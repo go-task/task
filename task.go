@@ -55,6 +55,7 @@ func RunTask(t *Task) error {
 	for _, c := range t.Cmds {
 		cmd := exec.Command("/bin/sh", "-c", c)
 		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
 		if err := cmd.Run(); err != nil {
 			return err
 		}
