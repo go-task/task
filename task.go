@@ -74,8 +74,10 @@ func Run() {
 		log.Fatal(err)
 	}
 
-	if err = RunTask(args[0]); err != nil {
-		log.Fatal(err)
+	for _, a := range args {
+		if err = RunTask(a); err != nil {
+			log.Fatal(err)
+		}
 	}
 }
 
