@@ -30,7 +30,7 @@ func init() {
 type Task struct {
 	Cmds      []string
 	Deps      []string
-	Source    string
+	Sources   string
 	Generates string
 }
 
@@ -84,6 +84,11 @@ func RunTask(name string) error {
 		return &TaskNotFoundError{name}
 	}
 
+	if isTaskUpToDate(t) {
+		log.Printf(`Task "%s" is up to date`, name)
+		return nil
+	}
+
 	for _, d := range t.Deps {
 		if err := RunTask(d); err != nil {
 			return err
@@ -96,6 +101,24 @@ func RunTask(name string) error {
 		}
 	}
 	return nil
+}
+
+func isTaskUpToDate(t *Task) bool {
+	if t.Sources == "" || t.Generates == "" {
+		return false
+	}
+
+	sourcesMaxTime, err := maxTime(t.Sources)
+	if err != nil || sourcesMaxTime.IsZero() {
+		return false
+	}
+
+	generatesMinTime, err := minTime(t.Generates)
+	if err != nil || generatesMinTime.IsZero() {
+		return false
+	}
+
+	return generatesMinTime.After(sourcesMaxTime)
 }
 
 func runCommand(c string) error {
