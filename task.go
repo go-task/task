@@ -6,17 +6,14 @@ import (
 	"log"
 	"os"
 	"os/exec"
-	"path/filepath"
 
-	"github.com/kardianos/osext"
 	"gopkg.in/yaml.v2"
 )
 
 var (
-	CurrentDirectory, _ = osext.ExecutableFolder()
-	TaskFilePath        = filepath.Join(CurrentDirectory, "Taskfile.yml")
-	ShExists            bool
-	ShPath              string
+	TaskFilePath = "Taskfile.yml"
+	ShExists     bool
+	ShPath       string
 
 	Tasks = make(map[string]*Task)
 )
