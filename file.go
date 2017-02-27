@@ -12,7 +12,41 @@ var dirsToSkip = []string{
 	"node_modules",
 }
 
-func minTime(pattern string) (minTime time.Time, err error) {
+func minTime(a, b time.Time) time.Time {
+	if !a.IsZero() && a.Before(b) {
+		return a
+	}
+	return b
+}
+func maxTime(a, b time.Time) time.Time {
+	if a.After(b) {
+		return a
+	}
+	return b
+}
+
+func getPatternsMinTime(patterns []string) (m time.Time, err error) {
+	for _, p := range patterns {
+		mp, err := getPatternMinTime(p)
+		if err != nil {
+			return time.Time{}, err
+		}
+		m = minTime(m, mp)
+	}
+	return
+}
+func getPatternsMaxTime(patterns []string) (m time.Time, err error) {
+	for _, p := range patterns {
+		mp, err := getPatternMaxTime(p)
+		if err != nil {
+			return time.Time{}, err
+		}
+		m = maxTime(m, mp)
+	}
+	return
+}
+
+func getPatternMinTime(pattern string) (minTime time.Time, err error) {
 	files, err := zglob.Glob(pattern)
 	if err != nil {
 		return time.Time{}, err
@@ -32,7 +66,7 @@ func minTime(pattern string) (minTime time.Time, err error) {
 	return
 }
 
-func maxTime(pattern string) (maxTime time.Time, err error) {
+func getPatternMaxTime(pattern string) (maxTime time.Time, err error) {
 	files, err := zglob.Glob(pattern)
 	if err != nil {
 		return time.Time{}, err
