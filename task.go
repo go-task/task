@@ -34,6 +34,15 @@ func (err *TaskNotFoundError) Error() string {
 	return fmt.Sprintf(`Task "%s" not found`, err.taskName)
 }
 
+type TaskRunError struct {
+	taskName string
+	err      error
+}
+
+func (err *TaskRunError) Error() string {
+	return fmt.Sprintf(`Failed to run task "%s": %v`, err.taskName, err.err)
+}
+
 func main() {
 	log.SetFlags(0)
 
@@ -76,7 +85,7 @@ func RunTask(name string) error {
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 		if err := cmd.Run(); err != nil {
-			return err
+			return &TaskRunError{name, err}
 		}
 	}
 	return nil
