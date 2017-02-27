@@ -1,0 +1,25 @@
+{
+	"comment": "",
+	"ignore": "test",
+	"package": [
+		{
+			"checksumSHA1": "UelPezrYA7pmz2lDhUZGGFvrg+A=",
+			"path": "github.com/mattn/go-zglob",
+			"revision": "95345c4e1c0ebc9d16a3284177f09360f4d20fab",
+			"revisionTime": "2017-01-24T11:57:57Z"
+		},
+		{
+			"checksumSHA1": "ztz//xJfXLnRAudY1JXhYz9fhqc=",
+			"path": "github.com/mattn/go-zglob/fastwalk",
+			"revision": "95345c4e1c0ebc9d16a3284177f09360f4d20fab",
+			"revisionTime": "2017-01-24T11:57:57Z"
+		},
+		{
+			"checksumSHA1": "QeQ0FWfng2E1CYl1LlPuAY9jLmg=",
+			"path": "gopkg.in/yaml.v2",
+			"revision": "a3f3340b5840cee44f372bddb5880fcbc419b46a",
+			"revisionTime": "2017-02-08T14:18:51Z"
+		}
+	],
+	"rootPath": "github.com/go-task/task"
+}
