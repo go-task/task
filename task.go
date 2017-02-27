@@ -15,9 +15,20 @@ import (
 var (
 	CurrentDirectory, _ = osext.ExecutableFolder()
 	TaskFilePath        = filepath.Join(CurrentDirectory, "Taskfile.yml")
+	ShExists            bool
+	ShPath              string
 
 	Tasks = make(map[string]*Task)
 )
+
+func init() {
+	var err error
+	ShPath, err = exec.LookPath("sh")
+	if err != nil {
+		return
+	}
+	ShExists = true
+}
 
 type Task struct {
 	Cmds      []string
@@ -81,12 +92,24 @@ func RunTask(name string) error {
 	}
 
 	for _, c := range t.Cmds {
-		cmd := exec.Command("/bin/sh", "-c", c)
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-		if err := cmd.Run(); err != nil {
+		if err := runCommand(c); err != nil {
 			return &TaskRunError{name, err}
 		}
+	}
+	return nil
+}
+
+func runCommand(c string) error {
+	var cmd *exec.Cmd
+	if ShExists {
+		cmd = exec.Command(ShPath, "-c", c)
+	} else {
+		cmd = exec.Command("cmd", "/C", c)
+	}
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err := cmd.Run(); err != nil {
+		return err
 	}
 	return nil
 }
