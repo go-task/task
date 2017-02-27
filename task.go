@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -14,6 +15,8 @@ import (
 var (
 	CurrentDirectory, _ = osext.ExecutableFolder()
 	TaskFilePath        = filepath.Join(CurrentDirectory, "Taskfile.yml")
+
+	Tasks = make(map[string]*Task)
 )
 
 type Task struct {
@@ -21,6 +24,14 @@ type Task struct {
 	Deps      []string
 	Source    string
 	Generates string
+}
+
+type TaskNotFoundError struct {
+	taskName string
+}
+
+func (err *TaskNotFoundError) Error() string {
+	return fmt.Sprintf(`Task "%s" not found`, err.taskName)
 }
 
 func main() {
@@ -33,25 +44,33 @@ func main() {
 
 	file, err := ioutil.ReadFile(TaskFilePath)
 	if err != nil {
+		if os.IsNotExist(err) {
+			log.Fatal("Taskfile.yml not found")
+		}
 		log.Fatal(err)
 	}
 
-	tasks := make(map[string]*Task)
-	if err = yaml.Unmarshal(file, &tasks); err != nil {
+	if err = yaml.Unmarshal(file, &Tasks); err != nil {
 		log.Fatal(err)
 	}
 
-	task, ok := tasks[args[0]]
-	if !ok {
-		log.Fatalf(`Task "%s" not found`, args[0])
-	}
-
-	if err = RunTask(task); err != nil {
+	if err = RunTask(args[0]); err != nil {
 		log.Fatal(err)
 	}
 }
 
-func RunTask(t *Task) error {
+func RunTask(name string) error {
+	t, ok := Tasks[name]
+	if !ok {
+		return &TaskNotFoundError{name}
+	}
+
+	for _, d := range t.Deps {
+		if err := RunTask(d); err != nil {
+			return err
+		}
+	}
+
 	for _, c := range t.Cmds {
 		cmd := exec.Command("/bin/sh", "-c", c)
 		cmd.Stdout = os.Stdout
