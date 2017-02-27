@@ -1,4 +1,4 @@
-package main
+package task
 
 import (
 	"fmt"
@@ -43,7 +43,7 @@ func (err *TaskRunError) Error() string {
 	return fmt.Sprintf(`Failed to run task "%s": %v`, err.taskName, err.err)
 }
 
-func main() {
+func Run() {
 	log.SetFlags(0)
 
 	args := os.Args[1:]
