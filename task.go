@@ -11,10 +11,14 @@ import (
 )
 
 var (
+	// TaskFilePath is the default Taskfile
 	TaskFilePath = "Taskfile.yml"
-	ShExists     bool
-	ShPath       string
+	// ShExists is true if Bash was found
+	ShExists bool
+	// ShPath constains the Bash path if found
+	ShPath string
 
+	// Tasks constains the tasks parsed from Taskfile
 	Tasks = make(map[string]*Task)
 )
 
@@ -27,6 +31,7 @@ func init() {
 	ShExists = true
 }
 
+// Task represents a task
 type Task struct {
 	Cmds      []string
 	Deps      []string
@@ -34,23 +39,24 @@ type Task struct {
 	Generates []string
 }
 
-type TaskNotFoundError struct {
+type taskNotFoundError struct {
 	taskName string
 }
 
-func (err *TaskNotFoundError) Error() string {
+func (err *taskNotFoundError) Error() string {
 	return fmt.Sprintf(`Task "%s" not found`, err.taskName)
 }
 
-type TaskRunError struct {
+type taskRunError struct {
 	taskName string
 	err      error
 }
 
-func (err *TaskRunError) Error() string {
+func (err *taskRunError) Error() string {
 	return fmt.Sprintf(`Failed to run task "%s": %v`, err.taskName, err.err)
 }
 
+// Run runs Task
 func Run() {
 	log.SetFlags(0)
 
@@ -78,10 +84,11 @@ func Run() {
 	}
 }
 
+// RunTask runs a task by its name
 func RunTask(name string) error {
 	t, ok := Tasks[name]
 	if !ok {
-		return &TaskNotFoundError{name}
+		return &taskNotFoundError{name}
 	}
 
 	if isTaskUpToDate(t) {
@@ -97,7 +104,7 @@ func RunTask(name string) error {
 
 	for _, c := range t.Cmds {
 		if err := runCommand(c); err != nil {
-			return &TaskRunError{name, err}
+			return &taskRunError{name, err}
 		}
 	}
 	return nil
