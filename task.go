@@ -1,18 +1,21 @@
 package task
 
 import (
+	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
 
+	"github.com/BurntSushi/toml"
 	"gopkg.in/yaml.v2"
 )
 
 var (
 	// TaskFilePath is the default Taskfile
-	TaskFilePath = "Taskfile.yml"
+	TaskFilePath = "Taskfile"
 	// ShExists is true if Bash was found
 	ShExists bool
 	// ShPath constains the Bash path if found
@@ -65,15 +68,9 @@ func Run() {
 		log.Fatal("No argument given")
 	}
 
-	file, err := ioutil.ReadFile(TaskFilePath)
+	var err error
+	Tasks, err = readTaskfile()
 	if err != nil {
-		if os.IsNotExist(err) {
-			log.Fatal("Taskfile.yml not found")
-		}
-		log.Fatal(err)
-	}
-
-	if err = yaml.Unmarshal(file, &Tasks); err != nil {
 		log.Fatal(err)
 	}
 
@@ -142,3 +139,19 @@ func runCommand(c string) error {
 	}
 	return nil
 }
+
+func readTaskfile() (tasks map[string]*Task, err error) {
+	if b, err := ioutil.ReadFile(TaskFilePath + ".yml"); err == nil {
+		return tasks, yaml.Unmarshal(b, &tasks)
+	}
+	if b, err := ioutil.ReadFile(TaskFilePath + ".json"); err == nil {
+		return tasks, json.Unmarshal(b, &tasks)
+	}
+	if b, err := ioutil.ReadFile(TaskFilePath + ".toml"); err == nil {
+		return tasks, toml.Unmarshal(b, &tasks)
+	}
+	return nil, ErrNoTaskFile
+}
+
+// ErrNoTaskFile is returns when the program can not find a proper TaskFile
+var ErrNoTaskFile = errors.New("no task file found (is it named '" + TaskFilePath + "'?)")

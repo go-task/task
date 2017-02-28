@@ -3,6 +3,12 @@
 	"ignore": "test",
 	"package": [
 		{
+			"checksumSHA1": "hqDDDpue/5363luidNMBS8z8eJU=",
+			"path": "github.com/BurntSushi/toml",
+			"revision": "99064174e013895bbd9b025c31100bd1d9b590ca",
+			"revisionTime": "2016-07-17T15:07:09Z"
+		},
+		{
 			"checksumSHA1": "UelPezrYA7pmz2lDhUZGGFvrg+A=",
 			"path": "github.com/mattn/go-zglob",
 			"revision": "95345c4e1c0ebc9d16a3284177f09360f4d20fab",
