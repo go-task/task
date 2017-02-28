@@ -16,8 +16,9 @@ Or you can download from the [releases][releases] page and add to your `PATH`.
 
 ## Usage
 
-Create a file called `Taskfile.yml`. The `cmds` key should contains the
-commands of a task:
+Create a file called `Taskfile.yml` in the root of the project.
+(`Taskfile.toml` and `Taskfile.json` are also supported, but YAML is used in
+the documentation). The `cmds` key should contains the commands of a task:
 
 ```yml
 build:
@@ -36,12 +37,12 @@ task assets build
 ```
 
 If Bash is available (Linux and Windows while on Git Bash), the commands will
-run in Bash, otherwise will run on `cmd` (Windows).
+run in Bash, otherwise will fallback to `cmd` (on Windows).
 
 ### Task dependencies
 
-You may have tasks that depends on others. Just point them on `deps` will run
-them automatically:
+You may have tasks that depends on others. Just pointing them on `deps` will
+run them automatically:
 
 ```yml
 build:
