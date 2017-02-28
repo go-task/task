@@ -7,11 +7,6 @@ import (
 	"github.com/mattn/go-zglob"
 )
 
-var dirsToSkip = []string{
-	".git",
-	"node_modules",
-}
-
 func minTime(a, b time.Time) time.Time {
 	if !a.IsZero() && a.Before(b) {
 		return a
