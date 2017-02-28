@@ -12,7 +12,7 @@ func main() {
 		fmt.Println(`
 task [target1 target2 ...]: Runs commands under targets like make.
 
-Example: 'task hello' with the following 'Taskfile.json' file will generate
+Example: 'task hello' with the following 'Taskfile.yml' file will generate
 an 'output.txt' file.
 '''
 hello:
