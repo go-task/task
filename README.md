@@ -12,7 +12,7 @@ If you have a Go environment setup, you can simply run:
 go get -u -v github.com/go-task/task/cmd/task
 ```
 
-Now the `task` executable should be available in your `PATH`.
+Or you can download from the [releases][releases] page and add to your `PATH`.
 
 ## Usage
 
@@ -106,3 +106,4 @@ necessary to run the task. If not, it will just print
 `Task "js" is up to date`.
 
 [make]: https://www.gnu.org/software/make/
+[releases]: https://github.com/go-task/task/releases
