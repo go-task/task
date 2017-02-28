@@ -1,0 +1,13 @@
+install:
+  cmds:
+    - go install -v ./...
+
+# TODO: have tests
+test:
+  cmds:
+    - go test -v
+
+# https://github.com/goreleaser/goreleaser
+release:
+  cmds:
+    - goreleaser
