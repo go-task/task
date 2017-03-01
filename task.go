@@ -3,7 +3,6 @@ package task
 import (
 	"encoding/json"
 	"errors"
-	"flag"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -11,6 +10,7 @@ import (
 	"os/exec"
 
 	"github.com/BurntSushi/toml"
+	"github.com/spf13/pflag"
 	"gopkg.in/yaml.v2"
 )
 
@@ -22,7 +22,7 @@ var (
 	// ShPath constains the Bash path if found
 	ShPath string
 
-	// Force (-f flag) forces a task to run even when it's up-to-date
+	// Force (--force or -f flag) forces a task to run even when it's up-to-date
 	Force bool
 
 	// Tasks constains the tasks parsed from Taskfile
@@ -68,7 +68,7 @@ func (err *taskRunError) Error() string {
 func Run() {
 	log.SetFlags(0)
 
-	args := flag.Args()
+	args := pflag.Args()
 	if len(args) == 0 {
 		log.Fatal("No argument given")
 	}
