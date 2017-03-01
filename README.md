@@ -121,5 +121,8 @@ will compare the modification date/time of the files to determine if it's
 necessary to run the task. If not, it will just print
 `Task "js" is up to date`.
 
+You can use `--force` or `-f` if you want to force a task to run even when
+up-to-date.
+
 [make]: https://www.gnu.org/software/make/
 [releases]: https://github.com/go-task/task/releases
