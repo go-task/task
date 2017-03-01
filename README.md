@@ -1,3 +1,5 @@
+[![Join the chat at https://gitter.im/go-task/task](https://badges.gitter.im/go-task/task.svg)](https://gitter.im/go-task/task?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 # Task - Simple "Make" alternative
 
 Task is a simple tool that allows you to easily run development and build
