@@ -40,7 +40,7 @@ type Task struct {
 	Deps      []string
 	Sources   []string
 	Generates []string
-	Chdir     string
+	Dir       string
 }
 
 type taskNotFoundError struct {
@@ -101,7 +101,7 @@ func RunTask(name string) error {
 	}
 
 	for _, c := range t.Cmds {
-		if err := runCommand(c, t.Chdir); err != nil {
+		if err := runCommand(c, t.Dir); err != nil {
 			return &taskRunError{name, err}
 		}
 	}
@@ -133,7 +133,7 @@ func runCommand(c, path string) error {
 	} else {
 		cmd = exec.Command("cmd", "/C", c)
 	}
-	if "" != path {
+	if path != "" {
 		cmd.Dir = path
 	}
 	cmd.Stdout = os.Stdout
