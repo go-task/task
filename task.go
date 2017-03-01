@@ -40,6 +40,7 @@ type Task struct {
 	Deps      []string
 	Sources   []string
 	Generates []string
+	Dir       string
 }
 
 type taskNotFoundError struct {
@@ -100,7 +101,7 @@ func RunTask(name string) error {
 	}
 
 	for _, c := range t.Cmds {
-		if err := runCommand(c); err != nil {
+		if err := runCommand(c, t.Dir); err != nil {
 			return &taskRunError{name, err}
 		}
 	}
@@ -125,12 +126,15 @@ func isTaskUpToDate(t *Task) bool {
 	return generatesMinTime.After(sourcesMaxTime)
 }
 
-func runCommand(c string) error {
+func runCommand(c, path string) error {
 	var cmd *exec.Cmd
 	if ShExists {
 		cmd = exec.Command(ShPath, "-c", c)
 	} else {
 		cmd = exec.Command("cmd", "/C", c)
+	}
+	if path != "" {
+		cmd.Dir = path
 	}
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
