@@ -3,6 +3,7 @@ package task
 import (
 	"encoding/json"
 	"errors"
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -20,6 +21,9 @@ var (
 	ShExists bool
 	// ShPath constains the Bash path if found
 	ShPath string
+
+	// Force (-f flag) forces a task to run even when it's up-to-date
+	Force bool
 
 	// Tasks constains the tasks parsed from Taskfile
 	Tasks = make(map[string]*Task)
@@ -64,7 +68,7 @@ func (err *taskRunError) Error() string {
 func Run() {
 	log.SetFlags(0)
 
-	args := os.Args[1:]
+	args := flag.Args()
 	if len(args) == 0 {
 		log.Fatal("No argument given")
 	}
@@ -89,7 +93,7 @@ func RunTask(name string) error {
 		return &taskNotFoundError{name}
 	}
 
-	if isTaskUpToDate(t) {
+	if !Force && isTaskUpToDate(t) {
 		log.Printf(`Task "%s" is up to date`, name)
 		return nil
 	}

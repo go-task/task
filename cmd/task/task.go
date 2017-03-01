@@ -24,6 +24,7 @@ hello:
 '''
 `)
 	}
+	flag.BoolVar(&task.Force, "f", false, "forces execution even when the task is up-to-date")
 	flag.Parse()
 	task.Run()
 }
