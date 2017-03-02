@@ -43,6 +43,7 @@ type Task struct {
 	Sources   []string
 	Generates []string
 	Dir       string
+	Variables map[string]string
 }
 
 type taskNotFoundError struct {
@@ -101,14 +102,16 @@ func RunTask(name string) error {
 		return nil
 	}
 
+	vars := t.handleVariables()
+
 	for _, d := range t.Deps {
-		if err := RunTask(d); err != nil {
+		if err := RunTask(ReplaceVariables(d, vars)); err != nil {
 			return err
 		}
 	}
 
 	for _, c := range t.Cmds {
-		if err := runCommand(c, t.Dir); err != nil {
+		if err := runCommand(ReplaceVariables(c, vars), ReplaceVariables(t.Dir, vars)); err != nil {
 			return &taskRunError{name, err}
 		}
 	}
