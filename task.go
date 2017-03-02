@@ -2,8 +2,6 @@ package task
 
 import (
 	"encoding/json"
-	"errors"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -47,31 +45,6 @@ type Task struct {
 	Sources   []string
 	Generates []string
 	Dir       string
-}
-
-type taskNotFoundError struct {
-	taskName string
-}
-
-func (err *taskNotFoundError) Error() string {
-	return fmt.Sprintf(`Task "%s" not found`, err.taskName)
-}
-
-type taskRunError struct {
-	taskName string
-	err      error
-}
-
-func (err *taskRunError) Error() string {
-	return fmt.Sprintf(`Failed to run task "%s": %v`, err.taskName, err.err)
-}
-
-type cyclicDepError struct {
-	taskName string
-}
-
-func (err *cyclicDepError) Error() string {
-	return fmt.Sprintf(`Cyclic dependency of task "%s" detected`, err.taskName)
 }
 
 // Run runs Task
@@ -175,6 +148,3 @@ func readTaskfile() (tasks map[string]*Task, err error) {
 	}
 	return nil, ErrNoTaskFile
 }
-
-// ErrNoTaskFile is returns when the program can not find a proper TaskFile
-var ErrNoTaskFile = errors.New("no task file found (is it named '" + TaskFilePath + "'?)")
