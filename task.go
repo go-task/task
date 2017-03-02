@@ -44,6 +44,7 @@ type Task struct {
 	Generates []string
 	Dir       string
 	Variables map[string]string
+	Set       string
 }
 
 type taskNotFoundError struct {
@@ -101,21 +102,30 @@ func RunTask(name string) error {
 		log.Printf(`Task "%s" is up to date`, name)
 		return nil
 	}
-
 	vars, err := t.handleVariables()
 	if err != nil {
 		return &taskRunError{name, err}
 	}
-
 	for _, d := range t.Deps {
 		if err := RunTask(ReplaceVariables(d, vars)); err != nil {
 			return err
 		}
 	}
-
+	vars, err = t.handleVariables() // read in a second time, as a dependency could have set a new env variable
+	if err != nil {
+		return &taskRunError{name, err}
+	}
 	for _, c := range t.Cmds {
-		if err := runCommand(ReplaceVariables(c, vars), ReplaceVariables(t.Dir, vars)); err != nil {
+		var (
+			output string
+			err    error
+		)
+		if output, err = runCommand(ReplaceVariables(c, vars), ReplaceVariables(t.Dir, vars)); err != nil {
 			return &taskRunError{name, err}
+		}
+		fmt.Println(output)
+		if t.Set != "" {
+			os.Setenv(t.Set, output)
 		}
 	}
 	return nil
@@ -139,8 +149,12 @@ func isTaskUpToDate(t *Task) bool {
 	return generatesMinTime.After(sourcesMaxTime)
 }
 
-func runCommand(c, path string) error {
-	var cmd *exec.Cmd
+func runCommand(c, path string) (string, error) {
+	var (
+		cmd *exec.Cmd
+		b   []byte
+		err error
+	)
 	if ShExists {
 		cmd = exec.Command(ShPath, "-c", c)
 	} else {
@@ -149,12 +163,11 @@ func runCommand(c, path string) error {
 	if path != "" {
 		cmd.Dir = path
 	}
-	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	if err := cmd.Run(); err != nil {
-		return err
+	if b, err = cmd.Output(); err != nil {
+		return "", err
 	}
-	return nil
+	return string(b), nil
 }
 
 func readTaskfile() (tasks map[string]*Task, err error) {
