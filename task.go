@@ -23,6 +23,8 @@ var (
 
 	// Tasks constains the tasks parsed from Taskfile
 	Tasks = make(map[string]*Task)
+
+	runTasks = make(map[string]bool)
 )
 
 func init() {
@@ -84,6 +86,11 @@ func Run() {
 
 // RunTask runs a task by its name
 func RunTask(name string) error {
+	if _, found := runTasks[name]; found {
+		return &taskRunError{taskName: name, err: fmt.Errorf("Cyclic dependency detected")}
+	}
+	runTasks[name] = true
+
 	t, ok := Tasks[name]
 	if !ok {
 		return &taskNotFoundError{name}
