@@ -88,6 +88,19 @@ css:
     - npm run buildcss
 ```
 
+Each task can only be run once. If it is included from another dependend task causing
+a cyclomatic dependency, execution will be stopped.
+
+```yml
+task1:
+  deps: [task2]
+
+task2:
+  deps: [task1]
+```
+
+Will stop at the moment the dependencies of `task2` are executed.
+
 ### Prevent task from running when not necessary
 
 If a task generates something, you can inform Task the source and generated
