@@ -1,20 +1,37 @@
 package task
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"strings"
+
+	"github.com/BurntSushi/toml"
+	yaml "gopkg.in/yaml.v2"
 )
 
-func (t Task) handleVariables() map[string]string {
+var (
+	// VariableFilePath file containing additional variables
+	VariableFilePath = "Variables"
+)
+
+func (t Task) handleVariables() (map[string]string, error) {
 	localVariables := make(map[string]string)
 	for key, value := range t.Variables {
 		localVariables[key] = value
 	}
+	if fileVariables, err := readVariablefile(); err == nil {
+		for key, value := range fileVariables {
+			localVariables[key] = value
+		}
+	} else {
+		return nil, err
+	}
 	for key, value := range getEnvironmentVariables() {
 		localVariables[key] = value
 	}
-	return localVariables
+	return localVariables, nil
 }
 
 // ReplaceVariables writes variables into initial string
@@ -42,4 +59,24 @@ func getEnvironmentVariables() map[string]string {
 		val = splits[1]
 		return
 	})
+}
+
+func readVariablefile() (map[string]string, error) {
+	var variables map[string]string
+	if b, err := ioutil.ReadFile(VariableFilePath + ".yml"); err == nil {
+		if err := yaml.Unmarshal(b, &variables); err != nil {
+			return nil, err
+		}
+	}
+	if b, err := ioutil.ReadFile(VariableFilePath + ".json"); err == nil {
+		if err := json.Unmarshal(b, &variables); err != nil {
+			return nil, err
+		}
+	}
+	if b, err := ioutil.ReadFile(VariableFilePath + ".toml"); err == nil {
+		if err := toml.Unmarshal(b, &variables); err != nil {
+			return nil, err
+		}
+	}
+	return variables, nil
 }
