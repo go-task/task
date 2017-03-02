@@ -39,6 +39,30 @@ task assets build
 If Bash is available (Linux and Windows while on Git Bash), the commands will
 run in Bash, otherwise will fallback to `cmd` (on Windows).
 
+### Variables
+
+```yml
+build:
+  deps: [setvar]
+  cmds:
+  - echo "{{prefix}} {{THEVAR}}"
+  variables:
+    prefix: "Path:"
+
+setvar:
+  cmds:
+  - echo "{{PATH}}"
+  set: THEVAR
+```
+
+The above sample saves the path into a new variable which is then again echoed.
+
+You can use environment variables, task level variables and a file called `Variables` as source of variables.
+
+They are evaluated in the following order:
+
+Task local variables are overwritten by variables found in `Variables`. Variables found in `Variables` are overwritten with variables from the environment.
+
 ### Task dependencies
 
 You may have tasks that depends on others. Just pointing them on `deps` will
