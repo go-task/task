@@ -61,7 +61,32 @@ You can use environment variables, task level variables and a file called `Varia
 
 They are evaluated in the following order:
 
-Task local variables are overwritten by variables found in `Variables`. Variables found in `Variables` are overwritten with variables from the environment.
+Task local variables are overwritten by variables found in `Variables`. Variables found in `Variables` are overwritten with variables from the environment. The output of the last command is stored in the environment. So you can do something like this:
+
+```yml
+build:
+  deps: [setvar]
+  cmds:
+  - echo "{{prefix}} '{{THEVAR}}'"
+  variables:
+    prefix: "Result: "
+
+setvar:
+  cmds:
+  - echo -n "a"
+  - echo -n "{{THEVAR}}b"
+  - echo -n "{{THEVAR}}c"
+  set: THEVAR
+```
+
+The result of a run of build would be:
+
+```
+a
+ab
+abc
+Result:  'abc'
+```
 
 ### Task dependencies
 
