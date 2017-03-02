@@ -102,7 +102,10 @@ func RunTask(name string) error {
 		return nil
 	}
 
-	vars := t.handleVariables()
+	vars, err := t.handleVariables()
+	if err != nil {
+		return &taskRunError{name, err}
+	}
 
 	for _, d := range t.Deps {
 		if err := RunTask(ReplaceVariables(d, vars)); err != nil {
