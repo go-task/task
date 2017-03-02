@@ -5,14 +5,14 @@ import (
 )
 
 // ErrNoTaskFile is returned when the program can not find a proper TaskFile
-var ErrNoTaskFile = fmt.Errorf(`No task file found (is it named "%s"?)`, TaskFilePath)
+var ErrNoTaskFile = fmt.Errorf(`task: No task file found (is it named "%s"?)`, TaskFilePath)
 
 type taskNotFoundError struct {
 	taskName string
 }
 
 func (err *taskNotFoundError) Error() string {
-	return fmt.Sprintf(`Task "%s" not found`, err.taskName)
+	return fmt.Sprintf(`task: Task "%s" not found`, err.taskName)
 }
 
 type taskRunError struct {
@@ -21,7 +21,7 @@ type taskRunError struct {
 }
 
 func (err *taskRunError) Error() string {
-	return fmt.Sprintf(`Failed to run task "%s": %v`, err.taskName, err.err)
+	return fmt.Sprintf(`task: Failed to run task "%s": %v`, err.taskName, err.err)
 }
 
 type cyclicDepError struct {
@@ -29,5 +29,5 @@ type cyclicDepError struct {
 }
 
 func (err *cyclicDepError) Error() string {
-	return fmt.Sprintf(`Cyclic dependency of task "%s" detected`, err.taskName)
+	return fmt.Sprintf(`task: Cyclic dependency of task "%s" detected`, err.taskName)
 }

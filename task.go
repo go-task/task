@@ -53,7 +53,7 @@ func Run() {
 
 	args := pflag.Args()
 	if len(args) == 0 {
-		log.Fatal("No argument given")
+		log.Fatal("task: No argument given")
 	}
 
 	var err error
@@ -88,7 +88,7 @@ func RunTask(name string) error {
 	}
 
 	if !Force && isTaskUpToDate(t) {
-		log.Printf(`Task "%s" is up to date`, name)
+		log.Printf(`task: Task "%s" is up to date`, name)
 		return nil
 	}
 
