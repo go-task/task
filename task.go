@@ -93,15 +93,15 @@ func RunTask(name string) error {
 		return &taskNotFoundError{name}
 	}
 
-	if !Force && isTaskUpToDate(t) {
-		log.Printf(`Task "%s" is up to date`, name)
-		return nil
-	}
-
 	for _, d := range t.Deps {
 		if err := RunTask(d); err != nil {
 			return err
 		}
+	}
+
+	if !Force && isTaskUpToDate(t) {
+		log.Printf(`Task "%s" is up to date`, name)
+		return nil
 	}
 
 	for _, c := range t.Cmds {
