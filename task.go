@@ -111,11 +111,12 @@ func RunTask(name string) error {
 			return err
 		}
 	}
-	vars, err = t.handleVariables() // read in a second time, as a dependency could have set a new env variable
-	if err != nil {
-		return &taskRunError{name, err}
-	}
 	for _, c := range t.Cmds {
+		// read in a each time, as a command could change a variable or it has been changed by a dependency
+		vars, err = t.handleVariables()
+		if err != nil {
+			return &taskRunError{name, err}
+		}
 		var (
 			output string
 			err    error
