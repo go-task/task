@@ -28,7 +28,7 @@ var (
 	// Tasks constains the tasks parsed from Taskfile
 	Tasks = make(map[string]*Task)
 
-	runTasks = make(map[string]bool)
+	runnedTasks = make(map[string]struct{})
 )
 
 func init() {
@@ -66,6 +66,14 @@ func (err *taskRunError) Error() string {
 	return fmt.Sprintf(`Failed to run task "%s": %v`, err.taskName, err.err)
 }
 
+type cyclicDepError struct {
+	taskName string
+}
+
+func (err *cyclicDepError) Error() string {
+	return fmt.Sprintf(`Cyclic dependency of task "%s" detected`, err.taskName)
+}
+
 // Run runs Task
 func Run() {
 	log.SetFlags(0)
@@ -90,10 +98,10 @@ func Run() {
 
 // RunTask runs a task by its name
 func RunTask(name string) error {
-	if _, found := runTasks[name]; found {
-		return &taskRunError{taskName: name, err: fmt.Errorf("Cyclic dependency detected")}
+	if _, found := runnedTasks[name]; found {
+		return &cyclicDepError{name}
 	}
-	runTasks[name] = true
+	runnedTasks[name] = struct{}{}
 
 	t, ok := Tasks[name]
 	if !ok {
