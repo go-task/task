@@ -23,6 +23,8 @@ var (
 
 	// Tasks constains the tasks parsed from Taskfile
 	Tasks = make(map[string]*Task)
+
+	runTasks = make(map[string]bool)
 )
 
 func init() {
@@ -40,7 +42,7 @@ type Task struct {
 	Deps      []string
 	Sources   []string
 	Generates []string
-	Chdir     string
+	Dir       string
 }
 
 type taskNotFoundError struct {
@@ -84,6 +86,11 @@ func Run() {
 
 // RunTask runs a task by its name
 func RunTask(name string) error {
+	if _, found := runTasks[name]; found {
+		return &taskRunError{taskName: name, err: fmt.Errorf("Cyclic dependency detected")}
+	}
+	runTasks[name] = true
+
 	t, ok := Tasks[name]
 	if !ok {
 		return &taskNotFoundError{name}
@@ -101,7 +108,7 @@ func RunTask(name string) error {
 	}
 
 	for _, c := range t.Cmds {
-		if err := runCommand(c, t.Chdir); err != nil {
+		if err := runCommand(c, t.Dir); err != nil {
 			return &taskRunError{name, err}
 		}
 	}
@@ -133,7 +140,7 @@ func runCommand(c, path string) error {
 	} else {
 		cmd = exec.Command("cmd", "/C", c)
 	}
-	if "" != path {
+	if path != "" {
 		cmd.Dir = path
 	}
 	cmd.Stdout = os.Stdout
