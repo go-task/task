@@ -88,6 +88,19 @@ abc
 Result:  'abc'
 ```
 
+### Running task in another dir
+
+By default, tasks will be executed in the directory where the Taskfile is
+located. But you can easily make the task run in another folder informing
+`dir`:
+
+```yml
+js:
+  dir: www/public/js
+  cmds:
+    - gulp
+```
+
 ### Task dependencies
 
 You may have tasks that depends on others. Just pointing them on `deps` will
