@@ -2,14 +2,13 @@ package task
 
 import (
 	"encoding/json"
-	"errors"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
 
 	"github.com/BurntSushi/toml"
+	"github.com/spf13/pflag"
 	"gopkg.in/yaml.v2"
 )
 
@@ -21,10 +20,13 @@ var (
 	// ShPath constains the Bash path if found
 	ShPath string
 
+	// Force (--force or -f flag) forces a task to run even when it's up-to-date
+	Force bool
+
 	// Tasks constains the tasks parsed from Taskfile
 	Tasks = make(map[string]*Task)
 
-	runTasks = make(map[string]bool)
+	runnedTasks = make(map[string]struct{})
 )
 
 func init() {
@@ -47,30 +49,13 @@ type Task struct {
 	Set       string
 }
 
-type taskNotFoundError struct {
-	taskName string
-}
-
-func (err *taskNotFoundError) Error() string {
-	return fmt.Sprintf(`Task "%s" not found`, err.taskName)
-}
-
-type taskRunError struct {
-	taskName string
-	err      error
-}
-
-func (err *taskRunError) Error() string {
-	return fmt.Sprintf(`Failed to run task "%s": %v`, err.taskName, err.err)
-}
-
 // Run runs Task
 func Run() {
 	log.SetFlags(0)
 
-	args := os.Args[1:]
+	args := pflag.Args()
 	if len(args) == 0 {
-		log.Fatal("No argument given")
+		log.Fatal("task: No argument given")
 	}
 
 	var err error
@@ -88,29 +73,31 @@ func Run() {
 
 // RunTask runs a task by its name
 func RunTask(name string) error {
-	if _, found := runTasks[name]; found {
-		return &taskRunError{taskName: name, err: fmt.Errorf("Cyclic dependency detected")}
+	if _, found := runnedTasks[name]; found {
+		return &cyclicDepError{name}
 	}
-	runTasks[name] = true
+	runnedTasks[name] = struct{}{}
 
 	t, ok := Tasks[name]
 	if !ok {
 		return &taskNotFoundError{name}
 	}
 
-	if isTaskUpToDate(t) {
-		log.Printf(`Task "%s" is up to date`, name)
+	if !Force && isTaskUpToDate(t) {
+		log.Printf(`task: Task "%s" is up to date`, name)
 		return nil
 	}
 	vars, err := t.handleVariables()
 	if err != nil {
 		return &taskRunError{name, err}
 	}
+  
 	for _, d := range t.Deps {
 		if err := RunTask(ReplaceVariables(d, vars)); err != nil {
 			return err
 		}
 	}
+  
 	for _, c := range t.Cmds {
 		// read in a each time, as a command could change a variable or it has been changed by a dependency
 		vars, err = t.handleVariables()
@@ -183,6 +170,3 @@ func readTaskfile() (tasks map[string]*Task, err error) {
 	}
 	return nil, ErrNoTaskFile
 }
-
-// ErrNoTaskFile is returns when the program can not find a proper TaskFile
-var ErrNoTaskFile = errors.New("no task file found (is it named '" + TaskFilePath + "'?)")

@@ -1,16 +1,16 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 
 	"github.com/go-task/task"
+
+	"github.com/spf13/pflag"
 )
 
 func main() {
-	flag.CommandLine.Usage = func() {
-		fmt.Println(`
-task [target1 target2 ...]: Runs commands under targets like make.
+	pflag.Usage = func() {
+		fmt.Println(`task [target1 target2 ...]: Runs commands under targets like make.
 
 Example: 'task hello' with the following 'Taskfile.yml' file will generate
 an 'output.txt' file.
@@ -23,7 +23,9 @@ hello:
     - output.txt
 '''
 `)
+		pflag.PrintDefaults()
 	}
-	flag.Parse()
+	pflag.BoolVarP(&task.Force, "force", "f", false, "forces execution even when the task is up-to-date")
+	pflag.Parse()
 	task.Run()
 }

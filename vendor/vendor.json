@@ -21,6 +21,12 @@
 			"revisionTime": "2017-01-24T11:57:57Z"
 		},
 		{
+			"checksumSHA1": "5KvHyB1CImtwZT3fwNkNUlc8R0k=",
+			"path": "github.com/spf13/pflag",
+			"revision": "9ff6c6923cfffbcd502984b8e0c80539a94968b7",
+			"revisionTime": "2017-01-30T21:42:45Z"
+		},
+		{
 			"checksumSHA1": "QeQ0FWfng2E1CYl1LlPuAY9jLmg=",
 			"path": "gopkg.in/yaml.v2",
 			"revision": "a3f3340b5840cee44f372bddb5880fcbc419b46a",

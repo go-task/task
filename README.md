@@ -1,3 +1,5 @@
+[![Join the chat at https://gitter.im/go-task/task](https://badges.gitter.im/go-task/task.svg)](https://gitter.im/go-task/task?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 # Task - Simple "Make" alternative
 
 Task is a simple tool that allows you to easily run development and build
@@ -6,7 +8,7 @@ It aims to be simpler and easier to use then [GNU Make][make].
 
 ## Installation
 
-If you have a Go environment setup, you can simply run:
+If you have a [Go][golang] environment setup, you can simply run:
 
 ```bash
 go get -u -v github.com/go-task/task/cmd/task
@@ -18,7 +20,8 @@ Or you can download from the [releases][releases] page and add to your `PATH`.
 
 Create a file called `Taskfile.yml` in the root of the project.
 (`Taskfile.toml` and `Taskfile.json` are also supported, but YAML is used in
-the documentation). The `cmds` key should contains the commands of a task:
+the documentation). The `cmds` attribute should contains the commands of a
+task:
 
 ```yml
 build:
@@ -104,7 +107,7 @@ js:
 ### Task dependencies
 
 You may have tasks that depends on others. Just pointing them on `deps` will
-run them automatically:
+make them run automatically before running the parent task:
 
 ```yml
 build:
@@ -151,7 +154,7 @@ Will stop at the moment the dependencies of `task2` are executed.
 ### Prevent task from running when not necessary
 
 If a task generates something, you can inform Task the source and generated
-files, to Task will prevent to run them if not necessary.
+files, so Task will prevent to run them if not necessary.
 
 ```yml
 build:
@@ -181,5 +184,9 @@ will compare the modification date/time of the files to determine if it's
 necessary to run the task. If not, it will just print
 `Task "js" is up to date`.
 
+You can use `--force` or `-f` if you want to force a task to run even when
+up-to-date.
+
 [make]: https://www.gnu.org/software/make/
 [releases]: https://github.com/go-task/task/releases
+[golang]: https://golang.org/
