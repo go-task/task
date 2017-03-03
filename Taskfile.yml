@@ -1,6 +1,13 @@
+# compiles current source code and make "task" executable available on
+# $GOPATH/bin/task{.exe}
 install:
   cmds:
     - go install -v ./...
+
+lint:
+  cmds:
+    - golint .
+    - golint ./cmd/task
 
 # TODO: have tests
 test:
