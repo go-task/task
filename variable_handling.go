@@ -45,15 +45,16 @@ func ReplaceVariables(initial string, variables map[string]string) string {
 
 // GetEnvironmentVariables returns environment variables as map
 func getEnvironmentVariables() map[string]string {
-	getenvironment := func(data []string, getkeyval func(item string) (key, val string)) map[string]string {
+	type getKeyValFunc func(item string) (key, val string)
+	getEnvironment := func(data []string, getKeyVal getKeyValFunc) map[string]string {
 		items := make(map[string]string)
 		for _, item := range data {
-			key, val := getkeyval(item)
+			key, val := getKeyVal(item)
 			items[key] = val
 		}
 		return items
 	}
-	return getenvironment(os.Environ(), func(item string) (key, val string) {
+	return getEnvironment(os.Environ(), func(item string) (key, val string) {
 		splits := strings.Split(item, "=")
 		key = splits[0]
 		val = splits[1]
