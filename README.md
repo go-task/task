@@ -48,9 +48,9 @@ run in Bash, otherwise will fallback to `cmd` (on Windows).
 build:
   deps: [setvar]
   cmds:
-  - echo "{{prefix}} {{THEVAR}}"
+  - echo "{{PREFIX}} {{THEVAR}}"
   vars:
-    prefix: "Path:"
+    PREFIX: "Path:"
 
 setvar:
   cmds:
