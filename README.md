@@ -194,14 +194,14 @@ Result:  'abc'
 ### Go's template engine
 
 Task parse commands as [Go's template engine][gotemplate] before executing
-them. Variables are acessible trought dot syntax (`.VARNAME`). The following
+them. Variables are acessible through dot syntax (`.VARNAME`). The following
 functions are available:
 
 - `OS`: return operating system. Possible values are "windows", "linux",
   "darwin" (macOS) and "freebsd".
 - `ARCH`: return the architecture Task was compiled to: "386", "amd64", "arm"
   or "s390x".
-- `IsSH`: on unix system this should always return `true`. On Windows, will
+- `IsSH`: on unix systems this should always return `true`. On Windows, will
   return `true` if `sh` command was found (Git Bash). In this case commands
   will run on `sh`. Otherwise, this function will return `false` meaning
   commands will run on `cmd`.
