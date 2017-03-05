@@ -2,6 +2,7 @@ package task
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -45,6 +46,8 @@ type Task struct {
 	Sources   []string
 	Generates []string
 	Dir       string
+	Variables map[string]string
+	Set       string
 }
 
 // Run runs Task
@@ -81,8 +84,13 @@ func RunTask(name string) error {
 		return &taskNotFoundError{name}
 	}
 
+	vars, err := t.handleVariables()
+	if err != nil {
+		return &taskRunError{name, err}
+	}
+
 	for _, d := range t.Deps {
-		if err := RunTask(d); err != nil {
+		if err := RunTask(ReplaceVariables(d, vars)); err != nil {
 			return err
 		}
 	}
@@ -93,8 +101,22 @@ func RunTask(name string) error {
 	}
 
 	for _, c := range t.Cmds {
-		if err := runCommand(c, t.Dir); err != nil {
+		// read in a each time, as a command could change a variable or it has been changed by a dependency
+		vars, err = t.handleVariables()
+		if err != nil {
 			return &taskRunError{name, err}
+		}
+		var (
+			output string
+			err    error
+		)
+		if output, err = runCommand(ReplaceVariables(c, vars), ReplaceVariables(t.Dir, vars)); err != nil {
+			return &taskRunError{name, err}
+		}
+		if t.Set != "" {
+			os.Setenv(t.Set, output)
+		} else {
+			fmt.Println(output)
 		}
 	}
 	return nil
@@ -118,8 +140,12 @@ func isTaskUpToDate(t *Task) bool {
 	return generatesMinTime.After(sourcesMaxTime)
 }
 
-func runCommand(c, path string) error {
-	var cmd *exec.Cmd
+func runCommand(c, path string) (string, error) {
+	var (
+		cmd *exec.Cmd
+		b   []byte
+		err error
+	)
 	if ShExists {
 		cmd = exec.Command(ShPath, "-c", c)
 	} else {
@@ -128,12 +154,11 @@ func runCommand(c, path string) error {
 	if path != "" {
 		cmd.Dir = path
 	}
-	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	if err := cmd.Run(); err != nil {
-		return err
+	if b, err = cmd.Output(); err != nil {
+		return "", err
 	}
-	return nil
+	return string(b), nil
 }
 
 func readTaskfile() (tasks map[string]*Task, err error) {
