@@ -1,11 +1,13 @@
 package task
 
 import (
+	"bytes"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"os"
+	"runtime"
 	"strings"
+	"text/template"
 
 	"github.com/BurntSushi/toml"
 	"gopkg.in/yaml.v2"
@@ -34,13 +36,23 @@ func (t Task) handleVariables() (map[string]string, error) {
 	return localVariables, nil
 }
 
-// ReplaceVariables writes variables into initial string
-func ReplaceVariables(initial string, variables map[string]string) string {
-	replaced := initial
-	for name, val := range variables {
-		replaced = strings.Replace(replaced, fmt.Sprintf("{{%s}}", name), val, -1)
+var templateFuncs = template.FuncMap{
+	"OS":   func() string { return runtime.GOOS },
+	"ARCH": func() string { return runtime.GOARCH },
+	"IsSH": func() bool { return ShExists },
+}
+
+// ReplaceVariables writes vars into initial string
+func ReplaceVariables(initial string, vars map[string]string) (string, error) {
+	t, err := template.New("").Funcs(templateFuncs).Parse(initial)
+	if err != nil {
+		return "", err
 	}
-	return replaced
+	b := bytes.NewBuffer(nil)
+	if err = t.Execute(b, vars); err != nil {
+		return "", err
+	}
+	return b.String(), nil
 }
 
 // GetEnvironmentVariables returns environment variables as map

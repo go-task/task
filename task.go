@@ -89,7 +89,11 @@ func RunTask(name string) error {
 	}
 
 	for _, d := range t.Deps {
-		if err := RunTask(ReplaceVariables(d, vars)); err != nil {
+		d, err = ReplaceVariables(d, vars)
+		if err != nil {
+			return err
+		}
+		if err = RunTask(d); err != nil {
 			return err
 		}
 	}
@@ -130,11 +134,15 @@ func (t *Task) runCommand(i int) error {
 	if err != nil {
 		return err
 	}
-	var (
-		c   = ReplaceVariables(t.Cmds[i], vars)
-		dir = ReplaceVariables(t.Dir, vars)
-		cmd *exec.Cmd
-	)
+	c, err := ReplaceVariables(t.Cmds[i], vars)
+	if err != nil {
+		return err
+	}
+	dir, err := ReplaceVariables(t.Dir, vars)
+	if err != nil {
+		return err
+	}
+	var cmd *exec.Cmd
 	if ShExists {
 		cmd = exec.Command(ShPath, "-c", c)
 	} else {
