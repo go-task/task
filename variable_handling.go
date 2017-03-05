@@ -18,7 +18,7 @@ var (
 
 func (t Task) handleVariables() (map[string]string, error) {
 	localVariables := make(map[string]string)
-	for key, value := range t.Variables {
+	for key, value := range t.Vars {
 		localVariables[key] = value
 	}
 	if fileVariables, err := readVariablefile(); err == nil {

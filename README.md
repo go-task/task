@@ -49,7 +49,7 @@ build:
   deps: [setvar]
   cmds:
   - echo "{{prefix}} {{THEVAR}}"
-  variables:
+  vars:
     prefix: "Path:"
 
 setvar:
@@ -70,9 +70,9 @@ Task local variables are overwritten by variables found in `Variables`. Variable
 build:
   deps: [setvar]
   cmds:
-  - echo "{{prefix}} '{{THEVAR}}'"
-  variables:
-    prefix: "Result: "
+  - echo "{{PREFIX}} '{{THEVAR}}'"
+  vars:
+    PREFIX: "Result: "
 
 setvar:
   cmds:

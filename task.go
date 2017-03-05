@@ -45,7 +45,7 @@ type Task struct {
 	Sources   []string
 	Generates []string
 	Dir       string
-	Variables map[string]string
+	Vars      map[string]string
 	Set       string
 }
 
