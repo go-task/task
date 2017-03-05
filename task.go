@@ -2,6 +2,7 @@ package task
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -83,21 +84,22 @@ func RunTask(name string) error {
 		return &taskNotFoundError{name}
 	}
 
-	if !Force && isTaskUpToDate(t) {
-		log.Printf(`task: Task "%s" is up to date`, name)
-		return nil
-	}
 	vars, err := t.handleVariables()
 	if err != nil {
 		return &taskRunError{name, err}
 	}
-  
+
 	for _, d := range t.Deps {
 		if err := RunTask(ReplaceVariables(d, vars)); err != nil {
 			return err
 		}
 	}
-  
+
+	if !Force && isTaskUpToDate(t) {
+		log.Printf(`task: Task "%s" is up to date`, name)
+		return nil
+	}
+
 	for _, c := range t.Cmds {
 		// read in a each time, as a command could change a variable or it has been changed by a dependency
 		vars, err = t.handleVariables()
