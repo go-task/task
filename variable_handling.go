@@ -12,8 +12,8 @@ import (
 )
 
 var (
-	// VariableFilePath file containing additional variables
-	VariableFilePath = "Taskvars"
+	// TaskvarsFilePath file containing additional variables
+	TaskvarsFilePath = "Taskvars"
 )
 
 func (t Task) handleVariables() (map[string]string, error) {
@@ -21,7 +21,7 @@ func (t Task) handleVariables() (map[string]string, error) {
 	for key, value := range t.Vars {
 		localVariables[key] = value
 	}
-	if fileVariables, err := readVariablefile(); err == nil {
+	if fileVariables, err := readTaskvarsFile(); err == nil {
 		for key, value := range fileVariables {
 			localVariables[key] = value
 		}
@@ -62,22 +62,25 @@ func getEnvironmentVariables() map[string]string {
 	})
 }
 
-func readVariablefile() (map[string]string, error) {
+func readTaskvarsFile() (map[string]string, error) {
 	var variables map[string]string
-	if b, err := ioutil.ReadFile(VariableFilePath + ".yml"); err == nil {
+	if b, err := ioutil.ReadFile(TaskvarsFilePath + ".yml"); err == nil {
 		if err := yaml.Unmarshal(b, &variables); err != nil {
 			return nil, err
 		}
+		return variables, nil
 	}
-	if b, err := ioutil.ReadFile(VariableFilePath + ".json"); err == nil {
+	if b, err := ioutil.ReadFile(TaskvarsFilePath + ".json"); err == nil {
 		if err := json.Unmarshal(b, &variables); err != nil {
 			return nil, err
 		}
+		return variables, nil
 	}
-	if b, err := ioutil.ReadFile(VariableFilePath + ".toml"); err == nil {
+	if b, err := ioutil.ReadFile(TaskvarsFilePath + ".toml"); err == nil {
 		if err := toml.Unmarshal(b, &variables); err != nil {
 			return nil, err
 		}
+		return variables, nil
 	}
 	return variables, nil
 }
