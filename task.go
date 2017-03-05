@@ -111,9 +111,10 @@ func RunTask(name string) error {
 		if output, err = runCommand(ReplaceVariables(c, vars), ReplaceVariables(t.Dir, vars)); err != nil {
 			return &taskRunError{name, err}
 		}
-		fmt.Println(output)
 		if t.Set != "" {
 			os.Setenv(t.Set, output)
+		} else {
+			fmt.Println(output)
 		}
 	}
 	return nil
