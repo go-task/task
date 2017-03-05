@@ -48,37 +48,41 @@ run in Bash, otherwise will fallback to `cmd` (on Windows).
 build:
   deps: [setvar]
   cmds:
-  - echo "{{PREFIX}} {{THEVAR}}"
+  - echo "{{.PREFIX}} {{.THEVAR}}"
   vars:
     PREFIX: "Path:"
 
 setvar:
   cmds:
-  - echo "{{PATH}}"
+  - echo "{{.PATH}}"
   set: THEVAR
 ```
 
 The above sample saves the path into a new variable which is then again echoed.
 
-You can use environment variables, task level variables and a file called `Variables` as source of variables.
+You can use environment variables, task level variables and a file called
+`Variables` as source of variables.
 
 They are evaluated in the following order:
 
-Task local variables are overwritten by variables found in `Variables`. Variables found in `Variables` are overwritten with variables from the environment. The output of the last command is stored in the environment. So you can do something like this:
+Task local variables are overwritten by variables found in `Variables`.
+Variables found in `Variables` are overwritten with variables from the
+environment. The output of the last command is stored in the environment. So
+you can do something like this:
 
 ```yml
 build:
   deps: [setvar]
   cmds:
-  - echo "{{PREFIX}} '{{THEVAR}}'"
+  - echo "{{.PREFIX}} '{{.THEVAR}}'"
   vars:
     PREFIX: "Result: "
 
 setvar:
   cmds:
   - echo -n "a"
-  - echo -n "{{THEVAR}}b"
-  - echo -n "{{THEVAR}}c"
+  - echo -n "{{.THEVAR}}b"
+  - echo -n "{{.THEVAR}}c"
   set: THEVAR
 ```
 
@@ -89,6 +93,32 @@ a
 ab
 abc
 Result:  'abc'
+```
+
+### Go's template engine
+
+Task parse commands as [Go's template engine][gotemplate] before executing
+them. Variables are acessible trought dot syntax (`.VARNAME`). The following
+functions are available:
+
+- `OS`: return operating system. Possible values are "windows", "linux",
+  "darwin" (macOS) and "freebsd".
+- `ARCH`: return the architecture Task was compiled to: "386", "amd64", "arm"
+  or "s390x".
+- `IsSH`: on unix system this should always return `true`. On Windows, will
+  return `true` if `sh` command was found (Git Bash). In this case commands
+  will run on `sh`. Otherwise, this function will return `false` meaning
+  commands will run on `cmd`.
+
+Example:
+
+```yml
+printos:
+  cmds:
+    - echo '{{OS}} {{ARCH}}'
+    - "echo '{{if eq OS \"windows\"}}windows-command{{else}}unix-command{{end}}'"
+    - echo 'Is SH? {{IsSH}}'
+
 ```
 
 ### Running task in another dir
@@ -190,3 +220,4 @@ up-to-date.
 [make]: https://www.gnu.org/software/make/
 [releases]: https://github.com/go-task/task/releases
 [golang]: https://golang.org/
+[gotemplate]: https://golang.org/pkg/text/template/
