@@ -216,7 +216,16 @@ printos:
     - echo 'Is SH? {{IsSH}}'
 ```
 
+## Alternatives
+
+Similar software:
+
+- [tj/robo][robo]
+- [dogtools/dog][dog]
+
 [make]: https://www.gnu.org/software/make/
 [releases]: https://github.com/go-task/task/releases
 [golang]: https://golang.org/
 [gotemplate]: https://golang.org/pkg/text/template/
+[robo]: https://github.com/tj/robo
+[dog]: https://github.com/dogtools/dog
