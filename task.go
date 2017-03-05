@@ -94,7 +94,7 @@ func RunTask(name string) error {
 		}
 	}
 
-	if !Force && isTaskUpToDate(t) {
+	if !Force && t.isUpToDate() {
 		log.Printf(`task: Task "%s" is up to date`, name)
 		return nil
 	}
@@ -107,7 +107,7 @@ func RunTask(name string) error {
 	return nil
 }
 
-func isTaskUpToDate(t *Task) bool {
+func (t *Task) isUpToDate() bool {
 	if len(t.Sources) == 0 || len(t.Generates) == 0 {
 		return false
 	}
