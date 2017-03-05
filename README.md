@@ -61,12 +61,12 @@ setvar:
 The above sample saves the path into a new variable which is then again echoed.
 
 You can use environment variables, task level variables and a file called
-`Variables` as source of variables.
+`Taskvars.yml` (or `Taskvars.toml` or `Taskvars.json`) as source of variables.
 
 They are evaluated in the following order:
 
-Task local variables are overwritten by variables found in `Variables`.
-Variables found in `Variables` are overwritten with variables from the
+Task local variables are overwritten by variables found in `Taskvars` file.
+Variables found in `Taskvars` file are overwritten with variables from the
 environment. The output of the last command is stored in the environment. So
 you can do something like this:
 
@@ -118,7 +118,6 @@ printos:
     - echo '{{OS}} {{ARCH}}'
     - "echo '{{if eq OS \"windows\"}}windows-command{{else}}unix-command{{end}}'"
     - echo 'Is SH? {{IsSH}}'
-
 ```
 
 ### Running task in another dir
