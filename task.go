@@ -2,7 +2,6 @@ package task
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -100,23 +99,9 @@ func RunTask(name string) error {
 		return nil
 	}
 
-	for _, c := range t.Cmds {
-		// read in a each time, as a command could change a variable or it has been changed by a dependency
-		vars, err = t.handleVariables()
-		if err != nil {
+	for i := range t.Cmds {
+		if err = t.runCommand(i); err != nil {
 			return &taskRunError{name, err}
-		}
-		var (
-			output string
-			err    error
-		)
-		if output, err = runCommand(ReplaceVariables(c, vars), ReplaceVariables(t.Dir, vars)); err != nil {
-			return &taskRunError{name, err}
-		}
-		if t.Set != "" {
-			os.Setenv(t.Set, output)
-		} else {
-			fmt.Println(output)
 		}
 	}
 	return nil
@@ -140,25 +125,39 @@ func isTaskUpToDate(t *Task) bool {
 	return generatesMinTime.After(sourcesMaxTime)
 }
 
-func runCommand(c, path string) (string, error) {
+func (t *Task) runCommand(i int) error {
+	vars, err := t.handleVariables()
+	if err != nil {
+		return err
+	}
 	var (
+		c   = ReplaceVariables(t.Cmds[i], vars)
+		dir = ReplaceVariables(t.Dir, vars)
 		cmd *exec.Cmd
-		b   []byte
-		err error
 	)
 	if ShExists {
 		cmd = exec.Command(ShPath, "-c", c)
 	} else {
 		cmd = exec.Command("cmd", "/C", c)
 	}
-	if path != "" {
-		cmd.Dir = path
+	if dir != "" {
+		cmd.Dir = dir
 	}
+	cmd.Stdin = os.Stdin
 	cmd.Stderr = os.Stderr
-	if b, err = cmd.Output(); err != nil {
-		return "", err
+	if t.Set != "" {
+		bytes, err := cmd.Output()
+		if err != nil {
+			return err
+		}
+		os.Setenv(t.Set, string(bytes))
+		return nil
 	}
-	return string(b), nil
+	cmd.Stdout = os.Stdout
+	if err = cmd.Run(); err != nil {
+		return err
+	}
+	return nil
 }
 
 func readTaskfile() (tasks map[string]*Task, err error) {
