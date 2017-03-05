@@ -13,7 +13,7 @@ import (
 
 var (
 	// VariableFilePath file containing additional variables
-	VariableFilePath = "Variables"
+	VariableFilePath = "Taskvars"
 )
 
 func (t Task) handleVariables() (map[string]string, error) {
