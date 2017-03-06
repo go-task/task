@@ -1,5 +1,0 @@
-build:
-  cmds:
-  - echo $hallo
-  env:
-    hallo: welt
