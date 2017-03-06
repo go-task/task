@@ -156,7 +156,15 @@ func (t *Task) runCommand(i int, envVariables map[string]string) error {
 	if nil != envVariables {
 		env := os.Environ()
 		for key, value := range envVariables {
-			env = append(env, fmt.Sprintf("%s=%s", key, value))
+			replacedValue, err := ReplaceVariables(value, vars)
+			if err != nil {
+				return err
+			}
+			replacedKey, err := ReplaceVariables(key, vars)
+			if err != nil {
+				return err
+			}
+			env = append(env, fmt.Sprintf("%s=%s", replacedKey, replacedValue))
 		}
 		cmd.Env = env
 	}
