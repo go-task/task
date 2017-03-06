@@ -2,10 +2,13 @@ package task
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
+	"sort"
+	"text/tabwriter"
 
 	"github.com/BurntSushi/toml"
 	"github.com/spf13/pflag"
@@ -42,6 +45,7 @@ func init() {
 type Task struct {
 	Cmds      []string
 	Deps      []string
+	Desc      string
 	Sources   []string
 	Generates []string
 	Dir       string
@@ -80,6 +84,11 @@ func RunTask(name string) error {
 
 	t, ok := Tasks[name]
 	if !ok {
+		tasks := tasksWithDesc()
+		if len(tasks) > 0 {
+			help(tasks)
+			return nil
+		}
 		return &taskNotFoundError{name}
 	}
 
@@ -179,4 +188,25 @@ func readTaskfile() (tasks map[string]*Task, err error) {
 		return tasks, toml.Unmarshal(b, &tasks)
 	}
 	return nil, ErrNoTaskFile
+}
+
+func help(tasks []string) {
+	w := new(tabwriter.Writer)
+	// Format in tab-separated columns with a tab stop of 8.
+	w.Init(os.Stdout, 0, 8, 0, '\t', 0)
+	for _, task := range tasks {
+		fmt.Fprintln(w, fmt.Sprintf("%s\t%s", task, Tasks[task].Desc))
+	}
+	w.Flush()
+}
+
+func tasksWithDesc() []string {
+	tasks := []string{}
+	for name, task := range Tasks {
+		if len(task.Desc) > 0 {
+			tasks = append(tasks, name)
+		}
+	}
+	sort.Strings(tasks)
+	return tasks
 }
