@@ -42,6 +42,18 @@ task assets build
 If Bash is available (Linux and Windows while on Git Bash), the commands will
 run in Bash, otherwise will fallback to `cmd` (on Windows).
 
+### Environment
+
+You can specify environment variables that are added when running a command:
+
+```yml
+build:
+  cmds:
+  - echo $hallo
+  env:
+    hallo: welt
+```
+
 ### Running task in another dir
 
 By default, tasks will be executed in the directory where the Taskfile is

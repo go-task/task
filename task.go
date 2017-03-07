@@ -2,6 +2,7 @@ package task
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -48,6 +49,7 @@ type Task struct {
 	Dir       string
 	Vars      map[string]string
 	Set       string
+	Env       map[string]string
 }
 
 // Run runs Task
@@ -105,7 +107,7 @@ func RunTask(name string) error {
 	}
 
 	for i := range t.Cmds {
-		if err = t.runCommand(i); err != nil {
+		if err = t.runCommand(i, t.Env); err != nil {
 			return &taskRunError{name, err}
 		}
 	}
@@ -130,7 +132,7 @@ func (t *Task) isUpToDate() bool {
 	return generatesMinTime.After(sourcesMaxTime)
 }
 
-func (t *Task) runCommand(i int) error {
+func (t *Task) runCommand(i int, envVariables map[string]string) error {
 	vars, err := t.handleVariables()
 	if err != nil {
 		return err
@@ -151,6 +153,21 @@ func (t *Task) runCommand(i int) error {
 	}
 	if dir != "" {
 		cmd.Dir = dir
+	}
+	if nil != envVariables {
+		env := os.Environ()
+		for key, value := range envVariables {
+			replacedValue, err := ReplaceVariables(value, vars)
+			if err != nil {
+				return err
+			}
+			replacedKey, err := ReplaceVariables(key, vars)
+			if err != nil {
+				return err
+			}
+			env = append(env, fmt.Sprintf("%s=%s", replacedKey, replacedValue))
+		}
+		cmd.Env = env
 	}
 	cmd.Stdin = os.Stdin
 	cmd.Stderr = os.Stderr
