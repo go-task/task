@@ -42,8 +42,8 @@ task assets build
 If Bash is available (Linux and Windows while on Git Bash), the commands will
 run in Bash, otherwise will fallback to `cmd` (on Windows).
 
-### Environment
 
+### Environment
 You can specify environment variables that are added when running a command:
 
 ```yml
@@ -53,6 +53,30 @@ build:
   env:
     hallo: welt
 ```
+
+### OS specific task support
+
+If you add a `Taskfile_{{GOOS}}` you can override or amend your taskfile based on the op;erating system.
+
+Example:
+
+Taskfile.yml:
+
+```yml
+build:
+  cmds:
+  - echo  "default"
+```
+
+Taskfile_linux.yml:
+
+```yml
+build:
+  cmds:
+  - echo  "linux"
+```
+
+Will print out `linux` and not default
 
 ### Running task in another dir
 
