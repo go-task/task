@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"strings"
 
 	"github.com/BurntSushi/toml"
 	"github.com/spf13/pflag"
@@ -158,7 +159,7 @@ func (t *Task) runCommand(i int) error {
 		if err != nil {
 			return err
 		}
-		os.Setenv(t.Set, string(bytes))
+		os.Setenv(t.Set, strings.TrimSpace(string(bytes)))
 		return nil
 	}
 	cmd.Stdout = os.Stdout
