@@ -1,16 +1,12 @@
 package task
 
 import (
-	"encoding/json"
-	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
 	"strings"
 
-	"github.com/BurntSushi/toml"
 	"github.com/spf13/pflag"
-	"gopkg.in/yaml.v2"
 )
 
 var (
@@ -167,17 +163,4 @@ func (t *Task) runCommand(i int) error {
 		return err
 	}
 	return nil
-}
-
-func readTaskfile() (tasks map[string]*Task, err error) {
-	if b, err := ioutil.ReadFile(TaskFilePath + ".yml"); err == nil {
-		return tasks, yaml.Unmarshal(b, &tasks)
-	}
-	if b, err := ioutil.ReadFile(TaskFilePath + ".json"); err == nil {
-		return tasks, json.Unmarshal(b, &tasks)
-	}
-	if b, err := ioutil.ReadFile(TaskFilePath + ".toml"); err == nil {
-		return tasks, toml.Unmarshal(b, &tasks)
-	}
-	return nil, ErrNoTaskFile
 }

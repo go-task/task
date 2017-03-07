@@ -4,8 +4,13 @@ import (
 	"fmt"
 )
 
-// ErrNoTaskFile is returned when the program can not find a proper TaskFile
-var ErrNoTaskFile = fmt.Errorf(`task: No task file found (is it named "%s"?)`, TaskFilePath)
+type taskFileNotFound struct {
+	taskFile string
+}
+
+func (err taskFileNotFound) Error() string {
+	return fmt.Sprintf(`task: No task file found (is it named "%s"?)`, err.taskFile)
+}
 
 type taskNotFoundError struct {
 	taskName string
