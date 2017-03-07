@@ -42,6 +42,30 @@ task assets build
 If Bash is available (Linux and Windows while on Git Bash), the commands will
 run in Bash, otherwise will fallback to `cmd` (on Windows).
 
+### OS specific task support
+
+If you add a `Taskfile_{{GOOS}}` you can override or amend your taskfile based on the op;erating system.
+
+Example:
+
+Taskfile.yml:
+
+```yml
+build:
+  cmds:
+  - echo  "default"
+```
+
+Taskfile_linux.yml:
+
+```yml
+build:
+  cmds:
+  - echo  "linux"
+```
+
+Will print out `linux` and not default
+
 ### Running task in another dir
 
 By default, tasks will be executed in the directory where the Taskfile is
