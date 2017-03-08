@@ -6,12 +6,9 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
-	"regexp"
 	"runtime"
 	"strings"
 	"text/template"
-
-	"fmt"
 
 	"github.com/BurntSushi/toml"
 	"gopkg.in/yaml.v2"
@@ -20,35 +17,20 @@ import (
 var (
 	// TaskvarsFilePath file containing additional variables
 	TaskvarsFilePath = "Taskvars"
-	// DynamicVariablePattern is a pattern to test if a variable should get filled from running the content. It must contain a command group
-	DynamicVariablePattern = "^@(?P<command>.*)" // alternative proposal: ^$((?P<command>.*))$
-	// ErrCommandGroupNotFound returned when the command group is not present
-	ErrCommandGroupNotFound = fmt.Errorf("%s does not contain the command group", DynamicVariablePattern)
 )
 
 func handleDynamicVariableContent(value string) (string, error) {
 	if value == "" {
 		return value, nil
 	}
-	re := regexp.MustCompile(DynamicVariablePattern)
-	if !re.MatchString(value) {
+	if value[0] != '@' {
 		return value, nil
-	}
-	subExpressionIndex := 0
-	for index, value := range re.SubexpNames() {
-		if value == "command" {
-			subExpressionIndex = index
-			break
-		}
-	}
-	if subExpressionIndex == 0 {
-		return "", ErrCommandGroupNotFound
 	}
 	var cmd *exec.Cmd
 	if ShExists {
-		cmd = exec.Command(ShPath, "-c", re.FindStringSubmatch(value)[subExpressionIndex])
+		cmd = exec.Command(ShPath, "-c", value[1:])
 	} else {
-		cmd = exec.Command("cmd", "/C", re.FindStringSubmatch(value)[subExpressionIndex])
+		cmd = exec.Command("cmd", "/C", value[1:])
 	}
 	cmd.Stdin = os.Stdin
 	cmd.Stderr = os.Stderr
