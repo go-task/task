@@ -3,6 +3,7 @@ package task
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -17,6 +18,8 @@ import (
 var (
 	// TaskvarsFilePath file containing additional variables
 	TaskvarsFilePath = "Taskvars"
+	// ErrMultilineResultCmd is returned when a command returns multiline result
+	ErrMultilineResultCmd = errors.New("Got multiline result from command")
 )
 
 func handleDynamicVariableContent(value string) (string, error) {
@@ -31,11 +34,17 @@ func handleDynamicVariableContent(value string) (string, error) {
 	}
 	cmd.Stdin = os.Stdin
 	cmd.Stderr = os.Stderr
-	bytes, err := cmd.Output()
+	b, err := cmd.Output()
 	if err != nil {
 		return "", err
 	}
-	return strings.TrimSpace(string(bytes)), nil
+	if b[len(b)-1] == '\n' {
+		b = b[:len(b)-1]
+	}
+	if bytes.ContainsRune(b, '\n') {
+		return "", ErrMultilineResultCmd
+	}
+	return strings.TrimSpace(string(b)), nil
 }
 
 func (t *Task) handleVariables() (map[string]string, error) {
