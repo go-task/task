@@ -38,7 +38,7 @@ func handleDynamicVariableContent(value string) (string, error) {
 	return strings.TrimSpace(string(bytes)), nil
 }
 
-func (t Task) handleVariables() (map[string]string, error) {
+func (t *Task) handleVariables() (map[string]string, error) {
 	localVariables := make(map[string]string)
 	for key, value := range t.Vars {
 		val, err := handleDynamicVariableContent(value)
