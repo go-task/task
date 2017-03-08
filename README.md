@@ -227,6 +227,10 @@ abc
 Result:  'abc'
 ```
 
+#### Dynamic variables
+
+If you prefix a variable with `@`, then the variable is considered a dynamic variable. The value after the @-synbol will be treated as a command and the output assigned.
+
 ### Go's template engine
 
 Task parse commands as [Go's template engine][gotemplate] before executing
