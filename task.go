@@ -103,7 +103,7 @@ func RunTask(name string) error {
 	}
 
 	for i := range t.Cmds {
-		if err = t.runCommand(i, t.Env); err != nil {
+		if err = t.runCommand(i); err != nil {
 			return &taskRunError{name, err}
 		}
 	}
@@ -128,7 +128,7 @@ func (t *Task) isUpToDate() bool {
 	return generatesMinTime.After(sourcesMaxTime)
 }
 
-func (t *Task) runCommand(i int, envVariables map[string]string) error {
+func (t *Task) runCommand(i int) error {
 	vars, err := t.handleVariables()
 	if err != nil {
 		return err
@@ -150,9 +150,9 @@ func (t *Task) runCommand(i int, envVariables map[string]string) error {
 	if dir != "" {
 		cmd.Dir = dir
 	}
-	if nil != envVariables {
-		env := os.Environ()
-		for key, value := range envVariables {
+	if t.Env != nil {
+		cmd.Env = os.Environ()
+		for key, value := range t.Env {
 			replacedValue, err := ReplaceVariables(value, vars)
 			if err != nil {
 				return err
@@ -161,9 +161,8 @@ func (t *Task) runCommand(i int, envVariables map[string]string) error {
 			if err != nil {
 				return err
 			}
-			env = append(env, fmt.Sprintf("%s=%s", replacedKey, replacedValue))
+			cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", replacedKey, replacedValue))
 		}
-		cmd.Env = env
 	}
 	cmd.Stdin = os.Stdin
 	cmd.Stderr = os.Stderr
