@@ -227,6 +227,20 @@ abc
 Result:  'abc'
 ```
 
+#### Dynamic variables
+
+If you prefix a variable with `$`, then the variable is considered a dynamic
+variable. The value after the $-symbol will be treated as a command and the
+output assigned.
+
+```yml
+build:
+  cmds:
+    - go build -ldflags="-X main.Version={{.LAST_GIT_COMMIT}}" main.go
+  vars:
+    LAST_GIT_COMMIT: $git log -n 1 --format=%h
+```
+
 ### Go's template engine
 
 Task parse commands as [Go's template engine][gotemplate] before executing

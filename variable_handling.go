@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"runtime"
 	"strings"
 	"text/template"
@@ -18,20 +19,51 @@ var (
 	TaskvarsFilePath = "Taskvars"
 )
 
+func handleDynamicVariableContent(value string) (string, error) {
+	if value == "" || value[0] != '$' {
+		return value, nil
+	}
+	var cmd *exec.Cmd
+	if ShExists {
+		cmd = exec.Command(ShPath, "-c", value[1:])
+	} else {
+		cmd = exec.Command("cmd", "/C", value[1:])
+	}
+	cmd.Stdin = os.Stdin
+	cmd.Stderr = os.Stderr
+	bytes, err := cmd.Output()
+	if err != nil {
+		return "", err
+	}
+	return strings.TrimSpace(string(bytes)), nil
+}
+
 func (t Task) handleVariables() (map[string]string, error) {
 	localVariables := make(map[string]string)
 	for key, value := range t.Vars {
-		localVariables[key] = value
+		val, err := handleDynamicVariableContent(value)
+		if err != nil {
+			return nil, err
+		}
+		localVariables[key] = val
 	}
 	if fileVariables, err := readTaskvarsFile(); err == nil {
 		for key, value := range fileVariables {
-			localVariables[key] = value
+			val, err := handleDynamicVariableContent(value)
+			if err != nil {
+				return nil, err
+			}
+			localVariables[key] = val
 		}
 	} else {
 		return nil, err
 	}
 	for key, value := range getEnvironmentVariables() {
-		localVariables[key] = value
+		val, err := handleDynamicVariableContent(value)
+		if err != nil {
+			return nil, err
+		}
+		localVariables[key] = val
 	}
 	return localVariables, nil
 }
