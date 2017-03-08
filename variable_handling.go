@@ -20,10 +20,7 @@ var (
 )
 
 func handleDynamicVariableContent(value string) (string, error) {
-	if value == "" {
-		return value, nil
-	}
-	if value[0] != '$' {
+	if value == "" || value[0] != '$' {
 		return value, nil
 	}
 	var cmd *exec.Cmd
