@@ -22,9 +22,14 @@ var (
 	ErrMultilineResultCmd = errors.New("Got multiline result from command")
 )
 
+var varCmds = make(map[string]string)
+
 func handleDynamicVariableContent(value string) (string, error) {
 	if value == "" || value[0] != '$' {
 		return value, nil
+	}
+	if result, ok := varCmds[value]; ok {
+		return result, nil
 	}
 	var cmd *exec.Cmd
 	if ShExists {
@@ -44,7 +49,9 @@ func handleDynamicVariableContent(value string) (string, error) {
 	if bytes.ContainsRune(b, '\n') {
 		return "", ErrMultilineResultCmd
 	}
-	return strings.TrimSpace(string(b)), nil
+	result := strings.TrimSpace(string(b))
+	varCmds[value] = result
+	return result, nil
 }
 
 func (t *Task) handleVariables() (map[string]string, error) {
