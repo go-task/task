@@ -68,11 +68,7 @@ func (t *Task) handleVariables() (map[string]string, error) {
 		return nil, err
 	}
 	for key, value := range getEnvironmentVariables() {
-		val, err := handleDynamicVariableContent(value)
-		if err != nil {
-			return nil, err
-		}
-		localVariables[key] = val
+		localVariables[key] = value
 	}
 	return localVariables, nil
 }
