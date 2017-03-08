@@ -9,6 +9,12 @@
 			"revisionTime": "2016-07-17T15:07:09Z"
 		},
 		{
+			"checksumSHA1": "LFU+UBG4GQNDk02KRF+JFwWuO2s=",
+			"path": "github.com/imdario/mergo",
+			"revision": "50d4dbd4eb0e84778abe37cefef140271d96fade",
+			"revisionTime": "2016-05-17T06:44:35Z"
+		},
+		{
 			"checksumSHA1": "UelPezrYA7pmz2lDhUZGGFvrg+A=",
 			"path": "github.com/mattn/go-zglob",
 			"revision": "95345c4e1c0ebc9d16a3284177f09360f4d20fab",
