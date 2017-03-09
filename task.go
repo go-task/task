@@ -54,7 +54,8 @@ func Run() {
 
 	args := pflag.Args()
 	if len(args) == 0 {
-		log.Fatal("task: No argument given")
+		log.Println("task: No argument given, trying default task")
+		args = []string{"default"}
 	}
 
 	var err error
