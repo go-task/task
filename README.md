@@ -42,6 +42,7 @@ task assets build
 If Bash is available (Linux and Windows while on Git Bash), the commands will
 run in Bash, otherwise will fallback to `cmd` (on Windows).
 
+If you ommit a task name a name of default will be assumed.
 
 ### Environment
 You can specify environment variables that are added when running a command:
