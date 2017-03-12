@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"os"
-
 	"runtime"
 
 	"github.com/BurntSushi/toml"
@@ -44,15 +42,4 @@ func readTaskfileData(path string) (tasks map[string]*Task, err error) {
 		return tasks, toml.Unmarshal(b, &tasks)
 	}
 	return nil, taskFileNotFound{path}
-}
-
-func exists(path string) (bool, error) {
-	_, err := os.Stat(path)
-	if err == nil {
-		return true, nil
-	}
-	if os.IsNotExist(err) {
-		return false, nil
-	}
-	return true, err
 }
