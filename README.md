@@ -42,7 +42,7 @@ task assets build
 If Bash is available (Linux and Windows while on Git Bash), the commands will
 run in Bash, otherwise will fallback to `cmd` (on Windows).
 
-If you ommit a task name a name of default will be assumed.
+If you ommit a task name, "default" will be assumed.
 
 ### Environment
 You can specify environment variables that are added when running a command:
@@ -57,7 +57,8 @@ build:
 
 ### OS specific task support
 
-If you add a `Taskfile_{{GOOS}}` you can override or amend your taskfile based on the op;erating system.
+If you add a `Taskfile_{{GOOS}}` you can override or amend your taskfile based
+on the operating system.
 
 Example:
 
