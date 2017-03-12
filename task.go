@@ -159,6 +159,7 @@ func (t *Task) runCommand(i int) error {
 		return nil
 	}
 	cmd.Stdout = os.Stdout
+	log.Println(c)
 	if err = cmd.Run(); err != nil {
 		return err
 	}
