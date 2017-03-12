@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"os/exec"
 	"strings"
+
+	"github.com/go-task/task/execext"
 
 	"github.com/spf13/pflag"
 )
@@ -13,10 +14,6 @@ import (
 var (
 	// TaskFilePath is the default Taskfile
 	TaskFilePath = "Taskfile"
-	// ShExists is true if Bash was found
-	ShExists bool
-	// ShPath constains the Bash path if found
-	ShPath string
 
 	// Force (--force or -f flag) forces a task to run even when it's up-to-date
 	Force bool
@@ -26,15 +23,6 @@ var (
 
 	runnedTasks = make(map[string]struct{})
 )
-
-func init() {
-	var err error
-	ShPath, err = exec.LookPath("sh")
-	if err != nil {
-		return
-	}
-	ShExists = true
-}
 
 // Task represents a task
 type Task struct {
@@ -142,12 +130,7 @@ func (t *Task) runCommand(i int) error {
 	if err != nil {
 		return err
 	}
-	var cmd *exec.Cmd
-	if ShExists {
-		cmd = exec.Command(ShPath, "-c", c)
-	} else {
-		cmd = exec.Command("cmd", "/C", c)
-	}
+	cmd := execext.NewCommand(c)
 	if dir != "" {
 		cmd.Dir = dir
 	}

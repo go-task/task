@@ -6,10 +6,11 @@ import (
 	"errors"
 	"io/ioutil"
 	"os"
-	"os/exec"
 	"runtime"
 	"strings"
 	"text/template"
+
+	"github.com/go-task/task/execext"
 
 	"github.com/BurntSushi/toml"
 	"gopkg.in/yaml.v2"
@@ -31,12 +32,7 @@ func handleDynamicVariableContent(value string) (string, error) {
 	if result, ok := varCmds[value]; ok {
 		return result, nil
 	}
-	var cmd *exec.Cmd
-	if ShExists {
-		cmd = exec.Command(ShPath, "-c", value[1:])
-	} else {
-		cmd = exec.Command("cmd", "/C", value[1:])
-	}
+	cmd := execext.NewCommand(value[1:])
 	cmd.Stdin = os.Stdin
 	cmd.Stderr = os.Stderr
 	b, err := cmd.Output()
@@ -83,7 +79,7 @@ func (t *Task) handleVariables() (map[string]string, error) {
 var templateFuncs = template.FuncMap{
 	"OS":   func() string { return runtime.GOOS },
 	"ARCH": func() string { return runtime.GOARCH },
-	"IsSH": func() bool { return ShExists },
+	"IsSH": func() bool { return execext.ShExists },
 }
 
 // ReplaceVariables writes vars into initial string
