@@ -15,6 +15,6 @@ func NewCommand(c string) *exec.Cmd {
 	return newCmdCommand(c)
 }
 
-func newCmdCommand(c string) {
+func newCmdCommand(c string) *exec.Cmd {
 	return exec.Command("cmd", "/C", c)
 }
