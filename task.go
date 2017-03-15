@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"strings"
+	"sync"
 
 	"github.com/go-task/task/execext"
 
@@ -22,6 +23,7 @@ var (
 	Tasks = make(map[string]*Task)
 
 	runnedTasks = make(map[string]struct{})
+	mu          sync.Mutex
 )
 
 // Task represents a task
@@ -61,29 +63,21 @@ func Run() {
 
 // RunTask runs a task by its name
 func RunTask(name string) error {
+	mu.Lock()
 	if _, found := runnedTasks[name]; found {
+		mu.Unlock()
 		return &cyclicDepError{name}
 	}
 	runnedTasks[name] = struct{}{}
+	mu.Unlock()
 
 	t, ok := Tasks[name]
 	if !ok {
 		return &taskNotFoundError{name}
 	}
 
-	vars, err := t.handleVariables()
-	if err != nil {
-		return &taskRunError{name, err}
-	}
-
-	for _, d := range t.Deps {
-		d, err = ReplaceVariables(d, vars)
-		if err != nil {
-			return err
-		}
-		if err = RunTask(d); err != nil {
-			return err
-		}
+	if err := t.runDeps(); err != nil {
+		return err
 	}
 
 	if !Force && t.isUpToDate() {
@@ -92,11 +86,54 @@ func RunTask(name string) error {
 	}
 
 	for i := range t.Cmds {
-		if err = t.runCommand(i); err != nil {
+		if err := t.runCommand(i); err != nil {
 			return &taskRunError{name, err}
 		}
 	}
 	return nil
+}
+
+func (t *Task) runDeps() error {
+	vars, err := t.handleVariables()
+	if err != nil {
+		return err
+	}
+
+	var (
+		wg       sync.WaitGroup
+		errChan  = make(chan error)
+		doneChan = make(chan struct{})
+	)
+
+	for _, d := range t.Deps {
+		wg.Add(1)
+
+		go func(dep string) {
+			defer wg.Done()
+
+			dep, err := ReplaceVariables(dep, vars)
+			if err != nil {
+				errChan <- err
+				return
+			}
+
+			if err := RunTask(dep); err != nil {
+				errChan <- err
+			}
+		}(d)
+	}
+
+	go func() {
+		wg.Wait()
+		doneChan <- struct{}{}
+	}()
+
+	select {
+	case err := <-errChan:
+		return err
+	case <-doneChan:
+		return nil
+	}
 }
 
 func (t *Task) isUpToDate() bool {
