@@ -9,8 +9,8 @@ lint:
     - golint .
     - golint ./cmd/task
 
-# TODO: have tests
 test:
+  deps: [install]
   cmds:
     - go test -v
 
