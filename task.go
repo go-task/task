@@ -4,10 +4,8 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"sort"
 	"strings"
 	"sync"
-	"text/tabwriter"
 
 	"github.com/go-task/task/execext"
 
@@ -57,6 +55,16 @@ func Run() {
 		log.Fatal(err)
 	}
 
+	// check if given tasks exist
+	for _, a := range args {
+		if _, ok := Tasks[a]; !ok {
+			var err error = &taskNotFoundError{taskName: a}
+			fmt.Println(err)
+			printExistingTasksHelp()
+			return
+		}
+	}
+
 	for _, a := range args {
 		if err = RunTask(a); err != nil {
 			log.Fatal(err)
@@ -76,11 +84,6 @@ func RunTask(name string) error {
 
 	t, ok := Tasks[name]
 	if !ok {
-		tasks := tasksWithDesc()
-		if len(tasks) > 0 {
-			help(tasks)
-			return nil
-		}
 		return &taskNotFoundError{name}
 	}
 
@@ -209,25 +212,4 @@ func (t *Task) runCommand(i int) error {
 		return err
 	}
 	return nil
-}
-
-func help(tasks []string) {
-	w := new(tabwriter.Writer)
-	// Format in tab-separated columns with a tab stop of 8.
-	w.Init(os.Stdout, 0, 8, 0, '\t', 0)
-	for _, task := range tasks {
-		fmt.Fprintln(w, fmt.Sprintf("%s\t%s", task, Tasks[task].Desc))
-	}
-	w.Flush()
-}
-
-func tasksWithDesc() []string {
-	tasks := []string{}
-	for name, task := range Tasks {
-		if len(task.Desc) > 0 {
-			tasks = append(tasks, name)
-		}
-	}
-	sort.Strings(tasks)
-	return tasks
 }
