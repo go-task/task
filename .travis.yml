@@ -1,0 +1,7 @@
+language: go
+go:
+  - 1.7
+  - 1.8
+script:
+  - go install github.com/go-task/task/cmd/task
+  - task test
