@@ -268,6 +268,37 @@ printos:
     - echo 'Is SH? {{IsSH}}'
 ```
 
+### Help
+
+Running `task help` lists all tasks with a description. The following taskfile:
+
+```yml
+build:
+  desc: Build the go binary.
+  cmds:
+    - go build -v -i main.go
+
+test:
+  desc: Run all the go tests.
+  cmds:
+    - go test -race ./...
+
+js:
+  cmds:
+    - npm run buildjs
+
+css:
+  cmds:
+    - npm run buildcss
+```
+
+would print the following output:
+
+```bash
+build   Build the go binary.
+test    Run all the go tests.
+```
+
 ## Alternatives
 
 Similar software:

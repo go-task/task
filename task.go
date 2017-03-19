@@ -30,6 +30,7 @@ var (
 type Task struct {
 	Cmds      []string
 	Deps      []string
+	Desc      string
 	Sources   []string
 	Generates []string
 	Dir       string
@@ -52,6 +53,16 @@ func Run() {
 	Tasks, err = readTaskfile()
 	if err != nil {
 		log.Fatal(err)
+	}
+
+	// check if given tasks exist
+	for _, a := range args {
+		if _, ok := Tasks[a]; !ok {
+			var err error = &taskNotFoundError{taskName: a}
+			fmt.Println(err)
+			printExistingTasksHelp()
+			return
+		}
 	}
 
 	for _, a := range args {

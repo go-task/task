@@ -1,20 +1,24 @@
 # compiles current source code and make "task" executable available on
 # $GOPATH/bin/task{.exe}
 install:
+  desc: Installs Task
   cmds:
     - go install -v ./...
 
 lint:
+  desc: Runs golint
   cmds:
     - golint .
     - golint ./cmd/task
 
 test:
+  desc: Runs test suite
   deps: [install]
   cmds:
     - go test -v
 
 # https://github.com/goreleaser/goreleaser
 release:
+  desc: Release Task
   cmds:
     - goreleaser
