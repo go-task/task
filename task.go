@@ -21,9 +21,6 @@ var (
 
 	// Tasks constains the tasks parsed from Taskfile
 	Tasks = make(map[string]*Task)
-
-	runnedTasks = make(map[string]struct{})
-	mu          sync.Mutex
 )
 
 // Task represents a task
@@ -55,6 +52,10 @@ func Run() {
 		log.Fatal(err)
 	}
 
+	if HasCyclicDep(Tasks) {
+		log.Fatal("Cyclic dependency detected")
+	}
+
 	// check if given tasks exist
 	for _, a := range args {
 		if _, ok := Tasks[a]; !ok {
@@ -74,18 +75,6 @@ func Run() {
 
 // RunTask runs a task by its name
 func RunTask(name string) error {
-	if strings.HasPrefix(name, "^") {
-		name = strings.TrimPrefix(name, "^")
-	} else {
-		mu.Lock()
-		if _, found := runnedTasks[name]; found {
-			mu.Unlock()
-			return &cyclicDepError{name}
-		}
-		runnedTasks[name] = struct{}{}
-		mu.Unlock()
-	}
-
 	t, ok := Tasks[name]
 	if !ok {
 		return &taskNotFoundError{name}
@@ -180,6 +169,7 @@ func (t *Task) runCommand(i int) error {
 	}
 
 	if strings.HasPrefix(c, "^") {
+		c = strings.TrimPrefix(c, "^")
 		if err = RunTask(c); err != nil {
 			return err
 		}
