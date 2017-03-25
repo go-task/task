@@ -2,11 +2,18 @@ default:
   deps: [hello]
 
 hello:
+  deps: [set-equal]
   cmds:
     - echo {{.FOO}} > foo.txt
     - echo {{.BAR}} > bar.txt
     - echo {{.FOO2}} > foo2.txt
     - echo {{.BAR2}} > bar2.txt
+    - echo {{.EQUAL}} > equal.txt
   vars:
     FOO: foo
     BAR: $echo bar
+
+set-equal:
+  set: EQUAL
+  cmds:
+    - echo foo=bar

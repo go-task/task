@@ -97,21 +97,17 @@ func ReplaceVariables(initial string, vars map[string]string) (string, error) {
 
 // GetEnvironmentVariables returns environment variables as map
 func getEnvironmentVariables() map[string]string {
-	type getKeyValFunc func(item string) (key, val string)
-	getEnvironment := func(data []string, getKeyVal getKeyValFunc) map[string]string {
-		items := make(map[string]string)
-		for _, item := range data {
-			key, val := getKeyVal(item)
-			items[key] = val
-		}
-		return items
+	var (
+		env = os.Environ()
+		m   = make(map[string]string, len(env))
+	)
+
+	for _, e := range env {
+		keyVal := strings.SplitN(e, "=", 2)
+		key, val := keyVal[0], keyVal[1]
+		m[key] = val
 	}
-	return getEnvironment(os.Environ(), func(item string) (key, val string) {
-		splits := strings.Split(item, "=")
-		key = splits[0]
-		val = splits[1]
-		return
-	})
+	return m
 }
 
 func readTaskvarsFile() (map[string]string, error) {

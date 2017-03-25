@@ -57,6 +57,7 @@ func TestVars(t *testing.T) {
 		{"bar.txt", "bar"},
 		{"foo2.txt", "foo2"},
 		{"bar2.txt", "bar2"},
+		{"equal.txt", "foo=bar"},
 	}
 
 	for _, f := range files {
