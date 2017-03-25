@@ -1,0 +1,12 @@
+default:
+  deps: [hello]
+
+hello:
+  cmds:
+    - echo {{.FOO}} > foo.txt
+    - echo {{.BAR}} > bar.txt
+    - echo {{.FOO2}} > foo2.txt
+    - echo {{.BAR2}} > bar2.txt
+  vars:
+    FOO: foo
+    BAR: $echo bar

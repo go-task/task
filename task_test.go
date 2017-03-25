@@ -1,9 +1,11 @@
 package task_test
 
 import (
+	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -40,6 +42,45 @@ func TestDeps(t *testing.T) {
 		f = filepath.Join(dir, f)
 		if _, err := os.Stat(f); err != nil {
 			t.Errorf("File %s should exists", f)
+		}
+	}
+}
+
+func TestVars(t *testing.T) {
+	const dir = "testdata/vars"
+
+	files := []struct {
+		file    string
+		content string
+	}{
+		{"foo.txt", "foo"},
+		{"bar.txt", "bar"},
+		{"foo2.txt", "foo2"},
+		{"bar2.txt", "bar2"},
+	}
+
+	for _, f := range files {
+		_ = os.Remove(filepath.Join(dir, f.file))
+	}
+
+	c := exec.Command("task")
+	c.Dir = dir
+
+	if err := c.Run(); err != nil {
+		t.Error(err)
+		return
+	}
+
+	for _, f := range files {
+		d, err := ioutil.ReadFile(filepath.Join(dir, f.file))
+		if err != nil {
+			t.Errorf("Error reading %s: %v", f.file, err)
+		}
+		s := string(d)
+		s = strings.TrimSpace(s)
+
+		if s != f.content {
+			t.Errorf("File content should be %s but is %s", f.content, s)
 		}
 	}
 }
