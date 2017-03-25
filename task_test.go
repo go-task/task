@@ -28,7 +28,7 @@ func TestDeps(t *testing.T) {
 	}
 
 	for _, f := range files {
-		_ = os.Remove(f)
+		_ = os.Remove(filepath.Join(dir, f))
 	}
 
 	c := exec.Command("task")
