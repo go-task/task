@@ -85,3 +85,30 @@ func TestVars(t *testing.T) {
 		}
 	}
 }
+
+func TestTaskCall(t *testing.T) {
+	const dir = "testdata/task_call"
+
+	files := []string{
+		"foo.txt",
+		"bar.txt",
+	}
+
+	for _, f := range files {
+		_ = os.Remove(filepath.Join(dir, f))
+	}
+
+	c := exec.Command("task")
+	c.Dir = dir
+
+	if err := c.Run(); err != nil {
+		t.Error(err)
+		return
+	}
+
+	for _, f := range files {
+		if _, err := os.Stat(filepath.Join(dir, f)); err != nil {
+			t.Error(err)
+		}
+	}
+}

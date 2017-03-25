@@ -74,13 +74,17 @@ func Run() {
 
 // RunTask runs a task by its name
 func RunTask(name string) error {
-	mu.Lock()
-	if _, found := runnedTasks[name]; found {
+	if strings.HasPrefix(name, "^") {
+		name = strings.TrimPrefix(name, "^")
+	} else {
+		mu.Lock()
+		if _, found := runnedTasks[name]; found {
+			mu.Unlock()
+			return &cyclicDepError{name}
+		}
+		runnedTasks[name] = struct{}{}
 		mu.Unlock()
-		return &cyclicDepError{name}
 	}
-	runnedTasks[name] = struct{}{}
-	mu.Unlock()
 
 	t, ok := Tasks[name]
 	if !ok {
@@ -174,6 +178,14 @@ func (t *Task) runCommand(i int) error {
 	if err != nil {
 		return err
 	}
+
+	if strings.HasPrefix(c, "^") {
+		if err = RunTask(c); err != nil {
+			return err
+		}
+		return nil
+	}
+
 	dir, err := ReplaceVariables(t.Dir, vars)
 	if err != nil {
 		return err

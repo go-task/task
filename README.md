@@ -141,6 +141,28 @@ task2:
 
 Will stop at the moment the dependencies of `task2` are executed.
 
+### Calling a task from another task
+
+When a task has many dependencies, they are executed concurrently. This will
+often result in a faster build pipeline. But in some situations you may need
+to call other tasks serially. For this just prefix a command with `^`:
+
+```yml
+a-task:
+  cmds:
+    - ^another-task
+    - ^even-another-task
+    - echo "Both done"
+
+another-task:
+  cmds:
+    - ...
+
+even-another-task:
+  cmds:
+    - ...
+```
+
 ### Prevent task from running when not necessary
 
 If a task generates something, you can inform Task the source and generated

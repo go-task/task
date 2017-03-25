@@ -1,0 +1,20 @@
+default:
+  cmds:
+    - ^set-foo
+    - ^print
+    - ^set-bar
+    - ^print
+
+print:
+  cmds:
+    - echo text > {{.FILE}}
+
+set-foo:
+  set: FILE
+  cmds:
+    - echo foo.txt
+
+set-bar:
+  set: FILE
+  cmds:
+    - echo bar.txt
