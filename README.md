@@ -322,6 +322,12 @@ build   Build the go binary.
 test    Run all the go tests.
 ```
 
+## Watch tasks (experimental)
+
+If you give a `--watch` or `-w` argument, task will watch for files changes
+and run the task again. This requires the `sources` attribute to be given,
+so task know which files to watch.
+
 ## Alternatives
 
 Similar software:
