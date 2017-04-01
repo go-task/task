@@ -9,6 +9,12 @@
 			"revisionTime": "2016-07-17T15:07:09Z"
 		},
 		{
+			"checksumSHA1": "x2Km0Qy3WgJJnV19Zv25VwTJcBM=",
+			"path": "github.com/fsnotify/fsnotify",
+			"revision": "4da3e2cfbabc9f751898f250b49f2439785783a1",
+			"revisionTime": "2017-03-29T04:21:07Z"
+		},
+		{
 			"checksumSHA1": "LFU+UBG4GQNDk02KRF+JFwWuO2s=",
 			"path": "github.com/imdario/mergo",
 			"revision": "50d4dbd4eb0e84778abe37cefef140271d96fade",
@@ -31,6 +37,12 @@
 			"path": "github.com/spf13/pflag",
 			"revision": "9ff6c6923cfffbcd502984b8e0c80539a94968b7",
 			"revisionTime": "2017-01-30T21:42:45Z"
+		},
+		{
+			"checksumSHA1": "mIZhS4hXW3qVQxsJ6tqztjJoJ8A=",
+			"path": "golang.org/x/sys/unix",
+			"revision": "9a7256cb28ed514b4e1e5f68959914c4c28a92e0",
+			"revisionTime": "2017-03-29T05:31:33Z"
 		},
 		{
 			"checksumSHA1": "QeQ0FWfng2E1CYl1LlPuAY9jLmg=",

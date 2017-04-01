@@ -36,3 +36,11 @@ type cyclicDepError struct {
 func (err *cyclicDepError) Error() string {
 	return fmt.Sprintf(`task: Cyclic dependency of task "%s" detected`, err.taskName)
 }
+
+type cantWatchNoSourcesError struct {
+	taskName string
+}
+
+func (err *cantWatchNoSourcesError) Error() string {
+	return fmt.Sprintf(`task: Can't watch task "%s" because it has no specified sources`, err.taskName)
+}
