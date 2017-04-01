@@ -18,6 +18,8 @@ var (
 
 	// Force (--force or -f flag) forces a task to run even when it's up-to-date
 	Force bool
+	// Watch (--watch or -w flag) enables watch of a task
+	Watch bool
 
 	// Tasks constains the tasks parsed from Taskfile
 	Tasks = make(map[string]*Task)
@@ -64,6 +66,13 @@ func Run() {
 			printExistingTasksHelp()
 			return
 		}
+	}
+
+	if Watch {
+		if err := WatchTasks(args); err != nil {
+			log.Fatal(err)
+		}
+		return
 	}
 
 	for _, a := range args {
