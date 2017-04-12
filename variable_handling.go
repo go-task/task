@@ -2,6 +2,7 @@ package task
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"io/ioutil"
@@ -32,7 +33,7 @@ func handleDynamicVariableContent(value string) (string, error) {
 	if result, ok := varCmds[value]; ok {
 		return result, nil
 	}
-	cmd := execext.NewCommand(value[1:])
+	cmd := execext.NewCommand(context.Background(), value[1:])
 	cmd.Stdin = os.Stdin
 	cmd.Stderr = os.Stderr
 	b, err := cmd.Output()

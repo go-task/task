@@ -1,6 +1,7 @@
 package task
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"os"
@@ -189,7 +190,7 @@ func (t *Task) runCommand(i int) error {
 	if err != nil {
 		return err
 	}
-	cmd := execext.NewCommand(c)
+	cmd := execext.NewCommand(context.Background(), c)
 	if dir != "" {
 		cmd.Dir = dir
 	}

@@ -1,6 +1,7 @@
 package execext
 
 import (
+	"context"
 	"os/exec"
 )
 
@@ -17,6 +18,6 @@ func init() {
 	ShExists = err == nil
 }
 
-func newShCommand(c string) *exec.Cmd {
-	return exec.Command(ShPath, "-c", c)
+func newShCommand(ctx context.Context, c string) *exec.Cmd {
+	return exec.CommandContext(ctx, ShPath, "-c", c)
 }
