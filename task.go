@@ -6,11 +6,11 @@ import (
 	"log"
 	"os"
 	"strings"
-	"sync"
 
 	"github.com/go-task/task/execext"
 
 	"github.com/spf13/pflag"
+	"golang.org/x/sync/errgroup"
 )
 
 var (
@@ -113,41 +113,28 @@ func (t *Task) runDeps() error {
 		return err
 	}
 
-	var (
-		wg       sync.WaitGroup
-		errChan  = make(chan error)
-		doneChan = make(chan struct{})
-	)
+	var g errgroup.Group
 
 	for _, d := range t.Deps {
-		wg.Add(1)
+		dep := d
 
-		go func(dep string) {
-			defer wg.Done()
-
+		g.Go(func() error {
 			dep, err := ReplaceVariables(dep, vars)
 			if err != nil {
-				errChan <- err
-				return
+				return err
 			}
 
-			if err := RunTask(dep); err != nil {
-				errChan <- err
+			if err = RunTask(dep); err != nil {
+				return err
 			}
-		}(d)
+			return nil
+		})
 	}
 
-	go func() {
-		wg.Wait()
-		doneChan <- struct{}{}
-	}()
-
-	select {
-	case err := <-errChan:
+	if err = g.Wait(); err != nil {
 		return err
-	case <-doneChan:
-		return nil
 	}
+	return nil
 }
 
 func (t *Task) isUpToDate() bool {
