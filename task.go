@@ -1,15 +1,16 @@
 package task
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"os"
 	"strings"
-	"sync"
 
 	"github.com/go-task/task/execext"
 
 	"github.com/spf13/pflag"
+	"golang.org/x/sync/errgroup"
 )
 
 var (
@@ -76,20 +77,20 @@ func Run() {
 	}
 
 	for _, a := range args {
-		if err = RunTask(a); err != nil {
+		if err = RunTask(context.Background(), a); err != nil {
 			log.Fatal(err)
 		}
 	}
 }
 
 // RunTask runs a task by its name
-func RunTask(name string) error {
+func RunTask(ctx context.Context, name string) error {
 	t, ok := Tasks[name]
 	if !ok {
 		return &taskNotFoundError{name}
 	}
 
-	if err := t.runDeps(); err != nil {
+	if err := t.runDeps(ctx); err != nil {
 		return err
 	}
 
@@ -99,54 +100,41 @@ func RunTask(name string) error {
 	}
 
 	for i := range t.Cmds {
-		if err := t.runCommand(i); err != nil {
+		if err := t.runCommand(ctx, i); err != nil {
 			return &taskRunError{name, err}
 		}
 	}
 	return nil
 }
 
-func (t *Task) runDeps() error {
+func (t *Task) runDeps(ctx context.Context) error {
 	vars, err := t.handleVariables()
 	if err != nil {
 		return err
 	}
 
-	var (
-		wg       sync.WaitGroup
-		errChan  = make(chan error)
-		doneChan = make(chan struct{})
-	)
+	g, ctx := errgroup.WithContext(ctx)
 
 	for _, d := range t.Deps {
-		wg.Add(1)
+		dep := d
 
-		go func(dep string) {
-			defer wg.Done()
-
+		g.Go(func() error {
 			dep, err := ReplaceVariables(dep, vars)
 			if err != nil {
-				errChan <- err
-				return
+				return err
 			}
 
-			if err := RunTask(dep); err != nil {
-				errChan <- err
+			if err = RunTask(ctx, dep); err != nil {
+				return err
 			}
-		}(d)
+			return nil
+		})
 	}
 
-	go func() {
-		wg.Wait()
-		doneChan <- struct{}{}
-	}()
-
-	select {
-	case err := <-errChan:
+	if err = g.Wait(); err != nil {
 		return err
-	case <-doneChan:
-		return nil
 	}
+	return nil
 }
 
 func (t *Task) isUpToDate() bool {
@@ -167,7 +155,7 @@ func (t *Task) isUpToDate() bool {
 	return generatesMinTime.After(sourcesMaxTime)
 }
 
-func (t *Task) runCommand(i int) error {
+func (t *Task) runCommand(ctx context.Context, i int) error {
 	vars, err := t.handleVariables()
 	if err != nil {
 		return err
@@ -179,7 +167,7 @@ func (t *Task) runCommand(i int) error {
 
 	if strings.HasPrefix(c, "^") {
 		c = strings.TrimPrefix(c, "^")
-		if err = RunTask(c); err != nil {
+		if err = RunTask(ctx, c); err != nil {
 			return err
 		}
 		return nil
@@ -189,7 +177,7 @@ func (t *Task) runCommand(i int) error {
 	if err != nil {
 		return err
 	}
-	cmd := execext.NewCommand(c)
+	cmd := execext.NewCommand(ctx, c)
 	if dir != "" {
 		cmd.Dir = dir
 	}
