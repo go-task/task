@@ -1,6 +1,7 @@
 package task
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -16,7 +17,7 @@ func WatchTasks(args []string) error {
 
 	// run tasks on init
 	for _, a := range args {
-		if err := RunTask(a); err != nil {
+		if err := RunTask(context.Background(), a); err != nil {
 			fmt.Println(err)
 			break
 		}
@@ -42,7 +43,7 @@ loop:
 		select {
 		case <-watcher.Events:
 			for _, a := range args {
-				if err := RunTask(a); err != nil {
+				if err := RunTask(context.Background(), a); err != nil {
 					fmt.Println(err)
 					continue loop
 				}
