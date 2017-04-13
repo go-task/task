@@ -34,7 +34,6 @@ func handleDynamicVariableContent(value string) (string, error) {
 		return result, nil
 	}
 	cmd := execext.NewCommand(context.Background(), value[1:])
-	cmd.Stdin = os.Stdin
 	cmd.Stderr = os.Stderr
 	b, err := cmd.Output()
 	if err != nil {
