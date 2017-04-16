@@ -46,6 +46,7 @@ run in Bash, otherwise will fallback to `cmd` (on Windows).
 If you ommit a task name, "default" will be assumed.
 
 ### Environment
+
 You can specify environment variables that are added when running a command:
 
 ```yml
@@ -269,8 +270,18 @@ build:
 ### Go's template engine
 
 Task parse commands as [Go's template engine][gotemplate] before executing
-them. Variables are acessible through dot syntax (`.VARNAME`). The following
-functions are available:
+them. Variables are acessible through dot syntax (`.VARNAME`).
+
+All functions by the Go's [sprig lib](http://masterminds.github.io/sprig/)
+are available. The following example gets the current date in a given format:
+
+```go
+print-date:
+  cmds:
+    - echo {{now | date "2006-01-02"}}
+```
+
+Task also adds the following functions:
 
 - `OS`: return operating system. Possible values are "windows", "linux",
   "darwin" (macOS) and "freebsd".
@@ -280,6 +291,10 @@ functions are available:
   return `true` if `sh` command was found (Git Bash). In this case commands
   will run on `sh`. Otherwise, this function will return `false` meaning
   commands will run on `cmd`.
+- `ToSlash`: Does nothing on `sh`, but on `cmd` converts a string from `\`
+  path format to `/`.
+- `FromSlash`: Oposite of `ToSlash`. Does nothing on `sh`, but on `cmd`
+  converts a string from `\` path format to `/`.
 
 Example:
 
@@ -289,6 +304,8 @@ printos:
     - echo '{{OS}} {{ARCH}}'
     - "echo '{{if eq OS \"windows\"}}windows-command{{else}}unix-command{{end}}'"
     - echo 'Is SH? {{IsSH}}'
+    # This will be ./bin/executable on sh but .\bin\executable on cmd
+    - "{{FromSlash \"./bin/executable\"}}"
 ```
 
 ### Help
