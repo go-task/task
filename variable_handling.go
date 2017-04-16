@@ -7,6 +7,7 @@ import (
 	"errors"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"runtime"
 	"strings"
 	"text/template"
@@ -14,6 +15,7 @@ import (
 	"github.com/go-task/task/execext"
 
 	"github.com/BurntSushi/toml"
+	"github.com/Masterminds/sprig"
 	"gopkg.in/yaml.v2"
 )
 
@@ -76,10 +78,31 @@ func (t *Task) handleVariables() (map[string]string, error) {
 	return localVariables, nil
 }
 
-var templateFuncs = template.FuncMap{
-	"OS":   func() string { return runtime.GOOS },
-	"ARCH": func() string { return runtime.GOARCH },
-	"IsSH": func() bool { return execext.ShExists },
+var templateFuncs template.FuncMap
+
+func init() {
+	taskFuncs := template.FuncMap{
+		"OS":   func() string { return runtime.GOOS },
+		"ARCH": func() string { return runtime.GOARCH },
+		"IsSH": func() bool { return execext.ShExists },
+		"FromSlash": func(path string) string {
+			if execext.ShExists {
+				return path
+			}
+			return filepath.FromSlash(path)
+		},
+		"ToSlash": func(path string) string {
+			if execext.ShExists {
+				return path
+			}
+			return filepath.ToSlash(path)
+		},
+	}
+
+	templateFuncs = sprig.TxtFuncMap()
+	for k, v := range taskFuncs {
+		templateFuncs[k] = v
+	}
 }
 
 // ReplaceVariables writes vars into initial string

@@ -1,0 +1,19 @@
+hash: d366098dbe0d3a7bc5afdc55b91fb2a75e3443ff976e1a3b87a79e22cfead454
+updated: 2017-04-07T09:31:43.889475111-06:00
+imports:
+- name: github.com/aokoli/goutils
+  version: 9c37978a95bd5c709a15883b6242714ea6709e64
+- name: github.com/Masterminds/goutils
+  version: 45307ec16e3cd47cd841506c081f7afd8237d210
+- name: github.com/Masterminds/semver
+  version: 59c29afe1a994eacb71c833025ca7acf874bb1da
+- name: github.com/satori/go.uuid
+  version: 879c5887cd475cd7864858769793b2ceb0d44feb
+- name: github.com/stretchr/testify
+  version: 4d4bfba8f1d1027c4fdbe371823030df51419987
+- name: golang.org/x/crypto
+  version: 420870623a70591d5e0b187c77c95455a1224ca6
+  subpackages:
+  - scrypt
+  - pbkdf2
+devImports: []
