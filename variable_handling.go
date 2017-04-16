@@ -7,6 +7,7 @@ import (
 	"errors"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"runtime"
 	"strings"
 	"text/template"
@@ -84,6 +85,18 @@ func init() {
 		"OS":   func() string { return runtime.GOOS },
 		"ARCH": func() string { return runtime.GOARCH },
 		"IsSH": func() bool { return execext.ShExists },
+		"FromSlash": func(path string) string {
+			if execext.ShExists {
+				return path
+			}
+			return filepath.FromSlash(path)
+		},
+		"ToSlash": func(path string) string {
+			if execext.ShExists {
+				return path
+			}
+			return filepath.ToSlash(path)
+		},
 	}
 
 	templateFuncs = sprig.TxtFuncMap()
