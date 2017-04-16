@@ -9,6 +9,24 @@
 			"revisionTime": "2016-07-17T15:07:09Z"
 		},
 		{
+			"checksumSHA1": "Z8SoRH0ZEPw18R69NtFEJGssQWk=",
+			"path": "github.com/Masterminds/semver",
+			"revision": "923f129261de8c3e45d529e39824061bd5edf9aa",
+			"revisionTime": "2017-04-07T15:36:03Z"
+		},
+		{
+			"checksumSHA1": "HPd13JQQPnYHVCly/iuOekOdc88=",
+			"path": "github.com/Masterminds/sprig",
+			"revision": "4fd5bcb33f764801522c8e35f464a12ceb180873",
+			"revisionTime": "2017-04-07T15:32:54Z"
+		},
+		{
+			"checksumSHA1": "5Vi6/8dcXD/++3YJMwcuv7FgwH8=",
+			"path": "github.com/aokoli/goutils",
+			"revision": "5e8cbdfe987ad788b91aceb88ce79545bc12b1f0",
+			"revisionTime": "2017-04-07T14:28:27Z"
+		},
+		{
 			"checksumSHA1": "x2Km0Qy3WgJJnV19Zv25VwTJcBM=",
 			"path": "github.com/fsnotify/fsnotify",
 			"revision": "4da3e2cfbabc9f751898f250b49f2439785783a1",
@@ -33,10 +51,28 @@
 			"revisionTime": "2017-01-24T11:57:57Z"
 		},
 		{
+			"checksumSHA1": "HUXE+Nrcau8FSaVEvPYHMvDjxOE=",
+			"path": "github.com/satori/go.uuid",
+			"revision": "5bf94b69c6b68ee1b541973bb8e1144db23a194b",
+			"revisionTime": "2017-03-21T23:07:31Z"
+		},
+		{
 			"checksumSHA1": "5KvHyB1CImtwZT3fwNkNUlc8R0k=",
 			"path": "github.com/spf13/pflag",
 			"revision": "9ff6c6923cfffbcd502984b8e0c80539a94968b7",
 			"revisionTime": "2017-01-30T21:42:45Z"
+		},
+		{
+			"checksumSHA1": "1MGpGDQqnUoRpv7VEcQrXOBydXE=",
+			"path": "golang.org/x/crypto/pbkdf2",
+			"revision": "cbc3d0884eac986df6e78a039b8792e869bff863",
+			"revisionTime": "2017-04-09T18:29:52Z"
+		},
+		{
+			"checksumSHA1": "E8pDMGySfy5Mw+jzXOkOxo35bww=",
+			"path": "golang.org/x/crypto/scrypt",
+			"revision": "cbc3d0884eac986df6e78a039b8792e869bff863",
+			"revisionTime": "2017-04-09T18:29:52Z"
 		},
 		{
 			"checksumSHA1": "Y+HGqEkYM15ir+J93MEaHdyFy0c=",
