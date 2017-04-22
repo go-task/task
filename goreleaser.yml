@@ -1,5 +1,5 @@
 build:
-  binary_name: task
+  binary: task
   main: cmd/task/task.go
   goos:
     - windows
