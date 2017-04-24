@@ -9,6 +9,7 @@ dl-deps:
   desc: Downloads cli dependencies
   cmds:
     - go get -u github.com/golang/lint/golint
+    - go get -u github.com/goreleaser/goreleaser
 
 lint:
   desc: Runs golint
