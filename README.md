@@ -40,8 +40,10 @@ Running the tasks is as simple as running:
 task assets build
 ```
 
-If Bash is available (Linux and Windows while on Git Bash), the commands will
-run in Bash, otherwise will fallback to `cmd` (on Windows).
+Task uses [github.com/mvdan/sh](https://github.com/mvdan/sh), a native Go sh
+interpreter. So you can write sh/bash commands and it will work even on
+Windows, where `sh` or `bash` is usually not available. Just remember any
+executable called must be available by the OS or in PATH.
 
 If you ommit a task name, "default" will be assumed.
 
@@ -287,13 +289,9 @@ Task also adds the following functions:
   "darwin" (macOS) and "freebsd".
 - `ARCH`: return the architecture Task was compiled to: "386", "amd64", "arm"
   or "s390x".
-- `IsSH`: on unix systems this should always return `true`. On Windows, will
-  return `true` if `sh` command was found (Git Bash). In this case commands
-  will run on `sh`. Otherwise, this function will return `false` meaning
-  commands will run on `cmd`.
-- `ToSlash`: Does nothing on `sh`, but on `cmd` converts a string from `\`
+- `ToSlash`: Does nothing on Unix, but on Windows converts a string from `\`
   path format to `/`.
-- `FromSlash`: Oposite of `ToSlash`. Does nothing on `sh`, but on `cmd`
+- `FromSlash`: Oposite of `ToSlash`. Does nothing on Unix, but on Windows
   converts a string from `\` path format to `/`.
 
 Example:
@@ -303,9 +301,8 @@ printos:
   cmds:
     - echo '{{OS}} {{ARCH}}'
     - "echo '{{if eq OS \"windows\"}}windows-command{{else}}unix-command{{end}}'"
-    - echo 'Is SH? {{IsSH}}'
-    # This will be ./bin/executable on sh but .\bin\executable on cmd
-    - "{{FromSlash \"./bin/executable\"}}"
+    # This will be path/to/file on Unix but path\to\file on Windows
+    - "{{FromSlash \"path/to/file\"}}"
 ```
 
 ### Help
@@ -358,3 +355,4 @@ Similar software:
 [gotemplate]: https://golang.org/pkg/text/template/
 [robo]: https://github.com/tj/robo
 [dog]: https://github.com/dogtools/dog
+[sh]: https://github.com/mvdan/sh
