@@ -5,6 +5,10 @@ install:
   cmds:
     - go install -v ./...
 
+dl-deps:
+  cmds:
+    - go get -u github.com/golang/lint/golint
+
 lint:
   desc: Runs golint
   cmds:

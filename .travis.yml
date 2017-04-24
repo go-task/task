@@ -4,5 +4,6 @@ go:
   - 1.8
 script:
   - go install github.com/go-task/task/cmd/task
+  - task dl-deps
   - task lint
   - task test
