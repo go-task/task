@@ -9,7 +9,7 @@ It aims to be simpler and easier to use then [GNU Make][make].
 
 ## Installation
 
-If you have a [Go][golang] environment setup, you can simply run:
+If you have a [Golang][golang] environment setup, you can simply run:
 
 ```bash
 go get -u -v github.com/go-task/task/cmd/task
@@ -285,7 +285,7 @@ print-date:
 
 Task also adds the following functions:
 
-- `OS`: return operating system. Possible values are "windows", "linux",
+- `OS`: Returns operating system. Possible values are "windows", "linux",
   "darwin" (macOS) and "freebsd".
 - `ARCH`: return the architecture Task was compiled to: "386", "amd64", "arm"
   or "s390x".

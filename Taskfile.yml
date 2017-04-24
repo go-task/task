@@ -6,6 +6,7 @@ install:
     - go install -v ./...
 
 dl-deps:
+  desc: Downloads cli dependencies
   cmds:
     - go get -u github.com/golang/lint/golint
 
