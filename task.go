@@ -1,6 +1,7 @@
 package task
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"log"
@@ -177,38 +178,54 @@ func (t *Task) runCommand(ctx context.Context, i int) error {
 	if err != nil {
 		return err
 	}
-	cmd := execext.NewCommand(ctx, c)
-	if dir != "" {
-		cmd.Dir = dir
-	}
-	if t.Env != nil {
-		cmd.Env = os.Environ()
-		for key, value := range t.Env {
-			replacedValue, err := ReplaceVariables(value, vars)
-			if err != nil {
-				return err
-			}
-			replacedKey, err := ReplaceVariables(key, vars)
-			if err != nil {
-				return err
-			}
-			cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", replacedKey, replacedValue))
-		}
-	}
-	cmd.Stdin = os.Stdin
-	cmd.Stderr = os.Stderr
-	if t.Set != "" {
-		bytes, err := cmd.Output()
-		if err != nil {
-			return err
-		}
-		os.Setenv(t.Set, strings.TrimSpace(string(bytes)))
-		return nil
-	}
-	cmd.Stdout = os.Stdout
-	log.Println(c)
-	if err = cmd.Run(); err != nil {
+
+	envs, err := t.getEnviron(vars)
+	if err != nil {
 		return err
 	}
+	opts := &execext.RunCommandOptions{
+		Context: ctx,
+		Command: c,
+		Dir:     dir,
+		Env:     envs,
+		Stdin:   os.Stdin,
+		Stderr:  os.Stderr,
+	}
+
+	if t.Set == "" {
+		log.Println(c)
+		opts.Stdout = os.Stdout
+		if err = execext.RunCommand(opts); err != nil {
+			return err
+		}
+	} else {
+		buff := bytes.NewBuffer(nil)
+		opts.Stdout = buff
+		if err = execext.RunCommand(opts); err != nil {
+			return err
+		}
+		os.Setenv(t.Set, strings.TrimSpace(buff.String()))
+	}
 	return nil
+}
+
+func (t *Task) getEnviron(vars map[string]string) ([]string, error) {
+	if t.Env == nil {
+		return nil, nil
+	}
+
+	envs := os.Environ()
+
+	for k, v := range t.Env {
+		replacedValue, err := ReplaceVariables(v, vars)
+		if err != nil {
+			return nil, err
+		}
+		replacedKey, err := ReplaceVariables(k, vars)
+		if err != nil {
+			return nil, err
+		}
+		envs = append(envs, fmt.Sprintf("%s=%s", replacedKey, replacedValue))
+	}
+	return envs, nil
 }

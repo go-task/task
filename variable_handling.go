@@ -2,7 +2,6 @@ package task
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"errors"
 	"io/ioutil"
@@ -35,19 +34,25 @@ func handleDynamicVariableContent(value string) (string, error) {
 	if result, ok := varCmds[value]; ok {
 		return result, nil
 	}
-	cmd := execext.NewCommand(context.Background(), value[1:])
-	cmd.Stderr = os.Stderr
-	b, err := cmd.Output()
-	if err != nil {
+
+	buff := bytes.NewBuffer(nil)
+
+	opts := &execext.RunCommandOptions{
+		Command: strings.TrimPrefix(value, "$"),
+		Stdout:  buff,
+		Stderr:  os.Stderr,
+	}
+	if err := execext.RunCommand(opts); err != nil {
 		return "", err
 	}
-	if b[len(b)-1] == '\n' {
-		b = b[:len(b)-1]
-	}
-	if bytes.ContainsRune(b, '\n') {
+
+	result := buff.String()
+	result = strings.TrimSuffix(result, "\n")
+	if strings.ContainsRune(result, '\n') {
 		return "", ErrMultilineResultCmd
 	}
-	result := strings.TrimSpace(string(b))
+
+	result = strings.TrimSpace(result)
 	varCmds[value] = result
 	return result, nil
 }
@@ -84,17 +89,12 @@ func init() {
 	taskFuncs := template.FuncMap{
 		"OS":   func() string { return runtime.GOOS },
 		"ARCH": func() string { return runtime.GOARCH },
-		"IsSH": func() bool { return execext.ShExists },
+		// historical reasons
+		"IsSH": func() bool { return true },
 		"FromSlash": func(path string) string {
-			if execext.ShExists {
-				return path
-			}
 			return filepath.FromSlash(path)
 		},
 		"ToSlash": func(path string) string {
-			if execext.ShExists {
-				return path
-			}
 			return filepath.ToSlash(path)
 		},
 	}
