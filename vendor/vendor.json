@@ -51,6 +51,18 @@
 			"revisionTime": "2017-01-24T11:57:57Z"
 		},
 		{
+			"checksumSHA1": "1ZLAvHVYAS3kxaYI8OQiTBllqNU=",
+			"path": "github.com/mvdan/sh/interp",
+			"revision": "17e267b541e30baece16b7ddeae50822cc6a795f",
+			"revisionTime": "2017-04-24T11:31:08Z"
+		},
+		{
+			"checksumSHA1": "4/7joITdf4wl+uoV8zDXgYqy2aw=",
+			"path": "github.com/mvdan/sh/syntax",
+			"revision": "17e267b541e30baece16b7ddeae50822cc6a795f",
+			"revisionTime": "2017-04-24T11:31:08Z"
+		},
+		{
 			"checksumSHA1": "HUXE+Nrcau8FSaVEvPYHMvDjxOE=",
 			"path": "github.com/satori/go.uuid",
 			"revision": "5bf94b69c6b68ee1b541973bb8e1144db23a194b",
