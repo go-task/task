@@ -9,6 +9,7 @@ lint:
   desc: Runs golint
   cmds:
     - golint .
+    - golint ./execext
     - golint ./cmd/task
 
 test:

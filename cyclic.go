@@ -1,5 +1,6 @@
 package task
 
+// HasCyclicDep checks if a task tree has any cyclic dependency
 func HasCyclicDep(m map[string]*Task) bool {
 	visits := make(map[string]struct{}, len(m))
 

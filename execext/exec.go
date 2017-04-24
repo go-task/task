@@ -10,6 +10,7 @@ import (
 	"github.com/mvdan/sh/syntax"
 )
 
+// RunCommandOptions is the options for the RunCommand func
 type RunCommandOptions struct {
 	Context context.Context
 	Command string
