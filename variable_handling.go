@@ -25,14 +25,9 @@ var (
 	ErrMultilineResultCmd = errors.New("Got multiline result from command")
 )
 
-var varCmds = make(map[string]string)
-
 func handleDynamicVariableContent(value string) (string, error) {
 	if !strings.HasPrefix(value, "$") {
 		return value, nil
-	}
-	if result, ok := varCmds[value]; ok {
-		return result, nil
 	}
 
 	buff := bytes.NewBuffer(nil)
@@ -53,11 +48,10 @@ func handleDynamicVariableContent(value string) (string, error) {
 	}
 
 	result = strings.TrimSpace(result)
-	varCmds[value] = result
 	return result, nil
 }
 
-func (t *Task) handleVariables() (map[string]string, error) {
+func (t *Task) getVariables() (map[string]string, error) {
 	localVariables := make(map[string]string)
 	for key, value := range t.Vars {
 		val, err := handleDynamicVariableContent(value)
@@ -106,13 +100,19 @@ func init() {
 }
 
 // ReplaceVariables writes vars into initial string
-func ReplaceVariables(initial string, vars map[string]string) (string, error) {
-	t, err := template.New("").Funcs(templateFuncs).Parse(initial)
+func (t *Task) ReplaceVariables(initial string) (string, error) {
+	vars, err := t.getVariables()
 	if err != nil {
 		return "", err
 	}
+
+	templ, err := template.New("").Funcs(templateFuncs).Parse(initial)
+	if err != nil {
+		return "", err
+	}
+
 	b := bytes.NewBuffer(nil)
-	if err = t.Execute(b, vars); err != nil {
+	if err = templ.Execute(b, vars); err != nil {
 		return "", err
 	}
 	return b.String(), nil

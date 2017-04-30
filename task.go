@@ -109,18 +109,13 @@ func RunTask(ctx context.Context, name string) error {
 }
 
 func (t *Task) runDeps(ctx context.Context) error {
-	vars, err := t.handleVariables()
-	if err != nil {
-		return err
-	}
-
 	g, ctx := errgroup.WithContext(ctx)
 
 	for _, d := range t.Deps {
 		dep := d
 
 		g.Go(func() error {
-			dep, err := ReplaceVariables(dep, vars)
+			dep, err := t.ReplaceVariables(dep)
 			if err != nil {
 				return err
 			}
@@ -132,7 +127,7 @@ func (t *Task) runDeps(ctx context.Context) error {
 		})
 	}
 
-	if err = g.Wait(); err != nil {
+	if err := g.Wait(); err != nil {
 		return err
 	}
 	return nil
@@ -157,11 +152,7 @@ func (t *Task) isUpToDate() bool {
 }
 
 func (t *Task) runCommand(ctx context.Context, i int) error {
-	vars, err := t.handleVariables()
-	if err != nil {
-		return err
-	}
-	c, err := ReplaceVariables(t.Cmds[i], vars)
+	c, err := t.ReplaceVariables(t.Cmds[i])
 	if err != nil {
 		return err
 	}
@@ -174,12 +165,12 @@ func (t *Task) runCommand(ctx context.Context, i int) error {
 		return nil
 	}
 
-	dir, err := ReplaceVariables(t.Dir, vars)
+	dir, err := t.ReplaceVariables(t.Dir)
 	if err != nil {
 		return err
 	}
 
-	envs, err := t.getEnviron(vars)
+	envs, err := t.getEnviron()
 	if err != nil {
 		return err
 	}
@@ -209,7 +200,7 @@ func (t *Task) runCommand(ctx context.Context, i int) error {
 	return nil
 }
 
-func (t *Task) getEnviron(vars map[string]string) ([]string, error) {
+func (t *Task) getEnviron() ([]string, error) {
 	if t.Env == nil {
 		return nil, nil
 	}
@@ -217,15 +208,11 @@ func (t *Task) getEnviron(vars map[string]string) ([]string, error) {
 	envs := os.Environ()
 
 	for k, v := range t.Env {
-		replacedValue, err := ReplaceVariables(v, vars)
+		env, err := t.ReplaceVariables(fmt.Sprintf("%s=%s", k, v))
 		if err != nil {
 			return nil, err
 		}
-		replacedKey, err := ReplaceVariables(k, vars)
-		if err != nil {
-			return nil, err
-		}
-		envs = append(envs, fmt.Sprintf("%s=%s", replacedKey, replacedValue))
+		envs = append(envs, env)
 	}
 	return envs, nil
 }
