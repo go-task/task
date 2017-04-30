@@ -95,9 +95,15 @@ func RunTask(ctx context.Context, name string) error {
 		return err
 	}
 
-	if !Force && t.isUpToDate() {
-		log.Printf(`task: Task "%s" is up to date`, name)
-		return nil
+	if !Force {
+		upToDate, err := t.isUpToDate()
+		if err != nil {
+			return err
+		}
+		if upToDate {
+			log.Printf(`task: Task "%s" is up to date`, name)
+			return nil
+		}
 	}
 
 	for i := range t.Cmds {
@@ -133,22 +139,31 @@ func (t *Task) runDeps(ctx context.Context) error {
 	return nil
 }
 
-func (t *Task) isUpToDate() bool {
+func (t *Task) isUpToDate() (bool, error) {
 	if len(t.Sources) == 0 || len(t.Generates) == 0 {
-		return false
+		return false, nil
 	}
 
-	sourcesMaxTime, err := getPatternsMaxTime(t.Sources)
+	sources, err := t.ReplaceSliceVariables(t.Sources)
+	if err != nil {
+		return false, err
+	}
+	generates, err := t.ReplaceSliceVariables(t.Generates)
+	if err != nil {
+		return false, err
+	}
+
+	sourcesMaxTime, err := getPatternsMaxTime(sources)
 	if err != nil || sourcesMaxTime.IsZero() {
-		return false
+		return false, nil
 	}
 
-	generatesMinTime, err := getPatternsMinTime(t.Generates)
+	generatesMinTime, err := getPatternsMinTime(generates)
 	if err != nil || generatesMinTime.IsZero() {
-		return false
+		return false, nil
 	}
 
-	return generatesMinTime.After(sourcesMaxTime)
+	return generatesMinTime.After(sourcesMaxTime), nil
 }
 
 func (t *Task) runCommand(ctx context.Context, i int) error {

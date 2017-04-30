@@ -99,6 +99,19 @@ func init() {
 	}
 }
 
+// ReplaceSliceVariables writes vars into initial string slice
+func (t *Task) ReplaceSliceVariables(initials []string) ([]string, error) {
+	result := make([]string, len(initials))
+	for i, s := range initials {
+		var err error
+		result[i], err = t.ReplaceVariables(s)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return result, nil
+}
+
 // ReplaceVariables writes vars into initial string
 func (t *Task) ReplaceVariables(initial string) (string, error) {
 	vars, err := t.getVariables()
