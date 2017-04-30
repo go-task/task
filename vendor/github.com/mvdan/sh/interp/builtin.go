@@ -5,13 +5,26 @@ package interp
 
 import (
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strconv"
 
 	"github.com/mvdan/sh/syntax"
 )
 
-func (r *Runner) builtin(pos syntax.Pos, name string, args []string) bool {
+func isBuiltin(name string) bool {
+	switch name {
+	case "true", ":", "false", "exit", "set", "shift", "unset",
+		"echo", "printf", "break", "continue", "pwd", "cd",
+		"wait", "builtin", "trap", "type", "source", "command",
+		"pushd", "popd", "umask", "alias", "unalias", "fg", "bg",
+		"getopts":
+		return true
+	}
+	return false
+}
+
+func (r *Runner) builtin(pos syntax.Pos, name string, args []string) {
 	exit := 0
 	switch name {
 	case "true", ":":
@@ -46,6 +59,7 @@ func (r *Runner) builtin(pos syntax.Pos, name string, args []string) bool {
 		default:
 			r.errf("usage: shift [n]\n")
 			exit = 2
+			break
 		}
 		if len(r.args) < n {
 			n = len(r.args)
@@ -160,20 +174,28 @@ func (r *Runner) builtin(pos syntax.Pos, name string, args []string) bool {
 		if len(args) < 1 {
 			break
 		}
-		// TODO: pos
-		if !r.builtin(0, args[0], args[1:]) {
+		if !isBuiltin(args[0]) {
 			exit = 1
+			break
 		}
-	case "trap", "type", "source", "command", "pushd", "popd",
+		// TODO: pos
+		r.builtin(0, args[0], args[1:])
+	case "type":
+		for _, arg := range args {
+			if isBuiltin(arg) {
+				r.outf("%s is a shell builtin\n", arg)
+				continue
+			}
+			if path, err := exec.LookPath(arg); err == nil {
+				r.outf("%s is %s\n", arg, path)
+				continue
+			}
+			exit = 1
+			r.errf("type: %s: not found\n", arg)
+		}
+	case "trap", "source", "command", "pushd", "popd",
 		"umask", "alias", "unalias", "fg", "bg", "getopts":
 		r.errf("unhandled builtin: %s", name)
-	// TODO(mvdan): we rely on the binary versions of these, we
-	// should eventually implement them as builtins like Bash for
-	// portability
-	// case "[", "test":
-	default:
-		return false
 	}
 	r.exit = exit
-	return true
 }

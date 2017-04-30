@@ -11,7 +11,14 @@ import (
 
 // PrintConfig controls how the printing of an AST node will behave.
 type PrintConfig struct {
-	Spaces int // 0 (default) for tabs, >0 for number of spaces
+	// Spaces dictates the indentation style. The default value of 0
+	// uses tabs, and any positive value uses that number of spaces.
+	Spaces int
+	// BinaryNextLine makes binary operators (such as &&, || and |)
+	// be at the start of a line if the statement that follows them
+	// is on a separate line. This means that the operator will come
+	// after an escaped newline.
+	BinaryNextLine bool
 }
 
 var printerFree = sync.Pool{
@@ -310,52 +317,7 @@ func (p *printer) wordPart(wp WordPart) {
 		p.nestedStmts(x.Stmts, x.Right)
 		p.sepTok(")", x.Right)
 	case *ParamExp:
-		if x.Short {
-			p.WriteByte('$')
-			p.WriteString(x.Param.Value)
-			break
-		}
-		p.WriteString("${")
-		switch {
-		case x.Length:
-			p.WriteByte('#')
-		case x.Excl:
-			p.WriteByte('!')
-		}
-		if x.Param != nil {
-			p.WriteString(x.Param.Value)
-		}
-		if x.Ind != nil {
-			p.WriteByte('[')
-			p.arithmExpr(x.Ind.Expr, false)
-			p.WriteByte(']')
-		}
-		if x.Slice != nil {
-			p.WriteByte(':')
-			if un, ok := x.Slice.Offset.(*UnaryArithm); ok {
-				if un.Op == Plus || un.Op == Minus {
-					// to avoid :+ and :-
-					p.WriteByte(' ')
-				}
-			}
-			p.arithmExpr(x.Slice.Offset, true)
-			if x.Slice.Length != nil {
-				p.WriteByte(':')
-				p.arithmExpr(x.Slice.Length, true)
-			}
-		} else if x.Repl != nil {
-			if x.Repl.All {
-				p.WriteByte('/')
-			}
-			p.WriteByte('/')
-			p.word(x.Repl.Orig)
-			p.WriteByte('/')
-			p.word(x.Repl.With)
-		} else if x.Exp != nil {
-			p.WriteString(x.Exp.Op.String())
-			p.word(x.Exp.Word)
-		}
-		p.WriteByte('}')
+		p.paramExp(x)
 	case *ArithmExp:
 		p.WriteString("$((")
 		p.arithmExpr(x.X, false)
@@ -379,6 +341,55 @@ func (p *printer) wordPart(wp WordPart) {
 		p.nestedStmts(x.Stmts, 0)
 		p.WriteByte(')')
 	}
+}
+
+func (p *printer) paramExp(pe *ParamExp) {
+	if pe.Short {
+		p.WriteByte('$')
+		p.WriteString(pe.Param.Value)
+		return
+	}
+	p.WriteString("${")
+	switch {
+	case pe.Length:
+		p.WriteByte('#')
+	case pe.Indirect:
+		p.WriteByte('!')
+	}
+	if pe.Param != nil {
+		p.WriteString(pe.Param.Value)
+	}
+	if pe.Ind != nil {
+		p.WriteByte('[')
+		p.arithmExpr(pe.Ind.Expr, false)
+		p.WriteByte(']')
+	}
+	if pe.Slice != nil {
+		p.WriteByte(':')
+		if un, ok := pe.Slice.Offset.(*UnaryArithm); ok {
+			if un.Op == Plus || un.Op == Minus {
+				// to avoid :+ and :-
+				p.WriteByte(' ')
+			}
+		}
+		p.arithmExpr(pe.Slice.Offset, true)
+		if pe.Slice.Length != nil {
+			p.WriteByte(':')
+			p.arithmExpr(pe.Slice.Length, true)
+		}
+	} else if pe.Repl != nil {
+		if pe.Repl.All {
+			p.WriteByte('/')
+		}
+		p.WriteByte('/')
+		p.word(pe.Repl.Orig)
+		p.WriteByte('/')
+		p.word(pe.Repl.With)
+	} else if pe.Exp != nil {
+		p.WriteString(pe.Exp.Op.String())
+		p.word(pe.Exp.Word)
+	}
+	p.WriteByte('}')
 }
 
 func (p *printer) loop(loop Loop) {
@@ -405,8 +416,10 @@ func (p *printer) loop(loop Loop) {
 
 func (p *printer) arithmExpr(expr ArithmExpr, compact bool) {
 	switch x := expr.(type) {
-	case *Word:
-		p.word(x)
+	case *Lit:
+		p.WriteString(x.Value)
+	case *ParamExp:
+		p.paramExp(x)
 	case *BinaryArithm:
 		if compact {
 			p.arithmExpr(x.X, compact)
@@ -636,19 +649,28 @@ func (p *printer) command(cmd Command, redirs []*Redirect) (startRedirs int) {
 			p.incLevel()
 		}
 		_, p.nestedBinary = x.Y.Cmd.(*BinaryCmd)
-		if len(p.pendingHdocs) == 0 && x.Y.Pos() > p.nline {
-			p.bslashNewl()
-			p.indent()
-		}
-		p.spacedString(x.Op.String())
-		if p.anyCommentsBefore(x.Y.Pos()) {
-			p.wantSpace = false
-			p.WriteByte('\n')
-			p.indent()
-			p.incLines(p.comments[0].Pos())
-			p.commentsUpTo(x.Y.Pos())
-			p.WriteByte('\n')
-			p.indent()
+		if p.BinaryNextLine {
+			if len(p.pendingHdocs) == 0 && x.Y.Pos() > p.nline {
+				p.bslashNewl()
+				p.indent()
+			}
+			p.spacedString(x.Op.String())
+			if p.anyCommentsBefore(x.Y.Pos()) {
+				p.wantSpace = false
+				p.WriteByte('\n')
+				p.indent()
+				p.incLines(p.comments[0].Pos())
+				p.commentsUpTo(x.Y.Pos())
+				p.WriteByte('\n')
+				p.indent()
+			}
+		} else {
+			p.spacedString(x.Op.String())
+			if x.Y.Pos() > p.nline {
+				p.commentsUpTo(x.Y.Pos())
+				p.newline(0)
+				p.indent()
+			}
 		}
 		p.incLines(x.Y.Pos())
 		p.stmt(x.Y)
@@ -723,11 +745,6 @@ func (p *printer) command(cmd Command, redirs []*Redirect) (startRedirs int) {
 			p.word(w)
 		}
 		p.assigns(x.Assigns)
-	case *EvalClause:
-		p.spacedString("eval")
-		if x.Stmt != nil {
-			p.stmt(x.Stmt)
-		}
 	case *CoprocClause:
 		p.spacedString("coproc")
 		if x.Name != nil {

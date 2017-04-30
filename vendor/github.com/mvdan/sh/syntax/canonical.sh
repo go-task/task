@@ -25,9 +25,9 @@ case $foo in
 esac
 
 foo | bar
-foo \
-	&& $(bar) \
-	&& (more)
+foo &&
+	$(bar) &&
+	(more)
 
 foo 2>&1
 foo <<EOF

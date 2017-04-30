@@ -40,7 +40,7 @@ func (r *Runner) paramExp(pe *syntax.ParamExp) string {
 	switch {
 	case pe.Length:
 		str = strconv.Itoa(utf8.RuneCountInString(str))
-	case pe.Excl:
+	case pe.Indirect:
 		val, set = r.lookupVar(str)
 		str = varStr(val)
 	}
@@ -141,7 +141,7 @@ func (r *Runner) paramExp(pe *syntax.ParamExp) string {
 			str = string(rs)
 		case syntax.LowerAll:
 			str = strings.ToLower(str)
-		default: // syntax.OtherParamOps
+		case syntax.OtherParamOps:
 			switch arg {
 			case "Q":
 				str = strconv.Quote(str)

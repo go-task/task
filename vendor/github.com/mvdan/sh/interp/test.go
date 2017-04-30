@@ -74,10 +74,10 @@ func (r *Runner) binTest(op syntax.BinTestOperator, x, y string) bool {
 		return x != "" && y != ""
 	case syntax.OrTest:
 		return x != "" || y != ""
-	case syntax.TsEqual:
+	case syntax.TsMatch:
 		m, _ := path.Match(y, x)
 		return m
-	case syntax.TsNequal:
+	case syntax.TsNoMatch:
 		m, _ := path.Match(y, x)
 		return !m
 	case syntax.TsBefore:

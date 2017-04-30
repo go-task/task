@@ -98,12 +98,10 @@ func (r *Runner) varInd(v varValue, e syntax.ArithmExpr) string {
 		}
 	case []string:
 		// TODO: @ between double quotes
-		if w, ok := e.(*syntax.Word); ok {
-			if lit, ok := w.Parts[0].(*syntax.Lit); ok {
-				switch lit.Value {
-				case "@", "*":
-					return strings.Join(x, " ")
-				}
+		if lit, ok := e.(*syntax.Lit); ok {
+			switch lit.Value {
+			case "@", "*":
+				return strings.Join(x, " ")
 			}
 		}
 		i := r.arithm(e)
@@ -373,6 +371,7 @@ func (r *Runner) cmd(cm syntax.Command) {
 			r.stmts(x.ThenStmts)
 			return
 		}
+		r.exit = 0
 		for _, el := range x.Elifs {
 			r.stmts(el.CondStmts)
 			if r.exit == 0 {
@@ -381,9 +380,6 @@ func (r *Runner) cmd(cm syntax.Command) {
 			}
 		}
 		r.stmts(x.ElseStmts)
-		if len(x.Elifs)+len(x.ElseStmts) == 0 {
-			r.exit = 0
-		}
 	case *syntax.WhileClause:
 		for r.err == nil {
 			r.stmts(x.CondStmts)
@@ -559,10 +555,16 @@ func (r *Runner) wordParts(wps []syntax.WordPart, quoted bool) []string {
 			curBuf.WriteString(field)
 		}
 	}
-	for _, wp := range wps {
+	for i, wp := range wps {
 		switch x := wp.(type) {
 		case *syntax.Lit:
-			curBuf.WriteString(x.Value)
+			s := x.Value
+			if i > 0 || len(s) == 0 || s[0] != '~' {
+			} else if len(s) < 2 || s[1] == '/' {
+				// TODO: ~someuser
+				s = r.getVar("HOME") + s[1:]
+			}
+			curBuf.WriteString(s)
 		case *syntax.SglQuoted:
 			curBuf.WriteString(x.Value)
 		case *syntax.DblQuoted:
@@ -619,7 +621,8 @@ func (r *Runner) call(pos syntax.Pos, name string, args []string) {
 		r.args = oldArgs
 		return
 	}
-	if r.builtin(pos, name, args) {
+	if isBuiltin(name) {
+		r.builtin(pos, name, args)
 		return
 	}
 	cmd := exec.CommandContext(r.Context, name, args...)

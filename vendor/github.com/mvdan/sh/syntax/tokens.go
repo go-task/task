@@ -316,16 +316,12 @@ const (
 	TsGeq
 	TsLss
 	TsGtr
-	AndTest = BinTestOperator(andAnd)
-	OrTest  = BinTestOperator(orOr)
-	// TODO(mvdan): == and != are pattern matches; use more
-	// appropriate names like TsMatch and TsNoMatch in 2.0
-	TsEqual  = BinTestOperator(equal)
-	TsNequal = BinTestOperator(nequal)
-	TsBefore = BinTestOperator(rdrIn)
-	TsAfter  = BinTestOperator(rdrOut)
-	// Deprecated: now parses as TsEqual
-	TsAssgn = BinTestOperator(assgn) // TODO(mvdan): remove in 2.0
+	AndTest   = BinTestOperator(andAnd)
+	OrTest    = BinTestOperator(orOr)
+	TsMatch   = BinTestOperator(equal)
+	TsNoMatch = BinTestOperator(nequal)
+	TsBefore  = BinTestOperator(rdrIn)
+	TsAfter   = BinTestOperator(rdrOut)
 )
 
 func (o RedirOperator) String() string   { return token(o).String() }

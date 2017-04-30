@@ -144,6 +144,10 @@ func (s *Stmt) End() Pos {
 
 // Command represents all nodes that are simple commands, which are
 // directly placed in a Stmt.
+//
+// These are *CallExpr, *IfClause, *WhileClause, *UntilClause,
+// *ForClause, *CaseClause, *Block, *Subshell, *BinaryCmd, *FuncDecl,
+// *ArithmCmd, *TestClause, *DeclClause, *LetClause, and *CoprocClause.
 type Command interface {
 	Node
 	commandNode()
@@ -162,7 +166,6 @@ func (*FuncDecl) commandNode()     {}
 func (*ArithmCmd) commandNode()    {}
 func (*TestClause) commandNode()   {}
 func (*DeclClause) commandNode()   {}
-func (*EvalClause) commandNode()   {}
 func (*LetClause) commandNode()    {}
 func (*CoprocClause) commandNode() {}
 
@@ -280,7 +283,7 @@ type ForClause struct {
 func (f *ForClause) Pos() Pos { return f.For }
 func (f *ForClause) End() Pos { return f.Done + 4 }
 
-// Loop represents all nodes that can be loops in a for clause.
+// Loop holds either *WordIter or *CStyleLoop.
 type Loop interface {
 	Node
 	loopNode()
@@ -342,6 +345,9 @@ func (w *Word) Pos() Pos { return w.Parts[0].Pos() }
 func (w *Word) End() Pos { return w.Parts[len(w.Parts)-1].End() }
 
 // WordPart represents all nodes that can form a word.
+//
+// These are *Lit, *SglQuoted, *DblQuoted, *ParamExp, *CmdSubst,
+// *ArithmExp, *ProcSubst, *ArrayExpr, and *ExtGlob.
 type WordPart interface {
 	Node
 	wordPartNode()
@@ -414,7 +420,8 @@ func (c *CmdSubst) End() Pos { return c.Right + 1 }
 type ParamExp struct {
 	Dollar, Rbrace Pos
 	Short          bool
-	Length, Excl   bool // TODO(mvdan): rename Excl in 2.0 (Indirect, etc)
+	Indirect       bool
+	Length         bool
 	Param          *Lit
 	Ind            *Index
 	Slice          *Slice
@@ -484,6 +491,9 @@ func (a *ArithmCmd) Pos() Pos { return a.Left }
 func (a *ArithmCmd) End() Pos { return a.Right + 2 }
 
 // ArithmExpr represents all nodes that form arithmetic expressions.
+//
+// These are *BinaryArithm, *UnaryArithm, *ParenArithm, *Lit, and
+// *ParamExp.
 type ArithmExpr interface {
 	Node
 	arithmExprNode()
@@ -492,20 +502,18 @@ type ArithmExpr interface {
 func (*BinaryArithm) arithmExprNode() {}
 func (*UnaryArithm) arithmExprNode()  {}
 func (*ParenArithm) arithmExprNode()  {}
-func (*Word) arithmExprNode()         {}
+func (*Lit) arithmExprNode()          {}
+func (*ParamExp) arithmExprNode()     {}
 
 // BinaryArithm represents a binary expression between two arithmetic
 // expression.
 //
-// If Op is any assign operator, X will be a *Word with a single *Lit
-// whose value is a valid name.
+// If Op is any assign operator, X will be a *Lit whose value is a valid
+// name.
 //
 // Ternary operators like "a ? b : c" are fit into this structure. Thus,
 // if Op == Quest, Y will be a *BinaryArithm with Op == Colon. Op can
 // only be Colon in that scenario.
-//
-// TODO(mvdan): we probably want to split up assigns in 2.0 (X would be
-// a *Lit) to simplify the rules here. Perhaps reuse the Assign type?
 type BinaryArithm struct {
 	OpPos Pos
 	Op    BinAritOperator
@@ -518,11 +526,7 @@ func (b *BinaryArithm) End() Pos { return b.Y.End() }
 // UnaryArithm represents an unary expression over a node, either before
 // or after it.
 //
-// If Op is Inc or Dec, X will be a *Word with a single *Lit whose value
-// is a valid name.
-//
-// TODO(mvdan): consider splitting up Inc/Dec like the assigns above in
-// 2.0.
+// If Op is Inc or Dec, X will be a *Lit whose value is a valid name.
 type UnaryArithm struct {
 	OpPos Pos
 	Op    UnAritOperator
@@ -584,6 +588,8 @@ func (t *TestClause) Pos() Pos { return t.Left }
 func (t *TestClause) End() Pos { return t.Right + 2 }
 
 // TestExpr represents all nodes that form arithmetic expressions.
+//
+// These are *BinaryTest, *UnaryTest, *ParenTest, and *Word.
 type TestExpr interface {
 	Node
 	testExprNode()
@@ -680,25 +686,6 @@ type ProcSubst struct {
 
 func (s *ProcSubst) Pos() Pos { return s.OpPos }
 func (s *ProcSubst) End() Pos { return s.Rparen + 1 }
-
-// EvalClause represents a Bash eval clause.
-//
-// This node will never appear when in PosixConformant mode.
-//
-// TODO(mvdan): EvalClause is actually pointless, as any non-trivial use
-// of eval will involve parsing the program at run-time. Remove in 2.0.
-type EvalClause struct {
-	Eval Pos
-	Stmt *Stmt
-}
-
-func (e *EvalClause) Pos() Pos { return e.Eval }
-func (e *EvalClause) End() Pos {
-	if e.Stmt != nil {
-		return e.Stmt.End()
-	}
-	return e.Eval + 4
-}
 
 // CoprocClause represents a Bash coproc clause.
 //

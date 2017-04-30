@@ -132,22 +132,13 @@ func (p *parser) word(parts []WordPart) *Word {
 	return w
 }
 
-func (p *parser) singleWps(wp WordPart) []WordPart {
+func (p *parser) wps(wp WordPart) []WordPart {
 	if len(p.wpsBatch) == 0 {
 		p.wpsBatch = make([]WordPart, 64)
 	}
 	wps := p.wpsBatch[:1:1]
 	p.wpsBatch = p.wpsBatch[1:]
 	wps[0] = wp
-	return wps
-}
-
-func (p *parser) wps() []WordPart {
-	if len(p.wpsBatch) < 4 {
-		p.wpsBatch = make([]WordPart, 64)
-	}
-	wps := p.wpsBatch[:0:4]
-	p.wpsBatch = p.wpsBatch[4:]
 	return wps
 }
 
@@ -204,6 +195,7 @@ const (
 	arithmExprBrack
 	testRegexp
 	switchCase
+	paramName
 	paramExpName
 	paramExpInd
 	paramExpOff
@@ -218,7 +210,7 @@ const (
 		arithmExprBrack | allParamArith
 	allRbrack     = arithmExprBrack | paramExpInd
 	allParamArith = paramExpInd | paramExpOff | paramExpLen
-	allParamReg   = paramExpName | allParamArith
+	allParamReg   = paramName | paramExpName | allParamArith
 	allParamExp   = allParamReg | paramExpRepl | paramExpExp
 )
 
@@ -498,11 +490,6 @@ func (p *parser) invalidStmtStart() {
 }
 
 func (p *parser) getWord() *Word {
-	if p.tok == _LitWord {
-		w := p.word(p.singleWps(p.lit(p.pos, p.val)))
-		p.next()
-		return w
-	}
 	if parts := p.wordParts(); len(parts) > 0 {
 		return p.word(parts)
 	}
@@ -514,7 +501,7 @@ func (p *parser) getWordOrEmpty() *Word {
 	if len(parts) == 0 {
 		l := p.lit(p.pos, "")
 		l.ValueEnd = l.ValuePos // force Lit.Pos() == Lit.End()
-		return p.word(p.singleWps(l))
+		return p.word(p.wps(l))
 	}
 	return p.word(parts)
 }
@@ -536,9 +523,10 @@ func (p *parser) wordParts() (wps []WordPart) {
 			return
 		}
 		if wps == nil {
-			wps = p.wps()
+			wps = p.wps(n)
+		} else {
+			wps = append(wps, n)
 		}
-		wps = append(wps, n)
 		if p.spaced {
 			return
 		}
@@ -607,11 +595,10 @@ func (p *parser) wordPart() WordPart {
 			p.rune()
 			p.tok, p.val = _LitWord, string(r)
 		default:
-			if p.quote&allRegTokens != 0 {
-				p.advanceLitNone(r)
-			} else {
-				p.advanceLitOther(r)
-			}
+			old := p.quote
+			p.quote = paramName
+			p.advanceLitOther(r)
+			p.quote = old
 		}
 		pe.Param = p.getLit()
 		return pe
@@ -665,12 +652,7 @@ func (p *parser) wordPart() WordPart {
 		old := p.quote
 		p.quote = dblQuotes
 		p.next()
-		if p.tok == _LitWord {
-			q.Parts = p.singleWps(p.lit(p.pos, p.val))
-			p.next()
-		} else {
-			q.Parts = p.wordParts()
-		}
+		q.Parts = p.wordParts()
 		p.quote = old
 		if !p.got(dblQuote) {
 			p.quoteErr(q.Pos(), dblQuote)
@@ -803,7 +785,7 @@ func (p *parser) arithmExpr(ftok token, fpos Pos, level int, compact, tern bool)
 		}
 	case AddAssgn, SubAssgn, MulAssgn, QuoAssgn, RemAssgn, AndAssgn,
 		OrAssgn, XorAssgn, ShlAssgn, ShrAssgn, Assgn:
-		if w, ok := b.X.(*Word); !ok || !p.wordIdent(w) {
+		if l, ok := b.X.(*Lit); !ok || !validIdent(l.Value, p.bash()) {
 			p.posErr(b.OpPos, "%s must follow a name", b.Op.String())
 		}
 	}
@@ -822,14 +804,6 @@ func (p *parser) arithmExpr(ftok token, fpos Pos, level int, compact, tern bool)
 	return b
 }
 
-func (p *parser) wordIdent(w *Word) bool {
-	if len(w.Parts) != 1 {
-		return false
-	}
-	lit, ok := w.Parts[0].(*Lit)
-	return ok && validIdent(lit.Value, p.bash())
-}
-
 func (p *parser) arithmExprBase(compact bool) ArithmExpr {
 	var x ArithmExpr
 	switch p.tok {
@@ -843,7 +817,11 @@ func (p *parser) arithmExprBase(compact bool) ArithmExpr {
 	case addAdd, subSub:
 		ue := &UnaryArithm{OpPos: p.pos, Op: UnAritOperator(p.tok)}
 		p.next()
-		ue.X = p.followWordTok(token(ue.Op), ue.OpPos)
+		if lit := p.getLit(); lit == nil {
+			p.followErr(ue.OpPos, token(ue.Op).String(), "a literal")
+		} else {
+			ue.X = lit
+		}
 		return ue
 	case leftParen:
 		pe := &ParenArithm{Lparen: p.pos}
@@ -864,23 +842,27 @@ func (p *parser) arithmExprBase(compact bool) ArithmExpr {
 			p.followErrExp(ue.OpPos, ue.Op.String())
 		}
 		x = ue
+	case illegalTok, rightBrack, rightBrace, rightParen:
+	case _LitWord:
+		x = p.getLit()
+	case dollar, dollBrace:
+		x = p.wordPart().(*ParamExp)
 	case bckQuote:
 		if p.quote == arithmExprLet {
 			return nil
 		}
 		fallthrough
 	default:
-		if w := p.getWord(); w != nil {
-			// we want real nil, not (*Word)(nil) as that
-			// sets the type to non-nil and then x != nil
-			x = w
+		if arithmOpLevel(BinAritOperator(p.tok)) >= 0 {
+			break
 		}
+		p.curErr("arithmetic expressions must consist of names and numbers")
 	}
 	if compact && p.spaced {
 		return x
 	}
 	if p.tok == addAdd || p.tok == subSub {
-		if w, ok := x.(*Word); !ok || !p.wordIdent(w) {
+		if l, ok := x.(*Lit); !ok || !validIdent(l.Value, p.bash()) {
 			p.curErr("%s must follow a name", p.tok.String())
 		}
 		u := &UnaryArithm{
@@ -914,7 +896,7 @@ func (p *parser) paramExp() *ParamExp {
 		}
 	case exclMark:
 		if p.r != '}' {
-			pe.Excl = true
+			pe.Indirect = true
 			p.next()
 		}
 	}
@@ -1089,7 +1071,7 @@ func (p *parser) getAssign() *Assign {
 	start := p.lit(p.pos+1, p.val[p.asPos+1:])
 	if start.Value != "" {
 		start.ValuePos += Pos(p.asPos)
-		as.Value = p.word(p.singleWps(start))
+		as.Value = p.word(p.wps(start))
 	}
 	if p.next(); p.spaced {
 		return as
@@ -1108,7 +1090,7 @@ func (p *parser) getAssign() *Assign {
 			}
 		}
 		ae.Rparen = p.matched(ae.Lparen, leftParen, rightParen)
-		as.Value = p.word(p.singleWps(ae))
+		as.Value = p.word(p.wps(ae))
 	} else if !p.newLine && !stopToken(p.tok) {
 		if w := p.getWord(); w != nil {
 			if as.Value == nil {
@@ -1227,55 +1209,66 @@ preLoop:
 	return
 }
 
-func bashDeclareWord(s string) bool {
-	switch s {
-	case "declare", "local", "export", "readonly", "typeset", "nameref":
-		return true
-	}
-	return false
-}
-
 func (p *parser) gotStmtPipe(s *Stmt) *Stmt {
 	switch p.tok {
-	case leftParen:
-		s.Cmd = p.subshell()
-	case dblLeftParen:
-		s.Cmd = p.arithmExpCmd()
 	case _LitWord:
-		switch {
-		case p.val == "}":
-			p.curErr("%s can only be used to close a block", p.val)
-		case p.val == "{":
+		switch p.val {
+		case "{":
 			s.Cmd = p.block()
-		case p.val == "if":
+		case "if":
 			s.Cmd = p.ifClause()
-		case p.val == "while":
+		case "while":
 			s.Cmd = p.whileClause()
-		case p.val == "until":
+		case "until":
 			s.Cmd = p.untilClause()
-		case p.val == "for":
+		case "for":
 			s.Cmd = p.forClause()
-		case p.val == "case":
+		case "case":
 			s.Cmd = p.caseClause()
-		case p.bash() && p.val == "[[":
-			s.Cmd = p.testClause()
-		case p.bash() && bashDeclareWord(p.val):
-			s.Cmd = p.declClause()
-		case p.bash() && p.val == "eval":
-			s.Cmd = p.evalClause()
-		case p.bash() && p.val == "coproc":
-			s.Cmd = p.coprocClause()
-		case p.bash() && p.val == "let":
-			s.Cmd = p.letClause()
-		case p.bash() && p.val == "function":
-			s.Cmd = p.bashFuncDecl()
+		case "}":
+			p.curErr(`%s can only be used to close a block`, p.val)
+		case "]]":
+			if !p.bash() {
+				break
+			}
+			p.curErr(`%s can only be used to close a test`, p.val)
+		case "then":
+			p.curErr(`%q can only be used in an if`, p.val)
+		case "elif":
+			p.curErr(`%q can only be used in an if`, p.val)
+		case "fi":
+			p.curErr(`%q can only be used to end an if`, p.val)
+		case "do":
+			p.curErr(`%q can only be used in a loop`, p.val)
+		case "done":
+			p.curErr(`%q can only be used to end a loop`, p.val)
+		case "esac":
+			p.curErr(`%q can only be used to end a case`, p.val)
 		default:
+			if !p.bash() {
+				break
+			}
+			switch p.val {
+			case "[[":
+				s.Cmd = p.testClause()
+			case "declare", "local", "export", "readonly",
+				"typeset", "nameref":
+				s.Cmd = p.declClause()
+			case "coproc":
+				s.Cmd = p.coprocClause()
+			case "let":
+				s.Cmd = p.letClause()
+			case "function":
+				s.Cmd = p.bashFuncDecl()
+			}
+		}
+		if s.Cmd == nil {
 			name := p.lit(p.pos, p.val)
 			if p.next(); p.gotSameLine(leftParen) {
 				p.follow(name.ValuePos, "foo(", rightParen)
 				s.Cmd = p.funcDecl(name, name.ValuePos)
 			} else {
-				s.Cmd = p.callExpr(s, p.word(p.singleWps(name)))
+				s.Cmd = p.callExpr(s, p.word(p.wps(name)))
 			}
 		}
 	case bckQuote:
@@ -1291,6 +1284,10 @@ func (p *parser) gotStmtPipe(s *Stmt) *Stmt {
 			p.posErr(w.Pos(), "invalid func name")
 		}
 		s.Cmd = p.callExpr(s, w)
+	case leftParen:
+		s.Cmd = p.subshell()
+	case dblLeftParen:
+		s.Cmd = p.arithmExpCmd()
 	}
 	for !p.newLine && p.peekRedir() {
 		p.doRedirect(s)
@@ -1625,24 +1622,15 @@ func (p *parser) declClause() *DeclClause {
 	return ds
 }
 
-func (p *parser) evalClause() *EvalClause {
-	ec := &EvalClause{Eval: p.pos}
-	p.next()
-	ec.Stmt, _ = p.getStmt(false, false)
-	return ec
-}
-
 func isBashCompoundCommand(tok token, val string) bool {
 	switch tok {
 	case leftParen, dblLeftParen:
 		return true
 	case _LitWord:
 		switch val {
-		case "{", "if", "while", "until", "for", "case", "[[", "eval",
-			"coproc", "let", "function":
-			return true
-		}
-		if bashDeclareWord(val) {
+		case "{", "if", "while", "until", "for", "case", "[[",
+			"coproc", "let", "function", "declare", "local",
+			"export", "readonly", "typeset", "nameref":
 			return true
 		}
 	}
@@ -1668,12 +1656,12 @@ func (p *parser) coprocClause() *CoprocClause {
 		}
 		// name was in fact the stmt
 		cc.Stmt = p.stmt(cc.Name.ValuePos)
-		cc.Stmt.Cmd = p.call(p.word(p.singleWps(cc.Name)))
+		cc.Stmt.Cmd = p.call(p.word(p.wps(cc.Name)))
 		cc.Name = nil
 	} else if cc.Name != nil {
 		if call, ok := cc.Stmt.Cmd.(*CallExpr); ok {
 			// name was in fact the start of a call
-			call.Args = append([]*Word{p.word(p.singleWps(cc.Name))},
+			call.Args = append([]*Word{p.word(p.wps(cc.Name))},
 				call.Args...)
 			cc.Name = nil
 		}
@@ -1726,7 +1714,7 @@ func (p *parser) callExpr(s *Stmt, w *Word) *CallExpr {
 			return ce
 		case _LitWord:
 			ce.Args = append(ce.Args, p.word(
-				p.singleWps(p.lit(p.pos, p.val)),
+				p.wps(p.lit(p.pos, p.val)),
 			))
 			p.next()
 		case bckQuote:

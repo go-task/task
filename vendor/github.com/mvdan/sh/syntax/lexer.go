@@ -732,15 +732,37 @@ loop:
 			if p.quote&allArithmExpr != 0 {
 				break loop
 			}
-		case ':', '=', '%', '?', '^', ',':
+			if p.quote == paramName && p.peekByte('(') {
+				tok = _Lit
+				break loop
+			}
+		case '?':
+			if p.quote == paramName && p.peekByte('(') {
+				tok = _Lit
+				break loop
+			}
+			fallthrough
+		case ':', '=', '%', '^', ',':
 			if p.quote&allArithmExpr != 0 || p.quote&allParamReg != 0 {
 				break loop
 			}
-		case '#', '[', '@':
+		case '@':
+			if p.quote == paramName && p.peekByte('(') {
+				tok = _Lit
+				break loop
+			}
+			fallthrough
+		case '#', '[':
 			if p.quote&allParamReg != 0 {
 				break loop
 			}
-		case '+', '-':
+		case '+':
+			if p.quote == paramName && p.peekByte('(') {
+				tok = _Lit
+				break loop
+			}
+			fallthrough
+		case '-':
 			switch p.quote {
 			case paramExpInd, paramExpLen, paramExpOff,
 				paramExpExp, paramExpRepl, sglQuotes:
@@ -778,7 +800,7 @@ loop:
 					p.discardLit(1)
 					if r = p.rune(); r == '\\' {
 						p.discardLit(1)
-						r = p.rune()
+						p.rune()
 					}
 				}
 			}
@@ -893,7 +915,7 @@ func (p *parser) hdocLitWord() *Word {
 		r = p.rune()
 	}
 	l := p.lit(pos, val)
-	return p.word(p.singleWps(l))
+	return p.word(p.wps(l))
 }
 
 func (p *parser) advanceLitRe(r rune) {
