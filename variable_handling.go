@@ -28,7 +28,7 @@ var (
 var varCmds = make(map[string]string)
 
 func handleDynamicVariableContent(value string) (string, error) {
-	if value == "" || value[0] != '$' {
+	if !strings.HasPrefix(value, "$") {
 		return value, nil
 	}
 	if result, ok := varCmds[value]; ok {
