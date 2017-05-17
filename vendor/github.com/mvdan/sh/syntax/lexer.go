@@ -46,7 +46,7 @@ func wordBreak(r rune) bool {
 	return false
 }
 
-func (p *parser) rune() rune {
+func (p *Parser) rune() rune {
 retry:
 	if p.npos < len(p.bs) {
 		if b := p.bs[p.npos]; b < utf8.RuneSelf {
@@ -86,7 +86,7 @@ retry:
 	return p.r
 }
 
-func (p *parser) unrune(r rune) {
+func (p *Parser) unrune(r rune) {
 	if p.r != utf8.RuneSelf {
 		p.npos -= utf8.RuneLen(p.r)
 		p.r = r
@@ -96,7 +96,7 @@ func (p *parser) unrune(r rune) {
 // fill reads more bytes from the input src into readBuf. Any bytes that
 // had not yet been used at the end of the buffer are slid into the
 // beginning of the buffer.
-func (p *parser) fill() {
+func (p *Parser) fill() {
 	left := len(p.bs) - p.npos
 	p.offs += p.npos
 	copy(p.readBuf[:left], p.readBuf[p.npos:])
@@ -124,7 +124,7 @@ func (p *parser) fill() {
 	p.npos = 0
 }
 
-func (p *parser) nextKeepSpaces() {
+func (p *Parser) nextKeepSpaces() {
 	r := p.r
 	if p.pos = p.getPos(); r > utf8.RuneSelf {
 		p.pos -= Pos(utf8.RuneLen(r) - 1)
@@ -174,7 +174,7 @@ func (p *parser) nextKeepSpaces() {
 	}
 }
 
-func (p *parser) next() {
+func (p *Parser) next() {
 	if p.r == utf8.RuneSelf {
 		p.tok = _EOF
 		return
@@ -231,7 +231,7 @@ skipSpace:
 			for r != utf8.RuneSelf && r != '\n' {
 				r = p.rune()
 			}
-			if p.mode&ParseComments > 0 {
+			if p.keepComments {
 				p.f.Comments = append(p.f.Comments, &Comment{
 					Hash: p.pos,
 					Text: p.endLit(),
@@ -282,14 +282,14 @@ skipSpace:
 	}
 }
 
-func (p *parser) peekByte(b byte) bool {
+func (p *Parser) peekByte(b byte) bool {
 	if p.npos == len(p.bs) && p.readErr == nil {
 		p.fill()
 	}
 	return p.npos < len(p.bs) && p.bs[p.npos] == b
 }
 
-func (p *parser) regToken(r rune) token {
+func (p *Parser) regToken(r rune) token {
 	switch r {
 	case '\'':
 		p.rune()
@@ -432,7 +432,7 @@ func (p *parser) regToken(r rune) token {
 	}
 }
 
-func (p *parser) dqToken(r rune) token {
+func (p *Parser) dqToken(r rune) token {
 	switch r {
 	case '"':
 		p.rune()
@@ -462,7 +462,7 @@ func (p *parser) dqToken(r rune) token {
 	}
 }
 
-func (p *parser) paramToken(r rune) token {
+func (p *Parser) paramToken(r rune) token {
 	switch r {
 	case '}':
 		p.rune()
@@ -537,7 +537,7 @@ func (p *parser) paramToken(r rune) token {
 	}
 }
 
-func (p *parser) arithmToken(r rune) token {
+func (p *Parser) arithmToken(r rune) token {
 	switch r {
 	case '!':
 		if p.rune() == '=' {
@@ -666,7 +666,7 @@ func (p *parser) arithmToken(r rune) token {
 	}
 }
 
-func (p *parser) newLit(r rune) {
+func (p *Parser) newLit(r rune) {
 	// don't let r == utf8.RuneSelf go to the second case as RuneLen
 	// would return -1
 	if r <= utf8.RuneSelf {
@@ -678,9 +678,9 @@ func (p *parser) newLit(r rune) {
 	}
 }
 
-func (p *parser) discardLit(n int) { p.litBs = p.litBs[:len(p.litBs)-n] }
+func (p *Parser) discardLit(n int) { p.litBs = p.litBs[:len(p.litBs)-n] }
 
-func (p *parser) endLit() (s string) {
+func (p *Parser) endLit() (s string) {
 	if p.r == utf8.RuneSelf {
 		s = string(p.litBs)
 	} else if len(p.litBs) > 0 {
@@ -690,7 +690,7 @@ func (p *parser) endLit() (s string) {
 	return
 }
 
-func (p *parser) advanceLitOther(r rune) {
+func (p *Parser) advanceLitOther(r rune) {
 	tok := _LitWord
 loop:
 	for p.newLit(r); r != utf8.RuneSelf; r = p.rune() {
@@ -756,6 +756,9 @@ loop:
 			if p.quote&allParamReg != 0 {
 				break loop
 			}
+			if r == '[' && p.bash() && p.quote&allArithmExpr != 0 {
+				break loop
+			}
 		case '+':
 			if p.quote == paramName && p.peekByte('(') {
 				tok = _Lit
@@ -764,8 +767,7 @@ loop:
 			fallthrough
 		case '-':
 			switch p.quote {
-			case paramExpInd, paramExpLen, paramExpOff,
-				paramExpExp, paramExpRepl, sglQuotes:
+			case paramExpExp, paramExpRepl, sglQuotes:
 			default:
 				break loop
 			}
@@ -780,7 +782,7 @@ loop:
 	p.tok, p.val = tok, p.endLit()
 }
 
-func (p *parser) advanceLitNone(r rune) {
+func (p *Parser) advanceLitNone(r rune) {
 	p.asPos = 0
 	tok := _LitWord
 loop:
@@ -826,12 +828,17 @@ loop:
 			}
 		case '=':
 			p.asPos = len(p.litBs) - 1
+		case '[':
+			if p.bash() && len(p.litBs) > 1 && p.litBs[0] != '[' {
+				tok = _Lit
+				break loop
+			}
 		}
 	}
 	p.tok, p.val = tok, p.endLit()
 }
 
-func (p *parser) advanceLitDquote(r rune) {
+func (p *Parser) advanceLitDquote(r rune) {
 	tok := _LitWord
 loop:
 	for p.newLit(r); r != utf8.RuneSelf; r = p.rune() {
@@ -848,7 +855,7 @@ loop:
 	p.tok, p.val = tok, p.endLit()
 }
 
-func (p *parser) advanceLitHdoc(r rune) {
+func (p *Parser) advanceLitHdoc(r rune) {
 	p.tok = _Lit
 	p.newLit(r)
 	if p.quote == hdocBodyTabs {
@@ -886,7 +893,7 @@ loop:
 	}
 }
 
-func (p *parser) hdocLitWord() *Word {
+func (p *Parser) hdocLitWord() *Word {
 	r := p.r
 	p.newLit(r)
 	pos, val := p.getPos(), ""
@@ -918,7 +925,7 @@ func (p *parser) hdocLitWord() *Word {
 	return p.word(p.wps(l))
 }
 
-func (p *parser) advanceLitRe(r rune) {
+func (p *Parser) advanceLitRe(r rune) {
 	lparens := 0
 loop:
 	for p.newLit(r); r != utf8.RuneSelf; r = p.rune() {

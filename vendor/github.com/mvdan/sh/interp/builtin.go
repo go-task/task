@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strconv"
+	"strings"
 
 	"github.com/mvdan/sh/syntax"
 )
@@ -18,32 +19,31 @@ func isBuiltin(name string) bool {
 		"echo", "printf", "break", "continue", "pwd", "cd",
 		"wait", "builtin", "trap", "type", "source", "command",
 		"pushd", "popd", "umask", "alias", "unalias", "fg", "bg",
-		"getopts":
+		"getopts", "eval":
 		return true
 	}
 	return false
 }
 
-func (r *Runner) builtin(pos syntax.Pos, name string, args []string) {
-	exit := 0
+func (r *Runner) builtinCode(pos syntax.Pos, name string, args []string) int {
 	switch name {
 	case "true", ":":
 	case "false":
-		exit = 1
+		return 1
 	case "exit":
 		switch len(args) {
 		case 0:
-			r.lastExit()
 		case 1:
 			if n, err := strconv.Atoi(args[0]); err != nil {
 				r.runErr(pos, "invalid exit code: %q", args[0])
 			} else {
-				exit = n
-				r.err = ExitCode(n)
+				r.exit = n
 			}
 		default:
 			r.runErr(pos, "exit cannot take multiple arguments")
 		}
+		r.lastExit()
+		return r.exit
 	case "set":
 		r.args = args
 	case "shift":
@@ -58,8 +58,7 @@ func (r *Runner) builtin(pos syntax.Pos, name string, args []string) {
 			fallthrough
 		default:
 			r.errf("usage: shift [n]\n")
-			exit = 2
-			break
+			return 2
 		}
 		if len(r.args) < n {
 			n = len(r.args)
@@ -97,8 +96,7 @@ func (r *Runner) builtin(pos syntax.Pos, name string, args []string) {
 	case "printf":
 		if len(args) == 0 {
 			r.errf("usage: printf format [arguments]\n")
-			exit = 2
-			break
+			return 2
 		}
 		var a []interface{}
 		for _, arg := range args[1:] {
@@ -121,7 +119,7 @@ func (r *Runner) builtin(pos syntax.Pos, name string, args []string) {
 			fallthrough
 		default:
 			r.errf("usage: break [n]\n")
-			exit = 2
+			return 2
 		}
 	case "continue":
 		if !r.inLoop {
@@ -139,15 +137,14 @@ func (r *Runner) builtin(pos syntax.Pos, name string, args []string) {
 			fallthrough
 		default:
 			r.errf("usage: continue [n]\n")
-			exit = 2
+			return 2
 		}
 	case "pwd":
 		r.outf("%s\n", r.getVar("PWD"))
 	case "cd":
 		if len(args) > 1 {
 			r.errf("usage: cd [dir]\n")
-			exit = 2
-			break
+			return 2
 		}
 		var dir string
 		if len(args) == 0 {
@@ -160,13 +157,12 @@ func (r *Runner) builtin(pos syntax.Pos, name string, args []string) {
 		}
 		_, err := os.Stat(dir)
 		if err != nil {
-			exit = 1
-			break
+			return 1
 		}
 		r.Dir = dir
 	case "wait":
 		if len(args) > 0 {
-			r.errf("wait with args not handled yet")
+			r.runErr(pos, "wait with args not handled yet")
 			break
 		}
 		r.bgShells.Wait()
@@ -175,13 +171,16 @@ func (r *Runner) builtin(pos syntax.Pos, name string, args []string) {
 			break
 		}
 		if !isBuiltin(args[0]) {
-			exit = 1
-			break
+			return 1
 		}
-		// TODO: pos
-		r.builtin(0, args[0], args[1:])
+		return r.builtinCode(pos, args[0], args[1:])
 	case "type":
+		anyNotFound := false
 		for _, arg := range args {
+			if _, ok := r.funcs[arg]; ok {
+				r.outf("%s is a function\n", arg)
+				continue
+			}
 			if isBuiltin(arg) {
 				r.outf("%s is a shell builtin\n", arg)
 				continue
@@ -190,12 +189,27 @@ func (r *Runner) builtin(pos syntax.Pos, name string, args []string) {
 				r.outf("%s is %s\n", arg, path)
 				continue
 			}
-			exit = 1
 			r.errf("type: %s: not found\n", arg)
+			anyNotFound = true
 		}
+		if anyNotFound {
+			return 1
+		}
+	case "eval":
+		src := strings.Join(args, " ")
+		p := syntax.NewParser()
+		file, err := p.Parse(strings.NewReader(src), "")
+		if err != nil {
+			r.errf("eval: %v\n", err)
+			return 1
+		}
+		r2 := *r
+		r2.File = file
+		r2.Run()
+		return r2.exit
 	case "trap", "source", "command", "pushd", "popd",
 		"umask", "alias", "unalias", "fg", "bg", "getopts":
-		r.errf("unhandled builtin: %s", name)
+		r.runErr(pos, "unhandled builtin: %s", name)
 	}
-	r.exit = exit
+	return 0
 }

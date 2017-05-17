@@ -46,6 +46,9 @@ func Walk(node Node, f func(Node) bool) {
 		if x.Value != nil {
 			Walk(x.Value, f)
 		}
+		if x.Array != nil {
+			Walk(x.Array, f)
+		}
 	case *Redirect:
 		if x.N != nil {
 			Walk(x.N, f)
@@ -69,9 +72,6 @@ func Walk(node Node, f func(Node) bool) {
 		}
 		walkStmts(x.ElseStmts, f)
 	case *WhileClause:
-		walkStmts(x.CondStmts, f)
-		walkStmts(x.DoStmts, f)
-	case *UntilClause:
 		walkStmts(x.CondStmts, f)
 		walkStmts(x.DoStmts, f)
 	case *ForClause:
@@ -112,8 +112,8 @@ func Walk(node Node, f func(Node) bool) {
 		if x.Param != nil {
 			Walk(x.Param, f)
 		}
-		if x.Ind != nil {
-			Walk(x.Ind.Expr, f)
+		if x.Index != nil {
+			Walk(x.Index, f)
 		}
 		if x.Repl != nil {
 			Walk(x.Repl.Orig, f)

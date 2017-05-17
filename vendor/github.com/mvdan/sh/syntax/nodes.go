@@ -145,9 +145,9 @@ func (s *Stmt) End() Pos {
 // Command represents all nodes that are simple commands, which are
 // directly placed in a Stmt.
 //
-// These are *CallExpr, *IfClause, *WhileClause, *UntilClause,
-// *ForClause, *CaseClause, *Block, *Subshell, *BinaryCmd, *FuncDecl,
-// *ArithmCmd, *TestClause, *DeclClause, *LetClause, and *CoprocClause.
+// These are *CallExpr, *IfClause, *WhileClause, *ForClause,
+// *CaseClause, *Block, *Subshell, *BinaryCmd, *FuncDecl, *ArithmCmd,
+// *TestClause, *DeclClause, *LetClause, and *CoprocClause.
 type Command interface {
 	Node
 	commandNode()
@@ -156,7 +156,6 @@ type Command interface {
 func (*CallExpr) commandNode()     {}
 func (*IfClause) commandNode()     {}
 func (*WhileClause) commandNode()  {}
-func (*UntilClause) commandNode()  {}
 func (*ForClause) commandNode()    {}
 func (*CaseClause) commandNode()   {}
 func (*Block) commandNode()        {}
@@ -173,7 +172,9 @@ func (*CoprocClause) commandNode() {}
 type Assign struct {
 	Append bool
 	Name   *Lit
+	Index  ArithmExpr
 	Value  *Word
+	Array  *ArrayExpr
 }
 
 func (a *Assign) Pos() Pos {
@@ -186,6 +187,12 @@ func (a *Assign) Pos() Pos {
 func (a *Assign) End() Pos {
 	if a.Value != nil {
 		return a.Value.End()
+	}
+	if a.Array != nil {
+		return a.Array.End()
+	}
+	if a.Index != nil {
+		return a.Index.End() + 2
 	}
 	return a.Name.End() + 1
 }
@@ -253,25 +260,16 @@ type Elif struct {
 	ThenStmts  []*Stmt
 }
 
-// WhileClause represents a while clause.
+// WhileClause represents a while or an until clause.
 type WhileClause struct {
 	While, Do, Done Pos
+	Until           bool
 	CondStmts       []*Stmt
 	DoStmts         []*Stmt
 }
 
 func (w *WhileClause) Pos() Pos { return w.While }
 func (w *WhileClause) End() Pos { return w.Done + 4 }
-
-// UntilClause represents an until clause.
-type UntilClause struct {
-	Until, Do, Done Pos
-	CondStmts       []*Stmt
-	DoStmts         []*Stmt
-}
-
-func (u *UntilClause) Pos() Pos { return u.Until }
-func (u *UntilClause) End() Pos { return u.Done + 4 }
 
 // ForClause represents a for clause.
 type ForClause struct {
@@ -347,7 +345,7 @@ func (w *Word) End() Pos { return w.Parts[len(w.Parts)-1].End() }
 // WordPart represents all nodes that can form a word.
 //
 // These are *Lit, *SglQuoted, *DblQuoted, *ParamExp, *CmdSubst,
-// *ArithmExp, *ProcSubst, *ArrayExpr, and *ExtGlob.
+// *ArithmExp, *ProcSubst, and *ExtGlob.
 type WordPart interface {
 	Node
 	wordPartNode()
@@ -360,7 +358,6 @@ func (*ParamExp) wordPartNode()  {}
 func (*CmdSubst) wordPartNode()  {}
 func (*ArithmExp) wordPartNode() {}
 func (*ProcSubst) wordPartNode() {}
-func (*ArrayExpr) wordPartNode() {}
 func (*ExtGlob) wordPartNode()   {}
 
 // Lit represents an unquoted string consisting of characters that were
@@ -423,7 +420,7 @@ type ParamExp struct {
 	Indirect       bool
 	Length         bool
 	Param          *Lit
-	Ind            *Index
+	Index          ArithmExpr
 	Slice          *Slice
 	Repl           *Replace
 	Exp            *Expansion
@@ -437,12 +434,7 @@ func (p *ParamExp) End() Pos {
 	return p.Param.End()
 }
 
-// Index represents access to an array via an index inside a ParamExp.
-//
-// This node will never appear when in PosixConformant mode.
-type Index struct {
-	Expr ArithmExpr
-}
+func (p *ParamExp) nakedIndex() bool { return p.Short && p.Index != nil }
 
 // Slice represents character slicing inside a ParamExp.
 //

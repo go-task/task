@@ -6,7 +6,6 @@ package interp
 import (
 	"os"
 	"os/exec"
-	"path"
 	"path/filepath"
 	"regexp"
 
@@ -75,11 +74,9 @@ func (r *Runner) binTest(op syntax.BinTestOperator, x, y string) bool {
 	case syntax.OrTest:
 		return x != "" || y != ""
 	case syntax.TsMatch:
-		m, _ := path.Match(y, x)
-		return m
+		return match(y, x)
 	case syntax.TsNoMatch:
-		m, _ := path.Match(y, x)
-		return !m
+		return !match(y, x)
 	case syntax.TsBefore:
 		return x < y
 	default: // syntax.TsAfter
@@ -154,7 +151,7 @@ func (r *Runner) unTest(op syntax.UnTestOperator, x string) bool {
 	case syntax.TsNot:
 		return x == ""
 	default:
-		r.errf("unhandled unary test op: %v", op)
+		r.runErr(0, "unhandled unary test op: %v", op)
 		return false
 	}
 }

@@ -262,26 +262,25 @@ func (r *Runner) stmt(st *syntax.Stmt) {
 	}
 }
 
-func (r *Runner) assignValue(word *syntax.Word) varValue {
-	if word == nil {
-		return nil
+func (r *Runner) assignValue(as *syntax.Assign) varValue {
+	if as.Value != nil {
+		return r.loneWord(as.Value)
 	}
-	ae, ok := word.Parts[0].(*syntax.ArrayExpr)
-	if !ok {
-		return r.loneWord(word)
+	if as.Array != nil {
+		strs := make([]string, len(as.Array.List))
+		for i, w := range as.Array.List {
+			strs[i] = r.loneWord(w)
+		}
+		return strs
 	}
-	strs := make([]string, len(ae.List))
-	for i, w := range ae.List {
-		strs[i] = r.loneWord(w)
-	}
-	return strs
+	return nil
 }
 
 func (r *Runner) stmtSync(st *syntax.Stmt) {
 	oldVars := r.cmdVars
 	for _, as := range st.Assigns {
 		name := as.Name.Value
-		val := r.assignValue(as.Value)
+		val := r.assignValue(as)
 		if st.Cmd == nil {
 			r.setVar(name, val)
 			continue
@@ -383,22 +382,9 @@ func (r *Runner) cmd(cm syntax.Command) {
 	case *syntax.WhileClause:
 		for r.err == nil {
 			r.stmts(x.CondStmts)
-			if r.exit != 0 {
-				r.exit = 0
-				break
-			}
-			if r.loopStmtsBroken(x.DoStmts) {
-				break
-			}
-		}
-	case *syntax.UntilClause:
-		for r.err == nil {
-			r.stmts(x.CondStmts)
-			if r.exit == 0 {
-				break
-			}
+			stop := (r.exit == 0) == x.Until
 			r.exit = 0
-			if r.loopStmtsBroken(x.DoStmts) {
+			if stop || r.loopStmtsBroken(x.DoStmts) {
 				break
 			}
 		}
@@ -440,9 +426,7 @@ func (r *Runner) cmd(cm syntax.Command) {
 		for _, pl := range x.List {
 			for _, word := range pl.Patterns {
 				pat := r.loneWord(word)
-				// TODO: error?
-				matched, _ := path.Match(pat, str)
-				if matched {
+				if match(pat, str) {
 					r.stmts(pl.Stmts)
 					return
 				}
@@ -453,7 +437,7 @@ func (r *Runner) cmd(cm syntax.Command) {
 			r.exit = 1
 		}
 	default:
-		r.errf("unhandled command node: %T", x)
+		r.runErr(cm.Pos(), "unhandled command node: %T", x)
 	}
 }
 
@@ -461,6 +445,11 @@ func (r *Runner) stmts(stmts []*syntax.Stmt) {
 	for _, stmt := range stmts {
 		r.stmt(stmt)
 	}
+}
+
+func match(pattern, name string) bool {
+	matched, _ := path.Match(pattern, name)
+	return matched
 }
 
 func (r *Runner) redir(rd *syntax.Redirect) (io.Closer, error) {
@@ -491,7 +480,7 @@ func (r *Runner) redir(rd *syntax.Redirect) (io.Closer, error) {
 		}
 		return nil, nil
 	case syntax.DplIn:
-		r.errf("unhandled redirect op: %v", rd.Op)
+		r.runErr(rd.Pos(), "unhandled redirect op: %v", rd.Op)
 	}
 	mode := os.O_RDONLY
 	switch rd.Op {
@@ -514,7 +503,7 @@ func (r *Runner) redir(rd *syntax.Redirect) (io.Closer, error) {
 		r.Stdout = f
 		r.Stderr = f
 	default:
-		r.errf("unhandled redirect op: %v", rd.Op)
+		r.runErr(rd.Pos(), "unhandled redirect op: %v", rd.Op)
 	}
 	return f, nil
 }
@@ -605,7 +594,7 @@ func (r *Runner) wordParts(wps []syntax.WordPart, quoted bool) []string {
 		case *syntax.ArithmExp:
 			curBuf.WriteString(strconv.Itoa(r.arithm(x.X)))
 		default:
-			r.errf("unhandled word part: %T", x)
+			r.runErr(wp.Pos(), "unhandled word part: %T", x)
 		}
 	}
 	flush()
@@ -622,7 +611,7 @@ func (r *Runner) call(pos syntax.Pos, name string, args []string) {
 		return
 	}
 	if isBuiltin(name) {
-		r.builtin(pos, name, args)
+		r.exit = r.builtinCode(pos, name, args)
 		return
 	}
 	cmd := exec.CommandContext(r.Context, name, args...)
@@ -639,10 +628,9 @@ func (r *Runner) call(pos syntax.Pos, name string, args []string) {
 	case *exec.ExitError:
 		// started, but errored - default to 1 if OS
 		// doesn't have exit statuses
+		r.exit = 1
 		if status, ok := x.Sys().(syscall.WaitStatus); ok {
 			r.exit = status.ExitStatus()
-		} else {
-			r.exit = 1
 		}
 	case *exec.Error:
 		// did not start

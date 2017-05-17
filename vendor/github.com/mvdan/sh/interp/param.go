@@ -4,7 +4,6 @@
 package interp
 
 import (
-	"path"
 	"strconv"
 	"strings"
 	"unicode"
@@ -34,8 +33,8 @@ func (r *Runner) paramExp(pe *syntax.ParamExp) string {
 		}
 	}
 	str := varStr(val)
-	if pe.Ind != nil {
-		str = r.varInd(val, pe.Ind.Expr)
+	if pe.Index != nil {
+		str = r.varInd(val, pe.Index)
 	}
 	switch {
 	case pe.Length:
@@ -155,9 +154,9 @@ func (r *Runner) paramExp(pe *syntax.ParamExp) string {
 				}
 				str = string(rns)
 			case "P", "A", "a":
-				r.errf("unhandled @%s param expansion", arg)
+				r.runErr(pe.Pos(), "unhandled @%s param expansion", arg)
 			default:
-				r.errf("unexpected @%s param expansion", arg)
+				r.runErr(pe.Pos(), "unexpected @%s param expansion", arg)
 			}
 		}
 	}
@@ -173,7 +172,7 @@ func removePattern(str, pattern string, fromEnd, longest bool) string {
 		i = 0
 	}
 	for {
-		if m, _ := path.Match(pattern, s); m {
+		if match(pattern, s) {
 			last = str[i:]
 			if fromEnd {
 				last = str[:i]

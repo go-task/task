@@ -51,16 +51,16 @@
 			"revisionTime": "2017-01-24T11:57:57Z"
 		},
 		{
-			"checksumSHA1": "ZjfvXVu+OyeRBysQ8uowAkPD/6o=",
+			"checksumSHA1": "ohm6oyTSFu/xZk5HtTUG7RIONO4=",
 			"path": "github.com/mvdan/sh/interp",
-			"revision": "faf782d3a498f50cfc6aa9071d04e6f1e82e8035",
-			"revisionTime": "2017-04-30T14:10:52Z"
+			"revision": "380eaf2df0412887a2240f5b15e76ac810ca2e71",
+			"revisionTime": "2017-05-17T16:44:15Z"
 		},
 		{
-			"checksumSHA1": "RIR7FOsCR78SmOJOUsclJe9lvxo=",
+			"checksumSHA1": "2OcfNJuStj/eAcEPW5yRdU02DCc=",
 			"path": "github.com/mvdan/sh/syntax",
-			"revision": "faf782d3a498f50cfc6aa9071d04e6f1e82e8035",
-			"revisionTime": "2017-04-30T14:10:52Z"
+			"revision": "380eaf2df0412887a2240f5b15e76ac810ca2e71",
+			"revisionTime": "2017-05-17T16:44:15Z"
 		},
 		{
 			"checksumSHA1": "HUXE+Nrcau8FSaVEvPYHMvDjxOE=",
