@@ -1,6 +1,7 @@
 package task_test
 
 import (
+	"bytes"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -110,5 +111,36 @@ func TestTaskCall(t *testing.T) {
 		if _, err := os.Stat(filepath.Join(dir, f)); err != nil {
 			t.Error(err)
 		}
+	}
+}
+
+func TestStatus(t *testing.T) {
+	const dir = "testdata/status"
+	var file = filepath.Join(dir, "foo.txt")
+
+	_ = os.Remove(file)
+
+	if _, err := os.Stat(file); err == nil {
+		t.Errorf("File should not exists: %v", err)
+	}
+	c := exec.Command("task", "gen-foo")
+	c.Dir = dir
+	if err := c.Run(); err != nil {
+		t.Error(err)
+	}
+	if _, err := os.Stat(file); err != nil {
+		t.Errorf("File should exists: %v", err)
+	}
+
+	buff := bytes.NewBuffer(nil)
+	c = exec.Command("task", "gen-foo")
+	c.Dir = dir
+	c.Stderr = buff
+	c.Stdout = buff
+	if err := c.Run(); err != nil {
+		t.Error(err)
+	}
+	if buff.String() != `task: Task "gen-foo" is up to date`+"\n" {
+		t.Errorf("Wrong output message: %s", buff.String())
 	}
 }

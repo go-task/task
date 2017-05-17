@@ -34,6 +34,7 @@ type Task struct {
 	Desc      string
 	Sources   []string
 	Generates []string
+	Status    []string
 	Dir       string
 	Vars      map[string]string
 	Set       string
@@ -140,6 +141,25 @@ func (t *Task) runDeps(ctx context.Context) error {
 }
 
 func (t *Task) isUpToDate() (bool, error) {
+	if len(t.Status) > 0 {
+		environ, err := t.getEnviron()
+		if err != nil {
+			return false, err
+		}
+
+		for _, s := range t.Status {
+			err = execext.RunCommand(&execext.RunCommandOptions{
+				Command: s,
+				Dir:     t.Dir,
+				Env:     environ,
+			})
+			if err != nil {
+				return false, nil
+			}
+		}
+		return true, nil
+	}
+
 	if len(t.Sources) == 0 || len(t.Generates) == 0 {
 		return false, nil
 	}
