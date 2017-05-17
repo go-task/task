@@ -24,6 +24,8 @@ type RunCommandOptions struct {
 var (
 	// ErrNilOptions is returned when a nil options is given
 	ErrNilOptions = errors.New("execext: nil options given")
+
+	parser = syntax.NewParser()
 )
 
 // RunCommand runs a shell command
@@ -32,7 +34,7 @@ func RunCommand(opts *RunCommandOptions) error {
 		return ErrNilOptions
 	}
 
-	p, err := syntax.Parse(strings.NewReader(opts.Command), "", 0)
+	p, err := parser.Parse(strings.NewReader(opts.Command), "")
 	if err != nil {
 		return err
 	}
