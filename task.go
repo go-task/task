@@ -97,7 +97,7 @@ func RunTask(ctx context.Context, name string) error {
 	}
 
 	if !Force {
-		upToDate, err := t.isUpToDate()
+		upToDate, err := t.isUpToDate(ctx)
 		if err != nil {
 			return err
 		}
@@ -140,7 +140,7 @@ func (t *Task) runDeps(ctx context.Context) error {
 	return nil
 }
 
-func (t *Task) isUpToDate() (bool, error) {
+func (t *Task) isUpToDate(ctx context.Context) (bool, error) {
 	if len(t.Status) > 0 {
 		environ, err := t.getEnviron()
 		if err != nil {
@@ -149,6 +149,7 @@ func (t *Task) isUpToDate() (bool, error) {
 
 		for _, s := range t.Status {
 			err = execext.RunCommand(&execext.RunCommandOptions{
+				Context: ctx,
 				Command: s,
 				Dir:     t.Dir,
 				Env:     environ,
