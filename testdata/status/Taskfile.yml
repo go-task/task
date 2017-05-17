@@ -1,0 +1,5 @@
+gen-foo:
+  cmds:
+    - touch foo.txt
+  status:
+    - test -f foo.txt

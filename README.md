@@ -199,6 +199,22 @@ will compare the modification date/time of the files to determine if it's
 necessary to run the task. If not, it will just print
 `Task "js" is up to date`.
 
+Alternatively, you can inform a sequence of tests as `status`. If no error
+is returned (exit status 0), the task is considered up-to-date:
+
+```yml
+generate-files:
+  cmds:
+    - mkdir directory
+    - touch directory/file1.txt
+    - touch directory/file2.txt
+  # test existence of files
+  status:
+    - test -d directory
+    - test -f directory/file1.txt
+    - test -f directory/file2.txt
+```
+
 You can use `--force` or `-f` if you want to force a task to run even when
 up-to-date.
 
