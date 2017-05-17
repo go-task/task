@@ -18,6 +18,8 @@ var (
 	// TaskFilePath is the default Taskfile
 	TaskFilePath = "Taskfile"
 
+	// Init (--init or -f flag) creates a Taskfile.yml in the current folder if not exists
+	Init bool
 	// Force (--force or -f flag) forces a task to run even when it's up-to-date
 	Force bool
 	// Watch (--watch or -w flag) enables watch of a task
@@ -46,6 +48,12 @@ func Run() {
 	log.SetFlags(0)
 
 	args := pflag.Args()
+
+	if Init {
+		initTaskfile()
+		return
+	}
+
 	if len(args) == 0 {
 		log.Println("task: No argument given, trying default task")
 		args = []string{"default"}

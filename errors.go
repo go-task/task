@@ -9,7 +9,7 @@ type taskFileNotFound struct {
 }
 
 func (err taskFileNotFound) Error() string {
-	return fmt.Sprintf(`task: No task file found (is it named "%s"?)`, err.taskFile)
+	return fmt.Sprintf(`task: No task file found (is it named "%s"?). Use "task --init" to create a new one`, err.taskFile)
 }
 
 type taskNotFoundError struct {

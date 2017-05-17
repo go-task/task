@@ -25,6 +25,7 @@ hello:
 `)
 		pflag.PrintDefaults()
 	}
+	pflag.BoolVarP(&task.Init, "init", "i", false, "creates a new Taskfile.yml in the current folder")
 	pflag.BoolVarP(&task.Force, "force", "f", false, "forces execution even when the task is up-to-date")
 	pflag.BoolVarP(&task.Watch, "watch", "w", false, "enables watch of the given task")
 	pflag.Parse()

@@ -144,3 +144,22 @@ func TestStatus(t *testing.T) {
 		t.Errorf("Wrong output message: %s", buff.String())
 	}
 }
+
+func TestInit(t *testing.T) {
+	const dir = "testdata/init"
+	var file = filepath.Join(dir, "Taskfile.yml")
+
+	_ = os.Remove(file)
+	if _, err := os.Stat(file); err == nil {
+		t.Errorf("Taskfile.yml should not exists")
+	}
+
+	c := exec.Command("task", "--init")
+	c.Dir = dir
+	if err := c.Run(); err != nil {
+		t.Error(err)
+	}
+	if _, err := os.Stat(file); err != nil {
+		t.Errorf("Taskfile.yml should exists")
+	}
+}
