@@ -91,6 +91,12 @@ func init() {
 		"ToSlash": func(path string) string {
 			return filepath.ToSlash(path)
 		},
+		"ExeExt": func() string {
+			if runtime.GOOS == "windows" {
+				return ".exe"
+			}
+			return ""
+		},
 	}
 
 	templateFuncs = sprig.TxtFuncMap()
