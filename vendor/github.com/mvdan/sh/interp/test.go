@@ -146,7 +146,9 @@ func (r *Runner) unTest(op syntax.UnTestOperator, x string) bool {
 	case syntax.TsNempStr:
 		return x != ""
 	//case syntax.TsOptSet:
-	//case syntax.TsVarSet:
+	case syntax.TsVarSet:
+		_, e := r.lookupVar(x)
+		return e
 	//case syntax.TsRefVar:
 	case syntax.TsNot:
 		return x == ""

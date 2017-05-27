@@ -34,18 +34,14 @@ func (p *Printer) Print(w io.Writer, f *File) error {
 	p.stmts(f.Stmts)
 	p.commentsUpTo(0)
 	p.newline(0)
-	if flusher, ok := p.bufWriter.(interface {
-		Flush() error
-	}); ok {
-		return flusher.Flush()
-	}
-	return nil
+	return p.bufWriter.Flush()
 }
 
 type bufWriter interface {
 	WriteByte(byte) error
 	WriteString(string) (int, error)
 	Reset(io.Writer)
+	Flush() error
 }
 
 type Printer struct {
@@ -190,8 +186,10 @@ func (p *Printer) newline(pos Pos) {
 	hdocs := p.pendingHdocs
 	p.pendingHdocs = p.pendingHdocs[:0]
 	for _, r := range hdocs {
-		p.word(r.Hdoc)
-		p.incLines(r.Hdoc.End())
+		if r.Hdoc != nil {
+			p.word(r.Hdoc)
+			p.incLines(r.Hdoc.End())
+		}
 		p.unquotedWord(r.Word)
 		p.WriteByte('\n')
 		p.incLine()
@@ -233,13 +231,13 @@ func (p *Printer) semiRsrv(s string, pos Pos, fallback bool) {
 	p.level--
 	if p.wantNewline || pos > p.nline {
 		p.newlines(pos)
-	} else if fallback {
-		if !p.wroteSemi {
+	} else {
+		if fallback && !p.wroteSemi {
 			p.WriteByte(';')
 		}
-		p.WriteByte(' ')
-	} else if p.wantSpace {
-		p.WriteByte(' ')
+		if p.wantSpace {
+			p.WriteByte(' ')
+		}
 	}
 	p.WriteString(s)
 	p.wantSpace = true
@@ -287,27 +285,34 @@ func (p *Printer) wordPart(wp WordPart) {
 		p.WriteByte('\'')
 		p.incLines(x.End())
 	case *DblQuoted:
-		if x.Dollar {
-			p.WriteByte('$')
-		}
-		p.WriteByte('"')
-		for i, n := range x.Parts {
-			p.wordPart(n)
-			if i == len(x.Parts)-1 {
-				p.incLines(n.End())
-			}
-		}
-		p.WriteByte('"')
+		p.dblQuoted(x)
 	case *CmdSubst:
 		p.incLines(x.Pos())
-		p.WriteString("$(")
-		p.wantSpace = len(x.Stmts) > 0 && startsWithLparen(x.Stmts[0])
-		p.nestedStmts(x.Stmts, x.Right)
-		p.sepTok(")", x.Right)
+		switch {
+		case x.MirBSDTempFile:
+			p.WriteString("${")
+			p.wantSpace = true
+			p.nestedStmts(x.Stmts, x.Right)
+			p.wantSpace = false
+			p.semiRsrv("}", x.Right, true)
+		case x.MirBSDReplyVar:
+			p.WriteString("${|")
+			p.nestedStmts(x.Stmts, x.Right)
+			p.wantSpace = false
+			p.semiRsrv("}", x.Right, true)
+		default:
+			p.WriteString("$(")
+			p.wantSpace = len(x.Stmts) > 0 && startsWithLparen(x.Stmts[0])
+			p.nestedStmts(x.Stmts, x.Right)
+			p.sepTok(")", x.Right)
+		}
 	case *ParamExp:
 		p.paramExp(x)
 	case *ArithmExp:
 		p.WriteString("$((")
+		if x.Unsigned {
+			p.WriteString("# ")
+		}
 		p.arithmExpr(x.X, false, false)
 		p.WriteString("))")
 	case *ExtGlob:
@@ -326,12 +331,38 @@ func (p *Printer) wordPart(wp WordPart) {
 	}
 }
 
+func (p *Printer) dblQuoted(dq *DblQuoted) {
+	if dq.Dollar {
+		p.WriteByte('$')
+	}
+	p.WriteByte('"')
+	for i, n := range dq.Parts {
+		p.wordPart(n)
+		if i == len(dq.Parts)-1 {
+			p.incLines(n.End())
+		}
+	}
+	p.WriteByte('"')
+}
+
+func (p *Printer) wroteIndex(index ArithmExpr, key *DblQuoted) bool {
+	if index == nil && key == nil {
+		return false
+	}
+	p.WriteByte('[')
+	if index != nil {
+		p.arithmExpr(index, false, false)
+	} else {
+		p.dblQuoted(key)
+	}
+	p.WriteByte(']')
+	return true
+}
+
 func (p *Printer) paramExp(pe *ParamExp) {
-	if pe.nakedIndex() { // arr[i]
+	if pe.nakedIndex() { // arr[x]
 		p.WriteString(pe.Param.Value)
-		p.WriteByte('[')
-		p.arithmExpr(pe.Index, false, false)
-		p.WriteByte(']')
+		p.wroteIndex(pe.Index, pe.Key)
 		return
 	}
 	if pe.Short { // $var
@@ -344,17 +375,15 @@ func (p *Printer) paramExp(pe *ParamExp) {
 	switch {
 	case pe.Length:
 		p.WriteByte('#')
+	case pe.Width:
+		p.WriteByte('%')
 	case pe.Indirect:
 		p.WriteByte('!')
 	}
 	if pe.Param != nil {
 		p.WriteString(pe.Param.Value)
 	}
-	if pe.Index != nil {
-		p.WriteByte('[')
-		p.arithmExpr(pe.Index, false, false)
-		p.WriteByte(']')
-	}
+	p.wroteIndex(pe.Index, pe.Key)
 	if pe.Slice != nil {
 		p.WriteByte(':')
 		p.arithmExpr(pe.Slice.Offset, true, true)
@@ -367,12 +396,18 @@ func (p *Printer) paramExp(pe *ParamExp) {
 			p.WriteByte('/')
 		}
 		p.WriteByte('/')
-		p.word(pe.Repl.Orig)
+		if pe.Repl.Orig != nil {
+			p.word(pe.Repl.Orig)
+		}
 		p.WriteByte('/')
-		p.word(pe.Repl.With)
+		if pe.Repl.With != nil {
+			p.word(pe.Repl.With)
+		}
 	} else if pe.Exp != nil {
 		p.WriteString(pe.Exp.Op.String())
-		p.word(pe.Exp.Word)
+		if pe.Exp.Word != nil {
+			p.word(pe.Exp.Word)
+		}
 	}
 	p.WriteByte('}')
 }
@@ -381,9 +416,9 @@ func (p *Printer) loop(loop Loop) {
 	switch x := loop.(type) {
 	case *WordIter:
 		p.WriteString(x.Name.Value)
-		if len(x.List) > 0 {
+		if len(x.Items) > 0 {
 			p.spacedString(" in")
-			p.wordJoin(x.List, true)
+			p.wordJoin(x.Items)
 		}
 	case *CStyleLoop:
 		p.WriteString("((")
@@ -401,10 +436,8 @@ func (p *Printer) loop(loop Loop) {
 
 func (p *Printer) arithmExpr(expr ArithmExpr, compact, spacePlusMinus bool) {
 	switch x := expr.(type) {
-	case *Lit:
-		p.WriteString(x.Value)
-	case *ParamExp:
-		p.paramExp(x)
+	case *Word:
+		p.word(x)
 	case *BinaryArithm:
 		if compact {
 			p.arithmExpr(x.X, compact, spacePlusMinus)
@@ -491,17 +524,12 @@ func (p *Printer) unquotedWord(w *Word) {
 	}
 }
 
-func (p *Printer) wordJoin(ws []*Word, backslash bool) {
+func (p *Printer) wordJoin(ws []*Word) {
 	anyNewline := false
 	for _, w := range ws {
 		if pos := w.Pos(); pos > p.nline {
 			p.commentsUpTo(pos)
-			if backslash {
-				p.bslashNewl()
-			} else {
-				p.WriteByte('\n')
-				p.incLine()
-			}
+			p.bslashNewl()
 			if !anyNewline {
 				p.incLevel()
 				anyNewline = true
@@ -518,11 +546,37 @@ func (p *Printer) wordJoin(ws []*Word, backslash bool) {
 	}
 }
 
+func (p *Printer) elemJoin(elems []*ArrayElem) {
+	anyNewline := false
+	for _, el := range elems {
+		if pos := el.Pos(); pos > p.nline {
+			p.commentsUpTo(pos)
+			p.WriteByte('\n')
+			p.incLine()
+			if !anyNewline {
+				p.incLevel()
+				anyNewline = true
+			}
+			p.indent()
+		} else if p.wantSpace {
+			p.WriteByte(' ')
+			p.wantSpace = false
+		}
+		if p.wroteIndex(el.Index, el.Key) {
+			p.WriteByte('=')
+		}
+		p.word(el.Value)
+	}
+	if anyNewline {
+		p.decLevel()
+	}
+}
+
 func (p *Printer) stmt(s *Stmt) {
 	if s.Negated {
 		p.spacedString("!")
 	}
-	p.assigns(s.Assigns)
+	p.assigns(s.Assigns, true)
 	var startRedirs int
 	if s.Cmd != nil {
 		startRedirs = p.command(s.Cmd, s.Redirs)
@@ -545,21 +599,25 @@ func (p *Printer) stmt(s *Stmt) {
 			p.WriteString(r.N.Value)
 		}
 		p.WriteString(r.Op.String())
+		p.wantSpace = true
 		p.word(r.Word)
 		if r.Op == Hdoc || r.Op == DashHdoc {
 			p.pendingHdocs = append(p.pendingHdocs, r)
 		}
 	}
 	p.wroteSemi = false
-	if s.Semicolon.IsValid() && s.Semicolon > p.nline {
+	switch {
+	case s.Semicolon.IsValid() && s.Semicolon > p.nline:
 		p.incLevel()
 		p.bslashNewl()
 		p.indent()
 		p.decLevel()
 		p.WriteByte(';')
 		p.wroteSemi = true
-	} else if s.Background {
+	case s.Background:
 		p.WriteString(" &")
+	case s.Coprocess:
+		p.WriteString(" |&")
 	}
 	if anyNewline {
 		p.decLevel()
@@ -574,10 +632,10 @@ func (p *Printer) command(cmd Command, redirs []*Redirect) (startRedirs int) {
 	switch x := cmd.(type) {
 	case *CallExpr:
 		if len(x.Args) <= 1 {
-			p.wordJoin(x.Args, true)
+			p.wordJoin(x.Args)
 			return 0
 		}
-		p.wordJoin(x.Args[:1], true)
+		p.wordJoin(x.Args[:1])
 		for _, r := range redirs {
 			if r.Pos() > x.Args[1].Pos() || r.Op == Hdoc || r.Op == DashHdoc {
 				break
@@ -589,10 +647,11 @@ func (p *Printer) command(cmd Command, redirs []*Redirect) (startRedirs int) {
 				p.WriteString(r.N.Value)
 			}
 			p.WriteString(r.Op.String())
+			p.wantSpace = true
 			p.word(r.Word)
 			startRedirs++
 		}
-		p.wordJoin(x.Args[1:], true)
+		p.wordJoin(x.Args[1:])
 	case *Block:
 		p.WriteByte('{')
 		p.wantSpace = true
@@ -639,13 +698,18 @@ func (p *Printer) command(cmd Command, redirs []*Redirect) (startRedirs int) {
 		p.semiRsrv("done", x.Done, true)
 	case *BinaryCmd:
 		p.stmt(x.X)
+		if x.Y.Pos() < p.nline {
+			// leave p.nestedBinary untouched
+			p.spacedString(x.Op.String())
+			p.stmt(x.Y)
+			break
+		}
 		indent := !p.nestedBinary
 		if indent {
 			p.incLevel()
 		}
-		_, p.nestedBinary = x.Y.Cmd.(*BinaryCmd)
 		if p.binNextLine {
-			if len(p.pendingHdocs) == 0 && x.Y.Pos() > p.nline {
+			if len(p.pendingHdocs) == 0 {
 				p.bslashNewl()
 				p.indent()
 			}
@@ -662,16 +726,15 @@ func (p *Printer) command(cmd Command, redirs []*Redirect) (startRedirs int) {
 		} else {
 			p.wantSpace = true
 			p.spacedString(x.Op.String())
-			if x.Y.Pos() > p.nline {
-				if x.OpPos > p.nline {
-					p.incLines(x.OpPos)
-				}
-				p.commentsUpTo(x.Y.Pos())
-				p.newline(0)
-				p.indent()
+			if x.OpPos > p.nline {
+				p.incLines(x.OpPos)
 			}
+			p.commentsUpTo(x.Y.Pos())
+			p.newline(0)
+			p.indent()
 		}
 		p.incLines(x.Y.Pos())
+		_, p.nestedBinary = x.Y.Cmd.(*BinaryCmd)
 		p.stmt(x.Y)
 		if indent {
 			p.decLevel()
@@ -689,10 +752,9 @@ func (p *Printer) command(cmd Command, redirs []*Redirect) (startRedirs int) {
 		p.WriteString("case ")
 		p.word(x.Word)
 		p.WriteString(" in")
-		p.incLevel()
-		for _, pl := range x.List {
-			p.commentsAndSeparate(pl.Patterns[0].Pos())
-			for i, w := range pl.Patterns {
+		for _, ci := range x.Items {
+			p.commentsAndSeparate(ci.Patterns[0].Pos())
+			for i, w := range ci.Patterns {
 				if i > 0 {
 					p.spacedString("|")
 				}
@@ -703,24 +765,26 @@ func (p *Printer) command(cmd Command, redirs []*Redirect) (startRedirs int) {
 			}
 			p.WriteByte(')')
 			p.wantSpace = true
-			sep := len(pl.Stmts) > 1 || (len(pl.Stmts) > 0 && pl.Stmts[0].Pos() > p.nline)
-			p.nestedStmts(pl.Stmts, 0)
+			sep := len(ci.Stmts) > 1 || (len(ci.Stmts) > 0 && ci.Stmts[0].Pos() > p.nline)
+			p.nestedStmts(ci.Stmts, 0)
 			p.level++
 			if sep {
-				p.commentsUpTo(pl.OpPos)
-				p.newlines(pl.OpPos)
+				p.commentsUpTo(ci.OpPos)
+				p.newlines(ci.OpPos)
 			}
-			p.spacedString(pl.Op.String())
-			p.incLines(pl.OpPos)
+			p.spacedString(ci.Op.String())
+			p.incLines(ci.OpPos)
 			p.level--
-			if sep || pl.OpPos == x.Esac {
+			if sep || ci.OpPos == x.Esac {
 				p.wantNewline = true
 			}
 		}
-		p.decLevel()
-		p.semiRsrv("esac", x.Esac, len(x.List) == 0)
+		p.semiRsrv("esac", x.Esac, len(x.Items) == 0)
 	case *ArithmCmd:
 		p.WriteString("((")
+		if x.Unsigned {
+			p.WriteString("# ")
+		}
 		p.arithmExpr(x.X, false, false)
 		p.WriteString("))")
 	case *TestClause:
@@ -728,16 +792,17 @@ func (p *Printer) command(cmd Command, redirs []*Redirect) (startRedirs int) {
 		p.testExpr(x.X)
 		p.spacedString("]]")
 	case *DeclClause:
-		name := x.Variant
-		if name == "" {
-			name = "declare"
-		}
-		p.spacedString(name)
+		p.spacedString(x.Variant)
 		for _, w := range x.Opts {
 			p.WriteByte(' ')
 			p.word(w)
 		}
-		p.assigns(x.Assigns)
+		p.assigns(x.Assigns, false)
+	case *TimeClause:
+		p.spacedString("time")
+		if x.Stmt != nil {
+			p.stmt(x.Stmt)
+		}
 	case *CoprocClause:
 		p.spacedString("coproc")
 		if x.Name != nil {
@@ -878,6 +943,7 @@ func (c *byteCounter) WriteString(s string) (int, error) {
 	return 0, nil
 }
 func (c *byteCounter) Reset(io.Writer) { *c = 0 }
+func (c *byteCounter) Flush() error    { return nil }
 
 // stmtCols reports the length that s will take when formatted in a
 // single line. If it will span multiple lines, stmtCols will return -1.
@@ -902,7 +968,7 @@ func (p *Printer) nestedStmts(stmts []*Stmt, closing Pos) {
 	p.decLevel()
 }
 
-func (p *Printer) assigns(assigns []*Assign) {
+func (p *Printer) assigns(assigns []*Assign, alwaysEqual bool) {
 	anyNewline := false
 	for _, a := range assigns {
 		if a.Pos() > p.nline {
@@ -917,22 +983,20 @@ func (p *Printer) assigns(assigns []*Assign) {
 		}
 		if a.Name != nil {
 			p.WriteString(a.Name.Value)
-			if a.Index != nil {
-				p.WriteByte('[')
-				p.arithmExpr(a.Index, false, false)
-				p.WriteByte(']')
-			}
+			p.wroteIndex(a.Index, a.Key)
 			if a.Append {
 				p.WriteByte('+')
 			}
-			p.WriteByte('=')
+			if alwaysEqual || a.Value != nil || a.Array != nil {
+				p.WriteByte('=')
+			}
 		}
 		if a.Value != nil {
 			p.word(a.Value)
 		} else if a.Array != nil {
 			p.wantSpace = false
 			p.WriteByte('(')
-			p.wordJoin(a.Array.List, false)
+			p.elemJoin(a.Array.Elems)
 			p.sepTok(")", a.Array.Rparen)
 		}
 		p.wantSpace = true

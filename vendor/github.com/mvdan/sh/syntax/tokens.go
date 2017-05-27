@@ -8,25 +8,26 @@ type token uint32
 // Modified version of golang.org/x/tools/cmd/stringer that gets the
 // string value from the inline comment of each constant, if there is
 // one. Also removes leading '_'.
-//go:generate stringer -type token
+//go:generate stringer -type token -linecoms
 
 // The list of all possible tokens.
 const (
 	illegalTok token = iota
-	_EOF
-	_Lit
-	_LitWord
-	_LitRedir
+
+	_EOF      // EOF
+	_Lit      // Lit
+	_LitWord  // LitWord
+	_LitRedir // LitRedir
 
 	sglQuote // '
 	dblQuote // "
 	bckQuote // `
 
-	and     // &
-	andAnd  // &&
-	orOr    // ||
-	or      // |
-	pipeAll // |&
+	and    // &
+	andAnd // &&
+	orOr   // ||
+	or     // |
+	orAnd  // |&
 
 	dollar       // $
 	dollSglQuote // $'
@@ -46,8 +47,9 @@ const (
 	semicolon     // ;
 
 	dblSemicolon // ;;
-	semiFall     // ;&
-	dblSemiFall  // ;;&
+	semiAnd      // ;&
+	dblSemiAnd   // ;;&
+	semiOr       // ;|
 
 	exclMark // !
 	addAdd   // ++
@@ -196,9 +198,10 @@ const (
 type CaseOperator token
 
 const (
-	DblSemicolon = CaseOperator(dblSemicolon) + iota
-	SemiFall
-	DblSemiFall
+	Break = CaseOperator(dblSemicolon) + iota
+	Fallthrough
+	Resume
+	ResumeKorn
 )
 
 type ParExpOperator token

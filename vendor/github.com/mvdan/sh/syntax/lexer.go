@@ -32,7 +32,7 @@ func paramOps(r rune) bool {
 func arithmOps(r rune) bool {
 	switch r {
 	case '+', '-', '!', '*', '/', '%', '(', ')', '^', '<', '>', ':', '=',
-		',', '?', '|', '&', ']':
+		',', '?', '|', '&', '[', ']', '#':
 		return true
 	}
 	return false
@@ -86,10 +86,11 @@ retry:
 	return p.r
 }
 
-func (p *Parser) unrune(r rune) {
+func (p *Parser) unrune(r rune, tok token) {
 	if p.r != utf8.RuneSelf {
 		p.npos -= utf8.RuneLen(p.r)
 		p.r = r
+		p.tok = tok
 	}
 }
 
@@ -240,6 +241,13 @@ skipSpace:
 				p.litBs = nil
 			}
 			p.next()
+		case '[':
+			if p.quote == arrayElems {
+				p.tok = leftBrack
+				p.rune()
+			} else {
+				p.advanceLitNone(r)
+			}
 		case '?', '*', '+', '@', '!':
 			if p.peekByte('(') {
 				switch r {
@@ -306,7 +314,7 @@ func (p *Parser) regToken(r rune) token {
 			p.rune()
 			return andAnd
 		case '>':
-			if !p.bash() {
+			if p.lang == LangPOSIX {
 				break
 			}
 			if p.rune() == '>' {
@@ -322,23 +330,23 @@ func (p *Parser) regToken(r rune) token {
 			p.rune()
 			return orOr
 		case '&':
-			if !p.bash() {
+			if p.lang == LangPOSIX {
 				break
 			}
 			p.rune()
-			return pipeAll
+			return orAnd
 		}
 		return or
 	case '$':
 		switch p.rune() {
 		case '\'':
-			if !p.bash() {
+			if p.lang == LangPOSIX {
 				break
 			}
 			p.rune()
 			return dollSglQuote
 		case '"':
-			if !p.bash() {
+			if p.lang == LangPOSIX {
 				break
 			}
 			p.rune()
@@ -347,7 +355,7 @@ func (p *Parser) regToken(r rune) token {
 			p.rune()
 			return dollBrace
 		case '[':
-			if !p.bash() {
+			if p.lang != LangBash {
 				break
 			}
 			p.rune()
@@ -361,7 +369,7 @@ func (p *Parser) regToken(r rune) token {
 		}
 		return dollar
 	case '(':
-		if p.rune() == '(' && p.bash() {
+		if p.rune() == '(' && p.lang != LangPOSIX {
 			p.rune()
 			return dblLeftParen
 		}
@@ -372,17 +380,23 @@ func (p *Parser) regToken(r rune) token {
 	case ';':
 		switch p.rune() {
 		case ';':
-			if p.rune() == '&' && p.bash() {
+			if p.rune() == '&' && p.lang == LangBash {
 				p.rune()
-				return dblSemiFall
+				return dblSemiAnd
 			}
 			return dblSemicolon
 		case '&':
-			if !p.bash() {
+			if p.lang == LangPOSIX {
 				break
 			}
 			p.rune()
-			return semiFall
+			return semiAnd
+		case '|':
+			if p.lang != LangMirBSDKorn {
+				break
+			}
+			p.rune()
+			return semiOr
 		}
 		return semicolon
 	case '<':
@@ -391,7 +405,7 @@ func (p *Parser) regToken(r rune) token {
 			if r = p.rune(); r == '-' {
 				p.rune()
 				return dashHdoc
-			} else if r == '<' && p.bash() {
+			} else if r == '<' && p.lang != LangPOSIX {
 				p.rune()
 				return wordHdoc
 			}
@@ -403,7 +417,7 @@ func (p *Parser) regToken(r rune) token {
 			p.rune()
 			return dplIn
 		case '(':
-			if !p.bash() {
+			if p.lang != LangBash {
 				break
 			}
 			p.rune()
@@ -422,7 +436,7 @@ func (p *Parser) regToken(r rune) token {
 			p.rune()
 			return clbOut
 		case '(':
-			if !p.bash() {
+			if p.lang != LangBash {
 				break
 			}
 			p.rune()
@@ -446,7 +460,7 @@ func (p *Parser) dqToken(r rune) token {
 			p.rune()
 			return dollBrace
 		case '[':
-			if !p.bash() {
+			if p.lang != LangBash {
 				break
 			}
 			p.rune()
@@ -651,6 +665,9 @@ func (p *Parser) arithmToken(r rune) token {
 			return xorAssgn
 		}
 		return caret
+	case '[':
+		p.rune()
+		return leftBrack
 	case ']':
 		p.rune()
 		return rightBrack
@@ -660,9 +677,12 @@ func (p *Parser) arithmToken(r rune) token {
 	case '?':
 		p.rune()
 		return quest
-	default: // ':'
+	case ':':
 		p.rune()
 		return colon
+	default: // '#'
+		p.rune()
+		return hash
 	}
 }
 
@@ -756,7 +776,7 @@ loop:
 			if p.quote&allParamReg != 0 {
 				break loop
 			}
-			if r == '[' && p.bash() && p.quote&allArithmExpr != 0 {
+			if r == '[' && p.lang != LangPOSIX && p.quote&allArithmExpr != 0 {
 				break loop
 			}
 		case '+':
@@ -829,7 +849,7 @@ loop:
 		case '=':
 			p.asPos = len(p.litBs) - 1
 		case '[':
-			if p.bash() && len(p.litBs) > 1 && p.litBs[0] != '[' {
+			if p.lang != LangPOSIX && len(p.litBs) > 1 && p.litBs[0] != '[' {
 				tok = _Lit
 				break loop
 			}
@@ -864,17 +884,23 @@ func (p *Parser) advanceLitHdoc(r rune) {
 		}
 	}
 	lStart := len(p.litBs) - 1
-loop:
-	for ; r != utf8.RuneSelf; r = p.rune() {
+	for ; ; r = p.rune() {
 		switch r {
 		case '`', '$':
-			break loop
+			p.val = p.endLit()
+			return
 		case '\\': // escaped byte follows
 			p.rune()
-		case '\n':
-			if bytes.Equal(p.litBs[lStart:len(p.litBs)-1], p.hdocStop) {
+		case '\n', utf8.RuneSelf:
+			if bytes.HasPrefix(p.litBs[lStart:], p.hdocStop) {
 				p.val = p.endLit()[:lStart]
+				if p.val == "" {
+					p.tok = illegalTok
+				}
 				p.hdocStop = nil
+				return
+			}
+			if r == utf8.RuneSelf {
 				return
 			}
 			if p.quote == hdocBodyTabs {
@@ -885,22 +911,15 @@ loop:
 			lStart = len(p.litBs)
 		}
 	}
-	if bytes.Equal(p.litBs[lStart:], p.hdocStop) {
-		p.val = p.endLit()[:lStart]
-		p.hdocStop = nil
-	} else {
-		p.val = p.endLit()
-	}
 }
 
 func (p *Parser) hdocLitWord() *Word {
 	r := p.r
 	p.newLit(r)
-	pos, val := p.getPos(), ""
-	for {
+	pos := p.getPos()
+	for ; ; r = p.rune() {
 		if r == utf8.RuneSelf {
-			val = p.endLit()
-			break
+			return nil
 		}
 		if p.quote == hdocBodyTabs {
 			for r == '\t' {
@@ -911,18 +930,15 @@ func (p *Parser) hdocLitWord() *Word {
 		for r != utf8.RuneSelf && r != '\n' {
 			r = p.rune()
 		}
-		lEnd := len(p.litBs)
-		if r != utf8.RuneSelf {
-			lEnd--
+		if bytes.HasPrefix(p.litBs[lStart:], p.hdocStop) {
+			p.hdocStop = nil
+			val := p.endLit()[:lStart]
+			if val == "" {
+				return nil
+			}
+			return p.word(p.wps(p.lit(pos, val)))
 		}
-		if bytes.Equal(p.litBs[lStart:lEnd], p.hdocStop) {
-			val = p.endLit()[:lStart]
-			break
-		}
-		r = p.rune()
 	}
-	l := p.lit(pos, val)
-	return p.word(p.wps(l))
 }
 
 func (p *Parser) advanceLitRe(r rune) {

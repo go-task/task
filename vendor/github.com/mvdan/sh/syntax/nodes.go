@@ -111,12 +111,15 @@ func (c *Comment) End() Pos { return c.Hash + Pos(len(c.Text)) }
 // Stmt represents a statement, otherwise known as a compound command.
 // It is compromised of a command and other components that may come
 // before or after it.
+//
+// The Coprocess field is particular to MirBSDKorn.
 type Stmt struct {
 	Cmd        Command
 	Position   Pos
 	Semicolon  Pos
 	Negated    bool
 	Background bool
+	Coprocess  bool
 	Assigns    []*Assign
 	Redirs     []*Redirect
 }
@@ -147,7 +150,7 @@ func (s *Stmt) End() Pos {
 //
 // These are *CallExpr, *IfClause, *WhileClause, *ForClause,
 // *CaseClause, *Block, *Subshell, *BinaryCmd, *FuncDecl, *ArithmCmd,
-// *TestClause, *DeclClause, *LetClause, and *CoprocClause.
+// *TestClause, *DeclClause, *LetClause, *TimeClause, and *CoprocClause.
 type Command interface {
 	Node
 	commandNode()
@@ -166,24 +169,21 @@ func (*ArithmCmd) commandNode()    {}
 func (*TestClause) commandNode()   {}
 func (*DeclClause) commandNode()   {}
 func (*LetClause) commandNode()    {}
+func (*TimeClause) commandNode()   {}
 func (*CoprocClause) commandNode() {}
 
 // Assign represents an assignment to a variable.
 type Assign struct {
 	Append bool
+	Naked  bool
 	Name   *Lit
 	Index  ArithmExpr
+	Key    *DblQuoted
 	Value  *Word
 	Array  *ArrayExpr
 }
 
-func (a *Assign) Pos() Pos {
-	if a.Name != nil {
-		return a.Name.Pos()
-	}
-	return a.Value.Pos()
-}
-
+func (a *Assign) Pos() Pos { return a.Name.Pos() }
 func (a *Assign) End() Pos {
 	if a.Value != nil {
 		return a.Value.End()
@@ -193,6 +193,12 @@ func (a *Assign) End() Pos {
 	}
 	if a.Index != nil {
 		return a.Index.End() + 2
+	}
+	if a.Key != nil {
+		return a.Key.End() + 2
+	}
+	if a.Naked {
+		return a.Name.End()
 	}
 	return a.Name.End() + 1
 }
@@ -293,12 +299,12 @@ func (*CStyleLoop) loopNode() {}
 // WordIter represents the iteration of a variable over a series of
 // words in a for clause.
 type WordIter struct {
-	Name *Lit
-	List []*Word
+	Name  *Lit
+	Items []*Word
 }
 
 func (w *WordIter) Pos() Pos { return w.Name.Pos() }
-func (w *WordIter) End() Pos { return posMax(w.Name.End(), wordLastEnd(w.List)) }
+func (w *WordIter) End() Pos { return posMax(w.Name.End(), wordLastEnd(w.Items)) }
 
 // CStyleLoop represents the behaviour of a for clause similar to the C
 // language.
@@ -408,6 +414,11 @@ func (q *DblQuoted) End() Pos {
 type CmdSubst struct {
 	Left, Right Pos
 	Stmts       []*Stmt
+
+	// MirBSDTempFile is true for mksh's ${ foo;}
+	MirBSDTempFile bool
+	// MirBSDReplyvar is true for mksh's ${|foo;}
+	MirBSDReplyVar bool
 }
 
 func (c *CmdSubst) Pos() Pos { return c.Left }
@@ -419,8 +430,10 @@ type ParamExp struct {
 	Short          bool
 	Indirect       bool
 	Length         bool
+	Width          bool
 	Param          *Lit
 	Index          ArithmExpr
+	Key            *DblQuoted
 	Slice          *Slice
 	Repl           *Replace
 	Exp            *Expansion
@@ -431,10 +444,18 @@ func (p *ParamExp) End() Pos {
 	if !p.Short {
 		return p.Rbrace + 1
 	}
+	if p.Index != nil {
+		return p.Index.End() + 1
+	}
+	if p.Key != nil {
+		return p.Key.End() + 1
+	}
 	return p.Param.End()
 }
 
-func (p *ParamExp) nakedIndex() bool { return p.Short && p.Index != nil }
+func (p *ParamExp) nakedIndex() bool {
+	return p.Short && (p.Index != nil || p.Key != nil)
+}
 
 // Slice represents character slicing inside a ParamExp.
 //
@@ -460,6 +481,7 @@ type Expansion struct {
 type ArithmExp struct {
 	Left, Right Pos
 	Bracket     bool
+	Unsigned    bool
 	X           ArithmExpr
 }
 
@@ -476,6 +498,7 @@ func (a *ArithmExp) End() Pos {
 // This node will never appear when in PosixConformant mode.
 type ArithmCmd struct {
 	Left, Right Pos
+	Unsigned    bool
 	X           ArithmExpr
 }
 
@@ -484,8 +507,7 @@ func (a *ArithmCmd) End() Pos { return a.Right + 2 }
 
 // ArithmExpr represents all nodes that form arithmetic expressions.
 //
-// These are *BinaryArithm, *UnaryArithm, *ParenArithm, *Lit, and
-// *ParamExp.
+// These are *BinaryArithm, *UnaryArithm, *ParenArithm, and *Word.
 type ArithmExpr interface {
 	Node
 	arithmExprNode()
@@ -494,14 +516,13 @@ type ArithmExpr interface {
 func (*BinaryArithm) arithmExprNode() {}
 func (*UnaryArithm) arithmExprNode()  {}
 func (*ParenArithm) arithmExprNode()  {}
-func (*Lit) arithmExprNode()          {}
-func (*ParamExp) arithmExprNode()     {}
+func (*Word) arithmExprNode()         {}
 
 // BinaryArithm represents a binary expression between two arithmetic
 // expression.
 //
-// If Op is any assign operator, X will be a *Lit whose value is a valid
-// name.
+// If Op is any assign operator, X will be a word with a single *Lit
+// whose value is a valid name.
 //
 // Ternary operators like "a ? b : c" are fit into this structure. Thus,
 // if Op == Quest, Y will be a *BinaryArithm with Op == Colon. Op can
@@ -518,7 +539,8 @@ func (b *BinaryArithm) End() Pos { return b.Y.End() }
 // UnaryArithm represents an unary expression over a node, either before
 // or after it.
 //
-// If Op is Inc or Dec, X will be a *Lit whose value is a valid name.
+// If Op is Inc or Dec, X will be a word with a single *Lit whose value
+// is a valid name.
 type UnaryArithm struct {
 	OpPos Pos
 	Op    UnAritOperator
@@ -554,14 +576,14 @@ func (p *ParenArithm) End() Pos { return p.Rparen + 1 }
 type CaseClause struct {
 	Case, Esac Pos
 	Word       *Word
-	List       []*PatternList
+	Items      []*CaseItem
 }
 
 func (c *CaseClause) Pos() Pos { return c.Case }
 func (c *CaseClause) End() Pos { return c.Esac + 4 }
 
-// PatternList represents a pattern list (case) within a CaseClause.
-type PatternList struct {
+// CaseItem represents a pattern list (case) within a CaseClause.
+type CaseItem struct {
 	Op       CaseOperator
 	OpPos    Pos
 	Patterns []*Word
@@ -647,11 +669,28 @@ func (d *DeclClause) End() Pos {
 // This node will never appear when in PosixConformant mode.
 type ArrayExpr struct {
 	Lparen, Rparen Pos
-	List           []*Word
+	Elems          []*ArrayElem
 }
 
 func (a *ArrayExpr) Pos() Pos { return a.Lparen }
 func (a *ArrayExpr) End() Pos { return a.Rparen + 1 }
+
+type ArrayElem struct {
+	Index ArithmExpr
+	Key   *DblQuoted
+	Value *Word
+}
+
+func (a *ArrayElem) Pos() Pos {
+	if a.Index != nil {
+		return a.Index.Pos()
+	}
+	if a.Key != nil {
+		return a.Key.Pos()
+	}
+	return a.Value.Pos()
+}
+func (a *ArrayElem) End() Pos { return a.Value.End() }
 
 // ExtGlob represents a Bash extended globbing expression. Note that
 // these are parsed independently of whether shopt has been called or
@@ -678,6 +717,22 @@ type ProcSubst struct {
 
 func (s *ProcSubst) Pos() Pos { return s.OpPos }
 func (s *ProcSubst) End() Pos { return s.Rparen + 1 }
+
+// TimeClause represents a Bash time clause.
+//
+// This node will never appear when in PosixConformant mode.
+type TimeClause struct {
+	Time Pos
+	Stmt *Stmt
+}
+
+func (c *TimeClause) Pos() Pos { return c.Time }
+func (c *TimeClause) End() Pos {
+	if c.Stmt == nil {
+		return c.Time + 4
+	}
+	return c.Stmt.End()
+}
 
 // CoprocClause represents a Bash coproc clause.
 //

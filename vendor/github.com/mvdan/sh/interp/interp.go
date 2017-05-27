@@ -98,10 +98,12 @@ func (r *Runner) varInd(v varValue, e syntax.ArithmExpr) string {
 		}
 	case []string:
 		// TODO: @ between double quotes
-		if lit, ok := e.(*syntax.Lit); ok {
-			switch lit.Value {
-			case "@", "*":
-				return strings.Join(x, " ")
+		if w, ok := e.(*syntax.Word); ok {
+			if lit, ok := w.Parts[0].(*syntax.Lit); ok {
+				switch lit.Value {
+				case "@", "*":
+					return strings.Join(x, " ")
+				}
 			}
 		}
 		i := r.arithm(e)
@@ -231,6 +233,9 @@ func (r *Runner) fields(words []*syntax.Word) []string {
 }
 
 func (r *Runner) loneWord(word *syntax.Word) string {
+	if word == nil {
+		return ""
+	}
 	return strings.Join(r.wordParts(word.Parts, false), "")
 }
 
@@ -263,13 +268,37 @@ func (r *Runner) stmt(st *syntax.Stmt) {
 }
 
 func (r *Runner) assignValue(as *syntax.Assign) varValue {
+	prev, _ := r.lookupVar(as.Name.Value)
 	if as.Value != nil {
-		return r.loneWord(as.Value)
+		s := r.loneWord(as.Value)
+		if !as.Append || prev == nil {
+			return s
+		}
+		switch x := prev.(type) {
+		case string:
+			return x + s
+		case []string:
+			if len(x) == 0 {
+				return []string{s}
+			}
+			x[0] += s
+			return x
+		}
+		return s
 	}
 	if as.Array != nil {
-		strs := make([]string, len(as.Array.List))
-		for i, w := range as.Array.List {
-			strs[i] = r.loneWord(w)
+		strs := make([]string, len(as.Array.Elems))
+		for i, elem := range as.Array.Elems {
+			strs[i] = r.loneWord(elem.Value)
+		}
+		if !as.Append || prev == nil {
+			return strs
+		}
+		switch x := prev.(type) {
+		case string:
+			return append([]string{x}, strs...)
+		case []string:
+			return append(x, strs...)
 		}
 		return strs
 	}
@@ -279,16 +308,15 @@ func (r *Runner) assignValue(as *syntax.Assign) varValue {
 func (r *Runner) stmtSync(st *syntax.Stmt) {
 	oldVars := r.cmdVars
 	for _, as := range st.Assigns {
-		name := as.Name.Value
 		val := r.assignValue(as)
 		if st.Cmd == nil {
-			r.setVar(name, val)
+			r.setVar(as.Name.Value, val)
 			continue
 		}
 		if r.cmdVars == nil {
 			r.cmdVars = make(map[string]varValue, len(st.Assigns))
 		}
-		r.cmdVars[name] = val
+		r.cmdVars[as.Name.Value] = val
 	}
 	oldIn, oldOut, oldErr := r.Stdin, r.Stdout, r.Stderr
 	for _, rd := range st.Redirs {
@@ -392,7 +420,7 @@ func (r *Runner) cmd(cm syntax.Command) {
 		switch y := x.Loop.(type) {
 		case *syntax.WordIter:
 			name := y.Name.Value
-			for _, field := range r.fields(y.List) {
+			for _, field := range r.fields(y.Items) {
 				r.setVar(name, field)
 				if r.loopStmtsBroken(x.DoStmts) {
 					break
@@ -423,11 +451,11 @@ func (r *Runner) cmd(cm syntax.Command) {
 		}
 	case *syntax.CaseClause:
 		str := r.loneWord(x.Word)
-		for _, pl := range x.List {
-			for _, word := range pl.Patterns {
+		for _, ci := range x.Items {
+			for _, word := range ci.Patterns {
 				pat := r.loneWord(word)
 				if match(pat, str) {
-					r.stmts(pl.Stmts)
+					r.stmts(ci.Stmts)
 					return
 				}
 			}
@@ -435,6 +463,13 @@ func (r *Runner) cmd(cm syntax.Command) {
 	case *syntax.TestClause:
 		if r.bashTest(x.X) == "" && r.exit == 0 {
 			r.exit = 1
+		}
+	case *syntax.DeclClause:
+		if len(x.Opts) > 0 {
+			r.runErr(cm.Pos(), "unhandled declare opts")
+		}
+		for _, as := range x.Assigns {
+			r.setVar(as.Name.Value, r.assignValue(as))
 		}
 	default:
 		r.runErr(cm.Pos(), "unhandled command node: %T", x)

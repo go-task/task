@@ -79,7 +79,7 @@ func Walk(node Node, f func(Node) bool) {
 		walkStmts(x.DoStmts, f)
 	case *WordIter:
 		Walk(x.Name, f)
-		walkWords(x.List, f)
+		walkWords(x.Items, f)
 	case *CStyleLoop:
 		if x.Init != nil {
 			Walk(x.Init, f)
@@ -116,20 +116,20 @@ func Walk(node Node, f func(Node) bool) {
 			Walk(x.Index, f)
 		}
 		if x.Repl != nil {
-			Walk(x.Repl.Orig, f)
-			Walk(x.Repl.With, f)
+			if x.Repl.Orig != nil {
+				Walk(x.Repl.Orig, f)
+			}
+			if x.Repl.With != nil {
+				Walk(x.Repl.With, f)
+			}
 		}
-		if x.Exp != nil {
+		if x.Exp != nil && x.Exp.Word != nil {
 			Walk(x.Exp.Word, f)
 		}
 	case *ArithmExp:
-		if x.X != nil {
-			Walk(x.X, f)
-		}
+		Walk(x.X, f)
 	case *ArithmCmd:
-		if x.X != nil {
-			Walk(x.X, f)
-		}
+		Walk(x.X, f)
 	case *BinaryArithm:
 		Walk(x.X, f)
 		Walk(x.Y, f)
@@ -146,9 +146,9 @@ func Walk(node Node, f func(Node) bool) {
 		Walk(x.X, f)
 	case *CaseClause:
 		Walk(x.Word, f)
-		for _, pl := range x.List {
-			walkWords(pl.Patterns, f)
-			walkStmts(pl.Stmts, f)
+		for _, ci := range x.Items {
+			walkWords(ci.Patterns, f)
+			walkStmts(ci.Stmts, f)
 		}
 	case *TestClause:
 		Walk(x.X, f)
@@ -158,11 +158,22 @@ func Walk(node Node, f func(Node) bool) {
 			Walk(a, f)
 		}
 	case *ArrayExpr:
-		walkWords(x.List, f)
+		for _, el := range x.Elems {
+			Walk(el, f)
+		}
+	case *ArrayElem:
+		if x.Index != nil {
+			Walk(x.Index, f)
+		}
+		Walk(x.Value, f)
 	case *ExtGlob:
 		Walk(x.Pattern, f)
 	case *ProcSubst:
 		walkStmts(x.Stmts, f)
+	case *TimeClause:
+		if x.Stmt != nil {
+			Walk(x.Stmt, f)
+		}
 	case *CoprocClause:
 		if x.Name != nil {
 			Walk(x.Name, f)

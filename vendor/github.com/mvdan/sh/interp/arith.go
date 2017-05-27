@@ -11,8 +11,8 @@ import (
 
 func (r *Runner) arithm(expr syntax.ArithmExpr) int {
 	switch x := expr.(type) {
-	case *syntax.Lit:
-		str := x.Value
+	case *syntax.Word:
+		str := r.loneWord(x)
 		// recursively fetch vars
 		for {
 			val := r.getVar(str)
@@ -23,14 +23,12 @@ func (r *Runner) arithm(expr syntax.ArithmExpr) int {
 		}
 		// default to 0
 		return atoi(str)
-	case *syntax.ParamExp:
-		return atoi(r.paramExp(x))
 	case *syntax.ParenArithm:
 		return r.arithm(x.X)
 	case *syntax.UnaryArithm:
 		switch x.Op {
 		case syntax.Inc, syntax.Dec:
-			name := x.X.(*syntax.Lit).Value
+			name := x.X.(*syntax.Word).Parts[0].(*syntax.Lit).Value
 			old := atoi(r.getVar(name))
 			val := old
 			if x.Op == syntax.Inc {
@@ -83,7 +81,7 @@ func atoi(s string) int {
 }
 
 func (r *Runner) assgnArit(b *syntax.BinaryArithm) int {
-	name := b.X.(*syntax.Lit).Value
+	name := b.X.(*syntax.Word).Parts[0].(*syntax.Lit).Value
 	val := atoi(r.getVar(name))
 	arg := r.arithm(b.Y)
 	switch b.Op {
