@@ -4,7 +4,7 @@
 # Task - Simple task runner / "Make" alternative
 
 Task is a simple tool that allows you to easily run development and build
-tasks. Task is written in Go, but can be used to develop any language.
+tasks. Task is written in Golang, but can be used to develop any language.
 It aims to be simpler and easier to use then [GNU Make][make].
 
 ## Installation
@@ -360,12 +360,14 @@ If you give a `--watch` or `-w` argument, task will watch for files changes
 and run the task again. This requires the `sources` attribute to be given,
 so task know which files to watch.
 
-## Alternatives
+## Alternative task runners
 
-Similar software:
-
-- [tj/robo][robo]
-- [dogtools/dog][dog]
+- YAML based:
+  - [tj/robo][robo]
+  - [dogtools/dog][dog]
+- Go based:
+  - [go-godo][godo]
+  - [markbates/grift][grift]
 
 [make]: https://www.gnu.org/software/make/
 [releases]: https://github.com/go-task/task/releases
@@ -373,4 +375,6 @@ Similar software:
 [gotemplate]: https://golang.org/pkg/text/template/
 [robo]: https://github.com/tj/robo
 [dog]: https://github.com/dogtools/dog
+[godo]: https://github.com/go-godo/godo
+[grift]: https://github.com/markbates/grift
 [sh]: https://github.com/mvdan/sh
