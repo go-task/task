@@ -132,25 +132,32 @@ func (e *Executor) runDeps(ctx context.Context, task string) error {
 
 func (t *Task) isUpToDate(ctx context.Context) (bool, error) {
 	if len(t.Status) > 0 {
-		environ, err := t.getEnviron()
-		if err != nil {
-			return false, err
-		}
+		return t.isUpToDateStatus(ctx)
+	}
+	return t.isUpToDateTimestamp(ctx)
+}
 
-		for _, s := range t.Status {
-			err = execext.RunCommand(&execext.RunCommandOptions{
-				Context: ctx,
-				Command: s,
-				Dir:     t.Dir,
-				Env:     environ,
-			})
-			if err != nil {
-				return false, nil
-			}
-		}
-		return true, nil
+func (t *Task) isUpToDateStatus(ctx context.Context) (bool, error) {
+	environ, err := t.getEnviron()
+	if err != nil {
+		return false, err
 	}
 
+	for _, s := range t.Status {
+		err = execext.RunCommand(&execext.RunCommandOptions{
+			Context: ctx,
+			Command: s,
+			Dir:     t.Dir,
+			Env:     environ,
+		})
+		if err != nil {
+			return false, nil
+		}
+	}
+	return true, nil
+}
+
+func (t *Task) isUpToDateTimestamp(ctx context.Context) (bool, error) {
 	if len(t.Sources) == 0 || len(t.Generates) == 0 {
 		return false, nil
 	}
