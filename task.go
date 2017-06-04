@@ -20,12 +20,15 @@ const (
 
 // Executor executes a Taskfile
 type Executor struct {
-	Tasks map[string]*Task
+	Tasks Tasks
 	Force bool
 	Watch bool
 
 	watchingFiles map[string]struct{}
 }
+
+// Tasks representas a group of tasks
+type Tasks map[string]*Task
 
 // Task represents a task
 type Task struct {

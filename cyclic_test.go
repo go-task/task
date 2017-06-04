@@ -8,7 +8,7 @@ import (
 
 func TestCyclicDepCheck(t *testing.T) {
 	isCyclic := &task.Executor{
-		Tasks: map[string]*task.Task{
+		Tasks: task.Tasks{
 			"task-a": &task.Task{
 				Deps: []string{"task-b"},
 			},
@@ -23,7 +23,7 @@ func TestCyclicDepCheck(t *testing.T) {
 	}
 
 	isNotCyclic := &task.Executor{
-		Tasks: map[string]*task.Task{
+		Tasks: task.Tasks{
 			"task-a": &task.Task{
 				Deps: []string{"task-c"},
 			},
