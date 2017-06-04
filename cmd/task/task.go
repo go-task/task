@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/go-task/task"
 
@@ -9,6 +10,8 @@ import (
 )
 
 func main() {
+	log.SetFlags(0)
+
 	pflag.Usage = func() {
 		fmt.Println(`task [target1 target2 ...]: Runs commands under targets like make.
 
@@ -25,9 +28,40 @@ hello:
 `)
 		pflag.PrintDefaults()
 	}
-	pflag.BoolVarP(&task.Init, "init", "i", false, "creates a new Taskfile.yml in the current folder")
-	pflag.BoolVarP(&task.Force, "force", "f", false, "forces execution even when the task is up-to-date")
-	pflag.BoolVarP(&task.Watch, "watch", "w", false, "enables watch of the given task")
+
+	var (
+		init  bool
+		force bool
+		watch bool
+	)
+
+	pflag.BoolVarP(&init, "init", "i", false, "creates a new Taskfile.yml in the current folder")
+	pflag.BoolVarP(&force, "force", "f", false, "forces execution even when the task is up-to-date")
+	pflag.BoolVarP(&watch, "watch", "w", false, "enables watch of the given task")
 	pflag.Parse()
-	task.Run()
+
+	if init {
+		if err := task.InitTaskfile(); err != nil {
+			log.Fatal(err)
+		}
+		return
+	}
+
+	e := task.Executor{
+		Force: force,
+		Watch: watch,
+	}
+	if err := e.ReadTaskfile(); err != nil {
+		log.Fatal(err)
+	}
+
+	args := pflag.Args()
+	if len(args) == 0 {
+		log.Println("task: No argument given, trying default task")
+		args = []string{"default"}
+	}
+
+	if err := e.Run(args...); err != nil {
+		log.Fatal(err)
+	}
 }

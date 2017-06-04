@@ -11,27 +11,30 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-func readTaskfile() (map[string]*Task, error) {
-	initialTasks, err := readTaskfileData(TaskFilePath)
+// ReadTaskfile parses Taskfile from the disk
+func (e *Executor) ReadTaskfile() error {
+	var err error
+	e.Tasks, err = e.readTaskfileData(TaskFilePath)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	mergeTasks, err := readTaskfileData(fmt.Sprintf("%s_%s", TaskFilePath, runtime.GOOS))
+
+	osTasks, err := e.readTaskfileData(fmt.Sprintf("%s_%s", TaskFilePath, runtime.GOOS))
 	if err != nil {
 		switch err.(type) {
-		default:
-			return nil, err
 		case taskFileNotFound:
-			return initialTasks, nil
+			return nil
+		default:
+			return err
 		}
 	}
-	if err := mergo.MapWithOverwrite(&initialTasks, mergeTasks); err != nil {
-		return nil, err
+	if err := mergo.MapWithOverwrite(&e.Tasks, osTasks); err != nil {
+		return err
 	}
-	return initialTasks, nil
+	return nil
 }
 
-func readTaskfileData(path string) (tasks map[string]*Task, err error) {
+func (e *Executor) readTaskfileData(path string) (tasks map[string]*Task, err error) {
 	if b, err := ioutil.ReadFile(path + ".yml"); err == nil {
 		return tasks, yaml.Unmarshal(b, &tasks)
 	}

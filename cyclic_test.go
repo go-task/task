@@ -7,30 +7,34 @@ import (
 )
 
 func TestCyclicDepCheck(t *testing.T) {
-	isCyclic := map[string]*task.Task{
-		"task-a": &task.Task{
-			Deps: []string{"task-b"},
-		},
-		"task-b": &task.Task{
-			Deps: []string{"task-a"},
+	isCyclic := &task.Executor{
+		Tasks: map[string]*task.Task{
+			"task-a": &task.Task{
+				Deps: []string{"task-b"},
+			},
+			"task-b": &task.Task{
+				Deps: []string{"task-a"},
+			},
 		},
 	}
 
-	if !task.HasCyclicDep(isCyclic) {
+	if !isCyclic.HasCyclicDep() {
 		t.Error("Task should be cyclic")
 	}
 
-	isNotCyclic := map[string]*task.Task{
-		"task-a": &task.Task{
-			Deps: []string{"task-c"},
+	isNotCyclic := &task.Executor{
+		Tasks: map[string]*task.Task{
+			"task-a": &task.Task{
+				Deps: []string{"task-c"},
+			},
+			"task-b": &task.Task{
+				Deps: []string{"task-c"},
+			},
+			"task-c": &task.Task{},
 		},
-		"task-b": &task.Task{
-			Deps: []string{"task-c"},
-		},
-		"task-c": &task.Task{},
 	}
 
-	if task.HasCyclicDep(isNotCyclic) {
+	if isNotCyclic.HasCyclicDep() {
 		t.Error("Task should not be cyclic")
 	}
 }

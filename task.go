@@ -10,24 +10,22 @@ import (
 
 	"github.com/go-task/task/execext"
 
-	"github.com/spf13/pflag"
 	"golang.org/x/sync/errgroup"
 )
 
-var (
+const (
 	// TaskFilePath is the default Taskfile
 	TaskFilePath = "Taskfile"
+)
 
-	// Init (--init or -f flag) creates a Taskfile.yml in the current folder if not exists
-	Init bool
-	// Force (--force or -f flag) forces a task to run even when it's up-to-date
+// Executor executes a Taskfile
+type Executor struct {
+	Tasks map[string]*Task
 	Force bool
-	// Watch (--watch or -w flag) enables watch of a task
 	Watch bool
 
-	// Tasks constains the tasks parsed from Taskfile
-	Tasks = make(map[string]*Task)
-)
+	watchingFiles map[string]struct{}
+}
 
 // Task represents a task
 type Task struct {
@@ -44,67 +42,47 @@ type Task struct {
 }
 
 // Run runs Task
-func Run() {
-	log.SetFlags(0)
-
-	args := pflag.Args()
-
-	if Init {
-		initTaskfile()
-		return
-	}
-
-	if len(args) == 0 {
-		log.Println("task: No argument given, trying default task")
-		args = []string{"default"}
-	}
-
-	var err error
-	Tasks, err = readTaskfile()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	if HasCyclicDep(Tasks) {
-		log.Fatal("Cyclic dependency detected")
+func (e *Executor) Run(args ...string) error {
+	if e.HasCyclicDep() {
+		return ErrCyclicDependencyDetected
 	}
 
 	// check if given tasks exist
 	for _, a := range args {
-		if _, ok := Tasks[a]; !ok {
-			var err error = &taskNotFoundError{taskName: a}
-			fmt.Println(err)
-			printExistingTasksHelp()
-			return
+		if _, ok := e.Tasks[a]; !ok {
+			// FIXME: move to the main package
+			e.printExistingTasksHelp()
+			return &taskNotFoundError{taskName: a}
 		}
 	}
 
-	if Watch {
-		if err := WatchTasks(args); err != nil {
-			log.Fatal(err)
+	if e.Watch {
+		if err := e.watchTasks(args...); err != nil {
+			return err
 		}
-		return
+		return nil
 	}
 
 	for _, a := range args {
-		if err = RunTask(context.Background(), a); err != nil {
-			log.Fatal(err)
+		if err := e.RunTask(context.Background(), a); err != nil {
+			return err
 		}
 	}
+	return nil
 }
 
 // RunTask runs a task by its name
-func RunTask(ctx context.Context, name string) error {
-	t, ok := Tasks[name]
+func (e *Executor) RunTask(ctx context.Context, name string) error {
+	t, ok := e.Tasks[name]
 	if !ok {
 		return &taskNotFoundError{name}
 	}
 
-	if err := t.runDeps(ctx); err != nil {
+	if err := e.runDeps(ctx, name); err != nil {
 		return err
 	}
 
-	if !Force {
+	if !e.Force {
 		upToDate, err := t.isUpToDate(ctx)
 		if err != nil {
 			return err
@@ -116,15 +94,16 @@ func RunTask(ctx context.Context, name string) error {
 	}
 
 	for i := range t.Cmds {
-		if err := t.runCommand(ctx, i); err != nil {
+		if err := e.runCommand(ctx, name, i); err != nil {
 			return &taskRunError{name, err}
 		}
 	}
 	return nil
 }
 
-func (t *Task) runDeps(ctx context.Context) error {
+func (e *Executor) runDeps(ctx context.Context, task string) error {
 	g, ctx := errgroup.WithContext(ctx)
+	t := e.Tasks[task]
 
 	for _, d := range t.Deps {
 		dep := d
@@ -135,7 +114,7 @@ func (t *Task) runDeps(ctx context.Context) error {
 				return err
 			}
 
-			if err = RunTask(ctx, dep); err != nil {
+			if err = e.RunTask(ctx, dep); err != nil {
 				return err
 			}
 			return nil
@@ -195,7 +174,9 @@ func (t *Task) isUpToDate(ctx context.Context) (bool, error) {
 	return generatesMinTime.After(sourcesMaxTime), nil
 }
 
-func (t *Task) runCommand(ctx context.Context, i int) error {
+func (e *Executor) runCommand(ctx context.Context, task string, i int) error {
+	t := e.Tasks[task]
+
 	c, err := t.ReplaceVariables(t.Cmds[i])
 	if err != nil {
 		return err
@@ -203,7 +184,7 @@ func (t *Task) runCommand(ctx context.Context, i int) error {
 
 	if strings.HasPrefix(c, "^") {
 		c = strings.TrimPrefix(c, "^")
-		if err = RunTask(ctx, c); err != nil {
+		if err = e.RunTask(ctx, c); err != nil {
 			return err
 		}
 		return nil

@@ -11,13 +11,13 @@ import (
 	"github.com/mattn/go-zglob"
 )
 
-// WatchTasks start watching the given tasks
-func WatchTasks(args []string) error {
+// watchTasks start watching the given tasks
+func (e *Executor) watchTasks(args ...string) error {
 	log.Printf("task: Started watching for tasks: %s", strings.Join(args, ", "))
 
 	// run tasks on init
 	for _, a := range args {
-		if err := RunTask(context.Background(), a); err != nil {
+		if err := e.RunTask(context.Background(), a); err != nil {
 			fmt.Println(err)
 			break
 		}
@@ -31,7 +31,7 @@ func WatchTasks(args []string) error {
 
 	go func() {
 		for {
-			if err := registerWatchedFiles(watcher, args); err != nil {
+			if err := e.registerWatchedFiles(watcher, args); err != nil {
 				log.Printf("Error watching files: %v", err)
 			}
 			time.Sleep(time.Second * 2)
@@ -43,7 +43,7 @@ loop:
 		select {
 		case <-watcher.Events:
 			for _, a := range args {
-				if err := RunTask(context.Background(), a); err != nil {
+				if err := e.RunTask(context.Background(), a); err != nil {
 					fmt.Println(err)
 					continue loop
 				}
@@ -55,11 +55,9 @@ loop:
 	}
 }
 
-var watchingFiles map[string]struct{}
-
-func registerWatchedFiles(w *fsnotify.Watcher, args []string) error {
-	oldWatchingFiles := watchingFiles
-	watchingFiles = make(map[string]struct{}, len(oldWatchingFiles))
+func (e *Executor) registerWatchedFiles(w *fsnotify.Watcher, args []string) error {
+	oldWatchingFiles := e.watchingFiles
+	e.watchingFiles = make(map[string]struct{}, len(oldWatchingFiles))
 
 	for k := range oldWatchingFiles {
 		if err := w.Remove(k); err != nil {
@@ -68,11 +66,11 @@ func registerWatchedFiles(w *fsnotify.Watcher, args []string) error {
 	}
 
 	for _, a := range args {
-		task, ok := Tasks[a]
+		task, ok := e.Tasks[a]
 		if !ok {
 			return &taskNotFoundError{a}
 		}
-		if err := registerWatchedFiles(w, task.Deps); err != nil {
+		if err := e.registerWatchedFiles(w, task.Deps); err != nil {
 			return err
 		}
 		for _, s := range task.Sources {
@@ -84,7 +82,7 @@ func registerWatchedFiles(w *fsnotify.Watcher, args []string) error {
 				if err := w.Add(f); err != nil {
 					return err
 				}
-				watchingFiles[f] = struct{}{}
+				e.watchingFiles[f] = struct{}{}
 
 				// run if is new file
 				if oldWatchingFiles != nil {

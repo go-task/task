@@ -13,17 +13,17 @@ default:
     - echo "Hello, World!"
 `
 
-func initTaskfile() {
+// InitTaskfile Taskfile creates a new Taskfile
+func InitTaskfile() error {
 	for _, f := range []string{"Taskfile.yml", "Taskfile.toml", "Taskfile.json"} {
 		if _, err := os.Stat(f); err == nil {
-			log.Printf("A Taskfile already exists")
-			os.Exit(1)
-			return
+			return ErrTaskfileAlreadyExists
 		}
 	}
 
 	if err := ioutil.WriteFile("Taskfile.yml", []byte(defaultTaskfile), 0666); err != nil {
-		log.Fatalf("%v", err)
+		return err
 	}
 	log.Printf("Taskfile.yml created in the current directory")
+	return nil
 }
