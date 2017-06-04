@@ -12,6 +12,29 @@ import (
 	"github.com/mvdan/sh/syntax"
 )
 
+func (r *Runner) quotedElems(pe *syntax.ParamExp) []string {
+	if pe == nil {
+		return nil
+	}
+	if pe.Param.Value == "@" {
+		return r.args
+	}
+	w, _ := pe.Index.(*syntax.Word)
+	if w == nil || len(w.Parts) != 1 {
+		return nil
+	}
+	l, _ := w.Parts[0].(*syntax.Lit)
+	if l == nil || l.Value != "@" {
+		return nil
+	}
+	val, _ := r.lookupVar(pe.Param.Value)
+	switch x := val.(type) {
+	case []string:
+		return x
+	}
+	return nil
+}
+
 func (r *Runner) paramExp(pe *syntax.ParamExp) string {
 	name := pe.Param.Value
 	var val varValue

@@ -2,6 +2,7 @@ package semver
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"regexp"
@@ -289,6 +290,31 @@ func (v *Version) Compare(o *Version) int {
 	}
 
 	return comparePrerelease(ps, po)
+}
+
+// UnmarshalJSON implements JSON.Unmarshaler interface.
+func (v *Version) UnmarshalJSON(b []byte) error {
+	var s string
+	if err := json.Unmarshal(b, &s); err != nil {
+		return err
+	}
+	temp, err := NewVersion(s)
+	if err != nil {
+		return err
+	}
+	v.major = temp.major
+	v.minor = temp.minor
+	v.patch = temp.patch
+	v.pre = temp.pre
+	v.metadata = temp.metadata
+	v.original = temp.original
+	temp = nil
+	return nil
+}
+
+// MarshalJSON implements JSON.Marshaler interface.
+func (v *Version) MarshalJSON() ([]byte, error) {
+	return json.Marshal(v.String())
 }
 
 func compareSegment(v, o int64) int {

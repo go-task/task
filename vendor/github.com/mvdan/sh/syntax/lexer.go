@@ -28,6 +28,15 @@ func paramOps(r rune) bool {
 	return false
 }
 
+// these start a parameter expansion name
+func paramNameOp(r rune) bool {
+	switch r {
+	case '}', ':', '+', '=', '%', '[', ']', '/', '^', ',', '@':
+		return false
+	}
+	return true
+}
+
 // tokenize these inside arithmetic expansions
 func arithmOps(r rune) bool {
 	switch r {
@@ -84,14 +93,6 @@ retry:
 		}
 	}
 	return p.r
-}
-
-func (p *Parser) unrune(r rune, tok token) {
-	if p.r != utf8.RuneSelf {
-		p.npos -= utf8.RuneLen(p.r)
-		p.r = r
-		p.tok = tok
-	}
 }
 
 // fill reads more bytes from the input src into readBuf. Any bytes that
@@ -528,7 +529,7 @@ func (p *Parser) paramToken(r rune) token {
 		p.rune()
 		return leftBrack
 	case '/':
-		if p.rune() == '/' {
+		if p.rune() == '/' && p.quote != paramExpRepl {
 			p.rune()
 			return dblSlash
 		}
@@ -961,90 +962,90 @@ loop:
 	p.tok, p.val = _LitWord, p.endLit()
 }
 
-func testUnaryOp(val string) token {
+func testUnaryOp(val string) UnTestOperator {
 	switch val {
 	case "!":
-		return exclMark
+		return TsNot
 	case "-e", "-a":
-		return tsExists
+		return TsExists
 	case "-f":
-		return tsRegFile
+		return TsRegFile
 	case "-d":
-		return tsDirect
+		return TsDirect
 	case "-c":
-		return tsCharSp
+		return TsCharSp
 	case "-b":
-		return tsBlckSp
+		return TsBlckSp
 	case "-p":
-		return tsNmPipe
+		return TsNmPipe
 	case "-S":
-		return tsSocket
+		return TsSocket
 	case "-L", "-h":
-		return tsSmbLink
+		return TsSmbLink
 	case "-k":
-		return tsSticky
+		return TsSticky
 	case "-g":
-		return tsGIDSet
+		return TsGIDSet
 	case "-u":
-		return tsUIDSet
+		return TsUIDSet
 	case "-G":
-		return tsGrpOwn
+		return TsGrpOwn
 	case "-O":
-		return tsUsrOwn
+		return TsUsrOwn
 	case "-N":
-		return tsModif
+		return TsModif
 	case "-r":
-		return tsRead
+		return TsRead
 	case "-w":
-		return tsWrite
+		return TsWrite
 	case "-x":
-		return tsExec
+		return TsExec
 	case "-s":
-		return tsNoEmpty
+		return TsNoEmpty
 	case "-t":
-		return tsFdTerm
+		return TsFdTerm
 	case "-z":
-		return tsEmpStr
+		return TsEmpStr
 	case "-n":
-		return tsNempStr
+		return TsNempStr
 	case "-o":
-		return tsOptSet
+		return TsOptSet
 	case "-v":
-		return tsVarSet
+		return TsVarSet
 	case "-R":
-		return tsRefVar
+		return TsRefVar
 	default:
-		return illegalTok
+		return 0
 	}
 }
 
-func testBinaryOp(val string) token {
+func testBinaryOp(val string) BinTestOperator {
 	switch val {
 	case "==", "=":
-		return equal
+		return TsMatch
 	case "!=":
-		return nequal
+		return TsNoMatch
 	case "=~":
-		return tsReMatch
+		return TsReMatch
 	case "-nt":
-		return tsNewer
+		return TsNewer
 	case "-ot":
-		return tsOlder
+		return TsOlder
 	case "-ef":
-		return tsDevIno
+		return TsDevIno
 	case "-eq":
-		return tsEql
+		return TsEql
 	case "-ne":
-		return tsNeq
+		return TsNeq
 	case "-le":
-		return tsLeq
+		return TsLeq
 	case "-ge":
-		return tsGeq
+		return TsGeq
 	case "-lt":
-		return tsLss
+		return TsLss
 	case "-gt":
-		return tsGtr
+		return TsGtr
 	default:
-		return illegalTok
+		return 0
 	}
 }

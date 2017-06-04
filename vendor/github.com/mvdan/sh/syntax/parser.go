@@ -118,7 +118,7 @@ func (p *Parser) getPos() Pos { return Pos(p.offs + p.npos) }
 
 func (p *Parser) lit(pos Pos, val string) *Lit {
 	if len(p.litBatch) == 0 {
-		p.litBatch = make([]Lit, 64)
+		p.litBatch = make([]Lit, 128)
 	}
 	l := &p.litBatch[0]
 	p.litBatch = p.litBatch[1:]
@@ -130,7 +130,7 @@ func (p *Parser) lit(pos Pos, val string) *Lit {
 
 func (p *Parser) word(parts []WordPart) *Word {
 	if len(p.wordBatch) == 0 {
-		p.wordBatch = make([]Word, 32)
+		p.wordBatch = make([]Word, 64)
 	}
 	w := &p.wordBatch[0]
 	p.wordBatch = p.wordBatch[1:]
@@ -150,7 +150,7 @@ func (p *Parser) wps(wp WordPart) []WordPart {
 
 func (p *Parser) stmt(pos Pos) *Stmt {
 	if len(p.stmtBatch) == 0 {
-		p.stmtBatch = make([]Stmt, 16)
+		p.stmtBatch = make([]Stmt, 64)
 	}
 	s := &p.stmtBatch[0]
 	p.stmtBatch = p.stmtBatch[1:]
@@ -160,7 +160,7 @@ func (p *Parser) stmt(pos Pos) *Stmt {
 
 func (p *Parser) stList() []*Stmt {
 	if len(p.stListBatch) == 0 {
-		p.stListBatch = make([]*Stmt, 128)
+		p.stListBatch = make([]*Stmt, 256)
 	}
 	stmts := p.stListBatch[:0:4]
 	p.stListBatch = p.stListBatch[4:]
@@ -184,7 +184,7 @@ func (p *Parser) call(w *Word) *CallExpr {
 	return ce
 }
 
-type quoteState uint
+type quoteState uint32
 
 const (
 	noState quoteState = 1 << iota
@@ -557,9 +557,9 @@ func (p *Parser) wordPart() WordPart {
 				p.curErr(`"${ stmts;}" is a mksh feature`)
 			}
 			cs := &CmdSubst{
-				Left:           p.pos,
-				MirBSDTempFile: p.r != '|',
-				MirBSDReplyVar: p.r == '|',
+				Left:     p.pos,
+				TempFile: p.r != '|',
+				ReplyVar: p.r == '|',
 			}
 			old := p.preNested(subCmd)
 			p.rune() // don't tokenize '|'
@@ -792,6 +792,9 @@ func (p *Parser) arithmExpr(ftok token, fpos Pos, level int, compact, tern bool)
 		case _Lit, _LitWord:
 			p.curErr("not a valid arithmetic operator: %s", p.val)
 			return nil
+		case leftBrack:
+			p.curErr("[ must follow a name")
+			return nil
 		case rightParen, _EOF:
 		default:
 			if p.quote == arithmExpr {
@@ -845,7 +848,7 @@ func isArithName(left ArithmExpr) bool {
 	}
 	switch x := w.Parts[0].(type) {
 	case *Lit:
-		return validIdent(x.Value)
+		return ValidName(x.Value)
 	case *ParamExp:
 		return x.nakedIndex()
 	default:
@@ -905,10 +908,6 @@ func (p *Parser) arithmExprBase(compact bool) ArithmExpr {
 		p.postNested(old)
 		p.matched(left, leftBrack, rightBrack)
 		x = p.word(p.wps(pe))
-	case dollar:
-		x = p.word(p.wps(p.shortParamExp()))
-	case dollBrace:
-		x = p.word(p.wps(p.paramExp()))
 	case bckQuote:
 		if p.quote == arithmExprLet {
 			return nil
@@ -964,15 +963,18 @@ func (p *Parser) paramExp() *ParamExp {
 	pe := &ParamExp{Dollar: p.pos}
 	old := p.quote
 	p.quote = paramExpName
-	p.next()
+	if p.r == '#' {
+		p.tok = hash
+		p.pos = p.getPos()
+		p.rune()
+	} else {
+		p.next()
+	}
 	switch p.tok {
 	case at:
 		p.tok, p.val = _LitWord, "@"
-	case dblHash:
-		p.unrune('#', hash)
-		fallthrough
 	case hash:
-		if p.r != '}' {
+		if paramNameOp(p.r) {
 			pe.Length = true
 			p.next()
 		}
@@ -980,12 +982,12 @@ func (p *Parser) paramExp() *ParamExp {
 		if p.lang != LangMirBSDKorn {
 			p.posErr(pe.Pos(), `"${%%foo}" is a mksh feature`)
 		}
-		if p.r != '}' {
+		if paramNameOp(p.r) {
 			pe.Width = true
 			p.next()
 		}
 	case exclMark:
-		if p.r != '}' {
+		if paramNameOp(p.r) {
 			pe.Indirect = true
 			p.next()
 		}
@@ -1006,9 +1008,7 @@ func (p *Parser) paramExp() *ParamExp {
 			p.curErr("%s cannot be followed by a word", op)
 		}
 	default:
-		if !pe.Length {
-			p.posErr(pe.Dollar, "parameter expansion requires a literal")
-		}
+		p.curErr("parameter expansion requires a literal")
 	}
 	if p.tok == rightBrace {
 		pe.Rbrace = p.pos
@@ -1050,14 +1050,9 @@ func (p *Parser) paramExp() *ParamExp {
 		p.next()
 		pe.Repl.Orig = p.getWord()
 		p.quote = paramExpExp
-		switch p.tok {
-		case dblSlash:
-			p.unrune('/', slash)
-			p.next()
-		case slash:
-			p.next()
+		if p.got(slash) {
+			pe.Repl.With = p.getWord()
 		}
-		pe.Repl.With = p.getWord()
 	case colon:
 		if p.lang == LangPOSIX {
 			p.curErr("slicing is a bash feature")
@@ -1119,7 +1114,8 @@ func stopToken(tok token) bool {
 	return false
 }
 
-func validIdent(val string) bool {
+// ValidName returns whether val is a valid name as per the POSIX spec.
+func ValidName(val string) bool {
 	for i, c := range val {
 		switch {
 		case 'a' <= c && c <= 'z':
@@ -1138,7 +1134,7 @@ func (p *Parser) hasValidIdent() bool {
 		if p.val[end-1] == '+' && p.lang != LangPOSIX {
 			end--
 		}
-		if validIdent(p.val[:end]) {
+		if ValidName(p.val[:end]) {
 			return true
 		}
 	}
@@ -1387,57 +1383,51 @@ preLoop:
 		case "esac":
 			p.curErr(`%q can only be used to end a case`, p.val)
 		case "[[":
-			if p.lang == LangPOSIX {
-				break
+			if p.lang != LangPOSIX {
+				s.Cmd = p.testClause()
 			}
-			s.Cmd = p.testClause()
 		case "]]":
-			if p.lang == LangPOSIX {
-				break
+			if p.lang != LangPOSIX {
+				p.curErr(`%s can only be used to close a test`,
+					p.val)
 			}
-			p.curErr(`%s can only be used to close a test`, p.val)
 		case "let":
-			if p.lang == LangPOSIX {
-				break
+			if p.lang != LangPOSIX {
+				s.Cmd = p.letClause()
 			}
-			s.Cmd = p.letClause()
 		case "function":
-			if p.lang == LangPOSIX {
-				break
+			if p.lang != LangPOSIX {
+				s.Cmd = p.bashFuncDecl()
 			}
-			s.Cmd = p.bashFuncDecl()
 		case "declare":
-			if p.lang != LangBash {
-				break
+			if p.lang == LangBash {
+				s.Cmd = p.declClause()
 			}
-			s.Cmd = p.declClause()
 		case "local", "export", "readonly", "typeset", "nameref":
-			if p.lang == LangPOSIX {
-				break
+			if p.lang != LangPOSIX {
+				s.Cmd = p.declClause()
 			}
-			s.Cmd = p.declClause()
 		case "time":
-			if p.lang == LangPOSIX {
-				break
+			if p.lang != LangPOSIX {
+				s.Cmd = p.timeClause()
 			}
-			s.Cmd = p.timeClause()
 		case "coproc":
-			if p.lang != LangBash {
-				break
+			if p.lang == LangBash {
+				s.Cmd = p.coprocClause()
 			}
-			s.Cmd = p.coprocClause()
 		}
-		if s.Cmd == nil {
-			name := p.lit(p.pos, p.val)
-			if p.next(); p.gotSameLine(leftParen) {
-				p.follow(name.ValuePos, "foo(", rightParen)
-				if p.lang == LangPOSIX && !validIdent(name.Value) {
-					p.posErr(name.Pos(), "invalid func name")
-				}
-				s.Cmd = p.funcDecl(name, name.ValuePos)
-			} else {
-				s.Cmd = p.callExpr(s, p.word(p.wps(name)))
+		if s.Cmd != nil {
+			break
+		}
+		name := p.lit(p.pos, p.val)
+		if p.next(); p.gotSameLine(leftParen) {
+			p.follow(name.ValuePos, "foo(", rightParen)
+			if p.lang == LangPOSIX && !ValidName(name.Value) {
+				p.posErr(name.Pos(), "invalid func name")
 			}
+			s.Cmd = p.funcDecl(name, name.ValuePos)
+		} else {
+			s.Cmd = p.callExpr(s, p.word(p.wps(name)))
 		}
 	case bckQuote:
 		if p.quote == subCmdBckquo {
@@ -1576,25 +1566,16 @@ func (p *Parser) loop(forPos Pos) Loop {
 	if p.tok == dblLeftParen {
 		cl := &CStyleLoop{Lparen: p.pos}
 		old := p.preNested(arithmExprCmd)
-		if p.next(); p.tok == dblSemicolon {
-			p.unrune(';', semicolon)
-		}
-		if p.tok != semicolon {
-			cl.Init = p.arithmExpr(dblLeftParen, cl.Lparen, 0, false, false)
-		}
+		p.next()
+		cl.Init = p.arithmExpr(dblLeftParen, cl.Lparen, 0, false, false)
 		scPos := p.pos
-		if p.tok == dblSemicolon {
-			p.unrune(';', semicolon)
-		}
-		p.follow(p.pos, "expression", semicolon)
-		if p.tok != semicolon {
+		if !p.got(dblSemicolon) {
+			p.follow(p.pos, "expr", semicolon)
 			cl.Cond = p.arithmExpr(semicolon, scPos, 0, false, false)
+			scPos = p.pos
+			p.follow(p.pos, "expr", semicolon)
 		}
-		scPos = p.pos
-		p.follow(p.pos, "expression", semicolon)
-		if p.tok != semicolon {
-			cl.Post = p.arithmExpr(semicolon, scPos, 0, false, false)
-		}
+		cl.Post = p.arithmExpr(semicolon, scPos, 0, false, false)
 		cl.Rparen = p.arithmEnd(dblLeftParen, cl.Lparen, old)
 		p.gotSameLine(semicolon)
 		return cl
@@ -1677,7 +1658,7 @@ func (p *Parser) testClause() *TestClause {
 	if p.next(); p.tok == _EOF || p.gotRsrv("]]") {
 		p.posErr(tc.Left, "test clause requires at least one expression")
 	}
-	tc.X = p.testExpr(illegalTok, tc.Left, 0)
+	tc.X = p.testExpr(illegalTok, tc.Left, false)
 	tc.Right = p.pos
 	if !p.gotRsrv("]]") {
 		p.matchingErr(tc.Left, "[[", "]]")
@@ -1685,26 +1666,23 @@ func (p *Parser) testClause() *TestClause {
 	return tc
 }
 
-func (p *Parser) testExpr(ftok token, fpos Pos, level int) TestExpr {
+func (p *Parser) testExpr(ftok token, fpos Pos, pastAndOr bool) TestExpr {
 	var left TestExpr
-	if level > 1 {
+	if pastAndOr {
 		left = p.testExprBase(ftok, fpos)
 	} else {
-		left = p.testExpr(ftok, fpos, level+1)
+		left = p.testExpr(ftok, fpos, true)
 	}
 	if left == nil {
 		return left
 	}
-	var newLevel int
 	switch p.tok {
 	case andAnd, orOr:
 	case _LitWord:
 		if p.val == "]]" {
 			return left
 		}
-		fallthrough
 	case rdrIn, rdrOut:
-		newLevel = 1
 	case _EOF, rightParen:
 		return left
 	case _Lit:
@@ -1712,11 +1690,8 @@ func (p *Parser) testExpr(ftok token, fpos Pos, level int) TestExpr {
 	default:
 		p.curErr("not a valid test operator: %v", p.tok)
 	}
-	if newLevel < level {
-		return left
-	}
 	if p.tok == _LitWord {
-		if p.tok = testBinaryOp(p.val); p.tok == illegalTok {
+		if p.tok = token(testBinaryOp(p.val)); p.tok == illegalTok {
 			p.curErr("not a valid test operator: %s", p.val)
 		}
 	}
@@ -1728,7 +1703,7 @@ func (p *Parser) testExpr(ftok token, fpos Pos, level int) TestExpr {
 	switch b.Op {
 	case AndTest, OrTest:
 		p.next()
-		if b.Y = p.testExpr(token(b.Op), b.OpPos, newLevel); b.Y == nil {
+		if b.Y = p.testExpr(token(b.Op), b.OpPos, false); b.Y == nil {
 			p.followErrExp(b.OpPos, b.Op.String())
 		}
 	case TsReMatch:
@@ -1754,11 +1729,10 @@ func (p *Parser) testExprBase(ftok token, fpos Pos) TestExpr {
 	case _EOF:
 		return nil
 	case _LitWord:
-		op := testUnaryOp(p.val)
+		op := token(testUnaryOp(p.val))
 		switch op {
 		case illegalTok:
-		case tsRefVar, tsModif:
-			// TODO: check with man mksh
+		case tsRefVar, tsModif: // not available in mksh
 			if p.lang == LangBash {
 				p.tok = op
 			}
@@ -1770,7 +1744,7 @@ func (p *Parser) testExprBase(ftok token, fpos Pos) TestExpr {
 	case exclMark:
 		u := &UnaryTest{OpPos: p.pos, Op: TsNot}
 		p.next()
-		u.X = p.testExpr(token(u.Op), u.OpPos, 0)
+		u.X = p.testExpr(token(u.Op), u.OpPos, false)
 		return u
 	case tsExists, tsRegFile, tsDirect, tsCharSp, tsBlckSp, tsNmPipe,
 		tsSocket, tsSmbLink, tsSticky, tsGIDSet, tsUIDSet, tsGrpOwn,
@@ -1783,7 +1757,7 @@ func (p *Parser) testExprBase(ftok token, fpos Pos) TestExpr {
 	case leftParen:
 		pe := &ParenTest{Lparen: p.pos}
 		p.next()
-		if pe.X = p.testExpr(leftParen, pe.Lparen, 0); pe.X == nil {
+		if pe.X = p.testExpr(leftParen, pe.Lparen, false); pe.X == nil {
 			p.followErrExp(pe.Lparen, "(")
 		}
 		pe.Rparen = p.matched(pe.Lparen, leftParen, rightParen)
@@ -1953,9 +1927,9 @@ func (p *Parser) callExpr(s *Stmt, w *Word) *CallExpr {
 
 func (p *Parser) funcDecl(name *Lit, pos Pos) *FuncDecl {
 	fd := &FuncDecl{
-		Position:  pos,
-		BashStyle: pos != name.ValuePos,
-		Name:      name,
+		Position: pos,
+		RsrvWord: pos != name.ValuePos,
+		Name:     name,
 	}
 	if fd.Body, _ = p.getStmt(false, false); fd.Body == nil {
 		p.followErr(fd.Pos(), "foo()", "a statement")

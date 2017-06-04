@@ -111,17 +111,16 @@ func (c *Comment) End() Pos { return c.Hash + Pos(len(c.Text)) }
 // Stmt represents a statement, otherwise known as a compound command.
 // It is compromised of a command and other components that may come
 // before or after it.
-//
-// The Coprocess field is particular to MirBSDKorn.
 type Stmt struct {
 	Cmd        Command
 	Position   Pos
 	Semicolon  Pos
-	Negated    bool
-	Background bool
-	Coprocess  bool
-	Assigns    []*Assign
-	Redirs     []*Redirect
+	Negated    bool // ! stmt
+	Background bool // stmt &
+	Coprocess  bool // mksh's |&
+
+	Assigns []*Assign   // a=x b=y stmt
+	Redirs  []*Redirect // stmt >a <b
 }
 
 func (s *Stmt) Pos() Pos { return s.Position }
@@ -174,13 +173,13 @@ func (*CoprocClause) commandNode() {}
 
 // Assign represents an assignment to a variable.
 type Assign struct {
-	Append bool
-	Naked  bool
+	Append bool // +=
+	Naked  bool // without '='
 	Name   *Lit
-	Index  ArithmExpr
-	Key    *DblQuoted
-	Value  *Word
-	Array  *ArrayExpr
+	Index  ArithmExpr // [i]
+	Key    *DblQuoted // ["k"]
+	Value  *Word      // =val
+	Array  *ArrayExpr // =(arr)
 }
 
 func (a *Assign) Pos() Pos { return a.Name.Pos() }
@@ -193,8 +192,7 @@ func (a *Assign) End() Pos {
 	}
 	if a.Index != nil {
 		return a.Index.End() + 2
-	}
-	if a.Key != nil {
+	} else if a.Key != nil {
 		return a.Key.End() + 2
 	}
 	if a.Naked {
@@ -205,10 +203,11 @@ func (a *Assign) End() Pos {
 
 // Redirect represents an input/output redirection.
 type Redirect struct {
-	OpPos      Pos
-	Op         RedirOperator
-	N          *Lit
-	Word, Hdoc *Word
+	OpPos Pos
+	Op    RedirOperator
+	N     *Lit  // N>
+	Word  *Word // >word
+	Hdoc  *Word // here-document body
 }
 
 func (r *Redirect) Pos() Pos {
@@ -330,10 +329,10 @@ func (b *BinaryCmd) End() Pos { return b.Y.End() }
 
 // FuncDecl represents the declaration of a function.
 type FuncDecl struct {
-	Position  Pos
-	BashStyle bool
-	Name      *Lit
-	Body      *Stmt
+	Position Pos
+	RsrvWord bool // non-posix "function " style
+	Name     *Lit
+	Body     *Stmt
 }
 
 func (f *FuncDecl) Pos() Pos { return f.Position }
@@ -379,7 +378,7 @@ func (l *Lit) End() Pos { return l.ValueEnd }
 // SglQuoted represents a string within single quotes.
 type SglQuoted struct {
 	Position Pos
-	Dollar   bool
+	Dollar   bool // $''
 	Value    string
 }
 
@@ -395,7 +394,7 @@ func (q *SglQuoted) End() Pos {
 // DblQuoted represents a list of nodes within double quotes.
 type DblQuoted struct {
 	Position Pos
-	Dollar   bool
+	Dollar   bool // $""
 	Parts    []WordPart
 }
 
@@ -415,10 +414,8 @@ type CmdSubst struct {
 	Left, Right Pos
 	Stmts       []*Stmt
 
-	// MirBSDTempFile is true for mksh's ${ foo;}
-	MirBSDTempFile bool
-	// MirBSDReplyvar is true for mksh's ${|foo;}
-	MirBSDReplyVar bool
+	TempFile bool // mksh's ${ foo;}
+	ReplyVar bool // mksh's ${|foo;}
 }
 
 func (c *CmdSubst) Pos() Pos { return c.Left }
@@ -427,16 +424,16 @@ func (c *CmdSubst) End() Pos { return c.Right + 1 }
 // ParamExp represents a parameter expansion.
 type ParamExp struct {
 	Dollar, Rbrace Pos
-	Short          bool
-	Indirect       bool
-	Length         bool
-	Width          bool
+	Short          bool // $a instead of ${a}
+	Indirect       bool // ${!a}
+	Length         bool // ${#a}
+	Width          bool // ${%a}
 	Param          *Lit
-	Index          ArithmExpr
-	Key            *DblQuoted
-	Slice          *Slice
-	Repl           *Replace
-	Exp            *Expansion
+	Index          ArithmExpr // ${a[i]}
+	Key            *DblQuoted // ${a["k"]}
+	Slice          *Slice     // ${a:x:y}
+	Repl           *Replace   // ${a/x/y}
+	Exp            *Expansion // ${a:-b}, ${a#b}, etc
 }
 
 func (p *ParamExp) Pos() Pos { return p.Dollar }
@@ -446,8 +443,7 @@ func (p *ParamExp) End() Pos {
 	}
 	if p.Index != nil {
 		return p.Index.End() + 1
-	}
-	if p.Key != nil {
+	} else if p.Key != nil {
 		return p.Key.End() + 1
 	}
 	return p.Param.End()
@@ -480,8 +476,8 @@ type Expansion struct {
 // ArithmExp represents an arithmetic expansion.
 type ArithmExp struct {
 	Left, Right Pos
-	Bracket     bool
-	Unsigned    bool
+	Bracket     bool // deprecated $[expr] form
+	Unsigned    bool // mksh's $((# expr))
 	X           ArithmExpr
 }
 
@@ -498,7 +494,7 @@ func (a *ArithmExp) End() Pos {
 // This node will never appear when in PosixConformant mode.
 type ArithmCmd struct {
 	Left, Right Pos
-	Unsigned    bool
+	Unsigned    bool // mksh's ((# expr))
 	X           ArithmExpr
 }
 
@@ -651,7 +647,7 @@ func (p *ParenTest) End() Pos { return p.Rparen + 1 }
 // This node will never appear when in PosixConformant mode.
 type DeclClause struct {
 	Position Pos
-	Variant  string
+	Variant  string // "declare", "local", etc
 	Opts     []*Word
 	Assigns  []*Assign
 }
@@ -684,8 +680,7 @@ type ArrayElem struct {
 func (a *ArrayElem) Pos() Pos {
 	if a.Index != nil {
 		return a.Index.Pos()
-	}
-	if a.Key != nil {
+	} else if a.Key != nil {
 		return a.Key.Pos()
 	}
 	return a.Value.Pos()

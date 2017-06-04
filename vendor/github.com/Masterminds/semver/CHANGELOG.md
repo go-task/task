@@ -1,3 +1,15 @@
+# 1.3.0 (2017-05-02)
+
+## Added
+- #45: Added json (un)marshaling support (thanks @mh-cbon)
+- Stability marker. See https://masterminds.github.io/stability/
+
+## Fixed
+- #51: Fix handling of single digit tilde constraint (thanks @dgodd)
+
+## Changed
+- #55: The godoc icon moved from png to svg
+
 # 1.2.3 (2017-04-03)
 
 ## Fixed

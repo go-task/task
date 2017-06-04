@@ -289,13 +289,13 @@ func (p *Printer) wordPart(wp WordPart) {
 	case *CmdSubst:
 		p.incLines(x.Pos())
 		switch {
-		case x.MirBSDTempFile:
+		case x.TempFile:
 			p.WriteString("${")
 			p.wantSpace = true
 			p.nestedStmts(x.Stmts, x.Right)
 			p.wantSpace = false
 			p.semiRsrv("}", x.Right, true)
-		case x.MirBSDReplyVar:
+		case x.ReplyVar:
 			p.WriteString("${|")
 			p.nestedStmts(x.Stmts, x.Right)
 			p.wantSpace = false
@@ -380,9 +380,7 @@ func (p *Printer) paramExp(pe *ParamExp) {
 	case pe.Indirect:
 		p.WriteByte('!')
 	}
-	if pe.Param != nil {
-		p.WriteString(pe.Param.Value)
-	}
+	p.WriteString(pe.Param.Value)
 	p.wroteIndex(pe.Index, pe.Key)
 	if pe.Slice != nil {
 		p.WriteByte(':')
@@ -741,7 +739,7 @@ func (p *Printer) command(cmd Command, redirs []*Redirect) (startRedirs int) {
 		}
 		p.nestedBinary = false
 	case *FuncDecl:
-		if x.BashStyle {
+		if x.RsrvWord {
 			p.WriteString("function ")
 		}
 		p.WriteString(x.Name.Value)

@@ -563,6 +563,7 @@ func (r *Runner) loopStmtsBroken(stmts []*syntax.Stmt) bool {
 func (r *Runner) wordParts(wps []syntax.WordPart, quoted bool) []string {
 	var parts []string
 	var curBuf bytes.Buffer
+	allowEmpty := false
 	flush := func() {
 		if curBuf.Len() == 0 {
 			return
@@ -590,17 +591,18 @@ func (r *Runner) wordParts(wps []syntax.WordPart, quoted bool) []string {
 			}
 			curBuf.WriteString(s)
 		case *syntax.SglQuoted:
+			allowEmpty = true
 			curBuf.WriteString(x.Value)
 		case *syntax.DblQuoted:
-			// TODO: @ between double quotes but not alone
+			allowEmpty = true
 			if len(x.Parts) == 1 {
-				pe, ok := x.Parts[0].(*syntax.ParamExp)
-				if ok && pe.Param.Value == "@" {
-					for i, arg := range r.args {
+				pe, _ := x.Parts[0].(*syntax.ParamExp)
+				if elems := r.quotedElems(pe); elems != nil {
+					for i, elem := range elems {
 						if i > 0 {
 							flush()
 						}
-						curBuf.WriteString(arg)
+						curBuf.WriteString(elem)
 					}
 					continue
 				}
@@ -617,10 +619,10 @@ func (r *Runner) wordParts(wps []syntax.WordPart, quoted bool) []string {
 			}
 		case *syntax.CmdSubst:
 			r2 := *r
-			var outBuf bytes.Buffer
-			r2.Stdout = &outBuf
+			var buf bytes.Buffer
+			r2.Stdout = &buf
 			r2.stmts(x.Stmts)
-			val := strings.TrimRight(outBuf.String(), "\n")
+			val := strings.TrimRight(buf.String(), "\n")
 			if quoted {
 				curBuf.WriteString(val)
 			} else {
@@ -633,6 +635,9 @@ func (r *Runner) wordParts(wps []syntax.WordPart, quoted bool) []string {
 		}
 	}
 	flush()
+	if allowEmpty && len(parts) == 0 {
+		parts = append(parts, "")
+	}
 	return parts
 }
 

@@ -19,7 +19,7 @@ func isBuiltin(name string) bool {
 		"echo", "printf", "break", "continue", "pwd", "cd",
 		"wait", "builtin", "trap", "type", "source", "command",
 		"pushd", "popd", "umask", "alias", "unalias", "fg", "bg",
-		"getopts", "eval":
+		"getopts", "eval", "test", "[":
 		return true
 	}
 	return false
@@ -207,6 +207,23 @@ func (r *Runner) builtinCode(pos syntax.Pos, name string, args []string) int {
 		r2.File = file
 		r2.Run()
 		return r2.exit
+	case "[":
+		if len(args) == 0 || args[len(args)-1] != "]" {
+			r.runErr(pos, "[: missing matching ]")
+			break
+		}
+		args = args[:len(args)-1]
+		fallthrough
+	case "test":
+		p := testParser{
+			rem: args,
+			err: func(format string, a ...interface{}) {
+				r.runErr(pos, format, a...)
+			},
+		}
+		p.next()
+		expr := p.classicTest("[", false)
+		return oneIf(r.bashTest(expr) == "")
 	case "trap", "source", "command", "pushd", "popd",
 		"umask", "alias", "unalias", "fg", "bg", "getopts":
 		r.runErr(pos, "unhandled builtin: %s", name)

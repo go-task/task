@@ -19,7 +19,7 @@ Date Functions
 	- date FORMAT TIME: Format a date, where a date is an integer type or a time.Time type, and
 	  format is a time.Format formatting string.
 	- dateModify: Given a date, modify it with a duration: `date_modify "-1.5h" now`. If the duration doesn't
-	parse, it returns the time unaltered. See `time.ParseDuration` for info on duration strings.
+	  parse, it returns the time unaltered. See `time.ParseDuration` for info on duration strings.
 	- now: Current time.Time, for feeding into date-related functions.
 	- htmlDate TIME: Format a date for use in the value field of an HTML "date" form element.
 	- dateInZone FORMAT TIME TZ: Like date, but takes three arguments: format, timestamp,
@@ -68,7 +68,7 @@ String Slice Functions:
 	- split: strings.Split, but as `split SEP STRING`. The results are returned
 	  as a map with the indexes set to _N, where N is an integer starting from 0.
 	  Use it like this: `{{$v := "foo/bar/baz" | split "/"}}{{$v._0}}` (Prints `foo`)
-    - splitList: strings.Split, but as `split SEP STRING`. The results are returned
+	- splitList: strings.Split, but as `split SEP STRING`. The results are returned
 	  as an array.
 	- toStrings: convert a list to a list of strings. 'list 1 2 3 | toStrings' produces '["1" "2" "3"]'
 	- sortAlpha: sort a list lexicographically.
@@ -114,7 +114,7 @@ File Paths:
 	- base: Return the last element of a path. https://golang.org/pkg/path#Base
 	- dir: Remove the last element of a path. https://golang.org/pkg/path#Dir
 	- clean: Clean a path to the shortest equivalent name.  (e.g. remove "foo/.."
-	from "foo/../bar.html") https://golang.org/pkg/path#Clean
+	  from "foo/../bar.html") https://golang.org/pkg/path#Clean
 	- ext: https://golang.org/pkg/path#Ext
 	- isAbs: https://golang.org/pkg/path#IsAbs
 
