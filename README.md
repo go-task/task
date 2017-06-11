@@ -368,6 +368,7 @@ so task know which files to watch.
 - YAML based:
   - [tj/robo][robo]
   - [dogtools/dog][dog]
+  - [goeuro/myke][myke]
 - Go based:
   - [go-godo][godo]
   - [markbates/grift][grift]
@@ -378,6 +379,7 @@ so task know which files to watch.
 [gotemplate]: https://golang.org/pkg/text/template/
 [robo]: https://github.com/tj/robo
 [dog]: https://github.com/dogtools/dog
+[myke]: https://github.com/goeuro/myke
 [godo]: https://github.com/go-godo/godo
 [grift]: https://github.com/markbates/grift
 [sh]: https://github.com/mvdan/sh
