@@ -10,6 +10,12 @@ dl-deps:
   cmds:
     - go get -u github.com/golang/lint/golint
     - go get -u github.com/goreleaser/goreleaser
+    - go get -u github.com/golang/dep/cmd/dep
+
+update-deps:
+  cmds:
+    - dep ensure
+    - dep prune
 
 lint:
   desc: Runs golint
