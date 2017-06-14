@@ -4,6 +4,7 @@
 package interp
 
 import (
+	"bytes"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -20,6 +21,19 @@ func (r *Runner) bashTest(expr syntax.TestExpr) string {
 	case *syntax.ParenTest:
 		return r.bashTest(x.X)
 	case *syntax.BinaryTest:
+		switch x.Op {
+		case syntax.TsMatch, syntax.TsNoMatch:
+			str := r.loneWord(x.X.(*syntax.Word))
+			var buf bytes.Buffer
+			yw := x.Y.(*syntax.Word)
+			for _, field := range r.wordFields(yw.Parts, false) {
+				buf.WriteString(escapeQuotedParts(field))
+			}
+			if match(buf.String(), str) == (x.Op == syntax.TsMatch) {
+				return "1"
+			}
+			return ""
+		}
 		if r.binTest(x.Op, r.bashTest(x.X), r.bashTest(x.Y)) {
 			return "1"
 		}
@@ -73,10 +87,6 @@ func (r *Runner) binTest(op syntax.BinTestOperator, x, y string) bool {
 		return x != "" && y != ""
 	case syntax.OrTest:
 		return x != "" || y != ""
-	case syntax.TsMatch:
-		return match(y, x)
-	case syntax.TsNoMatch:
-		return !match(y, x)
 	case syntax.TsBefore:
 		return x < y
 	default: // syntax.TsAfter

@@ -901,7 +901,7 @@ func (p *Parser) arithmExprBase(compact bool) ArithmExpr {
 		old := p.preNested(arithmExprBrack)
 		p.next()
 		if p.tok == dblQuote {
-			pe.Key = p.dblQuoted()
+			pe.Index = p.word(p.wps(p.dblQuoted()))
 		} else {
 			pe.Index = p.followArithm(leftBrack, left)
 		}
@@ -1028,7 +1028,7 @@ func (p *Parser) paramExp() *ParamExp {
 			p.tok, p.val = _LitWord, p.tok.String()
 		}
 		if p.tok == dblQuote {
-			pe.Key = p.dblQuoted()
+			pe.Index = p.word(p.wps(p.dblQuoted()))
 		} else {
 			pe.Index = p.followArithm(leftBrack, lpos)
 		}
@@ -1170,7 +1170,7 @@ func (p *Parser) getAssign(needEqual bool) *Assign {
 			p.tok, p.val = _LitWord, p.tok.String()
 		}
 		if p.tok == dblQuote {
-			as.Key = p.dblQuoted()
+			as.Index = p.word(p.wps(p.dblQuoted()))
 		} else {
 			as.Index = p.followArithm(leftBrack, left)
 		}
@@ -1219,7 +1219,7 @@ func (p *Parser) getAssign(needEqual bool) *Assign {
 				p.quote = arithmExprBrack
 				p.next()
 				if p.tok == dblQuote {
-					ae.Key = p.dblQuoted()
+					ae.Index = p.word(p.wps(p.dblQuoted()))
 				} else {
 					ae.Index = p.followArithm(leftBrack, left)
 				}

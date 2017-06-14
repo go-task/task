@@ -12,6 +12,7 @@ import (
 	"os/exec"
 	"os/user"
 	"path"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"sync"
@@ -97,7 +98,6 @@ func (r *Runner) varInd(v varValue, e syntax.ArithmExpr) string {
 			return x
 		}
 	case []string:
-		// TODO: @ between double quotes
 		if w, ok := e.(*syntax.Word); ok {
 			if lit, ok := w.Parts[0].(*syntax.Lit); ok {
 				switch lit.Value {
@@ -224,10 +224,43 @@ func (r *Runner) errf(format string, a ...interface{}) {
 	fmt.Fprintf(r.Stderr, format, a...)
 }
 
+func fieldJoin(parts []fieldPart) string {
+	var buf bytes.Buffer
+	for _, part := range parts {
+		buf.WriteString(part.val)
+	}
+	return buf.String()
+}
+
+func escapeQuotedParts(parts []fieldPart) string {
+	var buf bytes.Buffer
+	for _, part := range parts {
+		if !part.quoted {
+			buf.WriteString(part.val)
+			continue
+		}
+		for _, r := range part.val {
+			switch r {
+			case '*', '?', '\\', '[':
+				buf.WriteByte('\\')
+			}
+			buf.WriteRune(r)
+		}
+	}
+	return buf.String()
+}
+
 func (r *Runner) fields(words []*syntax.Word) []string {
 	fields := make([]string, 0, len(words))
 	for _, word := range words {
-		fields = append(fields, r.wordParts(word.Parts, false)...)
+		for _, field := range r.wordFields(word.Parts, false) {
+			matches, _ := filepath.Glob(escapeQuotedParts(field))
+			if len(matches) > 0 {
+				fields = append(fields, matches...)
+			} else {
+				fields = append(fields, fieldJoin(field))
+			}
+		}
 	}
 	return fields
 }
@@ -236,7 +269,13 @@ func (r *Runner) loneWord(word *syntax.Word) string {
 	if word == nil {
 		return ""
 	}
-	return strings.Join(r.wordParts(word.Parts, false), "")
+	var buf bytes.Buffer
+	for _, field := range r.wordFields(word.Parts, false) {
+		for _, part := range field {
+			buf.WriteString(part.val)
+		}
+	}
+	return buf.String()
 }
 
 func (r *Runner) stop() bool {
@@ -453,8 +492,11 @@ func (r *Runner) cmd(cm syntax.Command) {
 		str := r.loneWord(x.Word)
 		for _, ci := range x.Items {
 			for _, word := range ci.Patterns {
-				pat := r.loneWord(word)
-				if match(pat, str) {
+				var buf bytes.Buffer
+				for _, field := range r.wordFields(word.Parts, false) {
+					buf.WriteString(escapeQuotedParts(field))
+				}
+				if match(buf.String(), str) {
 					r.stmts(ci.Stmts)
 					return
 				}
@@ -560,16 +602,21 @@ func (r *Runner) loopStmtsBroken(stmts []*syntax.Stmt) bool {
 	return false
 }
 
-func (r *Runner) wordParts(wps []syntax.WordPart, quoted bool) []string {
-	var parts []string
-	var curBuf bytes.Buffer
+type fieldPart struct {
+	val    string
+	quoted bool
+}
+
+func (r *Runner) wordFields(wps []syntax.WordPart, quoted bool) [][]fieldPart {
+	var fields [][]fieldPart
+	var curField []fieldPart
 	allowEmpty := false
 	flush := func() {
-		if curBuf.Len() == 0 {
+		if len(curField) == 0 {
 			return
 		}
-		parts = append(parts, curBuf.String())
-		curBuf.Reset()
+		fields = append(fields, curField)
+		curField = nil
 	}
 	splitAdd := func(val string) {
 		// TODO: use IFS
@@ -577,7 +624,7 @@ func (r *Runner) wordParts(wps []syntax.WordPart, quoted bool) []string {
 			if i > 0 {
 				flush()
 			}
-			curBuf.WriteString(field)
+			curField = append(curField, fieldPart{val: field})
 		}
 	}
 	for i, wp := range wps {
@@ -589,10 +636,13 @@ func (r *Runner) wordParts(wps []syntax.WordPart, quoted bool) []string {
 				// TODO: ~someuser
 				s = r.getVar("HOME") + s[1:]
 			}
-			curBuf.WriteString(s)
+			curField = append(curField, fieldPart{val: s})
 		case *syntax.SglQuoted:
 			allowEmpty = true
-			curBuf.WriteString(x.Value)
+			curField = append(curField, fieldPart{
+				quoted: true,
+				val:    x.Value,
+			})
 		case *syntax.DblQuoted:
 			allowEmpty = true
 			if len(x.Parts) == 1 {
@@ -602,18 +652,26 @@ func (r *Runner) wordParts(wps []syntax.WordPart, quoted bool) []string {
 						if i > 0 {
 							flush()
 						}
-						curBuf.WriteString(elem)
+						curField = append(curField, fieldPart{
+							quoted: true,
+							val:    elem,
+						})
 					}
 					continue
 				}
 			}
-			for _, str := range r.wordParts(x.Parts, true) {
-				curBuf.WriteString(str)
+			for _, field := range r.wordFields(x.Parts, true) {
+				for _, part := range field {
+					curField = append(curField, fieldPart{
+						quoted: true,
+						val:    part.val,
+					})
+				}
 			}
 		case *syntax.ParamExp:
 			val := r.paramExp(x)
 			if quoted {
-				curBuf.WriteString(val)
+				curField = append(curField, fieldPart{val: val})
 			} else {
 				splitAdd(val)
 			}
@@ -624,21 +682,23 @@ func (r *Runner) wordParts(wps []syntax.WordPart, quoted bool) []string {
 			r2.stmts(x.Stmts)
 			val := strings.TrimRight(buf.String(), "\n")
 			if quoted {
-				curBuf.WriteString(val)
+				curField = append(curField, fieldPart{val: val})
 			} else {
 				splitAdd(val)
 			}
 		case *syntax.ArithmExp:
-			curBuf.WriteString(strconv.Itoa(r.arithm(x.X)))
+			curField = append(curField, fieldPart{
+				val: strconv.Itoa(r.arithm(x.X)),
+			})
 		default:
 			r.runErr(wp.Pos(), "unhandled word part: %T", x)
 		}
 	}
 	flush()
-	if allowEmpty && len(parts) == 0 {
-		parts = append(parts, "")
+	if allowEmpty && len(fields) == 0 {
+		fields = append(fields, []fieldPart{{}})
 	}
-	return parts
+	return fields
 }
 
 func (r *Runner) call(pos syntax.Pos, name string, args []string) {

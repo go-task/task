@@ -172,12 +172,16 @@ func (*TimeClause) commandNode()   {}
 func (*CoprocClause) commandNode() {}
 
 // Assign represents an assignment to a variable.
+//
+// Here and elsewhere, Index can either mean an index into an indexed or
+// an associative array. In the former, it's just an arithmetic
+// expression. In the latter, it will be a word with a single DblQuoted
+// part.
 type Assign struct {
 	Append bool // +=
 	Naked  bool // without '='
 	Name   *Lit
-	Index  ArithmExpr // [i]
-	Key    *DblQuoted // ["k"]
+	Index  ArithmExpr // [i], ["k"]
 	Value  *Word      // =val
 	Array  *ArrayExpr // =(arr)
 }
@@ -192,8 +196,6 @@ func (a *Assign) End() Pos {
 	}
 	if a.Index != nil {
 		return a.Index.End() + 2
-	} else if a.Key != nil {
-		return a.Key.End() + 2
 	}
 	if a.Naked {
 		return a.Name.End()
@@ -429,8 +431,7 @@ type ParamExp struct {
 	Length         bool // ${#a}
 	Width          bool // ${%a}
 	Param          *Lit
-	Index          ArithmExpr // ${a[i]}
-	Key            *DblQuoted // ${a["k"]}
+	Index          ArithmExpr // ${a[i]}, ${a["k"]}
 	Slice          *Slice     // ${a:x:y}
 	Repl           *Replace   // ${a/x/y}
 	Exp            *Expansion // ${a:-b}, ${a#b}, etc
@@ -443,14 +444,12 @@ func (p *ParamExp) End() Pos {
 	}
 	if p.Index != nil {
 		return p.Index.End() + 1
-	} else if p.Key != nil {
-		return p.Key.End() + 1
 	}
 	return p.Param.End()
 }
 
 func (p *ParamExp) nakedIndex() bool {
-	return p.Short && (p.Index != nil || p.Key != nil)
+	return p.Short && p.Index != nil
 }
 
 // Slice represents character slicing inside a ParamExp.
@@ -673,15 +672,12 @@ func (a *ArrayExpr) End() Pos { return a.Rparen + 1 }
 
 type ArrayElem struct {
 	Index ArithmExpr
-	Key   *DblQuoted
 	Value *Word
 }
 
 func (a *ArrayElem) Pos() Pos {
 	if a.Index != nil {
 		return a.Index.Pos()
-	} else if a.Key != nil {
-		return a.Key.Pos()
 	}
 	return a.Value.Pos()
 }

@@ -345,16 +345,12 @@ func (p *Printer) dblQuoted(dq *DblQuoted) {
 	p.WriteByte('"')
 }
 
-func (p *Printer) wroteIndex(index ArithmExpr, key *DblQuoted) bool {
-	if index == nil && key == nil {
+func (p *Printer) wroteIndex(index ArithmExpr) bool {
+	if index == nil {
 		return false
 	}
 	p.WriteByte('[')
-	if index != nil {
-		p.arithmExpr(index, false, false)
-	} else {
-		p.dblQuoted(key)
-	}
+	p.arithmExpr(index, false, false)
 	p.WriteByte(']')
 	return true
 }
@@ -362,7 +358,7 @@ func (p *Printer) wroteIndex(index ArithmExpr, key *DblQuoted) bool {
 func (p *Printer) paramExp(pe *ParamExp) {
 	if pe.nakedIndex() { // arr[x]
 		p.WriteString(pe.Param.Value)
-		p.wroteIndex(pe.Index, pe.Key)
+		p.wroteIndex(pe.Index)
 		return
 	}
 	if pe.Short { // $var
@@ -381,7 +377,7 @@ func (p *Printer) paramExp(pe *ParamExp) {
 		p.WriteByte('!')
 	}
 	p.WriteString(pe.Param.Value)
-	p.wroteIndex(pe.Index, pe.Key)
+	p.wroteIndex(pe.Index)
 	if pe.Slice != nil {
 		p.WriteByte(':')
 		p.arithmExpr(pe.Slice.Offset, true, true)
@@ -560,7 +556,7 @@ func (p *Printer) elemJoin(elems []*ArrayElem) {
 			p.WriteByte(' ')
 			p.wantSpace = false
 		}
-		if p.wroteIndex(el.Index, el.Key) {
+		if p.wroteIndex(el.Index) {
 			p.WriteByte('=')
 		}
 		p.word(el.Value)
@@ -981,7 +977,7 @@ func (p *Printer) assigns(assigns []*Assign, alwaysEqual bool) {
 		}
 		if a.Name != nil {
 			p.WriteString(a.Name.Value)
-			p.wroteIndex(a.Index, a.Key)
+			p.wroteIndex(a.Index)
 			if a.Append {
 				p.WriteByte('+')
 			}
