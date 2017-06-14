@@ -9,6 +9,10 @@ import (
 	"github.com/spf13/pflag"
 )
 
+var (
+	version = "master"
+)
+
 func main() {
 	log.SetFlags(0)
 
@@ -30,15 +34,22 @@ hello:
 	}
 
 	var (
-		init  bool
-		force bool
-		watch bool
+		versionFlag bool
+		init        bool
+		force       bool
+		watch       bool
 	)
 
+	pflag.BoolVar(&versionFlag, "version", false, "show Task version")
 	pflag.BoolVarP(&init, "init", "i", false, "creates a new Taskfile.yml in the current folder")
 	pflag.BoolVarP(&force, "force", "f", false, "forces execution even when the task is up-to-date")
 	pflag.BoolVarP(&watch, "watch", "w", false, "enables watch of the given task")
 	pflag.Parse()
+
+	if versionFlag {
+		log.Printf("Task version: %s\n", version)
+		return
+	}
 
 	if init {
 		if err := task.InitTaskfile(); err != nil {

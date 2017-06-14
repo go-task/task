@@ -3,7 +3,9 @@
 install:
   desc: Installs Task
   cmds:
-    - go install -v ./...
+    - go install -v -ldflags="-w -s -X main.version={{.GIT_COMMIT}}" ./cmd/task
+  vars:
+    GIT_COMMIT: $git log -n 1 --format=%h
 
 dl-deps:
   desc: Downloads cli dependencies
@@ -16,6 +18,11 @@ update-deps:
   cmds:
     - dep ensure
     - dep prune
+
+clean:
+  desc: Cleans temp files and folders
+  cmds:
+    - rm -rf dist/
 
 lint:
   desc: Runs golint
@@ -35,3 +42,8 @@ release:
   desc: Release Task
   cmds:
     - goreleaser
+
+test-release:
+  desc: Tests release process without publishing
+  cmds:
+    - goreleaser --skip-validate --skip-publish

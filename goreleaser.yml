@@ -8,3 +8,16 @@ build:
   goarch:
     - 386
     - amd64
+  ignore:
+    - goos: darwin
+      goarch: 386
+
+archive:
+  format_overrides:
+    - goos: windows
+      format: zip
+
+  replacements:
+    amd64: x64
+    386: x86
+    darwin: macOS
