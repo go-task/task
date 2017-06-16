@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/go-task/task/execext"
@@ -21,6 +22,7 @@ const (
 // Executor executes a Taskfile
 type Executor struct {
 	Tasks Tasks
+	Dir   string
 	Force bool
 	Watch bool
 
@@ -86,7 +88,7 @@ func (e *Executor) RunTask(ctx context.Context, name string) error {
 	}
 
 	if !e.Force {
-		upToDate, err := t.isUpToDate(ctx)
+		upToDate, err := e.isTaskUpToDate(ctx, name)
 		if err != nil {
 			return err
 		}
@@ -112,7 +114,7 @@ func (e *Executor) runDeps(ctx context.Context, task string) error {
 		dep := d
 
 		g.Go(func() error {
-			dep, err := t.ReplaceVariables(dep)
+			dep, err := e.ReplaceVariables(task, dep)
 			if err != nil {
 				return err
 			}
@@ -130,15 +132,23 @@ func (e *Executor) runDeps(ctx context.Context, task string) error {
 	return nil
 }
 
-func (t *Task) isUpToDate(ctx context.Context) (bool, error) {
+func (e *Executor) isTaskUpToDate(ctx context.Context, task string) (bool, error) {
+	t := e.Tasks[task]
+
 	if len(t.Status) > 0 {
-		return t.isUpToDateStatus(ctx)
+		return e.isUpToDateStatus(ctx, task)
 	}
-	return t.isUpToDateTimestamp(ctx)
+	return e.isUpToDateTimestamp(ctx, task)
 }
 
-func (t *Task) isUpToDateStatus(ctx context.Context) (bool, error) {
-	environ, err := t.getEnviron()
+func (e *Executor) isUpToDateStatus(ctx context.Context, task string) (bool, error) {
+	t := e.Tasks[task]
+
+	environ, err := e.getEnviron(task)
+	if err != nil {
+		return false, err
+	}
+	dir, err := e.getTaskDir(task)
 	if err != nil {
 		return false, err
 	}
@@ -147,7 +157,7 @@ func (t *Task) isUpToDateStatus(ctx context.Context) (bool, error) {
 		err = execext.RunCommand(&execext.RunCommandOptions{
 			Context: ctx,
 			Command: s,
-			Dir:     t.Dir,
+			Dir:     dir,
 			Env:     environ,
 		})
 		if err != nil {
@@ -157,26 +167,33 @@ func (t *Task) isUpToDateStatus(ctx context.Context) (bool, error) {
 	return true, nil
 }
 
-func (t *Task) isUpToDateTimestamp(ctx context.Context) (bool, error) {
+func (e *Executor) isUpToDateTimestamp(ctx context.Context, task string) (bool, error) {
+	t := e.Tasks[task]
+
 	if len(t.Sources) == 0 || len(t.Generates) == 0 {
 		return false, nil
 	}
 
-	sources, err := t.ReplaceSliceVariables(t.Sources)
-	if err != nil {
-		return false, err
-	}
-	generates, err := t.ReplaceSliceVariables(t.Generates)
+	dir, err := e.getTaskDir(task)
 	if err != nil {
 		return false, err
 	}
 
-	sourcesMaxTime, err := getPatternsMaxTime(sources)
+	sources, err := e.ReplaceSliceVariables(task, t.Sources)
+	if err != nil {
+		return false, err
+	}
+	generates, err := e.ReplaceSliceVariables(task, t.Generates)
+	if err != nil {
+		return false, err
+	}
+
+	sourcesMaxTime, err := getPatternsMaxTime(dir, sources)
 	if err != nil || sourcesMaxTime.IsZero() {
 		return false, nil
 	}
 
-	generatesMinTime, err := getPatternsMinTime(generates)
+	generatesMinTime, err := getPatternsMinTime(dir, generates)
 	if err != nil || generatesMinTime.IsZero() {
 		return false, nil
 	}
@@ -187,7 +204,7 @@ func (t *Task) isUpToDateTimestamp(ctx context.Context) (bool, error) {
 func (e *Executor) runCommand(ctx context.Context, task string, i int) error {
 	t := e.Tasks[task]
 
-	c, err := t.ReplaceVariables(t.Cmds[i])
+	c, err := e.ReplaceVariables(task, t.Cmds[i])
 	if err != nil {
 		return err
 	}
@@ -200,12 +217,12 @@ func (e *Executor) runCommand(ctx context.Context, task string, i int) error {
 		return nil
 	}
 
-	dir, err := t.ReplaceVariables(t.Dir)
+	dir, err := e.getTaskDir(task)
 	if err != nil {
 		return err
 	}
 
-	envs, err := t.getEnviron()
+	envs, err := e.getEnviron(task)
 	if err != nil {
 		return err
 	}
@@ -235,7 +252,24 @@ func (e *Executor) runCommand(ctx context.Context, task string, i int) error {
 	return nil
 }
 
-func (t *Task) getEnviron() ([]string, error) {
+func (e *Executor) getTaskDir(name string) (string, error) {
+	t := e.Tasks[name]
+
+	exeDir, err := e.ReplaceVariables(name, e.Dir)
+	if err != nil {
+		return "", err
+	}
+	taskDir, err := e.ReplaceVariables(name, t.Dir)
+	if err != nil {
+		return "", err
+	}
+
+	return filepath.Join(exeDir, taskDir), nil
+}
+
+func (e *Executor) getEnviron(task string) ([]string, error) {
+	t := e.Tasks[task]
+
 	if t.Env == nil {
 		return nil, nil
 	}
@@ -243,7 +277,7 @@ func (t *Task) getEnviron() ([]string, error) {
 	envs := os.Environ()
 
 	for k, v := range t.Env {
-		env, err := t.ReplaceVariables(fmt.Sprintf("%s=%s", k, v))
+		env, err := e.ReplaceVariables(task, fmt.Sprintf("%s=%s", k, v))
 		if err != nil {
 			return nil, err
 		}

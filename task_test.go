@@ -8,6 +8,10 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/go-task/task"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestDeps(t *testing.T) {
@@ -32,12 +36,11 @@ func TestDeps(t *testing.T) {
 		_ = os.Remove(filepath.Join(dir, f))
 	}
 
-	c := exec.Command("task")
-	c.Dir = dir
-	if err := c.Run(); err != nil {
-		t.Error(err)
-		return
+	e := &task.Executor{
+		Dir: dir,
 	}
+	assert.NoError(t, e.ReadTaskfile())
+	assert.NoError(t, e.Run("default"))
 
 	for _, f := range files {
 		f = filepath.Join(dir, f)
@@ -65,13 +68,11 @@ func TestVars(t *testing.T) {
 		_ = os.Remove(filepath.Join(dir, f.file))
 	}
 
-	c := exec.Command("task")
-	c.Dir = dir
-
-	if err := c.Run(); err != nil {
-		t.Error(err)
-		return
+	e := &task.Executor{
+		Dir: dir,
 	}
+	assert.NoError(t, e.ReadTaskfile())
+	assert.NoError(t, e.Run("default"))
 
 	for _, f := range files {
 		d, err := ioutil.ReadFile(filepath.Join(dir, f.file))
@@ -99,13 +100,11 @@ func TestTaskCall(t *testing.T) {
 		_ = os.Remove(filepath.Join(dir, f))
 	}
 
-	c := exec.Command("task")
-	c.Dir = dir
-
-	if err := c.Run(); err != nil {
-		t.Error(err)
-		return
+	e := &task.Executor{
+		Dir: dir,
 	}
+	assert.NoError(t, e.ReadTaskfile())
+	assert.NoError(t, e.Run("default"))
 
 	for _, f := range files {
 		if _, err := os.Stat(filepath.Join(dir, f)); err != nil {

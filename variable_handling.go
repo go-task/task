@@ -25,7 +25,7 @@ var (
 	ErrMultilineResultCmd = errors.New("Got multiline result from command")
 )
 
-func handleDynamicVariableContent(value string) (string, error) {
+func (e *Executor) handleDynamicVariableContent(value string) (string, error) {
 	if !strings.HasPrefix(value, "$") {
 		return value, nil
 	}
@@ -34,6 +34,7 @@ func handleDynamicVariableContent(value string) (string, error) {
 
 	opts := &execext.RunCommandOptions{
 		Command: strings.TrimPrefix(value, "$"),
+		Dir:     e.Dir,
 		Stdout:  buff,
 		Stderr:  os.Stderr,
 	}
@@ -51,18 +52,20 @@ func handleDynamicVariableContent(value string) (string, error) {
 	return result, nil
 }
 
-func (t *Task) getVariables() (map[string]string, error) {
+func (e *Executor) getVariables(task string) (map[string]string, error) {
+	t := e.Tasks[task]
+
 	localVariables := make(map[string]string)
 	for key, value := range t.Vars {
-		val, err := handleDynamicVariableContent(value)
+		val, err := e.handleDynamicVariableContent(value)
 		if err != nil {
 			return nil, err
 		}
 		localVariables[key] = val
 	}
-	if fileVariables, err := readTaskvarsFile(); err == nil {
+	if fileVariables, err := e.readTaskvarsFile(); err == nil {
 		for key, value := range fileVariables {
-			val, err := handleDynamicVariableContent(value)
+			val, err := e.handleDynamicVariableContent(value)
 			if err != nil {
 				return nil, err
 			}
@@ -106,11 +109,11 @@ func init() {
 }
 
 // ReplaceSliceVariables writes vars into initial string slice
-func (t *Task) ReplaceSliceVariables(initials []string) ([]string, error) {
+func (e *Executor) ReplaceSliceVariables(task string, initials []string) ([]string, error) {
 	result := make([]string, len(initials))
 	for i, s := range initials {
 		var err error
-		result[i], err = t.ReplaceVariables(s)
+		result[i], err = e.ReplaceVariables(task, s)
 		if err != nil {
 			return nil, err
 		}
@@ -119,8 +122,8 @@ func (t *Task) ReplaceSliceVariables(initials []string) ([]string, error) {
 }
 
 // ReplaceVariables writes vars into initial string
-func (t *Task) ReplaceVariables(initial string) (string, error) {
-	vars, err := t.getVariables()
+func (e *Executor) ReplaceVariables(task, initial string) (string, error) {
+	vars, err := e.getVariables(task)
 	if err != nil {
 		return "", err
 	}
@@ -152,21 +155,23 @@ func getEnvironmentVariables() map[string]string {
 	return m
 }
 
-func readTaskvarsFile() (map[string]string, error) {
+func (e *Executor) readTaskvarsFile() (map[string]string, error) {
+	file := filepath.Join(e.Dir, TaskvarsFilePath)
+
 	var variables map[string]string
-	if b, err := ioutil.ReadFile(TaskvarsFilePath + ".yml"); err == nil {
+	if b, err := ioutil.ReadFile(file + ".yml"); err == nil {
 		if err := yaml.Unmarshal(b, &variables); err != nil {
 			return nil, err
 		}
 		return variables, nil
 	}
-	if b, err := ioutil.ReadFile(TaskvarsFilePath + ".json"); err == nil {
+	if b, err := ioutil.ReadFile(file + ".json"); err == nil {
 		if err := json.Unmarshal(b, &variables); err != nil {
 			return nil, err
 		}
 		return variables, nil
 	}
-	if b, err := ioutil.ReadFile(TaskvarsFilePath + ".toml"); err == nil {
+	if b, err := ioutil.ReadFile(file + ".toml"); err == nil {
 		if err := toml.Unmarshal(b, &variables); err != nil {
 			return nil, err
 		}

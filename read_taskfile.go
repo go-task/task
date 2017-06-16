@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"path/filepath"
 	"runtime"
 
 	"github.com/BurntSushi/toml"
@@ -13,13 +14,15 @@ import (
 
 // ReadTaskfile parses Taskfile from the disk
 func (e *Executor) ReadTaskfile() error {
+	path := filepath.Join(e.Dir, TaskFilePath)
+
 	var err error
-	e.Tasks, err = e.readTaskfileData(TaskFilePath)
+	e.Tasks, err = e.readTaskfileData(path)
 	if err != nil {
 		return err
 	}
 
-	osTasks, err := e.readTaskfileData(fmt.Sprintf("%s_%s", TaskFilePath, runtime.GOOS))
+	osTasks, err := e.readTaskfileData(fmt.Sprintf("%s_%s", path, runtime.GOOS))
 	if err != nil {
 		switch err.(type) {
 		case taskFileNotFound:

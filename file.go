@@ -2,6 +2,7 @@ package task
 
 import (
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/mattn/go-zglob"
@@ -20,8 +21,9 @@ func maxTime(a, b time.Time) time.Time {
 	return b
 }
 
-func getPatternsMinTime(patterns []string) (m time.Time, err error) {
+func getPatternsMinTime(dir string, patterns []string) (m time.Time, err error) {
 	for _, p := range patterns {
+		p = filepath.Join(dir, p)
 		mp, err := getPatternMinTime(p)
 		if err != nil {
 			return time.Time{}, err
@@ -30,8 +32,9 @@ func getPatternsMinTime(patterns []string) (m time.Time, err error) {
 	}
 	return
 }
-func getPatternsMaxTime(patterns []string) (m time.Time, err error) {
+func getPatternsMaxTime(dir string, patterns []string) (m time.Time, err error) {
 	for _, p := range patterns {
+		p = filepath.Join(dir, p)
 		mp, err := getPatternMaxTime(p)
 		if err != nil {
 			return time.Time{}, err
