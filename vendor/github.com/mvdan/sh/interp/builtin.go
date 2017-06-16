@@ -142,21 +142,20 @@ func (r *Runner) builtinCode(pos syntax.Pos, name string, args []string) int {
 	case "pwd":
 		r.outf("%s\n", r.getVar("PWD"))
 	case "cd":
-		if len(args) > 1 {
+		var dir string
+		switch len(args) {
+		case 0:
+			dir = r.getVar("HOME")
+		case 1:
+			dir = args[0]
+		default:
 			r.errf("usage: cd [dir]\n")
 			return 2
-		}
-		var dir string
-		if len(args) == 0 {
-			dir = r.getVar("HOME")
-		} else {
-			dir = args[0]
 		}
 		if !filepath.IsAbs(dir) {
 			dir = filepath.Join(r.Dir, dir)
 		}
-		_, err := os.Stat(dir)
-		if err != nil {
+		if _, err := os.Stat(dir); err != nil {
 			return 1
 		}
 		r.Dir = dir

@@ -232,33 +232,47 @@ func fieldJoin(parts []fieldPart) string {
 	return buf.String()
 }
 
-func escapeQuotedParts(parts []fieldPart) string {
+func escapedGlob(parts []fieldPart) (escaped string, glob bool) {
 	var buf bytes.Buffer
 	for _, part := range parts {
-		if !part.quoted {
-			buf.WriteString(part.val)
-			continue
-		}
 		for _, r := range part.val {
 			switch r {
 			case '*', '?', '\\', '[':
-				buf.WriteByte('\\')
+				if part.quoted {
+					buf.WriteByte('\\')
+				} else {
+					glob = true
+				}
 			}
 			buf.WriteRune(r)
 		}
 	}
-	return buf.String()
+	return buf.String(), glob
 }
 
 func (r *Runner) fields(words []*syntax.Word) []string {
 	fields := make([]string, 0, len(words))
+	baseDir, _ := escapedGlob([]fieldPart{{val: r.Dir}})
 	for _, word := range words {
 		for _, field := range r.wordFields(word.Parts, false) {
-			matches, _ := filepath.Glob(escapeQuotedParts(field))
-			if len(matches) > 0 {
-				fields = append(fields, matches...)
-			} else {
+			path, glob := escapedGlob(field)
+			var matches []string
+			abs := filepath.IsAbs(path)
+			if glob {
+				if !abs {
+					path = filepath.Join(baseDir, path)
+				}
+				matches, _ = filepath.Glob(path)
+			}
+			if len(matches) == 0 {
 				fields = append(fields, fieldJoin(field))
+				continue
+			}
+			for _, match := range matches {
+				if !abs {
+					match, _ = filepath.Rel(baseDir, match)
+				}
+				fields = append(fields, match)
 			}
 		}
 	}
@@ -494,7 +508,8 @@ func (r *Runner) cmd(cm syntax.Command) {
 			for _, word := range ci.Patterns {
 				var buf bytes.Buffer
 				for _, field := range r.wordFields(word.Parts, false) {
-					buf.WriteString(escapeQuotedParts(field))
+					escaped, _ := escapedGlob(field)
+					buf.WriteString(escaped)
 				}
 				if match(buf.String(), str) {
 					r.stmts(ci.Stmts)

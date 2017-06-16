@@ -27,7 +27,8 @@ func (r *Runner) bashTest(expr syntax.TestExpr) string {
 			var buf bytes.Buffer
 			yw := x.Y.(*syntax.Word)
 			for _, field := range r.wordFields(yw.Parts, false) {
-				buf.WriteString(escapeQuotedParts(field))
+				escaped, _ := escapedGlob(field)
+				buf.WriteString(escaped)
 			}
 			if match(buf.String(), str) == (x.Op == syntax.TsMatch) {
 				return "1"

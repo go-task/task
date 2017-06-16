@@ -16,7 +16,7 @@ dl-deps:
 
 update-deps:
   cmds:
-    - dep ensure
+    - dep ensure -update
     - dep prune
 
 clean:
