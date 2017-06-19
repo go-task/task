@@ -18,7 +18,8 @@ If you have a [Golang][golang] environment setup, you can simply run:
 go get -u -v github.com/go-task/task/cmd/task
 ```
 
-Or you can download from the [releases][releases] page and add to your `PATH`.
+Or you can download the binary from the [releases][releases] page and add to
+your `PATH`. DEB and RPM packages are also available.
 
 ## Usage
 
