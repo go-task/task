@@ -13,11 +13,11 @@ build:
       goarch: 386
 
 archive:
+  name_template: "{{.Binary}}_{{.Os}}_{{.Arch}}"
+
   format_overrides:
     - goos: windows
       format: zip
 
-  replacements:
-    amd64: x64
-    386: x86
-    darwin: macOS
+release:
+  draft: true
