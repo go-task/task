@@ -21,3 +21,13 @@ archive:
 
 release:
   draft: true
+
+fpm:
+  vendor: Task
+  homepage: https://github.com/go-task/task
+  maintainer: Andrey Nering <andrey.nering@gmail.com>
+  description: Simple task runner written in Go
+  license: MIT
+  formats:
+    - deb
+    - rpm
