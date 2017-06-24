@@ -17,7 +17,7 @@ func isBuiltin(name string) bool {
 	switch name {
 	case "true", ":", "false", "exit", "set", "shift", "unset",
 		"echo", "printf", "break", "continue", "pwd", "cd",
-		"wait", "builtin", "trap", "type", "source", "command",
+		"wait", "builtin", "trap", "type", "source", ".", "command",
 		"pushd", "popd", "umask", "alias", "unalias", "fg", "bg",
 		"getopts", "eval", "test", "[":
 		return true
@@ -45,7 +45,12 @@ func (r *Runner) builtinCode(pos syntax.Pos, name string, args []string) int {
 		r.lastExit()
 		return r.exit
 	case "set":
-		r.args = args
+		rest, err := r.FromArgs(args...)
+		if err != nil {
+			r.errf("set: %v", err)
+			return 2
+		}
+		r.Params = rest
 	case "shift":
 		n := 1
 		switch len(args) {
@@ -60,17 +65,18 @@ func (r *Runner) builtinCode(pos syntax.Pos, name string, args []string) int {
 			r.errf("usage: shift [n]\n")
 			return 2
 		}
-		if len(r.args) < n {
-			n = len(r.args)
+		if n >= len(r.Params) {
+			r.Params = nil
+		} else {
+			r.Params = r.Params[n:]
 		}
-		r.args = r.args[n:]
 	case "unset":
 		for _, arg := range args {
 			r.delVar(arg)
 		}
 	case "echo":
 		newline := true
-	opts:
+	echoOpts:
 		for len(args) > 0 {
 			switch args[0] {
 			case "-n":
@@ -80,7 +86,7 @@ func (r *Runner) builtinCode(pos syntax.Pos, name string, args []string) int {
 				// exactly what is the difference in
 				// what we write?
 			default:
-				break opts
+				break echoOpts
 			}
 			args = args[1:]
 		}
@@ -206,6 +212,27 @@ func (r *Runner) builtinCode(pos syntax.Pos, name string, args []string) int {
 		r2.File = file
 		r2.Run()
 		return r2.exit
+	case "source", ".":
+		if len(args) < 1 {
+			r.runErr(pos, "source: need filename")
+		}
+		f, err := os.Open(args[0])
+		if err != nil {
+			r.errf("eval: %v\n", err)
+			return 1
+		}
+		defer f.Close()
+		p := syntax.NewParser()
+		file, err := p.Parse(f, args[0])
+		if err != nil {
+			r.errf("eval: %v\n", err)
+			return 1
+		}
+		r2 := *r
+		r2.Params = args[1:]
+		r2.File = file
+		r2.Run()
+		return r2.exit
 	case "[":
 		if len(args) == 0 || args[len(args)-1] != "]" {
 			r.runErr(pos, "[: missing matching ]")
@@ -223,7 +250,7 @@ func (r *Runner) builtinCode(pos syntax.Pos, name string, args []string) int {
 		p.next()
 		expr := p.classicTest("[", false)
 		return oneIf(r.bashTest(expr) == "")
-	case "trap", "source", "command", "pushd", "popd",
+	case "trap", "command", "pushd", "popd",
 		"umask", "alias", "unalias", "fg", "bg", "getopts":
 		r.runErr(pos, "unhandled builtin: %s", name)
 	}

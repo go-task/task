@@ -2,10 +2,10 @@
 
 
 [[projects]]
+  branch = "master"
   name = "github.com/BurntSushi/toml"
   packages = ["."]
-  revision = "b26d9c308763d68093482582cea63d69be07a0f0"
-  version = "v0.3.0"
+  revision = "8b58b6030fce084b58a61e2bc3fdf183d5881ab4"
 
 [[projects]]
   name = "github.com/Masterminds/semver"
@@ -41,7 +41,7 @@
   branch = "master"
   name = "github.com/imdario/mergo"
   packages = ["."]
-  revision = "d806ba8c21777d504a2090a2ca4913c750dd3a33"
+  revision = "e3000cb3d28c72b837601cac94debd91032d19fe"
 
 [[projects]]
   branch = "master"
@@ -53,7 +53,7 @@
   branch = "master"
   name = "github.com/mvdan/sh"
   packages = ["interp","syntax"]
-  revision = "b71d1ce71a70cf138ad62eb3dcc9a029c541c3d9"
+  revision = "7545ea3a7ad3eb62f4f879da2c07e9c13f53d0ef"
 
 [[projects]]
   name = "github.com/satori/go.uuid"
@@ -71,13 +71,13 @@
   branch = "master"
   name = "golang.org/x/crypto"
   packages = ["pbkdf2","scrypt"]
-  revision = "850760c427c516be930bc91280636328f1a62286"
+  revision = "adbae1b6b6fb4b02448a0fc0dbbc9ba2b95b294d"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/net"
   packages = ["context"]
-  revision = "ddf80d0970594e2e4cccf5a98861cad3d9eaa4cd"
+  revision = "5f8847ae0d0e90b6a9dc8148e7ad616874625171"
 
 [[projects]]
   branch = "master"
@@ -89,7 +89,7 @@
   branch = "master"
   name = "golang.org/x/sys"
   packages = ["unix"]
-  revision = "fb4cac33e3196ff7f507ab9b2d2a44b0142f5b5a"
+  revision = "c23410a886927bab8ca5e80b08af6a56faeb330d"
 
 [[projects]]
   branch = "v2"

@@ -17,7 +17,7 @@ func (r *Runner) quotedElems(pe *syntax.ParamExp) []string {
 		return nil
 	}
 	if pe.Param.Value == "@" {
-		return r.args
+		return r.Params
 	}
 	w, _ := pe.Index.(*syntax.Word)
 	if w == nil || len(w.Parts) != 1 {
@@ -41,15 +41,15 @@ func (r *Runner) paramExp(pe *syntax.ParamExp) string {
 	set := false
 	switch name {
 	case "#":
-		val = strconv.Itoa(len(r.args))
+		val = strconv.Itoa(len(r.Params))
 	case "*", "@":
-		val = strings.Join(r.args, " ")
+		val = strings.Join(r.Params, " ")
 	case "?":
 		val = strconv.Itoa(r.exit)
 	default:
 		if n, err := strconv.Atoi(name); err == nil {
-			if i := n - 1; i < len(r.args) {
-				val, set = r.args[i], true
+			if i := n - 1; i < len(r.Params) {
+				val, set = r.Params[i], true
 			}
 		} else {
 			val, set = r.lookupVar(name)
