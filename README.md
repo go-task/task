@@ -10,6 +10,21 @@ Task is a simple tool that allows you to easily run development and build
 tasks. Task is written in Golang, but can be used to develop any language.
 It aims to be simpler and easier to use then [GNU Make][make].
 
+- [Installation](#installation)
+- [Usage](#usage)
+  - [Environment](#environment)
+  - [OS specific task](#os-specific-task)
+  - [Task directory](#task-directory)
+  - [Task dependencies](#task-dependencies)
+  - [Calling another task](#calling-another-task)
+  - [Prevent unnecessary work](#prevent-unnecessary-work)
+  - [Variables](#variables)
+    - [Dynamic variables](#dynamic-variables)
+  - [Go's template engine](#gos-template-engine)
+  - [Help](#help)
+  - [Watch tasks](#watch-tasks-experimental)
+- [Alternative task runners](#alternative-task-runners)
+
 ## Installation
 
 If you have a [Golang][golang] environment setup, you can simply run:
@@ -58,12 +73,12 @@ You can specify environment variables that are added when running a command:
 ```yml
 build:
   cmds:
-  - echo $hallo
+    - echo $hallo
   env:
     hallo: welt
 ```
 
-### OS specific task support
+### OS specific task
 
 If you add a `Taskfile_{{GOOS}}` you can override or amend your taskfile based
 on the operating system.
@@ -75,7 +90,7 @@ Taskfile.yml:
 ```yml
 build:
   cmds:
-  - echo  "default"
+    - echo "default"
 ```
 
 Taskfile_linux.yml:
@@ -83,12 +98,12 @@ Taskfile_linux.yml:
 ```yml
 build:
   cmds:
-  - echo  "linux"
+    - echo "linux"
 ```
 
 Will print out `linux` and not default
 
-### Running task in another dir
+### Task directory
 
 By default, tasks will be executed in the directory where the Taskfile is
 located. But you can easily make the task run in another folder informing
@@ -146,9 +161,9 @@ task2:
   deps: [task1]
 ```
 
-Will stop at the moment the dependencies of `task2` are executed.
+The above will fail with the message: "cyclic dependency detected".
 
-### Calling a task from another task
+### Calling another task
 
 When a task has many dependencies, they are executed concurrently. This will
 often result in a faster build pipeline. But in some situations you may need
@@ -170,7 +185,7 @@ even-another-task:
     - ...
 ```
 
-### Prevent task from running when not necessary
+### Prevent unnecessary work
 
 If a task generates something, you can inform Task the source and generated
 files, so Task will prevent to run them if not necessary.
@@ -228,13 +243,13 @@ up-to-date.
 build:
   deps: [setvar]
   cmds:
-  - echo "{{.PREFIX}} {{.THEVAR}}"
+    - echo "{{.PREFIX}} {{.THEVAR}}"
   vars:
     PREFIX: "Path:"
 
 setvar:
   cmds:
-  - echo "{{.PATH}}"
+    - echo "{{.PATH}}"
   set: THEVAR
 ```
 
@@ -254,15 +269,15 @@ you can do something like this:
 build:
   deps: [setvar]
   cmds:
-  - echo "{{.PREFIX}} '{{.THEVAR}}'"
+    - echo "{{.PREFIX}} '{{.THEVAR}}'"
   vars:
     PREFIX: "Result: "
 
 setvar:
   cmds:
-  - echo -n "a"
-  - echo -n "{{.THEVAR}}b"
-  - echo -n "{{.THEVAR}}c"
+    - echo -n "a"
+    - echo -n "{{.THEVAR}}b"
+    - echo -n "{{.THEVAR}}c"
   set: THEVAR
 ```
 
@@ -297,7 +312,7 @@ them. Variables are acessible through dot syntax (`.VARNAME`).
 All functions by the Go's [sprig lib](http://masterminds.github.io/sprig/)
 are available. The following example gets the current date in a given format:
 
-```go
+```yml
 print-date:
   cmds:
     - echo {{now | date "2006-01-02"}}
@@ -319,12 +334,12 @@ Task also adds the following functions:
 Example:
 
 ```yml
-printos:
+print-os:
   cmds:
     - echo '{{OS}} {{ARCH}}'
-    - "echo '{{if eq OS \"windows\"}}windows-command{{else}}unix-command{{end}}'"
+    - echo '{{if eq OS "windows"}}windows-command{{else}}unix-command{{end}}'
     # This will be path/to/file on Unix but path\to\file on Windows
-    - "{{FromSlash \"path/to/file\"}}"
+    - echo '{{FromSlash "path/to/file"}}'
 ```
 
 ### Help
