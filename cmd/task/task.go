@@ -53,7 +53,11 @@ hello:
 	}
 
 	if init {
-		if err := task.InitTaskfile(); err != nil {
+		wd, err := os.Getwd()
+		if err != nil {
+			log.Fatal(err)
+		}
+		if err := task.InitTaskfile(wd); err != nil {
 			log.Fatal(err)
 		}
 		return
