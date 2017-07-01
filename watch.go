@@ -2,8 +2,6 @@ package task
 
 import (
 	"context"
-	"fmt"
-	"log"
 	"strings"
 	"time"
 
@@ -13,12 +11,12 @@ import (
 
 // watchTasks start watching the given tasks
 func (e *Executor) watchTasks(args ...string) error {
-	log.Printf("task: Started watching for tasks: %s", strings.Join(args, ", "))
+	e.printfln("task: Started watching for tasks: %s", strings.Join(args, ", "))
 
 	// run tasks on init
 	for _, a := range args {
 		if err := e.RunTask(context.Background(), a); err != nil {
-			fmt.Println(err)
+			e.println(err)
 			break
 		}
 	}
@@ -32,7 +30,7 @@ func (e *Executor) watchTasks(args ...string) error {
 	go func() {
 		for {
 			if err := e.registerWatchedFiles(watcher, args); err != nil {
-				log.Printf("Error watching files: %v", err)
+				e.printfln("Error watching files: %v", err)
 			}
 			time.Sleep(time.Second * 2)
 		}
@@ -44,12 +42,12 @@ loop:
 		case <-watcher.Events:
 			for _, a := range args {
 				if err := e.RunTask(context.Background(), a); err != nil {
-					fmt.Println(err)
+					e.println(err)
 					continue loop
 				}
 			}
 		case err := <-watcher.Errors:
-			fmt.Println(err)
+			e.println(err)
 			continue loop
 		}
 	}

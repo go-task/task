@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"log"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -25,6 +25,10 @@ type Executor struct {
 	Dir   string
 	Force bool
 	Watch bool
+
+	Stdin  io.Reader
+	Stdout io.Writer
+	Stderr io.Writer
 
 	watchingFiles map[string]struct{}
 }
@@ -50,6 +54,16 @@ type Task struct {
 func (e *Executor) Run(args ...string) error {
 	if e.HasCyclicDep() {
 		return ErrCyclicDependencyDetected
+	}
+
+	if e.Stdin == nil {
+		e.Stdin = os.Stdin
+	}
+	if e.Stdout == nil {
+		e.Stdout = os.Stdout
+	}
+	if e.Stderr == nil {
+		e.Stderr = os.Stderr
 	}
 
 	// check if given tasks exist
@@ -93,7 +107,7 @@ func (e *Executor) RunTask(ctx context.Context, name string) error {
 			return err
 		}
 		if upToDate {
-			log.Printf(`task: Task "%s" is up to date`, name)
+			e.printfln(`task: Task "%s" is up to date`, name)
 			return nil
 		}
 	}
@@ -231,13 +245,13 @@ func (e *Executor) runCommand(ctx context.Context, task string, i int) error {
 		Command: c,
 		Dir:     dir,
 		Env:     envs,
-		Stdin:   os.Stdin,
-		Stderr:  os.Stderr,
+		Stdin:   e.Stdin,
+		Stderr:  e.Stderr,
 	}
 
 	if t.Set == "" {
-		log.Println(c)
-		opts.Stdout = os.Stdout
+		e.println(c)
+		opts.Stdout = e.Stdout
 		if err = execext.RunCommand(opts); err != nil {
 			return err
 		}

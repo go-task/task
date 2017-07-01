@@ -36,7 +36,7 @@ func (e *Executor) handleDynamicVariableContent(value string) (string, error) {
 		Command: strings.TrimPrefix(value, "$"),
 		Dir:     e.Dir,
 		Stdout:  buff,
-		Stderr:  os.Stderr,
+		Stderr:  e.Stderr,
 	}
 	if err := execext.RunCommand(opts); err != nil {
 		return "", err
