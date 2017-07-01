@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"os"
 
 	"github.com/go-task/task"
 
@@ -52,7 +53,11 @@ hello:
 	}
 
 	if init {
-		if err := task.InitTaskfile(); err != nil {
+		wd, err := os.Getwd()
+		if err != nil {
+			log.Fatal(err)
+		}
+		if err := task.InitTaskfile(wd); err != nil {
 			log.Fatal(err)
 		}
 		return
@@ -61,6 +66,10 @@ hello:
 	e := task.Executor{
 		Force: force,
 		Watch: watch,
+
+		Stdin:  os.Stdin,
+		Stdout: os.Stdout,
+		Stderr: os.Stderr,
 	}
 	if err := e.ReadTaskfile(); err != nil {
 		log.Fatal(err)

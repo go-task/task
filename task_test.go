@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"io/ioutil"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -37,7 +36,9 @@ func TestDeps(t *testing.T) {
 	}
 
 	e := &task.Executor{
-		Dir: dir,
+		Dir:    dir,
+		Stdout: ioutil.Discard,
+		Stderr: ioutil.Discard,
 	}
 	assert.NoError(t, e.ReadTaskfile())
 	assert.NoError(t, e.Run("default"))
@@ -69,7 +70,9 @@ func TestVars(t *testing.T) {
 	}
 
 	e := &task.Executor{
-		Dir: dir,
+		Dir:    dir,
+		Stdout: ioutil.Discard,
+		Stderr: ioutil.Discard,
 	}
 	assert.NoError(t, e.ReadTaskfile())
 	assert.NoError(t, e.Run("default"))
@@ -101,7 +104,9 @@ func TestTaskCall(t *testing.T) {
 	}
 
 	e := &task.Executor{
-		Dir: dir,
+		Dir:    dir,
+		Stdout: ioutil.Discard,
+		Stderr: ioutil.Discard,
 	}
 	assert.NoError(t, e.ReadTaskfile())
 	assert.NoError(t, e.Run("default"))
@@ -122,23 +127,23 @@ func TestStatus(t *testing.T) {
 	if _, err := os.Stat(file); err == nil {
 		t.Errorf("File should not exists: %v", err)
 	}
-	c := exec.Command("task", "gen-foo")
-	c.Dir = dir
-	if err := c.Run(); err != nil {
-		t.Error(err)
+
+	e := &task.Executor{
+		Dir:    dir,
+		Stdout: ioutil.Discard,
+		Stderr: ioutil.Discard,
 	}
+	assert.NoError(t, e.ReadTaskfile())
+	assert.NoError(t, e.Run("gen-foo"))
+
 	if _, err := os.Stat(file); err != nil {
 		t.Errorf("File should exists: %v", err)
 	}
 
 	buff := bytes.NewBuffer(nil)
-	c = exec.Command("task", "gen-foo")
-	c.Dir = dir
-	c.Stderr = buff
-	c.Stdout = buff
-	if err := c.Run(); err != nil {
-		t.Error(err)
-	}
+	e.Stdout, e.Stderr = buff, buff
+	assert.NoError(t, e.Run("gen-foo"))
+
 	if buff.String() != `task: Task "gen-foo" is up to date`+"\n" {
 		t.Errorf("Wrong output message: %s", buff.String())
 	}
@@ -153,11 +158,10 @@ func TestInit(t *testing.T) {
 		t.Errorf("Taskfile.yml should not exists")
 	}
 
-	c := exec.Command("task", "--init")
-	c.Dir = dir
-	if err := c.Run(); err != nil {
+	if err := task.InitTaskfile(dir); err != nil {
 		t.Error(err)
 	}
+
 	if _, err := os.Stat(file); err != nil {
 		t.Errorf("Taskfile.yml should exists")
 	}

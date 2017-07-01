@@ -58,19 +58,19 @@ func (r *Runner) binTest(op syntax.BinTestOperator, x, y string) bool {
 		}
 		return re.MatchString(x)
 	case syntax.TsNewer:
-		i1, i2 := stat(x), stat(y)
+		i1, i2 := stat(r.Dir, x), stat(r.Dir, y)
 		if i1 == nil || i2 == nil {
 			return false
 		}
 		return i1.ModTime().After(i2.ModTime())
 	case syntax.TsOlder:
-		i1, i2 := stat(x), stat(y)
+		i1, i2 := stat(r.Dir, x), stat(r.Dir, y)
 		if i1 == nil || i2 == nil {
 			return false
 		}
 		return i1.ModTime().Before(i2.ModTime())
 	case syntax.TsDevIno:
-		i1, i2 := stat(x), stat(y)
+		i1, i2 := stat(r.Dir, x), stat(r.Dir, y)
 		return os.SameFile(i1, i2)
 	case syntax.TsEql:
 		return atoi(x) == atoi(y)
@@ -95,40 +95,40 @@ func (r *Runner) binTest(op syntax.BinTestOperator, x, y string) bool {
 	}
 }
 
-func stat(name string) os.FileInfo {
-	info, _ := os.Stat(name)
+func stat(dir, name string) os.FileInfo {
+	info, _ := os.Stat(filepath.Join(dir, name))
 	return info
 }
 
-func statMode(name string, mode os.FileMode) bool {
-	info := stat(name)
+func statMode(dir, name string, mode os.FileMode) bool {
+	info := stat(dir, name)
 	return info != nil && info.Mode()&mode != 0
 }
 
 func (r *Runner) unTest(op syntax.UnTestOperator, x string) bool {
 	switch op {
 	case syntax.TsExists:
-		return stat(x) != nil
+		return stat(r.Dir, x) != nil
 	case syntax.TsRegFile:
-		info := stat(x)
+		info := stat(r.Dir, x)
 		return info != nil && info.Mode().IsRegular()
 	case syntax.TsDirect:
-		return statMode(x, os.ModeDir)
+		return statMode(r.Dir, x, os.ModeDir)
 	//case syntax.TsCharSp:
 	//case syntax.TsBlckSp:
 	case syntax.TsNmPipe:
-		return statMode(x, os.ModeNamedPipe)
+		return statMode(r.Dir, x, os.ModeNamedPipe)
 	case syntax.TsSocket:
-		return statMode(x, os.ModeSocket)
+		return statMode(r.Dir, x, os.ModeSocket)
 	case syntax.TsSmbLink:
 		info, _ := os.Lstat(x)
 		return info != nil && info.Mode()&os.ModeSymlink != 0
 	case syntax.TsSticky:
-		return statMode(x, os.ModeSticky)
+		return statMode(r.Dir, x, os.ModeSticky)
 	case syntax.TsUIDSet:
-		return statMode(x, os.ModeSetuid)
+		return statMode(r.Dir, x, os.ModeSetuid)
 	case syntax.TsGIDSet:
-		return statMode(x, os.ModeSetgid)
+		return statMode(r.Dir, x, os.ModeSetgid)
 	//case syntax.TsGrpOwn:
 	//case syntax.TsUsrOwn:
 	//case syntax.TsModif:
@@ -149,7 +149,7 @@ func (r *Runner) unTest(op syntax.UnTestOperator, x string) bool {
 		_, err := exec.LookPath(filepath.Join(r.Dir, x))
 		return err == nil
 	case syntax.TsNoEmpty:
-		info := stat(x)
+		info := stat(r.Dir, x)
 		return info != nil && info.Size() > 0
 	//case syntax.TsFdTerm:
 	case syntax.TsEmpStr:
