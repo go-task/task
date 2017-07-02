@@ -1,0 +1,27 @@
+default:
+  deps:
+    - task: write-file
+      params:
+        CONTENT: Dependence1
+        FILE: dep1.txt
+    - task: write-file
+      params:
+        CONTENT: Dependence2
+        FILE: dep2.txt
+  cmds:
+    - task: write-file
+      params:
+        CONTENT: Hello
+        FILE: hello.txt
+    - task: write-file
+      params:
+        CONTENT: World
+        FILE: world.txt
+    - task: write-file
+      params:
+        CONTENT: "!"
+        FILE: exclamation.txt
+
+write-file:
+  cmds:
+    - echo {{.CONTENT}} > {{.FILE}}

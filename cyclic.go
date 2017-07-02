@@ -13,7 +13,7 @@ func (e *Executor) HasCyclicDep() bool {
 		defer delete(visits, name)
 
 		for _, d := range t.Deps {
-			if !checkCyclicDep(d, e.Tasks[d]) {
+			if !checkCyclicDep(d.Task, e.Tasks[d.Task]) {
 				return false
 			}
 		}

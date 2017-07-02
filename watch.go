@@ -15,7 +15,7 @@ func (e *Executor) watchTasks(args ...string) error {
 
 	// run tasks on init
 	for _, a := range args {
-		if err := e.RunTask(context.Background(), a); err != nil {
+		if err := e.RunTask(context.Background(), a, nil); err != nil {
 			e.println(err)
 			break
 		}
@@ -41,7 +41,7 @@ loop:
 		select {
 		case <-watcher.Events:
 			for _, a := range args {
-				if err := e.RunTask(context.Background(), a); err != nil {
+				if err := e.RunTask(context.Background(), a, nil); err != nil {
 					e.println(err)
 					continue loop
 				}
@@ -68,7 +68,11 @@ func (e *Executor) registerWatchedFiles(w *fsnotify.Watcher, args []string) erro
 		if !ok {
 			return &taskNotFoundError{a}
 		}
-		if err := e.registerWatchedFiles(w, task.Deps); err != nil {
+		deps := make([]string, len(task.Deps))
+		for i, d := range task.Deps {
+			deps[i] = d.Task
+		}
+		if err := e.registerWatchedFiles(w, deps); err != nil {
 			return err
 		}
 		for _, s := range task.Sources {
