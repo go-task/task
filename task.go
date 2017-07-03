@@ -249,8 +249,8 @@ func (e *Executor) runCommand(ctx context.Context, task string, i int) error {
 		Stderr:  e.Stderr,
 	}
 
+	e.println(c)
 	if t.Set == "" {
-		e.println(c)
 		opts.Stdout = e.Stdout
 		if err = execext.RunCommand(opts); err != nil {
 			return err
