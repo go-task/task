@@ -14,14 +14,14 @@ var (
 	version = "master"
 )
 
-func main() {
-	log.SetFlags(0)
+const usage = `Usage: task [-ifw] [--init] [--force] [--watch] [task...]
 
-	pflag.Usage = func() {
-		fmt.Println(`task [target1 target2 ...]: Runs commands under targets like make.
+Runs the specified task(s). Falls back to the "default" task if no task name
+was specified, or lists all tasks if an unknown task name was specified.
 
-Example: 'task hello' with the following 'Taskfile.yml' file will generate
-an 'output.txt' file.
+Example: 'task hello' with the following 'Taskfile.yml' file will generate an
+'output.txt' file with the content "hello".
+
 '''
 hello:
   cmds:
@@ -30,7 +30,13 @@ hello:
   generates:
     - output.txt
 '''
-`)
+`
+
+func main() {
+	log.SetFlags(0)
+
+	pflag.Usage = func() {
+		fmt.Println(usage)
 		pflag.PrintDefaults()
 	}
 
