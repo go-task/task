@@ -26,12 +26,14 @@ func (e *Executor) ReadTaskfile() error {
 	if err != nil {
 		switch err.(type) {
 		case taskFileNotFound:
-			return nil
 		default:
 			return err
 		}
 	}
 	if err := mergo.MapWithOverwrite(&e.Tasks, osTasks); err != nil {
+		return err
+	}
+	if err := e.readTaskvarsFile(); err != nil {
 		return err
 	}
 	return nil
@@ -48,4 +50,28 @@ func (e *Executor) readTaskfileData(path string) (tasks map[string]*Task, err er
 		return tasks, toml.Unmarshal(b, &tasks)
 	}
 	return nil, taskFileNotFound{path}
+}
+
+func (e *Executor) readTaskvarsFile() error {
+	file := filepath.Join(e.Dir, TaskvarsFilePath)
+
+	if b, err := ioutil.ReadFile(file + ".yml"); err == nil {
+		if err := yaml.Unmarshal(b, &e.taskvars); err != nil {
+			return err
+		}
+		return nil
+	}
+	if b, err := ioutil.ReadFile(file + ".json"); err == nil {
+		if err := json.Unmarshal(b, &e.taskvars); err != nil {
+			return err
+		}
+		return nil
+	}
+	if b, err := ioutil.ReadFile(file + ".toml"); err == nil {
+		if err := toml.Unmarshal(b, &e.taskvars); err != nil {
+			return err
+		}
+		return nil
+	}
+	return nil
 }

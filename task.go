@@ -30,6 +30,7 @@ type Executor struct {
 	Stdout io.Writer
 	Stderr io.Writer
 
+	taskvars      Params
 	watchingFiles map[string]struct{}
 }
 

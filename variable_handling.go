@@ -2,9 +2,7 @@ package task
 
 import (
 	"bytes"
-	"encoding/json"
 	"errors"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -13,9 +11,7 @@ import (
 
 	"github.com/go-task/task/execext"
 
-	"github.com/BurntSushi/toml"
 	"github.com/Masterminds/sprig"
-	"gopkg.in/yaml.v2"
 )
 
 var (
@@ -63,16 +59,14 @@ func (e *Executor) getVariables(task string, params Params) (map[string]string, 
 		}
 		localVariables[key] = val
 	}
-	if fileVariables, err := e.readTaskvarsFile(); err == nil {
-		for key, value := range fileVariables {
+	if e.taskvars != nil {
+		for key, value := range e.taskvars {
 			val, err := e.handleDynamicVariableContent(value)
 			if err != nil {
 				return nil, err
 			}
 			localVariables[key] = val
 		}
-	} else {
-		return nil, err
 	}
 	for key, value := range getEnvironmentVariables() {
 		localVariables[key] = value
@@ -162,29 +156,4 @@ func getEnvironmentVariables() map[string]string {
 		m[key] = val
 	}
 	return m
-}
-
-func (e *Executor) readTaskvarsFile() (map[string]string, error) {
-	file := filepath.Join(e.Dir, TaskvarsFilePath)
-
-	var variables map[string]string
-	if b, err := ioutil.ReadFile(file + ".yml"); err == nil {
-		if err := yaml.Unmarshal(b, &variables); err != nil {
-			return nil, err
-		}
-		return variables, nil
-	}
-	if b, err := ioutil.ReadFile(file + ".json"); err == nil {
-		if err := json.Unmarshal(b, &variables); err != nil {
-			return nil, err
-		}
-		return variables, nil
-	}
-	if b, err := ioutil.ReadFile(file + ".toml"); err == nil {
-		if err := toml.Unmarshal(b, &variables); err != nil {
-			return nil, err
-		}
-		return variables, nil
-	}
-	return variables, nil
 }
