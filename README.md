@@ -39,9 +39,7 @@ your `PATH`. DEB and RPM packages are also available.
 ## Usage
 
 Create a file called `Taskfile.yml` in the root of the project.
-(`Taskfile.toml` and `Taskfile.json` are also supported, but YAML is used in
-the documentation). The `cmds` attribute should contains the commands of a
-task:
+The `cmds` attribute should contains the commands of a task:
 
 ```yml
 build:
@@ -256,7 +254,7 @@ setvar:
 The above sample saves the path into a new variable which is then again echoed.
 
 You can use environment variables, task level variables and a file called
-`Taskvars.yml` (or `Taskvars.toml` or `Taskvars.json`) as source of variables.
+`Taskvars.yml` as source of variables.
 
 They are evaluated in the following order:
 

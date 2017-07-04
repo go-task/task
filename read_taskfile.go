@@ -1,13 +1,11 @@
 package task
 
 import (
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"path/filepath"
 	"runtime"
 
-	"github.com/BurntSushi/toml"
 	"github.com/imdario/mergo"
 	"gopkg.in/yaml.v2"
 )
@@ -43,12 +41,6 @@ func (e *Executor) readTaskfileData(path string) (tasks map[string]*Task, err er
 	if b, err := ioutil.ReadFile(path + ".yml"); err == nil {
 		return tasks, yaml.Unmarshal(b, &tasks)
 	}
-	if b, err := ioutil.ReadFile(path + ".json"); err == nil {
-		return tasks, json.Unmarshal(b, &tasks)
-	}
-	if b, err := ioutil.ReadFile(path + ".toml"); err == nil {
-		return tasks, toml.Unmarshal(b, &tasks)
-	}
 	return nil, taskFileNotFound{path}
 }
 
@@ -59,19 +51,6 @@ func (e *Executor) readTaskvarsFile() error {
 		if err := yaml.Unmarshal(b, &e.taskvars); err != nil {
 			return err
 		}
-		return nil
-	}
-	if b, err := ioutil.ReadFile(file + ".json"); err == nil {
-		if err := json.Unmarshal(b, &e.taskvars); err != nil {
-			return err
-		}
-		return nil
-	}
-	if b, err := ioutil.ReadFile(file + ".toml"); err == nil {
-		if err := toml.Unmarshal(b, &e.taskvars); err != nil {
-			return err
-		}
-		return nil
 	}
 	return nil
 }
