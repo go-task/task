@@ -5,22 +5,27 @@ import (
 	"strings"
 )
 
+// Cmd is a task command
 type Cmd struct {
 	Cmd  string
 	Task string
 	Vars Vars
 }
 
+// Dep is a task dependency
 type Dep struct {
 	Task string
 	Vars Vars
 }
 
 var (
+	// ErrCantUnmarshalCmd is returned for invalid command YAML
 	ErrCantUnmarshalCmd = errors.New("task: can't unmarshal cmd value")
+	// ErrCantUnmarshalDep is returned for invalid dependency YAML
 	ErrCantUnmarshalDep = errors.New("task: can't unmarshal dep value")
 )
 
+// UnmarshalYAML implements yaml.Unmarshaler interface
 func (c *Cmd) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	var cmd string
 	if err := unmarshal(&cmd); err == nil {
@@ -43,6 +48,7 @@ func (c *Cmd) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return ErrCantUnmarshalCmd
 }
 
+// UnmarshalYAML implements yaml.Unmarshaler interface
 func (d *Dep) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	var task string
 	if err := unmarshal(&task); err == nil {
