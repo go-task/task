@@ -165,22 +165,53 @@ The above will fail with the message: "cyclic dependency detected".
 
 When a task has many dependencies, they are executed concurrently. This will
 often result in a faster build pipeline. But in some situations you may need
-to call other tasks serially. For this just prefix a command with `^`:
+to call other tasks serially. In this case, just use the following syntax:
+
+```yml
+main-task:
+  cmds:
+    - task: task-to-be-called
+    - task: another-task
+    - echo "Both done"
+
+task-to-be-called:
+  cmds:
+    - echo "Task to be called"
+
+another-task:
+  cmds:
+    - echo "Another task"
+```
+
+Overriding variables in the called task is as simple as informing `vars`
+attribute:
+
+```yml
+main-task:
+  cmds:
+    - task: write-file
+      vars: {FILE: "hello.txt", CONTENT: "Hello!"}
+    - task: write-file
+      vars: {FILE: "world.txt", CONTENT: "World!"}
+
+write-file:
+  cmds:
+    - echo "{{.CONTENT}}" > {{.FILE}}
+```
+
+The above syntax is also supported in `deps`.
+
+> NOTE: It's also possible to call a task without any param prefixing it
+with `^`, but this syntax is deprecaded:
 
 ```yml
 a-task:
   cmds:
     - ^another-task
-    - ^even-another-task
-    - echo "Both done"
 
 another-task:
   cmds:
-    - ...
-
-even-another-task:
-  cmds:
-    - ...
+    - echo "Another task"
 ```
 
 ### Prevent unnecessary work
