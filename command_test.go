@@ -15,7 +15,7 @@ func TestCmdParse(t *testing.T) {
 		yamlDep      = `"task-name"`
 		yamlTaskCall = `
 task: another-task
-params:
+vars:
   PARAM1: VALUE1
   PARAM2: VALUE2
 `
@@ -33,7 +33,7 @@ params:
 		{
 			yamlTaskCall,
 			&task.Cmd{},
-			&task.Cmd{Task: "another-task", Params: task.Params{"PARAM1": "VALUE1", "PARAM2": "VALUE2"}},
+			&task.Cmd{Task: "another-task", Vars: task.Vars{"PARAM1": "VALUE1", "PARAM2": "VALUE2"}},
 		},
 		{
 			yamlDep,
@@ -43,7 +43,7 @@ params:
 		{
 			yamlTaskCall,
 			&task.Dep{},
-			&task.Dep{Task: "another-task", Params: task.Params{"PARAM1": "VALUE1", "PARAM2": "VALUE2"}},
+			&task.Dep{Task: "another-task", Vars: task.Vars{"PARAM1": "VALUE1", "PARAM2": "VALUE2"}},
 		},
 	}
 	for _, test := range tests {

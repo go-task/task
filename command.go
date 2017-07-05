@@ -5,17 +5,15 @@ import (
 	"strings"
 )
 
-type Params map[string]string
-
 type Cmd struct {
-	Cmd    string
-	Task   string
-	Params Params
+	Cmd  string
+	Task string
+	Vars Vars
 }
 
 type Dep struct {
-	Task   string
-	Params Params
+	Task string
+	Vars Vars
 }
 
 var (
@@ -34,12 +32,12 @@ func (c *Cmd) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		return nil
 	}
 	var taskCall struct {
-		Task   string
-		Params Params
+		Task string
+		Vars Vars
 	}
 	if err := unmarshal(&taskCall); err == nil {
 		c.Task = taskCall.Task
-		c.Params = taskCall.Params
+		c.Vars = taskCall.Vars
 		return nil
 	}
 	return ErrCantUnmarshalCmd
@@ -52,12 +50,12 @@ func (d *Dep) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		return nil
 	}
 	var taskCall struct {
-		Task   string
-		Params Params
+		Task string
+		Vars Vars
 	}
 	if err := unmarshal(&taskCall); err == nil {
 		d.Task = taskCall.Task
-		d.Params = taskCall.Params
+		d.Vars = taskCall.Vars
 		return nil
 	}
 	return ErrCantUnmarshalDep

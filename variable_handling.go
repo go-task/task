@@ -48,7 +48,7 @@ func (e *Executor) handleDynamicVariableContent(value string) (string, error) {
 	return result, nil
 }
 
-func (e *Executor) getVariables(task string, params Params) (map[string]string, error) {
+func (e *Executor) getVariables(task string, vars Vars) (map[string]string, error) {
 	t := e.Tasks[task]
 
 	localVariables := make(map[string]string)
@@ -71,8 +71,8 @@ func (e *Executor) getVariables(task string, params Params) (map[string]string, 
 	for key, value := range getEnvironmentVariables() {
 		localVariables[key] = value
 	}
-	if params != nil {
-		for k, v := range params {
+	if vars != nil {
+		for k, v := range vars {
 			val, err := e.handleDynamicVariableContent(v)
 			if err != nil {
 				return nil, err
@@ -112,11 +112,11 @@ func init() {
 }
 
 // ReplaceSliceVariables writes vars into initial string slice
-func (e *Executor) ReplaceSliceVariables(initials []string, task string, params Params) ([]string, error) {
+func (e *Executor) ReplaceSliceVariables(initials []string, task string, vars Vars) ([]string, error) {
 	result := make([]string, len(initials))
 	for i, s := range initials {
 		var err error
-		result[i], err = e.ReplaceVariables(s, task, params)
+		result[i], err = e.ReplaceVariables(s, task, vars)
 		if err != nil {
 			return nil, err
 		}
@@ -125,8 +125,8 @@ func (e *Executor) ReplaceSliceVariables(initials []string, task string, params 
 }
 
 // ReplaceVariables writes vars into initial string
-func (e *Executor) ReplaceVariables(initial, task string, params Params) (string, error) {
-	vars, err := e.getVariables(task, params)
+func (e *Executor) ReplaceVariables(initial, task string, vars Vars) (string, error) {
+	vars, err := e.getVariables(task, vars)
 	if err != nil {
 		return "", err
 	}
