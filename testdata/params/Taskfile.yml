@@ -8,7 +8,7 @@ default:
     - task: write-file
       vars: {CONTENT: Hello, FILE: hello.txt}
     - task: write-file
-      vars: {CONTENT: World, FILE: world.txt}
+      vars: {CONTENT: "$echo 'World'", FILE: world.txt}
     - task: write-file
       vars: {CONTENT: "!", FILE: exclamation.txt}
 
