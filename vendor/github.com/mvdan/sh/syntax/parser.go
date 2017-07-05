@@ -38,17 +38,11 @@ func NewParser(options ...func(*Parser)) *Parser {
 // an error is returned.
 func (p *Parser) Parse(src io.Reader, name string) (*File, error) {
 	p.reset()
-	alloc := &struct {
-		f File
-		l [32]Pos
-	}{}
-	p.f = &alloc.f
-	p.f.Name = name
-	p.f.lines = alloc.l[:1]
+	p.f = &File{Name: name}
 	p.src = src
 	p.rune()
 	p.next()
-	p.f.Stmts = p.stmts()
+	p.f.StmtList = p.stmts()
 	if p.err == nil {
 		// EOF immediately after heredoc word so no newline to
 		// trigger it
@@ -60,6 +54,7 @@ func (p *Parser) Parse(src io.Reader, name string) (*File, error) {
 type Parser struct {
 	src io.Reader
 	bs  []byte // current chunk of read bytes
+	bsp int    // pos within chunk for the next rune
 	r   rune
 
 	f *File
@@ -73,9 +68,9 @@ type Parser struct {
 	tok token  // current token
 	val string // current value (valid if tok is _Lit*)
 
+	offs int
 	pos  Pos // position of tok
-	offs int // chunk offset
-	npos int // pos within chunk for the next rune
+	npos Pos // next position
 
 	quote quoteState // current lexer state
 	asPos int        // position of '=' in a literal
@@ -89,6 +84,9 @@ type Parser struct {
 	buriedHdocs int
 	heredocs    []*Redirect
 	hdocStop    []byte
+
+	accComs []Comment
+	curComs *[]Comment
 
 	helperBuf *bytes.Buffer
 
@@ -107,14 +105,19 @@ type Parser struct {
 const bufSize = 1 << 10
 
 func (p *Parser) reset() {
-	p.bs = nil
-	p.offs, p.npos = 0, 0
+	p.bs, p.bsp = nil, 0
+	p.offs = 0
+	p.npos = Pos{line: 1}
 	p.r, p.err, p.readErr = 0, nil, nil
 	p.quote, p.forbidNested = noState, false
 	p.heredocs, p.buriedHdocs = p.heredocs[:0], 0
+	p.accComs, p.curComs = nil, &p.accComs
 }
 
-func (p *Parser) getPos() Pos { return Pos(p.offs + p.npos) }
+func (p *Parser) getPos() Pos {
+	p.npos.offs = uint32(p.offs + p.bsp - 1)
+	return p.npos
+}
 
 func (p *Parser) lit(pos Pos, val string) *Lit {
 	if len(p.litBatch) == 0 {
@@ -361,15 +364,15 @@ func (p *Parser) followRsrv(lpos Pos, left, val string) Pos {
 	return pos
 }
 
-func (p *Parser) followStmts(left string, lpos Pos, stops ...string) []*Stmt {
+func (p *Parser) followStmts(left string, lpos Pos, stops ...string) StmtList {
 	if p.gotSameLine(semicolon) {
-		return nil
+		return StmtList{}
 	}
-	sts := p.stmts(stops...)
-	if len(sts) < 1 && !p.newLine {
+	sl := p.stmts(stops...)
+	if len(sl.Stmts) < 1 && !p.newLine {
 		p.followErr(lpos, left, "a statement list")
 	}
-	return sts
+	return sl
 }
 
 func (p *Parser) followWordTok(tok token, pos Pos) *Word {
@@ -417,7 +420,7 @@ func (p *Parser) matched(lpos Pos, left, right token) Pos {
 func (p *Parser) errPass(err error) {
 	if p.err == nil {
 		p.err = err
-		p.npos = len(p.bs) + 1
+		p.bsp = len(p.bs) + 1
 		p.r = utf8.RuneSelf
 		p.tok = _EOF
 	}
@@ -425,17 +428,22 @@ func (p *Parser) errPass(err error) {
 
 // ParseError represents an error found when parsing a source file.
 type ParseError struct {
-	Position
+	Filename string
+	Pos
 	Text string
 }
 
 func (e *ParseError) Error() string {
-	return fmt.Sprintf("%s: %s", e.Position.String(), e.Text)
+	if e.Filename == "" {
+		return fmt.Sprintf("%s: %s", e.Pos.String(), e.Text)
+	}
+	return fmt.Sprintf("%s:%s: %s", e.Filename, e.Pos.String(), e.Text)
 }
 
 func (p *Parser) posErr(pos Pos, format string, a ...interface{}) {
 	p.errPass(&ParseError{
-		Position: p.f.Position(pos),
+		Filename: p.f.Name,
+		Pos:      pos,
 		Text:     fmt.Sprintf(format, a...),
 	})
 }
@@ -444,27 +452,28 @@ func (p *Parser) curErr(format string, a ...interface{}) {
 	p.posErr(p.pos, format, a...)
 }
 
-func (p *Parser) stmts(stops ...string) (sts []*Stmt) {
+func (p *Parser) stmts(stops ...string) (sl StmtList) {
 	gotEnd := true
+loop:
 	for p.tok != _EOF {
 		switch p.tok {
 		case _LitWord:
 			for _, stop := range stops {
 				if p.val == stop {
-					return
+					break loop
 				}
 			}
 		case rightParen:
 			if p.quote == subCmd {
-				return
+				break loop
 			}
 		case bckQuote:
 			if p.quote == subCmdBckquo {
-				return
+				break loop
 			}
 		case dblSemicolon, semiAnd, dblSemiAnd, semiOr:
 			if p.quote == switchCase {
-				return
+				break loop
 			}
 			p.curErr("%s can only be used in a case clause", p.tok)
 		}
@@ -477,13 +486,14 @@ func (p *Parser) stmts(stops ...string) (sts []*Stmt) {
 		if s, end := p.getStmt(true, false); s == nil {
 			p.invalidStmtStart()
 		} else {
-			if sts == nil {
-				sts = p.stList()
+			if sl.Stmts == nil {
+				sl.Stmts = p.stList()
 			}
-			sts = append(sts, s)
+			sl.Stmts = append(sl.Stmts, s)
 			gotEnd = end
 		}
 	}
+	sl.Last, p.accComs = p.accComs, nil
 	return
 }
 
@@ -564,7 +574,7 @@ func (p *Parser) wordPart() WordPart {
 			old := p.preNested(subCmd)
 			p.rune() // don't tokenize '|'
 			p.next()
-			cs.Stmts = p.stmts("}")
+			cs.StmtList = p.stmts("}")
 			p.postNested(old)
 			cs.Right = p.pos
 			if !p.gotRsrv("}") {
@@ -608,7 +618,7 @@ func (p *Parser) wordPart() WordPart {
 		cs := &CmdSubst{Left: p.pos}
 		old := p.preNested(subCmd)
 		p.next()
-		cs.Stmts = p.stmts()
+		cs.StmtList = p.stmts()
 		p.postNested(old)
 		cs.Right = p.matched(cs.Left, leftParen, rightParen)
 		return cs
@@ -620,7 +630,7 @@ func (p *Parser) wordPart() WordPart {
 		ps := &ProcSubst{Op: ProcOperator(p.tok), OpPos: p.pos}
 		old := p.preNested(subCmd)
 		p.next()
-		ps.Stmts = p.stmts()
+		ps.StmtList = p.stmts()
 		p.postNested(old)
 		ps.Rparen = p.matched(ps.OpPos, token(ps.Op), rightParen)
 		return ps
@@ -628,12 +638,13 @@ func (p *Parser) wordPart() WordPart {
 		if p.quote&allArithmExpr != 0 {
 			p.curErr("quotes should not be used in arithmetic expressions")
 		}
-		sq := &SglQuoted{Position: p.pos}
+		sq := &SglQuoted{Left: p.pos}
 		r := p.r
 	loop:
 		for p.newLit(r); ; r = p.rune() {
 			switch r {
 			case utf8.RuneSelf, '\'':
+				sq.Right = p.getPos()
 				sq.Value = p.endLit()
 				p.rune()
 				break loop
@@ -648,7 +659,7 @@ func (p *Parser) wordPart() WordPart {
 		if p.quote&allArithmExpr != 0 {
 			p.curErr("quotes should not be used in arithmetic expressions")
 		}
-		sq := &SglQuoted{Position: p.pos, Dollar: true}
+		sq := &SglQuoted{Left: p.pos, Dollar: true}
 		old := p.quote
 		p.quote = sglQuotes
 		p.next()
@@ -657,6 +668,7 @@ func (p *Parser) wordPart() WordPart {
 			sq.Value = p.val
 			p.next()
 		}
+		sq.Right = p.pos
 		if !p.got(sglQuote) {
 			p.quoteErr(sq.Pos(), sglQuote)
 		}
@@ -679,7 +691,7 @@ func (p *Parser) wordPart() WordPart {
 		cs := &CmdSubst{Left: p.pos}
 		old := p.preNested(subCmdBckquo)
 		p.next()
-		cs.Stmts = p.stmts()
+		cs.StmtList = p.stmts()
 		p.postNested(old)
 		cs.Right = p.pos
 		if !p.got(bckQuote) {
@@ -706,7 +718,7 @@ func (p *Parser) wordPart() WordPart {
 				}
 			}
 		}
-		eg.Pattern = p.lit(eg.OpPos+2, p.endLit())
+		eg.Pattern = p.lit(posAddCol(eg.OpPos, 2), p.endLit())
 		p.rune()
 		p.next()
 		if lparens != -1 {
@@ -941,7 +953,7 @@ func (p *Parser) arithmExprBase(compact bool) ArithmExpr {
 
 func (p *Parser) shortParamExp() *ParamExp {
 	pe := &ParamExp{Dollar: p.pos, Short: true}
-	p.pos++
+	p.pos = posAddCol(p.pos, 1)
 	switch p.r {
 	case '@', '*', '#', '$', '?', '!', '0', '-':
 		p.tok, p.val = _LitWord, string(p.r)
@@ -1152,10 +1164,10 @@ func (p *Parser) getAssign(needEqual bool) *Assign {
 		}
 		as.Name = p.lit(p.pos, p.val[:nameEnd])
 		// since we're not using the entire p.val
-		as.Name.ValueEnd = as.Name.ValuePos + Pos(nameEnd)
-		left := p.lit(p.pos+1, p.val[p.asPos+1:])
+		as.Name.ValueEnd = posAddCol(as.Name.ValuePos, nameEnd)
+		left := p.lit(posAddCol(p.pos, 1), p.val[p.asPos+1:])
 		if left.Value != "" {
-			left.ValuePos += Pos(p.asPos)
+			left.ValuePos = posAddCol(left.ValuePos, p.asPos)
 			as.Value = p.word(p.wps(left))
 		}
 		p.next()
@@ -1163,7 +1175,7 @@ func (p *Parser) getAssign(needEqual bool) *Assign {
 		as.Name = p.lit(p.pos, p.val)
 		// hasValidIdent already checks p.r is '['
 		p.rune()
-		left := p.pos + 1
+		left := posAddCol(p.pos, 1)
 		old := p.preNested(arithmExprBrack)
 		p.next()
 		if p.tok == star {
@@ -1182,7 +1194,7 @@ func (p *Parser) getAssign(needEqual bool) *Assign {
 		if len(p.val) > 0 && p.val[0] == '+' {
 			as.Append = true
 			p.val = p.val[1:]
-			p.pos++
+			p.pos = posAddCol(p.pos, 1)
 		}
 		if len(p.val) < 1 || p.val[0] != '=' {
 			if as.Append {
@@ -1192,7 +1204,7 @@ func (p *Parser) getAssign(needEqual bool) *Assign {
 			}
 			return nil
 		}
-		p.pos++
+		p.pos = posAddCol(p.pos, 1)
 		p.val = p.val[1:]
 		if p.val == "" {
 			p.next()
@@ -1214,6 +1226,7 @@ func (p *Parser) getAssign(needEqual bool) *Assign {
 		p.next()
 		for p.tok != _EOF && p.tok != rightParen {
 			ae := &ArrayElem{}
+			ae.Comments, p.accComs = p.accComs, nil
 			if p.tok == leftBrack {
 				left := p.pos
 				p.quote = arithmExprBrack
@@ -1235,9 +1248,18 @@ func (p *Parser) getAssign(needEqual bool) *Assign {
 			}
 			if ae.Value = p.getWord(); ae.Value == nil {
 				p.curErr("array element values must be words")
+				break
+			}
+			if len(p.accComs) > 0 {
+				c := p.accComs[0]
+				if c.Pos().Line() == ae.End().Line() {
+					ae.Comments = append(ae.Comments, c)
+					p.accComs = p.accComs[1:]
+				}
 			}
 			as.Array.Elems = append(as.Array.Elems, ae)
 		}
+		as.Array.Last, p.accComs = p.accComs, nil
 		p.postNested(old)
 		as.Array.Rparen = p.matched(as.Array.Lparen, leftParen, rightParen)
 	} else if w := p.getWord(); w != nil {
@@ -1285,13 +1307,14 @@ func (p *Parser) doRedirect(s *Stmt) {
 
 func (p *Parser) getStmt(readEnd, binCmd bool) (s *Stmt, gotEnd bool) {
 	s = p.stmt(p.pos)
+	s.Comments, p.accComs = p.accComs, nil
 	if p.gotRsrv("!") {
 		s.Negated = true
 		if p.newLine || stopToken(p.tok) {
 			p.posErr(s.Pos(), `! cannot form a statement alone`)
 		}
 	}
-	if s = p.gotStmtPipe(s); s == nil {
+	if s = p.gotStmtPipe(s); s == nil || p.err != nil {
 		return
 	}
 	switch p.tok {
@@ -1309,11 +1332,13 @@ func (p *Parser) getStmt(readEnd, binCmd bool) (s *Stmt, gotEnd bool) {
 				X:     s,
 			}
 			p.next()
-			if b.Y, _ = p.getStmt(false, true); b.Y == nil {
+			if b.Y, _ = p.getStmt(false, true); b.Y == nil || p.err != nil {
 				p.followErr(b.OpPos, b.Op.String(), "a statement")
+				return
 			}
 			s = p.stmt(s.Position)
 			s.Cmd = b
+			s.Comments, b.X.Comments = b.X.Comments, nil
 		}
 		if p.tok != semicolon {
 			break
@@ -1332,6 +1357,13 @@ func (p *Parser) getStmt(readEnd, binCmd bool) (s *Stmt, gotEnd bool) {
 		s.Coprocess = true
 	}
 	gotEnd = s.Semicolon.IsValid() || s.Background || s.Coprocess
+	if len(p.accComs) > 0 && !binCmd {
+		c := p.accComs[0]
+		if c.Pos().Line() == s.End().Line() {
+			s.Comments = append(s.Comments, c)
+			p.accComs = p.accComs[1:]
+		}
+	}
 	return
 }
 
@@ -1415,6 +1447,10 @@ preLoop:
 			if p.lang == LangBash {
 				s.Cmd = p.coprocClause()
 			}
+		case "select":
+			if p.lang != LangPOSIX {
+				s.Cmd = p.selectClause()
+			}
 		}
 		if s.Cmd != nil {
 			break
@@ -1463,11 +1499,25 @@ preLoop:
 	case or:
 		b := &BinaryCmd{OpPos: p.pos, Op: BinCmdOperator(p.tok), X: s}
 		p.next()
-		if b.Y = p.gotStmtPipe(p.stmt(p.pos)); b.Y == nil {
+		if b.Y = p.gotStmtPipe(p.stmt(p.pos)); b.Y == nil || p.err != nil {
 			p.followErr(b.OpPos, b.Op.String(), "a statement")
+			break
 		}
 		s = p.stmt(s.Position)
 		s.Cmd = b
+		s.Comments, b.X.Comments = b.X.Comments, nil
+		move := 0
+		for _, c := range p.accComs {
+			// inline comment belongs in the parent
+			if c.Hash.Line() >= b.Y.End().Line() {
+				break
+			}
+			move++
+		}
+		if move > 0 {
+			b.Y.Comments = p.accComs[:move]
+			p.accComs = p.accComs[move:]
+		}
 	}
 	return s
 }
@@ -1476,7 +1526,7 @@ func (p *Parser) subshell() *Subshell {
 	s := &Subshell{Lparen: p.pos}
 	old := p.preNested(subCmd)
 	p.next()
-	s.Stmts = p.stmts()
+	s.StmtList = p.stmts()
 	p.postNested(old)
 	s.Rparen = p.matched(s.Lparen, leftParen, rightParen)
 	return s
@@ -1500,7 +1550,7 @@ func (p *Parser) arithmExpCmd() Command {
 func (p *Parser) block() *Block {
 	b := &Block{Lbrace: p.pos}
 	p.next()
-	b.Stmts = p.stmts("}")
+	b.StmtList = p.stmts("}")
 	b.Rbrace = p.pos
 	if !p.gotRsrv("}") {
 		p.matchingErr(b.Lbrace, "{", "}")
@@ -1509,29 +1559,35 @@ func (p *Parser) block() *Block {
 }
 
 func (p *Parser) ifClause() *IfClause {
-	ic := &IfClause{If: p.pos}
+	rif := &IfClause{IfPos: p.pos}
 	p.next()
-	ic.CondStmts = p.followStmts("if", ic.If, "then")
-	ic.Then = p.followRsrv(ic.If, "if <cond>", "then")
-	ic.ThenStmts = p.followStmts("then", ic.Then, "fi", "elif", "else")
+	rif.Cond = p.followStmts("if", rif.IfPos, "then")
+	rif.ThenPos = p.followRsrv(rif.IfPos, "if <cond>", "then")
+	rif.Then = p.followStmts("then", rif.ThenPos, "fi", "elif", "else")
+	curIf := rif
 	for p.tok == _LitWord && p.val == "elif" {
-		elf := &Elif{Elif: p.pos}
+		elf := &IfClause{IfPos: p.pos, Elif: true}
 		p.next()
-		elf.CondStmts = p.followStmts("elif", elf.Elif, "then")
-		elf.Then = p.followRsrv(elf.Elif, "elif <cond>", "then")
-		elf.ThenStmts = p.followStmts("then", elf.Then, "fi", "elif", "else")
-		ic.Elifs = append(ic.Elifs, elf)
+		elf.Cond = p.followStmts("elif", elf.IfPos, "then")
+		elf.ThenPos = p.followRsrv(elf.IfPos, "elif <cond>", "then")
+		elf.Then = p.followStmts("then", elf.ThenPos, "fi", "elif", "else")
+		s := p.stmt(elf.IfPos)
+		s.Cmd = elf
+		curIf.ElsePos = elf.IfPos
+		curIf.Else.Stmts = []*Stmt{s}
+		curIf = elf
 	}
 	if elsePos := p.pos; p.gotRsrv("else") {
-		ic.Else = elsePos
-		ic.ElseStmts = p.followStmts("else", ic.Else, "fi")
+		curIf.ElsePos = elsePos
+		curIf.Else = p.followStmts("else", curIf.ElsePos, "fi")
 	}
-	ic.Fi = p.stmtEnd(ic, "if", "fi")
-	return ic
+	rif.FiPos = p.stmtEnd(rif, "if", "fi")
+	curIf.FiPos = rif.FiPos
+	return rif
 }
 
 func (p *Parser) whileClause(until bool) *WhileClause {
-	wc := &WhileClause{While: p.pos, Until: until}
+	wc := &WhileClause{WhilePos: p.pos, Until: until}
 	rsrv := "while"
 	rsrvCond := "while <cond>"
 	if wc.Until {
@@ -1539,24 +1595,24 @@ func (p *Parser) whileClause(until bool) *WhileClause {
 		rsrvCond = "until <cond>"
 	}
 	p.next()
-	wc.CondStmts = p.followStmts(rsrv, wc.While, "do")
-	wc.Do = p.followRsrv(wc.While, rsrvCond, "do")
-	wc.DoStmts = p.followStmts("do", wc.Do, "done")
-	wc.Done = p.stmtEnd(wc, rsrv, "done")
+	wc.Cond = p.followStmts(rsrv, wc.WhilePos, "do")
+	wc.DoPos = p.followRsrv(wc.WhilePos, rsrvCond, "do")
+	wc.Do = p.followStmts("do", wc.DoPos, "done")
+	wc.DonePos = p.stmtEnd(wc, rsrv, "done")
 	return wc
 }
 
 func (p *Parser) forClause() *ForClause {
-	fc := &ForClause{For: p.pos}
+	fc := &ForClause{ForPos: p.pos}
 	p.next()
-	fc.Loop = p.loop(fc.For)
-	fc.Do = p.followRsrv(fc.For, "for foo [in words]", "do")
-	fc.DoStmts = p.followStmts("do", fc.Do, "done")
-	fc.Done = p.stmtEnd(fc, "for", "done")
+	fc.Loop = p.loop(fc.ForPos)
+	fc.DoPos = p.followRsrv(fc.ForPos, "for foo [in words]", "do")
+	fc.Do = p.followStmts("do", fc.DoPos, "done")
+	fc.DonePos = p.stmtEnd(fc, "for", "done")
 	return fc
 }
 
-func (p *Parser) loop(forPos Pos) Loop {
+func (p *Parser) loop(fpos Pos) Loop {
 	if p.lang != LangBash {
 		switch p.tok {
 		case leftParen, dblLeftParen:
@@ -1580,9 +1636,14 @@ func (p *Parser) loop(forPos Pos) Loop {
 		p.gotSameLine(semicolon)
 		return cl
 	}
-	wi := &WordIter{}
+	wi := p.wordIter("for", fpos)
+	return &wi
+}
+
+func (p *Parser) wordIter(ftok string, fpos Pos) WordIter {
+	wi := WordIter{}
 	if wi.Name = p.getLit(); wi.Name == nil {
-		p.followErr(forPos, "for", "a literal")
+		p.followErr(fpos, ftok, "a literal")
 	}
 	if p.gotRsrv("in") {
 		for !p.newLine && p.tok != _EOF && p.tok != semicolon {
@@ -1594,32 +1655,44 @@ func (p *Parser) loop(forPos Pos) Loop {
 		}
 		p.gotSameLine(semicolon)
 	} else if !p.newLine && !p.got(semicolon) {
-		p.followErr(forPos, "for foo", `"in", ; or a newline`)
+		p.followErr(fpos, ftok+" foo", `"in", ; or a newline`)
 	}
 	return wi
+}
+
+func (p *Parser) selectClause() *SelectClause {
+	fc := &SelectClause{SelectPos: p.pos}
+	p.next()
+	fc.Loop = p.wordIter("select", fc.SelectPos)
+	fc.DoPos = p.followRsrv(fc.SelectPos, "select foo [in words]", "do")
+	fc.Do = p.followStmts("do", fc.DoPos, "done")
+	fc.DonePos = p.stmtEnd(fc, "select", "done")
+	return fc
 }
 
 func (p *Parser) caseClause() *CaseClause {
 	cc := &CaseClause{Case: p.pos}
 	p.next()
 	cc.Word = p.followWord("case", cc.Case)
+	end := "esac"
 	if p.gotRsrv("{") {
 		if p.lang != LangMirBSDKorn {
 			p.posErr(cc.Pos(), `"case i {" is a mksh feature`)
 		}
-		cc.Items = p.caseItems("}")
-		cc.Esac = p.stmtEnd(cc, "case", "}")
+		end = "}"
 	} else {
 		p.followRsrv(cc.Case, "case x", "in")
-		cc.Items = p.caseItems("esac")
-		cc.Esac = p.stmtEnd(cc, "case", "esac")
 	}
+	cc.Items = p.caseItems(end)
+	cc.Last, p.accComs = p.accComs, nil
+	cc.Esac = p.stmtEnd(cc, "case", end)
 	return cc
 }
 
 func (p *Parser) caseItems(stop string) (items []*CaseItem) {
 	for p.tok != _EOF && !(p.tok == _LitWord && p.val == stop) {
 		ci := &CaseItem{}
+		ci.Comments, p.accComs = p.accComs, nil
 		p.got(leftParen)
 		for p.tok != _EOF {
 			if w := p.getWord(); w == nil {
@@ -1636,7 +1709,7 @@ func (p *Parser) caseItems(stop string) (items []*CaseItem) {
 		}
 		old := p.preNested(switchCase)
 		p.next()
-		ci.Stmts = p.stmts(stop)
+		ci.StmtList = p.stmts(stop)
 		p.postNested(old)
 		ci.OpPos = p.pos
 		switch p.tok {
@@ -1646,8 +1719,17 @@ func (p *Parser) caseItems(stop string) (items []*CaseItem) {
 			items = append(items, ci)
 			return
 		}
+		ci.Last = append(ci.Last, p.accComs...)
+		p.accComs = nil
 		ci.Op = CaseOperator(p.tok)
 		p.next()
+		if len(p.accComs) > 0 {
+			c := p.accComs[0]
+			if c.Pos().Line() == ci.OpPos.Line() {
+				ci.Comments = append(ci.Comments, c)
+				p.accComs = p.accComs[1:]
+			}
+		}
 		items = append(items, ci)
 	}
 	return
@@ -1726,7 +1808,7 @@ func (p *Parser) testExpr(ftok token, fpos Pos, pastAndOr bool) TestExpr {
 
 func (p *Parser) testExprBase(ftok token, fpos Pos) TestExpr {
 	switch p.tok {
-	case _EOF:
+	case _EOF, rightParen:
 		return nil
 	case _LitWord:
 		op := token(testUnaryOp(p.val))
@@ -1762,8 +1844,6 @@ func (p *Parser) testExprBase(ftok token, fpos Pos) TestExpr {
 		}
 		pe.Rparen = p.matched(pe.Lparen, leftParen, rightParen)
 		return pe
-	case rightParen:
-		return nil
 	default:
 		// since we don't have [[ as a token
 		fstr := "[["
@@ -1775,7 +1855,7 @@ func (p *Parser) testExprBase(ftok token, fpos Pos) TestExpr {
 }
 
 func (p *Parser) declClause() *DeclClause {
-	ds := &DeclClause{Position: p.pos, Variant: p.val}
+	ds := &DeclClause{Variant: p.lit(p.pos, p.val)}
 	p.next()
 	for (p.tok == _LitWord || p.tok == _Lit) && p.val[0] == '-' {
 		ds.Opts = append(ds.Opts, p.getWord())
@@ -1788,8 +1868,13 @@ func (p *Parser) declClause() *DeclClause {
 				Naked: true,
 				Name:  p.getLit(),
 			})
+		} else if w := p.getWord(); w != nil {
+			ds.Assigns = append(ds.Assigns, &Assign{
+				Naked: true,
+				Value: w,
+			})
 		} else {
-			p.followErr(p.pos, ds.Variant, "names or assignments")
+			p.followErr(p.pos, ds.Variant.Value, "names or assignments")
 		}
 	}
 	return ds

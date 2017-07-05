@@ -61,12 +61,22 @@ func IoctlSetInt(fd int, req uint, value int) (err error) {
 	return ioctl(fd, req, uintptr(value))
 }
 
+func IoctlSetTermios(fd int, req uint, value *Termios) (err error) {
+	return ioctl(fd, req, uintptr(unsafe.Pointer(value)))
+}
+
 // IoctlGetInt performs an ioctl operation which gets an integer value
 // from fd, using the specified request number.
 func IoctlGetInt(fd int, req uint) (int, error) {
 	var value int
 	err := ioctl(fd, req, uintptr(unsafe.Pointer(&value)))
 	return value, err
+}
+
+func IoctlGetTermios(fd int, req uint) (*Termios, error) {
+	var value Termios
+	err := ioctl(fd, req, uintptr(unsafe.Pointer(&value)))
+	return &value, err
 }
 
 //sys	Linkat(olddirfd int, oldpath string, newdirfd int, newpath string, flags int) (err error)

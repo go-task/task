@@ -158,9 +158,7 @@ func (r *Runner) builtinCode(pos syntax.Pos, name string, args []string) int {
 			r.errf("usage: cd [dir]\n")
 			return 2
 		}
-		if !filepath.IsAbs(dir) {
-			dir = filepath.Join(r.Dir, dir)
-		}
+		dir = r.relPath(dir)
 		if _, err := os.Stat(dir); err != nil {
 			return 1
 		}
@@ -216,7 +214,7 @@ func (r *Runner) builtinCode(pos syntax.Pos, name string, args []string) int {
 		if len(args) < 1 {
 			r.runErr(pos, "source: need filename")
 		}
-		f, err := os.Open(args[0])
+		f, err := os.Open(r.relPath(args[0]))
 		if err != nil {
 			r.errf("eval: %v\n", err)
 			return 1
@@ -255,4 +253,11 @@ func (r *Runner) builtinCode(pos syntax.Pos, name string, args []string) int {
 		r.runErr(pos, "unhandled builtin: %s", name)
 	}
 	return 0
+}
+
+func (r *Runner) relPath(path string) string {
+	if filepath.IsAbs(path) {
+		return path
+	}
+	return filepath.Join(r.Dir, path)
 }

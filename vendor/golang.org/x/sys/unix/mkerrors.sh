@@ -153,6 +153,7 @@ struct ltchars {
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/socket.h>
+#include <sys/xattr.h>
 #include <linux/if.h>
 #include <linux/if_alg.h>
 #include <linux/if_arp.h>
@@ -170,6 +171,7 @@ struct ltchars {
 #include <linux/rtnetlink.h>
 #include <linux/ptrace.h>
 #include <linux/sched.h>
+#include <linux/seccomp.h>
 #include <linux/wait.h>
 #include <linux/icmpv6.h>
 #include <linux/serial.h>
@@ -374,7 +376,7 @@ ccflags="$@"
 		$2 == "IFNAMSIZ" ||
 		$2 ~ /^CTL_(MAXNAME|NET|QUERY)$/ ||
 		$2 ~ /^SYSCTL_VERS/ ||
-		$2 ~ /^(MS|MNT)_/ ||
+		$2 ~ /^(MS|MNT|UMOUNT)_/ ||
 		$2 ~ /^TUN(SET|GET|ATTACH|DETACH)/ ||
 		$2 ~ /^(O|F|E?FD|NAME|S|PTRACE|PT)_/ ||
 		$2 ~ /^LINUX_REBOOT_CMD_/ ||
@@ -402,8 +404,10 @@ ccflags="$@"
 		$2 ~ /^GRND_/ ||
 		$2 ~ /^KEY_(SPEC|REQKEY_DEFL)_/ ||
 		$2 ~ /^KEYCTL_/ ||
+		$2 ~ /^SECCOMP_MODE_/ ||
 		$2 ~ /^SPLICE_/ ||
 		$2 ~ /^(VM|VMADDR)_/ ||
+		$2 ~ /^XATTR_(CREATE|REPLACE)/ ||
 		$2 !~ "WMESGLEN" &&
 		$2 ~ /^W[A-Z0-9]+$/ ||
 		$2 ~ /^BLK[A-Z]*(GET$|SET$|BUF$|PART$|SIZE)/ {printf("\t%s = C.%s\n", $2, $2)}

@@ -68,10 +68,6 @@
 
 [[constraint]]
   branch = "master"
-  name = "github.com/BurntSushi/toml"
-
-[[constraint]]
-  branch = "master"
   name = "github.com/Masterminds/sprig"
 
 [[constraint]]

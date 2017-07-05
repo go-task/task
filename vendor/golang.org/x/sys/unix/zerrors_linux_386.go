@@ -1393,6 +1393,9 @@ const (
 	SCM_TIMESTAMPING_OPT_STATS           = 0x36
 	SCM_TIMESTAMPNS                      = 0x23
 	SCM_WIFI_STATUS                      = 0x29
+	SECCOMP_MODE_DISABLED                = 0x0
+	SECCOMP_MODE_FILTER                  = 0x2
+	SECCOMP_MODE_STRICT                  = 0x1
 	SHUT_RD                              = 0x0
 	SHUT_RDWR                            = 0x2
 	SHUT_WR                              = 0x1
@@ -1752,6 +1755,7 @@ const (
 	TUNSETVNETBE                         = 0x400454de
 	TUNSETVNETHDRSZ                      = 0x400454d8
 	TUNSETVNETLE                         = 0x400454dc
+	UMOUNT_NOFOLLOW                      = 0x8
 	VDISCARD                             = 0xd
 	VEOF                                 = 0x4
 	VEOL                                 = 0xb
@@ -1788,6 +1792,8 @@ const (
 	WORDSIZE                             = 0x20
 	WSTOPPED                             = 0x2
 	WUNTRACED                            = 0x2
+	XATTR_CREATE                         = 0x1
+	XATTR_REPLACE                        = 0x2
 	XCASE                                = 0x4
 	XTABS                                = 0x1800
 )

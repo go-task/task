@@ -121,9 +121,10 @@ parts:
 		}
 		s.modified = true
 		wps[i] = &SglQuoted{
-			Position: dq.Position,
-			Dollar:   dq.Dollar,
-			Value:    newVal,
+			Left:   dq.Pos(),
+			Right:  dq.End(),
+			Dollar: dq.Dollar,
+			Value:  newVal,
 		}
 	}
 	return wps
