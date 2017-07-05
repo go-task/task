@@ -21,10 +21,11 @@ const (
 
 // Executor executes a Taskfile
 type Executor struct {
-	Tasks Tasks
-	Dir   string
-	Force bool
-	Watch bool
+	Tasks   Tasks
+	Dir     string
+	Force   bool
+	Watch   bool
+	Verbose bool
 
 	Stdin  io.Reader
 	Stdout io.Writer

@@ -45,6 +45,7 @@ func (e *Executor) handleDynamicVariableContent(value string) (string, error) {
 	}
 
 	result = strings.TrimSpace(result)
+	e.verbosePrintfln(`task: dynamic variable: "%s", result: "%s"`, value, result)
 	return result, nil
 }
 
