@@ -39,9 +39,7 @@ your `PATH`. DEB and RPM packages are also available.
 ## Usage
 
 Create a file called `Taskfile.yml` in the root of the project.
-(`Taskfile.toml` and `Taskfile.json` are also supported, but YAML is used in
-the documentation). The `cmds` attribute should contains the commands of a
-task:
+The `cmds` attribute should contains the commands of a task:
 
 ```yml
 build:
@@ -167,22 +165,53 @@ The above will fail with the message: "cyclic dependency detected".
 
 When a task has many dependencies, they are executed concurrently. This will
 often result in a faster build pipeline. But in some situations you may need
-to call other tasks serially. For this just prefix a command with `^`:
+to call other tasks serially. In this case, just use the following syntax:
+
+```yml
+main-task:
+  cmds:
+    - task: task-to-be-called
+    - task: another-task
+    - echo "Both done"
+
+task-to-be-called:
+  cmds:
+    - echo "Task to be called"
+
+another-task:
+  cmds:
+    - echo "Another task"
+```
+
+Overriding variables in the called task is as simple as informing `vars`
+attribute:
+
+```yml
+main-task:
+  cmds:
+    - task: write-file
+      vars: {FILE: "hello.txt", CONTENT: "Hello!"}
+    - task: write-file
+      vars: {FILE: "world.txt", CONTENT: "World!"}
+
+write-file:
+  cmds:
+    - echo "{{.CONTENT}}" > {{.FILE}}
+```
+
+The above syntax is also supported in `deps`.
+
+> NOTE: It's also possible to call a task without any param prefixing it
+with `^`, but this syntax is deprecaded:
 
 ```yml
 a-task:
   cmds:
     - ^another-task
-    - ^even-another-task
-    - echo "Both done"
 
 another-task:
   cmds:
-    - ...
-
-even-another-task:
-  cmds:
-    - ...
+    - echo "Another task"
 ```
 
 ### Prevent unnecessary work
@@ -256,7 +285,7 @@ setvar:
 The above sample saves the path into a new variable which is then again echoed.
 
 You can use environment variables, task level variables and a file called
-`Taskvars.yml` (or `Taskvars.toml` or `Taskvars.json`) as source of variables.
+`Taskvars.yml` as source of variables.
 
 They are evaluated in the following order:
 

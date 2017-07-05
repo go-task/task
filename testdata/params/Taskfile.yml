@@ -1,0 +1,17 @@
+default:
+  deps:
+    - task: write-file
+      vars: {CONTENT: Dependence1, FILE: dep1.txt}
+    - task: write-file
+      vars: {CONTENT: Dependence2, FILE: dep2.txt}
+  cmds:
+    - task: write-file
+      vars: {CONTENT: Hello, FILE: hello.txt}
+    - task: write-file
+      vars: {CONTENT: "$echo 'World'", FILE: world.txt}
+    - task: write-file
+      vars: {CONTENT: "!", FILE: exclamation.txt}
+
+write-file:
+  cmds:
+    - echo {{.CONTENT}} > {{.FILE}}

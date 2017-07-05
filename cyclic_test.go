@@ -10,10 +10,10 @@ func TestCyclicDepCheck(t *testing.T) {
 	isCyclic := &task.Executor{
 		Tasks: task.Tasks{
 			"task-a": &task.Task{
-				Deps: []string{"task-b"},
+				Deps: []*task.Dep{&task.Dep{Task: "task-b"}},
 			},
 			"task-b": &task.Task{
-				Deps: []string{"task-a"},
+				Deps: []*task.Dep{&task.Dep{Task: "task-a"}},
 			},
 		},
 	}
@@ -25,10 +25,10 @@ func TestCyclicDepCheck(t *testing.T) {
 	isNotCyclic := &task.Executor{
 		Tasks: task.Tasks{
 			"task-a": &task.Task{
-				Deps: []string{"task-c"},
+				Deps: []*task.Dep{&task.Dep{Task: "task-c"}},
 			},
 			"task-b": &task.Task{
-				Deps: []string{"task-c"},
+				Deps: []*task.Dep{&task.Dep{Task: "task-c"}},
 			},
 			"task-c": &task.Task{},
 		},

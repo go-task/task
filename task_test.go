@@ -166,3 +166,35 @@ func TestInit(t *testing.T) {
 		t.Errorf("Taskfile.yml should exists")
 	}
 }
+
+func TestParams(t *testing.T) {
+	const dir = "testdata/params"
+	var files = []struct {
+		file    string
+		content string
+	}{
+		{"hello.txt", "Hello\n"},
+		{"world.txt", "World\n"},
+		{"exclamation.txt", "!\n"},
+		{"dep1.txt", "Dependence1\n"},
+		{"dep2.txt", "Dependence2\n"},
+	}
+
+	for _, f := range files {
+		_ = os.Remove(filepath.Join(dir, f.file))
+	}
+
+	e := task.Executor{
+		Dir:    dir,
+		Stdout: ioutil.Discard,
+		Stderr: ioutil.Discard,
+	}
+	assert.NoError(t, e.ReadTaskfile())
+	assert.NoError(t, e.Run("default"))
+
+	for _, f := range files {
+		content, err := ioutil.ReadFile(filepath.Join(dir, f.file))
+		assert.NoError(t, err)
+		assert.Equal(t, f.content, string(content))
+	}
+}

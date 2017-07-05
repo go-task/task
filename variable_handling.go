@@ -2,9 +2,7 @@ package task
 
 import (
 	"bytes"
-	"encoding/json"
 	"errors"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -13,9 +11,7 @@ import (
 
 	"github.com/go-task/task/execext"
 
-	"github.com/BurntSushi/toml"
 	"github.com/Masterminds/sprig"
-	"gopkg.in/yaml.v2"
 )
 
 var (
@@ -52,7 +48,7 @@ func (e *Executor) handleDynamicVariableContent(value string) (string, error) {
 	return result, nil
 }
 
-func (e *Executor) getVariables(task string) (map[string]string, error) {
+func (e *Executor) getVariables(task string, vars Vars) (map[string]string, error) {
 	t := e.Tasks[task]
 
 	localVariables := make(map[string]string)
@@ -63,19 +59,26 @@ func (e *Executor) getVariables(task string) (map[string]string, error) {
 		}
 		localVariables[key] = val
 	}
-	if fileVariables, err := e.readTaskvarsFile(); err == nil {
-		for key, value := range fileVariables {
+	if e.taskvars != nil {
+		for key, value := range e.taskvars {
 			val, err := e.handleDynamicVariableContent(value)
 			if err != nil {
 				return nil, err
 			}
 			localVariables[key] = val
 		}
-	} else {
-		return nil, err
 	}
 	for key, value := range getEnvironmentVariables() {
 		localVariables[key] = value
+	}
+	if vars != nil {
+		for k, v := range vars {
+			val, err := e.handleDynamicVariableContent(v)
+			if err != nil {
+				return nil, err
+			}
+			localVariables[k] = val
+		}
 	}
 	return localVariables, nil
 }
@@ -109,11 +112,11 @@ func init() {
 }
 
 // ReplaceSliceVariables writes vars into initial string slice
-func (e *Executor) ReplaceSliceVariables(task string, initials []string) ([]string, error) {
+func (e *Executor) ReplaceSliceVariables(initials []string, task string, vars Vars) ([]string, error) {
 	result := make([]string, len(initials))
 	for i, s := range initials {
 		var err error
-		result[i], err = e.ReplaceVariables(task, s)
+		result[i], err = e.ReplaceVariables(s, task, vars)
 		if err != nil {
 			return nil, err
 		}
@@ -122,8 +125,8 @@ func (e *Executor) ReplaceSliceVariables(task string, initials []string) ([]stri
 }
 
 // ReplaceVariables writes vars into initial string
-func (e *Executor) ReplaceVariables(task, initial string) (string, error) {
-	vars, err := e.getVariables(task)
+func (e *Executor) ReplaceVariables(initial, task string, vars Vars) (string, error) {
+	vars, err := e.getVariables(task, vars)
 	if err != nil {
 		return "", err
 	}
@@ -153,29 +156,4 @@ func getEnvironmentVariables() map[string]string {
 		m[key] = val
 	}
 	return m
-}
-
-func (e *Executor) readTaskvarsFile() (map[string]string, error) {
-	file := filepath.Join(e.Dir, TaskvarsFilePath)
-
-	var variables map[string]string
-	if b, err := ioutil.ReadFile(file + ".yml"); err == nil {
-		if err := yaml.Unmarshal(b, &variables); err != nil {
-			return nil, err
-		}
-		return variables, nil
-	}
-	if b, err := ioutil.ReadFile(file + ".json"); err == nil {
-		if err := json.Unmarshal(b, &variables); err != nil {
-			return nil, err
-		}
-		return variables, nil
-	}
-	if b, err := ioutil.ReadFile(file + ".toml"); err == nil {
-		if err := toml.Unmarshal(b, &variables); err != nil {
-			return nil, err
-		}
-		return variables, nil
-	}
-	return variables, nil
 }
