@@ -26,6 +26,12 @@ func (e *Executor) handleDynamicVariableContent(value string) (string, error) {
 		return value, nil
 	}
 
+	e.muDynamicCache.Lock()
+	defer e.muDynamicCache.Unlock()
+	if result, ok := e.dynamicCache[value]; ok {
+		return result, nil
+	}
+
 	buff := bytes.NewBuffer(nil)
 
 	opts := &execext.RunCommandOptions{
@@ -46,6 +52,7 @@ func (e *Executor) handleDynamicVariableContent(value string) (string, error) {
 
 	result = strings.TrimSpace(result)
 	e.verbosePrintfln(`task: dynamic variable: "%s", result: "%s"`, value, result)
+	e.dynamicCache[value] = result
 	return result, nil
 }
 

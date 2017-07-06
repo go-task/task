@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 
 	"github.com/go-task/task/execext"
 
@@ -33,6 +34,9 @@ type Executor struct {
 
 	taskvars      Vars
 	watchingFiles map[string]struct{}
+
+	dynamicCache   Vars
+	muDynamicCache sync.Mutex
 }
 
 // Vars is a string[string] variables map
@@ -69,6 +73,10 @@ func (e *Executor) Run(args ...string) error {
 	}
 	if e.Stderr == nil {
 		e.Stderr = os.Stderr
+	}
+
+	if e.dynamicCache == nil {
+		e.dynamicCache = make(Vars, 10)
 	}
 
 	// check if given tasks exist
