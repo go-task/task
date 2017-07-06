@@ -148,6 +148,9 @@ css:
     - npm run buildcss
 ```
 
+If there are more than one dependency, they always run in parallel for better
+performance.
+
 Each task can only be run once. If it is included from another dependend task causing
 a cyclomatic dependency, execution will be stopped.
 
@@ -268,55 +271,52 @@ up-to-date.
 
 ### Variables
 
-```yml
-build:
-  deps: [setvar]
-  cmds:
-    - echo "{{.PREFIX}} {{.THEVAR}}"
-  vars:
-    PREFIX: "Path:"
+When doing interpolation of variables, Task will look for the below.
+They are listed below in order of importance (e.g. most important first):
 
-setvar:
-  cmds:
-    - echo "{{.PATH}}"
-  set: THEVAR
+- Variables given while calling a task from another.
+  (See [Calling another task](#calling-another-task) above)
+- Environment variables
+- Variables available in the `Taskvars.yml` file
+- Variables declared locally in the task
+
+Example of overriding with environment variables:
+
+```bash
+$ TASK_VARIABLE=a-value task do-something
 ```
 
-The above sample saves the path into a new variable which is then again echoed.
-
-You can use environment variables, task level variables and a file called
-`Taskvars.yml` as source of variables.
-
-They are evaluated in the following order:
-
-Task local variables are overwritten by variables found in `Taskvars` file.
-Variables found in `Taskvars` file are overwritten with variables from the
-environment. The output of the last command is stored in the environment. So
-you can do something like this:
+Example of `Taskvars.yml` file:
 
 ```yml
-build:
-  deps: [setvar]
+PROJECT_NAME: My Project
+DEV_MODE: production
+GIT_COMMIT: $git log -n 1 --format=%h
+```
+
+Example of locally declared vars:
+
+```yml
+print-var:
   cmds:
-    - echo "{{.PREFIX}} '{{.THEVAR}}'"
+    echo "{{.VAR}}"
   vars:
-    PREFIX: "Result: "
+    VAR: Hello!
+```
 
-setvar:
+> NOTE: It's also possible setting a variable globally using `set` attribute
+in task, but this is deprecated:
+
+```yml
+build:
+  deps: [set-message]
   cmds:
-    - echo -n "a"
-    - echo -n "{{.THEVAR}}b"
-    - echo -n "{{.THEVAR}}c"
-  set: THEVAR
-```
+    - echo "Message: {{.MESSAGE}}"
 
-The result of a run of build would be:
-
-```
-a
-ab
-abc
-Result:  'abc'
+set-message:
+  cmds:
+    - echo "This is an important message"
+  set: MESSAGE
 ```
 
 #### Dynamic variables
@@ -332,6 +332,8 @@ build:
   vars:
     LAST_GIT_COMMIT: $git log -n 1 --format=%h
 ```
+
+This works for all types of variables.
 
 ### Go's template engine
 
