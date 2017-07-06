@@ -178,6 +178,7 @@ func TestParams(t *testing.T) {
 		{"exclamation.txt", "!\n"},
 		{"dep1.txt", "Dependence1\n"},
 		{"dep2.txt", "Dependence2\n"},
+		{"spanish.txt", "¡Holla mundo!\n"},
 	}
 
 	for _, f := range files {

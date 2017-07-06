@@ -237,7 +237,15 @@ func (e *Executor) runCommand(ctx context.Context, task string, i int, vars Vars
 	cmd := t.Cmds[i]
 
 	if cmd.Cmd == "" {
-		return e.RunTask(ctx, cmd.Task, cmd.Vars)
+		cmdVars := make(Vars, len(cmd.Vars))
+		for k, v := range cmd.Vars {
+			v, err := e.ReplaceVariables(v, task, vars)
+			if err != nil {
+				return err
+			}
+			cmdVars[k] = v
+		}
+		return e.RunTask(ctx, cmd.Task, cmdVars)
 	}
 
 	c, err := e.ReplaceVariables(cmd.Cmd, task, vars)
