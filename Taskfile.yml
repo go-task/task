@@ -4,8 +4,6 @@ install:
   desc: Installs Task
   cmds:
     - go install -v -ldflags="-w -s -X main.version={{.GIT_COMMIT}}" ./cmd/task
-  vars:
-    GIT_COMMIT: $git log -n 1 --format=%h
 
 dl-deps:
   desc: Downloads cli dependencies
@@ -15,6 +13,7 @@ dl-deps:
     - go get -u github.com/golang/dep/cmd/dep
 
 update-deps:
+  desc: Updates dependencies
   cmds:
     - dep ensure -update
     - dep prune

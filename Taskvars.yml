@@ -1,0 +1,1 @@
+GIT_COMMIT: $git log -n 1 --format=%h
