@@ -30,13 +30,15 @@ hello:
   generates:
     - output.txt
 '''
+
+Options:
 `
 
 func main() {
 	log.SetFlags(0)
 
 	pflag.Usage = func() {
-		fmt.Println(usage)
+		fmt.Print(usage)
 		pflag.PrintDefaults()
 	}
 
