@@ -41,7 +41,7 @@ func (e *Executor) handleDynamicVariableContent(value string) (string, error) {
 		Stderr:  e.Stderr,
 	}
 	if err := execext.RunCommand(opts); err != nil {
-		return "", err
+		return "", &dynamicVarError{cause: err, cmd: opts.Command}
 	}
 
 	result := buff.String()
