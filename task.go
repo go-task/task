@@ -297,16 +297,12 @@ func (e *Executor) runCommand(ctx context.Context, call Call, i int) error {
 func (e *Executor) getTaskDir(call Call) (string, error) {
 	t := e.Tasks[call.Task]
 
-	exeDir, err := e.ReplaceVariables(e.Dir, call)
-	if err != nil {
-		return "", err
-	}
 	taskDir, err := e.ReplaceVariables(t.Dir, call)
 	if err != nil {
 		return "", err
 	}
 
-	return filepath.Join(exeDir, taskDir), nil
+	return filepath.Join(e.Dir, taskDir), nil
 }
 
 func (e *Executor) getEnviron(call Call) ([]string, error) {
