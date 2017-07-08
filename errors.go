@@ -6,8 +6,6 @@ import (
 )
 
 var (
-	// ErrCyclicDepDetected is returned when a cyclic dependency was found in the Taskfile
-	ErrCyclicDepDetected = errors.New("task: cyclic dependency detected")
 	// ErrTaskfileAlreadyExists is returned on creating a Taskfile if one already exists
 	ErrTaskfileAlreadyExists = errors.New("task: A Taskfile already exists")
 )
@@ -60,4 +58,19 @@ type dynamicVarError struct {
 
 func (err *dynamicVarError) Error() string {
 	return fmt.Sprintf(`task: Command "%s" in taskvars file failed: %s`, err.cmd, err.cause)
+}
+
+// MaximumTaskCallExceededError is returned when a task is called too
+// many times. In this case you probably have a cyclic dependendy or
+// infinite loop
+type MaximumTaskCallExceededError struct {
+	task string
+}
+
+func (e *MaximumTaskCallExceededError) Error() string {
+	return fmt.Sprintf(
+		`task: maximum task call exceeded (%d) for task "%s": probably an cyclic dep or infinite loop`,
+		MaximumTaskCall,
+		e.task,
+	)
 }
