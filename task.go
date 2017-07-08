@@ -284,12 +284,12 @@ func (e *Executor) runCommand(ctx context.Context, call Call, i int) error {
 			return err
 		}
 	} else {
-		buff := bytes.NewBuffer(nil)
-		opts.Stdout = buff
+		var stdout bytes.Buffer
+		opts.Stdout = &stdout
 		if err = execext.RunCommand(opts); err != nil {
 			return err
 		}
-		os.Setenv(t.Set, strings.TrimSpace(buff.String()))
+		os.Setenv(t.Set, strings.TrimSpace(stdout.String()))
 	}
 	return nil
 }

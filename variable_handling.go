@@ -32,20 +32,18 @@ func (e *Executor) handleDynamicVariableContent(value string) (string, error) {
 		return result, nil
 	}
 
-	buff := bytes.NewBuffer(nil)
-
+	var stdout bytes.Buffer
 	opts := &execext.RunCommandOptions{
 		Command: strings.TrimPrefix(value, "$"),
 		Dir:     e.Dir,
-		Stdout:  buff,
+		Stdout:  &stdout,
 		Stderr:  e.Stderr,
 	}
 	if err := execext.RunCommand(opts); err != nil {
 		return "", &dynamicVarError{cause: err, cmd: opts.Command}
 	}
 
-	result := buff.String()
-	result = strings.TrimSuffix(result, "\n")
+	result := strings.TrimSuffix(stdout.String(), "\n")
 	if strings.ContainsRune(result, '\n') {
 		return "", ErrMultilineResultCmd
 	}
@@ -140,8 +138,8 @@ func (e *Executor) ReplaceVariables(initial string, call Call) (string, error) {
 		return "", err
 	}
 
-	b := bytes.NewBuffer(nil)
-	if err = templ.Execute(b, vars); err != nil {
+	var b bytes.Buffer
+	if err = templ.Execute(&b, vars); err != nil {
 		return "", err
 	}
 	return b.String(), nil
