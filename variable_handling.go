@@ -56,39 +56,35 @@ func (e *Executor) handleDynamicVariableContent(value string) (string, error) {
 	return result, nil
 }
 
-func (e *Executor) getVariables(call Call) (map[string]string, error) {
+func (e *Executor) getVariables(call Call) (Vars, error) {
 	t := e.Tasks[call.Task]
 
-	localVariables := make(map[string]string)
-	for key, value := range t.Vars {
-		val, err := e.handleDynamicVariableContent(value)
-		if err != nil {
-			return nil, err
-		}
-		localVariables[key] = val
-	}
-	if e.taskvars != nil {
-		for key, value := range e.taskvars {
-			val, err := e.handleDynamicVariableContent(value)
+	result := make(Vars, len(t.Vars)+len(e.taskvars)+len(call.Vars))
+	merge := func(vars Vars) error {
+		for k, v := range vars {
+			v, err := e.handleDynamicVariableContent(v)
 			if err != nil {
-				return nil, err
+				return err
 			}
-			localVariables[key] = val
+			result[k] = v
 		}
+		return nil
 	}
-	for key, value := range getEnvironmentVariables() {
-		localVariables[key] = value
+
+	if err := merge(e.taskvars); err != nil {
+		return nil, err
 	}
-	if call.Vars != nil {
-		for k, v := range call.Vars {
-			val, err := e.handleDynamicVariableContent(v)
-			if err != nil {
-				return nil, err
-			}
-			localVariables[k] = val
-		}
+	if err := merge(t.Vars); err != nil {
+		return nil, err
 	}
-	return localVariables, nil
+	if err := merge(getEnvironmentVariables()); err != nil {
+		return nil, err
+	}
+	if err := merge(call.Vars); err != nil {
+		return nil, err
+	}
+
+	return result, nil
 }
 
 var templateFuncs template.FuncMap
@@ -152,10 +148,10 @@ func (e *Executor) ReplaceVariables(initial string, call Call) (string, error) {
 }
 
 // GetEnvironmentVariables returns environment variables as map
-func getEnvironmentVariables() map[string]string {
+func getEnvironmentVariables() Vars {
 	var (
 		env = os.Environ()
-		m   = make(map[string]string, len(env))
+		m   = make(Vars, len(env))
 	)
 
 	for _, e := range env {

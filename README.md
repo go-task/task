@@ -277,21 +277,13 @@ They are listed below in order of importance (e.g. most important first):
 - Variables given while calling a task from another.
   (See [Calling another task](#calling-another-task) above)
 - Environment variables
-- Variables available in the `Taskvars.yml` file
 - Variables declared locally in the task
+- Variables available in the `Taskvars.yml` file
 
 Example of overriding with environment variables:
 
 ```bash
 $ TASK_VARIABLE=a-value task do-something
-```
-
-Example of `Taskvars.yml` file:
-
-```yml
-PROJECT_NAME: My Project
-DEV_MODE: production
-GIT_COMMIT: $git log -n 1 --format=%h
 ```
 
 Example of locally declared vars:
@@ -302,6 +294,14 @@ print-var:
     echo "{{.VAR}}"
   vars:
     VAR: Hello!
+```
+
+Example of `Taskvars.yml` file:
+
+```yml
+PROJECT_NAME: My Project
+DEV_MODE: production
+GIT_COMMIT: $git log -n 1 --format=%h
 ```
 
 > NOTE: It's also possible setting a variable globally using `set` attribute
