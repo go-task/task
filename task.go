@@ -98,7 +98,7 @@ func (e *Executor) Run(args ...string) error {
 	}
 
 	for _, a := range args {
-		if err := e.RunTask(context.Background(), a, nil); err != nil {
+		if err := e.RunTask(context.Background(), Call{Task: a}); err != nil {
 			return err
 		}
 	}
@@ -106,53 +106,53 @@ func (e *Executor) Run(args ...string) error {
 }
 
 // RunTask runs a task by its name
-func (e *Executor) RunTask(ctx context.Context, name string, vars Vars) error {
-	t, ok := e.Tasks[name]
+func (e *Executor) RunTask(ctx context.Context, call Call) error {
+	t, ok := e.Tasks[call.Task]
 	if !ok {
-		return &taskNotFoundError{name}
+		return &taskNotFoundError{call.Task}
 	}
 
 	if atomic.AddInt32(&t.callCount, 1) >= MaximumTaskCall {
-		return &MaximumTaskCallExceededError{task: name}
+		return &MaximumTaskCallExceededError{task: call.Task}
 	}
 
-	if err := e.runDeps(ctx, name, vars); err != nil {
+	if err := e.runDeps(ctx, call); err != nil {
 		return err
 	}
 
 	if !e.Force {
-		upToDate, err := e.isTaskUpToDate(ctx, name, vars)
+		upToDate, err := e.isTaskUpToDate(ctx, call)
 		if err != nil {
 			return err
 		}
 		if upToDate {
-			e.printfln(`task: Task "%s" is up to date`, name)
+			e.printfln(`task: Task "%s" is up to date`, call.Task)
 			return nil
 		}
 	}
 
 	for i := range t.Cmds {
-		if err := e.runCommand(ctx, name, i, vars); err != nil {
-			return &taskRunError{name, err}
+		if err := e.runCommand(ctx, call, i); err != nil {
+			return &taskRunError{call.Task, err}
 		}
 	}
 	return nil
 }
 
-func (e *Executor) runDeps(ctx context.Context, task string, vars Vars) error {
+func (e *Executor) runDeps(ctx context.Context, call Call) error {
 	g, ctx := errgroup.WithContext(ctx)
-	t := e.Tasks[task]
+	t := e.Tasks[call.Task]
 
 	for _, d := range t.Deps {
 		d := d
 
 		g.Go(func() error {
-			dep, err := e.ReplaceVariables(d.Task, task, vars)
+			dep, err := e.ReplaceVariables(d.Task, call)
 			if err != nil {
 				return err
 			}
 
-			if err = e.RunTask(ctx, dep, d.Vars); err != nil {
+			if err = e.RunTask(ctx, Call{Task: dep, Vars: d.Vars}); err != nil {
 				return err
 			}
 			return nil
@@ -165,27 +165,27 @@ func (e *Executor) runDeps(ctx context.Context, task string, vars Vars) error {
 	return nil
 }
 
-func (e *Executor) isTaskUpToDate(ctx context.Context, task string, vars Vars) (bool, error) {
-	t := e.Tasks[task]
+func (e *Executor) isTaskUpToDate(ctx context.Context, call Call) (bool, error) {
+	t := e.Tasks[call.Task]
 
 	if len(t.Status) > 0 {
-		return e.isUpToDateStatus(ctx, task, vars)
+		return e.isUpToDateStatus(ctx, call)
 	}
-	return e.isUpToDateTimestamp(ctx, task, vars)
+	return e.isUpToDateTimestamp(ctx, call)
 }
 
-func (e *Executor) isUpToDateStatus(ctx context.Context, task string, vars Vars) (bool, error) {
-	t := e.Tasks[task]
+func (e *Executor) isUpToDateStatus(ctx context.Context, call Call) (bool, error) {
+	t := e.Tasks[call.Task]
 
-	environ, err := e.getEnviron(task, vars)
+	environ, err := e.getEnviron(call)
 	if err != nil {
 		return false, err
 	}
-	dir, err := e.getTaskDir(task, vars)
+	dir, err := e.getTaskDir(call)
 	if err != nil {
 		return false, err
 	}
-	status, err := e.ReplaceSliceVariables(t.Status, task, vars)
+	status, err := e.ReplaceSliceVariables(t.Status, call)
 	if err != nil {
 		return false, err
 	}
@@ -204,23 +204,23 @@ func (e *Executor) isUpToDateStatus(ctx context.Context, task string, vars Vars)
 	return true, nil
 }
 
-func (e *Executor) isUpToDateTimestamp(ctx context.Context, task string, vars Vars) (bool, error) {
-	t := e.Tasks[task]
+func (e *Executor) isUpToDateTimestamp(ctx context.Context, call Call) (bool, error) {
+	t := e.Tasks[call.Task]
 
 	if len(t.Sources) == 0 || len(t.Generates) == 0 {
 		return false, nil
 	}
 
-	dir, err := e.getTaskDir(task, vars)
+	dir, err := e.getTaskDir(call)
 	if err != nil {
 		return false, err
 	}
 
-	sources, err := e.ReplaceSliceVariables(t.Sources, task, vars)
+	sources, err := e.ReplaceSliceVariables(t.Sources, call)
 	if err != nil {
 		return false, err
 	}
-	generates, err := e.ReplaceSliceVariables(t.Generates, task, vars)
+	generates, err := e.ReplaceSliceVariables(t.Generates, call)
 	if err != nil {
 		return false, err
 	}
@@ -238,33 +238,33 @@ func (e *Executor) isUpToDateTimestamp(ctx context.Context, task string, vars Va
 	return generatesMinTime.After(sourcesMaxTime), nil
 }
 
-func (e *Executor) runCommand(ctx context.Context, task string, i int, vars Vars) error {
-	t := e.Tasks[task]
+func (e *Executor) runCommand(ctx context.Context, call Call, i int) error {
+	t := e.Tasks[call.Task]
 	cmd := t.Cmds[i]
 
 	if cmd.Cmd == "" {
 		cmdVars := make(Vars, len(cmd.Vars))
 		for k, v := range cmd.Vars {
-			v, err := e.ReplaceVariables(v, task, vars)
+			v, err := e.ReplaceVariables(v, call)
 			if err != nil {
 				return err
 			}
 			cmdVars[k] = v
 		}
-		return e.RunTask(ctx, cmd.Task, cmdVars)
+		return e.RunTask(ctx, Call{Task: cmd.Task, Vars: cmdVars})
 	}
 
-	c, err := e.ReplaceVariables(cmd.Cmd, task, vars)
+	c, err := e.ReplaceVariables(cmd.Cmd, call)
 	if err != nil {
 		return err
 	}
 
-	dir, err := e.getTaskDir(task, vars)
+	dir, err := e.getTaskDir(call)
 	if err != nil {
 		return err
 	}
 
-	envs, err := e.getEnviron(task, vars)
+	envs, err := e.getEnviron(call)
 	if err != nil {
 		return err
 	}
@@ -294,14 +294,14 @@ func (e *Executor) runCommand(ctx context.Context, task string, i int, vars Vars
 	return nil
 }
 
-func (e *Executor) getTaskDir(task string, vars Vars) (string, error) {
-	t := e.Tasks[task]
+func (e *Executor) getTaskDir(call Call) (string, error) {
+	t := e.Tasks[call.Task]
 
-	exeDir, err := e.ReplaceVariables(e.Dir, task, vars)
+	exeDir, err := e.ReplaceVariables(e.Dir, call)
 	if err != nil {
 		return "", err
 	}
-	taskDir, err := e.ReplaceVariables(t.Dir, task, vars)
+	taskDir, err := e.ReplaceVariables(t.Dir, call)
 	if err != nil {
 		return "", err
 	}
@@ -309,8 +309,8 @@ func (e *Executor) getTaskDir(task string, vars Vars) (string, error) {
 	return filepath.Join(exeDir, taskDir), nil
 }
 
-func (e *Executor) getEnviron(task string, vars Vars) ([]string, error) {
-	t := e.Tasks[task]
+func (e *Executor) getEnviron(call Call) ([]string, error) {
+	t := e.Tasks[call.Task]
 
 	if t.Env == nil {
 		return nil, nil
@@ -319,7 +319,7 @@ func (e *Executor) getEnviron(task string, vars Vars) ([]string, error) {
 	envs := os.Environ()
 
 	for k, v := range t.Env {
-		env, err := e.ReplaceVariables(fmt.Sprintf("%s=%s", k, v), task, vars)
+		env, err := e.ReplaceVariables(fmt.Sprintf("%s=%s", k, v), call)
 		if err != nil {
 			return nil, err
 		}

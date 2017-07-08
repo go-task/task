@@ -15,7 +15,7 @@ func (e *Executor) watchTasks(args ...string) error {
 
 	// run tasks on init
 	for _, a := range args {
-		if err := e.RunTask(context.Background(), a, nil); err != nil {
+		if err := e.RunTask(context.Background(), Call{Task: a}); err != nil {
 			e.println(err)
 			break
 		}
@@ -41,7 +41,7 @@ loop:
 		select {
 		case <-watcher.Events:
 			for _, a := range args {
-				if err := e.RunTask(context.Background(), a, nil); err != nil {
+				if err := e.RunTask(context.Background(), Call{Task: a}); err != nil {
 					e.println(err)
 					continue loop
 				}
