@@ -13,7 +13,12 @@ func (e *Executor) CheckCyclicDep() error {
 		defer delete(visits, name)
 
 		for _, d := range t.Deps {
-			if err := checkCyclicDep(d.Task, e.Tasks[d.Task]); err != nil {
+			// FIXME: ignoring by now. should return an error instead?
+			task, ok := e.Tasks[d.Task]
+			if !ok {
+				continue
+			}
+			if err := checkCyclicDep(d.Task, task); err != nil {
 				return err
 			}
 		}

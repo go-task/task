@@ -35,4 +35,22 @@ func TestCyclicDepCheck(t *testing.T) {
 	}
 
 	assert.NoError(t, isNotCyclic.CheckCyclicDep())
+
+	inexixtentTask := &task.Executor{
+		Tasks: task.Tasks{
+			"task-a": &task.Task{
+				Deps: []*task.Dep{&task.Dep{Task: "invalid-task"}},
+			},
+		},
+	}
+
+	// FIXME: by now Task should ignore non existent tasks
+	// in the future we should improve the detection of
+	// tasks called with interpolation?
+	//     task:
+	//       deps:
+	//         - task: "task{{.VARIABLE}}"
+	//       vars:
+	//         VARIABLE: something
+	assert.NoError(t, inexixtentTask.CheckCyclicDep())
 }
