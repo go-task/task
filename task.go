@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+	"sync/atomic"
 
 	"github.com/go-task/task/execext"
 
@@ -18,6 +19,9 @@ import (
 const (
 	// TaskFilePath is the default Taskfile
 	TaskFilePath = "Taskfile"
+	// MaximumTaskCall is the max number of times a task can be called.
+	// This exists to prevent infinite loops on cyclic dependencies
+	MaximumTaskCall = 100
 )
 
 // Executor executes a Taskfile
@@ -57,14 +61,12 @@ type Task struct {
 	Vars      Vars
 	Set       string
 	Env       Vars
+
+	callCount int32
 }
 
 // Run runs Task
 func (e *Executor) Run(args ...string) error {
-	if err := e.CheckCyclicDep(); err != nil {
-		return err
-	}
-
 	if e.Stdin == nil {
 		e.Stdin = os.Stdin
 	}
@@ -108,6 +110,10 @@ func (e *Executor) RunTask(ctx context.Context, name string, vars Vars) error {
 	t, ok := e.Tasks[name]
 	if !ok {
 		return &taskNotFoundError{name}
+	}
+
+	if atomic.AddInt32(&t.callCount, 1) >= MaximumTaskCall {
+		return &MaximumTaskCallExceededError{task: name}
 	}
 
 	if err := e.runDeps(ctx, name, vars); err != nil {

@@ -199,3 +199,15 @@ func TestParams(t *testing.T) {
 		assert.Equal(t, f.content, string(content))
 	}
 }
+
+func TestCyclicDep(t *testing.T) {
+	const dir = "testdata/cyclic"
+
+	e := task.Executor{
+		Dir:    dir,
+		Stdout: ioutil.Discard,
+		Stderr: ioutil.Discard,
+	}
+	assert.NoError(t, e.ReadTaskfile())
+	assert.IsType(t, &task.MaximumTaskCallExceededError{}, e.Run("task-1"))
+}
