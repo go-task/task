@@ -61,8 +61,8 @@ type Task struct {
 
 // Run runs Task
 func (e *Executor) Run(args ...string) error {
-	if e.HasCyclicDep() {
-		return ErrCyclicDependencyDetected
+	if err := e.CheckCyclicDep(); err != nil {
+		return err
 	}
 
 	if e.Stdin == nil {
