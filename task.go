@@ -116,7 +116,21 @@ func (e *Executor) RunTask(ctx context.Context, call Call) error {
 		return &MaximumTaskCallExceededError{task: call.Task}
 	}
 
+	var err error
+	call.Vars, err = e.getVariables(call)
+	if err != nil {
+		return err
+	}
+
 	if err := e.runDeps(ctx, call); err != nil {
+		return err
+	}
+
+	// FIXME: doing again, since a var may have been overriden
+	// using the `set:` attribute of a dependecy.
+	// Remove this when `set` (that is deprecated) be removed
+	call.Vars, err = e.getVariables(call)
+	if err != nil {
 		return err
 	}
 

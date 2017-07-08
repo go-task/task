@@ -21,7 +21,9 @@ var (
 	ErrMultilineResultCmd = errors.New("Got multiline result from command")
 )
 
-var templateFuncs template.FuncMap
+var (
+	templateFuncs template.FuncMap
+)
 
 func init() {
 	taskFuncs := template.FuncMap{
@@ -51,18 +53,13 @@ func init() {
 
 // ReplaceVariables writes vars into initial string
 func (e *Executor) ReplaceVariables(initial string, call Call) (string, error) {
-	vars, err := e.getVariables(call)
-	if err != nil {
-		return "", err
-	}
-
 	templ, err := template.New("").Funcs(templateFuncs).Parse(initial)
 	if err != nil {
 		return "", err
 	}
 
 	var b bytes.Buffer
-	if err = templ.Execute(&b, vars); err != nil {
+	if err = templ.Execute(&b, call.Vars); err != nil {
 		return "", err
 	}
 	return b.String(), nil
@@ -85,27 +82,36 @@ func (e *Executor) getVariables(call Call) (Vars, error) {
 	t := e.Tasks[call.Task]
 
 	result := make(Vars, len(t.Vars)+len(e.taskvars)+len(call.Vars))
-	merge := func(vars Vars) error {
+	merge := func(vars Vars, runTemplate bool) error {
 		for k, v := range vars {
+			if runTemplate {
+				var err error
+				v, err = e.ReplaceVariables(v, call)
+				if err != nil {
+					return err
+				}
+			}
+
 			v, err := e.handleDynamicVariableContent(v)
 			if err != nil {
 				return err
 			}
+
 			result[k] = v
 		}
 		return nil
 	}
 
-	if err := merge(e.taskvars); err != nil {
+	if err := merge(e.taskvars, false); err != nil {
 		return nil, err
 	}
-	if err := merge(t.Vars); err != nil {
+	if err := merge(t.Vars, true); err != nil {
 		return nil, err
 	}
-	if err := merge(getEnvironmentVariables()); err != nil {
+	if err := merge(getEnvironmentVariables(), false); err != nil {
 		return nil, err
 	}
-	if err := merge(call.Vars); err != nil {
+	if err := merge(call.Vars, false); err != nil {
 		return nil, err
 	}
 
