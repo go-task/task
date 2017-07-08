@@ -31,10 +31,7 @@ func (e *Executor) ReadTaskfile() error {
 	if err := mergo.MapWithOverwrite(&e.Tasks, osTasks); err != nil {
 		return err
 	}
-	if err := e.readTaskvarsFile(); err != nil {
-		return err
-	}
-	return nil
+	return e.readTaskvarsFile()
 }
 
 func (e *Executor) readTaskfileData(path string) (tasks map[string]*Task, err error) {

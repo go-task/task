@@ -152,17 +152,11 @@ func (e *Executor) runDeps(ctx context.Context, call Call) error {
 				return err
 			}
 
-			if err = e.RunTask(ctx, Call{Task: dep, Vars: d.Vars}); err != nil {
-				return err
-			}
-			return nil
+			return e.RunTask(ctx, Call{Task: dep, Vars: d.Vars})
 		})
 	}
 
-	if err := g.Wait(); err != nil {
-		return err
-	}
-	return nil
+	return g.Wait()
 }
 
 func (e *Executor) isTaskUpToDate(ctx context.Context, call Call) (bool, error) {
@@ -278,20 +272,17 @@ func (e *Executor) runCommand(ctx context.Context, call Call, i int) error {
 	}
 
 	e.println(c)
-	if t.Set == "" {
-		opts.Stdout = e.Stdout
-		if err = execext.RunCommand(opts); err != nil {
-			return err
-		}
-	} else {
+	if t.Set != "" {
 		var stdout bytes.Buffer
 		opts.Stdout = &stdout
 		if err = execext.RunCommand(opts); err != nil {
 			return err
 		}
-		os.Setenv(t.Set, strings.TrimSpace(stdout.String()))
+		return os.Setenv(t.Set, strings.TrimSpace(stdout.String()))
 	}
-	return nil
+
+	opts.Stdout = e.Stdout
+	return execext.RunCommand(opts)
 }
 
 func (e *Executor) getTaskDir(call Call) (string, error) {

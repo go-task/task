@@ -46,8 +46,5 @@ func RunCommand(opts *RunCommandOptions) error {
 		Stdout:  opts.Stdout,
 		Stderr:  opts.Stderr,
 	}
-	if err = r.Run(); err != nil {
-		return err
-	}
-	return nil
+	return r.Run()
 }
