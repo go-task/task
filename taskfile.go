@@ -31,7 +31,7 @@ func (e *Executor) ReadTaskfile() error {
 	if err := mergo.MapWithOverwrite(&e.Tasks, osTasks); err != nil {
 		return err
 	}
-	return e.readTaskvarsFile()
+	return e.readTaskvars()
 }
 
 func (e *Executor) readTaskfileData(path string) (tasks map[string]*Task, err error) {
@@ -41,7 +41,7 @@ func (e *Executor) readTaskfileData(path string) (tasks map[string]*Task, err er
 	return nil, taskFileNotFound{path}
 }
 
-func (e *Executor) readTaskvarsFile() error {
+func (e *Executor) readTaskvars() error {
 	file := filepath.Join(e.Dir, TaskvarsFilePath)
 
 	if b, err := ioutil.ReadFile(file + ".yml"); err == nil {
