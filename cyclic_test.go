@@ -4,6 +4,8 @@ import (
 	"testing"
 
 	"github.com/go-task/task"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestCyclicDepCheck(t *testing.T) {
@@ -18,9 +20,7 @@ func TestCyclicDepCheck(t *testing.T) {
 		},
 	}
 
-	if !isCyclic.HasCyclicDep() {
-		t.Error("Task should be cyclic")
-	}
+	assert.Equal(t, task.ErrCyclicDepDetected, isCyclic.CheckCyclicDep(), "task should be cyclic")
 
 	isNotCyclic := &task.Executor{
 		Tasks: task.Tasks{
@@ -34,7 +34,5 @@ func TestCyclicDepCheck(t *testing.T) {
 		},
 	}
 
-	if isNotCyclic.HasCyclicDep() {
-		t.Error("Task should not be cyclic")
-	}
+	assert.NoError(t, isNotCyclic.CheckCyclicDep())
 }

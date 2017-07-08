@@ -6,8 +6,8 @@ import (
 )
 
 var (
-	// ErrCyclicDependencyDetected is returned when a cyclic dependency was found in the Taskfile
-	ErrCyclicDependencyDetected = errors.New("task: cyclic dependency detected")
+	// ErrCyclicDepDetected is returned when a cyclic dependency was found in the Taskfile
+	ErrCyclicDepDetected = errors.New("task: cyclic dependency detected")
 	// ErrTaskfileAlreadyExists is returned on creating a Taskfile if one already exists
 	ErrTaskfileAlreadyExists = errors.New("task: A Taskfile already exists")
 )
