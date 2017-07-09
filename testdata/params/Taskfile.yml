@@ -6,6 +6,8 @@ default:
       vars: {CONTENT: Dependence1, FILE: dep1.txt}
     - task: write-file
       vars: {CONTENT: Dependence2, FILE: dep2.txt}
+    - task: write-file
+      vars: {CONTENT: "{{.SPANISH|replace \"mundo\" \"dependencia\"}}", FILE: spanish-dep.txt}
   cmds:
     - task: write-file
       vars: {CONTENT: Hello, FILE: hello.txt}

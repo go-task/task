@@ -179,6 +179,7 @@ func TestParams(t *testing.T) {
 		{"dep1.txt", "Dependence1\n"},
 		{"dep2.txt", "Dependence2\n"},
 		{"spanish.txt", "¡Holla mundo!\n"},
+		{"spanish-dep.txt", "¡Holla dependencia!\n"},
 	}
 
 	for _, f := range files {

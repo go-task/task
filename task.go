@@ -165,8 +165,16 @@ func (e *Executor) runDeps(ctx context.Context, call Call) error {
 			if err != nil {
 				return err
 			}
+			depVars := make(Vars, len(d.Vars))
+			for k, v := range d.Vars {
+				v, err := e.ReplaceVariables(v, call)
+				if err != nil {
+					return err
+				}
+				depVars[k] = v
+			}
 
-			return e.RunTask(ctx, Call{Task: dep, Vars: d.Vars})
+			return e.RunTask(ctx, Call{Task: dep, Vars: depVars})
 		})
 	}
 
