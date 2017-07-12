@@ -1,0 +1,34 @@
+abs.txt:
+  desc: generates dest file based on absolute paths
+  deps:
+    - sub/src.txt
+  dir: sub
+  cmds:
+    - cat src.txt > '{{.BUILD_DIR}}/abs.txt'
+  sources:
+    - src.txt
+  generates:
+    - "{{.BUILD_DIR}}/abs.txt"
+
+rel.txt:
+  desc: generates dest file based on relative paths
+  deps:
+    - sub/src.txt
+  dir: sub
+  cmds:
+    - cat src.txt > '../rel.txt'
+  sources:
+    - src.txt
+  generates:
+    - "../rel.txt"
+
+sub/src.txt:
+  desc: generate source file
+  cmds:
+    - mkdir -p sub
+    - echo "hello world" > sub/src.txt
+    # Sleep to avoid time-stamp issue. Some filesystems, E.g. HFS+ for Mac OS,
+    # only support one second precision on file timestamps.
+    - sleep 1
+  status:
+    - test -f sub/src.txt

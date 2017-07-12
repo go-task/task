@@ -2,6 +2,7 @@ package task_test
 
 import (
 	"bytes"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -146,6 +147,61 @@ func TestStatus(t *testing.T) {
 
 	if buff.String() != `task: Task "gen-foo" is up to date`+"\n" {
 		t.Errorf("Wrong output message: %s", buff.String())
+	}
+}
+
+func TestGenerates(t *testing.T) {
+	var srcTask = "sub/src.txt"
+	var relTask = "rel.txt"
+	var absTask = "abs.txt"
+
+	// This test does not work with a relative dir.
+	dir, err := filepath.Abs("testdata/generates")
+	assert.NoError(t, err)
+	var srcFile = filepath.Join(dir, srcTask)
+
+	for _, task := range []string{srcTask, relTask, absTask} {
+		path := filepath.Join(dir, task)
+		_ = os.Remove(path)
+		if _, err := os.Stat(path); err == nil {
+			t.Errorf("File should not exists: %v", err)
+		}
+	}
+
+	buff := bytes.NewBuffer(nil)
+	e := &task.Executor{
+		Dir:    dir,
+		Stdout: buff,
+		Stderr: buff,
+	}
+	assert.NoError(t, e.ReadTaskfile())
+
+	for _, task := range []string{relTask, absTask} {
+		var destFile = filepath.Join(dir, task)
+		var upToDate = fmt.Sprintf("task: Task \"%s\" is up to date\n", srcTask) +
+			fmt.Sprintf("task: Task \"%s\" is up to date\n", task)
+
+		// Run task for the first time.
+		assert.NoError(t, e.Run(task))
+
+		if _, err := os.Stat(srcFile); err != nil {
+			t.Errorf("File should exists: %v", err)
+		}
+		if _, err := os.Stat(destFile); err != nil {
+			t.Errorf("File should exists: %v", err)
+		}
+		// Ensure task was not incorrectly found to be up-to-date on first run.
+		if buff.String() == upToDate {
+			t.Errorf("Wrong output message: %s", buff.String())
+		}
+		buff.Reset()
+
+		// Re-run task to ensure it's now found to be up-to-date.
+		assert.NoError(t, e.Run(task))
+		if buff.String() != upToDate {
+			t.Errorf("Wrong output message: %s", buff.String())
+		}
+		buff.Reset()
 	}
 }
 
