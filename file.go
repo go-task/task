@@ -23,7 +23,9 @@ func maxTime(a, b time.Time) time.Time {
 
 func getPatternsMinTime(dir string, patterns []string) (m time.Time, err error) {
 	for _, p := range patterns {
-		p = filepath.Join(dir, p)
+		if !filepath.IsAbs(p) {
+			p = filepath.Join(dir, p)
+		}
 		mp, err := getPatternMinTime(p)
 		if err != nil {
 			return time.Time{}, err
@@ -34,7 +36,9 @@ func getPatternsMinTime(dir string, patterns []string) (m time.Time, err error) 
 }
 func getPatternsMaxTime(dir string, patterns []string) (m time.Time, err error) {
 	for _, p := range patterns {
-		p = filepath.Join(dir, p)
+		if !filepath.IsAbs(p) {
+			p = filepath.Join(dir, p)
+		}
 		mp, err := getPatternMaxTime(p)
 		if err != nil {
 			return time.Time{}, err
