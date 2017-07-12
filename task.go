@@ -250,8 +250,7 @@ func (e *Executor) isUpToDateTimestamp(ctx context.Context, call Call) (bool, er
 	if err != nil || generatesMinTime.IsZero() {
 		return false, nil
 	}
-
-	return generatesMinTime.After(sourcesMaxTime), nil
+	return !generatesMinTime.Before(sourcesMaxTime), nil
 }
 
 func (e *Executor) runCommand(ctx context.Context, call Call, i int) error {

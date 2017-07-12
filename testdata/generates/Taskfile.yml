@@ -27,8 +27,5 @@ sub/src.txt:
   cmds:
     - mkdir -p sub
     - echo "hello world" > sub/src.txt
-    # Sleep to avoid time-stamp issue. Some filesystems, E.g. HFS+ for Mac OS,
-    # only support one second precision on file timestamps.
-    - sleep 1
   status:
     - test -f sub/src.txt
