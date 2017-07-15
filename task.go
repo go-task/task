@@ -158,24 +158,11 @@ func (e *Executor) runDeps(ctx context.Context, call Call) error {
 		d := d
 
 		g.Go(func() error {
-			dep, err := e.ReplaceVariables(d.Task, call)
+			c, err := e.toCall(d.Task, d.Vars, call)
 			if err != nil {
 				return err
 			}
-			depVars := make(Vars, len(d.Vars))
-			for k, v := range d.Vars {
-				static, err := e.ReplaceVariables(v.Static, call)
-				if err != nil {
-					return err
-				}
-				sh, err := e.ReplaceVariables(v.Sh, call)
-				if err != nil {
-					return err
-				}
-				depVars[k] = Var{Static: static, Sh: sh}
-			}
-
-			return e.RunTask(ctx, Call{Task: dep, Vars: depVars})
+			return e.RunTask(ctx, c)
 		})
 	}
 
@@ -259,19 +246,11 @@ func (e *Executor) runCommand(ctx context.Context, call Call, i int) error {
 	cmd := t.Cmds[i]
 
 	if cmd.Cmd == "" {
-		cmdVars := make(Vars, len(cmd.Vars))
-		for k, v := range cmd.Vars {
-			static, err := e.ReplaceVariables(v.Static, call)
-			if err != nil {
-				return err
-			}
-			sh, err := e.ReplaceVariables(v.Sh, call)
-			if err != nil {
-				return err
-			}
-			cmdVars[k] = Var{Static: static, Sh: sh}
+		c, err := e.toCall(cmd.Task, cmd.Vars, call)
+		if err != nil {
+			return err
 		}
-		return e.RunTask(ctx, Call{Task: cmd.Task, Vars: cmdVars})
+		return e.RunTask(ctx, c)
 	}
 
 	c, err := e.ReplaceVariables(cmd.Cmd, call)
@@ -309,6 +288,27 @@ func (e *Executor) runCommand(ctx context.Context, call Call, i int) error {
 
 	opts.Stdout = e.Stdout
 	return execext.RunCommand(opts)
+}
+
+func (e *Executor) toCall(task string, vs Vars, call Call) (Call, error) {
+	task, err := e.ReplaceVariables(task, call)
+	if err != nil {
+		return Call{}, err
+	}
+
+	newVars := make(Vars, len(vs))
+	for k, v := range vs {
+		static, err := e.ReplaceVariables(v.Static, call)
+		if err != nil {
+			return Call{}, err
+		}
+		sh, err := e.ReplaceVariables(v.Sh, call)
+		if err != nil {
+			return Call{}, err
+		}
+		newVars[k] = Var{Static: static, Sh: sh}
+	}
+	return Call{Task: task, Vars: newVars}, nil
 }
 
 func (e *Executor) getTaskDir(call Call) (string, error) {
