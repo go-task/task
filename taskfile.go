@@ -42,11 +42,24 @@ func (e *Executor) readTaskfileData(path string) (tasks map[string]*Task, err er
 }
 
 func (e *Executor) readTaskvars() error {
-	file := filepath.Join(e.Dir, TaskvarsFilePath)
+	var (
+		file           = filepath.Join(e.Dir, TaskvarsFilePath)
+		osSpecificFile = fmt.Sprintf("%s_%s", file, runtime.GOOS)
+	)
 
 	if b, err := ioutil.ReadFile(file + ".yml"); err == nil {
 		if err := yaml.UnmarshalStrict(b, &e.taskvars); err != nil {
 			return err
+		}
+	}
+
+	if b, err := ioutil.ReadFile(osSpecificFile + ".yml"); err == nil {
+		osTaskvars := make(Vars, 10)
+		if err := yaml.UnmarshalStrict(b, &osTaskvars); err != nil {
+			return err
+		}
+		for k, v := range osTaskvars {
+			e.taskvars[k] = v
 		}
 	}
 	return nil

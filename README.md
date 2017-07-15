@@ -78,8 +78,8 @@ build:
 
 ### OS specific task
 
-If you add a `Taskfile_{{GOOS}}` you can override or amend your taskfile based
-on the operating system.
+If you add a `Taskfile_{{GOOS}}.yml` you can override or amend your taskfile
+based on the operating system.
 
 Example:
 
@@ -99,7 +99,11 @@ build:
     - echo "linux"
 ```
 
-Will print out `linux` and not default
+Will print out `linux` and not default.
+
+It's also possible to have OS specific `Taskvars.yml` file, like
+`Taskvars_windows.yml` or `Taskvars_darwin.yml`. See the
+[variables section](#variables) below.
 
 ### Task directory
 
