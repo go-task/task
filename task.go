@@ -85,7 +85,7 @@ func (e *Executor) Run(args ...string) error {
 	for _, a := range args {
 		if _, ok := e.Tasks[a]; !ok {
 			// FIXME: move to the main package
-			e.printExistingTasksHelp()
+			e.PrintTasksHelp()
 			return &taskNotFoundError{taskName: a}
 		}
 	}

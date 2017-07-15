@@ -379,7 +379,8 @@ print-os:
 
 ### Help
 
-Running `task help` lists all tasks with a description. The following taskfile:
+Running `task --list` (or `task -l`) lists all tasks with a description.
+The following taskfile:
 
 ```yml
 build:
@@ -404,8 +405,8 @@ css:
 would print the following output:
 
 ```bash
-build   Build the go binary.
-test    Run all the go tests.
+* build:   Build the go binary.
+* test:    Run all the go tests.
 ```
 
 ## Watch tasks (experimental)

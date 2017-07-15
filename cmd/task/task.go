@@ -14,7 +14,7 @@ var (
 	version = "master"
 )
 
-const usage = `Usage: task [-ifwv] [--init] [--force] [--watch] [--verbose] [task...]
+const usage = `Usage: task [-ilfwv] [--init] [--list] [--force] [--watch] [--verbose] [task...]
 
 Runs the specified task(s). Falls back to the "default" task if no task name
 was specified, or lists all tasks if an unknown task name was specified.
@@ -45,6 +45,7 @@ func main() {
 	var (
 		versionFlag bool
 		init        bool
+		list        bool
 		force       bool
 		watch       bool
 		verbose     bool
@@ -52,6 +53,7 @@ func main() {
 
 	pflag.BoolVar(&versionFlag, "version", false, "show Task version")
 	pflag.BoolVarP(&init, "init", "i", false, "creates a new Taskfile.yml in the current folder")
+	pflag.BoolVarP(&list, "list", "l", false, "lists tasks with description of current Taskfile")
 	pflag.BoolVarP(&force, "force", "f", false, "forces execution even when the task is up-to-date")
 	pflag.BoolVarP(&watch, "watch", "w", false, "enables watch of the given task")
 	pflag.BoolVarP(&verbose, "verbose", "v", false, "enables verbose mode")
@@ -84,6 +86,11 @@ func main() {
 	}
 	if err := e.ReadTaskfile(); err != nil {
 		log.Fatal(err)
+	}
+
+	if list {
+		e.PrintTasksHelp()
+		return
 	}
 
 	args := pflag.Args()
