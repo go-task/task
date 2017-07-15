@@ -36,7 +36,7 @@ func (e *Executor) ReadTaskfile() error {
 
 func (e *Executor) readTaskfileData(path string) (tasks map[string]*Task, err error) {
 	if b, err := ioutil.ReadFile(path + ".yml"); err == nil {
-		return tasks, yaml.Unmarshal(b, &tasks)
+		return tasks, yaml.UnmarshalStrict(b, &tasks)
 	}
 	return nil, taskFileNotFound{path}
 }
@@ -45,7 +45,7 @@ func (e *Executor) readTaskvars() error {
 	file := filepath.Join(e.Dir, TaskvarsFilePath)
 
 	if b, err := ioutil.ReadFile(file + ".yml"); err == nil {
-		if err := yaml.Unmarshal(b, &e.taskvars); err != nil {
+		if err := yaml.UnmarshalStrict(b, &e.taskvars); err != nil {
 			return err
 		}
 	}
