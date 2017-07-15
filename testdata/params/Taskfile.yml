@@ -1,6 +1,7 @@
 default:
   vars:
     SPANISH: ¡Holla mundo!
+    PORTUGUESE: "{{.PORTUGUESE}}"
   deps:
     - task: write-file
       vars: {CONTENT: Dependence1, FILE: dep1.txt}
@@ -17,6 +18,8 @@ default:
       vars: {CONTENT: "!", FILE: exclamation.txt}
     - task: write-file
       vars: {CONTENT: "{{.SPANISH}}", FILE: spanish.txt}
+    - task: write-file
+      vars: {CONTENT: "{{.PORTUGUESE}}", FILE: portuguese.txt}
 
 write-file:
   cmds:

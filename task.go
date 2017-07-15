@@ -98,7 +98,7 @@ func (e *Executor) Run(args ...string) error {
 	}
 
 	for _, a := range args {
-		if err := e.RunTask(context.Background(), Call{Task: a}); err != nil {
+		if err := e.RunTask(context.Background(), Call{Task: a, Vars: e.taskvars}); err != nil {
 			return err
 		}
 	}
