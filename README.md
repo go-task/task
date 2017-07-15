@@ -32,6 +32,7 @@ go get -u -v github.com/go-task/task/cmd/task
 
 Or you can download the binary from the [releases][releases] page and add to
 your `PATH`. DEB and RPM packages are also available.
+The `task_checksums.txt` file contains the SHA-256 checksum for each file.
 
 ## Usage
 
