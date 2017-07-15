@@ -1,1 +1,6 @@
 GIT_COMMIT: $git log -n 1 --format=%h
+
+GO_PACKAGES:
+  .
+  ./cmd/task
+  ./execext

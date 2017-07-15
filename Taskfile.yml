@@ -10,6 +10,7 @@ dl-deps:
   cmds:
     - go get -u github.com/golang/lint/golint
     - go get -u github.com/goreleaser/goreleaser
+    - go get -u github.com/asticode/go-astitodo/astitodo
     - go get -u github.com/golang/dep/cmd/dep
 
 update-deps:
@@ -46,3 +47,8 @@ test-release:
   desc: Tests release process without publishing
   cmds:
     - goreleaser --skip-validate --skip-publish
+
+todo:
+  desc: Prints TODO comments present in the code
+  cmds:
+    - astitodo {{.GO_PACKAGES}}
