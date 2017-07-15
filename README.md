@@ -1,7 +1,4 @@
-[![License](https://img.shields.io/github/license/go-task/task.svg)](https://github.com/go-task/task/blob/master/LICENSE)
-[![Join the chat at https://gitter.im/go-task/task](https://img.shields.io/gitter/room/go-task/task.svg)](https://gitter.im/go-task/task?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-[![Join Slack room](https://img.shields.io/badge/%23task%20on-gophers%20slack-blue.svg)](https://gophers.slack.com/messages/task)
-[![Release Download Count](https://img.shields.io/github/downloads/go-task/task/total.svg)](http://www.somsubhra.com/github-release-stats/?username=go-task&repository=task)
+[![Join Slack room](https://img.shields.io/badge/%23task-chat%20room-blue.svg)](https://gophers.slack.com/messages/task)
 [![Build Status](https://travis-ci.org/go-task/task.svg?branch=master)](https://travis-ci.org/go-task/task)
 
 # Task - Simple task runner / "Make" alternative
