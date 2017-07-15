@@ -97,6 +97,10 @@ func init() {
 
 // ReplaceVariables writes vars into initial string
 func (e *Executor) ReplaceVariables(initial string, call Call) (string, error) {
+	if initial == "" {
+		return initial, nil
+	}
+
 	templ, err := template.New("").Funcs(templateFuncs).Parse(initial)
 	if err != nil {
 		return "", err
