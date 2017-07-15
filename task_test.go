@@ -61,8 +61,10 @@ func TestVars(t *testing.T) {
 	}{
 		{"foo.txt", "foo"},
 		{"bar.txt", "bar"},
+		{"baz.txt", "baz"},
 		{"foo2.txt", "foo2"},
 		{"bar2.txt", "bar2"},
+		{"baz2.txt", "baz2"},
 		{"equal.txt", "foo=bar"},
 	}
 

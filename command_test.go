@@ -33,7 +33,10 @@ vars:
 		{
 			yamlTaskCall,
 			&task.Cmd{},
-			&task.Cmd{Task: "another-task", Vars: task.Vars{"PARAM1": "VALUE1", "PARAM2": "VALUE2"}},
+			&task.Cmd{Task: "another-task", Vars: task.Vars{
+				"PARAM1": task.Var{Static: "VALUE1"},
+				"PARAM2": task.Var{Static: "VALUE2"},
+			}},
 		},
 		{
 			yamlDep,
@@ -43,7 +46,10 @@ vars:
 		{
 			yamlTaskCall,
 			&task.Dep{},
-			&task.Dep{Task: "another-task", Vars: task.Vars{"PARAM1": "VALUE1", "PARAM2": "VALUE2"}},
+			&task.Dep{Task: "another-task", Vars: task.Vars{
+				"PARAM1": task.Var{Static: "VALUE1"},
+				"PARAM2": task.Var{Static: "VALUE2"},
+			}},
 		},
 	}
 	for _, test := range tests {

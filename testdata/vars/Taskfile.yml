@@ -6,12 +6,16 @@ hello:
   cmds:
     - echo {{.FOO}} > foo.txt
     - echo {{.BAR}} > bar.txt
+    - echo {{.BAZ}} > baz.txt
     - echo {{.FOO2}} > foo2.txt
     - echo {{.BAR2}} > bar2.txt
+    - echo {{.BAZ2}} > baz2.txt
     - echo {{.EQUAL}} > equal.txt
   vars:
     FOO: foo
     BAR: $echo bar
+    BAZ:
+      sh: echo baz
 
 set-equal:
   set: EQUAL

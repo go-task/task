@@ -39,12 +39,9 @@ type Executor struct {
 	taskvars      Vars
 	watchingFiles map[string]struct{}
 
-	dynamicCache   Vars
+	dynamicCache   map[string]string
 	muDynamicCache sync.Mutex
 }
-
-// Vars is a string[string] variables map
-type Vars map[string]string
 
 // Tasks representas a group of tasks
 type Tasks map[string]*Task
@@ -78,7 +75,7 @@ func (e *Executor) Run(args ...string) error {
 	}
 
 	if e.dynamicCache == nil {
-		e.dynamicCache = make(Vars, 10)
+		e.dynamicCache = make(map[string]string, 10)
 	}
 
 	// check if given tasks exist
@@ -167,11 +164,15 @@ func (e *Executor) runDeps(ctx context.Context, call Call) error {
 			}
 			depVars := make(Vars, len(d.Vars))
 			for k, v := range d.Vars {
-				v, err := e.ReplaceVariables(v, call)
+				static, err := e.ReplaceVariables(v.Static, call)
 				if err != nil {
 					return err
 				}
-				depVars[k] = v
+				sh, err := e.ReplaceVariables(v.Sh, call)
+				if err != nil {
+					return err
+				}
+				depVars[k] = Var{Static: static, Sh: sh}
 			}
 
 			return e.RunTask(ctx, Call{Task: dep, Vars: depVars})
@@ -260,11 +261,15 @@ func (e *Executor) runCommand(ctx context.Context, call Call, i int) error {
 	if cmd.Cmd == "" {
 		cmdVars := make(Vars, len(cmd.Vars))
 		for k, v := range cmd.Vars {
-			v, err := e.ReplaceVariables(v, call)
+			static, err := e.ReplaceVariables(v.Static, call)
 			if err != nil {
 				return err
 			}
-			cmdVars[k] = v
+			sh, err := e.ReplaceVariables(v.Sh, call)
+			if err != nil {
+				return err
+			}
+			cmdVars[k] = Var{Static: static, Sh: sh}
 		}
 		return e.RunTask(ctx, Call{Task: cmd.Task, Vars: cmdVars})
 	}

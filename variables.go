@@ -21,6 +21,50 @@ var (
 	ErrMultilineResultCmd = errors.New("Got multiline result from command")
 )
 
+// Vars is a string[string] variables map
+type Vars map[string]Var
+
+// Var represents either a static or dynamic variable
+type Var struct {
+	Static string
+	Sh     string
+}
+
+func (vs Vars) toStringMap() (m map[string]string) {
+	m = make(map[string]string, len(vs))
+	for k, v := range vs {
+		m[k] = v.Static
+	}
+	return
+}
+
+var (
+	// ErrCantUnmarshalVar is returned for invalid var YAML
+	ErrCantUnmarshalVar = errors.New("task: can't unmarshal var value")
+)
+
+// UnmarshalYAML implements yaml.Unmarshaler interface
+func (v *Var) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var str string
+	if err := unmarshal(&str); err == nil {
+		if strings.HasPrefix(str, "$") {
+			v.Sh = strings.TrimPrefix(str, "$")
+		} else {
+			v.Static = str
+		}
+		return nil
+	}
+
+	var sh struct {
+		Sh string
+	}
+	if err := unmarshal(&sh); err == nil {
+		v.Sh = sh.Sh
+		return nil
+	}
+	return ErrCantUnmarshalVar
+}
+
 var (
 	templateFuncs template.FuncMap
 )
@@ -59,7 +103,7 @@ func (e *Executor) ReplaceVariables(initial string, call Call) (string, error) {
 	}
 
 	var b bytes.Buffer
-	if err = templ.Execute(&b, call.Vars); err != nil {
+	if err = templ.Execute(&b, call.Vars.toStringMap()); err != nil {
 		return "", err
 	}
 	return b.String(), nil
@@ -86,7 +130,11 @@ func (e *Executor) getVariables(call Call) (Vars, error) {
 		for k, v := range vars {
 			if runTemplate {
 				var err error
-				v, err = e.ReplaceVariables(v, call)
+				v.Static, err = e.ReplaceVariables(v.Static, call)
+				if err != nil {
+					return err
+				}
+				v.Sh, err = e.ReplaceVariables(v.Sh, call)
 				if err != nil {
 					return err
 				}
@@ -97,7 +145,7 @@ func (e *Executor) getVariables(call Call) (Vars, error) {
 				return err
 			}
 
-			result[k] = v
+			result[k] = Var{Static: v}
 		}
 		return nil
 	}
@@ -128,25 +176,25 @@ func getEnvironmentVariables() Vars {
 	for _, e := range env {
 		keyVal := strings.SplitN(e, "=", 2)
 		key, val := keyVal[0], keyVal[1]
-		m[key] = val
+		m[key] = Var{Static: val}
 	}
 	return m
 }
 
-func (e *Executor) handleDynamicVariableContent(value string) (string, error) {
-	if !strings.HasPrefix(value, "$") {
-		return value, nil
+func (e *Executor) handleDynamicVariableContent(v Var) (string, error) {
+	if v.Static != "" {
+		return v.Static, nil
 	}
 
 	e.muDynamicCache.Lock()
 	defer e.muDynamicCache.Unlock()
-	if result, ok := e.dynamicCache[value]; ok {
+	if result, ok := e.dynamicCache[v.Sh]; ok {
 		return result, nil
 	}
 
 	var stdout bytes.Buffer
 	opts := &execext.RunCommandOptions{
-		Command: strings.TrimPrefix(value, "$"),
+		Command: v.Sh,
 		Dir:     e.Dir,
 		Stdout:  &stdout,
 		Stderr:  e.Stderr,
@@ -161,7 +209,7 @@ func (e *Executor) handleDynamicVariableContent(value string) (string, error) {
 	}
 
 	result = strings.TrimSpace(result)
-	e.verbosePrintfln(`task: dynamic variable: "%s", result: "%s"`, value, result)
-	e.dynamicCache[value] = result
+	e.verbosePrintfln(`task: dynamic variable: "%s", result: "%s"`, v.Sh, result)
+	e.dynamicCache[v.Sh] = result
 	return result, nil
 }
