@@ -303,7 +303,7 @@ Example of `Taskvars.yml` file:
 ```yml
 PROJECT_NAME: My Project
 DEV_MODE: production
-GIT_COMMIT: $git log -n 1 --format=%h
+GIT_COMMIT: {sh: git log -n 1 --format=%h}
 ```
 
 > NOTE: It's also possible setting a variable globally using `set` attribute
@@ -323,19 +323,33 @@ set-message:
 
 #### Dynamic variables
 
-If you prefix a variable with `$`, then the variable is considered a dynamic
-variable. The value after the $-symbol will be treated as a command and the
-output assigned.
+The below syntax (`sh:` prop in a variable) is considered a dynamic
+variable. The value will be treated as a command and the output assigned.
 
 ```yml
 build:
   cmds:
-    - go build -ldflags="-X main.Version={{.LAST_GIT_COMMIT}}" main.go
+    - go build -ldflags="-X main.Version={{.GIT_COMMIT}}" main.go
   vars:
-    LAST_GIT_COMMIT: $git log -n 1 --format=%h
+    GIT_COMMIT:
+      sh: git log -n 1 --format=%h
 ```
 
 This works for all types of variables.
+
+> It's also possible to prefix the variable with `$` to have a dynamic
+variable, but this is now considered deprecated:
+
+```yml
+# Taskvars.yml
+
+# recommended
+GIT_COMMIT:
+  sh: git log -n 1 --format=%h
+
+# deprecated
+GIT_COMMIT: $git log -n 1 --format=%h
+```
 
 ### Go's template engine
 
