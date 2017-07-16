@@ -95,82 +95,36 @@ func init() {
 	}
 }
 
-// ReplaceVariables writes vars into initial string
-func (e *Executor) ReplaceVariables(initial string, call Call) (string, error) {
-	if initial == "" {
-		return initial, nil
-	}
-
-	templ, err := template.New("").Funcs(templateFuncs).Parse(initial)
-	if err != nil {
-		return "", err
-	}
-
-	var b bytes.Buffer
-	if err = templ.Execute(&b, call.Vars.toStringMap()); err != nil {
-		return "", err
-	}
-	return b.String(), nil
-}
-
-// ReplaceSliceVariables writes vars into initial string slice
-func (e *Executor) ReplaceSliceVariables(initials []string, call Call) ([]string, error) {
-	result := make([]string, len(initials))
-	for i, s := range initials {
-		var err error
-		result[i], err = e.ReplaceVariables(s, call)
-		if err != nil {
-			return nil, err
-		}
-	}
-	return result, nil
-}
-
-func (e *Executor) getVariables(call Call) (Vars, error) {
-	t := e.Tasks[call.Task]
-
+func (e *Executor) getVariables(t *Task, call Call) (Vars, error) {
 	result := make(Vars, len(t.Vars)+len(e.taskvars)+len(call.Vars))
-	merge := func(vars Vars, runTemplate bool) error {
-		for k, v := range vars {
-			if runTemplate {
-				var err error
-				v.Static, err = e.ReplaceVariables(v.Static, call)
-				if err != nil {
-					return err
-				}
-				v.Sh, err = e.ReplaceVariables(v.Sh, call)
-				if err != nil {
-					return err
-				}
-			}
 
+	merge := func(vars Vars) error {
+		for k, v := range vars {
 			v, err := e.handleDynamicVariableContent(v)
 			if err != nil {
 				return err
 			}
-
 			result[k] = Var{Static: v}
 		}
 		return nil
 	}
 
-	if err := merge(e.taskvars, false); err != nil {
+	if err := merge(e.taskvars); err != nil {
 		return nil, err
 	}
-	if err := merge(t.Vars, true); err != nil {
+	if err := merge(t.Vars); err != nil {
 		return nil, err
 	}
-	if err := merge(getEnvironmentVariables(), false); err != nil {
+	if err := merge(getEnvironmentVariables()); err != nil {
 		return nil, err
 	}
-	if err := merge(call.Vars, false); err != nil {
+	if err := merge(call.Vars); err != nil {
 		return nil, err
 	}
 
 	return result, nil
 }
 
-// GetEnvironmentVariables returns environment variables as map
 func getEnvironmentVariables() Vars {
 	var (
 		env = os.Environ()
@@ -216,4 +170,103 @@ func (e *Executor) handleDynamicVariableContent(v Var) (string, error) {
 	e.verbosePrintfln(`task: dynamic variable: "%s", result: "%s"`, v.Sh, result)
 	e.dynamicCache[v.Sh] = result
 	return result, nil
+}
+
+// ReplaceVariables returns a copy of a task, but replacing
+// variables in almost all properties using the Go template package
+func (t *Task) ReplaceVariables(vars Vars) (*Task, error) {
+	r := varReplacer{vars: vars}
+	new := Task{
+		Desc:      r.replace(t.Desc),
+		Sources:   r.replaceSlice(t.Sources),
+		Generates: r.replaceSlice(t.Generates),
+		Status:    r.replaceSlice(t.Status),
+		Dir:       r.replace(t.Dir),
+		Vars:      r.replaceVars(t.Vars),
+		Set:       r.replace(t.Set),
+		Env:       r.replaceVars(t.Env),
+	}
+
+	if len(t.Cmds) > 0 {
+		new.Cmds = make([]*Cmd, len(t.Cmds))
+		for i, cmd := range t.Cmds {
+			new.Cmds[i] = &Cmd{
+				Task: r.replace(cmd.Task),
+				Cmd:  r.replace(cmd.Cmd),
+				Vars: r.replaceVars(cmd.Vars),
+			}
+
+		}
+	}
+	if len(t.Deps) > 0 {
+		new.Deps = make([]*Dep, len(t.Deps))
+		for i, dep := range t.Deps {
+			new.Deps[i] = &Dep{
+				Task: r.replace(dep.Task),
+				Vars: r.replaceVars(dep.Vars),
+			}
+		}
+	}
+
+	return &new, r.err
+}
+
+// varReplacer is a help struct that allow us to call "replaceX" funcs multiple
+// times, without having to check for error each time.
+// The first error that happen will be assigned to r.err, and consecutive
+// calls to funcs will just return the zero value.
+type varReplacer struct {
+	vars   Vars
+	strMap map[string]string
+	err    error
+}
+
+func (r *varReplacer) replace(str string) string {
+	if r.err != nil || str == "" {
+		return ""
+	}
+
+	templ, err := template.New("").Funcs(templateFuncs).Parse(str)
+	if err != nil {
+		r.err = err
+		return ""
+	}
+
+	if r.strMap == nil {
+		r.strMap = r.vars.toStringMap()
+	}
+
+	var b bytes.Buffer
+	if err = templ.Execute(&b, r.strMap); err != nil {
+		r.err = err
+		return ""
+	}
+	return b.String()
+}
+
+func (r *varReplacer) replaceSlice(strs []string) []string {
+	if r.err != nil || len(strs) == 0 {
+		return nil
+	}
+
+	new := make([]string, len(strs))
+	for i, str := range strs {
+		new[i] = r.replace(str)
+	}
+	return new
+}
+
+func (r *varReplacer) replaceVars(vars Vars) Vars {
+	if r.err != nil || len(vars) == 0 {
+		return nil
+	}
+
+	new := make(Vars, len(vars))
+	for k, v := range vars {
+		new[k] = Var{
+			Static: r.replace(v.Static),
+			Sh:     r.replace(v.Sh),
+		}
+	}
+	return new
 }
