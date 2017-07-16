@@ -1,12 +1,55 @@
 package task
 
 import (
+	"context"
 	"os"
 	"path/filepath"
 	"time"
 
+	"github.com/go-task/task/execext"
 	"github.com/mattn/go-zglob"
 )
+
+func (e *Executor) isTaskUpToDate(ctx context.Context, t *Task) (bool, error) {
+	if len(t.Status) > 0 {
+		return e.isUpToDateStatus(ctx, t)
+	}
+	return e.isUpToDateTimestamp(ctx, t)
+}
+
+func (e *Executor) isUpToDateStatus(ctx context.Context, t *Task) (bool, error) {
+	for _, s := range t.Status {
+		err := execext.RunCommand(&execext.RunCommandOptions{
+			Context: ctx,
+			Command: s,
+			Dir:     e.getTaskDir(t),
+			Env:     e.getEnviron(t),
+		})
+		if err != nil {
+			return false, nil
+		}
+	}
+	return true, nil
+}
+
+func (e *Executor) isUpToDateTimestamp(ctx context.Context, t *Task) (bool, error) {
+	if len(t.Sources) == 0 || len(t.Generates) == 0 {
+		return false, nil
+	}
+
+	dir := e.getTaskDir(t)
+
+	sourcesMaxTime, err := getPatternsMaxTime(dir, t.Sources)
+	if err != nil || sourcesMaxTime.IsZero() {
+		return false, nil
+	}
+
+	generatesMinTime, err := getPatternsMinTime(dir, t.Generates)
+	if err != nil || generatesMinTime.IsZero() {
+		return false, nil
+	}
+	return !generatesMinTime.Before(sourcesMaxTime), nil
+}
 
 func minTime(a, b time.Time) time.Time {
 	if !a.IsZero() && a.Before(b) {
