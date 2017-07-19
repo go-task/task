@@ -31,6 +31,7 @@ type Executor struct {
 	Force   bool
 	Watch   bool
 	Verbose bool
+	Silent  bool
 
 	Stdin  io.Reader
 	Stdout io.Writer
@@ -60,6 +61,7 @@ type Task struct {
 	Vars      Vars
 	Set       string
 	Env       Vars
+	Silent    bool
 }
 
 // Run runs Task
@@ -194,7 +196,9 @@ func (e *Executor) runCommand(ctx context.Context, t *Task, call Call, i int) er
 		Stderr:  e.Stderr,
 	}
 
-	e.println(cmd.Cmd)
+	if !cmd.Silent && !t.Silent && !e.Silent {
+		e.println(cmd.Cmd)
+	}
 	if t.Set != "" {
 		var stdout bytes.Buffer
 		opts.Stdout = &stdout

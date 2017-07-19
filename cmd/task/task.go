@@ -14,7 +14,7 @@ var (
 	version = "master"
 )
 
-const usage = `Usage: task [-ilfwv] [--init] [--list] [--force] [--watch] [--verbose] [task...]
+const usage = `Usage: task [-ilfwvs] [--init] [--list] [--force] [--watch] [--verbose] [--silent] [task...]
 
 Runs the specified task(s). Falls back to the "default" task if no task name
 was specified, or lists all tasks if an unknown task name was specified.
@@ -49,6 +49,7 @@ func main() {
 		force       bool
 		watch       bool
 		verbose     bool
+		silent      bool
 	)
 
 	pflag.BoolVar(&versionFlag, "version", false, "show Task version")
@@ -57,6 +58,7 @@ func main() {
 	pflag.BoolVarP(&force, "force", "f", false, "forces execution even when the task is up-to-date")
 	pflag.BoolVarP(&watch, "watch", "w", false, "enables watch of the given task")
 	pflag.BoolVarP(&verbose, "verbose", "v", false, "enables verbose mode")
+	pflag.BoolVarP(&silent, "silent", "s", false, "disables echoing")
 	pflag.Parse()
 
 	if versionFlag {
@@ -79,6 +81,7 @@ func main() {
 		Force:   force,
 		Watch:   watch,
 		Verbose: verbose,
+		Silent:  silent,
 
 		Stdin:  os.Stdin,
 		Stdout: os.Stdout,

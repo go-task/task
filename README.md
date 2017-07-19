@@ -19,6 +19,7 @@ It aims to be simpler and easier to use then [GNU Make][make].
     - [Dynamic variables](#dynamic-variables)
   - [Go's template engine](#gos-template-engine)
   - [Help](#help)
+  - [Silent mode](#silent-mode)
   - [Watch tasks](#watch-tasks-experimental)
 - [Alternative task runners](#alternative-task-runners)
 
@@ -419,6 +420,60 @@ would print the following output:
 ```bash
 * build:   Build the go binary.
 * test:    Run all the go tests.
+```
+
+## Silent mode
+
+Silent mode disables echoing of commands before Task runs it.
+For the following Taskfile:
+
+```yml
+echo:
+  cmds:
+    - echo "Print something"
+```
+
+Normally this will be print:
+
+```sh
+echo "Print something"
+Print something
+```
+
+With silent mode on, the below will be print instead:
+
+```sh
+Print something
+```
+
+There's three ways to enable silent mode:
+
+* At command level:
+
+```yml
+echo:
+  cmds:
+    - cmd: echo "Print something"
+      silent: true
+```
+
+* At task level:
+
+```yml
+echo:
+  cmds:
+    - echo "Print something"
+  silent: true
+```
+
+* Or globally with `--silent` or `-s` flag
+
+If you want to supress stdout instead, just redirect a command to `/dev/null`:
+
+```yml
+echo:
+  cmds:
+    - echo "This will print nothing" > /dev/null
 ```
 
 ## Watch tasks (experimental)
