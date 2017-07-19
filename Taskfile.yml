@@ -27,9 +27,8 @@ clean:
 lint:
   desc: Runs golint
   cmds:
-    - golint .
-    - golint ./execext
-    - golint ./cmd/task
+    - golint {{.GO_PACKAGES}}
+  silent: true
 
 test:
   desc: Runs test suite
@@ -52,3 +51,4 @@ todo:
   desc: Prints TODO comments present in the code
   cmds:
     - astitodo {{.GO_PACKAGES}}
+  silent: true
