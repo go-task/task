@@ -7,9 +7,10 @@ import (
 
 // Cmd is a task command
 type Cmd struct {
-	Cmd  string
-	Task string
-	Vars Vars
+	Cmd    string
+	Silent bool
+	Task   string
+	Vars   Vars
 }
 
 // Dep is a task dependency
@@ -34,6 +35,15 @@ func (c *Cmd) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		} else {
 			c.Cmd = cmd
 		}
+		return nil
+	}
+	var cmdStruct struct {
+		Cmd    string
+		Silent bool
+	}
+	if err := unmarshal(&cmdStruct); err == nil && cmdStruct.Cmd != "" {
+		c.Cmd = cmdStruct.Cmd
+		c.Silent = cmdStruct.Silent
 		return nil
 	}
 	var taskCall struct {

@@ -185,15 +185,17 @@ func (t *Task) ReplaceVariables(vars Vars) (*Task, error) {
 		Vars:      r.replaceVars(t.Vars),
 		Set:       r.replace(t.Set),
 		Env:       r.replaceVars(t.Env),
+		Silent:    t.Silent,
 	}
 
 	if len(t.Cmds) > 0 {
 		new.Cmds = make([]*Cmd, len(t.Cmds))
 		for i, cmd := range t.Cmds {
 			new.Cmds[i] = &Cmd{
-				Task: r.replace(cmd.Task),
-				Cmd:  r.replace(cmd.Cmd),
-				Vars: r.replaceVars(cmd.Vars),
+				Task:   r.replace(cmd.Task),
+				Silent: cmd.Silent,
+				Cmd:    r.replace(cmd.Cmd),
+				Vars:   r.replaceVars(cmd.Vars),
 			}
 
 		}
