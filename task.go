@@ -102,7 +102,7 @@ func (e *Executor) Run(args ...string) error {
 	}
 
 	for _, a := range args {
-		if err := e.RunTask(context.Background(), Call{Task: a, Vars: e.taskvars}); err != nil {
+		if err := e.RunTask(context.Background(), Call{Task: a, Vars: nil}); err != nil {
 			return err
 		}
 	}
@@ -111,22 +111,20 @@ func (e *Executor) Run(args ...string) error {
 
 // RunTask runs a task by its name
 func (e *Executor) RunTask(ctx context.Context, call Call) error {
-	task, ok := e.Tasks[call.Task]
+	origTask, ok := e.Tasks[call.Task]
 	if !ok {
 		return &taskNotFoundError{call.Task}
 	}
-
 	if atomic.AddInt32(e.taskCallCount[call.Task], 1) >= MaximumTaskCall {
 		return &MaximumTaskCallExceededError{task: call.Task}
 	}
 
-	var err error
-	call.Vars, err = e.getVariables(task, call)
+	vars, err := e.getVariables(call)
 	if err != nil {
 		return err
 	}
 
-	t, err := task.ReplaceVariables(call.Vars)
+	t, err := origTask.ReplaceVariables(vars)
 	if err != nil {
 		return err
 	}
@@ -138,11 +136,11 @@ func (e *Executor) RunTask(ctx context.Context, call Call) error {
 	// FIXME: doing again, since a var may have been overriden
 	// using the `set:` attribute of a dependecy.
 	// Remove this when `set` (that is deprecated) be removed
-	call.Vars, err = e.getVariables(task, call)
+	vars, err = e.getVariables(call)
 	if err != nil {
 		return err
 	}
-	t, err = task.ReplaceVariables(call.Vars)
+	t, err = origTask.ReplaceVariables(vars)
 	if err != nil {
 		return err
 	}
