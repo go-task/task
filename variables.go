@@ -33,6 +33,11 @@ type Var struct {
 func (vs Vars) toStringMap() (m map[string]string) {
 	m = make(map[string]string, len(vs))
 	for k, v := range vs {
+		if v.Sh != "" {
+			// Dynamic variable is not yet resolved; trigger
+			// <no value> to be used in templates.
+			continue
+		}
 		m[k] = v.Static
 	}
 	return
@@ -95,33 +100,82 @@ func init() {
 	}
 }
 
-func (e *Executor) getVariables(t *Task, call Call) (Vars, error) {
-	result := make(Vars, len(t.Vars)+len(e.taskvars)+len(call.Vars))
+// getVariables returns fully resolved variables following the priorty order:
+// 1. Call variables (should already have been resolved)
+// 2. Environment (should not need to be resolved)
+// 3. Task variables, resolved with access to:
+//    - call, taskvars and environement variables
+// 4. Taskvars variables, resolved with access to:
+//    - environment variables
+func (e *Executor) getVariables(call Call) (Vars, error) {
+	t, ok := e.Tasks[call.Task]
+	if !ok {
+		return nil, &taskNotFoundError{call.Task}
+	}
 
-	merge := func(vars Vars) error {
-		for k, v := range vars {
-			v, err := e.handleDynamicVariableContent(v)
+	merge := func(dest Vars, srcs ...Vars) {
+		for _, src := range srcs {
+			for k, v := range src {
+				dest[k] = v
+			}
+		}
+	}
+	varsKeys := func(srcs ...Vars) []string {
+		m := make(map[string]struct{})
+		for _, src := range srcs {
+			for k := range src {
+				m[k] = struct{}{}
+			}
+		}
+		lst := make([]string, 0, len(m))
+		for k := range m {
+			lst = append(lst, k)
+		}
+		return lst
+	}
+	replaceVars := func(dest Vars, keys []string) error {
+		r := varReplacer{vars: dest}
+		for _, k := range keys {
+			v := dest[k]
+			dest[k] = Var{
+				Static: r.replace(v.Static),
+				Sh:     r.replace(v.Sh),
+			}
+		}
+		return r.err
+	}
+	resolveShell := func(dest Vars, keys []string) error {
+		for _, k := range keys {
+			v := dest[k]
+			static, err := e.handleDynamicVariableContent(v)
 			if err != nil {
 				return err
 			}
-			result[k] = Var{Static: v}
+			dest[k] = Var{Static: static}
 		}
 		return nil
 	}
-
-	if err := merge(e.taskvars); err != nil {
-		return nil, err
-	}
-	if err := merge(t.Vars); err != nil {
-		return nil, err
-	}
-	if err := merge(getEnvironmentVariables()); err != nil {
-		return nil, err
-	}
-	if err := merge(call.Vars); err != nil {
-		return nil, err
+	update := func(dest Vars, srcs ...Vars) error {
+		merge(dest, srcs...)
+		// updatedKeys ensures template evaluation is run only once.
+		updatedKeys := varsKeys(srcs...)
+		if err := replaceVars(dest, updatedKeys); err != nil {
+			return err
+		}
+		return resolveShell(dest, updatedKeys)
 	}
 
+	// Resolve taskvars variables to "result" with environment override variables.
+	override := getEnvironmentVariables()
+	result := make(Vars, len(e.taskvars)+len(t.Vars)+len(override))
+	if err := update(result, e.taskvars, override); err != nil {
+		return nil, err
+	}
+	// Resolve task variables to "result" with environment and call override variables.
+	merge(override, call.Vars)
+	if err := update(result, t.Vars, override); err != nil {
+		return nil, err
+	}
 	return result, nil
 }
 
@@ -176,13 +230,14 @@ func (e *Executor) handleDynamicVariableContent(v Var) (string, error) {
 // variables in almost all properties using the Go template package
 func (t *Task) ReplaceVariables(vars Vars) (*Task, error) {
 	r := varReplacer{vars: vars}
+
 	new := Task{
 		Desc:      r.replace(t.Desc),
 		Sources:   r.replaceSlice(t.Sources),
 		Generates: r.replaceSlice(t.Generates),
 		Status:    r.replaceSlice(t.Status),
 		Dir:       r.replace(t.Dir),
-		Vars:      r.replaceVars(t.Vars),
+		Vars:      nil,
 		Set:       r.replace(t.Set),
 		Env:       r.replaceVars(t.Env),
 		Silent:    t.Silent,
