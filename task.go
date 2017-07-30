@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path/filepath"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -124,7 +123,7 @@ func (e *Executor) RunTask(ctx context.Context, call Call) error {
 		return err
 	}
 
-	t, err := origTask.CompiledTask(vars)
+	t, err := origTask.CompiledTask(e.Dir, vars)
 	if err != nil {
 		return err
 	}
@@ -140,13 +139,13 @@ func (e *Executor) RunTask(ctx context.Context, call Call) error {
 	if err != nil {
 		return err
 	}
-	t, err = origTask.CompiledTask(vars)
+	t, err = origTask.CompiledTask(e.Dir, vars)
 	if err != nil {
 		return err
 	}
 
 	if !e.Force {
-		upToDate, err := e.isTaskUpToDate(ctx, t)
+		upToDate, err := t.isUpToDate(ctx)
 		if err != nil {
 			return err
 		}
@@ -188,8 +187,8 @@ func (e *Executor) runCommand(ctx context.Context, t *Task, call Call, i int) er
 	opts := &execext.RunCommandOptions{
 		Context: ctx,
 		Command: cmd.Cmd,
-		Dir:     e.getTaskDir(t),
-		Env:     e.getEnviron(t),
+		Dir:     t.Dir,
+		Env:     t.getEnviron(),
 		Stdin:   e.Stdin,
 		Stderr:  e.Stderr,
 	}
@@ -210,14 +209,7 @@ func (e *Executor) runCommand(ctx context.Context, t *Task, call Call, i int) er
 	return execext.RunCommand(opts)
 }
 
-func (e *Executor) getTaskDir(t *Task) string {
-	if filepath.IsAbs(t.Dir) {
-		return t.Dir
-	}
-	return filepath.Join(e.Dir, t.Dir)
-}
-
-func (e *Executor) getEnviron(t *Task) []string {
+func (t *Task) getEnviron() []string {
 	if t.Env == nil {
 		return nil
 	}

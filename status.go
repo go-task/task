@@ -10,20 +10,20 @@ import (
 	"github.com/mattn/go-zglob"
 )
 
-func (e *Executor) isTaskUpToDate(ctx context.Context, t *Task) (bool, error) {
+func (t *Task) isUpToDate(ctx context.Context) (bool, error) {
 	if len(t.Status) > 0 {
-		return e.isUpToDateStatus(ctx, t)
+		return t.isUpToDateStatus(ctx)
 	}
-	return e.isUpToDateTimestamp(ctx, t)
+	return t.isUpToDateTimestamp(ctx)
 }
 
-func (e *Executor) isUpToDateStatus(ctx context.Context, t *Task) (bool, error) {
+func (t *Task) isUpToDateStatus(ctx context.Context) (bool, error) {
 	for _, s := range t.Status {
 		err := execext.RunCommand(&execext.RunCommandOptions{
 			Context: ctx,
 			Command: s,
-			Dir:     e.getTaskDir(t),
-			Env:     e.getEnviron(t),
+			Dir:     t.Dir,
+			Env:     t.getEnviron(),
 		})
 		if err != nil {
 			return false, nil
@@ -32,19 +32,17 @@ func (e *Executor) isUpToDateStatus(ctx context.Context, t *Task) (bool, error) 
 	return true, nil
 }
 
-func (e *Executor) isUpToDateTimestamp(ctx context.Context, t *Task) (bool, error) {
+func (t *Task) isUpToDateTimestamp(ctx context.Context) (bool, error) {
 	if len(t.Sources) == 0 || len(t.Generates) == 0 {
 		return false, nil
 	}
 
-	dir := e.getTaskDir(t)
-
-	sourcesMaxTime, err := getPatternsMaxTime(dir, t.Sources)
+	sourcesMaxTime, err := getPatternsMaxTime(t.Dir, t.Sources)
 	if err != nil || sourcesMaxTime.IsZero() {
 		return false, nil
 	}
 
-	generatesMinTime, err := getPatternsMinTime(dir, t.Generates)
+	generatesMinTime, err := getPatternsMinTime(t.Dir, t.Generates)
 	if err != nil || generatesMinTime.IsZero() {
 		return false, nil
 	}

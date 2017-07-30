@@ -228,7 +228,7 @@ func (e *Executor) handleDynamicVariableContent(v Var) (string, error) {
 
 // CompiledTask returns a copy of a task, but replacing
 // variables in almost all properties using the Go template package
-func (t *Task) CompiledTask(vars Vars) (*Task, error) {
+func (t *Task) CompiledTask(dir string, vars Vars) (*Task, error) {
 	r := varReplacer{vars: vars}
 
 	new := Task{
@@ -241,6 +241,9 @@ func (t *Task) CompiledTask(vars Vars) (*Task, error) {
 		Set:       r.replace(t.Set),
 		Env:       r.replaceVars(t.Env),
 		Silent:    t.Silent,
+	}
+	if dir != "" && !filepath.IsAbs(new.Dir) {
+		new.Dir = filepath.Join(dir, new.Dir)
 	}
 
 	if len(t.Cmds) > 0 {
