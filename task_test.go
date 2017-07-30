@@ -289,7 +289,7 @@ func TestInit(t *testing.T) {
 		t.Errorf("Taskfile.yml should not exists")
 	}
 
-	if err := task.InitTaskfile(dir); err != nil {
+	if err := task.InitTaskfile(ioutil.Discard, dir); err != nil {
 		t.Error(err)
 	}
 

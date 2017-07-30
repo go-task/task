@@ -73,7 +73,7 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		if err := task.InitTaskfile(wd); err != nil {
+		if err := task.InitTaskfile(os.Stdout, wd); err != nil {
 			log.Fatal(err)
 		}
 		return

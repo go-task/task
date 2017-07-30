@@ -1,8 +1,9 @@
 package task
 
 import (
+	"fmt"
+	"io"
 	"io/ioutil"
-	"log"
 	"os"
 	"path/filepath"
 )
@@ -15,7 +16,7 @@ default:
 `
 
 // InitTaskfile Taskfile creates a new Taskfile
-func InitTaskfile(path string) error {
+func InitTaskfile(w io.Writer, path string) error {
 	for _, f := range []string{"Taskfile.yml", "Taskfile.toml", "Taskfile.json"} {
 		f = filepath.Join(path, f)
 		if _, err := os.Stat(f); err == nil {
@@ -27,6 +28,6 @@ func InitTaskfile(path string) error {
 	if err := ioutil.WriteFile(f, []byte(defaultTaskfile), 0666); err != nil {
 		return err
 	}
-	log.Printf("Taskfile.yml created in the current directory")
+	fmt.Fprintf(w, "Taskfile.yml created in the current directory\n")
 	return nil
 }
