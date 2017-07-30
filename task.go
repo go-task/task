@@ -124,7 +124,7 @@ func (e *Executor) RunTask(ctx context.Context, call Call) error {
 		return err
 	}
 
-	t, err := origTask.ReplaceVariables(vars)
+	t, err := origTask.CompiledTask(vars)
 	if err != nil {
 		return err
 	}
@@ -140,7 +140,7 @@ func (e *Executor) RunTask(ctx context.Context, call Call) error {
 	if err != nil {
 		return err
 	}
-	t, err = origTask.ReplaceVariables(vars)
+	t, err = origTask.CompiledTask(vars)
 	if err != nil {
 		return err
 	}
