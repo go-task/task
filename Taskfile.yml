@@ -34,7 +34,7 @@ test:
   desc: Runs test suite
   deps: [install]
   cmds:
-    - go test -v
+    - go test
 
 # https://github.com/goreleaser/goreleaser
 release:
