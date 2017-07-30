@@ -194,7 +194,7 @@ func (e *Executor) runCommand(ctx context.Context, t *Task, call Call, i int) er
 		Stderr:  e.Stderr,
 	}
 
-	if !cmd.Silent && !t.Silent && !e.Silent {
+	if e.Verbose || (!cmd.Silent && !t.Silent && !e.Silent) {
 		e.println(cmd.Cmd)
 	}
 	if t.Set != "" {
