@@ -7,14 +7,21 @@ import (
 	"bufio"
 	"io"
 	"strings"
+	"unicode"
 )
 
-func Indent(spaces int) func(*Printer) {
+// Indent sets the number of spaces used for indentation. If set to 0,
+// tabs will be used instead.
+func Indent(spaces uint) func(*Printer) {
 	return func(p *Printer) { p.indentSpaces = spaces }
 }
 
+// BinaryNextLine will make binary operators appear on the next line
+// when a binary command, such as a pipe, spans multiple lines. A
+// backslash will be used.
 func BinaryNextLine(p *Printer) { p.binNextLine = true }
 
+// NewPrinter allocates a new Printer and applies any number of options.
 func NewPrinter(options ...func(*Printer)) *Printer {
 	p := &Printer{
 		bufWriter:  bufio.NewWriter(nil),
@@ -26,7 +33,8 @@ func NewPrinter(options ...func(*Printer)) *Printer {
 	return p
 }
 
-// Print "pretty-prints" the given AST file to the given writer.
+// Print "pretty-prints" the given AST file to the given writer. Writes
+// to w are buffered.
 func (p *Printer) Print(w io.Writer, f *File) error {
 	p.reset()
 	p.bufWriter.Reset(w)
@@ -42,25 +50,27 @@ type bufWriter interface {
 	Flush() error
 }
 
+// Printer holds the internal state of the printing mechanism of a
+// program.
 type Printer struct {
 	bufWriter
 
-	indentSpaces int
+	indentSpaces uint
 	binNextLine  bool
 
 	wantSpace   bool
 	wantNewline bool
 	wroteSemi   bool
 
-	commentPadding int
+	commentPadding uint
 
 	// line is the current line number
 	line uint
 
 	// lastLevel is the last level of indentation that was used.
-	lastLevel int
+	lastLevel uint
 	// level is the current level of indentation.
-	level int
+	level uint
 	// levelIncs records which indentation level increments actually
 	// took place, to revert them once their section ends.
 	levelIncs []bool
@@ -85,8 +95,8 @@ func (p *Printer) reset() {
 	p.pendingHdocs = p.pendingHdocs[:0]
 }
 
-func (p *Printer) spaces(n int) {
-	for i := 0; i < n; i++ {
+func (p *Printer) spaces(n uint) {
+	for i := uint(0); i < n; i++ {
 		p.WriteByte(' ')
 	}
 }
@@ -148,10 +158,10 @@ func (p *Printer) indent() {
 	switch {
 	case p.level == 0:
 	case p.indentSpaces == 0:
-		for i := 0; i < p.level; i++ {
+		for i := uint(0); i < p.level; i++ {
 			p.WriteByte('\t')
 		}
-	case p.indentSpaces > 0:
+	default:
 		p.spaces(p.indentSpaces * p.level)
 	}
 }
@@ -219,7 +229,7 @@ func (p *Printer) comment(c Comment) {
 	}
 	p.line = c.Hash.Line()
 	p.WriteByte('#')
-	p.WriteString(c.Text)
+	p.WriteString(strings.TrimRightFunc(c.Text, unicode.IsSpace))
 }
 
 func (p *Printer) comments(cs []Comment) {
@@ -529,7 +539,6 @@ func (p *Printer) stmt(s *Stmt) {
 	if s.Negated {
 		p.spacedString("!")
 	}
-	p.assigns(s.Assigns, true)
 	var startRedirs int
 	if s.Cmd != nil {
 		startRedirs = p.command(s.Cmd, s.Redirs)
@@ -573,6 +582,7 @@ func (p *Printer) command(cmd Command, redirs []*Redirect) (startRedirs int) {
 	}
 	switch x := cmd.(type) {
 	case *CallExpr:
+		p.assigns(x.Assigns, true)
 		if len(x.Args) <= 1 {
 			p.wordJoin(x.Args)
 			return 0
@@ -704,6 +714,10 @@ func (p *Printer) command(cmd Command, redirs []*Redirect) (startRedirs int) {
 			p.WriteByte(')')
 			p.wantSpace = true
 			sep := len(ci.Stmts) > 1 || ci.StmtList.pos().Line() > p.line
+			if ci.OpPos != x.Esac && !ci.StmtList.empty() &&
+				ci.OpPos.Line() > ci.StmtList.end().Line() {
+				sep = true
+			}
 			sl := ci.StmtList
 			p.nestedStmts(sl, Pos{})
 			p.level++
@@ -868,7 +882,7 @@ func (p *Printer) stmts(sl StmtList) {
 		}
 		if inlineIndent > 0 {
 			if l := p.stmtCols(s); l > 0 {
-				p.commentPadding = inlineIndent - l
+				p.commentPadding = uint(inlineIndent - l)
 			}
 			lastIndentedLine = p.line
 		}

@@ -11,6 +11,8 @@ import (
 	"unicode/utf8"
 )
 
+// KeepComments makes the parser parse comments and attach them to
+// nodes, as opposed to discarding them.
 func KeepComments(p *Parser) { p.keepComments = true }
 
 type LangVariant int
@@ -21,10 +23,13 @@ const (
 	LangMirBSDKorn
 )
 
+// Variant changes the shell language variant that the parser will
+// accept.
 func Variant(l LangVariant) func(*Parser) {
 	return func(p *Parser) { p.lang = l }
 }
 
+// NewParser allocates a new Parser and applies any number of options.
 func NewParser(options ...func(*Parser)) *Parser {
 	p := &Parser{helperBuf: new(bytes.Buffer)}
 	for _, opt := range options {
@@ -35,11 +40,14 @@ func NewParser(options ...func(*Parser)) *Parser {
 
 // Parse reads and parses a shell program with an optional name. It
 // returns the parsed program if no issues were encountered. Otherwise,
-// an error is returned.
-func (p *Parser) Parse(src io.Reader, name string) (*File, error) {
+// an error is returned. Reads from r are buffered.
+//
+// Parse can be called more than once, but not concurrently. That is, a
+// Parser can be reused once it is done working.
+func (p *Parser) Parse(r io.Reader, name string) (*File, error) {
 	p.reset()
 	p.f = &File{Name: name}
-	p.src = src
+	p.src = r
 	p.rune()
 	p.next()
 	p.f.StmtList = p.stmts()
@@ -51,11 +59,14 @@ func (p *Parser) Parse(src io.Reader, name string) (*File, error) {
 	return p.f, p.err
 }
 
+// Parser holds the internal state of the parsing mechanism of a
+// program.
 type Parser struct {
 	src io.Reader
 	bs  []byte // current chunk of read bytes
-	bsp int    // pos within chunk for the next rune
-	r   rune
+	bsp int    // pos within chunk for the rune after r
+	r   rune   // next rune
+	w   uint16 // width of r
 
 	f *File
 
@@ -70,10 +81,10 @@ type Parser struct {
 
 	offs int
 	pos  Pos // position of tok
-	npos Pos // next position
+	npos Pos // next position (of r)
 
-	quote quoteState // current lexer state
-	asPos int        // position of '=' in a literal
+	quote   quoteState // current lexer state
+	eqlOffs int        // position of '=' in val (a literal)
 
 	keepComments bool
 	lang         LangVariant
@@ -105,17 +116,20 @@ type Parser struct {
 const bufSize = 1 << 10
 
 func (p *Parser) reset() {
+	p.tok, p.val = illegalTok, ""
+	p.eqlOffs = 0
 	p.bs, p.bsp = nil, 0
 	p.offs = 0
-	p.npos = Pos{line: 1}
-	p.r, p.err, p.readErr = 0, nil, nil
+	p.npos = Pos{line: 1, col: 1}
+	p.r, p.w = 0, 0
+	p.err, p.readErr = nil, nil
 	p.quote, p.forbidNested = noState, false
 	p.heredocs, p.buriedHdocs = p.heredocs[:0], 0
 	p.accComs, p.curComs = nil, &p.accComs
 }
 
 func (p *Parser) getPos() Pos {
-	p.npos.offs = uint32(p.offs + p.bsp - 1)
+	p.npos.offs = uint32(p.offs + p.bsp - int(p.w))
 	return p.npos
 }
 
@@ -1145,7 +1159,7 @@ func ValidName(val string) bool {
 }
 
 func (p *Parser) hasValidIdent() bool {
-	if end := p.asPos; end > 0 {
+	if end := p.eqlOffs; end > 0 {
 		if p.val[end-1] == '+' && p.lang != LangPOSIX {
 			end--
 		}
@@ -1158,9 +1172,9 @@ func (p *Parser) hasValidIdent() bool {
 
 func (p *Parser) getAssign(needEqual bool) *Assign {
 	as := &Assign{}
-	if p.asPos > 0 { // foo=bar
-		nameEnd := p.asPos
-		if p.lang != LangPOSIX && p.val[p.asPos-1] == '+' {
+	if p.eqlOffs > 0 { // foo=bar
+		nameEnd := p.eqlOffs
+		if p.lang != LangPOSIX && p.val[p.eqlOffs-1] == '+' {
 			// a+=b
 			as.Append = true
 			nameEnd--
@@ -1168,9 +1182,9 @@ func (p *Parser) getAssign(needEqual bool) *Assign {
 		as.Name = p.lit(p.pos, p.val[:nameEnd])
 		// since we're not using the entire p.val
 		as.Name.ValueEnd = posAddCol(as.Name.ValuePos, nameEnd)
-		left := p.lit(posAddCol(p.pos, 1), p.val[p.asPos+1:])
+		left := p.lit(posAddCol(p.pos, 1), p.val[p.eqlOffs+1:])
 		if left.Value != "" {
-			left.ValuePos = posAddCol(left.ValuePos, p.asPos)
+			left.ValuePos = posAddCol(left.ValuePos, p.eqlOffs)
 			as.Value = p.word(p.wps(left))
 		}
 		p.next()
@@ -1371,25 +1385,6 @@ func (p *Parser) getStmt(readEnd, binCmd bool) (s *Stmt, gotEnd bool) {
 }
 
 func (p *Parser) gotStmtPipe(s *Stmt) *Stmt {
-preLoop:
-	for {
-		switch p.tok {
-		case _Lit, _LitWord:
-			if !p.hasValidIdent() {
-				break preLoop
-			}
-			s.Assigns = append(s.Assigns, p.getAssign(true))
-		case rdrOut, appOut, rdrIn, dplIn, dplOut, clbOut, rdrInOut,
-			hdoc, dashHdoc, wordHdoc, rdrAll, appAll, _LitRedir:
-			p.doRedirect(s)
-		default:
-			break preLoop
-		}
-		switch {
-		case p.newLine, p.tok == _EOF, p.tok == semicolon:
-			return s
-		}
-	}
 	switch p.tok {
 	case _LitWord:
 		switch p.val {
@@ -1458,6 +1453,10 @@ preLoop:
 		if s.Cmd != nil {
 			break
 		}
+		if p.hasValidIdent() {
+			s.Cmd = p.callExpr(s, nil, true)
+			break
+		}
 		name := p.lit(p.pos, p.val)
 		if p.next(); p.gotSameLine(leftParen) {
 			p.follow(name.ValuePos, "foo(", rightParen)
@@ -1466,8 +1465,16 @@ preLoop:
 			}
 			s.Cmd = p.funcDecl(name, name.ValuePos)
 		} else {
-			s.Cmd = p.callExpr(s, p.word(p.wps(name)))
+			s.Cmd = p.callExpr(s, p.word(p.wps(name)), false)
 		}
+	case rdrOut, appOut, rdrIn, dplIn, dplOut, clbOut, rdrInOut,
+		hdoc, dashHdoc, wordHdoc, rdrAll, appAll, _LitRedir:
+		p.doRedirect(s)
+		switch {
+		case p.newLine, p.tok == _EOF, p.tok == semicolon:
+			return s
+		}
+		s.Cmd = p.callExpr(s, nil, false)
 	case bckQuote:
 		if p.quote == subCmdBckquo {
 			return s
@@ -1476,17 +1483,21 @@ preLoop:
 	case _Lit, dollBrace, dollDblParen, dollParen, dollar, cmdIn, cmdOut,
 		sglQuote, dollSglQuote, dblQuote, dollDblQuote, dollBrack,
 		globQuest, globStar, globPlus, globAt, globExcl:
+		if p.tok == _Lit && p.hasValidIdent() {
+			s.Cmd = p.callExpr(s, nil, true)
+			break
+		}
 		w := p.word(p.wordParts())
 		if p.gotSameLine(leftParen) && p.err == nil {
 			p.posErr(w.Pos(), "invalid func name")
 		}
-		s.Cmd = p.callExpr(s, w)
+		s.Cmd = p.callExpr(s, w, false)
 	case leftParen:
 		s.Cmd = p.subshell()
 	case dblLeftParen:
 		s.Cmd = p.arithmExpCmd()
 	default:
-		if len(s.Redirs) == 0 && len(s.Assigns) == 0 {
+		if len(s.Redirs) == 0 {
 			return nil
 		}
 	}
@@ -1829,7 +1840,9 @@ func (p *Parser) testExprBase(ftok token, fpos Pos) TestExpr {
 	case exclMark:
 		u := &UnaryTest{OpPos: p.pos, Op: TsNot}
 		p.next()
-		u.X = p.testExpr(token(u.Op), u.OpPos, false)
+		if u.X = p.testExpr(token(u.Op), u.OpPos, false); u.X == nil {
+			p.followErrExp(u.OpPos, u.Op.String())
+		}
 		return u
 	case tsExists, tsRegFile, tsDirect, tsCharSp, tsBlckSp, tsNmPipe,
 		tsSocket, tsSmbLink, tsSticky, tsGIDSet, tsUIDSet, tsGrpOwn,
@@ -1837,7 +1850,7 @@ func (p *Parser) testExprBase(ftok token, fpos Pos) TestExpr {
 		tsFdTerm, tsEmpStr, tsNempStr, tsOptSet, tsVarSet, tsRefVar:
 		u := &UnaryTest{OpPos: p.pos, Op: UnTestOperator(p.tok)}
 		p.next()
-		u.X = p.followWordTok(ftok, fpos)
+		u.X = p.followWordTok(token(u.Op), u.OpPos)
 		return u
 	case leftParen:
 		pe := &ParenTest{Lparen: p.pos}
@@ -1866,6 +1879,8 @@ func (p *Parser) declClause() *DeclClause {
 	for !p.newLine && !stopToken(p.tok) && !p.peekRedir() {
 		if (p.tok == _Lit || p.tok == _LitWord) && p.hasValidIdent() {
 			ds.Assigns = append(ds.Assigns, p.getAssign(false))
+		} else if p.eqlOffs > 0 {
+			p.curErr("invalid var name")
 		} else if p.tok == _LitWord {
 			ds.Assigns = append(ds.Assigns, &Assign{
 				Naked: true,
@@ -1975,24 +1990,41 @@ func (p *Parser) bashFuncDecl() *FuncDecl {
 	return p.funcDecl(name, fpos)
 }
 
-func (p *Parser) callExpr(s *Stmt, w *Word) *CallExpr {
+func (p *Parser) callExpr(s *Stmt, w *Word, assign bool) Command {
 	ce := p.call(w)
+	if w == nil {
+		ce.Args = ce.Args[:0]
+	}
+	if assign {
+		ce.Assigns = append(ce.Assigns, p.getAssign(true))
+	}
+loop:
 	for !p.newLine {
 		switch p.tok {
 		case _EOF, semicolon, and, or, andAnd, orOr, orAnd,
 			dblSemicolon, semiAnd, dblSemiAnd, semiOr:
-			return ce
+			break loop
 		case _LitWord:
+			if len(ce.Args) == 0 && p.hasValidIdent() {
+				ce.Assigns = append(ce.Assigns, p.getAssign(true))
+				break
+			}
 			ce.Args = append(ce.Args, p.word(
 				p.wps(p.lit(p.pos, p.val)),
 			))
 			p.next()
+		case _Lit:
+			if len(ce.Args) == 0 && p.hasValidIdent() {
+				ce.Assigns = append(ce.Assigns, p.getAssign(true))
+				break
+			}
+			ce.Args = append(ce.Args, p.word(p.wordParts()))
 		case bckQuote:
 			if p.quote == subCmdBckquo {
-				return ce
+				break loop
 			}
 			fallthrough
-		case _Lit, dollBrace, dollDblParen, dollParen, dollar, cmdIn, cmdOut,
+		case dollBrace, dollDblParen, dollParen, dollar, cmdIn, cmdOut,
 			sglQuote, dollSglQuote, dblQuote, dollDblQuote, dollBrack,
 			globQuest, globStar, globPlus, globAt, globExcl:
 			ce.Args = append(ce.Args, p.word(p.wordParts()))
@@ -2003,12 +2035,18 @@ func (p *Parser) callExpr(s *Stmt, w *Word) *CallExpr {
 			p.curErr("%s can only be used to open an arithmetic cmd", p.tok)
 		case rightParen:
 			if p.quote == subCmd {
-				return ce
+				break loop
 			}
 			fallthrough
 		default:
 			p.curErr("a command can only contain words and redirects")
 		}
+	}
+	if len(ce.Assigns) == 0 && len(ce.Args) == 0 {
+		return nil
+	}
+	if len(ce.Args) == 0 {
+		ce.Args = nil
 	}
 	return ce
 }

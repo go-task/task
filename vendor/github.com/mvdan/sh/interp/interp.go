@@ -29,8 +29,7 @@ import (
 // concurrent use, consider a workaround like hiding writes behind a
 // mutex.
 type Runner struct {
-	// TODO: syntax.Node instead of *syntax.File?
-	File *syntax.File
+	Node syntax.Node
 
 	// Env specifies the environment of the interpreter.
 	// If Env is nil, Run uses the current process's environment.
@@ -243,7 +242,16 @@ func (r *Runner) Run() error {
 		}
 		r.Dir = dir
 	}
-	r.stmts(r.File.StmtList)
+	switch x := r.Node.(type) {
+	case *syntax.File:
+		r.stmts(x.StmtList)
+	case *syntax.Stmt:
+		r.stmt(x)
+	case syntax.Command:
+		r.cmd(x)
+	default:
+		return fmt.Errorf("Node can only be File, Stmt, or Command: %T", x)
+	}
 	r.lastExit()
 	if r.err == ExitCode(0) {
 		r.err = nil
@@ -257,6 +265,56 @@ func (r *Runner) outf(format string, a ...interface{}) {
 
 func (r *Runner) errf(format string, a ...interface{}) {
 	fmt.Fprintf(r.Stderr, format, a...)
+}
+
+func (r *Runner) expand(format string, onlyChars bool, args ...string) string {
+	var buf bytes.Buffer
+	esc, fmt := false, false
+	for _, c := range format {
+		if esc {
+			esc = false
+			switch c {
+			case 'n':
+				buf.WriteRune('\n')
+			case 'r':
+				buf.WriteRune('\r')
+			case 't':
+				buf.WriteRune('\t')
+			case '\\':
+				buf.WriteRune('\\')
+			default:
+				buf.WriteRune('\\')
+				buf.WriteRune(c)
+			}
+			continue
+		}
+		if fmt {
+			fmt = false
+			arg := ""
+			if len(args) > 0 {
+				arg, args = args[0], args[1:]
+			}
+			switch c {
+			case 's':
+				buf.WriteString(arg)
+			case 'd':
+				// round-trip to convert invalid to 0
+				n, _ := strconv.Atoi(arg)
+				buf.WriteString(strconv.Itoa(n))
+			default:
+				r.runErr(syntax.Pos{}, "unhandled format char: %c", c)
+			}
+			continue
+		}
+		if c == '\\' {
+			esc = true
+		} else if !onlyChars && c == '%' {
+			fmt = true
+		} else {
+			buf.WriteRune(c)
+		}
+	}
+	return buf.String()
 }
 
 func fieldJoin(parts []fieldPart) string {
@@ -394,18 +452,6 @@ func (r *Runner) assignValue(as *syntax.Assign) varValue {
 }
 
 func (r *Runner) stmtSync(st *syntax.Stmt) {
-	oldVars := r.cmdVars
-	for _, as := range st.Assigns {
-		val := r.assignValue(as)
-		if st.Cmd == nil {
-			r.setVar(as.Name.Value, val)
-			continue
-		}
-		if r.cmdVars == nil {
-			r.cmdVars = make(map[string]varValue, len(st.Assigns))
-		}
-		r.cmdVars[as.Name.Value] = val
-	}
 	oldIn, oldOut, oldErr := r.Stdin, r.Stdout, r.Stderr
 	for _, rd := range st.Redirs {
 		cls, err := r.redir(rd)
@@ -425,7 +471,6 @@ func (r *Runner) stmtSync(st *syntax.Stmt) {
 	if st.Negated {
 		r.exit = oneIf(r.exit == 0)
 	}
-	r.cmdVars = oldVars
 	r.Stdin, r.Stdout, r.Stderr = oldIn, oldOut, oldErr
 }
 
@@ -448,8 +493,22 @@ func (r *Runner) cmd(cm syntax.Command) {
 		r2.stmts(x.StmtList)
 		r.exit = r2.exit
 	case *syntax.CallExpr:
+		if len(x.Args) == 0 {
+			for _, as := range x.Assigns {
+				r.setVar(as.Name.Value, r.assignValue(as))
+			}
+			break
+		}
+		oldVars := r.cmdVars
+		if r.cmdVars == nil {
+			r.cmdVars = make(map[string]varValue, len(x.Assigns))
+		}
+		for _, as := range x.Assigns {
+			r.cmdVars[as.Name.Value] = r.assignValue(as)
+		}
 		fields := r.fields(x.Args)
 		r.call(x.Args[0].Pos(), fields[0], fields[1:])
+		r.cmdVars = oldVars
 	case *syntax.BinaryCmd:
 		switch x.Op {
 		case syntax.AndStmt:
@@ -612,10 +671,17 @@ func (r *Runner) redir(rd *syntax.Redirect) (io.Closer, error) {
 	case syntax.RdrOut, syntax.RdrAll:
 		mode = os.O_RDWR | os.O_CREATE | os.O_TRUNC
 	}
-	f, err := os.OpenFile(r.relPath(arg), mode, 0644)
-	if err != nil {
-		// TODO: print to stderr?
-		return nil, err
+	var f io.ReadWriteCloser
+	switch arg {
+	case "/dev/null":
+		f = devNull{}
+	default:
+		var err error
+		f, err = os.OpenFile(r.relPath(arg), mode, 0644)
+		if err != nil {
+			// TODO: print to stderr?
+			return nil, err
+		}
 	}
 	switch rd.Op {
 	case syntax.RdrIn:
@@ -685,10 +751,11 @@ func (r *Runner) wordFields(wps []syntax.WordPart, quoted bool) [][]fieldPart {
 			curField = append(curField, fieldPart{val: s})
 		case *syntax.SglQuoted:
 			allowEmpty = true
-			curField = append(curField, fieldPart{
-				quoted: true,
-				val:    x.Value,
-			})
+			fp := fieldPart{quoted: true, val: x.Value}
+			if x.Dollar {
+				fp.val = r.expand(fp.val, true)
+			}
+			curField = append(curField, fp)
 		case *syntax.DblQuoted:
 			allowEmpty = true
 			if len(x.Parts) == 1 {

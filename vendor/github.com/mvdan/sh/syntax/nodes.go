@@ -40,6 +40,16 @@ func (s StmtList) pos() Pos {
 	return Pos{}
 }
 
+func (s StmtList) end() Pos {
+	if len(s.Last) > 0 {
+		return s.Last[len(s.Last)-1].End()
+	}
+	if len(s.Stmts) > 0 {
+		return s.Stmts[len(s.Stmts)-1].End()
+	}
+	return Pos{}
+}
+
 func (s StmtList) empty() bool {
 	return len(s.Stmts) == 0 && len(s.Last) == 0
 }
@@ -52,20 +62,14 @@ type Pos struct {
 
 // Offset returns the byte offset of the position in the original
 // source file. Byte offsets start at 0.
-func (p Pos) Offset() uint {
-	return uint(p.offs)
-}
+func (p Pos) Offset() uint { return uint(p.offs) }
 
 // Line returns the line number of the position, starting at 1.
-func (p Pos) Line() uint {
-	return uint(p.line)
-}
+func (p Pos) Line() uint { return uint(p.line) }
 
-// Col returns the column number of the position, starting at 0. It
+// Col returns the column number of the position, starting at 1. It
 // counts in bytes.
-func (p Pos) Col() uint {
-	return uint(p.col)
-}
+func (p Pos) Col() uint { return uint(p.col) }
 
 func (p Pos) String() string {
 	return fmt.Sprintf("%d:%d", p.Line(), p.Col())
@@ -113,9 +117,8 @@ type Comment struct {
 func (c *Comment) Pos() Pos { return c.Hash }
 func (c *Comment) End() Pos { return posAddCol(c.Hash, len(c.Text)) }
 
-// Stmt represents a statement, otherwise known as a compound command.
-// It is compromised of a command and other components that may come
-// before or after it.
+// Stmt represents a statement. It is compromised of a command and other
+// components that may come before or after it.
 type Stmt struct {
 	Comments   []Comment
 	Cmd        Command
@@ -125,8 +128,7 @@ type Stmt struct {
 	Background bool // stmt &
 	Coprocess  bool // mksh's |&
 
-	Assigns []*Assign   // a=x b=y stmt
-	Redirs  []*Redirect // stmt >a <b
+	Redirs []*Redirect // stmt >a <b
 }
 
 func (s *Stmt) Pos() Pos { return s.Position }
@@ -141,17 +143,14 @@ func (s *Stmt) End() Pos {
 	if s.Cmd != nil {
 		end = s.Cmd.End()
 	}
-	if len(s.Assigns) > 0 {
-		end = posMax(end, s.Assigns[len(s.Assigns)-1].End())
-	}
 	if len(s.Redirs) > 0 {
 		end = posMax(end, s.Redirs[len(s.Redirs)-1].End())
 	}
 	return end
 }
 
-// Command represents all nodes that are simple commands, which are
-// directly placed in a Stmt.
+// Command represents all nodes that are simple or compound commands,
+// including function declarations.
 //
 // These are *CallExpr, *IfClause, *WhileClause, *ForClause,
 // *CaseClause, *Block, *Subshell, *BinaryCmd, *FuncDecl, *ArithmCmd,
@@ -237,13 +236,29 @@ func (r *Redirect) Pos() Pos {
 }
 func (r *Redirect) End() Pos { return r.Word.End() }
 
-// CallExpr represents a command execution or function call.
+// CallExpr represents a command execution or function call, otherwise
+// known as a simple command.
+//
+// If Args is empty, Assigns apply to the shell environment. Otherwise,
+// they only apply to the call.
 type CallExpr struct {
-	Args []*Word
+	Assigns []*Assign // a=x b=y args
+	Args    []*Word
 }
 
-func (c *CallExpr) Pos() Pos { return c.Args[0].Pos() }
-func (c *CallExpr) End() Pos { return c.Args[len(c.Args)-1].End() }
+func (c *CallExpr) Pos() Pos {
+	if len(c.Assigns) > 0 {
+		return c.Assigns[0].Pos()
+	}
+	return c.Args[0].Pos()
+}
+
+func (c *CallExpr) End() Pos {
+	if len(c.Args) == 0 {
+		return c.Assigns[len(c.Assigns)-1].End()
+	}
+	return c.Args[len(c.Args)-1].End()
+}
 
 // Subshell represents a series of commands that should be executed in a
 // nested shell environment.

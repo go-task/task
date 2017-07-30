@@ -75,16 +75,15 @@ func (r *Runner) builtinCode(pos syntax.Pos, name string, args []string) int {
 			r.delVar(arg)
 		}
 	case "echo":
-		newline := true
+		newline, expand := true, false
 	echoOpts:
 		for len(args) > 0 {
 			switch args[0] {
 			case "-n":
 				newline = false
-			case "-e", "-E":
-				// TODO: what should be our default?
-				// exactly what is the difference in
-				// what we write?
+			case "-e":
+				expand = true
+			case "-E": // default
 			default:
 				break echoOpts
 			}
@@ -93,6 +92,9 @@ func (r *Runner) builtinCode(pos syntax.Pos, name string, args []string) int {
 		for i, arg := range args {
 			if i > 0 {
 				r.outf(" ")
+			}
+			if expand {
+				arg = r.expand(arg, true)
 			}
 			r.outf("%s", arg)
 		}
@@ -104,11 +106,7 @@ func (r *Runner) builtinCode(pos syntax.Pos, name string, args []string) int {
 			r.errf("usage: printf format [arguments]\n")
 			return 2
 		}
-		var a []interface{}
-		for _, arg := range args[1:] {
-			a = append(a, arg)
-		}
-		r.outf(args[0], a...)
+		r.outf("%s", r.expand(args[0], false, args[1:]...))
 	case "break":
 		if !r.inLoop {
 			r.errf("break is only useful in a loop")
@@ -159,7 +157,8 @@ func (r *Runner) builtinCode(pos syntax.Pos, name string, args []string) int {
 			return 2
 		}
 		dir = r.relPath(dir)
-		if _, err := os.Stat(dir); err != nil {
+		info, err := os.Stat(dir)
+		if err != nil || !info.IsDir() {
 			return 1
 		}
 		r.Dir = dir
@@ -207,7 +206,7 @@ func (r *Runner) builtinCode(pos syntax.Pos, name string, args []string) int {
 			return 1
 		}
 		r2 := *r
-		r2.File = file
+		r2.Node = file
 		r2.Run()
 		return r2.exit
 	case "source", ".":
@@ -228,7 +227,7 @@ func (r *Runner) builtinCode(pos syntax.Pos, name string, args []string) int {
 		}
 		r2 := *r
 		r2.Params = args[1:]
-		r2.File = file
+		r2.Node = file
 		r2.Run()
 		return r2.exit
 	case "[":

@@ -50,10 +50,10 @@
   revision = "95345c4e1c0ebc9d16a3284177f09360f4d20fab"
 
 [[projects]]
-  branch = "master"
   name = "github.com/mvdan/sh"
   packages = ["interp","syntax"]
-  revision = "cbdcf488deaebe5f51b5bb993f21d194f9f2211e"
+  revision = "e5b6ba788962dcccf0a5a50723f5b35623f16e18"
+  version = "v2.0-beta1"
 
 [[projects]]
   name = "github.com/pmezard/go-difflib"
@@ -68,10 +68,10 @@
   version = "v1.1.0"
 
 [[projects]]
-  branch = "master"
   name = "github.com/spf13/pflag"
   packages = ["."]
   revision = "e57e3eeb33f795204c1ca35f56c44f83227c6e66"
+  version = "v1.0.0"
 
 [[projects]]
   name = "github.com/stretchr/testify"
@@ -83,13 +83,13 @@
   branch = "master"
   name = "golang.org/x/crypto"
   packages = ["pbkdf2","scrypt"]
-  revision = "dd85ac7e6a88fc6ca420478e934de5f1a42dd3c6"
+  revision = "558b6879de74bc843225cde5686419267ff707ca"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/net"
   packages = ["context"]
-  revision = "f01ecb60fe3835d80d9a0b7b2bf24b228c89260e"
+  revision = "f5079bd7f6f74e23c4d65efa0f4ce14cbd6a3c0f"
 
 [[projects]]
   branch = "master"
@@ -101,13 +101,13 @@
   branch = "master"
   name = "golang.org/x/sys"
   packages = ["unix"]
-  revision = "4cd6d1a821c7175768725b55ca82f14683a29ea4"
+  revision = "0f826bdd13b500be0f1d4004938ad978fcc6031e"
 
 [[projects]]
   branch = "v2"
   name = "gopkg.in/yaml.v2"
   packages = ["."]
-  revision = "3b4ad1db5b2a649883ff3782f5f9f6fb52be71af"
+  revision = "25c4ec802a7d637f88d584ab26798e94ad14c13b"
 
 [solve-meta]
   analyzer-name = "dep"

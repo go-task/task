@@ -33,9 +33,6 @@ func Walk(node Node, f func(Node) bool) {
 		if x.Cmd != nil {
 			Walk(x.Cmd, f)
 		}
-		for _, a := range x.Assigns {
-			Walk(a, f)
-		}
 		for _, r := range x.Redirs {
 			Walk(r, f)
 		}
@@ -61,6 +58,9 @@ func Walk(node Node, f func(Node) bool) {
 			Walk(x.Hdoc, f)
 		}
 	case *CallExpr:
+		for _, a := range x.Assigns {
+			Walk(a, f)
+		}
 		walkWords(x.Args, f)
 	case *Subshell:
 		walkStmts(x.StmtList, f)

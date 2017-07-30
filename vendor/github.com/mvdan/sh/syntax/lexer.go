@@ -56,22 +56,23 @@ func wordBreak(r rune) bool {
 }
 
 func (p *Parser) rune() rune {
+	if p.r == '\n' {
+		// p.r instead of b so that newline
+		// character positions don't have col 0.
+		p.npos.line++
+		p.npos.col = 1
+	} else {
+		p.npos.col += p.w
+	}
 retry:
 	if p.bsp < len(p.bs) {
 		if b := p.bs[p.bsp]; b < utf8.RuneSelf {
 			p.bsp++
-			if p.r == '\n' {
-				// p.r instead of b so that newline
-				// character positions don't have col 0.
-				p.npos.line++
-				p.npos.col = 0
-			}
-			p.npos.col++
 			if p.litBs != nil {
 				p.litBs = append(p.litBs, b)
 			}
 			r := rune(b)
-			p.r = r
+			p.r, p.w = r, 1
 			return r
 		}
 		if p.bsp+utf8.UTFMax >= len(p.bs) {
@@ -85,10 +86,10 @@ retry:
 			p.litBs = append(p.litBs, p.bs[p.bsp:p.bsp+w]...)
 		}
 		p.bsp += w
-		p.npos.col += uint16(w)
 		if p.r == utf8.RuneError && w == 1 {
 			p.posErr(p.npos, "invalid UTF-8 encoding")
 		}
+		p.w = uint16(w)
 	} else {
 		if p.r == utf8.RuneSelf {
 		} else if p.fill(); p.bs == nil {
@@ -134,9 +135,7 @@ func (p *Parser) fill() {
 
 func (p *Parser) nextKeepSpaces() {
 	r := p.r
-	if p.pos = p.getPos(); r > utf8.RuneSelf {
-		p.pos = posAddCol(p.pos, -1) // TODO
-	}
+	p.pos = p.getPos()
 	switch p.quote {
 	case paramExpRepl:
 		switch r {
@@ -225,9 +224,7 @@ skipSpace:
 			break skipSpace
 		}
 	}
-	if p.pos = p.getPos(); r > utf8.RuneSelf {
-		p.pos = posAddCol(p.pos, -1) // TODO
-	}
+	p.pos = p.getPos()
 	switch {
 	case p.quote&allRegTokens != 0:
 		switch r {
@@ -810,7 +807,7 @@ loop:
 }
 
 func (p *Parser) advanceLitNone(r rune) {
-	p.asPos = 0
+	p.eqlOffs = 0
 	tok := _LitWord
 loop:
 	for p.newLit(r); r != utf8.RuneSelf; r = p.rune() {
@@ -854,7 +851,7 @@ loop:
 				break loop
 			}
 		case '=':
-			p.asPos = len(p.litBs) - 1
+			p.eqlOffs = len(p.litBs) - 1
 		case '[':
 			if p.lang != LangPOSIX && len(p.litBs) > 1 && p.litBs[0] != '[' {
 				tok = _Lit

@@ -167,7 +167,7 @@ func (s *simplifier) inlineSubshell(stmts []*Stmt) []*Stmt {
 	for len(stmts) == 1 {
 		st := stmts[0]
 		if st.Negated || st.Background || st.Coprocess ||
-			len(st.Assigns) > 0 || len(st.Redirs) > 0 {
+			len(st.Redirs) > 0 {
 			break
 		}
 		sub, _ := st.Cmd.(*Subshell)
