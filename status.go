@@ -49,19 +49,6 @@ func (t *Task) isUpToDateTimestamp(ctx context.Context) (bool, error) {
 	return !generatesMinTime.Before(sourcesMaxTime), nil
 }
 
-func minTime(a, b time.Time) time.Time {
-	if !a.IsZero() && a.Before(b) {
-		return a
-	}
-	return b
-}
-func maxTime(a, b time.Time) time.Time {
-	if a.After(b) {
-		return a
-	}
-	return b
-}
-
 func getPatternsMinTime(dir string, patterns []string) (m time.Time, err error) {
 	for _, p := range patterns {
 		if !filepath.IsAbs(p) {
@@ -89,7 +76,7 @@ func getPatternsMaxTime(dir string, patterns []string) (m time.Time, err error) 
 	return
 }
 
-func getPatternMinTime(pattern string) (minTime time.Time, err error) {
+func getPatternMinTime(pattern string) (m time.Time, err error) {
 	files, err := zglob.Glob(pattern)
 	if err != nil {
 		return time.Time{}, err
@@ -100,16 +87,12 @@ func getPatternMinTime(pattern string) (minTime time.Time, err error) {
 		if err != nil {
 			return time.Time{}, err
 		}
-
-		modTime := info.ModTime()
-		if minTime.IsZero() || modTime.Before(minTime) {
-			minTime = modTime
-		}
+		m = minTime(m, info.ModTime())
 	}
 	return
 }
 
-func getPatternMaxTime(pattern string) (maxTime time.Time, err error) {
+func getPatternMaxTime(pattern string) (m time.Time, err error) {
 	files, err := zglob.Glob(pattern)
 	if err != nil {
 		return time.Time{}, err
@@ -120,11 +103,21 @@ func getPatternMaxTime(pattern string) (maxTime time.Time, err error) {
 		if err != nil {
 			return time.Time{}, err
 		}
-
-		modTime := info.ModTime()
-		if modTime.After(maxTime) {
-			maxTime = modTime
-		}
+		m = maxTime(m, info.ModTime())
 	}
 	return
+}
+
+func minTime(a, b time.Time) time.Time {
+	if !a.IsZero() && a.Before(b) {
+		return a
+	}
+	return b
+}
+
+func maxTime(a, b time.Time) time.Time {
+	if a.After(b) {
+		return a
+	}
+	return b
 }
