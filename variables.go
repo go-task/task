@@ -147,7 +147,7 @@ func (e *Executor) getVariables(call Call) (Vars, error) {
 	resolveShell := func(dest Vars, keys []string) error {
 		for _, k := range keys {
 			v := dest[k]
-			static, err := e.handleDynamicVariableContent(v)
+			static, err := e.handleShVar(v)
 			if err != nil {
 				return err
 			}
@@ -193,7 +193,7 @@ func getEnvironmentVariables() Vars {
 	return m
 }
 
-func (e *Executor) handleDynamicVariableContent(v Var) (string, error) {
+func (e *Executor) handleShVar(v Var) (string, error) {
 	if v.Static != "" {
 		return v.Static, nil
 	}
