@@ -39,7 +39,7 @@ func RunCommand(opts *RunCommandOptions) error {
 
 	r := interp.Runner{
 		Context: opts.Context,
-		File:    p,
+		Node:    p,
 		Dir:     opts.Dir,
 		Env:     opts.Env,
 		Stdin:   opts.Stdin,
