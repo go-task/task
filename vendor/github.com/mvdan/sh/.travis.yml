@@ -1,0 +1,14 @@
+language: go
+
+go:
+  - 1.7.x
+  - 1.8.x
+
+before_install:
+  - go get -u github.com/mattn/goveralls
+
+script:
+  - go test ./...
+  - go test -short -race ./...
+  - shfmt -version
+  - goveralls

@@ -16,10 +16,4 @@
 ./task
 dist/
 
-vendor/**
-!vendor/**/*.go
-!vendor/**/LICENSE
-!vendor/**/COPYING
-!vendor/**/README
-!vendor/**/README.md
 vendor/**/*_test.go
