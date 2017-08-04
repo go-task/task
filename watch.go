@@ -44,13 +44,11 @@ loop:
 			cancel()
 			ctx, cancel = context.WithCancel(context.Background())
 			for _, a := range args {
-				// Use of goroutines means task order is not guaranteed.
-				// Not sure if task order is a requirement. (jackmordaunt)
-				go func(a string) {
+				go func() {
 					if err := e.RunTask(ctx, Call{Task: a}); err != nil {
 						e.println(err)
 					}
-				}(a)
+				}()
 			}
 		case err := <-watcher.Errors:
 			e.println(err)
