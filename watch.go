@@ -15,9 +15,11 @@ func (e *Executor) watchTasks(args ...string) error {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	for _, a := range args {
-		if err := e.RunTask(ctx, Call{Task: a}); err != nil {
-			e.println(err)
-		}
+		go func() {
+			if err := e.RunTask(ctx, Call{Task: a}); err != nil {
+				e.println(err)
+			}
+		}()
 	}
 
 	watcher, err := fsnotify.NewWatcher()
