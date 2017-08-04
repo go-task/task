@@ -46,7 +46,6 @@ func (e *Executor) watchTasks(args ...string) error {
 		}
 	}()
 
-loop:
 	for {
 		select {
 		case <-watcher.Events:
@@ -62,7 +61,6 @@ loop:
 			}
 		case err := <-watcher.Errors:
 			e.println(err)
-			continue loop
 		}
 	}
 }
