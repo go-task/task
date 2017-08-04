@@ -13,12 +13,18 @@ import (
 func (e *Executor) watchTasks(args ...string) error {
 	e.printfln("task: Started watching for tasks: %s", strings.Join(args, ", "))
 
-	// run tasks on init
+	taskCancellers := map[string]context.CancelFunc{}
+
 	for _, a := range args {
-		if err := e.RunTask(context.Background(), Call{Task: a}); err != nil {
-			e.println(err)
-			break
-		}
+		// Use of goroutines means task order is not guaranteed.
+		// Not sure if task order is a requirement. (jackmordaunt)
+		go func(a string) {
+			ctx, cancel := context.WithCancel(context.Background())
+			taskCancellers[a] = cancel
+			if err := e.RunTask(ctx, Call{Task: a}); err != nil {
+				e.println(err)
+			}
+		}(a)
 	}
 
 	watcher, err := fsnotify.NewWatcher()
@@ -41,10 +47,20 @@ loop:
 		select {
 		case <-watcher.Events:
 			for _, a := range args {
-				if err := e.RunTask(context.Background(), Call{Task: a}); err != nil {
-					e.println(err)
-					continue loop
+				if cancel, ok := taskCancellers[a]; ok {
+					cancel()
 				}
+			}
+			for _, a := range args {
+				// Use of goroutines means task order is not guaranteed.
+				// Not sure if task order is a requirement. (jackmordaunt)
+				go func(a string) {
+					ctx, cancel := context.WithCancel(context.Background())
+					taskCancellers[a] = cancel
+					if err := e.RunTask(ctx, Call{Task: a}); err != nil {
+						e.println(err)
+					}
+				}(a)
 			}
 		case err := <-watcher.Errors:
 			e.println(err)
