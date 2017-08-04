@@ -13,18 +13,11 @@ import (
 func (e *Executor) watchTasks(args ...string) error {
 	e.printfln("task: Started watching for tasks: %s", strings.Join(args, ", "))
 
-	taskCancellers := map[string]context.CancelFunc{}
-
+	ctx, cancel := context.WithCancel(context.Background())
 	for _, a := range args {
-		// Use of goroutines means task order is not guaranteed.
-		// Not sure if task order is a requirement. (jackmordaunt)
-		go func(a string) {
-			ctx, cancel := context.WithCancel(context.Background())
-			taskCancellers[a] = cancel
-			if err := e.RunTask(ctx, Call{Task: a}); err != nil {
-				e.println(err)
-			}
-		}(a)
+		if err := e.RunTask(ctx, Call{Task: a}); err != nil {
+			e.println(err)
+		}
 	}
 
 	watcher, err := fsnotify.NewWatcher()
@@ -46,17 +39,12 @@ loop:
 	for {
 		select {
 		case <-watcher.Events:
-			for _, a := range args {
-				if cancel, ok := taskCancellers[a]; ok {
-					cancel()
-				}
-			}
+			cancel()
+			ctx, cancel = context.WithCancel(context.Background())
 			for _, a := range args {
 				// Use of goroutines means task order is not guaranteed.
 				// Not sure if task order is a requirement. (jackmordaunt)
 				go func(a string) {
-					ctx, cancel := context.WithCancel(context.Background())
-					taskCancellers[a] = cancel
 					if err := e.RunTask(ctx, Call{Task: a}); err != nil {
 						e.println(err)
 					}
