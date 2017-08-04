@@ -13,10 +13,18 @@ import (
 func (e *Executor) watchTasks(args ...string) error {
 	e.printfln("task: Started watching for tasks: %s", strings.Join(args, ", "))
 
+	var isCtxErr = func(err error) bool {
+		switch err {
+		case context.Canceled, context.DeadlineExceeded:
+			return true
+		}
+		return false
+	}
+
 	ctx, cancel := context.WithCancel(context.Background())
 	for _, a := range args {
 		go func() {
-			if err := e.RunTask(ctx, Call{Task: a}); err != nil {
+			if err := e.RunTask(ctx, Call{Task: a}); err != nil && !isCtxErr(err) {
 				e.println(err)
 			}
 		}()
@@ -45,7 +53,7 @@ loop:
 			ctx, cancel = context.WithCancel(context.Background())
 			for _, a := range args {
 				go func() {
-					if err := e.RunTask(ctx, Call{Task: a}); err != nil {
+					if err := e.RunTask(ctx, Call{Task: a}); err != nil && !isCtxErr(err) {
 						e.println(err)
 					}
 				}()
