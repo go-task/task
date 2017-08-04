@@ -13,12 +13,22 @@ import (
 func (e *Executor) watchTasks(args ...string) error {
 	e.printfln("task: Started watching for tasks: %s", strings.Join(args, ", "))
 
-	// run tasks on init
-	for _, a := range args {
-		if err := e.RunTask(context.Background(), Call{Task: a}); err != nil {
-			e.println(err)
-			break
+	var isCtxErr = func(err error) bool {
+		switch err {
+		case context.Canceled, context.DeadlineExceeded:
+			return true
 		}
+		return false
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	for _, a := range args {
+		a := a
+		go func() {
+			if err := e.RunTask(ctx, Call{Task: a}); err != nil && !isCtxErr(err) {
+				e.println(err)
+			}
+		}()
 	}
 
 	watcher, err := fsnotify.NewWatcher()
@@ -36,19 +46,21 @@ func (e *Executor) watchTasks(args ...string) error {
 		}
 	}()
 
-loop:
 	for {
 		select {
 		case <-watcher.Events:
+			cancel()
+			ctx, cancel = context.WithCancel(context.Background())
 			for _, a := range args {
-				if err := e.RunTask(context.Background(), Call{Task: a}); err != nil {
-					e.println(err)
-					continue loop
-				}
+				a := a
+				go func() {
+					if err := e.RunTask(ctx, Call{Task: a}); err != nil && !isCtxErr(err) {
+						e.println(err)
+					}
+				}()
 			}
 		case err := <-watcher.Errors:
 			e.println(err)
-			continue loop
 		}
 	}
 }
