@@ -9,6 +9,11 @@ import (
 	"github.com/radovskyb/watcher"
 )
 
+var watchIgnoredDirs = []string{
+	".git",
+	"node_modules",
+}
+
 // watchTasks start watching the given tasks
 func (e *Executor) watchTasks(args ...string) error {
 	e.printfln("task: Started watching for tasks: %s", strings.Join(args, ", "))
@@ -34,6 +39,9 @@ func (e *Executor) watchTasks(args ...string) error {
 	w := watcher.New()
 	defer w.Close()
 	w.SetMaxEvents(1)
+	if err := w.Ignore(watchIgnoredDirs...); err != nil {
+		return err
+	}
 
 	go func() {
 		for {
