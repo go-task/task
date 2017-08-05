@@ -38,7 +38,9 @@ The `task_checksums.txt` file contains the SHA-256 checksum for each file.
 ## Usage
 
 Create a file called `Taskfile.yml` in the root of the project.
-The `cmds` attribute should contains the commands of a task:
+The `cmds` attribute should contains the commands of a task.
+The example below allows compile a Go app and uses [Minify][minify] to concat
+and minify multiple CSS files into a single one.
 
 ```yml
 build:
@@ -47,7 +49,7 @@ build:
 
 assets:
   cmds:
-    - gulp
+    - minify -o public/style.css src/css
 ```
 
 Running the tasks is as simple as running:
@@ -101,7 +103,7 @@ build:
 Will print out `linux` and not default.
 
 It's also possible to have OS specific `Taskvars.yml` file, like
-`Taskvars_windows.yml` or `Taskvars_darwin.yml`. See the
+`Taskvars_windows.yml`, `Taskfile_linux.yml` or `Taskvars_darwin.yml`. See the
 [variables section](#variables) below.
 
 ### Task directory
@@ -111,10 +113,11 @@ located. But you can easily make the task run in another folder informing
 `dir`:
 
 ```yml
-js:
-  dir: www/public/js
+serve:
+  dir: public/www
   cmds:
-    - gulp
+    # run http server
+    - caddy
 ```
 
 ### Task dependencies
@@ -130,7 +133,7 @@ build:
 
 assets:
   cmds:
-    - gulp
+    - minify -o public/style.css src/css
 ```
 
 In the above example, `assets` will always run right before `build` if you run
@@ -144,28 +147,15 @@ assets:
 
 js:
   cmds:
-    - npm run buildjs
+    - minify -o public/script.js src/js
 
 css:
   cmds:
-    - npm run buildcss
+    - minify -o public/style.css src/css
 ```
 
 If there are more than one dependency, they always run in parallel for better
 performance.
-
-Each task can only be run once. If it is included from another dependend task causing
-a cyclomatic dependency, execution will be stopped.
-
-```yml
-task1:
-  deps: [task2]
-
-task2:
-  deps: [task1]
-```
-
-The above will fail with the message: "cyclic dependency detected".
 
 ### Calling another task
 
@@ -233,24 +223,24 @@ build:
 
 js:
   cmds:
-    - npm run buildjs
+    - minify -o public/script.js src/js
   sources:
-    - js/src/**/*.js
+    - src/js/**/*.js
   generates:
-    - public/bundle.js
+    - public/script.js
 
 css:
   cmds:
-    - npm run buildcss
+    - minify -o public/style.css src/css
   sources:
-    - css/src/*.css
+    - src/css/**/*.css
   generates:
-    - public/bundle.css
+    - public/style.css
 ```
 
-`sources` and `generates` should be file patterns. When both are given, Task
-will compare the modification date/time of the files to determine if it's
-necessary to run the task. If not, it will just print
+`sources` and `generates` can be files or file patterns. When both are given,
+Task will compare the modification date/time of the files to determine if it's
+necessary to run the task. If not, it will just print a message like
 `Task "js" is up to date`.
 
 Alternatively, you can inform a sequence of tests as `status`. If no error
@@ -408,11 +398,11 @@ test:
 
 js:
   cmds:
-    - npm run buildjs
+    - minify -o public/script.js src/js
 
 css:
   cmds:
-    - npm run buildcss
+    - minify -o public/style.css src/css
 ```
 
 would print the following output:
@@ -482,6 +472,10 @@ If you give a `--watch` or `-w` argument, task will watch for files changes
 and run the task again. This requires the `sources` attribute to be given,
 so task know which files to watch.
 
+## Task in the wild
+
+- [How I Build My Static Assets for Hugo][post-hugo]
+
 ## Alternative task runners
 
 - YAML based:
@@ -502,3 +496,5 @@ so task know which files to watch.
 [godo]: https://github.com/go-godo/godo
 [grift]: https://github.com/markbates/grift
 [sh]: https://github.com/mvdan/sh
+[post-hugo]: https://blog.carlmjohnson.net/post/2017/hugo-asset-pipeline/
+[minify]: https://github.com/tdewolff/minify/tree/master/cmd/minify
