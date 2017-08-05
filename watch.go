@@ -5,8 +5,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/fsnotify/fsnotify"
 	"github.com/mattn/go-zglob"
+	"github.com/radovskyb/watcher"
 )
 
 // watchTasks start watching the given tasks
@@ -31,80 +31,99 @@ func (e *Executor) watchTasks(args ...string) error {
 		}()
 	}
 
-	watcher, err := fsnotify.NewWatcher()
-	if err != nil {
-		return err
-	}
-	defer watcher.Close()
+	w := watcher.New()
+	defer w.Close()
+	w.SetMaxEvents(1)
 
 	go func() {
 		for {
-			if err := e.registerWatchedFiles(watcher, args); err != nil {
-				e.printfln("Error watching files: %v", err)
+			select {
+			case event := <-w.Event:
+				e.verbosePrintfln("task: received watch event: %v", event)
+
+				cancel()
+				ctx, cancel = context.WithCancel(context.Background())
+				for _, a := range args {
+					a := a
+					go func() {
+						if err := e.RunTask(ctx, Call{Task: a}); err != nil && !isCtxErr(err) {
+							e.println(err)
+						}
+					}()
+				}
+			case err := <-w.Error:
+				switch err {
+				case watcher.ErrWatchedFileDeleted:
+					go func() {
+						w.TriggerEvent(watcher.Remove, nil)
+					}()
+				default:
+					e.println(err)
+				}
+			case <-w.Closed:
+				return
 			}
-			time.Sleep(time.Second * 2)
 		}
 	}()
 
-	for {
-		select {
-		case <-watcher.Events:
-			cancel()
-			ctx, cancel = context.WithCancel(context.Background())
-			for _, a := range args {
-				a := a
-				go func() {
-					if err := e.RunTask(ctx, Call{Task: a}); err != nil && !isCtxErr(err) {
-						e.println(err)
-					}
-				}()
+	go func() {
+		// re-register each second because we can have new files
+		for {
+			if err := e.registerWatchedFiles(w, args); err != nil {
+				e.println(err)
 			}
-		case err := <-watcher.Errors:
-			e.println(err)
+			time.Sleep(time.Second)
 		}
-	}
+	}()
+
+	return w.Start(time.Second)
 }
 
-func (e *Executor) registerWatchedFiles(w *fsnotify.Watcher, args []string) error {
-	oldWatchingFiles := e.watchingFiles
-	e.watchingFiles = make(map[string]struct{}, len(oldWatchingFiles))
+func (e *Executor) registerWatchedFiles(w *watcher.Watcher, args []string) error {
+	oldWatchedFiles := make(map[string]struct{})
+	for f := range w.WatchedFiles() {
+		oldWatchedFiles[f] = struct{}{}
+	}
 
-	for k := range oldWatchingFiles {
-		if err := w.Remove(k); err != nil {
+	for f := range oldWatchedFiles {
+		if err := w.Remove(f); err != nil {
 			return err
 		}
 	}
 
-	for _, a := range args {
-		task, ok := e.Tasks[a]
+	var registerTaskFiles func(string) error
+	registerTaskFiles = func(t string) error {
+		task, ok := e.Tasks[t]
 		if !ok {
-			return &taskNotFoundError{a}
+			return &taskNotFoundError{t}
 		}
-		deps := make([]string, len(task.Deps))
-		for i, d := range task.Deps {
-			deps[i] = d.Task
+
+		for _, d := range task.Deps {
+			if err := registerTaskFiles(d.Task); err != nil {
+				return err
+			}
 		}
-		if err := e.registerWatchedFiles(w, deps); err != nil {
-			return err
-		}
+
 		for _, s := range task.Sources {
 			files, err := zglob.Glob(s)
 			if err != nil {
 				return err
 			}
 			for _, f := range files {
+				if _, ok := oldWatchedFiles[f]; ok {
+					continue
+				}
 				if err := w.Add(f); err != nil {
 					return err
 				}
-				e.watchingFiles[f] = struct{}{}
-
-				// run if is new file
-				if oldWatchingFiles != nil {
-					if _, ok := oldWatchingFiles[f]; !ok {
-						w.Events <- fsnotify.Event{Name: f, Op: fsnotify.Create}
-					}
-				}
 			}
+		}
+		return nil
+	}
+
+	for _, a := range args {
+		if err := registerTaskFiles(a); err != nil {
+			return err
 		}
 	}
 	return nil

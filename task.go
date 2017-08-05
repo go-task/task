@@ -36,8 +36,7 @@ type Executor struct {
 	Stdout io.Writer
 	Stderr io.Writer
 
-	taskvars      Vars
-	watchingFiles map[string]struct{}
+	taskvars Vars
 
 	taskCallCount map[string]*int32
 
