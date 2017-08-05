@@ -18,19 +18,11 @@ var watchIgnoredDirs = []string{
 func (e *Executor) watchTasks(args ...string) error {
 	e.printfln("task: Started watching for tasks: %s", strings.Join(args, ", "))
 
-	var isCtxErr = func(err error) bool {
-		switch err {
-		case context.Canceled, context.DeadlineExceeded:
-			return true
-		}
-		return false
-	}
-
 	ctx, cancel := context.WithCancel(context.Background())
 	for _, a := range args {
 		a := a
 		go func() {
-			if err := e.RunTask(ctx, Call{Task: a}); err != nil && !isCtxErr(err) {
+			if err := e.RunTask(ctx, Call{Task: a}); err != nil && !isContextError(err) {
 				e.println(err)
 			}
 		}()
@@ -54,7 +46,7 @@ func (e *Executor) watchTasks(args ...string) error {
 				for _, a := range args {
 					a := a
 					go func() {
-						if err := e.RunTask(ctx, Call{Task: a}); err != nil && !isCtxErr(err) {
+						if err := e.RunTask(ctx, Call{Task: a}); err != nil && !isContextError(err) {
 							e.println(err)
 						}
 					}()
@@ -135,4 +127,13 @@ func (e *Executor) registerWatchedFiles(w *watcher.Watcher, args []string) error
 		}
 	}
 	return nil
+}
+
+func isContextError(err error) bool {
+	switch err {
+	case context.Canceled, context.DeadlineExceeded:
+		return true
+	default:
+		return false
+	}
 }
