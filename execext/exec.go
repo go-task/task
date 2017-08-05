@@ -39,12 +39,14 @@ func RunCommand(opts *RunCommandOptions) error {
 
 	r := interp.Runner{
 		Context: opts.Context,
-		Node:    p,
 		Dir:     opts.Dir,
 		Env:     opts.Env,
 		Stdin:   opts.Stdin,
 		Stdout:  opts.Stdout,
 		Stderr:  opts.Stderr,
 	}
-	return r.Run()
+	if err = r.Reset(); err != nil {
+		return err
+	}
+	return r.Run(p)
 }
