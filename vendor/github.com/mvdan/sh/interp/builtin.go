@@ -206,8 +206,8 @@ func (r *Runner) builtinCode(pos syntax.Pos, name string, args []string) int {
 			return 1
 		}
 		r2 := *r
-		r2.Node = file
-		r2.Run()
+		r2.Reset()
+		r2.Run(file)
 		return r2.exit
 	case "source", ".":
 		if len(args) < 1 {
@@ -227,8 +227,8 @@ func (r *Runner) builtinCode(pos syntax.Pos, name string, args []string) int {
 		}
 		r2 := *r
 		r2.Params = args[1:]
-		r2.Node = file
-		r2.Run()
+		r2.Reset()
+		r2.Run(file)
 		return r2.exit
 	case "[":
 		if len(args) == 0 || args[len(args)-1] != "]" {

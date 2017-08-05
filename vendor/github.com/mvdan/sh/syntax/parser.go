@@ -795,14 +795,14 @@ func arithmOpLevel(op BinAritOperator) int {
 }
 
 func (p *Parser) followArithm(ftok token, fpos Pos) ArithmExpr {
-	x := p.arithmExpr(ftok, fpos, 0, false, false)
+	x := p.arithmExpr(0, false, false)
 	if x == nil {
 		p.followErrExp(fpos, ftok.String())
 	}
 	return x
 }
 
-func (p *Parser) arithmExpr(ftok token, fpos Pos, level int, compact, tern bool) ArithmExpr {
+func (p *Parser) arithmExpr(level int, compact, tern bool) ArithmExpr {
 	if p.tok == _EOF || p.peekArithmEnd() {
 		return nil
 	}
@@ -810,7 +810,7 @@ func (p *Parser) arithmExpr(ftok token, fpos Pos, level int, compact, tern bool)
 	if level > 11 {
 		left = p.arithmExprBase(compact)
 	} else {
-		left = p.arithmExpr(ftok, fpos, level+1, compact, false)
+		left = p.arithmExpr(level+1, compact, false)
 	}
 	if compact && p.spaced {
 		return left
@@ -861,7 +861,7 @@ func (p *Parser) arithmExpr(ftok token, fpos Pos, level int, compact, tern bool)
 	if p.next(); compact && p.spaced {
 		p.followErrExp(b.OpPos, b.Op.String())
 	}
-	b.Y = p.arithmExpr(token(b.Op), b.OpPos, newLevel, compact, b.Op == Quest)
+	b.Y = p.arithmExpr(newLevel, compact, b.Op == Quest)
 	if b.Y == nil {
 		p.followErrExp(b.OpPos, b.Op.String())
 	}
@@ -1017,7 +1017,7 @@ func (p *Parser) paramExp() *ParamExp {
 		}
 	case exclMark:
 		if paramNameOp(p.r) {
-			pe.Indirect = true
+			pe.Excl = true
 			p.next()
 		}
 	}
@@ -1385,6 +1385,8 @@ func (p *Parser) getStmt(readEnd, binCmd bool) (s *Stmt, gotEnd bool) {
 }
 
 func (p *Parser) gotStmtPipe(s *Stmt) *Stmt {
+	s.Comments = append(s.Comments, p.accComs...)
+	p.accComs = nil
 	switch p.tok {
 	case _LitWord:
 		switch p.val {
@@ -1412,6 +1414,11 @@ func (p *Parser) gotStmtPipe(s *Stmt) *Stmt {
 			p.curErr(`%q can only be used to end a loop`, p.val)
 		case "esac":
 			p.curErr(`%q can only be used to end a case`, p.val)
+		case "!":
+			if !s.Negated {
+				p.curErr(`"!" can only be used in full statements`)
+				break
+			}
 		case "[[":
 			if p.lang != LangPOSIX {
 				s.Cmd = p.testClause()
@@ -1477,7 +1484,7 @@ func (p *Parser) gotStmtPipe(s *Stmt) *Stmt {
 		s.Cmd = p.callExpr(s, nil, false)
 	case bckQuote:
 		if p.quote == subCmdBckquo {
-			return s
+			return nil
 		}
 		fallthrough
 	case _Lit, dollBrace, dollDblParen, dollParen, dollar, cmdIn, cmdOut,
@@ -1520,18 +1527,6 @@ func (p *Parser) gotStmtPipe(s *Stmt) *Stmt {
 		s = p.stmt(s.Position)
 		s.Cmd = b
 		s.Comments, b.X.Comments = b.X.Comments, nil
-		move := 0
-		for _, c := range p.accComs {
-			// inline comment belongs in the parent
-			if c.Hash.Line() >= b.Y.End().Line() {
-				break
-			}
-			move++
-		}
-		if move > 0 {
-			b.Y.Comments = p.accComs[:move]
-			p.accComs = p.accComs[move:]
-		}
 	}
 	return s
 }
@@ -1637,15 +1632,13 @@ func (p *Parser) loop(fpos Pos) Loop {
 		cl := &CStyleLoop{Lparen: p.pos}
 		old := p.preNested(arithmExprCmd)
 		p.next()
-		cl.Init = p.arithmExpr(dblLeftParen, cl.Lparen, 0, false, false)
-		scPos := p.pos
+		cl.Init = p.arithmExpr(0, false, false)
 		if !p.got(dblSemicolon) {
 			p.follow(p.pos, "expr", semicolon)
-			cl.Cond = p.arithmExpr(semicolon, scPos, 0, false, false)
-			scPos = p.pos
+			cl.Cond = p.arithmExpr(0, false, false)
 			p.follow(p.pos, "expr", semicolon)
 		}
-		cl.Post = p.arithmExpr(semicolon, scPos, 0, false, false)
+		cl.Post = p.arithmExpr(0, false, false)
 		cl.Rparen = p.arithmEnd(dblLeftParen, cl.Lparen, old)
 		p.gotSameLine(semicolon)
 		return cl
@@ -1959,7 +1952,7 @@ func (p *Parser) letClause() *LetClause {
 	old := p.preNested(arithmExprLet)
 	p.next()
 	for !p.newLine && !stopToken(p.tok) && !p.peekRedir() {
-		x := p.arithmExpr(illegalTok, lc.Let, 0, true, false)
+		x := p.arithmExpr(0, true, false)
 		if x == nil {
 			break
 		}

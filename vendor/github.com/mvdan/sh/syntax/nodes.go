@@ -465,7 +465,7 @@ func (c *CmdSubst) End() Pos { return posAddCol(c.Right, 1) }
 type ParamExp struct {
 	Dollar, Rbrace Pos
 	Short          bool // $a instead of ${a}
-	Indirect       bool // ${!a}
+	Excl           bool // ${!a}
 	Length         bool // ${#a}
 	Width          bool // ${%a}
 	Param          *Lit

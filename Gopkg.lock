@@ -27,12 +27,6 @@
 
 [[projects]]
   branch = "master"
-  name = "github.com/fsnotify/fsnotify"
-  packages = ["."]
-  revision = "4da3e2cfbabc9f751898f250b49f2439785783a1"
-
-[[projects]]
-  branch = "master"
   name = "github.com/huandu/xstrings"
   packages = ["."]
   revision = "3959339b333561bf62a38b424fd41517c2c90f40"
@@ -50,16 +44,22 @@
   revision = "95345c4e1c0ebc9d16a3284177f09360f4d20fab"
 
 [[projects]]
+  branch = "master"
   name = "github.com/mvdan/sh"
   packages = ["interp","syntax"]
-  revision = "e5b6ba788962dcccf0a5a50723f5b35623f16e18"
-  version = "v2.0-beta1"
+  revision = "e6f9238b1f62400b3834f893a4f0088353519e82"
 
 [[projects]]
   name = "github.com/pmezard/go-difflib"
   packages = ["difflib"]
   revision = "792786c7400a136282c1664665ae0a8db921c6c2"
   version = "v1.0.0"
+
+[[projects]]
+  name = "github.com/radovskyb/watcher"
+  packages = ["."]
+  revision = "005eaf39e854c7af9082e63e9df884ad840819c8"
+  version = "v1.0.1"
 
 [[projects]]
   name = "github.com/satori/go.uuid"
@@ -83,7 +83,7 @@
   branch = "master"
   name = "golang.org/x/crypto"
   packages = ["pbkdf2","scrypt"]
-  revision = "558b6879de74bc843225cde5686419267ff707ca"
+  revision = "42ff06aea7c329876e5a0fe94acc96902accf0ad"
 
 [[projects]]
   branch = "master"
@@ -98,12 +98,6 @@
   revision = "f52d1811a62927559de87708c8913c1650ce4f26"
 
 [[projects]]
-  branch = "master"
-  name = "golang.org/x/sys"
-  packages = ["unix"]
-  revision = "0f826bdd13b500be0f1d4004938ad978fcc6031e"
-
-[[projects]]
   branch = "v2"
   name = "gopkg.in/yaml.v2"
   packages = ["."]
@@ -112,6 +106,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "93839de063626661a216a313ab71e2ad920afb2528f69ca6110c2155276e6dab"
+  inputs-digest = "e4d557aa8ac5361b90bedf938605af1892ee59538b0770cd416aad772e57e343"
   solver-name = "gps-cdcl"
   solver-version = 1

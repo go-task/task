@@ -196,11 +196,11 @@ func (p *Printer) newlines(pos Pos) {
 	p.indent()
 }
 
-func (p *Printer) sepTok(s string, pos Pos) {
+func (p *Printer) rightParen(pos Pos) {
 	if p.wantNewline || pos.Line() > p.line {
 		p.newlines(pos)
 	}
-	p.WriteString(s)
+	p.WriteByte(')')
 	p.wantSpace = true
 }
 
@@ -270,7 +270,7 @@ func (p *Printer) wordPart(wp WordPart) {
 			p.WriteString("$(")
 			p.wantSpace = len(x.Stmts) > 0 && startsWithLparen(x.Stmts[0])
 			p.nestedStmts(x.StmtList, x.Right)
-			p.sepTok(")", x.Right)
+			p.rightParen(x.Right)
 		}
 	case *ParamExp:
 		p.paramExp(x)
@@ -339,7 +339,7 @@ func (p *Printer) paramExp(pe *ParamExp) {
 		p.WriteByte('#')
 	case pe.Width:
 		p.WriteByte('%')
-	case pe.Indirect:
+	case pe.Excl:
 		p.WriteByte('!')
 	}
 	p.WriteString(pe.Param.Value)
@@ -615,7 +615,7 @@ func (p *Printer) command(cmd Command, redirs []*Redirect) (startRedirs int) {
 		p.WriteByte('(')
 		p.wantSpace = len(x.Stmts) > 0 && startsWithLparen(x.Stmts[0])
 		p.nestedStmts(x.StmtList, x.Rparen)
-		p.sepTok(")", x.Rparen)
+		p.rightParen(x.Rparen)
 	case *WhileClause:
 		if x.Until {
 			p.spacedString("until")
@@ -968,7 +968,7 @@ func (p *Printer) assigns(assigns []*Assign, alwaysEqual bool) {
 			p.wantSpace = false
 			p.WriteByte('(')
 			p.elemJoin(a.Array.Elems, a.Array.Last)
-			p.sepTok(")", a.Array.Rparen)
+			p.rightParen(a.Array.Rparen)
 		}
 		p.wantSpace = true
 	}

@@ -62,7 +62,7 @@ func (r *Runner) paramExp(pe *syntax.ParamExp) string {
 	switch {
 	case pe.Length:
 		str = strconv.Itoa(utf8.RuneCountInString(str))
-	case pe.Indirect:
+	case pe.Excl:
 		val, set = r.lookupVar(str)
 		str = varStr(val)
 	}

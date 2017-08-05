@@ -10,9 +10,9 @@ import "bytes"
 //
 // This function is EXPERIMENTAL; it may change or disappear at any
 // point until this notice is removed.
-func Simplify(f *File) bool {
+func Simplify(n Node) bool {
 	s := simplifier{}
-	Walk(f, s.visit)
+	Walk(n, s.visit)
 	return s.modified
 }
 
@@ -150,7 +150,7 @@ func (s *simplifier) inlineSimpleParams(x ArithmExpr) ArithmExpr {
 	if pe == nil || !ValidName(pe.Param.Value) {
 		return x
 	}
-	if pe.Indirect || pe.Length || pe.Width || pe.Slice != nil ||
+	if pe.Excl || pe.Length || pe.Width || pe.Slice != nil ||
 		pe.Repl != nil || pe.Exp != nil {
 		return x
 	}

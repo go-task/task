@@ -29,8 +29,6 @@ import (
 // concurrent use, consider a workaround like hiding writes behind a
 // mutex.
 type Runner struct {
-	Node syntax.Node
-
 	// Env specifies the environment of the interpreter.
 	// If Env is nil, Run uses the current process's environment.
 	Env []string
@@ -47,6 +45,8 @@ type Runner struct {
 	// file or calling a function. Accessible via the $@/$* family
 	// of vars.
 	Params []string
+
+	filename string // only if Node was a File
 
 	// Separate maps, note that bash allows a name to be both a var
 	// and a func simultaneously
@@ -137,8 +137,9 @@ func (e RunError) Error() string {
 func (r *Runner) runErr(pos syntax.Pos, format string, a ...interface{}) {
 	if r.err == nil {
 		r.err = RunError{
-			Pos:  pos,
-			Text: fmt.Sprintf(format, a...),
+			Filename: r.filename,
+			Pos:      pos,
+			Text:     fmt.Sprintf(format, a...),
 		}
 	}
 }
@@ -218,8 +219,17 @@ opts:
 	return args, nil
 }
 
-// Run starts the interpreter and returns any error.
-func (r *Runner) Run() error {
+func (r *Runner) Reset() error {
+	// reset the internal state
+	*r = Runner{
+		Env:     r.Env,
+		Dir:     r.Dir,
+		Params:  r.Params,
+		Context: r.Context,
+		Stdin:   r.Stdin,
+		Stdout:  r.Stdout,
+		Stderr:  r.Stderr,
+	}
 	if r.Context == nil {
 		r.Context = context.Background()
 	}
@@ -242,8 +252,15 @@ func (r *Runner) Run() error {
 		}
 		r.Dir = dir
 	}
-	switch x := r.Node.(type) {
+	return nil
+}
+
+// Run starts the interpreter and returns any error.
+func (r *Runner) Run(node syntax.Node) error {
+	r.filename = ""
+	switch x := node.(type) {
 	case *syntax.File:
+		r.filename = x.Name
 		r.stmts(x.StmtList)
 	case *syntax.Stmt:
 		r.stmt(x)
@@ -291,16 +308,29 @@ func (r *Runner) expand(format string, onlyChars bool, args ...string) string {
 		if fmt {
 			fmt = false
 			arg := ""
+			n := 0
 			if len(args) > 0 {
 				arg, args = args[0], args[1:]
+				i, _ := strconv.ParseInt(arg, 0, 0)
+				n = int(i)
 			}
 			switch c {
 			case 's':
 				buf.WriteString(arg)
-			case 'd':
-				// round-trip to convert invalid to 0
-				n, _ := strconv.Atoi(arg)
+			case 'c':
+				var b byte
+				if len(arg) > 0 {
+					b = arg[0]
+				}
+				buf.WriteByte(b)
+			case 'd', 'i':
 				buf.WriteString(strconv.Itoa(n))
+			case 'u':
+				buf.WriteString(strconv.FormatUint(uint64(n), 10))
+			case 'o':
+				buf.WriteString(strconv.FormatUint(uint64(n), 8))
+			case 'x':
+				buf.WriteString(strconv.FormatUint(uint64(n), 16))
 			default:
 				r.runErr(syntax.Pos{}, "unhandled format char: %c", c)
 			}
