@@ -113,7 +113,7 @@ func (e *Executor) RunTask(ctx context.Context, call Call) error {
 	if !ok {
 		return &taskNotFoundError{call.Task}
 	}
-	if atomic.AddInt32(e.taskCallCount[call.Task], 1) >= MaximumTaskCall {
+	if !e.Watch && atomic.AddInt32(e.taskCallCount[call.Task], 1) >= MaximumTaskCall {
 		return &MaximumTaskCallExceededError{task: call.Task}
 	}
 
