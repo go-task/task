@@ -36,8 +36,7 @@ type Executor struct {
 	Stdout io.Writer
 	Stderr io.Writer
 
-	taskvars      Vars
-	watchingFiles map[string]struct{}
+	taskvars Vars
 
 	taskCallCount map[string]*int32
 
@@ -114,7 +113,7 @@ func (e *Executor) RunTask(ctx context.Context, call Call) error {
 	if !ok {
 		return &taskNotFoundError{call.Task}
 	}
-	if atomic.AddInt32(e.taskCallCount[call.Task], 1) >= MaximumTaskCall {
+	if !e.Watch && atomic.AddInt32(e.taskCallCount[call.Task], 1) >= MaximumTaskCall {
 		return &MaximumTaskCallExceededError{task: call.Task}
 	}
 
