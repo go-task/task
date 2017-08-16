@@ -109,36 +109,22 @@ func (e *Executor) Run(args ...string) error {
 
 // RunTask runs a task by its name
 func (e *Executor) RunTask(ctx context.Context, call Call) error {
-	origTask, ok := e.Tasks[call.Task]
-	if !ok {
-		return &taskNotFoundError{call.Task}
+	t, err := e.CompiledTask(call)
+	if err != nil {
+		return err
 	}
 	if !e.Watch && atomic.AddInt32(e.taskCallCount[call.Task], 1) >= MaximumTaskCall {
 		return &MaximumTaskCallExceededError{task: call.Task}
-	}
-
-	vars, err := e.getVariables(call)
-	if err != nil {
-		return err
-	}
-
-	t, err := origTask.CompiledTask(e.Dir, vars)
-	if err != nil {
-		return err
 	}
 
 	if err := e.runDeps(ctx, t); err != nil {
 		return err
 	}
 
-	// FIXME: doing again, since a var may have been overriden
-	// using the `set:` attribute of a dependecy.
-	// Remove this when `set` (that is deprecated) be removed
-	vars, err = e.getVariables(call)
-	if err != nil {
-		return err
-	}
-	t, err = origTask.CompiledTask(e.Dir, vars)
+	// FIXME: doing again, since a var may have been overriden using the
+	// `set:` attribute of a dependecy.  Remove this when `set` (that is
+	// deprecated) be removed.
+	t, err = e.CompiledTask(call)
 	if err != nil {
 		return err
 	}
@@ -214,7 +200,7 @@ func (t *Task) getEnviron() []string {
 	}
 
 	envs := os.Environ()
-	for k, v := range t.Env {
+	for k, v := range t.Env.toStringMap() {
 		envs = append(envs, fmt.Sprintf("%s=%s", k, v))
 	}
 	return envs
