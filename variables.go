@@ -228,27 +228,44 @@ func (e *Executor) handleShVar(v Var) (string, error) {
 
 // CompiledTask returns a copy of a task, but replacing
 // variables in almost all properties using the Go template package
-func (t *Task) CompiledTask(dir string, vars Vars) (*Task, error) {
-	r := varReplacer{vars: vars}
+func (e *Executor) CompiledTask(call Call) (*Task, error) {
+	origTask, ok := e.Tasks[call.Task]
+	if !ok {
+		return nil, &taskNotFoundError{call.Task}
+	}
+
+	var r varReplacer
+	if vars, err := e.getVariables(call); err == nil {
+		r.vars = vars
+	} else {
+		return nil, err
+	}
 
 	new := Task{
-		Desc:      r.replace(t.Desc),
-		Sources:   r.replaceSlice(t.Sources),
-		Generates: r.replaceSlice(t.Generates),
-		Status:    r.replaceSlice(t.Status),
-		Dir:       r.replace(t.Dir),
+		Desc:      r.replace(origTask.Desc),
+		Sources:   r.replaceSlice(origTask.Sources),
+		Generates: r.replaceSlice(origTask.Generates),
+		Status:    r.replaceSlice(origTask.Status),
+		Dir:       r.replace(origTask.Dir),
 		Vars:      nil,
-		Set:       r.replace(t.Set),
-		Env:       r.replaceVars(t.Env),
-		Silent:    t.Silent,
+		Set:       r.replace(origTask.Set),
+		Env:       r.replaceVars(origTask.Env),
+		Silent:    origTask.Silent,
 	}
-	if dir != "" && !filepath.IsAbs(new.Dir) {
-		new.Dir = filepath.Join(dir, new.Dir)
+	if e.Dir != "" && !filepath.IsAbs(new.Dir) {
+		new.Dir = filepath.Join(e.Dir, new.Dir)
+	}
+	for k, v := range new.Env {
+		static, err := e.handleShVar(v)
+		if err != nil {
+			return nil, err
+		}
+		new.Env[k] = Var{Static: static}
 	}
 
-	if len(t.Cmds) > 0 {
-		new.Cmds = make([]*Cmd, len(t.Cmds))
-		for i, cmd := range t.Cmds {
+	if len(origTask.Cmds) > 0 {
+		new.Cmds = make([]*Cmd, len(origTask.Cmds))
+		for i, cmd := range origTask.Cmds {
 			new.Cmds[i] = &Cmd{
 				Task:   r.replace(cmd.Task),
 				Silent: cmd.Silent,
@@ -258,9 +275,9 @@ func (t *Task) CompiledTask(dir string, vars Vars) (*Task, error) {
 
 		}
 	}
-	if len(t.Deps) > 0 {
-		new.Deps = make([]*Dep, len(t.Deps))
-		for i, dep := range t.Deps {
+	if len(origTask.Deps) > 0 {
+		new.Deps = make([]*Dep, len(origTask.Deps))
+		for i, dep := range origTask.Deps {
 			new.Deps[i] = &Dep{
 				Task: r.replace(dep.Task),
 				Vars: r.replaceVars(dep.Vars),

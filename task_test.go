@@ -54,6 +54,18 @@ func (fct fileContentTest) Run(t *testing.T) {
 
 }
 
+func TestEnv(t *testing.T) {
+	tt := fileContentTest{
+		Dir:       "testdata/env",
+		Target:    "default",
+		TrimSpace: false,
+		Files: map[string]string{
+			"env.txt": "GOOS='linux' GOARCH='amd64' CGO_ENABLED='0'\n",
+		},
+	}
+	tt.Run(t)
+}
+
 func TestVars(t *testing.T) {
 	tt := fileContentTest{
 		Dir:       "testdata/vars",
