@@ -76,9 +76,6 @@ func Walk(node Node, f func(Node) bool) {
 	case *ForClause:
 		Walk(x.Loop, f)
 		walkStmts(x.Do, f)
-	case *SelectClause:
-		Walk(&x.Loop, f)
-		walkStmts(x.Do, f)
 	case *WordIter:
 		Walk(x.Name, f)
 		walkWords(x.Items, f)

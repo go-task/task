@@ -57,7 +57,7 @@ func (e Op) String() string {
 	return "???"
 }
 
-// An Event desribes an event that is received when files or directory
+// An Event describes an event that is received when files or directory
 // changes occur. It includes the os.FileInfo of the changed file or
 // directory and the type of event that's occurred and the full path of the file.
 type Event struct {

@@ -9,7 +9,7 @@ import (
 	"os/exec"
 	"regexp"
 
-	"github.com/mvdan/sh/syntax"
+	"mvdan.cc/sh/syntax"
 )
 
 // non-empty string is true, empty string is false

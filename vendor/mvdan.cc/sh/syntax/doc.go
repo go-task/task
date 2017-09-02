@@ -3,4 +3,4 @@
 
 // Package syntax implements parsing and formatting of shell programs.
 // It supports both POSIX Shell and Bash.
-package syntax
+package syntax // import "mvdan.cc/sh/syntax"

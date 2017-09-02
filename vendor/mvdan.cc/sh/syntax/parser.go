@@ -362,12 +362,10 @@ func (p *Parser) followErrExp(pos Pos, left string) {
 	p.followErr(pos, left, "an expression")
 }
 
-func (p *Parser) follow(lpos Pos, left string, tok token) Pos {
-	pos := p.pos
+func (p *Parser) follow(lpos Pos, left string, tok token) {
 	if !p.got(tok) {
 		p.followErr(lpos, left, tok.String())
 	}
-	return pos
 }
 
 func (p *Parser) followRsrv(lpos Pos, left, val string) Pos {
@@ -1324,11 +1322,10 @@ func (p *Parser) doRedirect(s *Stmt) {
 
 func (p *Parser) getStmt(readEnd, binCmd bool) (s *Stmt, gotEnd bool) {
 	s = p.stmt(p.pos)
-	s.Comments, p.accComs = p.accComs, nil
 	if p.gotRsrv("!") {
 		s.Negated = true
 		if p.newLine || stopToken(p.tok) {
-			p.posErr(s.Pos(), `! cannot form a statement alone`)
+			p.posErr(s.Pos(), `"!" cannot form a statement alone`)
 		}
 	}
 	if s = p.gotStmtPipe(s); s == nil || p.err != nil {
@@ -1385,8 +1382,7 @@ func (p *Parser) getStmt(readEnd, binCmd bool) (s *Stmt, gotEnd bool) {
 }
 
 func (p *Parser) gotStmtPipe(s *Stmt) *Stmt {
-	s.Comments = append(s.Comments, p.accComs...)
-	p.accComs = nil
+	s.Comments, p.accComs = p.accComs, nil
 	switch p.tok {
 	case _LitWord:
 		switch p.val {
@@ -1401,7 +1397,7 @@ func (p *Parser) gotStmtPipe(s *Stmt) *Stmt {
 		case "case":
 			s.Cmd = p.caseClause()
 		case "}":
-			p.curErr(`%s can only be used to close a block`, p.val)
+			p.curErr(`%q can only be used to close a block`, p.val)
 		case "then":
 			p.curErr(`%q can only be used in an if`, p.val)
 		case "elif":
@@ -1425,7 +1421,7 @@ func (p *Parser) gotStmtPipe(s *Stmt) *Stmt {
 			}
 		case "]]":
 			if p.lang != LangPOSIX {
-				p.curErr(`%s can only be used to close a test`,
+				p.curErr(`%q can only be used to close a test`,
 					p.val)
 			}
 		case "let":
@@ -1643,12 +1639,11 @@ func (p *Parser) loop(fpos Pos) Loop {
 		p.gotSameLine(semicolon)
 		return cl
 	}
-	wi := p.wordIter("for", fpos)
-	return &wi
+	return p.wordIter("for", fpos)
 }
 
-func (p *Parser) wordIter(ftok string, fpos Pos) WordIter {
-	wi := WordIter{}
+func (p *Parser) wordIter(ftok string, fpos Pos) *WordIter {
+	wi := &WordIter{}
 	if wi.Name = p.getLit(); wi.Name == nil {
 		p.followErr(fpos, ftok, "a literal")
 	}
@@ -1667,11 +1662,11 @@ func (p *Parser) wordIter(ftok string, fpos Pos) WordIter {
 	return wi
 }
 
-func (p *Parser) selectClause() *SelectClause {
-	fc := &SelectClause{SelectPos: p.pos}
+func (p *Parser) selectClause() *ForClause {
+	fc := &ForClause{ForPos: p.pos, Select: true}
 	p.next()
-	fc.Loop = p.wordIter("select", fc.SelectPos)
-	fc.DoPos = p.followRsrv(fc.SelectPos, "select foo [in words]", "do")
+	fc.Loop = p.wordIter("select", fc.ForPos)
+	fc.DoPos = p.followRsrv(fc.ForPos, "select foo [in words]", "do")
 	fc.Do = p.followStmts("do", fc.DoPos, "done")
 	fc.DonePos = p.stmtEnd(fc, "select", "done")
 	return fc

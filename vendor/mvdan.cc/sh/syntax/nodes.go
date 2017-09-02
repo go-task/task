@@ -175,7 +175,6 @@ func (*DeclClause) commandNode()   {}
 func (*LetClause) commandNode()    {}
 func (*TimeClause) commandNode()   {}
 func (*CoprocClause) commandNode() {}
-func (*SelectClause) commandNode() {}
 
 // Assign represents an assignment to a variable.
 //
@@ -322,9 +321,11 @@ type WhileClause struct {
 func (w *WhileClause) Pos() Pos { return w.WhilePos }
 func (w *WhileClause) End() Pos { return posAddCol(w.DonePos, 4) }
 
-// ForClause represents a for clause.
+// ForClause represents a for or a select clause. The latter is only
+// present in Bash.
 type ForClause struct {
 	ForPos, DoPos, DonePos Pos
+	Select                 bool
 	Loop                   Loop
 	Do                     StmtList
 }
@@ -795,16 +796,6 @@ type LetClause struct {
 
 func (l *LetClause) Pos() Pos { return l.Let }
 func (l *LetClause) End() Pos { return l.Exprs[len(l.Exprs)-1].End() }
-
-// SelectClause represents a Bash select clause.
-type SelectClause struct {
-	SelectPos, DoPos, DonePos Pos
-	Loop                      WordIter
-	Do                        StmtList
-}
-
-func (f *SelectClause) Pos() Pos { return f.SelectPos }
-func (f *SelectClause) End() Pos { return posAddCol(f.DonePos, 4) }
 
 func wordLastEnd(ws []*Word) Pos {
 	if len(ws) == 0 {

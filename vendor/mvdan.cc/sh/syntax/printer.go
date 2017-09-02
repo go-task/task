@@ -21,6 +21,10 @@ func Indent(spaces uint) func(*Printer) {
 // backslash will be used.
 func BinaryNextLine(p *Printer) { p.binNextLine = true }
 
+// SwitchCaseIndent will make switch cases be indented. As such, switch
+// case bodies will be two levels deeper than the switch itself.
+func SwitchCaseIndent(p *Printer) { p.swtCaseIndent = true }
+
 // NewPrinter allocates a new Printer and applies any number of options.
 func NewPrinter(options ...func(*Printer)) *Printer {
 	p := &Printer{
@@ -55,8 +59,9 @@ type bufWriter interface {
 type Printer struct {
 	bufWriter
 
-	indentSpaces uint
-	binNextLine  bool
+	indentSpaces  uint
+	binNextLine   bool
+	swtCaseIndent bool
 
 	wantSpace   bool
 	wantNewline bool
@@ -627,14 +632,12 @@ func (p *Printer) command(cmd Command, redirs []*Redirect) (startRedirs int) {
 		p.nestedStmts(x.Do, Pos{})
 		p.semiRsrv("done", x.DonePos, true)
 	case *ForClause:
-		p.WriteString("for ")
+		if x.Select {
+			p.WriteString("select ")
+		} else {
+			p.WriteString("for ")
+		}
 		p.loop(x.Loop)
-		p.semiOrNewl("do", x.DoPos)
-		p.nestedStmts(x.Do, Pos{})
-		p.semiRsrv("done", x.DonePos, true)
-	case *SelectClause:
-		p.WriteString("select ")
-		p.loop(&x.Loop)
 		p.semiOrNewl("do", x.DoPos)
 		p.nestedStmts(x.Do, Pos{})
 		p.semiRsrv("done", x.DonePos, true)
@@ -690,6 +693,9 @@ func (p *Printer) command(cmd Command, redirs []*Redirect) (startRedirs int) {
 		p.WriteString("case ")
 		p.word(x.Word)
 		p.WriteString(" in")
+		if p.swtCaseIndent {
+			p.incLevel()
+		}
 		for _, ci := range x.Items {
 			var inlineCom *Comment
 			for _, c := range ci.Comments {
@@ -732,6 +738,9 @@ func (p *Printer) command(cmd Command, redirs []*Redirect) (startRedirs int) {
 			p.level--
 		}
 		p.comments(x.Last)
+		if p.swtCaseIndent {
+			p.decLevel()
+		}
 		p.semiRsrv("esac", x.Esac, len(x.Items) == 0)
 	case *ArithmCmd:
 		p.WriteString("((")

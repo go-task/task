@@ -8,6 +8,15 @@ import "bytes"
 // Simplify simplifies a given program and returns whether any changes
 // were made.
 //
+// The changes currently applied are:
+//
+//     Remove clearly useless parentheses       $(( (expr) ))
+//     Remove dollars from vars in exprs        (($var))
+//     Remove duplicate subshells               $( (stmts) )
+//     Remove redundant quotes                  [[ "$var" == str ]]
+//     Merge negations with unary operators     [[ ! -n $var ]]
+//     Use single quotes to shorten literals    "\$foo"
+//
 // This function is EXPERIMENTAL; it may change or disappear at any
 // point until this notice is removed.
 func Simplify(n Node) bool {

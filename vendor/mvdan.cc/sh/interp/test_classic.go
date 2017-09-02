@@ -4,7 +4,7 @@
 package interp
 
 import (
-	"github.com/mvdan/sh/syntax"
+	"mvdan.cc/sh/syntax"
 )
 
 const illegalTok = 0

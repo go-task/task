@@ -44,12 +44,6 @@
   revision = "95345c4e1c0ebc9d16a3284177f09360f4d20fab"
 
 [[projects]]
-  branch = "master"
-  name = "github.com/mvdan/sh"
-  packages = ["interp","syntax"]
-  revision = "e6f9238b1f62400b3834f893a4f0088353519e82"
-
-[[projects]]
   name = "github.com/pmezard/go-difflib"
   packages = ["difflib"]
   revision = "792786c7400a136282c1664665ae0a8db921c6c2"
@@ -58,8 +52,8 @@
 [[projects]]
   name = "github.com/radovskyb/watcher"
   packages = ["."]
-  revision = "005eaf39e854c7af9082e63e9df884ad840819c8"
-  version = "v1.0.1"
+  revision = "6145e1439b9de93806925353403f91d2abbad8a5"
+  version = "v1.0.2"
 
 [[projects]]
   name = "github.com/satori/go.uuid"
@@ -68,10 +62,10 @@
   version = "v1.1.0"
 
 [[projects]]
+  branch = "master"
   name = "github.com/spf13/pflag"
   packages = ["."]
-  revision = "e57e3eeb33f795204c1ca35f56c44f83227c6e66"
-  version = "v1.0.0"
+  revision = "7aff26db30c1be810f9de5038ec5ef96ac41fd7c"
 
 [[projects]]
   name = "github.com/stretchr/testify"
@@ -83,13 +77,13 @@
   branch = "master"
   name = "golang.org/x/crypto"
   packages = ["pbkdf2","scrypt"]
-  revision = "42ff06aea7c329876e5a0fe94acc96902accf0ad"
+  revision = "81e90905daefcd6fd217b62423c0908922eadb30"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/net"
   packages = ["context"]
-  revision = "f5079bd7f6f74e23c4d65efa0f4ce14cbd6a3c0f"
+  revision = "66aacef3dd8a676686c7ae3716979581e8b03c47"
 
 [[projects]]
   branch = "master"
@@ -101,11 +95,17 @@
   branch = "v2"
   name = "gopkg.in/yaml.v2"
   packages = ["."]
-  revision = "25c4ec802a7d637f88d584ab26798e94ad14c13b"
+  revision = "eb3733d160e74a9c7e442f435eb3bea458e1d19f"
+
+[[projects]]
+  branch = "master"
+  name = "mvdan.cc/sh"
+  packages = ["interp","syntax"]
+  revision = "eaf7b83013b7a3dbfe3c627d00e1b9971afc9748"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "e4d557aa8ac5361b90bedf938605af1892ee59538b0770cd416aad772e57e343"
+  inputs-digest = "10e83efacd30cadfc07b31678375bdf2e6be288a8b9d175768b1f2efc914f5e1"
   solver-name = "gps-cdcl"
   solver-version = 1

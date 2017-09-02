@@ -1,19 +1,23 @@
 # sh
 
-[![GoDoc](https://godoc.org/github.com/mvdan/sh?status.svg)](https://godoc.org/github.com/mvdan/sh)
+[![GoDoc](https://godoc.org/mvdan.cc/sh?status.svg)](https://godoc.org/mvdan.cc/sh)
 [![Build Status](https://travis-ci.org/mvdan/sh.svg?branch=master)](https://travis-ci.org/mvdan/sh)
 [![Coverage Status](https://coveralls.io/repos/github/mvdan/sh/badge.svg?branch=master)](https://coveralls.io/github/mvdan/sh)
 
 A shell parser, formatter and interpreter. Supports [POSIX Shell],
-[Bash] and [mksh]. Requires Go 1.7 or later.
+[Bash] and [mksh]. Requires Go 1.8 or later.
+
+**Please note that the import paths have been moved from
+`github.com/mvdan/sh/...` to `mvdan.cc/sh/...` for 2.0.** This will help
+future-proof the project by making it depend less on GitHub.
 
 ### shfmt
 
-	go get -u github.com/mvdan/sh/cmd/shfmt
+	go get -u mvdan.cc/sh/cmd/shfmt
 
 `shfmt` formats shell programs. It can use tabs or any number of spaces
 to indent. See [canonical.sh](syntax/canonical.sh) for a quick look at
-its style.
+its default style.
 
 You can feed it standard input, any number of files or any number of
 directories to recurse into. When recursing, it will operate on `.sh`
@@ -22,7 +26,8 @@ operate on files with no extension and a shell shebang.
 
 	shfmt -l -w script.sh
 
-Use `-i N` to indent with a number of spaces instead of tabs.
+Use `-i N` to indent with a number of spaces instead of tabs. There are
+other formatting options - see `shfmt -h`.
 
 Packages are available for [Arch], [Homebrew], [NixOS] and [Void].
 
@@ -44,7 +49,7 @@ validity:
 
 ### gosh
 
-	go get -u github.com/mvdan/sh/cmd/gosh
+	go get -u mvdan.cc/sh/cmd/gosh
 
 Experimental non-interactive shell that uses `interp`. Work in progress,
 so don't expect stability just yet.
@@ -93,7 +98,7 @@ the parser and the printer. To get started, run:
 [posix shell]: http://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html
 [bash]: https://www.gnu.org/software/bash/
 [mksh]: https://www.mirbsd.org/mksh.htm
-[examples]: https://godoc.org/github.com/mvdan/sh/syntax#pkg-examples
+[examples]: https://godoc.org/mvdan.cc/sh/syntax#pkg-examples
 [arch]: https://aur.archlinux.org/packages/shfmt/
 [homebrew]: https://github.com/Homebrew/homebrew-core/blob/HEAD/Formula/shfmt.rb
 [nixos]: https://github.com/NixOS/nixpkgs/blob/HEAD/pkgs/tools/text/shfmt/default.nix

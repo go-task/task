@@ -7,4 +7,4 @@
 //
 // This package is a work in progress and EXPERIMENTAL; its API is not
 // subject to the 1.x backwards compatibility guarantee.
-package interp
+package interp // import "mvdan.cc/sh/interp"

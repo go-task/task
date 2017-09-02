@@ -80,7 +80,7 @@
 
 [[constraint]]
   branch = "master"
-  name = "github.com/mvdan/sh"
+  name = "mvdan.cc/sh"
 
 [[constraint]]
   branch = "master"

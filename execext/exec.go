@@ -6,8 +6,8 @@ import (
 	"io"
 	"strings"
 
-	"github.com/mvdan/sh/interp"
-	"github.com/mvdan/sh/syntax"
+	"mvdan.cc/sh/interp"
+	"mvdan.cc/sh/syntax"
 )
 
 // RunCommandOptions is the options for the RunCommand func
