@@ -5,9 +5,24 @@ import (
 	"errors"
 	"io"
 	"strings"
+	"sync"
 
 	"mvdan.cc/sh/interp"
 	"mvdan.cc/sh/syntax"
+)
+
+var (
+	parserPool = sync.Pool{
+		New: func() interface{} {
+			return syntax.NewParser()
+		},
+	}
+
+	runnerPool = sync.Pool{
+		New: func() interface{} {
+			return &interp.Runner{}
+		},
+	}
 )
 
 // RunCommandOptions is the options for the RunCommand func
@@ -32,19 +47,24 @@ func RunCommand(opts *RunCommandOptions) error {
 		return ErrNilOptions
 	}
 
-	p, err := syntax.NewParser().Parse(strings.NewReader(opts.Command), "")
+	parser := parserPool.Get().(*syntax.Parser)
+	defer parserPool.Put(parser)
+
+	p, err := parser.Parse(strings.NewReader(opts.Command), "")
 	if err != nil {
 		return err
 	}
 
-	r := interp.Runner{
-		Context: opts.Context,
-		Dir:     opts.Dir,
-		Env:     opts.Env,
-		Stdin:   opts.Stdin,
-		Stdout:  opts.Stdout,
-		Stderr:  opts.Stderr,
-	}
+	r := runnerPool.Get().(*interp.Runner)
+	defer runnerPool.Put(r)
+
+	r.Context = opts.Context
+	r.Dir = opts.Dir
+	r.Env = opts.Env
+	r.Stdin = opts.Stdin
+	r.Stdout = opts.Stdout
+	r.Stderr = opts.Stderr
+
 	if err = r.Reset(); err != nil {
 		return err
 	}
