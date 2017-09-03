@@ -103,6 +103,26 @@ func TestVars(t *testing.T) {
 	tt.Target = "hello"
 	tt.Run(t)
 }
+func TestMultilineVars(t *testing.T) {
+	tt := fileContentTest{
+		Dir:       "testdata/vars/multiline",
+		Target:    "default",
+		TrimSpace: false,
+		Files: map[string]string{
+			// Note:
+			// - task does not strip a trailing newline from var entries
+			// - task strips one trailing newline from shell output
+			// - the cat command adds a trailing newline
+			"echo_foobar.txt":      "foo\nbar\n",
+			"echo_n_foobar.txt":    "foo\nbar\n",
+			"echo_n_multiline.txt": "\n\nfoo\n  bar\nfoobar\n\nbaz\n\n",
+			"var_multiline.txt":    "\n\nfoo\n  bar\nfoobar\n\nbaz\n\n\n",
+			"var_catlines.txt":     "  foo   bar foobar  baz  \n",
+			"var_enumfile.txt":     "0:\n1:\n2:foo\n3:  bar\n4:foobar\n5:\n6:baz\n7:\n8:\n",
+		},
+	}
+	tt.Run(t)
+}
 
 func TestVarsInvalidTmpl(t *testing.T) {
 	const (

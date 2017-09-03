@@ -198,7 +198,7 @@ write-file:
 The above syntax is also supported in `deps`.
 
 > NOTE: It's also possible to call a task without any param prefixing it
-with `^`, but this syntax is deprecaded:
+with `^`, but this syntax is deprecated:
 
 ```yml
 a-task:
@@ -314,8 +314,9 @@ set-message:
 
 #### Dynamic variables
 
-The below syntax (`sh:` prop in a variable) is considered a dynamic
-variable. The value will be treated as a command and the output assigned.
+The below syntax (`sh:` prop in a variable) is considered a dynamic variable.
+The value will be treated as a command and the output assigned. If there is one
+or more trailing newlines, the last newline will be trimmed.
 
 ```yml
 build:
@@ -345,7 +346,7 @@ GIT_COMMIT: $git log -n 1 --format=%h
 ### Go's template engine
 
 Task parse commands as [Go's template engine][gotemplate] before executing
-them. Variables are acessible through dot syntax (`.VARNAME`).
+them. Variables are accessible through dot syntax (`.VARNAME`).
 
 All functions by the Go's [sprig lib](http://masterminds.github.io/sprig/)
 are available. The following example gets the current date in a given format:
@@ -362,11 +363,13 @@ Task also adds the following functions:
   "darwin" (macOS) and "freebsd".
 - `ARCH`: return the architecture Task was compiled to: "386", "amd64", "arm"
   or "s390x".
-- `ToSlash`: Does nothing on Unix, but on Windows converts a string from `\`
+- `splitLines`: Splits Unix (\n) and Windows (\r\n) styled newlines.
+- `catLines`: Replaces Unix (\n) and Windows (\r\n) styled newlines with a space.
+- `toSlash`: Does nothing on Unix, but on Windows converts a string from `\`
   path format to `/`.
-- `FromSlash`: Oposite of `ToSlash`. Does nothing on Unix, but on Windows
+- `fromSlash`: Oposite of `toSlash`. Does nothing on Unix, but on Windows
   converts a string from `\` path format to `/`.
-- `ExeExt`: Returns the right executable extension for the current OS
+- `exeExt`: Returns the right executable extension for the current OS
   (`".exe"` for Windows, `""` for others).
 
 Example:
@@ -377,8 +380,22 @@ print-os:
     - echo '{{OS}} {{ARCH}}'
     - echo '{{if eq OS "windows"}}windows-command{{else}}unix-command{{end}}'
     # This will be path/to/file on Unix but path\to\file on Windows
-    - echo '{{FromSlash "path/to/file"}}'
+    - echo '{{fromSlash "path/to/file"}}'
+enumerated-file:
+  vars:
+    CONTENT: |
+      foo
+      bar
+  cmds:
+    - |
+      cat << EOF > output.txt
+      {{range $i, $line := .CONTENT | splitLines -}}
+      {{printf "%3d" $i}}: {{$line}}
+      {{end}}EOF
 ```
+
+> NOTE: There are some deprecated function names still available: `ToSlash`,
+`FromSlash` and `ExeExt`. These where changed for consistency with sprig lib.
 
 ### Help
 
@@ -458,7 +475,7 @@ echo:
 
 * Or globally with `--silent` or `-s` flag
 
-If you want to supress stdout instead, just redirect a command to `/dev/null`:
+If you want to suppress stdout instead, just redirect a command to `/dev/null`:
 
 ```yml
 echo:

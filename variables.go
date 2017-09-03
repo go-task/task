@@ -15,19 +15,30 @@ import (
 )
 
 var (
-	// TaskvarsFilePath file containing additional variables
+	// TaskvarsFilePath file containing additional variables.
 	TaskvarsFilePath = "Taskvars"
-	// ErrMultilineResultCmd is returned when a command returns multiline result
-	ErrMultilineResultCmd = errors.New("Got multiline result from command")
 )
 
-// Vars is a string[string] variables map
+var (
+	// ErrCantUnmarshalVar is returned for invalid var YAML.
+	ErrCantUnmarshalVar = errors.New("task: can't unmarshal var value")
+)
+
+// Vars is a string[string] variables map.
 type Vars map[string]Var
 
-// Var represents either a static or dynamic variable
-type Var struct {
-	Static string
-	Sh     string
+func getEnvironmentVariables() Vars {
+	var (
+		env = os.Environ()
+		m   = make(Vars, len(env))
+	)
+
+	for _, e := range env {
+		keyVal := strings.SplitN(e, "=", 2)
+		key, val := keyVal[0], keyVal[1]
+		m[key] = Var{Static: val}
+	}
+	return m
 }
 
 func (vs Vars) toStringMap() (m map[string]string) {
@@ -43,12 +54,13 @@ func (vs Vars) toStringMap() (m map[string]string) {
 	return
 }
 
-var (
-	// ErrCantUnmarshalVar is returned for invalid var YAML
-	ErrCantUnmarshalVar = errors.New("task: can't unmarshal var value")
-)
+// Var represents either a static or dynamic variable.
+type Var struct {
+	Static string
+	Sh     string
+}
 
-// UnmarshalYAML implements yaml.Unmarshaler interface
+// UnmarshalYAML implements yaml.Unmarshaler interface.
 func (v *Var) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	var str string
 	if err := unmarshal(&str); err == nil {
@@ -67,44 +79,15 @@ func (v *Var) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		v.Sh = sh.Sh
 		return nil
 	}
+
 	return ErrCantUnmarshalVar
 }
 
-var (
-	templateFuncs template.FuncMap
-)
-
-func init() {
-	taskFuncs := template.FuncMap{
-		"OS":   func() string { return runtime.GOOS },
-		"ARCH": func() string { return runtime.GOARCH },
-		// historical reasons
-		"IsSH": func() bool { return true },
-		"FromSlash": func(path string) string {
-			return filepath.FromSlash(path)
-		},
-		"ToSlash": func(path string) string {
-			return filepath.ToSlash(path)
-		},
-		"ExeExt": func() string {
-			if runtime.GOOS == "windows" {
-				return ".exe"
-			}
-			return ""
-		},
-	}
-
-	templateFuncs = sprig.TxtFuncMap()
-	for k, v := range taskFuncs {
-		templateFuncs[k] = v
-	}
-}
-
-// getVariables returns fully resolved variables following the priorty order:
+// getVariables returns fully resolved variables following the priority order:
 // 1. Call variables (should already have been resolved)
 // 2. Environment (should not need to be resolved)
 // 3. Task variables, resolved with access to:
-//    - call, taskvars and environement variables
+//    - call, taskvars and environment variables
 // 4. Taskvars variables, resolved with access to:
 //    - environment variables
 func (e *Executor) getVariables(call Call) (Vars, error) {
@@ -179,27 +162,13 @@ func (e *Executor) getVariables(call Call) (Vars, error) {
 	return result, nil
 }
 
-func getEnvironmentVariables() Vars {
-	var (
-		env = os.Environ()
-		m   = make(Vars, len(env))
-	)
-
-	for _, e := range env {
-		keyVal := strings.SplitN(e, "=", 2)
-		key, val := keyVal[0], keyVal[1]
-		m[key] = Var{Static: val}
-	}
-	return m
-}
-
 func (e *Executor) handleShVar(v Var) (string, error) {
-	if v.Static != "" {
+	if v.Static != "" || v.Sh == "" {
 		return v.Static, nil
 	}
-
 	e.muDynamicCache.Lock()
 	defer e.muDynamicCache.Unlock()
+
 	if result, ok := e.dynamicCache[v.Sh]; ok {
 		return result, nil
 	}
@@ -215,19 +184,18 @@ func (e *Executor) handleShVar(v Var) (string, error) {
 		return "", &dynamicVarError{cause: err, cmd: opts.Command}
 	}
 
+	// Trim a single trailing newline from the result to make most command
+	// output easier to use in shell commands.
 	result := strings.TrimSuffix(stdout.String(), "\n")
-	if strings.ContainsRune(result, '\n') {
-		return "", ErrMultilineResultCmd
-	}
 
-	result = strings.TrimSpace(result)
-	e.verbosePrintfln(`task: dynamic variable: "%s", result: "%s"`, v.Sh, result)
 	e.dynamicCache[v.Sh] = result
+	e.verbosePrintfln(`task: dynamic variable: '%s' result: '%s'`, v.Sh, result)
+
 	return result, nil
 }
 
-// CompiledTask returns a copy of a task, but replacing
-// variables in almost all properties using the Go template package
+// CompiledTask returns a copy of a task, but replacing variables in almost all
+// properties using the Go template package.
 func (e *Executor) CompiledTask(call Call) (*Task, error) {
 	origTask, ok := e.Tasks[call.Task]
 	if !ok {
@@ -289,9 +257,9 @@ func (e *Executor) CompiledTask(call Call) (*Task, error) {
 }
 
 // varReplacer is a help struct that allow us to call "replaceX" funcs multiple
-// times, without having to check for error each time.
-// The first error that happen will be assigned to r.err, and consecutive
-// calls to funcs will just return the zero value.
+// times, without having to check for error each time. The first error that
+// happen will be assigned to r.err, and consecutive calls to funcs will just
+// return the zero value.
 type varReplacer struct {
 	vars   Vars
 	strMap map[string]string
@@ -346,4 +314,46 @@ func (r *varReplacer) replaceVars(vars Vars) Vars {
 		}
 	}
 	return new
+}
+
+var (
+	templateFuncs template.FuncMap
+)
+
+func init() {
+	taskFuncs := template.FuncMap{
+		"OS":   func() string { return runtime.GOOS },
+		"ARCH": func() string { return runtime.GOARCH },
+		"catLines": func(s string) string {
+			s = strings.Replace(s, "\r\n", " ", -1)
+			return strings.Replace(s, "\n", " ", -1)
+		},
+		"splitLines": func(s string) []string {
+			s = strings.Replace(s, "\r\n", "\n", -1)
+			return strings.Split(s, "\n")
+		},
+		"fromSlash": func(path string) string {
+			return filepath.FromSlash(path)
+		},
+		"toSlash": func(path string) string {
+			return filepath.ToSlash(path)
+		},
+		"exeExt": func() string {
+			if runtime.GOOS == "windows" {
+				return ".exe"
+			}
+			return ""
+		},
+		// IsSH is deprecated.
+		"IsSH": func() bool { return true },
+	}
+	// Deprecated aliases for renamed functions.
+	taskFuncs["FromSlash"] = taskFuncs["fromSlash"]
+	taskFuncs["ToSlash"] = taskFuncs["toSlash"]
+	taskFuncs["ExeExt"] = taskFuncs["exeExt"]
+
+	templateFuncs = sprig.TxtFuncMap()
+	for k, v := range taskFuncs {
+		templateFuncs[k] = v
+	}
 }
