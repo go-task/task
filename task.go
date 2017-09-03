@@ -121,8 +121,8 @@ func (e *Executor) RunTask(ctx context.Context, call Call) error {
 		return err
 	}
 
-	// FIXME: doing again, since a var may have been overriden using the
-	// `set:` attribute of a dependecy.  Remove this when `set` (that is
+	// FIXME: doing again, since a var may have been overridden using the
+	// `set:` attribute of a dependency.  Remove this when `set` (that is
 	// deprecated) be removed.
 	t, err = e.CompiledTask(call)
 	if err != nil {
