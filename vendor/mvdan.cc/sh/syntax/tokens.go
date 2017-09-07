@@ -15,6 +15,7 @@ const (
 	illegalTok token = iota
 
 	_EOF      // EOF
+	_Newl     // Newline
 	_Lit      // Lit
 	_LitWord  // LitWord
 	_LitRedir // LitRedir

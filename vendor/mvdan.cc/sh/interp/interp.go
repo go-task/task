@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"math"
 	"os"
 	"os/exec"
 	"os/user"
@@ -17,6 +18,7 @@ import (
 	"strings"
 	"sync"
 	"syscall"
+	"time"
 
 	"mvdan.cc/sh/syntax"
 )
@@ -645,6 +647,19 @@ func (r *Runner) cmd(cm syntax.Command) {
 		for _, as := range x.Assigns {
 			r.setVar(as.Name.Value, r.assignValue(as))
 		}
+	case *syntax.TimeClause:
+		start := time.Now()
+		if x.Stmt != nil {
+			r.stmt(x.Stmt)
+		}
+		elapsed := time.Since(start)
+		r.outf("\n")
+		min := int(elapsed.Minutes())
+		sec := math.Remainder(elapsed.Seconds(), 60.0)
+		r.outf("real\t%dm%.3fs\n", min, sec)
+		// TODO: can we do these?
+		r.outf("user\t0m0.000s\n")
+		r.outf("sys\t0m0.000s\n")
 	default:
 		r.runErr(cm.Pos(), "unhandled command node: %T", x)
 	}

@@ -51,8 +51,8 @@ validity:
 
 	go get -u mvdan.cc/sh/cmd/gosh
 
-Experimental non-interactive shell that uses `interp`. Work in progress,
-so don't expect stability just yet.
+Experimental shell that uses `interp`. Work in progress, so don't expect
+stability just yet.
 
 ### Fuzzing
 

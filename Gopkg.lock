@@ -11,7 +11,7 @@
   branch = "master"
   name = "github.com/Masterminds/sprig"
   packages = ["."]
-  revision = "e039e20e500c2c025d9145be375e27cf42a94174"
+  revision = "175e437013029f9a1c35bdf04bc451b0d20d4331"
 
 [[projects]]
   name = "github.com/aokoli/goutils"
@@ -101,7 +101,7 @@
   branch = "master"
   name = "mvdan.cc/sh"
   packages = ["interp","syntax"]
-  revision = "eaf7b83013b7a3dbfe3c627d00e1b9971afc9748"
+  revision = "d8d2c36c06455d4bb8e2116cc2b955271046329d"
 
 [solve-meta]
   analyzer-name = "dep"
