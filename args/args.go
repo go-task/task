@@ -8,9 +8,11 @@ import (
 )
 
 var (
+	// ErrVariableWithoutTask is returned when variables are given before any task
 	ErrVariableWithoutTask = errors.New("task: variable given before any task")
 )
 
+// Parse parses command line argument: tasks and vars of each task
 func Parse(args ...string) ([]task.Call, error) {
 	var calls []task.Call
 

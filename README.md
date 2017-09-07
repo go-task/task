@@ -1,7 +1,7 @@
 [![Join Slack room](https://img.shields.io/badge/%23task-chat%20room-blue.svg)](https://gophers.slack.com/messages/task)
 [![Build Status](https://travis-ci.org/go-task/task.svg?branch=master)](https://travis-ci.org/go-task/task)
 
-# Task - Simple task runner / "Make" alternative
+# Task - A task runner / simpler Make alternative written in Go
 
 Task is a simple tool that allows you to easily run development and build
 tasks. Task is written in Golang, but can be used to develop any language.
@@ -21,6 +21,7 @@ It aims to be simpler and easier to use then [GNU Make][make].
   - [Help](#help)
   - [Silent mode](#silent-mode)
   - [Watch tasks](#watch-tasks-experimental)
+  - [Task in the wild](#task-in-the-wild)
 - [Alternative task runners](#alternative-task-runners)
 
 ## Installation
@@ -508,9 +509,13 @@ so task know which files to watch.
   - [tj/robo][robo]
   - [dogtools/dog][dog]
   - [goeuro/myke][myke]
+  - [dreadl0ck/zeus][zeus]
 - Go based:
-  - [go-godo][godo]
+  - [go-godo/godo][godo]
   - [markbates/grift][grift]
+  - [nstratos/make.go][make.go]
+- Make based:
+  - [tj/mmake][mmake]
 
 [make]: https://www.gnu.org/software/make/
 [releases]: https://github.com/go-task/task/releases
@@ -519,8 +524,11 @@ so task know which files to watch.
 [robo]: https://github.com/tj/robo
 [dog]: https://github.com/dogtools/dog
 [myke]: https://github.com/goeuro/myke
+[zeus]: https://github.com/dreadl0ck/zeus
 [godo]: https://github.com/go-godo/godo
 [grift]: https://github.com/markbates/grift
+[make.go]: https://github.com/nstratos/make.go
+[mmake]: https://github.com/tj/mmake
 [sh]: https://github.com/mvdan/sh
 [post-hugo]: https://blog.carlmjohnson.net/post/2017/hugo-asset-pipeline/
 [minify]: https://github.com/tdewolff/minify/tree/master/cmd/minify
