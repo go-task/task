@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/go-task/task"
+	"github.com/go-task/task/args"
 
 	"github.com/spf13/pflag"
 )
@@ -99,13 +100,18 @@ func main() {
 		return
 	}
 
-	args := pflag.Args()
-	if len(args) == 0 {
+	arguments := pflag.Args()
+	if len(arguments) == 0 {
 		log.Println("task: No argument given, trying default task")
-		args = []string{"default"}
+		arguments = []string{"default"}
 	}
 
-	if err := e.Run(args...); err != nil {
+	calls, err := args.Parse(arguments...)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if err := e.Run(calls...); err != nil {
 		log.Fatal(err)
 	}
 }

@@ -63,7 +63,7 @@ type Task struct {
 }
 
 // Run runs Task
-func (e *Executor) Run(args ...string) error {
+func (e *Executor) Run(calls ...Call) error {
 	if e.Stdin == nil {
 		e.Stdin = os.Stdin
 	}
@@ -84,23 +84,23 @@ func (e *Executor) Run(args ...string) error {
 	}
 
 	// check if given tasks exist
-	for _, a := range args {
-		if _, ok := e.Tasks[a]; !ok {
+	for _, c := range calls {
+		if _, ok := e.Tasks[c.Task]; !ok {
 			// FIXME: move to the main package
 			e.PrintTasksHelp()
-			return &taskNotFoundError{taskName: a}
+			return &taskNotFoundError{taskName: c.Task}
 		}
 	}
 
 	if e.Watch {
-		if err := e.watchTasks(args...); err != nil {
+		if err := e.watchTasks(calls...); err != nil {
 			return err
 		}
 		return nil
 	}
 
-	for _, a := range args {
-		if err := e.RunTask(context.Background(), Call{Task: a, Vars: nil}); err != nil {
+	for _, c := range calls {
+		if err := e.RunTask(context.TODO(), c); err != nil {
 			return err
 		}
 	}

@@ -15,14 +15,18 @@ var watchIgnoredDirs = []string{
 }
 
 // watchTasks start watching the given tasks
-func (e *Executor) watchTasks(args ...string) error {
-	e.printfln("task: Started watching for tasks: %s", strings.Join(args, ", "))
+func (e *Executor) watchTasks(calls ...Call) error {
+	tasks := make([]string, len(calls))
+	for i, c := range calls {
+		tasks[i] = c.Task
+	}
+	e.printfln("task: Started watching for tasks: %s", strings.Join(tasks, ", "))
 
 	ctx, cancel := context.WithCancel(context.Background())
-	for _, a := range args {
-		a := a
+	for _, c := range calls {
+		c := c
 		go func() {
-			if err := e.RunTask(ctx, Call{Task: a}); err != nil && !isContextError(err) {
+			if err := e.RunTask(ctx, c); err != nil && !isContextError(err) {
 				e.println(err)
 			}
 		}()
@@ -43,10 +47,10 @@ func (e *Executor) watchTasks(args ...string) error {
 
 				cancel()
 				ctx, cancel = context.WithCancel(context.Background())
-				for _, a := range args {
-					a := a
+				for _, c := range calls {
+					c := c
 					go func() {
-						if err := e.RunTask(ctx, Call{Task: a}); err != nil && !isContextError(err) {
+						if err := e.RunTask(ctx, c); err != nil && !isContextError(err) {
 							e.println(err)
 						}
 					}()
@@ -69,7 +73,7 @@ func (e *Executor) watchTasks(args ...string) error {
 	go func() {
 		// re-register each second because we can have new files
 		for {
-			if err := e.registerWatchedFiles(w, args); err != nil {
+			if err := e.registerWatchedFiles(w, tasks); err != nil {
 				e.println(err)
 			}
 			time.Sleep(time.Second)
@@ -79,7 +83,7 @@ func (e *Executor) watchTasks(args ...string) error {
 	return w.Start(time.Second)
 }
 
-func (e *Executor) registerWatchedFiles(w *watcher.Watcher, args []string) error {
+func (e *Executor) registerWatchedFiles(w *watcher.Watcher, tasks []string) error {
 	oldWatchedFiles := make(map[string]struct{})
 	for f := range w.WatchedFiles() {
 		oldWatchedFiles[f] = struct{}{}
@@ -121,8 +125,8 @@ func (e *Executor) registerWatchedFiles(w *watcher.Watcher, args []string) error
 		return nil
 	}
 
-	for _, a := range args {
-		if err := registerTaskFiles(a); err != nil {
+	for _, t := range tasks {
+		if err := registerTaskFiles(t); err != nil {
 			return err
 		}
 	}

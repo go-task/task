@@ -279,6 +279,15 @@ Example of overriding with environment variables:
 $ TASK_VARIABLE=a-value task do-something
 ```
 
+Since some shells don't support above syntax to set environment variables
+(Windows) tasks also accepts a similar style when not in the beginning of
+the command. Variables given in this form are only visible to the task called
+right before.
+
+```bash
+$ task write-file FILE=file.txt "CONTENT=Hello, World!" print "MESSAGE=All done!"
+```
+
 Example of locally declared vars:
 
 ```yml
