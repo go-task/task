@@ -1,12 +1,10 @@
 package task
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"io"
 	"os"
-	"strings"
 	"sync"
 	"sync/atomic"
 
@@ -58,7 +56,6 @@ type Task struct {
 	Status    []string
 	Dir       string
 	Vars      Vars
-	Set       string
 	Env       Vars
 	Silent    bool
 	Method    string
@@ -123,14 +120,6 @@ func (e *Executor) RunTask(ctx context.Context, call Call) error {
 		return err
 	}
 
-	// FIXME: doing again, since a var may have been overridden using the
-	// `set:` attribute of a dependency.  Remove this when `set` (that is
-	// deprecated) be removed.
-	t, err = e.CompiledTask(call)
-	if err != nil {
-		return err
-	}
-
 	if !e.Force {
 		upToDate, err := t.isUpToDate(ctx)
 		if err != nil {
@@ -174,29 +163,19 @@ func (e *Executor) runCommand(ctx context.Context, t *Task, call Call, i int) er
 		return e.RunTask(ctx, Call{Task: cmd.Task, Vars: cmd.Vars})
 	}
 
-	opts := &execext.RunCommandOptions{
+	if e.Verbose || (!cmd.Silent && !t.Silent && !e.Silent) {
+		e.println(cmd.Cmd)
+	}
+
+	return execext.RunCommand(&execext.RunCommandOptions{
 		Context: ctx,
 		Command: cmd.Cmd,
 		Dir:     t.Dir,
 		Env:     t.getEnviron(),
 		Stdin:   e.Stdin,
+		Stdout:  e.Stdout,
 		Stderr:  e.Stderr,
-	}
-
-	if e.Verbose || (!cmd.Silent && !t.Silent && !e.Silent) {
-		e.println(cmd.Cmd)
-	}
-	if t.Set != "" {
-		var stdout bytes.Buffer
-		opts.Stdout = &stdout
-		if err := execext.RunCommand(opts); err != nil {
-			return err
-		}
-		return os.Setenv(t.Set, strings.TrimSpace(stdout.String()))
-	}
-
-	opts.Stdout = e.Stdout
-	return execext.RunCommand(opts)
+	})
 }
 
 func (t *Task) getEnviron() []string {

@@ -2,7 +2,6 @@ default:
   deps: [hello]
 
 hello:
-  deps: [set-equal]
   cmds:
     - echo {{.FOO}} > foo.txt
     - echo {{.BAR}} > bar.txt
@@ -25,7 +24,6 @@ hello:
     - echo '{{.SHTMPL2_FOO}}' > shtmpl2_foo.txt
     - echo '{{.SHTMPL2_FOO2}}' > shtmpl2_foo2.txt
     - echo '{{.NESTEDTMPL2_FOO2}}' > nestedtmpl2_foo2.txt
-    - echo {{.EQUAL}} > equal.txt
     - echo {{.OVERRIDE}} > override.txt
   vars:
     FOO: foo
@@ -43,11 +41,6 @@ hello:
     NESTEDTMPL_FOO: "{{.TMPL_FOO}}"
     NESTEDTMPL_FOO2: "{{.TMPL2_FOO2}}"
     OVERRIDE: "bar"
-
-set-equal:
-  set: EQUAL
-  cmds:
-    - echo foo=bar
 
 invalid-var-tmpl:
   vars:

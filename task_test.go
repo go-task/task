@@ -94,7 +94,6 @@ func TestVars(t *testing.T) {
 			"shtmpl2_foo.txt":      "<no value>",
 			"shtmpl2_foo2.txt":     "foo2",
 			"nestedtmpl2_foo2.txt": "{{.FOO2}}",
-			"equal.txt":            "foo=bar",
 			"override.txt":         "bar",
 		},
 	}
@@ -195,33 +194,6 @@ func TestDeps(t *testing.T) {
 		f = filepath.Join(dir, f)
 		if _, err := os.Stat(f); err != nil {
 			t.Errorf("File %s should exists", f)
-		}
-	}
-}
-
-func TestTaskCall(t *testing.T) {
-	const dir = "testdata/task_call"
-
-	files := []string{
-		"foo.txt",
-		"bar.txt",
-	}
-
-	for _, f := range files {
-		_ = os.Remove(filepath.Join(dir, f))
-	}
-
-	e := &task.Executor{
-		Dir:    dir,
-		Stdout: ioutil.Discard,
-		Stderr: ioutil.Discard,
-	}
-	assert.NoError(t, e.ReadTaskfile())
-	assert.NoError(t, e.Run(task.Call{Task: "default"}))
-
-	for _, f := range files {
-		if _, err := os.Stat(filepath.Join(dir, f)); err != nil {
-			t.Error(err)
 		}
 	}
 }

@@ -326,21 +326,6 @@ DEV_MODE: production
 GIT_COMMIT: {sh: git log -n 1 --format=%h}
 ```
 
-> NOTE: It's also possible setting a variable globally using `set` attribute
-in task, but this is deprecated:
-
-```yml
-build:
-  deps: [set-message]
-  cmds:
-    - echo "Message: {{.MESSAGE}}"
-
-set-message:
-  cmds:
-    - echo "This is an important message"
-  set: MESSAGE
-```
-
 #### Dynamic variables
 
 The below syntax (`sh:` prop in a variable) is considered a dynamic variable.

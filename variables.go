@@ -217,7 +217,6 @@ func (e *Executor) CompiledTask(call Call) (*Task, error) {
 		Status:    r.replaceSlice(origTask.Status),
 		Dir:       r.replace(origTask.Dir),
 		Vars:      nil,
-		Set:       r.replace(origTask.Set),
 		Env:       r.replaceVars(origTask.Env),
 		Silent:    origTask.Silent,
 		Method:    r.replace(origTask.Method),
