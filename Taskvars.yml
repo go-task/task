@@ -6,3 +6,4 @@ GO_PACKAGES:
   ./args
   ./cmd/task
   ./execext
+  ./status

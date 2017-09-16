@@ -49,6 +49,7 @@ type Tasks map[string]*Task
 
 // Task represents a task
 type Task struct {
+	Task      string
 	Cmds      []*Cmd
 	Deps      []*Dep
 	Desc      string
@@ -60,6 +61,7 @@ type Task struct {
 	Set       string
 	Env       Vars
 	Silent    bool
+	Method    string
 }
 
 // Run runs Task
@@ -135,14 +137,17 @@ func (e *Executor) RunTask(ctx context.Context, call Call) error {
 			return err
 		}
 		if upToDate {
-			e.printfln(`task: Task "%s" is up to date`, call.Task)
+			e.printfln(`task: Task "%s" is up to date`, t.Task)
 			return nil
 		}
 	}
 
 	for i := range t.Cmds {
 		if err := e.runCommand(ctx, t, call, i); err != nil {
-			return &taskRunError{call.Task, err}
+			if err2 := t.statusOnError(); err2 != nil {
+				e.verbosePrintfln("task: error cleaning status on error: %v", err2)
+			}
+			return &taskRunError{t.Task, err}
 		}
 	}
 	return nil

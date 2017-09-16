@@ -312,6 +312,40 @@ func TestGenerates(t *testing.T) {
 	}
 }
 
+func TestStatusChecksum(t *testing.T) {
+	const dir = "testdata/checksum"
+
+	files := []string{
+		"generated.txt",
+		".task/build",
+	}
+
+	for _, f := range files {
+		_ = os.Remove(filepath.Join(dir, f))
+
+		_, err := os.Stat(filepath.Join(dir, f))
+		assert.Error(t, err)
+	}
+
+	var buff bytes.Buffer
+	e := task.Executor{
+		Dir:    dir,
+		Stdout: &buff,
+		Stderr: &buff,
+	}
+	assert.NoError(t, e.ReadTaskfile())
+
+	assert.NoError(t, e.Run(task.Call{Task: "build"}))
+	for _, f := range files {
+		_, err := os.Stat(filepath.Join(dir, f))
+		assert.NoError(t, err)
+	}
+
+	buff.Reset()
+	assert.NoError(t, e.Run(task.Call{Task: "build"}))
+	assert.Equal(t, `task: Task "build" is up to date`+"\n", buff.String())
+}
+
 func TestInit(t *testing.T) {
 	const dir = "testdata/init"
 	var file = filepath.Join(dir, "Taskfile.yml")

@@ -2,19 +2,52 @@ package task
 
 import (
 	"context"
-	"os"
-	"path/filepath"
-	"time"
+	"fmt"
 
 	"github.com/go-task/task/execext"
-	"github.com/mattn/go-zglob"
+	"github.com/go-task/task/status"
 )
 
 func (t *Task) isUpToDate(ctx context.Context) (bool, error) {
 	if len(t.Status) > 0 {
 		return t.isUpToDateStatus(ctx)
 	}
-	return t.isUpToDateTimestamp(ctx)
+
+	checker, err := t.getStatusChecker()
+	if err != nil {
+		return false, err
+	}
+
+	return checker.IsUpToDate()
+}
+
+func (t *Task) statusOnError() error {
+	checker, err := t.getStatusChecker()
+	if err != nil {
+		return err
+	}
+	return checker.OnError()
+}
+
+func (t *Task) getStatusChecker() (status.Checker, error) {
+	switch t.Method {
+	case "", "timestamp":
+		return &status.Timestamp{
+			Dir:       t.Dir,
+			Sources:   t.Sources,
+			Generates: t.Generates,
+		}, nil
+	case "checksum":
+		return &status.Checksum{
+			Dir:     t.Dir,
+			Task:    t.Task,
+			Sources: t.Sources,
+		}, nil
+	case "none":
+		return status.None{}, nil
+	default:
+		return nil, fmt.Errorf(`task: invalid method "%s"`, t.Method)
+	}
 }
 
 func (t *Task) isUpToDateStatus(ctx context.Context) (bool, error) {
@@ -30,94 +63,4 @@ func (t *Task) isUpToDateStatus(ctx context.Context) (bool, error) {
 		}
 	}
 	return true, nil
-}
-
-func (t *Task) isUpToDateTimestamp(ctx context.Context) (bool, error) {
-	if len(t.Sources) == 0 || len(t.Generates) == 0 {
-		return false, nil
-	}
-
-	sourcesMaxTime, err := getPatternsMaxTime(t.Dir, t.Sources)
-	if err != nil || sourcesMaxTime.IsZero() {
-		return false, nil
-	}
-
-	generatesMinTime, err := getPatternsMinTime(t.Dir, t.Generates)
-	if err != nil || generatesMinTime.IsZero() {
-		return false, nil
-	}
-	return !generatesMinTime.Before(sourcesMaxTime), nil
-}
-
-func getPatternsMinTime(dir string, patterns []string) (m time.Time, err error) {
-	for _, p := range patterns {
-		if !filepath.IsAbs(p) {
-			p = filepath.Join(dir, p)
-		}
-		mp, err := getPatternMinTime(p)
-		if err != nil {
-			return time.Time{}, err
-		}
-		m = minTime(m, mp)
-	}
-	return
-}
-func getPatternsMaxTime(dir string, patterns []string) (m time.Time, err error) {
-	for _, p := range patterns {
-		if !filepath.IsAbs(p) {
-			p = filepath.Join(dir, p)
-		}
-		mp, err := getPatternMaxTime(p)
-		if err != nil {
-			return time.Time{}, err
-		}
-		m = maxTime(m, mp)
-	}
-	return
-}
-
-func getPatternMinTime(pattern string) (m time.Time, err error) {
-	files, err := zglob.Glob(pattern)
-	if err != nil {
-		return time.Time{}, err
-	}
-
-	for _, f := range files {
-		info, err := os.Stat(f)
-		if err != nil {
-			return time.Time{}, err
-		}
-		m = minTime(m, info.ModTime())
-	}
-	return
-}
-
-func getPatternMaxTime(pattern string) (m time.Time, err error) {
-	files, err := zglob.Glob(pattern)
-	if err != nil {
-		return time.Time{}, err
-	}
-
-	for _, f := range files {
-		info, err := os.Stat(f)
-		if err != nil {
-			return time.Time{}, err
-		}
-		m = maxTime(m, info.ModTime())
-	}
-	return
-}
-
-func minTime(a, b time.Time) time.Time {
-	if !a.IsZero() && a.Before(b) {
-		return a
-	}
-	return b
-}
-
-func maxTime(a, b time.Time) time.Time {
-	if a.After(b) {
-		return a
-	}
-	return b
 }

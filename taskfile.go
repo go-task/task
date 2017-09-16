@@ -31,6 +31,10 @@ func (e *Executor) ReadTaskfile() error {
 	if err := mergo.MapWithOverwrite(&e.Tasks, osTasks); err != nil {
 		return err
 	}
+	for name, task := range e.Tasks {
+		task.Task = name
+	}
+
 	return e.readTaskvars()
 }
 

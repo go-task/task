@@ -244,6 +244,25 @@ Task will compare the modification date/time of the files to determine if it's
 necessary to run the task. If not, it will just print a message like
 `Task "js" is up to date`.
 
+If you prefer this check to be made by the content of the files, instead of
+its timestamp, just set the `method` property to `checksum`.
+You will probably want to ignore the `.task` folder in your `.gitignore` file
+(It's there that Task stores the last checksum).
+This feature is still experimental and can change until it's stable.
+
+```yml
+build:
+  cmds:
+    - go build .
+  sources:
+    - ./*.go
+  generates:
+    - app{{exeExt}}
+  method: checksum
+```
+
+> TIP: method `none` skips any validation and always run the task.
+
 Alternatively, you can inform a sequence of tests as `status`. If no error
 is returned (exit status 0), the task is considered up-to-date:
 

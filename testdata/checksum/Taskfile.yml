@@ -1,0 +1,8 @@
+build:
+  cmds:
+    - cp ./source.txt ./generated.txt
+  sources:
+    - ./source.txt
+  generates:
+    - ./generated.txt
+  method: checksum

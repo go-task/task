@@ -210,6 +210,7 @@ func (e *Executor) CompiledTask(call Call) (*Task, error) {
 	}
 
 	new := Task{
+		Task:      origTask.Task,
 		Desc:      r.replace(origTask.Desc),
 		Sources:   r.replaceSlice(origTask.Sources),
 		Generates: r.replaceSlice(origTask.Generates),
@@ -219,6 +220,7 @@ func (e *Executor) CompiledTask(call Call) (*Task, error) {
 		Set:       r.replace(origTask.Set),
 		Env:       r.replaceVars(origTask.Env),
 		Silent:    origTask.Silent,
+		Method:    r.replace(origTask.Method),
 	}
 	if e.Dir != "" && !filepath.IsAbs(new.Dir) {
 		new.Dir = filepath.Join(e.Dir, new.Dir)
