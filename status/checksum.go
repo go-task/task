@@ -50,6 +50,13 @@ func (c *Checksum) checksum(files ...string) (string, error) {
 		if err != nil {
 			return "", err
 		}
+		info, err := f.Stat()
+		if err != nil {
+			return "", err
+		}
+		if info.IsDir() {
+			continue
+		}
 		if _, err := io.Copy(h, f); err != nil {
 			return "", err
 		}
