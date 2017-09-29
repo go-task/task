@@ -17,8 +17,3 @@ wrong:
     - |
       CGO_LDFLAGS="-L/some/path -laaa -lbbb -lccc"
       CGO_LDFLAGS=$CGO_LDFLAGS ./showenv.sh $CGO_LDFLAGS
-
-# showenv:
-# #!/bin/bash
-# echo "CGO_LDFLAGS=$CGO_LDFLAGS"
-# echo "\$@=$@"
