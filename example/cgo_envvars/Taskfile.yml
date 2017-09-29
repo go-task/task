@@ -1,0 +1,24 @@
+# This applies generaly to environment variables passed in this way, not just
+# CGO_ xxx
+#
+right:
+  # Notice the quotes guarding the variable references on the second line of
+  # the cmds.
+  cmds:
+    - |
+      CGO_LDFLAGS="-L/some/path -laaa -lbbb -lccc"
+      CGO_LDFLAGS="$CGO_LDFLAGS" ./showenv.sh "$CGO_LDFLAGS"
+wrong:
+  # In this instance the quotes are missing, the output will be:
+  #
+  # CGO_LDFLAGS=-L/some/path-laaa-lbbb-lccc
+  # $@=-L/some/path-laaa-lbbb-lccc
+  cmds:
+    - |
+      CGO_LDFLAGS="-L/some/path -laaa -lbbb -lccc"
+      CGO_LDFLAGS=$CGO_LDFLAGS ./showenv.sh $CGO_LDFLAGS
+
+# showenv:
+# #!/bin/bash
+# echo "CGO_LDFLAGS=$CGO_LDFLAGS"
+# echo "\$@=$@"
