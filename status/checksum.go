@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 )
 
@@ -20,7 +21,7 @@ type Checksum struct {
 
 // IsUpToDate implements the Checker interface
 func (c *Checksum) IsUpToDate() (bool, error) {
-	checksumFile := filepath.Join(c.Dir, ".task", c.Task)
+	checksumFile := filepath.Join(c.Dir, ".task", c.normalizeFilename(c.Task))
 
 	data, _ := ioutil.ReadFile(checksumFile)
 	oldMd5 := strings.TrimSpace(string(data))
@@ -36,7 +37,7 @@ func (c *Checksum) IsUpToDate() (bool, error) {
 	}
 
 	_ = os.MkdirAll(filepath.Join(c.Dir, ".task"), 0755)
-	if err = ioutil.WriteFile(checksumFile, []byte(newMd5), 0644); err != nil {
+	if err = ioutil.WriteFile(checksumFile, []byte(newMd5+"\n"), 0644); err != nil {
 		return false, err
 	}
 	return oldMd5 == newMd5, nil
@@ -63,6 +64,13 @@ func (c *Checksum) checksum(files ...string) (string, error) {
 	}
 
 	return fmt.Sprintf("%x", h.Sum(nil)), nil
+}
+
+var checksumFilenameRegexp = regexp.MustCompile("[^A-z0-9]")
+
+// replaces invalid caracters on filenames with "-"
+func (*Checksum) normalizeFilename(f string) string {
+	return checksumFilenameRegexp.ReplaceAllString(f, "-")
 }
 
 // OnError implements the Checker interface
