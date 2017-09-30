@@ -126,7 +126,9 @@ func (e *Executor) RunTask(ctx context.Context, call Call) error {
 			return err
 		}
 		if upToDate {
-			e.printfln(`task: Task "%s" is up to date`, t.Task)
+			if !e.Silent {
+				e.errf(`task: Task "%s" is up to date`, t.Task)
+			}
 			return nil
 		}
 	}
@@ -134,7 +136,7 @@ func (e *Executor) RunTask(ctx context.Context, call Call) error {
 	for i := range t.Cmds {
 		if err := e.runCommand(ctx, t, call, i); err != nil {
 			if err2 := t.statusOnError(); err2 != nil {
-				e.verbosePrintfln("task: error cleaning status on error: %v", err2)
+				e.verboseErrf("task: error cleaning status on error: %v", err2)
 			}
 			return &taskRunError{t.Task, err}
 		}
@@ -164,7 +166,7 @@ func (e *Executor) runCommand(ctx context.Context, t *Task, call Call, i int) er
 	}
 
 	if e.Verbose || (!cmd.Silent && !t.Silent && !e.Silent) {
-		e.println(cmd.Cmd)
+		e.errf(cmd.Cmd)
 	}
 
 	return execext.RunCommand(&execext.RunCommandOptions{

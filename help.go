@@ -12,7 +12,7 @@ func (e *Executor) PrintTasksHelp() {
 	if len(tasks) == 0 {
 		return
 	}
-	e.println("Available tasks for this project:")
+	e.outf("Available tasks for this project:")
 
 	// Format in tab-separated columns with a tab stop of 8.
 	w := tabwriter.NewWriter(e.Stdout, 0, 8, 0, '\t', 0)

@@ -20,14 +20,14 @@ func (e *Executor) watchTasks(calls ...Call) error {
 	for i, c := range calls {
 		tasks[i] = c.Task
 	}
-	e.printfln("task: Started watching for tasks: %s", strings.Join(tasks, ", "))
+	e.errf("task: Started watching for tasks: %s", strings.Join(tasks, ", "))
 
 	ctx, cancel := context.WithCancel(context.Background())
 	for _, c := range calls {
 		c := c
 		go func() {
 			if err := e.RunTask(ctx, c); err != nil && !isContextError(err) {
-				e.println(err)
+				e.errf("%v", err)
 			}
 		}()
 	}
@@ -43,7 +43,7 @@ func (e *Executor) watchTasks(calls ...Call) error {
 		for {
 			select {
 			case event := <-w.Event:
-				e.verbosePrintfln("task: received watch event: %v", event)
+				e.verboseErrf("task: received watch event: %v", event)
 
 				cancel()
 				ctx, cancel = context.WithCancel(context.Background())
@@ -51,7 +51,7 @@ func (e *Executor) watchTasks(calls ...Call) error {
 					c := c
 					go func() {
 						if err := e.RunTask(ctx, c); err != nil && !isContextError(err) {
-							e.println(err)
+							e.errf("%v", err)
 						}
 					}()
 				}
@@ -62,7 +62,7 @@ func (e *Executor) watchTasks(calls ...Call) error {
 						w.TriggerEvent(watcher.Remove, nil)
 					}()
 				default:
-					e.println(err)
+					e.errf("%v", err)
 				}
 			case <-w.Closed:
 				return
@@ -74,7 +74,7 @@ func (e *Executor) watchTasks(calls ...Call) error {
 		// re-register each second because we can have new files
 		for {
 			if err := e.registerWatchedFiles(w, tasks); err != nil {
-				e.println(err)
+				e.errf("%v", err)
 			}
 			time.Sleep(time.Second)
 		}

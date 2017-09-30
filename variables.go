@@ -189,7 +189,7 @@ func (e *Executor) handleShVar(v Var) (string, error) {
 	result := strings.TrimSuffix(stdout.String(), "\n")
 
 	e.dynamicCache[v.Sh] = result
-	e.verbosePrintfln(`task: dynamic variable: '%s' result: '%s'`, v.Sh, result)
+	e.verboseErrf(`task: dynamic variable: '%s' result: '%s'`, v.Sh, result)
 
 	return result, nil
 }

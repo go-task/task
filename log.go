@@ -4,22 +4,28 @@ import (
 	"fmt"
 )
 
-func (e *Executor) println(args ...interface{}) {
-	fmt.Fprintln(e.Stdout, args...)
+func (e *Executor) outf(s string, args ...interface{}) {
+	if len(args) == 0 {
+		s, args = "%s", []interface{}{s}
+	}
+	fmt.Fprintf(e.Stdout, s+"\n", args...)
 }
 
-func (e *Executor) printfln(format string, args ...interface{}) {
-	fmt.Fprintf(e.Stdout, format+"\n", args...)
-}
-
-func (e *Executor) verbosePrintln(args ...interface{}) {
+func (e *Executor) verboseOutf(s string, args ...interface{}) {
 	if e.Verbose {
-		e.println(args...)
+		e.outf(s, args...)
 	}
 }
 
-func (e *Executor) verbosePrintfln(format string, args ...interface{}) {
+func (e *Executor) errf(s string, args ...interface{}) {
+	if len(args) == 0 {
+		s, args = "%s", []interface{}{s}
+	}
+	fmt.Fprintf(e.Stderr, s+"\n", args...)
+}
+
+func (e *Executor) verboseErrf(s string, args ...interface{}) {
 	if e.Verbose {
-		e.printfln(format, args...)
+		e.errf(s, args...)
 	}
 }
