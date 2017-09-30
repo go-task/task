@@ -73,7 +73,7 @@ func (e *Executor) watchTasks(calls ...Call) error {
 	go func() {
 		// re-register each second because we can have new files
 		for {
-			if err := e.registerWatchedFiles(w, tasks); err != nil {
+			if err := e.registerWatchedFiles(w, calls...); err != nil {
 				e.errf("%v", err)
 			}
 			time.Sleep(time.Second)
@@ -83,7 +83,7 @@ func (e *Executor) watchTasks(calls ...Call) error {
 	return w.Start(time.Second)
 }
 
-func (e *Executor) registerWatchedFiles(w *watcher.Watcher, tasks []string) error {
+func (e *Executor) registerWatchedFiles(w *watcher.Watcher, calls ...Call) error {
 	oldWatchedFiles := make(map[string]struct{})
 	for f := range w.WatchedFiles() {
 		oldWatchedFiles[f] = struct{}{}
@@ -95,16 +95,23 @@ func (e *Executor) registerWatchedFiles(w *watcher.Watcher, tasks []string) erro
 		}
 	}
 
-	var registerTaskFiles func(string) error
-	registerTaskFiles = func(t string) error {
-		task, ok := e.Tasks[t]
-		if !ok {
-			return &taskNotFoundError{t}
+	var registerTaskFiles func(Call) error
+	registerTaskFiles = func(c Call) error {
+		task, err := e.CompiledTask(c)
+		if err != nil {
+			return err
 		}
 
 		for _, d := range task.Deps {
-			if err := registerTaskFiles(d.Task); err != nil {
+			if err := registerTaskFiles(Call{Task: d.Task, Vars: d.Vars}); err != nil {
 				return err
+			}
+		}
+		for _, c := range task.Cmds {
+			if c.Task != "" {
+				if err := registerTaskFiles(Call{Task: c.Task, Vars: c.Vars}); err != nil {
+					return err
+				}
 			}
 		}
 
@@ -125,8 +132,8 @@ func (e *Executor) registerWatchedFiles(w *watcher.Watcher, tasks []string) erro
 		return nil
 	}
 
-	for _, t := range tasks {
-		if err := registerTaskFiles(t); err != nil {
+	for _, c := range calls {
+		if err := registerTaskFiles(c); err != nil {
 			return err
 		}
 	}
