@@ -1,5 +1,5 @@
 * Bug reports and feature requests are welcome in [the issues][issues]
-* For questions and discussion there's the [Slack room][slack]
+* For questions and discussion there's the [Slack room][slack] ([invititation here][slackinvite])
 * Pull Requests are welcome. For more complex changes and features it's
   recommended to open an issue first
 * About 3 or 4 pull requests accepted one gets write access to the repo.
@@ -9,3 +9,4 @@
 
 [issues]: https://github.com/go-task/task/issues
 [slack]: https://gophers.slack.com/messages/task
+[slackinvite]: https://invite.slack.golangbridge.org/

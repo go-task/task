@@ -514,10 +514,12 @@ so task know which files to watch.
   - [dogtools/dog][dog]
   - [goeuro/myke][myke]
   - [dreadl0ck/zeus][zeus]
+  - [rliebz/tusk][tusk]
 - Go based:
   - [go-godo/godo][godo]
   - [markbates/grift][grift]
   - [nstratos/make.go][make.go]
+  - [magefile/mage][mage]
 - Make based:
   - [tj/mmake][mmake]
 
@@ -529,9 +531,11 @@ so task know which files to watch.
 [dog]: https://github.com/dogtools/dog
 [myke]: https://github.com/goeuro/myke
 [zeus]: https://github.com/dreadl0ck/zeus
+[tusk]: https://github.com/rliebz/tusk
 [godo]: https://github.com/go-godo/godo
 [grift]: https://github.com/markbates/grift
 [make.go]: https://github.com/nstratos/make.go
+[mage]: https://github.com/magefile/mage
 [mmake]: https://github.com/tj/mmake
 [sh]: https://github.com/mvdan/sh
 [post-hugo]: https://blog.carlmjohnson.net/post/2017/hugo-asset-pipeline/
