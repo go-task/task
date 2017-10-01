@@ -35,6 +35,7 @@ test:
   deps: [install]
   cmds:
     - go test ./args
+    - go test ./status
     - go test
 
 # https://github.com/goreleaser/goreleaser

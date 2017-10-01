@@ -21,7 +21,7 @@ type Checksum struct {
 
 // IsUpToDate implements the Checker interface
 func (c *Checksum) IsUpToDate() (bool, error) {
-	checksumFile := filepath.Join(c.Dir, ".task", c.normalizeFilename(c.Task))
+	checksumFile := c.checksumFilePath()
 
 	data, _ := ioutil.ReadFile(checksumFile)
 	oldMd5 := strings.TrimSpace(string(data))
@@ -66,14 +66,18 @@ func (c *Checksum) checksum(files ...string) (string, error) {
 	return fmt.Sprintf("%x", h.Sum(nil)), nil
 }
 
+// OnError implements the Checker interface
+func (c *Checksum) OnError() error {
+	return os.Remove(c.checksumFilePath())
+}
+
+func (c *Checksum) checksumFilePath() string {
+	return filepath.Join(c.Dir, ".task", c.normalizeFilename(c.Task))
+}
+
 var checksumFilenameRegexp = regexp.MustCompile("[^A-z0-9]")
 
 // replaces invalid caracters on filenames with "-"
 func (*Checksum) normalizeFilename(f string) string {
 	return checksumFilenameRegexp.ReplaceAllString(f, "-")
-}
-
-// OnError implements the Checker interface
-func (c *Checksum) OnError() error {
-	return os.Remove(filepath.Join(c.Dir, ".task", c.Task))
 }
