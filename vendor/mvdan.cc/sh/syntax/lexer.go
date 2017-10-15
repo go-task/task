@@ -706,10 +706,30 @@ func (p *Parser) endLit() (s string) {
 	if p.r == utf8.RuneSelf {
 		s = string(p.litBs)
 	} else if len(p.litBs) > 0 {
-		s = string(p.litBs[:len(p.litBs)-1])
+		s = string(p.litBs[:len(p.litBs)-int(p.w)])
 	}
 	p.litBs = nil
 	return
+}
+
+func (p *Parser) advanceNameCont(r rune) {
+	// we know that r is a letter or underscore
+loop:
+	for p.newLit(r); r != utf8.RuneSelf; r = p.rune() {
+		switch {
+		case r == '\\':
+			if r = p.rune(); r == '\n' {
+				p.discardLit(2)
+			}
+		case 'a' <= r && r <= 'z':
+		case 'A' <= r && r <= 'Z':
+		case r == '_':
+		case '0' <= r && r <= '9':
+		default:
+			break loop
+		}
+	}
+	p.tok, p.val = _LitWord, p.endLit()
 }
 
 func (p *Parser) advanceLitOther(r rune) {
@@ -754,40 +774,18 @@ loop:
 			if p.quote&allArithmExpr != 0 {
 				break loop
 			}
-			if p.quote == paramName && p.peekByte('(') {
-				tok = _Lit
+		case ':', '=', '%', '^', ',', '?':
+			if p.quote&allArithmExpr != 0 || p.quote == paramExpName {
 				break loop
 			}
-		case '?':
-			if p.quote == paramName && p.peekByte('(') {
-				tok = _Lit
-				break loop
-			}
-			fallthrough
-		case ':', '=', '%', '^', ',':
-			if p.quote&allArithmExpr != 0 || p.quote&allParamReg != 0 {
-				break loop
-			}
-		case '@':
-			if p.quote == paramName && p.peekByte('(') {
-				tok = _Lit
-				break loop
-			}
-			fallthrough
-		case '#', '[':
+		case '#', '[', '@':
 			if p.quote&allParamReg != 0 {
 				break loop
 			}
 			if r == '[' && p.lang != LangPOSIX && p.quote&allArithmExpr != 0 {
 				break loop
 			}
-		case '+':
-			if p.quote == paramName && p.peekByte('(') {
-				tok = _Lit
-				break loop
-			}
-			fallthrough
-		case '-':
+		case '+', '-':
 			switch p.quote {
 			case paramExpExp, paramExpRepl, sglQuotes:
 			default:

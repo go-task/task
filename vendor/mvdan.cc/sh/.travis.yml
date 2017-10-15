@@ -14,3 +14,6 @@ script:
   - go test -short -race ./...
   - shfmt -version
   - goveralls
+  # at least make sure the builds work
+  - GOOS=windows go install ./interp
+  - GOOS=darwin go install ./interp

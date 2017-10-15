@@ -69,3 +69,8 @@ func dateAgo(date interface{}) string {
 	duration := time.Since(t) / time.Second * time.Second
 	return duration.String()
 }
+
+func toDate(fmt, str string) time.Time {
+	t, _ := time.ParseInLocation(fmt, str, time.Local)
+	return t
+}

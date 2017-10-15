@@ -4,14 +4,14 @@
 [[projects]]
   name = "github.com/Masterminds/semver"
   packages = ["."]
-  revision = "517734cc7d6470c0d07130e40fd40bdeb9bcd3fd"
-  version = "v1.3.1"
+  revision = "15d8430ab86497c5c0da827b748823945e1cf1e1"
+  version = "v1.4.0"
 
 [[projects]]
   branch = "master"
   name = "github.com/Masterminds/sprig"
   packages = ["."]
-  revision = "175e437013029f9a1c35bdf04bc451b0d20d4331"
+  revision = "82f6f19d47b416d27ae039939b44afaa0575860e"
 
 [[projects]]
   name = "github.com/aokoli/goutils"
@@ -29,19 +29,19 @@
   branch = "master"
   name = "github.com/huandu/xstrings"
   packages = ["."]
-  revision = "3959339b333561bf62a38b424fd41517c2c90f40"
+  revision = "d6590c0c31d16526217fa60fbd2067f7afcd78c5"
 
 [[projects]]
-  branch = "master"
   name = "github.com/imdario/mergo"
   packages = ["."]
-  revision = "e3000cb3d28c72b837601cac94debd91032d19fe"
+  revision = "7fe0c75c13abdee74b09fcacef5ea1c6bba6a874"
+  version = "0.2.4"
 
 [[projects]]
   branch = "master"
   name = "github.com/mattn/go-zglob"
   packages = [".","fastwalk"]
-  revision = "95345c4e1c0ebc9d16a3284177f09360f4d20fab"
+  revision = "4ecb59231939b2e499b1f2fd8f075565977d2452"
 
 [[projects]]
   name = "github.com/pmezard/go-difflib"
@@ -65,7 +65,7 @@
   branch = "master"
   name = "github.com/spf13/pflag"
   packages = ["."]
-  revision = "7aff26db30c1be810f9de5038ec5ef96ac41fd7c"
+  revision = "a9789e855c7696159b7db0db7f440b449edf2b31"
 
 [[projects]]
   name = "github.com/stretchr/testify"
@@ -77,19 +77,19 @@
   branch = "master"
   name = "golang.org/x/crypto"
   packages = ["pbkdf2","scrypt"]
-  revision = "81e90905daefcd6fd217b62423c0908922eadb30"
+  revision = "9419663f5a44be8b34ca85f08abc5fe1be11f8a3"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/net"
   packages = ["context"]
-  revision = "66aacef3dd8a676686c7ae3716979581e8b03c47"
+  revision = "a04bdaca5b32abe1c069418fb7088ae607de5bd0"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/sync"
   packages = ["errgroup"]
-  revision = "f52d1811a62927559de87708c8913c1650ce4f26"
+  revision = "8e0aa688b654ef28caa72506fa5ec8dba9fc7690"
 
 [[projects]]
   branch = "v2"
@@ -101,7 +101,7 @@
   branch = "master"
   name = "mvdan.cc/sh"
   packages = ["interp","syntax"]
-  revision = "d8d2c36c06455d4bb8e2116cc2b955271046329d"
+  revision = "24a28656b7c1d2532406e69527366ecf9f455a17"
 
 [solve-meta]
   analyzer-name = "dep"

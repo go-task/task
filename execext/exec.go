@@ -41,9 +41,13 @@ func RunCommand(opts *RunCommandOptions) error {
 		Context: opts.Context,
 		Dir:     opts.Dir,
 		Env:     opts.Env,
-		Stdin:   opts.Stdin,
-		Stdout:  opts.Stdout,
-		Stderr:  opts.Stderr,
+
+		Exec: interp.DefaultExec,
+		Open: interp.OpenDevImpls(interp.DefaultOpen),
+
+		Stdin:  opts.Stdin,
+		Stdout: opts.Stdout,
+		Stderr: opts.Stderr,
 	}
 	if err = r.Reset(); err != nil {
 		return err

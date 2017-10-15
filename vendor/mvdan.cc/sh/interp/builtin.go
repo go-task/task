@@ -19,7 +19,7 @@ func isBuiltin(name string) bool {
 		"echo", "printf", "break", "continue", "pwd", "cd",
 		"wait", "builtin", "trap", "type", "source", ".", "command",
 		"pushd", "popd", "umask", "alias", "unalias", "fg", "bg",
-		"getopts", "eval", "test", "[":
+		"getopts", "eval", "test", "[", "exec":
 		return true
 	}
 	return false
@@ -161,6 +161,9 @@ func (r *Runner) builtinCode(pos syntax.Pos, name string, args []string) int {
 		if err != nil || !info.IsDir() {
 			return 1
 		}
+		if !hasPermissionToDir(info) {
+			return 1
+		}
 		r.Dir = dir
 	case "wait":
 		if len(args) > 0 {
@@ -213,7 +216,7 @@ func (r *Runner) builtinCode(pos syntax.Pos, name string, args []string) int {
 		if len(args) < 1 {
 			r.runErr(pos, "source: need filename")
 		}
-		f, err := os.Open(r.relPath(args[0]))
+		f, err := r.open(r.relPath(args[0]), os.O_RDONLY, 0, false)
 		if err != nil {
 			r.errf("eval: %v\n", err)
 			return 1
@@ -247,6 +250,18 @@ func (r *Runner) builtinCode(pos syntax.Pos, name string, args []string) int {
 		p.next()
 		expr := p.classicTest("[", false)
 		return oneIf(r.bashTest(expr) == "")
+	case "exec":
+		// TODO: Consider syscall.Exec, i.e. actually replacing
+		// the process. It's in theory what a shell should do,
+		// but in practice it would kill the entire Go process
+		// and it's not available on Windows.
+		if len(args) == 0 {
+			// TODO: different behavior, apparently
+			return 0
+		}
+		r.exec(args[0], args[1:])
+		r.lastExit()
+		return r.exit
 	case "trap", "command", "pushd", "popd",
 		"umask", "alias", "unalias", "fg", "bg", "getopts":
 		r.runErr(pos, "unhandled builtin: %s", name)
@@ -255,8 +270,8 @@ func (r *Runner) builtinCode(pos syntax.Pos, name string, args []string) int {
 }
 
 func (r *Runner) relPath(path string) string {
-	if filepath.IsAbs(path) {
-		return path
+	if !filepath.IsAbs(path) {
+		path = filepath.Join(r.Dir, path)
 	}
-	return filepath.Join(r.Dir, path)
+	return filepath.Clean(path)
 }

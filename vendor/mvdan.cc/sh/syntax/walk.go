@@ -9,6 +9,9 @@ func walkStmts(sl StmtList, f func(Node) bool) {
 	for _, s := range sl.Stmts {
 		Walk(s, f)
 	}
+	for _, c := range sl.Last {
+		Walk(&c, f)
+	}
 }
 
 func walkWords(words []*Word, f func(Node) bool) {
@@ -29,7 +32,15 @@ func Walk(node Node, f func(Node) bool) {
 	switch x := node.(type) {
 	case *File:
 		walkStmts(x.StmtList, f)
+	case *Comment:
 	case *Stmt:
+		for _, c := range x.Comments {
+			if c.Pos().After(x.Pos()) {
+				defer Walk(&c, f)
+				break
+			}
+			Walk(&c, f)
+		}
 		if x.Cmd != nil {
 			Walk(x.Cmd, f)
 		}
@@ -146,7 +157,17 @@ func Walk(node Node, f func(Node) bool) {
 		for _, ci := range x.Items {
 			Walk(ci, f)
 		}
+		for _, c := range x.Last {
+			Walk(&c, f)
+		}
 	case *CaseItem:
+		for _, c := range x.Comments {
+			if c.Pos().After(x.Pos()) {
+				defer Walk(&c, f)
+				break
+			}
+			Walk(&c, f)
+		}
 		walkWords(x.Patterns, f)
 		walkStmts(x.StmtList, f)
 	case *TestClause:
@@ -160,7 +181,17 @@ func Walk(node Node, f func(Node) bool) {
 		for _, el := range x.Elems {
 			Walk(el, f)
 		}
+		for _, c := range x.Last {
+			Walk(&c, f)
+		}
 	case *ArrayElem:
+		for _, c := range x.Comments {
+			if c.Pos().After(x.Pos()) {
+				defer Walk(&c, f)
+				break
+			}
+			Walk(&c, f)
+		}
 		if x.Index != nil {
 			Walk(x.Index, f)
 		}

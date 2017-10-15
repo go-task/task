@@ -136,7 +136,7 @@ func (r *Runner) paramExp(pe *syntax.ParamExp) string {
 			fallthrough
 		case syntax.SubstColAssgn:
 			if str == "" {
-				r.setVar(name, arg)
+				r.setVar(name, nil, arg)
 				str = arg
 			}
 		case syntax.RemSmallPrefix:

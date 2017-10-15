@@ -132,13 +132,13 @@ func (r *Runner) unTest(op syntax.UnTestOperator, x string) bool {
 	//case syntax.TsUsrOwn:
 	//case syntax.TsModif:
 	case syntax.TsRead:
-		f, err := os.OpenFile(r.relPath(x), os.O_RDONLY, 0)
+		f, err := r.open(r.relPath(x), os.O_RDONLY, 0, false)
 		if err == nil {
 			f.Close()
 		}
 		return err == nil
 	case syntax.TsWrite:
-		f, err := os.OpenFile(r.relPath(x), os.O_WRONLY, 0)
+		f, err := r.open(r.relPath(x), os.O_WRONLY, 0, false)
 		if err == nil {
 			f.Close()
 		}

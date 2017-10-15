@@ -232,7 +232,6 @@ const (
 	arithmExprBrack
 	testRegexp
 	switchCase
-	paramName
 	paramExpName
 	paramExpInd
 	paramExpOff
@@ -247,9 +246,9 @@ const (
 		switchCase | arrayElems
 	allArithmExpr = arithmExpr | arithmExprLet | arithmExprCmd |
 		arithmExprBrack | allParamArith
-	allRbrack     = arithmExprBrack | paramExpInd | paramName
+	allRbrack     = arithmExprBrack | paramExpInd
 	allParamArith = paramExpInd | paramExpOff | paramExpLen
-	allParamReg   = paramName | paramExpName | allParamArith
+	allParamReg   = paramExpName | allParamArith
 	allParamExp   = allParamReg | paramExpRepl | paramExpExp
 )
 
@@ -676,13 +675,23 @@ func (p *Parser) wordPart() WordPart {
 		return cs
 	case dollar:
 		r := p.r
-		if r == utf8.RuneSelf || wordBreak(r) || r == '"' || r == '\'' || r == '`' || r == '[' {
+		switch {
+		case singleRuneParam(r):
+			p.tok, p.val = _LitWord, string(r)
+			p.rune()
+		case 'a' <= r && r <= 'z', 'A' <= r && r <= 'Z',
+			'0' <= r && r <= '9', r == '_', r == '\\':
+			p.advanceNameCont(r)
+		default:
 			l := p.lit(p.pos, "$")
 			p.next()
 			return l
 		}
 		p.ensureNoNested()
-		return p.shortParamExp()
+		pe := &ParamExp{Dollar: p.pos, Short: true}
+		p.pos = posAddCol(p.pos, 1)
+		pe.Param = p.getLit()
+		return pe
 	case cmdIn, cmdOut:
 		p.ensureNoNested()
 		ps := &ProcSubst{Op: ProcOperator(p.tok), OpPos: p.pos}
@@ -1012,21 +1021,13 @@ func (p *Parser) arithmExprBase(compact bool) ArithmExpr {
 	return x
 }
 
-func (p *Parser) shortParamExp() *ParamExp {
-	pe := &ParamExp{Dollar: p.pos, Short: true}
-	p.pos = posAddCol(p.pos, 1)
-	switch p.r {
-	case '@', '*', '#', '$', '?', '!', '0', '-':
-		p.tok, p.val = _LitWord, string(p.r)
-		p.rune()
-	default:
-		old := p.quote
-		p.quote = paramName
-		p.advanceLitOther(p.r)
-		p.quote = old
+func singleRuneParam(r rune) bool {
+	switch r {
+	case '@', '*', '#', '$', '?', '!', '-',
+		'0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
+		return true
 	}
-	pe.Param = p.getLit()
-	return pe
+	return false
 }
 
 func (p *Parser) paramExp() *ParamExp {
@@ -1186,12 +1187,12 @@ func stopToken(tok token) bool {
 
 // ValidName returns whether val is a valid name as per the POSIX spec.
 func ValidName(val string) bool {
-	for i, c := range val {
+	for i, r := range val {
 		switch {
-		case 'a' <= c && c <= 'z':
-		case 'A' <= c && c <= 'Z':
-		case c == '_':
-		case i > 0 && '0' <= c && c <= '9':
+		case 'a' <= r && r <= 'z':
+		case 'A' <= r && r <= 'Z':
+		case r == '_':
+		case i > 0 && '0' <= r && r <= '9':
 		default:
 			return false
 		}
@@ -1275,6 +1276,9 @@ func (p *Parser) getAssign(needEqual bool) *Assign {
 		if p.lang == LangPOSIX {
 			p.curErr("arrays are a bash feature")
 		}
+		if as.Index != nil {
+			p.curErr("arrays cannot be nested")
+		}
 		as.Array = &ArrayExpr{Lparen: p.pos}
 		newQuote := p.quote
 		if p.lang == LangBash {
@@ -1308,6 +1312,9 @@ func (p *Parser) getAssign(needEqual bool) *Assign {
 				p.next()
 			}
 			if ae.Value = p.getWord(); ae.Value == nil {
+				if p.tok == leftParen {
+					p.curErr("arrays cannot be nested")
+				}
 				p.curErr("array element values must be words")
 				break
 			}

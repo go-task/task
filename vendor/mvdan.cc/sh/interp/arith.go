@@ -36,7 +36,7 @@ func (r *Runner) arithm(expr syntax.ArithmExpr) int {
 			} else {
 				val--
 			}
-			r.setVar(name, strconv.Itoa(val))
+			r.setVar(name, nil, strconv.Itoa(val))
 			if x.Post {
 				return old
 			}
@@ -108,7 +108,7 @@ func (r *Runner) assgnArit(b *syntax.BinaryArithm) int {
 	case syntax.ShrAssgn:
 		val >>= uint(arg)
 	}
-	r.setVar(name, strconv.Itoa(val))
+	r.setVar(name, nil, strconv.Itoa(val))
 	return val
 }
 

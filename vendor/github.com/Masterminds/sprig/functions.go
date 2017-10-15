@@ -99,6 +99,7 @@ var genericMap = map[string]interface{}{
 	"dateInZone":     dateInZone,
 	"dateModify":     dateModify,
 	"ago":            dateAgo,
+	"toDate":         toDate,
 
 	// Strings
 	"abbrev":     abbrev,
@@ -251,8 +252,11 @@ var genericMap = map[string]interface{}{
 	"has":     func(needle interface{}, haystack []interface{}) bool { return inList(haystack, needle) },
 
 	// Crypto:
-	"genPrivateKey":  generatePrivateKey,
-	"derivePassword": derivePassword,
+	"genPrivateKey":     generatePrivateKey,
+	"derivePassword":    derivePassword,
+	"genCA":             generateCertificateAuthority,
+	"genSelfSignedCert": generateSelfSignedCertificate,
+	"genSignedCert":     generateSignedCertificate,
 
 	// UUIDs:
 	"uuidv4": uuidv4,

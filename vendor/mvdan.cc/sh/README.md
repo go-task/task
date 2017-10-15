@@ -7,10 +7,6 @@
 A shell parser, formatter and interpreter. Supports [POSIX Shell],
 [Bash] and [mksh]. Requires Go 1.8 or later.
 
-**Please note that the import paths have been moved from
-`github.com/mvdan/sh/...` to `mvdan.cc/sh/...` for 2.0.** This will help
-future-proof the project by making it depend less on GitHub.
-
 ### shfmt
 
 	go get -u mvdan.cc/sh/cmd/shfmt

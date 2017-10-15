@@ -89,7 +89,7 @@ Integer Slice Functions:
 Conversions:
 
 	- atoi: Convert a string to an integer. 0 if the integer could not be parsed.
-	- in64: Convert a string or another numeric type to an int64.
+	- int64: Convert a string or another numeric type to an int64.
 	- int: Convert a string or another numeric type to an int.
 	- float64: Convert a string or another numeric type to a float64.
 

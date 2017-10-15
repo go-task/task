@@ -16,6 +16,7 @@ dl-deps:
 update-deps:
   desc: Updates dependencies
   cmds:
+    - dep ensure
     - dep ensure -update
     - dep prune
 

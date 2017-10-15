@@ -10,14 +10,12 @@ import (
 	"io"
 	"math"
 	"os"
-	"os/exec"
 	"os/user"
 	"path"
 	"path/filepath"
 	"strconv"
 	"strings"
 	"sync"
-	"syscall"
 	"time"
 
 	"mvdan.cc/sh/syntax"
@@ -48,6 +46,9 @@ type Runner struct {
 	// of vars.
 	Params []string
 
+	Exec ModuleExec
+	Open ModuleOpen
+
 	filename string // only if Node was a File
 
 	// Separate maps, note that bash allows a name to be both a var
@@ -76,6 +77,76 @@ type Runner struct {
 	Context context.Context
 
 	stopOnCmdErr bool // set -e
+}
+
+// Reset will set the unexported fields back to zero, fill any exported
+// fields with their default values if not set, and prepare the runner
+// to interpret a program.
+//
+// This function should be called once before running any node. It can
+// be skipped before any following runs to keep internal state, such as
+// declared variables.
+func (r *Runner) Reset() error {
+	// reset the internal state
+	*r = Runner{
+		Env:     r.Env,
+		Dir:     r.Dir,
+		Params:  r.Params,
+		Context: r.Context,
+		Stdin:   r.Stdin,
+		Stdout:  r.Stdout,
+		Stderr:  r.Stderr,
+		Exec:    r.Exec,
+		Open:    r.Open,
+	}
+	if r.Context == nil {
+		r.Context = context.Background()
+	}
+	if r.Env == nil {
+		r.Env = os.Environ()
+	}
+	r.envMap = make(map[string]string, len(r.Env))
+	for _, kv := range r.Env {
+		i := strings.IndexByte(kv, '=')
+		if i < 0 {
+			return fmt.Errorf("env not in the form key=value: %q", kv)
+		}
+		name, val := kv[:i], kv[i+1:]
+		r.envMap[name] = val
+	}
+	if _, ok := r.envMap["HOME"]; !ok {
+		u, _ := user.Current()
+		r.envMap["HOME"] = u.HomeDir
+	}
+	if r.Dir == "" {
+		dir, err := os.Getwd()
+		if err != nil {
+			return fmt.Errorf("could not get current dir: %v", err)
+		}
+		r.Dir = dir
+	}
+	if r.Exec == nil {
+		r.Exec = DefaultExec
+	}
+	if r.Open == nil {
+		r.Open = DefaultOpen
+	}
+	return nil
+}
+
+func (r *Runner) ctx() Ctxt {
+	c := Ctxt{
+		Context: r.Context,
+		Env:     r.Env,
+		Dir:     r.Dir,
+		Stdin:   r.Stdin,
+		Stdout:  r.Stdout,
+		Stderr:  r.Stderr,
+	}
+	for name, val := range r.cmdVars {
+		c.Env = append(c.Env, name+"="+varStr(val))
+	}
+	return c
 }
 
 // varValue can hold a string, an indexed array ([]string) or an
@@ -136,14 +207,18 @@ func (e RunError) Error() string {
 	return fmt.Sprintf("%s:%s: %s", e.Filename, e.Pos.String(), e.Text)
 }
 
-func (r *Runner) runErr(pos syntax.Pos, format string, a ...interface{}) {
+func (r *Runner) setErr(err error) {
 	if r.err == nil {
-		r.err = RunError{
-			Filename: r.filename,
-			Pos:      pos,
-			Text:     fmt.Sprintf(format, a...),
-		}
+		r.err = err
 	}
+}
+
+func (r *Runner) runErr(pos syntax.Pos, format string, a ...interface{}) {
+	r.setErr(RunError{
+		Filename: r.filename,
+		Pos:      pos,
+		Text:     fmt.Sprintf(format, a...),
+	})
 }
 
 func (r *Runner) lastExit() {
@@ -152,20 +227,36 @@ func (r *Runner) lastExit() {
 	}
 }
 
-func (r *Runner) setVar(name string, val varValue) {
+func (r *Runner) setVar(name string, index syntax.ArithmExpr, val varValue) {
 	if r.vars == nil {
 		r.vars = make(map[string]varValue, 4)
 	}
-	r.vars[name] = val
+	if index == nil {
+		r.vars[name] = val
+		return
+	}
+	// from the syntax package, we know that val must be a string if
+	// index is non-nil; nested arrays are forbidden.
+	valStr := val.(string)
+	var list []string
+	switch x := r.vars[name].(type) {
+	case string:
+		list = []string{x}
+	case []string:
+		list = x
+	}
+	k := r.arithm(index)
+	for len(list) < k+1 {
+		list = append(list, "")
+	}
+	list[k] = valStr
+	r.vars[name] = list
 }
 
 func (r *Runner) lookupVar(name string) (varValue, bool) {
 	switch name {
 	case "PWD":
 		return r.Dir, true
-	case "HOME":
-		u, _ := user.Current()
-		return u.HomeDir, true
 	}
 	if val, e := r.cmdVars[name]; e {
 		return val, true
@@ -221,42 +312,6 @@ opts:
 	return args, nil
 }
 
-func (r *Runner) Reset() error {
-	// reset the internal state
-	*r = Runner{
-		Env:     r.Env,
-		Dir:     r.Dir,
-		Params:  r.Params,
-		Context: r.Context,
-		Stdin:   r.Stdin,
-		Stdout:  r.Stdout,
-		Stderr:  r.Stderr,
-	}
-	if r.Context == nil {
-		r.Context = context.Background()
-	}
-	if r.Env == nil {
-		r.Env = os.Environ()
-	}
-	r.envMap = make(map[string]string, len(r.Env))
-	for _, kv := range r.Env {
-		i := strings.IndexByte(kv, '=')
-		if i < 0 {
-			return fmt.Errorf("env not in the form key=value: %q", kv)
-		}
-		name, val := kv[:i], kv[i+1:]
-		r.envMap[name] = val
-	}
-	if r.Dir == "" {
-		dir, err := os.Getwd()
-		if err != nil {
-			return fmt.Errorf("could not get current dir: %v", err)
-		}
-		r.Dir = dir
-	}
-	return nil
-}
-
 // Run starts the interpreter and returns any error.
 func (r *Runner) Run(node syntax.Node) error {
 	r.filename = ""
@@ -275,6 +330,11 @@ func (r *Runner) Run(node syntax.Node) error {
 	if r.err == ExitCode(0) {
 		r.err = nil
 	}
+	return r.err
+}
+
+func (r *Runner) Stmt(stmt *syntax.Stmt) error {
+	r.stmt(stmt)
 	return r.err
 }
 
@@ -375,7 +435,7 @@ func escapedGlob(parts []fieldPart) (escaped string, glob bool) {
 	return buf.String(), glob
 }
 
-func (r *Runner) fields(words []*syntax.Word) []string {
+func (r *Runner) Fields(words []*syntax.Word) []string {
 	fields := make([]string, 0, len(words))
 	baseDir, _ := escapedGlob([]fieldPart{{val: r.Dir}})
 	for _, word := range words {
@@ -465,9 +525,22 @@ func (r *Runner) assignValue(as *syntax.Assign) varValue {
 		return s
 	}
 	if as.Array != nil {
-		strs := make([]string, len(as.Array.Elems))
+		maxIndex := len(as.Array.Elems) - 1
+		indexes := make([]int, len(as.Array.Elems))
 		for i, elem := range as.Array.Elems {
-			strs[i] = r.loneWord(elem.Value)
+			if elem.Index == nil {
+				indexes[i] = i
+				continue
+			}
+			k := r.arithm(elem.Index)
+			indexes[i] = k
+			if k > maxIndex {
+				maxIndex = k
+			}
+		}
+		strs := make([]string, maxIndex+1)
+		for i, elem := range as.Array.Elems {
+			strs[indexes[i]] = r.loneWord(elem.Value)
 		}
 		if !as.Append || prev == nil {
 			return strs
@@ -524,10 +597,11 @@ func (r *Runner) cmd(cm syntax.Command) {
 		r2 := *r
 		r2.stmts(x.StmtList)
 		r.exit = r2.exit
+		r.setErr(r2.err)
 	case *syntax.CallExpr:
 		if len(x.Args) == 0 {
 			for _, as := range x.Assigns {
-				r.setVar(as.Name.Value, r.assignValue(as))
+				r.setVar(as.Name.Value, as.Index, r.assignValue(as))
 			}
 			break
 		}
@@ -538,7 +612,7 @@ func (r *Runner) cmd(cm syntax.Command) {
 		for _, as := range x.Assigns {
 			r.cmdVars[as.Name.Value] = r.assignValue(as)
 		}
-		fields := r.fields(x.Args)
+		fields := r.Fields(x.Args)
 		r.call(x.Args[0].Pos(), fields[0], fields[1:])
 		r.cmdVars = oldVars
 	case *syntax.BinaryCmd:
@@ -564,12 +638,17 @@ func (r *Runner) cmd(cm syntax.Command) {
 				r2.Stderr = r.Stderr
 			}
 			r.Stdin = pr
+			var wg sync.WaitGroup
+			wg.Add(1)
 			go func() {
 				r2.stmt(x.X)
 				pw.Close()
+				wg.Done()
 			}()
 			r.stmt(x.Y)
 			pr.Close()
+			wg.Wait()
+			r.setErr(r2.err)
 		}
 	case *syntax.IfClause:
 		r.stmts(x.Cond)
@@ -592,8 +671,8 @@ func (r *Runner) cmd(cm syntax.Command) {
 		switch y := x.Loop.(type) {
 		case *syntax.WordIter:
 			name := y.Name.Value
-			for _, field := range r.fields(y.Items) {
-				r.setVar(name, field)
+			for _, field := range r.Fields(y.Items) {
+				r.setVar(name, nil, field)
 				if r.loopStmtsBroken(x.Do) {
 					break
 				}
@@ -645,18 +724,16 @@ func (r *Runner) cmd(cm syntax.Command) {
 			r.runErr(cm.Pos(), "unhandled declare opts")
 		}
 		for _, as := range x.Assigns {
-			r.setVar(as.Name.Value, r.assignValue(as))
+			r.setVar(as.Name.Value, as.Index, r.assignValue(as))
 		}
 	case *syntax.TimeClause:
 		start := time.Now()
 		if x.Stmt != nil {
 			r.stmt(x.Stmt)
 		}
-		elapsed := time.Since(start)
+		real := time.Since(start)
 		r.outf("\n")
-		min := int(elapsed.Minutes())
-		sec := math.Remainder(elapsed.Seconds(), 60.0)
-		r.outf("real\t%dm%.3fs\n", min, sec)
+		r.outf("real\t%s\n", elapsedString(real))
 		// TODO: can we do these?
 		r.outf("user\t0m0.000s\n")
 		r.outf("sys\t0m0.000s\n")
@@ -666,6 +743,12 @@ func (r *Runner) cmd(cm syntax.Command) {
 	if r.exit != 0 && r.stopOnCmdErr {
 		r.lastExit()
 	}
+}
+
+func elapsedString(d time.Duration) string {
+	min := int(d.Minutes())
+	sec := math.Remainder(d.Seconds(), 60.0)
+	return fmt.Sprintf("%dm%.3fs", min, sec)
 }
 
 func (r *Runner) stmts(sl syntax.StmtList) {
@@ -716,17 +799,9 @@ func (r *Runner) redir(rd *syntax.Redirect) (io.Closer, error) {
 	case syntax.RdrOut, syntax.RdrAll:
 		mode = os.O_RDWR | os.O_CREATE | os.O_TRUNC
 	}
-	var f io.ReadWriteCloser
-	switch arg {
-	case "/dev/null":
-		f = devNull{}
-	default:
-		var err error
-		f, err = os.OpenFile(r.relPath(arg), mode, 0644)
-		if err != nil {
-			// TODO: print to stderr?
-			return nil, err
-		}
+	f, err := r.open(r.relPath(arg), mode, 0644, true)
+	if err != nil {
+		return nil, err
 	}
 	switch rd.Op {
 	case syntax.RdrIn:
@@ -844,6 +919,7 @@ func (r *Runner) wordFields(wps []syntax.WordPart, quoted bool) [][]fieldPart {
 			} else {
 				splitAdd(val)
 			}
+			r.setErr(r2.err)
 		case *syntax.ArithmExp:
 			curField = append(curField, fieldPart{
 				val: strconv.Itoa(r.arithm(x.X)),
@@ -872,31 +948,31 @@ func (r *Runner) call(pos syntax.Pos, name string, args []string) {
 		r.exit = r.builtinCode(pos, name, args)
 		return
 	}
-	cmd := exec.CommandContext(r.Context, name, args...)
-	cmd.Env = r.Env
-	for name, val := range r.cmdVars {
-		cmd.Env = append(cmd.Env, name+"="+varStr(val))
-	}
-	cmd.Dir = r.Dir
-	cmd.Stdin = r.Stdin
-	cmd.Stdout = r.Stdout
-	cmd.Stderr = r.Stderr
-	err := cmd.Run()
+	r.exec(name, args)
+}
+
+func (r *Runner) exec(name string, args []string) {
+	err := r.Exec(r.ctx(), name, args)
 	switch x := err.(type) {
-	case *exec.ExitError:
-		// started, but errored - default to 1 if OS
-		// doesn't have exit statuses
-		r.exit = 1
-		if status, ok := x.Sys().(syscall.WaitStatus); ok {
-			r.exit = status.ExitStatus()
-		}
-	case *exec.Error:
-		// did not start
-		// TODO: can this be anything other than
-		// "command not found"?
-		r.exit = 127
-		// TODO: print something?
-	default:
+	case nil:
 		r.exit = 0
+	case ExitCode:
+		r.exit = int(x)
+	default:
+		r.setErr(err)
 	}
+}
+
+func (r *Runner) open(path string, flags int, mode os.FileMode, print bool) (io.ReadWriteCloser, error) {
+	f, err := r.Open(r.ctx(), path, flags, mode)
+	switch err.(type) {
+	case nil:
+	case *os.PathError:
+		if print {
+			r.errf("%v\n", err)
+		}
+	default:
+		r.setErr(err)
+	}
+	return f, err
 }
