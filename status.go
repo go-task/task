@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/go-task/task/execext"
-	"github.com/go-task/task/status"
+	"github.com/go-task/task/internal/execext"
+	"github.com/go-task/task/internal/status"
 )
 
 func (t *Task) isUpToDate(ctx context.Context) (bool, error) {

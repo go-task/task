@@ -8,7 +8,7 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"github.com/go-task/task/execext"
+	"github.com/go-task/task/internal/execext"
 
 	"golang.org/x/sync/errgroup"
 )
@@ -92,10 +92,7 @@ func (e *Executor) Run(calls ...Call) error {
 	}
 
 	if e.Watch {
-		if err := e.watchTasks(calls...); err != nil {
-			return err
-		}
-		return nil
+		return e.watchTasks(calls...)
 	}
 
 	for _, c := range calls {

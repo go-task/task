@@ -9,7 +9,7 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/go-task/task/execext"
+	"github.com/go-task/task/internal/execext"
 
 	"github.com/Masterminds/sprig"
 )

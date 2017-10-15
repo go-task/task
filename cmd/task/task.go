@@ -6,7 +6,7 @@ import (
 	"os"
 
 	"github.com/go-task/task"
-	"github.com/go-task/task/args"
+	"github.com/go-task/task/internal/args"
 
 	"github.com/spf13/pflag"
 )

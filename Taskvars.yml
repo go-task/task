@@ -3,7 +3,7 @@ GIT_COMMIT:
 
 GO_PACKAGES:
   .
-  ./args
   ./cmd/task
-  ./execext
-  ./status
+  ./internal/args
+  ./internal/execext
+  ./internal/status
