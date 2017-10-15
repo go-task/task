@@ -21,7 +21,8 @@ It aims to be simpler and easier to use then [GNU Make][make].
   - [Help](#help)
   - [Silent mode](#silent-mode)
   - [Watch tasks](#watch-tasks-experimental)
-  - [Task in the wild](#task-in-the-wild)
+- [Examples][#examples]
+- [Task in the wild](#task-in-the-wild)
 - [Alternative task runners](#alternative-task-runners)
 
 ## Installation
@@ -503,6 +504,12 @@ If you give a `--watch` or `-w` argument, task will watch for files changes
 and run the task again. This requires the `sources` attribute to be given,
 so task know which files to watch.
 
+## Examples
+
+The [go-task/examples][examples] intends to be a collection of Taskfiles for
+various use cases.
+(It still lacks many examples, though. Contributions are welcome).
+
 ## Task in the wild
 
 - [How I Build My Static Assets for Hugo][post-hugo]
@@ -540,3 +547,4 @@ so task know which files to watch.
 [sh]: https://github.com/mvdan/sh
 [post-hugo]: https://blog.carlmjohnson.net/post/2017/hugo-asset-pipeline/
 [minify]: https://github.com/tdewolff/minify/tree/master/cmd/minify
+[examples]: https://github.com/go-task/examples
