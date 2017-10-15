@@ -21,7 +21,7 @@ It aims to be simpler and easier to use then [GNU Make][make].
   - [Help](#help)
   - [Silent mode](#silent-mode)
   - [Watch tasks](#watch-tasks-experimental)
-- [Examples][#examples]
+- [Examples](#examples)
 - [Task in the wild](#task-in-the-wild)
 - [Alternative task runners](#alternative-task-runners)
 
