@@ -8,6 +8,9 @@ tasks. Task is written in Golang, but can be used to develop any language.
 It aims to be simpler and easier to use then [GNU Make][make].
 
 - [Installation](#installation)
+  - [Go](#go)
+  - [Snap](#snap)
+  - [Binary](#binary)
 - [Usage](#usage)
   - [Environment](#environment)
   - [OS specific task](#os-specific-task)
@@ -27,15 +30,29 @@ It aims to be simpler and easier to use then [GNU Make][make].
 
 ## Installation
 
+### Go
+
 If you have a [Golang][golang] environment setup, you can simply run:
 
 ```bash
 go get -u -v github.com/go-task/task/cmd/task
 ```
 
+### Snap
+
+Task is available for [Snapcraft][snapcraft], but keep in mind that your
+Linux distribution should allow classic confinement for Snaps to Task work
+right:
+
+```bash
+sudo snap install task
+```
+
+### Binary
+
 Or you can download the binary from the [releases][releases] page and add to
 your `PATH`. DEB and RPM packages are also available.
-The `task_checksums.txt` file contains the SHA-256 checksum for each file.
+The `task_checksums.txt` file contains the sha256 checksum for each file.
 
 ## Usage
 
@@ -548,3 +565,4 @@ various use cases.
 [post-hugo]: https://blog.carlmjohnson.net/post/2017/hugo-asset-pipeline/
 [minify]: https://github.com/tdewolff/minify/tree/master/cmd/minify
 [examples]: https://github.com/go-task/examples
+[snapcraft]: https://snapcraft.io/
