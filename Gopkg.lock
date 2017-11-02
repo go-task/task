@@ -71,7 +71,7 @@
   branch = "master"
   name = "github.com/spf13/pflag"
   packages = ["."]
-  revision = "a9789e855c7696159b7db0db7f440b449edf2b31"
+  revision = "97afa5e7ca8a08a383cb259e06636b5e2cc7897f"
 
 [[projects]]
   name = "github.com/stretchr/testify"
@@ -83,19 +83,19 @@
   branch = "master"
   name = "golang.org/x/crypto"
   packages = ["pbkdf2","scrypt"]
-  revision = "9419663f5a44be8b34ca85f08abc5fe1be11f8a3"
+  revision = "bd6f299fb381e4c3393d1c4b1f0b94f5e77650c8"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/net"
   packages = ["context"]
-  revision = "a04bdaca5b32abe1c069418fb7088ae607de5bd0"
+  revision = "ea0da6f35caf3ff91581c800469e22eef75076f4"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/sync"
   packages = ["errgroup"]
-  revision = "8e0aa688b654ef28caa72506fa5ec8dba9fc7690"
+  revision = "fd80eb99c8f653c847d294a001bdf2a3a6f768f5"
 
 [[projects]]
   branch = "v2"
@@ -107,7 +107,7 @@
   branch = "master"
   name = "mvdan.cc/sh"
   packages = ["interp","syntax"]
-  revision = "24a28656b7c1d2532406e69527366ecf9f455a17"
+  revision = "6582b4e9a06a902580267d416b57fe49947ea29f"
 
 [solve-meta]
   analyzer-name = "dep"

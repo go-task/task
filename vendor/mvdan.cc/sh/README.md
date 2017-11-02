@@ -25,7 +25,7 @@ operate on files with no extension and a shell shebang.
 Use `-i N` to indent with a number of spaces instead of tabs. There are
 other formatting options - see `shfmt -h`.
 
-Packages are available for [Arch], [Homebrew], [NixOS] and [Void].
+Packages are available for [Arch], [CRUX], [Homebrew], [NixOS] and [Void].
 
 #### Advantages over `bash -n`
 
@@ -86,22 +86,25 @@ the parser and the printer. To get started, run:
 
 ### Related projects
 
-* [format-shell] - Atom plugin for `shfmt`
-* [shell-format] - VS Code plugin for `shfmt`
 * [dockerised-shfmt] - A docker image of `shfmt`
+* [format-shell] - Atom plugin for `shfmt`
+* [micro] - Editor with a built-in plugin for `shfmt`
+* [shell-format] - VS Code plugin for `shfmt`
 * [vim-shfmt] - Vim plugin for `shfmt`
 
-[posix shell]: http://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html
-[bash]: https://www.gnu.org/software/bash/
-[mksh]: https://www.mirbsd.org/mksh.htm
-[examples]: https://godoc.org/mvdan.cc/sh/syntax#pkg-examples
 [arch]: https://aur.archlinux.org/packages/shfmt/
-[homebrew]: https://github.com/Homebrew/homebrew-core/blob/HEAD/Formula/shfmt.rb
-[nixos]: https://github.com/NixOS/nixpkgs/blob/HEAD/pkgs/tools/text/shfmt/default.nix
-[void]: https://github.com/voidlinux/void-packages/blob/HEAD/srcpkgs/shfmt/template
-[go-fuzz]: https://github.com/dvyukov/go-fuzz
-[posix-ambiguity]: http://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html#tag_18_06_03
-[format-shell]: https://atom.io/packages/format-shell
-[shell-format]: https://marketplace.visualstudio.com/items?itemName=foxundermoon.shell-format
+[bash]: https://www.gnu.org/software/bash/
+[crux]: https://github.com/6c37/crux-ports-git/tree/3.3/shfmt
 [dockerised-shfmt]: https://hub.docker.com/r/jamesmstone/shfmt/
+[examples]: https://godoc.org/mvdan.cc/sh/syntax#pkg-examples
+[format-shell]: https://atom.io/packages/format-shell
+[go-fuzz]: https://github.com/dvyukov/go-fuzz
+[homebrew]: https://github.com/Homebrew/homebrew-core/blob/HEAD/Formula/shfmt.rb
+[micro]: https://micro-editor.github.io/
+[mksh]: https://www.mirbsd.org/mksh.htm
+[nixos]: https://github.com/NixOS/nixpkgs/blob/HEAD/pkgs/tools/text/shfmt/default.nix
+[posix shell]: http://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html
+[posix-ambiguity]: http://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html#tag_18_06_03
+[shell-format]: https://marketplace.visualstudio.com/items?itemName=foxundermoon.shell-format
 [vim-shfmt]: https://github.com/z0mbix/vim-shfmt
+[void]: https://github.com/voidlinux/void-packages/blob/HEAD/srcpkgs/shfmt/template

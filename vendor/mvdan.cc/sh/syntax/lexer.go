@@ -71,9 +71,8 @@ retry:
 			if p.litBs != nil {
 				p.litBs = append(p.litBs, b)
 			}
-			r := rune(b)
-			p.r, p.w = r, 1
-			return r
+			p.w, p.r = 1, rune(b)
+			return p.r
 		}
 		if p.bsp+utf8.UTFMax >= len(p.bs) {
 			// we might need up to 4 bytes to read a full
