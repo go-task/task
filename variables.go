@@ -12,6 +12,7 @@ import (
 	"github.com/go-task/task/internal/execext"
 
 	"github.com/Masterminds/sprig"
+	"github.com/mitchellh/go-homedir"
 )
 
 var (
@@ -202,12 +203,11 @@ func (e *Executor) CompiledTask(call Call) (*Task, error) {
 		return nil, &taskNotFoundError{call.Task}
 	}
 
-	var r varReplacer
-	if vars, err := e.getVariables(call); err == nil {
-		r.vars = vars
-	} else {
+	vars, err := e.getVariables(call)
+	if err != nil {
 		return nil, err
 	}
+	r := varReplacer{vars: vars}
 
 	new := Task{
 		Task:      origTask.Task,
@@ -220,6 +220,10 @@ func (e *Executor) CompiledTask(call Call) (*Task, error) {
 		Env:       r.replaceVars(origTask.Env),
 		Silent:    origTask.Silent,
 		Method:    r.replace(origTask.Method),
+	}
+	new.Dir, err = homedir.Expand(new.Dir)
+	if err != nil {
+		return nil, err
 	}
 	if e.Dir != "" && !filepath.IsAbs(new.Dir) {
 		new.Dir = filepath.Join(e.Dir, new.Dir)

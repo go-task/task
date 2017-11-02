@@ -97,3 +97,7 @@
 [[constraint]]
   branch = "master"
   name = "github.com/radovskyb/watcher"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/mitchellh/go-homedir"
