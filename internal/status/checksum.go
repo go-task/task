@@ -58,7 +58,11 @@ func (c *Checksum) checksum(files ...string) (string, error) {
 		if info.IsDir() {
 			continue
 		}
-		if _, err := io.Copy(h, f); err != nil {
+		// also sum the filename, so checksum changes for renaming a file
+		if _, err = io.Copy(h, strings.NewReader(info.Name())); err != nil {
+			return "", err
+		}
+		if _, err = io.Copy(h, f); err != nil {
 			return "", err
 		}
 	}
