@@ -289,7 +289,7 @@ func TestStatusChecksum(t *testing.T) {
 
 	files := []string{
 		"generated.txt",
-		".task/build",
+		".task/checksum/build",
 	}
 
 	for _, f := range files {

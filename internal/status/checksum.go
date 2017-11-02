@@ -36,7 +36,7 @@ func (c *Checksum) IsUpToDate() (bool, error) {
 		return false, nil
 	}
 
-	_ = os.MkdirAll(filepath.Join(c.Dir, ".task"), 0755)
+	_ = os.MkdirAll(filepath.Join(c.Dir, ".task", "checksum"), 0755)
 	if err = ioutil.WriteFile(checksumFile, []byte(newMd5+"\n"), 0644); err != nil {
 		return false, err
 	}
@@ -76,7 +76,7 @@ func (c *Checksum) OnError() error {
 }
 
 func (c *Checksum) checksumFilePath() string {
-	return filepath.Join(c.Dir, ".task", c.normalizeFilename(c.Task))
+	return filepath.Join(c.Dir, ".task", "checksum", c.normalizeFilename(c.Task))
 }
 
 var checksumFilenameRegexp = regexp.MustCompile("[^A-z0-9]")
