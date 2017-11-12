@@ -30,6 +30,8 @@ type Executor struct {
 	Verbose bool
 	Silent  bool
 
+	Context context.Context
+
 	Stdin  io.Reader
 	Stdout io.Writer
 	Stderr io.Writer
@@ -63,6 +65,9 @@ type Task struct {
 
 // Run runs Task
 func (e *Executor) Run(calls ...Call) error {
+	if e.Context == nil {
+		e.Context = context.Background()
+	}
 	if e.Stdin == nil {
 		e.Stdin = os.Stdin
 	}
@@ -96,7 +101,7 @@ func (e *Executor) Run(calls ...Call) error {
 	}
 
 	for _, c := range calls {
-		if err := e.RunTask(context.TODO(), c); err != nil {
+		if err := e.RunTask(e.Context, c); err != nil {
 			return err
 		}
 	}

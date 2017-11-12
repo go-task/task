@@ -1,9 +1,11 @@
 package main
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/go-task/task"
 	"github.com/go-task/task/internal/args"
@@ -37,9 +39,10 @@ Options:
 
 func main() {
 	log.SetFlags(0)
+	log.SetOutput(os.Stderr)
 
 	pflag.Usage = func() {
-		fmt.Print(usage)
+		log.Print(usage)
 		pflag.PrintDefaults()
 	}
 
@@ -87,6 +90,8 @@ func main() {
 		Silent:  silent,
 		Dir:     dir,
 
+		Context: getSignalContext(),
+
 		Stdin:  os.Stdin,
 		Stdout: os.Stdout,
 		Stderr: os.Stderr,
@@ -114,4 +119,16 @@ func main() {
 	if err := e.Run(calls...); err != nil {
 		log.Fatal(err)
 	}
+}
+
+func getSignalContext() context.Context {
+	ch := make(chan os.Signal, 1)
+	signal.Notify(ch, os.Interrupt, os.Kill, syscall.SIGTERM)
+	ctx, cancel := context.WithCancel(context.Background())
+	go func() {
+		sig := <-ch
+		log.Printf("task: signal received: %s", sig)
+		cancel()
+	}()
+	return ctx
 }
