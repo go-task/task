@@ -62,7 +62,8 @@ type Runner struct {
 	// >0 to break or continue out of N enclosing loops
 	breakEnclosing, contnEnclosing int
 
-	inLoop bool
+	inLoop    bool
+	canReturn bool
 
 	err  error // current fatal error
 	exit int   // current (last) exit code
@@ -77,6 +78,21 @@ type Runner struct {
 	Context context.Context
 
 	stopOnCmdErr bool // set -e
+
+	dirStack []string
+
+	// KillTimeout holds how much time the interpreter will wait for a
+	// program to stop after being sent an interrupt signal, after
+	// which a kill signal will be sent. This process will happen when the
+	// interpreter's context is cancelled.
+	//
+	// The zero value will default to 2 seconds.
+	//
+	// A negative value means that a kill signal will be sent immediately.
+	//
+	// On Windows, the kill signal is always sent immediately,
+	// because Go doesn't currently support sending Interrupt on Windows.
+	KillTimeout time.Duration
 }
 
 // Reset will set the unexported fields back to zero, fill any exported
@@ -89,15 +105,16 @@ type Runner struct {
 func (r *Runner) Reset() error {
 	// reset the internal state
 	*r = Runner{
-		Env:     r.Env,
-		Dir:     r.Dir,
-		Params:  r.Params,
-		Context: r.Context,
-		Stdin:   r.Stdin,
-		Stdout:  r.Stdout,
-		Stderr:  r.Stderr,
-		Exec:    r.Exec,
-		Open:    r.Open,
+		Env:         r.Env,
+		Dir:         r.Dir,
+		Params:      r.Params,
+		Context:     r.Context,
+		Stdin:       r.Stdin,
+		Stdout:      r.Stdout,
+		Stderr:      r.Stderr,
+		Exec:        r.Exec,
+		Open:        r.Open,
+		KillTimeout: r.KillTimeout,
 	}
 	if r.Context == nil {
 		r.Context = context.Background()
@@ -114,9 +131,10 @@ func (r *Runner) Reset() error {
 		name, val := kv[:i], kv[i+1:]
 		r.envMap[name] = val
 	}
+	r.vars = make(map[string]varValue, 4)
 	if _, ok := r.envMap["HOME"]; !ok {
 		u, _ := user.Current()
-		r.envMap["HOME"] = u.HomeDir
+		r.vars["HOME"] = u.HomeDir
 	}
 	if r.Dir == "" {
 		dir, err := os.Getwd()
@@ -125,36 +143,57 @@ func (r *Runner) Reset() error {
 		}
 		r.Dir = dir
 	}
+	r.vars["PWD"] = r.Dir
+	r.dirStack = []string{r.Dir}
 	if r.Exec == nil {
 		r.Exec = DefaultExec
 	}
 	if r.Open == nil {
 		r.Open = DefaultOpen
 	}
+	if r.KillTimeout == 0 {
+		r.KillTimeout = 2 * time.Second
+	}
 	return nil
 }
 
 func (r *Runner) ctx() Ctxt {
 	c := Ctxt{
-		Context: r.Context,
-		Env:     r.Env,
-		Dir:     r.Dir,
-		Stdin:   r.Stdin,
-		Stdout:  r.Stdout,
-		Stderr:  r.Stderr,
+		Context:     r.Context,
+		Env:         r.Env,
+		Dir:         r.Dir,
+		Stdin:       r.Stdin,
+		Stdout:      r.Stdout,
+		Stderr:      r.Stderr,
+		KillTimeout: r.KillTimeout,
 	}
 	for name, val := range r.cmdVars {
-		c.Env = append(c.Env, name+"="+varStr(val))
+		c.Env = append(c.Env, name+"="+r.varStr(val, 0))
 	}
 	return c
 }
 
-// varValue can hold a string, an indexed array ([]string) or an
-// associative array (map[string]string)
-// TODO: implement associative arrays
+// varValue can hold any of:
+//
+//     string (normal variable)
+//     []string (indexed array)
+//     arrayMap (associative array)
+//     nameRef (name reference)
 type varValue interface{}
 
-func varStr(v varValue) string {
+type arrayMap struct {
+	keys []string
+	vals map[string]string
+}
+
+type nameRef string
+
+// maxNameRefDepth defines the maximum number of times to follow
+// references when expanding a variable. Otherwise, simple name
+// reference loops could crash the interpreter quite easily.
+const maxNameRefDepth = 100
+
+func (r *Runner) varStr(v varValue, depth int) string {
 	switch x := v.(type) {
 	case string:
 		return x
@@ -162,11 +201,19 @@ func varStr(v varValue) string {
 		if len(x) > 0 {
 			return x[0]
 		}
+	case arrayMap:
+		// nothing to do
+	case nameRef:
+		if depth > maxNameRefDepth {
+			return ""
+		}
+		val, _ := r.lookupVar(string(x))
+		return r.varStr(val, depth+1)
 	}
 	return ""
 }
 
-func (r *Runner) varInd(v varValue, e syntax.ArithmExpr) string {
+func (r *Runner) varInd(v varValue, e syntax.ArithmExpr, depth int) string {
 	switch x := v.(type) {
 	case string:
 		i := r.arithm(e)
@@ -186,6 +233,26 @@ func (r *Runner) varInd(v varValue, e syntax.ArithmExpr) string {
 		if len(x) > 0 {
 			return x[i]
 		}
+	case arrayMap:
+		if w, ok := e.(*syntax.Word); ok {
+			if lit, ok := w.Parts[0].(*syntax.Lit); ok {
+				switch lit.Value {
+				case "@", "*":
+					var strs []string
+					for _, k := range x.keys {
+						strs = append(strs, x.vals[k])
+					}
+					return strings.Join(strs, " ")
+				}
+			}
+		}
+		return x.vals[r.loneWord(e.(*syntax.Word))]
+	case nameRef:
+		if depth > maxNameRefDepth {
+			return ""
+		}
+		v, _ = r.lookupVar(string(x))
+		return r.varInd(v, e, depth+1)
 	}
 	return ""
 }
@@ -228,9 +295,6 @@ func (r *Runner) lastExit() {
 }
 
 func (r *Runner) setVar(name string, index syntax.ArithmExpr, val varValue) {
-	if r.vars == nil {
-		r.vars = make(map[string]varValue, 4)
-	}
 	if index == nil {
 		r.vars[name] = val
 		return
@@ -238,12 +302,36 @@ func (r *Runner) setVar(name string, index syntax.ArithmExpr, val varValue) {
 	// from the syntax package, we know that val must be a string if
 	// index is non-nil; nested arrays are forbidden.
 	valStr := val.(string)
+	// if the existing variable is already an arrayMap, try our best
+	// to convert the key to a string
+	_, isArrayMap := r.vars[name].(arrayMap)
+	if stringIndex(index) || isArrayMap {
+		var amap arrayMap
+		switch x := r.vars[name].(type) {
+		case string, []string:
+			return // TODO
+		case arrayMap:
+			amap = x
+		}
+		w, ok := index.(*syntax.Word)
+		if !ok {
+			return
+		}
+		k := r.loneWord(w)
+		if _, ok := amap.vals[k]; !ok {
+			amap.keys = append(amap.keys, k)
+		}
+		amap.vals[k] = valStr
+		r.vars[name] = amap
+		return
+	}
 	var list []string
 	switch x := r.vars[name].(type) {
 	case string:
 		list = []string{x}
 	case []string:
 		list = x
+	case arrayMap: // done above
 	}
 	k := r.arithm(index)
 	for len(list) < k+1 {
@@ -254,10 +342,6 @@ func (r *Runner) setVar(name string, index syntax.ArithmExpr, val varValue) {
 }
 
 func (r *Runner) lookupVar(name string) (varValue, bool) {
-	switch name {
-	case "PWD":
-		return r.Dir, true
-	}
 	if val, e := r.cmdVars[name]; e {
 		return val, true
 	}
@@ -270,7 +354,7 @@ func (r *Runner) lookupVar(name string) (varValue, bool) {
 
 func (r *Runner) getVar(name string) string {
 	val, _ := r.lookupVar(name)
-	return varStr(val)
+	return r.varStr(val, 0)
 }
 
 func (r *Runner) delVar(name string) {
@@ -494,8 +578,7 @@ func (r *Runner) stmt(st *syntax.Stmt) {
 	}
 	if st.Background {
 		r.bgShells.Add(1)
-		r2 := *r
-		r2.bgShells = sync.WaitGroup{}
+		r2 := r.sub()
 		go func() {
 			r2.stmtSync(st)
 			r.bgShells.Done()
@@ -505,7 +588,16 @@ func (r *Runner) stmt(st *syntax.Stmt) {
 	}
 }
 
-func (r *Runner) assignValue(as *syntax.Assign) varValue {
+func stringIndex(index syntax.ArithmExpr) bool {
+	w, ok := index.(*syntax.Word)
+	if !ok || len(w.Parts) != 1 {
+		return false
+	}
+	_, ok = w.Parts[0].(*syntax.DblQuoted)
+	return ok
+}
+
+func (r *Runner) assignValue(as *syntax.Assign, mode string) varValue {
 	prev, _ := r.lookupVar(as.Name.Value)
 	if as.Value != nil {
 		s := r.loneWord(as.Value)
@@ -521,39 +613,72 @@ func (r *Runner) assignValue(as *syntax.Assign) varValue {
 			}
 			x[0] += s
 			return x
+		case arrayMap:
+			// TODO
 		}
 		return s
 	}
-	if as.Array != nil {
-		maxIndex := len(as.Array.Elems) - 1
-		indexes := make([]int, len(as.Array.Elems))
-		for i, elem := range as.Array.Elems {
-			if elem.Index == nil {
-				indexes[i] = i
+	if as.Array == nil {
+		return nil
+	}
+	elems := as.Array.Elems
+	if mode == "" {
+		if len(elems) == 0 || !stringIndex(elems[0].Index) {
+			mode = "-a" // indexed
+		} else {
+			mode = "-A" // associative
+		}
+	}
+	if mode == "-A" {
+		// associative array
+		amap := arrayMap{
+			keys: make([]string, 0, len(elems)),
+			vals: make(map[string]string, len(elems)),
+		}
+		for _, elem := range elems {
+			k := r.loneWord(elem.Index.(*syntax.Word))
+			if _, ok := amap.vals[k]; ok {
 				continue
 			}
-			k := r.arithm(elem.Index)
-			indexes[i] = k
-			if k > maxIndex {
-				maxIndex = k
-			}
-		}
-		strs := make([]string, maxIndex+1)
-		for i, elem := range as.Array.Elems {
-			strs[indexes[i]] = r.loneWord(elem.Value)
+			amap.keys = append(amap.keys, k)
+			amap.vals[k] = r.loneWord(elem.Value)
 		}
 		if !as.Append || prev == nil {
-			return strs
+			return amap
 		}
-		switch x := prev.(type) {
-		case string:
-			return append([]string{x}, strs...)
-		case []string:
-			return append(x, strs...)
+		// TODO
+		return amap
+	}
+	// indexed array
+	maxIndex := len(elems) - 1
+	indexes := make([]int, len(elems))
+	for i, elem := range elems {
+		if elem.Index == nil {
+			indexes[i] = i
+			continue
 		}
+		k := r.arithm(elem.Index)
+		indexes[i] = k
+		if k > maxIndex {
+			maxIndex = k
+		}
+	}
+	strs := make([]string, maxIndex+1)
+	for i, elem := range elems {
+		strs[indexes[i]] = r.loneWord(elem.Value)
+	}
+	if !as.Append || prev == nil {
 		return strs
 	}
-	return nil
+	switch x := prev.(type) {
+	case string:
+		return append([]string{x}, strs...)
+	case []string:
+		return append(x, strs...)
+	case arrayMap:
+		// TODO
+	}
+	return strs
 }
 
 func (r *Runner) stmtSync(st *syntax.Stmt) {
@@ -586,6 +711,18 @@ func oneIf(b bool) int {
 	return 0
 }
 
+func (r *Runner) sub() *Runner {
+	r2 := *r
+	r2.bgShells = sync.WaitGroup{}
+	// TODO: perhaps we could do a lazy copy here, or some sort of
+	// overlay to avoid copying all the time
+	r2.vars = make(map[string]varValue, len(r.vars))
+	for k, v := range r.vars {
+		r2.vars[k] = v
+	}
+	return &r2
+}
+
 func (r *Runner) cmd(cm syntax.Command) {
 	if r.stop() {
 		return
@@ -594,14 +731,15 @@ func (r *Runner) cmd(cm syntax.Command) {
 	case *syntax.Block:
 		r.stmts(x.StmtList)
 	case *syntax.Subshell:
-		r2 := *r
+		r2 := r.sub()
 		r2.stmts(x.StmtList)
 		r.exit = r2.exit
 		r.setErr(r2.err)
 	case *syntax.CallExpr:
-		if len(x.Args) == 0 {
+		fields := r.Fields(x.Args)
+		if len(fields) == 0 {
 			for _, as := range x.Assigns {
-				r.setVar(as.Name.Value, as.Index, r.assignValue(as))
+				r.setVar(as.Name.Value, as.Index, r.assignValue(as, ""))
 			}
 			break
 		}
@@ -610,9 +748,8 @@ func (r *Runner) cmd(cm syntax.Command) {
 			r.cmdVars = make(map[string]varValue, len(x.Assigns))
 		}
 		for _, as := range x.Assigns {
-			r.cmdVars[as.Name.Value] = r.assignValue(as)
+			r.cmdVars[as.Name.Value] = r.assignValue(as, "")
 		}
-		fields := r.Fields(x.Args)
 		r.call(x.Args[0].Pos(), fields[0], fields[1:])
 		r.cmdVars = oldVars
 	case *syntax.BinaryCmd:
@@ -629,8 +766,7 @@ func (r *Runner) cmd(cm syntax.Command) {
 			}
 		case syntax.Pipe, syntax.PipeAll:
 			pr, pw := io.Pipe()
-			r2 := *r
-			r2.Stdin = r.Stdin
+			r2 := r.sub()
 			r2.Stdout = pw
 			if x.Op == syntax.PipeAll {
 				r2.Stderr = pw
@@ -716,15 +852,37 @@ func (r *Runner) cmd(cm syntax.Command) {
 			}
 		}
 	case *syntax.TestClause:
-		if r.bashTest(x.X) == "" && r.exit == 0 {
-			r.exit = 1
+		if r.bashTest(x.X) == "" {
+			if r.exit == 0 {
+				// to preserve exit code 2 for regex
+				// errors, etc
+				r.exit = 1
+			}
+		} else {
+			r.exit = 0
 		}
 	case *syntax.DeclClause:
-		if len(x.Opts) > 0 {
-			r.runErr(cm.Pos(), "unhandled declare opts")
+		mode := ""
+		for _, opt := range x.Opts {
+			_ = opt
+			switch s := r.loneWord(opt); s {
+			case "-n", "-A":
+				mode = s
+			default:
+				r.runErr(cm.Pos(), "unhandled declare opts")
+			}
 		}
 		for _, as := range x.Assigns {
-			r.setVar(as.Name.Value, as.Index, r.assignValue(as))
+			val := r.assignValue(as, mode)
+			switch mode {
+			case "-n": // name reference
+				if name, ok := val.(string); ok {
+					val = nameRef(name)
+				}
+			case "-A":
+				// nothing to do
+			}
+			r.setVar(as.Name.Value, as.Index, val)
 		}
 	case *syntax.TimeClause:
 		start := time.Now()
@@ -789,7 +947,11 @@ func (r *Runner) redir(rd *syntax.Redirect) (io.Closer, error) {
 			*orig = r.Stderr
 		}
 		return nil, nil
-	case syntax.DplIn:
+	case syntax.RdrIn, syntax.RdrOut, syntax.AppOut,
+		syntax.RdrAll, syntax.AppAll:
+		// done further below
+	// case syntax.DplIn:
+	default:
 		r.runErr(rd.Pos(), "unhandled redirect op: %v", rd.Op)
 	}
 	mode := os.O_RDONLY
@@ -909,7 +1071,7 @@ func (r *Runner) wordFields(wps []syntax.WordPart, quoted bool) [][]fieldPart {
 				splitAdd(val)
 			}
 		case *syntax.CmdSubst:
-			r2 := *r
+			r2 := r.sub()
 			var buf bytes.Buffer
 			r2.Stdout = &buf
 			r2.stmts(x.StmtList)
@@ -935,13 +1097,23 @@ func (r *Runner) wordFields(wps []syntax.WordPart, quoted bool) [][]fieldPart {
 	return fields
 }
 
+type returnCode uint8
+
+func (returnCode) Error() string { return "returned" }
+
 func (r *Runner) call(pos syntax.Pos, name string, args []string) {
 	if body := r.funcs[name]; body != nil {
 		// stack them to support nested func calls
 		oldParams := r.Params
 		r.Params = args
+		r.canReturn = true
 		r.stmt(body)
 		r.Params = oldParams
+		r.canReturn = false
+		if code, ok := r.err.(returnCode); ok {
+			r.err = nil
+			r.exit = int(code)
+		}
 		return
 	}
 	if isBuiltin(name) {

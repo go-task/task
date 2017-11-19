@@ -8,19 +8,22 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"runtime"
 	"syscall"
+	"time"
 )
 
 // Ctxt is the type passed to all the module functions. It contains some
 // of the current state of the Runner, as well as some fields necessary
 // to implement some of the modules.
 type Ctxt struct {
-	Context context.Context
-	Env     []string
-	Dir     string
-	Stdin   io.Reader
-	Stdout  io.Writer
-	Stderr  io.Writer
+	Context     context.Context
+	Env         []string
+	Dir         string
+	Stdin       io.Reader
+	Stdout      io.Writer
+	Stderr      io.Writer
+	KillTimeout time.Duration
 }
 
 // ModuleExec is the module responsible for executing a program. It is
@@ -36,13 +39,33 @@ type Ctxt struct {
 type ModuleExec func(ctx Ctxt, name string, args []string) error
 
 func DefaultExec(ctx Ctxt, name string, args []string) error {
-	cmd := exec.CommandContext(ctx.Context, name, args...)
+	cmd := exec.Command(name, args...)
 	cmd.Env = ctx.Env
 	cmd.Dir = ctx.Dir
 	cmd.Stdin = ctx.Stdin
 	cmd.Stdout = ctx.Stdout
 	cmd.Stderr = ctx.Stderr
-	err := cmd.Run()
+
+	err := cmd.Start()
+	if err == nil {
+		go func() {
+			<-ctx.Context.Done()
+
+			if ctx.KillTimeout <= 0 || runtime.GOOS == "windows" {
+				_ = cmd.Process.Signal(os.Kill)
+				return
+			}
+
+			go func() {
+				time.Sleep(ctx.KillTimeout)
+				_ = cmd.Process.Signal(os.Kill)
+			}()
+			_ = cmd.Process.Signal(os.Interrupt)
+		}()
+
+		err = cmd.Wait()
+	}
+
 	switch x := err.(type) {
 	case *exec.ExitError:
 		// started, but errored - default to 1 if OS
@@ -58,7 +81,7 @@ func DefaultExec(ctx Ctxt, name string, args []string) error {
 		return ExitCode(127)
 		// TODO: print something?
 	default:
-		return nil
+		return err
 	}
 }
 

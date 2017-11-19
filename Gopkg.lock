@@ -41,7 +41,7 @@
   branch = "master"
   name = "github.com/mattn/go-zglob"
   packages = [".","fastwalk"]
-  revision = "4ecb59231939b2e499b1f2fd8f075565977d2452"
+  revision = "4b74c24375b3b1ee226867156e01996f4e19a8d6"
 
 [[projects]]
   branch = "master"
@@ -71,7 +71,7 @@
   branch = "master"
   name = "github.com/spf13/pflag"
   packages = ["."]
-  revision = "97afa5e7ca8a08a383cb259e06636b5e2cc7897f"
+  revision = "4c012f6dcd9546820e378d0bdda4d8fc772cdfea"
 
 [[projects]]
   name = "github.com/stretchr/testify"
@@ -82,14 +82,14 @@
 [[projects]]
   branch = "master"
   name = "golang.org/x/crypto"
-  packages = ["pbkdf2","scrypt"]
-  revision = "bd6f299fb381e4c3393d1c4b1f0b94f5e77650c8"
+  packages = ["pbkdf2","scrypt","ssh/terminal"]
+  revision = "9f005a07e0d31d45e6656d241bb5c0f2efd4bc94"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/net"
   packages = ["context"]
-  revision = "ea0da6f35caf3ff91581c800469e22eef75076f4"
+  revision = "9dfe39835686865bff950a07b394c12a98ddc811"
 
 [[projects]]
   branch = "master"
@@ -98,16 +98,22 @@
   revision = "fd80eb99c8f653c847d294a001bdf2a3a6f768f5"
 
 [[projects]]
+  branch = "master"
+  name = "golang.org/x/sys"
+  packages = ["unix","windows"]
+  revision = "0ac51a24ef1c37380f98ba8b98f56e3bffd59850"
+
+[[projects]]
   branch = "v2"
   name = "gopkg.in/yaml.v2"
   packages = ["."]
-  revision = "eb3733d160e74a9c7e442f435eb3bea458e1d19f"
+  revision = "287cf08546ab5e7e37d55a84f7ed3fd1db036de5"
 
 [[projects]]
   branch = "master"
   name = "mvdan.cc/sh"
   packages = ["interp","syntax"]
-  revision = "6582b4e9a06a902580267d416b57fe49947ea29f"
+  revision = "5758e57655f2f2242603195aaaad08d1cb9f8f85"
 
 [solve-meta]
   analyzer-name = "dep"

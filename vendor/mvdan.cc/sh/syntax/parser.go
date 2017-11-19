@@ -59,7 +59,7 @@ func (p *Parser) Parse(r io.Reader, name string) (*File, error) {
 	return p.f, p.err
 }
 
-func (p *Parser) Stmts(r io.Reader, fn func(*Stmt)) error {
+func (p *Parser) Stmts(r io.Reader, fn func(*Stmt) bool) error {
 	p.reset()
 	p.f = &File{}
 	p.src = r
@@ -490,7 +490,7 @@ func (p *Parser) curErr(format string, a ...interface{}) {
 	p.posErr(p.pos, format, a...)
 }
 
-func (p *Parser) stmts(fn func(*Stmt), stops ...string) {
+func (p *Parser) stmts(fn func(*Stmt) bool, stops ...string) {
 	gotEnd := true
 loop:
 	for p.tok != _EOF {
@@ -526,21 +526,25 @@ loop:
 		if p.tok == _EOF {
 			break
 		}
-		if s, end := p.getStmt(true, false); s == nil {
+		s, end := p.getStmt(true, false, false)
+		if s == nil {
 			p.invalidStmtStart()
-		} else {
-			fn(s)
-			gotEnd = end
+			break
+		}
+		gotEnd = end
+		if !fn(s) {
+			break
 		}
 	}
 }
 
 func (p *Parser) stmtList(stops ...string) (sl StmtList) {
-	fn := func(s *Stmt) {
+	fn := func(s *Stmt) bool {
 		if sl.Stmts == nil {
 			sl.Stmts = p.stList()
 		}
 		sl.Stmts = append(sl.Stmts, s)
+		return true
 	}
 	p.stmts(fn, stops...)
 	sl.Last, p.accComs = p.accComs, nil
@@ -1376,7 +1380,7 @@ func (p *Parser) doRedirect(s *Stmt) {
 	s.Redirs = append(s.Redirs, r)
 }
 
-func (p *Parser) getStmt(readEnd, binCmd bool) (s *Stmt, gotEnd bool) {
+func (p *Parser) getStmt(readEnd, binCmd, fnBody bool) (s *Stmt, gotEnd bool) {
 	pos, ok := p.gotRsrv("!")
 	s = p.stmt(pos)
 	if ok {
@@ -1403,7 +1407,8 @@ func (p *Parser) getStmt(readEnd, binCmd bool) (s *Stmt, gotEnd bool) {
 				X:     s,
 			}
 			p.next()
-			if b.Y, _ = p.getStmt(false, true); b.Y == nil || p.err != nil {
+			b.Y, _ = p.getStmt(false, true, false)
+			if b.Y == nil || p.err != nil {
 				p.followErr(b.OpPos, b.Op.String(), "a statement")
 				return
 			}
@@ -1428,7 +1433,7 @@ func (p *Parser) getStmt(readEnd, binCmd bool) (s *Stmt, gotEnd bool) {
 		s.Coprocess = true
 	}
 	gotEnd = s.Semicolon.IsValid() || s.Background || s.Coprocess
-	if len(p.accComs) > 0 && !binCmd {
+	if len(p.accComs) > 0 && !binCmd && !fnBody {
 		c := p.accComs[0]
 		if c.Pos().Line() == s.End().Line() {
 			s.Comments = append(s.Comments, c)
@@ -2111,7 +2116,7 @@ func (p *Parser) funcDecl(name *Lit, pos Pos) *FuncDecl {
 		RsrvWord: pos != name.ValuePos,
 		Name:     name,
 	}
-	if fd.Body, _ = p.getStmt(false, false); fd.Body == nil {
+	if fd.Body, _ = p.getStmt(false, false, true); fd.Body == nil {
 		p.followErr(fd.Pos(), "foo()", "a statement")
 	}
 	return fd

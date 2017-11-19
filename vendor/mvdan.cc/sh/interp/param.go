@@ -55,16 +55,16 @@ func (r *Runner) paramExp(pe *syntax.ParamExp) string {
 			val, set = r.lookupVar(name)
 		}
 	}
-	str := varStr(val)
+	str := r.varStr(val, 0)
 	if pe.Index != nil {
-		str = r.varInd(val, pe.Index)
+		str = r.varInd(val, pe.Index, 0)
 	}
 	switch {
 	case pe.Length:
 		str = strconv.Itoa(utf8.RuneCountInString(str))
 	case pe.Excl:
 		val, set = r.lookupVar(str)
-		str = varStr(val)
+		str = r.varStr(val, 0)
 	}
 	slicePos := func(expr syntax.ArithmExpr) int {
 		p := r.arithm(expr)

@@ -111,6 +111,14 @@ func makePattern(pattern string) (*zenv, error) {
 }
 
 func Glob(pattern string) ([]string, error) {
+	return glob(pattern, false)
+}
+
+func GlobFollowSymlinks(pattern string) ([]string, error) {
+	return glob(pattern, true)
+}
+
+func glob(pattern string, followSymlinks bool) ([]string, error) {
 	zenv, err := makePattern(pattern)
 	if err != nil {
 		return nil, err
@@ -130,6 +138,16 @@ func Glob(pattern string) ([]string, error) {
 			path = path[len(zenv.root)+1:]
 		}
 		path = filepath.ToSlash(path)
+
+		if followSymlinks && info == os.ModeSymlink {
+			followedPath, err := filepath.EvalSymlinks(path)
+			if err == nil {
+				fi, err := os.Lstat(followedPath)
+				if err == nil && fi.IsDir() {
+					return fastwalk.TraverseLink
+				}
+			}
+		}
 
 		if info.IsDir() {
 			if path == "." || len(path) <= len(zenv.root) {

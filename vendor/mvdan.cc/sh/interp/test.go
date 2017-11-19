@@ -9,6 +9,8 @@ import (
 	"os/exec"
 	"regexp"
 
+	"golang.org/x/crypto/ssh/terminal"
+
 	"mvdan.cc/sh/syntax"
 )
 
@@ -113,8 +115,12 @@ func (r *Runner) unTest(op syntax.UnTestOperator, x string) bool {
 		return info != nil && info.Mode().IsRegular()
 	case syntax.TsDirect:
 		return r.statMode(x, os.ModeDir)
-	//case syntax.TsCharSp:
-	//case syntax.TsBlckSp:
+	case syntax.TsCharSp:
+		return r.statMode(x, os.ModeCharDevice)
+	case syntax.TsBlckSp:
+		info := r.stat(x)
+		return info != nil && info.Mode()&os.ModeDevice != 0 &&
+			info.Mode()&os.ModeCharDevice == 0
 	case syntax.TsNmPipe:
 		return r.statMode(x, os.ModeNamedPipe)
 	case syntax.TsSocket:
@@ -149,16 +155,26 @@ func (r *Runner) unTest(op syntax.UnTestOperator, x string) bool {
 	case syntax.TsNoEmpty:
 		info := r.stat(x)
 		return info != nil && info.Size() > 0
-	//case syntax.TsFdTerm:
+	case syntax.TsFdTerm:
+		return terminal.IsTerminal(atoi(x))
 	case syntax.TsEmpStr:
 		return x == ""
 	case syntax.TsNempStr:
 		return x != ""
-	//case syntax.TsOptSet:
+	case syntax.TsOptSet:
+		switch x {
+		case "errexit":
+			return r.stopOnCmdErr
+		default:
+			return false
+		}
 	case syntax.TsVarSet:
 		_, e := r.lookupVar(x)
 		return e
-	//case syntax.TsRefVar:
+	case syntax.TsRefVar:
+		v, _ := r.lookupVar(x)
+		_, ok := v.(nameRef)
+		return ok
 	case syntax.TsNot:
 		return x == ""
 	default:

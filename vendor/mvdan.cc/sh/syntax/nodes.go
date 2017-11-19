@@ -279,7 +279,7 @@ type Block struct {
 	StmtList
 }
 
-func (b *Block) Pos() Pos { return b.Rbrace }
+func (b *Block) Pos() Pos { return b.Lbrace }
 func (b *Block) End() Pos { return posAddCol(b.Rbrace, 1) }
 
 // IfClause represents an if statement.

@@ -18,8 +18,9 @@ func isBuiltin(name string) bool {
 	case "true", ":", "false", "exit", "set", "shift", "unset",
 		"echo", "printf", "break", "continue", "pwd", "cd",
 		"wait", "builtin", "trap", "type", "source", ".", "command",
-		"pushd", "popd", "umask", "alias", "unalias", "fg", "bg",
-		"getopts", "eval", "test", "[", "exec":
+		"dirs", "pushd", "popd", "umask", "alias", "unalias",
+		"fg", "bg", "getopts", "eval", "test", "[", "exec",
+		"return":
 		return true
 	}
 	return false
@@ -146,25 +147,17 @@ func (r *Runner) builtinCode(pos syntax.Pos, name string, args []string) int {
 	case "pwd":
 		r.outf("%s\n", r.getVar("PWD"))
 	case "cd":
-		var dir string
+		var path string
 		switch len(args) {
 		case 0:
-			dir = r.getVar("HOME")
+			path = r.getVar("HOME")
 		case 1:
-			dir = args[0]
+			path = args[0]
 		default:
 			r.errf("usage: cd [dir]\n")
 			return 2
 		}
-		dir = r.relPath(dir)
-		info, err := os.Stat(dir)
-		if err != nil || !info.IsDir() {
-			return 1
-		}
-		if !hasPermissionToDir(info) {
-			return 1
-		}
-		r.Dir = dir
+		return r.changeDir(path)
 	case "wait":
 		if len(args) > 0 {
 			r.runErr(pos, "wait with args not handled yet")
@@ -218,20 +211,24 @@ func (r *Runner) builtinCode(pos syntax.Pos, name string, args []string) int {
 		}
 		f, err := r.open(r.relPath(args[0]), os.O_RDONLY, 0, false)
 		if err != nil {
-			r.errf("eval: %v\n", err)
+			r.errf("source: %v\n", err)
 			return 1
 		}
 		defer f.Close()
 		p := syntax.NewParser()
 		file, err := p.Parse(f, args[0])
 		if err != nil {
-			r.errf("eval: %v\n", err)
+			r.errf("source: %v\n", err)
 			return 1
 		}
 		r2 := *r
 		r2.Params = args[1:]
 		r2.Reset()
+		r2.canReturn = true
 		r2.Run(file)
+		if code, ok := r2.err.(returnCode); ok {
+			r2.exit = int(code)
+		}
 		return r2.exit
 	case "[":
 		if len(args) == 0 || args[len(args)-1] != "]" {
@@ -257,15 +254,156 @@ func (r *Runner) builtinCode(pos syntax.Pos, name string, args []string) int {
 		// and it's not available on Windows.
 		if len(args) == 0 {
 			// TODO: different behavior, apparently
-			return 0
+			break
 		}
 		r.exec(args[0], args[1:])
 		r.lastExit()
 		return r.exit
-	case "trap", "command", "pushd", "popd",
-		"umask", "alias", "unalias", "fg", "bg", "getopts":
+	case "command":
+		show := false
+		for len(args) > 0 && strings.HasPrefix(args[0], "-") {
+			switch args[0] {
+			case "-v":
+				show = true
+			default:
+				r.errf("command: invalid option %s\n", args[0])
+				return 2
+			}
+			args = args[1:]
+		}
+		if len(args) == 0 {
+			break
+		}
+		if !show {
+			if isBuiltin(args[0]) {
+				return r.builtinCode(pos, args[0], args[1:])
+			}
+			r.exec(args[0], args[1:])
+			return r.exit
+		}
+		last := 0
+		for _, arg := range args {
+			last = 0
+			if r.funcs[arg] != nil || isBuiltin(arg) {
+				r.outf("%s\n", arg)
+			} else if path, err := exec.LookPath(arg); err == nil {
+				r.outf("%s\n", path)
+			} else {
+				last = 1
+			}
+		}
+		return last
+	case "dirs":
+		for i := len(r.dirStack) - 1; i >= 0; i-- {
+			r.outf("%s", r.dirStack[i])
+			if i > 0 {
+				r.outf(" ")
+			}
+		}
+		r.outf("\n")
+	case "pushd":
+		change := true
+		if len(args) > 0 && args[0] == "-n" {
+			change = false
+			args = args[1:]
+		}
+		swap := func() string {
+			oldtop := r.dirStack[len(r.dirStack)-1]
+			top := r.dirStack[len(r.dirStack)-2]
+			r.dirStack[len(r.dirStack)-1] = top
+			r.dirStack[len(r.dirStack)-2] = oldtop
+			return top
+		}
+		switch len(args) {
+		case 0:
+			if !change {
+				break
+			}
+			if len(r.dirStack) < 2 {
+				r.errf("pushd: no other directory\n")
+				return 1
+			}
+			newtop := swap()
+			if code := r.changeDir(newtop); code != 0 {
+				return code
+			}
+			r.builtinCode(syntax.Pos{}, "dirs", nil)
+		case 1:
+			if change {
+				if code := r.changeDir(args[0]); code != 0 {
+					return code
+				}
+				r.dirStack = append(r.dirStack, r.Dir)
+			} else {
+				r.dirStack = append(r.dirStack, args[0])
+				swap()
+			}
+			r.builtinCode(syntax.Pos{}, "dirs", nil)
+		default:
+			r.errf("pushd: too many arguments\n")
+			return 2
+		}
+	case "popd":
+		change := true
+		if len(args) > 0 && args[0] == "-n" {
+			change = false
+			args = args[1:]
+		}
+		switch len(args) {
+		case 0:
+			if len(r.dirStack) < 2 {
+				r.errf("popd: directory stack empty\n")
+				return 1
+			}
+			oldtop := r.dirStack[len(r.dirStack)-1]
+			r.dirStack = r.dirStack[:len(r.dirStack)-1]
+			if change {
+				newtop := r.dirStack[len(r.dirStack)-1]
+				if code := r.changeDir(newtop); code != 0 {
+					return code
+				}
+			} else {
+				r.dirStack[len(r.dirStack)-1] = oldtop
+			}
+			r.builtinCode(syntax.Pos{}, "dirs", nil)
+		default:
+			r.errf("popd: invdalid argument\n")
+			return 2
+		}
+	case "return":
+		if !r.canReturn {
+			r.errf("return: can only be done from a func or sourced script\n")
+			return 1
+		}
+		code := 0
+		switch len(args) {
+		case 0:
+		case 1:
+			code = atoi(args[0])
+		default:
+			r.errf("return: too many arguments\n")
+			return 2
+		}
+		r.setErr(returnCode(code))
+	default:
+		// "trap", "umask", "alias", "unalias", "fg", "bg",
+		// "getopts"
 		r.runErr(pos, "unhandled builtin: %s", name)
 	}
+	return 0
+}
+
+func (r *Runner) changeDir(path string) int {
+	path = r.relPath(path)
+	info, err := os.Stat(path)
+	if err != nil || !info.IsDir() {
+		return 1
+	}
+	if !hasPermissionToDir(info) {
+		return 1
+	}
+	r.Dir = path
+	r.vars["PWD"] = path
 	return 0
 }
 
