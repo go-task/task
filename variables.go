@@ -85,49 +85,82 @@ func (v *Var) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 // getVariables returns fully resolved variables following the priority order:
-// 1. Task variables
-// 2. Call variables
-// 3. Taskvars file variables
-// 4. Environment variables
+// 1. Call variables (should already have been resolved)
+// 2. Environment (should not need to be resolved)
+// 3. Task variables, resolved with access to:
+//    - call, taskvars and environment variables
+// 4. Taskvars variables, resolved with access to:
+//    - environment variables
 func (e *Executor) getVariables(call Call) (Vars, error) {
 	t, ok := e.Tasks[call.Task]
 	if !ok {
-		return nil, &taskNotFoundError{taskName: call.Task}
+		return nil, &taskNotFoundError{call.Task}
 	}
-	vr := varResolver{e: e, vars: getEnvironmentVariables()}
-	vr.merge(e.taskvars)
-	vr.merge(e.taskvars)
-	vr.merge(call.Vars)
-	vr.merge(call.Vars)
-	vr.merge(t.Vars)
-	vr.merge(t.Vars)
-	return vr.vars, vr.err
-}
 
-type varResolver struct {
-	e    *Executor
-	vars Vars
-	err  error
-}
+	merge := func(dest Vars, srcs ...Vars) {
+		for _, src := range srcs {
+			for k, v := range src {
+				dest[k] = v
+			}
+		}
+	}
+	varsKeys := func(srcs ...Vars) []string {
+		m := make(map[string]struct{})
+		for _, src := range srcs {
+			for k := range src {
+				m[k] = struct{}{}
+			}
+		}
+		lst := make([]string, 0, len(m))
+		for k := range m {
+			lst = append(lst, k)
+		}
+		return lst
+	}
+	replaceVars := func(dest Vars, keys []string) error {
+		r := varReplacer{vars: dest}
+		for _, k := range keys {
+			v := dest[k]
+			dest[k] = Var{
+				Static: r.replace(v.Static),
+				Sh:     r.replace(v.Sh),
+			}
+		}
+		return r.err
+	}
+	resolveShell := func(dest Vars, keys []string) error {
+		for _, k := range keys {
+			v := dest[k]
+			static, err := e.handleShVar(v)
+			if err != nil {
+				return err
+			}
+			dest[k] = Var{Static: static}
+		}
+		return nil
+	}
+	update := func(dest Vars, srcs ...Vars) error {
+		merge(dest, srcs...)
+		// updatedKeys ensures template evaluation is run only once.
+		updatedKeys := varsKeys(srcs...)
+		if err := replaceVars(dest, updatedKeys); err != nil {
+			return err
+		}
+		return resolveShell(dest, updatedKeys)
+	}
 
-func (vr *varResolver) merge(vars Vars) {
-	if vr.err != nil {
-		return
+	// Resolve taskvars variables to "result" with environment override variables.
+	override := getEnvironmentVariables()
+	result := make(Vars, len(e.taskvars)+len(t.Vars)+len(override))
+	if err := update(result, e.taskvars, override); err != nil {
+		return nil, err
 	}
-	r := varReplacer{vars: vr.vars}
-	for k, v := range vars {
-		v = Var{
-			Static: r.replace(v.Static),
-			Sh:     r.replace(v.Sh),
-		}
-		static, err := vr.e.handleShVar(v)
-		if err != nil {
-			vr.err = err
-			return
-		}
-		vr.vars[k] = Var{Static: static}
+	// Resolve task variables to "result" with environment and call override variables.
+	merge(override, call.Vars)
+	if err := update(result, t.Vars, override); err != nil {
+		return nil, err
 	}
-	vr.err = r.err
+	return result, nil
 }
 
 func (e *Executor) handleShVar(v Var) (string, error) {
