@@ -42,6 +42,36 @@ type Executor struct {
 
 	dynamicCache   map[string]string
 	muDynamicCache sync.Mutex
+
+	RunTasksFunc func (e *Executor, calls ...Call) error
+	RunTaskFunc func (e *Executor, ctx context.Context, call Call) error // TODO ctx as first param
+	RunDepsFunc func (e *Executor, ctx context.Context, t *Task) error // TODO ctx as first param
+	RunCommandFunc func (e *Executor, ctx context.Context, t *Task, call Call, i int) error // TODO ctx as first param
+}
+
+// RunDeps calls the default implementaion on how to run dependencies for a task
+func RunDeps(e *Executor, ctx context.Context, t *Task) error {
+	return e.runDeps(ctx, t)
+}
+
+// RunTasks calls the default implementation on how to execute multiple tasks
+func RunTasks(e *Executor, calls ...Call) error {
+	for _, c := range calls {
+		if err := e.RunTaskFunc(e, e.Context, c); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// RunTask calls the default implementation on how to execute a single task
+func RunTask(e *Executor, ctx context.Context, call Call) error {
+	return e.RunTask(ctx, call)
+}
+
+// RunCommand calls the default function for running a command
+func RunCommand(e *Executor, ctx context.Context, t *Task, call Call, i int) error {
+	return e.runCommand(ctx, t, call, i)
 }
 
 // Tasks representas a group of tasks
@@ -78,6 +108,22 @@ func (e *Executor) Run(calls ...Call) error {
 		e.Stderr = os.Stderr
 	}
 
+	if e.RunDepsFunc == nil {
+		e.RunDepsFunc = RunDeps
+	}
+
+	if e.RunTasksFunc == nil {
+		e.RunTasksFunc = RunTasks
+	}
+
+	if e.RunTaskFunc == nil {
+		e.RunTaskFunc = RunTask
+	}
+
+	if e.RunCommandFunc == nil {
+		e.RunCommandFunc = RunCommand
+	}
+
 	e.taskCallCount = make(map[string]*int32, len(e.Tasks))
 	for k := range e.Tasks {
 		e.taskCallCount[k] = new(int32)
@@ -100,12 +146,7 @@ func (e *Executor) Run(calls ...Call) error {
 		return e.watchTasks(calls...)
 	}
 
-	for _, c := range calls {
-		if err := e.RunTask(e.Context, c); err != nil {
-			return err
-		}
-	}
-	return nil
+	return e.RunTasksFunc(e, calls...)
 }
 
 // RunTask runs a task by its name
@@ -118,7 +159,7 @@ func (e *Executor) RunTask(ctx context.Context, call Call) error {
 		return &MaximumTaskCallExceededError{task: call.Task}
 	}
 
-	if err := e.runDeps(ctx, t); err != nil {
+	if err := e.RunDepsFunc(e, ctx, t); err != nil {
 		return err
 	}
 
@@ -136,7 +177,7 @@ func (e *Executor) RunTask(ctx context.Context, call Call) error {
 	}
 
 	for i := range t.Cmds {
-		if err := e.runCommand(ctx, t, call, i); err != nil {
+		if err := e.RunCommandFunc(e, ctx, t, call, i); err != nil {
 			if err2 := t.statusOnError(); err2 != nil {
 				e.verboseErrf("task: error cleaning status on error: %v", err2)
 			}
