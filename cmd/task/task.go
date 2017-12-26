@@ -50,6 +50,7 @@ func main() {
 		versionFlag bool
 		init        bool
 		list        bool
+		status      bool
 		force       bool
 		watch       bool
 		verbose     bool
@@ -60,6 +61,7 @@ func main() {
 	pflag.BoolVar(&versionFlag, "version", false, "show Task version")
 	pflag.BoolVarP(&init, "init", "i", false, "creates a new Taskfile.yml in the current folder")
 	pflag.BoolVarP(&list, "list", "l", false, "lists tasks with description of current Taskfile")
+	pflag.BoolVar(&status, "status", false, "exits with non-zero exit code if any of the given tasks is not up-to-date")
 	pflag.BoolVarP(&force, "force", "f", false, "forces execution even when the task is up-to-date")
 	pflag.BoolVarP(&watch, "watch", "w", false, "enables watch of the given task")
 	pflag.BoolVarP(&verbose, "verbose", "v", false, "enables verbose mode")
@@ -114,6 +116,13 @@ func main() {
 	calls, err := args.Parse(arguments...)
 	if err != nil {
 		log.Fatal(err)
+	}
+
+	if status {
+		if err = e.Status(calls...); err != nil {
+			log.Fatal(err)
+		}
+		return
 	}
 
 	if err := e.Run(calls...); err != nil {

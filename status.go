@@ -8,6 +8,24 @@ import (
 	"github.com/go-task/task/internal/status"
 )
 
+// Status returns an error if any the of given tasks is not up-to-date
+func (e *Executor) Status(calls ...Call) error {
+	for _, call := range calls {
+		t, ok := e.Tasks[call.Task]
+		if !ok {
+			return &taskNotFoundError{taskName: call.Task}
+		}
+		isUpToDate, err := t.isUpToDate(e.Context)
+		if err != nil {
+			return err
+		}
+		if !isUpToDate {
+			return fmt.Errorf(`task: Task "%s" is not up-to-date`, t.Task)
+		}
+	}
+	return nil
+}
+
 func (t *Task) isUpToDate(ctx context.Context) (bool, error) {
 	if len(t.Status) > 0 {
 		return t.isUpToDateStatus(ctx)

@@ -300,6 +300,9 @@ generate-files:
 You can use `--force` or `-f` if you want to force a task to run even when
 up-to-date.
 
+Also, `task --status [tasks]...` will exit with non-zero exit code if any of
+the tasks is not up-to-date.
+
 ### Variables
 
 When doing interpolation of variables, Task will look for the below.
