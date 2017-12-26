@@ -25,7 +25,6 @@ It aims to be simpler and easier to use then [GNU Make][make].
   - [Silent mode](#silent-mode)
   - [Watch tasks](#watch-tasks-experimental)
 - [Examples](#examples)
-- [Task in the wild](#task-in-the-wild)
 - [Alternative task runners](#alternative-task-runners)
 
 ## Installation
@@ -530,22 +529,14 @@ The [go-task/examples][examples] intends to be a collection of Taskfiles for
 various use cases.
 (It still lacks many examples, though. Contributions are welcome).
 
-## Task in the wild
-
-- [How I Build My Static Assets for Hugo][post-hugo]
-
 ## Alternative task runners
 
 - YAML based:
-  - [tj/robo][robo]
-  - [dogtools/dog][dog]
   - [goeuro/myke][myke]
   - [dreadl0ck/zeus][zeus]
   - [rliebz/tusk][tusk]
 - Go based:
-  - [go-godo/godo][godo]
   - [markbates/grift][grift]
-  - [nstratos/make.go][make.go]
   - [magefile/mage][mage]
 - Make based:
   - [tj/mmake][mmake]
@@ -554,18 +545,13 @@ various use cases.
 [releases]: https://github.com/go-task/task/releases
 [golang]: https://golang.org/
 [gotemplate]: https://golang.org/pkg/text/template/
-[robo]: https://github.com/tj/robo
-[dog]: https://github.com/dogtools/dog
 [myke]: https://github.com/goeuro/myke
 [zeus]: https://github.com/dreadl0ck/zeus
 [tusk]: https://github.com/rliebz/tusk
-[godo]: https://github.com/go-godo/godo
 [grift]: https://github.com/markbates/grift
-[make.go]: https://github.com/nstratos/make.go
 [mage]: https://github.com/magefile/mage
 [mmake]: https://github.com/tj/mmake
 [sh]: https://github.com/mvdan/sh
-[post-hugo]: https://blog.carlmjohnson.net/post/2017/hugo-asset-pipeline/
 [minify]: https://github.com/tdewolff/minify/tree/master/cmd/minify
 [examples]: https://github.com/go-task/examples
 [snapcraft]: https://snapcraft.io/
