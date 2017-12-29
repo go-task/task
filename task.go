@@ -23,12 +23,12 @@ const (
 
 // Executor executes a Taskfile
 type Executor struct {
-	Tasks   Tasks
-	Dir     string
-	Force   bool
-	Watch   bool
-	Verbose bool
-	Silent  bool
+	Taskfile *Taskfile
+	Dir      string
+	Force    bool
+	Watch    bool
+	Verbose  bool
+	Silent   bool
 
 	Context context.Context
 
@@ -78,8 +78,8 @@ func (e *Executor) Run(calls ...Call) error {
 		e.Stderr = os.Stderr
 	}
 
-	e.taskCallCount = make(map[string]*int32, len(e.Tasks))
-	for k := range e.Tasks {
+	e.taskCallCount = make(map[string]*int32, len(e.Taskfile.Tasks))
+	for k := range e.Taskfile.Tasks {
 		e.taskCallCount[k] = new(int32)
 	}
 
@@ -89,7 +89,7 @@ func (e *Executor) Run(calls ...Call) error {
 
 	// check if given tasks exist
 	for _, c := range calls {
-		if _, ok := e.Tasks[c.Task]; !ok {
+		if _, ok := e.Taskfile.Tasks[c.Task]; !ok {
 			// FIXME: move to the main package
 			e.PrintTasksHelp()
 			return &taskNotFoundError{taskName: c.Task}

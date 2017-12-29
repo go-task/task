@@ -92,7 +92,7 @@ func (v *Var) UnmarshalYAML(unmarshal func(interface{}) error) error {
 // 4. Taskvars variables, resolved with access to:
 //    - environment variables
 func (e *Executor) getVariables(call Call) (Vars, error) {
-	t, ok := e.Tasks[call.Task]
+	t, ok := e.Taskfile.Tasks[call.Task]
 	if !ok {
 		return nil, &taskNotFoundError{call.Task}
 	}
@@ -198,7 +198,7 @@ func (e *Executor) handleShVar(v Var) (string, error) {
 // CompiledTask returns a copy of a task, but replacing variables in almost all
 // properties using the Go template package.
 func (e *Executor) CompiledTask(call Call) (*Task, error) {
-	origTask, ok := e.Tasks[call.Task]
+	origTask, ok := e.Taskfile.Tasks[call.Task]
 	if !ok {
 		return nil, &taskNotFoundError{call.Task}
 	}

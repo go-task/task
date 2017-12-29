@@ -347,3 +347,26 @@ func TestCyclicDep(t *testing.T) {
 	assert.NoError(t, e.ReadTaskfile())
 	assert.IsType(t, &task.MaximumTaskCallExceededError{}, e.Run(task.Call{Task: "task-1"}))
 }
+
+func TestTaskVersion(t *testing.T) {
+	tests := []struct {
+		Dir     string
+		Version int
+	}{
+		{"testdata/version/v1", 1},
+		{"testdata/version/v2", 2},
+	}
+
+	for _, test := range tests {
+		t.Run(test.Dir, func(t *testing.T) {
+			e := task.Executor{
+				Dir:    test.Dir,
+				Stdout: ioutil.Discard,
+				Stderr: ioutil.Discard,
+			}
+			assert.NoError(t, e.ReadTaskfile())
+			assert.Equal(t, test.Version, e.Taskfile.Version)
+			assert.Equal(t, 2, len(e.Taskfile.Tasks))
+		})
+	}
+}

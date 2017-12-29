@@ -11,7 +11,7 @@ import (
 // Status returns an error if any the of given tasks is not up-to-date
 func (e *Executor) Status(calls ...Call) error {
 	for _, call := range calls {
-		t, ok := e.Tasks[call.Task]
+		t, ok := e.Taskfile.Tasks[call.Task]
 		if !ok {
 			return &taskNotFoundError{taskName: call.Task}
 		}

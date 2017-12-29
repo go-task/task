@@ -18,17 +18,18 @@ func (e *Executor) PrintTasksHelp() {
 	// Format in tab-separated columns with a tab stop of 8.
 	w := tabwriter.NewWriter(e.Stdout, 0, 8, 0, '\t', 0)
 	for _, task := range tasks {
-		fmt.Fprintln(w, fmt.Sprintf("* %s: \t%s", task, e.Tasks[task].Desc))
+		fmt.Fprintf(w, "* %s: \t%s\n", task.Task, task.Desc)
 	}
 	w.Flush()
 }
 
-func (e *Executor) tasksWithDesc() (tasks []string) {
-	for name, task := range e.Tasks {
+func (e *Executor) tasksWithDesc() (tasks []*Task) {
+	tasks = make([]*Task, 0, len(e.Taskfile.Tasks))
+	for _, task := range e.Taskfile.Tasks {
 		if task.Desc != "" {
-			tasks = append(tasks, name)
+			tasks = append(tasks, task)
 		}
 	}
-	sort.Strings(tasks)
+	sort.Slice(tasks, func(i, j int) bool { return tasks[i].Task < tasks[j].Task })
 	return
 }

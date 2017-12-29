@@ -10,12 +10,37 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+// Taskfile represents a Taskfile.yml
+type Taskfile struct {
+	// TODO: version is still not used
+	Version int
+	Tasks   Tasks
+}
+
+// UnmarshalYAML implements yaml.Unmarshaler interface
+func (tf *Taskfile) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	if err := unmarshal(&tf.Tasks); err == nil {
+		return nil
+	}
+
+	var taskfile struct {
+		Version int
+		Tasks   Tasks
+	}
+	if err := unmarshal(&taskfile); err != nil {
+		return err
+	}
+	tf.Version = taskfile.Version
+	tf.Tasks = taskfile.Tasks
+	return nil
+}
+
 // ReadTaskfile parses Taskfile from the disk
 func (e *Executor) ReadTaskfile() error {
 	path := filepath.Join(e.Dir, TaskFilePath)
 
 	var err error
-	e.Tasks, err = e.readTaskfileData(path)
+	e.Taskfile, err = e.readTaskfileData(path)
 	if err != nil {
 		return err
 	}
@@ -27,20 +52,22 @@ func (e *Executor) ReadTaskfile() error {
 		default:
 			return err
 		}
+	} else {
+		if err := mergo.MapWithOverwrite(&e.Taskfile.Tasks, osTasks.Tasks); err != nil {
+			return err
+		}
 	}
-	if err := mergo.MapWithOverwrite(&e.Tasks, osTasks); err != nil {
-		return err
-	}
-	for name, task := range e.Tasks {
+	for name, task := range e.Taskfile.Tasks {
 		task.Task = name
 	}
 
 	return e.readTaskvars()
 }
 
-func (e *Executor) readTaskfileData(path string) (tasks map[string]*Task, err error) {
+func (e *Executor) readTaskfileData(path string) (*Taskfile, error) {
 	if b, err := ioutil.ReadFile(path + ".yml"); err == nil {
-		return tasks, yaml.UnmarshalStrict(b, &tasks)
+		var taskfile Taskfile
+		return &taskfile, yaml.UnmarshalStrict(b, &taskfile)
 	}
 	return nil, taskFileNotFound{path}
 }
