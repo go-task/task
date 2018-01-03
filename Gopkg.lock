@@ -11,7 +11,7 @@
   branch = "master"
   name = "github.com/Masterminds/sprig"
   packages = ["."]
-  revision = "82f6f19d47b416d27ae039939b44afaa0575860e"
+  revision = "9d9aa1f74c86fd9d36ecfe3f2a44a3093c3d4c15"
 
 [[projects]]
   name = "github.com/aokoli/goutils"
@@ -29,7 +29,7 @@
   branch = "master"
   name = "github.com/huandu/xstrings"
   packages = ["."]
-  revision = "d6590c0c31d16526217fa60fbd2067f7afcd78c5"
+  revision = "37469d0c81a7910b49d64a0d308ded4823e90937"
 
 [[projects]]
   name = "github.com/imdario/mergo"
@@ -40,8 +40,11 @@
 [[projects]]
   branch = "master"
   name = "github.com/mattn/go-zglob"
-  packages = [".","fastwalk"]
-  revision = "4b74c24375b3b1ee226867156e01996f4e19a8d6"
+  packages = [
+    ".",
+    "fastwalk"
+  ]
+  revision = "4959821b481786922ac53e7ef25c61ae19fb7c36"
 
 [[projects]]
   branch = "master"
@@ -76,20 +79,24 @@
 [[projects]]
   name = "github.com/stretchr/testify"
   packages = ["assert"]
-  revision = "69483b4bd14f5845b5a1e55bca19e954e827f1d0"
-  version = "v1.1.4"
+  revision = "b91bfb9ebec76498946beb6af7c0230c7cc7ba6c"
+  version = "v1.2.0"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/crypto"
-  packages = ["pbkdf2","scrypt","ssh/terminal"]
-  revision = "9f005a07e0d31d45e6656d241bb5c0f2efd4bc94"
+  packages = [
+    "pbkdf2",
+    "scrypt",
+    "ssh/terminal"
+  ]
+  revision = "0fcca4842a8d74bfddc2c96a073bd2a4d2a7a2e8"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/net"
   packages = ["context"]
-  revision = "9dfe39835686865bff950a07b394c12a98ddc811"
+  revision = "d866cfc389cec985d6fda2859936a575a55a3ab6"
 
 [[projects]]
   branch = "master"
@@ -100,20 +107,26 @@
 [[projects]]
   branch = "master"
   name = "golang.org/x/sys"
-  packages = ["unix","windows"]
-  revision = "0ac51a24ef1c37380f98ba8b98f56e3bffd59850"
+  packages = [
+    "unix",
+    "windows"
+  ]
+  revision = "28a7276518d399b9634904daad79e18b44d481bc"
 
 [[projects]]
   branch = "v2"
   name = "gopkg.in/yaml.v2"
   packages = ["."]
-  revision = "287cf08546ab5e7e37d55a84f7ed3fd1db036de5"
+  revision = "c95af922eae69f190717a0b7148960af8c55a072"
 
 [[projects]]
   branch = "master"
   name = "mvdan.cc/sh"
-  packages = ["interp","syntax"]
-  revision = "5758e57655f2f2242603195aaaad08d1cb9f8f85"
+  packages = [
+    "interp",
+    "syntax"
+  ]
+  revision = "74c5a41b2a56e9d106305492759e4e531ed5bf47"
 
 [solve-meta]
   analyzer-name = "dep"

@@ -1,19 +1,22 @@
 language: go
 
-go:
-  - 1.8.x
-  - 1.9.x
+matrix:
+  include:
+    - os: linux
+      dist: trusty
+      sudo: false
+      go: 1.8.x
+    - os: linux
+      dist: trusty
+      sudo: false
+      go: 1.9.x
+    - os: osx
+      osx_image: xcode9.2
+      go: 1.9.x
 
 go_import_path: mvdan.cc/sh
-
-before_install:
-  - go get -u github.com/mattn/goveralls
 
 script:
   - go test ./...
   - go test -short -race ./...
   - shfmt -version
-  - goveralls
-  # at least make sure the builds work
-  - GOOS=windows go install ./interp
-  - GOOS=darwin go install ./interp

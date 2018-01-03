@@ -31,7 +31,7 @@ func paramOps(r rune) bool {
 // these start a parameter expansion name
 func paramNameOp(r rune) bool {
 	switch r {
-	case '}', ':', '+', '=', '%', '[', ']', '/', '^', ',', '@':
+	case '}', ':', '+', '=', '%', '[', ']', '/', '^', ',':
 		return false
 	}
 	return true
@@ -42,14 +42,6 @@ func arithmOps(r rune) bool {
 	switch r {
 	case '+', '-', '!', '*', '/', '%', '(', ')', '^', '<', '>', ':', '=',
 		',', '?', '|', '&', '[', ']', '#':
-		return true
-	}
-	return false
-}
-
-func wordBreak(r rune) bool {
-	switch r {
-	case ' ', '\t', '\n', ';', '&', '>', '<', '|', '(', ')', '\r':
 		return true
 	}
 	return false
@@ -167,6 +159,9 @@ func (p *Parser) nextKeepSpaces() {
 			p.tok = rightBrace
 		case '`', '"', '$':
 			p.tok = p.dqToken(r)
+		case '\'':
+			p.rune()
+			p.tok = sglQuote
 		default:
 			p.advanceLitOther(r)
 		}
@@ -693,7 +688,7 @@ func (p *Parser) newLit(r rune) {
 	if r <= utf8.RuneSelf {
 		p.litBs = p.litBuf[:1]
 		p.litBs[0] = byte(r)
-	} else if p.bsp <= len(p.bs) {
+	} else {
 		w := utf8.RuneLen(r)
 		p.litBs = append(p.litBuf[:0], p.bs[p.bsp-w:p.bsp]...)
 	}
@@ -704,7 +699,7 @@ func (p *Parser) discardLit(n int) { p.litBs = p.litBs[:len(p.litBs)-n] }
 func (p *Parser) endLit() (s string) {
 	if p.r == utf8.RuneSelf {
 		s = string(p.litBs)
-	} else if len(p.litBs) > 0 {
+	} else {
 		s = string(p.litBs[:len(p.litBs)-int(p.w)])
 	}
 	p.litBs = nil
@@ -717,8 +712,11 @@ loop:
 	for p.newLit(r); r != utf8.RuneSelf; r = p.rune() {
 		switch {
 		case r == '\\':
-			if r = p.rune(); r == '\n' {
+			if p.peekByte('\n') {
+				p.rune()
 				p.discardLit(2)
+			} else {
+				break loop
 			}
 		case 'a' <= r && r <= 'z':
 		case 'A' <= r && r <= 'Z':
@@ -846,7 +844,9 @@ loop:
 				break loop
 			}
 		case '=':
-			p.eqlOffs = len(p.litBs) - 1
+			if p.eqlOffs == 0 {
+				p.eqlOffs = len(p.litBs) - 1
+			}
 		case '[':
 			if p.lang != LangPOSIX && len(p.litBs) > 1 && p.litBs[0] != '[' {
 				tok = _Lit

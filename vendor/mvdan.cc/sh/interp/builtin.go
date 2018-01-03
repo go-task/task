@@ -4,6 +4,8 @@
 package interp
 
 import (
+	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -20,7 +22,7 @@ func isBuiltin(name string) bool {
 		"wait", "builtin", "trap", "type", "source", ".", "command",
 		"dirs", "pushd", "popd", "umask", "alias", "unalias",
 		"fg", "bg", "getopts", "eval", "test", "[", "exec",
-		"return":
+		"return", "read":
 		return true
 	}
 	return false
@@ -36,19 +38,21 @@ func (r *Runner) builtinCode(pos syntax.Pos, name string, args []string) int {
 		case 0:
 		case 1:
 			if n, err := strconv.Atoi(args[0]); err != nil {
-				r.runErr(pos, "invalid exit code: %q", args[0])
+				r.errf("invalid exit code: %q\n", args[0])
+				r.exit = 2
 			} else {
 				r.exit = n
 			}
 		default:
-			r.runErr(pos, "exit cannot take multiple arguments")
+			r.errf("exit cannot take multiple arguments\n")
+			r.exit = 1
 		}
 		r.lastExit()
 		return r.exit
 	case "set":
 		rest, err := r.FromArgs(args...)
 		if err != nil {
-			r.errf("set: %v", err)
+			r.errf("set: %v\n", err)
 			return 2
 		}
 		r.Params = rest
@@ -72,8 +76,29 @@ func (r *Runner) builtinCode(pos syntax.Pos, name string, args []string) int {
 			r.Params = r.Params[n:]
 		}
 	case "unset":
+		vars := true
+		funcs := true
+	unsetOpts:
+		for i, arg := range args {
+			switch arg {
+			case "-v":
+				funcs = false
+			case "-f":
+				vars = false
+			default:
+				args = args[i:]
+				break unsetOpts
+			}
+		}
+
 		for _, arg := range args {
-			r.delVar(arg)
+			if _, ok := r.lookupVar(arg); ok && vars {
+				r.delVar(arg)
+				continue
+			}
+			if _, ok := r.Funcs[arg]; ok && funcs {
+				delete(r.Funcs, arg)
+			}
 		}
 	case "echo":
 		newline, expand := true, false
@@ -92,22 +117,34 @@ func (r *Runner) builtinCode(pos syntax.Pos, name string, args []string) int {
 		}
 		for i, arg := range args {
 			if i > 0 {
-				r.outf(" ")
+				r.out(" ")
 			}
 			if expand {
-				arg = r.expand(arg, true)
+				_, arg, _ = r.expandFormat(arg, nil)
 			}
-			r.outf("%s", arg)
+			r.out(arg)
 		}
 		if newline {
-			r.outf("\n")
+			r.out("\n")
 		}
 	case "printf":
 		if len(args) == 0 {
 			r.errf("usage: printf format [arguments]\n")
 			return 2
 		}
-		r.outf("%s", r.expand(args[0], false, args[1:]...))
+		format, args := args[0], args[1:]
+		for {
+			n, s, err := r.expandFormat(format, args)
+			if err != nil {
+				r.errf("%v\n", err)
+				return 1
+			}
+			r.out(s)
+			args = args[n:]
+			if n == 0 || len(args) == 0 {
+				break
+			}
+		}
 	case "break":
 		if !r.inLoop {
 			r.errf("break is only useful in a loop")
@@ -160,8 +197,7 @@ func (r *Runner) builtinCode(pos syntax.Pos, name string, args []string) int {
 		return r.changeDir(path)
 	case "wait":
 		if len(args) > 0 {
-			r.runErr(pos, "wait with args not handled yet")
-			break
+			panic("wait with args not handled yet")
 		}
 		r.bgShells.Wait()
 	case "builtin":
@@ -175,7 +211,7 @@ func (r *Runner) builtinCode(pos syntax.Pos, name string, args []string) int {
 	case "type":
 		anyNotFound := false
 		for _, arg := range args {
-			if _, ok := r.funcs[arg]; ok {
+			if _, ok := r.Funcs[arg]; ok {
 				r.outf("%s is a function\n", arg)
 				continue
 			}
@@ -201,13 +237,12 @@ func (r *Runner) builtinCode(pos syntax.Pos, name string, args []string) int {
 			r.errf("eval: %v\n", err)
 			return 1
 		}
-		r2 := *r
-		r2.Reset()
-		r2.Run(file)
-		return r2.exit
+		r.stmts(file.StmtList)
+		return r.exit
 	case "source", ".":
 		if len(args) < 1 {
-			r.runErr(pos, "source: need filename")
+			r.errf("%v: source: need filename\n", pos)
+			return 2
 		}
 		f, err := r.open(r.relPath(args[0]), os.O_RDONLY, 0, false)
 		if err != nil {
@@ -221,31 +256,40 @@ func (r *Runner) builtinCode(pos syntax.Pos, name string, args []string) int {
 			r.errf("source: %v\n", err)
 			return 1
 		}
-		r2 := *r
-		r2.Params = args[1:]
-		r2.Reset()
-		r2.canReturn = true
-		r2.Run(file)
-		if code, ok := r2.err.(returnCode); ok {
-			r2.exit = int(code)
+		oldParams := r.Params
+		r.Params = args[1:]
+		oldInSource := r.inSource
+		r.inSource = true
+		r.stmts(file.StmtList)
+
+		r.Params = oldParams
+		r.inSource = oldInSource
+		if code, ok := r.err.(returnCode); ok {
+			r.err = nil
+			r.exit = int(code)
 		}
-		return r2.exit
+		return r.exit
 	case "[":
 		if len(args) == 0 || args[len(args)-1] != "]" {
-			r.runErr(pos, "[: missing matching ]")
-			break
+			r.errf("%v: [: missing matching ]\n", pos)
+			return 2
 		}
 		args = args[:len(args)-1]
 		fallthrough
 	case "test":
+		parseErr := false
 		p := testParser{
 			rem: args,
-			err: func(format string, a ...interface{}) {
-				r.runErr(pos, format, a...)
+			err: func(err error) {
+				r.errf("%v: %v\n", pos, err)
+				parseErr = true
 			},
 		}
 		p.next()
 		expr := p.classicTest("[", false)
+		if parseErr {
+			return 2
+		}
 		return oneIf(r.bashTest(expr) == "")
 	case "exec":
 		// TODO: Consider syscall.Exec, i.e. actually replacing
@@ -253,10 +297,10 @@ func (r *Runner) builtinCode(pos syntax.Pos, name string, args []string) int {
 		// but in practice it would kill the entire Go process
 		// and it's not available on Windows.
 		if len(args) == 0 {
-			// TODO: different behavior, apparently
+			r.keepRedirs = true
 			break
 		}
-		r.exec(args[0], args[1:])
+		r.exec(args)
 		r.lastExit()
 		return r.exit
 	case "command":
@@ -278,13 +322,13 @@ func (r *Runner) builtinCode(pos syntax.Pos, name string, args []string) int {
 			if isBuiltin(args[0]) {
 				return r.builtinCode(pos, args[0], args[1:])
 			}
-			r.exec(args[0], args[1:])
+			r.exec(args)
 			return r.exit
 		}
 		last := 0
 		for _, arg := range args {
 			last = 0
-			if r.funcs[arg] != nil || isBuiltin(arg) {
+			if r.Funcs[arg] != nil || isBuiltin(arg) {
 				r.outf("%s\n", arg)
 			} else if path, err := exec.LookPath(arg); err == nil {
 				r.outf("%s\n", path)
@@ -297,10 +341,10 @@ func (r *Runner) builtinCode(pos syntax.Pos, name string, args []string) int {
 		for i := len(r.dirStack) - 1; i >= 0; i-- {
 			r.outf("%s", r.dirStack[i])
 			if i > 0 {
-				r.outf(" ")
+				r.out(" ")
 			}
 		}
-		r.outf("\n")
+		r.out("\n")
 	case "pushd":
 		change := true
 		if len(args) > 0 && args[0] == "-n" {
@@ -367,11 +411,11 @@ func (r *Runner) builtinCode(pos syntax.Pos, name string, args []string) int {
 			}
 			r.builtinCode(syntax.Pos{}, "dirs", nil)
 		default:
-			r.errf("popd: invdalid argument\n")
+			r.errf("popd: invalid argument\n")
 			return 2
 		}
 	case "return":
-		if !r.canReturn {
+		if !r.inFunc && !r.inSource {
 			r.errf("return: can only be done from a func or sourced script\n")
 			return 1
 		}
@@ -385,17 +429,188 @@ func (r *Runner) builtinCode(pos syntax.Pos, name string, args []string) int {
 			return 2
 		}
 		r.setErr(returnCode(code))
+	case "read":
+		raw := false
+		for len(args) > 0 && strings.HasPrefix(args[0], "-") {
+			switch args[0] {
+			case "-r":
+				raw = true
+			default:
+				r.errf("read: invalid option %q\n", args[0])
+				return 2
+			}
+			args = args[1:]
+		}
+
+		for _, name := range args {
+			if !syntax.ValidName(name) {
+				r.errf("read: invalid identifier %q\n", name)
+				return 2
+			}
+		}
+
+		line, err := r.readLine(raw)
+		if err != nil {
+			return 1
+		}
+		if len(args) == 0 {
+			args = append(args, "REPLY")
+		}
+
+		values := r.ifsFields(string(line), len(args), raw)
+		for i, name := range args {
+			val := ""
+			if i < len(values) {
+				val = values[i]
+			}
+			r.setVar(name, nil, Variable{Value: StringVal(val)})
+		}
+
+		return 0
+
+	case "getopts":
+		if len(args) < 2 {
+			r.errf("getopts: usage: getopts optstring name [arg]\n")
+			return 2
+		}
+		optind, _ := strconv.Atoi(r.getVar("OPTIND"))
+		if optind-1 != r.optState.argidx {
+			if optind < 1 {
+				optind = 1
+			}
+			r.optState = getopts{argidx: optind - 1}
+		}
+		optstr := args[0]
+		name := args[1]
+		if !syntax.ValidName(name) {
+			r.errf("getopts: invalid identifier: %q\n", name)
+			return 2
+		}
+		args = args[2:]
+		if len(args) == 0 {
+			args = r.Params
+		}
+		diagnostics := !strings.HasPrefix(optstr, ":")
+
+		opt, optarg, done := r.optState.Next(optstr, args)
+
+		r.setVarString(name, string(opt))
+		r.delVar("OPTARG")
+		switch {
+		case opt == '?' && diagnostics && !done:
+			r.errf("getopts: illegal option -- %q\n", optarg)
+		case opt == ':' && diagnostics:
+			r.errf("getopts: option requires an argument -- %q\n", optarg)
+		default:
+			if optarg != "" {
+				r.setVarString("OPTARG", optarg)
+			}
+		}
+		if optind-1 != r.optState.argidx {
+			r.setVarString("OPTIND", strconv.FormatInt(int64(r.optState.argidx+1), 10))
+		}
+
+		return oneIf(done)
+
 	default:
 		// "trap", "umask", "alias", "unalias", "fg", "bg",
-		// "getopts"
-		r.runErr(pos, "unhandled builtin: %s", name)
+		panic(fmt.Sprintf("unhandled builtin: %s", name))
 	}
 	return 0
 }
 
+func (r *Runner) ifsFields(s string, n int, raw bool) []string {
+	type pos struct {
+		start, end int
+	}
+	var fpos []pos
+
+	runes := make([]rune, 0, len(s))
+	infield := false
+	esc := false
+	for _, c := range s {
+		if infield {
+			if r.ifsRune(c) && (raw || !esc) {
+				fpos[len(fpos)-1].end = len(runes)
+				infield = false
+			}
+		} else {
+			if !r.ifsRune(c) && (raw || !esc) {
+				fpos = append(fpos, pos{start: len(runes), end: -1})
+				infield = true
+			}
+		}
+		if c == '\\' {
+			if raw || esc {
+				runes = append(runes, c)
+			}
+			esc = !esc
+			continue
+		}
+		runes = append(runes, c)
+		esc = false
+	}
+	if len(fpos) == 0 {
+		return nil
+	}
+	if infield {
+		fpos[len(fpos)-1].end = len(runes)
+	}
+
+	switch {
+	case n == 1:
+		// include heading/trailing IFSs
+		fpos[0].start, fpos[0].end = 0, len(runes)
+		fpos = fpos[:1]
+	case n != -1 && n < len(fpos):
+		// combine to max n fields
+		fpos[n-1].end = fpos[len(fpos)-1].end
+		fpos = fpos[:n]
+	}
+
+	var fields = make([]string, len(fpos))
+	for i, p := range fpos {
+		fields[i] = string(runes[p.start:p.end])
+	}
+	return fields
+}
+
+func (r *Runner) readLine(raw bool) ([]byte, error) {
+	var line []byte
+	esc := false
+
+	for {
+		var buf [1]byte
+		n, err := r.Stdin.Read(buf[:])
+		if n > 0 {
+			b := buf[0]
+			switch {
+			case !raw && b == '\\':
+				line = append(line, b)
+				esc = !esc
+			case !raw && b == '\n' && esc:
+				// line continuation
+				line = line[len(line)-1:]
+				esc = false
+			case b == '\n':
+				return line, nil
+			default:
+				line = append(line, b)
+				esc = false
+			}
+		}
+		if err == io.EOF && len(line) > 0 {
+			return line, nil
+		}
+		if err != nil {
+			return nil, err
+		}
+	}
+}
+
 func (r *Runner) changeDir(path string) int {
 	path = r.relPath(path)
-	info, err := os.Stat(path)
+	info, err := r.stat(path)
 	if err != nil || !info.IsDir() {
 		return 1
 	}
@@ -403,7 +618,8 @@ func (r *Runner) changeDir(path string) int {
 		return 1
 	}
 	r.Dir = path
-	r.vars["PWD"] = path
+	r.Vars["OLDPWD"] = r.Vars["PWD"]
+	r.Vars["PWD"] = Variable{Value: StringVal(path)}
 	return 0
 }
 
@@ -412,4 +628,46 @@ func (r *Runner) relPath(path string) string {
 		path = filepath.Join(r.Dir, path)
 	}
 	return filepath.Clean(path)
+}
+
+type getopts struct {
+	argidx  int
+	runeidx int
+}
+
+func (g *getopts) Next(optstr string, args []string) (opt rune, optarg string, done bool) {
+	if len(args) == 0 || g.argidx >= len(args) {
+		return '?', "", true
+	}
+	arg := []rune(args[g.argidx])
+	if len(arg) < 2 || arg[0] != '-' || arg[1] == '-' {
+		return '?', "", true
+	}
+
+	opts := arg[1:]
+	opt = opts[g.runeidx]
+	if g.runeidx+1 < len(opts) {
+		g.runeidx++
+	} else {
+		g.argidx++
+		g.runeidx = 0
+	}
+
+	i := strings.IndexRune(optstr, opt)
+	if i < 0 {
+		// invalid option
+		return '?', string(opt), false
+	}
+
+	if i+1 < len(optstr) && optstr[i+1] == ':' {
+		if g.argidx >= len(args) {
+			// missing argument
+			return ':', string(opt), false
+		}
+		optarg = args[g.argidx]
+		g.argidx++
+		g.runeidx = 0
+	}
+
+	return opt, optarg, false
 }

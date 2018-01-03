@@ -73,7 +73,9 @@ func makePattern(pattern string) (*zenv, error) {
 		if cc[i] == '*' {
 			if i < len(cc)-2 && cc[i+1] == '*' && cc[i+2] == '/' {
 				filemask += "(.*/)?"
-				dirmask = filemask
+				if dirmask == "" {
+					dirmask = filemask
+				}
 				i += 2
 			} else {
 				filemask += "[^/]*"
@@ -151,6 +153,12 @@ func glob(pattern string, followSymlinks bool) ([]string, error) {
 
 		if info.IsDir() {
 			if path == "." || len(path) <= len(zenv.root) {
+				return nil
+			}
+			if zenv.fre.MatchString(path) {
+				mu.Lock()
+				matches = append(matches, path)
+				mu.Unlock()
 				return nil
 			}
 			if !zenv.dre.MatchString(path + "/") {

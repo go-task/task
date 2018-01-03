@@ -4,6 +4,7 @@
 package interp
 
 import (
+	"fmt"
 	"strconv"
 
 	"mvdan.cc/sh/syntax"
@@ -14,7 +15,7 @@ func (r *Runner) arithm(expr syntax.ArithmExpr) int {
 	case *syntax.Word:
 		str := r.loneWord(x)
 		// recursively fetch vars
-		for {
+		for str != "" {
 			val := r.getVar(str)
 			if val == "" {
 				break
@@ -36,7 +37,7 @@ func (r *Runner) arithm(expr syntax.ArithmExpr) int {
 			} else {
 				val--
 			}
-			r.setVar(name, nil, strconv.Itoa(val))
+			r.setVarString(name, strconv.Itoa(val))
 			if x.Post {
 				return old
 			}
@@ -68,9 +69,15 @@ func (r *Runner) arithm(expr syntax.ArithmExpr) int {
 		}
 		return binArit(x.Op, r.arithm(x.X), r.arithm(x.Y))
 	default:
-		r.runErr(expr.Pos(), "unexpected arithm expr: %T", x)
-		return 0
+		panic(fmt.Sprintf("unexpected arithm expr: %T", x))
 	}
+}
+
+func oneIf(b bool) int {
+	if b {
+		return 1
+	}
+	return 0
 }
 
 // atoi is just a shorthand for strconv.Atoi that ignores the error,
@@ -108,7 +115,7 @@ func (r *Runner) assgnArit(b *syntax.BinaryArithm) int {
 	case syntax.ShrAssgn:
 		val >>= uint(arg)
 	}
-	r.setVar(name, nil, strconv.Itoa(val))
+	r.setVarString(name, strconv.Itoa(val))
 	return val
 }
 

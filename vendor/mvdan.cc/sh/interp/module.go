@@ -5,10 +5,12 @@ package interp
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"os"
 	"os/exec"
 	"runtime"
+	"strings"
 	"syscall"
 	"time"
 )
@@ -26,42 +28,62 @@ type Ctxt struct {
 	KillTimeout time.Duration
 }
 
+// UnixPath fixes absolute unix paths on Windows, for example converting
+// "C:\\CurDir\\dev\\null" to "/dev/null".
+func (c *Ctxt) UnixPath(path string) string {
+	if runtime.GOOS != "windows" {
+		return path
+	}
+	path = strings.TrimPrefix(path, c.Dir)
+	return strings.Replace(path, `\`, `/`, -1)
+}
+
 // ModuleExec is the module responsible for executing a program. It is
-// executed for all CallExpr nodes where the name is neither a declared
-// function nor a builtin.
+// executed for all CallExpr nodes where the first argument is neither a
+// declared function nor a builtin.
+//
+// Note that the name is included as the first argument. If path is an
+// empty string, it means that the executable did not exist or was not
+// found in $PATH.
 //
 // Use a return error of type ExitCode to set the exit code. A nil error
 // has the same effect as ExitCode(0). If the error is of any other
 // type, the interpreter will come to a stop.
-//
-// TODO: replace name with path, to avoid the common "path :=
-// exec.LookPath(name)"?
-type ModuleExec func(ctx Ctxt, name string, args []string) error
+type ModuleExec func(ctx Ctxt, path string, args []string) error
 
-func DefaultExec(ctx Ctxt, name string, args []string) error {
-	cmd := exec.Command(name, args...)
-	cmd.Env = ctx.Env
-	cmd.Dir = ctx.Dir
-	cmd.Stdin = ctx.Stdin
-	cmd.Stdout = ctx.Stdout
-	cmd.Stderr = ctx.Stderr
+func DefaultExec(ctx Ctxt, path string, args []string) error {
+	if path == "" {
+		fmt.Fprintf(ctx.Stderr, "%q: executable file not found in $PATH\n", args[0])
+		return ExitCode(127)
+	}
+	cmd := exec.Cmd{
+		Path:   path,
+		Args:   args,
+		Env:    ctx.Env,
+		Dir:    ctx.Dir,
+		Stdin:  ctx.Stdin,
+		Stdout: ctx.Stdout,
+		Stderr: ctx.Stderr,
+	}
 
 	err := cmd.Start()
 	if err == nil {
-		go func() {
-			<-ctx.Context.Done()
-
-			if ctx.KillTimeout <= 0 || runtime.GOOS == "windows" {
-				_ = cmd.Process.Signal(os.Kill)
-				return
-			}
-
+		if done := ctx.Context.Done(); done != nil {
 			go func() {
-				time.Sleep(ctx.KillTimeout)
-				_ = cmd.Process.Signal(os.Kill)
+				<-done
+
+				if ctx.KillTimeout <= 0 || runtime.GOOS == "windows" {
+					_ = cmd.Process.Signal(os.Kill)
+					return
+				}
+
+				go func() {
+					time.Sleep(ctx.KillTimeout)
+					_ = cmd.Process.Signal(os.Kill)
+				}()
+				_ = cmd.Process.Signal(os.Interrupt)
 			}()
-			_ = cmd.Process.Signal(os.Interrupt)
-		}()
+		}
 
 		err = cmd.Wait()
 	}
@@ -71,15 +93,16 @@ func DefaultExec(ctx Ctxt, name string, args []string) error {
 		// started, but errored - default to 1 if OS
 		// doesn't have exit statuses
 		if status, ok := x.Sys().(syscall.WaitStatus); ok {
+			if status.Signaled() && ctx.Context.Err() != nil {
+				return ctx.Context.Err()
+			}
 			return ExitCode(status.ExitStatus())
 		}
 		return ExitCode(1)
 	case *exec.Error:
 		// did not start
-		// TODO: can this be anything other than
-		// "command not found"?
+		fmt.Fprintf(ctx.Stderr, "%v\n", err)
 		return ExitCode(127)
-		// TODO: print something?
 	default:
 		return err
 	}
@@ -106,7 +129,7 @@ func DefaultOpen(ctx Ctxt, path string, flag int, perm os.FileMode) (io.ReadWrit
 
 func OpenDevImpls(next ModuleOpen) ModuleOpen {
 	return func(ctx Ctxt, path string, flag int, perm os.FileMode) (io.ReadWriteCloser, error) {
-		switch path {
+		switch ctx.UnixPath(path) {
 		case "/dev/null":
 			return devNull{}, nil
 		}

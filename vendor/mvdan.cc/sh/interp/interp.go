@@ -11,9 +11,8 @@ import (
 	"math"
 	"os"
 	"os/user"
-	"path"
 	"path/filepath"
-	"strconv"
+	"runtime"
 	"strings"
 	"sync"
 	"time"
@@ -53,17 +52,21 @@ type Runner struct {
 
 	// Separate maps, note that bash allows a name to be both a var
 	// and a func simultaneously
-	vars  map[string]varValue
-	funcs map[string]*syntax.Stmt
+	Vars  map[string]Variable
+	Funcs map[string]*syntax.Stmt
 
-	// like vars, but local to a cmd i.e. "foo=bar prog args..."
-	cmdVars map[string]varValue
+	// like Vars, but local to a func i.e. "local foo=bar"
+	funcVars map[string]Variable
+
+	// like Vars, but local to a cmd i.e. "foo=bar prog args..."
+	cmdVars map[string]string
 
 	// >0 to break or continue out of N enclosing loops
 	breakEnclosing, contnEnclosing int
 
-	inLoop    bool
-	canReturn bool
+	inLoop   bool
+	inFunc   bool
+	inSource bool
 
 	err  error // current fatal error
 	exit int   // current (last) exit code
@@ -77,9 +80,18 @@ type Runner struct {
 	// Context can be used to cancel the interpreter before it finishes
 	Context context.Context
 
-	stopOnCmdErr bool // set -e
+	shellOpts [len(shellOptsTable)]bool
 
 	dirStack []string
+
+	optState getopts
+
+	ifsJoin string
+	ifsRune func(rune) bool
+
+	// keepRedirs is used so that "exec" can make any redirections
+	// apply to the current shell, and not just the command.
+	keepRedirs bool
 
 	// KillTimeout holds how much time the interpreter will wait for a
 	// program to stop after being sent an interrupt signal, after
@@ -93,7 +105,62 @@ type Runner struct {
 	// On Windows, the kill signal is always sent immediately,
 	// because Go doesn't currently support sending Interrupt on Windows.
 	KillTimeout time.Duration
+
+	fieldAlloc      [4]fieldPart
+	fieldsAlloc     [4][]fieldPart
+	bufferAlloc     bytes.Buffer
+	oneWord         [1]*syntax.Word
+	braceAlloc      braceWord
+	bracePartsAlloc [4]braceWordPart
 }
+
+func (r *Runner) strBuilder() *bytes.Buffer {
+	b := &r.bufferAlloc
+	b.Reset()
+	return b
+}
+
+func (r *Runner) optByFlag(flag string) *bool {
+	for i, opt := range shellOptsTable {
+		if opt.flag == flag {
+			return &r.shellOpts[i]
+		}
+	}
+	return nil
+}
+
+func (r *Runner) optByName(name string) *bool {
+	for i, opt := range shellOptsTable {
+		if opt.name == name {
+			return &r.shellOpts[i]
+		}
+	}
+	return nil
+}
+
+var shellOptsTable = [...]struct {
+	flag, name string
+}{
+	// sorted alphabetically by name; use a space for the options
+	// that have no flag form
+	{"a", "allexport"},
+	{"e", "errexit"},
+	{"n", "noexec"},
+	{"f", "noglob"},
+	{"u", "nounset"},
+	{" ", "pipefail"},
+}
+
+// To access the shell options arrays without a linear search when we
+// know which option we're after at compile time.
+const (
+	optAllExport = iota
+	optErrExit
+	optNoExec
+	optNoGlob
+	optNoUnset
+	optPipeFail
+)
 
 // Reset will set the unexported fields back to zero, fill any exported
 // fields with their default values if not set, and prepare the runner
@@ -115,6 +182,33 @@ func (r *Runner) Reset() error {
 		Exec:        r.Exec,
 		Open:        r.Open,
 		KillTimeout: r.KillTimeout,
+
+		// emptied below, to reuse the space
+		envMap:   r.envMap,
+		Vars:     r.Vars,
+		cmdVars:  r.cmdVars,
+		dirStack: r.dirStack[:0],
+	}
+	if r.envMap == nil {
+		r.envMap = make(map[string]string)
+	} else {
+		for k := range r.envMap {
+			delete(r.envMap, k)
+		}
+	}
+	if r.Vars == nil {
+		r.Vars = make(map[string]Variable)
+	} else {
+		for k := range r.Vars {
+			delete(r.Vars, k)
+		}
+	}
+	if r.cmdVars == nil {
+		r.cmdVars = make(map[string]string)
+	} else {
+		for k := range r.cmdVars {
+			delete(r.cmdVars, k)
+		}
 	}
 	if r.Context == nil {
 		r.Context = context.Background()
@@ -122,19 +216,20 @@ func (r *Runner) Reset() error {
 	if r.Env == nil {
 		r.Env = os.Environ()
 	}
-	r.envMap = make(map[string]string, len(r.Env))
 	for _, kv := range r.Env {
 		i := strings.IndexByte(kv, '=')
 		if i < 0 {
 			return fmt.Errorf("env not in the form key=value: %q", kv)
 		}
 		name, val := kv[:i], kv[i+1:]
+		if runtime.GOOS == "windows" {
+			name = strings.ToUpper(name)
+		}
 		r.envMap[name] = val
 	}
-	r.vars = make(map[string]varValue, 4)
 	if _, ok := r.envMap["HOME"]; !ok {
 		u, _ := user.Current()
-		r.vars["HOME"] = u.HomeDir
+		r.Vars["HOME"] = Variable{Value: StringVal(u.HomeDir)}
 	}
 	if r.Dir == "" {
 		dir, err := os.Getwd()
@@ -143,8 +238,19 @@ func (r *Runner) Reset() error {
 		}
 		r.Dir = dir
 	}
-	r.vars["PWD"] = r.Dir
-	r.dirStack = []string{r.Dir}
+	r.Vars["PWD"] = Variable{Value: StringVal(r.Dir)}
+	r.Vars["IFS"] = Variable{Value: StringVal(" \t\n")}
+	r.ifsUpdated()
+	r.Vars["OPTIND"] = Variable{Value: StringVal("1")}
+
+	if runtime.GOOS == "windows" {
+		// convert $PATH to a unix path list
+		path := r.envMap["PATH"]
+		path = strings.Join(filepath.SplitList(path), ":")
+		r.Vars["PATH"] = Variable{Value: StringVal(path)}
+	}
+
+	r.dirStack = append(r.dirStack, r.Dir)
 	if r.Exec == nil {
 		r.Exec = DefaultExec
 	}
@@ -167,125 +273,26 @@ func (r *Runner) ctx() Ctxt {
 		Stderr:      r.Stderr,
 		KillTimeout: r.KillTimeout,
 	}
+	for name, vr := range r.Vars {
+		if !vr.Exported {
+			continue
+		}
+		c.Env = append(c.Env, name+"="+r.varStr(vr, 0))
+	}
 	for name, val := range r.cmdVars {
-		c.Env = append(c.Env, name+"="+r.varStr(val, 0))
+		c.Env = append(c.Env, name+"="+val)
 	}
 	return c
-}
-
-// varValue can hold any of:
-//
-//     string (normal variable)
-//     []string (indexed array)
-//     arrayMap (associative array)
-//     nameRef (name reference)
-type varValue interface{}
-
-type arrayMap struct {
-	keys []string
-	vals map[string]string
-}
-
-type nameRef string
-
-// maxNameRefDepth defines the maximum number of times to follow
-// references when expanding a variable. Otherwise, simple name
-// reference loops could crash the interpreter quite easily.
-const maxNameRefDepth = 100
-
-func (r *Runner) varStr(v varValue, depth int) string {
-	switch x := v.(type) {
-	case string:
-		return x
-	case []string:
-		if len(x) > 0 {
-			return x[0]
-		}
-	case arrayMap:
-		// nothing to do
-	case nameRef:
-		if depth > maxNameRefDepth {
-			return ""
-		}
-		val, _ := r.lookupVar(string(x))
-		return r.varStr(val, depth+1)
-	}
-	return ""
-}
-
-func (r *Runner) varInd(v varValue, e syntax.ArithmExpr, depth int) string {
-	switch x := v.(type) {
-	case string:
-		i := r.arithm(e)
-		if i == 0 {
-			return x
-		}
-	case []string:
-		if w, ok := e.(*syntax.Word); ok {
-			if lit, ok := w.Parts[0].(*syntax.Lit); ok {
-				switch lit.Value {
-				case "@", "*":
-					return strings.Join(x, " ")
-				}
-			}
-		}
-		i := r.arithm(e)
-		if len(x) > 0 {
-			return x[i]
-		}
-	case arrayMap:
-		if w, ok := e.(*syntax.Word); ok {
-			if lit, ok := w.Parts[0].(*syntax.Lit); ok {
-				switch lit.Value {
-				case "@", "*":
-					var strs []string
-					for _, k := range x.keys {
-						strs = append(strs, x.vals[k])
-					}
-					return strings.Join(strs, " ")
-				}
-			}
-		}
-		return x.vals[r.loneWord(e.(*syntax.Word))]
-	case nameRef:
-		if depth > maxNameRefDepth {
-			return ""
-		}
-		v, _ = r.lookupVar(string(x))
-		return r.varInd(v, e, depth+1)
-	}
-	return ""
 }
 
 type ExitCode uint8
 
 func (e ExitCode) Error() string { return fmt.Sprintf("exit status %d", e) }
 
-type RunError struct {
-	Filename string
-	syntax.Pos
-	Text string
-}
-
-func (e RunError) Error() string {
-	if e.Filename == "" {
-		return fmt.Sprintf("%s: %s", e.Pos.String(), e.Text)
-	}
-	return fmt.Sprintf("%s:%s: %s", e.Filename, e.Pos.String(), e.Text)
-}
-
 func (r *Runner) setErr(err error) {
 	if r.err == nil {
 		r.err = err
 	}
-}
-
-func (r *Runner) runErr(pos syntax.Pos, format string, a ...interface{}) {
-	r.setErr(RunError{
-		Filename: r.filename,
-		Pos:      pos,
-		Text:     fmt.Sprintf(format, a...),
-	})
 }
 
 func (r *Runner) lastExit() {
@@ -294,103 +301,53 @@ func (r *Runner) lastExit() {
 	}
 }
 
-func (r *Runner) setVar(name string, index syntax.ArithmExpr, val varValue) {
-	if index == nil {
-		r.vars[name] = val
-		return
-	}
-	// from the syntax package, we know that val must be a string if
-	// index is non-nil; nested arrays are forbidden.
-	valStr := val.(string)
-	// if the existing variable is already an arrayMap, try our best
-	// to convert the key to a string
-	_, isArrayMap := r.vars[name].(arrayMap)
-	if stringIndex(index) || isArrayMap {
-		var amap arrayMap
-		switch x := r.vars[name].(type) {
-		case string, []string:
-			return // TODO
-		case arrayMap:
-			amap = x
-		}
-		w, ok := index.(*syntax.Word)
-		if !ok {
-			return
-		}
-		k := r.loneWord(w)
-		if _, ok := amap.vals[k]; !ok {
-			amap.keys = append(amap.keys, k)
-		}
-		amap.vals[k] = valStr
-		r.vars[name] = amap
-		return
-	}
-	var list []string
-	switch x := r.vars[name].(type) {
-	case string:
-		list = []string{x}
-	case []string:
-		list = x
-	case arrayMap: // done above
-	}
-	k := r.arithm(index)
-	for len(list) < k+1 {
-		list = append(list, "")
-	}
-	list[k] = valStr
-	r.vars[name] = list
-}
-
-func (r *Runner) lookupVar(name string) (varValue, bool) {
-	if val, e := r.cmdVars[name]; e {
-		return val, true
-	}
-	if val, e := r.vars[name]; e {
-		return val, true
-	}
-	str, e := r.envMap[name]
-	return str, e
-}
-
-func (r *Runner) getVar(name string) string {
-	val, _ := r.lookupVar(name)
-	return r.varStr(val, 0)
-}
-
-func (r *Runner) delVar(name string) {
-	delete(r.vars, name)
-	delete(r.envMap, name)
-}
-
-func (r *Runner) setFunc(name string, body *syntax.Stmt) {
-	if r.funcs == nil {
-		r.funcs = make(map[string]*syntax.Stmt, 4)
-	}
-	r.funcs[name] = body
-}
-
 // FromArgs populates the shell options and returns the remaining
 // arguments. For example, running FromArgs("-e", "--", "foo") will set
 // the "-e" option and return []string{"foo"}.
 //
 // This is similar to what the interpreter's "set" builtin does.
 func (r *Runner) FromArgs(args ...string) ([]string, error) {
-opts:
 	for len(args) > 0 {
-		opt := args[0]
-		if opt == "" || (opt[0] != '-' && opt[0] != '+') {
+		arg := args[0]
+		if arg == "" || (arg[0] != '-' && arg[0] != '+') {
 			break
 		}
-		enable := opt[0] == '-'
-		switch opt[1:] {
-		case "-":
+		if arg == "--" {
 			args = args[1:]
-			break opts
-		case "e":
-			r.stopOnCmdErr = enable
-		default:
-			return nil, fmt.Errorf("invalid option: %q", opt)
+			break
 		}
+		enable := arg[0] == '-'
+		var opt *bool
+		if flag := arg[1:]; flag == "o" {
+			args = args[1:]
+			if len(args) == 0 && enable {
+				for i, opt := range shellOptsTable {
+					status := "off"
+					if r.shellOpts[i] {
+						status = "on"
+					}
+					r.outf("%s:\t%s\n", opt.name, status)
+				}
+				break
+			}
+			if len(args) == 0 && !enable {
+				for i, opt := range shellOptsTable {
+					setFlag := "+o"
+					if r.shellOpts[i] {
+						setFlag = "-o"
+					}
+					r.outf("set %s %s\n", setFlag, opt.name)
+				}
+				break
+			}
+			opt = r.optByName(args[0])
+		} else {
+			opt = r.optByFlag(flag)
+		}
+		if opt == nil {
+			return nil, fmt.Errorf("invalid option: %q", arg)
+		}
+		*opt = enable
 		args = args[1:]
 	}
 	return args, nil
@@ -422,6 +379,10 @@ func (r *Runner) Stmt(stmt *syntax.Stmt) error {
 	return r.err
 }
 
+func (r *Runner) out(s string) {
+	io.WriteString(r.Stdout, s)
+}
+
 func (r *Runner) outf(format string, a ...interface{}) {
 	fmt.Fprintf(r.Stdout, format, a...)
 }
@@ -430,143 +391,15 @@ func (r *Runner) errf(format string, a ...interface{}) {
 	fmt.Fprintf(r.Stderr, format, a...)
 }
 
-func (r *Runner) expand(format string, onlyChars bool, args ...string) string {
-	var buf bytes.Buffer
-	esc, fmt := false, false
-	for _, c := range format {
-		if esc {
-			esc = false
-			switch c {
-			case 'n':
-				buf.WriteRune('\n')
-			case 'r':
-				buf.WriteRune('\r')
-			case 't':
-				buf.WriteRune('\t')
-			case '\\':
-				buf.WriteRune('\\')
-			default:
-				buf.WriteRune('\\')
-				buf.WriteRune(c)
-			}
-			continue
-		}
-		if fmt {
-			fmt = false
-			arg := ""
-			n := 0
-			if len(args) > 0 {
-				arg, args = args[0], args[1:]
-				i, _ := strconv.ParseInt(arg, 0, 0)
-				n = int(i)
-			}
-			switch c {
-			case 's':
-				buf.WriteString(arg)
-			case 'c':
-				var b byte
-				if len(arg) > 0 {
-					b = arg[0]
-				}
-				buf.WriteByte(b)
-			case 'd', 'i':
-				buf.WriteString(strconv.Itoa(n))
-			case 'u':
-				buf.WriteString(strconv.FormatUint(uint64(n), 10))
-			case 'o':
-				buf.WriteString(strconv.FormatUint(uint64(n), 8))
-			case 'x':
-				buf.WriteString(strconv.FormatUint(uint64(n), 16))
-			default:
-				r.runErr(syntax.Pos{}, "unhandled format char: %c", c)
-			}
-			continue
-		}
-		if c == '\\' {
-			esc = true
-		} else if !onlyChars && c == '%' {
-			fmt = true
-		} else {
-			buf.WriteRune(c)
-		}
-	}
-	return buf.String()
-}
-
-func fieldJoin(parts []fieldPart) string {
-	var buf bytes.Buffer
-	for _, part := range parts {
-		buf.WriteString(part.val)
-	}
-	return buf.String()
-}
-
-func escapedGlob(parts []fieldPart) (escaped string, glob bool) {
-	var buf bytes.Buffer
-	for _, part := range parts {
-		for _, r := range part.val {
-			switch r {
-			case '*', '?', '\\', '[':
-				if part.quoted {
-					buf.WriteByte('\\')
-				} else {
-					glob = true
-				}
-			}
-			buf.WriteRune(r)
-		}
-	}
-	return buf.String(), glob
-}
-
-func (r *Runner) Fields(words []*syntax.Word) []string {
-	fields := make([]string, 0, len(words))
-	baseDir, _ := escapedGlob([]fieldPart{{val: r.Dir}})
-	for _, word := range words {
-		for _, field := range r.wordFields(word.Parts, false) {
-			path, glob := escapedGlob(field)
-			var matches []string
-			abs := filepath.IsAbs(path)
-			if glob {
-				if !abs {
-					path = filepath.Join(baseDir, path)
-				}
-				matches, _ = filepath.Glob(path)
-			}
-			if len(matches) == 0 {
-				fields = append(fields, fieldJoin(field))
-				continue
-			}
-			for _, match := range matches {
-				if !abs {
-					match, _ = filepath.Rel(baseDir, match)
-				}
-				fields = append(fields, match)
-			}
-		}
-	}
-	return fields
-}
-
-func (r *Runner) loneWord(word *syntax.Word) string {
-	if word == nil {
-		return ""
-	}
-	var buf bytes.Buffer
-	for _, field := range r.wordFields(word.Parts, false) {
-		for _, part := range field {
-			buf.WriteString(part.val)
-		}
-	}
-	return buf.String()
-}
-
 func (r *Runner) stop() bool {
 	if r.err != nil {
 		return true
 	}
 	if err := r.Context.Err(); err != nil {
 		r.err = err
+		return true
+	}
+	if r.shellOpts[optNoExec] {
 		return true
 	}
 	return false
@@ -586,99 +419,6 @@ func (r *Runner) stmt(st *syntax.Stmt) {
 	} else {
 		r.stmtSync(st)
 	}
-}
-
-func stringIndex(index syntax.ArithmExpr) bool {
-	w, ok := index.(*syntax.Word)
-	if !ok || len(w.Parts) != 1 {
-		return false
-	}
-	_, ok = w.Parts[0].(*syntax.DblQuoted)
-	return ok
-}
-
-func (r *Runner) assignValue(as *syntax.Assign, mode string) varValue {
-	prev, _ := r.lookupVar(as.Name.Value)
-	if as.Value != nil {
-		s := r.loneWord(as.Value)
-		if !as.Append || prev == nil {
-			return s
-		}
-		switch x := prev.(type) {
-		case string:
-			return x + s
-		case []string:
-			if len(x) == 0 {
-				return []string{s}
-			}
-			x[0] += s
-			return x
-		case arrayMap:
-			// TODO
-		}
-		return s
-	}
-	if as.Array == nil {
-		return nil
-	}
-	elems := as.Array.Elems
-	if mode == "" {
-		if len(elems) == 0 || !stringIndex(elems[0].Index) {
-			mode = "-a" // indexed
-		} else {
-			mode = "-A" // associative
-		}
-	}
-	if mode == "-A" {
-		// associative array
-		amap := arrayMap{
-			keys: make([]string, 0, len(elems)),
-			vals: make(map[string]string, len(elems)),
-		}
-		for _, elem := range elems {
-			k := r.loneWord(elem.Index.(*syntax.Word))
-			if _, ok := amap.vals[k]; ok {
-				continue
-			}
-			amap.keys = append(amap.keys, k)
-			amap.vals[k] = r.loneWord(elem.Value)
-		}
-		if !as.Append || prev == nil {
-			return amap
-		}
-		// TODO
-		return amap
-	}
-	// indexed array
-	maxIndex := len(elems) - 1
-	indexes := make([]int, len(elems))
-	for i, elem := range elems {
-		if elem.Index == nil {
-			indexes[i] = i
-			continue
-		}
-		k := r.arithm(elem.Index)
-		indexes[i] = k
-		if k > maxIndex {
-			maxIndex = k
-		}
-	}
-	strs := make([]string, maxIndex+1)
-	for i, elem := range elems {
-		strs[indexes[i]] = r.loneWord(elem.Value)
-	}
-	if !as.Append || prev == nil {
-		return strs
-	}
-	switch x := prev.(type) {
-	case string:
-		return append([]string{x}, strs...)
-	case []string:
-		return append(x, strs...)
-	case arrayMap:
-		// TODO
-	}
-	return strs
 }
 
 func (r *Runner) stmtSync(st *syntax.Stmt) {
@@ -701,24 +441,31 @@ func (r *Runner) stmtSync(st *syntax.Stmt) {
 	if st.Negated {
 		r.exit = oneIf(r.exit == 0)
 	}
-	r.Stdin, r.Stdout, r.Stderr = oldIn, oldOut, oldErr
-}
-
-func oneIf(b bool) int {
-	if b {
-		return 1
+	if r.exit != 0 && r.shellOpts[optErrExit] {
+		r.lastExit()
 	}
-	return 0
+	if !r.keepRedirs {
+		r.Stdin, r.Stdout, r.Stderr = oldIn, oldOut, oldErr
+	}
 }
 
 func (r *Runner) sub() *Runner {
 	r2 := *r
 	r2.bgShells = sync.WaitGroup{}
+	r2.bufferAlloc = bytes.Buffer{}
 	// TODO: perhaps we could do a lazy copy here, or some sort of
 	// overlay to avoid copying all the time
-	r2.vars = make(map[string]varValue, len(r.vars))
-	for k, v := range r.vars {
-		r2.vars[k] = v
+	r2.envMap = make(map[string]string, len(r.envMap))
+	for k, v := range r.envMap {
+		r2.envMap[k] = v
+	}
+	r2.Vars = make(map[string]Variable, len(r.Vars))
+	for k, v := range r.Vars {
+		r2.Vars[k] = v
+	}
+	r2.cmdVars = make(map[string]string, len(r.cmdVars))
+	for k, v := range r.cmdVars {
+		r2.cmdVars[k] = v
 	}
 	return &r2
 }
@@ -736,22 +483,31 @@ func (r *Runner) cmd(cm syntax.Command) {
 		r.exit = r2.exit
 		r.setErr(r2.err)
 	case *syntax.CallExpr:
-		fields := r.Fields(x.Args)
+		fields := r.Fields(x.Args...)
 		if len(fields) == 0 {
 			for _, as := range x.Assigns {
-				r.setVar(as.Name.Value, as.Index, r.assignValue(as, ""))
+				vr, _ := r.lookupVar(as.Name.Value)
+				vr.Value = r.assignVal(as, "")
+				r.setVar(as.Name.Value, as.Index, vr)
 			}
 			break
 		}
-		oldVars := r.cmdVars
-		if r.cmdVars == nil {
-			r.cmdVars = make(map[string]varValue, len(x.Assigns))
-		}
 		for _, as := range x.Assigns {
-			r.cmdVars[as.Name.Value] = r.assignValue(as, "")
+			val := r.assignVal(as, "")
+			// we know that inline vars must be strings
+			r.cmdVars[as.Name.Value] = string(val.(StringVal))
+			if as.Name.Value == "IFS" {
+				r.ifsUpdated()
+				defer r.ifsUpdated()
+			}
 		}
-		r.call(x.Args[0].Pos(), fields[0], fields[1:])
-		r.cmdVars = oldVars
+		r.call(x.Args[0].Pos(), fields)
+		// cmdVars can be nuked here, as they are never useful
+		// again once we nest into further levels of inline
+		// vars.
+		for k := range r.cmdVars {
+			delete(r.cmdVars, k)
+		}
 	case *syntax.BinaryCmd:
 		switch x.Op {
 		case syntax.AndStmt:
@@ -784,18 +540,21 @@ func (r *Runner) cmd(cm syntax.Command) {
 			r.stmt(x.Y)
 			pr.Close()
 			wg.Wait()
+			if r.shellOpts[optPipeFail] && r2.exit > 0 && r.exit == 0 {
+				r.exit = r2.exit
+			}
 			r.setErr(r2.err)
 		}
 	case *syntax.IfClause:
 		r.stmts(x.Cond)
 		if r.exit == 0 {
 			r.stmts(x.Then)
-			return
+			break
 		}
 		r.exit = 0
 		r.stmts(x.Else)
 	case *syntax.WhileClause:
-		for r.err == nil {
+		for !r.stop() {
 			r.stmts(x.Cond)
 			stop := (r.exit == 0) == x.Until
 			r.exit = 0
@@ -807,8 +566,8 @@ func (r *Runner) cmd(cm syntax.Command) {
 		switch y := x.Loop.(type) {
 		case *syntax.WordIter:
 			name := y.Name.Value
-			for _, field := range r.Fields(y.Items) {
-				r.setVar(name, nil, field)
+			for _, field := range r.Fields(y.Items...) {
+				r.setVarString(name, field)
 				if r.loopStmtsBroken(x.Do) {
 					break
 				}
@@ -825,85 +584,112 @@ func (r *Runner) cmd(cm syntax.Command) {
 	case *syntax.FuncDecl:
 		r.setFunc(x.Name.Value, x.Body)
 	case *syntax.ArithmCmd:
-		if r.arithm(x.X) == 0 {
-			r.exit = 1
-		}
+		r.exit = oneIf(r.arithm(x.X) == 0)
 	case *syntax.LetClause:
 		var val int
 		for _, expr := range x.Exprs {
 			val = r.arithm(expr)
 		}
-		if val == 0 {
-			r.exit = 1
-		}
+		r.exit = oneIf(val == 0)
 	case *syntax.CaseClause:
 		str := r.loneWord(x.Word)
 		for _, ci := range x.Items {
 			for _, word := range ci.Patterns {
-				var buf bytes.Buffer
-				for _, field := range r.wordFields(word.Parts, false) {
-					escaped, _ := escapedGlob(field)
-					buf.WriteString(escaped)
-				}
-				if match(buf.String(), str) {
+				pat := r.lonePattern(word)
+				if match(pat, str) {
 					r.stmts(ci.StmtList)
 					return
 				}
 			}
 		}
 	case *syntax.TestClause:
-		if r.bashTest(x.X) == "" {
-			if r.exit == 0 {
-				// to preserve exit code 2 for regex
-				// errors, etc
-				r.exit = 1
-			}
-		} else {
-			r.exit = 0
+		r.exit = 0
+		if r.bashTest(x.X) == "" && r.exit == 0 {
+			// to preserve exit code 2 for regex
+			// errors, etc
+			r.exit = 1
 		}
 	case *syntax.DeclClause:
-		mode := ""
+		local := false
+		var modes []string
+		valType := ""
+		switch x.Variant.Value {
+		case "declare":
+			// When used in a function, "declare" acts as
+			// "local" unless the "-g" option is used.
+			local = r.inFunc
+		case "local":
+			if !r.inFunc {
+				r.errf("local: can only be used in a function\n")
+				r.exit = 1
+				return
+			}
+			local = true
+		case "export":
+			modes = append(modes, "-x")
+		case "readonly":
+			modes = append(modes, "-r")
+		case "nameref":
+			modes = append(modes, "-n")
+		}
 		for _, opt := range x.Opts {
-			_ = opt
 			switch s := r.loneWord(opt); s {
-			case "-n", "-A":
-				mode = s
+			case "-x", "-r", "-n":
+				modes = append(modes, s)
+			case "-a", "-A":
+				valType = s
+			case "-g":
+				local = false
 			default:
-				r.runErr(cm.Pos(), "unhandled declare opts")
+				r.errf("declare: invalid option %q\n", s)
+				r.exit = 2
+				return
 			}
 		}
 		for _, as := range x.Assigns {
-			val := r.assignValue(as, mode)
-			switch mode {
-			case "-n": // name reference
-				if name, ok := val.(string); ok {
-					val = nameRef(name)
+			for _, as := range r.expandAssigns(as) {
+				name := as.Name.Value
+				vr, _ := r.lookupVar(as.Name.Value)
+				vr.Value = r.assignVal(as, valType)
+				vr.Local = local
+				for _, mode := range modes {
+					switch mode {
+					case "-x":
+						vr.Exported = true
+					case "-r":
+						vr.ReadOnly = true
+					case "-n":
+						vr.NameRef = true
+					}
 				}
-			case "-A":
-				// nothing to do
+				r.setVar(name, as.Index, vr)
 			}
-			r.setVar(as.Name.Value, as.Index, val)
 		}
 	case *syntax.TimeClause:
 		start := time.Now()
 		if x.Stmt != nil {
 			r.stmt(x.Stmt)
 		}
+		format := "%s\t%s\n"
+		if x.PosixFormat {
+			format = "%s %s\n"
+		} else {
+			r.outf("\n")
+		}
 		real := time.Since(start)
-		r.outf("\n")
-		r.outf("real\t%s\n", elapsedString(real))
+		r.outf(format, "real", elapsedString(real, x.PosixFormat))
 		// TODO: can we do these?
-		r.outf("user\t0m0.000s\n")
-		r.outf("sys\t0m0.000s\n")
+		r.outf(format, "user", elapsedString(0, x.PosixFormat))
+		r.outf(format, "sys", elapsedString(0, x.PosixFormat))
 	default:
-		r.runErr(cm.Pos(), "unhandled command node: %T", x)
-	}
-	if r.exit != 0 && r.stopOnCmdErr {
-		r.lastExit()
+		panic(fmt.Sprintf("unhandled command node: %T", x))
 	}
 }
 
-func elapsedString(d time.Duration) string {
+func elapsedString(d time.Duration, posix bool) string {
+	if posix {
+		return fmt.Sprintf("%.2f", d.Seconds())
+	}
 	min := int(d.Minutes())
 	sec := math.Remainder(d.Seconds(), 60.0)
 	return fmt.Sprintf("%dm%.3fs", min, sec)
@@ -913,11 +699,6 @@ func (r *Runner) stmts(sl syntax.StmtList) {
 	for _, stmt := range sl.Stmts {
 		r.stmt(stmt)
 	}
-}
-
-func match(pattern, name string) bool {
-	matched, _ := path.Match(pattern, name)
-	return matched
 }
 
 func (r *Runner) redir(rd *syntax.Redirect) (io.Closer, error) {
@@ -952,7 +733,7 @@ func (r *Runner) redir(rd *syntax.Redirect) (io.Closer, error) {
 		// done further below
 	// case syntax.DplIn:
 	default:
-		r.runErr(rd.Pos(), "unhandled redirect op: %v", rd.Op)
+		panic(fmt.Sprintf("unhandled redirect op: %v", rd.Op))
 	}
 	mode := os.O_RDONLY
 	switch rd.Op {
@@ -974,14 +755,15 @@ func (r *Runner) redir(rd *syntax.Redirect) (io.Closer, error) {
 		r.Stdout = f
 		r.Stderr = f
 	default:
-		r.runErr(rd.Pos(), "unhandled redirect op: %v", rd.Op)
+		panic(fmt.Sprintf("unhandled redirect op: %v", rd.Op))
 	}
 	return f, nil
 }
 
 func (r *Runner) loopStmtsBroken(sl syntax.StmtList) bool {
+	oldInLoop := r.inLoop
 	r.inLoop = true
-	defer func() { r.inLoop = false }()
+	defer func() { r.inLoop = oldInLoop }()
 	for _, stmt := range sl.Stmts {
 		r.stmt(stmt)
 		if r.contnEnclosing > 0 {
@@ -996,120 +778,29 @@ func (r *Runner) loopStmtsBroken(sl syntax.StmtList) bool {
 	return false
 }
 
-type fieldPart struct {
-	val    string
-	quoted bool
-}
-
-func (r *Runner) wordFields(wps []syntax.WordPart, quoted bool) [][]fieldPart {
-	var fields [][]fieldPart
-	var curField []fieldPart
-	allowEmpty := false
-	flush := func() {
-		if len(curField) == 0 {
-			return
-		}
-		fields = append(fields, curField)
-		curField = nil
-	}
-	splitAdd := func(val string) {
-		// TODO: use IFS
-		for i, field := range strings.Fields(val) {
-			if i > 0 {
-				flush()
-			}
-			curField = append(curField, fieldPart{val: field})
-		}
-	}
-	for i, wp := range wps {
-		switch x := wp.(type) {
-		case *syntax.Lit:
-			s := x.Value
-			if i > 0 || len(s) == 0 || s[0] != '~' {
-			} else if len(s) < 2 || s[1] == '/' {
-				// TODO: ~someuser
-				s = r.getVar("HOME") + s[1:]
-			}
-			curField = append(curField, fieldPart{val: s})
-		case *syntax.SglQuoted:
-			allowEmpty = true
-			fp := fieldPart{quoted: true, val: x.Value}
-			if x.Dollar {
-				fp.val = r.expand(fp.val, true)
-			}
-			curField = append(curField, fp)
-		case *syntax.DblQuoted:
-			allowEmpty = true
-			if len(x.Parts) == 1 {
-				pe, _ := x.Parts[0].(*syntax.ParamExp)
-				if elems := r.quotedElems(pe); elems != nil {
-					for i, elem := range elems {
-						if i > 0 {
-							flush()
-						}
-						curField = append(curField, fieldPart{
-							quoted: true,
-							val:    elem,
-						})
-					}
-					continue
-				}
-			}
-			for _, field := range r.wordFields(x.Parts, true) {
-				for _, part := range field {
-					curField = append(curField, fieldPart{
-						quoted: true,
-						val:    part.val,
-					})
-				}
-			}
-		case *syntax.ParamExp:
-			val := r.paramExp(x)
-			if quoted {
-				curField = append(curField, fieldPart{val: val})
-			} else {
-				splitAdd(val)
-			}
-		case *syntax.CmdSubst:
-			r2 := r.sub()
-			var buf bytes.Buffer
-			r2.Stdout = &buf
-			r2.stmts(x.StmtList)
-			val := strings.TrimRight(buf.String(), "\n")
-			if quoted {
-				curField = append(curField, fieldPart{val: val})
-			} else {
-				splitAdd(val)
-			}
-			r.setErr(r2.err)
-		case *syntax.ArithmExp:
-			curField = append(curField, fieldPart{
-				val: strconv.Itoa(r.arithm(x.X)),
-			})
-		default:
-			r.runErr(wp.Pos(), "unhandled word part: %T", x)
-		}
-	}
-	flush()
-	if allowEmpty && len(fields) == 0 {
-		fields = append(fields, []fieldPart{{}})
-	}
-	return fields
-}
-
 type returnCode uint8
 
 func (returnCode) Error() string { return "returned" }
 
-func (r *Runner) call(pos syntax.Pos, name string, args []string) {
-	if body := r.funcs[name]; body != nil {
+func (r *Runner) call(pos syntax.Pos, args []string) {
+	if r.stop() {
+		return
+	}
+	name := args[0]
+	if body := r.Funcs[name]; body != nil {
 		// stack them to support nested func calls
 		oldParams := r.Params
-		r.Params = args
-		r.canReturn = true
+		r.Params = args[1:]
+		oldInFunc := r.inFunc
+		oldFuncVars := r.funcVars
+		r.funcVars = nil
+		r.inFunc = true
+
 		r.stmt(body)
+
 		r.Params = oldParams
-		r.canReturn = false
+		r.funcVars = oldFuncVars
+		r.inFunc = oldInFunc
 		if code, ok := r.err.(returnCode); ok {
 			r.err = nil
 			r.exit = int(code)
@@ -1117,20 +808,21 @@ func (r *Runner) call(pos syntax.Pos, name string, args []string) {
 		return
 	}
 	if isBuiltin(name) {
-		r.exit = r.builtinCode(pos, name, args)
+		r.exit = r.builtinCode(pos, name, args[1:])
 		return
 	}
-	r.exec(name, args)
+	r.exec(args)
 }
 
-func (r *Runner) exec(name string, args []string) {
-	err := r.Exec(r.ctx(), name, args)
+func (r *Runner) exec(args []string) {
+	path := r.lookPath(args[0])
+	err := r.Exec(r.ctx(), path, args)
 	switch x := err.(type) {
 	case nil:
 		r.exit = 0
 	case ExitCode:
 		r.exit = int(x)
-	default:
+	default: // module's custom fatal error
 		r.setErr(err)
 	}
 }
@@ -1143,8 +835,132 @@ func (r *Runner) open(path string, flags int, mode os.FileMode, print bool) (io.
 		if print {
 			r.errf("%v\n", err)
 		}
-	default:
+	default: // module's custom fatal error
 		r.setErr(err)
 	}
 	return f, err
+}
+
+func (r *Runner) stat(name string) (os.FileInfo, error) {
+	return os.Stat(r.relPath(name))
+}
+
+func (r *Runner) checkStat(file string) string {
+	d, err := r.stat(file)
+	if err != nil {
+		return ""
+	}
+	m := d.Mode()
+	if m.IsDir() {
+		return ""
+	}
+	if runtime.GOOS != "windows" && m&0111 == 0 {
+		return ""
+	}
+	return file
+}
+
+func winHasExt(file string) bool {
+	i := strings.LastIndex(file, ".")
+	if i < 0 {
+		return false
+	}
+	return strings.LastIndexAny(file, `:\/`) < i
+}
+
+func (r *Runner) findExecutable(file string, exts []string) string {
+	if len(exts) == 0 {
+		// non-windows
+		return r.checkStat(file)
+	}
+	if winHasExt(file) && r.checkStat(file) != "" {
+		return file
+	}
+	for _, e := range exts {
+		if f := file + e; r.checkStat(f) != "" {
+			return f
+		}
+	}
+	return ""
+}
+
+// splitList is like filepath.SplitList, but always using the unix path
+// list separator ':'. On Windows, it also makes sure not to split
+// [A-Z]:[/\].
+func splitList(path string) []string {
+	if path == "" {
+		return []string{""}
+	}
+	list := strings.Split(path, ":")
+	if runtime.GOOS != "windows" {
+		return list
+	}
+	// join "C", "/foo" into "C:/foo"
+	var fixed []string
+	for i := 0; i < len(list); i++ {
+		s := list[i]
+		switch {
+		case len(s) != 1, s[0] < 'A', s[0] > 'Z':
+			// not a disk name
+		case i+1 >= len(list):
+			// last element
+		case strings.IndexAny(list[i+1], `/\`) != 0:
+			// next element doesn't start with / or \
+		default:
+			fixed = append(fixed, s+":"+list[i+1])
+			i++
+			continue
+		}
+		fixed = append(fixed, s)
+	}
+	return fixed
+}
+
+func (r *Runner) lookPath(file string) string {
+	pathList := splitList(r.getVar("PATH"))
+	chars := `/`
+	if runtime.GOOS == "windows" {
+		chars = `:\/`
+		// so that "foo" always tries "./foo"
+		pathList = append([]string{"."}, pathList...)
+	}
+	exts := r.pathExts()
+	if strings.ContainsAny(file, chars) {
+		return r.findExecutable(file, exts)
+	}
+	for _, dir := range pathList {
+		var path string
+		switch dir {
+		case "", ".":
+			// otherwise "foo" won't be "./foo"
+			path = "." + string(filepath.Separator) + file
+		default:
+			path = filepath.Join(dir, file)
+		}
+		if f := r.findExecutable(path, exts); f != "" {
+			return f
+		}
+	}
+	return ""
+}
+
+func (r *Runner) pathExts() []string {
+	if runtime.GOOS != "windows" {
+		return nil
+	}
+	pathext := r.getVar("PATHEXT")
+	if pathext == "" {
+		return []string{".com", ".exe", ".bat", ".cmd"}
+	}
+	var exts []string
+	for _, e := range strings.Split(strings.ToLower(pathext), `;`) {
+		if e == "" {
+			continue
+		}
+		if e[0] != '.' {
+			e = "." + e
+		}
+		exts = append(exts, e)
+	}
+	return exts
 }

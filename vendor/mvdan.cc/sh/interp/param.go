@@ -4,6 +4,9 @@
 package interp
 
 import (
+	"fmt"
+	"os"
+	"regexp"
 	"strconv"
 	"strings"
 	"unicode"
@@ -12,6 +15,23 @@ import (
 	"mvdan.cc/sh/syntax"
 )
 
+func anyOfLit(v interface{}, vals ...string) string {
+	word, _ := v.(*syntax.Word)
+	if word == nil || len(word.Parts) != 1 {
+		return ""
+	}
+	lit, ok := word.Parts[0].(*syntax.Lit)
+	if !ok {
+		return ""
+	}
+	for _, val := range vals {
+		if lit.Value == val {
+			return val
+		}
+	}
+	return ""
+}
+
 func (r *Runner) quotedElems(pe *syntax.ParamExp) []string {
 	if pe == nil {
 		return nil
@@ -19,17 +39,12 @@ func (r *Runner) quotedElems(pe *syntax.ParamExp) []string {
 	if pe.Param.Value == "@" {
 		return r.Params
 	}
-	w, _ := pe.Index.(*syntax.Word)
-	if w == nil || len(w.Parts) != 1 {
-		return nil
-	}
-	l, _ := w.Parts[0].(*syntax.Lit)
-	if l == nil || l.Value != "@" {
+	if anyOfLit(pe.Index, "@") == "" {
 		return nil
 	}
 	val, _ := r.lookupVar(pe.Param.Value)
-	switch x := val.(type) {
-	case []string:
+	switch x := val.Value.(type) {
+	case IndexArray:
 		return x
 	}
 	return nil
@@ -37,34 +52,59 @@ func (r *Runner) quotedElems(pe *syntax.ParamExp) []string {
 
 func (r *Runner) paramExp(pe *syntax.ParamExp) string {
 	name := pe.Param.Value
-	var val varValue
+	var vr Variable
 	set := false
+	index := pe.Index
 	switch name {
 	case "#":
-		val = strconv.Itoa(len(r.Params))
-	case "*", "@":
-		val = strings.Join(r.Params, " ")
+		vr.Value = StringVal(strconv.Itoa(len(r.Params)))
+	case "@", "*":
+		vr.Value = IndexArray(r.Params)
+		index = &syntax.Word{Parts: []syntax.WordPart{
+			&syntax.Lit{Value: name},
+		}}
 	case "?":
-		val = strconv.Itoa(r.exit)
+		vr.Value = StringVal(strconv.Itoa(r.exit))
+	case "$":
+		vr.Value = StringVal(strconv.Itoa(os.Getpid()))
+	case "PPID":
+		vr.Value = StringVal(strconv.Itoa(os.Getppid()))
+	case "LINENO":
+		line := uint64(pe.Pos().Line())
+		vr.Value = StringVal(strconv.FormatUint(line, 10))
 	default:
 		if n, err := strconv.Atoi(name); err == nil {
 			if i := n - 1; i < len(r.Params) {
-				val, set = r.Params[i], true
+				vr.Value, set = StringVal(r.Params[i]), true
 			}
 		} else {
-			val, set = r.lookupVar(name)
+			vr, set = r.lookupVar(name)
 		}
 	}
-	str := r.varStr(val, 0)
-	if pe.Index != nil {
-		str = r.varInd(val, pe.Index, 0)
+	str := r.varStr(vr, 0)
+	if index != nil {
+		str = r.varInd(vr, index, 0)
+	}
+	if pe.Length {
+		n := 1
+		if anyOfLit(index, "@", "*") != "" {
+			switch x := vr.Value.(type) {
+			case IndexArray:
+				n = len(x)
+			case AssocArray:
+				n = len(x)
+			}
+		} else {
+			n = utf8.RuneCountInString(str)
+		}
+		str = strconv.Itoa(n)
 	}
 	switch {
-	case pe.Length:
-		str = strconv.Itoa(utf8.RuneCountInString(str))
 	case pe.Excl:
-		val, set = r.lookupVar(str)
-		str = r.varStr(val, 0)
+		if str != "" {
+			vr, set = r.lookupVar(str)
+			str = r.varStr(vr, 0)
+		}
 	}
 	slicePos := func(expr syntax.ArithmExpr) int {
 		p := r.arithm(expr)
@@ -89,13 +129,22 @@ func (r *Runner) paramExp(pe *syntax.ParamExp) string {
 		}
 	}
 	if pe.Repl != nil {
-		orig := r.loneWord(pe.Repl.Orig)
+		orig := r.lonePattern(pe.Repl.Orig)
 		with := r.loneWord(pe.Repl.With)
 		n := 1
 		if pe.Repl.All {
 			n = -1
 		}
-		str = strings.Replace(str, orig, with, n)
+		locs := findAllIndex(orig, str, n)
+		buf := r.strBuilder()
+		last := 0
+		for _, loc := range locs {
+			buf.WriteString(str[last:loc[0]])
+			buf.WriteString(with)
+			last = loc[1]
+		}
+		buf.WriteString(str[last:])
+		str = buf.String()
 	}
 	if pe.Exp != nil {
 		arg := r.loneWord(pe.Exp.Word)
@@ -125,7 +174,7 @@ func (r *Runner) paramExp(pe *syntax.ParamExp) string {
 			fallthrough
 		case syntax.SubstColQuest:
 			if str == "" {
-				r.errf("%s", arg)
+				r.errf("%s\n", arg)
 				r.exit = 1
 				r.lastExit()
 			}
@@ -136,7 +185,7 @@ func (r *Runner) paramExp(pe *syntax.ParamExp) string {
 			fallthrough
 		case syntax.SubstColAssgn:
 			if str == "" {
-				r.setVar(name, nil, arg)
+				r.setVarString(name, arg)
 				str = arg
 			}
 		case syntax.RemSmallPrefix:
@@ -177,44 +226,36 @@ func (r *Runner) paramExp(pe *syntax.ParamExp) string {
 				}
 				str = string(rns)
 			case "P", "A", "a":
-				r.runErr(pe.Pos(), "unhandled @%s param expansion", arg)
+				panic(fmt.Sprintf("unhandled @%s param expansion", arg))
 			default:
-				r.runErr(pe.Pos(), "unexpected @%s param expansion", arg)
+				panic(fmt.Sprintf("unexpected @%s param expansion", arg))
 			}
 		}
 	}
 	return str
 }
 
-func removePattern(str, pattern string, fromEnd, longest bool) string {
-	// TODO: really slow to not re-implement path.Match.
-	last := str
-	s := str
-	i := len(str)
-	if fromEnd {
-		i = 0
+func removePattern(str, pattern string, fromEnd, greedy bool) string {
+	expr, err := syntax.TranslatePattern(pattern, greedy)
+	if err != nil {
+		return str
 	}
-	for {
-		if match(pattern, s) {
-			last = str[i:]
-			if fromEnd {
-				last = str[:i]
-			}
-			if longest {
-				return last
-			}
-		}
-		if fromEnd {
-			if i++; i >= len(str) {
-				break
-			}
-			s = str[i:]
-		} else {
-			if i--; i < 1 {
-				break
-			}
-			s = str[:i]
-		}
+	switch {
+	case fromEnd && !greedy:
+		// use .* to get the right-most (shortest) match
+		expr = ".*(" + expr + ")$"
+	case fromEnd:
+		// simple suffix
+		expr = "(" + expr + ")$"
+	default:
+		// simple prefix
+		expr = "^(" + expr + ")"
 	}
-	return last
+	// no need to check error as TranslatePattern returns one
+	rx := regexp.MustCompile(expr)
+	if loc := rx.FindStringSubmatchIndex(str); loc != nil {
+		// remove the original pattern (the submatch)
+		str = str[:loc[2]] + str[loc[3]:]
+	}
+	return str
 }

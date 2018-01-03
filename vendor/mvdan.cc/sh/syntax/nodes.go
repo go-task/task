@@ -242,7 +242,8 @@ func (r *Redirect) End() Pos { return r.Word.End() }
 // known as a simple command.
 //
 // If Args is empty, Assigns apply to the shell environment. Otherwise,
-// they only apply to the call.
+// they are variables that cannot be arrays and which only apply to the
+// call.
 type CallExpr struct {
 	Assigns []*Assign // a=x b=y args
 	Args    []*Word
@@ -692,7 +693,9 @@ func (p *ParenTest) End() Pos { return posAddCol(p.Rparen, 1) }
 //
 // This node will only appear with LangBash.
 type DeclClause struct {
-	Variant *Lit // "declare", "local", etc
+	// Variant is one of "declare", "local", "export", "readonly",
+	// "typeset", or "nameref".
+	Variant *Lit
 	Opts    []*Word
 	Assigns []*Assign
 }
@@ -761,12 +764,14 @@ type ProcSubst struct {
 func (s *ProcSubst) Pos() Pos { return s.OpPos }
 func (s *ProcSubst) End() Pos { return posAddCol(s.Rparen, 1) }
 
-// TimeClause represents a Bash time clause.
+// TimeClause represents a Bash time clause. PosixFormat corresponds to
+// the -p flag.
 //
 // This node will only appear in LangBash and LangMirBSDKorn.
 type TimeClause struct {
-	Time Pos
-	Stmt *Stmt
+	Time        Pos
+	PosixFormat bool
+	Stmt        *Stmt
 }
 
 func (c *TimeClause) Pos() Pos { return c.Time }

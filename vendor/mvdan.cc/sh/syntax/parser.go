@@ -1046,8 +1046,6 @@ func (p *Parser) paramExp() *ParamExp {
 		p.next()
 	}
 	switch p.tok {
-	case at:
-		p.tok, p.val = _LitWord, "@"
 	case hash:
 		if paramNameOp(p.r) {
 			pe.Length = true
@@ -1071,7 +1069,7 @@ func (p *Parser) paramExp() *ParamExp {
 	case _Lit, _LitWord:
 		pe.Param = p.lit(p.pos, p.val)
 		p.next()
-	case hash, exclMark:
+	case at, hash, exclMark:
 		pe.Param = p.lit(p.pos, p.tok.String())
 		p.next()
 	case dollar, quest, minus:
@@ -1157,6 +1155,18 @@ func (p *Parser) paramExp() *ParamExp {
 		pe.Exp = &Expansion{Op: ParExpOperator(p.tok)}
 		p.quote = paramExpExp
 		p.next()
+		if pe.Exp.Op == OtherParamOps {
+			switch p.tok {
+			case _Lit, _LitWord:
+			default:
+				p.curErr("@ expansion operator requires a literal")
+			}
+			switch p.val {
+			case "Q", "E", "P", "A", "a":
+			default:
+				p.curErr("invalid @ expansion operator")
+			}
+		}
 		pe.Exp.Word = p.getWord()
 	}
 	p.quote = old
@@ -1205,6 +1215,9 @@ func ValidName(val string) bool {
 }
 
 func (p *Parser) hasValidIdent() bool {
+	if p.tok != _Lit && p.tok != _LitWord {
+		return false
+	}
 	if end := p.eqlOffs; end > 0 {
 		if p.val[end-1] == '+' && p.lang != LangPOSIX {
 			end--
@@ -1213,7 +1226,7 @@ func (p *Parser) hasValidIdent() bool {
 			return true
 		}
 	}
-	return p.tok == _Lit && p.r == '['
+	return p.r == '['
 }
 
 func (p *Parser) getAssign(needEqual bool) *Assign {
@@ -1552,7 +1565,7 @@ func (p *Parser) gotStmtPipe(s *Stmt) *Stmt {
 	case _Lit, dollBrace, dollDblParen, dollParen, dollar, cmdIn, cmdOut,
 		sglQuote, dollSglQuote, dblQuote, dollDblQuote, dollBrack,
 		globQuest, globStar, globPlus, globAt, globExcl:
-		if p.tok == _Lit && p.hasValidIdent() {
+		if p.hasValidIdent() {
 			s.Cmd = p.callExpr(s, nil, true)
 			break
 		}
@@ -1928,6 +1941,9 @@ func (p *Parser) testExprBase(ftok token, fpos Pos) TestExpr {
 		if ftok != illegalTok {
 			fstr = ftok.String()
 		}
+		if p.tok == _Newl {
+			p.next()
+		}
 		return p.followWord(fstr, fpos)
 	}
 }
@@ -1935,11 +1951,12 @@ func (p *Parser) testExprBase(ftok token, fpos Pos) TestExpr {
 func (p *Parser) declClause() *DeclClause {
 	ds := &DeclClause{Variant: p.lit(p.pos, p.val)}
 	p.next()
-	for (p.tok == _LitWord || p.tok == _Lit) && p.val[0] == '-' {
+	for (p.tok == _LitWord || p.tok == _Lit) &&
+		(p.val[0] == '-' || p.val[0] == '+') {
 		ds.Opts = append(ds.Opts, p.getWord())
 	}
 	for !stopToken(p.tok) && !p.peekRedir() {
-		if (p.tok == _Lit || p.tok == _LitWord) && p.hasValidIdent() {
+		if p.hasValidIdent() {
 			ds.Assigns = append(ds.Assigns, p.getAssign(false))
 		} else if p.eqlOffs > 0 {
 			p.curErr("invalid var name")
@@ -1978,6 +1995,10 @@ func isBashCompoundCommand(tok token, val string) bool {
 func (p *Parser) timeClause() *TimeClause {
 	tc := &TimeClause{Time: p.pos}
 	p.next()
+	if p.tok == _LitWord && p.val == "-p" {
+		tc.PosixFormat = true
+		p.next()
+	}
 	if p.tok != _Newl {
 		tc.Stmt = p.gotStmtPipe(p.stmt(p.pos))
 	}
@@ -2106,6 +2127,12 @@ loop:
 	}
 	if len(ce.Args) == 0 {
 		ce.Args = nil
+	} else {
+		for _, asgn := range ce.Assigns {
+			if asgn.Index != nil || asgn.Array != nil {
+				p.posErr(asgn.Pos(), "inline variables cannot be arrays")
+			}
+		}
 	}
 	return ce
 }
