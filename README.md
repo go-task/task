@@ -175,6 +175,24 @@ css:
 If there are more than one dependency, they always run in parallel for better
 performance.
 
+If you want to pass information to dependencies, you can do that the same manner as you would to [call another task](#calling-another-task):
+
+```yml
+default:
+  deps:
+    - task: echo_sth
+      vars: {TEXT: "before 1"}
+    - task: echo_sth
+      vars: {TEXT: "before 2"}
+  cmds:
+    - echo "after"
+    
+echo_sth:
+  cmds:
+    - echo {{.TEXT}}
+```
+
+
 ### Calling another task
 
 When a task has many dependencies, they are executed concurrently. This will
