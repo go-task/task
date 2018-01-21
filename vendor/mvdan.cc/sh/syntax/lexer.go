@@ -22,7 +22,7 @@ func regOps(r rune) bool {
 func paramOps(r rune) bool {
 	switch r {
 	case '}', '#', '!', ':', '-', '+', '=', '?', '%', '[', ']', '/', '^',
-		',', '@':
+		',', '@', '*':
 		return true
 	}
 	return false
@@ -216,6 +216,14 @@ skipSpace:
 			break skipSpace
 		}
 	}
+	if p.stopAt != nil && (p.spaced || p.tok == illegalTok || stopToken(p.tok)) {
+		w := utf8.RuneLen(r)
+		if bytes.HasPrefix(p.bs[p.bsp-w:], p.stopAt) {
+			p.r = utf8.RuneSelf
+			p.tok = _EOF
+			return
+		}
+	}
 	p.pos = p.getPos()
 	switch {
 	case p.quote&allRegTokens != 0:
@@ -237,10 +245,9 @@ skipSpace:
 				p.litBs = nil
 			}
 			p.next()
-		case '[':
+		case '[', '=':
 			if p.quote == arrayElems {
-				p.tok = leftBrack
-				p.rune()
+				p.tok = p.paramToken(r)
 			} else {
 				p.advanceLitNone(r)
 			}
@@ -351,7 +358,8 @@ func (p *Parser) regToken(r rune) token {
 			p.rune()
 			return dollBrace
 		case '[':
-			if p.lang != LangBash {
+			if p.lang != LangBash || p.quote == paramExpName {
+				// latter to not tokenise ${$[@]} as $[
 				break
 			}
 			p.rune()
@@ -523,6 +531,9 @@ func (p *Parser) paramToken(r rune) token {
 	case '[':
 		p.rune()
 		return leftBrack
+	case ']':
+		p.rune()
+		return rightBrack
 	case '/':
 		if p.rune() == '/' && p.quote != paramExpRepl {
 			p.rune()
@@ -541,9 +552,12 @@ func (p *Parser) paramToken(r rune) token {
 			return dblComma
 		}
 		return comma
-	default: // '@'
+	case '@':
 		p.rune()
 		return at
+	default: // '*'
+		p.rune()
+		return star
 	}
 }
 
@@ -738,12 +752,6 @@ loop:
 			if r = p.rune(); r == '\n' {
 				p.discardLit(2)
 			}
-		case '\n':
-			switch p.quote {
-			case sglQuotes, paramExpRepl, paramExpExp:
-			default:
-				break loop
-			}
 		case '\'':
 			switch p.quote {
 			case paramExpExp, paramExpRepl:
@@ -764,14 +772,10 @@ loop:
 				break loop
 			}
 		case ']':
-			if p.quote&allRbrack != 0 {
+			if p.quote == arithmExprBrack {
 				break loop
 			}
-		case '!', '*':
-			if p.quote&allArithmExpr != 0 {
-				break loop
-			}
-		case ':', '=', '%', '^', ',', '?':
+		case ':', '=', '%', '^', ',', '?', '!', '*':
 			if p.quote&allArithmExpr != 0 || p.quote == paramExpName {
 				break loop
 			}
@@ -782,13 +786,7 @@ loop:
 			if r == '[' && p.lang != LangPOSIX && p.quote&allArithmExpr != 0 {
 				break loop
 			}
-		case '+', '-':
-			switch p.quote {
-			case paramExpExp, paramExpRepl, sglQuotes:
-			default:
-				break loop
-			}
-		case ' ', '\t', ';', '&', '>', '<', '|', '(', ')', '\r':
+		case '+', '-', ' ', '\t', ';', '&', '>', '<', '|', '(', ')', '\n', '\r':
 			switch p.quote {
 			case paramExpExp, paramExpRepl, sglQuotes:
 			default:

@@ -17,7 +17,7 @@ TEXT ·Syscall(SB),NOSPLIT,$0-56
 TEXT ·Syscall6(SB),NOSPLIT,$0-80
 	B	syscall·Syscall6(SB)
 
-TEXT ·Syscall(SB),NOSPLIT,$0-48
+TEXT ·SyscallNoError(SB),NOSPLIT,$0-48
 	BL	runtime·entersyscall(SB)
 	MOVD	a1+8(FP), R0
 	MOVD	a2+16(FP), R1

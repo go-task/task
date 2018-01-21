@@ -6,6 +6,7 @@ package ssh
 
 import (
 	"bufio"
+	"bytes"
 	"errors"
 	"io"
 	"log"
@@ -253,15 +254,14 @@ func generateKeys(d direction, algs directionAlgorithms, kex *kexResult) (iv, ke
 func newPacketCipher(d direction, algs directionAlgorithms, kex *kexResult) (packetCipher, error) {
 	iv, key, macKey := generateKeys(d, algs, kex)
 
-	if algs.Cipher == gcmCipherID {
+	switch algs.Cipher {
+	case chacha20Poly1305ID:
+		return newChaCha20Cipher(key)
+	case gcmCipherID:
 		return newGCMCipher(iv, key)
-	}
-
-	if algs.Cipher == aes128cbcID {
+	case aes128cbcID:
 		return newAESCBCCipher(iv, key, macKey, algs)
-	}
-
-	if algs.Cipher == tripledescbcID {
+	case tripledescbcID:
 		return newTripleDESCBCCipher(iv, key, macKey, algs)
 	}
 
@@ -342,7 +342,7 @@ func readVersion(r io.Reader) ([]byte, error) {
 	var ok bool
 	var buf [1]byte
 
-	for len(versionString) < maxVersionStringBytes {
+	for length := 0; length < maxVersionStringBytes; length++ {
 		_, err := io.ReadFull(r, buf[:])
 		if err != nil {
 			return nil, err
@@ -350,6 +350,13 @@ func readVersion(r io.Reader) ([]byte, error) {
 		// The RFC says that the version should be terminated with \r\n
 		// but several SSH servers actually only send a \n.
 		if buf[0] == '\n' {
+			if !bytes.HasPrefix(versionString, []byte("SSH-")) {
+				// RFC 4253 says we need to ignore all version string lines
+				// except the one containing the SSH version (provided that
+				// all the lines do not exceed 255 bytes in total).
+				versionString = versionString[:0]
+				continue
+			}
 			ok = true
 			break
 		}

@@ -258,8 +258,11 @@ func stringIndex(index syntax.ArithmExpr) bool {
 	if !ok || len(w.Parts) != 1 {
 		return false
 	}
-	_, ok = w.Parts[0].(*syntax.DblQuoted)
-	return ok
+	switch w.Parts[0].(type) {
+	case *syntax.DblQuoted, *syntax.SglQuoted:
+		return true
+	}
+	return false
 }
 
 func (r *Runner) assignVal(as *syntax.Assign, valType string) VarValue {
@@ -357,4 +360,20 @@ func (r *Runner) ifsUpdated() {
 		}
 		return false
 	}
+}
+
+func (r *Runner) namesByPrefix(prefix string) []string {
+	var names []string
+	for name := range r.envMap {
+		if strings.HasPrefix(name, prefix) {
+			names = append(names, name)
+		}
+	}
+	for name := range r.Vars {
+		if strings.HasPrefix(name, prefix) {
+			names = append(names, name)
+		}
+	}
+	sort.Strings(names)
+	return names
 }

@@ -11,6 +11,9 @@ import (
 )
 
 func charClass(s string) (string, error) {
+	if strings.HasPrefix(s, "[[.") || strings.HasPrefix(s, "[[=") {
+		return "", fmt.Errorf("collating features not available")
+	}
 	if !strings.HasPrefix(s, "[[:") {
 		return "", nil
 	}
@@ -32,9 +35,14 @@ func charClass(s string) (string, error) {
 // TranslatePattern turns a shell pattern expression into a regular
 // expression that can be used with regexp.Compile. It will return an
 // error if the input pattern was incorrect. Otherwise, the returned
-// expression is ensured to be valid syntax.
+// expression can be passed to regexp.MustCompile.
 //
 // For example, TranslatePattern(`foo*bar?`, true) returns `foo.*bar.`.
+//
+// Note that this function (and QuotePattern) should not be directly
+// used with file paths if Windows is supported, as the path separator
+// on that platform is the same character as the escaping character for
+// shell patterns.
 func TranslatePattern(pattern string, greedy bool) (string, error) {
 	any := false
 loop:
@@ -62,9 +70,10 @@ loop:
 		case '?':
 			buf.WriteString(".")
 		case '\\':
-			buf.WriteByte(c)
-			i++
-			buf.WriteByte(pattern[i])
+			if i++; i >= len(pattern) {
+				return "", fmt.Errorf(`\ at end of pattern`)
+			}
+			buf.WriteString(regexp.QuoteMeta(string(pattern[i])))
 		case '[':
 			name, err := charClass(pattern[i:])
 			if err != nil {
@@ -79,19 +88,31 @@ loop:
 			if i++; i >= len(pattern) {
 				return "", fmt.Errorf("[ was not matched with a closing ]")
 			}
-			c = pattern[i]
-			if c == '!' {
-				c = '^'
+			switch c = pattern[i]; c {
+			case '!', '^':
+				buf.WriteByte('^')
+				i++
+				c = pattern[i]
 			}
 			buf.WriteByte(c)
+			last := c
+			rangeStart := byte(0)
 			for {
 				if i++; i >= len(pattern) {
 					return "", fmt.Errorf("[ was not matched with a closing ]")
 				}
-				c = pattern[i]
+				last, c = c, pattern[i]
 				buf.WriteByte(c)
 				if c == ']' {
 					break
+				}
+				if rangeStart != 0 && rangeStart > c {
+					return "", fmt.Errorf("invalid range: %c-%c", rangeStart, c)
+				}
+				if c == '-' {
+					rangeStart = last
+				} else {
+					rangeStart = 0
 				}
 			}
 		default:

@@ -32,10 +32,10 @@
   revision = "37469d0c81a7910b49d64a0d308ded4823e90937"
 
 [[projects]]
+  branch = "master"
   name = "github.com/imdario/mergo"
   packages = ["."]
-  revision = "7fe0c75c13abdee74b09fcacef5ea1c6bba6a874"
-  version = "0.2.4"
+  revision = "c961a4f451fae5acb3b50c1a54576c6929e3a6d8"
 
 [[projects]]
   branch = "master"
@@ -67,8 +67,8 @@
 [[projects]]
   name = "github.com/satori/go.uuid"
   packages = ["."]
-  revision = "879c5887cd475cd7864858769793b2ceb0d44feb"
-  version = "v1.1.0"
+  revision = "f58768cc1a7a7e77a3bd49e98cdd21419399b6a3"
+  version = "v1.2.0"
 
 [[projects]]
   branch = "master"
@@ -90,13 +90,13 @@
     "scrypt",
     "ssh/terminal"
   ]
-  revision = "0fcca4842a8d74bfddc2c96a073bd2a4d2a7a2e8"
+  revision = "a6600008915114d9c087fad9f03d75087b1a74df"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/net"
   packages = ["context"]
-  revision = "d866cfc389cec985d6fda2859936a575a55a3ab6"
+  revision = "5ccada7d0a7ba9aeb5d3aca8d3501b4c2a509fec"
 
 [[projects]]
   branch = "master"
@@ -111,13 +111,13 @@
     "unix",
     "windows"
   ]
-  revision = "28a7276518d399b9634904daad79e18b44d481bc"
+  revision = "2c42eef0765b9837fbdab12011af7830f55f88f0"
 
 [[projects]]
   branch = "v2"
   name = "gopkg.in/yaml.v2"
   packages = ["."]
-  revision = "c95af922eae69f190717a0b7148960af8c55a072"
+  revision = "d670f9405373e636a5a2765eea47fac0c9bc91a4"
 
 [[projects]]
   branch = "master"
@@ -126,7 +126,7 @@
     "interp",
     "syntax"
   ]
-  revision = "74c5a41b2a56e9d106305492759e4e531ed5bf47"
+  revision = "46a8a4e0a8ca0d45de9626b8d290ccc7bfc732b0"
 
 [solve-meta]
   analyzer-name = "dep"

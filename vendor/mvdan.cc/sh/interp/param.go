@@ -85,27 +85,6 @@ func (r *Runner) paramExp(pe *syntax.ParamExp) string {
 	if index != nil {
 		str = r.varInd(vr, index, 0)
 	}
-	if pe.Length {
-		n := 1
-		if anyOfLit(index, "@", "*") != "" {
-			switch x := vr.Value.(type) {
-			case IndexArray:
-				n = len(x)
-			case AssocArray:
-				n = len(x)
-			}
-		} else {
-			n = utf8.RuneCountInString(str)
-		}
-		str = strconv.Itoa(n)
-	}
-	switch {
-	case pe.Excl:
-		if str != "" {
-			vr, set = r.lookupVar(str)
-			str = r.varStr(vr, 0)
-		}
-	}
 	slicePos := func(expr syntax.ArithmExpr) int {
 		p := r.arithm(expr)
 		if p < 0 {
@@ -118,7 +97,30 @@ func (r *Runner) paramExp(pe *syntax.ParamExp) string {
 		}
 		return p
 	}
-	if pe.Slice != nil {
+	switch {
+	case pe.Length:
+		n := 1
+		if anyOfLit(index, "@", "*") != "" {
+			switch x := vr.Value.(type) {
+			case IndexArray:
+				n = len(x)
+			case AssocArray:
+				n = len(x)
+			}
+		} else {
+			n = utf8.RuneCountInString(str)
+		}
+		str = strconv.Itoa(n)
+	case pe.Excl:
+		if pe.Names != 0 {
+			str = strings.Join(r.namesByPrefix(pe.Param.Value), " ")
+		} else if vr.NameRef {
+			str = string(vr.Value.(StringVal))
+		} else if str != "" {
+			vr, _ = r.lookupVar(str)
+			str = r.varStr(vr, 0)
+		}
+	case pe.Slice != nil:
 		if pe.Slice.Offset != nil {
 			offset := slicePos(pe.Slice.Offset)
 			str = str[offset:]
@@ -127,8 +129,7 @@ func (r *Runner) paramExp(pe *syntax.ParamExp) string {
 			length := slicePos(pe.Slice.Length)
 			str = str[:length]
 		}
-	}
-	if pe.Repl != nil {
+	case pe.Repl != nil:
 		orig := r.lonePattern(pe.Repl.Orig)
 		with := r.loneWord(pe.Repl.With)
 		n := 1
@@ -145,8 +146,7 @@ func (r *Runner) paramExp(pe *syntax.ParamExp) string {
 		}
 		buf.WriteString(str[last:])
 		str = buf.String()
-	}
-	if pe.Exp != nil {
+	case pe.Exp != nil:
 		arg := r.loneWord(pe.Exp.Word)
 		switch pe.Exp.Op {
 		case syntax.SubstColPlus:

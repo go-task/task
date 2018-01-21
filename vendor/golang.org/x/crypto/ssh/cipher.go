@@ -16,6 +16,9 @@ import (
 	"hash"
 	"io"
 	"io/ioutil"
+
+	"golang.org/x/crypto/internal/chacha20"
+	"golang.org/x/crypto/poly1305"
 )
 
 const (
@@ -111,10 +114,10 @@ var cipherModes = map[string]*streamCipherMode{
 	// RFC4345 introduces improved versions of Arcfour.
 	"arcfour": {16, 0, 0, newRC4},
 
-	// AES-GCM is not a stream cipher, so it is constructed with a
-	// special case. If we add any more non-stream ciphers, we
-	// should invest a cleaner way to do this.
-	gcmCipherID: {16, 12, 0, nil},
+	// AEAD ciphers are special cased. If we add any more non-stream
+	// ciphers, we should create a cleaner way to do this.
+	gcmCipherID:        {16, 12, 0, nil},
+	chacha20Poly1305ID: {64, 0, 0, nil},
 
 	// CBC mode is insecure and so is not included in the default config.
 	// (See http://www.isg.rhul.ac.uk/~kp/SandPfinal.pdf). If absolutely
@@ -625,5 +628,144 @@ func (c *cbcCipher) writePacket(seqNum uint32, w io.Writer, rand io.Reader, pack
 		return err
 	}
 
+	return nil
+}
+
+const chacha20Poly1305ID = "chacha20-poly1305@openssh.com"
+
+// chacha20Poly1305Cipher implements the chacha20-poly1305@openssh.com
+// AEAD, which is described here:
+//
+//   https://tools.ietf.org/html/draft-josefsson-ssh-chacha20-poly1305-openssh-00
+//
+// the methods here also implement padding, which RFC4253 Section 6
+// also requires of stream ciphers.
+type chacha20Poly1305Cipher struct {
+	lengthKey  [32]byte
+	contentKey [32]byte
+	buf        []byte
+}
+
+func newChaCha20Cipher(key []byte) (packetCipher, error) {
+	if len(key) != 64 {
+		panic("key length")
+	}
+
+	c := &chacha20Poly1305Cipher{
+		buf: make([]byte, 256),
+	}
+
+	copy(c.contentKey[:], key[:32])
+	copy(c.lengthKey[:], key[32:])
+	return c, nil
+}
+
+// The Poly1305 key is obtained by encrypting 32 0-bytes.
+var chacha20PolyKeyInput [32]byte
+
+func (c *chacha20Poly1305Cipher) readPacket(seqNum uint32, r io.Reader) ([]byte, error) {
+	var counter [16]byte
+	binary.BigEndian.PutUint64(counter[8:], uint64(seqNum))
+
+	var polyKey [32]byte
+	chacha20.XORKeyStream(polyKey[:], chacha20PolyKeyInput[:], &counter, &c.contentKey)
+
+	encryptedLength := c.buf[:4]
+	if _, err := r.Read(encryptedLength); err != nil {
+		return nil, err
+	}
+
+	var lenBytes [4]byte
+	chacha20.XORKeyStream(lenBytes[:], encryptedLength, &counter, &c.lengthKey)
+
+	length := binary.BigEndian.Uint32(lenBytes[:])
+	if length > maxPacket {
+		return nil, errors.New("ssh: invalid packet length, packet too large")
+	}
+
+	contentEnd := 4 + length
+	packetEnd := contentEnd + poly1305.TagSize
+	if uint32(cap(c.buf)) < packetEnd {
+		c.buf = make([]byte, packetEnd)
+		copy(c.buf[:], encryptedLength)
+	} else {
+		c.buf = c.buf[:packetEnd]
+	}
+
+	if _, err := r.Read(c.buf[4:packetEnd]); err != nil {
+		return nil, err
+	}
+
+	var mac [poly1305.TagSize]byte
+	copy(mac[:], c.buf[contentEnd:packetEnd])
+
+	if !poly1305.Verify(&mac, c.buf[:contentEnd], &polyKey) {
+		return nil, errors.New("ssh: MAC failure")
+	}
+
+	counter[0] = 1
+
+	plain := c.buf[4:contentEnd]
+	chacha20.XORKeyStream(plain, plain, &counter, &c.contentKey)
+
+	padding := plain[0]
+	if padding < 4 {
+		// padding is a byte, so it automatically satisfies
+		// the maximum size, which is 255.
+		return nil, fmt.Errorf("ssh: illegal padding %d", padding)
+	}
+
+	if int(padding)+1 >= len(plain) {
+		return nil, fmt.Errorf("ssh: padding %d too large", padding)
+	}
+
+	plain = plain[1 : len(plain)-int(padding)]
+	return plain, nil
+}
+
+func (c *chacha20Poly1305Cipher) writePacket(seqNum uint32, w io.Writer, rand io.Reader, payload []byte) error {
+	var counter [16]byte
+	binary.BigEndian.PutUint64(counter[8:], uint64(seqNum))
+
+	var polyKey [32]byte
+	chacha20.XORKeyStream(polyKey[:], chacha20PolyKeyInput[:], &counter, &c.contentKey)
+
+	// There is no blocksize, so fall back to multiple of 8 byte
+	// padding, as described in RFC 4253, Sec 6.
+	const packetSizeMultiple = 8
+
+	padding := packetSizeMultiple - (1+len(payload))%packetSizeMultiple
+	if padding < 4 {
+		padding += packetSizeMultiple
+	}
+
+	// size (4 bytes), padding (1), payload, padding, tag.
+	totalLength := 4 + 1 + len(payload) + padding + poly1305.TagSize
+	if cap(c.buf) < totalLength {
+		c.buf = make([]byte, totalLength)
+	} else {
+		c.buf = c.buf[:totalLength]
+	}
+
+	binary.BigEndian.PutUint32(c.buf, uint32(1+len(payload)+padding))
+	chacha20.XORKeyStream(c.buf, c.buf[:4], &counter, &c.lengthKey)
+	c.buf[4] = byte(padding)
+	copy(c.buf[5:], payload)
+	packetEnd := 5 + len(payload) + padding
+	if _, err := io.ReadFull(rand, c.buf[5+len(payload):packetEnd]); err != nil {
+		return err
+	}
+
+	counter[0] = 1
+	chacha20.XORKeyStream(c.buf[4:], c.buf[4:packetEnd], &counter, &c.contentKey)
+
+	var mac [poly1305.TagSize]byte
+	poly1305.Sum(&mac, c.buf[:packetEnd], &polyKey)
+
+	copy(c.buf[packetEnd:], mac[:])
+
+	if _, err := w.Write(c.buf); err != nil {
+		return err
+	}
 	return nil
 }

@@ -123,7 +123,7 @@ type Stmt struct {
 	Comments   []Comment
 	Cmd        Command
 	Position   Pos
-	Semicolon  Pos
+	Semicolon  Pos  // position of ';', '&', or '|&', if any
 	Negated    bool // ! stmt
 	Background bool // stmt &
 	Coprocess  bool // mksh's |&
@@ -134,7 +134,11 @@ type Stmt struct {
 func (s *Stmt) Pos() Pos { return s.Position }
 func (s *Stmt) End() Pos {
 	if s.Semicolon.IsValid() {
-		return posAddCol(s.Semicolon, 1)
+		end := posAddCol(s.Semicolon, 1) // ';' or '&'
+		if s.Coprocess {
+			end = posAddCol(end, 1) // '|&'
+		}
+		return end
 	}
 	end := s.Position
 	if s.Negated {
@@ -181,7 +185,7 @@ func (*CoprocClause) commandNode() {}
 // Here and elsewhere, Index can either mean an index into an indexed or
 // an associative array. In the former, it's just an arithmetic
 // expression. In the latter, it will be a word with a single DblQuoted
-// part.
+// or SglQuoted part.
 //
 // If Index is non-nil, the value will be a word and not an array as
 // nested arrays are not allowed.
@@ -434,7 +438,7 @@ type SglQuoted struct {
 }
 
 func (q *SglQuoted) Pos() Pos { return q.Left }
-func (q *SglQuoted) End() Pos { return q.Right }
+func (q *SglQuoted) End() Pos { return posAddCol(q.Right, 1) }
 
 // DblQuoted represents a list of nodes within double quotes.
 type DblQuoted struct {
@@ -474,10 +478,11 @@ type ParamExp struct {
 	Length         bool // ${#a}
 	Width          bool // ${%a}
 	Param          *Lit
-	Index          ArithmExpr // ${a[i]}, ${a["k"]}
-	Slice          *Slice     // ${a:x:y}
-	Repl           *Replace   // ${a/x/y}
-	Exp            *Expansion // ${a:-b}, ${a#b}, etc
+	Index          ArithmExpr       // ${a[i]}, ${a["k"]}
+	Slice          *Slice           // ${a:x:y}
+	Repl           *Replace         // ${a/x/y}
+	Names          ParNamesOperator // ${!prefix*} or ${!prefix@}
+	Exp            *Expansion       // ${a:-b}, ${a#b}, etc
 }
 
 func (p *ParamExp) Pos() Pos { return p.Dollar }

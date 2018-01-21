@@ -5,9 +5,12 @@ package interp
 
 import (
 	"fmt"
+	"os"
 	"os/user"
 	"path/filepath"
 	"regexp"
+	"runtime"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -133,9 +136,11 @@ func (r *Runner) escapedGlobField(parts []fieldPart) (escaped string, glob bool)
 	return escaped, glob
 }
 
-// TODO: consider making brace a special syntax Node
+// TODO: consider making these special syntax nodes
 
 type brace struct {
+	seq   bool // {x..y[..incr]} instead of {x,y[,...]}
+	chars bool // sequence is of chars, not numbers
 	elems []*braceWord
 }
 
@@ -144,12 +149,13 @@ type braceWord struct {
 	parts []braceWordPart
 }
 
-// braceWordPart contains either syntax.WordPart or brace.
+// braceWordPart contains any syntax.WordPart or a brace.
 type braceWordPart interface{}
 
 var (
 	litLeftBrace  = &syntax.Lit{Value: "{"}
 	litComma      = &syntax.Lit{Value: ","}
+	litDots       = &syntax.Lit{Value: ".."}
 	litRightBrace = &syntax.Lit{Value: "}"}
 )
 
@@ -181,7 +187,7 @@ func (r *Runner) splitBraces(word *syntax.Word) (*braceWord, bool) {
 			continue
 		}
 		last := 0
-		for j, r := range lit.Value {
+		for j := 0; j < len(lit.Value); j++ {
 			addlit := func() {
 				if last == j {
 					return // empty lit
@@ -190,7 +196,7 @@ func (r *Runner) splitBraces(word *syntax.Word) (*braceWord, bool) {
 				l2.Value = l2.Value[last:j]
 				acc.parts = append(acc.parts, &l2)
 			}
-			switch r {
+			switch lit.Value[j] {
 			case '{':
 				addlit()
 				acc = &braceWord{}
@@ -203,20 +209,73 @@ func (r *Runner) splitBraces(word *syntax.Word) (*braceWord, bool) {
 				addlit()
 				acc = &braceWord{}
 				cur.elems = append(cur.elems, acc)
+			case '.':
+				if cur == nil {
+					continue
+				}
+				if j+1 >= len(lit.Value) || lit.Value[j+1] != '.' {
+					continue
+				}
+				addlit()
+				cur.seq = true
+				acc = &braceWord{}
+				cur.elems = append(cur.elems, acc)
+				j++
 			case '}':
 				if cur == nil {
 					continue
 				}
 				any = true
 				addlit()
-				ended := pop()
-				if len(ended.elems) > 1 {
-					acc.parts = append(acc.parts, ended)
+				br := pop()
+				if len(br.elems) == 1 {
+					// return {x} to a non-brace
+					acc.parts = append(acc.parts, litLeftBrace)
+					acc.parts = append(acc.parts, br.elems[0].parts...)
+					acc.parts = append(acc.parts, litRightBrace)
 					break
 				}
-				// return {x} to a non-brace
+				if !br.seq {
+					acc.parts = append(acc.parts, br)
+					break
+				}
+				var chars [2]bool
+				broken := false
+				for i, elem := range br.elems[:2] {
+					val := braceWordLit(elem)
+					if _, err := strconv.Atoi(val); err == nil {
+					} else if len(val) == 1 &&
+						'a' <= val[0] && val[0] <= 'z' {
+						chars[i] = true
+					} else {
+						broken = true
+					}
+				}
+				if len(br.elems) == 3 {
+					// increment must be a number
+					val := braceWordLit(br.elems[2])
+					if _, err := strconv.Atoi(val); err != nil {
+						broken = true
+					}
+				}
+				// are start and end both chars or
+				// non-chars?
+				if chars[0] != chars[1] {
+					broken = true
+				}
+				if !broken {
+					br.chars = chars[0]
+					acc.parts = append(acc.parts, br)
+					break
+				}
+				// return broken {x..y[..incr]} to a non-brace
 				acc.parts = append(acc.parts, litLeftBrace)
-				acc.parts = append(acc.parts, ended.elems[0].parts...)
+				for i, elem := range br.elems {
+					if i > 0 {
+						acc.parts = append(acc.parts, litDots)
+					}
+					acc.parts = append(acc.parts, elem.parts...)
+				}
 				acc.parts = append(acc.parts, litRightBrace)
 			default:
 				continue
@@ -233,16 +292,32 @@ func (r *Runner) splitBraces(word *syntax.Word) (*braceWord, bool) {
 	}
 	// open braces that were never closed fall back to non-braces
 	for acc != top {
-		ended := pop()
+		br := pop()
 		acc.parts = append(acc.parts, litLeftBrace)
-		for i, elem := range ended.elems {
+		for i, elem := range br.elems {
 			if i > 0 {
-				acc.parts = append(acc.parts, litComma)
+				if br.seq {
+					acc.parts = append(acc.parts, litDots)
+				} else {
+					acc.parts = append(acc.parts, litComma)
+				}
 			}
 			acc.parts = append(acc.parts, elem.parts...)
 		}
 	}
 	return top, any
+}
+
+func braceWordLit(v interface{}) string {
+	word, _ := v.(*braceWord)
+	if word == nil || len(word.parts) != 1 {
+		return ""
+	}
+	lit, ok := word.parts[0].(*syntax.Lit)
+	if !ok {
+		return ""
+	}
+	return lit.Value
 }
 
 func expandRec(bw *braceWord) []*syntax.Word {
@@ -253,6 +328,52 @@ func expandRec(bw *braceWord) []*syntax.Word {
 		if !ok {
 			left = append(left, wp.(syntax.WordPart))
 			continue
+		}
+		if br.seq {
+			var from, to int
+			if br.chars {
+				from = int(braceWordLit(br.elems[0])[0])
+				to = int(braceWordLit(br.elems[1])[0])
+			} else {
+				from = atoi(braceWordLit(br.elems[0]))
+				to = atoi(braceWordLit(br.elems[1]))
+			}
+			upward := from <= to
+			incr := 1
+			if !upward {
+				incr = -1
+			}
+			if len(br.elems) > 2 {
+				val := braceWordLit(br.elems[2])
+				if n := atoi(val); n != 0 && n > 0 == upward {
+					incr = n
+				}
+			}
+			n := from
+			for {
+				if upward && n > to {
+					break
+				}
+				if !upward && n < to {
+					break
+				}
+				next := *bw
+				next.parts = next.parts[i+1:]
+				lit := &syntax.Lit{}
+				if br.chars {
+					lit.Value = string(n)
+				} else {
+					lit.Value = strconv.Itoa(n)
+				}
+				next.parts = append([]braceWordPart{lit}, next.parts...)
+				exp := expandRec(&next)
+				for _, w := range exp {
+					w.Parts = append(left, w.Parts...)
+				}
+				all = append(all, exp...)
+				n += incr
+			}
+			return all
 		}
 		for _, elem := range br.elems {
 			next := *bw
@@ -285,14 +406,14 @@ func (r *Runner) Fields(words ...*syntax.Word) []string {
 	for _, word := range words {
 		for _, expWord := range r.expandBraces(word) {
 			for _, field := range r.wordFields(expWord.Parts) {
-				path, glob := r.escapedGlobField(field)
+				path, doGlob := r.escapedGlobField(field)
 				var matches []string
 				abs := filepath.IsAbs(path)
-				if glob && !r.shellOpts[optNoGlob] {
+				if doGlob && !r.shellOpts[optNoGlob] {
 					if !abs {
 						path = filepath.Join(baseDir, path)
 					}
-					matches, _ = filepath.Glob(path)
+					matches = glob(path)
 				}
 				if len(matches) == 0 {
 					fields = append(fields, r.fieldJoin(field))
@@ -552,4 +673,68 @@ func findAllIndex(pattern, name string, n int) [][]int {
 	}
 	rx := regexp.MustCompile(expr)
 	return rx.FindAllStringIndex(name, n)
+}
+
+func glob(pattern string) []string {
+	dir, file := filepath.Split(pattern)
+	// TODO: special case for windows, like in filepath.Glob?
+	dir = cleanGlobPath(dir)
+
+	expr, err := syntax.TranslatePattern(file, true)
+	if err != nil {
+		return nil
+	}
+	rx, err := regexp.Compile("^" + expr + "$")
+	if err != nil {
+		return nil
+	}
+	if !hasGlob(dir) {
+		return globDir(dir, rx, nil)
+	}
+
+	var matches []string
+	for _, d := range glob(dir) {
+		matches = globDir(d, rx, matches)
+	}
+	return matches
+}
+
+func cleanGlobPath(path string) string {
+	switch path {
+	case "":
+		return "."
+	case string(filepath.Separator):
+		return path
+	default:
+		return path[:len(path)-1]
+	}
+}
+
+func globDir(dir string, rx *regexp.Regexp, matches []string) []string {
+	d, err := os.Open(dir)
+	if err != nil {
+		return nil
+	}
+	defer d.Close()
+
+	names, _ := d.Readdirnames(-1)
+	sort.Strings(names)
+
+	for _, name := range names {
+		if !strings.HasPrefix(rx.String(), `^\.`) && name[0] == '.' {
+			continue
+		}
+		if rx.MatchString(name) {
+			matches = append(matches, filepath.Join(dir, name))
+		}
+	}
+	return matches
+}
+
+func hasGlob(path string) bool {
+	magicChars := `*?[`
+	if runtime.GOOS != "windows" {
+		magicChars = `*?[\`
+	}
+	return strings.ContainsAny(path, magicChars)
 }

@@ -202,6 +202,13 @@ const (
 	ResumeKorn
 )
 
+type ParNamesOperator token
+
+const (
+	NamesPrefix      = ParNamesOperator(star)
+	NamesPrefixWords = ParNamesOperator(at)
+)
+
 type ParExpOperator token
 
 const (
@@ -325,13 +332,14 @@ const (
 	TsAfter   = BinTestOperator(rdrOut)
 )
 
-func (o RedirOperator) String() string   { return token(o).String() }
-func (o ProcOperator) String() string    { return token(o).String() }
-func (o GlobOperator) String() string    { return token(o).String() }
-func (o BinCmdOperator) String() string  { return token(o).String() }
-func (o CaseOperator) String() string    { return token(o).String() }
-func (o ParExpOperator) String() string  { return token(o).String() }
-func (o UnAritOperator) String() string  { return token(o).String() }
-func (o BinAritOperator) String() string { return token(o).String() }
-func (o UnTestOperator) String() string  { return token(o).String() }
-func (o BinTestOperator) String() string { return token(o).String() }
+func (o RedirOperator) String() string    { return token(o).String() }
+func (o ProcOperator) String() string     { return token(o).String() }
+func (o GlobOperator) String() string     { return token(o).String() }
+func (o BinCmdOperator) String() string   { return token(o).String() }
+func (o CaseOperator) String() string     { return token(o).String() }
+func (o ParNamesOperator) String() string { return token(o).String() }
+func (o ParExpOperator) String() string   { return token(o).String() }
+func (o UnAritOperator) String() string   { return token(o).String() }
+func (o BinAritOperator) String() string  { return token(o).String() }
+func (o UnTestOperator) String() string   { return token(o).String() }
+func (o BinTestOperator) String() string  { return token(o).String() }

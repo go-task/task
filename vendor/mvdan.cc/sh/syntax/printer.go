@@ -474,6 +474,8 @@ func (p *Printer) paramExp(pe *ParamExp) {
 		if pe.Repl.With != nil {
 			p.word(pe.Repl.With)
 		}
+	} else if pe.Names != 0 {
+		p.WriteString(pe.Names.String())
 	} else if pe.Exp != nil {
 		p.WriteString(pe.Exp.Op.String())
 		if pe.Exp.Word != nil {
