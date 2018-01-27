@@ -9,6 +9,7 @@ It aims to be simpler and easier to use then [GNU Make][make].
 
 - [Installation](#installation)
   - [Go](#go)
+  - [Homebrew](#homebrew)
   - [Snap](#snap)
   - [Binary](#binary)
 - [Usage](#usage)
@@ -35,6 +36,17 @@ If you have a [Golang][golang] environment setup, you can simply run:
 
 ```bash
 go get -u -v github.com/go-task/task/cmd/task
+```
+
+### Homebrew
+
+If you're on macOS and have [Homebrew][homebrew] installed, getting Task is
+as simple as running:
+
+```bash
+brew update
+brew tap go-task/tap
+brew install go-task
 ```
 
 ### Snap
@@ -186,7 +198,7 @@ default:
       vars: {TEXT: "before 2"}
   cmds:
     - echo "after"
-    
+
 echo_sth:
   cmds:
     - echo {{.TEXT}}
@@ -573,3 +585,4 @@ various use cases.
 [minify]: https://github.com/tdewolff/minify/tree/master/cmd/minify
 [examples]: https://github.com/go-task/examples
 [snapcraft]: https://snapcraft.io/
+[homebrew]: https://brew.sh/
