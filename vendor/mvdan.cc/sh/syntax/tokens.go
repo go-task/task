@@ -35,6 +35,7 @@ const (
 	dollParen    // $(
 	dollDblParen // $((
 	leftBrack    // [
+	dblLeftBrack // [[
 	leftParen    // (
 	dblLeftParen // ((
 

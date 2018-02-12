@@ -56,10 +56,20 @@ func (p *Parser) rune() rune {
 	} else {
 		p.npos.col += p.w
 	}
+	bquotes := 0
 retry:
 	if p.bsp < len(p.bs) {
 		if b := p.bs[p.bsp]; b < utf8.RuneSelf {
 			p.bsp++
+			if b == '\\' && p.openBquotes > 0 {
+				// don't do it for newlines, as we want
+				// the newlines to be eaten in p.next
+				if bquotes < p.openBquotes && p.bs[p.bsp] != '\n' {
+					bquotes++
+					goto retry
+				}
+				bquotes = 0
+			}
 			if p.litBs != nil {
 				p.litBs = append(p.litBs, b)
 			}
@@ -100,13 +110,10 @@ func (p *Parser) fill() {
 	p.offs += p.bsp
 	left := len(p.bs) - p.bsp
 	copy(p.readBuf[:left], p.readBuf[p.bsp:])
-	var n int
-	var err error
-	if p.readErr == nil {
+	n, err := 0, p.readErr
+	if err == nil {
 		n, err = p.src.Read(p.readBuf[left:])
 		p.readErr = err
-	} else {
-		n, err = 0, p.readErr
 	}
 	if n == 0 {
 		// don't use p.errPass as we don't want to overwrite p.tok
@@ -133,7 +140,7 @@ func (p *Parser) nextKeepSpaces() {
 		case '}', '/':
 			p.tok = p.paramToken(r)
 		case '`', '"', '$':
-			p.tok = p.dqToken(r)
+			p.tok = p.regToken(r)
 		default:
 			p.advanceLitOther(r)
 		}
@@ -152,26 +159,18 @@ func (p *Parser) nextKeepSpaces() {
 		} else {
 			p.advanceLitHdoc(r)
 		}
-	case paramExpExp:
+	default: // paramExpExp:
 		switch r {
 		case '}':
-			p.rune()
-			p.tok = rightBrace
-		case '`', '"', '$':
-			p.tok = p.dqToken(r)
-		case '\'':
-			p.rune()
-			p.tok = sglQuote
+			p.tok = p.paramToken(r)
+		case '`', '"', '$', '\'':
+			p.tok = p.regToken(r)
 		default:
 			p.advanceLitOther(r)
 		}
-	default: // sglQuotes
-		if r == '\'' {
-			p.rune()
-			p.tok = sglQuote
-		} else {
-			p.advanceLitOther(r)
-		}
+	}
+	if p.err != nil && p.tok != _EOF {
+		p.tok = _EOF
 	}
 }
 
@@ -197,6 +196,7 @@ skipSpace:
 			r = p.rune()
 		case '\n':
 			if p.tok == _Newl {
+				// merge consecutive newline tokens
 				r = p.rune()
 				continue
 			}
@@ -278,9 +278,17 @@ skipSpace:
 	case p.quote&allParamExp != 0 && paramOps(r):
 		p.tok = p.paramToken(r)
 	case p.quote == testRegexp:
-		if regOps(r) && r != '(' {
+		switch r {
+		case ';', '"', '\'', '$', '&', '>', '<', '`':
 			p.tok = p.regToken(r)
-		} else {
+		case ')':
+			if p.reOpenParens > 0 {
+				// continuation of open paren
+				p.advanceLitRe(r)
+			} else {
+				p.tok = rightParen
+			}
+		default: // including '(', '|'
 			p.advanceLitRe(r)
 		}
 	case regOps(r):
@@ -294,7 +302,7 @@ skipSpace:
 }
 
 func (p *Parser) peekByte(b byte) bool {
-	if p.bsp == len(p.bs) && p.readErr == nil {
+	if p.bsp == len(p.bs) {
 		p.fill()
 	}
 	return p.bsp < len(p.bs) && p.bs[p.bsp] == b
@@ -720,6 +728,18 @@ func (p *Parser) endLit() (s string) {
 	return
 }
 
+func (p *Parser) numLit() bool {
+	for _, b := range p.litBs {
+		switch b {
+		case '>', '<':
+		case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
+		default:
+			return false
+		}
+	}
+	return true
+}
+
 func (p *Parser) advanceNameCont(r rune) {
 	// we know that r is a letter or underscore
 loop:
@@ -752,17 +772,9 @@ loop:
 			if r = p.rune(); r == '\n' {
 				p.discardLit(2)
 			}
-		case '\'':
-			switch p.quote {
-			case paramExpExp, paramExpRepl:
-			default:
-				break loop
-			}
 		case '"', '`', '$':
-			if p.quote != sglQuotes {
-				tok = _Lit
-				break loop
-			}
+			tok = _Lit
+			break loop
 		case '}':
 			if p.quote&allParamExp != 0 {
 				break loop
@@ -786,10 +798,8 @@ loop:
 			if r == '[' && p.lang != LangPOSIX && p.quote&allArithmExpr != 0 {
 				break loop
 			}
-		case '+', '-', ' ', '\t', ';', '&', '>', '<', '|', '(', ')', '\n', '\r':
-			switch p.quote {
-			case paramExpExp, paramExpRepl, sglQuotes:
-			default:
+		case '\'', '+', '-', ' ', '\t', ';', '&', '>', '<', '|', '(', ')', '\n', '\r':
+			if p.quote&allKeepSpaces == 0 {
 				break loop
 			}
 		}
@@ -806,23 +816,11 @@ loop:
 		case ' ', '\t', '\n', '\r', '&', '|', ';', '(', ')':
 			break loop
 		case '\\': // escaped byte follows
-			r = p.rune()
-			switch r {
-			case '\n':
+			if r = p.rune(); r == '\n' {
 				p.discardLit(2)
-			case '\\':
-				// TODO: also treat escaped ` and $
-				// differently in backquotes
-				if p.quote == subCmdBckquo {
-					p.discardLit(1)
-					if r = p.rune(); r == '\\' {
-						p.discardLit(1)
-						p.rune()
-					}
-				}
 			}
 		case '>', '<':
-			if p.peekByte('(') {
+			if p.peekByte('(') || !p.numLit() {
 				tok = _Lit
 			} else {
 				tok = _LitRedir
@@ -939,23 +937,27 @@ func (p *Parser) hdocLitWord() *Word {
 }
 
 func (p *Parser) advanceLitRe(r rune) {
-	lparens := 0
-loop:
-	for p.newLit(r); r != utf8.RuneSelf; r = p.rune() {
+	for p.newLit(r); ; r = p.rune() {
 		switch r {
 		case '\\':
 			p.rune()
 		case '(':
-			lparens++
+			p.reOpenParens++
 		case ')':
-			lparens--
-		case ' ', '\t', '\r', '\n', ';':
-			if lparens == 0 {
-				break loop
+			if p.reOpenParens--; p.reOpenParens < 0 {
+				p.tok, p.val = _LitWord, p.endLit()
+				return
 			}
+		case ' ', '\t', '\r', '\n':
+			if p.reOpenParens <= 0 {
+				p.tok, p.val = _LitWord, p.endLit()
+				return
+			}
+		case utf8.RuneSelf, ';', '"', '\'', '$', '&', '>', '<', '`':
+			p.tok, p.val = _LitWord, p.endLit()
+			return
 		}
 	}
-	p.tok, p.val = _LitWord, p.endLit()
 }
 
 func testUnaryOp(val string) UnTestOperator {

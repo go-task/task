@@ -684,10 +684,7 @@ func glob(pattern string) []string {
 	if err != nil {
 		return nil
 	}
-	rx, err := regexp.Compile("^" + expr + "$")
-	if err != nil {
-		return nil
-	}
+	rx := regexp.MustCompile("^" + expr + "$")
 	if !hasGlob(dir) {
 		return globDir(dir, rx, nil)
 	}

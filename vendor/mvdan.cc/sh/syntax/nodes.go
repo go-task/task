@@ -79,6 +79,8 @@ func (p Pos) String() string {
 // returned by Parse are valid.
 func (p Pos) IsValid() bool { return p.line > 0 }
 
+// After reports whether the position p is after p2. It is a more
+// expressive version of p.Offset() > p2.Offset().
 func (p Pos) After(p2 Pos) bool { return p.offs > p2.offs }
 
 func (f *File) Pos() Pos {
@@ -229,7 +231,7 @@ func (a *Assign) End() Pos {
 type Redirect struct {
 	OpPos Pos
 	Op    RedirOperator
-	N     *Lit  // N>
+	N     *Lit  // N>, must be a number
 	Word  *Word // >word
 	Hdoc  *Word // here-document body
 }

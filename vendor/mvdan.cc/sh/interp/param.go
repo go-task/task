@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"unicode"
@@ -32,8 +33,9 @@ func anyOfLit(v interface{}, vals ...string) string {
 	return ""
 }
 
+// quotedElems checks if a parameter expansion is exactly ${@} or ${foo[@]}
 func (r *Runner) quotedElems(pe *syntax.ParamExp) []string {
-	if pe == nil {
+	if pe == nil || pe.Excl || pe.Length || pe.Width {
 		return nil
 	}
 	if pe.Param.Value == "@" {
@@ -72,6 +74,8 @@ func (r *Runner) paramExp(pe *syntax.ParamExp) string {
 	case "LINENO":
 		line := uint64(pe.Pos().Line())
 		vr.Value = StringVal(strconv.FormatUint(line, 10))
+	case "DIRSTACK":
+		vr.Value = IndexArray(r.dirStack)
 	default:
 		if n, err := strconv.Atoi(name); err == nil {
 			if i := n - 1; i < len(r.Params) {
@@ -97,29 +101,44 @@ func (r *Runner) paramExp(pe *syntax.ParamExp) string {
 		}
 		return p
 	}
+	elems := []string{str}
+	if anyOfLit(index, "@", "*") != "" {
+		switch x := vr.Value.(type) {
+		case nil:
+			elems = nil
+		case IndexArray:
+			elems = x
+		}
+	}
 	switch {
 	case pe.Length:
-		n := 1
-		if anyOfLit(index, "@", "*") != "" {
-			switch x := vr.Value.(type) {
-			case IndexArray:
-				n = len(x)
-			case AssocArray:
-				n = len(x)
-			}
-		} else {
+		n := len(elems)
+		if anyOfLit(index, "@", "*") == "" {
 			n = utf8.RuneCountInString(str)
 		}
 		str = strconv.Itoa(n)
 	case pe.Excl:
+		var strs []string
 		if pe.Names != 0 {
-			str = strings.Join(r.namesByPrefix(pe.Param.Value), " ")
+			strs = r.namesByPrefix(pe.Param.Value)
 		} else if vr.NameRef {
-			str = string(vr.Value.(StringVal))
+			strs = append(strs, string(vr.Value.(StringVal)))
+		} else if x, ok := vr.Value.(IndexArray); ok {
+			for i, e := range x {
+				if e != "" {
+					strs = append(strs, strconv.Itoa(i))
+				}
+			}
+		} else if x, ok := vr.Value.(AssocArray); ok {
+			for k := range x {
+				strs = append(strs, k)
+			}
 		} else if str != "" {
 			vr, _ = r.lookupVar(str)
-			str = r.varStr(vr, 0)
+			strs = append(strs, r.varStr(vr, 0))
 		}
+		sort.Strings(strs)
+		str = strings.Join(strs, " ")
 	case pe.Slice != nil:
 		if pe.Slice.Offset != nil {
 			offset := slicePos(pe.Slice.Offset)
@@ -148,7 +167,7 @@ func (r *Runner) paramExp(pe *syntax.ParamExp) string {
 		str = buf.String()
 	case pe.Exp != nil:
 		arg := r.loneWord(pe.Exp.Word)
-		switch pe.Exp.Op {
+		switch op := pe.Exp.Op; op {
 		case syntax.SubstColPlus:
 			if str == "" {
 				break
@@ -188,30 +207,45 @@ func (r *Runner) paramExp(pe *syntax.ParamExp) string {
 				r.setVarString(name, arg)
 				str = arg
 			}
-		case syntax.RemSmallPrefix:
-			str = removePattern(str, arg, false, false)
-		case syntax.RemLargePrefix:
-			str = removePattern(str, arg, false, true)
-		case syntax.RemSmallSuffix:
-			str = removePattern(str, arg, true, false)
-		case syntax.RemLargeSuffix:
-			str = removePattern(str, arg, true, true)
-		case syntax.UpperFirst:
-			rs := []rune(str)
-			if len(rs) > 0 {
-				rs[0] = unicode.ToUpper(rs[0])
+		case syntax.RemSmallPrefix, syntax.RemLargePrefix,
+			syntax.RemSmallSuffix, syntax.RemLargeSuffix:
+			suffix := op == syntax.RemSmallSuffix ||
+				op == syntax.RemLargeSuffix
+			large := op == syntax.RemLargePrefix ||
+				op == syntax.RemLargeSuffix
+			for i, elem := range elems {
+				elems[i] = removePattern(elem, arg, suffix, large)
 			}
-			str = string(rs)
-		case syntax.UpperAll:
-			str = strings.ToUpper(str)
-		case syntax.LowerFirst:
-			rs := []rune(str)
-			if len(rs) > 0 {
-				rs[0] = unicode.ToLower(rs[0])
+			str = strings.Join(elems, " ")
+		case syntax.UpperFirst, syntax.UpperAll,
+			syntax.LowerFirst, syntax.LowerAll:
+
+			caseFunc := unicode.ToLower
+			if op == syntax.UpperFirst || op == syntax.UpperAll {
+				caseFunc = unicode.ToUpper
 			}
-			str = string(rs)
-		case syntax.LowerAll:
-			str = strings.ToLower(str)
+			all := op == syntax.UpperAll || op == syntax.LowerAll
+
+			// empty string means '?'; nothing to do there
+			expr, err := syntax.TranslatePattern(arg, false)
+			if err != nil {
+				return str
+			}
+			rx := regexp.MustCompile(expr)
+
+			for i, elem := range elems {
+				rs := []rune(elem)
+				for ri, r := range rs {
+					if rx.MatchString(string(r)) {
+						rs[ri] = caseFunc(r)
+						if !all {
+							break
+						}
+					}
+				}
+				elems[i] = string(rs)
+			}
+			str = strings.Join(elems, " ")
 		case syntax.OtherParamOps:
 			switch arg {
 			case "Q":

@@ -32,26 +32,21 @@ type simplifier struct {
 func (s *simplifier) visit(node Node) bool {
 	switch x := node.(type) {
 	case *Assign:
-		if x.Index != nil {
-			x.Index = s.removeParensArithm(x.Index)
-			x.Index = s.inlineSimpleParams(x.Index)
-		}
+		x.Index = s.removeParensArithm(x.Index)
+		// Don't inline params, as x[i] and x[$i] mean
+		// different things when x is an associative
+		// array; the first means "i", the second "$i".
 	case *ParamExp:
-		if x.Index != nil {
-			x.Index = s.removeParensArithm(x.Index)
-			x.Index = s.inlineSimpleParams(x.Index)
-		}
+		x.Index = s.removeParensArithm(x.Index)
+		// don't inline params - same as above.
+
 		if x.Slice == nil {
 			break
 		}
-		if x.Slice.Offset != nil {
-			x.Slice.Offset = s.removeParensArithm(x.Slice.Offset)
-			x.Slice.Offset = s.inlineSimpleParams(x.Slice.Offset)
-		}
-		if x.Slice.Length != nil {
-			x.Slice.Length = s.removeParensArithm(x.Slice.Length)
-			x.Slice.Length = s.inlineSimpleParams(x.Slice.Length)
-		}
+		x.Slice.Offset = s.removeParensArithm(x.Slice.Offset)
+		x.Slice.Offset = s.inlineSimpleParams(x.Slice.Offset)
+		x.Slice.Length = s.removeParensArithm(x.Slice.Length)
+		x.Slice.Length = s.inlineSimpleParams(x.Slice.Length)
 	case *ArithmExp:
 		x.X = s.removeParensArithm(x.X)
 		x.X = s.inlineSimpleParams(x.X)

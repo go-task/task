@@ -83,6 +83,9 @@ func (p *Parser) Parse(r io.Reader, name string) (*File, error) {
 	return p.f, p.err
 }
 
+// Stmts reads and parses statements one at a time, calling a function
+// each time one is parsed. If the function returns false, parsing is
+// stopped and the function is not called again.
 func (p *Parser) Stmts(r io.Reader, fn func(*Stmt) bool) error {
 	p.reset()
 	p.f = &File{}
@@ -135,6 +138,9 @@ type Parser struct {
 	buriedHdocs int
 	heredocs    []*Redirect
 	hdocStop    []byte
+	openBquotes int
+
+	reOpenParens int
 
 	accComs []Comment
 	curComs *[]Comment
@@ -165,6 +171,7 @@ func (p *Parser) reset() {
 	p.err, p.readErr = nil, nil
 	p.quote, p.forbidNested = noState, false
 	p.heredocs, p.buriedHdocs = p.heredocs[:0], 0
+	p.reOpenParens = 0
 	p.accComs, p.curComs = nil, &p.accComs
 }
 
@@ -247,7 +254,6 @@ const (
 	noState quoteState = 1 << iota
 	subCmd
 	subCmdBckquo
-	sglQuotes
 	dblQuotes
 	hdocWord
 	hdocBody
@@ -259,21 +265,19 @@ const (
 	testRegexp
 	switchCase
 	paramExpName
-	paramExpOff
-	paramExpLen
+	paramExpSlice
 	paramExpRepl
 	paramExpExp
 	arrayElems
 
 	allKeepSpaces = paramExpRepl | dblQuotes | hdocBody |
-		hdocBodyTabs | paramExpExp | sglQuotes
+		hdocBodyTabs | paramExpExp
 	allRegTokens = noState | subCmd | subCmdBckquo | hdocWord |
 		switchCase | arrayElems
 	allArithmExpr = arithmExpr | arithmExprLet | arithmExprCmd |
-		arithmExprBrack | allParamArith
-	allParamArith = paramExpOff | paramExpLen
-	allParamReg   = paramExpName | allParamArith
-	allParamExp   = allParamReg | paramExpRepl | paramExpExp | arithmExprBrack
+		arithmExprBrack | paramExpSlice
+	allParamReg = paramExpName | paramExpSlice
+	allParamExp = allParamReg | paramExpRepl | paramExpExp | arithmExprBrack
 )
 
 type saveState struct {
@@ -359,16 +363,7 @@ func (p *Parser) doHeredocs() {
 	p.quote = old
 }
 
-func (p *Parser) newLine() bool {
-	if p.tok == _Newl {
-		p.next()
-		return true
-	}
-	return false
-}
-
 func (p *Parser) got(tok token) bool {
-	p.newLine()
 	if p.tok == tok {
 		p.next()
 		return true
@@ -377,21 +372,12 @@ func (p *Parser) got(tok token) bool {
 }
 
 func (p *Parser) gotRsrv(val string) (Pos, bool) {
-	p.newLine()
 	pos := p.pos
 	if p.tok == _LitWord && p.val == val {
 		p.next()
 		return pos, true
 	}
 	return pos, false
-}
-
-func (p *Parser) gotSameLine(tok token) bool {
-	if p.tok == tok {
-		p.next()
-		return true
-	}
-	return false
 }
 
 func readableStr(s string) string {
@@ -426,10 +412,10 @@ func (p *Parser) followRsrv(lpos Pos, left, val string) Pos {
 }
 
 func (p *Parser) followStmts(left string, lpos Pos, stops ...string) StmtList {
-	if p.gotSameLine(semicolon) {
+	if p.got(semicolon) {
 		return StmtList{}
 	}
-	newLine := p.newLine()
+	newLine := p.got(_Newl)
 	sl := p.stmtList(stops...)
 	if len(sl.Stmts) < 1 && !newLine {
 		p.followErr(lpos, left, "a statement list")
@@ -518,7 +504,7 @@ func (p *Parser) stmts(fn func(*Stmt) bool, stops ...string) {
 	gotEnd := true
 loop:
 	for p.tok != _EOF {
-		newLine := p.newLine()
+		newLine := p.got(_Newl)
 		switch p.tok {
 		case _LitWord:
 			for _, stop := range stops {
@@ -551,7 +537,7 @@ loop:
 			p.invalidStmtStart()
 			break
 		}
-		gotEnd = s.Semicolon.IsValid() || s.Background || s.Coprocess
+		gotEnd = s.Semicolon.IsValid()
 		if !fn(s) {
 			break
 		}
@@ -725,45 +711,29 @@ func (p *Parser) wordPart() WordPart {
 		p.postNested(old)
 		ps.Rparen = p.matched(ps.OpPos, token(ps.Op), rightParen)
 		return ps
-	case sglQuote:
+	case sglQuote, dollSglQuote:
 		if p.quote&allArithmExpr != 0 {
 			p.curErr("quotes should not be used in arithmetic expressions")
 		}
-		sq := &SglQuoted{Left: p.pos}
+		sq := &SglQuoted{Left: p.pos, Dollar: p.tok == dollSglQuote}
 		r := p.r
-	loop:
 		for p.newLit(r); ; r = p.rune() {
 			switch r {
-			case utf8.RuneSelf, '\'':
+			case '\\':
+				if sq.Dollar {
+					p.rune()
+				}
+			case '\'':
 				sq.Right = p.getPos()
 				sq.Value = p.endLit()
 				p.rune()
-				break loop
+				p.next()
+				return sq
+			case utf8.RuneSelf:
+				p.posErr(sq.Pos(), "reached EOF without closing quote %s", sglQuote)
+				return nil
 			}
 		}
-		if r != '\'' {
-			p.posErr(sq.Pos(), "reached EOF without closing quote %s", sglQuote)
-		}
-		p.next()
-		return sq
-	case dollSglQuote:
-		if p.quote&allArithmExpr != 0 {
-			p.curErr("quotes should not be used in arithmetic expressions")
-		}
-		sq := &SglQuoted{Left: p.pos, Dollar: true}
-		old := p.quote
-		p.quote = sglQuotes
-		p.next()
-		p.quote = old
-		if p.tok != sglQuote {
-			sq.Value = p.val
-			p.next()
-		}
-		sq.Right = p.pos
-		if !p.got(sglQuote) {
-			p.quoteErr(sq.Pos(), sglQuote)
-		}
-		return sq
 	case dblQuote, dollDblQuote:
 		if p.quote == dblQuotes {
 			// p.tok == dblQuote, as "foo$" puts $ in the lit
@@ -780,9 +750,11 @@ func (p *Parser) wordPart() WordPart {
 		p.ensureNoNested()
 		cs := &CmdSubst{Left: p.pos}
 		old := p.preNested(subCmdBckquo)
+		p.openBquotes++
 		p.next()
 		cs.StmtList = p.stmtList()
 		p.postNested(old)
+		p.openBquotes--
 		cs.Right = p.pos
 		if !p.got(bckQuote) {
 			p.quoteErr(cs.Pos(), bckQuote)
@@ -793,7 +765,7 @@ func (p *Parser) wordPart() WordPart {
 			p.curErr("extended globs are a bash feature")
 		}
 		eg := &ExtGlob{Op: GlobOperator(p.tok), OpPos: p.pos}
-		lparens := 0
+		lparens := 1
 		r := p.r
 	globLoop:
 		for p.newLit(r); ; r = p.rune() {
@@ -803,7 +775,7 @@ func (p *Parser) wordPart() WordPart {
 			case '(':
 				lparens++
 			case ')':
-				if lparens--; lparens < 0 {
+				if lparens--; lparens == 0 {
 					break globLoop
 				}
 			}
@@ -811,7 +783,7 @@ func (p *Parser) wordPart() WordPart {
 		eg.Pattern = p.lit(posAddCol(eg.OpPos, 2), p.endLit())
 		p.rune()
 		p.next()
-		if lparens != -1 {
+		if lparens != 0 {
 			p.matchingErr(eg.OpPos, eg.Op, rightParen)
 		}
 		return eg
@@ -885,9 +857,9 @@ func (p *Parser) arithmExpr(level int, compact, tern bool) ArithmExpr {
 	if compact && p.spaced {
 		return left
 	}
-	p.newLine()
+	p.got(_Newl)
 	newLevel := arithmOpLevel(BinAritOperator(p.tok))
-	if !tern && p.tok == colon && p.quote&allParamArith != 0 {
+	if !tern && p.tok == colon && p.quote == paramExpSlice {
 		newLevel = -1
 	}
 	if newLevel < 0 {
@@ -960,7 +932,7 @@ func isArithName(left ArithmExpr) bool {
 }
 
 func (p *Parser) arithmExprBase(compact bool) ArithmExpr {
-	p.newLine()
+	p.got(_Newl)
 	var x ArithmExpr
 	switch p.tok {
 	case exclMark:
@@ -1077,12 +1049,10 @@ func (p *Parser) paramExp() *ParamExp {
 			p.next()
 		}
 	}
+	op := p.tok
 	switch p.tok {
 	case _Lit, _LitWord:
 		pe.Param = p.lit(p.pos, p.val)
-		p.next()
-	case at, star, hash, exclMark:
-		pe.Param = p.lit(p.pos, p.tok.String())
 		p.next()
 	case quest, minus:
 		if pe.Length && p.r != '}' {
@@ -1092,24 +1062,21 @@ func (p *Parser) paramExp() *ParamExp {
 			break
 		}
 		fallthrough
-	case dollar:
-		op := p.tok
+	case at, star, hash, exclMark, dollar:
 		pe.Param = p.lit(p.pos, p.tok.String())
 		p.next()
-		switch p.tok {
-		case _Lit, _LitWord:
-			p.curErr("%s cannot be followed by a word", op)
-		}
 	default:
 		p.curErr("parameter expansion requires a literal")
 	}
-	if p.tok == rightBrace {
+	switch p.tok {
+	case _Lit, _LitWord:
+		p.curErr("%s cannot be followed by a word", op)
+	case rightBrace:
 		pe.Rbrace = p.pos
 		p.quote = old
 		p.next()
 		return pe
-	}
-	if p.tok == leftBrack {
+	case leftBrack:
 		if p.lang == LangPOSIX {
 			p.curErr("arrays are a bash feature")
 		}
@@ -1148,12 +1115,11 @@ func (p *Parser) paramExp() *ParamExp {
 		}
 		pe.Slice = &Slice{}
 		colonPos := p.pos
-		p.quote = paramExpOff
+		p.quote = paramExpSlice
 		if p.next(); p.tok != colon {
 			pe.Slice.Offset = p.followArithm(colon, colonPos)
 		}
 		colonPos = p.pos
-		p.quote = paramExpLen
 		if p.got(colon) {
 			pe.Slice.Length = p.followArithm(colon, colonPos)
 		}
@@ -1177,8 +1143,9 @@ func (p *Parser) paramExp() *ParamExp {
 		}
 	case plus, colPlus, minus, colMinus, quest, colQuest, assgn, colAssgn:
 		// if unset/null actions
-		if !ValidName(pe.Param.Value) {
-			p.curErr("a special parameter name can never be unset or null")
+		switch pe.Param.Value {
+		case "#", "$", "?", "!":
+			p.curErr("$%s can never be unset or null", pe.Param.Value)
 		}
 		pe.Exp = p.paramExpExp()
 	case perc, dblPerc, hash, dblHash:
@@ -1354,7 +1321,7 @@ func (p *Parser) getAssign(needEqual bool) *Assign {
 		}
 		old := p.preNested(newQuote)
 		p.next()
-		p.newLine()
+		p.got(_Newl)
 		for p.tok != _EOF && p.tok != rightParen {
 			ae := &ArrayElem{}
 			ae.Comments, p.accComs = p.accComs, nil
@@ -1378,7 +1345,7 @@ func (p *Parser) getAssign(needEqual bool) *Assign {
 				}
 			}
 			as.Array.Elems = append(as.Array.Elems, ae)
-			p.newLine()
+			p.got(_Newl)
 		}
 		as.Array.Last, p.accComs = p.accComs, nil
 		p.postNested(old)
@@ -1407,9 +1374,6 @@ func (p *Parser) doRedirect(s *Stmt) {
 	r.N = p.getLit()
 	r.Op, r.OpPos = RedirOperator(p.tok), p.pos
 	p.next()
-	if p.tok == _Newl {
-		p.curErr("redirect word must be on the same line")
-	}
 	switch r.Op {
 	case Hdoc, DashHdoc:
 		old := p.quote
@@ -1454,6 +1418,7 @@ func (p *Parser) getStmt(readEnd, binCmd, fnBody bool) *Stmt {
 			X:     s,
 		}
 		p.next()
+		p.got(_Newl)
 		b.Y = p.getStmt(false, true, false)
 		if b.Y == nil || p.err != nil {
 			p.followErr(b.OpPos, b.Op.String(), "a statement")
@@ -1473,6 +1438,7 @@ func (p *Parser) getStmt(readEnd, binCmd, fnBody bool) *Stmt {
 			p.next()
 			s.Background = true
 		case orAnd:
+			s.Semicolon = p.pos
 			p.next()
 			s.Coprocess = true
 		}
@@ -1488,9 +1454,6 @@ func (p *Parser) getStmt(readEnd, binCmd, fnBody bool) *Stmt {
 }
 
 func (p *Parser) gotStmtPipe(s *Stmt) *Stmt {
-	if p.newLine() {
-		s.Position = p.pos
-	}
 	s.Comments, p.accComs = p.accComs, nil
 	switch p.tok {
 	case _LitWord:
@@ -1570,7 +1533,7 @@ func (p *Parser) gotStmtPipe(s *Stmt) *Stmt {
 			break
 		}
 		name := p.lit(p.pos, p.val)
-		if p.next(); p.gotSameLine(leftParen) {
+		if p.next(); p.got(leftParen) {
 			p.follow(name.ValuePos, "foo(", rightParen)
 			if p.lang == LangPOSIX && !ValidName(name.Value) {
 				p.posErr(name.Pos(), "invalid func name")
@@ -1582,10 +1545,6 @@ func (p *Parser) gotStmtPipe(s *Stmt) *Stmt {
 	case rdrOut, appOut, rdrIn, dplIn, dplOut, clbOut, rdrInOut,
 		hdoc, dashHdoc, wordHdoc, rdrAll, appAll, _LitRedir:
 		p.doRedirect(s)
-		switch {
-		case p.tok == _EOF, p.tok == semicolon, p.tok == _Newl:
-			return s
-		}
 		s.Cmd = p.callExpr(s, nil, false)
 	case bckQuote:
 		if p.quote == subCmdBckquo {
@@ -1600,7 +1559,7 @@ func (p *Parser) gotStmtPipe(s *Stmt) *Stmt {
 			break
 		}
 		w := p.word(p.wordParts())
-		if p.gotSameLine(leftParen) && p.err == nil {
+		if p.got(leftParen) && p.err == nil {
 			p.posErr(w.Pos(), "invalid func name")
 		}
 		s.Cmd = p.callExpr(s, w, false)
@@ -1625,6 +1584,7 @@ func (p *Parser) gotStmtPipe(s *Stmt) *Stmt {
 	case or:
 		b := &BinaryCmd{OpPos: p.pos, Op: BinCmdOperator(p.tok), X: s}
 		p.next()
+		p.got(_Newl)
 		if b.Y = p.gotStmtPipe(p.stmt(p.pos)); b.Y == nil || p.err != nil {
 			p.followErr(b.OpPos, b.Op.String(), "a statement")
 			break
@@ -1632,6 +1592,9 @@ func (p *Parser) gotStmtPipe(s *Stmt) *Stmt {
 		s = p.stmt(s.Position)
 		s.Cmd = b
 		s.Comments, b.X.Comments = b.X.Comments, nil
+		// in "! x | y", the bang applies to the entire pipeline
+		s.Negated = b.X.Negated
+		b.X.Negated = false
 	}
 	return s
 }
@@ -1746,7 +1709,8 @@ func (p *Parser) loop(fpos Pos) Loop {
 		}
 		cl.Post = p.arithmExpr(0, false, false)
 		cl.Rparen = p.arithmEnd(dblLeftParen, cl.Lparen, old)
-		p.gotSameLine(semicolon)
+		p.got(semicolon)
+		p.got(_Newl)
 		return cl
 	}
 	return p.wordIter("for", fpos)
@@ -1757,16 +1721,21 @@ func (p *Parser) wordIter(ftok string, fpos Pos) *WordIter {
 	if wi.Name = p.getLit(); wi.Name == nil {
 		p.followErr(fpos, ftok, "a literal")
 	}
-	if _, ok := p.gotRsrv("in"); ok {
-		for p.tok != _Newl && p.tok != _EOF && p.tok != semicolon {
+	if p.got(_Newl) {
+		// same as if we saw a semicolon
+	} else if _, ok := p.gotRsrv("in"); ok {
+		for !stopToken(p.tok) {
 			if w := p.getWord(); w == nil {
 				p.curErr("word list can only contain words")
 			} else {
 				wi.Items = append(wi.Items, w)
 			}
 		}
-		p.gotSameLine(semicolon)
-	} else if p.tok != _Newl && !p.gotSameLine(semicolon) {
+		p.got(semicolon)
+		p.got(_Newl)
+	} else if p.got(semicolon) {
+		p.got(_Newl)
+	} else {
 		p.followErr(fpos, ftok+" foo", `"in", ; or a newline`)
 	}
 	return wi
@@ -1787,6 +1756,7 @@ func (p *Parser) caseClause() *CaseClause {
 	p.next()
 	cc.Word = p.followWord("case", cc.Case)
 	end := "esac"
+	p.got(_Newl)
 	if _, ok := p.gotRsrv("{"); ok {
 		if p.lang != LangMirBSDKorn {
 			p.posErr(cc.Pos(), `"case i {" is a mksh feature`)
@@ -1802,7 +1772,7 @@ func (p *Parser) caseClause() *CaseClause {
 }
 
 func (p *Parser) caseItems(stop string) (items []*CaseItem) {
-	p.newLine()
+	p.got(_Newl)
 	for p.tok != _EOF && !(p.tok == _LitWord && p.val == stop) {
 		ci := &CaseItem{}
 		ci.Comments, p.accComs = p.accComs, nil
@@ -1844,7 +1814,7 @@ func (p *Parser) caseItems(stop string) (items []*CaseItem) {
 			}
 		}
 		items = append(items, ci)
-		p.newLine()
+		p.got(_Newl)
 	}
 	return
 }
@@ -1855,7 +1825,7 @@ func (p *Parser) testClause() *TestClause {
 	if _, ok := p.gotRsrv("]]"); ok || p.tok == _EOF {
 		p.posErr(tc.Left, "test clause requires at least one expression")
 	}
-	tc.X = p.testExpr(illegalTok, tc.Left, false)
+	tc.X = p.testExpr(dblLeftBrack, tc.Left, false)
 	tc.Right = p.pos
 	if _, ok := p.gotRsrv("]]"); !ok {
 		p.matchingErr(tc.Left, "[[", "]]")
@@ -1907,8 +1877,12 @@ func (p *Parser) testExpr(ftok token, fpos Pos, pastAndOr bool) TestExpr {
 		if p.lang != LangBash {
 			p.curErr("regex tests are a bash feature")
 		}
+		oldReOpenParens := p.reOpenParens
 		old := p.preNested(testRegexp)
-		defer p.postNested(old)
+		defer func() {
+			p.postNested(old)
+			p.reOpenParens = oldReOpenParens
+		}()
 		fallthrough
 	default:
 		if _, ok := b.X.(*Word); !ok {
@@ -1962,13 +1936,8 @@ func (p *Parser) testExprBase(ftok token, fpos Pos) TestExpr {
 		pe.Rparen = p.matched(pe.Lparen, leftParen, rightParen)
 		return pe
 	default:
-		// since we don't have [[ as a token
-		fstr := "[["
-		if ftok != illegalTok {
-			fstr = ftok.String()
-		}
-		p.newLine()
-		return p.followWord(fstr, fpos)
+		p.got(_Newl)
+		return p.followWordTok(ftok, fpos)
 	}
 }
 
@@ -2023,9 +1992,7 @@ func (p *Parser) timeClause() *TimeClause {
 		tc.PosixFormat = true
 		p.next()
 	}
-	if p.tok != _Newl {
-		tc.Stmt = p.gotStmtPipe(p.stmt(p.pos))
-	}
+	tc.Stmt = p.gotStmtPipe(p.stmt(p.pos))
 	return tc
 }
 
@@ -2035,9 +2002,6 @@ func (p *Parser) coprocClause() *CoprocClause {
 		// has no name
 		cc.Stmt = p.gotStmtPipe(p.stmt(p.pos))
 		return cc
-	}
-	if p.tok == _Newl {
-		p.posErr(cc.Coproc, "coproc clause requires a command")
 	}
 	cc.Name = p.getLit()
 	cc.Stmt = p.gotStmtPipe(p.stmt(p.pos))
@@ -2087,7 +2051,7 @@ func (p *Parser) bashFuncDecl() *FuncDecl {
 		}
 	}
 	name := p.lit(p.pos, p.val)
-	if p.next(); p.gotSameLine(leftParen) {
+	if p.next(); p.got(leftParen) {
 		p.follow(name.ValuePos, "foo(", rightParen)
 	}
 	return p.funcDecl(name, fpos)

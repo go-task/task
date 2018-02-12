@@ -257,6 +257,15 @@ type RawSockaddrHCI struct {
 	Channel uint16
 }
 
+type RawSockaddrL2 struct {
+	Family      uint16
+	Psm         uint16
+	Bdaddr      [6]uint8
+	Cid         uint16
+	Bdaddr_type uint8
+	_           [1]byte
+}
+
 type RawSockaddrCAN struct {
 	Family  uint16
 	_       [2]byte
@@ -411,6 +420,7 @@ const (
 	SizeofSockaddrLinklayer = 0x14
 	SizeofSockaddrNetlink   = 0xc
 	SizeofSockaddrHCI       = 0x6
+	SizeofSockaddrL2        = 0xe
 	SizeofSockaddrCAN       = 0x10
 	SizeofSockaddrALG       = 0x58
 	SizeofSockaddrVM        = 0x10
@@ -876,4 +886,10 @@ type cpuMask uint64
 const (
 	_CPU_SETSIZE = 0x400
 	_NCPUBITS    = 0x40
+)
+
+const (
+	BDADDR_BREDR     = 0x0
+	BDADDR_LE_PUBLIC = 0x1
+	BDADDR_LE_RANDOM = 0x2
 )

@@ -52,7 +52,7 @@ type Timex struct {
 	Errcnt    int32
 	Stbcnt    int32
 	Tai       int32
-	Pad_cgo_0 [44]byte
+	_         [44]byte
 }
 
 type Time_t int32
@@ -116,20 +116,20 @@ type Stat_t struct {
 }
 
 type Statfs_t struct {
-	Type      int32
-	Bsize     int32
-	Frsize    int32
-	Pad_cgo_0 [4]byte
-	Blocks    uint64
-	Bfree     uint64
-	Files     uint64
-	Ffree     uint64
-	Bavail    uint64
-	Fsid      Fsid
-	Namelen   int32
-	Flags     int32
-	Spare     [5]int32
-	Pad_cgo_1 [4]byte
+	Type    int32
+	Bsize   int32
+	Frsize  int32
+	_       [4]byte
+	Blocks  uint64
+	Bfree   uint64
+	Files   uint64
+	Ffree   uint64
+	Bavail  uint64
+	Fsid    Fsid
+	Namelen int32
+	Flags   int32
+	Spare   [5]int32
+	_       [4]byte
 }
 
 type StatxTimestamp struct {
@@ -163,12 +163,12 @@ type Statx_t struct {
 }
 
 type Dirent struct {
-	Ino       uint64
-	Off       int64
-	Reclen    uint16
-	Type      uint8
-	Name      [256]int8
-	Pad_cgo_0 [5]byte
+	Ino    uint64
+	Off    int64
+	Reclen uint16
+	Type   uint8
+	Name   [256]int8
+	_      [5]byte
 }
 
 type Fsid struct {
@@ -176,13 +176,13 @@ type Fsid struct {
 }
 
 type Flock_t struct {
-	Type      int16
-	Whence    int16
-	Pad_cgo_0 [4]byte
-	Start     int64
-	Len       int64
-	Pid       int32
-	Pad_cgo_1 [4]byte
+	Type   int16
+	Whence int16
+	_      [4]byte
+	Start  int64
+	Len    int64
+	Pid    int32
+	_      [4]byte
 }
 
 type FscryptPolicy struct {
@@ -257,11 +257,20 @@ type RawSockaddrHCI struct {
 	Channel uint16
 }
 
+type RawSockaddrL2 struct {
+	Family      uint16
+	Psm         uint16
+	Bdaddr      [6]uint8
+	Cid         uint16
+	Bdaddr_type uint8
+	_           [1]byte
+}
+
 type RawSockaddrCAN struct {
-	Family    uint16
-	Pad_cgo_0 [2]byte
-	Ifindex   int32
-	Addr      [8]byte
+	Family  uint16
+	_       [2]byte
+	Ifindex int32
+	Addr    [8]byte
 }
 
 type RawSockaddrALG struct {
@@ -374,7 +383,7 @@ type TCPInfo struct {
 	Probes         uint8
 	Backoff        uint8
 	Options        uint8
-	Pad_cgo_0      [2]byte
+	_              [2]byte
 	Rto            uint32
 	Ato            uint32
 	Snd_mss        uint32
@@ -409,6 +418,7 @@ const (
 	SizeofSockaddrLinklayer = 0x14
 	SizeofSockaddrNetlink   = 0xc
 	SizeofSockaddrHCI       = 0x6
+	SizeofSockaddrL2        = 0xe
 	SizeofSockaddrCAN       = 0x10
 	SizeofSockaddrALG       = 0x58
 	SizeofSockaddrVM        = 0x10
@@ -598,9 +608,9 @@ type SockFilter struct {
 }
 
 type SockFprog struct {
-	Len       uint16
-	Pad_cgo_0 [2]byte
-	Filter    *SockFilter
+	Len    uint16
+	_      [2]byte
+	Filter *SockFilter
 }
 
 type InotifyEvent struct {
@@ -724,11 +734,11 @@ type Winsize struct {
 
 type Taskstats struct {
 	Version                   uint16
-	Pad_cgo_0                 [2]byte
+	_                         [2]byte
 	Ac_exitcode               uint32
 	Ac_flag                   uint8
 	Ac_nice                   uint8
-	Pad_cgo_1                 [6]byte
+	_                         [6]byte
 	Cpu_count                 uint64
 	Cpu_delay_total           uint64
 	Blkio_count               uint64
@@ -740,13 +750,13 @@ type Taskstats struct {
 	Ac_comm                   [32]int8
 	Ac_sched                  uint8
 	Ac_pad                    [3]uint8
-	Pad_cgo_2                 [4]byte
+	_                         [4]byte
 	Ac_uid                    uint32
 	Ac_gid                    uint32
 	Ac_pid                    uint32
 	Ac_ppid                   uint32
 	Ac_btime                  uint32
-	Pad_cgo_3                 [4]byte
+	_                         [4]byte
 	Ac_etime                  uint64
 	Ac_utime                  uint64
 	Ac_stime                  uint64
@@ -846,4 +856,10 @@ type cpuMask uint32
 const (
 	_CPU_SETSIZE = 0x400
 	_NCPUBITS    = 0x20
+)
+
+const (
+	BDADDR_BREDR     = 0x0
+	BDADDR_LE_PUBLIC = 0x1
+	BDADDR_LE_RANDOM = 0x2
 )

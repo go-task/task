@@ -38,6 +38,9 @@ func KeepPadding(p *Printer) {
 	p.bufWriter = &p.cols
 }
 
+// Minify will print programs in a way to save the most bytes possible.
+// For example, indentation and comments are skipped, and extra
+// whitespace is avoided when possible.
 func Minify(p *Printer) { p.minify = true }
 
 // NewPrinter allocates a new Printer and applies any number of options.

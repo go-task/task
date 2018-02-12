@@ -211,14 +211,8 @@ func (r *Runner) setVar(name string, index syntax.ArithmExpr, vr Variable) {
 
 	// if the existing variable is already an AssocArray, try our best
 	// to convert the key to a string
-	if stringIndex(index) || isAssocArray {
-		var amap AssocArray
-		switch x := cur.Value.(type) {
-		case StringVal, IndexArray:
-			return // TODO
-		case AssocArray:
-			amap = x
-		}
+	if isAssocArray {
+		amap := cur.Value.(AssocArray)
 		w, ok := index.(*syntax.Word)
 		if !ok {
 			return
@@ -374,6 +368,5 @@ func (r *Runner) namesByPrefix(prefix string) []string {
 			names = append(names, name)
 		}
 	}
-	sort.Strings(names)
 	return names
 }

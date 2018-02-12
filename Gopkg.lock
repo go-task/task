@@ -35,7 +35,7 @@
   branch = "master"
   name = "github.com/imdario/mergo"
   packages = ["."]
-  revision = "c961a4f451fae5acb3b50c1a54576c6929e3a6d8"
+  revision = "0d4b488675fdec1dde48751b05ab530cf0b630e1"
 
 [[projects]]
   branch = "master"
@@ -74,13 +74,13 @@
   branch = "master"
   name = "github.com/spf13/pflag"
   packages = ["."]
-  revision = "4c012f6dcd9546820e378d0bdda4d8fc772cdfea"
+  revision = "6a877ebacf28c5fc79846f4fcd380a5d9872b997"
 
 [[projects]]
   name = "github.com/stretchr/testify"
   packages = ["assert"]
-  revision = "b91bfb9ebec76498946beb6af7c0230c7cc7ba6c"
-  version = "v1.2.0"
+  revision = "12b6f73e6084dad08a7c6e575284b177ecafbc71"
+  version = "v1.2.1"
 
 [[projects]]
   branch = "master"
@@ -90,13 +90,13 @@
     "scrypt",
     "ssh/terminal"
   ]
-  revision = "a6600008915114d9c087fad9f03d75087b1a74df"
+  revision = "9de5f2eaf759b4c4550b3db39fed2e9e5f86f45c"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/net"
   packages = ["context"]
-  revision = "5ccada7d0a7ba9aeb5d3aca8d3501b4c2a509fec"
+  revision = "f5dfe339be1d06f81b22525fe34671ee7d2c8904"
 
 [[projects]]
   branch = "master"
@@ -111,7 +111,7 @@
     "unix",
     "windows"
   ]
-  revision = "2c42eef0765b9837fbdab12011af7830f55f88f0"
+  revision = "37707fdb30a5b38865cfb95e5aab41707daec7fd"
 
 [[projects]]
   branch = "v2"
@@ -126,7 +126,7 @@
     "interp",
     "syntax"
   ]
-  revision = "46a8a4e0a8ca0d45de9626b8d290ccc7bfc732b0"
+  revision = "916da31af7b773dab99fdb4a155e1a200e9d6211"
 
 [solve-meta]
   analyzer-name = "dep"
