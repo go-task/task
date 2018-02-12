@@ -18,7 +18,6 @@ update-deps:
   cmds:
     - dep ensure
     - dep ensure -update
-    - dep prune
 
 clean:
   desc: Cleans temp files and folders

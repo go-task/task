@@ -15,5 +15,3 @@
 
 ./task
 dist/
-
-vendor/**/*_test.go
