@@ -9,6 +9,7 @@ import (
 	"sync/atomic"
 
 	"github.com/go-task/task/internal/execext"
+	"github.com/go-task/task/internal/taskfile"
 
 	"golang.org/x/sync/errgroup"
 )
@@ -23,7 +24,7 @@ const (
 
 // Executor executes a Taskfile
 type Executor struct {
-	Taskfile *Taskfile
+	Taskfile *taskfile.Taskfile
 	Dir      string
 	Force    bool
 	Watch    bool
@@ -36,7 +37,7 @@ type Executor struct {
 	Stdout io.Writer
 	Stderr io.Writer
 
-	taskvars Vars
+	taskvars taskfile.Vars
 
 	taskCallCount map[string]*int32
 
@@ -44,27 +45,8 @@ type Executor struct {
 	muDynamicCache sync.Mutex
 }
 
-// Tasks representas a group of tasks
-type Tasks map[string]*Task
-
-// Task represents a task
-type Task struct {
-	Task      string
-	Cmds      []*Cmd
-	Deps      []*Dep
-	Desc      string
-	Sources   []string
-	Generates []string
-	Status    []string
-	Dir       string
-	Vars      Vars
-	Env       Vars
-	Silent    bool
-	Method    string
-}
-
 // Run runs Task
-func (e *Executor) Run(calls ...Call) error {
+func (e *Executor) Run(calls ...taskfile.Call) error {
 	if e.Context == nil {
 		e.Context = context.Background()
 	}
@@ -109,7 +91,7 @@ func (e *Executor) Run(calls ...Call) error {
 }
 
 // RunTask runs a task by its name
-func (e *Executor) RunTask(ctx context.Context, call Call) error {
+func (e *Executor) RunTask(ctx context.Context, call taskfile.Call) error {
 	t, err := e.CompiledTask(call)
 	if err != nil {
 		return err
@@ -123,7 +105,7 @@ func (e *Executor) RunTask(ctx context.Context, call Call) error {
 	}
 
 	if !e.Force {
-		upToDate, err := t.isUpToDate(ctx)
+		upToDate, err := isTaskUpToDate(ctx, t)
 		if err != nil {
 			return err
 		}
@@ -137,7 +119,7 @@ func (e *Executor) RunTask(ctx context.Context, call Call) error {
 
 	for i := range t.Cmds {
 		if err := e.runCommand(ctx, t, call, i); err != nil {
-			if err2 := t.statusOnError(); err2 != nil {
+			if err2 := statusOnError(t); err2 != nil {
 				e.verboseErrf("task: error cleaning status on error: %v", err2)
 			}
 			return &taskRunError{t.Task, err}
@@ -146,25 +128,25 @@ func (e *Executor) RunTask(ctx context.Context, call Call) error {
 	return nil
 }
 
-func (e *Executor) runDeps(ctx context.Context, t *Task) error {
+func (e *Executor) runDeps(ctx context.Context, t *taskfile.Task) error {
 	g, ctx := errgroup.WithContext(ctx)
 
 	for _, d := range t.Deps {
 		d := d
 
 		g.Go(func() error {
-			return e.RunTask(ctx, Call{Task: d.Task, Vars: d.Vars})
+			return e.RunTask(ctx, taskfile.Call{Task: d.Task, Vars: d.Vars})
 		})
 	}
 
 	return g.Wait()
 }
 
-func (e *Executor) runCommand(ctx context.Context, t *Task, call Call, i int) error {
+func (e *Executor) runCommand(ctx context.Context, t *taskfile.Task, call taskfile.Call, i int) error {
 	cmd := t.Cmds[i]
 
 	if cmd.Cmd == "" {
-		return e.RunTask(ctx, Call{Task: cmd.Task, Vars: cmd.Vars})
+		return e.RunTask(ctx, taskfile.Call{Task: cmd.Task, Vars: cmd.Vars})
 	}
 
 	if e.Verbose || (!cmd.Silent && !t.Silent && !e.Silent) {
@@ -175,20 +157,20 @@ func (e *Executor) runCommand(ctx context.Context, t *Task, call Call, i int) er
 		Context: ctx,
 		Command: cmd.Cmd,
 		Dir:     t.Dir,
-		Env:     t.getEnviron(),
+		Env:     getEnviron(t),
 		Stdin:   e.Stdin,
 		Stdout:  e.Stdout,
 		Stderr:  e.Stderr,
 	})
 }
 
-func (t *Task) getEnviron() []string {
+func getEnviron(t *taskfile.Task) []string {
 	if t.Env == nil {
 		return nil
 	}
 
 	envs := os.Environ()
-	for k, v := range t.Env.toStringMap() {
+	for k, v := range t.Env.ToStringMap() {
 		envs = append(envs, fmt.Sprintf("%s=%s", k, v))
 	}
 	return envs

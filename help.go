@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"sort"
 	"text/tabwriter"
+
+	"github.com/go-task/task/internal/taskfile"
 )
 
 // PrintTasksHelp prints help os tasks that have a description
@@ -23,8 +25,8 @@ func (e *Executor) PrintTasksHelp() {
 	w.Flush()
 }
 
-func (e *Executor) tasksWithDesc() (tasks []*Task) {
-	tasks = make([]*Task, 0, len(e.Taskfile.Tasks))
+func (e *Executor) tasksWithDesc() (tasks []*taskfile.Task) {
+	tasks = make([]*taskfile.Task, 0, len(e.Taskfile.Tasks))
 	for _, task := range e.Taskfile.Tasks {
 		if task.Desc != "" {
 			tasks = append(tasks, task)

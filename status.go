@@ -6,16 +6,17 @@ import (
 
 	"github.com/go-task/task/internal/execext"
 	"github.com/go-task/task/internal/status"
+	"github.com/go-task/task/internal/taskfile"
 )
 
 // Status returns an error if any the of given tasks is not up-to-date
-func (e *Executor) Status(calls ...Call) error {
+func (e *Executor) Status(calls ...taskfile.Call) error {
 	for _, call := range calls {
 		t, ok := e.Taskfile.Tasks[call.Task]
 		if !ok {
 			return &taskNotFoundError{taskName: call.Task}
 		}
-		isUpToDate, err := t.isUpToDate(e.Context)
+		isUpToDate, err := isTaskUpToDate(e.Context, t)
 		if err != nil {
 			return err
 		}
@@ -26,12 +27,12 @@ func (e *Executor) Status(calls ...Call) error {
 	return nil
 }
 
-func (t *Task) isUpToDate(ctx context.Context) (bool, error) {
+func isTaskUpToDate(ctx context.Context, t *taskfile.Task) (bool, error) {
 	if len(t.Status) > 0 {
-		return t.isUpToDateStatus(ctx)
+		return isTaskUpToDateStatus(ctx, t)
 	}
 
-	checker, err := t.getStatusChecker()
+	checker, err := getStatusChecker(t)
 	if err != nil {
 		return false, err
 	}
@@ -39,15 +40,15 @@ func (t *Task) isUpToDate(ctx context.Context) (bool, error) {
 	return checker.IsUpToDate()
 }
 
-func (t *Task) statusOnError() error {
-	checker, err := t.getStatusChecker()
+func statusOnError(t *taskfile.Task) error {
+	checker, err := getStatusChecker(t)
 	if err != nil {
 		return err
 	}
 	return checker.OnError()
 }
 
-func (t *Task) getStatusChecker() (status.Checker, error) {
+func getStatusChecker(t *taskfile.Task) (status.Checker, error) {
 	switch t.Method {
 	case "", "timestamp":
 		return &status.Timestamp{
@@ -68,13 +69,13 @@ func (t *Task) getStatusChecker() (status.Checker, error) {
 	}
 }
 
-func (t *Task) isUpToDateStatus(ctx context.Context) (bool, error) {
+func isTaskUpToDateStatus(ctx context.Context, t *taskfile.Task) (bool, error) {
 	for _, s := range t.Status {
 		err := execext.RunCommand(&execext.RunCommandOptions{
 			Context: ctx,
 			Command: s,
 			Dir:     t.Dir,
-			Env:     t.getEnviron(),
+			Env:     getEnviron(t),
 		})
 		if err != nil {
 			return false, nil

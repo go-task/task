@@ -7,3 +7,4 @@ GO_PACKAGES:
   ./internal/args
   ./internal/execext
   ./internal/status
+  ./internal/taskfile

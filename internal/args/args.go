@@ -4,7 +4,7 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/go-task/task"
+	"github.com/go-task/task/internal/taskfile"
 )
 
 var (
@@ -13,12 +13,12 @@ var (
 )
 
 // Parse parses command line argument: tasks and vars of each task
-func Parse(args ...string) ([]task.Call, error) {
-	var calls []task.Call
+func Parse(args ...string) ([]taskfile.Call, error) {
+	var calls []taskfile.Call
 
 	for _, arg := range args {
 		if !strings.Contains(arg, "=") {
-			calls = append(calls, task.Call{Task: arg})
+			calls = append(calls, taskfile.Call{Task: arg})
 			continue
 		}
 		if len(calls) < 1 {
@@ -26,11 +26,11 @@ func Parse(args ...string) ([]task.Call, error) {
 		}
 
 		if calls[len(calls)-1].Vars == nil {
-			calls[len(calls)-1].Vars = make(task.Vars)
+			calls[len(calls)-1].Vars = make(taskfile.Vars)
 		}
 
 		pair := strings.SplitN(arg, "=", 2)
-		calls[len(calls)-1].Vars[pair[0]] = task.Var{Static: pair[1]}
+		calls[len(calls)-1].Vars[pair[0]] = taskfile.Var{Static: pair[1]}
 	}
 	return calls, nil
 }

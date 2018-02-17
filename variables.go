@@ -2,7 +2,6 @@ package task
 
 import (
 	"bytes"
-	"errors"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -10,6 +9,7 @@ import (
 	"text/template"
 
 	"github.com/go-task/task/internal/execext"
+	"github.com/go-task/task/internal/taskfile"
 
 	"github.com/Masterminds/sprig"
 	"github.com/mitchellh/go-homedir"
@@ -20,68 +20,18 @@ var (
 	TaskvarsFilePath = "Taskvars"
 )
 
-var (
-	// ErrCantUnmarshalVar is returned for invalid var YAML.
-	ErrCantUnmarshalVar = errors.New("task: can't unmarshal var value")
-)
-
-// Vars is a string[string] variables map.
-type Vars map[string]Var
-
-func getEnvironmentVariables() Vars {
+func getEnvironmentVariables() taskfile.Vars {
 	var (
 		env = os.Environ()
-		m   = make(Vars, len(env))
+		m   = make(taskfile.Vars, len(env))
 	)
 
 	for _, e := range env {
 		keyVal := strings.SplitN(e, "=", 2)
 		key, val := keyVal[0], keyVal[1]
-		m[key] = Var{Static: val}
+		m[key] = taskfile.Var{Static: val}
 	}
 	return m
-}
-
-func (vs Vars) toStringMap() (m map[string]string) {
-	m = make(map[string]string, len(vs))
-	for k, v := range vs {
-		if v.Sh != "" {
-			// Dynamic variable is not yet resolved; trigger
-			// <no value> to be used in templates.
-			continue
-		}
-		m[k] = v.Static
-	}
-	return
-}
-
-// Var represents either a static or dynamic variable.
-type Var struct {
-	Static string
-	Sh     string
-}
-
-// UnmarshalYAML implements yaml.Unmarshaler interface.
-func (v *Var) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	var str string
-	if err := unmarshal(&str); err == nil {
-		if strings.HasPrefix(str, "$") {
-			v.Sh = strings.TrimPrefix(str, "$")
-		} else {
-			v.Static = str
-		}
-		return nil
-	}
-
-	var sh struct {
-		Sh string
-	}
-	if err := unmarshal(&sh); err == nil {
-		v.Sh = sh.Sh
-		return nil
-	}
-
-	return ErrCantUnmarshalVar
 }
 
 // getVariables returns fully resolved variables following the priority order:
@@ -91,20 +41,20 @@ func (v *Var) UnmarshalYAML(unmarshal func(interface{}) error) error {
 //    - call, taskvars and environment variables
 // 4. Taskvars variables, resolved with access to:
 //    - environment variables
-func (e *Executor) getVariables(call Call) (Vars, error) {
+func (e *Executor) getVariables(call taskfile.Call) (taskfile.Vars, error) {
 	t, ok := e.Taskfile.Tasks[call.Task]
 	if !ok {
 		return nil, &taskNotFoundError{call.Task}
 	}
 
-	merge := func(dest Vars, srcs ...Vars) {
+	merge := func(dest taskfile.Vars, srcs ...taskfile.Vars) {
 		for _, src := range srcs {
 			for k, v := range src {
 				dest[k] = v
 			}
 		}
 	}
-	varsKeys := func(srcs ...Vars) []string {
+	varsKeys := func(srcs ...taskfile.Vars) []string {
 		m := make(map[string]struct{})
 		for _, src := range srcs {
 			for k := range src {
@@ -117,29 +67,29 @@ func (e *Executor) getVariables(call Call) (Vars, error) {
 		}
 		return lst
 	}
-	replaceVars := func(dest Vars, keys []string) error {
+	replaceVars := func(dest taskfile.Vars, keys []string) error {
 		r := varReplacer{vars: dest}
 		for _, k := range keys {
 			v := dest[k]
-			dest[k] = Var{
+			dest[k] = taskfile.Var{
 				Static: r.replace(v.Static),
 				Sh:     r.replace(v.Sh),
 			}
 		}
 		return r.err
 	}
-	resolveShell := func(dest Vars, keys []string) error {
+	resolveShell := func(dest taskfile.Vars, keys []string) error {
 		for _, k := range keys {
 			v := dest[k]
 			static, err := e.handleShVar(v)
 			if err != nil {
 				return err
 			}
-			dest[k] = Var{Static: static}
+			dest[k] = taskfile.Var{Static: static}
 		}
 		return nil
 	}
-	update := func(dest Vars, srcs ...Vars) error {
+	update := func(dest taskfile.Vars, srcs ...taskfile.Vars) error {
 		merge(dest, srcs...)
 		// updatedKeys ensures template evaluation is run only once.
 		updatedKeys := varsKeys(srcs...)
@@ -151,7 +101,7 @@ func (e *Executor) getVariables(call Call) (Vars, error) {
 
 	// Resolve taskvars variables to "result" with environment override variables.
 	override := getEnvironmentVariables()
-	result := make(Vars, len(e.taskvars)+len(t.Vars)+len(override))
+	result := make(taskfile.Vars, len(e.taskvars)+len(t.Vars)+len(override))
 	if err := update(result, e.taskvars, override); err != nil {
 		return nil, err
 	}
@@ -163,7 +113,7 @@ func (e *Executor) getVariables(call Call) (Vars, error) {
 	return result, nil
 }
 
-func (e *Executor) handleShVar(v Var) (string, error) {
+func (e *Executor) handleShVar(v taskfile.Var) (string, error) {
 	if v.Static != "" || v.Sh == "" {
 		return v.Static, nil
 	}
@@ -197,7 +147,7 @@ func (e *Executor) handleShVar(v Var) (string, error) {
 
 // CompiledTask returns a copy of a task, but replacing variables in almost all
 // properties using the Go template package.
-func (e *Executor) CompiledTask(call Call) (*Task, error) {
+func (e *Executor) CompiledTask(call taskfile.Call) (*taskfile.Task, error) {
 	origTask, ok := e.Taskfile.Tasks[call.Task]
 	if !ok {
 		return nil, &taskNotFoundError{call.Task}
@@ -209,7 +159,7 @@ func (e *Executor) CompiledTask(call Call) (*Task, error) {
 	}
 	r := varReplacer{vars: vars}
 
-	new := Task{
+	new := taskfile.Task{
 		Task:      origTask.Task,
 		Desc:      r.replace(origTask.Desc),
 		Sources:   r.replaceSlice(origTask.Sources),
@@ -233,13 +183,13 @@ func (e *Executor) CompiledTask(call Call) (*Task, error) {
 		if err != nil {
 			return nil, err
 		}
-		new.Env[k] = Var{Static: static}
+		new.Env[k] = taskfile.Var{Static: static}
 	}
 
 	if len(origTask.Cmds) > 0 {
-		new.Cmds = make([]*Cmd, len(origTask.Cmds))
+		new.Cmds = make([]*taskfile.Cmd, len(origTask.Cmds))
 		for i, cmd := range origTask.Cmds {
-			new.Cmds[i] = &Cmd{
+			new.Cmds[i] = &taskfile.Cmd{
 				Task:   r.replace(cmd.Task),
 				Silent: cmd.Silent,
 				Cmd:    r.replace(cmd.Cmd),
@@ -249,9 +199,9 @@ func (e *Executor) CompiledTask(call Call) (*Task, error) {
 		}
 	}
 	if len(origTask.Deps) > 0 {
-		new.Deps = make([]*Dep, len(origTask.Deps))
+		new.Deps = make([]*taskfile.Dep, len(origTask.Deps))
 		for i, dep := range origTask.Deps {
-			new.Deps[i] = &Dep{
+			new.Deps[i] = &taskfile.Dep{
 				Task: r.replace(dep.Task),
 				Vars: r.replaceVars(dep.Vars),
 			}
@@ -266,7 +216,7 @@ func (e *Executor) CompiledTask(call Call) (*Task, error) {
 // happen will be assigned to r.err, and consecutive calls to funcs will just
 // return the zero value.
 type varReplacer struct {
-	vars   Vars
+	vars   taskfile.Vars
 	strMap map[string]string
 	err    error
 }
@@ -283,7 +233,7 @@ func (r *varReplacer) replace(str string) string {
 	}
 
 	if r.strMap == nil {
-		r.strMap = r.vars.toStringMap()
+		r.strMap = r.vars.ToStringMap()
 	}
 
 	var b bytes.Buffer
@@ -306,14 +256,14 @@ func (r *varReplacer) replaceSlice(strs []string) []string {
 	return new
 }
 
-func (r *varReplacer) replaceVars(vars Vars) Vars {
+func (r *varReplacer) replaceVars(vars taskfile.Vars) taskfile.Vars {
 	if r.err != nil || len(vars) == 0 {
 		return nil
 	}
 
-	new := make(Vars, len(vars))
+	new := make(taskfile.Vars, len(vars))
 	for k, v := range vars {
-		new[k] = Var{
+		new[k] = taskfile.Var{
 			Static: r.replace(v.Static),
 			Sh:     r.replace(v.Sh),
 		}

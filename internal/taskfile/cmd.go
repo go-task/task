@@ -1,4 +1,4 @@
-package task
+package taskfile
 
 import (
 	"errors"
@@ -75,10 +75,4 @@ func (d *Dep) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		return nil
 	}
 	return ErrCantUnmarshalDep
-}
-
-// Call is the parameters to a task call
-type Call struct {
-	Task string
-	Vars Vars
 }

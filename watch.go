@@ -5,6 +5,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/go-task/task/internal/taskfile"
 	"github.com/mattn/go-zglob"
 	"github.com/radovskyb/watcher"
 )
@@ -15,7 +16,7 @@ var watchIgnoredDirs = []string{
 }
 
 // watchTasks start watching the given tasks
-func (e *Executor) watchTasks(calls ...Call) error {
+func (e *Executor) watchTasks(calls ...taskfile.Call) error {
 	tasks := make([]string, len(calls))
 	for i, c := range calls {
 		tasks[i] = c.Task
@@ -83,7 +84,7 @@ func (e *Executor) watchTasks(calls ...Call) error {
 	return w.Start(time.Second)
 }
 
-func (e *Executor) registerWatchedFiles(w *watcher.Watcher, calls ...Call) error {
+func (e *Executor) registerWatchedFiles(w *watcher.Watcher, calls ...taskfile.Call) error {
 	oldWatchedFiles := make(map[string]struct{})
 	for f := range w.WatchedFiles() {
 		oldWatchedFiles[f] = struct{}{}
@@ -95,21 +96,21 @@ func (e *Executor) registerWatchedFiles(w *watcher.Watcher, calls ...Call) error
 		}
 	}
 
-	var registerTaskFiles func(Call) error
-	registerTaskFiles = func(c Call) error {
+	var registerTaskFiles func(taskfile.Call) error
+	registerTaskFiles = func(c taskfile.Call) error {
 		task, err := e.CompiledTask(c)
 		if err != nil {
 			return err
 		}
 
 		for _, d := range task.Deps {
-			if err := registerTaskFiles(Call{Task: d.Task, Vars: d.Vars}); err != nil {
+			if err := registerTaskFiles(taskfile.Call{Task: d.Task, Vars: d.Vars}); err != nil {
 				return err
 			}
 		}
 		for _, c := range task.Cmds {
 			if c.Task != "" {
-				if err := registerTaskFiles(Call{Task: c.Task, Vars: c.Vars}); err != nil {
+				if err := registerTaskFiles(taskfile.Call{Task: c.Task, Vars: c.Vars}); err != nil {
 					return err
 				}
 			}
