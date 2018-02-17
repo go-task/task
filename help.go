@@ -12,10 +12,10 @@ import (
 func (e *Executor) PrintTasksHelp() {
 	tasks := e.tasksWithDesc()
 	if len(tasks) == 0 {
-		e.outf("task: No tasks with description available")
+		e.Logger.Outf("task: No tasks with description available")
 		return
 	}
-	e.outf("task: Available tasks for this project:")
+	e.Logger.Outf("task: Available tasks for this project:")
 
 	// Format in tab-separated columns with a tab stop of 8.
 	w := tabwriter.NewWriter(e.Stdout, 0, 8, 0, '\t', 0)

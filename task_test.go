@@ -209,10 +209,12 @@ func TestStatus(t *testing.T) {
 		t.Errorf("File should not exists: %v", err)
 	}
 
+	var buff bytes.Buffer
 	e := &task.Executor{
 		Dir:    dir,
-		Stdout: ioutil.Discard,
-		Stderr: ioutil.Discard,
+		Stdout: &buff,
+		Stderr: &buff,
+		Silent: true,
 	}
 	assert.NoError(t, e.ReadTaskfile())
 	assert.NoError(t, e.Run(taskfile.Call{Task: "gen-foo"}))
@@ -221,8 +223,7 @@ func TestStatus(t *testing.T) {
 		t.Errorf("File should exists: %v", err)
 	}
 
-	buff := bytes.NewBuffer(nil)
-	e.Stdout, e.Stderr = buff, buff
+	e.Silent = false
 	assert.NoError(t, e.Run(taskfile.Call{Task: "gen-foo"}))
 
 	if buff.String() != `task: Task "gen-foo" is up to date`+"\n" {

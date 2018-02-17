@@ -5,10 +5,12 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"sync"
 	"sync/atomic"
 
+	"github.com/go-task/task/internal/compiler"
+	compilerv1 "github.com/go-task/task/internal/compiler/v1"
 	"github.com/go-task/task/internal/execext"
+	"github.com/go-task/task/internal/logger"
 	"github.com/go-task/task/internal/taskfile"
 
 	"golang.org/x/sync/errgroup"
@@ -37,12 +39,12 @@ type Executor struct {
 	Stdout io.Writer
 	Stderr io.Writer
 
+	Logger   *logger.Logger
+	Compiler compiler.Compiler
+
 	taskvars taskfile.Vars
 
 	taskCallCount map[string]*int32
-
-	dynamicCache   map[string]string
-	muDynamicCache sync.Mutex
 }
 
 // Run runs Task
@@ -59,14 +61,25 @@ func (e *Executor) Run(calls ...taskfile.Call) error {
 	if e.Stderr == nil {
 		e.Stderr = os.Stderr
 	}
+	if e.Logger == nil {
+		e.Logger = &logger.Logger{
+			Stdout:  e.Stdout,
+			Stderr:  e.Stderr,
+			Verbose: e.Verbose,
+		}
+	}
+	// TODO: Add version 2
+	if e.Compiler == nil {
+		e.Compiler = &compilerv1.CompilerV1{
+			Dir:    e.Dir,
+			Vars:   e.taskvars,
+			Logger: e.Logger,
+		}
+	}
 
 	e.taskCallCount = make(map[string]*int32, len(e.Taskfile.Tasks))
 	for k := range e.Taskfile.Tasks {
 		e.taskCallCount[k] = new(int32)
-	}
-
-	if e.dynamicCache == nil {
-		e.dynamicCache = make(map[string]string, 10)
 	}
 
 	// check if given tasks exist
@@ -111,7 +124,7 @@ func (e *Executor) RunTask(ctx context.Context, call taskfile.Call) error {
 		}
 		if upToDate {
 			if !e.Silent {
-				e.errf(`task: Task "%s" is up to date`, t.Task)
+				e.Logger.Errf(`task: Task "%s" is up to date`, t.Task)
 			}
 			return nil
 		}
@@ -120,7 +133,7 @@ func (e *Executor) RunTask(ctx context.Context, call taskfile.Call) error {
 	for i := range t.Cmds {
 		if err := e.runCommand(ctx, t, call, i); err != nil {
 			if err2 := statusOnError(t); err2 != nil {
-				e.verboseErrf("task: error cleaning status on error: %v", err2)
+				e.Logger.VerboseErrf("task: error cleaning status on error: %v", err2)
 			}
 			return &taskRunError{t.Task, err}
 		}
@@ -150,7 +163,7 @@ func (e *Executor) runCommand(ctx context.Context, t *taskfile.Task, call taskfi
 	}
 
 	if e.Verbose || (!cmd.Silent && !t.Silent && !e.Silent) {
-		e.errf(cmd.Cmd)
+		e.Logger.Errf(cmd.Cmd)
 	}
 
 	return execext.RunCommand(&execext.RunCommandOptions{
