@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/go-task/task"
+	"github.com/go-task/task/internal/taskfile"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -38,7 +39,7 @@ func (fct fileContentTest) Run(t *testing.T) {
 		Stderr: ioutil.Discard,
 	}
 	assert.NoError(t, e.ReadTaskfile(), "e.ReadTaskfile()")
-	assert.NoError(t, e.Run(task.Call{Task: fct.Target}), "e.Run(target)")
+	assert.NoError(t, e.Run(taskfile.Call{Task: fct.Target}), "e.Run(target)")
 
 	for name, expectContent := range fct.Files {
 		t.Run(fct.name(name), func(t *testing.T) {
@@ -66,9 +67,9 @@ func TestEnv(t *testing.T) {
 	tt.Run(t)
 }
 
-func TestVars(t *testing.T) {
+func TestVarsV1(t *testing.T) {
 	tt := fileContentTest{
-		Dir:       "testdata/vars",
+		Dir:       "testdata/vars/v1",
 		Target:    "default",
 		TrimSpace: true,
 		Files: map[string]string{
@@ -102,30 +103,69 @@ func TestVars(t *testing.T) {
 	tt.Target = "hello"
 	tt.Run(t)
 }
-func TestMultilineVars(t *testing.T) {
+
+func TestVarsV2(t *testing.T) {
 	tt := fileContentTest{
-		Dir:       "testdata/vars/multiline",
+		Dir:       "testdata/vars/v2",
 		Target:    "default",
-		TrimSpace: false,
+		TrimSpace: true,
 		Files: map[string]string{
-			// Note:
-			// - task does not strip a trailing newline from var entries
-			// - task strips one trailing newline from shell output
-			// - the cat command adds a trailing newline
-			"echo_foobar.txt":      "foo\nbar\n",
-			"echo_n_foobar.txt":    "foo\nbar\n",
-			"echo_n_multiline.txt": "\n\nfoo\n  bar\nfoobar\n\nbaz\n\n",
-			"var_multiline.txt":    "\n\nfoo\n  bar\nfoobar\n\nbaz\n\n\n",
-			"var_catlines.txt":     "  foo   bar foobar  baz  \n",
-			"var_enumfile.txt":     "0:\n1:\n2:foo\n3:  bar\n4:foobar\n5:\n6:baz\n7:\n8:\n",
+			"foo.txt":              "foo",
+			"bar.txt":              "bar",
+			"baz.txt":              "baz",
+			"tmpl_foo.txt":         "foo",
+			"tmpl_bar.txt":         "bar",
+			"tmpl_foo2.txt":        "foo2",
+			"tmpl_bar2.txt":        "bar2",
+			"shtmpl_foo.txt":       "foo",
+			"shtmpl_foo2.txt":      "foo2",
+			"nestedtmpl_foo.txt":   "<no value>",
+			"nestedtmpl_foo2.txt":  "foo2",
+			"foo2.txt":             "foo2",
+			"bar2.txt":             "bar2",
+			"baz2.txt":             "baz2",
+			"tmpl2_foo.txt":        "<no value>",
+			"tmpl2_foo2.txt":       "foo2",
+			"tmpl2_bar.txt":        "<no value>",
+			"tmpl2_bar2.txt":       "bar2",
+			"shtmpl2_foo.txt":      "<no value>",
+			"shtmpl2_foo2.txt":     "foo2",
+			"nestedtmpl2_foo2.txt": "<no value>",
+			"override.txt":         "bar",
 		},
 	}
 	tt.Run(t)
+	// Ensure identical results when running hello task directly.
+	tt.Target = "hello"
+	tt.Run(t)
+}
+
+func TestMultilineVars(t *testing.T) {
+	for _, dir := range []string{"testdata/vars/v1/multiline", "testdata/vars/v2/multiline"} {
+		tt := fileContentTest{
+			Dir:       dir,
+			Target:    "default",
+			TrimSpace: false,
+			Files: map[string]string{
+				// Note:
+				// - task does not strip a trailing newline from var entries
+				// - task strips one trailing newline from shell output
+				// - the cat command adds a trailing newline
+				"echo_foobar.txt":      "foo\nbar\n",
+				"echo_n_foobar.txt":    "foo\nbar\n",
+				"echo_n_multiline.txt": "\n\nfoo\n  bar\nfoobar\n\nbaz\n\n",
+				"var_multiline.txt":    "\n\nfoo\n  bar\nfoobar\n\nbaz\n\n\n",
+				"var_catlines.txt":     "  foo   bar foobar  baz  \n",
+				"var_enumfile.txt":     "0:\n1:\n2:foo\n3:  bar\n4:foobar\n5:\n6:baz\n7:\n8:\n",
+			},
+		}
+		tt.Run(t)
+	}
 }
 
 func TestVarsInvalidTmpl(t *testing.T) {
 	const (
-		dir         = "testdata/vars"
+		dir         = "testdata/vars/v1"
 		target      = "invalid-var-tmpl"
 		expectError = "template: :1: unexpected EOF"
 	)
@@ -136,7 +176,7 @@ func TestVarsInvalidTmpl(t *testing.T) {
 		Stderr: ioutil.Discard,
 	}
 	assert.NoError(t, e.ReadTaskfile(), "e.ReadTaskfile()")
-	assert.EqualError(t, e.Run(task.Call{Task: target}), expectError, "e.Run(target)")
+	assert.EqualError(t, e.Run(taskfile.Call{Task: target}), expectError, "e.Run(target)")
 }
 
 func TestParams(t *testing.T) {
@@ -188,7 +228,7 @@ func TestDeps(t *testing.T) {
 		Stderr: ioutil.Discard,
 	}
 	assert.NoError(t, e.ReadTaskfile())
-	assert.NoError(t, e.Run(task.Call{Task: "default"}))
+	assert.NoError(t, e.Run(taskfile.Call{Task: "default"}))
 
 	for _, f := range files {
 		f = filepath.Join(dir, f)
@@ -208,21 +248,22 @@ func TestStatus(t *testing.T) {
 		t.Errorf("File should not exists: %v", err)
 	}
 
+	var buff bytes.Buffer
 	e := &task.Executor{
 		Dir:    dir,
-		Stdout: ioutil.Discard,
-		Stderr: ioutil.Discard,
+		Stdout: &buff,
+		Stderr: &buff,
+		Silent: true,
 	}
 	assert.NoError(t, e.ReadTaskfile())
-	assert.NoError(t, e.Run(task.Call{Task: "gen-foo"}))
+	assert.NoError(t, e.Run(taskfile.Call{Task: "gen-foo"}))
 
 	if _, err := os.Stat(file); err != nil {
 		t.Errorf("File should exists: %v", err)
 	}
 
-	buff := bytes.NewBuffer(nil)
-	e.Stdout, e.Stderr = buff, buff
-	assert.NoError(t, e.Run(task.Call{Task: "gen-foo"}))
+	e.Silent = false
+	assert.NoError(t, e.Run(taskfile.Call{Task: "gen-foo"}))
 
 	if buff.String() != `task: Task "gen-foo" is up to date`+"\n" {
 		t.Errorf("Wrong output message: %s", buff.String())
@@ -261,7 +302,7 @@ func TestGenerates(t *testing.T) {
 			fmt.Sprintf("task: Task \"%s\" is up to date\n", theTask)
 
 		// Run task for the first time.
-		assert.NoError(t, e.Run(task.Call{Task: theTask}))
+		assert.NoError(t, e.Run(taskfile.Call{Task: theTask}))
 
 		if _, err := os.Stat(srcFile); err != nil {
 			t.Errorf("File should exists: %v", err)
@@ -276,7 +317,7 @@ func TestGenerates(t *testing.T) {
 		buff.Reset()
 
 		// Re-run task to ensure it's now found to be up-to-date.
-		assert.NoError(t, e.Run(task.Call{Task: theTask}))
+		assert.NoError(t, e.Run(taskfile.Call{Task: theTask}))
 		if buff.String() != upToDate {
 			t.Errorf("Wrong output message: %s", buff.String())
 		}
@@ -307,14 +348,14 @@ func TestStatusChecksum(t *testing.T) {
 	}
 	assert.NoError(t, e.ReadTaskfile())
 
-	assert.NoError(t, e.Run(task.Call{Task: "build"}))
+	assert.NoError(t, e.Run(taskfile.Call{Task: "build"}))
 	for _, f := range files {
 		_, err := os.Stat(filepath.Join(dir, f))
 		assert.NoError(t, err)
 	}
 
 	buff.Reset()
-	assert.NoError(t, e.Run(task.Call{Task: "build"}))
+	assert.NoError(t, e.Run(taskfile.Call{Task: "build"}))
 	assert.Equal(t, `task: Task "build" is up to date`+"\n", buff.String())
 }
 
@@ -345,7 +386,7 @@ func TestCyclicDep(t *testing.T) {
 		Stderr: ioutil.Discard,
 	}
 	assert.NoError(t, e.ReadTaskfile())
-	assert.IsType(t, &task.MaximumTaskCallExceededError{}, e.Run(task.Call{Task: "task-1"}))
+	assert.IsType(t, &task.MaximumTaskCallExceededError{}, e.Run(taskfile.Call{Task: "task-1"}))
 }
 
 func TestTaskVersion(t *testing.T) {

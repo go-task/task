@@ -6,34 +6,11 @@ import (
 	"path/filepath"
 	"runtime"
 
+	"github.com/go-task/task/internal/taskfile"
+
 	"github.com/imdario/mergo"
 	"gopkg.in/yaml.v2"
 )
-
-// Taskfile represents a Taskfile.yml
-type Taskfile struct {
-	// TODO: version is still not used
-	Version int
-	Tasks   Tasks
-}
-
-// UnmarshalYAML implements yaml.Unmarshaler interface
-func (tf *Taskfile) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	if err := unmarshal(&tf.Tasks); err == nil {
-		return nil
-	}
-
-	var taskfile struct {
-		Version int
-		Tasks   Tasks
-	}
-	if err := unmarshal(&taskfile); err != nil {
-		return err
-	}
-	tf.Version = taskfile.Version
-	tf.Tasks = taskfile.Tasks
-	return nil
-}
 
 // ReadTaskfile parses Taskfile from the disk
 func (e *Executor) ReadTaskfile() error {
@@ -64,9 +41,9 @@ func (e *Executor) ReadTaskfile() error {
 	return e.readTaskvars()
 }
 
-func (e *Executor) readTaskfileData(path string) (*Taskfile, error) {
+func (e *Executor) readTaskfileData(path string) (*taskfile.Taskfile, error) {
 	if b, err := ioutil.ReadFile(path + ".yml"); err == nil {
-		var taskfile Taskfile
+		var taskfile taskfile.Taskfile
 		return &taskfile, yaml.UnmarshalStrict(b, &taskfile)
 	}
 	return nil, taskFileNotFound{path}
@@ -85,7 +62,7 @@ func (e *Executor) readTaskvars() error {
 	}
 
 	if b, err := ioutil.ReadFile(osSpecificFile + ".yml"); err == nil {
-		osTaskvars := make(Vars, 10)
+		osTaskvars := make(taskfile.Vars, 10)
 		if err := yaml.UnmarshalStrict(b, &osTaskvars); err != nil {
 			return err
 		}

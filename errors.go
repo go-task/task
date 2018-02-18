@@ -51,15 +51,6 @@ func (err *cantWatchNoSourcesError) Error() string {
 	return fmt.Sprintf(`task: Can't watch task "%s" because it has no specified sources`, err.taskName)
 }
 
-type dynamicVarError struct {
-	cause error
-	cmd   string
-}
-
-func (err *dynamicVarError) Error() string {
-	return fmt.Sprintf(`task: Command "%s" in taskvars file failed: %s`, err.cmd, err.cause)
-}
-
 // MaximumTaskCallExceededError is returned when a task is called too
 // many times. In this case you probably have a cyclic dependendy or
 // infinite loop

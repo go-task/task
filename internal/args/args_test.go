@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/go-task/task"
 	"github.com/go-task/task/internal/args"
+	"github.com/go-task/task/internal/taskfile"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -13,12 +13,12 @@ import (
 func TestArgs(t *testing.T) {
 	tests := []struct {
 		Args     []string
-		Expected []task.Call
+		Expected []taskfile.Call
 		Err      error
 	}{
 		{
 			Args: []string{"task-a", "task-b", "task-c"},
-			Expected: []task.Call{
+			Expected: []taskfile.Call{
 				{Task: "task-a"},
 				{Task: "task-b"},
 				{Task: "task-c"},
@@ -26,30 +26,30 @@ func TestArgs(t *testing.T) {
 		},
 		{
 			Args: []string{"task-a", "FOO=bar", "task-b", "task-c", "BAR=baz", "BAZ=foo"},
-			Expected: []task.Call{
+			Expected: []taskfile.Call{
 				{
 					Task: "task-a",
-					Vars: task.Vars{
-						"FOO": task.Var{Static: "bar"},
+					Vars: taskfile.Vars{
+						"FOO": taskfile.Var{Static: "bar"},
 					},
 				},
 				{Task: "task-b"},
 				{
 					Task: "task-c",
-					Vars: task.Vars{
-						"BAR": task.Var{Static: "baz"},
-						"BAZ": task.Var{Static: "foo"},
+					Vars: taskfile.Vars{
+						"BAR": taskfile.Var{Static: "baz"},
+						"BAZ": taskfile.Var{Static: "foo"},
 					},
 				},
 			},
 		},
 		{
 			Args: []string{"task-a", "CONTENT=with some spaces"},
-			Expected: []task.Call{
+			Expected: []taskfile.Call{
 				{
 					Task: "task-a",
-					Vars: task.Vars{
-						"CONTENT": task.Var{Static: "with some spaces"},
+					Vars: taskfile.Vars{
+						"CONTENT": taskfile.Var{Static: "with some spaces"},
 					},
 				},
 			},
