@@ -109,6 +109,10 @@ func (e *Executor) setup() error {
 			Vars:   e.taskvars,
 			Logger: e.Logger,
 		}
+
+		if !e.Silent {
+			e.Logger.Errf(`task: warning: Taskfile "version: 2" is experimental and implementation can change before v2.0.0 release`)
+		}
 	default:
 		return fmt.Errorf(`task: Unrecognized Taskfile version "%d"`, e.Taskfile.Version)
 	}
