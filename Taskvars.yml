@@ -7,6 +7,7 @@ GO_PACKAGES:
   ./internal/args
   ./internal/compiler
   ./internal/compiler/v1
+  ./internal/compiler/v2
   ./internal/execext
   ./internal/logger
   ./internal/status

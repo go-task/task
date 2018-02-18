@@ -122,7 +122,7 @@ func (c *CompilerV1) HandleDynamicVar(v taskfile.Var) (string, error) {
 		Stderr:  c.Logger.Stderr,
 	}
 	if err := execext.RunCommand(opts); err != nil {
-		return "", &dynamicVarError{cause: err, cmd: opts.Command}
+		return "", fmt.Errorf(`task: Command "%s" in taskvars file failed: %s`, opts.Command, err)
 	}
 
 	// Trim a single trailing newline from the result to make most command
@@ -133,13 +133,4 @@ func (c *CompilerV1) HandleDynamicVar(v taskfile.Var) (string, error) {
 	c.Logger.VerboseErrf(`task: dynamic variable: '%s' result: '%s'`, v.Sh, result)
 
 	return result, nil
-}
-
-type dynamicVarError struct {
-	cause error
-	cmd   string
-}
-
-func (err *dynamicVarError) Error() string {
-	return fmt.Sprintf(`task: Command "%s" in taskvars file failed: %s`, err.cmd, err.cause)
 }

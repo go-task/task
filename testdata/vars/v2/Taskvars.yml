@@ -1,0 +1,12 @@
+FOO2: foo2
+BAR2: $echo bar2
+BAZ2:
+  sh: echo baz2
+TMPL2_FOO: "{{.FOO}}"
+TMPL2_BAR: "{{.BAR}}"
+TMPL2_FOO2: "{{.FOO2}}"
+TMPL2_BAR2: "{{.BAR2}}"
+SHTMPL2_FOO2:
+  sh: "echo '{{.FOO2}}'"
+NESTEDTMPL2_FOO2: "{{.TMPL2_FOO2}}"
+OVERRIDE: "foo"

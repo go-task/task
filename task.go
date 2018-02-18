@@ -9,6 +9,7 @@ import (
 
 	"github.com/go-task/task/internal/compiler"
 	compilerv1 "github.com/go-task/task/internal/compiler/v1"
+	compilerv2 "github.com/go-task/task/internal/compiler/v2"
 	"github.com/go-task/task/internal/execext"
 	"github.com/go-task/task/internal/logger"
 	"github.com/go-task/task/internal/taskfile"
@@ -49,37 +50,8 @@ type Executor struct {
 
 // Run runs Task
 func (e *Executor) Run(calls ...taskfile.Call) error {
-	if e.Context == nil {
-		e.Context = context.Background()
-	}
-	if e.Stdin == nil {
-		e.Stdin = os.Stdin
-	}
-	if e.Stdout == nil {
-		e.Stdout = os.Stdout
-	}
-	if e.Stderr == nil {
-		e.Stderr = os.Stderr
-	}
-	if e.Logger == nil {
-		e.Logger = &logger.Logger{
-			Stdout:  e.Stdout,
-			Stderr:  e.Stderr,
-			Verbose: e.Verbose,
-		}
-	}
-	// TODO: Add version 2
-	if e.Compiler == nil {
-		e.Compiler = &compilerv1.CompilerV1{
-			Dir:    e.Dir,
-			Vars:   e.taskvars,
-			Logger: e.Logger,
-		}
-	}
-
-	e.taskCallCount = make(map[string]*int32, len(e.Taskfile.Tasks))
-	for k := range e.Taskfile.Tasks {
-		e.taskCallCount[k] = new(int32)
+	if err := e.setup(); err != nil {
+		return err
 	}
 
 	// check if given tasks exist
@@ -99,6 +71,51 @@ func (e *Executor) Run(calls ...taskfile.Call) error {
 		if err := e.RunTask(e.Context, c); err != nil {
 			return err
 		}
+	}
+	return nil
+}
+
+func (e *Executor) setup() error {
+	if e.Taskfile.Version == 0 {
+		e.Taskfile.Version = 1
+	}
+	if e.Context == nil {
+		e.Context = context.Background()
+	}
+	if e.Stdin == nil {
+		e.Stdin = os.Stdin
+	}
+	if e.Stdout == nil {
+		e.Stdout = os.Stdout
+	}
+	if e.Stderr == nil {
+		e.Stderr = os.Stderr
+	}
+	e.Logger = &logger.Logger{
+		Stdout:  e.Stdout,
+		Stderr:  e.Stderr,
+		Verbose: e.Verbose,
+	}
+	switch e.Taskfile.Version {
+	case 1:
+		e.Compiler = &compilerv1.CompilerV1{
+			Dir:    e.Dir,
+			Vars:   e.taskvars,
+			Logger: e.Logger,
+		}
+	case 2:
+		e.Compiler = &compilerv2.CompilerV2{
+			Dir:    e.Dir,
+			Vars:   e.taskvars,
+			Logger: e.Logger,
+		}
+	default:
+		return fmt.Errorf(`task: Unrecognized Taskfile version "%d"`, e.Taskfile.Version)
+	}
+
+	e.taskCallCount = make(map[string]*int32, len(e.Taskfile.Tasks))
+	for k := range e.Taskfile.Tasks {
+		e.taskCallCount[k] = new(int32)
 	}
 	return nil
 }
