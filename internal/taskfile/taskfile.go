@@ -2,8 +2,7 @@ package taskfile
 
 // Taskfile represents a Taskfile.yml
 type Taskfile struct {
-	// TODO: version is still not used
-	Version int
+	Version string
 	Tasks   Tasks
 }
 
@@ -14,7 +13,7 @@ func (tf *Taskfile) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	}
 
 	var taskfile struct {
-		Version int
+		Version string
 		Tasks   Tasks
 	}
 	if err := unmarshal(&taskfile); err != nil {

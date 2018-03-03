@@ -392,10 +392,10 @@ func TestCyclicDep(t *testing.T) {
 func TestTaskVersion(t *testing.T) {
 	tests := []struct {
 		Dir     string
-		Version int
+		Version string
 	}{
-		{"testdata/version/v1", 1},
-		{"testdata/version/v2", 2},
+		{"testdata/version/v1", "1"},
+		{"testdata/version/v2", "2"},
 	}
 
 	for _, test := range tests {

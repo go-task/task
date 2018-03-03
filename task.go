@@ -13,7 +13,9 @@ import (
 	"github.com/go-task/task/internal/execext"
 	"github.com/go-task/task/internal/logger"
 	"github.com/go-task/task/internal/taskfile"
+	"github.com/go-task/task/internal/taskfile/version"
 
+	"github.com/Masterminds/semver"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -76,9 +78,14 @@ func (e *Executor) Run(calls ...taskfile.Call) error {
 }
 
 func (e *Executor) setup() error {
-	if e.Taskfile.Version == 0 {
-		e.Taskfile.Version = 1
+	if e.Taskfile.Version == "" {
+		e.Taskfile.Version = "1"
 	}
+	v, err := semver.NewVersion(e.Taskfile.Version)
+	if err != nil {
+		return fmt.Errorf(`task: could not parse taskfile version "%s": %v`, e.Taskfile.Version, err)
+	}
+
 	if e.Context == nil {
 		e.Context = context.Background()
 	}
@@ -96,14 +103,14 @@ func (e *Executor) setup() error {
 		Stderr:  e.Stderr,
 		Verbose: e.Verbose,
 	}
-	switch e.Taskfile.Version {
-	case 1:
+	switch {
+	case version.IsV1(v):
 		e.Compiler = &compilerv1.CompilerV1{
 			Dir:    e.Dir,
 			Vars:   e.taskvars,
 			Logger: e.Logger,
 		}
-	case 2:
+	case version.IsV2(v):
 		e.Compiler = &compilerv2.CompilerV2{
 			Dir:    e.Dir,
 			Vars:   e.taskvars,
@@ -113,8 +120,8 @@ func (e *Executor) setup() error {
 		if !e.Silent {
 			e.Logger.Errf(`task: warning: Taskfile "version: 2" is experimental and implementation can change before v2.0.0 release`)
 		}
-	default:
-		return fmt.Errorf(`task: Unrecognized Taskfile version "%d"`, e.Taskfile.Version)
+	case version.IsV21(v):
+		return fmt.Errorf(`task: Taskfile versions greater than v2 not implemented in the version of Task`)
 	}
 
 	e.taskCallCount = make(map[string]*int32, len(e.Taskfile.Tasks))
