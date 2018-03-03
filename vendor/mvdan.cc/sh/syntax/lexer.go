@@ -47,6 +47,14 @@ func arithmOps(r rune) bool {
 	return false
 }
 
+func bquoteEscaped(b byte) bool {
+	switch b {
+	case '$', '`', '\\':
+		return true
+	}
+	return false
+}
+
 func (p *Parser) rune() rune {
 	if p.r == '\n' {
 		// p.r instead of b so that newline
@@ -64,7 +72,7 @@ retry:
 			if b == '\\' && p.openBquotes > 0 {
 				// don't do it for newlines, as we want
 				// the newlines to be eaten in p.next
-				if bquotes < p.openBquotes && p.bs[p.bsp] != '\n' {
+				if bquotes < p.openBquotes && bquoteEscaped(p.bs[p.bsp]) {
 					bquotes++
 					goto retry
 				}
@@ -311,6 +319,11 @@ func (p *Parser) peekByte(b byte) bool {
 func (p *Parser) regToken(r rune) token {
 	switch r {
 	case '\'':
+		if p.openBquotes > 0 {
+			// bury openBquotes
+			p.buriedBquotes = p.openBquotes
+			p.openBquotes = 0
+		}
 		p.rune()
 		return sglQuote
 	case '"':

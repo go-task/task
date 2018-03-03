@@ -29,7 +29,7 @@
   branch = "master"
   name = "github.com/huandu/xstrings"
   packages = ["."]
-  revision = "37469d0c81a7910b49d64a0d308ded4823e90937"
+  revision = "2bf18b218c51864a87384c06996e40ff9dcff8e1"
 
 [[projects]]
   branch = "master"
@@ -74,7 +74,7 @@
   branch = "master"
   name = "github.com/spf13/pflag"
   packages = ["."]
-  revision = "6a877ebacf28c5fc79846f4fcd380a5d9872b997"
+  revision = "ee5fd03fd6acfd43e44aea0b4135958546ed8e73"
 
 [[projects]]
   name = "github.com/stretchr/testify"
@@ -90,13 +90,13 @@
     "scrypt",
     "ssh/terminal"
   ]
-  revision = "9de5f2eaf759b4c4550b3db39fed2e9e5f86f45c"
+  revision = "91a49db82a88618983a78a06c1cbd4e00ab749ab"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/net"
   packages = ["context"]
-  revision = "f5dfe339be1d06f81b22525fe34671ee7d2c8904"
+  revision = "22ae77b79946ea320088417e4d50825671d82d57"
 
 [[projects]]
   branch = "master"
@@ -111,13 +111,13 @@
     "unix",
     "windows"
   ]
-  revision = "37707fdb30a5b38865cfb95e5aab41707daec7fd"
+  revision = "dd2ff4accc098aceecb86b36eaa7829b2a17b1c9"
 
 [[projects]]
-  branch = "v2"
   name = "gopkg.in/yaml.v2"
   packages = ["."]
-  revision = "d670f9405373e636a5a2765eea47fac0c9bc91a4"
+  revision = "7f97868eec74b32b0982dd158a51a446d1da7eb5"
+  version = "v2.1.1"
 
 [[projects]]
   branch = "master"
@@ -126,11 +126,11 @@
     "interp",
     "syntax"
   ]
-  revision = "916da31af7b773dab99fdb4a155e1a200e9d6211"
+  revision = "fb0bad77f8fa7a57e6f249f53074ec52b21558d1"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "da52cb2c602c1362c303cf241aa18dfd6199f30484bb12684adb0b6927391cbf"
+  inputs-digest = "976972e7291789a9d4904805cc7f49d733476868bf80f120309078b02a095a65"
   solver-name = "gps-cdcl"
   solver-version = 1

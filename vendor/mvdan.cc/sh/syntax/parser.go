@@ -138,7 +138,9 @@ type Parser struct {
 	buriedHdocs int
 	heredocs    []*Redirect
 	hdocStop    []byte
-	openBquotes int
+
+	openBquotes   int
+	buriedBquotes int // break them when we enter single quotes
 
 	reOpenParens int
 
@@ -171,6 +173,7 @@ func (p *Parser) reset() {
 	p.err, p.readErr = nil, nil
 	p.quote, p.forbidNested = noState, false
 	p.heredocs, p.buriedHdocs = p.heredocs[:0], 0
+	p.openBquotes, p.buriedBquotes = 0, 0
 	p.reOpenParens = 0
 	p.accComs, p.curComs = nil, &p.accComs
 }
@@ -726,6 +729,11 @@ func (p *Parser) wordPart() WordPart {
 			case '\'':
 				sq.Right = p.getPos()
 				sq.Value = p.endLit()
+
+				// restore openBquotes
+				p.openBquotes = p.buriedBquotes
+				p.buriedBquotes = 0
+
 				p.rune()
 				p.next()
 				return sq
@@ -2130,6 +2138,7 @@ func (p *Parser) funcDecl(name *Lit, pos Pos) *FuncDecl {
 		RsrvWord: pos != name.ValuePos,
 		Name:     name,
 	}
+	p.got(_Newl)
 	if fd.Body = p.getStmt(false, false, true); fd.Body == nil {
 		p.followErr(fd.Pos(), "foo()", "a statement")
 	}
