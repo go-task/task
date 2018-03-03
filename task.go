@@ -78,9 +78,6 @@ func (e *Executor) Run(calls ...taskfile.Call) error {
 }
 
 func (e *Executor) setup() error {
-	if e.Taskfile.Version == "" {
-		e.Taskfile.Version = "1"
-	}
 	v, err := semver.NewVersion(e.Taskfile.Version)
 	if err != nil {
 		return fmt.Errorf(`task: could not parse taskfile version "%s": %v`, e.Taskfile.Version, err)
