@@ -112,6 +112,7 @@ func (e *Executor) setup() error {
 			Dir:          e.Dir,
 			Taskvars:     e.taskvars,
 			TaskfileVars: e.Taskfile.Vars,
+			Expansions:   e.Taskfile.Expansions,
 			Logger:       e.Logger,
 		}
 

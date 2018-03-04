@@ -16,9 +16,12 @@ import (
 var _ compiler.Compiler = &CompilerV2{}
 
 type CompilerV2 struct {
-	Dir          string
+	Dir string
+
 	Taskvars     taskfile.Vars
 	TaskfileVars taskfile.Vars
+
+	Expansions int
 
 	Logger *logger.Logger
 
@@ -34,14 +37,11 @@ type CompilerV2 struct {
 // 5. Environment variables
 func (c *CompilerV2) GetVariables(t *taskfile.Task, call taskfile.Call) (taskfile.Vars, error) {
 	vr := varResolver{c: c, vars: compiler.GetEnviron()}
-	vr.merge(c.Taskvars)
-	vr.merge(c.Taskvars)
-	vr.merge(c.TaskfileVars)
-	vr.merge(c.TaskfileVars)
-	vr.merge(call.Vars)
-	vr.merge(call.Vars)
-	vr.merge(t.Vars)
-	vr.merge(t.Vars)
+	for _, vars := range []taskfile.Vars{c.Taskvars, c.TaskfileVars, call.Vars, t.Vars} {
+		for i := 0; i < c.Expansions; i++ {
+			vr.merge(vars)
+		}
+	}
 	return vr.vars, vr.err
 }
 
