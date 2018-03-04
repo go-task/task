@@ -132,6 +132,7 @@ func TestVarsV2(t *testing.T) {
 			"shtmpl2_foo2.txt":     "foo2",
 			"nestedtmpl2_foo2.txt": "<no value>",
 			"override.txt":         "bar",
+			"nested.txt":           "Taskvars-TaskfileVars-TaskVars",
 		},
 	}
 	tt.Run(t)

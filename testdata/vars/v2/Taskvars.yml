@@ -10,3 +10,4 @@ SHTMPL2_FOO2:
   sh: "echo '{{.FOO2}}'"
 NESTEDTMPL2_FOO2: "{{.TMPL2_FOO2}}"
 OVERRIDE: "foo"
+NESTED1: "Taskvars"

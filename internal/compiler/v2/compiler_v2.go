@@ -16,8 +16,9 @@ import (
 var _ compiler.Compiler = &CompilerV2{}
 
 type CompilerV2 struct {
-	Dir  string
-	Vars taskfile.Vars
+	Dir          string
+	Taskvars     taskfile.Vars
+	TaskfileVars taskfile.Vars
 
 	Logger *logger.Logger
 
@@ -28,12 +29,15 @@ type CompilerV2 struct {
 // GetVariables returns fully resolved variables following the priority order:
 // 1. Task variables
 // 2. Call variables
-// 3. Taskvars file variables
-// 4. Environment variables
+// 3. Taskfile variables
+// 4. Taskvars file variables
+// 5. Environment variables
 func (c *CompilerV2) GetVariables(t *taskfile.Task, call taskfile.Call) (taskfile.Vars, error) {
 	vr := varResolver{c: c, vars: compiler.GetEnviron()}
-	vr.merge(c.Vars)
-	vr.merge(c.Vars)
+	vr.merge(c.Taskvars)
+	vr.merge(c.Taskvars)
+	vr.merge(c.TaskfileVars)
+	vr.merge(c.TaskfileVars)
 	vr.merge(call.Vars)
 	vr.merge(call.Vars)
 	vr.merge(t.Vars)

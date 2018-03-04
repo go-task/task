@@ -1,4 +1,6 @@
 version: '2'
+vars:
+  NESTED2: "{{.NESTED1}}-TaskfileVars"
 tasks:
   default:
     deps: [hello]
@@ -27,6 +29,7 @@ tasks:
       - echo '{{.SHTMPL2_FOO2}}' > shtmpl2_foo2.txt
       - echo '{{.NESTEDTMPL2_FOO2}}' > nestedtmpl2_foo2.txt
       - echo {{.OVERRIDE}} > override.txt
+      - echo '{{.NESTED3}}' > nested.txt
     vars:
       FOO: foo
       BAR: $echo bar
@@ -43,6 +46,7 @@ tasks:
       NESTEDTMPL_FOO: "{{.TMPL_FOO}}"
       NESTEDTMPL_FOO2: "{{.TMPL2_FOO2}}"
       OVERRIDE: "bar"
+      NESTED3: "{{.NESTED2}}-TaskVars"
 
   invalid-var-tmpl:
     vars:

@@ -109,9 +109,10 @@ func (e *Executor) setup() error {
 		}
 	case version.IsV2(v):
 		e.Compiler = &compilerv2.CompilerV2{
-			Dir:    e.Dir,
-			Vars:   e.taskvars,
-			Logger: e.Logger,
+			Dir:          e.Dir,
+			Taskvars:     e.taskvars,
+			TaskfileVars: e.Taskfile.Vars,
+			Logger:       e.Logger,
 		}
 
 		if !e.Silent {
