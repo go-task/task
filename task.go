@@ -115,10 +115,6 @@ func (e *Executor) setup() error {
 			Expansions:   e.Taskfile.Expansions,
 			Logger:       e.Logger,
 		}
-
-		if !e.Silent {
-			e.Logger.Errf(`task: warning: Taskfile "version: 2" is experimental and implementation can change before v2.0.0 release`)
-		}
 	case version.IsV21(v):
 		return fmt.Errorf(`task: Taskfile versions greater than v2 not implemented in the version of Task`)
 	}
