@@ -45,7 +45,7 @@ release:
 test-release:
   desc: Tests release process without publishing
   cmds:
-    - goreleaser --skip-validate --skip-publish
+    - goreleaser --snapshot
 
 todo:
   desc: Prints TODO comments present in the code
