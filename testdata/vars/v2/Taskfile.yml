@@ -1,6 +1,8 @@
 version: '2'
+
 vars:
   NESTED2: "{{.NESTED1}}-TaskfileVars"
+
 tasks:
   default:
     deps: [hello]
