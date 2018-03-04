@@ -10,22 +10,27 @@ import (
 
 const defaultTaskfile = `# github.com/go-task/task
 
-default:
-  cmds:
-    - echo "Hello, World!"
+version: '2'
+
+vars:
+  GREETING: Hello, World!
+
+tasks:
+  default:
+    cmds:
+      - echo "{{.GREETING}}"
+    silent: true
 `
 
 // InitTaskfile Taskfile creates a new Taskfile
-func InitTaskfile(w io.Writer, path string) error {
-	for _, f := range []string{"Taskfile.yml", "Taskfile.toml", "Taskfile.json"} {
-		f = filepath.Join(path, f)
-		if _, err := os.Stat(f); err == nil {
-			return ErrTaskfileAlreadyExists
-		}
+func InitTaskfile(w io.Writer, dir string) error {
+	f := filepath.Join(dir, "Taskfile.yml")
+
+	if _, err := os.Stat(f); err == nil {
+		return ErrTaskfileAlreadyExists
 	}
 
-	f := filepath.Join(path, "Taskfile.yml")
-	if err := ioutil.WriteFile(f, []byte(defaultTaskfile), 0666); err != nil {
+	if err := ioutil.WriteFile(f, []byte(defaultTaskfile), 0644); err != nil {
 		return err
 	}
 	fmt.Fprintf(w, "Taskfile.yml created in the current directory\n")
