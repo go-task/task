@@ -29,7 +29,7 @@ The variable priority order was also different:
 1. Call variables
 2. Environment
 3. Task variables
-4. `Taskvars.yml` veriables
+4. `Taskvars.yml` variables
 
 ## Version 2.0
 
@@ -46,7 +46,7 @@ tasks:
       - echo "Hello, World!"
 ```
 
-Version 2 not allows you to write global variables directly in the Taskfile,
+Version 2 allows you to write global variables directly in the Taskfile,
 if you don't want to create a `Taskvars.yml`:
 
 ```yml
