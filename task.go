@@ -52,10 +52,6 @@ type Executor struct {
 
 // Run runs Task
 func (e *Executor) Run(calls ...taskfile.Call) error {
-	if err := e.setup(); err != nil {
-		return err
-	}
-
 	// check if given tasks exist
 	for _, c := range calls {
 		if _, ok := e.Taskfile.Tasks[c.Task]; !ok {
@@ -77,7 +73,12 @@ func (e *Executor) Run(calls ...taskfile.Call) error {
 	return nil
 }
 
-func (e *Executor) setup() error {
+// Setup setups Executor's internal state
+func (e *Executor) Setup() error {
+	if err := e.readTaskfile(); err != nil {
+		return err
+	}
+
 	v, err := semver.NewVersion(e.Taskfile.Version)
 	if err != nil {
 		return fmt.Errorf(`task: could not parse taskfile version "%s": %v`, e.Taskfile.Version, err)

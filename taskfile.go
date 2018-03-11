@@ -12,8 +12,8 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-// ReadTaskfile parses Taskfile from the disk
-func (e *Executor) ReadTaskfile() error {
+// readTaskfile parses Taskfile from the disk
+func (e *Executor) readTaskfile() error {
 	path := filepath.Join(e.Dir, TaskFilePath)
 
 	var err error
