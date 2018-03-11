@@ -22,12 +22,35 @@ archive:
 release:
   draft: true
 
-fpm:
+snapshot:
+  name_template: "{{.Tag}}"
+
+nfpm:
   vendor: Task
   homepage: https://github.com/go-task/task
   maintainer: Andrey Nering <andrey.nering@gmail.com>
   description: Simple task runner written in Go
   license: MIT
+  conflicts:
+    - taskwarrior
   formats:
     - deb
     - rpm
+
+brew:
+  name: go-task
+  github:
+    owner: go-task
+    name: homebrew-tap
+  commit_author:
+    name: Andrey Nering
+    email: andrey.nering@gmail.com
+  folder: Formula
+  homepage: https://github.com/go-task/task
+  description: Task runner / simpler Make alternative written in Go
+  conflicts:
+    - taskwarrior
+  install: |
+    bin.install "task"
+  test: |
+    system "#{bin}/task", "--help"

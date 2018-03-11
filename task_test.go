@@ -38,7 +38,7 @@ func (fct fileContentTest) Run(t *testing.T) {
 		Stdout: ioutil.Discard,
 		Stderr: ioutil.Discard,
 	}
-	assert.NoError(t, e.ReadTaskfile(), "e.ReadTaskfile()")
+	assert.NoError(t, e.Setup(), "e.Setup()")
 	assert.NoError(t, e.Run(taskfile.Call{Task: fct.Target}), "e.Run(target)")
 
 	for name, expectContent := range fct.Files {
@@ -176,7 +176,7 @@ func TestVarsInvalidTmpl(t *testing.T) {
 		Stdout: ioutil.Discard,
 		Stderr: ioutil.Discard,
 	}
-	assert.NoError(t, e.ReadTaskfile(), "e.ReadTaskfile()")
+	assert.NoError(t, e.Setup(), "e.Setup()")
 	assert.EqualError(t, e.Run(taskfile.Call{Task: target}), expectError, "e.Run(target)")
 }
 
@@ -228,7 +228,7 @@ func TestDeps(t *testing.T) {
 		Stdout: ioutil.Discard,
 		Stderr: ioutil.Discard,
 	}
-	assert.NoError(t, e.ReadTaskfile())
+	assert.NoError(t, e.Setup())
 	assert.NoError(t, e.Run(taskfile.Call{Task: "default"}))
 
 	for _, f := range files {
@@ -256,7 +256,7 @@ func TestStatus(t *testing.T) {
 		Stderr: &buff,
 		Silent: true,
 	}
-	assert.NoError(t, e.ReadTaskfile())
+	assert.NoError(t, e.Setup())
 	assert.NoError(t, e.Run(taskfile.Call{Task: "gen-foo"}))
 
 	if _, err := os.Stat(file); err != nil {
@@ -295,7 +295,7 @@ func TestGenerates(t *testing.T) {
 		Stdout: buff,
 		Stderr: buff,
 	}
-	assert.NoError(t, e.ReadTaskfile())
+	assert.NoError(t, e.Setup())
 
 	for _, theTask := range []string{relTask, absTask} {
 		var destFile = filepath.Join(dir, theTask)
@@ -347,7 +347,7 @@ func TestStatusChecksum(t *testing.T) {
 		Stdout: &buff,
 		Stderr: &buff,
 	}
-	assert.NoError(t, e.ReadTaskfile())
+	assert.NoError(t, e.Setup())
 
 	assert.NoError(t, e.Run(taskfile.Call{Task: "build"}))
 	for _, f := range files {
@@ -386,7 +386,7 @@ func TestCyclicDep(t *testing.T) {
 		Stdout: ioutil.Discard,
 		Stderr: ioutil.Discard,
 	}
-	assert.NoError(t, e.ReadTaskfile())
+	assert.NoError(t, e.Setup())
 	assert.IsType(t, &task.MaximumTaskCallExceededError{}, e.Run(taskfile.Call{Task: "task-1"}))
 }
 
@@ -406,7 +406,7 @@ func TestTaskVersion(t *testing.T) {
 				Stdout: ioutil.Discard,
 				Stderr: ioutil.Discard,
 			}
-			assert.NoError(t, e.ReadTaskfile())
+			assert.NoError(t, e.Setup())
 			assert.Equal(t, test.Version, e.Taskfile.Version)
 			assert.Equal(t, 2, len(e.Taskfile.Tasks))
 		})

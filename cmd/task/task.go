@@ -98,7 +98,7 @@ func main() {
 		Stdout: os.Stdout,
 		Stderr: os.Stderr,
 	}
-	if err := e.ReadTaskfile(); err != nil {
+	if err := e.Setup(); err != nil {
 		log.Fatal(err)
 	}
 

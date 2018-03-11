@@ -1,10 +1,25 @@
 language: go
+
 go:
   - '1.8'
   - '1.9'
   - '1.10'
+
+addons:
+  apt:
+    packages:
+      - rpm
+
 script:
   - go install github.com/go-task/task/cmd/task
   - task dl-deps
   - task lint
   - task test
+
+deploy:
+  - provider: script
+    skip_cleanup: true
+    script: curl -sL http://git.io/goreleaser | bash
+    on:
+      tags: true
+      condition: $TRAVIS_OS_NAME = linux
