@@ -39,16 +39,10 @@ tasks:
     cmds:
       - go test {{.GO_PACKAGES}}
 
-  # https://github.com/goreleaser/goreleaser
-  release:
-    desc: Release Task
-    cmds:
-      - goreleaser
-
   test-release:
     desc: Tests release process without publishing
     cmds:
-      - goreleaser --snapshot
+      - goreleaser --snapshot --rm-dist
 
   todo:
     desc: Prints TODO comments present in the code
