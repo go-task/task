@@ -25,6 +25,9 @@ release:
 snapshot:
   name_template: "{{.Tag}}"
 
+checksum:
+  name_template: "task_checksums.txt"
+
 nfpm:
   vendor: Task
   homepage: https://github.com/go-task/task
@@ -36,21 +39,4 @@ nfpm:
   formats:
     - deb
     - rpm
-
-brew:
-  name: go-task
-  github:
-    owner: go-task
-    name: homebrew-tap
-  commit_author:
-    name: Andrey Nering
-    email: andrey.nering@gmail.com
-  folder: Formula
-  homepage: https://github.com/go-task/task
-  description: Task runner / simpler Make alternative written in Go
-  conflicts:
-    - taskwarrior
-  install: |
-    bin.install "task"
-  test: |
-    system "#{bin}/task", "--help"
+  name_template: "{{.ProjectName}}_{{.Os}}_{{.Arch}}"

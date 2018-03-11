@@ -6,8 +6,13 @@ the `test-release` task of the Taskfile.
 
 The Travis CI should release automatically when a new
 Git tag is pushed to master, either for the artifact uploading (raw executables
-and DEB and RPM packages) and publishing of a new version in the
-[Homebrew tap][homebrewtap].
+and DEB and RPM packages)
+
+# Homebrew
+
+To release a new version on the [Homebrew tap][homebrewtap] edit the
+[Formula/go-task.rb][gotaskrb] file, updating with the new version, download
+URL and sha256.
 
 # Snapcraft
 
@@ -21,6 +26,7 @@ the [Snapscraft dashboard][snapcraftdashboard]
 
 [goreleaser]: https://goreleaser.com/#continuous_integration
 [homebrewtap]: https://github.com/go-task/homebrew-tap
+[gotaskrb]: https://github.com/go-task/homebrew-tap/blob/master/Formula/go-task.rb
 [snappackage]: https://github.com/go-task/snap
 [snapcraftyaml]: https://github.com/go-task/snap/blob/master/snap/snapcraft.yaml#L2
 [snapcraftdashboard]: https://dashboard.snapcraft.io/
