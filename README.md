@@ -71,9 +71,9 @@ The `task_checksums.txt` file contains the sha256 checksum for each file.
 
 ## Usage
 
-Create a file called `Taskfile.yml` in the root of the project.
-The `cmds` attribute should contains the commands of a task.
-The example below allows compile a Go app and uses [Minify][minify] to concat
+Create a file called `Taskfile.yml` in the root of your project.
+The `cmds` attribute should contain the commands of a task.
+The example below allows compiling a Go app and uses [Minify][minify] to concat
 and minify multiple CSS files into a single one.
 
 ```yml
@@ -97,7 +97,7 @@ task assets build
 
 Task uses [github.com/mvdan/sh](https://github.com/mvdan/sh), a native Go sh
 interpreter. So you can write sh/bash commands and it will work even on
-Windows, where `sh` or `bash` is usually not available. Just remember any
+Windows, where `sh` or `bash` are usually not available. Just remember any
 executable called must be available by the OS or in PATH.
 
 If you ommit a task name, "default" will be assumed.
@@ -146,8 +146,8 @@ tasks:
 
 Will print out `linux` and not default.
 
-It's also possible to have OS specific `Taskvars.yml` file, like
-`Taskvars_windows.yml`, `Taskfile_linux.yml` or `Taskvars_darwin.yml`. See the
+It's also possible to have an OS specific `Taskvars.yml` file, like
+`Taskvars_windows.yml`, `Taskfile_linux.yml`, or `Taskvars_darwin.yml`. See the
 [variables section](#variables) below.
 
 ### Task directory
@@ -169,7 +169,7 @@ tasks:
 
 ### Task dependencies
 
-You may have tasks that depends on others. Just pointing them on `deps` will
+You may have tasks that depend on others. Just pointing them on `deps` will
 make them run automatically before running the parent task:
 
 ```yml
@@ -207,7 +207,7 @@ tasks:
       - minify -o public/style.css src/css
 ```
 
-If there are more than one dependency, they always run in parallel for better
+If there is more than one dependency, they always run in parallel for better
 performance.
 
 If you want to pass information to dependencies, you can do that the same
@@ -357,8 +357,8 @@ tasks:
 You can use `--force` or `-f` if you want to force a task to run even when
 up-to-date.
 
-Also, `task --status [tasks]...` will exit with non-zero exit code if any of
-the tasks is not up-to-date.
+Also, `task --status [tasks]...` will exit with a non-zero exit code if any of
+the tasks are not up-to-date.
 
 ### Variables
 
@@ -626,7 +626,7 @@ tasks:
 
 ## Watch tasks (experimental)
 
-If you give a `--watch` or `-w` argument, task will watch for files changes
+If you give a `--watch` or `-w` argument, task will watch for file changes
 and run the task again. This requires the `sources` attribute to be given,
 so task know which files to watch.
 
