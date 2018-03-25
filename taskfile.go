@@ -22,6 +22,19 @@ func (e *Executor) readTaskfile() error {
 		return err
 	}
 
+	overrideTasks, err := e.readTaskfileData(fmt.Sprintf("%s_%s", path, "override"))
+	if err != nil {
+		switch err.(type) {
+		case taskFileNotFound:
+		default:
+			return err
+		}
+	} else {
+		if err := mergo.MapWithOverwrite(&e.Taskfile.Tasks, overrideTasks.Tasks); err != nil {
+			return err
+		}
+	}
+
 	osTasks, err := e.readTaskfileData(fmt.Sprintf("%s_%s", path, runtime.GOOS))
 	if err != nil {
 		switch err.(type) {
