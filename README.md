@@ -48,9 +48,7 @@ If you're on macOS and have [Homebrew][homebrew] installed, getting Task is
 as simple as running:
 
 ```bash
-brew update
-brew tap go-task/tap
-brew install go-task
+brew install go-task/tap/go-task
 ```
 
 ### Snap
@@ -624,7 +622,7 @@ tasks:
       - echo "This will print nothing" > /dev/null
 ```
 
-## Watch tasks (experimental)
+## Watch tasks
 
 If you give a `--watch` or `-w` argument, task will watch for file changes
 and run the task again. This requires the `sources` attribute to be given,
@@ -647,6 +645,18 @@ various use cases.
   - [magefile/mage][mage]
 - Make based:
   - [tj/mmake][mmake]
+
+### Sponsors
+
+![Sponsors](https://opencollective.com/task/sponsors.svg?width=890)
+
+### Backers
+
+![Backers](https://opencollective.com/task/backers.svg?width=890)
+
+### Contributors
+
+![Contributors](https://opencollective.com/task/contributors.svg?width=890)
 
 [make]: https://www.gnu.org/software/make/
 [releases]: https://github.com/go-task/task/releases
