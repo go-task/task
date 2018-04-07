@@ -61,6 +61,16 @@ right:
 sudo snap install task
 ```
 
+### Install script
+
+We also have a [install script][installscript], which is very useful on
+scanarios like CIs. Many thanks to [godownloader][godownloader] for easily
+generating this script.
+
+```bash
+curl -s https://raw.githubusercontent.com/go-task/task/master/install-task.sh | sh
+```
+
 ### Binary
 
 Or you can download the binary from the [releases][releases] page and add to
@@ -673,3 +683,5 @@ various use cases.
 [examples]: https://github.com/go-task/examples
 [snapcraft]: https://snapcraft.io/
 [homebrew]: https://brew.sh/
+[installscript]: https://github.com/go-task/task/blob/master/install-task.sh
+[godownloader]: https://github.com/goreleaser/godownloader

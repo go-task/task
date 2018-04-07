@@ -33,6 +33,7 @@ tasks:
       - go get -u github.com/asticode/go-astitodo/astitodo
       - go get -u github.com/golang/dep/cmd/dep
       - if [ "$CI" != "1" ]; then go get -u github.com/goreleaser/goreleaser; fi
+      - go get -u github.com/goreleaser/godownloader
 
   update-deps:
     desc: Updates dependencies
@@ -61,6 +62,11 @@ tasks:
     desc: Tests release process without publishing
     cmds:
       - goreleaser --snapshot --rm-dist
+
+  generate-install-script:
+    desc: Generate install script using https://githbub.com/goreleaser/godownloader
+    cmds:
+      - godownloader --repo go-task/task -o install-task.sh
 
   todo:
     desc: Prints TODO comments present in the code
