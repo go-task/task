@@ -12,9 +12,7 @@ addons:
 
 script:
   - go install github.com/go-task/task/cmd/task
-  - task dl-deps
-  - task lint
-  - task test
+  - task ci
 
 deploy:
   - provider: script
