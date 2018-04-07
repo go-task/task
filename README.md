@@ -658,15 +658,15 @@ various use cases.
 
 ### Sponsors
 
-![Sponsors](https://opencollective.com/task/sponsors.svg?width=890)
+[![Sponsors](https://opencollective.com/task/sponsors.svg?width=890)][opencollective]
 
 ### Backers
 
-![Backers](https://opencollective.com/task/backers.svg?width=890)
+[![Backers](https://opencollective.com/task/backers.svg?width=890)][opencollective]
 
 ### Contributors
 
-![Contributors](https://opencollective.com/task/contributors.svg?width=890)
+[![Contributors](https://opencollective.com/task/contributors.svg?width=890)][contributors]
 
 [make]: https://www.gnu.org/software/make/
 [releases]: https://github.com/go-task/task/releases
@@ -685,3 +685,5 @@ various use cases.
 [homebrew]: https://brew.sh/
 [installscript]: https://github.com/go-task/task/blob/master/install-task.sh
 [godownloader]: https://github.com/goreleaser/godownloader
+[opencollective]: https://opencollective.com/task
+[contributors]: https://github.com/go-task/task/graphs/contributors
