@@ -5,27 +5,30 @@ import (
 )
 
 var (
-	v1 = mustVersion("1")
-	v2 = mustVersion("2")
-
-	isV1  = mustConstraint("= 1")
-	isV2  = mustConstraint(">= 2")
-	isV21 = mustConstraint(">= 2.1")
+	v1  = mustVersion("1")
+	v2  = mustVersion("2")
+	v21 = mustVersion("2.1")
+	v22 = mustVersion("2.2")
 )
 
 // IsV1 returns if is a given Taskfile version is version 1
-func IsV1(v *semver.Version) bool {
-	return isV1.Check(v)
+func IsV1(v *semver.Constraints) bool {
+	return v.Check(v1)
 }
 
 // IsV2 returns if is a given Taskfile version is at least version 2
-func IsV2(v *semver.Version) bool {
-	return isV2.Check(v)
+func IsV2(v *semver.Constraints) bool {
+	return v.Check(v2)
 }
 
-// IsV21 returns if is a given Taskfile version is at least version 2
-func IsV21(v *semver.Version) bool {
-	return isV21.Check(v)
+// IsV21 returns if is a given Taskfile version is at least version 2.1
+func IsV21(v *semver.Constraints) bool {
+	return v.Check(v21)
+}
+
+// IsV22 returns if is a given Taskfile version is at least version 2.2
+func IsV22(v *semver.Constraints) bool {
+	return v.Check(v22)
 }
 
 func mustVersion(s string) *semver.Version {
@@ -34,12 +37,4 @@ func mustVersion(s string) *semver.Version {
 		panic(err)
 	}
 	return v
-}
-
-func mustConstraint(s string) *semver.Constraints {
-	c, err := semver.NewConstraint(s)
-	if err != nil {
-		panic(err)
-	}
-	return c
 }
