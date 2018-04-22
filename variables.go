@@ -39,6 +39,7 @@ func (e *Executor) CompiledTask(call taskfile.Call) (*taskfile.Task, error) {
 		Env:       r.ReplaceVars(origTask.Env),
 		Silent:    origTask.Silent,
 		Method:    r.Replace(origTask.Method),
+		Prefix:    r.Replace(origTask.Prefix),
 	}
 	new.Dir, err = homedir.Expand(new.Dir)
 	if err != nil {
@@ -46,6 +47,9 @@ func (e *Executor) CompiledTask(call taskfile.Call) (*taskfile.Task, error) {
 	}
 	if e.Dir != "" && !filepath.IsAbs(new.Dir) {
 		new.Dir = filepath.Join(e.Dir, new.Dir)
+	}
+	if new.Prefix == "" {
+		new.Prefix = new.Task
 	}
 	for k, v := range new.Env {
 		static, err := e.Compiler.HandleDynamicVar(v)

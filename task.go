@@ -130,6 +130,8 @@ func (e *Executor) Setup() error {
 		e.Output = output.Interleaved{}
 	case "group":
 		e.Output = output.Group{}
+	case "prefixed":
+		e.Output = output.Prefixed{}
 	default:
 		return fmt.Errorf(`task: output option "%s" not recognized`, e.Taskfile.Output)
 	}
@@ -204,8 +206,8 @@ func (e *Executor) runCommand(ctx context.Context, t *taskfile.Task, call taskfi
 		e.Logger.Errf(cmd.Cmd)
 	}
 
-	stdOut := e.Output.WrapWriter(e.Stdout)
-	stdErr := e.Output.WrapWriter(e.Stderr)
+	stdOut := e.Output.WrapWriter(e.Stdout, t.Prefix)
+	stdErr := e.Output.WrapWriter(e.Stderr, t.Prefix)
 	defer stdOut.Close()
 	defer stdErr.Close()
 

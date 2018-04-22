@@ -17,4 +17,5 @@ type Task struct {
 	Env       Vars
 	Silent    bool
 	Method    string
+	Prefix    string
 }
