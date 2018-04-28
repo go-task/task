@@ -5,26 +5,26 @@ package syntax
 
 import "fmt"
 
-// Node represents an AST node.
+// Node represents a syntax tree node.
 type Node interface {
-	// Pos returns the position of the first character of the node.
-	// Comments are ignored.
+	// Pos returns the position of the first character of the node. Comments
+	// are ignored.
 	Pos() Pos
-	// End returns the position of the character immediately after
-	// the node. If the character is a newline, the line number
-	// won't cross into the next line. Comments are ignored.
+	// End returns the position of the character immediately after the node.
+	// If the character is a newline, the line number won't cross into the
+	// next line. Comments are ignored.
 	End() Pos
 }
 
-// File is a shell program.
+// File represents a shell source file.
 type File struct {
 	Name string
 
 	StmtList
 }
 
-// StmtList is a list of statements with any number of trailing
-// comments. Both lists can be empty.
+// StmtList is a list of statements with any number of trailing comments. Both
+// lists can be empty.
 type StmtList struct {
 	Stmts []*Stmt
 	Last  []Comment
@@ -54,21 +54,21 @@ func (s StmtList) empty() bool {
 	return len(s.Stmts) == 0 && len(s.Last) == 0
 }
 
-// Pos is a position within a source file.
+// Pos is a position within a shell source file.
 type Pos struct {
 	offs      uint32
 	line, col uint16
 }
 
-// Offset returns the byte offset of the position in the original
-// source file. Byte offsets start at 0.
+// Offset returns the byte offset of the position in the original source file.
+// Byte offsets start at 0.
 func (p Pos) Offset() uint { return uint(p.offs) }
 
 // Line returns the line number of the position, starting at 1.
 func (p Pos) Line() uint { return uint(p.line) }
 
-// Col returns the column number of the position, starting at 1. It
-// counts in bytes.
+// Col returns the column number of the position, starting at 1. It counts in
+// bytes.
 func (p Pos) Col() uint { return uint(p.col) }
 
 func (p Pos) String() string {
@@ -79,8 +79,8 @@ func (p Pos) String() string {
 // returned by Parse are valid.
 func (p Pos) IsValid() bool { return p.line > 0 }
 
-// After reports whether the position p is after p2. It is a more
-// expressive version of p.Offset() > p2.Offset().
+// After reports whether the position p is after p2. It is a more expressive
+// version of p.Offset() > p2.Offset().
 func (p Pos) After(p2 Pos) bool { return p.offs > p2.offs }
 
 func (f *File) Pos() Pos {
@@ -119,8 +119,9 @@ type Comment struct {
 func (c *Comment) Pos() Pos { return c.Hash }
 func (c *Comment) End() Pos { return posAddCol(c.Hash, len(c.Text)) }
 
-// Stmt represents a statement. It is compromised of a command and other
-// components that may come before or after it.
+// Stmt represents a statement, also known as a "complete command". It is
+// compromised of a command and other components that may come before or after
+// it.
 type Stmt struct {
 	Comments   []Comment
 	Cmd        Command
@@ -155,12 +156,12 @@ func (s *Stmt) End() Pos {
 	return end
 }
 
-// Command represents all nodes that are simple or compound commands,
-// including function declarations.
+// Command represents all nodes that are simple or compound commands, including
+// function declarations.
 //
-// These are *CallExpr, *IfClause, *WhileClause, *ForClause,
-// *CaseClause, *Block, *Subshell, *BinaryCmd, *FuncDecl, *ArithmCmd,
-// *TestClause, *DeclClause, *LetClause, *TimeClause, and *CoprocClause.
+// These are *CallExpr, *IfClause, *WhileClause, *ForClause, *CaseClause,
+// *Block, *Subshell, *BinaryCmd, *FuncDecl, *ArithmCmd, *TestClause,
+// *DeclClause, *LetClause, *TimeClause, and *CoprocClause.
 type Command interface {
 	Node
 	commandNode()
@@ -184,17 +185,15 @@ func (*CoprocClause) commandNode() {}
 
 // Assign represents an assignment to a variable.
 //
-// Here and elsewhere, Index can either mean an index into an indexed or
-// an associative array. In the former, it's just an arithmetic
-// expression. In the latter, it will be a word with a single DblQuoted
-// or SglQuoted part.
+// Here and elsewhere, Index can mean either an index expression into an indexed
+// array, or a string key into an associative array.
 //
-// If Index is non-nil, the value will be a word and not an array as
-// nested arrays are not allowed.
+// If Index is non-nil, the value will be a word and not an array as nested
+// arrays are not allowed.
 //
-// If Naked is true, it's part of a DeclClause and doesn't contain a
-// value. In that context, if the name wasn't a literal, it will be in
-// Value instead of Name.
+// If Naked is true, it's part of a DeclClause and doesn't contain a value. In
+// that context, if the name wasn't a literal, it will be in Value instead of
+// Name.
 type Assign struct {
 	Append bool // +=
 	Naked  bool // without '='
@@ -244,12 +243,11 @@ func (r *Redirect) Pos() Pos {
 }
 func (r *Redirect) End() Pos { return r.Word.End() }
 
-// CallExpr represents a command execution or function call, otherwise
-// known as a simple command.
+// CallExpr represents a command execution or function call, otherwise known as
+// a "simple command".
 //
-// If Args is empty, Assigns apply to the shell environment. Otherwise,
-// they are variables that cannot be arrays and which only apply to the
-// call.
+// If Args is empty, Assigns apply to the shell environment. Otherwise, they are
+// variables that cannot be arrays and which only apply to the call.
 type CallExpr struct {
 	Assigns []*Assign // a=x b=y args
 	Args    []*Word
@@ -269,8 +267,8 @@ func (c *CallExpr) End() Pos {
 	return c.Args[len(c.Args)-1].End()
 }
 
-// Subshell represents a series of commands that should be executed in a
-// nested shell environment.
+// Subshell represents a series of commands that should be executed in a nested
+// shell environment.
 type Subshell struct {
 	Lparen, Rparen Pos
 	StmtList
@@ -279,8 +277,8 @@ type Subshell struct {
 func (s *Subshell) Pos() Pos { return s.Lparen }
 func (s *Subshell) End() Pos { return posAddCol(s.Rparen, 1) }
 
-// Block represents a series of commands that should be executed in a
-// nested scope.
+// Block represents a series of commands that should be executed in a nested
+// scope.
 type Block struct {
 	Lbrace, Rbrace Pos
 	StmtList
@@ -310,14 +308,21 @@ func (c *IfClause) End() Pos {
 }
 
 // FollowedByElif reports whether this IfClause is followed by an "elif"
-// IfClause in its Else branch. This is true if Else.Stmts has exactly
-// one statement with an IfClause whose Elif field is true.
+// IfClause in its Else branch. This is true if Else.Stmts has exactly one
+// statement with an IfClause whose Elif field is true.
 func (c *IfClause) FollowedByElif() bool {
 	if len(c.Else.Stmts) != 1 {
 		return false
 	}
 	ic, _ := c.Else.Stmts[0].Cmd.(*IfClause)
 	return ic != nil && ic.Elif
+}
+
+func (c *IfClause) bodyEndPos() Pos {
+	if c.ElsePos.IsValid() {
+		return c.ElsePos
+	}
+	return c.FiPos
 }
 
 // WhileClause represents a while or an until clause.
@@ -331,8 +336,8 @@ type WhileClause struct {
 func (w *WhileClause) Pos() Pos { return w.WhilePos }
 func (w *WhileClause) End() Pos { return posAddCol(w.DonePos, 4) }
 
-// ForClause represents a for or a select clause. The latter is only
-// present in Bash.
+// ForClause represents a for or a select clause. The latter is only present in
+// Bash.
 type ForClause struct {
 	ForPos, DoPos, DonePos Pos
 	Select                 bool
@@ -352,8 +357,8 @@ type Loop interface {
 func (*WordIter) loopNode()   {}
 func (*CStyleLoop) loopNode() {}
 
-// WordIter represents the iteration of a variable over a series of
-// words in a for clause.
+// WordIter represents the iteration of a variable over a series of words in a
+// for clause.
 type WordIter struct {
 	Name  *Lit
 	Items []*Word
@@ -395,8 +400,9 @@ type FuncDecl struct {
 func (f *FuncDecl) Pos() Pos { return f.Position }
 func (f *FuncDecl) End() Pos { return f.Body.End() }
 
-// Word represents a non-empty list of nodes that are contiguous to each
-// other. The word is delimeted by word boundaries.
+// Word represents a shell word, containing one or more word parts contiguous to
+// each other. The word is delimeted by word boundaries, such as spaces,
+// newlines, semicolons, or parentheses.
 type Word struct {
 	Parts []WordPart
 }
@@ -404,10 +410,10 @@ type Word struct {
 func (w *Word) Pos() Pos { return w.Parts[0].Pos() }
 func (w *Word) End() Pos { return w.Parts[len(w.Parts)-1].End() }
 
-// WordPart represents all nodes that can form a word.
+// WordPart represents all nodes that can form part of a word.
 //
-// These are *Lit, *SglQuoted, *DblQuoted, *ParamExp, *CmdSubst,
-// *ArithmExp, *ProcSubst, and *ExtGlob.
+// These are *Lit, *SglQuoted, *DblQuoted, *ParamExp, *CmdSubst, *ArithmExp,
+// *ProcSubst, and *ExtGlob.
 type WordPart interface {
 	Node
 	wordPartNode()
@@ -422,8 +428,11 @@ func (*ArithmExp) wordPartNode() {}
 func (*ProcSubst) wordPartNode() {}
 func (*ExtGlob) wordPartNode()   {}
 
-// Lit represents an unquoted string consisting of characters that were
-// not tokenized.
+// Lit represents a string literal.
+//
+// Note that a parsed string literal may not appear as-is in the original source
+// code, as it is possible to split literals by escaping newlines. The splitting
+// is lost, but the end position is not.
 type Lit struct {
 	ValuePos, ValueEnd Pos
 	Value              string
@@ -502,21 +511,21 @@ func (p *ParamExp) nakedIndex() bool {
 	return p.Short && p.Index != nil
 }
 
-// Slice represents character slicing inside a ParamExp.
+// Slice represents a character slicing expression inside a ParamExp.
 //
 // This node will only appear in LangBash and LangMirBSDKorn.
 type Slice struct {
 	Offset, Length ArithmExpr
 }
 
-// Replace represents a search and replace inside a ParamExp.
+// Replace represents a search and replace expression inside a ParamExp.
 type Replace struct {
 	All        bool
 	Orig, With *Word
 }
 
-// Expansion represents string manipulation in a ParamExp other than
-// those covered by Replace.
+// Expansion represents string manipulation in a ParamExp other than those
+// covered by Replace.
 type Expansion struct {
 	Op   ParExpOperator
 	Word *Word
@@ -563,15 +572,14 @@ func (*UnaryArithm) arithmExprNode()  {}
 func (*ParenArithm) arithmExprNode()  {}
 func (*Word) arithmExprNode()         {}
 
-// BinaryArithm represents a binary expression between two arithmetic
-// expression.
+// BinaryArithm represents a binary arithmetic expression.
 //
-// If Op is any assign operator, X will be a word with a single *Lit
-// whose value is a valid name.
+// If Op is any assign operator, X will be a word with a single *Lit whose value
+// is a valid name.
 //
-// Ternary operators like "a ? b : c" are fit into this structure. Thus,
-// if Op == Quest, Y will be a *BinaryArithm with Op == Colon. Op can
-// only be Colon in that scenario.
+// Ternary operators like "a ? b : c" are fit into this structure. Thus, if
+// Op==Quest, Y will be a *BinaryArithm with Op==Colon. Op can only be Colon in
+// that scenario.
 type BinaryArithm struct {
 	OpPos Pos
 	Op    BinAritOperator
@@ -581,11 +589,11 @@ type BinaryArithm struct {
 func (b *BinaryArithm) Pos() Pos { return b.X.Pos() }
 func (b *BinaryArithm) End() Pos { return b.Y.End() }
 
-// UnaryArithm represents an unary expression over a node, either before
-// or after it.
+// UnaryArithm represents an unary arithmetic expression. The unary opearator
+// may come before or after the sub-expression.
 //
-// If Op is Inc or Dec, X will be a word with a single *Lit whose value
-// is a valid name.
+// If Op is Inc or Dec, X will be a word with a single *Lit whose value is a
+// valid name.
 type UnaryArithm struct {
 	OpPos Pos
 	Op    UnAritOperator
@@ -607,8 +615,7 @@ func (u *UnaryArithm) End() Pos {
 	return u.X.End()
 }
 
-// ParenArithm represents an expression within parentheses inside an
-// ArithmExp.
+// ParenArithm represents an arithmetic expression within parentheses.
 type ParenArithm struct {
 	Lparen, Rparen Pos
 	X              ArithmExpr
@@ -651,7 +658,7 @@ type TestClause struct {
 func (t *TestClause) Pos() Pos { return t.Left }
 func (t *TestClause) End() Pos { return posAddCol(t.Right, 2) }
 
-// TestExpr represents all nodes that form arithmetic expressions.
+// TestExpr represents all nodes that form test expressions.
 //
 // These are *BinaryTest, *UnaryTest, *ParenTest, and *Word.
 type TestExpr interface {
@@ -664,8 +671,7 @@ func (*UnaryTest) testExprNode()  {}
 func (*ParenTest) testExprNode()  {}
 func (*Word) testExprNode()       {}
 
-// BinaryTest represents a binary expression between two arithmetic
-// expression.
+// BinaryTest represents a binary test expression.
 type BinaryTest struct {
 	OpPos Pos
 	Op    BinTestOperator
@@ -675,8 +681,8 @@ type BinaryTest struct {
 func (b *BinaryTest) Pos() Pos { return b.X.Pos() }
 func (b *BinaryTest) End() Pos { return b.Y.End() }
 
-// UnaryTest represents an unary expression over a node, either before
-// or after it.
+// UnaryTest represents a unary test expression. The unary opearator may come
+// before or after the sub-expression.
 type UnaryTest struct {
 	OpPos Pos
 	Op    UnTestOperator
@@ -686,8 +692,7 @@ type UnaryTest struct {
 func (u *UnaryTest) Pos() Pos { return u.OpPos }
 func (u *UnaryTest) End() Pos { return u.X.End() }
 
-// ParenTest represents an expression within parentheses inside an
-// TestExp.
+// ParenTest represents a test expression within parentheses.
 type ParenTest struct {
 	Lparen, Rparen Pos
 	X              TestExpr
@@ -745,9 +750,8 @@ func (a *ArrayElem) Pos() Pos {
 }
 func (a *ArrayElem) End() Pos { return a.Value.End() }
 
-// ExtGlob represents a Bash extended globbing expression. Note that
-// these are parsed independently of whether shopt has been called or
-// not.
+// ExtGlob represents a Bash extended globbing expression. Note that these are
+// parsed independently of whether shopt has been called or not.
 //
 // This node will only appear in LangBash and LangMirBSDKorn.
 type ExtGlob struct {
@@ -771,8 +775,8 @@ type ProcSubst struct {
 func (s *ProcSubst) Pos() Pos { return s.OpPos }
 func (s *ProcSubst) End() Pos { return posAddCol(s.Rparen, 1) }
 
-// TimeClause represents a Bash time clause. PosixFormat corresponds to
-// the -p flag.
+// TimeClause represents a Bash time clause. PosixFormat corresponds to the -p
+// flag.
 //
 // This node will only appear in LangBash and LangMirBSDKorn.
 type TimeClause struct {

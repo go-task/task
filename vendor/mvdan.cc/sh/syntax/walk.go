@@ -3,7 +3,11 @@
 
 package syntax
 
-import "fmt"
+import (
+	"fmt"
+	"io"
+	"reflect"
+)
 
 func walkStmts(sl StmtList, f func(Node) bool) {
 	for _, s := range sl.Stmts {
@@ -20,7 +24,7 @@ func walkWords(words []*Word, f func(Node) bool) {
 	}
 }
 
-// Walk traverses an AST in depth-first order: It starts by calling
+// Walk traverses a syntax tree in depth-first order: It starts by calling
 // f(node); node must not be nil. If f returns true, Walk invokes f
 // recursively for each of the non-nil children of node, followed by
 // f(nil).
@@ -218,4 +222,87 @@ func Walk(node Node, f func(Node) bool) {
 	}
 
 	f(nil)
+}
+
+// DebugPrint prints the provided syntax tree, spanning multiple lines and with
+// indentation. Can be useful to investigate the content of a syntax tree.
+func DebugPrint(w io.Writer, node Node) error {
+	p := debugPrinter{out: w}
+	p.print(reflect.ValueOf(node))
+	return p.err
+}
+
+type debugPrinter struct {
+	out   io.Writer
+	level int
+	err   error
+}
+
+func (p *debugPrinter) printf(format string, args ...interface{}) {
+	_, err := fmt.Fprintf(p.out, format, args...)
+	if err != nil && p.err == nil {
+		p.err = err
+	}
+}
+
+func (p *debugPrinter) newline() {
+	p.printf("\n")
+	for i := 0; i < p.level; i++ {
+		p.printf(".  ")
+	}
+}
+
+func (p *debugPrinter) print(x reflect.Value) {
+	switch x.Kind() {
+	case reflect.Interface:
+		if x.IsNil() {
+			p.printf("nil")
+			return
+		}
+		p.print(x.Elem())
+	case reflect.Ptr:
+		if x.IsNil() {
+			p.printf("nil")
+			return
+		}
+		p.printf("*")
+		p.print(x.Elem())
+	case reflect.Slice:
+		p.printf("%s (len = %d) {", x.Type(), x.Len())
+		if x.Len() > 0 {
+			p.level++
+			p.newline()
+			for i := 0; i < x.Len(); i++ {
+				p.printf("%d: ", i)
+				p.print(x.Index(i))
+				if i == x.Len()-1 {
+					p.level--
+				}
+				p.newline()
+			}
+		}
+		p.printf("}")
+
+	case reflect.Struct:
+		switch v := x.Interface().(type) {
+		case Pos:
+			p.printf("%v:%v", v.Line(), v.Col())
+			return
+		}
+		t := x.Type()
+		p.printf("%s {", t)
+		p.level++
+		p.newline()
+		for i := 0; i < t.NumField(); i++ {
+			p.printf("%s: ", t.Field(i).Name)
+			p.print(x.Field(i))
+			if i == x.NumField()-1 {
+				p.level--
+			}
+			p.newline()
+		}
+		p.printf("}")
+	default:
+		p.printf("%#v", x.Interface())
+	}
 }

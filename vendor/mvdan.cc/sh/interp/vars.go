@@ -4,12 +4,112 @@
 package interp
 
 import (
+	"fmt"
 	"runtime"
 	"sort"
 	"strings"
 
 	"mvdan.cc/sh/syntax"
 )
+
+type Environ interface {
+	Get(name string) (value string, exists bool)
+	Set(name, value string)
+	Delete(name string)
+	Names() []string
+	Copy() Environ
+}
+
+type mapEnviron struct {
+	names  []string
+	values map[string]string
+}
+
+func (m *mapEnviron) Get(name string) (string, bool) {
+	val, ok := m.values[name]
+	return val, ok
+}
+
+func (m *mapEnviron) Set(name, value string) {
+	_, ok := m.values[name]
+	if !ok {
+		m.names = append(m.names, name)
+		sort.Strings(m.names)
+	}
+	m.values[name] = value
+}
+
+func (m *mapEnviron) Delete(name string) {
+	if _, ok := m.values[name]; !ok {
+		return
+	}
+	delete(m.values, name)
+	for i, iname := range m.names {
+		if iname == name {
+			m.names = append(m.names[:i], m.names[i+1:]...)
+			return
+		}
+	}
+}
+
+func (m *mapEnviron) Names() []string {
+	return m.names
+}
+
+func (m *mapEnviron) Copy() Environ {
+	m2 := &mapEnviron{
+		names:  make([]string, len(m.names)),
+		values: make(map[string]string, len(m.values)),
+	}
+	copy(m2.names, m.names)
+	for name, val := range m.values {
+		m2.values[name] = val
+	}
+	return m2
+}
+
+func execEnv(env Environ) []string {
+	names := env.Names()
+	list := make([]string, len(names))
+	for i, name := range names {
+		val, _ := env.Get(name)
+		list[i] = name + "=" + val
+	}
+	return list
+}
+
+func EnvFromList(list []string) (Environ, error) {
+	m := mapEnviron{
+		names:  make([]string, 0, len(list)),
+		values: make(map[string]string, len(list)),
+	}
+	for _, kv := range list {
+		i := strings.IndexByte(kv, '=')
+		if i < 0 {
+			return nil, fmt.Errorf("env not in the form key=value: %q", kv)
+		}
+		name, val := kv[:i], kv[i+1:]
+		if runtime.GOOS == "windows" {
+			name = strings.ToUpper(name)
+		}
+		m.names = append(m.names, name)
+		m.values[name] = val
+	}
+	sort.Strings(m.names)
+	return &m, nil
+}
+
+type FuncEnviron func(string) string
+
+func (f FuncEnviron) Get(name string) (string, bool) {
+	val := f(name)
+	return val, val != ""
+}
+
+func (f FuncEnviron) Set(name, value string) {}
+func (f FuncEnviron) Delete(name string)     {}
+func (f FuncEnviron) Names() []string        { return nil }
+func (f FuncEnviron) Copy() Environ          { return f }
 
 type Variable struct {
 	Local    bool
@@ -45,16 +145,16 @@ func (r *Runner) lookupVar(name string) (Variable, bool) {
 	if vr, e := r.Vars[name]; e {
 		return vr, true
 	}
-	if str, e := r.envMap[name]; e {
+	if str, e := r.Env.Get(name); e {
 		return Variable{Value: StringVal(str)}, true
 	}
 	if runtime.GOOS == "windows" {
 		upper := strings.ToUpper(name)
-		if str, e := r.envMap[upper]; e {
+		if str, e := r.Env.Get(upper); e {
 			return Variable{Value: StringVal(str)}, true
 		}
 	}
-	if r.shellOpts[optNoUnset] {
+	if r.opts[optNoUnset] {
 		r.errf("%s: unbound variable\n", name)
 		r.exit = 1
 		r.lastExit()
@@ -77,7 +177,7 @@ func (r *Runner) delVar(name string) {
 	delete(r.Vars, name)
 	delete(r.funcVars, name)
 	delete(r.cmdVars, name)
-	delete(r.envMap, name)
+	r.Env.Delete(name)
 }
 
 // maxNameRefDepth defines the maximum number of times to follow
@@ -157,7 +257,7 @@ func (r *Runner) setVarString(name, val string) {
 
 func (r *Runner) setVarInternal(name string, vr Variable) {
 	if _, ok := vr.Value.(StringVal); ok {
-		if r.shellOpts[optAllExport] {
+		if r.opts[optAllExport] {
 			vr.Exported = true
 		}
 	} else {
@@ -358,7 +458,7 @@ func (r *Runner) ifsUpdated() {
 
 func (r *Runner) namesByPrefix(prefix string) []string {
 	var names []string
-	for name := range r.envMap {
+	for _, name := range r.Env.Names() {
 		if strings.HasPrefix(name, prefix) {
 			names = append(names, name)
 		}

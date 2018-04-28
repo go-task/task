@@ -2,16 +2,16 @@
 
 
 [[projects]]
+  branch = "master"
   name = "github.com/Masterminds/semver"
   packages = ["."]
-  revision = "15d8430ab86497c5c0da827b748823945e1cf1e1"
-  version = "v1.4.0"
+  revision = "3c560837130448941620d7694991d3ec440aefc0"
 
 [[projects]]
-  branch = "master"
   name = "github.com/Masterminds/sprig"
   packages = ["."]
-  revision = "9d9aa1f74c86fd9d36ecfe3f2a44a3093c3d4c15"
+  revision = "6b2a58267f6a8b1dc8e2eb5519b984008fa85e8c"
+  version = "v2.15.0"
 
 [[projects]]
   name = "github.com/aokoli/goutils"
@@ -26,16 +26,22 @@
   version = "v1.1.0"
 
 [[projects]]
-  branch = "master"
+  name = "github.com/google/uuid"
+  packages = ["."]
+  revision = "064e2069ce9c359c118179501254f67d7d37ba24"
+  version = "0.2"
+
+[[projects]]
   name = "github.com/huandu/xstrings"
   packages = ["."]
   revision = "2bf18b218c51864a87384c06996e40ff9dcff8e1"
+  version = "v1.0.0"
 
 [[projects]]
-  branch = "master"
   name = "github.com/imdario/mergo"
   packages = ["."]
-  revision = "0d4b488675fdec1dde48751b05ab530cf0b630e1"
+  revision = "9d5f1277e9a8ed20c3684bda8fde67c05628518c"
+  version = "v0.3.4"
 
 [[projects]]
   branch = "master"
@@ -44,7 +50,7 @@
     ".",
     "fastwalk"
   ]
-  revision = "4959821b481786922ac53e7ef25c61ae19fb7c36"
+  revision = "9960a25705902198f55789b9b689a686682798b5"
 
 [[projects]]
   branch = "master"
@@ -59,22 +65,16 @@
   version = "v1.0.0"
 
 [[projects]]
+  branch = "master"
   name = "github.com/radovskyb/watcher"
   packages = ["."]
-  revision = "6145e1439b9de93806925353403f91d2abbad8a5"
-  version = "v1.0.2"
+  revision = "1d8f9aeb09848f7d3e9bbeec08da893f0e8c315d"
 
 [[projects]]
-  name = "github.com/satori/go.uuid"
-  packages = ["."]
-  revision = "f58768cc1a7a7e77a3bd49e98cdd21419399b6a3"
-  version = "v1.2.0"
-
-[[projects]]
-  branch = "master"
   name = "github.com/spf13/pflag"
   packages = ["."]
-  revision = "ee5fd03fd6acfd43e44aea0b4135958546ed8e73"
+  revision = "583c0c0531f06d5278b7d917446061adc344b5cd"
+  version = "v1.0.1"
 
 [[projects]]
   name = "github.com/stretchr/testify"
@@ -90,19 +90,19 @@
     "scrypt",
     "ssh/terminal"
   ]
-  revision = "91a49db82a88618983a78a06c1cbd4e00ab749ab"
+  revision = "b49d69b5da943f7ef3c9cf91c8777c1f78a0cc3c"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/net"
   packages = ["context"]
-  revision = "22ae77b79946ea320088417e4d50825671d82d57"
+  revision = "5f9ae10d9af5b1c89ae6904293b14b064d4ada23"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/sync"
   packages = ["errgroup"]
-  revision = "fd80eb99c8f653c847d294a001bdf2a3a6f768f5"
+  revision = "1d60e4601c6fd243af51cc01ddf169918a5407ca"
 
 [[projects]]
   branch = "master"
@@ -111,13 +111,13 @@
     "unix",
     "windows"
   ]
-  revision = "dd2ff4accc098aceecb86b36eaa7829b2a17b1c9"
+  revision = "cbbc999da32df943dac6cd71eb3ee39e1d7838b9"
 
 [[projects]]
   name = "gopkg.in/yaml.v2"
   packages = ["."]
-  revision = "7f97868eec74b32b0982dd158a51a446d1da7eb5"
-  version = "v2.1.1"
+  revision = "5420a8b6744d3b0345ab293f6fcba19c978f1183"
+  version = "v2.2.1"
 
 [[projects]]
   branch = "master"
@@ -126,7 +126,7 @@
     "interp",
     "syntax"
   ]
-  revision = "fb0bad77f8fa7a57e6f249f53074ec52b21558d1"
+  revision = "92e1ec37d3a62365afd58cd6c25d0f6825773434"
 
 [solve-meta]
   analyzer-name = "dep"

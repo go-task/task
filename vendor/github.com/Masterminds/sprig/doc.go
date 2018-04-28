@@ -110,6 +110,9 @@ Defaults:
 	  because it is an empty value.
 	- compact: Return a copy of a list with all of the empty values removed.
 	  'list 0 1 2 "" | compact' will return '[1 2]'
+	- ternary: Given a value,'true | ternary "b" "c"' will return "b".
+	  'false | ternary "b" "c"' will return '"c"'. Similar to the JavaScript ternary
+	  operator.
 
 OS:
 	- env: Resolve an environment variable
@@ -160,7 +163,7 @@ Data Structures:
 	  be assigned the empty string. Non-string keys are converted to strings as
 	  follows: []byte are converted, fmt.Stringers will have String() called.
 	  errors will have Error() called. All others will be passed through
-	  fmt.Sprtinf("%v").
+	  fmt.Sprintf("%v").
 
 Lists Functions:
 
@@ -189,7 +192,7 @@ These are used to manipulate dicts.
 	- hasKey: Takes a dict and a key, and returns boolean true if the key is in
 	  the dict.
 	- pluck: Given a key and one or more maps, get all of the values for that key.
-	- keys: Get an array of all of the keys in a dict.
+	- keys: Get an array of all of the keys in one or more dicts.
 	- pick: Select just the given keys out of the dict, and return a new dict.
 	- omit: Return a dict without the given keys.
 

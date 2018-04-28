@@ -20,7 +20,7 @@ import (
 // to implement some of the modules.
 type Ctxt struct {
 	Context     context.Context
-	Env         []string
+	Env         Environ
 	Dir         string
 	Stdin       io.Reader
 	Stdout      io.Writer
@@ -59,7 +59,7 @@ func DefaultExec(ctx Ctxt, path string, args []string) error {
 	cmd := exec.Cmd{
 		Path:   path,
 		Args:   args,
-		Env:    ctx.Env,
+		Env:    execEnv(ctx.Env),
 		Dir:    ctx.Dir,
 		Stdin:  ctx.Stdin,
 		Stdout: ctx.Stdout,
@@ -77,6 +77,9 @@ func DefaultExec(ctx Ctxt, path string, args []string) error {
 					return
 				}
 
+				// TODO: don't temporarily leak this goroutine
+				// if the program stops itself with the
+				// interrupt.
 				go func() {
 					time.Sleep(ctx.KillTimeout)
 					_ = cmd.Process.Signal(os.Kill)

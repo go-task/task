@@ -233,12 +233,6 @@ func constraintNotEqual(v *Version, c *constraint) bool {
 
 func constraintGreaterThan(v *Version, c *constraint) bool {
 
-	// An edge case the constraint is 0.0.0 and the version is 0.0.0-someprerelease
-	// exists. This that case.
-	if !isNonZero(c.con) && isNonZero(v) {
-		return true
-	}
-
 	// If there is a pre-release on the version but the constraint isn't looking
 	// for them assume that pre-releases are not compatible. See issue 21 for
 	// more details.
@@ -271,11 +265,6 @@ func constraintLessThan(v *Version, c *constraint) bool {
 }
 
 func constraintGreaterThanEqual(v *Version, c *constraint) bool {
-	// An edge case the constraint is 0.0.0 and the version is 0.0.0-someprerelease
-	// exists. This that case.
-	if !isNonZero(c.con) && isNonZero(v) {
-		return true
-	}
 
 	// If there is a pre-release on the version but the constraint isn't looking
 	// for them assume that pre-releases are not compatible. See issue 21 for
@@ -414,13 +403,4 @@ func rewriteRange(i string) string {
 	}
 
 	return o
-}
-
-// Detect if a version is not zero (0.0.0)
-func isNonZero(v *Version) bool {
-	if v.Major() != 0 || v.Minor() != 0 || v.Patch() != 0 || v.Prerelease() != "" {
-		return true
-	}
-
-	return false
 }

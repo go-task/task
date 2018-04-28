@@ -160,7 +160,7 @@ func (r *Runner) unTest(op syntax.UnTestOperator, x string) bool {
 	case syntax.TsNempStr:
 		return x != ""
 	case syntax.TsOptSet:
-		if opt := r.optByName(x); opt != nil {
+		if opt := r.optByName(x, false); opt != nil {
 			return *opt
 		}
 		return false

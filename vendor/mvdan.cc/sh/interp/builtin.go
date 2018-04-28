@@ -22,7 +22,7 @@ func isBuiltin(name string) bool {
 		"wait", "builtin", "trap", "type", "source", ".", "command",
 		"dirs", "pushd", "popd", "umask", "alias", "unalias",
 		"fg", "bg", "getopts", "eval", "test", "[", "exec",
-		"return", "read":
+		"return", "read", "shopt":
 		return true
 	}
 	return false
@@ -512,11 +512,62 @@ func (r *Runner) builtinCode(pos syntax.Pos, name string, args []string) int {
 
 		return oneIf(done)
 
+	case "shopt":
+		mode := ""
+		posixOpts := false
+		for len(args) > 0 && strings.HasPrefix(args[0], "-") {
+			switch args[0] {
+			case "-s", "-u":
+				mode = args[0]
+			case "-o":
+				posixOpts = true
+			case "-p", "-q":
+				panic(fmt.Sprintf("unhandled shopt flag: %s", args[0]))
+			default:
+				r.errf("shopt: invalid option %q\n", args[0])
+				return 2
+			}
+			args = args[1:]
+		}
+		if len(args) == 0 {
+			if !posixOpts {
+				for i, name := range bashOptsTable {
+					r.printOptLine(name, r.opts[len(shellOptsTable)+i])
+				}
+				break
+			}
+			for i, opt := range shellOptsTable {
+				r.printOptLine(opt.name, r.opts[i])
+			}
+			break
+		}
+		for _, arg := range args {
+			opt := r.optByName(arg, !posixOpts)
+			if opt == nil {
+				r.errf("shopt: invalid option name %q\n", arg)
+				return 1
+			}
+			switch mode {
+			case "-s", "-u":
+				*opt = mode == "-s"
+			default: // ""
+				r.printOptLine(arg, *opt)
+			}
+		}
+
 	default:
 		// "trap", "umask", "alias", "unalias", "fg", "bg",
 		panic(fmt.Sprintf("unhandled builtin: %s", name))
 	}
 	return 0
+}
+
+func (r *Runner) printOptLine(name string, enabled bool) {
+	status := "off"
+	if enabled {
+		status = "on"
+	}
+	r.outf("%s\t%s\n", name, status)
 }
 
 func (r *Runner) ifsFields(s string, n int, raw bool) []string {

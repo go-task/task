@@ -139,8 +139,15 @@ type Parser struct {
 	heredocs    []*Redirect
 	hdocStop    []byte
 
-	openBquotes   int
-	buriedBquotes int // break them when we enter single quotes
+	// openBquotes is how many levels of backquotes are open at the
+	// moment
+	openBquotes int
+	// lastBquoteEsc is how many times the last backquote token was
+	// escaped
+	lastBquoteEsc int
+	// buriedBquotes is like openBquotes, but saved for when the
+	// parser comes out of single quotes
+	buriedBquotes int
 
 	reOpenParens int
 
@@ -520,7 +527,7 @@ loop:
 				break loop
 			}
 		case bckQuote:
-			if p.quote == subCmdBckquo {
+			if p.backquoteEnd() {
 				break loop
 			}
 		case dblSemicolon, semiAnd, dblSemiAnd, semiOr:
@@ -715,9 +722,6 @@ func (p *Parser) wordPart() WordPart {
 		ps.Rparen = p.matched(ps.OpPos, token(ps.Op), rightParen)
 		return ps
 	case sglQuote, dollSglQuote:
-		if p.quote&allArithmExpr != 0 {
-			p.curErr("quotes should not be used in arithmetic expressions")
-		}
 		sq := &SglQuoted{Left: p.pos, Dollar: p.tok == dollSglQuote}
 		r := p.r
 		for p.newLit(r); ; r = p.rune() {
@@ -747,12 +751,9 @@ func (p *Parser) wordPart() WordPart {
 			// p.tok == dblQuote, as "foo$" puts $ in the lit
 			return nil
 		}
-		if p.quote&allArithmExpr != 0 {
-			p.curErr("quotes should not be used in arithmetic expressions")
-		}
 		return p.dblQuoted()
 	case bckQuote:
-		if p.quote == subCmdBckquo {
+		if p.backquoteEnd() {
 			return nil
 		}
 		p.ensureNoNested()
@@ -984,7 +985,7 @@ func (p *Parser) arithmExprBase(compact bool) ArithmExpr {
 		pe.Index = p.eitherIndex()
 		x = p.word(p.wps(pe))
 	case bckQuote:
-		if p.quote == arithmExprLet {
+		if p.quote == arithmExprLet && p.openBquotes > 0 {
 			return nil
 		}
 		fallthrough
@@ -1193,20 +1194,10 @@ func (p *Parser) eitherIndex() ArithmExpr {
 	lpos := p.pos
 	p.quote = arithmExprBrack
 	p.next()
-	var expr ArithmExpr
-	switch p.tok {
-	case sglQuote, dollSglQuote, dblQuote, dollDblQuote:
-		// We can't use an arithm quote, as that will trigger
-		// the "quotes should not be used in arithmetic
-		// expressions" error. paramExpName is the closest.
-		p.quote = paramExpName
-		expr = p.word(p.wps(p.wordPart()))
-	case star, at:
+	if p.tok == star || p.tok == at {
 		p.tok, p.val = _LitWord, p.tok.String()
-		fallthrough
-	default:
-		expr = p.followArithm(leftBrack, lpos)
 	}
+	expr := p.followArithm(leftBrack, lpos)
 	p.quote = old
 	p.matched(lpos, leftBrack, rightBrack)
 	return expr
@@ -1234,6 +1225,10 @@ func stopToken(tok token) bool {
 		return true
 	}
 	return false
+}
+
+func (p *Parser) backquoteEnd() bool {
+	return p.quote == subCmdBckquo && p.lastBquoteEsc < p.openBquotes
 }
 
 // ValidName returns whether val is a valid name as per the POSIX spec.
@@ -1378,7 +1373,19 @@ func (p *Parser) peekRedir() bool {
 }
 
 func (p *Parser) doRedirect(s *Stmt) {
-	r := &Redirect{}
+	var r *Redirect
+	if s.Redirs == nil {
+		var alloc struct {
+			redirs [4]*Redirect
+			redir  Redirect
+		}
+		s.Redirs = alloc.redirs[:0]
+		r = &alloc.redir
+		s.Redirs = append(s.Redirs, r)
+	} else {
+		r = &Redirect{}
+		s.Redirs = append(s.Redirs, r)
+	}
 	r.N = p.getLit()
 	r.Op, r.OpPos = RedirOperator(p.tok), p.pos
 	p.next()
@@ -1395,7 +1402,6 @@ func (p *Parser) doRedirect(s *Stmt) {
 	default:
 		r.Word = p.followWordTok(token(r.Op), r.OpPos)
 	}
-	s.Redirs = append(s.Redirs, r)
 }
 
 func (p *Parser) getStmt(readEnd, binCmd, fnBody bool) *Stmt {
@@ -1555,7 +1561,7 @@ func (p *Parser) gotStmtPipe(s *Stmt) *Stmt {
 		p.doRedirect(s)
 		s.Cmd = p.callExpr(s, nil, false)
 	case bckQuote:
-		if p.quote == subCmdBckquo {
+		if p.backquoteEnd() {
 			return nil
 		}
 		fallthrough
@@ -1743,8 +1749,9 @@ func (p *Parser) wordIter(ftok string, fpos Pos) *WordIter {
 		p.got(_Newl)
 	} else if p.got(semicolon) {
 		p.got(_Newl)
+	} else if p.tok == _LitWord && p.val == "do" {
 	} else {
-		p.followErr(fpos, ftok+" foo", `"in", ; or a newline`)
+		p.followErr(fpos, ftok+" foo", `"in", "do", ;, or a newline`)
 	}
 	return wi
 }
@@ -1878,6 +1885,7 @@ func (p *Parser) testExpr(ftok token, fpos Pos, pastAndOr bool) TestExpr {
 	switch b.Op {
 	case AndTest, OrTest:
 		p.next()
+		p.got(_Newl)
 		if b.Y = p.testExpr(token(b.Op), b.OpPos, false); b.Y == nil {
 			p.followErrExp(b.OpPos, b.Op.String())
 		}
@@ -1938,6 +1946,7 @@ func (p *Parser) testExprBase(ftok token, fpos Pos) TestExpr {
 	case leftParen:
 		pe := &ParenTest{Lparen: p.pos}
 		p.next()
+		p.got(_Newl)
 		if pe.X = p.testExpr(leftParen, pe.Lparen, false); pe.X == nil {
 			p.followErrExp(pe.Lparen, "(")
 		}
@@ -2095,7 +2104,7 @@ loop:
 			}
 			ce.Args = append(ce.Args, p.word(p.wordParts()))
 		case bckQuote:
-			if p.quote == subCmdBckquo {
+			if p.backquoteEnd() {
 				break loop
 			}
 			fallthrough
