@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"io"
+	"os"
 	"strings"
 
 	"mvdan.cc/sh/interp"
@@ -37,10 +38,19 @@ func RunCommand(opts *RunCommandOptions) error {
 		return err
 	}
 
+	environ := opts.Env
+	if len(environ) == 0 {
+		environ = os.Environ()
+	}
+	env, err := interp.EnvFromList(environ)
+	if err != nil {
+		return err
+	}
+
 	r := interp.Runner{
 		Context: opts.Context,
 		Dir:     opts.Dir,
-		Env:     opts.Env,
+		Env:     env,
 
 		Exec: interp.DefaultExec,
 		Open: interp.OpenDevImpls(interp.DefaultOpen),
