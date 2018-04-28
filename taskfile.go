@@ -44,7 +44,7 @@ func (e *Executor) readTaskfile() error {
 func (e *Executor) readTaskfileData(path string) (*taskfile.Taskfile, error) {
 	if b, err := ioutil.ReadFile(path + ".yml"); err == nil {
 		var taskfile taskfile.Taskfile
-		return &taskfile, yaml.UnmarshalStrict(b, &taskfile)
+		return &taskfile, yaml.Unmarshal(b, &taskfile)
 	}
 	return nil, taskFileNotFound{path}
 }
@@ -56,14 +56,14 @@ func (e *Executor) readTaskvars() error {
 	)
 
 	if b, err := ioutil.ReadFile(file + ".yml"); err == nil {
-		if err := yaml.UnmarshalStrict(b, &e.taskvars); err != nil {
+		if err := yaml.Unmarshal(b, &e.taskvars); err != nil {
 			return err
 		}
 	}
 
 	if b, err := ioutil.ReadFile(osSpecificFile + ".yml"); err == nil {
 		osTaskvars := make(taskfile.Vars, 10)
-		if err := yaml.UnmarshalStrict(b, &osTaskvars); err != nil {
+		if err := yaml.Unmarshal(b, &osTaskvars); err != nil {
 			return err
 		}
 		for k, v := range osTaskvars {
