@@ -4,6 +4,7 @@ package taskfile
 type Taskfile struct {
 	Version    string
 	Expansions int
+	Output     string
 	Vars       Vars
 	Tasks      Tasks
 }
@@ -18,6 +19,7 @@ func (tf *Taskfile) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	var taskfile struct {
 		Version    string
 		Expansions int
+		Output     string
 		Vars       Vars
 		Tasks      Tasks
 	}
@@ -26,6 +28,7 @@ func (tf *Taskfile) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	}
 	tf.Version = taskfile.Version
 	tf.Expansions = taskfile.Expansions
+	tf.Output = taskfile.Output
 	tf.Vars = taskfile.Vars
 	tf.Tasks = taskfile.Tasks
 	if tf.Expansions <= 0 {

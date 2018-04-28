@@ -12,6 +12,7 @@ import (
 	compilerv2 "github.com/go-task/task/internal/compiler/v2"
 	"github.com/go-task/task/internal/execext"
 	"github.com/go-task/task/internal/logger"
+	"github.com/go-task/task/internal/output"
 	"github.com/go-task/task/internal/taskfile"
 	"github.com/go-task/task/internal/taskfile/version"
 
@@ -44,6 +45,7 @@ type Executor struct {
 
 	Logger   *logger.Logger
 	Compiler compiler.Compiler
+	Output   output.Output
 
 	taskvars taskfile.Vars
 
@@ -79,7 +81,7 @@ func (e *Executor) Setup() error {
 		return err
 	}
 
-	v, err := semver.NewVersion(e.Taskfile.Version)
+	v, err := semver.NewConstraint(e.Taskfile.Version)
 	if err != nil {
 		return fmt.Errorf(`task: could not parse taskfile version "%s": %v`, e.Taskfile.Version, err)
 	}
@@ -108,7 +110,7 @@ func (e *Executor) Setup() error {
 			Vars:   e.taskvars,
 			Logger: e.Logger,
 		}
-	case version.IsV2(v):
+	case version.IsV2(v), version.IsV21(v):
 		e.Compiler = &compilerv2.CompilerV2{
 			Dir:          e.Dir,
 			Taskvars:     e.taskvars,
@@ -116,8 +118,22 @@ func (e *Executor) Setup() error {
 			Expansions:   e.Taskfile.Expansions,
 			Logger:       e.Logger,
 		}
-	case version.IsV21(v):
-		return fmt.Errorf(`task: Taskfile versions greater than v2 not implemented in the version of Task`)
+	case version.IsV22(v):
+		return fmt.Errorf(`task: Taskfile versions greater than v2.1 not implemented in the version of Task`)
+	}
+
+	if !version.IsV21(v) && e.Taskfile.Output != "" {
+		return fmt.Errorf(`task: Taskfile option "output" is only available starting on Taskfile version v2.1`)
+	}
+	switch e.Taskfile.Output {
+	case "", "interleaved":
+		e.Output = output.Interleaved{}
+	case "group":
+		e.Output = output.Group{}
+	case "prefixed":
+		e.Output = output.Prefixed{}
+	default:
+		return fmt.Errorf(`task: output option "%s" not recognized`, e.Taskfile.Output)
 	}
 
 	e.taskCallCount = make(map[string]*int32, len(e.Taskfile.Tasks))
@@ -190,14 +206,19 @@ func (e *Executor) runCommand(ctx context.Context, t *taskfile.Task, call taskfi
 		e.Logger.Errf(cmd.Cmd)
 	}
 
+	stdOut := e.Output.WrapWriter(e.Stdout, t.Prefix)
+	stdErr := e.Output.WrapWriter(e.Stderr, t.Prefix)
+	defer stdOut.Close()
+	defer stdErr.Close()
+
 	return execext.RunCommand(&execext.RunCommandOptions{
 		Context: ctx,
 		Command: cmd.Cmd,
 		Dir:     t.Dir,
 		Env:     getEnviron(t),
 		Stdin:   e.Stdin,
-		Stdout:  e.Stdout,
-		Stderr:  e.Stderr,
+		Stdout:  stdOut,
+		Stderr:  stdErr,
 	})
 }
 

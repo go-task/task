@@ -13,6 +13,7 @@ vars:
     ./internal/compiler/v2
     ./internal/execext
     ./internal/logger
+    ./internal/output
     ./internal/status
     ./internal/taskfile
     ./internal/taskfile/version

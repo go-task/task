@@ -632,6 +632,68 @@ tasks:
       - echo "This will print nothing" > /dev/null
 ```
 
+## Output syntax
+
+By default, Task just redirect the STDOUT and STDERR of the running commands
+to the shell in real time. This is good for having live feedback for log
+printed by commands, but the output can become messy if you have multiple
+commands running at the same time and printing lots of stuff.
+
+To make this more customizable, there are currently three different output
+options you can choose:
+
+- `interleaved` (default)
+- `group`
+- `prefixed`
+
+ To choose another one, just set it to root in the Taskfile:
+
+ ```yml
+version: '2'
+
+output: 'group'
+
+tasks:
+  # ...
+ ```
+
+ The `group` output will print the entire output of a command once, after it
+ finishes, so you won't have live feedback for commands that take a long time
+ to run.
+
+ The `prefix` output will prefix every line printed by a command with
+ `[task-name] ` as the prefix, but you can customize the prefix for a command
+ with the `prefix:` attribute:
+
+ ```yml
+version: '2'
+
+output: prefixed
+
+tasks:
+  default:
+    deps:
+      - task: print
+        vars: {TEXT: foo}
+      - task: print
+        vars: {TEXT: bar}
+      - task: print
+        vars: {TEXT: baz}
+
+  print:
+    cmds:
+      - echo "{{.TEXT}}"
+    prefix: "print-{{.TEXT}}"
+    silent: true
+```
+
+```bash
+$ task default
+[print-foo] foo
+[print-bar] bar
+[print-baz] baz
+```
+
 ## Watch tasks
 
 If you give a `--watch` or `-w` argument, task will watch for file changes
