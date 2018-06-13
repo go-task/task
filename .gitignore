@@ -15,5 +15,6 @@
 
 ./task
 dist/
+vendor/
 
 .DS_Store

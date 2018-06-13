@@ -34,6 +34,18 @@ It aims to be simpler and easier to use then [GNU Make][make].
 
 ## Installation
 
+### First of all install dependencies
+
+Install [dep](https://github.com/golang/dep)
+```bash
+go get -u github.com/golang/dep/cmd/dep
+```
+
+Install project dependencies
+```bash
+dep ensure
+```
+
 ### Go
 
 If you have a [Golang][golang] environment setup, you can simply run:
