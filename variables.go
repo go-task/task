@@ -3,10 +3,9 @@ package task
 import (
 	"path/filepath"
 
+	"github.com/go-task/task/internal/osext"
 	"github.com/go-task/task/internal/taskfile"
 	"github.com/go-task/task/internal/templater"
-
-	"github.com/mitchellh/go-homedir"
 )
 
 var (
@@ -41,7 +40,7 @@ func (e *Executor) CompiledTask(call taskfile.Call) (*taskfile.Task, error) {
 		Method:    r.Replace(origTask.Method),
 		Prefix:    r.Replace(origTask.Prefix),
 	}
-	new.Dir, err = homedir.Expand(new.Dir)
+	new.Dir, err = osext.Expand(new.Dir)
 	if err != nil {
 		return nil, err
 	}

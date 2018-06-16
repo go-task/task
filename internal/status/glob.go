@@ -4,8 +4,9 @@ import (
 	"path/filepath"
 	"sort"
 
+	"github.com/go-task/task/internal/osext"
+
 	"github.com/mattn/go-zglob"
-	"github.com/mitchellh/go-homedir"
 )
 
 func glob(dir string, globs []string) (files []string, err error) {
@@ -13,7 +14,7 @@ func glob(dir string, globs []string) (files []string, err error) {
 		if !filepath.IsAbs(g) {
 			g = filepath.Join(dir, g)
 		}
-		g, err = homedir.Expand(g)
+		g, err = osext.Expand(g)
 		if err != nil {
 			return nil, err
 		}
