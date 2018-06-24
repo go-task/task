@@ -11,6 +11,8 @@ build:
   ignore:
     - goos: darwin
       goarch: 386
+  env:
+    - CGO_ENABLED=0
 
 archive:
   name_template: "{{.Binary}}_{{.Os}}_{{.Arch}}"
