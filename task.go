@@ -198,28 +198,31 @@ func (e *Executor) runDeps(ctx context.Context, t *taskfile.Task) error {
 func (e *Executor) runCommand(ctx context.Context, t *taskfile.Task, call taskfile.Call, i int) error {
 	cmd := t.Cmds[i]
 
-	if cmd.Cmd == "" {
+	switch {
+	case cmd.Task != "":
 		return e.RunTask(ctx, taskfile.Call{Task: cmd.Task, Vars: cmd.Vars})
+	case cmd.Cmd != "":
+		if e.Verbose || (!cmd.Silent && !t.Silent && !e.Silent) {
+			e.Logger.Errf(cmd.Cmd)
+		}
+
+		stdOut := e.Output.WrapWriter(e.Stdout, t.Prefix)
+		stdErr := e.Output.WrapWriter(e.Stderr, t.Prefix)
+		defer stdOut.Close()
+		defer stdErr.Close()
+
+		return execext.RunCommand(&execext.RunCommandOptions{
+			Context: ctx,
+			Command: cmd.Cmd,
+			Dir:     t.Dir,
+			Env:     getEnviron(t),
+			Stdin:   e.Stdin,
+			Stdout:  stdOut,
+			Stderr:  stdErr,
+		})
+	default:
+		return nil
 	}
-
-	if e.Verbose || (!cmd.Silent && !t.Silent && !e.Silent) {
-		e.Logger.Errf(cmd.Cmd)
-	}
-
-	stdOut := e.Output.WrapWriter(e.Stdout, t.Prefix)
-	stdErr := e.Output.WrapWriter(e.Stderr, t.Prefix)
-	defer stdOut.Close()
-	defer stdErr.Close()
-
-	return execext.RunCommand(&execext.RunCommandOptions{
-		Context: ctx,
-		Command: cmd.Cmd,
-		Dir:     t.Dir,
-		Env:     getEnviron(t),
-		Stdin:   e.Stdin,
-		Stdout:  stdOut,
-		Stderr:  stdErr,
-	})
 }
 
 func getEnviron(t *taskfile.Task) []string {
