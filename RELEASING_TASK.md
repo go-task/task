@@ -21,7 +21,7 @@ The exception is the publishing of a new version of the
 the binaries:
 
 * Updating the current version on [snapcraft.yaml][snapcraftyaml];
-* Moving either the `i386` and `amd64` new artifacts to the stable channel on
+* Moving both `i386` and `amd64` new artifacts to the stable channel on
 the [Snapscraft dashboard][snapcraftdashboard]
 
 [goreleaser]: https://goreleaser.com/#continuous_integration
