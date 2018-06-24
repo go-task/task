@@ -25,6 +25,10 @@ func BinaryNextLine(p *Printer) { p.binNextLine = true }
 // case bodies will be two levels deeper than the switch itself.
 func SwitchCaseIndent(p *Printer) { p.swtCaseIndent = true }
 
+// SpaceRedirects will put a space after most redirection operators. The
+// exceptions are '>&', '<&', '>(', and '<('.
+func SpaceRedirects(p *Printer) { p.spaceRedirects = true }
+
 // KeepPadding will keep most nodes and tokens in the same column that
 // they were in the original source. This allows the user to decide how
 // to align and pad their code with spaces.
@@ -64,17 +68,24 @@ func NewPrinter(options ...func(*Printer)) *Printer {
 func (p *Printer) Print(w io.Writer, node Node) error {
 	p.reset()
 	p.bufWriter.Reset(w)
+	p.line = node.Pos().Line()
 	switch x := node.(type) {
 	case *File:
 		p.stmts(x.StmtList)
-		p.newline(Pos{})
+		p.newline(x.End())
 	case *Stmt:
-		p.stmt(x)
+		sl := StmtList{Stmts: []*Stmt{x}}
+		// StmtList.pos is better than Stmt.Pos, since it also takes
+		// comments into account.
+		p.line = sl.pos().Line()
+		p.stmts(sl)
 	case *Word:
 		p.word(x)
 	case Command:
 		p.command(x, nil)
 	}
+	p.flushHeredocs()
+	p.flushComments()
 	return p.bufWriter.Flush()
 }
 
@@ -121,11 +132,12 @@ type Printer struct {
 	bufWriter
 	cols colCounter
 
-	indentSpaces  uint
-	binNextLine   bool
-	swtCaseIndent bool
-	keepPadding   bool
-	minify        bool
+	indentSpaces   uint
+	binNextLine    bool
+	swtCaseIndent  bool
+	spaceRedirects bool
+	keepPadding    bool
+	minify         bool
 
 	wantSpace   bool
 	wantNewline bool
@@ -133,12 +145,12 @@ type Printer struct {
 
 	commentPadding uint
 
-	// pendingComment is any comment in the current line that we have yet to
-	// print. This is useful because that way, we can ensure that all
-	// comments are written immediately before a newline. Otherwise, in some
-	// edge cases we might wrongly place words after a comment in the same
-	// line, breaking programs.
-	pendingComment *Comment
+	// pendingComments are any comments in the current line or statement
+	// that we have yet to print. This is useful because that way, we can
+	// ensure that all comments are written immediately before a newline.
+	// Otherwise, in some edge cases we might wrongly place words after a
+	// comment in the same line, breaking programs.
+	pendingComments []Comment
 
 	// line is the current line number
 	line uint
@@ -162,19 +174,17 @@ type Printer struct {
 
 	// used when printing <<- heredocs with tab indentation
 	tabsPrinter *Printer
-
-	firstStmt bool
 }
 
 func (p *Printer) reset() {
 	p.wantSpace, p.wantNewline = false, false
 	p.commentPadding = 0
+	p.pendingComments = p.pendingComments[:0]
 	p.line = 0
 	p.lastLevel, p.level = 0, 0
 	p.levelIncs = p.levelIncs[:0]
 	p.nestedBinary = false
 	p.pendingHdocs = p.pendingHdocs[:0]
-	p.firstStmt = true
 }
 
 func (p *Printer) spaces(n uint) {
@@ -277,14 +287,31 @@ func (p *Printer) indent() {
 }
 
 func (p *Printer) newline(pos Pos) {
-	p.flushComment()
-	p.wantNewline, p.wantSpace = false, false
+	p.flushHeredocs()
+	p.flushComments()
 	p.WriteByte('\n')
+	p.wantNewline, p.wantSpace = false, false
 	if p.line < pos.Line() {
 		p.line++
 	}
+}
+
+func (p *Printer) flushHeredocs() {
+	if len(p.pendingHdocs) == 0 {
+		return
+	}
 	hdocs := p.pendingHdocs
 	p.pendingHdocs = p.pendingHdocs[:0]
+	coms := p.pendingComments
+	p.pendingComments = nil
+	if len(coms) > 0 {
+		c := coms[0]
+		if c.Pos().Line() == p.line {
+			p.pendingComments = append(p.pendingComments, c)
+			p.flushComments()
+			coms = coms[1:]
+		}
+	}
 
 	// Reuse the last indentation level, as
 	// indentation levels are usually changed before
@@ -294,6 +321,9 @@ func (p *Printer) newline(pos Pos) {
 	p.level = p.lastLevel
 
 	for _, r := range hdocs {
+		p.line++
+		p.WriteByte('\n')
+		p.wantNewline, p.wantSpace = false, false
 		if r.Op == DashHdoc && p.indentSpaces == 0 &&
 			!p.minify && p.tabsPrinter != nil {
 			if r.Hdoc != nil {
@@ -317,14 +347,19 @@ func (p *Printer) newline(pos Pos) {
 			p.line = r.Hdoc.End().Line()
 		}
 		p.unquotedWord(r.Word)
-		p.line++
-		p.WriteByte('\n')
 		p.wantSpace = false
 	}
 	p.level = newLevel
+	p.pendingComments = coms
 }
 
 func (p *Printer) newlines(pos Pos) {
+	if !p.wantNewline && p.line == 0 && len(p.pendingComments) == 0 {
+		return // no empty lines at the top
+	}
+	if !p.wantNewline && pos.Line() <= p.line {
+		return
+	}
 	p.newline(pos)
 	if pos.Line() > p.line {
 		if !p.minify {
@@ -337,8 +372,7 @@ func (p *Printer) newlines(pos Pos) {
 }
 
 func (p *Printer) rightParen(pos Pos) {
-	if p.minify {
-	} else if p.wantNewline || pos.Line() > p.line {
+	if !p.minify {
 		p.newlines(pos)
 	}
 	p.WriteByte(')')
@@ -364,41 +398,39 @@ func (p *Printer) comment(c Comment) {
 	if p.minify {
 		return
 	}
-	if p.pendingComment != nil {
-		p.flushComment()
-	}
-	p.pendingComment = &c
+	p.pendingComments = append(p.pendingComments, c)
 }
 
-func (p *Printer) flushComment() {
-	if p.pendingComment == nil {
-		return
-	}
-	c := *p.pendingComment
-	p.pendingComment = nil
-	switch {
-	case p.line == 0:
-	case c.Hash.Line() > p.line:
-		p.newlines(c.Hash)
-	case p.wantSpace:
-		if p.keepPadding {
-			p.spacePad(c.Pos())
-		} else {
-			p.spaces(p.commentPadding + 1)
+func (p *Printer) flushComments() {
+	for i, c := range p.pendingComments {
+		cline := c.Hash.Line()
+		switch {
+		case i > 0, cline > p.line && p.line > 0:
+			p.WriteByte('\n')
+			if cline > p.line+1 {
+				p.WriteByte('\n')
+			}
+			p.indent()
+		case p.wantSpace:
+			if p.keepPadding {
+				p.spacePad(c.Pos())
+			} else {
+				p.spaces(p.commentPadding + 1)
+			}
 		}
+		// don't go back one line, which may happen in some edge cases
+		if p.line < cline {
+			p.line = cline
+		}
+		p.WriteByte('#')
+		p.WriteString(strings.TrimRightFunc(c.Text, unicode.IsSpace))
+		p.wantNewline = true
 	}
-	// don't go back one line, which may happen in some edge cases
-	if l := c.Hash.Line(); p.line < l {
-		p.line = l
-	}
-	p.WriteByte('#')
-	p.WriteString(strings.TrimRightFunc(c.Text, unicode.IsSpace))
+	p.pendingComments = nil
 }
 
 func (p *Printer) comments(cs []Comment) {
-	for _, c := range cs {
-		p.comment(c)
-	}
+	p.pendingComments = append(p.pendingComments, cs...)
 }
 
 func (p *Printer) wordParts(wps []WordPart) {
@@ -477,7 +509,7 @@ func (p *Printer) wordPart(wp, next WordPart) {
 			p.space()
 		}
 		p.WriteString(x.Op.String())
-		p.nestedStmts(x.StmtList, Pos{})
+		p.nestedStmts(x.StmtList, x.Rparen)
 		p.WriteByte(')')
 	}
 }
@@ -527,14 +559,15 @@ func (p *Printer) paramExp(pe *ParamExp) {
 	}
 	p.WriteString(pe.Param.Value)
 	p.wroteIndex(pe.Index)
-	if pe.Slice != nil {
+	switch {
+	case pe.Slice != nil:
 		p.WriteByte(':')
 		p.arithmExpr(pe.Slice.Offset, true, true)
 		if pe.Slice.Length != nil {
 			p.WriteByte(':')
 			p.arithmExpr(pe.Slice.Length, true, false)
 		}
-	} else if pe.Repl != nil {
+	case pe.Repl != nil:
 		if pe.Repl.All {
 			p.WriteByte('/')
 		}
@@ -546,9 +579,9 @@ func (p *Printer) paramExp(pe *ParamExp) {
 		if pe.Repl.With != nil {
 			p.word(pe.Repl.With)
 		}
-	} else if pe.Names != 0 {
+	case pe.Names != 0:
 		p.WriteString(pe.Names.String())
-	} else if pe.Exp != nil {
+	case pe.Exp != nil:
 		p.WriteString(pe.Exp.Op.String())
 		if pe.Exp.Word != nil {
 			p.word(pe.Exp.Word)
@@ -736,13 +769,12 @@ func (p *Printer) elemJoin(elems []*ArrayElem, last []Comment) {
 	}
 	if len(last) > 0 {
 		p.comments(last)
-		p.flushComment()
+		p.flushComments()
 	}
 	p.decLevel()
 }
 
 func (p *Printer) stmt(s *Stmt) {
-	p.firstStmt = false
 	if s.Negated {
 		p.spacedString("!", s.Pos())
 	}
@@ -763,7 +795,11 @@ func (p *Printer) stmt(s *Stmt) {
 			p.WriteString(r.N.Value)
 		}
 		p.WriteString(r.Op.String())
-		p.wantSpace = true
+		if p.spaceRedirects && (r.Op != DplIn && r.Op != DplOut) {
+			p.space()
+		} else {
+			p.wantSpace = true
+		}
 		p.word(r.Word)
 		if r.Op == Hdoc || r.Op == DashHdoc {
 			p.pendingHdocs = append(p.pendingHdocs, r)
@@ -793,7 +829,7 @@ func (p *Printer) command(cmd Command, redirs []*Redirect) (startRedirs int) {
 	p.spacePad(cmd.Pos())
 	switch x := cmd.(type) {
 	case *CallExpr:
-		p.assigns(x.Assigns, true)
+		p.assigns(x.Assigns)
 		if len(x.Args) <= 1 {
 			p.wordJoin(x.Args)
 			return 0
@@ -811,7 +847,11 @@ func (p *Printer) command(cmd Command, redirs []*Redirect) (startRedirs int) {
 				p.WriteString(r.N.Value)
 			}
 			p.WriteString(r.Op.String())
-			p.wantSpace = true
+			if p.spaceRedirects && (r.Op != DplIn && r.Op != DplOut) {
+				p.space()
+			} else {
+				p.wantSpace = true
+			}
 			p.word(r.Word)
 			startRedirs++
 		}
@@ -839,7 +879,7 @@ func (p *Printer) command(cmd Command, redirs []*Redirect) (startRedirs int) {
 		}
 		p.nestedStmts(x.Cond, Pos{})
 		p.semiOrNewl("do", x.DoPos)
-		p.nestedStmts(x.Do, Pos{})
+		p.nestedStmts(x.Do, x.DonePos)
 		p.semiRsrv("done", x.DonePos, true)
 	case *ForClause:
 		if x.Select {
@@ -913,25 +953,19 @@ func (p *Printer) command(cmd Command, redirs []*Redirect) (startRedirs int) {
 		for i, ci := range x.Items {
 			var inlineCom *Comment
 			for _, c := range ci.Comments {
-				if c.Pos().After(ci.Patterns[0].Pos()) {
+				if c.Pos().After(ci.Pos()) {
 					inlineCom = &c
 					break
 				}
 				p.comment(c)
 			}
-			if pos := ci.Patterns[0].Pos(); pos.Line() > p.line {
-				p.newlines(pos)
-			}
+			p.newlines(ci.Pos())
 			p.casePatternJoin(ci.Patterns)
 			p.WriteByte(')')
 			p.wantSpace = !p.minify
-			sep := len(ci.Stmts) > 1 || ci.StmtList.pos().Line() > p.line
-			if ci.OpPos != x.Esac && !ci.StmtList.empty() &&
-				ci.OpPos.Line() > ci.StmtList.end().Line() {
-				sep = true
-			}
-			sl := ci.StmtList
-			p.nestedStmts(sl, Pos{})
+			sep := len(ci.Stmts) > 1 || ci.StmtList.pos().Line() > p.line ||
+				(!ci.StmtList.empty() && ci.OpPos.Line() > ci.StmtList.end().Line())
+			p.nestedStmts(ci.StmtList, ci.OpPos)
 			if !p.minify || i != len(x.Items)-1 {
 				p.level++
 				if sep {
@@ -947,7 +981,7 @@ func (p *Printer) command(cmd Command, redirs []*Redirect) (startRedirs int) {
 		}
 		p.comments(x.Last)
 		if p.swtCaseIndent {
-			p.flushComment()
+			p.flushComments()
 			p.decLevel()
 		}
 		p.semiRsrv("esac", x.Esac, len(x.Items) == 0)
@@ -968,7 +1002,7 @@ func (p *Printer) command(cmd Command, redirs []*Redirect) (startRedirs int) {
 			p.space()
 			p.word(w)
 		}
-		p.assigns(x.Assigns, false)
+		p.assigns(x.Assigns)
 	case *TimeClause:
 		p.spacedString("time", x.Pos())
 		if x.PosixFormat {
@@ -1036,61 +1070,38 @@ func (p *Printer) hasInline(s *Stmt) bool {
 }
 
 func (p *Printer) stmts(sl StmtList) {
-	switch len(sl.Stmts) {
-	case 0:
-		p.comments(sl.Last)
-		return
-	case 1:
-		s := sl.Stmts[0]
-		pos := s.Pos()
-		var inlineCom *Comment
-		for _, c := range s.Comments {
-			if c.Pos().After(s.Pos()) {
-				inlineCom = &c
-				break
-			}
-			p.comment(c)
-		}
-		if pos.Line() <= p.line || (p.minify && !p.wantSpace) {
-			p.line = pos.Line()
-			p.stmt(s)
-		} else {
-			if !p.firstStmt || p.pendingComment != nil {
-				p.newlines(pos)
-			}
-			p.line = pos.Line()
-			p.stmt(s)
-			p.wantNewline = true
-		}
-		if inlineCom != nil {
-			p.comment(*inlineCom)
-		}
-		p.comments(sl.Last)
-		return
-	}
+	sep := p.wantNewline ||
+		(len(sl.Stmts) > 0 && sl.Stmts[0].Pos().Line() > p.line)
 	inlineIndent := 0
 	lastIndentedLine := uint(0)
 	for i, s := range sl.Stmts {
 		pos := s.Pos()
-		var inlineCom *Comment
+		var endCom *Comment
+		var midComs []Comment
 		for _, c := range s.Comments {
-			if c.Pos().After(s.Pos()) {
-				inlineCom = &c
+			if c.End().After(s.End()) {
+				endCom = &c
 				break
+			}
+			if c.Pos().After(s.Pos()) {
+				midComs = append(midComs, c)
+				continue
 			}
 			p.comment(c)
 		}
-		if p.minify && i == 0 && !p.wantSpace {
-		} else if !p.firstStmt || p.pendingComment != nil {
+		if !p.minify || p.wantSpace {
 			p.newlines(pos)
 		}
 		p.line = pos.Line()
 		if !p.hasInline(s) {
 			inlineIndent = 0
 			p.commentPadding = 0
+			p.comments(midComs)
 			p.stmt(s)
+			p.wantNewline = true
 			continue
 		}
+		p.comments(midComs)
 		p.stmt(s)
 		if s.Pos().Line() > lastIndentedLine+1 {
 			inlineIndent = 0
@@ -1111,11 +1122,14 @@ func (p *Printer) stmts(sl StmtList) {
 			}
 			lastIndentedLine = p.line
 		}
-		if inlineCom != nil {
-			p.comment(*inlineCom)
+		if endCom != nil {
+			p.comment(*endCom)
 		}
+		p.wantNewline = true
 	}
-	p.wantNewline = true
+	if len(sl.Stmts) == 1 && !sep {
+		p.wantNewline = false
+	}
 	p.comments(sl.Last)
 }
 
@@ -1185,18 +1199,31 @@ func (p *Printer) stmtCols(s *Stmt) int {
 
 func (p *Printer) nestedStmts(sl StmtList, closing Pos) {
 	p.incLevel()
-	if len(sl.Stmts) == 1 && closing.Line() > p.line && sl.Stmts[0].End().Line() <= p.line {
-		p.newline(Pos{})
-		p.indent()
+	switch {
+	case len(sl.Stmts) > 1:
+		// Force a newline if we find:
+		//     { stmt; stmt; }
+		p.wantNewline = true
+	case closing.Line() > p.line && len(sl.Stmts) > 0 &&
+		sl.end().Line() <= p.line:
+		// Force a newline if we find:
+		//     { stmt
+		//     }
+		p.wantNewline = true
+	case len(p.pendingComments) > 0 && len(sl.Stmts) > 0:
+		// Force a newline if we find:
+		//     for i in a b # stmt
+		//     do foo; done
+		p.wantNewline = true
 	}
 	p.stmts(sl)
 	if closing.IsValid() {
-		p.flushComment()
+		p.flushComments()
 	}
 	p.decLevel()
 }
 
-func (p *Printer) assigns(assigns []*Assign, alwaysEqual bool) {
+func (p *Printer) assigns(assigns []*Assign) {
 	p.incLevel()
 	for _, a := range assigns {
 		if a.Pos().Line() > p.line {
@@ -1210,7 +1237,7 @@ func (p *Printer) assigns(assigns []*Assign, alwaysEqual bool) {
 			if a.Append {
 				p.WriteByte('+')
 			}
-			if alwaysEqual || a.Value != nil || a.Array != nil {
+			if !a.Naked {
 				p.WriteByte('=')
 			}
 		}

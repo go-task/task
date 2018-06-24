@@ -39,6 +39,16 @@ var TraverseLink = errors.New("traverse symlink, assuming target is a directory"
 //     sentinel error. It is the walkFn's responsibility to prevent
 //     fastWalk from going into symlink cycles.
 func FastWalk(root string, walkFn func(path string, typ os.FileMode) error) error {
+	// Check if "root" is actually a file, not a directory.
+	stat, err := os.Stat(root)
+	if err != nil {
+		return err
+	}
+	if !stat.IsDir() {
+		// If it is, just directly pass it to walkFn and return.
+		return walkFn(root, stat.Mode())
+	}
+
 	// TODO(bradfitz): make numWorkers configurable? We used a
 	// minimum of 4 to give the kernel more info about multiple
 	// things we want, in hopes its I/O scheduling can take

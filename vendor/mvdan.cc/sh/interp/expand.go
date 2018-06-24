@@ -149,7 +149,7 @@ func (r *Runner) Fields(words ...*syntax.Word) []string {
 					if !abs {
 						path = filepath.Join(baseDir, path)
 					}
-					matches = glob(path)
+					matches = glob(path, r.opts[optGlobStar])
 				}
 				if len(matches) == 0 {
 					fields = append(fields, r.fieldJoin(field))
@@ -157,7 +157,11 @@ func (r *Runner) Fields(words ...*syntax.Word) []string {
 				}
 				for _, match := range matches {
 					if !abs {
+						endSeparator := strings.HasSuffix(match, string(filepath.Separator))
 						match, _ = filepath.Rel(r.Dir, match)
+						if endSeparator {
+							match += string(filepath.Separator)
+						}
 					}
 					fields = append(fields, match)
 				}
@@ -411,36 +415,67 @@ func findAllIndex(pattern, name string, n int) [][]int {
 	return rx.FindAllStringIndex(name, n)
 }
 
-func glob(pattern string) []string {
-	dir, file := filepath.Split(pattern)
-	// TODO: special case for windows, like in filepath.Glob?
-	dir = cleanGlobPath(dir)
-
-	expr, err := syntax.TranslatePattern(file, true)
-	if err != nil {
-		return nil
+func hasGlob(path string) bool {
+	magicChars := `*?[`
+	if runtime.GOOS != "windows" {
+		magicChars = `*?[\`
 	}
-	rx := regexp.MustCompile("^" + expr + "$")
-	if !hasGlob(dir) {
-		return globDir(dir, rx, nil)
-	}
-
-	var matches []string
-	for _, d := range glob(dir) {
-		matches = globDir(d, rx, matches)
-	}
-	return matches
+	return strings.ContainsAny(path, magicChars)
 }
 
-func cleanGlobPath(path string) string {
-	switch path {
-	case "":
-		return "."
-	case string(filepath.Separator):
-		return path
-	default:
-		return path[:len(path)-1]
+var rxGlobStar = regexp.MustCompile(".*")
+
+func glob(pattern string, globStar bool) []string {
+	parts := strings.Split(pattern, string(filepath.Separator))
+	matches := []string{"."}
+	if filepath.IsAbs(pattern) {
+		if parts[0] == "" {
+			// unix-like
+			matches[0] = string(filepath.Separator)
+		} else {
+			// windows (for some reason it won't work without the
+			// trailing separator)
+			matches[0] = parts[0] + string(filepath.Separator)
+		}
+		parts = parts[1:]
 	}
+	for _, part := range parts {
+		if part == "**" && globStar {
+			for i := range matches {
+				// "a/**" should match "a/ a/b a/b/c ..."; note
+				// how the zero-match case has a trailing
+				// separator.
+				matches[i] += string(filepath.Separator)
+			}
+			// expand all the possible levels of **
+			latest := matches
+			for {
+				var newMatches []string
+				for _, dir := range latest {
+					newMatches = globDir(dir, rxGlobStar, newMatches)
+				}
+				if len(newMatches) == 0 {
+					// not another level of directories to
+					// try; stop
+					break
+				}
+				matches = append(matches, newMatches...)
+				latest = newMatches
+			}
+			continue
+		}
+		expr, err := syntax.TranslatePattern(part, true)
+		if err != nil {
+			return nil
+		}
+		rx := regexp.MustCompile("^" + expr + "$")
+		var newMatches []string
+		for _, dir := range matches {
+			newMatches = globDir(dir, rx, newMatches)
+		}
+		matches = newMatches
+	}
+	return matches
 }
 
 func globDir(dir string, rx *regexp.Regexp, matches []string) []string {
@@ -462,12 +497,4 @@ func globDir(dir string, rx *regexp.Regexp, matches []string) []string {
 		}
 	}
 	return matches
-}
-
-func hasGlob(path string) bool {
-	magicChars := `*?[`
-	if runtime.GOOS != "windows" {
-		magicChars = `*?[\`
-	}
-	return strings.ContainsAny(path, magicChars)
 }

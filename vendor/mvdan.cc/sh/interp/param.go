@@ -45,8 +45,7 @@ func (r *Runner) quotedElems(pe *syntax.ParamExp) []string {
 		return nil
 	}
 	val, _ := r.lookupVar(pe.Param.Value)
-	switch x := val.Value.(type) {
-	case IndexArray:
+	if x, ok := val.Value.(IndexArray); ok {
 		return x
 	}
 	return nil

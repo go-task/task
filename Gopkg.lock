@@ -40,8 +40,8 @@
 [[projects]]
   name = "github.com/imdario/mergo"
   packages = ["."]
-  revision = "9d5f1277e9a8ed20c3684bda8fde67c05628518c"
-  version = "v0.3.4"
+  revision = "9316a62528ac99aaecb4e47eadd6dc8aa6533d58"
+  version = "v0.3.5"
 
 [[projects]]
   branch = "master"
@@ -50,13 +50,7 @@
     ".",
     "fastwalk"
   ]
-  revision = "9960a25705902198f55789b9b689a686682798b5"
-
-[[projects]]
-  branch = "master"
-  name = "github.com/mitchellh/go-homedir"
-  packages = ["."]
-  revision = "b8bc1bf767474819792c23f32d8286a45736f1c6"
+  revision = "49693fbb3fe3c3a75fc4e4d6fb1d7cedcbdeb385"
 
 [[projects]]
   name = "github.com/pmezard/go-difflib"
@@ -68,19 +62,19 @@
   branch = "master"
   name = "github.com/radovskyb/watcher"
   packages = ["."]
-  revision = "1d8f9aeb09848f7d3e9bbeec08da893f0e8c315d"
+  revision = "0d9d32686dbf6395752c9b209398a59e302a7f1e"
 
 [[projects]]
+  branch = "master"
   name = "github.com/spf13/pflag"
   packages = ["."]
-  revision = "583c0c0531f06d5278b7d917446061adc344b5cd"
-  version = "v1.0.1"
+  revision = "3ebe029320b2676d667ae88da602a5f854788a8a"
 
 [[projects]]
   name = "github.com/stretchr/testify"
   packages = ["assert"]
-  revision = "12b6f73e6084dad08a7c6e575284b177ecafbc71"
-  version = "v1.2.1"
+  revision = "f35b8ab0b5a2cef36673838d662e249dd9c94686"
+  version = "v1.2.2"
 
 [[projects]]
   branch = "master"
@@ -90,13 +84,13 @@
     "scrypt",
     "ssh/terminal"
   ]
-  revision = "b49d69b5da943f7ef3c9cf91c8777c1f78a0cc3c"
+  revision = "a49355c7e3f8fe157a85be2f77e6e269a0f89602"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/net"
   packages = ["context"]
-  revision = "5f9ae10d9af5b1c89ae6904293b14b064d4ada23"
+  revision = "afe8f62b1d6bbd81f31868121a50b06d8188e1f9"
 
 [[projects]]
   branch = "master"
@@ -111,7 +105,7 @@
     "unix",
     "windows"
   ]
-  revision = "cbbc999da32df943dac6cd71eb3ee39e1d7838b9"
+  revision = "63fc586f45fe72d95d5240a5d5eb95e6503907d3"
 
 [[projects]]
   name = "gopkg.in/yaml.v2"
@@ -124,13 +118,14 @@
   name = "mvdan.cc/sh"
   packages = [
     "interp",
+    "shell",
     "syntax"
   ]
-  revision = "92e1ec37d3a62365afd58cd6c25d0f6825773434"
+  revision = "ca7561fd34910fd8575a3830d3cded291c0ce8b2"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "976972e7291789a9d4904805cc7f49d733476868bf80f120309078b02a095a65"
+  inputs-digest = "600bd482208fdedec60141bfaffe55eb403df077944bfdf5c007a33132c8ab5a"
   solver-name = "gps-cdcl"
   solver-version = 1

@@ -284,8 +284,7 @@ func (p *debugPrinter) print(x reflect.Value) {
 		p.printf("}")
 
 	case reflect.Struct:
-		switch v := x.Interface().(type) {
-		case Pos:
+		if v, ok := x.Interface().(Pos); ok {
 			p.printf("%v:%v", v.Line(), v.Col())
 			return
 		}

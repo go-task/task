@@ -8,11 +8,11 @@ import "fmt"
 // Node represents a syntax tree node.
 type Node interface {
 	// Pos returns the position of the first character of the node. Comments
-	// are ignored.
+	// are ignored, except if the node is a *File.
 	Pos() Pos
 	// End returns the position of the character immediately after the node.
 	// If the character is a newline, the line number won't cross into the
-	// next line. Comments are ignored.
+	// next line. Comments are ignored, except if the node is a *File.
 	End() Pos
 }
 
@@ -32,7 +32,14 @@ type StmtList struct {
 
 func (s StmtList) pos() Pos {
 	if len(s.Stmts) > 0 {
-		return s.Stmts[0].Pos()
+		s := s.Stmts[0]
+		sPos := s.Pos()
+		if len(s.Comments) > 0 {
+			if cPos := s.Comments[0].Pos(); sPos.After(cPos) {
+				return cPos
+			}
+		}
+		return sPos
 	}
 	if len(s.Last) > 0 {
 		return s.Last[0].Pos()
@@ -45,7 +52,14 @@ func (s StmtList) end() Pos {
 		return s.Last[len(s.Last)-1].End()
 	}
 	if len(s.Stmts) > 0 {
-		return s.Stmts[len(s.Stmts)-1].End()
+		s := s.Stmts[len(s.Stmts)-1]
+		sEnd := s.End()
+		if len(s.Comments) > 0 {
+			if cEnd := s.Comments[0].End(); cEnd.After(sEnd) {
+				return cEnd
+			}
+		}
+		return sEnd
 	}
 	return Pos{}
 }
@@ -83,19 +97,8 @@ func (p Pos) IsValid() bool { return p.line > 0 }
 // version of p.Offset() > p2.Offset().
 func (p Pos) After(p2 Pos) bool { return p.offs > p2.offs }
 
-func (f *File) Pos() Pos {
-	if len(f.Stmts) == 0 {
-		return Pos{}
-	}
-	return f.Stmts[0].Pos()
-}
-
-func (f *File) End() Pos {
-	if len(f.Stmts) == 0 {
-		return Pos{}
-	}
-	return f.Stmts[len(f.Stmts)-1].End()
-}
+func (f *File) Pos() Pos { return f.StmtList.pos() }
+func (f *File) End() Pos { return f.StmtList.end() }
 
 func posAddCol(p Pos, n int) Pos {
 	p.col += uint16(n)
@@ -117,7 +120,7 @@ type Comment struct {
 }
 
 func (c *Comment) Pos() Pos { return c.Hash }
-func (c *Comment) End() Pos { return posAddCol(c.Hash, len(c.Text)) }
+func (c *Comment) End() Pos { return posAddCol(c.Hash, 1+len(c.Text)) }
 
 // Stmt represents a statement, also known as a "complete command". It is
 // compromised of a command and other components that may come before or after
@@ -191,9 +194,8 @@ func (*CoprocClause) commandNode() {}
 // If Index is non-nil, the value will be a word and not an array as nested
 // arrays are not allowed.
 //
-// If Naked is true, it's part of a DeclClause and doesn't contain a value. In
-// that context, if the name wasn't a literal, it will be in Value instead of
-// Name.
+// If Naked is true and Name is nil, the assignment is part of a DeclClause and
+// the assignment expression (in the Value field) will be evaluated at run-time.
 type Assign struct {
 	Append bool // +=
 	Naked  bool // without '='
@@ -638,14 +640,19 @@ func (c *CaseClause) End() Pos { return posAddCol(c.Esac, 4) }
 // CaseItem represents a pattern list (case) within a CaseClause.
 type CaseItem struct {
 	Op       CaseOperator
-	OpPos    Pos
+	OpPos    Pos // unset if it was finished by "esac"
 	Comments []Comment
 	Patterns []*Word
 	StmtList
 }
 
 func (c *CaseItem) Pos() Pos { return c.Patterns[0].Pos() }
-func (c *CaseItem) End() Pos { return posAddCol(c.OpPos, len(c.Op.String())) }
+func (c *CaseItem) End() Pos {
+	if c.OpPos.IsValid() {
+		return posAddCol(c.OpPos, len(c.Op.String()))
+	}
+	return c.StmtList.end()
+}
 
 // TestClause represents a Bash extended test clause.
 //

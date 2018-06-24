@@ -79,6 +79,7 @@ func (e Event) String() string {
 	return "???"
 }
 
+// Watcher describes a process that watches files for changes.
 type Watcher struct {
 	Event  chan Event
 	Error  chan error
@@ -211,7 +212,7 @@ func (w *Watcher) list(name string) (map[string]os.FileInfo, error) {
 	return fileList, nil
 }
 
-// Add adds either a single file or directory recursively to the file list.
+// AddRecursive adds either a single file or directory recursively to the file list.
 func (w *Watcher) AddRecursive(name string) (err error) {
 	w.mu.Lock()
 	defer w.mu.Unlock()
@@ -292,7 +293,7 @@ func (w *Watcher) Remove(name string) (err error) {
 	return nil
 }
 
-// Remove removes either a single file or a directory recursively from
+// RemoveRecursive removes either a single file or a directory recursively from
 // the file's list.
 func (w *Watcher) RemoveRecursive(name string) (err error) {
 	w.mu.Lock()
@@ -346,6 +347,7 @@ func (w *Watcher) Ignore(paths ...string) (err error) {
 	return nil
 }
 
+// WatchedFiles returns a map of files added to a Watcher.
 func (w *Watcher) WatchedFiles() map[string]os.FileInfo {
 	w.mu.Lock()
 	defer w.mu.Unlock()
@@ -560,7 +562,7 @@ func (w *Watcher) pollEvents(files map[string]os.FileInfo, evt chan Event,
 	// Check for renames and moves.
 	for path1, info1 := range removes {
 		for path2, info2 := range creates {
-			if SameFile(info1, info2) {
+			if sameFile(info1, info2) {
 				e := Event{
 					Op:       Move,
 					Path:     fmt.Sprintf("%s -> %s", path1, path2),
@@ -606,6 +608,7 @@ func (w *Watcher) Wait() {
 	w.wg.Wait()
 }
 
+// Close stops a Watcher and unlocks its mutex, then sends a close signal.
 func (w *Watcher) Close() {
 	w.mu.Lock()
 	if !w.running {

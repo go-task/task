@@ -536,7 +536,7 @@ func (r *Runner) builtinCode(pos syntax.Pos, name string, args []string) int {
 				}
 				break
 			}
-			for i, opt := range shellOptsTable {
+			for i, opt := range &shellOptsTable {
 				r.printOptLine(opt.name, r.opts[i])
 			}
 			break
