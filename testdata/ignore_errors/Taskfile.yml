@@ -1,0 +1,15 @@
+CmdShouldPass:
+  cmds:
+    - cmd: UnknownCommandThatNeverWillExist
+      ignoreError: true
+CmdShouldFail:
+  cmds:
+    - cmd: UnknownCommandThatNeverWillExist
+
+TaskShouldPass:
+  cmds:
+    - task: CmdShouldFail
+      ignoreError: true
+TaskShouldFail:
+  cmds:
+    - task: CmdShouldFail

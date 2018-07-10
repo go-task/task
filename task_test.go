@@ -52,7 +52,6 @@ func (fct fileContentTest) Run(t *testing.T) {
 			assert.Equal(t, expectContent, s, "unexpected file content")
 		})
 	}
-
 }
 
 func TestEnv(t *testing.T) {
@@ -411,4 +410,48 @@ func TestTaskVersion(t *testing.T) {
 			assert.Equal(t, 2, len(e.Taskfile.Tasks))
 		})
 	}
+}
+
+func TestTaskIgnoreErrors(t *testing.T) {
+	const dir = "testdata/ignore_errors"
+
+	t.Run("CmdShouldPass", func(t *testing.T) {
+		e := task.Executor{
+			Dir:    dir,
+			Stdout: ioutil.Discard,
+			Stderr: ioutil.Discard,
+		}
+		assert.NoError(t, e.Setup())
+		assert.NoError(t, e.Run(taskfile.Call{Task: "CmdShouldPass"}))
+	})
+
+	t.Run("CmdShouldFail", func(t *testing.T) {
+		e := task.Executor{
+			Dir:    dir,
+			Stdout: ioutil.Discard,
+			Stderr: ioutil.Discard,
+		}
+		assert.NoError(t, e.Setup())
+		assert.Error(t, e.Run(taskfile.Call{Task: "CmdShouldFail"}))
+	})
+
+	t.Run("TaskShouldPass", func(t *testing.T) {
+		e := task.Executor{
+			Dir:    dir,
+			Stdout: ioutil.Discard,
+			Stderr: ioutil.Discard,
+		}
+		assert.NoError(t, e.Setup())
+		assert.NoError(t, e.Run(taskfile.Call{Task: "TaskShouldPass"}))
+	})
+
+	t.Run("TaskShouldFail", func(t *testing.T) {
+		e := task.Executor{
+			Dir:    dir,
+			Stdout: ioutil.Discard,
+			Stderr: ioutil.Discard,
+		}
+		assert.NoError(t, e.Setup())
+		assert.Error(t, e.Run(taskfile.Call{Task: "TaskShouldFail"}))
+	})
 }

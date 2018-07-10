@@ -188,7 +188,7 @@ func (e *Executor) runDeps(ctx context.Context, t *taskfile.Task) error {
 		d := d
 
 		g.Go(func() error {
-			return e.RunTask(ctx, taskfile.Call{Task: d.Task, Vars: d.Vars})
+			return e.RunTask(ctx, taskfile.Call{Task: d.Task, Vars: d.Vars, IgnoreError: d.IgnoreError})
 		})
 	}
 
@@ -200,7 +200,7 @@ func (e *Executor) runCommand(ctx context.Context, t *taskfile.Task, call taskfi
 
 	switch {
 	case cmd.Task != "":
-		return e.RunTask(ctx, taskfile.Call{Task: cmd.Task, Vars: cmd.Vars})
+		return e.RunTask(ctx, taskfile.Call{Task: cmd.Task, Vars: cmd.Vars, IgnoreError: cmd.IgnoreError || call.IgnoreError})
 	case cmd.Cmd != "":
 		if e.Verbose || (!cmd.Silent && !t.Silent && !e.Silent) {
 			e.Logger.Errf(cmd.Cmd)
@@ -212,13 +212,14 @@ func (e *Executor) runCommand(ctx context.Context, t *taskfile.Task, call taskfi
 		defer stdErr.Close()
 
 		return execext.RunCommand(&execext.RunCommandOptions{
-			Context: ctx,
-			Command: cmd.Cmd,
-			Dir:     t.Dir,
-			Env:     getEnviron(t),
-			Stdin:   e.Stdin,
-			Stdout:  stdOut,
-			Stderr:  stdErr,
+			Context:         ctx,
+			Command:         cmd.Cmd,
+			Dir:             t.Dir,
+			Env:             getEnviron(t),
+			Stdin:           e.Stdin,
+			Stdout:          stdOut,
+			Stderr:          stdErr,
+			IgnoreErrorCode: cmd.IgnoreError || call.IgnoreError,
 		})
 	default:
 		return nil

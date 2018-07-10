@@ -62,12 +62,12 @@ func (e *Executor) CompiledTask(call taskfile.Call) (*taskfile.Task, error) {
 		new.Cmds = make([]*taskfile.Cmd, len(origTask.Cmds))
 		for i, cmd := range origTask.Cmds {
 			new.Cmds[i] = &taskfile.Cmd{
-				Task:   r.Replace(cmd.Task),
-				Silent: cmd.Silent,
-				Cmd:    r.Replace(cmd.Cmd),
-				Vars:   r.ReplaceVars(cmd.Vars),
+				Task:        r.Replace(cmd.Task),
+				Silent:      cmd.Silent,
+				Cmd:         r.Replace(cmd.Cmd),
+				Vars:        r.ReplaceVars(cmd.Vars),
+				IgnoreError: cmd.IgnoreError,
 			}
-
 		}
 	}
 	if len(origTask.Deps) > 0 {

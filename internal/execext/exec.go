@@ -13,13 +13,14 @@ import (
 
 // RunCommandOptions is the options for the RunCommand func
 type RunCommandOptions struct {
-	Context context.Context
-	Command string
-	Dir     string
-	Env     []string
-	Stdin   io.Reader
-	Stdout  io.Writer
-	Stderr  io.Writer
+	Context         context.Context
+	Command         string
+	Dir             string
+	Env             []string
+	Stdin           io.Reader
+	Stdout          io.Writer
+	Stderr          io.Writer
+	IgnoreErrorCode bool
 }
 
 var (
@@ -62,5 +63,12 @@ func RunCommand(opts *RunCommandOptions) error {
 	if err = r.Reset(); err != nil {
 		return err
 	}
-	return r.Run(p)
+	if err = r.Run(p); err != nil {
+		if opts.IgnoreErrorCode {
+			if _, ok := err.(interp.ExitCode); ok {
+				return nil
+			}
+		}
+	}
+	return err
 }
