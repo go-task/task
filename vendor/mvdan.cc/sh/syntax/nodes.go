@@ -232,7 +232,7 @@ func (a *Assign) End() Pos {
 type Redirect struct {
 	OpPos Pos
 	Op    RedirOperator
-	N     *Lit  // N>, must be a number
+	N     *Lit  // fd>, or {varname}> in Bash
 	Word  *Word // >word
 	Hdoc  *Word // here-document body
 }

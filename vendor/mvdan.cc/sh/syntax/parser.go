@@ -30,6 +30,18 @@ func Variant(l LangVariant) func(*Parser) {
 	return func(p *Parser) { p.lang = l }
 }
 
+func (l LangVariant) String() string {
+	switch l {
+	case LangBash:
+		return "bash"
+	case LangPOSIX:
+		return "posix"
+	case LangMirBSDKorn:
+		return "mksh"
+	}
+	return "unknown shell language variant"
+}
+
 // StopAt configures the lexer to stop at an arbitrary word, treating it
 // as if it were the end of the input. It can contain any characters
 // except whitespace, and cannot be over four bytes in size.
@@ -480,26 +492,60 @@ func (p *Parser) errPass(err error) {
 		p.err = err
 		p.bsp = len(p.bs) + 1
 		p.r = utf8.RuneSelf
+		p.w = 1
 		p.tok = _EOF
 	}
 }
 
-// ParseError represents an error found when parsing a source file.
+// ParseError represents an error found when parsing a source file, from which
+// the parser cannot recover.
 type ParseError struct {
 	Filename string
 	Pos
 	Text string
 }
 
-func (e *ParseError) Error() string {
+func (e ParseError) Error() string {
 	if e.Filename == "" {
 		return fmt.Sprintf("%s: %s", e.Pos.String(), e.Text)
 	}
 	return fmt.Sprintf("%s:%s: %s", e.Filename, e.Pos.String(), e.Text)
 }
 
+// LangError is returned when the parser encounters code that is only valid in
+// other shell language variants. The error includes what feature is not present
+// in the current language variant, and what languages support it.
+type LangError struct {
+	Filename string
+	Pos
+	Feature string
+	Langs   []LangVariant
+}
+
+func (e LangError) Error() string {
+	var buf bytes.Buffer
+	if e.Filename != "" {
+		buf.WriteString(e.Filename + ":")
+	}
+	buf.WriteString(e.Pos.String() + ": ")
+	buf.WriteString(e.Feature)
+	if strings.HasSuffix(e.Feature, "s") {
+		buf.WriteString(" are a ")
+	} else {
+		buf.WriteString(" is a ")
+	}
+	for i, lang := range e.Langs {
+		if i > 0 {
+			buf.WriteString("/")
+		}
+		buf.WriteString(lang.String())
+	}
+	buf.WriteString(" feature")
+	return buf.String()
+}
+
 func (p *Parser) posErr(pos Pos, format string, a ...interface{}) {
-	p.errPass(&ParseError{
+	p.errPass(ParseError{
 		Filename: p.f.Name,
 		Pos:      pos,
 		Text:     fmt.Sprintf(format, a...),
@@ -508,6 +554,15 @@ func (p *Parser) posErr(pos Pos, format string, a ...interface{}) {
 
 func (p *Parser) curErr(format string, a ...interface{}) {
 	p.posErr(p.pos, format, a...)
+}
+
+func (p *Parser) langErr(pos Pos, feature string, langs ...LangVariant) {
+	p.errPass(LangError{
+		Filename: p.f.Name,
+		Pos:      pos,
+		Feature:  feature,
+		Langs:    langs,
+	})
 }
 
 func (p *Parser) stmts(fn func(*Stmt) bool, stops ...string) {
@@ -668,7 +723,7 @@ func (p *Parser) wordPart() WordPart {
 		p.next()
 		if p.got(hash) {
 			if p.lang != LangMirBSDKorn {
-				p.posErr(ar.Pos(), "unsigned expressions are a mksh feature")
+				p.langErr(ar.Pos(), "unsigned expressions", LangMirBSDKorn)
 			}
 			ar.Unsigned = true
 		}
@@ -712,9 +767,16 @@ func (p *Parser) wordPart() WordPart {
 		p.pos = posAddCol(p.pos, 1)
 		pe.Param = p.getLit()
 		if pe.Param != nil && pe.Param.Value == "" {
-			// e.g. "$\\\n", which we can't detect above
 			l := p.lit(pe.Dollar, "$")
-			p.next()
+			if p.val == "" {
+				// e.g. "$\\\n" followed by a closing double
+				// quote, so we need the next token.
+				p.next()
+			} else {
+				// e.g. "$\\\"" within double quotes, so we must
+				// keep the rest of the literal characters.
+				l.ValueEnd = posAddCol(l.ValuePos, 1)
+			}
 			return l
 		}
 		return pe
@@ -777,7 +839,7 @@ func (p *Parser) wordPart() WordPart {
 		return cs
 	case globQuest, globStar, globPlus, globAt, globExcl:
 		if p.lang == LangPOSIX {
-			p.curErr("extended globs are a bash feature")
+			p.langErr(p.pos, "extended globs", LangBash, LangMirBSDKorn)
 		}
 		eg := &ExtGlob{Op: GlobOperator(p.tok), OpPos: p.pos}
 		lparens := 1
@@ -1058,7 +1120,7 @@ func (p *Parser) paramExp() *ParamExp {
 	case exclMark:
 		if paramNameOp(p.r) {
 			if p.lang == LangPOSIX {
-				p.curErr("${!foo} is a bash feature")
+				p.langErr(p.pos, "${!foo}", LangBash, LangMirBSDKorn)
 			}
 			pe.Excl = true
 			p.next()
@@ -1067,6 +1129,9 @@ func (p *Parser) paramExp() *ParamExp {
 	op := p.tok
 	switch p.tok {
 	case _Lit, _LitWord:
+		if !numberLiteral(p.val) && !ValidName(p.val) {
+			p.curErr("invalid parameter name")
+		}
 		pe.Param = p.lit(p.pos, p.val)
 		p.next()
 	case quest, minus:
@@ -1093,7 +1158,7 @@ func (p *Parser) paramExp() *ParamExp {
 		return pe
 	case leftBrack:
 		if p.lang == LangPOSIX {
-			p.curErr("arrays are a bash feature")
+			p.langErr(p.pos, "arrays", LangBash, LangMirBSDKorn)
 		}
 		if !ValidName(pe.Param.Value) {
 			p.curErr("cannot index a special parameter name")
@@ -1113,7 +1178,7 @@ func (p *Parser) paramExp() *ParamExp {
 	case slash, dblSlash:
 		// pattern search and replace
 		if p.lang == LangPOSIX {
-			p.curErr("search and replace is a bash feature")
+			p.langErr(p.pos, "search and replace", LangBash, LangMirBSDKorn)
 		}
 		pe.Repl = &Replace{All: p.tok == dblSlash}
 		p.quote = paramExpRepl
@@ -1126,7 +1191,7 @@ func (p *Parser) paramExp() *ParamExp {
 	case colon:
 		// slicing
 		if p.lang == LangPOSIX {
-			p.curErr("slicing is a bash feature")
+			p.langErr(p.pos, "slicing", LangBash, LangMirBSDKorn)
 		}
 		pe.Slice = &Slice{}
 		colonPos := p.pos
@@ -1141,13 +1206,13 @@ func (p *Parser) paramExp() *ParamExp {
 	case caret, dblCaret, comma, dblComma:
 		// upper/lower case
 		if p.lang != LangBash {
-			p.curErr("this expansion operator is a bash feature")
+			p.langErr(p.pos, "this expansion operator", LangBash)
 		}
 		pe.Exp = p.paramExpExp()
 	case at, star:
 		switch {
 		case p.tok == at && p.lang == LangPOSIX:
-			p.curErr("this expansion operator is a bash feature")
+			p.langErr(p.pos, "this expansion operator", LangBash, LangMirBSDKorn)
 		case p.tok == star && !pe.Excl:
 			p.curErr("not a valid parameter expansion operator: %v", p.tok)
 		case pe.Excl:
@@ -1252,6 +1317,15 @@ func ValidName(val string) bool {
 	return true
 }
 
+func numberLiteral(val string) bool {
+	for _, r := range val {
+		if '0' > r || r > '9' {
+			return false
+		}
+	}
+	return true
+}
+
 func (p *Parser) hasValidIdent() bool {
 	if p.tok != _Lit && p.tok != _LitWord {
 		return false
@@ -1319,7 +1393,7 @@ func (p *Parser) getAssign(needEqual bool) *Assign {
 	}
 	if as.Value == nil && p.tok == leftParen {
 		if p.lang == LangPOSIX {
-			p.curErr("arrays are a bash feature")
+			p.langErr(p.pos, "arrays", LangBash, LangMirBSDKorn)
 		}
 		if as.Index != nil {
 			p.curErr("arrays cannot be nested")
@@ -1394,6 +1468,9 @@ func (p *Parser) doRedirect(s *Stmt) {
 		s.Redirs = append(s.Redirs, r)
 	}
 	r.N = p.getLit()
+	if p.lang != LangBash && r.N != nil && r.N.Value[0] == '{' {
+		p.langErr(r.N.Pos(), "{varname} redirects", LangBash)
+	}
 	r.Op, r.OpPos = RedirOperator(p.tok), p.pos
 	p.next()
 	switch r.Op {
@@ -1643,7 +1720,7 @@ func (p *Parser) arithmExpCmd(s *Stmt) {
 	p.next()
 	if p.got(hash) {
 		if p.lang != LangMirBSDKorn {
-			p.posErr(ar.Pos(), "unsigned expressions are a mksh feature")
+			p.langErr(ar.Pos(), "unsigned expressions", LangMirBSDKorn)
 		}
 		ar.Unsigned = true
 	}
@@ -1725,7 +1802,7 @@ func (p *Parser) loop(fpos Pos) Loop {
 	if p.lang != LangBash {
 		switch p.tok {
 		case leftParen, dblLeftParen:
-			p.curErr("c-style fors are a bash feature")
+			p.langErr(p.pos, "c-style fors", LangBash)
 		}
 	}
 	if p.tok == dblLeftParen {
@@ -1909,7 +1986,7 @@ func (p *Parser) testExpr(ftok token, fpos Pos, pastAndOr bool) TestExpr {
 		}
 	case TsReMatch:
 		if p.lang != LangBash {
-			p.curErr("regex tests are a bash feature")
+			p.langErr(p.pos, "regex tests", LangBash)
 		}
 		oldReOpenParens := p.reOpenParens
 		old := p.preNested(testRegexp)

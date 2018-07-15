@@ -3,129 +3,185 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:147fe67eb5dcb4f1a182992bf2a9b00ca4de3f4b8193bda0c89a9fdbb9db6ad6"
   name = "github.com/Masterminds/semver"
   packages = ["."]
+  pruneopts = "NUT"
   revision = "3c560837130448941620d7694991d3ec440aefc0"
 
 [[projects]]
+  branch = "master"
+  digest = "1:43f9a530dfe36fb355b05fbc7a5712f8149a7f6bdfd131bc0ccc634e25c4dd1e"
   name = "github.com/Masterminds/sprig"
   packages = ["."]
+  pruneopts = "NUT"
   revision = "6b2a58267f6a8b1dc8e2eb5519b984008fa85e8c"
-  version = "v2.15.0"
 
 [[projects]]
+  digest = "1:975108e8d4f5dab096fc991326e96a5716ee8d02e5e7386bb4796171afc4ab9a"
   name = "github.com/aokoli/goutils"
   packages = ["."]
+  pruneopts = "NUT"
   revision = "3391d3790d23d03408670993e957e8f408993c34"
   version = "v1.0.1"
 
 [[projects]]
+  digest = "1:a2c1d0e43bd3baaa071d1b9ed72c27d78169b2b269f71c105ac4ba34b1be4a39"
   name = "github.com/davecgh/go-spew"
   packages = ["spew"]
+  pruneopts = "NUT"
   revision = "346938d642f2ec3594ed81d874461961cd0faa76"
   version = "v1.1.0"
 
 [[projects]]
+  digest = "1:1bb197a3b5db4e06e00b7560f8e89836c486627f2a0338332ed37daa003d259e"
   name = "github.com/google/uuid"
   packages = ["."]
+  pruneopts = "NUT"
   revision = "064e2069ce9c359c118179501254f67d7d37ba24"
   version = "0.2"
 
 [[projects]]
+  digest = "1:f5db19d350bd0b542d17f7e7cf4e7068bac416c08adb6a129b3c6d1db8211051"
   name = "github.com/huandu/xstrings"
   packages = ["."]
+  pruneopts = "NUT"
   revision = "2bf18b218c51864a87384c06996e40ff9dcff8e1"
   version = "v1.0.0"
 
 [[projects]]
+  branch = "master"
+  digest = "1:65300ccc4bcb38b107b868155c303312978981e56bca707c81efec57575b5e06"
   name = "github.com/imdario/mergo"
   packages = ["."]
+  pruneopts = "NUT"
   revision = "9316a62528ac99aaecb4e47eadd6dc8aa6533d58"
-  version = "v0.3.5"
 
 [[projects]]
   branch = "master"
+  digest = "1:fdf499904ff0a8b5e05a32d98a1e65ddaff6b358640dbd8696ce8bb4e8d2d246"
   name = "github.com/mattn/go-zglob"
   packages = [
     ".",
-    "fastwalk"
+    "fastwalk",
   ]
-  revision = "49693fbb3fe3c3a75fc4e4d6fb1d7cedcbdeb385"
+  pruneopts = "NUT"
+  revision = "c436403c742d0b6d8fc37e69eadf33e024fe74fa"
 
 [[projects]]
+  branch = "master"
+  digest = "1:9db29b604bd78452d167abed82386ddd2f93973df3841896fb6ab8aff936f1d6"
+  name = "github.com/mitchellh/go-homedir"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "3864e76763d94a6df2f9960b16a20a33da9f9a66"
+
+[[projects]]
+  digest = "1:0028cb19b2e4c3112225cd871870f2d9cf49b9b4276531f03438a88e94be86fe"
   name = "github.com/pmezard/go-difflib"
   packages = ["difflib"]
+  pruneopts = "NUT"
   revision = "792786c7400a136282c1664665ae0a8db921c6c2"
   version = "v1.0.0"
 
 [[projects]]
   branch = "master"
+  digest = "1:5089085e1b27a57be4fb7acf32bfa71fb6236dc0e8371165651c9e15285a9ce0"
   name = "github.com/radovskyb/watcher"
   packages = ["."]
+  pruneopts = "NUT"
   revision = "0d9d32686dbf6395752c9b209398a59e302a7f1e"
 
 [[projects]]
   branch = "master"
+  digest = "1:8c05fbdaac9713aed2a89d171a8b4e98a563f6c84e48352d0bcb10b1a5122488"
   name = "github.com/spf13/pflag"
   packages = ["."]
+  pruneopts = "NUT"
   revision = "3ebe029320b2676d667ae88da602a5f854788a8a"
 
 [[projects]]
+  digest = "1:bacb8b590716ab7c33f2277240972c9582d389593ee8d66fc10074e0508b8126"
   name = "github.com/stretchr/testify"
   packages = ["assert"]
+  pruneopts = "NUT"
   revision = "f35b8ab0b5a2cef36673838d662e249dd9c94686"
   version = "v1.2.2"
 
 [[projects]]
   branch = "master"
+  digest = "1:17ff32de9f3bf39f76d339ddffcd380140721b112bea96837a86d4dc26c2c633"
   name = "golang.org/x/crypto"
   packages = [
     "pbkdf2",
     "scrypt",
-    "ssh/terminal"
+    "ssh/terminal",
   ]
+  pruneopts = "NUT"
   revision = "a49355c7e3f8fe157a85be2f77e6e269a0f89602"
 
 [[projects]]
   branch = "master"
+  digest = "1:76ee51c3f468493aff39dbacc401e8831fbb765104cbf613b89bef01cf4bad70"
   name = "golang.org/x/net"
   packages = ["context"]
-  revision = "afe8f62b1d6bbd81f31868121a50b06d8188e1f9"
+  pruneopts = "NUT"
+  revision = "d0887baf81f4598189d4e12a37c6da86f0bba4d0"
 
 [[projects]]
   branch = "master"
+  digest = "1:39ebcc2b11457b703ae9ee2e8cca0f68df21969c6102cb3b705f76cca0ea0239"
   name = "golang.org/x/sync"
   packages = ["errgroup"]
+  pruneopts = "NUT"
   revision = "1d60e4601c6fd243af51cc01ddf169918a5407ca"
 
 [[projects]]
   branch = "master"
+  digest = "1:64107e3c8f52f341891a565d117bf263ed396fe0c16bad19634b25be25debfaa"
   name = "golang.org/x/sys"
   packages = [
     "unix",
-    "windows"
+    "windows",
   ]
-  revision = "63fc586f45fe72d95d5240a5d5eb95e6503907d3"
+  pruneopts = "NUT"
+  revision = "ac767d655b305d4e9612f5f6e33120b9176c4ad4"
 
 [[projects]]
+  branch = "v2"
+  digest = "1:7c95b35057a0ff2e19f707173cc1a947fa43a6eb5c4d300d196ece0334046082"
   name = "gopkg.in/yaml.v2"
   packages = ["."]
+  pruneopts = "NUT"
   revision = "5420a8b6744d3b0345ab293f6fcba19c978f1183"
-  version = "v2.2.1"
 
 [[projects]]
   branch = "master"
+  digest = "1:36dbf10f4bf8c7568b5d4a5fe1afb57cd8e0451a6566b28f5bc87fc01f65339d"
   name = "mvdan.cc/sh"
   packages = [
     "interp",
-    "shell",
-    "syntax"
+    "syntax",
   ]
-  revision = "ca7561fd34910fd8575a3830d3cded291c0ce8b2"
+  pruneopts = "NUT"
+  revision = "76fa0d67a25bb78ecf63fa717191661589dcdadd"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "600bd482208fdedec60141bfaffe55eb403df077944bfdf5c007a33132c8ab5a"
+  input-imports = [
+    "github.com/Masterminds/semver",
+    "github.com/Masterminds/sprig",
+    "github.com/imdario/mergo",
+    "github.com/mattn/go-zglob",
+    "github.com/mitchellh/go-homedir",
+    "github.com/radovskyb/watcher",
+    "github.com/spf13/pflag",
+    "github.com/stretchr/testify/assert",
+    "golang.org/x/sync/errgroup",
+    "gopkg.in/yaml.v2",
+    "mvdan.cc/sh/interp",
+    "mvdan.cc/sh/syntax",
+  ]
   solver-name = "gps-cdcl"
   solver-version = 1
