@@ -1,9 +1,6 @@
 * Bug reports and feature requests are welcome in [the issues][issues]
-* For questions and discussion there's the [Slack room][slack] ([invititation here][slackinvite])
 * Pull Requests are welcome. For more complex changes and features it's
   recommended to open an issue with the feature request first
 * Documentation contributions are as important as code contributions
 
 [issues]: https://github.com/go-task/task/issues
-[slack]: https://gophers.slack.com/messages/task
-[slackinvite]: https://invite.slack.golangbridge.org/
