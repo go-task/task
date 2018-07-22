@@ -26,6 +26,9 @@ func Taskfile(dir string) (*taskfile.Taskfile, error) {
 		if err != nil {
 			return nil, err
 		}
+		if t.Version != osTaskfile.Version {
+			return nil, fmt.Errorf(`Taskfile versions should match. Taskfile.yml is "%s" but Taskfile_%s.yml is "%s"`, t.Version, runtime.GOOS, osTaskfile.Version)
+		}
 		if err = mergo.MapWithOverwrite(&t.Tasks, osTaskfile.Tasks); err != nil {
 			return nil, err
 		}
