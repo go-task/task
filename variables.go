@@ -9,11 +9,6 @@ import (
 	"mvdan.cc/sh/shell"
 )
 
-var (
-	// TaskvarsFilePath file containing additional variables.
-	TaskvarsFilePath = "Taskvars"
-)
-
 // CompiledTask returns a copy of a task, but replacing variables in almost all
 // properties using the Go template package.
 func (e *Executor) CompiledTask(call taskfile.Call) (*taskfile.Task, error) {
