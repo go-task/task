@@ -145,13 +145,18 @@ tasks:
 Taskfile_linux.yml:
 
 ```yml
+version: '2'
+
 tasks:
   build:
     cmds:
       - echo "linux"
 ```
 
-Will print out `linux` and not default.
+Will print out `linux` and not `default`.
+
+Keep in mind that the version of the files should match. Also, when redefining
+a task the whole task is replaced, properties of the task are not merged.
 
 It's also possible to have an OS specific `Taskvars.yml` file, like
 `Taskvars_windows.yml`, `Taskfile_linux.yml`, or `Taskvars_darwin.yml`. See the
