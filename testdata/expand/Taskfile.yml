@@ -1,0 +1,8 @@
+version: '2'
+
+tasks:
+  pwd:
+    cmds:
+      - pwd
+    dir: '~'
+    silent: true

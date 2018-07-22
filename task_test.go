@@ -12,6 +12,7 @@ import (
 	"github.com/go-task/task"
 	"github.com/go-task/task/internal/taskfile"
 
+	"github.com/mitchellh/go-homedir"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -411,4 +412,23 @@ func TestTaskVersion(t *testing.T) {
 			assert.Equal(t, 2, len(e.Taskfile.Tasks))
 		})
 	}
+}
+
+func TestExpand(t *testing.T) {
+	const dir = "testdata/expand"
+
+	home, err := homedir.Dir()
+	if err != nil {
+		t.Errorf("Couldn't get $HOME: %v", err)
+	}
+	var buff bytes.Buffer
+
+	e := task.Executor{
+		Dir:    dir,
+		Stdout: &buff,
+		Stderr: &buff,
+	}
+	assert.NoError(t, e.Setup())
+	assert.NoError(t, e.Run(taskfile.Call{Task: "pwd"}))
+	assert.Equal(t, home, strings.TrimSpace(buff.String()))
 }
