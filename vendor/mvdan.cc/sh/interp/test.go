@@ -15,29 +15,36 @@ import (
 )
 
 // non-empty string is true, empty string is false
-func (r *Runner) bashTest(expr syntax.TestExpr) string {
+func (r *Runner) bashTest(expr syntax.TestExpr, classic bool) string {
 	switch x := expr.(type) {
 	case *syntax.Word:
 		return r.loneWord(x)
 	case *syntax.ParenTest:
-		return r.bashTest(x.X)
+		return r.bashTest(x.X, classic)
 	case *syntax.BinaryTest:
 		switch x.Op {
 		case syntax.TsMatch, syntax.TsNoMatch:
 			str := r.loneWord(x.X.(*syntax.Word))
 			yw := x.Y.(*syntax.Word)
-			pat := r.lonePattern(yw)
-			if match(pat, str) == (x.Op == syntax.TsMatch) {
-				return "1"
+			if classic { // test, [
+				lit := r.loneWord(yw)
+				if (str == lit) == (x.Op == syntax.TsMatch) {
+					return "1"
+				}
+			} else { // [[
+				pat := r.lonePattern(yw)
+				if match(pat, str) == (x.Op == syntax.TsMatch) {
+					return "1"
+				}
 			}
 			return ""
 		}
-		if r.binTest(x.Op, r.bashTest(x.X), r.bashTest(x.Y)) {
+		if r.binTest(x.Op, r.bashTest(x.X, classic), r.bashTest(x.Y, classic)) {
 			return "1"
 		}
 		return ""
 	case *syntax.UnaryTest:
-		if r.unTest(x.Op, r.bashTest(x.X)) {
+		if r.unTest(x.Op, r.bashTest(x.X, classic)) {
 			return "1"
 		}
 		return ""

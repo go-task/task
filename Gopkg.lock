@@ -3,11 +3,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:147fe67eb5dcb4f1a182992bf2a9b00ca4de3f4b8193bda0c89a9fdbb9db6ad6"
+  digest = "1:f3960e064201714a3507bf96183be246b3d941568af01dc5cff2a388ac4c7515"
   name = "github.com/Masterminds/semver"
   packages = ["."]
   pruneopts = "NUT"
-  revision = "3c560837130448941620d7694991d3ec440aefc0"
+  revision = "4ca3c04fd4fe2a472df0d7121b1b9462f2214c43"
 
 [[projects]]
   branch = "master"
@@ -50,12 +50,12 @@
   version = "v1.0.0"
 
 [[projects]]
-  branch = "master"
   digest = "1:65300ccc4bcb38b107b868155c303312978981e56bca707c81efec57575b5e06"
   name = "github.com/imdario/mergo"
   packages = ["."]
   pruneopts = "NUT"
   revision = "9316a62528ac99aaecb4e47eadd6dc8aa6533d58"
+  version = "v0.3.5"
 
 [[projects]]
   branch = "master"
@@ -118,7 +118,7 @@
     "ssh/terminal",
   ]
   pruneopts = "NUT"
-  revision = "a49355c7e3f8fe157a85be2f77e6e269a0f89602"
+  revision = "a2144134853fc9a27a7b1e3eb4f19f1a76df13c9"
 
 [[projects]]
   branch = "master"
@@ -126,7 +126,7 @@
   name = "golang.org/x/net"
   packages = ["context"]
   pruneopts = "NUT"
-  revision = "d0887baf81f4598189d4e12a37c6da86f0bba4d0"
+  revision = "a680a1efc54dd51c040b3b5ce4939ea3cf2ea0d1"
 
 [[projects]]
   branch = "master"
@@ -157,14 +157,15 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:36dbf10f4bf8c7568b5d4a5fe1afb57cd8e0451a6566b28f5bc87fc01f65339d"
+  digest = "1:01be9a02fb8bcae03383a7422d0bd48813fd49834a50be5ef933e430604b3423"
   name = "mvdan.cc/sh"
   packages = [
     "interp",
+    "shell",
     "syntax",
   ]
   pruneopts = "NUT"
-  revision = "76fa0d67a25bb78ecf63fa717191661589dcdadd"
+  revision = "54e5852f101469e5ff9b03902ce0d4ff2ef09809"
 
 [solve-meta]
   analyzer-name = "dep"
@@ -172,7 +173,6 @@
   input-imports = [
     "github.com/Masterminds/semver",
     "github.com/Masterminds/sprig",
-    "github.com/imdario/mergo",
     "github.com/mattn/go-zglob",
     "github.com/mitchellh/go-homedir",
     "github.com/radovskyb/watcher",
@@ -181,6 +181,7 @@
     "golang.org/x/sync/errgroup",
     "gopkg.in/yaml.v2",
     "mvdan.cc/sh/interp",
+    "mvdan.cc/sh/shell",
     "mvdan.cc/sh/syntax",
   ]
   solver-name = "gps-cdcl"

@@ -788,6 +788,7 @@ func (p *Printer) elemJoin(elems []*ArrayElem, last []Comment) {
 }
 
 func (p *Printer) stmt(s *Stmt) {
+	p.wroteSemi = false
 	if s.Negated {
 		p.spacedString("!", s.Pos())
 	}
@@ -817,7 +818,6 @@ func (p *Printer) stmt(s *Stmt) {
 			p.pendingHdocs = append(p.pendingHdocs, r)
 		}
 	}
-	p.wroteSemi = false
 	switch {
 	case s.Semicolon.IsValid() && s.Semicolon.Line() > p.line:
 		p.bslashNewl()
