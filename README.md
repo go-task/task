@@ -635,6 +635,11 @@ tasks:
       - echo "This will print nothing" > /dev/null
 ```
 
+## Dry Run Mode
+
+Dry run mode (`--dry-run`) compiles and steps through each task, printing the commands
+that would be run without executing them. This is useful for debugging your Taskfiles.
+
 ## Output syntax
 
 By default, Task just redirect the STDOUT and STDERR of the running commands
