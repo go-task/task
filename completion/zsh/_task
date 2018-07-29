@@ -12,7 +12,7 @@ function __list() {
 
 _arguments \
     '(-d --dir)'{-d,--dir}': :_files' \
-    '(--dry-run)'--dry-run \
+    '(--dry)'--dry \
     '(-f --force)'{-f,--force} \
     '(-i --init)'{-i,--init} \
     '(-l --list)'{-l,--list} \

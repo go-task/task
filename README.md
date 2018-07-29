@@ -637,7 +637,7 @@ tasks:
 
 ## Dry Run Mode
 
-Dry run mode (`--dry-run`) compiles and steps through each task, printing the commands
+Dry run mode (`--dry`) compiles and steps through each task, printing the commands
 that would be run without executing them. This is useful for debugging your Taskfiles.
 
 ## Output syntax
