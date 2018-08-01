@@ -188,7 +188,7 @@ func (e *Executor) runDeps(ctx context.Context, t *taskfile.Task) error {
 		d := d
 
 		g.Go(func() error {
-			return e.RunTask(ctx, taskfile.Call{Task: d.Task, Vars: d.Vars, IgnoreError: d.IgnoreError})
+			return e.RunTask(ctx, taskfile.Call{Task: d.Task, Vars: d.Vars})
 		})
 	}
 
@@ -200,7 +200,7 @@ func (e *Executor) runCommand(ctx context.Context, t *taskfile.Task, call taskfi
 
 	switch {
 	case cmd.Task != "":
-		return e.RunTask(ctx, taskfile.Call{Task: cmd.Task, Vars: cmd.Vars, IgnoreError: cmd.IgnoreError || call.IgnoreError})
+		return e.RunTask(ctx, taskfile.Call{Task: cmd.Task, Vars: cmd.Vars})
 	case cmd.Cmd != "":
 		if e.Verbose || (!cmd.Silent && !t.Silent && !e.Silent) {
 			e.Logger.Errf(cmd.Cmd)
@@ -219,7 +219,7 @@ func (e *Executor) runCommand(ctx context.Context, t *taskfile.Task, call taskfi
 			Stdin:           e.Stdin,
 			Stdout:          stdOut,
 			Stderr:          stdErr,
-			IgnoreErrorCode: cmd.IgnoreError || call.IgnoreError,
+			IgnoreErrorCode: cmd.IgnoreError,
 		})
 	default:
 		return nil

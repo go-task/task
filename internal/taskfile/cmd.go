@@ -16,9 +16,8 @@ type Cmd struct {
 
 // Dep is a task dependency
 type Dep struct {
-	Task        string
-	Vars        Vars
-	IgnoreError bool
+	Task string
+	Vars Vars
 }
 
 var (
@@ -42,7 +41,7 @@ func (c *Cmd) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	var cmdStruct struct {
 		Cmd         string
 		Silent      bool
-		IgnoreError bool `yaml:"ignoreError"`
+		IgnoreError bool `yaml:"ignore_error"`
 	}
 	if err := unmarshal(&cmdStruct); err == nil && cmdStruct.Cmd != "" {
 		c.Cmd = cmdStruct.Cmd
@@ -51,14 +50,12 @@ func (c *Cmd) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		return nil
 	}
 	var taskCall struct {
-		Task        string
-		Vars        Vars
-		IgnoreError bool `yaml:"ignoreError"`
+		Task string
+		Vars Vars
 	}
 	if err := unmarshal(&taskCall); err == nil {
 		c.Task = taskCall.Task
 		c.Vars = taskCall.Vars
-		c.IgnoreError = taskCall.IgnoreError
 		return nil
 	}
 	return ErrCantUnmarshalCmd
@@ -72,14 +69,12 @@ func (d *Dep) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		return nil
 	}
 	var taskCall struct {
-		Task        string
-		Vars        Vars
-		IgnoreError bool `yaml:"ignoreError"`
+		Task string
+		Vars Vars
 	}
 	if err := unmarshal(&taskCall); err == nil {
 		d.Task = taskCall.Task
 		d.Vars = taskCall.Vars
-		d.IgnoreError = taskCall.IgnoreError
 		return nil
 	}
 	return ErrCantUnmarshalDep

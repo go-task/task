@@ -415,43 +415,23 @@ func TestTaskVersion(t *testing.T) {
 func TestTaskIgnoreErrors(t *testing.T) {
 	const dir = "testdata/ignore_errors"
 
-	t.Run("CmdShouldPass", func(t *testing.T) {
+	t.Run("cmd-should-pass", func(t *testing.T) {
 		e := task.Executor{
 			Dir:    dir,
 			Stdout: ioutil.Discard,
 			Stderr: ioutil.Discard,
 		}
 		assert.NoError(t, e.Setup())
-		assert.NoError(t, e.Run(taskfile.Call{Task: "CmdShouldPass"}))
+		assert.NoError(t, e.Run(taskfile.Call{Task: "cmd-should-pass"}))
 	})
 
-	t.Run("CmdShouldFail", func(t *testing.T) {
+	t.Run("cmd-should-fail", func(t *testing.T) {
 		e := task.Executor{
 			Dir:    dir,
 			Stdout: ioutil.Discard,
 			Stderr: ioutil.Discard,
 		}
 		assert.NoError(t, e.Setup())
-		assert.Error(t, e.Run(taskfile.Call{Task: "CmdShouldFail"}))
-	})
-
-	t.Run("TaskShouldPass", func(t *testing.T) {
-		e := task.Executor{
-			Dir:    dir,
-			Stdout: ioutil.Discard,
-			Stderr: ioutil.Discard,
-		}
-		assert.NoError(t, e.Setup())
-		assert.NoError(t, e.Run(taskfile.Call{Task: "TaskShouldPass"}))
-	})
-
-	t.Run("TaskShouldFail", func(t *testing.T) {
-		e := task.Executor{
-			Dir:    dir,
-			Stdout: ioutil.Discard,
-			Stderr: ioutil.Discard,
-		}
-		assert.NoError(t, e.Setup())
-		assert.Error(t, e.Run(taskfile.Call{Task: "TaskShouldFail"}))
+		assert.Error(t, e.Run(taskfile.Call{Task: "cmd-should-fail"}))
 	})
 }

@@ -1,15 +1,11 @@
-CmdShouldPass:
-  cmds:
-    - cmd: UnknownCommandThatNeverWillExist
-      ignoreError: true
-CmdShouldFail:
-  cmds:
-    - cmd: UnknownCommandThatNeverWillExist
+version: 2
 
-TaskShouldPass:
-  cmds:
-    - task: CmdShouldFail
-      ignoreError: true
-TaskShouldFail:
-  cmds:
-    - task: CmdShouldFail
+tasks:
+  cmd-should-pass:
+    cmds:
+      - cmd: exit 1
+        ignore_error: true
+
+  cmd-should-fail:
+    cmds:
+      - cmd: exit 1
