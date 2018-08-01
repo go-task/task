@@ -9,10 +9,6 @@
 
 [[constraint]]
   branch = "master"
-  name = "github.com/imdario/mergo"
-
-[[constraint]]
-  branch = "master"
   name = "github.com/mattn/go-zglob"
 
 [[constraint]]

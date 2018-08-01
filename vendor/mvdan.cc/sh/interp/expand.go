@@ -247,7 +247,7 @@ func (r *Runner) wordField(wps []syntax.WordPart, ql quoteLevel) []fieldPart {
 						case '\n': // remove \\\n
 							i++
 							continue
-						case '\\', '$', '`': // special chars
+						case '"', '\\', '$', '`': // special chars
 							continue
 						}
 					}

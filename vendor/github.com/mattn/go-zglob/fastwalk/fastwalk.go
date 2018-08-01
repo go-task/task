@@ -19,6 +19,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"sync"
 )
 
 // TraverseLink is a sentinel error for fastWalk, similar to filepath.SkipDir.
@@ -67,11 +68,18 @@ func FastWalk(root string, walkFn func(path string, typ os.FileMode) error) erro
 		// buffered for correctness & not leaking goroutines:
 		resc: make(chan error, numWorkers),
 	}
-	defer close(w.donec)
+
 	// TODO(bradfitz): start the workers as needed? maybe not worth it.
+	var wg sync.WaitGroup
 	for i := 0; i < numWorkers; i++ {
-		go w.doWork()
+		wg.Add(1)
+		go w.doWork(&wg)
 	}
+
+	// Ensure we wait for goroutines we started to finish before we return.
+	defer wg.Wait()
+	defer close(w.donec)
+
 	todo := []walkItem{{dir: root}}
 	out := 0
 	for {
@@ -113,10 +121,11 @@ func FastWalk(root string, walkFn func(path string, typ os.FileMode) error) erro
 
 // doWork reads directories as instructed (via workc) and runs the
 // user's callback function.
-func (w *walker) doWork() {
+func (w *walker) doWork(wg *sync.WaitGroup) {
 	for {
 		select {
 		case <-w.donec:
+			wg.Done()
 			return
 		case it := <-w.workc:
 			w.resc <- w.walk(it.dir, !it.callbackDone)

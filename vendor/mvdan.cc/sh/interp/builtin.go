@@ -290,7 +290,7 @@ func (r *Runner) builtinCode(pos syntax.Pos, name string, args []string) int {
 		if parseErr {
 			return 2
 		}
-		return oneIf(r.bashTest(expr) == "")
+		return oneIf(r.bashTest(expr, true) == "")
 	case "exec":
 		// TODO: Consider syscall.Exec, i.e. actually replacing
 		// the process. It's in theory what a shell should do,

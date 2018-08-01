@@ -4,9 +4,11 @@
 package shell
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"os"
+	"time"
 
 	"mvdan.cc/sh/interp"
 	"mvdan.cc/sh/syntax"
@@ -44,6 +46,8 @@ var purePrograms = []string{
 	"env", "sleep", "uniq", "sort",
 }
 
+var pureRunnerTimeout = 2 * time.Second
+
 func pureRunner() *interp.Runner {
 	r := &interp.Runner{}
 	// forbid executing programs that might cause trouble
@@ -67,10 +71,14 @@ func pureRunner() *interp.Runner {
 //
 // Any side effects or modifications to the system are forbidden when
 // interpreting the program. This is enforced via whitelists when
-// executing programs and opening paths.
+// executing programs and opening paths. The interpreter also has a timeout of
+// two seconds.
 func SourceNode(node syntax.Node) (map[string]interp.Variable, error) {
 	r := pureRunner()
 	r.Reset()
+	ctx, cancel := context.WithTimeout(context.Background(), pureRunnerTimeout)
+	defer cancel()
+	r.Context = ctx
 	if err := r.Run(node); err != nil {
 		return nil, fmt.Errorf("could not run: %v", err)
 	}

@@ -1,4 +1,3 @@
-[![Join Slack room](https://img.shields.io/badge/%23task-chat%20room-blue.svg)](https://gophers.slack.com/messages/task)
 [![Build Status](https://travis-ci.org/go-task/task.svg?branch=master)](https://travis-ci.org/go-task/task)
 
 # Task - A task runner / simpler Make alternative written in Go
@@ -127,7 +126,7 @@ tasks:
 
 ### OS specific task
 
-If you add a `Taskfile_{{GOOS}}.yml` you can override or amend your taskfile
+If you add a `Taskfile_{{GOOS}}.yml` you can override or amend your Taskfile
 based on the operating system.
 
 Example:
@@ -146,13 +145,18 @@ tasks:
 Taskfile_linux.yml:
 
 ```yml
+version: '2'
+
 tasks:
   build:
     cmds:
       - echo "linux"
 ```
 
-Will print out `linux` and not default.
+Will print out `linux` and not `default`.
+
+Keep in mind that the version of the files should match. Also, when redefining
+a task the whole task is replaced, properties of the task are not merged.
 
 It's also possible to have an OS specific `Taskvars.yml` file, like
 `Taskvars_windows.yml`, `Taskfile_linux.yml`, or `Taskvars_darwin.yml`. See the
@@ -325,7 +329,6 @@ If you prefer this check to be made by the content of the files, instead of
 its timestamp, just set the `method` property to `checksum`.
 You will probably want to ignore the `.task` folder in your `.gitignore` file
 (It's there that Task stores the last checksum).
-This feature is still experimental and can change until it's stable.
 
 ```yml
 version: '2'

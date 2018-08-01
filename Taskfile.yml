@@ -5,24 +5,13 @@ vars:
     sh: git log -n 1 --format=%h
 
   GO_PACKAGES:
-    .
-    ./cmd/task
-    ./internal/args
-    ./internal/compiler
-    ./internal/compiler/v1
-    ./internal/compiler/v2
-    ./internal/execext
-    ./internal/logger
-    ./internal/osext
-    ./internal/output
-    ./internal/status
-    ./internal/taskfile
-    ./internal/taskfile/version
-    ./internal/templater
+    sh: go list ./...
 
 tasks:
-  # compiles current source code and make "task" executable available on
-  # $GOPATH/bin/task{.exe}
+  default:
+    cmds:
+      - task: test
+
   install:
     desc: Installs Task
     cmds:
@@ -35,8 +24,6 @@ tasks:
     cmds:
       - task: go-get
         vars: {REPO: github.com/golang/lint/golint}
-      - task: go-get
-        vars: {REPO: github.com/asticode/go-astitodo/astitodo}
       - task: go-get
         vars: {REPO: github.com/golang/dep/cmd/dep}
       - task: go-get
@@ -58,14 +45,14 @@ tasks:
   lint:
     desc: Runs golint
     cmds:
-      - golint {{.GO_PACKAGES}}
+      - golint {{catLines .GO_PACKAGES}}
     silent: true
 
   test:
     desc: Runs test suite
     deps: [install]
     cmds:
-      - go test {{.GO_PACKAGES}}
+      - go test {{catLines .GO_PACKAGES}}
 
   test-release:
     desc: Tests release process without publishing
@@ -77,12 +64,6 @@ tasks:
     cmds:
       - godownloader --repo go-task/task -o install-task.sh
 
-  todo:
-    desc: Prints TODO comments present in the code
-    cmds:
-      - astitodo {{.GO_PACKAGES}}
-    silent: true
-
   ci:
     cmds:
       - task: go-get
@@ -93,3 +74,8 @@ tasks:
   go-get:
     cmds:
       - go get -u {{.REPO}}
+
+  packages:
+    cmds:
+      - echo '{{.GO_PACKAGES}}'
+    silent: true

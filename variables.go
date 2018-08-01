@@ -3,14 +3,10 @@ package task
 import (
 	"path/filepath"
 
-	"github.com/go-task/task/internal/osext"
 	"github.com/go-task/task/internal/taskfile"
 	"github.com/go-task/task/internal/templater"
-)
 
-var (
-	// TaskvarsFilePath file containing additional variables.
-	TaskvarsFilePath = "Taskvars"
+	"mvdan.cc/sh/shell"
 )
 
 // CompiledTask returns a copy of a task, but replacing variables in almost all
@@ -40,7 +36,7 @@ func (e *Executor) CompiledTask(call taskfile.Call) (*taskfile.Task, error) {
 		Method:    r.Replace(origTask.Method),
 		Prefix:    r.Replace(origTask.Prefix),
 	}
-	new.Dir, err = osext.Expand(new.Dir)
+	new.Dir, err = shell.Expand(new.Dir, nil)
 	if err != nil {
 		return nil, err
 	}

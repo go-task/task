@@ -68,17 +68,12 @@ func NewPrinter(options ...func(*Printer)) *Printer {
 func (p *Printer) Print(w io.Writer, node Node) error {
 	p.reset()
 	p.bufWriter.Reset(w)
-	p.line = node.Pos().Line()
 	switch x := node.(type) {
 	case *File:
-		p.stmts(x.StmtList)
+		p.stmtList(x.StmtList)
 		p.newline(x.End())
 	case *Stmt:
-		sl := StmtList{Stmts: []*Stmt{x}}
-		// StmtList.pos is better than Stmt.Pos, since it also takes
-		// comments into account.
-		p.line = sl.pos().Line()
-		p.stmts(sl)
+		p.stmtList(StmtList{Stmts: []*Stmt{x}})
 	case *Word:
 		p.word(x)
 	case Command:
@@ -152,6 +147,8 @@ type Printer struct {
 	// comment in the same line, breaking programs.
 	pendingComments []Comment
 
+	// firstLine means we are still writing the first line
+	firstLine bool
 	// line is the current line number
 	line uint
 
@@ -180,7 +177,11 @@ func (p *Printer) reset() {
 	p.wantSpace, p.wantNewline = false, false
 	p.commentPadding = 0
 	p.pendingComments = p.pendingComments[:0]
+
+	// minification uses its own newline logic
+	p.firstLine = !p.minify
 	p.line = 0
+
 	p.lastLevel, p.level = 0, 0
 	p.levelIncs = p.levelIncs[:0]
 	p.nestedBinary = false
@@ -354,7 +355,8 @@ func (p *Printer) flushHeredocs() {
 }
 
 func (p *Printer) newlines(pos Pos) {
-	if !p.wantNewline && p.line == 0 && len(p.pendingComments) == 0 {
+	if p.firstLine && len(p.pendingComments) == 0 {
+		p.firstLine = false
 		return // no empty lines at the top
 	}
 	if !p.wantNewline && pos.Line() <= p.line {
@@ -379,11 +381,11 @@ func (p *Printer) rightParen(pos Pos) {
 	p.wantSpace = true
 }
 
-func (p *Printer) semiRsrv(s string, pos Pos, fallback bool) {
+func (p *Printer) semiRsrv(s string, pos Pos) {
 	if p.wantNewline || pos.Line() > p.line {
 		p.newlines(pos)
 	} else {
-		if fallback && !p.wroteSemi {
+		if !p.wroteSemi {
 			p.WriteByte(';')
 		}
 		if !p.minify {
@@ -403,6 +405,9 @@ func (p *Printer) comment(c Comment) {
 
 func (p *Printer) flushComments() {
 	for i, c := range p.pendingComments {
+		p.firstLine = false
+		// We can't call any of the newline methods, as they call this
+		// function and we'd recurse forever.
 		cline := c.Hash.Line()
 		switch {
 		case i > 0, cline > p.line && p.line > 0:
@@ -430,6 +435,9 @@ func (p *Printer) flushComments() {
 }
 
 func (p *Printer) comments(cs []Comment) {
+	if p.minify {
+		return
+	}
 	p.pendingComments = append(p.pendingComments, cs...)
 }
 
@@ -465,12 +473,12 @@ func (p *Printer) wordPart(wp, next WordPart) {
 			p.wantSpace = true
 			p.nestedStmts(x.StmtList, x.Right)
 			p.wantSpace = false
-			p.semiRsrv("}", x.Right, true)
+			p.semiRsrv("}", x.Right)
 		case x.ReplyVar:
 			p.WriteString("${|")
 			p.nestedStmts(x.StmtList, x.Right)
 			p.wantSpace = false
-			p.semiRsrv("}", x.Right, true)
+			p.semiRsrv("}", x.Right)
 		default:
 			p.WriteString("$(")
 			p.wantSpace = len(x.Stmts) > 0 && startsWithLparen(x.Stmts[0])
@@ -478,14 +486,19 @@ func (p *Printer) wordPart(wp, next WordPart) {
 			p.rightParen(x.Right)
 		}
 	case *ParamExp:
-		nextLit, ok := next.(*Lit)
 		litCont := ";"
-		if ok {
+		if nextLit, ok := next.(*Lit); ok {
 			litCont = nextLit.Value[:1]
 		}
-		if p.minify && !x.Excl && !x.Length && !x.Width &&
-			x.Index == nil && x.Slice == nil && x.Repl == nil &&
-			x.Exp == nil && !ValidName(x.Param.Value+litCont) {
+		name := x.Param.Value
+		switch {
+		case !p.minify:
+		case x.Excl, x.Length, x.Width:
+		case x.Index != nil, x.Slice != nil:
+		case x.Repl != nil, x.Exp != nil:
+		case len(name) > 1 && !ValidName(name): // ${10}
+		case ValidName(name + litCont): // ${var}cont
+		default:
 			x2 := *x
 			x2.Short = true
 			p.paramExp(&x2)
@@ -510,7 +523,7 @@ func (p *Printer) wordPart(wp, next WordPart) {
 		}
 		p.WriteString(x.Op.String())
 		p.nestedStmts(x.StmtList, x.Rparen)
-		p.WriteByte(')')
+		p.rightParen(x.Rparen)
 	}
 }
 
@@ -775,6 +788,7 @@ func (p *Printer) elemJoin(elems []*ArrayElem, last []Comment) {
 }
 
 func (p *Printer) stmt(s *Stmt) {
+	p.wroteSemi = false
 	if s.Negated {
 		p.spacedString("!", s.Pos())
 	}
@@ -787,8 +801,7 @@ func (p *Printer) stmt(s *Stmt) {
 		if r.OpPos.Line() > p.line {
 			p.bslashNewl()
 		}
-		if p.minify && r.N == nil {
-		} else if p.wantSpace {
+		if p.wantSpace {
 			p.spacePad(r.Pos())
 		}
 		if r.N != nil {
@@ -805,7 +818,6 @@ func (p *Printer) stmt(s *Stmt) {
 			p.pendingHdocs = append(p.pendingHdocs, r)
 		}
 	}
-	p.wroteSemi = false
 	switch {
 	case s.Semicolon.IsValid() && s.Semicolon.Line() > p.line:
 		p.bslashNewl()
@@ -839,8 +851,7 @@ func (p *Printer) command(cmd Command, redirs []*Redirect) (startRedirs int) {
 			if r.Pos().After(x.Args[1].Pos()) || r.Op == Hdoc || r.Op == DashHdoc {
 				break
 			}
-			if p.minify && r.N == nil {
-			} else if p.wantSpace {
+			if p.wantSpace {
 				p.spacePad(r.Pos())
 			}
 			if r.N != nil {
@@ -860,7 +871,7 @@ func (p *Printer) command(cmd Command, redirs []*Redirect) (startRedirs int) {
 		p.WriteByte('{')
 		p.wantSpace = true
 		p.nestedStmts(x.StmtList, x.Rbrace)
-		p.semiRsrv("}", x.Rbrace, true)
+		p.semiRsrv("}", x.Rbrace)
 	case *IfClause:
 		p.ifClause(x, false)
 	case *Subshell:
@@ -880,7 +891,7 @@ func (p *Printer) command(cmd Command, redirs []*Redirect) (startRedirs int) {
 		p.nestedStmts(x.Cond, Pos{})
 		p.semiOrNewl("do", x.DoPos)
 		p.nestedStmts(x.Do, x.DonePos)
-		p.semiRsrv("done", x.DonePos, true)
+		p.semiRsrv("done", x.DonePos)
 	case *ForClause:
 		if x.Select {
 			p.WriteString("select ")
@@ -890,7 +901,7 @@ func (p *Printer) command(cmd Command, redirs []*Redirect) (startRedirs int) {
 		p.loop(x.Loop)
 		p.semiOrNewl("do", x.DoPos)
 		p.nestedStmts(x.Do, x.DonePos)
-		p.semiRsrv("done", x.DonePos, true)
+		p.semiRsrv("done", x.DonePos)
 	case *BinaryCmd:
 		p.stmt(x.X)
 		if p.minify || x.Y.Pos().Line() <= p.line {
@@ -973,6 +984,8 @@ func (p *Printer) command(cmd Command, redirs []*Redirect) (startRedirs int) {
 					p.wantNewline = true
 				}
 				p.spacedToken(ci.Op.String(), ci.OpPos)
+				// avoid ; directly after tokens like ;;
+				p.wroteSemi = true
 				if inlineCom != nil {
 					p.comment(*inlineCom)
 				}
@@ -984,7 +997,7 @@ func (p *Printer) command(cmd Command, redirs []*Redirect) (startRedirs int) {
 			p.flushComments()
 			p.decLevel()
 		}
-		p.semiRsrv("esac", x.Esac, len(x.Items) == 0)
+		p.semiRsrv("esac", x.Esac)
 	case *ArithmCmd:
 		p.WriteString("((")
 		if x.Unsigned {
@@ -1037,17 +1050,17 @@ func (p *Printer) ifClause(ic *IfClause, elif bool) {
 	p.semiOrNewl("then", ic.ThenPos)
 	p.nestedStmts(ic.Then, ic.bodyEndPos())
 	if ic.FollowedByElif() {
-		p.semiRsrv("elif", ic.ElsePos, true)
+		p.semiRsrv("elif", ic.ElsePos)
 		p.ifClause(ic.Else.Stmts[0].Cmd.(*IfClause), true)
 		return
 	}
 	if !ic.Else.empty() {
-		p.semiRsrv("else", ic.ElsePos, true)
+		p.semiRsrv("else", ic.ElsePos)
 		p.nestedStmts(ic.Else, ic.FiPos)
 	} else if ic.ElsePos.IsValid() {
 		p.line = ic.ElsePos.Line()
 	}
-	p.semiRsrv("fi", ic.FiPos, true)
+	p.semiRsrv("fi", ic.FiPos)
 }
 
 func startsWithLparen(s *Stmt) bool {
@@ -1069,7 +1082,7 @@ func (p *Printer) hasInline(s *Stmt) bool {
 	return false
 }
 
-func (p *Printer) stmts(sl StmtList) {
+func (p *Printer) stmtList(sl StmtList) {
 	sep := p.wantNewline ||
 		(len(sl.Stmts) > 0 && sl.Stmts[0].Pos().Line() > p.line)
 	inlineIndent := 0
@@ -1216,7 +1229,7 @@ func (p *Printer) nestedStmts(sl StmtList, closing Pos) {
 		//     do foo; done
 		p.wantNewline = true
 	}
-	p.stmts(sl)
+	p.stmtList(sl)
 	if closing.IsValid() {
 		p.flushComments()
 	}

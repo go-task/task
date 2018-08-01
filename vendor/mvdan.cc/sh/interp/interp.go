@@ -602,7 +602,7 @@ func (r *Runner) cmd(cm syntax.Command) {
 		}
 	case *syntax.TestClause:
 		r.exit = 0
-		if r.bashTest(x.X) == "" && r.exit == 0 {
+		if r.bashTest(x.X, false) == "" && r.exit == 0 {
 			// to preserve exit code 2 for regex
 			// errors, etc
 			r.exit = 1

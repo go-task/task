@@ -14,6 +14,7 @@ import (
 	"github.com/go-task/task/internal/logger"
 	"github.com/go-task/task/internal/output"
 	"github.com/go-task/task/internal/taskfile"
+	"github.com/go-task/task/internal/taskfile/read"
 	"github.com/go-task/task/internal/taskfile/version"
 
 	"github.com/Masterminds/semver"
@@ -21,8 +22,6 @@ import (
 )
 
 const (
-	// TaskFilePath is the default Taskfile
-	TaskFilePath = "Taskfile"
 	// MaximumTaskCall is the max number of times a task can be called.
 	// This exists to prevent infinite loops on cyclic dependencies
 	MaximumTaskCall = 100
@@ -77,7 +76,13 @@ func (e *Executor) Run(calls ...taskfile.Call) error {
 
 // Setup setups Executor's internal state
 func (e *Executor) Setup() error {
-	if err := e.readTaskfile(); err != nil {
+	var err error
+	e.Taskfile, err = read.Taskfile(e.Dir)
+	if err != nil {
+		return err
+	}
+	e.taskvars, err = read.Taskvars(e.Dir)
+	if err != nil {
 		return err
 	}
 

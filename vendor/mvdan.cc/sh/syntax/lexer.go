@@ -107,6 +107,7 @@ retry:
 		} else if p.fill(); p.bs == nil {
 			p.bsp++
 			p.r = utf8.RuneSelf
+			p.w = 1
 		} else {
 			goto retry
 		}
@@ -232,6 +233,7 @@ skipSpace:
 		w := utf8.RuneLen(r)
 		if bytes.HasPrefix(p.bs[p.bsp-w:], p.stopAt) {
 			p.r = utf8.RuneSelf
+			p.w = 1
 			p.tok = _EOF
 			return
 		}
@@ -748,10 +750,13 @@ func (p *Parser) endLit() (s string) {
 	return
 }
 
-func (p *Parser) numLit() bool {
-	for _, b := range p.litBs {
+func (p *Parser) isLitRedir() bool {
+	lit := p.litBs[:len(p.litBs)-1]
+	if lit[0] == '{' && lit[len(lit)-1] == '}' {
+		return ValidName(string(lit[1 : len(lit)-1]))
+	}
+	for _, b := range lit {
 		switch b {
-		case '>', '<':
 		case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
 		default:
 			return false
@@ -800,7 +805,7 @@ loop:
 				break loop
 			}
 		case '/':
-			if p.quote&allParamExp != 0 && p.quote != paramExpExp {
+			if p.quote != paramExpExp {
 				break loop
 			}
 		case ':', '=', '%', '^', ',', '?', '!', '*':
@@ -838,7 +843,7 @@ loop:
 				p.discardLit(2)
 			}
 		case '>', '<':
-			if p.peekByte('(') || !p.numLit() {
+			if p.peekByte('(') || !p.isLitRedir() {
 				tok = _Lit
 			} else {
 				tok = _LitRedir
