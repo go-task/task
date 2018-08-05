@@ -640,6 +640,39 @@ tasks:
 Dry run mode (`--dry`) compiles and steps through each task, printing the commands
 that would be run without executing them. This is useful for debugging your Taskfiles.
 
+## Ignore errors
+
+You have the option to ignore errors during command execution.
+Given the following Taskfile:
+
+```yml
+version: '2'
+
+tasks:
+  echo:
+    cmds:
+      - exit 1
+      - echo "Hello World"
+```
+
+Task will abort the execution after running `exit 1` because the status code `1` stands for `EXIT_FAILURE`.
+However it is possible to continue with execution using `ignore_error`:
+
+```yml
+version: '2'
+
+tasks:
+  echo:
+    cmds:
+      - cmd: exit 1
+        ignore_error: true
+      - echo "Hello World"
+```
+
+`ignore_error` can also be set for a task, which mean errors will be supressed
+for all commands. But keep in mind this option won't propagate to other tasks
+called either by `deps` or `cmds`!
+
 ## Output syntax
 
 By default, Task just redirect the STDOUT and STDERR of the running commands

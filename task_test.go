@@ -53,7 +53,6 @@ func (fct fileContentTest) Run(t *testing.T) {
 			assert.Equal(t, expectContent, s, "unexpected file content")
 		})
 	}
-
 }
 
 func TestEnv(t *testing.T) {
@@ -412,6 +411,22 @@ func TestTaskVersion(t *testing.T) {
 			assert.Equal(t, 2, len(e.Taskfile.Tasks))
 		})
 	}
+}
+
+func TestTaskIgnoreErrors(t *testing.T) {
+	const dir = "testdata/ignore_errors"
+
+	e := task.Executor{
+		Dir:    dir,
+		Stdout: ioutil.Discard,
+		Stderr: ioutil.Discard,
+	}
+	assert.NoError(t, e.Setup())
+
+	assert.NoError(t, e.Run(taskfile.Call{Task: "task-should-pass"}))
+	assert.Error(t, e.Run(taskfile.Call{Task: "task-should-fail"}))
+	assert.NoError(t, e.Run(taskfile.Call{Task: "cmd-should-pass"}))
+	assert.Error(t, e.Run(taskfile.Call{Task: "cmd-should-fail"}))
 }
 
 func TestExpand(t *testing.T) {

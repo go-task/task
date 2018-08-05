@@ -1,0 +1,20 @@
+version: '2'
+
+tasks:
+  task-should-pass:
+    cmds:
+      - exit 1
+    ignore_error: true
+
+  task-should-fail:
+    cmds:
+      - exit 1
+
+  cmd-should-pass:
+    cmds:
+      - cmd: exit 1
+        ignore_error: true
+
+  cmd-should-fail:
+    cmds:
+      - cmd: exit 1
