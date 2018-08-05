@@ -416,6 +416,26 @@ func TestTaskVersion(t *testing.T) {
 func TestTaskIgnoreErrors(t *testing.T) {
 	const dir = "testdata/ignore_errors"
 
+	t.Run("task-should-pass", func(t *testing.T) {
+		e := task.Executor{
+			Dir:    dir,
+			Stdout: ioutil.Discard,
+			Stderr: ioutil.Discard,
+		}
+		assert.NoError(t, e.Setup())
+		assert.NoError(t, e.Run(taskfile.Call{Task: "task-should-pass"}))
+	})
+
+	t.Run("task-should-fail", func(t *testing.T) {
+		e := task.Executor{
+			Dir:    dir,
+			Stdout: ioutil.Discard,
+			Stderr: ioutil.Discard,
+		}
+		assert.NoError(t, e.Setup())
+		assert.Error(t, e.Run(taskfile.Call{Task: "task-should-fail"}))
+	})
+
 	t.Run("cmd-should-pass", func(t *testing.T) {
 		e := task.Executor{
 			Dir:    dir,

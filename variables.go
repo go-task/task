@@ -24,17 +24,18 @@ func (e *Executor) CompiledTask(call taskfile.Call) (*taskfile.Task, error) {
 	r := templater.Templater{Vars: vars}
 
 	new := taskfile.Task{
-		Task:      origTask.Task,
-		Desc:      r.Replace(origTask.Desc),
-		Sources:   r.ReplaceSlice(origTask.Sources),
-		Generates: r.ReplaceSlice(origTask.Generates),
-		Status:    r.ReplaceSlice(origTask.Status),
-		Dir:       r.Replace(origTask.Dir),
-		Vars:      nil,
-		Env:       r.ReplaceVars(origTask.Env),
-		Silent:    origTask.Silent,
-		Method:    r.Replace(origTask.Method),
-		Prefix:    r.Replace(origTask.Prefix),
+		Task:        origTask.Task,
+		Desc:        r.Replace(origTask.Desc),
+		Sources:     r.ReplaceSlice(origTask.Sources),
+		Generates:   r.ReplaceSlice(origTask.Generates),
+		Status:      r.ReplaceSlice(origTask.Status),
+		Dir:         r.Replace(origTask.Dir),
+		Vars:        nil,
+		Env:         r.ReplaceVars(origTask.Env),
+		Silent:      origTask.Silent,
+		Method:      r.Replace(origTask.Method),
+		Prefix:      r.Replace(origTask.Prefix),
+		IgnoreError: origTask.IgnoreError,
 	}
 	new.Dir, err = shell.Expand(new.Dir, nil)
 	if err != nil {

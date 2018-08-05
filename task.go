@@ -182,6 +182,12 @@ func (e *Executor) RunTask(ctx context.Context, call taskfile.Call) error {
 			if err2 := statusOnError(t); err2 != nil {
 				e.Logger.VerboseErrf("task: error cleaning status on error: %v", err2)
 			}
+
+			if _, ok := err.(interp.ExitCode); ok && t.IgnoreError {
+				e.Logger.VerboseErrf("task: task error ignored: %v", err)
+				continue
+			}
+
 			return &taskRunError{t.Task, err}
 		}
 	}
