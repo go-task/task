@@ -19,6 +19,7 @@ import (
 
 	"github.com/Masterminds/semver"
 	"golang.org/x/sync/errgroup"
+	"mvdan.cc/sh/interp"
 )
 
 const (
@@ -221,16 +222,20 @@ func (e *Executor) runCommand(ctx context.Context, t *taskfile.Task, call taskfi
 		defer stdOut.Close()
 		defer stdErr.Close()
 
-		return execext.RunCommand(&execext.RunCommandOptions{
-			Context:         ctx,
-			Command:         cmd.Cmd,
-			Dir:             t.Dir,
-			Env:             getEnviron(t),
-			Stdin:           e.Stdin,
-			Stdout:          stdOut,
-			Stderr:          stdErr,
-			IgnoreErrorCode: cmd.IgnoreError,
+		err := execext.RunCommand(&execext.RunCommandOptions{
+			Context: ctx,
+			Command: cmd.Cmd,
+			Dir:     t.Dir,
+			Env:     getEnviron(t),
+			Stdin:   e.Stdin,
+			Stdout:  stdOut,
+			Stderr:  stdErr,
 		})
+		if _, ok := err.(interp.ExitCode); ok && cmd.IgnoreError {
+			e.Logger.VerboseErrf("task: command error ignored: %v", err)
+			return nil
+		}
+		return err
 	default:
 		return nil
 	}
