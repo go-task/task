@@ -655,8 +655,8 @@ tasks:
       - echo "Hello World"
 ```
 
-Task will abort the execution after running `exit 1` because the status code `1` stands for `EXIT_FAILURE`.  
-However it is possible to continue with execution using `ignore_errors`:
+Task will abort the execution after running `exit 1` because the status code `1` stands for `EXIT_FAILURE`.
+However it is possible to continue with execution using `ignore_error`:
 
 ```yml
 version: '2'
@@ -665,9 +665,13 @@ tasks:
   echo:
     cmds:
       - cmd: exit 1
-        ignore_errors: true
+        ignore_error: true
       - echo "Hello World"
 ```
+
+`ignore_error` can also be set for a task, which mean errors will be supressed
+for all commands. But keep in mind this option won't propagate to other tasks
+called either by `deps` or `cmds`!
 
 ## Output syntax
 
