@@ -455,3 +455,26 @@ func TestExpand(t *testing.T) {
 	assert.NoError(t, e.Run(taskfile.Call{Task: "pwd"}))
 	assert.Equal(t, home, strings.TrimSpace(buff.String()))
 }
+
+func TestDry(t *testing.T) {
+	const dir = "testdata/dry"
+
+	file := filepath.Join(dir, "file.txt")
+	_ = os.Remove(file)
+
+	var buff bytes.Buffer
+
+	e := task.Executor{
+		Dir:    dir,
+		Stdout: &buff,
+		Stderr: &buff,
+		Dry:    true,
+	}
+	assert.NoError(t, e.Setup())
+	assert.NoError(t, e.Run(taskfile.Call{Task: "build"}))
+
+	assert.Equal(t, "touch file.txt", strings.TrimSpace(buff.String()))
+	if _, err := os.Stat(file); err == nil {
+		t.Errorf("File should not exist %s", file)
+	}
+}
