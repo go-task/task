@@ -55,7 +55,7 @@ func main() {
 		watch       bool
 		verbose     bool
 		silent      bool
-		dryRun      bool
+		dry         bool
 		dir         string
 	)
 
@@ -67,7 +67,7 @@ func main() {
 	pflag.BoolVarP(&watch, "watch", "w", false, "enables watch of the given task")
 	pflag.BoolVarP(&verbose, "verbose", "v", false, "enables verbose mode")
 	pflag.BoolVarP(&silent, "silent", "s", false, "disables echoing")
-	pflag.BoolVar(&dryRun, "dry", false, "compiles and prints tasks in the order that they would be run, without executing them")
+	pflag.BoolVar(&dry, "dry", false, "compiles and prints tasks in the order that they would be run, without executing them")
 	pflag.StringVarP(&dir, "dir", "d", "", "sets directory of execution")
 	pflag.Parse()
 
@@ -93,7 +93,7 @@ func main() {
 		Verbose: verbose,
 		Silent:  silent,
 		Dir:     dir,
-		DryRun:  dryRun,
+		Dry:     dry,
 
 		Context: getSignalContext(),
 

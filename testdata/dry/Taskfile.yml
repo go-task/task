@@ -1,0 +1,6 @@
+version: '2'
+
+tasks:
+  build:
+    cmds:
+      - touch file.txt

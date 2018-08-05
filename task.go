@@ -35,7 +35,7 @@ type Executor struct {
 	Watch    bool
 	Verbose  bool
 	Silent   bool
-	DryRun   bool
+	Dry      bool
 
 	Context context.Context
 
@@ -212,7 +212,7 @@ func (e *Executor) runCommand(ctx context.Context, t *taskfile.Task, call taskfi
 			e.Logger.Errf(cmd.Cmd)
 		}
 
-		if e.DryRun {
+		if e.Dry {
 			return nil
 		}
 
