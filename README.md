@@ -750,14 +750,11 @@ various use cases.
 ## Alternative task runners
 
 - YAML based:
-  - [goeuro/myke][myke]
-  - [dreadl0ck/zeus][zeus]
   - [rliebz/tusk][tusk]
 - Go based:
-  - [markbates/grift][grift]
   - [magefile/mage][mage]
-- Make based:
-  - [tj/mmake][mmake]
+- Make based or similar:
+  - [casey/just][just]
 
 ### Sponsors
 
@@ -775,12 +772,9 @@ various use cases.
 [releases]: https://github.com/go-task/task/releases
 [golang]: https://golang.org/
 [gotemplate]: https://golang.org/pkg/text/template/
-[myke]: https://github.com/goeuro/myke
-[zeus]: https://github.com/dreadl0ck/zeus
 [tusk]: https://github.com/rliebz/tusk
-[grift]: https://github.com/markbates/grift
 [mage]: https://github.com/magefile/mage
-[mmake]: https://github.com/tj/mmake
+[just]: https://github.com/casey/just
 [sh]: https://github.com/mvdan/sh
 [minify]: https://github.com/tdewolff/minify/tree/master/cmd/minify
 [examples]: https://github.com/go-task/examples
