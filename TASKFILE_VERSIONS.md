@@ -89,3 +89,44 @@ tasks:
     cmds:
       - echo "{{.FOOBARBAZ}}"
 ```
+
+## Version 2.1
+
+Version 2.1 includes a global `output` option, to allow having more control
+over how commands output are printed to the console
+(see [documentation][output] for more info):
+
+```yml
+version: '2'
+
+output: prefixed
+
+tasks:
+  server:
+    cmds:
+      - go run main.go
+  prefix: server
+```
+
+From this version it's not also possible to ignore errors of a command or task
+(check documentatio [here][ignore_errors]):
+
+```yml
+version: '2'
+
+tasks:
+  example-1:
+    cmds:
+      - cmd: exit 1
+        ignore_error: true
+      - echo "This will be print"
+
+  example-2:
+    cmds:
+      - exit 1
+      - echo "This will be print"
+    ignore_error: true
+```
+
+[output]: https://github.com/go-task/task#output-syntax
+[ignore_errors]: https://github.com/go-task/task#ignore-errors
