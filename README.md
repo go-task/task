@@ -27,7 +27,7 @@ It aims to be simpler and easier to use then [GNU Make][make].
   - [Go's template engine](#gos-template-engine)
   - [Help](#help)
   - [Silent mode](#silent-mode)
-  - [Dry Run Mode](#dry-run-mode)
+  - [Dry run mode](#dry-run-mode)
   - [Ignore errors](#ignore-errors)
   - [Output syntax](#output-syntax)
   - [Watch tasks](#watch-tasks-experimental)
@@ -638,7 +638,7 @@ tasks:
       - echo "This will print nothing" > /dev/null
 ```
 
-## Dry Run Mode
+## Dry run mode
 
 Dry run mode (`--dry`) compiles and steps through each task, printing the commands
 that would be run without executing them. This is useful for debugging your Taskfiles.
