@@ -16,7 +16,7 @@ func Taskfile(dir string) (*taskfile.Taskfile, error) {
 	path := filepath.Join(dir, "Taskfile.yml")
 	t, err := readTaskfile(path)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf(`No Taskfile.yml found. Use "task --init" to create a new one`)
 	}
 
 	path = filepath.Join(dir, fmt.Sprintf("Taskfile_%s.yml", runtime.GOOS))

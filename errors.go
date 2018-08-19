@@ -10,14 +10,6 @@ var (
 	ErrTaskfileAlreadyExists = errors.New("task: A Taskfile already exists")
 )
 
-type taskFileNotFound struct {
-	taskFile string
-}
-
-func (err taskFileNotFound) Error() string {
-	return fmt.Sprintf(`task: No task file found (is it named "%s"?). Use "task --init" to create a new one`, err.taskFile)
-}
-
 type taskNotFoundError struct {
 	taskName string
 }
