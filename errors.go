@@ -35,22 +35,6 @@ func (err *taskRunError) Error() string {
 	return fmt.Sprintf(`task: Failed to run task "%s": %v`, err.taskName, err.err)
 }
 
-type cyclicDepError struct {
-	taskName string
-}
-
-func (err *cyclicDepError) Error() string {
-	return fmt.Sprintf(`task: Cyclic dependency of task "%s" detected`, err.taskName)
-}
-
-type cantWatchNoSourcesError struct {
-	taskName string
-}
-
-func (err *cantWatchNoSourcesError) Error() string {
-	return fmt.Sprintf(`task: Can't watch task "%s" because it has no specified sources`, err.taskName)
-}
-
 // MaximumTaskCallExceededError is returned when a task is called too
 // many times. In this case you probably have a cyclic dependendy or
 // infinite loop
