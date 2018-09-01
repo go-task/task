@@ -13,7 +13,6 @@ import (
 
 // RunCommandOptions is the options for the RunCommand func
 type RunCommandOptions struct {
-	Context context.Context
 	Command string
 	Dir     string
 	Env     []string
@@ -28,7 +27,7 @@ var (
 )
 
 // RunCommand runs a shell command
-func RunCommand(opts *RunCommandOptions) error {
+func RunCommand(ctx context.Context, opts *RunCommandOptions) error {
 	if opts == nil {
 		return ErrNilOptions
 	}
@@ -47,20 +46,27 @@ func RunCommand(opts *RunCommandOptions) error {
 		return err
 	}
 
-	r := interp.Runner{
-		Context: opts.Context,
-		Dir:     opts.Dir,
-		Env:     env,
+	r, err := interp.New(
+		interp.Dir(opts.Dir),
+		interp.Env(env),
 
-		Exec: interp.DefaultExec,
-		Open: interp.OpenDevImpls(interp.DefaultOpen),
+		interp.Module(interp.DefaultExec),
+		interp.Module(interp.OpenDevImpls(interp.DefaultOpen)),
 
-		Stdin:  opts.Stdin,
-		Stdout: opts.Stdout,
-		Stderr: opts.Stderr,
-	}
-	if err = r.Reset(); err != nil {
+		interp.StdIO(opts.Stdin, opts.Stdout, opts.Stderr),
+	)
+	if err != nil {
 		return err
 	}
-	return r.Run(p)
+	return r.Run(ctx, p)
+}
+
+// IsExitError returns true the given error is an exis status error
+func IsExitError(err error) bool {
+	switch err.(type) {
+	case interp.ExitStatus, interp.ShellExitStatus:
+		return true
+	default:
+		return false
+	}
 }

@@ -71,8 +71,7 @@ func getStatusChecker(t *taskfile.Task) (status.Checker, error) {
 
 func isTaskUpToDateStatus(ctx context.Context, t *taskfile.Task) (bool, error) {
 	for _, s := range t.Status {
-		err := execext.RunCommand(&execext.RunCommandOptions{
-			Context: ctx,
+		err := execext.RunCommand(ctx, &execext.RunCommandOptions{
 			Command: s,
 			Dir:     t.Dir,
 			Env:     getEnviron(t),
