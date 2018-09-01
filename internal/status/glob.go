@@ -19,7 +19,7 @@ func glob(dir string, globs []string) (files []string, err error) {
 		}
 		f, err := zglob.Glob(g)
 		if err != nil {
-			return nil, err
+			continue
 		}
 		files = append(files, f...)
 	}

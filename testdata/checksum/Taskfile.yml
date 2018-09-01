@@ -2,6 +2,7 @@ build:
   cmds:
     - cp ./source.txt ./generated.txt
   sources:
+    - ./**/glob-with-inexistent-file.txt
     - ./source.txt
   generates:
     - ./generated.txt
