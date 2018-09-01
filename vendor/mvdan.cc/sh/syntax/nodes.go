@@ -291,14 +291,17 @@ func (b *Block) End() Pos { return posAddCol(b.Rbrace, 1) }
 
 // IfClause represents an if statement.
 type IfClause struct {
-	Elif    bool
-	IfPos   Pos // pos of "elif" if Elif == true
+	Elif    bool // whether this IfClause begins with "elif"
+	IfPos   Pos  // position of the starting "if" or "elif" token
 	ThenPos Pos
-	ElsePos Pos // pos of "elif" if FollowedByElif() == true
-	FiPos   Pos // empty if Elif == true
-	Cond    StmtList
-	Then    StmtList
-	Else    StmtList
+	ElsePos Pos // position of a following "else" or "elif", if any
+	FiPos   Pos // position of "fi", empty if Elif == true
+
+	Cond StmtList
+	Then StmtList
+	Else StmtList
+
+	ElseComments []Comment // comments on the "else"
 }
 
 func (c *IfClause) Pos() Pos { return c.IfPos }

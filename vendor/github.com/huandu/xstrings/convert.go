@@ -43,7 +43,7 @@ func ToCamelCase(str string) string {
 	if len(str) == 0 {
 		return buf.String()
 	}
-	
+
 	r0 = unicode.ToUpper(r0)
 
 	for len(str) > 0 {
@@ -81,6 +81,9 @@ func ToCamelCase(str string) string {
 //     "GO_PATH"    => "go_path"
 //     "GO PATH"    => "go_path"      // space is converted to underscore.
 //     "GO-PATH"    => "go_path"      // hyphen is converted to underscore.
+//     "HTTP2XX"    => "http_2xx"     // insert an underscore before a number and after an alphabet.
+//     "http2xx"    => "http_2xx"
+//     "HTTP20xOK"  => "http_20x_ok"
 func ToSnakeCase(str string) string {
 	if len(str) == 0 {
 		return ""
@@ -102,7 +105,7 @@ func ToSnakeCase(str string) string {
 			buf.WriteByte(byte(str[0]))
 
 		case unicode.IsUpper(r0):
-			if prev != '_' {
+			if prev != '_' && !unicode.IsNumber(prev) {
 				buf.WriteRune('_')
 			}
 
@@ -140,6 +143,12 @@ func ToSnakeCase(str string) string {
 						r0 = '_'
 
 						buf.WriteRune(unicode.ToLower(r1))
+					} else if unicode.IsNumber(r0) {
+						// treat a number as an upper case rune
+						// so that both `http2xx` and `HTTP2XX` can be converted to `http_2xx`.
+						buf.WriteRune(unicode.ToLower(r1))
+						buf.WriteRune('_')
+						buf.WriteRune(r0)
 					} else {
 						buf.WriteRune('_')
 						buf.WriteRune(unicode.ToLower(r1))
@@ -154,8 +163,14 @@ func ToSnakeCase(str string) string {
 
 			if len(str) == 0 || r0 == '_' {
 				buf.WriteRune(unicode.ToLower(r0))
-				break
 			}
+
+		case unicode.IsNumber(r0):
+			if prev != '_' && !unicode.IsNumber(prev) {
+				buf.WriteRune('_')
+			}
+
+			buf.WriteRune(r0)
 
 		default:
 			if r0 == ' ' || r0 == '-' {

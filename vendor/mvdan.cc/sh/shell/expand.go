@@ -37,11 +37,8 @@ func Expand(s string, env func(string) string) (string, error) {
 	if env != nil {
 		r.Env = interp.FuncEnviron(env)
 	}
-	r.Reset()
 	ctx, cancel := context.WithTimeout(context.Background(), pureRunnerTimeout)
 	defer cancel()
-	r.Context = ctx
-	fields := r.Fields(word)
-	// TODO: runner error
-	return strings.Join(fields, ""), nil
+	fields, err := r.Fields(ctx, word)
+	return strings.Join(fields, ""), err
 }

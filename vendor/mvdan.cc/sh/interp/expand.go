@@ -4,6 +4,7 @@
 package interp
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"os/user"
@@ -136,12 +137,19 @@ func (r *Runner) escapedGlobField(parts []fieldPart) (escaped string, glob bool)
 	return escaped, glob
 }
 
-func (r *Runner) Fields(words ...*syntax.Word) []string {
+func (r *Runner) Fields(ctx context.Context, words ...*syntax.Word) ([]string, error) {
+	if !r.didReset {
+		r.Reset()
+	}
+	return r.fields(ctx, words...), r.err
+}
+
+func (r *Runner) fields(ctx context.Context, words ...*syntax.Word) []string {
 	fields := make([]string, 0, len(words))
 	baseDir := syntax.QuotePattern(r.Dir)
 	for _, word := range words {
 		for _, expWord := range syntax.ExpandBraces(word) {
-			for _, field := range r.wordFields(expWord.Parts) {
+			for _, field := range r.wordFields(ctx, expWord.Parts) {
 				path, doGlob := r.escapedGlobField(field)
 				var matches []string
 				abs := filepath.IsAbs(path)
@@ -171,16 +179,16 @@ func (r *Runner) Fields(words ...*syntax.Word) []string {
 	return fields
 }
 
-func (r *Runner) loneWord(word *syntax.Word) string {
+func (r *Runner) loneWord(ctx context.Context, word *syntax.Word) string {
 	if word == nil {
 		return ""
 	}
-	field := r.wordField(word.Parts, quoteDouble)
+	field := r.wordField(ctx, word.Parts, quoteDouble)
 	return r.fieldJoin(field)
 }
 
-func (r *Runner) lonePattern(word *syntax.Word) string {
-	field := r.wordField(word.Parts, quoteSingle)
+func (r *Runner) lonePattern(ctx context.Context, word *syntax.Word) string {
+	field := r.wordField(ctx, word.Parts, quoteSingle)
 	buf := r.strBuilder()
 	for _, part := range field {
 		if part.quote > quoteNone {
@@ -192,7 +200,7 @@ func (r *Runner) lonePattern(word *syntax.Word) string {
 	return buf.String()
 }
 
-func (r *Runner) expandAssigns(as *syntax.Assign) []*syntax.Assign {
+func (r *Runner) expandAssigns(ctx context.Context, as *syntax.Assign) []*syntax.Assign {
 	// Convert "declare $x" into "declare value".
 	// Don't use syntax.Parser here, as we only want the basic
 	// splitting by '='.
@@ -200,7 +208,7 @@ func (r *Runner) expandAssigns(as *syntax.Assign) []*syntax.Assign {
 		return []*syntax.Assign{as} // nothing to do
 	}
 	var asgns []*syntax.Assign
-	for _, field := range r.Fields(as.Value) {
+	for _, field := range r.fields(ctx, as.Value) {
 		as := &syntax.Assign{}
 		parts := strings.SplitN(field, "=", 2)
 		as.Name = &syntax.Lit{Value: parts[0]}
@@ -229,7 +237,7 @@ const (
 	quoteSingle
 )
 
-func (r *Runner) wordField(wps []syntax.WordPart, ql quoteLevel) []fieldPart {
+func (r *Runner) wordField(ctx context.Context, wps []syntax.WordPart, ql quoteLevel) []fieldPart {
 	var field []fieldPart
 	for i, wp := range wps {
 		switch x := wp.(type) {
@@ -263,17 +271,17 @@ func (r *Runner) wordField(wps []syntax.WordPart, ql quoteLevel) []fieldPart {
 			}
 			field = append(field, fp)
 		case *syntax.DblQuoted:
-			for _, part := range r.wordField(x.Parts, quoteDouble) {
+			for _, part := range r.wordField(ctx, x.Parts, quoteDouble) {
 				part.quote = quoteDouble
 				field = append(field, part)
 			}
 		case *syntax.ParamExp:
-			field = append(field, fieldPart{val: r.paramExp(x)})
+			field = append(field, fieldPart{val: r.paramExp(ctx, x)})
 		case *syntax.CmdSubst:
-			field = append(field, fieldPart{val: r.cmdSubst(x)})
+			field = append(field, fieldPart{val: r.cmdSubst(ctx, x)})
 		case *syntax.ArithmExp:
 			field = append(field, fieldPart{
-				val: strconv.Itoa(r.arithm(x.X)),
+				val: strconv.Itoa(r.arithm(ctx, x.X)),
 			})
 		default:
 			panic(fmt.Sprintf("unhandled word part: %T", x))
@@ -282,16 +290,16 @@ func (r *Runner) wordField(wps []syntax.WordPart, ql quoteLevel) []fieldPart {
 	return field
 }
 
-func (r *Runner) cmdSubst(cs *syntax.CmdSubst) string {
+func (r *Runner) cmdSubst(ctx context.Context, cs *syntax.CmdSubst) string {
 	r2 := r.sub()
 	buf := r.strBuilder()
 	r2.Stdout = buf
-	r2.stmts(cs.StmtList)
+	r2.stmts(ctx, cs.StmtList)
 	r.setErr(r2.err)
 	return strings.TrimRight(buf.String(), "\n")
 }
 
-func (r *Runner) wordFields(wps []syntax.WordPart) [][]fieldPart {
+func (r *Runner) wordFields(ctx context.Context, wps []syntax.WordPart) [][]fieldPart {
 	fields := r.fieldsAlloc[:0]
 	curField := r.fieldAlloc[:0]
 	allowEmpty := false
@@ -354,17 +362,17 @@ func (r *Runner) wordFields(wps []syntax.WordPart) [][]fieldPart {
 					continue
 				}
 			}
-			for _, part := range r.wordField(x.Parts, quoteDouble) {
+			for _, part := range r.wordField(ctx, x.Parts, quoteDouble) {
 				part.quote = quoteDouble
 				curField = append(curField, part)
 			}
 		case *syntax.ParamExp:
-			splitAdd(r.paramExp(x))
+			splitAdd(r.paramExp(ctx, x))
 		case *syntax.CmdSubst:
-			splitAdd(r.cmdSubst(x))
+			splitAdd(r.cmdSubst(ctx, x))
 		case *syntax.ArithmExp:
 			curField = append(curField, fieldPart{
-				val: strconv.Itoa(r.arithm(x.X)),
+				val: strconv.Itoa(r.arithm(ctx, x.X)),
 			})
 		default:
 			panic(fmt.Sprintf("unhandled word part: %T", x))

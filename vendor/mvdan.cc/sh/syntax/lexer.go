@@ -336,7 +336,8 @@ func (p *Parser) regToken(r rune) token {
 		p.rune()
 		return dblQuote
 	case '`':
-		p.rune()
+		// Don't call p.rune, as we need to work out p.openBquotes to
+		// properly handle backslashes in the lexer.
 		return bckQuote
 	case '&':
 		switch p.rune() {
@@ -483,7 +484,8 @@ func (p *Parser) dqToken(r rune) token {
 		p.rune()
 		return dblQuote
 	case '`':
-		p.rune()
+		// Don't call p.rune, as we need to work out p.openBquotes to
+		// properly handle backslashes in the lexer.
 		return bckQuote
 	default: // '$'
 		switch p.rune() {

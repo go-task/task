@@ -618,7 +618,28 @@ func (p *Parser) stmtList(stops ...string) (sl StmtList) {
 		return true
 	}
 	p.stmts(fn, stops...)
-	sl.Last, p.accComs = p.accComs, nil
+	split := len(p.accComs)
+	if p.tok == _LitWord && (p.val == "elif" || p.val == "else") {
+		// Split the comments, so that any aligned with an opening token
+		// get attached to it. For example:
+		//
+		//     if foo; then
+		//         # inside the body
+		//     # document the else
+		//     else
+		//     fi
+		// TODO(mvdan): look into deduplicating this with similar logic
+		// in caseItems.
+		for i := len(p.accComs)-1; i >= 0; i-- {
+			c := p.accComs[i]
+			if c.Pos().Col() != p.pos.Col() {
+				break
+			}
+			split = i
+		}
+	}
+	sl.Last = p.accComs[:split]
+	p.accComs = p.accComs[split:]
 	return
 }
 
@@ -828,11 +849,19 @@ func (p *Parser) wordPart() WordPart {
 		cs := &CmdSubst{Left: p.pos}
 		old := p.preNested(subCmdBckquo)
 		p.openBquotes++
+
+		// The lexer didn't call p.rune for us, so that it could have
+		// the right p.openBquotes to properly handle backslashes.
+		p.rune()
+
 		p.next()
 		cs.StmtList = p.stmtList()
 		p.postNested(old)
 		p.openBquotes--
 		cs.Right = p.pos
+
+		// Like above, the lexer didn't call p.rune for us.
+		p.rune()
 		if !p.got(bckQuote) {
 			p.quoteErr(cs.Pos(), bckQuote)
 		}
@@ -1750,17 +1779,21 @@ func (p *Parser) ifClause(s *Stmt) {
 	curIf := rif
 	for p.tok == _LitWord && p.val == "elif" {
 		elf := &IfClause{IfPos: p.pos, Elif: true}
+		s := p.stmt(elf.IfPos)
+		s.Cmd = elf
+		s.Comments = p.accComs
+		p.accComs = nil
 		p.next()
 		elf.Cond = p.followStmts("elif", elf.IfPos, "then")
 		elf.ThenPos = p.followRsrv(elf.IfPos, "elif <cond>", "then")
 		elf.Then = p.followStmts("then", elf.ThenPos, "fi", "elif", "else")
-		s := p.stmt(elf.IfPos)
-		s.Cmd = elf
 		curIf.ElsePos = elf.IfPos
 		curIf.Else.Stmts = []*Stmt{s}
 		curIf = elf
 	}
 	if elsePos, ok := p.gotRsrv("else"); ok {
+		curIf.ElseComments = p.accComs
+		p.accComs = nil
 		curIf.ElsePos = elsePos
 		curIf.Else = p.followStmts("else", curIf.ElsePos, "fi")
 	}
@@ -1916,15 +1949,20 @@ func (p *Parser) caseItems(stop string) (items []*CaseItem) {
 		ci.OpPos = p.pos
 		ci.Op = CaseOperator(p.tok)
 		p.next()
-		if len(p.accComs) > 0 {
-			c := p.accComs[0]
-			if c.Pos().Line() == ci.OpPos.Line() {
-				ci.Comments = append(ci.Comments, c)
-				p.accComs = p.accComs[1:]
+		p.got(_Newl)
+		split := len(p.accComs)
+		if p.tok == _LitWord && p.val != stop {
+			for i := len(p.accComs)-1; i >= 0; i-- {
+				c := p.accComs[i]
+				if c.Pos().Col() != p.pos.Col() {
+					break
+				}
+				split = i
 			}
 		}
+		ci.Comments = append(ci.Comments, p.accComs[:split]...)
+		p.accComs = p.accComs[split:]
 		items = append(items, ci)
-		p.got(_Newl)
 	}
 	return
 }

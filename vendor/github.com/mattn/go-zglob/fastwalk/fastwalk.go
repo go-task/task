@@ -76,10 +76,6 @@ func FastWalk(root string, walkFn func(path string, typ os.FileMode) error) erro
 		go w.doWork(&wg)
 	}
 
-	// Ensure we wait for goroutines we started to finish before we return.
-	defer wg.Wait()
-	defer close(w.donec)
-
 	todo := []walkItem{{dir: root}}
 	out := 0
 	for {
@@ -97,10 +93,28 @@ func FastWalk(root string, walkFn func(path string, typ os.FileMode) error) erro
 		case it := <-w.enqueuec:
 			todo = append(todo, it)
 		case err := <-w.resc:
-			out--
 			if err != nil {
+				// Signal to the workers to close.
+				close(w.donec)
+
+				// Drain the results channel from the other workers which
+				// haven't returned yet.
+				go func() {
+					for {
+						select {
+						case _, ok := <-w.resc:
+							if !ok {
+								return
+							}
+						}
+					}
+				}()
+
+				wg.Wait()
 				return err
 			}
+
+			out--
 			if out == 0 && len(todo) == 0 {
 				// It's safe to quit here, as long as the buffered
 				// enqueue channel isn't also readable, which might
@@ -112,6 +126,10 @@ func FastWalk(root string, walkFn func(path string, typ os.FileMode) error) erro
 				case it := <-w.enqueuec:
 					todo = append(todo, it)
 				default:
+					// Signal to the workers to close, and wait for all of
+					// them to return.
+					close(w.donec)
+					wg.Wait()
 					return nil
 				}
 			}

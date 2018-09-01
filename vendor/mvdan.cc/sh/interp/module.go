@@ -15,11 +15,18 @@ import (
 	"time"
 )
 
-// Ctxt is the type passed to all the module functions. It contains some
-// of the current state of the Runner, as well as some fields necessary
-// to implement some of the modules.
-type Ctxt struct {
-	Context     context.Context
+// FromModuleContext returns the ModuleCtx value stored in ctx, if any.
+func FromModuleContext(ctx context.Context) (ModuleCtx, bool) {
+	mc, ok := ctx.Value(moduleCtxKey{}).(ModuleCtx)
+	return mc, ok
+}
+
+type moduleCtxKey struct{}
+
+// ModuleCtx is the data passed to all the module functions via a context value.
+// It contains some of the current state of the Runner, as well as some fields
+// necessary to implement some of the modules.
+type ModuleCtx struct {
 	Env         Environ
 	Dir         string
 	Stdin       io.Reader
@@ -30,11 +37,11 @@ type Ctxt struct {
 
 // UnixPath fixes absolute unix paths on Windows, for example converting
 // "C:\\CurDir\\dev\\null" to "/dev/null".
-func (c *Ctxt) UnixPath(path string) string {
+func (mc ModuleCtx) UnixPath(path string) string {
 	if runtime.GOOS != "windows" {
 		return path
 	}
-	path = strings.TrimPrefix(path, c.Dir)
+	path = strings.TrimPrefix(path, mc.Dir)
 	return strings.Replace(path, `\`, `/`, -1)
 }
 
@@ -46,33 +53,36 @@ func (c *Ctxt) UnixPath(path string) string {
 // empty string, it means that the executable did not exist or was not
 // found in $PATH.
 //
-// Use a return error of type ExitCode to set the exit code. A nil error
-// has the same effect as ExitCode(0). If the error is of any other
-// type, the interpreter will come to a stop.
-type ModuleExec func(ctx Ctxt, path string, args []string) error
+// Use a return error of type ExitStatus to set the exit status. A nil error has
+// the same effect as ExitStatus(0). If the error is of any other type, the
+// interpreter will come to a stop.
+type ModuleExec func(ctx context.Context, path string, args []string) error
 
-func DefaultExec(ctx Ctxt, path string, args []string) error {
+func (ModuleExec) isModule() {}
+
+var DefaultExec = ModuleExec(func(ctx context.Context, path string, args []string) error {
+	mc, _ := FromModuleContext(ctx)
 	if path == "" {
-		fmt.Fprintf(ctx.Stderr, "%q: executable file not found in $PATH\n", args[0])
-		return ExitCode(127)
+		fmt.Fprintf(mc.Stderr, "%q: executable file not found in $PATH\n", args[0])
+		return ExitStatus(127)
 	}
 	cmd := exec.Cmd{
 		Path:   path,
 		Args:   args,
-		Env:    execEnv(ctx.Env),
-		Dir:    ctx.Dir,
-		Stdin:  ctx.Stdin,
-		Stdout: ctx.Stdout,
-		Stderr: ctx.Stderr,
+		Env:    execEnv(mc.Env),
+		Dir:    mc.Dir,
+		Stdin:  mc.Stdin,
+		Stdout: mc.Stdout,
+		Stderr: mc.Stderr,
 	}
 
 	err := cmd.Start()
 	if err == nil {
-		if done := ctx.Context.Done(); done != nil {
+		if done := ctx.Done(); done != nil {
 			go func() {
 				<-done
 
-				if ctx.KillTimeout <= 0 || runtime.GOOS == "windows" {
+				if mc.KillTimeout <= 0 || runtime.GOOS == "windows" {
 					_ = cmd.Process.Signal(os.Kill)
 					return
 				}
@@ -81,7 +91,7 @@ func DefaultExec(ctx Ctxt, path string, args []string) error {
 				// if the program stops itself with the
 				// interrupt.
 				go func() {
-					time.Sleep(ctx.KillTimeout)
+					time.Sleep(mc.KillTimeout)
 					_ = cmd.Process.Signal(os.Kill)
 				}()
 				_ = cmd.Process.Signal(os.Interrupt)
@@ -96,20 +106,20 @@ func DefaultExec(ctx Ctxt, path string, args []string) error {
 		// started, but errored - default to 1 if OS
 		// doesn't have exit statuses
 		if status, ok := x.Sys().(syscall.WaitStatus); ok {
-			if status.Signaled() && ctx.Context.Err() != nil {
-				return ctx.Context.Err()
+			if status.Signaled() && ctx.Err() != nil {
+				return ctx.Err()
 			}
-			return ExitCode(status.ExitStatus())
+			return ExitStatus(status.ExitStatus())
 		}
-		return ExitCode(1)
+		return ExitStatus(1)
 	case *exec.Error:
 		// did not start
-		fmt.Fprintf(ctx.Stderr, "%v\n", err)
-		return ExitCode(127)
+		fmt.Fprintf(mc.Stderr, "%v\n", err)
+		return ExitStatus(127)
 	default:
 		return err
 	}
-}
+})
 
 // ModuleOpen is the module responsible for opening a file. It is
 // executed for all files that are opened directly by the shell, such as
@@ -118,21 +128,24 @@ func DefaultExec(ctx Ctxt, path string, args []string) error {
 // The path parameter is absolute and has been cleaned.
 //
 // Use a return error of type *os.PathError to have the error printed to
-// stderr and the exit code set to 1. If the error is of any other type,
-// the interpreter will come to a stop.
+// stderr and the exit status set to 1. If the error is of any other type, the
+// interpreter will come to a stop.
 //
 // TODO: What about stat calls? They are used heavily in the builtin
 // test expressions, and also when doing a cd. Should they have a
 // separate module?
-type ModuleOpen func(ctx Ctxt, path string, flag int, perm os.FileMode) (io.ReadWriteCloser, error)
+type ModuleOpen func(ctx context.Context, path string, flag int, perm os.FileMode) (io.ReadWriteCloser, error)
 
-func DefaultOpen(ctx Ctxt, path string, flag int, perm os.FileMode) (io.ReadWriteCloser, error) {
+func (ModuleOpen) isModule() {}
+
+var DefaultOpen = ModuleOpen(func(ctx context.Context, path string, flag int, perm os.FileMode) (io.ReadWriteCloser, error) {
 	return os.OpenFile(path, flag, perm)
-}
+})
 
 func OpenDevImpls(next ModuleOpen) ModuleOpen {
-	return func(ctx Ctxt, path string, flag int, perm os.FileMode) (io.ReadWriteCloser, error) {
-		switch ctx.UnixPath(path) {
+	return func(ctx context.Context, path string, flag int, perm os.FileMode) (io.ReadWriteCloser, error) {
+		mc, _ := FromModuleContext(ctx)
+		switch mc.UnixPath(path) {
 		case "/dev/null":
 			return devNull{}, nil
 		}

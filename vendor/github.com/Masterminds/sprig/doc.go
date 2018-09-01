@@ -195,6 +195,7 @@ These are used to manipulate dicts.
 	- keys: Get an array of all of the keys in one or more dicts.
 	- pick: Select just the given keys out of the dict, and return a new dict.
 	- omit: Return a dict without the given keys.
+	- values: Returns a list (interface{}) of all dictionary values.
 
 Math Functions:
 

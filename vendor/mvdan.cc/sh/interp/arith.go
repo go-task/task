@@ -4,16 +4,17 @@
 package interp
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 
 	"mvdan.cc/sh/syntax"
 )
 
-func (r *Runner) arithm(expr syntax.ArithmExpr) int {
+func (r *Runner) arithm(ctx context.Context, expr syntax.ArithmExpr) int {
 	switch x := expr.(type) {
 	case *syntax.Word:
-		str := r.loneWord(x)
+		str := r.loneWord(ctx, x)
 		// recursively fetch vars
 		for str != "" {
 			val := r.getVar(str)
@@ -25,7 +26,7 @@ func (r *Runner) arithm(expr syntax.ArithmExpr) int {
 		// default to 0
 		return atoi(str)
 	case *syntax.ParenArithm:
-		return r.arithm(x.X)
+		return r.arithm(ctx, x.X)
 	case *syntax.UnaryArithm:
 		switch x.Op {
 		case syntax.Inc, syntax.Dec:
@@ -37,13 +38,13 @@ func (r *Runner) arithm(expr syntax.ArithmExpr) int {
 			} else {
 				val--
 			}
-			r.setVarString(name, strconv.Itoa(val))
+			r.setVarString(ctx, name, strconv.Itoa(val))
 			if x.Post {
 				return old
 			}
 			return val
 		}
-		val := r.arithm(x.X)
+		val := r.arithm(ctx, x.X)
 		switch x.Op {
 		case syntax.Not:
 			return oneIf(val == 0)
@@ -58,16 +59,16 @@ func (r *Runner) arithm(expr syntax.ArithmExpr) int {
 			syntax.MulAssgn, syntax.QuoAssgn, syntax.RemAssgn,
 			syntax.AndAssgn, syntax.OrAssgn, syntax.XorAssgn,
 			syntax.ShlAssgn, syntax.ShrAssgn:
-			return r.assgnArit(x)
+			return r.assgnArit(ctx, x)
 		case syntax.Quest: // Colon can't happen here
-			cond := r.arithm(x.X)
+			cond := r.arithm(ctx, x.X)
 			b2 := x.Y.(*syntax.BinaryArithm) // must have Op==Colon
 			if cond == 1 {
-				return r.arithm(b2.X)
+				return r.arithm(ctx, b2.X)
 			}
-			return r.arithm(b2.Y)
+			return r.arithm(ctx, b2.Y)
 		}
-		return binArit(x.Op, r.arithm(x.X), r.arithm(x.Y))
+		return binArit(x.Op, r.arithm(ctx, x.X), r.arithm(ctx, x.Y))
 	default:
 		panic(fmt.Sprintf("unexpected arithm expr: %T", x))
 	}
@@ -87,10 +88,10 @@ func atoi(s string) int {
 	return n
 }
 
-func (r *Runner) assgnArit(b *syntax.BinaryArithm) int {
+func (r *Runner) assgnArit(ctx context.Context, b *syntax.BinaryArithm) int {
 	name := b.X.(*syntax.Word).Parts[0].(*syntax.Lit).Value
 	val := atoi(r.getVar(name))
-	arg := r.arithm(b.Y)
+	arg := r.arithm(ctx, b.Y)
 	switch b.Op {
 	case syntax.Assgn:
 		val = arg
@@ -115,7 +116,7 @@ func (r *Runner) assgnArit(b *syntax.BinaryArithm) int {
 	case syntax.ShrAssgn:
 		val >>= uint(arg)
 	}
-	r.setVarString(name, strconv.Itoa(val))
+	r.setVarString(ctx, name, strconv.Itoa(val))
 	return val
 }
 

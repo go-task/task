@@ -86,3 +86,12 @@ func merge(dst map[string]interface{}, srcs ...map[string]interface{}) interface
 	}
 	return dst
 }
+
+func values(dict map[string]interface{}) []interface{} {
+	values := []interface{}{}
+	for _, value := range dict {
+		values = append(values, value)
+	}
+
+	return values
+}

@@ -962,10 +962,10 @@ func (p *Printer) command(cmd Command, redirs []*Redirect) (startRedirs int) {
 			p.incLevel()
 		}
 		for i, ci := range x.Items {
-			var inlineCom *Comment
-			for _, c := range ci.Comments {
+			var last []Comment
+			for i, c := range ci.Comments {
 				if c.Pos().After(ci.Pos()) {
-					inlineCom = &c
+					last = ci.Comments[i:]
 					break
 				}
 				p.comment(c)
@@ -977,8 +977,8 @@ func (p *Printer) command(cmd Command, redirs []*Redirect) (startRedirs int) {
 			sep := len(ci.Stmts) > 1 || ci.StmtList.pos().Line() > p.line ||
 				(!ci.StmtList.empty() && ci.OpPos.Line() > ci.StmtList.end().Line())
 			p.nestedStmts(ci.StmtList, ci.OpPos)
+			p.level++
 			if !p.minify || i != len(x.Items)-1 {
-				p.level++
 				if sep {
 					p.newlines(ci.OpPos)
 					p.wantNewline = true
@@ -986,11 +986,10 @@ func (p *Printer) command(cmd Command, redirs []*Redirect) (startRedirs int) {
 				p.spacedToken(ci.Op.String(), ci.OpPos)
 				// avoid ; directly after tokens like ;;
 				p.wroteSemi = true
-				if inlineCom != nil {
-					p.comment(*inlineCom)
-				}
-				p.level--
 			}
+			p.comments(last)
+			p.flushComments()
+			p.level--
 		}
 		p.comments(x.Last)
 		if p.swtCaseIndent {
@@ -1049,9 +1048,12 @@ func (p *Printer) ifClause(ic *IfClause, elif bool) {
 	p.nestedStmts(ic.Cond, Pos{})
 	p.semiOrNewl("then", ic.ThenPos)
 	p.nestedStmts(ic.Then, ic.bodyEndPos())
+	p.comments(ic.ElseComments)
 	if ic.FollowedByElif() {
+		s := ic.Else.Stmts[0]
+		p.comments(s.Comments)
 		p.semiRsrv("elif", ic.ElsePos)
-		p.ifClause(ic.Else.Stmts[0].Cmd.(*IfClause), true)
+		p.ifClause(s.Cmd.(*IfClause), true)
 		return
 	}
 	if !ic.Else.empty() {

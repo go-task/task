@@ -4,6 +4,7 @@
 package interp
 
 import (
+	"context"
 	"fmt"
 	"runtime"
 	"sort"
@@ -156,8 +157,7 @@ func (r *Runner) lookupVar(name string) (Variable, bool) {
 	}
 	if r.opts[optNoUnset] {
 		r.errf("%s: unbound variable\n", name)
-		r.exit = 1
-		r.lastExit()
+		r.setErr(ShellExitStatus(1))
 	}
 	return Variable{}, false
 }
@@ -206,7 +206,7 @@ func (r *Runner) varStr(vr Variable, depth int) string {
 	return ""
 }
 
-func (r *Runner) varInd(vr Variable, e syntax.ArithmExpr, depth int) string {
+func (r *Runner) varInd(ctx context.Context, vr Variable, e syntax.ArithmExpr, depth int) string {
 	if depth > maxNameRefDepth {
 		return ""
 	}
@@ -214,9 +214,9 @@ func (r *Runner) varInd(vr Variable, e syntax.ArithmExpr, depth int) string {
 	case StringVal:
 		if vr.NameRef {
 			vr, _ = r.lookupVar(string(x))
-			return r.varInd(vr, e, depth+1)
+			return r.varInd(ctx, vr, e, depth+1)
 		}
-		if r.arithm(e) == 0 {
+		if r.arithm(ctx, e) == 0 {
 			return string(x)
 		}
 	case IndexArray:
@@ -226,7 +226,7 @@ func (r *Runner) varInd(vr Variable, e syntax.ArithmExpr, depth int) string {
 		case "*":
 			return strings.Join(x, r.ifsJoin)
 		}
-		i := r.arithm(e)
+		i := r.arithm(ctx, e)
 		if len(x) > 0 {
 			return x[i]
 		}
@@ -246,13 +246,13 @@ func (r *Runner) varInd(vr Variable, e syntax.ArithmExpr, depth int) string {
 			}
 			return strings.Join(strs, " ")
 		}
-		return x[r.loneWord(e.(*syntax.Word))]
+		return x[r.loneWord(ctx, e.(*syntax.Word))]
 	}
 	return ""
 }
 
-func (r *Runner) setVarString(name, val string) {
-	r.setVar(name, nil, Variable{Value: StringVal(val)})
+func (r *Runner) setVarString(ctx context.Context, name, val string) {
+	r.setVar(ctx, name, nil, Variable{Value: StringVal(val)})
 }
 
 func (r *Runner) setVarInternal(name string, vr Variable) {
@@ -276,12 +276,11 @@ func (r *Runner) setVarInternal(name string, vr Variable) {
 	}
 }
 
-func (r *Runner) setVar(name string, index syntax.ArithmExpr, vr Variable) {
+func (r *Runner) setVar(ctx context.Context, name string, index syntax.ArithmExpr, vr Variable) {
 	cur, _ := r.lookupVar(name)
 	if cur.ReadOnly {
 		r.errf("%s: readonly variable\n", name)
 		r.exit = 1
-		r.lastExit()
 		return
 	}
 	_, isIndexArray := cur.Value.(IndexArray)
@@ -317,7 +316,7 @@ func (r *Runner) setVar(name string, index syntax.ArithmExpr, vr Variable) {
 		if !ok {
 			return
 		}
-		k := r.loneWord(w)
+		k := r.loneWord(ctx, w)
 		amap[k] = valStr
 		cur.Value = amap
 		r.setVarInternal(name, cur)
@@ -331,7 +330,7 @@ func (r *Runner) setVar(name string, index syntax.ArithmExpr, vr Variable) {
 		list = x
 	case AssocArray: // done above
 	}
-	k := r.arithm(index)
+	k := r.arithm(ctx, index)
 	for len(list) < k+1 {
 		list = append(list, "")
 	}
@@ -359,13 +358,13 @@ func stringIndex(index syntax.ArithmExpr) bool {
 	return false
 }
 
-func (r *Runner) assignVal(as *syntax.Assign, valType string) VarValue {
+func (r *Runner) assignVal(ctx context.Context, as *syntax.Assign, valType string) VarValue {
 	prev, prevOk := r.lookupVar(as.Name.Value)
 	if as.Naked {
 		return prev.Value
 	}
 	if as.Value != nil {
-		s := r.loneWord(as.Value)
+		s := r.loneWord(ctx, as.Value)
 		if !as.Append || !prevOk {
 			return StringVal(s)
 		}
@@ -398,8 +397,8 @@ func (r *Runner) assignVal(as *syntax.Assign, valType string) VarValue {
 		// associative array
 		amap := AssocArray(make(map[string]string, len(elems)))
 		for _, elem := range elems {
-			k := r.loneWord(elem.Index.(*syntax.Word))
-			amap[k] = r.loneWord(elem.Value)
+			k := r.loneWord(ctx, elem.Index.(*syntax.Word))
+			amap[k] = r.loneWord(ctx, elem.Value)
 		}
 		if !as.Append || !prevOk {
 			return amap
@@ -415,7 +414,7 @@ func (r *Runner) assignVal(as *syntax.Assign, valType string) VarValue {
 			indexes[i] = i
 			continue
 		}
-		k := r.arithm(elem.Index)
+		k := r.arithm(ctx, elem.Index)
 		indexes[i] = k
 		if k > maxIndex {
 			maxIndex = k
@@ -423,7 +422,7 @@ func (r *Runner) assignVal(as *syntax.Assign, valType string) VarValue {
 	}
 	strs := make([]string, maxIndex+1)
 	for i, elem := range elems {
-		strs[indexes[i]] = r.loneWord(elem.Value)
+		strs[indexes[i]] = r.loneWord(ctx, elem.Value)
 	}
 	if !as.Append || !prevOk {
 		return IndexArray(strs)

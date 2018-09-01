@@ -369,8 +369,13 @@ func getBaseCertTemplate(
 	if err != nil {
 		return nil, err
 	}
+	serialNumberUpperBound := new(big.Int).Lsh(big.NewInt(1), 128)
+	serialNumber, err := rand.Int(rand.Reader, serialNumberUpperBound)
+	if err != nil {
+		return nil, err
+	}
 	return &x509.Certificate{
-		SerialNumber: big.NewInt(1),
+		SerialNumber: serialNumber,
 		Subject: pkix.Name{
 			CommonName: cn,
 		},

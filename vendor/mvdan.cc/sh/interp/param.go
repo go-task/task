@@ -4,6 +4,7 @@
 package interp
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"regexp"
@@ -51,7 +52,7 @@ func (r *Runner) quotedElems(pe *syntax.ParamExp) []string {
 	return nil
 }
 
-func (r *Runner) paramExp(pe *syntax.ParamExp) string {
+func (r *Runner) paramExp(ctx context.Context, pe *syntax.ParamExp) string {
 	name := pe.Param.Value
 	var vr Variable
 	set := false
@@ -86,10 +87,10 @@ func (r *Runner) paramExp(pe *syntax.ParamExp) string {
 	}
 	str := r.varStr(vr, 0)
 	if index != nil {
-		str = r.varInd(vr, index, 0)
+		str = r.varInd(ctx, vr, index, 0)
 	}
 	slicePos := func(expr syntax.ArithmExpr) int {
-		p := r.arithm(expr)
+		p := r.arithm(ctx, expr)
 		if p < 0 {
 			p = len(str) + p
 			if p < 0 {
@@ -148,8 +149,8 @@ func (r *Runner) paramExp(pe *syntax.ParamExp) string {
 			str = str[:length]
 		}
 	case pe.Repl != nil:
-		orig := r.lonePattern(pe.Repl.Orig)
-		with := r.loneWord(pe.Repl.With)
+		orig := r.lonePattern(ctx, pe.Repl.Orig)
+		with := r.loneWord(ctx, pe.Repl.With)
 		n := 1
 		if pe.Repl.All {
 			n = -1
@@ -165,7 +166,7 @@ func (r *Runner) paramExp(pe *syntax.ParamExp) string {
 		buf.WriteString(str[last:])
 		str = buf.String()
 	case pe.Exp != nil:
-		arg := r.loneWord(pe.Exp.Word)
+		arg := r.loneWord(ctx, pe.Exp.Word)
 		switch op := pe.Exp.Op; op {
 		case syntax.SubstColPlus:
 			if str == "" {
@@ -194,7 +195,7 @@ func (r *Runner) paramExp(pe *syntax.ParamExp) string {
 			if str == "" {
 				r.errf("%s\n", arg)
 				r.exit = 1
-				r.lastExit()
+				r.setErr(ShellExitStatus(r.exit))
 			}
 		case syntax.SubstAssgn:
 			if set {
@@ -203,7 +204,7 @@ func (r *Runner) paramExp(pe *syntax.ParamExp) string {
 			fallthrough
 		case syntax.SubstColAssgn:
 			if str == "" {
-				r.setVarString(name, arg)
+				r.setVarString(ctx, name, arg)
 				str = arg
 			}
 		case syntax.RemSmallPrefix, syntax.RemLargePrefix,

@@ -7,15 +7,15 @@
   name = "github.com/Masterminds/semver"
   packages = ["."]
   pruneopts = "NUT"
-  revision = "4ca3c04fd4fe2a472df0d7121b1b9462f2214c43"
+  revision = "c84ddcca87bf5a941b138dde832a7e20b0159ad8"
 
 [[projects]]
   branch = "master"
-  digest = "1:43f9a530dfe36fb355b05fbc7a5712f8149a7f6bdfd131bc0ccc634e25c4dd1e"
+  digest = "1:58551c80f84fd3ba2954668f5f850a8179dc3c5bb4885fc7eed5a8e2ae815c99"
   name = "github.com/Masterminds/sprig"
   packages = ["."]
   pruneopts = "NUT"
-  revision = "6b2a58267f6a8b1dc8e2eb5519b984008fa85e8c"
+  revision = "77bb58b7f5e10889a1195c21b9e7a96ee166f199"
 
 [[projects]]
   digest = "1:975108e8d4f5dab096fc991326e96a5716ee8d02e5e7386bb4796171afc4ab9a"
@@ -26,55 +26,55 @@
   version = "v1.0.1"
 
 [[projects]]
-  digest = "1:a2c1d0e43bd3baaa071d1b9ed72c27d78169b2b269f71c105ac4ba34b1be4a39"
+  digest = "1:ffe9824d294da03b391f44e1ae8281281b4afc1bdaa9588c9097785e3af10cec"
   name = "github.com/davecgh/go-spew"
   packages = ["spew"]
   pruneopts = "NUT"
-  revision = "346938d642f2ec3594ed81d874461961cd0faa76"
-  version = "v1.1.0"
+  revision = "8991bc29aa16c548c550c7ff78260e27b9ab7c73"
+  version = "v1.1.1"
 
 [[projects]]
-  digest = "1:1bb197a3b5db4e06e00b7560f8e89836c486627f2a0338332ed37daa003d259e"
+  digest = "1:a1578f7323eca2b88021fdc9a79a99833d40b12c32a5ea4f284e2fad19ea2657"
   name = "github.com/google/uuid"
   packages = ["."]
   pruneopts = "NUT"
-  revision = "064e2069ce9c359c118179501254f67d7d37ba24"
-  version = "0.2"
-
-[[projects]]
-  digest = "1:f5db19d350bd0b542d17f7e7cf4e7068bac416c08adb6a129b3c6d1db8211051"
-  name = "github.com/huandu/xstrings"
-  packages = ["."]
-  pruneopts = "NUT"
-  revision = "2bf18b218c51864a87384c06996e40ff9dcff8e1"
+  revision = "d460ce9f8df2e77fb1ba55ca87fafed96c607494"
   version = "v1.0.0"
 
 [[projects]]
-  digest = "1:65300ccc4bcb38b107b868155c303312978981e56bca707c81efec57575b5e06"
+  digest = "1:ed24122ea28f4f65f82f5b4703389fdbb5f246efc971e4d74f01f7c47c0b81b2"
+  name = "github.com/huandu/xstrings"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "55ae428c2ac4f74d7430952ef528631e656ac92c"
+  version = "v1.1.0"
+
+[[projects]]
+  digest = "1:9a52adf44086cead3b384e5d0dbf7a1c1cce65e67552ee3383a8561c42a18cd3"
   name = "github.com/imdario/mergo"
   packages = ["."]
   pruneopts = "NUT"
-  revision = "9316a62528ac99aaecb4e47eadd6dc8aa6533d58"
-  version = "v0.3.5"
+  revision = "9f23e2d6bd2a77f959b2bf6acdbefd708a83a4a4"
+  version = "v0.3.6"
 
 [[projects]]
   branch = "master"
-  digest = "1:fdf499904ff0a8b5e05a32d98a1e65ddaff6b358640dbd8696ce8bb4e8d2d246"
+  digest = "1:729c1199021f057f38487f7e64432f3539f9efac444185e64b4b7e121414ac68"
   name = "github.com/mattn/go-zglob"
   packages = [
     ".",
     "fastwalk",
   ]
   pruneopts = "NUT"
-  revision = "c436403c742d0b6d8fc37e69eadf33e024fe74fa"
+  revision = "2ea3427bfa539cca900ca2768d8663ecc8a708c1"
 
 [[projects]]
-  branch = "master"
-  digest = "1:9db29b604bd78452d167abed82386ddd2f93973df3841896fb6ab8aff936f1d6"
+  digest = "1:a4df73029d2c42fabcb6b41e327d2f87e685284ec03edf76921c267d9cfc9c23"
   name = "github.com/mitchellh/go-homedir"
   packages = ["."]
   pruneopts = "NUT"
-  revision = "3864e76763d94a6df2f9960b16a20a33da9f9a66"
+  revision = "ae18d6b8b3205b561c79e8e5f69bff09736185f4"
+  version = "v1.0.0"
 
 [[projects]]
   digest = "1:0028cb19b2e4c3112225cd871870f2d9cf49b9b4276531f03438a88e94be86fe"
@@ -94,11 +94,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:8c05fbdaac9713aed2a89d171a8b4e98a563f6c84e48352d0bcb10b1a5122488"
+  digest = "1:9d8420bbf131d1618bde6530af37c3799340d3762cc47210c1d9532a4c3a2779"
   name = "github.com/spf13/pflag"
   packages = ["."]
   pruneopts = "NUT"
-  revision = "3ebe029320b2676d667ae88da602a5f854788a8a"
+  revision = "298182f68c66c05229eb03ac171abe6e309ee79a"
 
 [[projects]]
   digest = "1:bacb8b590716ab7c33f2277240972c9582d389593ee8d66fc10074e0508b8126"
@@ -110,7 +110,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:17ff32de9f3bf39f76d339ddffcd380140721b112bea96837a86d4dc26c2c633"
+  digest = "1:69b3fcb7a41b18436a85471cbdcfc70ad10ba3206f8c87563e1c773610e1bcad"
   name = "golang.org/x/crypto"
   packages = [
     "pbkdf2",
@@ -118,7 +118,7 @@
     "ssh/terminal",
   ]
   pruneopts = "NUT"
-  revision = "a2144134853fc9a27a7b1e3eb4f19f1a76df13c9"
+  revision = "182538f80094b6a8efaade63a8fd8e0d9d5843dd"
 
 [[projects]]
   branch = "master"
@@ -126,7 +126,7 @@
   name = "golang.org/x/net"
   packages = ["context"]
   pruneopts = "NUT"
-  revision = "a680a1efc54dd51c040b3b5ce4939ea3cf2ea0d1"
+  revision = "8a410e7b638dca158bf9e766925842f6651ff828"
 
 [[projects]]
   branch = "master"
@@ -138,14 +138,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:64107e3c8f52f341891a565d117bf263ed396fe0c16bad19634b25be25debfaa"
+  digest = "1:8270f14d85e8d36e852e018872ac923f7a2067648bfe8428d01be288818aa337"
   name = "golang.org/x/sys"
   packages = [
     "unix",
     "windows",
   ]
   pruneopts = "NUT"
-  revision = "ac767d655b305d4e9612f5f6e33120b9176c4ad4"
+  revision = "fa5fdf94c78965f1aa8423f0cc50b8b8d728b05a"
 
 [[projects]]
   branch = "v2"
@@ -157,7 +157,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:01be9a02fb8bcae03383a7422d0bd48813fd49834a50be5ef933e430604b3423"
+  digest = "1:e647f1f4fcc94a6baad3965a347c1ac4ed669f31c87c826516314e415d1a4ad2"
   name = "mvdan.cc/sh"
   packages = [
     "interp",
@@ -165,7 +165,7 @@
     "syntax",
   ]
   pruneopts = "NUT"
-  revision = "54e5852f101469e5ff9b03902ce0d4ff2ef09809"
+  revision = "3a244a89e2e520d2777e94693d51bef800761879"
 
 [solve-meta]
   analyzer-name = "dep"
