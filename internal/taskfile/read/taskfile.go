@@ -19,6 +19,23 @@ func Taskfile(dir string) (*taskfile.Taskfile, error) {
 		return nil, fmt.Errorf(`No Taskfile.yml found. Use "task --init" to create a new one`)
 	}
 
+	for namespace, path := range t.Includes {
+		info, err := os.Stat(path)
+		if err != nil {
+			return nil, err
+		}
+		if info.IsDir() {
+			path = filepath.Join(path, "Taskfile.yml")
+		}
+		includedTaskfile, err := readTaskfile(path)
+		if err != nil {
+			return nil, err
+		}
+		if err = taskfile.Merge(t, includedTaskfile, namespace); err != nil {
+			return nil, err
+		}
+	}
+
 	path = filepath.Join(dir, fmt.Sprintf("Taskfile_%s.yml", runtime.GOOS))
 	if _, err = os.Stat(path); err == nil {
 		osTaskfile, err := readTaskfile(path)
