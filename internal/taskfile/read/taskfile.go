@@ -14,9 +14,12 @@ import (
 // Taskfile reads a Taskfile for a given directory
 func Taskfile(dir string) (*taskfile.Taskfile, error) {
 	path := filepath.Join(dir, "Taskfile.yml")
+	if _, err := os.Stat(path); err != nil {
+		return nil, fmt.Errorf(`No Taskfile.yml found. Use "task --init" to create a new one`)
+	}
 	t, err := readTaskfile(path)
 	if err != nil {
-		return nil, fmt.Errorf(`No Taskfile.yml found. Use "task --init" to create a new one`)
+		return nil, err
 	}
 
 	path = filepath.Join(dir, fmt.Sprintf("Taskfile_%s.yml", runtime.GOOS))
