@@ -1,5 +1,3 @@
-[![Build Status](https://travis-ci.org/go-task/task.svg?branch=master)](https://travis-ci.org/go-task/task)
-
 # Task - A task runner / simpler Make alternative written in Go
 
 Task is a simple tool that allows you to easily run development and build
@@ -8,6 +6,6 @@ It aims to be simpler and easier to use then [GNU Make][make].
 
 ---
 
-See [Taskfile.org](https://taskfile.org) for documentation.
+See [Installation](INSTALLATION) and [Getting Started](USAGE#getting-started).
 
 [make]: https://www.gnu.org/software/make/

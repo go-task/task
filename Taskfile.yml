@@ -79,3 +79,13 @@ tasks:
     cmds:
       - echo '{{.GO_PACKAGES}}'
     silent: true
+
+  docs:install:
+    desc: Installs docsify to work the on the documentation site
+    cmds:
+      - npm install docsify-cli -g
+
+  docs:serve:
+    desc: Serves the documentation site locally
+    cmds:
+      - docsify serve docs
