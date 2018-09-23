@@ -33,7 +33,7 @@ executable called must be available by the OS or in PATH.
 
 If you ommit a task name, "default" will be assumed.
 
-### Environment
+## Environment
 
 You can specify environment variables that are added when running a command:
 
@@ -48,7 +48,7 @@ tasks:
       hallo: welt
 ```
 
-### OS specific task
+## OS specific task
 
 If you add a `Taskfile_{{GOOS}}.yml` you can override or amend your Taskfile
 based on the operating system.
@@ -86,7 +86,7 @@ It's also possible to have an OS specific `Taskvars.yml` file, like
 `Taskvars_windows.yml`, `Taskfile_linux.yml`, or `Taskvars_darwin.yml`. See the
 [variables section](#variables) below.
 
-### Task directory
+## Task directory
 
 By default, tasks will be executed in the directory where the Taskfile is
 located. But you can easily make the task run in another folder informing
@@ -103,7 +103,7 @@ tasks:
       - caddy
 ```
 
-### Task dependencies
+## Task dependencies
 
 You may have tasks that depend on others. Just pointing them on `deps` will
 make them run automatically before running the parent task:
@@ -167,7 +167,7 @@ tasks:
       - echo {{.TEXT}}
 ```
 
-### Calling another task
+## Calling another task
 
 When a task has many dependencies, they are executed concurrently. This will
 often result in a faster build pipeline. But in some situations you may need
@@ -213,7 +213,7 @@ tasks:
 
 The above syntax is also supported in `deps`.
 
-### Prevent unnecessary work
+## Prevent unnecessary work
 
 If a task generates something, you can inform Task the source and generated
 files, so Task will prevent to run them if not necessary.
@@ -295,7 +295,7 @@ up-to-date.
 Also, `task --status [tasks]...` will exit with a non-zero exit code if any of
 the tasks are not up-to-date.
 
-### Variables
+## Variables
 
 When doing interpolation of variables, Task will look for the below.
 They are listed below in order of importance (e.g. most important first):
@@ -357,7 +357,7 @@ DEV_MODE: production
 GIT_COMMIT: {sh: git log -n 1 --format=%h}
 ```
 
-#### Variables expansion
+### Variables expansion
 
 Variables are expanded 2 times by default. You can change that by setting the
 `expansions:` option. Change that will be necessary if you compose many
@@ -381,7 +381,7 @@ tasks:
       - echo "{{.FOOBARBAZ}}"
 ```
 
-#### Dynamic variables
+### Dynamic variables
 
 The below syntax (`sh:` prop in a variable) is considered a dynamic variable.
 The value will be treated as a command and the output assigned. If there is one
@@ -401,7 +401,7 @@ tasks:
 
 This works for all types of variables.
 
-### Go's template engine
+## Go's template engine
 
 Task parse commands as [Go's template engine][gotemplate] before executing
 them. Variables are accessible through dot syntax (`.VARNAME`).
@@ -458,7 +458,7 @@ tasks:
         {{end}}EOF
 ```
 
-### Help
+## Help
 
 Running `task --list` (or `task -l`) lists all tasks with a description.
 The following taskfile:

@@ -1,14 +1,14 @@
 # Alternative task runners
 
-## YAML based:
+## YAML based
 
 - [rliebz/tusk][tusk]
 
-## Go based:
+## Go based
 
 - [magefile/mage][mage]
 
-## Make similar:
+## Make similar
 
 - [casey/just][just]
 
