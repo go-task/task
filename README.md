@@ -8,6 +8,6 @@ It aims to be simpler and easier to use then [GNU Make][make].
 
 ---
 
-See [taskfile.org](http://taskfile.org) for documentation.
+See [taskfile.org](https://taskfile.org) for documentation.
 
 [make]: https://www.gnu.org/software/make/

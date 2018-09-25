@@ -34,7 +34,7 @@ scanarios like CIs. Many thanks to [godownloader][godownloader] for easily
 generating this script.
 
 ```bash
-curl -s https://raw.githubusercontent.com/go-task/task/master/install-task.sh | sh
+curl -s https://taskfile.org/install.sh | sh
 ```
 
 ## Binary
