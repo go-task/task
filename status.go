@@ -12,9 +12,9 @@ import (
 // Status returns an error if any the of given tasks is not up-to-date
 func (e *Executor) Status(calls ...taskfile.Call) error {
 	for _, call := range calls {
-		t, ok := e.Taskfile.Tasks[call.Task]
-		if !ok {
-			return &taskNotFoundError{taskName: call.Task}
+		t, err := e.CompiledTask(call)
+		if err != nil {
+			return err
 		}
 		isUpToDate, err := isTaskUpToDate(e.Context, t)
 		if err != nil {
