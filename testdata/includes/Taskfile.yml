@@ -2,12 +2,14 @@ version: '2'
 
 includes:
   included: ./included
+  included_taskfile: ./Taskfile2.yml
 
 tasks:
   default:
     cmds:
       - task: gen
       - task: included:gen
+      - task: included_taskfile:gen
 
   gen:
     cmds:

@@ -3,4 +3,4 @@ version: '2'
 tasks:
   gen:
     cmds:
-      - echo included > included.txt
+      - echo included_directory > included_directory.txt

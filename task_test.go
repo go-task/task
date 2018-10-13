@@ -477,8 +477,9 @@ func TestIncludes(t *testing.T) {
 		Target:    "default",
 		TrimSpace: true,
 		Files: map[string]string{
-			"main.txt":     "main",
-			"included.txt": "included",
+			"main.txt":               "main",
+			"included_directory.txt": "included_directory",
+			"included_taskfile.txt":  "included_taskfile",
 		},
 	}
 	tt.Run(t)
