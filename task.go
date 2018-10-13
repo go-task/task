@@ -116,7 +116,7 @@ func (e *Executor) Setup() error {
 			Vars:   e.taskvars,
 			Logger: e.Logger,
 		}
-	case version.IsV2(v), version.IsV21(v):
+	case version.IsV2(v), version.IsV21(v), version.IsV22(v):
 		e.Compiler = &compilerv2.CompilerV2{
 			Dir:          e.Dir,
 			Taskvars:     e.taskvars,
@@ -124,12 +124,15 @@ func (e *Executor) Setup() error {
 			Expansions:   e.Taskfile.Expansions,
 			Logger:       e.Logger,
 		}
-	case version.IsV22(v):
-		return fmt.Errorf(`task: Taskfile versions greater than v2.1 not implemented in the version of Task`)
+	case version.IsV23(v):
+		return fmt.Errorf(`task: Taskfile versions greater than v2.3 not implemented in the version of Task`)
 	}
 
 	if !version.IsV21(v) && e.Taskfile.Output != "" {
 		return fmt.Errorf(`task: Taskfile option "output" is only available starting on Taskfile version v2.1`)
+	}
+	if !version.IsV22(v) && len(e.Taskfile.Includes) > 0 {
+		return fmt.Errorf(`task: Including Taskfiles is only available starting on Taskfile version v2.2`)
 	}
 	switch e.Taskfile.Output {
 	case "", "interleaved":

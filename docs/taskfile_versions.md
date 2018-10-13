@@ -128,5 +128,21 @@ tasks:
     ignore_error: true
 ```
 
-[output]: https://github.com/go-task/task#output-syntax
-[ignore_errors]: https://github.com/go-task/task#ignore-errors
+## Version 2.2
+
+Version 2.2 comes with a global `includes` options to include other
+Taskfiles:
+
+```yaml
+version: '2'
+
+includes:
+  docs: ./documentation # will look for ./documentation/Taskfile.yml
+  docker: ./DockerTasks.yml
+```
+
+Please check the [documentation][includes]
+
+[output]: usage#output-syntax
+[ignore_errors]: usage#ignore-errors
+[includes]: usage#including-other-taskfiles
