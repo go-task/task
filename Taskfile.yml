@@ -23,7 +23,7 @@ tasks:
     desc: Downloads cli dependencies
     cmds:
       - task: go-get
-        vars: {REPO: github.com/golang/lint/golint}
+        vars: {REPO: golang.org/x/lint/golint}
       - task: go-get
         vars: {REPO: github.com/golang/dep/cmd/dep}
       - task: go-get
@@ -68,7 +68,7 @@ tasks:
   ci:
     cmds:
       - task: go-get
-        vars: {REPO: github.com/golang/lint/golint}
+        vars: {REPO: golang.org/x/lint/golint}
       - task: lint
       - task: test
 
