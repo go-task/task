@@ -2,7 +2,10 @@ package task
 
 import (
 	"context"
+	"os"
+	"os/signal"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/go-task/task/internal/taskfile"
@@ -40,6 +43,8 @@ func (e *Executor) watchTasks(calls ...taskfile.Call) error {
 		return err
 	}
 
+	closeOnInterrupt(w)
+
 	go func() {
 		for {
 			select {
@@ -66,6 +71,7 @@ func (e *Executor) watchTasks(calls ...taskfile.Call) error {
 					e.Logger.Errf("%v", err)
 				}
 			case <-w.Closed:
+				cancel()
 				return
 			}
 		}
@@ -82,6 +88,19 @@ func (e *Executor) watchTasks(calls ...taskfile.Call) error {
 	}()
 
 	return w.Start(time.Second)
+}
+
+func isContextError(err error) bool {
+	return err == context.Canceled || err == context.DeadlineExceeded
+}
+
+func closeOnInterrupt(w *watcher.Watcher) {
+	ch := make(chan os.Signal, 1)
+	signal.Notify(ch, os.Interrupt, os.Kill, syscall.SIGTERM)
+	go func() {
+		<-ch
+		w.Close()
+	}()
 }
 
 func (e *Executor) registerWatchedFiles(w *watcher.Watcher, calls ...taskfile.Call) error {
@@ -139,13 +158,4 @@ func (e *Executor) registerWatchedFiles(w *watcher.Watcher, calls ...taskfile.Ca
 		}
 	}
 	return nil
-}
-
-func isContextError(err error) bool {
-	switch err {
-	case context.Canceled, context.DeadlineExceeded:
-		return true
-	default:
-		return false
-	}
 }

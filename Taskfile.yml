@@ -60,9 +60,10 @@ tasks:
       - goreleaser --snapshot --rm-dist
 
   generate-install-script:
-    desc: Generate install script using https://githbub.com/goreleaser/godownloader
+    desc: Generate install script using https://github.com/goreleaser/godownloader
     cmds:
       - godownloader --repo go-task/task -o install-task.sh
+      - cp ./install-task.sh ./docs/install.sh
 
   ci:
     cmds:
@@ -79,3 +80,13 @@ tasks:
     cmds:
       - echo '{{.GO_PACKAGES}}'
     silent: true
+
+  docs:install:
+    desc: Installs docsify to work the on the documentation site
+    cmds:
+      - npm install docsify-cli -g
+
+  docs:serve:
+    desc: Serves the documentation site locally
+    cmds:
+      - docsify serve docs

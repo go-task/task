@@ -1,0 +1,8 @@
+- [Installation](installation)
+- [Usage](usage)
+- [Taskfile Versions](taskfile_versions)
+- [Examples](examples)
+- [Releasing Task](releasing_task)
+- [Alternative Task Runners](alternative_task_runners)
+- [Sponsors and Backers](sponsors_and_backers)
+- [![Github](https://icongram.jgog.in/simple/github.svg?color=808080&size=16)Github](https://github.com/go-task/task)

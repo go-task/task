@@ -9,6 +9,6 @@ trim_trailing_whitespace = true
 indent_style = tab
 indent_size = 8
 
-[*.{md,yml,yaml,json,toml}]
+[*.{md,yml,yaml,json,toml,htm,html}]
 indent_style = space
 indent_size = 2

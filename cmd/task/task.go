@@ -87,6 +87,11 @@ func main() {
 		return
 	}
 
+	ctx := context.Background()
+	if !watch {
+		ctx = getSignalContext()
+	}
+
 	e := task.Executor{
 		Force:   force,
 		Watch:   watch,
@@ -95,7 +100,7 @@ func main() {
 		Dir:     dir,
 		Dry:     dry,
 
-		Context: getSignalContext(),
+		Context: ctx,
 
 		Stdin:  os.Stdin,
 		Stdout: os.Stdout,

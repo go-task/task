@@ -1,9 +1,9 @@
-# Taskfile version
+# Taskfile Versions
 
 The Taskfile syntax and features changed with time. This document explains what
 changed on each version and how to upgrade your Taskfile.
 
-# What the Taskfile version mean
+## What the Taskfile version mean
 
 The Taskfile version follows the Task version. E.g. the change to Taskfile
 version `2` means that Task `v2.0.0` should be release to support it.
@@ -18,7 +18,7 @@ available, but not `3.0.0+`.
 In the first version of the `Taskfile`, the `version:` key was not available,
 because the tasks was in the root of the YAML document. Like this:
 
-```yml
+```yaml
 echo:
   cmds:
     - echo "Hello, World!"
@@ -37,7 +37,7 @@ At version 2, we introduced the `version:` key, to allow us to envolve Task
 with new features without breaking existing Taskfiles. The new syntax is as
 follows:
 
-```yml
+```yaml
 version: '2'
 
 tasks:
@@ -49,7 +49,7 @@ tasks:
 Version 2 allows you to write global variables directly in the Taskfile,
 if you don't want to create a `Taskvars.yml`:
 
-```yml
+```yaml
 version: '2'
 
 vars:
@@ -72,7 +72,7 @@ The variable priority order changed to the following:
 A new global option was added to configure the number of variables expansions
 (which default to 2):
 
-```yml
+```yaml
 version: '2'
 
 expansions: 3
@@ -96,7 +96,7 @@ Version 2.1 includes a global `output` option, to allow having more control
 over how commands output are printed to the console
 (see [documentation][output] for more info):
 
-```yml
+```yaml
 version: '2'
 
 output: prefixed
@@ -109,9 +109,9 @@ tasks:
 ```
 
 From this version it's not also possible to ignore errors of a command or task
-(check documentatio [here][ignore_errors]):
+(check documentation [here][ignore_errors]):
 
-```yml
+```yaml
 version: '2'
 
 tasks:
