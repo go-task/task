@@ -48,7 +48,7 @@ tasks:
       hallo: welt
 ```
 
-## OS specific task
+## Operating System specific tasks
 
 If you add a `Taskfile_{{GOOS}}.yml` you can override or amend your Taskfile
 based on the operating system.
@@ -85,6 +85,31 @@ a task the whole task is replaced, properties of the task are not merged.
 It's also possible to have an OS specific `Taskvars.yml` file, like
 `Taskvars_windows.yml`, `Taskfile_linux.yml`, or `Taskvars_darwin.yml`. See the
 [variables section](#variables) below.
+
+## Including other Taskfiles
+
+If you want to share tasks between different projects (Taskfiles), you can use
+the importing mechanism to include other Taskfiles using the `includes` keyword:
+
+```yaml
+version: '2'
+
+includes:
+  docs: ./documentation # will look for ./documentation/Taskfile.yml
+  docker: ./DockerTasks.yml
+```
+
+The tasks described in the given Taskfiles will be available with the informed
+namespace. So, you'd call `task docs:serve` to run the `serve` task from
+`documentation/Taskfile.yml` or `task docker:build` to run the `build` task
+from the `DockerTasks.yml` file.
+
+> The included Taskfiles must be using the same schema version the main
+> Taskfile uses.
+
+> Also, for now included Taskfiles can't include other Taskfiles.
+> This was a deliberate decision to keep use and implementation simple.
+> If you disagree, open an GitHub issue and explain your use case. =)
 
 ## Task directory
 
