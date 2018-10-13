@@ -1,6 +1,7 @@
 package read
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -11,6 +12,9 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+// ErrIncludedTaskfilesCantHaveIncludes is returned when a included Taskfile contains includes
+var ErrIncludedTaskfilesCantHaveIncludes = errors.New("task: Included Taskfiles can't have includes. Please, move the include to the main Taskfile")
+
 // Taskfile reads a Taskfile for a given directory
 func Taskfile(dir string) (*taskfile.Taskfile, error) {
 	path := filepath.Join(dir, "Taskfile.yml")
@@ -20,6 +24,27 @@ func Taskfile(dir string) (*taskfile.Taskfile, error) {
 	t, err := readTaskfile(path)
 	if err != nil {
 		return nil, err
+	}
+
+	for namespace, path := range t.Includes {
+		path = filepath.Join(dir, path)
+		info, err := os.Stat(path)
+		if err != nil {
+			return nil, err
+		}
+		if info.IsDir() {
+			path = filepath.Join(path, "Taskfile.yml")
+		}
+		includedTaskfile, err := readTaskfile(path)
+		if err != nil {
+			return nil, err
+		}
+		if len(includedTaskfile.Includes) > 0 {
+			return nil, ErrIncludedTaskfilesCantHaveIncludes
+		}
+		if err = taskfile.Merge(t, includedTaskfile, namespace); err != nil {
+			return nil, err
+		}
 	}
 
 	path = filepath.Join(dir, fmt.Sprintf("Taskfile_%s.yml", runtime.GOOS))
