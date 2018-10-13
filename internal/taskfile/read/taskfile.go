@@ -23,6 +23,7 @@ func Taskfile(dir string) (*taskfile.Taskfile, error) {
 	}
 
 	for namespace, path := range t.Includes {
+		path = filepath.Join(dir, path)
 		info, err := os.Stat(path)
 		if err != nil {
 			return nil, err

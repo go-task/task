@@ -470,3 +470,16 @@ func TestDry(t *testing.T) {
 		t.Errorf("File should not exist %s", file)
 	}
 }
+
+func TestIncludes(t *testing.T) {
+	tt := fileContentTest{
+		Dir:       "testdata/includes",
+		Target:    "default",
+		TrimSpace: true,
+		Files: map[string]string{
+			"main.txt":     "main",
+			"included.txt": "included",
+		},
+	}
+	tt.Run(t)
+}

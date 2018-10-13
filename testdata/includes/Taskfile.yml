@@ -1,0 +1,14 @@
+version: '2'
+
+includes:
+  included: ./included
+
+tasks:
+  default:
+    cmds:
+      - task: gen
+      - task: included:gen
+
+  gen:
+    cmds:
+      - echo main > main.txt
