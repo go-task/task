@@ -7,7 +7,7 @@ Since it's written in [Go][go], Task is just a single binary and has no other
 dependencies, which means you don't need to mess with any complicated install
 setups just to use a build tool.
 
-Once [installed](installation), you just need to describe your build tasks
+Once [installed](installation.md), you just need to describe your build tasks
 using a simple [YAML][yaml] schema in a file called `Taskfile.yml`:
 
 ```yaml
@@ -27,10 +27,10 @@ guide to check the full schema documentation and Task features.
 
 ## Features
 
-- [Easy installation](installation): just download a single binary, add to
+- [Easy installation](installation.md): just download a single binary, add to
   $PATH and you're done! Or you can also install using [Homebrew][homebrew] or
   [Snapcraft][snapcraft] if you want;
-- Available on CIs: by adding [this simple command](installation#install-script)
+- Available on CIs: by adding [this simple command](installation.md#install-script)
   to install on your CI script and you're done to use Task as part of your CI pipeline;
 - Truly cross-platform: while most build tools only work well on Linux or macOS,
   Task also supports Windows thanks to [this awesome shell interpreter for Go][sh];
