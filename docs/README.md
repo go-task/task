@@ -22,7 +22,7 @@ tasks:
 
 And call it by running `task hello` from you terminal.
 
-The above example is just the start, you can take a look at the [usage](usage)
+The above example is just the start, you can take a look at the [usage](usage.md)
 guide to check the full schema documentation and Task features.
 
 ## Features
@@ -34,7 +34,7 @@ guide to check the full schema documentation and Task features.
   to install on your CI script and you're done to use Task as part of your CI pipeline;
 - Truly cross-platform: while most build tools only work well on Linux or macOS,
   Task also supports Windows thanks to [this awesome shell interpreter for Go][sh];
-- Great for code generation: you can easily [prevent a task from running](usage#prevent-unnecessary-work)
+- Great for code generation: you can easily [prevent a task from running](usage.md#prevent-unnecessary-work)
   if a given set of files haven't changed since last run (based either on its
   timestamp or content).
 

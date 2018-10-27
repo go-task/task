@@ -143,6 +143,6 @@ includes:
 
 Please check the [documentation][includes]
 
-[output]: usage#output-syntax
-[ignore_errors]: usage#ignore-errors
-[includes]: usage#including-other-taskfiles
+[output]: usage.md#output-syntax
+[ignore_errors]: usage.md#ignore-errors
+[includes]: usage.md#including-other-taskfiles
