@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 )
 
-const defaultTaskfile = `# github.com/go-task/task
+const defaultTaskfile = `# https://taskfile.org
 
 version: '2'
 
