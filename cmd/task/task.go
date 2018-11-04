@@ -7,8 +7,8 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/go-task/task"
-	"github.com/go-task/task/internal/args"
+	"github.com/go-task/task/v2"
+	"github.com/go-task/task/v2/internal/args"
 
 	"github.com/spf13/pflag"
 )

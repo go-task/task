@@ -1,4 +1,4 @@
-module github.com/go-task/task
+module github.com/go-task/task/v2
 
 require (
 	github.com/Masterminds/semver v0.0.0-20180807142431-c84ddcca87bf
