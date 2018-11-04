@@ -1,8 +1,8 @@
 module github.com/go-task/task/v2
 
 require (
-	github.com/Masterminds/semver v0.0.0-20180807142431-c84ddcca87bf
-	github.com/Masterminds/sprig v0.0.0-20180725212158-77bb58b7f5e1
+	github.com/Masterminds/semver v1.4.2
+	github.com/Masterminds/sprig v2.16.0+incompatible
 	github.com/aokoli/goutils v1.0.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/google/uuid v1.0.0 // indirect
@@ -11,7 +11,7 @@ require (
 	github.com/mattn/go-zglob v0.0.0-20180803001819-2ea3427bfa53
 	github.com/mitchellh/go-homedir v1.0.0
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/radovskyb/watcher v0.0.0-20180525001723-0d9d32686dbf
+	github.com/radovskyb/watcher v1.0.2
 	github.com/spf13/pflag v1.0.3
 	github.com/stretchr/testify v1.2.2
 	golang.org/x/crypto v0.0.0-20180830192347-182538f80094 // indirect
