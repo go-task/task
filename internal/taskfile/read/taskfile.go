@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"runtime"
 
-	"github.com/go-task/task/internal/taskfile"
+	"github.com/go-task/task/v2/internal/taskfile"
 )
 
 // ErrIncludedTaskfilesCantHaveIncludes is returned when a included Taskfile contains includes
