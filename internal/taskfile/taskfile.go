@@ -1,11 +1,17 @@
 package taskfile
 
+import (
+	"os"
+
+	yaml "gopkg.in/yaml.v2"
+)
+
 // Taskfile represents a Taskfile.yml
 type Taskfile struct {
 	Version    string
 	Expansions int
 	Output     string
-	Includes   map[string]string
+	Includes   map[string]*Includes
 	Vars       Vars
 	Tasks      Tasks
 }
@@ -21,7 +27,7 @@ func (tf *Taskfile) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		Version    string
 		Expansions int
 		Output     string
-		Includes   map[string]string
+		Includes   map[string]*Includes
 		Vars       Vars
 		Tasks      Tasks
 	}
@@ -38,4 +44,14 @@ func (tf *Taskfile) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		tf.Expansions = 2
 	}
 	return nil
+}
+
+// LoadFromPath parses a local Taskfile
+func LoadFromPath(path string) (*Taskfile, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	var t Taskfile
+	return &t, yaml.NewDecoder(f).Decode(&t)
 }

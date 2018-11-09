@@ -8,12 +8,13 @@ import (
 	"runtime"
 
 	"github.com/go-task/task/internal/taskfile"
-
-	"gopkg.in/yaml.v2"
 )
 
 // ErrIncludedTaskfilesCantHaveIncludes is returned when a included Taskfile contains includes
-var ErrIncludedTaskfilesCantHaveIncludes = errors.New("task: Included Taskfiles can't have includes. Please, move the include to the main Taskfile")
+var ErrIncludedTaskfilesCantHaveIncludes = errors.New(
+	`task: Included Taskfiles can't have includes. 
+		Please, move the include to the main Taskfile`,
+)
 
 // Taskfile reads a Taskfile for a given directory
 func Taskfile(dir string) (*taskfile.Taskfile, error) {
@@ -21,21 +22,16 @@ func Taskfile(dir string) (*taskfile.Taskfile, error) {
 	if _, err := os.Stat(path); err != nil {
 		return nil, fmt.Errorf(`No Taskfile.yml found. Use "task --init" to create a new one`)
 	}
-	t, err := readTaskfile(path)
+	t, err := taskfile.LoadFromPath(path)
 	if err != nil {
 		return nil, err
 	}
 
-	for namespace, path := range t.Includes {
-		path = filepath.Join(dir, path)
-		info, err := os.Stat(path)
-		if err != nil {
-			return nil, err
-		}
-		if info.IsDir() {
-			path = filepath.Join(path, "Taskfile.yml")
-		}
-		includedTaskfile, err := readTaskfile(path)
+	for namespace, include := range t.Includes {
+		fmt.Printf("%#v\n", include)
+		include.Dir = dir
+		includedTaskfile, err := include.LoadTaskfile()
+
 		if err != nil {
 			return nil, err
 		}
@@ -49,7 +45,7 @@ func Taskfile(dir string) (*taskfile.Taskfile, error) {
 
 	path = filepath.Join(dir, fmt.Sprintf("Taskfile_%s.yml", runtime.GOOS))
 	if _, err = os.Stat(path); err == nil {
-		osTaskfile, err := readTaskfile(path)
+		osTaskfile, err := taskfile.LoadFromPath(path)
 		if err != nil {
 			return nil, err
 		}
@@ -63,13 +59,4 @@ func Taskfile(dir string) (*taskfile.Taskfile, error) {
 	}
 
 	return t, nil
-}
-
-func readTaskfile(file string) (*taskfile.Taskfile, error) {
-	f, err := os.Open(file)
-	if err != nil {
-		return nil, err
-	}
-	var t taskfile.Taskfile
-	return &t, yaml.NewDecoder(f).Decode(&t)
 }
