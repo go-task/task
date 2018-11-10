@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/go-task/task/internal/output"
+	"github.com/go-task/task/v2/internal/output"
 
 	"github.com/stretchr/testify/assert"
 )
