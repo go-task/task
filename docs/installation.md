@@ -27,11 +27,34 @@ sudo snap install task
 
 ## Go
 
-If you have a [Go][go] environment setup, you can simply run:
+Task now uses [Go Modules](https://github.com/golang/go/wiki/Modules), which
+means you may have trouble compiling it on older Go versions.
+
+For CI environments we recommend using the [Install Script](#install-script)
+instead, which is faster and more stable, since it'll just download the latest
+released binary, instead of compiling the edge (master branch) version.
+
+Installing in your `$GOPATH`:
 
 ```bash
 go get -u -v github.com/go-task/task/cmd/task
 ```
+
+Installing in another directory:
+
+```bash
+git clone https://github.com/go-task/task
+cd task
+
+# compiling binary to $GOPATH/bin
+go install -v
+
+# compiling it to another location
+# use -o ./task.exe on Windows
+go build -v -o ./task ./cmd/task
+```
+
+Both methods requires having the [Go][go] environment properly setup locally.
 
 ## Install script
 
