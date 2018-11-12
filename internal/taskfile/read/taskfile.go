@@ -27,20 +27,8 @@ func Taskfile(dir string) (*taskfile.Taskfile, error) {
 		return nil, err
 	}
 
-	for namespace, include := range t.Includes {
-		fmt.Printf("%#v\n", include)
-		include.Dir = dir
-		includedTaskfile, err := include.LoadTaskfile()
-
-		if err != nil {
-			return nil, err
-		}
-		if len(includedTaskfile.Includes) > 0 {
-			return nil, ErrIncludedTaskfilesCantHaveIncludes
-		}
-		if err = taskfile.Merge(t, includedTaskfile, namespace); err != nil {
-			return nil, err
-		}
+	if err := t.ProcessIncludes(dir); err != nil {
+		return nil, err
 	}
 
 	path = filepath.Join(dir, fmt.Sprintf("Taskfile_%s.yml", runtime.GOOS))
