@@ -484,3 +484,15 @@ func TestIncludes(t *testing.T) {
 	}
 	tt.Run(t)
 }
+
+func TestIncludesEmptyMain(t *testing.T) {
+	tt := fileContentTest{
+		Dir:       "testdata/includes_empty",
+		Target:    "included:default",
+		TrimSpace: true,
+		Files: map[string]string{
+			"file.txt": "default",
+		},
+	}
+	tt.Run(t)
+}

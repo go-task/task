@@ -20,11 +20,23 @@ func Merge(t1, t2 *Taskfile, namespaces ...string) error {
 	if t2.Output != "" {
 		t1.Output = t2.Output
 	}
+
+	if t1.Includes == nil {
+		t1.Includes = make(map[string]string)
+	}
 	for k, v := range t2.Includes {
 		t1.Includes[k] = v
 	}
+
+	if t1.Vars == nil {
+		t1.Vars = make(Vars)
+	}
 	for k, v := range t2.Vars {
 		t1.Vars[k] = v
+	}
+
+	if t1.Tasks == nil {
+		t1.Tasks = make(Tasks)
 	}
 	for k, v := range t2.Tasks {
 		t1.Tasks[taskNameWithNamespace(k, namespaces...)] = v
