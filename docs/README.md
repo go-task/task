@@ -28,8 +28,8 @@ guide to check the full schema documentation and Task features.
 ## Features
 
 - [Easy installation](installation.md): just download a single binary, add to
-  $PATH and you're done! Or you can also install using [Homebrew][homebrew] or
-  [Snapcraft][snapcraft] if you want;
+  $PATH and you're done! Or you can also install using [Homebrew][homebrew],
+  [Snapcraft][snapcraft], or [Scoop][scoop] if you want;
 - Available on CIs: by adding [this simple command](installation.md#install-script)
   to install on your CI script and you're done to use Task as part of your CI pipeline;
 - Truly cross-platform: while most build tools only work well on Linux or macOS,
@@ -43,4 +43,5 @@ guide to check the full schema documentation and Task features.
 [yaml]: http://yaml.org/
 [homebrew]: https://brew.sh/
 [snapcraft]: https://snapcraft.io/
+[scoop]: https://scoop.sh/
 [sh]: https://mvdan.cc/sh
