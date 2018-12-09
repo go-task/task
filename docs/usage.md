@@ -88,6 +88,8 @@ It's also possible to have an OS specific `Taskvars.yml` file, like
 
 ## Including other Taskfiles
 
+> This feature is still experimental and may have bugs.
+
 If you want to share tasks between different projects (Taskfiles), you can use
 the importing mechanism to include other Taskfiles using the `includes` keyword:
 
