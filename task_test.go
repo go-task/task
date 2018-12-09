@@ -496,3 +496,17 @@ func TestIncludesEmptyMain(t *testing.T) {
 	}
 	tt.Run(t)
 }
+
+func TestIncludesDependencies(t *testing.T) {
+	tt := fileContentTest{
+		Dir:       "testdata/includes_deps",
+		Target:    "default",
+		TrimSpace: true,
+		Files: map[string]string{
+			"default.txt":     "default",
+			"called_dep.txt":  "called_dep",
+			"called_task.txt": "called_task",
+		},
+	}
+	tt.Run(t)
+}

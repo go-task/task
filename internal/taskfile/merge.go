@@ -39,7 +39,20 @@ func Merge(t1, t2 *Taskfile, namespaces ...string) error {
 		t1.Tasks = make(Tasks)
 	}
 	for k, v := range t2.Tasks {
+		// FIXME(@andreynering): Refactor this block, otherwise we can
+		// have serious side-effects in the future, since we're editing
+		// the original references instead of deep copying them.
+
 		t1.Tasks[taskNameWithNamespace(k, namespaces...)] = v
+
+		for _, dep := range v.Deps {
+			dep.Task = taskNameWithNamespace(dep.Task, namespaces...)
+		}
+		for _, cmd := range v.Cmds {
+			if cmd.Task != "" {
+				cmd.Task = taskNameWithNamespace(cmd.Task, namespaces...)
+			}
+		}
 	}
 
 	return nil
