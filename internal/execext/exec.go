@@ -7,6 +7,7 @@ import (
 	"os"
 	"strings"
 
+	"mvdan.cc/sh/expand"
 	"mvdan.cc/sh/interp"
 	"mvdan.cc/sh/syntax"
 )
@@ -41,14 +42,10 @@ func RunCommand(ctx context.Context, opts *RunCommandOptions) error {
 	if len(environ) == 0 {
 		environ = os.Environ()
 	}
-	env, err := interp.EnvFromList(environ)
-	if err != nil {
-		return err
-	}
 
 	r, err := interp.New(
 		interp.Dir(opts.Dir),
-		interp.Env(env),
+		interp.Env(expand.ListEnviron(environ...)),
 
 		interp.Module(interp.DefaultExec),
 		interp.Module(interp.OpenDevImpls(interp.DefaultOpen)),
