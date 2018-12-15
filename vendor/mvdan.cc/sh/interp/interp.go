@@ -13,6 +13,7 @@ import (
 	"os"
 	"os/user"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"strings"
 	"sync"
@@ -20,6 +21,7 @@ import (
 
 	"golang.org/x/sync/errgroup"
 
+	"mvdan.cc/sh/expand"
 	"mvdan.cc/sh/syntax"
 )
 
@@ -46,10 +48,10 @@ func New(opts ...func(*Runner) error) (*Runner, error) {
 		}
 	}
 	if r.Exec == nil {
-		Module(nil)(r)
+		Module(ModuleExec(nil))(r)
 	}
 	if r.Open == nil {
-		Module(nil)(r)
+		Module(ModuleOpen(nil))(r)
 	}
 	if r.Stdout == nil || r.Stderr == nil {
 		StdIO(r.Stdin, r.Stdout, r.Stderr)(r)
@@ -57,12 +59,127 @@ func New(opts ...func(*Runner) error) (*Runner, error) {
 	return r, nil
 }
 
-// Env sets the interpreter's environment. If nil, the current process's
-// environment is used.
-func Env(env Environ) func(*Runner) error {
+func (r *Runner) fillExpandConfig(ctx context.Context) {
+	r.ectx = ctx
+	r.ecfg = &expand.Config{
+		Env: expandEnv{r},
+		CmdSubst: func(w io.Writer, cs *syntax.CmdSubst) error {
+			switch len(cs.Stmts) {
+			case 0: // nothing to do
+				return nil
+			case 1: // $(<file)
+				word := catShortcutArg(cs.Stmts[0])
+				if word == nil {
+					break
+				}
+				path := r.literal(word)
+				f, err := r.open(ctx, r.relPath(path), os.O_RDONLY, 0, true)
+				if err != nil {
+					return err
+				}
+				_, err = io.Copy(w, f)
+				return err
+			}
+			r2 := r.sub()
+			r2.Stdout = w
+			r2.stmts(ctx, cs.StmtList)
+			return r2.err
+		},
+		ReadDir: ioutil.ReadDir,
+	}
+	r.updateExpandOpts()
+}
+
+// catShortcutArg checks if a statement is of the form "$(<file)". The redirect
+// word is returned if there's a match, and nil otherwise.
+func catShortcutArg(stmt *syntax.Stmt) *syntax.Word {
+	if stmt.Cmd != nil || stmt.Negated || stmt.Background || stmt.Coprocess {
+		return nil
+	}
+	if len(stmt.Redirs) != 1 {
+		return nil
+	}
+	redir := stmt.Redirs[0]
+	if redir.Op != syntax.RdrIn {
+		return nil
+	}
+	return redir.Word
+}
+
+func (r *Runner) updateExpandOpts() {
+	r.ecfg.NoGlob = r.opts[optNoGlob]
+	r.ecfg.GlobStar = r.opts[optGlobStar]
+}
+
+func (r *Runner) expandErr(err error) {
+	switch err := err.(type) {
+	case nil:
+	case expand.UnsetParameterError:
+		r.errf("%s\n", err.Message)
+		r.exit = 1
+		r.setErr(ShellExitStatus(r.exit))
+	default:
+		r.setErr(err)
+		r.exit = 1
+	}
+}
+
+func (r *Runner) arithm(expr syntax.ArithmExpr) int {
+	n, err := expand.Arithm(r.ecfg, expr)
+	r.expandErr(err)
+	return n
+}
+
+func (r *Runner) fields(words ...*syntax.Word) []string {
+	strs, err := expand.Fields(r.ecfg, words...)
+	r.expandErr(err)
+	return strs
+}
+
+func (r *Runner) literal(word *syntax.Word) string {
+	str, err := expand.Literal(r.ecfg, word)
+	r.expandErr(err)
+	return str
+}
+
+func (r *Runner) document(word *syntax.Word) string {
+	str, err := expand.Document(r.ecfg, word)
+	r.expandErr(err)
+	return str
+}
+
+func (r *Runner) pattern(word *syntax.Word) string {
+	str, err := expand.Pattern(r.ecfg, word)
+	r.expandErr(err)
+	return str
+}
+
+// expandEnv exposes Runner's variables to the expand package.
+type expandEnv struct {
+	r *Runner
+}
+
+func (e expandEnv) Get(name string) expand.Variable {
+	return e.r.lookupVar(name)
+}
+func (e expandEnv) Set(name string, vr expand.Variable) {
+	e.r.setVarInternal(name, vr)
+}
+func (e expandEnv) Each(fn func(name string, vr expand.Variable) bool) {
+	e.r.Env.Each(fn)
+	for name, vr := range e.r.Vars {
+		if !fn(name, vr) {
+			return
+		}
+	}
+}
+
+// Env sets the interpreter's environment. If nil, a copy of the current
+// process's environment is used.
+func Env(env expand.Environ) func(*Runner) error {
 	return func(r *Runner) error {
 		if env == nil {
-			env, _ = EnvFromList(os.Environ())
+			env = expand.ListEnviron(os.Environ()...)
 		}
 		r.Env = env
 		return nil
@@ -143,6 +260,7 @@ func Params(args ...string) func(*Runner) error {
 			args = args[1:]
 		}
 		r.Params = args
+		r.updateExpandOpts()
 		return nil
 	}
 }
@@ -203,7 +321,7 @@ func StdIO(in io.Reader, out, err io.Writer) func(*Runner) error {
 type Runner struct {
 	// Env specifies the environment of the interpreter, which must be
 	// non-nil.
-	Env Environ
+	Env expand.Environ
 
 	// Dir specifies the working directory of the command, which must be an
 	// absolute path.
@@ -223,11 +341,14 @@ type Runner struct {
 	Stdout io.Writer
 	Stderr io.Writer
 
-	// Separate maps, note that bash allows a name to be both a var
-	// and a func simultaneously
-	// TODO: merge into Env?
-	Vars  map[string]Variable
+	// Separate maps - note that bash allows a name to be both a var and a
+	// func simultaneously
+
+	Vars  map[string]expand.Variable
 	Funcs map[string]*syntax.Stmt
+
+	ecfg *expand.Config
+	ectx context.Context // just so that Runner.Sub can use it again
 
 	// didReset remembers whether the runner has ever been reset. This is
 	// used so that Reset is automatically called when running any program
@@ -239,7 +360,7 @@ type Runner struct {
 	filename string // only if Node was a File
 
 	// like Vars, but local to a func i.e. "local foo=bar"
-	funcVars map[string]Variable
+	funcVars map[string]expand.Variable
 
 	// like Vars, but local to a cmd i.e. "foo=bar prog args..."
 	cmdVars map[string]string
@@ -262,9 +383,6 @@ type Runner struct {
 
 	optState getopts
 
-	ifsJoin string
-	ifsRune func(rune) bool
-
 	// keepRedirs is used so that "exec" can make any redirections
 	// apply to the current shell, and not just the command.
 	keepRedirs bool
@@ -281,17 +399,6 @@ type Runner struct {
 	// On Windows, the kill signal is always sent immediately,
 	// because Go doesn't currently support sending Interrupt on Windows.
 	KillTimeout time.Duration
-
-	fieldAlloc  [4]fieldPart
-	fieldsAlloc [4][]fieldPart
-	bufferAlloc bytes.Buffer
-	oneWord     [1]*syntax.Word
-}
-
-func (r *Runner) strBuilder() *bytes.Buffer {
-	b := &r.bufferAlloc
-	b.Reset()
-	return b
 }
 
 func (r *Runner) optByFlag(flag string) *bool {
@@ -380,7 +487,7 @@ func (r *Runner) Reset() {
 		usedNew:  r.usedNew,
 	}
 	if r.Vars == nil {
-		r.Vars = make(map[string]Variable)
+		r.Vars = make(map[string]expand.Variable)
 	} else {
 		for k := range r.Vars {
 			delete(r.Vars, k)
@@ -393,29 +500,22 @@ func (r *Runner) Reset() {
 			delete(r.cmdVars, k)
 		}
 	}
-	if _, ok := r.Env.Get("HOME"); !ok {
+	if vr := r.Env.Get("HOME"); !vr.IsSet() {
 		u, _ := user.Current()
-		r.Vars["HOME"] = Variable{Value: StringVal(u.HomeDir)}
+		r.Vars["HOME"] = expand.Variable{Value: u.HomeDir}
 	}
-	r.Vars["PWD"] = Variable{Value: StringVal(r.Dir)}
-	r.Vars["IFS"] = Variable{Value: StringVal(" \t\n")}
-	r.ifsUpdated()
-	r.Vars["OPTIND"] = Variable{Value: StringVal("1")}
+	r.Vars["PWD"] = expand.Variable{Value: r.Dir}
+	r.Vars["IFS"] = expand.Variable{Value: " \t\n"}
+	r.Vars["OPTIND"] = expand.Variable{Value: "1"}
 
 	if runtime.GOOS == "windows" {
 		// convert $PATH to a unix path list
-		path, _ := r.Env.Get("PATH")
+		path := r.Env.Get("PATH").String()
 		path = strings.Join(filepath.SplitList(path), ":")
-		r.Vars["PATH"] = Variable{Value: StringVal(path)}
+		r.Vars["PATH"] = expand.Variable{Value: path}
 	}
 
 	r.dirStack = append(r.dirStack, r.Dir)
-	if r.Exec == nil {
-		r.Exec = DefaultExec
-	}
-	if r.Open == nil {
-		r.Open = DefaultOpen
-	}
 	if r.KillTimeout == 0 {
 		r.KillTimeout = 2 * time.Second
 	}
@@ -424,23 +524,26 @@ func (r *Runner) Reset() {
 
 func (r *Runner) modCtx(ctx context.Context) context.Context {
 	mc := ModuleCtx{
-		Env:         r.Env,
 		Dir:         r.Dir,
 		Stdin:       r.Stdin,
 		Stdout:      r.Stdout,
 		Stderr:      r.Stderr,
 		KillTimeout: r.KillTimeout,
 	}
-	mc.Env = r.Env.Copy()
+	oenv := overlayEnviron{
+		parent: r.Env,
+		values: make(map[string]expand.Variable),
+	}
 	for name, vr := range r.Vars {
-		if !vr.Exported {
-			continue
-		}
-		mc.Env.Set(name, r.varStr(vr, 0))
+		oenv.Set(name, vr)
 	}
-	for name, val := range r.cmdVars {
-		mc.Env.Set(name, val)
+	for name, vr := range r.funcVars {
+		oenv.Set(name, vr)
 	}
+	for name, value := range r.cmdVars {
+		oenv.Set(name, expand.Variable{Exported: true, Value: value})
+	}
+	mc.Env = oenv
 	return context.WithValue(ctx, moduleCtxKey{}, mc)
 }
 
@@ -471,6 +574,7 @@ func (r *Runner) Run(ctx context.Context, node syntax.Node) error {
 	if !r.didReset {
 		r.Reset()
 	}
+	r.fillExpandConfig(ctx)
 	r.err = nil
 	r.filename = ""
 	switch x := node.(type) {
@@ -482,7 +586,7 @@ func (r *Runner) Run(ctx context.Context, node syntax.Node) error {
 	case syntax.Command:
 		r.cmd(ctx, x)
 	default:
-		return fmt.Errorf("Node can only be File, Stmt, or Command: %T", x)
+		return fmt.Errorf("node can only be File, Stmt, or Command: %T", x)
 	}
 	if r.exit > 0 {
 		r.setErr(ExitStatus(r.exit))
@@ -564,6 +668,7 @@ func (r *Runner) sub() *Runner {
 	// Keep in sync with the Runner type. Manually copy fields, to not copy
 	// sensitive ones like errgroup.Group, and to do deep copies of slices.
 	r2 := &Runner{
+		Env:         r.Env,
 		Dir:         r.Dir,
 		Params:      r.Params,
 		Exec:        r.Exec,
@@ -576,19 +681,20 @@ func (r *Runner) sub() *Runner {
 		filename:    r.filename,
 		opts:        r.opts,
 	}
-	// TODO: perhaps we could do a lazy copy here, or some sort of
-	// overlay to avoid copying all the time
-	r2.Env = r.Env.Copy()
-	r2.Vars = make(map[string]Variable, len(r.Vars))
+	r2.Vars = make(map[string]expand.Variable, len(r.Vars))
 	for k, v := range r.Vars {
 		r2.Vars[k] = v
+	}
+	r2.funcVars = make(map[string]expand.Variable, len(r.funcVars))
+	for k, v := range r.funcVars {
+		r2.funcVars[k] = v
 	}
 	r2.cmdVars = make(map[string]string, len(r.cmdVars))
 	for k, v := range r.cmdVars {
 		r2.cmdVars[k] = v
 	}
 	r2.dirStack = append([]string(nil), r.dirStack...)
-	r2.ifsUpdated()
+	r2.fillExpandConfig(r.ectx)
 	r2.didReset = true
 	return r2
 }
@@ -606,23 +712,19 @@ func (r *Runner) cmd(ctx context.Context, cm syntax.Command) {
 		r.exit = r2.exit
 		r.setErr(r2.err)
 	case *syntax.CallExpr:
-		fields := r.fields(ctx, x.Args...)
+		fields := r.fields(x.Args...)
 		if len(fields) == 0 {
 			for _, as := range x.Assigns {
-				vr, _ := r.lookupVar(as.Name.Value)
-				vr.Value = r.assignVal(ctx, as, "")
-				r.setVar(ctx, as.Name.Value, as.Index, vr)
+				vr := r.lookupVar(as.Name.Value)
+				vr.Value = r.assignVal(as, "")
+				r.setVar(as.Name.Value, as.Index, vr)
 			}
 			break
 		}
 		for _, as := range x.Assigns {
-			val := r.assignVal(ctx, as, "")
+			val := r.assignVal(as, "")
 			// we know that inline vars must be strings
-			r.cmdVars[as.Name.Value] = string(val.(StringVal))
-			if as.Name.Value == "IFS" {
-				r.ifsUpdated()
-				defer r.ifsUpdated()
-			}
+			r.cmdVars[as.Name.Value] = val.(string)
 		}
 		r.call(ctx, x.Args[0].Pos(), fields)
 		// cmdVars can be nuked here, as they are never useful
@@ -689,37 +791,37 @@ func (r *Runner) cmd(ctx context.Context, cm syntax.Command) {
 		switch y := x.Loop.(type) {
 		case *syntax.WordIter:
 			name := y.Name.Value
-			for _, field := range r.fields(ctx, y.Items...) {
-				r.setVarString(ctx, name, field)
+			for _, field := range r.fields(y.Items...) {
+				r.setVarString(name, field)
 				if r.loopStmtsBroken(ctx, x.Do) {
 					break
 				}
 			}
 		case *syntax.CStyleLoop:
-			r.arithm(ctx, y.Init)
-			for r.arithm(ctx, y.Cond) != 0 {
+			r.arithm(y.Init)
+			for r.arithm(y.Cond) != 0 {
 				if r.loopStmtsBroken(ctx, x.Do) {
 					break
 				}
-				r.arithm(ctx, y.Post)
+				r.arithm(y.Post)
 			}
 		}
 	case *syntax.FuncDecl:
 		r.setFunc(x.Name.Value, x.Body)
 	case *syntax.ArithmCmd:
-		r.exit = oneIf(r.arithm(ctx, x.X) == 0)
+		r.exit = oneIf(r.arithm(x.X) == 0)
 	case *syntax.LetClause:
 		var val int
 		for _, expr := range x.Exprs {
-			val = r.arithm(ctx, expr)
+			val = r.arithm(expr)
 		}
 		r.exit = oneIf(val == 0)
 	case *syntax.CaseClause:
-		str := r.loneWord(ctx, x.Word)
+		str := r.literal(x.Word)
 		for _, ci := range x.Items {
 			for _, word := range ci.Patterns {
-				pat := r.lonePattern(ctx, word)
-				if match(pat, str) {
+				pattern := r.pattern(word)
+				if match(pattern, str) {
 					r.stmts(ctx, ci.StmtList)
 					return
 				}
@@ -732,13 +834,13 @@ func (r *Runner) cmd(ctx context.Context, cm syntax.Command) {
 			r.exit = 1
 		}
 	case *syntax.DeclClause:
-		local := false
+		local, global := false, false
 		var modes []string
 		valType := ""
 		switch x.Variant.Value {
 		case "declare":
-			// When used in a function, "declare" acts as
-			// "local" unless the "-g" option is used.
+			// When used in a function, "declare" acts as "local"
+			// unless the "-g" option is used.
 			local = r.inFunc
 		case "local":
 			if !r.inFunc {
@@ -755,13 +857,13 @@ func (r *Runner) cmd(ctx context.Context, cm syntax.Command) {
 			modes = append(modes, "-n")
 		}
 		for _, opt := range x.Opts {
-			switch s := r.loneWord(ctx, opt); s {
+			switch s := r.literal(opt); s {
 			case "-x", "-r", "-n":
 				modes = append(modes, s)
 			case "-a", "-A":
 				valType = s
 			case "-g":
-				local = false
+				global = true
 			default:
 				r.errf("declare: invalid option %q\n", s)
 				r.exit = 2
@@ -769,11 +871,20 @@ func (r *Runner) cmd(ctx context.Context, cm syntax.Command) {
 			}
 		}
 		for _, as := range x.Assigns {
-			for _, as := range r.expandAssigns(ctx, as) {
+			for _, as := range r.flattenAssign(as) {
 				name := as.Name.Value
-				vr, _ := r.lookupVar(as.Name.Value)
-				vr.Value = r.assignVal(ctx, as, valType)
-				vr.Local = local
+				if !syntax.ValidName(name) {
+					r.errf("declare: invalid name %q\n", name)
+					r.exit = 1
+					return
+				}
+				vr := r.lookupVar(as.Name.Value)
+				vr.Value = r.assignVal(as, valType)
+				if global {
+					vr.Local = false
+				} else if local {
+					vr.Local = true
+				}
 				for _, mode := range modes {
 					switch mode {
 					case "-x":
@@ -784,7 +895,7 @@ func (r *Runner) cmd(ctx context.Context, cm syntax.Command) {
 						vr.NameRef = true
 					}
 				}
-				r.setVar(ctx, name, as.Index, vr)
+				r.setVar(name, as.Index, vr)
 			}
 		}
 	case *syntax.TimeClause:
@@ -808,6 +919,39 @@ func (r *Runner) cmd(ctx context.Context, cm syntax.Command) {
 	}
 }
 
+func (r *Runner) flattenAssign(as *syntax.Assign) []*syntax.Assign {
+	// Convert "declare $x" into "declare value".
+	// Don't use syntax.Parser here, as we only want the basic
+	// splitting by '='.
+	if as.Name != nil {
+		return []*syntax.Assign{as} // nothing to do
+	}
+	var asgns []*syntax.Assign
+	for _, field := range r.fields(as.Value) {
+		as := &syntax.Assign{}
+		parts := strings.SplitN(field, "=", 2)
+		as.Name = &syntax.Lit{Value: parts[0]}
+		if len(parts) == 1 {
+			as.Naked = true
+		} else {
+			as.Value = &syntax.Word{Parts: []syntax.WordPart{
+				&syntax.Lit{Value: parts[1]},
+			}}
+		}
+		asgns = append(asgns, as)
+	}
+	return asgns
+}
+
+func match(pattern, name string) bool {
+	expr, err := syntax.TranslatePattern(pattern, true)
+	if err != nil {
+		return false
+	}
+	rx := regexp.MustCompile("^" + expr + "$")
+	return rx.MatchString(name)
+}
+
 func elapsedString(d time.Duration, posix bool) string {
 	if posix {
 		return fmt.Sprintf("%.2f", d.Seconds())
@@ -823,10 +967,42 @@ func (r *Runner) stmts(ctx context.Context, sl syntax.StmtList) {
 	}
 }
 
+func (r *Runner) hdocReader(rd *syntax.Redirect) io.Reader {
+	if rd.Op != syntax.DashHdoc {
+		hdoc := r.document(rd.Hdoc)
+		return strings.NewReader(hdoc)
+	}
+	var buf bytes.Buffer
+	var cur []syntax.WordPart
+	flushLine := func() {
+		if buf.Len() > 0 {
+			buf.WriteByte('\n')
+		}
+		buf.WriteString(r.document(&syntax.Word{Parts: cur}))
+		cur = cur[:0]
+	}
+	for _, wp := range rd.Hdoc.Parts {
+		lit, ok := wp.(*syntax.Lit)
+		if !ok {
+			cur = append(cur, wp)
+			continue
+		}
+		for i, part := range strings.Split(lit.Value, "\n") {
+			if i > 0 {
+				flushLine()
+				cur = cur[:0]
+			}
+			part = strings.TrimLeft(part, "\t")
+			cur = append(cur, &syntax.Lit{Value: part})
+		}
+	}
+	flushLine()
+	return &buf
+}
+
 func (r *Runner) redir(ctx context.Context, rd *syntax.Redirect) (io.Closer, error) {
 	if rd.Hdoc != nil {
-		hdoc := r.loneWord(ctx, rd.Hdoc)
-		r.Stdin = strings.NewReader(hdoc)
+		r.Stdin = r.hdocReader(rd)
 		return nil, nil
 	}
 	orig := &r.Stdout
@@ -837,7 +1013,7 @@ func (r *Runner) redir(ctx context.Context, rd *syntax.Redirect) (io.Closer, err
 			orig = &r.Stderr
 		}
 	}
-	arg := r.loneWord(ctx, rd.Word)
+	arg := r.literal(rd.Word)
 	switch rd.Op {
 	case syntax.WordHdoc:
 		r.Stdin = strings.NewReader(arg + "\n")
@@ -860,9 +1036,9 @@ func (r *Runner) redir(ctx context.Context, rd *syntax.Redirect) (io.Closer, err
 	mode := os.O_RDONLY
 	switch rd.Op {
 	case syntax.AppOut, syntax.AppAll:
-		mode = os.O_RDWR | os.O_CREATE | os.O_APPEND
+		mode = os.O_WRONLY | os.O_CREATE | os.O_APPEND
 	case syntax.RdrOut, syntax.RdrAll:
-		mode = os.O_RDWR | os.O_CREATE | os.O_TRUNC
+		mode = os.O_WRONLY | os.O_CREATE | os.O_TRUNC
 	}
 	f, err := r.open(ctx, r.relPath(arg), mode, 0644, true)
 	if err != nil {
@@ -1039,7 +1215,7 @@ func splitList(path string) []string {
 }
 
 func (r *Runner) lookPath(file string) string {
-	pathList := splitList(r.getVar("PATH"))
+	pathList := splitList(r.envGet("PATH"))
 	chars := `/`
 	if runtime.GOOS == "windows" {
 		chars = `:\/`
@@ -1070,7 +1246,7 @@ func (r *Runner) pathExts() []string {
 	if runtime.GOOS != "windows" {
 		return nil
 	}
-	pathext := r.getVar("PATHEXT")
+	pathext := r.envGet("PATHEXT")
 	if pathext == "" {
 		return []string{".com", ".exe", ".bat", ".cmd"}
 	}

@@ -19,22 +19,22 @@ import (
 func (r *Runner) bashTest(ctx context.Context, expr syntax.TestExpr, classic bool) string {
 	switch x := expr.(type) {
 	case *syntax.Word:
-		return r.loneWord(ctx, x)
+		return r.literal(x)
 	case *syntax.ParenTest:
 		return r.bashTest(ctx, x.X, classic)
 	case *syntax.BinaryTest:
 		switch x.Op {
 		case syntax.TsMatch, syntax.TsNoMatch:
-			str := r.loneWord(ctx, x.X.(*syntax.Word))
+			str := r.literal(x.X.(*syntax.Word))
 			yw := x.Y.(*syntax.Word)
 			if classic { // test, [
-				lit := r.loneWord(ctx, yw)
+				lit := r.literal(yw)
 				if (str == lit) == (x.Op == syntax.TsMatch) {
 					return "1"
 				}
 			} else { // [[
-				pat := r.lonePattern(ctx, yw)
-				if match(pat, str) == (x.Op == syntax.TsMatch) {
+				pattern := r.pattern(yw)
+				if match(pattern, str) == (x.Op == syntax.TsMatch) {
 					return "1"
 				}
 			}
@@ -173,11 +173,9 @@ func (r *Runner) unTest(ctx context.Context, op syntax.UnTestOperator, x string)
 		}
 		return false
 	case syntax.TsVarSet:
-		_, e := r.lookupVar(x)
-		return e
+		return r.lookupVar(x).IsSet()
 	case syntax.TsRefVar:
-		v, _ := r.lookupVar(x)
-		return v.NameRef
+		return r.lookupVar(x).NameRef
 	case syntax.TsNot:
 		return x == ""
 	default:
