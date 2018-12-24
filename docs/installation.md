@@ -35,6 +35,9 @@ scoop bucket add extras
 scoop install task
 ```
 
+This installation method is community owned. After a new release of Task, it
+may take some time until it's available on Scoop.
+
 ## Go
 
 Task now uses [Go Modules](https://github.com/golang/go/wiki/Modules), which
