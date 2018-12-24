@@ -3,7 +3,9 @@
 ## Unreleased
 
 - On Windows, Task can now be installed using [Scoop](https://scoop.sh/)
-  ([#152](https://github.com/go-task/task/pull/152)).
+  ([#152](https://github.com/go-task/task/pull/152));
+- Fixes issue with file/directory globing
+  ([#153](https://github.com/go-task/task/issues/153)).
 
 ## v2.2.1 - 2018-12-09
 
