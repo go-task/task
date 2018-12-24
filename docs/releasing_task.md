@@ -24,6 +24,13 @@ the binaries:
 * Moving both `i386` and `amd64` new artifacts to the stable channel on
 the [Snapscraft dashboard][snapcraftdashboard]
 
+# Scoop
+
+Scoop is a community owned installation method. Scoop owners usually take care
+of updating versions there by editing
+[this file](https://github.com/lukesampson/scoop-extras/blob/master/task.json).
+If you think its Task version is outdated, open an issue to let us know.
+
 [goreleaser]: https://goreleaser.com/#continuous_integration
 [homebrewtap]: https://github.com/go-task/homebrew-tap
 [gotaskrb]: https://github.com/go-task/homebrew-tap/blob/master/Formula/go-task.rb

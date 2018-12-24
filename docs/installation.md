@@ -25,6 +25,19 @@ right:
 sudo snap install task
 ```
 
+## Scoop
+
+If you're on Windows and have [Scoop][scoop] installed, use `extras` bucket
+to install Task like:
+
+```cmd
+scoop bucket add extras
+scoop install task
+```
+
+This installation method is community owned. After a new release of Task, it
+may take some time until it's available on Scoop.
+
 ## Go
 
 Task now uses [Go Modules](https://github.com/golang/go/wiki/Modules), which
@@ -74,3 +87,4 @@ curl -s https://taskfile.org/install.sh | sh
 [installscript]: https://github.com/go-task/task/blob/master/install-task.sh
 [releases]: https://github.com/go-task/task/releases
 [godownloader]: https://github.com/goreleaser/godownloader
+[scoop]: https://scoop.sh/
