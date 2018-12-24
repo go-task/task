@@ -38,8 +38,8 @@ golang.org/x/sys/unix
 golang.org/x/sys/windows
 # gopkg.in/yaml.v2 v2.2.1
 gopkg.in/yaml.v2
-# mvdan.cc/sh v2.6.3-0.20181208181451-7bec78194799+incompatible
-mvdan.cc/sh/shell
-mvdan.cc/sh/interp
-mvdan.cc/sh/syntax
+# mvdan.cc/sh v2.6.3-0.20181216173157-8aeb0734cd0f+incompatible
 mvdan.cc/sh/expand
+mvdan.cc/sh/interp
+mvdan.cc/sh/shell
+mvdan.cc/sh/syntax

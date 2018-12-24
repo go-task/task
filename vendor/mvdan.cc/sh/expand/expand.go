@@ -35,6 +35,8 @@ type Config struct {
 	// variables.
 	Env Environ
 
+	// TODO(mvdan): consider replacing NoGlob==true with ReadDir==nil.
+
 	// NoGlob corresponds to the shell option that disables globbing.
 	NoGlob bool
 	// GlobStar corresponds to the shell option that allows globbing with
@@ -317,7 +319,6 @@ func Fields(cfg *Config, words ...*syntax.Word) ([]string, error) {
 	cfg = prepareConfig(cfg)
 	fields := make([]string, 0, len(words))
 	dir := cfg.envGet("PWD")
-	baseDir := syntax.QuotePattern(dir)
 	for _, expWord := range Braces(words...) {
 		wfields, err := cfg.wordFields(expWord.Parts)
 		if err != nil {
@@ -328,10 +329,11 @@ func Fields(cfg *Config, words ...*syntax.Word) ([]string, error) {
 			var matches []string
 			abs := filepath.IsAbs(path)
 			if doGlob && !cfg.NoGlob {
+				base := ""
 				if !abs {
-					path = filepath.Join(baseDir, path)
+					base = dir
 				}
-				matches, err = cfg.glob(path)
+				matches, err = cfg.glob(base, path)
 				if err != nil {
 					return nil, err
 				}
@@ -342,11 +344,7 @@ func Fields(cfg *Config, words ...*syntax.Word) ([]string, error) {
 			}
 			for _, match := range matches {
 				if !abs {
-					endSeparator := strings.HasSuffix(match, string(filepath.Separator))
-					match, _ = filepath.Rel(dir, match)
-					if endSeparator {
-						match += string(filepath.Separator)
-					}
+					match = strings.TrimPrefix(match, dir)
 				}
 				fields = append(fields, match)
 			}
@@ -609,9 +607,29 @@ func hasGlob(path string) bool {
 
 var rxGlobStar = regexp.MustCompile(".*")
 
-func (cfg *Config) glob(pattern string) ([]string, error) {
-	parts := strings.Split(pattern, string(filepath.Separator))
-	matches := []string{"."}
+// pathJoin2 is a simpler version of filepath.Join without cleaning the result,
+// since that's needed for globbing.
+func pathJoin2(elem1, elem2 string) string {
+	if elem1 == "" {
+		return elem2
+	}
+	if strings.HasSuffix(elem1, string(filepath.Separator)) {
+		return elem1 + elem2
+	}
+	return elem1 + string(filepath.Separator) + elem2
+}
+
+// pathSplit splits a file path into its elements, retaining empty ones. Before
+// splitting, slashes are replaced with filepath.Separator, so that splitting
+// Unix paths on Windows works as well.
+func pathSplit(path string) []string {
+	path = filepath.FromSlash(path)
+	return strings.Split(path, string(filepath.Separator))
+}
+
+func (cfg *Config) glob(base, pattern string) ([]string, error) {
+	parts := pathSplit(pattern)
+	matches := []string{""}
 	if filepath.IsAbs(pattern) {
 		if parts[0] == "" {
 			// unix-like
@@ -624,12 +642,26 @@ func (cfg *Config) glob(pattern string) ([]string, error) {
 		parts = parts[1:]
 	}
 	for _, part := range parts {
-		if part == "**" && cfg.GlobStar {
-			for i := range matches {
+		switch {
+		case part == "", part == ".", part == "..":
+			var newMatches []string
+			for _, dir := range matches {
+				// TODO(mvdan): reuse the previous ReadDir call
+				if cfg.ReadDir == nil {
+					continue // no globbing
+				} else if _, err := cfg.ReadDir(filepath.Join(base, dir)); err != nil {
+					continue // not actually a dir
+				}
+				newMatches = append(newMatches, pathJoin2(dir, part))
+			}
+			matches = newMatches
+			continue
+		case part == "**" && cfg.GlobStar:
+			for i, match := range matches {
 				// "a/**" should match "a/ a/b a/b/cfg ..."; note
 				// how the zero-match case has a trailing
 				// separator.
-				matches[i] += string(filepath.Separator)
+				matches[i] = pathJoin2(match, "")
 			}
 			// expand all the possible levels of **
 			latest := matches
@@ -637,7 +669,7 @@ func (cfg *Config) glob(pattern string) ([]string, error) {
 				var newMatches []string
 				for _, dir := range latest {
 					var err error
-					newMatches, err = cfg.globDir(dir, rxGlobStar, newMatches)
+					newMatches, err = cfg.globDir(base, dir, rxGlobStar, newMatches)
 					if err != nil {
 						return nil, err
 					}
@@ -660,7 +692,7 @@ func (cfg *Config) glob(pattern string) ([]string, error) {
 		rx := regexp.MustCompile("^" + expr + "$")
 		var newMatches []string
 		for _, dir := range matches {
-			newMatches, err = cfg.globDir(dir, rx, newMatches)
+			newMatches, err = cfg.globDir(base, dir, rx, newMatches)
 			if err != nil {
 				return nil, err
 			}
@@ -670,11 +702,12 @@ func (cfg *Config) glob(pattern string) ([]string, error) {
 	return matches, nil
 }
 
-func (cfg *Config) globDir(dir string, rx *regexp.Regexp, matches []string) ([]string, error) {
+func (cfg *Config) globDir(base, dir string, rx *regexp.Regexp, matches []string) ([]string, error) {
 	if cfg.ReadDir == nil {
+		// TODO(mvdan): check this at the beginning of a glob?
 		return nil, nil
 	}
-	infos, err := cfg.ReadDir(dir)
+	infos, err := cfg.ReadDir(filepath.Join(base, dir))
 	if err != nil {
 		return nil, err
 	}
@@ -684,7 +717,7 @@ func (cfg *Config) globDir(dir string, rx *regexp.Regexp, matches []string) ([]s
 			continue
 		}
 		if rx.MatchString(name) {
-			matches = append(matches, filepath.Join(dir, name))
+			matches = append(matches, pathJoin2(dir, name))
 		}
 	}
 	return matches, nil
