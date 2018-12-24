@@ -38,6 +38,18 @@ guide to check the full schema documentation and Task features.
   if a given set of files haven't changed since last run (based either on its
   timestamp or content).
 
+## Sponsors
+
+[![Sponsors](https://opencollective.com/task/sponsors.svg?width=890)](https://opencollective.com/task)
+
+## Backers
+
+[![Backers](https://opencollective.com/task/backers.svg?width=890)](https://opencollective.com/task)
+
+## Contributors
+
+[![Contributors](https://opencollective.com/task/contributors.svg?width=890)](https://github.com/go-task/task/graphs/contributors)
+
 [make]: https://www.gnu.org/software/make/
 [go]: https://golang.org/
 [yaml]: http://yaml.org/
