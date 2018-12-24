@@ -1,57 +1,66 @@
 // Copyright (c) 2017, Daniel Martí <mvdan@mvdan.cc>
 // See LICENSE for licensing information
 
-package interp
+package expand
 
 import (
-	"context"
 	"fmt"
 	"strconv"
 
 	"mvdan.cc/sh/syntax"
 )
 
-func (r *Runner) arithm(ctx context.Context, expr syntax.ArithmExpr) int {
+func Arithm(cfg *Config, expr syntax.ArithmExpr) (int, error) {
 	switch x := expr.(type) {
 	case *syntax.Word:
-		str := r.loneWord(ctx, x)
+		str, err := Literal(cfg, x)
+		if err != nil {
+			return 0, err
+		}
 		// recursively fetch vars
-		for str != "" {
-			val := r.getVar(str)
+		i := 0
+		for str != "" && syntax.ValidName(str) {
+			val := cfg.envGet(str)
 			if val == "" {
+				break
+			}
+			if i++; i >= maxNameRefDepth {
 				break
 			}
 			str = val
 		}
 		// default to 0
-		return atoi(str)
+		return atoi(str), nil
 	case *syntax.ParenArithm:
-		return r.arithm(ctx, x.X)
+		return Arithm(cfg, x.X)
 	case *syntax.UnaryArithm:
 		switch x.Op {
 		case syntax.Inc, syntax.Dec:
-			name := x.X.(*syntax.Word).Parts[0].(*syntax.Lit).Value
-			old := atoi(r.getVar(name))
+			name := x.X.(*syntax.Word).Lit()
+			old := atoi(cfg.envGet(name))
 			val := old
 			if x.Op == syntax.Inc {
 				val++
 			} else {
 				val--
 			}
-			r.setVarString(ctx, name, strconv.Itoa(val))
+			cfg.envSet(name, strconv.Itoa(val))
 			if x.Post {
-				return old
+				return old, nil
 			}
-			return val
+			return val, nil
 		}
-		val := r.arithm(ctx, x.X)
+		val, err := Arithm(cfg, x.X)
+		if err != nil {
+			return 0, err
+		}
 		switch x.Op {
 		case syntax.Not:
-			return oneIf(val == 0)
+			return oneIf(val == 0), nil
 		case syntax.Plus:
-			return val
+			return val, nil
 		default: // syntax.Minus
-			return -val
+			return -val, nil
 		}
 	case *syntax.BinaryArithm:
 		switch x.Op {
@@ -59,16 +68,27 @@ func (r *Runner) arithm(ctx context.Context, expr syntax.ArithmExpr) int {
 			syntax.MulAssgn, syntax.QuoAssgn, syntax.RemAssgn,
 			syntax.AndAssgn, syntax.OrAssgn, syntax.XorAssgn,
 			syntax.ShlAssgn, syntax.ShrAssgn:
-			return r.assgnArit(ctx, x)
+			return cfg.assgnArit(x)
 		case syntax.Quest: // Colon can't happen here
-			cond := r.arithm(ctx, x.X)
+			cond, err := Arithm(cfg, x.X)
+			if err != nil {
+				return 0, err
+			}
 			b2 := x.Y.(*syntax.BinaryArithm) // must have Op==Colon
 			if cond == 1 {
-				return r.arithm(ctx, b2.X)
+				return Arithm(cfg, b2.X)
 			}
-			return r.arithm(ctx, b2.Y)
+			return Arithm(cfg, b2.Y)
 		}
-		return binArit(x.Op, r.arithm(ctx, x.X), r.arithm(ctx, x.Y))
+		left, err := Arithm(cfg, x.X)
+		if err != nil {
+			return 0, err
+		}
+		right, err := Arithm(cfg, x.Y)
+		if err != nil {
+			return 0, err
+		}
+		return binArit(x.Op, left, right), nil
 	default:
 		panic(fmt.Sprintf("unexpected arithm expr: %T", x))
 	}
@@ -88,10 +108,13 @@ func atoi(s string) int {
 	return n
 }
 
-func (r *Runner) assgnArit(ctx context.Context, b *syntax.BinaryArithm) int {
-	name := b.X.(*syntax.Word).Parts[0].(*syntax.Lit).Value
-	val := atoi(r.getVar(name))
-	arg := r.arithm(ctx, b.Y)
+func (cfg *Config) assgnArit(b *syntax.BinaryArithm) (int, error) {
+	name := b.X.(*syntax.Word).Lit()
+	val := atoi(cfg.envGet(name))
+	arg, err := Arithm(cfg, b.Y)
+	if err != nil {
+		return 0, err
+	}
 	switch b.Op {
 	case syntax.Assgn:
 		val = arg
@@ -116,8 +139,8 @@ func (r *Runner) assgnArit(ctx context.Context, b *syntax.BinaryArithm) int {
 	case syntax.ShrAssgn:
 		val >>= uint(arg)
 	}
-	r.setVarString(ctx, name, strconv.Itoa(val))
-	return val
+	cfg.envSet(name, strconv.Itoa(val))
+	return val, nil
 }
 
 func intPow(a, b int) int {
