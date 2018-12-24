@@ -3,10 +3,9 @@ package task
 import (
 	"path/filepath"
 
+	"github.com/go-task/task/v2/internal/execext"
 	"github.com/go-task/task/v2/internal/taskfile"
 	"github.com/go-task/task/v2/internal/templater"
-
-	"mvdan.cc/sh/shell"
 )
 
 // CompiledTask returns a copy of a task, but replacing variables in almost all
@@ -37,7 +36,7 @@ func (e *Executor) CompiledTask(call taskfile.Call) (*taskfile.Task, error) {
 		Prefix:      r.Replace(origTask.Prefix),
 		IgnoreError: origTask.IgnoreError,
 	}
-	new.Dir, err = shell.Expand(new.Dir, nil)
+	new.Dir, err = execext.Expand(new.Dir)
 	if err != nil {
 		return nil, err
 	}

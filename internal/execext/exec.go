@@ -9,6 +9,7 @@ import (
 
 	"mvdan.cc/sh/expand"
 	"mvdan.cc/sh/interp"
+	"mvdan.cc/sh/shell"
 	"mvdan.cc/sh/syntax"
 )
 
@@ -66,4 +67,17 @@ func IsExitError(err error) bool {
 	default:
 		return false
 	}
+}
+
+// Expand is a helper to mvdan.cc/shell.Fields that returns the first field
+// if available.
+func Expand(s string) (string, error) {
+	fields, err := shell.Fields(s, nil)
+	if err != nil {
+		return "", err
+	}
+	if len(fields) > 0 {
+		return fields[0], nil
+	}
+	return "", nil
 }
