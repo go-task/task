@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- On Windows, Task can now be installed using [Scoop](https://scoop.sh/)
+  ([#152](https://github.com/go-task/task/pull/152)).
+
 ## v2.2.1 - 2018-12-09
 
 - This repository now uses Go Modules (#143). We'll still keep the `vendor` directory in sync for some time, though;
