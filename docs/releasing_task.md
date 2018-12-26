@@ -1,6 +1,6 @@
 # Releasing Task
 
-The release process of Task is done is done with the help of
+The release process of Task is done with the help of
 [GoReleaser][goreleaser]. You can test the release process locally by calling
 the `test-release` task of the Taskfile.
 
