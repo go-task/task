@@ -83,7 +83,7 @@ Keep in mind that the version of the files should match. Also, when redefining
 a task the whole task is replaced, properties of the task are not merged.
 
 It's also possible to have an OS specific `Taskvars.yml` file, like
-`Taskvars_windows.yml`, `Taskfile_linux.yml`, or `Taskvars_darwin.yml`. See the
+`Taskvars_windows.yml`, `Taskvars_linux.yml`, or `Taskvars_darwin.yml`. See the
 [variables section](#variables) below.
 
 ## Including other Taskfiles
