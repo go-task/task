@@ -72,7 +72,7 @@ Both methods requires having the [Go][go] environment properly setup locally.
 ## Install script
 
 We also have a [install script][installscript], which is very useful on
-scanarios like CIs. Many thanks to [godownloader][godownloader] for allowing
+scenarios like CIs. Many thanks to [godownloader][godownloader] for allowing
 easily generating this script.
 
 ```bash

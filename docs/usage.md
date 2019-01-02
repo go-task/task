@@ -473,7 +473,7 @@ Task also adds the following functions:
 - `catLines`: Replaces Unix (\n) and Windows (\r\n) styled newlines with a space.
 - `toSlash`: Does nothing on Unix, but on Windows converts a string from `\`
   path format to `/`.
-- `fromSlash`: Oposite of `toSlash`. Does nothing on Unix, but on Windows
+- `fromSlash`: Opposite of `toSlash`. Does nothing on Unix, but on Windows
   converts a string from `\` path format to `/`.
 - `exeExt`: Returns the right executable extension for the current OS
   (`".exe"` for Windows, `""` for others).
@@ -506,7 +506,7 @@ tasks:
 ## Help
 
 Running `task --list` (or `task -l`) lists all tasks with a description.
-The following taskfile:
+The following Taskfile:
 
 ```yaml
 version: '2'
@@ -593,7 +593,7 @@ tasks:
 
 * Or globally with `--silent` or `-s` flag
 
-If you want to suppress stdout instead, just redirect a command to `/dev/null`:
+If you want to suppress STDOUT instead, just redirect a command to `/dev/null`:
 
 ```yaml
 version: '2'
