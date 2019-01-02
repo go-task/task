@@ -31,22 +31,40 @@ interpreter. So you can write sh/bash commands and it will work even on
 Windows, where `sh` or `bash` are usually not available. Just remember any
 executable called must be available by the OS or in PATH.
 
-If you ommit a task name, "default" will be assumed.
+If you omit a task name, "default" will be assumed.
 
 ## Environment
 
-You can specify environment variables that are added when running a command:
+You can use `env` to set custom environment variables for a specific task:
 
 ```yaml
 version: '2'
 
 tasks:
-  build:
+  greet:
     cmds:
-      - echo $hallo
+      - echo $GREETING
     env:
-      hallo: welt
+      GREETING: Hey, there!
 ```
+
+Additionally, you can set globally environment variables, that'll be available
+to all tasks:
+
+```yaml
+version: '2'
+
+env:
+  GREETING: Hey, there!
+
+tasks:
+  greet:
+    cmds:
+      - echo $GREETING
+```
+
+> NOTE: `env` supports expansion and and retrieving output from a shell command
+> just like variables, as you can see on the [Variables](#variables) section.
 
 ## Operating System specific tasks
 

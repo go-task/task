@@ -5,7 +5,12 @@
 - On Windows, Task can now be installed using [Scoop](https://scoop.sh/)
   ([#152](https://github.com/go-task/task/pull/152));
 - Fixes issue with file/directory globing
-  ([#153](https://github.com/go-task/task/issues/153)).
+  ([#153](https://github.com/go-task/task/issues/153));
+- Add ability to globally set environment variables
+  (
+    [#138](https://github.com/go-task/task/pull/138),
+    [#159](https://github.com/go-task/task/pull/159)
+  ).
 
 ## v2.2.1 - 2018-12-09
 
