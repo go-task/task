@@ -709,7 +709,14 @@ func (cfg *Config) globDir(base, dir string, rx *regexp.Regexp, matches []string
 	}
 	infos, err := cfg.ReadDir(filepath.Join(base, dir))
 	if err != nil {
-		return nil, err
+		// Ignore the error, as this might be a file instead of a
+		// directory. v3 refactored globbing to only use one ReadDir
+		// call per directory instead of two, so it knows to skip this
+		// kind of path at the ReadDir call of its parent.
+		// Instead of backporting that complex rewrite into v2, just
+		// work around the edge case here. We might ignore other kinds
+		// of errors, but at least we don't fail on a correct glob.
+		return matches, nil
 	}
 	for _, info := range infos {
 		name := info.Name()

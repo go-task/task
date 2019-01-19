@@ -12,18 +12,18 @@ github.com/google/uuid
 github.com/huandu/xstrings
 # github.com/imdario/mergo v0.3.6
 github.com/imdario/mergo
-# github.com/mattn/go-zglob v0.0.0-20180803001819-2ea3427bfa53
+# github.com/mattn/go-zglob v0.0.1
 github.com/mattn/go-zglob
 github.com/mattn/go-zglob/fastwalk
 # github.com/mitchellh/go-homedir v1.0.0
 github.com/mitchellh/go-homedir
 # github.com/pmezard/go-difflib v1.0.0
 github.com/pmezard/go-difflib/difflib
-# github.com/radovskyb/watcher v1.0.2
+# github.com/radovskyb/watcher v1.0.5
 github.com/radovskyb/watcher
 # github.com/spf13/pflag v1.0.3
 github.com/spf13/pflag
-# github.com/stretchr/testify v1.2.2
+# github.com/stretchr/testify v1.3.0
 github.com/stretchr/testify/assert
 # golang.org/x/crypto v0.0.0-20180830192347-182538f80094
 golang.org/x/crypto/ssh/terminal
@@ -38,7 +38,7 @@ golang.org/x/sys/unix
 golang.org/x/sys/windows
 # gopkg.in/yaml.v2 v2.2.1
 gopkg.in/yaml.v2
-# mvdan.cc/sh v2.6.3-0.20181216173157-8aeb0734cd0f+incompatible
+# mvdan.cc/sh v2.6.3+incompatible
 mvdan.cc/sh/expand
 mvdan.cc/sh/interp
 mvdan.cc/sh/shell
