@@ -20,5 +20,5 @@ require (
 	golang.org/x/sync v0.0.0-20180314180146-1d60e4601c6f
 	golang.org/x/sys v0.0.0-20180831094639-fa5fdf94c789 // indirect
 	gopkg.in/yaml.v2 v2.2.1
-	mvdan.cc/sh v2.6.3-0.20181216173157-8aeb0734cd0f+incompatible
+	mvdan.cc/sh v2.6.3+incompatible
 )
