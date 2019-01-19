@@ -11,10 +11,9 @@ require (
 	github.com/kr/pretty v0.1.0 // indirect
 	github.com/mattn/go-zglob v0.0.1
 	github.com/mitchellh/go-homedir v1.0.0
-	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/radovskyb/watcher v1.0.2
+	github.com/radovskyb/watcher v1.0.5
 	github.com/spf13/pflag v1.0.3
-	github.com/stretchr/testify v1.2.2
+	github.com/stretchr/testify v1.3.0
 	golang.org/x/crypto v0.0.0-20180830192347-182538f80094 // indirect
 	golang.org/x/net v0.0.0-20180826012351-8a410e7b638d // indirect
 	golang.org/x/sync v0.0.0-20180314180146-1d60e4601c6f
