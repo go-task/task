@@ -9,7 +9,7 @@ require (
 	github.com/huandu/xstrings v1.1.0 // indirect
 	github.com/imdario/mergo v0.3.6 // indirect
 	github.com/kr/pretty v0.1.0 // indirect
-	github.com/mattn/go-zglob v0.0.0-20180803001819-2ea3427bfa53
+	github.com/mattn/go-zglob v0.0.1
 	github.com/mitchellh/go-homedir v1.0.0
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/radovskyb/watcher v1.0.2
