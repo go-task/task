@@ -12,14 +12,19 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-// ErrIncludedTaskfilesCantHaveIncludes is returned when a included Taskfile contains includes
-var ErrIncludedTaskfilesCantHaveIncludes = errors.New("task: Included Taskfiles can't have includes. Please, move the include to the main Taskfile")
+var (
+	// ErrIncludedTaskfilesCantHaveIncludes is returned when a included Taskfile contains includes
+	ErrIncludedTaskfilesCantHaveIncludes = errors.New("task: Included Taskfiles can't have includes. Please, move the include to the main Taskfile")
+
+	// ErrNoTaskfileFound is returned when Taskfile.yml is not found
+	ErrNoTaskfileFound = errors.New(`no Taskfile.yml found. Use "task --init" to create a new one`)
+)
 
 // Taskfile reads a Taskfile for a given directory
 func Taskfile(dir string) (*taskfile.Taskfile, error) {
 	path := filepath.Join(dir, "Taskfile.yml")
 	if _, err := os.Stat(path); err != nil {
-		return nil, fmt.Errorf(`No Taskfile.yml found. Use "task --init" to create a new one`)
+		return nil, ErrNoTaskfileFound
 	}
 	t, err := readTaskfile(path)
 	if err != nil {
