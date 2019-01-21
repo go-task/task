@@ -22,7 +22,7 @@ the binaries:
 
 * Updating the current version on [snapcraft.yaml][snapcraftyaml];
 * Moving both `i386` and `amd64` new artifacts to the stable channel on
-the [Snapscraft dashboard][snapcraftdashboard]
+the [Snapcraft dashboard][snapcraftdashboard]
 
 # Scoop
 
