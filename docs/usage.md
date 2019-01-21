@@ -638,7 +638,7 @@ tasks:
       - echo "Hello World"
 ```
 
-`ignore_error` can also be set for a task, which mean errors will be supressed
+`ignore_error` can also be set for a task, which mean errors will be suppressed
 for all commands. But keep in mind this option won't propagate to other tasks
 called either by `deps` or `cmds`!
 
