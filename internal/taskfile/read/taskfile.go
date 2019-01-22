@@ -17,7 +17,7 @@ var (
 	ErrIncludedTaskfilesCantHaveIncludes = errors.New("task: Included Taskfiles can't have includes. Please, move the include to the main Taskfile")
 
 	// ErrNoTaskfileFound is returned when Taskfile.yml is not found
-	ErrNoTaskfileFound = errors.New(`no Taskfile.yml found. Use "task --init" to create a new one`)
+	ErrNoTaskfileFound = errors.New(`task: No Taskfile.yml found. Use "task --init" to create a new one`)
 )
 
 // Taskfile reads a Taskfile for a given directory
