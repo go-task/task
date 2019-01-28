@@ -37,7 +37,7 @@ func Taskfile(dir string) (*taskfile.Taskfile, error) {
 		if err != nil {
 			return nil, err
 		}
-		if err = taskfile.Merge(t, osTaskfile); err != nil {
+		if err = taskfile.Merge(nil, t, osTaskfile); err != nil {
 			return nil, err
 		}
 	}

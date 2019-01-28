@@ -111,6 +111,44 @@ from the `DockerTasks.yml` file.
 > This was a deliberate decision to keep use and implementation simple.
 > If you disagree, open an GitHub issue and explain your use case. =)
 
+Sometimes it's necessary to include a generic bundle of tasks or variables from a remote. 
+Those could be fetched from a HTTP target or pulled from a git repository. The last option
+requires git to be installed.
+
+Basically this is defined as the following:
+
+```yaml
+version: '2'
+
+includes:
+  ruby: http://example.org/Taskfile.yml
+  go: git+ssh://git@example.org:123/path/to/repo:/path/to/Taskfile.yml
+```
+
+The remote includes wouldn't be cached by default, but this could be activated per task
+or globally at the includes section. Just by adding `.defaults: { cache: 1h }` to includes
+section or by writing down as described below:
+
+```yaml
+includes:
+  ruby:
+    path: http://example.org/Taskfile.yml
+    cache: 1h
+```
+
+There are 2 more arguments which could be passed to included task section. 
+At first `hidden: true`, which will mark all imported tasks as hidden. 
+(Those are not shown by default.) And additionally the `direct: true` part, this
+will import the tasks with the prefixed namespace and automatically copies them to
+the current tasks section. 
+
+Special modifiers: Tasks could be prefixed with a dot `.ruby` or an underscore `_ruby` this will set
+some of the described options above. The modifiers will be striped from the namespace before
+loading them. 
+
+* Dot: `.` - This will mark all imported as hidden
+* Underscore: `_` - This will mark all imported as hidden, and direct as well.
+
 ## Task directory
 
 By default, tasks will be executed in the directory where the Taskfile is

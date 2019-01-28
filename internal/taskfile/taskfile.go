@@ -23,7 +23,7 @@ type Taskfile struct {
 	Version    string
 	Expansions int
 	Output     string
-	Includes   map[string]*Include
+	Includes   Includes
 	Vars       Vars
 	Tasks      Tasks
 }
@@ -79,6 +79,7 @@ func (tf *Taskfile) ProcessIncludes(dir string) error {
 		if defaults_available {
 			include.ApplyDefaults(defaults)
 		}
+		include.ApplySettingsByNamespace(namespace)
 		includedTaskfile, err := include.LoadTaskfile()
 
 		if err != nil {
@@ -87,7 +88,7 @@ func (tf *Taskfile) ProcessIncludes(dir string) error {
 		if len(includedTaskfile.Includes) > 0 {
 			return ErrIncludedTaskfilesCantHaveIncludes
 		}
-		if err = Merge(tf, includedTaskfile, namespace); err != nil {
+		if err = Merge(include, tf, includedTaskfile, namespace); err != nil {
 			return err
 		}
 	}
