@@ -50,6 +50,8 @@ func main() {
 		versionFlag bool
 		init        bool
 		list        bool
+		listHidden  bool
+		withDeps    bool
 		status      bool
 		force       bool
 		watch       bool
@@ -61,7 +63,10 @@ func main() {
 
 	pflag.BoolVar(&versionFlag, "version", false, "show Task version")
 	pflag.BoolVarP(&init, "init", "i", false, "creates a new Taskfile.yml in the current folder")
-	pflag.BoolVarP(&list, "list", "l", false, "lists tasks with description of current Taskfile")
+	pflag.BoolVarP(&list, "list", "l", false, "lists tasks of current Taskfile")
+	pflag.BoolVar(&listHidden, "list-hidden",
+		false, "lists all tasks")
+	pflag.BoolVar(&withDeps, "with-deps", false, "list all tasks with dependencies")
 	pflag.BoolVar(&status, "status", false, "exits with non-zero exit code if any of the given tasks is not up-to-date")
 	pflag.BoolVarP(&force, "force", "f", false, "forces execution even when the task is up-to-date")
 	pflag.BoolVarP(&watch, "watch", "w", false, "enables watch of the given task")
@@ -111,7 +116,12 @@ func main() {
 	}
 
 	if list {
-		e.PrintTasksHelp()
+		e.PrintTasksHelp(true, withDeps)
+		return
+	}
+
+	if listHidden {
+		e.PrintTasksHelp(false, withDeps)
 		return
 	}
 

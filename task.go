@@ -58,7 +58,7 @@ func (e *Executor) Run(calls ...taskfile.Call) error {
 	for _, c := range calls {
 		if _, ok := e.Taskfile.Tasks[c.Task]; !ok {
 			// FIXME: move to the main package
-			e.PrintTasksHelp()
+			e.PrintTasksHelp(true, false)
 			return &taskNotFoundError{taskName: c.Task}
 		}
 	}
