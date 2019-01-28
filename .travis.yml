@@ -14,13 +14,12 @@ env:
 script:
   - curl -s https://taskfile.org/install.sh | sh
   - task ci
+  - git reset --hard
 
 deploy:
   - provider: script
     skip_cleanup: true
-    script:
-     - git reset --hard
-     - curl -sL http://git.io/goreleaser | bash
+    script: curl -sL http://git.io/goreleaser | bash
     on:
       tags: true
       condition: $TRAVIS_OS_NAME = linux
