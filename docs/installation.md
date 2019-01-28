@@ -76,7 +76,7 @@ scenarios like CIs. Many thanks to [godownloader][godownloader] for allowing
 easily generating this script.
 
 ```bash
-curl -s https://taskfile.org/install.sh | sh
+curl -Ls https://git.io/ttask.sh | sh
 ```
 
 > This method will download the binary on the local `./bin` directory by default.
