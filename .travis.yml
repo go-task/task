@@ -1,7 +1,6 @@
 language: go
 
 go:
-  - 1.10.x
   - 1.11.x
 
 addons:
@@ -9,8 +8,11 @@ addons:
     packages:
       - rpm
 
+env:
+  - GO111MODULE=on
+
 script:
-  - go install github.com/go-task/task/cmd/task
+  - curl -s https://taskfile.org/install.sh | sh
   - task ci
 
 deploy:
