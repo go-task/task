@@ -38,7 +38,7 @@ func Merge(t1, t2 *Taskfile, namespaces ...string) error {
 	if t1.Env == nil {
 		t1.Env = make(Vars)
 	}
-	for k, v := range t2.Vars {
+	for k, v := range t2.Env {
 		t1.Env[k] = v
 	}
 
