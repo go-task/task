@@ -113,6 +113,135 @@ func (p *Parser) Stmts(r io.Reader, fn func(*Stmt) bool) error {
 	return p.err
 }
 
+type wrappedReader struct {
+	*Parser
+	io.Reader
+
+	lastLine    uint16
+	accumulated []*Stmt
+	fn          func([]*Stmt) bool
+}
+
+func (w *wrappedReader) Read(p []byte) (n int, err error) {
+	// If we lexed a newline for the first time, we just finished a line, so
+	// we may need to give a callback for the edge cases below not covered
+	// by Parser.Stmts.
+	if w.r == '\n' && w.npos.line > w.lastLine {
+		if w.Incomplete() {
+			// Incomplete statement; call back to print "> ".
+			if !w.fn(w.accumulated) {
+				return 0, io.EOF
+			}
+		} else if len(w.accumulated) == 0 {
+			// Nothing was parsed; call back to print another "$ ".
+			if !w.fn(nil) {
+				return 0, io.EOF
+			}
+		}
+		w.lastLine = w.npos.line
+	}
+	return w.Reader.Read(p)
+}
+
+// Interactive implements what is necessary to parse statements in an
+// interactive shell. The parser will call the given function under two
+// circumstances outlined below.
+//
+// If a line containing any number of statements is parsed, the function will be
+// called with said statements.
+//
+// If a line ending in an incomplete statement is parsed, the function will be
+// called with any fully parsed statents, and Parser.Incomplete will return
+// true.
+//
+// One can imagine a simple interactive shell implementation as follows:
+//
+//         fmt.Fprintf(os.Stdout, "$ ")
+//         parser.Interactive(os.Stdin, func(stmts []*syntax.Stmt) bool {
+//                 if parser.Incomplete() {
+//                         fmt.Fprintf(os.Stdout, "> ")
+//                         return true
+//                 }
+//                 run(stmts)
+//                 fmt.Fprintf(os.Stdout, "$ ")
+//                 return true
+//         }
+//
+// If the callback function returns false, parsing is stopped and the function
+// is not called again.
+func (p *Parser) Interactive(r io.Reader, fn func([]*Stmt) bool) error {
+	w := wrappedReader{Parser: p, Reader: r, fn: fn}
+	return p.Stmts(&w, func(stmt *Stmt) bool {
+		w.accumulated = append(w.accumulated, stmt)
+		// We finished parsing a statement and we're at a newline token,
+		// so we finished fully parsing a number of statements. Call
+		// back to run the statements and print "$ ".
+		if p.tok == _Newl {
+			if !fn(w.accumulated) {
+				return false
+			}
+			w.accumulated = w.accumulated[:0]
+			// The callback above would already print "$ ", so we
+			// don't want the subsequent wrappedReader.Read to cause
+			// another "$ " print thinking that nothing was parsed.
+			w.lastLine = w.npos.line + 1
+		}
+		return true
+	})
+}
+
+// Words reads and parses words one at a time, calling a function each time one
+// is parsed. If the function returns false, parsing is stopped and the function
+// is not called again.
+//
+// Newlines are skipped, meaning that multi-line input will work fine. If the
+// parser encounters a token that isn't a word, such as a semicolon, an error
+// will be returned.
+//
+// Note that the lexer doesn't currently tokenize spaces, so it may need to read
+// a non-space byte such as a newline or a letter before finishing the parsing
+// of a word. This will be fixed in the future.
+func (p *Parser) Words(r io.Reader, fn func(*Word) bool) error {
+	p.reset()
+	p.f = &File{}
+	p.src = r
+	p.rune()
+	p.next()
+	for {
+		p.got(_Newl)
+		w := p.getWord()
+		if w == nil {
+			if p.tok != _EOF {
+				p.curErr("%s is not a valid word", p.tok)
+			}
+			return p.err
+		}
+		if !fn(w) {
+			return nil
+		}
+	}
+}
+
+// Document parses a single here-document word. That is, it parses the input as
+// if they were lines following a <<EOF redirection.
+//
+// In practice, this is the same as parsing the input as if it were within
+// double quotes, but without having to escape all double quote characters.
+// Similarly, the here-document word parsed here cannot be ended by any
+// delimiter other than reaching the end of the input.
+func (p *Parser) Document(r io.Reader) (*Word, error) {
+	p.reset()
+	p.f = &File{}
+	p.src = r
+	p.rune()
+	p.quote = hdocBody
+	p.hdocStop = []byte("MVDAN_CC_SH_SYNTAX_EOF")
+	p.parsingDoc = true
+	p.next()
+	w := p.getWord()
+	return w, p.err
+}
+
 // Parser holds the internal state of the parsing mechanism of a
 // program.
 type Parser struct {
@@ -150,18 +279,23 @@ type Parser struct {
 	buriedHdocs int
 	heredocs    []*Redirect
 	hdocStop    []byte
+	parsingDoc  bool
 
-	// openBquotes is how many levels of backquotes are open at the
-	// moment
+	// openStmts is how many entire statements we're currently parsing. A
+	// non-zero number means that we require certain tokens or words before
+	// reaching EOF.
+	openStmts int
+	// openBquotes is how many levels of backquotes are open at the moment.
 	openBquotes int
-	// lastBquoteEsc is how many times the last backquote token was
-	// escaped
+
+	// lastBquoteEsc is how many times the last backquote token was escaped
 	lastBquoteEsc int
-	// buriedBquotes is like openBquotes, but saved for when the
-	// parser comes out of single quotes
+	// buriedBquotes is like openBquotes, but saved for when the parser
+	// comes out of single quotes
 	buriedBquotes int
 
-	reOpenParens int
+	rxOpenParens int
+	rxFirstPart  bool
 
 	accComs []Comment
 	curComs *[]Comment
@@ -180,6 +314,14 @@ type Parser struct {
 	litBs   []byte
 }
 
+func (p *Parser) Incomplete() bool {
+	// If we're in a quote state other than noState, we're parsing a node
+	// such as a double-quoted string.
+	// If there are any open statements, we need to finish them.
+	// If we're constructing a literal, we need to finish it.
+	return p.quote != noState || p.openStmts > 0 || p.litBs != nil
+}
+
 const bufSize = 1 << 10
 
 func (p *Parser) reset() {
@@ -191,9 +333,10 @@ func (p *Parser) reset() {
 	p.r, p.w = 0, 0
 	p.err, p.readErr = nil, nil
 	p.quote, p.forbidNested = noState, false
+	p.openStmts = 0
 	p.heredocs, p.buriedHdocs = p.heredocs[:0], 0
+	p.parsingDoc = false
 	p.openBquotes, p.buriedBquotes = 0, 0
-	p.reOpenParens = 0
 	p.accComs, p.curComs = nil, &p.accComs
 }
 
@@ -269,6 +412,8 @@ func (p *Parser) call(w *Word) *CallExpr {
 	ce.Args[0] = w
 	return ce
 }
+
+//go:generate stringer -type=quoteState
 
 type quoteState uint32
 
@@ -372,7 +517,7 @@ func (p *Parser) doHeredocs() {
 			p.rune()
 		}
 		if quoted {
-			r.Hdoc = p.hdocLitWord()
+			r.Hdoc = p.quotedHdocWord()
 		} else {
 			p.next()
 			r.Hdoc = p.getWord()
@@ -597,7 +742,9 @@ loop:
 		if p.tok == _EOF {
 			break
 		}
+		p.openStmts++
 		s := p.getStmt(true, false, false)
+		p.openStmts--
 		if s == nil {
 			p.invalidStmtStart()
 			break
@@ -619,7 +766,7 @@ func (p *Parser) stmtList(stops ...string) (sl StmtList) {
 	}
 	p.stmts(fn, stops...)
 	split := len(p.accComs)
-	if p.tok == _LitWord && (p.val == "elif" || p.val == "else") {
+	if p.tok == _LitWord && (p.val == "elif" || p.val == "else" || p.val == "fi") {
 		// Split the comments, so that any aligned with an opening token
 		// get attached to it. For example:
 		//
@@ -630,7 +777,7 @@ func (p *Parser) stmtList(stops ...string) (sl StmtList) {
 		//     fi
 		// TODO(mvdan): look into deduplicating this with similar logic
 		// in caseItems.
-		for i := len(p.accComs)-1; i >= 0; i-- {
+		for i := len(p.accComs) - 1; i >= 0; i-- {
 			c := p.accComs[i]
 			if c.Pos().Col() != p.pos.Col() {
 				break
@@ -1250,15 +1397,8 @@ func (p *Parser) paramExp() *ParamExp {
 		default:
 			pe.Exp = p.paramExpExp()
 		}
-	case plus, colPlus, minus, colMinus, quest, colQuest, assgn, colAssgn:
-		// if unset/null actions
-		switch pe.Param.Value {
-		case "#", "$", "?", "!":
-			p.curErr("$%s can never be unset or null", pe.Param.Value)
-		}
-		pe.Exp = p.paramExpExp()
-	case perc, dblPerc, hash, dblHash:
-		// pattern string manipulation
+	case plus, colPlus, minus, colMinus, quest, colQuest, assgn, colAssgn,
+		perc, dblPerc, hash, dblHash:
 		pe.Exp = p.paramExpExp()
 	case _EOF:
 	default:
@@ -1333,6 +1473,9 @@ func (p *Parser) backquoteEnd() bool {
 
 // ValidName returns whether val is a valid name as per the POSIX spec.
 func ValidName(val string) bool {
+	if val == "" {
+		return false
+	}
 	for i, r := range val {
 		switch {
 		case 'a' <= r && r <= 'z':
@@ -1797,6 +1940,8 @@ func (p *Parser) ifClause(s *Stmt) {
 		curIf.ElsePos = elsePos
 		curIf.Else = p.followStmts("else", curIf.ElsePos, "fi")
 	}
+	curIf.FiComments = p.accComs
+	p.accComs = nil
 	rif.FiPos = p.stmtEnd(rif, "if", "fi")
 	curIf.FiPos = rif.FiPos
 	s.Cmd = rif
@@ -1952,7 +2097,7 @@ func (p *Parser) caseItems(stop string) (items []*CaseItem) {
 		p.got(_Newl)
 		split := len(p.accComs)
 		if p.tok == _LitWord && p.val != stop {
-			for i := len(p.accComs)-1; i >= 0; i-- {
+			for i := len(p.accComs) - 1; i >= 0; i-- {
 				c := p.accComs[i]
 				if c.Pos().Col() != p.pos.Col() {
 					break
@@ -1982,6 +2127,7 @@ func (p *Parser) testClause(s *Stmt) {
 }
 
 func (p *Parser) testExpr(ftok token, fpos Pos, pastAndOr bool) TestExpr {
+	p.got(_Newl)
 	var left TestExpr
 	if pastAndOr {
 		left = p.testExprBase(ftok, fpos)
@@ -1991,6 +2137,7 @@ func (p *Parser) testExpr(ftok token, fpos Pos, pastAndOr bool) TestExpr {
 	if left == nil {
 		return left
 	}
+	p.got(_Newl)
 	switch p.tok {
 	case andAnd, orOr:
 	case _LitWord:
@@ -2015,10 +2162,12 @@ func (p *Parser) testExpr(ftok token, fpos Pos, pastAndOr bool) TestExpr {
 		Op:    BinTestOperator(p.tok),
 		X:     left,
 	}
+	// Save the previous quoteState, since we change it in TsReMatch.
+	oldQuote := p.quote
+
 	switch b.Op {
 	case AndTest, OrTest:
 		p.next()
-		p.got(_Newl)
 		if b.Y = p.testExpr(token(b.Op), b.OpPos, false); b.Y == nil {
 			p.followErrExp(b.OpPos, b.Op.String())
 		}
@@ -2026,12 +2175,12 @@ func (p *Parser) testExpr(ftok token, fpos Pos, pastAndOr bool) TestExpr {
 		if p.lang != LangBash {
 			p.langErr(p.pos, "regex tests", LangBash)
 		}
-		oldReOpenParens := p.reOpenParens
-		old := p.preNested(testRegexp)
-		defer func() {
-			p.postNested(old)
-			p.reOpenParens = oldReOpenParens
-		}()
+		p.rxOpenParens = 0
+		p.rxFirstPart = true
+		// TODO(mvdan): Using nested states within a regex will break in
+		// all sorts of ways. The better fix is likely to use a stop
+		// token, like we do with heredocs.
+		p.quote = testRegexp
 		fallthrough
 	default:
 		if _, ok := b.X.(*Word); !ok {
@@ -2041,6 +2190,7 @@ func (p *Parser) testExpr(ftok token, fpos Pos, pastAndOr bool) TestExpr {
 		p.next()
 		b.Y = p.followWordTok(token(b.Op), b.OpPos)
 	}
+	p.quote = oldQuote
 	return b
 }
 
@@ -2079,14 +2229,12 @@ func (p *Parser) testExprBase(ftok token, fpos Pos) TestExpr {
 	case leftParen:
 		pe := &ParenTest{Lparen: p.pos}
 		p.next()
-		p.got(_Newl)
 		if pe.X = p.testExpr(leftParen, pe.Lparen, false); pe.X == nil {
 			p.followErrExp(pe.Lparen, "(")
 		}
 		pe.Rparen = p.matched(pe.Lparen, leftParen, rightParen)
 		return pe
 	default:
-		p.got(_Newl)
 		return p.followWordTok(ftok, fpos)
 	}
 }

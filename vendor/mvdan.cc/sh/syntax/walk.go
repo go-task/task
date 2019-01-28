@@ -39,7 +39,7 @@ func Walk(node Node, f func(Node) bool) {
 	case *Comment:
 	case *Stmt:
 		for _, c := range x.Comments {
-			if c.Pos().After(x.Pos()) {
+			if !x.End().After(c.Pos()) {
 				defer Walk(&c, f)
 				break
 			}

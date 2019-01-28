@@ -1,6 +1,6 @@
 # Releasing Task
 
-The release process of Task is done is done with the help of
+The release process of Task is done with the help of
 [GoReleaser][goreleaser]. You can test the release process locally by calling
 the `test-release` task of the Taskfile.
 
@@ -22,7 +22,14 @@ the binaries:
 
 * Updating the current version on [snapcraft.yaml][snapcraftyaml];
 * Moving both `i386` and `amd64` new artifacts to the stable channel on
-the [Snapscraft dashboard][snapcraftdashboard]
+the [Snapcraft dashboard][snapcraftdashboard]
+
+# Scoop
+
+Scoop is a community owned installation method. Scoop owners usually take care
+of updating versions there by editing
+[this file](https://github.com/lukesampson/scoop-extras/blob/master/task.json).
+If you think its Task version is outdated, open an issue to let us know.
 
 [goreleaser]: https://goreleaser.com/#continuous_integration
 [homebrewtap]: https://github.com/go-task/homebrew-tap

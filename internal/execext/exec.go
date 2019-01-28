@@ -7,7 +7,9 @@ import (
 	"os"
 	"strings"
 
+	"mvdan.cc/sh/expand"
 	"mvdan.cc/sh/interp"
+	"mvdan.cc/sh/shell"
 	"mvdan.cc/sh/syntax"
 )
 
@@ -41,14 +43,10 @@ func RunCommand(ctx context.Context, opts *RunCommandOptions) error {
 	if len(environ) == 0 {
 		environ = os.Environ()
 	}
-	env, err := interp.EnvFromList(environ)
-	if err != nil {
-		return err
-	}
 
 	r, err := interp.New(
 		interp.Dir(opts.Dir),
-		interp.Env(env),
+		interp.Env(expand.ListEnviron(environ...)),
 
 		interp.Module(interp.DefaultExec),
 		interp.Module(interp.OpenDevImpls(interp.DefaultOpen)),
@@ -69,4 +67,17 @@ func IsExitError(err error) bool {
 	default:
 		return false
 	}
+}
+
+// Expand is a helper to mvdan.cc/shell.Fields that returns the first field
+// if available.
+func Expand(s string) (string, error) {
+	fields, err := shell.Fields(s, nil)
+	if err != nil {
+		return "", err
+	}
+	if len(fields) > 0 {
+		return fields[0], nil
+	}
+	return "", nil
 }

@@ -4,5 +4,4 @@
 - [Examples](examples.md)
 - [Releasing Task](releasing_task.md)
 - [Alternative Task Runners](alternative_task_runners.md)
-- [Sponsors and Backers](sponsors_and_backers.md)
 - [![Github](https://icongram.jgog.in/simple/github.svg?color=808080&size=16)Github](https://github.com/go-task/task)

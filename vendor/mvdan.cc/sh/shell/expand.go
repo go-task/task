@@ -4,41 +4,60 @@
 package shell
 
 import (
-	"context"
+	"os"
 	"strings"
 
-	"mvdan.cc/sh/interp"
+	"mvdan.cc/sh/expand"
 	"mvdan.cc/sh/syntax"
 )
 
-// Expand performs shell expansion on s, using env to resolve variables.
-// The expansion will apply to parameter expansions like $var and
-// ${#var}, but also to arithmetic expansions like $((var + 3)), and
-// command substitutions like $(echo foo).
+// Expand performs shell expansion on s as if it were within double quotes,
+// using env to resolve variables. This includes parameter expansion, arithmetic
+// expansion, and quote removal.
 //
-// If env is nil, the current environment variables are used.
+// If env is nil, the current environment variables are used. Empty variables
+// are treated as unset; to support variables which are set but empty, use the
+// expand package directly.
 //
-// Any side effects or modifications to the system are forbidden when
-// interpreting the program. This is enforced via whitelists when
-// executing programs and opening paths. The interpreter also has a timeout of
-// two seconds.
+// Command subsitutions like $(echo foo) aren't supported to avoid running
+// arbitrary code. To support those, use an interpreter with the expand package.
+//
+// An error will be reported if the input string had invalid syntax.
 func Expand(s string, env func(string) string) (string, error) {
 	p := syntax.NewParser()
-	src := "<<EXPAND_EOF\n" + s + "\nEXPAND_EOF"
-	f, err := p.Parse(strings.NewReader(src), "")
+	word, err := p.Document(strings.NewReader(s))
 	if err != nil {
 		return "", err
 	}
-	word := f.Stmts[0].Redirs[0].Hdoc
-	last := word.Parts[len(word.Parts)-1].(*syntax.Lit)
-	// since the heredoc implies a trailing newline
-	last.Value = strings.TrimSuffix(last.Value, "\n")
-	r := pureRunner()
-	if env != nil {
-		r.Env = interp.FuncEnviron(env)
+	if env == nil {
+		env = os.Getenv
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), pureRunnerTimeout)
-	defer cancel()
-	fields, err := r.Fields(ctx, word)
-	return strings.Join(fields, ""), err
+	cfg := &expand.Config{Env: expand.FuncEnviron(env)}
+	return expand.Document(cfg, word)
+}
+
+// Fields performs shell expansion on s as if it were a command's arguments,
+// using env to resolve variables. It is similar to Expand, but includes brace
+// expansion, tilde expansion, and globbing.
+//
+// If env is nil, the current environment variables are used. Empty variables
+// are treated as unset; to support variables which are set but empty, use the
+// expand package directly.
+//
+// An error will be reported if the input string had invalid syntax.
+func Fields(s string, env func(string) string) ([]string, error) {
+	p := syntax.NewParser()
+	var words []*syntax.Word
+	err := p.Words(strings.NewReader(s), func(w *syntax.Word) bool {
+		words = append(words, w)
+		return true
+	})
+	if err != nil {
+		return nil, err
+	}
+	if env == nil {
+		env = os.Getenv
+	}
+	cfg := &expand.Config{Env: expand.FuncEnviron(env)}
+	return expand.Fields(cfg, words...)
 }

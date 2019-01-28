@@ -13,6 +13,8 @@ import (
 	"strings"
 	"syscall"
 	"time"
+
+	"mvdan.cc/sh/expand"
 )
 
 // FromModuleContext returns the ModuleCtx value stored in ctx, if any.
@@ -27,7 +29,7 @@ type moduleCtxKey struct{}
 // It contains some of the current state of the Runner, as well as some fields
 // necessary to implement some of the modules.
 type ModuleCtx struct {
-	Env         Environ
+	Env         expand.Environ
 	Dir         string
 	Stdin       io.Reader
 	Stdout      io.Writer

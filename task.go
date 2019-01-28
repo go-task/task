@@ -7,15 +7,15 @@ import (
 	"os"
 	"sync/atomic"
 
-	"github.com/go-task/task/internal/compiler"
-	compilerv1 "github.com/go-task/task/internal/compiler/v1"
-	compilerv2 "github.com/go-task/task/internal/compiler/v2"
-	"github.com/go-task/task/internal/execext"
-	"github.com/go-task/task/internal/logger"
-	"github.com/go-task/task/internal/output"
-	"github.com/go-task/task/internal/taskfile"
-	"github.com/go-task/task/internal/taskfile/read"
-	"github.com/go-task/task/internal/taskfile/version"
+	"github.com/go-task/task/v2/internal/compiler"
+	compilerv1 "github.com/go-task/task/v2/internal/compiler/v1"
+	compilerv2 "github.com/go-task/task/v2/internal/compiler/v2"
+	"github.com/go-task/task/v2/internal/execext"
+	"github.com/go-task/task/v2/internal/logger"
+	"github.com/go-task/task/v2/internal/output"
+	"github.com/go-task/task/v2/internal/taskfile"
+	"github.com/go-task/task/v2/internal/taskfile/read"
+	"github.com/go-task/task/v2/internal/taskfile/version"
 
 	"github.com/Masterminds/semver"
 	"golang.org/x/sync/errgroup"
@@ -58,7 +58,7 @@ func (e *Executor) Run(calls ...taskfile.Call) error {
 	for _, c := range calls {
 		if _, ok := e.Taskfile.Tasks[c.Task]; !ok {
 			// FIXME: move to the main package
-			e.PrintTasksHelp()
+			e.PrintTasksHelp(true, false)
 			return &taskNotFoundError{taskName: c.Task}
 		}
 	}
@@ -240,19 +240,22 @@ func (e *Executor) runCommand(ctx context.Context, t *taskfile.Task, call taskfi
 			return nil
 		}
 
-		stdOut := e.Output.WrapWriter(e.Stdout, t.Prefix)
-		stdErr := e.Output.WrapWriter(e.Stderr, t.Prefix)
-		defer stdOut.Close()
-		defer stdErr.Close()
-
-		err := execext.RunCommand(ctx, &execext.RunCommandOptions{
+		opts := &execext.RunCommandOptions{
 			Command: cmd.Cmd,
 			Dir:     t.Dir,
 			Env:     getEnviron(t),
-			Stdin:   e.Stdin,
-			Stdout:  stdOut,
-			Stderr:  stdErr,
-		})
+		}
+		if cmd.InteractiveModeEnabled {
+			opts.Stdout = os.Stdout
+			opts.Stderr = os.Stderr
+			opts.Stdin = os.Stdin
+		} else {
+			opts.Stdout = e.Output.WrapWriter(e.Stdout, t.Prefix)
+			opts.Stderr = e.Output.WrapWriter(e.Stderr, t.Prefix)
+			opts.Stdin = e.Stdin
+		}
+
+		err := execext.RunCommand(ctx, opts)
 		if execext.IsExitError(err) && cmd.IgnoreError {
 			e.Logger.VerboseErrf("task: command error ignored: %v", err)
 			return nil
@@ -268,9 +271,9 @@ func getEnviron(t *taskfile.Task) []string {
 		return nil
 	}
 
-	envs := os.Environ()
+	environ := os.Environ()
 	for k, v := range t.Env.ToStringMap() {
-		envs = append(envs, fmt.Sprintf("%s=%s", k, v))
+		environ = append(environ, fmt.Sprintf("%s=%s", k, v))
 	}
-	return envs
+	return environ
 }

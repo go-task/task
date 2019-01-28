@@ -1,0 +1,12 @@
+version: '2'
+
+tasks:
+  install:
+    desc: Installs docsify to work the on the documentation site
+    cmds:
+      - npm install docsify-cli -g
+
+  serve:
+    desc: Serves the documentation site locally
+    cmds:
+      - docsify serve docs

@@ -25,18 +25,54 @@ right:
 sudo snap install task
 ```
 
+## Scoop
+
+If you're on Windows and have [Scoop][scoop] installed, use `extras` bucket
+to install Task like:
+
+```cmd
+scoop bucket add extras
+scoop install task
+```
+
+This installation method is community owned. After a new release of Task, it
+may take some time until it's available on Scoop.
+
 ## Go
 
-If you have a [Go][go] environment setup, you can simply run:
+Task now uses [Go Modules](https://github.com/golang/go/wiki/Modules), which
+means you may have trouble compiling it on older Go versions.
+
+For CI environments we recommend using the [Install Script](#install-script)
+instead, which is faster and more stable, since it'll just download the latest
+released binary, instead of compiling the edge (master branch) version.
+
+Installing in your `$GOPATH`:
 
 ```bash
 go get -u -v github.com/go-task/task/cmd/task
 ```
 
+Installing in another directory:
+
+```bash
+git clone https://github.com/go-task/task
+cd task
+
+# compiling binary to $GOPATH/bin
+go install -v
+
+# compiling it to another location
+# use -o ./task.exe on Windows
+go build -v -o ./task ./cmd/task
+```
+
+Both methods requires having the [Go][go] environment properly setup locally.
+
 ## Install script
 
 We also have a [install script][installscript], which is very useful on
-scanarios like CIs. Many thanks to [godownloader][godownloader] for allowing
+scenarios like CIs. Many thanks to [godownloader][godownloader] for allowing
 easily generating this script.
 
 ```bash
@@ -51,3 +87,4 @@ curl -s https://taskfile.org/install.sh | sh
 [installscript]: https://github.com/go-task/task/blob/master/install-task.sh
 [releases]: https://github.com/go-task/task/releases
 [godownloader]: https://github.com/goreleaser/godownloader
+[scoop]: https://scoop.sh/

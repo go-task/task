@@ -7,11 +7,12 @@ import (
 
 // Cmd is a task command
 type Cmd struct {
-	Cmd         string
-	Silent      bool
-	Task        string
-	Vars        Vars
-	IgnoreError bool
+	Cmd                    string
+	Silent                 bool
+	Task                   string
+	Vars                   Vars
+	IgnoreError            bool
+	InteractiveModeEnabled bool
 }
 
 // Dep is a task dependency
@@ -39,12 +40,18 @@ func (c *Cmd) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		return nil
 	}
 	var cmdStruct struct {
-		Cmd         string
-		Silent      bool
-		IgnoreError bool `yaml:"ignore_error"`
+		Cmd            string
+		Silent         bool
+		IgnoreError    bool   `yaml:"ignore_error"`
+		InteractiveCmd string `yaml:"ish"`
 	}
-	if err := unmarshal(&cmdStruct); err == nil && cmdStruct.Cmd != "" {
+	if err := unmarshal(&cmdStruct); err == nil &&
+		(cmdStruct.Cmd != "" || cmdStruct.InteractiveCmd != "") {
 		c.Cmd = cmdStruct.Cmd
+		if cmdStruct.InteractiveCmd != "" {
+			c.Cmd = cmdStruct.InteractiveCmd
+			c.InteractiveModeEnabled = true
+		}
 		c.Silent = cmdStruct.Silent
 		c.IgnoreError = cmdStruct.IgnoreError
 		return nil

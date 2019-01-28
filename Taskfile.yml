@@ -1,5 +1,8 @@
 version: '2'
 
+includes:
+  docs: ./docs
+
 vars:
   GIT_COMMIT:
     sh: git log -n 1 --format=%h
@@ -25,11 +28,14 @@ tasks:
       - task: go-get
         vars: {REPO: golang.org/x/lint/golint}
       - task: go-get
-        vars: {REPO: github.com/golang/dep/cmd/dep}
-      - task: go-get
         vars: {REPO: github.com/goreleaser/goreleaser}
       - task: go-get
         vars: {REPO: github.com/goreleaser/godownloader}
+
+  vendor:
+    desc: Sync vendor/ directory according to go.mod file
+    cmds:
+      - go mod vendor
 
   update-deps:
     desc: Updates dependencies
@@ -80,13 +86,3 @@ tasks:
     cmds:
       - echo '{{.GO_PACKAGES}}'
     silent: true
-
-  docs:install:
-    desc: Installs docsify to work the on the documentation site
-    cmds:
-      - npm install docsify-cli -g
-
-  docs:serve:
-    desc: Serves the documentation site locally
-    cmds:
-      - docsify serve docs

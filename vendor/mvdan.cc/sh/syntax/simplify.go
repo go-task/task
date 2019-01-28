@@ -16,9 +16,6 @@ import "bytes"
 //     Remove redundant quotes                  [[ "$var" == str ]]
 //     Merge negations with unary operators     [[ ! -n $var ]]
 //     Use single quotes to shorten literals    "\$foo"
-//
-// This function is EXPERIMENTAL; it may change or disappear at any
-// point until this notice is removed.
 func Simplify(n Node) bool {
 	s := simplifier{}
 	Walk(n, s.visit)
