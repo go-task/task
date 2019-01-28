@@ -37,7 +37,7 @@ func Merge(inc *Include, t1, t2 *Taskfile, namespaces ...string) error {
 	for k, v := range t2.Vars {
 		t1.Vars[k] = v
 	}
-	for k, v := range t2.Vars {
+	for k, v := range t2.Env {
 		t1.Env[k] = v
 	}
 	for k, v := range t2.Tasks {
