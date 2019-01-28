@@ -348,7 +348,7 @@ End of functions from https://github.com/client9/shlib
 EOF
 
 PROJECT_NAME="task"
-OWNER=go-task
+OWNER=tonobo
 REPO="task"
 BINARY=task
 FORMAT=tar.gz
