@@ -622,6 +622,20 @@ tasks:
       - echo "This will print nothing" > /dev/null
 ```
 
+## Interactive shell mode
+
+The interactive mode disable preprocessing of captured output. 
+By enabling interactive mode task will pass the OS I/O directly to the command.
+
+```yaml
+version: '2'
+
+tasks:
+  echo:
+    cmds:
+      - ish: vim /path/to/file
+```
+
 ## Dry run mode
 
 Dry run mode (`--dry`) compiles and steps through each task, printing the commands

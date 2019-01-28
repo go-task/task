@@ -240,19 +240,22 @@ func (e *Executor) runCommand(ctx context.Context, t *taskfile.Task, call taskfi
 			return nil
 		}
 
-		stdOut := e.Output.WrapWriter(e.Stdout, t.Prefix)
-		stdErr := e.Output.WrapWriter(e.Stderr, t.Prefix)
-		defer stdOut.Close()
-		defer stdErr.Close()
-
-		err := execext.RunCommand(ctx, &execext.RunCommandOptions{
+		opts := &execext.RunCommandOptions{
 			Command: cmd.Cmd,
 			Dir:     t.Dir,
 			Env:     getEnviron(t),
-			Stdin:   e.Stdin,
-			Stdout:  stdOut,
-			Stderr:  stdErr,
-		})
+		}
+		if cmd.InteractiveModeEnabled {
+			opts.Stdout = os.Stdout
+			opts.Stderr = os.Stderr
+			opts.Stdin = os.Stdin
+		} else {
+			opts.Stdout = e.Output.WrapWriter(e.Stdout, t.Prefix)
+			opts.Stderr = e.Output.WrapWriter(e.Stderr, t.Prefix)
+			opts.Stdin = e.Stdin
+		}
+
+		err := execext.RunCommand(ctx, opts)
 		if execext.IsExitError(err) && cmd.IgnoreError {
 			e.Logger.VerboseErrf("task: command error ignored: %v", err)
 			return nil
