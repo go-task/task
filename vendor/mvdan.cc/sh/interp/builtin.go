@@ -13,6 +13,7 @@ import (
 	"strconv"
 	"strings"
 
+	"mvdan.cc/sh/expand"
 	"mvdan.cc/sh/syntax"
 )
 
@@ -27,6 +28,20 @@ func isBuiltin(name string) bool {
 		return true
 	}
 	return false
+}
+
+func oneIf(b bool) int {
+	if b {
+		return 1
+	}
+	return 0
+}
+
+// atoi is just a shorthand for strconv.Atoi that ignores the error,
+// just like shells do.
+func atoi(s string) int {
+	n, _ := strconv.Atoi(s)
+	return n
 }
 
 func (r *Runner) builtinCode(ctx context.Context, pos syntax.Pos, name string, args []string) int {
@@ -91,7 +106,7 @@ func (r *Runner) builtinCode(ctx context.Context, pos syntax.Pos, name string, a
 		}
 
 		for _, arg := range args {
-			if _, ok := r.lookupVar(arg); ok && vars {
+			if vr := r.lookupVar(arg); vr.IsSet() && vars {
 				r.delVar(arg)
 				continue
 			}
@@ -100,14 +115,14 @@ func (r *Runner) builtinCode(ctx context.Context, pos syntax.Pos, name string, a
 			}
 		}
 	case "echo":
-		newline, expand := true, false
+		newline, doExpand := true, false
 	echoOpts:
 		for len(args) > 0 {
 			switch args[0] {
 			case "-n":
 				newline = false
 			case "-e":
-				expand = true
+				doExpand = true
 			case "-E": // default
 			default:
 				break echoOpts
@@ -118,8 +133,8 @@ func (r *Runner) builtinCode(ctx context.Context, pos syntax.Pos, name string, a
 			if i > 0 {
 				r.out(" ")
 			}
-			if expand {
-				_, arg, _ = r.expandFormat(arg, nil)
+			if doExpand {
+				arg, _, _ = expand.Format(r.ecfg, arg, nil)
 			}
 			r.out(arg)
 		}
@@ -133,7 +148,7 @@ func (r *Runner) builtinCode(ctx context.Context, pos syntax.Pos, name string, a
 		}
 		format, args := args[0], args[1:]
 		for {
-			n, s, err := r.expandFormat(format, args)
+			s, n, err := expand.Format(r.ecfg, format, args)
 			if err != nil {
 				r.errf("%v\n", err)
 				return 1
@@ -144,49 +159,35 @@ func (r *Runner) builtinCode(ctx context.Context, pos syntax.Pos, name string, a
 				break
 			}
 		}
-	case "break":
+	case "break", "continue":
 		if !r.inLoop {
-			r.errf("break is only useful in a loop")
+			r.errf("%s is only useful in a loop", name)
 			break
+		}
+		enclosing := &r.breakEnclosing
+		if name == "continue" {
+			enclosing = &r.contnEnclosing
 		}
 		switch len(args) {
 		case 0:
-			r.breakEnclosing = 1
+			*enclosing = 1
 		case 1:
 			if n, err := strconv.Atoi(args[0]); err == nil {
-				r.breakEnclosing = n
+				*enclosing = n
 				break
 			}
 			fallthrough
 		default:
-			r.errf("usage: break [n]\n")
-			return 2
-		}
-	case "continue":
-		if !r.inLoop {
-			r.errf("continue is only useful in a loop")
-			break
-		}
-		switch len(args) {
-		case 0:
-			r.contnEnclosing = 1
-		case 1:
-			if n, err := strconv.Atoi(args[0]); err == nil {
-				r.contnEnclosing = n
-				break
-			}
-			fallthrough
-		default:
-			r.errf("usage: continue [n]\n")
+			r.errf("usage: %s [n]\n", name)
 			return 2
 		}
 	case "pwd":
-		r.outf("%s\n", r.getVar("PWD"))
+		r.outf("%s\n", r.envGet("PWD"))
 	case "cd":
 		var path string
 		switch len(args) {
 		case 0:
-			path = r.getVar("HOME")
+			path = r.envGet("HOME")
 		case 1:
 			path = args[0]
 		default:
@@ -462,13 +463,13 @@ func (r *Runner) builtinCode(ctx context.Context, pos syntax.Pos, name string, a
 			args = append(args, "REPLY")
 		}
 
-		values := r.ifsFields(string(line), len(args), raw)
+		values := expand.ReadFields(r.ecfg, string(line), len(args), raw)
 		for i, name := range args {
 			val := ""
 			if i < len(values) {
 				val = values[i]
 			}
-			r.setVar(ctx, name, nil, Variable{Value: StringVal(val)})
+			r.setVar(name, nil, expand.Variable{Value: val})
 		}
 
 		return 0
@@ -478,7 +479,7 @@ func (r *Runner) builtinCode(ctx context.Context, pos syntax.Pos, name string, a
 			r.errf("getopts: usage: getopts optstring name [arg]\n")
 			return 2
 		}
-		optind, _ := strconv.Atoi(r.getVar("OPTIND"))
+		optind, _ := strconv.Atoi(r.envGet("OPTIND"))
 		if optind-1 != r.optState.argidx {
 			if optind < 1 {
 				optind = 1
@@ -499,7 +500,7 @@ func (r *Runner) builtinCode(ctx context.Context, pos syntax.Pos, name string, a
 
 		opt, optarg, done := r.optState.Next(optstr, args)
 
-		r.setVarString(ctx, name, string(opt))
+		r.setVarString(name, string(opt))
 		r.delVar("OPTARG")
 		switch {
 		case opt == '?' && diagnostics && !done:
@@ -508,11 +509,11 @@ func (r *Runner) builtinCode(ctx context.Context, pos syntax.Pos, name string, a
 			r.errf("getopts: option requires an argument -- %q\n", optarg)
 		default:
 			if optarg != "" {
-				r.setVarString(ctx, "OPTARG", optarg)
+				r.setVarString("OPTARG", optarg)
 			}
 		}
 		if optind-1 != r.optState.argidx {
-			r.setVarString(ctx, "OPTIND", strconv.FormatInt(int64(r.optState.argidx+1), 10))
+			r.setVarString("OPTIND", strconv.FormatInt(int64(r.optState.argidx+1), 10))
 		}
 
 		return oneIf(done)
@@ -559,6 +560,7 @@ func (r *Runner) builtinCode(ctx context.Context, pos syntax.Pos, name string, a
 				r.printOptLine(arg, *opt)
 			}
 		}
+		r.updateExpandOpts()
 
 	default:
 		// "trap", "umask", "alias", "unalias", "fg", "bg",
@@ -573,62 +575,6 @@ func (r *Runner) printOptLine(name string, enabled bool) {
 		status = "on"
 	}
 	r.outf("%s\t%s\n", name, status)
-}
-
-func (r *Runner) ifsFields(s string, n int, raw bool) []string {
-	type pos struct {
-		start, end int
-	}
-	var fpos []pos
-
-	runes := make([]rune, 0, len(s))
-	infield := false
-	esc := false
-	for _, c := range s {
-		if infield {
-			if r.ifsRune(c) && (raw || !esc) {
-				fpos[len(fpos)-1].end = len(runes)
-				infield = false
-			}
-		} else {
-			if !r.ifsRune(c) && (raw || !esc) {
-				fpos = append(fpos, pos{start: len(runes), end: -1})
-				infield = true
-			}
-		}
-		if c == '\\' {
-			if raw || esc {
-				runes = append(runes, c)
-			}
-			esc = !esc
-			continue
-		}
-		runes = append(runes, c)
-		esc = false
-	}
-	if len(fpos) == 0 {
-		return nil
-	}
-	if infield {
-		fpos[len(fpos)-1].end = len(runes)
-	}
-
-	switch {
-	case n == 1:
-		// include heading/trailing IFSs
-		fpos[0].start, fpos[0].end = 0, len(runes)
-		fpos = fpos[:1]
-	case n != -1 && n < len(fpos):
-		// combine to max n fields
-		fpos[n-1].end = fpos[len(fpos)-1].end
-		fpos = fpos[:n]
-	}
-
-	var fields = make([]string, len(fpos))
-	for i, p := range fpos {
-		fields[i] = string(runes[p.start:p.end])
-	}
-	return fields
 }
 
 func (r *Runner) readLine(raw bool) ([]byte, error) {
@@ -675,7 +621,7 @@ func (r *Runner) changeDir(path string) int {
 	}
 	r.Dir = path
 	r.Vars["OLDPWD"] = r.Vars["PWD"]
-	r.Vars["PWD"] = Variable{Value: StringVal(path)}
+	r.Vars["PWD"] = expand.Variable{Value: path}
 	return 0
 }
 

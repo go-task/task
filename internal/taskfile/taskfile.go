@@ -25,6 +25,7 @@ type Taskfile struct {
 	Output     string
 	Includes   Includes
 	Vars       Vars
+	Env        Vars
 	Tasks      Tasks
 }
 
@@ -41,6 +42,7 @@ func (tf *Taskfile) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		Output     string
 		Includes   map[string]*Include
 		Vars       Vars
+		Env        Vars
 		Tasks      Tasks
 	}
 	if err := unmarshal(&taskfile); err != nil {
@@ -51,6 +53,7 @@ func (tf *Taskfile) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	tf.Output = taskfile.Output
 	tf.Includes = taskfile.Includes
 	tf.Vars = taskfile.Vars
+	tf.Env = taskfile.Env
 	tf.Tasks = taskfile.Tasks
 	if tf.Expansions <= 0 {
 		tf.Expansions = 2

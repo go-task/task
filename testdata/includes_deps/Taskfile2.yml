@@ -1,0 +1,16 @@
+version: '2'
+
+tasks:
+  default:
+    deps: [called_dep]
+    cmds:
+      - echo "default" > default.txt
+      - task: called_task
+
+  called_dep:
+    cmds:
+      - echo "called_dep" > called_dep.txt
+
+  called_task:
+    cmds:
+      - echo "called_task" > called_task.txt

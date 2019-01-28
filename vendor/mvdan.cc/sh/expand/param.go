@@ -1,12 +1,10 @@
 // Copyright (c) 2017, Daniel Martí <mvdan@mvdan.cc>
 // See LICENSE for licensing information
 
-package interp
+package expand
 
 import (
-	"context"
 	"fmt"
-	"os"
 	"regexp"
 	"sort"
 	"strconv"
@@ -17,146 +15,133 @@ import (
 	"mvdan.cc/sh/syntax"
 )
 
-func anyOfLit(v interface{}, vals ...string) string {
-	word, _ := v.(*syntax.Word)
-	if word == nil || len(word.Parts) != 1 {
-		return ""
-	}
-	lit, ok := word.Parts[0].(*syntax.Lit)
-	if !ok {
-		return ""
-	}
-	for _, val := range vals {
-		if lit.Value == val {
-			return val
-		}
+func nodeLit(node syntax.Node) string {
+	if word, ok := node.(*syntax.Word); ok {
+		return word.Lit()
 	}
 	return ""
 }
 
-// quotedElems checks if a parameter expansion is exactly ${@} or ${foo[@]}
-func (r *Runner) quotedElems(pe *syntax.ParamExp) []string {
-	if pe == nil || pe.Excl || pe.Length || pe.Width {
-		return nil
-	}
-	if pe.Param.Value == "@" {
-		return r.Params
-	}
-	if anyOfLit(pe.Index, "@") == "" {
-		return nil
-	}
-	val, _ := r.lookupVar(pe.Param.Value)
-	if x, ok := val.Value.(IndexArray); ok {
-		return x
-	}
-	return nil
+type UnsetParameterError struct {
+	Node    *syntax.ParamExp
+	Message string
 }
 
-func (r *Runner) paramExp(ctx context.Context, pe *syntax.ParamExp) string {
+func (u UnsetParameterError) Error() string {
+	return u.Message
+}
+
+func (cfg *Config) paramExp(pe *syntax.ParamExp) (string, error) {
+	oldParam := cfg.curParam
+	cfg.curParam = pe
+	defer func() { cfg.curParam = oldParam }()
+
 	name := pe.Param.Value
-	var vr Variable
-	set := false
 	index := pe.Index
 	switch name {
-	case "#":
-		vr.Value = StringVal(strconv.Itoa(len(r.Params)))
 	case "@", "*":
-		vr.Value = IndexArray(r.Params)
 		index = &syntax.Word{Parts: []syntax.WordPart{
 			&syntax.Lit{Value: name},
 		}}
-	case "?":
-		vr.Value = StringVal(strconv.Itoa(r.exit))
-	case "$":
-		vr.Value = StringVal(strconv.Itoa(os.Getpid()))
-	case "PPID":
-		vr.Value = StringVal(strconv.Itoa(os.Getppid()))
+	}
+	var vr Variable
+	switch name {
 	case "LINENO":
-		line := uint64(pe.Pos().Line())
-		vr.Value = StringVal(strconv.FormatUint(line, 10))
-	case "DIRSTACK":
-		vr.Value = IndexArray(r.dirStack)
+		// This is the only parameter expansion that the environment
+		// interface cannot satisfy.
+		line := uint64(cfg.curParam.Pos().Line())
+		vr.Value = strconv.FormatUint(line, 10)
 	default:
-		if n, err := strconv.Atoi(name); err == nil {
-			if i := n - 1; i < len(r.Params) {
-				vr.Value, set = StringVal(r.Params[i]), true
-			}
-		} else {
-			vr, set = r.lookupVar(name)
-		}
+		vr = cfg.Env.Get(name)
 	}
-	str := r.varStr(vr, 0)
-	if index != nil {
-		str = r.varInd(ctx, vr, index, 0)
+	orig := vr
+	_, vr = vr.Resolve(cfg.Env)
+	str, err := cfg.varInd(vr, index)
+	if err != nil {
+		return "", err
 	}
-	slicePos := func(expr syntax.ArithmExpr) int {
-		p := r.arithm(ctx, expr)
-		if p < 0 {
-			p = len(str) + p
-			if p < 0 {
-				p = len(str)
+	slicePos := func(n int) int {
+		if n < 0 {
+			n = len(str) + n
+			if n < 0 {
+				n = len(str)
 			}
-		} else if p > len(str) {
-			p = len(str)
+		} else if n > len(str) {
+			n = len(str)
 		}
-		return p
+		return n
 	}
 	elems := []string{str}
-	if anyOfLit(index, "@", "*") != "" {
+	switch nodeLit(index) {
+	case "@", "*":
 		switch x := vr.Value.(type) {
 		case nil:
 			elems = nil
-		case IndexArray:
+		case []string:
 			elems = x
 		}
 	}
 	switch {
 	case pe.Length:
 		n := len(elems)
-		if anyOfLit(index, "@", "*") == "" {
+		switch nodeLit(index) {
+		case "@", "*":
+		default:
 			n = utf8.RuneCountInString(str)
 		}
 		str = strconv.Itoa(n)
 	case pe.Excl:
 		var strs []string
 		if pe.Names != 0 {
-			strs = r.namesByPrefix(pe.Param.Value)
-		} else if vr.NameRef {
-			strs = append(strs, string(vr.Value.(StringVal)))
-		} else if x, ok := vr.Value.(IndexArray); ok {
+			strs = cfg.namesByPrefix(pe.Param.Value)
+		} else if orig.NameRef {
+			strs = append(strs, orig.Value.(string))
+		} else if x, ok := vr.Value.([]string); ok {
 			for i, e := range x {
 				if e != "" {
 					strs = append(strs, strconv.Itoa(i))
 				}
 			}
-		} else if x, ok := vr.Value.(AssocArray); ok {
+		} else if x, ok := vr.Value.(map[string]string); ok {
 			for k := range x {
 				strs = append(strs, k)
 			}
 		} else if str != "" {
-			vr, _ = r.lookupVar(str)
-			strs = append(strs, r.varStr(vr, 0))
+			vr = cfg.Env.Get(str)
+			strs = append(strs, vr.String())
 		}
 		sort.Strings(strs)
 		str = strings.Join(strs, " ")
 	case pe.Slice != nil:
 		if pe.Slice.Offset != nil {
-			offset := slicePos(pe.Slice.Offset)
-			str = str[offset:]
+			n, err := Arithm(cfg, pe.Slice.Offset)
+			if err != nil {
+				return "", err
+			}
+			str = str[slicePos(n):]
 		}
 		if pe.Slice.Length != nil {
-			length := slicePos(pe.Slice.Length)
-			str = str[:length]
+			n, err := Arithm(cfg, pe.Slice.Length)
+			if err != nil {
+				return "", err
+			}
+			str = str[:slicePos(n)]
 		}
 	case pe.Repl != nil:
-		orig := r.lonePattern(ctx, pe.Repl.Orig)
-		with := r.loneWord(ctx, pe.Repl.With)
+		orig, err := Pattern(cfg, pe.Repl.Orig)
+		if err != nil {
+			return "", err
+		}
+		with, err := Literal(cfg, pe.Repl.With)
+		if err != nil {
+			return "", err
+		}
 		n := 1
 		if pe.Repl.All {
 			n = -1
 		}
 		locs := findAllIndex(orig, str, n)
-		buf := r.strBuilder()
+		buf := cfg.strBuilder()
 		last := 0
 		for _, loc := range locs {
 			buf.WriteString(str[last:loc[0]])
@@ -166,7 +151,10 @@ func (r *Runner) paramExp(ctx context.Context, pe *syntax.ParamExp) string {
 		buf.WriteString(str[last:])
 		str = buf.String()
 	case pe.Exp != nil:
-		arg := r.loneWord(ctx, pe.Exp.Word)
+		arg, err := Literal(cfg, pe.Exp.Word)
+		if err != nil {
+			return "", err
+		}
 		switch op := pe.Exp.Op; op {
 		case syntax.SubstColPlus:
 			if str == "" {
@@ -174,11 +162,11 @@ func (r *Runner) paramExp(ctx context.Context, pe *syntax.ParamExp) string {
 			}
 			fallthrough
 		case syntax.SubstPlus:
-			if set {
+			if vr.IsSet() {
 				str = arg
 			}
 		case syntax.SubstMinus:
-			if set {
+			if vr.IsSet() {
 				break
 			}
 			fallthrough
@@ -187,24 +175,25 @@ func (r *Runner) paramExp(ctx context.Context, pe *syntax.ParamExp) string {
 				str = arg
 			}
 		case syntax.SubstQuest:
-			if set {
+			if vr.IsSet() {
 				break
 			}
 			fallthrough
 		case syntax.SubstColQuest:
 			if str == "" {
-				r.errf("%s\n", arg)
-				r.exit = 1
-				r.setErr(ShellExitStatus(r.exit))
+				return "", UnsetParameterError{
+					Node:    pe,
+					Message: arg,
+				}
 			}
 		case syntax.SubstAssgn:
-			if set {
+			if vr.IsSet() {
 				break
 			}
 			fallthrough
 		case syntax.SubstColAssgn:
 			if str == "" {
-				r.setVarString(ctx, name, arg)
+				cfg.envSet(name, arg)
 				str = arg
 			}
 		case syntax.RemSmallPrefix, syntax.RemLargePrefix,
@@ -229,7 +218,7 @@ func (r *Runner) paramExp(ctx context.Context, pe *syntax.ParamExp) string {
 			// empty string means '?'; nothing to do there
 			expr, err := syntax.TranslatePattern(arg, false)
 			if err != nil {
-				return str
+				return str, nil
 			}
 			rx := regexp.MustCompile(expr)
 
@@ -266,7 +255,7 @@ func (r *Runner) paramExp(ctx context.Context, pe *syntax.ParamExp) string {
 			}
 		}
 	}
-	return str
+	return str, nil
 }
 
 func removePattern(str, pattern string, fromEnd, greedy bool) string {
@@ -292,4 +281,68 @@ func removePattern(str, pattern string, fromEnd, greedy bool) string {
 		str = str[:loc[2]] + str[loc[3]:]
 	}
 	return str
+}
+
+func (cfg *Config) varInd(vr Variable, idx syntax.ArithmExpr) (string, error) {
+	if idx == nil {
+		return vr.String(), nil
+	}
+	switch x := vr.Value.(type) {
+	case string:
+		n, err := Arithm(cfg, idx)
+		if err != nil {
+			return "", err
+		}
+		if n == 0 {
+			return x, nil
+		}
+	case []string:
+		switch nodeLit(idx) {
+		case "@":
+			return strings.Join(x, " "), nil
+		case "*":
+			return cfg.ifsJoin(x), nil
+		}
+		i, err := Arithm(cfg, idx)
+		if err != nil {
+			return "", err
+		}
+		if len(x) > 0 {
+			return x[i], nil
+		}
+	case map[string]string:
+		switch lit := nodeLit(idx); lit {
+		case "@", "*":
+			var strs []string
+			keys := make([]string, 0, len(x))
+			for k := range x {
+				keys = append(keys, k)
+			}
+			sort.Strings(keys)
+			for _, k := range keys {
+				strs = append(strs, x[k])
+			}
+			if lit == "*" {
+				return cfg.ifsJoin(strs), nil
+			}
+			return strings.Join(strs, " "), nil
+		}
+		val, err := Literal(cfg, idx.(*syntax.Word))
+		if err != nil {
+			return "", err
+		}
+		return x[val], nil
+	}
+	return "", nil
+}
+
+func (cfg *Config) namesByPrefix(prefix string) []string {
+	var names []string
+	cfg.Env.Each(func(name string, vr Variable) bool {
+		if strings.HasPrefix(name, prefix) {
+			names = append(names, name)
+		}
+		return true
+	})
+	return names
 }

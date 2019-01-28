@@ -3,10 +3,9 @@ package task
 import (
 	"path/filepath"
 
+	"github.com/go-task/task/v2/internal/execext"
 	"github.com/go-task/task/v2/internal/taskfile"
 	"github.com/go-task/task/v2/internal/templater"
-
-	"mvdan.cc/sh/shell"
 )
 
 // CompiledTask returns a copy of a task, but replacing variables in almost all
@@ -31,13 +30,13 @@ func (e *Executor) CompiledTask(call taskfile.Call) (*taskfile.Task, error) {
 		Status:      r.ReplaceSlice(origTask.Status),
 		Dir:         r.Replace(origTask.Dir),
 		Vars:        nil,
-		Env:         r.ReplaceVars(origTask.Env),
+		Env:         nil,
 		Silent:      origTask.Silent,
 		Method:      r.Replace(origTask.Method),
 		Prefix:      r.Replace(origTask.Prefix),
 		IgnoreError: origTask.IgnoreError,
 	}
-	new.Dir, err = shell.Expand(new.Dir, nil)
+	new.Dir, err = execext.Expand(new.Dir)
 	if err != nil {
 		return nil, err
 	}
@@ -46,6 +45,14 @@ func (e *Executor) CompiledTask(call taskfile.Call) (*taskfile.Task, error) {
 	}
 	if new.Prefix == "" {
 		new.Prefix = new.Task
+	}
+
+	new.Env = make(taskfile.Vars, len(e.Taskfile.Env)+len(origTask.Env))
+	for k, v := range r.ReplaceVars(e.Taskfile.Env) {
+		new.Env[k] = v
+	}
+	for k, v := range r.ReplaceVars(origTask.Env) {
+		new.Env[k] = v
 	}
 	for k, v := range new.Env {
 		static, err := e.Compiler.HandleDynamicVar(v)

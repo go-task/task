@@ -31,22 +31,40 @@ interpreter. So you can write sh/bash commands and it will work even on
 Windows, where `sh` or `bash` are usually not available. Just remember any
 executable called must be available by the OS or in PATH.
 
-If you ommit a task name, "default" will be assumed.
+If you omit a task name, "default" will be assumed.
 
 ## Environment
 
-You can specify environment variables that are added when running a command:
+You can use `env` to set custom environment variables for a specific task:
 
 ```yaml
 version: '2'
 
 tasks:
-  build:
+  greet:
     cmds:
-      - echo $hallo
+      - echo $GREETING
     env:
-      hallo: welt
+      GREETING: Hey, there!
 ```
+
+Additionally, you can set globally environment variables, that'll be available
+to all tasks:
+
+```yaml
+version: '2'
+
+env:
+  GREETING: Hey, there!
+
+tasks:
+  greet:
+    cmds:
+      - echo $GREETING
+```
+
+> NOTE: `env` supports expansion and and retrieving output from a shell command
+> just like variables, as you can see on the [Variables](#variables) section.
 
 ## Operating System specific tasks
 
@@ -83,10 +101,12 @@ Keep in mind that the version of the files should match. Also, when redefining
 a task the whole task is replaced, properties of the task are not merged.
 
 It's also possible to have an OS specific `Taskvars.yml` file, like
-`Taskvars_windows.yml`, `Taskfile_linux.yml`, or `Taskvars_darwin.yml`. See the
+`Taskvars_windows.yml`, `Taskvars_linux.yml`, or `Taskvars_darwin.yml`. See the
 [variables section](#variables) below.
 
 ## Including other Taskfiles
+
+> This feature is still experimental and may have bugs.
 
 If you want to share tasks between different projects (Taskfiles), you can use
 the importing mechanism to include other Taskfiles using the `includes` keyword:
@@ -491,7 +511,7 @@ Task also adds the following functions:
 - `catLines`: Replaces Unix (\n) and Windows (\r\n) styled newlines with a space.
 - `toSlash`: Does nothing on Unix, but on Windows converts a string from `\`
   path format to `/`.
-- `fromSlash`: Oposite of `toSlash`. Does nothing on Unix, but on Windows
+- `fromSlash`: Opposite of `toSlash`. Does nothing on Unix, but on Windows
   converts a string from `\` path format to `/`.
 - `exeExt`: Returns the right executable extension for the current OS
   (`".exe"` for Windows, `""` for others).
@@ -524,7 +544,7 @@ tasks:
 ## Help
 
 Running `task --list` (or `task -l`) lists all tasks with a description.
-The following taskfile:
+The following Taskfile:
 
 ```yaml
 version: '2'
@@ -611,7 +631,7 @@ tasks:
 
 * Or globally with `--silent` or `-s` flag
 
-If you want to suppress stdout instead, just redirect a command to `/dev/null`:
+If you want to suppress STDOUT instead, just redirect a command to `/dev/null`:
 
 ```yaml
 version: '2'
@@ -670,7 +690,7 @@ tasks:
       - echo "Hello World"
 ```
 
-`ignore_error` can also be set for a task, which mean errors will be supressed
+`ignore_error` can also be set for a task, which mean errors will be suppressed
 for all commands. But keep in mind this option won't propagate to other tasks
 called either by `deps` or `cmds`!
 

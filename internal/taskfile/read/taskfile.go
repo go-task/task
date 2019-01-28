@@ -10,17 +10,22 @@ import (
 	"github.com/go-task/task/v2/internal/taskfile"
 )
 
-// ErrIncludedTaskfilesCantHaveIncludes is returned when a included Taskfile contains includes
-var ErrIncludedTaskfilesCantHaveIncludes = errors.New(
-	`task: Included Taskfiles can't have includes. 
+var (
+	ErrIncludedTaskfilesCantHaveIncludes = errors.New(
+		`task: Included Taskfiles can't have includes. 
 		Please, move the include to the main Taskfile`,
+	)
+
+	ErrNoTaskfileFound = errors.New(
+		`task: No Taskfile.yml found. Use "task --init" to create a new one`,
+	)
 )
 
 // Taskfile reads a Taskfile for a given directory
 func Taskfile(dir string) (*taskfile.Taskfile, error) {
 	path := filepath.Join(dir, "Taskfile.yml")
 	if _, err := os.Stat(path); err != nil {
-		return nil, fmt.Errorf(`No Taskfile.yml found. Use "task --init" to create a new one`)
+		return nil, ErrNoTaskfileFound
 	}
 	t, err := taskfile.LoadFromPath(path)
 	if err != nil {

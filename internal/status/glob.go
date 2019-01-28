@@ -4,8 +4,9 @@ import (
 	"path/filepath"
 	"sort"
 
+	"github.com/go-task/task/v2/internal/execext"
+
 	"github.com/mattn/go-zglob"
-	"mvdan.cc/sh/shell"
 )
 
 func glob(dir string, globs []string) (files []string, err error) {
@@ -13,7 +14,7 @@ func glob(dir string, globs []string) (files []string, err error) {
 		if !filepath.IsAbs(g) {
 			g = filepath.Join(dir, g)
 		}
-		g, err = shell.Expand(g, nil)
+		g, err = execext.Expand(g)
 		if err != nil {
 			return nil, err
 		}

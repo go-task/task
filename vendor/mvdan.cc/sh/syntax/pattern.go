@@ -32,17 +32,16 @@ func charClass(s string) (string, error) {
 	return s[:len(name)+6], nil
 }
 
-// TranslatePattern turns a shell pattern expression into a regular
-// expression that can be used with regexp.Compile. It will return an
-// error if the input pattern was incorrect. Otherwise, the returned
-// expression can be passed to regexp.MustCompile.
+// TranslatePattern turns a shell wildcard pattern into a regular expression
+// that can be used with regexp.Compile. It will return an error if the input
+// pattern was incorrect. Otherwise, the returned expression can be passed to
+// regexp.MustCompile.
 //
 // For example, TranslatePattern(`foo*bar?`, true) returns `foo.*bar.`.
 //
-// Note that this function (and QuotePattern) should not be directly
-// used with file paths if Windows is supported, as the path separator
-// on that platform is the same character as the escaping character for
-// shell patterns.
+// Note that this function (and QuotePattern) should not be directly used with
+// file paths if Windows is supported, as the path separator on that platform is
+// the same character as the escaping character for shell patterns.
 func TranslatePattern(pattern string, greedy bool) (string, error) {
 	any := false
 loop:
@@ -122,9 +121,31 @@ loop:
 	return buf.String(), nil
 }
 
-// QuotePattern returns a string that quotes all special characters in
-// the given pattern. The returned string is a pattern that matches the
-// literal string.
+// HasPattern returns whether a string contains any unescaped wildcard
+// characters: '*', '?', or '['. When the function returns false, the given
+// pattern can only match at most one string.
+//
+// For example, HasPattern(`foo\*bar`) returns false, but HasPattern(`foo*bar`)
+// returns true.
+//
+// This can be useful to avoid extra work, like TranslatePattern. Note that this
+// function cannot be used to avoid QuotePattern, as backslashes are quoted by
+// that function but ignored here.
+func HasPattern(pattern string) bool {
+	for i := 0; i < len(pattern); i++ {
+		switch pattern[i] {
+		case '\\':
+			i++
+		case '*', '?', '[':
+			return true
+		}
+	}
+	return false
+}
+
+// QuotePattern returns a string that quotes all special characters in the given
+// wildcard pattern. The returned string is a pattern that matches the literal
+// string.
 //
 // For example, QuotePattern(`foo*bar?`) returns `foo\*bar\?`.
 func QuotePattern(pattern string) string {

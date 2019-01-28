@@ -16,6 +16,7 @@
 .glide/
 
 ./task
+.task
 dist/
 
 .DS_Store

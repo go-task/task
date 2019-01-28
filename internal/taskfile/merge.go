@@ -25,6 +25,9 @@ func Merge(inc *Include, t1, t2 *Taskfile, namespaces ...string) error {
 	if t1.Vars == nil {
 		t1.Vars = Vars{}
 	}
+	if t1.Env == nil {
+		t1.Env = Vars{}
+	}
 	if t1.Tasks == nil {
 		t1.Tasks = Tasks{}
 	}
@@ -33,6 +36,9 @@ func Merge(inc *Include, t1, t2 *Taskfile, namespaces ...string) error {
 	}
 	for k, v := range t2.Vars {
 		t1.Vars[k] = v
+	}
+	for k, v := range t2.Vars {
+		t1.Env[k] = v
 	}
 	for k, v := range t2.Tasks {
 		if inc != nil {
@@ -46,6 +52,5 @@ func Merge(inc *Include, t1, t2 *Taskfile, namespaces ...string) error {
 			}
 		}
 	}
-
 	return nil
 }

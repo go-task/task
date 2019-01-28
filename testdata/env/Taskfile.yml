@@ -1,10 +1,33 @@
-default:
-  vars:
-    AMD64: amd64
-  env:
-    GOOS: linux
-    GOARCH: "{{.AMD64}}"
-    CGO_ENABLED:
-      sh: echo '0'
-  cmds:
-    - echo "GOOS='$GOOS' GOARCH='$GOARCH' CGO_ENABLED='$CGO_ENABLED'" > env.txt
+version: '2'
+
+vars:
+  BAZ:
+    sh: echo baz
+
+env:
+  FOO: foo
+  BAR: bar
+  BAZ: "{{.BAZ}}"
+
+tasks:
+  default:
+    cmds:
+      - task: local
+      - task: global
+
+  local:
+    vars:
+      AMD64: amd64
+    env:
+      GOOS: linux
+      GOARCH: "{{.AMD64}}"
+      CGO_ENABLED:
+        sh: echo '0'
+    cmds:
+      - echo "GOOS='$GOOS' GOARCH='$GOARCH' CGO_ENABLED='$CGO_ENABLED'" > local.txt
+
+  global:
+    env:
+      BAR: overriden
+    cmds:
+      - echo "FOO='$FOO' BAR='$BAR' BAZ='$BAZ'" > global.txt
