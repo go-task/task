@@ -169,6 +169,8 @@ loading them.
 * Dot: `.` - This will mark all imported as hidden
 * Underscore: `_` - This will mark all imported as hidden, and direct as well.
 
+> All includes will be processed in parallel, but the merge order will be preserved.
+
 ## Task directory
 
 By default, tasks will be executed in the directory where the Taskfile is
