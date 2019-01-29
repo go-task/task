@@ -77,23 +77,44 @@ func LoadFromPath(path string) (*Taskfile, error) {
 	return &t, yaml.NewDecoder(f).Decode(&t)
 }
 
+type taskfilePipeline struct {
+	inc   *Include
+	tf    *Taskfile
+	order int
+	err   error
+}
+
 func (tf *Taskfile) ProcessIncludes(dir string) error {
-	for _, include := range tf.Includes {
+	ch := make(chan taskfilePipeline, len(tf.Includes))
+	defer close(ch)
+	for i, include := range tf.Includes {
 		namespace := include.Namespace
 		include.Dir = dir
 		if tf.IncludeDefaults != nil {
 			include.ApplyDefaults(tf.IncludeDefaults)
 		}
 		include.ApplySettingsByNamespace(namespace)
-		includedTaskfile, err := include.LoadTaskfile()
+		go func(pipeline chan taskfilePipeline, include *Include, i int) {
+			includedTaskfile, err := include.LoadTaskfile()
+			pipeline <- taskfilePipeline{include, includedTaskfile, i, err}
+		}(ch, include, i)
+	}
 
-		if err != nil {
-			return err
+	list := make([]taskfilePipeline, len(tf.Includes))
+
+	for range tf.Includes {
+		tp := <-ch
+		list[tp.order] = tp
+	}
+
+	for _, tp := range list {
+		if tp.err != nil {
+			return tp.err
 		}
-		if len(includedTaskfile.Includes) > 0 {
+		if len(tp.tf.Includes) > 0 {
 			return ErrIncludedTaskfilesCantHaveIncludes
 		}
-		if err = Merge(include, tf, includedTaskfile, namespace); err != nil {
+		if err := Merge(tp.inc, tf, tp.tf, tp.inc.Namespace); err != nil {
 			return err
 		}
 	}
