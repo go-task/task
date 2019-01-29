@@ -7,6 +7,8 @@ vars:
   GIT_COMMIT:
     sh: git log -n 1 --format=%h
 
+  GIT_REPO: 'tonobo/task'
+
   GO_PACKAGES:
     sh: go list ./...
 
@@ -18,7 +20,7 @@ tasks:
   install:
     desc: Installs Task
     cmds:
-      - go install -v -ldflags="-w -s -X main.version={{.GIT_COMMIT}}" ./cmd/task
+      - go install -v -ldflags="-w -s -X main.version={{.GIT_COMMIT}} -X main.repo={{.GIT_REPO}}" ./cmd/task
     env:
       CGO_ENABLED: '0'
 
