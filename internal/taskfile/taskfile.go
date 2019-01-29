@@ -20,13 +20,14 @@ var (
 
 // Taskfile represents a Taskfile.yml
 type Taskfile struct {
-	Version    string
-	Expansions int
-	Output     string
-	Includes   Includes
-	Vars       Vars
-	Env        Vars
-	Tasks      Tasks
+	Version         string
+	Expansions      int
+	Output          string
+	Includes        Includes
+	IncludeDefaults *Include
+	Vars            Vars
+	Env             Vars
+	Tasks           Tasks
 }
 
 // UnmarshalYAML implements yaml.Unmarshaler interface
@@ -40,7 +41,7 @@ func (tf *Taskfile) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		Version    string
 		Expansions int
 		Output     string
-		Includes   map[string]*Include
+		Includes   yaml.MapSlice
 		Vars       Vars
 		Env        Vars
 		Tasks      Tasks
@@ -51,7 +52,12 @@ func (tf *Taskfile) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	tf.Version = taskfile.Version
 	tf.Expansions = taskfile.Expansions
 	tf.Output = taskfile.Output
-	tf.Includes = taskfile.Includes
+	includes, defaultInclude, err := IncludesFromYaml(taskfile.Includes)
+	if err != nil {
+		return err
+	}
+	tf.Includes = includes
+	tf.IncludeDefaults = defaultInclude
 	tf.Vars = taskfile.Vars
 	tf.Env = taskfile.Env
 	tf.Tasks = taskfile.Tasks
@@ -72,15 +78,11 @@ func LoadFromPath(path string) (*Taskfile, error) {
 }
 
 func (tf *Taskfile) ProcessIncludes(dir string) error {
-	defaults, defaults_available := tf.Includes[".defaults"]
-
-	for namespace, include := range tf.Includes {
-		if namespace == ".defaults" {
-			continue
-		}
+	for _, include := range tf.Includes {
+		namespace := include.Namespace
 		include.Dir = dir
-		if defaults_available {
-			include.ApplyDefaults(defaults)
+		if tf.IncludeDefaults != nil {
+			include.ApplyDefaults(tf.IncludeDefaults)
 		}
 		include.ApplySettingsByNamespace(namespace)
 		includedTaskfile, err := include.LoadTaskfile()

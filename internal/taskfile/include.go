@@ -37,9 +37,11 @@ func (c commandr) CombinedOutput(command string, args ...string) ([]byte, error)
 	return exec.Command(command, args...).CombinedOutput()
 }
 
-type Includes map[string]*Include
+type Includes []*Include
 
 type Include struct {
+	Namespace string
+
 	// Path should be a local path or a remote URL
 	Path string
 
@@ -62,27 +64,44 @@ type Include struct {
 	Direct bool `yaml:"direct"`
 }
 
-// UnmarshalYAML implements yaml.Unmarshaler interface
-func (i *Include) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	var path string
-	if err := unmarshal(&path); err == nil {
-		i.Path = path
-		return nil
+// IncludesFromYaml parses the yaml manually to perserve the include order.
+// It will return the include objects as first param and the defaults as second one.
+func IncludesFromYaml(slice yaml.MapSlice) (Includes, *Include, error) {
+	includes := make(Includes, 0)
+	var defaultInclude *Include
+	for _, mapItem := range slice {
+		inc := &Include{}
+		switch val := mapItem.Value.(type) {
+		case string:
+			inc.Path = val
+		case yaml.MapSlice:
+			for _, innerItem := range val {
+				switch innerItem.Key.(string) {
+				case "path":
+					inc.Path = innerItem.Value.(string)
+				case "cache":
+					cache := innerItem.Value.(string)
+					duration, err := time.ParseDuration(cache)
+					if err != nil {
+						return nil, nil, fmt.Errorf("task: Unable to parse cache from include. %s", err)
+					}
+					inc.Cache = &duration
+				case "hidden":
+					inc.Hidden = innerItem.Value.(bool)
+				case "direct":
+					inc.Direct = innerItem.Value.(bool)
+				}
+			}
+		}
+		inc.Namespace = mapItem.Key.(string)
+		if inc.Namespace == ".defaults" {
+			defaultInclude = inc
+		} else {
+			includes = append(includes, inc)
+		}
 	}
-	var includeStruct struct {
-		Path   string
-		Cache  *time.Duration
-		Hidden bool
-		Direct bool
-	}
-	if err := unmarshal(&includeStruct); err != nil {
-		return err
-	}
-	i.Path = includeStruct.Path
-	i.Cache = includeStruct.Cache
-	i.Hidden = includeStruct.Hidden
-	i.Direct = includeStruct.Direct
-	return nil
+	return includes, defaultInclude, nil
+
 }
 
 func (i *Include) ApplySettingsByNamespace(namespace string) {
