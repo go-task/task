@@ -1,6 +1,13 @@
 build:
   binary: task
   main: cmd/task/task.go
+  ldflags:
+    - >
+      -s -w 
+      -X main.version={{.Version}} 
+      -X main.repo=tonobo/task 
+      -X main.commit={{.ShortCommit}} 
+      -X main.date={{.Date}} 
   goos:
     - windows
     - darwin
