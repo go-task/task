@@ -14,7 +14,7 @@ func glob(dir string, globs []string) (files []string, err error) {
 		if !filepath.IsAbs(g) {
 			g = filepath.Join(dir, g)
 		}
-		g, err = execext.Expand(g)
+		g, err = execext.Expand(filepath.ToSlash(g))
 		if err != nil {
 			return nil, err
 		}

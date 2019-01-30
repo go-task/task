@@ -36,7 +36,7 @@ func (e *Executor) CompiledTask(call taskfile.Call) (*taskfile.Task, error) {
 		Prefix:      r.Replace(origTask.Prefix),
 		IgnoreError: origTask.IgnoreError,
 	}
-	new.Dir, err = execext.Expand(new.Dir)
+	new.Dir, err = execext.Expand(filepath.ToSlash(new.Dir))
 	if err != nil {
 		return nil, err
 	}
