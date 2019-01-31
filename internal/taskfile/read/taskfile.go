@@ -22,8 +22,14 @@ var (
 )
 
 // Taskfile reads a Taskfile for a given directory
-func Taskfile(dir string) (*taskfile.Taskfile, error) {
+func Taskfile(dir, location string) (*taskfile.Taskfile, error) {
 	path := filepath.Join(dir, "Taskfile.yml")
+	if location != "" {
+		path = filepath.Join(dir, location)
+	}
+	if location != "" && filepath.IsAbs(location) {
+		path = location
+	}
 	if _, err := os.Stat(path); err != nil {
 		return nil, ErrNoTaskfileFound
 	}

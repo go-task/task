@@ -97,25 +97,27 @@ func main() {
 	}
 
 	var (
-		versionFlag bool
-		init        bool
-		list        bool
-		listHidden  bool
-		withDeps    bool
-		status      bool
-		force       bool
-		watch       bool
-		verbose     bool
-		silent      bool
-		dry         bool
-		update      bool
-		dir         string
+		versionFlag      bool
+		init             bool
+		list             bool
+		listHidden       bool
+		withDeps         bool
+		status           bool
+		force            bool
+		watch            bool
+		verbose          bool
+		taskfileLocation string
+		silent           bool
+		dry              bool
+		update           bool
+		dir              string
 	)
 
 	pflag.BoolVar(&versionFlag, "version", false, "show Task version")
 	pflag.BoolVarP(&init, "init", "i", false, "creates a new Taskfile.yml in the current folder")
 	pflag.BoolVarP(&list, "list", "l", false, "lists tasks of current Taskfile")
 	pflag.BoolVar(&update, "update", false, "selfupdate task")
+	pflag.StringVarP(&taskfileLocation, "config", "c", "Taskfile.yml", "Specify taskfile location")
 	pflag.BoolVar(&listHidden, "list-hidden",
 		false, "lists all tasks")
 	pflag.BoolVar(&withDeps, "with-deps", false, "list all tasks with dependencies")
@@ -157,12 +159,13 @@ func main() {
 	}
 
 	e := task.Executor{
-		Force:   force,
-		Watch:   watch,
-		Verbose: verbose,
-		Silent:  silent,
-		Dir:     dir,
-		Dry:     dry,
+		Force:            force,
+		Watch:            watch,
+		Verbose:          verbose,
+		Silent:           silent,
+		Dir:              dir,
+		Dry:              dry,
+		TaskfileLocation: taskfileLocation,
 
 		Context: ctx,
 

@@ -29,13 +29,14 @@ const (
 
 // Executor executes a Taskfile
 type Executor struct {
-	Taskfile *taskfile.Taskfile
-	Dir      string
-	Force    bool
-	Watch    bool
-	Verbose  bool
-	Silent   bool
-	Dry      bool
+	Taskfile         *taskfile.Taskfile
+	Dir              string
+	Force            bool
+	Watch            bool
+	Verbose          bool
+	Silent           bool
+	Dry              bool
+	TaskfileLocation string
 
 	Context context.Context
 
@@ -78,7 +79,7 @@ func (e *Executor) Run(calls ...taskfile.Call) error {
 // Setup setups Executor's internal state
 func (e *Executor) Setup() error {
 	var err error
-	e.Taskfile, err = read.Taskfile(e.Dir)
+	e.Taskfile, err = read.Taskfile(e.Dir, e.TaskfileLocation)
 	if err != nil {
 		return err
 	}
