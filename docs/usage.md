@@ -258,6 +258,10 @@ tasks:
 
 The above syntax is also supported in `deps`.
 
+> NOTE: If you want to call a task declared in the root Taskfile from within an
+> [included Taskfile](#including-other-taskfiles), add a leading `:` like this:
+> `task: :task-name`.
+
 ## Prevent unnecessary work
 
 If a task generates something, you can inform Task the source and generated
