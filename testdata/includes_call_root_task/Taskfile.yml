@@ -1,0 +1,9 @@
+version: '2'
+
+includes:
+  included: Taskfile2.yml
+
+tasks:
+  root-task:
+    cmds:
+      - echo "root task" > root_task.txt

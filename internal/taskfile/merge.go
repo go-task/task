@@ -66,5 +66,8 @@ func Merge(t1, t2 *Taskfile, namespaces ...string) error {
 }
 
 func taskNameWithNamespace(taskName string, namespaces ...string) string {
+	if strings.HasPrefix(taskName, ":") {
+		return strings.TrimPrefix(taskName, ":")
+	}
 	return strings.Join(append(namespaces, taskName), NamespaceSeparator)
 }
