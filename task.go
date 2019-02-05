@@ -46,6 +46,7 @@ type Executor struct {
 	Logger   *logger.Logger
 	Compiler compiler.Compiler
 	Output   output.Output
+	OutputStyle string
 
 	taskvars taskfile.Vars
 
@@ -133,6 +134,9 @@ func (e *Executor) Setup() error {
 	}
 	if !version.IsV22(v) && len(e.Taskfile.Includes) > 0 {
 		return fmt.Errorf(`task: Including Taskfiles is only available starting on Taskfile version v2.2`)
+	}
+	if e.OutputStyle != "" {
+		e.Taskfile.Output = e.OutputStyle
 	}
 	switch e.Taskfile.Output {
 	case "", "interleaved":
