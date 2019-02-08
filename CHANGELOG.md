@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Allow calling a task of the root Taskfile from an included Taskfile
+  by prefixing it with `:`
+  ([#161](https://github.com/go-task/task/issues/161), [#172](https://github.com/go-task/task/issues/172)).
+
 ## v2.3.0 - 2019-01-02
 
 - On Windows, Task can now be installed using [Scoop](https://scoop.sh/)

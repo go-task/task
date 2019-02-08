@@ -511,3 +511,15 @@ func TestIncludesDependencies(t *testing.T) {
 	}
 	tt.Run(t)
 }
+
+func TestIncludesCallingRoot(t *testing.T) {
+	tt := fileContentTest{
+		Dir:       "testdata/includes_call_root_task",
+		Target:    "included:call-root",
+		TrimSpace: true,
+		Files: map[string]string{
+			"root_task.txt": "root task",
+		},
+	}
+	tt.Run(t)
+}
