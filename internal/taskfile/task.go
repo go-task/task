@@ -49,14 +49,21 @@ func (t *Task) ApplyNamespace(taskName string, ns ...string) []*Task {
 	}
 	for _, cmd := range t.Cmds {
 		if cmd.Task != "" {
-			cmd.Task = strings.Join(append(ns, cmd.Task), NamespaceSeparator)
+			cmd.Task = taskWithNamespace(ns, cmd.Task)
 		}
 	}
 	for _, dep := range t.Deps {
 		if dep.Task != "" {
-			dep.Task = strings.Join(append(ns, dep.Task), NamespaceSeparator)
+			dep.Task = taskWithNamespace(ns, dep.Task)
 		}
 	}
-	t.Task = strings.Join(append(ns, taskName), NamespaceSeparator)
+	t.Task = taskWithNamespace(ns, taskName)
 	return append(tasks, t)
+}
+
+func taskWithNamespace(ns []string, taskName string) string {
+	if strings.HasPrefix(taskName, ":") {
+		return strings.TrimPrefix(taskName, ":")
+	}
+	return strings.Join(append(ns, taskName), NamespaceSeparator)
 }

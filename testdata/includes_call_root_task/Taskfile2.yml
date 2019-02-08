@@ -1,0 +1,6 @@
+version: '2'
+
+tasks:
+  call-root:
+    cmds:
+      - task: :root-task
