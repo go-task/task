@@ -43,9 +43,9 @@ type Executor struct {
 	Stdout io.Writer
 	Stderr io.Writer
 
-	Logger   *logger.Logger
-	Compiler compiler.Compiler
-	Output   output.Output
+	Logger      *logger.Logger
+	Compiler    compiler.Compiler
+	Output      output.Output
 	OutputStyle string
 
 	taskvars taskfile.Vars
