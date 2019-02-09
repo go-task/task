@@ -181,7 +181,7 @@ func (e *Executor) RunTask(ctx context.Context, call taskfile.Call) error {
 	}
 
 	if !e.Force {
-		upToDate, err := isTaskUpToDate(ctx, t)
+		upToDate, err := e.isTaskUpToDate(ctx, t)
 		if err != nil {
 			return err
 		}
@@ -195,7 +195,7 @@ func (e *Executor) RunTask(ctx context.Context, call taskfile.Call) error {
 
 	for i := range t.Cmds {
 		if err := e.runCommand(ctx, t, call, i); err != nil {
-			if err2 := statusOnError(t); err2 != nil {
+			if err2 := e.statusOnError(t); err2 != nil {
 				e.Logger.VerboseErrf("task: error cleaning status on error: %v", err2)
 			}
 

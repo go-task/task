@@ -473,6 +473,32 @@ func TestDry(t *testing.T) {
 	}
 }
 
+// TestDryChecksum tests if the checksum file is not being written to disk
+// if the dry mode is enabled.
+func TestDryChecksum(t *testing.T) {
+	const dir = "testdata/dry_checksum"
+
+	checksumFile := filepath.Join(dir, ".task/checksum/default")
+	_ = os.Remove(checksumFile)
+
+	e := task.Executor{
+		Dir:    dir,
+		Stdout: ioutil.Discard,
+		Stderr: ioutil.Discard,
+		Dry:    true,
+	}
+	assert.NoError(t, e.Setup())
+	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "default"}))
+
+	_, err := os.Stat(checksumFile)
+	assert.Error(t, err, "checksum file should not exist")
+
+	e.Dry = false
+	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "default"}))
+	_, err = os.Stat(checksumFile)
+	assert.NoError(t, err, "checksum file should exist")
+}
+
 func TestIncludes(t *testing.T) {
 	tt := fileContentTest{
 		Dir:       "testdata/includes",

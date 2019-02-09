@@ -6,7 +6,10 @@
   by prefixing it with `:`
   ([#161](https://github.com/go-task/task/issues/161), [#172](https://github.com/go-task/task/issues/172)),
 - Add flag to override the `output` option
-  ([#173](https://github.com/go-task/task/pull/173)).
+  ([#173](https://github.com/go-task/task/pull/173));
+- Fix bug where Task was persisting the new checksum on the disk when the Dry
+  Mode is enabled
+  ([#166](https://github.com/go-task/task/issues/166)).
 
 ## v2.3.0 - 2019-01-02
 
