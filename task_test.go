@@ -2,6 +2,7 @@ package task_test
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -40,7 +41,7 @@ func (fct fileContentTest) Run(t *testing.T) {
 		Stderr: ioutil.Discard,
 	}
 	assert.NoError(t, e.Setup(), "e.Setup()")
-	assert.NoError(t, e.Run(taskfile.Call{Task: fct.Target}), "e.Run(target)")
+	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: fct.Target}), "e.Run(target)")
 
 	for name, expectContent := range fct.Files {
 		t.Run(fct.name(name), func(t *testing.T) {
@@ -178,7 +179,7 @@ func TestVarsInvalidTmpl(t *testing.T) {
 		Stderr: ioutil.Discard,
 	}
 	assert.NoError(t, e.Setup(), "e.Setup()")
-	assert.EqualError(t, e.Run(taskfile.Call{Task: target}), expectError, "e.Run(target)")
+	assert.EqualError(t, e.Run(context.Background(), taskfile.Call{Task: target}), expectError, "e.Run(target)")
 }
 
 func TestParams(t *testing.T) {
@@ -230,7 +231,7 @@ func TestDeps(t *testing.T) {
 		Stderr: ioutil.Discard,
 	}
 	assert.NoError(t, e.Setup())
-	assert.NoError(t, e.Run(taskfile.Call{Task: "default"}))
+	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "default"}))
 
 	for _, f := range files {
 		f = filepath.Join(dir, f)
@@ -258,14 +259,14 @@ func TestStatus(t *testing.T) {
 		Silent: true,
 	}
 	assert.NoError(t, e.Setup())
-	assert.NoError(t, e.Run(taskfile.Call{Task: "gen-foo"}))
+	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "gen-foo"}))
 
 	if _, err := os.Stat(file); err != nil {
 		t.Errorf("File should exists: %v", err)
 	}
 
 	e.Silent = false
-	assert.NoError(t, e.Run(taskfile.Call{Task: "gen-foo"}))
+	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "gen-foo"}))
 
 	if buff.String() != `task: Task "gen-foo" is up to date`+"\n" {
 		t.Errorf("Wrong output message: %s", buff.String())
@@ -304,7 +305,7 @@ func TestGenerates(t *testing.T) {
 			fmt.Sprintf("task: Task \"%s\" is up to date\n", theTask)
 
 		// Run task for the first time.
-		assert.NoError(t, e.Run(taskfile.Call{Task: theTask}))
+		assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: theTask}))
 
 		if _, err := os.Stat(srcFile); err != nil {
 			t.Errorf("File should exists: %v", err)
@@ -319,7 +320,7 @@ func TestGenerates(t *testing.T) {
 		buff.Reset()
 
 		// Re-run task to ensure it's now found to be up-to-date.
-		assert.NoError(t, e.Run(taskfile.Call{Task: theTask}))
+		assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: theTask}))
 		if buff.String() != upToDate {
 			t.Errorf("Wrong output message: %s", buff.String())
 		}
@@ -350,14 +351,14 @@ func TestStatusChecksum(t *testing.T) {
 	}
 	assert.NoError(t, e.Setup())
 
-	assert.NoError(t, e.Run(taskfile.Call{Task: "build"}))
+	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "build"}))
 	for _, f := range files {
 		_, err := os.Stat(filepath.Join(dir, f))
 		assert.NoError(t, err)
 	}
 
 	buff.Reset()
-	assert.NoError(t, e.Run(taskfile.Call{Task: "build"}))
+	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "build"}))
 	assert.Equal(t, `task: Task "build" is up to date`+"\n", buff.String())
 }
 
@@ -388,7 +389,7 @@ func TestCyclicDep(t *testing.T) {
 		Stderr: ioutil.Discard,
 	}
 	assert.NoError(t, e.Setup())
-	assert.IsType(t, &task.MaximumTaskCallExceededError{}, e.Run(taskfile.Call{Task: "task-1"}))
+	assert.IsType(t, &task.MaximumTaskCallExceededError{}, e.Run(context.Background(), taskfile.Call{Task: "task-1"}))
 }
 
 func TestTaskVersion(t *testing.T) {
@@ -424,10 +425,10 @@ func TestTaskIgnoreErrors(t *testing.T) {
 	}
 	assert.NoError(t, e.Setup())
 
-	assert.NoError(t, e.Run(taskfile.Call{Task: "task-should-pass"}))
-	assert.Error(t, e.Run(taskfile.Call{Task: "task-should-fail"}))
-	assert.NoError(t, e.Run(taskfile.Call{Task: "cmd-should-pass"}))
-	assert.Error(t, e.Run(taskfile.Call{Task: "cmd-should-fail"}))
+	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "task-should-pass"}))
+	assert.Error(t, e.Run(context.Background(), taskfile.Call{Task: "task-should-fail"}))
+	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "cmd-should-pass"}))
+	assert.Error(t, e.Run(context.Background(), taskfile.Call{Task: "cmd-should-fail"}))
 }
 
 func TestExpand(t *testing.T) {
@@ -445,7 +446,7 @@ func TestExpand(t *testing.T) {
 		Stderr: &buff,
 	}
 	assert.NoError(t, e.Setup())
-	assert.NoError(t, e.Run(taskfile.Call{Task: "pwd"}))
+	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "pwd"}))
 	assert.Equal(t, home, strings.TrimSpace(buff.String()))
 }
 
@@ -464,7 +465,7 @@ func TestDry(t *testing.T) {
 		Dry:    true,
 	}
 	assert.NoError(t, e.Setup())
-	assert.NoError(t, e.Run(taskfile.Call{Task: "build"}))
+	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "build"}))
 
 	assert.Equal(t, "touch file.txt", strings.TrimSpace(buff.String()))
 	if _, err := os.Stat(file); err == nil {

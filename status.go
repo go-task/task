@@ -10,13 +10,13 @@ import (
 )
 
 // Status returns an error if any the of given tasks is not up-to-date
-func (e *Executor) Status(calls ...taskfile.Call) error {
+func (e *Executor) Status(ctx context.Context, calls ...taskfile.Call) error {
 	for _, call := range calls {
 		t, err := e.CompiledTask(call)
 		if err != nil {
 			return err
 		}
-		isUpToDate, err := isTaskUpToDate(e.Context, t)
+		isUpToDate, err := isTaskUpToDate(ctx, t)
 		if err != nil {
 			return err
 		}

@@ -89,11 +89,6 @@ func main() {
 		return
 	}
 
-	ctx := context.Background()
-	if !watch {
-		ctx = getSignalContext()
-	}
-
 	e := task.Executor{
 		Force:   force,
 		Watch:   watch,
@@ -101,8 +96,6 @@ func main() {
 		Silent:  silent,
 		Dir:     dir,
 		Dry:     dry,
-
-		Context: ctx,
 
 		Stdin:  os.Stdin,
 		Stdout: os.Stdout,
@@ -130,14 +123,19 @@ func main() {
 		log.Fatal(err)
 	}
 
+	ctx := context.Background()
+	if !watch {
+		ctx = getSignalContext()
+	}
+
 	if status {
-		if err = e.Status(calls...); err != nil {
+		if err = e.Status(ctx, calls...); err != nil {
 			log.Fatal(err)
 		}
 		return
 	}
 
-	if err := e.Run(calls...); err != nil {
+	if err := e.Run(ctx, calls...); err != nil {
 		log.Fatal(err)
 	}
 }

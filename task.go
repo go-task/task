@@ -37,8 +37,6 @@ type Executor struct {
 	Silent   bool
 	Dry      bool
 
-	Context context.Context
-
 	Stdin  io.Reader
 	Stdout io.Writer
 	Stderr io.Writer
@@ -54,7 +52,7 @@ type Executor struct {
 }
 
 // Run runs Task
-func (e *Executor) Run(calls ...taskfile.Call) error {
+func (e *Executor) Run(ctx context.Context, calls ...taskfile.Call) error {
 	// check if given tasks exist
 	for _, c := range calls {
 		if _, ok := e.Taskfile.Tasks[c.Task]; !ok {
@@ -69,7 +67,7 @@ func (e *Executor) Run(calls ...taskfile.Call) error {
 	}
 
 	for _, c := range calls {
-		if err := e.RunTask(e.Context, c); err != nil {
+		if err := e.RunTask(ctx, c); err != nil {
 			return err
 		}
 	}
@@ -93,9 +91,6 @@ func (e *Executor) Setup() error {
 		return fmt.Errorf(`task: could not parse taskfile version "%s": %v`, e.Taskfile.Version, err)
 	}
 
-	if e.Context == nil {
-		e.Context = context.Background()
-	}
 	if e.Stdin == nil {
 		e.Stdin = os.Stdin
 	}
