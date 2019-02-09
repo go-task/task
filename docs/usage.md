@@ -708,6 +708,8 @@ $ task default
 [print-baz] baz
 ```
 
+> The `output` option can also be specified by the `--output` or `-o` flags.
+
 ## Watch tasks
 
 If you give a `--watch` or `-w` argument, task will watch for file changes
