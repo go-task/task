@@ -17,6 +17,7 @@ type Checksum struct {
 	Dir     string
 	Task    string
 	Sources []string
+	Dry     bool
 }
 
 // IsUpToDate implements the Checker interface
@@ -36,9 +37,11 @@ func (c *Checksum) IsUpToDate() (bool, error) {
 		return false, nil
 	}
 
-	_ = os.MkdirAll(filepath.Join(c.Dir, ".task", "checksum"), 0755)
-	if err = ioutil.WriteFile(checksumFile, []byte(newMd5+"\n"), 0644); err != nil {
-		return false, err
+	if !c.Dry {
+		_ = os.MkdirAll(filepath.Join(c.Dir, ".task", "checksum"), 0755)
+		if err = ioutil.WriteFile(checksumFile, []byte(newMd5+"\n"), 0644); err != nil {
+			return false, err
+		}
 	}
 	return oldMd5 == newMd5, nil
 }
