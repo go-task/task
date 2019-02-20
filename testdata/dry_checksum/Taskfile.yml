@@ -1,0 +1,9 @@
+version: '2'
+
+tasks:
+  default:
+    cmds:
+      - echo "Working..."
+    sources:
+      - source.txt
+    method: checksum

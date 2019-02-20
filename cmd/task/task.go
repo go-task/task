@@ -111,6 +111,7 @@ func main() {
 		dry              bool
 		update           bool
 		dir              string
+		output           string
 	)
 
 	pflag.BoolVar(&versionFlag, "version", false, "show Task version")
@@ -128,6 +129,7 @@ func main() {
 	pflag.BoolVarP(&silent, "silent", "s", false, "disables echoing")
 	pflag.BoolVar(&dry, "dry", false, "compiles and prints tasks in the order that they would be run, without executing them")
 	pflag.StringVarP(&dir, "dir", "d", "", "sets directory of execution")
+	pflag.StringVarP(&output, "output", "o", "", "sets output style: [interleaved|group|prefixed]")
 	pflag.Parse()
 
 	if versionFlag {
@@ -153,11 +155,6 @@ func main() {
 		return
 	}
 
-	ctx := context.Background()
-	if !watch {
-		ctx = getSignalContext()
-	}
-
 	e := task.Executor{
 		Force:            force,
 		Watch:            watch,
@@ -167,11 +164,11 @@ func main() {
 		Dry:              dry,
 		TaskfileLocation: taskfileLocation,
 
-		Context: ctx,
-
 		Stdin:  os.Stdin,
 		Stdout: os.Stdout,
 		Stderr: os.Stderr,
+
+		OutputStyle: output,
 	}
 	if err := e.Setup(); err != nil {
 		log.Fatal(err)
@@ -198,14 +195,19 @@ func main() {
 		log.Fatal(err)
 	}
 
+	ctx := context.Background()
+	if !watch {
+		ctx = getSignalContext()
+	}
+
 	if status {
-		if err = e.Status(calls...); err != nil {
+		if err = e.Status(ctx, calls...); err != nil {
 			log.Fatal(err)
 		}
 		return
 	}
 
-	if err := e.Run(calls...); err != nil {
+	if err := e.Run(ctx, calls...); err != nil {
 		log.Fatal(err)
 	}
 }

@@ -38,15 +38,14 @@ type Executor struct {
 	Dry              bool
 	TaskfileLocation string
 
-	Context context.Context
-
 	Stdin  io.Reader
 	Stdout io.Writer
 	Stderr io.Writer
 
-	Logger   *logger.Logger
-	Compiler compiler.Compiler
-	Output   output.Output
+	Logger      *logger.Logger
+	Compiler    compiler.Compiler
+	Output      output.Output
+	OutputStyle string
 
 	taskvars taskfile.Vars
 
@@ -54,7 +53,7 @@ type Executor struct {
 }
 
 // Run runs Task
-func (e *Executor) Run(calls ...taskfile.Call) error {
+func (e *Executor) Run(ctx context.Context, calls ...taskfile.Call) error {
 	// check if given tasks exist
 	for _, c := range calls {
 		if _, ok := e.Taskfile.Tasks[c.Task]; !ok {
@@ -69,7 +68,7 @@ func (e *Executor) Run(calls ...taskfile.Call) error {
 	}
 
 	for _, c := range calls {
-		if err := e.RunTask(e.Context, c); err != nil {
+		if err := e.RunTask(ctx, c); err != nil {
 			return err
 		}
 	}
@@ -93,9 +92,6 @@ func (e *Executor) Setup() error {
 		return fmt.Errorf(`task: could not parse taskfile version "%s": %v`, e.Taskfile.Version, err)
 	}
 
-	if e.Context == nil {
-		e.Context = context.Background()
-	}
 	if e.Stdin == nil {
 		e.Stdin = os.Stdin
 	}
@@ -134,6 +130,9 @@ func (e *Executor) Setup() error {
 	}
 	if !version.IsV22(v) && len(e.Taskfile.Includes) > 0 {
 		return fmt.Errorf(`task: Including Taskfiles is only available starting on Taskfile version v2.2`)
+	}
+	if e.OutputStyle != "" {
+		e.Taskfile.Output = e.OutputStyle
 	}
 	switch e.Taskfile.Output {
 	case "", "interleaved":
@@ -183,7 +182,7 @@ func (e *Executor) RunTask(ctx context.Context, call taskfile.Call) error {
 	}
 
 	if !e.Force {
-		upToDate, err := isTaskUpToDate(ctx, t)
+		upToDate, err := e.isTaskUpToDate(ctx, t)
 		if err != nil {
 			return err
 		}
@@ -197,7 +196,7 @@ func (e *Executor) RunTask(ctx context.Context, call taskfile.Call) error {
 
 	for i := range t.Cmds {
 		if err := e.runCommand(ctx, t, call, i); err != nil {
-			if err2 := statusOnError(t); err2 != nil {
+			if err2 := e.statusOnError(t); err2 != nil {
 				e.Logger.VerboseErrf("task: error cleaning status on error: %v", err2)
 			}
 
