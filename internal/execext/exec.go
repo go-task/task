@@ -72,6 +72,7 @@ func IsExitError(err error) bool {
 // Expand is a helper to mvdan.cc/shell.Fields that returns the first field
 // if available.
 func Expand(s string) (string, error) {
+	s = strings.Replace(s, " ", `\ `, -1)
 	fields, err := shell.Fields(s, nil)
 	if err != nil {
 		return "", err
