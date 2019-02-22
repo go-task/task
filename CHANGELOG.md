@@ -11,7 +11,9 @@
   Mode is enabled
   ([#166](https://github.com/go-task/task/issues/166));
 - Fix file timestamp issue when the file name has spaces
-  ([#176](https://github.com/go-task/task/issues/176)).
+  ([#176](https://github.com/go-task/task/issues/176));
+- Mitigating path expanding issues on Windows
+  ([#170](https://github.com/go-task/task/pull/170)).
 
 ## v2.3.0 - 2019-01-02
 
