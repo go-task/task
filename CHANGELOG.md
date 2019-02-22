@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v2.4.0 - 2019-02-21
 
 - Allow calling a task of the root Taskfile from an included Taskfile
   by prefixing it with `:`
