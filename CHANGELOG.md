@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v2.4.0 - 2019-02-21
 
 - Allow calling a task of the root Taskfile from an included Taskfile
   by prefixing it with `:`
@@ -9,7 +9,11 @@
   ([#173](https://github.com/go-task/task/pull/173));
 - Fix bug where Task was persisting the new checksum on the disk when the Dry
   Mode is enabled
-  ([#166](https://github.com/go-task/task/issues/166)).
+  ([#166](https://github.com/go-task/task/issues/166));
+- Fix file timestamp issue when the file name has spaces
+  ([#176](https://github.com/go-task/task/issues/176));
+- Mitigating path expanding issues on Windows
+  ([#170](https://github.com/go-task/task/pull/170)).
 
 ## v2.3.0 - 2019-01-02
 
