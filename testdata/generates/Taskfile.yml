@@ -29,3 +29,13 @@ sub/src.txt:
     - echo "hello world" > sub/src.txt
   status:
     - test -f sub/src.txt
+
+'my text file.txt':
+  desc: generate file with spaces in the name
+  deps: [sub/src.txt]
+  cmds:
+    - cat sub/src.txt > 'my text file.txt'
+  sources:
+    - sub/src.txt
+  generates:
+    - 'my text file.txt'

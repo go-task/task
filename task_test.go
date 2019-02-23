@@ -274,16 +274,19 @@ func TestStatus(t *testing.T) {
 }
 
 func TestGenerates(t *testing.T) {
-	var srcTask = "sub/src.txt"
-	var relTask = "rel.txt"
-	var absTask = "abs.txt"
+	const (
+		srcTask        = "sub/src.txt"
+		relTask        = "rel.txt"
+		absTask        = "abs.txt"
+		fileWithSpaces = "my text file.txt"
+	)
 
 	// This test does not work with a relative dir.
 	dir, err := filepath.Abs("testdata/generates")
 	assert.NoError(t, err)
 	var srcFile = filepath.Join(dir, srcTask)
 
-	for _, task := range []string{srcTask, relTask, absTask} {
+	for _, task := range []string{srcTask, relTask, absTask, fileWithSpaces} {
 		path := filepath.Join(dir, task)
 		_ = os.Remove(path)
 		if _, err := os.Stat(path); err == nil {
@@ -299,7 +302,7 @@ func TestGenerates(t *testing.T) {
 	}
 	assert.NoError(t, e.Setup())
 
-	for _, theTask := range []string{relTask, absTask} {
+	for _, theTask := range []string{relTask, absTask, fileWithSpaces} {
 		var destFile = filepath.Join(dir, theTask)
 		var upToDate = fmt.Sprintf("task: Task \"%s\" is up to date\n", srcTask) +
 			fmt.Sprintf("task: Task \"%s\" is up to date\n", theTask)
