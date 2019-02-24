@@ -36,6 +36,7 @@ type Executor struct {
 	Verbose  bool
 	Silent   bool
 	Dry      bool
+	Details  bool
 
 	Stdin  io.Reader
 	Stdout io.Writer
