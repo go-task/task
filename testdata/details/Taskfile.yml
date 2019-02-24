@@ -1,7 +1,7 @@
 version: 2
 tasks:
   task-with-details:
-    deps: [dependend-task]
+    deps: [dependend-task-1,dependend-task-2]
     details: |
       details of task-with-details - line 1
       line 2
@@ -16,9 +16,13 @@ tasks:
     cmds:
       - echo 'task-without-details was executed'
 
-  dependend-task:
+  dependend-task-1:
     cmds:
-      - echo 'dependend-task was executed'
+      - echo 'dependend-task-1 was executed'
+      -
+  dependend-task-2:
+    cmds:
+      - echo 'dependend-task-2 was executed'
 
   other-task-with-details:
     details: details of other-task-with-details

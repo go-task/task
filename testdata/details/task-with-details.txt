@@ -4,6 +4,10 @@ details of task-with-details - line 1
 line 2
 line 3
 
+dependencies:
+ - dependend-task-1
+ - dependend-task-2
+
 commands:
  - echo 'task-with-details was executed'
  - echo 'another command'
