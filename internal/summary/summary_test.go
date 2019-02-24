@@ -138,3 +138,28 @@ commands:
 `
 	return expected
 }
+
+func TestPrintDescriptionAsFallback(t *testing.T) {
+	buffer := &bytes.Buffer{}
+	l := logger.Logger{
+		Stdout:  buffer,
+		Stderr:  buffer,
+		Verbose: false,
+	}
+	taskWithoutSummary := &taskfile.Task{
+		Desc: "description",
+	}
+
+	taskWithSummary := &taskfile.Task{
+		Desc:    "description",
+		Summary: "summary",
+	}
+
+	summary.Print(&l, taskWithoutSummary)
+	assert.Contains(t, buffer.String(), "description")
+
+	buffer.Reset()
+	summary.Print(&l, taskWithSummary)
+	assert.NotContains(t, buffer.String(), "description")
+
+}
