@@ -18,6 +18,6 @@ tasks:
       - echo 'dependend-task was executed'
 
   other-task-with-details:
-    details: short details
+    details: details of other-task-with-details
     cmds:
       - echo 'other-task-with-details was executed'

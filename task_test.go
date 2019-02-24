@@ -554,6 +554,19 @@ func TestIncludesCallingRoot(t *testing.T) {
 	tt.Run(t)
 }
 
+func TestDetailsParsing(t *testing.T) {
+	const dir = "testdata/details"
+
+	e := task.Executor{
+		Dir: dir,
+	}
+	assert.NoError(t, e.Setup())
+
+	assert.Equal(t, e.Taskfile.Tasks["task-with-details"].Details, "This is a very long detailed description\nwith multiple lines\n")
+	assert.Equal(t, e.Taskfile.Tasks["other-task-with-details"].Details, "short details")
+	assert.Equal(t, e.Taskfile.Tasks["task-without-details"].Details, "")
+}
+
 func TestDetails(t *testing.T) {
 	const dir = "testdata/details"
 
@@ -566,19 +579,22 @@ func TestDetails(t *testing.T) {
 		Silent:  true,
 	}
 	assert.NoError(t, e.Setup())
-	const longDetails = "This is a very long detailed description\nwith multiple lines\n"
-	assert.Equal(t, e.Taskfile.Tasks["task-with-details"].Details, longDetails)
-	const shortDetails = "short details"
-	assert.Equal(t, e.Taskfile.Tasks["other-task-with-details"].Details, shortDetails)
-	assert.Equal(t, e.Taskfile.Tasks["task-without-details"].Details, "")
 
+	buff.Reset()
 	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "task-with-details"}))
+	assert.Contains(t, buff.String(), "This is a very long detailed description")
+	assert.Contains(t, buff.String(), "with multiple lines")
+
 	assert.NotContains(t, buff.String(), "task-with-details was executed")
 	assert.NotContains(t, buff.String(), "dependend-task was executed")
-	assert.Contains(t, buff.String(), longDetails)
 
+	buff.Reset()
 	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "task-without-details"}))
 	assert.NotContains(t, buff.String(), "task-without-details was executed")
 	assert.NotContains(t, buff.String(), "dependend-task was executed")
 
+	buff.Reset()
+	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "other-task-with-details"}, taskfile.Call{Task: "task-with-details"}))
+	assert.Contains(t, buff.String(), "details of other-task-with-details")
+	assert.NotContains(t, buff.String(), "This is a very long detailed description")
 }
