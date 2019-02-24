@@ -9,7 +9,7 @@ type Task struct {
 	Cmds        []*Cmd
 	Deps        []*Dep
 	Desc        string
-	Details     string
+	Summary     string
 	Sources     []string
 	Generates   []string
 	Status      []string

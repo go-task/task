@@ -555,20 +555,20 @@ func TestIncludesCallingRoot(t *testing.T) {
 }
 
 func TestDetailsParsing(t *testing.T) {
-	const dir = "testdata/details"
+	const dir = "testdata/summary"
 
 	e := task.Executor{
 		Dir: dir,
 	}
 	assert.NoError(t, e.Setup())
 
-	assert.Equal(t, e.Taskfile.Tasks["task-with-details"].Details, "details of task-with-details - line 1\nline 2\nline 3\n")
-	assert.Equal(t, e.Taskfile.Tasks["other-task-with-details"].Details, "details of other-task-with-details")
-	assert.Equal(t, e.Taskfile.Tasks["task-without-details"].Details, "")
+	assert.Equal(t, e.Taskfile.Tasks["task-with-details"].Summary, "details of task-with-details - line 1\nline 2\nline 3\n")
+	assert.Equal(t, e.Taskfile.Tasks["other-task-with-details"].Summary, "details of other-task-with-details")
+	assert.Equal(t, e.Taskfile.Tasks["task-without-details"].Summary, "")
 }
 
 func TestDetails(t *testing.T) {
-	const dir = "testdata/details"
+	const dir = "testdata/summary"
 
 	var buff bytes.Buffer
 	e := task.Executor{

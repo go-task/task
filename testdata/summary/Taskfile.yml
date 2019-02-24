@@ -2,7 +2,7 @@ version: 2
 tasks:
   task-with-details:
     deps: [dependend-task-1,dependend-task-2]
-    details: |
+    summary: |
       details of task-with-details - line 1
       line 2
       line 3
@@ -25,12 +25,12 @@ tasks:
       - echo 'dependend-task-2 was executed'
 
   other-task-with-details:
-    details: details of other-task-with-details
+    summary: details of other-task-with-details
     cmds:
       - echo 'other-task-with-details was executed'
 
   task-with-description-containing-empty-line:
-    details: |
+    summary: |
       First line followed by empty line
 
       Last Line
