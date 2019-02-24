@@ -154,6 +154,7 @@ func TestPrintDescriptionAsFallback(t *testing.T) {
 		Desc:    "description",
 		Summary: "summary",
 	}
+	taskWithoutSummaryOrDescription := &taskfile.Task{}
 
 	summary.Print(&l, taskWithoutSummary)
 	assert.Contains(t, buffer.String(), "description")
@@ -161,5 +162,9 @@ func TestPrintDescriptionAsFallback(t *testing.T) {
 	buffer.Reset()
 	summary.Print(&l, taskWithSummary)
 	assert.NotContains(t, buffer.String(), "description")
+
+	buffer.Reset()
+	summary.Print(&l, taskWithoutSummaryOrDescription)
+	assert.Contains(t, buffer.String(), "\n(task does not have description or summary)\n")
 
 }
