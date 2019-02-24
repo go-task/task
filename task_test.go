@@ -592,9 +592,11 @@ func TestDetails(t *testing.T) {
 	assert.Equal(t, buff.String(), "task: There is no detailed description for task: task-without-details\n")
 
 	buff.Reset()
-	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "other-task-with-details"}, taskfile.Call{Task: "task-with-details"}))
-	assert.Contains(t, buff.String(), "details of other-task-with-details")
-	assert.NotContains(t, buff.String(), "details of task-with-details")
+	const firstTask = "other-task-with-details"
+	const secondTask = "task-with-details"
+	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: firstTask}, taskfile.Call{Task: secondTask}))
+	assert.Contains(t, buff.String(), "details of "+firstTask)
+	assert.NotContains(t, buff.String(), "details of "+secondTask)
 
 	buff.Reset()
 	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "task-with-description-containing-empty-line"}))
