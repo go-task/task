@@ -582,9 +582,7 @@ func TestDetails(t *testing.T) {
 
 	buff.Reset()
 	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "task-with-details"}))
-	assert.Contains(t, buff.String(), "details of task-with-details - line 1")
-	assert.Contains(t, buff.String(), "line 2")
-	assert.Contains(t, buff.String(), "line 3")
+	assert.Equal(t, buff.String(), "details of task-with-details - line 1\n"+"line 2\n"+"line 3\n\n")
 
 	assert.NotContains(t, buff.String(), "task-with-details was executed")
 	assert.NotContains(t, buff.String(), "dependend-task was executed")

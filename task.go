@@ -84,6 +84,7 @@ func (e *Executor) displayTaskDetails(task string) {
 	if e.Taskfile.Tasks[task].Details == "" {
 		e.Logger.Errf("task: There is no detailed description for task: %s", task)
 	} else {
+
 		e.Logger.Outf(e.Taskfile.Tasks[task].Details)
 	}
 }
