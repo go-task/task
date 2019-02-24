@@ -1,6 +1,6 @@
-task: task-with-details
+task: task-with-summary
 
-details of task-with-details - line 1
+summary of task-with-summary - line 1
 line 2
 line 3
 
@@ -9,6 +9,6 @@ dependencies:
  - dependend-task-2
 
 commands:
- - echo 'task-with-details was executed'
+ - echo 'task-with-summary was executed'
  - echo 'another command'
  - exit 0

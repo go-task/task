@@ -85,7 +85,7 @@ func (e *Executor) printTaskSummary(task string) {
 	t := e.Taskfile.Tasks[task]
 	s := t.Summary
 	if s == "" {
-		e.Logger.Errf("task: There is no detailed description for task: %s", task)
+		e.Logger.Errf("task: There is no summary for task: %s", task)
 		return
 	}
 

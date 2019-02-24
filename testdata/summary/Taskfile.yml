@@ -1,20 +1,20 @@
 version: 2
 tasks:
-  task-with-details:
+  task-with-summary:
     deps: [dependend-task-1,dependend-task-2]
     summary: |
-      details of task-with-details - line 1
+      summary of task-with-summary - line 1
       line 2
       line 3
     cmds:
-      - echo 'task-with-details was executed'
+      - echo 'task-with-summary was executed'
       - echo 'another command'
       - exit 0
 
-  task-without-details:
+  task-without-summary:
     deps: [dependend-task]
     cmds:
-      - echo 'task-without-details was executed'
+      - echo 'task-without-summary was executed'
 
   dependend-task-1:
     cmds:
@@ -24,12 +24,12 @@ tasks:
     cmds:
       - echo 'dependend-task-2 was executed'
 
-  other-task-with-details:
-    summary: details of other-task-with-details
+  other-task-with-summary:
+    summary: summary of other-task-with-summary
     cmds:
-      - echo 'other-task-with-details was executed'
+      - echo 'other-task-with-summary was executed'
 
-  task-with-description-containing-empty-line:
+  task-with-summary-containing-empty-line:
     summary: |
       First line followed by empty line
 

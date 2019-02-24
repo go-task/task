@@ -1,4 +1,4 @@
-task: task-with-description-containing-empty-line
+task: task-with-summary-containing-empty-line
 
 First line followed by empty line
 

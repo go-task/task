@@ -554,7 +554,7 @@ func TestIncludesCallingRoot(t *testing.T) {
 	tt.Run(t)
 }
 
-func TestDetailsParsing(t *testing.T) {
+func TestSummaryParsing(t *testing.T) {
 	const dir = "testdata/summary"
 
 	e := task.Executor{
@@ -562,12 +562,12 @@ func TestDetailsParsing(t *testing.T) {
 	}
 	assert.NoError(t, e.Setup())
 
-	assert.Equal(t, e.Taskfile.Tasks["task-with-details"].Summary, "details of task-with-details - line 1\nline 2\nline 3\n")
-	assert.Equal(t, e.Taskfile.Tasks["other-task-with-details"].Summary, "details of other-task-with-details")
-	assert.Equal(t, e.Taskfile.Tasks["task-without-details"].Summary, "")
+	assert.Equal(t, e.Taskfile.Tasks["task-with-summary"].Summary, "summary of task-with-summary - line 1\nline 2\nline 3\n")
+	assert.Equal(t, e.Taskfile.Tasks["other-task-with-summary"].Summary, "summary of other-task-with-summary")
+	assert.Equal(t, e.Taskfile.Tasks["task-without-summary"].Summary, "")
 }
 
-func TestDetails(t *testing.T) {
+func TestSummary(t *testing.T) {
 	const dir = "testdata/summary"
 
 	var buff bytes.Buffer
@@ -579,24 +579,24 @@ func TestDetails(t *testing.T) {
 		Silent:  true,
 	}
 	assert.NoError(t, e.Setup())
-	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "task-with-details"}))
-	assert.Equal(t, readTestFixture(t, dir, "task-with-details.txt"), buff.String())
+	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "task-with-summary"}))
+	assert.Equal(t, readTestFixture(t, dir, "task-with-summary.txt"), buff.String())
 
 	buff.Reset()
-	const noDetails = "task-without-details"
-	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: noDetails}))
-	assert.Equal(t, "task: There is no detailed description for task: "+noDetails+"\n", buff.String())
+	const nosummary = "task-without-summary"
+	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: nosummary}))
+	assert.Equal(t, "task: There is no summary for task: "+nosummary+"\n", buff.String())
 
 	buff.Reset()
-	const firstTask = "other-task-with-details"
-	const secondTask = "task-with-details"
+	const firstTask = "other-task-with-summary"
+	const secondTask = "task-with-summary"
 	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: firstTask}, taskfile.Call{Task: secondTask}))
-	assert.Contains(t, buff.String(), "details of "+firstTask)
-	assert.NotContains(t, buff.String(), "details of "+secondTask)
+	assert.Contains(t, buff.String(), "summary of "+firstTask)
+	assert.NotContains(t, buff.String(), "summary of "+secondTask)
 
 	buff.Reset()
-	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "task-with-description-containing-empty-line"}))
-	assert.Equal(t, readTestFixture(t, dir, "task-with-description-containing-empty-line.txt"), buff.String())
+	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "task-with-summary-containing-empty-line"}))
+	assert.Equal(t, readTestFixture(t, dir, "task-with-summary-containing-empty-line.txt"), buff.String())
 
 }
 
