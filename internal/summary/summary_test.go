@@ -123,19 +123,22 @@ func TestFullSummary(t *testing.T) {
 
 	summary.Print(&l, task)
 
+	assert.Equal(t, expectedOutput(), buffer.String())
+}
+
+func expectedOutput() string {
 	expected :=
 		`task: sample-task
-
-line1
-line2
-line3
-
-dependencies:
- - dependency
-
-commands:
- - command
-`
-
-	assert.Equal(t, expected, buffer.String())
+	
+	line1
+	line2
+	line3
+	
+	dependencies:
+	 - dependency
+	
+	commands:
+	 - command
+	`
+	return expected
 }
