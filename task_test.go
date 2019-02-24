@@ -596,7 +596,7 @@ func TestDetails(t *testing.T) {
 
 	buff.Reset()
 	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "task-with-description-containing-empty-line"}))
-	assert.Equal(t, "task: task-with-description-containing-empty-line\n\nFirst line followed by empty line\n\nLast Line\n\ncommands:\n", buff.String())
+	assert.Equal(t, readTestFixture(t, dir, "expected-task-with-description-containing-empty-line.txt"), buff.String())
 
 }
 

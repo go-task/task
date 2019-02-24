@@ -1,0 +1,7 @@
+task: task-with-description-containing-empty-line
+
+First line followed by empty line
+
+Last Line
+
+commands:
