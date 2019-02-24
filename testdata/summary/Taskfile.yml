@@ -12,7 +12,7 @@ tasks:
       - exit 0
 
   task-without-summary:
-    deps: [dependend-task]
+    deps: [dependend-task-1]
     cmds:
       - echo 'task-without-summary was executed'
 
@@ -36,3 +36,7 @@ tasks:
       Last Line
     cmds:
        - exit 0
+
+  task-without-commands:
+    summary: summary
+    deps: [dependend-task-1]

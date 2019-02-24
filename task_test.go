@@ -554,19 +554,6 @@ func TestIncludesCallingRoot(t *testing.T) {
 	tt.Run(t)
 }
 
-func TestSummaryParsing(t *testing.T) {
-	const dir = "testdata/summary"
-
-	e := task.Executor{
-		Dir: dir,
-	}
-	assert.NoError(t, e.Setup())
-
-	assert.Equal(t, e.Taskfile.Tasks["task-with-summary"].Summary, "summary of task-with-summary - line 1\nline 2\nline 3\n")
-	assert.Equal(t, e.Taskfile.Tasks["other-task-with-summary"].Summary, "summary of other-task-with-summary")
-	assert.Equal(t, e.Taskfile.Tasks["task-without-summary"].Summary, "")
-}
-
 func TestSummary(t *testing.T) {
 	const dir = "testdata/summary"
 
@@ -597,6 +584,10 @@ func TestSummary(t *testing.T) {
 	buff.Reset()
 	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "task-with-summary-containing-empty-line"}))
 	assert.Equal(t, readTestFixture(t, dir, "task-with-summary-containing-empty-line.txt"), buff.String())
+
+	buff.Reset()
+	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "task-without-commands"}))
+	assert.Equal(t, readTestFixture(t, dir, "task-without-commands.txt"), buff.String())
 
 }
 

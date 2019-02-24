@@ -98,9 +98,13 @@ func (e *Executor) printTaskSummary(task string) {
 }
 
 func printCommands(cmds []*taskfile.Cmd, logger *logger.Logger) {
-	logger.Outf("commands:")
-	for _, c := range cmds {
-		logger.Outf(" - %s", c.Cmd)
+	hasCommands := len(cmds) > 0
+	if hasCommands {
+		logger.Outf("")
+		logger.Outf("commands:")
+		for _, c := range cmds {
+			logger.Outf(" - %s", c.Cmd)
+		}
 	}
 }
 
@@ -114,7 +118,6 @@ func printTaskDependencies(deps []*taskfile.Dep, logger *logger.Logger) {
 			logger.Outf(" - %s", d.Task)
 		}
 	}
-	logger.Outf("")
 }
 
 func printTaskSummary(description string, Logger *logger.Logger) {
