@@ -102,3 +102,40 @@ func TestDoesNotPrintCommandIfMissing(t *testing.T) {
 
 	assert.NotContains(t, buffer.String(), "commands")
 }
+
+func TestFullSummary(t *testing.T) {
+	buffer := &bytes.Buffer{}
+	l := logger.Logger{
+		Stdout:  buffer,
+		Stderr:  buffer,
+		Verbose: false,
+	}
+	task := &taskfile.Task{
+		Task:    "sample-task",
+		Summary: "line1\nline2\nline3\n",
+		Deps: []*taskfile.Dep{
+			{Task: "dependency"},
+		},
+		Cmds: []*taskfile.Cmd{
+			{Cmd: "command"},
+		},
+	}
+
+	summary.Print(&l, task)
+
+	expected :=
+		`task: sample-task
+
+line1
+line2
+line3
+
+dependencies:
+ - dependency
+
+commands:
+ - command
+`
+
+	assert.Equal(t, expected, buffer.String())
+}
