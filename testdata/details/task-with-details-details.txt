@@ -5,3 +5,6 @@ line 2
 line 3
 
 commands:
+ - echo 'task-with-details was executed'
+ - echo 'another command'
+ - exit 0

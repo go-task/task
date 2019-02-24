@@ -8,6 +8,8 @@ tasks:
       line 3
     cmds:
       - echo 'task-with-details was executed'
+      - echo 'another command'
+      - exit 0
 
   task-without-details:
     deps: [dependend-task]

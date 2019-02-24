@@ -82,7 +82,8 @@ func (e *Executor) Run(ctx context.Context, calls ...taskfile.Call) error {
 }
 
 func (e *Executor) printTaskDetails(task string) {
-	s := e.Taskfile.Tasks[task].Details
+	t := e.Taskfile.Tasks[task]
+	s := t.Details
 	if s == "" {
 		e.Logger.Errf("task: There is no detailed description for task: %s", task)
 		return
@@ -96,6 +97,10 @@ func (e *Executor) printTaskDetails(task string) {
 
 	e.Logger.Outf("")
 	e.Logger.Outf("commands:")
+
+	for _, c := range t.Cmds {
+		e.Logger.Outf(" - %s", c.Cmd)
+	}
 }
 
 func displayTaskDetailedDescription(description string, Logger *logger.Logger) {
