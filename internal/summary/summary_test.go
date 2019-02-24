@@ -86,3 +86,19 @@ func TestPrintTaskCommandsIfPresent(t *testing.T) {
 	assert.Contains(t, buffer.String(), "\n - command-2\n")
 	assert.Contains(t, buffer.String(), "\n - command-3\n")
 }
+
+func TestDoesNotPrintCommandIfMissing(t *testing.T) {
+	buffer := &bytes.Buffer{}
+	l := logger.Logger{
+		Stdout:  buffer,
+		Stderr:  buffer,
+		Verbose: false,
+	}
+	task := &taskfile.Task{
+		Cmds: []*taskfile.Cmd{},
+	}
+
+	summary.Print(&l, task)
+
+	assert.NotContains(t, buffer.String(), "commands")
+}
