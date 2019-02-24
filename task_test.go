@@ -591,8 +591,7 @@ func TestDetails(t *testing.T) {
 
 	buff.Reset()
 	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "task-without-details"}))
-	assert.NotContains(t, buff.String(), "task-without-details was executed")
-	assert.NotContains(t, buff.String(), "dependend-task was executed")
+	assert.Equal(t, buff.String(), "task: There is no detailed description for task: task-without-details\n")
 
 	buff.Reset()
 	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "other-task-with-details"}, taskfile.Call{Task: "task-with-details"}))
