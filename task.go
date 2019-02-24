@@ -92,10 +92,8 @@ func (e *Executor) printTaskSummary(task string) {
 	e.Logger.Outf("task: " + task)
 	e.Logger.Outf("")
 
-	printTaskDetailedDescription(s, e.Logger)
+	printTaskSummary(s, e.Logger)
 	printTaskDependencies(t.Deps, e.Logger)
-
-	e.Logger.Outf("")
 	printCommands(t.Cmds, e.Logger)
 }
 
@@ -116,9 +114,10 @@ func printTaskDependencies(deps []*taskfile.Dep, logger *logger.Logger) {
 			logger.Outf(" - %s", d.Task)
 		}
 	}
+	logger.Outf("")
 }
 
-func printTaskDetailedDescription(description string, Logger *logger.Logger) {
+func printTaskSummary(description string, Logger *logger.Logger) {
 	lines := strings.Split(description, "\n")
 	for i, line := range lines {
 		notLastLine := i+1 < len(lines)
@@ -126,7 +125,6 @@ func printTaskDetailedDescription(description string, Logger *logger.Logger) {
 			Logger.Outf(line)
 		}
 	}
-
 }
 
 // Setup setups Executor's internal state
