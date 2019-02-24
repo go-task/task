@@ -65,7 +65,7 @@ func (e *Executor) Run(ctx context.Context, calls ...taskfile.Call) error {
 	}
 
 	if e.Summary {
-		e.printTaskDetails(calls[0].Task)
+		e.printTaskSummary(calls[0].Task)
 		return nil
 	}
 
@@ -81,7 +81,7 @@ func (e *Executor) Run(ctx context.Context, calls ...taskfile.Call) error {
 	return nil
 }
 
-func (e *Executor) printTaskDetails(task string) {
+func (e *Executor) printTaskSummary(task string) {
 	t := e.Taskfile.Tasks[task]
 	s := t.Summary
 	if s == "" {
