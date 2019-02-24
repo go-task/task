@@ -580,8 +580,7 @@ func TestDetails(t *testing.T) {
 	}
 	assert.NoError(t, e.Setup())
 
-	exp, err := ioutil.ReadFile(dir + "/expected-task-with-details-details.txt")
-	assert.NoError(t, err, "error reading text fixture")
+	exp := readTestFixture(t, dir, "expected-task-with-details-details.txt")
 
 	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "task-with-details"}))
 	assert.Equal(t, string(exp), buff.String())
@@ -602,4 +601,10 @@ func TestDetails(t *testing.T) {
 	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "task-with-description-containing-empty-line"}))
 	assert.Equal(t, "task: task-with-description-containing-empty-line\n\nFirst line followed by empty line\n\nLast Line\n\ncommands:\n", buff.String())
 
+}
+
+func readTestFixture(t *testing.T, dir string, file string) []byte {
+	exp, err := ioutil.ReadFile(dir + "/" + file)
+	assert.NoError(t, err, "error reading text fixture")
+	return exp
 }
