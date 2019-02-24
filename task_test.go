@@ -575,7 +575,7 @@ func TestDetails(t *testing.T) {
 		Dir:     dir,
 		Stdout:  &buff,
 		Stderr:  &buff,
-		Details: true,
+		Summary: true,
 		Silent:  true,
 	}
 	assert.NoError(t, e.Setup())

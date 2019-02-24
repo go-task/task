@@ -37,7 +37,7 @@ type Executor struct {
 	Verbose  bool
 	Silent   bool
 	Dry      bool
-	Details  bool
+	Summary  bool
 
 	Stdin  io.Reader
 	Stdout io.Writer
@@ -64,7 +64,7 @@ func (e *Executor) Run(ctx context.Context, calls ...taskfile.Call) error {
 		}
 	}
 
-	if e.Details {
+	if e.Summary {
 		e.printTaskDetails(calls[0].Task)
 		return nil
 	}

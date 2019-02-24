@@ -98,7 +98,7 @@ func main() {
 		Silent:  silent,
 		Dir:     dir,
 		Dry:     dry,
-		Details: summary,
+		Summary: summary,
 
 		Stdin:  os.Stdin,
 		Stdout: os.Stdout,
