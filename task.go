@@ -65,7 +65,7 @@ func (e *Executor) Run(ctx context.Context, calls ...taskfile.Call) error {
 	}
 
 	if e.Details {
-		e.displayTaskDetails(calls[0].Task)
+		e.printTaskDetails(calls[0].Task)
 		return nil
 	}
 
@@ -81,12 +81,16 @@ func (e *Executor) Run(ctx context.Context, calls ...taskfile.Call) error {
 	return nil
 }
 
-func (e *Executor) displayTaskDetails(task string) {
+func (e *Executor) printTaskDetails(task string) {
 	s := e.Taskfile.Tasks[task].Details
 	if s == "" {
 		e.Logger.Errf("task: There is no detailed description for task: %s", task)
 		return
 	}
+
+	e.Logger.Outf("task: " + task)
+	e.Logger.Outf("")
+
 	lines := strings.Split(s, "\n")
 	for i, line := range lines {
 		notLastLine := i+1 < len(lines)
