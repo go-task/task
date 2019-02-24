@@ -7,14 +7,18 @@ import (
 )
 
 func Print(Logger *logger.Logger, task *taskfile.Task) {
-	Logger.Outf("task: " + task.Task)
-	Logger.Outf("")
+	printTaskName(Logger, task)
 	printTaskSummary(task.Summary, Logger)
 	printTaskDependencies(task.Deps, Logger)
-	printCommands(task.Cmds, Logger)
+	printTaskCommands(task.Cmds, Logger)
 }
 
-func printCommands(cmds []*taskfile.Cmd, logger *logger.Logger) {
+func printTaskName(Logger *logger.Logger, task *taskfile.Task) {
+	Logger.Outf("task: " + task.Task)
+	Logger.Outf("")
+}
+
+func printTaskCommands(cmds []*taskfile.Cmd, logger *logger.Logger) {
 	hasCommands := len(cmds) > 0
 	if hasCommands {
 		logger.Outf("")
