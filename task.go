@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 	"sync/atomic"
 
 	"github.com/go-task/task/v2/internal/compiler"
@@ -81,11 +82,16 @@ func (e *Executor) Run(ctx context.Context, calls ...taskfile.Call) error {
 }
 
 func (e *Executor) displayTaskDetails(task string) {
-	if e.Taskfile.Tasks[task].Details == "" {
+	s := e.Taskfile.Tasks[task].Details
+	if s == "" {
 		e.Logger.Errf("task: There is no detailed description for task: %s", task)
-	} else {
-
-		e.Logger.Outf(e.Taskfile.Tasks[task].Details)
+		return
+	}
+	lines := strings.Split(s, "\n")
+	for _, line := range lines {
+		if line != "" {
+			e.Logger.Outf(line)
+		}
 	}
 }
 
