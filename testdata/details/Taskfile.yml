@@ -1,12 +1,23 @@
 version: 2
 tasks:
   task-with-details:
+    deps: [dependend-task]
     details: |
       This is a very long detailed description
       with multiple lines
     cmds:
-      - exit 0
+      - echo 'task-with-details was executed'
 
   task-without-details:
+    deps: [dependend-task]
     cmds:
-      - exit 0
+      - echo 'task-without-details was executed'
+
+  dependend-task:
+    cmds:
+      - echo 'dependend-task was executed'
+
+  other-task-with-details:
+    details: short details
+    cmds:
+      - echo 'other-task-with-details was executed'
