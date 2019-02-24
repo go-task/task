@@ -17,6 +17,10 @@ tasks:
 
   install:
     desc: Installs Task
+    details: |
+      Push Docker image to Google cloud registry.
+
+      The env variable "DOCKER_IMAGE_FQN" define the Docker image name to push.
     cmds:
       - go install -v -ldflags="-w -s -X main.version={{.GIT_COMMIT}}" ./cmd/task
     env:
