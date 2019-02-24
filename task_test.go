@@ -563,7 +563,7 @@ func TestDetailsParsing(t *testing.T) {
 	assert.NoError(t, e.Setup())
 
 	assert.Equal(t, e.Taskfile.Tasks["task-with-details"].Details, "This is a very long detailed description\nwith multiple lines\n")
-	assert.Equal(t, e.Taskfile.Tasks["other-task-with-details"].Details, "short details")
+	assert.Equal(t, e.Taskfile.Tasks["other-task-with-details"].Details, "details of other-task-with-details")
 	assert.Equal(t, e.Taskfile.Tasks["task-without-details"].Details, "")
 }
 
