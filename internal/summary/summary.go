@@ -24,7 +24,11 @@ func printTaskCommands(cmds []*taskfile.Cmd, logger *logger.Logger) {
 		logger.Outf("")
 		logger.Outf("commands:")
 		for _, c := range cmds {
-			logger.Outf(" - %s", c.Cmd)
+			if c.Cmd != "" {
+				logger.Outf(" - %s", c.Cmd)
+			} else {
+				logger.Outf(" - Task: %s", c.Task)
+			}
 		}
 	}
 }

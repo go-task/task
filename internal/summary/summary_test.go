@@ -75,7 +75,7 @@ func TestPrintTaskCommandsIfPresent(t *testing.T) {
 		Cmds: []*taskfile.Cmd{
 			{Cmd: "command-1"},
 			{Cmd: "command-2"},
-			{Cmd: "command-3"},
+			{Task: "task-1"},
 		},
 	}
 
@@ -84,7 +84,7 @@ func TestPrintTaskCommandsIfPresent(t *testing.T) {
 	assert.Contains(t, buffer.String(), "\ncommands:\n")
 	assert.Contains(t, buffer.String(), "\n - command-1\n")
 	assert.Contains(t, buffer.String(), "\n - command-2\n")
-	assert.Contains(t, buffer.String(), "\n - command-3\n")
+	assert.Contains(t, buffer.String(), "\n - Task: task-1\n")
 }
 
 func TestDoesNotPrintCommandIfMissing(t *testing.T) {
