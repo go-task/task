@@ -3,8 +3,9 @@ tasks:
   task-with-details:
     deps: [dependend-task]
     details: |
-      This is a very long detailed description
-      with multiple lines
+      details of task-with-details - line 1
+      line 2
+      line 3
     cmds:
       - echo 'task-with-details was executed'
 

@@ -562,7 +562,7 @@ func TestDetailsParsing(t *testing.T) {
 	}
 	assert.NoError(t, e.Setup())
 
-	assert.Equal(t, e.Taskfile.Tasks["task-with-details"].Details, "This is a very long detailed description\nwith multiple lines\n")
+	assert.Equal(t, e.Taskfile.Tasks["task-with-details"].Details, "details of task-with-details - line 1\nline 2\nline 3\n")
 	assert.Equal(t, e.Taskfile.Tasks["other-task-with-details"].Details, "details of other-task-with-details")
 	assert.Equal(t, e.Taskfile.Tasks["task-without-details"].Details, "")
 }
@@ -582,8 +582,9 @@ func TestDetails(t *testing.T) {
 
 	buff.Reset()
 	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "task-with-details"}))
-	assert.Contains(t, buff.String(), "This is a very long detailed description")
-	assert.Contains(t, buff.String(), "with multiple lines")
+	assert.Contains(t, buff.String(), "details of task-with-details - line 1")
+	assert.Contains(t, buff.String(), "line 2")
+	assert.Contains(t, buff.String(), "line 3")
 
 	assert.NotContains(t, buff.String(), "task-with-details was executed")
 	assert.NotContains(t, buff.String(), "dependend-task was executed")
@@ -596,5 +597,5 @@ func TestDetails(t *testing.T) {
 	buff.Reset()
 	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "other-task-with-details"}, taskfile.Call{Task: "task-with-details"}))
 	assert.Contains(t, buff.String(), "details of other-task-with-details")
-	assert.NotContains(t, buff.String(), "This is a very long detailed description")
+	assert.NotContains(t, buff.String(), "details of task-with-details")
 }
