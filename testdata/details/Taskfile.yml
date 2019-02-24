@@ -1,0 +1,12 @@
+version: 2
+tasks:
+  task-with-details:
+    details: |
+      This is a very long detailed description
+      with multiple lines
+    cmds:
+      - exit 0
+
+  task-without-details:
+    cmds:
+      - exit 0

@@ -553,3 +553,18 @@ func TestIncludesCallingRoot(t *testing.T) {
 	}
 	tt.Run(t)
 }
+
+func TestDetails(t *testing.T) {
+	const dir = "testdata/details"
+
+	var buff bytes.Buffer
+	e := task.Executor{
+		Dir:     dir,
+		Stdout:  &buff,
+		Stderr:  &buff,
+		Details: true,
+	}
+	assert.NoError(t, e.Setup())
+	assert.Equal(t, e.Taskfile.Tasks["task-with-details"].Details, "This is a very long detailed description\nwith multiple lines\n")
+	assert.Equal(t, e.Taskfile.Tasks["task-without-details"].Details, "")
+}
