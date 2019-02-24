@@ -582,7 +582,7 @@ func TestDetails(t *testing.T) {
 
 	buff.Reset()
 	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "task-with-details"}))
-	assert.Equal(t, buff.String(), "task: task-with-details\n\ndetails of task-with-details - line 1\n"+"line 2\n"+"line 3\n\nCommands:\n")
+	assert.Equal(t, "task: task-with-details\n\ndetails of task-with-details - line 1\n"+"line 2\n"+"line 3\n\nCommands:\n", buff.String())
 
 	assert.NotContains(t, buff.String(), "task-with-details was executed")
 	assert.NotContains(t, buff.String(), "dependend-task was executed")
@@ -590,7 +590,7 @@ func TestDetails(t *testing.T) {
 	buff.Reset()
 	const noDetails = "task-without-details"
 	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: noDetails}))
-	assert.Equal(t, buff.String(), "task: There is no detailed description for task: "+noDetails+"\n")
+	assert.Equal(t, "task: There is no detailed description for task: "+noDetails+"\n", buff.String())
 
 	buff.Reset()
 	const firstTask = "other-task-with-details"
@@ -601,6 +601,6 @@ func TestDetails(t *testing.T) {
 
 	buff.Reset()
 	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "task-with-description-containing-empty-line"}))
-	assert.Equal(t, buff.String(), "task: task-with-description-containing-empty-line\n\nFirst line followed by empty line\n\nLast Line\n\nCommands:\n")
+	assert.Equal(t, "task: task-with-description-containing-empty-line\n\nFirst line followed by empty line\n\nLast Line\n\nCommands:\n", buff.String())
 
 }
