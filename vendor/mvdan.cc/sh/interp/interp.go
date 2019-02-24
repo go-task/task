@@ -1182,6 +1182,10 @@ func (r *Runner) findExecutable(file string, exts []string) string {
 	return ""
 }
 
+func driveLetter(c byte) bool {
+	return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')
+}
+
 // splitList is like filepath.SplitList, but always using the unix path
 // list separator ':'. On Windows, it also makes sure not to split
 // [A-Z]:[/\].
@@ -1198,8 +1202,7 @@ func splitList(path string) []string {
 	for i := 0; i < len(list); i++ {
 		s := list[i]
 		switch {
-		case len(s) != 1, s[0] < 'A', s[0] > 'Z':
-			// not a disk name
+		case len(s) != 1, !driveLetter(s[0]):
 		case i+1 >= len(list):
 			// last element
 		case strings.IndexAny(list[i+1], `/\`) != 0:
