@@ -580,9 +580,11 @@ func TestDetails(t *testing.T) {
 	}
 	assert.NoError(t, e.Setup())
 
-	buff.Reset()
+	exp, err := ioutil.ReadFile(dir + "/expected-task-with-details-details.txt")
+	assert.NoError(t, err, "error reading text fixture")
+
 	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "task-with-details"}))
-	assert.Equal(t, "task: task-with-details\n\ndetails of task-with-details - line 1\n"+"line 2\n"+"line 3\n\nCommands:\n", buff.String())
+	assert.Equal(t, string(exp), buff.String())
 
 	assert.NotContains(t, buff.String(), "task-with-details was executed")
 	assert.NotContains(t, buff.String(), "dependend-task was executed")
@@ -601,6 +603,6 @@ func TestDetails(t *testing.T) {
 
 	buff.Reset()
 	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "task-with-description-containing-empty-line"}))
-	assert.Equal(t, "task: task-with-description-containing-empty-line\n\nFirst line followed by empty line\n\nLast Line\n\nCommands:\n", buff.String())
+	assert.Equal(t, "task: task-with-description-containing-empty-line\n\nFirst line followed by empty line\n\nLast Line\n\ncommands:\n", buff.String())
 
 }

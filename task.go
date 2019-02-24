@@ -95,7 +95,7 @@ func (e *Executor) printTaskDetails(task string) {
 	displayTaskDetailedDescription(s, Logger)
 
 	e.Logger.Outf("")
-	e.Logger.Outf("Commands:")
+	e.Logger.Outf("commands:")
 }
 
 func displayTaskDetailedDescription(description string, Logger *logger.Logger) {
