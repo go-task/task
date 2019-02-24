@@ -66,7 +66,7 @@ func (e *Executor) Run(ctx context.Context, calls ...taskfile.Call) error {
 
 	if e.Summary {
 		firstTask := calls[0].Task
-		e.printTaskSummary(firstTask)
+		summary.Print(e.Logger, e.Taskfile.Tasks[firstTask])
 		return nil
 	}
 
@@ -80,16 +80,6 @@ func (e *Executor) Run(ctx context.Context, calls ...taskfile.Call) error {
 		}
 	}
 	return nil
-}
-
-func (e *Executor) printTaskSummary(task string) {
-	t := e.Taskfile.Tasks[task]
-	if t.Summary == "" {
-		e.Logger.Errf("task: There is no summary for task: %s", task)
-		return
-	}
-
-	summary.Print(e.Logger, t)
 }
 
 // Setup setups Executor's internal state

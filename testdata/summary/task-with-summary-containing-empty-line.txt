@@ -1,8 +1,0 @@
-task: task-with-summary-containing-empty-line
-
-First line followed by empty line
-
-Last Line
-
-commands:
- - exit 0

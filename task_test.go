@@ -570,25 +570,11 @@ func TestSummary(t *testing.T) {
 	assert.Equal(t, readTestFixture(t, dir, "task-with-summary.txt"), buff.String())
 
 	buff.Reset()
-	const nosummary = "task-without-summary"
-	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: nosummary}))
-	assert.Equal(t, "task: There is no summary for task: "+nosummary+"\n", buff.String())
-
-	buff.Reset()
 	const firstTask = "other-task-with-summary"
 	const secondTask = "task-with-summary"
 	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: firstTask}, taskfile.Call{Task: secondTask}))
 	assert.Contains(t, buff.String(), "summary of "+firstTask)
 	assert.NotContains(t, buff.String(), "summary of "+secondTask)
-
-	buff.Reset()
-	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "task-with-summary-containing-empty-line"}))
-	assert.Equal(t, readTestFixture(t, dir, "task-with-summary-containing-empty-line.txt"), buff.String())
-
-	buff.Reset()
-	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "task-without-commands"}))
-	assert.Equal(t, readTestFixture(t, dir, "task-without-commands.txt"), buff.String())
-
 }
 
 func readTestFixture(t *testing.T, dir string, file string) string {

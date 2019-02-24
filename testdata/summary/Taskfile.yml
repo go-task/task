@@ -13,27 +13,10 @@ tasks:
       - echo 'another command'
       - exit 0
 
-  task-without-summary:
-    deps: [dependend-task-1]
-    cmds:
-      - echo 'task-without-summary was executed'
-
   other-task-with-summary:
     summary: summary of other-task-with-summary
     cmds:
       - echo 'other-task-with-summary was executed'
-
-  task-with-summary-containing-empty-line:
-    summary: |
-      First line followed by empty line
-
-      Last Line
-    cmds:
-      - exit 0
-
-  task-without-commands:
-    summary: summary
-    deps: [dependend-task-1]
 
   dependend-task-1:
     cmds:

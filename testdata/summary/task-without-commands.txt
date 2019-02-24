@@ -1,6 +1,0 @@
-task: task-without-commands
-
-summary
-
-dependencies:
- - dependend-task-1

@@ -544,7 +544,7 @@ would print the following output:
 
 ## Detailed task description
 
-Running `task --details task-name` will show a detailed description of a task if present.
+Running `task --summary task-name` will show a summary of a task
 The following Taskfile:
 
 ```yaml
@@ -552,23 +552,39 @@ version: '2'
 
 tasks:
   release:
-    details: |
+    deps: [build]
+    summary: |
       Release your project to github
 
+      It will build your project before starting the release it.
       Please make sure that you have set GITHUB_TOKEN before starting.
     cmds:
       - your-release-tool
+  build:
+    cmds:
+      - your-build-tool
 ```
 
-with running ``task --details release`` would print the following output:
+with running ``task --summary release`` would print the following output:
 
 ```
+task: release
+
 Release your project to github
 
+It will build your project before starting the release it.
 Please make sure that you have set GITHUB_TOKEN before starting.
-```
 
-Please note: *showing the detailed description will not execute the command*
+dependencies:
+ - build
+
+commands:
+ - your-release-tool
+```
+If a summary is missing, the description will be printed. 
+If the task does not have a summary or a description, a warning is printed.
+
+Please note: *showing the summary will not execute the command*
 
 ## Silent mode
 
