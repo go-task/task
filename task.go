@@ -88,8 +88,9 @@ func (e *Executor) displayTaskDetails(task string) {
 		return
 	}
 	lines := strings.Split(s, "\n")
-	for _, line := range lines {
-		if line != "" {
+	for i, line := range lines {
+		notLastLine := i+1 < len(lines)
+		if notLastLine || line != "" {
 			e.Logger.Outf(line)
 		}
 	}

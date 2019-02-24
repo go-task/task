@@ -595,4 +595,9 @@ func TestDetails(t *testing.T) {
 	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "other-task-with-details"}, taskfile.Call{Task: "task-with-details"}))
 	assert.Contains(t, buff.String(), "details of other-task-with-details")
 	assert.NotContains(t, buff.String(), "details of task-with-details")
+
+	buff.Reset()
+	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "task-with-description-containing-empty-line"}))
+	assert.Equal(t, buff.String(), "First line followed by empty line\n\nLast Line\n")
+
 }
