@@ -93,7 +93,7 @@ func (e *Executor) printTaskDetails(task string) {
 	e.Logger.Outf("")
 
 	printTaskDetailedDescription(s, e.Logger)
-	printDependencies(t.Deps, e.Logger)
+	printTaskDependencies(t.Deps, e.Logger)
 
 	e.Logger.Outf("")
 	e.Logger.Outf("commands:")
@@ -103,7 +103,7 @@ func (e *Executor) printTaskDetails(task string) {
 	}
 }
 
-func printDependencies(deps []*taskfile.Dep, logger *logger.Logger) {
+func printTaskDependencies(deps []*taskfile.Dep, logger *logger.Logger) {
 	hasDependencies := len(deps) > 0
 	if hasDependencies {
 		logger.Outf("")

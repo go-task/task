@@ -56,7 +56,7 @@ func main() {
 		verbose     bool
 		silent      bool
 		dry         bool
-		details     bool
+		summary     bool
 		dir         string
 		output      string
 	)
@@ -70,7 +70,7 @@ func main() {
 	pflag.BoolVarP(&verbose, "verbose", "v", false, "enables verbose mode")
 	pflag.BoolVarP(&silent, "silent", "s", false, "disables echoing")
 	pflag.BoolVar(&dry, "dry", false, "compiles and prints tasks in the order that they would be run, without executing them")
-	pflag.BoolVar(&details, "details", false, "show detailed description about a task if present")
+	pflag.BoolVar(&summary, "summary", false, "show summary about a task")
 	pflag.StringVarP(&dir, "dir", "d", "", "sets directory of execution")
 	pflag.StringVarP(&output, "output", "o", "", "sets output style: [interleaved|group|prefixed]")
 	pflag.Parse()
@@ -98,7 +98,7 @@ func main() {
 		Silent:  silent,
 		Dir:     dir,
 		Dry:     dry,
-		Details: details,
+		Details: summary,
 
 		Stdin:  os.Stdin,
 		Stdout: os.Stdout,
