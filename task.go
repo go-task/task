@@ -3,9 +3,9 @@ package task
 import (
 	"context"
 	"fmt"
+	"github.com/go-task/task/v2/internal/summary"
 	"io"
 	"os"
-	"strings"
 	"sync/atomic"
 
 	"github.com/go-task/task/v2/internal/compiler"
@@ -84,51 +84,12 @@ func (e *Executor) Run(ctx context.Context, calls ...taskfile.Call) error {
 
 func (e *Executor) printTaskSummary(task string) {
 	t := e.Taskfile.Tasks[task]
-	s := t.Summary
-	if s == "" {
+	if t.Summary == "" {
 		e.Logger.Errf("task: There is no summary for task: %s", task)
 		return
 	}
 
-	e.Logger.Outf("task: " + task)
-	e.Logger.Outf("")
-
-	printTaskSummary(s, e.Logger)
-	printTaskDependencies(t.Deps, e.Logger)
-	printCommands(t.Cmds, e.Logger)
-}
-
-func printCommands(cmds []*taskfile.Cmd, logger *logger.Logger) {
-	hasCommands := len(cmds) > 0
-	if hasCommands {
-		logger.Outf("")
-		logger.Outf("commands:")
-		for _, c := range cmds {
-			logger.Outf(" - %s", c.Cmd)
-		}
-	}
-}
-
-func printTaskDependencies(deps []*taskfile.Dep, logger *logger.Logger) {
-	hasDependencies := len(deps) > 0
-	if hasDependencies {
-		logger.Outf("")
-		logger.Outf("dependencies:")
-
-		for _, d := range deps {
-			logger.Outf(" - %s", d.Task)
-		}
-	}
-}
-
-func printTaskSummary(description string, Logger *logger.Logger) {
-	lines := strings.Split(description, "\n")
-	for i, line := range lines {
-		notLastLine := i+1 < len(lines)
-		if notLastLine || line != "" {
-			Logger.Outf(line)
-		}
-	}
+	summary.Print(e.Logger, t)
 }
 
 // Setup setups Executor's internal state
