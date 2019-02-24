@@ -542,7 +542,7 @@ would print the following output:
 * test:    Run all the go tests.
 ```
 
-## Detailed task description
+## Display summary of task
 
 Running `task --summary task-name` will show a summary of a task
 The following Taskfile:
