@@ -100,7 +100,7 @@ func TestDoesNotPrintCommandIfMissing(t *testing.T) {
 	assert.NotContains(t, buffer.String(), "commands")
 }
 
-func TestFullSummary(t *testing.T) {
+func TestLayout(t *testing.T) {
 	buffer := &bytes.Buffer{}
 	l := logger.Logger{
 		Stdout:  buffer,
