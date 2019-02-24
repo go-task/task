@@ -91,11 +91,19 @@ func (e *Executor) printTaskDetails(task string) {
 	e.Logger.Outf("task: " + task)
 	e.Logger.Outf("")
 
-	lines := strings.Split(s, "\n")
+	Logger := e.Logger
+	displayTaskDetailedDescription(s, Logger)
+
+	e.Logger.Outf("")
+	e.Logger.Outf("Commands:")
+}
+
+func displayTaskDetailedDescription(description string, Logger *logger.Logger) {
+	lines := strings.Split(description, "\n")
 	for i, line := range lines {
 		notLastLine := i+1 < len(lines)
 		if notLastLine || line != "" {
-			e.Logger.Outf(line)
+			Logger.Outf(line)
 		}
 	}
 }
