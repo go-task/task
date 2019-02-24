@@ -96,10 +96,13 @@ func (e *Executor) printTaskSummary(task string) {
 	printTaskDependencies(t.Deps, e.Logger)
 
 	e.Logger.Outf("")
-	e.Logger.Outf("commands:")
+	printCommands(t.Cmds, e.Logger)
+}
 
-	for _, c := range t.Cmds {
-		e.Logger.Outf(" - %s", c.Cmd)
+func printCommands(cmds []*taskfile.Cmd, logger *logger.Logger) {
+	logger.Outf("commands:")
+	for _, c := range cmds {
+		logger.Outf(" - %s", c.Cmd)
 	}
 }
 
