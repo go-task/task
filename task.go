@@ -64,13 +64,7 @@ func (e *Executor) Run(ctx context.Context, calls ...taskfile.Call) error {
 	}
 
 	if e.Details {
-		task := calls[0].Task
-
-		if e.Taskfile.Tasks[task].Details == "" {
-			e.Logger.Errf("task: There is no detailed description for task: %s", task)
-		} else {
-			e.Logger.Outf(e.Taskfile.Tasks[task].Details)
-		}
+		displayTaskDetails(e, calls[0].Task)
 		return nil
 	}
 
@@ -84,6 +78,14 @@ func (e *Executor) Run(ctx context.Context, calls ...taskfile.Call) error {
 		}
 	}
 	return nil
+}
+
+func displayTaskDetails(e *Executor, task string) {
+	if e.Taskfile.Tasks[task].Details == "" {
+		e.Logger.Errf("task: There is no detailed description for task: %s", task)
+	} else {
+		e.Logger.Outf(e.Taskfile.Tasks[task].Details)
+	}
 }
 
 // Setup setups Executor's internal state
