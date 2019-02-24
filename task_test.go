@@ -579,11 +579,8 @@ func TestDetails(t *testing.T) {
 		Silent:  true,
 	}
 	assert.NoError(t, e.Setup())
-
-	exp := readTestFixture(t, dir, "expected-task-with-details-details.txt")
-
 	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "task-with-details"}))
-	assert.Equal(t, string(exp), buff.String())
+	assert.Equal(t, readTestFixture(t, dir, "expected-task-with-details-details.txt"), buff.String())
 
 	buff.Reset()
 	const noDetails = "task-without-details"
@@ -603,8 +600,8 @@ func TestDetails(t *testing.T) {
 
 }
 
-func readTestFixture(t *testing.T, dir string, file string) []byte {
-	exp, err := ioutil.ReadFile(dir + "/" + file)
+func readTestFixture(t *testing.T, dir string, file string) string {
+	b, err := ioutil.ReadFile(dir + "/" + file)
 	assert.NoError(t, err, "error reading text fixture")
-	return exp
+	return string(b)
 }
