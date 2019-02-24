@@ -65,7 +65,8 @@ func (e *Executor) Run(ctx context.Context, calls ...taskfile.Call) error {
 	}
 
 	if e.Summary {
-		e.printTaskSummary(calls[0].Task)
+		firstTask := calls[0].Task
+		e.printTaskSummary(firstTask)
 		return nil
 	}
 
