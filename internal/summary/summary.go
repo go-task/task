@@ -13,66 +13,66 @@ func Print(l *logger.Logger, t *taskfile.Task) {
 	} else if hasDescription(t) {
 		printTaskDescription(l, t)
 	} else {
-		printErrorNoDescriptionOrSummary(l)
+		printNoDescriptionOrSummary(l)
 	}
 	printTaskDependencies(l, t)
 	printTaskCommands(l, t)
 }
 
-func hasSummary(task *taskfile.Task) bool {
-	return task.Summary != ""
+func hasSummary(t *taskfile.Task) bool {
+	return t.Summary != ""
 }
 
-func printTaskSummary(Logger *logger.Logger, task *taskfile.Task) {
-	lines := strings.Split(task.Summary, "\n")
+func printTaskSummary(l *logger.Logger, t *taskfile.Task) {
+	lines := strings.Split(t.Summary, "\n")
 	for i, line := range lines {
 		notLastLine := i+1 < len(lines)
 		if notLastLine || line != "" {
-			Logger.Outf(line)
+			l.Outf(line)
 		}
 	}
 }
 
-func printTaskName(Logger *logger.Logger, task *taskfile.Task) {
-	Logger.Outf("task: " + task.Task)
-	Logger.Outf("")
+func printTaskName(l *logger.Logger, t *taskfile.Task) {
+	l.Outf("task: " + t.Task)
+	l.Outf("")
 }
 
-func hasDescription(task *taskfile.Task) bool {
-	return task.Desc != ""
+func hasDescription(t *taskfile.Task) bool {
+	return t.Desc != ""
 }
 
-func printTaskDescription(Logger *logger.Logger, task *taskfile.Task) {
-	Logger.Outf(task.Desc)
+func printTaskDescription(l *logger.Logger, t *taskfile.Task) {
+	l.Outf(t.Desc)
 }
 
-func printErrorNoDescriptionOrSummary(l *logger.Logger) {
+func printNoDescriptionOrSummary(l *logger.Logger) {
 	l.Outf("(task does not have description or summary)")
 }
 
-func printTaskDependencies(logger *logger.Logger, task *taskfile.Task) {
-	hasDependencies := len(task.Deps) > 0
+func printTaskDependencies(l *logger.Logger, t *taskfile.Task) {
+	hasDependencies := len(t.Deps) > 0
 	if hasDependencies {
-		logger.Outf("")
-		logger.Outf("dependencies:")
+		l.Outf("")
+		l.Outf("dependencies:")
 
-		for _, d := range task.Deps {
-			logger.Outf(" - %s", d.Task)
+		for _, d := range t.Deps {
+			l.Outf(" - %s", d.Task)
 		}
 	}
 }
 
-func printTaskCommands(logger *logger.Logger, task *taskfile.Task) {
-	hasCommands := len(task.Cmds) > 0
+func printTaskCommands(l *logger.Logger, t *taskfile.Task) {
+	hasCommands := len(t.Cmds) > 0
 	if hasCommands {
-		logger.Outf("")
-		logger.Outf("commands:")
-		for _, c := range task.Cmds {
+		l.Outf("")
+		l.Outf("commands:")
+		for _, c := range t.Cmds {
 			isCommand := c.Cmd != ""
 			if isCommand {
-				logger.Outf(" - %s", c.Cmd)
+				l.Outf(" - %s", c.Cmd)
 			} else {
-				logger.Outf(" - Task: %s", c.Task)
+				l.Outf(" - Task: %s", c.Task)
 			}
 		}
 	}
