@@ -68,10 +68,9 @@ func (e *Executor) Run(ctx context.Context, calls ...taskfile.Call) error {
 
 		if e.Taskfile.Tasks[task].Details == "" {
 			e.Logger.Errf("task: There is no detailed description for task: %s", task)
-			return nil
+		} else {
+			e.Logger.Outf(e.Taskfile.Tasks[task].Details)
 		}
-
-		e.Logger.Outf(e.Taskfile.Tasks[task].Details)
 		return nil
 	}
 
