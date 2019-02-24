@@ -26,10 +26,7 @@ func TestPrintsDependenciesIfPresent(t *testing.T) {
 
 	summary.Print(&l, task)
 
-	assert.Contains(t, buffer.String(), "\ndependencies:\n")
-	assert.Contains(t, buffer.String(), "\n - dep1\n")
-	assert.Contains(t, buffer.String(), "\n - dep2\n")
-	assert.Contains(t, buffer.String(), "\n - dep3\n")
+	assert.Contains(t, buffer.String(), "\ndependencies:\n"+" - dep1\n"+" - dep2\n"+" - dep3\n")
 }
 
 func TestDoesNotPrintDependenciesIfMissing(t *testing.T) {
@@ -127,18 +124,17 @@ func TestFullSummary(t *testing.T) {
 }
 
 func expectedOutput() string {
-	expected :=
-		`task: sample-task
-	
-	line1
-	line2
-	line3
-	
-	dependencies:
-	 - dependency
-	
-	commands:
-	 - command
-	`
+	expected := `task: sample-task
+
+line1
+line2
+line3
+
+dependencies:
+ - dependency
+
+commands:
+ - command
+`
 	return expected
 }
