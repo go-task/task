@@ -542,6 +542,34 @@ would print the following output:
 * test:    Run all the go tests.
 ```
 
+## Detailed task description
+
+Running `task --details task-name` will show a detailed description of a task if present.
+The following Taskfile:
+
+```yaml
+version: '2'
+
+tasks:
+  release:
+    details: |
+      Release your project to github
+
+      Please make sure that you have set GITHUB_TOKEN before starting.
+    cmds:
+      - your-release-tool
+```
+
+with running ``task --details release`` would print the following output:
+
+```
+Release your project to github
+
+Please make sure that you have set GITHUB_TOKEN before starting
+```
+
+*showing the detailed description will not execute the command*
+
 ## Silent mode
 
 Silent mode disables echoing of commands before Task runs it.
