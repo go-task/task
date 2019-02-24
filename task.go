@@ -95,11 +95,13 @@ func (e *Executor) printTaskDetails(task string) {
 	Logger := e.Logger
 	displayTaskDetailedDescription(s, Logger)
 
-	e.Logger.Outf("")
-	e.Logger.Outf("dependencies:")
+	if len(t.Deps) > 0 {
+		e.Logger.Outf("")
+		e.Logger.Outf("dependencies:")
 
-	for _, d := range t.Deps {
-		e.Logger.Outf(" - %s", d.Task)
+		for _, d := range t.Deps {
+			e.Logger.Outf(" - %s", d.Task)
+		}
 	}
 
 	e.Logger.Outf("")
