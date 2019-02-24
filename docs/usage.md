@@ -565,10 +565,10 @@ with running ``task --details release`` would print the following output:
 ```
 Release your project to github
 
-Please make sure that you have set GITHUB_TOKEN before starting
+Please make sure that you have set GITHUB_TOKEN before starting.
 ```
 
-*showing the detailed description will not execute the command*
+Please note: *showing the detailed description will not execute the command*
 
 ## Silent mode
 
