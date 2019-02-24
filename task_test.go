@@ -580,7 +580,7 @@ func TestDetails(t *testing.T) {
 	}
 	assert.NoError(t, e.Setup())
 	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "task-with-details"}))
-	assert.Equal(t, readTestFixture(t, dir, "expected-task-with-details-details.txt"), buff.String())
+	assert.Equal(t, readTestFixture(t, dir, "task-with-details-details.txt"), buff.String())
 
 	buff.Reset()
 	const noDetails = "task-without-details"
@@ -596,7 +596,7 @@ func TestDetails(t *testing.T) {
 
 	buff.Reset()
 	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "task-with-description-containing-empty-line"}))
-	assert.Equal(t, readTestFixture(t, dir, "expected-task-with-description-containing-empty-line.txt"), buff.String())
+	assert.Equal(t, readTestFixture(t, dir, "task-with-description-containing-empty-line.txt"), buff.String())
 
 }
 
