@@ -1,5 +1,7 @@
 version: 2
+
 tasks:
+
   task-with-summary:
     deps: [dependend-task-1,dependend-task-2]
     summary: |
@@ -16,14 +18,6 @@ tasks:
     cmds:
       - echo 'task-without-summary was executed'
 
-  dependend-task-1:
-    cmds:
-      - echo 'dependend-task-1 was executed'
-      -
-  dependend-task-2:
-    cmds:
-      - echo 'dependend-task-2 was executed'
-
   other-task-with-summary:
     summary: summary of other-task-with-summary
     cmds:
@@ -35,8 +29,16 @@ tasks:
 
       Last Line
     cmds:
-       - exit 0
+      - exit 0
 
   task-without-commands:
     summary: summary
     deps: [dependend-task-1]
+
+  dependend-task-1:
+    cmds:
+      - echo 'dependend-task-1 was executed'
+      -
+  dependend-task-2:
+    cmds:
+      - echo 'dependend-task-2 was executed'
