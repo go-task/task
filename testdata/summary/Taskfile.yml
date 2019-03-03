@@ -3,7 +3,7 @@ version: 2
 tasks:
 
   task-with-summary:
-    deps: [dependend-task-1,dependend-task-2]
+    deps: [dependend-task-1, dependend-task-2]
     summary: |
       summary of task-with-summary - line 1
       line 2
