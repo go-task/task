@@ -1,7 +1,6 @@
 version: 2
 
 tasks:
-
   task-with-summary:
     deps: [dependend-task-1, dependend-task-2]
     summary: |
