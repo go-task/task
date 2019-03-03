@@ -585,7 +585,7 @@ commands:
 If a summary is missing, the description will be printed. 
 If the task does not have a summary or a description, a warning is printed.
 
-Please note: *showing the summary will not execute the command*
+Please note: *showing the summary will not execute the command*.
 
 ## Silent mode
 
