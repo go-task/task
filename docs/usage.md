@@ -560,6 +560,7 @@ tasks:
       Please make sure that you have set GITHUB_TOKEN before starting.
     cmds:
       - your-release-tool
+
   build:
     cmds:
       - your-build-tool
