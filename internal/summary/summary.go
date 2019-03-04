@@ -9,12 +9,19 @@ import (
 
 func PrintAll(l *logger.Logger, t *taskfile.Taskfile, c []taskfile.Call) {
 	for i, call := range c {
-		if i > 0 {
-			l.Outf("")
-			l.Outf("")
-		}
+		printSpaceBetweenSummaries(i, l)
 		Print(l, t.Tasks[call.Task])
 	}
+}
+
+func printSpaceBetweenSummaries(i int, l *logger.Logger) {
+	spaceRequired := i > 0
+	if !spaceRequired {
+		return
+	}
+
+	l.Outf("")
+	l.Outf("")
 }
 
 func Print(l *logger.Logger, t *taskfile.Task) {
