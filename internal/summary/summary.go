@@ -26,6 +26,12 @@ func printSpaceBetweenSummaries(l *logger.Logger, i int) {
 
 func PrintTask(l *logger.Logger, t *taskfile.Task) {
 	printTaskName(l, t)
+	printTaskDescribingText(t, l)
+	printTaskDependencies(l, t)
+	printTaskCommands(l, t)
+}
+
+func printTaskDescribingText(t *taskfile.Task, l *logger.Logger) {
 	if hasSummary(t) {
 		printTaskSummary(l, t)
 	} else if hasDescription(t) {
@@ -33,8 +39,6 @@ func PrintTask(l *logger.Logger, t *taskfile.Task) {
 	} else {
 		printNoDescriptionOrSummary(l)
 	}
-	printTaskDependencies(l, t)
-	printTaskCommands(l, t)
 }
 
 func hasSummary(t *taskfile.Task) bool {
