@@ -1,9 +1,10 @@
 package summary
 
 import (
+	"strings"
+
 	"github.com/go-task/task/v2/internal/logger"
 	"github.com/go-task/task/v2/internal/taskfile"
-	"strings"
 )
 
 func Print(l *logger.Logger, t *taskfile.Task) {
