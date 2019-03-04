@@ -7,14 +7,14 @@ import (
 	"github.com/go-task/task/v2/internal/taskfile"
 )
 
-func PrintAll(l *logger.Logger, t *taskfile.Taskfile, c []taskfile.Call) {
+func PrintTasks(l *logger.Logger, t *taskfile.Taskfile, c []taskfile.Call) {
 	for i, call := range c {
-		printSpaceBetweenSummaries(i, l)
-		Print(l, t.Tasks[call.Task])
+		printSpaceBetweenSummaries(l, i)
+		PrintTask(l, t.Tasks[call.Task])
 	}
 }
 
-func printSpaceBetweenSummaries(i int, l *logger.Logger) {
+func printSpaceBetweenSummaries(l *logger.Logger, i int) {
 	spaceRequired := i > 0
 	if !spaceRequired {
 		return
@@ -24,7 +24,7 @@ func printSpaceBetweenSummaries(i int, l *logger.Logger) {
 	l.Outf("")
 }
 
-func Print(l *logger.Logger, t *taskfile.Task) {
+func PrintTask(l *logger.Logger, t *taskfile.Task) {
 	printTaskName(l, t)
 	if hasSummary(t) {
 		printTaskSummary(l, t)

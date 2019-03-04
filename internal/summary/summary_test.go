@@ -22,7 +22,7 @@ func TestPrintsDependenciesIfPresent(t *testing.T) {
 		},
 	}
 
-	summary.Print(&l, task)
+	summary.PrintTask(&l, task)
 
 	assert.Contains(t, buffer.String(), "\ndependencies:\n - dep1\n - dep2\n - dep3\n")
 }
@@ -43,7 +43,7 @@ func TestDoesNotPrintDependenciesIfMissing(t *testing.T) {
 		Deps: []*taskfile.Dep{},
 	}
 
-	summary.Print(&l, task)
+	summary.PrintTask(&l, task)
 
 	assert.NotContains(t, buffer.String(), "dependencies:")
 }
@@ -54,7 +54,7 @@ func TestPrintTaskName(t *testing.T) {
 		Task: "my-task-name",
 	}
 
-	summary.Print(&l, task)
+	summary.PrintTask(&l, task)
 
 	assert.Contains(t, buffer.String(), "task: my-task-name\n")
 }
@@ -69,7 +69,7 @@ func TestPrintTaskCommandsIfPresent(t *testing.T) {
 		},
 	}
 
-	summary.Print(&l, task)
+	summary.PrintTask(&l, task)
 
 	assert.Contains(t, buffer.String(), "\ncommands:\n")
 	assert.Contains(t, buffer.String(), "\n - command-1\n")
@@ -83,7 +83,7 @@ func TestDoesNotPrintCommandIfMissing(t *testing.T) {
 		Cmds: []*taskfile.Cmd{},
 	}
 
-	summary.Print(&l, task)
+	summary.PrintTask(&l, task)
 
 	assert.NotContains(t, buffer.String(), "commands")
 }
@@ -101,7 +101,7 @@ func TestLayout(t *testing.T) {
 		},
 	}
 
-	summary.Print(&l, task)
+	summary.PrintTask(&l, task)
 
 	assert.Equal(t, expectedOutput(), buffer.String())
 }
@@ -134,17 +134,17 @@ func TestPrintDescriptionAsFallback(t *testing.T) {
 	}
 	taskWithoutSummaryOrDescription := &taskfile.Task{}
 
-	summary.Print(&l, taskWithoutSummary)
+	summary.PrintTask(&l, taskWithoutSummary)
 
 	assert.Contains(t, buffer.String(), "description")
 
 	buffer.Reset()
-	summary.Print(&l, taskWithSummary)
+	summary.PrintTask(&l, taskWithSummary)
 
 	assert.NotContains(t, buffer.String(), "description")
 
 	buffer.Reset()
-	summary.Print(&l, taskWithoutSummaryOrDescription)
+	summary.PrintTask(&l, taskWithoutSummaryOrDescription)
 
 	assert.Contains(t, buffer.String(), "\n(task does not have description or summary)\n")
 
@@ -162,7 +162,7 @@ func TestPrintAllWithSpaces(t *testing.T) {
 	tasks["t2"] = t2
 	tasks["t3"] = t3
 
-	summary.PrintAll(&l,
+	summary.PrintTasks(&l,
 		&taskfile.Taskfile{Tasks: tasks},
 		[]taskfile.Call{{Task: "t1"}, {Task: "t2"}, {Task: "t3"}})
 
