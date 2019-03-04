@@ -574,7 +574,7 @@ func TestSummary(t *testing.T) {
 	const secondTask = "task-with-summary"
 	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: firstTask}, taskfile.Call{Task: secondTask}))
 	assert.Contains(t, buff.String(), "summary of "+firstTask)
-	assert.NotContains(t, buff.String(), "summary of "+secondTask)
+	assert.Contains(t, buff.String(), "summary of "+secondTask)
 }
 
 func readTestFixture(t *testing.T, dir string, file string) string {
