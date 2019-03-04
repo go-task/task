@@ -81,8 +81,7 @@ func printTaskDependencies(l *logger.Logger, t *taskfile.Task) {
 }
 
 func printTaskCommands(l *logger.Logger, t *taskfile.Task) {
-	noCommands := len(t.Cmds) == 0
-	if noCommands {
+	if len(t.Cmds) == 0 {
 		return
 	}
 
