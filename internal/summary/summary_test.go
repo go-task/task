@@ -2,6 +2,7 @@ package summary_test
 
 import (
 	"bytes"
+	"strings"
 	"testing"
 
 	"github.com/go-task/task/v2/internal/logger"
@@ -12,12 +13,7 @@ import (
 )
 
 func TestPrintsDependenciesIfPresent(t *testing.T) {
-	buffer := &bytes.Buffer{}
-	l := logger.Logger{
-		Stdout:  buffer,
-		Stderr:  buffer,
-		Verbose: false,
-	}
+	buffer, l := createDummyLogger()
 	task := &taskfile.Task{
 		Deps: []*taskfile.Dep{
 			{Task: "dep1"},
@@ -31,13 +27,18 @@ func TestPrintsDependenciesIfPresent(t *testing.T) {
 	assert.Contains(t, buffer.String(), "\ndependencies:\n - dep1\n - dep2\n - dep3\n")
 }
 
-func TestDoesNotPrintDependenciesIfMissing(t *testing.T) {
+func createDummyLogger() (*bytes.Buffer, logger.Logger) {
 	buffer := &bytes.Buffer{}
 	l := logger.Logger{
-		Stdout:  buffer,
 		Stderr:  buffer,
+		Stdout:  buffer,
 		Verbose: false,
 	}
+	return buffer, l
+}
+
+func TestDoesNotPrintDependenciesIfMissing(t *testing.T) {
+	buffer, l := createDummyLogger()
 	task := &taskfile.Task{
 		Deps: []*taskfile.Dep{},
 	}
@@ -48,12 +49,7 @@ func TestDoesNotPrintDependenciesIfMissing(t *testing.T) {
 }
 
 func TestPrintTaskName(t *testing.T) {
-	buffer := &bytes.Buffer{}
-	l := logger.Logger{
-		Stdout:  buffer,
-		Stderr:  buffer,
-		Verbose: false,
-	}
+	buffer, l := createDummyLogger()
 	task := &taskfile.Task{
 		Task: "my-task-name",
 	}
@@ -64,12 +60,7 @@ func TestPrintTaskName(t *testing.T) {
 }
 
 func TestPrintTaskCommandsIfPresent(t *testing.T) {
-	buffer := &bytes.Buffer{}
-	l := logger.Logger{
-		Stdout:  buffer,
-		Stderr:  buffer,
-		Verbose: false,
-	}
+	buffer, l := createDummyLogger()
 	task := &taskfile.Task{
 		Cmds: []*taskfile.Cmd{
 			{Cmd: "command-1"},
@@ -87,12 +78,7 @@ func TestPrintTaskCommandsIfPresent(t *testing.T) {
 }
 
 func TestDoesNotPrintCommandIfMissing(t *testing.T) {
-	buffer := &bytes.Buffer{}
-	l := logger.Logger{
-		Stdout:  buffer,
-		Stderr:  buffer,
-		Verbose: false,
-	}
+	buffer, l := createDummyLogger()
 	task := &taskfile.Task{
 		Cmds: []*taskfile.Cmd{},
 	}
@@ -103,12 +89,7 @@ func TestDoesNotPrintCommandIfMissing(t *testing.T) {
 }
 
 func TestLayout(t *testing.T) {
-	buffer := &bytes.Buffer{}
-	l := logger.Logger{
-		Stdout:  buffer,
-		Stderr:  buffer,
-		Verbose: false,
-	}
+	buffer, l := createDummyLogger()
 	task := &taskfile.Task{
 		Task:    "sample-task",
 		Summary: "line1\nline2\nline3\n",
@@ -142,12 +123,7 @@ commands:
 }
 
 func TestPrintDescriptionAsFallback(t *testing.T) {
-	buffer := &bytes.Buffer{}
-	l := logger.Logger{
-		Stdout:  buffer,
-		Stderr:  buffer,
-		Verbose: false,
-	}
+	buffer, l := createDummyLogger()
 	taskWithoutSummary := &taskfile.Task{
 		Desc: "description",
 	}
@@ -159,14 +135,41 @@ func TestPrintDescriptionAsFallback(t *testing.T) {
 	taskWithoutSummaryOrDescription := &taskfile.Task{}
 
 	summary.Print(&l, taskWithoutSummary)
+
 	assert.Contains(t, buffer.String(), "description")
 
 	buffer.Reset()
 	summary.Print(&l, taskWithSummary)
+
 	assert.NotContains(t, buffer.String(), "description")
 
 	buffer.Reset()
 	summary.Print(&l, taskWithoutSummaryOrDescription)
+
 	assert.Contains(t, buffer.String(), "\n(task does not have description or summary)\n")
+
+}
+
+func TestPrintAllWithSpaces(t *testing.T) {
+	buffer, l := createDummyLogger()
+
+	t1 := &taskfile.Task{Task: "t1"}
+	t2 := &taskfile.Task{Task: "t2"}
+	t3 := &taskfile.Task{Task: "t3"}
+
+	tasks := make(taskfile.Tasks, 3)
+	tasks["t1"] = t1
+	tasks["t2"] = t2
+	tasks["t3"] = t3
+
+	tf := &taskfile.Taskfile{
+		Tasks: tasks,
+	}
+
+	summary.PrintAll(&l, tf, []taskfile.Call{{Task: "t1"}, {Task: "t2"}, {Task: "t3"}})
+
+	assert.True(t, strings.HasPrefix(buffer.String(), "task: t1"))
+	assert.Contains(t, buffer.String(), "\n(task does not have description or summary)\n\n\ntask: t2")
+	assert.Contains(t, buffer.String(), "\n(task does not have description or summary)\n\n\ntask: t3")
 
 }

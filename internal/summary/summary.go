@@ -69,14 +69,15 @@ func printNoDescriptionOrSummary(l *logger.Logger) {
 }
 
 func printTaskDependencies(l *logger.Logger, t *taskfile.Task) {
-	hasDependencies := len(t.Deps) > 0
-	if hasDependencies {
-		l.Outf("")
-		l.Outf("dependencies:")
+	if len(t.Deps) == 0 {
+		return
+	}
 
-		for _, d := range t.Deps {
-			l.Outf(" - %s", d.Task)
-		}
+	l.Outf("")
+	l.Outf("dependencies:")
+
+	for _, d := range t.Deps {
+		l.Outf(" - %s", d.Task)
 	}
 }
 
