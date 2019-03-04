@@ -81,17 +81,19 @@ func printTaskDependencies(l *logger.Logger, t *taskfile.Task) {
 }
 
 func printTaskCommands(l *logger.Logger, t *taskfile.Task) {
-	hasCommands := len(t.Cmds) > 0
-	if hasCommands {
-		l.Outf("")
-		l.Outf("commands:")
-		for _, c := range t.Cmds {
-			isCommand := c.Cmd != ""
-			if isCommand {
-				l.Outf(" - %s", c.Cmd)
-			} else {
-				l.Outf(" - Task: %s", c.Task)
-			}
+	noCommands := len(t.Cmds) == 0
+	if noCommands {
+		return
+	}
+
+	l.Outf("")
+	l.Outf("commands:")
+	for _, c := range t.Cmds {
+		isCommand := c.Cmd != ""
+		if isCommand {
+			l.Outf(" - %s", c.Cmd)
+		} else {
+			l.Outf(" - Task: %s", c.Task)
 		}
 	}
 }
