@@ -3,7 +3,6 @@ package task
 import (
 	"context"
 	"fmt"
-	"github.com/go-task/task/v2/internal/summary"
 	"io"
 	"os"
 	"sync/atomic"
@@ -14,6 +13,7 @@ import (
 	"github.com/go-task/task/v2/internal/execext"
 	"github.com/go-task/task/v2/internal/logger"
 	"github.com/go-task/task/v2/internal/output"
+	"github.com/go-task/task/v2/internal/summary"
 	"github.com/go-task/task/v2/internal/taskfile"
 	"github.com/go-task/task/v2/internal/taskfile/read"
 	"github.com/go-task/task/v2/internal/taskfile/version"
