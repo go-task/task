@@ -7,6 +7,16 @@ import (
 	"github.com/go-task/task/v2/internal/taskfile"
 )
 
+func PrintAll(l *logger.Logger, t *taskfile.Taskfile, c []taskfile.Call) {
+	for i, call := range c {
+		if i > 0 {
+			l.Outf("")
+			l.Outf("")
+		}
+		Print(l, t.Tasks[call.Task])
+	}
+}
+
 func Print(l *logger.Logger, t *taskfile.Task) {
 	printTaskName(l, t)
 	if hasSummary(t) {
