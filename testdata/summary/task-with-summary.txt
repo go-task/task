@@ -12,3 +12,9 @@ commands:
  - echo 'task-with-summary was executed'
  - echo 'another command'
  - exit 0
+task: other-task-with-summary
+
+summary of other-task-with-summary
+
+commands:
+ - echo 'other-task-with-summary was executed'
