@@ -2,11 +2,13 @@ package summary_test
 
 import (
 	"bytes"
+	"testing"
+
 	"github.com/go-task/task/v2/internal/logger"
 	"github.com/go-task/task/v2/internal/summary"
 	"github.com/go-task/task/v2/internal/taskfile"
+
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestPrintsDependenciesIfPresent(t *testing.T) {
