@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 )
 
-const defaultTaskfile = `# https://taskfile.org
+const defaultTaskfile = `# https://taskfile.dev
 
 version: '2'
 
