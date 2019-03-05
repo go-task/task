@@ -1,6 +1,6 @@
 package taskfile
 
-// Tasks representas a group of tasks
+// Tasks represents a group of tasks
 type Tasks map[string]*Task
 
 // Task represents a task
@@ -9,6 +9,7 @@ type Task struct {
 	Cmds        []*Cmd
 	Deps        []*Dep
 	Desc        string
+	Summary     string
 	Sources     []string
 	Generates   []string
 	Status      []string

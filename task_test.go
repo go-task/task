@@ -553,3 +553,25 @@ func TestIncludesCallingRoot(t *testing.T) {
 	}
 	tt.Run(t)
 }
+
+func TestSummary(t *testing.T) {
+	const dir = "testdata/summary"
+
+	var buff bytes.Buffer
+	e := task.Executor{
+		Dir:     dir,
+		Stdout:  &buff,
+		Stderr:  &buff,
+		Summary: true,
+		Silent:  true,
+	}
+	assert.NoError(t, e.Setup())
+	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "task-with-summary"}, taskfile.Call{Task: "other-task-with-summary"}))
+	assert.Equal(t, readTestFixture(t, dir, "task-with-summary.txt"), buff.String())
+}
+
+func readTestFixture(t *testing.T, dir string, file string) string {
+	b, err := ioutil.ReadFile(dir + "/" + file)
+	assert.NoError(t, err, "error reading text fixture")
+	return string(b)
+}

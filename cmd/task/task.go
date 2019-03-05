@@ -17,7 +17,7 @@ var (
 	version = "master"
 )
 
-const usage = `Usage: task [-ilfwvsd] [--init] [--list] [--force] [--watch] [--verbose] [--silent] [--dir] [--dry] [task...]
+const usage = `Usage: task [-ilfwvsd] [--init] [--list] [--force] [--watch] [--verbose] [--silent] [--dir] [--dry] [--summary] [task...]
 
 Runs the specified task(s). Falls back to the "default" task if no task name
 was specified, or lists all tasks if an unknown task name was specified.
@@ -56,6 +56,7 @@ func main() {
 		verbose     bool
 		silent      bool
 		dry         bool
+		summary     bool
 		dir         string
 		output      string
 	)
@@ -69,6 +70,7 @@ func main() {
 	pflag.BoolVarP(&verbose, "verbose", "v", false, "enables verbose mode")
 	pflag.BoolVarP(&silent, "silent", "s", false, "disables echoing")
 	pflag.BoolVar(&dry, "dry", false, "compiles and prints tasks in the order that they would be run, without executing them")
+	pflag.BoolVar(&summary, "summary", false, "show summary about a task")
 	pflag.StringVarP(&dir, "dir", "d", "", "sets directory of execution")
 	pflag.StringVarP(&output, "output", "o", "", "sets output style: [interleaved|group|prefixed]")
 	pflag.Parse()
@@ -96,6 +98,7 @@ func main() {
 		Silent:  silent,
 		Dir:     dir,
 		Dry:     dry,
+		Summary: summary,
 
 		Stdin:  os.Stdin,
 		Stdout: os.Stdout,
