@@ -23,4 +23,3 @@ _arguments \
     '(-w --watch)'{-w,--watch} \
     '(- *)'{-h,--help} \
     '*: :__list' \
-
