@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Fixes to the ZSH completion
+  ([#182](https://github.com/go-task/task/pull/182)).
+- Add [`--summary` flag along with `summary:` task attribute](https://taskfile.org/#/usage?id=display-summary-of-task)
+  ([#180](https://github.com/go-task/task/pull/180)).
+
 ## v2.4.0 - 2019-02-21
 
 - Allow calling a task of the root Taskfile from an included Taskfile
