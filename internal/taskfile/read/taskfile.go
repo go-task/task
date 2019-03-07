@@ -22,8 +22,15 @@ var (
 
 // Taskfile reads a Taskfile for a given directory
 func Taskfile(dir string) (*taskfile.Taskfile, error) {
-	path := filepath.Join(dir, "Taskfile.yml")
-	if _, err := os.Stat(path); err != nil {
+	var path string
+	for _, name := range []string{"Taskfile.yml", "Taskfile.yaml"} {
+		p := filepath.Join(dir, name)
+		if _, err := os.Stat(p); err == nil {
+			path = p
+			break
+		}
+	}
+	if path == "" {
 		return nil, ErrNoTaskfileFound
 	}
 	t, err := readTaskfile(path)
