@@ -1003,6 +1003,11 @@ func (p *Parser) wordPart() WordPart {
 
 		p.next()
 		cs.StmtList = p.stmtList()
+		if p.tok == bckQuote && p.lastBquoteEsc < p.openBquotes-1 {
+			// e.g. found ` before the nested backquote \` was closed.
+			p.tok = _EOF
+			p.quoteErr(cs.Pos(), bckQuote)
+		}
 		p.postNested(old)
 		p.openBquotes--
 		cs.Right = p.pos
@@ -1587,11 +1592,16 @@ func (p *Parser) getAssign(needEqual bool) *Assign {
 				p.follow(left, `"[x]"`, assgn)
 			}
 			if ae.Value = p.getWord(); ae.Value == nil {
-				if p.tok == leftParen {
+				switch p.tok {
+				case leftParen:
 					p.curErr("arrays cannot be nested")
+					return nil
+				case _Newl, rightParen, leftBrack:
+					// TODO: support [index]=[
+				default:
+					p.curErr("array element values must be words")
+					break
 				}
-				p.curErr("array element values must be words")
-				break
 			}
 			if len(p.accComs) > 0 {
 				c := p.accComs[0]
@@ -2012,7 +2022,8 @@ func (p *Parser) wordIter(ftok string, fpos Pos) *WordIter {
 		return wi
 	}
 	p.got(_Newl)
-	if _, ok := p.gotRsrv("in"); ok {
+	if pos, ok := p.gotRsrv("in"); ok {
+		wi.InPos = pos
 		for !stopToken(p.tok) {
 			if w := p.getWord(); w == nil {
 				p.curErr("word list can only contain words")
