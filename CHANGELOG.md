@@ -1,12 +1,12 @@
 # Changelog
 
-## Unreleased
+## v2.5.0 = 2019-03-16
 
 - We moved from the taskfile.org domain to the new fancy taskfile.dev domain.
   While stuff is being redirected, we strongly recommend to everyone that use
   [this install script](https://taskfile.dev/#/installation?id=install-script)
   to use the new taskfile.dev domain on scripts from now on.
-- Fixes to the ZSH completion
+- Fixed to the ZSH completion
   ([#182](https://github.com/go-task/task/pull/182)).
 - Add [`--summary` flag along with `summary:` task attribute](https://taskfile.org/#/usage?id=display-summary-of-task)
   ([#180](https://github.com/go-task/task/pull/180)).
