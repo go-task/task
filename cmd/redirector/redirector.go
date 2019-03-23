@@ -1,5 +1,3 @@
-//+build ignore
-
 // This small web app is used to redirect from the old taskfile.org domain
 // to the new taskfile.dev without breaking CIs that uses cURL to download
 // "/install.sh" without the -L flag (which follow redirects).
@@ -19,9 +17,9 @@ func main() {
 			return
 		}
 
-		println("Redirecting to taskfile.dev")
+		println("Redirecting to https://taskfile.dev" + r.URL.Path)
 
-		w.Header().Set("Location", "https://taskfile.dev")
+		w.Header().Set("Location", "https://taskfile.dev"+r.URL.Path)
 		w.WriteHeader(301)
 	})
 
