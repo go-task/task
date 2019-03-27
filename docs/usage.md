@@ -745,6 +745,12 @@ tasks:
 for all commands. But keep in mind this option won't propagate to other tasks
 called either by `deps` or `cmds`!
 
+> Sometimes it might happen that you want to ignore the errors to 
+> not fail the whole task run, but skip further steps.
+> You could do this by adding `abort_on_error: true` at task level.
+> A real world example could be a guard clause to prevent some cmds from execution
+> in different environments.
+
 ## Output syntax
 
 By default, Task just redirect the STDOUT and STDERR of the running commands
