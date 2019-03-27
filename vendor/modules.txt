@@ -46,7 +46,7 @@ golang.org/x/text/transform
 golang.org/x/text/unicode/norm
 # gopkg.in/yaml.v2 v2.2.1
 gopkg.in/yaml.v2
-# mvdan.cc/sh v2.6.3+incompatible
+# mvdan.cc/sh v2.6.4+incompatible
 mvdan.cc/sh/expand
 mvdan.cc/sh/interp
 mvdan.cc/sh/shell

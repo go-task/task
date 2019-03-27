@@ -13,6 +13,7 @@ import (
 	"github.com/go-task/task/v2/internal/execext"
 	"github.com/go-task/task/v2/internal/logger"
 	"github.com/go-task/task/v2/internal/output"
+	"github.com/go-task/task/v2/internal/summary"
 	"github.com/go-task/task/v2/internal/taskfile"
 	"github.com/go-task/task/v2/internal/taskfile/read"
 	"github.com/go-task/task/v2/internal/taskfile/version"
@@ -37,6 +38,7 @@ type Executor struct {
 	Silent           bool
 	Dry              bool
 	TaskfileLocation string
+	Summary          bool
 
 	Stdin  io.Reader
 	Stdout io.Writer
@@ -61,6 +63,11 @@ func (e *Executor) Run(ctx context.Context, calls ...taskfile.Call) error {
 			e.PrintTasksHelp(true, false)
 			return &taskNotFoundError{taskName: c.Task}
 		}
+	}
+
+	if e.Summary {
+		summary.PrintTasks(e.Logger, e.Taskfile, calls)
+		return nil
 	}
 
 	if e.Watch {

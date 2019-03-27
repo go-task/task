@@ -21,3 +21,6 @@
 dist/
 
 .DS_Store
+
+# intellij idea/goland
+.idea/

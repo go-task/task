@@ -70,6 +70,7 @@ func (r *Runner) builtinCode(ctx context.Context, pos syntax.Pos, name string, a
 			r.errf("set: %v\n", err)
 			return 2
 		}
+		r.updateExpandOpts()
 	case "shift":
 		n := 1
 		switch len(args) {

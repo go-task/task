@@ -5,9 +5,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/h2non/gock"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
+	gock "gopkg.in/h2non/gock.v1"
 
 	"github.com/go-task/task/v2/internal/taskfile"
 

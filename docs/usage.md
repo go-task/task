@@ -582,6 +582,51 @@ would print the following output:
 * test:    Run all the go tests.
 ```
 
+## Display summary of task
+
+Running `task --summary task-name` will show a summary of a task
+The following Taskfile:
+
+```yaml
+version: '2'
+
+tasks:
+  release:
+    deps: [build]
+    summary: |
+      Release your project to github
+
+      It will build your project before starting the release it.
+      Please make sure that you have set GITHUB_TOKEN before starting.
+    cmds:
+      - your-release-tool
+
+  build:
+    cmds:
+      - your-build-tool
+```
+
+with running ``task --summary release`` would print the following output:
+
+```
+task: release
+
+Release your project to github
+
+It will build your project before starting the release it.
+Please make sure that you have set GITHUB_TOKEN before starting.
+
+dependencies:
+ - build
+
+commands:
+ - your-release-tool
+```
+If a summary is missing, the description will be printed. 
+If the task does not have a summary or a description, a warning is printed.
+
+Please note: *showing the summary will not execute the command*.
+
 ## Silent mode
 
 Silent mode disables echoing of commands before Task runs it.

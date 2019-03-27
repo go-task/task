@@ -1,0 +1,26 @@
+version: 2
+
+tasks:
+  task-with-summary:
+    deps: [dependend-task-1, dependend-task-2]
+    summary: |
+      summary of task-with-summary - line 1
+      line 2
+      line 3
+    cmds:
+      - echo 'task-with-summary was executed'
+      - echo 'another command'
+      - exit 0
+
+  other-task-with-summary:
+    summary: summary of other-task-with-summary
+    cmds:
+      - echo 'other-task-with-summary was executed'
+
+  dependend-task-1:
+    cmds:
+      - echo 'dependend-task-1 was executed'
+
+  dependend-task-2:
+    cmds:
+      - echo 'dependend-task-2 was executed'

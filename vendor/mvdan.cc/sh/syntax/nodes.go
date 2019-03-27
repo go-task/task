@@ -376,14 +376,21 @@ func (*WordIter) loopNode()   {}
 func (*CStyleLoop) loopNode() {}
 
 // WordIter represents the iteration of a variable over a series of words in a
-// for clause.
+// for clause. If InPos is an invalid position, the "in" token was missing, so
+// the iteration is over the shell's positional parameters.
 type WordIter struct {
 	Name  *Lit
+	InPos Pos // position of "in"
 	Items []*Word
 }
 
 func (w *WordIter) Pos() Pos { return w.Name.Pos() }
-func (w *WordIter) End() Pos { return posMax(w.Name.End(), wordLastEnd(w.Items)) }
+func (w *WordIter) End() Pos {
+	if len(w.Items) > 0 {
+		return wordLastEnd(w.Items)
+	}
+	return posMax(w.Name.End(), posAddCol(w.InPos, 2))
+}
 
 // CStyleLoop represents the behaviour of a for clause similar to the C
 // language.
@@ -781,8 +788,12 @@ func (a *ArrayExpr) Pos() Pos { return a.Lparen }
 func (a *ArrayExpr) End() Pos { return posAddCol(a.Rparen, 1) }
 
 // ArrayElem represents a Bash array element.
+//
+// Index can be nil; for example, declare -a x=(value).
+// Value can be nil; for example, declare -A x=([index]=).
+// Finally, neither can be nil; for example, declare -A x=([index]=value)
 type ArrayElem struct {
-	Index    ArithmExpr // [i]=, ["k"]=
+	Index    ArithmExpr
 	Value    *Word
 	Comments []Comment
 }
@@ -793,7 +804,12 @@ func (a *ArrayElem) Pos() Pos {
 	}
 	return a.Value.Pos()
 }
-func (a *ArrayElem) End() Pos { return a.Value.End() }
+func (a *ArrayElem) End() Pos {
+	if a.Value != nil {
+		return a.Value.End()
+	}
+	return posAddCol(a.Index.Pos(), 1)
+}
 
 // ExtGlob represents a Bash extended globbing expression. Note that these are
 // parsed independently of whether shopt has been called or not.

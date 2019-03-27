@@ -19,7 +19,7 @@ import (
 func (r *Runner) bashTest(ctx context.Context, expr syntax.TestExpr, classic bool) string {
 	switch x := expr.(type) {
 	case *syntax.Word:
-		return r.literal(x)
+		return r.document(x)
 	case *syntax.ParenTest:
 		return r.bashTest(ctx, x.X, classic)
 	case *syntax.BinaryTest:

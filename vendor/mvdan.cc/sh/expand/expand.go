@@ -373,7 +373,11 @@ func (cfg *Config) wordField(wps []syntax.WordPart, ql quoteLevel) ([]fieldPart,
 		case *syntax.Lit:
 			s := x.Value
 			if i == 0 && ql == quoteNone {
-				s = cfg.expandUser(s)
+				if prefix, rest := cfg.expandUser(s); prefix != "" {
+					// TODO: return two separate fieldParts,
+					// like in wordFields?
+					s = prefix + rest
+				}
 			}
 			if ql == quoteDouble && strings.Contains(s, "\\") {
 				buf := cfg.strBuilder()
@@ -468,7 +472,12 @@ func (cfg *Config) wordFields(wps []syntax.WordPart) ([][]fieldPart, error) {
 		case *syntax.Lit:
 			s := x.Value
 			if i == 0 {
-				s = cfg.expandUser(s)
+				prefix, rest := cfg.expandUser(s)
+				curField = append(curField, fieldPart{
+					quote: quoteSingle,
+					val:   prefix,
+				})
+				s = rest
 			}
 			if strings.Contains(s, "\\") {
 				buf := cfg.strBuilder()
@@ -562,28 +571,27 @@ func (cfg *Config) quotedElems(pe *syntax.ParamExp) []string {
 	return nil
 }
 
-func (cfg *Config) expandUser(field string) string {
+func (cfg *Config) expandUser(field string) (prefix, rest string) {
 	if len(field) == 0 || field[0] != '~' {
-		return field
+		return "", field
 	}
 	name := field[1:]
-	rest := ""
 	if i := strings.Index(name, "/"); i >= 0 {
 		rest = name[i:]
 		name = name[:i]
 	}
 	if name == "" {
-		return cfg.Env.Get("HOME").String() + rest
+		return cfg.Env.Get("HOME").String(), rest
 	}
 	if vr := cfg.Env.Get("HOME " + name); vr.IsSet() {
-		return vr.String() + rest
+		return vr.String(), rest
 	}
 
 	u, err := user.Lookup(name)
 	if err != nil {
-		return field
+		return "", field
 	}
-	return u.HomeDir + rest
+	return u.HomeDir, rest
 }
 
 func findAllIndex(pattern, name string, n int) [][]int {

@@ -13,8 +13,6 @@ curl -Ls https://git.io/ttask.sh | sh
 
 See [taskfile](https://tonobo.github.io/task) documentation.
 
----
-
 ## Sponsors
 
 [![Sponsors](https://opencollective.com/task/sponsors.svg?width=890)](https://opencollective.com/task)

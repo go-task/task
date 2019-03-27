@@ -260,7 +260,6 @@ func Params(args ...string) func(*Runner) error {
 			args = args[1:]
 		}
 		r.Params = args
-		r.updateExpandOpts()
 		return nil
 	}
 }
@@ -479,6 +478,7 @@ func (r *Runner) Reset() {
 		Exec:        r.Exec,
 		Open:        r.Open,
 		KillTimeout: r.KillTimeout,
+		opts:        r.opts,
 
 		// emptied below, to reuse the space
 		Vars:     r.Vars,
@@ -791,7 +791,11 @@ func (r *Runner) cmd(ctx context.Context, cm syntax.Command) {
 		switch y := x.Loop.(type) {
 		case *syntax.WordIter:
 			name := y.Name.Value
-			for _, field := range r.fields(y.Items...) {
+			items := r.Params // for i; do ...
+			if y.InPos.IsValid() {
+				items = r.fields(y.Items...) // for i in ...; do ...
+			}
+			for _, field := range items {
 				r.setVarString(name, field)
 				if r.loopStmtsBroken(ctx, x.Do) {
 					break
@@ -1182,6 +1186,10 @@ func (r *Runner) findExecutable(file string, exts []string) string {
 	return ""
 }
 
+func driveLetter(c byte) bool {
+	return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')
+}
+
 // splitList is like filepath.SplitList, but always using the unix path
 // list separator ':'. On Windows, it also makes sure not to split
 // [A-Z]:[/\].
@@ -1198,8 +1206,7 @@ func splitList(path string) []string {
 	for i := 0; i < len(list); i++ {
 		s := list[i]
 		switch {
-		case len(s) != 1, s[0] < 'A', s[0] > 'Z':
-			// not a disk name
+		case len(s) != 1, !driveLetter(s[0]):
 		case i+1 >= len(list):
 			// last element
 		case strings.IndexAny(list[i+1], `/\`) != 0:

@@ -1,0 +1,22 @@
+task: task-with-summary
+
+summary of task-with-summary - line 1
+line 2
+line 3
+
+dependencies:
+ - dependend-task-1
+ - dependend-task-2
+
+commands:
+ - echo 'task-with-summary was executed'
+ - echo 'another command'
+ - exit 0
+
+
+task: other-task-with-summary
+
+summary of other-task-with-summary
+
+commands:
+ - echo 'other-task-with-summary was executed'

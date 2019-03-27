@@ -16,6 +16,7 @@ type Task struct {
 	Cmds        []*Cmd
 	Deps        []*Dep
 	Desc        string
+	Summary     string
 	Sources     []string
 	Generates   []string
 	Status      []string
