@@ -434,6 +434,20 @@ func TestTaskIgnoreErrors(t *testing.T) {
 	assert.Error(t, e.Run(context.Background(), taskfile.Call{Task: "cmd-should-fail"}))
 }
 
+func TestTaskAbortOnError(t *testing.T) {
+	const dir = "testdata/abort_on_error"
+
+	e := task.Executor{
+		Dir:    dir,
+		Stdout: ioutil.Discard,
+		Stderr: ioutil.Discard,
+	}
+	assert.NoError(t, e.Setup())
+
+	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "task-should-pass"}))
+	assert.Error(t, e.Run(context.Background(), taskfile.Call{Task: "task-should-fail"}))
+}
+
 func TestExpand(t *testing.T) {
 	const dir = "testdata/expand"
 

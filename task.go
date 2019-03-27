@@ -202,6 +202,7 @@ func (e *Executor) RunTask(ctx context.Context, call taskfile.Call) error {
 	}
 
 	for i := range t.Cmds {
+		fmt.Printf("%#v\n", t)
 		if err := e.runCommand(ctx, t, call, i); err != nil {
 			if err2 := e.statusOnError(t); err2 != nil {
 				e.Logger.VerboseErrf("task: error cleaning status on error: %v", err2)
@@ -209,6 +210,9 @@ func (e *Executor) RunTask(ctx context.Context, call taskfile.Call) error {
 
 			if execext.IsExitError(err) && t.IgnoreError {
 				e.Logger.VerboseErrf("task: task error ignored: %v", err)
+				if t.AbortOnError {
+					return nil
+				}
 				continue
 			}
 

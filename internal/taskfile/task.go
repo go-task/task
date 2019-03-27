@@ -12,23 +12,24 @@ type Tasks map[string]*Task
 
 // Task represents a task
 type Task struct {
-	Task        string
-	Cmds        []*Cmd
-	Deps        []*Dep
-	Desc        string
-	Summary     string
-	Sources     []string
-	Generates   []string
-	Status      []string
-	Dir         string
-	Vars        Vars
-	Env         Vars
-	Silent      bool
-	Method      string
-	Prefix      string
-	Hidden      bool
-	direct      bool
-	IgnoreError bool `yaml:"ignore_error"`
+	Task         string
+	Cmds         []*Cmd
+	Deps         []*Dep
+	Desc         string
+	Summary      string
+	Sources      []string
+	Generates    []string
+	Status       []string
+	Dir          string
+	Vars         Vars
+	Env          Vars
+	Silent       bool
+	Method       string
+	Prefix       string
+	Hidden       bool
+	direct       bool
+	IgnoreError  bool `yaml:"ignore_error"`
+	AbortOnError bool `yaml:"abort_on_error"`
 }
 
 // ApplyNamespace will update the task dependencies end returns new tasks

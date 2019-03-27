@@ -1,0 +1,15 @@
+version: '2'
+
+tasks:
+  task-should-pass:
+    cmds:
+      - exit 1
+      - while true; do sleep 1; done 
+    ignore_error: true
+    abort_on_error: true
+
+  task-should-fail:
+    cmds:
+      - exit 1
+    abort_on_error: yes
+
