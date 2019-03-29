@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"sync"
 	"sync/atomic"
 
 	"github.com/go-task/task/v2/internal/compiler"
@@ -51,6 +52,8 @@ type Executor struct {
 	taskvars taskfile.Vars
 
 	taskCallCount map[string]*int32
+	generating    map[string]*sync.Mutex
+	generateLock  sync.Mutex
 }
 
 // Run runs Task
@@ -166,6 +169,8 @@ func (e *Executor) Setup() error {
 		}
 	}
 
+	e.generating = make(map[string]*sync.Mutex)
+
 	e.taskCallCount = make(map[string]*int32, len(e.Taskfile.Tasks))
 	for k := range e.Taskfile.Tasks {
 		e.taskCallCount[k] = new(int32)
@@ -186,6 +191,21 @@ func (e *Executor) RunTask(ctx context.Context, call taskfile.Call) error {
 	if err := e.runDeps(ctx, t); err != nil {
 		return err
 	}
+
+	e.generateLock.Lock()
+	for _, g := range t.Generates {
+		m, ok := e.generating[g]
+
+		if !ok {
+			m = &sync.Mutex{}
+			e.generating[g] = m
+		}
+
+		m.Lock()
+
+		defer m.Unlock()
+	}
+	e.generateLock.Unlock()
 
 	if !e.Force {
 		upToDate, err := e.isTaskUpToDate(ctx, t)
