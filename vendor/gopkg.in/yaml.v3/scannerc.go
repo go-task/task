@@ -1,3 +1,25 @@
+// 
+// Copyright (c) 2011-2019 Canonical Ltd
+// Copyright (c) 2006-2010 Kirill Simonov
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy of
+// this software and associated documentation files (the "Software"), to deal in
+// the Software without restriction, including without limitation the rights to
+// use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+// of the Software, and to permit persons to whom the Software is furnished to do
+// so, subject to the following conditions:
+// 
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+
 package yaml
 
 import (
@@ -629,8 +651,11 @@ func yaml_parser_fetch_more_tokens(parser *yaml_parser_t) bool {
 		// Check if we really need to fetch more tokens.
 		need_more_tokens := false
 
-		if parser.tokens_head == len(parser.tokens) {
-			// Queue is empty.
+		// [Go] When parsing flow items, force the queue to have at least
+		// two items so that comments after commas may be associated
+		// with the value being parsed before them.
+		if parser.tokens_head == len(parser.tokens) || parser.flow_level > 0 && parser.tokens_head >= len(parser.tokens)-1 {
+			// Queue is empty or has just one element inside a flow context.
 			need_more_tokens = true
 		} else {
 			// Check if any potential simple key may occupy the head position.
@@ -662,7 +687,7 @@ func yaml_parser_fetch_more_tokens(parser *yaml_parser_t) bool {
 }
 
 // The dispatcher for token fetchers.
-func yaml_parser_fetch_next_token(parser *yaml_parser_t) bool {
+func yaml_parser_fetch_next_token(parser *yaml_parser_t) (ok bool) {
 	// Ensure that the buffer is initialized.
 	if parser.unread < 1 && !yaml_parser_update_buffer(parser, 1) {
 		return false
@@ -716,6 +741,25 @@ func yaml_parser_fetch_next_token(parser *yaml_parser_t) bool {
 	if parser.mark.column == 0 && buf[pos] == '.' && buf[pos+1] == '.' && buf[pos+2] == '.' && is_blankz(buf, pos+3) {
 		return yaml_parser_fetch_document_indicator(parser, yaml_DOCUMENT_END_TOKEN)
 	}
+
+	comment_mark := parser.mark
+	if parser.flow_level > 0 && buf[pos] == ',' && len(parser.tokens) > 0 {
+		// Associate any following comments with the prior token.
+		comment_mark = parser.tokens[len(parser.tokens)-1].start_mark
+	}
+	defer func() {
+		if !ok {
+			return
+		}
+		if !yaml_parser_scan_line_comment(parser, comment_mark) {
+			ok = false
+			return
+		}
+		if !yaml_parser_scan_foot_comment(parser, comment_mark) {
+			ok = false
+			return
+		}
+	}()
 
 	// Is it the flow sequence start indicator?
 	if buf[pos] == '[' {
@@ -810,7 +854,7 @@ func yaml_parser_fetch_next_token(parser *yaml_parser_t) bool {
 	// if it is followed by a non-space character.
 	//
 	// The last rule is more restrictive than the specification requires.
-	// [Go] Make this logic more reasonable.
+	// [Go] TODO Make this logic more reasonable.
 	//switch parser.buffer[parser.buffer_pos] {
 	//case '-', '?', ':', ',', '?', '-', ',', ':', ']', '[', '}', '{', '&', '#', '!', '*', '>', '|', '"', '\'', '@', '%', '-', '`':
 	//}
@@ -1097,6 +1141,7 @@ func yaml_parser_fetch_document_indicator(parser *yaml_parser_t, typ yaml_token_
 
 // Produce the FLOW-SEQUENCE-START or FLOW-MAPPING-START token.
 func yaml_parser_fetch_flow_collection_start(parser *yaml_parser_t, typ yaml_token_type_t) bool {
+
 	// The indicators '[' and '{' may start a simple key.
 	if !yaml_parser_save_simple_key(parser) {
 		return false
@@ -1455,11 +1500,8 @@ func yaml_parser_scan_to_next_token(parser *yaml_parser_t) bool {
 
 		// Eat a comment until a line break.
 		if parser.buffer[parser.buffer_pos] == '#' {
-			for !is_breakz(parser.buffer, parser.buffer_pos) {
-				skip(parser)
-				if parser.unread < 1 && !yaml_parser_update_buffer(parser, 1) {
-					return false
-				}
+			if !yaml_parser_scan_head_comment(parser, parser.mark) {
+				return false
 			}
 		}
 
@@ -1557,6 +1599,10 @@ func yaml_parser_scan_directive(parser *yaml_parser_t, token *yaml_token_t) bool
 	}
 
 	if parser.buffer[parser.buffer_pos] == '#' {
+		// [Go] Discard this inline comment for the time being.
+		//if !yaml_parser_scan_line_comment(parser, start_mark) {
+		//	return false
+		//}
 		for !is_breakz(parser.buffer, parser.buffer_pos) {
 			skip(parser)
 			if parser.unread < 1 && !yaml_parser_update_buffer(parser, 1) {
@@ -1972,7 +2018,7 @@ func yaml_parser_scan_tag_uri(parser *yaml_parser_t, directive bool, head []byte
 	//      '0'-'9', 'A'-'Z', 'a'-'z', '_', '-', ';', '/', '?', ':', '@', '&',
 	//      '=', '+', '$', ',', '.', '!', '~', '*', '\'', '(', ')', '[', ']',
 	//      '%'.
-	// [Go] Convert this into more reasonable logic.
+	// [Go] TODO Convert this into more reasonable logic.
 	for is_alpha(parser.buffer, parser.buffer_pos) || parser.buffer[parser.buffer_pos] == ';' ||
 		parser.buffer[parser.buffer_pos] == '/' || parser.buffer[parser.buffer_pos] == '?' ||
 		parser.buffer[parser.buffer_pos] == ':' || parser.buffer[parser.buffer_pos] == '@' ||
@@ -2127,11 +2173,8 @@ func yaml_parser_scan_block_scalar(parser *yaml_parser_t, token *yaml_token_t, l
 		}
 	}
 	if parser.buffer[parser.buffer_pos] == '#' {
-		for !is_breakz(parser.buffer, parser.buffer_pos) {
-			skip(parser)
-			if parser.unread < 1 && !yaml_parser_update_buffer(parser, 1) {
-				return false
-			}
+		if !yaml_parser_scan_line_comment(parser, start_mark) {
+			return false
 		}
 	}
 
@@ -2691,6 +2734,162 @@ func yaml_parser_scan_plain_scalar(parser *yaml_parser_t, token *yaml_token_t) b
 	// Note that we change the 'simple_key_allowed' flag.
 	if leading_blanks {
 		parser.simple_key_allowed = true
+	}
+	return true
+}
+
+func yaml_parser_scan_line_comment(parser *yaml_parser_t, after yaml_mark_t) bool {
+	if parser.mark.column == 0 {
+		return true
+	}
+
+	parser.comments = append(parser.comments, yaml_comment_t{after: after})
+	comment := &parser.comments[len(parser.comments)-1].line
+
+	for peek := 0; peek < 512; peek++ {
+		if parser.unread < peek+1 && !yaml_parser_update_buffer(parser, peek+1) {
+			break
+		}
+		if is_blank(parser.buffer, parser.buffer_pos+peek) {
+			continue
+		}
+		if parser.buffer[parser.buffer_pos+peek] == '#' {
+			if len(*comment) > 0 {
+				*comment = append(*comment, '\n')
+			}
+			for !is_breakz(parser.buffer, parser.buffer_pos+peek) {
+				*comment = append(*comment, parser.buffer[parser.buffer_pos+peek])
+				peek++
+				if parser.unread < peek+1 && !yaml_parser_update_buffer(parser, peek+1) {
+					return false
+				}
+			}
+
+			// Skip until after the consumed comment line.
+			until := parser.buffer_pos + peek
+			for parser.buffer_pos < until {
+				if is_break(parser.buffer, parser.buffer_pos) {
+					//break // Leave the break in the buffer so calling this function twice is safe.
+					if parser.unread < 2 && !yaml_parser_update_buffer(parser, 2) {
+						return false
+					}
+					skip_line(parser)
+				} else {
+					skip(parser)
+				}
+			}
+		}
+		break
+	}
+	return true
+}
+
+func yaml_parser_scan_head_comment(parser *yaml_parser_t, after yaml_mark_t) bool {
+	parser.comments = append(parser.comments, yaml_comment_t{after: after})
+	comment := &parser.comments[len(parser.comments)-1].head
+	breaks := false
+	for peek := 0; peek < 512; peek++ {
+		if parser.unread < peek+1 && !yaml_parser_update_buffer(parser, peek+1) {
+			break
+		}
+		if parser.buffer[parser.buffer_pos+peek] == 0 {
+			break
+		}
+		if is_blank(parser.buffer, parser.buffer_pos+peek) {
+			continue
+		}
+		if is_break(parser.buffer, parser.buffer_pos+peek) {
+			if !breaks {
+				*comment = append(*comment, '\n')
+			}
+			breaks = true
+		} else if parser.buffer[parser.buffer_pos+peek] == '#' {
+			if len(*comment) > 0 {
+				*comment = append(*comment, '\n')
+			}
+			breaks = false
+			for !is_breakz(parser.buffer, parser.buffer_pos+peek) {
+				*comment = append(*comment, parser.buffer[parser.buffer_pos+peek])
+				peek++
+				if parser.unread < peek+1 && !yaml_parser_update_buffer(parser, peek+1) {
+					return false
+				}
+			}
+
+			// Skip until after the consumed comment line.
+			until := parser.buffer_pos + peek
+			for parser.buffer_pos < until {
+				if is_break(parser.buffer, parser.buffer_pos) {
+					if parser.unread < 2 && !yaml_parser_update_buffer(parser, 2) {
+						return false
+					}
+					skip_line(parser)
+				} else {
+					skip(parser)
+				}
+			}
+			peek = 0
+		} else {
+			break
+		}
+	}
+	return true
+}
+
+func yaml_parser_scan_foot_comment(parser *yaml_parser_t, after yaml_mark_t) bool {
+	parser.comments = append(parser.comments, yaml_comment_t{after: after})
+	comment := &parser.comments[len(parser.comments)-1].foot
+	original := *comment
+	breaks := false
+	peek := 0
+	for ; peek < 32768; peek++ {
+		if parser.unread < peek+1 && !yaml_parser_update_buffer(parser, peek+1) {
+			break
+		}
+		c := parser.buffer[parser.buffer_pos+peek]
+		if c == 0 {
+			break
+		}
+		if is_blank(parser.buffer, parser.buffer_pos+peek) {
+			continue
+		}
+		if is_break(parser.buffer, parser.buffer_pos+peek) {
+			if breaks {
+				break
+			}
+			breaks = true
+		} else if c == '#' {
+			if len(*comment) > 0 {
+				*comment = append(*comment, '\n')
+			}
+			for !is_breakz(parser.buffer, parser.buffer_pos+peek) {
+				*comment = append(*comment, parser.buffer[parser.buffer_pos+peek])
+				peek++
+				if parser.unread < peek+1 && !yaml_parser_update_buffer(parser, peek+1) {
+					return false
+				}
+			}
+			breaks = true
+		} else if c == ']' || c == '}' {
+			break
+		} else {
+			// Abort and allow that next line to have the comment as its header.
+			*comment = original
+			return true
+		}
+	}
+
+	// Skip until after the consumed comment lines.
+	until := parser.buffer_pos + peek
+	for parser.buffer_pos < until {
+		if is_break(parser.buffer, parser.buffer_pos) {
+			if parser.unread < 2 && !yaml_parser_update_buffer(parser, 2) {
+				return false
+			}
+			skip_line(parser)
+		} else {
+			skip(parser)
+		}
 	}
 	return true
 }
