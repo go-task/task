@@ -18,6 +18,6 @@ require (
 	golang.org/x/net v0.0.0-20180826012351-8a410e7b638d // indirect
 	golang.org/x/sync v0.0.0-20180314180146-1d60e4601c6f
 	golang.org/x/sys v0.0.0-20180831094639-fa5fdf94c789 // indirect
-	gopkg.in/yaml.v2 v2.2.1
+	gopkg.in/yaml.v3 v3.0.0-20190409140830-cdc409dda467
 	mvdan.cc/sh v2.6.4+incompatible
 )
