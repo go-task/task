@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Fixed some issues with interactive command line tools, where sometimes
+  the output were not being shown, and similar issues
+  ([#114](https://github.com/go-task/task/issues/114), [#190](https://github.com/go-task/task/issues/190), [#200](https://github.com/go-task/task/pull/200)).
+
 ## v2.5.0 = 2019-03-16
 
 - We moved from the taskfile.org domain to the new fancy taskfile.dev domain.
