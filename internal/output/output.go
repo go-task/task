@@ -5,5 +5,5 @@ import (
 )
 
 type Output interface {
-	WrapWriter(w io.Writer, prefix string) io.WriteCloser
+	WrapWriter(w io.Writer, prefix string) io.Writer
 }
