@@ -3,6 +3,7 @@ package output_test
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"testing"
 
 	"github.com/go-task/task/v2/internal/output"
@@ -24,7 +25,7 @@ func TestInterleaved(t *testing.T) {
 func TestGroup(t *testing.T) {
 	var b bytes.Buffer
 	var o output.Output = output.Group{}
-	var w = o.WrapWriter(&b, "")
+	var w = o.WrapWriter(&b, "").(io.WriteCloser)
 
 	fmt.Fprintln(w, "foo\nbar")
 	assert.Equal(t, "", b.String())
@@ -37,7 +38,7 @@ func TestGroup(t *testing.T) {
 func TestPrefixed(t *testing.T) {
 	var b bytes.Buffer
 	var o output.Output = output.Prefixed{}
-	var w = o.WrapWriter(&b, "prefix")
+	var w = o.WrapWriter(&b, "prefix").(io.WriteCloser)
 
 	t.Run("simple use cases", func(t *testing.T) {
 		b.Reset()

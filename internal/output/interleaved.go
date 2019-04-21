@@ -6,18 +6,6 @@ import (
 
 type Interleaved struct{}
 
-func (Interleaved) WrapWriter(w io.Writer, _ string) io.WriteCloser {
-	return nopWriterCloser{w: w}
-}
-
-type nopWriterCloser struct {
-	w io.Writer
-}
-
-func (wc nopWriterCloser) Write(p []byte) (int, error) {
-	return wc.w.Write(p)
-}
-
-func (wc nopWriterCloser) Close() error {
-	return nil
+func (Interleaved) WrapWriter(w io.Writer, _ string) io.Writer {
+	return w
 }
