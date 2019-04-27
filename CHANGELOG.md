@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 2.5.1 - 2019-04-27
 
 - Fixed some issues with interactive command line tools, where sometimes
   the output were not being shown, and similar issues
