@@ -7,7 +7,7 @@ import (
 
 type Group struct{}
 
-func (Group) WrapWriter(w io.Writer, _ string) io.WriteCloser {
+func (Group) WrapWriter(w io.Writer, _ string) io.Writer {
 	return &groupWriter{writer: w}
 }
 

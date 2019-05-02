@@ -1,6 +1,13 @@
 # Changelog
 
-## v2.5.0 = 2019-03-16
+## 2.5.1 - 2019-04-27
+
+- Fixed some issues with interactive command line tools, where sometimes
+  the output were not being shown, and similar issues
+  ([#114](https://github.com/go-task/task/issues/114), [#190](https://github.com/go-task/task/issues/190), [#200](https://github.com/go-task/task/pull/200)).
+- Upgraded [go-yaml/yaml](https://github.com/go-yaml/yaml) from v2 to v3.
+
+## v2.5.0 - 2019-03-16
 
 - We moved from the taskfile.org domain to the new fancy taskfile.dev domain.
   While stuff is being redirected, we strongly recommend to everyone that use

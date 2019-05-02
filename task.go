@@ -255,6 +255,22 @@ func (e *Executor) runCommand(ctx context.Context, t *taskfile.Task, call taskfi
 			Dir:     t.Dir,
 			Env:     getEnviron(t),
 		}
+
+		stdOut := e.Output.WrapWriter(e.Stdout, t.Prefix)
+		stdErr := e.Output.WrapWriter(e.Stderr, t.Prefix)
+		defer func() {
+			if _, ok := stdOut.(*os.File); !ok {
+				if closer, ok := stdOut.(io.Closer); ok {
+					closer.Close()
+				}
+			}
+			if _, ok := stdErr.(*os.File); !ok {
+				if closer, ok := stdErr.(io.Closer); ok {
+					closer.Close()
+				}
+			}
+		}()
+
 		if cmd.InteractiveModeEnabled {
 			opts.Stdout = os.Stdout
 			opts.Stderr = os.Stderr

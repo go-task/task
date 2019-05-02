@@ -15,9 +15,10 @@ require (
 	github.com/spf13/afero v1.2.2
 	github.com/spf13/pflag v1.0.3
 	github.com/stretchr/testify v1.3.0
-	golang.org/x/crypto v0.0.0-20190325154230-a5d413f7728c // indirect
-	golang.org/x/sync v0.0.0-20190227155943-e225da77a7e6
+	golang.org/x/crypto v0.0.0-20190426145343-a29dc8fdc734 // indirect
+	golang.org/x/sync v0.0.0-20181108010431-42b317875d0f
 	gopkg.in/h2non/gock.v1 v1.0.14
-	gopkg.in/yaml.v2 v2.2.2
+	gopkg.in/yaml.v2 v2.2.1
+	gopkg.in/yaml.v3 v3.0.0-20190502103701-55513cacd4ae
 	mvdan.cc/sh v2.6.4+incompatible
 )
