@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Allow setting global variables through the CLI
+  ([#192](https://github.com/go-task/task/issues/192)).
+
 ## 2.5.1 - 2019-04-27
 
 - Fixed some issues with interactive command line tools, where sometimes

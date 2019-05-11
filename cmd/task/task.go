@@ -121,9 +121,9 @@ func main() {
 		arguments = []string{"default"}
 	}
 
-	calls, err := args.Parse(arguments...)
-	if err != nil {
-		log.Fatal(err)
+	calls, globals := args.Parse(arguments...)
+	for name, value := range globals {
+		e.Taskfile.Vars[name] = value
 	}
 
 	ctx := context.Background()
@@ -132,7 +132,7 @@ func main() {
 	}
 
 	if status {
-		if err = e.Status(ctx, calls...); err != nil {
+		if err := e.Status(ctx, calls...); err != nil {
 			log.Fatal(err)
 		}
 		return

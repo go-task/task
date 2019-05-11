@@ -371,6 +371,12 @@ right before.
 $ task write-file FILE=file.txt "CONTENT=Hello, World!" print "MESSAGE=All done!"
 ```
 
+If you want to set global variables using this syntax, give it before any task:
+
+```bash
+$ task OUTPUT=file.txt generate-file
+```
+
 Example of locally declared vars:
 
 ```yaml
@@ -582,7 +588,7 @@ dependencies:
 commands:
  - your-release-tool
 ```
-If a summary is missing, the description will be printed. 
+If a summary is missing, the description will be printed.
 If the task does not have a summary or a description, a warning is printed.
 
 Please note: *showing the summary will not execute the command*.
