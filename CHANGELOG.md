@@ -1,7 +1,9 @@
 # Changelog
 
-## Unreleased
+## v2.5.2 - 2019-05-11
 
+- Reverted YAML upgrade due issues with CRLF on Windows
+  ([#201](https://github.com/go-task/task/issues/201), [go-yaml/yaml#450](https://github.com/go-yaml/yaml/issues/450)).
 - Allow setting global variables through the CLI
   ([#192](https://github.com/go-task/task/issues/192)).
 
