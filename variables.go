@@ -73,6 +73,7 @@ func (e *Executor) CompiledTask(call taskfile.Call) (*taskfile.Task, error) {
 				IgnoreError: cmd.IgnoreError,
 			}
 		}
+
 	}
 	if len(origTask.Deps) > 0 {
 		new.Deps = make([]*taskfile.Dep, len(origTask.Deps))
@@ -80,6 +81,16 @@ func (e *Executor) CompiledTask(call taskfile.Call) (*taskfile.Task, error) {
 			new.Deps[i] = &taskfile.Dep{
 				Task: r.Replace(dep.Task),
 				Vars: r.ReplaceVars(dep.Vars),
+			}
+		}
+	}
+	if len(origTask.Precondition) > 0 {
+		new.Precondition = make([]*taskfile.Precondition, len(origTask.Precondition))
+		for i, precond := range origTask.Precondition {
+			new.Precondition[i] = &taskfile.Precondition{
+				Sh:          r.Replace(precond.Sh),
+				Msg:         r.Replace(precond.Msg),
+				IgnoreError: precond.IgnoreError,
 			}
 		}
 	}

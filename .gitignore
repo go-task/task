@@ -21,3 +21,6 @@ dist/
 
 # intellij idea/goland
 .idea/
+
+# exuberant ctags
+tags

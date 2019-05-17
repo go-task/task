@@ -273,6 +273,68 @@ func TestStatus(t *testing.T) {
 	}
 }
 
+func TestPrecondition(t *testing.T) {
+	const dir = "testdata/precondition"
+
+	var buff bytes.Buffer
+	e := &task.Executor{
+		Dir:    dir,
+		Stdout: &buff,
+		Stderr: &buff,
+		Silent: false,
+	}
+
+	// A precondition that has been met
+	assert.NoError(t, e.Setup())
+	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "foo"}))
+	if buff.String() != "" {
+		t.Errorf("Got Output when none was expected: %s", buff.String())
+	}
+
+	// A precondition that was not met
+	assert.Error(t, e.Run(context.Background(), taskfile.Call{Task: "impossible"}))
+
+	if buff.String() != "1 != 0\n" {
+		t.Errorf("Wrong output message: %s", buff.String())
+	}
+	buff.Reset()
+
+	// Calling a task with a precondition in a dependency fails the task
+	assert.Error(t, e.Run(context.Background(), taskfile.Call{Task: "depends_on_imposssible"}))
+	if buff.String() != "1 != 0\n" {
+		t.Errorf("Wrong output message: %s", buff.String())
+	}
+	buff.Reset()
+
+	// Calling a task with a precondition in a cmd fails the task
+	assert.Error(t, e.Run(context.Background(), taskfile.Call{Task: "executes_failing_task_as_cmd"}))
+	if buff.String() != "1 != 0\n" {
+		t.Errorf("Wrong output message: %s", buff.String())
+	}
+	buff.Reset()
+
+	// A task with a failing precondition and ignore_errors on still fails
+	assert.Error(t, e.Run(context.Background(), taskfile.Call{Task: "impossible_but_i_dont_care"}))
+	if buff.String() != "2 != 1\n" {
+		t.Errorf("Wrong output message: %s", buff.String())
+	}
+	buff.Reset()
+
+	// If a precondition has ignore errors, then it will allow _dependent_ tasks to execute
+	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "depends_on_failure_of_impossible"}))
+	if buff.String() != "2 != 1\ntask: optional precondition not met\n" {
+		t.Errorf("Wrong output message: %s", buff.String())
+	}
+	buff.Reset()
+
+	// If a precondition has ignore errors, then it will allow tasks calling it to execute
+	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "executes_failing_task_as_cmd_but_succeeds"}))
+	if buff.String() != "2 != 1\ntask: optional precondition not met\n" {
+		t.Errorf("Wrong output message: %s", buff.String())
+	}
+
+}
+
 func TestGenerates(t *testing.T) {
 	const (
 		srcTask        = "sub/src.txt"

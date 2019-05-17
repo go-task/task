@@ -1,0 +1,34 @@
+version: '2'
+
+tasks:
+  foo:
+    precondition:
+      - test -f foo.txt
+
+  impossible:
+    precondition:
+      - sh: "[ 1 = 0 ]"
+        msg: "1 != 0"
+
+  impossible_but_i_dont_care:
+    precondition:
+      - sh: "[ 2 = 1 ]"
+        msg: "2 != 1"
+        ignore_error: true
+
+  depends_on_imposssible:
+    deps:
+      - impossible
+
+  executes_failing_task_as_cmd:
+    cmds:
+      - task: impossible
+
+  depends_on_failure_of_impossible:
+    deps:
+      - impossible_but_i_dont_care
+
+  executes_failing_task_as_cmd_but_succeeds:
+    cmds:
+      - task: impossible_but_i_dont_care
+

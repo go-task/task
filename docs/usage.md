@@ -344,6 +344,53 @@ up-to-date.
 Also, `task --status [tasks]...` will exit with a non-zero exit code if any of
 the tasks are not up-to-date.
 
+If you need a certain set of conditions to be _true_ you can use the
+`preconditions` stanza.  `preconditions` are very similar to `status`
+lines except they support `sh` expansion and they SHOULD all return 0
+
+```yaml
+version: '2'
+
+tasks:
+  generate-files:
+    cmds:
+      - mkdir directory
+      - touch directory/file1.txt
+      - touch directory/file2.txt
+    # test existence of files
+    preconditions:
+      - test -f .env
+      - sh: "[ 1 = 0 ]"
+        msg: "One doesn't equal Zero, Halting"
+```
+
+Preconditions can set specific failure messages that can tell
+a user what to do using the `msg` field.
+
+If a task has a dependency on a sub-task with a precondition, and that
+precondition is not met - the calling task will fail.  Adding `ignore_errors`
+to the precondition will cause parent tasks to execute even if the sub task
+can not run.  Note that a task executed directly with a failing precondition
+will not run unless `--force` is given.
+
+```yaml
+version: '2'
+tasks:
+  task_will_fail:
+    preconditions:
+      - sh: "exit 1"
+        ignore_errors: true
+
+  task_will_succeed:
+  deps:
+    - task_will_fail
+
+  task_will_succeed:
+  cmds:
+    - task: task_will_fail
+    - echo "I will run"
+```
+
 ## Variables
 
 When doing interpolation of variables, Task will look for the below.
