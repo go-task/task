@@ -194,7 +194,7 @@ func (e *Executor) RunTask(ctx context.Context, call taskfile.Call) error {
 		}
 		if upToDate {
 			if !e.Silent {
-				e.Logger.Errf(`task: Task "%s" is up to date`, t.Task)
+				e.Logger.Errf(logger.Magenta, `task: Task "%s" is up to date`, t.Task)
 			}
 			return nil
 		}
@@ -203,11 +203,11 @@ func (e *Executor) RunTask(ctx context.Context, call taskfile.Call) error {
 	for i := range t.Cmds {
 		if err := e.runCommand(ctx, t, call, i); err != nil {
 			if err2 := e.statusOnError(t); err2 != nil {
-				e.Logger.VerboseErrf("task: error cleaning status on error: %v", err2)
+				e.Logger.VerboseErrf(logger.Yellow, "task: error cleaning status on error: %v", err2)
 			}
 
 			if execext.IsExitError(err) && t.IgnoreError {
-				e.Logger.VerboseErrf("task: task error ignored: %v", err)
+				e.Logger.VerboseErrf(logger.Yellow, "task: task error ignored: %v", err)
 				continue
 			}
 
@@ -239,7 +239,7 @@ func (e *Executor) runCommand(ctx context.Context, t *taskfile.Task, call taskfi
 		return e.RunTask(ctx, taskfile.Call{Task: cmd.Task, Vars: cmd.Vars})
 	case cmd.Cmd != "":
 		if e.Verbose || (!cmd.Silent && !t.Silent && !e.Silent) {
-			e.Logger.Errf(cmd.Cmd)
+			e.Logger.Errf(logger.Green, "task: %s", cmd.Cmd)
 		}
 
 		if e.Dry {
@@ -270,7 +270,7 @@ func (e *Executor) runCommand(ctx context.Context, t *taskfile.Task, call taskfi
 			Stderr:  stdErr,
 		})
 		if execext.IsExitError(err) && cmd.IgnoreError {
-			e.Logger.VerboseErrf("task: command error ignored: %v", err)
+			e.Logger.VerboseErrf(logger.Yellow, "task: command error ignored: %v", err)
 			return nil
 		}
 		return err
