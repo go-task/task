@@ -10,16 +10,12 @@ import (
 )
 
 var (
-	// ErrNecessaryPreconditionFailed is returned when a precondition fails
-	ErrNecessaryPreconditionFailed = errors.New("task: precondition not met")
-	// ErrOptionalPreconditionFailed is returned when a precondition fails
-	// that has ignore_error set to true
-	ErrOptionalPreconditionFailed = errors.New("task: optional precondition not met")
+	// ErrPreconditionFailed is returned when a precondition fails
+	ErrPreconditionFailed = errors.New("task: precondition not met")
 )
 
 func (e *Executor) areTaskPreconditionsMet(ctx context.Context, t *taskfile.Task) (bool, error) {
-	var optionalPreconditionFailed bool
-	for _, p := range t.Precondition {
+	for _, p := range t.Preconditions {
 		err := execext.RunCommand(ctx, &execext.RunCommandOptions{
 			Command: p.Sh,
 			Dir:     t.Dir,
@@ -28,16 +24,8 @@ func (e *Executor) areTaskPreconditionsMet(ctx context.Context, t *taskfile.Task
 
 		if err != nil {
 			e.Logger.Outf(p.Msg)
-			if p.IgnoreError == true {
-				optionalPreconditionFailed = true
-			} else {
-				return false, ErrNecessaryPreconditionFailed
-			}
+			return false, ErrPreconditionFailed
 		}
-	}
-
-	if optionalPreconditionFailed == true {
-		return true, ErrOptionalPreconditionFailed
 	}
 
 	return true, nil

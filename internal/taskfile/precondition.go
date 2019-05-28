@@ -12,9 +12,8 @@ var (
 
 // Precondition represents a precondition necessary for a task to run
 type Precondition struct {
-	Sh          string
-	Msg         string
-	IgnoreError bool
+	Sh  string
+	Msg string
 }
 
 // UnmarshalYAML implements yaml.Unmarshaler interface.
@@ -24,28 +23,23 @@ func (p *Precondition) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	if err := unmarshal(&cmd); err == nil {
 		p.Sh = cmd
 		p.Msg = fmt.Sprintf("`%s` failed", cmd)
-		p.IgnoreError = false
 		return nil
 	}
 
 	var sh struct {
-		Sh          string
-		Msg         string
-		IgnoreError bool `yaml:"ignore_error"`
+		Sh  string
+		Msg string
 	}
 
-	err := unmarshal(&sh)
-
-	if err == nil {
-		p.Sh = sh.Sh
-		p.Msg = sh.Msg
-		if p.Msg == "" {
-			p.Msg = fmt.Sprintf("%s failed", sh.Sh)
-		}
-
-		p.IgnoreError = sh.IgnoreError
-		return nil
+	if err := unmarshal(&sh); err != nil {
+		return err
 	}
 
-	return err
+	p.Sh = sh.Sh
+	p.Msg = sh.Msg
+	if p.Msg == "" {
+		p.Msg = fmt.Sprintf("%s failed", sh.Sh)
+	}
+
+	return nil
 }

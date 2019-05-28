@@ -189,12 +189,12 @@ func (e *Executor) RunTask(ctx context.Context, call taskfile.Call) error {
 	}
 
 	if !e.Force {
-		upToDate, err := e.isTaskUpToDate(ctx, t)
+		preCondMet, err := e.areTaskPreconditionsMet(ctx, t)
 		if err != nil {
 			return err
 		}
 
-		preCondMet, err := e.areTaskPreconditionsMet(ctx, t)
+		upToDate, err := e.isTaskUpToDate(ctx, t)
 		if err != nil {
 			return err
 		}
@@ -233,11 +233,8 @@ func (e *Executor) runDeps(ctx context.Context, t *taskfile.Task) error {
 		g.Go(func() error {
 			err := e.RunTask(ctx, taskfile.Call{Task: d.Task, Vars: d.Vars})
 			if err != nil {
-				if err == ErrOptionalPreconditionFailed {
-					e.Logger.Errf("%s", err)
-				} else {
-					return err
-				}
+				e.Logger.Errf("%s", err)
+				return err
 			}
 			return nil
 		})
@@ -253,11 +250,8 @@ func (e *Executor) runCommand(ctx context.Context, t *taskfile.Task, call taskfi
 	case cmd.Task != "":
 		err := e.RunTask(ctx, taskfile.Call{Task: cmd.Task, Vars: cmd.Vars})
 		if err != nil {
-			if err == ErrOptionalPreconditionFailed {
-				e.Logger.Errf("%s", err)
-			} else {
-				return err
-			}
+			e.Logger.Errf("%s", err)
+			return err
 		}
 		return nil
 	case cmd.Cmd != "":
