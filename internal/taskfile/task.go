@@ -13,7 +13,7 @@ type Task struct {
 	Sources      []string
 	Generates    []string
 	Status       []string
-	Precondition []*Precondition
+	Preconditions []*Precondition
 	Dir          string
 	Vars         Vars
 	Env          Vars

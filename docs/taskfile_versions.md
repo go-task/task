@@ -141,9 +141,9 @@ includes:
   docker: ./DockerTasks.yml
 ```
 
-## Version 2.3
+## Version 2.6
 
-Version 2.3 comes with `preconditions` stanza in tasks.
+Version 2.6 comes with `preconditions` stanza in tasks.
 
 ```yaml
 version: '2'

@@ -73,7 +73,6 @@ func (e *Executor) CompiledTask(call taskfile.Call) (*taskfile.Task, error) {
 				IgnoreError: cmd.IgnoreError,
 			}
 		}
-
 	}
 	if len(origTask.Deps) > 0 {
 		new.Deps = make([]*taskfile.Dep, len(origTask.Deps))
