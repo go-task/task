@@ -365,13 +365,16 @@ tasks:
 ```
 
 Preconditions can set specific failure messages that can tell
-a user what to do using the `msg` field.
+a user what steps to take using the `msg` field.
 
 If a task has a dependency on a sub-task with a precondition, and that
-precondition is not met - the calling task will fail.  Adding `ignore_errors`
-to the precondition will cause parent tasks to execute even if the sub task
-can not run.  Note that a task executed directly with a failing precondition
-will not run unless `--force` is given.
+precondition is not met - the calling task will fail.  Note that a task
+executed with a failing precondition will not run unless `--force` is
+given.
+
+Unlike `status` which will skip a task if it is up to date, and continue
+executing tasks that depenend on it a `precondition` will fail a task, along
+with any other tasks that depend on it.
 
 ```yaml
 version: '2'
@@ -379,16 +382,15 @@ tasks:
   task_will_fail:
     preconditions:
       - sh: "exit 1"
-        ignore_errors: true
 
-  task_will_succeed:
+  task_will_also_fail:
   deps:
     - task_will_fail
 
-  task_will_succeed:
+  task_will_still_fail:
   cmds:
     - task: task_will_fail
-    - echo "I will run"
+    - echo "I will not run"
 ```
 
 ## Variables
