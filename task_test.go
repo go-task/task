@@ -575,3 +575,22 @@ func readTestFixture(t *testing.T, dir string, file string) string {
 	assert.NoError(t, err, "error reading text fixture")
 	return string(b)
 }
+
+func TestWhenNoDirAttributeItRunsInSameDirAsTaskfile(t *testing.T) {
+	const expected = "dir"
+	const dir = "testdata/" + expected
+	var out bytes.Buffer
+	e := &task.Executor{
+		Dir:    dir,
+		Stdout: &out,
+		Stderr: &out,
+	}
+
+	assert.NoError(t, e.Setup())
+	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "whereami"}))
+
+	// got should be the "dir" part of "testdata/dir"
+	got := strings.TrimSuffix(filepath.Base(out.String()), "\n")
+	assert.Equal(t, expected, got, "Mismatch in the working directory")
+}
+
