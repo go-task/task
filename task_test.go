@@ -594,3 +594,20 @@ func TestWhenNoDirAttributeItRunsInSameDirAsTaskfile(t *testing.T) {
 	assert.Equal(t, expected, got, "Mismatch in the working directory")
 }
 
+func TestWhenDirAttributeAndDirExistsItRunsInThatDir(t *testing.T) {
+	const expected = "exists"
+	const dir = "testdata/dir/explicit_exists"
+	var out bytes.Buffer
+	e := &task.Executor{
+		Dir:    dir,
+		Stdout: &out,
+		Stderr: &out,
+	}
+
+	assert.NoError(t, e.Setup())
+	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "whereami"}))
+
+	got := strings.TrimSuffix(filepath.Base(out.String()), "\n")
+	assert.Equal(t, expected, got, "Mismatch in the working directory")
+}
+
