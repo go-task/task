@@ -611,3 +611,29 @@ func TestWhenDirAttributeAndDirExistsItRunsInThatDir(t *testing.T) {
 	assert.Equal(t, expected, got, "Mismatch in the working directory")
 }
 
+func TestWhenDirAttributeItCreatesMissingAndRunsInThatDir(t *testing.T) {
+	const expected = "createme"
+	const dir = "testdata/dir/explicit_doesnt_exist/"
+	const toBeCreated = dir + expected
+	const target = "whereami"
+	var out bytes.Buffer
+	e := &task.Executor{
+		Dir:    dir,
+		Stdout: &out,
+		Stderr: &out,
+	}
+
+	// Ensure that the directory to be created doesn't actually exist.
+	_ = os.Remove(toBeCreated)
+	if _, err := os.Stat(toBeCreated); err == nil {
+		t.Errorf("Directory should not exist: %v", err)
+	}
+	assert.NoError(t, e.Setup())
+	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: target}))
+
+	got := strings.TrimSuffix(filepath.Base(out.String()), "\n")
+	assert.Equal(t, expected, got, "Mismatch in the working directory")
+
+	// Clean-up after ourselves only if no error.
+	_ = os.Remove(toBeCreated)
+}
