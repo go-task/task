@@ -236,7 +236,7 @@ func TestDeps(t *testing.T) {
 	for _, f := range files {
 		f = filepath.Join(dir, f)
 		if _, err := os.Stat(f); err != nil {
-			t.Errorf("File %s should exists", f)
+			t.Errorf("File %s should exist", f)
 		}
 	}
 }
@@ -248,7 +248,7 @@ func TestStatus(t *testing.T) {
 	_ = os.Remove(file)
 
 	if _, err := os.Stat(file); err == nil {
-		t.Errorf("File should not exists: %v", err)
+		t.Errorf("File should not exist: %v", err)
 	}
 
 	var buff bytes.Buffer
@@ -262,7 +262,7 @@ func TestStatus(t *testing.T) {
 	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "gen-foo"}))
 
 	if _, err := os.Stat(file); err != nil {
-		t.Errorf("File should exists: %v", err)
+		t.Errorf("File should exist: %v", err)
 	}
 
 	e.Silent = false
@@ -290,7 +290,7 @@ func TestGenerates(t *testing.T) {
 		path := filepath.Join(dir, task)
 		_ = os.Remove(path)
 		if _, err := os.Stat(path); err == nil {
-			t.Errorf("File should not exists: %v", err)
+			t.Errorf("File should not exist: %v", err)
 		}
 	}
 
@@ -311,10 +311,10 @@ func TestGenerates(t *testing.T) {
 		assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: theTask}))
 
 		if _, err := os.Stat(srcFile); err != nil {
-			t.Errorf("File should exists: %v", err)
+			t.Errorf("File should exist: %v", err)
 		}
 		if _, err := os.Stat(destFile); err != nil {
-			t.Errorf("File should exists: %v", err)
+			t.Errorf("File should exist: %v", err)
 		}
 		// Ensure task was not incorrectly found to be up-to-date on first run.
 		if buff.String() == upToDate {
@@ -371,7 +371,7 @@ func TestInit(t *testing.T) {
 
 	_ = os.Remove(file)
 	if _, err := os.Stat(file); err == nil {
-		t.Errorf("Taskfile.yml should not exists")
+		t.Errorf("Taskfile.yml should not exist")
 	}
 
 	if err := task.InitTaskfile(ioutil.Discard, dir); err != nil {
@@ -379,7 +379,7 @@ func TestInit(t *testing.T) {
 	}
 
 	if _, err := os.Stat(file); err != nil {
-		t.Errorf("Taskfile.yml should exists")
+		t.Errorf("Taskfile.yml should exist")
 	}
 }
 
