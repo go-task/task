@@ -200,12 +200,14 @@ func (e *Executor) RunTask(ctx context.Context, call taskfile.Call) error {
 		}
 	}
 
-	// When using the dir: attribute it can happen that the directory doesn't exist.
+	// When using the "dir:" attribute it can happen that the directory doesn't exist.
 	// If so, we create it.
-	if _, err := os.Stat(t.Dir); os.IsNotExist(err) {
-		if err := os.MkdirAll(t.Dir, 0755); err != nil {
-			e.Logger.Errf("cannot make directory %v: %v", t.Dir, err)
-			return err
+	if t.Dir != "" {
+		if _, err := os.Stat(t.Dir); os.IsNotExist(err) {
+			if err := os.MkdirAll(t.Dir, 0755); err != nil {
+				e.Logger.Errf("task: cannot make directory %q: %v", t.Dir, err)
+				return err
+			}
 		}
 	}
 
