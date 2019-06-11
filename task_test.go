@@ -11,6 +11,7 @@ import (
 	"testing"
 
 	"github.com/go-task/task/v2"
+	"github.com/go-task/task/v2/internal/logger"
 	"github.com/go-task/task/v2/internal/taskfile"
 
 	"github.com/mitchellh/go-homedir"
@@ -388,12 +389,20 @@ func TestStatusChecksum(t *testing.T) {
 	}
 
 	var buff bytes.Buffer
+
+	logCapturer := logger.Logger{
+		Stdout:  &buff,
+		Stderr:  &buff,
+		Verbose: true,
+	}
+
 	e := task.Executor{
 		Dir:    dir,
 		Stdout: &buff,
 		Stderr: &buff,
 	}
 	assert.NoError(t, e.Setup())
+	e.Logger = &logCapturer
 
 	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "build"}))
 	for _, f := range files {
@@ -404,6 +413,18 @@ func TestStatusChecksum(t *testing.T) {
 	buff.Reset()
 	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "build"}))
 	assert.Equal(t, `task: Task "build" is up to date`+"\n", buff.String())
+
+	buff.Reset()
+	e.Silent = false
+	e.Verbose = true
+	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "build-with-checksum"}))
+	assert.Contains(t, buff.String(), "d41d8cd98f00b204e9800998ecf8427e")
+
+	buff.Reset()
+	inf, _ := os.Stat(filepath.Join(dir, "source.txt"))
+	ts := fmt.Sprintf("%d", inf.ModTime().Unix())
+	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "build-with-timestamp"}))
+	assert.Contains(t, buff.String(), ts)
 }
 
 func TestInit(t *testing.T) {

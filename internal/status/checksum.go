@@ -46,6 +46,10 @@ func (c *Checksum) IsUpToDate() (bool, error) {
 	return oldMd5 == newMd5, nil
 }
 
+func (t *Checksum) Kind() string {
+	return "checksum"
+}
+
 func (c *Checksum) checksum(files ...string) (string, error) {
 	h := md5.New()
 
@@ -71,6 +75,11 @@ func (c *Checksum) checksum(files ...string) (string, error) {
 	}
 
 	return fmt.Sprintf("%x", h.Sum(nil)), nil
+}
+
+// Value implements the Chcker Interface
+func (c *Checksum) Value() (string, error) {
+	return c.checksum()
 }
 
 // OnError implements the Checker interface

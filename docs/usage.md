@@ -340,6 +340,16 @@ tasks:
       - test -f directory/file2.txt
 ```
 
+Normally, you would use either `status` or `sources` in combination with
+`generates` - but for tasks that generate remote artifacts (docker images,
+deploys, CD releases) the checksum source and timestamps require either
+access to the artifact or for an out-of-band refresh of the `.checksum`
+fingerprint file.
+
+Two special variables `{{.CHECKSUM}}` and `{{.TIMESTAMP}}` are available
+for interpolation within `status` commands, depending on the method assigned
+to fingerprint the sources.  Only `source` globs are fingerprinted.
+
 You can use `--force` or `-f` if you want to force a task to run even when
 up-to-date.
 

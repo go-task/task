@@ -7,3 +7,16 @@ build:
   generates:
     - ./generated.txt
   method: checksum
+
+build-with-checksum:
+  sources:
+    - ./source.txt
+  method: checksum
+  status:
+    - echo "{{.CHECKSUM}}"
+
+build-with-timestamp:
+  sources:
+    - ./source.txt
+  status:
+    - echo "{{.TIMESTAMP}}"

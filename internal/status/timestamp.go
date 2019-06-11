@@ -1,6 +1,7 @@
 package status
 
 import (
+	"fmt"
 	"os"
 	"time"
 )
@@ -39,6 +40,29 @@ func (t *Timestamp) IsUpToDate() (bool, error) {
 	}
 
 	return !generatesMinTime.Before(sourcesMaxTime), nil
+}
+
+func (t *Timestamp) Kind() string {
+	return "timestamp"
+}
+
+// Value implements the Checker Interface
+func (t *Timestamp) Value() (string, error) {
+	sources, err := glob(t.Dir, t.Sources)
+	if err != nil {
+		return "<no value>", err
+	}
+
+	sourcesMaxTime, err := getMaxTime(sources...)
+	if err != nil {
+		return "<no value>", err
+	}
+
+	if sourcesMaxTime.IsZero() {
+		return "0", nil
+	}
+
+	return fmt.Sprintf("%d", sourcesMaxTime.Unix()), nil
 }
 
 func getMinTime(files ...string) (time.Time, error) {

@@ -32,7 +32,7 @@ func (e *Executor) isTaskUpToDate(ctx context.Context, t *taskfile.Task) (bool, 
 		return e.isTaskUpToDateStatus(ctx, t)
 	}
 
-	checker, err := e.getStatusChecker(t)
+	checker, err := e.GetStatusChecker(t)
 	if err != nil {
 		return false, err
 	}
@@ -41,14 +41,14 @@ func (e *Executor) isTaskUpToDate(ctx context.Context, t *taskfile.Task) (bool, 
 }
 
 func (e *Executor) statusOnError(t *taskfile.Task) error {
-	checker, err := e.getStatusChecker(t)
+	checker, err := e.GetStatusChecker(t)
 	if err != nil {
 		return err
 	}
 	return checker.OnError()
 }
 
-func (e *Executor) getStatusChecker(t *taskfile.Task) (status.Checker, error) {
+func (e *Executor) GetStatusChecker(t *taskfile.Task) (status.Checker, error) {
 	switch t.Method {
 	case "", "timestamp":
 		return &status.Timestamp{

@@ -1,7 +1,9 @@
 package task
 
 import (
+	"io/ioutil"
 	"path/filepath"
+	"strings"
 
 	"github.com/go-task/task/v2/internal/execext"
 	"github.com/go-task/task/v2/internal/taskfile"
@@ -20,6 +22,7 @@ func (e *Executor) CompiledTask(call taskfile.Call) (*taskfile.Task, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	r := templater.Templater{Vars: vars}
 
 	new := taskfile.Task{
@@ -27,7 +30,6 @@ func (e *Executor) CompiledTask(call taskfile.Call) (*taskfile.Task, error) {
 		Desc:        r.Replace(origTask.Desc),
 		Sources:     r.ReplaceSlice(origTask.Sources),
 		Generates:   r.ReplaceSlice(origTask.Generates),
-		Status:      r.ReplaceSlice(origTask.Status),
 		Dir:         r.Replace(origTask.Dir),
 		Vars:        nil,
 		Env:         nil,
@@ -60,6 +62,31 @@ func (e *Executor) CompiledTask(call taskfile.Call) (*taskfile.Task, error) {
 			return nil, err
 		}
 		new.Env[k] = taskfile.Var{Static: static}
+	}
+
+	if len(origTask.Status) > 0 {
+
+		e := &Executor{
+			Dir:    new.Dir,
+			Stdout: ioutil.Discard,
+			Stderr: ioutil.Discard,
+			Dry:    true,
+		}
+
+		checker, err := e.GetStatusChecker(&new)
+		if err != nil {
+			return nil, err
+		}
+
+		value, err := checker.Value()
+		if err != nil {
+			return nil, err
+		}
+
+		vars[strings.ToUpper(checker.Kind())] = taskfile.Var{Static: value}
+
+		statusTemplater := templater.Templater{Vars: vars}
+		new.Status = statusTemplater.ReplaceSlice(origTask.Status)
 	}
 
 	if len(origTask.Cmds) > 0 {

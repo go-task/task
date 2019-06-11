@@ -8,6 +8,15 @@ func (None) IsUpToDate() (bool, error) {
 	return false, nil
 }
 
+// Value implements the Checker interface
+func (None) Value() (string, error) {
+	return "", nil
+}
+
+func (None) Kind() string {
+	return "none"
+}
+
 // OnError implements the Checker interface
 func (None) OnError() error {
 	return nil
