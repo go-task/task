@@ -293,7 +293,7 @@ func TestPrecondition(t *testing.T) {
 	// A precondition that was not met
 	assert.Error(t, e.Run(context.Background(), taskfile.Call{Task: "impossible"}))
 
-	if buff.String() != "1 != 0\n" {
+	if buff.String() != "task: 1 != 0 obviously!\n" {
 		t.Errorf("Wrong output message: %s", buff.String())
 	}
 	buff.Reset()
@@ -301,14 +301,14 @@ func TestPrecondition(t *testing.T) {
 	// Calling a task with a precondition in a dependency fails the task
 	assert.Error(t, e.Run(context.Background(), taskfile.Call{Task: "depends_on_imposssible"}))
 
-	if buff.String() != "1 != 0\ntask: precondition not met\n" {
+	if buff.String() != "task: 1 != 0 obviously!\n" {
 		t.Errorf("Wrong output message: %s", buff.String())
 	}
 	buff.Reset()
 
 	// Calling a task with a precondition in a cmd fails the task
 	assert.Error(t, e.Run(context.Background(), taskfile.Call{Task: "executes_failing_task_as_cmd"}))
-	if buff.String() != "1 != 0\ntask: precondition not met\n" {
+	if buff.String() != "task: 1 != 0 obviously!\n" {
 		t.Errorf("Wrong output message: %s", buff.String())
 	}
 	buff.Reset()

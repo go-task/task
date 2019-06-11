@@ -22,7 +22,7 @@ func (e *Executor) areTaskPreconditionsMet(ctx context.Context, t *taskfile.Task
 		})
 
 		if err != nil {
-			e.Logger.Outf("task: %s", p.Msg)
+			e.Logger.Errf("task: %s", p.Msg)
 			return false, ErrPreconditionFailed
 		}
 	}

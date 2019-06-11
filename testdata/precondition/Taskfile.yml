@@ -8,7 +8,7 @@ tasks:
   impossible:
     preconditions:
       - sh: "[ 1 = 0 ]"
-        msg: "1 != 0"
+        msg: "1 != 0 obviously!"
 
   depends_on_imposssible:
     deps:
@@ -17,7 +17,3 @@ tasks:
   executes_failing_task_as_cmd:
     cmds:
       - task: impossible
-
-  depends_on_failure_of_impossible:
-    deps:
-      - impossible_but_i_dont_care
