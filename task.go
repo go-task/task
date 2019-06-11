@@ -233,7 +233,6 @@ func (e *Executor) runDeps(ctx context.Context, t *taskfile.Task) error {
 		g.Go(func() error {
 			err := e.RunTask(ctx, taskfile.Call{Task: d.Task, Vars: d.Vars})
 			if err != nil {
-				e.Logger.Errf("%s", err)
 				return err
 			}
 			return nil
@@ -250,7 +249,6 @@ func (e *Executor) runCommand(ctx context.Context, t *taskfile.Task, call taskfi
 	case cmd.Task != "":
 		err := e.RunTask(ctx, taskfile.Call{Task: cmd.Task, Vars: cmd.Vars})
 		if err != nil {
-			e.Logger.Errf("%s", err)
 			return err
 		}
 		return nil

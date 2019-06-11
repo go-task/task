@@ -1,4 +1,3 @@
-// Package task provides ...
 package task
 
 import (
@@ -23,7 +22,7 @@ func (e *Executor) areTaskPreconditionsMet(ctx context.Context, t *taskfile.Task
 		})
 
 		if err != nil {
-			e.Logger.Outf(p.Msg)
+			e.Logger.Outf("task: %s", p.Msg)
 			return false, ErrPreconditionFailed
 		}
 	}

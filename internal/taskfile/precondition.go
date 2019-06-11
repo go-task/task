@@ -7,7 +7,7 @@ import (
 
 var (
 	// ErrCantUnmarshalPrecondition is returned for invalid precond YAML.
-	ErrCantUnmarshalPrecondition = errors.New("task: can't unmarshal precondition value")
+	ErrCantUnmarshalPrecondition = errors.New("task: Can't unmarshal precondition value")
 )
 
 // Precondition represents a precondition necessary for a task to run

@@ -346,7 +346,7 @@ the tasks are not up-to-date.
 
 If you need a certain set of conditions to be _true_ you can use the
 `preconditions` stanza.  `preconditions` are very similar to `status`
-lines except they support `sh` expansion and they SHOULD all return 0
+lines except they support `sh` expansion and they SHOULD all return 0.
 
 ```yaml
 version: '2'
@@ -373,7 +373,7 @@ executed with a failing precondition will not run unless `--force` is
 given.
 
 Unlike `status` which will skip a task if it is up to date, and continue
-executing tasks that depenend on it a `precondition` will fail a task, along
+executing tasks that depend on it, a `precondition` will fail a task, along
 with any other tasks that depend on it.
 
 ```yaml
@@ -384,13 +384,13 @@ tasks:
       - sh: "exit 1"
 
   task_will_also_fail:
-  deps:
-    - task_will_fail
+    deps:
+      - task_will_fail
 
   task_will_still_fail:
-  cmds:
-    - task: task_will_fail
-    - echo "I will not run"
+    cmds:
+      - task: task_will_fail
+      - echo "I will not run"
 ```
 
 ## Variables

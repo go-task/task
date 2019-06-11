@@ -281,7 +281,6 @@ func TestPrecondition(t *testing.T) {
 		Dir:    dir,
 		Stdout: &buff,
 		Stderr: &buff,
-		Silent: false,
 	}
 
 	// A precondition that has been met
