@@ -299,7 +299,7 @@ func TestPrecondition(t *testing.T) {
 	buff.Reset()
 
 	// Calling a task with a precondition in a dependency fails the task
-	assert.Error(t, e.Run(context.Background(), taskfile.Call{Task: "depends_on_imposssible"}))
+	assert.Error(t, e.Run(context.Background(), taskfile.Call{Task: "depends_on_impossible"}))
 
 	if buff.String() != "task: 1 != 0 obviously!\n" {
 		t.Errorf("Wrong output message: %s", buff.String())
