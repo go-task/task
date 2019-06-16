@@ -148,6 +148,8 @@ tasks:
       - caddy
 ```
 
+If the directory doesn't exist, `task` creates it.
+
 ## Task dependencies
 
 You may have tasks that depend on others. Just pointing them on `deps` will
