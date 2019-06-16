@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/go-task/task/v2/internal/execext"
+	"github.com/go-task/task/v2/internal/logger"
 	"github.com/go-task/task/v2/internal/status"
 	"github.com/go-task/task/v2/internal/taskfile"
 )
@@ -78,10 +79,10 @@ func (e *Executor) isTaskUpToDateStatus(ctx context.Context, t *taskfile.Task) (
 			Env:     getEnviron(t),
 		})
 		if err != nil {
-			e.Logger.VerboseOutf("task: status command %s exited non-zero: %s", s, err)
+			e.Logger.VerboseOutf(logger.Yellow, "task: status command %s exited non-zero: %s", s, err)
 			return false, nil
 		}
-		e.Logger.VerboseOutf("task: status command %s exited zero", s)
+		e.Logger.VerboseOutf(logger.Yellow, "task: status command %s exited zero", s)
 	}
 	return true, nil
 }

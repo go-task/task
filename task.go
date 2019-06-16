@@ -229,7 +229,7 @@ func (e *Executor) RunTask(ctx context.Context, call taskfile.Call) error {
 	}
 
 	if err := e.mkdir(t); err != nil {
-		e.Logger.Errf("task: cannot make directory %q: %v", t.Dir, err)
+		e.Logger.Errf(logger.Red, "task: cannot make directory %q: %v", t.Dir, err)
 	}
 
 	for i := range t.Cmds {
