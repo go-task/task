@@ -385,7 +385,7 @@ version: '2'
 tasks:
   print-var:
     cmds:
-      echo "{{.VAR}}"
+      - echo "{{.VAR}}"
     vars:
       VAR: Hello!
 ```
