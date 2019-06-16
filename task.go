@@ -2,9 +2,12 @@ package task
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"os"
+	"strconv"
+	"sync"
 	"sync/atomic"
 
 	"github.com/go-task/task/v2/internal/compiler"
@@ -16,9 +19,7 @@ import (
 	"github.com/go-task/task/v2/internal/summary"
 	"github.com/go-task/task/v2/internal/taskfile"
 	"github.com/go-task/task/v2/internal/taskfile/read"
-	"github.com/go-task/task/v2/internal/taskfile/version"
 
-	"github.com/Masterminds/semver"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -51,6 +52,7 @@ type Executor struct {
 	taskvars taskfile.Vars
 
 	taskCallCount map[string]*int32
+	mkdirMutexMap map[string]*sync.Mutex
 }
 
 // Run runs Task
@@ -93,11 +95,6 @@ func (e *Executor) Setup() error {
 		return err
 	}
 
-	v, err := semver.NewConstraint(e.Taskfile.Version)
-	if err != nil {
-		return fmt.Errorf(`task: could not parse taskfile version "%s": %v`, e.Taskfile.Version, err)
-	}
-
 	if e.Stdin == nil {
 		e.Stdin = os.Stdin
 	}
@@ -112,14 +109,30 @@ func (e *Executor) Setup() error {
 		Stderr:  e.Stderr,
 		Verbose: e.Verbose,
 	}
-	switch {
-	case version.IsV1(v):
+
+	v, err := strconv.ParseFloat(e.Taskfile.Version, 64)
+	if err != nil {
+		return fmt.Errorf(`task: Could not parse taskfile version "%s": %v`, e.Taskfile.Version, err)
+	}
+	// consider as equal to the greater version if round
+	if v == 2.0 {
+		v = 2.6
+	}
+
+	if v < 1 {
+		return fmt.Errorf(`task: Taskfile version should be greater or equal to v1`)
+	}
+	if v > 2.6 {
+		return fmt.Errorf(`task: Taskfile versions greater than v2.6 not implemented in the version of Task`)
+	}
+
+	if v < 2 {
 		e.Compiler = &compilerv1.CompilerV1{
 			Dir:    e.Dir,
 			Vars:   e.taskvars,
 			Logger: e.Logger,
 		}
-	case version.IsV2(v), version.IsV21(v), version.IsV22(v):
+	} else { // v >= 2
 		e.Compiler = &compilerv2.CompilerV2{
 			Dir:          e.Dir,
 			Taskvars:     e.taskvars,
@@ -127,16 +140,15 @@ func (e *Executor) Setup() error {
 			Expansions:   e.Taskfile.Expansions,
 			Logger:       e.Logger,
 		}
-	case version.IsV23(v):
-		return fmt.Errorf(`task: Taskfile versions greater than v2.3 not implemented in the version of Task`)
 	}
 
-	if !version.IsV21(v) && e.Taskfile.Output != "" {
+	if v < 2.1 && e.Taskfile.Output != "" {
 		return fmt.Errorf(`task: Taskfile option "output" is only available starting on Taskfile version v2.1`)
 	}
-	if !version.IsV22(v) && len(e.Taskfile.Includes) > 0 {
+	if v < 2.2 && len(e.Taskfile.Includes) > 0 {
 		return fmt.Errorf(`task: Including Taskfiles is only available starting on Taskfile version v2.2`)
 	}
+
 	if e.OutputStyle != "" {
 		e.Taskfile.Output = e.OutputStyle
 	}
@@ -151,8 +163,8 @@ func (e *Executor) Setup() error {
 		return fmt.Errorf(`task: output option "%s" not recognized`, e.Taskfile.Output)
 	}
 
-	if !version.IsV21(v) {
-		err := fmt.Errorf(`task: Taskfile option "ignore_error" is only available starting on Taskfile version v2.1`)
+	if v <= 2.1 {
+		err := errors.New(`task: Taskfile option "ignore_error" is only available starting on Taskfile version v2.1`)
 
 		for _, task := range e.Taskfile.Tasks {
 			if task.IgnoreError {
@@ -166,9 +178,19 @@ func (e *Executor) Setup() error {
 		}
 	}
 
+	if v < 2.6 {
+		for _, task := range e.Taskfile.Tasks {
+			if len(task.Preconditions) > 0 {
+				return errors.New(`task: Task option "preconditions" is only available starting on Taskfile version v2.6`)
+			}
+		}
+	}
+
 	e.taskCallCount = make(map[string]*int32, len(e.Taskfile.Tasks))
+	e.mkdirMutexMap = make(map[string]*sync.Mutex, len(e.Taskfile.Tasks))
 	for k := range e.Taskfile.Tasks {
 		e.taskCallCount[k] = new(int32)
+		e.mkdirMutexMap[k] = &sync.Mutex{}
 	}
 	return nil
 }
@@ -188,16 +210,26 @@ func (e *Executor) RunTask(ctx context.Context, call taskfile.Call) error {
 	}
 
 	if !e.Force {
+		preCondMet, err := e.areTaskPreconditionsMet(ctx, t)
+		if err != nil {
+			return err
+		}
+
 		upToDate, err := e.isTaskUpToDate(ctx, t)
 		if err != nil {
 			return err
 		}
-		if upToDate {
+
+		if upToDate && preCondMet {
 			if !e.Silent {
 				e.Logger.Errf(logger.Magenta, `task: Task "%s" is up to date`, t.Task)
 			}
 			return nil
 		}
+	}
+
+	if err := e.mkdir(t); err != nil {
+		e.Logger.Errf("task: cannot make directory %q: %v", t.Dir, err)
 	}
 
 	for i := range t.Cmds {
@@ -217,6 +249,23 @@ func (e *Executor) RunTask(ctx context.Context, call taskfile.Call) error {
 	return nil
 }
 
+func (e *Executor) mkdir(t *taskfile.Task) error {
+	if t.Dir == "" {
+		return nil
+	}
+
+	mutex := e.mkdirMutexMap[t.Task]
+	mutex.Lock()
+	defer mutex.Unlock()
+
+	if _, err := os.Stat(t.Dir); os.IsNotExist(err) {
+		if err := os.MkdirAll(t.Dir, 0755); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (e *Executor) runDeps(ctx context.Context, t *taskfile.Task) error {
 	g, ctx := errgroup.WithContext(ctx)
 
@@ -224,7 +273,11 @@ func (e *Executor) runDeps(ctx context.Context, t *taskfile.Task) error {
 		d := d
 
 		g.Go(func() error {
-			return e.RunTask(ctx, taskfile.Call{Task: d.Task, Vars: d.Vars})
+			err := e.RunTask(ctx, taskfile.Call{Task: d.Task, Vars: d.Vars})
+			if err != nil {
+				return err
+			}
+			return nil
 		})
 	}
 
@@ -236,7 +289,11 @@ func (e *Executor) runCommand(ctx context.Context, t *taskfile.Task, call taskfi
 
 	switch {
 	case cmd.Task != "":
-		return e.RunTask(ctx, taskfile.Call{Task: cmd.Task, Vars: cmd.Vars})
+		err := e.RunTask(ctx, taskfile.Call{Task: cmd.Task, Vars: cmd.Vars})
+		if err != nil {
+			return err
+		}
+		return nil
 	case cmd.Cmd != "":
 		if e.Verbose || (!cmd.Silent && !t.Silent && !e.Silent) {
 			e.Logger.Errf(logger.Green, "task: %s", cmd.Cmd)

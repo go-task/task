@@ -236,7 +236,7 @@ func TestDeps(t *testing.T) {
 	for _, f := range files {
 		f = filepath.Join(dir, f)
 		if _, err := os.Stat(f); err != nil {
-			t.Errorf("File %s should exists", f)
+			t.Errorf("File %s should exist", f)
 		}
 	}
 }
@@ -248,7 +248,7 @@ func TestStatus(t *testing.T) {
 	_ = os.Remove(file)
 
 	if _, err := os.Stat(file); err == nil {
-		t.Errorf("File should not exists: %v", err)
+		t.Errorf("File should not exist: %v", err)
 	}
 
 	var buff bytes.Buffer
@@ -262,7 +262,7 @@ func TestStatus(t *testing.T) {
 	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "gen-foo"}))
 
 	if _, err := os.Stat(file); err != nil {
-		t.Errorf("File should exists: %v", err)
+		t.Errorf("File should exist: %v", err)
 	}
 
 	e.Silent = false
@@ -271,6 +271,47 @@ func TestStatus(t *testing.T) {
 	if buff.String() != `task: Task "gen-foo" is up to date`+"\n" {
 		t.Errorf("Wrong output message: %s", buff.String())
 	}
+}
+
+func TestPrecondition(t *testing.T) {
+	const dir = "testdata/precondition"
+
+	var buff bytes.Buffer
+	e := &task.Executor{
+		Dir:    dir,
+		Stdout: &buff,
+		Stderr: &buff,
+	}
+
+	// A precondition that has been met
+	assert.NoError(t, e.Setup())
+	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "foo"}))
+	if buff.String() != "" {
+		t.Errorf("Got Output when none was expected: %s", buff.String())
+	}
+
+	// A precondition that was not met
+	assert.Error(t, e.Run(context.Background(), taskfile.Call{Task: "impossible"}))
+
+	if buff.String() != "task: 1 != 0 obviously!\n" {
+		t.Errorf("Wrong output message: %s", buff.String())
+	}
+	buff.Reset()
+
+	// Calling a task with a precondition in a dependency fails the task
+	assert.Error(t, e.Run(context.Background(), taskfile.Call{Task: "depends_on_impossible"}))
+
+	if buff.String() != "task: 1 != 0 obviously!\n" {
+		t.Errorf("Wrong output message: %s", buff.String())
+	}
+	buff.Reset()
+
+	// Calling a task with a precondition in a cmd fails the task
+	assert.Error(t, e.Run(context.Background(), taskfile.Call{Task: "executes_failing_task_as_cmd"}))
+	if buff.String() != "task: 1 != 0 obviously!\n" {
+		t.Errorf("Wrong output message: %s", buff.String())
+	}
+	buff.Reset()
 }
 
 func TestGenerates(t *testing.T) {
@@ -290,7 +331,7 @@ func TestGenerates(t *testing.T) {
 		path := filepath.Join(dir, task)
 		_ = os.Remove(path)
 		if _, err := os.Stat(path); err == nil {
-			t.Errorf("File should not exists: %v", err)
+			t.Errorf("File should not exist: %v", err)
 		}
 	}
 
@@ -311,10 +352,10 @@ func TestGenerates(t *testing.T) {
 		assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: theTask}))
 
 		if _, err := os.Stat(srcFile); err != nil {
-			t.Errorf("File should exists: %v", err)
+			t.Errorf("File should exist: %v", err)
 		}
 		if _, err := os.Stat(destFile); err != nil {
-			t.Errorf("File should exists: %v", err)
+			t.Errorf("File should exist: %v", err)
 		}
 		// Ensure task was not incorrectly found to be up-to-date on first run.
 		if buff.String() == upToDate {
@@ -371,7 +412,7 @@ func TestInit(t *testing.T) {
 
 	_ = os.Remove(file)
 	if _, err := os.Stat(file); err == nil {
-		t.Errorf("Taskfile.yml should not exists")
+		t.Errorf("Taskfile.yml should not exist")
 	}
 
 	if err := task.InitTaskfile(ioutil.Discard, dir); err != nil {
@@ -379,7 +420,7 @@ func TestInit(t *testing.T) {
 	}
 
 	if _, err := os.Stat(file); err != nil {
-		t.Errorf("Taskfile.yml should exists")
+		t.Errorf("Taskfile.yml should exist")
 	}
 }
 
@@ -574,4 +615,66 @@ func readTestFixture(t *testing.T, dir string, file string) string {
 	b, err := ioutil.ReadFile(dir + "/" + file)
 	assert.NoError(t, err, "error reading text fixture")
 	return string(b)
+}
+
+func TestWhenNoDirAttributeItRunsInSameDirAsTaskfile(t *testing.T) {
+	const expected = "dir"
+	const dir = "testdata/" + expected
+	var out bytes.Buffer
+	e := &task.Executor{
+		Dir:    dir,
+		Stdout: &out,
+		Stderr: &out,
+	}
+
+	assert.NoError(t, e.Setup())
+	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "whereami"}))
+
+	// got should be the "dir" part of "testdata/dir"
+	got := strings.TrimSuffix(filepath.Base(out.String()), "\n")
+	assert.Equal(t, expected, got, "Mismatch in the working directory")
+}
+
+func TestWhenDirAttributeAndDirExistsItRunsInThatDir(t *testing.T) {
+	const expected = "exists"
+	const dir = "testdata/dir/explicit_exists"
+	var out bytes.Buffer
+	e := &task.Executor{
+		Dir:    dir,
+		Stdout: &out,
+		Stderr: &out,
+	}
+
+	assert.NoError(t, e.Setup())
+	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "whereami"}))
+
+	got := strings.TrimSuffix(filepath.Base(out.String()), "\n")
+	assert.Equal(t, expected, got, "Mismatch in the working directory")
+}
+
+func TestWhenDirAttributeItCreatesMissingAndRunsInThatDir(t *testing.T) {
+	const expected = "createme"
+	const dir = "testdata/dir/explicit_doesnt_exist/"
+	const toBeCreated = dir + expected
+	const target = "whereami"
+	var out bytes.Buffer
+	e := &task.Executor{
+		Dir:    dir,
+		Stdout: &out,
+		Stderr: &out,
+	}
+
+	// Ensure that the directory to be created doesn't actually exist.
+	_ = os.Remove(toBeCreated)
+	if _, err := os.Stat(toBeCreated); err == nil {
+		t.Errorf("Directory should not exist: %v", err)
+	}
+	assert.NoError(t, e.Setup())
+	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: target}))
+
+	got := strings.TrimSuffix(filepath.Base(out.String()), "\n")
+	assert.Equal(t, expected, got, "Mismatch in the working directory")
+
+	// Clean-up after ourselves only if no error.
+	_ = os.Remove(toBeCreated)
 }

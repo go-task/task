@@ -78,8 +78,10 @@ func (e *Executor) isTaskUpToDateStatus(ctx context.Context, t *taskfile.Task) (
 			Env:     getEnviron(t),
 		})
 		if err != nil {
+			e.Logger.VerboseOutf("task: status command %s exited non-zero: %s", s, err)
 			return false, nil
 		}
+		e.Logger.VerboseOutf("task: status command %s exited zero", s)
 	}
 	return true, nil
 }

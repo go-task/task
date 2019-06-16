@@ -141,6 +141,21 @@ includes:
   docker: ./DockerTasks.yml
 ```
 
+## Version 2.6
+
+Version 2.6 comes with `preconditions` stanza in tasks.
+
+```yaml
+version: '2'
+
+tasks:
+  upload_environment:
+    preconditions:
+      - test -f .env
+    cmds:
+      - aws s3 cp .env s3://myenvironment
+```
+
 Please check the [documentation][includes]
 
 [output]: usage.md#output-syntax

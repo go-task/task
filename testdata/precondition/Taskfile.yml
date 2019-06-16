@@ -1,0 +1,19 @@
+version: '2'
+
+tasks:
+  foo:
+    preconditions:
+      - test -f foo.txt
+
+  impossible:
+    preconditions:
+      - sh: "[ 1 = 0 ]"
+        msg: "1 != 0 obviously!"
+
+  depends_on_impossible:
+    deps:
+      - impossible
+
+  executes_failing_task_as_cmd:
+    cmds:
+      - task: impossible
