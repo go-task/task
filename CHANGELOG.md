@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add `preconditions:` to task
+  ([#205](https://github.com/go-task/task/pull/205)).
 - Create directory informed on `dir:` if it doesn't exist
   ([#209](https://github.com/go-task/task/issues/209), [#211](https://github.com/go-task/task/pull/211)).
 
