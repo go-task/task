@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Create directory informed on `dir:` if it doesn't exist
+  ([#209](https://github.com/go-task/task/issues/209), [#211](https://github.com/go-task/task/pull/211)).
+
 ## v2.5.2 - 2019-05-11
 
 - Reverted YAML upgrade due issues with CRLF on Windows

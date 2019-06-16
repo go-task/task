@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"sync"
 	"sync/atomic"
 
 	"github.com/go-task/task/v2/internal/compiler"
@@ -51,6 +52,7 @@ type Executor struct {
 	taskvars taskfile.Vars
 
 	taskCallCount map[string]*int32
+	mkdirMutexMap map[string]*sync.Mutex
 }
 
 // Run runs Task
@@ -167,8 +169,10 @@ func (e *Executor) Setup() error {
 	}
 
 	e.taskCallCount = make(map[string]*int32, len(e.Taskfile.Tasks))
+	e.mkdirMutexMap = make(map[string]*sync.Mutex, len(e.Taskfile.Tasks))
 	for k := range e.Taskfile.Tasks {
 		e.taskCallCount[k] = new(int32)
+		e.mkdirMutexMap[k] = &sync.Mutex{}
 	}
 	return nil
 }
@@ -200,9 +204,7 @@ func (e *Executor) RunTask(ctx context.Context, call taskfile.Call) error {
 		}
 	}
 
-	// When using the "dir:" attribute it can happen that the directory doesn't exist.
-	// If so, we create it.
-	if err := t.Mkdir(); err != nil {
+	if err := e.mkdir(t); err != nil {
 		e.Logger.Errf("task: cannot make directory %q: %v", t.Dir, err)
 	}
 
@@ -218,6 +220,23 @@ func (e *Executor) RunTask(ctx context.Context, call taskfile.Call) error {
 			}
 
 			return &taskRunError{t.Task, err}
+		}
+	}
+	return nil
+}
+
+func (e *Executor) mkdir(t *taskfile.Task) error {
+	if t.Dir == "" {
+		return nil
+	}
+
+	mutex := e.mkdirMutexMap[t.Task]
+	mutex.Lock()
+	defer mutex.Unlock()
+
+	if _, err := os.Stat(t.Dir); os.IsNotExist(err) {
+		if err := os.MkdirAll(t.Dir, 0755); err != nil {
+			return err
 		}
 	}
 	return nil
