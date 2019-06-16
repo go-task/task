@@ -121,7 +121,7 @@ func (e *Executor) Setup() error {
 			Vars:   e.taskvars,
 			Logger: e.Logger,
 		}
-	case version.IsV2(v), version.IsV21(v), version.IsV22(v):
+	case version.IsV2(v), version.IsV21(v), version.IsV22(v), version.IsV23(v):
 		e.Compiler = &compilerv2.CompilerV2{
 			Dir:          e.Dir,
 			Taskvars:     e.taskvars,
@@ -129,8 +129,9 @@ func (e *Executor) Setup() error {
 			Expansions:   e.Taskfile.Expansions,
 			Logger:       e.Logger,
 		}
-	case version.IsV23(v):
-		return fmt.Errorf(`task: Taskfile versions greater than v2.3 not implemented in the version of Task`)
+
+	case version.IsV24(v):
+		return fmt.Errorf(`task: Taskfile versions greater than v2.4 not implemented in the version of Task`)
 	}
 
 	if !version.IsV21(v) && e.Taskfile.Output != "" {
@@ -192,11 +193,17 @@ func (e *Executor) RunTask(ctx context.Context, call taskfile.Call) error {
 	}
 
 	if !e.Force {
+		preCondMet, err := e.areTaskPreconditionsMet(ctx, t)
+		if err != nil {
+			return err
+		}
+
 		upToDate, err := e.isTaskUpToDate(ctx, t)
 		if err != nil {
 			return err
 		}
-		if upToDate {
+
+		if upToDate && preCondMet {
 			if !e.Silent {
 				e.Logger.Errf(`task: Task "%s" is up to date`, t.Task)
 			}
@@ -249,7 +256,11 @@ func (e *Executor) runDeps(ctx context.Context, t *taskfile.Task) error {
 		d := d
 
 		g.Go(func() error {
-			return e.RunTask(ctx, taskfile.Call{Task: d.Task, Vars: d.Vars})
+			err := e.RunTask(ctx, taskfile.Call{Task: d.Task, Vars: d.Vars})
+			if err != nil {
+				return err
+			}
+			return nil
 		})
 	}
 
@@ -261,7 +272,11 @@ func (e *Executor) runCommand(ctx context.Context, t *taskfile.Task, call taskfi
 
 	switch {
 	case cmd.Task != "":
-		return e.RunTask(ctx, taskfile.Call{Task: cmd.Task, Vars: cmd.Vars})
+		err := e.RunTask(ctx, taskfile.Call{Task: cmd.Task, Vars: cmd.Vars})
+		if err != nil {
+			return err
+		}
+		return nil
 	case cmd.Cmd != "":
 		if e.Verbose || (!cmd.Silent && !t.Silent && !e.Silent) {
 			e.Logger.Errf(cmd.Cmd)

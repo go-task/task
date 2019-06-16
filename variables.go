@@ -84,5 +84,15 @@ func (e *Executor) CompiledTask(call taskfile.Call) (*taskfile.Task, error) {
 		}
 	}
 
+	if len(origTask.Preconditions) > 0 {
+		new.Preconditions = make([]*taskfile.Precondition, len(origTask.Preconditions))
+		for i, precond := range origTask.Preconditions {
+			new.Preconditions[i] = &taskfile.Precondition{
+				Sh:  r.Replace(precond.Sh),
+				Msg: r.Replace(precond.Msg),
+			}
+		}
+	}
+
 	return &new, r.Err()
 }

@@ -10,6 +10,8 @@ var (
 	v21 = mustVersion("2.1")
 	v22 = mustVersion("2.2")
 	v23 = mustVersion("2.3")
+	v24 = mustVersion("2.4")
+	v25 = mustVersion("2.5")
 )
 
 // IsV1 returns if is a given Taskfile version is version 1
@@ -35,6 +37,16 @@ func IsV22(v *semver.Constraints) bool {
 // IsV23 returns if is a given Taskfile version is at least version 2.3
 func IsV23(v *semver.Constraints) bool {
 	return v.Check(v23)
+}
+
+// IsV24 returns if is a given Taskfile version is at least version 2.4
+func IsV24(v *semver.Constraints) bool {
+	return v.Check(v24)
+}
+
+// IsV25 returns if is a given Taskfile version is at least version 2.5
+func IsV25(v *semver.Constraints) bool {
+	return v.Check(v25)
 }
 
 func mustVersion(s string) *semver.Version {

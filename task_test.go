@@ -273,6 +273,47 @@ func TestStatus(t *testing.T) {
 	}
 }
 
+func TestPrecondition(t *testing.T) {
+	const dir = "testdata/precondition"
+
+	var buff bytes.Buffer
+	e := &task.Executor{
+		Dir:    dir,
+		Stdout: &buff,
+		Stderr: &buff,
+	}
+
+	// A precondition that has been met
+	assert.NoError(t, e.Setup())
+	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "foo"}))
+	if buff.String() != "" {
+		t.Errorf("Got Output when none was expected: %s", buff.String())
+	}
+
+	// A precondition that was not met
+	assert.Error(t, e.Run(context.Background(), taskfile.Call{Task: "impossible"}))
+
+	if buff.String() != "task: 1 != 0 obviously!\n" {
+		t.Errorf("Wrong output message: %s", buff.String())
+	}
+	buff.Reset()
+
+	// Calling a task with a precondition in a dependency fails the task
+	assert.Error(t, e.Run(context.Background(), taskfile.Call{Task: "depends_on_imposssible"}))
+
+	if buff.String() != "task: 1 != 0 obviously!\n" {
+		t.Errorf("Wrong output message: %s", buff.String())
+	}
+	buff.Reset()
+
+	// Calling a task with a precondition in a cmd fails the task
+	assert.Error(t, e.Run(context.Background(), taskfile.Call{Task: "executes_failing_task_as_cmd"}))
+	if buff.String() != "task: 1 != 0 obviously!\n" {
+		t.Errorf("Wrong output message: %s", buff.String())
+	}
+	buff.Reset()
+}
+
 func TestGenerates(t *testing.T) {
 	const (
 		srcTask        = "sub/src.txt"
