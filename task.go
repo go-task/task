@@ -2,9 +2,11 @@ package task
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"os"
+	"strconv"
 	"sync"
 	"sync/atomic"
 
@@ -17,9 +19,7 @@ import (
 	"github.com/go-task/task/v2/internal/summary"
 	"github.com/go-task/task/v2/internal/taskfile"
 	"github.com/go-task/task/v2/internal/taskfile/read"
-	"github.com/go-task/task/v2/internal/taskfile/version"
 
-	"github.com/Masterminds/semver"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -95,11 +95,6 @@ func (e *Executor) Setup() error {
 		return err
 	}
 
-	v, err := semver.NewConstraint(e.Taskfile.Version)
-	if err != nil {
-		return fmt.Errorf(`task: could not parse taskfile version "%s": %v`, e.Taskfile.Version, err)
-	}
-
 	if e.Stdin == nil {
 		e.Stdin = os.Stdin
 	}
@@ -114,14 +109,30 @@ func (e *Executor) Setup() error {
 		Stderr:  e.Stderr,
 		Verbose: e.Verbose,
 	}
-	switch {
-	case version.IsV1(v):
+
+	v, err := strconv.ParseFloat(e.Taskfile.Version, 64)
+	if err != nil {
+		return fmt.Errorf(`task: Could not parse taskfile version "%s": %v`, e.Taskfile.Version, err)
+	}
+	// consider as equal to the greater version if round
+	if v == 2.0 {
+		v = 2.6
+	}
+
+	if v < 1 {
+		return fmt.Errorf(`task: Taskfile version should be greater or equal to v1`)
+	}
+	if v > 2.6 {
+		return fmt.Errorf(`task: Taskfile versions greater than v2.6 not implemented in the version of Task`)
+	}
+
+	if v < 2 {
 		e.Compiler = &compilerv1.CompilerV1{
 			Dir:    e.Dir,
 			Vars:   e.taskvars,
 			Logger: e.Logger,
 		}
-	case version.IsV2(v), version.IsV21(v), version.IsV22(v), version.IsV23(v):
+	} else { // v >= 2
 		e.Compiler = &compilerv2.CompilerV2{
 			Dir:          e.Dir,
 			Taskvars:     e.taskvars,
@@ -129,17 +140,15 @@ func (e *Executor) Setup() error {
 			Expansions:   e.Taskfile.Expansions,
 			Logger:       e.Logger,
 		}
-
-	case version.IsV24(v):
-		return fmt.Errorf(`task: Taskfile versions greater than v2.4 not implemented in the version of Task`)
 	}
 
-	if !version.IsV21(v) && e.Taskfile.Output != "" {
+	if v < 2.1 && e.Taskfile.Output != "" {
 		return fmt.Errorf(`task: Taskfile option "output" is only available starting on Taskfile version v2.1`)
 	}
-	if !version.IsV22(v) && len(e.Taskfile.Includes) > 0 {
+	if v < 2.2 && len(e.Taskfile.Includes) > 0 {
 		return fmt.Errorf(`task: Including Taskfiles is only available starting on Taskfile version v2.2`)
 	}
+
 	if e.OutputStyle != "" {
 		e.Taskfile.Output = e.OutputStyle
 	}
@@ -154,8 +163,8 @@ func (e *Executor) Setup() error {
 		return fmt.Errorf(`task: output option "%s" not recognized`, e.Taskfile.Output)
 	}
 
-	if !version.IsV21(v) {
-		err := fmt.Errorf(`task: Taskfile option "ignore_error" is only available starting on Taskfile version v2.1`)
+	if v <= 2.1 {
+		err := errors.New(`task: Taskfile option "ignore_error" is only available starting on Taskfile version v2.1`)
 
 		for _, task := range e.Taskfile.Tasks {
 			if task.IgnoreError {
@@ -165,6 +174,14 @@ func (e *Executor) Setup() error {
 				if cmd.IgnoreError {
 					return err
 				}
+			}
+		}
+	}
+
+	if v < 2.6 {
+		for _, task := range e.Taskfile.Tasks {
+			if len(task.Preconditions) > 0 {
+				return errors.New(`task: Task option "preconditions" is only available starting on Taskfile version v2.6`)
 			}
 		}
 	}

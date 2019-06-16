@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Fixed some bugs regarding minor version checks on `version:`.
 - Add `preconditions:` to task
   ([#205](https://github.com/go-task/task/pull/205)).
 - Create directory informed on `dir:` if it doesn't exist
