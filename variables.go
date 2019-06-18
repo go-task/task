@@ -65,7 +65,6 @@ func (e *Executor) CompiledTask(call taskfile.Call) (*taskfile.Task, error) {
 	}
 
 	if len(origTask.Status) > 0 {
-
 		e := &Executor{
 			Dir:    new.Dir,
 			Stdout: ioutil.Discard,

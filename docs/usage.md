@@ -341,7 +341,7 @@ tasks:
 ```
 
 Normally, you would use either `status` or `sources` in combination with
-`generates` - but for tasks that generate remote artifacts (docker images,
+`generates` - but for tasks that generate remote artifacts (Docker images,
 deploys, CD releases) the checksum source and timestamps require either
 access to the artifact or for an out-of-band refresh of the `.checksum`
 fingerprint file.
