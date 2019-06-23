@@ -510,7 +510,7 @@ This works for all types of variables.
 Task parse commands as [Go's template engine][gotemplate] before executing
 them. Variables are accessible through dot syntax (`.VARNAME`).
 
-All functions by the Go's [sprig lib](http://masterminds.github.io/sprig/)
+All functions by the Go's [slim-sprig lib](https://go-task.github.io/slim-sprig/)
 are available. The following example gets the current date in a given format:
 
 ```yaml
