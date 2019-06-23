@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased - v3
+
+- We're now using [slim-sprig](https://github.com/go-task/slim-sprig) instead of
+  [sprig](https://github.com/Masterminds/sprig), which allowed a file size
+  reduction of about 22%
+  ([#219](https://github.com/go-task/task/pull/219)).
+
 ## Unreleased
 
 - Fixed some bugs regarding minor version checks on `version:`.
