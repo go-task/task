@@ -1,6 +1,7 @@
 package templater
 
 import (
+	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -17,6 +18,12 @@ func init() {
 	taskFuncs := template.FuncMap{
 		"OS":   func() string { return runtime.GOOS },
 		"ARCH": func() string { return runtime.GOARCH },
+		"TASKFILE_DIR": func() string {
+			if wd, err := os.Getwd(); err == nil {
+				return wd
+			}
+			return ""
+		},
 		"catLines": func(s string) string {
 			s = strings.Replace(s, "\r\n", " ", -1)
 			return strings.Replace(s, "\n", " ", -1)
