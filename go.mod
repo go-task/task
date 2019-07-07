@@ -1,14 +1,8 @@
 module github.com/go-task/task/v2
 
 require (
-	github.com/Masterminds/semver v1.4.2 // indirect
-	github.com/Masterminds/sprig v2.16.0+incompatible
-	github.com/aokoli/goutils v1.0.1 // indirect
-	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/fatih/color v1.7.0
-	github.com/google/uuid v1.0.0 // indirect
-	github.com/huandu/xstrings v1.1.0 // indirect
-	github.com/imdario/mergo v0.3.6 // indirect
+	github.com/go-task/slim-sprig v0.0.0-20190623010546-24867827a98b
 	github.com/kr/pretty v0.1.0 // indirect
 	github.com/mattn/go-colorable v0.1.2 // indirect
 	github.com/mattn/go-zglob v0.0.1
