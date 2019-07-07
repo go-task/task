@@ -131,7 +131,7 @@ func (c *CompilerV1) HandleDynamicVar(v taskfile.Var) (string, error) {
 	result := strings.TrimSuffix(stdout.String(), "\n")
 
 	c.dynamicCache[v.Sh] = result
-	c.Logger.VerboseErrf(`task: dynamic variable: '%s' result: '%s'`, v.Sh, result)
+	c.Logger.VerboseErrf(logger.Magenta, `task: dynamic variable: '%s' result: '%s'`, v.Sh, result)
 
 	return result, nil
 }

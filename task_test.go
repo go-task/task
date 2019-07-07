@@ -511,7 +511,7 @@ func TestDry(t *testing.T) {
 	assert.NoError(t, e.Setup())
 	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "build"}))
 
-	assert.Equal(t, "touch file.txt", strings.TrimSpace(buff.String()))
+	assert.Equal(t, "task: touch file.txt", strings.TrimSpace(buff.String()))
 	if _, err := os.Stat(file); err == nil {
 		t.Errorf("File should not exist %s", file)
 	}

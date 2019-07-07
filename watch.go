@@ -8,6 +8,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/go-task/task/v2/internal/logger"
 	"github.com/go-task/task/v2/internal/taskfile"
 	"github.com/mattn/go-zglob"
 	"github.com/radovskyb/watcher"
@@ -24,14 +25,14 @@ func (e *Executor) watchTasks(calls ...taskfile.Call) error {
 	for i, c := range calls {
 		tasks[i] = c.Task
 	}
-	e.Logger.Errf("task: Started watching for tasks: %s", strings.Join(tasks, ", "))
+	e.Logger.Errf(logger.Green, "task: Started watching for tasks: %s", strings.Join(tasks, ", "))
 
 	ctx, cancel := context.WithCancel(context.Background())
 	for _, c := range calls {
 		c := c
 		go func() {
 			if err := e.RunTask(ctx, c); err != nil && !isContextError(err) {
-				e.Logger.Errf("%v", err)
+				e.Logger.Errf(logger.Red, "%v", err)
 			}
 		}()
 	}
@@ -49,7 +50,7 @@ func (e *Executor) watchTasks(calls ...taskfile.Call) error {
 		for {
 			select {
 			case event := <-w.Event:
-				e.Logger.VerboseErrf("task: received watch event: %v", event)
+				e.Logger.VerboseErrf(logger.Magenta, "task: received watch event: %v", event)
 
 				cancel()
 				ctx, cancel = context.WithCancel(context.Background())
@@ -57,7 +58,7 @@ func (e *Executor) watchTasks(calls ...taskfile.Call) error {
 					c := c
 					go func() {
 						if err := e.RunTask(ctx, c); err != nil && !isContextError(err) {
-							e.Logger.Errf("%v", err)
+							e.Logger.Errf(logger.Red, "%v", err)
 						}
 					}()
 				}
@@ -68,7 +69,7 @@ func (e *Executor) watchTasks(calls ...taskfile.Call) error {
 						w.TriggerEvent(watcher.Remove, nil)
 					}()
 				default:
-					e.Logger.Errf("%v", err)
+					e.Logger.Errf(logger.Red, "%v", err)
 				}
 			case <-w.Closed:
 				cancel()
@@ -81,7 +82,7 @@ func (e *Executor) watchTasks(calls ...taskfile.Call) error {
 		// re-register each second because we can have new files
 		for {
 			if err := e.registerWatchedFiles(w, calls...); err != nil {
-				e.Logger.Errf("%v", err)
+				e.Logger.Errf(logger.Red, "%v", err)
 			}
 			time.Sleep(time.Second)
 		}
