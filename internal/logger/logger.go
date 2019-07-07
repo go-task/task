@@ -25,12 +25,16 @@ type Logger struct {
 	Stdout  io.Writer
 	Stderr  io.Writer
 	Verbose bool
+	Color   bool
 }
 
 // Outf prints stuff to STDOUT.
 func (l *Logger) Outf(print PrintFunc, s string, args ...interface{}) {
 	if len(args) == 0 {
 		s, args = "%s", []interface{}{s}
+	}
+	if !l.Color {
+		print = Default
 	}
 	print(l.Stdout, s+"\n", args...)
 }
@@ -46,6 +50,9 @@ func (l *Logger) VerboseOutf(print PrintFunc, s string, args ...interface{}) {
 func (l *Logger) Errf(print PrintFunc, s string, args ...interface{}) {
 	if len(args) == 0 {
 		s, args = "%s", []interface{}{s}
+	}
+	if !l.Color {
+		print = Default
 	}
 	print(l.Stderr, s+"\n", args...)
 }

@@ -60,6 +60,7 @@ func main() {
 		summary     bool
 		dir         string
 		output      string
+		color       bool
 	)
 
 	pflag.BoolVar(&versionFlag, "version", false, "show Task version")
@@ -74,6 +75,7 @@ func main() {
 	pflag.BoolVar(&summary, "summary", false, "show summary about a task")
 	pflag.StringVarP(&dir, "dir", "d", "", "sets directory of execution")
 	pflag.StringVarP(&output, "output", "o", "", "sets output style: [interleaved|group|prefixed]")
+	pflag.BoolVarP(&color, "color", "c", true, "colored output")
 	pflag.Parse()
 
 	if versionFlag {
@@ -100,6 +102,7 @@ func main() {
 		Dir:     dir,
 		Dry:     dry,
 		Summary: summary,
+		Color:   color,
 
 		Stdin:  os.Stdin,
 		Stdout: os.Stdout,

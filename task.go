@@ -39,6 +39,7 @@ type Executor struct {
 	Silent   bool
 	Dry      bool
 	Summary  bool
+	Color    bool
 
 	Stdin  io.Reader
 	Stdout io.Writer
@@ -108,6 +109,7 @@ func (e *Executor) Setup() error {
 		Stdout:  e.Stdout,
 		Stderr:  e.Stderr,
 		Verbose: e.Verbose,
+		Color:   e.Color,
 	}
 
 	v, err := strconv.ParseFloat(e.Taskfile.Version, 64)
