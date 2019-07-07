@@ -124,8 +124,13 @@ func (e *Executor) Setup() error {
 	if v < 1 {
 		return fmt.Errorf(`task: Taskfile version should be greater or equal to v1`)
 	}
-	if v > 2.6 {
-		return fmt.Errorf(`task: Taskfile versions greater than v2.6 not implemented in the version of Task`)
+	if v > 3.0 {
+		return fmt.Errorf(`task: Taskfile versions greater than v3.0 not implemented in the version of Task`)
+	}
+
+	// Color available only on v3
+	if v < 3 {
+		e.Logger.Color = false
 	}
 
 	if v < 2 {
