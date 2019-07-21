@@ -8,12 +8,14 @@ The `task_checksums.txt` file contains the sha256 checksum for each file.
 
 ## Homebrew
 
-If you're on macOS and have [Homebrew][homebrew] installed, getting Task is
-as simple as running:
+If you're on macOS or Linux and have [Homebrew][homebrew] installed, getting
+Task is as simple as running:
 
 ```bash
 brew install go-task/tap/go-task
 ```
+
+> This installation method is only currently supported on amd64 architectures.
 
 ## Snap
 

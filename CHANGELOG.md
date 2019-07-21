@@ -10,6 +10,8 @@
 - We now have a `--taskfile` flag (alias `-t`), which can be used to run
   another Taskfile (other than the default `Taskfile.yml`)
   ([#221](https://github.com/go-task/task/pull/221)).
+- It's now possible to install Task using Homebrew on Linux
+  ([go-task/homebrew-tap#1](https://github.com/go-task/homebrew-tap/pull/1)).
 
 ## v2.5.2 - 2019-05-11
 
