@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v2.6.0 - 2019-07-21
 
 - Fixed some bugs regarding minor version checks on `version:`.
 - Add `preconditions:` to task
