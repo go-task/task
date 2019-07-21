@@ -15,16 +15,13 @@ import (
 var (
 	// ErrIncludedTaskfilesCantHaveIncludes is returned when a included Taskfile contains includes
 	ErrIncludedTaskfilesCantHaveIncludes = errors.New("task: Included Taskfiles can't have includes. Please, move the include to the main Taskfile")
-
-	// ErrNoTaskfileFound is returned when Taskfile.yml is not found
-	ErrNoTaskfileFound = errors.New(`task: No Taskfile.yml found. Use "task --init" to create a new one`)
 )
 
 // Taskfile reads a Taskfile for a given directory
-func Taskfile(dir string) (*taskfile.Taskfile, error) {
-	path := filepath.Join(dir, "Taskfile.yml")
+func Taskfile(dir string, entrypoint string) (*taskfile.Taskfile, error) {
+	path := filepath.Join(dir, entrypoint)
 	if _, err := os.Stat(path); err != nil {
-		return nil, ErrNoTaskfileFound
+		return nil, fmt.Errorf(`task: No Taskfile found on "%s". Use "task --init" to create a new one`, path)
 	}
 	t, err := readTaskfile(path)
 	if err != nil {

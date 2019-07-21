@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"syscall"
 
 	"github.com/go-task/task/v2"
@@ -17,7 +18,7 @@ var (
 	version = "master"
 )
 
-const usage = `Usage: task [-ilfwvsd] [--init] [--list] [--force] [--watch] [--verbose] [--silent] [--dir] [--dry] [--summary] [task...]
+const usage = `Usage: task [-ilfwvsd] [--init] [--list] [--force] [--watch] [--verbose] [--silent] [--dir] [--taskfile] [--dry] [--summary] [task...]
 
 Runs the specified task(s). Falls back to the "default" task if no task name
 was specified, or lists all tasks if an unknown task name was specified.
@@ -58,6 +59,7 @@ func main() {
 		dry         bool
 		summary     bool
 		dir         string
+		entrypoint  string
 		output      string
 	)
 
@@ -72,6 +74,7 @@ func main() {
 	pflag.BoolVar(&dry, "dry", false, "compiles and prints tasks in the order that they would be run, without executing them")
 	pflag.BoolVar(&summary, "summary", false, "show summary about a task")
 	pflag.StringVarP(&dir, "dir", "d", "", "sets directory of execution")
+	pflag.StringVarP(&entrypoint, "taskfile", "t", "", `choose which Taskfile to run. Defaults to "Taskfile.yml"`)
 	pflag.StringVarP(&output, "output", "o", "", "sets output style: [interleaved|group|prefixed]")
 	pflag.Parse()
 
@@ -91,14 +94,26 @@ func main() {
 		return
 	}
 
+	if dir != "" && entrypoint != "" {
+		log.Fatal("task: You can't set both --dir and --taskfile")
+		return
+	}
+	if entrypoint != "" {
+		dir = filepath.Dir(entrypoint)
+		entrypoint = filepath.Base(entrypoint)
+	} else {
+		entrypoint = "Taskfile.yml"
+	}
+
 	e := task.Executor{
-		Force:   force,
-		Watch:   watch,
-		Verbose: verbose,
-		Silent:  silent,
-		Dir:     dir,
-		Dry:     dry,
-		Summary: summary,
+		Force:      force,
+		Watch:      watch,
+		Verbose:    verbose,
+		Silent:     silent,
+		Dir:        dir,
+		Dry:        dry,
+		Entrypoint: entrypoint,
+		Summary:    summary,
 
 		Stdin:  os.Stdin,
 		Stdout: os.Stdout,

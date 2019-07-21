@@ -7,6 +7,9 @@
   ([#205](https://github.com/go-task/task/pull/205)).
 - Create directory informed on `dir:` if it doesn't exist
   ([#209](https://github.com/go-task/task/issues/209), [#211](https://github.com/go-task/task/pull/211)).
+- We now have a `--taskfile` flag (alias `-t`), which can be used to run
+  another Taskfile (other than the default `Taskfile.yml`)
+  ([#221](https://github.com/go-task/task/pull/221)).
 
 ## v2.5.2 - 2019-05-11
 
