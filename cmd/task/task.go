@@ -58,6 +58,7 @@ func main() {
 		silent      bool
 		dry         bool
 		summary     bool
+		skipDeps    bool
 		dir         string
 		entrypoint  string
 		output      string
@@ -73,6 +74,7 @@ func main() {
 	pflag.BoolVarP(&silent, "silent", "s", false, "disables echoing")
 	pflag.BoolVar(&dry, "dry", false, "compiles and prints tasks in the order that they would be run, without executing them")
 	pflag.BoolVar(&summary, "summary", false, "show summary about a task")
+	pflag.BoolVar(&skipDeps, "skip-deps", false, "skip task dependencies")
 	pflag.StringVarP(&dir, "dir", "d", "", "sets directory of execution")
 	pflag.StringVarP(&entrypoint, "taskfile", "t", "", `choose which Taskfile to run. Defaults to "Taskfile.yml"`)
 	pflag.StringVarP(&output, "output", "o", "", "sets output style: [interleaved|group|prefixed]")
@@ -113,6 +115,7 @@ func main() {
 		Dir:        dir,
 		Dry:        dry,
 		Entrypoint: entrypoint,
+		SkipDeps:   skipDeps,
 		Summary:    summary,
 
 		Stdin:  os.Stdin,

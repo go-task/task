@@ -40,6 +40,7 @@ type Executor struct {
 	Verbose    bool
 	Silent     bool
 	Dry        bool
+	SkipDeps   bool
 	Summary    bool
 
 	Stdin  io.Reader
@@ -273,6 +274,11 @@ func (e *Executor) mkdir(t *taskfile.Task) error {
 }
 
 func (e *Executor) runDeps(ctx context.Context, t *taskfile.Task) error {
+
+	if e.SkipDeps {
+		return nil
+	}
+
 	g, ctx := errgroup.WithContext(ctx)
 
 	for _, d := range t.Deps {
