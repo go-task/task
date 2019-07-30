@@ -211,8 +211,14 @@ func (e *Executor) RunTask(ctx context.Context, call taskfile.Call) error {
 		return &MaximumTaskCallExceededError{task: call.Task}
 	}
 
-	if err := e.runDeps(ctx, t); err != nil {
-		return err
+	if t.DepsSerially {
+		if err := e.runDepsSerially(ctx, t); err != nil {
+			return err
+		}
+	} else {
+		if err := e.runDeps(ctx, t); err != nil {
+			return err
+		}
 	}
 
 	if !e.Force {
@@ -269,6 +275,19 @@ func (e *Executor) mkdir(t *taskfile.Task) error {
 			return err
 		}
 	}
+	return nil
+}
+
+func (e *Executor) runDepsSerially(ctx context.Context, t *taskfile.Task) error {
+	for _, d := range t.Deps {
+		d := d
+
+		err := e.RunTask(ctx, taskfile.Call{Task: d.Task, Vars: d.Vars})
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
