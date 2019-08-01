@@ -58,10 +58,11 @@ func (e *Executor) getStatusChecker(t *taskfile.Task) (status.Checker, error) {
 		}, nil
 	case "checksum":
 		return &status.Checksum{
-			Dir:     t.Dir,
-			Task:    t.Task,
-			Sources: t.Sources,
-			Dry:     e.Dry,
+			Dir:       t.Dir,
+			Task:      t.Task,
+			Sources:   t.Sources,
+			Generates: t.Generates,
+			Dry:       e.Dry,
 		}, nil
 	case "none":
 		return status.None{}, nil

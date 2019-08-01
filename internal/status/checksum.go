@@ -14,10 +14,11 @@ import (
 // Checksum validades if a task is up to date by calculating its source
 // files checksum
 type Checksum struct {
-	Dir     string
-	Task    string
-	Sources []string
-	Dry     bool
+	Dir       string
+	Task      string
+	Sources   []string
+	Generates []string
+	Dry       bool
 }
 
 // IsUpToDate implements the Checker interface
@@ -30,6 +31,16 @@ func (c *Checksum) IsUpToDate() (bool, error) {
 	sources, err := glob(c.Dir, c.Sources)
 	if err != nil {
 		return false, err
+	}
+
+	generates, err := glob(c.Dir, c.Generates)
+	if err != nil || len(generates) == 0 {
+		return false, err
+	}
+	for _, generate := range generates {
+		if _, err := os.Stat(generate); err != nil {
+			return false, nil
+		}
 	}
 
 	newMd5, err := c.checksum(sources...)
