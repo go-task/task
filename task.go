@@ -32,14 +32,17 @@ const (
 // Executor executes a Taskfile
 type Executor struct {
 	Taskfile *taskfile.Taskfile
-	Dir      string
-	Force    bool
-	Watch    bool
-	Verbose  bool
-	Silent   bool
-	Dry      bool
-	Summary  bool
-	Color    bool
+
+	Dir         string
+	Entrypoint  string
+	Force       bool
+	Watch       bool
+	Verbose     bool
+	Silent      bool
+	Dry         bool
+	Summary     bool
+	Color       bool
+	Interactive bool
 
 	Stdin  io.Reader
 	Stdout io.Writer

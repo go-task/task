@@ -18,7 +18,7 @@ var (
 	version = "master"
 )
 
-const usage = `Usage: task [-ilfwvsd] [--init] [--list] [--force] [--watch] [--verbose] [--silent] [--dir] [--dry] [--summary] [task...]
+const usage = `Usage: task [-ilfwvsd] [--init] [--list] [--force] [--watch] [--verbose] [--silent] [--dir] [--dry] [--summary] [--interactive] [task...]
 
 Runs the specified task(s). Falls back to the "default" task if no task name
 was specified, or lists all tasks if an unknown task name was specified.
@@ -58,6 +58,7 @@ func main() {
 		silent      bool
 		dry         bool
 		summary     bool
+		interactive bool
 		dir         string
 		output      string
 		color       bool
@@ -73,6 +74,7 @@ func main() {
 	pflag.BoolVarP(&silent, "silent", "s", false, "disables echoing")
 	pflag.BoolVar(&dry, "dry", false, "compiles and prints tasks in the order that they would be run, without executing them")
 	pflag.BoolVar(&summary, "summary", false, "show summary about a task")
+	pflag.BoolVar(&interactive, "interactive", true, "interactive prompt inputs")
 	pflag.StringVarP(&dir, "dir", "d", "", "sets directory of execution")
 	pflag.StringVarP(&output, "output", "o", "", "sets output style: [interleaved|group|prefixed]")
 	pflag.BoolVarP(&color, "color", "c", true, "colored output")
@@ -95,14 +97,16 @@ func main() {
 	}
 
 	e := task.Executor{
-		Force:   force,
-		Watch:   watch,
-		Verbose: verbose,
-		Silent:  silent,
-		Dir:     dir,
-		Dry:     dry,
-		Summary: summary,
-		Color:   color,
+		Force:       force,
+		Watch:       watch,
+		Verbose:     verbose,
+		Silent:      silent,
+		Dir:         dir,
+		Dry:         dry,
+		Entrypoint:  entrypoint,
+		Summary:     summary,
+		Color:       color,
+		Interactive: interactive,
 
 		Stdin:  os.Stdin,
 		Stdout: os.Stdout,
