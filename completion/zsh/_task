@@ -18,6 +18,7 @@ _arguments \
     '(-l --list)'{-l,--list} \
     '(-s --silent)'{-s,--silent} \
     '(--status)'--status \
+    '(--interactive)'--interactive \
     '(-v --verbose)'{-v,--verbose} \
     '(--version)'--version \
     '(-w --watch)'{-w,--watch} \
