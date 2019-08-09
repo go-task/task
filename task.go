@@ -207,6 +207,8 @@ func (e *Executor) Setup() error {
 
 // RunTask runs a task by its name
 func (e *Executor) RunTask(ctx context.Context, call taskfile.Call) error {
+	e.runInputs(ctx, &call)
+
 	t, err := e.CompiledTask(call)
 	if err != nil {
 		return err
@@ -274,6 +276,34 @@ func (e *Executor) mkdir(t *taskfile.Task) error {
 		}
 	}
 	return nil
+}
+
+func (e *Executor) runInputs(ctx context.Context, call *taskfile.Call) {
+	if origTask, ok := e.Taskfile.Tasks[call.Task]; ok {
+		if call.Vars == nil {
+			call.Vars = taskfile.Vars{}
+		}
+		for name, input := range origTask.Inputs {
+			var in string
+			if e.Interactive {
+				fmt.Println(input.FullTitle(name))
+				fmt.Fscanln(e.Stdin, &in)
+			}
+			if in == "" {
+				if input.Required {
+					e.Logger.Errf("Input required")
+					continue
+				}
+				in = input.Default
+			}
+			if !input.Validate(in) {
+				e.Logger.Errf("Input invalid")
+				continue
+			}
+
+			call.Vars[name] = taskfile.Var{Static: in}
+		}
+	}
 }
 
 func (e *Executor) runDeps(ctx context.Context, t *taskfile.Task) error {
