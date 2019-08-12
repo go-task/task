@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased - v3
+## v3.0.0 - Preview 1
 
 - We're now using [slim-sprig](https://github.com/go-task/slim-sprig) instead of
   [sprig](https://github.com/Masterminds/sprig), which allowed a file size
