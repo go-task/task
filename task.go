@@ -32,14 +32,16 @@ const (
 // Executor executes a Taskfile
 type Executor struct {
 	Taskfile *taskfile.Taskfile
-	Dir      string
-	Force    bool
-	Watch    bool
-	Verbose  bool
-	Silent   bool
-	Dry      bool
-	Summary  bool
-	Color    bool
+
+	Dir        string
+	Entrypoint string
+	Force      bool
+	Watch      bool
+	Verbose    bool
+	Silent     bool
+	Dry        bool
+	Summary    bool
+	Color      bool
 
 	Stdin  io.Reader
 	Stdout io.Writer
@@ -86,8 +88,12 @@ func (e *Executor) Run(ctx context.Context, calls ...taskfile.Call) error {
 
 // Setup setups Executor's internal state
 func (e *Executor) Setup() error {
+	if e.Entrypoint == "" {
+		e.Entrypoint = "Taskfile.yml"
+	}
+
 	var err error
-	e.Taskfile, err = read.Taskfile(e.Dir)
+	e.Taskfile, err = read.Taskfile(e.Dir, e.Entrypoint)
 	if err != nil {
 		return err
 	}

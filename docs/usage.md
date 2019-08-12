@@ -148,6 +148,8 @@ tasks:
       - caddy
 ```
 
+If the directory doesn't exist, `task` creates it.
+
 ## Task dependencies
 
 You may have tasks that depend on others. Just pointing them on `deps` will
@@ -398,7 +400,7 @@ tasks:
 When doing interpolation of variables, Task will look for the below.
 They are listed below in order of importance (e.g. most important first):
 
-- Variables declared locally in the task
+- Variables declared in the task definition
 - Variables given while calling a task from another.
   (See [Calling another task](#calling-another-task) above)
 - Variables declared in the `vars:` option in the `Taskfile`

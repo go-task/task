@@ -9,11 +9,21 @@
 
 ## Unreleased
 
+- Fixed panic bug when assigning a global variable
+  ([#229](https://github.com/go-task/task/issues/229), [#243](https://github.com/go-task/task/issues/234)).
+
+## v2.6.0 - 2019-07-21
+
 - Fixed some bugs regarding minor version checks on `version:`.
 - Add `preconditions:` to task
   ([#205](https://github.com/go-task/task/pull/205)).
 - Create directory informed on `dir:` if it doesn't exist
   ([#209](https://github.com/go-task/task/issues/209), [#211](https://github.com/go-task/task/pull/211)).
+- We now have a `--taskfile` flag (alias `-t`), which can be used to run
+  another Taskfile (other than the default `Taskfile.yml`)
+  ([#221](https://github.com/go-task/task/pull/221)).
+- It's now possible to install Task using Homebrew on Linux
+  ([go-task/homebrew-tap#1](https://github.com/go-task/homebrew-tap/pull/1)).
 
 ## v2.5.2 - 2019-05-11
 

@@ -40,5 +40,8 @@ func (tf *Taskfile) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	if tf.Expansions <= 0 {
 		tf.Expansions = 2
 	}
+	if tf.Vars == nil {
+		tf.Vars = make(Vars)
+	}
 	return nil
 }
