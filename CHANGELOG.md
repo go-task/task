@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Fixed panic bug when assigning a global variable
+  ([#229](https://github.com/go-task/task/issues/229), [#243](https://github.com/go-task/task/issues/234)).
+
 ## v2.6.0 - 2019-07-21
 
 - Fixed some bugs regarding minor version checks on `version:`.
