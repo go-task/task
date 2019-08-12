@@ -6,6 +6,9 @@
   [sprig](https://github.com/Masterminds/sprig), which allowed a file size
   reduction of about 22%
   ([#219](https://github.com/go-task/task/pull/219)).
+- We now use some colors on Task output to better distinguish message types -
+  commands are green, errors are red, etc
+  ([#207](https://github.com/go-task/task/pull/207)).
 
 ## Unreleased
 
