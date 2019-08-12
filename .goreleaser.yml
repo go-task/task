@@ -14,12 +14,11 @@ build:
   env:
     - CGO_ENABLED=0
 
-archive:
-  name_template: "{{.Binary}}_{{.Os}}_{{.Arch}}"
-
-  format_overrides:
-    - goos: windows
-      format: zip
+archives:
+  - name_template: "{{.Binary}}_{{.Os}}_{{.Arch}}"
+    format_overrides:
+      - goos: windows
+        format: zip
 
 release:
   draft: true
@@ -30,15 +29,15 @@ snapshot:
 checksum:
   name_template: "task_checksums.txt"
 
-nfpm:
-  vendor: Task
-  homepage: https://github.com/go-task/task
-  maintainer: Andrey Nering <andrey.nering@gmail.com>
-  description: Simple task runner written in Go
-  license: MIT
-  conflicts:
-    - taskwarrior
-  formats:
-    - deb
-    - rpm
-  name_template: "{{.ProjectName}}_{{.Os}}_{{.Arch}}"
+nfpms:
+  - vendor: Task
+    homepage: https://github.com/go-task/task
+    maintainer: Andrey Nering <andrey.nering@gmail.com>
+    description: Simple task runner written in Go
+    license: MIT
+    conflicts:
+      - taskwarrior
+    formats:
+      - deb
+      - rpm
+    name_template: "{{.ProjectName}}_{{.Os}}_{{.Arch}}"
