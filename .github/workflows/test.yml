@@ -15,7 +15,10 @@ jobs:
         uses: actions/checkout@v1
 
       - name: Build
-        run: go test -v .
+        run: go install -v ./cmd/task
+
+      - name: Test
+        run: task ci
 
   windows:
     name: Windows
@@ -31,7 +34,10 @@ jobs:
         uses: actions/checkout@v1
 
       - name: Build
-        run: go test -v .
+        run: go install -v ./cmd/task
+
+      - name: Test
+        run: task ci
 
   macos:
     name: MacOS
@@ -47,4 +53,7 @@ jobs:
         uses: actions/checkout@v1
 
       - name: Build
-        run: go test -v .
+        run: go install -v ./cmd/task
+
+      - name: Test
+        run: task ci
