@@ -37,7 +37,7 @@ jobs:
         run: go build -o ./bin/task -v ./cmd/task
 
       - name: Test
-        run: ./bin/task test
+        run: bin/task test
 
   macos:
     name: MacOS
