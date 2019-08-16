@@ -15,10 +15,10 @@ jobs:
         uses: actions/checkout@v1
 
       - name: Build
-        run: go build -o ./bin/task -v ./cmd/task
+        run: go build -o ./task -v ./cmd/task
 
       - name: Test
-        run: ./bin/task test
+        run: ./task test
 
   windows:
     name: Windows
@@ -34,10 +34,10 @@ jobs:
         uses: actions/checkout@v1
 
       - name: Build
-        run: go build -o ./bin/task -v ./cmd/task
+        run: go build -o ./task -v ./cmd/task
 
       - name: Test
-        run: bin\task test
+        run: task test
 
   macos:
     name: MacOS
@@ -53,7 +53,7 @@ jobs:
         uses: actions/checkout@v1
 
       - name: Build
-        run: go build -o ./bin/task -v ./cmd/task
+        run: go build -o ./task -v ./cmd/task
 
       - name: Test
-        run: ./bin/task test
+        run: ./task test
