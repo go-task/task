@@ -18,7 +18,7 @@ jobs:
         run: go build -o ./bin/task -v ./cmd/task
 
       - name: Test
-        run: ./bin/task ci
+        run: ./bin/task test
 
   windows:
     name: Windows
@@ -37,7 +37,7 @@ jobs:
         run: go build -o ./bin/task -v ./cmd/task
 
       - name: Test
-        run: ./bin/task ci
+        run: ./bin/task test
 
   macos:
     name: MacOS
@@ -56,4 +56,4 @@ jobs:
         run: go build -o ./bin/task -v ./cmd/task
 
       - name: Test
-        run: ./bin/task ci
+        run: ./bin/task test
