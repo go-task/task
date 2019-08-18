@@ -1,53 +1,56 @@
-default:
-  deps: [d1, d2, d3]
+version: '2'
 
-d1:
-  deps: [d11, d12, d13]
-  cmds:
-    - echo 'Text' > d1.txt
+tasks:
+  default:
+    deps: [d1, d2, d3]
 
-d2:
-  deps: [d21, d22, d23]
-  cmds:
-    - echo 'Text' > d2.txt
+  d1:
+    deps: [d11, d12, d13]
+    cmds:
+      - echo 'Text' > d1.txt
 
-d3:
-  deps: [d31, d32, d33]
-  cmds:
-    - echo 'Text' > d3.txt
+  d2:
+    deps: [d21, d22, d23]
+    cmds:
+      - echo 'Text' > d2.txt
 
-d11:
-  cmds:
-    - echo 'Text' > d11.txt
+  d3:
+    deps: [d31, d32, d33]
+    cmds:
+      - echo 'Text' > d3.txt
 
-d12:
-  cmds:
-    - echo 'Text' > d12.txt
+  d11:
+    cmds:
+      - echo 'Text' > d11.txt
 
-d13:
-  cmds:
-    - echo 'Text' > d13.txt
+  d12:
+    cmds:
+      - echo 'Text' > d12.txt
 
-d21:
-  cmds:
-    - echo 'Text' > d21.txt
+  d13:
+    cmds:
+      - echo 'Text' > d13.txt
 
-d22:
-  cmds:
-    - echo 'Text' > d22.txt
+  d21:
+    cmds:
+      - echo 'Text' > d21.txt
 
-d23:
-  cmds:
-    - echo 'Text' > d23.txt
+  d22:
+    cmds:
+      - echo 'Text' > d22.txt
 
-d31:
-  cmds:
-    - echo 'Text' > d31.txt
+  d23:
+    cmds:
+      - echo 'Text' > d23.txt
 
-d32:
-  cmds:
-    - echo 'Text' > d32.txt
+  d31:
+    cmds:
+      - echo 'Text' > d31.txt
 
-d33:
-  cmds:
-    - echo 'Text' > d33.txt
+  d32:
+    cmds:
+      - echo 'Text' > d32.txt
+
+  d33:
+    cmds:
+      - echo 'Text' > d33.txt
