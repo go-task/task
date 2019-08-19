@@ -28,7 +28,7 @@ Example: 'task hello' with the following 'Taskfile.yml' file will generate an
 'output.txt' file with the content "hello".
 
 '''
-version: '2'
+version: '3'
 tasks:
   hello:
     cmds:
