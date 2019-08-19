@@ -15,7 +15,23 @@ available, but not `3.0.0+`.
 
 ## Version 1
 
-Is deprecated and can not be used anymore.
+*Taskfiles with Version `1` are not available on Task >= `v3.0.0` anymore.*
+
+In the first version of the `Taskfile`, the `version:` key was not available,
+because the tasks was in the root of the YAML document. Like this:
+
+```yaml
+echo:
+  cmds:
+    - echo "Hello, World!"
+```
+
+The variable priority order was also different:
+
+1. Call variables
+2. Environment
+3. Task variables
+4. `Taskvars.yml` variables
 
 ## Version 2.0
 
