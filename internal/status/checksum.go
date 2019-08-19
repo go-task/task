@@ -34,7 +34,10 @@ func (c *Checksum) IsUpToDate() (bool, error) {
 	}
 
 	generates, err := glob(c.Dir, c.Generates)
-	if err != nil || len(generates) == 0 {
+	if err != nil {
+		return false, err
+	}
+	if len(generates) == 0 {
 		return false, err
 	}
 	for _, generate := range generates {
