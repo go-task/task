@@ -647,5 +647,8 @@ func TestDisplaysErrorOnUnsupportedVersion(t *testing.T) {
 		Stdout: ioutil.Discard,
 		Stderr: ioutil.Discard,
 	}
-	assert.Error(t, e.Setup())
+	err := e.Setup()
+	assert.Error(t, err)
+	assert.Equal(t, "task: Taskfile versions prior to v2 are not supported anymore", err.Error())
+
 }
