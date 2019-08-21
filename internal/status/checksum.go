@@ -30,8 +30,9 @@ func (c *Checksum) IsUpToDate() (bool, error) {
 
 	sources, err := globs(c.Dir, c.Sources)
 	if err != nil {
-		return false, nil
+		return false, err
 	}
+
 	newMd5, err := c.checksum(sources...)
 	if err != nil {
 		return false, nil
