@@ -64,19 +64,12 @@ func (c *Checksum) checksum(files ...string) (string, error) {
 	h := md5.New()
 
 	for _, f := range files {
+		// also sum the filename, so checksum changes for renaming a file
+		if _, err := io.Copy(h, strings.NewReader(filepath.Base(f))); err != nil {
+			return "", err
+		}
 		f, err := os.Open(f)
 		if err != nil {
-			return "", err
-		}
-		info, err := f.Stat()
-		if err != nil {
-			return "", err
-		}
-		if info.IsDir() {
-			continue
-		}
-		// also sum the filename, so checksum changes for renaming a file
-		if _, err = io.Copy(h, strings.NewReader(info.Name())); err != nil {
 			return "", err
 		}
 		if _, err = io.Copy(h, f); err != nil {
