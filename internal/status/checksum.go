@@ -30,22 +30,8 @@ func (c *Checksum) IsUpToDate() (bool, error) {
 
 	sources, err := globs(c.Dir, c.Sources)
 	if err != nil {
-		return false, err
+		return false, nil
 	}
-
-	generates, err := glob(c.Dir, c.Generates)
-	if err != nil {
-		return false, err
-	}
-	if len(generates) == 0 {
-		return false, err
-	}
-	for _, generate := range generates {
-		if _, err := os.Stat(generate); err != nil {
-			return false, nil
-		}
-	}
-
 	newMd5, err := c.checksum(sources...)
 	if err != nil {
 		return false, nil
@@ -57,6 +43,20 @@ func (c *Checksum) IsUpToDate() (bool, error) {
 			return false, err
 		}
 	}
+
+	if len(c.Generates) != 0 {
+		// For each specified 'generates' field, check whether the files actually exist.
+		for _, g := range c.Generates {
+			generates, err := glob(c.Dir, g)
+			if err != nil {
+				return false, nil
+			}
+			if len(generates) == 0 {
+				return false, nil
+			}
+		}
+	}
+
 	return oldMd5 == newMd5, nil
 }
 
