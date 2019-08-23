@@ -678,3 +678,17 @@ func TestWhenDirAttributeItCreatesMissingAndRunsInThatDir(t *testing.T) {
 	// Clean-up after ourselves only if no error.
 	_ = os.Remove(toBeCreated)
 }
+
+func TestShortTaskNotation(t *testing.T) {
+	const dir = "testdata/short_task_notation/"
+
+	var buff bytes.Buffer
+	e := task.Executor{
+		Dir:     dir,
+		Stdout:  &buff,
+		Stderr:  &buff,
+	}
+	assert.NoError(t, e.Setup())
+	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "run"}))
+	assert.Equal(t, readTestFixture(t, dir, "expected_output.txt"), buff.String())
+}

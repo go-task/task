@@ -1,0 +1,4 @@
+task: echo "output of short-1"
+output of short-1
+task: echo "output of short-2"
+output of short-2

@@ -1,0 +1,16 @@
+version: '3'
+
+tasks:
+
+  run:
+    cmds:
+      - task: short-1
+      - task: short-2
+
+  short-1:
+    cmds:
+      - echo "output of short-1"
+
+  short-2:
+    cmds:
+      - echo "output of short-2"
