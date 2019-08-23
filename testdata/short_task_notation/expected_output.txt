@@ -1,4 +1,6 @@
-task: echo "output of short-1"
-output of short-1
-task: echo "output of short-2"
-output of short-2
+task: echo "single-line-short-task"
+single-line-short-task
+task: echo "multiple-cmds-short-tasks-1"
+multiple-cmds-short-tasks-1
+task: echo "multiple-cmds-short-tasks-2"
+multiple-cmds-short-tasks-2

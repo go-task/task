@@ -4,13 +4,14 @@ tasks:
 
   run:
     cmds:
-      - task: short-1
-      - task: short-2
+      - task: single-cmd
+      - task: multiple-cmds
 
-  short-1:
+  single-cmd:
     cmds:
-      - echo "output of short-1"
+      - echo "single-line-short-task"
 
-  short-2:
+  multiple-cmds:
     cmds:
-      - echo "output of short-2"
+      - echo "multiple-cmds-short-tasks-1"
+      - echo "multiple-cmds-short-tasks-2"
