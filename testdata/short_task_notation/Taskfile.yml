@@ -7,9 +7,10 @@ tasks:
       - task: single-cmd
       - task: multiple-cmds
 
-  single-cmd: echo "single-line-short-task"
+  single-cmd:
+    cmds:
+      - echo "single-line-short-task"
 
   multiple-cmds:
-    cmds:
-      - echo "multiple-cmds-short-tasks-1"
-      - echo "multiple-cmds-short-tasks-2"
+    - echo "multiple-cmds-short-tasks-1"
+    - echo "multiple-cmds-short-tasks-2"

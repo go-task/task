@@ -20,5 +20,5 @@ type Task struct {
 	Silent       bool
 	Method       string
 	Prefix       string
-	IgnoreError  bool `yaml:"ignore_error"`
+	IgnoreError  bool
 }

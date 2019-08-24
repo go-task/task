@@ -1,7 +1,4 @@
-version: '3'
-
-includes:
-  docs: ./docs
+version: '2'
 
 vars:
   GIT_COMMIT:
