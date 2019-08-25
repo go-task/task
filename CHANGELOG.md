@@ -1,5 +1,10 @@
 # Changelog
 
+# v3 - Unreleased
+
+- Taskfiles in version 1 are not supported anymore
+  ([#237](https://github.com/go-task/task/pull/237)).
+
 ## v3.0.0 - Preview 1
 
 - We're now using [slim-sprig](https://github.com/go-task/slim-sprig) instead of
