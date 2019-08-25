@@ -10,6 +10,7 @@ import (
 
 	"github.com/go-task/task/v2"
 	"github.com/go-task/task/v2/internal/args"
+	"github.com/go-task/task/v2/internal/logger"
 
 	"github.com/spf13/pflag"
 )
@@ -61,6 +62,7 @@ func main() {
 		dir         string
 		entrypoint  string
 		output      string
+		color       bool
 	)
 
 	pflag.BoolVar(&versionFlag, "version", false, "show Task version")
@@ -76,6 +78,7 @@ func main() {
 	pflag.StringVarP(&dir, "dir", "d", "", "sets directory of execution")
 	pflag.StringVarP(&entrypoint, "taskfile", "t", "", `choose which Taskfile to run. Defaults to "Taskfile.yml"`)
 	pflag.StringVarP(&output, "output", "o", "", "sets output style: [interleaved|group|prefixed]")
+	pflag.BoolVarP(&color, "color", "c", true, "colored output")
 	pflag.Parse()
 
 	if versionFlag {
@@ -114,6 +117,7 @@ func main() {
 		Dry:        dry,
 		Entrypoint: entrypoint,
 		Summary:    summary,
+		Color:      color,
 
 		Stdin:  os.Stdin,
 		Stdout: os.Stdout,
@@ -132,7 +136,7 @@ func main() {
 
 	arguments := pflag.Args()
 	if len(arguments) == 0 {
-		log.Println("task: No argument given, trying default task")
+		e.Logger.Errf(logger.Yellow, "task: No argument given, trying default task")
 		arguments = []string{"default"}
 	}
 
@@ -154,7 +158,8 @@ func main() {
 	}
 
 	if err := e.Run(ctx, calls...); err != nil {
-		log.Fatal(err)
+		e.Logger.Errf(logger.Red, "%v", err)
+		os.Exit(1)
 	}
 }
 

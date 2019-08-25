@@ -41,6 +41,7 @@ type Executor struct {
 	Silent     bool
 	Dry        bool
 	Summary    bool
+	Color      bool
 
 	Stdin  io.Reader
 	Stdout io.Writer
@@ -114,6 +115,7 @@ func (e *Executor) Setup() error {
 		Stdout:  e.Stdout,
 		Stderr:  e.Stderr,
 		Verbose: e.Verbose,
+		Color:   e.Color,
 	}
 
 	v, err := strconv.ParseFloat(e.Taskfile.Version, 64)
@@ -128,8 +130,13 @@ func (e *Executor) Setup() error {
 	if v < 1 {
 		return fmt.Errorf(`task: Taskfile version should be greater or equal to v1`)
 	}
-	if v > 2.6 {
-		return fmt.Errorf(`task: Taskfile versions greater than v2.6 not implemented in the version of Task`)
+	if v > 3.0 {
+		return fmt.Errorf(`task: Taskfile versions greater than v3.0 not implemented in the version of Task`)
+	}
+
+	// Color available only on v3
+	if v < 3 {
+		e.Logger.Color = false
 	}
 
 	if v < 2 {
@@ -228,24 +235,24 @@ func (e *Executor) RunTask(ctx context.Context, call taskfile.Call) error {
 
 		if upToDate && preCondMet {
 			if !e.Silent {
-				e.Logger.Errf(`task: Task "%s" is up to date`, t.Task)
+				e.Logger.Errf(logger.Magenta, `task: Task "%s" is up to date`, t.Task)
 			}
 			return nil
 		}
 	}
 
 	if err := e.mkdir(t); err != nil {
-		e.Logger.Errf("task: cannot make directory %q: %v", t.Dir, err)
+		e.Logger.Errf(logger.Red, "task: cannot make directory %q: %v", t.Dir, err)
 	}
 
 	for i := range t.Cmds {
 		if err := e.runCommand(ctx, t, call, i); err != nil {
 			if err2 := e.statusOnError(t); err2 != nil {
-				e.Logger.VerboseErrf("task: error cleaning status on error: %v", err2)
+				e.Logger.VerboseErrf(logger.Yellow, "task: error cleaning status on error: %v", err2)
 			}
 
 			if execext.IsExitError(err) && t.IgnoreError {
-				e.Logger.VerboseErrf("task: task error ignored: %v", err)
+				e.Logger.VerboseErrf(logger.Yellow, "task: task error ignored: %v", err)
 				continue
 			}
 
@@ -302,7 +309,7 @@ func (e *Executor) runCommand(ctx context.Context, t *taskfile.Task, call taskfi
 		return nil
 	case cmd.Cmd != "":
 		if e.Verbose || (!cmd.Silent && !t.Silent && !e.Silent) {
-			e.Logger.Errf(cmd.Cmd)
+			e.Logger.Errf(logger.Green, "task: %s", cmd.Cmd)
 		}
 
 		if e.Dry {
@@ -333,7 +340,7 @@ func (e *Executor) runCommand(ctx context.Context, t *taskfile.Task, call taskfi
 			Stderr:  stdErr,
 		})
 		if execext.IsExitError(err) && cmd.IgnoreError {
-			e.Logger.VerboseErrf("task: command error ignored: %v", err)
+			e.Logger.VerboseErrf(logger.Yellow, "task: command error ignored: %v", err)
 			return nil
 		}
 		return err

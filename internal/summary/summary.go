@@ -20,8 +20,8 @@ func printSpaceBetweenSummaries(l *logger.Logger, i int) {
 		return
 	}
 
-	l.Outf("")
-	l.Outf("")
+	l.Outf(logger.Default, "")
+	l.Outf(logger.Default, "")
 }
 
 func PrintTask(l *logger.Logger, t *taskfile.Task) {
@@ -50,14 +50,14 @@ func printTaskSummary(l *logger.Logger, t *taskfile.Task) {
 	for i, line := range lines {
 		notLastLine := i+1 < len(lines)
 		if notLastLine || line != "" {
-			l.Outf(line)
+			l.Outf(logger.Default, line)
 		}
 	}
 }
 
 func printTaskName(l *logger.Logger, t *taskfile.Task) {
-	l.Outf("task: %s", t.Task)
-	l.Outf("")
+	l.Outf(logger.Default, "task: %s", t.Task)
+	l.Outf(logger.Default, "")
 }
 
 func hasDescription(t *taskfile.Task) bool {
@@ -65,11 +65,11 @@ func hasDescription(t *taskfile.Task) bool {
 }
 
 func printTaskDescription(l *logger.Logger, t *taskfile.Task) {
-	l.Outf(t.Desc)
+	l.Outf(logger.Default, t.Desc)
 }
 
 func printNoDescriptionOrSummary(l *logger.Logger) {
-	l.Outf("(task does not have description or summary)")
+	l.Outf(logger.Default, "(task does not have description or summary)")
 }
 
 func printTaskDependencies(l *logger.Logger, t *taskfile.Task) {
@@ -77,11 +77,11 @@ func printTaskDependencies(l *logger.Logger, t *taskfile.Task) {
 		return
 	}
 
-	l.Outf("")
-	l.Outf("dependencies:")
+	l.Outf(logger.Default, "")
+	l.Outf(logger.Default, "dependencies:")
 
 	for _, d := range t.Deps {
-		l.Outf(" - %s", d.Task)
+		l.Outf(logger.Default, " - %s", d.Task)
 	}
 }
 
@@ -90,14 +90,14 @@ func printTaskCommands(l *logger.Logger, t *taskfile.Task) {
 		return
 	}
 
-	l.Outf("")
-	l.Outf("commands:")
+	l.Outf(logger.Default, "")
+	l.Outf(logger.Default, "commands:")
 	for _, c := range t.Cmds {
 		isCommand := c.Cmd != ""
 		if isCommand {
-			l.Outf(" - %s", c.Cmd)
+			l.Outf(logger.Default, " - %s", c.Cmd)
 		} else {
-			l.Outf(" - Task: %s", c.Task)
+			l.Outf(logger.Default, " - Task: %s", c.Task)
 		}
 	}
 }
