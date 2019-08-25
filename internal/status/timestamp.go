@@ -47,7 +47,7 @@ func (t *Timestamp) Kind() string {
 
 // Value implements the Checker Interface
 func (t *Timestamp) Value() (interface{}, error) {
-	sources, err := glob(t.Dir, t.Sources)
+	sources, err := globs(t.Dir, t.Sources)
 	if err != nil {
 		return time.Now(), err
 	}
