@@ -1,7 +1,6 @@
 package status
 
 import (
-	"fmt"
 	"os"
 	"time"
 )
@@ -47,22 +46,22 @@ func (t *Timestamp) Kind() string {
 }
 
 // Value implements the Checker Interface
-func (t *Timestamp) Value() (string, error) {
+func (t *Timestamp) Value() (interface{}, error) {
 	sources, err := glob(t.Dir, t.Sources)
 	if err != nil {
-		return "<no value>", err
+		return time.Now(), err
 	}
 
 	sourcesMaxTime, err := getMaxTime(sources...)
 	if err != nil {
-		return "<no value>", err
+		return time.Now(), err
 	}
 
 	if sourcesMaxTime.IsZero() {
-		return "0", nil
+		return time.Unix(0, 0), nil
 	}
 
-	return fmt.Sprintf("%d", sourcesMaxTime.Unix()), nil
+	return sourcesMaxTime, nil
 }
 
 func getMinTime(files ...string) (time.Time, error) {

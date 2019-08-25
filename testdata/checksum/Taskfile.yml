@@ -19,4 +19,5 @@ build-with-timestamp:
   sources:
     - ./source.txt
   status:
-    - echo "{{.TIMESTAMP}}"
+    - echo '{{.TIMESTAMP.Unix }}'
+    - echo '{{.TIMESTAMP}}'

@@ -13,17 +13,22 @@ var (
 // Vars is a string[string] variables map.
 type Vars map[string]Var
 
-// ToStringMap converts Vars to a string map containing only the static
+// ToCacheMap converts Vars to a map containing only the static
 // variables
-func (vs Vars) ToStringMap() (m map[string]string) {
-	m = make(map[string]string, len(vs))
+func (vs Vars) ToCacheMap() (m map[string](interface{})) {
+	m = make(map[string](interface{}), len(vs))
 	for k, v := range vs {
 		if v.Sh != "" {
 			// Dynamic variable is not yet resolved; trigger
 			// <no value> to be used in templates.
 			continue
 		}
-		m[k] = v.Static
+
+		if v.Live != nil {
+			m[k] = v.Live
+		} else {
+			m[k] = v.Static
+		}
 	}
 	return
 }
@@ -31,6 +36,7 @@ func (vs Vars) ToStringMap() (m map[string]string) {
 // Var represents either a static or dynamic variable.
 type Var struct {
 	Static string
+	Live   interface{}
 	Sh     string
 }
 

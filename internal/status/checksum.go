@@ -74,7 +74,7 @@ func (c *Checksum) checksum(files ...string) (string, error) {
 }
 
 // Value implements the Checker Interface
-func (c *Checksum) Value() (string, error) {
+func (c *Checksum) Value() (interface{}, error) {
 	return c.checksum()
 }
 

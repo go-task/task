@@ -14,12 +14,12 @@ import (
 type Templater struct {
 	Vars taskfile.Vars
 
-	strMap map[string]string
-	err    error
+	cacheMap map[string](interface{})
+	err      error
 }
 
-func (r *Templater) RefreshStringMap() {
-	r.strMap = r.Vars.ToStringMap()
+func (r *Templater) RefreshCacheMap() {
+	r.cacheMap = r.Vars.ToCacheMap()
 }
 
 func (r *Templater) Replace(str string) string {
@@ -33,12 +33,12 @@ func (r *Templater) Replace(str string) string {
 		return ""
 	}
 
-	if r.strMap == nil {
-		r.strMap = r.Vars.ToStringMap()
+	if r.cacheMap == nil {
+		r.cacheMap = r.Vars.ToCacheMap()
 	}
 
 	var b bytes.Buffer
-	if err = templ.Execute(&b, r.strMap); err != nil {
+	if err = templ.Execute(&b, r.cacheMap); err != nil {
 		r.err = err
 		return ""
 	}
@@ -66,6 +66,7 @@ func (r *Templater) ReplaceVars(vars taskfile.Vars) taskfile.Vars {
 	for k, v := range vars {
 		new[k] = taskfile.Var{
 			Static: r.Replace(v.Static),
+			Live:   v.Live,
 			Sh:     r.Replace(v.Sh),
 		}
 	}

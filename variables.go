@@ -106,10 +106,10 @@ func (e *Executor) CompiledTask(call taskfile.Call) (*taskfile.Task, error) {
 			return nil, err
 		}
 
-		vars[strings.ToUpper(checker.Kind())] = taskfile.Var{Static: value}
-		// Adding new static variables, requires us to refresh the templaters
-		// cache of the the static values
-		r.RefreshStringMap()
+		vars[strings.ToUpper(checker.Kind())] = taskfile.Var{Live: value}
+		// Adding new variables, requires us to refresh the templaters
+		// cache of the the values manually
+		r.RefreshCacheMap()
 
 		new.Status = r.ReplaceSlice(origTask.Status)
 	}

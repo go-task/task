@@ -356,6 +356,11 @@ Two special variables `{{.CHECKSUM}}` and `{{.TIMESTAMP}}` are available
 for interpolation within `status` commands, depending on the method assigned
 to fingerprint the sources.  Only `source` globs are fingerprinted.
 
+Note that the `{{.TIMESTAMP}}` variable is a "live" Go time struct, and can be
+formatted using any of the methods that `Time` responds to.
+
+See [the Go Time documentation](https://golang.org/pkg/time/) for more information.
+
 You can use `--force` or `-f` if you want to force a task to run even when
 up-to-date.
 

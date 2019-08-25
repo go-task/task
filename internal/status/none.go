@@ -9,7 +9,7 @@ func (None) IsUpToDate() (bool, error) {
 }
 
 // Value implements the Checker interface
-func (None) Value() (string, error) {
+func (None) Value() (interface{}, error) {
 	return "", nil
 }
 

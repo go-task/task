@@ -423,8 +423,10 @@ func TestStatusChecksum(t *testing.T) {
 	buff.Reset()
 	inf, _ := os.Stat(filepath.Join(dir, "source.txt"))
 	ts := fmt.Sprintf("%d", inf.ModTime().Unix())
+	tf := fmt.Sprintf("%s", inf.ModTime())
 	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "build-with-timestamp"}))
 	assert.Contains(t, buff.String(), ts)
+	assert.Contains(t, buff.String(), tf)
 }
 
 func TestInit(t *testing.T) {
