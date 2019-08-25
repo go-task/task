@@ -11,7 +11,6 @@ import (
 	"sync/atomic"
 
 	"github.com/go-task/task/v2/internal/compiler"
-	compilerv1 "github.com/go-task/task/v2/internal/compiler/v1"
 	compilerv2 "github.com/go-task/task/v2/internal/compiler/v2"
 	"github.com/go-task/task/v2/internal/execext"
 	"github.com/go-task/task/v2/internal/logger"
@@ -122,14 +121,16 @@ func (e *Executor) Setup() error {
 	if err != nil {
 		return fmt.Errorf(`task: Could not parse taskfile version "%s": %v`, e.Taskfile.Version, err)
 	}
+
+	if v < 2 {
+		return fmt.Errorf(`task: Taskfile versions prior to v2 are not supported anymore`)
+	}
+
 	// consider as equal to the greater version if round
 	if v == 2.0 {
 		v = 2.6
 	}
 
-	if v < 1 {
-		return fmt.Errorf(`task: Taskfile version should be greater or equal to v1`)
-	}
 	if v > 3.0 {
 		return fmt.Errorf(`task: Taskfile versions greater than v3.0 not implemented in the version of Task`)
 	}
@@ -139,20 +140,12 @@ func (e *Executor) Setup() error {
 		e.Logger.Color = false
 	}
 
-	if v < 2 {
-		e.Compiler = &compilerv1.CompilerV1{
-			Dir:    e.Dir,
-			Vars:   e.taskvars,
-			Logger: e.Logger,
-		}
-	} else { // v >= 2
-		e.Compiler = &compilerv2.CompilerV2{
-			Dir:          e.Dir,
-			Taskvars:     e.taskvars,
-			TaskfileVars: e.Taskfile.Vars,
-			Expansions:   e.Taskfile.Expansions,
-			Logger:       e.Logger,
-		}
+	e.Compiler = &compilerv2.CompilerV2{
+		Dir:          e.Dir,
+		Taskvars:     e.taskvars,
+		TaskfileVars: e.Taskfile.Vars,
+		Expansions:   e.Taskfile.Expansions,
+		Logger:       e.Logger,
 	}
 
 	if v < 2.1 && e.Taskfile.Output != "" {

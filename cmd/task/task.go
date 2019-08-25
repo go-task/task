@@ -28,12 +28,14 @@ Example: 'task hello' with the following 'Taskfile.yml' file will generate an
 'output.txt' file with the content "hello".
 
 '''
-hello:
-  cmds:
-    - echo "I am going to write a file named 'output.txt' now."
-    - echo "hello" > output.txt
-  generates:
-    - output.txt
+version: '3'
+tasks:
+  hello:
+    cmds:
+      - echo "I am going to write a file named 'output.txt' now."
+      - echo "hello" > output.txt
+    generates:
+      - output.txt
 '''
 
 Options:

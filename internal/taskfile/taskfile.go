@@ -13,11 +13,6 @@ type Taskfile struct {
 
 // UnmarshalYAML implements yaml.Unmarshaler interface
 func (tf *Taskfile) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	if err := unmarshal(&tf.Tasks); err == nil {
-		tf.Version = "1"
-		return nil
-	}
-
 	var taskfile struct {
 		Version    string
 		Expansions int
