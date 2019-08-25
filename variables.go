@@ -1,7 +1,6 @@
 package task
 
 import (
-	"io/ioutil"
 	"path/filepath"
 	"strings"
 
@@ -64,30 +63,6 @@ func (e *Executor) CompiledTask(call taskfile.Call) (*taskfile.Task, error) {
 		new.Env[k] = taskfile.Var{Static: static}
 	}
 
-	if len(origTask.Status) > 0 {
-		e := &Executor{
-			Dir:    new.Dir,
-			Stdout: ioutil.Discard,
-			Stderr: ioutil.Discard,
-			Dry:    true,
-		}
-
-		checker, err := e.GetStatusChecker(&new)
-		if err != nil {
-			return nil, err
-		}
-
-		value, err := checker.Value()
-		if err != nil {
-			return nil, err
-		}
-
-		vars[strings.ToUpper(checker.Kind())] = taskfile.Var{Static: value}
-
-		statusTemplater := templater.Templater{Vars: vars}
-		new.Status = statusTemplater.ReplaceSlice(origTask.Status)
-	}
-
 	if len(origTask.Cmds) > 0 {
 		new.Cmds = make([]*taskfile.Cmd, len(origTask.Cmds))
 		for i, cmd := range origTask.Cmds {
@@ -118,6 +93,25 @@ func (e *Executor) CompiledTask(call taskfile.Call) (*taskfile.Task, error) {
 				Msg: r.Replace(precond.Msg),
 			}
 		}
+	}
+
+	if len(origTask.Status) > 0 {
+		checker, err := e.getStatusChecker(&new)
+		if err != nil {
+			return nil, err
+		}
+
+		value, err := checker.Value()
+		if err != nil {
+			return nil, err
+		}
+
+		vars[strings.ToUpper(checker.Kind())] = taskfile.Var{Static: value}
+		// Adding new static variables, requires us to refresh the templaters
+		// cache of the the static values
+		r.RefreshStringMap()
+
+		new.Status = r.ReplaceSlice(origTask.Status)
 	}
 
 	return &new, r.Err()

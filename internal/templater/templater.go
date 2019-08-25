@@ -18,6 +18,10 @@ type Templater struct {
 	err    error
 }
 
+func (r *Templater) RefreshStringMap() {
+	r.strMap = r.Vars.ToStringMap()
+}
+
 func (r *Templater) Replace(str string) string {
 	if r.err != nil || str == "" {
 		return ""
