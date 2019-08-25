@@ -10,7 +10,7 @@ import (
 	"github.com/mattn/go-zglob"
 )
 
-func globs(dir string, globs []string) ([]string, error){
+func globs(dir string, globs []string) ([]string, error) {
 	files := make([]string, 0)
 	for _, g := range globs {
 		f, err := glob(dir, g)
@@ -39,13 +39,12 @@ func glob(dir string, g string) ([]string, error) {
 	for _, f := range fs {
 		info, err := os.Stat(f)
 		if err != nil {
-			continue
+			return nil, err
 		}
 		if info.IsDir() {
 			continue
 		}
 		files = append(files, f)
 	}
-	sort.Strings(files)
 	return files, nil
 }

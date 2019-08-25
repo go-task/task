@@ -45,12 +45,15 @@ func (c *Checksum) IsUpToDate() (bool, error) {
 		}
 	}
 
-	if len(c.Generates) != 0 {
-		// For each specified 'generates' field, check whether the files actually exist.
+	if len(c.Generates) > 0 {
+		// For each specified 'generates' field, check whether the files actually exist
 		for _, g := range c.Generates {
 			generates, err := glob(c.Dir, g)
-			if err != nil {
+			if os.IsNotExist(err) {
 				return false, nil
+			}
+			if err != nil {
+				return false, err
 			}
 			if len(generates) == 0 {
 				return false, nil
