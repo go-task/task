@@ -84,9 +84,19 @@ func (c *Checksum) checksum(files ...string) (string, error) {
 	return fmt.Sprintf("%x", h.Sum(nil)), nil
 }
 
+// Value implements the Checker Interface
+func (c *Checksum) Value() (interface{}, error) {
+	return c.checksum()
+}
+
 // OnError implements the Checker interface
 func (c *Checksum) OnError() error {
 	return os.Remove(c.checksumFilePath())
+}
+
+// Kind implements the Checker Interface
+func (t *Checksum) Kind() string {
+	return "checksum"
 }
 
 func (c *Checksum) checksumFilePath() string {

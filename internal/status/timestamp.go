@@ -41,6 +41,29 @@ func (t *Timestamp) IsUpToDate() (bool, error) {
 	return !generatesMinTime.Before(sourcesMaxTime), nil
 }
 
+func (t *Timestamp) Kind() string {
+	return "timestamp"
+}
+
+// Value implements the Checker Interface
+func (t *Timestamp) Value() (interface{}, error) {
+	sources, err := globs(t.Dir, t.Sources)
+	if err != nil {
+		return time.Now(), err
+	}
+
+	sourcesMaxTime, err := getMaxTime(sources...)
+	if err != nil {
+		return time.Now(), err
+	}
+
+	if sourcesMaxTime.IsZero() {
+		return time.Unix(0, 0), nil
+	}
+
+	return sourcesMaxTime, nil
+}
+
 func getMinTime(files ...string) (time.Time, error) {
 	var t time.Time
 	for _, f := range files {
