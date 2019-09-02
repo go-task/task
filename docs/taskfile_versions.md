@@ -15,6 +15,8 @@ available, but not `3.0.0+`.
 
 ## Version 1
 
+> NOTE: Taskfiles in version 1 are not supported on Task >= v3.0.0 anymore.
+
 In the first version of the `Taskfile`, the `version:` key was not available,
 because the tasks was in the root of the YAML document. Like this:
 

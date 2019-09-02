@@ -1,5 +1,10 @@
 # Changelog
 
+# v3 - Unreleased
+
+- Taskfiles in version 1 are not supported anymore
+  ([#237](https://github.com/go-task/task/pull/237)).
+
 ## v3.0.0 - Preview 1
 
 - We're now using [slim-sprig](https://github.com/go-task/slim-sprig) instead of
@@ -14,6 +19,8 @@
 
 - Fixed panic bug when assigning a global variable
   ([#229](https://github.com/go-task/task/issues/229), [#243](https://github.com/go-task/task/issues/234)).
+- A task with `method: checksum` will now re-run if generated files are deleted
+  ([#228](https://github.com/go-task/task/pull/228), [#238](https://github.com/go-task/task/issues/238)).
 
 ## v2.6.0 - 2019-07-21
 

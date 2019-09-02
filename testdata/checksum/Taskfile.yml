@@ -1,9 +1,12 @@
-build:
-  cmds:
-    - cp ./source.txt ./generated.txt
-  sources:
-    - ./**/glob-with-inexistent-file.txt
-    - ./source.txt
-  generates:
-    - ./generated.txt
-  method: checksum
+version: '2'
+
+tasks:
+  build:
+    cmds:
+      - cp ./source.txt ./generated.txt
+    sources:
+      - ./**/glob-with-inexistent-file.txt
+      - ./source.txt
+    generates:
+      - ./generated.txt
+    method: checksum

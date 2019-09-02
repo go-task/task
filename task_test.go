@@ -69,43 +69,6 @@ func TestEnv(t *testing.T) {
 	tt.Run(t)
 }
 
-func TestVarsV1(t *testing.T) {
-	tt := fileContentTest{
-		Dir:       "testdata/vars/v1",
-		Target:    "default",
-		TrimSpace: true,
-		Files: map[string]string{
-			// hello task:
-			"foo.txt":              "foo",
-			"bar.txt":              "bar",
-			"baz.txt":              "baz",
-			"tmpl_foo.txt":         "foo",
-			"tmpl_bar.txt":         "<no value>",
-			"tmpl_foo2.txt":        "foo2",
-			"tmpl_bar2.txt":        "bar2",
-			"shtmpl_foo.txt":       "foo",
-			"shtmpl_foo2.txt":      "foo2",
-			"nestedtmpl_foo.txt":   "{{.FOO}}",
-			"nestedtmpl_foo2.txt":  "foo2",
-			"foo2.txt":             "foo2",
-			"bar2.txt":             "bar2",
-			"baz2.txt":             "baz2",
-			"tmpl2_foo.txt":        "<no value>",
-			"tmpl2_foo2.txt":       "foo2",
-			"tmpl2_bar.txt":        "<no value>",
-			"tmpl2_bar2.txt":       "<no value>",
-			"shtmpl2_foo.txt":      "<no value>",
-			"shtmpl2_foo2.txt":     "foo2",
-			"nestedtmpl2_foo2.txt": "{{.FOO2}}",
-			"override.txt":         "bar",
-		},
-	}
-	tt.Run(t)
-	// Ensure identical results when running hello task directly.
-	tt.Target = "hello"
-	tt.Run(t)
-}
-
 func TestVarsV2(t *testing.T) {
 	tt := fileContentTest{
 		Dir:       "testdata/vars/v2",
@@ -144,7 +107,7 @@ func TestVarsV2(t *testing.T) {
 }
 
 func TestMultilineVars(t *testing.T) {
-	for _, dir := range []string{"testdata/vars/v1/multiline", "testdata/vars/v2/multiline"} {
+	for _, dir := range []string{"testdata/vars/v2/multiline"} {
 		tt := fileContentTest{
 			Dir:       dir,
 			Target:    "default",
@@ -168,7 +131,7 @@ func TestMultilineVars(t *testing.T) {
 
 func TestVarsInvalidTmpl(t *testing.T) {
 	const (
-		dir         = "testdata/vars/v1"
+		dir         = "testdata/vars/v2"
 		target      = "invalid-var-tmpl"
 		expectError = "template: :1: unexpected EOF"
 	)
@@ -441,7 +404,6 @@ func TestTaskVersion(t *testing.T) {
 		Dir     string
 		Version string
 	}{
-		{"testdata/version/v1", "1"},
 		{"testdata/version/v2", "2"},
 	}
 
@@ -691,4 +653,15 @@ func TestShortTaskNotation(t *testing.T) {
 	assert.NoError(t, e.Setup())
 	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "run"}))
 	assert.Equal(t, readTestFixture(t, dir, "expected_output.txt"), buff.String())
+}
+
+func TestDisplaysErrorOnUnsupportedVersion(t *testing.T) {
+	e := task.Executor{
+		Dir:    "testdata/version/v1",
+		Stdout: ioutil.Discard,
+		Stderr: ioutil.Discard,
+	}
+	err := e.Setup()
+	assert.Error(t, err)
+	assert.Equal(t, "task: Taskfile versions prior to v2 are not supported anymore", err.Error())
 }
