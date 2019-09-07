@@ -24,3 +24,5 @@ dist/
 
 # exuberant ctags
 tags
+
+/bin
