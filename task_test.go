@@ -12,6 +12,7 @@ import (
 	"testing"
 
 	"github.com/go-task/task/v2"
+	_ "github.com/go-task/task/v2/internal/homefix"
 	"github.com/go-task/task/v2/internal/taskfile"
 
 	"github.com/mitchellh/go-homedir"
