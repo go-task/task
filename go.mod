@@ -21,3 +21,5 @@ require (
 	gopkg.in/yaml.v2 v2.2.1
 	mvdan.cc/sh v2.6.4+incompatible
 )
+
+go 1.13
