@@ -10,7 +10,7 @@ addons:
       - rpm
 
 script:
-  - go install github.com/go-task/task/cmd/task
+  - go install -v ./cmd/task
   - task ci
 
 deploy:
