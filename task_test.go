@@ -7,10 +7,12 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 
 	"github.com/go-task/task/v2"
+	_ "github.com/go-task/task/v2/internal/homefix"
 	"github.com/go-task/task/v2/internal/taskfile"
 
 	"github.com/mitchellh/go-homedir"
@@ -570,13 +572,16 @@ func TestSummary(t *testing.T) {
 	}
 	assert.NoError(t, e.Setup())
 	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "task-with-summary"}, taskfile.Call{Task: "other-task-with-summary"}))
-	assert.Equal(t, readTestFixture(t, dir, "task-with-summary.txt"), buff.String())
-}
 
-func readTestFixture(t *testing.T, dir string, file string) string {
-	b, err := ioutil.ReadFile(dir + "/" + file)
-	assert.NoError(t, err, "error reading text fixture")
-	return string(b)
+	data, err := ioutil.ReadFile(filepath.Join(dir, "task-with-summary.txt"))
+	assert.NoError(t, err)
+
+	expectedOutput := string(data)
+	if runtime.GOOS == "windows" {
+		expectedOutput = strings.Replace(expectedOutput, "\r\n", "\n", -1)
+	}
+
+	assert.Equal(t, expectedOutput, buff.String())
 }
 
 func TestWhenNoDirAttributeItRunsInSameDirAsTaskfile(t *testing.T) {

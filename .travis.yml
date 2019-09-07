@@ -1,8 +1,8 @@
 language: go
 
 go:
-  - 1.11.x
   - 1.12.x
+  - 1.13.x
 
 addons:
   apt:
@@ -10,7 +10,7 @@ addons:
       - rpm
 
 script:
-  - go install github.com/go-task/task/cmd/task
+  - go install -v ./cmd/task
   - task ci
 
 deploy:

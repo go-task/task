@@ -11,6 +11,7 @@ import (
 	"github.com/go-task/task/v2"
 	"github.com/go-task/task/v2/internal/args"
 	"github.com/go-task/task/v2/internal/logger"
+	_ "github.com/go-task/task/v2/internal/homefix"
 
 	"github.com/spf13/pflag"
 )

@@ -1,0 +1,59 @@
+name: Test
+on: [push]
+jobs:
+  linux:
+    name: Linux
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Go 1.13
+        uses: actions/setup-go@v1
+        with:
+          go-version: 1.13
+        id: go
+
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v1
+
+      - name: Build
+        run: go build -o ./task -v ./cmd/task
+
+      - name: Test
+        run: ./task test
+
+  windows:
+    name: Windows
+    runs-on: windows-latest
+    steps:
+      - name: Set up Go 1.13
+        uses: actions/setup-go@v1
+        with:
+          go-version: 1.13
+        id: go
+
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v1
+
+      - name: Build
+        run: go install -v ./cmd/task
+
+      - name: Test
+        run: go test -v ./...
+
+  macos:
+    name: MacOS
+    runs-on: macOS-latest
+    steps:
+      - name: Set up Go 1.13
+        uses: actions/setup-go@v1
+        with:
+          go-version: 1.13
+        id: go
+
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v1
+
+      - name: Build
+        run: go build -o ./task -v ./cmd/task
+
+      - name: Test
+        run: ./task test
