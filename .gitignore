@@ -26,3 +26,4 @@ dist/
 tags
 
 /bin
+/testdata/vars/v1
