@@ -169,6 +169,14 @@ func (e *Executor) Setup() error {
 		return fmt.Errorf(`task: output option "%s" not recognized`, e.Taskfile.Output)
 	}
 
+	if e.Taskfile.Method == "" {
+		if v >= 3 {
+			e.Taskfile.Method = "checksum"
+		} else {
+			e.Taskfile.Method = "timestamp"
+		}
+	}
+
 	if v <= 2.1 {
 		err := errors.New(`task: Taskfile option "ignore_error" is only available starting on Taskfile version v2.1`)
 

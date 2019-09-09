@@ -8,6 +8,7 @@ tasks:
     dir: sub
     cmds:
       - cat src.txt > '{{.BUILD_DIR}}/abs.txt'
+    method: timestamp
     sources:
       - src.txt
     generates:
@@ -20,6 +21,7 @@ tasks:
     dir: sub
     cmds:
       - cat src.txt > '../rel.txt'
+    method: timestamp
     sources:
       - src.txt
     generates:
@@ -30,6 +32,7 @@ tasks:
     cmds:
       - mkdir -p sub
       - echo "hello world" > sub/src.txt
+    method: timestamp
     status:
       - test -f sub/src.txt
 
@@ -38,6 +41,7 @@ tasks:
     deps: [sub/src.txt]
     cmds:
       - cat sub/src.txt > 'my text file.txt'
+    method: timestamp
     sources:
       - sub/src.txt
     generates:

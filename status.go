@@ -55,7 +55,7 @@ func (e *Executor) getStatusChecker(t *taskfile.Task) (status.Checker, error) {
 		method = e.Taskfile.Method
 	}
 	switch method {
-	case "", "timestamp":
+	case "timestamp":
 		return &status.Timestamp{
 			Dir:       t.Dir,
 			Sources:   t.Sources,
