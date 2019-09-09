@@ -12,10 +12,8 @@ import (
 	"testing"
 
 	"github.com/go-task/task/v2"
-	_ "github.com/go-task/task/v2/internal/homefix"
 	"github.com/go-task/task/v2/internal/taskfile"
 
-	"github.com/mitchellh/go-homedir"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -442,7 +440,7 @@ func TestTaskIgnoreErrors(t *testing.T) {
 func TestExpand(t *testing.T) {
 	const dir = "testdata/expand"
 
-	home, err := homedir.Dir()
+	home, err := os.UserHomeDir()
 	if err != nil {
 		t.Errorf("Couldn't get $HOME: %v", err)
 	}
