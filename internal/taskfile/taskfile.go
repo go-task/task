@@ -5,6 +5,7 @@ type Taskfile struct {
 	Version    string
 	Expansions int
 	Output     string
+	Method     string
 	Includes   map[string]string
 	Vars       Vars
 	Env        Vars
@@ -17,6 +18,7 @@ func (tf *Taskfile) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		Version    string
 		Expansions int
 		Output     string
+		Method     string
 		Includes   map[string]string
 		Vars       Vars
 		Env        Vars
@@ -28,6 +30,7 @@ func (tf *Taskfile) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	tf.Version = taskfile.Version
 	tf.Expansions = taskfile.Expansions
 	tf.Output = taskfile.Output
+	tf.Method = taskfile.Method
 	tf.Includes = taskfile.Includes
 	tf.Vars = taskfile.Vars
 	tf.Env = taskfile.Env
