@@ -8,10 +8,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	"mvdan.cc/sh/expand"
-	"mvdan.cc/sh/interp"
-	"mvdan.cc/sh/shell"
-	"mvdan.cc/sh/syntax"
+	"mvdan.cc/sh/v3/expand"
+	"mvdan.cc/sh/v3/interp"
+	"mvdan.cc/sh/v3/shell"
+	"mvdan.cc/sh/v3/syntax"
 )
 
 // RunCommandOptions is the options for the RunCommand func
@@ -49,8 +49,7 @@ func RunCommand(ctx context.Context, opts *RunCommandOptions) error {
 		interp.Dir(opts.Dir),
 		interp.Env(expand.ListEnviron(environ...)),
 
-		interp.Module(interp.DefaultExec),
-		interp.Module(interp.OpenDevImpls(interp.DefaultOpen)),
+		interp.WithOpenModules(interp.OpenDevImpls),
 
 		interp.StdIO(opts.Stdin, opts.Stdout, opts.Stderr),
 	)
