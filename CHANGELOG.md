@@ -4,6 +4,12 @@
 
 - Taskfiles in version 1 are not supported anymore
   ([#237](https://github.com/go-task/task/pull/237)).
+- Added global `method:` option. With this option, you can set a default
+  method to all tasks in a Taskfile
+  ([#246](https://github.com/go-task/task/issues/246)).
+- Changed default method from `timestamp` to `checksum`
+  ([#246](https://github.com/go-task/task/issues/246)).
+
 
 ## v3.0.0 - Preview 1
 
