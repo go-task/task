@@ -23,6 +23,10 @@ type Checksum struct {
 
 // IsUpToDate implements the Checker interface
 func (c *Checksum) IsUpToDate() (bool, error) {
+	if len(c.Sources) == 0 {
+		return false, nil
+	}
+
 	checksumFile := c.checksumFilePath()
 
 	data, _ := ioutil.ReadFile(checksumFile)

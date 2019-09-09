@@ -630,7 +630,7 @@ func TestWhenDirAttributeItCreatesMissingAndRunsInThatDir(t *testing.T) {
 	}
 
 	// Ensure that the directory to be created doesn't actually exist.
-	_ = os.Remove(toBeCreated)
+	_ = os.RemoveAll(toBeCreated)
 	if _, err := os.Stat(toBeCreated); err == nil {
 		t.Errorf("Directory should not exist: %v", err)
 	}
@@ -641,7 +641,7 @@ func TestWhenDirAttributeItCreatesMissingAndRunsInThatDir(t *testing.T) {
 	assert.Equal(t, expected, got, "Mismatch in the working directory")
 
 	// Clean-up after ourselves only if no error.
-	_ = os.Remove(toBeCreated)
+	_ = os.RemoveAll(toBeCreated)
 }
 
 func TestDisplaysErrorOnUnsupportedVersion(t *testing.T) {

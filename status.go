@@ -50,8 +50,12 @@ func (e *Executor) statusOnError(t *taskfile.Task) error {
 }
 
 func (e *Executor) getStatusChecker(t *taskfile.Task) (status.Checker, error) {
-	switch t.Method {
-	case "", "timestamp":
+	method := t.Method
+	if method == "" {
+		method = e.Taskfile.Method
+	}
+	switch method {
+	case "timestamp":
 		return &status.Timestamp{
 			Dir:       t.Dir,
 			Sources:   t.Sources,
@@ -68,7 +72,7 @@ func (e *Executor) getStatusChecker(t *taskfile.Task) (status.Checker, error) {
 	case "none":
 		return status.None{}, nil
 	default:
-		return nil, fmt.Errorf(`task: invalid method "%s"`, t.Method)
+		return nil, fmt.Errorf(`task: invalid method "%s"`, method)
 	}
 }
 
