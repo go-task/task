@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/go-task/task/v2/internal/execext"
+	"github.com/go-task/task/v2/internal/status"
 	"github.com/go-task/task/v2/internal/taskfile"
 	"github.com/go-task/task/v2/internal/templater"
 )
@@ -96,17 +97,14 @@ func (e *Executor) CompiledTask(call taskfile.Call) (*taskfile.Task, error) {
 	}
 
 	if len(origTask.Status) > 0 {
-		checker, err := e.getStatusChecker(&new)
-		if err != nil {
-			return nil, err
+		for _, checker := range []status.Checker{e.timestampChecker(&new), e.checksumChecker(&new)} {
+			value, err := checker.Value()
+			if err != nil {
+				return nil, err
+			}
+			vars[strings.ToUpper(checker.Kind())] = taskfile.Var{Live: value}
 		}
 
-		value, err := checker.Value()
-		if err != nil {
-			return nil, err
-		}
-
-		vars[strings.ToUpper(checker.Kind())] = taskfile.Var{Live: value}
 		// Adding new variables, requires us to refresh the templaters
 		// cache of the the values manually
 		r.ResetCache()

@@ -1,17 +1,10 @@
 version: '3'
 
 tasks:
-  build-with-checksum:
+  build:
     sources:
       - ./source.txt
-    method: checksum
     status:
       - echo "{{.CHECKSUM}}"
-
-  build-with-timestamp:
-    sources:
-      - ./source.txt
-    method: timestamp
-    status:
       - echo '{{.TIMESTAMP.Unix}}'
       - echo '{{.TIMESTAMP}}'

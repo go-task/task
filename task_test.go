@@ -370,48 +370,31 @@ func TestStatusChecksum(t *testing.T) {
 }
 
 func TestStatusVariables(t *testing.T) {
-	t.Run("Checksum", func(t *testing.T) {
-		const dir = "testdata/status_vars"
+	const dir = "testdata/status_vars"
 
-		_ = os.RemoveAll(filepath.Join(dir, ".task"))
-		_ = os.Remove(filepath.Join(dir, "generated.txt"))
+	_ = os.RemoveAll(filepath.Join(dir, ".task"))
+	_ = os.Remove(filepath.Join(dir, "generated.txt"))
 
-		var buff bytes.Buffer
-		e := task.Executor{
-			Dir:     dir,
-			Stdout:  &buff,
-			Stderr:  &buff,
-			Silent:  false,
-			Verbose: true,
-		}
-		assert.NoError(t, e.Setup())
-		assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "build-with-checksum"}))
-		assert.Contains(t, buff.String(), "d41d8cd98f00b204e9800998ecf8427e")
-	})
+	var buff bytes.Buffer
+	e := task.Executor{
+		Dir:     dir,
+		Stdout:  &buff,
+		Stderr:  &buff,
+		Silent:  false,
+		Verbose: true,
+	}
+	assert.NoError(t, e.Setup())
+	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "build"}))
 
-	t.Run("Timestamp", func(t *testing.T) {
-		const dir = "testdata/status_vars"
+	assert.Contains(t, buff.String(), "d41d8cd98f00b204e9800998ecf8427e")
 
-		_ = os.Remove(filepath.Join(dir, "generated.txt"))
+	inf, err := os.Stat(filepath.Join(dir, "source.txt"))
+	assert.NoError(t, err)
+	ts := fmt.Sprintf("%d", inf.ModTime().Unix())
+	tf := fmt.Sprintf("%s", inf.ModTime())
 
-		var buff bytes.Buffer
-		e := task.Executor{
-			Dir:     dir,
-			Stdout:  &buff,
-			Stderr:  &buff,
-			Silent:  false,
-			Verbose: true,
-		}
-		assert.NoError(t, e.Setup())
-		assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "build-with-timestamp"}))
-
-		inf, err := os.Stat(filepath.Join(dir, "source.txt"))
-		assert.NoError(t, err)
-		ts := fmt.Sprintf("%d", inf.ModTime().Unix())
-		tf := fmt.Sprintf("%s", inf.ModTime())
-		assert.Contains(t, buff.String(), ts)
-		assert.Contains(t, buff.String(), tf)
-	})
+	assert.Contains(t, buff.String(), ts)
+	assert.Contains(t, buff.String(), tf)
 }
 
 func TestInit(t *testing.T) {

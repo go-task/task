@@ -56,23 +56,31 @@ func (e *Executor) getStatusChecker(t *taskfile.Task) (status.Checker, error) {
 	}
 	switch method {
 	case "timestamp":
-		return &status.Timestamp{
-			Dir:       t.Dir,
-			Sources:   t.Sources,
-			Generates: t.Generates,
-		}, nil
+		return e.timestampChecker(t), nil
 	case "checksum":
-		return &status.Checksum{
-			Dir:       t.Dir,
-			Task:      t.Task,
-			Sources:   t.Sources,
-			Generates: t.Generates,
-			Dry:       e.Dry,
-		}, nil
+		return e.checksumChecker(t), nil
 	case "none":
 		return status.None{}, nil
 	default:
 		return nil, fmt.Errorf(`task: invalid method "%s"`, method)
+	}
+}
+
+func (e *Executor) timestampChecker(t *taskfile.Task) status.Checker {
+	return &status.Timestamp{
+		Dir:       t.Dir,
+		Sources:   t.Sources,
+		Generates: t.Generates,
+	}
+}
+
+func (e *Executor) checksumChecker(t *taskfile.Task) status.Checker {
+	return &status.Checksum{
+		Dir:       t.Dir,
+		Task:      t.Task,
+		Sources:   t.Sources,
+		Generates: t.Generates,
+		Dry:       e.Dry,
 	}
 }
 
