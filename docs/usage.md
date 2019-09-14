@@ -266,6 +266,8 @@ The above syntax is also supported in `deps`.
 
 ## Prevent unnecessary work
 
+### By fingerprinting locally generated files and their sources
+
 If a task generates something, you can inform Task the source and generated
 files, so Task will prevent to run them if not necessary.
 
@@ -321,6 +323,9 @@ tasks:
 
 > TIP: method `none` skips any validation and always run the task.
 
+### Using programmatic checks to indicate a task is up to date.
+
+
 Alternatively, you can inform a sequence of tests as `status`. If no error
 is returned (exit status 0), the task is considered up-to-date:
 
@@ -340,15 +345,35 @@ tasks:
       - test -f directory/file2.txt
 ```
 
+
+Normally, you would use `sources` in combination with
+`generates` - but for tasks that generate remote artifacts (Docker images,
+deploys, CD releases) the checksum source and timestamps require either
+access to the artifact or for an out-of-band refresh of the `.checksum`
+fingerprint file.
+
+Two special variables `{{.CHECKSUM}}` and `{{.TIMESTAMP}}` are available
+for interpolation within `status` commands, depending on the method assigned
+to fingerprint the sources.  Only `source` globs are fingerprinted.
+
+Note that the `{{.TIMESTAMP}}` variable is a "live" Go time struct, and can be
+formatted using any of the methods that `Time` responds to.
+
+See [the Go Time documentation](https://golang.org/pkg/time/) for more information.
+
 You can use `--force` or `-f` if you want to force a task to run even when
 up-to-date.
 
 Also, `task --status [tasks]...` will exit with a non-zero exit code if any of
 the tasks are not up-to-date.
 
-If you need a certain set of conditions to be _true_ you can use the
-`preconditions` stanza.  `preconditions` are very similar to `status`
-lines except they support `sh` expansion and they SHOULD all return 0.
+### Using programmatic checks to cancel execution of an task and it's dependencies
+
+In addition to `status` checks, there are also `preconditions` checks, which are
+the logical inverse of `status` checks.  That is, if you need a certain set of
+conditions to be _true_ you can use the `preconditions` stanza.
+`preconditions` are similar to `status` lines except they support `sh`
+expansion and they SHOULD all return 0.
 
 ```yaml
 version: '2'
