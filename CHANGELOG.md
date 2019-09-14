@@ -9,7 +9,13 @@
   ([#246](https://github.com/go-task/task/issues/246)).
 - Changed default method from `timestamp` to `checksum`
   ([#246](https://github.com/go-task/task/issues/246)).
-
+- New magic variables are now available when using `status:`:
+  `.TIMESTAMP` which contains the greatest modification date
+  from the files listed in `sources:`, and `.CHECKSUM`, which
+  contains a checksum of all files listed in `status:`.
+  This is useful for manual checking when using external, or even remote,
+  artifacts when using `status:`
+  ([#216](https://github.com/go-task/task/pull/216)).
 
 ## v3.0.0 - Preview 1
 
