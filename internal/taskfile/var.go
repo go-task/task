@@ -15,8 +15,8 @@ type Vars map[string]Var
 
 // ToCacheMap converts Vars to a map containing only the static
 // variables
-func (vs Vars) ToCacheMap() (m map[string](interface{})) {
-	m = make(map[string](interface{}), len(vs))
+func (vs Vars) ToCacheMap() (m map[string]interface{}) {
+	m = make(map[string]interface{}, len(vs))
 	for k, v := range vs {
 		if v.Sh != "" {
 			// Dynamic variable is not yet resolved; trigger

@@ -99,7 +99,7 @@ func (c *Checksum) OnError() error {
 }
 
 // Kind implements the Checker Interface
-func (t *Checksum) Kind() string {
+func (*Checksum) Kind() string {
 	return "checksum"
 }
 

@@ -109,7 +109,7 @@ func (e *Executor) CompiledTask(call taskfile.Call) (*taskfile.Task, error) {
 		vars[strings.ToUpper(checker.Kind())] = taskfile.Var{Live: value}
 		// Adding new variables, requires us to refresh the templaters
 		// cache of the the values manually
-		r.RefreshCacheMap()
+		r.ResetCache()
 
 		new.Status = r.ReplaceSlice(origTask.Status)
 	}

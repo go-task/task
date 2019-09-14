@@ -14,11 +14,11 @@ import (
 type Templater struct {
 	Vars taskfile.Vars
 
-	cacheMap map[string](interface{})
+	cacheMap map[string]interface{}
 	err      error
 }
 
-func (r *Templater) RefreshCacheMap() {
+func (r *Templater) ResetCache() {
 	r.cacheMap = r.Vars.ToCacheMap()
 }
 

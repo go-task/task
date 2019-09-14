@@ -357,7 +357,9 @@ func getEnviron(t *taskfile.Task) []string {
 
 	environ := os.Environ()
 	for k, v := range t.Env.ToCacheMap() {
-		environ = append(environ, fmt.Sprintf("%s=%s", k, v))
+		if s, ok := v.(string); ok {
+			environ = append(environ, fmt.Sprintf("%s=%s", k, s))
+		}
 	}
 	return environ
 }

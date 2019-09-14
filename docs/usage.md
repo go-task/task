@@ -325,7 +325,6 @@ tasks:
 
 ### Using programmatic checks to indicate a task is up to date.
 
-
 Alternatively, you can inform a sequence of tests as `status`. If no error
 is returned (exit status 0), the task is considered up-to-date:
 
@@ -345,7 +344,6 @@ tasks:
       - test -f directory/file2.txt
 ```
 
-
 Normally, you would use `sources` in combination with
 `generates` - but for tasks that generate remote artifacts (Docker images,
 deploys, CD releases) the checksum source and timestamps require either
@@ -354,10 +352,10 @@ fingerprint file.
 
 Two special variables `{{.CHECKSUM}}` and `{{.TIMESTAMP}}` are available
 for interpolation within `status` commands, depending on the method assigned
-to fingerprint the sources.  Only `source` globs are fingerprinted.
+to fingerprint the sources. Only `source` globs are fingerprinted.
 
-Note that the `{{.TIMESTAMP}}` variable is a "live" Go time struct, and can be
-formatted using any of the methods that `Time` responds to.
+Note that the `{{.TIMESTAMP}}` variable is a "live" Go `time.Time` struct, and
+can be formatted using any of the methods that `time.Time` responds to.
 
 See [the Go Time documentation](https://golang.org/pkg/time/) for more information.
 
