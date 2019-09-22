@@ -12,11 +12,3 @@ addons:
 script:
   - go install -v ./cmd/task
   - task ci
-
-deploy:
-  - provider: script
-    skip_cleanup: true
-    script: curl -sL http://git.io/goreleaser | bash
-    on:
-      tags: true
-      condition: $TRAVIS_OS_NAME = linux
