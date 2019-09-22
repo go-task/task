@@ -1,6 +1,6 @@
 # Changelog
 
-# v3 - Unreleased
+# v3.0.0 - Preview 2
 
 - Taskfiles in version 1 are not supported anymore
   ([#237](https://github.com/go-task/task/pull/237)).
@@ -27,7 +27,7 @@
   commands are green, errors are red, etc
   ([#207](https://github.com/go-task/task/pull/207)).
 
-## Unreleased
+## v2.7.0 - 2019-09-22
 
 - Fixed panic bug when assigning a global variable
   ([#229](https://github.com/go-task/task/issues/229), [#243](https://github.com/go-task/task/issues/234)).
