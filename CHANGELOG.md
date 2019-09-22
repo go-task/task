@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v2.7.0 - 2019-09-22
 
 - Fixed panic bug when assigning a global variable
   ([#229](https://github.com/go-task/task/issues/229), [#243](https://github.com/go-task/task/issues/234)).
