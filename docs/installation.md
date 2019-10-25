@@ -43,17 +43,12 @@ may take some time until it's available on Scoop.
 ## Go
 
 Task now uses [Go Modules](https://github.com/golang/go/wiki/Modules), which
-means you may have trouble compiling it on older Go versions.
+means you may have trouble compiling it on older Go versions or using
+`$GOPATH`.
 
 For CI environments we recommend using the [Install Script](#install-script)
 instead, which is faster and more stable, since it'll just download the latest
 released binary, instead of compiling the edge (master branch) version.
-
-Installing in your `$GOPATH`:
-
-```bash
-go get -u -v github.com/go-task/task/cmd/task
-```
 
 Installing in another directory:
 
@@ -62,7 +57,7 @@ git clone https://github.com/go-task/task
 cd task
 
 # compiling binary to $GOPATH/bin
-go install -v
+go install -v ./cmd/task
 
 # compiling it to another location
 # use -o ./task.exe on Windows
