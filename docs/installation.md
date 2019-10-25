@@ -78,6 +78,19 @@ curl -sL https://taskfile.dev/install.sh | sh
 
 > This method will download the binary on the local `./bin` directory by default.
 
+## GitHub Actions
+
+If you want to install Task in GitHub Actions you can try using
+[this action](https://github.com/arduino/actions/tree/master/setup-taskfile)
+by the Arduino team:
+
+```yaml
+- name: Install Task
+  uses: Arduino/actions/setup-taskfile@master
+```
+
+This installation method is community owned.
+
 [go]: https://golang.org/
 [snapcraft]: https://snapcraft.io/
 [homebrew]: https://brew.sh/
