@@ -50,21 +50,21 @@ func (r *Runner) builtinCode(ctx context.Context, pos syntax.Pos, name string, a
 	case "false":
 		return 1
 	case "exit":
+		r.exitShell = true
 		switch len(args) {
 		case 0:
+			return r.exit
 		case 1:
-			if n, err := strconv.Atoi(args[0]); err != nil {
+			n, err := strconv.Atoi(args[0])
+			if err != nil {
 				r.errf("invalid exit status code: %q\n", args[0])
-				r.exit = 2
-			} else {
-				r.exit = n
+				return 2
 			}
+			return n
 		default:
 			r.errf("exit cannot take multiple arguments\n")
-			r.exit = 1
+			return 1
 		}
-		r.setErr(ShellExitStatus(r.exit))
-		return 0 // the command's exit status does not matter
 	case "set":
 		if err := Params(args...)(r); err != nil {
 			r.errf("set: %v\n", err)
@@ -203,7 +203,6 @@ func (r *Runner) builtinCode(ctx context.Context, pos syntax.Pos, name string, a
 		switch err := r.bgShells.Wait().(type) {
 		case nil:
 		case ExitStatus:
-		case ShellExitStatus:
 		default:
 			r.setErr(err)
 		}
@@ -251,7 +250,7 @@ func (r *Runner) builtinCode(ctx context.Context, pos syntax.Pos, name string, a
 			r.errf("%v: source: need filename\n", pos)
 			return 2
 		}
-		f, err := r.open(ctx, r.relPath(args[0]), os.O_RDONLY, 0, false)
+		f, err := r.open(ctx, args[0], os.O_RDONLY, 0, false)
 		if err != nil {
 			r.errf("source: %v\n", err)
 			return 1
@@ -273,7 +272,7 @@ func (r *Runner) builtinCode(ctx context.Context, pos syntax.Pos, name string, a
 		r.inSource = oldInSource
 		if code, ok := r.err.(returnStatus); ok {
 			r.err = nil
-			r.exit = int(code)
+			return int(code)
 		}
 		return r.exit
 	case "[":
@@ -308,8 +307,8 @@ func (r *Runner) builtinCode(ctx context.Context, pos syntax.Pos, name string, a
 			break
 		}
 		r.exec(ctx, args)
-		r.setErr(ShellExitStatus(r.exit))
-		return 0
+		r.exitShell = true
+		return r.exit
 	case "command":
 		show := false
 		for len(args) > 0 && strings.HasPrefix(args[0], "-") {
@@ -612,7 +611,7 @@ func (r *Runner) readLine(raw bool) ([]byte, error) {
 }
 
 func (r *Runner) changeDir(path string) int {
-	path = r.relPath(path)
+	path = r.absPath(path)
 	info, err := r.stat(path)
 	if err != nil || !info.IsDir() {
 		return 1
@@ -626,7 +625,7 @@ func (r *Runner) changeDir(path string) int {
 	return 0
 }
 
-func (r *Runner) relPath(path string) string {
+func (r *Runner) absPath(path string) string {
 	if !filepath.IsAbs(path) {
 		path = filepath.Join(r.Dir, path)
 	}

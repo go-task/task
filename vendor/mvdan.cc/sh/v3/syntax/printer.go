@@ -13,24 +13,35 @@ import (
 	"unicode"
 )
 
+// PrinterOption is a function which can be passed to NewPrinter
+// to alter its behaviour. To apply option to existing Printer
+// call it directly, for example syntax.KeepPadding(true)(printer).
+type PrinterOption func(*Printer)
+
 // Indent sets the number of spaces used for indentation. If set to 0,
 // tabs will be used instead.
-func Indent(spaces uint) func(*Printer) {
+func Indent(spaces uint) PrinterOption {
 	return func(p *Printer) { p.indentSpaces = spaces }
 }
 
 // BinaryNextLine will make binary operators appear on the next line
 // when a binary command, such as a pipe, spans multiple lines. A
 // backslash will be used.
-func BinaryNextLine(p *Printer) { p.binNextLine = true }
+func BinaryNextLine(enabled bool) PrinterOption {
+	return func(p *Printer) { p.binNextLine = enabled }
+}
 
 // SwitchCaseIndent will make switch cases be indented. As such, switch
 // case bodies will be two levels deeper than the switch itself.
-func SwitchCaseIndent(p *Printer) { p.swtCaseIndent = true }
+func SwitchCaseIndent(enabled bool) PrinterOption {
+	return func(p *Printer) { p.swtCaseIndent = enabled }
+}
 
 // SpaceRedirects will put a space after most redirection operators. The
 // exceptions are '>&', '<&', '>(', and '<('.
-func SpaceRedirects(p *Printer) { p.spaceRedirects = true }
+func SpaceRedirects(enabled bool) PrinterOption {
+	return func(p *Printer) { p.spaceRedirects = enabled }
+}
 
 // KeepPadding will keep most nodes and tokens in the same column that
 // they were in the original source. This allows the user to decide how
@@ -39,24 +50,31 @@ func SpaceRedirects(p *Printer) { p.spaceRedirects = true }
 // Note that this feature is best-effort and will only keep the
 // alignment stable, so it may need some human help the first time it is
 // run.
-func KeepPadding(p *Printer) {
-	p.keepPadding = true
-	p.cols.Writer = p.bufWriter.(*bufio.Writer)
-	p.bufWriter = &p.cols
+func KeepPadding(enabled bool) PrinterOption {
+	return func(p *Printer) {
+		// TODO: support setting this option to false.
+		if enabled {
+			p.keepPadding = true
+			p.cols.Writer = p.bufWriter.(*bufio.Writer)
+			p.bufWriter = &p.cols
+		}
+	}
 }
 
 // Minify will print programs in a way to save the most bytes possible.
 // For example, indentation and comments are skipped, and extra
 // whitespace is avoided when possible.
-func Minify(p *Printer) { p.minify = true }
+func Minify(enabled bool) PrinterOption {
+	return func(p *Printer) { p.minify = enabled }
+}
 
 // NewPrinter allocates a new Printer and applies any number of options.
-func NewPrinter(options ...func(*Printer)) *Printer {
+func NewPrinter(opts ...PrinterOption) *Printer {
 	p := &Printer{
 		bufWriter: bufio.NewWriter(nil),
 		tabWriter: new(tabwriter.Writer),
 	}
-	for _, opt := range options {
+	for _, opt := range opts {
 		opt(p)
 	}
 	return p

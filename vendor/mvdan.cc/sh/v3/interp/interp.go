@@ -14,6 +14,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"runtime"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -24,13 +25,18 @@ import (
 	"mvdan.cc/sh/v3/syntax"
 )
 
+// RunnerOption is a function which can be passed to New to alter Runner behaviour.
+// To apply option to existing Runner call it directly,
+// for example interp.Params("-e")(runner).
+type RunnerOption func(*Runner) error
+
 // New creates a new Runner, applying a number of options. If applying any of
 // the options results in an error, it is returned.
 //
 // Any unset options fall back to their defaults. For example, not supplying the
 // environment falls back to the process's environment, and not supplying the
 // standard output writer means that the output will be discarded.
-func New(opts ...func(*Runner) error) (*Runner, error) {
+func New(opts ...RunnerOption) (*Runner, error) {
 	r := &Runner{
 		usedNew: true,
 		Exec:    DefaultExec,
@@ -71,7 +77,7 @@ func (r *Runner) fillExpandConfig(ctx context.Context) {
 					break
 				}
 				path := r.literal(word)
-				f, err := r.open(ctx, r.relPath(path), os.O_RDONLY, 0, true)
+				f, err := r.open(ctx, path, os.O_RDONLY, 0, true)
 				if err != nil {
 					return err
 				}
@@ -116,7 +122,7 @@ func (r *Runner) expandErr(err error) {
 	if err != nil {
 		r.errf("%v\n", err)
 		r.exit = 1
-		r.setErr(ShellExitStatus(r.exit))
+		r.exitShell = true
 	}
 }
 
@@ -177,7 +183,7 @@ func (e expandEnv) Each(fn func(name string, vr expand.Variable) bool) {
 
 // Env sets the interpreter's environment. If nil, a copy of the current
 // process's environment is used.
-func Env(env expand.Environ) func(*Runner) error {
+func Env(env expand.Environ) RunnerOption {
 	return func(r *Runner) error {
 		if env == nil {
 			env = expand.ListEnviron(os.Environ()...)
@@ -189,7 +195,7 @@ func Env(env expand.Environ) func(*Runner) error {
 
 // Dir sets the interpreter's working directory. If empty, the process's current
 // directory is used.
-func Dir(path string) func(*Runner) error {
+func Dir(path string) RunnerOption {
 	return func(r *Runner) error {
 		if path == "" {
 			path, err := os.Getwd()
@@ -220,7 +226,7 @@ func Dir(path string) func(*Runner) error {
 // Params("+e") will unset the "-e" option and leave the parameters untouched.
 //
 // This is similar to what the interpreter's "set" builtin does.
-func Params(args ...string) func(*Runner) error {
+func Params(args ...string) RunnerOption {
 	return func(r *Runner) error {
 		onlyFlags := true
 		for len(args) > 0 {
@@ -279,7 +285,7 @@ func Params(args ...string) func(*Runner) error {
 //
 // The last or innermost module is always DefaultExec. You can make it
 // unreachable by adding a middleware that never calls its next module.
-func WithExecModules(mods ...func(next ExecModule) ExecModule) func(*Runner) error {
+func WithExecModules(mods ...func(next ExecModule) ExecModule) RunnerOption {
 	return func(r *Runner) error {
 		for i := len(mods) - 1; i >= 0; i-- {
 			mod := mods[i]
@@ -295,7 +301,7 @@ func WithExecModules(mods ...func(next ExecModule) ExecModule) func(*Runner) err
 //
 // The last or innermost module is always DefaultOpen. You can make it
 // unreachable by adding a middleware that never calls its next module.
-func WithOpenModules(mods ...func(next OpenModule) OpenModule) func(*Runner) error {
+func WithOpenModules(mods ...func(next OpenModule) OpenModule) RunnerOption {
 	return func(r *Runner) error {
 		for i := len(mods) - 1; i >= 0; i-- {
 			mod := mods[i]
@@ -308,7 +314,7 @@ func WithOpenModules(mods ...func(next OpenModule) OpenModule) func(*Runner) err
 // StdIO configures an interpreter's standard input, standard output, and
 // standard error. If out or err are nil, they default to a writer that discards
 // the output.
-func StdIO(in io.Reader, out, err io.Writer) func(*Runner) error {
+func StdIO(in io.Reader, out, err io.Writer) RunnerOption {
 	return func(r *Runner) error {
 		r.Stdin = in
 		if out == nil {
@@ -331,7 +337,9 @@ func StdIO(in io.Reader, out, err io.Writer) func(*Runner) error {
 // isn't safe for concurrent use, consider a workaround like hiding writes
 // behind a mutex.
 //
-// To create a Runner, use New.
+// To create a Runner, use New. Runner's exported fields are meant to be
+// configured via runner options; once a Runner has been created, the fields
+// should be treated as read-only.
 type Runner struct {
 	// Env specifies the environment of the interpreter, which must be
 	// non-nil.
@@ -387,8 +395,9 @@ type Runner struct {
 	inSource  bool
 	noErrExit bool
 
-	err  error // current shell exit code or fatal error
-	exit int   // current (last) exit status code
+	err       error // current shell exit code or fatal error
+	exit      int   // current (last) exit status code
+	exitShell bool  // whether the shell needs to exit
 
 	bgShells errgroup.Group
 
@@ -570,6 +579,11 @@ func (r *Runner) Reset() {
 		home, _ := os.UserHomeDir()
 		r.Vars["HOME"] = expand.Variable{Kind: expand.String, Str: home}
 	}
+	r.Vars["UID"] = expand.Variable{
+		Kind:     expand.String,
+		ReadOnly: true,
+		Str:      strconv.Itoa(os.Getuid()),
+	}
 	r.Vars["PWD"] = expand.Variable{Kind: expand.String, Str: r.Dir}
 	r.Vars["IFS"] = expand.Variable{Kind: expand.String, Str: " \t\n"}
 	r.Vars["OPTIND"] = expand.Variable{Kind: expand.String, Str: "1"}
@@ -614,11 +628,6 @@ func (r *Runner) modCtx(ctx context.Context) context.Context {
 	return context.WithValue(ctx, moduleCtxKey{}, mc)
 }
 
-// ShellExitStatus exits the shell with a status code.
-type ShellExitStatus uint8
-
-func (s ShellExitStatus) Error() string { return fmt.Sprintf("exit status %d", s) }
-
 // ExitStatus is a non-zero status code resulting from running a shell node.
 type ExitStatus uint8
 
@@ -631,8 +640,7 @@ func (r *Runner) setErr(err error) {
 }
 
 // Run interprets a node, which can be a *File, *Stmt, or Command. If a non-nil
-// error is returned, it will typically be of type ExitStatus or
-// ShellExitStatus.
+// error is returned, it will typically be of type ExitStatus.
 //
 // Run can be called multiple times synchronously to interpret programs
 // incrementally. To reuse a Runner without keeping the internal shell state,
@@ -643,6 +651,7 @@ func (r *Runner) Run(ctx context.Context, node syntax.Node) error {
 	}
 	r.fillExpandConfig(ctx)
 	r.err = nil
+	r.exitShell = false
 	r.filename = ""
 	switch x := node.(type) {
 	case *syntax.File:
@@ -655,10 +664,19 @@ func (r *Runner) Run(ctx context.Context, node syntax.Node) error {
 	default:
 		return fmt.Errorf("node can only be File, Stmt, or Command: %T", x)
 	}
-	if r.exit > 0 {
+	if r.exit != 0 {
 		r.setErr(ExitStatus(r.exit))
 	}
 	return r.err
+}
+
+// Exited reports whether the last Run call should exit an entire shell. This
+// can be triggered by the "exit" built-in command, for example.
+//
+// Note that this state is overwritten at every Run call, so it should be
+// checked immediately after each Run call.
+func (r *Runner) Exited() bool {
+	return r.exitShell
 }
 
 func (r *Runner) out(s string) {
@@ -674,7 +692,7 @@ func (r *Runner) errf(format string, a ...interface{}) {
 }
 
 func (r *Runner) stop(ctx context.Context) bool {
-	if r.err != nil {
+	if r.err != nil || r.exitShell {
 		return true
 	}
 	if err := ctx.Err(); err != nil {
@@ -730,7 +748,7 @@ func (r *Runner) stmtSync(ctx context.Context, st *syntax.Stmt) {
 		//   conditions (if <cond>, while <cond>, etc)
 		//   part of && or || lists
 		//   preceded by !
-		r.setErr(ShellExitStatus(r.exit))
+		r.exitShell = true
 	}
 	if !r.keepRedirs {
 		r.Stdin, r.Stdout, r.Stderr = oldIn, oldOut, oldErr
@@ -836,7 +854,7 @@ func (r *Runner) cmd(ctx context.Context, cm syntax.Command) {
 			r.stmt(ctx, x.Y)
 			pr.Close()
 			wg.Wait()
-			if r.opts[optPipeFail] && r2.exit > 0 && r.exit == 0 {
+			if r.opts[optPipeFail] && r2.exit != 0 && r.exit == 0 {
 				r.exit = r2.exit
 			}
 			r.setErr(r2.err)
@@ -1123,7 +1141,7 @@ func (r *Runner) redir(ctx context.Context, rd *syntax.Redirect) (io.Closer, err
 	case syntax.RdrOut, syntax.RdrAll:
 		mode = os.O_WRONLY | os.O_CREATE | os.O_TRUNC
 	}
-	f, err := r.open(ctx, r.relPath(arg), mode, 0644, true)
+	f, err := r.open(ctx, arg, mode, 0644, true)
 	if err != nil {
 		return nil, err
 	}
@@ -1196,8 +1214,7 @@ func (r *Runner) call(ctx context.Context, pos syntax.Pos, args []string) {
 }
 
 func (r *Runner) exec(ctx context.Context, args []string) {
-	path := r.lookPath(args[0])
-	err := r.Exec(r.modCtx(ctx), path, args)
+	err := r.Exec(r.modCtx(ctx), args)
 	switch x := err.(type) {
 	case nil:
 		r.exit = 0
@@ -1223,128 +1240,5 @@ func (r *Runner) open(ctx context.Context, path string, flags int, mode os.FileM
 }
 
 func (r *Runner) stat(name string) (os.FileInfo, error) {
-	return os.Stat(r.relPath(name))
-}
-
-func (r *Runner) checkStat(file string) string {
-	d, err := r.stat(file)
-	if err != nil {
-		return ""
-	}
-	m := d.Mode()
-	if m.IsDir() {
-		return ""
-	}
-	if runtime.GOOS != "windows" && m&0111 == 0 {
-		return ""
-	}
-	return file
-}
-
-func winHasExt(file string) bool {
-	i := strings.LastIndex(file, ".")
-	if i < 0 {
-		return false
-	}
-	return strings.LastIndexAny(file, `:\/`) < i
-}
-
-func (r *Runner) findExecutable(file string, exts []string) string {
-	if len(exts) == 0 {
-		// non-windows
-		return r.checkStat(file)
-	}
-	if winHasExt(file) && r.checkStat(file) != "" {
-		return file
-	}
-	for _, e := range exts {
-		if f := file + e; r.checkStat(f) != "" {
-			return f
-		}
-	}
-	return ""
-}
-
-func driveLetter(c byte) bool {
-	return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')
-}
-
-// splitList is like filepath.SplitList, but always using the unix path
-// list separator ':'. On Windows, it also makes sure not to split
-// [A-Z]:[/\].
-func splitList(path string) []string {
-	if path == "" {
-		return []string{""}
-	}
-	list := strings.Split(path, ":")
-	if runtime.GOOS != "windows" {
-		return list
-	}
-	// join "C", "/foo" into "C:/foo"
-	var fixed []string
-	for i := 0; i < len(list); i++ {
-		s := list[i]
-		switch {
-		case len(s) != 1, !driveLetter(s[0]):
-		case i+1 >= len(list):
-			// last element
-		case strings.IndexAny(list[i+1], `/\`) != 0:
-			// next element doesn't start with / or \
-		default:
-			fixed = append(fixed, s+":"+list[i+1])
-			i++
-			continue
-		}
-		fixed = append(fixed, s)
-	}
-	return fixed
-}
-
-func (r *Runner) lookPath(file string) string {
-	pathList := splitList(r.envGet("PATH"))
-	chars := `/`
-	if runtime.GOOS == "windows" {
-		chars = `:\/`
-		// so that "foo" always tries "./foo"
-		pathList = append([]string{"."}, pathList...)
-	}
-	exts := r.pathExts()
-	if strings.ContainsAny(file, chars) {
-		return r.findExecutable(file, exts)
-	}
-	for _, dir := range pathList {
-		var path string
-		switch dir {
-		case "", ".":
-			// otherwise "foo" won't be "./foo"
-			path = "." + string(filepath.Separator) + file
-		default:
-			path = filepath.Join(dir, file)
-		}
-		if f := r.findExecutable(path, exts); f != "" {
-			return f
-		}
-	}
-	return ""
-}
-
-func (r *Runner) pathExts() []string {
-	if runtime.GOOS != "windows" {
-		return nil
-	}
-	pathext := r.envGet("PATHEXT")
-	if pathext == "" {
-		return []string{".com", ".exe", ".bat", ".cmd"}
-	}
-	var exts []string
-	for _, e := range strings.Split(strings.ToLower(pathext), `;`) {
-		if e == "" {
-			continue
-		}
-		if e[0] != '.' {
-			e = "." + e
-		}
-		exts = append(exts, e)
-	}
-	return exts
+	return os.Stat(r.absPath(name))
 }

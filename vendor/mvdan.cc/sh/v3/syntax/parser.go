@@ -12,9 +12,16 @@ import (
 	"unicode/utf8"
 )
 
+// ParserOption is a function which can be passed to NewParser
+// to alter its behaviour. To apply option to existing Parser
+// call it directly, for example syntax.KeepComments(true)(parser).
+type ParserOption func(*Parser)
+
 // KeepComments makes the parser parse comments and attach them to
 // nodes, as opposed to discarding them.
-func KeepComments(p *Parser) { p.keepComments = true }
+func KeepComments(enabled bool) ParserOption {
+	return func(p *Parser) { p.keepComments = enabled }
+}
 
 type LangVariant int
 
@@ -26,7 +33,7 @@ const (
 
 // Variant changes the shell language variant that the parser will
 // accept.
-func Variant(l LangVariant) func(*Parser) {
+func Variant(l LangVariant) ParserOption {
 	return func(p *Parser) { p.lang = l }
 }
 
@@ -55,7 +62,7 @@ func (l LangVariant) String() string {
 //
 // The match is done by prefix, so the example above will also act on
 // "foo $$bar".
-func StopAt(word string) func(*Parser) {
+func StopAt(word string) ParserOption {
 	if len(word) > 4 {
 		panic("stop word can't be over four bytes in size")
 	}
@@ -66,7 +73,7 @@ func StopAt(word string) func(*Parser) {
 }
 
 // NewParser allocates a new Parser and applies any number of options.
-func NewParser(options ...func(*Parser)) *Parser {
+func NewParser(options ...ParserOption) *Parser {
 	p := &Parser{helperBuf: new(bytes.Buffer)}
 	for _, opt := range options {
 		opt(p)

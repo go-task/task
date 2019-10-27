@@ -48,6 +48,7 @@ func SourceNode(ctx context.Context, node syntax.Node) (map[string]expand.Variab
 	// delete the internal shell vars that the user is not
 	// interested in
 	delete(r.Vars, "PWD")
+	delete(r.Vars, "UID")
 	delete(r.Vars, "HOME")
 	delete(r.Vars, "PATH")
 	delete(r.Vars, "IFS")

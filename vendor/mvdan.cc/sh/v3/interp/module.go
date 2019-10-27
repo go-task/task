@@ -9,6 +9,7 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"runtime"
 	"strings"
 	"syscall"
@@ -29,41 +30,40 @@ type moduleCtxKey struct{}
 // It contains some of the current state of the Runner, as well as some fields
 // necessary to implement some of the modules.
 type ModuleCtx struct {
-	Env         expand.Environ
-	Dir         string
-	Stdin       io.Reader
-	Stdout      io.Writer
-	Stderr      io.Writer
+	// Env is a read-only version of the interpreter's environment,
+	// including environment variables, global variables, and local function
+	// variables.
+	Env expand.Environ
+
+	// Dir is the interpreter's current directory.
+	Dir string
+
+	// Stdin is the interpreter's current standard input reader.
+	Stdin io.Reader
+	// Stdout is the interpreter's current standard output writer.
+	Stdout io.Writer
+	// Stderr is the interpreter's current standard error writer.
+	Stderr io.Writer
+
+	// KillTimeout is the duration configured by Runner.KillTimeout; refer
+	// to its docs for its purpose. It is needed to implement DefaultExec.
 	KillTimeout time.Duration
 }
 
-// UnixPath fixes absolute unix paths on Windows, for example converting
-// "C:\\CurDir\\dev\\null" to "/dev/null".
-func (mc ModuleCtx) UnixPath(path string) string {
-	if runtime.GOOS != "windows" {
-		return path
-	}
-	path = strings.TrimPrefix(path, mc.Dir)
-	return strings.Replace(path, `\`, `/`, -1)
-}
-
-// ExecModule is the module responsible for executing a program. It is
+// ExecModule is the module responsible for executing a simple command. It is
 // executed for all CallExpr nodes where the first argument is neither a
 // declared function nor a builtin.
-//
-// Note that the name is included as the first argument. If path is an
-// empty string, it means that the executable did not exist or was not
-// found in $PATH.
 //
 // Use a return error of type ExitStatus to set the exit status. A nil error has
 // the same effect as ExitStatus(0). If the error is of any other type, the
 // interpreter will come to a stop.
-type ExecModule = func(ctx context.Context, path string, args []string) error
+type ExecModule func(ctx context.Context, args []string) error
 
-func DefaultExec(ctx context.Context, path string, args []string) error {
+func DefaultExec(ctx context.Context, args []string) error {
 	mc, _ := FromModuleContext(ctx)
-	if path == "" {
-		fmt.Fprintf(mc.Stderr, "%q: executable file not found in $PATH\n", args[0])
+	path, err := LookPath(mc.Env, args[0])
+	if err != nil {
+		fmt.Fprintln(mc.Stderr, err)
 		return ExitStatus(127)
 	}
 	cmd := exec.Cmd{
@@ -76,7 +76,7 @@ func DefaultExec(ctx context.Context, path string, args []string) error {
 		Stderr: mc.Stderr,
 	}
 
-	err := cmd.Start()
+	err = cmd.Start()
 	if err == nil {
 		if done := ctx.Done(); done != nil {
 			go func() {
@@ -121,37 +121,164 @@ func DefaultExec(ctx context.Context, path string, args []string) error {
 	}
 }
 
-func ExecBuiltin(name string, fn func(ModuleCtx, []string) error) func(ExecModule) ExecModule {
-	return func(next ExecModule) ExecModule {
-		return func(ctx context.Context, path string, args []string) error {
-			if args[0] == name {
-				mc, _ := FromModuleContext(ctx)
-				return fn(mc, args[1:])
-			}
-			return next(ctx, path, args)
+func checkStat(dir, file string) (string, error) {
+	if !filepath.IsAbs(file) {
+		file = filepath.Join(dir, file)
+	}
+	info, err := os.Stat(file)
+	if err != nil {
+		return "", err
+	}
+	m := info.Mode()
+	if m.IsDir() {
+		return "", fmt.Errorf("is a directory")
+	}
+	if runtime.GOOS != "windows" && m&0111 == 0 {
+		return "", fmt.Errorf("permission denied")
+	}
+	return file, nil
+}
+
+func winHasExt(file string) bool {
+	i := strings.LastIndex(file, ".")
+	if i < 0 {
+		return false
+	}
+	return strings.LastIndexAny(file, `:\/`) < i
+}
+
+func findExecutable(dir, file string, exts []string) (string, error) {
+	if len(exts) == 0 {
+		// non-windows
+		return checkStat(dir, file)
+	}
+	if winHasExt(file) {
+		if file, err := checkStat(dir, file); err == nil {
+			return file, nil
 		}
 	}
+	for _, e := range exts {
+		f := file + e
+		if f, err := checkStat(dir, f); err == nil {
+			return f, nil
+		}
+	}
+	return "", fmt.Errorf("not found")
+}
+
+func driveLetter(c byte) bool {
+	return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')
+}
+
+// splitList is like filepath.SplitList, but always using the unix path
+// list separator ':'. On Windows, it also makes sure not to split
+// [A-Z]:[/\].
+func splitList(path string) []string {
+	if path == "" {
+		return []string{""}
+	}
+	list := strings.Split(path, ":")
+	if runtime.GOOS != "windows" {
+		return list
+	}
+	// join "C", "/foo" into "C:/foo"
+	var fixed []string
+	for i := 0; i < len(list); i++ {
+		s := list[i]
+		switch {
+		case len(s) != 1, !driveLetter(s[0]):
+		case i+1 >= len(list):
+			// last element
+		case strings.IndexAny(list[i+1], `/\`) != 0:
+			// next element doesn't start with / or \
+		default:
+			fixed = append(fixed, s+":"+list[i+1])
+			i++
+			continue
+		}
+		fixed = append(fixed, s)
+	}
+	return fixed
+}
+
+// LookPath is similar to os/exec.LookPath, with the difference that it uses the
+// provided environment. env is used to fetch relevant environment variables
+// such as PWD and PATH.
+//
+// If no error is returned, the returned path must be valid.
+func LookPath(env expand.Environ, file string) (string, error) {
+	pathList := splitList(env.Get("PATH").String())
+	chars := `/`
+	if runtime.GOOS == "windows" {
+		chars = `:\/`
+		// so that "foo" always tries "./foo"
+		pathList = append([]string{"."}, pathList...)
+	}
+	exts := pathExts(env)
+	dir := env.Get("PWD").String()
+	if strings.ContainsAny(file, chars) {
+		return findExecutable(dir, file, exts)
+	}
+	for _, elem := range pathList {
+		var path string
+		switch elem {
+		case "", ".":
+			// otherwise "foo" won't be "./foo"
+			path = "." + string(filepath.Separator) + file
+		default:
+			path = filepath.Join(elem, file)
+		}
+		if f, err := findExecutable(dir, path, exts); err == nil {
+			return f, nil
+		}
+	}
+	return "", fmt.Errorf("%q: executable file not found in $PATH", file)
+}
+
+func pathExts(env expand.Environ) []string {
+	if runtime.GOOS != "windows" {
+		return nil
+	}
+	pathext := env.Get("PATHEXT").String()
+	if pathext == "" {
+		return []string{".com", ".exe", ".bat", ".cmd"}
+	}
+	var exts []string
+	for _, e := range strings.Split(strings.ToLower(pathext), `;`) {
+		if e == "" {
+			continue
+		}
+		if e[0] != '.' {
+			e = "." + e
+		}
+		exts = append(exts, e)
+	}
+	return exts
 }
 
 // OpenModule is the module responsible for opening a file. It is
 // executed for all files that are opened directly by the shell, such as
 // in redirects. Files opened by executed programs are not included.
 //
-// The path parameter is absolute and has been cleaned.
+// The path parameter may be relative to the current directory, which can be
+// fetched via FromModuleContext.
 //
 // Use a return error of type *os.PathError to have the error printed to
 // stderr and the exit status set to 1. If the error is of any other type, the
 // interpreter will come to a stop.
-type OpenModule = func(ctx context.Context, path string, flag int, perm os.FileMode) (io.ReadWriteCloser, error)
+type OpenModule func(ctx context.Context, path string, flag int, perm os.FileMode) (io.ReadWriteCloser, error)
 
 func DefaultOpen(ctx context.Context, path string, flag int, perm os.FileMode) (io.ReadWriteCloser, error) {
+	mc, _ := FromModuleContext(ctx)
+	if !filepath.IsAbs(path) {
+		path = filepath.Join(mc.Dir, path)
+	}
 	return os.OpenFile(path, flag, perm)
 }
 
 func OpenDevImpls(next OpenModule) OpenModule {
 	return func(ctx context.Context, path string, flag int, perm os.FileMode) (io.ReadWriteCloser, error) {
-		mc, _ := FromModuleContext(ctx)
-		switch mc.UnixPath(path) {
+		switch path {
 		case "/dev/null":
 			return devNull{}, nil
 		}
