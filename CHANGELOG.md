@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Fix error being raised when `exit 0` was called
+  ([#251](https://github.com/go-task/task/issues/251)).
+
 ## v2.7.0 - 2019-09-22
 
 - Fixed panic bug when assigning a global variable
