@@ -4,6 +4,9 @@ go:
   - 1.12.x
   - 1.13.x
 
+env:
+  - GO111MODULE=on
+
 addons:
   apt:
     packages:
@@ -12,11 +15,3 @@ addons:
 script:
   - go install -v ./cmd/task
   - task ci
-
-deploy:
-  - provider: script
-    skip_cleanup: true
-    script: curl -sL http://git.io/goreleaser | bash
-    on:
-      tags: true
-      condition: $TRAVIS_OS_NAME = linux

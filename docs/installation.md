@@ -43,17 +43,12 @@ may take some time until it's available on Scoop.
 ## Go
 
 Task now uses [Go Modules](https://github.com/golang/go/wiki/Modules), which
-means you may have trouble compiling it on older Go versions.
+means you may have trouble compiling it on older Go versions or using
+`$GOPATH`.
 
 For CI environments we recommend using the [Install Script](#install-script)
 instead, which is faster and more stable, since it'll just download the latest
 released binary, instead of compiling the edge (master branch) version.
-
-Installing in your `$GOPATH`:
-
-```bash
-go get -u -v github.com/go-task/task/cmd/task
-```
 
 Installing in another directory:
 
@@ -62,7 +57,7 @@ git clone https://github.com/go-task/task
 cd task
 
 # compiling binary to $GOPATH/bin
-go install -v
+go install -v ./cmd/task
 
 # compiling it to another location
 # use -o ./task.exe on Windows
@@ -82,6 +77,19 @@ curl -sL https://taskfile.dev/install.sh | sh
 ```
 
 > This method will download the binary on the local `./bin` directory by default.
+
+## GitHub Actions
+
+If you want to install Task in GitHub Actions you can try using
+[this action](https://github.com/arduino/actions/tree/master/setup-taskfile)
+by the Arduino team:
+
+```yaml
+- name: Install Task
+  uses: Arduino/actions/setup-taskfile@master
+```
+
+This installation method is community owned.
 
 [go]: https://golang.org/
 [snapcraft]: https://snapcraft.io/

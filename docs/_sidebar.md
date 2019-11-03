@@ -1,5 +1,6 @@
 - [Installation](installation.md)
 - [Usage](usage.md)
+- [Styleguide](styleguide.md)
 - [Taskfile Versions](taskfile_versions.md)
 - [Examples](examples.md)
 - [Releasing Task](releasing_task.md)

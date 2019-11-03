@@ -7,10 +7,10 @@ require (
 	github.com/mattn/go-zglob v0.0.1
 	github.com/radovskyb/watcher v1.0.5
 	github.com/spf13/pflag v1.0.3
-	github.com/stretchr/testify v1.3.0
+	github.com/stretchr/testify v1.4.0
 	golang.org/x/sync v0.0.0-20190423024810-112230192c58
-	gopkg.in/yaml.v2 v2.2.1
-	mvdan.cc/sh/v3 v3.0.0-alpha2.0.20190908210725-4a0ebd2f3c1b
+	gopkg.in/yaml.v2 v2.2.2
+	mvdan.cc/sh/v3 v3.0.0-alpha3
 )
 
 go 1.13

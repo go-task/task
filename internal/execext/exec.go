@@ -62,7 +62,7 @@ func RunCommand(ctx context.Context, opts *RunCommandOptions) error {
 // IsExitError returns true the given error is an exis status error
 func IsExitError(err error) bool {
 	switch err.(type) {
-	case interp.ExitStatus, interp.ShellExitStatus:
+	case interp.ExitStatus:
 		return true
 	default:
 		return false
