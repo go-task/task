@@ -3,7 +3,7 @@ _task_completion()
   local scripts;
   local curr_arg;
 
-  # Remove colon from work breaks
+  # Remove colon from word breaks
   COMP_WORDBREAKS=${COMP_WORDBREAKS//:}
 
   scripts=$(task -l | sed '1d' | sed 's/^\* //' | awk '{ print $1 }');
