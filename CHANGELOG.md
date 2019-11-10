@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v2.7.1 - 2019-11-10
 
 - Fix error being raised when `exit 0` was called
   ([#251](https://github.com/go-task/task/issues/251)).
