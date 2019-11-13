@@ -41,6 +41,7 @@ type Executor struct {
 	Silent     bool
 	Dry        bool
 	Summary    bool
+	Parallel   bool
 
 	Stdin  io.Reader
 	Stdout io.Writer
@@ -77,12 +78,18 @@ func (e *Executor) Run(ctx context.Context, calls ...taskfile.Call) error {
 		return e.watchTasks(calls...)
 	}
 
+	g, ctx := errgroup.WithContext(ctx)
 	for _, c := range calls {
-		if err := e.RunTask(ctx, c); err != nil {
-			return err
+		c := c
+		if e.Parallel {
+			g.Go(func() error { return e.RunTask(ctx, c) })
+		} else {
+			if err := e.RunTask(ctx, c); err != nil {
+				return err
+			}
 		}
 	}
-	return nil
+	return g.Wait()
 }
 
 // Setup setups Executor's internal state
