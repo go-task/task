@@ -20,7 +20,7 @@ taskfile.yml
 Taskfile.yml
 ```
 
-This is important to specially to Linux users. Windows and macOS have case
+This is important especially for Linux users. Windows and macOS have case
 insensitive filesystems, so `taskfile.yml` will end up working, even that not
 officially supported. On Linux, only `Taskfile.yml` will work, though.
 
