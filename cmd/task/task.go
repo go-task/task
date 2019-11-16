@@ -58,6 +58,7 @@ func main() {
 		silent      bool
 		dry         bool
 		summary     bool
+		parallel    bool
 		dir         string
 		entrypoint  string
 		output      string
@@ -71,6 +72,7 @@ func main() {
 	pflag.BoolVarP(&watch, "watch", "w", false, "enables watch of the given task")
 	pflag.BoolVarP(&verbose, "verbose", "v", false, "enables verbose mode")
 	pflag.BoolVarP(&silent, "silent", "s", false, "disables echoing")
+	pflag.BoolVarP(&parallel, "parallel", "p", false, "executes tasks provided on command line in parallel")
 	pflag.BoolVar(&dry, "dry", false, "compiles and prints tasks in the order that they would be run, without executing them")
 	pflag.BoolVar(&summary, "summary", false, "show summary about a task")
 	pflag.StringVarP(&dir, "dir", "d", "", "sets directory of execution")
@@ -114,6 +116,7 @@ func main() {
 		Dry:        dry,
 		Entrypoint: entrypoint,
 		Summary:    summary,
+		Parallel:   parallel,
 
 		Stdin:  os.Stdin,
 		Stdout: os.Stdout,
