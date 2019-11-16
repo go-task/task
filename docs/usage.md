@@ -193,6 +193,9 @@ tasks:
 If there is more than one dependency, they always run in parallel for better
 performance.
 
+> You can also make the tasks given by the command line run in parallel by
+> using the `--parallel` flag (alias `-p`). Example: `task --parallel js css`.
+
 If you want to pass information to dependencies, you can do that the same
 manner as you would to [call another task](#calling-another-task):
 

@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Add `--parallel` flag (alias `-p`) to run tasks given by the command line in
+  parallel
+  ([#266](https://github.com/go-task/task/pull/266)).
+
 ## v2.7.1 - 2019-11-10
 
 - Fix error being raised when `exit 0` was called
