@@ -627,6 +627,7 @@ const (
 	SizeofRtAttr            = 0x4
 	SizeofIfInfomsg         = 0x10
 	SizeofIfAddrmsg         = 0x8
+	SizeofIfaCacheinfo      = 0x10
 	SizeofRtMsg             = 0xc
 	SizeofRtNexthop         = 0x8
 	SizeofNdUseroptmsg      = 0x10
@@ -675,6 +676,13 @@ type IfAddrmsg struct {
 	Flags     uint8
 	Scope     uint8
 	Index     uint32
+}
+
+type IfaCacheinfo struct {
+	Prefered uint32
+	Valid    uint32
+	Cstamp   uint32
+	Tstamp   uint32
 }
 
 type RtMsg struct {
@@ -2581,4 +2589,18 @@ type TIPCSIOCNodeIDReq struct {
 const (
 	TIPC_CLUSTER_SCOPE = 0x2
 	TIPC_NODE_SCOPE    = 0x3
+)
+
+const (
+	SYSLOG_ACTION_CLOSE         = 0
+	SYSLOG_ACTION_OPEN          = 1
+	SYSLOG_ACTION_READ          = 2
+	SYSLOG_ACTION_READ_ALL      = 3
+	SYSLOG_ACTION_READ_CLEAR    = 4
+	SYSLOG_ACTION_CLEAR         = 5
+	SYSLOG_ACTION_CONSOLE_OFF   = 6
+	SYSLOG_ACTION_CONSOLE_ON    = 7
+	SYSLOG_ACTION_CONSOLE_LEVEL = 8
+	SYSLOG_ACTION_SIZE_UNREAD   = 9
+	SYSLOG_ACTION_SIZE_BUFFER   = 10
 )

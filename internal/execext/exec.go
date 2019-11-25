@@ -49,7 +49,12 @@ func RunCommand(ctx context.Context, opts *RunCommandOptions) error {
 		interp.Dir(opts.Dir),
 		interp.Env(expand.ListEnviron(environ...)),
 
-		interp.WithOpenModules(interp.OpenDevImpls),
+		interp.OpenHandler(func(ctx context.Context, path string, flag int, perm os.FileMode) (io.ReadWriteCloser, error) {
+			if path == "/dev/null" {
+				return devNull{}, nil
+			}
+			return interp.DefaultOpenHandler()(ctx, path, flag, perm)
+		}),
 
 		interp.StdIO(opts.Stdin, opts.Stdout, opts.Stderr),
 	)
@@ -61,12 +66,10 @@ func RunCommand(ctx context.Context, opts *RunCommandOptions) error {
 
 // IsExitError returns true the given error is an exis status error
 func IsExitError(err error) bool {
-	switch err.(type) {
-	case interp.ExitStatus:
+	if _, ok := interp.IsExitStatus(err); ok {
 		return true
-	default:
-		return false
 	}
+	return false
 }
 
 // Expand is a helper to mvdan.cc/shell.Fields that returns the first field

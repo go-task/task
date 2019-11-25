@@ -20,8 +20,10 @@ import (
 	"time"
 
 	"golang.org/x/sync/errgroup"
+	"golang.org/x/xerrors"
 
 	"mvdan.cc/sh/v3/expand"
+	"mvdan.cc/sh/v3/pattern"
 	"mvdan.cc/sh/v3/syntax"
 )
 
@@ -38,9 +40,9 @@ type RunnerOption func(*Runner) error
 // standard output writer means that the output will be discarded.
 func New(opts ...RunnerOption) (*Runner, error) {
 	r := &Runner{
-		usedNew: true,
-		Exec:    DefaultExec,
-		Open:    DefaultOpen,
+		usedNew:     true,
+		execHandler: DefaultExecHandler(2 * time.Second),
+		openHandler: DefaultOpenHandler(),
 	}
 	r.dirStack = r.dirBootstrap[:0]
 	for _, opt := range opts {
@@ -57,8 +59,8 @@ func New(opts ...RunnerOption) (*Runner, error) {
 			return nil, err
 		}
 	}
-	if r.Stdout == nil || r.Stderr == nil {
-		StdIO(r.Stdin, r.Stdout, r.Stderr)(r)
+	if r.stdout == nil || r.stderr == nil {
+		StdIO(r.stdin, r.stdout, r.stderr)(r)
 	}
 	return r, nil
 }
@@ -85,7 +87,7 @@ func (r *Runner) fillExpandConfig(ctx context.Context) {
 				return err
 			}
 			r2 := r.sub()
-			r2.Stdout = w
+			r2.stdout = w
 			r2.stmts(ctx, cs.Stmts)
 			return r2.err
 		},
@@ -279,34 +281,18 @@ func Params(args ...string) RunnerOption {
 	}
 }
 
-// WithExecModule sets up a runner with a chain of ExecModule middlewares. The
-// chain is set up starting at the end, so that the first middleware in the list
-// will be the first one to execute as part of the interpreter.
-//
-// The last or innermost module is always DefaultExec. You can make it
-// unreachable by adding a middleware that never calls its next module.
-func WithExecModules(mods ...func(next ExecModule) ExecModule) RunnerOption {
+// ExecHandler sets command execution handler. See ExecHandlerFunc for more info.
+func ExecHandler(f ExecHandlerFunc) RunnerOption {
 	return func(r *Runner) error {
-		for i := len(mods) - 1; i >= 0; i-- {
-			mod := mods[i]
-			r.Exec = mod(r.Exec)
-		}
+		r.execHandler = f
 		return nil
 	}
 }
 
-// WithOpenModule sets up a runner with a chain of OpenModule middlewares. The
-// chain is set up starting at the end, so that the first middleware in the list
-// will be the first one to execute as part of the interpreter.
-//
-// The last or innermost module is always DefaultOpen. You can make it
-// unreachable by adding a middleware that never calls its next module.
-func WithOpenModules(mods ...func(next OpenModule) OpenModule) RunnerOption {
+// OpenHandler sets file open handler. See OpenHandlerFunc for more info.
+func OpenHandler(f OpenHandlerFunc) RunnerOption {
 	return func(r *Runner) error {
-		for i := len(mods) - 1; i >= 0; i-- {
-			mod := mods[i]
-			r.Open = mod(r.Open)
-		}
+		r.openHandler = f
 		return nil
 	}
 }
@@ -316,15 +302,15 @@ func WithOpenModules(mods ...func(next OpenModule) OpenModule) RunnerOption {
 // the output.
 func StdIO(in io.Reader, out, err io.Writer) RunnerOption {
 	return func(r *Runner) error {
-		r.Stdin = in
+		r.stdin = in
 		if out == nil {
 			out = ioutil.Discard
 		}
-		r.Stdout = out
+		r.stdout = out
 		if err == nil {
 			err = ioutil.Discard
 		}
-		r.Stderr = err
+		r.stderr = err
 		return nil
 	}
 }
@@ -353,21 +339,21 @@ type Runner struct {
 	// file or calling a function. Accessible via the $@/$* family of vars.
 	Params []string
 
-	// Exec is the module responsible for executing programs. It must be
-	// non-nil.
-	Exec ExecModule
-	// Open is the module responsible for opening files. It must be non-nil.
-	Open OpenModule
-
-	Stdin  io.Reader
-	Stdout io.Writer
-	Stderr io.Writer
-
 	// Separate maps - note that bash allows a name to be both a var and a
 	// func simultaneously
 
 	Vars  map[string]expand.Variable
 	Funcs map[string]*syntax.Stmt
+
+	// execHandler is a function responsible for executing programs. It must be non-nil.
+	execHandler ExecHandlerFunc
+
+	// openHandler is a function responsible for opening files. It must be non-nil.
+	openHandler OpenHandlerFunc
+
+	stdin  io.Reader
+	stdout io.Writer
+	stderr io.Writer
 
 	ecfg *expand.Config
 	ectx context.Context // just so that Runner.Sub can use it again
@@ -420,19 +406,6 @@ type Runner struct {
 	// keepRedirs is used so that "exec" can make any redirections
 	// apply to the current shell, and not just the command.
 	keepRedirs bool
-
-	// KillTimeout holds how much time the interpreter will wait for a
-	// program to stop after being sent an interrupt signal, after
-	// which a kill signal will be sent. This process will happen when the
-	// interpreter's context is cancelled.
-	//
-	// The zero value will default to 2 seconds.
-	//
-	// A negative value means that a kill signal will be sent immediately.
-	//
-	// On Windows, the kill signal is always sent immediately,
-	// because Go doesn't currently support sending Interrupt on Windows.
-	KillTimeout time.Duration
 
 	// So that we can get io.Copy to reuse the same buffer within a runner.
 	// For example, this saves an allocation for every shell pipe, since
@@ -526,16 +499,15 @@ func (r *Runner) Reset() {
 		r.origDir = r.Dir
 		r.origParams = r.Params
 		r.origOpts = r.opts
-		r.origStdin = r.Stdin
-		r.origStdout = r.Stdout
-		r.origStderr = r.Stderr
+		r.origStdin = r.stdin
+		r.origStdout = r.stdout
+		r.origStderr = r.stderr
 	}
 	// reset the internal state
 	*r = Runner{
 		Env:         r.Env,
-		Exec:        r.Exec,
-		Open:        r.Open,
-		KillTimeout: r.KillTimeout,
+		execHandler: r.execHandler,
+		openHandler: r.openHandler,
 
 		// These can be set by functions like Dir or Params, but
 		// builtins can overwrite them; reset the fields to whatever the
@@ -543,9 +515,9 @@ func (r *Runner) Reset() {
 		Dir:    r.origDir,
 		Params: r.origParams,
 		opts:   r.origOpts,
-		Stdin:  r.origStdin,
-		Stdout: r.origStdout,
-		Stderr: r.origStderr,
+		stdin:  r.origStdin,
+		stdout: r.origStdout,
+		stderr: r.origStderr,
 
 		origDir:    r.origDir,
 		origParams: r.origParams,
@@ -596,20 +568,16 @@ func (r *Runner) Reset() {
 	}
 
 	r.dirStack = append(r.dirStack, r.Dir)
-	if r.KillTimeout == 0 {
-		r.KillTimeout = 2 * time.Second
-	}
 	r.didReset = true
 	r.bufCopier.Reader = nil
 }
 
-func (r *Runner) modCtx(ctx context.Context) context.Context {
-	mc := ModuleCtx{
-		Dir:         r.Dir,
-		Stdin:       r.Stdin,
-		Stdout:      r.Stdout,
-		Stderr:      r.Stderr,
-		KillTimeout: r.KillTimeout,
+func (r *Runner) handlerCtx(ctx context.Context) context.Context {
+	hc := HandlerContext{
+		Dir:    r.Dir,
+		Stdin:  r.stdin,
+		Stdout: r.stdout,
+		Stderr: r.stderr,
 	}
 	oenv := overlayEnviron{
 		parent: r.Env,
@@ -624,14 +592,28 @@ func (r *Runner) modCtx(ctx context.Context) context.Context {
 	for name, value := range r.cmdVars {
 		oenv.Set(name, expand.Variable{Exported: true, Kind: expand.String, Str: value})
 	}
-	mc.Env = oenv
-	return context.WithValue(ctx, moduleCtxKey{}, mc)
+	hc.Env = oenv
+	return context.WithValue(ctx, handlerCtxKey{}, hc)
 }
 
-// ExitStatus is a non-zero status code resulting from running a shell node.
-type ExitStatus uint8
+// exitStatus is a non-zero status code resulting from running a shell node.
+type exitStatus uint8
 
-func (s ExitStatus) Error() string { return fmt.Sprintf("exit status %d", s) }
+func (s exitStatus) Error() string { return fmt.Sprintf("exit status %d", s) }
+
+// NewExitStatus creates an error which contains the specified exit status code.
+func NewExitStatus(status uint8) error {
+	return exitStatus(status)
+}
+
+// IsExitStatus checks whether error contains an exit status and returns it.
+func IsExitStatus(err error) (status uint8, ok bool) {
+	var s exitStatus
+	if xerrors.As(err, &s) {
+		return uint8(s), true
+	}
+	return 0, false
+}
 
 func (r *Runner) setErr(err error) {
 	if r.err == nil {
@@ -640,7 +622,8 @@ func (r *Runner) setErr(err error) {
 }
 
 // Run interprets a node, which can be a *File, *Stmt, or Command. If a non-nil
-// error is returned, it will typically be of type ExitStatus.
+// error is returned, it will typically contain commands exit status,
+// which can be retrieved with IsExitStatus.
 //
 // Run can be called multiple times synchronously to interpret programs
 // incrementally. To reuse a Runner without keeping the internal shell state,
@@ -665,7 +648,7 @@ func (r *Runner) Run(ctx context.Context, node syntax.Node) error {
 		return fmt.Errorf("node can only be File, Stmt, or Command: %T", x)
 	}
 	if r.exit != 0 {
-		r.setErr(ExitStatus(r.exit))
+		r.setErr(NewExitStatus(uint8(r.exit)))
 	}
 	return r.err
 }
@@ -680,15 +663,15 @@ func (r *Runner) Exited() bool {
 }
 
 func (r *Runner) out(s string) {
-	io.WriteString(r.Stdout, s)
+	io.WriteString(r.stdout, s)
 }
 
 func (r *Runner) outf(format string, a ...interface{}) {
-	fmt.Fprintf(r.Stdout, format, a...)
+	fmt.Fprintf(r.stdout, format, a...)
 }
 
 func (r *Runner) errf(format string, a ...interface{}) {
-	fmt.Fprintf(r.Stderr, format, a...)
+	fmt.Fprintf(r.stderr, format, a...)
 }
 
 func (r *Runner) stop(ctx context.Context) bool {
@@ -722,7 +705,7 @@ func (r *Runner) stmt(ctx context.Context, st *syntax.Stmt) {
 }
 
 func (r *Runner) stmtSync(ctx context.Context, st *syntax.Stmt) {
-	oldIn, oldOut, oldErr := r.Stdin, r.Stdout, r.Stderr
+	oldIn, oldOut, oldErr := r.stdin, r.stdout, r.stderr
 	for _, rd := range st.Redirs {
 		cls, err := r.redir(ctx, rd)
 		if err != nil {
@@ -751,7 +734,7 @@ func (r *Runner) stmtSync(ctx context.Context, st *syntax.Stmt) {
 		r.exitShell = true
 	}
 	if !r.keepRedirs {
-		r.Stdin, r.Stdout, r.Stderr = oldIn, oldOut, oldErr
+		r.stdin, r.stdout, r.stderr = oldIn, oldOut, oldErr
 	}
 }
 
@@ -762,13 +745,12 @@ func (r *Runner) sub() *Runner {
 		Env:         r.Env,
 		Dir:         r.Dir,
 		Params:      r.Params,
-		Exec:        r.Exec,
-		Open:        r.Open,
-		Stdin:       r.Stdin,
-		Stdout:      r.Stdout,
-		Stderr:      r.Stderr,
 		Funcs:       r.Funcs,
-		KillTimeout: r.KillTimeout,
+		execHandler: r.execHandler,
+		openHandler: r.openHandler,
+		stdin:       r.stdin,
+		stdout:      r.stdout,
+		stderr:      r.stderr,
 		filename:    r.filename,
 		opts:        r.opts,
 	}
@@ -836,14 +818,14 @@ func (r *Runner) cmd(ctx context.Context, cm syntax.Command) {
 		case syntax.Pipe, syntax.PipeAll:
 			pr, pw := io.Pipe()
 			r2 := r.sub()
-			r2.Stdout = pw
+			r2.stdout = pw
 			if x.Op == syntax.PipeAll {
-				r2.Stderr = pw
+				r2.stderr = pw
 			} else {
-				r2.Stderr = r.Stderr
+				r2.stderr = r.stderr
 			}
 			r.bufCopier.Reader = pr
-			r.Stdin = &r.bufCopier
+			r.stdin = &r.bufCopier
 			var wg sync.WaitGroup
 			wg.Add(1)
 			go func() {
@@ -1044,8 +1026,8 @@ func (r *Runner) flattenAssign(as *syntax.Assign) []*syntax.Assign {
 	return asgns
 }
 
-func match(pattern, name string) bool {
-	expr, err := syntax.TranslatePattern(pattern, true)
+func match(pat, name string) bool {
+	expr, err := pattern.Regexp(pat, 0)
 	if err != nil {
 		return false
 	}
@@ -1103,28 +1085,28 @@ func (r *Runner) hdocReader(rd *syntax.Redirect) io.Reader {
 
 func (r *Runner) redir(ctx context.Context, rd *syntax.Redirect) (io.Closer, error) {
 	if rd.Hdoc != nil {
-		r.Stdin = r.hdocReader(rd)
+		r.stdin = r.hdocReader(rd)
 		return nil, nil
 	}
-	orig := &r.Stdout
+	orig := &r.stdout
 	if rd.N != nil {
 		switch rd.N.Value {
 		case "1":
 		case "2":
-			orig = &r.Stderr
+			orig = &r.stderr
 		}
 	}
 	arg := r.literal(rd.Word)
 	switch rd.Op {
 	case syntax.WordHdoc:
-		r.Stdin = strings.NewReader(arg + "\n")
+		r.stdin = strings.NewReader(arg + "\n")
 		return nil, nil
 	case syntax.DplOut:
 		switch arg {
 		case "1":
-			*orig = r.Stdout
+			*orig = r.stdout
 		case "2":
-			*orig = r.Stderr
+			*orig = r.stderr
 		}
 		return nil, nil
 	case syntax.RdrIn, syntax.RdrOut, syntax.AppOut,
@@ -1147,12 +1129,12 @@ func (r *Runner) redir(ctx context.Context, rd *syntax.Redirect) (io.Closer, err
 	}
 	switch rd.Op {
 	case syntax.RdrIn:
-		r.Stdin = f
+		r.stdin = f
 	case syntax.RdrOut, syntax.AppOut:
 		*orig = f
 	case syntax.RdrAll, syntax.AppAll:
-		r.Stdout = f
-		r.Stderr = f
+		r.stdout = f
+		r.stderr = f
 	default:
 		panic(fmt.Sprintf("unhandled redirect op: %v", rd.Op))
 	}
@@ -1214,26 +1196,29 @@ func (r *Runner) call(ctx context.Context, pos syntax.Pos, args []string) {
 }
 
 func (r *Runner) exec(ctx context.Context, args []string) {
-	err := r.Exec(r.modCtx(ctx), args)
-	switch x := err.(type) {
-	case nil:
-		r.exit = 0
-	case ExitStatus:
-		r.exit = int(x)
-	default: // module's custom fatal error
-		r.setErr(err)
+	err := r.execHandler(r.handlerCtx(ctx), args)
+	if status, ok := IsExitStatus(err); ok {
+		r.exit = int(status)
+		return
 	}
+	if err != nil {
+		// handler's custom fatal error
+		r.setErr(err)
+		return
+	}
+	r.exit = 0
 }
 
 func (r *Runner) open(ctx context.Context, path string, flags int, mode os.FileMode, print bool) (io.ReadWriteCloser, error) {
-	f, err := r.Open(r.modCtx(ctx), path, flags, mode)
+	f, err := r.openHandler(r.handlerCtx(ctx), path, flags, mode)
+	// TODO: support wrapped PathError returned from openHandler.
 	switch err.(type) {
 	case nil:
 	case *os.PathError:
 		if print {
 			r.errf("%v\n", err)
 		}
-	default: // module's custom fatal error
+	default: // handler's custom fatal error
 		r.setErr(err)
 	}
 	return f, err

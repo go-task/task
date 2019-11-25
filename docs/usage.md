@@ -63,7 +63,7 @@ tasks:
       - echo $GREETING
 ```
 
-> NOTE: `env` supports expansion and and retrieving output from a shell command
+> NOTE: `env` supports expansion and retrieving output from a shell command
 > just like variables, as you can see on the [Variables](#variables) section.
 
 ## Operating System specific tasks
@@ -192,6 +192,9 @@ tasks:
 
 If there is more than one dependency, they always run in parallel for better
 performance.
+
+> You can also make the tasks given by the command line run in parallel by
+> using the `--parallel` flag (alias `-p`). Example: `task --parallel js css`.
 
 If you want to pass information to dependencies, you can do that the same
 manner as you would to [call another task](#calling-another-task):

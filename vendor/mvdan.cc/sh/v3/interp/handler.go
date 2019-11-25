@@ -18,18 +18,21 @@ import (
 	"mvdan.cc/sh/v3/expand"
 )
 
-// FromModuleContext returns the ModuleCtx value stored in ctx, if any.
-func FromModuleContext(ctx context.Context) (ModuleCtx, bool) {
-	mc, ok := ctx.Value(moduleCtxKey{}).(ModuleCtx)
-	return mc, ok
+// HandlerCtx returns HandlerContext value stored in ctx.
+// It panics if ctx has no HandlerContext stored.
+func HandlerCtx(ctx context.Context) HandlerContext {
+	hc, ok := ctx.Value(handlerCtxKey{}).(HandlerContext)
+	if !ok {
+		panic("interp.HandlerCtx: no HandlerContext in ctx")
+	}
+	return hc
 }
 
-type moduleCtxKey struct{}
+type handlerCtxKey struct{}
 
-// ModuleCtx is the data passed to all the module functions via a context value.
-// It contains some of the current state of the Runner, as well as some fields
-// necessary to implement some of the modules.
-type ModuleCtx struct {
+// HandlerContext is the data passed to all the handler functions via a context value.
+// It contains some of the current state of the Runner.
+type HandlerContext struct {
 	// Env is a read-only version of the interpreter's environment,
 	// including environment variables, global variables, and local function
 	// variables.
@@ -44,80 +47,85 @@ type ModuleCtx struct {
 	Stdout io.Writer
 	// Stderr is the interpreter's current standard error writer.
 	Stderr io.Writer
-
-	// KillTimeout is the duration configured by Runner.KillTimeout; refer
-	// to its docs for its purpose. It is needed to implement DefaultExec.
-	KillTimeout time.Duration
 }
 
-// ExecModule is the module responsible for executing a simple command. It is
-// executed for all CallExpr nodes where the first argument is neither a
+// ExecHandlerFunc is a handler which executes simple command. It is
+// called for all CallExpr nodes where the first argument is neither a
 // declared function nor a builtin.
 //
-// Use a return error of type ExitStatus to set the exit status. A nil error has
-// the same effect as ExitStatus(0). If the error is of any other type, the
-// interpreter will come to a stop.
-type ExecModule func(ctx context.Context, args []string) error
+// Returning nil error sets commands exit status to 0. Other exit statuses
+// can be set with NewExitStatus. Any other error will halt an interpreter.
+type ExecHandlerFunc func(ctx context.Context, args []string) error
 
-func DefaultExec(ctx context.Context, args []string) error {
-	mc, _ := FromModuleContext(ctx)
-	path, err := LookPath(mc.Env, args[0])
-	if err != nil {
-		fmt.Fprintln(mc.Stderr, err)
-		return ExitStatus(127)
-	}
-	cmd := exec.Cmd{
-		Path:   path,
-		Args:   args,
-		Env:    execEnv(mc.Env),
-		Dir:    mc.Dir,
-		Stdin:  mc.Stdin,
-		Stdout: mc.Stdout,
-		Stderr: mc.Stderr,
-	}
+// DefaultExecHandler returns an ExecHandlerFunc used by default.
+// It finds binaries in PATH and executes them.
+// When context is cancelled, interrupt signal is sent to running processes.
+// KillTimeout is a duration to wait before sending kill signal.
+// A negative value means that a kill signal will be sent immediately.
+// On Windows, the kill signal is always sent immediately,
+// because Go doesn't currently support sending Interrupt on Windows.
+// Runner.New sets killTimeout to 2 seconds by default.
+func DefaultExecHandler(killTimeout time.Duration) ExecHandlerFunc {
+	return func(ctx context.Context, args []string) error {
+		hc := HandlerCtx(ctx)
+		path, err := LookPath(hc.Env, args[0])
+		if err != nil {
+			fmt.Fprintln(hc.Stderr, err)
+			return NewExitStatus(127)
+		}
+		cmd := exec.Cmd{
+			Path:   path,
+			Args:   args,
+			Env:    execEnv(hc.Env),
+			Dir:    hc.Dir,
+			Stdin:  hc.Stdin,
+			Stdout: hc.Stdout,
+			Stderr: hc.Stderr,
+		}
 
-	err = cmd.Start()
-	if err == nil {
-		if done := ctx.Done(); done != nil {
-			go func() {
-				<-done
-
-				if mc.KillTimeout <= 0 || runtime.GOOS == "windows" {
-					_ = cmd.Process.Signal(os.Kill)
-					return
-				}
-
-				// TODO: don't temporarily leak this goroutine
-				// if the program stops itself with the
-				// interrupt.
+		err = cmd.Start()
+		if err == nil {
+			if done := ctx.Done(); done != nil {
 				go func() {
-					time.Sleep(mc.KillTimeout)
-					_ = cmd.Process.Signal(os.Kill)
+					<-done
+
+					if killTimeout <= 0 || runtime.GOOS == "windows" {
+						_ = cmd.Process.Signal(os.Kill)
+						return
+					}
+
+					// TODO: don't temporarily leak this goroutine
+					// if the program stops itself with the
+					// interrupt.
+					go func() {
+						time.Sleep(killTimeout)
+						_ = cmd.Process.Signal(os.Kill)
+					}()
+					_ = cmd.Process.Signal(os.Interrupt)
 				}()
-				_ = cmd.Process.Signal(os.Interrupt)
-			}()
-		}
-
-		err = cmd.Wait()
-	}
-
-	switch x := err.(type) {
-	case *exec.ExitError:
-		// started, but errored - default to 1 if OS
-		// doesn't have exit statuses
-		if status, ok := x.Sys().(syscall.WaitStatus); ok {
-			if status.Signaled() && ctx.Err() != nil {
-				return ctx.Err()
 			}
-			return ExitStatus(status.ExitStatus())
+
+			err = cmd.Wait()
 		}
-		return ExitStatus(1)
-	case *exec.Error:
-		// did not start
-		fmt.Fprintf(mc.Stderr, "%v\n", err)
-		return ExitStatus(127)
-	default:
-		return err
+
+		switch x := err.(type) {
+		case *exec.ExitError:
+			// started, but errored - default to 1 if OS
+			// doesn't have exit statuses
+			if status, ok := x.Sys().(syscall.WaitStatus); ok {
+				if status.Signaled() && ctx.Err() != nil {
+					return ctx.Err()
+				}
+				return NewExitStatus(uint8(status.ExitStatus()))
+			}
+			return NewExitStatus(1)
+		case *exec.Error:
+			// did not start
+			fmt.Fprintf(hc.Stderr, "%v\n", err)
+			return NewExitStatus(127)
+		default:
+			return err
+		}
 	}
 }
 
@@ -256,40 +264,25 @@ func pathExts(env expand.Environ) []string {
 	return exts
 }
 
-// OpenModule is the module responsible for opening a file. It is
-// executed for all files that are opened directly by the shell, such as
+// OpenHandlerFunc is a handler which opens files. It is
+// called for all files that are opened directly by the shell, such as
 // in redirects. Files opened by executed programs are not included.
 //
 // The path parameter may be relative to the current directory, which can be
-// fetched via FromModuleContext.
+// fetched via HandlerCtx.
 //
 // Use a return error of type *os.PathError to have the error printed to
 // stderr and the exit status set to 1. If the error is of any other type, the
 // interpreter will come to a stop.
-type OpenModule func(ctx context.Context, path string, flag int, perm os.FileMode) (io.ReadWriteCloser, error)
+type OpenHandlerFunc func(ctx context.Context, path string, flag int, perm os.FileMode) (io.ReadWriteCloser, error)
 
-func DefaultOpen(ctx context.Context, path string, flag int, perm os.FileMode) (io.ReadWriteCloser, error) {
-	mc, _ := FromModuleContext(ctx)
-	if !filepath.IsAbs(path) {
-		path = filepath.Join(mc.Dir, path)
-	}
-	return os.OpenFile(path, flag, perm)
-}
-
-func OpenDevImpls(next OpenModule) OpenModule {
+// DefaultOpenHandler returns an OpenHandlerFunc used by default. It uses os.OpenFile to open files.
+func DefaultOpenHandler() OpenHandlerFunc {
 	return func(ctx context.Context, path string, flag int, perm os.FileMode) (io.ReadWriteCloser, error) {
-		switch path {
-		case "/dev/null":
-			return devNull{}, nil
+		mc := HandlerCtx(ctx)
+		if !filepath.IsAbs(path) {
+			path = filepath.Join(mc.Dir, path)
 		}
-		return next(ctx, path, flag, perm)
+		return os.OpenFile(path, flag, perm)
 	}
 }
-
-var _ io.ReadWriteCloser = devNull{}
-
-type devNull struct{}
-
-func (devNull) Read(p []byte) (int, error)  { return 0, io.EOF }
-func (devNull) Write(p []byte) (int, error) { return len(p), nil }
-func (devNull) Close() error                { return nil }
