@@ -10,13 +10,12 @@ type PrintFunc func(io.Writer, string, ...interface{})
 
 var (
 	Default PrintFunc = color.New(color.Reset).FprintfFunc()
-	Bold    PrintFunc = color.New(color.Bold).FprintfFunc()
-	Blue    PrintFunc = color.New(color.FgBlue, color.Bold).FprintfFunc()
-	Green   PrintFunc = color.New(color.FgGreen, color.Bold).FprintfFunc()
-	Cyan    PrintFunc = color.New(color.FgCyan, color.Bold).FprintfFunc()
-	Yellow  PrintFunc = color.New(color.FgYellow, color.Bold).FprintfFunc()
-	Magenta PrintFunc = color.New(color.FgMagenta, color.Bold).FprintfFunc()
-	Red     PrintFunc = color.New(color.FgRed, color.Bold).FprintfFunc()
+	Blue    PrintFunc = color.New(color.FgBlue).FprintfFunc()
+	Green   PrintFunc = color.New(color.FgGreen).FprintfFunc()
+	Cyan    PrintFunc = color.New(color.FgCyan).FprintfFunc()
+	Yellow  PrintFunc = color.New(color.FgYellow).FprintfFunc()
+	Magenta PrintFunc = color.New(color.FgMagenta).FprintfFunc()
+	Red     PrintFunc = color.New(color.FgRed).FprintfFunc()
 )
 
 // Logger is just a wrapper that prints stuff to STDOUT or STDERR,
