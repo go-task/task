@@ -2,5 +2,5 @@
 // See LICENSE for licensing information
 
 // Package syntax implements parsing and formatting of shell programs.
-// It supports both POSIX Shell and Bash.
+// It supports POSIX Shell, Bash, and mksh.
 package syntax

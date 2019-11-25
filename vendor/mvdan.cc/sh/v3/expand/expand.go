@@ -15,6 +15,7 @@ import (
 	"strconv"
 	"strings"
 
+	"mvdan.cc/sh/v3/pattern"
 	"mvdan.cc/sh/v3/syntax"
 )
 
@@ -173,7 +174,7 @@ func Pattern(cfg *Config, word *syntax.Word) (string, error) {
 	buf := cfg.strBuilder()
 	for _, part := range field {
 		if part.quote > quoteNone {
-			buf.WriteString(syntax.QuotePattern(part.val))
+			buf.WriteString(pattern.QuoteMeta(part.val))
 		} else {
 			buf.WriteString(part.val)
 		}
@@ -344,11 +345,11 @@ func (cfg *Config) escapedGlobField(parts []fieldPart) (escaped string, glob boo
 	buf := cfg.strBuilder()
 	for _, part := range parts {
 		if part.quote > quoteNone {
-			buf.WriteString(syntax.QuotePattern(part.val))
+			buf.WriteString(pattern.QuoteMeta(part.val))
 			continue
 		}
 		buf.WriteString(part.val)
-		if syntax.HasPattern(part.val) {
+		if pattern.HasMeta(part.val) {
 			glob = true
 		}
 	}
@@ -651,8 +652,8 @@ func (cfg *Config) expandUser(field string) (prefix, rest string) {
 	return u.HomeDir, rest
 }
 
-func findAllIndex(pattern, name string, n int) [][]int {
-	expr, err := syntax.TranslatePattern(pattern, true)
+func findAllIndex(pat, name string, n int) [][]int {
+	expr, err := pattern.Regexp(pat, 0)
 	if err != nil {
 		return nil
 	}
@@ -682,10 +683,10 @@ func pathSplit(path string) []string {
 	return strings.Split(path, string(filepath.Separator))
 }
 
-func (cfg *Config) glob(base, pattern string) ([]string, error) {
-	parts := pathSplit(pattern)
+func (cfg *Config) glob(base, pat string) ([]string, error) {
+	parts := pathSplit(pat)
 	matches := []string{""}
-	if filepath.IsAbs(pattern) {
+	if filepath.IsAbs(pat) {
 		if parts[0] == "" {
 			// unix-like
 			matches[0] = string(filepath.Separator)
@@ -732,7 +733,7 @@ func (cfg *Config) glob(base, pattern string) ([]string, error) {
 			}
 			continue
 		}
-		expr, err := syntax.TranslatePattern(part, true)
+		expr, err := pattern.Regexp(part, pattern.Filenames)
 		if err != nil {
 			// If any glob part is not a valid pattern, don't glob.
 			return nil, nil
