@@ -32,6 +32,8 @@
 - Add `--parallel` flag (alias `-p`) to run tasks given by the command line in
   parallel
   ([#266](https://github.com/go-task/task/pull/266)).
+- Fixed bug where calling the `task` CLI only informing global vars would not
+  execute the `default` task.
 
 ## v2.7.1 - 2019-11-10
 

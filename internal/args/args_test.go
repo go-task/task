@@ -64,6 +64,28 @@ func TestArgs(t *testing.T) {
 				"FOO": {Static: "bar"},
 			},
 		},
+		{
+			Args: nil,
+			ExpectedCalls: []taskfile.Call{
+				{Task: "default"},
+			},
+		},
+		{
+			Args: []string{},
+			ExpectedCalls: []taskfile.Call{
+				{Task: "default"},
+			},
+		},
+		{
+			Args: []string{"FOO=bar", "BAR=baz"},
+			ExpectedCalls: []taskfile.Call{
+				{Task: "default"},
+			},
+			ExpectedGlobals: taskfile.Vars{
+				"FOO": {Static: "bar"},
+				"BAR": {Static: "baz"},
+			},
+		},
 	}
 
 	for i, test := range tests {
