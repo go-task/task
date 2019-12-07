@@ -1,5 +1,10 @@
 # Changelog
 
+# Unreleased
+
+- Expose `.TASK` variable in templates with the task name
+  ([#252](https://github.com/go-task/task/issues/252)).
+
 # v3.0.0 - Preview 2
 
 - Taskfiles in version 1 are not supported anymore

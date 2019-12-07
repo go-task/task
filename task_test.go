@@ -98,6 +98,7 @@ func TestVarsV2(t *testing.T) {
 			"nestedtmpl2_foo2.txt": "<no value>",
 			"override.txt":         "bar",
 			"nested.txt":           "Taskvars-TaskfileVars-TaskVars",
+			"task_name.txt":        "hello",
 		},
 	}
 	tt.Run(t)

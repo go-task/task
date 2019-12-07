@@ -439,6 +439,8 @@ Example of sending parameters with environment variables:
 $ TASK_VARIABLE=a-value task do-something
 ```
 
+> TIP: A special variable `.TASK` is always available containg the task name.
+
 Since some shells don't support above syntax to set environment variables
 (Windows) tasks also accepts a similar style when not in the beginning of
 the command. Variables given in this form are only visible to the task called

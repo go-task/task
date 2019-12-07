@@ -32,6 +32,7 @@ tasks:
       - echo '{{.NESTEDTMPL2_FOO2}}' > nestedtmpl2_foo2.txt
       - echo {{.OVERRIDE}} > override.txt
       - echo '{{.NESTED3}}' > nested.txt
+      - echo '{{.TASK}}' > task_name.txt
     vars:
       FOO: foo
       BAR: $echo bar

@@ -38,6 +38,7 @@ type CompilerV2 struct {
 // 5. Environment variables
 func (c *CompilerV2) GetVariables(t *taskfile.Task, call taskfile.Call) (taskfile.Vars, error) {
 	vr := varResolver{c: c, vars: compiler.GetEnviron()}
+	vr.vars["TASK"] = taskfile.Var{Static: t.Task}
 	for _, vars := range []taskfile.Vars{c.Taskvars, c.TaskfileVars, call.Vars, t.Vars} {
 		for i := 0; i < c.Expansions; i++ {
 			vr.merge(vars)
