@@ -7,7 +7,6 @@ insert_final_newline = true
 charset = utf-8
 trim_trailing_whitespace = true
 indent_style = tab
-indent_size = 8
 
 [*.{md,yml,yaml,json,toml,htm,html}]
 indent_style = space
