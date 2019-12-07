@@ -133,13 +133,7 @@ func main() {
 		return
 	}
 
-	arguments := pflag.Args()
-	if len(arguments) == 0 {
-		log.Println("task: No argument given, trying default task")
-		arguments = []string{"default"}
-	}
-
-	calls, globals := args.Parse(arguments...)
+	calls, globals := args.Parse(pflag.Args()...)
 	for name, value := range globals {
 		e.Taskfile.Vars[name] = value
 	}

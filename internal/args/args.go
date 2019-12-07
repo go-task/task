@@ -34,6 +34,10 @@ func Parse(args ...string) ([]taskfile.Call, taskfile.Vars) {
 		}
 	}
 
+	if len(calls) == 0 {
+		calls = append(calls, taskfile.Call{Task: "default"})
+	}
+
 	return calls, globals
 }
 
