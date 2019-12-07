@@ -65,6 +65,18 @@ func TestArgs(t *testing.T) {
 			},
 		},
 		{
+			Args: nil,
+			ExpectedCalls: []taskfile.Call{
+				{Task: "default"},
+			},
+		},
+		{
+			Args: []string{},
+			ExpectedCalls: []taskfile.Call{
+				{Task: "default"},
+			},
+		},
+		{
 			Args: []string{"FOO=bar", "BAR=baz"},
 			ExpectedCalls: []taskfile.Call{
 				{Task: "default"},
