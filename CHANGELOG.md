@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v2.8.0 - 2019-12-07
 
 - Add `--parallel` flag (alias `-p`) to run tasks given by the command line in
   parallel
