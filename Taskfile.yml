@@ -1,5 +1,7 @@
 version: '2'
 
+# silent: true
+
 includes:
   docs: ./docs
 
