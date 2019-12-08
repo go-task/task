@@ -684,3 +684,18 @@ func TestDisplaysErrorOnUnsupportedVersion(t *testing.T) {
 	assert.Equal(t, "task: Taskfile versions prior to v2 are not supported anymore", err.Error())
 
 }
+
+func TestShortTaskNotation(t *testing.T) {
+	const dir = "testdata/short_task_notation"
+
+	var buff bytes.Buffer
+	e := task.Executor{
+		Dir:    dir,
+		Stdout: &buff,
+		Stderr: &buff,
+		Silent: true,
+	}
+	assert.NoError(t, e.Setup())
+	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "default"}))
+	assert.Equal(t, "string-slice-1\nstring-slice-2\nstring\n", buff.String())
+}

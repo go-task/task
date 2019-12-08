@@ -4,6 +4,8 @@
 
 - Expose `.TASK` variable in templates with the task name
   ([#252](https://github.com/go-task/task/issues/252)).
+- Implement short task syntax
+  ([#194](https://github.com/go-task/task/issues/194), [#240](https://github.com/go-task/task/pull/240)).
 
 # v3.0.0 - Preview 2
 

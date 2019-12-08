@@ -840,6 +840,22 @@ $ task default
 
 > The `output` option can also be specified by the `--output` or `-o` flags.
 
+## Short task syntax
+
+Starting on Task v3, you can now write tasks with a shorter syntax if they
+have the default settings (e.g. no custom `env:`, `vars:`, `silent:` , etc):
+
+```yaml
+version: '3'
+
+tasks:
+  build: go build -v -o ./app{{exeExt}} .
+
+  build:
+    - task: build
+    - ./app{{exeExt}} -h localhost -p 8080
+```
+
 ## Watch tasks
 
 If you give a `--watch` or `-w` argument, task will watch for file changes

@@ -72,15 +72,12 @@ tasks:
       - cp ./install-task.sh ./docs/install.sh
 
   ci:
-    cmds:
-      - task: go-get
-        vars: {REPO: golang.org/x/lint/golint}
-      - task: lint
-      - task: test
+    - task: go-get
+      vars: {REPO: golang.org/x/lint/golint}
+    - task: lint
+    - task: test
 
-  go-get:
-    cmds:
-      - go get -u {{.REPO}}
+  go-get: go get -u {{.REPO}}
 
   packages:
     cmds:
