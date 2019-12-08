@@ -316,7 +316,7 @@ func (e *Executor) runCommand(ctx context.Context, t *taskfile.Task, call taskfi
 		}
 		return nil
 	case cmd.Cmd != "":
-		if e.Verbose || (!cmd.Silent && !t.Silent && !e.Silent) {
+		if e.Verbose || (!cmd.Silent && !t.Silent && !e.Taskfile.Silent && !e.Silent) {
 			e.Logger.Errf(logger.Green, "task: %s", cmd.Cmd)
 		}
 

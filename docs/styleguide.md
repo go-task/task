@@ -28,7 +28,7 @@ officially supported. On Linux, only `Taskfile.yml` will work, though.
 
 - `version:`
 - `includes:`
-- Configuration ones, like `output:` and `expansions:`
+- Configuration ones, like `output:`, `expansions:` or `silent:`
 - `vars:`
 - `env:`
 - `tasks:`

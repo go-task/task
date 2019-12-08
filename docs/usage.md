@@ -699,7 +699,7 @@ With silent mode on, the below will be print instead:
 Print something
 ```
 
-There's three ways to enable silent mode:
+There are four ways to enable silent mode:
 
 * At command level:
 
@@ -723,6 +723,19 @@ tasks:
     cmds:
       - echo "Print something"
     silent: true
+```
+
+* Globally at Taskfile level:
+
+```yaml
+version: '2'
+
+silent: true
+
+tasks:
+  echo:
+    cmds:
+      - echo "Print something"
 ```
 
 * Or globally with `--silent` or `-s` flag

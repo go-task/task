@@ -34,13 +34,15 @@
   commands are green, errors are red, etc
   ([#207](https://github.com/go-task/task/pull/207)).
 
-## Unreleased
+## v2.8.0 - 2019-12-07
 
 - Add `--parallel` flag (alias `-p`) to run tasks given by the command line in
   parallel
   ([#266](https://github.com/go-task/task/pull/266)).
 - Fixed bug where calling the `task` CLI only informing global vars would not
   execute the `default` task.
+- Add hability to silent all tasks by adding `silent: true` a the root of the
+  Taskfile.
 
 ## v2.7.1 - 2019-11-10
 
