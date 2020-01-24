@@ -15,7 +15,7 @@ import (
 
 // PrinterOption is a function which can be passed to NewPrinter
 // to alter its behaviour. To apply option to existing Printer
-// call it directly, for example syntax.KeepPadding(true)(printer).
+// call it directly, for example KeepPadding(true)(printer).
 type PrinterOption func(*Printer)
 
 // Indent sets the number of spaces used for indentation. If set to 0,
@@ -478,6 +478,11 @@ func (p *Printer) semiRsrv(s string, pos Pos) {
 
 func (p *Printer) flushComments() {
 	for i, c := range p.pendingComments {
+		if i == 0 {
+			// Flush any pending heredocs first. Otherwise, the
+			// comments would become part of a heredoc body.
+			p.flushHeredocs()
+		}
 		p.firstLine = false
 		// We can't call any of the newline methods, as they call this
 		// function and we'd recurse forever.

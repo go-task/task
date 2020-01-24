@@ -256,6 +256,7 @@ skipSpace:
 			for r != '\n' && r != utf8.RuneSelf {
 				if r == escNewl {
 					p.litBs = append(p.litBs, '\\', '\n')
+					break
 				}
 				r = p.rune()
 			}
@@ -316,6 +317,7 @@ skipSpace:
 			} else {
 				p.tok = rightParen
 				p.quote = noState
+				p.rune() // we are tokenizing manually
 			}
 		default: // including '(', '|'
 			p.advanceLitRe(r)
