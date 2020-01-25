@@ -9,6 +9,8 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/client"
+	"github.com/docker/docker/pkg/jsonmessage"
+	"github.com/docker/docker/pkg/term"
 	"io"
 	"os"
 	"path/filepath"
@@ -87,9 +89,14 @@ func RunCommandInDocker(ctx context.Context, opts *RunCommandOptions) error {
 		return err
 	}
 
-	_, err = cli.ImagePull(context.Background(), image.String(), types.ImagePullOptions{
-		All: true,
-	})
+	pullReader, err := cli.ImagePull(context.Background(), image.String(), types.ImagePullOptions{})
+	if err != nil {
+		return err
+	}
+	defer pullReader.Close()
+
+	termFd, isTerminal := term.GetFdInfo(os.Stderr)
+	err = jsonmessage.DisplayJSONMessagesStream(pullReader, os.Stderr, termFd, isTerminal, nil)
 	if err != nil {
 		return err
 	}
