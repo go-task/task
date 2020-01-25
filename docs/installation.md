@@ -40,6 +40,19 @@ scoop install task
 This installation method is community owned. After a new release of Task, it
 may take some time until it's available on Scoop.
 
+## Arch Linux
+
+If you're on Arch Linux you can install Task from
+[AUR](https://aur.archlinux.org/packages/taskfile-git) using your favorite
+package manager such as `yay`, `pacaur` or `yaourt`:
+
+```cmd
+yay -S taskfile-git
+```
+
+This installation method is community owned, but since it's `-git` version of
+the package, it's always latest available version based on the git repository.
+
 ## Go
 
 Task now uses [Go Modules](https://github.com/golang/go/wiki/Modules), which
