@@ -1,0 +1,7 @@
+version: '2'
+
+tasks:
+  default:
+    image: alpine:3.11.3
+    cmds:
+      - cat /etc/alpine-release > version.txt

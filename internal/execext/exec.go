@@ -3,6 +3,14 @@ package execext
 import (
 	"context"
 	"errors"
+	"fmt"
+	"github.com/docker/distribution/reference"
+	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/mount"
+	"github.com/docker/docker/client"
+	"github.com/docker/docker/pkg/jsonmessage"
+	"github.com/docker/docker/pkg/term"
 	"io"
 	"os"
 	"path/filepath"
@@ -16,6 +24,7 @@ import (
 
 // RunCommandOptions is the options for the RunCommand func
 type RunCommandOptions struct {
+	Image   string
 	Command string
 	Dir     string
 	Env     []string
@@ -33,6 +42,10 @@ var (
 func RunCommand(ctx context.Context, opts *RunCommandOptions) error {
 	if opts == nil {
 		return ErrNilOptions
+	}
+
+	if opts.Image != "" {
+		return RunCommandInDocker(ctx, opts)
 	}
 
 	p, err := syntax.NewParser().Parse(strings.NewReader(opts.Command), "")
@@ -62,6 +75,86 @@ func RunCommand(ctx context.Context, opts *RunCommandOptions) error {
 		return err
 	}
 	return r.Run(ctx, p)
+}
+
+func RunCommandInDocker(ctx context.Context, opts *RunCommandOptions) error {
+	cli, err := client.NewEnvClient()
+	if err != nil {
+		return err
+	}
+
+	absoluteDir, _ := filepath.Abs(opts.Dir)
+	image, err := reference.ParseNormalizedNamed(opts.Image)
+	if err != nil {
+		return err
+	}
+
+	pullReader, err := cli.ImagePull(context.Background(), image.String(), types.ImagePullOptions{})
+	if err != nil {
+		return err
+	}
+	defer pullReader.Close()
+
+	termFd, isTerminal := term.GetFdInfo(os.Stderr)
+	err = jsonmessage.DisplayJSONMessagesStream(pullReader, os.Stderr, termFd, isTerminal, nil)
+	if err != nil {
+		return err
+	}
+
+	cont, err := cli.ContainerCreate(
+		context.Background(),
+		&container.Config{
+			Image:        image.String(),
+			Cmd:          []string{"-c", opts.Command},
+			Entrypoint:   []string{"/bin/sh"},
+			WorkingDir:   absoluteDir,
+			AttachStdout: true,
+			AttachStderr: true,
+			AttachStdin:  true,
+		},
+		&container.HostConfig{
+			Mounts: []mount.Mount{
+				{
+					Type:   mount.TypeBind,
+					Source: absoluteDir,
+					Target: absoluteDir,
+				},
+			},
+		}, nil, "")
+
+	if err != nil {
+		return err
+	}
+
+	err = cli.ContainerStart(context.Background(), cont.ID, types.ContainerStartOptions{})
+	if err != nil {
+		return err
+	}
+
+	reader, err := cli.ContainerLogs(context.Background(), cont.ID, types.ContainerLogsOptions{
+		ShowStdout: true,
+		ShowStderr: true,
+		Follow:     true,
+	})
+	if err != nil {
+		return err
+	}
+	defer reader.Close()
+
+	go func() {
+		io.Copy(opts.Stdout, reader)
+	}()
+
+	code, err := cli.ContainerWait(context.Background(), cont.ID)
+	if code != 0 {
+		return errors.New(fmt.Sprintf("exit status %v", code))
+	}
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // IsExitError returns true the given error is an exis status error
