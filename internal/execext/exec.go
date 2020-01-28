@@ -4,6 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
+	"os"
+	"path/filepath"
+	"strings"
+
 	"github.com/docker/distribution/reference"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
@@ -11,11 +16,6 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/jsonmessage"
 	"github.com/docker/docker/pkg/term"
-	"io"
-	"os"
-	"path/filepath"
-	"strings"
-
 	"mvdan.cc/sh/v3/expand"
 	"mvdan.cc/sh/v3/interp"
 	"mvdan.cc/sh/v3/shell"
@@ -95,8 +95,8 @@ func RunCommandInDocker(ctx context.Context, opts *RunCommandOptions) error {
 	}
 	defer pullReader.Close()
 
-	termFd, isTerminal := term.GetFdInfo(os.Stderr)
-	err = jsonmessage.DisplayJSONMessagesStream(pullReader, os.Stderr, termFd, isTerminal, nil)
+	termFd, isTerminal := term.GetFdInfo(os.Stdout)
+	err = jsonmessage.DisplayJSONMessagesStream(pullReader, os.Stdout, termFd, isTerminal, nil)
 	if err != nil {
 		return err
 	}
@@ -141,9 +141,10 @@ func RunCommandInDocker(ctx context.Context, opts *RunCommandOptions) error {
 	}
 	defer reader.Close()
 
-	go func() {
-		io.Copy(opts.Stdout, reader)
-	}()
+	_, err = io.Copy(opts.Stdout, reader)
+	if err != nil {
+		return err
+	}
 
 	code, err := cli.ContainerWait(context.Background(), cont.ID)
 	if code != 0 {
