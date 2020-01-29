@@ -1,0 +1,6 @@
+version: '2'
+
+tasks:
+  gen:
+    cmds:
+      - echo "darwin" > os_related.txt

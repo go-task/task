@@ -540,9 +540,13 @@ func TestIncludes(t *testing.T) {
 		Target:    "default",
 		TrimSpace: true,
 		Files: map[string]string{
-			"main.txt":               "main",
-			"included_directory.txt": "included_directory",
-			"included_taskfile.txt":  "included_taskfile",
+			"main.txt":                                  "main",
+			"included_directory.txt":                    "included_directory",
+			"included_directory_without_dir.txt":        "included_directory_without_dir",
+			"included_taskfile_without_dir.txt":         "included_taskfile_without_dir",
+			"./module2/included_directory_with_dir.txt": "included_directory_with_dir",
+			"./module2/included_taskfile_with_dir.txt":  "included_taskfile_with_dir",
+			"./module3/os_related.txt":                  runtime.GOOS,
 		},
 	}
 	tt.Run(t)
