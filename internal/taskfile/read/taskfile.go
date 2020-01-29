@@ -28,8 +28,8 @@ func Taskfile(dir string, entrypoint string) (*taskfile.Taskfile, error) {
 		return nil, err
 	}
 
-	for namespace, path := range t.Includes {
-		path = filepath.Join(dir, path)
+	for namespace, includedTask := range t.Includes {
+		path = filepath.Join(dir, includedTask.Taskfile)
 		info, err := os.Stat(path)
 		if err != nil {
 			return nil, err
@@ -44,6 +44,11 @@ func Taskfile(dir string, entrypoint string) (*taskfile.Taskfile, error) {
 		if len(includedTaskfile.Includes) > 0 {
 			return nil, ErrIncludedTaskfilesCantHaveIncludes
 		}
+
+		for _, task := range includedTaskfile.Tasks {
+			task.Dir = filepath.Join(includedTask.Dir, task.Dir)
+		}
+
 		if err = taskfile.Merge(t, includedTaskfile, namespace); err != nil {
 			return nil, err
 		}
