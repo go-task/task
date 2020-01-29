@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 
 	"github.com/go-task/task/v2/internal/taskfile"
 
@@ -43,6 +44,19 @@ func Taskfile(dir string, entrypoint string) (*taskfile.Taskfile, error) {
 		}
 		if len(includedTaskfile.Includes) > 0 {
 			return nil, ErrIncludedTaskfilesCantHaveIncludes
+		}
+
+		includedTaskDirectory := filepath.Dir(path)
+		includedTaskFileName := strings.TrimSuffix(filepath.Base(path), filepath.Ext(path))
+		path = filepath.Join(includedTaskDirectory, fmt.Sprintf("%s_%s.yml", includedTaskFileName, runtime.GOOS))
+		if _, err = os.Stat(path); err == nil {
+			osIncludedTaskfile, err := readTaskfile(path)
+			if err != nil {
+				return nil, err
+			}
+			if err = taskfile.Merge(includedTaskfile, osIncludedTaskfile); err != nil {
+				return nil, err
+			}
 		}
 
 		for _, task := range includedTaskfile.Tasks {
