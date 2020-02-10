@@ -51,7 +51,7 @@ yay -S taskfile-git
 ```
 
 This installation method is community owned, but since it's `-git` version of
-the package, it's always latest available version based on the git repository.
+the package, it's always latest available version based on the Git repository.
 
 ## Go
 
