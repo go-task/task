@@ -47,8 +47,8 @@ func Taskfile(dir string, entrypoint string) (*taskfile.Taskfile, error) {
 		}
 
 		includedTaskDirectory := filepath.Dir(path)
-		includedTaskFileName := strings.TrimSuffix(filepath.Base(path), filepath.Ext(path))
-		path = filepath.Join(includedTaskDirectory, fmt.Sprintf("%s_%s.yml", includedTaskFileName, runtime.GOOS))
+		includedTaskfileName := strings.TrimSuffix(filepath.Base(path), filepath.Ext(path))
+		path = filepath.Join(includedTaskDirectory, fmt.Sprintf("%s_%s.yml", includedTaskfileName, runtime.GOOS))
 		if _, err = os.Stat(path); err == nil {
 			osIncludedTaskfile, err := readTaskfile(path)
 			if err != nil {

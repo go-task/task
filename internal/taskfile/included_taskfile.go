@@ -3,21 +3,21 @@ package taskfile
 import "errors"
 
 var (
-	// ErrCantUnmarshalIncludedTaskFile is returned for invalid var YAML.
-	ErrCantUnmarshalIncludedTaskFile = errors.New("task: can't unmarshal included value")
+	// ErrCantUnmarshalIncludedTaskfile is returned for invalid var YAML.
+	ErrCantUnmarshalIncludedTaskfile = errors.New("task: can't unmarshal included value")
 )
 
-// IncludedTaskFile represents information about included tasksfile
-type IncludedTaskFile struct {
+// IncludedTaskfile represents information about included tasksfile
+type IncludedTaskfile struct {
 	Taskfile string
 	Dir      string
 }
 
-// IncludedTaskFiles represents information about included tasksfiles
-type IncludedTaskFiles = map[string]IncludedTaskFile
+// IncludedTaskfiles represents information about included tasksfiles
+type IncludedTaskfiles = map[string]IncludedTaskfile
 
 // UnmarshalYAML implements yaml.Unmarshaler interface
-func (it *IncludedTaskFile) UnmarshalYAML(unmarshal func(interface{}) error) error {
+func (it *IncludedTaskfile) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	var str string
 	if err := unmarshal(&str); err == nil {
 		it.Taskfile = str
@@ -34,5 +34,5 @@ func (it *IncludedTaskFile) UnmarshalYAML(unmarshal func(interface{}) error) err
 		return nil
 	}
 
-	return ErrCantUnmarshalIncludedTaskFile
+	return ErrCantUnmarshalIncludedTaskfile
 }
