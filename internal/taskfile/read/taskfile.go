@@ -29,7 +29,12 @@ func Taskfile(dir string, entrypoint string) (*taskfile.Taskfile, error) {
 	}
 
 	for namespace, includedTask := range t.Includes {
-		path = filepath.Join(dir, includedTask.Taskfile)
+		if filepath.IsAbs(includedTask.Taskfile) {
+			path = includedTask.Taskfile
+		} else {
+			path = filepath.Join(dir, includedTask.Taskfile)
+		}
+
 		info, err := os.Stat(path)
 		if err != nil {
 			return nil, err
