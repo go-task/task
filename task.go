@@ -207,6 +207,14 @@ func (e *Executor) Setup() error {
 		}
 	}
 
+	if v < 3 {
+		for _, taskfile := range e.Taskfile.Includes {
+			if taskfile.AdvancedImport {
+				return errors.New(`task: Import with additional parameters is only available starting on Taskfile version v3`)
+			}
+		}
+	}
+
 	e.taskCallCount = make(map[string]*int32, len(e.Taskfile.Tasks))
 	e.mkdirMutexMap = make(map[string]*sync.Mutex, len(e.Taskfile.Tasks))
 	for k := range e.Taskfile.Tasks {

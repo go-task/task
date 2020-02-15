@@ -45,9 +45,11 @@ func Taskfile(dir string, entrypoint string) (*taskfile.Taskfile, error) {
 			return nil, ErrIncludedTaskfilesCantHaveIncludes
 		}
 
-		for _, task := range includedTaskfile.Tasks {
-			if !filepath.IsAbs(task.Dir) {
-				task.Dir = filepath.Join(includedTask.Dir, task.Dir)
+		if includedTask.AdvancedImport {
+			for _, task := range includedTaskfile.Tasks {
+				if !filepath.IsAbs(task.Dir) {
+					task.Dir = filepath.Join(includedTask.Dir, task.Dir)
+				}
 			}
 		}
 

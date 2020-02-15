@@ -551,6 +551,21 @@ func TestIncludes(t *testing.T) {
 	tt.Run(t)
 }
 
+func TestIncorrectVersionIncludes(t *testing.T) {
+	const dir = "testdata/incorrect_includes"
+	expectedError := "task: Import with additional parameters is only available starting on Taskfile version v3"
+
+	var buff bytes.Buffer
+	e := task.Executor{
+		Dir:    dir,
+		Stdout: &buff,
+		Stderr: &buff,
+		Silent: true,
+	}
+
+	assert.EqualError(t, e.Setup(), expectedError)
+}
+
 func TestIncludesEmptyMain(t *testing.T) {
 	tt := fileContentTest{
 		Dir:       "testdata/includes_empty",

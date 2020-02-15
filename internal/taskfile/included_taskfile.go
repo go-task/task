@@ -9,8 +9,9 @@ var (
 
 // IncludedTaskfile represents information about included tasksfile
 type IncludedTaskfile struct {
-	Taskfile string
-	Dir      string
+	Taskfile       string
+	Dir            string
+	AdvancedImport bool
 }
 
 // IncludedTaskfiles represents information about included tasksfiles
@@ -31,6 +32,7 @@ func (it *IncludedTaskfile) UnmarshalYAML(unmarshal func(interface{}) error) err
 	if err := unmarshal(&includedTaskfile); err == nil {
 		it.Dir = includedTaskfile.Dir
 		it.Taskfile = includedTaskfile.Taskfile
+		it.AdvancedImport = true
 		return nil
 	}
 
