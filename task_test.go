@@ -546,7 +546,6 @@ func TestIncludes(t *testing.T) {
 			"included_taskfile_without_dir.txt":         "included_taskfile_without_dir",
 			"./module2/included_directory_with_dir.txt": "included_directory_with_dir",
 			"./module2/included_taskfile_with_dir.txt":  "included_taskfile_with_dir",
-			"./module3/os_related.txt":                  runtime.GOOS,
 		},
 	}
 	tt.Run(t)

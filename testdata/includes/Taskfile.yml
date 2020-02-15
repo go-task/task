@@ -1,4 +1,4 @@
-version: '2'
+version: '3'
 
 includes:
   included: ./included
@@ -13,9 +13,6 @@ includes:
   included_taskfile_with_dir:
     taskfile:  ./module2/Taskfile.yml
     dir:  ./module2
-  os_related:
-    taskfile:  ./module3/CustomTaskfile.yml
-    dir:  ./module3
 
 tasks:
   default:
@@ -27,7 +24,6 @@ tasks:
       - task: included_taskfile_without_dir:gen_dir
       - task: included_with_dir:gen_file
       - task: included_taskfile_with_dir:gen_dir
-      - task: os_related:gen
 
   gen:
     cmds:

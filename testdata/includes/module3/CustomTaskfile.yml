@@ -1,6 +1,0 @@
-version: '2'
-
-tasks:
-  gen:
-    cmds:
-      - echo "INVALID" > os_related.txt
