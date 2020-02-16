@@ -6,6 +6,8 @@
   ([#252](https://github.com/go-task/task/issues/252)).
 - Implement short task syntax
   ([#194](https://github.com/go-task/task/issues/194), [#240](https://github.com/go-task/task/pull/240)).
+- Added option to make included Taskfile run commands on its own directory
+  ([#260](https://github.com/go-task/task/issues/260), [#144](https://github.com/go-task/task/issues/144))
 
 # v3.0.0 - Preview 2
 

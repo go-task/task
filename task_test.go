@@ -540,12 +540,30 @@ func TestIncludes(t *testing.T) {
 		Target:    "default",
 		TrimSpace: true,
 		Files: map[string]string{
-			"main.txt":               "main",
-			"included_directory.txt": "included_directory",
-			"included_taskfile.txt":  "included_taskfile",
+			"main.txt":                                  "main",
+			"included_directory.txt":                    "included_directory",
+			"included_directory_without_dir.txt":        "included_directory_without_dir",
+			"included_taskfile_without_dir.txt":         "included_taskfile_without_dir",
+			"./module2/included_directory_with_dir.txt": "included_directory_with_dir",
+			"./module2/included_taskfile_with_dir.txt":  "included_taskfile_with_dir",
 		},
 	}
 	tt.Run(t)
+}
+
+func TestIncorrectVersionIncludes(t *testing.T) {
+	const dir = "testdata/incorrect_includes"
+	expectedError := "task: Import with additional parameters is only available starting on Taskfile version v3"
+
+	var buff bytes.Buffer
+	e := task.Executor{
+		Dir:    dir,
+		Stdout: &buff,
+		Stderr: &buff,
+		Silent: true,
+	}
+
+	assert.EqualError(t, e.Setup(), expectedError)
 }
 
 func TestIncludesEmptyMain(t *testing.T) {

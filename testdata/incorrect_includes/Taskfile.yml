@@ -1,0 +1,10 @@
+version: '2.6'
+
+includes:
+  included:
+    taskfile:  ./included
+
+tasks:
+  default:
+    cmds:
+      - task: gen
