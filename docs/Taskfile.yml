@@ -9,4 +9,4 @@ tasks:
   serve:
     desc: Serves the documentation site locally
     cmds:
-      - docsify serve docs
+      - docsify serve .
