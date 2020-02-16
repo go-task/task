@@ -124,6 +124,21 @@ namespace. So, you'd call `task docs:serve` to run the `serve` task from
 `documentation/Taskfile.yml` or `task docker:build` to run the `build` task
 from the `DockerTasks.yml` file.
 
+### Directory of included Taskfile
+
+By default, included Taskfile's tasks are ran in the current directory, even
+if the Taskfile is in another directory, but you can force its tasks to run
+in another directory by using this alternative syntax:
+
+```yaml
+version: '3'
+
+includes:
+  docs:
+    taskfile: ./docs/Taskfile.yml
+    dir: ./docs
+```
+
 > The included Taskfiles must be using the same schema version the main
 > Taskfile uses.
 
