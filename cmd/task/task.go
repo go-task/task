@@ -2,12 +2,10 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 
 	"github.com/blang/semver"
 	"github.com/rhysd/go-github-selfupdate/selfupdate"
@@ -43,11 +41,21 @@ hello:
 Options:
 `
 
-func doSelfUpdate() {
+func doSelfUpdate(requireVersion string) {
 	v, err := semver.Make(version)
 	if err != nil {
 		log.Println("Unable to detect version:", err)
 		return
+	}
+	if requireVersion != "" {
+		rv, err := semver.Make(requireVersion)
+		if err != nil {
+			log.Println("Invalid version requirement given:", err)
+			return
+		}
+		if v.Equals(rv) {
+			return
+		}
 	}
 	latest, err := selfupdate.UpdateSelf(v, repo)
 	if err != nil {
@@ -61,30 +69,6 @@ func doSelfUpdate() {
 		log.Println("Successfully updated to version", latest.Version)
 		log.Println("Release note:\n", latest.ReleaseNotes)
 	}
-}
-
-func checkForUpdate() {
-	stat, err := os.Stat("/tmp/.task-update-check")
-	if err == nil && time.Since(stat.ModTime()) < time.Hour*24 {
-		return
-	}
-	latest, found, err := selfupdate.DetectLatest(repo)
-	if err != nil {
-		log.Println("Error occurred while detecting version:", err)
-		return
-	}
-
-	v, err := semver.Make(version)
-	if err != nil {
-		log.Println("Unable to detect version:", err)
-		return
-	}
-	if !found || latest.Version.LTE(v) {
-		log.Println("Current version is the latest")
-		return
-	}
-	fmt.Printf("\n\t **** New version available. %s ****\n\t Run: task --update\n\n", latest.Version)
-	os.OpenFile("/tmp/.task-update-check", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 }
 
 func main() {
@@ -110,6 +94,7 @@ func main() {
 		silent           bool
 		dry              bool
 		update           bool
+		requireVersion   string
 		dir              string
 		summary          bool
 		output           string
@@ -120,6 +105,7 @@ func main() {
 	pflag.BoolVarP(&list, "list", "l", false, "lists tasks of current Taskfile")
 	pflag.BoolVar(&update, "update", false, "selfupdate task")
 	pflag.StringVarP(&taskfileLocation, "config", "c", "Taskfile.yml", "Specify taskfile location")
+	pflag.StringVar(&requireVersion, "require-version", "", "Expected version")
 	pflag.BoolVar(&listHidden, "list-hidden",
 		false, "lists all tasks")
 	pflag.BoolVar(&withDeps, "with-deps", false, "list all tasks with dependencies")
@@ -139,10 +125,8 @@ func main() {
 		return
 	}
 
-	checkForUpdate()
-
 	if update {
-		doSelfUpdate()
+		doSelfUpdate(requireVersion)
 		return
 	}
 
