@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/user"
 	"path/filepath"
 	"strings"
 
@@ -122,7 +123,13 @@ func RunCommandInDocker(ctx context.Context, opts *RunCommandOptions) error {
 		}
 
 		localPath := volumePaths[0]
-		if !filepath.IsAbs(localPath) {
+		if strings.HasPrefix(localPath, "~") {
+			home, err := user.Current()
+			if err != nil {
+				return err
+			}
+			localPath = home.HomeDir + localPath[1:]
+		} else if !filepath.IsAbs(localPath) {
 			localPath = filepath.Join(absoluteDir, localPath)
 		}
 
