@@ -25,6 +25,7 @@ import (
 // RunCommandOptions is the options for the RunCommand func
 type RunCommandOptions struct {
 	Image   string
+	Volumes []string
 	Command string
 	Dir     string
 	Env     []string
@@ -74,7 +75,9 @@ func RunCommand(ctx context.Context, opts *RunCommandOptions) error {
 	if err != nil {
 		return err
 	}
-	return r.Run(ctx, p)
+	err = r.Run(ctx, p)
+
+	return err
 }
 
 func RunCommandInDocker(ctx context.Context, opts *RunCommandOptions) error {
@@ -101,6 +104,36 @@ func RunCommandInDocker(ctx context.Context, opts *RunCommandOptions) error {
 		return err
 	}
 
+	var mounts []mount.Mount
+	mounts = append(mounts, mount.Mount{
+		Type:   mount.TypeBind,
+		Source: absoluteDir,
+		Target: absoluteDir,
+	})
+
+	for _, volume := range opts.Volumes {
+		volumePaths := strings.Split(volume, ":")
+
+		var readOnly = false
+		if len(volumePaths) == 3 {
+			readOnly = true
+		} else if len(volumePaths) != 2 {
+			return errors.New(fmt.Sprintf("invalid volume \"%s\"", volume))
+		}
+
+		localPath := volumePaths[0]
+		if !filepath.IsAbs(localPath) {
+			localPath = filepath.Join(absoluteDir, localPath)
+		}
+
+		mounts = append(mounts, mount.Mount{
+			Type:     mount.TypeBind,
+			Source:   localPath,
+			Target:   volumePaths[1],
+			ReadOnly: readOnly,
+		})
+	}
+
 	cont, err := cli.ContainerCreate(
 		context.Background(),
 		&container.Config{
@@ -113,13 +146,7 @@ func RunCommandInDocker(ctx context.Context, opts *RunCommandOptions) error {
 			AttachStdin:  true,
 		},
 		&container.HostConfig{
-			Mounts: []mount.Mount{
-				{
-					Type:   mount.TypeBind,
-					Source: absoluteDir,
-					Target: absoluteDir,
-				},
-			},
+			Mounts: mounts,
 		}, nil, "")
 
 	if err != nil {

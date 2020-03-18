@@ -56,6 +56,18 @@ func (fct fileContentTest) Run(t *testing.T) {
 	}
 }
 
+func TestImageVolume(t *testing.T) {
+	tt := fileContentTest{
+		Dir:       "testdata/image_volumes",
+		Target:    "default",
+		TrimSpace: false,
+		Files: map[string]string{
+			"version.txt": "test\n",
+		},
+	}
+	tt.Run(t)
+}
+
 func TestImage(t *testing.T) {
 	tt := fileContentTest{
 		Dir:       "testdata/image",
@@ -63,6 +75,18 @@ func TestImage(t *testing.T) {
 		TrimSpace: false,
 		Files: map[string]string{
 			"version.txt": "3.11.3\n",
+		},
+	}
+	tt.Run(t)
+}
+
+func TestDirContext(t *testing.T) {
+	tt := fileContentTest{
+		Dir:       "testdata/dir/context",
+		Target:    "default",
+		TrimSpace: false,
+		Files: map[string]string{
+			"dir.txt": "3.11.3\n",
 		},
 	}
 	tt.Run(t)

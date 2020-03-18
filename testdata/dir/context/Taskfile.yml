@@ -1,0 +1,8 @@
+version: '2'
+
+tasks:
+  default:
+    dir: subdir
+    cmds:
+      - cd ..
+      - pwd > dir.txt

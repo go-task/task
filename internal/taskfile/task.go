@@ -11,6 +11,7 @@ type Tasks map[string]*Task
 type Task struct {
 	Task          string
 	Image         string
+	Volumes       []string
 	Cmds          []*Cmd
 	Deps          []*Dep
 	Desc          string
@@ -49,6 +50,7 @@ func (t *Task) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	var task struct {
 		Cmds          []*Cmd
 		Image         string
+		Volumes       []string
 		Deps          []*Dep
 		Desc          string
 		Summary       string
@@ -67,6 +69,7 @@ func (t *Task) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	if err := unmarshal(&task); err == nil {
 		t.Cmds = task.Cmds
 		t.Image = task.Image
+		t.Volumes = task.Volumes
 		t.Deps = task.Deps
 		t.Desc = task.Desc
 		t.Summary = task.Summary

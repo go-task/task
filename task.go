@@ -342,6 +342,7 @@ func (e *Executor) runCommand(ctx context.Context, t *taskfile.Task, call taskfi
 		err := execext.RunCommand(ctx, &execext.RunCommandOptions{
 			Command: cmd.Cmd,
 			Image:   t.Image,
+			Volumes: t.Volumes,
 			Dir:     t.Dir,
 			Env:     getEnviron(t),
 			Stdin:   e.Stdin,
