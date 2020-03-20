@@ -32,15 +32,28 @@ func (c *Checksum) IsUpToDate() (bool, error) {
 	data, _ := ioutil.ReadFile(checksumFile)
 	oldMd5 := strings.TrimSpace(string(data))
 
-	sources, err := globs(c.Dir, c.Sources)
+	var h = md5.New()
+	matcher, err := NewMatcher(c.Dir, c.Sources)
 	if err != nil {
 		return false, err
 	}
+	if err := matcher.Match(func(p string) error {
+		if _, err := io.WriteString(h, p); err != nil {
+			return err
+		}
 
-	newMd5, err := c.checksum(sources...)
-	if err != nil {
-		return false, nil
+		f, err := os.Open(p)
+		if err != nil {
+			return err
+		}
+		_, err = io.Copy(h, f)
+		f.Close()
+		return err
+	}); err != nil {
+		return false, err
 	}
+
+	newMd5 := fmt.Sprintf("%x", h.Sum(nil))
 
 	if !c.Dry {
 		_ = os.MkdirAll(filepath.Join(c.Dir, ".task", "checksum"), 0755)

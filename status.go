@@ -3,6 +3,7 @@ package task
 import (
 	"context"
 	"fmt"
+	"os"
 
 	"github.com/go-task/task/v2/internal/execext"
 	"github.com/go-task/task/v2/internal/logger"
@@ -50,6 +51,15 @@ func (e *Executor) statusOnError(t *taskfile.Task) error {
 }
 
 func (e *Executor) getStatusChecker(t *taskfile.Task) (status.Checker, error) {
+	dir := t.Dir
+	if dir == "" {
+		var err error
+		dir, err = os.Getwd()
+		if err != nil {
+			return nil, err
+		}
+	}
+	t.Dir = dir
 	method := t.Method
 	if method == "" {
 		method = e.Taskfile.Method

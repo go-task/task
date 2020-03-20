@@ -302,6 +302,7 @@ tasks:
     cmds:
       - minify -o public/script.js src/js
     sources:
+      - "!src/js/node_modules/**" # don't include specify directory files
       - src/js/**/*.js
     generates:
       - public/script.js
