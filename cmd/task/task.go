@@ -124,6 +124,12 @@ func main() {
 
 		OutputStyle: output,
 	}
+
+	if list && silent {
+		e.PrintTaskNames() // silently ignore any errors
+		return
+	}
+
 	if err := e.Setup(); err != nil {
 		log.Fatal(err)
 	}
