@@ -159,6 +159,8 @@ func Document(cfg *Config, word *syntax.Word) (string, error) {
 	return cfg.fieldJoin(field), nil
 }
 
+const patMode = pattern.Filenames | pattern.Braces
+
 // Pattern expands a single shell word as a pattern, using syntax.QuotePattern
 // on any non-quoted parts of the input word. The result can be used on
 // syntax.TranslatePattern directly.
@@ -174,7 +176,7 @@ func Pattern(cfg *Config, word *syntax.Word) (string, error) {
 	buf := cfg.strBuilder()
 	for _, part := range field {
 		if part.quote > quoteNone {
-			buf.WriteString(pattern.QuoteMeta(part.val))
+			buf.WriteString(pattern.QuoteMeta(part.val, patMode))
 		} else {
 			buf.WriteString(part.val)
 		}
@@ -345,11 +347,11 @@ func (cfg *Config) escapedGlobField(parts []fieldPart) (escaped string, glob boo
 	buf := cfg.strBuilder()
 	for _, part := range parts {
 		if part.quote > quoteNone {
-			buf.WriteString(pattern.QuoteMeta(part.val))
+			buf.WriteString(pattern.QuoteMeta(part.val, patMode))
 			continue
 		}
 		buf.WriteString(part.val)
-		if pattern.HasMeta(part.val) {
+		if pattern.HasMeta(part.val, patMode) {
 			glob = true
 		}
 	}
@@ -367,9 +369,10 @@ func Fields(cfg *Config, words ...*syntax.Word) ([]string, error) {
 	fields := make([]string, 0, len(words))
 	dir := cfg.envGet("PWD")
 	for _, word := range words {
-		afterBraces := []*syntax.Word{word}
-		if syntax.SplitBraces(word) {
-			afterBraces = Braces(word)
+		word := *word // make a copy, since SplitBraces replaces the Parts slice
+		afterBraces := []*syntax.Word{&word}
+		if syntax.SplitBraces(&word) {
+			afterBraces = Braces(&word)
 		}
 		for _, word2 := range afterBraces {
 			wfields, err := cfg.wordFields(word2.Parts)
@@ -540,7 +543,6 @@ func (cfg *Config) wordFields(wps []syntax.WordPart) ([][]fieldPart, error) {
 			}
 			curField = append(curField, fp)
 		case *syntax.DblQuoted:
-			allowEmpty = true
 			if len(x.Parts) == 1 {
 				pe, _ := x.Parts[0].(*syntax.ParamExp)
 				if elems := cfg.quotedElems(pe); elems != nil {
@@ -556,6 +558,7 @@ func (cfg *Config) wordFields(wps []syntax.WordPart) ([][]fieldPart, error) {
 					continue
 				}
 			}
+			allowEmpty = true
 			wfield, err := cfg.wordField(x.Parts, quoteDouble)
 			if err != nil {
 				return nil, err

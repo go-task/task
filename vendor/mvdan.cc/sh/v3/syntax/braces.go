@@ -129,7 +129,6 @@ func SplitBraces(word *Word) bool {
 					broken = true
 				}
 				if !broken {
-					br.Chars = chars[0]
 					acc.Parts = append(acc.Parts, br)
 					break
 				}

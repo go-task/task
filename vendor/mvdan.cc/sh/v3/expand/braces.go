@@ -24,13 +24,13 @@ func Braces(word *syntax.Word) []*syntax.Word {
 			continue
 		}
 		if br.Sequence {
-			var from, to int
-			if br.Chars {
+			chars := false
+			from, err1 := strconv.Atoi(br.Elems[0].Lit())
+			to, err2 := strconv.Atoi(br.Elems[1].Lit())
+			if err1 != nil || err2 != nil {
+				chars = true
 				from = int(br.Elems[0].Lit()[0])
 				to = int(br.Elems[1].Lit()[0])
-			} else {
-				from, _ = strconv.Atoi(br.Elems[0].Lit())
-				to, _ = strconv.Atoi(br.Elems[1].Lit())
 			}
 			upward := from <= to
 			incr := 1
@@ -54,7 +54,7 @@ func Braces(word *syntax.Word) []*syntax.Word {
 				next := *word
 				next.Parts = next.Parts[i+1:]
 				lit := &syntax.Lit{}
-				if br.Chars {
+				if chars {
 					lit.Value = string(n)
 				} else {
 					lit.Value = strconv.Itoa(n)

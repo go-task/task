@@ -16,8 +16,8 @@ import (
 	"strings"
 )
 
-// TODO: support Mode in the other APIs too
-
+// Mode can be used to supply a number of options to the package's functions.
+// Not all functions change their behavior with all of the options below.
 type Mode uint
 
 const (
@@ -254,13 +254,17 @@ func charClass(s string) (string, error) {
 // This can be useful to avoid extra work, like TranslatePattern. Note that this
 // function cannot be used to avoid QuotePattern, as backslashes are quoted by
 // that function but ignored here.
-func HasMeta(pat string) bool {
+func HasMeta(pat string, mode Mode) bool {
 	for i := 0; i < len(pat); i++ {
 		switch pat[i] {
 		case '\\':
 			i++
 		case '*', '?', '[':
 			return true
+		case '{':
+			if mode&Braces != 0 {
+				return true
+			}
 		}
 	}
 	return false
@@ -270,11 +274,16 @@ func HasMeta(pat string) bool {
 // given text. The returned string is a pattern that matches the literal text.
 //
 // For example, QuoteMeta(`foo*bar?`) returns `foo\*bar\?`.
-func QuoteMeta(pat string) string {
+func QuoteMeta(pat string, mode Mode) string {
 	any := false
 loop:
 	for _, r := range pat {
 		switch r {
+		case '{':
+			if mode&Braces == 0 {
+				continue
+			}
+			fallthrough
 		case '*', '?', '[', '\\':
 			any = true
 			break loop
@@ -288,6 +297,10 @@ loop:
 		switch r {
 		case '*', '?', '[', '\\':
 			buf.WriteByte('\\')
+		case '{':
+			if mode&Braces != 0 {
+				buf.WriteByte('\\')
+			}
 		}
 		buf.WriteRune(r)
 	}

@@ -37,7 +37,7 @@ golang.org/x/xerrors
 golang.org/x/xerrors/internal
 # gopkg.in/yaml.v2 v2.2.2
 gopkg.in/yaml.v2
-# mvdan.cc/sh/v3 v3.0.0-beta1
+# mvdan.cc/sh/v3 v3.0.2
 mvdan.cc/sh/v3/expand
 mvdan.cc/sh/v3/interp
 mvdan.cc/sh/v3/pattern
