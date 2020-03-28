@@ -6,7 +6,7 @@ import (
 	"github.com/go-task/task/v2/internal/taskfile"
 
 	"github.com/stretchr/testify/assert"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 func TestPreconditionParse(t *testing.T) {
