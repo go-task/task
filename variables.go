@@ -28,6 +28,7 @@ func (e *Executor) CompiledTask(call taskfile.Call) (*taskfile.Task, error) {
 	new := taskfile.Task{
 		Task:        origTask.Task,
 		Desc:        r.Replace(origTask.Desc),
+		Summary:     r.Replace(origTask.Summary),
 		Sources:     r.ReplaceSlice(origTask.Sources),
 		Generates:   r.ReplaceSlice(origTask.Generates),
 		Dir:         r.Replace(origTask.Dir),

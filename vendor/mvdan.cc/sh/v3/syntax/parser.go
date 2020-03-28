@@ -14,7 +14,7 @@ import (
 
 // ParserOption is a function which can be passed to NewParser
 // to alter its behaviour. To apply option to existing Parser
-// call it directly, for example syntax.KeepComments(true)(parser).
+// call it directly, for example KeepComments(true)(parser).
 type ParserOption func(*Parser)
 
 // KeepComments makes the parser parse comments and attach them to
@@ -524,9 +524,13 @@ func (p *Parser) unquotedWordPart(buf *bytes.Buffer, wp WordPart, quotes bool) (
 }
 
 func (p *Parser) doHeredocs() {
+	hdocs := p.heredocs[p.buriedHdocs:]
+	if len(hdocs) == 0 {
+		// Nothing do do; don't even issue a read.
+		return
+	}
 	p.rune() // consume '\n', since we know p.tok == _Newl
 	old := p.quote
-	hdocs := p.heredocs[p.buriedHdocs:]
 	p.heredocs = p.heredocs[:p.buriedHdocs]
 	for i, r := range hdocs {
 		if p.err != nil {
@@ -840,7 +844,7 @@ func (p *Parser) invalidStmtStart() {
 }
 
 func (p *Parser) getWord() *Word {
-	if parts := p.wordParts(); len(parts) > 0 {
+	if parts := p.wordParts(); len(parts) > 0 && p.err == nil {
 		return p.word(parts)
 	}
 	return nil
@@ -1546,13 +1550,15 @@ func (p *Parser) hasValidIdent() bool {
 	}
 	if end := p.eqlOffs; end > 0 {
 		if p.val[end-1] == '+' && p.lang != LangPOSIX {
-			end--
+			end-- // a+=x
 		}
 		if ValidName(p.val[:end]) {
 			return true
 		}
+	} else if !ValidName(p.val) {
+		return false // *[i]=x
 	}
-	return p.r == '['
+	return p.r == '[' // a[i]=x
 }
 
 func (p *Parser) getAssign(needEqual bool) *Assign {

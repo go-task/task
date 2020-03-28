@@ -745,7 +745,6 @@ func (r *Runner) sub() *Runner {
 		Env:         r.Env,
 		Dir:         r.Dir,
 		Params:      r.Params,
-		Funcs:       r.Funcs,
 		execHandler: r.execHandler,
 		openHandler: r.openHandler,
 		stdin:       r.stdin,
@@ -765,6 +764,10 @@ func (r *Runner) sub() *Runner {
 	r2.cmdVars = make(map[string]string, len(r.cmdVars))
 	for k, v := range r.cmdVars {
 		r2.cmdVars[k] = v
+	}
+	r2.Funcs = make(map[string]*syntax.Stmt, len(r.Funcs))
+	for k, v := range r.Funcs {
+		r2.Funcs[k] = v
 	}
 	r2.dirStack = append(r2.dirBootstrap[:0], r.dirStack...)
 	r2.fillExpandConfig(r.ectx)

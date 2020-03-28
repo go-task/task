@@ -409,9 +409,9 @@ type Word struct {
 func (w *Word) Pos() Pos { return w.Parts[0].Pos() }
 func (w *Word) End() Pos { return w.Parts[len(w.Parts)-1].End() }
 
-// Lit returns the word as a literal value, if the word consists of *syntax.Lit
-// nodes only. An empty string is returned otherwise. Words with multiple
-// literals, which can appear in some edge cases, are handled properly.
+// Lit returns the word as a literal value, if the word consists of *Lit nodes
+// only. An empty string is returned otherwise. Words with multiple literals,
+// which can appear in some edge cases, are handled properly.
 //
 // For example, the word "foo" will return "foo", but the word "foo${bar}" will
 // return "".
@@ -859,12 +859,11 @@ type LetClause struct {
 func (l *LetClause) Pos() Pos { return l.Let }
 func (l *LetClause) End() Pos { return l.Exprs[len(l.Exprs)-1].End() }
 
-// BraceExp represents a Bash brace expression, such as "{x,y}" or "{1..10}".
+// BraceExp represents a Bash brace expression, such as "{a,f}" or "{1..10}".
 //
 // This node will only appear as a result of SplitBraces.
 type BraceExp struct {
 	Sequence bool // {x..y[..incr]} instead of {x,y[,...]}
-	Chars    bool // sequence is of chars, not numbers (TODO: remove)
 	Elems    []*Word
 }
 

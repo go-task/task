@@ -70,7 +70,14 @@ func (e *Executor) Run(ctx context.Context, calls ...taskfile.Call) error {
 	}
 
 	if e.Summary {
-		summary.PrintTasks(e.Logger, e.Taskfile, calls)
+		for i, c := range calls {
+			compiledTask, err := e.CompiledTask(c)
+			if err != nil {
+				return nil
+			}
+			summary.PrintSpaceBetweenSummaries(e.Logger, i)
+			summary.PrintTask(e.Logger, compiledTask)
+		}
 		return nil
 	}
 
