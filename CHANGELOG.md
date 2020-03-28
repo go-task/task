@@ -1,6 +1,6 @@
 # Changelog
 
-# Unreleased
+# v3.0.0 - Preview 3
 
 - Expose `.TASK` variable in templates with the task name
   ([#252](https://github.com/go-task/task/issues/252)).
