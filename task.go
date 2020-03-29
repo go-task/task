@@ -52,7 +52,7 @@ type Executor struct {
 	Output      output.Output
 	OutputStyle string
 
-	taskvars taskfile.Vars
+	taskvars *taskfile.Vars
 
 	taskCallCount map[string]*int32
 	mkdirMutexMap map[string]*sync.Mutex

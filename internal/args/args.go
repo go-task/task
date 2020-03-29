@@ -7,9 +7,9 @@ import (
 )
 
 // Parse parses command line argument: tasks and vars of each task
-func Parse(args ...string) ([]taskfile.Call, taskfile.Vars) {
+func Parse(args ...string) ([]taskfile.Call, *taskfile.Vars) {
 	var calls []taskfile.Call
-	var globals taskfile.Vars
+	var globals *taskfile.Vars
 
 	for _, arg := range args {
 		if !strings.Contains(arg, "=") {
@@ -19,18 +19,16 @@ func Parse(args ...string) ([]taskfile.Call, taskfile.Vars) {
 
 		if len(calls) < 1 {
 			if globals == nil {
-				globals = taskfile.Vars{}
+				globals = &taskfile.Vars{}
 			}
-
 			name, value := splitVar(arg)
-			globals[name] = taskfile.Var{Static: value}
+			globals.Set(name, taskfile.Var{Static: value})
 		} else {
 			if calls[len(calls)-1].Vars == nil {
-				calls[len(calls)-1].Vars = make(taskfile.Vars)
+				calls[len(calls)-1].Vars = &taskfile.Vars{}
 			}
-
-			name, value := splitVar((arg))
-			calls[len(calls)-1].Vars[name] = taskfile.Var{Static: value}
+			name, value := splitVar(arg)
+			calls[len(calls)-1].Vars.Set(name, taskfile.Var{Static: value})
 		}
 	}
 

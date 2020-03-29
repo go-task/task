@@ -10,14 +10,14 @@ type Cmd struct {
 	Cmd         string
 	Silent      bool
 	Task        string
-	Vars        Vars
+	Vars        *Vars
 	IgnoreError bool
 }
 
 // Dep is a task dependency
 type Dep struct {
 	Task string
-	Vars Vars
+	Vars *Vars
 }
 
 var (
@@ -51,7 +51,7 @@ func (c *Cmd) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	}
 	var taskCall struct {
 		Task string
-		Vars Vars
+		Vars *Vars
 	}
 	if err := unmarshal(&taskCall); err == nil {
 		c.Task = taskCall.Task
@@ -70,7 +70,7 @@ func (d *Dep) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	}
 	var taskCall struct {
 		Task string
-		Vars Vars
+		Vars *Vars
 	}
 	if err := unmarshal(&taskCall); err == nil {
 		d.Task = taskCall.Task

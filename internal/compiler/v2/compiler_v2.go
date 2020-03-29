@@ -19,8 +19,8 @@ var _ compiler.Compiler = &CompilerV2{}
 type CompilerV2 struct {
 	Dir string
 
-	Taskvars     taskfile.Vars
-	TaskfileVars taskfile.Vars
+	Taskvars     *taskfile.Vars
+	TaskfileVars *taskfile.Vars
 
 	Expansions int
 
@@ -36,10 +36,10 @@ type CompilerV2 struct {
 // 3. Taskfile variables
 // 4. Taskvars file variables
 // 5. Environment variables
-func (c *CompilerV2) GetVariables(t *taskfile.Task, call taskfile.Call) (taskfile.Vars, error) {
+func (c *CompilerV2) GetVariables(t *taskfile.Task, call taskfile.Call) (*taskfile.Vars, error) {
 	vr := varResolver{c: c, vars: compiler.GetEnviron()}
-	vr.vars["TASK"] = taskfile.Var{Static: t.Task}
-	for _, vars := range []taskfile.Vars{c.Taskvars, c.TaskfileVars, call.Vars, t.Vars} {
+	vr.vars.Set("TASK", taskfile.Var{Static: t.Task})
+	for _, vars := range []*taskfile.Vars{c.Taskvars, c.TaskfileVars, call.Vars, t.Vars} {
 		for i := 0; i < c.Expansions; i++ {
 			vr.merge(vars)
 		}
@@ -49,16 +49,16 @@ func (c *CompilerV2) GetVariables(t *taskfile.Task, call taskfile.Call) (taskfil
 
 type varResolver struct {
 	c    *CompilerV2
-	vars taskfile.Vars
+	vars *taskfile.Vars
 	err  error
 }
 
-func (vr *varResolver) merge(vars taskfile.Vars) {
+func (vr *varResolver) merge(vars *taskfile.Vars) {
 	if vr.err != nil {
 		return
 	}
 	tr := templater.Templater{Vars: vr.vars}
-	for k, v := range vars {
+	vars.Range(func(k string, v taskfile.Var) error {
 		v = taskfile.Var{
 			Static: tr.Replace(v.Static),
 			Sh:     tr.Replace(v.Sh),
@@ -66,10 +66,11 @@ func (vr *varResolver) merge(vars taskfile.Vars) {
 		static, err := vr.c.HandleDynamicVar(v)
 		if err != nil {
 			vr.err = err
-			return
+			return err
 		}
-		vr.vars[k] = taskfile.Var{Static: static}
-	}
+		vr.vars.Set(k, taskfile.Var{Static: static})
+		return nil
+	})
 	vr.err = tr.Err()
 }
 

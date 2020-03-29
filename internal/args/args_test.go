@@ -14,7 +14,7 @@ func TestArgs(t *testing.T) {
 	tests := []struct {
 		Args            []string
 		ExpectedCalls   []taskfile.Call
-		ExpectedGlobals taskfile.Vars
+		ExpectedGlobals *taskfile.Vars
 	}{
 		{
 			Args: []string{"task-a", "task-b", "task-c"},
@@ -29,16 +29,22 @@ func TestArgs(t *testing.T) {
 			ExpectedCalls: []taskfile.Call{
 				{
 					Task: "task-a",
-					Vars: taskfile.Vars{
-						"FOO": taskfile.Var{Static: "bar"},
+					Vars: &taskfile.Vars{
+						Keys: []string{"FOO"},
+						Mapping: map[string]taskfile.Var{
+							"FOO": taskfile.Var{Static: "bar"},
+						},
 					},
 				},
 				{Task: "task-b"},
 				{
 					Task: "task-c",
-					Vars: taskfile.Vars{
-						"BAR": taskfile.Var{Static: "baz"},
-						"BAZ": taskfile.Var{Static: "foo"},
+					Vars: &taskfile.Vars{
+						Keys: []string{"BAR", "BAZ"},
+						Mapping: map[string]taskfile.Var{
+							"BAR": taskfile.Var{Static: "baz"},
+							"BAZ": taskfile.Var{Static: "foo"},
+						},
 					},
 				},
 			},
@@ -48,8 +54,11 @@ func TestArgs(t *testing.T) {
 			ExpectedCalls: []taskfile.Call{
 				{
 					Task: "task-a",
-					Vars: taskfile.Vars{
-						"CONTENT": taskfile.Var{Static: "with some spaces"},
+					Vars: &taskfile.Vars{
+						Keys: []string{"CONTENT"},
+						Mapping: map[string]taskfile.Var{
+							"CONTENT": taskfile.Var{Static: "with some spaces"},
+						},
 					},
 				},
 			},
@@ -60,8 +69,11 @@ func TestArgs(t *testing.T) {
 				{Task: "task-a"},
 				{Task: "task-b"},
 			},
-			ExpectedGlobals: taskfile.Vars{
-				"FOO": {Static: "bar"},
+			ExpectedGlobals: &taskfile.Vars{
+				Keys: []string{"FOO"},
+				Mapping: map[string]taskfile.Var{
+					"FOO": {Static: "bar"},
+				},
 			},
 		},
 		{
@@ -81,9 +93,12 @@ func TestArgs(t *testing.T) {
 			ExpectedCalls: []taskfile.Call{
 				{Task: "default"},
 			},
-			ExpectedGlobals: taskfile.Vars{
-				"FOO": {Static: "bar"},
-				"BAR": {Static: "baz"},
+			ExpectedGlobals: &taskfile.Vars{
+				Keys: []string{"FOO", "BAR"},
+				Mapping: map[string]taskfile.Var{
+					"FOO": {Static: "bar"},
+					"BAR": {Static: "baz"},
+				},
 			},
 		},
 	}
