@@ -41,5 +41,11 @@ func (tf *Taskfile) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	if tf.Expansions <= 0 {
 		tf.Expansions = 2
 	}
+	if tf.Vars == nil {
+		tf.Vars = &Vars{}
+	}
+	if tf.Env == nil {
+		tf.Env = &Vars{}
+	}
 	return nil
 }

@@ -50,9 +50,6 @@ func (vs *Vars) Merge(other *Vars) {
 
 // Set sets a value to a given key
 func (vs *Vars) Set(key string, value Var) {
-	if vs == nil {
-		vs = &Vars{}
-	}
 	if vs.Mapping == nil {
 		vs.Mapping = make(map[string]Var, 1)
 	}
