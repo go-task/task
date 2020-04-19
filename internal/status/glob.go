@@ -8,23 +8,22 @@ import (
 
 	"github.com/go-task/task/v2/internal/execext"
 
-	gobwas "github.com/gobwas/glob"
 	"github.com/mattn/go-zglob"
 )
 
 // Matcher represents a matcher to sources
 type Matcher struct {
-	dir string
-	includes []gobwas.Glob
-	excludes []gobwas.Glob
+	dir      string
+	includes []string
+	excludes []string
 }
 
 // NewMatcher creates a Matcher
 func NewMatcher(dir string, globs []string) (*Matcher, error) {
-	var sm = Matcher {
-		dir: dir,
-		includes: make([]gobwas.Glob, 0, len(globs)),
-		excludes: make([]gobwas.Glob, 0, len(globs)/2+1),
+	var sm = Matcher{
+		dir:      dir,
+		includes: make([]string, 0, len(globs)),
+		excludes: make([]string, 0, len(globs)/2+1),
 	}
 
 	for _, g := range globs {
@@ -38,9 +37,9 @@ func NewMatcher(dir string, globs []string) (*Matcher, error) {
 		}
 
 		if isExclude {
-			sm.excludes = append(sm.excludes, gobwas.MustCompile(g))
+			sm.excludes = append(sm.excludes, g)
 		} else {
-			sm.includes = append(sm.includes, gobwas.MustCompile(g))
+			sm.includes = append(sm.includes, g)
 		}
 	}
 
@@ -49,7 +48,7 @@ func NewMatcher(dir string, globs []string) (*Matcher, error) {
 
 // Match matches the files and invoke the call back function until there is an error.
 func (s Matcher) Match(callback func(p string) error) error {
-	return filepath.Walk(s.dir, func(path string, info os.FileInfo, err error) error{
+	return filepath.Walk(s.dir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
@@ -63,22 +62,34 @@ func (s Matcher) Match(callback func(p string) error) error {
 		}
 
 		for _, g := range s.excludes {
-			if g.Match(rPath) {
+			matched, err := zglob.Match(g, rPath)
+			if err != nil {
+				return err
+			} else if matched {
 				return nil
 			}
 		}
 
-		for _, g := range s.includes {
-			if g.Match(rPath) {
-				if err := callback(path); err != nil {
+		// if there is no includes, then all non-excludes files will be add to checksum
+		if len(s.includes) == 0 {
+			if err := callback(path); err != nil {
+				return err
+			}
+		} else {
+			for _, g := range s.includes {
+				matched, err := zglob.Match(g, rPath)
+				if err != nil {
 					return err
+				} else if matched {
+					if err := callback(path); err != nil {
+						return err
+					}
 				}
 			}
 		}
 		return nil
 	})
 }
-
 
 func globs(dir string, globs []string) ([]string, error) {
 	files := make([]string, 0)

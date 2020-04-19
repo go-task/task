@@ -4,14 +4,6 @@ require (
 	github.com/fatih/color v1.7.0
 	github.com/go-task/slim-sprig v0.0.0-20191103011349-ba7d6a531428
 	github.com/mattn/go-colorable v0.1.2 // indirect
-	github.com/Masterminds/semver v1.4.2 // indirect
-	github.com/Masterminds/sprig v2.16.0+incompatible
-	github.com/aokoli/goutils v1.0.1 // indirect
-	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/gobwas/glob v0.2.3
-	github.com/google/uuid v1.0.0 // indirect
-	github.com/huandu/xstrings v1.1.0 // indirect
-	github.com/imdario/mergo v0.3.6 // indirect
 	github.com/mattn/go-zglob v0.0.1
 	github.com/radovskyb/watcher v1.0.5
 	github.com/spf13/pflag v1.0.3
