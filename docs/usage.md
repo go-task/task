@@ -321,8 +321,9 @@ Task will compare the modification date/time of the files to determine if it's
 necessary to run the task. If not, it will just print a message like
 `Task "js" is up to date`.
 
-The `sources` support wildcard, we use glob library, please see https://github.com/gobwas/glob
-to know more details.
+You can also add `!` before the pattern so that it will ignore all that matched files.
+If you have only exclude pattern but no include pattern, all non-exclude files will 
+be included.
 
 If you prefer this check to be made by the content of the files, instead of
 its timestamp, just set the `method` property to `checksum`.
