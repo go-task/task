@@ -12,9 +12,10 @@ require (
 	github.com/radovskyb/watcher v1.0.5
 	github.com/spf13/pflag v1.0.3
 	github.com/stretchr/testify v1.4.0
+	golang.org/x/crypto v0.0.0-20191002192127-34f69633bfdc // indirect
 	golang.org/x/sync v0.0.0-20190911185100-cd5d95a43a6e
 	gopkg.in/yaml.v2 v2.2.2
-	mvdan.cc/sh/v3 v3.0.2
+	mvdan.cc/sh/v3 v3.1.0
 )
 
 go 1.13
