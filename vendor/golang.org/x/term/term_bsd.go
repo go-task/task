@@ -2,9 +2,12 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-package terminal
+// +build darwin dragonfly freebsd netbsd openbsd
 
-import "golang.org/x/sys/unix"
+package term
 
-const ioctlReadTermios = unix.TCGETS
-const ioctlWriteTermios = unix.TCSETS
+import (
+	"golang.org/x/sys/unix"
+)
+
+const ioctlReadTermios = unix.TIOCGETA

@@ -4,6 +4,7 @@
 package interp
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"io"
@@ -53,7 +54,7 @@ func (r *Runner) builtinCode(ctx context.Context, pos syntax.Pos, name string, a
 		r.exitShell = true
 		switch len(args) {
 		case 0:
-			return r.exit
+			return r.lastExit
 		case 1:
 			n, err := strconv.Atoi(args[0])
 			if err != nil {
@@ -215,6 +216,20 @@ func (r *Runner) builtinCode(ctx context.Context, pos syntax.Pos, name string, a
 	case "type":
 		anyNotFound := false
 		for _, arg := range args {
+			if als, ok := r.alias[arg]; ok && r.opts[optExpandAliases] {
+				var buf bytes.Buffer
+				if len(als.args) > 0 {
+					printer := syntax.NewPrinter()
+					printer.Print(&buf, &syntax.CallExpr{
+						Args: als.args,
+					})
+				}
+				if als.blank {
+					buf.WriteByte(' ')
+				}
+				r.outf("%s is aliased to `%s'\n", arg, &buf)
+				continue
+			}
 			if _, ok := r.Funcs[arg]; ok {
 				r.outf("%s is a function\n", arg)
 				continue
@@ -223,7 +238,7 @@ func (r *Runner) builtinCode(ctx context.Context, pos syntax.Pos, name string, a
 				r.outf("%s is a shell builtin\n", arg)
 				continue
 			}
-			if path, err := exec.LookPath(arg); err == nil {
+			if path, err := LookPath(expandEnv{r}, arg); err == nil {
 				r.outf("%s is %s\n", arg, path)
 				continue
 			}
@@ -260,14 +275,33 @@ func (r *Runner) builtinCode(ctx context.Context, pos syntax.Pos, name string, a
 			r.errf("source: %v\n", err)
 			return 1
 		}
+
+		// Keep the current versions of some fields we might modify.
 		oldParams := r.Params
-		r.Params = args[1:]
+		oldSourceSetParams := r.sourceSetParams
 		oldInSource := r.inSource
-		r.inSource = true
+
+		// If we run "source file args...", set said args as parameters.
+		// Otherwise, keep the current parameters.
+		sourceArgs := len(args[1:]) > 0
+		if sourceArgs {
+			r.Params = args[1:]
+			r.sourceSetParams = false
+		}
+		// We want to track if the sourced file explicitly sets the
+		// paramters.
+		r.sourceSetParams = false
+		r.inSource = true // know that we're inside a sourced script.
 		r.stmts(ctx, file.Stmts)
 
-		r.Params = oldParams
+		// If we modified the parameters and the sourced file didn't
+		// explicitly set them, we restore the old ones.
+		if sourceArgs && !r.sourceSetParams {
+			r.Params = oldParams
+		}
+		r.sourceSetParams = oldSourceSetParams
 		r.inSource = oldInSource
+
 		if code, ok := r.err.(returnStatus); ok {
 			r.err = nil
 			return int(code)
@@ -296,7 +330,7 @@ func (r *Runner) builtinCode(ctx context.Context, pos syntax.Pos, name string, a
 		}
 		return oneIf(r.bashTest(ctx, expr, true) == "")
 	case "exec":
-		// TODO: Consider syscall.Exec, i.e. actually replacing
+		// TODO: Consider unix.Exec, i.e. actually replacing
 		// the process. It's in theory what a shell should do,
 		// but in practice it would kill the entire Go process
 		// and it's not available on Windows.
@@ -304,8 +338,8 @@ func (r *Runner) builtinCode(ctx context.Context, pos syntax.Pos, name string, a
 			r.keepRedirs = true
 			break
 		}
-		r.exec(ctx, args)
 		r.exitShell = true
+		r.exec(ctx, args)
 		return r.exit
 	case "command":
 		show := false
@@ -560,8 +594,66 @@ func (r *Runner) builtinCode(ctx context.Context, pos syntax.Pos, name string, a
 		}
 		r.updateExpandOpts()
 
+	case "alias":
+		show := func(name string, als alias) {
+			var buf bytes.Buffer
+			if len(als.args) > 0 {
+				printer := syntax.NewPrinter()
+				printer.Print(&buf, &syntax.CallExpr{
+					Args: als.args,
+				})
+			}
+			if als.blank {
+				buf.WriteByte(' ')
+			}
+			r.outf("alias %s='%s'\n", name, &buf)
+		}
+
+		if len(args) == 0 {
+			for name, als := range r.alias {
+				show(name, als)
+			}
+		}
+		for _, name := range args {
+			i := strings.IndexByte(name, '=')
+			if i < 1 { // don't save an empty name
+				als, ok := r.alias[name]
+				if !ok {
+					r.errf("alias: %q not found\n", name)
+					continue
+				}
+				show(name, als)
+				continue
+			}
+
+			// TODO: parse any CallExpr perhaps, or even any Stmt
+			parser := syntax.NewParser()
+			var words []*syntax.Word
+			src := name[i+1:]
+			if err := parser.Words(strings.NewReader(src), func(w *syntax.Word) bool {
+				words = append(words, w)
+				return true
+			}); err != nil {
+				r.errf("alias: could not parse %q: %v", src, err)
+				continue
+			}
+
+			name = name[:i]
+			if r.alias == nil {
+				r.alias = make(map[string]alias)
+			}
+			r.alias[name] = alias{
+				args:  words,
+				blank: strings.TrimRight(src, " \t") != src,
+			}
+		}
+	case "unalias":
+		for _, name := range args {
+			delete(r.alias, name)
+		}
+
 	default:
-		// "trap", "umask", "alias", "unalias", "fg", "bg",
+		// "trap", "umask", "fg", "bg",
 		panic(fmt.Sprintf("unhandled builtin: %s", name))
 	}
 	return 0

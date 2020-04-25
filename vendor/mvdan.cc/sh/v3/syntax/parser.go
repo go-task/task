@@ -74,7 +74,7 @@ func StopAt(word string) ParserOption {
 
 // NewParser allocates a new Parser and applies any number of options.
 func NewParser(options ...ParserOption) *Parser {
-	p := &Parser{helperBuf: new(bytes.Buffer)}
+	p := &Parser{}
 	for _, opt := range options {
 		opt(p)
 	}
@@ -242,7 +242,7 @@ func (p *Parser) Document(r io.Reader) (*Word, error) {
 	p.src = r
 	p.rune()
 	p.quote = hdocBody
-	p.hdocStop = []byte("MVDAN_CC_SH_SYNTAX_EOF")
+	p.hdocStops = [][]byte{[]byte("MVDAN_CC_SH_SYNTAX_EOF")}
 	p.parsingDoc = true
 	p.next()
 	w := p.getWord()
@@ -298,8 +298,10 @@ type Parser struct {
 	// list of pending heredoc bodies
 	buriedHdocs int
 	heredocs    []*Redirect
-	hdocStop    []byte
-	parsingDoc  bool
+
+	hdocStops [][]byte // stack of end words for open heredocs
+
+	parsingDoc bool // true if using Parser.Document
 
 	// openStmts is how many entire statements we're currently parsing. A
 	// non-zero number means that we require certain tokens or words before
@@ -319,8 +321,6 @@ type Parser struct {
 
 	accComs []Comment
 	curComs *[]Comment
-
-	helperBuf *bytes.Buffer
 
 	litBatch    []Lit
 	wordBatch   []Word
@@ -488,14 +488,14 @@ func (p *Parser) postNested(s saveState) {
 }
 
 func (p *Parser) unquotedWordBytes(w *Word) ([]byte, bool) {
-	p.helperBuf.Reset()
+	var buf bytes.Buffer
 	didUnquote := false
 	for _, wp := range w.Parts {
-		if p.unquotedWordPart(p.helperBuf, wp, false) {
+		if p.unquotedWordPart(&buf, wp, false) {
 			didUnquote = true
 		}
 	}
-	return p.helperBuf.Bytes(), didUnquote
+	return buf.Bytes(), didUnquote
 }
 
 func (p *Parser) unquotedWordPart(buf *bytes.Buffer, wp WordPart, quotes bool) (quoted bool) {
@@ -540,8 +540,8 @@ func (p *Parser) doHeredocs() {
 		if r.Op == DashHdoc {
 			p.quote = hdocBodyTabs
 		}
-		var quoted bool
-		p.hdocStop, quoted = p.unquotedWordBytes(r.Word)
+		stop, quoted := p.unquotedWordBytes(r.Word)
+		p.hdocStops = append(p.hdocStops, stop)
 		if i > 0 && p.r == '\n' {
 			p.rune()
 		}
@@ -551,10 +551,10 @@ func (p *Parser) doHeredocs() {
 			p.next()
 			r.Hdoc = p.getWord()
 		}
-		if p.hdocStop != nil {
-			p.posErr(r.Pos(), "unclosed here-document '%s'",
-				string(p.hdocStop))
+		if stop := p.hdocStops[len(p.hdocStops)-1]; stop != nil {
+			p.posErr(r.Pos(), "unclosed here-document '%s'", stop)
 		}
+		p.hdocStops = p.hdocStops[:len(p.hdocStops)-1]
 	}
 	p.quote = old
 }
@@ -623,14 +623,6 @@ func (p *Parser) followWordTok(tok token, pos Pos) *Word {
 	w := p.getWord()
 	if w == nil {
 		p.followErr(pos, tok.String(), "a word")
-	}
-	return w
-}
-
-func (p *Parser) followWord(s string, pos Pos) *Word {
-	w := p.getWord()
-	if w == nil {
-		p.followErr(pos, s, "a word")
 	}
 	return w
 }
@@ -1893,7 +1885,7 @@ func (p *Parser) gotStmtPipe(s *Stmt, binCmd bool) *Stmt {
 			break
 		}
 		w := p.word(p.wordParts())
-		if p.got(leftParen) && p.err == nil {
+		if p.got(leftParen) {
 			p.posErr(w.Pos(), "invalid func name")
 		}
 		p.callExpr(s, w, false)
@@ -2031,12 +2023,23 @@ func (p *Parser) forClause(s *Stmt) {
 	fc := &ForClause{ForPos: p.pos}
 	p.next()
 	fc.Loop = p.loop(fc.ForPos)
-	fc.DoPos = p.followRsrv(fc.ForPos, "for foo [in words]", "do")
+
+	start, end := "do", "done"
+	if pos, ok := p.gotRsrv("{"); ok {
+		if p.lang == LangPOSIX {
+			p.langErr(pos, "for loops with braces", LangBash, LangMirBSDKorn)
+		}
+		fc.DoPos = pos
+		fc.Braces = true
+		start, end = "{", "}"
+	} else {
+		fc.DoPos = p.followRsrv(fc.ForPos, "for foo [in words]", start)
+	}
 
 	s.Comments = append(s.Comments, p.accComs...)
 	p.accComs = nil
-	fc.Do, fc.DoLast = p.followStmts("do", fc.DoPos, "done")
-	fc.DonePos = p.stmtEnd(fc, "for", "done")
+	fc.Do, fc.DoLast = p.followStmts(start, fc.DoPos, end)
+	fc.DonePos = p.stmtEnd(fc, "for", end)
 	s.Cmd = fc
 }
 
@@ -2107,16 +2110,21 @@ func (p *Parser) selectClause(s *Stmt) {
 func (p *Parser) caseClause(s *Stmt) {
 	cc := &CaseClause{Case: p.pos}
 	p.next()
-	cc.Word = p.followWord("case", cc.Case)
+	cc.Word = p.getWord()
+	if cc.Word == nil {
+		p.followErr(cc.Case, "case", "a word")
+	}
 	end := "esac"
 	p.got(_Newl)
-	if _, ok := p.gotRsrv("{"); ok {
+	if pos, ok := p.gotRsrv("{"); ok {
+		cc.In = pos
+		cc.Braces = true
 		if p.lang != LangMirBSDKorn {
 			p.posErr(cc.Pos(), `"case i {" is a mksh feature`)
 		}
 		end = "}"
 	} else {
-		p.followRsrv(cc.Case, "case x", "in")
+		cc.In = p.followRsrv(cc.Case, "case x", "in")
 	}
 	cc.Items = p.caseItems(end)
 	cc.Last, p.accComs = p.accComs, nil
@@ -2404,9 +2412,7 @@ func (p *Parser) letClause(s *Stmt) {
 func (p *Parser) bashFuncDecl(s *Stmt) {
 	fpos := p.pos
 	if p.next(); p.tok != _LitWord {
-		if w := p.followWord("function", fpos); p.err == nil {
-			p.posErr(w.Pos(), "invalid func name")
-		}
+		p.followErr(fpos, "function", "a name")
 	}
 	name := p.lit(p.pos, p.val)
 	if p.next(); p.got(leftParen) {
