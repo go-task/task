@@ -91,6 +91,10 @@ func (e *Executor) watchTasks(calls ...taskfile.Call) error {
 }
 
 func isContextError(err error) bool {
+	if taskRunErr, ok := err.(*taskRunError); ok {
+		err = taskRunErr.err
+	}
+
 	return err == context.Canceled || err == context.DeadlineExceeded
 }
 
