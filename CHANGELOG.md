@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Supress `context` errors when using the `--watch` flag
+  ([#313](https://github.com/go-task/task/issues/313), [#317](https://github.com/go-task/task/pull/317)).
+
 ## v2.8.0 - 2019-12-07
 
 - Add `--parallel` flag (alias `-p`) to run tasks given by the command line in
