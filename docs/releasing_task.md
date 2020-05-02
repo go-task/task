@@ -4,9 +4,9 @@ The release process of Task is done with the help of
 [GoReleaser][goreleaser]. You can test the release process locally by calling
 the `test-release` task of the Taskfile.
 
-The Travis CI should release automatically when a new
-Git tag is pushed to master, either for the artifact uploading (raw executables
-and DEB and RPM packages)
+[GitHub Actions](https://github.com/go-task/task/actions) should release
+artifacts automatically when a new Git tag is pushed to master
+(raw executables and DEB and RPM packages).
 
 # Homebrew
 
