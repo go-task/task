@@ -1,4 +1,5 @@
-[![Build Status](https://travis-ci.org/go-task/task.svg?branch=master)](https://travis-ci.org/go-task/task)
+![Test](https://github.com/go-task/task/workflows/Test/badge.svg)
+![goreleaser](https://github.com/go-task/task/workflows/goreleaser/badge.svg)
 
 # Task
 
