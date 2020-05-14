@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
 	"os/signal"
@@ -81,7 +82,7 @@ func main() {
 	pflag.Parse()
 
 	if versionFlag {
-		log.Printf("Task version: %s\n", version)
+		fmt.Printf("Task version: %s\n", version)
 		return
 	}
 
