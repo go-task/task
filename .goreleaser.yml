@@ -40,4 +40,4 @@ nfpms:
     formats:
       - deb
       - rpm
-    name_template: "{{.ProjectName}}_{{.Os}}_{{.Arch}}"
+    file_name_template: "{{.ProjectName}}_{{.Os}}_{{.Arch}}"
