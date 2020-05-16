@@ -23,7 +23,12 @@ func (e *Executor) CompiledTask(call taskfile.Call) (*taskfile.Task, error) {
 		return nil, err
 	}
 
-	r := templater.Templater{Vars: vars}
+	v, err := e.parsedVersion()
+	if err != nil {
+		return nil, err
+	}
+
+	r := templater.Templater{Vars: vars, RemoveNoValue: v >= 3.0}
 
 	new := taskfile.Task{
 		Task:        origTask.Task,

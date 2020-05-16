@@ -12,6 +12,7 @@ import (
 
 	"github.com/go-task/task/v2/internal/compiler"
 	compilerv2 "github.com/go-task/task/v2/internal/compiler/v2"
+	compilerv3 "github.com/go-task/task/v2/internal/compiler/v3"
 	"github.com/go-task/task/v2/internal/execext"
 	"github.com/go-task/task/v2/internal/logger"
 	"github.com/go-task/task/v2/internal/output"
@@ -131,9 +132,9 @@ func (e *Executor) Setup() error {
 		Color:   e.Color,
 	}
 
-	v, err := strconv.ParseFloat(e.Taskfile.Version, 64)
+	v, err := e.parsedVersion()
 	if err != nil {
-		return fmt.Errorf(`task: Could not parse taskfile version "%s": %v`, e.Taskfile.Version, err)
+
 	}
 
 	if v < 2 {
@@ -154,12 +155,20 @@ func (e *Executor) Setup() error {
 		e.Logger.Color = false
 	}
 
-	e.Compiler = &compilerv2.CompilerV2{
-		Dir:          e.Dir,
-		Taskvars:     e.taskvars,
-		TaskfileVars: e.Taskfile.Vars,
-		Expansions:   e.Taskfile.Expansions,
-		Logger:       e.Logger,
+	if v < 3 {
+		e.Compiler = &compilerv2.CompilerV2{
+			Dir:          e.Dir,
+			Taskvars:     e.taskvars,
+			TaskfileVars: e.Taskfile.Vars,
+			Expansions:   e.Taskfile.Expansions,
+			Logger:       e.Logger,
+		}
+	} else {
+		e.Compiler = &compilerv3.CompilerV3{
+			Dir:          e.Dir,
+			TaskfileVars: e.Taskfile.Vars,
+			Logger:       e.Logger,
+		}
 	}
 
 	if v < 2.1 && e.Taskfile.Output != "" {
@@ -229,6 +238,14 @@ func (e *Executor) Setup() error {
 		e.mkdirMutexMap[k] = &sync.Mutex{}
 	}
 	return nil
+}
+
+func (e *Executor) parsedVersion() (float64, error) {
+	v, err := strconv.ParseFloat(e.Taskfile.Version, 64)
+	if err != nil {
+		return 0, fmt.Errorf(`task: Could not parse taskfile version "%s": %v`, e.Taskfile.Version, err)
+	}
+	return v, nil
 }
 
 // RunTask runs a task by its name

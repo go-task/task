@@ -2,6 +2,7 @@ package templater
 
 import (
 	"bytes"
+	"strings"
 	"text/template"
 
 	"github.com/go-task/task/v2/internal/taskfile"
@@ -12,7 +13,8 @@ import (
 // happen will be assigned to r.err, and consecutive calls to funcs will just
 // return the zero value.
 type Templater struct {
-	Vars *taskfile.Vars
+	Vars          *taskfile.Vars
+	RemoveNoValue bool
 
 	cacheMap map[string]interface{}
 	err      error
@@ -41,6 +43,9 @@ func (r *Templater) Replace(str string) string {
 	if err = templ.Execute(&b, r.cacheMap); err != nil {
 		r.err = err
 		return ""
+	}
+	if r.RemoveNoValue {
+		return strings.ReplaceAll(b.String(), "<no value>", "")
 	}
 	return b.String()
 }

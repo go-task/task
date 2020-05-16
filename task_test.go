@@ -107,6 +107,20 @@ func TestVarsV2(t *testing.T) {
 	tt.Run(t)
 }
 
+func TestVarsV3(t *testing.T) {
+	tt := fileContentTest{
+		Dir:    "testdata/vars/v3",
+		Target: "default",
+		Files: map[string]string{
+			"missing-var.txt":  "\n",
+			"var-order.txt":    "ABCDEF\n",
+			"dependent-sh.txt": "123456\n",
+			"with-call.txt":    "Hi, ABC123!\n",
+		},
+	}
+	tt.Run(t)
+}
+
 func TestMultilineVars(t *testing.T) {
 	for _, dir := range []string{"testdata/vars/v2/multiline"} {
 		tt := fileContentTest{
