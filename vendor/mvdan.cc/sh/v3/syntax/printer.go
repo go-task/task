@@ -37,6 +37,9 @@ func SwitchCaseIndent(enabled bool) PrinterOption {
 	return func(p *Printer) { p.swtCaseIndent = enabled }
 }
 
+// TODO(v4): consider turning this into a "space all operators" option, to also
+// allow foo=( bar baz ), (( x + y )), and so on.
+
 // SpaceRedirects will put a space after most redirection operators. The
 // exceptions are '>&', '<&', '>(', and '<('.
 func SpaceRedirects(enabled bool) PrinterOption {
@@ -52,11 +55,17 @@ func SpaceRedirects(enabled bool) PrinterOption {
 // run.
 func KeepPadding(enabled bool) PrinterOption {
 	return func(p *Printer) {
-		// TODO: support setting this option to false.
-		if enabled {
+		if enabled && !p.keepPadding {
+			// Enable the flag, and set up the writer wrapper.
 			p.keepPadding = true
 			p.cols.Writer = p.bufWriter.(*bufio.Writer)
 			p.bufWriter = &p.cols
+
+		} else if !enabled && p.keepPadding {
+			// Ensure we reset the state to that of NewPrinter.
+			p.keepPadding = false
+			p.bufWriter = p.cols.Writer
+			p.cols = colCounter{}
 		}
 	}
 }
@@ -66,6 +75,11 @@ func KeepPadding(enabled bool) PrinterOption {
 // whitespace is avoided when possible.
 func Minify(enabled bool) PrinterOption {
 	return func(p *Printer) { p.minify = enabled }
+}
+
+// FunctionNextLine will place a function's opening braces on the next line.
+func FunctionNextLine(enabled bool) PrinterOption {
+	return func(p *Printer) { p.funcNextLine = enabled }
 }
 
 // NewPrinter allocates a new Printer and applies any number of options.
@@ -194,6 +208,7 @@ type Printer struct {
 	spaceRedirects bool
 	keepPadding    bool
 	minify         bool
+	funcNextLine   bool
 
 	wantSpace   bool
 	wantNewline bool
@@ -415,10 +430,8 @@ func (p *Printer) flushHeredocs() {
 					line:      r.Hdoc.Pos().Line(),
 				}
 				p.tabsPrinter.wordParts(r.Hdoc.Parts, true)
-				p.indent()
-			} else {
-				p.indent()
 			}
+			p.indent()
 		} else if r.Hdoc != nil {
 			p.wordParts(r.Hdoc.Parts, true)
 		}
@@ -859,8 +872,7 @@ func (p *Printer) elemJoin(elems []*ArrayElem, last []Comment) {
 			p.comments(c)
 		}
 		if el.Pos().Line() > p.line {
-			p.newline(el.Pos())
-			p.indent()
+			p.newlines(el.Pos())
 		} else if p.wantSpace {
 			p.space()
 		}
@@ -910,11 +922,11 @@ func (p *Printer) stmt(s *Stmt) {
 			p.pendingHdocs = append(p.pendingHdocs, r)
 		}
 	}
+	p.wroteSemi = true
 	switch {
 	case s.Semicolon.IsValid() && s.Semicolon.Line() > p.line:
 		p.bslashNewl()
 		p.WriteByte(';')
-		p.wroteSemi = true
 	case s.Background:
 		if !p.minify {
 			p.space()
@@ -925,6 +937,11 @@ func (p *Printer) stmt(s *Stmt) {
 			p.space()
 		}
 		p.WriteString("|&")
+	default:
+		p.wroteSemi = false
+	}
+	if p.wroteSemi {
+		p.wantSpace = true
 	}
 	p.decLevel()
 }
@@ -962,6 +979,8 @@ func (p *Printer) command(cmd Command, redirs []*Redirect) (startRedirs int) {
 	case *Block:
 		p.WriteByte('{')
 		p.wantSpace = true
+		// Forbid "foo()\n{ bar; }"
+		p.wantNewline = p.wantNewline || p.funcNextLine
 		p.nestedStmts(x.Stmts, x.Last, x.Rbrace)
 		p.semiRsrv("}", x.Rbrace)
 	case *IfClause:
@@ -1040,7 +1059,9 @@ func (p *Printer) command(cmd Command, redirs []*Redirect) (startRedirs int) {
 		}
 		p.writeLit(x.Name.Value)
 		p.WriteString("()")
-		if !p.minify {
+		if p.funcNextLine {
+			p.newline(Pos{})
+		} else if !p.minify {
 			p.space()
 		}
 		p.line = x.Body.Pos().Line()

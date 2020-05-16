@@ -306,10 +306,8 @@ func (cfg *Config) varInd(vr Variable, idx syntax.ArithmExpr) (string, error) {
 		}
 	case Indexed:
 		switch nodeLit(idx) {
-		case "@":
+		case "*", "@":
 			return strings.Join(vr.List, " "), nil
-		case "*":
-			return cfg.ifsJoin(vr.List), nil
 		}
 		i, err := Arithm(cfg, idx)
 		if err != nil {

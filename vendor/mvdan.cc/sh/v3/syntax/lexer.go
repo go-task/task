@@ -174,7 +174,7 @@ func (p *Parser) nextKeepSpaces() {
 		switch {
 		case r == '`' || r == '$':
 			p.tok = p.dqToken(r)
-		case p.hdocStop == nil:
+		case p.hdocStops[:len(p.hdocStops)-1] == nil:
 			p.tok = _Newl
 		default:
 			p.advanceLitHdoc(r)
@@ -912,6 +912,7 @@ func (p *Parser) advanceLitHdoc(r rune) {
 		}
 	}
 	lStart := len(p.litBs) - 1
+	stop := p.hdocStops[len(p.hdocStops)-1]
 	for ; ; r = p.rune() {
 		switch r {
 		case escNewl, '`', '$':
@@ -925,12 +926,12 @@ func (p *Parser) advanceLitHdoc(r rune) {
 					p.val = p.endLit()
 					return
 				}
-			} else if lStart >= 0 && bytes.HasPrefix(p.litBs[lStart:], p.hdocStop) {
+			} else if lStart >= 0 && bytes.HasPrefix(p.litBs[lStart:], stop) {
 				p.val = p.endLit()[:lStart]
 				if p.val == "" {
 					p.tok = _Newl
 				}
-				p.hdocStop = nil
+				p.hdocStops[len(p.hdocStops)-1] = nil
 				return
 			}
 			if r == utf8.RuneSelf {
@@ -950,6 +951,7 @@ func (p *Parser) quotedHdocWord() *Word {
 	r := p.r
 	p.newLit(r)
 	pos := p.getPos()
+	stop := p.hdocStops[len(p.hdocStops)-1]
 	for ; ; r = p.rune() {
 		if r == utf8.RuneSelf {
 			return nil
@@ -963,11 +965,12 @@ func (p *Parser) quotedHdocWord() *Word {
 		for r != utf8.RuneSelf && r != '\n' {
 			if r == escNewl {
 				p.litBs = append(p.litBs, '\\', '\n')
+				break
 			}
 			r = p.rune()
 		}
-		if lStart >= 0 && bytes.HasPrefix(p.litBs[lStart:], p.hdocStop) {
-			p.hdocStop = nil
+		if lStart >= 0 && bytes.HasPrefix(p.litBs[lStart:], stop) {
+			p.hdocStops[len(p.hdocStops)-1] = nil
 			val := p.endLit()[:lStart]
 			if val == "" {
 				return nil

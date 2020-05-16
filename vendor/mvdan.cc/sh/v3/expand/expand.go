@@ -43,6 +43,12 @@ type Config struct {
 	// UnexpectedCommandError.
 	CmdSubst func(io.Writer, *syntax.CmdSubst) error
 
+	// ProcSubst expands a process substitution node.
+	//
+	// Note that this feature is a work in progress, and the signature of
+	// this field might change until #451 is completely fixed.
+	ProcSubst func(*syntax.ProcSubst) (string, error)
+
 	// ReadDir is used for file path globbing. If nil, globbing is disabled.
 	// Use ioutil.ReadDir to use the filesystem directly.
 	ReadDir func(string) ([]os.FileInfo, error)
@@ -473,6 +479,12 @@ func (cfg *Config) wordField(wps []syntax.WordPart, ql quoteLevel) ([]fieldPart,
 				return nil, err
 			}
 			field = append(field, fieldPart{val: strconv.Itoa(n)})
+		case *syntax.ProcSubst:
+			path, err := cfg.ProcSubst(x)
+			if err != nil {
+				return nil, err
+			}
+			field = append(field, fieldPart{val: path})
 		default:
 			panic(fmt.Sprintf("unhandled word part: %T", x))
 		}
@@ -545,7 +557,7 @@ func (cfg *Config) wordFields(wps []syntax.WordPart) ([][]fieldPart, error) {
 		case *syntax.DblQuoted:
 			if len(x.Parts) == 1 {
 				pe, _ := x.Parts[0].(*syntax.ParamExp)
-				if elems := cfg.quotedElems(pe); elems != nil {
+				if elems := cfg.quotedElemFields(pe); elems != nil {
 					for i, elem := range elems {
 						if i > 0 {
 							flush()
@@ -585,6 +597,12 @@ func (cfg *Config) wordFields(wps []syntax.WordPart) ([][]fieldPart, error) {
 				return nil, err
 			}
 			curField = append(curField, fieldPart{val: strconv.Itoa(n)})
+		case *syntax.ProcSubst:
+			path, err := cfg.ProcSubst(x)
+			if err != nil {
+				return nil, err
+			}
+			splitAdd(path)
 		default:
 			panic(fmt.Sprintf("unhandled word part: %T", x))
 		}
@@ -596,20 +614,35 @@ func (cfg *Config) wordFields(wps []syntax.WordPart) ([][]fieldPart, error) {
 	return fields, nil
 }
 
-// quotedElems checks if a parameter expansion is exactly ${@} or ${foo[@]}
-func (cfg *Config) quotedElems(pe *syntax.ParamExp) []string {
-	if pe == nil || pe.Excl || pe.Length || pe.Width {
+// quotedElemFields returns the list of elements resulting from a quoted
+// parameter expansion if it was in the form of ${*}, ${@}, ${foo[*], ${foo[@]},
+// or ${!foo@}.
+func (cfg *Config) quotedElemFields(pe *syntax.ParamExp) []string {
+	if pe == nil || pe.Length || pe.Width {
 		return nil
 	}
-	if pe.Param.Value == "@" {
-		return cfg.Env.Get("@").List
-	}
-	if nodeLit(pe.Index) != "@" {
+	if pe.Excl {
+		if pe.Names == syntax.NamesPrefixWords {
+			return cfg.namesByPrefix(pe.Param.Value)
+		}
 		return nil
 	}
-	vr := cfg.Env.Get(pe.Param.Value)
-	if vr.Kind == Indexed {
-		return vr.List
+	name := pe.Param.Value
+	switch name {
+	case "*":
+		return []string{cfg.ifsJoin(cfg.Env.Get(name).List)}
+	case "@":
+		return cfg.Env.Get(name).List
+	}
+	switch nodeLit(pe.Index) {
+	case "@":
+		if vr := cfg.Env.Get(name); vr.Kind == Indexed {
+			return vr.List
+		}
+	case "*":
+		if vr := cfg.Env.Get(name); vr.Kind == Indexed {
+			return []string{cfg.ifsJoin(vr.List)}
+		}
 	}
 	return nil
 }

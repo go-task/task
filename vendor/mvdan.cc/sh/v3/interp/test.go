@@ -10,7 +10,7 @@ import (
 	"os/exec"
 	"regexp"
 
-	"golang.org/x/crypto/ssh/terminal"
+	"golang.org/x/term"
 
 	"mvdan.cc/sh/v3/expand"
 	"mvdan.cc/sh/v3/syntax"
@@ -163,7 +163,23 @@ func (r *Runner) unTest(ctx context.Context, op syntax.UnTestOperator, x string)
 		info, err := r.stat(x)
 		return err == nil && info.Size() > 0
 	case syntax.TsFdTerm:
-		return terminal.IsTerminal(atoi(x))
+		fd := atoi(x)
+		var f interface{}
+		switch fd {
+		case 0:
+			f = r.stdin
+		case 1:
+			f = r.stdout
+		case 2:
+			f = r.stderr
+		}
+		if f, ok := f.(interface{ Fd() uintptr }); ok {
+			// Support Fd methods such as the one on *os.File.
+			return term.IsTerminal(int(f.Fd()))
+		}
+		// TODO: allow term.IsTerminal here too if running in the
+		// "single process" mode.
+		return false
 	case syntax.TsEmpStr:
 		return x == ""
 	case syntax.TsNempStr:
