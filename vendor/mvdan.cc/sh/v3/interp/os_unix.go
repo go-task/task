@@ -10,7 +10,13 @@ import (
 	"os/user"
 	"strconv"
 	"syscall"
+
+	"golang.org/x/sys/unix"
 )
+
+func mkfifo(path string, mode uint32) error {
+	return unix.Mkfifo(path, mode)
+}
 
 // hasPermissionToDir returns if the OS current user has execute permission
 // to the given directory

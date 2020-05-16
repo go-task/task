@@ -3,7 +3,14 @@
 
 package interp
 
-import "os"
+import (
+	"fmt"
+	"os"
+)
+
+func mkfifo(path string, mode uint32) error {
+	return fmt.Errorf("unsupported")
+}
 
 // hasPermissionToDir is a no-op on Windows.
 func hasPermissionToDir(info os.FileInfo) bool {

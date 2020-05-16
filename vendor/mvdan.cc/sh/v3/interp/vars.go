@@ -60,7 +60,7 @@ func (r *Runner) lookupVar(name string) expand.Variable {
 	case "@", "*":
 		vr.Kind, vr.List = expand.Indexed, r.Params
 	case "?":
-		vr.Kind, vr.Str = expand.String, strconv.Itoa(r.exit)
+		vr.Kind, vr.Str = expand.String, strconv.Itoa(r.lastExit)
 	case "$":
 		vr.Kind, vr.Str = expand.String, strconv.Itoa(os.Getpid())
 	case "PPID":

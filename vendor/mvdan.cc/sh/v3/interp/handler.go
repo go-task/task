@@ -113,8 +113,11 @@ func DefaultExecHandler(killTimeout time.Duration) ExecHandlerFunc {
 			// started, but errored - default to 1 if OS
 			// doesn't have exit statuses
 			if status, ok := x.Sys().(syscall.WaitStatus); ok {
-				if status.Signaled() && ctx.Err() != nil {
-					return ctx.Err()
+				if status.Signaled() {
+					if ctx.Err() != nil {
+						return ctx.Err()
+					}
+					return NewExitStatus(uint8(128 + status.Signal()))
 				}
 				return NewExitStatus(uint8(status.ExitStatus()))
 			}
