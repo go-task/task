@@ -111,9 +111,17 @@ func (e *Executor) Setup() error {
 	if err != nil {
 		return err
 	}
-	e.taskvars, err = read.Taskvars(e.Dir)
+
+	v, err := e.parsedVersion()
 	if err != nil {
 		return err
+	}
+
+	if v < 3.0 {
+		e.taskvars, err = read.Taskvars(e.Dir)
+		if err != nil {
+			return err
+		}
 	}
 
 	if e.Stdin == nil {
@@ -130,11 +138,6 @@ func (e *Executor) Setup() error {
 		Stderr:  e.Stderr,
 		Verbose: e.Verbose,
 		Color:   e.Color,
-	}
-
-	v, err := e.parsedVersion()
-	if err != nil {
-
 	}
 
 	if v < 2 {
