@@ -177,6 +177,9 @@ func (e *Executor) Setup() error {
 	if v < 2.2 && len(e.Taskfile.Includes) > 0 {
 		return fmt.Errorf(`task: Including Taskfiles is only available starting on Taskfile version v2.2`)
 	}
+	if v >= 3.0 && e.Taskfile.Expansions > 2 {
+		return fmt.Errorf(`task: The "expansions" setting is not available anymore on v3.0`)
+	}
 
 	if e.OutputStyle != "" {
 		e.Taskfile.Output = e.OutputStyle
