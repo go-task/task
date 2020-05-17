@@ -19,8 +19,8 @@ type Task struct {
 	Status        []string
 	Preconditions []*Precondition
 	Dir           string
-	Vars          Vars
-	Env           Vars
+	Vars          *Vars
+	Env           *Vars
 	Silent        bool
 	Method        string
 	Prefix        string
@@ -55,8 +55,8 @@ func (t *Task) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		Status        []string
 		Preconditions []*Precondition
 		Dir           string
-		Vars          Vars
-		Env           Vars
+		Vars          *Vars
+		Env           *Vars
 		Silent        bool
 		Method        string
 		Prefix        string

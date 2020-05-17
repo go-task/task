@@ -7,8 +7,8 @@ type Taskfile struct {
 	Output     string
 	Method     string
 	Includes   IncludedTaskfiles
-	Vars       Vars
-	Env        Vars
+	Vars       *Vars
+	Env        *Vars
 	Tasks      Tasks
 	Silent     bool
 }
@@ -21,8 +21,8 @@ func (tf *Taskfile) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		Output     string
 		Method     string
 		Includes   IncludedTaskfiles
-		Vars       Vars
-		Env        Vars
+		Vars       *Vars
+		Env        *Vars
 		Tasks      Tasks
 		Silent     bool
 	}
@@ -42,7 +42,10 @@ func (tf *Taskfile) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		tf.Expansions = 2
 	}
 	if tf.Vars == nil {
-		tf.Vars = make(Vars)
+		tf.Vars = &Vars{}
+	}
+	if tf.Env == nil {
+		tf.Env = &Vars{}
 	}
 	return nil
 }

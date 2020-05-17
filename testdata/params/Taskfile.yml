@@ -1,4 +1,8 @@
-version: '2'
+version: '3'
+
+vars:
+  PORTUGUESE_HELLO_WORLD: Olá, mundo!
+  GERMAN: Hello
 
 tasks:
   default:

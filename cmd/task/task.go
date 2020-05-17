@@ -148,9 +148,7 @@ func main() {
 	}
 
 	calls, globals := args.Parse(pflag.Args()...)
-	for name, value := range globals {
-		e.Taskfile.Vars[name] = value
-	}
+	e.Taskfile.Vars.Merge(globals)
 
 	ctx := context.Background()
 	if !watch {

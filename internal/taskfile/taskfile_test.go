@@ -6,7 +6,7 @@ import (
 	"github.com/go-task/task/v2/internal/taskfile"
 
 	"github.com/stretchr/testify/assert"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 func TestCmdParse(t *testing.T) {
@@ -33,9 +33,12 @@ vars:
 		{
 			yamlTaskCall,
 			&taskfile.Cmd{},
-			&taskfile.Cmd{Task: "another-task", Vars: taskfile.Vars{
-				"PARAM1": taskfile.Var{Static: "VALUE1"},
-				"PARAM2": taskfile.Var{Static: "VALUE2"},
+			&taskfile.Cmd{Task: "another-task", Vars: &taskfile.Vars{
+				Keys: []string{"PARAM1", "PARAM2"},
+				Mapping: map[string]taskfile.Var{
+					"PARAM1": taskfile.Var{Static: "VALUE1"},
+					"PARAM2": taskfile.Var{Static: "VALUE2"},
+				},
 			}},
 		},
 		{
@@ -46,9 +49,12 @@ vars:
 		{
 			yamlTaskCall,
 			&taskfile.Dep{},
-			&taskfile.Dep{Task: "another-task", Vars: taskfile.Vars{
-				"PARAM1": taskfile.Var{Static: "VALUE1"},
-				"PARAM2": taskfile.Var{Static: "VALUE2"},
+			&taskfile.Dep{Task: "another-task", Vars: &taskfile.Vars{
+				Keys: []string{"PARAM1", "PARAM2"},
+				Mapping: map[string]taskfile.Var{
+					"PARAM1": taskfile.Var{Static: "VALUE1"},
+					"PARAM2": taskfile.Var{Static: "VALUE2"},
+				},
 			}},
 		},
 	}
