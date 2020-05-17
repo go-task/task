@@ -23,7 +23,7 @@ func (e *Executor) CompiledTask(call taskfile.Call) (*taskfile.Task, error) {
 		return nil, err
 	}
 
-	v, err := e.parsedVersion()
+	v, err := e.Taskfile.ParsedVersion()
 	if err != nil {
 		return nil, err
 	}

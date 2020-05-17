@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"strconv"
 	"sync"
 	"sync/atomic"
 
@@ -112,7 +111,7 @@ func (e *Executor) Setup() error {
 		return err
 	}
 
-	v, err := e.parsedVersion()
+	v, err := e.Taskfile.ParsedVersion()
 	if err != nil {
 		return err
 	}
@@ -244,14 +243,6 @@ func (e *Executor) Setup() error {
 		e.mkdirMutexMap[k] = &sync.Mutex{}
 	}
 	return nil
-}
-
-func (e *Executor) parsedVersion() (float64, error) {
-	v, err := strconv.ParseFloat(e.Taskfile.Version, 64)
-	if err != nil {
-		return 0, fmt.Errorf(`task: Could not parse taskfile version "%s": %v`, e.Taskfile.Version, err)
-	}
-	return v, nil
 }
 
 // RunTask runs a task by its name

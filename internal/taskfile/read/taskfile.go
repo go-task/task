@@ -63,14 +63,20 @@ func Taskfile(dir string, entrypoint string) (*taskfile.Taskfile, error) {
 		}
 	}
 
-	path = filepath.Join(dir, fmt.Sprintf("Taskfile_%s.yml", runtime.GOOS))
-	if _, err = os.Stat(path); err == nil {
-		osTaskfile, err := readTaskfile(path)
-		if err != nil {
-			return nil, err
-		}
-		if err = taskfile.Merge(t, osTaskfile); err != nil {
-			return nil, err
+	v, err := t.ParsedVersion()
+	if err != nil {
+		return nil, err
+	}
+	if v < 3.0 {
+		path = filepath.Join(dir, fmt.Sprintf("Taskfile_%s.yml", runtime.GOOS))
+		if _, err = os.Stat(path); err == nil {
+			osTaskfile, err := readTaskfile(path)
+			if err != nil {
+				return nil, err
+			}
+			if err = taskfile.Merge(t, osTaskfile); err != nil {
+				return nil, err
+			}
 		}
 	}
 

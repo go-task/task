@@ -1,5 +1,10 @@
 package taskfile
 
+import (
+	"fmt"
+	"strconv"
+)
+
 // Taskfile represents a Taskfile.yml
 type Taskfile struct {
 	Version    string
@@ -48,4 +53,13 @@ func (tf *Taskfile) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		tf.Env = &Vars{}
 	}
 	return nil
+}
+
+// ParsedVersion returns the version as a float64
+func (tf *Taskfile) ParsedVersion() (float64, error) {
+	v, err := strconv.ParseFloat(tf.Version, 64)
+	if err != nil {
+		return 0, fmt.Errorf(`task: Could not parse taskfile version "%s": %v`, tf.Version, err)
+	}
+	return v, nil
 }
