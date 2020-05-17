@@ -1,0 +1,4 @@
+version: '3'
+
+tasks:
+  gen: echo 'os' > os_include.txt

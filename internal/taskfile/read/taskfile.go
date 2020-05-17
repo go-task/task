@@ -8,6 +8,7 @@ import (
 	"runtime"
 
 	"github.com/go-task/task/v2/internal/taskfile"
+	"github.com/go-task/task/v2/internal/templater"
 
 	"gopkg.in/yaml.v3"
 )
@@ -28,7 +29,24 @@ func Taskfile(dir string, entrypoint string) (*taskfile.Taskfile, error) {
 		return nil, err
 	}
 
+	v, err := t.ParsedVersion()
+	if err != nil {
+		return nil, err
+	}
+
 	for namespace, includedTask := range t.Includes {
+		if v >= 3.0 {
+			tr := templater.Templater{Vars: &taskfile.Vars{}, RemoveNoValue: true}
+			includedTask = taskfile.IncludedTaskfile{
+				Taskfile:       tr.Replace(includedTask.Taskfile),
+				Dir:            tr.Replace(includedTask.Dir),
+				AdvancedImport: includedTask.AdvancedImport,
+			}
+			if err := tr.Err(); err != nil {
+				return nil, err
+			}
+		}
+
 		if filepath.IsAbs(includedTask.Taskfile) {
 			path = includedTask.Taskfile
 		} else {
@@ -63,10 +81,6 @@ func Taskfile(dir string, entrypoint string) (*taskfile.Taskfile, error) {
 		}
 	}
 
-	v, err := t.ParsedVersion()
-	if err != nil {
-		return nil, err
-	}
 	if v < 3.0 {
 		path = filepath.Join(dir, fmt.Sprintf("Taskfile_%s.yml", runtime.GOOS))
 		if _, err = os.Stat(path); err == nil {
