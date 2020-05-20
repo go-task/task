@@ -65,5 +65,5 @@ gopkg.in/errgo.v2 v2.1.0/go.mod h1:hNsd1EY+bozCKY1Ytp96fpM3vjJbqLJn88ws8XvfDNI=
 gopkg.in/yaml.v2 v2.2.2 h1:ZCJp+EgiOT7lHqUV2J862kp8Qj64Jo6az82+3Td9dZw=
 gopkg.in/yaml.v2 v2.2.2/go.mod h1:hI93XBmqTisBFMUTm0b8Fm+jr3Dg1NNxqwp+5A1VGuI=
 mvdan.cc/editorconfig v0.1.1-0.20200121172147-e40951bde157/go.mod h1:Ge4atmRUYqueGppvJ7JNrtqpqokoJEFxYbP0Z+WeKS8=
-mvdan.cc/sh/v3 v3.1.0 h1:bFxsEzIubuABloc8G1Ko78rbZZ0JspNN9e9+R/w3z5k=
-mvdan.cc/sh/v3 v3.1.0/go.mod h1:F+Vm4ZxPJxDKExMLhvjuI50oPnedVXpfjNSrusiTOno=
+mvdan.cc/sh/v3 v3.1.1 h1:niuYC5Ug0KzLuN6CNX3ru37v4MkVD5Wm9T4Mk2eJr9A=
+mvdan.cc/sh/v3 v3.1.1/go.mod h1:F+Vm4ZxPJxDKExMLhvjuI50oPnedVXpfjNSrusiTOno=
