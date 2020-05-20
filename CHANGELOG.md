@@ -1,9 +1,15 @@
 # Changelog
 
-## Unreleased
+## v2.8.1 - 2019-05-20
 
+- Fix error code for the `--help` flag
+  ([#300](https://github.com/go-task/task/issues/300), [#330](https://github.com/go-task/task/pull/330)).
+- Print version to stdout instead of stderr
+  ([#299](https://github.com/go-task/task/issues/299), [#329](https://github.com/go-task/task/pull/329)).
 - Supress `context` errors when using the `--watch` flag
   ([#313](https://github.com/go-task/task/issues/313), [#317](https://github.com/go-task/task/pull/317)).
+- Support templating on description
+  ([#276](https://github.com/go-task/task/issues/276), [#283](https://github.com/go-task/task/pull/283)).
 
 ## v2.8.0 - 2019-12-07
 
