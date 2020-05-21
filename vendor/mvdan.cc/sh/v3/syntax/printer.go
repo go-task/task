@@ -165,26 +165,26 @@ type colCounter struct {
 	lineStart bool
 }
 
-func (c *colCounter) WriteByte(b byte) error {
+func (c *colCounter) addByte(b byte) {
 	switch b {
 	case '\n':
 		c.column = 0
 		c.lineStart = true
-	case '\t', ' ':
+	case '\t', ' ', tabwriter.Escape:
 	default:
 		c.lineStart = false
 	}
 	c.column++
+}
+
+func (c *colCounter) WriteByte(b byte) error {
+	c.addByte(b)
 	return c.Writer.WriteByte(b)
 }
 
 func (c *colCounter) WriteString(s string) (int, error) {
-	c.lineStart = false
-	for _, r := range s {
-		if r == '\n' {
-			c.column = 0
-		}
-		c.column++
+	for _, b := range []byte(s) {
+		c.addByte(b)
 	}
 	return c.Writer.WriteString(s)
 }
@@ -269,14 +269,14 @@ func (p *Printer) space() {
 }
 
 func (p *Printer) spacePad(pos Pos) {
-	if p.wantSpace {
-		p.WriteByte(' ')
-		p.wantSpace = false
-	}
 	if p.cols.lineStart {
 		// Never add padding at the start of a line, since this may
 		// result in broken indentation or mixing of spaces and tabs.
 		return
+	}
+	if p.wantSpace {
+		p.WriteByte(' ')
+		p.wantSpace = false
 	}
 	for !p.cols.lineStart && p.cols.column > 0 && p.cols.column < int(pos.col) {
 		p.WriteByte(' ')
@@ -331,7 +331,7 @@ func (p *Printer) writeLit(s string) {
 		p.WriteString(s)
 		return
 	}
-	p.WriteByte('\xff')
+	p.WriteByte(tabwriter.Escape)
 	for i := 0; i < len(s); i++ {
 		b := s[i]
 		if b != '\t' {
@@ -340,7 +340,7 @@ func (p *Printer) writeLit(s string) {
 		}
 		p.WriteByte(b)
 	}
-	p.WriteByte('\xff')
+	p.WriteByte(tabwriter.Escape)
 }
 
 func (p *Printer) incLevel() {
@@ -370,11 +370,11 @@ func (p *Printer) indent() {
 	switch {
 	case p.level == 0:
 	case p.indentSpaces == 0:
-		p.WriteByte('\xff')
+		p.WriteByte(tabwriter.Escape)
 		for i := uint(0); i < p.level; i++ {
 			p.WriteByte('\t')
 		}
-		p.WriteByte('\xff')
+		p.WriteByte(tabwriter.Escape)
 	default:
 		p.spaces(p.indentSpaces * p.level)
 	}

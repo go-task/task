@@ -993,7 +993,7 @@ func (p *Parser) advanceLitRe(r rune) {
 				p.quote = noState
 				return
 			}
-		case ' ', '\t', '\r', '\n':
+		case ' ', '\t', '\r', '\n', ';', '&', '>', '<':
 			if p.rxOpenParens <= 0 {
 				p.tok, p.val = _LitWord, p.endLit()
 				p.quote = noState
@@ -1002,7 +1002,7 @@ func (p *Parser) advanceLitRe(r rune) {
 		case '"', '\'', '$', '`':
 			p.tok, p.val = _Lit, p.endLit()
 			return
-		case utf8.RuneSelf, ';', '&', '>', '<':
+		case utf8.RuneSelf:
 			p.tok, p.val = _LitWord, p.endLit()
 			p.quote = noState
 			return
