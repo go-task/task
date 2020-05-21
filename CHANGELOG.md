@@ -1,5 +1,15 @@
 # Changelog
 
+# v3.0.0 - Preview 4
+
+- Refactor how variables work on version 3
+  ([#311](https://github.com/go-task/task/pull/311)).
+- Disallow `expansions` on v3 since it has no effect.
+- `Taskvars.yml` is not automatically included anymore.
+- `Taskfile_{{OS}}.yml` is not automatically included anymore.
+- Allow interpolation on `includes`, so you can manually include a Taskfile
+  based on operation system, for example.
+
 # v3.0.0 - Preview 3
 
 - Expose `.TASK` variable in templates with the task name
