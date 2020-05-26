@@ -8,7 +8,7 @@ The example below allows compiling a Go app and uses [Minify][minify] to concat
 and minify multiple CSS files into a single one.
 
 ```yaml
-version: '2'
+version: 2
 
 tasks:
   build:
@@ -38,7 +38,7 @@ If you omit a task name, "default" will be assumed.
 You can use `env` to set custom environment variables for a specific task:
 
 ```yaml
-version: '2'
+version: 2
 
 tasks:
   greet:
@@ -52,7 +52,7 @@ Additionally, you can set globally environment variables, that'll be available
 to all tasks:
 
 ```yaml
-version: '2'
+version: 2
 
 env:
   GREETING: Hey, there!
@@ -76,7 +76,7 @@ Example:
 Taskfile.yml:
 
 ```yaml
-version: '2'
+version: 2
 
 tasks:
   build:
@@ -87,7 +87,7 @@ tasks:
 Taskfile_linux.yml:
 
 ```yaml
-version: '2'
+version: 2
 
 tasks:
   build:
@@ -112,7 +112,7 @@ If you want to share tasks between different projects (Taskfiles), you can use
 the importing mechanism to include other Taskfiles using the `includes` keyword:
 
 ```yaml
-version: '2'
+version: 2
 
 includes:
   docs: ./documentation # will look for ./documentation/Taskfile.yml
@@ -138,7 +138,7 @@ located. But you can easily make the task run in another folder informing
 `dir`:
 
 ```yaml
-version: '2'
+version: 2
 
 tasks:
   serve:
@@ -160,7 +160,7 @@ You may have tasks that depend on others. Just pointing them on `deps` will
 make them run automatically before running the parent task:
 
 ```yaml
-version: '2'
+version: 2
 
 tasks:
   build:
@@ -179,7 +179,7 @@ In the above example, `assets` will always run right before `build` if you run
 A task can have only dependencies and no commands to group tasks together:
 
 ```yaml
-version: '2'
+version: 2
 
 tasks:
   assets:
@@ -204,7 +204,7 @@ If you want to pass information to dependencies, you can do that the same
 manner as you would to [call another task](#calling-another-task):
 
 ```yaml
-version: '2'
+version: 2
 
 tasks:
   default:
@@ -228,7 +228,7 @@ often result in a faster build pipeline. But in some situations you may need
 to call other tasks serially. In this case, just use the following syntax:
 
 ```yaml
-version: '2'
+version: 2
 
 tasks:
   main-task:
@@ -250,7 +250,7 @@ Overriding variables in the called task is as simple as informing `vars`
 attribute:
 
 ```yaml
-version: '2'
+version: 2
 
 tasks:
   main-task:
@@ -277,7 +277,7 @@ If a task generates something, you can inform Task the source and generated
 files, so Task will prevent to run them if not necessary.
 
 ```yaml
-version: '2'
+version: 2
 
 tasks:
   build:
@@ -313,7 +313,7 @@ You will probably want to ignore the `.task` folder in your `.gitignore` file
 (It's there that Task stores the last checksum).
 
 ```yaml
-version: '2'
+version: 2
 
 tasks:
   build:
@@ -332,7 +332,7 @@ Alternatively, you can inform a sequence of tests as `status`. If no error
 is returned (exit status 0), the task is considered up-to-date:
 
 ```yaml
-version: '2'
+version: 2
 
 tasks:
   generate-files:
@@ -358,7 +358,7 @@ If you need a certain set of conditions to be _true_ you can use the
 lines except they support `sh` expansion and they SHOULD all return 0.
 
 ```yaml
-version: '2'
+version: 2
 
 tasks:
   generate-files:
@@ -386,7 +386,7 @@ executing tasks that depend on it, a `precondition` will fail a task, along
 with any other tasks that depend on it.
 
 ```yaml
-version: '2'
+version: 2
 tasks:
   task_will_fail:
     preconditions:
@@ -438,7 +438,7 @@ $ task OUTPUT=file.txt generate-file
 Example of locally declared vars:
 
 ```yaml
-version: '2'
+version: 2
 
 tasks:
   print-var:
@@ -451,7 +451,7 @@ tasks:
 Example of global vars in a `Taskfile.yml`:
 
 ```yaml
-version: '2'
+version: 2
 
 vars:
   GREETING: Hello from Taskfile!
@@ -477,7 +477,7 @@ Variables are expanded 2 times by default. You can change that by setting the
 variables together:
 
 ```yaml
-version: '2'
+version: 2
 
 expansions: 3
 
@@ -501,7 +501,7 @@ The value will be treated as a command and the output assigned. If there is one
 or more trailing newlines, the last newline will be trimmed.
 
 ```yaml
-version: '2'
+version: 2
 
 tasks:
   build:
@@ -523,7 +523,7 @@ All functions by the Go's [sprig lib](http://masterminds.github.io/sprig/)
 are available. The following example gets the current date in a given format:
 
 ```yaml
-version: '2'
+version: 2
 
 tasks:
   print-date:
@@ -549,7 +549,7 @@ Task also adds the following functions:
 Example:
 
 ```yaml
-version: '2'
+version: 2
 
 tasks:
   print-os:
@@ -577,7 +577,7 @@ Running `task --list` (or `task -l`) lists all tasks with a description.
 The following Taskfile:
 
 ```yaml
-version: '2'
+version: 2
 
 tasks:
   build:
@@ -612,7 +612,7 @@ Running `task --summary task-name` will show a summary of a task
 The following Taskfile:
 
 ```yaml
-version: '2'
+version: 2
 
 tasks:
   release:
@@ -657,7 +657,7 @@ Silent mode disables echoing of commands before Task runs it.
 For the following Taskfile:
 
 ```yaml
-version: '2'
+version: 2
 
 tasks:
   echo:
@@ -683,7 +683,7 @@ There are four ways to enable silent mode:
 * At command level:
 
 ```yaml
-version: '2'
+version: 2
 
 tasks:
   echo:
@@ -695,7 +695,7 @@ tasks:
 * At task level:
 
 ```yaml
-version: '2'
+version: 2
 
 tasks:
   echo:
@@ -707,7 +707,7 @@ tasks:
 * Globally at Taskfile level:
 
 ```yaml
-version: '2'
+version: 2
 
 silent: true
 
@@ -722,7 +722,7 @@ tasks:
 If you want to suppress STDOUT instead, just redirect a command to `/dev/null`:
 
 ```yaml
-version: '2'
+version: 2
 
 tasks:
   echo:
@@ -741,7 +741,7 @@ You have the option to ignore errors during command execution.
 Given the following Taskfile:
 
 ```yaml
-version: '2'
+version: 2
 
 tasks:
   echo:
@@ -754,7 +754,7 @@ Task will abort the execution after running `exit 1` because the status code `1`
 However it is possible to continue with execution using `ignore_error`:
 
 ```yaml
-version: '2'
+version: 2
 
 tasks:
   echo:
@@ -785,7 +785,7 @@ options you can choose:
 To choose another one, just set it to root in the Taskfile:
 
 ```yaml
-version: '2'
+version: 2
 
 output: 'group'
 
@@ -802,7 +802,7 @@ tasks:
  with the `prefix:` attribute:
 
  ```yaml
-version: '2'
+version: 2
 
 output: prefixed
 

@@ -38,7 +38,7 @@ with new features without breaking existing Taskfiles. The new syntax is as
 follows:
 
 ```yaml
-version: '2'
+version: 2
 
 tasks:
   echo:
@@ -50,7 +50,7 @@ Version 2 allows you to write global variables directly in the Taskfile,
 if you don't want to create a `Taskvars.yml`:
 
 ```yaml
-version: '2'
+version: 2
 
 vars:
   GREETING: Hello, World!
@@ -73,7 +73,7 @@ A new global option was added to configure the number of variables expansions
 (which default to 2):
 
 ```yaml
-version: '2'
+version: 2
 
 expansions: 3
 
@@ -97,7 +97,7 @@ over how commands output are printed to the console
 (see [documentation][output] for more info):
 
 ```yaml
-version: '2'
+version: 2
 
 output: prefixed
 
@@ -112,7 +112,7 @@ From this version it's not also possible to ignore errors of a command or task
 (check documentation [here][ignore_errors]):
 
 ```yaml
-version: '2'
+version: 2
 
 tasks:
   example-1:
@@ -134,7 +134,7 @@ Version 2.2 comes with a global `includes` options to include other
 Taskfiles:
 
 ```yaml
-version: '2'
+version: 2
 
 includes:
   docs: ./documentation # will look for ./documentation/Taskfile.yml
@@ -146,7 +146,7 @@ includes:
 Version 2.6 comes with `preconditions` stanza in tasks.
 
 ```yaml
-version: '2'
+version: 2
 
 tasks:
   upload_environment:

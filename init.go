@@ -10,7 +10,7 @@ import (
 
 const defaultTaskfile = `# https://taskfile.dev
 
-version: '2'
+version: 2
 
 vars:
   GREETING: Hello, World!
