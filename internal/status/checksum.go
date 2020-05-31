@@ -95,6 +95,9 @@ func (c *Checksum) Value() (interface{}, error) {
 
 // OnError implements the Checker interface
 func (c *Checksum) OnError() error {
+	if len(c.Sources) == 0 {
+		return nil
+	}
 	return os.Remove(c.checksumFilePath())
 }
 
