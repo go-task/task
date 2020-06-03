@@ -12,6 +12,7 @@ type Task struct {
 	Task          string
 	Cmds          []*Cmd
 	Deps          []*Dep
+	Label         string
 	Desc          string
 	Summary       string
 	Sources       []string
@@ -32,6 +33,13 @@ var (
 	ErrCantUnmarshalTask = errors.New("task: can't unmarshal task value")
 )
 
+func (t *Task) Name() string {
+	if t.Label != "" {
+		return t.Label
+	}
+	return t.Task
+}
+
 func (t *Task) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	var cmd Cmd
 	if err := unmarshal(&cmd); err == nil && cmd.Cmd != "" {
@@ -48,6 +56,7 @@ func (t *Task) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	var task struct {
 		Cmds          []*Cmd
 		Deps          []*Dep
+		Label         string
 		Desc          string
 		Summary       string
 		Sources       []string
@@ -65,6 +74,7 @@ func (t *Task) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	if err := unmarshal(&task); err == nil {
 		t.Cmds = task.Cmds
 		t.Deps = task.Deps
+		t.Label = task.Label
 		t.Desc = task.Desc
 		t.Summary = task.Summary
 		t.Sources = task.Sources
