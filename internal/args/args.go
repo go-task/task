@@ -17,19 +17,11 @@ func Parse(args ...string) ([]taskfile.Call, *taskfile.Vars) {
 			continue
 		}
 
-		if len(calls) < 1 {
-			if globals == nil {
-				globals = &taskfile.Vars{}
-			}
-			name, value := splitVar(arg)
-			globals.Set(name, taskfile.Var{Static: value})
-		} else {
-			if calls[len(calls)-1].Vars == nil {
-				calls[len(calls)-1].Vars = &taskfile.Vars{}
-			}
-			name, value := splitVar(arg)
-			calls[len(calls)-1].Vars.Set(name, taskfile.Var{Static: value})
+		if globals == nil {
+			globals = &taskfile.Vars{}
 		}
+		name, value := splitVar(arg)
+		globals.Set(name, taskfile.Var{Static: value})
 	}
 
 	if len(calls) == 0 {

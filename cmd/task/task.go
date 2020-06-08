@@ -16,9 +16,7 @@ import (
 	"github.com/spf13/pflag"
 )
 
-var (
-	version = "master"
-)
+var version = "master"
 
 const usage = `Usage: task [-ilfwvsd] [--init] [--list] [--force] [--watch] [--verbose] [--silent] [--dir] [--taskfile] [--dry] [--summary] [task...]
 

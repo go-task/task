@@ -27,39 +27,28 @@ func TestArgs(t *testing.T) {
 		{
 			Args: []string{"task-a", "FOO=bar", "task-b", "task-c", "BAR=baz", "BAZ=foo"},
 			ExpectedCalls: []taskfile.Call{
-				{
-					Task: "task-a",
-					Vars: &taskfile.Vars{
-						Keys: []string{"FOO"},
-						Mapping: map[string]taskfile.Var{
-							"FOO": taskfile.Var{Static: "bar"},
-						},
-					},
-				},
+				{Task: "task-a"},
 				{Task: "task-b"},
-				{
-					Task: "task-c",
-					Vars: &taskfile.Vars{
-						Keys: []string{"BAR", "BAZ"},
-						Mapping: map[string]taskfile.Var{
-							"BAR": taskfile.Var{Static: "baz"},
-							"BAZ": taskfile.Var{Static: "foo"},
-						},
-					},
+				{Task: "task-c"},
+			},
+			ExpectedGlobals: &taskfile.Vars{
+				Keys: []string{"FOO", "BAR", "BAZ"},
+				Mapping: map[string]taskfile.Var{
+					"FOO": taskfile.Var{Static: "bar"},
+					"BAR": taskfile.Var{Static: "baz"},
+					"BAZ": taskfile.Var{Static: "foo"},
 				},
 			},
 		},
 		{
 			Args: []string{"task-a", "CONTENT=with some spaces"},
 			ExpectedCalls: []taskfile.Call{
-				{
-					Task: "task-a",
-					Vars: &taskfile.Vars{
-						Keys: []string{"CONTENT"},
-						Mapping: map[string]taskfile.Var{
-							"CONTENT": taskfile.Var{Static: "with some spaces"},
-						},
-					},
+				{Task: "task-a"},
+			},
+			ExpectedGlobals: &taskfile.Vars{
+				Keys: []string{"CONTENT"},
+				Mapping: map[string]taskfile.Var{
+					"CONTENT": taskfile.Var{Static: "with some spaces"},
 				},
 			},
 		},
