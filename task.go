@@ -32,16 +32,17 @@ const (
 type Executor struct {
 	Taskfile *taskfile.Taskfile
 
-	Dir        string
-	Entrypoint string
-	Force      bool
-	Watch      bool
-	Verbose    bool
-	Silent     bool
-	Dry        bool
-	Summary    bool
-	Parallel   bool
-	Color      bool
+	Dir         string
+	Entrypoint  string
+	Force       bool
+	Watch       bool
+	Verbose     bool
+	Silent      bool
+	Dry         bool
+	Summary     bool
+	Parallel    bool
+	Color       bool
+	Concurrency int
 
 	Stdin  io.Reader
 	Stdout io.Writer
@@ -54,8 +55,9 @@ type Executor struct {
 
 	taskvars *taskfile.Vars
 
-	taskCallCount map[string]*int32
-	mkdirMutexMap map[string]*sync.Mutex
+	concurrencySemaphore chan struct{}
+	taskCallCount        map[string]*int32
+	mkdirMutexMap        map[string]*sync.Mutex
 }
 
 // Run runs Task
@@ -247,6 +249,10 @@ func (e *Executor) Setup() error {
 		e.taskCallCount[k] = new(int32)
 		e.mkdirMutexMap[k] = &sync.Mutex{}
 	}
+
+	if e.Concurrency > 0 {
+		e.concurrencySemaphore = make(chan struct{}, e.Concurrency)
+	}
 	return nil
 }
 
@@ -259,6 +265,9 @@ func (e *Executor) RunTask(ctx context.Context, call taskfile.Call) error {
 	if !e.Watch && atomic.AddInt32(e.taskCallCount[call.Task], 1) >= MaximumTaskCall {
 		return &MaximumTaskCallExceededError{task: call.Task}
 	}
+
+	release := e.acquireConcurrencyLimit()
+	defer release()
 
 	if err := e.runDeps(ctx, t); err != nil {
 		return err
@@ -324,6 +333,9 @@ func (e *Executor) mkdir(t *taskfile.Task) error {
 func (e *Executor) runDeps(ctx context.Context, t *taskfile.Task) error {
 	g, ctx := errgroup.WithContext(ctx)
 
+	reacquire := e.releaseConcurrencyLimit()
+	defer reacquire()
+
 	for _, d := range t.Deps {
 		d := d
 
@@ -344,6 +356,9 @@ func (e *Executor) runCommand(ctx context.Context, t *taskfile.Task, call taskfi
 
 	switch {
 	case cmd.Task != "":
+		reacquire := e.releaseConcurrencyLimit()
+		defer reacquire()
+
 		err := e.RunTask(ctx, taskfile.Call{Task: cmd.Task, Vars: cmd.Vars})
 		if err != nil {
 			return err

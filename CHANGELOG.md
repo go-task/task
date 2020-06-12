@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Add a `--concurrency` (alias `-C`) flag, to limit the number of tasks that
+  run concurrently. This is useful for heavy workloads.
+  ([#345](https://github.com/go-task/task/pull/345)).
+
 ## v3.2.2 - 2021-01-12
 
 - Improve performance of `--list` and `--summary` by skipping running shell

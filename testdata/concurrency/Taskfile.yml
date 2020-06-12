@@ -1,0 +1,32 @@
+version: '2'
+
+tasks:
+  default:
+    deps:
+      - t1
+
+  t1:
+    deps:
+      - t3
+      - t4
+    cmds:
+      - task: t2
+      - echo done 1
+  t2:
+    deps:
+      - t5
+      - t6
+    cmds:
+      - echo done 2
+  t3:
+    cmds:
+      - echo done 3
+  t4:
+    cmds:
+      - echo done 4
+  t5:
+    cmds:
+      - echo done 5
+  t6:
+    cmds:
+      - echo done 6

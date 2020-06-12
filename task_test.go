@@ -171,6 +171,22 @@ func TestVarsInvalidTmpl(t *testing.T) {
 	assert.EqualError(t, e.Run(context.Background(), taskfile.Call{Task: target}), expectError, "e.Run(target)")
 }
 
+func TestConcurrency(t *testing.T) {
+	const (
+		dir    = "testdata/concurrency"
+		target = "default"
+	)
+
+	e := &task.Executor{
+		Dir:         dir,
+		Stdout:      ioutil.Discard,
+		Stderr:      ioutil.Discard,
+		Concurrency: 1,
+	}
+	assert.NoError(t, e.Setup(), "e.Setup()")
+	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: target}), "e.Run(target)")
+}
+
 func TestParams(t *testing.T) {
 	tt := fileContentTest{
 		Dir:       "testdata/params",
