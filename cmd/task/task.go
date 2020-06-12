@@ -65,6 +65,7 @@ func main() {
 		dry         bool
 		summary     bool
 		parallel    bool
+		concurrency int
 		dir         string
 		entrypoint  string
 		output      string
@@ -87,6 +88,7 @@ func main() {
 	pflag.StringVarP(&entrypoint, "taskfile", "t", "", `choose which Taskfile to run. Defaults to "Taskfile.yml"`)
 	pflag.StringVarP(&output, "output", "o", "", "sets output style: [interleaved|group|prefixed]")
 	pflag.BoolVarP(&color, "color", "c", true, "colored output")
+	pflag.IntVarP(&concurrency, "concurrency", "C", 0, "limit number tasks to run concurrently")
 	pflag.Parse()
 
 	if versionFlag {
@@ -122,16 +124,17 @@ func main() {
 	}
 
 	e := task.Executor{
-		Force:      force,
-		Watch:      watch,
-		Verbose:    verbose,
-		Silent:     silent,
-		Dir:        dir,
-		Dry:        dry,
-		Entrypoint: entrypoint,
-		Summary:    summary,
-		Parallel:   parallel,
-		Color:      color,
+		Force:            force,
+		Watch:            watch,
+		Verbose:          verbose,
+		Silent:           silent,
+		Dir:              dir,
+		Dry:              dry,
+		Entrypoint:       entrypoint,
+		Summary:          summary,
+		Parallel:         parallel,
+		Color:            color,
+		ConcurrencyLimit: concurrency,
 
 		Stdin:  os.Stdin,
 		Stdout: os.Stdout,

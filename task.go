@@ -32,16 +32,17 @@ const (
 type Executor struct {
 	Taskfile *taskfile.Taskfile
 
-	Dir        string
-	Entrypoint string
-	Force      bool
-	Watch      bool
-	Verbose    bool
-	Silent     bool
-	Dry        bool
-	Summary    bool
-	Parallel   bool
-	Color      bool
+	Dir              string
+	Entrypoint       string
+	Force            bool
+	Watch            bool
+	Verbose          bool
+	Silent           bool
+	Dry              bool
+	Summary          bool
+	Parallel         bool
+	Color            bool
+	ConcurrencyLimit int
 
 	Stdin  io.Reader
 	Stdout io.Writer
@@ -54,8 +55,9 @@ type Executor struct {
 
 	taskvars *taskfile.Vars
 
-	taskCallCount map[string]*int32
-	mkdirMutexMap map[string]*sync.Mutex
+	concurrencySemaphore chan struct{}
+	taskCallCount        map[string]*int32
+	mkdirMutexMap        map[string]*sync.Mutex
 }
 
 // Run runs Task
@@ -247,7 +249,33 @@ func (e *Executor) Setup() error {
 		e.taskCallCount[k] = new(int32)
 		e.mkdirMutexMap[k] = &sync.Mutex{}
 	}
+
+	if e.ConcurrencyLimit > 0 {
+		e.concurrencySemaphore = make(chan struct{}, e.ConcurrencyLimit)
+	}
 	return nil
+}
+
+func (e *Executor) acquireTaskLimit() func() {
+	if e.concurrencySemaphore == nil {
+		return func() {}
+	}
+
+	e.concurrencySemaphore <- struct{}{}
+	return func() {
+		<-e.concurrencySemaphore
+	}
+}
+
+func (e *Executor) releaseTaskLimit() func() {
+	if e.concurrencySemaphore == nil {
+		return func() {}
+	}
+
+	<-e.concurrencySemaphore
+	return func() {
+		e.concurrencySemaphore <- struct{}{}
+	}
 }
 
 // RunTask runs a task by its name
@@ -259,6 +287,9 @@ func (e *Executor) RunTask(ctx context.Context, call taskfile.Call) error {
 	if !e.Watch && atomic.AddInt32(e.taskCallCount[call.Task], 1) >= MaximumTaskCall {
 		return &MaximumTaskCallExceededError{task: call.Task}
 	}
+
+	release := e.acquireTaskLimit()
+	defer release()
 
 	if err := e.runDeps(ctx, t); err != nil {
 		return err
@@ -324,6 +355,9 @@ func (e *Executor) mkdir(t *taskfile.Task) error {
 func (e *Executor) runDeps(ctx context.Context, t *taskfile.Task) error {
 	g, ctx := errgroup.WithContext(ctx)
 
+	reacquire := e.releaseTaskLimit()
+	defer reacquire()
+
 	for _, d := range t.Deps {
 		d := d
 
@@ -344,6 +378,9 @@ func (e *Executor) runCommand(ctx context.Context, t *taskfile.Task, call taskfi
 
 	switch {
 	case cmd.Task != "":
+		reacquire := e.releaseTaskLimit()
+		defer reacquire()
+
 		err := e.RunTask(ctx, taskfile.Call{Task: cmd.Task, Vars: cmd.Vars})
 		if err != nil {
 			return err
