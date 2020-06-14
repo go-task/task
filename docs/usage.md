@@ -687,6 +687,30 @@ If the task does not have a summary or a description, a warning is printed.
 
 Please note: *showing the summary will not execute the command*.
 
+## Overriding task name
+
+Sometimes you may want to override the task name print on summary, up-to-date
+messates to STDOUT, etc. In this case you can just set `label:`, which can also
+be interpolated with variables:
+
+```yaml
+version: '3'
+
+tasks:
+  default:
+    - task: print
+      vars:
+        MESSAGE: hello
+    - task: print
+      vars:
+        MESSAGE: world
+
+  print:
+    label: 'print-{{.MESSAGE}}'
+    cmds:
+      - echo "{{.MESSAGE}}"
+```
+
 ## Silent mode
 
 Silent mode disables echoing of commands before Task runs it.

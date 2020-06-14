@@ -1,5 +1,10 @@
 # Changelog
 
+# v3.0.0 - Unreleased
+
+- Add `label:` to task so you can override the task name in the logs
+  ([#321](https://github.com/go-task/task/issues/321]), [#337](https://github.com/go-task/task/pull/337)).
+
 # v3.0.0 - Preview 4
 
 - Refactor how variables work on version 3
