@@ -167,6 +167,10 @@ If the directory doesn't exist, `task` creates it.
 
 ## Task dependencies
 
+> Dependencies run in parallel, so dependencies of a task shouldn't depend one
+> another. If you want to force tasks to run serially take a look at the
+> [Calling Another Task](#calling-another-task) section below.
+
 You may have tasks that depend on others. Just pointing them on `deps` will
 make them run automatically before running the parent task:
 
