@@ -1,0 +1,10 @@
+version: '3'
+
+vars:
+  BAR: baz
+
+tasks:
+  foo:
+    label: "foo{{.BAR}}"
+    status:
+      - echo "I'm ok"
