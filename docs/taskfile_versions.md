@@ -9,8 +9,8 @@ The Taskfile version follows the Task version. E.g. the change to Taskfile
 version `2` means that Task `v2.0.0` should be release to support it.
 
 The `version:` key on Taskfile accepts a semver string, so either `2`, `2.0` or
-`2.0.0` is accepted. You you choose to use `2.0` Task will not enable future
-`2.1` features, but if you choose to use `2`, than any `2.x.x` features will be
+`2.0.0` is accepted. If you choose to use `2.0` Task will not enable future
+`2.1` features, but if you choose to use `2`, then any `2.x.x` features will be
 available, but not `3.0.0+`.
 
 ## Version 1
@@ -33,7 +33,7 @@ The variable priority order was also different:
 
 ## Version 2.0
 
-At version 2, we introduced the `version:` key, to allow us to envolve Task
+At version 2, we introduced the `version:` key, to allow us to evolve Task
 with new features without breaking existing Taskfiles. The new syntax is as
 follows:
 
@@ -108,7 +108,7 @@ tasks:
   prefix: server
 ```
 
-From this version it's not also possible to ignore errors of a command or task
+From this version it's also possible to ignore errors of a command or task
 (check documentation [here][ignore_errors]):
 
 ```yaml
