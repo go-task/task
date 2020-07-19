@@ -608,7 +608,7 @@ would print the following output:
 
 ## Display summary of task
 
-Running `task --summary task-name` will show a summary of a task
+Running `task --summary task-name` will show a summary of a task.
 The following Taskfile:
 
 ```yaml
@@ -620,7 +620,7 @@ tasks:
     summary: |
       Release your project to github
 
-      It will build your project before starting the release it.
+      It will build your project before starting the release.
       Please make sure that you have set GITHUB_TOKEN before starting.
     cmds:
       - your-release-tool
@@ -637,7 +637,7 @@ task: release
 
 Release your project to github
 
-It will build your project before starting the release it.
+It will build your project before starting the release.
 Please make sure that you have set GITHUB_TOKEN before starting.
 
 dependencies:
