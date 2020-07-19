@@ -16,6 +16,7 @@ type Taskfile struct {
 	Env        *Vars
 	Tasks      Tasks
 	Silent     bool
+	Warning    string
 }
 
 // UnmarshalYAML implements yaml.Unmarshaler interface
@@ -30,6 +31,7 @@ func (tf *Taskfile) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		Env        *Vars
 		Tasks      Tasks
 		Silent     bool
+		Warning    string
 	}
 	if err := unmarshal(&taskfile); err != nil {
 		return err
@@ -43,6 +45,7 @@ func (tf *Taskfile) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	tf.Env = taskfile.Env
 	tf.Tasks = taskfile.Tasks
 	tf.Silent = taskfile.Silent
+	tf.Warning = taskfile.Warning
 	if tf.Expansions <= 0 {
 		tf.Expansions = 2
 	}

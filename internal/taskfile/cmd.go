@@ -11,6 +11,7 @@ type Cmd struct {
 	Silent      bool
 	Task        string
 	Vars        *Vars
+	Warning     string
 	IgnoreError bool
 }
 
@@ -41,11 +42,13 @@ func (c *Cmd) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	var cmdStruct struct {
 		Cmd         string
 		Silent      bool
+		Warning     string
 		IgnoreError bool `yaml:"ignore_error"`
 	}
 	if err := unmarshal(&cmdStruct); err == nil && cmdStruct.Cmd != "" {
 		c.Cmd = cmdStruct.Cmd
 		c.Silent = cmdStruct.Silent
+		c.Warning = cmdStruct.Warning
 		c.IgnoreError = cmdStruct.IgnoreError
 		return nil
 	}

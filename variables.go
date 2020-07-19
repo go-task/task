@@ -41,6 +41,7 @@ func (e *Executor) CompiledTask(call taskfile.Call) (*taskfile.Task, error) {
 		Vars:        nil,
 		Env:         nil,
 		Silent:      origTask.Silent,
+		Warning:     origTask.Warning,
 		Method:      r.Replace(origTask.Method),
 		Prefix:      r.Replace(origTask.Prefix),
 		IgnoreError: origTask.IgnoreError,
@@ -77,6 +78,7 @@ func (e *Executor) CompiledTask(call taskfile.Call) (*taskfile.Task, error) {
 			new.Cmds[i] = &taskfile.Cmd{
 				Task:        r.Replace(cmd.Task),
 				Silent:      cmd.Silent,
+				Warning:     cmd.Warning,
 				Cmd:         r.Replace(cmd.Cmd),
 				Vars:        r.ReplaceVars(cmd.Vars),
 				IgnoreError: cmd.IgnoreError,

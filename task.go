@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 	"sync"
 	"sync/atomic"
 
@@ -34,6 +35,7 @@ type Executor struct {
 
 	Dir        string
 	Entrypoint string
+	Warning    string
 	Force      bool
 	Watch      bool
 	Verbose    bool
@@ -345,6 +347,17 @@ func (e *Executor) runCommand(ctx context.Context, t *taskfile.Task, call taskfi
 		}
 		return nil
 	case cmd.Cmd != "":
+		if cmd.Warning != "" {
+			fmt.Printf("%s (y/N): ", cmd.Warning)
+
+			var response string
+			fmt.Scanln(&response)
+
+			if !isConfirmed(response) {
+				return errors.New("cancelled at warning")
+			}
+		}
+
 		if e.Verbose || (!cmd.Silent && !t.Silent && !e.Taskfile.Silent && !e.Silent) {
 			e.Logger.Errf(logger.Green, "task: %s", cmd.Cmd)
 		}
@@ -398,4 +411,15 @@ func getEnviron(t *taskfile.Task) []string {
 		}
 	}
 	return environ
+}
+
+func isConfirmed(response string) bool {
+	affirmativeResponses := []string{"y", "yes"}
+
+	for _, affirm := range affirmativeResponses {
+		if strings.ToLower(response) == affirm {
+			return true
+		}
+	}
+	return false
 }

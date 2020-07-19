@@ -25,6 +25,7 @@ type Task struct {
 	Silent        bool
 	Method        string
 	Prefix        string
+	Warning       string
 	IgnoreError   bool
 }
 
@@ -69,6 +70,7 @@ func (t *Task) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		Silent        bool
 		Method        string
 		Prefix        string
+		Warning       string
 		IgnoreError   bool `yaml:"ignore_error"`
 	}
 	if err := unmarshal(&task); err == nil {
@@ -87,6 +89,7 @@ func (t *Task) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		t.Silent = task.Silent
 		t.Method = task.Method
 		t.Prefix = task.Prefix
+		t.Warning = task.Warning
 		t.IgnoreError = task.IgnoreError
 
 		return nil
