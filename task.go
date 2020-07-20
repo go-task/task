@@ -35,7 +35,6 @@ type Executor struct {
 
 	Dir        string
 	Entrypoint string
-	Warning    string
 	Force      bool
 	Watch      bool
 	Verbose    bool
@@ -257,6 +256,13 @@ func (e *Executor) RunTask(ctx context.Context, call taskfile.Call) error {
 		return &MaximumTaskCallExceededError{task: call.Task}
 	}
 
+	if t.Warning != "" {
+		response := promptWithWarning(t.Warning)
+		if !isConfirmed(response) {
+			return errors.New("cancelled at warning")
+		}
+	}
+
 	if err := e.runDeps(ctx, t); err != nil {
 		return err
 	}
@@ -348,13 +354,10 @@ func (e *Executor) runCommand(ctx context.Context, t *taskfile.Task, call taskfi
 		return nil
 	case cmd.Cmd != "":
 		if cmd.Warning != "" {
-			fmt.Printf("%s (y/N): ", cmd.Warning)
-
-			var response string
-			fmt.Scanln(&response)
-
+			response := promptWithWarning(cmd.Warning)
 			if !isConfirmed(response) {
-				return errors.New("cancelled at warning")
+				// Continue to next cmd
+				return nil
 			}
 		}
 
@@ -411,6 +414,15 @@ func getEnviron(t *taskfile.Task) []string {
 		}
 	}
 	return environ
+}
+
+func promptWithWarning(warning string) string {
+	fmt.Printf("%s (y/N): ", warning)
+
+	var response string
+	fmt.Scanln(&response)
+
+	return response
 }
 
 func isConfirmed(response string) bool {
