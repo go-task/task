@@ -172,15 +172,18 @@ func (e *Executor) Setup() error {
 	if e.OutputStyle != "" {
 		e.Taskfile.Output = e.OutputStyle
 	}
-	switch e.Taskfile.Output {
-	case "", "interleaved":
-		e.Output = output.Interleaved{}
-	case "group":
-		e.Output = output.Group{}
-	case "prefixed":
-		e.Output = output.Prefixed{}
-	default:
-		return fmt.Errorf(`task: output option "%s" not recognized`, e.Taskfile.Output)
+
+	if e.Output == nil {
+		switch e.Taskfile.Output {
+		case "", "interleaved":
+			e.Output = output.Interleaved{}
+		case "group":
+			e.Output = output.Group{}
+		case "prefixed":
+			e.Output = output.Prefixed{}
+		default:
+			return fmt.Errorf(`task: output option "%s" not recognized`, e.Taskfile.Output)
+		}
 	}
 
 	if v <= 2.1 {
