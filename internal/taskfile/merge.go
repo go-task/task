@@ -29,18 +29,13 @@ func Merge(t1, t2 *Taskfile, namespaces ...string) error {
 	}
 
 	if t1.Vars == nil {
-		t1.Vars = make(Vars)
+		t1.Vars = &Vars{}
 	}
-	for k, v := range t2.Vars {
-		t1.Vars[k] = v
-	}
-
 	if t1.Env == nil {
-		t1.Env = make(Vars)
+		t1.Env = &Vars{}
 	}
-	for k, v := range t2.Env {
-		t1.Env[k] = v
-	}
+	t1.Vars.Merge(t2.Vars)
+	t1.Env.Merge(t2.Env)
 
 	if t1.Tasks == nil {
 		t1.Tasks = make(Tasks)

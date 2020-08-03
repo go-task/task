@@ -1,5 +1,20 @@
 # Changelog
 
+# v3.0.0 - Unreleased
+
+- Add `label:` to task so you can override the task name in the logs
+  ([#321](https://github.com/go-task/task/issues/321]), [#337](https://github.com/go-task/task/pull/337)).
+
+# v3.0.0 - Preview 4
+
+- Refactor how variables work on version 3
+  ([#311](https://github.com/go-task/task/pull/311)).
+- Disallow `expansions` on v3 since it has no effect.
+- `Taskvars.yml` is not automatically included anymore.
+- `Taskfile_{{OS}}.yml` is not automatically included anymore.
+- Allow interpolation on `includes`, so you can manually include a Taskfile
+  based on operation system, for example.
+
 # v3.0.0 - Preview 3
 
 - Expose `.TASK` variable in templates with the task name
@@ -35,6 +50,17 @@
 - We now use some colors on Task output to better distinguish message types -
   commands are green, errors are red, etc
   ([#207](https://github.com/go-task/task/pull/207)).
+
+## v2.8.1 - 2019-05-20
+
+- Fix error code for the `--help` flag
+  ([#300](https://github.com/go-task/task/issues/300), [#330](https://github.com/go-task/task/pull/330)).
+- Print version to stdout instead of stderr
+  ([#299](https://github.com/go-task/task/issues/299), [#329](https://github.com/go-task/task/pull/329)).
+- Supress `context` errors when using the `--watch` flag
+  ([#313](https://github.com/go-task/task/issues/313), [#317](https://github.com/go-task/task/pull/317)).
+- Support templating on description
+  ([#276](https://github.com/go-task/task/issues/276), [#283](https://github.com/go-task/task/pull/283)).
 
 ## v2.8.0 - 2019-12-07
 

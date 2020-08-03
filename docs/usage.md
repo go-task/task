@@ -167,6 +167,10 @@ If the directory doesn't exist, `task` creates it.
 
 ## Task dependencies
 
+> Dependencies run in parallel, so dependencies of a task shouldn't depend one
+> another. If you want to force tasks to run serially take a look at the
+> [Calling Another Task](#calling-another-task) section below.
+
 You may have tasks that depend on others. Just pointing them on `deps` will
 make them run automatically before running the parent task:
 
@@ -686,6 +690,30 @@ If a summary is missing, the description will be printed.
 If the task does not have a summary or a description, a warning is printed.
 
 Please note: *showing the summary will not execute the command*.
+
+## Overriding task name
+
+Sometimes you may want to override the task name print on summary, up-to-date
+messates to STDOUT, etc. In this case you can just set `label:`, which can also
+be interpolated with variables:
+
+```yaml
+version: '3'
+
+tasks:
+  default:
+    - task: print
+      vars:
+        MESSAGE: hello
+    - task: print
+      vars:
+        MESSAGE: world
+
+  print:
+    label: 'print-{{.MESSAGE}}'
+    cmds:
+      - echo "{{.MESSAGE}}"
+```
 
 ## Silent mode
 

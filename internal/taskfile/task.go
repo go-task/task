@@ -12,6 +12,7 @@ type Task struct {
 	Task          string
 	Cmds          []*Cmd
 	Deps          []*Dep
+	Label         string
 	Desc          string
 	Summary       string
 	Sources       []string
@@ -19,8 +20,8 @@ type Task struct {
 	Status        []string
 	Preconditions []*Precondition
 	Dir           string
-	Vars          Vars
-	Env           Vars
+	Vars          *Vars
+	Env           *Vars
 	Silent        bool
 	Method        string
 	Prefix        string
@@ -31,6 +32,13 @@ var (
 	// ErrCantUnmarshalTask is returned for invalid task YAML
 	ErrCantUnmarshalTask = errors.New("task: can't unmarshal task value")
 )
+
+func (t *Task) Name() string {
+	if t.Label != "" {
+		return t.Label
+	}
+	return t.Task
+}
 
 func (t *Task) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	var cmd Cmd
@@ -48,6 +56,7 @@ func (t *Task) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	var task struct {
 		Cmds          []*Cmd
 		Deps          []*Dep
+		Label         string
 		Desc          string
 		Summary       string
 		Sources       []string
@@ -55,8 +64,8 @@ func (t *Task) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		Status        []string
 		Preconditions []*Precondition
 		Dir           string
-		Vars          Vars
-		Env           Vars
+		Vars          *Vars
+		Env           *Vars
 		Silent        bool
 		Method        string
 		Prefix        string
@@ -65,6 +74,7 @@ func (t *Task) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	if err := unmarshal(&task); err == nil {
 		t.Cmds = task.Cmds
 		t.Deps = task.Deps
+		t.Label = task.Label
 		t.Desc = task.Desc
 		t.Summary = task.Summary
 		t.Sources = task.Sources

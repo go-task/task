@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
 	"os/signal"
@@ -52,6 +53,7 @@ func main() {
 
 	var (
 		versionFlag bool
+		helpFlag    bool
 		init        bool
 		list        bool
 		status      bool
@@ -69,6 +71,7 @@ func main() {
 	)
 
 	pflag.BoolVar(&versionFlag, "version", false, "show Task version")
+	pflag.BoolVarP(&helpFlag, "help", "h", false, "shows Task usage")
 	pflag.BoolVarP(&init, "init", "i", false, "creates a new Taskfile.yml in the current folder")
 	pflag.BoolVarP(&list, "list", "l", false, "lists tasks with description of current Taskfile")
 	pflag.BoolVar(&status, "status", false, "exits with non-zero exit code if any of the given tasks is not up-to-date")
@@ -86,7 +89,12 @@ func main() {
 	pflag.Parse()
 
 	if versionFlag {
-		log.Printf("Task version: %s\n", version)
+		fmt.Printf("Task version: %s\n", version)
+		return
+	}
+
+	if helpFlag {
+		pflag.Usage()
 		return
 	}
 
@@ -140,9 +148,7 @@ func main() {
 	}
 
 	calls, globals := args.Parse(pflag.Args()...)
-	for name, value := range globals {
-		e.Taskfile.Vars[name] = value
-	}
+	e.Taskfile.Vars.Merge(globals)
 
 	ctx := context.Background()
 	if !watch {

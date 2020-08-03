@@ -37,6 +37,9 @@ func SwitchCaseIndent(enabled bool) PrinterOption {
 	return func(p *Printer) { p.swtCaseIndent = enabled }
 }
 
+// TODO(v4): consider turning this into a "space all operators" option, to also
+// allow foo=( bar baz ), (( x + y )), and so on.
+
 // SpaceRedirects will put a space after most redirection operators. The
 // exceptions are '>&', '<&', '>(', and '<('.
 func SpaceRedirects(enabled bool) PrinterOption {
@@ -52,11 +55,17 @@ func SpaceRedirects(enabled bool) PrinterOption {
 // run.
 func KeepPadding(enabled bool) PrinterOption {
 	return func(p *Printer) {
-		// TODO: support setting this option to false.
-		if enabled {
+		if enabled && !p.keepPadding {
+			// Enable the flag, and set up the writer wrapper.
 			p.keepPadding = true
 			p.cols.Writer = p.bufWriter.(*bufio.Writer)
 			p.bufWriter = &p.cols
+
+		} else if !enabled && p.keepPadding {
+			// Ensure we reset the state to that of NewPrinter.
+			p.keepPadding = false
+			p.bufWriter = p.cols.Writer
+			p.cols = colCounter{}
 		}
 	}
 }
@@ -66,6 +75,11 @@ func KeepPadding(enabled bool) PrinterOption {
 // whitespace is avoided when possible.
 func Minify(enabled bool) PrinterOption {
 	return func(p *Printer) { p.minify = enabled }
+}
+
+// FunctionNextLine will place a function's opening braces on the next line.
+func FunctionNextLine(enabled bool) PrinterOption {
+	return func(p *Printer) { p.funcNextLine = enabled }
 }
 
 // NewPrinter allocates a new Printer and applies any number of options.
@@ -151,26 +165,26 @@ type colCounter struct {
 	lineStart bool
 }
 
-func (c *colCounter) WriteByte(b byte) error {
+func (c *colCounter) addByte(b byte) {
 	switch b {
 	case '\n':
 		c.column = 0
 		c.lineStart = true
-	case '\t', ' ':
+	case '\t', ' ', tabwriter.Escape:
 	default:
 		c.lineStart = false
 	}
 	c.column++
+}
+
+func (c *colCounter) WriteByte(b byte) error {
+	c.addByte(b)
 	return c.Writer.WriteByte(b)
 }
 
 func (c *colCounter) WriteString(s string) (int, error) {
-	c.lineStart = false
-	for _, r := range s {
-		if r == '\n' {
-			c.column = 0
-		}
-		c.column++
+	for _, b := range []byte(s) {
+		c.addByte(b)
 	}
 	return c.Writer.WriteString(s)
 }
@@ -194,6 +208,7 @@ type Printer struct {
 	spaceRedirects bool
 	keepPadding    bool
 	minify         bool
+	funcNextLine   bool
 
 	wantSpace   bool
 	wantNewline bool
@@ -254,14 +269,14 @@ func (p *Printer) space() {
 }
 
 func (p *Printer) spacePad(pos Pos) {
-	if p.wantSpace {
-		p.WriteByte(' ')
-		p.wantSpace = false
-	}
 	if p.cols.lineStart {
 		// Never add padding at the start of a line, since this may
 		// result in broken indentation or mixing of spaces and tabs.
 		return
+	}
+	if p.wantSpace {
+		p.WriteByte(' ')
+		p.wantSpace = false
 	}
 	for !p.cols.lineStart && p.cols.column > 0 && p.cols.column < int(pos.col) {
 		p.WriteByte(' ')
@@ -316,7 +331,7 @@ func (p *Printer) writeLit(s string) {
 		p.WriteString(s)
 		return
 	}
-	p.WriteByte('\xff')
+	p.WriteByte(tabwriter.Escape)
 	for i := 0; i < len(s); i++ {
 		b := s[i]
 		if b != '\t' {
@@ -325,7 +340,7 @@ func (p *Printer) writeLit(s string) {
 		}
 		p.WriteByte(b)
 	}
-	p.WriteByte('\xff')
+	p.WriteByte(tabwriter.Escape)
 }
 
 func (p *Printer) incLevel() {
@@ -355,11 +370,11 @@ func (p *Printer) indent() {
 	switch {
 	case p.level == 0:
 	case p.indentSpaces == 0:
-		p.WriteByte('\xff')
+		p.WriteByte(tabwriter.Escape)
 		for i := uint(0); i < p.level; i++ {
 			p.WriteByte('\t')
 		}
-		p.WriteByte('\xff')
+		p.WriteByte(tabwriter.Escape)
 	default:
 		p.spaces(p.indentSpaces * p.level)
 	}
@@ -415,10 +430,8 @@ func (p *Printer) flushHeredocs() {
 					line:      r.Hdoc.Pos().Line(),
 				}
 				p.tabsPrinter.wordParts(r.Hdoc.Parts, true)
-				p.indent()
-			} else {
-				p.indent()
 			}
+			p.indent()
 		} else if r.Hdoc != nil {
 			p.wordParts(r.Hdoc.Parts, true)
 		}
@@ -859,8 +872,7 @@ func (p *Printer) elemJoin(elems []*ArrayElem, last []Comment) {
 			p.comments(c)
 		}
 		if el.Pos().Line() > p.line {
-			p.newline(el.Pos())
-			p.indent()
+			p.newlines(el.Pos())
 		} else if p.wantSpace {
 			p.space()
 		}
@@ -910,11 +922,11 @@ func (p *Printer) stmt(s *Stmt) {
 			p.pendingHdocs = append(p.pendingHdocs, r)
 		}
 	}
+	p.wroteSemi = true
 	switch {
 	case s.Semicolon.IsValid() && s.Semicolon.Line() > p.line:
 		p.bslashNewl()
 		p.WriteByte(';')
-		p.wroteSemi = true
 	case s.Background:
 		if !p.minify {
 			p.space()
@@ -925,6 +937,11 @@ func (p *Printer) stmt(s *Stmt) {
 			p.space()
 		}
 		p.WriteString("|&")
+	default:
+		p.wroteSemi = false
+	}
+	if p.wroteSemi {
+		p.wantSpace = true
 	}
 	p.decLevel()
 }
@@ -962,6 +979,8 @@ func (p *Printer) command(cmd Command, redirs []*Redirect) (startRedirs int) {
 	case *Block:
 		p.WriteByte('{')
 		p.wantSpace = true
+		// Forbid "foo()\n{ bar; }"
+		p.wantNewline = p.wantNewline || p.funcNextLine
 		p.nestedStmts(x.Stmts, x.Last, x.Rbrace)
 		p.semiRsrv("}", x.Rbrace)
 	case *IfClause:
@@ -1040,7 +1059,9 @@ func (p *Printer) command(cmd Command, redirs []*Redirect) (startRedirs int) {
 		}
 		p.writeLit(x.Name.Value)
 		p.WriteString("()")
-		if !p.minify {
+		if p.funcNextLine {
+			p.newline(Pos{})
+		} else if !p.minify {
 			p.space()
 		}
 		p.line = x.Body.Pos().Line()

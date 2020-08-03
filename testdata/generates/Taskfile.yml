@@ -1,4 +1,7 @@
-version: '2'
+version: '3'
+
+vars:
+  BUILD_DIR: $pwd
 
 tasks:
   abs.txt:

@@ -107,6 +107,20 @@ func TestVarsV2(t *testing.T) {
 	tt.Run(t)
 }
 
+func TestVarsV3(t *testing.T) {
+	tt := fileContentTest{
+		Dir:    "testdata/vars/v3",
+		Target: "default",
+		Files: map[string]string{
+			"missing-var.txt":  "\n",
+			"var-order.txt":    "ABCDEF\n",
+			"dependent-sh.txt": "123456\n",
+			"with-call.txt":    "Hi, ABC123!\n",
+		},
+	}
+	tt.Run(t)
+}
+
 func TestMultilineVars(t *testing.T) {
 	for _, dir := range []string{"testdata/vars/v2/multiline"} {
 		tt := fileContentTest{
@@ -370,6 +384,90 @@ func TestStatusChecksum(t *testing.T) {
 	assert.Equal(t, `task: Task "build" is up to date`+"\n", buff.String())
 }
 
+func TestLabelUpToDate(t *testing.T) {
+	const dir = "testdata/label_uptodate"
+
+	var buff bytes.Buffer
+	e := task.Executor{
+		Dir:    dir,
+		Stdout: &buff,
+		Stderr: &buff,
+	}
+	assert.NoError(t, e.Setup())
+	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "foo"}))
+	assert.Contains(t, buff.String(), "foobar")
+}
+
+func TestLabelSummary(t *testing.T) {
+	const dir = "testdata/label_summary"
+
+	var buff bytes.Buffer
+	e := task.Executor{
+		Dir:     dir,
+		Summary: true,
+		Stdout:  &buff,
+		Stderr:  &buff,
+	}
+	assert.NoError(t, e.Setup())
+	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "foo"}))
+	assert.Contains(t, buff.String(), "foobar")
+}
+
+func TestLabelInStatus(t *testing.T) {
+	const dir = "testdata/label_status"
+
+	e := task.Executor{
+		Dir: dir,
+	}
+	assert.NoError(t, e.Setup())
+	err := e.Status(context.Background(), taskfile.Call{Task: "foo"})
+	if assert.Error(t, err) {
+		assert.Contains(t, err.Error(), "foobar")
+	}
+}
+
+func TestLabelWithVariableExpansion(t *testing.T) {
+	const dir = "testdata/label_var"
+
+	var buff bytes.Buffer
+	e := task.Executor{
+		Dir:    dir,
+		Stdout: &buff,
+		Stderr: &buff,
+	}
+	assert.NoError(t, e.Setup())
+	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "foo"}))
+	assert.Contains(t, buff.String(), "foobaz")
+}
+
+func TestLabelInSummary(t *testing.T) {
+	const dir = "testdata/label_summary"
+
+	var buff bytes.Buffer
+	e := task.Executor{
+		Dir:    dir,
+		Stdout: &buff,
+		Stderr: &buff,
+	}
+	assert.NoError(t, e.Setup())
+	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "foo"}))
+	assert.Contains(t, buff.String(), "foobar")
+}
+
+func TestLabelInList(t *testing.T) {
+	const dir = "testdata/label_list"
+
+	var buff bytes.Buffer
+	e := task.Executor{
+		Dir:    dir,
+		Stdout: &buff,
+		Stderr: &buff,
+	}
+	assert.NoError(t, e.Setup())
+	e.PrintTasksHelp()
+	assert.Contains(t, buff.String(), "foobar")
+}
+
 func TestStatusVariables(t *testing.T) {
 	const dir = "testdata/status_vars"
 
@@ -546,6 +644,7 @@ func TestIncludes(t *testing.T) {
 			"included_taskfile_without_dir.txt":         "included_taskfile_without_dir",
 			"./module2/included_directory_with_dir.txt": "included_directory_with_dir",
 			"./module2/included_taskfile_with_dir.txt":  "included_taskfile_with_dir",
+			"os_include.txt":                            "os",
 		},
 	}
 	tt.Run(t)

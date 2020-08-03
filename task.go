@@ -6,12 +6,12 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"strconv"
 	"sync"
 	"sync/atomic"
 
 	"github.com/go-task/task/v2/internal/compiler"
 	compilerv2 "github.com/go-task/task/v2/internal/compiler/v2"
+	compilerv3 "github.com/go-task/task/v2/internal/compiler/v3"
 	"github.com/go-task/task/v2/internal/execext"
 	"github.com/go-task/task/v2/internal/logger"
 	"github.com/go-task/task/v2/internal/output"
@@ -52,7 +52,7 @@ type Executor struct {
 	Output      output.Output
 	OutputStyle string
 
-	taskvars taskfile.Vars
+	taskvars *taskfile.Vars
 
 	taskCallCount map[string]*int32
 	mkdirMutexMap map[string]*sync.Mutex
@@ -110,9 +110,17 @@ func (e *Executor) Setup() error {
 	if err != nil {
 		return err
 	}
-	e.taskvars, err = read.Taskvars(e.Dir)
+
+	v, err := e.Taskfile.ParsedVersion()
 	if err != nil {
 		return err
+	}
+
+	if v < 3.0 {
+		e.taskvars, err = read.Taskvars(e.Dir)
+		if err != nil {
+			return err
+		}
 	}
 
 	if e.Stdin == nil {
@@ -129,11 +137,6 @@ func (e *Executor) Setup() error {
 		Stderr:  e.Stderr,
 		Verbose: e.Verbose,
 		Color:   e.Color,
-	}
-
-	v, err := strconv.ParseFloat(e.Taskfile.Version, 64)
-	if err != nil {
-		return fmt.Errorf(`task: Could not parse taskfile version "%s": %v`, e.Taskfile.Version, err)
 	}
 
 	if v < 2 {
@@ -154,12 +157,20 @@ func (e *Executor) Setup() error {
 		e.Logger.Color = false
 	}
 
-	e.Compiler = &compilerv2.CompilerV2{
-		Dir:          e.Dir,
-		Taskvars:     e.taskvars,
-		TaskfileVars: e.Taskfile.Vars,
-		Expansions:   e.Taskfile.Expansions,
-		Logger:       e.Logger,
+	if v < 3 {
+		e.Compiler = &compilerv2.CompilerV2{
+			Dir:          e.Dir,
+			Taskvars:     e.taskvars,
+			TaskfileVars: e.Taskfile.Vars,
+			Expansions:   e.Taskfile.Expansions,
+			Logger:       e.Logger,
+		}
+	} else {
+		e.Compiler = &compilerv3.CompilerV3{
+			Dir:          e.Dir,
+			TaskfileVars: e.Taskfile.Vars,
+			Logger:       e.Logger,
+		}
 	}
 
 	if v < 2.1 && e.Taskfile.Output != "" {
@@ -167,6 +178,9 @@ func (e *Executor) Setup() error {
 	}
 	if v < 2.2 && len(e.Taskfile.Includes) > 0 {
 		return fmt.Errorf(`task: Including Taskfiles is only available starting on Taskfile version v2.2`)
+	}
+	if v >= 3.0 && e.Taskfile.Expansions > 2 {
+		return fmt.Errorf(`task: The "expansions" setting is not available anymore on v3.0`)
 	}
 
 	if e.OutputStyle != "" {
@@ -258,7 +272,7 @@ func (e *Executor) RunTask(ctx context.Context, call taskfile.Call) error {
 
 		if upToDate && preCondMet {
 			if !e.Silent {
-				e.Logger.Errf(logger.Magenta, `task: Task "%s" is up to date`, t.Task)
+				e.Logger.Errf(logger.Magenta, `task: Task "%s" is up to date`, t.Name())
 			}
 			return nil
 		}

@@ -1,12 +1,12 @@
 # Installation
 
-## Binary
+Task offers many installation methods. Check out the available methods below.
 
-Or you can download the binary from the [releases][releases] page and add to
-your $PATH. DEB and RPM packages are also available.
-The `task_checksums.txt` file contains the sha256 checksum for each file.
+## Package Managers
 
-## Homebrew
+<!-- tabs:start -->
+
+#### **Homebrew**
 
 If you're on macOS or Linux and have [Homebrew][homebrew] installed, getting
 Task is as simple as running:
@@ -15,19 +15,17 @@ Task is as simple as running:
 brew install go-task/tap/go-task
 ```
 
-> This installation method is only currently supported on amd64 architectures.
+#### **Snap**
 
-## Snap
-
-Task is available for [Snapcraft][snapcraft], but keep in mind that your
+Task is available in [Snapcraft][snapcraft], but keep in mind that your
 Linux distribution should allow classic confinement for Snaps to Task work
 right:
 
 ```bash
-sudo snap install task
+sudo snap install task --classic
 ```
 
-## Scoop
+#### **Scoop**
 
 If you're on Windows and have [Scoop][scoop] installed, use `extras` bucket
 to install Task like:
@@ -40,7 +38,7 @@ scoop install task
 This installation method is community owned. After a new release of Task, it
 may take some time until it's available on Scoop.
 
-## Arch Linux
+#### **AUR**
 
 If you're on Arch Linux you can install Task from
 [AUR](https://aur.archlinux.org/packages/taskfile-git) using your favorite
@@ -53,36 +51,25 @@ yay -S taskfile-git
 This installation method is community owned, but since it's `-git` version of
 the package, it's always latest available version based on the Git repository.
 
-## Go
+<!-- tabs:end -->
 
-Task now uses [Go Modules](https://github.com/golang/go/wiki/Modules), which
-means you may have trouble compiling it on older Go versions or using
-`$GOPATH`.
+## Get The Binary
 
-For CI environments we recommend using the [Install Script](#install-script)
-instead, which is faster and more stable, since it'll just download the latest
-released binary, instead of compiling the edge (master branch) version.
+<!-- tabs:start -->
 
-Installing in another directory:
+#### **Binary**
 
-```bash
-git clone https://github.com/go-task/task
-cd task
+You can download the binary from the [releases page on GitHub][releases] and
+add to your `$PATH`.
 
-# compiling binary to $GOPATH/bin
-go install -v ./cmd/task
+DEB and RPM packages are also available.
 
-# compiling it to another location
-# use -o ./task.exe on Windows
-go build -v -o ./task ./cmd/task
-```
+The `task_checksums.txt` file contains the SHA-256 checksum for each file.
 
-Both methods requires having the [Go][go] environment properly setup locally.
-
-## Install script
+#### **Install Script**
 
 We also have a [install script][installscript], which is very useful on
-scenarios like CIs. Many thanks to [godownloader][godownloader] for allowing
+scenarios like CIs. Many thanks to [GoDownloader][godownloader] for allowing
 easily generating this script.
 
 ```bash
@@ -91,7 +78,7 @@ curl -sL https://taskfile.dev/install.sh | sh
 
 > This method will download the binary on the local `./bin` directory by default.
 
-## GitHub Actions
+#### **GitHub Actions**
 
 If you want to install Task in GitHub Actions you can try using
 [this action](https://github.com/arduino/actions/tree/master/setup-taskfile)
@@ -104,8 +91,41 @@ by the Arduino team:
 
 This installation method is community owned.
 
+<!-- tabs:end -->
+
+## Build From Source
+
+<!-- tabs:start -->
+
+#### **Go Modules**
+
+First, make sure you have [Go][go] properly installed and setup.
+
+Task requires [Go Modules](https://github.com/golang/go/wiki/Modules) and
+doesn't officially support installing via `go get` anymore.
+
+Installing in another directory:
+
+```bash
+git clone https://github.com/go-task/task
+cd task
+
+# Compiling binary to $GOPATH/bin
+go install -v ./cmd/task
+
+# Compiling it to another location.
+# Use -o ./task.exe on Windows.
+go build -v -o ./task ./cmd/task
+```
+
+> For CI environments we recommend using the [Install Script](#get-the-binary)
+> instead, which is faster and more stable, since it'll just download the latest
+> released binary, instead of compiling the edge (master branch) version.
+
+<!-- tabs:end -->
+
 [go]: https://golang.org/
-[snapcraft]: https://snapcraft.io/
+[snapcraft]: https://snapcraft.io/task
 [homebrew]: https://brew.sh/
 [installscript]: https://github.com/go-task/task/blob/master/install-task.sh
 [releases]: https://github.com/go-task/task/releases

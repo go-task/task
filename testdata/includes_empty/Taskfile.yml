@@ -1,4 +1,4 @@
-version: '2'
+version: '3'
 
 includes:
   included: Taskfile2.yml

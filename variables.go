@@ -23,10 +23,16 @@ func (e *Executor) CompiledTask(call taskfile.Call) (*taskfile.Task, error) {
 		return nil, err
 	}
 
-	r := templater.Templater{Vars: vars}
+	v, err := e.Taskfile.ParsedVersion()
+	if err != nil {
+		return nil, err
+	}
+
+	r := templater.Templater{Vars: vars, RemoveNoValue: v >= 3.0}
 
 	new := taskfile.Task{
 		Task:        origTask.Task,
+		Label:       r.Replace(origTask.Label),
 		Desc:        r.Replace(origTask.Desc),
 		Summary:     r.Replace(origTask.Summary),
 		Sources:     r.ReplaceSlice(origTask.Sources),
@@ -50,19 +56,19 @@ func (e *Executor) CompiledTask(call taskfile.Call) (*taskfile.Task, error) {
 		new.Prefix = new.Task
 	}
 
-	new.Env = make(taskfile.Vars, len(e.Taskfile.Env)+len(origTask.Env))
-	for k, v := range r.ReplaceVars(e.Taskfile.Env) {
-		new.Env[k] = v
-	}
-	for k, v := range r.ReplaceVars(origTask.Env) {
-		new.Env[k] = v
-	}
-	for k, v := range new.Env {
+	new.Env = &taskfile.Vars{}
+	new.Env.Merge(r.ReplaceVars(e.Taskfile.Env))
+	new.Env.Merge(r.ReplaceVars(origTask.Env))
+	err = new.Env.Range(func(k string, v taskfile.Var) error {
 		static, err := e.Compiler.HandleDynamicVar(v)
 		if err != nil {
-			return nil, err
+			return err
 		}
-		new.Env[k] = taskfile.Var{Static: static}
+		new.Env.Set(k, taskfile.Var{Static: static})
+		return nil
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	if len(origTask.Cmds) > 0 {
@@ -103,7 +109,7 @@ func (e *Executor) CompiledTask(call taskfile.Call) (*taskfile.Task, error) {
 			if err != nil {
 				return nil, err
 			}
-			vars[strings.ToUpper(checker.Kind())] = taskfile.Var{Live: value}
+			vars.Set(strings.ToUpper(checker.Kind()), taskfile.Var{Live: value})
 		}
 
 		// Adding new variables, requires us to refresh the templaters
