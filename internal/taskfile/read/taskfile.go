@@ -3,6 +3,7 @@ package read
 import (
 	"errors"
 	"fmt"
+	"github.com/joho/godotenv"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -16,6 +17,7 @@ import (
 var (
 	// ErrIncludedTaskfilesCantHaveIncludes is returned when a included Taskfile contains includes
 	ErrIncludedTaskfilesCantHaveIncludes = errors.New("task: Included Taskfiles can't have includes. Please, move the include to the main Taskfile")
+	ErrIncludedTaskfilesCantHaveDotenvs = errors.New("task: Included Taskfiles can't have dotenv declarations. Please, move the dotenv declaration to the main Taskfile")
 )
 
 // Taskfile reads a Taskfile for a given directory
@@ -32,6 +34,22 @@ func Taskfile(dir string, entrypoint string) (*taskfile.Taskfile, error) {
 	v, err := t.ParsedVersion()
 	if err != nil {
 		return nil, err
+	}
+
+	if v >= 3.0 {
+		if len(t.Dotenv) > 0 {
+			for _, envFile := range t.Dotenv {
+				var envFilePath string
+				if filepath.IsAbs(envFile) {
+					envFilePath = envFile
+				} else {
+					envFilePath = filepath.Join(dir, envFile)
+				}
+				if  err = godotenv.Load(envFilePath); err != nil {
+					return nil, err
+				}
+			}
+		}
 	}
 
 	for namespace, includedTask := range t.Includes {
@@ -66,6 +84,12 @@ func Taskfile(dir string, entrypoint string) (*taskfile.Taskfile, error) {
 		}
 		if len(includedTaskfile.Includes) > 0 {
 			return nil, ErrIncludedTaskfilesCantHaveIncludes
+		}
+
+		if v >= 3.0 {
+			if len(includedTaskfile.Dotenv) > 0 {
+				return nil, ErrIncludedTaskfilesCantHaveDotenvs
+			}
 		}
 
 		if includedTask.AdvancedImport {

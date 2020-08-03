@@ -3,6 +3,7 @@ module github.com/go-task/task/v2
 require (
 	github.com/fatih/color v1.7.0
 	github.com/go-task/slim-sprig v0.0.0-20200516131648-f9bac4e523eb
+	github.com/joho/godotenv v1.3.0
 	github.com/mattn/go-colorable v0.1.2 // indirect
 	github.com/mattn/go-zglob v0.0.1
 	github.com/radovskyb/watcher v1.0.5

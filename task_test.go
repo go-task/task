@@ -816,3 +816,50 @@ func TestShortTaskNotation(t *testing.T) {
 	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "default"}))
 	assert.Equal(t, "string-slice-1\nstring-slice-2\nstring\n", buff.String())
 }
+
+func TestDotenvShouldIncludeAllEnvFiles(t *testing.T) {
+	tt := fileContentTest{
+		Dir:       "testdata/dotenv",
+		Target:    "default",
+		TrimSpace: false,
+		Files: map[string]string{
+			"include.txt":  "INCLUDE1='from_include1' INCLUDE2='from_include2'\n",
+		},
+	}
+	tt.Run(t)
+}
+
+func TestDotenvShouldErrorWithIncludeEnvPath(t *testing.T) {
+	const dir = "testdata/dotenv"
+	const entry = "Taskfile-errors1.yml"
+
+	var buff bytes.Buffer
+	e := task.Executor{
+		Dir:     dir,
+		Entrypoint: entry,
+		Summary: true,
+		Stdout:  &buff,
+		Stderr:  &buff,
+	}
+	err := e.Setup()
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "no such file")
+}
+
+func TestDotenvShouldErrorWhenIncludingDependantDotenvs(t *testing.T) {
+	const dir = "testdata/dotenv"
+	const entry = "Taskfile-errors2.yml"
+
+	var buff bytes.Buffer
+	e := task.Executor{
+		Dir:     dir,
+		Entrypoint: entry,
+		Summary: true,
+		Stdout:  &buff,
+		Stderr:  &buff,
+	}
+
+	err := e.Setup()
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "move the dotenv")
+}
