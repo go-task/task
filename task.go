@@ -43,6 +43,7 @@ type Executor struct {
 	Summary    bool
 	Parallel   bool
 	Color      bool
+	Yes        bool
 
 	Stdin  io.Reader
 	Stdout io.Writer
@@ -256,9 +257,10 @@ func (e *Executor) RunTask(ctx context.Context, call taskfile.Call) error {
 		return &MaximumTaskCallExceededError{task: call.Task}
 	}
 
-	if t.Warning != "" {
+	if t.Warning != "" && !e.Yes {
 		response := promptWithWarning(t.Warning)
 		if !isConfirmed(response) {
+			// Skip task
 			return nil
 		}
 	}
@@ -353,10 +355,10 @@ func (e *Executor) runCommand(ctx context.Context, t *taskfile.Task, call taskfi
 		}
 		return nil
 	case cmd.Cmd != "":
-		if cmd.Warning != "" {
+		if cmd.Warning != "" && !e.Yes {
 			response := promptWithWarning(cmd.Warning)
 			if !isConfirmed(response) {
-				// Continue to next cmd
+				// Skip command
 				return nil
 			}
 		}

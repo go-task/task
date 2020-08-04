@@ -68,6 +68,7 @@ func main() {
 		entrypoint  string
 		output      string
 		color       bool
+		yes         bool
 	)
 
 	pflag.BoolVar(&versionFlag, "version", false, "show Task version")
@@ -86,6 +87,7 @@ func main() {
 	pflag.StringVarP(&entrypoint, "taskfile", "t", "", `choose which Taskfile to run. Defaults to "Taskfile.yml"`)
 	pflag.StringVarP(&output, "output", "o", "", "sets output style: [interleaved|group|prefixed]")
 	pflag.BoolVarP(&color, "color", "c", true, "colored output")
+	pflag.BoolVarP(&yes, "yes", "y", false, "automatic yes to warning prompts")
 	pflag.Parse()
 
 	if versionFlag {
@@ -131,6 +133,7 @@ func main() {
 		Summary:    summary,
 		Parallel:   parallel,
 		Color:      color,
+		Yes:        yes,
 
 		Stdin:  os.Stdin,
 		Stdout: os.Stdout,
