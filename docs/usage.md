@@ -920,3 +920,47 @@ so task know which files to watch.
 
 [gotemplate]: https://golang.org/pkg/text/template/
 [minify]: https://github.com/tdewolff/minify/tree/master/cmd/minify
+
+## Warning prompts
+
+You can add both task level and command level warning prompts to your Taskfile.
+
+Here is how `warning` can be used at both levels:
+
+```yaml
+version: '3'
+
+tasks:
+  delete-things:
+    desc: Remove both important and unimportant files
+    warning: Are you sure you want to run this task?
+    cmds:
+      - rm -rf /unimportant-files
+      - cmd: rm -rf /important-files
+        warning: Are you sure you want to run this command?
+```
+
+In this example, a warning prompt will be presented both at the start of the task,
+and again when the task reaches the command with a warning.
+
+> NOTE: as with [silent mode](#silent-mode) and [ignore errors](#ignore-errors), 
+> to add an option at the command level requires prefixing the target command with `cmd:`
+
+### Behavior of denied warnings
+
+When a task level warning is denied, the task is skipped.  Command level warnings have
+the same behavior: when denied, the task continues on to the next command (if any).
+
+### Automatic confirmation
+
+The `[-y | --yes]` option passed with a task call enables the ability to automatically
+confirm a task with warnings.  When provided, all warnings, at both task and command
+levels are confirmed.
+
+To build off the example above:
+
+```bash
+$ task delete-things -y
+```
+
+Will run the entire task without warning. Use with caution!
