@@ -259,7 +259,7 @@ func (e *Executor) RunTask(ctx context.Context, call taskfile.Call) error {
 	if t.Warning != "" {
 		response := promptWithWarning(t.Warning)
 		if !isConfirmed(response) {
-			return errors.New("cancelled at warning")
+			return nil
 		}
 	}
 
