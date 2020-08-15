@@ -35,8 +35,8 @@ If you omit a task name, "default" will be assumed.
 
 ## Environment variables
 
-
 ### Task
+
 You can use `env` to set custom environment variables for a specific task:
 
 ```yaml
@@ -68,29 +68,20 @@ tasks:
 > NOTE: `env` supports expansion and retrieving output from a shell command
 > just like variables, as you can see on the [Variables](#variables) section.
 
+### .env files
 
-### Operating System
-Environment variables from the OS are accessible using `$VARNAME`:
+You can also ask Task to include `.env` like files by using the `dotenv:`
+setting:
 
-```yaml
-version: '2'
-
-tasks:
-  greet:
-    cmds:
-      - echo "Hello $USER"
 ```
-
-### .env
-
-*.env* files are supported in v3 using the `dotenv` declaration:
-
-.env
-```
+# .env
 KEYNAME=VALUE
 ```
-Taskfile.yml
+
+
 ```yaml
+# Taskfile.yml
+
 version: '3'
 
 dotenv: ['.env']

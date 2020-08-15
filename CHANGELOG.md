@@ -2,6 +2,8 @@
 
 # v3.0.0 - Unreleased
 
+- Add support to `.env` like files
+  ([#324](https://github.com/go-task/task/issues/324), [#356](https://github.com/go-task/task/pull/356)).
 - Add `label:` to task so you can override the task name in the logs
   ([#321](https://github.com/go-task/task/issues/321]), [#337](https://github.com/go-task/task/pull/337)).
 

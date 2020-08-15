@@ -3,7 +3,6 @@ package read
 import (
 	"errors"
 	"fmt"
-	"github.com/joho/godotenv"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -11,12 +10,14 @@ import (
 	"github.com/go-task/task/v2/internal/taskfile"
 	"github.com/go-task/task/v2/internal/templater"
 
+	"github.com/joho/godotenv"
 	"gopkg.in/yaml.v3"
 )
 
 var (
 	// ErrIncludedTaskfilesCantHaveIncludes is returned when a included Taskfile contains includes
 	ErrIncludedTaskfilesCantHaveIncludes = errors.New("task: Included Taskfiles can't have includes. Please, move the include to the main Taskfile")
+	// ErrIncludedTaskfilesCantHaveDotenvs is returned when a included Taskfile contains dotenvs
 	ErrIncludedTaskfilesCantHaveDotenvs = errors.New("task: Included Taskfiles can't have dotenv declarations. Please, move the dotenv declaration to the main Taskfile")
 )
 
@@ -36,17 +37,18 @@ func Taskfile(dir string, entrypoint string) (*taskfile.Taskfile, error) {
 		return nil, err
 	}
 
-	if v >= 3.0 {
-		if len(t.Dotenv) > 0 {
-			for _, envFile := range t.Dotenv {
-				var envFilePath string
-				if filepath.IsAbs(envFile) {
-					envFilePath = envFile
-				} else {
-					envFilePath = filepath.Join(dir, envFile)
-				}
-				if  err = godotenv.Load(envFilePath); err != nil {
-					return nil, err
+	if v >= 3.0 && len(t.Dotenv) > 0 {
+		for _, dotEnvPath := range t.Dotenv {
+			if !filepath.IsAbs(dotEnvPath) {
+				dotEnvPath = filepath.Join(dir, dotEnvPath)
+			}
+			envs, err := godotenv.Read(dotEnvPath)
+			if err != nil {
+				return nil, err
+			}
+			for key, value := range envs {
+				if _, ok := t.Env.Mapping[key]; !ok {
+					t.Env.Set(key, taskfile.Var{Static: value})
 				}
 			}
 		}
@@ -86,10 +88,8 @@ func Taskfile(dir string, entrypoint string) (*taskfile.Taskfile, error) {
 			return nil, ErrIncludedTaskfilesCantHaveIncludes
 		}
 
-		if v >= 3.0 {
-			if len(includedTaskfile.Dotenv) > 0 {
-				return nil, ErrIncludedTaskfilesCantHaveDotenvs
-			}
+		if v >= 3.0 && len(includedTaskfile.Dotenv) > 0 {
+			return nil, ErrIncludedTaskfilesCantHaveDotenvs
 		}
 
 		if includedTask.AdvancedImport {
