@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/go-task/task/v2/internal/args"
-	"github.com/go-task/task/v2/internal/taskfile"
+	"github.com/go-task/task/v3/internal/args"
+	"github.com/go-task/task/v3/internal/taskfile"
 
 	"github.com/stretchr/testify/assert"
 )

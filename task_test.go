@@ -11,8 +11,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/go-task/task/v2"
-	"github.com/go-task/task/v2/internal/taskfile"
+	"github.com/go-task/task/v3"
+	"github.com/go-task/task/v3/internal/taskfile"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -823,7 +823,7 @@ func TestDotenvShouldIncludeAllEnvFiles(t *testing.T) {
 		Target:    "default",
 		TrimSpace: false,
 		Files: map[string]string{
-			"include.txt":  "INCLUDE1='from_include1' INCLUDE2='from_include2'\n",
+			"include.txt": "INCLUDE1='from_include1' INCLUDE2='from_include2'\n",
 		},
 	}
 	tt.Run(t)
@@ -835,11 +835,11 @@ func TestDotenvShouldErrorWithIncludeEnvPath(t *testing.T) {
 
 	var buff bytes.Buffer
 	e := task.Executor{
-		Dir:     dir,
+		Dir:        dir,
 		Entrypoint: entry,
-		Summary: true,
-		Stdout:  &buff,
-		Stderr:  &buff,
+		Summary:    true,
+		Stdout:     &buff,
+		Stderr:     &buff,
 	}
 	err := e.Setup()
 	assert.Error(t, err)
@@ -852,11 +852,11 @@ func TestDotenvShouldErrorWhenIncludingDependantDotenvs(t *testing.T) {
 
 	var buff bytes.Buffer
 	e := task.Executor{
-		Dir:     dir,
+		Dir:        dir,
 		Entrypoint: entry,
-		Summary: true,
-		Stdout:  &buff,
-		Stderr:  &buff,
+		Summary:    true,
+		Stdout:     &buff,
+		Stderr:     &buff,
 	}
 
 	err := e.Setup()

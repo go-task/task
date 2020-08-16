@@ -3,7 +3,7 @@ package taskfile_test
 import (
 	"testing"
 
-	"github.com/go-task/task/v2/internal/taskfile"
+	"github.com/go-task/task/v3/internal/taskfile"
 
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/yaml.v3"

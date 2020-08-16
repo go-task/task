@@ -5,8 +5,8 @@ import (
 	"sort"
 	"text/tabwriter"
 
-	"github.com/go-task/task/v2/internal/logger"
-	"github.com/go-task/task/v2/internal/taskfile"
+	"github.com/go-task/task/v3/internal/logger"
+	"github.com/go-task/task/v3/internal/taskfile"
 )
 
 // PrintTasksHelp prints help os tasks that have a description

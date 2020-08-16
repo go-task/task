@@ -3,7 +3,7 @@ package args
 import (
 	"strings"
 
-	"github.com/go-task/task/v2/internal/taskfile"
+	"github.com/go-task/task/v3/internal/taskfile"
 )
 
 // Parse parses command line argument: tasks and vars of each task
