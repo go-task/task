@@ -1,0 +1,46 @@
+version: '3'
+
+vars:
+  VAR_A: A
+  VAR_B: '{{.VAR_A}}B'
+  VAR_C: '{{.VAR_B}}C'
+
+  VAR_1: {sh: echo 1}
+  VAR_2: {sh: 'echo "{{.VAR_1}}2"'}
+  VAR_3: {sh: 'echo "{{.VAR_2}}3"'}
+
+tasks:
+  default:
+    - task: missing-var
+    - task: var-order
+    - task: dependent-sh
+    - task: with-call
+
+  missing-var: echo '{{.NON_EXISTING_VAR}}' > missing-var.txt
+
+  var-order:
+    vars:
+      VAR_D: '{{.VAR_C}}D'
+      VAR_E: '{{.VAR_D}}E'
+      VAR_F: '{{.VAR_E}}F'
+    cmds:
+      - echo '{{.VAR_F}}' > var-order.txt
+
+  dependent-sh:
+    vars:
+      VAR_4: {sh: 'echo "{{.VAR_3}}4"'}
+      VAR_5: {sh: 'echo "{{.VAR_4}}5"'}
+      VAR_6: {sh: 'echo "{{.VAR_5}}6"'}
+    cmds:
+      - echo '{{.VAR_6}}' > dependent-sh.txt
+
+  with-call:
+    - task: called-task
+      vars:
+        ABC123: '{{.VAR_C}}{{.VAR_3}}'
+
+  called-task:
+    vars:
+      MESSAGE: Hi, {{.ABC123}}!
+    cmds:
+      - echo "{{.MESSAGE}}" > with-call.txt

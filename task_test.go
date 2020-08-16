@@ -11,8 +11,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/go-task/task/v2"
-	"github.com/go-task/task/v2/internal/taskfile"
+	"github.com/go-task/task/v3"
+	"github.com/go-task/task/v3/internal/taskfile"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -69,43 +69,6 @@ func TestEnv(t *testing.T) {
 	tt.Run(t)
 }
 
-func TestVarsV1(t *testing.T) {
-	tt := fileContentTest{
-		Dir:       "testdata/vars/v1",
-		Target:    "default",
-		TrimSpace: true,
-		Files: map[string]string{
-			// hello task:
-			"foo.txt":              "foo",
-			"bar.txt":              "bar",
-			"baz.txt":              "baz",
-			"tmpl_foo.txt":         "foo",
-			"tmpl_bar.txt":         "<no value>",
-			"tmpl_foo2.txt":        "foo2",
-			"tmpl_bar2.txt":        "bar2",
-			"shtmpl_foo.txt":       "foo",
-			"shtmpl_foo2.txt":      "foo2",
-			"nestedtmpl_foo.txt":   "{{.FOO}}",
-			"nestedtmpl_foo2.txt":  "foo2",
-			"foo2.txt":             "foo2",
-			"bar2.txt":             "bar2",
-			"baz2.txt":             "baz2",
-			"tmpl2_foo.txt":        "<no value>",
-			"tmpl2_foo2.txt":       "foo2",
-			"tmpl2_bar.txt":        "<no value>",
-			"tmpl2_bar2.txt":       "<no value>",
-			"shtmpl2_foo.txt":      "<no value>",
-			"shtmpl2_foo2.txt":     "foo2",
-			"nestedtmpl2_foo2.txt": "{{.FOO2}}",
-			"override.txt":         "bar",
-		},
-	}
-	tt.Run(t)
-	// Ensure identical results when running hello task directly.
-	tt.Target = "hello"
-	tt.Run(t)
-}
-
 func TestVarsV2(t *testing.T) {
 	tt := fileContentTest{
 		Dir:       "testdata/vars/v2",
@@ -135,6 +98,7 @@ func TestVarsV2(t *testing.T) {
 			"nestedtmpl2_foo2.txt": "<no value>",
 			"override.txt":         "bar",
 			"nested.txt":           "Taskvars-TaskfileVars-TaskVars",
+			"task_name.txt":        "hello",
 		},
 	}
 	tt.Run(t)
@@ -143,8 +107,22 @@ func TestVarsV2(t *testing.T) {
 	tt.Run(t)
 }
 
+func TestVarsV3(t *testing.T) {
+	tt := fileContentTest{
+		Dir:    "testdata/vars/v3",
+		Target: "default",
+		Files: map[string]string{
+			"missing-var.txt":  "\n",
+			"var-order.txt":    "ABCDEF\n",
+			"dependent-sh.txt": "123456\n",
+			"with-call.txt":    "Hi, ABC123!\n",
+		},
+	}
+	tt.Run(t)
+}
+
 func TestMultilineVars(t *testing.T) {
-	for _, dir := range []string{"testdata/vars/v1/multiline", "testdata/vars/v2/multiline"} {
+	for _, dir := range []string{"testdata/vars/v2/multiline"} {
 		tt := fileContentTest{
 			Dir:       dir,
 			Target:    "default",
@@ -168,7 +146,7 @@ func TestMultilineVars(t *testing.T) {
 
 func TestVarsInvalidTmpl(t *testing.T) {
 	const (
-		dir         = "testdata/vars/v1"
+		dir         = "testdata/vars/v2"
 		target      = "invalid-var-tmpl"
 		expectError = "template: :1: unexpected EOF"
 	)
@@ -406,6 +384,118 @@ func TestStatusChecksum(t *testing.T) {
 	assert.Equal(t, `task: Task "build" is up to date`+"\n", buff.String())
 }
 
+func TestLabelUpToDate(t *testing.T) {
+	const dir = "testdata/label_uptodate"
+
+	var buff bytes.Buffer
+	e := task.Executor{
+		Dir:    dir,
+		Stdout: &buff,
+		Stderr: &buff,
+	}
+	assert.NoError(t, e.Setup())
+	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "foo"}))
+	assert.Contains(t, buff.String(), "foobar")
+}
+
+func TestLabelSummary(t *testing.T) {
+	const dir = "testdata/label_summary"
+
+	var buff bytes.Buffer
+	e := task.Executor{
+		Dir:     dir,
+		Summary: true,
+		Stdout:  &buff,
+		Stderr:  &buff,
+	}
+	assert.NoError(t, e.Setup())
+	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "foo"}))
+	assert.Contains(t, buff.String(), "foobar")
+}
+
+func TestLabelInStatus(t *testing.T) {
+	const dir = "testdata/label_status"
+
+	e := task.Executor{
+		Dir: dir,
+	}
+	assert.NoError(t, e.Setup())
+	err := e.Status(context.Background(), taskfile.Call{Task: "foo"})
+	if assert.Error(t, err) {
+		assert.Contains(t, err.Error(), "foobar")
+	}
+}
+
+func TestLabelWithVariableExpansion(t *testing.T) {
+	const dir = "testdata/label_var"
+
+	var buff bytes.Buffer
+	e := task.Executor{
+		Dir:    dir,
+		Stdout: &buff,
+		Stderr: &buff,
+	}
+	assert.NoError(t, e.Setup())
+	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "foo"}))
+	assert.Contains(t, buff.String(), "foobaz")
+}
+
+func TestLabelInSummary(t *testing.T) {
+	const dir = "testdata/label_summary"
+
+	var buff bytes.Buffer
+	e := task.Executor{
+		Dir:    dir,
+		Stdout: &buff,
+		Stderr: &buff,
+	}
+	assert.NoError(t, e.Setup())
+	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "foo"}))
+	assert.Contains(t, buff.String(), "foobar")
+}
+
+func TestLabelInList(t *testing.T) {
+	const dir = "testdata/label_list"
+
+	var buff bytes.Buffer
+	e := task.Executor{
+		Dir:    dir,
+		Stdout: &buff,
+		Stderr: &buff,
+	}
+	assert.NoError(t, e.Setup())
+	e.PrintTasksHelp()
+	assert.Contains(t, buff.String(), "foobar")
+}
+
+func TestStatusVariables(t *testing.T) {
+	const dir = "testdata/status_vars"
+
+	_ = os.RemoveAll(filepath.Join(dir, ".task"))
+	_ = os.Remove(filepath.Join(dir, "generated.txt"))
+
+	var buff bytes.Buffer
+	e := task.Executor{
+		Dir:     dir,
+		Stdout:  &buff,
+		Stderr:  &buff,
+		Silent:  false,
+		Verbose: true,
+	}
+	assert.NoError(t, e.Setup())
+	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "build"}))
+
+	assert.Contains(t, buff.String(), "d41d8cd98f00b204e9800998ecf8427e")
+
+	inf, err := os.Stat(filepath.Join(dir, "source.txt"))
+	assert.NoError(t, err)
+	ts := fmt.Sprintf("%d", inf.ModTime().Unix())
+	tf := fmt.Sprintf("%s", inf.ModTime())
+
+	assert.Contains(t, buff.String(), ts)
+	assert.Contains(t, buff.String(), tf)
+}
+
 func TestInit(t *testing.T) {
 	const dir = "testdata/init"
 	var file = filepath.Join(dir, "Taskfile.yml")
@@ -441,7 +531,6 @@ func TestTaskVersion(t *testing.T) {
 		Dir     string
 		Version string
 	}{
-		{"testdata/version/v1", "1"},
 		{"testdata/version/v2", "2"},
 	}
 
@@ -511,7 +600,7 @@ func TestDry(t *testing.T) {
 	assert.NoError(t, e.Setup())
 	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "build"}))
 
-	assert.Equal(t, "touch file.txt", strings.TrimSpace(buff.String()))
+	assert.Equal(t, "task: touch file.txt", strings.TrimSpace(buff.String()))
 	if _, err := os.Stat(file); err == nil {
 		t.Errorf("File should not exist %s", file)
 	}
@@ -549,12 +638,31 @@ func TestIncludes(t *testing.T) {
 		Target:    "default",
 		TrimSpace: true,
 		Files: map[string]string{
-			"main.txt":               "main",
-			"included_directory.txt": "included_directory",
-			"included_taskfile.txt":  "included_taskfile",
+			"main.txt":                                  "main",
+			"included_directory.txt":                    "included_directory",
+			"included_directory_without_dir.txt":        "included_directory_without_dir",
+			"included_taskfile_without_dir.txt":         "included_taskfile_without_dir",
+			"./module2/included_directory_with_dir.txt": "included_directory_with_dir",
+			"./module2/included_taskfile_with_dir.txt":  "included_taskfile_with_dir",
+			"os_include.txt":                            "os",
 		},
 	}
 	tt.Run(t)
+}
+
+func TestIncorrectVersionIncludes(t *testing.T) {
+	const dir = "testdata/incorrect_includes"
+	expectedError := "task: Import with additional parameters is only available starting on Taskfile version v3"
+
+	var buff bytes.Buffer
+	e := task.Executor{
+		Dir:    dir,
+		Stdout: &buff,
+		Stderr: &buff,
+		Silent: true,
+	}
+
+	assert.EqualError(t, e.Setup(), expectedError)
 }
 
 func TestIncludesEmptyMain(t *testing.T) {
@@ -668,7 +776,7 @@ func TestWhenDirAttributeItCreatesMissingAndRunsInThatDir(t *testing.T) {
 	}
 
 	// Ensure that the directory to be created doesn't actually exist.
-	_ = os.Remove(toBeCreated)
+	_ = os.RemoveAll(toBeCreated)
 	if _, err := os.Stat(toBeCreated); err == nil {
 		t.Errorf("Directory should not exist: %v", err)
 	}
@@ -679,5 +787,79 @@ func TestWhenDirAttributeItCreatesMissingAndRunsInThatDir(t *testing.T) {
 	assert.Equal(t, expected, got, "Mismatch in the working directory")
 
 	// Clean-up after ourselves only if no error.
-	_ = os.Remove(toBeCreated)
+	_ = os.RemoveAll(toBeCreated)
+}
+
+func TestDisplaysErrorOnUnsupportedVersion(t *testing.T) {
+	e := task.Executor{
+		Dir:    "testdata/version/v1",
+		Stdout: ioutil.Discard,
+		Stderr: ioutil.Discard,
+	}
+	err := e.Setup()
+	assert.Error(t, err)
+	assert.Equal(t, "task: Taskfile versions prior to v2 are not supported anymore", err.Error())
+
+}
+
+func TestShortTaskNotation(t *testing.T) {
+	const dir = "testdata/short_task_notation"
+
+	var buff bytes.Buffer
+	e := task.Executor{
+		Dir:    dir,
+		Stdout: &buff,
+		Stderr: &buff,
+		Silent: true,
+	}
+	assert.NoError(t, e.Setup())
+	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "default"}))
+	assert.Equal(t, "string-slice-1\nstring-slice-2\nstring\n", buff.String())
+}
+
+func TestDotenvShouldIncludeAllEnvFiles(t *testing.T) {
+	tt := fileContentTest{
+		Dir:       "testdata/dotenv",
+		Target:    "default",
+		TrimSpace: false,
+		Files: map[string]string{
+			"include.txt": "INCLUDE1='from_include1' INCLUDE2='from_include2'\n",
+		},
+	}
+	tt.Run(t)
+}
+
+func TestDotenvShouldErrorWithIncludeEnvPath(t *testing.T) {
+	const dir = "testdata/dotenv"
+	const entry = "Taskfile-errors1.yml"
+
+	var buff bytes.Buffer
+	e := task.Executor{
+		Dir:        dir,
+		Entrypoint: entry,
+		Summary:    true,
+		Stdout:     &buff,
+		Stderr:     &buff,
+	}
+	err := e.Setup()
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "no such file")
+}
+
+func TestDotenvShouldErrorWhenIncludingDependantDotenvs(t *testing.T) {
+	const dir = "testdata/dotenv"
+	const entry = "Taskfile-errors2.yml"
+
+	var buff bytes.Buffer
+	e := task.Executor{
+		Dir:        dir,
+		Entrypoint: entry,
+		Summary:    true,
+		Stdout:     &buff,
+		Stderr:     &buff,
+	}
+
+	err := e.Setup()
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "move the dotenv")
 }

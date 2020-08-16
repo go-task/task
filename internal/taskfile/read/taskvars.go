@@ -6,14 +6,14 @@ import (
 	"path/filepath"
 	"runtime"
 
-	"github.com/go-task/task/v2/internal/taskfile"
+	"github.com/go-task/task/v3/internal/taskfile"
 
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 // Taskvars reads a Taskvars for a given directory
-func Taskvars(dir string) (taskfile.Vars, error) {
-	vars := make(taskfile.Vars)
+func Taskvars(dir string) (*taskfile.Vars, error) {
+	vars := &taskfile.Vars{}
 
 	path := filepath.Join(dir, "Taskvars.yml")
 	if _, err := os.Stat(path); err == nil {
@@ -29,24 +29,17 @@ func Taskvars(dir string) (taskfile.Vars, error) {
 		if err != nil {
 			return nil, err
 		}
-
-		if vars == nil {
-			vars = osVars
-		} else {
-			for k, v := range osVars {
-				vars[k] = v
-			}
-		}
+		vars.Merge(osVars)
 	}
 
 	return vars, nil
 }
 
-func readTaskvars(file string) (taskfile.Vars, error) {
+func readTaskvars(file string) (*taskfile.Vars, error) {
 	f, err := os.Open(file)
 	if err != nil {
 		return nil, err
 	}
 	var vars taskfile.Vars
-	return vars, yaml.NewDecoder(f).Decode(&vars)
+	return &vars, yaml.NewDecoder(f).Decode(&vars)
 }

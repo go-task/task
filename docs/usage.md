@@ -33,7 +33,9 @@ executable called must be available by the OS or in PATH.
 
 If you omit a task name, "default" will be assumed.
 
-## Environment
+## Environment variables
+
+### Task
 
 You can use `env` to set custom environment variables for a specific task:
 
@@ -65,6 +67,30 @@ tasks:
 
 > NOTE: `env` supports expansion and retrieving output from a shell command
 > just like variables, as you can see on the [Variables](#variables) section.
+
+### .env files
+
+You can also ask Task to include `.env` like files by using the `dotenv:`
+setting:
+
+```
+# .env
+KEYNAME=VALUE
+```
+
+
+```yaml
+# Taskfile.yml
+
+version: '3'
+
+dotenv: ['.env']
+
+tasks:
+  greet:
+    cmds:
+      - echo "Using $KEYNAME"
+```
 
 ## Operating System specific tasks
 
@@ -123,6 +149,21 @@ The tasks described in the given Taskfiles will be available with the informed
 namespace. So, you'd call `task docs:serve` to run the `serve` task from
 `documentation/Taskfile.yml` or `task docker:build` to run the `build` task
 from the `DockerTasks.yml` file.
+
+### Directory of included Taskfile
+
+By default, included Taskfile's tasks are ran in the current directory, even
+if the Taskfile is in another directory, but you can force its tasks to run
+in another directory by using this alternative syntax:
+
+```yaml
+version: '3'
+
+includes:
+  docs:
+    taskfile: ./docs/Taskfile.yml
+    dir: ./docs
+```
 
 > The included Taskfiles must be using the same schema version the main
 > Taskfile uses.
@@ -273,6 +314,8 @@ The above syntax is also supported in `deps`.
 
 ## Prevent unnecessary work
 
+### By fingerprinting locally generated files and their sources
+
 If a task generates something, you can inform Task the source and generated
 files, so Task will prevent to run them if not necessary.
 
@@ -328,6 +371,8 @@ tasks:
 
 > TIP: method `none` skips any validation and always run the task.
 
+### Using programmatic checks to indicate a task is up to date.
+
 Alternatively, you can inform a sequence of tests as `status`. If no error
 is returned (exit status 0), the task is considered up-to-date:
 
@@ -347,15 +392,34 @@ tasks:
       - test -f directory/file2.txt
 ```
 
+Normally, you would use `sources` in combination with
+`generates` - but for tasks that generate remote artifacts (Docker images,
+deploys, CD releases) the checksum source and timestamps require either
+access to the artifact or for an out-of-band refresh of the `.checksum`
+fingerprint file.
+
+Two special variables `{{.CHECKSUM}}` and `{{.TIMESTAMP}}` are available
+for interpolation within `status` commands, depending on the method assigned
+to fingerprint the sources. Only `source` globs are fingerprinted.
+
+Note that the `{{.TIMESTAMP}}` variable is a "live" Go `time.Time` struct, and
+can be formatted using any of the methods that `time.Time` responds to.
+
+See [the Go Time documentation](https://golang.org/pkg/time/) for more information.
+
 You can use `--force` or `-f` if you want to force a task to run even when
 up-to-date.
 
 Also, `task --status [tasks]...` will exit with a non-zero exit code if any of
 the tasks are not up-to-date.
 
-If you need a certain set of conditions to be _true_ you can use the
-`preconditions` stanza.  `preconditions` are very similar to `status`
-lines except they support `sh` expansion and they SHOULD all return 0.
+### Using programmatic checks to cancel execution of an task and it's dependencies
+
+In addition to `status` checks, there are also `preconditions` checks, which are
+the logical inverse of `status` checks.  That is, if you need a certain set of
+conditions to be _true_ you can use the `preconditions` stanza.
+`preconditions` are similar to `status` lines except they support `sh`
+expansion and they SHOULD all return 0.
 
 ```yaml
 version: '2'
@@ -419,6 +483,8 @@ Example of sending parameters with environment variables:
 ```bash
 $ TASK_VARIABLE=a-value task do-something
 ```
+
+> TIP: A special variable `.TASK` is always available containg the task name.
 
 Since some shells don't support above syntax to set environment variables
 (Windows) tasks also accepts a similar style when not in the beginning of
@@ -519,7 +585,7 @@ This works for all types of variables.
 Task parse commands as [Go's template engine][gotemplate] before executing
 them. Variables are accessible through dot syntax (`.VARNAME`).
 
-All functions by the Go's [sprig lib](http://masterminds.github.io/sprig/)
+All functions by the Go's [slim-sprig lib](https://go-task.github.io/slim-sprig/)
 are available. The following example gets the current date in a given format:
 
 ```yaml
@@ -650,6 +716,30 @@ If a summary is missing, the description will be printed.
 If the task does not have a summary or a description, a warning is printed.
 
 Please note: *showing the summary will not execute the command*.
+
+## Overriding task name
+
+Sometimes you may want to override the task name print on summary, up-to-date
+messates to STDOUT, etc. In this case you can just set `label:`, which can also
+be interpolated with variables:
+
+```yaml
+version: '3'
+
+tasks:
+  default:
+    - task: print
+      vars:
+        MESSAGE: hello
+    - task: print
+      vars:
+        MESSAGE: world
+
+  print:
+    label: 'print-{{.MESSAGE}}'
+    cmds:
+      - echo "{{.MESSAGE}}"
+```
 
 ## Silent mode
 
@@ -831,6 +921,22 @@ $ task default
 ```
 
 > The `output` option can also be specified by the `--output` or `-o` flags.
+
+## Short task syntax
+
+Starting on Task v3, you can now write tasks with a shorter syntax if they
+have the default settings (e.g. no custom `env:`, `vars:`, `silent:` , etc):
+
+```yaml
+version: '3'
+
+tasks:
+  build: go build -v -o ./app{{exeExt}} .
+
+  build:
+    - task: build
+    - ./app{{exeExt}} -h localhost -p 8080
+```
 
 ## Watch tasks
 

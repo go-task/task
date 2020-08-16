@@ -4,9 +4,10 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/go-task/task/v2/internal/execext"
-	"github.com/go-task/task/v2/internal/status"
-	"github.com/go-task/task/v2/internal/taskfile"
+	"github.com/go-task/task/v3/internal/execext"
+	"github.com/go-task/task/v3/internal/logger"
+	"github.com/go-task/task/v3/internal/status"
+	"github.com/go-task/task/v3/internal/taskfile"
 )
 
 // Status returns an error if any the of given tasks is not up-to-date
@@ -21,7 +22,7 @@ func (e *Executor) Status(ctx context.Context, calls ...taskfile.Call) error {
 			return err
 		}
 		if !isUpToDate {
-			return fmt.Errorf(`task: Task "%s" is not up-to-date`, t.Task)
+			return fmt.Errorf(`task: Task "%s" is not up-to-date`, t.Name())
 		}
 	}
 	return nil
@@ -49,25 +50,37 @@ func (e *Executor) statusOnError(t *taskfile.Task) error {
 }
 
 func (e *Executor) getStatusChecker(t *taskfile.Task) (status.Checker, error) {
-	switch t.Method {
-	case "", "timestamp":
-		return &status.Timestamp{
-			Dir:       t.Dir,
-			Sources:   t.Sources,
-			Generates: t.Generates,
-		}, nil
+	method := t.Method
+	if method == "" {
+		method = e.Taskfile.Method
+	}
+	switch method {
+	case "timestamp":
+		return e.timestampChecker(t), nil
 	case "checksum":
-		return &status.Checksum{
-			Dir:       t.Dir,
-			Task:      t.Task,
-			Sources:   t.Sources,
-			Generates: t.Generates,
-			Dry:       e.Dry,
-		}, nil
+		return e.checksumChecker(t), nil
 	case "none":
 		return status.None{}, nil
 	default:
-		return nil, fmt.Errorf(`task: invalid method "%s"`, t.Method)
+		return nil, fmt.Errorf(`task: invalid method "%s"`, method)
+	}
+}
+
+func (e *Executor) timestampChecker(t *taskfile.Task) status.Checker {
+	return &status.Timestamp{
+		Dir:       t.Dir,
+		Sources:   t.Sources,
+		Generates: t.Generates,
+	}
+}
+
+func (e *Executor) checksumChecker(t *taskfile.Task) status.Checker {
+	return &status.Checksum{
+		Dir:       t.Dir,
+		Task:      t.Task,
+		Sources:   t.Sources,
+		Generates: t.Generates,
+		Dry:       e.Dry,
 	}
 }
 
@@ -79,10 +92,10 @@ func (e *Executor) isTaskUpToDateStatus(ctx context.Context, t *taskfile.Task) (
 			Env:     getEnviron(t),
 		})
 		if err != nil {
-			e.Logger.VerboseOutf("task: status command %s exited non-zero: %s", s, err)
+			e.Logger.VerboseOutf(logger.Yellow, "task: status command %s exited non-zero: %s", s, err)
 			return false, nil
 		}
-		e.Logger.VerboseOutf("task: status command %s exited zero", s)
+		e.Logger.VerboseOutf(logger.Yellow, "task: status command %s exited zero", s)
 	}
 	return true, nil
 }

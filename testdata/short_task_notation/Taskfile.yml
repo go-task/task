@@ -1,0 +1,12 @@
+version: '3'
+
+tasks:
+  default:
+    - task: string-slice
+    - task: string
+
+  string-slice:
+    - echo "string-slice-1"
+    - echo "string-slice-2"
+
+  string: echo "string"

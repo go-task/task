@@ -2,10 +2,12 @@ package task
 
 import (
 	"path/filepath"
+	"strings"
 
-	"github.com/go-task/task/v2/internal/execext"
-	"github.com/go-task/task/v2/internal/taskfile"
-	"github.com/go-task/task/v2/internal/templater"
+	"github.com/go-task/task/v3/internal/execext"
+	"github.com/go-task/task/v3/internal/status"
+	"github.com/go-task/task/v3/internal/taskfile"
+	"github.com/go-task/task/v3/internal/templater"
 )
 
 // CompiledTask returns a copy of a task, but replacing variables in almost all
@@ -20,15 +22,21 @@ func (e *Executor) CompiledTask(call taskfile.Call) (*taskfile.Task, error) {
 	if err != nil {
 		return nil, err
 	}
-	r := templater.Templater{Vars: vars}
+
+	v, err := e.Taskfile.ParsedVersion()
+	if err != nil {
+		return nil, err
+	}
+
+	r := templater.Templater{Vars: vars, RemoveNoValue: v >= 3.0}
 
 	new := taskfile.Task{
 		Task:        origTask.Task,
+		Label:       r.Replace(origTask.Label),
 		Desc:        r.Replace(origTask.Desc),
 		Summary:     r.Replace(origTask.Summary),
 		Sources:     r.ReplaceSlice(origTask.Sources),
 		Generates:   r.ReplaceSlice(origTask.Generates),
-		Status:      r.ReplaceSlice(origTask.Status),
 		Dir:         r.Replace(origTask.Dir),
 		Vars:        nil,
 		Env:         nil,
@@ -48,19 +56,19 @@ func (e *Executor) CompiledTask(call taskfile.Call) (*taskfile.Task, error) {
 		new.Prefix = new.Task
 	}
 
-	new.Env = make(taskfile.Vars, len(e.Taskfile.Env)+len(origTask.Env))
-	for k, v := range r.ReplaceVars(e.Taskfile.Env) {
-		new.Env[k] = v
-	}
-	for k, v := range r.ReplaceVars(origTask.Env) {
-		new.Env[k] = v
-	}
-	for k, v := range new.Env {
+	new.Env = &taskfile.Vars{}
+	new.Env.Merge(r.ReplaceVars(e.Taskfile.Env))
+	new.Env.Merge(r.ReplaceVars(origTask.Env))
+	err = new.Env.Range(func(k string, v taskfile.Var) error {
 		static, err := e.Compiler.HandleDynamicVar(v)
 		if err != nil {
-			return nil, err
+			return err
 		}
-		new.Env[k] = taskfile.Var{Static: static}
+		new.Env.Set(k, taskfile.Var{Static: static})
+		return nil
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	if len(origTask.Cmds) > 0 {
@@ -93,6 +101,22 @@ func (e *Executor) CompiledTask(call taskfile.Call) (*taskfile.Task, error) {
 				Msg: r.Replace(precond.Msg),
 			}
 		}
+	}
+
+	if len(origTask.Status) > 0 {
+		for _, checker := range []status.Checker{e.timestampChecker(&new), e.checksumChecker(&new)} {
+			value, err := checker.Value()
+			if err != nil {
+				return nil, err
+			}
+			vars.Set(strings.ToUpper(checker.Kind()), taskfile.Var{Live: value})
+		}
+
+		// Adding new variables, requires us to refresh the templaters
+		// cache of the the values manually
+		r.ResetCache()
+
+		new.Status = r.ReplaceSlice(origTask.Status)
 	}
 
 	return &new, r.Err()

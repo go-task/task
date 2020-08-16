@@ -1,5 +1,58 @@
 # Changelog
 
+# v3.0.0 - Unreleased
+
+- Add support to `.env` like files
+  ([#324](https://github.com/go-task/task/issues/324), [#356](https://github.com/go-task/task/pull/356)).
+- Add `label:` to task so you can override the task name in the logs
+  ([#321](https://github.com/go-task/task/issues/321]), [#337](https://github.com/go-task/task/pull/337)).
+
+# v3.0.0 - Preview 4
+
+- Refactor how variables work on version 3
+  ([#311](https://github.com/go-task/task/pull/311)).
+- Disallow `expansions` on v3 since it has no effect.
+- `Taskvars.yml` is not automatically included anymore.
+- `Taskfile_{{OS}}.yml` is not automatically included anymore.
+- Allow interpolation on `includes`, so you can manually include a Taskfile
+  based on operation system, for example.
+
+# v3.0.0 - Preview 3
+
+- Expose `.TASK` variable in templates with the task name
+  ([#252](https://github.com/go-task/task/issues/252)).
+- Implement short task syntax
+  ([#194](https://github.com/go-task/task/issues/194), [#240](https://github.com/go-task/task/pull/240)).
+- Added option to make included Taskfile run commands on its own directory
+  ([#260](https://github.com/go-task/task/issues/260), [#144](https://github.com/go-task/task/issues/144))
+
+# v3.0.0 - Preview 2
+
+- Taskfiles in version 1 are not supported anymore
+  ([#237](https://github.com/go-task/task/pull/237)).
+- Added global `method:` option. With this option, you can set a default
+  method to all tasks in a Taskfile
+  ([#246](https://github.com/go-task/task/issues/246)).
+- Changed default method from `timestamp` to `checksum`
+  ([#246](https://github.com/go-task/task/issues/246)).
+- New magic variables are now available when using `status:`:
+  `.TIMESTAMP` which contains the greatest modification date
+  from the files listed in `sources:`, and `.CHECKSUM`, which
+  contains a checksum of all files listed in `status:`.
+  This is useful for manual checking when using external, or even remote,
+  artifacts when using `status:`
+  ([#216](https://github.com/go-task/task/pull/216)).
+
+## v3.0.0 - Preview 1
+
+- We're now using [slim-sprig](https://github.com/go-task/slim-sprig) instead of
+  [sprig](https://github.com/Masterminds/sprig), which allowed a file size
+  reduction of about 22%
+  ([#219](https://github.com/go-task/task/pull/219)).
+- We now use some colors on Task output to better distinguish message types -
+  commands are green, errors are red, etc
+  ([#207](https://github.com/go-task/task/pull/207)).
+
 ## v2.8.1 - 2019-05-20
 
 - Fix error code for the `--help` flag

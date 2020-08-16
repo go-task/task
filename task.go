@@ -6,19 +6,18 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"strconv"
 	"sync"
 	"sync/atomic"
 
-	"github.com/go-task/task/v2/internal/compiler"
-	compilerv1 "github.com/go-task/task/v2/internal/compiler/v1"
-	compilerv2 "github.com/go-task/task/v2/internal/compiler/v2"
-	"github.com/go-task/task/v2/internal/execext"
-	"github.com/go-task/task/v2/internal/logger"
-	"github.com/go-task/task/v2/internal/output"
-	"github.com/go-task/task/v2/internal/summary"
-	"github.com/go-task/task/v2/internal/taskfile"
-	"github.com/go-task/task/v2/internal/taskfile/read"
+	"github.com/go-task/task/v3/internal/compiler"
+	compilerv2 "github.com/go-task/task/v3/internal/compiler/v2"
+	compilerv3 "github.com/go-task/task/v3/internal/compiler/v3"
+	"github.com/go-task/task/v3/internal/execext"
+	"github.com/go-task/task/v3/internal/logger"
+	"github.com/go-task/task/v3/internal/output"
+	"github.com/go-task/task/v3/internal/summary"
+	"github.com/go-task/task/v3/internal/taskfile"
+	"github.com/go-task/task/v3/internal/taskfile/read"
 
 	"golang.org/x/sync/errgroup"
 )
@@ -42,6 +41,7 @@ type Executor struct {
 	Dry        bool
 	Summary    bool
 	Parallel   bool
+	Color      bool
 
 	Stdin  io.Reader
 	Stdout io.Writer
@@ -52,7 +52,7 @@ type Executor struct {
 	Output      output.Output
 	OutputStyle string
 
-	taskvars taskfile.Vars
+	taskvars *taskfile.Vars
 
 	taskCallCount map[string]*int32
 	mkdirMutexMap map[string]*sync.Mutex
@@ -110,9 +110,17 @@ func (e *Executor) Setup() error {
 	if err != nil {
 		return err
 	}
-	e.taskvars, err = read.Taskvars(e.Dir)
+
+	v, err := e.Taskfile.ParsedVersion()
 	if err != nil {
 		return err
+	}
+
+	if v < 3.0 {
+		e.taskvars, err = read.Taskvars(e.Dir)
+		if err != nil {
+			return err
+		}
 	}
 
 	if e.Stdin == nil {
@@ -128,36 +136,39 @@ func (e *Executor) Setup() error {
 		Stdout:  e.Stdout,
 		Stderr:  e.Stderr,
 		Verbose: e.Verbose,
+		Color:   e.Color,
 	}
 
-	v, err := strconv.ParseFloat(e.Taskfile.Version, 64)
-	if err != nil {
-		return fmt.Errorf(`task: Could not parse taskfile version "%s": %v`, e.Taskfile.Version, err)
+	if v < 2 {
+		return fmt.Errorf(`task: Taskfile versions prior to v2 are not supported anymore`)
 	}
+
 	// consider as equal to the greater version if round
 	if v == 2.0 {
 		v = 2.6
 	}
 
-	if v < 1 {
-		return fmt.Errorf(`task: Taskfile version should be greater or equal to v1`)
-	}
-	if v > 2.6 {
-		return fmt.Errorf(`task: Taskfile versions greater than v2.6 not implemented in the version of Task`)
+	if v > 3.0 {
+		return fmt.Errorf(`task: Taskfile versions greater than v3.0 not implemented in the version of Task`)
 	}
 
-	if v < 2 {
-		e.Compiler = &compilerv1.CompilerV1{
-			Dir:    e.Dir,
-			Vars:   e.taskvars,
-			Logger: e.Logger,
-		}
-	} else { // v >= 2
+	// Color available only on v3
+	if v < 3 {
+		e.Logger.Color = false
+	}
+
+	if v < 3 {
 		e.Compiler = &compilerv2.CompilerV2{
 			Dir:          e.Dir,
 			Taskvars:     e.taskvars,
 			TaskfileVars: e.Taskfile.Vars,
 			Expansions:   e.Taskfile.Expansions,
+			Logger:       e.Logger,
+		}
+	} else {
+		e.Compiler = &compilerv3.CompilerV3{
+			Dir:          e.Dir,
+			TaskfileVars: e.Taskfile.Vars,
 			Logger:       e.Logger,
 		}
 	}
@@ -167,6 +178,9 @@ func (e *Executor) Setup() error {
 	}
 	if v < 2.2 && len(e.Taskfile.Includes) > 0 {
 		return fmt.Errorf(`task: Including Taskfiles is only available starting on Taskfile version v2.2`)
+	}
+	if v >= 3.0 && e.Taskfile.Expansions > 2 {
+		return fmt.Errorf(`task: The "expansions" setting is not available anymore on v3.0`)
 	}
 
 	if e.OutputStyle != "" {
@@ -181,6 +195,14 @@ func (e *Executor) Setup() error {
 		e.Output = output.Prefixed{}
 	default:
 		return fmt.Errorf(`task: output option "%s" not recognized`, e.Taskfile.Output)
+	}
+
+	if e.Taskfile.Method == "" {
+		if v >= 3 {
+			e.Taskfile.Method = "checksum"
+		} else {
+			e.Taskfile.Method = "timestamp"
+		}
 	}
 
 	if v <= 2.1 {
@@ -202,6 +224,14 @@ func (e *Executor) Setup() error {
 		for _, task := range e.Taskfile.Tasks {
 			if len(task.Preconditions) > 0 {
 				return errors.New(`task: Task option "preconditions" is only available starting on Taskfile version v2.6`)
+			}
+		}
+	}
+
+	if v < 3 {
+		for _, taskfile := range e.Taskfile.Includes {
+			if taskfile.AdvancedImport {
+				return errors.New(`task: Import with additional parameters is only available starting on Taskfile version v3`)
 			}
 		}
 	}
@@ -242,24 +272,24 @@ func (e *Executor) RunTask(ctx context.Context, call taskfile.Call) error {
 
 		if upToDate && preCondMet {
 			if !e.Silent {
-				e.Logger.Errf(`task: Task "%s" is up to date`, t.Task)
+				e.Logger.Errf(logger.Magenta, `task: Task "%s" is up to date`, t.Name())
 			}
 			return nil
 		}
 	}
 
 	if err := e.mkdir(t); err != nil {
-		e.Logger.Errf("task: cannot make directory %q: %v", t.Dir, err)
+		e.Logger.Errf(logger.Red, "task: cannot make directory %q: %v", t.Dir, err)
 	}
 
 	for i := range t.Cmds {
 		if err := e.runCommand(ctx, t, call, i); err != nil {
 			if err2 := e.statusOnError(t); err2 != nil {
-				e.Logger.VerboseErrf("task: error cleaning status on error: %v", err2)
+				e.Logger.VerboseErrf(logger.Yellow, "task: error cleaning status on error: %v", err2)
 			}
 
 			if execext.IsExitError(err) && t.IgnoreError {
-				e.Logger.VerboseErrf("task: task error ignored: %v", err)
+				e.Logger.VerboseErrf(logger.Yellow, "task: task error ignored: %v", err)
 				continue
 			}
 
@@ -316,7 +346,7 @@ func (e *Executor) runCommand(ctx context.Context, t *taskfile.Task, call taskfi
 		return nil
 	case cmd.Cmd != "":
 		if e.Verbose || (!cmd.Silent && !t.Silent && !e.Taskfile.Silent && !e.Silent) {
-			e.Logger.Errf(cmd.Cmd)
+			e.Logger.Errf(logger.Green, "task: %s", cmd.Cmd)
 		}
 
 		if e.Dry {
@@ -347,7 +377,7 @@ func (e *Executor) runCommand(ctx context.Context, t *taskfile.Task, call taskfi
 			Stderr:  stdErr,
 		})
 		if execext.IsExitError(err) && cmd.IgnoreError {
-			e.Logger.VerboseErrf("task: command error ignored: %v", err)
+			e.Logger.VerboseErrf(logger.Yellow, "task: command error ignored: %v", err)
 			return nil
 		}
 		return err
@@ -362,8 +392,10 @@ func getEnviron(t *taskfile.Task) []string {
 	}
 
 	environ := os.Environ()
-	for k, v := range t.Env.ToStringMap() {
-		environ = append(environ, fmt.Sprintf("%s=%s", k, v))
+	for k, v := range t.Env.ToCacheMap() {
+		if s, ok := v.(string); ok {
+			environ = append(environ, fmt.Sprintf("%s=%s", k, s))
+		}
 	}
 	return environ
 }

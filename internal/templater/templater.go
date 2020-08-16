@@ -2,9 +2,10 @@ package templater
 
 import (
 	"bytes"
+	"strings"
 	"text/template"
 
-	"github.com/go-task/task/v2/internal/taskfile"
+	"github.com/go-task/task/v3/internal/taskfile"
 )
 
 // Templater is a help struct that allow us to call "replaceX" funcs multiple
@@ -12,10 +13,15 @@ import (
 // happen will be assigned to r.err, and consecutive calls to funcs will just
 // return the zero value.
 type Templater struct {
-	Vars taskfile.Vars
+	Vars          *taskfile.Vars
+	RemoveNoValue bool
 
-	strMap map[string]string
-	err    error
+	cacheMap map[string]interface{}
+	err      error
+}
+
+func (r *Templater) ResetCache() {
+	r.cacheMap = r.Vars.ToCacheMap()
 }
 
 func (r *Templater) Replace(str string) string {
@@ -29,14 +35,17 @@ func (r *Templater) Replace(str string) string {
 		return ""
 	}
 
-	if r.strMap == nil {
-		r.strMap = r.Vars.ToStringMap()
+	if r.cacheMap == nil {
+		r.cacheMap = r.Vars.ToCacheMap()
 	}
 
 	var b bytes.Buffer
-	if err = templ.Execute(&b, r.strMap); err != nil {
+	if err = templ.Execute(&b, r.cacheMap); err != nil {
 		r.err = err
 		return ""
+	}
+	if r.RemoveNoValue {
+		return strings.ReplaceAll(b.String(), "<no value>", "")
 	}
 	return b.String()
 }
@@ -53,19 +62,22 @@ func (r *Templater) ReplaceSlice(strs []string) []string {
 	return new
 }
 
-func (r *Templater) ReplaceVars(vars taskfile.Vars) taskfile.Vars {
-	if r.err != nil || len(vars) == 0 {
+func (r *Templater) ReplaceVars(vars *taskfile.Vars) *taskfile.Vars {
+	if r.err != nil || vars == nil || len(vars.Keys) == 0 {
 		return nil
 	}
 
-	new := make(taskfile.Vars, len(vars))
-	for k, v := range vars {
-		new[k] = taskfile.Var{
+	var new taskfile.Vars
+	vars.Range(func(k string, v taskfile.Var) error {
+		new.Set(k, taskfile.Var{
 			Static: r.Replace(v.Static),
+			Live:   v.Live,
 			Sh:     r.Replace(v.Sh),
-		}
-	}
-	return new
+		})
+		return nil
+	})
+
+	return &new
 }
 
 func (r *Templater) Err() error {

@@ -1,4 +1,4 @@
-version: '2'
+version: '3'
 
 tasks:
   install:
@@ -9,4 +9,4 @@ tasks:
   serve:
     desc: Serves the documentation site locally
     cmds:
-      - docsify serve docs
+      - docsify serve .

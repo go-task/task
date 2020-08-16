@@ -1,41 +1,51 @@
-abs.txt:
-  desc: generates dest file based on absolute paths
-  deps:
-    - sub/src.txt
-  dir: sub
-  cmds:
-    - cat src.txt > '{{.BUILD_DIR}}/abs.txt'
-  sources:
-    - src.txt
-  generates:
-    - "{{.BUILD_DIR}}/abs.txt"
+version: '3'
 
-rel.txt:
-  desc: generates dest file based on relative paths
-  deps:
-    - sub/src.txt
-  dir: sub
-  cmds:
-    - cat src.txt > '../rel.txt'
-  sources:
-    - src.txt
-  generates:
-    - "../rel.txt"
+vars:
+  BUILD_DIR: $pwd
 
-sub/src.txt:
-  desc: generate source file
-  cmds:
-    - mkdir -p sub
-    - echo "hello world" > sub/src.txt
-  status:
-    - test -f sub/src.txt
+tasks:
+  abs.txt:
+    desc: generates dest file based on absolute paths
+    deps:
+      - sub/src.txt
+    dir: sub
+    cmds:
+      - cat src.txt > '{{.BUILD_DIR}}/abs.txt'
+    method: timestamp
+    sources:
+      - src.txt
+    generates:
+      - "{{.BUILD_DIR}}/abs.txt"
 
-'my text file.txt':
-  desc: generate file with spaces in the name
-  deps: [sub/src.txt]
-  cmds:
-    - cat sub/src.txt > 'my text file.txt'
-  sources:
-    - sub/src.txt
-  generates:
-    - 'my text file.txt'
+  rel.txt:
+    desc: generates dest file based on relative paths
+    deps:
+      - sub/src.txt
+    dir: sub
+    cmds:
+      - cat src.txt > '../rel.txt'
+    method: timestamp
+    sources:
+      - src.txt
+    generates:
+      - "../rel.txt"
+
+  sub/src.txt:
+    desc: generate source file
+    cmds:
+      - mkdir -p sub
+      - echo "hello world" > sub/src.txt
+    method: timestamp
+    status:
+      - test -f sub/src.txt
+
+  'my text file.txt':
+    desc: generate file with spaces in the name
+    deps: [sub/src.txt]
+    cmds:
+      - cat sub/src.txt > 'my text file.txt'
+    method: timestamp
+    sources:
+      - sub/src.txt
+    generates:
+      - 'my text file.txt'

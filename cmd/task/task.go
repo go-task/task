@@ -9,8 +9,9 @@ import (
 	"path/filepath"
 	"syscall"
 
-	"github.com/go-task/task/v2"
-	"github.com/go-task/task/v2/internal/args"
+	"github.com/go-task/task/v3"
+	"github.com/go-task/task/v3/internal/args"
+	"github.com/go-task/task/v3/internal/logger"
 
 	"github.com/spf13/pflag"
 )
@@ -28,12 +29,14 @@ Example: 'task hello' with the following 'Taskfile.yml' file will generate an
 'output.txt' file with the content "hello".
 
 '''
-hello:
-  cmds:
-    - echo "I am going to write a file named 'output.txt' now."
-    - echo "hello" > output.txt
-  generates:
-    - output.txt
+version: '3'
+tasks:
+  hello:
+    cmds:
+      - echo "I am going to write a file named 'output.txt' now."
+      - echo "hello" > output.txt
+    generates:
+      - output.txt
 '''
 
 Options:
@@ -64,6 +67,7 @@ func main() {
 		dir         string
 		entrypoint  string
 		output      string
+		color       bool
 	)
 
 	pflag.BoolVar(&versionFlag, "version", false, "show Task version")
@@ -81,6 +85,7 @@ func main() {
 	pflag.StringVarP(&dir, "dir", "d", "", "sets directory of execution")
 	pflag.StringVarP(&entrypoint, "taskfile", "t", "", `choose which Taskfile to run. Defaults to "Taskfile.yml"`)
 	pflag.StringVarP(&output, "output", "o", "", "sets output style: [interleaved|group|prefixed]")
+	pflag.BoolVarP(&color, "color", "c", true, "colored output")
 	pflag.Parse()
 
 	if versionFlag {
@@ -125,6 +130,7 @@ func main() {
 		Entrypoint: entrypoint,
 		Summary:    summary,
 		Parallel:   parallel,
+		Color:      color,
 
 		Stdin:  os.Stdin,
 		Stdout: os.Stdout,
@@ -142,9 +148,7 @@ func main() {
 	}
 
 	calls, globals := args.Parse(pflag.Args()...)
-	for name, value := range globals {
-		e.Taskfile.Vars[name] = value
-	}
+	e.Taskfile.Vars.Merge(globals)
 
 	ctx := context.Background()
 	if !watch {
@@ -159,7 +163,8 @@ func main() {
 	}
 
 	if err := e.Run(ctx, calls...); err != nil {
-		log.Fatal(err)
+		e.Logger.Errf(logger.Red, "%v", err)
+		os.Exit(1)
 	}
 }
 

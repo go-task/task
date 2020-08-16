@@ -23,6 +23,10 @@ type Checksum struct {
 
 // IsUpToDate implements the Checker interface
 func (c *Checksum) IsUpToDate() (bool, error) {
+	if len(c.Sources) == 0 {
+		return false, nil
+	}
+
 	checksumFile := c.checksumFilePath()
 
 	data, _ := ioutil.ReadFile(checksumFile)
@@ -84,9 +88,22 @@ func (c *Checksum) checksum(files ...string) (string, error) {
 	return fmt.Sprintf("%x", h.Sum(nil)), nil
 }
 
+// Value implements the Checker Interface
+func (c *Checksum) Value() (interface{}, error) {
+	return c.checksum()
+}
+
 // OnError implements the Checker interface
 func (c *Checksum) OnError() error {
+	if len(c.Sources) == 0 {
+		return nil
+	}
 	return os.Remove(c.checksumFilePath())
+}
+
+// Kind implements the Checker Interface
+func (*Checksum) Kind() string {
+	return "checksum"
 }
 
 func (c *Checksum) checksumFilePath() string {
