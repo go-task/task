@@ -34,11 +34,6 @@ tasks:
       - task: go-get
         vars: {REPO: github.com/goreleaser/godownloader}
 
-  vendor:
-    desc: Sync vendor/ directory according to go.mod file
-    cmds:
-      - go mod vendor
-
   update-deps:
     desc: Updates dependencies
     cmds:
