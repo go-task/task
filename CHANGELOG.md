@@ -2,6 +2,8 @@
 
 # v3.0.0 - Unreleased
 
+- On `v3`, all CLI variables will be considered global variables
+  ([#336](https://github.com/go-task/task/issues/336), [#341](https://github.com/go-task/task/pull/341))
 - Add support to `.env` like files
   ([#324](https://github.com/go-task/task/issues/324), [#356](https://github.com/go-task/task/pull/356)).
 - Add `label:` to task so you can override the task name in the logs

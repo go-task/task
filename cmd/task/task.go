@@ -12,6 +12,7 @@ import (
 	"github.com/go-task/task/v3"
 	"github.com/go-task/task/v3/internal/args"
 	"github.com/go-task/task/v3/internal/logger"
+	"github.com/go-task/task/v3/internal/taskfile"
 
 	"github.com/spf13/pflag"
 )
@@ -141,13 +142,26 @@ func main() {
 	if err := e.Setup(); err != nil {
 		log.Fatal(err)
 	}
+	v, err := e.Taskfile.ParsedVersion()
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
 
 	if list {
 		e.PrintTasksHelp()
 		return
 	}
 
-	calls, globals := args.Parse(pflag.Args()...)
+	var (
+		calls   []taskfile.Call
+		globals *taskfile.Vars
+	)
+	if v >= 3.0 {
+		calls, globals = args.ParseV3(pflag.Args()...)
+	} else {
+		calls, globals = args.ParseV2(pflag.Args()...)
+	}
 	e.Taskfile.Vars.Merge(globals)
 
 	ctx := context.Background()

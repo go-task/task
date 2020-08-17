@@ -488,17 +488,9 @@ $ TASK_VARIABLE=a-value task do-something
 
 Since some shells don't support above syntax to set environment variables
 (Windows) tasks also accepts a similar style when not in the beginning of
-the command. Variables given in this form are only visible to the task called
-right before.
-
+the command.
 ```bash
 $ task write-file FILE=file.txt "CONTENT=Hello, World!" print "MESSAGE=All done!"
-```
-
-If you want to set global variables using this syntax, give it before any task:
-
-```bash
-$ task OUTPUT=file.txt generate-file
 ```
 
 Example of locally declared vars:
