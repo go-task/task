@@ -453,6 +453,41 @@ tasks:
       - echo "I will not run"
 ```
 
+### Limiting when tasks run
+
+If a task executed by multiple `cmds` or multiple `deps` you can limit
+how many times it is executed each invocation of the `task` command using `run`. `run` can also be set at the root of the taskfile to change the behavior of all the tasks unless explicitly overridden
+
+Supported values for `run`
+ * `always` (default) always attempt to invoke the task regardless of the number of previous executions
+ * `once` only invoke this task once regardless of the number of times referred to
+ * `when_changed` only invokes the task once for a set of variables passed into the task
+
+```yaml
+version: '3'
+tasks:
+  default:
+    cmds:
+      - task: generate-file
+        vars: { CONTENT: '1' }
+      - task: generate-file
+        vars: { CONTENT: '2' }
+      - task: generate-file
+        vars: { CONTENT: '2' }
+
+  generate-file:
+    run: when_changed
+    deps:
+      - install-deps
+    cmds:
+      - echo {{.CONTENT}}
+
+  install-deps:
+    run: once
+    cmds:
+      - sleep 5 # long operation like installing packages
+```
+
 ## Variables
 
 When doing interpolation of variables, Task will look for the below.
