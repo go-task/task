@@ -346,14 +346,14 @@ tasks:
 ```
 
 `sources` and `generates` can be files or file patterns. When both are given,
-Task will compare the modification date/time of the files to determine if it's
+Task will compare the checksum of the files to determine if it's
 necessary to run the task. If not, it will just print a message like
 `Task "js" is up to date`.
-
-If you prefer this check to be made by the content of the files, instead of
-its timestamp, just set the `method` property to `checksum`.
 You will probably want to ignore the `.task` folder in your `.gitignore` file
 (It's there that Task stores the last checksum).
+
+If you prefer this check to be made by the modification timestamp of the files,
+instead of its checksum (content), just set the `method` property to `timestamp`.
 
 ```yaml
 version: '3'
