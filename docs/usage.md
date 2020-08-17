@@ -332,6 +332,7 @@ tasks:
     cmds:
       - minify -o public/script.js src/js
     sources:
+      - "!src/js/node_modules/**" # don't include specify directory files
       - src/js/**/*.js
     generates:
       - public/script.js
@@ -349,6 +350,10 @@ tasks:
 Task will compare the modification date/time of the files to determine if it's
 necessary to run the task. If not, it will just print a message like
 `Task "js" is up to date`.
+
+You can also add `!` before the pattern so that it will ignore all that matched files.
+If you have only exclude pattern but no include pattern, all non-exclude files will 
+be included.
 
 If you prefer this check to be made by the content of the files, instead of
 its timestamp, just set the `method` property to `checksum`.

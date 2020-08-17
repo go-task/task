@@ -19,17 +19,29 @@ func (t *Timestamp) IsUpToDate() (bool, error) {
 		return false, nil
 	}
 
-	sources, err := globs(t.Dir, t.Sources)
+	var sourcesMaxTime time.Time
+
+	matcher, err := NewMatcher(t.Dir, t.Sources)
 	if err != nil {
-		return false, nil
+		return false, err
 	}
-	generates, err := globs(t.Dir, t.Generates)
-	if err != nil {
+	if err := matcher.Match(func(p string) error {
+		info, err := os.Stat(p)
+		if err != nil {
+			return err
+		}
+		sourcesMaxTime = maxTime(sourcesMaxTime, info.ModTime())
+		return nil
+	}); err != nil {
+		return false, err
+	}
+
+	if err != nil || sourcesMaxTime.IsZero() {
 		return false, nil
 	}
 
-	sourcesMaxTime, err := getMaxTime(sources...)
-	if err != nil || sourcesMaxTime.IsZero() {
+	generates, err := globs(t.Dir, t.Generates)
+	if err != nil {
 		return false, nil
 	}
 
