@@ -56,7 +56,7 @@ tasks:
 
 ```yaml
 # bad
-version: 2
+version: '3'
 includes:
   docker: ./docker/Taskfile.yml
 output: prefixed
@@ -70,7 +70,7 @@ tasks:
 
 
 # good
-version: 2
+version: '3'
 
 includes:
   docker: ./docker/Taskfile.yml
@@ -92,7 +92,7 @@ tasks:
 
 ```yaml
 # bad
-version: 2
+version: '3'
 
 tasks:
   foo:
@@ -107,7 +107,7 @@ tasks:
 
 
 # good
-version: 2
+version: '3'
 
 tasks:
   foo:
@@ -127,7 +127,7 @@ tasks:
 
 ```yaml
 # bad
-version: 2
+version: '3'
 
 vars:
   binary_name: myapp
@@ -139,7 +139,7 @@ tasks:
 
 
 # good
-version: 2
+version: '3'
 
 vars:
   BINARY_NAME: myapp
@@ -154,7 +154,7 @@ tasks:
 
 ```yaml
 # bad
-version: 2
+version: '3'
 
 tasks:
   greet:
@@ -163,7 +163,7 @@ tasks:
 
 
 # good
-version: 2
+version: '3'
 
 tasks:
   greet:
@@ -177,7 +177,7 @@ This convention is also used by most people for any Go templating.
 
 ```yaml
 # bad
-version: 2
+version: '3'
 
 tasks:
   do_something_fancy:
@@ -186,7 +186,7 @@ tasks:
 
 
 # good
-version: 2
+version: '3'
 
 tasks:
   do-something-fancy:
@@ -198,7 +198,7 @@ tasks:
 
 ```yaml
 # good
-version: 2
+version: '3'
 
 tasks:
   docker:build:
