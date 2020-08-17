@@ -979,3 +979,14 @@ func TestExitImmediately(t *testing.T) {
 	assert.Error(t, e.Run(context.Background(), taskfile.Call{Task: "default"}))
 	assert.Contains(t, buff.String(), `"this_should_fail": executable file not found in $PATH`)
 }
+
+func TestRunOnlyRunsJobsHashOnce(t *testing.T) {
+	tt := fileContentTest{
+		Dir:    "testdata/run",
+		Target: "generate-hash",
+		Files: map[string]string{
+			"hash.txt": "starting 1\n1\n2\n",
+		},
+	}
+	tt.Run(t)
+}
