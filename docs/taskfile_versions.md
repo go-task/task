@@ -163,3 +163,63 @@ Please check the [documentation][includes]
 [output]: usage.md#output-syntax
 [ignore_errors]: usage.md#ignore-errors
 [includes]: usage.md#including-other-taskfiles
+
+## Version 3
+
+These are some major changes done on `v3`:
+
+- Task's output will now be colored
+- Added support for `.env` like files
+- Added `label:` setting to task so one can override how the task name
+  appear in the logs
+- A global `method:` was added to allow setting the default method,
+  and Task's default changed to `checksum`
+- Two magic variables were added when using `status:`: `CHECKSUM` and
+  `TIMESTAMP` which contains, respectively, the md5 checksum and greatest
+  modification timestamp of the files listed on `sources:`
+- Also, the `TASK` variable is always available with the current task name
+- CLI variables are always treated as global variables
+- Added `dir:` option to `includes` to allow choosing on which directory an
+  included Taskfile will run:
+
+```yaml
+includes:
+  docs:
+    taskfile: ./docs
+    dir: ./docs
+```
+
+- Implemented short task syntax. All below syntaxes are equivalent:
+
+```yaml
+version: '3'
+
+tasks:
+  print:
+    cmds:
+      - echo "Hello, World!"
+```
+
+```yaml
+version: '3'
+
+tasks:
+  print:
+    - echo "Hello, World!"
+```
+
+```yaml
+version: '3'
+
+tasks:
+  print: echo "Hello, World!"
+```
+
+- There was a major refactor on how variables are handled. They're now easier
+  to understand. The `expansions:` setting was removed as it became unncessary.
+  This is the order in which Task will process variables, each level can see
+  the variables set by the previous one and override those.
+  - Environment variables
+  - Global + CLI variables
+  - Call variables
+  - Task variables
