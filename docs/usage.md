@@ -472,10 +472,9 @@ When doing interpolation of variables, Task will look for the below.
 They are listed below in order of importance (e.g. most important first):
 
 - Variables declared in the task definition
-- Variables given while calling a task from another.
+- Variables given while calling a task from another
   (See [Calling another task](#calling-another-task) above)
-- Variables declared in the `vars:` option in the `Taskfile`
-- Variables available in the `Taskvars.yml` file
+- Global variables (those declared in the `vars:` option in the Taskfile)
 - Environment variables
 
 Example of sending parameters with environment variables:
@@ -489,6 +488,7 @@ $ TASK_VARIABLE=a-value task do-something
 Since some shells don't support above syntax to set environment variables
 (Windows) tasks also accepts a similar style when not in the beginning of
 the command.
+
 ```bash
 $ task write-file FILE=file.txt "CONTENT=Hello, World!" print "MESSAGE=All done!"
 ```
@@ -526,30 +526,6 @@ Example of `Taskvars.yml` file:
 PROJECT_NAME: My Project
 DEV_MODE: production
 GIT_COMMIT: {sh: git log -n 1 --format=%h}
-```
-
-### Variables expansion
-
-Variables are expanded 2 times by default. You can change that by setting the
-`expansions:` option. Change that will be necessary if you compose many
-variables together:
-
-```yaml
-version: '3'
-
-expansions: 3
-
-vars:
-  FOO: foo
-  BAR: bar
-  BAZ: baz
-  FOOBAR: "{{.FOO}}{{.BAR}}"
-  FOOBARBAZ: "{{.FOOBAR}}{{.BAZ}}"
-
-tasks:
-  default:
-    cmds:
-      - echo "{{.FOOBARBAZ}}"
 ```
 
 ### Dynamic variables
