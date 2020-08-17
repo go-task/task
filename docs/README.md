@@ -11,7 +11,7 @@ Once [installed](installation.md), you just need to describe your build tasks
 using a simple [YAML][yaml] schema in a file called `Taskfile.yml`:
 
 ```yaml
-version: '2'
+version: '3'
 
 tasks:
   hello:
