@@ -1,0 +1,13 @@
+version: "3"
+
+vars:
+  BAZ:
+    sh: echo baz
+
+env:
+  FOO: foo
+  BAR: bar
+  BAZ: "{{.BAZ}}"
+
+tasks:
+  hello:

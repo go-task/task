@@ -29,7 +29,7 @@ func (e *Executor) PrintTasksHelp() {
 func (e *Executor) tasksWithDesc() (tasks []*taskfile.Task) {
 	tasks = make([]*taskfile.Task, 0, len(e.Taskfile.Tasks))
 	for _, task := range e.Taskfile.Tasks {
-		if task.Desc != "" {
+		if task != nil && task.Desc != "" {
 			compiledTask, err := e.CompiledTask(taskfile.Call{Task: task.Task})
 			if err == nil {
 				task = compiledTask

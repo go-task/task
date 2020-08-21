@@ -67,6 +67,10 @@ func (e *Executor) Run(ctx context.Context, calls ...taskfile.Call) error {
 			e.PrintTasksHelp()
 			return &taskNotFoundError{taskName: c.Task}
 		}
+		// check whether the task is defined, a task might have 'nil' value if it is not defined
+		if e.Taskfile.Tasks[c.Task] == nil {
+			return fmt.Errorf("No task is defined for '%s'", c.Task)
+		}
 	}
 
 	if e.Summary {

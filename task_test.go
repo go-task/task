@@ -863,3 +863,32 @@ func TestDotenvShouldErrorWhenIncludingDependantDotenvs(t *testing.T) {
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "move the dotenv")
 }
+
+func TestTaskNotExist(t *testing.T) {
+	const dir = "testdata/empty_task"
+
+	var buff bytes.Buffer
+	e := task.Executor{
+		Dir:    dir,
+		Stdout: &buff,
+		Stderr: &buff,
+	}
+
+	assert.NoError(t, e.Setup())
+	assert.Error(t, e.Run(context.Background(), taskfile.Call{Task: "hello1"}))
+	assert.Contains(t, buff.String(), "task: No tasks with description available")
+}
+
+func TestTaskNotDefined(t *testing.T) {
+	const dir = "testdata/empty_task"
+
+	var buff bytes.Buffer
+	e := task.Executor{
+		Dir:    dir,
+		Stdout: &buff,
+		Stderr: &buff,
+	}
+
+	assert.NoError(t, e.Setup())
+	assert.Error(t, e.Run(context.Background(), taskfile.Call{Task: "hello"}))
+}
