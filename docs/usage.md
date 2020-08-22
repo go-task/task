@@ -483,7 +483,7 @@ Example of sending parameters with environment variables:
 $ TASK_VARIABLE=a-value task do-something
 ```
 
-> TIP: A special variable `.TASK` is always available containg the task name.
+> TIP: A special variable `.TASK` is always available containing the task name.
 
 Since some shells don't support above syntax to set environment variables
 (Windows) tasks also accepts a similar style when not in the beginning of
@@ -688,7 +688,7 @@ Please note: *showing the summary will not execute the command*.
 ## Overriding task name
 
 Sometimes you may want to override the task name print on summary, up-to-date
-messates to STDOUT, etc. In this case you can just set `label:`, which can also
+messages to STDOUT, etc. In this case you can just set `label:`, which can also
 be interpolated with variables:
 
 ```yaml
@@ -908,9 +908,9 @@ tasks:
 
 ## Watch tasks
 
-If you give a `--watch` or `-w` argument, task will watch for file changes
+With the flags `--watch` or `-w` task will watch for file changes
 and run the task again. This requires the `sources` attribute to be given,
-so task know which files to watch.
+so task knows which files to watch.
 
 [gotemplate]: https://golang.org/pkg/text/template/
 [minify]: https://github.com/tdewolff/minify/tree/master/cmd/minify
