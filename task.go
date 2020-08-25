@@ -16,8 +16,8 @@ import (
 	"github.com/go-task/task/v3/internal/logger"
 	"github.com/go-task/task/v3/internal/output"
 	"github.com/go-task/task/v3/internal/summary"
-	"github.com/go-task/task/v3/internal/taskfile"
-	"github.com/go-task/task/v3/internal/taskfile/read"
+	"github.com/go-task/task/v3/taskfile"
+	"github.com/go-task/task/v3/taskfile/read"
 
 	"golang.org/x/sync/errgroup"
 )

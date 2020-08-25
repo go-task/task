@@ -10,9 +10,9 @@ import (
 	"syscall"
 
 	"github.com/go-task/task/v3"
-	"github.com/go-task/task/v3/internal/args"
+	"github.com/go-task/task/v3/args"
 	"github.com/go-task/task/v3/internal/logger"
-	"github.com/go-task/task/v3/internal/taskfile"
+	"github.com/go-task/task/v3/taskfile"
 
 	"github.com/spf13/pflag"
 )

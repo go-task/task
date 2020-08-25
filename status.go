@@ -7,7 +7,7 @@ import (
 	"github.com/go-task/task/v3/internal/execext"
 	"github.com/go-task/task/v3/internal/logger"
 	"github.com/go-task/task/v3/internal/status"
-	"github.com/go-task/task/v3/internal/taskfile"
+	"github.com/go-task/task/v3/taskfile"
 )
 
 // Status returns an error if any the of given tasks is not up-to-date
