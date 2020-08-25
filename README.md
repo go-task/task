@@ -1,5 +1,6 @@
 ![Test](https://github.com/go-task/task/workflows/Test/badge.svg)
 ![GoReleaser](https://github.com/go-task/task/workflows/goreleaser/badge.svg)
+![GitHub All Releases](https://img.shields.io/github/downloads/go-task/task/total)
 
 # Task
 
