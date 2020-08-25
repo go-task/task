@@ -4,7 +4,7 @@ import (
 	"strings"
 
 	"github.com/go-task/task/v3/internal/logger"
-	"github.com/go-task/task/v3/internal/taskfile"
+	"github.com/go-task/task/v3/taskfile"
 )
 
 func PrintTasks(l *logger.Logger, t *taskfile.Taskfile, c []taskfile.Call) {

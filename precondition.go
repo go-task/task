@@ -6,7 +6,7 @@ import (
 
 	"github.com/go-task/task/v3/internal/execext"
 	"github.com/go-task/task/v3/internal/logger"
-	"github.com/go-task/task/v3/internal/taskfile"
+	"github.com/go-task/task/v3/taskfile"
 )
 
 var (
