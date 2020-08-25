@@ -92,47 +92,7 @@ tasks:
       - echo "Using $KEYNAME"
 ```
 
-## Operating System specific tasks
-
-If you add a `Taskfile_{{GOOS}}.yml` you can override or amend your Taskfile
-based on the operating system.
-
-Example:
-
-Taskfile.yml:
-
-```yaml
-version: '3'
-
-tasks:
-  build:
-    cmds:
-      - echo "default"
-```
-
-Taskfile_linux.yml:
-
-```yaml
-version: '3'
-
-tasks:
-  build:
-    cmds:
-      - echo "linux"
-```
-
-Will print out `linux` and not `default`.
-
-Keep in mind that the version of the files should match. Also, when redefining
-a task the whole task is replaced, properties of the task are not merged.
-
-It's also possible to have an OS specific `Taskvars.yml` file, like
-`Taskvars_windows.yml`, `Taskvars_linux.yml`, or `Taskvars_darwin.yml`. See the
-[variables section](#variables) below.
-
 ## Including other Taskfiles
-
-> This feature is still experimental and may have bugs.
 
 If you want to share tasks between different projects (Taskfiles), you can use
 the importing mechanism to include other Taskfiles using the `includes` keyword:
@@ -149,6 +109,21 @@ The tasks described in the given Taskfiles will be available with the informed
 namespace. So, you'd call `task docs:serve` to run the `serve` task from
 `documentation/Taskfile.yml` or `task docker:build` to run the `build` task
 from the `DockerTasks.yml` file.
+
+### OS-specific Taskfiles
+
+With `version: '2'`, task automatically includes any `Taskfile_{{OS}}.yml`
+if it exists (for example: `Taskfile_windows.yml`, `Taskfile_linux.yml` or
+`Taskfile_darwin.yml`). Since this behavior was a bit too implicit, it
+was removed on version 3, but you still can have a similar behavior by
+explicitly importing these files:
+
+```yaml
+version: '3'
+
+includes:
+  build: ./Taskfile_{{OS}}.yml
+```
 
 ### Directory of included Taskfile
 
@@ -345,8 +320,8 @@ tasks:
       - public/style.css
 ```
 
-`sources` and `generates` can be files or file patterns. When both are given,
-Task will compare the checksum of the files to determine if it's
+`sources` and `generates` can be files or file patterns. When given,
+Task will compare the checksum of the source files to determine if it's
 necessary to run the task. If not, it will just print a message like
 `Task "js" is up to date`.
 You will probably want to ignore the `.task` folder in your `.gitignore` file
@@ -370,6 +345,10 @@ tasks:
 ```
 
 > TIP: method `none` skips any validation and always run the task.
+
+> NOTE: for the `checksum` (default) method to work, it's only necessary to
+> inform the source files, but if you want to use the `timestamp` method, you
+> also need to inform the generated files with `generates`.
 
 ### Using programmatic checks to indicate a task is up to date.
 
@@ -451,18 +430,19 @@ with any other tasks that depend on it.
 
 ```yaml
 version: '3'
+
 tasks:
-  task_will_fail:
+  task-will-fail:
     preconditions:
       - sh: "exit 1"
 
-  task_will_also_fail:
+  task-will-also-fail:
     deps:
-      - task_will_fail
+      - task-will-fail
 
-  task_will_still_fail:
+  task-will-still-fail:
     cmds:
-      - task: task_will_fail
+      - task: task-will-fail
       - echo "I will not run"
 ```
 
@@ -518,14 +498,6 @@ tasks:
   greet:
     cmds:
       - echo "{{.GREETING}}"
-```
-
-Example of `Taskvars.yml` file:
-
-```yaml
-PROJECT_NAME: My Project
-DEV_MODE: production
-GIT_COMMIT: {sh: git log -n 1 --format=%h}
 ```
 
 ### Dynamic variables
