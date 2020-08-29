@@ -1,0 +1,14 @@
+version: '3'
+
+tasks:
+  a:
+    cmds:
+      - task: b
+
+  b:
+    cmds:
+      - task: c
+
+  c:
+    cmds:
+      - task: b

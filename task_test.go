@@ -514,8 +514,8 @@ func TestInit(t *testing.T) {
 	}
 }
 
-func TestCyclicDep(t *testing.T) {
-	const dir = "testdata/cyclic"
+func TestCyclicDirectDep(t *testing.T) {
+	const dir = "testdata/cyclic_direct"
 
 	e := task.Executor{
 		Dir:    dir,
@@ -523,7 +523,83 @@ func TestCyclicDep(t *testing.T) {
 		Stderr: ioutil.Discard,
 	}
 	assert.NoError(t, e.Setup())
-	assert.IsType(t, &task.MaximumTaskCallExceededError{}, e.Run(context.Background(), taskfile.Call{Task: "task-1"}))
+	assert.IsType(t, task.DirectDepCycleError{}, e.Run(context.Background(), taskfile.Call{Task: "a"}))
+}
+
+func TestCyclicIndirectDep(t *testing.T) {
+	const dir = "testdata/cyclic_indirect"
+
+	e := task.Executor{
+		Dir:    dir,
+		Stdout: ioutil.Discard,
+		Stderr: ioutil.Discard,
+	}
+	assert.NoError(t, e.Setup())
+	assert.IsType(t, task.MaxDepLevelReachedError{}, e.Run(context.Background(), taskfile.Call{Task: "a"}))
+}
+
+func TestCyclicViaDirectCall(t *testing.T) {
+	const dir = "testdata/cyclic_via_direct_call"
+
+	e := task.Executor{
+		Dir:    dir,
+		Stdout: ioutil.Discard,
+		Stderr: ioutil.Discard,
+	}
+
+	assert.NoError(t, e.Setup())
+
+	err := e.Run(context.Background(), taskfile.Call{Task: "a"})
+
+	// Because the call goes 3 deep (a, b, c), there should be 3 run errors,
+	// and the last run error should be the infinite call loop error.
+	assert.IsType(t, &task.RunError{}, err)
+	assert.IsType(t, &task.RunError{}, err.(*task.RunError).ActualErr)
+	assert.IsType(t, &task.RunError{}, err.(*task.RunError).ActualErr.(*task.RunError).ActualErr)
+	assert.IsType(
+		t,
+		task.InfiniteCallLoopError{},
+		err.(*task.RunError).ActualErr.(*task.RunError).ActualErr.(*task.RunError).ActualErr,
+	)
+}
+
+func TestCyclicViaDepAndDirectCall(t *testing.T) {
+	const dir = "testdata/cyclic_via_dep_and_direct_call"
+
+	e := task.Executor{
+		Dir:    dir,
+		Stdout: ioutil.Discard,
+		Stderr: ioutil.Discard,
+	}
+
+	assert.NoError(t, e.Setup())
+
+	err := e.Run(context.Background(), taskfile.Call{Task: "a"})
+	assert.IsType(t, &task.RunError{}, err)
+	assert.IsType(t, task.InfiniteCallLoopError{}, err.(*task.RunError).ActualErr)
+}
+
+func TestDepsRunOnlyOnce(t *testing.T) {
+	dir := "testdata/deps_run_only_once"
+
+	files := map[string]string{
+		"a.txt": "a",
+		"b.txt": "b",
+		"c.txt": "c",
+		"d.txt": "d",
+	}
+	for fileName := range files {
+		file := filepath.Join(dir, fileName)
+		_ = os.Remove(file)
+	}
+
+	tt := fileContentTest{
+		Dir:       dir,
+		Target:    "a",
+		TrimSpace: true,
+		Files:     files,
+	}
+	tt.Run(t)
 }
 
 func TestTaskVersion(t *testing.T) {

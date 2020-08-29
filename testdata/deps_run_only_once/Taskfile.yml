@@ -1,0 +1,26 @@
+version: '3'
+
+tasks:
+  a:
+    cmds:
+      - echo "a" >> a.txt
+    deps:
+      - b
+      - c
+
+  b:
+    cmds:
+      - echo "b" >> b.txt
+    deps:
+      - c
+      - d
+
+  c:
+    cmds:
+      - echo "c" >> c.txt
+    deps:
+      - d
+
+  d:
+    cmds:
+      - echo "d" >> d.txt

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"reflect"
 	"sync"
 	"sync/atomic"
 
@@ -26,6 +27,11 @@ const (
 	// MaximumTaskCall is the max number of times a task can be called.
 	// This exists to prevent infinite loops on cyclic dependencies
 	MaximumTaskCall = 100
+
+	// MaximumDepLevel defines the maximum depth of the dependency analysis.
+	// The depth is 2 if a (0) depends on b (1) depends on c (2).
+	// We use this to prevent the dependency analysis to end up in an infinite loop.
+	MaximumDepLevel = 50
 )
 
 // Executor executes a Taskfile
@@ -54,8 +60,10 @@ type Executor struct {
 
 	taskvars *taskfile.Vars
 
+	callStackMux  *sync.Mutex
 	taskCallCount map[string]*int32
 	mkdirMutexMap map[string]*sync.Mutex
+	depMutexMap   map[string]*sync.Mutex
 }
 
 // Run runs Task
@@ -236,17 +244,31 @@ func (e *Executor) Setup() error {
 		}
 	}
 
+	e.callStackMux = &sync.Mutex{}
 	e.taskCallCount = make(map[string]*int32, len(e.Taskfile.Tasks))
 	e.mkdirMutexMap = make(map[string]*sync.Mutex, len(e.Taskfile.Tasks))
+	e.depMutexMap = make(map[string]*sync.Mutex, len(e.Taskfile.Tasks))
 	for k := range e.Taskfile.Tasks {
 		e.taskCallCount[k] = new(int32)
 		e.mkdirMutexMap[k] = &sync.Mutex{}
+		e.depMutexMap[k] = &sync.Mutex{}
 	}
 	return nil
 }
 
 // RunTask runs a task by its name
 func (e *Executor) RunTask(ctx context.Context, call taskfile.Call) error {
+	return e.runTask(ctx, make(taskfile.CallStack, 0, 16), call, true)
+}
+
+// runTask runs a task by its name
+func (e *Executor) runTask(ctx context.Context, callStack taskfile.CallStack, call taskfile.Call, runDeps bool) error {
+	if callStack.Contains(call) {
+		return InfiniteCallLoopError{causeTask: call.Task, callStack: callStack}
+	}
+
+	callStack = callStack.Add(call)
+
 	t, err := e.CompiledTask(call)
 	if err != nil {
 		return err
@@ -255,8 +277,10 @@ func (e *Executor) RunTask(ctx context.Context, call taskfile.Call) error {
 		return &MaximumTaskCallExceededError{task: call.Task}
 	}
 
-	if err := e.runDeps(ctx, t); err != nil {
-		return err
+	if runDeps {
+		if err := e.runDeps(ctx, callStack, t); err != nil {
+			return err
+		}
 	}
 
 	if !e.Force {
@@ -283,7 +307,7 @@ func (e *Executor) RunTask(ctx context.Context, call taskfile.Call) error {
 	}
 
 	for i := range t.Cmds {
-		if err := e.runCommand(ctx, t, call, i); err != nil {
+		if err := e.runCommand(ctx, callStack, t, i); err != nil {
 			if err2 := e.statusOnError(t); err2 != nil {
 				e.Logger.VerboseErrf(logger.Yellow, "task: error cleaning status on error: %v", err2)
 			}
@@ -293,10 +317,133 @@ func (e *Executor) RunTask(ctx context.Context, call taskfile.Call) error {
 				continue
 			}
 
-			return &taskRunError{t.Task, err}
+			return &RunError{t.Task, err}
 		}
 	}
 	return nil
+}
+
+// collectDeps collects the dependencies of the given task.
+// It returns the dependencies by level/depth.
+//
+// Example:
+// a depends on b and c
+// b depends on c
+// c depends on d
+// d depends on nothing
+//
+// When getting the dependencies of a, the following is returned:
+// [0]{"b","c"} - because a depends on b and c
+// [1]{"c","d"} - because b (from level 0) depends on c, and c (from level 0) depends on d
+// [2]{"d"} - because c (from level 1) depends on d
+//
+// It could thus be that one task is returned more than once - if multiple tasks depend on the same task,
+// but in different levels.
+func (e *Executor) collectDeps(t *taskfile.Task) (map[int][]*taskfile.Dep, error) {
+	collection := make(map[int][]*taskfile.Dep, 1)
+	err := e.recursivelyCollectDeps(t, 0, collection)
+	if err != nil {
+		return nil, err
+	}
+	return collection, err
+}
+
+// recursivelyCollectDeps recursively collects deps of the given task. It groups them by level.
+func (e *Executor) recursivelyCollectDeps(
+	t *taskfile.Task,
+	level int,
+	collection map[int][]*taskfile.Dep,
+) error {
+	if level == MaximumDepLevel {
+		return MaxDepLevelReachedError{level}
+	}
+
+	collection[level] = append(collection[level], t.Deps...)
+
+	for _, d := range t.Deps {
+		depTask, err := e.CompiledTask(d.ToCall())
+		if err != nil {
+			return err
+		}
+		if len(depTask.Deps) == 0 {
+			continue
+		}
+
+		// If one of this dependency's dependencies depends on the input task,
+		// we have a dependency cycle.
+		for _, depDep := range depTask.Deps {
+			if depDep.Task == t.Task {
+				return DirectDepCycleError{depDep.Task, d.Task}
+			}
+		}
+
+		err = e.recursivelyCollectDeps(depTask, level+1, collection)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// runDeps runs the dependencies of the given task.
+func (e *Executor) runDeps(ctx context.Context, callStack taskfile.CallStack, t *taskfile.Task) error {
+	deps, err := e.collectDeps(t)
+	if err != nil {
+		return err
+	}
+
+	// Keep track of which deps we've run so that we can prevent a dep
+	// from being run again if it has already ran on a deeper level.
+	ranDeps := make([]*taskfile.Dep, 0, len(deps))
+
+	// Start at the deepest level and run all deps there,
+	// then move up levels until all deps have been run.
+	for level := len(deps) - 1; level >= 0; level-- {
+		g, ctx := errgroup.WithContext(ctx)
+
+	depLoop:
+		for _, d := range deps[level] {
+			d := d
+
+			// If this dep was already run, don't run it again.
+			for _, ranDep := range ranDeps {
+				if d.Task == ranDep.Task && reflect.DeepEqual(d.Vars, ranDep.Vars) {
+					continue depLoop
+				}
+			}
+
+			g.Go(func() error {
+				return e.runDep(ctx, callStack, d)
+			})
+
+			ranDeps = append(ranDeps, d)
+		}
+
+		err := g.Wait()
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (e *Executor) runDep(ctx context.Context, callStack taskfile.CallStack, d *taskfile.Dep) error {
+	// Even though in runTask we check if we are not ending up in an endless loop,
+	// we must do it here, too because it may prevent a deadlock.
+	// Example: a has dep b which runs a (directly, no dep).
+	// When a runs, the dependencies are run. Only one dependency is allowed to run at a time,
+	// so when dep b runs, a cannot finish until dep b finishes.
+	// B runs a however (directly), and a must run dep b, which is stuck because the first run of
+	// a is still waiting for it.
+	if callStack.Contains(d.ToCall()) {
+		return InfiniteCallLoopError{causeTask: d.Task, callStack: callStack}
+	}
+
+	e.depMutexMap[d.Task].Lock()
+	defer e.depMutexMap[d.Task].Unlock()
+	return e.runTask(ctx, callStack, d.ToCall(), false)
 }
 
 func (e *Executor) mkdir(t *taskfile.Task) error {
@@ -316,30 +463,12 @@ func (e *Executor) mkdir(t *taskfile.Task) error {
 	return nil
 }
 
-func (e *Executor) runDeps(ctx context.Context, t *taskfile.Task) error {
-	g, ctx := errgroup.WithContext(ctx)
-
-	for _, d := range t.Deps {
-		d := d
-
-		g.Go(func() error {
-			err := e.RunTask(ctx, taskfile.Call{Task: d.Task, Vars: d.Vars})
-			if err != nil {
-				return err
-			}
-			return nil
-		})
-	}
-
-	return g.Wait()
-}
-
-func (e *Executor) runCommand(ctx context.Context, t *taskfile.Task, call taskfile.Call, i int) error {
+func (e *Executor) runCommand(ctx context.Context, callStack taskfile.CallStack, t *taskfile.Task, i int) error {
 	cmd := t.Cmds[i]
 
 	switch {
 	case cmd.Task != "":
-		err := e.RunTask(ctx, taskfile.Call{Task: cmd.Task, Vars: cmd.Vars})
+		err := e.runTask(ctx, callStack, cmd.ToCall(), true)
 		if err != nil {
 			return err
 		}

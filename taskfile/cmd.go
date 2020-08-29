@@ -61,6 +61,11 @@ func (c *Cmd) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return ErrCantUnmarshalCmd
 }
 
+// ToCall converts the cmd to a call.
+func (c *Cmd) ToCall() Call {
+	return Call{Task: c.Task, Vars: c.Vars}
+}
+
 // UnmarshalYAML implements yaml.Unmarshaler interface
 func (d *Dep) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	var task string
@@ -78,4 +83,9 @@ func (d *Dep) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		return nil
 	}
 	return ErrCantUnmarshalDep
+}
+
+// ToCall converts the dependency to a call.
+func (d *Dep) ToCall() Call {
+	return Call{Task: d.Task, Vars: d.Vars}
 }
