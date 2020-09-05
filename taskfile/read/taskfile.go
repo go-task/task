@@ -122,7 +122,7 @@ func Taskfile(dir string, entrypoint string) (*taskfile.Taskfile, error) {
 		// if the task found to be 'nil' continue to the next task
 		// it so happens that, user may want to run the other task he defined in the file and want to ignore this empty task
 		if task == nil {
-			continue
+			task = &taskfile.Task{}
 		}
 		task.Task = name
 	}
