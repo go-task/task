@@ -4,5 +4,5 @@
 - [Taskfile Versions](taskfile_versions.md)
 - [Examples](examples.md)
 - [Releasing Task](releasing_task.md)
-- [Alternative Task Runners](alternative_task_runners.md)
+- [Donate](donate.md)
 - [![GitHub](https://icongram.jgog.in/simple/github.svg?color=808080&size=16)GitHub](https://github.com/go-task/task)
