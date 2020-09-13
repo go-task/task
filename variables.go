@@ -44,6 +44,7 @@ func (e *Executor) CompiledTask(call taskfile.Call) (*taskfile.Task, error) {
 		Method:      r.Replace(origTask.Method),
 		Prefix:      r.Replace(origTask.Prefix),
 		IgnoreError: origTask.IgnoreError,
+		Run:         r.Replace(origTask.Run),
 	}
 	new.Dir, err = execext.Expand(new.Dir)
 	if err != nil {

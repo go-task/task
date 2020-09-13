@@ -863,3 +863,14 @@ func TestDotenvShouldErrorWhenIncludingDependantDotenvs(t *testing.T) {
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "move the dotenv")
 }
+
+func TestRunOnlyRunsJobsHashOnce(t *testing.T) {
+	tt := fileContentTest{
+		Dir:    "testdata/run",
+		Target: "generate-hash",
+		Files: map[string]string{
+			"hash.txt": "starting 1\n1\n2\n",
+		},
+	}
+	tt.Run(t)
+}

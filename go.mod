@@ -6,6 +6,7 @@ require (
 	github.com/joho/godotenv v1.3.0
 	github.com/mattn/go-colorable v0.1.2 // indirect
 	github.com/mattn/go-zglob v0.0.1
+	github.com/mitchellh/hashstructure v1.0.0
 	github.com/radovskyb/watcher v1.0.5
 	github.com/spf13/pflag v1.0.3
 	github.com/stretchr/testify v1.5.1
