@@ -1,7 +1,7 @@
 version: '3'
 
 includes:
-  include1: './include1'
+  include1: '../include1'
 
 tasks:
   default:

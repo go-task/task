@@ -819,7 +819,7 @@ func TestShortTaskNotation(t *testing.T) {
 
 func TestDotenvShouldIncludeAllEnvFiles(t *testing.T) {
 	tt := fileContentTest{
-		Dir:       "testdata/dotenv",
+		Dir:       "testdata/dotenv/default",
 		Target:    "default",
 		TrimSpace: false,
 		Files: map[string]string{
@@ -829,26 +829,9 @@ func TestDotenvShouldIncludeAllEnvFiles(t *testing.T) {
 	tt.Run(t)
 }
 
-func TestDotenvShouldErrorWithIncludeEnvPath(t *testing.T) {
-	const dir = "testdata/dotenv"
-	const entry = "Taskfile-errors1.yml"
-
-	var buff bytes.Buffer
-	e := task.Executor{
-		Dir:        dir,
-		Entrypoint: entry,
-		Summary:    true,
-		Stdout:     &buff,
-		Stderr:     &buff,
-	}
-	err := e.Setup()
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "no such file")
-}
-
 func TestDotenvShouldErrorWhenIncludingDependantDotenvs(t *testing.T) {
-	const dir = "testdata/dotenv"
-	const entry = "Taskfile-errors2.yml"
+	const dir = "testdata/dotenv/error_included_envs"
+	const entry = "Taskfile.yml"
 
 	var buff bytes.Buffer
 	e := task.Executor{
@@ -862,4 +845,16 @@ func TestDotenvShouldErrorWhenIncludingDependantDotenvs(t *testing.T) {
 	err := e.Setup()
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "move the dotenv")
+}
+
+func TestDotenvShouldAllowMissingEnv(t *testing.T) {
+	tt := fileContentTest{
+		Dir:       "testdata/dotenv/missing_env",
+		Target:    "default",
+		TrimSpace: false,
+		Files: map[string]string{
+			"include.txt": "INCLUDE1='' INCLUDE2=''\n",
+		},
+	}
+	tt.Run(t)
 }

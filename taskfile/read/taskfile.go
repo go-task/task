@@ -42,14 +42,18 @@ func Taskfile(dir string, entrypoint string) (*taskfile.Taskfile, error) {
 			if !filepath.IsAbs(dotEnvPath) {
 				dotEnvPath = filepath.Join(dir, dotEnvPath)
 			}
-			envs, err := godotenv.Read(dotEnvPath)
-			if err != nil {
-				return nil, err
-			}
-			for key, value := range envs {
-				if _, ok := t.Env.Mapping[key]; !ok {
-					t.Env.Set(key, taskfile.Var{Static: value})
+			// allow for missing env files since they may be created by a bootstrap task
+			if _, err := os.Stat(dotEnvPath); !os.IsNotExist(err) {
+				envs, err := godotenv.Read(dotEnvPath)
+				if err != nil {
+					return nil, err
 				}
+				for key, value := range envs {
+					if _, ok := t.Env.Mapping[key]; !ok {
+						t.Env.Set(key, taskfile.Var{Static: value})
+					}
+				}
+			} else {
 			}
 		}
 	}

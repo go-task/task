@@ -1,6 +1,6 @@
 version: '3'
 
-dotenv: ['include1/.env', 'include1/envs/.env']
+dotenv: ['.env']
 
 tasks:
   default:
