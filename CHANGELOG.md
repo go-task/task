@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Do not error if a specified dotenv file does not exist
+  ([#378](https://github.com/go-task/task/issues/378), [#385](https://github.com/go-task/task/pull/385)).
 - Fix panic when you have empty tasks in your Taskfile
   ([#338](https://github.com/go-task/task/issues/338), [#362](https://github.com/go-task/task/pull/362)).
 
