@@ -56,6 +56,16 @@ func (fct fileContentTest) Run(t *testing.T) {
 	}
 }
 
+func TestEmptyTask(t *testing.T) {
+	e := &task.Executor{
+		Dir:    "testdata/empty_task",
+		Stdout: ioutil.Discard,
+		Stderr: ioutil.Discard,
+	}
+	assert.NoError(t, e.Setup(), "e.Setup()")
+	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "default"}))
+}
+
 func TestEnv(t *testing.T) {
 	tt := fileContentTest{
 		Dir:       "testdata/env",

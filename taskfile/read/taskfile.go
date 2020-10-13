@@ -119,6 +119,10 @@ func Taskfile(dir string, entrypoint string) (*taskfile.Taskfile, error) {
 	}
 
 	for name, task := range t.Tasks {
+		if task == nil {
+			task = &taskfile.Task{}
+			t.Tasks[name] = task
+		}
 		task.Task = name
 	}
 

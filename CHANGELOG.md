@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Fix panic when you have empty tasks in your Taskfile
+  ([#338](https://github.com/go-task/task/issues/338), [#362](https://github.com/go-task/task/pull/362)).
+
 ## v3.0.0
 
 - On `v3`, all CLI variables will be considered global variables
