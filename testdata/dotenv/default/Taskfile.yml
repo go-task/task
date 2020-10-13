@@ -1,0 +1,8 @@
+version: '3'
+
+dotenv: ['../include1/.env', '../include1/envs/.env']
+
+tasks:
+  default:
+    cmds:
+      - echo "INCLUDE1='$INCLUDE1' INCLUDE2='$INCLUDE2'" > include.txt
