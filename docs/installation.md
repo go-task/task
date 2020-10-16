@@ -74,10 +74,12 @@ easily generating this script.
 
 ```bash
 # For Default Installion to ./bin with debug logging
-curl -sL https://taskfile.dev/install.sh | sh -s -- -d 
+sh -c "$(curl -ssL https://taskfile.dev/install.sh)" -- -d
 
-# For Installation To /usr/local/bin with debug logging
-curl -sL https://taskfile.dev/install.sh | sudo sh -s -- -d -b /usr/local/bin
+# For Installation To /usr/local/bin for userwide access with debug logging
+# May require sudo sh
+sh -c "$(curl -ssL https://taskfile.dev/install.sh)" -- -d -b /usr/local/bin
+
 ```
 
 > This method will download the binary on the local `./bin` directory by default.
