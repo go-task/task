@@ -52,6 +52,10 @@ type Executor struct {
 	Output      output.Output
 	OutputStyle string
 
+	PreRun   func(*taskfile.Task, map[string]interface{})
+	PostRun  func(*taskfile.Task, map[string]interface{})
+	FinalRun func(*taskfile.Task, map[string]interface{})
+
 	taskvars *taskfile.Vars
 
 	taskCallCount map[string]*int32
@@ -282,6 +286,15 @@ func (e *Executor) RunTask(ctx context.Context, call taskfile.Call) error {
 		e.Logger.Errf(logger.Red, "task: cannot make directory %q: %v", t.Dir, err)
 	}
 
+	x := make(map[string]interface{})
+	if e.PreRun != nil {
+		e.PreRun(t, x)
+	}
+
+	if e.FinalRun != nil {
+		defer e.FinalRun(t, x)
+	}
+
 	for i := range t.Cmds {
 		if err := e.runCommand(ctx, t, call, i); err != nil {
 			if err2 := e.statusOnError(t); err2 != nil {
@@ -296,6 +309,11 @@ func (e *Executor) RunTask(ctx context.Context, call taskfile.Call) error {
 			return &taskRunError{t.Task, err}
 		}
 	}
+
+	if e.PostRun != nil {
+		e.PostRun(t, x)
+	}
+
 	return nil
 }
 
