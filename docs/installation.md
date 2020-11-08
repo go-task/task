@@ -73,7 +73,13 @@ scenarios like CIs. Many thanks to [GoDownloader][godownloader] for allowing
 easily generating this script.
 
 ```bash
-curl -sL https://taskfile.dev/install.sh | sh
+# For Default Installion to ./bin with debug logging
+sh -c "$(curl -ssL https://taskfile.dev/install.sh)" -- -d
+
+# For Installation To /usr/local/bin for userwide access with debug logging
+# May require sudo sh
+sh -c "$(curl -ssL https://taskfile.dev/install.sh)" -- -d -b /usr/local/bin
+
 ```
 
 > This method will download the binary on the local `./bin` directory by default.
