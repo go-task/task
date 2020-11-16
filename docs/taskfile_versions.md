@@ -162,7 +162,7 @@ Please check the [documentation][includes]
 
 [output]: usage.md#output-syntax
 [ignore_errors]: usage.md#ignore-errors
-[includes]: usage.md#including-other-taskfiles
+[includes]: usage.md#using-programmatic-checks-to-cancel-execution-of-an-task-and-its-dependencies
 
 ## Version 3
 
