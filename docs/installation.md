@@ -74,11 +74,11 @@ easily generating this script.
 
 ```bash
 # For Default Installion to ./bin with debug logging
-sh -c "$(curl -ssL https://taskfile.dev/install.sh)" -- -d
+sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d
 
 # For Installation To /usr/local/bin for userwide access with debug logging
 # May require sudo sh
-sh -c "$(curl -ssL https://taskfile.dev/install.sh)" -- -d -b /usr/local/bin
+sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d -b /usr/local/bin
 
 ```
 
