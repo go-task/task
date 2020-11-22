@@ -436,6 +436,21 @@ func TestLabelInStatus(t *testing.T) {
 	}
 }
 
+func TestTaskfileParentDirectory(t *testing.T) {
+	const dir = "testdata/walk_up/child1/child2"
+
+	var buff bytes.Buffer
+
+	e := task.Executor{
+		Dir:    dir,
+		Stdout: &buff,
+		Stderr: &buff,
+	}
+	assert.NoError(t, e.Setup())
+	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "hello"}))
+	assert.Equal(t, "Hello World from Task!\n", buff.String())
+}
+
 func TestLabelWithVariableExpansion(t *testing.T) {
 	const dir = "testdata/label_var"
 

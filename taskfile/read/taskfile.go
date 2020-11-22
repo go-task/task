@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 
 	"github.com/go-task/task/v3/internal/templater"
 	"github.com/go-task/task/v3/taskfile"
@@ -23,9 +24,12 @@ var (
 
 // Taskfile reads a Taskfile for a given directory
 func Taskfile(dir string, entrypoint string) (*taskfile.Taskfile, error) {
-	path := filepath.Join(dir, entrypoint)
-	if _, err := os.Stat(path); err != nil {
-		return nil, fmt.Errorf(`task: No Taskfile found on "%s". Use "task --init" to create a new one`, path)
+	// we need the full path to iterate
+	dir, _ = filepath.Abs(dir)
+
+	path, err := findPath(dir, entrypoint)
+	if err != nil {
+		return nil, err
 	}
 	t, err := readTaskfile(path)
 	if err != nil {
@@ -131,6 +135,25 @@ func Taskfile(dir string, entrypoint string) (*taskfile.Taskfile, error) {
 	}
 
 	return t, nil
+}
+
+func findPath(dir string, entrypoint string) (path string, err error) {
+	found := false
+	anker := filepath.Join(dir, entrypoint)
+	for !found {
+		path = filepath.Join(dir, entrypoint)
+		if _, err := os.Stat(path); err != nil {
+			if dir == "/" {
+				return "", fmt.Errorf(`task: No Taskfile found on "%s". Use "task --init" to create a new one`, anker)
+			}
+			dirFragments := strings.Split(dir, string(os.PathSeparator))
+			dir = "/" + strings.Join(dirFragments[1:len(dirFragments)-1], string(os.PathSeparator))
+
+		} else {
+			found = true
+		}
+	}
+	return
 }
 
 func readTaskfile(file string) (*taskfile.Taskfile, error) {

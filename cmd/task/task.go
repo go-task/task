@@ -145,7 +145,6 @@ func main() {
 	v, err := e.Taskfile.ParsedVersion()
 	if err != nil {
 		log.Fatal(err)
-		return
 	}
 
 	if list {
