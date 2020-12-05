@@ -24,8 +24,14 @@ tasks:
     env:
       CGO_ENABLED: '0'
 
-  dl-deps:
-    desc: Downloads cli dependencies
+  mod:
+    desc: Downloads and tidy Go modules
+    cmds:
+      - go mod download
+      - go mod tidy
+
+  cli-deps:
+    desc: Downloads CLI dependencies
     cmds:
       - task: go-get
         vars: {REPO: golang.org/x/lint/golint}
@@ -33,12 +39,6 @@ tasks:
         vars: {REPO: github.com/goreleaser/goreleaser}
       - task: go-get
         vars: {REPO: github.com/goreleaser/godownloader}
-
-  update-deps:
-    desc: Updates dependencies
-    cmds:
-      - dep ensure
-      - dep ensure -update
 
   clean:
     desc: Cleans temp files and folders
@@ -62,7 +62,7 @@ tasks:
     cmds:
       - goreleaser --snapshot --rm-dist
 
-  generate-install-script:
+  gen-install-script:
     desc: Generate install script using https://github.com/goreleaser/godownloader
     cmds:
       - godownloader --repo go-task/task -o install-task.sh
