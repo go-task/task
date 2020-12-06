@@ -108,7 +108,12 @@ This installation method is community owned.
 First, make sure you have [Go][go] properly installed and setup.
 
 Task requires [Go Modules](https://github.com/golang/go/wiki/Modules) and
-doesn't officially support installing via `go get` anymore.
+can be installed got `go get` given that you have a recent version of [Go][go].
+
+```bash
+go get -u github.com/go-task/task/cmd/task
+```
+
 
 Installing in another directory:
 
