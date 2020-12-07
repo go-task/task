@@ -865,7 +865,7 @@ $ task default
 ## Short task syntax
 
 Starting on Task v3, you can now write tasks with a shorter syntax if they
-have the default settings (e.g. no custom `env:`, `vars:`, `silent:` , etc):
+have the default settings (e.g. no custom `env:`, `vars:`, `desc:`, `silent:` , etc):
 
 ```yaml
 version: '3'
@@ -873,7 +873,7 @@ version: '3'
 tasks:
   build: go build -v -o ./app{{exeExt}} .
 
-  build:
+  run:
     - task: build
     - ./app{{exeExt}} -h localhost -p 8080
 ```
