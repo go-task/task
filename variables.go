@@ -23,6 +23,8 @@ func (e *Executor) CompiledTask(call taskfile.Call) (*taskfile.Task, error) {
 		return nil, err
 	}
 
+	vars.Merge(e.Taskfile.Vars)
+
 	v, err := e.Taskfile.ParsedVersion()
 	if err != nil {
 		return nil, err
