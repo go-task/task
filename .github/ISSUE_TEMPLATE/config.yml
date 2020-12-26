@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Questions, Ideas and General Discussions
+    url: https://github.com/go-task/task/discussions
+    about: Ask questions and discuss general ideas with the community
