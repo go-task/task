@@ -1,5 +1,6 @@
 ---
 name: Bug Report
+about: Use the template to report bugs and issues
 labels: bug
 ---
 

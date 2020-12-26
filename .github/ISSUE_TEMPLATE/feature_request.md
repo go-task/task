@@ -1,5 +1,6 @@
 ---
 name: Feature Request
+about: Use the template to make feature requests
 labels: feature
 ---
 
