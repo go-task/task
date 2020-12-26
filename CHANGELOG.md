@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v3.0.1
 
 - Do not error if a specified dotenv file does not exist
   ([#378](https://github.com/go-task/task/issues/378), [#385](https://github.com/go-task/task/pull/385)).
