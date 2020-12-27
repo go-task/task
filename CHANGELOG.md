@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- `set -e` is now automatically set on every command. This was done to fix an
+  issue where multiline string commands wouldn't really fail unless the
+  sentence was in the last line
+  ([#403](https://github.com/go-task/task/issues/403)).
+
 ## v3.0.1
 
 - Do not error if a specified dotenv file does not exist

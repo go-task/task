@@ -868,3 +868,19 @@ func TestDotenvShouldAllowMissingEnv(t *testing.T) {
 	}
 	tt.Run(t)
 }
+
+func TestExitImmediately(t *testing.T) {
+	const dir = "testdata/exit_immediately"
+
+	var buff bytes.Buffer
+	e := task.Executor{
+		Dir:    dir,
+		Stdout: &buff,
+		Stderr: &buff,
+		Silent: true,
+	}
+	assert.NoError(t, e.Setup())
+
+	assert.Error(t, e.Run(context.Background(), taskfile.Call{Task: "default"}))
+	assert.Contains(t, buff.String(), `"this_should_fail": executable file not found in $PATH`)
+}
