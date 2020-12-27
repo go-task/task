@@ -8,6 +8,19 @@
     <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/docsify-themeable/dist/css/theme-simple.css">
     <meta name="google-site-verification" content="VGAYkbdmuaciIDGkBe-eAg9yfZg0C6ostgonbGxxOa0" />
+    <style>
+      #logo {
+        transition: all 0.7s ease;
+      }
+      #logo:hover {
+        -webkit-transform: rotateZ(360deg);
+        -ms-transform: rotateZ(360deg);
+        transform: rotateZ(360deg);
+      }
+      .app-name-link img {
+        width: 125px;
+      }
+    </style>
   </head>
   <body>
     <div id="app"></div>
@@ -15,7 +28,8 @@
       window.$docsify = {
         name: 'Task',
         repo: 'go-task/task',
-        themeColor: '#00add8',
+        logo: 'Logo.png',
+        themeColor: '#29beb0',
         loadSidebar: true,
         auto2top: true,
         maxLevel: 3,

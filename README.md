@@ -1,10 +1,15 @@
-![Test](https://github.com/go-task/task/workflows/Test/badge.svg)
-![GoReleaser](https://github.com/go-task/task/workflows/goreleaser/badge.svg)
-![GitHub All Releases](https://img.shields.io/github/downloads/go-task/task/total)
+<div align="center">
+  <a href="https://taskfile.dev">
+    <img src="docs/Logo.png" width="200px" height="200px" />
+  </a>
 
-# Task
+  <h1>Task</h1>
 
-Task is a task runner / build tool that aims to be simpler and easier to use
-than, for example, [GNU Make](https://www.gnu.org/software/make/).
+  <p>
+    Task is a task runner / build tool that aims to be simpler and easier to use than, for example, <a href="https://www.gnu.org/software/make/">GNU Make<a>.
+  </p>
 
-See [taskfile.dev](https://taskfile.dev) for the documentation.
+  <p>
+    See <a href="https://taskfile.dev">taskfile.dev</a> for the documentation.
+  </p>
+</div>

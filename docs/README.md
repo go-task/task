@@ -1,5 +1,9 @@
 # Task
 
+<div align="center">
+  <img id="logo" src="/Logo.png" height="250px" width="250px" />
+</div>
+
 Task is a task runner / build tool that aims to be simpler and easier to use
 than, for example, [GNU Make][make].
 
