@@ -48,14 +48,7 @@ func RunCommand(ctx context.Context, opts *RunCommandOptions) error {
 	r, err := interp.New(
 		interp.Dir(opts.Dir),
 		interp.Env(expand.ListEnviron(environ...)),
-
-		interp.OpenHandler(func(ctx context.Context, path string, flag int, perm os.FileMode) (io.ReadWriteCloser, error) {
-			if path == "/dev/null" {
-				return devNull{}, nil
-			}
-			return interp.DefaultOpenHandler()(ctx, path, flag, perm)
-		}),
-
+		interp.OpenHandler(openHandler),
 		interp.StdIO(opts.Stdin, opts.Stdout, opts.Stderr),
 	)
 	if err != nil {
@@ -85,4 +78,11 @@ func Expand(s string) (string, error) {
 		return fields[0], nil
 	}
 	return "", nil
+}
+
+func openHandler(ctx context.Context, path string, flag int, perm os.FileMode) (io.ReadWriteCloser, error) {
+	if path == "/dev/null" {
+		return devNull{}, nil
+	}
+	return interp.DefaultOpenHandler()(ctx, path, flag, perm)
 }
