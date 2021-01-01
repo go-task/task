@@ -11,7 +11,7 @@ type Taskfile struct {
 	Expansions int
 	Output     string
 	Method     string
-	Includes   IncludedTaskfiles
+	Includes   *IncludedTaskfiles
 	Vars       *Vars
 	Env        *Vars
 	Tasks      Tasks
@@ -26,7 +26,7 @@ func (tf *Taskfile) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		Expansions int
 		Output     string
 		Method     string
-		Includes   IncludedTaskfiles
+		Includes   *IncludedTaskfiles
 		Vars       *Vars
 		Env        *Vars
 		Tasks      Tasks

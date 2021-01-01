@@ -53,19 +53,10 @@ func (vs *Vars) Set(key string, value Var) {
 	if vs.Mapping == nil {
 		vs.Mapping = make(map[string]Var, 1)
 	}
-	if !strSliceContains(vs.Keys, key) {
+	if !stringSliceContains(vs.Keys, key) {
 		vs.Keys = append(vs.Keys, key)
 	}
 	vs.Mapping[key] = value
-}
-
-func strSliceContains(s []string, str string) bool {
-	for _, v := range s {
-		if v == str {
-			return true
-		}
-	}
-	return false
 }
 
 // Range allows you to loop into the vars in its right order

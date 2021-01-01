@@ -176,7 +176,7 @@ func (e *Executor) Setup() error {
 	if v < 2.1 && e.Taskfile.Output != "" {
 		return fmt.Errorf(`task: Taskfile option "output" is only available starting on Taskfile version v2.1`)
 	}
-	if v < 2.2 && len(e.Taskfile.Includes) > 0 {
+	if v < 2.2 && e.Taskfile.Includes.Len() > 0 {
 		return fmt.Errorf(`task: Including Taskfiles is only available starting on Taskfile version v2.2`)
 	}
 	if v >= 3.0 && e.Taskfile.Expansions > 2 {
@@ -229,10 +229,14 @@ func (e *Executor) Setup() error {
 	}
 
 	if v < 3 {
-		for _, taskfile := range e.Taskfile.Includes {
+		err := e.Taskfile.Includes.Range(func(_ string, taskfile taskfile.IncludedTaskfile) error {
 			if taskfile.AdvancedImport {
 				return errors.New(`task: Import with additional parameters is only available starting on Taskfile version v3`)
 			}
+			return nil
+		})
+		if err != nil {
+			return err
 		}
 	}
 

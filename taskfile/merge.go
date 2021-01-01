@@ -22,11 +22,9 @@ func Merge(t1, t2 *Taskfile, namespaces ...string) error {
 	}
 
 	if t1.Includes == nil {
-		t1.Includes = make(IncludedTaskfiles)
+		t1.Includes = &IncludedTaskfiles{}
 	}
-	for k, v := range t2.Includes {
-		t1.Includes[k] = v
-	}
+	t1.Includes.Merge(t2.Includes)
 
 	if t1.Vars == nil {
 		t1.Vars = &Vars{}

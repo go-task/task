@@ -58,7 +58,7 @@ func Taskfile(dir string, entrypoint string) (*taskfile.Taskfile, error) {
 		}
 	}
 
-	for namespace, includedTask := range t.Includes {
+	err = t.Includes.Range(func(namespace string, includedTask taskfile.IncludedTaskfile) error {
 		if v >= 3.0 {
 			tr := templater.Templater{Vars: &taskfile.Vars{}, RemoveNoValue: true}
 			includedTask = taskfile.IncludedTaskfile{
@@ -67,7 +67,7 @@ func Taskfile(dir string, entrypoint string) (*taskfile.Taskfile, error) {
 				AdvancedImport: includedTask.AdvancedImport,
 			}
 			if err := tr.Err(); err != nil {
-				return nil, err
+				return err
 			}
 		}
 
@@ -79,21 +79,21 @@ func Taskfile(dir string, entrypoint string) (*taskfile.Taskfile, error) {
 
 		info, err := os.Stat(path)
 		if err != nil {
-			return nil, err
+			return err
 		}
 		if info.IsDir() {
 			path = filepath.Join(path, "Taskfile.yml")
 		}
 		includedTaskfile, err := readTaskfile(path)
 		if err != nil {
-			return nil, err
+			return err
 		}
-		if len(includedTaskfile.Includes) > 0 {
-			return nil, ErrIncludedTaskfilesCantHaveIncludes
+		if includedTaskfile.Includes.Len() > 0 {
+			return ErrIncludedTaskfilesCantHaveIncludes
 		}
 
 		if v >= 3.0 && len(includedTaskfile.Dotenv) > 0 {
-			return nil, ErrIncludedTaskfilesCantHaveDotenvs
+			return ErrIncludedTaskfilesCantHaveDotenvs
 		}
 
 		if includedTask.AdvancedImport {
@@ -105,8 +105,12 @@ func Taskfile(dir string, entrypoint string) (*taskfile.Taskfile, error) {
 		}
 
 		if err = taskfile.Merge(t, includedTaskfile, namespace); err != nil {
-			return nil, err
+			return err
 		}
+		return nil
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	if v < 3.0 {
