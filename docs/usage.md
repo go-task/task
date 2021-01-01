@@ -269,16 +269,16 @@ attribute:
 version: '3'
 
 tasks:
-  main-task:
+  greet:
+    vars:
+      RECIPIENT: '{{default "World" .RECIPIENT}}'
     cmds:
-      - task: write-file
-        vars: {FILE: "hello.txt", CONTENT: "Hello!"}
-      - task: write-file
-        vars: {FILE: "world.txt", CONTENT: "World!"}
+      - echo "Hello, {{.RECIPIENT}}!"
 
-  write-file:
+  greet-pessimistically:
     cmds:
-      - echo "{{.CONTENT}}" > {{.FILE}}
+      - task: greet
+        vars: {RECIPIENT: "Cruel World"}
 ```
 
 The above syntax is also supported in `deps`.
