@@ -27,17 +27,7 @@ type RunCommandOptions struct {
 var (
 	// ErrNilOptions is returned when a nil options is given
 	ErrNilOptions = errors.New("execext: nil options given")
-
-	setMinusE *syntax.File
 )
-
-func init() {
-	var err error
-	setMinusE, err = syntax.NewParser().Parse(strings.NewReader("set -e"), "")
-	if err != nil {
-		panic(err)
-	}
-}
 
 // RunCommand runs a shell command
 func RunCommand(ctx context.Context, opts *RunCommandOptions) error {
@@ -56,15 +46,13 @@ func RunCommand(ctx context.Context, opts *RunCommandOptions) error {
 	}
 
 	r, err := interp.New(
+		interp.Params("-e"),
 		interp.Dir(opts.Dir),
 		interp.Env(expand.ListEnviron(environ...)),
 		interp.OpenHandler(openHandler),
 		interp.StdIO(opts.Stdin, opts.Stdout, opts.Stderr),
 	)
 	if err != nil {
-		return err
-	}
-	if err = r.Run(ctx, setMinusE); err != nil {
 		return err
 	}
 	return r.Run(ctx, p)
