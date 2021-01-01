@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Task now respects the order of declaration of included Taskfiles when
+  evaluating variables declaring by them
+  ([#393](https://github.com/go-task/task/issues/393)).
 - `set -e` is now automatically set on every command. This was done to fix an
   issue where multiline string commands wouldn't really fail unless the
   sentence was in the last line
