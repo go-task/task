@@ -12,6 +12,9 @@
 
 ## v3.0.1
 
+- Allow use as a library by moving the required packages out of the `internal`
+  directory
+  ([#358](https://github.com/go-task/task/pull/358)).
 - Do not error if a specified dotenv file does not exist
   ([#378](https://github.com/go-task/task/issues/378), [#385](https://github.com/go-task/task/pull/385)).
 - Fix panic when you have empty tasks in your Taskfile
