@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Fix a bug when the checksum up-to-date resolution is used by a task
+  with a custom `label:` attribute
+  ([#412](https://github.com/go-task/task/issues/412)).
 - Starting from this release, we're releasing official ARMv6 and ARM64 binaries
   for Linux
   ([#375](https://github.com/go-task/task/issues/375), [#418](https://github.com/go-task/task/issues/418)).
