@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Starting from this release, we're releasing official ARMv6 and ARM64 binaries
+  for Linux
+  ([#375](https://github.com/go-task/task/issues/375), [#418](https://github.com/go-task/task/issues/418)).
 - Task now respects the order of declaration of included Taskfiles when
   evaluating variables declaring by them
   ([#393](https://github.com/go-task/task/issues/393)).
