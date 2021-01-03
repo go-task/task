@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v3.1.0
 
 - Fix a bug when the checksum up-to-date resolution is used by a task
   with a custom `label:` attribute
