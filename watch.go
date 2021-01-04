@@ -81,12 +81,12 @@ func (e *Executor) watchTasks(calls ...taskfile.Call) error {
 	}()
 
 	go func() {
-		// re-register each second because we can have new files
+		// re-register every 20 seconds because we can have new files, but this process is expensive to run
 		for {
 			if err := e.registerWatchedFiles(w, calls...); err != nil {
 				e.Logger.Errf(logger.Red, "%v", err)
 			}
-			time.Sleep(time.Second)
+			time.Sleep(time.Second * 20)
 		}
 	}()
 
