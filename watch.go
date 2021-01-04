@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"strings"
 	"syscall"
 	"time"
@@ -41,6 +42,7 @@ func (e *Executor) watchTasks(calls ...taskfile.Call) error {
 	defer w.Close()
 	w.SetMaxEvents(1)
 	if err := w.Ignore(watchIgnoredDirs...); err != nil {
+		cancel()
 		return err
 	}
 
@@ -114,12 +116,6 @@ func (e *Executor) registerWatchedFiles(w *watcher.Watcher, calls ...taskfile.Ca
 		oldWatchedFiles[f] = struct{}{}
 	}
 
-	for f := range oldWatchedFiles {
-		if err := w.Remove(f); err != nil {
-			return err
-		}
-	}
-
 	var registerTaskFiles func(taskfile.Call) error
 	registerTaskFiles = func(c taskfile.Call) error {
 		task, err := e.CompiledTask(c)
@@ -146,12 +142,17 @@ func (e *Executor) registerWatchedFiles(w *watcher.Watcher, calls ...taskfile.Ca
 				return err
 			}
 			for _, f := range files {
-				if _, ok := oldWatchedFiles[f]; ok {
-					continue
-				}
-				if err := w.Add(f); err != nil {
+				absFile, err := filepath.Abs(f)
+				if err != nil {
 					return err
 				}
+				if _, ok := oldWatchedFiles[absFile]; ok {
+					continue
+				}
+				if err := w.Add(absFile); err != nil {
+					return err
+				}
+				e.Logger.VerboseOutf(logger.Green, "task: watching new file: %v", absFile)
 			}
 		}
 		return nil
