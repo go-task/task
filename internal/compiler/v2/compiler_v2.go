@@ -109,3 +109,11 @@ func (c *CompilerV2) HandleDynamicVar(v taskfile.Var) (string, error) {
 
 	return result, nil
 }
+
+// ResetCache clear the dymanic variables cache
+func (c *CompilerV2) ResetCache() {
+	c.muDynamicCache.Lock()
+	defer c.muDynamicCache.Unlock()
+
+	c.dynamicCache = nil
+}

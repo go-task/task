@@ -49,6 +49,9 @@ func (e *Executor) watchTasks(calls ...taskfile.Call) error {
 
 				cancel()
 				ctx, cancel = context.WithCancel(context.Background())
+
+				e.Compiler.ResetCache()
+
 				for _, c := range calls {
 					c := c
 					go func() {

@@ -9,4 +9,5 @@ import (
 type Compiler interface {
 	GetVariables(t *taskfile.Task, call taskfile.Call) (*taskfile.Vars, error)
 	HandleDynamicVar(v taskfile.Var) (string, error)
+	ResetCache()
 }

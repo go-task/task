@@ -4,7 +4,7 @@
 
 - The watch feature (via the `--watch` flag) got a few different bug fixes and
   should be more stable now
-  ([#423](https://github.com/go-task/task/pull/423)).
+  ([#423](https://github.com/go-task/task/pull/423), [#365](https://github.com/go-task/task/issues/365)).
 
 ## v3.1.0
 
