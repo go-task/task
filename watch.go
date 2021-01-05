@@ -145,7 +145,6 @@ func (e *Executor) registerWatchedFiles(w *watcher.Watcher, calls ...taskfile.Ca
 				if err := w.Add(absFile); err != nil {
 					return err
 				}
-				w.TriggerEvent(watcher.Create, nil)
 				e.Logger.VerboseOutf(logger.Green, "task: watching new file: %v", absFile)
 			}
 		}
