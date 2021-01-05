@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- The watch feature (via the `--watch` flag) got a few different bug fixes and
+  should be more stable now
+  ([#423](https://github.com/go-task/task/pull/423)).
+
 ## v3.1.0
 
 - Fix a bug when the checksum up-to-date resolution is used by a task

@@ -15,10 +15,7 @@ import (
 	"github.com/radovskyb/watcher"
 )
 
-var watchIgnoredDirs = []string{
-	".git",
-	"node_modules",
-}
+const watchInterval = 5 * time.Second
 
 // watchTasks start watching the given tasks
 func (e *Executor) watchTasks(calls ...taskfile.Call) error {
@@ -41,10 +38,6 @@ func (e *Executor) watchTasks(calls ...taskfile.Call) error {
 	w := watcher.New()
 	defer w.Close()
 	w.SetMaxEvents(1)
-	if err := w.Ignore(watchIgnoredDirs...); err != nil {
-		cancel()
-		return err
-	}
 
 	closeOnInterrupt(w)
 
@@ -67,9 +60,6 @@ func (e *Executor) watchTasks(calls ...taskfile.Call) error {
 			case err := <-w.Error:
 				switch err {
 				case watcher.ErrWatchedFileDeleted:
-					go func() {
-						w.TriggerEvent(watcher.Remove, nil)
-					}()
 				default:
 					e.Logger.Errf(logger.Red, "%v", err)
 				}
@@ -81,16 +71,16 @@ func (e *Executor) watchTasks(calls ...taskfile.Call) error {
 	}()
 
 	go func() {
-		// re-register every 20 seconds because we can have new files, but this process is expensive to run
+		// re-register every 5 seconds because we can have new files, but this process is expensive to run
 		for {
 			if err := e.registerWatchedFiles(w, calls...); err != nil {
 				e.Logger.Errf(logger.Red, "%v", err)
 			}
-			time.Sleep(time.Second * 20)
+			time.Sleep(watchInterval)
 		}
 	}()
 
-	return w.Start(time.Second)
+	return w.Start(watchInterval)
 }
 
 func isContextError(err error) bool {
@@ -111,10 +101,7 @@ func closeOnInterrupt(w *watcher.Watcher) {
 }
 
 func (e *Executor) registerWatchedFiles(w *watcher.Watcher, calls ...taskfile.Call) error {
-	oldWatchedFiles := make(map[string]struct{})
-	for f := range w.WatchedFiles() {
-		oldWatchedFiles[f] = struct{}{}
-	}
+	watchedFiles := w.WatchedFiles()
 
 	var registerTaskFiles func(taskfile.Call) error
 	registerTaskFiles = func(c taskfile.Call) error {
@@ -146,12 +133,16 @@ func (e *Executor) registerWatchedFiles(w *watcher.Watcher, calls ...taskfile.Ca
 				if err != nil {
 					return err
 				}
-				if _, ok := oldWatchedFiles[absFile]; ok {
+				if shouldIgnoreFile(absFile) {
+					continue
+				}
+				if _, ok := watchedFiles[absFile]; ok {
 					continue
 				}
 				if err := w.Add(absFile); err != nil {
 					return err
 				}
+				w.TriggerEvent(watcher.Create, nil)
 				e.Logger.VerboseOutf(logger.Green, "task: watching new file: %v", absFile)
 			}
 		}
@@ -164,4 +155,8 @@ func (e *Executor) registerWatchedFiles(w *watcher.Watcher, calls ...taskfile.Ca
 		}
 	}
 	return nil
+}
+
+func shouldIgnoreFile(path string) bool {
+	return strings.Contains(path, "/.git") || strings.Contains(path, "/.task") || strings.Contains(path, "/node_modules")
 }
