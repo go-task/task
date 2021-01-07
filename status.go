@@ -76,7 +76,8 @@ func (e *Executor) timestampChecker(t *taskfile.Task) status.Checker {
 
 func (e *Executor) checksumChecker(t *taskfile.Task) status.Checker {
 	return &status.Checksum{
-		Dir:       t.Dir,
+		BaseDir:   e.Dir,
+		TaskDir:   t.Dir,
 		Task:      t.Name(),
 		Sources:   t.Sources,
 		Generates: t.Generates,

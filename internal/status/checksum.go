@@ -14,7 +14,8 @@ import (
 // Checksum validades if a task is up to date by calculating its source
 // files checksum
 type Checksum struct {
-	Dir       string
+	BaseDir   string
+	TaskDir   string
 	Task      string
 	Sources   []string
 	Generates []string
@@ -32,7 +33,7 @@ func (c *Checksum) IsUpToDate() (bool, error) {
 	data, _ := ioutil.ReadFile(checksumFile)
 	oldMd5 := strings.TrimSpace(string(data))
 
-	sources, err := globs(c.Dir, c.Sources)
+	sources, err := globs(c.TaskDir, c.Sources)
 	if err != nil {
 		return false, err
 	}
@@ -43,7 +44,7 @@ func (c *Checksum) IsUpToDate() (bool, error) {
 	}
 
 	if !c.Dry {
-		_ = os.MkdirAll(filepath.Join(c.Dir, ".task", "checksum"), 0755)
+		_ = os.MkdirAll(filepath.Join(c.BaseDir, ".task", "checksum"), 0755)
 		if err = ioutil.WriteFile(checksumFile, []byte(newMd5+"\n"), 0644); err != nil {
 			return false, err
 		}
@@ -52,7 +53,7 @@ func (c *Checksum) IsUpToDate() (bool, error) {
 	if len(c.Generates) > 0 {
 		// For each specified 'generates' field, check whether the files actually exist
 		for _, g := range c.Generates {
-			generates, err := glob(c.Dir, g)
+			generates, err := glob(c.TaskDir, g)
 			if os.IsNotExist(err) {
 				return false, nil
 			}
@@ -107,7 +108,7 @@ func (*Checksum) Kind() string {
 }
 
 func (c *Checksum) checksumFilePath() string {
-	return filepath.Join(c.Dir, ".task", "checksum", c.normalizeFilename(c.Task))
+	return filepath.Join(c.BaseDir, ".task", "checksum", c.normalizeFilename(c.Task))
 }
 
 var checksumFilenameRegexp = regexp.MustCompile("[^A-z0-9]")
