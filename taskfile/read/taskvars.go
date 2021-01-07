@@ -6,9 +6,9 @@ import (
 	"path/filepath"
 	"runtime"
 
-	"github.com/go-task/task/v3/taskfile"
-
 	"gopkg.in/yaml.v3"
+
+	"github.com/go-task/task/v3/taskfile"
 )
 
 // Taskvars reads a Taskvars for a given directory

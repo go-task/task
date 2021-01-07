@@ -6,9 +6,9 @@ import (
 	"io"
 	"testing"
 
-	"github.com/go-task/task/v3/internal/output"
-
 	"github.com/stretchr/testify/assert"
+
+	"github.com/go-task/task/v3/internal/output"
 )
 
 func TestInterleaved(t *testing.T) {

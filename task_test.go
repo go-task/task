@@ -11,10 +11,10 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/go-task/task/v3"
 	"github.com/go-task/task/v3/taskfile"
-
-	"github.com/stretchr/testify/assert"
 )
 
 // fileContentTest provides a basic reusable test-case for running a Taskfile

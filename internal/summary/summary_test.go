@@ -5,11 +5,11 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/go-task/task/v3/internal/logger"
 	"github.com/go-task/task/v3/internal/summary"
 	"github.com/go-task/task/v3/taskfile"
-
-	"github.com/stretchr/testify/assert"
 )
 
 func TestPrintsDependenciesIfPresent(t *testing.T) {
