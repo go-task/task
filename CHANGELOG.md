@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v3.2.0
 
 - Fix the `.task` directory being created in the task directory instead of the
   Taskfile directory
