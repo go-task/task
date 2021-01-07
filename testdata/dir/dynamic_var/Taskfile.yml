@@ -1,0 +1,11 @@
+version: '3'
+
+tasks:
+  default:
+    cmds:
+      - echo '{{.FOLDER}}' > dir.txt
+    dir: subdirectory
+    vars:
+      FOLDER:
+        sh: basename $(pwd)
+    silent: true

@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Fix a bug where dynamic variables (those declared with `sh:`) were not
+  running in the task directory when the task has a custom dir or it was
+  in an included taskfile
+  ([#384](https://github.com/go-task/task/issues/384)).
 - The watch feature (via the `--watch` flag) got a few different bug fixes and
   should be more stable now
   ([#423](https://github.com/go-task/task/pull/423), [#365](https://github.com/go-task/task/issues/365)).

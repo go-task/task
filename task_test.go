@@ -303,16 +303,15 @@ func TestPrecondition(t *testing.T) {
 }
 
 func TestGenerates(t *testing.T) {
+	const dir = "testdata/generates"
+
 	const (
 		srcTask        = "sub/src.txt"
 		relTask        = "rel.txt"
-		absTask        = "abs.txt"
+		absTask        = "sub/abs.txt"
 		fileWithSpaces = "my text file.txt"
 	)
 
-	// This test does not work with a relative dir.
-	dir, err := filepath.Abs("testdata/generates")
-	assert.NoError(t, err)
 	var srcFile = filepath.Join(dir, srcTask)
 
 	for _, task := range []string{srcTask, relTask, absTask, fileWithSpaces} {
@@ -798,6 +797,18 @@ func TestWhenDirAttributeItCreatesMissingAndRunsInThatDir(t *testing.T) {
 
 	// Clean-up after ourselves only if no error.
 	_ = os.RemoveAll(toBeCreated)
+}
+
+func TestDynamicVariablesShouldRunOnTheTaskDir(t *testing.T) {
+	tt := fileContentTest{
+		Dir:       "testdata/dir/dynamic_var",
+		Target:    "default",
+		TrimSpace: false,
+		Files: map[string]string{
+			"subdirectory/dir.txt": "subdirectory\n",
+		},
+	}
+	tt.Run(t)
 }
 
 func TestDisplaysErrorOnUnsupportedVersion(t *testing.T) {

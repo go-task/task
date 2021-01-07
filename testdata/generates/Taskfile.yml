@@ -4,7 +4,7 @@ vars:
   BUILD_DIR: $pwd
 
 tasks:
-  abs.txt:
+  sub/abs.txt:
     desc: generates dest file based on absolute paths
     deps:
       - sub/src.txt

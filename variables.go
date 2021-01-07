@@ -60,7 +60,7 @@ func (e *Executor) CompiledTask(call taskfile.Call) (*taskfile.Task, error) {
 	new.Env.Merge(r.ReplaceVars(e.Taskfile.Env))
 	new.Env.Merge(r.ReplaceVars(origTask.Env))
 	err = new.Env.Range(func(k string, v taskfile.Var) error {
-		static, err := e.Compiler.HandleDynamicVar(v)
+		static, err := e.Compiler.HandleDynamicVar(v, new.Dir)
 		if err != nil {
 			return err
 		}
