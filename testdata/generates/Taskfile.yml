@@ -1,10 +1,11 @@
 version: '3'
 
 vars:
-  BUILD_DIR: $pwd
+  BUILD_DIR:
+    sh: pwd
 
 tasks:
-  sub/abs.txt:
+  abs.txt:
     desc: generates dest file based on absolute paths
     deps:
       - sub/src.txt

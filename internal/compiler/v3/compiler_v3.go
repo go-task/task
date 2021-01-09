@@ -32,29 +32,27 @@ func (c *CompilerV3) GetVariables(t *taskfile.Task, call taskfile.Call) (*taskfi
 	result := compiler.GetEnviron()
 	result.Set("TASK", taskfile.Var{Static: t.Task})
 
-	// NOTE(@andreynering): We're manually joining these paths here because
-	// this is the raw task, not the compiled one.
-	dir := t.Dir
-	if !filepath.IsAbs(dir) {
-		dir = filepath.Join(c.Dir, dir)
-	}
+	getRangeFunc := func(dir string) func(k string, v taskfile.Var) error {
+		return func(k string, v taskfile.Var) error {
+			tr := templater.Templater{Vars: result, RemoveNoValue: true}
 
-	rangeFunc := func(k string, v taskfile.Var) error {
-		tr := templater.Templater{Vars: result, RemoveNoValue: true}
-		v = taskfile.Var{
-			Static: tr.Replace(v.Static),
-			Sh:     tr.Replace(v.Sh),
+			v = taskfile.Var{
+				Static: tr.Replace(v.Static),
+				Sh:     tr.Replace(v.Sh),
+				Dir:    v.Dir,
+			}
+			if err := tr.Err(); err != nil {
+				return err
+			}
+			static, err := c.HandleDynamicVar(v, dir)
+			if err != nil {
+				return err
+			}
+			result.Set(k, taskfile.Var{Static: static})
+			return nil
 		}
-		if err := tr.Err(); err != nil {
-			return err
-		}
-		static, err := c.HandleDynamicVar(v, dir)
-		if err != nil {
-			return err
-		}
-		result.Set(k, taskfile.Var{Static: static})
-		return nil
 	}
+	rangeFunc := getRangeFunc(c.Dir)
 
 	if err := c.TaskfileVars.Range(rangeFunc); err != nil {
 		return nil, err
@@ -62,7 +60,20 @@ func (c *CompilerV3) GetVariables(t *taskfile.Task, call taskfile.Call) (*taskfi
 	if err := call.Vars.Range(rangeFunc); err != nil {
 		return nil, err
 	}
-	if err := t.Vars.Range(rangeFunc); err != nil {
+
+	// NOTE(@andreynering): We're manually joining these paths here because
+	// this is the raw task, not the compiled one.
+	tr := templater.Templater{Vars: result, RemoveNoValue: true}
+	dir := tr.Replace(t.Dir)
+	if err := tr.Err(); err != nil {
+		return nil, err
+	}
+	if !filepath.IsAbs(dir) {
+		dir = filepath.Join(c.Dir, dir)
+	}
+	taskRangeFunc := getRangeFunc(dir)
+
+	if err := t.Vars.Range(taskRangeFunc); err != nil {
 		return nil, err
 	}
 
@@ -82,6 +93,11 @@ func (c *CompilerV3) HandleDynamicVar(v taskfile.Var, dir string) (string, error
 	}
 	if result, ok := c.dynamicCache[v.Sh]; ok {
 		return result, nil
+	}
+
+	// NOTE(@andreynering): If a var have a specific dir, use this instead
+	if v.Dir != "" {
+		dir = v.Dir
 	}
 
 	var stdout bytes.Buffer

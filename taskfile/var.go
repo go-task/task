@@ -98,6 +98,7 @@ type Var struct {
 	Static string
 	Live   interface{}
 	Sh     string
+	Dir    string
 }
 
 // UnmarshalYAML implements yaml.Unmarshaler interface.

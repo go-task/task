@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Fixed some bugs and regressions regarding dynamic variables and directories
+  ([#426](https://github.com/go-task/task/issues/426)).
 - The [slim-sprig](https://github.com/go-task/slim-sprig) package was updated
   with the upstream [sprig](https://github.com/Masterminds/sprig).
 

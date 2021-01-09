@@ -308,7 +308,7 @@ func TestGenerates(t *testing.T) {
 	const (
 		srcTask        = "sub/src.txt"
 		relTask        = "rel.txt"
-		absTask        = "sub/abs.txt"
+		absTask        = "abs.txt"
 		fileWithSpaces = "my text file.txt"
 	)
 
@@ -805,7 +805,10 @@ func TestDynamicVariablesShouldRunOnTheTaskDir(t *testing.T) {
 		Target:    "default",
 		TrimSpace: false,
 		Files: map[string]string{
-			"subdirectory/dir.txt": "subdirectory\n",
+			"subdirectory/from_root_taskfile.txt":          "subdirectory\n",
+			"subdirectory/from_included_taskfile.txt":      "subdirectory\n",
+			"subdirectory/from_included_taskfile_task.txt": "subdirectory\n",
+			"subdirectory/from_interpolated_dir.txt":       "subdirectory\n",
 		},
 	}
 	tt.Run(t)

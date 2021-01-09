@@ -1,11 +1,33 @@
 version: '3'
 
+includes:
+  sub:
+    taskfile: subdirectory
+    dir: subdirectory
+
+vars:
+  DIRECTORY: subdirectory
+
 tasks:
   default:
+    - task: from-root-taskfile
+    - task: sub:from-included-taskfile
+    - task: sub:from-included-taskfile-task
+    - task: from-interpolated-dir
+
+  from-root-taskfile:
     cmds:
-      - echo '{{.FOLDER}}' > dir.txt
+      - echo '{{.TASK_DIR}}' > from_root_taskfile.txt
     dir: subdirectory
     vars:
-      FOLDER:
+      TASK_DIR:
         sh: basename $(pwd)
     silent: true
+
+  from-interpolated-dir:
+    cmds:
+      - echo '{{.INTERPOLATED_DIR}}' > from_interpolated_dir.txt
+    dir: '{{.DIRECTORY}}'
+    vars:
+      INTERPOLATED_DIR:
+        sh: basename $(pwd)

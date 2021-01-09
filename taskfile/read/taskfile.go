@@ -97,6 +97,17 @@ func Taskfile(dir string, entrypoint string) (*taskfile.Taskfile, error) {
 		}
 
 		if includedTask.AdvancedImport {
+			for k, v := range includedTaskfile.Vars.Mapping {
+				o := v
+				o.Dir = filepath.Join(dir, includedTask.Dir)
+				includedTaskfile.Vars.Mapping[k] = o
+			}
+			for k, v := range includedTaskfile.Env.Mapping {
+				o := v
+				o.Dir = filepath.Join(dir, includedTask.Dir)
+				includedTaskfile.Env.Mapping[k] = o
+			}
+
 			for _, task := range includedTaskfile.Tasks {
 				if !filepath.IsAbs(task.Dir) {
 					task.Dir = filepath.Join(includedTask.Dir, task.Dir)
