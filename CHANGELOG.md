@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- The [slim-sprig](https://github.com/go-task/slim-sprig) package was updated
+  with the upstream [sprig](https://github.com/Masterminds/sprig).
+
 ## v3.2.0
 
 - Fix the `.task` directory being created in the task directory instead of the
