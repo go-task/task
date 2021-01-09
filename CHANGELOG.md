@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v3.2.1
 
 - Fixed some bugs and regressions regarding dynamic variables and directories
   ([#426](https://github.com/go-task/task/issues/426)).
