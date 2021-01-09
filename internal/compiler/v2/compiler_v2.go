@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"path/filepath"
 	"strings"
 	"sync"
 
@@ -38,16 +37,8 @@ type CompilerV2 struct {
 // 4. Taskvars file variables
 // 5. Environment variables
 func (c *CompilerV2) GetVariables(t *taskfile.Task, call taskfile.Call) (*taskfile.Vars, error) {
-	// NOTE(@andreynering): We're manually joining these paths here because
-	// this is the raw task, not the compiled one.
-	dir := t.Dir
-	if !filepath.IsAbs(dir) {
-		dir = filepath.Join(c.Dir, dir)
-	}
-
 	vr := varResolver{
 		c:    c,
-		dir:  dir,
 		vars: compiler.GetEnviron(),
 	}
 	vr.vars.Set("TASK", taskfile.Var{Static: t.Task})
@@ -62,7 +53,6 @@ func (c *CompilerV2) GetVariables(t *taskfile.Task, call taskfile.Call) (*taskfi
 
 type varResolver struct {
 	c    *CompilerV2
-	dir  string
 	vars *taskfile.Vars
 	err  error
 }
@@ -77,7 +67,7 @@ func (vr *varResolver) merge(vars *taskfile.Vars) {
 			Static: tr.Replace(v.Static),
 			Sh:     tr.Replace(v.Sh),
 		}
-		static, err := vr.c.HandleDynamicVar(v, vr.dir)
+		static, err := vr.c.HandleDynamicVar(v, "")
 		if err != nil {
 			vr.err = err
 			return err
@@ -88,7 +78,7 @@ func (vr *varResolver) merge(vars *taskfile.Vars) {
 	vr.err = tr.Err()
 }
 
-func (c *CompilerV2) HandleDynamicVar(v taskfile.Var, dir string) (string, error) {
+func (c *CompilerV2) HandleDynamicVar(v taskfile.Var, _ string) (string, error) {
 	if v.Static != "" || v.Sh == "" {
 		return v.Static, nil
 	}
@@ -106,7 +96,6 @@ func (c *CompilerV2) HandleDynamicVar(v taskfile.Var, dir string) (string, error
 	var stdout bytes.Buffer
 	opts := &execext.RunCommandOptions{
 		Command: v.Sh,
-		Dir:     dir,
 		Stdout:  &stdout,
 		Stderr:  c.Logger.Stderr,
 	}
