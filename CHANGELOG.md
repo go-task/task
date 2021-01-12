@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v3.2.2
 
 - Improve performance of `--list` and `--summary` by skipping running shell
   variables for these flags
