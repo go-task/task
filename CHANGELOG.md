@@ -10,6 +10,8 @@
   ([#425](https://github.com/go-task/task/issues/425)).
 - Fixed environment from .env files not being available as variables
   ([#379](https://github.com/go-task/task/issues/379)).
+- The install script is now working for ARM platforms
+  ([#428](https://github.com/go-task/task/pull/428)).
 
 ## v3.2.1
 
