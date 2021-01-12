@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Fixed a bug where an environment in a Taskfile was not always overridable
+  by the system environment
+  ([#425](https://github.com/go-task/task/issues/425)).
 - Fixed environment from .env files not being available as variables
   ([#379](https://github.com/go-task/task/issues/379)).
 
