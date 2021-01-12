@@ -881,7 +881,7 @@ tasks:
 ## Watch tasks
 
 With the flags `--watch` or `-w` task will watch for file changes
-and run the task again. This requires the `sources` attribute to be given,
+and run the task again. This requires the `Sources` task attribute to be given,
 so task knows which files to watch.
 
 [gotemplate]: https://golang.org/pkg/text/template/
