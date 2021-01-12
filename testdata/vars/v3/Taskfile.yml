@@ -1,5 +1,7 @@
 version: '3'
 
+dotenv: [.env]
+
 vars:
   VAR_A: A
   VAR_B: '{{.VAR_A}}B'
@@ -15,6 +17,7 @@ tasks:
     - task: var-order
     - task: dependent-sh
     - task: with-call
+    - task: from-dot-env
 
   missing-var: echo '{{.NON_EXISTING_VAR}}' > missing-var.txt
 
@@ -44,3 +47,5 @@ tasks:
       MESSAGE: Hi, {{.ABC123}}!
     cmds:
       - echo "{{.MESSAGE}}" > with-call.txt
+
+  from-dot-env: echo '{{.DOT_ENV_VAR}}' > from-dot-env.txt

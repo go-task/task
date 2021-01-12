@@ -20,6 +20,7 @@ var _ compiler.Compiler = &CompilerV3{}
 type CompilerV3 struct {
 	Dir string
 
+	TaskfileEnv  *taskfile.Vars
 	TaskfileVars *taskfile.Vars
 
 	Logger *logger.Logger
@@ -54,6 +55,9 @@ func (c *CompilerV3) GetVariables(t *taskfile.Task, call taskfile.Call) (*taskfi
 	}
 	rangeFunc := getRangeFunc(c.Dir)
 
+	if err := c.TaskfileEnv.Range(rangeFunc); err != nil {
+		return nil, err
+	}
 	if err := c.TaskfileVars.Range(rangeFunc); err != nil {
 		return nil, err
 	}

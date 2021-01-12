@@ -168,6 +168,7 @@ func (e *Executor) Setup() error {
 	} else {
 		e.Compiler = &compilerv3.CompilerV3{
 			Dir:          e.Dir,
+			TaskfileEnv:  e.Taskfile.Env,
 			TaskfileVars: e.Taskfile.Vars,
 			Logger:       e.Logger,
 		}

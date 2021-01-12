@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Fixed environment from .env files not being available as variables
+  ([#379](https://github.com/go-task/task/issues/379)).
+
 ## v3.2.1
 
 - Fixed some bugs and regressions regarding dynamic variables and directories

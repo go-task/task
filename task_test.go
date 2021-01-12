@@ -126,6 +126,7 @@ func TestVarsV3(t *testing.T) {
 			"var-order.txt":    "ABCDEF\n",
 			"dependent-sh.txt": "123456\n",
 			"with-call.txt":    "Hi, ABC123!\n",
+			"from-dot-env.txt": "From .env file\n",
 		},
 	}
 	tt.Run(t)
