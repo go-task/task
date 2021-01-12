@@ -71,7 +71,7 @@ func (e *Executor) Run(ctx context.Context, calls ...taskfile.Call) error {
 
 	if e.Summary {
 		for i, c := range calls {
-			compiledTask, err := e.CompiledTask(c)
+			compiledTask, err := e.FastCompiledTask(c)
 			if err != nil {
 				return nil
 			}

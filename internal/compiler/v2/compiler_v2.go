@@ -30,6 +30,11 @@ type CompilerV2 struct {
 	muDynamicCache sync.Mutex
 }
 
+// FastGetVariables is a no-op on v2
+func (c *CompilerV2) FastGetVariables(t *taskfile.Task, call taskfile.Call) (*taskfile.Vars, error) {
+	return c.GetVariables(t, call)
+}
+
 // GetVariables returns fully resolved variables following the priority order:
 // 1. Task variables
 // 2. Call variables

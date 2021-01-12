@@ -8,6 +8,7 @@ import (
 // E.g. variable merger, template processing, etc.
 type Compiler interface {
 	GetVariables(t *taskfile.Task, call taskfile.Call) (*taskfile.Vars, error)
+	FastGetVariables(t *taskfile.Task, call taskfile.Call) (*taskfile.Vars, error)
 	HandleDynamicVar(v taskfile.Var, dir string) (string, error)
 	ResetCache()
 }

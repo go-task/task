@@ -13,12 +13,27 @@ import (
 // CompiledTask returns a copy of a task, but replacing variables in almost all
 // properties using the Go template package.
 func (e *Executor) CompiledTask(call taskfile.Call) (*taskfile.Task, error) {
+	return e.compiledTask(call, true)
+}
+
+// FastCompiledTask is like CompiledTask, but it skippes dynamic variables.
+func (e *Executor) FastCompiledTask(call taskfile.Call) (*taskfile.Task, error) {
+	return e.compiledTask(call, false)
+}
+
+func (e *Executor) compiledTask(call taskfile.Call, evaluateShVars bool) (*taskfile.Task, error) {
 	origTask, ok := e.Taskfile.Tasks[call.Task]
 	if !ok {
 		return nil, &taskNotFoundError{call.Task}
 	}
 
-	vars, err := e.Compiler.GetVariables(origTask, call)
+	var vars *taskfile.Vars
+	var err error
+	if evaluateShVars {
+		vars, err = e.Compiler.GetVariables(origTask, call)
+	} else {
+		vars, err = e.Compiler.FastGetVariables(origTask, call)
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -59,16 +74,18 @@ func (e *Executor) CompiledTask(call taskfile.Call) (*taskfile.Task, error) {
 	new.Env = &taskfile.Vars{}
 	new.Env.Merge(r.ReplaceVars(e.Taskfile.Env))
 	new.Env.Merge(r.ReplaceVars(origTask.Env))
-	err = new.Env.Range(func(k string, v taskfile.Var) error {
-		static, err := e.Compiler.HandleDynamicVar(v, new.Dir)
+	if evaluateShVars {
+		err = new.Env.Range(func(k string, v taskfile.Var) error {
+			static, err := e.Compiler.HandleDynamicVar(v, new.Dir)
+			if err != nil {
+				return err
+			}
+			new.Env.Set(k, taskfile.Var{Static: static})
+			return nil
+		})
 		if err != nil {
-			return err
+			return nil, err
 		}
-		new.Env.Set(k, taskfile.Var{Static: static})
-		return nil
-	})
-	if err != nil {
-		return nil, err
 	}
 
 	if len(origTask.Cmds) > 0 {

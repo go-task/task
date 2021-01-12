@@ -30,12 +30,25 @@ type CompilerV3 struct {
 }
 
 func (c *CompilerV3) GetVariables(t *taskfile.Task, call taskfile.Call) (*taskfile.Vars, error) {
+	return c.getVariables(t, call, true)
+}
+
+func (c *CompilerV3) FastGetVariables(t *taskfile.Task, call taskfile.Call) (*taskfile.Vars, error) {
+	return c.getVariables(t, call, false)
+}
+
+func (c *CompilerV3) getVariables(t *taskfile.Task, call taskfile.Call, evaluateShVars bool) (*taskfile.Vars, error) {
 	result := compiler.GetEnviron()
 	result.Set("TASK", taskfile.Var{Static: t.Task})
 
 	getRangeFunc := func(dir string) func(k string, v taskfile.Var) error {
 		return func(k string, v taskfile.Var) error {
 			tr := templater.Templater{Vars: result, RemoveNoValue: true}
+
+			if !evaluateShVars {
+				result.Set(k, taskfile.Var{Static: tr.Replace(v.Static)})
+				return nil
+			}
 
 			v = taskfile.Var{
 				Static: tr.Replace(v.Static),

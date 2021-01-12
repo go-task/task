@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Improve performance of `--list` and `--summary` by skipping running shell
+  variables for these flags
+  ([#332](https://github.com/go-task/task/issues/332)).
 - Fixed a bug where an environment in a Taskfile was not always overridable
   by the system environment
   ([#425](https://github.com/go-task/task/issues/425)).
