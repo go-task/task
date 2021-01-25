@@ -35,6 +35,7 @@ type Executor struct {
 	Dir        string
 	Entrypoint string
 	Force      bool
+	ForceFirst bool
 	Watch      bool
 	Verbose    bool
 	Silent     bool
@@ -89,9 +90,9 @@ func (e *Executor) Run(ctx context.Context, calls ...taskfile.Call) error {
 	for _, c := range calls {
 		c := c
 		if e.Parallel {
-			g.Go(func() error { return e.RunTask(ctx, c) })
+			g.Go(func() error { return e.RunTask(ctx, c, true) })
 		} else {
-			if err := e.RunTask(ctx, c); err != nil {
+			if err := e.RunTask(ctx, c, true); err != nil {
 				return err
 			}
 		}
@@ -251,7 +252,9 @@ func (e *Executor) Setup() error {
 }
 
 // RunTask runs a task by its name
-func (e *Executor) RunTask(ctx context.Context, call taskfile.Call) error {
+// isRoot indicates if this task is the root task, i.e. the first called task.
+// `foo` would be the root task when calling `task foo`.
+func (e *Executor) RunTask(ctx context.Context, call taskfile.Call, isRoot bool) error {
 	t, err := e.CompiledTask(call)
 	if err != nil {
 		return err
@@ -264,7 +267,8 @@ func (e *Executor) RunTask(ctx context.Context, call taskfile.Call) error {
 		return err
 	}
 
-	if !e.Force {
+	isForcedRun := e.Force || (e.ForceFirst && isRoot)
+	if !isForcedRun {
 		preCondMet, err := e.areTaskPreconditionsMet(ctx, t)
 		if err != nil {
 			return err
@@ -328,7 +332,7 @@ func (e *Executor) runDeps(ctx context.Context, t *taskfile.Task) error {
 		d := d
 
 		g.Go(func() error {
-			err := e.RunTask(ctx, taskfile.Call{Task: d.Task, Vars: d.Vars})
+			err := e.RunTask(ctx, taskfile.Call{Task: d.Task, Vars: d.Vars}, false)
 			if err != nil {
 				return err
 			}
@@ -344,7 +348,7 @@ func (e *Executor) runCommand(ctx context.Context, t *taskfile.Task, call taskfi
 
 	switch {
 	case cmd.Task != "":
-		err := e.RunTask(ctx, taskfile.Call{Task: cmd.Task, Vars: cmd.Vars})
+		err := e.RunTask(ctx, taskfile.Call{Task: cmd.Task, Vars: cmd.Vars}, false)
 		if err != nil {
 			return err
 		}

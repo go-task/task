@@ -59,6 +59,7 @@ func main() {
 		list        bool
 		status      bool
 		force       bool
+		forceFirst  bool
 		watch       bool
 		verbose     bool
 		silent      bool
@@ -77,6 +78,7 @@ func main() {
 	pflag.BoolVarP(&list, "list", "l", false, "lists tasks with description of current Taskfile")
 	pflag.BoolVar(&status, "status", false, "exits with non-zero exit code if any of the given tasks is not up-to-date")
 	pflag.BoolVarP(&force, "force", "f", false, "forces execution even when the task is up-to-date")
+	pflag.BoolVar(&forceFirst, "ff", false, "forces execution **of only the task(s) called by the user** even when the task is up-to-date")
 	pflag.BoolVarP(&watch, "watch", "w", false, "enables watch of the given task")
 	pflag.BoolVarP(&verbose, "verbose", "v", false, "enables verbose mode")
 	pflag.BoolVarP(&silent, "silent", "s", false, "disables echoing")
@@ -123,6 +125,7 @@ func main() {
 
 	e := task.Executor{
 		Force:      force,
+		ForceFirst: forceFirst,
 		Watch:      watch,
 		Verbose:    verbose,
 		Silent:     silent,

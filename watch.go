@@ -29,7 +29,7 @@ func (e *Executor) watchTasks(calls ...taskfile.Call) error {
 	for _, c := range calls {
 		c := c
 		go func() {
-			if err := e.RunTask(ctx, c); err != nil && !isContextError(err) {
+			if err := e.RunTask(ctx, c, true); err != nil && !isContextError(err) {
 				e.Logger.Errf(logger.Red, "%v", err)
 			}
 		}()
@@ -55,7 +55,7 @@ func (e *Executor) watchTasks(calls ...taskfile.Call) error {
 				for _, c := range calls {
 					c := c
 					go func() {
-						if err := e.RunTask(ctx, c); err != nil && !isContextError(err) {
+						if err := e.RunTask(ctx, c, true); err != nil && !isContextError(err) {
 							e.Logger.Errf(logger.Red, "%v", err)
 						}
 					}()
