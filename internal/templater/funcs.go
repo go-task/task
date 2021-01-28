@@ -39,6 +39,22 @@ func init() {
 		},
 		// IsSH is deprecated.
 		"IsSH": func() bool { return true },
+		"toUpper": func(s string) string {
+			return strings.ToUpper(s)
+		},
+		"toLower": func(s string) string {
+			return strings.ToLower(s)
+		},
+		"replace": func(s, old, new string) string {
+			return strings.ReplaceAll(s, old, new)
+		},
+		"substring": func(s string, start, end int) string {
+			lastIndex := len(s) - 1
+			if end == -1 || end > lastIndex {
+				end = lastIndex
+			}
+			return s[start:end]
+		},
 	}
 	// Deprecated aliases for renamed functions.
 	taskFuncs["FromSlash"] = taskFuncs["fromSlash"]

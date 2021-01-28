@@ -551,6 +551,10 @@ Task also adds the following functions:
   converts a string from `\` path format to `/`.
 - `exeExt`: Returns the right executable extension for the current OS
   (`".exe"` for Windows, `""` for others).
+- `toUpper` Returns string with all Unicode letters mapped to their upper case.
+- `toLower` Opposite of `toUpper`. It returns string with all Unicode letters mapped to their lower case.
+- `replace` Returns a new string with all matches of a old value replaced by a new value.
+- `substring` Returns the part of the string between the start and end indexes.
 
 Example:
 
@@ -564,6 +568,7 @@ tasks:
       - echo '{{if eq OS "windows"}}windows-command{{else}}unix-command{{end}}'
       # This will be path/to/file on Unix but path\to\file on Windows
       - echo '{{fromSlash "path/to/file"}}'
+
   enumerated-file:
     vars:
       CONTENT: |
@@ -575,6 +580,19 @@ tasks:
         {{range $i, $line := .CONTENT | splitLines -}}
         {{printf "%3d" $i}}: {{$line}}
         {{end}}EOF
+
+  string-functions:
+    vars:
+      VALUE: 'Hello Beautiful Word!'
+    cmds:
+      # This will print HELLO BEAUTIFUL WORD!
+      - echo '{{.VALUE | toUpper}}'
+      # This will print hello beautiful word!
+      - echo '{{.VALUE | toLower}}'
+      # This will print Hello_beautiful_word!
+      - echo '{{replace .VALUE " " "_"}}'
+      # This will print beautiful word!
+      - echo '{{substring .VALUE 6 -1}}'
 ```
 
 ## Help
