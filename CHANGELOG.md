@@ -1,6 +1,6 @@
 # Changelog
 
-## v3.2.2
+## v3.2.2 - 2021-01-12
 
 - Improve performance of `--list` and `--summary` by skipping running shell
   variables for these flags
@@ -13,14 +13,14 @@
 - The install script is now working for ARM platforms
   ([#428](https://github.com/go-task/task/pull/428)).
 
-## v3.2.1
+## v3.2.1 - 2021-01-09
 
 - Fixed some bugs and regressions regarding dynamic variables and directories
   ([#426](https://github.com/go-task/task/issues/426)).
 - The [slim-sprig](https://github.com/go-task/slim-sprig) package was updated
   with the upstream [sprig](https://github.com/Masterminds/sprig).
 
-## v3.2.0
+## v3.2.0 - 2021-01-07
 
 - Fix the `.task` directory being created in the task directory instead of the
   Taskfile directory
@@ -33,7 +33,7 @@
   should be more stable now
   ([#423](https://github.com/go-task/task/pull/423), [#365](https://github.com/go-task/task/issues/365)).
 
-## v3.1.0
+## v3.1.0 - 2021-01-03
 
 - Fix a bug when the checksum up-to-date resolution is used by a task
   with a custom `label:` attribute
@@ -49,7 +49,7 @@
   sentence was in the last line
   ([#403](https://github.com/go-task/task/issues/403)).
 
-## v3.0.1
+## v3.0.1 - 2020-12-26
 
 - Allow use as a library by moving the required packages out of the `internal`
   directory
@@ -59,7 +59,7 @@
 - Fix panic when you have empty tasks in your Taskfile
   ([#338](https://github.com/go-task/task/issues/338), [#362](https://github.com/go-task/task/pull/362)).
 
-## v3.0.0
+## v3.0.0 - 2019-08-16
 
 - On `v3`, all CLI variables will be considered global variables
   ([#336](https://github.com/go-task/task/issues/336), [#341](https://github.com/go-task/task/pull/341))
@@ -102,7 +102,7 @@
   commands are green, errors are red, etc
   ([#207](https://github.com/go-task/task/pull/207)).
 
-## v2.8.1 - 2019-05-20
+## v2.8.1 - 2020-05-20
 
 - Fix error code for the `--help` flag
   ([#300](https://github.com/go-task/task/issues/300), [#330](https://github.com/go-task/task/pull/330)).
