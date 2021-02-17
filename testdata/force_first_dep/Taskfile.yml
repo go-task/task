@@ -1,0 +1,24 @@
+version: '3'
+
+tasks:
+  main:
+    cmds:
+      - echo "main1" > main1.txt
+      # Sub 1 should not run because the existence of "main1.txt" ought to prevent it from running.
+      - task: sub1
+      # Sub 2 should run because the existence of "main2.txt", which doesn't exist, would prevent it from running.
+      - task: sub2
+    preconditions:
+      - sh: "[1 = 0]"
+
+  sub1:
+    cmds:
+      - echo "sub1" > sub1.txt
+    status:
+      - test -f main1.txt
+
+  sub2:
+    cmds:
+      - echo "sub2" > sub2.txt
+    status:
+      - test -f main2.txt

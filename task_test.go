@@ -192,6 +192,37 @@ func TestParams(t *testing.T) {
 	tt.Run(t)
 }
 
+func TestForceFirst(t *testing.T) {
+	dir := "testdata/force_first_dep"
+
+	// File that we expect to be there after the task has been run.
+	expectedFile1 := filepath.Join(dir, "main1.txt")
+	expectedFile2 := filepath.Join(dir, "sub2.txt")
+
+	// File that we don't expect to be there after the task has been run.
+	unexpectedFile := filepath.Join(dir, "sub1.txt")
+
+	// Remove previously generated files.
+	_ = os.Remove(expectedFile1)
+	_ = os.Remove(expectedFile2)
+
+	e := task.Executor{
+		Dir:        dir,
+		Stdout:     ioutil.Discard,
+		Stderr:     ioutil.Discard,
+		ForceFirst: true,
+	}
+
+	assert.NoError(t, e.Setup())
+
+	err := e.Run(context.Background(), taskfile.Call{Task: "main"})
+	assert.Nil(t, err)
+
+	assert.FileExists(t, expectedFile1)
+	assert.FileExists(t, expectedFile2)
+	assert.NoFileExists(t, unexpectedFile)
+}
+
 func TestDeps(t *testing.T) {
 	const dir = "testdata/deps"
 
