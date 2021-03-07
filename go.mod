@@ -11,7 +11,7 @@ require (
 	github.com/stretchr/testify v1.5.1
 	golang.org/x/sync v0.0.0-20201020160332-67f06af15bc9
 	gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c
-	mvdan.cc/sh/v3 v3.2.1
+	mvdan.cc/sh/v3 v3.2.2
 )
 
 go 1.13
