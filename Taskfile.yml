@@ -12,6 +12,9 @@ vars:
   GO_PACKAGES:
     sh: go list ./...
 
+env:
+  CGO_ENABLED: '0'
+
 tasks:
   default:
     cmds:
@@ -21,8 +24,6 @@ tasks:
     desc: Installs Task
     cmds:
       - go install -v -ldflags="-w -s -X main.version={{.GIT_COMMIT}}" ./cmd/task
-    env:
-      CGO_ENABLED: '0'
 
   mod:
     desc: Downloads and tidy Go modules
