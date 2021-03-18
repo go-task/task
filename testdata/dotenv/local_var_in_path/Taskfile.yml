@@ -1,0 +1,11 @@
+version: "3"
+
+env:
+  LOCAL_VAR: testing
+
+dotenv: [".env.{{.LOCAL_VAR}}"]
+
+tasks:
+  default:
+    cmds:
+      - echo "VAR='$VAR_IN_DOTENV'" > var.txt

@@ -3,6 +3,7 @@ package read
 import (
 	"errors"
 	"fmt"
+	"github.com/go-task/task/v3/internal/compiler"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -38,7 +39,13 @@ func Taskfile(dir string, entrypoint string) (*taskfile.Taskfile, error) {
 	}
 
 	if v >= 3.0 {
+		result := compiler.GetEnviron()
+		result.Merge(t.Env)
+		tr := templater.Templater{Vars: result, RemoveNoValue: true}
+
 		for _, dotEnvPath := range t.Dotenv {
+			dotEnvPath = tr.Replace(dotEnvPath)
+
 			if !filepath.IsAbs(dotEnvPath) {
 				dotEnvPath = filepath.Join(dir, dotEnvPath)
 			}

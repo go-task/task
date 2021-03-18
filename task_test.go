@@ -900,6 +900,32 @@ func TestDotenvShouldAllowMissingEnv(t *testing.T) {
 	tt.Run(t)
 }
 
+func TestDotenvHasLocalVarInPath(t *testing.T) {
+	tt := fileContentTest{
+		Dir:       "testdata/dotenv/local_var_in_path",
+		Target:    "default",
+		TrimSpace: false,
+		Files: map[string]string{
+			"var.txt": "VAR='var_in_dot_env_1'\n",
+		},
+	}
+	tt.Run(t)
+}
+
+func TestDotenvHasEnvVarInPath(t *testing.T) {
+	os.Setenv("ENV_VAR", "testing")
+
+	tt := fileContentTest{
+		Dir:       "testdata/dotenv/env_var_in_path",
+		Target:    "default",
+		TrimSpace: false,
+		Files: map[string]string{
+			"var.txt": "VAR='var_in_dot_env_2'\n",
+		},
+	}
+	tt.Run(t)
+}
+
 func TestExitImmediately(t *testing.T) {
 	const dir = "testdata/exit_immediately"
 
