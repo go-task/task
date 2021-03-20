@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v3.3.0 - 2021-03-20
 
 - Add support for delegating CLI arguments to commands with `--` and a
   special `CLI_ARGS` variable
