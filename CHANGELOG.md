@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Add support for delegating CLI arguments to commands with `--` and a
+  special `CLI_ARGS` variable
+  ([#327](https://github.com/go-task/task/issues/327)).
 - Add a `--concurrency` (alias `-C`) flag, to limit the number of tasks that
   run concurrently. This is useful for heavy workloads.
   ([#345](https://github.com/go-task/task/pull/345)).

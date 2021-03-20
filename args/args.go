@@ -9,7 +9,7 @@ import (
 // ParseV3 parses command line argument: tasks and global variables
 func ParseV3(args ...string) ([]taskfile.Call, *taskfile.Vars) {
 	var calls []taskfile.Call
-	var globals *taskfile.Vars
+	var globals = &taskfile.Vars{}
 
 	for _, arg := range args {
 		if !strings.Contains(arg, "=") {
@@ -17,9 +17,6 @@ func ParseV3(args ...string) ([]taskfile.Call, *taskfile.Vars) {
 			continue
 		}
 
-		if globals == nil {
-			globals = &taskfile.Vars{}
-		}
 		name, value := splitVar(arg)
 		globals.Set(name, taskfile.Var{Static: value})
 	}
@@ -34,7 +31,7 @@ func ParseV3(args ...string) ([]taskfile.Call, *taskfile.Vars) {
 // ParseV2 parses command line argument: tasks and vars of each task
 func ParseV2(args ...string) ([]taskfile.Call, *taskfile.Vars) {
 	var calls []taskfile.Call
-	var globals *taskfile.Vars
+	var globals = &taskfile.Vars{}
 
 	for _, arg := range args {
 		if !strings.Contains(arg, "=") {
@@ -43,9 +40,6 @@ func ParseV2(args ...string) ([]taskfile.Call, *taskfile.Vars) {
 		}
 
 		if len(calls) < 1 {
-			if globals == nil {
-				globals = &taskfile.Vars{}
-			}
 			name, value := splitVar(arg)
 			globals.Set(name, taskfile.Var{Static: value})
 		} else {

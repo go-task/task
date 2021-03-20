@@ -75,7 +75,7 @@ func (vs *Vars) Range(yield func(key string, value Var) error) error {
 // ToCacheMap converts Vars to a map containing only the static
 // variables
 func (vs *Vars) ToCacheMap() (m map[string]interface{}) {
-	m = make(map[string]interface{}, len(vs.Keys))
+	m = make(map[string]interface{}, vs.Len())
 	vs.Range(func(k string, v Var) error {
 		if v.Sh != "" {
 			// Dynamic variable is not yet resolved; trigger
@@ -91,6 +91,14 @@ func (vs *Vars) ToCacheMap() (m map[string]interface{}) {
 		return nil
 	})
 	return
+}
+
+// Len returns the size of the map
+func (vs *Vars) Len() int {
+	if vs == nil {
+		return 0
+	}
+	return len(vs.Keys)
 }
 
 // Var represents either a static or dynamic variable.

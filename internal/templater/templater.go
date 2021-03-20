@@ -63,7 +63,7 @@ func (r *Templater) ReplaceSlice(strs []string) []string {
 }
 
 func (r *Templater) ReplaceVars(vars *taskfile.Vars) *taskfile.Vars {
-	if r.err != nil || vars == nil || len(vars.Keys) == 0 {
+	if r.err != nil || vars.Len() == 0 {
 		return nil
 	}
 

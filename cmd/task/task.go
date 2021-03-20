@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"strings"
 	"syscall"
 
 	"github.com/spf13/pflag"
@@ -157,14 +158,18 @@ func main() {
 	}
 
 	var (
-		calls   []taskfile.Call
-		globals *taskfile.Vars
+		calls                 []taskfile.Call
+		globals               *taskfile.Vars
+		tasksAndVars, cliArgs = getArgs()
 	)
+
 	if v >= 3.0 {
-		calls, globals = args.ParseV3(pflag.Args()...)
+		calls, globals = args.ParseV3(tasksAndVars...)
 	} else {
-		calls, globals = args.ParseV2(pflag.Args()...)
+		calls, globals = args.ParseV2(tasksAndVars...)
 	}
+
+	globals.Set("CLI_ARGS", taskfile.Var{Static: strings.Join(cliArgs, " ")})
 	e.Taskfile.Vars.Merge(globals)
 
 	ctx := context.Background()
@@ -183,6 +188,22 @@ func main() {
 		e.Logger.Errf(logger.Red, "%v", err)
 		os.Exit(1)
 	}
+}
+
+func getArgs() (tasksAndVars, cliArgs []string) {
+	var (
+		args          = pflag.Args()
+		doubleDashPos = pflag.CommandLine.ArgsLenAtDash()
+	)
+
+	if doubleDashPos != -1 {
+		tasksAndVars = args[:doubleDashPos]
+		cliArgs = args[doubleDashPos:]
+	} else {
+		tasksAndVars = args
+	}
+
+	return
 }
 
 func getSignalContext() context.Context {

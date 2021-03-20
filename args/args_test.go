@@ -96,7 +96,9 @@ func TestArgsV3(t *testing.T) {
 		t.Run(fmt.Sprintf("TestArgs%d", i+1), func(t *testing.T) {
 			calls, globals := args.ParseV3(test.Args...)
 			assert.Equal(t, test.ExpectedCalls, calls)
-			assert.Equal(t, test.ExpectedGlobals, globals)
+			if test.ExpectedGlobals.Len() > 0 || globals.Len() > 0 {
+				assert.Equal(t, test.ExpectedGlobals, globals)
+			}
 		})
 	}
 }
@@ -198,7 +200,10 @@ func TestArgsV2(t *testing.T) {
 		t.Run(fmt.Sprintf("TestArgs%d", i+1), func(t *testing.T) {
 			calls, globals := args.ParseV2(test.Args...)
 			assert.Equal(t, test.ExpectedCalls, calls)
-			assert.Equal(t, test.ExpectedGlobals, globals)
+			if test.ExpectedGlobals.Len() > 0 || globals.Len() > 0 {
+				assert.Equal(t, test.ExpectedGlobals, globals)
+			}
+
 		})
 	}
 }

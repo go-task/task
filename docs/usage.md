@@ -520,6 +520,27 @@ tasks:
 
 This works for all types of variables.
 
+## Forwarding CLI arguments to commands
+
+If `--` is given in the CLI, all following paramaters are added to a
+special `.CLI_ARGS` variable. This is useful to forward arguments to another
+command.
+
+The below example will run `yarn install`.
+
+```bash
+$ task yarn -- install
+```
+
+```yaml
+version: '3'
+
+tasks:
+  yarn:
+    cmds:
+      - yarn {{.CLI_ARGS}}
+```
+
 ## Go's template engine
 
 Task parse commands as [Go's template engine][gotemplate] before executing
