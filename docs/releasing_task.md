@@ -36,4 +36,4 @@ If you think its Task version is outdated, open an issue to let us know.
 [gotaskrb]: https://github.com/go-task/homebrew-tap/blob/master/Formula/go-task.rb
 [snappackage]: https://github.com/go-task/snap
 [snapcraftyaml]: https://github.com/go-task/snap/blob/master/snap/snapcraft.yaml#L2
-[snapcraftdashboard]: https://dashboard.snapcraft.io/
+[snapcraftdashboard]: https://snapcraft.io/task/releases
