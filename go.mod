@@ -7,7 +7,7 @@ require (
 	github.com/mattn/go-colorable v0.1.2 // indirect
 	github.com/mattn/go-zglob v0.0.1
 	github.com/radovskyb/watcher v1.0.5
-	github.com/spf13/pflag v1.0.3
+	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.5.1
 	golang.org/x/sync v0.0.0-20201020160332-67f06af15bc9
 	gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c
