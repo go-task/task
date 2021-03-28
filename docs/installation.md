@@ -110,7 +110,7 @@ First, make sure you have [Go][go] properly installed and setup.
 You can easily install it globally by running:
 
 ```bash
-go get -u github.com/go-task/task/v3/cmd/task
+env GO111MODULE=on go get -u github.com/go-task/task/v3/cmd/task
 ```
 
 Or you can install into another directory:
