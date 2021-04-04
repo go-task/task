@@ -222,14 +222,14 @@ func getVersion() string {
 		return version
 	}
 
-	if info, ok := debug.ReadBuildInfo(); ok && info.Main.Version != "" {
-		version = info.Main.Version
+	info, ok := debug.ReadBuildInfo()
+	if !ok || info.Main.Version == "" {
+		return "unknown"
+	}
 
-		if info.Main.Sum != "" {
-			version += fmt.Sprintf(" (%s)", info.Main.Sum)
-		}
-	} else {
-		version = "unknown"
+	version = info.Main.Version
+	if info.Main.Sum != "" {
+		version += fmt.Sprintf(" (%s)", info.Main.Sum)
 	}
 
 	return version

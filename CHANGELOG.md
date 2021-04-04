@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Improve version reporting when building Task from source using Go Modules
+  ([#462](https://github.com/go-task/task/pull/462)).
+
 ## v3.3.0 - 2021-03-20
 
 - Add support for delegating CLI arguments to commands with `--` and a
