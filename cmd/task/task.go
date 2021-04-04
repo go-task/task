@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"runtime/debug"
 	"strings"
 	"syscall"
 
@@ -18,9 +19,7 @@ import (
 	"github.com/go-task/task/v3/taskfile"
 )
 
-var (
-	version = "master"
-)
+var version = ""
 
 const usage = `Usage: task [-ilfwvsd] [--init] [--list] [--force] [--watch] [--verbose] [--silent] [--dir] [--taskfile] [--dry] [--summary] [task...]
 
@@ -93,7 +92,7 @@ func main() {
 	pflag.Parse()
 
 	if versionFlag {
-		fmt.Printf("Task version: %s\n", version)
+		fmt.Printf("Task version: %s\n", getVersion())
 		return
 	}
 
@@ -216,4 +215,22 @@ func getSignalContext() context.Context {
 		cancel()
 	}()
 	return ctx
+}
+
+func getVersion() string {
+	if version != "" {
+		return version
+	}
+
+	if info, ok := debug.ReadBuildInfo(); ok && info.Main.Version != "" {
+		version = info.Main.Version
+
+		if info.Main.Sum != "" {
+			version += fmt.Sprintf(" (%s)", info.Main.Sum)
+		}
+	} else {
+		version = "unknown"
+	}
+
+	return version
 }
