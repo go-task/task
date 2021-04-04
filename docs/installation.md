@@ -107,29 +107,27 @@ This installation method is community owned.
 
 First, make sure you have [Go][go] properly installed and setup.
 
-You can easily install it globally by running:
+You can easily install the latest release globally by running:
 
 ```bash
-env GO111MODULE=on go get -u github.com/go-task/task/v3/cmd/task
+go install github.com/go-task/task/v3/cmd/task@latest
 ```
 
 Or you can install into another directory:
 
 ```bash
-git clone https://github.com/go-task/task
-cd task
+env GOBIN=/bin go install github.com/go-task/task/v3/cmd/task@latest
+```
 
-# Compiling binary to $GOPATH/bin
-go install -v ./cmd/task
+If using Go 1.15 or earlier, instead use:
 
-# Compiling it to another location.
-# Use -o ./task.exe on Windows.
-go build -v -o ./task ./cmd/task
+```bash
+env GO111MODULE=on go get -u github.com/go-task/task/v3/cmd/task@latest
 ```
 
 > For CI environments we recommend using the [Install Script](#get-the-binary)
 > instead, which is faster and more stable, since it'll just download the latest
-> released binary, instead of compiling the edge (master branch) version.
+> released binary.
 
 <!-- tabs:end -->
 
