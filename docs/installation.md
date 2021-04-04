@@ -68,9 +68,9 @@ The `task_checksums.txt` file contains the SHA-256 checksum for each file.
 
 #### **Install Script**
 
-We also have a [install script][installscript], which is very useful on
-scenarios like CIs. Many thanks to [GoDownloader][godownloader] for allowing
-easily generating this script.
+We also have an [install script][installscript] which is very useful in
+scenarios like CI. Many thanks to [GoDownloader][godownloader] for enabling the
+easy generation of this script.
 
 ```bash
 # For Default Installation to ./bin with debug logging
