@@ -6,7 +6,7 @@ require (
 	github.com/joho/godotenv v1.3.0
 	github.com/mattn/go-colorable v0.1.2 // indirect
 	github.com/mattn/go-zglob v0.0.3
-	github.com/radovskyb/watcher v1.0.5
+	github.com/radovskyb/watcher v1.0.7
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.5.1
 	golang.org/x/sync v0.0.0-20201020160332-67f06af15bc9
