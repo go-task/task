@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v3.4.1 - 2021-04-17
 
 - Improve error reporting when parsing YAML: in some situations where you
   would just see an generic error, you'll now see the actual error with
