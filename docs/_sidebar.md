@@ -2,6 +2,7 @@
 - [Usage](usage.md)
 - [Styleguide](styleguide.md)
 - [Taskfile Versions](taskfile_versions.md)
+- [Community](community.md)
 - [Examples](examples.md)
 - [Releasing Task](releasing_task.md)
 - [Donate](donate.md)

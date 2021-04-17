@@ -1,0 +1,44 @@
+# Community
+
+Some of the work to improve the Task ecosystem is done by the community, be
+it installation methods or integrations with code editor. I (the author) am
+thankful for everyone that helps me to improve the overall experience.
+
+## Editor Integrations
+
+### JSON Schema
+
+[@KROSF](https://github.com/KROSF) worked on a JSON Schema [into this Gist](https://gist.github.com/KROSF/c5435acf590acd632f71bb720f685895),
+which later was made officially available by [@Crandel](https://github.com/Crandel)
+at [https://json.schemastore.org/taskfile.json](https://json.schemastore.org/taskfile.json).
+Further improvements are possible by opening pull requests changing
+[this file](https://github.com/SchemaStore/schemastore/blob/master/src/schemas/json/taskfile.json).
+Some code editors, like Visual Studio Code, make use of Schema Store
+automatically.
+
+### Visual Studio Code extension
+
+Additionally, there's also some work done by
+[@paulvarache](https://github.com/paulvarache) in making an Visual Studio Code
+extension, which has its code [here](https://github.com/paulvarache/vscode-taskfile)
+and is published [here](https://marketplace.visualstudio.com/items?itemName=paulvarache.vscode-taskfile).
+
+## Installation methods
+
+Some installation methods are maintained by third party:
+
+- [GitHub Actions](https://github.com/arduino/actions/tree/master/setup-taskfile)
+  by [@arduino](https://github.com/arduino)
+- [AUR](https://aur.archlinux.org/packages/taskfile-git)
+  by [@kovetskiy](https://github.com/kovetskiy)
+- [Scoop](https://github.com/lukesampson/scoop-extras/blob/master/bucket/task.json)
+
+## More
+
+Also, thanks for all the [code contributors](https://github.com/go-task/task/graphs/contributors),
+[financial contributors](https://opencollective.com/task), all those who
+[reported bugs](https://github.com/go-task/task/issues?q=is%3Aissue) and
+[answered questions](https://github.com/go-task/task/discussions).
+
+If you know something that is missing in this document, please submit a
+pull request.
