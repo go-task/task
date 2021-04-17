@@ -4,10 +4,10 @@
 
 - Improve error reporting when parsing YAML: in some situations where you
   would just see an generic error, you'll now see the actual error with
-  more detail: the YAML line the failed to parse, for exemple
-  [#467](https://github.com/go-task/task/issues/467).
+  more detail: the YAML line the failed to parse, for example
+  ([#467](https://github.com/go-task/task/issues/467)).
 - A JSON Schema was published [here](https://json.schemastore.org/taskfile.json)
-- and is automatically being used by some editors like Visual Studio Code
+  and is automatically being used by some editors like Visual Studio Code
   ([#135](https://github.com/go-task/task/issues/135)).
 - Print task name before the command in the log output
   ([#398](https://github.com/go-task/task/pull/398)).
