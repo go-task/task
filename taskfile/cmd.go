@@ -1,7 +1,6 @@
 package taskfile
 
 import (
-	"errors"
 	"strings"
 )
 
@@ -19,13 +18,6 @@ type Dep struct {
 	Task string
 	Vars *Vars
 }
-
-var (
-	// ErrCantUnmarshalCmd is returned for invalid command YAML
-	ErrCantUnmarshalCmd = errors.New("task: can't unmarshal cmd value")
-	// ErrCantUnmarshalDep is returned for invalid dependency YAML
-	ErrCantUnmarshalDep = errors.New("task: can't unmarshal dep value")
-)
 
 // UnmarshalYAML implements yaml.Unmarshaler interface
 func (c *Cmd) UnmarshalYAML(unmarshal func(interface{}) error) error {
@@ -53,12 +45,12 @@ func (c *Cmd) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		Task string
 		Vars *Vars
 	}
-	if err := unmarshal(&taskCall); err == nil {
-		c.Task = taskCall.Task
-		c.Vars = taskCall.Vars
-		return nil
+	if err := unmarshal(&taskCall); err != nil {
+		return err
 	}
-	return ErrCantUnmarshalCmd
+	c.Task = taskCall.Task
+	c.Vars = taskCall.Vars
+	return nil
 }
 
 // UnmarshalYAML implements yaml.Unmarshaler interface
@@ -72,10 +64,10 @@ func (d *Dep) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		Task string
 		Vars *Vars
 	}
-	if err := unmarshal(&taskCall); err == nil {
-		d.Task = taskCall.Task
-		d.Vars = taskCall.Vars
-		return nil
+	if err := unmarshal(&taskCall); err != nil {
+		return err
 	}
-	return ErrCantUnmarshalDep
+	d.Task = taskCall.Task
+	d.Vars = taskCall.Vars
+	return nil
 }

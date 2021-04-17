@@ -7,11 +7,6 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-var (
-	// ErrCantUnmarshalVar is returned for invalid var YAML.
-	ErrCantUnmarshalVar = errors.New("task: can't unmarshal var value")
-)
-
 // Vars is a string[string] variables map.
 type Vars struct {
 	Keys    []string
@@ -124,10 +119,9 @@ func (v *Var) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	var sh struct {
 		Sh string
 	}
-	if err := unmarshal(&sh); err == nil {
-		v.Sh = sh.Sh
-		return nil
+	if err := unmarshal(&sh); err != nil {
+		return err
 	}
-
-	return ErrCantUnmarshalVar
+	v.Sh = sh.Sh
+	return nil
 }

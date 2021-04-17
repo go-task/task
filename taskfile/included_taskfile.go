@@ -6,11 +6,6 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-var (
-	// ErrCantUnmarshalIncludedTaskfile is returned for invalid var YAML.
-	ErrCantUnmarshalIncludedTaskfile = errors.New("task: can't unmarshal included value")
-)
-
 // IncludedTaskfile represents information about included tasksfile
 type IncludedTaskfile struct {
 	Taskfile       string
@@ -98,12 +93,11 @@ func (it *IncludedTaskfile) UnmarshalYAML(unmarshal func(interface{}) error) err
 		Taskfile string
 		Dir      string
 	}
-	if err := unmarshal(&includedTaskfile); err == nil {
-		it.Dir = includedTaskfile.Dir
-		it.Taskfile = includedTaskfile.Taskfile
-		it.AdvancedImport = true
-		return nil
+	if err := unmarshal(&includedTaskfile); err != nil {
+		return err
 	}
-
-	return ErrCantUnmarshalIncludedTaskfile
+	it.Dir = includedTaskfile.Dir
+	it.Taskfile = includedTaskfile.Taskfile
+	it.AdvancedImport = true
+	return nil
 }

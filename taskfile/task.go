@@ -1,9 +1,5 @@
 package taskfile
 
-import (
-	"errors"
-)
-
 // Tasks represents a group of tasks
 type Tasks map[string]*Task
 
@@ -27,11 +23,6 @@ type Task struct {
 	Prefix        string
 	IgnoreError   bool
 }
-
-var (
-	// ErrCantUnmarshalTask is returned for invalid task YAML
-	ErrCantUnmarshalTask = errors.New("task: can't unmarshal task value")
-)
 
 func (t *Task) Name() string {
 	if t.Label != "" {
@@ -71,26 +62,24 @@ func (t *Task) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		Prefix        string
 		IgnoreError   bool `yaml:"ignore_error"`
 	}
-	if err := unmarshal(&task); err == nil {
-		t.Cmds = task.Cmds
-		t.Deps = task.Deps
-		t.Label = task.Label
-		t.Desc = task.Desc
-		t.Summary = task.Summary
-		t.Sources = task.Sources
-		t.Generates = task.Generates
-		t.Status = task.Status
-		t.Preconditions = task.Preconditions
-		t.Dir = task.Dir
-		t.Vars = task.Vars
-		t.Env = task.Env
-		t.Silent = task.Silent
-		t.Method = task.Method
-		t.Prefix = task.Prefix
-		t.IgnoreError = task.IgnoreError
-
-		return nil
+	if err := unmarshal(&task); err != nil {
+		return err
 	}
-
-	return ErrCantUnmarshalTask
+	t.Cmds = task.Cmds
+	t.Deps = task.Deps
+	t.Label = task.Label
+	t.Desc = task.Desc
+	t.Summary = task.Summary
+	t.Sources = task.Sources
+	t.Generates = task.Generates
+	t.Status = task.Status
+	t.Preconditions = task.Preconditions
+	t.Dir = task.Dir
+	t.Vars = task.Vars
+	t.Env = task.Env
+	t.Silent = task.Silent
+	t.Method = task.Method
+	t.Prefix = task.Prefix
+	t.IgnoreError = task.IgnoreError
+	return nil
 }
