@@ -11,8 +11,6 @@
   ([#135](https://github.com/go-task/task/issues/135)).
 - Print task name before the command in the log output
   ([#398](https://github.com/go-task/task/pull/398)).
-- Improve version reporting when building Task from source using Go Modules
-  ([#462](https://github.com/go-task/task/pull/462)).
 
 ## v3.3.0 - 2021-03-20
 
