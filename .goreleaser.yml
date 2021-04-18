@@ -1,6 +1,8 @@
+gomod:
+  proxy: true
 build:
   binary: task
-  main: cmd/task/task.go
+  main: cmd/task
   goos:
     - windows
     - darwin
