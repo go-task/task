@@ -1,5 +1,3 @@
-gomod:
-  proxy: true
 build:
   binary: task
   main: cmd/task
