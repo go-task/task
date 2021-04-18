@@ -2,6 +2,7 @@ package task
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -129,7 +130,7 @@ func (e *Executor) registerWatchedFiles(w *watcher.Watcher, calls ...taskfile.Ca
 		for _, s := range task.Sources {
 			files, err := zglob.Glob(s)
 			if err != nil {
-				return err
+				return fmt.Errorf("%s: %w", s, err)
 			}
 			for _, f := range files {
 				absFile, err := filepath.Abs(f)
