@@ -915,3 +915,58 @@ func TestExitImmediately(t *testing.T) {
 	assert.Error(t, e.Run(context.Background(), taskfile.Call{Task: "default"}))
 	assert.Contains(t, buff.String(), `"this_should_fail": executable file not found in $PATH`)
 }
+
+func TestAlways(t *testing.T) {
+	const dir = "testdata/always"
+
+	var buff bytes.Buffer
+	e := task.Executor{
+		Dir:     dir,
+		Stdout:  &buff,
+		Stderr:  &buff,
+		Verbose: true,
+	}
+	assert.NoError(t, e.Setup())
+
+	buff.Reset()
+	assert.EqualError(t, e.Run(context.Background(), taskfile.Call{Task: "always-command"}), `task: Failed to run task "always-command": exit status 1`)
+	assert.Contains(t, buff.String(), `task: [always-command] exit 1`)
+	assert.Contains(t, buff.String(), `task: [always-command] echo "always run"`)
+	assert.Contains(t, buff.String(), `[always-command] always run`)
+
+	buff.Reset()
+	assert.EqualError(t, e.Run(context.Background(), taskfile.Call{Task: "always-command-skip-other"}), `task: Failed to run task "always-command-skip-other": exit status 1`)
+	assert.Contains(t, buff.String(), `task: [always-command-skip-other] exit 1`)
+	assert.Contains(t, buff.String(), `task: [always-command-skip-other] echo "always run"`)
+	assert.Contains(t, buff.String(), `[always-command-skip-other] always run`)
+	assert.NotContains(t, buff.String(), `[always-command-skip-other] won't run`)
+
+	buff.Reset()
+	assert.EqualError(t, e.Run(context.Background(), taskfile.Call{Task: "always-command-that-fails-skip-other"}), `task: Failed to run task "always-command-that-fails-skip-other": exit status 1`)
+	assert.Contains(t, buff.String(), `task: [always-command-that-fails-skip-other] exit 1`)
+	assert.Contains(t, buff.String(), `task: [always-command-that-fails-skip-other] echo "always run"`)
+	assert.Contains(t, buff.String(), `[always-command-that-fails-skip-other] always run`)
+	assert.NotContains(t, buff.String(), `[always-command-that-fails-skip-other] won't run`)
+
+	buff.Reset()
+	assert.EqualError(t, e.Run(context.Background(), taskfile.Call{Task: "always-command-task"}), `task: Failed to run task "always-command-task": task: Failed to run task "always-command": exit status 1`)
+	assert.Contains(t, buff.String(), `task: [always-command] exit 1`)
+	assert.Contains(t, buff.String(), `task: [always-command] echo "always run"`)
+	assert.Contains(t, buff.String(), `[always-command] always run`)
+	assert.Contains(t, buff.String(), `[always-command-task] always run (after failed task)`)
+
+	buff.Reset()
+	assert.EqualError(t, e.Run(context.Background(), taskfile.Call{Task: "with-deps"}), `task: Failed to run task "dep-of-with-deps": task: Failed to run task "always-command": exit status 1`)
+	assert.Contains(t, buff.String(), `task: [always-command] exit 1`)
+	assert.Contains(t, buff.String(), `task: [always-command] echo "always run"`)
+	assert.Contains(t, buff.String(), `[always-command] always run`)
+	assert.NotContains(t, buff.String(), `[with-deps] won't run`)
+
+	buff.Reset()
+	ctx, cancel := context.WithCancel(context.Background())
+	errChan := make(chan error, 1)
+	go func() { errChan <- e.Run(ctx, taskfile.Call{Task: "interrupt-me"}) }()
+	cancel() // cancel the context to trigger an interrupt of the task
+	assert.EqualError(t, <-errChan, `task: Failed to run task "interrupt-me": context canceled`)
+	assert.Contains(t, buff.String(), `[interrupt-me] run after interrupt`)
+}

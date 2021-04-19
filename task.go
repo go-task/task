@@ -8,6 +8,7 @@ import (
 	"os"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	"github.com/go-task/task/v3/internal/compiler"
 	compilerv2 "github.com/go-task/task/v3/internal/compiler/v2"
@@ -296,8 +297,24 @@ func (e *Executor) RunTask(ctx context.Context, call taskfile.Call) error {
 		e.Logger.Errf(logger.Red, "task: cannot make directory %q: %v", t.Dir, err)
 	}
 
+	var firstTaskError error
 	for i := range t.Cmds {
-		if err := e.runCommand(ctx, t, call, i); err != nil {
+		cmd := t.Cmds[i]
+
+		// Once a task has encountered an error, only run tasks with always: true
+		if firstTaskError != nil && !cmd.Always {
+			continue
+		}
+
+		// Give commands with always: true their own context so that cleanup can run even after an interrupt signal
+		cmdCtx := ctx
+		if cmd.Always {
+			cleanupCtx, cancelCleanupCtx := context.WithTimeout(context.Background(), time.Second*10)
+			defer cancelCleanupCtx()
+			cmdCtx = cleanupCtx
+		}
+
+		if err := e.runCommand(cmdCtx, t, call, i); err != nil {
 			if err2 := e.statusOnError(t); err2 != nil {
 				e.Logger.VerboseErrf(logger.Yellow, "task: error cleaning status on error: %v", err2)
 			}
@@ -307,10 +324,15 @@ func (e *Executor) RunTask(ctx context.Context, call taskfile.Call) error {
 				continue
 			}
 
-			return &taskRunError{t.Task, err}
+			if firstTaskError == nil {
+				firstTaskError = &taskRunError{t.Task, err}
+			} else {
+				e.Logger.VerboseErrf(logger.Yellow, "task: subsequent error ignored: %v", err)
+			}
 		}
 	}
-	return nil
+
+	return firstTaskError
 }
 
 func (e *Executor) mkdir(t *taskfile.Task) error {

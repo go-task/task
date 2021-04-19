@@ -11,6 +11,7 @@ type Cmd struct {
 	Task        string
 	Vars        *Vars
 	IgnoreError bool
+	Always      bool
 }
 
 // Dep is a task dependency
@@ -34,22 +35,26 @@ func (c *Cmd) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		Cmd         string
 		Silent      bool
 		IgnoreError bool `yaml:"ignore_error"`
+		Always      bool
 	}
 	if err := unmarshal(&cmdStruct); err == nil && cmdStruct.Cmd != "" {
 		c.Cmd = cmdStruct.Cmd
 		c.Silent = cmdStruct.Silent
 		c.IgnoreError = cmdStruct.IgnoreError
+		c.Always = cmdStruct.Always
 		return nil
 	}
 	var taskCall struct {
-		Task string
-		Vars *Vars
+		Task   string
+		Vars   *Vars
+		Always bool
 	}
 	if err := unmarshal(&taskCall); err != nil {
 		return err
 	}
 	c.Task = taskCall.Task
 	c.Vars = taskCall.Vars
+	c.Always = taskCall.Always
 	return nil
 }
 
