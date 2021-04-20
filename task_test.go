@@ -248,12 +248,18 @@ func TestDeps(t *testing.T) {
 
 func TestStatus(t *testing.T) {
 	const dir = "testdata/status"
-	var file = filepath.Join(dir, "foo.txt")
 
-	_ = os.Remove(file)
+	files := []string{
+		"foo.txt",
+		"bar.txt",
+	}
 
-	if _, err := os.Stat(file); err == nil {
-		t.Errorf("File should not exist: %v", err)
+	for _, f := range files {
+		path := filepath.Join(dir, f)
+		_ = os.Remove(path)
+		if _, err := os.Stat(path); err == nil {
+			t.Errorf("File should not exist: %v", err)
+		}
 	}
 
 	var buff bytes.Buffer
@@ -265,17 +271,33 @@ func TestStatus(t *testing.T) {
 	}
 	assert.NoError(t, e.Setup())
 	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "gen-foo"}))
+	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "gen-bar"}))
 
-	if _, err := os.Stat(file); err != nil {
-		t.Errorf("File should exist: %v", err)
+	for _, f := range files {
+		if _, err := os.Stat(filepath.Join(dir, f)); err != nil {
+			t.Errorf("File should exist: %v", err)
+		}
 	}
 
 	e.Silent = false
-	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "gen-foo"}))
 
-	if buff.String() != `task: Task "gen-foo" is up to date`+"\n" {
-		t.Errorf("Wrong output message: %s", buff.String())
-	}
+	// all: not up-to-date
+	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "gen-foo"}))
+	assert.Equal(t, "task: [gen-foo] touch foo.txt", strings.TrimSpace(buff.String()))
+	buff.Reset()
+	// status: not up-to-date
+	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "gen-foo"}))
+	assert.Equal(t, "task: [gen-foo] touch foo.txt", strings.TrimSpace(buff.String()))
+	buff.Reset()
+
+	// sources: not up-to-date
+	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "gen-bar"}))
+	assert.Equal(t, "task: [gen-bar] touch bar.txt", strings.TrimSpace(buff.String()))
+	buff.Reset()
+	// all: up-to-date
+	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "gen-bar"}))
+	assert.Equal(t, `task: Task "gen-bar" is up to date`, strings.TrimSpace(buff.String()))
+	buff.Reset()
 }
 
 func TestPrecondition(t *testing.T) {
