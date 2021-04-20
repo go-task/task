@@ -19,8 +19,9 @@ dist/
 
 .DS_Store
 
-# intellij idea/goland
+# editors
 .idea/
+.vscode/
 
 # exuberant ctags
 tags
