@@ -1,7 +1,11 @@
 # Changelog
 
-## Unreleased
+## v3.4.2 - 2021-04-23
 
+- On watch, report which file failed to read
+  ([#472](https://github.com/go-task/task/pull/472)).
+- Do not try to catch SIGKILL signal, which are not actually possible
+  ([#476](https://github.com/go-task/task/pull/476)).
 - Improve version reporting when building Task from source using Go Modules
   ([#462](https://github.com/go-task/task/pull/462), [#473](https://github.com/go-task/task/pull/473)).
 
