@@ -209,7 +209,7 @@ func getArgs() (tasksAndVars, cliArgs []string) {
 
 func getSignalContext() context.Context {
 	ch := make(chan os.Signal, 1)
-	signal.Notify(ch, os.Interrupt, os.Kill, syscall.SIGTERM)
+	signal.Notify(ch, os.Interrupt, syscall.SIGTERM)
 	ctx, cancel := context.WithCancel(context.Background())
 	go func() {
 		sig := <-ch
