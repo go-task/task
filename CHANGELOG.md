@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Improve version reporting when building Task from source using Go Modules
+  ([#462](https://github.com/go-task/task/pull/462), [#473](https://github.com/go-task/task/pull/473)).
+
 ## v3.4.1 - 2021-04-17
 
 - Improve error reporting when parsing YAML: in some situations where you
