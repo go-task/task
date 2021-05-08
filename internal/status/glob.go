@@ -13,7 +13,7 @@ import (
 func globs(dir string, globs []string) ([]string, error) {
 	files := make([]string, 0)
 	for _, g := range globs {
-		f, err := glob(dir, g)
+		f, err := Glob(dir, g)
 		if err != nil {
 			continue
 		}
@@ -23,7 +23,7 @@ func globs(dir string, globs []string) ([]string, error) {
 	return files, nil
 }
 
-func glob(dir string, g string) ([]string, error) {
+func Glob(dir string, g string) ([]string, error) {
 	files := make([]string, 0)
 	if !filepath.IsAbs(g) {
 		g = filepath.Join(dir, g)
