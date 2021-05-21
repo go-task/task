@@ -27,7 +27,7 @@ and is published [here](https://marketplace.visualstudio.com/items?itemName=paul
 
 Some installation methods are maintained by third party:
 
-- [GitHub Actions](https://github.com/arduino/actions/tree/master/setup-taskfile)
+- [GitHub Actions](https://github.com/arduino/setup-task)
   by [@arduino](https://github.com/arduino)
 - [AUR](https://aur.archlinux.org/packages/taskfile-git)
   by [@kovetskiy](https://github.com/kovetskiy)
