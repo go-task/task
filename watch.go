@@ -11,8 +11,8 @@ import (
 	"time"
 
 	"github.com/go-task/task/v3/internal/logger"
+	"github.com/go-task/task/v3/internal/status"
 	"github.com/go-task/task/v3/taskfile"
-	"github.com/mattn/go-zglob"
 	"github.com/radovskyb/watcher"
 )
 
@@ -128,7 +128,7 @@ func (e *Executor) registerWatchedFiles(w *watcher.Watcher, calls ...taskfile.Ca
 		}
 
 		for _, s := range task.Sources {
-			files, err := zglob.Glob(s)
+			files, err := status.Glob(task.Dir, s)
 			if err != nil {
 				return fmt.Errorf("task: %s: %w", s, err)
 			}
