@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Fix bug where sources were not considering the right directory
+  in `--watch` mode
+  ([#484](https://github.com/go-task/task/issues/484), [#485](https://github.com/go-task/task/pull/485)).
+
 ## v3.4.2 - 2021-04-23
 
 - On watch, report which file failed to read
