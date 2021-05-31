@@ -17,6 +17,10 @@ import (
 	"github.com/go-task/task/v3/taskfile"
 )
 
+func init() {
+	_ = os.Setenv("NO_COLOR", "1")
+}
+
 // fileContentTest provides a basic reusable test-case for running a Taskfile
 // and inspect generated files.
 type fileContentTest struct {

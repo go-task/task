@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add support for the `NO_COLOR` environment variable.
+  ([#459](https://github.com/go-task/task/issues/459), [fatih/color#137](https://github.com/fatih/color/pull/137)).
 - Fix bug where sources were not considering the right directory
   in `--watch` mode
   ([#484](https://github.com/go-task/task/issues/484), [#485](https://github.com/go-task/task/pull/485)).
