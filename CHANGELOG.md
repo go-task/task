@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v3.4.3 - 2021-05-30
 
 - Add support for the `NO_COLOR` environment variable.
   ([#459](https://github.com/go-task/task/issues/459), [fatih/color#137](https://github.com/fatih/color/pull/137)).
