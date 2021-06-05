@@ -176,6 +176,23 @@ func (e *Executor) Setup() error {
 		}
 	}
 
+	if v >= 3.0 {
+		env, err := read.Dotenv(e.Compiler, e.Taskfile, e.Dir)
+		if err != nil {
+			return err
+		}
+
+		err = env.Range(func(key string, value taskfile.Var) error {
+			if _, ok := e.Taskfile.Env.Mapping[key]; !ok {
+				e.Taskfile.Env.Set(key, value)
+			}
+			return nil
+		})
+		if err != nil {
+			return err
+		}
+	}
+
 	if v < 2.1 && e.Taskfile.Output != "" {
 		return fmt.Errorf(`task: Taskfile option "output" is only available starting on Taskfile version v2.1`)
 	}

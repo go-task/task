@@ -29,17 +29,23 @@ type CompilerV3 struct {
 	muDynamicCache sync.Mutex
 }
 
+func (c *CompilerV3) GetTaskfileVariables() (*taskfile.Vars, error) {
+	return c.getVariables(nil, nil, true)
+}
+
 func (c *CompilerV3) GetVariables(t *taskfile.Task, call taskfile.Call) (*taskfile.Vars, error) {
-	return c.getVariables(t, call, true)
+	return c.getVariables(t, &call, true)
 }
 
 func (c *CompilerV3) FastGetVariables(t *taskfile.Task, call taskfile.Call) (*taskfile.Vars, error) {
-	return c.getVariables(t, call, false)
+	return c.getVariables(t, &call, false)
 }
 
-func (c *CompilerV3) getVariables(t *taskfile.Task, call taskfile.Call, evaluateShVars bool) (*taskfile.Vars, error) {
+func (c *CompilerV3) getVariables(t *taskfile.Task, call *taskfile.Call, evaluateShVars bool) (*taskfile.Vars, error) {
 	result := compiler.GetEnviron()
-	result.Set("TASK", taskfile.Var{Static: t.Task})
+	if t != nil {
+		result.Set("TASK", taskfile.Var{Static: t.Task})
+	}
 
 	getRangeFunc := func(dir string) func(k string, v taskfile.Var) error {
 		return func(k string, v taskfile.Var) error {
@@ -74,6 +80,11 @@ func (c *CompilerV3) getVariables(t *taskfile.Task, call taskfile.Call, evaluate
 	if err := c.TaskfileVars.Range(rangeFunc); err != nil {
 		return nil, err
 	}
+
+	if t == nil || call == nil {
+		return result, nil
+	}
+
 	if err := call.Vars.Range(rangeFunc); err != nil {
 		return nil, err
 	}

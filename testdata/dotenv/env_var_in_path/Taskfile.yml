@@ -1,0 +1,8 @@
+version: "3"
+
+dotenv: [".env.{{.ENV_VAR}}"]
+
+tasks:
+  default:
+    cmds:
+      - echo "VAR='$VAR_IN_DOTENV'" > var.txt

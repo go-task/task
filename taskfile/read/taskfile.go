@@ -7,7 +7,6 @@ import (
 	"path/filepath"
 	"runtime"
 
-	"github.com/joho/godotenv"
 	"gopkg.in/yaml.v3"
 
 	"github.com/go-task/task/v3/internal/templater"
@@ -35,27 +34,6 @@ func Taskfile(dir string, entrypoint string) (*taskfile.Taskfile, error) {
 	v, err := t.ParsedVersion()
 	if err != nil {
 		return nil, err
-	}
-
-	if v >= 3.0 {
-		for _, dotEnvPath := range t.Dotenv {
-			if !filepath.IsAbs(dotEnvPath) {
-				dotEnvPath = filepath.Join(dir, dotEnvPath)
-			}
-			if _, err := os.Stat(dotEnvPath); os.IsNotExist(err) {
-				continue
-			}
-
-			envs, err := godotenv.Read(dotEnvPath)
-			if err != nil {
-				return nil, err
-			}
-			for key, value := range envs {
-				if _, ok := t.Env.Mapping[key]; !ok {
-					t.Env.Set(key, taskfile.Var{Static: value})
-				}
-			}
-		}
 	}
 
 	err = t.Includes.Range(func(namespace string, includedTask taskfile.IncludedTaskfile) error {

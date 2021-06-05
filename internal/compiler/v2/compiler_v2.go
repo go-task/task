@@ -30,6 +30,10 @@ type CompilerV2 struct {
 	muDynamicCache sync.Mutex
 }
 
+func (c *CompilerV2) GetTaskfileVariables() (*taskfile.Vars, error) {
+	return &taskfile.Vars{}, nil
+}
+
 // FastGetVariables is a no-op on v2
 func (c *CompilerV2) FastGetVariables(t *taskfile.Task, call taskfile.Call) (*taskfile.Vars, error) {
 	return c.GetVariables(t, call)

@@ -78,18 +78,25 @@ setting:
 KEYNAME=VALUE
 ```
 
+```
+# testing/.env
+ENDPOINT=testing.com
+```
 
 ```yaml
 # Taskfile.yml
 
 version: '3'
 
-dotenv: ['.env']
+env:
+  ENV: testing
+
+dotenv: ['.env', '{{.ENV}}/.env.', '{{.HOME}}/.env']
 
 tasks:
   greet:
     cmds:
-      - echo "Using $KEYNAME"
+      - echo "Using $KEYNAME and endpoint $ENDPOINT"
 ```
 
 ## Including other Taskfiles
