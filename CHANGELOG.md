@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Add support for interpolation in `dotenv:`
+  ([#433](https://github.com/go-task/task/discussions/433), [#434](https://github.com/go-task/task/issues/434), [#453](https://github.com/go-task/task/pull/453)).
+
 ## v3.4.3 - 2021-05-30
 
 - Add support for the `NO_COLOR` environment variable.
