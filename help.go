@@ -2,7 +2,10 @@ package task
 
 import (
 	"fmt"
+	"io"
+	"os"
 	"sort"
+	"strings"
 	"text/tabwriter"
 
 	"github.com/go-task/task/v3/internal/logger"
@@ -69,4 +72,34 @@ func (e *Executor) tasksWithDesc() (tasks []*taskfile.Task) {
 	}
 	sort.Slice(tasks, func(i, j int) bool { return tasks[i].Task < tasks[j].Task })
 	return
+}
+
+// PrintTaskNames prints only the task names in a taskfile.
+func (e *Executor) PrintTaskNames() error {
+	// if called from cmd/task.go, e.Taskfile has not yet been parsed
+	if nil == e.Taskfile {
+		err := e.readTaskfile()
+		if nil != err {
+			return err
+		}
+	}
+	var w io.Writer = os.Stdout
+	if nil != e.Stdout {
+		w = e.Stdout
+	}
+
+	// create a slice from all map values
+	task := make([]*taskfile.Task, 0, len(e.Taskfile.Tasks))
+	for _, t := range e.Taskfile.Tasks {
+		task = append(task, t)
+	}
+
+	sort.Slice(task,
+		func(i, j int) bool {
+			return task[i].Task < task[j].Task
+		})
+	for _, t := range task {
+		fmt.Fprintf(w, "%s\n", strings.TrimSuffix(t.Task, ":"))
+	}
+	return nil
 }
