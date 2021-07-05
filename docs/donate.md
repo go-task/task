@@ -14,22 +14,14 @@ these options to donate:
 - [$2 per month](https://opencollective.com/task/contribute/backer-4034/checkout)
 - [$5 per month](https://opencollective.com/task/contribute/supporter-8404/checkout)
 - [$20 per month](https://opencollective.com/task/contribute/sponsor-4035/checkout)
+- [$50 per month](https://opencollective.com/task/contribute/sponsor-28775/checkout)
 - [Custom value - One-time donation option supported](https://opencollective.com/task/donate)
-
-## Patreon
-
-I'm also on [Patreon](https://www.patreon.com/andreynering) if
-you prefer:
-
-- [$5 per month](https://www.patreon.com/join/andreynering/checkout?rid=4229277)
-- [$10 per month](https://www.patreon.com/join/andreynering/checkout?rid=4229276)
-- [$15 per month](https://www.patreon.com/join/andreynering/checkout?rid=4229275)
-
-You can choose a custom value on any of the links above.
-
-Patreon does not support one-time donation. As a workaround you can fire a
-subscription and cancel it once the donation was succeded.
 
 ## PayPal
 
-- [Any value - One-time donation](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=GSVDU63RKG45A&currency_code=BRL&source=url)
+- [Any value - One-time donation](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=GSVDU63RKG45A&currency_code=USD&source=url)
+
+## PIX (Brazil only)
+
+If you're Brazilian, you can donate any value by
+<a href="/pix.png" target="_blank">using this QR Code</a>.
