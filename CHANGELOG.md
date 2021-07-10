@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Small optimization and bug fix: don't compute variables if not needed for
+  `dotenv:` ([#517](https://github.com/go-task/task/issues/517)).
+
 ## v3.5.0 - 2021-07-04
 
 - Add support for interpolation in `dotenv:`

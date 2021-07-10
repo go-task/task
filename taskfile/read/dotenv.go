@@ -12,6 +12,10 @@ import (
 )
 
 func Dotenv(c compiler.Compiler, tf *taskfile.Taskfile, dir string) (*taskfile.Vars, error) {
+	if len(tf.Dotenv) == 0 {
+		return nil, nil
+	}
+
 	vars, err := c.GetTaskfileVariables()
 	if err != nil {
 		return nil, err
