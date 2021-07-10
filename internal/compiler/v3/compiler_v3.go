@@ -136,7 +136,7 @@ func (c *CompilerV3) HandleDynamicVar(v taskfile.Var, dir string) (string, error
 		Stderr:  c.Logger.Stderr,
 	}
 	if err := execext.RunCommand(context.Background(), opts); err != nil {
-		return "", fmt.Errorf(`task: Command "%s" in taskvars file failed: %s`, opts.Command, err)
+		return "", fmt.Errorf(`task: Command "%s" failed: %s`, opts.Command, err)
 	}
 
 	// Trim a single trailing newline from the result to make most command
