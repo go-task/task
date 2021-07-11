@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v3.6.0 - 2021-07-10
 
 - Allow using both `sources:` and `status:` in the same task
   ([#411](https://github.com/go-task/task/issues/411), [#427](https://github.com/go-task/task/issues/427), [#477](https://github.com/go-task/task/pull/477)).
