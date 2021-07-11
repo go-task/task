@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Allow using both `sources:` and `status:` in the same task
+  ([#411](https://github.com/go-task/task/issues/411), ([#427](https://github.com/go-task/task/issues/427)), [#477](https://github.com/go-task/task/pull/477)).
 - Small optimization and bug fix: don't compute variables if not needed for
   `dotenv:` ([#517](https://github.com/go-task/task/issues/517)).
 
