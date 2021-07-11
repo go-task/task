@@ -1,0 +1,48 @@
+version: "3"
+
+output: prefixed
+
+tasks:
+  always-command:
+    cmds:
+      - exit 1
+      - cmd: echo "always run"
+        always: true
+
+  always-command-skip-other:
+    cmds:
+      - exit 1
+      - echo "won't run"
+      - cmd: echo "always run"
+        always: true
+
+  always-command-that-fails-skip-other:
+    cmds:
+      - exit 1
+      - echo "won't run"
+      - cmd: exit 2
+        always: true
+      - cmd: echo "always run"
+        always: true
+
+  always-command-task:
+    cmds:
+      - task: always-command
+      - cmd: echo "always run (after failed task)"
+        always: true
+
+  dep-of-with-deps:
+    cmds:
+      - task: always-command
+
+  with-deps:
+    deps: [dep-of-with-deps]
+    cmds:
+      - cmd: echo "won't run"
+        always: true
+
+  interrupt-me:
+    cmds:
+      - sleep 30
+      - cmd: echo "run after interrupt"
+        always: true

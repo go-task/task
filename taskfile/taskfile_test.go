@@ -11,8 +11,12 @@ import (
 
 func TestCmdParse(t *testing.T) {
 	const (
-		yamlCmd      = `echo "a string command"`
-		yamlDep      = `"task-name"`
+		yamlCmd       = `echo "a string command"`
+		yamlDep       = `"task-name"`
+		yamlCmdAlways = `
+cmd: echo "always run"
+always: true
+`
 		yamlTaskCall = `
 task: another-task
 vars:
@@ -29,6 +33,11 @@ vars:
 			yamlCmd,
 			&taskfile.Cmd{},
 			&taskfile.Cmd{Cmd: `echo "a string command"`},
+		},
+		{
+			yamlCmdAlways,
+			&taskfile.Cmd{},
+			&taskfile.Cmd{Cmd: `echo "always run"`, Always: true},
 		},
 		{
 			yamlTaskCall,
