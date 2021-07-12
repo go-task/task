@@ -45,6 +45,7 @@ tasks:
     desc: Cleans temp files and folders
     cmds:
       - rm -rf dist/
+      - rm -rf tmp/
 
   lint:
     desc: Runs golint
@@ -52,9 +53,15 @@ tasks:
       - golint {{catLines .GO_PACKAGES}}
     silent: true
 
+  sleepit:
+    desc: Builds the sleepit test helper
+    dir: tmp
+    cmds:
+      - go build ../internal/sleepit
+
   test:
     desc: Runs test suite
-    deps: [install]
+    deps: [install, sleepit]
     cmds:
       - go test {{catLines .GO_PACKAGES}}
 
