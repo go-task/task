@@ -38,6 +38,8 @@ func (e *Executor) compiledTask(call taskfile.Call, evaluateShVars bool) (*taskf
 		return nil, err
 	}
 
+	vars.Merge(e.Taskfile.Vars)
+
 	v, err := e.Taskfile.ParsedVersion()
 	if err != nil {
 		return nil, err
