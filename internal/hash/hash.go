@@ -3,8 +3,9 @@ package hash
 import (
 	"fmt"
 
-	"github.com/go-task/task/v3/taskfile"
 	"github.com/mitchellh/hashstructure/v2"
+
+	"github.com/go-task/task/v3/taskfile"
 )
 
 type HashFunc func(*taskfile.Task) (string, error)
