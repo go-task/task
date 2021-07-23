@@ -23,6 +23,12 @@ Additionally, there's also some work done by
 extension, which has its code [here](https://github.com/paulvarache/vscode-taskfile)
 and is published [here](https://marketplace.visualstudio.com/items?itemName=paulvarache.vscode-taskfile).
 
+## Sublime Text 4 package
+
+There is a convenience wrapper for initializing and running tasks from Sublime Text's command palette. The package is 
+developed by [@biozz](https://github.com/biozz), the source code is available [here](https://github.com/biozz/sublime-taskfile)
+and it is published on Package Control [here](https://packagecontrol.io/packages/Taskfile).
+
 ## Installation methods
 
 Some installation methods are maintained by third party:
