@@ -152,8 +152,8 @@ func (e *Executor) Setup() error {
 		v = 2.6
 	}
 
-	if v > 3.0 {
-		return fmt.Errorf(`task: Taskfile versions greater than v3.0 not implemented in the version of Task`)
+	if v > 3.7 {
+		return fmt.Errorf(`task: Taskfile versions greater than v3.7 not implemented in the version of Task`)
 	}
 
 	// Color available only on v3
@@ -227,13 +227,6 @@ func (e *Executor) Setup() error {
 		}
 	}
 
-	if v < 3 && e.Taskfile.Run != "" {
-		return errors.New(`task: Setting the "run" type is only available starting on Taskfile version v3`)
-	}
-	if e.Taskfile.Run == "" {
-		e.Taskfile.Run = "always"
-	}
-
 	if v <= 2.1 {
 		err := errors.New(`task: Taskfile option "ignore_error" is only available starting on Taskfile version v2.1`)
 
@@ -267,11 +260,22 @@ func (e *Executor) Setup() error {
 		if err != nil {
 			return err
 		}
+	}
+
+	if v < 3.7 {
+		if e.Taskfile.Run != "" {
+			return errors.New(`task: Setting the "run" type is only available starting on Taskfile version v3.7`)
+		}
+
 		for _, task := range e.Taskfile.Tasks {
 			if task.Run != "" {
-				return errors.New(`task: Setting the "run" type is only available starting on Taskfile version v3`)
+				return errors.New(`task: Setting the "run" type is only available starting on Taskfile version v3.7`)
 			}
 		}
+	}
+
+	if e.Taskfile.Run == "" {
+		e.Taskfile.Run = "always"
 	}
 
 	e.execution = make(map[string]context.Context)
