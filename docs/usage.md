@@ -468,7 +468,7 @@ Supported values for `run`
   passed into the task
 
 ```yaml
-version: '3'
+version: '3.7'
 tasks:
   default:
     cmds:
