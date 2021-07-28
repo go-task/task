@@ -58,8 +58,8 @@ type Executor struct {
 	concurrencySemaphore chan struct{}
 	taskCallCount        map[string]*int32
 	mkdirMutexMap        map[string]*sync.Mutex
-	execution            map[string]context.Context
-	executionMutex       sync.Mutex
+	executionHashes      map[string]context.Context
+	executionHashesMutex sync.Mutex
 }
 
 // Run runs Task
@@ -278,7 +278,7 @@ func (e *Executor) Setup() error {
 		e.Taskfile.Run = "always"
 	}
 
-	e.execution = make(map[string]context.Context)
+	e.executionHashes = make(map[string]context.Context)
 
 	e.taskCallCount = make(map[string]*int32, len(e.Taskfile.Tasks))
 	e.mkdirMutexMap = make(map[string]*sync.Mutex, len(e.Taskfile.Tasks))
@@ -306,59 +306,50 @@ func (e *Executor) RunTask(ctx context.Context, call taskfile.Call) error {
 	release := e.acquireConcurrencyLimit()
 	defer release()
 
-	started, ctx, cancel, err := e.startExecution(ctx, t)
-	if err != nil {
-		return err
-	}
-	defer cancel()
+	return e.startExecution(ctx, t, func(ctx context.Context) error {
+		if err := e.runDeps(ctx, t); err != nil {
+			return err
+		}
 
-	if !started {
-		<-ctx.Done()
+		if !e.Force {
+			preCondMet, err := e.areTaskPreconditionsMet(ctx, t)
+			if err != nil {
+				return err
+			}
+
+			upToDate, err := e.isTaskUpToDate(ctx, t)
+			if err != nil {
+				return err
+			}
+
+			if upToDate && preCondMet {
+				if !e.Silent {
+					e.Logger.Errf(logger.Magenta, `task: Task "%s" is up to date`, t.Name())
+				}
+				return nil
+			}
+		}
+
+		if err := e.mkdir(t); err != nil {
+			e.Logger.Errf(logger.Red, "task: cannot make directory %q: %v", t.Dir, err)
+		}
+
+		for i := range t.Cmds {
+			if err := e.runCommand(ctx, t, call, i); err != nil {
+				if err2 := e.statusOnError(t); err2 != nil {
+					e.Logger.VerboseErrf(logger.Yellow, "task: error cleaning status on error: %v", err2)
+				}
+
+				if execext.IsExitError(err) && t.IgnoreError {
+					e.Logger.VerboseErrf(logger.Yellow, "task: task error ignored: %v", err)
+					continue
+				}
+
+				return &taskRunError{t.Task, err}
+			}
+		}
 		return nil
-	}
-
-	if err := e.runDeps(ctx, t); err != nil {
-		return err
-	}
-
-	if !e.Force {
-		preCondMet, err := e.areTaskPreconditionsMet(ctx, t)
-		if err != nil {
-			return err
-		}
-
-		upToDate, err := e.isTaskUpToDate(ctx, t)
-		if err != nil {
-			return err
-		}
-
-		if upToDate && preCondMet {
-			if !e.Silent {
-				e.Logger.Errf(logger.Magenta, `task: Task "%s" is up to date`, t.Name())
-			}
-			return nil
-		}
-	}
-
-	if err := e.mkdir(t); err != nil {
-		e.Logger.Errf(logger.Red, "task: cannot make directory %q: %v", t.Dir, err)
-	}
-
-	for i := range t.Cmds {
-		if err := e.runCommand(ctx, t, call, i); err != nil {
-			if err2 := e.statusOnError(t); err2 != nil {
-				e.Logger.VerboseErrf(logger.Yellow, "task: error cleaning status on error: %v", err2)
-			}
-
-			if execext.IsExitError(err) && t.IgnoreError {
-				e.Logger.VerboseErrf(logger.Yellow, "task: task error ignored: %v", err)
-				continue
-			}
-
-			return &taskRunError{t.Task, err}
-		}
-	}
-	return nil
+	})
 }
 
 func (e *Executor) mkdir(t *taskfile.Task) error {
@@ -477,24 +468,26 @@ func getEnviron(t *taskfile.Task) []string {
 	return environ
 }
 
-func (e *Executor) startExecution(innerCtx context.Context, t *taskfile.Task) (bool, context.Context, context.CancelFunc, error) {
+func (e *Executor) startExecution(ctx context.Context, t *taskfile.Task, execute func(ctx context.Context) error) error {
 	h, err := e.GetHash(t)
 	if err != nil {
-		return true, nil, nil, err
+		return err
 	}
 
 	if h == "" {
-		return true, innerCtx, func() {}, nil
+		return execute(ctx)
 	}
 
-	e.executionMutex.Lock()
-	defer e.executionMutex.Unlock()
-	ctx, ok := e.execution[h]
+	e.executionHashesMutex.Lock()
+	otherExecutionCtx, ok := e.executionHashes[h]
+	e.executionHashesMutex.Unlock()
 	if ok {
-		return false, ctx, func() {}, nil
+		<-otherExecutionCtx.Done()
+		return nil
 	}
 
-	ctx, cancel := context.WithCancel(innerCtx)
-	e.execution[h] = ctx
-	return true, ctx, cancel, nil
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+	e.executionHashes[h] = ctx
+	return execute(ctx)
 }
