@@ -151,6 +151,9 @@ func (e *Executor) Setup() error {
 	if v == 2.0 {
 		v = 2.6
 	}
+	if v == 3.0 {
+		v = 3.7
+	}
 
 	if v > 3.7 {
 		return fmt.Errorf(`task: Taskfile versions greater than v3.7 not implemented in the version of Task`)
@@ -480,14 +483,19 @@ func (e *Executor) startExecution(ctx context.Context, t *taskfile.Task, execute
 
 	e.executionHashesMutex.Lock()
 	otherExecutionCtx, ok := e.executionHashes[h]
-	e.executionHashesMutex.Unlock()
+
 	if ok {
+		e.executionHashesMutex.Unlock()
+		e.Logger.VerboseErrf(logger.Magenta, "task: skipping execution of task: %s", h)
 		<-otherExecutionCtx.Done()
 		return nil
 	}
 
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
+
 	e.executionHashes[h] = ctx
+	e.executionHashesMutex.Unlock()
+
 	return execute(ctx)
 }

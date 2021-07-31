@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- Add `run:` setting to control if tasks should run multiple times or not.
+  Available options are `always` (the default), `when_changed` (if a variable
+  modified the task) and `once` (run only once no matter what).
+  This is a long time requested feature. Enjoy!
+  ([#53](https://github.com/go-task/task/issues/53), [#359](https://github.com/go-task/task/pull/359)).
+
 ## v3.6.0 - 2021-07-10
 
 - Allow using both `sources:` and `status:` in the same task

@@ -455,12 +455,13 @@ tasks:
 
 ### Limiting when tasks run
 
-If a task executed by multiple `cmds` or multiple `deps` you can limit
-how many times it is executed using `run`. `run` can also be set at the root
+If a task executed by multiple `cmds` or multiple `deps` you can control
+when it is executed using `run`. `run` can also be set at the root
 of the Taskfile to change the behavior of all the tasks unless explicitly
-overridden
+overridden.
 
-Supported values for `run`
+Supported values for `run`:
+
  * `always` (default) always attempt to invoke the task regardless of the
   number of previous executions
  * `once` only invoke this task once regardless of the number of references
@@ -468,7 +469,8 @@ Supported values for `run`
   passed into the task
 
 ```yaml
-version: '3.7'
+version: '3'
+
 tasks:
   default:
     cmds:
