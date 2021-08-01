@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v3.7.0 - 2021-07-31
 
 - Add `run:` setting to control if tasks should run multiple times or not.
   Available options are `always` (the default), `when_changed` (if a variable
