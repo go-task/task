@@ -15,7 +15,7 @@ _task_completion()
     return
   fi
 
-  COMPREPLY=($(compgen -c | echo "$scripts" | grep $curr_arg));
+  COMPREPLY=($(compgen -c | echo "$scripts" | grep -- $curr_arg));
 }
 
 complete -F _task_completion task
