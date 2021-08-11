@@ -755,6 +755,41 @@ func TestIncludesCallingRoot(t *testing.T) {
 	tt.Run(t)
 }
 
+func TestIncludesOptional(t *testing.T) {
+  tt := fileContentTest{
+    Dir:       "testdata/includes_optional",
+    Target:    "default",
+	  TrimSpace: true,
+	  Files: map[string]string{
+		  "called_dep.txt": "called_dep",
+	  }}
+  tt.Run(t)
+}
+
+func TestIncludesOptionalImplicitFalse(t *testing.T) {
+	e := task.Executor{
+		Dir:    "testdata/includes_optional_implicit_false",
+		Stdout: ioutil.Discard,
+		Stderr: ioutil.Discard,
+	}
+
+	err := e.Setup()
+	assert.Error(t, err)
+	assert.Equal(t, "stat testdata/includes_optional_implicit_false/TaskfileOptional.yml: no such file or directory", err.Error())
+}
+
+func TestIncludesOptionalExplicitFalse(t *testing.T) {
+	e := task.Executor{
+		Dir:    "testdata/includes_optional_explicit_false",
+		Stdout: ioutil.Discard,
+		Stderr: ioutil.Discard,
+	}
+
+	err := e.Setup()
+	assert.Error(t, err)
+	assert.Equal(t, "stat testdata/includes_optional_explicit_false/TaskfileOptional.yml: no such file or directory", err.Error())
+}
+
 func TestSummary(t *testing.T) {
 	const dir = "testdata/summary"
 

@@ -42,6 +42,7 @@ func Taskfile(dir string, entrypoint string) (*taskfile.Taskfile, error) {
 			includedTask = taskfile.IncludedTaskfile{
 				Taskfile:       tr.Replace(includedTask.Taskfile),
 				Dir:            tr.Replace(includedTask.Dir),
+				Optional:       includedTask.Optional,
 				AdvancedImport: includedTask.AdvancedImport,
 			}
 			if err := tr.Err(); err != nil {
@@ -56,6 +57,9 @@ func Taskfile(dir string, entrypoint string) (*taskfile.Taskfile, error) {
 		}
 
 		info, err := os.Stat(path)
+		if err != nil && includedTask.Optional {
+			return nil
+		}
 		if err != nil {
 			return err
 		}

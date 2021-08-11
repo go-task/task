@@ -154,6 +154,24 @@ includes:
 > This was a deliberate decision to keep use and implementation simple.
 > If you disagree, open an GitHub issue and explain your use case. =)
 
+### Optional includes
+
+Includes marked as optional will allow Task to continue execution as normal if
+the included file is missing.
+
+```yaml
+version: '3'
+
+includes:
+  tests:
+    taskfile: ./tests/Taskfile.yml
+    optional: true
+tasks:
+  greet:
+    cmds:
+      - echo "This command can still be successfully executed if ./tests/Taskfile.yml does not exist"
+```
+
 ## Task directory
 
 By default, tasks will be executed in the directory where the Taskfile is
