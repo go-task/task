@@ -1,6 +1,6 @@
 build:
   binary: task
-  main: cmd/task
+  main: ./cmd/task
   goos:
     - windows
     - darwin
