@@ -617,7 +617,7 @@ Task also adds the following functions:
 - `toSlash`: Does nothing on Unix, but on Windows converts a string from `\`
   path format to `/`.
 - `fromSlash`: Opposite of `toSlash`. Does nothing on Unix, but on Windows
-  converts a string from `\` path format to `/`.
+  converts a string from `/` path format to `\`.
 - `exeExt`: Returns the right executable extension for the current OS
   (`".exe"` for Windows, `""` for others).
 
