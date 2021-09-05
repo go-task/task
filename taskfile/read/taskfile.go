@@ -6,7 +6,6 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
-	"strings"
 
 	"gopkg.in/yaml.v3"
 
@@ -51,16 +50,13 @@ func Taskfile(dir string, entrypoint string) (*taskfile.Taskfile, error) {
 			}
 		}
 
-		if filepath.IsAbs(includedTask.Taskfile) {
-			path = includedTask.Taskfile
-		} else if strings.HasPrefix(includedTask.Taskfile, "~") {
-			home, err := execext.Expand("~")
-			if err != nil {
-				return err
-			}
-			path = strings.Replace(includedTask.Taskfile, "~", home, 1)
-		} else {
-			path = filepath.Join(dir, includedTask.Taskfile)
+		path, err := execext.Expand(includedTask.Taskfile)
+		if err != nil {
+			return err
+		}
+
+		if ! filepath.IsAbs(path) {
+			path = filepath.Join(dir, path)
 		}
 
 		info, err := os.Stat(path)
