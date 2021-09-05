@@ -50,3 +50,17 @@ nfpms:
       - deb
       - rpm
     file_name_template: "{{.ProjectName}}_{{.Os}}_{{.Arch}}"
+
+brews:
+  - name: go-task
+    description: Task runner / simpler Make alternative written in Go
+    license: MIT
+    homepage: https://taskfile.dev
+    folder: Formula
+    tap:
+      owner: go-task
+      name: homebrew-tap
+    test:
+      system "#{bin}/task", "--help"
+    url_template: https://github.com/go-task/task/releases/download/{{.Tag}}/{{.ArtifactName}}
+    commit_msg_template: Bump {{.Tag}}
