@@ -60,8 +60,7 @@ brews:
     tap:
       owner: go-task
       name: homebrew-tap
-      token: "{{.Env.GORELEASER_TOKEN}}"
     test:
       system "#{bin}/task", "--help"
     url_template: https://github.com/go-task/task/releases/download/{{.Tag}}/{{.ArtifactName}}
-    commit_msg_template: Bump {{.Tag}}
+    skip_upload: true
