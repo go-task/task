@@ -64,3 +64,4 @@ brews:
       system "#{bin}/task", "--help"
     url_template: https://github.com/go-task/task/releases/download/{{.Tag}}/{{.ArtifactName}}
     commit_msg_template: Bump {{.Tag}}
+    token: "{{.Env.GORELEASER_TOKEN}}"
