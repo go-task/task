@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Add support for including Taskfiles in the home directory by using `~`
+  ([#539](https://github.com/go-task/task/issues/539), [#557](https://github.com/go-task/task/pull/557)).
+
 ## 3.7.3 - 2021-09-04
 
 - Add official support to Apple M1 ([#564](https://github.com/go-task/task/pull/564), [#567](https://github.com/go-task/task/pull/567)).

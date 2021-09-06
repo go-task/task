@@ -54,8 +54,7 @@ func Taskfile(dir string, entrypoint string) (*taskfile.Taskfile, error) {
 		if err != nil {
 			return err
 		}
-
-		if ! filepath.IsAbs(path) {
+		if !filepath.IsAbs(path) {
 			path = filepath.Join(dir, path)
 		}
 
