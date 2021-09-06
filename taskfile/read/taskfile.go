@@ -9,6 +9,7 @@ import (
 
 	"gopkg.in/yaml.v3"
 
+	"github.com/go-task/task/v3/internal/execext"
 	"github.com/go-task/task/v3/internal/templater"
 	"github.com/go-task/task/v3/taskfile"
 )
@@ -49,10 +50,13 @@ func Taskfile(dir string, entrypoint string) (*taskfile.Taskfile, error) {
 			}
 		}
 
-		if filepath.IsAbs(includedTask.Taskfile) {
-			path = includedTask.Taskfile
-		} else {
-			path = filepath.Join(dir, includedTask.Taskfile)
+		path, err := execext.Expand(includedTask.Taskfile)
+		if err != nil {
+			return err
+		}
+
+		if ! filepath.IsAbs(path) {
+			path = filepath.Join(dir, path)
 		}
 
 		info, err := os.Stat(path)
