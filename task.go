@@ -327,24 +327,24 @@ func (e *Executor) RunTask(ctx context.Context, call taskfile.Call) error {
 
 			if upToDate && preCondMet {
 				if !e.Silent {
-					e.Logger.Errf(logger.Magenta, `task: Task "%s" is up to date`, t.Name())
+					e.Logger.Errf(logger.Skip, `task: Task "%s" is up to date`, t.Name())
 				}
 				return nil
 			}
 		}
 
 		if err := e.mkdir(t); err != nil {
-			e.Logger.Errf(logger.Red, "task: cannot make directory %q: %v", t.Dir, err)
+			e.Logger.Errf(logger.Fail, "task: cannot make directory %q: %v", t.Dir, err)
 		}
 
 		for i := range t.Cmds {
 			if err := e.runCommand(ctx, t, call, i); err != nil {
 				if err2 := e.statusOnError(t); err2 != nil {
-					e.Logger.VerboseErrf(logger.Yellow, "task: error cleaning status on error: %v", err2)
+					e.Logger.VerboseErrf(logger.Warn, "task: error cleaning status on error: %v", err2)
 				}
 
 				if execext.IsExitError(err) && t.IgnoreError {
-					e.Logger.VerboseErrf(logger.Yellow, "task: task error ignored: %v", err)
+					e.Logger.VerboseErrf(logger.Warn, "task: task error ignored: %v", err)
 					continue
 				}
 
@@ -408,7 +408,7 @@ func (e *Executor) runCommand(ctx context.Context, t *taskfile.Task, call taskfi
 		return nil
 	case cmd.Cmd != "":
 		if e.Verbose || (!cmd.Silent && !t.Silent && !e.Taskfile.Silent && !e.Silent) {
-			e.Logger.Errf(logger.Green, "task: [%s] %s", t.Name(), cmd.Cmd)
+			e.Logger.Errf(logger.Exec, "task: [%s] %s", t.Name(), cmd.Cmd)
 		}
 
 		if e.Dry {
@@ -439,7 +439,7 @@ func (e *Executor) runCommand(ctx context.Context, t *taskfile.Task, call taskfi
 			Stderr:  stdErr,
 		})
 		if execext.IsExitError(err) && cmd.IgnoreError {
-			e.Logger.VerboseErrf(logger.Yellow, "task: [%s] command error ignored: %v", t.Name(), err)
+			e.Logger.VerboseErrf(logger.Warn, "task: [%s] command error ignored: %v", t.Name(), err)
 			return nil
 		}
 		return err
@@ -486,7 +486,7 @@ func (e *Executor) startExecution(ctx context.Context, t *taskfile.Task, execute
 
 	if ok {
 		e.executionHashesMutex.Unlock()
-		e.Logger.VerboseErrf(logger.Magenta, "task: skipping execution of task: %s", h)
+		e.Logger.VerboseErrf(logger.Skip, "task: skipping execution of task: %s", h)
 		<-otherExecutionCtx.Done()
 		return nil
 	}

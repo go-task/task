@@ -2,6 +2,8 @@ package logger
 
 import (
 	"io"
+	"os"
+	"strconv"
 
 	"github.com/fatih/color"
 )
@@ -16,6 +18,11 @@ func Cyan() PrintFunc    { return color.New(color.FgCyan).FprintfFunc() }
 func Yellow() PrintFunc  { return color.New(color.FgYellow).FprintfFunc() }
 func Magenta() PrintFunc { return color.New(color.FgMagenta).FprintfFunc() }
 func Red() PrintFunc     { return color.New(color.FgRed).FprintfFunc() }
+
+func Fail() PrintFunc { return color.New(EnvColor("TASK_COLOR_FAIL", color.FgRed)).FprintfFunc() }
+func Exec() PrintFunc { return color.New(EnvColor("TASK_COLOR_EXEC", color.FgGreen)).FprintfFunc() }
+func Skip() PrintFunc { return color.New(EnvColor("TASK_COLOR_SKIP", color.FgMagenta)).FprintfFunc() }
+func Warn() PrintFunc { return color.New(EnvColor("TASK_COLOR_WARN", color.FgYellow)).FprintfFunc() }
 
 // Logger is just a wrapper that prints stuff to STDOUT or STDERR,
 // with optional color.
@@ -62,4 +69,12 @@ func (l *Logger) VerboseErrf(color Color, s string, args ...interface{}) {
 	if l.Verbose {
 		l.Errf(color, s, args...)
 	}
+}
+
+func EnvColor(envKey string, defaultColor color.Attribute) color.Attribute {
+	envColor, err := strconv.Atoi(os.Getenv(envKey))
+	if err != nil {
+		return defaultColor
+	}
+	return color.Attribute(envColor)
 }
