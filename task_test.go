@@ -990,3 +990,29 @@ func TestRunOnlyRunsJobsHashOnce(t *testing.T) {
 	}
 	tt.Run(t)
 }
+
+func TestIgnoreNilElements(t *testing.T) {
+	tests := []struct {
+		name string
+		dir  string
+	}{
+		{"nil cmd", "testdata/ignore_nil_elements/cmds"},
+		{"nil dep", "testdata/ignore_nil_elements/deps"},
+		{"nil precondition", "testdata/ignore_nil_elements/preconditions"},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			var buff bytes.Buffer
+			e := task.Executor{
+				Dir:    test.dir,
+				Stdout: &buff,
+				Stderr: &buff,
+				Silent: true,
+			}
+			assert.NoError(t, e.Setup())
+			assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "default"}))
+			assert.Equal(t, "string-slice-1\n", buff.String())
+		})
+	}
+}

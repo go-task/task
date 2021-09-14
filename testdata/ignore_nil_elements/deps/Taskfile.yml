@@ -1,0 +1,11 @@
+version: '3'
+
+tasks:
+  default:
+    deps:
+      -
+      - task: dep
+
+  dep:
+    cmds:
+      - echo "string-slice-1"
