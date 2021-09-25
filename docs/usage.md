@@ -166,6 +166,7 @@ includes:
   tests:
     taskfile: ./tests/Taskfile.yml
     optional: true
+
 tasks:
   greet:
     cmds:

@@ -60,10 +60,10 @@ func Taskfile(dir string, entrypoint string) (*taskfile.Taskfile, error) {
 		}
 
 		info, err := os.Stat(path)
-		if err != nil && includedTask.Optional {
-			return nil
-		}
 		if err != nil {
+			if includedTask.Optional {
+				return nil
+			}
 			return err
 		}
 		if info.IsDir() {

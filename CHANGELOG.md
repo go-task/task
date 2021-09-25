@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add ability to declare an included Taskfile as optional
+  ([#519](https://github.com/go-task/task/issues/519), [#552](https://github.com/go-task/task/pull/552)).
 - Add support for including Taskfiles in the home directory by using `~`
   ([#539](https://github.com/go-task/task/issues/539), [#557](https://github.com/go-task/task/pull/557)).
 
