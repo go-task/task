@@ -877,6 +877,33 @@ func TestWhenDirAttributeItCreatesMissingAndRunsInThatDir(t *testing.T) {
 	_ = os.RemoveAll(toBeCreated)
 }
 
+func TestDynamicVariablesRunOnTheNewCreatedDir(t *testing.T) {
+	const expected = "created"
+	const dir = "testdata/dir/dynamic_var_on_created_dir/"
+	const toBeCreated = dir + expected
+	const target = "default"
+	var out bytes.Buffer
+	e := &task.Executor{
+		Dir:    dir,
+		Stdout: &out,
+		Stderr: &out,
+	}
+
+	// Ensure that the directory to be created doesn't actually exist.
+	_ = os.RemoveAll(toBeCreated)
+	if _, err := os.Stat(toBeCreated); err == nil {
+		t.Errorf("Directory should not exist: %v", err)
+	}
+	assert.NoError(t, e.Setup())
+	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: target}))
+
+	got := strings.TrimSuffix(filepath.Base(out.String()), "\n")
+	assert.Equal(t, expected, got, "Mismatch in the working directory")
+
+	// Clean-up after ourselves only if no error.
+	_ = os.RemoveAll(toBeCreated)
+}
+
 func TestDynamicVariablesShouldRunOnTheTaskDir(t *testing.T) {
 	tt := fileContentTest{
 		Dir:       "testdata/dir/dynamic_var",
