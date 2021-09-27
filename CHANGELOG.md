@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add `interactive: true` setting to improve support for interactive CLI apps
+  ([#217](https://github.com/go-task/task/issues/217), [#563](https://github.com/go-task/task/pull/563)).
 - Fix some `nil` errors
   ([#534](https://github.com/go-task/task/issues/534), [#573](https://github.com/go-task/task/pull/573)).
 - Add ability to declare an included Taskfile as optional

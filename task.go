@@ -415,13 +415,12 @@ func (e *Executor) runCommand(ctx context.Context, t *taskfile.Task, call taskfi
 			return nil
 		}
 
-		stdOut := e.Output.WrapWriter(e.Stdout, t.Prefix)
-		stdErr := e.Output.WrapWriter(e.Stderr, t.Prefix)
-
+		outputWrapper := e.Output
 		if t.Interactive {
-			stdOut = output.Interleaved{}.WrapWriter(e.Stdout, t.Prefix)
-			stdErr = output.Interleaved{}.WrapWriter(e.Stderr, t.Prefix)
+			outputWrapper = output.Interleaved{}
 		}
+		stdOut := outputWrapper.WrapWriter(e.Stdout, t.Prefix)
+		stdErr := outputWrapper.WrapWriter(e.Stderr, t.Prefix)
 
 		defer func() {
 			if _, ok := stdOut.(*os.File); !ok {

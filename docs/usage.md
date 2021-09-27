@@ -950,6 +950,28 @@ $ task default
 
 > The `output` option can also be specified by the `--output` or `-o` flags.
 
+## Interactive CLI application
+
+When running interactive CLI applications inside Task they can sometimes behave
+weirdly, specially when the [output mode](#output-syntax) is set to something
+other than `interleaved` (the default), or when interactive apps are ran in
+parallel with other tasks.
+
+The `interactive: true` tells Task this is an interactive application, and Task
+will try to optimize for it:
+
+```yaml
+version: '3'
+
+tasks:
+  cmds:
+    - vim my-file.txt
+  interactive: true
+```
+
+If you still have problem running an interactive app through Task, please open
+an issue about it.
+
 ## Short task syntax
 
 Starting on Task v3, you can now write tasks with a shorter syntax if they
