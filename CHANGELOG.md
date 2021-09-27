@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v3.8.0 - 2021-09-26
 
 - Add `interactive: true` setting to improve support for interactive CLI apps
   ([#217](https://github.com/go-task/task/issues/217), [#563](https://github.com/go-task/task/pull/563)).
@@ -11,7 +11,7 @@
 - Add support for including Taskfiles in the home directory by using `~`
   ([#539](https://github.com/go-task/task/issues/539), [#557](https://github.com/go-task/task/pull/557)).
 
-## 3.7.3 - 2021-09-04
+## v3.7.3 - 2021-09-04
 
 - Add official support to Apple M1 ([#564](https://github.com/go-task/task/pull/564), [#567](https://github.com/go-task/task/pull/567)).
 - Our [official Homebrew tap](https://github.com/go-task/homebrew-tap) will
