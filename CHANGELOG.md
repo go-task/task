@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v3.9.0 - 2021-10-02
 
 - A new `shellQuote` was added to the template system
   (`{{shellQuote "a string"}}`) to ensure a string is safe for use in shell
