@@ -2,7 +2,7 @@
 
 ## v3.9.0 - 2021-10-02
 
-- A new `shellQuote` was added to the template system
+- A new `shellQuote` function was added to the template system
   (`{{shellQuote "a string"}}`) to ensure a string is safe for use in shell
   ([mvdan/sh#727](https://github.com/mvdan/sh/pull/727), [mvdan/sh#737](https://github.com/mvdan/sh/pull/737), [Documentation](https://pkg.go.dev/mvdan.cc/sh/v3@v3.4.0/syntax#Quote))
 - In this version [mvdan.cc/sh](https://github.com/mvdan/sh) was upgraded
