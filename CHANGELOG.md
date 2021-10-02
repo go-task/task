@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased
+
+- In this version [mvdan.cc/sh](https://github.com/mvdan/sh) was upgraded
+  with some small fixes and features
+  - The `read -p` flag is now supported
+    ([#314](https://github.com/go-task/task/issues/314), [mvdan/sh#551](https://github.com/mvdan/sh/issues/551), [mvdan/sh#772](https://github.com/mvdan/sh/pull/722))
+  - The `pwd -P` and `pwd -L` flags are now supported
+    ([#553](https://github.com/go-task/task/issues/553), [mvdan/sh#724](https://github.com/mvdan/sh/issues/724), [mvdan/sh#728](https://github.com/mvdan/sh/pull/728))
+  - The `$GID` environment variable is now correctly being set
+    ([#561](https://github.com/go-task/task/issues/561), [mvdan/sh#723](https://github.com/mvdan/sh/pull/723))
+
 ## v3.8.0 - 2021-09-26
 
 - Add `interactive: true` setting to improve support for interactive CLI apps
