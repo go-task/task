@@ -73,8 +73,8 @@ func (l *Logger) VerboseErrf(color Color, s string, args ...interface{}) {
 
 func EnvColor(envKey string, defaultColor color.Attribute) color.Attribute {
 	envColor, err := strconv.Atoi(os.Getenv(envKey))
-	if err != nil {
-		return defaultColor
+	if err == nil {
+		return color.Attribute(envColor)
 	}
-	return color.Attribute(envColor)
+	return defaultColor
 }
