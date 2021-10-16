@@ -64,10 +64,21 @@ func (c *CompilerV3) getVariables(t *taskfile.Task, call *taskfile.Call, evaluat
 			if err := tr.Err(); err != nil {
 				return err
 			}
+
+			debugLog := false
+			if _, ok := c.dynamicCache[v.Sh]; !ok {
+				debugLog = true
+			}
+
 			static, err := c.HandleDynamicVar(v, dir)
 			if err != nil {
 				return err
 			}
+
+			if v.Static == "" && v.Sh != "" && debugLog {
+				c.Logger.VerboseErrf(logger.Magenta, `task: dynamic variable: [%s] '%s' result: '%s'`, k, v.Sh, static)
+			}
+
 			result.Set(k, taskfile.Var{Static: static})
 			return nil
 		}
@@ -144,7 +155,6 @@ func (c *CompilerV3) HandleDynamicVar(v taskfile.Var, dir string) (string, error
 	result := strings.TrimSuffix(stdout.String(), "\n")
 
 	c.dynamicCache[v.Sh] = result
-	c.Logger.VerboseErrf(logger.Magenta, `task: dynamic variable: '%s' result: '%s'`, v.Sh, result)
 
 	return result, nil
 }
