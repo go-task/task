@@ -25,6 +25,10 @@ gomod:
 
 archives:
   - name_template: "{{.Binary}}_{{.Os}}_{{.Arch}}"
+    files:
+      - README.md
+      - LICENSE
+      - completion/**/*
     format_overrides:
       - goos: windows
         format: zip
@@ -62,5 +66,8 @@ brews:
       name: homebrew-tap
     test:
       system "#{bin}/task", "--help"
-    url_template: https://github.com/go-task/task/releases/download/{{.Tag}}/{{.ArtifactName}}
-    skip_upload: true
+    install: |-
+      bin.install "task"
+      bash_completion.install "completion/bash/task.bash" => "task"
+      zsh_completion.install "completion/zsh/_task" => "_task"
+      fish_completion.install "completion/fish/task.fish"
