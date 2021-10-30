@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Install shell completions automatically when installing via Homebrew
+  ([#264](https://github.com/go-task/task/issues/264), [#592](https://github.com/go-task/task/pull/592), [go-task/homebrew-tap#2](https://github.com/go-task/homebrew-tap/pull/2)).
+
 ## v3.9.0 - 2021-10-02
 
 - A new `shellQuote` function was added to the template system
