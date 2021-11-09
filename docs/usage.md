@@ -589,7 +589,7 @@ This works for all types of variables.
 
 ## Forwarding CLI arguments to commands
 
-If `--` is given in the CLI, all following paramaters are added to a
+If `--` is given in the CLI, all following parameters are added to a
 special `.CLI_ARGS` variable. This is useful to forward arguments to another
 command.
 
