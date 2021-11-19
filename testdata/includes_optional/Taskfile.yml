@@ -1,0 +1,11 @@
+version: '3'
+
+includes:
+  included:
+    taskfile: TaskfileOptional.yml
+    optional: true
+
+tasks:
+  default:
+    cmds:
+      - echo "called_dep" > called_dep.txt

@@ -87,12 +87,12 @@ sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d -b /usr/local/b
 #### **GitHub Actions**
 
 If you want to install Task in GitHub Actions you can try using
-[this action](https://github.com/arduino/actions/tree/master/setup-taskfile)
+[this action](https://github.com/arduino/setup-task)
 by the Arduino team:
 
 ```yaml
 - name: Install Task
-  uses: Arduino/actions/setup-taskfile@master
+  uses: arduino/setup-task@v1
 ```
 
 This installation method is community owned.

@@ -7,9 +7,9 @@ import (
 	"path/filepath"
 	"runtime"
 
-	"github.com/joho/godotenv"
 	"gopkg.in/yaml.v3"
 
+	"github.com/go-task/task/v3/internal/execext"
 	"github.com/go-task/task/v3/internal/templater"
 	"github.com/go-task/task/v3/taskfile"
 )
@@ -37,33 +37,13 @@ func Taskfile(dir string, entrypoint string) (*taskfile.Taskfile, error) {
 		return nil, err
 	}
 
-	if v >= 3.0 {
-		for _, dotEnvPath := range t.Dotenv {
-			if !filepath.IsAbs(dotEnvPath) {
-				dotEnvPath = filepath.Join(dir, dotEnvPath)
-			}
-			if _, err := os.Stat(dotEnvPath); os.IsNotExist(err) {
-				continue
-			}
-
-			envs, err := godotenv.Read(dotEnvPath)
-			if err != nil {
-				return nil, err
-			}
-			for key, value := range envs {
-				if _, ok := t.Env.Mapping[key]; !ok {
-					t.Env.Set(key, taskfile.Var{Static: value})
-				}
-			}
-		}
-	}
-
 	err = t.Includes.Range(func(namespace string, includedTask taskfile.IncludedTaskfile) error {
 		if v >= 3.0 {
 			tr := templater.Templater{Vars: &taskfile.Vars{}, RemoveNoValue: true}
 			includedTask = taskfile.IncludedTaskfile{
 				Taskfile:       tr.Replace(includedTask.Taskfile),
 				Dir:            tr.Replace(includedTask.Dir),
+				Optional:       includedTask.Optional,
 				AdvancedImport: includedTask.AdvancedImport,
 			}
 			if err := tr.Err(); err != nil {
@@ -71,14 +51,19 @@ func Taskfile(dir string, entrypoint string) (*taskfile.Taskfile, error) {
 			}
 		}
 
-		if filepath.IsAbs(includedTask.Taskfile) {
-			path = includedTask.Taskfile
-		} else {
-			path = filepath.Join(dir, includedTask.Taskfile)
+		path, err := execext.Expand(includedTask.Taskfile)
+		if err != nil {
+			return err
+		}
+		if !filepath.IsAbs(path) {
+			path = filepath.Join(dir, path)
 		}
 
 		info, err := os.Stat(path)
 		if err != nil {
+			if includedTask.Optional {
+				return nil
+			}
 			return err
 		}
 		if info.IsDir() {

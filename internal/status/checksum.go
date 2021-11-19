@@ -53,7 +53,7 @@ func (c *Checksum) IsUpToDate() (bool, error) {
 	if len(c.Generates) > 0 {
 		// For each specified 'generates' field, check whether the files actually exist
 		for _, g := range c.Generates {
-			generates, err := glob(c.TaskDir, g)
+			generates, err := Glob(c.TaskDir, g)
 			if os.IsNotExist(err) {
 				return false, nil
 			}

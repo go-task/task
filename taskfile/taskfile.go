@@ -17,6 +17,7 @@ type Taskfile struct {
 	Tasks      Tasks
 	Silent     bool
 	Dotenv     []string
+	Run        string
 }
 
 // UnmarshalYAML implements yaml.Unmarshaler interface
@@ -32,6 +33,7 @@ func (tf *Taskfile) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		Tasks      Tasks
 		Silent     bool
 		Dotenv     []string
+		Run        string
 	}
 	if err := unmarshal(&taskfile); err != nil {
 		return err
@@ -46,6 +48,7 @@ func (tf *Taskfile) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	tf.Tasks = taskfile.Tasks
 	tf.Silent = taskfile.Silent
 	tf.Dotenv = taskfile.Dotenv
+	tf.Run = taskfile.Run
 	if tf.Expansions <= 0 {
 		tf.Expansions = 2
 	}

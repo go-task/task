@@ -6,7 +6,8 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/go-task/slim-sprig"
+	sprig "github.com/go-task/slim-sprig"
+	"mvdan.cc/sh/v3/syntax"
 )
 
 var (
@@ -36,6 +37,9 @@ func init() {
 				return ".exe"
 			}
 			return ""
+		},
+		"shellQuote": func(str string) (string, error) {
+			return syntax.Quote(str, syntax.LangBash)
 		},
 		// IsSH is deprecated.
 		"IsSH": func() bool { return true },

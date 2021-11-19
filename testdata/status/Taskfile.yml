@@ -4,5 +4,15 @@ tasks:
   gen-foo:
     cmds:
       - touch foo.txt
+    sources:
+      - ./foo.txt
     status:
-      - test -f foo.txt
+      - test 1 = 0
+
+  gen-bar:
+    cmds:
+      - touch bar.txt
+    sources:
+      - ./bar.txt
+    status: 
+      - test 1 = 1

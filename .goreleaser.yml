@@ -1,6 +1,6 @@
 build:
   binary: task
-  main: cmd/task
+  main: ./cmd/task
   goos:
     - windows
     - darwin
@@ -25,6 +25,10 @@ gomod:
 
 archives:
   - name_template: "{{.Binary}}_{{.Os}}_{{.Arch}}"
+    files:
+      - README.md
+      - LICENSE
+      - completion/**/*
     format_overrides:
       - goos: windows
         format: zip
@@ -50,3 +54,20 @@ nfpms:
       - deb
       - rpm
     file_name_template: "{{.ProjectName}}_{{.Os}}_{{.Arch}}"
+
+brews:
+  - name: go-task
+    description: Task runner / simpler Make alternative written in Go
+    license: MIT
+    homepage: https://taskfile.dev
+    folder: Formula
+    tap:
+      owner: go-task
+      name: homebrew-tap
+    test:
+      system "#{bin}/task", "--help"
+    install: |-
+      bin.install "task"
+      bash_completion.install "completion/bash/task.bash" => "task"
+      zsh_completion.install "completion/zsh/_task" => "_task"
+      fish_completion.install "completion/fish/task.fish"

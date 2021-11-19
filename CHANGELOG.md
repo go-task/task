@@ -1,5 +1,69 @@
 # Changelog
 
+## Unreleased
+
+- Install shell completions automatically when installing via Homebrew
+  ([#264](https://github.com/go-task/task/issues/264), [#592](https://github.com/go-task/task/pull/592), [go-task/homebrew-tap#2](https://github.com/go-task/homebrew-tap/pull/2)).
+
+## v3.9.0 - 2021-10-02
+
+- A new `shellQuote` function was added to the template system
+  (`{{shellQuote "a string"}}`) to ensure a string is safe for use in shell
+  ([mvdan/sh#727](https://github.com/mvdan/sh/pull/727), [mvdan/sh#737](https://github.com/mvdan/sh/pull/737), [Documentation](https://pkg.go.dev/mvdan.cc/sh/v3@v3.4.0/syntax#Quote))
+- In this version [mvdan.cc/sh](https://github.com/mvdan/sh) was upgraded
+  with some small fixes and features
+  - The `read -p` flag is now supported
+    ([#314](https://github.com/go-task/task/issues/314), [mvdan/sh#551](https://github.com/mvdan/sh/issues/551), [mvdan/sh#772](https://github.com/mvdan/sh/pull/722))
+  - The `pwd -P` and `pwd -L` flags are now supported
+    ([#553](https://github.com/go-task/task/issues/553), [mvdan/sh#724](https://github.com/mvdan/sh/issues/724), [mvdan/sh#728](https://github.com/mvdan/sh/pull/728))
+  - The `$GID` environment variable is now correctly being set
+    ([#561](https://github.com/go-task/task/issues/561), [mvdan/sh#723](https://github.com/mvdan/sh/pull/723))
+
+## v3.8.0 - 2021-09-26
+
+- Add `interactive: true` setting to improve support for interactive CLI apps
+  ([#217](https://github.com/go-task/task/issues/217), [#563](https://github.com/go-task/task/pull/563)).
+- Fix some `nil` errors
+  ([#534](https://github.com/go-task/task/issues/534), [#573](https://github.com/go-task/task/pull/573)).
+- Add ability to declare an included Taskfile as optional
+  ([#519](https://github.com/go-task/task/issues/519), [#552](https://github.com/go-task/task/pull/552)).
+- Add support for including Taskfiles in the home directory by using `~`
+  ([#539](https://github.com/go-task/task/issues/539), [#557](https://github.com/go-task/task/pull/557)).
+
+## v3.7.3 - 2021-09-04
+
+- Add official support to Apple M1 ([#564](https://github.com/go-task/task/pull/564), [#567](https://github.com/go-task/task/pull/567)).
+- Our [official Homebrew tap](https://github.com/go-task/homebrew-tap) will
+  support more platforms, including Apple M1
+
+## v3.7.0 - 2021-07-31
+
+- Add `run:` setting to control if tasks should run multiple times or not.
+  Available options are `always` (the default), `when_changed` (if a variable
+  modified the task) and `once` (run only once no matter what).
+  This is a long time requested feature. Enjoy!
+  ([#53](https://github.com/go-task/task/issues/53), [#359](https://github.com/go-task/task/pull/359)).
+
+## v3.6.0 - 2021-07-10
+
+- Allow using both `sources:` and `status:` in the same task
+  ([#411](https://github.com/go-task/task/issues/411), [#427](https://github.com/go-task/task/issues/427), [#477](https://github.com/go-task/task/pull/477)).
+- Small optimization and bug fix: don't compute variables if not needed for
+  `dotenv:` ([#517](https://github.com/go-task/task/issues/517)).
+
+## v3.5.0 - 2021-07-04
+
+- Add support for interpolation in `dotenv:`
+  ([#433](https://github.com/go-task/task/discussions/433), [#434](https://github.com/go-task/task/issues/434), [#453](https://github.com/go-task/task/pull/453)).
+
+## v3.4.3 - 2021-05-30
+
+- Add support for the `NO_COLOR` environment variable.
+  ([#459](https://github.com/go-task/task/issues/459), [fatih/color#137](https://github.com/fatih/color/pull/137)).
+- Fix bug where sources were not considering the right directory
+  in `--watch` mode
+  ([#484](https://github.com/go-task/task/issues/484), [#485](https://github.com/go-task/task/pull/485)).
+
 ## v3.4.2 - 2021-04-23
 
 - On watch, report which file failed to read

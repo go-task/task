@@ -58,6 +58,8 @@ type Executor struct {
 	concurrencySemaphore chan struct{}
 	taskCallCount        map[string]*int32
 	mkdirMutexMap        map[string]*sync.Mutex
+	executionHashes      map[string]context.Context
+	executionHashesMutex sync.Mutex
 }
 
 // Run runs Task
@@ -149,9 +151,12 @@ func (e *Executor) Setup() error {
 	if v == 2.0 {
 		v = 2.6
 	}
+	if v == 3.0 {
+		v = 3.7
+	}
 
-	if v > 3.0 {
-		return fmt.Errorf(`task: Taskfile versions greater than v3.0 not implemented in the version of Task`)
+	if v > 3.7 {
+		return fmt.Errorf(`task: Taskfile versions greater than v3.7 not implemented in the version of Task`)
 	}
 
 	// Color available only on v3
@@ -173,6 +178,23 @@ func (e *Executor) Setup() error {
 			TaskfileEnv:  e.Taskfile.Env,
 			TaskfileVars: e.Taskfile.Vars,
 			Logger:       e.Logger,
+		}
+	}
+
+	if v >= 3.0 {
+		env, err := read.Dotenv(e.Compiler, e.Taskfile, e.Dir)
+		if err != nil {
+			return err
+		}
+
+		err = env.Range(func(key string, value taskfile.Var) error {
+			if _, ok := e.Taskfile.Env.Mapping[key]; !ok {
+				e.Taskfile.Env.Set(key, value)
+			}
+			return nil
+		})
+		if err != nil {
+			return err
 		}
 	}
 
@@ -243,6 +265,24 @@ func (e *Executor) Setup() error {
 		}
 	}
 
+	if v < 3.7 {
+		if e.Taskfile.Run != "" {
+			return errors.New(`task: Setting the "run" type is only available starting on Taskfile version v3.7`)
+		}
+
+		for _, task := range e.Taskfile.Tasks {
+			if task.Run != "" {
+				return errors.New(`task: Setting the "run" type is only available starting on Taskfile version v3.7`)
+			}
+		}
+	}
+
+	if e.Taskfile.Run == "" {
+		e.Taskfile.Run = "always"
+	}
+
+	e.executionHashes = make(map[string]context.Context)
+
 	e.taskCallCount = make(map[string]*int32, len(e.Taskfile.Tasks))
 	e.mkdirMutexMap = make(map[string]*sync.Mutex, len(e.Taskfile.Tasks))
 	for k := range e.Taskfile.Tasks {
@@ -269,48 +309,50 @@ func (e *Executor) RunTask(ctx context.Context, call taskfile.Call) error {
 	release := e.acquireConcurrencyLimit()
 	defer release()
 
-	if err := e.runDeps(ctx, t); err != nil {
-		return err
-	}
-
-	if !e.Force {
-		preCondMet, err := e.areTaskPreconditionsMet(ctx, t)
-		if err != nil {
+	return e.startExecution(ctx, t, func(ctx context.Context) error {
+		if err := e.runDeps(ctx, t); err != nil {
 			return err
 		}
 
-		upToDate, err := e.isTaskUpToDate(ctx, t)
-		if err != nil {
-			return err
-		}
-
-		if upToDate && preCondMet {
-			if !e.Silent {
-				e.Logger.Errf(logger.Magenta, `task: Task "%s" is up to date`, t.Name())
-			}
-			return nil
-		}
-	}
-
-	if err := e.mkdir(t); err != nil {
-		e.Logger.Errf(logger.Red, "task: cannot make directory %q: %v", t.Dir, err)
-	}
-
-	for i := range t.Cmds {
-		if err := e.runCommand(ctx, t, call, i); err != nil {
-			if err2 := e.statusOnError(t); err2 != nil {
-				e.Logger.VerboseErrf(logger.Yellow, "task: error cleaning status on error: %v", err2)
+		if !e.Force {
+			preCondMet, err := e.areTaskPreconditionsMet(ctx, t)
+			if err != nil {
+				return err
 			}
 
-			if execext.IsExitError(err) && t.IgnoreError {
-				e.Logger.VerboseErrf(logger.Yellow, "task: task error ignored: %v", err)
-				continue
+			upToDate, err := e.isTaskUpToDate(ctx, t)
+			if err != nil {
+				return err
 			}
 
-			return &taskRunError{t.Task, err}
+			if upToDate && preCondMet {
+				if !e.Silent {
+					e.Logger.Errf(logger.Magenta, `task: Task "%s" is up to date`, t.Name())
+				}
+				return nil
+			}
 		}
-	}
-	return nil
+
+		if err := e.mkdir(t); err != nil {
+			e.Logger.Errf(logger.Red, "task: cannot make directory %q: %v", t.Dir, err)
+		}
+
+		for i := range t.Cmds {
+			if err := e.runCommand(ctx, t, call, i); err != nil {
+				if err2 := e.statusOnError(t); err2 != nil {
+					e.Logger.VerboseErrf(logger.Yellow, "task: error cleaning status on error: %v", err2)
+				}
+
+				if execext.IsExitError(err) && t.IgnoreError {
+					e.Logger.VerboseErrf(logger.Yellow, "task: task error ignored: %v", err)
+					continue
+				}
+
+				return &taskRunError{t.Task, err}
+			}
+		}
+		return nil
+	})
 }
 
 func (e *Executor) mkdir(t *taskfile.Task) error {
@@ -373,8 +415,13 @@ func (e *Executor) runCommand(ctx context.Context, t *taskfile.Task, call taskfi
 			return nil
 		}
 
-		stdOut := e.Output.WrapWriter(e.Stdout, t.Prefix)
-		stdErr := e.Output.WrapWriter(e.Stderr, t.Prefix)
+		outputWrapper := e.Output
+		if t.Interactive {
+			outputWrapper = output.Interleaved{}
+		}
+		stdOut := outputWrapper.WrapWriter(e.Stdout, t.Prefix)
+		stdErr := outputWrapper.WrapWriter(e.Stderr, t.Prefix)
+
 		defer func() {
 			if _, ok := stdOut.(*os.File); !ok {
 				if closer, ok := stdOut.(io.Closer); ok {
@@ -427,4 +474,33 @@ func getEnviron(t *taskfile.Task) []string {
 	}
 
 	return environ
+}
+
+func (e *Executor) startExecution(ctx context.Context, t *taskfile.Task, execute func(ctx context.Context) error) error {
+	h, err := e.GetHash(t)
+	if err != nil {
+		return err
+	}
+
+	if h == "" {
+		return execute(ctx)
+	}
+
+	e.executionHashesMutex.Lock()
+	otherExecutionCtx, ok := e.executionHashes[h]
+
+	if ok {
+		e.executionHashesMutex.Unlock()
+		e.Logger.VerboseErrf(logger.Magenta, "task: skipping execution of task: %s", h)
+		<-otherExecutionCtx.Done()
+		return nil
+	}
+
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	e.executionHashes[h] = ctx
+	e.executionHashesMutex.Unlock()
+
+	return execute(ctx)
 }

@@ -1,0 +1,24 @@
+version: '3.7'
+run: when_changed
+
+tasks:
+  generate-hash:
+    - rm -f hash.txt
+    - task: input-content
+      vars: { CONTENT: '1' }
+    - task: input-content
+      vars: { CONTENT: '2' }
+    - task: input-content
+      vars: { CONTENT: '2' }
+
+  input-content:
+    deps:
+      - task: create-output
+        vars: { CONTENT: '1' }
+    cmds:
+      - echo {{.CONTENT}} >> hash.txt
+
+  create-output:
+    run: once
+    cmds:
+      - echo starting {{.CONTENT}} >> hash.txt

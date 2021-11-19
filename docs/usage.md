@@ -78,18 +78,25 @@ setting:
 KEYNAME=VALUE
 ```
 
+```
+# testing/.env
+ENDPOINT=testing.com
+```
 
 ```yaml
 # Taskfile.yml
 
 version: '3'
 
-dotenv: ['.env']
+env:
+  ENV: testing
+
+dotenv: ['.env', '{{.ENV}}/.env.', '{{.HOME}}/.env']
 
 tasks:
   greet:
     cmds:
-      - echo "Using $KEYNAME"
+      - echo "Using $KEYNAME and endpoint $ENDPOINT"
 ```
 
 ## Including other Taskfiles
@@ -146,6 +153,25 @@ includes:
 > Also, for now included Taskfiles can't include other Taskfiles.
 > This was a deliberate decision to keep use and implementation simple.
 > If you disagree, open an GitHub issue and explain your use case. =)
+
+### Optional includes
+
+Includes marked as optional will allow Task to continue execution as normal if
+the included file is missing.
+
+```yaml
+version: '3'
+
+includes:
+  tests:
+    taskfile: ./tests/Taskfile.yml
+    optional: true
+
+tasks:
+  greet:
+    cmds:
+      - echo "This command can still be successfully executed if ./tests/Taskfile.yml does not exist"
+```
 
 ## Task directory
 
@@ -446,6 +472,47 @@ tasks:
       - echo "I will not run"
 ```
 
+### Limiting when tasks run
+
+If a task executed by multiple `cmds` or multiple `deps` you can control
+when it is executed using `run`. `run` can also be set at the root
+of the Taskfile to change the behavior of all the tasks unless explicitly
+overridden.
+
+Supported values for `run`:
+
+ * `always` (default) always attempt to invoke the task regardless of the
+  number of previous executions
+ * `once` only invoke this task once regardless of the number of references
+ * `when_changed` only invokes the task once for each unique set of variables
+  passed into the task
+
+```yaml
+version: '3'
+
+tasks:
+  default:
+    cmds:
+      - task: generate-file
+        vars: { CONTENT: '1' }
+      - task: generate-file
+        vars: { CONTENT: '2' }
+      - task: generate-file
+        vars: { CONTENT: '2' }
+
+  generate-file:
+    run: when_changed
+    deps:
+      - install-deps
+    cmds:
+      - echo {{.CONTENT}}
+
+  install-deps:
+    run: once
+    cmds:
+      - sleep 5 # long operation like installing packages
+```
+
 ## Variables
 
 When doing interpolation of variables, Task will look for the below.
@@ -522,7 +589,7 @@ This works for all types of variables.
 
 ## Forwarding CLI arguments to commands
 
-If `--` is given in the CLI, all following paramaters are added to a
+If `--` is given in the CLI, all following parameters are added to a
 special `.CLI_ARGS` variable. This is useful to forward arguments to another
 command.
 
@@ -569,9 +636,12 @@ Task also adds the following functions:
 - `toSlash`: Does nothing on Unix, but on Windows converts a string from `\`
   path format to `/`.
 - `fromSlash`: Opposite of `toSlash`. Does nothing on Unix, but on Windows
-  converts a string from `\` path format to `/`.
+  converts a string from `/` path format to `\`.
 - `exeExt`: Returns the right executable extension for the current OS
   (`".exe"` for Windows, `""` for others).
+- `shellQuote`: Quotes a string to make it safe for use in shell scripts.
+  Task uses [this Go function](https://pkg.go.dev/mvdan.cc/sh/v3@v3.4.0/syntax#Quote)
+  for this. The Bash dialect is assumed.
 
 Example:
 
@@ -882,6 +952,28 @@ $ task default
 ```
 
 > The `output` option can also be specified by the `--output` or `-o` flags.
+
+## Interactive CLI application
+
+When running interactive CLI applications inside Task they can sometimes behave
+weirdly, specially when the [output mode](#output-syntax) is set to something
+other than `interleaved` (the default), or when interactive apps are ran in
+parallel with other tasks.
+
+The `interactive: true` tells Task this is an interactive application, and Task
+will try to optimize for it:
+
+```yaml
+version: '3'
+
+tasks:
+  cmds:
+    - vim my-file.txt
+  interactive: true
+```
+
+If you still have problem running an interactive app through Task, please open
+an issue about it.
 
 ## Short task syntax
 

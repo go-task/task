@@ -10,6 +10,7 @@ import (
 type IncludedTaskfile struct {
 	Taskfile       string
 	Dir            string
+	Optional       bool
 	AdvancedImport bool
 }
 
@@ -92,12 +93,14 @@ func (it *IncludedTaskfile) UnmarshalYAML(unmarshal func(interface{}) error) err
 	var includedTaskfile struct {
 		Taskfile string
 		Dir      string
+		Optional bool
 	}
 	if err := unmarshal(&includedTaskfile); err != nil {
 		return err
 	}
-	it.Dir = includedTaskfile.Dir
 	it.Taskfile = includedTaskfile.Taskfile
+	it.Dir = includedTaskfile.Dir
+	it.Optional = includedTaskfile.Optional
 	it.AdvancedImport = true
 	return nil
 }

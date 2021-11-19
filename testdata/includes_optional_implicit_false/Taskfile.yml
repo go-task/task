@@ -1,0 +1,9 @@
+version: '3'
+
+includes:
+  included: TaskfileOptional.yml
+
+tasks:
+  default:
+    cmds:
+      - echo "Hello, world!"

@@ -56,9 +56,11 @@ func (e *Executor) compiledTask(call taskfile.Call, evaluateShVars bool) (*taskf
 		Vars:        nil,
 		Env:         nil,
 		Silent:      origTask.Silent,
+		Interactive: origTask.Interactive,
 		Method:      r.Replace(origTask.Method),
 		Prefix:      r.Replace(origTask.Prefix),
 		IgnoreError: origTask.IgnoreError,
+		Run:         r.Replace(origTask.Run),
 	}
 	new.Dir, err = execext.Expand(new.Dir)
 	if err != nil {
@@ -89,34 +91,43 @@ func (e *Executor) compiledTask(call taskfile.Call, evaluateShVars bool) (*taskf
 	}
 
 	if len(origTask.Cmds) > 0 {
-		new.Cmds = make([]*taskfile.Cmd, len(origTask.Cmds))
-		for i, cmd := range origTask.Cmds {
-			new.Cmds[i] = &taskfile.Cmd{
+		new.Cmds = make([]*taskfile.Cmd, 0, len(origTask.Cmds))
+		for _, cmd := range origTask.Cmds {
+			if cmd == nil {
+				continue
+			}
+			new.Cmds = append(new.Cmds, &taskfile.Cmd{
 				Task:        r.Replace(cmd.Task),
 				Silent:      cmd.Silent,
 				Cmd:         r.Replace(cmd.Cmd),
 				Vars:        r.ReplaceVars(cmd.Vars),
 				IgnoreError: cmd.IgnoreError,
-			}
+			})
 		}
 	}
 	if len(origTask.Deps) > 0 {
-		new.Deps = make([]*taskfile.Dep, len(origTask.Deps))
-		for i, dep := range origTask.Deps {
-			new.Deps[i] = &taskfile.Dep{
+		new.Deps = make([]*taskfile.Dep, 0, len(origTask.Deps))
+		for _, dep := range origTask.Deps {
+			if dep == nil {
+				continue
+			}
+			new.Deps = append(new.Deps, &taskfile.Dep{
 				Task: r.Replace(dep.Task),
 				Vars: r.ReplaceVars(dep.Vars),
-			}
+			})
 		}
 	}
 
 	if len(origTask.Preconditions) > 0 {
-		new.Preconditions = make([]*taskfile.Precondition, len(origTask.Preconditions))
-		for i, precond := range origTask.Preconditions {
-			new.Preconditions[i] = &taskfile.Precondition{
+		new.Preconditions = make([]*taskfile.Precondition, 0, len(origTask.Preconditions))
+		for _, precond := range origTask.Preconditions {
+			if precond == nil {
+				continue
+			}
+			new.Preconditions = append(new.Preconditions, &taskfile.Precondition{
 				Sh:  r.Replace(precond.Sh),
 				Msg: r.Replace(precond.Msg),
-			}
+			})
 		}
 	}
 

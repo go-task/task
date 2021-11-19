@@ -28,7 +28,7 @@ officially supported. On Linux, only `Taskfile.yml` will work, though.
 
 - `version:`
 - `includes:`
-- Configuration ones, like `output:`, `expansions:` or `silent:`
+- Configuration ones, like `output:` or `silent:`
 - `vars:`
 - `env:`
 - `tasks:`
@@ -60,7 +60,6 @@ version: '3'
 includes:
   docker: ./docker/Taskfile.yml
 output: prefixed
-expansions: 3
 vars:
   FOO: bar
 env:
@@ -76,7 +75,6 @@ includes:
   docker: ./docker/Taskfile.yml
 
 output: prefixed
-expansions: 3
 
 vars:
   FOO: bar

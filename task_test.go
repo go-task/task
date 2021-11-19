@@ -17,6 +17,10 @@ import (
 	"github.com/go-task/task/v3/taskfile"
 )
 
+func init() {
+	_ = os.Setenv("NO_COLOR", "1")
+}
+
 // fileContentTest provides a basic reusable test-case for running a Taskfile
 // and inspect generated files.
 type fileContentTest struct {
@@ -248,12 +252,18 @@ func TestDeps(t *testing.T) {
 
 func TestStatus(t *testing.T) {
 	const dir = "testdata/status"
-	var file = filepath.Join(dir, "foo.txt")
 
-	_ = os.Remove(file)
+	files := []string{
+		"foo.txt",
+		"bar.txt",
+	}
 
-	if _, err := os.Stat(file); err == nil {
-		t.Errorf("File should not exist: %v", err)
+	for _, f := range files {
+		path := filepath.Join(dir, f)
+		_ = os.Remove(path)
+		if _, err := os.Stat(path); err == nil {
+			t.Errorf("File should not exist: %v", err)
+		}
 	}
 
 	var buff bytes.Buffer
@@ -265,17 +275,33 @@ func TestStatus(t *testing.T) {
 	}
 	assert.NoError(t, e.Setup())
 	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "gen-foo"}))
+	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "gen-bar"}))
 
-	if _, err := os.Stat(file); err != nil {
-		t.Errorf("File should exist: %v", err)
+	for _, f := range files {
+		if _, err := os.Stat(filepath.Join(dir, f)); err != nil {
+			t.Errorf("File should exist: %v", err)
+		}
 	}
 
 	e.Silent = false
-	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "gen-foo"}))
 
-	if buff.String() != `task: Task "gen-foo" is up to date`+"\n" {
-		t.Errorf("Wrong output message: %s", buff.String())
-	}
+	// all: not up-to-date
+	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "gen-foo"}))
+	assert.Equal(t, "task: [gen-foo] touch foo.txt", strings.TrimSpace(buff.String()))
+	buff.Reset()
+	// status: not up-to-date
+	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "gen-foo"}))
+	assert.Equal(t, "task: [gen-foo] touch foo.txt", strings.TrimSpace(buff.String()))
+	buff.Reset()
+
+	// sources: not up-to-date
+	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "gen-bar"}))
+	assert.Equal(t, "task: [gen-bar] touch bar.txt", strings.TrimSpace(buff.String()))
+	buff.Reset()
+	// all: up-to-date
+	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "gen-bar"}))
+	assert.Equal(t, `task: Task "gen-bar" is up to date`, strings.TrimSpace(buff.String()))
+	buff.Reset()
 }
 
 func TestPrecondition(t *testing.T) {
@@ -729,6 +755,41 @@ func TestIncludesCallingRoot(t *testing.T) {
 	tt.Run(t)
 }
 
+func TestIncludesOptional(t *testing.T) {
+  tt := fileContentTest{
+    Dir:       "testdata/includes_optional",
+    Target:    "default",
+	  TrimSpace: true,
+	  Files: map[string]string{
+		  "called_dep.txt": "called_dep",
+	  }}
+  tt.Run(t)
+}
+
+func TestIncludesOptionalImplicitFalse(t *testing.T) {
+	e := task.Executor{
+		Dir:    "testdata/includes_optional_implicit_false",
+		Stdout: ioutil.Discard,
+		Stderr: ioutil.Discard,
+	}
+
+	err := e.Setup()
+	assert.Error(t, err)
+	assert.Equal(t, "stat testdata/includes_optional_implicit_false/TaskfileOptional.yml: no such file or directory", err.Error())
+}
+
+func TestIncludesOptionalExplicitFalse(t *testing.T) {
+	e := task.Executor{
+		Dir:    "testdata/includes_optional_explicit_false",
+		Stdout: ioutil.Discard,
+		Stderr: ioutil.Discard,
+	}
+
+	err := e.Setup()
+	assert.Error(t, err)
+	assert.Equal(t, "stat testdata/includes_optional_explicit_false/TaskfileOptional.yml: no such file or directory", err.Error())
+}
+
 func TestSummary(t *testing.T) {
 	const dir = "testdata/summary"
 
@@ -900,6 +961,44 @@ func TestDotenvShouldAllowMissingEnv(t *testing.T) {
 	tt.Run(t)
 }
 
+func TestDotenvHasLocalEnvInPath(t *testing.T) {
+	tt := fileContentTest{
+		Dir:       "testdata/dotenv/local_env_in_path",
+		Target:    "default",
+		TrimSpace: false,
+		Files: map[string]string{
+			"var.txt": "VAR='var_in_dot_env_1'\n",
+		},
+	}
+	tt.Run(t)
+}
+
+func TestDotenvHasLocalVarInPath(t *testing.T) {
+	tt := fileContentTest{
+		Dir:       "testdata/dotenv/local_var_in_path",
+		Target:    "default",
+		TrimSpace: false,
+		Files: map[string]string{
+			"var.txt": "VAR='var_in_dot_env_3'\n",
+		},
+	}
+	tt.Run(t)
+}
+
+func TestDotenvHasEnvVarInPath(t *testing.T) {
+	os.Setenv("ENV_VAR", "testing")
+
+	tt := fileContentTest{
+		Dir:       "testdata/dotenv/env_var_in_path",
+		Target:    "default",
+		TrimSpace: false,
+		Files: map[string]string{
+			"var.txt": "VAR='var_in_dot_env_2'\n",
+		},
+	}
+	tt.Run(t)
+}
+
 func TestExitImmediately(t *testing.T) {
 	const dir = "testdata/exit_immediately"
 
@@ -914,4 +1013,41 @@ func TestExitImmediately(t *testing.T) {
 
 	assert.Error(t, e.Run(context.Background(), taskfile.Call{Task: "default"}))
 	assert.Contains(t, buff.String(), `"this_should_fail": executable file not found in $PATH`)
+}
+
+func TestRunOnlyRunsJobsHashOnce(t *testing.T) {
+	tt := fileContentTest{
+		Dir:    "testdata/run",
+		Target: "generate-hash",
+		Files: map[string]string{
+			"hash.txt": "starting 1\n1\n2\n",
+		},
+	}
+	tt.Run(t)
+}
+
+func TestIgnoreNilElements(t *testing.T) {
+	tests := []struct {
+		name string
+		dir  string
+	}{
+		{"nil cmd", "testdata/ignore_nil_elements/cmds"},
+		{"nil dep", "testdata/ignore_nil_elements/deps"},
+		{"nil precondition", "testdata/ignore_nil_elements/preconditions"},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			var buff bytes.Buffer
+			e := task.Executor{
+				Dir:    test.dir,
+				Stdout: &buff,
+				Stderr: &buff,
+				Silent: true,
+			}
+			assert.NoError(t, e.Setup())
+			assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "default"}))
+			assert.Equal(t, "string-slice-1\n", buff.String())
+		})
+	}
 }
