@@ -1,3 +1,4 @@
+//go:build !windows
 // +build !windows
 
 // This file contains tests for signal handling on Unix.
@@ -23,6 +24,10 @@ var (
 )
 
 func TestSignalSentToProcessGroup(t *testing.T) {
+	task, err := filepath.Abs("./bin/task")
+	if err != nil {
+		t.Fatal(err)
+	}
 	testCases := map[string]struct {
 		args     []string
 		sendSigs int
@@ -32,7 +37,7 @@ func TestSignalSentToProcessGroup(t *testing.T) {
 		// regression:
 		// - child is terminated, immediately, by "context canceled" (another bug???)
 		"child does not handle sigint: receives sigint and terminates immediately": {
-			args:     []string{"task", "--", SLEEPIT, "default", "-sleep=10s"},
+			args:     []string{task, "--", SLEEPIT, "default", "-sleep=10s"},
 			sendSigs: 1,
 			want: []string{
 				"sleepit: ready\n",
@@ -51,7 +56,7 @@ func TestSignalSentToProcessGroup(t *testing.T) {
 		// TODO we need -cleanup=2s only to show reliably the bug; once the fix is committed,
 		// we can use -cleanup=50ms to speed the test up
 		"child intercepts sigint: receives sigint and does cleanup": {
-			args:     []string{"task", "--", SLEEPIT, "handle", "-sleep=10s", "-cleanup=2s"},
+			args:     []string{task, "--", SLEEPIT, "handle", "-sleep=10s", "-cleanup=2s"},
 			sendSigs: 1,
 			want: []string{
 				"sleepit: ready\n",
@@ -70,7 +75,7 @@ func TestSignalSentToProcessGroup(t *testing.T) {
 		},
 		// regression: child receives 2 signal instead of 1 and thus terminates abruptly
 		"child simulates terraform: receives 1 sigint and does cleanup": {
-			args:     []string{"task", "--", SLEEPIT, "handle", "-term-after=2", "-sleep=10s", "-cleanup=50ms"},
+			args:     []string{task, "--", SLEEPIT, "handle", "-term-after=2", "-sleep=10s", "-cleanup=50ms"},
 			sendSigs: 1,
 			want: []string{
 				"sleepit: ready\n",
