@@ -756,14 +756,14 @@ func TestIncludesCallingRoot(t *testing.T) {
 }
 
 func TestIncludesOptional(t *testing.T) {
-  tt := fileContentTest{
-    Dir:       "testdata/includes_optional",
-    Target:    "default",
-	  TrimSpace: true,
-	  Files: map[string]string{
-		  "called_dep.txt": "called_dep",
-	  }}
-  tt.Run(t)
+	tt := fileContentTest{
+		Dir:       "testdata/includes_optional",
+		Target:    "default",
+		TrimSpace: true,
+		Files: map[string]string{
+			"called_dep.txt": "called_dep",
+		}}
+	tt.Run(t)
 }
 
 func TestIncludesOptionalImplicitFalse(t *testing.T) {
@@ -1033,6 +1033,7 @@ func TestIgnoreNilElements(t *testing.T) {
 	}{
 		{"nil cmd", "testdata/ignore_nil_elements/cmds"},
 		{"nil dep", "testdata/ignore_nil_elements/deps"},
+		{"nil include", "testdata/ignore_nil_elements/includes"},
 		{"nil precondition", "testdata/ignore_nil_elements/preconditions"},
 	}
 
