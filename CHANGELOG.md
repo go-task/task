@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v3.9.1 - 2021-11-28
 
 - Add logging in verbose mode for when a task starts and finishes
   ([#533](https://github.com/go-task/task/issues/533), [#588](https://github.com/go-task/task/pull/588)).
