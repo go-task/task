@@ -12,6 +12,7 @@ import (
 	"syscall"
 
 	"github.com/spf13/pflag"
+	"mvdan.cc/sh/v3/syntax"
 
 	"github.com/go-task/task/v3"
 	"github.com/go-task/task/v3/args"
@@ -159,10 +160,14 @@ func main() {
 	}
 
 	var (
-		calls                 []taskfile.Call
-		globals               *taskfile.Vars
-		tasksAndVars, cliArgs = getArgs()
+		calls   []taskfile.Call
+		globals *taskfile.Vars
 	)
+
+	tasksAndVars, cliArgs, err := getArgs()
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	if v >= 3.0 {
 		calls, globals = args.ParseV3(tasksAndVars...)
@@ -170,7 +175,7 @@ func main() {
 		calls, globals = args.ParseV2(tasksAndVars...)
 	}
 
-	globals.Set("CLI_ARGS", taskfile.Var{Static: strings.Join(cliArgs, " ")})
+	globals.Set("CLI_ARGS", taskfile.Var{Static: cliArgs})
 	e.Taskfile.Vars.Merge(globals)
 
 	ctx := context.Background()
@@ -191,20 +196,25 @@ func main() {
 	}
 }
 
-func getArgs() (tasksAndVars, cliArgs []string) {
+func getArgs() ([]string, string, error) {
 	var (
 		args          = pflag.Args()
 		doubleDashPos = pflag.CommandLine.ArgsLenAtDash()
 	)
 
-	if doubleDashPos != -1 {
-		tasksAndVars = args[:doubleDashPos]
-		cliArgs = args[doubleDashPos:]
-	} else {
-		tasksAndVars = args
+	if doubleDashPos == -1 {
+		return args, "", nil
 	}
 
-	return
+	quotedCliArgs := []string{}
+	for _, arg := range args[doubleDashPos:] {
+		quotedCliArg, err := syntax.Quote(arg, syntax.LangBash)
+		if err != nil {
+			return []string{}, "", err
+		}
+		quotedCliArgs = append(quotedCliArgs, quotedCliArg)
+	}
+	return args[:doubleDashPos], strings.Join(quotedCliArgs, " "), nil
 }
 
 func getSignalContext() context.Context {
