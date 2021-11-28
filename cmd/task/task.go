@@ -206,11 +206,11 @@ func getArgs() ([]string, string, error) {
 		return args, "", nil
 	}
 
-	quotedCliArgs := []string{}
+	var quotedCliArgs []string
 	for _, arg := range args[doubleDashPos:] {
 		quotedCliArg, err := syntax.Quote(arg, syntax.LangBash)
 		if err != nil {
-			return []string{}, "", err
+			return nil, "", err
 		}
 		quotedCliArgs = append(quotedCliArgs, quotedCliArg)
 	}

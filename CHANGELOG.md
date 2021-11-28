@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Quote each `{{.CLI_ARGS}}` argument to prevent one with spaces to become many
+  ([#613](https://github.com/go-task/task/pull/613)).
 - Fix  nil pointer when `cmd:` was left empty
   ([#612](https://github.com/go-task/task/issues/612), [#614](https://github.com/go-task/task/pull/614)).
 - Upgrade [mvdan/sh](https://github.com/mvdan/sh) which contains two
