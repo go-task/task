@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add logging in verbose mode for when a task starts and finishes
+  ([#533](https://github.com/go-task/task/issues/533), [#588](https://github.com/go-task/task/pull/588)).
 - Fix an issue with preconditions and context errors
   ([#597](https://github.com/go-task/task/issues/597), [#598](https://github.com/go-task/task/pull/598)).
 - Quote each `{{.CLI_ARGS}}` argument to prevent one with spaces to become many
