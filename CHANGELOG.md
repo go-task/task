@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Upgrade [mvdan/sh](https://github.com/mvdan/sh) which contains two
+  relevant fixes:
+  - Fix quote of empty strings in `shellQuote`
+    ([#609](https://github.com/go-task/task/issues/609), [mvdan/sh#763](https://github.com/mvdan/sh/issues/763)).
+  - Fix issue of wrong environment variable being picked when there's another
+    very similar one
+    ([#586](https://github.com/go-task/task/issues/586), [mndan/sh#745](https://github.com/mvdan/sh/pull/745)).
 - Install shell completions automatically when installing via Homebrew
   ([#264](https://github.com/go-task/task/issues/264), [#592](https://github.com/go-task/task/pull/592), [go-task/homebrew-tap#2](https://github.com/go-task/homebrew-tap/pull/2)).
 
