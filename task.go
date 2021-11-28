@@ -310,6 +310,7 @@ func (e *Executor) RunTask(ctx context.Context, call taskfile.Call) error {
 	defer release()
 
 	return e.startExecution(ctx, t, func(ctx context.Context) error {
+		e.Logger.VerboseErrf(logger.Magenta, `task: "%s" started`, call.Task)
 		if err := e.runDeps(ctx, t); err != nil {
 			return err
 		}
@@ -355,6 +356,7 @@ func (e *Executor) RunTask(ctx context.Context, call taskfile.Call) error {
 				return &taskRunError{t.Task, err}
 			}
 		}
+		e.Logger.VerboseErrf(logger.Magenta, `task: "%s" finished`, call.Task)
 		return nil
 	})
 }
