@@ -49,7 +49,7 @@ func Merge(t1, t2 *Taskfile, namespaces ...string) error {
 			dep.Task = taskNameWithNamespace(dep.Task, namespaces...)
 		}
 		for _, cmd := range v.Cmds {
-			if cmd.Task != "" {
+			if cmd != nil && cmd.Task != "" {
 				cmd.Task = taskNameWithNamespace(cmd.Task, namespaces...)
 			}
 		}
