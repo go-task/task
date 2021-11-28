@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Fix an issue with preconditions and context errors
+  ([#597](https://github.com/go-task/task/issues/597), [#598](https://github.com/go-task/task/pull/598)).
 - Quote each `{{.CLI_ARGS}}` argument to prevent one with spaces to become many
   ([#613](https://github.com/go-task/task/pull/613)).
 - Fix  nil pointer when `cmd:` was left empty
