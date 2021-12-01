@@ -407,7 +407,7 @@ func (e *Executor) runCommand(ctx context.Context, t *taskfile.Task, call taskfi
 		reacquire := e.releaseConcurrencyLimit()
 		defer reacquire()
 
-		err := e.RunTask(ctx, taskfile.Call{Task: cmd.Task, Vars: cmd.Vars})
+		err := e.RunTask(ctx, taskfile.Call{Dir: t.Dir, Task: cmd.Task, Vars: cmd.Vars})
 		if err != nil {
 			return err
 		}
@@ -441,9 +441,15 @@ func (e *Executor) runCommand(ctx context.Context, t *taskfile.Task, call taskfi
 			}
 		}()
 
+		// inherit directory
+		dir := call.Dir
+		if t.Dir != "" {
+			dir = t.Dir
+		}
+
 		err := execext.RunCommand(ctx, &execext.RunCommandOptions{
 			Command: cmd.Cmd,
-			Dir:     t.Dir,
+			Dir:     dir,
 			Env:     getEnviron(t),
 			Stdin:   e.Stdin,
 			Stdout:  stdOut,
