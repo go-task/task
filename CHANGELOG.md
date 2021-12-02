@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Upgrade [mvdan/sh](https://github.com/mvdan/sh) which contains a fix a for
+  a important regression on Windows
+  ([#619](https://github.com/go-task/task/issues/619), [mvdan/sh#768](https://github.com/mvdan/sh/issues/768), [mvdan/sh#769](https://github.com/mvdan/sh/pull/769)).
+
 ## v3.9.1 - 2021-11-28
 
 - Add logging in verbose mode for when a task starts and finishes
