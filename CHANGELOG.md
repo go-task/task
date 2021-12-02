@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v3.9.2 - 2021-12-02
 
 - Upgrade [mvdan/sh](https://github.com/mvdan/sh) which contains a fix a for
   a important regression on Windows
