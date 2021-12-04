@@ -19,14 +19,26 @@ var (
 	ErrIncludedTaskfilesCantHaveIncludes = errors.New("task: Included Taskfiles can't have includes. Please, move the include to the main Taskfile")
 	// ErrIncludedTaskfilesCantHaveDotenvs is returned when a included Taskfile contains dotenvs
 	ErrIncludedTaskfilesCantHaveDotenvs = errors.New("task: Included Taskfiles can't have dotenv declarations. Please, move the dotenv declaration to the main Taskfile")
+
+	defaultTaskfiles = []string{"Taskfile.yml", "Taskfile.yaml"}
 )
 
 // Taskfile reads a Taskfile for a given directory
+// Uses current dir when dir is left empty. Uses Taskfile.yml
+// or Taskfile.yaml when entrypoint is left empty
 func Taskfile(dir string, entrypoint string) (*taskfile.Taskfile, error) {
-	path := filepath.Join(dir, entrypoint)
-	if _, err := os.Stat(path); err != nil {
-		return nil, fmt.Errorf(`task: No Taskfile found on "%s". Use "task --init" to create a new one`, path)
+	if dir == "" {
+		d, err := os.Getwd()
+		if err != nil {
+			return nil, err
+		}
+		dir = d
 	}
+	path, err := exists(filepath.Join(dir, entrypoint))
+	if err != nil {
+		return nil, err
+	}
+
 	t, err := readTaskfile(path)
 	if err != nil {
 		return nil, err
@@ -59,16 +71,14 @@ func Taskfile(dir string, entrypoint string) (*taskfile.Taskfile, error) {
 			path = filepath.Join(dir, path)
 		}
 
-		info, err := os.Stat(path)
+		path, err = exists(path)
 		if err != nil {
 			if includedTask.Optional {
 				return nil
 			}
 			return err
 		}
-		if info.IsDir() {
-			path = filepath.Join(path, "Taskfile.yml")
-		}
+
 		includedTaskfile, err := readTaskfile(path)
 		if err != nil {
 			return err
@@ -140,4 +150,23 @@ func readTaskfile(file string) (*taskfile.Taskfile, error) {
 	}
 	var t taskfile.Taskfile
 	return &t, yaml.NewDecoder(f).Decode(&t)
+}
+
+func exists(path string) (string, error) {
+	fi, err := os.Stat(path)
+	if err != nil {
+		return "", err
+	}
+	if fi.Mode().IsRegular() {
+		return path, nil
+	}
+
+	for _, n := range defaultTaskfiles {
+		fpath := filepath.Join(path, n)
+		if _, err := os.Stat(fpath); err == nil {
+			return fpath, nil
+		}
+	}
+
+	return "", fmt.Errorf(`task: No Taskfile found in "%s". Use "task --init" to create a new one`, path)
 }

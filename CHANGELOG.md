@@ -2,6 +2,31 @@
 
 ## Unreleased
 
+- Add support for yaml extension ([#584](https://github.com/go-task/task/issues/584))
+
+## v3.9.2 - 2021-12-02
+
+- Upgrade [mvdan/sh](https://github.com/mvdan/sh) which contains a fix a for
+  a important regression on Windows
+  ([#619](https://github.com/go-task/task/issues/619), [mvdan/sh#768](https://github.com/mvdan/sh/issues/768), [mvdan/sh#769](https://github.com/mvdan/sh/pull/769)).
+
+## v3.9.1 - 2021-11-28
+
+- Add logging in verbose mode for when a task starts and finishes
+  ([#533](https://github.com/go-task/task/issues/533), [#588](https://github.com/go-task/task/pull/588)).
+- Fix an issue with preconditions and context errors
+  ([#597](https://github.com/go-task/task/issues/597), [#598](https://github.com/go-task/task/pull/598)).
+- Quote each `{{.CLI_ARGS}}` argument to prevent one with spaces to become many
+  ([#613](https://github.com/go-task/task/pull/613)).
+- Fix  nil pointer when `cmd:` was left empty
+  ([#612](https://github.com/go-task/task/issues/612), [#614](https://github.com/go-task/task/pull/614)).
+- Upgrade [mvdan/sh](https://github.com/mvdan/sh) which contains two
+  relevant fixes:
+  - Fix quote of empty strings in `shellQuote`
+    ([#609](https://github.com/go-task/task/issues/609), [mvdan/sh#763](https://github.com/mvdan/sh/issues/763)).
+  - Fix issue of wrong environment variable being picked when there's another
+    very similar one
+    ([#586](https://github.com/go-task/task/issues/586), [mvdan/sh#745](https://github.com/mvdan/sh/pull/745)).
 - Install shell completions automatically when installing via Homebrew
   ([#264](https://github.com/go-task/task/issues/264), [#592](https://github.com/go-task/task/pull/592), [go-task/homebrew-tap#2](https://github.com/go-task/homebrew-tap/pull/2)).
 

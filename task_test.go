@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -24,10 +24,11 @@ func init() {
 // fileContentTest provides a basic reusable test-case for running a Taskfile
 // and inspect generated files.
 type fileContentTest struct {
-	Dir       string
-	Target    string
-	TrimSpace bool
-	Files     map[string]string
+	Dir        string
+	Entrypoint string
+	Target     string
+	TrimSpace  bool
+	Files      map[string]string
 }
 
 func (fct fileContentTest) name(file string) string {
@@ -40,16 +41,17 @@ func (fct fileContentTest) Run(t *testing.T) {
 	}
 
 	e := &task.Executor{
-		Dir:    fct.Dir,
-		Stdout: ioutil.Discard,
-		Stderr: ioutil.Discard,
+		Dir:        fct.Dir,
+		Entrypoint: fct.Entrypoint,
+		Stdout:     io.Discard,
+		Stderr:     io.Discard,
 	}
 	assert.NoError(t, e.Setup(), "e.Setup()")
 	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: fct.Target}), "e.Run(target)")
 
 	for name, expectContent := range fct.Files {
 		t.Run(fct.name(name), func(t *testing.T) {
-			b, err := ioutil.ReadFile(filepath.Join(fct.Dir, name))
+			b, err := os.ReadFile(filepath.Join(fct.Dir, name))
 			assert.NoError(t, err, "Error reading file")
 			s := string(b)
 			if fct.TrimSpace {
@@ -63,8 +65,8 @@ func (fct fileContentTest) Run(t *testing.T) {
 func TestEmptyTask(t *testing.T) {
 	e := &task.Executor{
 		Dir:    "testdata/empty_task",
-		Stdout: ioutil.Discard,
-		Stderr: ioutil.Discard,
+		Stdout: io.Discard,
+		Stderr: io.Discard,
 	}
 	assert.NoError(t, e.Setup(), "e.Setup()")
 	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "default"}))
@@ -168,8 +170,8 @@ func TestVarsInvalidTmpl(t *testing.T) {
 
 	e := &task.Executor{
 		Dir:    dir,
-		Stdout: ioutil.Discard,
-		Stderr: ioutil.Discard,
+		Stdout: io.Discard,
+		Stderr: io.Discard,
 	}
 	assert.NoError(t, e.Setup(), "e.Setup()")
 	assert.EqualError(t, e.Run(context.Background(), taskfile.Call{Task: target}), expectError, "e.Run(target)")
@@ -183,8 +185,8 @@ func TestConcurrency(t *testing.T) {
 
 	e := &task.Executor{
 		Dir:         dir,
-		Stdout:      ioutil.Discard,
-		Stderr:      ioutil.Discard,
+		Stdout:      io.Discard,
+		Stderr:      io.Discard,
 		Concurrency: 1,
 	}
 	assert.NoError(t, e.Setup(), "e.Setup()")
@@ -236,8 +238,8 @@ func TestDeps(t *testing.T) {
 
 	e := &task.Executor{
 		Dir:    dir,
-		Stdout: ioutil.Discard,
-		Stderr: ioutil.Discard,
+		Stdout: io.Discard,
+		Stderr: io.Discard,
 	}
 	assert.NoError(t, e.Setup())
 	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "default"}))
@@ -550,20 +552,21 @@ func TestStatusVariables(t *testing.T) {
 
 func TestInit(t *testing.T) {
 	const dir = "testdata/init"
-	var file = filepath.Join(dir, "Taskfile.yml")
+	var file = filepath.Join(dir, "Taskfile.yaml")
 
 	_ = os.Remove(file)
 	if _, err := os.Stat(file); err == nil {
-		t.Errorf("Taskfile.yml should not exist")
+		t.Errorf("Taskfile.yaml should not exist")
 	}
 
-	if err := task.InitTaskfile(ioutil.Discard, dir); err != nil {
+	if err := task.InitTaskfile(io.Discard, dir); err != nil {
 		t.Error(err)
 	}
 
 	if _, err := os.Stat(file); err != nil {
-		t.Errorf("Taskfile.yml should exist")
+		t.Errorf("Taskfile.yaml should exist")
 	}
+	_ = os.Remove(file)
 }
 
 func TestCyclicDep(t *testing.T) {
@@ -571,8 +574,8 @@ func TestCyclicDep(t *testing.T) {
 
 	e := task.Executor{
 		Dir:    dir,
-		Stdout: ioutil.Discard,
-		Stderr: ioutil.Discard,
+		Stdout: io.Discard,
+		Stderr: io.Discard,
 	}
 	assert.NoError(t, e.Setup())
 	assert.IsType(t, &task.MaximumTaskCallExceededError{}, e.Run(context.Background(), taskfile.Call{Task: "task-1"}))
@@ -590,8 +593,8 @@ func TestTaskVersion(t *testing.T) {
 		t.Run(test.Dir, func(t *testing.T) {
 			e := task.Executor{
 				Dir:    test.Dir,
-				Stdout: ioutil.Discard,
-				Stderr: ioutil.Discard,
+				Stdout: io.Discard,
+				Stderr: io.Discard,
 			}
 			assert.NoError(t, e.Setup())
 			assert.Equal(t, test.Version, e.Taskfile.Version)
@@ -605,8 +608,8 @@ func TestTaskIgnoreErrors(t *testing.T) {
 
 	e := task.Executor{
 		Dir:    dir,
-		Stdout: ioutil.Discard,
-		Stderr: ioutil.Discard,
+		Stdout: io.Discard,
+		Stderr: io.Discard,
 	}
 	assert.NoError(t, e.Setup())
 
@@ -668,8 +671,8 @@ func TestDryChecksum(t *testing.T) {
 
 	e := task.Executor{
 		Dir:    dir,
-		Stdout: ioutil.Discard,
-		Stderr: ioutil.Discard,
+		Stdout: io.Discard,
+		Stderr: io.Discard,
 		Dry:    true,
 	}
 	assert.NoError(t, e.Setup())
@@ -756,21 +759,21 @@ func TestIncludesCallingRoot(t *testing.T) {
 }
 
 func TestIncludesOptional(t *testing.T) {
-  tt := fileContentTest{
-    Dir:       "testdata/includes_optional",
-    Target:    "default",
-	  TrimSpace: true,
-	  Files: map[string]string{
-		  "called_dep.txt": "called_dep",
-	  }}
-  tt.Run(t)
+	tt := fileContentTest{
+		Dir:       "testdata/includes_optional",
+		Target:    "default",
+		TrimSpace: true,
+		Files: map[string]string{
+			"called_dep.txt": "called_dep",
+		}}
+	tt.Run(t)
 }
 
 func TestIncludesOptionalImplicitFalse(t *testing.T) {
 	e := task.Executor{
 		Dir:    "testdata/includes_optional_implicit_false",
-		Stdout: ioutil.Discard,
-		Stderr: ioutil.Discard,
+		Stdout: io.Discard,
+		Stderr: io.Discard,
 	}
 
 	err := e.Setup()
@@ -781,13 +784,28 @@ func TestIncludesOptionalImplicitFalse(t *testing.T) {
 func TestIncludesOptionalExplicitFalse(t *testing.T) {
 	e := task.Executor{
 		Dir:    "testdata/includes_optional_explicit_false",
-		Stdout: ioutil.Discard,
-		Stderr: ioutil.Discard,
+		Stdout: io.Discard,
+		Stderr: io.Discard,
 	}
 
 	err := e.Setup()
 	assert.Error(t, err)
 	assert.Equal(t, "stat testdata/includes_optional_explicit_false/TaskfileOptional.yml: no such file or directory", err.Error())
+}
+
+func TestIncludesFromCustomTaskfile(t *testing.T) {
+	tt := fileContentTest{
+		Dir:        "testdata/includes_yaml",
+		Entrypoint: "Custom.ext",
+		Target:     "default",
+		TrimSpace:  true,
+		Files: map[string]string{
+			"main.txt":                         "main",
+			"included_with_yaml_extension.txt": "included_with_yaml_extension",
+			"included_with_custom_file.txt":    "included_with_custom_file",
+		},
+	}
+	tt.Run(t)
 }
 
 func TestSummary(t *testing.T) {
@@ -804,7 +822,7 @@ func TestSummary(t *testing.T) {
 	assert.NoError(t, e.Setup())
 	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "task-with-summary"}, taskfile.Call{Task: "other-task-with-summary"}))
 
-	data, err := ioutil.ReadFile(filepath.Join(dir, "task-with-summary.txt"))
+	data, err := os.ReadFile(filepath.Join(dir, "task-with-summary.txt"))
 	assert.NoError(t, err)
 
 	expectedOutput := string(data)
@@ -895,8 +913,8 @@ func TestDynamicVariablesShouldRunOnTheTaskDir(t *testing.T) {
 func TestDisplaysErrorOnUnsupportedVersion(t *testing.T) {
 	e := task.Executor{
 		Dir:    "testdata/version/v1",
-		Stdout: ioutil.Discard,
-		Stderr: ioutil.Discard,
+		Stdout: io.Discard,
+		Stderr: io.Discard,
 	}
 	err := e.Setup()
 	assert.Error(t, err)
@@ -1033,6 +1051,7 @@ func TestIgnoreNilElements(t *testing.T) {
 	}{
 		{"nil cmd", "testdata/ignore_nil_elements/cmds"},
 		{"nil dep", "testdata/ignore_nil_elements/deps"},
+		{"nil include", "testdata/ignore_nil_elements/includes"},
 		{"nil precondition", "testdata/ignore_nil_elements/preconditions"},
 	}
 

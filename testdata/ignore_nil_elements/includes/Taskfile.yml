@@ -1,0 +1,9 @@
+version: '3'
+
+includes:
+  inc: inc.yml
+
+tasks:
+  default:
+    cmds:
+      - task: inc:default

@@ -4,7 +4,6 @@ import (
 	"crypto/md5"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -30,7 +29,7 @@ func (c *Checksum) IsUpToDate() (bool, error) {
 
 	checksumFile := c.checksumFilePath()
 
-	data, _ := ioutil.ReadFile(checksumFile)
+	data, _ := os.ReadFile(checksumFile)
 	oldMd5 := strings.TrimSpace(string(data))
 
 	sources, err := globs(c.TaskDir, c.Sources)
@@ -45,7 +44,7 @@ func (c *Checksum) IsUpToDate() (bool, error) {
 
 	if !c.Dry {
 		_ = os.MkdirAll(filepath.Join(c.BaseDir, ".task", "checksum"), 0755)
-		if err = ioutil.WriteFile(checksumFile, []byte(newMd5+"\n"), 0644); err != nil {
+		if err = os.WriteFile(checksumFile, []byte(newMd5+"\n"), 0644); err != nil {
 			return false, err
 		}
 	}

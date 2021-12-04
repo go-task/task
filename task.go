@@ -105,10 +105,6 @@ func (e *Executor) Run(ctx context.Context, calls ...taskfile.Call) error {
 
 // Setup setups Executor's internal state
 func (e *Executor) Setup() error {
-	if e.Entrypoint == "" {
-		e.Entrypoint = "Taskfile.yml"
-	}
-
 	var err error
 	e.Taskfile, err = read.Taskfile(e.Dir, e.Entrypoint)
 	if err != nil {
@@ -310,11 +306,16 @@ func (e *Executor) RunTask(ctx context.Context, call taskfile.Call) error {
 	defer release()
 
 	return e.startExecution(ctx, t, func(ctx context.Context) error {
+		e.Logger.VerboseErrf(logger.Magenta, `task: "%s" started`, call.Task)
 		if err := e.runDeps(ctx, t); err != nil {
 			return err
 		}
 
 		if !e.Force {
+			if err := ctx.Err(); err != nil {
+				return err
+			}
+
 			preCondMet, err := e.areTaskPreconditionsMet(ctx, t)
 			if err != nil {
 				return err
@@ -351,6 +352,7 @@ func (e *Executor) RunTask(ctx context.Context, call taskfile.Call) error {
 				return &taskRunError{t.Task, err}
 			}
 		}
+		e.Logger.VerboseErrf(logger.Magenta, `task: "%s" finished`, call.Task)
 		return nil
 	})
 }

@@ -4,7 +4,7 @@
 function __list() {
     local -a scripts
 
-    if [ -f Taskfile.yml ]; then
+    if [ -f Taskfile.yml ] || [ -f Taskfile.yaml ]; then
         scripts=($(task -l | sed '1d' | sed 's/^\* //' | awk '{ print $1 }' | sed 's/:$//' | sed 's/:/\\:/g'))
         _describe 'script' scripts
     fi
