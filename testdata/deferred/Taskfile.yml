@@ -1,0 +1,12 @@
+version: "3"
+
+tasks:
+  task-1:
+    - echo 'task-1 ran'
+
+  task-2:
+    - defer: "^task-1"
+    - defer: echo 'echo ran'
+    - defer: echo 'failing' && exit 2
+    - echo 'cmd ran'
+    - exit 1

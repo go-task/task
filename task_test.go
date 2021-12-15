@@ -1044,6 +1044,32 @@ func TestRunOnlyRunsJobsHashOnce(t *testing.T) {
 	tt.Run(t)
 }
 
+func TestDeferredCmds(t *testing.T) {
+	const dir = "testdata/deferred"
+	var buff bytes.Buffer
+	e := task.Executor{
+		Dir:    dir,
+		Stdout: &buff,
+		Stderr: &buff,
+	}
+	assert.NoError(t, e.Setup())
+
+	expectedOutputOrder := strings.TrimSpace(`
+task: [task-2] echo 'cmd ran'
+cmd ran
+task: [task-2] exit 1
+task: [task-2] echo 'failing' && exit 2
+failing
+task: [task-2] echo 'echo ran'
+echo ran
+task: [task-1] echo 'task-1 ran'
+task-1 ran
+`)
+	assert.Error(t, e.Run(context.Background(), taskfile.Call{Task: "task-2"}))
+	fmt.Println(buff.String())
+	assert.Contains(t, buff.String(), expectedOutputOrder)
+}
+
 func TestIgnoreNilElements(t *testing.T) {
 	tests := []struct {
 		name string
