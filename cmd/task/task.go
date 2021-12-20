@@ -11,6 +11,7 @@ import (
 	"strings"
 	"syscall"
 
+	colorpkg "github.com/fatih/color"
 	"github.com/spf13/pflag"
 	"mvdan.cc/sh/v3/syntax"
 
@@ -140,8 +141,8 @@ func main() {
 		Concurrency: concurrency,
 
 		Stdin:  os.Stdin,
-		Stdout: os.Stdout,
-		Stderr: os.Stderr,
+		Stdout: colorpkg.Output,
+		Stderr: colorpkg.Error,
 
 		OutputStyle: output,
 	}
