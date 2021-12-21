@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -41,15 +41,15 @@ func (fct fileContentTest) Run(t *testing.T) {
 
 	e := &task.Executor{
 		Dir:    fct.Dir,
-		Stdout: ioutil.Discard,
-		Stderr: ioutil.Discard,
+		Stdout: io.Discard,
+		Stderr: io.Discard,
 	}
 	assert.NoError(t, e.Setup(), "e.Setup()")
 	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: fct.Target}), "e.Run(target)")
 
 	for name, expectContent := range fct.Files {
 		t.Run(fct.name(name), func(t *testing.T) {
-			b, err := ioutil.ReadFile(filepath.Join(fct.Dir, name))
+			b, err := os.ReadFile(filepath.Join(fct.Dir, name))
 			assert.NoError(t, err, "Error reading file")
 			s := string(b)
 			if fct.TrimSpace {
@@ -63,8 +63,8 @@ func (fct fileContentTest) Run(t *testing.T) {
 func TestEmptyTask(t *testing.T) {
 	e := &task.Executor{
 		Dir:    "testdata/empty_task",
-		Stdout: ioutil.Discard,
-		Stderr: ioutil.Discard,
+		Stdout: io.Discard,
+		Stderr: io.Discard,
 	}
 	assert.NoError(t, e.Setup(), "e.Setup()")
 	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "default"}))
@@ -168,8 +168,8 @@ func TestVarsInvalidTmpl(t *testing.T) {
 
 	e := &task.Executor{
 		Dir:    dir,
-		Stdout: ioutil.Discard,
-		Stderr: ioutil.Discard,
+		Stdout: io.Discard,
+		Stderr: io.Discard,
 	}
 	assert.NoError(t, e.Setup(), "e.Setup()")
 	assert.EqualError(t, e.Run(context.Background(), taskfile.Call{Task: target}), expectError, "e.Run(target)")
@@ -183,8 +183,8 @@ func TestConcurrency(t *testing.T) {
 
 	e := &task.Executor{
 		Dir:         dir,
-		Stdout:      ioutil.Discard,
-		Stderr:      ioutil.Discard,
+		Stdout:      io.Discard,
+		Stderr:      io.Discard,
 		Concurrency: 1,
 	}
 	assert.NoError(t, e.Setup(), "e.Setup()")
@@ -236,8 +236,8 @@ func TestDeps(t *testing.T) {
 
 	e := &task.Executor{
 		Dir:    dir,
-		Stdout: ioutil.Discard,
-		Stderr: ioutil.Discard,
+		Stdout: io.Discard,
+		Stderr: io.Discard,
 	}
 	assert.NoError(t, e.Setup())
 	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "default"}))
@@ -557,7 +557,7 @@ func TestInit(t *testing.T) {
 		t.Errorf("Taskfile.yml should not exist")
 	}
 
-	if err := task.InitTaskfile(ioutil.Discard, dir); err != nil {
+	if err := task.InitTaskfile(io.Discard, dir); err != nil {
 		t.Error(err)
 	}
 
@@ -571,8 +571,8 @@ func TestCyclicDep(t *testing.T) {
 
 	e := task.Executor{
 		Dir:    dir,
-		Stdout: ioutil.Discard,
-		Stderr: ioutil.Discard,
+		Stdout: io.Discard,
+		Stderr: io.Discard,
 	}
 	assert.NoError(t, e.Setup())
 	assert.IsType(t, &task.MaximumTaskCallExceededError{}, e.Run(context.Background(), taskfile.Call{Task: "task-1"}))
@@ -590,8 +590,8 @@ func TestTaskVersion(t *testing.T) {
 		t.Run(test.Dir, func(t *testing.T) {
 			e := task.Executor{
 				Dir:    test.Dir,
-				Stdout: ioutil.Discard,
-				Stderr: ioutil.Discard,
+				Stdout: io.Discard,
+				Stderr: io.Discard,
 			}
 			assert.NoError(t, e.Setup())
 			assert.Equal(t, test.Version, e.Taskfile.Version)
@@ -605,8 +605,8 @@ func TestTaskIgnoreErrors(t *testing.T) {
 
 	e := task.Executor{
 		Dir:    dir,
-		Stdout: ioutil.Discard,
-		Stderr: ioutil.Discard,
+		Stdout: io.Discard,
+		Stderr: io.Discard,
 	}
 	assert.NoError(t, e.Setup())
 
@@ -668,8 +668,8 @@ func TestDryChecksum(t *testing.T) {
 
 	e := task.Executor{
 		Dir:    dir,
-		Stdout: ioutil.Discard,
-		Stderr: ioutil.Discard,
+		Stdout: io.Discard,
+		Stderr: io.Discard,
 		Dry:    true,
 	}
 	assert.NoError(t, e.Setup())
@@ -769,8 +769,8 @@ func TestIncludesOptional(t *testing.T) {
 func TestIncludesOptionalImplicitFalse(t *testing.T) {
 	e := task.Executor{
 		Dir:    "testdata/includes_optional_implicit_false",
-		Stdout: ioutil.Discard,
-		Stderr: ioutil.Discard,
+		Stdout: io.Discard,
+		Stderr: io.Discard,
 	}
 
 	err := e.Setup()
@@ -781,8 +781,8 @@ func TestIncludesOptionalImplicitFalse(t *testing.T) {
 func TestIncludesOptionalExplicitFalse(t *testing.T) {
 	e := task.Executor{
 		Dir:    "testdata/includes_optional_explicit_false",
-		Stdout: ioutil.Discard,
-		Stderr: ioutil.Discard,
+		Stdout: io.Discard,
+		Stderr: io.Discard,
 	}
 
 	err := e.Setup()
@@ -804,7 +804,7 @@ func TestSummary(t *testing.T) {
 	assert.NoError(t, e.Setup())
 	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "task-with-summary"}, taskfile.Call{Task: "other-task-with-summary"}))
 
-	data, err := ioutil.ReadFile(filepath.Join(dir, "task-with-summary.txt"))
+	data, err := os.ReadFile(filepath.Join(dir, "task-with-summary.txt"))
 	assert.NoError(t, err)
 
 	expectedOutput := string(data)
@@ -895,8 +895,8 @@ func TestDynamicVariablesShouldRunOnTheTaskDir(t *testing.T) {
 func TestDisplaysErrorOnUnsupportedVersion(t *testing.T) {
 	e := task.Executor{
 		Dir:    "testdata/version/v1",
-		Stdout: ioutil.Discard,
-		Stderr: ioutil.Discard,
+		Stdout: io.Discard,
+		Stderr: io.Discard,
 	}
 	err := e.Setup()
 	assert.Error(t, err)

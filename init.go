@@ -3,7 +3,6 @@ package task
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 )
@@ -30,7 +29,7 @@ func InitTaskfile(w io.Writer, dir string) error {
 		return ErrTaskfileAlreadyExists
 	}
 
-	if err := ioutil.WriteFile(f, []byte(defaultTaskfile), 0644); err != nil {
+	if err := os.WriteFile(f, []byte(defaultTaskfile), 0644); err != nil {
 		return err
 	}
 	fmt.Fprintf(w, "Taskfile.yml created in the current directory\n")
