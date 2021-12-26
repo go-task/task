@@ -73,6 +73,7 @@ func main() {
 		entrypoint  string
 		output      string
 		color       bool
+		oneshell    bool
 	)
 
 	pflag.BoolVar(&versionFlag, "version", false, "show Task version")
@@ -92,6 +93,7 @@ func main() {
 	pflag.StringVarP(&output, "output", "o", "", "sets output style: [interleaved|group|prefixed]")
 	pflag.BoolVarP(&color, "color", "c", true, "colored output. Enabled by default. Set flag to false or use NO_COLOR=1 to disable")
 	pflag.IntVarP(&concurrency, "concurrency", "C", 0, "limit number tasks to run concurrently")
+	pflag.BoolVar(&oneshell, "oneshell", false, "run all commands in one shell")
 	pflag.Parse()
 
 	if versionFlag {
@@ -138,6 +140,7 @@ func main() {
 		Parallel:    parallel,
 		Color:       color,
 		Concurrency: concurrency,
+		OneShell:    oneshell,
 
 		Stdin:  os.Stdin,
 		Stdout: os.Stdout,

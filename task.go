@@ -43,6 +43,7 @@ type Executor struct {
 	Parallel    bool
 	Color       bool
 	Concurrency int
+	OneShell    bool
 
 	Stdin  io.Reader
 	Stdout io.Writer
@@ -441,6 +442,11 @@ func (e *Executor) runCommand(ctx context.Context, t *taskfile.Task, call taskfi
 			}
 		}()
 
+		oneshell := e.OneShell // value from command line argument
+		if t.OneShell != nil { // if OneShell parameter exists in Taskfile.yml for current task
+			oneshell = *t.OneShell // use value from Taskfile.yml
+		}
+		fmt.Printf("oneshell: %+v\n", oneshell)
 		err := execext.RunCommand(ctx, &execext.RunCommandOptions{
 			Command: cmd.Cmd,
 			Dir:     t.Dir,
