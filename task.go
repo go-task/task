@@ -446,11 +446,11 @@ func (e *Executor) runCommand(ctx context.Context, t *taskfile.Task, call taskfi
 		if t.OneShell != nil { // if OneShell parameter exists in Taskfile.yml for current task
 			oneshell = *t.OneShell // use value from Taskfile.yml
 		}
-		fmt.Printf("oneshell: %+v\n", oneshell)
 		err := execext.RunCommand(ctx, &execext.RunCommandOptions{
 			Command: cmd.Cmd,
 			Dir:     t.Dir,
 			Env:     getEnviron(t),
+			OneShell: oneshell,
 			Stdin:   e.Stdin,
 			Stdout:  stdOut,
 			Stderr:  stdErr,
