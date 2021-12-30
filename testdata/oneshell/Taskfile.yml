@@ -1,0 +1,12 @@
+version: '3'
+
+vars:
+  GREETING: Hello
+
+tasks:
+  default:
+    cmds:
+      - export WHAT=world
+      - echo "{{.GREETING}}" ${WHAT} >> oneshell.txt
+    silent: true
+    oneshell: true

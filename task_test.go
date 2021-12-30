@@ -191,6 +191,18 @@ func TestConcurrency(t *testing.T) {
 	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: target}), "e.Run(target)")
 }
 
+func TestOneShell(t *testing.T) {
+	tt := fileContentTest{
+		Dir:       "testdata/oneshell",
+		Target:    "default",
+		TrimSpace: false,
+		Files: map[string]string{
+			"oneshell.txt":       "Hello world\n",
+		},
+	}
+	tt.Run(t)
+}
+
 func TestParams(t *testing.T) {
 	tt := fileContentTest{
 		Dir:       "testdata/params",

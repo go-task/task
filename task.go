@@ -446,6 +446,9 @@ func (e *Executor) runCommand(ctx context.Context, t *taskfile.Task, call taskfi
 		if t.OneShell != nil { // if OneShell parameter exists in Taskfile.yml for current task
 			oneshell = *t.OneShell // use value from Taskfile.yml
 		}
+		if i == 0 { // we need to create new shell if this is the first cmd in task
+			oneshell = false
+		}
 		err := execext.RunCommand(ctx, &execext.RunCommandOptions{
 			Command: cmd.Cmd,
 			Dir:     t.Dir,
