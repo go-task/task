@@ -20,6 +20,7 @@ func (c *Cmd) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	var cmd string
 	if err := unmarshal(&cmd); err == nil {
 		c.Cmd = cmd
+		return nil
 	}
 	var cmdStruct struct {
 		Cmd         string
