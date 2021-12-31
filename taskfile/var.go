@@ -2,7 +2,6 @@ package taskfile
 
 import (
 	"errors"
-	"strings"
 
 	"gopkg.in/yaml.v3"
 )
@@ -108,12 +107,7 @@ type Var struct {
 func (v *Var) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	var str string
 	if err := unmarshal(&str); err == nil {
-		if strings.HasPrefix(str, "$") {
-			v.Sh = strings.TrimPrefix(str, "$")
-		} else {
-			v.Static = str
-		}
-		return nil
+		v.Static = str
 	}
 
 	var sh struct {
