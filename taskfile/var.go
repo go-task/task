@@ -108,6 +108,8 @@ func (v *Var) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	var str string
 	if err := unmarshal(&str); err == nil {
 		v.Static = str
+
+	} else {
 		return nil
 	}
 
