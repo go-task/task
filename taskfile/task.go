@@ -24,7 +24,6 @@ type Task struct {
 	Prefix        string
 	IgnoreError   bool
 	Run           string
-	OneShell      *bool
 }
 
 func (t *Task) Name() string {
@@ -66,7 +65,6 @@ func (t *Task) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		Prefix        string
 		IgnoreError   bool `yaml:"ignore_error"`
 		Run           string
-		OneShell      *bool `yaml:",omitempty"`
 	}
 	if err := unmarshal(&task); err != nil {
 		return err
@@ -89,6 +87,5 @@ func (t *Task) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	t.Prefix = task.Prefix
 	t.IgnoreError = task.IgnoreError
 	t.Run = task.Run
-	t.OneShell = task.OneShell
 	return nil
 }

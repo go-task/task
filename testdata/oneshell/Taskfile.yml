@@ -1,5 +1,7 @@
 version: '3'
 
+oneshell: true
+
 vars:
   GREETING: Hello
 
@@ -9,4 +11,3 @@ tasks:
       - export WHAT=world
       - echo "{{.GREETING}}" ${WHAT} >> oneshell.txt
     silent: true
-    oneshell: true

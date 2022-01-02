@@ -16,19 +16,17 @@ import (
 
 // RunCommandOptions is the options for the RunCommand func
 type RunCommandOptions struct {
-	Command  string
-	Dir      string
-	Env      []string
-	OneShell bool
-	Stdin    io.Reader
-	Stdout   io.Writer
-	Stderr   io.Writer
+	Command string
+	Dir     string
+	Env     []string
+	Stdin   io.Reader
+	Stdout  io.Writer
+	Stderr  io.Writer
 }
 
 var (
 	// ErrNilOptions is returned when a nil options is given
 	ErrNilOptions = errors.New("execext: nil options given")
-	runner        *interp.Runner
 )
 
 // RunCommand runs a shell command
@@ -47,20 +45,17 @@ func RunCommand(ctx context.Context, opts *RunCommandOptions) error {
 		environ = os.Environ()
 	}
 
-	if runner == nil || !opts.OneShell {
-		runner, err = interp.New(
-			interp.Params("-e"),
-			interp.Dir(opts.Dir),
-			interp.Env(expand.ListEnviron(environ...)),
-			interp.OpenHandler(openHandler),
-			interp.StdIO(opts.Stdin, opts.Stdout, opts.Stderr),
-		)
-	}
-
+	r, err := interp.New(
+		interp.Params("-e"),
+		interp.Dir(opts.Dir),
+		interp.Env(expand.ListEnviron(environ...)),
+		interp.OpenHandler(openHandler),
+		interp.StdIO(opts.Stdin, opts.Stdout, opts.Stderr),
+	)
 	if err != nil {
 		return err
 	}
-	return runner.Run(ctx, p)
+	return r.Run(ctx, p)
 }
 
 // IsExitError returns true the given error is an exis status error

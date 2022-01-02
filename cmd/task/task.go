@@ -24,7 +24,7 @@ var (
 	version = ""
 )
 
-const usage = `Usage: task [-ilfwvsd] [--init] [--list] [--force] [--watch] [--verbose] [--oneshell] [--silent] [--dir] [--taskfile] [--dry] [--summary] [task...]
+const usage = `Usage: task [-ilfwvsd] [--init] [--list] [--force] [--watch] [--verbose] [--silent] [--dir] [--taskfile] [--dry] [--summary] [task...]
 
 Runs the specified task(s). Falls back to the "default" task if no task name
 was specified, or lists all tasks if an unknown task name was specified.
@@ -73,7 +73,6 @@ func main() {
 		entrypoint  string
 		output      string
 		color       bool
-		oneshell    bool
 	)
 
 	pflag.BoolVar(&versionFlag, "version", false, "show Task version")
@@ -93,7 +92,6 @@ func main() {
 	pflag.StringVarP(&output, "output", "o", "", "sets output style: [interleaved|group|prefixed]")
 	pflag.BoolVarP(&color, "color", "c", true, "colored output. Enabled by default. Set flag to false or use NO_COLOR=1 to disable")
 	pflag.IntVarP(&concurrency, "concurrency", "C", 0, "limit number tasks to run concurrently")
-	pflag.BoolVar(&oneshell, "oneshell", false, "enforce all commands in a task to be executed in a single shell instance")
 	pflag.Parse()
 
 	if versionFlag {
@@ -140,7 +138,6 @@ func main() {
 		Parallel:    parallel,
 		Color:       color,
 		Concurrency: concurrency,
-		OneShell:    oneshell,
 
 		Stdin:  os.Stdin,
 		Stdout: os.Stdout,
