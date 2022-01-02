@@ -1,9 +1,5 @@
 package taskfile
 
-import (
-	"strings"
-)
-
 // Cmd is a task command
 type Cmd struct {
 	Cmd         string
@@ -23,11 +19,7 @@ type Dep struct {
 func (c *Cmd) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	var cmd string
 	if err := unmarshal(&cmd); err == nil {
-		if strings.HasPrefix(cmd, "^") {
-			c.Task = strings.TrimPrefix(cmd, "^")
-		} else {
-			c.Cmd = cmd
-		}
+		c.Cmd = cmd
 		return nil
 	}
 	var cmdStruct struct {

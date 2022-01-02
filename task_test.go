@@ -24,10 +24,11 @@ func init() {
 // fileContentTest provides a basic reusable test-case for running a Taskfile
 // and inspect generated files.
 type fileContentTest struct {
-	Dir       string
-	Target    string
-	TrimSpace bool
-	Files     map[string]string
+	Dir        string
+	Entrypoint string
+	Target     string
+	TrimSpace  bool
+	Files      map[string]string
 }
 
 func (fct fileContentTest) name(file string) string {
@@ -40,9 +41,10 @@ func (fct fileContentTest) Run(t *testing.T) {
 	}
 
 	e := &task.Executor{
-		Dir:    fct.Dir,
-		Stdout: io.Discard,
-		Stderr: io.Discard,
+		Dir:        fct.Dir,
+		Entrypoint: fct.Entrypoint,
+		Stdout:     io.Discard,
+		Stderr:     io.Discard,
 	}
 	assert.NoError(t, e.Setup(), "e.Setup()")
 	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: fct.Target}), "e.Run(target)")
@@ -562,11 +564,11 @@ func TestStatusVariables(t *testing.T) {
 
 func TestInit(t *testing.T) {
 	const dir = "testdata/init"
-	var file = filepath.Join(dir, "Taskfile.yml")
+	var file = filepath.Join(dir, "Taskfile.yaml")
 
 	_ = os.Remove(file)
 	if _, err := os.Stat(file); err == nil {
-		t.Errorf("Taskfile.yml should not exist")
+		t.Errorf("Taskfile.yaml should not exist")
 	}
 
 	if err := task.InitTaskfile(io.Discard, dir); err != nil {
@@ -574,8 +576,9 @@ func TestInit(t *testing.T) {
 	}
 
 	if _, err := os.Stat(file); err != nil {
-		t.Errorf("Taskfile.yml should exist")
+		t.Errorf("Taskfile.yaml should exist")
 	}
+	_ = os.Remove(file)
 }
 
 func TestCyclicDep(t *testing.T) {
@@ -800,6 +803,21 @@ func TestIncludesOptionalExplicitFalse(t *testing.T) {
 	err := e.Setup()
 	assert.Error(t, err)
 	assert.Equal(t, "stat testdata/includes_optional_explicit_false/TaskfileOptional.yml: no such file or directory", err.Error())
+}
+
+func TestIncludesFromCustomTaskfile(t *testing.T) {
+	tt := fileContentTest{
+		Dir:        "testdata/includes_yaml",
+		Entrypoint: "Custom.ext",
+		Target:     "default",
+		TrimSpace:  true,
+		Files: map[string]string{
+			"main.txt":                         "main",
+			"included_with_yaml_extension.txt": "included_with_yaml_extension",
+			"included_with_custom_file.txt":    "included_with_custom_file",
+		},
+	}
+	tt.Run(t)
 }
 
 func TestSummary(t *testing.T) {

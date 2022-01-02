@@ -105,10 +105,6 @@ func (e *Executor) Run(ctx context.Context, calls ...taskfile.Call) error {
 
 // Setup setups Executor's internal state
 func (e *Executor) Setup() error {
-	if e.Entrypoint == "" {
-		e.Entrypoint = "Taskfile.yml"
-	}
-
 	var err error
 	e.Taskfile, err = read.Taskfile(e.Dir, e.Entrypoint)
 	if err != nil {
