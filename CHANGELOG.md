@@ -2,7 +2,12 @@
 
 ## Unreleased
 
-- Add support for yaml extension ([#584](https://github.com/go-task/task/issues/584))
+- Remove long deprecated and undocumented `$` variable prefix and `^` command
+  prefix
+  ([#642](https://github.com/go-task/task/issues/642), [#644](https://github.com/go-task/task/issues/644), [#645](https://github.com/go-task/task/pull/645)).
+- Add support for `.yaml` extension (as an alternative to `.yml`).
+  This was requested multiple times throughout the years. Enjoy!
+  ([#183](https://github.com/go-task/task/issues/183), [#184](https://github.com/go-task/task/pull/184), [#369](https://github.com/go-task/task/issues/369), [#584](https://github.com/go-task/task/issues/584), [#621](https://github.com/go-task/task/pull/621)).
 
 ## v3.9.2 - 2021-12-02
 
