@@ -28,7 +28,7 @@ type RunCommandOptions struct {
 var (
 	// ErrNilOptions is returned when a nil options is given
 	ErrNilOptions = errors.New("execext: nil options given")
-    runner *interp.Runner
+	runner        *interp.Runner
 )
 
 // RunCommand runs a shell command
