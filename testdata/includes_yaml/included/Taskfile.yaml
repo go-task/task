@@ -1,0 +1,6 @@
+version: '3'
+
+tasks:
+  gen:
+    cmds:
+      - echo included_with_yaml_extension > included_with_yaml_extension.txt

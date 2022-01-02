@@ -1,0 +1,6 @@
+version: '3'
+
+tasks:
+  gen:
+    cmds:
+      - echo included_with_custom_file > included_with_custom_file.txt
