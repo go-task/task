@@ -1062,8 +1062,8 @@ task: [task-2] echo 'failing' && exit 2
 failing
 task: [task-2] echo 'echo ran'
 echo ran
-task: [task-1] echo 'task-1 ran'
-task-1 ran
+task: [task-1] echo 'task-1 ran successfully'
+task-1 ran successfully
 `)
 	assert.Error(t, e.Run(context.Background(), taskfile.Call{Task: "task-2"}))
 	fmt.Println(buff.String())

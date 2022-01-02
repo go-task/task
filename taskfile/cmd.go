@@ -39,11 +39,19 @@ func (c *Cmd) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	}
 	if err := unmarshal(&deferredCmd); err == nil && deferredCmd.Defer != "" {
 		c.Defer = true
-		if strings.HasPrefix(deferredCmd.Defer, "^") {
-			c.Task = strings.TrimPrefix(deferredCmd.Defer, "^")
-		} else {
-			c.Cmd = deferredCmd.Defer
+		c.Cmd = deferredCmd.Defer
+		return nil
+	}
+	var deferredCall struct {
+		Defer struct {
+			Task string
+			Vars *Vars
 		}
+	}
+	if err := unmarshal(&deferredCall); err == nil && deferredCall.Defer.Task != "" {
+		c.Defer = true
+		c.Task = deferredCall.Defer.Task
+		c.Vars = deferredCall.Defer.Vars
 		return nil
 	}
 	var taskCall struct {

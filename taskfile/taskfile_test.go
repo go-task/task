@@ -19,7 +19,7 @@ vars:
   PARAM1: VALUE1
   PARAM2: VALUE2
 `
-		yamlDeferredTask = `defer: ^some_task`
+		yamlDeferredCall = `defer: { task: some_task, vars: { PARAM1: "var" } }`
 		yamlDeferredCmd  = `defer: echo 'test'`
 	)
 	tests := []struct {
@@ -49,9 +49,14 @@ vars:
 			&taskfile.Cmd{Cmd: "echo 'test'", Defer: true},
 		},
 		{
-			yamlDeferredTask,
+			yamlDeferredCall,
 			&taskfile.Cmd{},
-			&taskfile.Cmd{Task: "some_task", Defer: true},
+			&taskfile.Cmd{Task: "some_task", Vars: &taskfile.Vars{
+				Keys: []string{"PARAM1"},
+				Mapping: map[string]taskfile.Var{
+					"PARAM1": taskfile.Var{Static: "var"},
+				},
+			}, Defer: true},
 		},
 		{
 			yamlDep,
