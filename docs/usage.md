@@ -772,6 +772,78 @@ tasks:
       - echo "{{.MESSAGE}}"
 ```
 
+## Oneshell mode
+
+Oneshell mode enforces all commands in a task to be executed in a single shell instance.
+
+Default behaviour is to create new shell for every command. Let's use this taskfile for example:
+
+```yaml
+version: '3'
+
+vars:
+  GREETING: Hello
+
+tasks:
+  default:
+    cmds:
+      - export WHAT=world
+      - echo "{{.GREETING}}" ${WHAT}
+
+  singleshell:
+    cmds:
+      - export WHAT=world
+      - echo "{{.GREETING}}" ${WHAT}
+    oneshell: true
+```
+
+Every command of default task has its own shell. Therefore, second command can't see the environment variable, that was created in a first command:
+
+```sh
+$ task default
+task: [default] export WHAT=world
+task: [default] echo "Hello" ${WHAT}
+Hello
+```
+
+Singleshell task is very similar to default, but has oneshell parameter set to true. Commands share the same shell, so second command has access to $WHAT environment variable:
+
+```sh
+$ task singleshell
+task: [singleshell] export WHAT=world
+task: [singleshell] echo "Hello" ${WHAT}
+Hello world
+```
+
+Oneshell parameter can be set directly in command line:
+
+```sh
+$ task default --oneshell
+task: [default] export WHAT=world
+task: [default] echo "Hello" ${WHAT}
+Hello world
+```
+
+Taskfile oneshell setting has higher priority than command line setting:
+
+```sh
+$ task default singleshell --oneshell=false
+task: [default] export WHAT=world
+task: [default] echo "Hello" ${WHAT}
+Hello
+task: [singleshell] export WHAT=world
+task: [singleshell] echo "Hello" ${WHAT}
+Hello world
+$ task default singleshell --oneshell=true
+task: [default] export WHAT=world
+task: [default] echo "Hello" ${WHAT}
+Hello world
+task: [singleshell] export WHAT=world
+task: [singleshell] echo "Hello" ${WHAT}
+Hello world
+```
+
+
 ## Silent mode
 
 Silent mode disables echoing of commands before Task runs it.
