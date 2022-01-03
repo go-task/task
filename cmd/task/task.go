@@ -150,8 +150,12 @@ func main() {
 		return
 	}
 
-	if list || listAll {
-		e.PrintTasksHelp(listAll)
+	if list {
+		e.ListTasksWithDesc()
+	}
+
+	if listAll {
+		e.ListAllTasks()
 		return
 	}
 

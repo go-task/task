@@ -492,7 +492,7 @@ func TestListAllShowsNoDesc(t *testing.T) {
 	assert.NoError(t, e.Setup())
 
 	var title string
-	e.PrintTasksHelp(true)
+	e.ListAllTasks()
 	for _, title = range []string{
 		"foo",
 		"voo",
@@ -514,7 +514,7 @@ func TestListCanListDescOnly(t *testing.T) {
 	}
 
 	assert.NoError(t, e.Setup())
-	e.PrintTasksHelp(false)
+	e.ListTasksWithDesc()
 
 	var title string
 	assert.Contains(t, buff.String(), "foo")

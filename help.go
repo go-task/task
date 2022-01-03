@@ -15,7 +15,7 @@ import (
 func (e *Executor) PrintTasksHelp(listAll bool) {
 	var tasks []*taskfile.Task
 	if listAll == true {
-		tasks = e.taskNames()
+		tasks = e.allTaskNames()
 	} else {
 		tasks = e.tasksWithDesc()
 	}
@@ -35,7 +35,7 @@ func (e *Executor) PrintTasksHelp(listAll bool) {
 	w.Flush()
 }
 
-func (e *Executor) taskNames() (tasks []*taskfile.Task) {
+func (e *Executor) allTaskNames() (tasks []*taskfile.Task) {
 	tasks = make([]*taskfile.Task, 0, len(e.Taskfile.Tasks))
 	for _, task := range e.Taskfile.Tasks {
 		tasks = append(tasks, task)
@@ -56,5 +56,17 @@ func (e *Executor) tasksWithDesc() (tasks []*taskfile.Task) {
 		}
 	}
 	sort.Slice(tasks, func(i, j int) bool { return tasks[i].Task < tasks[j].Task })
+	return
+}
+
+// ListTasksWithDesc reports tasks that have a description spec.
+func (e *Executor) ListTasksWithDesc() {
+	e.PrintTasksHelp(false)
+	return
+}
+
+// ListAllTasks reports all tasks, with or without a description spec.
+func (e *Executor) ListAllTasks() {
+	e.PrintTasksHelp(true)
 	return
 }
