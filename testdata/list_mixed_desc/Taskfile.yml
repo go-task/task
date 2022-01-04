@@ -1,0 +1,12 @@
+version: '3'
+
+tasks:
+  foo:
+    label: "foobar"
+    desc: "foo has desc and label"
+
+  voo:
+    label: "voo has no desc"
+
+  doo:
+    label: "doo has desc, no label"

@@ -518,8 +518,56 @@ func TestLabelInList(t *testing.T) {
 		Stderr: &buff,
 	}
 	assert.NoError(t, e.Setup())
-	e.PrintTasksHelp()
+	e.PrintTasksHelp(false)
 	assert.Contains(t, buff.String(), "foobar")
+}
+
+// task -al case 1: listAll list all tasks
+func TestListAllShowsNoDesc(t *testing.T) {
+	const dir = "testdata/list_mixed_desc"
+
+	var buff bytes.Buffer
+	e := task.Executor{
+		Dir:    dir,
+		Stdout: &buff,
+		Stderr: &buff,
+	}
+
+	assert.NoError(t, e.Setup())
+
+	var title string
+	e.ListAllTasks()
+	for _, title = range []string{
+		"foo",
+		"voo",
+		"doo",
+	} {
+		assert.Contains(t, buff.String(), title)
+	}
+}
+
+// task -al case 2: !listAll list some tasks (only those with desc)
+func TestListCanListDescOnly(t *testing.T) {
+	const dir = "testdata/list_mixed_desc"
+
+	var buff bytes.Buffer
+	e := task.Executor{
+		Dir:    dir,
+		Stdout: &buff,
+		Stderr: &buff,
+	}
+
+	assert.NoError(t, e.Setup())
+	e.ListTasksWithDesc()
+
+	var title string
+	assert.Contains(t, buff.String(), "foo")
+	for _, title = range []string{
+		"voo",
+		"doo",
+	} {
+		assert.NotContains(t, buff.String(), title)
+	}
 }
 
 func TestStatusVariables(t *testing.T) {
