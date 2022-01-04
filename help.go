@@ -9,20 +9,32 @@ import (
 	"github.com/go-task/task/v3/taskfile"
 )
 
-// PrintTasksHelp prints tasks' help.
-// Behavior is governed by listAll. When false, only tasks with descriptions are reported.
-// When true, all tasks are reported with descriptions shown where available.
-func (e *Executor) PrintTasksHelp(listAll bool) {
+// ListTasksWithDesc reports tasks that have a description spec.
+func (e *Executor) ListTasksWithDesc() {
+	e.pringTasks(false)
+	return
+}
+
+// ListAllTasks reports all tasks, with or without a description spec.
+func (e *Executor) ListAllTasks() {
+	e.pringTasks(true)
+	return
+}
+
+func (e *Executor) pringTasks(listAll bool) {
 	var tasks []*taskfile.Task
-	if listAll == true {
+	if listAll {
 		tasks = e.allTaskNames()
 	} else {
 		tasks = e.tasksWithDesc()
 	}
 
 	if len(tasks) == 0 {
-		// TODO: This message should be more informative. Maybe a hint to try -la for showing all?
-		e.Logger.Outf(logger.Yellow, "task: No tasks with description available")
+		if listAll {
+			e.Logger.Outf(logger.Yellow, "task: No tasks available")
+		} else {
+			e.Logger.Outf(logger.Yellow, "task: No tasks with description available. Try --list-all to list all tasks")
+		}
 		return
 	}
 	e.Logger.Outf(logger.Default, "task: Available tasks for this project:")
@@ -56,17 +68,5 @@ func (e *Executor) tasksWithDesc() (tasks []*taskfile.Task) {
 		}
 	}
 	sort.Slice(tasks, func(i, j int) bool { return tasks[i].Task < tasks[j].Task })
-	return
-}
-
-// ListTasksWithDesc reports tasks that have a description spec.
-func (e *Executor) ListTasksWithDesc() {
-	e.PrintTasksHelp(false)
-	return
-}
-
-// ListAllTasks reports all tasks, with or without a description spec.
-func (e *Executor) ListAllTasks() {
-	e.PrintTasksHelp(true)
 	return
 }

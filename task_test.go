@@ -518,7 +518,7 @@ func TestLabelInList(t *testing.T) {
 		Stderr: &buff,
 	}
 	assert.NoError(t, e.Setup())
-	e.PrintTasksHelp(false)
+	e.ListTasksWithDesc()
 	assert.Contains(t, buff.String(), "foobar")
 }
 

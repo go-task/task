@@ -742,6 +742,8 @@ would print the following output:
 * test:    Run all the go tests.
 ```
 
+If you want to see all tasks, there's a `--list-all` (alias `-a`) flag as well.
+
 ## Display summary of task
 
 Running `task --summary task-name` will show a summary of a task.
