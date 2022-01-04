@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v3.10.0 - 2022-01-04
 
 - A new `--list-all` (alias `-a`) flag is now available. It's similar to the
   exiting `--list` (`-l`) but prints all tasks, even those without a
