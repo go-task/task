@@ -8,7 +8,6 @@ import (
 	"os"
 	"sync"
 	"sync/atomic"
-	"time"
 
 	"github.com/go-task/task/v3/internal/compiler"
 	compilerv2 "github.com/go-task/task/v3/internal/compiler/v2"
@@ -402,8 +401,9 @@ func (e *Executor) runDeps(ctx context.Context, t *taskfile.Task) error {
 }
 
 func (e *Executor) runDeferred(t *taskfile.Task, call taskfile.Call, i int) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
+	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
+
 	if err := e.runCommand(ctx, t, call, i); err != nil {
 		e.Logger.VerboseErrf(logger.Yellow, `task: ignored error in deferred cmd: %s`, err.Error())
 	}

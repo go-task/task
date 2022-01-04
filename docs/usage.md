@@ -608,6 +608,45 @@ tasks:
       - yarn {{.CLI_ARGS}}
 ```
 
+## Doing task cleanup with `defer`
+
+With the `defer` keyword, it's possible to schedule cleanup to be run once
+the task finishes. The difference with just putting it as the last command is
+that this command will run even when the task fails.
+
+In the example below `rm -rf tmpdir/` will run even if the third command fails:
+
+```yaml
+version: '3'
+
+tasks:
+  default:
+    cmds:
+      - mkdir -p tmpdir/
+      - defer: rm -rf tmpdir/
+      - echo 'Do work on tmpdir/'
+```
+
+If you want to move the cleanup command into another task, that's possible as
+well:
+
+```yaml
+version: '3'
+
+tasks:
+  default:
+    cmds:
+      - mkdir -p tmpdir/
+      - defer: { task: cleanup }
+      - echo 'Do work on tmpdir/'
+
+  cleanup: rm -rf tmpdir/
+```
+
+> NOTE: Due to the nature of how the
+[Go's own `defer` work](https://go.dev/tour/flowcontrol/13), the deferred
+commands are executed in the reverse order if you schedule multiple of them.
+
 ## Go's template engine
 
 Task parse commands as [Go's template engine][gotemplate] before executing

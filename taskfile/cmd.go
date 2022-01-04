@@ -43,10 +43,7 @@ func (c *Cmd) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		return nil
 	}
 	var deferredCall struct {
-		Defer struct {
-			Task string
-			Vars *Vars
-		}
+		Defer Call
 	}
 	if err := unmarshal(&deferredCall); err == nil && deferredCall.Defer.Task != "" {
 		c.Defer = true

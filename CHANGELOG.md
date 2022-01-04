@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- It's now possible to schedule cleanup commands to run once a task finishes
+  with the `defer:` keyword
+  ([Documentation](https://taskfile.dev/#/usage?id=doing-task-cleanup-with-defer), [#475](https://github.com/go-task/task/issues/475), [#626](https://github.com/go-task/task/pull/626/files)).
 - Remove long deprecated and undocumented `$` variable prefix and `^` command
   prefix
   ([#642](https://github.com/go-task/task/issues/642), [#644](https://github.com/go-task/task/issues/644), [#645](https://github.com/go-task/task/pull/645)).
