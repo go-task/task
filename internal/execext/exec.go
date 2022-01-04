@@ -47,10 +47,10 @@ func RunCommand(ctx context.Context, opts *RunCommandOptions) error {
 
 	r, err := interp.New(
 		interp.Params("-e"),
-		interp.Dir(opts.Dir),
 		interp.Env(expand.ListEnviron(environ...)),
 		interp.OpenHandler(openHandler),
 		interp.StdIO(opts.Stdin, opts.Stdout, opts.Stderr),
+		dirOption(opts.Dir),
 	)
 	if err != nil {
 		return err
@@ -86,4 +86,25 @@ func openHandler(ctx context.Context, path string, flag int, perm os.FileMode) (
 		return devNull{}, nil
 	}
 	return interp.DefaultOpenHandler()(ctx, path, flag, perm)
+}
+
+func dirOption(path string) interp.RunnerOption {
+	return func(r *interp.Runner) error {
+		err := interp.Dir(path)(r)
+		if err == nil {
+			return nil
+		}
+
+		// If the specified directory doesn't exist, it will be created later.
+		// Therefore, even if `interp.Dir` method returns an error, the
+		// directory path should be set only when the directory cannot be found.
+		if absPath, _ := filepath.Abs(path); absPath != "" {
+			if _, err := os.Stat(absPath); os.IsNotExist(err) {
+				r.Dir = absPath
+				return nil
+			}
+		}
+
+		return err
+	}
 }

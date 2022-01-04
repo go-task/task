@@ -1,0 +1,10 @@
+version: '3'
+
+tasks:
+  default:
+    dir: created
+    cmds:
+      - echo {{.TASK_DIR}}
+    vars:
+      TASK_DIR:
+        sh: echo $(pwd)
