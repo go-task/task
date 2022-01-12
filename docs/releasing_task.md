@@ -31,6 +31,13 @@ of updating versions there by editing
 [this file](https://github.com/lukesampson/scoop-extras/blob/master/bucket/task.json).
 If you think its Task version is outdated, open an issue to let us know.
 
+# Nix
+
+Nix is a community owned installation method. Nix package maintainers usually take care
+of updating versions there by editing
+[this file](https://github.com/NixOS/nixpkgs/blob/nixos-unstable/pkgs/development/tools/go-task/default.nix#L34).
+If you think its Task version is outdated, open an issue to let us know.
+
 [goreleaser]: https://goreleaser.com/#continuous_integration
 [homebrewtap]: https://github.com/go-task/homebrew-tap
 [gotaskrb]: https://github.com/go-task/homebrew-tap/blob/master/Formula/go-task.rb

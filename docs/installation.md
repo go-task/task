@@ -51,6 +51,19 @@ yay -S taskfile-git
 This installation method is community owned, but since it's `-git` version of
 the package, it's always latest available version based on the Git repository.
 
+
+#### **Nix**
+
+If you're on NixOS or have Nix installed
+you can install Task from [nixpkgs](https://github.com/NixOS/nixpkgs):
+
+```cmd
+nix-env -iA nixpkgs.go-task
+```
+
+This installation method is community owned. After a new release of Task, it
+may take some time until it's available in [nixpkgs](https://github.com/NixOS/nixpkgs).
+
 <!-- tabs:end -->
 
 ## Get The Binary
