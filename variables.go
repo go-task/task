@@ -102,6 +102,7 @@ func (e *Executor) compiledTask(call taskfile.Call, evaluateShVars bool) (*taskf
 				Cmd:         r.Replace(cmd.Cmd),
 				Vars:        r.ReplaceVars(cmd.Vars),
 				IgnoreError: cmd.IgnoreError,
+				Defer:       cmd.Defer,
 			})
 		}
 	}

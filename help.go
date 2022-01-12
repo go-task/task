@@ -9,11 +9,32 @@ import (
 	"github.com/go-task/task/v3/taskfile"
 )
 
-// PrintTasksHelp prints help os tasks that have a description
-func (e *Executor) PrintTasksHelp() {
-	tasks := e.tasksWithDesc()
+// ListTasksWithDesc reports tasks that have a description spec.
+func (e *Executor) ListTasksWithDesc() {
+	e.printTasks(false)
+	return
+}
+
+// ListAllTasks reports all tasks, with or without a description spec.
+func (e *Executor) ListAllTasks() {
+	e.printTasks(true)
+	return
+}
+
+func (e *Executor) printTasks(listAll bool) {
+	var tasks []*taskfile.Task
+	if listAll {
+		tasks = e.allTaskNames()
+	} else {
+		tasks = e.tasksWithDesc()
+	}
+
 	if len(tasks) == 0 {
-		e.Logger.Outf(logger.Yellow, "task: No tasks with description available")
+		if listAll {
+			e.Logger.Outf(logger.Yellow, "task: No tasks available")
+		} else {
+			e.Logger.Outf(logger.Yellow, "task: No tasks with description available. Try --list-all to list all tasks")
+		}
 		return
 	}
 	e.Logger.Outf(logger.Default, "task: Available tasks for this project:")
@@ -24,6 +45,15 @@ func (e *Executor) PrintTasksHelp() {
 		fmt.Fprintf(w, "* %s: \t%s\n", task.Name(), task.Desc)
 	}
 	w.Flush()
+}
+
+func (e *Executor) allTaskNames() (tasks []*taskfile.Task) {
+	tasks = make([]*taskfile.Task, 0, len(e.Taskfile.Tasks))
+	for _, task := range e.Taskfile.Tasks {
+		tasks = append(tasks, task)
+	}
+	sort.Slice(tasks, func(i, j int) bool { return tasks[i].Task < tasks[j].Task })
+	return
 }
 
 func (e *Executor) tasksWithDesc() (tasks []*taskfile.Task) {

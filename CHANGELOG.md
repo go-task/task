@@ -1,13 +1,23 @@
 # Changelog
 
-## Unreleased
+## v3.10.0 - 2022-01-04
 
+- A new `--list-all` (alias `-a`) flag is now available. It's similar to the
+  exiting `--list` (`-l`) but prints all tasks, even those without a
+  description
+  ([#383](https://github.com/go-task/task/issues/383), [#401](https://github.com/go-task/task/pull/401)).
+- It's now possible to schedule cleanup commands to run once a task finishes
+  with the `defer:` keyword
+  ([Documentation](https://taskfile.dev/#/usage?id=doing-task-cleanup-with-defer), [#475](https://github.com/go-task/task/issues/475), [#626](https://github.com/go-task/task/pull/626)).
 - Remove long deprecated and undocumented `$` variable prefix and `^` command
   prefix
   ([#642](https://github.com/go-task/task/issues/642), [#644](https://github.com/go-task/task/issues/644), [#645](https://github.com/go-task/task/pull/645)).
 - Add support for `.yaml` extension (as an alternative to `.yml`).
   This was requested multiple times throughout the years. Enjoy!
   ([#183](https://github.com/go-task/task/issues/183), [#184](https://github.com/go-task/task/pull/184), [#369](https://github.com/go-task/task/issues/369), [#584](https://github.com/go-task/task/issues/584), [#621](https://github.com/go-task/task/pull/621)).
+- Fixed error when computing a variable when the task directory do not exist
+  yet
+  ([#481](https://github.com/go-task/task/issues/481), [#579](https://github.com/go-task/task/pull/579)).
 
 ## v3.9.2 - 2021-12-02
 

@@ -530,8 +530,56 @@ func TestLabelInList(t *testing.T) {
 		Stderr: &buff,
 	}
 	assert.NoError(t, e.Setup())
-	e.PrintTasksHelp()
+	e.ListTasksWithDesc()
 	assert.Contains(t, buff.String(), "foobar")
+}
+
+// task -al case 1: listAll list all tasks
+func TestListAllShowsNoDesc(t *testing.T) {
+	const dir = "testdata/list_mixed_desc"
+
+	var buff bytes.Buffer
+	e := task.Executor{
+		Dir:    dir,
+		Stdout: &buff,
+		Stderr: &buff,
+	}
+
+	assert.NoError(t, e.Setup())
+
+	var title string
+	e.ListAllTasks()
+	for _, title = range []string{
+		"foo",
+		"voo",
+		"doo",
+	} {
+		assert.Contains(t, buff.String(), title)
+	}
+}
+
+// task -al case 2: !listAll list some tasks (only those with desc)
+func TestListCanListDescOnly(t *testing.T) {
+	const dir = "testdata/list_mixed_desc"
+
+	var buff bytes.Buffer
+	e := task.Executor{
+		Dir:    dir,
+		Stdout: &buff,
+		Stderr: &buff,
+	}
+
+	assert.NoError(t, e.Setup())
+	e.ListTasksWithDesc()
+
+	var title string
+	assert.Contains(t, buff.String(), "foo")
+	for _, title = range []string{
+		"voo",
+		"doo",
+	} {
+		assert.NotContains(t, buff.String(), title)
+	}
 }
 
 func TestStatusVariables(t *testing.T) {
@@ -907,6 +955,33 @@ func TestWhenDirAttributeItCreatesMissingAndRunsInThatDir(t *testing.T) {
 	_ = os.RemoveAll(toBeCreated)
 }
 
+func TestDynamicVariablesRunOnTheNewCreatedDir(t *testing.T) {
+	const expected = "created"
+	const dir = "testdata/dir/dynamic_var_on_created_dir/"
+	const toBeCreated = dir + expected
+	const target = "default"
+	var out bytes.Buffer
+	e := &task.Executor{
+		Dir:    dir,
+		Stdout: &out,
+		Stderr: &out,
+	}
+
+	// Ensure that the directory to be created doesn't actually exist.
+	_ = os.RemoveAll(toBeCreated)
+	if _, err := os.Stat(toBeCreated); err == nil {
+		t.Errorf("Directory should not exist: %v", err)
+	}
+	assert.NoError(t, e.Setup())
+	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: target}))
+
+	got := strings.TrimSuffix(filepath.Base(out.String()), "\n")
+	assert.Equal(t, expected, got, "Mismatch in the working directory")
+
+	// Clean-up after ourselves only if no error.
+	_ = os.RemoveAll(toBeCreated)
+}
+
 func TestDynamicVariablesShouldRunOnTheTaskDir(t *testing.T) {
 	tt := fileContentTest{
 		Dir:       "testdata/dir/dynamic_var",
@@ -1054,6 +1129,32 @@ func TestRunOnlyRunsJobsHashOnce(t *testing.T) {
 		},
 	}
 	tt.Run(t)
+}
+
+func TestDeferredCmds(t *testing.T) {
+	const dir = "testdata/deferred"
+	var buff bytes.Buffer
+	e := task.Executor{
+		Dir:    dir,
+		Stdout: &buff,
+		Stderr: &buff,
+	}
+	assert.NoError(t, e.Setup())
+
+	expectedOutputOrder := strings.TrimSpace(`
+task: [task-2] echo 'cmd ran'
+cmd ran
+task: [task-2] exit 1
+task: [task-2] echo 'failing' && exit 2
+failing
+task: [task-2] echo 'echo ran'
+echo ran
+task: [task-1] echo 'task-1 ran successfully'
+task-1 ran successfully
+`)
+	assert.Error(t, e.Run(context.Background(), taskfile.Call{Task: "task-2"}))
+	fmt.Println(buff.String())
+	assert.Contains(t, buff.String(), expectedOutputOrder)
 }
 
 func TestIgnoreNilElements(t *testing.T) {

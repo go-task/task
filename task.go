@@ -68,7 +68,7 @@ func (e *Executor) Run(ctx context.Context, calls ...taskfile.Call) error {
 	for _, c := range calls {
 		if _, ok := e.Taskfile.Tasks[c.Task]; !ok {
 			// FIXME: move to the main package
-			e.PrintTasksHelp()
+			e.ListTasksWithDesc()
 			return &taskNotFoundError{taskName: c.Task}
 		}
 	}
@@ -339,6 +339,11 @@ func (e *Executor) RunTask(ctx context.Context, call taskfile.Call) error {
 		}
 
 		for i := range t.Cmds {
+			if t.Cmds[i].Defer {
+				defer e.runDeferred(t, call, i)
+				continue
+			}
+
 			if err := e.runCommand(ctx, t, call, i); err != nil {
 				if err2 := e.statusOnError(t); err2 != nil {
 					e.Logger.VerboseErrf(logger.Yellow, "task: error cleaning status on error: %v", err2)
@@ -393,6 +398,15 @@ func (e *Executor) runDeps(ctx context.Context, t *taskfile.Task) error {
 	}
 
 	return g.Wait()
+}
+
+func (e *Executor) runDeferred(t *taskfile.Task, call taskfile.Call, i int) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	if err := e.runCommand(ctx, t, call, i); err != nil {
+		e.Logger.VerboseErrf(logger.Yellow, `task: ignored error in deferred cmd: %s`, err.Error())
+	}
 }
 
 func (e *Executor) runCommand(ctx context.Context, t *taskfile.Task, call taskfile.Call, i int) error {
