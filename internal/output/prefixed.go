@@ -9,7 +9,7 @@ import (
 
 type Prefixed struct{}
 
-func (Prefixed) WrapWriter(w io.Writer, prefix string) io.Writer {
+func (Prefixed) WrapWriter(w io.Writer, prefix string, _ Templater) io.Writer {
 	return &prefixWriter{writer: w, prefix: prefix}
 }
 

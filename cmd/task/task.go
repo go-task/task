@@ -11,6 +11,7 @@ import (
 	"strings"
 	"syscall"
 
+	outputpkg "github.com/go-task/task/v3/internal/output"
 	"github.com/spf13/pflag"
 	"mvdan.cc/sh/v3/syntax"
 
@@ -72,7 +73,7 @@ func main() {
 		concurrency int
 		dir         string
 		entrypoint  string
-		output      string
+		output      outputpkg.Style
 		color       bool
 	)
 
@@ -91,7 +92,9 @@ func main() {
 	pflag.BoolVar(&summary, "summary", false, "show summary about a task")
 	pflag.StringVarP(&dir, "dir", "d", "", "sets directory of execution")
 	pflag.StringVarP(&entrypoint, "taskfile", "t", "", `choose which Taskfile to run. Defaults to "Taskfile.yml"`)
-	pflag.StringVarP(&output, "output", "o", "", "sets output style: [interleaved|group|prefixed]")
+	pflag.StringVarP(&output.Name, "output", "o", "", "sets output style: [interleaved|group|prefixed]")
+	pflag.StringVar(&output.Group.Begin, "output-group-begin", "", "message template to print before a task's grouped output")
+	pflag.StringVar(&output.Group.End, "output-group-end", "", "message template to print after a task's grouped output")
 	pflag.BoolVarP(&color, "color", "c", true, "colored output. Enabled by default. Set flag to false or use NO_COLOR=1 to disable")
 	pflag.IntVarP(&concurrency, "concurrency", "C", 0, "limit number tasks to run concurrently")
 	pflag.Parse()
@@ -124,6 +127,17 @@ func main() {
 	if entrypoint != "" {
 		dir = filepath.Dir(entrypoint)
 		entrypoint = filepath.Base(entrypoint)
+	}
+
+	if output.Name != "group" {
+		if output.Group.Begin != "" {
+			log.Fatal("task: You can't set --output-group-begin without --output=group")
+			return
+		}
+		if output.Group.End != "" {
+			log.Fatal("task: You can't set --output-group-end without --output=group")
+			return
+		}
 	}
 
 	e := task.Executor{

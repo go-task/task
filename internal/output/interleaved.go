@@ -6,6 +6,6 @@ import (
 
 type Interleaved struct{}
 
-func (Interleaved) WrapWriter(w io.Writer, _ string) io.Writer {
+func (Interleaved) WrapWriter(w io.Writer, _ string, _ Templater) io.Writer {
 	return w
 }
