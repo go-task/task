@@ -54,6 +54,13 @@ nfpms:
       - deb
       - rpm
     file_name_template: "{{.ProjectName}}_{{.Os}}_{{.Arch}}"
+    contents:
+      - src: completion/bash/task.bash
+        dst: /etc/bash_completion.d/task
+      - src: completion/fish/task.fish
+        dst: /usr/share/fish/completions/task.fish
+      - src: completion/zsh/_task
+        dst: /usr/local/share/zsh/site-functions/_task
 
 brews:
   - name: go-task
