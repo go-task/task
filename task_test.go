@@ -753,6 +753,31 @@ func TestIncludes(t *testing.T) {
 	tt.Run(t)
 }
 
+func TestIncludesMultiLevel(t *testing.T) {
+	tt := fileContentTest{
+		Dir:       "testdata/includes_multi_level",
+		Target:    "default",
+		TrimSpace: true,
+		Files:     map[string]string{},
+	}
+	tt.Run(t)
+}
+
+func TestIncludeCycle(t *testing.T) {
+	const dir = "testdata/includes_cycle"
+	expectedError := "include cycle detected between testdata/includes_cycle/Taskfile.yml <--> testdata/includes_cycle/one/two/Taskfile.yml"
+
+	var buff bytes.Buffer
+	e := task.Executor{
+		Dir:    dir,
+		Stdout: &buff,
+		Stderr: &buff,
+		Silent: true,
+	}
+
+	assert.EqualError(t, e.Setup(), expectedError)
+}
+
 func TestIncorrectVersionIncludes(t *testing.T) {
 	const dir = "testdata/incorrect_includes"
 	expectedError := "task: Import with additional parameters is only available starting on Taskfile version v3"
