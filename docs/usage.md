@@ -8,7 +8,7 @@ The example below allows compiling a Go app and uses [Minify][minify] to concat
 and minify multiple CSS files into a single one.
 
 ```yaml
-version: '3'
+version: "3"
 
 tasks:
   build:
@@ -40,7 +40,7 @@ If you omit a task name, "default" will be assumed.
 You can use `env` to set custom environment variables for a specific task:
 
 ```yaml
-version: '3'
+version: "3"
 
 tasks:
   greet:
@@ -54,7 +54,7 @@ Additionally, you can set globally environment variables, that'll be available
 to all tasks:
 
 ```yaml
-version: '3'
+version: "3"
 
 env:
   GREETING: Hey, there!
@@ -86,12 +86,12 @@ ENDPOINT=testing.com
 ```yaml
 # Taskfile.yml
 
-version: '3'
+version: "3"
 
 env:
   ENV: testing
 
-dotenv: ['.env', '{{.ENV}}/.env.', '{{.HOME}}/.env']
+dotenv: [".env", "{{.ENV}}/.env.", "{{.HOME}}/.env"]
 
 tasks:
   greet:
@@ -105,7 +105,7 @@ If you want to share tasks between different projects (Taskfiles), you can use
 the importing mechanism to include other Taskfiles using the `includes` keyword:
 
 ```yaml
-version: '3'
+version: "3"
 
 includes:
   docs: ./documentation # will look for ./documentation/Taskfile.yml
@@ -126,7 +126,7 @@ was removed on version 3, but you still can have a similar behavior by
 explicitly importing these files:
 
 ```yaml
-version: '3'
+version: "3"
 
 includes:
   build: ./Taskfile_{{OS}}.yml
@@ -139,7 +139,7 @@ if the Taskfile is in another directory, but you can force its tasks to run
 in another directory by using this alternative syntax:
 
 ```yaml
-version: '3'
+version: "3"
 
 includes:
   docs:
@@ -150,17 +150,13 @@ includes:
 > The included Taskfiles must be using the same schema version the main
 > Taskfile uses.
 
-> Also, for now included Taskfiles can't include other Taskfiles.
-> This was a deliberate decision to keep use and implementation simple.
-> If you disagree, open an GitHub issue and explain your use case. =)
-
 ### Optional includes
 
 Includes marked as optional will allow Task to continue execution as normal if
 the included file is missing.
 
 ```yaml
-version: '3'
+version: "3"
 
 includes:
   tests:
@@ -180,7 +176,7 @@ located. But you can easily make the task run in another folder informing
 `dir`:
 
 ```yaml
-version: '3'
+version: "3"
 
 tasks:
   serve:
@@ -202,7 +198,7 @@ You may have tasks that depend on others. Just pointing them on `deps` will
 make them run automatically before running the parent task:
 
 ```yaml
-version: '3'
+version: "3"
 
 tasks:
   build:
@@ -221,7 +217,7 @@ In the above example, `assets` will always run right before `build` if you run
 A task can have only dependencies and no commands to group tasks together:
 
 ```yaml
-version: '3'
+version: "3"
 
 tasks:
   assets:
@@ -246,15 +242,15 @@ If you want to pass information to dependencies, you can do that the same
 manner as you would to [call another task](#calling-another-task):
 
 ```yaml
-version: '3'
+version: "3"
 
 tasks:
   default:
     deps:
       - task: echo_sth
-        vars: {TEXT: "before 1"}
+        vars: { TEXT: "before 1" }
       - task: echo_sth
-        vars: {TEXT: "before 2"}
+        vars: { TEXT: "before 2" }
     cmds:
       - echo "after"
 
@@ -270,7 +266,7 @@ often result in a faster build pipeline. But in some situations you may need
 to call other tasks serially. In this case, just use the following syntax:
 
 ```yaml
-version: '3'
+version: "3"
 
 tasks:
   main-task:
@@ -292,7 +288,7 @@ Overriding variables in the called task is as simple as informing `vars`
 attribute:
 
 ```yaml
-version: '3'
+version: "3"
 
 tasks:
   greet:
@@ -304,7 +300,7 @@ tasks:
   greet-pessimistically:
     cmds:
       - task: greet
-        vars: {RECIPIENT: "Cruel World"}
+        vars: { RECIPIENT: "Cruel World" }
 ```
 
 The above syntax is also supported in `deps`.
@@ -321,7 +317,7 @@ If a task generates something, you can inform Task the source and generated
 files, so Task will prevent to run them if not necessary.
 
 ```yaml
-version: '3'
+version: "3"
 
 tasks:
   build:
@@ -357,7 +353,7 @@ If you prefer this check to be made by the modification timestamp of the files,
 instead of its checksum (content), just set the `method` property to `timestamp`.
 
 ```yaml
-version: '3'
+version: "3"
 
 tasks:
   build:
@@ -382,7 +378,7 @@ Alternatively, you can inform a sequence of tests as `status`. If no error
 is returned (exit status 0), the task is considered up-to-date:
 
 ```yaml
-version: '3'
+version: "3"
 
 tasks:
   generate-files:
@@ -421,13 +417,13 @@ the tasks are not up-to-date.
 ### Using programmatic checks to cancel execution of an task and it's dependencies
 
 In addition to `status` checks, there are also `preconditions` checks, which are
-the logical inverse of `status` checks.  That is, if you need a certain set of
+the logical inverse of `status` checks. That is, if you need a certain set of
 conditions to be _true_ you can use the `preconditions` stanza.
 `preconditions` are similar to `status` lines except they support `sh`
 expansion and they SHOULD all return 0.
 
 ```yaml
-version: '3'
+version: "3"
 
 tasks:
   generate-files:
@@ -446,7 +442,7 @@ Preconditions can set specific failure messages that can tell
 a user what steps to take using the `msg` field.
 
 If a task has a dependency on a sub-task with a precondition, and that
-precondition is not met - the calling task will fail.  Note that a task
+precondition is not met - the calling task will fail. Note that a task
 executed with a failing precondition will not run unless `--force` is
 given.
 
@@ -455,7 +451,7 @@ executing tasks that depend on it, a `precondition` will fail a task, along
 with any other tasks that depend on it.
 
 ```yaml
-version: '3'
+version: "3"
 
 tasks:
   task-will-fail:
@@ -481,24 +477,24 @@ overridden.
 
 Supported values for `run`:
 
- * `always` (default) always attempt to invoke the task regardless of the
+- `always` (default) always attempt to invoke the task regardless of the
   number of previous executions
- * `once` only invoke this task once regardless of the number of references
- * `when_changed` only invokes the task once for each unique set of variables
+- `once` only invoke this task once regardless of the number of references
+- `when_changed` only invokes the task once for each unique set of variables
   passed into the task
 
 ```yaml
-version: '3'
+version: "3"
 
 tasks:
   default:
     cmds:
       - task: generate-file
-        vars: { CONTENT: '1' }
+        vars: { CONTENT: "1" }
       - task: generate-file
-        vars: { CONTENT: '2' }
+        vars: { CONTENT: "2" }
       - task: generate-file
-        vars: { CONTENT: '2' }
+        vars: { CONTENT: "2" }
 
   generate-file:
     run: when_changed
@@ -543,7 +539,7 @@ $ task write-file FILE=file.txt "CONTENT=Hello, World!" print "MESSAGE=All done!
 Example of locally declared vars:
 
 ```yaml
-version: '3'
+version: "3"
 
 tasks:
   print-var:
@@ -556,7 +552,7 @@ tasks:
 Example of global vars in a `Taskfile.yml`:
 
 ```yaml
-version: '3'
+version: "3"
 
 vars:
   GREETING: Hello from Taskfile!
@@ -574,7 +570,7 @@ The value will be treated as a command and the output assigned. If there is one
 or more trailing newlines, the last newline will be trimmed.
 
 ```yaml
-version: '3'
+version: "3"
 
 tasks:
   build:
@@ -600,7 +596,7 @@ $ task yarn -- install
 ```
 
 ```yaml
-version: '3'
+version: "3"
 
 tasks:
   yarn:
@@ -617,7 +613,7 @@ that this command will run even when the task fails.
 In the example below `rm -rf tmpdir/` will run even if the third command fails:
 
 ```yaml
-version: '3'
+version: "3"
 
 tasks:
   default:
@@ -631,7 +627,7 @@ If you want to move the cleanup command into another task, that's possible as
 well:
 
 ```yaml
-version: '3'
+version: "3"
 
 tasks:
   default:
@@ -644,8 +640,8 @@ tasks:
 ```
 
 > NOTE: Due to the nature of how the
-[Go's own `defer` work](https://go.dev/tour/flowcontrol/13), the deferred
-commands are executed in the reverse order if you schedule multiple of them.
+> [Go's own `defer` work](https://go.dev/tour/flowcontrol/13), the deferred
+> commands are executed in the reverse order if you schedule multiple of them.
 
 ## Go's template engine
 
@@ -656,7 +652,7 @@ All functions by the Go's [slim-sprig lib](https://go-task.github.io/slim-sprig/
 are available. The following example gets the current date in a given format:
 
 ```yaml
-version: '3'
+version: "3"
 
 tasks:
   print-date:
@@ -685,7 +681,7 @@ Task also adds the following functions:
 Example:
 
 ```yaml
-version: '3'
+version: "3"
 
 tasks:
   print-os:
@@ -713,7 +709,7 @@ Running `task --list` (or `task -l`) lists all tasks with a description.
 The following Taskfile:
 
 ```yaml
-version: '3'
+version: "3"
 
 tasks:
   build:
@@ -750,7 +746,7 @@ Running `task --summary task-name` will show a summary of a task.
 The following Taskfile:
 
 ```yaml
-version: '3'
+version: "3"
 
 tasks:
   release:
@@ -768,7 +764,7 @@ tasks:
       - your-build-tool
 ```
 
-with running ``task --summary release`` would print the following output:
+with running `task --summary release` would print the following output:
 
 ```
 task: release
@@ -784,10 +780,11 @@ dependencies:
 commands:
  - your-release-tool
 ```
+
 If a summary is missing, the description will be printed.
 If the task does not have a summary or a description, a warning is printed.
 
-Please note: *showing the summary will not execute the command*.
+Please note: _showing the summary will not execute the command_.
 
 ## Overriding task name
 
@@ -796,7 +793,7 @@ messages to STDOUT, etc. In this case you can just set `label:`, which can also
 be interpolated with variables:
 
 ```yaml
-version: '3'
+version: "3"
 
 tasks:
   default:
@@ -808,7 +805,7 @@ tasks:
         MESSAGE: world
 
   print:
-    label: 'print-{{.MESSAGE}}'
+    label: "print-{{.MESSAGE}}"
     cmds:
       - echo "{{.MESSAGE}}"
 ```
@@ -819,7 +816,7 @@ Silent mode disables echoing of commands before Task runs it.
 For the following Taskfile:
 
 ```yaml
-version: '3'
+version: "3"
 
 tasks:
   echo:
@@ -842,10 +839,10 @@ Print something
 
 There are four ways to enable silent mode:
 
-* At command level:
+- At command level:
 
 ```yaml
-version: '3'
+version: "3"
 
 tasks:
   echo:
@@ -854,10 +851,10 @@ tasks:
         silent: true
 ```
 
-* At task level:
+- At task level:
 
 ```yaml
-version: '3'
+version: "3"
 
 tasks:
   echo:
@@ -866,10 +863,10 @@ tasks:
     silent: true
 ```
 
-* Globally at Taskfile level:
+- Globally at Taskfile level:
 
 ```yaml
-version: '3'
+version: "3"
 
 silent: true
 
@@ -879,12 +876,12 @@ tasks:
       - echo "Print something"
 ```
 
-* Or globally with `--silent` or `-s` flag
+- Or globally with `--silent` or `-s` flag
 
 If you want to suppress STDOUT instead, just redirect a command to `/dev/null`:
 
 ```yaml
-version: '3'
+version: "3"
 
 tasks:
   echo:
@@ -903,7 +900,7 @@ You have the option to ignore errors during command execution.
 Given the following Taskfile:
 
 ```yaml
-version: '3'
+version: "3"
 
 tasks:
   echo:
@@ -916,7 +913,7 @@ Task will abort the execution after running `exit 1` because the status code `1`
 However it is possible to continue with execution using `ignore_error`:
 
 ```yaml
-version: '3'
+version: "3"
 
 tasks:
   echo:
@@ -947,24 +944,24 @@ options you can choose:
 To choose another one, just set it to root in the Taskfile:
 
 ```yaml
-version: '3'
+version: "3"
 
-output: 'group'
+output: "group"
 
 tasks:
   # ...
 ```
 
- The `group` output will print the entire output of a command once, after it
- finishes, so you won't have live feedback for commands that take a long time
- to run.
+The `group` output will print the entire output of a command once, after it
+finishes, so you won't have live feedback for commands that take a long time
+to run.
 
- The `prefix` output will prefix every line printed by a command with
- `[task-name] ` as the prefix, but you can customize the prefix for a command
- with the `prefix:` attribute:
+The `prefix` output will prefix every line printed by a command with
+`[task-name] ` as the prefix, but you can customize the prefix for a command
+with the `prefix:` attribute:
 
- ```yaml
-version: '3'
+```yaml
+version: "3"
 
 output: prefixed
 
@@ -972,11 +969,11 @@ tasks:
   default:
     deps:
       - task: print
-        vars: {TEXT: foo}
+        vars: { TEXT: foo }
       - task: print
-        vars: {TEXT: bar}
+        vars: { TEXT: bar }
       - task: print
-        vars: {TEXT: baz}
+        vars: { TEXT: baz }
 
   print:
     cmds:
@@ -1005,7 +1002,7 @@ The `interactive: true` tells Task this is an interactive application, and Task
 will try to optimize for it:
 
 ```yaml
-version: '3'
+version: "3"
 
 tasks:
   cmds:
@@ -1022,7 +1019,7 @@ Starting on Task v3, you can now write tasks with a shorter syntax if they
 have the default settings (e.g. no custom `env:`, `vars:`, `desc:`, `silent:` , etc):
 
 ```yaml
-version: '3'
+version: "3"
 
 tasks:
   build: go build -v -o ./app{{exeExt}} .
