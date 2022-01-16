@@ -77,29 +77,18 @@ func Taskfile(readerNode *ReaderNode) (*taskfile.Taskfile, error) {
 			path = filepath.Join(readerNode.Dir, path)
 		}
 
-		// check for cyclic include references by walking up
-		// node tree of parents and comparing paths
-		var curNode = readerNode
-		for curNode.Parent != nil {
-			curNode = curNode.Parent
-			curPath := filepath.Join(curNode.Dir, curNode.Entrypoint)
-			if curPath == path {
-				return fmt.Errorf("include cycle detected between %s <--> %s",
-					curPath,
-					filepath.Join(readerNode.Dir, readerNode.Entrypoint),
-				)
-			}
-		}
-
-		// if we made it here then there is no cyclic include
-		readOpts := &ReaderNode{
+		includeReaderNode := &ReaderNode{
 			Dir:        filepath.Dir(path),
 			Entrypoint: filepath.Base(path),
 			Parent:     readerNode,
 			Optional:   includedTask.Optional,
 		}
 
-		includedTaskfile, err := Taskfile(readOpts)
+		if err := checkCircularIncludes(includeReaderNode); err != nil {
+			return err
+		}
+
+		includedTaskfile, err := Taskfile(includeReaderNode)
 		if err != nil {
 			if includedTask.Optional {
 				return nil
@@ -189,4 +178,26 @@ func exists(path string) (string, error) {
 	}
 
 	return "", fmt.Errorf(`task: No Taskfile found in "%s". Use "task --init" to create a new one`, path)
+}
+
+func checkCircularIncludes(node *ReaderNode) error {
+	if node == nil {
+		return errors.New("failed to check for include cycle: node was nil")
+	}
+	if node.Parent == nil {
+		return errors.New("failed to check for include cycle: node.Parent was nil")
+	}
+	var curNode = node
+	var basePath = filepath.Join(node.Dir, node.Entrypoint)
+	for curNode.Parent != nil {
+		curNode = curNode.Parent
+		curPath := filepath.Join(curNode.Dir, curNode.Entrypoint)
+		if curPath == basePath {
+			return fmt.Errorf("include cycle detected between %s <--> %s",
+				curPath,
+				filepath.Join(node.Parent.Dir, node.Parent.Entrypoint),
+			)
+		}
+	}
+	return nil
 }

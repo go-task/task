@@ -4,6 +4,6 @@ includes:
   'two': ./two/Taskfile.yml
 
 tasks:
-  level2:
+  level1:
     cmds:
-      - echo "hello level 2"
+      - echo "hello level 1"

@@ -1,6 +1,6 @@
 version: '3'
 
 tasks:
-  level3:
+  default:
     cmds:
-      - echo "hello level 3"
+      - echo "called_dep" > called_dep.txt
