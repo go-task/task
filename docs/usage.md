@@ -653,8 +653,10 @@ There are a series of hooks that can be used to execute commands in response to 
 - `before_all` commands are called before a task starts execution
 - `after_all` commands are called after a task completes, success or failure
 - `on_success` commands are called when a task completes successfully
-- `on_failure` commands are called when a task fails an exit code other than `0`
+- `on_failure` commands are called when a task completes with an exit code other than `0`
 - `on_skipped` commands are called when a task is skipped due to status, precondition or checksum
+
+Hooks are simply event listeners and do not have the ability to control the flow of a task. If a command within a hook fails to execute, the failure will simply be pushed to the verbose logger and the task will continue its execution.
 
 Examples:
 ```yml
@@ -719,6 +721,7 @@ tasks:
 
   skippy2:
     status:
+      - touch status.txt
       - test -f status.txt
     cmds:
       - echo "i won't get here"
