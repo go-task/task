@@ -18,6 +18,7 @@ type Task struct {
 	Dir           string
 	Vars          *Vars
 	Env           *Vars
+	Hooks         *Hooks
 	Silent        bool
 	Interactive   bool
 	Method        string
@@ -59,6 +60,7 @@ func (t *Task) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		Dir           string
 		Vars          *Vars
 		Env           *Vars
+		Hooks         *Hooks
 		Silent        bool
 		Interactive   bool
 		Method        string
@@ -81,6 +83,7 @@ func (t *Task) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	t.Dir = task.Dir
 	t.Vars = task.Vars
 	t.Env = task.Env
+	t.Hooks = task.Hooks
 	t.Silent = task.Silent
 	t.Interactive = task.Interactive
 	t.Method = task.Method

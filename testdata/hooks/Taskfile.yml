@@ -1,0 +1,25 @@
+version: '3'
+
+tasks:
+  success:
+    cmds:
+      - echo "command executed" > success.txt
+    hooks:
+      after_all:
+        - echo "success" > after_all.txt
+      before_all:
+        - echo "success" > before_all.txt
+      on_success:
+        - echo "on_success" > on_success.txt
+
+  failure:
+    cmds:
+      - echo "command executed" > failure.txt
+      - exit 1
+    hooks:
+      after_all:
+        - echo "failure" > after_all.txt
+      before_all:
+        - echo "failure" > before_all.txt
+      on_failure:
+        - echo "on_failure" > on_failure.txt

@@ -338,13 +338,22 @@ func (e *Executor) RunTask(ctx context.Context, call taskfile.Call) error {
 			e.Logger.Errf(logger.Red, "task: cannot make directory %q: %v", t.Dir, err)
 		}
 
-		for i := range t.Cmds {
-			if t.Cmds[i].Defer {
-				defer e.runDeferred(t, call, i)
+		if t.Hooks != nil && len(t.Hooks.BeforeAll) != 0 {
+			for _, cmd := range t.Hooks.BeforeAll {
+				if err = e.runCommand(ctx, t, cmd); err != nil {
+					e.Logger.VerboseErrf(logger.Red, "task: error executing command in before_all hook: %v", err)
+				}
+			}
+		}
+
+		var taskErr error = nil
+		for _, cmd := range t.Cmds {
+			if cmd.Defer {
+				defer e.runDeferred(t, cmd)
 				continue
 			}
 
-			if err := e.runCommand(ctx, t, call, i); err != nil {
+			if err := e.runCommand(ctx, t, cmd); err != nil {
 				if err2 := e.statusOnError(t); err2 != nil {
 					e.Logger.VerboseErrf(logger.Yellow, "task: error cleaning status on error: %v", err2)
 				}
@@ -354,11 +363,39 @@ func (e *Executor) RunTask(ctx context.Context, call taskfile.Call) error {
 					continue
 				}
 
-				return &taskRunError{t.Task, err}
+				taskErr = &taskRunError{t.Task, err}
+				break
 			}
 		}
+
+		if taskErr != nil {
+			if t.Hooks != nil && len(t.Hooks.OnFailure) != 0 {
+				for _, cmd := range t.Hooks.OnFailure {
+					if err = e.runCommand(ctx, t, cmd); err != nil {
+						e.Logger.VerboseErrf(logger.Red, "task: error executing command in on_failure hook: %v", err)
+					}
+				}
+			}
+		} else {
+			if t.Hooks != nil && len(t.Hooks.OnSuccess) != 0 {
+				for _, cmd := range t.Hooks.OnSuccess {
+					if err = e.runCommand(ctx, t, cmd); err != nil {
+						e.Logger.VerboseErrf(logger.Red, "task: error executing command in on_success hook: %v", err)
+					}
+				}
+			}
+		}
+
+		if t.Hooks != nil && len(t.Hooks.AfterAll) != 0 {
+			for _, cmd := range t.Hooks.AfterAll {
+				if err = e.runCommand(ctx, t, cmd); err != nil {
+					e.Logger.VerboseErrf(logger.Red, "task: error executing command in after_all hook: %v", err)
+				}
+			}
+		}
+
 		e.Logger.VerboseErrf(logger.Magenta, `task: "%s" finished`, call.Task)
-		return nil
+		return taskErr
 	})
 }
 
@@ -400,18 +437,16 @@ func (e *Executor) runDeps(ctx context.Context, t *taskfile.Task) error {
 	return g.Wait()
 }
 
-func (e *Executor) runDeferred(t *taskfile.Task, call taskfile.Call, i int) {
+func (e *Executor) runDeferred(t *taskfile.Task, cmd *taskfile.Cmd) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	if err := e.runCommand(ctx, t, call, i); err != nil {
+	if err := e.runCommand(ctx, t, cmd); err != nil {
 		e.Logger.VerboseErrf(logger.Yellow, `task: ignored error in deferred cmd: %s`, err.Error())
 	}
 }
 
-func (e *Executor) runCommand(ctx context.Context, t *taskfile.Task, call taskfile.Call, i int) error {
-	cmd := t.Cmds[i]
-
+func (e *Executor) runCommand(ctx context.Context, t *taskfile.Task, cmd *taskfile.Cmd) error {
 	switch {
 	case cmd.Task != "":
 		reacquire := e.releaseConcurrencyLimit()

@@ -1,0 +1,11 @@
+version: '3'
+
+includes: 
+  included: "./Taskfile.yml"
+
+tasks:
+  success:
+    - task: included:success
+
+  failure:
+    - task: included:failure

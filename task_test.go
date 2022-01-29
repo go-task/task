@@ -28,6 +28,7 @@ type fileContentTest struct {
 	Entrypoint string
 	Target     string
 	TrimSpace  bool
+	ExpectErr  bool
 	Files      map[string]string
 }
 
@@ -46,8 +47,14 @@ func (fct fileContentTest) Run(t *testing.T) {
 		Stdout:     io.Discard,
 		Stderr:     io.Discard,
 	}
-	assert.NoError(t, e.Setup(), "e.Setup()")
-	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: fct.Target}), "e.Run(target)")
+
+	if fct.ExpectErr {
+		e.Setup()
+		e.Run(context.Background(), taskfile.Call{Task: fct.Target})
+	} else {
+		assert.NoError(t, e.Setup(), "e.Setup()")
+		assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: fct.Target}), "e.Run(target)")
+	}
 
 	for name, expectContent := range fct.Files {
 		t.Run(fct.name(name), func(t *testing.T) {
@@ -250,6 +257,70 @@ func TestDeps(t *testing.T) {
 			t.Errorf("File %s should exist", f)
 		}
 	}
+}
+
+func TestHooksTaskSuccess(t *testing.T) {
+	tt := fileContentTest{
+		Dir:       "testdata/hooks",
+		Target:    "success",
+		TrimSpace: true,
+		Files: map[string]string{
+			"success.txt":    "command executed",
+			"after_all.txt":  "success",
+			"before_all.txt": "success",
+			"on_success.txt": "on_success",
+		},
+	}
+	tt.Run(t)
+}
+
+func TestHooksTaskFailure(t *testing.T) {
+	tt := fileContentTest{
+		Dir:       "testdata/hooks",
+		Target:    "failure",
+		TrimSpace: true,
+		ExpectErr: true,
+		Files: map[string]string{
+			"failure.txt":    "command executed",
+			"after_all.txt":  "failure",
+			"before_all.txt": "failure",
+			"on_failure.txt": "on_failure",
+		},
+	}
+	tt.Run(t)
+}
+
+func TestHooksIncludedTaskSuccess(t *testing.T) {
+	tt := fileContentTest{
+		Dir:        "testdata/hooks/",
+		Entrypoint: "Taskfile2.yml",
+		Target:     "included:success",
+		TrimSpace:  true,
+		Files: map[string]string{
+			"success.txt":    "command executed",
+			"after_all.txt":  "success",
+			"before_all.txt": "success",
+			"on_success.txt": "on_success",
+		},
+	}
+	tt.Run(t)
+}
+
+func TestHooksIncludedTaskFailure(t *testing.T) {
+	tt := fileContentTest{
+		Dir:        "testdata/hooks",
+		Entrypoint: "Taskfile2.yml",
+		Target:     "included:failure",
+		TrimSpace:  true,
+		ExpectErr:  true,
+		Files: map[string]string{
+			"failure.txt":    "command executed",
+			"after_all.txt":  "failure",
+			"before_all.txt": "failure",
+			"on_failure.txt": "on_failure",
+		},
+	}
+	tt.Run(t)
 }
 
 func TestStatus(t *testing.T) {
