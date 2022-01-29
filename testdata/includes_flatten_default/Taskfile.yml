@@ -1,0 +1,9 @@
+version: 3
+
+includes:
+  flat: "./Taskfile2.yml"
+
+tasks:
+  default:
+    cmds:
+      - task: flat

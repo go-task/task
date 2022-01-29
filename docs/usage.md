@@ -117,6 +117,30 @@ namespace. So, you'd call `task docs:serve` to run the `serve` task from
 `documentation/Taskfile.yml` or `task docker:build` to run the `build` task
 from the `DockerTasks.yml` file.
 
+Included Taskfiles that declare a `default` task will be aliased automatically
+to their namespace only if there is not a conflicting task in the parent Taskfile.
+
+```yaml
+version: '3'
+includes:
+  docker: ./DockerTasks.yml
+tasks:
+  deploy:
+    - task: docker # will run docker:default
+```
+
+...
+
+```yaml
+version: '3'
+includes:
+  docker: ./DockerTasks.yml
+tasks:
+  docker: # declaring `docker` will prevent the above behavior
+    cmds:
+      - task: docker:default # but the default task can still be used
+```
+
 ### OS-specific Taskfiles
 
 With `version: '2'`, task automatically includes any `Taskfile_{{OS}}.yml`

@@ -753,6 +753,18 @@ func TestIncludes(t *testing.T) {
 	tt.Run(t)
 }
 
+func TestIncludesFlattenDefault(t *testing.T) {
+	tt := fileContentTest{
+		Dir:       "testdata/includes_flatten_default",
+		Target:    "default",
+		TrimSpace: true,
+		Files: map[string]string{
+			"file.txt": "hello world",
+		},
+	}
+	tt.Run(t)
+}
+
 func TestIncorrectVersionIncludes(t *testing.T) {
 	const dir = "testdata/incorrect_includes"
 	expectedError := "task: Import with additional parameters is only available starting on Taskfile version v3"

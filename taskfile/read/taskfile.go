@@ -113,6 +113,11 @@ func Taskfile(dir string, entrypoint string) (*taskfile.Taskfile, error) {
 		if err = taskfile.Merge(t, includedTaskfile, namespace); err != nil {
 			return err
 		}
+
+		if t.Tasks[namespace] == nil && includedTaskfile.Tasks["default"] != nil {
+			t.Tasks[namespace] = includedTaskfile.Tasks["default"]
+		}
+
 		return nil
 	})
 	if err != nil {
