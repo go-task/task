@@ -2,3 +2,4 @@ before_all.txt
 after_all.txt
 *failure.txt
 *success.txt
+*skipped.txt

@@ -290,6 +290,32 @@ func TestHooksTaskFailure(t *testing.T) {
 	tt.Run(t)
 }
 
+func TestHooksTaskSkippedByStatus(t *testing.T) {
+	tt := fileContentTest{
+		Dir:       "testdata/hooks",
+		Target:    "skipped_status",
+		TrimSpace: true,
+		ExpectErr: true,
+		Files: map[string]string{
+			"on_skipped.txt": "on_skipped_status",
+		},
+	}
+	tt.Run(t)
+}
+
+func TestHooksTaskSkippedByPrecondition(t *testing.T) {
+	tt := fileContentTest{
+		Dir:       "testdata/hooks",
+		Target:    "skipped_preconditions",
+		TrimSpace: true,
+		ExpectErr: true,
+		Files: map[string]string{
+			"on_skipped.txt": "on_skipped_preconditions",
+		},
+	}
+	tt.Run(t)
+}
+
 func TestHooksIncludedTaskSuccess(t *testing.T) {
 	tt := fileContentTest{
 		Dir:        "testdata/hooks/",
@@ -318,6 +344,34 @@ func TestHooksIncludedTaskFailure(t *testing.T) {
 			"after_all.txt":  "failure",
 			"before_all.txt": "failure",
 			"on_failure.txt": "on_failure",
+		},
+	}
+	tt.Run(t)
+}
+
+func TestHooksIncludedTaskSkippedByStatus(t *testing.T) {
+	tt := fileContentTest{
+		Dir:        "testdata/hooks",
+		Entrypoint: "Taskfile2.yml",
+		Target:     "included:skipped_status",
+		TrimSpace:  true,
+		ExpectErr:  true,
+		Files: map[string]string{
+			"on_skipped.txt": "on_skipped_status",
+		},
+	}
+	tt.Run(t)
+}
+
+func TestHooksIncludedTaskSkippedByPrecondition(t *testing.T) {
+	tt := fileContentTest{
+		Dir:        "testdata/hooks",
+		Entrypoint: "Taskfile2.yml",
+		Target:     "included:skipped_preconditions",
+		TrimSpace:  true,
+		ExpectErr:  true,
+		Files: map[string]string{
+			"on_skipped.txt": "on_skipped_preconditions",
 		},
 	}
 	tt.Run(t)

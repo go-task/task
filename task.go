@@ -307,6 +307,9 @@ func (e *Executor) RunTask(ctx context.Context, call taskfile.Call) error {
 
 	return e.startExecution(ctx, t, func(ctx context.Context) error {
 		e.Logger.VerboseErrf(logger.Magenta, `task: "%s" started`, call.Task)
+
+		e.hookBeforeAll(ctx, t)
+
 		if err := e.runDeps(ctx, t); err != nil {
 			return err
 		}
@@ -318,24 +321,20 @@ func (e *Executor) RunTask(ctx context.Context, call taskfile.Call) error {
 
 			preCondMet, err := e.areTaskPreconditionsMet(ctx, t)
 			if err != nil {
+				e.hookSkipped(ctx, t)
 				return err
 			}
 
 			upToDate, err := e.isTaskUpToDate(ctx, t)
 			if err != nil {
+				e.hookSkipped(ctx, t)
 				return err
 			}
 
 			if upToDate && preCondMet {
+				e.hookSkipped(ctx, t)
 				if !e.Silent {
 					e.Logger.Errf(logger.Magenta, `task: Task "%s" is up to date`, t.Name())
-				}
-				if t.Hooks != nil && len(t.Hooks.OnSkipped) != 0 {
-					for _, cmd := range t.Hooks.OnSkipped {
-						if err = e.runCommand(ctx, t, cmd); err != nil {
-							e.Logger.VerboseErrf(logger.Red, "task: error executing command in on_skipped hook: %v", err)
-						}
-					}
 				}
 				return nil
 			}
@@ -343,14 +342,6 @@ func (e *Executor) RunTask(ctx context.Context, call taskfile.Call) error {
 
 		if err := e.mkdir(t); err != nil {
 			e.Logger.Errf(logger.Red, "task: cannot make directory %q: %v", t.Dir, err)
-		}
-
-		if t.Hooks != nil && len(t.Hooks.BeforeAll) != 0 {
-			for _, cmd := range t.Hooks.BeforeAll {
-				if err = e.runCommand(ctx, t, cmd); err != nil {
-					e.Logger.VerboseErrf(logger.Red, "task: error executing command in before_all hook: %v", err)
-				}
-			}
 		}
 
 		var taskErr error = nil
@@ -376,32 +367,15 @@ func (e *Executor) RunTask(ctx context.Context, call taskfile.Call) error {
 		}
 
 		if taskErr != nil {
-			if t.Hooks != nil && len(t.Hooks.OnFailure) != 0 {
-				for _, cmd := range t.Hooks.OnFailure {
-					if err = e.runCommand(ctx, t, cmd); err != nil {
-						e.Logger.VerboseErrf(logger.Red, "task: error executing command in on_failure hook: %v", err)
-					}
-				}
-			}
+			e.hookFailure(ctx, t)
 		} else {
-			if t.Hooks != nil && len(t.Hooks.OnSuccess) != 0 {
-				for _, cmd := range t.Hooks.OnSuccess {
-					if err = e.runCommand(ctx, t, cmd); err != nil {
-						e.Logger.VerboseErrf(logger.Red, "task: error executing command in on_success hook: %v", err)
-					}
-				}
-			}
+			e.hookSuccess(ctx, t)
 		}
 
-		if t.Hooks != nil && len(t.Hooks.AfterAll) != 0 {
-			for _, cmd := range t.Hooks.AfterAll {
-				if err = e.runCommand(ctx, t, cmd); err != nil {
-					e.Logger.VerboseErrf(logger.Red, "task: error executing command in after_all hook: %v", err)
-				}
-			}
-		}
+		e.hookAfterAll(ctx, t)
 
 		e.Logger.VerboseErrf(logger.Magenta, `task: "%s" finished`, call.Task)
+
 		return taskErr
 	})
 }

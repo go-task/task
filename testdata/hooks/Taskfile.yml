@@ -23,3 +23,21 @@ tasks:
         - echo "failure" > before_all.txt
       on_failure:
         - echo "on_failure" > on_failure.txt
+
+  skipped_status:
+    status:
+      - echo "no errors here"
+    cmds:
+      - echo "i won't get here" > skipped.txt
+    hooks:
+      on_skipped:
+        - echo "on_skipped_status" > on_skipped.txt
+
+  skipped_preconditions:
+    preconditions:
+      - sh: "exit 1"
+    cmds:
+      - echo "i won't get here" > skipped.txt
+    hooks:
+      on_skipped:
+        - echo "on_skipped_preconditions" > on_skipped.txt
