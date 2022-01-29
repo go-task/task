@@ -330,6 +330,13 @@ func (e *Executor) RunTask(ctx context.Context, call taskfile.Call) error {
 				if !e.Silent {
 					e.Logger.Errf(logger.Magenta, `task: Task "%s" is up to date`, t.Name())
 				}
+				if t.Hooks != nil && len(t.Hooks.OnSkipped) != 0 {
+					for _, cmd := range t.Hooks.OnSkipped {
+						if err = e.runCommand(ctx, t, cmd); err != nil {
+							e.Logger.VerboseErrf(logger.Red, "task: error executing command in on_skipped hook: %v", err)
+						}
+					}
+				}
 				return nil
 			}
 		}

@@ -11,7 +11,8 @@ type Hooks struct {
 	OnSuccess []*Cmd `yaml:"on_success"`
 	// OnFailure commands are called when a task fails with an error
 	OnFailure []*Cmd `yaml:"on_failure"`
-
+	// OnSkipped commands are called when a task is skipped due to status, precondition or checksum
+	OnSkipped []*Cmd `yaml:"on_skipped"`
 	/**
 	// Other useful hooks?
 
