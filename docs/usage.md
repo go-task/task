@@ -643,9 +643,89 @@ tasks:
   cleanup: rm -rf tmpdir/
 ```
 
-> NOTE: Due to the nature of how the
+> `NOTE` Due to the nature of how the
 [Go's own `defer` work](https://go.dev/tour/flowcontrol/13), the deferred
 commands are executed in the reverse order if you schedule multiple of them.
+
+## Hooks
+There are a series of hooks that can be used to execute commands in response to an event happening during a task's execution. The available hooks are as follows:
+
+- `before_all` commands are called before a task starts execution
+- `after_all` commands are called after a task completes, success or failure
+- `on_success` commands are called when a task completes successfully
+- `on_failure` commands are called when a task fails an exit code other than `0`
+- `on_skipped` commands are called when a task is skipped due to status, precondition or checksum
+
+Examples:
+```yml
+version: '3'
+
+tasks:
+  notify:
+    vars:
+      STATUS: "NONE"
+    cmds:
+      - curl -d "status={{.STATUS}}" -X POST http://webhook.example.com
+      
+  test:
+    cmds:
+      - go test
+    hooks:
+      on_success:
+        - task: notify
+          vars:
+            STATUS: "PASS" 
+      on_failure:
+        - task: notify
+          vars:
+            STATUS: "FAIL"
+```
+
+```yml
+version: '3'
+
+tasks:
+  clean:
+    cmds:
+      - rm -rf .temp/
+
+  build:
+    cmds:
+      - go build
+    hooks:
+      before_all:
+        - go mod vendor
+        - go mod tidy
+      after_all:
+        - task: clean
+```
+
+> `NOTE` The difference between the `defer` feature and `after_all` hook is subtle. They can both be used to execute commands after a task has finished in success or failure, however, commands scheduled using `defer` are executed first-in-last-out. Commands scheduled using `after_all` are first-in-first-out. 
+
+One can also schedule commands when a task is skipped by `status`, `precondition` or `sources` + `generates`. 
+```yml
+version: '3'
+
+tasks:
+  
+  skippy:
+    preconditions:
+      - sh: "exit 1"
+    cmds:
+      - echo "i won't get here"
+    hooks:
+      on_skipped:
+        - echo "but i will get here"
+
+  skippy2:
+    status:
+      - test -f status.txt
+    cmds:
+      - echo "i won't get here"
+    hooks:
+      on_skipped:
+        - echo "but i will get here"  
+```
 
 ## Go's template engine
 
