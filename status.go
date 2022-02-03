@@ -107,9 +107,9 @@ func (e *Executor) checksumChecker(t *taskfile.Task) status.Checker {
 func (e *Executor) isTaskUpToDateStatus(ctx context.Context, t *taskfile.Task) (bool, error) {
 	for _, s := range t.Status {
 		err := execext.RunCommand(ctx, &execext.RunCommandOptions{
-			Command: s,
-			Dir:     t.Dir,
-			Env:     getEnviron(t),
+			Commands: []string{s},
+			Dir:      t.Dir,
+			Env:      getEnviron(t),
 		})
 		if err != nil {
 			e.Logger.VerboseOutf(logger.Yellow, "task: status command %s exited non-zero: %s", s, err)

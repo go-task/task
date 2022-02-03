@@ -15,6 +15,7 @@ type Taskfile struct {
 	Vars       *Vars
 	Env        *Vars
 	Tasks      Tasks
+	Setup      *[]Cmd
 	Silent     bool
 	Dotenv     []string
 	Run        string
@@ -30,6 +31,7 @@ func (tf *Taskfile) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		Includes   *IncludedTaskfiles
 		Vars       *Vars
 		Env        *Vars
+		Setup      *[]Cmd
 		Tasks      Tasks
 		Silent     bool
 		Dotenv     []string
@@ -45,6 +47,7 @@ func (tf *Taskfile) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	tf.Includes = taskfile.Includes
 	tf.Vars = taskfile.Vars
 	tf.Env = taskfile.Env
+	tf.Setup = taskfile.Setup
 	tf.Tasks = taskfile.Tasks
 	tf.Silent = taskfile.Silent
 	tf.Dotenv = taskfile.Dotenv

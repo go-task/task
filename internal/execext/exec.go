@@ -16,12 +16,12 @@ import (
 
 // RunCommandOptions is the options for the RunCommand func
 type RunCommandOptions struct {
-	Command string
-	Dir     string
-	Env     []string
-	Stdin   io.Reader
-	Stdout  io.Writer
-	Stderr  io.Writer
+	Commands []string
+	Dir      string
+	Env      []string
+	Stdin    io.Reader
+	Stdout   io.Writer
+	Stderr   io.Writer
 }
 
 var (
@@ -35,9 +35,14 @@ func RunCommand(ctx context.Context, opts *RunCommandOptions) error {
 		return ErrNilOptions
 	}
 
-	p, err := syntax.NewParser().Parse(strings.NewReader(opts.Command), "")
-	if err != nil {
-		return err
+	script := &syntax.File{}
+	parser := syntax.NewParser()
+	for _, c := range opts.Commands {
+		parsed, err := parser.Parse(strings.NewReader(c), "")
+		if err != nil {
+			return err
+		}
+		script.Stmts = append(script.Stmts, parsed.Stmts...)
 	}
 
 	environ := opts.Env
@@ -55,7 +60,7 @@ func RunCommand(ctx context.Context, opts *RunCommandOptions) error {
 	if err != nil {
 		return err
 	}
-	return r.Run(ctx, p)
+	return r.Run(ctx, script)
 }
 
 // IsExitError returns true the given error is an exis status error
