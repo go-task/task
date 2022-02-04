@@ -765,7 +765,7 @@ func TestIncludesMultiLevel(t *testing.T) {
 
 func TestIncludeCycle(t *testing.T) {
 	const dir = "testdata/includes_cycle"
-	expectedError := "include cycle detected between testdata/includes_cycle/Taskfile.yml <--> testdata/includes_cycle/one/two/Taskfile.yml"
+	expectedError := "task: include cycle detected between testdata/includes_cycle/Taskfile.yml <--> testdata/includes_cycle/one/two/Taskfile.yml"
 
 	var buff bytes.Buffer
 	e := task.Executor{
