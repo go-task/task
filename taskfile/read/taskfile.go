@@ -182,10 +182,10 @@ func exists(path string) (string, error) {
 
 func checkCircularIncludes(node *ReaderNode) error {
 	if node == nil {
-		return errors.New("failed to check for include cycle: node was nil")
+		return errors.New("task: failed to check for include cycle: node was nil")
 	}
 	if node.Parent == nil {
-		return errors.New("failed to check for include cycle: node.Parent was nil")
+		return errors.New("task: failed to check for include cycle: node.Parent was nil")
 	}
 	var curNode = node
 	var basePath = filepath.Join(node.Dir, node.Entrypoint)
@@ -193,7 +193,7 @@ func checkCircularIncludes(node *ReaderNode) error {
 		curNode = curNode.Parent
 		curPath := filepath.Join(curNode.Dir, curNode.Entrypoint)
 		if curPath == basePath {
-			return fmt.Errorf("include cycle detected between %s <--> %s",
+			return fmt.Errorf("task: include cycle detected between %s <--> %s",
 				curPath,
 				filepath.Join(node.Parent.Dir, node.Parent.Entrypoint),
 			)
