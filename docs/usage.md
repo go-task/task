@@ -150,10 +150,6 @@ includes:
 > The included Taskfiles must be using the same schema version the main
 > Taskfile uses.
 
-> Also, for now included Taskfiles can't include other Taskfiles.
-> This was a deliberate decision to keep use and implementation simple.
-> If you disagree, open an GitHub issue and explain your use case. =)
-
 ### Optional includes
 
 Includes marked as optional will allow Task to continue execution as normal if
