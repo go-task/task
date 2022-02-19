@@ -20,7 +20,12 @@ var (
 	// ErrIncludedTaskfilesCantHaveDotenvs is returned when a included Taskfile contains dotenvs
 	ErrIncludedTaskfilesCantHaveDotenvs = errors.New("task: Included Taskfiles can't have dotenv declarations. Please, move the dotenv declaration to the main Taskfile")
 
-	defaultTaskfiles = []string{"Taskfile.yml", "Taskfile.yaml", "Taskfile.dist.yml", "Taskfile.dist.yaml"}
+	defaultTaskfiles = []string{
+		"Taskfile.yml",
+		"Taskfile.yaml",
+		"Taskfile.dist.yml",
+		"Taskfile.dist.yaml",
+	}
 )
 
 // Taskfile reads a Taskfile for a given directory

@@ -856,6 +856,28 @@ func TestIncludesFromCustomTaskfile(t *testing.T) {
 	tt.Run(t)
 }
 
+func TestSupportedFileNames(t *testing.T) {
+	fileNames := []string{
+		"Taskfile.yml",
+		"Taskfile.yaml",
+		"Taskfile.dist.yml",
+		"Taskfile.dist.yaml",
+	}
+	for _, fileName := range fileNames {
+		t.Run(fileName, func(t *testing.T) {
+			tt := fileContentTest{
+				Dir:       fmt.Sprintf("testdata/file_names/%s", fileName),
+				Target:    "default",
+				TrimSpace: true,
+				Files: map[string]string{
+					"output.txt": "hello",
+				},
+			}
+			tt.Run(t)
+		})
+	}
+}
+
 func TestSummary(t *testing.T) {
 	const dir = "testdata/summary"
 

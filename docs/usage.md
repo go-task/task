@@ -33,6 +33,20 @@ executable called must be available by the OS or in PATH.
 
 If you omit a task name, "default" will be assumed.
 
+## Supported file names
+
+Task will look for the following file names, in order of priority:
+
+- Taskfile.yml
+- Taskfile.yaml
+- Taskfile.dist.yml
+- Taskfile.dist.yaml
+
+The intention of having the `.dist` variants is to allow projects to have one
+commited version (`.dist`) while still allowing individual users to override
+the Taskfile by adding an additional `Taskfile.yml` (which would be on
+`.gitignore`).
+
 ## Environment variables
 
 ### Task

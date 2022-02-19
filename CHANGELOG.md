@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Add `Taskfile.dist.yml` and `Taskfile.dist.yaml` to the supported file
+  name list. [Check out the documentation for more information](https://taskfile.dev/#/usage?id=supported-file-names).
+  ([#498](https://github.com/go-task/task/issues/498), [#666](https://github.com/go-task/task/pull/666)).
+
 ## v3.10.0 - 2022-01-04
 
 - A new `--list-all` (alias `-a`) flag is now available. It's similar to the
