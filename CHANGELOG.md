@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v3.11.0 - 2022-01-19
 
 - Task now supports printing begin and end messages when using the `group`
   output mode, useful for grouping tasks in CI systems.
