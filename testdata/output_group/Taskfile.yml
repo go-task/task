@@ -1,0 +1,16 @@
+version: '3'
+
+output:
+  group:
+    begin: '::group::{{ .TASK }}'
+    end: '::endgroup::'
+
+tasks:
+  hello:
+    cmds:
+      - echo 'Hello!'
+  bye:
+    deps:
+      - hello
+    cmds:
+      - echo 'Bye!'

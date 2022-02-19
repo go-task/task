@@ -16,6 +16,7 @@ import (
 	"github.com/go-task/task/v3/internal/logger"
 	"github.com/go-task/task/v3/internal/output"
 	"github.com/go-task/task/v3/internal/summary"
+	"github.com/go-task/task/v3/internal/templater"
 	"github.com/go-task/task/v3/taskfile"
 	"github.com/go-task/task/v3/taskfile/read"
 
@@ -51,7 +52,7 @@ type Executor struct {
 	Logger      *logger.Logger
 	Compiler    compiler.Compiler
 	Output      output.Output
-	OutputStyle string
+	OutputStyle output.Style
 
 	taskvars *taskfile.Vars
 
@@ -148,11 +149,11 @@ func (e *Executor) Setup() error {
 		v = 2.6
 	}
 	if v == 3.0 {
-		v = 3.7
+		v = 3.8
 	}
 
-	if v > 3.7 {
-		return fmt.Errorf(`task: Taskfile versions greater than v3.7 not implemented in the version of Task`)
+	if v > 3.8 {
+		return fmt.Errorf(`task: Taskfile versions greater than v3.8 not implemented in the version of Task`)
 	}
 
 	// Color available only on v3
@@ -194,7 +195,7 @@ func (e *Executor) Setup() error {
 		}
 	}
 
-	if v < 2.1 && e.Taskfile.Output != "" {
+	if v < 2.1 && !e.Taskfile.Output.IsSet() {
 		return fmt.Errorf(`task: Taskfile option "output" is only available starting on Taskfile version v2.1`)
 	}
 	if v < 2.2 && e.Taskfile.Includes.Len() > 0 {
@@ -203,19 +204,17 @@ func (e *Executor) Setup() error {
 	if v >= 3.0 && e.Taskfile.Expansions > 2 {
 		return fmt.Errorf(`task: The "expansions" setting is not available anymore on v3.0`)
 	}
-
-	if e.OutputStyle != "" {
-		e.Taskfile.Output = e.OutputStyle
+	if v < 3.8 && e.Taskfile.Output.Group.IsSet() {
+		return fmt.Errorf(`task: Taskfile option "output.group" is only available starting on Taskfile version v3.8`)
 	}
-	switch e.Taskfile.Output {
-	case "", "interleaved":
-		e.Output = output.Interleaved{}
-	case "group":
-		e.Output = output.Group{}
-	case "prefixed":
-		e.Output = output.Prefixed{}
-	default:
-		return fmt.Errorf(`task: output option "%s" not recognized`, e.Taskfile.Output)
+
+	if !e.OutputStyle.IsSet() {
+		e.OutputStyle = e.Taskfile.Output
+	}
+	if o, err := e.OutputStyle.Build(); err != nil {
+		return err
+	} else {
+		e.Output = o
 	}
 
 	if e.Taskfile.Method == "" {
@@ -435,8 +434,13 @@ func (e *Executor) runCommand(ctx context.Context, t *taskfile.Task, call taskfi
 		if t.Interactive {
 			outputWrapper = output.Interleaved{}
 		}
-		stdOut := outputWrapper.WrapWriter(e.Stdout, t.Prefix)
-		stdErr := outputWrapper.WrapWriter(e.Stderr, t.Prefix)
+		vars, err := e.Compiler.FastGetVariables(t, call)
+		outputTemplater := &templater.Templater{Vars: vars, RemoveNoValue: true}
+		if err != nil {
+			return fmt.Errorf("task: failed to get variables: %w", err)
+		}
+		stdOut := outputWrapper.WrapWriter(e.Stdout, t.Prefix, outputTemplater)
+		stdErr := outputWrapper.WrapWriter(e.Stderr, t.Prefix, outputTemplater)
 
 		defer func() {
 			if _, ok := stdOut.(*os.File); !ok {
@@ -451,7 +455,7 @@ func (e *Executor) runCommand(ctx context.Context, t *taskfile.Task, call taskfi
 			}
 		}()
 
-		err := execext.RunCommand(ctx, &execext.RunCommandOptions{
+		err = execext.RunCommand(ctx, &execext.RunCommandOptions{
 			Command: cmd.Cmd,
 			Dir:     t.Dir,
 			Env:     getEnviron(t),

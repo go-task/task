@@ -1193,3 +1193,28 @@ func TestIgnoreNilElements(t *testing.T) {
 		})
 	}
 }
+
+func TestOutputGroup(t *testing.T) {
+	const dir = "testdata/output_group"
+	var buff bytes.Buffer
+	e := task.Executor{
+		Dir:    dir,
+		Stdout: &buff,
+		Stderr: &buff,
+	}
+	assert.NoError(t, e.Setup())
+
+	expectedOutputOrder := strings.TrimSpace(`
+task: [hello] echo 'Hello!'
+::group::hello
+Hello!
+::endgroup::
+task: [bye] echo 'Bye!'
+::group::bye
+Bye!
+::endgroup::
+`)
+	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "bye"}))
+	t.Log(buff.String())
+	assert.Equal(t, strings.TrimSpace(buff.String()), expectedOutputOrder)
+}
