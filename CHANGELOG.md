@@ -2,8 +2,12 @@
 
 ## Unreleased
 
+- Task now supports printing begin and end messages when using the `group`
+  output mode, useful for grouping tasks in CI systems.
+  [Check out the documentation](http://taskfile.dev/#/usage?id=output-syntax) for more information
+  ([#647](https://github.com/go-task/task/issues/647), [#651](https://github.com/go-task/task/pull/651)).
 - Add `Taskfile.dist.yml` and `Taskfile.dist.yaml` to the supported file
-  name list. [Check out the documentation for more information](https://taskfile.dev/#/usage?id=supported-file-names).
+  name list. [Check out the documentation](https://taskfile.dev/#/usage?id=supported-file-names) for more information
   ([#498](https://github.com/go-task/task/issues/498), [#666](https://github.com/go-task/task/pull/666)).
 
 ## v3.10.0 - 2022-01-04

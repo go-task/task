@@ -52,7 +52,7 @@ type Executor struct {
 	Logger      *logger.Logger
 	Compiler    compiler.Compiler
 	Output      output.Output
-	OutputStyle output.Style
+	OutputStyle taskfile.Output
 
 	taskvars *taskfile.Vars
 
@@ -211,10 +211,9 @@ func (e *Executor) Setup() error {
 	if !e.OutputStyle.IsSet() {
 		e.OutputStyle = e.Taskfile.Output
 	}
-	if o, err := e.OutputStyle.Build(); err != nil {
+	e.Output, err = output.BuildFor(&e.OutputStyle)
+	if err != nil {
 		return err
-	} else {
-		e.Output = o
 	}
 
 	if e.Taskfile.Method == "" {

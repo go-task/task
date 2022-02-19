@@ -11,7 +11,6 @@ import (
 	"strings"
 	"syscall"
 
-	outputpkg "github.com/go-task/task/v3/internal/output"
 	"github.com/spf13/pflag"
 	"mvdan.cc/sh/v3/syntax"
 
@@ -73,7 +72,7 @@ func main() {
 		concurrency int
 		dir         string
 		entrypoint  string
-		output      outputpkg.Style
+		output      taskfile.Output
 		color       bool
 	)
 

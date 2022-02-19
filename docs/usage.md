@@ -974,9 +974,10 @@ tasks:
  to run.
 
 When using the `group` output, you can optionally provide a templated message
-to print at the start of the group. This can be useful for instructing CI
-systems to group all of the output for a given task, such as with [GitHub
-Actions' `::group::` command](https://docs.github.com/en/actions/learn-github-actions/workflow-commands-for-github-actions#grouping-log-lines).
+to print at the start and end of the group. This can be useful for instructing
+CI systems to group all of the output for a given task, such as with
+[GitHub Actions' `::group::` command](https://docs.github.com/en/actions/learn-github-actions/workflow-commands-for-github-actions#grouping-log-lines)
+or [Azure Pipelines](https://docs.microsoft.com/en-us/azure/devops/pipelines/scripts/logging-commands?expand=1&view=azure-devops&tabs=bash#formatting-commands).
 
 ```yaml
 version: '3'

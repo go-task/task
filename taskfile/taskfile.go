@@ -3,15 +3,13 @@ package taskfile
 import (
 	"fmt"
 	"strconv"
-
-	"github.com/go-task/task/v3/internal/output"
 )
 
 // Taskfile represents a Taskfile.yml
 type Taskfile struct {
 	Version    string
 	Expansions int
-	Output     output.Style
+	Output     Output
 	Method     string
 	Includes   *IncludedTaskfiles
 	Vars       *Vars
@@ -27,7 +25,7 @@ func (tf *Taskfile) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	var taskfile struct {
 		Version    string
 		Expansions int
-		Output     output.Style
+		Output     Output
 		Method     string
 		Includes   *IncludedTaskfiles
 		Vars       *Vars
