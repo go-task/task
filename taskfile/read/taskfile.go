@@ -76,6 +76,13 @@ func Taskfile(readerNode *ReaderNode) (*taskfile.Taskfile, error) {
 		if !filepath.IsAbs(path) {
 			path = filepath.Join(readerNode.Dir, path)
 		}
+		path, err = exists(path)
+		if err != nil {
+			if includedTask.Optional {
+				return nil
+			}
+			return err
+		}
 
 		includeReaderNode := &ReaderNode{
 			Dir:        filepath.Dir(path),

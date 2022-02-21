@@ -758,7 +758,11 @@ func TestIncludesMultiLevel(t *testing.T) {
 		Dir:       "testdata/includes_multi_level",
 		Target:    "default",
 		TrimSpace: true,
-		Files:     map[string]string{},
+		Files: map[string]string{
+			"called_one.txt":   "one",
+			"called_two.txt":   "two",
+			"called_three.txt": "three",
+		},
 	}
 	tt.Run(t)
 }

@@ -1,9 +1,7 @@
 version: '3'
 
 includes:
-  'two': ./two/Taskfile.yml
+  'two': ./two/
 
 tasks:
-  level1:
-    cmds:
-      - echo "hello level 1"
+  default: echo one > called_one.txt
