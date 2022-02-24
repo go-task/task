@@ -1,0 +1,11 @@
+version: "3"
+
+vars:
+  VAR_1: included-default-var1
+  VAR_2: incldued-default-var2
+
+tasks:
+  task1:
+    cmds:
+      - echo "VAR_1 is {{.VAR_1}}"
+      - echo "VAR_2 is {{.VAR_2}}"
