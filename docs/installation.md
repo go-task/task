@@ -34,6 +34,9 @@ Task is as simple as running:
 choco install go-task
 ```
 
+This installation method is community owned.
+
+
 #### **Scoop**
 
 If you're on Windows and have [Scoop][scoop] installed, use `extras` bucket
