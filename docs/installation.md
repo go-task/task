@@ -27,7 +27,7 @@ sudo snap install task --classic
 
 #### **Chocolatey**
 
-If you're on Windows and have [Chocolatey][scoop] installed, getting
+If you're on Windows and have [Chocolatey][choco] installed, getting
 Task is as simple as running:
 
 ```bash
