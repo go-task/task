@@ -62,6 +62,7 @@ func Taskfile(dir string, entrypoint string) (*taskfile.Taskfile, error) {
 				Dir:            tr.Replace(includedTask.Dir),
 				Optional:       includedTask.Optional,
 				AdvancedImport: includedTask.AdvancedImport,
+				Vars:           includedTask.Vars,
 			}
 			if err := tr.Err(); err != nil {
 				return err
@@ -109,6 +110,12 @@ func Taskfile(dir string, entrypoint string) (*taskfile.Taskfile, error) {
 			}
 
 			for _, task := range includedTaskfile.Tasks {
+				if includedTask.Vars != nil {
+					if task.Vars == nil {
+						task.Vars = &taskfile.Vars{}
+					}
+					task.Vars.Merge(includedTask.Vars)
+				}
 				if !filepath.IsAbs(task.Dir) {
 					task.Dir = filepath.Join(includedTask.Dir, task.Dir)
 				}

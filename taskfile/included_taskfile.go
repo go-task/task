@@ -12,6 +12,7 @@ type IncludedTaskfile struct {
 	Dir            string
 	Optional       bool
 	AdvancedImport bool
+	Vars           *Vars
 }
 
 // IncludedTaskfiles represents information about included tasksfiles
@@ -94,6 +95,7 @@ func (it *IncludedTaskfile) UnmarshalYAML(unmarshal func(interface{}) error) err
 		Taskfile string
 		Dir      string
 		Optional bool
+		Vars     *Vars
 	}
 	if err := unmarshal(&includedTaskfile); err != nil {
 		return err
@@ -102,5 +104,6 @@ func (it *IncludedTaskfile) UnmarshalYAML(unmarshal func(interface{}) error) err
 	it.Dir = includedTaskfile.Dir
 	it.Optional = includedTaskfile.Optional
 	it.AdvancedImport = true
+	it.Vars = includedTaskfile.Vars
 	return nil
 }

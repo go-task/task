@@ -1218,3 +1218,32 @@ Bye!
 	t.Log(buff.String())
 	assert.Equal(t, strings.TrimSpace(buff.String()), expectedOutputOrder)
 }
+
+func TestIncludedVars(t *testing.T) {
+	const dir = "testdata/include_with_vars"
+	var buff bytes.Buffer
+	e := task.Executor{
+		Dir:    dir,
+		Stdout: &buff,
+		Stderr: &buff,
+	}
+	assert.NoError(t, e.Setup())
+
+	expectedOutputOrder := strings.TrimSpace(`
+task: [included1:task1] echo "VAR_1 is included1-var1"
+VAR_1 is included1-var1
+task: [included1:task1] echo "VAR_2 is incldued-default-var2"
+VAR_2 is incldued-default-var2
+task: [included2:task1] echo "VAR_1 is included2-var1"
+VAR_1 is included2-var1
+task: [included2:task1] echo "VAR_2 is incldued-default-var2"
+VAR_2 is incldued-default-var2
+task: [included3:task1] echo "VAR_1 is included-default-var1"
+VAR_1 is included-default-var1
+task: [included3:task1] echo "VAR_2 is incldued-default-var2"
+VAR_2 is incldued-default-var2
+`)
+	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "task1"}))
+	t.Log(buff.String())
+	assert.Equal(t, strings.TrimSpace(buff.String()), expectedOutputOrder)
+}
