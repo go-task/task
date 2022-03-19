@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Add ability to specify vars when including a Taskfile.
+  [Check out the documentation](http://localhost:3000/#/usage?id=vars-of-included-taskfiles)
+  for more information.
+  ([#677](https://github.com/go-task/task/pull/677)).
+
 ## v3.11.0 - 2022-01-19
 
 - Task now supports printing begin and end messages when using the `group`

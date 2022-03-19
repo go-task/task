@@ -74,11 +74,34 @@ func (c *CompilerV3) getVariables(t *taskfile.Task, call *taskfile.Call, evaluat
 	}
 	rangeFunc := getRangeFunc(c.Dir)
 
+	var taskRangeFunc func(k string, v taskfile.Var) error
+	if t != nil {
+		// NOTE(@andreynering): We're manually joining these paths here because
+		// this is the raw task, not the compiled one.
+		tr := templater.Templater{Vars: result, RemoveNoValue: true}
+		dir := tr.Replace(t.Dir)
+		if err := tr.Err(); err != nil {
+			return nil, err
+		}
+		if !filepath.IsAbs(dir) {
+			dir = filepath.Join(c.Dir, dir)
+		}
+		taskRangeFunc = getRangeFunc(dir)
+	}
+
 	if err := c.TaskfileEnv.Range(rangeFunc); err != nil {
 		return nil, err
 	}
 	if err := c.TaskfileVars.Range(rangeFunc); err != nil {
 		return nil, err
+	}
+	if t != nil {
+		if err := t.IncludedTaskfileVars.Range(taskRangeFunc); err != nil {
+			return nil, err
+		}
+		if err := t.IncludeVars.Range(rangeFunc); err != nil {
+			return nil, err
+		}
 	}
 
 	if t == nil || call == nil {
@@ -88,19 +111,6 @@ func (c *CompilerV3) getVariables(t *taskfile.Task, call *taskfile.Call, evaluat
 	if err := call.Vars.Range(rangeFunc); err != nil {
 		return nil, err
 	}
-
-	// NOTE(@andreynering): We're manually joining these paths here because
-	// this is the raw task, not the compiled one.
-	tr := templater.Templater{Vars: result, RemoveNoValue: true}
-	dir := tr.Replace(t.Dir)
-	if err := tr.Err(); err != nil {
-		return nil, err
-	}
-	if !filepath.IsAbs(dir) {
-		dir = filepath.Join(c.Dir, dir)
-	}
-	taskRangeFunc := getRangeFunc(dir)
-
 	if err := t.Vars.Range(taskRangeFunc); err != nil {
 		return nil, err
 	}

@@ -1232,16 +1232,16 @@ func TestIncludedVars(t *testing.T) {
 	expectedOutputOrder := strings.TrimSpace(`
 task: [included1:task1] echo "VAR_1 is included1-var1"
 VAR_1 is included1-var1
-task: [included1:task1] echo "VAR_2 is incldued-default-var2"
-VAR_2 is incldued-default-var2
+task: [included1:task1] echo "VAR_2 is included-default-var2"
+VAR_2 is included-default-var2
 task: [included2:task1] echo "VAR_1 is included2-var1"
 VAR_1 is included2-var1
-task: [included2:task1] echo "VAR_2 is incldued-default-var2"
-VAR_2 is incldued-default-var2
+task: [included2:task1] echo "VAR_2 is included-default-var2"
+VAR_2 is included-default-var2
 task: [included3:task1] echo "VAR_1 is included-default-var1"
 VAR_1 is included-default-var1
-task: [included3:task1] echo "VAR_2 is incldued-default-var2"
-VAR_2 is incldued-default-var2
+task: [included3:task1] echo "VAR_2 is included-default-var2"
+VAR_2 is included-default-var2
 `)
 	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "task1"}))
 	t.Log(buff.String())

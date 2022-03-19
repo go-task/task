@@ -187,6 +187,31 @@ tasks:
       - echo "This command can still be successfully executed if ./tests/Taskfile.yml does not exist"
 ```
 
+### Vars of included Taskfiles
+
+You can also specify variables when including a Taskfile. This may be useful
+for having reusable Taskfile that can be tweaked or even included more than once:
+
+```yaml
+version: '3'
+
+includes:
+  backend:
+    taskfile: ./taskfiles/Docker.yml
+    vars:
+      DOCKER_IMAGE: backend_image
+
+  frontend:
+    taskfile: ./taskfiles/Docker.yml
+    vars:
+      DOCKER_IMAGE: frontend_image
+```
+
+> NOTE: Vars declared in the included Taskfile have preference over the
+included ones! If you want a variable in an included Taskfile to be overridable
+use the [default function](https://go-task.github.io/slim-sprig/defaults.html):
+`MY_VAR: '{{.MY_VAR | default "my-default-value"}}'`.
+
 ## Task directory
 
 By default, tasks will be executed in the directory where the Taskfile is
@@ -535,6 +560,8 @@ They are listed below in order of importance (e.g. most important first):
 - Variables declared in the task definition
 - Variables given while calling a task from another
   (See [Calling another task](#calling-another-task) above)
+- Variables of the [included Taskfile](#including-other-taskfiles) (when the task is included)
+- Variables of the [inclusion of the Taskfile](#vars-of-included-taskfiles) (when the task is included)
 - Global variables (those declared in the `vars:` option in the Taskfile)
 - Environment variables
 

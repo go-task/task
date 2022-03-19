@@ -1,8 +1,8 @@
 version: "3"
 
 vars:
-  VAR_1: included-default-var1
-  VAR_2: incldued-default-var2
+  VAR_1: '{{.VAR_1 | default "included-default-var1"}}'
+  VAR_2: '{{.VAR_2 | default "included-default-var2"}}'
 
 tasks:
   task1:
