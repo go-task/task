@@ -3,7 +3,7 @@
 ## Unreleased
 
 - Add ability to specify vars when including a Taskfile.
-  [Check out the documentation](http://localhost:3000/#/usage?id=vars-of-included-taskfiles)
+  [Check out the documentation](https://taskfile.dev/#/usage?id=vars-of-included-taskfiles)
   for more information.
   ([#677](https://github.com/go-task/task/pull/677)).
 
