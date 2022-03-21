@@ -74,32 +74,29 @@ func (e *Executor) tasksWithDesc() (tasks []*taskfile.Task) {
 	return
 }
 
-// PrintTaskNames prints only the task names in a taskfile.
-func (e *Executor) PrintTaskNames() error {
+// PrintTaskNames prints only the task names in a Taskfile.
+// Only tasks with a non-empty description are printed if allTasks is false.
+// Otherwise, all task names are printed.
+func (e *Executor) ListTaskNames(allTasks bool) {
 	// if called from cmd/task.go, e.Taskfile has not yet been parsed
-	if nil == e.Taskfile {
-		err := e.readTaskfile()
-		if nil != err {
-			return err
-		}
+	if nil == e.Taskfile && e.readTaskfile() != nil {
+		return
 	}
+	// use stdout if no output defined
 	var w io.Writer = os.Stdout
-	if nil != e.Stdout {
+	if e.Stdout != nil {
 		w = e.Stdout
 	}
-
-	// create a slice from all map values
-	task := make([]*taskfile.Task, 0, len(e.Taskfile.Tasks))
+	// create a string slice from all map values (*taskfile.Task)
+	s := make([]string, 0, len(e.Taskfile.Tasks))
 	for _, t := range e.Taskfile.Tasks {
-		task = append(task, t)
+		if allTasks || t.Desc != "" {
+			s = append(s, strings.TrimRight(t.Task, ":"))
+		}
 	}
-
-	sort.Slice(task,
-		func(i, j int) bool {
-			return task[i].Task < task[j].Task
-		})
-	for _, t := range task {
-		fmt.Fprintf(w, "%s\n", strings.TrimSuffix(t.Task, ":"))
+	// sort and print all task names
+	sort.Strings(s)
+	for _, t := range s {
+		fmt.Fprintln(w, t)
 	}
-	return nil
 }

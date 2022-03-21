@@ -158,10 +158,12 @@ func main() {
 
 		OutputStyle: output,
 	}
-	if list && silent {
-		e.PrintTaskNames()
+
+	if (list || listAll) && silent {
+		e.ListTaskNames(listAll)
 		return
 	}
+
 	if err := e.Setup(); err != nil {
 		log.Fatal(err)
 	}
