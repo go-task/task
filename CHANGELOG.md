@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Added support for multi-level inclusion of Taskfiles. This means that
+  included Taskfiles can also include other Taskfiles. Before this was limited
+  to one level
+  ([#390](https://github.com/go-task/task/issues/390), [#623](https://github.com/go-task/task/discussions/623), [#656](https://github.com/go-task/task/pull/656)).
 - Add ability to specify vars when including a Taskfile.
   [Check out the documentation](https://taskfile.dev/#/usage?id=vars-of-included-taskfiles)
   for more information.
