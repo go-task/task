@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v3.12.0 - 2022-03-31
 
 - The `--list` and `--list-all` flags can now be combined with the `--silent`
   flag to print the task names only, without their description
@@ -14,7 +14,7 @@
   for more information.
   ([#677](https://github.com/go-task/task/pull/677)).
 
-## v3.11.0 - 2022-01-19
+## v3.11.0 - 2022-02-19
 
 - Task now supports printing begin and end messages when using the `group`
   output mode, useful for grouping tasks in CI systems.
