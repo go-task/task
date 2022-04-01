@@ -104,8 +104,13 @@ func (e *Executor) Run(ctx context.Context, calls ...taskfile.Call) error {
 	return g.Wait()
 }
 
-// Setup setups Executor's internal state
-func (e *Executor) Setup() error {
+// readTaskfile selects and parses the entrypoint.
+func (e *Executor) readTaskfile() error {
+	// select the default entrypoint if not provided
+	if e.Entrypoint == "" {
+		e.Entrypoint = "Taskfile.yml"
+	}
+
 	var err error
 	e.Taskfile, err = read.Taskfile(&read.ReaderNode{
 		Dir:        e.Dir,
@@ -113,6 +118,12 @@ func (e *Executor) Setup() error {
 		Parent:     nil,
 		Optional:   false,
 	})
+	return err
+}
+
+// Setup setups Executor's internal state
+func (e *Executor) Setup() error {
+	err := e.readTaskfile()
 	if err != nil {
 		return err
 	}
