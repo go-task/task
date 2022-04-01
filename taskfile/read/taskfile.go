@@ -15,8 +15,6 @@ import (
 )
 
 var (
-	// ErrIncludedTaskfilesCantHaveIncludes is returned when a included Taskfile contains includes
-	ErrIncludedTaskfilesCantHaveIncludes = errors.New("task: Included Taskfiles can't have includes. Please, move the include to the main Taskfile")
 	// ErrIncludedTaskfilesCantHaveDotenvs is returned when a included Taskfile contains dotenvs
 	ErrIncludedTaskfilesCantHaveDotenvs = errors.New("task: Included Taskfiles can't have dotenv declarations. Please, move the dotenv declaration to the main Taskfile")
 
@@ -28,21 +26,29 @@ var (
 	}
 )
 
+type ReaderNode struct {
+	Dir        string
+	Entrypoint string
+	Optional   bool
+	Parent     *ReaderNode
+}
+
 // Taskfile reads a Taskfile for a given directory
 // Uses current dir when dir is left empty. Uses Taskfile.yml
 // or Taskfile.yaml when entrypoint is left empty
-func Taskfile(dir string, entrypoint string) (*taskfile.Taskfile, error) {
-	if dir == "" {
+func Taskfile(readerNode *ReaderNode) (*taskfile.Taskfile, error) {
+	if readerNode.Dir == "" {
 		d, err := os.Getwd()
 		if err != nil {
 			return nil, err
 		}
-		dir = d
+		readerNode.Dir = d
 	}
-	path, err := exists(filepath.Join(dir, entrypoint))
+	path, err := exists(filepath.Join(readerNode.Dir, readerNode.Entrypoint))
 	if err != nil {
 		return nil, err
 	}
+	readerNode.Entrypoint = filepath.Base(path)
 
 	t, err := readTaskfile(path)
 	if err != nil {
@@ -74,9 +80,8 @@ func Taskfile(dir string, entrypoint string) (*taskfile.Taskfile, error) {
 			return err
 		}
 		if !filepath.IsAbs(path) {
-			path = filepath.Join(dir, path)
+			path = filepath.Join(readerNode.Dir, path)
 		}
-
 		path, err = exists(path)
 		if err != nil {
 			if includedTask.Optional {
@@ -85,12 +90,23 @@ func Taskfile(dir string, entrypoint string) (*taskfile.Taskfile, error) {
 			return err
 		}
 
-		includedTaskfile, err := readTaskfile(path)
-		if err != nil {
+		includeReaderNode := &ReaderNode{
+			Dir:        filepath.Dir(path),
+			Entrypoint: filepath.Base(path),
+			Parent:     readerNode,
+			Optional:   includedTask.Optional,
+		}
+
+		if err := checkCircularIncludes(includeReaderNode); err != nil {
 			return err
 		}
-		if includedTaskfile.Includes.Len() > 0 {
-			return ErrIncludedTaskfilesCantHaveIncludes
+
+		includedTaskfile, err := Taskfile(includeReaderNode)
+		if err != nil {
+			if includedTask.Optional {
+				return nil
+			}
+			return err
 		}
 
 		if v >= 3.0 && len(includedTaskfile.Dotenv) > 0 {
@@ -100,12 +116,12 @@ func Taskfile(dir string, entrypoint string) (*taskfile.Taskfile, error) {
 		if includedTask.AdvancedImport {
 			for k, v := range includedTaskfile.Vars.Mapping {
 				o := v
-				o.Dir = filepath.Join(dir, includedTask.Dir)
+				o.Dir = filepath.Join(readerNode.Dir, includedTask.Dir)
 				includedTaskfile.Vars.Mapping[k] = o
 			}
 			for k, v := range includedTaskfile.Env.Mapping {
 				o := v
-				o.Dir = filepath.Join(dir, includedTask.Dir)
+				o.Dir = filepath.Join(readerNode.Dir, includedTask.Dir)
 				includedTaskfile.Env.Mapping[k] = o
 			}
 
@@ -128,7 +144,7 @@ func Taskfile(dir string, entrypoint string) (*taskfile.Taskfile, error) {
 	}
 
 	if v < 3.0 {
-		path = filepath.Join(dir, fmt.Sprintf("Taskfile_%s.yml", runtime.GOOS))
+		path = filepath.Join(readerNode.Dir, fmt.Sprintf("Taskfile_%s.yml", runtime.GOOS))
 		if _, err = os.Stat(path); err == nil {
 			osTaskfile, err := readTaskfile(path)
 			if err != nil {
@@ -177,4 +193,26 @@ func exists(path string) (string, error) {
 	}
 
 	return "", fmt.Errorf(`task: No Taskfile found in "%s". Use "task --init" to create a new one`, path)
+}
+
+func checkCircularIncludes(node *ReaderNode) error {
+	if node == nil {
+		return errors.New("task: failed to check for include cycle: node was nil")
+	}
+	if node.Parent == nil {
+		return errors.New("task: failed to check for include cycle: node.Parent was nil")
+	}
+	var curNode = node
+	var basePath = filepath.Join(node.Dir, node.Entrypoint)
+	for curNode.Parent != nil {
+		curNode = curNode.Parent
+		curPath := filepath.Join(curNode.Dir, curNode.Entrypoint)
+		if curPath == basePath {
+			return fmt.Errorf("task: include cycle detected between %s <--> %s",
+				curPath,
+				filepath.Join(node.Parent.Dir, node.Parent.Entrypoint),
+			)
+		}
+	}
+	return nil
 }

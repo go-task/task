@@ -107,7 +107,12 @@ func (e *Executor) Run(ctx context.Context, calls ...taskfile.Call) error {
 // Setup setups Executor's internal state
 func (e *Executor) Setup() error {
 	var err error
-	e.Taskfile, err = read.Taskfile(e.Dir, e.Entrypoint)
+	e.Taskfile, err = read.Taskfile(&read.ReaderNode{
+		Dir:        e.Dir,
+		Entrypoint: e.Entrypoint,
+		Parent:     nil,
+		Optional:   false,
+	})
 	if err != nil {
 		return err
 	}
