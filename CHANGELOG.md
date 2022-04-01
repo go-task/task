@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- The `--list` and `--list-all` flags can now be combined with the `--silent`
+  flag to print the task names only, without their description
+  ([#691](https://github.com/go-task/task/pull/691)).
 - Added support for multi-level inclusion of Taskfiles. This means that
   included Taskfiles can also include other Taskfiles. Before this was limited
   to one level

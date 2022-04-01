@@ -3,6 +3,7 @@ package task
 import (
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"sort"
 	"strings"
@@ -79,8 +80,11 @@ func (e *Executor) tasksWithDesc() (tasks []*taskfile.Task) {
 // Otherwise, all task names are printed.
 func (e *Executor) ListTaskNames(allTasks bool) {
 	// if called from cmd/task.go, e.Taskfile has not yet been parsed
-	if nil == e.Taskfile && e.readTaskfile() != nil {
-		return
+	if e.Taskfile == nil {
+		if err := e.readTaskfile(); err != nil {
+			log.Fatal(err)
+			return
+		}
 	}
 	// use stdout if no output defined
 	var w io.Writer = os.Stdout
