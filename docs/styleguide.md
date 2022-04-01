@@ -4,8 +4,8 @@ This is the official Task styleguide for `Taskfile.yml` files. This guide
 contains some basic instructions to keep your Taskfile clean and familiar to
 other users.
 
-This contains general guidelines, but don't necessarely need to be strictly
-followed. Feel free to disagree and proceed differently in some point if you
+This contains general guidelines, but they don't necessarily need to be strictly
+followed. Feel free to disagree and proceed differently at some point if you
 need or want to. Also, feel free to open issues or pull requests with
 improvements to this guide.
 
