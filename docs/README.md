@@ -24,7 +24,7 @@ tasks:
     silent: true
 ```
 
-And call it by running `task hello` from you terminal.
+And call it by running `task hello` from your terminal.
 
 The above example is just the start, you can take a look at the [usage](usage.md)
 guide to check the full schema documentation and Task features.

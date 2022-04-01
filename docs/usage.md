@@ -43,7 +43,7 @@ Task will look for the following file names, in order of priority:
 - Taskfile.dist.yaml
 
 The intention of having the `.dist` variants is to allow projects to have one
-commited version (`.dist`) while still allowing individual users to override
+committed version (`.dist`) while still allowing individual users to override
 the Taskfile by adding an additional `Taskfile.yml` (which would be on
 `.gitignore`).
 
