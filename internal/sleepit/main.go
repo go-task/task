@@ -20,8 +20,7 @@ Commands
 
   default     Use default action: on reception of SIGINT terminate abruptly
   handle      Handle signals: on reception of SIGINT perform cleanup before exiting
-  version     Show the sleepit version
-`
+  version     Show the sleepit version`
 
 var (
 	// Filled by the linker.
