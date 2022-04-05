@@ -33,6 +33,20 @@ executable called must be available by the OS or in PATH.
 
 If you omit a task name, "default" will be assumed.
 
+## Supported file names
+
+Task will look for the following file names, in order of priority:
+
+- Taskfile.yml
+- Taskfile.yaml
+- Taskfile.dist.yml
+- Taskfile.dist.yaml
+
+The intention of having the `.dist` variants is to allow projects to have one
+committed version (`.dist`) while still allowing individual users to override
+the Taskfile by adding an additional `Taskfile.yml` (which would be on
+`.gitignore`).
+
 ## Environment variables
 
 ### Task
@@ -150,10 +164,6 @@ includes:
 > The included Taskfiles must be using the same schema version the main
 > Taskfile uses.
 
-> Also, for now included Taskfiles can't include other Taskfiles.
-> This was a deliberate decision to keep use and implementation simple.
-> If you disagree, open an GitHub issue and explain your use case. =)
-
 ### Optional includes
 
 Includes marked as optional will allow Task to continue execution as normal if
@@ -172,6 +182,31 @@ tasks:
     cmds:
       - echo "This command can still be successfully executed if ./tests/Taskfile.yml does not exist"
 ```
+
+### Vars of included Taskfiles
+
+You can also specify variables when including a Taskfile. This may be useful
+for having reusable Taskfile that can be tweaked or even included more than once:
+
+```yaml
+version: '3'
+
+includes:
+  backend:
+    taskfile: ./taskfiles/Docker.yml
+    vars:
+      DOCKER_IMAGE: backend_image
+
+  frontend:
+    taskfile: ./taskfiles/Docker.yml
+    vars:
+      DOCKER_IMAGE: frontend_image
+```
+
+> NOTE: Vars declared in the included Taskfile have preference over the
+included ones! If you want a variable in an included Taskfile to be overridable
+use the [default function](https://go-task.github.io/slim-sprig/defaults.html):
+`MY_VAR: '{{.MY_VAR | default "my-default-value"}}'`.
 
 ## Task directory
 
@@ -521,6 +556,8 @@ They are listed below in order of importance (e.g. most important first):
 - Variables declared in the task definition
 - Variables given while calling a task from another
   (See [Calling another task](#calling-another-task) above)
+- Variables of the [included Taskfile](#including-other-taskfiles) (when the task is included)
+- Variables of the [inclusion of the Taskfile](#vars-of-included-taskfiles) (when the task is included)
 - Global variables (those declared in the `vars:` option in the Taskfile)
 - Environment variables
 
@@ -607,6 +644,45 @@ tasks:
     cmds:
       - yarn {{.CLI_ARGS}}
 ```
+
+## Doing task cleanup with `defer`
+
+With the `defer` keyword, it's possible to schedule cleanup to be run once
+the task finishes. The difference with just putting it as the last command is
+that this command will run even when the task fails.
+
+In the example below `rm -rf tmpdir/` will run even if the third command fails:
+
+```yaml
+version: '3'
+
+tasks:
+  default:
+    cmds:
+      - mkdir -p tmpdir/
+      - defer: rm -rf tmpdir/
+      - echo 'Do work on tmpdir/'
+```
+
+If you want to move the cleanup command into another task, that's possible as
+well:
+
+```yaml
+version: '3'
+
+tasks:
+  default:
+    cmds:
+      - mkdir -p tmpdir/
+      - defer: { task: cleanup }
+      - echo 'Do work on tmpdir/'
+
+  cleanup: rm -rf tmpdir/
+```
+
+> NOTE: Due to the nature of how the
+[Go's own `defer` work](https://go.dev/tour/flowcontrol/13), the deferred
+commands are executed in the reverse order if you schedule multiple of them.
 
 ## Go's template engine
 
@@ -702,6 +778,8 @@ would print the following output:
 * build:   Build the go binary.
 * test:    Run all the go tests.
 ```
+
+If you want to see all tasks, there's a `--list-all` (alias `-a`) flag as well.
 
 ## Display summary of task
 
@@ -917,6 +995,34 @@ tasks:
  The `group` output will print the entire output of a command once, after it
  finishes, so you won't have live feedback for commands that take a long time
  to run.
+
+When using the `group` output, you can optionally provide a templated message
+to print at the start and end of the group. This can be useful for instructing
+CI systems to group all of the output for a given task, such as with
+[GitHub Actions' `::group::` command](https://docs.github.com/en/actions/learn-github-actions/workflow-commands-for-github-actions#grouping-log-lines)
+or [Azure Pipelines](https://docs.microsoft.com/en-us/azure/devops/pipelines/scripts/logging-commands?expand=1&view=azure-devops&tabs=bash#formatting-commands).
+
+```yaml
+version: '3'
+
+output:
+  group:
+    begin: '::begin::{{.TASK}}'
+    end: '::endgroup::'
+
+tasks:
+  default:
+    cmds:
+      - echo 'Hello, World!'
+    silent: true
+```
+
+```bash
+$ task default
+::begin::default
+Hello, World!
+::endgroup::
+```
 
  The `prefix` output will prefix every line printed by a command with
  `[task-name] ` as the prefix, but you can customize the prefix for a command

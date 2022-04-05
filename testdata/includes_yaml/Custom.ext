@@ -1,0 +1,16 @@
+version: '3'
+
+includes:
+  included: ./included
+  custom: ./included/custom.yaml
+
+tasks:
+  default:
+    cmds:
+      - task: gen
+      - task: included:gen
+      - task: custom:gen
+
+  gen:
+    cmds:
+      - echo main > main.txt

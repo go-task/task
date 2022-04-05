@@ -1,0 +1,7 @@
+version: '3'
+
+includes:
+  'two': ./two/
+
+tasks:
+  default: echo one > called_one.txt

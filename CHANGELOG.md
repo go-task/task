@@ -1,7 +1,71 @@
 # Changelog
 
-## Unreleased
+## v3.12.0 - 2022-03-31
 
+- The `--list` and `--list-all` flags can now be combined with the `--silent`
+  flag to print the task names only, without their description
+  ([#691](https://github.com/go-task/task/pull/691)).
+- Added support for multi-level inclusion of Taskfiles. This means that
+  included Taskfiles can also include other Taskfiles. Before this was limited
+  to one level
+  ([#390](https://github.com/go-task/task/issues/390), [#623](https://github.com/go-task/task/discussions/623), [#656](https://github.com/go-task/task/pull/656)).
+- Add ability to specify vars when including a Taskfile.
+  [Check out the documentation](https://taskfile.dev/#/usage?id=vars-of-included-taskfiles)
+  for more information.
+  ([#677](https://github.com/go-task/task/pull/677)).
+
+## v3.11.0 - 2022-02-19
+
+- Task now supports printing begin and end messages when using the `group`
+  output mode, useful for grouping tasks in CI systems.
+  [Check out the documentation](http://taskfile.dev/#/usage?id=output-syntax) for more information
+  ([#647](https://github.com/go-task/task/issues/647), [#651](https://github.com/go-task/task/pull/651)).
+- Add `Taskfile.dist.yml` and `Taskfile.dist.yaml` to the supported file
+  name list. [Check out the documentation](https://taskfile.dev/#/usage?id=supported-file-names) for more information
+  ([#498](https://github.com/go-task/task/issues/498), [#666](https://github.com/go-task/task/pull/666)).
+
+## v3.10.0 - 2022-01-04
+
+- A new `--list-all` (alias `-a`) flag is now available. It's similar to the
+  exiting `--list` (`-l`) but prints all tasks, even those without a
+  description
+  ([#383](https://github.com/go-task/task/issues/383), [#401](https://github.com/go-task/task/pull/401)).
+- It's now possible to schedule cleanup commands to run once a task finishes
+  with the `defer:` keyword
+  ([Documentation](https://taskfile.dev/#/usage?id=doing-task-cleanup-with-defer), [#475](https://github.com/go-task/task/issues/475), [#626](https://github.com/go-task/task/pull/626)).
+- Remove long deprecated and undocumented `$` variable prefix and `^` command
+  prefix
+  ([#642](https://github.com/go-task/task/issues/642), [#644](https://github.com/go-task/task/issues/644), [#645](https://github.com/go-task/task/pull/645)).
+- Add support for `.yaml` extension (as an alternative to `.yml`).
+  This was requested multiple times throughout the years. Enjoy!
+  ([#183](https://github.com/go-task/task/issues/183), [#184](https://github.com/go-task/task/pull/184), [#369](https://github.com/go-task/task/issues/369), [#584](https://github.com/go-task/task/issues/584), [#621](https://github.com/go-task/task/pull/621)).
+- Fixed error when computing a variable when the task directory do not exist
+  yet
+  ([#481](https://github.com/go-task/task/issues/481), [#579](https://github.com/go-task/task/pull/579)).
+
+## v3.9.2 - 2021-12-02
+
+- Upgrade [mvdan/sh](https://github.com/mvdan/sh) which contains a fix a for
+  a important regression on Windows
+  ([#619](https://github.com/go-task/task/issues/619), [mvdan/sh#768](https://github.com/mvdan/sh/issues/768), [mvdan/sh#769](https://github.com/mvdan/sh/pull/769)).
+
+## v3.9.1 - 2021-11-28
+
+- Add logging in verbose mode for when a task starts and finishes
+  ([#533](https://github.com/go-task/task/issues/533), [#588](https://github.com/go-task/task/pull/588)).
+- Fix an issue with preconditions and context errors
+  ([#597](https://github.com/go-task/task/issues/597), [#598](https://github.com/go-task/task/pull/598)).
+- Quote each `{{.CLI_ARGS}}` argument to prevent one with spaces to become many
+  ([#613](https://github.com/go-task/task/pull/613)).
+- Fix  nil pointer when `cmd:` was left empty
+  ([#612](https://github.com/go-task/task/issues/612), [#614](https://github.com/go-task/task/pull/614)).
+- Upgrade [mvdan/sh](https://github.com/mvdan/sh) which contains two
+  relevant fixes:
+  - Fix quote of empty strings in `shellQuote`
+    ([#609](https://github.com/go-task/task/issues/609), [mvdan/sh#763](https://github.com/mvdan/sh/issues/763)).
+  - Fix issue of wrong environment variable being picked when there's another
+    very similar one
+    ([#586](https://github.com/go-task/task/issues/586), [mvdan/sh#745](https://github.com/mvdan/sh/pull/745)).
 - Install shell completions automatically when installing via Homebrew
   ([#264](https://github.com/go-task/task/issues/264), [#592](https://github.com/go-task/task/pull/592), [go-task/homebrew-tap#2](https://github.com/go-task/homebrew-tap/pull/2)).
 

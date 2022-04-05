@@ -25,6 +25,18 @@ right:
 sudo snap install task --classic
 ```
 
+#### **Chocolatey**
+
+If you're on Windows and have [Chocolatey][choco] installed, getting
+Task is as simple as running:
+
+```bash
+choco install go-task
+```
+
+This installation method is community owned.
+
+
 #### **Scoop**
 
 If you're on Windows and have [Scoop][scoop] installed, use `extras` bucket
@@ -50,6 +62,19 @@ yay -S taskfile-git
 
 This installation method is community owned, but since it's `-git` version of
 the package, it's always latest available version based on the Git repository.
+
+
+#### **Nix**
+
+If you're on NixOS or have Nix installed
+you can install Task from [nixpkgs](https://github.com/NixOS/nixpkgs):
+
+```cmd
+nix-env -iA nixpkgs.go-task
+```
+
+This installation method is community owned. After a new release of Task, it
+may take some time until it's available in [nixpkgs](https://github.com/NixOS/nixpkgs).
 
 <!-- tabs:end -->
 
@@ -137,4 +162,5 @@ env GO111MODULE=on go get -u github.com/go-task/task/v3/cmd/task@latest
 [installscript]: https://github.com/go-task/task/blob/master/install-task.sh
 [releases]: https://github.com/go-task/task/releases
 [godownloader]: https://github.com/goreleaser/godownloader
+[choco]: https://chocolatey.org/
 [scoop]: https://scoop.sh/

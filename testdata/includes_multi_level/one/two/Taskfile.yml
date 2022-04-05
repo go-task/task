@@ -1,0 +1,7 @@
+version: '3'
+
+includes:
+  'three': ./three/Taskfile.yml
+
+tasks:
+  default: echo two > called_two.txt

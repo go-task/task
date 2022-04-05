@@ -35,7 +35,8 @@ tasks:
       - echo '{{.TASK}}' > task_name.txt
     vars:
       FOO: foo
-      BAR: $echo bar
+      BAR:
+        sh: echo bar
       BAZ:
         sh: echo baz
       TMPL_FOO: "{{.FOO}}"

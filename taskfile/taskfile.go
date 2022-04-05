@@ -9,7 +9,7 @@ import (
 type Taskfile struct {
 	Version    string
 	Expansions int
-	Output     string
+	Output     Output
 	Method     string
 	Includes   *IncludedTaskfiles
 	Vars       *Vars
@@ -25,7 +25,7 @@ func (tf *Taskfile) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	var taskfile struct {
 		Version    string
 		Expansions int
-		Output     string
+		Output     Output
 		Method     string
 		Includes   *IncludedTaskfiles
 		Vars       *Vars

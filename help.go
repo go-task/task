@@ -2,18 +2,43 @@ package task
 
 import (
 	"fmt"
+	"io"
+	"log"
+	"os"
 	"sort"
+	"strings"
 	"text/tabwriter"
 
 	"github.com/go-task/task/v3/internal/logger"
 	"github.com/go-task/task/v3/taskfile"
 )
 
-// PrintTasksHelp prints help os tasks that have a description
-func (e *Executor) PrintTasksHelp() {
-	tasks := e.tasksWithDesc()
+// ListTasksWithDesc reports tasks that have a description spec.
+func (e *Executor) ListTasksWithDesc() {
+	e.printTasks(false)
+	return
+}
+
+// ListAllTasks reports all tasks, with or without a description spec.
+func (e *Executor) ListAllTasks() {
+	e.printTasks(true)
+	return
+}
+
+func (e *Executor) printTasks(listAll bool) {
+	var tasks []*taskfile.Task
+	if listAll {
+		tasks = e.allTaskNames()
+	} else {
+		tasks = e.tasksWithDesc()
+	}
+
 	if len(tasks) == 0 {
-		e.Logger.Outf(logger.Yellow, "task: No tasks with description available")
+		if listAll {
+			e.Logger.Outf(logger.Yellow, "task: No tasks available")
+		} else {
+			e.Logger.Outf(logger.Yellow, "task: No tasks with description available. Try --list-all to list all tasks")
+		}
 		return
 	}
 	e.Logger.Outf(logger.Default, "task: Available tasks for this project:")
@@ -24,6 +49,15 @@ func (e *Executor) PrintTasksHelp() {
 		fmt.Fprintf(w, "* %s: \t%s\n", task.Name(), task.Desc)
 	}
 	w.Flush()
+}
+
+func (e *Executor) allTaskNames() (tasks []*taskfile.Task) {
+	tasks = make([]*taskfile.Task, 0, len(e.Taskfile.Tasks))
+	for _, task := range e.Taskfile.Tasks {
+		tasks = append(tasks, task)
+	}
+	sort.Slice(tasks, func(i, j int) bool { return tasks[i].Task < tasks[j].Task })
+	return
 }
 
 func (e *Executor) tasksWithDesc() (tasks []*taskfile.Task) {
@@ -39,4 +73,34 @@ func (e *Executor) tasksWithDesc() (tasks []*taskfile.Task) {
 	}
 	sort.Slice(tasks, func(i, j int) bool { return tasks[i].Task < tasks[j].Task })
 	return
+}
+
+// PrintTaskNames prints only the task names in a Taskfile.
+// Only tasks with a non-empty description are printed if allTasks is false.
+// Otherwise, all task names are printed.
+func (e *Executor) ListTaskNames(allTasks bool) {
+	// if called from cmd/task.go, e.Taskfile has not yet been parsed
+	if e.Taskfile == nil {
+		if err := e.readTaskfile(); err != nil {
+			log.Fatal(err)
+			return
+		}
+	}
+	// use stdout if no output defined
+	var w io.Writer = os.Stdout
+	if e.Stdout != nil {
+		w = e.Stdout
+	}
+	// create a string slice from all map values (*taskfile.Task)
+	s := make([]string, 0, len(e.Taskfile.Tasks))
+	for _, t := range e.Taskfile.Tasks {
+		if allTasks || t.Desc != "" {
+			s = append(s, strings.TrimRight(t.Task, ":"))
+		}
+	}
+	// sort and print all task names
+	sort.Strings(s)
+	for _, t := range s {
+		fmt.Fprintln(w, t)
+	}
 }

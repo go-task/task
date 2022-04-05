@@ -1,9 +1,5 @@
 package taskfile
 
-import (
-	"strings"
-)
-
 // Cmd is a task command
 type Cmd struct {
 	Cmd         string
@@ -11,6 +7,7 @@ type Cmd struct {
 	Task        string
 	Vars        *Vars
 	IgnoreError bool
+	Defer       bool
 }
 
 // Dep is a task dependency
@@ -23,11 +20,7 @@ type Dep struct {
 func (c *Cmd) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	var cmd string
 	if err := unmarshal(&cmd); err == nil {
-		if strings.HasPrefix(cmd, "^") {
-			c.Task = strings.TrimPrefix(cmd, "^")
-		} else {
-			c.Cmd = cmd
-		}
+		c.Cmd = cmd
 		return nil
 	}
 	var cmdStruct struct {
@@ -39,6 +32,23 @@ func (c *Cmd) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		c.Cmd = cmdStruct.Cmd
 		c.Silent = cmdStruct.Silent
 		c.IgnoreError = cmdStruct.IgnoreError
+		return nil
+	}
+	var deferredCmd struct {
+		Defer string
+	}
+	if err := unmarshal(&deferredCmd); err == nil && deferredCmd.Defer != "" {
+		c.Defer = true
+		c.Cmd = deferredCmd.Defer
+		return nil
+	}
+	var deferredCall struct {
+		Defer Call
+	}
+	if err := unmarshal(&deferredCall); err == nil && deferredCall.Defer.Task != "" {
+		c.Defer = true
+		c.Task = deferredCall.Defer.Task
+		c.Vars = deferredCall.Defer.Vars
 		return nil
 	}
 	var taskCall struct {

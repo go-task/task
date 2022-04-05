@@ -1,5 +1,6 @@
 FOO2: foo2
-BAR2: $echo bar2
+BAR2:
+  sh: echo bar2
 BAZ2:
   sh: echo baz2
 TMPL2_FOO: "{{.FOO}}"

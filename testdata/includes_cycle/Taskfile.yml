@@ -1,0 +1,12 @@
+version: '3'
+
+includes:
+  'one': ./one/Taskfile.yml
+
+tasks:
+  default:
+    cmds:
+      - echo "called_dep" > called_dep.txt
+  level1:
+    cmds:
+      - echo "hello level 1"

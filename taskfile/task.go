@@ -5,25 +5,27 @@ type Tasks map[string]*Task
 
 // Task represents a task
 type Task struct {
-	Task          string
-	Cmds          []*Cmd
-	Deps          []*Dep
-	Label         string
-	Desc          string
-	Summary       string
-	Sources       []string
-	Generates     []string
-	Status        []string
-	Preconditions []*Precondition
-	Dir           string
-	Vars          *Vars
-	Env           *Vars
-	Silent        bool
-	Interactive   bool
-	Method        string
-	Prefix        string
-	IgnoreError   bool
-	Run           string
+	Task                 string
+	Cmds                 []*Cmd
+	Deps                 []*Dep
+	Label                string
+	Desc                 string
+	Summary              string
+	Sources              []string
+	Generates            []string
+	Status               []string
+	Preconditions        []*Precondition
+	Dir                  string
+	Vars                 *Vars
+	Env                  *Vars
+	Silent               bool
+	Interactive          bool
+	Method               string
+	Prefix               string
+	IgnoreError          bool
+	Run                  string
+	IncludeVars          *Vars
+	IncludedTaskfileVars *Vars
 }
 
 func (t *Task) Name() string {

@@ -17,7 +17,7 @@ func Merge(t1, t2 *Taskfile, namespaces ...string) error {
 	if t2.Expansions != 0 && t2.Expansions != 2 {
 		t1.Expansions = t2.Expansions
 	}
-	if t2.Output != "" {
+	if t2.Output.IsSet() {
 		t1.Output = t2.Output
 	}
 
@@ -49,7 +49,7 @@ func Merge(t1, t2 *Taskfile, namespaces ...string) error {
 			dep.Task = taskNameWithNamespace(dep.Task, namespaces...)
 		}
 		for _, cmd := range v.Cmds {
-			if cmd.Task != "" {
+			if cmd != nil && cmd.Task != "" {
 				cmd.Task = taskNameWithNamespace(cmd.Task, namespaces...)
 			}
 		}

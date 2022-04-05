@@ -1,0 +1,9 @@
+version: '3'
+
+includes:
+  bad: "../../Taskfile.yml"
+
+tasks:
+  level3:
+    cmds:
+      - echo "hello level 3"

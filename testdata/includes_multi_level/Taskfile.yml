@@ -1,0 +1,11 @@
+version: '3'
+
+includes:
+  'one': ./one/
+
+tasks:
+  default:
+    cmds:
+      - task: one:default
+      - task: one:two:default
+      - task: one:two:three:default
