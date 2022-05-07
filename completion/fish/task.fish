@@ -1,5 +1,8 @@
 function __task_get_tasks --description "Prints all available tasks with their description"
-	task -l | sed '1d' | awk '{ $1=""; print $0 }' | sed 's/:\ /\t/g' | string trim
+  set -l output (task -l 2>&1 < /dev/null | sed '1d' | awk '{ $1=""; print $0 }' | sed 's/:\ /\t/g' | string trim | string split0)
+  if test $output
+      echo $output
+  end
 end
 
 complete -c task -d 'Runs the specified task(s). Falls back to the "default" task if no task name was specified, or lists all tasks if an unknown task name was 
