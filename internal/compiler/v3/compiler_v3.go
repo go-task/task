@@ -151,7 +151,8 @@ func (c *CompilerV3) HandleDynamicVar(v taskfile.Var, dir string) (string, error
 
 	// Trim a single trailing newline from the result to make most command
 	// output easier to use in shell commands.
-	result := strings.TrimSuffix(stdout.String(), "\n")
+	result := strings.TrimSuffix(stdout.String(), "\r\n")
+	result = strings.TrimSuffix(result, "\n")
 
 	c.dynamicCache[v.Sh] = result
 	c.Logger.VerboseErrf(logger.Magenta, `task: dynamic variable: '%s' result: '%s'`, v.Sh, result)

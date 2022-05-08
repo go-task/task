@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Fixed bug where, on Windows, variables were ending with `\r` because we were
+  only removing the final `\n` but not `\r\n`
+  ([#717](https://github.com/go-task/task/issues/717)).
+
 ## v3.12.0 - 2022-03-31
 
 - The `--list` and `--list-all` flags can now be combined with the `--silent`
