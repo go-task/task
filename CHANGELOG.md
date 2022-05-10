@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v3.12.1 - 2022-05-10
 
 - Fixed bug where, on Windows, variables were ending with `\r` because we were
   only removing the final `\n` but not `\r\n`
