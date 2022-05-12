@@ -24,6 +24,21 @@
         --base-font-size: 14px;
         --theme-color: #29beb0;
       }
+
+      #carbonads {
+        margin-bottom: 15px;
+        margin-left: -25px;
+        margin-right: -25px;
+      }
+
+      #carbonads .carbon-wrap {
+        flex-direction: column;
+        align-items: center;
+      }
+
+      #carbonads .carbon-text {
+        white-space: inherit;
+      }
     </style>
 
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-4RT25NXQ7N"></script>
@@ -37,6 +52,15 @@
   </head>
   <body>
     <div id="app"></div>
+
+    <script src="//cdn.jsdelivr.net/npm/docsify/lib/docsify.min.js"></script>
+    <script src="//cdn.jsdelivr.net/npm/docsify-themeable/dist/js/docsify-themeable.min.js"></script>
+    <script src="//cdn.jsdelivr.net/npm/docsify-tabs"></script>
+    <script src="//cdn.jsdelivr.net/npm/docsify/lib/plugins/search.min.js"></script>
+    <script src="//cdn.jsdelivr.net/npm/prismjs/components/prism-bash.min.js"></script>
+    <script src="//cdn.jsdelivr.net/npm/prismjs/components/prism-yaml.min.js"></script>
+    <script src="//cdn.jsdelivr.net/npm/docsify-plugin-carbon@1/index.min.js"></script>
+
     <script>
       window.$docsify = {
         name: 'Task',
@@ -46,14 +70,11 @@
         loadSidebar: true,
         auto2top: true,
         maxLevel: 3,
-        subMaxLevel: 3
+        subMaxLevel: 3,
+        plugins: [
+          DocsifyCarbon.create('CESI65QJ', 'taskfiledev')
+        ]
       }
     </script>
-    <script src="//cdn.jsdelivr.net/npm/docsify/lib/docsify.min.js"></script>
-    <script src="//cdn.jsdelivr.net/npm/docsify-themeable/dist/js/docsify-themeable.min.js"></script>
-    <script src="//cdn.jsdelivr.net/npm/docsify-tabs"></script>
-    <script src="//cdn.jsdelivr.net/npm/docsify/lib/plugins/search.min.js"></script>
-    <script src="//cdn.jsdelivr.net/npm/prismjs/components/prism-bash.min.js"></script>
-    <script src="//cdn.jsdelivr.net/npm/prismjs/components/prism-yaml.min.js"></script>
   </body>
 </html>
