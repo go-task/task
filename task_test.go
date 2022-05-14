@@ -1192,7 +1192,6 @@ task: [task-1] echo 'task-1 ran successfully'
 task-1 ran successfully
 `)
 	assert.Error(t, e.Run(context.Background(), taskfile.Call{Task: "task-2"}))
-	fmt.Println(buff.String())
 	assert.Contains(t, buff.String(), expectedOutputOrder)
 }
 
