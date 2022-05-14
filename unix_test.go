@@ -11,6 +11,7 @@ package task_test
 import (
 	"bytes"
 	"errors"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
@@ -24,10 +25,11 @@ var (
 )
 
 func TestSignalSentToProcessGroup(t *testing.T) {
-	task, err := filepath.Abs("./bin/task")
+	task, err := getTaskPath()
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	testCases := map[string]struct {
 		args     []string
 		sendSigs int
@@ -189,6 +191,18 @@ func TestSignalSentToProcessGroup(t *testing.T) {
 			}
 		})
 	}
+}
+
+func getTaskPath() (string, error) {
+	if info, err := os.Stat("./bin/task"); err == nil {
+		return info.Name(), nil
+	}
+
+	if path, err := exec.LookPath("task"); err == nil {
+		return path, nil
+	}
+
+	return "", errors.New("task: \"task\" binary was not found!")
 }
 
 // Return the difference of the two lists: the elements that are present in the first
