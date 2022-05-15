@@ -592,7 +592,7 @@ func TestStatusVariables(t *testing.T) {
 	inf, err := os.Stat(filepath.Join(dir, "source.txt"))
 	assert.NoError(t, err)
 	ts := fmt.Sprintf("%d", inf.ModTime().Unix())
-	tf := fmt.Sprintf("%s", inf.ModTime())
+	tf := inf.ModTime().String()
 
 	assert.Contains(t, buff.String(), ts)
 	assert.Contains(t, buff.String(), tf)

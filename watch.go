@@ -97,7 +97,7 @@ func isContextError(err error) bool {
 
 func closeOnInterrupt(w *watcher.Watcher) {
 	ch := make(chan os.Signal, 1)
-	signal.Notify(ch, os.Interrupt, os.Kill, syscall.SIGTERM)
+	signal.Notify(ch, os.Interrupt, syscall.SIGTERM)
 	go func() {
 		<-ch
 		w.Close()
