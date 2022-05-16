@@ -36,7 +36,7 @@ func (vs *Vars) UnmarshalYAML(node *yaml.Node) error {
 
 // Merge merges the given Vars into the caller one
 func (vs *Vars) Merge(other *Vars) {
-	other.Range(func(key string, value Var) error {
+	_ = other.Range(func(key string, value Var) error {
 		vs.Set(key, value)
 		return nil
 	})
@@ -70,7 +70,7 @@ func (vs *Vars) Range(yield func(key string, value Var) error) error {
 // variables
 func (vs *Vars) ToCacheMap() (m map[string]interface{}) {
 	m = make(map[string]interface{}, vs.Len())
-	vs.Range(func(k string, v Var) error {
+	_ = vs.Range(func(k string, v Var) error {
 		if v.Sh != "" {
 			// Dynamic variable is not yet resolved; trigger
 			// <no value> to be used in templates.

@@ -53,7 +53,7 @@ func (tfs *IncludedTaskfiles) Len() int {
 
 // Merge merges the given IncludedTaskfiles into the caller one
 func (tfs *IncludedTaskfiles) Merge(other *IncludedTaskfiles) {
-	other.Range(func(key string, value IncludedTaskfile) error {
+	_ = other.Range(func(key string, value IncludedTaskfile) error {
 		tfs.Set(key, value)
 		return nil
 	})

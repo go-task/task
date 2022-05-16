@@ -52,7 +52,7 @@ func run(args []string) int {
 	switch args[0] {
 
 	case "default":
-		defaultCmd.Parse(args[1:])
+		_ = defaultCmd.Parse(args[1:])
 		if len(defaultCmd.Args()) > 0 {
 			fmt.Fprintf(os.Stderr, "default: unexpected arguments: %v\n", defaultCmd.Args())
 			return 2
@@ -60,7 +60,7 @@ func run(args []string) int {
 		return supervisor(*defaultSleep, 0, 0, nil)
 
 	case "handle":
-		handleCmd.Parse(args[1:])
+		_ = handleCmd.Parse(args[1:])
 		if *handleTermAfter == 1 {
 			fmt.Fprintf(os.Stderr, "handle: term-after cannot be 1\n")
 			return 2
@@ -74,7 +74,7 @@ func run(args []string) int {
 		return supervisor(*handleSleep, *handleCleanup, *handleTermAfter, sigCh)
 
 	case "version":
-		versionCmd.Parse(args[1:])
+		_ = versionCmd.Parse(args[1:])
 		if len(versionCmd.Args()) > 0 {
 			fmt.Fprintf(os.Stderr, "version: unexpected arguments: %v\n", versionCmd.Args())
 			return 2

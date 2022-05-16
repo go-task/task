@@ -16,13 +16,11 @@ import (
 // ListTasksWithDesc reports tasks that have a description spec.
 func (e *Executor) ListTasksWithDesc() {
 	e.printTasks(false)
-	return
 }
 
 // ListAllTasks reports all tasks, with or without a description spec.
 func (e *Executor) ListAllTasks() {
 	e.printTasks(true)
-	return
 }
 
 func (e *Executor) printTasks(listAll bool) {

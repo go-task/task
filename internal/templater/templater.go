@@ -68,7 +68,7 @@ func (r *Templater) ReplaceVars(vars *taskfile.Vars) *taskfile.Vars {
 	}
 
 	var new taskfile.Vars
-	vars.Range(func(k string, v taskfile.Var) error {
+	_ = vars.Range(func(k string, v taskfile.Var) error {
 		new.Set(k, taskfile.Var{
 			Static: r.Replace(v.Static),
 			Live:   v.Live,

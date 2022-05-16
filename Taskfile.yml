@@ -18,6 +18,7 @@ env:
 tasks:
   default:
     cmds:
+      - task: lint
       - task: test
 
   install:
@@ -31,33 +32,22 @@ tasks:
       - go mod download
       - go mod tidy
 
-  cli-deps:
-    desc: Downloads CLI dependencies
-    cmds:
-      - task: go-get
-        vars: {REPO: golang.org/x/lint/golint}
-      - task: go-get
-        vars: {REPO: github.com/goreleaser/goreleaser}
-      - task: go-get
-        vars: {REPO: github.com/goreleaser/godownloader}
-
   clean:
     desc: Cleans temp files and folders
     cmds:
       - rm -rf dist/
       - rm -rf tmp/
 
-  lint:
-    desc: Runs golint
-    cmds:
-      - golint {{catLines .GO_PACKAGES}}
-    silent: true
-
   sleepit:
     desc: Builds the sleepit test helper
     dir: tmp
     cmds:
       - go build ../internal/sleepit
+
+  lint:
+    desc: Runs golangci-lint
+    cmds:
+      - golangci-lint run
 
   test:
     desc: Runs test suite
@@ -75,14 +65,6 @@ tasks:
     cmds:
       - godownloader --repo go-task/task -o install-task.sh
       - cp ./install-task.sh ./docs/install.sh
-
-  ci:
-    - task: go-get
-      vars: {REPO: golang.org/x/lint/golint}
-    - task: lint
-    - task: test
-
-  go-get: go get -u {{.REPO}}
 
   packages:
     cmds:

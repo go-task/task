@@ -71,7 +71,7 @@ func (vr *varResolver) merge(vars *taskfile.Vars) {
 		return
 	}
 	tr := templater.Templater{Vars: vr.vars}
-	vars.Range(func(k string, v taskfile.Var) error {
+	_ = vars.Range(func(k string, v taskfile.Var) error {
 		v = taskfile.Var{
 			Static: tr.Replace(v.Static),
 			Sh:     tr.Replace(v.Sh),
