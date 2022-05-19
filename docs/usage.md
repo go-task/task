@@ -1073,9 +1073,10 @@ will try to optimize for it:
 version: '3'
 
 tasks:
-  cmds:
-    - vim my-file.txt
-  interactive: true
+  default:
+    cmds:
+      - vim my-file.txt
+    interactive: true
 ```
 
 If you still have problem running an interactive app through Task, please open
