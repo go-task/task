@@ -405,6 +405,16 @@ tasks:
     method: checksum
 ```
 
+> NOTE: Each task has only one checksum stored for its `sources`. If you want
+> to distinguish a task by any of its input variables, you can add those
+> variables as part of the task's label and it will be considered a different
+> task.
+>
+> This is useful if you want to run a task once for each distinct set of
+> inputs until the sources actually change. For example if the sources depend
+> on the value of a variable, or you want the task to rerun if some arguments
+> change even if the source hasn't.
+
 > TIP: method `none` skips any validation and always run the task.
 
 > NOTE: for the `checksum` (default) method to work, it's only necessary to
