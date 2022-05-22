@@ -1,4 +1,4 @@
-# /bin/bash
+#!/bin/bash
 
 _task_completion()
 {
@@ -7,12 +7,14 @@ _task_completion()
 
   case "$cur" in
   --*)
-    local options="$(_parse_help task)"
-    COMPREPLY=( $(compgen -W "$options" -- "$cur") )
+    local options
+    options="$(_parse_help task)"
+    mapfile -t COMPREPLY < <(compgen -W "$options" -- "$cur")
     ;;
   *)
-    local tasks="$(task --list-all | awk 'NR>1 { sub(/:$/,"",$2); print $2 }')"
-    COMPREPLY=( $(compgen -W "$tasks" -- "$cur") )
+    local tasks
+    tasks="$(task --list-all | awk 'NR>1 { sub(/:$/,"",$2); print $2 }')"
+    mapfile -t COMPREPLY < <(compgen -W "$tasks" -- "$cur")
     ;;
   esac
 
