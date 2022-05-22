@@ -38,12 +38,6 @@ tasks:
       - rm -rf dist/
       - rm -rf tmp/
 
-  sleepit:
-    desc: Builds the sleepit test helper
-    dir: tmp
-    cmds:
-      - go build ../internal/sleepit
-
   lint:
     desc: Runs golangci-lint
     cmds:
@@ -51,7 +45,7 @@ tasks:
 
   test:
     desc: Runs test suite
-    deps: [install, sleepit]
+    deps: [install]
     cmds:
       - go test {{catLines .GO_PACKAGES}}
 

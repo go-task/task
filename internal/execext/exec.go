@@ -56,15 +56,7 @@ func RunCommand(ctx context.Context, opts *RunCommandOptions) error {
 		return err
 	}
 
-	// We used to pass to interp.Runner a context that was cancelled on reception of a
-	// OS signal. This caused the Runner to terminate the subprocess abruptly.
-	// The correct behavior instead is for us to completely ignore the signal and let
-	// the subprocess deal with it. If the subprocess doesn't handle the signal, it will
-	// be terminated. If the subprocess does handle the signal, it knows better than us
-	// wether it wants to cleanup and terminate or do something different.
-	// See https://github.com/go-task/task/issues/458 for details.
-	// So now we pass an empty context just to make the API of interp.Runner happy
-	return r.Run(context.Background(), p)
+	return r.Run(ctx, p)
 }
 
 // IsExitError returns true the given error is an exis status error
