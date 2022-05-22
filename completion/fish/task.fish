@@ -1,11 +1,11 @@
 function __task_get_tasks --description "Prints all available tasks with their description"
-  set -l output (task -l 2>&1 < /dev/null | sed '1d' | awk '{ $1=""; print $0 }' | sed 's/:\ /\t/g' | string trim | string split0)
+	set -l output (task --list-all | sed '1d; s/\* \(.*\):\s*\(.*\)/\1\t\2/' | string split0)
   if test $output
       echo $output
   end
 end
 
-complete -c task -d 'Runs the specified task(s). Falls back to the "default" task if no task name was specified, or lists all tasks if an unknown task name was 
+complete -c task -d 'Runs the specified task(s). Falls back to the "default" task if no task name was specified, or lists all tasks if an unknown task name was
 specified.' -xa "(__task_get_tasks)"
 
 
