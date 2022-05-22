@@ -1,6 +1,8 @@
 #!/bin/bash
 
-_task_completion()
+GO_TASK_PROGNAME=task
+
+_go_task_completion()
 {
   local cur
   _get_comp_words_by_ref -n : cur
@@ -13,7 +15,7 @@ _task_completion()
     ;;
   *)
     local tasks
-    tasks="$(task --list-all | awk 'NR>1 { sub(/:$/,"",$2); print $2 }')"
+    tasks="$($GO_TASK_PROGNAME --list-all 2> /dev/null | awk 'NR>1 { sub(/:$/,"",$2); print $2 }')"
     mapfile -t COMPREPLY < <(compgen -W "$tasks" -- "$cur")
     ;;
   esac
@@ -21,4 +23,4 @@ _task_completion()
   __ltrim_colon_completions "$cur"
 }
 
-complete -F _task_completion task
+complete -F _go_task_completion $GO_TASK_PROGNAME
