@@ -11,5 +11,5 @@
 </li>
 <li style="display: flex">
   <img src="/discord.svg" style="width: 15px; margin-right: 5px">
-  <a target="_blank" href="https://discord.gg/bVnczQBY">Discord</a>
+  <a target="_blank" href="https://discord.gg/6TY36E39UK">Discord</a>
 </li>
