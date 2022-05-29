@@ -1,4 +1,9 @@
-# Releasing Task
+---
+slug: /releasing/
+sidebar_position: 6
+---
+
+# Releasing
 
 The release process of Task is done with the help of
 [GoReleaser][goreleaser]. You can test the release process locally by calling
@@ -38,7 +43,7 @@ of updating versions there by editing
 [this file](https://github.com/NixOS/nixpkgs/blob/nixos-unstable/pkgs/development/tools/go-task/default.nix).
 If you think its Task version is outdated, open an issue to let us know.
 
-[goreleaser]: https://goreleaser.com/#continuous_integration
+[goreleaser]: https://goreleaser.com/
 [homebrewtap]: https://github.com/go-task/homebrew-tap
 [gotaskrb]: https://github.com/go-task/homebrew-tap/blob/master/Formula/go-task.rb
 [snappackage]: https://github.com/go-task/snap

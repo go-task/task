@@ -1,3 +1,8 @@
+---
+slug: /donate/
+sidebar_position: 8
+---
+
 # Donate
 
 If you find this project useful, you can consider donating by using one of the
@@ -24,4 +29,4 @@ these options to donate:
 ## PIX (Brazil only)
 
 If you're Brazilian, you can donate any value by
-<a href="/pix.png" target="_blank">using this QR Code</a>.
+[using this QR Code](/img/pix.png).

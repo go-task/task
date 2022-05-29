@@ -1,7 +1,13 @@
+---
+slug: /
+sidebar_position: 1
+title: Home
+---
+
 # Task
 
 <div align="center">
-  <img id="logo" src="/Logo.png" height="250px" width="250px" />
+  <img id="logo" src="img/logo.svg" height="250px" width="250px" />
 </div>
 
 Task is a task runner / build tool that aims to be simpler and easier to use
@@ -14,7 +20,7 @@ setups just to use a build tool.
 Once [installed](installation.md), you just need to describe your build tasks
 using a simple [YAML][yaml] schema in a file called `Taskfile.yml`:
 
-```yaml
+```yaml title="Taskfile.yml"
 version: '3'
 
 tasks:
@@ -26,7 +32,7 @@ tasks:
 
 And call it by running `task hello` from your terminal.
 
-The above example is just the start, you can take a look at the [usage](usage.md)
+The above example is just the start, you can take a look at the [usage](/usage)
 guide to check the full schema documentation and Task features.
 
 ## Features
@@ -37,13 +43,13 @@ guide to check the full schema documentation and Task features.
 - Available on CIs: by adding [this simple command](installation.md#install-script)
   to install on your CI script and you're done to use Task as part of your CI pipeline;
 - Truly cross-platform: while most build tools only work well on Linux or macOS,
-  Task also supports Windows thanks to [this awesome shell interpreter for Go][sh];
-- Great for code generation: you can easily [prevent a task from running](usage.md#prevent-unnecessary-work)
+  Task also supports Windows thanks to [this shell interpreter for Go][sh];
+- Great for code generation: you can easily [prevent a task from running](/usage#prevent-unnecessary-work)
   if a given set of files haven't changed since last run (based either on its
   timestamp or content).
 
 [make]: https://www.gnu.org/software/make/
-[go]: https://golang.org/
+[go]: https://go.dev/
 [yaml]: http://yaml.org/
 [homebrew]: https://brew.sh/
 [snapcraft]: https://snapcraft.io/

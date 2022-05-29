@@ -1,3 +1,8 @@
+---
+slug: /styleguide/
+sidebar_position: 4
+---
+
 # Styleguide
 
 This is the official Task styleguide for `Taskfile.yml` files. This guide

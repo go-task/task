@@ -1,17 +1,27 @@
 version: '3'
 
 tasks:
-  install:
-    desc: Installs docsify to work the on the documentation site
+  setup:
+    desc: Setup Docusaurus locally
     cmds:
-      - npm install docsify-cli -g
+      - yarn install
 
-  serve:
-    desc: Serves the documentation site locally
+  start:
+    desc: Start website
     cmds:
-      - docsify serve .
+      - npx docusaurus start --no-open --port=3001
 
-  ico:
-    desc: Generate favicon.ico from Logo.png
+  build:
+    desc: Build website
     cmds:
-      - convert -background transparent "Logo.png" -define icon:auto-resize=16,24,32,48,64,72,96,128,256 "favicon.ico"
+      - npx docusaurus build
+
+  clean:
+    desc: Clean temp directories
+    cmds:
+      - rm -rf ./build
+
+  deploy:
+    desc: Build and deploy Docusaurus. Requires GIT_USER and GIT_PASS envs to be previous set
+    cmds:
+      - npx docusaurus deploy
