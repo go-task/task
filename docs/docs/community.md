@@ -1,3 +1,8 @@
+---
+slug: /community/
+sidebar_position: 5
+---
+
 # Community
 
 Some of the work to improve the Task ecosystem is done by the community, be
@@ -25,7 +30,7 @@ and is published [here](https://marketplace.visualstudio.com/items?itemName=paul
 
 ### Sublime Text 4 package
 
-There is a convenience wrapper for initializing and running tasks from Sublime Text's command palette. The package is 
+There is a convenience wrapper for initializing and running tasks from Sublime Text's command palette. The package is
 developed by [@biozz](https://github.com/biozz), the source code is available [here](https://github.com/biozz/sublime-taskfile)
 and it is published on Package Control [here](https://packagecontrol.io/packages/Taskfile).
 

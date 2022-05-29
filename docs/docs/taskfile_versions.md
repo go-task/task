@@ -1,3 +1,8 @@
+---
+slug: /taskfile-versions/
+sidebar_position: 7
+---
+
 # Taskfile Versions
 
 The Taskfile syntax and features changed with time. This document explains what

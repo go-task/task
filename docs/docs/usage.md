@@ -1,3 +1,8 @@
+---
+slug: /usage/
+sidebar_position: 3
+---
+
 # Usage
 
 ## Getting started
@@ -26,7 +31,7 @@ Running the tasks is as simple as running:
 task assets build
 ```
 
-Task uses [github.com/mvdan/sh](https://github.com/mvdan/sh), a native Go sh
+Task uses [mvdan.cc/sh](https://mvdan.cc/sh/), a native Go sh
 interpreter. So you can write sh/bash commands and it will work even on
 Windows, where `sh` or `bash` are usually not available. Just remember any
 executable called must be available by the OS or in PATH.
@@ -79,27 +84,27 @@ tasks:
       - echo $GREETING
 ```
 
-> NOTE: `env` supports expansion and retrieving output from a shell command
-> just like variables, as you can see on the [Variables](#variables) section.
+:::info
+
+`env` supports expansion and retrieving output from a shell command
+just like variables, as you can see on the [Variables](#variables) section.
+
+:::
 
 ### .env files
 
 You can also ask Task to include `.env` like files by using the `dotenv:`
 setting:
 
-```
-# .env
+```bash title=".env"
 KEYNAME=VALUE
 ```
 
-```
-# testing/.env
+```bash title="testing/.env"
 ENDPOINT=testing.com
 ```
 
-```yaml
-# Taskfile.yml
-
+```yaml title="Taskfile.yml"
 version: '3'
 
 env:
@@ -161,8 +166,12 @@ includes:
     dir: ./docs
 ```
 
-> The included Taskfiles must be using the same schema version the main
-> Taskfile uses.
+:::info
+
+The included Taskfiles must be using the same schema version the main
+Taskfile uses.
+
+:::
 
 ### Optional includes
 
@@ -203,10 +212,14 @@ includes:
       DOCKER_IMAGE: frontend_image
 ```
 
-> NOTE: Vars declared in the included Taskfile have preference over the
+:::info
+
+Vars declared in the included Taskfile have preference over the
 included ones! If you want a variable in an included Taskfile to be overridable
 use the [default function](https://go-task.github.io/slim-sprig/defaults.html):
 `MY_VAR: '{{.MY_VAR | default "my-default-value"}}'`.
+
+:::
 
 ## Task directory
 
@@ -274,8 +287,12 @@ tasks:
 If there is more than one dependency, they always run in parallel for better
 performance.
 
-> You can also make the tasks given by the command line run in parallel by
-> using the `--parallel` flag (alias `-p`). Example: `task --parallel js css`.
+:::tip
+
+You can also make the tasks given by the command line run in parallel by
+using the `--parallel` flag (alias `-p`). Example: `task --parallel js css`.
+
+:::
 
 If you want to pass information to dependencies, you can do that the same
 manner as you would to [call another task](#calling-another-task):
@@ -344,9 +361,13 @@ tasks:
 
 The above syntax is also supported in `deps`.
 
-> NOTE: If you want to call a task declared in the root Taskfile from within an
-> [included Taskfile](#including-other-taskfiles), add a leading `:` like this:
-> `task: :task-name`.
+:::tip
+
+NOTE: If you want to call a task declared in the root Taskfile from within an
+[included Taskfile](#including-other-taskfiles), add a leading `:` like this:
+`task: :task-name`.
+
+:::
 
 ## Prevent unnecessary work
 
@@ -405,21 +426,33 @@ tasks:
     method: checksum
 ```
 
-> NOTE: Each task has only one checksum stored for its `sources`. If you want
-> to distinguish a task by any of its input variables, you can add those
-> variables as part of the task's label and it will be considered a different
-> task.
->
-> This is useful if you want to run a task once for each distinct set of
-> inputs until the sources actually change. For example if the sources depend
-> on the value of a variable, or you want the task to rerun if some arguments
-> change even if the source hasn't.
+:::info
 
-> TIP: method `none` skips any validation and always run the task.
+Each task has only one checksum stored for its `sources`. If you want
+to distinguish a task by any of its input variables, you can add those
+variables as part of the task's label and it will be considered a different
+task.
 
-> NOTE: for the `checksum` (default) method to work, it's only necessary to
-> inform the source files, but if you want to use the `timestamp` method, you
-> also need to inform the generated files with `generates`.
+This is useful if you want to run a task once for each distinct set of
+inputs until the sources actually change. For example if the sources depend
+on the value of a variable, or you want the task to rerun if some arguments
+change even if the source hasn't.
+
+:::
+
+:::tip
+
+The method `none` skips any validation and always run the task.
+
+:::
+
+:::info
+
+For the `checksum` (default) method to work, it's only necessary to
+inform the source files, but if you want to use the `timestamp` method, you
+also need to inform the generated files with `generates`.
+
+:::
 
 ### Using programmatic checks to indicate a task is up to date.
 
@@ -577,7 +610,11 @@ Example of sending parameters with environment variables:
 $ TASK_VARIABLE=a-value task do-something
 ```
 
-> TIP: A special variable `.TASK` is always available containing the task name.
+:::tip
+
+A special variable `.TASK` is always available containing the task name.
+
+:::
 
 Since some shells don't support above syntax to set environment variables
 (Windows) tasks also accepts a similar style when not in the beginning of
@@ -690,9 +727,13 @@ tasks:
   cleanup: rm -rf tmpdir/
 ```
 
-> NOTE: Due to the nature of how the
+:::info
+
+Due to the nature of how the
 [Go's own `defer` work](https://go.dev/tour/flowcontrol/13), the deferred
 commands are executed in the reverse order if you schedule multiple of them.
+
+:::
 
 ## Go's template engine
 
@@ -1002,9 +1043,9 @@ tasks:
   # ...
 ```
 
- The `group` output will print the entire output of a command once, after it
- finishes, so you won't have live feedback for commands that take a long time
- to run.
+The `group` output will print the entire output of a command once, after it
+finishes, so you won't have live feedback for commands that take a long time
+to run.
 
 When using the `group` output, you can optionally provide a templated message
 to print at the start and end of the group. This can be useful for instructing
@@ -1034,9 +1075,9 @@ Hello, World!
 ::endgroup::
 ```
 
- The `prefix` output will prefix every line printed by a command with
- `[task-name] ` as the prefix, but you can customize the prefix for a command
- with the `prefix:` attribute:
+The `prefix` output will prefix every line printed by a command with
+`[task-name] ` as the prefix, but you can customize the prefix for a command
+with the `prefix:` attribute:
 
  ```yaml
 version: '3'
@@ -1067,7 +1108,11 @@ $ task default
 [print-baz] baz
 ```
 
-> The `output` option can also be specified by the `--output` or `-o` flags.
+:::tip
+
+The `output` option can also be specified by the `--output` or `-o` flags.
+
+:::
 
 ## Interactive CLI application
 

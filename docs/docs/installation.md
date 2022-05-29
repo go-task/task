@@ -1,12 +1,15 @@
+---
+slug: /installation/
+sidebar_position: 2
+---
+
 # Installation
 
 Task offers many installation methods. Check out the available methods below.
 
 ## Package Managers
 
-<!-- tabs:start -->
-
-#### **Homebrew**
+### **Homebrew**
 
 If you're on macOS or Linux and have [Homebrew][homebrew] installed, getting
 Task is as simple as running:
@@ -15,7 +18,7 @@ Task is as simple as running:
 brew install go-task/tap/go-task
 ```
 
-#### **Snap**
+### **Snap**
 
 Task is available in [Snapcraft][snapcraft], but keep in mind that your
 Linux distribution should allow classic confinement for Snaps to Task work
@@ -25,7 +28,7 @@ right:
 sudo snap install task --classic
 ```
 
-#### **Chocolatey**
+### **Chocolatey**
 
 If you're on Windows and have [Chocolatey][choco] installed, getting
 Task is as simple as running:
@@ -37,7 +40,7 @@ choco install go-task
 This installation method is community owned.
 
 
-#### **Scoop**
+### **Scoop**
 
 If you're on Windows and have [Scoop][scoop] installed, use `extras` bucket
 to install Task like:
@@ -50,7 +53,7 @@ scoop install task
 This installation method is community owned. After a new release of Task, it
 may take some time until it's available on Scoop.
 
-#### **AUR**
+### **AUR**
 
 If you're on Arch Linux you can install Task from
 [AUR](https://aur.archlinux.org/packages/taskfile-git) using your favorite
@@ -64,7 +67,7 @@ This installation method is community owned, but since it's `-git` version of
 the package, it's always latest available version based on the Git repository.
 
 
-#### **Nix**
+### **Nix**
 
 If you're on NixOS or have Nix installed
 you can install Task from [nixpkgs](https://github.com/NixOS/nixpkgs):
@@ -76,13 +79,9 @@ nix-env -iA nixpkgs.go-task
 This installation method is community owned. After a new release of Task, it
 may take some time until it's available in [nixpkgs](https://github.com/NixOS/nixpkgs).
 
-<!-- tabs:end -->
-
 ## Get The Binary
 
-<!-- tabs:start -->
-
-#### **Binary**
+### **Binary**
 
 You can download the binary from the [releases page on GitHub][releases] and
 add to your `$PATH`.
@@ -91,7 +90,7 @@ DEB and RPM packages are also available.
 
 The `task_checksums.txt` file contains the SHA-256 checksum for each file.
 
-#### **Install Script**
+### **Install Script**
 
 We also have an [install script][installscript] which is very useful in
 scenarios like CI. Many thanks to [GoDownloader][godownloader] for enabling the
@@ -107,9 +106,13 @@ sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d -b /usr/local/b
 
 ```
 
-> This method will download the binary on the local `./bin` directory by default.
+:::info
 
-#### **GitHub Actions**
+This method will download the binary on the local `./bin` directory by default.
+
+:::
+
+### **GitHub Actions**
 
 If you want to install Task in GitHub Actions you can try using
 [this action](https://github.com/arduino/setup-task)
@@ -122,13 +125,9 @@ by the Arduino team:
 
 This installation method is community owned.
 
-<!-- tabs:end -->
-
 ## Build From Source
 
-<!-- tabs:start -->
-
-#### **Go Modules**
+### **Go Modules**
 
 First, make sure you have [Go][go] properly installed and setup.
 
@@ -150,11 +149,13 @@ If using Go 1.15 or earlier, instead use:
 env GO111MODULE=on go get -u github.com/go-task/task/v3/cmd/task@latest
 ```
 
-> For CI environments we recommend using the [Install Script](#get-the-binary)
-> instead, which is faster and more stable, since it'll just download the latest
-> released binary.
+:::tip
 
-<!-- tabs:end -->
+For CI environments we recommend using the [install script](#get-the-binary)
+instead, which is faster and more stable, since it'll just download the latest
+released binary.
+
+:::
 
 [go]: https://golang.org/
 [snapcraft]: https://snapcraft.io/task
