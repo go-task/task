@@ -54,12 +54,6 @@ tasks:
     cmds:
       - goreleaser --snapshot --rm-dist
 
-  gen-install-script:
-    desc: Generate install script using https://github.com/goreleaser/godownloader
-    cmds:
-      - godownloader --repo go-task/task -o install-task.sh
-      - cp ./install-task.sh ./docs/install.sh
-
   packages:
     cmds:
       - echo '{{.GO_PACKAGES}}'
