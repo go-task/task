@@ -1,6 +1,6 @@
 ---
 slug: /styleguide/
-sidebar_position: 4
+sidebar_position: 5
 ---
 
 # Styleguide
@@ -33,9 +33,9 @@ officially supported. On Linux, only `Taskfile.yml` will work, though.
 
 - `version:`
 - `includes:`
-- Configuration ones, like `output:` or `silent:`
+- Configuration ones, like `output:`, `silent:`, `method:` and `run:`
 - `vars:`
-- `env:`
+- `env:`, `dotenv:`
 - `tasks:`
 
 ## Use 2 spaces for indentation
