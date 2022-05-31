@@ -85,6 +85,12 @@ const config = {
           },
           {
             type: 'doc',
+            docId: 'api_reference',
+            position: 'left',
+            label: 'API'
+          },
+          {
+            type: 'doc',
             docId: 'donate',
             position: 'left',
             label: 'Donate'
