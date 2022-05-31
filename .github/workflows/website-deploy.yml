@@ -31,3 +31,5 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./docs/build
+          user_name: task-bot
+          user_email: 106601941+task-bot@users.noreply.github.com
