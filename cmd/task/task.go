@@ -68,6 +68,7 @@ func main() {
 		silent      bool
 		dry         bool
 		summary     bool
+		carryErr    bool
 		parallel    bool
 		concurrency int
 		dir         string
@@ -89,6 +90,7 @@ func main() {
 	pflag.BoolVarP(&parallel, "parallel", "p", false, "executes tasks provided on command line in parallel")
 	pflag.BoolVar(&dry, "dry", false, "compiles and prints tasks in the order that they would be run, without executing them")
 	pflag.BoolVar(&summary, "summary", false, "show summary about a task")
+	pflag.BoolVar(&carryErr, "carry", false, "carry error code if any")
 	pflag.StringVarP(&dir, "dir", "d", "", "sets directory of execution")
 	pflag.StringVarP(&entrypoint, "taskfile", "t", "", `choose which Taskfile to run. Defaults to "Taskfile.yml"`)
 	pflag.StringVarP(&output.Name, "output", "o", "", "sets output style: [interleaved|group|prefixed]")
@@ -216,7 +218,13 @@ func main() {
 
 	if err := e.Run(ctx, calls...); err != nil {
 		e.Logger.Errf(logger.Red, "%v", err)
-		os.Exit(1)
+		code := 1
+		if carryErr {
+			if tre, ok := err.(*task.TaskRunError); ok {
+				code = tre.ExitCode()
+			}
+		}
+		os.Exit(code)
 	}
 }
 

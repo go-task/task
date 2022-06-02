@@ -3,6 +3,7 @@ package task
 import (
 	"errors"
 	"fmt"
+	"mvdan.cc/sh/v3/interp"
 )
 
 var (
@@ -18,13 +19,21 @@ func (err *taskNotFoundError) Error() string {
 	return fmt.Sprintf(`task: Task "%s" not found`, err.taskName)
 }
 
-type taskRunError struct {
+type TaskRunError struct {
 	taskName string
 	err      error
 }
 
-func (err *taskRunError) Error() string {
+func (err *TaskRunError) Error() string {
 	return fmt.Sprintf(`task: Failed to run task "%s": %v`, err.taskName, err.err)
+}
+
+func (err *TaskRunError) ExitCode() int {
+	if c, ok := interp.IsExitStatus(err.err); ok {
+		return int(c)
+	}
+
+	return 1
 }
 
 // MaximumTaskCallExceededError is returned when a task is called too
