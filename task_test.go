@@ -1275,3 +1275,22 @@ VAR_2 is included-default-var2
 	t.Log(buff.String())
 	assert.Equal(t, strings.TrimSpace(buff.String()), expectedOutputOrder)
 }
+
+func TestErrorCode(t *testing.T) {
+	const dir = "testdata/error_code"
+
+	var buff bytes.Buffer
+	e := &task.Executor{
+		Dir:    dir,
+		Stdout: &buff,
+		Stderr: &buff,
+		Silent: true,
+	}
+	assert.NoError(t, e.Setup())
+
+	err := e.Run(context.Background(), taskfile.Call{Task: "test-exit-code"})
+	assert.Error(t, err)
+	casted, ok := err.(*task.TaskRunError)
+	assert.True(t, ok, "cannot cast returned error to *task.TaskRunError")
+	assert.Equal(t, 42, casted.ExitCode(), "unexpected exit code from task")
+}
