@@ -22,6 +22,10 @@ these options to donate:
 - [$50 per month](https://opencollective.com/task/contribute/sponsor-28775/checkout)
 - [Custom value - One-time donation option supported](https://opencollective.com/task/donate)
 
+## GitHub Sponsors
+
+- [@andreynering](https://github.com/sponsors/andreynering)
+
 ## PayPal
 
 - [Any value - One-time donation](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=GSVDU63RKG45A&currency_code=USD&source=url)
