@@ -32,7 +32,7 @@ task assets build
 ```
 
 Task uses [mvdan.cc/sh](https://mvdan.cc/sh/), a native Go sh
-interpreter. So you can write sh/bash commands and it will work even on
+interpreter. So you can write sh/bash commands, and it will work even on
 Windows, where `sh` or `bash` are usually not available. Just remember any
 executable called must be available by the OS or in PATH.
 
@@ -69,7 +69,7 @@ tasks:
       GREETING: Hey, there!
 ```
 
-Additionally, you can set globally environment variables, that'll be available
+Additionally, you can set global environment variables that will be available
 to all tasks:
 
 ```yaml
@@ -87,7 +87,7 @@ tasks:
 :::info
 
 `env` supports expansion and retrieving output from a shell command
-just like variables, as you can see on the [Variables](#variables) section.
+just like variables, as you can see in the [Variables](#variables) section.
 
 :::
 
@@ -153,7 +153,7 @@ includes:
 
 ### Directory of included Taskfile
 
-By default, included Taskfile's tasks are ran in the current directory, even
+By default, included Taskfile's tasks are run in the current directory, even
 if the Taskfile is in another directory, but you can force its tasks to run
 in another directory by using this alternative syntax:
 
@@ -168,7 +168,7 @@ includes:
 
 :::info
 
-The included Taskfiles must be using the same schema version the main
+The included Taskfiles must be using the same schema version as the main
 Taskfile uses.
 
 :::
@@ -215,7 +215,7 @@ includes:
 :::info
 
 Vars declared in the included Taskfile have preference over the
-included ones! If you want a variable in an included Taskfile to be overridable
+included ones! If you want a variable in an included Taskfile to be overridable,
 use the [default function](https://go-task.github.io/slim-sprig/defaults.html):
 `MY_VAR: '{{.MY_VAR | default "my-default-value"}}'`.
 
@@ -224,7 +224,7 @@ use the [default function](https://go-task.github.io/slim-sprig/defaults.html):
 ## Task directory
 
 By default, tasks will be executed in the directory where the Taskfile is
-located. But you can easily make the task run in another folder informing
+located. But you can easily make the task run in another folder, informing
 `dir`:
 
 ```yaml
@@ -238,12 +238,12 @@ tasks:
       - caddy
 ```
 
-If the directory doesn't exist, `task` creates it.
+If the directory does not exist, `task` creates it.
 
 ## Task dependencies
 
-> Dependencies run in parallel, so dependencies of a task shouldn't depend one
-> another. If you want to force tasks to run serially take a look at the
+> Dependencies run in parallel, so dependencies of a task should not depend one
+> another. If you want to force tasks to run serially, take a look at the
 > [Calling Another Task](#calling-another-task) section below.
 
 You may have tasks that depend on others. Just pointing them on `deps` will
@@ -318,8 +318,8 @@ tasks:
 ## Calling another task
 
 When a task has many dependencies, they are executed concurrently. This will
-often result in a faster build pipeline. But in some situations you may need
-to call other tasks serially. In this case, just use the following syntax:
+often result in a faster build pipeline. However, in some situations, you may need
+to call other tasks serially. In this case, use the following syntax:
 
 ```yaml
 version: '3'
@@ -374,7 +374,7 @@ NOTE: If you want to call a task declared in the root Taskfile from within an
 ### By fingerprinting locally generated files and their sources
 
 If a task generates something, you can inform Task the source and generated
-files, so Task will prevent to run them if not necessary.
+files, so Task will prevent running them if not necessary.
 
 ```yaml
 version: '3'
@@ -407,7 +407,7 @@ Task will compare the checksum of the source files to determine if it's
 necessary to run the task. If not, it will just print a message like
 `Task "js" is up to date`.
 You will probably want to ignore the `.task` folder in your `.gitignore` file
-(It's there that Task stores the last checksum).
+(It is there that Task stores the last checksum).
 
 If you prefer this check to be made by the modification timestamp of the files,
 instead of its checksum (content), just set the `method` property to `timestamp`.
@@ -430,13 +430,13 @@ tasks:
 
 Each task has only one checksum stored for its `sources`. If you want
 to distinguish a task by any of its input variables, you can add those
-variables as part of the task's label and it will be considered a different
+variables as part of the task's label, and it will be considered a different
 task.
 
 This is useful if you want to run a task once for each distinct set of
-inputs until the sources actually change. For example if the sources depend
-on the value of a variable, or you want the task to rerun if some arguments
-change even if the source hasn't.
+inputs until the sources actually change. For example, if the sources depend
+on the value of a variable, or you if you want the task to rerun if some arguments
+change even if the source has not.
 
 :::
 
@@ -448,7 +448,7 @@ The method `none` skips any validation and always run the task.
 
 :::info
 
-For the `checksum` (default) method to work, it's only necessary to
+For the `checksum` (default) method to work, it is only necessary to
 inform the source files, but if you want to use the `timestamp` method, you
 also need to inform the generated files with `generates`.
 
@@ -496,13 +496,13 @@ up-to-date.
 Also, `task --status [tasks]...` will exit with a non-zero exit code if any of
 the tasks are not up-to-date.
 
-### Using programmatic checks to cancel execution of an task and it's dependencies
+### Using programmatic checks to cancel the execution of a task and its dependencies
 
-In addition to `status` checks, there are also `preconditions` checks, which are
+In addition to `status` checks, `preconditions` checks are
 the logical inverse of `status` checks.  That is, if you need a certain set of
 conditions to be _true_ you can use the `preconditions` stanza.
-`preconditions` are similar to `status` lines except they support `sh`
-expansion and they SHOULD all return 0.
+`preconditions` are similar to `status` lines, except they support `sh`
+expansion, and they SHOULD all return 0.
 
 ```yaml
 version: '3'
@@ -528,7 +528,7 @@ precondition is not met - the calling task will fail.  Note that a task
 executed with a failing precondition will not run unless `--force` is
 given.
 
-Unlike `status` which will skip a task if it is up to date, and continue
+Unlike `status`, which will skip a task if it is up to date and continue
 executing tasks that depend on it, a `precondition` will fail a task, along
 with any other tasks that depend on it.
 
@@ -616,8 +616,8 @@ A special variable `.TASK` is always available containing the task name.
 
 :::
 
-Since some shells don't support above syntax to set environment variables
-(Windows) tasks also accepts a similar style when not in the beginning of
+Since some shells do not support the above syntax to set environment variables
+(Windows) tasks also accept a similar style when not at the beginning of
 the command.
 
 ```bash
@@ -654,7 +654,7 @@ tasks:
 ### Dynamic variables
 
 The below syntax (`sh:` prop in a variable) is considered a dynamic variable.
-The value will be treated as a command and the output assigned. If there is one
+The value will be treated as a command and the output assigned. If there are one
 or more trailing newlines, the last newline will be trimmed.
 
 ```yaml
@@ -698,7 +698,7 @@ With the `defer` keyword, it's possible to schedule cleanup to be run once
 the task finishes. The difference with just putting it as the last command is
 that this command will run even when the task fails.
 
-In the example below `rm -rf tmpdir/` will run even if the third command fails:
+In the example below, `rm -rf tmpdir/` will run even if the third command fails:
 
 ```yaml
 version: '3'
@@ -711,7 +711,7 @@ tasks:
       - echo 'Do work on tmpdir/'
 ```
 
-If you want to move the cleanup command into another task, that's possible as
+If you want to move the cleanup command into another task, that is possible as
 well:
 
 ```yaml
@@ -754,7 +754,7 @@ tasks:
 
 Task also adds the following functions:
 
-- `OS`: Returns operating system. Possible values are "windows", "linux",
+- `OS`: Returns the operating system. Possible values are "windows", "linux",
   "darwin" (macOS) and "freebsd".
 - `ARCH`: return the architecture Task was compiled to: "386", "amd64", "arm"
   or "s390x".
@@ -879,8 +879,8 @@ Please note: *showing the summary will not execute the command*.
 
 ## Overriding task name
 
-Sometimes you may want to override the task name print on summary, up-to-date
-messages to STDOUT, etc. In this case you can just set `label:`, which can also
+Sometimes you may want to override the task name printed on the summary, up-to-date
+messages to STDOUT, etc. In this case, you can just set `label:`, which can also
 be interpolated with variables:
 
 ```yaml
@@ -903,7 +903,7 @@ tasks:
 
 ## Silent mode
 
-Silent mode disables echoing of commands before Task runs it.
+Silent mode disables the echoing of commands before Task runs it.
 For the following Taskfile:
 
 ```yaml
@@ -915,14 +915,14 @@ tasks:
       - echo "Print something"
 ```
 
-Normally this will be print:
+Normally this will be printed:
 
 ```sh
 echo "Print something"
 Print something
 ```
 
-With silent mode on, the below will be print instead:
+With silent mode on, the below will be printed instead:
 
 ```sh
 Print something
@@ -1001,7 +1001,7 @@ tasks:
 ```
 
 Task will abort the execution after running `exit 1` because the status code `1` stands for `EXIT_FAILURE`.
-However it is possible to continue with execution using `ignore_error`:
+However, it is possible to continue with execution using `ignore_error`:
 
 ```yaml
 version: '3'
@@ -1014,16 +1014,16 @@ tasks:
       - echo "Hello World"
 ```
 
-`ignore_error` can also be set for a task, which mean errors will be suppressed
-for all commands. But keep in mind this option won't propagate to other tasks
+`ignore_error` can also be set for a task, which means errors will be suppressed
+for all commands. Nevertheless, keep in mind that this option will not propagate to other tasks
 called either by `deps` or `cmds`!
 
 ## Output syntax
 
-By default, Task just redirect the STDOUT and STDERR of the running commands
-to the shell in real time. This is good for having live feedback for log
+By default, Task just redirects the STDOUT and STDERR of the running commands
+to the shell in real-time. This is good for having live feedback for logging
 printed by commands, but the output can become messy if you have multiple
-commands running at the same time and printing lots of stuff.
+commands running simultaneously and printing lots of stuff.
 
 To make this more customizable, there are currently three different output
 options you can choose:
@@ -1043,8 +1043,8 @@ tasks:
   # ...
 ```
 
-The `group` output will print the entire output of a command once, after it
-finishes, so you won't have live feedback for commands that take a long time
+The `group` output will print the entire output of a command once after it
+finishes, so you will not have live feedback for commands that take a long time
 to run.
 
 When using the `group` output, you can optionally provide a templated message
@@ -1117,11 +1117,11 @@ The `output` option can also be specified by the `--output` or `-o` flags.
 ## Interactive CLI application
 
 When running interactive CLI applications inside Task they can sometimes behave
-weirdly, specially when the [output mode](#output-syntax) is set to something
-other than `interleaved` (the default), or when interactive apps are ran in
+weirdly, especially when the [output mode](#output-syntax) is set to something
+other than `interleaved` (the default), or when interactive apps are run in
 parallel with other tasks.
 
-The `interactive: true` tells Task this is an interactive application, and Task
+The `interactive: true` tells Task this is an interactive application and Task
 will try to optimize for it:
 
 ```yaml
@@ -1134,7 +1134,7 @@ tasks:
     interactive: true
 ```
 
-If you still have problem running an interactive app through Task, please open
+If you still have problems running an interactive app through Task, please open
 an issue about it.
 
 ## Short task syntax
