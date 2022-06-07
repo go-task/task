@@ -66,6 +66,17 @@ yay -S taskfile-git
 This installation method is community owned, but since it's `-git` version of
 the package, it's always latest available version based on the Git repository.
 
+### **Fedora**
+
+If you're on Fedora Linux you can install Task from the official 
+[Fedora](https://packages.fedoraproject.org/pkgs/golang-github-task/go-task/) repository using `dnf`:
+
+```cmd
+sudo dnf install go-task
+```
+
+This installation method is community owned. After a new release of Task, it
+may take some time until it's available in [Fedora](https://packages.fedoraproject.org/pkgs/golang-github-task/go-task/).
 
 ### **Nix**
 
