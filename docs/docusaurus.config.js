@@ -153,7 +153,7 @@ const config = {
       // NOTE(@andreynering): Don't worry, these keys are meant to be public =)
       algolia: {
         appId: '7IZIJ13AI7',
-        apiKey: '14bd976bed13965279eee2a4dbf5c8c6',
+        apiKey: '34b64ae4fc8d9da43d9a13d9710aaddc',
         indexName: 'taskfile'
       }
     }),
