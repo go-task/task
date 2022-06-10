@@ -594,7 +594,7 @@ tasks:
 ## Variables
 
 When doing interpolation of variables, Task will look for the below.
-They are listed below in order of importance (e.g. most important first):
+They are listed below in order of importance (i.e. most important first):
 
 - Variables declared in the task definition
 - Variables given while calling a task from another
