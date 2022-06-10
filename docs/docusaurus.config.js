@@ -61,7 +61,7 @@ const config = {
       metadata: [
         {
           name: 'og:image',
-          content: 'https://preview-taskfile.netlify.app/img/logo.svg'
+          content: 'https://taskfile.dev/img/logo.png'
         }
       ],
       navbar: {
