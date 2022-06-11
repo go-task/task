@@ -9,7 +9,7 @@ Task offers many installation methods. Check out the available methods below.
 
 ## Package Managers
 
-### **Homebrew**
+### Homebrew
 
 If you're on macOS or Linux and have [Homebrew][homebrew] installed, getting
 Task is as simple as running:
@@ -18,7 +18,7 @@ Task is as simple as running:
 brew install go-task/tap/go-task
 ```
 
-### **Snap**
+### Snap
 
 Task is available in [Snapcraft][snapcraft], but keep in mind that your
 Linux distribution should allow classic confinement for Snaps to Task work
@@ -28,7 +28,7 @@ right:
 sudo snap install task --classic
 ```
 
-### **Chocolatey**
+### Chocolatey
 
 If you're on Windows and have [Chocolatey][choco] installed, getting
 Task is as simple as running:
@@ -40,7 +40,7 @@ choco install go-task
 This installation method is community owned.
 
 
-### **Scoop**
+### Scoop
 
 If you're on Windows and have [Scoop][scoop] installed, use `extras` bucket
 to install Task like:
@@ -53,7 +53,7 @@ scoop install task
 This installation method is community owned. After a new release of Task, it
 may take some time until it's available on Scoop.
 
-### **AUR**
+### AUR
 
 If you're on Arch Linux you can install Task from
 [AUR](https://aur.archlinux.org/packages/taskfile-git) using your favorite
@@ -66,9 +66,9 @@ yay -S taskfile-git
 This installation method is community owned, but since it's `-git` version of
 the package, it's always latest available version based on the Git repository.
 
-### **Fedora**
+### Fedora
 
-If you're on Fedora Linux you can install Task from the official 
+If you're on Fedora Linux you can install Task from the official
 [Fedora](https://packages.fedoraproject.org/pkgs/golang-github-task/go-task/) repository using `dnf`:
 
 ```cmd
@@ -78,7 +78,7 @@ sudo dnf install go-task
 This installation method is community owned. After a new release of Task, it
 may take some time until it's available in [Fedora](https://packages.fedoraproject.org/pkgs/golang-github-task/go-task/).
 
-### **Nix**
+### Nix
 
 If you're on NixOS or have Nix installed
 you can install Task from [nixpkgs](https://github.com/NixOS/nixpkgs):
@@ -92,7 +92,7 @@ may take some time until it's available in [nixpkgs](https://github.com/NixOS/ni
 
 ## Get The Binary
 
-### **Binary**
+### Binary
 
 You can download the binary from the [releases page on GitHub][releases] and
 add to your `$PATH`.
@@ -101,7 +101,7 @@ DEB and RPM packages are also available.
 
 The `task_checksums.txt` file contains the SHA-256 checksum for each file.
 
-### **Install Script**
+### Install Script
 
 We also have an [install script][installscript] which is very useful in
 scenarios like CI. Many thanks to [GoDownloader][godownloader] for enabling the
@@ -123,7 +123,7 @@ This method will download the binary on the local `./bin` directory by default.
 
 :::
 
-### **GitHub Actions**
+### GitHub Actions
 
 If you want to install Task in GitHub Actions you can try using
 [this action](https://github.com/arduino/setup-task)
@@ -138,7 +138,7 @@ This installation method is community owned.
 
 ## Build From Source
 
-### **Go Modules**
+### Go Modules
 
 First, make sure you have [Go][go] properly installed and setup.
 
