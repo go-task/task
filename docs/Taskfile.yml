@@ -8,8 +8,10 @@ tasks:
 
   start:
     desc: Start website
+    vars:
+      PORT: '{{default "3001" .PORT}}'
     cmds:
-      - npx docusaurus start --no-open --port=3001
+      - npx docusaurus start --no-open --port={{.PORT}}
 
   build:
     desc: Build website
