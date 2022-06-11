@@ -13,7 +13,7 @@ thankful for everyone that helps me to improve the overall experience.
 
 ## Awesome Taskfiles:
 
-- https://github.com/better-sre/awesome-taskfile
+- [awesome-taskfile](https://github.com/better-sre/awesome-taskfile)
 - Collect some `Taskfiles` written by community developers.
 
 
