@@ -218,13 +218,13 @@ func main() {
 
 	if err := e.Run(ctx, calls...); err != nil {
 		e.Logger.Errf(logger.Red, "%v", err)
-		code := 1
+
 		if exitCode {
-			if tre, ok := err.(*task.TaskRunError); ok {
-				code = tre.ExitCode()
+			if err, ok := err.(*task.TaskRunError); ok {
+				os.Exit(err.ExitCode())
 			}
 		}
-		os.Exit(code)
+		os.Exit(1)
 	}
 }
 

@@ -3,6 +3,7 @@ package task
 import (
 	"errors"
 	"fmt"
+
 	"mvdan.cc/sh/v3/interp"
 )
 

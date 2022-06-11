@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Add new `--exit-code` (`-x`) flag that will pass-through the exit form the
+  command being ran
+  ([#755](https://github.com/go-task/task/pull/755)).
+
 ## v3.12.1 - 2022-05-10
 
 - Fixed bug where, on Windows, variables were ending with `\r` because we were

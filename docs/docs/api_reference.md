@@ -26,6 +26,7 @@ variable
 | `-C` | `--concurrency` | `int` | `0` | Limit number tasks to run concurrently. Zero means unlimited. |
 | `-d` | `--dir` | `string` | Working directory | Sets directory of execution. |
 |      | `--dry` | `bool` | `false` | Compiles and prints tasks in the order that they would be run, without executing them. |
+| `-x` | `--exit-code` | `bool` | `false` | Pass-through the exit code of the task command. |
 | `-f` | `--force` | `bool` | `false` | Forces execution even when the task is up-to-date. |
 | `-h` | `--help` | `bool` | `false` | Shows Task usage. |
 | `-i` | `--init` | `bool` | `false` | Creates a new Taskfile.yaml in the current folder. |
