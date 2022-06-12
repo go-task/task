@@ -5,11 +5,9 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"os/signal"
 	"path/filepath"
 	"runtime/debug"
 	"strings"
-	"syscall"
 
 	"github.com/spf13/pflag"
 	"mvdan.cc/sh/v3/syntax"
@@ -204,10 +202,11 @@ func main() {
 	globals.Set("CLI_ARGS", taskfile.Var{Static: cliArgs})
 	e.Taskfile.Vars.Merge(globals)
 
-	ctx := context.Background()
 	if !watch {
-		ctx = getSignalContext()
+		e.InterceptInterruptSignals()
 	}
+
+	ctx := context.Background()
 
 	if status {
 		if err := e.Status(ctx, calls...); err != nil {
@@ -247,18 +246,6 @@ func getArgs() ([]string, string, error) {
 		quotedCliArgs = append(quotedCliArgs, quotedCliArg)
 	}
 	return args[:doubleDashPos], strings.Join(quotedCliArgs, " "), nil
-}
-
-func getSignalContext() context.Context {
-	ch := make(chan os.Signal, 1)
-	signal.Notify(ch, os.Interrupt, syscall.SIGTERM)
-	ctx, cancel := context.WithCancel(context.Background())
-	go func() {
-		sig := <-ch
-		log.Printf("task: signal received: %s", sig)
-		cancel()
-	}()
-	return ctx
 }
 
 func getVersion() string {

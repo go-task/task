@@ -23,6 +23,8 @@ tasks:
 
   install:
     desc: Installs Task
+    sources:
+      - './**/*.go'
     cmds:
       - go install -v -ldflags="-w -s -X main.version={{.GIT_COMMIT}}" ./cmd/task
 
@@ -40,12 +42,30 @@ tasks:
 
   lint:
     desc: Runs golangci-lint
+    sources:
+      - './**/*.go'
     cmds:
       - golangci-lint run
 
+  sleepit:build:
+    desc: Builds the sleepit test helper
+    sources:
+      - ./cmd/sleepit/**/*.go
+    generates:
+      - ./bin/sleepit
+    cmds:
+      - go build -o ./bin/sleepit{{exeExt}} ./cmd/sleepit
+
+  sleepit:run:
+    desc: Builds the sleepit test helper
+    deps: [sleepit:build]
+    cmds:
+      - ./bin/sleepit {{.CLI_ARGS}}
+    silent: true
+
   test:
     desc: Runs test suite
-    deps: [install]
+    deps: [install, sleepit:build]
     cmds:
       - go test {{catLines .GO_PACKAGES}}
 

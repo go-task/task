@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"mvdan.cc/sh/v3/expand"
 	"mvdan.cc/sh/v3/interp"
@@ -48,6 +49,7 @@ func RunCommand(ctx context.Context, opts *RunCommandOptions) error {
 	r, err := interp.New(
 		interp.Params("-e"),
 		interp.Env(expand.ListEnviron(environ...)),
+		interp.ExecHandler(interp.DefaultExecHandler(15*time.Second)),
 		interp.OpenHandler(openHandler),
 		interp.StdIO(opts.Stdin, opts.Stdout, opts.Stderr),
 		dirOption(opts.Dir),
