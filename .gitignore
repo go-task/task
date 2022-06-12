@@ -26,6 +26,7 @@ dist/
 # exuberant ctags
 tags
 
-/bin
+/bin/*
+!/bin/.keep
 /testdata/vars/v1
 /tmp
