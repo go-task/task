@@ -61,7 +61,7 @@ const config = {
       metadata: [
         {
           name: 'og:image',
-          content: 'https://taskfile.dev/img/logo.png'
+          content: 'https://taskfile.dev/img/og-image.png'
         }
       ],
       navbar: {
