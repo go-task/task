@@ -108,8 +108,8 @@ scenarios like CI. Many thanks to [GoDownloader][godownloader] for enabling the
 easy generation of this script.
 
 ```bash
-# For Default Installation to ./bin with debug logging
-sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d
+# For user-level installation to ~/.local/bin with debug logging
+sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d -b ~/.local/bin
 
 # For Installation To /usr/local/bin for userwide access with debug logging
 # May require sudo sh
