@@ -86,7 +86,7 @@ func main() {
 	pflag.BoolVarP(&verbose, "verbose", "v", false, "enables verbose mode")
 	pflag.BoolVarP(&silent, "silent", "s", false, "disables echoing")
 	pflag.BoolVarP(&parallel, "parallel", "p", false, "executes tasks provided on command line in parallel")
-	pflag.BoolVar(&dry, "dry", false, "compiles and prints tasks in the order that they would be run, without executing them")
+	pflag.BoolVarP(&dry, "dry", "n", false, "compiles and prints tasks in the order that they would be run, without executing them")
 	pflag.BoolVar(&summary, "summary", false, "show summary about a task")
 	pflag.BoolVarP(&exitCode, "exit-code", "x", false, "pass-through the exit code of the task command")
 	pflag.StringVarP(&dir, "dir", "d", "", "sets directory of execution")
