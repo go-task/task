@@ -5,6 +5,17 @@ sidebar_position: 6
 
 # Changelog
 
+## v3.13.0 - 2022-06-13
+
+- Added `-n` as an alias to `--dry`
+  ([#776](https://github.com/go-task/task/issues/776), [#777](https://github.com/go-task/task/pull/777)).
+- Fix behavior of interrupt (SIGINT, SIGTERM) signals. Task will now give time
+  for the processes running to do cleanup work
+  ([#458](https://github.com/go-task/task/issues/458), [#479](https://github.com/go-task/task/pull/479), [#728](https://github.com/go-task/task/issues/728)).
+- Add new `--exit-code` (`-x`) flag that will pass-through the exit form the
+  command being ran
+  ([#755](https://github.com/go-task/task/pull/755)).
+
 ## v3.12.1 - 2022-05-10
 
 - Fixed bug where, on Windows, variables were ending with `\r` because we were

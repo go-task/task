@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v3.13.0 - 2022-06-13
 
 - Added `-n` as an alias to `--dry`
   ([#776](https://github.com/go-task/task/issues/776), [#777](https://github.com/go-task/task/pull/777)).
