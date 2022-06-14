@@ -25,7 +25,7 @@ variable
 | `-c` | `--color` | `bool` | `true` | Colored output. Enabled by default. Set flag to `false` or use `NO_COLOR=1` to disable. |
 | `-C` | `--concurrency` | `int` | `0` | Limit number tasks to run concurrently. Zero means unlimited. |
 | `-d` | `--dir` | `string` | Working directory | Sets directory of execution. |
-| '-n' | `--dry` | `bool` | `false` | Compiles and prints tasks in the order that they would be run, without executing them. |
+| `-n` | `--dry` | `bool` | `false` | Compiles and prints tasks in the order that they would be run, without executing them. |
 | `-x` | `--exit-code` | `bool` | `false` | Pass-through the exit code of the task command. |
 | `-f` | `--force` | `bool` | `false` | Forces execution even when the task is up-to-date. |
 | `-h` | `--help` | `bool` | `false` | Shows Task usage. |

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added `-n` as an alias to `--dry`
+  ([#776](https://github.com/go-task/task/issues/776), [#777](https://github.com/go-task/task/pull/777)).
 - Fix behavior of interrupt (SIGINT, SIGTERM) signals. Task will now give time
   for the processes running to do cleanup work
   ([#458](https://github.com/go-task/task/issues/458), [#479](https://github.com/go-task/task/pull/479), [#728](https://github.com/go-task/task/issues/728)).
