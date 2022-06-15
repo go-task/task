@@ -1,5 +1,5 @@
-//go:build !windows
-// +build !windows
+//go:build signals
+// +build signals
 
 // This file contains tests for signal handling on Unix.
 // Based on code from https://github.com/marco-m/timeit

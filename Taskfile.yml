@@ -65,9 +65,15 @@ tasks:
 
   test:
     desc: Runs test suite
-    deps: [install, sleepit:build]
+    deps: [install]
     cmds:
       - go test {{catLines .GO_PACKAGES}}
+
+  test:signals:
+    desc: Runs test suite with signals tests included
+    deps: [install, sleepit:build]
+    cmds:
+      - go test {{catLines .GO_PACKAGES}} -tags signals
 
   test-release:
     desc: Tests release process without publishing
