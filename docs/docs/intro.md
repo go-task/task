@@ -54,4 +54,4 @@ guide to check the full schema documentation and Task features.
 [homebrew]: https://brew.sh/
 [snapcraft]: https://snapcraft.io/
 [scoop]: https://scoop.sh/
-[sh]: https://mvdan.cc/sh
+[sh]: https://github.com/mvdan/sh
