@@ -15,7 +15,7 @@ task [--flags] [tasks...] [-- CLI_ARGS...]
 
 :::tip
 
-If `--` is given, all remaning arguments to assigned to a special `CLI_ARGS`
+If `--` is given, all remaning arguments will be assigned to a special `CLI_ARGS`
 variable
 
 :::
