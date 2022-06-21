@@ -1058,7 +1058,7 @@ version: '3'
 
 output:
   group:
-    begin: '::begin::{{.TASK}}'
+    begin: '::group::{{.TASK}}'
     end: '::endgroup::'
 
 tasks:
@@ -1070,7 +1070,7 @@ tasks:
 
 ```bash
 $ task default
-::begin::default
+::group::default
 Hello, World!
 ::endgroup::
 ```
