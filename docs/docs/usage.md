@@ -423,7 +423,7 @@ tasks:
       - ./*.go
     generates:
       - app{{exeExt}}
-    method: checksum
+    method: timestamp
 ```
 
 :::info
