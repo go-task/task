@@ -42,11 +42,10 @@ This installation method is community owned.
 
 ### Scoop
 
-If you're on Windows and have [Scoop][scoop] installed, use `extras` bucket
-to install Task like:
+If you're on Windows and have [Scoop][scoop] installed, getting
+Task is as simple as running:
 
 ```cmd
-scoop bucket add extras
 scoop install task
 ```
 
