@@ -2,6 +2,8 @@ package logger
 
 import (
 	"io"
+	"os"
+	"strconv"
 
 	"github.com/fatih/color"
 )
@@ -9,13 +11,20 @@ import (
 type Color func() PrintFunc
 type PrintFunc func(io.Writer, string, ...interface{})
 
-func Default() PrintFunc { return color.New(color.Reset).FprintfFunc() }
-func Blue() PrintFunc    { return color.New(color.FgBlue).FprintfFunc() }
-func Green() PrintFunc   { return color.New(color.FgGreen).FprintfFunc() }
-func Cyan() PrintFunc    { return color.New(color.FgCyan).FprintfFunc() }
-func Yellow() PrintFunc  { return color.New(color.FgYellow).FprintfFunc() }
-func Magenta() PrintFunc { return color.New(color.FgMagenta).FprintfFunc() }
-func Red() PrintFunc     { return color.New(color.FgRed).FprintfFunc() }
+func Getenvcolor(envVar string, defaultColor color.Attribute) color.Attribute {
+	override, err := strconv.Atoi(os.Getenv(envVar))
+	if err != nil {
+		return defaultColor
+	}
+	return color.Attribute(override)
+}
+func Default() PrintFunc { return color.New(Getenvcolor("TASK_COLOR_RESET", color.Reset)).FprintfFunc() }
+func Blue() PrintFunc    { return color.New(Getenvcolor("TASK_COLOR_BLUE", color.FgBlue)).FprintfFunc() }
+func Green() PrintFunc   { return color.New(Getenvcolor("TASK_COLOR_GREEN", color.FgGreen)).FprintfFunc() }
+func Cyan() PrintFunc    { return color.New(Getenvcolor("TASK_COLOR_CYAN", color.FgCyan)).FprintfFunc() }
+func Yellow() PrintFunc  { return color.New(Getenvcolor("TASK_COLOR_YELLOW", color.FgYellow)).FprintfFunc() }
+func Magenta() PrintFunc { return color.New(Getenvcolor("TASK_COLOR_MAGENTA", color.FgMagenta)).FprintfFunc() }
+func Red() PrintFunc     { return color.New(Getenvcolor("TASK_COLOR_RED", color.FgRed)).FprintfFunc() }
 
 // Logger is just a wrapper that prints stuff to STDOUT or STDERR,
 // with optional color.
