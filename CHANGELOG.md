@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Allow to override Task colors using environment variables:
+  `TASK_COLOR_RESET`, `TASK_COLOR_BLUE`, `TASK_COLOR_GREEN`,
+  `TASK_COLOR_CYAN`, `TASK_COLOR_YELLOW`, `TASK_COLOR_MAGENTA`
+  and `TASK_COLOR_RED`
+  ([#568](https://github.com/go-task/task/pull/568), [#792](https://github.com/go-task/task/pull/792)).
 - Fixed bug when using the `output: group` mode where STDOUT and STDERR were
   being print in separated blocks instead of in the right order
   ([#779](https://github.com/go-task/task/issues/779)).
