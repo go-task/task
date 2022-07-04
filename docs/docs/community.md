@@ -49,6 +49,8 @@ Some installation methods are maintained by third party:
 - [AUR](https://aur.archlinux.org/packages/taskfile-git)
   by [@kovetskiy](https://github.com/kovetskiy)
 - [Scoop](https://github.com/lukesampson/scoop-extras/blob/master/bucket/task.json)
+- [Fedora](https://packages.fedoraproject.org/pkgs/golang-github-task/go-task/)
+- [NixOS](https://github.com/NixOS/nixpkgs/blob/master/pkgs/development/tools/go-task/default.nix)
 
 ## More
 
