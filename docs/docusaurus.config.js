@@ -5,6 +5,7 @@ const lightCodeTheme = require('prism-react-renderer/themes/github');
 const darkCodeTheme = require('prism-react-renderer/themes/dracula');
 
 const GITHUB_URL = 'https://github.com/go-task/task';
+const TWITTER_URL = 'https://twitter.com/taskfiledev';
 const DISCORD_URL = 'https://discord.gg/6TY36E39UK';
 
 /** @type {import('@docusaurus/types').Config} */
@@ -101,6 +102,11 @@ const config = {
             position: 'right'
           },
           {
+            href: TWITTER_URL,
+            label: 'Twitter',
+            position: 'right'
+          },
+          {
             href: DISCORD_URL,
             label: 'Discord',
             position: 'right'
@@ -133,6 +139,10 @@ const config = {
               {
                 label: 'GitHub',
                 href: GITHUB_URL
+              },
+              {
+                label: 'Twitter',
+                href: TWITTER_URL
               },
               {
                 label: 'Discord',
