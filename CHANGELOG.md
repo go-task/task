@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Starting on this release, ARM architecture binaries are been released to Snap
+  as well
+  ([#795](https://github.com/go-task/task/issues/795)).
+- i386 binaries won't be available anymore on Snap because Ubuntu removed the support
+  for this architecture.
 - Upgrade mvdan.cc/sh, which fixes a bug with associative arrays
   ([#785](https://github.com/go-task/task/issues/785), [mvdan/sh#884](https://github.com/mvdan/sh/issues/884), [mvdan/sh#893](https://github.com/mvdan/sh/pull/893)).
 

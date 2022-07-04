@@ -25,9 +25,9 @@ The exception is the publishing of a new version of the
 [snap package][snappackage]. This current require two steps after publishing
 the binaries:
 
-* Updating the current version on [snapcraft.yaml][snapcraftyaml];
-* Moving both `i386` and `amd64` new artifacts to the stable channel on
-the [Snapcraft dashboard][snapcraftdashboard]
+* Updating the current version on [snapcraft.yaml][snapcraftyaml].
+* Moving both `amd64`, `armhf` and `arm64` new artifacts to the stable channel on
+the [Snapcraft dashboard][snapcraftdashboard].
 
 # Scoop
 
