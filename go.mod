@@ -8,7 +8,7 @@ require (
 	github.com/mitchellh/hashstructure/v2 v2.0.2
 	github.com/radovskyb/watcher v1.0.7
 	github.com/spf13/pflag v1.0.5
-	github.com/stretchr/testify v1.7.2
+	github.com/stretchr/testify v1.8.0
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 	gopkg.in/yaml.v3 v3.0.1
 	mvdan.cc/sh/v3 v3.6.0-0.dev.0.20220704111049-a6e3029cd899
