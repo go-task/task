@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Upgrade mvdan.cc/sh, which fixes a bug with associative arrays
+  ([#785](https://github.com/go-task/task/issues/785), [mvdan/sh#884](https://github.com/mvdan/sh/issues/884), [mvdan/sh#893](https://github.com/mvdan/sh/pull/893)).
+
 ## v3.13.0 - 2022-06-13
 
 - Added `-n` as an alias to `--dry`
