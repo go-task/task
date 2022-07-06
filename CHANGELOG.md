@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Fixed bug when using the `output: group` mode where STDOUT and STDERR were
+  being print in separated blocks instead of in the right order
+  ([#779](https://github.com/go-task/task/issues/779)).
 - Starting on this release, ARM architecture binaries are been released to Snap
   as well
   ([#795](https://github.com/go-task/task/issues/795)).

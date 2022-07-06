@@ -15,8 +15,10 @@ type Templater interface {
 }
 
 type Output interface {
-	WrapWriter(w io.Writer, prefix string, tmpl Templater) io.Writer
+	WrapWriter(stdOut, stdErr io.Writer, prefix string, tmpl Templater) (io.Writer, io.Writer, CloseFunc)
 }
+
+type CloseFunc func() error
 
 // Build the Output for the requested taskfile.Output.
 func BuildFor(o *taskfile.Output) (Output, error) {

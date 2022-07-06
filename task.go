@@ -449,19 +449,10 @@ func (e *Executor) runCommand(ctx context.Context, t *taskfile.Task, call taskfi
 		if err != nil {
 			return fmt.Errorf("task: failed to get variables: %w", err)
 		}
-		stdOut := outputWrapper.WrapWriter(e.Stdout, t.Prefix, outputTemplater)
-		stdErr := outputWrapper.WrapWriter(e.Stderr, t.Prefix, outputTemplater)
-
+		stdOut, stdErr, close := outputWrapper.WrapWriter(e.Stdout, e.Stderr, t.Prefix, outputTemplater)
 		defer func() {
-			if _, ok := stdOut.(*os.File); !ok {
-				if closer, ok := stdOut.(io.Closer); ok {
-					closer.Close()
-				}
-			}
-			if _, ok := stdErr.(*os.File); !ok {
-				if closer, ok := stdErr.(io.Closer); ok {
-					closer.Close()
-				}
+			if err := close(); err != nil {
+				e.Logger.Errf(logger.Red, "task: unable to close writter: %v", err)
 			}
 		}()
 

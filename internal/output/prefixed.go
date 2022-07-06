@@ -9,8 +9,9 @@ import (
 
 type Prefixed struct{}
 
-func (Prefixed) WrapWriter(w io.Writer, prefix string, _ Templater) io.Writer {
-	return &prefixWriter{writer: w, prefix: prefix}
+func (Prefixed) WrapWriter(stdOut, _ io.Writer, prefix string, _ Templater) (io.Writer, io.Writer, CloseFunc) {
+	pw := &prefixWriter{writer: stdOut, prefix: prefix}
+	return pw, pw, func() error { return pw.close() }
 }
 
 type prefixWriter struct {
@@ -28,7 +29,7 @@ func (pw *prefixWriter) Write(p []byte) (int, error) {
 	return n, pw.writeOutputLines(false)
 }
 
-func (pw *prefixWriter) Close() error {
+func (pw *prefixWriter) close() error {
 	return pw.writeOutputLines(true)
 }
 
