@@ -5,6 +5,26 @@ sidebar_position: 6
 
 # Changelog
 
+## v3.14.0 - 2022-07-08
+
+- Add ability to override the `.task` directory location with the
+  `TASK_TEMP_DIR` environment variable.
+- Allow to override Task colors using environment variables:
+  `TASK_COLOR_RESET`, `TASK_COLOR_BLUE`, `TASK_COLOR_GREEN`,
+  `TASK_COLOR_CYAN`, `TASK_COLOR_YELLOW`, `TASK_COLOR_MAGENTA`
+  and `TASK_COLOR_RED`
+  ([#568](https://github.com/go-task/task/pull/568), [#792](https://github.com/go-task/task/pull/792)).
+- Fixed bug when using the `output: group` mode where STDOUT and STDERR were
+  being print in separated blocks instead of in the right order
+  ([#779](https://github.com/go-task/task/issues/779)).
+- Starting on this release, ARM architecture binaries are been released to Snap
+  as well
+  ([#795](https://github.com/go-task/task/issues/795)).
+- i386 binaries won't be available anymore on Snap because Ubuntu removed the support
+  for this architecture.
+- Upgrade mvdan.cc/sh, which fixes a bug with associative arrays
+  ([#785](https://github.com/go-task/task/issues/785), [mvdan/sh#884](https://github.com/mvdan/sh/issues/884), [mvdan/sh#893](https://github.com/mvdan/sh/pull/893)).
+
 ## v3.13.0 - 2022-06-13
 
 - Added `-n` as an alias to `--dry`

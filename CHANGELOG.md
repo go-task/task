@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v3.14.0 - 2022-07-08
 
 - Add ability to override the `.task` directory location with the
   `TASK_TEMP_DIR` environment variable.
