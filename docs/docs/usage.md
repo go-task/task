@@ -406,8 +406,6 @@ tasks:
 Task will compare the checksum of the source files to determine if it's
 necessary to run the task. If not, it will just print a message like
 `Task "js" is up to date`.
-You will probably want to ignore the `.task` folder in your `.gitignore` file
-(It is there that Task stores the last checksum).
 
 If you prefer this check to be made by the modification timestamp of the files,
 instead of its checksum (content), just set the `method` property to `timestamp`.
@@ -425,6 +423,26 @@ tasks:
       - app{{exeExt}}
     method: timestamp
 ```
+
+:::info
+
+By default, task stores checksums on a local `.task` directory in the project's
+directory. Most of the time, you'll want to have this directory on `.gitignore`
+(or equivalent) so it isn't committed. (If you have a task for code generation
+that is committed it may make sense to commit the checksum of that task as
+well, though).
+
+If you want these files to be stored in another directory, you can set a
+`TASK_TEMP_DIR` environment variable in your machine. It can contain a relative
+path like `tmp/task` that will be interpreted as relative to the project
+directory, or an absolute or home path like `/tmp/.task` or `~/.task`
+(subdirectories will be created for each project).
+
+```bash
+export TASK_TEMP_DIR='~/.task'
+```
+
+:::
 
 :::info
 

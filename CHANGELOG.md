@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add ability to override the `.task` directory location with the
+  `TASK_TEMP_DIR` environment variable.
 - Allow to override Task colors using environment variables:
   `TASK_COLOR_RESET`, `TASK_COLOR_BLUE`, `TASK_COLOR_GREEN`,
   `TASK_COLOR_CYAN`, `TASK_COLOR_YELLOW`, `TASK_COLOR_MAGENTA`

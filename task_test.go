@@ -42,6 +42,7 @@ func (fct fileContentTest) Run(t *testing.T) {
 
 	e := &task.Executor{
 		Dir:        fct.Dir,
+		TempDir:    filepath.Join(fct.Dir, ".task"),
 		Entrypoint: fct.Entrypoint,
 		Stdout:     io.Discard,
 		Stderr:     io.Discard,
@@ -270,10 +271,11 @@ func TestStatus(t *testing.T) {
 
 	var buff bytes.Buffer
 	e := &task.Executor{
-		Dir:    dir,
-		Stdout: &buff,
-		Stderr: &buff,
-		Silent: true,
+		Dir:     dir,
+		TempDir: filepath.Join(dir, ".task"),
+		Stdout:  &buff,
+		Stderr:  &buff,
+		Silent:  true,
 	}
 	assert.NoError(t, e.Setup())
 	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "gen-foo"}))
@@ -421,9 +423,10 @@ func TestStatusChecksum(t *testing.T) {
 
 	var buff bytes.Buffer
 	e := task.Executor{
-		Dir:    dir,
-		Stdout: &buff,
-		Stderr: &buff,
+		Dir:     dir,
+		TempDir: filepath.Join(dir, ".task"),
+		Stdout:  &buff,
+		Stderr:  &buff,
 	}
 	assert.NoError(t, e.Setup())
 
@@ -579,6 +582,7 @@ func TestStatusVariables(t *testing.T) {
 	var buff bytes.Buffer
 	e := task.Executor{
 		Dir:     dir,
+		TempDir: filepath.Join(dir, ".task"),
 		Stdout:  &buff,
 		Stderr:  &buff,
 		Silent:  false,
@@ -718,10 +722,11 @@ func TestDryChecksum(t *testing.T) {
 	_ = os.Remove(checksumFile)
 
 	e := task.Executor{
-		Dir:    dir,
-		Stdout: io.Discard,
-		Stderr: io.Discard,
-		Dry:    true,
+		Dir:     dir,
+		TempDir: filepath.Join(dir, ".task"),
+		Stdout:  io.Discard,
+		Stderr:  io.Discard,
+		Dry:     true,
 	}
 	assert.NoError(t, e.Setup())
 	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "default"}))

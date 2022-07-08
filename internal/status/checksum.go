@@ -13,7 +13,7 @@ import (
 // Checksum validades if a task is up to date by calculating its source
 // files checksum
 type Checksum struct {
-	BaseDir   string
+	TempDir   string
 	TaskDir   string
 	Task      string
 	Sources   []string
@@ -43,7 +43,7 @@ func (c *Checksum) IsUpToDate() (bool, error) {
 	}
 
 	if !c.Dry {
-		_ = os.MkdirAll(filepath.Join(c.BaseDir, ".task", "checksum"), 0755)
+		_ = os.MkdirAll(filepath.Join(c.TempDir, "checksum"), 0755)
 		if err = os.WriteFile(checksumFile, []byte(newMd5+"\n"), 0644); err != nil {
 			return false, err
 		}
@@ -107,7 +107,7 @@ func (*Checksum) Kind() string {
 }
 
 func (c *Checksum) checksumFilePath() string {
-	return filepath.Join(c.BaseDir, ".task", "checksum", c.normalizeFilename(c.Task))
+	return filepath.Join(c.TempDir, "checksum", c.normalizeFilename(c.Task))
 }
 
 var checksumFilenameRegexp = regexp.MustCompile("[^A-z0-9]")

@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
+	"strings"
 	"sync"
 	"sync/atomic"
 
@@ -34,6 +36,7 @@ type Executor struct {
 	Taskfile *taskfile.Taskfile
 
 	Dir         string
+	TempDir     string
 	Entrypoint  string
 	Force       bool
 	Watch       bool
@@ -149,6 +152,22 @@ func (e *Executor) Setup() error {
 		Stderr:  e.Stderr,
 		Verbose: e.Verbose,
 		Color:   e.Color,
+	}
+
+	if e.TempDir == "" {
+		if os.Getenv("TASK_TEMP_DIR") == "" {
+			e.TempDir = filepath.Join(e.Dir, ".task")
+		} else if filepath.IsAbs(os.Getenv("TASK_TEMP_DIR")) || strings.HasPrefix(os.Getenv("TASK_TEMP_DIR"), "~") {
+			tempDir, err := execext.Expand(os.Getenv("TASK_TEMP_DIR"))
+			if err != nil {
+				return err
+			}
+			projectDir, _ := filepath.Abs(e.Dir)
+			projectName := filepath.Base(projectDir)
+			e.TempDir = filepath.Join(tempDir, projectName)
+		} else {
+			e.TempDir = filepath.Join(e.Dir, os.Getenv("TASK_TEMP_DIR"))
+		}
 	}
 
 	if v < 2 {
