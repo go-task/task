@@ -44,6 +44,21 @@ variable
 |      | `--version` | `bool` | `false` | Show Task version. |
 | `-w` | `--watch` | `bool` | `false` | Enables watch of the given task. |
 
+## ENV
+
+Some environment variables can be overriden to adjust Task behavior.
+
+| ENV | Default | Description |
+| - | - | - |
+| `TASK_TEMP_DIR` | `.task` | Location of the temp dir. Can relative to the project like `tmp/task` or absolute like `/tmp/.task` or `~/.task`. |
+| `TASK_COLOR_RESET` | `0` | Color used for white. |
+| `TASK_COLOR_BLUE` | `34` | Color used for blue. |
+| `TASK_COLOR_GREEN` | `32` | Color used for green. |
+| `TASK_COLOR_CYAN` | `36` | Color used for cyan. |
+| `TASK_COLOR_YELLOW` | `33` | Color used for yellow. |
+| `TASK_COLOR_MAGENTA` | `35` | Color used for magenta. |
+| `TASK_COLOR_RED` | `31` | Color used for red. |
+
 ## Schema
 
 ### Taskfile
