@@ -114,6 +114,9 @@ tasks:
   foobar:
     - echo "foo"
     - echo "bar"
+  
+  baz:
+    cmd: echo "baz"
 ```
 
 :::
