@@ -27,7 +27,7 @@ function __task_list() {
     (( enabled )) || return 0
 
     scripts=()
-    for item in "${(@)${(f)$("${cmd[@]}" --list)}[2,-1]#\* }"; do
+    for item in "${(@)${(f)$("${cmd[@]}" --list-all)}[2,-1]#\* }"; do
         task="${item%%:[[:space:]]*}"
         desc="${item##[^[:space:]]##[[:space:]]##}"
         scripts+=( "${task//:/\\:}:$desc" )
