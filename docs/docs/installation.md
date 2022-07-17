@@ -106,19 +106,25 @@ We also have an [install script][installscript] which is very useful in
 scenarios like CI. Many thanks to [GoDownloader][godownloader] for enabling the
 easy generation of this script.
 
+By default, it installs on the `./bin` directory relative to the working
+directory:
+
 ```bash
-# For Default Installation to ./bin with debug logging
 sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d
-
-# For Installation To /usr/local/bin for userwide access with debug logging
-# May require sudo sh
-sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d -b /usr/local/bin
-
 ```
 
-:::info
+It is possible to override the installation directory with the `-b` parameter.
+On Linux, common choices are `~/.local/bin` and `~/bin` to install for the
+current user or `/usr/local/bin` to install for all users:
 
-This method will download the binary on the local `./bin` directory by default.
+```bash
+sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d -b ~/.local/bin
+```
+
+:::caution
+
+On macOS and Windows, `~/.local/bin` and `~/bin` are not added to `$PATH` by
+default.
 
 :::
 
