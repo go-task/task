@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Fix ZSH and PowerShell completions to consider all tasks instead of just the
+  public ones (those with descriptions)
+  ([#803](https://github.com/go-task/task/pull/803)).
+
 ## v3.14.0 - 2022-07-08
 
 - Add ability to override the `.task` directory location with the
