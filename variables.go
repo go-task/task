@@ -57,6 +57,7 @@ func (e *Executor) compiledTask(call taskfile.Call, evaluateShVars bool) (*taskf
 		Env:                  nil,
 		Silent:               origTask.Silent,
 		Interactive:          origTask.Interactive,
+		Internal:             origTask.Internal,
 		Method:               r.Replace(origTask.Method),
 		Prefix:               r.Replace(origTask.Prefix),
 		IgnoreError:          origTask.IgnoreError,

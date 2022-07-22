@@ -20,6 +20,14 @@ func (err *taskNotFoundError) Error() string {
 	return fmt.Sprintf(`task: Task "%s" not found`, err.taskName)
 }
 
+type taskInternalError struct {
+	taskName string
+}
+
+func (err *taskInternalError) Error() string {
+	return fmt.Sprintf(`task: Task "%s" is internal`, err.taskName)
+}
+
 type TaskRunError struct {
 	taskName string
 	err      error

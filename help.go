@@ -52,7 +52,9 @@ func (e *Executor) printTasks(listAll bool) {
 func (e *Executor) allTaskNames() (tasks []*taskfile.Task) {
 	tasks = make([]*taskfile.Task, 0, len(e.Taskfile.Tasks))
 	for _, task := range e.Taskfile.Tasks {
-		tasks = append(tasks, task)
+		if !task.Internal {
+			tasks = append(tasks, task)
+		}
 	}
 	sort.Slice(tasks, func(i, j int) bool { return tasks[i].Task < tasks[j].Task })
 	return
@@ -61,7 +63,7 @@ func (e *Executor) allTaskNames() (tasks []*taskfile.Task) {
 func (e *Executor) tasksWithDesc() (tasks []*taskfile.Task) {
 	tasks = make([]*taskfile.Task, 0, len(e.Taskfile.Tasks))
 	for _, task := range e.Taskfile.Tasks {
-		if task.Desc != "" {
+		if !task.Internal && task.Desc != "" {
 			compiledTask, err := e.FastCompiledTask(taskfile.Call{Task: task.Task})
 			if err == nil {
 				task = compiledTask
