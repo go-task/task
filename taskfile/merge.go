@@ -9,7 +9,7 @@ import (
 const NamespaceSeparator = ":"
 
 // Merge merges the second Taskfile into the first
-func Merge(t1, t2 *Taskfile, namespaces ...string) error {
+func Merge(t1, t2 *Taskfile, internal bool, namespaces ...string) error {
 	if t1.Version != t2.Version {
 		return fmt.Errorf(`task: Taskfiles versions should match. First is "%s" but second is "%s"`, t1.Version, t2.Version)
 	}
@@ -42,6 +42,8 @@ func Merge(t1, t2 *Taskfile, namespaces ...string) error {
 		// FIXME(@andreynering): Refactor this block, otherwise we can
 		// have serious side-effects in the future, since we're editing
 		// the original references instead of deep copying them.
+
+		v.Internal = internal
 
 		t1.Tasks[taskNameWithNamespace(k, namespaces...)] = v
 
