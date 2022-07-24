@@ -43,7 +43,7 @@ func Merge(t1, t2 *Taskfile, internal bool, namespaces ...string) error {
 		// have serious side-effects in the future, since we're editing
 		// the original references instead of deep copying them.
 
-		v.Internal = internal
+		v.Internal = v.Internal || internal
 
 		t1.Tasks[taskNameWithNamespace(k, namespaces...)] = v
 
