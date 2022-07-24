@@ -94,7 +94,7 @@ func (e *Executor) ListTaskNames(allTasks bool) {
 	// create a string slice from all map values (*taskfile.Task)
 	s := make([]string, 0, len(e.Taskfile.Tasks))
 	for _, t := range e.Taskfile.Tasks {
-		if allTasks || t.Desc != "" {
+		if (allTasks || t.Desc != "") && !t.Internal {
 			s = append(s, strings.TrimRight(t.Task, ":"))
 		}
 	}
