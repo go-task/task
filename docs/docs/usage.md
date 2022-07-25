@@ -136,6 +136,8 @@ namespace. So, you'd call `task docs:serve` to run the `serve` task from
 `documentation/Taskfile.yml` or `task docker:build` to run the `build` task
 from the `DockerTasks.yml` file.
 
+Relative paths are resolved relative to the directory containing the including Taskfile.
+
 ### OS-specific Taskfiles
 
 With `version: '2'`, task automatically includes any `Taskfile_{{OS}}.yml`
