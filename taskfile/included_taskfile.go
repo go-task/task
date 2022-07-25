@@ -2,17 +2,22 @@ package taskfile
 
 import (
 	"errors"
+	"fmt"
+	"path/filepath"
+
+	"github.com/go-task/task/v3/internal/execext"
 
 	"gopkg.in/yaml.v3"
 )
 
-// IncludedTaskfile represents information about included tasksfile
+// IncludedTaskfile represents information about included taskfiles
 type IncludedTaskfile struct {
 	Taskfile       string
 	Dir            string
 	Optional       bool
 	AdvancedImport bool
 	Vars           *Vars
+	BaseDir        string // The directory from which the including taskfile was loaded; used to resolve relative paths
 }
 
 // IncludedTaskfiles represents information about included tasksfiles
@@ -106,4 +111,32 @@ func (it *IncludedTaskfile) UnmarshalYAML(unmarshal func(interface{}) error) err
 	it.AdvancedImport = true
 	it.Vars = includedTaskfile.Vars
 	return nil
+}
+
+// FullTaskfilePath returns the fully qualified path to the included taskfile
+func (it *IncludedTaskfile) FullTaskfilePath() (string, error) {
+	return it.resolvePath(it.Taskfile)
+}
+
+// FullDirPath returns the fully qualified path to the included taskfile's working directory
+func (it *IncludedTaskfile) FullDirPath() (string, error) {
+	return it.resolvePath(it.Dir)
+}
+
+func (it *IncludedTaskfile) resolvePath(path string) (string, error) {
+	path, err := execext.Expand(path)
+	if err != nil {
+		return "", err
+	}
+
+	if filepath.IsAbs(path) {
+		return path, nil
+	}
+
+	result, err := filepath.Abs(filepath.Join(it.BaseDir, path))
+	if err != nil {
+		return "", fmt.Errorf("task: error resolving path %s relative to %s: %w", path, it.BaseDir, err)
+	}
+
+	return result, nil
 }

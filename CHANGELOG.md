@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Always resolve relative include paths relative to the including Taskfile
+  ([#822](https://github.com/go-task/task/issues/822), [#823](https://github.com/go-task/task/pull/823)).
 - Fix ZSH and PowerShell completions to consider all tasks instead of just the
   public ones (those with descriptions)
   ([#803](https://github.com/go-task/task/pull/803)).

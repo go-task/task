@@ -81,7 +81,7 @@ Some environment variables can be overriden to adjust Task behavior.
 
 | Attribute | Type | Default | Description |
 | - | - | - | - |
-| `taskfile` | `string` | | The path for the Taskfile or directory to be included. If a directory, Task will look for files named `Taskfile.yml` or `Taskfile.yaml` inside that directory. |
+| `taskfile` | `string` | | The path for the Taskfile or directory to be included. If a directory, Task will look for files named `Taskfile.yml` or `Taskfile.yaml` inside that directory. If a relative path, resolved relative to the directory containing the including Taskfile. |
 | `dir` | `string` | The parent Taskfile directory | The working directory of the included tasks when run. |
 | `optional` | `bool` | `false` | If `true`, no errors will be thrown if the specified file does not exist. |
 
@@ -129,7 +129,7 @@ tasks:
   foobar:
     - echo "foo"
     - echo "bar"
-  
+
   baz:
     cmd: echo "baz"
 ```

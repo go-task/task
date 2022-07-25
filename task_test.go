@@ -52,13 +52,14 @@ func (fct fileContentTest) Run(t *testing.T) {
 
 	for name, expectContent := range fct.Files {
 		t.Run(fct.name(name), func(t *testing.T) {
-			b, err := os.ReadFile(filepath.Join(fct.Dir, name))
+			path := filepath.Join(fct.Dir, name)
+			b, err := os.ReadFile(path)
 			assert.NoError(t, err, "Error reading file")
 			s := string(b)
 			if fct.TrimSpace {
 				s = strings.TrimSpace(s)
 			}
-			assert.Equal(t, expectContent, s, "unexpected file content")
+			assert.Equal(t, expectContent, s, "unexpected file content in %s", path)
 		})
 	}
 }
@@ -774,7 +775,12 @@ func TestIncludesMultiLevel(t *testing.T) {
 
 func TestIncludeCycle(t *testing.T) {
 	const dir = "testdata/includes_cycle"
-	expectedError := "task: include cycle detected between testdata/includes_cycle/Taskfile.yml <--> testdata/includes_cycle/one/two/Taskfile.yml"
+
+	wd, err := os.Getwd()
+	assert.Nil(t, err)
+
+	message := "task: include cycle detected between %s/%s/one/Taskfile.yml <--> %s/%s/Taskfile.yml"
+	expectedError := fmt.Sprintf(message, wd, dir, wd, dir)
 
 	var buff bytes.Buffer
 	e := task.Executor{
@@ -852,27 +858,39 @@ func TestIncludesOptional(t *testing.T) {
 }
 
 func TestIncludesOptionalImplicitFalse(t *testing.T) {
+	const dir = "testdata/includes_optional_implicit_false"
+	wd, _ := os.Getwd()
+
+	message := "stat %s/%s/TaskfileOptional.yml: no such file or directory"
+	expected := fmt.Sprintf(message, wd, dir)
+
 	e := task.Executor{
-		Dir:    "testdata/includes_optional_implicit_false",
+		Dir:    dir,
 		Stdout: io.Discard,
 		Stderr: io.Discard,
 	}
 
 	err := e.Setup()
 	assert.Error(t, err)
-	assert.Equal(t, "stat testdata/includes_optional_implicit_false/TaskfileOptional.yml: no such file or directory", err.Error())
+	assert.Equal(t, expected, err.Error())
 }
 
 func TestIncludesOptionalExplicitFalse(t *testing.T) {
+	const dir = "testdata/includes_optional_explicit_false"
+	wd, _ := os.Getwd()
+
+	message := "stat %s/%s/TaskfileOptional.yml: no such file or directory"
+	expected := fmt.Sprintf(message, wd, dir)
+
 	e := task.Executor{
-		Dir:    "testdata/includes_optional_explicit_false",
+		Dir:    dir,
 		Stdout: io.Discard,
 		Stderr: io.Discard,
 	}
 
 	err := e.Setup()
 	assert.Error(t, err)
-	assert.Equal(t, "stat testdata/includes_optional_explicit_false/TaskfileOptional.yml: no such file or directory", err.Error())
+	assert.Equal(t, expected, err.Error())
 }
 
 func TestIncludesFromCustomTaskfile(t *testing.T) {
@@ -888,6 +906,26 @@ func TestIncludesFromCustomTaskfile(t *testing.T) {
 		},
 	}
 	tt.Run(t)
+}
+
+func TestIncludesRelativePath(t *testing.T) {
+	const dir = "testdata/includes_rel_path"
+
+	var buff bytes.Buffer
+	e := task.Executor{
+		Dir:    dir,
+		Stdout: &buff,
+		Stderr: &buff,
+	}
+
+	assert.NoError(t, e.Setup())
+
+	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "common:pwd"}))
+	assert.Contains(t, buff.String(), "testdata/includes_rel_path/common")
+
+	buff.Reset()
+	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "included:common:pwd"}))
+	assert.Contains(t, buff.String(), "testdata/includes_rel_path/common")
 }
 
 func TestSupportedFileNames(t *testing.T) {
