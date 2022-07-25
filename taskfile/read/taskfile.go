@@ -60,6 +60,20 @@ func Taskfile(readerNode *ReaderNode) (*taskfile.Taskfile, error) {
 		return nil, err
 	}
 
+	// Resolve any relative paths used by includes to absolute ones
+	_ = t.Includes.Range(func(key string, includedFile taskfile.IncludedTaskfile) error {
+		if !filepath.IsAbs(includedFile.Taskfile) {
+			includedFile.Taskfile = filepath.Join(readerNode.Dir, includedFile.Taskfile)
+		}
+
+		if includedFile.Dir != "" && !filepath.IsAbs(includedFile.Dir) {
+			includedFile.Dir = filepath.Join(readerNode.Dir, includedFile.Dir)
+		}
+
+		t.Includes.Set(key, includedFile)
+		return nil
+	})
+
 	err = t.Includes.Range(func(namespace string, includedTask taskfile.IncludedTaskfile) error {
 		if v >= 3.0 {
 			tr := templater.Templater{Vars: &taskfile.Vars{}, RemoveNoValue: true}
