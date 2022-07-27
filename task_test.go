@@ -52,13 +52,14 @@ func (fct fileContentTest) Run(t *testing.T) {
 
 	for name, expectContent := range fct.Files {
 		t.Run(fct.name(name), func(t *testing.T) {
-			b, err := os.ReadFile(filepath.Join(fct.Dir, name))
+			path := filepath.Join(fct.Dir, name)
+			b, err := os.ReadFile(path)
 			assert.NoError(t, err, "Error reading file")
 			s := string(b)
 			if fct.TrimSpace {
 				s = strings.TrimSpace(s)
 			}
-			assert.Equal(t, expectContent, s, "unexpected file content")
+			assert.Equal(t, expectContent, s, "unexpected file content in %s", path)
 		})
 	}
 }
