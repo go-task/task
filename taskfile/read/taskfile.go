@@ -44,6 +44,7 @@ func Taskfile(readerNode *ReaderNode) (*taskfile.Taskfile, error) {
 		}
 		readerNode.Dir = d
 	}
+
 	path, err := exists(filepath.Join(readerNode.Dir, readerNode.Entrypoint))
 	if err != nil {
 		return nil, err
@@ -60,17 +61,13 @@ func Taskfile(readerNode *ReaderNode) (*taskfile.Taskfile, error) {
 		return nil, err
 	}
 
-	// Resolve any relative paths used by includes to absolute ones
+	// Annotate any included Taskfile reference with a base directory for resolving relative paths
 	_ = t.Includes.Range(func(key string, includedFile taskfile.IncludedTaskfile) error {
-		if !filepath.IsAbs(includedFile.Taskfile) {
-			includedFile.Taskfile = filepath.Join(readerNode.Dir, includedFile.Taskfile)
+		// Set the base directory for resolving relative paths, but only if not already set
+		if includedFile.BaseDir == "" {
+			includedFile.BaseDir = readerNode.Dir
+			t.Includes.Set(key, includedFile)
 		}
-
-		if includedFile.Dir != "" && !filepath.IsAbs(includedFile.Dir) {
-			includedFile.Dir = filepath.Join(readerNode.Dir, includedFile.Dir)
-		}
-
-		t.Includes.Set(key, includedFile)
 		return nil
 	})
 
@@ -83,19 +80,23 @@ func Taskfile(readerNode *ReaderNode) (*taskfile.Taskfile, error) {
 				Optional:       includedTask.Optional,
 				AdvancedImport: includedTask.AdvancedImport,
 				Vars:           includedTask.Vars,
+				BaseDir:        includedTask.BaseDir,
 			}
 			if err := tr.Err(); err != nil {
 				return err
 			}
 		}
 
-		path, err := execext.Expand(includedTask.Taskfile)
+		tf, err := includedTask.FullTaskfilepath()
 		if err != nil {
 			return err
 		}
-		if !filepath.IsAbs(path) {
-			path = filepath.Join(readerNode.Dir, path)
+
+		path, err := execext.Expand(tf)
+		if err != nil {
+			return err
 		}
+
 		path, err = exists(path)
 		if err != nil {
 			if includedTask.Optional {
@@ -128,21 +129,27 @@ func Taskfile(readerNode *ReaderNode) (*taskfile.Taskfile, error) {
 		}
 
 		if includedTask.AdvancedImport {
+			dir, err := includedTask.FullDirPath()
+			if err != nil {
+				return err
+			}
+
 			for k, v := range includedTaskfile.Vars.Mapping {
 				o := v
-				o.Dir = filepath.Join(readerNode.Dir, includedTask.Dir)
+				o.Dir = dir
 				includedTaskfile.Vars.Mapping[k] = o
 			}
 			for k, v := range includedTaskfile.Env.Mapping {
 				o := v
-				o.Dir = filepath.Join(readerNode.Dir, includedTask.Dir)
+				o.Dir = dir
 				includedTaskfile.Env.Mapping[k] = o
 			}
 
 			for _, task := range includedTaskfile.Tasks {
 				if !filepath.IsAbs(task.Dir) {
-					task.Dir = filepath.Join(includedTask.Dir, task.Dir)
+					task.Dir = dir
 				}
+
 				task.IncludeVars = includedTask.Vars
 				task.IncludedTaskfileVars = includedTaskfile.Vars
 			}
@@ -190,19 +197,31 @@ func readTaskfile(file string) (*taskfile.Taskfile, error) {
 	return &t, yaml.NewDecoder(f).Decode(&t)
 }
 
+// exists finds a Taskfile at the stated location, returning a fully qualified path to the file
 func exists(path string) (string, error) {
 	fi, err := os.Stat(path)
 	if err != nil {
 		return "", err
 	}
 	if fi.Mode().IsRegular() {
-		return path, nil
+		// File exists, return a fully qualified path
+		result, err := filepath.Abs(path)
+		if err != nil {
+			return "", err
+		}
+
+		return result, nil
 	}
 
 	for _, n := range defaultTaskfiles {
 		fpath := filepath.Join(path, n)
 		if _, err := os.Stat(fpath); err == nil {
-			return fpath, nil
+			result, err := filepath.Abs(fpath)
+			if err != nil {
+				return "", err
+			}
+
+			return result, nil
 		}
 	}
 
