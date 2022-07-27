@@ -147,7 +147,7 @@ func Taskfile(readerNode *ReaderNode) (*taskfile.Taskfile, error) {
 
 			for _, task := range includedTaskfile.Tasks {
 				if !filepath.IsAbs(task.Dir) {
-					task.Dir = dir
+					task.Dir = filepath.Join(dir, task.Dir)
 				}
 
 				task.IncludeVars = includedTask.Vars
