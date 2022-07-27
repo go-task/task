@@ -775,7 +775,16 @@ func TestIncludesMultiLevel(t *testing.T) {
 
 func TestIncludeCycle(t *testing.T) {
 	const dir = "testdata/includes_cycle"
-	expectedError := "task: include cycle detected between testdata/includes_cycle/Taskfile.yml <--> testdata/includes_cycle/one/two/Taskfile.yml"
+
+	wd, err := os.Getwd()
+	assert.Nil(t, err)
+
+	expectedError := fmt.Sprintf(
+		"task: include cycle detected between %s/%s/one/Taskfile.yml <--> %s/%s/Taskfile.yml",
+		wd,
+		dir,
+		wd,
+		dir)
 
 	var buff bytes.Buffer
 	e := task.Executor{
@@ -853,27 +862,43 @@ func TestIncludesOptional(t *testing.T) {
 }
 
 func TestIncludesOptionalImplicitFalse(t *testing.T) {
+	const dir = "testdata/includes_optional_implicit_false"
+	wd, _ := os.Getwd()
+
+	expected := fmt.Sprintf(
+		"stat %s/%s/TaskfileOptional.yml: no such file or directory",
+		wd,
+		dir)
+
 	e := task.Executor{
-		Dir:    "testdata/includes_optional_implicit_false",
+		Dir:    dir,
 		Stdout: io.Discard,
 		Stderr: io.Discard,
 	}
 
 	err := e.Setup()
 	assert.Error(t, err)
-	assert.Equal(t, "stat testdata/includes_optional_implicit_false/TaskfileOptional.yml: no such file or directory", err.Error())
+	assert.Equal(t, expected, err.Error())
 }
 
 func TestIncludesOptionalExplicitFalse(t *testing.T) {
+	const dir = "testdata/includes_optional_explicit_false"
+	wd, _ := os.Getwd()
+
+	expected := fmt.Sprintf(
+		"stat %s/%s/TaskfileOptional.yml: no such file or directory",
+		wd,
+		dir)
+
 	e := task.Executor{
-		Dir:    "testdata/includes_optional_explicit_false",
+		Dir:    dir,
 		Stdout: io.Discard,
 		Stderr: io.Discard,
 	}
 
 	err := e.Setup()
 	assert.Error(t, err)
-	assert.Equal(t, "stat testdata/includes_optional_explicit_false/TaskfileOptional.yml: no such file or directory", err.Error())
+	assert.Equal(t, expected, err.Error())
 }
 
 func TestIncludesFromCustomTaskfile(t *testing.T) {
