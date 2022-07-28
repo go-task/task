@@ -215,7 +215,7 @@ includes:
 :::info
 
 Vars declared in the included Taskfile have preference over the
-included ones! If you want a variable in an included Taskfile to be overridable,
+variables in the including Taskfile! If you want a variable in an included Taskfile to be overridable,
 use the [default function](https://go-task.github.io/slim-sprig/defaults.html):
 `MY_VAR: '{{.MY_VAR | default "my-default-value"}}'`.
 
