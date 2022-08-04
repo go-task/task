@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v3.14.1 - 2022-08-03
 
 - Always resolve relative include paths relative to the including Taskfile
   ([#822](https://github.com/go-task/task/issues/822), [#823](https://github.com/go-task/task/pull/823)).
