@@ -1,10 +1,10 @@
 package task
 
 import (
-	"path/filepath"
 	"strings"
 
 	"github.com/go-task/task/v3/internal/execext"
+	"github.com/go-task/task/v3/internal/filepathext"
 	"github.com/go-task/task/v3/internal/status"
 	"github.com/go-task/task/v3/internal/templater"
 	"github.com/go-task/task/v3/taskfile"
@@ -68,8 +68,8 @@ func (e *Executor) compiledTask(call taskfile.Call, evaluateShVars bool) (*taskf
 	if err != nil {
 		return nil, err
 	}
-	if e.Dir != "" && !filepath.IsAbs(new.Dir) {
-		new.Dir = filepath.Join(e.Dir, new.Dir)
+	if e.Dir != "" {
+		new.Dir = filepathext.SmartJoin(e.Dir, new.Dir)
 	}
 	if new.Prefix == "" {
 		new.Prefix = new.Task

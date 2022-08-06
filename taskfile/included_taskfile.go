@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/go-task/task/v3/internal/execext"
+	"github.com/go-task/task/v3/internal/filepathext"
 
 	"gopkg.in/yaml.v3"
 )
@@ -133,7 +134,7 @@ func (it *IncludedTaskfile) resolvePath(path string) (string, error) {
 		return path, nil
 	}
 
-	result, err := filepath.Abs(filepath.Join(it.BaseDir, path))
+	result, err := filepath.Abs(filepathext.SmartJoin(it.BaseDir, path))
 	if err != nil {
 		return "", fmt.Errorf("task: error resolving path %s relative to %s: %w", path, it.BaseDir, err)
 	}

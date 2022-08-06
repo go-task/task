@@ -4,12 +4,12 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"path/filepath"
 	"strings"
 	"sync"
 
 	"github.com/go-task/task/v3/internal/compiler"
 	"github.com/go-task/task/v3/internal/execext"
+	"github.com/go-task/task/v3/internal/filepathext"
 	"github.com/go-task/task/v3/internal/logger"
 	"github.com/go-task/task/v3/internal/templater"
 	"github.com/go-task/task/v3/taskfile"
@@ -83,9 +83,7 @@ func (c *CompilerV3) getVariables(t *taskfile.Task, call *taskfile.Call, evaluat
 		if err := tr.Err(); err != nil {
 			return nil, err
 		}
-		if !filepath.IsAbs(dir) {
-			dir = filepath.Join(c.Dir, dir)
-		}
+		dir = filepathext.SmartJoin(c.Dir, dir)
 		taskRangeFunc = getRangeFunc(dir)
 	}
 

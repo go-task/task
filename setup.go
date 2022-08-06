@@ -12,6 +12,7 @@ import (
 	compilerv2 "github.com/go-task/task/v3/internal/compiler/v2"
 	compilerv3 "github.com/go-task/task/v3/internal/compiler/v3"
 	"github.com/go-task/task/v3/internal/execext"
+	"github.com/go-task/task/v3/internal/filepathext"
 	"github.com/go-task/task/v3/internal/logger"
 	"github.com/go-task/task/v3/internal/output"
 	"github.com/go-task/task/v3/taskfile"
@@ -69,7 +70,7 @@ func (e *Executor) setupTempDir() error {
 	}
 
 	if os.Getenv("TASK_TEMP_DIR") == "" {
-		e.TempDir = filepath.Join(e.Dir, ".task")
+		e.TempDir = filepathext.SmartJoin(e.Dir, ".task")
 	} else if filepath.IsAbs(os.Getenv("TASK_TEMP_DIR")) || strings.HasPrefix(os.Getenv("TASK_TEMP_DIR"), "~") {
 		tempDir, err := execext.Expand(os.Getenv("TASK_TEMP_DIR"))
 		if err != nil {
@@ -77,9 +78,9 @@ func (e *Executor) setupTempDir() error {
 		}
 		projectDir, _ := filepath.Abs(e.Dir)
 		projectName := filepath.Base(projectDir)
-		e.TempDir = filepath.Join(tempDir, projectName)
+		e.TempDir = filepathext.SmartJoin(tempDir, projectName)
 	} else {
-		e.TempDir = filepath.Join(e.Dir, os.Getenv("TASK_TEMP_DIR"))
+		e.TempDir = filepathext.SmartJoin(e.Dir, os.Getenv("TASK_TEMP_DIR"))
 	}
 
 	return nil

@@ -8,6 +8,8 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+
+	"github.com/go-task/task/v3/internal/filepathext"
 )
 
 // Checksum validades if a task is up to date by calculating its source
@@ -43,7 +45,7 @@ func (c *Checksum) IsUpToDate() (bool, error) {
 	}
 
 	if !c.Dry {
-		_ = os.MkdirAll(filepath.Join(c.TempDir, "checksum"), 0755)
+		_ = os.MkdirAll(filepathext.SmartJoin(c.TempDir, "checksum"), 0755)
 		if err = os.WriteFile(checksumFile, []byte(newMd5+"\n"), 0644); err != nil {
 			return false, err
 		}

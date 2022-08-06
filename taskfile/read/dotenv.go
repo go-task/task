@@ -2,11 +2,11 @@ package read
 
 import (
 	"os"
-	"path/filepath"
 
 	"github.com/joho/godotenv"
 
 	"github.com/go-task/task/v3/internal/compiler"
+	"github.com/go-task/task/v3/internal/filepathext"
 	"github.com/go-task/task/v3/internal/templater"
 	"github.com/go-task/task/v3/taskfile"
 )
@@ -27,10 +27,8 @@ func Dotenv(c compiler.Compiler, tf *taskfile.Taskfile, dir string) (*taskfile.V
 
 	for _, dotEnvPath := range tf.Dotenv {
 		dotEnvPath = tr.Replace(dotEnvPath)
+		dotEnvPath = filepathext.SmartJoin(dir, dotEnvPath)
 
-		if !filepath.IsAbs(dotEnvPath) {
-			dotEnvPath = filepath.Join(dir, dotEnvPath)
-		}
 		if _, err := os.Stat(dotEnvPath); os.IsNotExist(err) {
 			continue
 		}

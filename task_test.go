@@ -14,6 +14,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/go-task/task/v3"
+	"github.com/go-task/task/v3/internal/filepathext"
 	"github.com/go-task/task/v3/taskfile"
 )
 
@@ -37,12 +38,12 @@ func (fct fileContentTest) name(file string) string {
 
 func (fct fileContentTest) Run(t *testing.T) {
 	for f := range fct.Files {
-		_ = os.Remove(filepath.Join(fct.Dir, f))
+		_ = os.Remove(filepathext.SmartJoin(fct.Dir, f))
 	}
 
 	e := &task.Executor{
 		Dir:        fct.Dir,
-		TempDir:    filepath.Join(fct.Dir, ".task"),
+		TempDir:    filepathext.SmartJoin(fct.Dir, ".task"),
 		Entrypoint: fct.Entrypoint,
 		Stdout:     io.Discard,
 		Stderr:     io.Discard,
@@ -52,7 +53,7 @@ func (fct fileContentTest) Run(t *testing.T) {
 
 	for name, expectContent := range fct.Files {
 		t.Run(fct.name(name), func(t *testing.T) {
-			path := filepath.Join(fct.Dir, name)
+			path := filepathext.SmartJoin(fct.Dir, name)
 			b, err := os.ReadFile(path)
 			assert.NoError(t, err, "Error reading file")
 			s := string(b)
@@ -235,7 +236,7 @@ func TestDeps(t *testing.T) {
 	}
 
 	for _, f := range files {
-		_ = os.Remove(filepath.Join(dir, f))
+		_ = os.Remove(filepathext.SmartJoin(dir, f))
 	}
 
 	e := &task.Executor{
@@ -247,7 +248,7 @@ func TestDeps(t *testing.T) {
 	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "default"}))
 
 	for _, f := range files {
-		f = filepath.Join(dir, f)
+		f = filepathext.SmartJoin(dir, f)
 		if _, err := os.Stat(f); err != nil {
 			t.Errorf("File %s should exist", f)
 		}
@@ -263,7 +264,7 @@ func TestStatus(t *testing.T) {
 	}
 
 	for _, f := range files {
-		path := filepath.Join(dir, f)
+		path := filepathext.SmartJoin(dir, f)
 		_ = os.Remove(path)
 		if _, err := os.Stat(path); err == nil {
 			t.Errorf("File should not exist: %v", err)
@@ -273,7 +274,7 @@ func TestStatus(t *testing.T) {
 	var buff bytes.Buffer
 	e := &task.Executor{
 		Dir:     dir,
-		TempDir: filepath.Join(dir, ".task"),
+		TempDir: filepathext.SmartJoin(dir, ".task"),
 		Stdout:  &buff,
 		Stderr:  &buff,
 		Silent:  true,
@@ -283,7 +284,7 @@ func TestStatus(t *testing.T) {
 	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "gen-bar"}))
 
 	for _, f := range files {
-		if _, err := os.Stat(filepath.Join(dir, f)); err != nil {
+		if _, err := os.Stat(filepathext.SmartJoin(dir, f)); err != nil {
 			t.Errorf("File should exist: %v", err)
 		}
 	}
@@ -360,10 +361,10 @@ func TestGenerates(t *testing.T) {
 		fileWithSpaces = "my text file.txt"
 	)
 
-	var srcFile = filepath.Join(dir, srcTask)
+	var srcFile = filepathext.SmartJoin(dir, srcTask)
 
 	for _, task := range []string{srcTask, relTask, absTask, fileWithSpaces} {
-		path := filepath.Join(dir, task)
+		path := filepathext.SmartJoin(dir, task)
 		_ = os.Remove(path)
 		if _, err := os.Stat(path); err == nil {
 			t.Errorf("File should not exist: %v", err)
@@ -379,7 +380,7 @@ func TestGenerates(t *testing.T) {
 	assert.NoError(t, e.Setup())
 
 	for _, theTask := range []string{relTask, absTask, fileWithSpaces} {
-		var destFile = filepath.Join(dir, theTask)
+		var destFile = filepathext.SmartJoin(dir, theTask)
 		var upToDate = fmt.Sprintf("task: Task \"%s\" is up to date\n", srcTask) +
 			fmt.Sprintf("task: Task \"%s\" is up to date\n", theTask)
 
@@ -416,16 +417,16 @@ func TestStatusChecksum(t *testing.T) {
 	}
 
 	for _, f := range files {
-		_ = os.Remove(filepath.Join(dir, f))
+		_ = os.Remove(filepathext.SmartJoin(dir, f))
 
-		_, err := os.Stat(filepath.Join(dir, f))
+		_, err := os.Stat(filepathext.SmartJoin(dir, f))
 		assert.Error(t, err)
 	}
 
 	var buff bytes.Buffer
 	e := task.Executor{
 		Dir:     dir,
-		TempDir: filepath.Join(dir, ".task"),
+		TempDir: filepathext.SmartJoin(dir, ".task"),
 		Stdout:  &buff,
 		Stderr:  &buff,
 	}
@@ -433,7 +434,7 @@ func TestStatusChecksum(t *testing.T) {
 
 	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "build"}))
 	for _, f := range files {
-		_, err := os.Stat(filepath.Join(dir, f))
+		_, err := os.Stat(filepathext.SmartJoin(dir, f))
 		assert.NoError(t, err)
 	}
 
@@ -577,13 +578,13 @@ func TestListCanListDescOnly(t *testing.T) {
 func TestStatusVariables(t *testing.T) {
 	const dir = "testdata/status_vars"
 
-	_ = os.RemoveAll(filepath.Join(dir, ".task"))
-	_ = os.Remove(filepath.Join(dir, "generated.txt"))
+	_ = os.RemoveAll(filepathext.SmartJoin(dir, ".task"))
+	_ = os.Remove(filepathext.SmartJoin(dir, "generated.txt"))
 
 	var buff bytes.Buffer
 	e := task.Executor{
 		Dir:     dir,
-		TempDir: filepath.Join(dir, ".task"),
+		TempDir: filepathext.SmartJoin(dir, ".task"),
 		Stdout:  &buff,
 		Stderr:  &buff,
 		Silent:  false,
@@ -594,7 +595,7 @@ func TestStatusVariables(t *testing.T) {
 
 	assert.Contains(t, buff.String(), "d41d8cd98f00b204e9800998ecf8427e")
 
-	inf, err := os.Stat(filepath.Join(dir, "source.txt"))
+	inf, err := os.Stat(filepathext.SmartJoin(dir, "source.txt"))
 	assert.NoError(t, err)
 	ts := fmt.Sprintf("%d", inf.ModTime().Unix())
 	tf := inf.ModTime().String()
@@ -605,7 +606,7 @@ func TestStatusVariables(t *testing.T) {
 
 func TestInit(t *testing.T) {
 	const dir = "testdata/init"
-	var file = filepath.Join(dir, "Taskfile.yaml")
+	var file = filepathext.SmartJoin(dir, "Taskfile.yaml")
 
 	_ = os.Remove(file)
 	if _, err := os.Stat(file); err == nil {
@@ -694,7 +695,7 @@ func TestExpand(t *testing.T) {
 func TestDry(t *testing.T) {
 	const dir = "testdata/dry"
 
-	file := filepath.Join(dir, "file.txt")
+	file := filepathext.SmartJoin(dir, "file.txt")
 	_ = os.Remove(file)
 
 	var buff bytes.Buffer
@@ -719,12 +720,12 @@ func TestDry(t *testing.T) {
 func TestDryChecksum(t *testing.T) {
 	const dir = "testdata/dry_checksum"
 
-	checksumFile := filepath.Join(dir, ".task/checksum/default")
+	checksumFile := filepathext.SmartJoin(dir, ".task/checksum/default")
 	_ = os.Remove(checksumFile)
 
 	e := task.Executor{
 		Dir:     dir,
-		TempDir: filepath.Join(dir, ".task"),
+		TempDir: filepathext.SmartJoin(dir, ".task"),
 		Stdout:  io.Discard,
 		Stderr:  io.Discard,
 		Dry:     true,
@@ -964,7 +965,7 @@ func TestSummary(t *testing.T) {
 	assert.NoError(t, e.Setup())
 	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "task-with-summary"}, taskfile.Call{Task: "other-task-with-summary"}))
 
-	data, err := os.ReadFile(filepath.Join(dir, "task-with-summary.txt"))
+	data, err := os.ReadFile(filepathext.SmartJoin(dir, "task-with-summary.txt"))
 	assert.NoError(t, err)
 
 	expectedOutput := string(data)

@@ -9,6 +9,7 @@ import (
 
 	"gopkg.in/yaml.v3"
 
+	"github.com/go-task/task/v3/internal/filepathext"
 	"github.com/go-task/task/v3/internal/templater"
 	"github.com/go-task/task/v3/taskfile"
 )
@@ -44,7 +45,7 @@ func Taskfile(readerNode *ReaderNode) (*taskfile.Taskfile, error) {
 		readerNode.Dir = d
 	}
 
-	path, err := exists(filepath.Join(readerNode.Dir, readerNode.Entrypoint))
+	path, err := exists(filepathext.SmartJoin(readerNode.Dir, readerNode.Entrypoint))
 	if err != nil {
 		return nil, err
 	}
@@ -140,10 +141,7 @@ func Taskfile(readerNode *ReaderNode) (*taskfile.Taskfile, error) {
 			}
 
 			for _, task := range includedTaskfile.Tasks {
-				if !filepath.IsAbs(task.Dir) {
-					task.Dir = filepath.Join(dir, task.Dir)
-				}
-
+				task.Dir = filepathext.SmartJoin(dir, task.Dir)
 				task.IncludeVars = includedTask.Vars
 				task.IncludedTaskfileVars = includedTaskfile.Vars
 			}
@@ -159,7 +157,7 @@ func Taskfile(readerNode *ReaderNode) (*taskfile.Taskfile, error) {
 	}
 
 	if v < 3.0 {
-		path = filepath.Join(readerNode.Dir, fmt.Sprintf("Taskfile_%s.yml", runtime.GOOS))
+		path = filepathext.SmartJoin(readerNode.Dir, fmt.Sprintf("Taskfile_%s.yml", runtime.GOOS))
 		if _, err = os.Stat(path); err == nil {
 			osTaskfile, err := readTaskfile(path)
 			if err != nil {
@@ -191,29 +189,19 @@ func readTaskfile(file string) (*taskfile.Taskfile, error) {
 	return &t, yaml.NewDecoder(f).Decode(&t)
 }
 
-// exists finds a Taskfile at the stated location, returning a fully qualified path to the file
 func exists(path string) (string, error) {
 	fi, err := os.Stat(path)
 	if err != nil {
 		return "", err
 	}
 	if fi.Mode().IsRegular() {
-		// File exists, return a fully qualified path
-		result, err := filepath.Abs(path)
-		if err != nil {
-			return "", err
-		}
-		return result, nil
+		return path, nil
 	}
 
 	for _, n := range defaultTaskfiles {
-		fpath := filepath.Join(path, n)
+		fpath := filepathext.SmartJoin(path, n)
 		if _, err := os.Stat(fpath); err == nil {
-			result, err := filepath.Abs(fpath)
-			if err != nil {
-				return "", err
-			}
-			return result, nil
+			return fpath, nil
 		}
 	}
 
@@ -228,14 +216,14 @@ func checkCircularIncludes(node *ReaderNode) error {
 		return errors.New("task: failed to check for include cycle: node.Parent was nil")
 	}
 	var curNode = node
-	var basePath = filepath.Join(node.Dir, node.Entrypoint)
+	var basePath = filepathext.SmartJoin(node.Dir, node.Entrypoint)
 	for curNode.Parent != nil {
 		curNode = curNode.Parent
-		curPath := filepath.Join(curNode.Dir, curNode.Entrypoint)
+		curPath := filepathext.SmartJoin(curNode.Dir, curNode.Entrypoint)
 		if curPath == basePath {
 			return fmt.Errorf("task: include cycle detected between %s <--> %s",
 				curPath,
-				filepath.Join(node.Parent.Dir, node.Parent.Entrypoint),
+				filepathext.SmartJoin(node.Parent.Dir, node.Parent.Entrypoint),
 			)
 		}
 	}

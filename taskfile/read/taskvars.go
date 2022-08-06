@@ -3,11 +3,11 @@ package read
 import (
 	"fmt"
 	"os"
-	"path/filepath"
 	"runtime"
 
 	"gopkg.in/yaml.v3"
 
+	"github.com/go-task/task/v3/internal/filepathext"
 	"github.com/go-task/task/v3/taskfile"
 )
 
@@ -15,7 +15,7 @@ import (
 func Taskvars(dir string) (*taskfile.Vars, error) {
 	vars := &taskfile.Vars{}
 
-	path := filepath.Join(dir, "Taskvars.yml")
+	path := filepathext.SmartJoin(dir, "Taskvars.yml")
 	if _, err := os.Stat(path); err == nil {
 		vars, err = readTaskvars(path)
 		if err != nil {
@@ -23,7 +23,7 @@ func Taskvars(dir string) (*taskfile.Vars, error) {
 		}
 	}
 
-	path = filepath.Join(dir, fmt.Sprintf("Taskvars_%s.yml", runtime.GOOS))
+	path = filepathext.SmartJoin(dir, fmt.Sprintf("Taskvars_%s.yml", runtime.GOOS))
 	if _, err := os.Stat(path); err == nil {
 		osVars, err := readTaskvars(path)
 		if err != nil {
