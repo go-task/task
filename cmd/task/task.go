@@ -19,7 +19,7 @@ import (
 	"github.com/go-task/task/v3/taskfile"
 )
 
-const usage = `Usage: task [-ilfwvsd] [--init] [--list] [--force] [--watch] [--verbose] [--silent] [--dir] [--taskfile] [--dry] [--summary] [task...]
+const usage = `Usage: task [-ilfwvsd] [--init] [--list] [--force] [--watch] [--verbose] [--silent] [--sandbox] [--dir] [--taskfile] [--dry] [--summary] [task...]
 
 Runs the specified task(s). Falls back to the "default" task if no task name
 was specified, or lists all tasks if an unknown task name was specified.
@@ -64,6 +64,7 @@ func main() {
 		silent      bool
 		dry         bool
 		summary     bool
+		sandbox     bool
 		exitCode    bool
 		parallel    bool
 		concurrency int
@@ -89,6 +90,7 @@ func main() {
 	pflag.BoolVarP(&parallel, "parallel", "p", false, "Executes tasks provided on command line in parallel.")
 	pflag.BoolVarP(&dry, "dry", "n", false, "Compiles and prints tasks in the order that they would be run, without executing them.")
 	pflag.BoolVar(&summary, "summary", false, "Show summary about a task.")
+	pflag.BoolVar(&sandbox, "sandbox", false, "Run Task with experimental sandboxing.")
 	pflag.BoolVarP(&exitCode, "exit-code", "x", false, "Pass-through the exit code of the task command.")
 	pflag.StringVarP(&dir, "dir", "d", "", "Sets directory of execution.")
 	pflag.StringVarP(&entrypoint, "taskfile", "t", "", `Choose which Taskfile to run. Defaults to "Taskfile.yml".`)
@@ -169,6 +171,7 @@ func main() {
 		Dry:         dry,
 		Entrypoint:  entrypoint,
 		Summary:     summary,
+		Sandbox:     sandbox,
 		Parallel:    parallel,
 		Color:       color,
 		Concurrency: concurrency,

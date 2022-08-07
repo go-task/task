@@ -18,6 +18,7 @@ import (
 	"github.com/go-task/task/v3/internal/fingerprint"
 	"github.com/go-task/task/v3/internal/logger"
 	"github.com/go-task/task/v3/internal/output"
+	"github.com/go-task/task/v3/internal/sandbox"
 	"github.com/go-task/task/v3/internal/slicesext"
 	"github.com/go-task/task/v3/internal/summary"
 	"github.com/go-task/task/v3/internal/templater"
@@ -49,6 +50,7 @@ type Executor struct {
 	Summary     bool
 	Parallel    bool
 	Color       bool
+	Sandbox     bool
 	Concurrency int
 	Interval    time.Duration
 
@@ -137,6 +139,12 @@ func (e *Executor) RunTask(ctx context.Context, call taskfile.Call) error {
 
 	release := e.acquireConcurrencyLimit()
 	defer release()
+
+	if e.Sandbox {
+		if err := sandbox.WithSandbox(t.Sources, t.Generates); err != nil {
+			return err
+		}
+	}
 
 	return e.startExecution(ctx, t, func(ctx context.Context) error {
 		if !shouldRunOnCurrentPlatform(t.Platforms) {
