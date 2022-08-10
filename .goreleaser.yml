@@ -17,6 +17,9 @@ build:
       goarch: 386
   env:
     - CGO_ENABLED=0
+  mod_timestamp: '{{ .CommitTimestamp }}'
+  flags:
+    - -trimpath
   ldflags:
     - -s -w # Don't set main.version.
 
