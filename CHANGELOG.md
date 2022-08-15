@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Improvements and fixes to Bash completion
+  ([#835](https://github.com/go-task/task/pull/835)).
+
 ## v3.14.1 - 2022-08-03
 
 - Always resolve relative include paths relative to the including Taskfile
