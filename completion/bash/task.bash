@@ -1,26 +1,48 @@
-#!/bin/bash
+# vim: set tabstop=2 shiftwidth=2 expandtab:
 
-GO_TASK_PROGNAME=task
+_GO_TASK_COMPLETION_LIST_OPTION='--list-all'
 
-_go_task_completion()
+function _task()
 {
-  local cur
-  _get_comp_words_by_ref -n : cur
+  local cur prev words cword
+  _init_completion -n : || return
 
-  case "$cur" in
-  --*)
-    local options
-    options="$(_parse_help task)"
-    mapfile -t COMPREPLY < <(compgen -W "$options" -- "$cur")
+  # Handle special arguments of options.
+  case "$prev" in
+    -d|--dir)
+      _filedir -d
+      return $?
     ;;
-  *)
-    local tasks
-    tasks="$($GO_TASK_PROGNAME --list-all 2> /dev/null | awk 'NR>1 { sub(/:$/,"",$2); print $2 }')"
-    mapfile -t COMPREPLY < <(compgen -W "$tasks" -- "$cur")
+    -t|--taskfile)
+      _filedir yaml || return $?
+      _filedir yml
+      return $?
+    ;;
+    -o|--output)
+      COMPREPLY=( $( compgen -W "interleaved group prefixed" -- $cur ) )
+      return 0
     ;;
   esac
 
+  # Handle normal options.
+  case "$cur" in
+    -*)
+      COMPREPLY=( $( compgen -W "$(_parse_help $1)" -- $cur ) )
+      return 0
+    ;;
+  esac
+
+  # Get task names.
+  local line tasks=()
+  while read line; do
+    if [[ "${line}" =~ ^\*[[:space:]]+([[:alnum:]_:]+): ]]; then
+      tasks+=( ${BASH_REMATCH[1]} )
+    fi
+  done < <("${COMP_WORDS[@]}" $_GO_TASK_COMPLETION_LIST_OPTION 2> /dev/null)
+
+  # Prepare task completions and post-process due to colons.
+  COMPREPLY=( $( compgen -W "${tasks[*]}" -- "$cur" ) )
   __ltrim_colon_completions "$cur"
 }
 
-complete -F _go_task_completion $GO_TASK_PROGNAME
+complete -F _task task
