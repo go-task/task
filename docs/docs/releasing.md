@@ -31,9 +31,9 @@ the [Snapcraft dashboard][snapcraftdashboard].
 
 # Scoop
 
-Scoop is a community owned installation method. Scoop owners usually take care
-of updating versions there by editing
-[this file](https://github.com/lukesampson/scoop-extras/blob/master/bucket/task.json).
+Scoop is a command-line package manager for the Windows operating system.
+Scoop package manifests are maintained by the community.
+Scoop owners usually take care of updating versions there by editing [this file](https://github.com/lukesampson/scoop-extras/blob/master/bucket/task.json).
 If you think its Task version is outdated, open an issue to let us know.
 
 # Nix
