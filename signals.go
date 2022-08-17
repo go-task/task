@@ -9,7 +9,7 @@ import (
 )
 
 // NOTE(@andreynering): This function intercepts SIGINT and SIGTERM signals
-// so the Task process is not killed immediatelly and processes running have
+// so the Task process is not killed immediately and processes running have
 // time to do cleanup work.
 func (e *Executor) InterceptInterruptSignals() {
 	ch := make(chan os.Signal, 3)
