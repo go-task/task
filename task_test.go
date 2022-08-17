@@ -970,7 +970,7 @@ func TestSummary(t *testing.T) {
 
 	expectedOutput := string(data)
 	if runtime.GOOS == "windows" {
-		expectedOutput = strings.Replace(expectedOutput, "\r\n", "\n", -1)
+		expectedOutput = strings.ReplaceAll(expectedOutput, "\r\n", "\n")
 	}
 
 	assert.Equal(t, expectedOutput, buff.String())

@@ -19,11 +19,11 @@ func init() {
 		"OS":   func() string { return runtime.GOOS },
 		"ARCH": func() string { return runtime.GOARCH },
 		"catLines": func(s string) string {
-			s = strings.Replace(s, "\r\n", " ", -1)
-			return strings.Replace(s, "\n", " ", -1)
+			s = strings.ReplaceAll(s, "\r\n", " ")
+			return strings.ReplaceAll(s, "\n", " ")
 		},
 		"splitLines": func(s string) []string {
-			s = strings.Replace(s, "\r\n", "\n", -1)
+			s = strings.ReplaceAll(s, "\r\n", "\n")
 			return strings.Split(s, "\n")
 		},
 		"fromSlash": func(path string) string {

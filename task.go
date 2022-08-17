@@ -181,7 +181,7 @@ func (e *Executor) mkdir(t *taskfile.Task) error {
 	defer mutex.Unlock()
 
 	if _, err := os.Stat(t.Dir); os.IsNotExist(err) {
-		if err := os.MkdirAll(t.Dir, 0755); err != nil {
+		if err := os.MkdirAll(t.Dir, 0o755); err != nil {
 			return err
 		}
 	}

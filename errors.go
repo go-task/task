@@ -17,7 +17,7 @@ type taskNotFoundError struct {
 }
 
 func (err *taskNotFoundError) Error() string {
-	return fmt.Sprintf(`task: Task "%s" not found`, err.taskName)
+	return fmt.Sprintf(`task: Task %q not found`, err.taskName)
 }
 
 type TaskRunError struct {
@@ -26,7 +26,7 @@ type TaskRunError struct {
 }
 
 func (err *TaskRunError) Error() string {
-	return fmt.Sprintf(`task: Failed to run task "%s": %v`, err.taskName, err.err)
+	return fmt.Sprintf(`task: Failed to run task %q: %v`, err.taskName, err.err)
 }
 
 func (err *TaskRunError) ExitCode() int {
@@ -46,7 +46,7 @@ type MaximumTaskCallExceededError struct {
 
 func (e *MaximumTaskCallExceededError) Error() string {
 	return fmt.Sprintf(
-		`task: maximum task call exceeded (%d) for task "%s": probably an cyclic dep or infinite loop`,
+		`task: maximum task call exceeded (%d) for task %q: probably an cyclic dep or infinite loop`,
 		MaximumTaskCall,
 		e.task,
 	)
