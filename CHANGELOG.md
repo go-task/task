@@ -3,7 +3,7 @@
 ## Unreleased
 
 - Improvements and fixes to Bash completion
-  ([#835](https://github.com/go-task/task/pull/835)).
+  ([#835](https://github.com/go-task/task/pull/835), [#844](https://github.com/go-task/task/pull/844)).
 
 ## v3.14.1 - 2022-08-03
 
