@@ -1,0 +1,14 @@
+version: '3'
+tasks:
+  default:
+    sources:
+      - src/**/*
+    cmds:
+      - echo "some job"
+  test-sym:
+    cmds:
+      - echo "shared file source changed" > src/shared/b
+  reset:
+    cmds:
+      - echo "shared file source" > src/shared/b
+      - echo "file source" > src/a
