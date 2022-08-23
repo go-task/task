@@ -32,7 +32,7 @@ func Glob(dir string, g string) ([]string, error) {
 		return nil, err
 	}
 
-	fs, err := zglob.Glob(g)
+	fs, err := zglob.GlobFollowSymlinks(g)
 	if err != nil {
 		return nil, err
 	}
