@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Follow symlinks on `sources`
+  ([#826](https://github.com/go-task/task/issues/826), [#831](https://github.com/go-task/task/pull/831)).
 - Improvements and fixes to Bash completion
   ([#835](https://github.com/go-task/task/pull/835), [#844](https://github.com/go-task/task/pull/844)).
 
