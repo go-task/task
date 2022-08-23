@@ -32,16 +32,11 @@ function _task()
     ;;
   esac
 
-  # Get task names.
-  local line tasks=()
-  while read line; do
-    if [[ "${line}" =~ ^\*[[:space:]]+([[:alnum:]_:]+): ]]; then
-      tasks+=( ${BASH_REMATCH[1]} )
-    fi
-  done < <("${COMP_WORDS[@]}" $_GO_TASK_COMPLETION_LIST_OPTION 2> /dev/null)
-
-  # Prepare task completions and post-process due to colons.
+  # Prepare task name completions.
+  local tasks=( $( "${COMP_WORDS[@]}" --silent $_GO_TASK_COMPLETION_LIST_OPTION 2> /dev/null ) )
   COMPREPLY=( $( compgen -W "${tasks[*]}" -- "$cur" ) )
+
+  # Post-process because task names might contain colons.
   __ltrim_colon_completions "$cur"
 }
 
