@@ -1,6 +1,7 @@
 package task
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"io"
@@ -118,6 +119,14 @@ func (e *Executor) RunTask(ctx context.Context, call taskfile.Call) error {
 		e.Logger.VerboseErrf(logger.Magenta, `task: "%s" started`, call.Task)
 		if err := e.runDeps(ctx, t); err != nil {
 			return err
+		}
+
+		if t.Warn != "" {
+			answer := e.Logger.ReadKeyln(logger.Yellow, "task: [%s] %s Proceed [y/N]? ", call.Task, t.Warn)
+			if !bytes.Contains([]byte("yY"), []byte(string(answer))) {
+				e.Logger.Errf(logger.Red, "task: [%s] skipped", call.Task)
+				return nil
+			}
 		}
 
 		if !e.Force {
