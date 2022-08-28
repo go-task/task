@@ -1,6 +1,7 @@
 package logger
 
 import (
+	"bufio"
 	"io"
 	"os"
 	"strconv"
@@ -87,4 +88,25 @@ func (l *Logger) VerboseErrf(color Color, s string, args ...interface{}) {
 	if l.Verbose {
 		l.Errf(color, s, args...)
 	}
+}
+
+// Print to STDOUT a string without '\n' and read a key pressed from STDIN
+func (l *Logger) ReadKeyln(color Color, s string, args ...interface{}) byte {
+	if len(args) == 0 {
+		s, args = "%s", []interface{}{s}
+	}
+	if !l.Color {
+		color = Default
+	}
+	print := color()
+	print(l.Stdout, s, args...)
+
+	r := bufio.NewReader(l.Stdin)
+	b, err := r.ReadByte()
+
+	if err != nil {
+		panic(err)
+	}
+
+	return b
 }
