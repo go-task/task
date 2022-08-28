@@ -1371,3 +1371,42 @@ func TestEvaluateSymlinksInPaths(t *testing.T) {
 	err = os.RemoveAll(dir + "/.task")
 	assert.NoError(t, err)
 }
+
+func TestWarnNo(t *testing.T) {
+	const dir = "testdata/warn"
+	var buff_out bytes.Buffer
+	buff_in := bytes.NewBufferString("n")
+	e := task.Executor{
+		Dir:    dir,
+		Stdin:  buff_in,
+		Stdout: &buff_out,
+		Stderr: &buff_out,
+	}
+	assert.NoError(t, e.Setup())
+
+	expectedOutputOrder := `task: [task-warning] display this warning. Proceed [y/N]? ` +
+		`task: [task-warning] skipped`
+	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "task-warning"}))
+	assert.Contains(t, buff_out.String(), expectedOutputOrder)
+}
+
+func TestWarnYes(t *testing.T) {
+	const dir = "testdata/warn"
+	var buff_out bytes.Buffer
+	buff_in := bytes.NewBufferString("y")
+	e := task.Executor{
+		Dir:    dir,
+		Stdin:  buff_in,
+		Stdout: &buff_out,
+		Stderr: &buff_out,
+	}
+	assert.NoError(t, e.Setup())
+
+	expectedOutputOrder := `task: [task-warning] display this warning. Proceed [y/N]? ` +
+		strings.TrimSpace(`task: [task-warning] echo 'display this'
+display this
+	`)
+
+	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "task-warning"}))
+	assert.Contains(t, buff_out.String(), expectedOutputOrder)
+}

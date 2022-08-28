@@ -1,0 +1,7 @@
+version: '3'
+
+tasks:
+  task-warning:
+    cmds:
+      - echo 'display this'
+    warn: 'display this warning.'
