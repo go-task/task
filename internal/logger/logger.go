@@ -46,6 +46,7 @@ func envColor(env string, defaultColor color.Attribute) color.Attribute {
 // Logger is just a wrapper that prints stuff to STDOUT or STDERR,
 // with optional color.
 type Logger struct {
+	Stdin   io.Reader
 	Stdout  io.Writer
 	Stderr  io.Writer
 	Verbose bool

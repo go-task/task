@@ -100,6 +100,7 @@ func (e *Executor) setupStdFiles() {
 
 func (e *Executor) setupLogger() {
 	e.Logger = &logger.Logger{
+		Stdin:   e.Stdin,
 		Stdout:  e.Stdout,
 		Stderr:  e.Stderr,
 		Verbose: e.Verbose,
