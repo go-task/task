@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Add new special variables `ROOT_DIR` and `TASKFILE_DIR`. This was a highly
+  requested feature
+  ([#215](https://github.com/go-task/task/issues/215), [Documentation](https://taskfile.dev/api/#special-variables)).
 - Follow symlinks on `sources`
   ([#826](https://github.com/go-task/task/issues/826), [#831](https://github.com/go-task/task/pull/831)).
 - Improvements and fixes to Bash completion

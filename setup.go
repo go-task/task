@@ -20,6 +20,10 @@ import (
 )
 
 func (e *Executor) Setup() error {
+	if err := e.setCurrentDir(); err != nil {
+		return err
+	}
+
 	if err := e.readTaskfile(); err != nil {
 		return err
 	}
@@ -50,6 +54,23 @@ func (e *Executor) Setup() error {
 	e.setupDefaults(v)
 	e.setupConcurrencyState()
 
+	return nil
+}
+
+func (e *Executor) setCurrentDir() error {
+	if e.Dir == "" {
+		wd, err := os.Getwd()
+		if err != nil {
+			return err
+		}
+		e.Dir = wd
+	} else if !filepath.IsAbs(e.Dir) {
+		abs, err := filepath.Abs(e.Dir)
+		if err != nil {
+			return err
+		}
+		e.Dir = abs
+	}
 	return nil
 }
 

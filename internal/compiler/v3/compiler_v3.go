@@ -44,7 +44,13 @@ func (c *CompilerV3) FastGetVariables(t *taskfile.Task, call taskfile.Call) (*ta
 func (c *CompilerV3) getVariables(t *taskfile.Task, call *taskfile.Call, evaluateShVars bool) (*taskfile.Vars, error) {
 	result := compiler.GetEnviron()
 	if t != nil {
-		result.Set("TASK", taskfile.Var{Static: t.Task})
+		specialVars, err := c.getSpecialVars(t)
+		if err != nil {
+			return nil, err
+		}
+		for k, v := range specialVars {
+			result.Set(k, taskfile.Var{Static: v})
+		}
 	}
 
 	getRangeFunc := func(dir string) func(k string, v taskfile.Var) error {
@@ -164,4 +170,24 @@ func (c *CompilerV3) ResetCache() {
 	defer c.muDynamicCache.Unlock()
 
 	c.dynamicCache = nil
+}
+
+func (c *CompilerV3) getSpecialVars(t *taskfile.Task) (map[string]string, error) {
+	taskfileDir, err := c.getTaskfileDir(t)
+	if err != nil {
+		return nil, err
+	}
+
+	return map[string]string{
+		"TASK":         t.Task,
+		"ROOT_DIR":     c.Dir,
+		"TASKFILE_DIR": taskfileDir,
+	}, nil
+}
+
+func (c *CompilerV3) getTaskfileDir(t *taskfile.Task) (string, error) {
+	if t.IncludedTaskfile != nil {
+		return t.IncludedTaskfile.FullDirPath()
+	}
+	return c.Dir, nil
 }
