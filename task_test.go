@@ -677,6 +677,28 @@ func TestTaskIgnoreErrors(t *testing.T) {
 	assert.Error(t, e.Run(context.Background(), taskfile.Call{Task: "dep-task-should-fail"}))
 }
 
+func TestTaskIgnoreErrorsExtended(t *testing.T) {
+	const dir = "testdata/ignore_errors_2"
+	var buff bytes.Buffer
+	e := &task.Executor{
+		Dir:    dir,
+		Stdout: &buff,
+		Stderr: &buff,
+	}
+	assert.NoError(t, e.Setup())
+
+	assert.Error(t, e.Run(context.Background(), taskfile.Call{Task: "fail"}))
+	assert.Contains(t, strings.TrimSpace(buff.String()), `task: [fail] echo Failing task
+Failing task
+task: [fail] exit 100`)
+
+	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "ignore-error-task-without-template"}))
+	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "ignore-error-cmd-without-template"}))
+	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "ignore-error-task-with-template"}))
+	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "ignore-error-cmd-with-template"}))
+
+}
+
 func TestExpand(t *testing.T) {
 	const dir = "testdata/expand"
 
