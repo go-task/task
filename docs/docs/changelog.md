@@ -5,6 +5,16 @@ sidebar_position: 6
 
 # Changelog
 
+## v3.15.0 - 2022-09-03
+
+- Add new special variables `ROOT_DIR` and `TASKFILE_DIR`. This was a highly
+  requested feature
+  ([#215](https://github.com/go-task/task/issues/215), [Documentation](https://taskfile.dev/api/#special-variables)).
+- Follow symlinks on `sources`
+  ([#826](https://github.com/go-task/task/issues/826), [#831](https://github.com/go-task/task/pull/831)).
+- Improvements and fixes to Bash completion
+  ([#835](https://github.com/go-task/task/pull/835), [#844](https://github.com/go-task/task/pull/844)).
+
 ## v3.14.1 - 2022-08-03
 
 - Always resolve relative include paths relative to the including Taskfile

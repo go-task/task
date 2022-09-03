@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v3.15.0 - 2022-09-03
 
 - Add new special variables `ROOT_DIR` and `TASKFILE_DIR`. This was a highly
   requested feature
