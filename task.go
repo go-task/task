@@ -198,7 +198,7 @@ func (e *Executor) runDeps(ctx context.Context, t *taskfile.Task) error {
 		d := d
 
 		g.Go(func() error {
-			err := e.RunTask(ctx, taskfile.Call{Task: d.Task, Vars: d.Vars})
+			err := e.RunTask(ctx, taskfile.Call{Task: d.Task, Vars: d.Vars, IgnoreError: t.IgnoreError})
 			if err != nil {
 				return err
 			}
@@ -226,8 +226,8 @@ func (e *Executor) runCommand(ctx context.Context, t *taskfile.Task, call taskfi
 		reacquire := e.releaseConcurrencyLimit()
 		defer reacquire()
 
-		err := e.RunTask(ctx, taskfile.Call{Task: cmd.Task, Vars: cmd.Vars})
-		if err != nil {
+		err := e.RunTask(ctx, taskfile.Call{Task: cmd.Task, Vars: cmd.Vars, IgnoreError: cmd.IgnoreError})
+		if err != nil && !t.IgnoreError {
 			return err
 		}
 		return nil
@@ -264,7 +264,7 @@ func (e *Executor) runCommand(ctx context.Context, t *taskfile.Task, call taskfi
 			Stdout:  stdOut,
 			Stderr:  stdErr,
 		})
-		if execext.IsExitError(err) && cmd.IgnoreError {
+		if execext.IsExitError(err) && t.IgnoreError {
 			e.Logger.VerboseErrf(logger.Yellow, "task: [%s] command error ignored: %v", t.Name(), err)
 			return nil
 		}
