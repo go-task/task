@@ -164,6 +164,39 @@ func TestMultilineVars(t *testing.T) {
 	}
 }
 
+func TestSpecialVars(t *testing.T) {
+	const dir = "testdata/special_vars"
+	const target = "default"
+
+	var buff bytes.Buffer
+	e := &task.Executor{
+		Dir:    dir,
+		Stdout: &buff,
+		Stderr: &buff,
+		Silent: true,
+	}
+	assert.NoError(t, e.Setup())
+	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: target}))
+
+	toAbs := func(rel string) string {
+		abs, err := filepath.Abs(rel)
+		assert.NoError(t, err)
+		return abs
+	}
+
+	output := buff.String()
+
+	// Root Taskfile
+	assert.Contains(t, output, "root/TASK=print")
+	assert.Contains(t, output, "root/ROOT_DIR="+toAbs("testdata/special_vars"))
+	assert.Contains(t, output, "root/TASKFILE_DIR="+toAbs("testdata/special_vars"))
+
+	// Included Taskfile
+	assert.Contains(t, output, "included/TASK=included:print")
+	assert.Contains(t, output, "included/ROOT_DIR="+toAbs("testdata/special_vars"))
+	assert.Contains(t, output, "included/TASKFILE_DIR="+toAbs("testdata/special_vars/included"))
+}
+
 func TestVarsInvalidTmpl(t *testing.T) {
 	const (
 		dir         = "testdata/vars/v2"
@@ -777,12 +810,6 @@ func TestIncludesMultiLevel(t *testing.T) {
 func TestIncludeCycle(t *testing.T) {
 	const dir = "testdata/includes_cycle"
 
-	wd, err := os.Getwd()
-	assert.Nil(t, err)
-
-	message := "task: include cycle detected between %s/%s/one/Taskfile.yml <--> %s/%s/Taskfile.yml"
-	expectedError := fmt.Sprintf(message, wd, dir, wd, dir)
-
 	var buff bytes.Buffer
 	e := task.Executor{
 		Dir:    dir,
@@ -791,7 +818,9 @@ func TestIncludeCycle(t *testing.T) {
 		Silent: true,
 	}
 
-	assert.EqualError(t, e.Setup(), expectedError)
+	err := e.Setup()
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "task: include cycle detected between")
 }
 
 func TestIncorrectVersionIncludes(t *testing.T) {

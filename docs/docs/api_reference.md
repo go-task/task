@@ -44,6 +44,19 @@ variable
 |      | `--version` | `bool` | `false` | Show Task version. |
 | `-w` | `--watch` | `bool` | `false` | Enables watch of the given task. |
 
+## Special Variables
+
+There are some special variables that is available on the templating system:
+
+| Var | Description |
+| - | - |
+| `CLI_ARGS` | Contain all extra arguments passed after `--` when calling Task through the CLI. |
+| `TASK` | The name of the current task. |
+| `ROOT_DIR` | The absolute path of the root Taskfile. |
+| `TASKFILE_DIR` | The absolute path of the included Taskfile. |
+| `CHECKSUM` | The checksum of the files listed in `sources`. Only available within the `status` prop and if method is set to `checksum`. |
+| `TIMESTAMP` | The date object of the greatest timestamp of the files listes in `sources`. Only available within the `status` prop and if method is set to `timestamp`. |
+
 ## ENV
 
 Some environment variables can be overriden to adjust Task behavior.

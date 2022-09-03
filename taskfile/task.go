@@ -26,6 +26,7 @@ type Task struct {
 	Run                  string
 	IncludeVars          *Vars
 	IncludedTaskfileVars *Vars
+	IncludedTaskfile     *IncludedTaskfile
 }
 
 func (t *Task) Name() string {

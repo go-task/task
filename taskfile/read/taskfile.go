@@ -144,6 +144,7 @@ func Taskfile(readerNode *ReaderNode) (*taskfile.Taskfile, error) {
 				task.Dir = filepathext.SmartJoin(dir, task.Dir)
 				task.IncludeVars = includedTask.Vars
 				task.IncludedTaskfileVars = includedTaskfile.Vars
+				task.IncludedTaskfile = &includedTask
 			}
 		}
 
