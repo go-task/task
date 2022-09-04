@@ -9,9 +9,10 @@ tasks:
   start:
     desc: Start website
     vars:
+      HOST: '{{default "localhost" .HOST}}'
       PORT: '{{default "3001" .PORT}}'
     cmds:
-      - npx docusaurus start --no-open --port={{.PORT}}
+      - npx docusaurus start --no-open --host={{.HOST}} --port={{.PORT}}
 
   build:
     desc: Build website

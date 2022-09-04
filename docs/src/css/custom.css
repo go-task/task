@@ -1,4 +1,9 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,400;0,700;1,400;1,700&family=Roboto:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+
 :root {
+  --ifm-font-family-base: Roboto, system-ui, -apple-system, Segoe UI, Ubuntu, Cantarell, Noto Sans, sans-serif, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+  --ifm-font-family-monospace: 'Roboto Mono', SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+
   --ifm-color-primary: #43ABA2 ;
   --ifm-color-primary-dark: #3AB2A6;
   --ifm-color-primary-darker: #32B8AB;
@@ -11,13 +16,6 @@
 }
 
 [data-theme='dark'] {
-  --ifm-color-primary: #43ABA2 ;
-  --ifm-color-primary-dark: #3AB2A6;
-  --ifm-color-primary-darker: #32B8AB;
-  --ifm-color-primary-darkest: #29BEB0;
-  --ifm-color-primary-light: #4CA59D;
-  --ifm-color-primary-lighter: #559F98;
-  --ifm-color-primary-lightest: #5D9993;
   --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
 }
 
