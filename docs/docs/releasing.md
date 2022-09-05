@@ -13,6 +13,10 @@ the `test-release` task of the Taskfile.
 artifacts automatically when a new Git tag is pushed to master
 (raw executables and DEB and RPM packages).
 
+Since v3.15.0, raw executables can also be reproduced and verified locally by
+checking out a specific tag and calling `goreleaser build`, using the Go version
+defined in the above GitHub Actions.
+
 # Homebrew
 
 To release a new version on the [Homebrew tap][homebrewtap] edit the
