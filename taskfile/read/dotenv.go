@@ -27,6 +27,9 @@ func Dotenv(c compiler.Compiler, tf *taskfile.Taskfile, dir string) (*taskfile.V
 
 	for _, dotEnvPath := range tf.Dotenv {
 		dotEnvPath = tr.Replace(dotEnvPath)
+		if dotEnvPath == "" {
+			continue
+		}
 		dotEnvPath = filepathext.SmartJoin(dir, dotEnvPath)
 
 		if _, err := os.Stat(dotEnvPath); os.IsNotExist(err) {
