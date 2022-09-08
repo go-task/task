@@ -1,0 +1,16 @@
+# https://taskfile.dev
+
+version: '3'
+
+vars:
+  GREETING: Hello, World!
+
+interval: "50ms"
+
+tasks:
+  default:
+    sources:
+      - "src/*"
+    cmds:
+      - echo "{{.GREETING}}"
+    silent: false
