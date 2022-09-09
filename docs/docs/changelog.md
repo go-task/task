@@ -5,6 +5,16 @@ sidebar_position: 6
 
 # Changelog
 
+## v3.15.1 - 2022-09-08
+
+- Fix error when using variable in `env:` introduced in the previous release
+  ([#858](https://github.com/go-task/task/issues/858), [#866](https://github.com/go-task/task/pull/866)).
+- Fix handling of `CLI_ARGS` (`--`) in Bash completion
+  ([#863](https://github.com/go-task/task/pull/863)).
+- On zsh completion, add ability to replace `--list-all` with `--list` as
+  already possible on the Bash completion
+  ([#861](https://github.com/go-task/task/pull/861)).
+
 ## v3.15.0 - 2022-09-03
 
 - Add new special variables `ROOT_DIR` and `TASKFILE_DIR`. This was a highly
