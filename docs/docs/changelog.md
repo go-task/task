@@ -5,7 +5,7 @@ sidebar_position: 6
 
 # Changelog
 
-## v3.15.1 - 2022-09-08
+## v3.15.2 - 2022-09-08
 
 - Fix error when using variable in `env:` introduced in the previous release
   ([#858](https://github.com/go-task/task/issues/858), [#866](https://github.com/go-task/task/pull/866)).
