@@ -958,6 +958,86 @@ func TestIncludesRelativePath(t *testing.T) {
 	assert.Contains(t, buff.String(), "testdata/includes_rel_path/common")
 }
 
+func TestIncludesInternal(t *testing.T) {
+	const dir = "testdata/internal_task"
+	tests := []struct {
+		name           string
+		task           string
+		expectedErr    bool
+		expectedOutput string
+	}{
+		{"included internal task via task", "task-1", false, "Hello, World!\n"},
+		{"included internal task via dep", "task-2", false, "Hello, World!\n"},
+		{
+			"included internal direct",
+			"included:task-3",
+			true,
+			"task: No tasks with description available. Try --list-all to list all tasks\n",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			var buff bytes.Buffer
+			e := task.Executor{
+				Dir:    dir,
+				Stdout: &buff,
+				Stderr: &buff,
+				Silent: true,
+			}
+			assert.NoError(t, e.Setup())
+
+			err := e.Run(context.Background(), taskfile.Call{Task: test.task})
+			if test.expectedErr {
+				assert.Error(t, err, test.expectedErr)
+			} else {
+				assert.NoError(t, err)
+			}
+			assert.Equal(t, test.expectedOutput, buff.String())
+		})
+	}
+}
+
+func TestInternalTask(t *testing.T) {
+	const dir = "testdata/internal_task"
+	tests := []struct {
+		name           string
+		task           string
+		expectedErr    bool
+		expectedOutput string
+	}{
+		{"internal task via task", "task-1", false, "Hello, World!\n"},
+		{"internal task via dep", "task-2", false, "Hello, World!\n"},
+		{
+			"internal direct",
+			"task-3",
+			true,
+			"task: No tasks with description available. Try --list-all to list all tasks\n",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			var buff bytes.Buffer
+			e := task.Executor{
+				Dir:    dir,
+				Stdout: &buff,
+				Stderr: &buff,
+				Silent: true,
+			}
+			assert.NoError(t, e.Setup())
+
+			err := e.Run(context.Background(), taskfile.Call{Task: test.task})
+			if test.expectedErr {
+				assert.Error(t, err, test.expectedErr)
+			} else {
+				assert.NoError(t, err)
+			}
+			assert.Equal(t, test.expectedOutput, buff.String())
+		})
+	}
+}
+
 func TestSupportedFileNames(t *testing.T) {
 	fileNames := []string{
 		"Taskfile.yml",

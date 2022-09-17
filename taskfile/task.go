@@ -20,6 +20,7 @@ type Task struct {
 	Env                  *Vars
 	Silent               bool
 	Interactive          bool
+	Internal             bool
 	Method               string
 	Prefix               string
 	IgnoreError          bool
@@ -64,6 +65,7 @@ func (t *Task) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		Env           *Vars
 		Silent        bool
 		Interactive   bool
+		Internal      bool
 		Method        string
 		Prefix        string
 		IgnoreError   bool `yaml:"ignore_error"`
@@ -86,6 +88,7 @@ func (t *Task) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	t.Env = task.Env
 	t.Silent = task.Silent
 	t.Interactive = task.Interactive
+	t.Internal = task.Internal
 	t.Method = task.Method
 	t.Prefix = task.Prefix
 	t.IgnoreError = task.IgnoreError
