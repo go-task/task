@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Add support to marking tasks and includes as internal, which will hide them
+  from `--list` and `--list-all`
+  ([#818](https://github.com/go-task/task/pull/818)).
+
 ## v3.15.2 - 2022-09-08
 
 - Fix error when using variable in `env:` introduced in the previous release

@@ -97,6 +97,7 @@ Some environment variables can be overriden to adjust Task behavior.
 | `taskfile` | `string` | | The path for the Taskfile or directory to be included. If a directory, Task will look for files named `Taskfile.yml` or `Taskfile.yaml` inside that directory. If a relative path, resolved relative to the directory containing the including Taskfile. |
 | `dir` | `string` | The parent Taskfile directory | The working directory of the included tasks when run. |
 | `optional` | `bool` | `false` | If `true`, no errors will be thrown if the specified file does not exist. |
+| `internal` | `bool` | `false` | If `true`, tasks will be omitted from both `--list` and `--list-all`. |
 
 :::info
 
@@ -119,6 +120,7 @@ includes:
 | `dir` | `string` | | The current directory which this task should run. |
 | `method` | `string` | `checksum` | Method used by this task. Default to the one declared globally or `checksum`. Available options: `checksum`, `timestamp` and `none` |
 | `silent` | `bool` | `false` | Skips some output for this task. Note that STDOUT and STDERR of the commands will still be redirected. |
+| `internal` | `bool` | `false` | If `true`, omit this task from both `--list` and `--list-all`. |
 | `run` | `string` | The one declared globally in the Taskfile or `always` | Specifies whether the task should run again or not if called more than once. Available options: `always`, `once` and `when_changed`. |
 | `prefix` | `string` | | Allows to override the prefix print before the STDOUT. Only relevant when using the `prefixed` output mode. |
 | `ignore_error` | `bool` | `false` | Continue execution if errors happen while executing the commands. |

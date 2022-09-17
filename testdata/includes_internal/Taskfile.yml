@@ -6,7 +6,6 @@ includes:
     internal: true
 
 tasks:
-
   task-1:
     cmds:
       - task: included:default

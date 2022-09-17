@@ -197,8 +197,9 @@ tasks:
 ### Internal includes
 
 Includes marked as internal will set all the tasks of the included file to be
-internal as well (See the [Internal Tasks](#internal-tasks) section below). This is useful when including utility tasks that are not
-intended to be used directly by the user.
+internal as well (see the [Internal tasks](#internal-tasks) section below).
+This is useful when including utility tasks that are not intended to be used
+directly by the user.
 
 ```yaml
 version: '3'
@@ -238,7 +239,7 @@ use the [default function](https://go-task.github.io/slim-sprig/defaults.html):
 
 :::
 
-## Internal Tasks
+## Internal tasks
 
 Internal tasks are tasks that cannot be called directly by the user. They will
 not appear in the output when running `task --list|--list-all`. Other tasks may
@@ -249,7 +250,6 @@ function-like tasks that have no useful purpose on the command line.
 version: '3'
 
 tasks:
-
   build-image-1:
     cmds:
       - task: build-image
