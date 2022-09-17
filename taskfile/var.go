@@ -3,6 +3,7 @@ package taskfile
 import (
 	"errors"
 
+	"golang.org/x/exp/slices"
 	"gopkg.in/yaml.v3"
 )
 
@@ -59,7 +60,7 @@ func (vs *Vars) Set(key string, value Var) {
 	if vs.Mapping == nil {
 		vs.Mapping = make(map[string]Var, 1)
 	}
-	if !stringSliceContains(vs.Keys, key) {
+	if !slices.Contains(vs.Keys, key) {
 		vs.Keys = append(vs.Keys, key)
 	}
 	vs.Mapping[key] = value

@@ -7,6 +7,7 @@ import (
 
 	"github.com/go-task/task/v3/internal/execext"
 	"github.com/go-task/task/v3/internal/filepathext"
+	"golang.org/x/exp/slices"
 
 	"gopkg.in/yaml.v3"
 )
@@ -72,7 +73,7 @@ func (tfs *IncludedTaskfiles) Set(key string, includedTaskfile IncludedTaskfile)
 	if tfs.Mapping == nil {
 		tfs.Mapping = make(map[string]IncludedTaskfile, 1)
 	}
-	if !stringSliceContains(tfs.Keys, key) {
+	if !slices.Contains(tfs.Keys, key) {
 		tfs.Keys = append(tfs.Keys, key)
 	}
 	tfs.Mapping[key] = includedTaskfile
