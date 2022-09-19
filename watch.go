@@ -39,17 +39,17 @@ func (e *Executor) watchTasks(calls ...taskfile.Call) error {
 
 	var watchIntervalString string
 
-	if e.Taskfile.Interval != "" {
-		watchIntervalString = e.Taskfile.Interval
-	} else if e.Interval != "" {
+	if e.Interval != "" {
 		watchIntervalString = e.Interval
+	} else if e.Taskfile.Interval != "" {
+		watchIntervalString = e.Taskfile.Interval
 	}
 
 	watchInterval := defaultWatchInterval
 
 	if watchIntervalString != "" {
 		var err error
-		watchInterval, err = parsedWatchInterval(watchIntervalString)
+		watchInterval, err = parseWatchInterval(watchIntervalString)
 		if err != nil {
 			e.Logger.Errf(logger.Red, "%v", err)
 		}
@@ -185,7 +185,7 @@ func shouldIgnoreFile(path string) bool {
 	return strings.Contains(path, "/.git") || strings.Contains(path, "/.task") || strings.Contains(path, "/node_modules")
 }
 
-func parsedWatchInterval(watchInterval string) (time.Duration, error) {
+func parseWatchInterval(watchInterval string) (time.Duration, error) {
 	v, err := time.ParseDuration(watchInterval)
 	if err != nil {
 		return 0, fmt.Errorf(`task: Could not parse watch interval "%s": %v`, watchInterval, err)

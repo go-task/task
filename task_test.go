@@ -1503,9 +1503,6 @@ Hello, World!
 	assert.NoError(t, e.Setup())
 	buff.Reset()
 
-	ctx := context.Background()
-	ctx, cancel := context.WithCancel(ctx)
-
 	err := os.MkdirAll(dir+"/src", 0755)
 	assert.NoError(t, err)
 
@@ -1513,6 +1510,9 @@ Hello, World!
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	ctx := context.Background()
+	ctx, cancel := context.WithCancel(ctx)
 
 	go func(ctx context.Context) {
 		for {
@@ -1535,9 +1535,10 @@ Hello, World!
 	}
 	time.Sleep(70 * time.Millisecond)
 	cancel()
-
 	assert.Equal(t, expectedOutput, strings.TrimSpace(buff.String()))
 	buff.Reset()
 	err = os.RemoveAll(dir + "/.task")
+	assert.NoError(t, err)
+	err = os.RemoveAll(dir + "/src")
 	assert.NoError(t, err)
 }
