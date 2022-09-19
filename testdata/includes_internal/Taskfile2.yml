@@ -1,0 +1,6 @@
+version: '3'
+
+tasks:
+  task-3:
+    cmds:
+      - echo "Hello, World!"

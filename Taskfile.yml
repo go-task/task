@@ -80,6 +80,19 @@ tasks:
     cmds:
       - goreleaser --snapshot --rm-dist
 
+  docs:changelog:
+    desc: Copy CHANGELOG.md to the documentation website
+    vars:
+      FILE: docs/docs/changelog.md
+    cmds:
+      - rm {{.FILE}}
+      - 'echo "---" >> {{.FILE}}'
+      - 'echo "slug: /changelog/" >> {{.FILE}}'
+      - 'echo "sidebar_position: 6" >> {{.FILE}}'
+      - 'echo "---" >> {{.FILE}}'
+      - 'echo "" >> {{.FILE}}'
+      - 'cat CHANGELOG.md >> {{.FILE}}'
+
   packages:
     cmds:
       - echo '{{.GO_PACKAGES}}'

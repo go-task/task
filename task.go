@@ -65,10 +65,15 @@ type Executor struct {
 func (e *Executor) Run(ctx context.Context, calls ...taskfile.Call) error {
 	// check if given tasks exist
 	for _, c := range calls {
-		if _, ok := e.Taskfile.Tasks[c.Task]; !ok {
+		t, ok := e.Taskfile.Tasks[c.Task]
+		if !ok {
 			// FIXME: move to the main package
 			e.ListTasksWithDesc()
 			return &taskNotFoundError{taskName: c.Task}
+		}
+		if t.Internal {
+			e.ListTasksWithDesc()
+			return &taskInternalError{taskName: c.Task}
 		}
 	}
 

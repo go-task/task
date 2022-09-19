@@ -194,6 +194,22 @@ tasks:
       - echo "This command can still be successfully executed if ./tests/Taskfile.yml does not exist"
 ```
 
+### Internal includes
+
+Includes marked as internal will set all the tasks of the included file to be
+internal as well (see the [Internal tasks](#internal-tasks) section below).
+This is useful when including utility tasks that are not intended to be used
+directly by the user.
+
+```yaml
+version: '3'
+
+includes:
+  tests:
+    taskfile: ./taskfiles/Utils.yml
+    internal: true
+```
+
 ### Vars of included Taskfiles
 
 You can also specify variables when including a Taskfile. This may be useful
@@ -222,6 +238,29 @@ use the [default function](https://go-task.github.io/slim-sprig/defaults.html):
 `MY_VAR: '{{.MY_VAR | default "my-default-value"}}'`.
 
 :::
+
+## Internal tasks
+
+Internal tasks are tasks that cannot be called directly by the user. They will
+not appear in the output when running `task --list|--list-all`. Other tasks may
+call internal tasks in the usual way. This is useful for creating reusable,
+function-like tasks that have no useful purpose on the command line.
+
+```yaml
+version: '3'
+
+tasks:
+  build-image-1:
+    cmds:
+      - task: build-image
+        vars:
+          DOCKER_IMAGE: image-1
+
+  build-image:
+    internal: true
+    cmds:
+      - docker build -t {{.DOCKER_IMAGE}} .
+```
 
 ## Task directory
 

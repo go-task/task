@@ -1,6 +1,6 @@
 (function () {
   function attachAd() {
-    const el = document.createElement('script');
+    var el = document.createElement('script');
     el.setAttribute('type', 'text/javascript');
     el.setAttribute('id', '_carbonads_js');
     el.setAttribute(
@@ -9,7 +9,7 @@
     );
     el.setAttribute('async', 'async');
 
-    const wrapper = document.getElementById('sidebar-ads');
+    var wrapper = document.getElementById('sidebar-ads');
     wrapper.innerHTML = '';
     wrapper.appendChild(el);
   }
@@ -17,8 +17,13 @@
   setTimeout(function () {
     attachAd();
 
-    window.addEventListener('popstate', function () {
-      attachAd();
-    });
+    var currentPath = window.location.pathname;
+
+    setInterval(function () {
+      if (currentPath !== window.location.pathname) {
+        currentPath = window.location.pathname;
+        attachAd();
+      }
+    }, 1000);
   }, 1000);
 })();

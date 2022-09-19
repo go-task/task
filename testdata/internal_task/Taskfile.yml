@@ -1,0 +1,15 @@
+version: '3'
+
+tasks:
+  task-1:
+    cmds:
+      - task: task-3
+
+  task-2:
+    deps:
+      - task-3
+
+  task-3:
+    internal: true
+    cmds:
+      - echo "Hello, World!"

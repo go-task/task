@@ -1,0 +1,15 @@
+version: '3'
+
+includes:
+  included:
+    taskfile: Taskfile2.yml
+    internal: true
+
+tasks:
+  task-1:
+    cmds:
+      - task: included:default
+
+  task-2:
+    deps:
+      - included:default

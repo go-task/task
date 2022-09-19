@@ -3,6 +3,8 @@
 local context state state_descr line
 typeset -A opt_args
 
+_GO_TASK_COMPLETION_LIST_OPTION="${GO_TASK_COMPLETION_LIST_OPTION:---list-all}"
+
 # Listing commands from Taskfile.yml
 function __task_list() {
     local -a scripts cmd
@@ -27,7 +29,7 @@ function __task_list() {
     (( enabled )) || return 0
 
     scripts=()
-    for item in "${(@)${(f)$("${cmd[@]}" --list-all)}[2,-1]#\* }"; do
+    for item in "${(@)${(f)$("${cmd[@]}" $_GO_TASK_COMPLETION_LIST_OPTION)}[2,-1]#\* }"; do
         task="${item%%:[[:space:]]*}"
         desc="${item##[^[:space:]]##[[:space:]]##}"
         scripts+=( "${task//:/\\:}:$desc" )
