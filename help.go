@@ -42,9 +42,12 @@ func (e *Executor) printTasks(listAll bool) {
 	e.Logger.Outf(logger.Default, "task: Available tasks for this project:")
 
 	// Format in tab-separated columns with a tab stop of 8.
-	w := tabwriter.NewWriter(e.Stdout, 0, 8, 0, '\t', 0)
+	w := tabwriter.NewWriter(e.Stdout, 0, 8, 6, ' ', 0)
 	for _, task := range tasks {
-		fmt.Fprintf(w, "* %s: \t%s\n", task.Task, task.Desc)
+		e.Logger.FOutf(w, logger.Yellow, "* ")
+		e.Logger.FOutf(w, logger.Green, task.Task)
+		e.Logger.FOutf(w, logger.Default, ": \t%s", task.Desc)
+		fmt.Fprint(w, "\n")
 	}
 	w.Flush()
 }
