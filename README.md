@@ -10,6 +10,6 @@
   </p>
 
   <p>
-    See <a href="https://taskfile.dev">taskfile.dev</a> for the documentation.
+    <a href="https://taskfile.dev/installation/">Installation</a> | <a href="https://taskfile.dev/usage/">Documentation</a> | <a href="https://twitter.com/taskfiledev">Twitter</a> | <a href="https://discord.gg/6TY36E39UK">Discord</a>
   </p>
 </div>
