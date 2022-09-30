@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add `npm` as new installation method: `npm i -g @go-task/cli`
+  ([#870](https://github.com/go-task/task/issues/870), [#871](https://github.com/go-task/task/pull/871), [npm package](https://www.npmjs.com/package/@go-task/cli)).
 - Add support to marking tasks and includes as internal, which will hide them
   from `--list` and `--list-all`
   ([#818](https://github.com/go-task/task/pull/818)).
