@@ -93,6 +93,11 @@ tasks:
       - 'echo "" >> {{.FILE}}'
       - 'cat CHANGELOG.md >> {{.FILE}}'
 
+  npm:publish:
+    desc: Publish release to npm
+    cmds:
+      - npm publish --access=public
+
   packages:
     cmds:
       - echo '{{.GO_PACKAGES}}'

@@ -71,7 +71,7 @@ the source code instead of downloading the binary from the
 yay -S go-task
 ```
 
-This installation method is community owned. 
+This installation method is community owned.
 
 ### Fedora
 
@@ -96,6 +96,15 @@ nix-env -iA nixpkgs.go-task
 
 This installation method is community owned. After a new release of Task, it
 may take some time until it's available in [nixpkgs](https://github.com/NixOS/nixpkgs).
+
+### npm
+
+You can also use Node and npm to install Task by installing
+[this package](https://www.npmjs.com/package/@go-task/cli).
+
+```bash
+npm install -g @go-task/cli
+```
 
 ## Get The Binary
 

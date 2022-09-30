@@ -19,15 +19,19 @@ defined in the above GitHub Actions.
 
 # Homebrew
 
-To release a new version on the [Homebrew tap][homebrewtap] edit the
-[Formula/go-task.rb][gotaskrb] file, updating with the new version, download
-URL and sha256.
+Goreleaser will automatically push a new commit to the
+[Formula/go-task.rb][gotaskrb] file in the [Homebrew tap][homebrewtap]
+repository to release the new version.
+
+# npm
+
+To release to npm update the version in the [`package.json`][packagejson] file
+and then run `task npm:publish` to push it.
 
 # Snapcraft
 
-The exception is the publishing of a new version of the
-[snap package][snappackage]. This current require two steps after publishing
-the binaries:
+The [snap package][snappackage] requires to manual steps to release a new
+version:
 
 * Updating the current version on [snapcraft.yaml][snapcraftyaml].
 * Moving both `amd64`, `armhf` and `arm64` new artifacts to the stable channel on
@@ -50,6 +54,7 @@ If you think its Task version is outdated, open an issue to let us know.
 [goreleaser]: https://goreleaser.com/
 [homebrewtap]: https://github.com/go-task/homebrew-tap
 [gotaskrb]: https://github.com/go-task/homebrew-tap/blob/master/Formula/go-task.rb
+[packagejson]: https://github.com/go-task/homebrew-tap/blob/master/package.json#3
 [snappackage]: https://github.com/go-task/snap
 [snapcraftyaml]: https://github.com/go-task/snap/blob/master/snap/snapcraft.yaml#L2
 [snapcraftdashboard]: https://snapcraft.io/task/releases
