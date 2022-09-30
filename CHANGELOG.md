@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v3.16.0 - 2022-09-29
 
 - Add `npm` as new installation method: `npm i -g @go-task/cli`
   ([#870](https://github.com/go-task/task/issues/870), [#871](https://github.com/go-task/task/pull/871), [npm package](https://www.npmjs.com/package/@go-task/cli)).

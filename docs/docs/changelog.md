@@ -5,6 +5,14 @@ sidebar_position: 6
 
 # Changelog
 
+## v3.16.0 - 2022-09-29
+
+- Add `npm` as new installation method: `npm i -g @go-task/cli`
+  ([#870](https://github.com/go-task/task/issues/870), [#871](https://github.com/go-task/task/pull/871), [npm package](https://www.npmjs.com/package/@go-task/cli)).
+- Add support to marking tasks and includes as internal, which will hide them
+  from `--list` and `--list-all`
+  ([#818](https://github.com/go-task/task/pull/818)).
+
 ## v3.15.2 - 2022-09-08
 
 - Fix error when using variable in `env:` introduced in the previous release
