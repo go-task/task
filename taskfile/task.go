@@ -11,6 +11,7 @@ type Task struct {
 	Label                string
 	Desc                 string
 	Summary              string
+	Aliases              []string
 	Sources              []string
 	Generates            []string
 	Status               []string
@@ -56,6 +57,7 @@ func (t *Task) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		Label         string
 		Desc          string
 		Summary       string
+		Aliases       []string
 		Sources       []string
 		Generates     []string
 		Status        []string
@@ -78,6 +80,7 @@ func (t *Task) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	t.Deps = task.Deps
 	t.Label = task.Label
 	t.Desc = task.Desc
+	t.Aliases = task.Aliases
 	t.Summary = task.Summary
 	t.Sources = task.Sources
 	t.Generates = task.Generates

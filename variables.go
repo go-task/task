@@ -22,13 +22,12 @@ func (e *Executor) FastCompiledTask(call taskfile.Call) (*taskfile.Task, error) 
 }
 
 func (e *Executor) compiledTask(call taskfile.Call, evaluateShVars bool) (*taskfile.Task, error) {
-	origTask, ok := e.Taskfile.Tasks[call.Task]
-	if !ok {
-		return nil, &taskNotFoundError{call.Task}
+	origTask, err := e.GetTask(call)
+	if err != nil {
+		return nil, err
 	}
 
 	var vars *taskfile.Vars
-	var err error
 	if evaluateShVars {
 		vars, err = e.Compiler.GetVariables(origTask, call)
 	} else {
@@ -50,6 +49,7 @@ func (e *Executor) compiledTask(call taskfile.Call, evaluateShVars bool) (*taskf
 		Label:                r.Replace(origTask.Label),
 		Desc:                 r.Replace(origTask.Desc),
 		Summary:              r.Replace(origTask.Summary),
+		Aliases:              origTask.Aliases,
 		Sources:              r.ReplaceSlice(origTask.Sources),
 		Generates:            r.ReplaceSlice(origTask.Generates),
 		Dir:                  r.Replace(origTask.Dir),

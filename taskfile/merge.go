@@ -55,6 +55,9 @@ func Merge(t1, t2 *Taskfile, internal bool, namespaces ...string) error {
 				cmd.Task = taskNameWithNamespace(cmd.Task, namespaces...)
 			}
 		}
+		for i, alias := range v.Aliases {
+			v.Aliases[i] = taskNameWithNamespace(alias, namespaces...)
+		}
 	}
 
 	return nil

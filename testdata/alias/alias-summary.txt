@@ -1,0 +1,11 @@
+task: foo
+
+(task does not have description or summary)
+
+aliases:
+ - f
+ - x
+
+commands:
+ - echo "foo"
+ - Task: b

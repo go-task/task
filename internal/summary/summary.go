@@ -28,6 +28,7 @@ func PrintTask(l *logger.Logger, t *taskfile.Task) {
 	printTaskName(l, t)
 	printTaskDescribingText(t, l)
 	printTaskDependencies(l, t)
+	printTaskAliases(l, t)
 	printTaskCommands(l, t)
 }
 
@@ -59,6 +60,18 @@ func printTaskName(l *logger.Logger, t *taskfile.Task) {
 	l.FOutf(l.Stdout, logger.Default, "task: ")
 	l.FOutf(l.Stdout, logger.Green, "%s\n", t.Name())
 	l.Outf(logger.Default, "")
+}
+
+func printTaskAliases(l *logger.Logger, t *taskfile.Task) {
+	if len(t.Aliases) == 0 {
+		return
+	}
+	l.Outf(logger.Default, "")
+	l.Outf(logger.Default, "aliases:")
+	for _, alias := range t.Aliases {
+		l.FOutf(l.Stdout, logger.Default, " - ")
+		l.Outf(logger.Cyan, alias)
+	}
 }
 
 func hasDescription(t *taskfile.Task) bool {

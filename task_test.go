@@ -476,6 +476,58 @@ func TestStatusChecksum(t *testing.T) {
 	assert.Equal(t, `task: Task "build" is up to date`+"\n", buff.String())
 }
 
+func TestAlias(t *testing.T) {
+	const dir = "testdata/alias"
+
+	data, err := os.ReadFile(filepathext.SmartJoin(dir, "alias.txt"))
+	assert.NoError(t, err)
+
+	var buff bytes.Buffer
+	e := task.Executor{
+		Dir:    dir,
+		Stdout: &buff,
+		Stderr: &buff,
+	}
+	assert.NoError(t, e.Setup())
+	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "f"}))
+	assert.Equal(t, string(data), buff.String())
+}
+
+func TestDuplicateAlias(t *testing.T) {
+	const dir = "testdata/alias"
+
+	data, err := os.ReadFile(filepathext.SmartJoin(dir, "alias-duplicate.txt"))
+	assert.NoError(t, err)
+
+	var buff bytes.Buffer
+	e := task.Executor{
+		Dir:    dir,
+		Stdout: &buff,
+		Stderr: &buff,
+	}
+	assert.NoError(t, e.Setup())
+	assert.Error(t, e.Run(context.Background(), taskfile.Call{Task: "x"}))
+	assert.Equal(t, string(data), buff.String())
+}
+
+func TestAliasSummary(t *testing.T) {
+	const dir = "testdata/alias"
+
+	data, err := os.ReadFile(filepathext.SmartJoin(dir, "alias-summary.txt"))
+	assert.NoError(t, err)
+
+	var buff bytes.Buffer
+	e := task.Executor{
+		Dir:     dir,
+		Summary: true,
+		Stdout:  &buff,
+		Stderr:  &buff,
+	}
+	assert.NoError(t, e.Setup())
+	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "f"}))
+	assert.Equal(t, string(data), buff.String())
+}
+
 func TestLabelUpToDate(t *testing.T) {
 	const dir = "testdata/label_uptodate"
 
@@ -989,7 +1041,7 @@ func TestIncludesInternal(t *testing.T) {
 
 			err := e.Run(context.Background(), taskfile.Call{Task: test.task})
 			if test.expectedErr {
-				assert.Error(t, err, test.expectedErr)
+				assert.Error(t, err)
 			} else {
 				assert.NoError(t, err)
 			}
@@ -1029,7 +1081,7 @@ func TestInternalTask(t *testing.T) {
 
 			err := e.Run(context.Background(), taskfile.Call{Task: test.task})
 			if test.expectedErr {
-				assert.Error(t, err, test.expectedErr)
+				assert.Error(t, err)
 			} else {
 				assert.NoError(t, err)
 			}
