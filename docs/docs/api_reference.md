@@ -89,7 +89,6 @@ Some environment variables can be overriden to adjust Task behavior.
 | `dotenv` | `[]string` | | A list of `.env` file paths to be parsed. |
 | `tasks` | [`map[string]Task`](#task) | | The task definitions. |
 
-
 ### Include
 
 | Attribute | Type | Default | Description |
@@ -97,7 +96,8 @@ Some environment variables can be overriden to adjust Task behavior.
 | `taskfile` | `string` | | The path for the Taskfile or directory to be included. If a directory, Task will look for files named `Taskfile.yml` or `Taskfile.yaml` inside that directory. If a relative path, resolved relative to the directory containing the including Taskfile. |
 | `dir` | `string` | The parent Taskfile directory | The working directory of the included tasks when run. |
 | `optional` | `bool` | `false` | If `true`, no errors will be thrown if the specified file does not exist. |
-| `internal` | `bool` | `false` | If `true`, tasks will be omitted from both `--list` and `--list-all`. |
+| `internal` | `bool` | `false` | If `true`, tasks will not be callable from the command line and will be omitted from both `--list` and `--list-all`. |
+| `aliases` | `[]string` | | Alternative names for the namespace of the included Taskfile. |
 
 :::info
 
@@ -116,11 +116,13 @@ includes:
 | - | - | - | - |
 | `desc` | `string` | | A short description of the task. This is listed when calling `task --list`. |
 | `summary` | `string` | | A longer description of the task. This is listed when calling `task --summary [task]`. |
+| `aliases` | `[]string` | | Alternative names for the task. |
+| `label` | `string` | | Overrides the name of the task in the output when a task is run. Supports variables. |
 | `sources` | `[]string` | | List of sources to check before running this task. Relevant for `checksum` and `timestamp` methods. Can be file paths or star globs. |
 | `dir` | `string` | | The current directory which this task should run. |
 | `method` | `string` | `checksum` | Method used by this task. Default to the one declared globally or `checksum`. Available options: `checksum`, `timestamp` and `none` |
 | `silent` | `bool` | `false` | Skips some output for this task. Note that STDOUT and STDERR of the commands will still be redirected. |
-| `internal` | `bool` | `false` | If `true`, omit this task from both `--list` and `--list-all`. |
+| `internal` | `bool` | `false` | If `true`, this task will not be callable from the command line and will be omitted from both `--list` and `--list-all`. |
 | `run` | `string` | The one declared globally in the Taskfile or `always` | Specifies whether the task should run again or not if called more than once. Available options: `always`, `once` and `when_changed`. |
 | `prefix` | `string` | | Allows to override the prefix print before the STDOUT. Only relevant when using the `prefixed` output mode. |
 | `ignore_error` | `bool` | `false` | Continue execution if errors happen while executing the commands. |
