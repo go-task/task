@@ -120,6 +120,23 @@ func (it *IncludedTaskfile) UnmarshalYAML(unmarshal func(interface{}) error) err
 	return nil
 }
 
+// DeepCopy creates a new instance of IncludedTaskfile and copies
+// data by value from the source struct.
+func (it *IncludedTaskfile) DeepCopy() *IncludedTaskfile {
+	if it == nil {
+		return nil
+	}
+	return &IncludedTaskfile{
+		Taskfile:       it.Taskfile,
+		Dir:            it.Dir,
+		Optional:       it.Optional,
+		Internal:       it.Internal,
+		AdvancedImport: it.AdvancedImport,
+		Vars:           it.Vars.DeepCopy(),
+		BaseDir:        it.BaseDir,
+	}
+}
+
 // FullTaskfilePath returns the fully qualified path to the included taskfile
 func (it *IncludedTaskfile) FullTaskfilePath() (string, error) {
 	return it.resolvePath(it.Taskfile)

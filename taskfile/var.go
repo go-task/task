@@ -34,6 +34,18 @@ func (vs *Vars) UnmarshalYAML(node *yaml.Node) error {
 	return nil
 }
 
+// DeepCopy creates a new instance of Vars and copies
+// data by value from the source struct.
+func (vs *Vars) DeepCopy() *Vars {
+	if vs == nil {
+		return nil
+	}
+	return &Vars{
+		Keys:    deepCopySlice(vs.Keys),
+		Mapping: deepCopyMap(vs.Mapping),
+	}
+}
+
 // Merge merges the given Vars into the caller one
 func (vs *Vars) Merge(other *Vars) {
 	_ = other.Range(func(key string, value Var) error {

@@ -39,18 +39,13 @@ func Merge(t1, t2 *Taskfile, includedTaskfile *IncludedTaskfile, namespaces ...s
 		t1.Tasks = make(Tasks)
 	}
 	for k, v := range t2.Tasks {
-		// FIXME(@andreynering): Refactor this block, otherwise we can
-		// have serious side-effects in the future, since we're editing
-		// the original references instead of deep copying them.
-		task := v
+		// We do a deep copy of the task struct here to ensure that no data can
+		// be changed elsewhere once the taskfile is merged.
+		task := v.DeepCopy()
 
 		// Set the task to internal if EITHER the included task or the included
 		// taskfile are marked as internal
 		task.Internal = task.Internal || includedTaskfile.Internal
-
-		// Deep copy the aliases so we can use them later
-		origAliases := make([]string, len(task.Aliases))
-		copy(origAliases, task.Aliases)
 
 		// Add namespaces to dependencies, commands and aliases
 		for _, dep := range task.Deps {
@@ -67,8 +62,8 @@ func Merge(t1, t2 *Taskfile, includedTaskfile *IncludedTaskfile, namespaces ...s
 		// Add namespace aliases
 		if includedTaskfile != nil {
 			for _, namespaceAlias := range includedTaskfile.Aliases {
-				for _, alias := range origAliases {
-					task.Aliases = append(v.Aliases, taskNameWithNamespace(alias, namespaceAlias))
+				for _, alias := range v.Aliases {
+					task.Aliases = append(task.Aliases, taskNameWithNamespace(alias, namespaceAlias))
 				}
 			}
 		}
