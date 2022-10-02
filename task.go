@@ -16,6 +16,7 @@ import (
 	"github.com/go-task/task/v3/internal/templater"
 	"github.com/go-task/task/v3/taskfile"
 
+	"github.com/sajari/fuzzy"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -51,7 +52,8 @@ type Executor struct {
 	Output      output.Output
 	OutputStyle taskfile.Output
 
-	taskvars *taskfile.Vars
+	taskvars   *taskfile.Vars
+	fuzzyModel *fuzzy.Model
 
 	concurrencySemaphore chan struct{}
 	taskCallCount        map[string]*int32
@@ -68,7 +70,12 @@ func (e *Executor) Run(ctx context.Context, calls ...taskfile.Call) error {
 		if !ok {
 			// FIXME: move to the main package
 			e.ListTasksWithDesc()
-			return &taskNotFoundError{taskName: c.Task}
+
+			didYouMean := ""
+			if e.fuzzyModel != nil {
+				didYouMean = e.fuzzyModel.SpellCheck(c.Task)
+			}
+			return &taskNotFoundError{taskName: c.Task, didYouMean: didYouMean}
 		}
 		if t.Internal {
 			e.ListTasksWithDesc()

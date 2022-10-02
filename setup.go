@@ -17,6 +17,8 @@ import (
 	"github.com/go-task/task/v3/internal/output"
 	"github.com/go-task/task/v3/taskfile"
 	"github.com/go-task/task/v3/taskfile/read"
+
+	"github.com/sajari/fuzzy"
 )
 
 func (e *Executor) Setup() error {
@@ -27,6 +29,8 @@ func (e *Executor) Setup() error {
 	if err := e.readTaskfile(); err != nil {
 		return err
 	}
+
+	e.setupFuzzyModel()
 
 	v, err := e.Taskfile.ParsedVersion()
 	if err != nil {
@@ -83,6 +87,21 @@ func (e *Executor) readTaskfile() error {
 		Optional:   false,
 	})
 	return err
+}
+
+func (e *Executor) setupFuzzyModel() {
+	if e.Taskfile != nil {
+		model := fuzzy.NewModel()
+		model.SetThreshold(1) // because we want to build grammar based on every task name
+
+		var words []string
+		for taskName := range e.Taskfile.Tasks {
+			words = append(words, taskName)
+		}
+
+		model.Train(words)
+		e.fuzzyModel = model
+	}
 }
 
 func (e *Executor) setupTempDir() error {

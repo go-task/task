@@ -24,7 +24,11 @@ func (e *Executor) FastCompiledTask(call taskfile.Call) (*taskfile.Task, error) 
 func (e *Executor) compiledTask(call taskfile.Call, evaluateShVars bool) (*taskfile.Task, error) {
 	origTask, ok := e.Taskfile.Tasks[call.Task]
 	if !ok {
-		return nil, &taskNotFoundError{call.Task}
+		didYouMean := ""
+		if e.fuzzyModel != nil {
+			didYouMean = e.fuzzyModel.SpellCheck(call.Task)
+		}
+		return nil, &taskNotFoundError{taskName: call.Task, didYouMean: didYouMean}
 	}
 
 	var vars *taskfile.Vars
