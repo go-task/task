@@ -3,6 +3,7 @@ version: '3'
 includes:
   included:
     taskfile: Taskfile2.yml
+    aliases: [inc, i]
 
 tasks:
   foo:
@@ -15,4 +16,4 @@ tasks:
     aliases: [b, x]
     cmds:
       - echo "bar"
-      - task: included:q
+      - task: inc:q
