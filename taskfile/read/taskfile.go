@@ -79,6 +79,7 @@ func Taskfile(readerNode *ReaderNode) (*taskfile.Taskfile, error) {
 				Dir:            tr.Replace(includedTask.Dir),
 				Optional:       includedTask.Optional,
 				Internal:       includedTask.Internal,
+				Aliases:        includedTask.Aliases,
 				AdvancedImport: includedTask.AdvancedImport,
 				Vars:           includedTask.Vars,
 				BaseDir:        includedTask.BaseDir,
@@ -149,7 +150,7 @@ func Taskfile(readerNode *ReaderNode) (*taskfile.Taskfile, error) {
 			}
 		}
 
-		if err = taskfile.Merge(t, includedTaskfile, includedTask.Internal, namespace); err != nil {
+		if err = taskfile.Merge(t, includedTaskfile, &includedTask, namespace); err != nil {
 			return err
 		}
 		return nil
@@ -165,7 +166,7 @@ func Taskfile(readerNode *ReaderNode) (*taskfile.Taskfile, error) {
 			if err != nil {
 				return nil, err
 			}
-			if err = taskfile.Merge(t, osTaskfile, false); err != nil {
+			if err = taskfile.Merge(t, osTaskfile, nil); err != nil {
 				return nil, err
 			}
 		}

@@ -9,7 +9,7 @@ import (
 const NamespaceSeparator = ":"
 
 // Merge merges the second Taskfile into the first
-func Merge(t1, t2 *Taskfile, internal bool, namespaces ...string) error {
+func Merge(t1, t2 *Taskfile, includedTaskfile *IncludedTaskfile, namespaces ...string) error {
 	if t1.Version != t2.Version {
 		return fmt.Errorf(`task: Taskfiles versions should match. First is "%s" but second is "%s"`, t1.Version, t2.Version)
 	}
@@ -42,22 +42,39 @@ func Merge(t1, t2 *Taskfile, internal bool, namespaces ...string) error {
 		// FIXME(@andreynering): Refactor this block, otherwise we can
 		// have serious side-effects in the future, since we're editing
 		// the original references instead of deep copying them.
+		task := v
 
-		v.Internal = v.Internal || internal
+		// Set the task to internal if EITHER the included task or the included
+		// taskfile are marked as internal
+		task.Internal = task.Internal || includedTaskfile.Internal
 
-		t1.Tasks[taskNameWithNamespace(k, namespaces...)] = v
+		// Deep copy the aliases so we can use them later
+		origAliases := make([]string, len(task.Aliases))
+		copy(origAliases, task.Aliases)
 
-		for _, dep := range v.Deps {
+		// Add namespaces to dependencies, commands and aliases
+		for _, dep := range task.Deps {
 			dep.Task = taskNameWithNamespace(dep.Task, namespaces...)
 		}
-		for _, cmd := range v.Cmds {
+		for _, cmd := range task.Cmds {
 			if cmd != nil && cmd.Task != "" {
 				cmd.Task = taskNameWithNamespace(cmd.Task, namespaces...)
 			}
 		}
-		for i, alias := range v.Aliases {
-			v.Aliases[i] = taskNameWithNamespace(alias, namespaces...)
+		for i, alias := range task.Aliases {
+			task.Aliases[i] = taskNameWithNamespace(alias, namespaces...)
 		}
+		// Add namespace aliases
+		if includedTaskfile != nil {
+			for _, namespaceAlias := range includedTaskfile.Aliases {
+				for _, alias := range origAliases {
+					task.Aliases = append(v.Aliases, taskNameWithNamespace(alias, namespaceAlias))
+				}
+			}
+		}
+
+		// Add the task to the merged taskfile
+		t1.Tasks[taskNameWithNamespace(k, namespaces...)] = task
 	}
 
 	return nil

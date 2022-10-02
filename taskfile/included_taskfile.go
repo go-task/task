@@ -17,6 +17,7 @@ type IncludedTaskfile struct {
 	Dir            string
 	Optional       bool
 	Internal       bool
+	Aliases        []string
 	AdvancedImport bool
 	Vars           *Vars
 	BaseDir        string // The directory from which the including taskfile was loaded; used to resolve relative paths
@@ -103,6 +104,7 @@ func (it *IncludedTaskfile) UnmarshalYAML(unmarshal func(interface{}) error) err
 		Dir      string
 		Optional bool
 		Internal bool
+		Aliases  []string
 		Vars     *Vars
 	}
 	if err := unmarshal(&includedTaskfile); err != nil {
@@ -112,6 +114,7 @@ func (it *IncludedTaskfile) UnmarshalYAML(unmarshal func(interface{}) error) err
 	it.Dir = includedTaskfile.Dir
 	it.Optional = includedTaskfile.Optional
 	it.Internal = includedTaskfile.Internal
+	it.Aliases = includedTaskfile.Aliases
 	it.AdvancedImport = true
 	it.Vars = includedTaskfile.Vars
 	return nil
