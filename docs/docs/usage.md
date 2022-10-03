@@ -465,6 +465,11 @@ tasks:
     method: timestamp
 ```
 
+In situations where you need more flexibility the `status` keyword can be used.
+You can even combine the two. See the documentation for
+[status](#using-programmatic-checks-to-indicate-a-task-is-up-to-date) for an
+example.
+
 :::info
 
 By default, task stores checksums on a local `.task` directory in the project's
@@ -554,6 +559,30 @@ up-to-date.
 
 Also, `task --status [tasks]...` will exit with a non-zero exit code if any of
 the tasks are not up-to-date.
+
+`status` can be combined with the [fingerprinting](#by-fingerprinting-locally-generated-files-and-their-sources)
+to have a task run if either the the source/generated artifacts changes, or the
+programmatic check fails:
+
+```yaml
+version: '3'
+
+tasks:
+  build:prod:
+    desc: Build for production usage.
+    cmds:
+      - composer install
+    # Run this task if source files changes.
+    sources:
+      - composer.json
+      - composer.lock
+    generates:
+      - ./vendor/composer/installed.json
+      - ./vendor/autoload.php
+    # But also run the task if the last build was not a production build.
+    status:
+      - grep -q '"dev": false' ./vendor/composer/installed.json
+```
 
 ### Using programmatic checks to cancel the execution of a task and its dependencies
 
