@@ -13,13 +13,13 @@ import (
 
 // IncludedTaskfile represents information about included taskfiles
 type IncludedTaskfile struct {
-	Taskfile       string
-	Dir            string
-	Optional       bool
-	Internal       bool
-	AdvancedImport bool
-	Vars           *Vars
-	BaseDir        string // The directory from which the including taskfile was loaded; used to resolve relative paths
+	Taskfile       string `json:"taskfile"`
+	Dir            string `json:"dir"`
+	Optional       bool   `json:"optional"`
+	Internal       bool   `json:"internal"`
+	AdvancedImport bool   `json:"advanced_import"`
+	Vars           *Vars  `json:"vars"`
+	BaseDir        string `json:"base_dir"` // The directory from which the including taskfile was loaded; used to resolve relative paths
 }
 
 // IncludedTaskfiles represents information about included tasksfiles

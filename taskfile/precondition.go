@@ -12,8 +12,8 @@ var (
 
 // Precondition represents a precondition necessary for a task to run
 type Precondition struct {
-	Sh  string
-	Msg string
+	Sh  string `json:"sh"`
+	Msg string `json:"msg"`
 }
 
 // UnmarshalYAML implements yaml.Unmarshaler interface.

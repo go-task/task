@@ -1,6 +1,7 @@
 package task
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
@@ -16,11 +17,15 @@ import (
 type ListOptions struct {
 	ListWithDescriptionsOnly bool
 	ListAll                  bool
+	AsJson                   bool
 }
 
 func (o ListOptions) Validate() error {
 	if o.ListWithDescriptionsOnly && o.ListAll {
 		return fmt.Errorf("cannot use --list and --list-all at the same time")
+	}
+	if o.AsJson && !(o.ListWithDescriptionsOnly || o.ListAll) {
+		return fmt.Errorf("cannot use --json without --list or --list-all")
 	}
 	return nil
 }
@@ -46,6 +51,13 @@ func (e *Executor) printTasks(o ListOptions) {
 	var w io.Writer = os.Stdout
 	if e.Stdout != nil {
 		w = e.Stdout
+	}
+
+	if o.AsJson {
+		if err := json.NewEncoder(w).Encode(tasks); err != nil {
+			log.Fatal(err)
+		}
+		return
 	}
 
 	if len(tasks) == 0 {
@@ -117,7 +129,13 @@ func (e *Executor) ListTaskNames(o ListOptions) {
 	}
 	// sort and print all task names
 	sort.Strings(s)
-	for _, t := range s {
-		fmt.Fprintln(w, t)
+	if o.AsJson {
+		if err := json.NewEncoder(w).Encode(s); err != nil {
+			log.Fatal(err)
+		}
+	} else {
+		for _, t := range s {
+			fmt.Fprintln(w, t)
+		}
 	}
 }

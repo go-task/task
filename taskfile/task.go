@@ -5,29 +5,29 @@ type Tasks map[string]*Task
 
 // Task represents a task
 type Task struct {
-	Task                 string
-	Cmds                 []*Cmd
-	Deps                 []*Dep
-	Label                string
-	Desc                 string
-	Summary              string
-	Sources              []string
-	Generates            []string
-	Status               []string
-	Preconditions        []*Precondition
-	Dir                  string
-	Vars                 *Vars
-	Env                  *Vars
-	Silent               bool
-	Interactive          bool
-	Internal             bool
-	Method               string
-	Prefix               string
-	IgnoreError          bool
-	Run                  string
-	IncludeVars          *Vars
-	IncludedTaskfileVars *Vars
-	IncludedTaskfile     *IncludedTaskfile
+	Task                 string            `json:"task"`
+	Cmds                 []*Cmd            `json:"cmds"`
+	Deps                 []*Dep            `json:"deps"`
+	Label                string            `json:"label"`
+	Desc                 string            `json:"desc"`
+	Summary              string            `json:"summary"`
+	Sources              []string          `json:"sources"`
+	Generates            []string          `json:"generates"`
+	Status               []string          `json:"status"`
+	Preconditions        []*Precondition   `json:"preconditions"`
+	Dir                  string            `json:"dir"`
+	Vars                 *Vars             `json:"vars"`
+	Env                  *Vars             `json:"env"`
+	Silent               bool              `json:"silent"`
+	Interactive          bool              `json:"interactive"`
+	Internal             bool              `json:"internal"`
+	Method               string            `json:"method"`
+	Prefix               string            `json:"prefix"`
+	IgnoreError          bool              `json:"ignore_error"`
+	Run                  string            `json:"run"`
+	IncludeVars          *Vars             `json:"include_vars"`
+	IncludedTaskfileVars *Vars             `json:"included_taskfile_vars"`
+	IncludedTaskfile     *IncludedTaskfile `json:"included_taskfile"`
 }
 
 func (t *Task) Name() string {

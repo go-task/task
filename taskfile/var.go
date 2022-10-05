@@ -8,8 +8,8 @@ import (
 
 // Vars is a string[string] variables map.
 type Vars struct {
-	Keys    []string
-	Mapping map[string]Var
+	Keys    []string       `json:"keys"`
+	Mapping map[string]Var `json:"mapping"`
 }
 
 // UnmarshalYAML implements the yaml.Unmarshaler interface.
@@ -97,10 +97,10 @@ func (vs *Vars) Len() int {
 
 // Var represents either a static or dynamic variable.
 type Var struct {
-	Static string
-	Live   interface{}
-	Sh     string
-	Dir    string
+	Static string      `json:"static"`
+	Live   interface{} `json:"live"`
+	Sh     string      `json:"sh"`
+	Dir    string      `json:"dir"`
 }
 
 // UnmarshalYAML implements yaml.Unmarshaler interface.

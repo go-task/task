@@ -79,6 +79,7 @@ func main() {
 	pflag.BoolVarP(&init, "init", "i", false, "creates a new Taskfile.yaml in the current folder")
 	pflag.BoolVarP(&listOptions.ListWithDescriptionsOnly, "list", "l", false, "lists tasks with description of current Taskfile")
 	pflag.BoolVarP(&listOptions.ListAll, "list-all", "a", false, "lists tasks with or without a description")
+	pflag.BoolVarP(&listOptions.AsJson, "json", "j", false, "lists tasks as JSON")
 	pflag.BoolVar(&status, "status", false, "exits with non-zero exit code if any of the given tasks is not up-to-date")
 	pflag.BoolVarP(&force, "force", "f", false, "forces execution even when the task is up-to-date")
 	pflag.BoolVarP(&watch, "watch", "w", false, "enables watch of the given task")
