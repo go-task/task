@@ -24,8 +24,8 @@ type IncludedTaskfile struct {
 
 // IncludedTaskfiles represents information about included tasksfiles
 type IncludedTaskfiles struct {
-	Keys    []string
-	Mapping map[string]IncludedTaskfile
+	Keys    []string                    `json:"keys"`
+	Mapping map[string]IncludedTaskfile `json:"mapping"`
 }
 
 // UnmarshalYAML implements the yaml.Unmarshaler interface.

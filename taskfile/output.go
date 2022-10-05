@@ -7,9 +7,9 @@ import (
 // Output of the Task output
 type Output struct {
 	// Name of the Output.
-	Name string `yaml:"-"`
+	Name string `yaml:"-" json:"name"`
 	// Group specific style
-	Group OutputGroup
+	Group OutputGroup `json:"group"`
 }
 
 // IsSet returns true if and only if a custom output style is set.

@@ -7,17 +7,17 @@ import (
 
 // Taskfile represents a Taskfile.yml
 type Taskfile struct {
-	Version    string
-	Expansions int
-	Output     Output
-	Method     string
-	Includes   *IncludedTaskfiles
-	Vars       *Vars
-	Env        *Vars
-	Tasks      Tasks
-	Silent     bool
-	Dotenv     []string
-	Run        string
+	Version    string             `json:"version"`
+	Expansions int                `json:"expansions"`
+	Output     Output             `json:"output"`
+	Method     string             `json:"method"`
+	Includes   *IncludedTaskfiles `json:"includes"`
+	Vars       *Vars              `json:"vars"`
+	Env        *Vars              `json:"env"`
+	Tasks      Tasks              `json:"tasks"`
+	Silent     bool               `json:"silent"`
+	Dotenv     []string           `json:"dotenv"`
+	Run        string             `json:"run"`
 }
 
 // UnmarshalYAML implements yaml.Unmarshaler interface
