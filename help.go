@@ -13,26 +13,43 @@ import (
 	"github.com/go-task/task/v3/taskfile"
 )
 
-// ListTasksWithDesc reports tasks that have a description spec.
-func (e *Executor) ListTasksWithDesc() {
-	e.printTasks(false)
+type ListOptions struct {
+	ListWithDescriptionsOnly bool
+	ListAll                  bool
 }
 
-// ListAllTasks reports all tasks, with or without a description spec.
-func (e *Executor) ListAllTasks() {
-	e.printTasks(true)
+func (o ListOptions) Validate() error {
+	if o.ListWithDescriptionsOnly && o.ListAll {
+		return fmt.Errorf("cannot use --list and --list-all at the same time")
+	}
+	return nil
 }
 
-func (e *Executor) printTasks(listAll bool) {
+func (o ListOptions) ShowList() bool {
+	return o.ListWithDescriptionsOnly || o.ListAll
+}
+
+// ListTasks reports tasks.
+func (e *Executor) ListTasks(o ListOptions) {
+	e.printTasks(o)
+}
+
+func (e *Executor) printTasks(o ListOptions) {
 	var tasks []*taskfile.Task
-	if listAll {
+	if o.ListAll {
 		tasks = e.allTaskNames()
 	} else {
 		tasks = e.tasksWithDesc()
 	}
 
+	// use stdout if no output defined
+	var w io.Writer = os.Stdout
+	if e.Stdout != nil {
+		w = e.Stdout
+	}
+
 	if len(tasks) == 0 {
-		if listAll {
+		if o.ListAll {
 			e.Logger.Outf(logger.Yellow, "task: No tasks available")
 		} else {
 			e.Logger.Outf(logger.Yellow, "task: No tasks with description available. Try --list-all to list all tasks")
@@ -42,11 +59,11 @@ func (e *Executor) printTasks(listAll bool) {
 	e.Logger.Outf(logger.Default, "task: Available tasks for this project:")
 
 	// Format in tab-separated columns with a tab stop of 8.
-	w := tabwriter.NewWriter(e.Stdout, 0, 8, 0, '\t', 0)
+	tw := tabwriter.NewWriter(w, 0, 8, 0, '\t', 0)
 	for _, task := range tasks {
-		fmt.Fprintf(w, "* %s: \t%s\n", task.Name(), task.Desc)
+		fmt.Fprintf(tw, "* %s: \t%s\n", task.Name(), task.Desc)
 	}
-	w.Flush()
+	tw.Flush()
 }
 
 func (e *Executor) allTaskNames() (tasks []*taskfile.Task) {
@@ -75,10 +92,10 @@ func (e *Executor) tasksWithDesc() (tasks []*taskfile.Task) {
 	return
 }
 
-// PrintTaskNames prints only the task names in a Taskfile.
+// ListTaskNames prints only the task names in a Taskfile.
 // Only tasks with a non-empty description are printed if allTasks is false.
 // Otherwise, all task names are printed.
-func (e *Executor) ListTaskNames(allTasks bool) {
+func (e *Executor) ListTaskNames(o ListOptions) {
 	// if called from cmd/task.go, e.Taskfile has not yet been parsed
 	if e.Taskfile == nil {
 		if err := e.readTaskfile(); err != nil {
@@ -94,7 +111,7 @@ func (e *Executor) ListTaskNames(allTasks bool) {
 	// create a string slice from all map values (*taskfile.Task)
 	s := make([]string, 0, len(e.Taskfile.Tasks))
 	for _, t := range e.Taskfile.Tasks {
-		if (allTasks || t.Desc != "") && !t.Internal {
+		if (o.ListAll || t.Desc != "") && !t.Internal {
 			s = append(s, strings.TrimRight(t.Task, ":"))
 		}
 	}

@@ -67,11 +67,11 @@ func (e *Executor) Run(ctx context.Context, calls ...taskfile.Call) error {
 		t, ok := e.Taskfile.Tasks[c.Task]
 		if !ok {
 			// FIXME: move to the main package
-			e.ListTasksWithDesc()
+			e.ListTasks(ListOptions{ListWithDescriptionsOnly: true})
 			return &taskNotFoundError{taskName: c.Task}
 		}
 		if t.Internal {
-			e.ListTasksWithDesc()
+			e.ListTasks(ListOptions{ListWithDescriptionsOnly: true})
 			return &taskInternalError{taskName: c.Task}
 		}
 	}

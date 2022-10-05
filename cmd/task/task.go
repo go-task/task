@@ -57,8 +57,7 @@ func main() {
 		versionFlag bool
 		helpFlag    bool
 		init        bool
-		list        bool
-		listAll     bool
+		listOptions task.ListOptions
 		status      bool
 		force       bool
 		watch       bool
@@ -78,8 +77,8 @@ func main() {
 	pflag.BoolVar(&versionFlag, "version", false, "show Task version")
 	pflag.BoolVarP(&helpFlag, "help", "h", false, "shows Task usage")
 	pflag.BoolVarP(&init, "init", "i", false, "creates a new Taskfile.yaml in the current folder")
-	pflag.BoolVarP(&list, "list", "l", false, "lists tasks with description of current Taskfile")
-	pflag.BoolVarP(&listAll, "list-all", "a", false, "lists tasks with or without a description")
+	pflag.BoolVarP(&listOptions.ListWithDescriptionsOnly, "list", "l", false, "lists tasks with description of current Taskfile")
+	pflag.BoolVarP(&listOptions.ListAll, "list-all", "a", false, "lists tasks with or without a description")
 	pflag.BoolVar(&status, "status", false, "exits with non-zero exit code if any of the given tasks is not up-to-date")
 	pflag.BoolVarP(&force, "force", "f", false, "forces execution even when the task is up-to-date")
 	pflag.BoolVarP(&watch, "watch", "w", false, "enables watch of the given task")
@@ -159,8 +158,12 @@ func main() {
 		OutputStyle: output,
 	}
 
-	if (list || listAll) && silent {
-		e.ListTaskNames(listAll)
+	if err := listOptions.Validate(); err != nil {
+		log.Fatal(err)
+	}
+
+	if (listOptions.ShowList()) && silent {
+		e.ListTaskNames(listOptions)
 		return
 	}
 
@@ -173,13 +176,8 @@ func main() {
 		return
 	}
 
-	if list {
-		e.ListTasksWithDesc()
-		return
-	}
-
-	if listAll {
-		e.ListAllTasks()
+	if listOptions.ShowList() {
+		e.ListTasks(listOptions)
 		return
 	}
 
