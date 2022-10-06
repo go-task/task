@@ -28,6 +28,7 @@ type Task struct {
 	IncludeVars          *Vars
 	IncludedTaskfileVars *Vars
 	IncludedTaskfile     *IncludedTaskfile
+	ExportVars           bool
 }
 
 func (t *Task) Name() string {
@@ -70,6 +71,7 @@ func (t *Task) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		Prefix        string
 		IgnoreError   bool `yaml:"ignore_error"`
 		Run           string
+		ExportVars		bool `yaml:"exportVars"`
 	}
 	if err := unmarshal(&task); err != nil {
 		return err
@@ -93,5 +95,6 @@ func (t *Task) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	t.Prefix = task.Prefix
 	t.IgnoreError = task.IgnoreError
 	t.Run = task.Run
+	t.ExportVars = task.ExportVars
 	return nil
 }
