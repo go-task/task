@@ -66,21 +66,23 @@ func (e *Executor) Run(ctx context.Context, calls ...taskfile.Call) error {
 	for _, c := range calls {
 		t, ok := e.Taskfile.Tasks[c.Task]
 
-		if e.Taskfile.ExportVars && e.Taskfile.Vars != nil {
-			for k, v := range e.Taskfile.Vars.Mapping {
-				if t.Env == nil {
-					t.Env = &taskfile.Vars{}
+		if t != nil {
+			if e.Taskfile.ExportVars && e.Taskfile.Vars != nil {
+				for k, v := range e.Taskfile.Vars.Mapping {
+					if t.Env == nil {
+						t.Env = &taskfile.Vars{}
+					}
+					t.Env.Set(k, v)
 				}
-				t.Env.Set(k, v)
 			}
-		}
 
-		if (e.Taskfile.ExportVars || t.ExportVars) && t.Vars != nil {
-			for k, v := range t.Vars.Mapping {
-				if t.Env == nil {
-					t.Env = &taskfile.Vars{}
+			if (e.Taskfile.ExportVars || t.ExportVars) && t.Vars != nil {
+				for k, v := range t.Vars.Mapping {
+					if t.Env == nil {
+						t.Env = &taskfile.Vars{}
+					}
+					t.Env.Set(k, v)
 				}
-				t.Env.Set(k, v)
 			}
 		}
 
