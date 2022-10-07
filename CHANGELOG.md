@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Add colored output to `--list`, `--list-all` and `--summary` flags ([#845](https://github.com/go-task/task/pull/845), [#874](https://github.com/go-task/task/pull/874)).
 - Fix unexpected behavior where `label:` was being shown instead of the task
   name on `--list`
   ([#603](https://github.com/go-task/task/issues/603), [#877](https://github.com/go-task/task/pull/877)).

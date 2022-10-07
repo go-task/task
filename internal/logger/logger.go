@@ -53,6 +53,11 @@ type Logger struct {
 
 // Outf prints stuff to STDOUT.
 func (l *Logger) Outf(color Color, s string, args ...interface{}) {
+	l.FOutf(l.Stdout, color, s+"\n", args...)
+}
+
+// FOutf prints stuff to the given writer.
+func (l *Logger) FOutf(w io.Writer, color Color, s string, args ...interface{}) {
 	if len(args) == 0 {
 		s, args = "%s", []interface{}{s}
 	}
@@ -60,7 +65,7 @@ func (l *Logger) Outf(color Color, s string, args ...interface{}) {
 		color = Default
 	}
 	print := color()
-	print(l.Stdout, s+"\n", args...)
+	print(w, s, args...)
 }
 
 // VerboseOutf prints stuff to STDOUT if verbose mode is enabled.
