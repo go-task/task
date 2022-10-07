@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Fix unexpected behavior where `label:` was being shown instead of the task
+  name on `--list`
+  ([#603](https://github.com/go-task/task/issues/603), [#877](https://github.com/go-task/task/pull/877)).
+
 ## v3.16.0 - 2022-09-29
 
 - Add `npm` as new installation method: `npm i -g @go-task/cli`
