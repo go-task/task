@@ -546,7 +546,7 @@ func TestLabelInSummary(t *testing.T) {
 	assert.Contains(t, buff.String(), "foobar")
 }
 
-func TestLabelInList(t *testing.T) {
+func TestNoLabelInList(t *testing.T) {
 	const dir = "testdata/label_list"
 
 	var buff bytes.Buffer
@@ -557,7 +557,7 @@ func TestLabelInList(t *testing.T) {
 	}
 	assert.NoError(t, e.Setup())
 	e.ListTasksWithDesc()
-	assert.Contains(t, buff.String(), "foobar")
+	assert.Contains(t, buff.String(), "foo")
 }
 
 // task -al case 1: listAll list all tasks
