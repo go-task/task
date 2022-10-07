@@ -1,6 +1,6 @@
 ---
 slug: /taskfile-versions/
-sidebar_position: 8
+sidebar_position: 9
 ---
 
 # Taskfile Versions
