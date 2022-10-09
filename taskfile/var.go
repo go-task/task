@@ -1,7 +1,7 @@
 package taskfile
 
 import (
-	"errors"
+	"fmt"
 
 	"golang.org/x/exp/slices"
 	"gopkg.in/yaml.v3"
@@ -13,26 +13,27 @@ type Vars struct {
 	Mapping map[string]Var
 }
 
-// UnmarshalYAML implements the yaml.Unmarshaler interface.
 func (vs *Vars) UnmarshalYAML(node *yaml.Node) error {
-	if node.Kind != yaml.MappingNode {
-		return errors.New("task: vars is not a map")
-	}
+	switch node.Kind {
 
-	// NOTE(@andreynering): on this style of custom unmarsheling,
-	// even number contains the keys, while odd numbers contains
-	// the values.
-	for i := 0; i < len(node.Content); i += 2 {
-		keyNode := node.Content[i]
-		valueNode := node.Content[i+1]
+	case yaml.MappingNode:
+		// NOTE(@andreynering): on this style of custom unmarshalling,
+		// even number contains the keys, while odd numbers contains
+		// the values.
+		for i := 0; i < len(node.Content); i += 2 {
+			keyNode := node.Content[i]
+			valueNode := node.Content[i+1]
 
-		var v Var
-		if err := valueNode.Decode(&v); err != nil {
-			return err
+			var v Var
+			if err := valueNode.Decode(&v); err != nil {
+				return err
+			}
+			vs.Set(keyNode.Value, v)
 		}
-		vs.Set(keyNode.Value, v)
+		return nil
 	}
-	return nil
+
+	return fmt.Errorf("yaml: line %d: cannot unmarshal %s into variables", node.Line, node.ShortTag())
 }
 
 // DeepCopy creates a new instance of Vars and copies
@@ -116,20 +117,27 @@ type Var struct {
 	Dir    string
 }
 
-// UnmarshalYAML implements yaml.Unmarshaler interface.
-func (v *Var) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	var str string
-	if err := unmarshal(&str); err == nil {
+func (v *Var) UnmarshalYAML(node *yaml.Node) error {
+	switch node.Kind {
+
+	case yaml.ScalarNode:
+		var str string
+		if err := node.Decode(&str); err != nil {
+			return err
+		}
 		v.Static = str
+		return nil
+
+	case yaml.MappingNode:
+		var sh struct {
+			Sh string
+		}
+		if err := node.Decode(&sh); err != nil {
+			return err
+		}
+		v.Sh = sh.Sh
 		return nil
 	}
 
-	var sh struct {
-		Sh string
-	}
-	if err := unmarshal(&sh); err != nil {
-		return err
-	}
-	v.Sh = sh.Sh
-	return nil
+	return fmt.Errorf("yaml: line %d: cannot unmarshal %s into variable", node.Line, node.ShortTag())
 }

@@ -3,6 +3,8 @@ package taskfile
 import (
 	"errors"
 	"fmt"
+
+	"gopkg.in/yaml.v3"
 )
 
 var (
@@ -17,29 +19,33 @@ type Precondition struct {
 }
 
 // UnmarshalYAML implements yaml.Unmarshaler interface.
-func (p *Precondition) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	var cmd string
+func (p *Precondition) UnmarshalYAML(node *yaml.Node) error {
+	switch node.Kind {
 
-	if err := unmarshal(&cmd); err == nil {
+	case yaml.ScalarNode:
+		var cmd string
+		if err := node.Decode(&cmd); err != nil {
+			return err
+		}
 		p.Sh = cmd
 		p.Msg = fmt.Sprintf("`%s` failed", cmd)
 		return nil
+
+	case yaml.MappingNode:
+		var sh struct {
+			Sh  string
+			Msg string
+		}
+		if err := node.Decode(&sh); err != nil {
+			return err
+		}
+		p.Sh = sh.Sh
+		p.Msg = sh.Msg
+		if p.Msg == "" {
+			p.Msg = fmt.Sprintf("%s failed", sh.Sh)
+		}
+		return nil
 	}
 
-	var sh struct {
-		Sh  string
-		Msg string
-	}
-
-	if err := unmarshal(&sh); err != nil {
-		return err
-	}
-
-	p.Sh = sh.Sh
-	p.Msg = sh.Msg
-	if p.Msg == "" {
-		p.Msg = fmt.Sprintf("%s failed", sh.Sh)
-	}
-
-	return nil
+	return fmt.Errorf("yaml: line %d: cannot unmarshal %s into precondition", node.Line, node.ShortTag())
 }

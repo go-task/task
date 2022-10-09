@@ -1,5 +1,11 @@
 package taskfile
 
+import (
+	"fmt"
+
+	"gopkg.in/yaml.v3"
+)
+
 // Tasks represents a group of tasks
 type Tasks map[string]*Task
 
@@ -39,67 +45,80 @@ func (t *Task) Name() string {
 	return t.Task
 }
 
-func (t *Task) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	var cmd Cmd
-	if err := unmarshal(&cmd); err == nil && cmd.Cmd != "" {
+func (t *Task) UnmarshalYAML(node *yaml.Node) error {
+	switch node.Kind {
+
+	// Shortcut syntax for a task with a single command
+	case yaml.ScalarNode:
+		var cmd Cmd
+		if err := node.Decode(&cmd); err != nil {
+			return err
+		}
 		t.Cmds = append(t.Cmds, &cmd)
 		return nil
-	}
 
-	var cmds []*Cmd
-	if err := unmarshal(&cmds); err == nil && len(cmds) > 0 {
+	// Shortcut syntax for a simple task with a list of commands
+	case yaml.SequenceNode:
+		var cmds []*Cmd
+		if err := node.Decode(&cmds); err != nil {
+			return err
+		}
 		t.Cmds = cmds
+		return nil
+
+	// Full task object
+	case yaml.MappingNode:
+		var task struct {
+			Cmds          []*Cmd
+			Deps          []*Dep
+			Label         string
+			Desc          string
+			Summary       string
+			Aliases       []string
+			Sources       []string
+			Generates     []string
+			Status        []string
+			Preconditions []*Precondition
+			Dir           string
+			Vars          *Vars
+			Env           *Vars
+			Dotenv        []string
+			Silent        bool
+			Interactive   bool
+			Internal      bool
+			Method        string
+			Prefix        string
+			IgnoreError   bool `yaml:"ignore_error"`
+			Run           string
+		}
+		if err := node.Decode(&task); err != nil {
+			return err
+		}
+		t.Cmds = task.Cmds
+		t.Deps = task.Deps
+		t.Label = task.Label
+		t.Desc = task.Desc
+		t.Summary = task.Summary
+		t.Aliases = task.Aliases
+		t.Sources = task.Sources
+		t.Generates = task.Generates
+		t.Status = task.Status
+		t.Preconditions = task.Preconditions
+		t.Dir = task.Dir
+		t.Vars = task.Vars
+		t.Env = task.Env
+		t.Dotenv = task.Dotenv
+		t.Silent = task.Silent
+		t.Interactive = task.Interactive
+		t.Internal = task.Internal
+		t.Method = task.Method
+		t.Prefix = task.Prefix
+		t.IgnoreError = task.IgnoreError
+		t.Run = task.Run
 		return nil
 	}
 
-	var task struct {
-		Cmds          []*Cmd
-		Deps          []*Dep
-		Label         string
-		Desc          string
-		Summary       string
-		Aliases       []string
-		Sources       []string
-		Generates     []string
-		Status        []string
-		Preconditions []*Precondition
-		Dir           string
-		Vars          *Vars
-		Env           *Vars
-		Dotenv        []string
-		Silent        bool
-		Interactive   bool
-		Internal      bool
-		Method        string
-		Prefix        string
-		IgnoreError   bool `yaml:"ignore_error"`
-		Run           string
-	}
-	if err := unmarshal(&task); err != nil {
-		return err
-	}
-	t.Cmds = task.Cmds
-	t.Deps = task.Deps
-	t.Label = task.Label
-	t.Desc = task.Desc
-	t.Aliases = task.Aliases
-	t.Summary = task.Summary
-	t.Sources = task.Sources
-	t.Generates = task.Generates
-	t.Status = task.Status
-	t.Preconditions = task.Preconditions
-	t.Dir = task.Dir
-	t.Vars = task.Vars
-	t.Env = task.Env
-	t.Dotenv = task.Dotenv
-	t.Silent = task.Silent
-	t.Interactive = task.Interactive
-	t.Internal = task.Internal
-	t.Method = task.Method
-	t.Prefix = task.Prefix
-	t.IgnoreError = task.IgnoreError
-	t.Run = task.Run
-	return nil
+	return fmt.Errorf("yaml: line %d: cannot unmarshal %s into task", node.Line, node.ShortTag())
 }
 
 // DeepCopy creates a new instance of Task and copies
