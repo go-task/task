@@ -1,0 +1,40 @@
+version: "3"
+
+tasks:
+
+  pass:
+    cmd: exit 0
+
+  fail:
+    cmds:
+      - echo Failing task
+      - exit 100
+
+  ignore-error-task-without-template:
+    cmds:
+      - task: fail
+      - echo After ignore_error
+    ignore_error: true          # FIXED
+
+  ignore-error-cmd-without-template:
+    cmds:
+      - cmd: exit 101
+      - echo After ignore_error
+    ignore_error: true          # FIXED
+
+
+  ignore-error-task-with-template:
+    cmds:
+      - cmd: echo IGNORE="$IGNORE"
+      - cmd: echo '{{if .IGNORE}}true{{else}}false{{end}}'
+      - task: fail
+      - echo After ignore_error
+    # ignore_error: '{{if .IGNORE}}true{{else}}false{{end}}'
+
+  ignore-error-cmd-with-template:
+    cmds:
+      - cmd: echo IGNORE="$IGNORE"
+      - cmd: echo '{{if .IGNORE}}true{{else}}false{{end}}'
+      - cmd: exit 102
+      - echo After ignore_error
+    # ignore_error: '{{if .IGNORE}}true{{else}}false{{end}}'

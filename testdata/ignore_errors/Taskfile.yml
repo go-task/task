@@ -10,11 +10,36 @@ tasks:
     cmds:
       - exit 1
 
+  inner-task:
+    cmds:
+      - exit 1
+
+  inner-task-should-pass:
+    cmds:
+      - task: inner-task
+    ignore_error: true
+
+  inner-task-should-fail:
+    cmds:
+      - task: inner-task
+
   cmd-should-pass:
     cmds:
       - cmd: exit 1
-        ignore_error: true
+    ignore_error: true
 
   cmd-should-fail:
     cmds:
       - cmd: exit 1
+
+  dep-task-should-pass:
+    deps: [inner-task]
+    cmds:
+      - echo 'test ignore_error'
+    ignore_error: true
+
+  dep-task-should-fail:
+    deps: [inner-task]
+    cmds:
+      - echo 'test ignore_error'
+

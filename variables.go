@@ -60,7 +60,7 @@ func (e *Executor) compiledTask(call taskfile.Call, evaluateShVars bool) (*taskf
 		Internal:             origTask.Internal,
 		Method:               r.Replace(origTask.Method),
 		Prefix:               r.Replace(origTask.Prefix),
-		IgnoreError:          origTask.IgnoreError,
+		IgnoreError:          origTask.IgnoreError || call.IgnoreError,
 		Run:                  r.Replace(origTask.Run),
 		IncludeVars:          origTask.IncludeVars,
 		IncludedTaskfileVars: origTask.IncludedTaskfileVars,
@@ -104,7 +104,7 @@ func (e *Executor) compiledTask(call taskfile.Call, evaluateShVars bool) (*taskf
 				Silent:      cmd.Silent,
 				Cmd:         r.Replace(cmd.Cmd),
 				Vars:        r.ReplaceVars(cmd.Vars),
-				IgnoreError: cmd.IgnoreError,
+				IgnoreError: cmd.IgnoreError || call.IgnoreError,
 				Defer:       cmd.Defer,
 			})
 		}

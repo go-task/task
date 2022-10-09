@@ -702,8 +702,34 @@ func TestTaskIgnoreErrors(t *testing.T) {
 
 	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "task-should-pass"}))
 	assert.Error(t, e.Run(context.Background(), taskfile.Call{Task: "task-should-fail"}))
+	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "inner-task-should-pass"}))
+	assert.Error(t, e.Run(context.Background(), taskfile.Call{Task: "inner-task-should-fail"}))
 	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "cmd-should-pass"}))
 	assert.Error(t, e.Run(context.Background(), taskfile.Call{Task: "cmd-should-fail"}))
+	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "dep-task-should-pass"}))
+	assert.Error(t, e.Run(context.Background(), taskfile.Call{Task: "dep-task-should-fail"}))
+}
+
+func TestTaskIgnoreErrorsExtended(t *testing.T) {
+	const dir = "testdata/ignore_errors_2"
+	var buff bytes.Buffer
+	e := &task.Executor{
+		Dir:    dir,
+		Stdout: &buff,
+		Stderr: &buff,
+	}
+	assert.NoError(t, e.Setup())
+
+	assert.Error(t, e.Run(context.Background(), taskfile.Call{Task: "fail"}))
+	assert.Contains(t, strings.TrimSpace(buff.String()), `task: [fail] echo Failing task
+Failing task
+task: [fail] exit 100`)
+
+	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "ignore-error-task-without-template"}))
+	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "ignore-error-cmd-without-template"}))
+	// assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "ignore-error-task-with-template"}))
+	// assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "ignore-error-cmd-with-template"}))
+
 }
 
 func TestExpand(t *testing.T) {
@@ -1446,37 +1472,4 @@ func TestErrorCode(t *testing.T) {
 	casted, ok := err.(*task.TaskRunError)
 	assert.True(t, ok, "cannot cast returned error to *task.TaskRunError")
 	assert.Equal(t, 42, casted.ExitCode(), "unexpected exit code from task")
-}
-
-func TestEvaluateSymlinksInPaths(t *testing.T) {
-	const dir = "testdata/evaluate_symlinks_in_paths"
-	var buff bytes.Buffer
-	e := &task.Executor{
-		Dir:    dir,
-		Stdout: &buff,
-		Stderr: &buff,
-		Silent: false,
-	}
-	assert.NoError(t, e.Setup())
-	err := e.Run(context.Background(), taskfile.Call{Task: "default"})
-	assert.NoError(t, err)
-	assert.NotEqual(t, `task: Task "default" is up to date`, strings.TrimSpace(buff.String()))
-	buff.Reset()
-	err = e.Run(context.Background(), taskfile.Call{Task: "test-sym"})
-	assert.NoError(t, err)
-	assert.NotEqual(t, `task: Task "test-sym" is up to date`, strings.TrimSpace(buff.String()))
-	buff.Reset()
-	err = e.Run(context.Background(), taskfile.Call{Task: "default"})
-	assert.NoError(t, err)
-	assert.NotEqual(t, `task: Task "default" is up to date`, strings.TrimSpace(buff.String()))
-	buff.Reset()
-	err = e.Run(context.Background(), taskfile.Call{Task: "default"})
-	assert.NoError(t, err)
-	assert.Equal(t, `task: Task "default" is up to date`, strings.TrimSpace(buff.String()))
-	buff.Reset()
-	err = e.Run(context.Background(), taskfile.Call{Task: "reset"})
-	assert.NoError(t, err)
-	buff.Reset()
-	err = os.RemoveAll(dir + "/.task")
-	assert.NoError(t, err)
 }
