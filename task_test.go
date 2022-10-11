@@ -481,13 +481,19 @@ func TestLabelUpToDate(t *testing.T) {
 
 	var buff bytes.Buffer
 	e := task.Executor{
-		Dir:    dir,
-		Stdout: &buff,
-		Stderr: &buff,
+		Dir:         dir,
+		Stdout:      &buff,
+		Stderr:      &buff,
+		OutputStyle: taskfile.Output{Name: "prefixed"},
 	}
 	assert.NoError(t, e.Setup())
 	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "foo"}))
-	assert.Contains(t, buff.String(), "foobar")
+	assert.Contains(t, buff.String(), "task: [foobar] echo")
+	assert.Contains(t, buff.String(), "[foobar] I'm ok")
+	assert.NotContains(t, buff.String(), "[foo] I'm ok")
+	assert.Contains(t, buff.String(), "task: [bar] echo")
+	assert.Contains(t, buff.String(), "[bar] I'm good")
+	assert.NotContains(t, buff.String(), "[foobar] I'm good")
 }
 
 func TestLabelSummary(t *testing.T) {

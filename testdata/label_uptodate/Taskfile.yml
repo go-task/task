@@ -3,5 +3,9 @@ version: '3'
 tasks:
   foo:
     label: "foobar"
-    status:
+    cmds:
       - echo "I'm ok"
+      - task: bar
+  bar:
+    cmds:
+      - echo "I'm good"
