@@ -891,6 +891,20 @@ func TestIncorrectVersionIncludes(t *testing.T) {
 	assert.EqualError(t, e.Setup(), expectedError)
 }
 
+func TestIncludesIncorrect(t *testing.T) {
+	const dir = "testdata/includes_incorrect"
+
+	var buff bytes.Buffer
+	e := task.Executor{
+		Dir:    dir,
+		Stdout: &buff,
+		Stderr: &buff,
+		Silent: true,
+	}
+
+	assert.Error(t, e.Setup())
+}
+
 func TestIncludesEmptyMain(t *testing.T) {
 	tt := fileContentTest{
 		Dir:       "testdata/includes_empty",

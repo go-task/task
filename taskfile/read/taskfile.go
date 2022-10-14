@@ -189,7 +189,10 @@ func readTaskfile(file string) (*taskfile.Taskfile, error) {
 		return nil, err
 	}
 	var t taskfile.Taskfile
-	return &t, yaml.NewDecoder(f).Decode(&t)
+	if err := yaml.NewDecoder(f).Decode(&t); err != nil {
+		return nil, fmt.Errorf("%s: %w", file, err)
+	}
+	return &t, nil
 }
 
 func exists(path string) (string, error) {
