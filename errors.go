@@ -3,6 +3,7 @@ package task
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	"mvdan.cc/sh/v3/interp"
 )
@@ -18,6 +19,15 @@ type taskNotFoundError struct {
 
 func (err *taskNotFoundError) Error() string {
 	return fmt.Sprintf(`task: Task %q not found`, err.taskName)
+}
+
+type multipleTasksWithAliasError struct {
+	aliasName string
+	taskNames []string
+}
+
+func (err *multipleTasksWithAliasError) Error() string {
+	return fmt.Sprintf(`task: Multiple tasks (%s) with alias %q found`, strings.Join(err.taskNames, ", "), err.aliasName)
 }
 
 type taskInternalError struct {

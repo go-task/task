@@ -47,6 +47,9 @@ func (e *Executor) printTasks(listAll bool) {
 		e.Logger.FOutf(w, logger.Yellow, "* ")
 		e.Logger.FOutf(w, logger.Green, task.Task)
 		e.Logger.FOutf(w, logger.Default, ": \t%s", task.Desc)
+		if len(task.Aliases) > 0 {
+			e.Logger.FOutf(w, logger.Cyan, "\t(aliases: %s)", strings.Join(task.Aliases, ", "))
+		}
 		fmt.Fprint(w, "\n")
 	}
 	w.Flush()

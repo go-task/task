@@ -16,6 +16,7 @@ import (
 	"github.com/go-task/task/v3/internal/templater"
 	"github.com/go-task/task/v3/taskfile"
 
+	"golang.org/x/exp/slices"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -64,16 +65,15 @@ type Executor struct {
 // Run runs Task
 func (e *Executor) Run(ctx context.Context, calls ...taskfile.Call) error {
 	// check if given tasks exist
-	for _, c := range calls {
-		t, ok := e.Taskfile.Tasks[c.Task]
-		if !ok {
-			// FIXME: move to the main package
+	for _, call := range calls {
+		task, err := e.GetTask(call)
+		if err != nil {
 			e.ListTasksWithDesc()
-			return &taskNotFoundError{taskName: c.Task}
+			return err
 		}
-		if t.Internal {
+		if task.Internal {
 			e.ListTasksWithDesc()
-			return &taskInternalError{taskName: c.Task}
+			return &taskInternalError{taskName: call.Task}
 		}
 	}
 
@@ -113,8 +113,8 @@ func (e *Executor) RunTask(ctx context.Context, call taskfile.Call) error {
 	if err != nil {
 		return err
 	}
-	if !e.Watch && atomic.AddInt32(e.taskCallCount[call.Task], 1) >= MaximumTaskCall {
-		return &MaximumTaskCallExceededError{task: call.Task}
+	if !e.Watch && atomic.AddInt32(e.taskCallCount[t.Task], 1) >= MaximumTaskCall {
+		return &MaximumTaskCallExceededError{task: t.Task}
 	}
 
 	release := e.acquireConcurrencyLimit()
@@ -330,4 +330,39 @@ func (e *Executor) startExecution(ctx context.Context, t *taskfile.Task, execute
 	e.executionHashesMutex.Unlock()
 
 	return execute(ctx)
+}
+
+// GetTask will return the task with the name matching the given call from the taskfile.
+// If no task is found, it will search for tasks with a matching alias.
+// If multiple tasks contain the same alias or no matches are found an error is returned.
+func (e *Executor) GetTask(call taskfile.Call) (*taskfile.Task, error) {
+	// Search for a matching task
+	matchingTask, ok := e.Taskfile.Tasks[call.Task]
+	if ok {
+		return matchingTask, nil
+	}
+
+	// If didn't find one, search for a task with a matching alias
+	var aliasedTasks []string
+	for _, task := range e.Taskfile.Tasks {
+		if slices.Contains(task.Aliases, call.Task) {
+			aliasedTasks = append(aliasedTasks, task.Task)
+			matchingTask = task
+		}
+	}
+	// If we found multiple tasks
+	if len(aliasedTasks) > 1 {
+		return nil, &multipleTasksWithAliasError{
+			aliasName: call.Task,
+			taskNames: aliasedTasks,
+		}
+	}
+	// If we found no tasks
+	if len(aliasedTasks) == 0 {
+		return nil, &taskNotFoundError{
+			taskName: call.Task,
+		}
+	}
+
+	return matchingTask, nil
 }

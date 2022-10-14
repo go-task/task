@@ -230,6 +230,21 @@ includes:
       DOCKER_IMAGE: frontend_image
 ```
 
+### Namespace aliases
+
+When including a Taskfile, you can give the namespace a list of `aliases`.
+This works in the same way as [task aliases](#task-aliases) and can be used
+together to create shorter and easier-to-type commands.
+
+```yaml
+version: '3'
+
+includes:
+  generate:
+    taskfile: ./taskfiles/Generate.yml
+    aliases: [gen]
+```
+
 :::info
 
 Vars declared in the included Taskfile have preference over the
@@ -964,6 +979,30 @@ If a summary is missing, the description will be printed.
 If the task does not have a summary or a description, a warning is printed.
 
 Please note: *showing the summary will not execute the command*.
+
+## Task aliases
+
+Aliases are alternative names for tasks. They can be used to make it easier and
+quicker to run tasks with long or hard-to-type names. You can use them on the
+command line, when [calling sub-tasks](#calling-another-task) in your Taskfile
+and when [including tasks](#including-other-taskfiles) with aliases from another
+Taskfile. They can also be used together with [namespace
+aliases](#namespace-aliases).
+
+```yaml
+version: '3'
+
+tasks:
+  generate:
+    aliases: [gen]
+    cmds:
+      - task: gen-mocks
+
+  generate-mocks:
+    aliases: [gen-mocks]
+    cmds:
+      - echo "generating..."
+```
 
 ## Overriding task name
 

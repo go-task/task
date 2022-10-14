@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Add ability to set `aliases` for tasks and namespaces ([#268](https://github.com/go-task/task/pull/268), [#340](https://github.com/go-task/task/pull/340), [#879](https://github.com/go-task/task/pull/879)).
 - Improvements to Fish shell completion
   ([#897](https://github.com/go-task/task/pull/897)).
 - Added ability to set a different watch interval by setting

@@ -1,0 +1,19 @@
+version: '3'
+
+includes:
+  included:
+    taskfile: Taskfile2.yml
+    aliases: [inc, i]
+
+tasks:
+  foo:
+    aliases: [f, x]
+    cmds:
+      - echo "foo"
+      - task: b
+
+  bar:
+    aliases: [b, x]
+    cmds:
+      - echo "bar"
+      - task: inc:q

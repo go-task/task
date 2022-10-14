@@ -3,6 +3,7 @@ package taskfile
 import (
 	"errors"
 
+	"golang.org/x/exp/slices"
 	"gopkg.in/yaml.v3"
 )
 
@@ -34,6 +35,18 @@ func (vs *Vars) UnmarshalYAML(node *yaml.Node) error {
 	return nil
 }
 
+// DeepCopy creates a new instance of Vars and copies
+// data by value from the source struct.
+func (vs *Vars) DeepCopy() *Vars {
+	if vs == nil {
+		return nil
+	}
+	return &Vars{
+		Keys:    deepCopySlice(vs.Keys),
+		Mapping: deepCopyMap(vs.Mapping),
+	}
+}
+
 // Merge merges the given Vars into the caller one
 func (vs *Vars) Merge(other *Vars) {
 	_ = other.Range(func(key string, value Var) error {
@@ -47,7 +60,7 @@ func (vs *Vars) Set(key string, value Var) {
 	if vs.Mapping == nil {
 		vs.Mapping = make(map[string]Var, 1)
 	}
-	if !stringSliceContains(vs.Keys, key) {
+	if !slices.Contains(vs.Keys, key) {
 		vs.Keys = append(vs.Keys, key)
 	}
 	vs.Mapping[key] = value

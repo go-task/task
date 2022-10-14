@@ -1,0 +1,7 @@
+version: '3'
+
+tasks:
+  qux:
+    aliases: [q, x]
+    cmds:
+      - echo "qux"

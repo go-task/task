@@ -8,6 +8,7 @@ import (
 	"github.com/go-task/task/v3/internal/execext"
 	"github.com/go-task/task/v3/internal/filepathext"
 
+	"golang.org/x/exp/slices"
 	"gopkg.in/yaml.v3"
 )
 
@@ -17,6 +18,7 @@ type IncludedTaskfile struct {
 	Dir            string
 	Optional       bool
 	Internal       bool
+	Aliases        []string
 	AdvancedImport bool
 	Vars           *Vars
 	BaseDir        string // The directory from which the including taskfile was loaded; used to resolve relative paths
@@ -71,7 +73,7 @@ func (tfs *IncludedTaskfiles) Set(key string, includedTaskfile IncludedTaskfile)
 	if tfs.Mapping == nil {
 		tfs.Mapping = make(map[string]IncludedTaskfile, 1)
 	}
-	if !stringSliceContains(tfs.Keys, key) {
+	if !slices.Contains(tfs.Keys, key) {
 		tfs.Keys = append(tfs.Keys, key)
 	}
 	tfs.Mapping[key] = includedTaskfile
@@ -103,6 +105,7 @@ func (it *IncludedTaskfile) UnmarshalYAML(unmarshal func(interface{}) error) err
 		Dir      string
 		Optional bool
 		Internal bool
+		Aliases  []string
 		Vars     *Vars
 	}
 	if err := unmarshal(&includedTaskfile); err != nil {
@@ -112,9 +115,27 @@ func (it *IncludedTaskfile) UnmarshalYAML(unmarshal func(interface{}) error) err
 	it.Dir = includedTaskfile.Dir
 	it.Optional = includedTaskfile.Optional
 	it.Internal = includedTaskfile.Internal
+	it.Aliases = includedTaskfile.Aliases
 	it.AdvancedImport = true
 	it.Vars = includedTaskfile.Vars
 	return nil
+}
+
+// DeepCopy creates a new instance of IncludedTaskfile and copies
+// data by value from the source struct.
+func (it *IncludedTaskfile) DeepCopy() *IncludedTaskfile {
+	if it == nil {
+		return nil
+	}
+	return &IncludedTaskfile{
+		Taskfile:       it.Taskfile,
+		Dir:            it.Dir,
+		Optional:       it.Optional,
+		Internal:       it.Internal,
+		AdvancedImport: it.AdvancedImport,
+		Vars:           it.Vars.DeepCopy(),
+		BaseDir:        it.BaseDir,
+	}
 }
 
 // FullTaskfilePath returns the fully qualified path to the included taskfile

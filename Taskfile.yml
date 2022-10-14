@@ -2,6 +2,7 @@ version: '3'
 
 includes:
   docs:
+    aliases: [d]
     taskfile: ./docs
     dir: ./docs
 
@@ -23,6 +24,7 @@ tasks:
 
   install:
     desc: Installs Task
+    aliases: [i]
     sources:
       - './**/*.go'
     cmds:
@@ -42,6 +44,7 @@ tasks:
 
   lint:
     desc: Runs golangci-lint
+    aliases: [l]
     sources:
       - './**/*.go'
     cmds:
@@ -65,6 +68,7 @@ tasks:
 
   test:
     desc: Runs test suite
+    aliases: [t]
     deps: [install]
     cmds:
       - go test {{catLines .GO_PACKAGES}}
