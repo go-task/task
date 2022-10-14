@@ -16,6 +16,7 @@ import (
 	"github.com/go-task/task/v3/internal/templater"
 	"github.com/go-task/task/v3/taskfile"
 
+	"github.com/sajari/fuzzy"
 	"golang.org/x/exp/slices"
 	"golang.org/x/sync/errgroup"
 )
@@ -53,7 +54,8 @@ type Executor struct {
 	Output      output.Output
 	OutputStyle taskfile.Output
 
-	taskvars *taskfile.Vars
+	taskvars   *taskfile.Vars
+	fuzzyModel *fuzzy.Model
 
 	concurrencySemaphore chan struct{}
 	taskCallCount        map[string]*int32
@@ -71,6 +73,7 @@ func (e *Executor) Run(ctx context.Context, calls ...taskfile.Call) error {
 			e.ListTasksWithDesc()
 			return err
 		}
+
 		if task.Internal {
 			e.ListTasksWithDesc()
 			return &taskInternalError{taskName: call.Task}
@@ -359,8 +362,13 @@ func (e *Executor) GetTask(call taskfile.Call) (*taskfile.Task, error) {
 	}
 	// If we found no tasks
 	if len(aliasedTasks) == 0 {
+		didYouMean := ""
+		if e.fuzzyModel != nil {
+			didYouMean = e.fuzzyModel.SpellCheck(call.Task)
+		}
 		return nil, &taskNotFoundError{
-			taskName: call.Task,
+			taskName:   call.Task,
+			didYouMean: didYouMean,
 		}
 	}
 

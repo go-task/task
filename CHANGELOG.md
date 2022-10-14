@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Add a "Did you mean ...?" suggestion when a task does not exits another one
+  with a similar name is found
+  ([#867](https://github.com/go-task/task/issues/867), [#880](https://github.com/go-task/task/pull/880)).
 - Now YAML parse errors will print which Taskfile failed to parse
   ([#885](https://github.com/go-task/task/issues/885), [#887](https://github.com/go-task/task/pull/887)).
 - Add ability to set `aliases` for tasks and namespaces ([#268](https://github.com/go-task/task/pull/268), [#340](https://github.com/go-task/task/pull/340), [#879](https://github.com/go-task/task/pull/879)).

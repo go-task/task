@@ -81,7 +81,7 @@ func (e *Executor) tasksWithDesc() (tasks []*taskfile.Task) {
 	return
 }
 
-// PrintTaskNames prints only the task names in a Taskfile.
+// ListTaskNames prints only the task names in a Taskfile.
 // Only tasks with a non-empty description are printed if allTasks is false.
 // Otherwise, all task names are printed.
 func (e *Executor) ListTaskNames(allTasks bool) {
