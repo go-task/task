@@ -1,5 +1,8 @@
 blank_issues_enabled: false
 contact_links:
+  - name: Help forum on Discord
+    url: https://discord.com/channels/974121106208354339/1025054680289660989
+    about: 'The Discord #help channel is the best way to get help from the community.'
   - name: Questions, Ideas and General Discussions
     url: https://github.com/go-task/task/discussions
-    about: Ask questions and discuss general ideas with the community
+    about: Ask questions and discuss general ideas with the community.
