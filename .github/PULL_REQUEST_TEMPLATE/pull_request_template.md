@@ -1,3 +1,4 @@
+---
 name: Pull Request
 description: Open a pull request.
 body:
@@ -18,3 +19,4 @@ body:
       placeholder: You description here.
     validations:
       required: true
+---

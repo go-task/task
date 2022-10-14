@@ -1,3 +1,4 @@
+---
 name: Bug Report
 description: Use this to make feature requests.
 body:
@@ -15,3 +16,4 @@ body:
       placeholder: You description here.
     validations:
       required: true
+---

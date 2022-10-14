@@ -1,3 +1,4 @@
+---
 name: Bug Report
 description: Use this to report bugs and issues.
 body:
@@ -34,3 +35,4 @@ body:
       placeholder: You description here.
     validations:
       required: true
+---
