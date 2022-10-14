@@ -62,6 +62,7 @@ func Merge(t1, t2 *Taskfile, includedTaskfile *IncludedTaskfile, namespaces ...s
 		// Add namespace aliases
 		if includedTaskfile != nil {
 			for _, namespaceAlias := range includedTaskfile.Aliases {
+				task.Aliases = append(task.Aliases, taskNameWithNamespace(task.Task, namespaceAlias))
 				for _, alias := range v.Aliases {
 					task.Aliases = append(task.Aliases, taskNameWithNamespace(alias, namespaceAlias))
 				}
