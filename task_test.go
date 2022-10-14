@@ -902,7 +902,9 @@ func TestIncludesIncorrect(t *testing.T) {
 		Silent: true,
 	}
 
-	assert.Error(t, e.Setup())
+	err := e.Setup()
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "task: Failed to parse testdata/includes_incorrect/incomplete.yml:")
 }
 
 func TestIncludesEmptyMain(t *testing.T) {
