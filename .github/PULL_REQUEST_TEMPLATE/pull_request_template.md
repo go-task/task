@@ -1,6 +1,6 @@
 ---
 name: Pull Request
-description: Open a pull request.
+about: Open a pull request.
 body:
   - type: markdown
     attributes:

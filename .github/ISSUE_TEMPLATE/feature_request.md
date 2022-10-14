@@ -1,6 +1,6 @@
 ---
 name: Bug Report
-description: Use this to make feature requests.
+about: Use this to make feature requests.
 body:
   - type: textarea
     id: description
