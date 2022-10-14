@@ -1247,5 +1247,9 @@ With the flags `--watch` or `-w` task will watch for file changes
 and run the task again. This requires the `sources` attribute to be given,
 so task knows which files to watch.
 
+The default watch interval is 5 seconds, but it's possible to change it by
+either setting `interval: '500ms'` in the root of the Taskfile passing it
+as an argument like `--interval=500ms`.
+
 [gotemplate]: https://golang.org/pkg/text/template/
 [minify]: https://github.com/tdewolff/minify/tree/master/cmd/minify

@@ -1503,10 +1503,10 @@ Hello, World!
 	assert.NoError(t, e.Setup())
 	buff.Reset()
 
-	err := os.MkdirAll(dir+"/src", 0755)
+	err := os.MkdirAll(filepathext.SmartJoin(dir, "src"), 0755)
 	assert.NoError(t, err)
 
-	err = os.WriteFile(dir+"/src/a", []byte("test"), 0644)
+	err = os.WriteFile(filepathext.SmartJoin(dir, "src/a"), []byte("test"), 0644)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1529,16 +1529,16 @@ Hello, World!
 	}(ctx)
 
 	time.Sleep(10 * time.Millisecond)
-	err = os.WriteFile(dir+"/src/a", []byte("test updated"), 0644)
+	err = os.WriteFile(filepathext.SmartJoin(dir, "src/a"), []byte("test updated"), 0644)
 	if err != nil {
 		t.Fatal(err)
 	}
-	time.Sleep(70 * time.Millisecond)
+	time.Sleep(700 * time.Millisecond)
 	cancel()
 	assert.Equal(t, expectedOutput, strings.TrimSpace(buff.String()))
 	buff.Reset()
-	err = os.RemoveAll(dir + "/.task")
+	err = os.RemoveAll(filepathext.SmartJoin(dir, ".task"))
 	assert.NoError(t, err)
-	err = os.RemoveAll(dir + "/src")
+	err = os.RemoveAll(filepathext.SmartJoin(dir, "src"))
 	assert.NoError(t, err)
 }

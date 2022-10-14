@@ -5,7 +5,7 @@ version: '3'
 vars:
   GREETING: Hello, World!
 
-interval: "30ms"
+interval: "500ms"
 
 tasks:
   default:

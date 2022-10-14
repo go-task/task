@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Added ability to set a different watch interval by setting
+  `interval: '500ms'` or using the `--interval=500ms` flag
+  ([#813](https://github.com/go-task/task/issues/813), [#865](https://github.com/go-task/task/pull/865)).
 - Add colored output to `--list`, `--list-all` and `--summary` flags ([#845](https://github.com/go-task/task/pull/845), [#874](https://github.com/go-task/task/pull/874)).
 - Fix unexpected behavior where `label:` was being shown instead of the task
   name on `--list`

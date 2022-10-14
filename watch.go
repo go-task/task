@@ -51,7 +51,8 @@ func (e *Executor) watchTasks(calls ...taskfile.Call) error {
 		var err error
 		watchInterval, err = parseWatchInterval(watchIntervalString)
 		if err != nil {
-			e.Logger.Errf(logger.Red, "%v", err)
+			cancel()
+			return err
 		}
 	}
 

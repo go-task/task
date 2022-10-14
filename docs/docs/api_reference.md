@@ -30,6 +30,7 @@ variable
 | `-f` | `--force` | `bool` | `false` | Forces execution even when the task is up-to-date. |
 | `-h` | `--help` | `bool` | `false` | Shows Task usage. |
 | `-i` | `--init` | `bool` | `false` | Creates a new Taskfile.yaml in the current folder. |
+| `-I` | `--interval` | `string` | `5s` | Sets a different watch interval when using `--watch`, the default being 5 seconds. This string should be a valid [Go Duration](https://pkg.go.dev/time#ParseDuration). |
 | `-l` | `--list` | `bool` | `false` | Lists tasks with description of current Taskfile. |
 | `-a` | `--list-all` | `bool` | `false` | Lists tasks with or without a description. |
 | `-o` | `--output` | `string` | Default set in the Taskfile or `intervealed` | Sets output style: [`interleaved`/`group`/`prefixed`]. |
@@ -84,6 +85,7 @@ Some environment variables can be overriden to adjust Task behavior.
 | `method` | `string` | `checksum` | Default method in this Taskfile. Can be overriden in a task by task basis. Available options: `checksum`, `timestamp` and `none`. |
 | `silent` | `bool` | `false` | Default "silent" options for this Taskfile. If `false`, can be overidden with `true` in a task by task basis. |
 | `run` | `string` | `always` | Default "run" option for this Taskfile. Available options: `always`, `once` and `when_changed`. |
+| `interval` | `string` | `5s` | Sets a different watch interval when using `--watch`, the default being 5 seconds. This string should be a valid [Go Duration](https://pkg.go.dev/time#ParseDuration). |
 | `vars` | [`map[string]Variable`](#variable) | | Global variables. |
 | `env` | [`map[string]Variable`](#variable) | | Global environment. |
 | `dotenv` | `[]string` | | A list of `.env` file paths to be parsed. |

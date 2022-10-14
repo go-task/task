@@ -209,10 +209,6 @@ func main() {
 		e.InterceptInterruptSignals()
 	}
 
-	if e.Interval == "" {
-		e.Interval = strings.TrimSpace(interval)
-	}
-
 	ctx := context.Background()
 
 	if status {
