@@ -1,15 +1,23 @@
 set GO_TASK_PROGNAME task
 
 function __task_get_tasks --description "Prints all available tasks with their description"
-	set -l output ($GO_TASK_PROGNAME --list-all | sed '1d; s/\* \(.*\):\s*\(.*\)/\1\t\2/' | string split0)
+  # Read the list of tasks (and potential errors)
+  $GO_TASK_PROGNAME --list-all 2>&1 | read -lz rawOutput
+
+  # Return on non-zero exit code (for cases when there is no Taskfile found or etc.)
+  if test $status -ne 0
+    return
+  end
+
+  # Grab names and descriptions (if any) of the tasks
+  set -l output (echo $rawOutput | sed '1d; s/\* \(.*\):\s*\(.*\)/\1\t\2/' | string split0)
   if test $output
-      echo $output
+    echo $output
   end
 end
 
 complete -c $GO_TASK_PROGNAME -d 'Runs the specified task(s). Falls back to the "default" task if no task name was specified, or lists all tasks if an unknown task name was
 specified.' -xa "(__task_get_tasks)"
-
 
 complete -c $GO_TASK_PROGNAME -s c -l color     -d 'colored output (default true)'
 complete -c $GO_TASK_PROGNAME -s d -l dir       -d 'sets directory of execution'
