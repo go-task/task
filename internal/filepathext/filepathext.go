@@ -1,6 +1,7 @@
 package filepathext
 
 import (
+	"os"
 	"path/filepath"
 )
 
@@ -11,4 +12,20 @@ func SmartJoin(a, b string) string {
 		return b
 	}
 	return filepath.Join(a, b)
+}
+
+// TryAbsToRel tries to convert an absolute path to relative based on the
+// process working directory. If it can't, it returns the absolute path.
+func TryAbsToRel(abs string) string {
+	wd, err := os.Getwd()
+	if err != nil {
+		return abs
+	}
+
+	rel, err := filepath.Rel(wd, abs)
+	if err != nil {
+		return abs
+	}
+
+	return rel
 }
