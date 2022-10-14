@@ -22,6 +22,7 @@ dist/
 # editors
 .idea/
 .vscode/
+.fleet/
 
 # exuberant ctags
 tags

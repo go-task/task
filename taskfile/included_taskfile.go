@@ -7,8 +7,8 @@ import (
 
 	"github.com/go-task/task/v3/internal/execext"
 	"github.com/go-task/task/v3/internal/filepathext"
-	"golang.org/x/exp/slices"
 
+	"golang.org/x/exp/slices"
 	"gopkg.in/yaml.v3"
 )
 

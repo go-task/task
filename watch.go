@@ -16,7 +16,7 @@ import (
 	"github.com/radovskyb/watcher"
 )
 
-const watchInterval = 5 * time.Second
+const defaultWatchInterval = 5 * time.Second
 
 // watchTasks start watching the given tasks
 func (e *Executor) watchTasks(calls ...taskfile.Call) error {
@@ -24,6 +24,7 @@ func (e *Executor) watchTasks(calls ...taskfile.Call) error {
 	for i, c := range calls {
 		tasks[i] = c.Task
 	}
+
 	e.Logger.Errf(logger.Green, "task: Started watching for tasks: %s", strings.Join(tasks, ", "))
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -35,6 +36,27 @@ func (e *Executor) watchTasks(calls ...taskfile.Call) error {
 			}
 		}()
 	}
+
+	var watchIntervalString string
+
+	if e.Interval != "" {
+		watchIntervalString = e.Interval
+	} else if e.Taskfile.Interval != "" {
+		watchIntervalString = e.Taskfile.Interval
+	}
+
+	watchInterval := defaultWatchInterval
+
+	if watchIntervalString != "" {
+		var err error
+		watchInterval, err = parseWatchInterval(watchIntervalString)
+		if err != nil {
+			cancel()
+			return err
+		}
+	}
+
+	e.Logger.VerboseOutf(logger.Green, "task: Watching for changes every %v", watchInterval)
 
 	w := watcher.New()
 	defer w.Close()
@@ -162,4 +184,12 @@ func (e *Executor) registerWatchedFiles(w *watcher.Watcher, calls ...taskfile.Ca
 
 func shouldIgnoreFile(path string) bool {
 	return strings.Contains(path, "/.git") || strings.Contains(path, "/.task") || strings.Contains(path, "/node_modules")
+}
+
+func parseWatchInterval(watchInterval string) (time.Duration, error) {
+	v, err := time.ParseDuration(watchInterval)
+	if err != nil {
+		return 0, fmt.Errorf(`task: Could not parse watch interval "%s": %v`, watchInterval, err)
+	}
+	return v, nil
 }

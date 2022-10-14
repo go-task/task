@@ -42,6 +42,7 @@ type Executor struct {
 	Parallel    bool
 	Color       bool
 	Concurrency int
+	Interval    string
 
 	Stdin  io.Reader
 	Stdout io.Writer
