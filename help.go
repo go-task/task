@@ -44,10 +44,12 @@ func (e *Executor) printTasks(listAll bool) {
 	// Format in tab-separated columns with a tab stop of 8.
 	w := tabwriter.NewWriter(e.Stdout, 0, 8, 6, ' ', 0)
 	for _, task := range tasks {
-		taskNames := append([]string{task.Task}, task.Aliases...)
 		e.Logger.FOutf(w, logger.Yellow, "* ")
-		e.Logger.FOutf(w, logger.Green, strings.Join(taskNames, "|"))
+		e.Logger.FOutf(w, logger.Green, task.Task)
 		e.Logger.FOutf(w, logger.Default, ": \t%s", task.Desc)
+		if len(task.Aliases) > 0 {
+			e.Logger.FOutf(w, logger.Cyan, "\t(aliases: %s)", strings.Join(task.Aliases, ", "))
+		}
 		fmt.Fprint(w, "\n")
 	}
 	w.Flush()
