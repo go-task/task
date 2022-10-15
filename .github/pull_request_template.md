@@ -1,8 +1,3 @@
----
-name: Pull Request
-about: Open a pull request
----
-
 > Thanks for your pull request, we really appreciate contributions!
 >
 > Please understand that it may take some time to be reviewed.
