@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v3.17.0
 
 - Add a "Did you mean ...?" suggestion when a task does not exits another one
   with a similar name is found

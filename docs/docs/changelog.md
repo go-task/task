@@ -5,6 +5,24 @@ sidebar_position: 6
 
 # Changelog
 
+## v3.17.0
+
+- Add a "Did you mean ...?" suggestion when a task does not exits another one
+  with a similar name is found
+  ([#867](https://github.com/go-task/task/issues/867), [#880](https://github.com/go-task/task/pull/880)).
+- Now YAML parse errors will print which Taskfile failed to parse
+  ([#885](https://github.com/go-task/task/issues/885), [#887](https://github.com/go-task/task/pull/887)).
+- Add ability to set `aliases` for tasks and namespaces ([#268](https://github.com/go-task/task/pull/268), [#340](https://github.com/go-task/task/pull/340), [#879](https://github.com/go-task/task/pull/879)).
+- Improvements to Fish shell completion
+  ([#897](https://github.com/go-task/task/pull/897)).
+- Added ability to set a different watch interval by setting
+  `interval: '500ms'` or using the `--interval=500ms` flag
+  ([#813](https://github.com/go-task/task/issues/813), [#865](https://github.com/go-task/task/pull/865)).
+- Add colored output to `--list`, `--list-all` and `--summary` flags ([#845](https://github.com/go-task/task/pull/845), [#874](https://github.com/go-task/task/pull/874)).
+- Fix unexpected behavior where `label:` was being shown instead of the task
+  name on `--list`
+  ([#603](https://github.com/go-task/task/issues/603), [#877](https://github.com/go-task/task/pull/877)).
+
 ## v3.16.0 - 2022-09-29
 
 - Add `npm` as new installation method: `npm i -g @go-task/cli`
