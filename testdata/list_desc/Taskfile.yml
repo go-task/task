@@ -1,0 +1,8 @@
+version: '3'
+
+tasks:
+  foo:
+    desc: "foo has desc, no label"
+
+  bar:
+    desc: "bar has desc, no label"

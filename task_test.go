@@ -661,6 +661,45 @@ func TestListCanListDescOnly(t *testing.T) {
 	}
 }
 
+// task -l=foo case 1: tasks can be filtered by name
+func TestListCanFilterList(t *testing.T) {
+	const dir = "testdata/list_desc"
+
+	var buff bytes.Buffer
+	e := task.Executor{
+		Dir:        dir,
+		Stdout:     &buff,
+		Stderr:     &buff,
+		ListFilter: "foo",
+	}
+
+	assert.NoError(t, e.Setup())
+	e.ListTasksWithDesc()
+
+	assert.Contains(t, buff.String(), "foo")
+	assert.NotContains(t, buff.String(), "bar")
+}
+
+// task -l=foo --silent: tasks are filtered with silent
+func TestListCanFilterListWithSilent(t *testing.T) {
+	const dir = "testdata/list_desc"
+
+	var buff bytes.Buffer
+	e := task.Executor{
+		Dir:        dir,
+		Stdout:     &buff,
+		Stderr:     &buff,
+		ListFilter: "foo",
+		Silent:     true,
+	}
+
+	assert.NoError(t, e.Setup())
+	e.ListTaskNames(false)
+
+	assert.Contains(t, buff.String(), "foo")
+	assert.NotContains(t, buff.String(), "bar")
+}
+
 func TestStatusVariables(t *testing.T) {
 	const dir = "testdata/status_vars"
 

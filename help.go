@@ -5,6 +5,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"regexp"
 	"sort"
 	"strings"
 	"text/tabwriter"
@@ -44,13 +45,15 @@ func (e *Executor) printTasks(listAll bool) {
 	// Format in tab-separated columns with a tab stop of 8.
 	w := tabwriter.NewWriter(e.Stdout, 0, 8, 6, ' ', 0)
 	for _, task := range tasks {
-		e.Logger.FOutf(w, logger.Yellow, "* ")
-		e.Logger.FOutf(w, logger.Green, task.Task)
-		e.Logger.FOutf(w, logger.Default, ": \t%s", task.Desc)
-		if len(task.Aliases) > 0 {
-			e.Logger.FOutf(w, logger.Cyan, "\t(aliases: %s)", strings.Join(task.Aliases, ", "))
+		if e.TaskMatchesFilter(task.Task) {
+			e.Logger.FOutf(w, logger.Yellow, "* ")
+			e.Logger.FOutf(w, logger.Green, task.Task)
+			e.Logger.FOutf(w, logger.Default, ": \t%s", task.Desc)
+			if len(task.Aliases) > 0 {
+				e.Logger.FOutf(w, logger.Cyan, "\t(aliases: %s)", strings.Join(task.Aliases, ", "))
+			}
+			fmt.Fprint(w, "\n")
 		}
-		fmt.Fprint(w, "\n")
 	}
 	w.Flush()
 }
@@ -100,8 +103,13 @@ func (e *Executor) ListTaskNames(allTasks bool) {
 	// create a string slice from all map values (*taskfile.Task)
 	s := make([]string, 0, len(e.Taskfile.Tasks))
 	for _, t := range e.Taskfile.Tasks {
-		if (allTasks || t.Desc != "") && !t.Internal {
-			s = append(s, strings.TrimRight(t.Task, ":"))
+		taskName := strings.TrimRight(t.Task, ":")
+		if allTasks && !t.Internal {
+			s = append(s, taskName)
+		} else if t.Desc != "" && !t.Internal {
+			if e.TaskMatchesFilter(taskName) {
+				s = append(s, taskName)
+			}
 		}
 	}
 	// sort and print all task names
@@ -109,4 +117,11 @@ func (e *Executor) ListTaskNames(allTasks bool) {
 	for _, t := range s {
 		fmt.Fprintln(w, t)
 	}
+}
+
+func (e *Executor) TaskMatchesFilter(taskName string) bool {
+	if matched, _ := regexp.MatchString(e.ListFilter, taskName); matched {
+		return true
+	}
+	return false
 }

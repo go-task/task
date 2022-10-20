@@ -57,7 +57,7 @@ func main() {
 		versionFlag bool
 		helpFlag    bool
 		init        bool
-		list        bool
+		list        string
 		listAll     bool
 		status      bool
 		force       bool
@@ -79,7 +79,7 @@ func main() {
 	pflag.BoolVar(&versionFlag, "version", false, "show Task version")
 	pflag.BoolVarP(&helpFlag, "help", "h", false, "shows Task usage")
 	pflag.BoolVarP(&init, "init", "i", false, "creates a new Taskfile.yaml in the current folder")
-	pflag.BoolVarP(&list, "list", "l", false, "lists tasks with description of current Taskfile")
+	pflag.StringVarP(&list, "list", "l", "", "lists tasks with description of current Taskfile. optionally accepts an regex argument to filter tasks")
 	pflag.BoolVarP(&listAll, "list-all", "a", false, "lists tasks with or without a description")
 	pflag.BoolVar(&status, "status", false, "exits with non-zero exit code if any of the given tasks is not up-to-date")
 	pflag.BoolVarP(&force, "force", "f", false, "forces execution even when the task is up-to-date")
@@ -98,6 +98,7 @@ func main() {
 	pflag.BoolVarP(&color, "color", "c", true, "colored output. Enabled by default. Set flag to false or use NO_COLOR=1 to disable")
 	pflag.IntVarP(&concurrency, "concurrency", "C", 0, "limit number tasks to run concurrently")
 	pflag.StringVarP(&interval, "interval", "I", "5s", "interval to watch for changes")
+	pflag.Lookup("list").NoOptDefVal = ".*"
 	pflag.Parse()
 
 	if versionFlag {
@@ -153,6 +154,7 @@ func main() {
 		Parallel:    parallel,
 		Color:       color,
 		Concurrency: concurrency,
+		ListFilter:  list,
 		Interval:    interval,
 
 		Stdin:  os.Stdin,
@@ -162,7 +164,7 @@ func main() {
 		OutputStyle: output,
 	}
 
-	if (list || listAll) && silent {
+	if (list != "" || listAll) && silent {
 		e.ListTaskNames(listAll)
 		return
 	}
@@ -176,7 +178,7 @@ func main() {
 		return
 	}
 
-	if list {
+	if list != "" {
 		e.ListTasksWithDesc()
 		return
 	}
