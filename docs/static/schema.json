@@ -116,6 +116,13 @@
             "description": "A set of environment variables that will be made available to shell commands.",
             "$ref": "#/definitions/3/env"
           },
+          "dotenv": {
+            "description": "A list of `.env` file paths to be parsed.",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
           "silent": {
             "description": "Hides task name and command from output. The command's output will still be redirected to `STDOUT` and `STDERR`. When combined with the `--list` flag, task descriptions will be hidden.",
             "type": "boolean",

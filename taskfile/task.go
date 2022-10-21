@@ -19,6 +19,7 @@ type Task struct {
 	Dir                  string
 	Vars                 *Vars
 	Env                  *Vars
+	Dotenv               []string
 	Silent               bool
 	Interactive          bool
 	Internal             bool
@@ -65,6 +66,7 @@ func (t *Task) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		Dir           string
 		Vars          *Vars
 		Env           *Vars
+		Dotenv        []string
 		Silent        bool
 		Interactive   bool
 		Internal      bool
@@ -89,6 +91,7 @@ func (t *Task) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	t.Dir = task.Dir
 	t.Vars = task.Vars
 	t.Env = task.Env
+	t.Dotenv = task.Dotenv
 	t.Silent = task.Silent
 	t.Interactive = task.Interactive
 	t.Internal = task.Internal
@@ -117,6 +120,7 @@ func (t *Task) DeepCopy() *Task {
 		Dir:                  t.Dir,
 		Vars:                 t.Vars.DeepCopy(),
 		Env:                  t.Env.DeepCopy(),
+		Dotenv:               deepCopySlice(t.Dotenv),
 		Silent:               t.Silent,
 		Interactive:          t.Interactive,
 		Internal:             t.Internal,

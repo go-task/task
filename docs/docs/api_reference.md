@@ -130,6 +130,7 @@ includes:
 | `dir` | `string` | | The directory in which this task should run. Defaults to the current working directory. |
 | `vars` | [`map[string]Variable`](#variable) | | A set of variables that can be used in the task. |
 | `env` | [`map[string]Variable`](#variable) | | A set of environment variables that will be made available to shell commands. |
+| `dotenv` | `[]string` | | A list of `.env` file paths to be parsed. |
 | `silent` | `bool` | `false` | Hides task name and command from output. The command's output will still be redirected to `STDOUT` and `STDERR`. When combined with the `--list` flag, task descriptions will be hidden. |
 | `interactive` | `bool` | `false` | Tells task that the command is interactive. |
 | `internal` | `bool` | `false` | Stops a task from being callable on the command line. It will also be omitted from the output when used with `--list`. |

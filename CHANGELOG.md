@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Add task-level `dotenv` support ([#389](https://github.com/go-task/task/issues/389), [#904](https://github.com/go-task/task/pull/904)).
+
 ## v3.18.0
 
 - Show aliases on `task --list --silent` (`task --ls`). This means that aliases
