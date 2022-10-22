@@ -72,6 +72,9 @@ Some environment variables can be overriden to adjust Task behavior.
 | `TASK_COLOR_YELLOW` | `33` | Color used for yellow. |
 | `TASK_COLOR_MAGENTA` | `35` | Color used for magenta. |
 | `TASK_COLOR_RED` | `31` | Color used for red. |
+| `TASK_GCP_CREDENTIALS_JSON` | | [GCP Secret Manager](/usage/#dynamic-variables): override auth credentials. Uses the environment auth by default (gcloud auth, etc). |
+| `TASK_GCP_DEFAULT_PROJECT` | | [GCP Secret Manager](/usage/#dynamic-variables): override default project where to access the secrets. Will fail by default if no project is in secret ID. |
+| `TASK_GCP_SECRET_DEFAULT_VERSION` | `latest` | [GCP Secret Manager](/usage/#dynamic-variables): override default secrets version, unless specified in the key. |
 
 ## Schema
 
@@ -135,6 +138,7 @@ includes:
 | `env` | [`map[string]Variable`](#variable) | | Task environment. |
 | `deps` | [`[]Dependency`](#dependency) | | List of dependencies of this task. |
 | `cmds` | [`[]Command`](#command) | | List of commands to be executed. |
+| `vars_exporters` | [`[]exporters.Type`](#vars-exporters) | | List of exporters for the task vars and env. Only `github_actions` supported for now: will set vars and env to `GITHUB_ENV`. |
 
 :::info
 
@@ -206,6 +210,7 @@ tasks:
 | - | - | - | - |
 | *itself* | `string` | | A static value that will be set to the variable. |
 | `sh` | `string` | | A shell command. The output (`STDOUT`) will be assigned to the variable. |
+| `gcp` | `string` | | A [Google Cloud Secret Manager](/usage/#dynamic-variables) secret version id. Can be short, like `my-secret` (then you need to provide the default project) or full (i.e. `projects/my-project/secrets/my-secret/versions/my-version`). |
 
 :::info
 
@@ -216,6 +221,10 @@ vars:
   STATIC: static
   DYNAMIC:
     sh: echo "dynamic"
+  DYNAMIC_GCP_SECRET:
+    gcp: my-secret
+  DYNAMIC_GCP_SECRET_FULL:
+    gcp: projects/my-project/secrets/test-secret/versions/my-version
 ```
 
 :::
@@ -239,3 +248,6 @@ tasks:
 ```
 
 :::
+
+### Vars exporters
+Supported [vars exporters](/usage/#vars-exporters): `github_actions`.

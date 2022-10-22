@@ -220,6 +220,7 @@ func main() {
 
 	if err := e.Run(ctx, calls...); err != nil {
 		e.Logger.Errf(logger.Red, "%v", err)
+		_ = e.Compiler.Close()
 
 		if exitCode {
 			if err, ok := err.(*task.TaskRunError); ok {
@@ -228,6 +229,7 @@ func main() {
 		}
 		os.Exit(1)
 	}
+	_ = e.Compiler.Close()
 }
 
 func getArgs() ([]string, string, error) {

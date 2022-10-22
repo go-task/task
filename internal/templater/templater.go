@@ -73,6 +73,7 @@ func (r *Templater) ReplaceVars(vars *taskfile.Vars) *taskfile.Vars {
 			Static: r.Replace(v.Static),
 			Live:   v.Live,
 			Sh:     r.Replace(v.Sh),
+			Gcp:    r.Replace(v.Gcp),
 		})
 		return nil
 	})

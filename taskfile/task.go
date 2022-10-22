@@ -1,5 +1,9 @@
 package taskfile
 
+import (
+	"github.com/go-task/task/v3/internal/exporter"
+)
+
 // Tasks represents a group of tasks
 type Tasks map[string]*Task
 
@@ -29,6 +33,7 @@ type Task struct {
 	IncludeVars          *Vars
 	IncludedTaskfileVars *Vars
 	IncludedTaskfile     *IncludedTaskfile
+	VarsExporters        []exporter.Type
 }
 
 func (t *Task) Name() string {
@@ -72,10 +77,16 @@ func (t *Task) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		Prefix        string
 		IgnoreError   bool `yaml:"ignore_error"`
 		Run           string
+		VarsExporters []string `yaml:"vars_exporters"`
 	}
 	if err := unmarshal(&task); err != nil {
 		return err
 	}
+	exporters, err := exporter.UnmarshalTypes(task.VarsExporters)
+	if err != nil {
+		return err
+	}
+
 	t.Cmds = task.Cmds
 	t.Deps = task.Deps
 	t.Label = task.Label
@@ -96,6 +107,7 @@ func (t *Task) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	t.Prefix = task.Prefix
 	t.IgnoreError = task.IgnoreError
 	t.Run = task.Run
+	t.VarsExporters = *exporters
 	return nil
 }
 
@@ -127,6 +139,7 @@ func (t *Task) DeepCopy() *Task {
 		IncludeVars:          t.IncludeVars.DeepCopy(),
 		IncludedTaskfileVars: t.IncludedTaskfileVars.DeepCopy(),
 		IncludedTaskfile:     t.IncludedTaskfile.DeepCopy(),
+		VarsExporters:        deepCopySlice(t.VarsExporters),
 	}
 	return c
 }

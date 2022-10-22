@@ -3,6 +3,7 @@ package task
 import (
 	"context"
 	"fmt"
+	"github.com/go-task/task/v3/internal/exporter"
 	"io"
 	"os"
 	"sync"
@@ -112,7 +113,7 @@ func (e *Executor) Run(ctx context.Context, calls ...taskfile.Call) error {
 
 // RunTask runs a task by its name
 func (e *Executor) RunTask(ctx context.Context, call taskfile.Call) error {
-	t, err := e.CompiledTask(call)
+	t, evaluatedVars, err := e.CompiledTask(call)
 	if err != nil {
 		return err
 	}
@@ -175,9 +176,36 @@ func (e *Executor) RunTask(ctx context.Context, call taskfile.Call) error {
 				return &TaskRunError{t.Task, err}
 			}
 		}
+
+		if len(t.VarsExporters) > 0 {
+			e.handleExporters(call, t, evaluatedVars)
+		}
+
 		e.Logger.VerboseErrf(logger.Magenta, `task: "%s" finished`, call.Task)
 		return nil
 	})
+}
+
+func (e *Executor) handleExporters(call taskfile.Call, task *taskfile.Task, taskEvaluatedVars *taskfile.Vars) {
+	if varsToExtract := extractAllVarsForTask(call, e, task, taskEvaluatedVars, e.taskvars); varsToExtract != nil {
+		for _, exp := range task.VarsExporters {
+			switch exp {
+			case exporter.GithubActions:
+				ghaExporter, err := exporter.NewGithubActionsExporter()
+				if err != nil {
+					e.Logger.Errf(logger.Red, "task: cannot initialise %s exporter: %v", exp, err)
+					os.Exit(1)
+				}
+				if err = ghaExporter.Export(*varsToExtract); err != nil {
+					e.Logger.Errf(logger.Red, "task: cannot export variables to %s: %v", exp, err)
+					os.Exit(1)
+				}
+			default:
+				e.Logger.Errf(logger.Red, "task: unknown exporter: %s", exp)
+				os.Exit(1)
+			}
+		}
+	}
 }
 
 func (e *Executor) mkdir(t *taskfile.Task) error {

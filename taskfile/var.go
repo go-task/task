@@ -114,6 +114,7 @@ type Var struct {
 	Live   interface{}
 	Sh     string
 	Dir    string
+	Gcp    string
 }
 
 // UnmarshalYAML implements yaml.Unmarshaler interface.
@@ -131,5 +132,13 @@ func (v *Var) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		return err
 	}
 	v.Sh = sh.Sh
+
+	var gcp struct {
+		Gcp string
+	}
+	if err := unmarshal(&gcp); err != nil {
+		return err
+	}
+	v.Gcp = gcp.Gcp
 	return nil
 }

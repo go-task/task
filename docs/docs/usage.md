@@ -756,7 +756,11 @@ tasks:
 
 ### Dynamic variables
 
-The below syntax (`sh:` prop in a variable) is considered a dynamic variable.
+This works for all types of variables.
+
+#### Shell
+
+The below syntax (`sh:` prop in a variable) is considered a dynamic (shell) variable.
 The value will be treated as a command and the output assigned. If there are one
 or more trailing newlines, the last newline will be trimmed.
 
@@ -772,7 +776,43 @@ tasks:
         sh: git log -n 1 --format=%h
 ```
 
-This works for all types of variables.
+#### Google Cloud Secret Manager
+
+The below syntax (`gcp:` prop in a variable) is considered a dynamic (secret) variable.
+The value will be treated as a secret version ID to access the secret from GCP Secret Manager.
+
+:::info
+
+You can override the auth for Google Cloud via providing
+the [JSON credentials][gcloudjsonauth] in the `TASK_GCP_CREDENTIALS_JSON` environment variable,
+or otherwise the [existing auth connection][gcloudauth] will be used.
+
+:::
+
+:::tip
+
+You can also override the default GCP project via providing the `TASK_GCP_DEFAULT_PROJECT` environment variable,
+so that the full resource ID is not needed.
+
+:::
+
+```yaml
+version: '3'
+
+tasks:
+  build:
+    cmds:
+      - echo "look at {{.MY_SHORT_SECRET}}"
+      - echo "also at {{.MY_ANOTHER_SECRET}"
+      - echo "and also at {{.MY_LONG_SECRET}}"
+    vars:
+      MY_SHORT_SECRET:
+        gcp: my-short-secret
+      MY_ANOTHER_SECRET:
+        gcp: projects/my-project/secrets/my-another-secret
+      MY_LONG_SECRET:
+        gcp: projects/my-project/secrets/my-another-secret/versions/my-version
+```
 
 ## Forwarding CLI arguments to commands
 
@@ -1292,3 +1332,23 @@ as an argument like `--interval=500ms`.
 
 [gotemplate]: https://golang.org/pkg/text/template/
 [minify]: https://github.com/tdewolff/minify/tree/master/cmd/minify
+[gcloudauth]: https://cloud.google.com/docs/authentication/provide-credentials-adc
+[gcloudjsonauth]: https://cloud.google.com/iam/docs/creating-managing-service-account-keys#creating
+
+
+## Vars Exporters
+
+```yaml
+tasks:
+  foo:
+    vars:
+      FOO_BAR:
+        sh: pwd
+    vars_exporters:
+      - github_actions
+```
+
+### GitHub Actions
+
+The above task will export `FOO_BAR` to GitHub Actions environment variables (`GITHUB_ENV`).
+Can be useful if you want to reuse your Taskfile on CI in combination with GCP secrets to set up the environment for the other steps.

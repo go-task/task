@@ -3,7 +3,9 @@ package v3
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
+	"github.com/go-task/task/v3/internal/secrets"
 	"strings"
 	"sync"
 
@@ -24,6 +26,9 @@ type CompilerV3 struct {
 	TaskfileVars *taskfile.Vars
 
 	Logger *logger.Logger
+
+	gcpSecretManager   *secrets.GoogleCloudSecretManager
+	mugcpSecretManager sync.Mutex
 
 	dynamicCache   map[string]string
 	muDynamicCache sync.Mutex
@@ -65,6 +70,7 @@ func (c *CompilerV3) getVariables(t *taskfile.Task, call *taskfile.Call, evaluat
 			v = taskfile.Var{
 				Static: tr.Replace(v.Static),
 				Sh:     tr.Replace(v.Sh),
+				Gcp:    tr.Replace(v.Gcp),
 				Dir:    v.Dir,
 			}
 			if err := tr.Err(); err != nil {
@@ -123,10 +129,26 @@ func (c *CompilerV3) getVariables(t *taskfile.Task, call *taskfile.Call, evaluat
 }
 
 func (c *CompilerV3) HandleDynamicVar(v taskfile.Var, dir string) (string, error) {
-	if v.Static != "" || v.Sh == "" {
+	if v.Static != "" || (v.Sh == "" && v.Gcp == "") {
 		return v.Static, nil
 	}
 
+	if v.Sh != "" && v.Gcp != "" {
+		return v.Static, errors.New("for dynamic vars please specify only one of: 'sh', 'gcp'")
+	}
+
+	if v.Sh != "" {
+		return c.handleDynamicShVar(v, dir)
+	}
+
+	if v.Gcp != "" {
+		return c.handleDynamicGcpVar(v)
+	}
+
+	panic(errors.New("exhaustive"))
+}
+
+func (c *CompilerV3) handleDynamicShVar(v taskfile.Var, dir string) (string, error) {
 	c.muDynamicCache.Lock()
 	defer c.muDynamicCache.Unlock()
 
@@ -164,6 +186,38 @@ func (c *CompilerV3) HandleDynamicVar(v taskfile.Var, dir string) (string, error
 	return result, nil
 }
 
+func (c *CompilerV3) handleDynamicGcpVar(v taskfile.Var) (string, error) {
+	c.muDynamicCache.Lock()
+	c.mugcpSecretManager.Lock()
+	defer c.muDynamicCache.Unlock()
+	defer c.mugcpSecretManager.Unlock()
+
+	if c.dynamicCache == nil {
+		c.dynamicCache = make(map[string]string, 30)
+	}
+	if result, ok := c.dynamicCache[v.Gcp]; ok {
+		return result, nil
+	}
+
+	if c.gcpSecretManager == nil {
+		manager, err := secrets.NewGoogleCloudSecretManager()
+		if err != nil {
+			return "", err
+		}
+		c.gcpSecretManager = manager
+	}
+
+	result, err := c.gcpSecretManager.GetValue(v.Gcp)
+	if err != nil {
+		return "", fmt.Errorf("accessing gcp value failed (%s): %s", v.Gcp, err)
+	}
+
+	c.dynamicCache[v.Gcp] = result
+	c.Logger.VerboseErrf(logger.Magenta, `task: dynamic variable (gcp): '%s' result: '%s'`, v.Gcp, result)
+
+	return result, nil
+}
+
 // ResetCache clear the dymanic variables cache
 func (c *CompilerV3) ResetCache() {
 	c.muDynamicCache.Lock()
@@ -190,4 +244,11 @@ func (c *CompilerV3) getTaskfileDir(t *taskfile.Task) (string, error) {
 		return t.IncludedTaskfile.FullDirPath()
 	}
 	return c.Dir, nil
+}
+
+func (c *CompilerV3) Close() error {
+	if c.gcpSecretManager != nil {
+		return c.gcpSecretManager.Close()
+	}
+	return nil
 }

@@ -42,6 +42,7 @@ guide to check the full schema documentation and Task features.
   [Snapcraft][snapcraft], or [Scoop][scoop] if you want.
 - Available on CIs: by adding [this simple command](installation.md#install-script)
   to install on your CI script and you're ready to use Task as part of your CI pipeline;
+- Supports cloud secrets (only for Google Cloud Secret Manager for now).
 - Truly cross-platform: while most build tools only work well on Linux or macOS,
   Task also supports Windows thanks to [this shell interpreter for Go][sh].
 - Great for code generation: you can easily [prevent a task from running](/usage#prevent-unnecessary-work)

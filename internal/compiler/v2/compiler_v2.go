@@ -129,3 +129,7 @@ func (c *CompilerV2) ResetCache() {
 
 	c.dynamicCache = nil
 }
+
+func (c *CompilerV2) Close() error {
+	return nil
+}

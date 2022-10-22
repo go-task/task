@@ -25,6 +25,7 @@ func (e *Executor) InterceptInterruptSignals() {
 			}
 
 			e.Logger.Errf(logger.Red, `task: Signal received for the third time: "%s". Forcing shutdown`, sig)
+			_ = e.Compiler.Close()
 			os.Exit(1)
 		}
 	}()

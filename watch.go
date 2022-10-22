@@ -131,7 +131,7 @@ func (e *Executor) registerWatchedFiles(w *watcher.Watcher, calls ...taskfile.Ca
 
 	var registerTaskFiles func(taskfile.Call) error
 	registerTaskFiles = func(c taskfile.Call) error {
-		task, err := e.CompiledTask(c)
+		task, _, err := e.CompiledTask(c)
 		if err != nil {
 			return err
 		}

@@ -12,4 +12,5 @@ type Compiler interface {
 	FastGetVariables(t *taskfile.Task, call taskfile.Call) (*taskfile.Vars, error)
 	HandleDynamicVar(v taskfile.Var, dir string) (string, error)
 	ResetCache()
+	Close() error
 }

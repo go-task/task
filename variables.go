@@ -12,19 +12,22 @@ import (
 
 // CompiledTask returns a copy of a task, but replacing variables in almost all
 // properties using the Go template package.
-func (e *Executor) CompiledTask(call taskfile.Call) (*taskfile.Task, error) {
+func (e *Executor) CompiledTask(call taskfile.Call) (*taskfile.Task, *taskfile.Vars, error) {
 	return e.compiledTask(call, true)
 }
 
-// FastCompiledTask is like CompiledTask, but it skippes dynamic variables.
+// FastCompiledTask is like CompiledTask, but it skips dynamic variables.
 func (e *Executor) FastCompiledTask(call taskfile.Call) (*taskfile.Task, error) {
-	return e.compiledTask(call, false)
+	task, _, err := e.compiledTask(call, false)
+	return task, err
 }
 
-func (e *Executor) compiledTask(call taskfile.Call, evaluateShVars bool) (*taskfile.Task, error) {
+// compiledTask returns the compiled task and the evaluated vars used in it,
+// or an error if something goes wrong.
+func (e *Executor) compiledTask(call taskfile.Call, evaluateShVars bool) (*taskfile.Task, *taskfile.Vars, error) {
 	origTask, err := e.GetTask(call)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	var vars *taskfile.Vars
@@ -34,12 +37,12 @@ func (e *Executor) compiledTask(call taskfile.Call, evaluateShVars bool) (*taskf
 		vars, err = e.Compiler.FastGetVariables(origTask, call)
 	}
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	v, err := e.Taskfile.ParsedVersion()
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	r := templater.Templater{Vars: vars, RemoveNoValue: v >= 3.0}
@@ -64,10 +67,11 @@ func (e *Executor) compiledTask(call taskfile.Call, evaluateShVars bool) (*taskf
 		Run:                  r.Replace(origTask.Run),
 		IncludeVars:          origTask.IncludeVars,
 		IncludedTaskfileVars: origTask.IncludedTaskfileVars,
+		VarsExporters:        origTask.VarsExporters,
 	}
 	new.Dir, err = execext.Expand(new.Dir)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	if e.Dir != "" {
 		new.Dir = filepathext.SmartJoin(e.Dir, new.Dir)
@@ -89,7 +93,7 @@ func (e *Executor) compiledTask(call taskfile.Call, evaluateShVars bool) (*taskf
 			return nil
 		})
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 	}
 
@@ -139,7 +143,7 @@ func (e *Executor) compiledTask(call taskfile.Call, evaluateShVars bool) (*taskf
 		for _, checker := range []status.Checker{e.timestampChecker(&new), e.checksumChecker(&new)} {
 			value, err := checker.Value()
 			if err != nil {
-				return nil, err
+				return nil, nil, err
 			}
 			vars.Set(strings.ToUpper(checker.Kind()), taskfile.Var{Live: value})
 		}
@@ -151,5 +155,5 @@ func (e *Executor) compiledTask(call taskfile.Call, evaluateShVars bool) (*taskf
 		new.Status = r.ReplaceSlice(origTask.Status)
 	}
 
-	return &new, r.Err()
+	return &new, vars, r.Err()
 }
