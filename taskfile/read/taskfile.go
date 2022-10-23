@@ -36,29 +36,30 @@ type ReaderNode struct {
 // Taskfile reads a Taskfile for a given directory
 // Uses current dir when dir is left empty. Uses Taskfile.yml
 // or Taskfile.yaml when entrypoint is left empty
-func Taskfile(readerNode *ReaderNode) (*taskfile.Taskfile, error) {
+func Taskfile(readerNode *ReaderNode) (*taskfile.Taskfile, string, error) {
 	if readerNode.Dir == "" {
 		d, err := os.Getwd()
 		if err != nil {
-			return nil, err
+			return nil, "", err
 		}
 		readerNode.Dir = d
 	}
 
-	path, err := exists(filepathext.SmartJoin(readerNode.Dir, readerNode.Entrypoint))
+	path, err := existsWalk(filepathext.SmartJoin(readerNode.Dir, readerNode.Entrypoint))
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
+	readerNode.Dir = filepath.Dir(path)
 	readerNode.Entrypoint = filepath.Base(path)
 
 	t, err := readTaskfile(path)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 
 	v, err := t.ParsedVersion()
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 
 	// Annotate any included Taskfile reference with a base directory for resolving relative paths
@@ -113,7 +114,7 @@ func Taskfile(readerNode *ReaderNode) (*taskfile.Taskfile, error) {
 			return err
 		}
 
-		includedTaskfile, err := Taskfile(includeReaderNode)
+		includedTaskfile, _, err := Taskfile(includeReaderNode)
 		if err != nil {
 			if includedTask.Optional {
 				return nil
@@ -156,7 +157,7 @@ func Taskfile(readerNode *ReaderNode) (*taskfile.Taskfile, error) {
 		return nil
 	})
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 
 	if v < 3.0 {
@@ -164,10 +165,10 @@ func Taskfile(readerNode *ReaderNode) (*taskfile.Taskfile, error) {
 		if _, err = os.Stat(path); err == nil {
 			osTaskfile, err := readTaskfile(path)
 			if err != nil {
-				return nil, err
+				return nil, "", err
 			}
 			if err = taskfile.Merge(t, osTaskfile, nil); err != nil {
-				return nil, err
+				return nil, "", err
 			}
 		}
 	}
@@ -180,7 +181,7 @@ func Taskfile(readerNode *ReaderNode) (*taskfile.Taskfile, error) {
 		task.Task = name
 	}
 
-	return t, nil
+	return t, readerNode.Dir, nil
 }
 
 func readTaskfile(file string) (*taskfile.Taskfile, error) {
@@ -212,6 +213,23 @@ func exists(path string) (string, error) {
 	}
 
 	return "", fmt.Errorf(`task: No Taskfile found in "%s". Use "task --init" to create a new one`, path)
+}
+
+func existsWalk(path string) (string, error) {
+	origPath := path
+	for {
+		fpath, err := exists(path)
+		if err == nil {
+			return fpath, nil
+		}
+		parentPath := filepath.Dir(path)
+
+		// Error if we reached the root directory and still haven't found a file
+		if path == parentPath {
+			return "", fmt.Errorf(`task: No Taskfile found in "%s" (or any of the parent directories). Use "task --init" to create a new one`, origPath)
+		}
+		path = parentPath
+	}
 }
 
 func checkCircularIncludes(node *ReaderNode) error {

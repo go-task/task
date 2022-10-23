@@ -1610,3 +1610,38 @@ Hello, World!
 	err = os.RemoveAll(filepathext.SmartJoin(dir, "src"))
 	assert.NoError(t, err)
 }
+
+func TestTaskfileWalk(t *testing.T) {
+	tests := []struct {
+		name     string
+		dir      string
+		expected string
+	}{
+		{
+			name:     "walk from root directory",
+			dir:      "testdata/taskfile_walk",
+			expected: "foo\n",
+		}, {
+			name:     "walk from sub directory",
+			dir:      "testdata/taskfile_walk/foo",
+			expected: "foo\n",
+		}, {
+			name:     "walk from sub sub directory",
+			dir:      "testdata/taskfile_walk/foo/bar",
+			expected: "foo\n",
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			var buff bytes.Buffer
+			e := task.Executor{
+				Dir:    test.dir,
+				Stdout: &buff,
+				Stderr: &buff,
+			}
+			assert.NoError(t, e.Setup())
+			assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "default"}))
+			assert.Equal(t, test.expected, buff.String())
+		})
+	}
+}

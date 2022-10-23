@@ -80,7 +80,7 @@ func (e *Executor) setCurrentDir() error {
 
 func (e *Executor) readTaskfile() error {
 	var err error
-	e.Taskfile, err = read.Taskfile(&read.ReaderNode{
+	e.Taskfile, e.Dir, err = read.Taskfile(&read.ReaderNode{
 		Dir:        e.Dir,
 		Entrypoint: e.Entrypoint,
 		Parent:     nil,
