@@ -39,7 +39,6 @@ choco install go-task
 
 This installation method is community owned.
 
-
 ### Scoop
 
 If you're on Windows and have [Scoop][scoop] installed, getting
@@ -189,6 +188,68 @@ instead, which is faster and more stable, since it'll just download the latest
 released binary.
 
 :::
+
+## Setup completions
+
+Download the autocompletion file corresponding to your shell.
+
+[All completions are available on the task repository](https://github.com/go-task/task/tree/master/completion).
+
+### bash
+
+First, ensure that you installed bash-completion using your package manager.
+
+Make the completion file executable:
+
+```
+chmod +x path/to/task.bash
+```
+
+After, add this to your ~/.bash_profile:
+
+```shell
+source path/to/task.bash
+```
+
+### zsh
+
+Put the `_task` file somewhere in your `$fpath`:
+
+```shell
+mv path/to/_task /usr/local/share/zsh/site-functions/_task
+```
+
+Ensure that the following is present in your ~/.zshrc:
+
+```shell
+autoload -U compinit
+compinit -i
+```
+
+Zsh version 5.7 or later is recommended.
+
+### fish
+
+Move the `task.fish` completion script:
+
+```shell
+mv path/to/task.fish ~/.config/fish/completions/task.fish
+```
+
+### PowerShell
+
+Open your profile script with:
+
+```
+mkdir -Path (Split-Path -Parent $profile) -ErrorAction SilentlyContinue
+notepad $profile
+```
+
+Add the line and save the file:
+
+```shell
+Invoke-Expression -Command path/to/task.ps1
+```
 
 [go]: https://golang.org/
 [snapcraft]: https://snapcraft.io/task
