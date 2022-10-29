@@ -1,0 +1,42 @@
+name: issue awaiting response
+
+on:
+  issue_comment:
+    types: [created]
+
+jobs:
+  issue-awaiting-response:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v6
+        with:
+          script: |
+            const issue = await github.rest.issues.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            })
+            const comments = await github.paginate(
+              github.rest.issues.listComments, {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+              }
+            )
+            const labels = await github.paginate(
+              github.rest.issues.listLabelsOnIssue, {
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+              }
+            )
+            if (labels.find(label => label.name === 'awaiting response')) {
+              if (comments[comments.length-1].user?.login === issue.data.user?.login) {
+                github.rest.issues.removeLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: context.issue.number,
+                  name: 'awaiting response'
+                })
+              }
+            }

@@ -1,0 +1,28 @@
+name: issue needs triage
+
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  needs-triage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v6
+        with:
+          script: |
+            const labels = await github.paginate(
+              github.rest.issues.listLabelsOnIssue, {
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+              }
+            )
+            if (labels.length === 0) {
+              github.rest.issues.addLabels({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                labels: ['needs triage']
+              })
+            }
