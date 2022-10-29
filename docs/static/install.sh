@@ -64,15 +64,21 @@ get_binaries() {
   case "$PLATFORM" in
     darwin/amd64) BINARIES="task" ;;
     darwin/arm64) BINARIES="task" ;;
+    darwin/armv5) BINARIES="task" ;;
     darwin/armv6) BINARIES="task" ;;
+    darwin/armv7) BINARIES="task" ;;
     linux/386) BINARIES="task" ;;
     linux/amd64) BINARIES="task" ;;
     linux/arm64) BINARIES="task" ;;
+    linux/armv5) BINARIES="task" ;;
     linux/armv6) BINARIES="task" ;;
+    linux/armv7) BINARIES="task" ;;
     windows/386) BINARIES="task" ;;
     windows/amd64) BINARIES="task" ;;
     windows/arm64) BINARIES="task" ;;
+    windows/armv5) BINARIES="task" ;;
     windows/armv6) BINARIES="task" ;;
+    windows/armv7) BINARIES="task" ;;
     *)
       log_crit "platform $PLATFORM is not supported.  Make sure this script is up-to-date and file request at https://github.com/${PREFIX}/issues/new"
       exit 1
@@ -184,9 +190,9 @@ uname_arch() {
     i686) arch="386" ;;
     i386) arch="386" ;;
     aarch64) arch="arm64" ;;
-    armv5*) arch="armv5" ;;
-    armv6*) arch="armv6" ;;
-    armv7*) arch="armv7" ;;
+    armv5*) arch="arm" ;;
+    armv6*) arch="arm" ;;
+    armv7*) arch="arm" ;;
   esac
   echo ${arch}
 }
@@ -214,9 +220,7 @@ uname_arch_check() {
     386) return 0 ;;
     amd64) return 0 ;;
     arm64) return 0 ;;
-    armv5) return 0 ;;
-    armv6) return 0 ;;
-    armv7) return 0 ;;
+    arm) return 0 ;;
     ppc64) return 0 ;;
     ppc64le) return 0 ;;
     mips) return 0 ;;
