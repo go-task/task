@@ -193,9 +193,9 @@ released binary.
 
 Download the autocompletion file corresponding to your shell.
 
-[All completions are available on the task repository](https://github.com/go-task/task/tree/master/completion).
+[All completions are available on the Task repository](https://github.com/go-task/task/tree/master/completion).
 
-### bash
+### Bash
 
 First, ensure that you installed bash-completion using your package manager.
 
@@ -205,30 +205,30 @@ Make the completion file executable:
 chmod +x path/to/task.bash
 ```
 
-After, add this to your ~/.bash_profile:
+After, add this to your `~/.bash_profile`:
 
 ```shell
 source path/to/task.bash
 ```
 
-### zsh
+### ZSH
 
-Put the `_task` file somewhere in your `$fpath`:
+Put the `_task` file somewhere in your `$FPATH`:
 
 ```shell
 mv path/to/_task /usr/local/share/zsh/site-functions/_task
 ```
 
-Ensure that the following is present in your ~/.zshrc:
+Ensure that the following is present in your `~/.zshrc`:
 
 ```shell
 autoload -U compinit
 compinit -i
 ```
 
-Zsh version 5.7 or later is recommended.
+ZSH version 5.7 or later is recommended.
 
-### fish
+### Fish
 
 Move the `task.fish` completion script:
 
