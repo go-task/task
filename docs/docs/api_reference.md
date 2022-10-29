@@ -35,7 +35,7 @@ variable
 | `-a` | `--list-all` | `bool` | `false` | Lists tasks with or without a description. |
 | `-o` | `--output` | `string` | Default set in the Taskfile or `intervealed` | Sets output style: [`interleaved`/`group`/`prefixed`]. |
 |      | `--output-group-begin` | `string` | | Message template to print before a task's grouped output. |
-|      | `--output-group-end `  | `string` | | Message template to print after a task's grouped output. |
+|      | `--output-group-end` | `string` | | Message template to print after a task's grouped output. |
 | `-p` | `--parallel` | `bool` | `false` | Executes tasks provided on command line in parallel. |
 | `-s` | `--silent` | `bool` | `false` | Disables echoing. |
 |      | `--status` | `bool` | `false` | Exits with non-zero exit code if any of the given tasks is not up-to-date. |
@@ -80,16 +80,16 @@ Some environment variables can be overriden to adjust Task behavior.
 | Attribute | Type | Default | Description |
 | - | - | - | - |
 | `version` | `string` | | Version of the Taskfile. The current version is `3`. |
-| `includes` | [`map[string]Include`](#include) | | Additional Taskfiles to be included. |
 | `output` | `string` | `interleaved` | Output mode. Available options: `interleaved`, `group` and `prefixed`. |
 | `method` | `string` | `checksum` | Default method in this Taskfile. Can be overriden in a task by task basis. Available options: `checksum`, `timestamp` and `none`. |
-| `silent` | `bool` | `false` | Default "silent" options for this Taskfile. If `false`, can be overidden with `true` in a task by task basis. |
-| `run` | `string` | `always` | Default "run" option for this Taskfile. Available options: `always`, `once` and `when_changed`. |
-| `interval` | `string` | `5s` | Sets a different watch interval when using `--watch`, the default being 5 seconds. This string should be a valid [Go Duration](https://pkg.go.dev/time#ParseDuration). |
-| `vars` | [`map[string]Variable`](#variable) | | Global variables. |
-| `env` | [`map[string]Variable`](#variable) | | Global environment. |
+| `includes` | [`map[string]Include`](#include) | | Additional Taskfiles to be included. |
+| `vars` | [`map[string]Variable`](#variable) | | A set of global variables. |
+| `env` | [`map[string]Variable`](#variable) | | A set of global environment variables. |
+| `tasks` | [`map[string]Task`](#task) | | A set of task definitions. |
+| `silent` | `bool` | `false` | Default 'silent' options for this Taskfile. If `false`, can be overidden with `true` in a task by task basis. |
 | `dotenv` | `[]string` | | A list of `.env` file paths to be parsed. |
-| `tasks` | [`map[string]Task`](#task) | | The task definitions. |
+| `run` | `string` | `always` | Default 'run' option for this Taskfile. Available options: `always`, `once` and `when_changed`. |
+| `interval` | `string` | `5s` | Sets a different watch interval when using `--watch`, the default being 5 seconds. This string should be a valid [Go Duration](https://pkg.go.dev/time#ParseDuration). |
 
 ### Include
 
@@ -98,8 +98,9 @@ Some environment variables can be overriden to adjust Task behavior.
 | `taskfile` | `string` | | The path for the Taskfile or directory to be included. If a directory, Task will look for files named `Taskfile.yml` or `Taskfile.yaml` inside that directory. If a relative path, resolved relative to the directory containing the including Taskfile. |
 | `dir` | `string` | The parent Taskfile directory | The working directory of the included tasks when run. |
 | `optional` | `bool` | `false` | If `true`, no errors will be thrown if the specified file does not exist. |
-| `internal` | `bool` | `false` | If `true`, tasks will not be callable from the command line and will be omitted from both `--list` and `--list-all`. |
+| `internal` | `bool` | `false` | Stops any task in the included Taskfile from being callable on the command line. These commands will also be omitted from the output when used with `--list`. |
 | `aliases` | `[]string` | | Alternative names for the namespace of the included Taskfile. |
+| `vars` | `map[string]Variable` | | A set of variables to apply to the included Taskfile. |
 
 :::info
 
@@ -116,25 +117,26 @@ includes:
 
 | Attribute | Type | Default | Description |
 | - | - | - | - |
-| `desc` | `string` | | A short description of the task. This is listed when calling `task --list`. |
-| `summary` | `string` | | A longer description of the task. This is listed when calling `task --summary [task]`. |
-| `aliases` | `[]string` | | Alternative names for the task. |
+| `cmds` | [`[]Command`](#command) | | A list of shell commands to be executed. |
+| `deps` | [`[]Dependency`](#dependency) | | A list of dependencies of this task. Tasks defined here will run in parallel before this task. |
 | `label` | `string` | | Overrides the name of the task in the output when a task is run. Supports variables. |
-| `sources` | `[]string` | | List of sources to check before running this task. Relevant for `checksum` and `timestamp` methods. Can be file paths or star globs. |
-| `dir` | `string` | | The current directory which this task should run. |
-| `method` | `string` | `checksum` | Method used by this task. Default to the one declared globally or `checksum`. Available options: `checksum`, `timestamp` and `none` |
-| `silent` | `bool` | `false` | Skips some output for this task. Note that STDOUT and STDERR of the commands will still be redirected. |
-| `internal` | `bool` | `false` | If `true`, this task will not be callable from the command line and will be omitted from both `--list` and `--list-all`. |
+| `desc` | `string` | | A short description of the task. This is displayed when calling `task --list`. |
+| `summary` | `string` | | A longer description of the task. This is displayed when calling `task --summary [task]`. |
+| `aliases` | `[]string` | | A list of alternative names by which the task can be called. |
+| `sources` | `[]string` | | A list of sources to check before running this task. Relevant for `checksum` and `timestamp` methods. Can be file paths or star globs. |
+| `generates` | `[]string` | | A list of files meant to be generated by this task. Relevant for `timestamp` method. Can be file paths or star globs. |
+| `status` | `[]string` | | A list of commands to check if this task should run. The task is skipped otherwise. This overrides `method`, `sources` and `generates`. |
+| `preconditions` | [`[]Precondition`](#precondition) | | A list of commands to check if this task should run. If a condition is not met, the task will error. |
+| `dir` | `string` | | The directory in which this task should run. Defaults to the current working directory. |
+| `vars` | [`map[string]Variable`](#variable) | | A set of variables that can be used in the task. |
+| `env` | [`map[string]Variable`](#variable) | | A set of environment variables that will be made available to shell commands. |
+| `silent` | `bool` | `false` | Hides task name and command from output. The command's output will still be redirected to `STDOUT` and `STDERR`. When combined with the `--list` flag, task descriptions will be hidden. |
+| `interactive` | `bool` | `false` | Tells task that the command is interactive. |
+| `internal` | `bool` | `false` | Stops a task from being callable on the command line. It will also be omitted from the output when used with `--list`. |
+| `method` | `string` | `checksum` | Defines which method is used to check the task is up-to-date. `timestamp` will compare the timestamp of the sources and generates files. `checksum` will check the checksum (You probably want to ignore the .task folder in your .gitignore file). `none` skips any validation and always run the task. |
+| `prefix` | `string` | | Defines a string to prefix the output of tasks running in parallel. Only used when the output mode is `prefixed`. |
+| `ignore_error` | `bool` | `false` | Continue execution if errors happen while executing commands. |
 | `run` | `string` | The one declared globally in the Taskfile or `always` | Specifies whether the task should run again or not if called more than once. Available options: `always`, `once` and `when_changed`. |
-| `prefix` | `string` | | Allows to override the prefix print before the STDOUT. Only relevant when using the `prefixed` output mode. |
-| `ignore_error` | `bool` | `false` | Continue execution if errors happen while executing the commands. |
-| `generates` | `[]string` | | List of files meant to be generated by this task. Relevant for `timestamp` method. Can be file paths or star globs. |
-| `status` | `[]string` | | List of commands to check if this task should run. The task is skipped otherwise. This overrides `method`, `sources` and `generates`. |
-| `preconditions` | [`[]Precondition`](#precondition) | | List of commands to check if this task should run. The task errors otherwise. |
-| `vars` | [`map[string]Variable`](#variable) | | Task variables. |
-| `env` | [`map[string]Variable`](#variable) | | Task environment. |
-| `deps` | [`[]Dependency`](#dependency) | | List of dependencies of this task. |
-| `cmds` | [`[]Command`](#command) | | List of commands to be executed. |
 
 :::info
 
@@ -180,11 +182,11 @@ tasks:
 | Attribute | Type | Default | Description |
 | - | - | - | - |
 | `cmd` | `string` | | The shell command to be executed. |
-| `defer` | `string` | | Alternative to `cmd`, but schedules the command to be executed at the end of this task instead of immediately. This cannot be used together with `cmd`. |
 | `silent` | `bool` | `false` | Skips some output for this command. Note that STDOUT and STDERR of the commands will still be redirected. |
-| `ignore_error` | `bool` | `false` | Continue execution if errors happen while executing the command. |
 | `task` | `string` | | Set this to trigger execution of another task instead of running a command. This cannot be set together with `cmd`. |
 | `vars` | [`map[string]Variable`](#variable) | | Optional additional variables to be passed to the referenced task. Only relevant when setting `task` instead of `cmd`. |
+| `ignore_error` | `bool` | `false` | Continue execution if errors happen while executing the command. |
+| `defer` | `string` | | Alternative to `cmd`, but schedules the command to be executed at the end of this task instead of immediately. This cannot be used together with `cmd`. |
 
 :::info
 
