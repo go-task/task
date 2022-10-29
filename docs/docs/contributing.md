@@ -60,8 +60,10 @@ to add a new section. If you're updating an existing feature, ensure that the
 documentation and any examples are up-to-date. Ensure that any examples follow
 the [Taskfile Styleguide](./styleguide.md).
 
-If you added a new command/flag, ensure that you add it to the [API
-Reference](./api_reference.md).
+If you added a new field, command or flag, ensure that you add it to the [API
+Reference](./api_reference.md). New fields also need to be added to the
+[JSON Schema](../static/schema.json). The descriptions for fields in the API
+reference and the schema should match.
 
 ### Writing tests
 
