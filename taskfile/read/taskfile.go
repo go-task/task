@@ -10,6 +10,7 @@ import (
 	"gopkg.in/yaml.v3"
 
 	"github.com/go-task/task/v3/internal/filepathext"
+	"github.com/go-task/task/v3/internal/sysinfo"
 	"github.com/go-task/task/v3/internal/templater"
 	"github.com/go-task/task/v3/taskfile"
 )
@@ -217,17 +218,30 @@ func exists(path string) (string, error) {
 
 func existsWalk(path string) (string, error) {
 	origPath := path
+	owner, err := sysinfo.Owner(path)
+	if err != nil {
+		return "", err
+	}
 	for {
 		fpath, err := exists(path)
 		if err == nil {
 			return fpath, nil
 		}
+
+		// Get the parent path/user id
 		parentPath := filepath.Dir(path)
+		parentOwner, err := sysinfo.Owner(parentPath)
+		if err != nil {
+			return "", err
+		}
 
 		// Error if we reached the root directory and still haven't found a file
-		if path == parentPath {
+		// OR if the user id of the directory changes
+		if path == parentPath || (parentOwner != owner) {
 			return "", fmt.Errorf(`task: No Taskfile found in "%s" (or any of the parent directories). Use "task --init" to create a new one`, origPath)
 		}
+
+		owner = parentOwner
 		path = parentPath
 	}
 }
