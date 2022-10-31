@@ -52,6 +52,35 @@ committed version (`.dist`) while still allowing individual users to override
 the Taskfile by adding an additional `Taskfile.yml` (which would be on
 `.gitignore`).
 
+### Running a Taskfile from a subdirectory
+
+If a Taskfile cannot be found in the current working directory, it will walk up
+the file tree until it finds one (similar to how `git` works). When running Task
+from a subdirectory like this, it will behave as if you ran it from the
+directory containing the Taskfile.
+
+You can use this functionality along with the special `{{.WORKING_DIR}}`
+variable to create some very useful reusable tasks. For example, if you have a
+monorepo with directories for each microservice, you can `cd` into a
+microservice directory and run a task command to bring it up without having to
+create multiple tasks or Taskfiles with identical content. For example:
+
+```yaml
+version: '3'
+
+tasks:
+  up:
+    dir: '{{.WORKING_DIR}}'
+    preconditions:
+      - test -f docker-compose.yml
+    cmds:
+      - docker-compose up -d
+```
+
+In this example, we can run `cd <serivce>` and `task up` and as long as the
+`<service>` directory contains a `docker-compose.yml`, the Docker composition will be
+brought up.
+
 ## Environment variables
 
 ### Task

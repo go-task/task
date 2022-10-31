@@ -1645,3 +1645,17 @@ func TestTaskfileWalk(t *testing.T) {
 		})
 	}
 }
+
+func TestWorkingDirectory(t *testing.T) {
+	var buff bytes.Buffer
+	e := task.Executor{
+		Dir:    "testdata/working_dir",
+		Stdout: &buff,
+		Stderr: &buff,
+	}
+	wd, err := os.Getwd()
+	assert.NoError(t, err)
+	assert.NoError(t, e.Setup())
+	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "default"}))
+	assert.Equal(t, fmt.Sprintf("%s\n", wd), buff.String())
+}
