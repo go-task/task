@@ -1,0 +1,7 @@
+version: '3'
+
+includes:
+  included: ./Included.yml
+
+env:
+  FOO: global
