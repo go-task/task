@@ -10,34 +10,15 @@ import (
 	"text/tabwriter"
 
 	"github.com/go-task/task/v3/internal/logger"
-	"github.com/go-task/task/v3/taskfile"
 )
 
-// ListTasksWithDesc reports tasks that have a description spec.
-func (e *Executor) ListTasksWithDesc() {
-	e.printTasks(false)
-}
-
-// ListAllTasks reports all tasks, with or without a description spec.
-func (e *Executor) ListAllTasks() {
-	e.printTasks(true)
-}
-
-func (e *Executor) printTasks(listAll bool) {
-	var tasks []*taskfile.Task
-	if listAll {
-		tasks = e.allTaskNames()
-	} else {
-		tasks = e.tasksWithDesc()
-	}
-
+// ListTasks prints a list of tasks.
+// Tasks that match the given filters will be excluded from the list.
+// The function returns a boolean indicating whether or not tasks were found.
+func (e *Executor) ListTasks(filters ...FilterFunc) bool {
+	tasks := e.GetTaskList(filters...)
 	if len(tasks) == 0 {
-		if listAll {
-			e.Logger.Outf(logger.Yellow, "task: No tasks available")
-		} else {
-			e.Logger.Outf(logger.Yellow, "task: No tasks with description available. Try --list-all to list all tasks")
-		}
-		return
+		return false
 	}
 	e.Logger.Outf(logger.Default, "task: Available tasks for this project:")
 
@@ -53,32 +34,7 @@ func (e *Executor) printTasks(listAll bool) {
 		fmt.Fprint(w, "\n")
 	}
 	w.Flush()
-}
-
-func (e *Executor) allTaskNames() (tasks []*taskfile.Task) {
-	tasks = make([]*taskfile.Task, 0, len(e.Taskfile.Tasks))
-	for _, task := range e.Taskfile.Tasks {
-		if !task.Internal {
-			tasks = append(tasks, task)
-		}
-	}
-	sort.Slice(tasks, func(i, j int) bool { return tasks[i].Task < tasks[j].Task })
-	return
-}
-
-func (e *Executor) tasksWithDesc() (tasks []*taskfile.Task) {
-	tasks = make([]*taskfile.Task, 0, len(e.Taskfile.Tasks))
-	for _, task := range e.Taskfile.Tasks {
-		if !task.Internal && task.Desc != "" {
-			compiledTask, err := e.FastCompiledTask(taskfile.Call{Task: task.Task})
-			if err == nil {
-				task = compiledTask
-			}
-			tasks = append(tasks, task)
-		}
-	}
-	sort.Slice(tasks, func(i, j int) bool { return tasks[i].Task < tasks[j].Task })
-	return
+	return true
 }
 
 // ListTaskNames prints only the task names in a Taskfile.
