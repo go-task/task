@@ -6,9 +6,9 @@ tasks:
     cmds:
       - yarn install
 
-  start:
+  default:
     desc: Start website
-    aliases: [s]
+    aliases: [s, start]
     vars:
       HOST: '{{default "localhost" .HOST}}'
       PORT: '{{default "3001" .PORT}}'

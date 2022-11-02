@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- It's now possible to call a `default` task in an included Taskfile by using
+  just the namespace. For example: `docs:default` is now automatically
+  aliased to `docs`
+  ([#661](https://github.com/go-task/task/issues/661), [#815](https://github.com/go-task/task/pull/815)).
+
 ## v3.17.0
 
 - Add a "Did you mean ...?" suggestion when a task does not exits another one
