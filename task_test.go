@@ -1107,6 +1107,30 @@ func TestInternalTask(t *testing.T) {
 	}
 }
 
+func TestIncludesShadowedDefault(t *testing.T) {
+	tt := fileContentTest{
+		Dir:       "testdata/includes_shadowed_default",
+		Target:    "included",
+		TrimSpace: true,
+		Files: map[string]string{
+			"file.txt": "shadowed",
+		},
+	}
+	tt.Run(t)
+}
+
+func TestIncludesUnshadowedDefault(t *testing.T) {
+	tt := fileContentTest{
+		Dir:       "testdata/includes_unshadowed_default",
+		Target:    "included",
+		TrimSpace: true,
+		Files: map[string]string{
+			"file.txt": "included",
+		},
+	}
+	tt.Run(t)
+}
+
 func TestSupportedFileNames(t *testing.T) {
 	fileNames := []string{
 		"Taskfile.yml",
