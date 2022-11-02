@@ -1,0 +1,10 @@
+version: '3'
+
+includes:
+  included:
+    taskfile: Taskfile2.yml
+
+tasks:
+  included:
+    cmds:
+      - echo "shadowed" > file.txt

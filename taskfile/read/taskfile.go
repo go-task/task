@@ -153,6 +153,13 @@ func Taskfile(readerNode *ReaderNode) (*taskfile.Taskfile, error) {
 		if err = taskfile.Merge(t, includedTaskfile, &includedTask, namespace); err != nil {
 			return err
 		}
+
+		if includedTaskfile.Tasks["default"] != nil && t.Tasks[namespace] == nil {
+			defaultTaskName := fmt.Sprintf("%s:default", namespace)
+			t.Tasks[defaultTaskName].Aliases = append(t.Tasks[defaultTaskName].Aliases, namespace)
+			t.Tasks[defaultTaskName].Aliases = append(t.Tasks[defaultTaskName].Aliases, includedTask.Aliases...)
+		}
+
 		return nil
 	})
 	if err != nil {
