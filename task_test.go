@@ -497,9 +497,6 @@ func TestAlias(t *testing.T) {
 func TestDuplicateAlias(t *testing.T) {
 	const dir = "testdata/alias"
 
-	data, err := os.ReadFile(filepathext.SmartJoin(dir, "alias-duplicate.txt"))
-	assert.NoError(t, err)
-
 	var buff bytes.Buffer
 	e := task.Executor{
 		Dir:    dir,
@@ -508,7 +505,7 @@ func TestDuplicateAlias(t *testing.T) {
 	}
 	assert.NoError(t, e.Setup())
 	assert.Error(t, e.Run(context.Background(), taskfile.Call{Task: "x"}))
-	assert.Equal(t, string(data), buff.String())
+	assert.Equal(t, "", buff.String())
 }
 
 func TestAliasSummary(t *testing.T) {
@@ -609,7 +606,7 @@ func TestNoLabelInList(t *testing.T) {
 		Stderr: &buff,
 	}
 	assert.NoError(t, e.Setup())
-	e.ListTasksWithDesc()
+	e.ListTasks(task.FilterOutInternal(), task.FilterOutNoDesc())
 	assert.Contains(t, buff.String(), "foo")
 }
 
@@ -627,7 +624,7 @@ func TestListAllShowsNoDesc(t *testing.T) {
 	assert.NoError(t, e.Setup())
 
 	var title string
-	e.ListAllTasks()
+	e.ListTasks(task.FilterOutInternal())
 	for _, title = range []string{
 		"foo",
 		"voo",
@@ -649,7 +646,7 @@ func TestListCanListDescOnly(t *testing.T) {
 	}
 
 	assert.NoError(t, e.Setup())
-	e.ListTasksWithDesc()
+	e.ListTasks(task.FilterOutInternal(), task.FilterOutNoDesc())
 
 	var title string
 	assert.Contains(t, buff.String(), "foo")
@@ -1037,12 +1034,7 @@ func TestIncludesInternal(t *testing.T) {
 	}{
 		{"included internal task via task", "task-1", false, "Hello, World!\n"},
 		{"included internal task via dep", "task-2", false, "Hello, World!\n"},
-		{
-			"included internal direct",
-			"included:task-3",
-			true,
-			"task: No tasks with description available. Try --list-all to list all tasks\n",
-		},
+		{"included internal direct", "included:task-3", true, ""},
 	}
 
 	for _, test := range tests {
@@ -1077,12 +1069,7 @@ func TestInternalTask(t *testing.T) {
 	}{
 		{"internal task via task", "task-1", false, "Hello, World!\n"},
 		{"internal task via dep", "task-2", false, "Hello, World!\n"},
-		{
-			"internal direct",
-			"task-3",
-			true,
-			"task: No tasks with description available. Try --list-all to list all tasks\n",
-		},
+		{"internal direct", "task-3", true, ""},
 	}
 
 	for _, test := range tests {
