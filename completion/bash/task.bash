@@ -56,7 +56,7 @@ function _task()
   done < <( "${words[@]}" $_GO_TASK_COMPLETION_LIST_OPTION 2> /dev/null )
 
   # Prepare task name proposals.
-  COMPREPLY=( $( compgen -W "${tasks[*]}" -- "$cur" ) )
+  COMPREPLY=( $( compgen -W "${tasks[*]%,}" -- "$cur" ) )
 
   # Post-process proposals because task names might contain colons.
   __ltrim_colon_completions "$cur"
