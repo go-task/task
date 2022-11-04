@@ -3,6 +3,7 @@ package task
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/go-task/task/v3/internal/execext"
 	"github.com/go-task/task/v3/internal/logger"
@@ -48,6 +49,9 @@ func (e *Executor) isTaskUpToDate(ctx context.Context, t *taskfile.Task) (bool, 
 		if err != nil {
 			return false, err
 		}
+
+		logInputsGenerates(e, t)
+
 		isUpToDate, err := checker.IsUpToDate()
 		if err != nil {
 			return false, err
@@ -58,6 +62,20 @@ func (e *Executor) isTaskUpToDate(ctx context.Context, t *taskfile.Task) (bool, 
 	}
 
 	return true, nil
+}
+
+// print the sources and generates that are checked if verbose
+func logInputsGenerates(e *Executor, t *taskfile.Task) {
+	if e.Logger.Verbose {
+		sources, err := status.Globs(t.Dir, t.Sources)
+		if err == nil {
+			e.Logger.VerboseOutf(logger.Cyan, "task: sources: [\"%s\"]\n", strings.Join(sources, `", "`))
+		}
+		generates, err := status.Globs(t.Dir, t.Generates)
+		if err == nil {
+			e.Logger.VerboseOutf(logger.Cyan, "task: generates: [\"%s\"]\n", strings.Join(generates, `", "`))
+		}
+	}
 }
 
 func (e *Executor) statusOnError(t *taskfile.Task) error {

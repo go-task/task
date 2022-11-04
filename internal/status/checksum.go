@@ -34,7 +34,7 @@ func (c *Checksum) IsUpToDate() (bool, error) {
 	data, _ := os.ReadFile(checksumFile)
 	oldMd5 := strings.TrimSpace(string(data))
 
-	sources, err := globs(c.TaskDir, c.Sources)
+	sources, err := Globs(c.TaskDir, c.Sources)
 	if err != nil {
 		return false, err
 	}

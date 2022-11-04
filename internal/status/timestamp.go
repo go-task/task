@@ -19,11 +19,11 @@ func (t *Timestamp) IsUpToDate() (bool, error) {
 		return false, nil
 	}
 
-	sources, err := globs(t.Dir, t.Sources)
+	sources, err := Globs(t.Dir, t.Sources)
 	if err != nil {
 		return false, nil
 	}
-	generates, err := globs(t.Dir, t.Generates)
+	generates, err := Globs(t.Dir, t.Generates)
 	if err != nil {
 		return false, nil
 	}
@@ -47,7 +47,7 @@ func (t *Timestamp) Kind() string {
 
 // Value implements the Checker Interface
 func (t *Timestamp) Value() (interface{}, error) {
-	sources, err := globs(t.Dir, t.Sources)
+	sources, err := Globs(t.Dir, t.Sources)
 	if err != nil {
 		return time.Now(), err
 	}
