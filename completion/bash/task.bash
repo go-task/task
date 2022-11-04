@@ -11,7 +11,7 @@ function _task()
   local i
   for i in "${!words[@]}"; do
     if [ "${words[$i]}" == "--" ]; then
-      # Do not complete words following `--` passed to CLI_ARGS.
+      # Do not complete words following `--` which are passed to CLI_ARGS.
       [ $cword -gt $i ] && return
       # Remove the words following `--` to not put --list in CLI_ARGS.
       words=( "${words[@]:0:$i}" )
@@ -44,11 +44,21 @@ function _task()
     ;;
   esac
 
-  # Prepare task name completions.
+  # Obtain task names.
   local tasks=( $( "${words[@]}" --silent $_GO_TASK_COMPLETION_LIST_OPTION 2> /dev/null ) )
+
+  # Obtain alias names. (TODO: Include aliases in --list --silent as well.)
+  local line
+  while read -r line; do
+    if [[ "${line}" =~ \(aliases:[[:space:]]+(.+)\) ]]; then
+      tasks+=( ${BASH_REMATCH[1]} )
+    fi
+  done < <( "${words[@]}" $_GO_TASK_COMPLETION_LIST_OPTION 2> /dev/null )
+
+  # Prepare task name proposals.
   COMPREPLY=( $( compgen -W "${tasks[*]}" -- "$cur" ) )
 
-  # Post-process because task names might contain colons.
+  # Post-process proposals because task names might contain colons.
   __ltrim_colon_completions "$cur"
 }
 
