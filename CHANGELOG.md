@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v3.18.0
 
 - Show aliases on `task --list --silent` (`task --ls`). This means that aliases
   will be completed by the completion scripts

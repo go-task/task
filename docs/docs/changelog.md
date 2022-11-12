@@ -5,6 +5,18 @@ sidebar_position: 6
 
 # Changelog
 
+## v3.18.0
+
+- Show aliases on `task --list --silent` (`task --ls`). This means that aliases
+  will be completed by the completion scripts
+  ([#919](https://github.com/go-task/task/pull/919)).
+- Tasks in the root Taskfile will now be displayed first in `--list`/`--list-all`
+  output ([#806](https://github.com/go-task/task/pull/806), [#890](https://github.com/go-task/task/pull/890)).
+- It's now possible to call a `default` task in an included Taskfile by using
+  just the namespace. For example: `docs:default` is now automatically
+  aliased to `docs`
+  ([#661](https://github.com/go-task/task/issues/661), [#815](https://github.com/go-task/task/pull/815)).
+
 ## v3.17.0
 
 - Add a "Did you mean ...?" suggestion when a task does not exits another one
