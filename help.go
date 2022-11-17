@@ -1,6 +1,7 @@
 package task
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
@@ -9,15 +10,69 @@ import (
 	"strings"
 	"text/tabwriter"
 
+	"github.com/go-task/task/v3/internal/editors"
 	"github.com/go-task/task/v3/internal/logger"
 )
 
+// ListOptions collects list-related options
+type ListOptions struct {
+	ListOnlyTasksWithDescriptions bool
+	ListAllTasks                  bool
+	FormatTaskListAsJSON          bool
+}
+
+// NewListOptions creates a new ListOptions instance
+func NewListOptions(list, listAll, listAsJson bool) ListOptions {
+	return ListOptions{
+		ListOnlyTasksWithDescriptions: list,
+		ListAllTasks:                  listAll,
+		FormatTaskListAsJSON:          listAsJson,
+	}
+}
+
+// ShouldListTasks returns true if one of the options to list tasks has been set to true
+func (o ListOptions) ShouldListTasks() bool {
+	return o.ListOnlyTasksWithDescriptions || o.ListAllTasks
+}
+
+// Validate validates that the collection of list-related options are in a valid configuration
+func (o ListOptions) Validate() interface{} {
+	if o.ListOnlyTasksWithDescriptions && o.ListAllTasks {
+		return fmt.Errorf("task: cannot use --list and --list-all at the same time")
+	}
+	if o.FormatTaskListAsJSON && !(o.ShouldListTasks()) {
+		return fmt.Errorf("task: --json only applies to --list or --list-all")
+	}
+	return nil
+}
+
+// Filters returns the slice of FilterFunc which filters a list
+// of taskfile.Task according to the given ListOptions
+func (o ListOptions) Filters() []FilterFunc {
+	filters := []FilterFunc{FilterOutInternal()}
+
+	if o.ListOnlyTasksWithDescriptions {
+		filters = append(filters, FilterOutNoDesc())
+	}
+
+	return filters
+}
+
 // ListTasks prints a list of tasks.
 // Tasks that match the given filters will be excluded from the list.
-// The function returns a boolean indicating whether or not tasks were found.
-func (e *Executor) ListTasks(filters ...FilterFunc) bool {
-	tasks := e.GetTaskList(filters...)
+// The function returns a boolean indicating whether tasks were found.
+func (e *Executor) ListTasks(o ListOptions) bool {
+	tasks := e.GetTaskList(o.Filters()...)
+	if o.FormatTaskListAsJSON {
+		_ = json.NewEncoder(os.Stdout).Encode(editors.ToOutput(tasks))
+		return len(tasks) > 0
+	}
 	if len(tasks) == 0 {
+		if o.ListOnlyTasksWithDescriptions {
+			e.Logger.Outf(logger.Yellow, "task: No tasks with description available. Try --list-all to list all tasks")
+		} else if o.ListAllTasks {
+			e.Logger.Outf(logger.Yellow, "task: No tasks available")
+		}
 		return false
 	}
 	e.Logger.Outf(logger.Default, "task: Available tasks for this project:")

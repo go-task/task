@@ -606,7 +606,7 @@ func TestNoLabelInList(t *testing.T) {
 		Stderr: &buff,
 	}
 	assert.NoError(t, e.Setup())
-	e.ListTasks(task.FilterOutInternal(), task.FilterOutNoDesc())
+	e.ListTasks(task.ListOptions{ListOnlyTasksWithDescriptions: true})
 	assert.Contains(t, buff.String(), "foo")
 }
 
@@ -624,7 +624,7 @@ func TestListAllShowsNoDesc(t *testing.T) {
 	assert.NoError(t, e.Setup())
 
 	var title string
-	e.ListTasks(task.FilterOutInternal())
+	e.ListTasks(task.ListOptions{ListAllTasks: true})
 	for _, title = range []string{
 		"foo",
 		"voo",
@@ -646,7 +646,7 @@ func TestListCanListDescOnly(t *testing.T) {
 	}
 
 	assert.NoError(t, e.Setup())
-	e.ListTasks(task.FilterOutInternal(), task.FilterOutNoDesc())
+	e.ListTasks(task.ListOptions{ListOnlyTasksWithDescriptions: true})
 
 	var title string
 	assert.Contains(t, buff.String(), "foo")

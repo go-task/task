@@ -72,13 +72,11 @@ func (e *Executor) Run(ctx context.Context, calls ...taskfile.Call) error {
 	for _, call := range calls {
 		task, err := e.GetTask(call)
 		if err != nil {
-			e.ListTasks(FilterOutInternal(), FilterOutNoDesc())
-			return err
+			return fmt.Errorf("task: executor.Run(): executor.GetTask(): %v", err)
 		}
 
 		if task.Internal {
-			e.ListTasks(FilterOutInternal(), FilterOutNoDesc())
-			return &taskInternalError{taskName: call.Task}
+			return fmt.Errorf("task: executor.Run(): %v", &taskInternalError{taskName: call.Task})
 		}
 	}
 
@@ -396,7 +394,7 @@ func (e *Executor) GetTaskList(filters ...FilterFunc) []*taskfile.Task {
 		tasks = filter(tasks)
 	}
 
-	// Sort the tasks
+	// Sort the tasks.
 	// Tasks that are not namespaced should be listed before tasks that are.
 	// We detect this by searching for a ':' in the task name.
 	sort.Slice(tasks, func(i, j int) bool {
