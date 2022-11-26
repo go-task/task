@@ -9,6 +9,12 @@ Some of the work to improve the Task ecosystem is done by the community, be
 it installation methods or integrations with code editor. I (the author) am
 thankful for everyone that helps me to improve the overall experience.
 
+## Translations
+
+[@DeronW](https://github.com/DeronW) maintains  the
+[Chinese translation](https://task-zh.readthedocs.io/zh_CN/latest/) of the
+website [on this repository](https://github.com/DeronW/task).
+
 ## Editor Integrations
 
 ### JSON Schema

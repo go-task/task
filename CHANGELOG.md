@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- The website got a brand new [translation to Chinese](https://task-zh.readthedocs.io/zh_CN/latest/)
+  by [@DeronW](https://github.com/DeronW). Thanks!
+
 ## v3.18.0
 
 - Show aliases on `task --list --silent` (`task --ls`). This means that aliases
