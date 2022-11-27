@@ -19,13 +19,12 @@ website [on this repository](https://github.com/DeronW/task).
 
 ### JSON Schema
 
-[@KROSF](https://github.com/KROSF) worked on a JSON Schema [into this Gist](https://gist.github.com/KROSF/c5435acf590acd632f71bb720f685895),
-which later was made officially available by [@Crandel](https://github.com/Crandel)
-at [https://json.schemastore.org/taskfile.json](https://json.schemastore.org/taskfile.json).
-Further improvements are possible by opening pull requests changing
-[this file](https://github.com/SchemaStore/schemastore/blob/master/src/schemas/json/taskfile.json).
-Some code editors, like Visual Studio Code, make use of Schema Store
-automatically.
+Initial work on the schema was made by [@KROSF](https://github.com/KROSF)
+on [this Gist](https://gist.github.com/KROSF/c5435acf590acd632f71bb720f685895).
+The schema is currently available at
+https://taskfile.dev/schema.json and linked at https://json.schemastore.org/taskfile.json
+so it is be used automatically many code editors, like VSCode.
+Contributions can be done by editing [this file](https://github.com/go-task/task/blob/master/docs/static/schema.json).
 
 ### Visual Studio Code extension
 
