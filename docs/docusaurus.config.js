@@ -160,7 +160,7 @@ const config = {
             title: 'Translations',
             items: [
               {
-                label: 'Chinese',
+                label: 'Chinese | 中国人',
                 href: CHINESE_URL
               }
             ]
