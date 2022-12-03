@@ -36,11 +36,11 @@ func (o ListOptions) ShouldListTasks() bool {
 }
 
 // Validate validates that the collection of list-related options are in a valid configuration
-func (o ListOptions) Validate() interface{} {
+func (o ListOptions) Validate() error {
 	if o.ListOnlyTasksWithDescriptions && o.ListAllTasks {
 		return fmt.Errorf("task: cannot use --list and --list-all at the same time")
 	}
-	if o.FormatTaskListAsJSON && !(o.ShouldListTasks()) {
+	if o.FormatTaskListAsJSON && !o.ShouldListTasks() {
 		return fmt.Errorf("task: --json only applies to --list or --list-all")
 	}
 	return nil
@@ -60,12 +60,18 @@ func (o ListOptions) Filters() []FilterFunc {
 
 // ListTasks prints a list of tasks.
 // Tasks that match the given filters will be excluded from the list.
-// The function returns a boolean indicating whether tasks were found.
-func (e *Executor) ListTasks(o ListOptions) bool {
+// The function returns a boolean indicating whether tasks were found
+// and an error if one was encountered while preparing the output.
+func (e *Executor) ListTasks(o ListOptions) (bool, error) {
 	tasks := e.GetTaskList(o.Filters()...)
 	if o.FormatTaskListAsJSON {
-		_ = json.NewEncoder(os.Stdout).Encode(editors.ToOutput(tasks))
-		return len(tasks) > 0
+		encoder := json.NewEncoder(e.Stdout)
+		encoder.SetIndent("", "  ")
+		if err := encoder.Encode(editors.ToOutput(tasks)); err != nil {
+			return false, err
+		}
+
+		return len(tasks) > 0, nil
 	}
 	if len(tasks) == 0 {
 		if o.ListOnlyTasksWithDescriptions {
@@ -73,7 +79,7 @@ func (e *Executor) ListTasks(o ListOptions) bool {
 		} else if o.ListAllTasks {
 			e.Logger.Outf(logger.Yellow, "task: No tasks available")
 		}
-		return false
+		return false, nil
 	}
 	e.Logger.Outf(logger.Default, "task: Available tasks for this project:")
 
@@ -86,10 +92,12 @@ func (e *Executor) ListTasks(o ListOptions) bool {
 		if len(task.Aliases) > 0 {
 			e.Logger.FOutf(w, logger.Cyan, "\t(aliases: %s)", strings.Join(task.Aliases, ", "))
 		}
-		fmt.Fprint(w, "\n")
+		_, _ = fmt.Fprint(w, "\n")
 	}
-	w.Flush()
-	return true
+	if err := w.Flush(); err != nil {
+		return false, err
+	}
+	return true, nil
 }
 
 // ListTaskNames prints only the task names in a Taskfile.

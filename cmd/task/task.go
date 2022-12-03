@@ -184,8 +184,10 @@ func main() {
 	}
 
 	if listOptions.ShouldListTasks() {
-		_ = e.ListTasks(listOptions)
-		return // if we are listing tasks, we don't expect a task to run
+		if foundTasks, err := e.ListTasks(listOptions); !foundTasks || err != nil {
+			os.Exit(1)
+		}
+		return
 	}
 
 	var (

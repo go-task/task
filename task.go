@@ -72,11 +72,11 @@ func (e *Executor) Run(ctx context.Context, calls ...taskfile.Call) error {
 	for _, call := range calls {
 		task, err := e.GetTask(call)
 		if err != nil {
-			return fmt.Errorf("task: executor.Run(): executor.GetTask(): %v", err)
+			return err
 		}
 
 		if task.Internal {
-			return fmt.Errorf("task: executor.Run(): %v", &taskInternalError{taskName: call.Task})
+			return &taskInternalError{taskName: call.Task}
 		}
 	}
 

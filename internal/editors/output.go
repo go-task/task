@@ -9,17 +9,10 @@ type Output struct {
 
 // Task describes a single task
 type Task struct {
-	Name    string `json:"name"`
-	Desc    string `json:"desc"`
-	Summary string `json:"summary"`
-
-	// "up-to-date" vs. "out-of-date"? Alternatively could be a "UpToDate bool"
-	//Status string `json:"status"`
-	UpToDate bool `json:"up_to_date"`
-
-	//// These could be added on the future. Don't need to be on the MVP
-	//Env map[string]string `json:"env"`
-	//Vars map[string]string `json:"vars"`
+	Name     string `json:"name"`
+	Desc     string `json:"desc"`
+	Summary  string `json:"summary"`
+	UpToDate bool   `json:"up_to_date"`
 }
 
 func ToOutput(tasks []*taskfile.Task) *Output {
