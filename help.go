@@ -1,8 +1,10 @@
 package task
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/go-task/task/v3/taskfile"
 	"io"
 	"log"
 	"os"
@@ -65,9 +67,14 @@ func (o ListOptions) Filters() []FilterFunc {
 func (e *Executor) ListTasks(o ListOptions) (bool, error) {
 	tasks := e.GetTaskList(o.Filters()...)
 	if o.FormatTaskListAsJSON {
+		output, err := e.ToEditorOutput(tasks)
+		if err != nil {
+			return false, err
+		}
+
 		encoder := json.NewEncoder(e.Stdout)
 		encoder.SetIndent("", "  ")
-		if err := encoder.Encode(editors.ToOutput(tasks)); err != nil {
+		if err := encoder.Encode(output); err != nil {
 			return false, err
 		}
 
@@ -131,4 +138,23 @@ func (e *Executor) ListTaskNames(allTasks bool) {
 	for _, t := range s {
 		fmt.Fprintln(w, t)
 	}
+}
+
+func (e *Executor) ToEditorOutput(tasks []*taskfile.Task) (*editors.Output, error) {
+	o := &editors.Output{
+		Tasks: make([]editors.Task, len(tasks)),
+	}
+	for i, t := range tasks {
+		upToDate, err := e.isTaskUpToDate(context.Background(), t)
+		if err != nil {
+			return nil, err
+		}
+		o.Tasks[i] = editors.Task{
+			Name:     t.Name(),
+			Desc:     t.Desc,
+			Summary:  t.Summary,
+			UpToDate: upToDate,
+		}
+	}
+	return o, nil
 }
