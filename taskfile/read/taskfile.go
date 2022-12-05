@@ -73,7 +73,7 @@ func Taskfile(readerNode *ReaderNode) (*taskfile.Taskfile, error) {
 
 	err = t.Includes.Range(func(namespace string, includedTask taskfile.IncludedTaskfile) error {
 		if v >= 3.0 {
-			tr := templater.Templater{Vars: &taskfile.Vars{}, RemoveNoValue: true}
+			tr := templater.Templater{Vars: t.Vars, RemoveNoValue: true}
 			includedTask = taskfile.IncludedTaskfile{
 				Taskfile:       tr.Replace(includedTask.Taskfile),
 				Dir:            tr.Replace(includedTask.Dir),

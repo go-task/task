@@ -1,0 +1,10 @@
+version: "3"
+
+vars:
+  MODULE_NAME: included
+
+includes:
+  include: './{{.MODULE_NAME}}/Taskfile.yml'
+  include-with-dir:
+    taskfile: './{{.MODULE_NAME}}/Taskfile.yml'
+    dir: '{{.MODULE_NAME}}'
