@@ -1,0 +1,28 @@
+version: '3'
+
+env:
+  FOO: global
+
+tasks:
+  dotenv:
+    dotenv: ['.env']
+    cmds:
+      - echo "$FOO" > dotenv.txt
+
+  dotenv-overridden-by-env:
+    dotenv: ['.env']
+    env:
+      FOO: overridden
+    cmds:
+      - echo "$FOO" > dotenv-overridden-by-env.txt
+
+  dotenv-with-var-name:
+    vars:
+      DOTENV: .env
+    dotenv: ['{{.DOTENV}}']
+    cmds:
+      - echo "$FOO" > dotenv-with-var-name.txt
+
+  no-dotenv:
+    cmds:
+      - echo "$FOO" > no-dotenv.txt

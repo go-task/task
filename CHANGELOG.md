@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add task-level `dotenv` support
+  ([#389](https://github.com/go-task/task/issues/389), [#904](https://github.com/go-task/task/pull/904)).
 - It's now possible to use global level variables on `includes`
   ([#942](https://github.com/go-task/task/issues/942), [#943](https://github.com/go-task/task/pull/943)).
 - The website got a brand new [translation to Chinese](https://task-zh.readthedocs.io/zh_CN/latest/)
