@@ -121,15 +121,7 @@ func Taskfile(readerNode *ReaderNode) (*taskfile.Taskfile, error) {
 			return err
 		}
 
-		tasksWithDotenv := false
-		for _, v := range includedTaskfile.Tasks {
-			if len(v.Dotenv) > 0 {
-				tasksWithDotenv = true
-				break
-			}
-		}
-
-		if v >= 3.0 && (len(includedTaskfile.Dotenv) > 0 || tasksWithDotenv) {
+		if v >= 3.0 && len(includedTaskfile.Dotenv) > 0 {
 			return ErrIncludedTaskfilesCantHaveDotenvs
 		}
 

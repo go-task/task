@@ -1400,20 +1400,6 @@ func TestTaskDotenvFail(t *testing.T) {
 	tt.Run(t)
 }
 
-func TestTaskDotenvShouldErrorWhenIncludingDependantTaskDotenvs(t *testing.T) {
-	var buff bytes.Buffer
-	e := task.Executor{
-		Dir:        "testdata/dotenv_task/included",
-		Entrypoint: "Taskfile.yml",
-		Summary:    true,
-		Stdout:     &buff,
-		Stderr:     &buff,
-	}
-	err := e.Setup()
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "move the dotenv")
-}
-
 func TestTaskDotenvOverriddenByEnv(t *testing.T) {
 	tt := fileContentTest{
 		Dir:       "testdata/dotenv_task/default",

@@ -1,7 +1,0 @@
-version: '3'
-
-tasks:
-  dotenv:
-    dotenv: ['.env']
-    cmds:
-      - echo "$FOO" > included-dotenv.txt
