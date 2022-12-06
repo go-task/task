@@ -179,16 +179,16 @@ func (e *Executor) setupCompiler(v float64) error {
 			Logger:       e.Logger,
 		}
 	} else {
-		workingDir, err := os.Getwd()
+		userWorkingDir, err := os.Getwd()
 		if err != nil {
 			return err
 		}
 		e.Compiler = &compilerv3.CompilerV3{
-			Dir:          e.Dir,
-			WorkingDir:   workingDir,
-			TaskfileEnv:  e.Taskfile.Env,
-			TaskfileVars: e.Taskfile.Vars,
-			Logger:       e.Logger,
+			Dir:            e.Dir,
+			UserWorkingDir: userWorkingDir,
+			TaskfileEnv:    e.Taskfile.Env,
+			TaskfileVars:   e.Taskfile.Vars,
+			Logger:         e.Logger,
 		}
 	}
 

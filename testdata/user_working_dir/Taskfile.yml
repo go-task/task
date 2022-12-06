@@ -3,5 +3,5 @@ version: '3'
 tasks:
   default:
     cmds:
-      - echo '{{.WORKING_DIR}}'
+      - echo '{{.USER_WORKING_DIR}}'
     silent: true

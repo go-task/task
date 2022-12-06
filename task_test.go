@@ -1739,10 +1739,10 @@ func TestTaskfileWalk(t *testing.T) {
 	}
 }
 
-func TestWorkingDirectory(t *testing.T) {
+func TestUserWorkingDirectory(t *testing.T) {
 	var buff bytes.Buffer
 	e := task.Executor{
-		Dir:    "testdata/working_dir",
+		Dir:    "testdata/user_working_dir",
 		Stdout: &buff,
 		Stderr: &buff,
 	}
