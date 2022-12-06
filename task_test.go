@@ -1059,6 +1059,40 @@ func TestIncludesInternal(t *testing.T) {
 	}
 }
 
+func TestIncludesInterpolation(t *testing.T) {
+	const dir = "testdata/includes_interpolation"
+	tests := []struct {
+		name           string
+		task           string
+		expectedErr    bool
+		expectedOutput string
+	}{
+		{"include", "include", false, "includes_interpolation\n"},
+		{"include with dir", "include-with-dir", false, "included\n"},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			var buff bytes.Buffer
+			e := task.Executor{
+				Dir:    dir,
+				Stdout: &buff,
+				Stderr: &buff,
+				Silent: true,
+			}
+			assert.NoError(t, e.Setup())
+
+			err := e.Run(context.Background(), taskfile.Call{Task: test.task})
+			if test.expectedErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+			}
+			assert.Equal(t, test.expectedOutput, buff.String())
+		})
+	}
+}
+
 func TestInternalTask(t *testing.T) {
 	const dir = "testdata/internal_task"
 	tests := []struct {

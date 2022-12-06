@@ -13,3 +13,15 @@
     <a href="https://taskfile.dev/installation/">Installation</a> | <a href="https://taskfile.dev/usage/">Documentation</a> | <a href="https://twitter.com/taskfiledev">Twitter</a> | <a href="https://discord.gg/6TY36E39UK">Discord</a>
   </p>
 </div>
+
+## Gold Sponsors
+
+<div align="center">
+
+| [Appwrite][appwrite] |
+| - |
+| [![Appwrite](/docs/static/img/appwrite.svg)][appwrite] |
+
+</div>
+
+[appwrite]: https://appwrite.io/?utm_source=task_github&utm_medium=social&utm_campaign=task_oss_fund

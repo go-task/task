@@ -48,6 +48,16 @@ guide to check the full schema documentation and Task features.
   if a given set of files haven't changed since last run (based either on its
   timestamp or content).
 
+## Gold Sponsors
+
+<div class="gold-sponsors">
+
+| [Appwrite][appwrite] |
+| - |
+| [![Appwrite](/img/appwrite.svg)][appwrite] |
+
+</div>
+
 [make]: https://www.gnu.org/software/make/
 [go]: https://go.dev/
 [yaml]: http://yaml.org/
@@ -55,3 +65,4 @@ guide to check the full schema documentation and Task features.
 [snapcraft]: https://snapcraft.io/
 [scoop]: https://scoop.sh/
 [sh]: https://github.com/mvdan/sh
+[appwrite]: https://appwrite.io/?utm_source=taskfile.dev&utm_medium=website&utm_campaign=task_oss_fund

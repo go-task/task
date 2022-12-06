@@ -267,7 +267,7 @@
       }
     }
   },
-  "oneOf": [
+  "allOf": [
     {
       "type": "object",
       "properties": {
