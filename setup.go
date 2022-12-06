@@ -80,7 +80,7 @@ func (e *Executor) setCurrentDir() error {
 
 func (e *Executor) readTaskfile() error {
 	var err error
-	e.Taskfile, err = read.Taskfile(&read.ReaderNode{
+	e.Taskfile, e.Dir, err = read.Taskfile(&read.ReaderNode{
 		Dir:        e.Dir,
 		Entrypoint: e.Entrypoint,
 		Parent:     nil,
@@ -179,11 +179,16 @@ func (e *Executor) setupCompiler(v float64) error {
 			Logger:       e.Logger,
 		}
 	} else {
+		userWorkingDir, err := os.Getwd()
+		if err != nil {
+			return err
+		}
 		e.Compiler = &compilerv3.CompilerV3{
-			Dir:          e.Dir,
-			TaskfileEnv:  e.Taskfile.Env,
-			TaskfileVars: e.Taskfile.Vars,
-			Logger:       e.Logger,
+			Dir:            e.Dir,
+			UserWorkingDir: userWorkingDir,
+			TaskfileEnv:    e.Taskfile.Env,
+			TaskfileVars:   e.Taskfile.Vars,
+			Logger:         e.Logger,
 		}
 	}
 

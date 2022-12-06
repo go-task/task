@@ -18,7 +18,8 @@ import (
 var _ compiler.Compiler = &CompilerV3{}
 
 type CompilerV3 struct {
-	Dir string
+	Dir            string
+	UserWorkingDir string
 
 	TaskfileEnv  *taskfile.Vars
 	TaskfileVars *taskfile.Vars
@@ -179,9 +180,10 @@ func (c *CompilerV3) getSpecialVars(t *taskfile.Task) (map[string]string, error)
 	}
 
 	return map[string]string{
-		"TASK":         t.Task,
-		"ROOT_DIR":     c.Dir,
-		"TASKFILE_DIR": taskfileDir,
+		"TASK":             t.Task,
+		"ROOT_DIR":         c.Dir,
+		"TASKFILE_DIR":     taskfileDir,
+		"USER_WORKING_DIR": c.UserWorkingDir,
 	}, nil
 }
 

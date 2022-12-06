@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- It's now possible to run Taskfiles from subdirectories! A new `USER_WORKING_DIR` special
+  variable was added to add even more flexibility for monorepos
+  ([#289](https://github.com/go-task/task/issues/289), [#920](https://github.com/go-task/task/pull/920)).
 - Add task-level `dotenv` support
   ([#389](https://github.com/go-task/task/issues/389), [#904](https://github.com/go-task/task/pull/904)).
 - It's now possible to use global level variables on `includes`

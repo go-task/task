@@ -1,0 +1,7 @@
+version: '3'
+
+tasks:
+  default:
+    cmds:
+      - echo '{{.USER_WORKING_DIR}}'
+    silent: true
