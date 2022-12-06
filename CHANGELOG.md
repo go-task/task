@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v3.19.0 - 2022-12-05
 
 - Installation via npm now supports [pnpm](https://pnpm.io/) as well
   ([go-task/go-npm#2](https://github.com/go-task/go-npm/issues/2), [go-task/go-npm#3](https://github.com/go-task/go-npm/pull/3)).
@@ -14,7 +14,7 @@
 - The website got a brand new [translation to Chinese](https://task-zh.readthedocs.io/zh_CN/latest/)
   by [@DeronW](https://github.com/DeronW). Thanks!
 
-## v3.18.0
+## v3.18.0 - 2022-11-12
 
 - Show aliases on `task --list --silent` (`task --ls`). This means that aliases
   will be completed by the completion scripts
@@ -26,7 +26,7 @@
   aliased to `docs`
   ([#661](https://github.com/go-task/task/issues/661), [#815](https://github.com/go-task/task/pull/815)).
 
-## v3.17.0
+## v3.17.0 - 2022-10-14
 
 - Add a "Did you mean ...?" suggestion when a task does not exits another one
   with a similar name is found
