@@ -91,21 +91,23 @@ func (e *Executor) readTaskfile() error {
 
 func (e *Executor) setupFuzzyModel() {
 	if e.Taskfile != nil {
-		model := fuzzy.NewModel()
-		model.SetThreshold(1) // because we want to build grammar based on every task name
-
-		var words []string
-		for taskName := range e.Taskfile.Tasks {
-			words = append(words, taskName)
-
-			for _, task := range e.Taskfile.Tasks {
-				words = append(words, task.Aliases...)
-			}
-		}
-
-		model.Train(words)
-		e.fuzzyModel = model
+		return
 	}
+
+	model := fuzzy.NewModel()
+	model.SetThreshold(1) // because we want to build grammar based on every task name
+
+	var words []string
+	for taskName := range e.Taskfile.Tasks {
+		words = append(words, taskName)
+
+		for _, task := range e.Taskfile.Tasks {
+			words = append(words, task.Aliases...)
+		}
+	}
+
+	model.Train(words)
+	e.fuzzyModel = model
 }
 
 func (e *Executor) setupTempDir() error {

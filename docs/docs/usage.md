@@ -147,6 +147,45 @@ tasks:
       - echo "Using $KEYNAME and endpoint $ENDPOINT"
 ```
 
+Dotenv files can also be specified at the task level:
+
+```yaml
+version: '3'
+
+env:
+  ENV: testing
+
+tasks:
+  greet:
+    dotenv: ['.env', '{{.ENV}}/.env.', '{{.HOME}}/.env']
+    cmds:
+      - echo "Using $KEYNAME and endpoint $ENDPOINT"
+```
+
+Environment variables specified explicitly at the task-level will override
+variables defined in dotfiles:
+
+```yaml
+version: '3'
+
+env:
+  ENV: testing
+
+tasks:
+  greet:
+    dotenv: ['.env', '{{.ENV}}/.env.', '{{.HOME}}/.env']
+    env:
+      KEYNAME: DIFFERENT_VALUE
+    cmds:
+      - echo "Using $KEYNAME and endpoint $ENDPOINT"
+```
+
+:::info
+
+Please note that you are not currently able to use the `dotenv` key inside included Taskfiles.
+
+:::
+
 ## Including other Taskfiles
 
 If you want to share tasks between different projects (Taskfiles), you can use

@@ -75,7 +75,7 @@ func Taskfile(readerNode *ReaderNode) (*taskfile.Taskfile, string, error) {
 
 	err = t.Includes.Range(func(namespace string, includedTask taskfile.IncludedTaskfile) error {
 		if v >= 3.0 {
-			tr := templater.Templater{Vars: &taskfile.Vars{}, RemoveNoValue: true}
+			tr := templater.Templater{Vars: t.Vars, RemoveNoValue: true}
 			includedTask = taskfile.IncludedTaskfile{
 				Taskfile:       tr.Replace(includedTask.Taskfile),
 				Dir:            tr.Replace(includedTask.Dir),
@@ -155,6 +155,13 @@ func Taskfile(readerNode *ReaderNode) (*taskfile.Taskfile, string, error) {
 		if err = taskfile.Merge(t, includedTaskfile, &includedTask, namespace); err != nil {
 			return err
 		}
+
+		if includedTaskfile.Tasks["default"] != nil && t.Tasks[namespace] == nil {
+			defaultTaskName := fmt.Sprintf("%s:default", namespace)
+			t.Tasks[defaultTaskName].Aliases = append(t.Tasks[defaultTaskName].Aliases, namespace)
+			t.Tasks[defaultTaskName].Aliases = append(t.Tasks[defaultTaskName].Aliases, includedTask.Aliases...)
+		}
+
 		return nil
 	})
 	if err != nil {

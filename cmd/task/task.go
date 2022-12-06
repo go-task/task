@@ -177,12 +177,16 @@ func main() {
 	}
 
 	if list {
-		e.ListTasksWithDesc()
+		if ok := e.ListTasks(task.FilterOutInternal(), task.FilterOutNoDesc()); !ok {
+			e.Logger.Outf(logger.Yellow, "task: No tasks with description available. Try --list-all to list all tasks")
+		}
 		return
 	}
 
 	if listAll {
-		e.ListAllTasks()
+		if ok := e.ListTasks(task.FilterOutInternal()); !ok {
+			e.Logger.Outf(logger.Yellow, "task: No tasks available")
+		}
 		return
 	}
 

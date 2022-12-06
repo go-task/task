@@ -497,9 +497,6 @@ func TestAlias(t *testing.T) {
 func TestDuplicateAlias(t *testing.T) {
 	const dir = "testdata/alias"
 
-	data, err := os.ReadFile(filepathext.SmartJoin(dir, "alias-duplicate.txt"))
-	assert.NoError(t, err)
-
 	var buff bytes.Buffer
 	e := task.Executor{
 		Dir:    dir,
@@ -508,7 +505,7 @@ func TestDuplicateAlias(t *testing.T) {
 	}
 	assert.NoError(t, e.Setup())
 	assert.Error(t, e.Run(context.Background(), taskfile.Call{Task: "x"}))
-	assert.Equal(t, string(data), buff.String())
+	assert.Equal(t, "", buff.String())
 }
 
 func TestAliasSummary(t *testing.T) {
@@ -609,7 +606,7 @@ func TestNoLabelInList(t *testing.T) {
 		Stderr: &buff,
 	}
 	assert.NoError(t, e.Setup())
-	e.ListTasksWithDesc()
+	e.ListTasks(task.FilterOutInternal(), task.FilterOutNoDesc())
 	assert.Contains(t, buff.String(), "foo")
 }
 
@@ -627,7 +624,7 @@ func TestListAllShowsNoDesc(t *testing.T) {
 	assert.NoError(t, e.Setup())
 
 	var title string
-	e.ListAllTasks()
+	e.ListTasks(task.FilterOutInternal())
 	for _, title = range []string{
 		"foo",
 		"voo",
@@ -649,7 +646,7 @@ func TestListCanListDescOnly(t *testing.T) {
 	}
 
 	assert.NoError(t, e.Setup())
-	e.ListTasksWithDesc()
+	e.ListTasks(task.FilterOutInternal(), task.FilterOutNoDesc())
 
 	var title string
 	assert.Contains(t, buff.String(), "foo")
@@ -1037,12 +1034,41 @@ func TestIncludesInternal(t *testing.T) {
 	}{
 		{"included internal task via task", "task-1", false, "Hello, World!\n"},
 		{"included internal task via dep", "task-2", false, "Hello, World!\n"},
-		{
-			"included internal direct",
-			"included:task-3",
-			true,
-			"task: No tasks with description available. Try --list-all to list all tasks\n",
-		},
+		{"included internal direct", "included:task-3", true, ""},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			var buff bytes.Buffer
+			e := task.Executor{
+				Dir:    dir,
+				Stdout: &buff,
+				Stderr: &buff,
+				Silent: true,
+			}
+			assert.NoError(t, e.Setup())
+
+			err := e.Run(context.Background(), taskfile.Call{Task: test.task})
+			if test.expectedErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+			}
+			assert.Equal(t, test.expectedOutput, buff.String())
+		})
+	}
+}
+
+func TestIncludesInterpolation(t *testing.T) {
+	const dir = "testdata/includes_interpolation"
+	tests := []struct {
+		name           string
+		task           string
+		expectedErr    bool
+		expectedOutput string
+	}{
+		{"include", "include", false, "includes_interpolation\n"},
+		{"include with dir", "include-with-dir", false, "included\n"},
 	}
 
 	for _, test := range tests {
@@ -1077,12 +1103,7 @@ func TestInternalTask(t *testing.T) {
 	}{
 		{"internal task via task", "task-1", false, "Hello, World!\n"},
 		{"internal task via dep", "task-2", false, "Hello, World!\n"},
-		{
-			"internal direct",
-			"task-3",
-			true,
-			"task: No tasks with description available. Try --list-all to list all tasks\n",
-		},
+		{"internal direct", "task-3", true, ""},
 	}
 
 	for _, test := range tests {
@@ -1105,6 +1126,30 @@ func TestInternalTask(t *testing.T) {
 			assert.Equal(t, test.expectedOutput, buff.String())
 		})
 	}
+}
+
+func TestIncludesShadowedDefault(t *testing.T) {
+	tt := fileContentTest{
+		Dir:       "testdata/includes_shadowed_default",
+		Target:    "included",
+		TrimSpace: true,
+		Files: map[string]string{
+			"file.txt": "shadowed",
+		},
+	}
+	tt.Run(t)
+}
+
+func TestIncludesUnshadowedDefault(t *testing.T) {
+	tt := fileContentTest{
+		Dir:       "testdata/includes_unshadowed_default",
+		Target:    "included",
+		TrimSpace: true,
+		Files: map[string]string{
+			"file.txt": "included",
+		},
+	}
+	tt.Run(t)
 }
 
 func TestSupportedFileNames(t *testing.T) {
@@ -1360,6 +1405,54 @@ func TestDotenvHasEnvVarInPath(t *testing.T) {
 		TrimSpace: false,
 		Files: map[string]string{
 			"var.txt": "VAR='var_in_dot_env_2'\n",
+		},
+	}
+	tt.Run(t)
+}
+
+func TestTaskDotenv(t *testing.T) {
+	tt := fileContentTest{
+		Dir:       "testdata/dotenv_task/default",
+		Target:    "dotenv",
+		TrimSpace: true,
+		Files: map[string]string{
+			"dotenv.txt": "foo",
+		},
+	}
+	tt.Run(t)
+}
+
+func TestTaskDotenvFail(t *testing.T) {
+	tt := fileContentTest{
+		Dir:       "testdata/dotenv_task/default",
+		Target:    "no-dotenv",
+		TrimSpace: true,
+		Files: map[string]string{
+			"no-dotenv.txt": "global",
+		},
+	}
+	tt.Run(t)
+}
+
+func TestTaskDotenvOverriddenByEnv(t *testing.T) {
+	tt := fileContentTest{
+		Dir:       "testdata/dotenv_task/default",
+		Target:    "dotenv-overridden-by-env",
+		TrimSpace: true,
+		Files: map[string]string{
+			"dotenv-overridden-by-env.txt": "overridden",
+		},
+	}
+	tt.Run(t)
+}
+
+func TestTaskDotenvWithVarName(t *testing.T) {
+	tt := fileContentTest{
+		Dir:       "testdata/dotenv_task/default",
+		Target:    "dotenv-with-var-name",
+		TrimSpace: true,
+		Files: map[string]string{
+			"dotenv-with-var-name.txt": "foo",
 		},
 	}
 	tt.Run(t)

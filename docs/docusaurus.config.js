@@ -1,12 +1,14 @@
 // @ts-check
 // Note: type annotations allow type checking and IDEs autocompletion
 
+const {
+  GITHUB_URL,
+  TWITTER_URL,
+  DISCORD_URL,
+  CHINESE_URL
+} = require('./constants');
 const lightCodeTheme = require('./src/themes/prismLight');
 const darkCodeTheme = require('./src/themes/prismDark');
-
-const GITHUB_URL = 'https://github.com/go-task/task';
-const TWITTER_URL = 'https://twitter.com/taskfiledev';
-const DISCORD_URL = 'https://discord.gg/6TY36E39UK';
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
@@ -151,6 +153,15 @@ const config = {
               {
                 label: 'OpenCollective',
                 href: 'https://opencollective.com/task'
+              }
+            ]
+          },
+          {
+            title: 'Translations',
+            items: [
+              {
+                label: 'Chinese | 中国人',
+                href: CHINESE_URL
               }
             ]
           }

@@ -1,7 +1,10 @@
 package task
 
 import (
+	"os"
 	"strings"
+
+	"github.com/joho/godotenv"
 
 	"github.com/go-task/task/v3/internal/execext"
 	"github.com/go-task/task/v3/internal/filepathext"
@@ -55,6 +58,7 @@ func (e *Executor) compiledTask(call taskfile.Call, evaluateShVars bool) (*taskf
 		Dir:                  r.Replace(origTask.Dir),
 		Vars:                 nil,
 		Env:                  nil,
+		Dotenv:               r.ReplaceSlice(origTask.Dotenv),
 		Silent:               origTask.Silent,
 		Interactive:          origTask.Interactive,
 		Internal:             origTask.Internal,
@@ -76,8 +80,28 @@ func (e *Executor) compiledTask(call taskfile.Call, evaluateShVars bool) (*taskf
 		new.Prefix = new.Task
 	}
 
+	dotenvEnvs := &taskfile.Vars{}
+	if len(new.Dotenv) > 0 {
+		for _, dotEnvPath := range new.Dotenv {
+			dotEnvPath = filepathext.SmartJoin(new.Dir, dotEnvPath)
+			if _, err := os.Stat(dotEnvPath); os.IsNotExist(err) {
+				continue
+			}
+			envs, err := godotenv.Read(dotEnvPath)
+			if err != nil {
+				return nil, err
+			}
+			for key, value := range envs {
+				if _, ok := dotenvEnvs.Mapping[key]; !ok {
+					dotenvEnvs.Set(key, taskfile.Var{Static: value})
+				}
+			}
+		}
+	}
+
 	new.Env = &taskfile.Vars{}
 	new.Env.Merge(r.ReplaceVars(e.Taskfile.Env))
+	new.Env.Merge(r.ReplaceVars(dotenvEnvs))
 	new.Env.Merge(r.ReplaceVars(origTask.Env))
 	if evaluateShVars {
 		err = new.Env.Range(func(k string, v taskfile.Var) error {

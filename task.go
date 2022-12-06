@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"sort"
+	"strings"
 	"sync"
 	"sync/atomic"
 
@@ -70,12 +72,12 @@ func (e *Executor) Run(ctx context.Context, calls ...taskfile.Call) error {
 	for _, call := range calls {
 		task, err := e.GetTask(call)
 		if err != nil {
-			e.ListTasksWithDesc()
+			e.ListTasks(FilterOutInternal(), FilterOutNoDesc())
 			return err
 		}
 
 		if task.Internal {
-			e.ListTasksWithDesc()
+			e.ListTasks(FilterOutInternal(), FilterOutNoDesc())
 			return &taskInternalError{taskName: call.Task}
 		}
 	}
@@ -373,4 +375,74 @@ func (e *Executor) GetTask(call taskfile.Call) (*taskfile.Task, error) {
 	}
 
 	return matchingTask, nil
+}
+
+type FilterFunc func(tasks []*taskfile.Task) []*taskfile.Task
+
+func (e *Executor) GetTaskList(filters ...FilterFunc) []*taskfile.Task {
+	tasks := make([]*taskfile.Task, 0, len(e.Taskfile.Tasks))
+
+	// Fetch and compile the list of tasks
+	for _, task := range e.Taskfile.Tasks {
+		compiledTask, err := e.FastCompiledTask(taskfile.Call{Task: task.Task})
+		if err == nil {
+			task = compiledTask
+		}
+		tasks = append(tasks, task)
+	}
+
+	// Filter the tasks
+	for _, filter := range filters {
+		tasks = filter(tasks)
+	}
+
+	// Sort the tasks
+	// Tasks that are not namespaced should be listed before tasks that are.
+	// We detect this by searching for a ':' in the task name.
+	sort.Slice(tasks, func(i, j int) bool {
+		iContainsColon := strings.Contains(tasks[i].Task, ":")
+		jContainsColon := strings.Contains(tasks[j].Task, ":")
+		if iContainsColon == jContainsColon {
+			return tasks[i].Task < tasks[j].Task
+		}
+		if !iContainsColon && jContainsColon {
+			return true
+		}
+		return false
+	})
+
+	return tasks
+}
+
+// Filter is a generic task filtering function. It will remove each task in the
+// slice where the result of the given function is true.
+func Filter(f func(task *taskfile.Task) bool) FilterFunc {
+	return func(tasks []*taskfile.Task) []*taskfile.Task {
+		shift := 0
+		for _, task := range tasks {
+			if !f(task) {
+				tasks[shift] = task
+				shift++
+			}
+		}
+		// This loop stops any memory leaks
+		for j := shift; j < len(tasks); j++ {
+			tasks[j] = nil
+		}
+		return slices.Clip(tasks[:shift])
+	}
+}
+
+// FilterOutNoDesc removes all tasks that do not contain a description.
+func FilterOutNoDesc() FilterFunc {
+	return Filter(func(task *taskfile.Task) bool {
+		return task.Desc == ""
+	})
+}
+
+// FilterOutInternal removes all tasks that are marked as internal.
+func FilterOutInternal() FilterFunc {
+	return Filter(func(task *taskfile.Task) bool {
+		return task.Internal
+	})
 }

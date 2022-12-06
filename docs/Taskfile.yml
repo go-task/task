@@ -1,14 +1,18 @@
 version: '3'
 
 tasks:
-  setup:
+  yarn:install:
     desc: Setup Docusaurus locally
     cmds:
       - yarn install
+    sources:
+      - package.json
+      - yarn.lock
 
-  start:
+  default:
     desc: Start website
-    aliases: [s]
+    deps: [yarn:install]
+    aliases: [s, start]
     vars:
       HOST: '{{default "localhost" .HOST}}'
       PORT: '{{default "3001" .PORT}}'
@@ -17,6 +21,7 @@ tasks:
 
   build:
     desc: Build website
+    deps: [yarn:install]
     cmds:
       - npx docusaurus build
 
