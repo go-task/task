@@ -29,6 +29,6 @@
   },
   "homepage": "https://taskfile.dev",
   "dependencies": {
-    "@go-task/go-npm": "^0.1.16"
+    "@go-task/go-npm": "^0.1.17"
   }
 }
