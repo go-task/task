@@ -1,7 +1,10 @@
 package task
 
 import (
+	"context"
+	"encoding/json"
 	"fmt"
+	"github.com/go-task/task/v3/taskfile"
 	"io"
 	"log"
 	"os"
@@ -9,16 +12,81 @@ import (
 	"strings"
 	"text/tabwriter"
 
+	"github.com/go-task/task/v3/internal/editors"
 	"github.com/go-task/task/v3/internal/logger"
 )
 
+// ListOptions collects list-related options
+type ListOptions struct {
+	ListOnlyTasksWithDescriptions bool
+	ListAllTasks                  bool
+	FormatTaskListAsJSON          bool
+}
+
+// NewListOptions creates a new ListOptions instance
+func NewListOptions(list, listAll, listAsJson bool) ListOptions {
+	return ListOptions{
+		ListOnlyTasksWithDescriptions: list,
+		ListAllTasks:                  listAll,
+		FormatTaskListAsJSON:          listAsJson,
+	}
+}
+
+// ShouldListTasks returns true if one of the options to list tasks has been set to true
+func (o ListOptions) ShouldListTasks() bool {
+	return o.ListOnlyTasksWithDescriptions || o.ListAllTasks
+}
+
+// Validate validates that the collection of list-related options are in a valid configuration
+func (o ListOptions) Validate() error {
+	if o.ListOnlyTasksWithDescriptions && o.ListAllTasks {
+		return fmt.Errorf("task: cannot use --list and --list-all at the same time")
+	}
+	if o.FormatTaskListAsJSON && !o.ShouldListTasks() {
+		return fmt.Errorf("task: --json only applies to --list or --list-all")
+	}
+	return nil
+}
+
+// Filters returns the slice of FilterFunc which filters a list
+// of taskfile.Task according to the given ListOptions
+func (o ListOptions) Filters() []FilterFunc {
+	filters := []FilterFunc{FilterOutInternal()}
+
+	if o.ListOnlyTasksWithDescriptions {
+		filters = append(filters, FilterOutNoDesc())
+	}
+
+	return filters
+}
+
 // ListTasks prints a list of tasks.
 // Tasks that match the given filters will be excluded from the list.
-// The function returns a boolean indicating whether or not tasks were found.
-func (e *Executor) ListTasks(filters ...FilterFunc) bool {
-	tasks := e.GetTaskList(filters...)
+// The function returns a boolean indicating whether tasks were found
+// and an error if one was encountered while preparing the output.
+func (e *Executor) ListTasks(o ListOptions) (bool, error) {
+	tasks := e.GetTaskList(o.Filters()...)
+	if o.FormatTaskListAsJSON {
+		output, err := e.ToEditorOutput(tasks)
+		if err != nil {
+			return false, err
+		}
+
+		encoder := json.NewEncoder(e.Stdout)
+		encoder.SetIndent("", "  ")
+		if err := encoder.Encode(output); err != nil {
+			return false, err
+		}
+
+		return len(tasks) > 0, nil
+	}
 	if len(tasks) == 0 {
-		return false
+		if o.ListOnlyTasksWithDescriptions {
+			e.Logger.Outf(logger.Yellow, "task: No tasks with description available. Try --list-all to list all tasks")
+		} else if o.ListAllTasks {
+			e.Logger.Outf(logger.Yellow, "task: No tasks available")
+		}
+		return false, nil
 	}
 	e.Logger.Outf(logger.Default, "task: Available tasks for this project:")
 
@@ -31,10 +99,12 @@ func (e *Executor) ListTasks(filters ...FilterFunc) bool {
 		if len(task.Aliases) > 0 {
 			e.Logger.FOutf(w, logger.Cyan, "\t(aliases: %s)", strings.Join(task.Aliases, ", "))
 		}
-		fmt.Fprint(w, "\n")
+		_, _ = fmt.Fprint(w, "\n")
 	}
-	w.Flush()
-	return true
+	if err := w.Flush(); err != nil {
+		return false, err
+	}
+	return true, nil
 }
 
 // ListTaskNames prints only the task names in a Taskfile.
@@ -68,4 +138,23 @@ func (e *Executor) ListTaskNames(allTasks bool) {
 	for _, t := range s {
 		fmt.Fprintln(w, t)
 	}
+}
+
+func (e *Executor) ToEditorOutput(tasks []*taskfile.Task) (*editors.Output, error) {
+	o := &editors.Output{
+		Tasks: make([]editors.Task, len(tasks)),
+	}
+	for i, t := range tasks {
+		upToDate, err := e.isTaskUpToDate(context.Background(), t)
+		if err != nil {
+			return nil, err
+		}
+		o.Tasks[i] = editors.Task{
+			Name:     t.Name(),
+			Desc:     t.Desc,
+			Summary:  t.Summary,
+			UpToDate: upToDate,
+		}
+	}
+	return o, nil
 }

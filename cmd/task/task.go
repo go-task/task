@@ -59,6 +59,7 @@ func main() {
 		init        bool
 		list        bool
 		listAll     bool
+		listJson    bool
 		status      bool
 		force       bool
 		watch       bool
@@ -81,6 +82,7 @@ func main() {
 	pflag.BoolVarP(&init, "init", "i", false, "creates a new Taskfile.yaml in the current folder")
 	pflag.BoolVarP(&list, "list", "l", false, "lists tasks with description of current Taskfile")
 	pflag.BoolVarP(&listAll, "list-all", "a", false, "lists tasks with or without a description")
+	pflag.BoolVarP(&listJson, "json", "j", false, "formats task list as json")
 	pflag.BoolVar(&status, "status", false, "exits with non-zero exit code if any of the given tasks is not up-to-date")
 	pflag.BoolVarP(&force, "force", "f", false, "forces execution even when the task is up-to-date")
 	pflag.BoolVarP(&watch, "watch", "w", false, "enables watch of the given task")
@@ -162,7 +164,12 @@ func main() {
 		OutputStyle: output,
 	}
 
-	if (list || listAll) && silent {
+	var listOptions = task.NewListOptions(list, listAll, listJson)
+	if err := listOptions.Validate(); err != nil {
+		log.Fatal(err)
+	}
+
+	if (listOptions.ShouldListTasks()) && silent {
 		e.ListTaskNames(listAll)
 		return
 	}
@@ -176,16 +183,9 @@ func main() {
 		return
 	}
 
-	if list {
-		if ok := e.ListTasks(task.FilterOutInternal(), task.FilterOutNoDesc()); !ok {
-			e.Logger.Outf(logger.Yellow, "task: No tasks with description available. Try --list-all to list all tasks")
-		}
-		return
-	}
-
-	if listAll {
-		if ok := e.ListTasks(task.FilterOutInternal()); !ok {
-			e.Logger.Outf(logger.Yellow, "task: No tasks available")
+	if listOptions.ShouldListTasks() {
+		if foundTasks, err := e.ListTasks(listOptions); !foundTasks || err != nil {
+			os.Exit(1)
 		}
 		return
 	}
