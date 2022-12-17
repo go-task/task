@@ -35,3 +35,8 @@ tasks:
     summary: Requires GIT_USER and GIT_PASS envs to be previous set
     cmds:
       - npx docusaurus deploy
+
+  upgrade:
+    desc: Upgrade Docusaurus
+    cmds:
+      - yarn upgrade @docusaurus/core@latest @docusaurus/preset-classic@latest
