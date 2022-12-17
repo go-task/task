@@ -74,11 +74,11 @@ tasks:
     cmds:
       - go test {{catLines .GO_PACKAGES}}
 
-  test:signals:
-    desc: Runs test suite with signals tests included
+  test:all:
+    desc: Runs test suite with signals and watch tests included
     deps: [install, sleepit:build]
     cmds:
-      - go test {{catLines .GO_PACKAGES}} -tags signals
+      - go test {{catLines .GO_PACKAGES}} -tags 'signals watch'
 
   test-release:
     desc: Tests release process without publishing
