@@ -47,6 +47,7 @@ tasks:
     aliases: [l]
     sources:
       - './**/*.go'
+      - .golangci.yml
     cmds:
       - golangci-lint run
 

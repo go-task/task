@@ -130,11 +130,11 @@ func supervisor(
 // The goroutine will prepend its prints with the prefix `name`.
 // The goroutine will simulate some work and will terminate when one of the following
 // conditions happens:
-// 1. When `howlong` is elapsed. This case will be signaled on the `workerDone` channel.
-// 2. When something happens on channel `canceled`. Note that this simulates real-life,
-//    so cancellation is not instantaneous: if the caller wants a synchronous cancel,
-//    it should send a message; if instead it wants an asynchronous cancel, it should
-//    close the channel.
+//  1. When `howlong` is elapsed. This case will be signaled on the `workerDone` channel.
+//  2. When something happens on channel `canceled`. Note that this simulates real-life,
+//     so cancellation is not instantaneous: if the caller wants a synchronous cancel,
+//     it should send a message; if instead it wants an asynchronous cancel, it should
+//     close the channel.
 func worker(
 	canceled <-chan struct{},
 	howlong time.Duration,
