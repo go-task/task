@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Add `--json` flag (alias `-j`) with the intent to improve support for code
+  editors and add room to other possible integrations. This is basic for now,
+  but we plan to add more info in the near future
+  ([#936](https://github.com/go-task/task/pull/936) by @davidalpert, [#764](https://github.com/go-task/task/issues/764)).
+
 ## v3.19.0 - 2022-12-05
 
 - Installation via npm now supports [pnpm](https://pnpm.io/) as well

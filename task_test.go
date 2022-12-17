@@ -1040,7 +1040,7 @@ func TestIncludesInternal(t *testing.T) {
 	}{
 		{"included internal task via task", "task-1", false, "Hello, World!\n"},
 		{"included internal task via dep", "task-2", false, "Hello, World!\n"},
-		{"included internal direct", "included:task-3", true, ""},
+		{"included internal direct", "included:task-3", true, "task: No tasks with description available. Try --list-all to list all tasks\n"},
 	}
 
 	for _, test := range tests {

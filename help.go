@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/go-task/task/v3/taskfile"
 	"io"
 	"log"
 	"os"
@@ -14,6 +13,7 @@ import (
 
 	"github.com/go-task/task/v3/internal/editors"
 	"github.com/go-task/task/v3/internal/logger"
+	"github.com/go-task/task/v3/taskfile"
 )
 
 // ListOptions collects list-related options

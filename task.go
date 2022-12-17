@@ -72,10 +72,20 @@ func (e *Executor) Run(ctx context.Context, calls ...taskfile.Call) error {
 	for _, call := range calls {
 		task, err := e.GetTask(call)
 		if err != nil {
+			if _, ok := err.(*taskNotFoundError); ok {
+				if _, err := e.ListTasks(ListOptions{ListOnlyTasksWithDescriptions: true}); err != nil {
+					return err
+				}
+			}
 			return err
 		}
 
 		if task.Internal {
+			if _, ok := err.(*taskNotFoundError); ok {
+				if _, err := e.ListTasks(ListOptions{ListOnlyTasksWithDescriptions: true}); err != nil {
+					return err
+				}
+			}
 			return &taskInternalError{taskName: call.Task}
 		}
 	}
