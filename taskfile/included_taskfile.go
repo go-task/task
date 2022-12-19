@@ -1,7 +1,6 @@
 package taskfile
 
 import (
-	"errors"
 	"fmt"
 	"path/filepath"
 
@@ -32,24 +31,26 @@ type IncludedTaskfiles struct {
 
 // UnmarshalYAML implements the yaml.Unmarshaler interface.
 func (tfs *IncludedTaskfiles) UnmarshalYAML(node *yaml.Node) error {
-	if node.Kind != yaml.MappingNode {
-		return errors.New("task: includes is not a map")
-	}
+	switch node.Kind {
 
-	// NOTE(@andreynering): on this style of custom unmarsheling,
-	// even number contains the keys, while odd numbers contains
-	// the values.
-	for i := 0; i < len(node.Content); i += 2 {
-		keyNode := node.Content[i]
-		valueNode := node.Content[i+1]
+	case yaml.MappingNode:
+		// NOTE(@andreynering): on this style of custom unmarshalling,
+		// even number contains the keys, while odd numbers contains
+		// the values.
+		for i := 0; i < len(node.Content); i += 2 {
+			keyNode := node.Content[i]
+			valueNode := node.Content[i+1]
 
-		var v IncludedTaskfile
-		if err := valueNode.Decode(&v); err != nil {
-			return err
+			var v IncludedTaskfile
+			if err := valueNode.Decode(&v); err != nil {
+				return err
+			}
+			tfs.Set(keyNode.Value, v)
 		}
-		tfs.Set(keyNode.Value, v)
+		return nil
 	}
-	return nil
+
+	return fmt.Errorf("yaml: line %d: cannot unmarshal %s into included taskfiles", node.Line, node.ShortTag())
 }
 
 // Len returns the length of the map
@@ -92,33 +93,40 @@ func (tfs *IncludedTaskfiles) Range(yield func(key string, includedTaskfile Incl
 	return nil
 }
 
-// UnmarshalYAML implements yaml.Unmarshaler interface
-func (it *IncludedTaskfile) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	var str string
-	if err := unmarshal(&str); err == nil {
+func (it *IncludedTaskfile) UnmarshalYAML(node *yaml.Node) error {
+	switch node.Kind {
+
+	case yaml.ScalarNode:
+		var str string
+		if err := node.Decode(&str); err != nil {
+			return err
+		}
 		it.Taskfile = str
+		return nil
+
+	case yaml.MappingNode:
+		var includedTaskfile struct {
+			Taskfile string
+			Dir      string
+			Optional bool
+			Internal bool
+			Aliases  []string
+			Vars     *Vars
+		}
+		if err := node.Decode(&includedTaskfile); err != nil {
+			return err
+		}
+		it.Taskfile = includedTaskfile.Taskfile
+		it.Dir = includedTaskfile.Dir
+		it.Optional = includedTaskfile.Optional
+		it.Internal = includedTaskfile.Internal
+		it.Aliases = includedTaskfile.Aliases
+		it.AdvancedImport = true
+		it.Vars = includedTaskfile.Vars
 		return nil
 	}
 
-	var includedTaskfile struct {
-		Taskfile string
-		Dir      string
-		Optional bool
-		Internal bool
-		Aliases  []string
-		Vars     *Vars
-	}
-	if err := unmarshal(&includedTaskfile); err != nil {
-		return err
-	}
-	it.Taskfile = includedTaskfile.Taskfile
-	it.Dir = includedTaskfile.Dir
-	it.Optional = includedTaskfile.Optional
-	it.Internal = includedTaskfile.Internal
-	it.Aliases = includedTaskfile.Aliases
-	it.AdvancedImport = true
-	it.Vars = includedTaskfile.Vars
-	return nil
+	return fmt.Errorf("yaml: line %d: cannot unmarshal %s into included taskfile", node.Line, node.ShortTag())
 }
 
 // DeepCopy creates a new instance of IncludedTaskfile and copies

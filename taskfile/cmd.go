@@ -1,5 +1,11 @@
 package taskfile
 
+import (
+	"fmt"
+
+	"gopkg.in/yaml.v3"
+)
+
 // Cmd is a task command
 type Cmd struct {
 	Cmd         string
@@ -16,68 +22,93 @@ type Dep struct {
 	Vars *Vars
 }
 
-// UnmarshalYAML implements yaml.Unmarshaler interface
-func (c *Cmd) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	var cmd string
-	if err := unmarshal(&cmd); err == nil {
+func (c *Cmd) UnmarshalYAML(node *yaml.Node) error {
+	switch node.Kind {
+
+	case yaml.ScalarNode:
+		var cmd string
+		if err := node.Decode(&cmd); err != nil {
+			return err
+		}
 		c.Cmd = cmd
 		return nil
+
+	case yaml.MappingNode:
+
+		// A command with additional options
+		var cmdStruct struct {
+			Cmd         string
+			Silent      bool
+			IgnoreError bool `yaml:"ignore_error"`
+		}
+		if err := node.Decode(&cmdStruct); err == nil && cmdStruct.Cmd != "" {
+			c.Cmd = cmdStruct.Cmd
+			c.Silent = cmdStruct.Silent
+			c.IgnoreError = cmdStruct.IgnoreError
+			return nil
+		}
+
+		// A deferred command
+		var deferredCmd struct {
+			Defer string
+		}
+		if err := node.Decode(&deferredCmd); err == nil && deferredCmd.Defer != "" {
+			c.Defer = true
+			c.Cmd = deferredCmd.Defer
+			return nil
+		}
+
+		// A deferred task call
+		var deferredCall struct {
+			Defer Call
+		}
+		if err := node.Decode(&deferredCall); err == nil && deferredCall.Defer.Task != "" {
+			c.Defer = true
+			c.Task = deferredCall.Defer.Task
+			c.Vars = deferredCall.Defer.Vars
+			return nil
+		}
+
+		// A task call
+		var taskCall struct {
+			Task string
+			Vars *Vars
+		}
+		if err := node.Decode(&taskCall); err == nil && taskCall.Task != "" {
+			c.Task = taskCall.Task
+			c.Vars = taskCall.Vars
+			return nil
+		}
+
+		return fmt.Errorf("yaml: line %d: invalid keys in command", node.Line)
 	}
-	var cmdStruct struct {
-		Cmd         string
-		Silent      bool
-		IgnoreError bool `yaml:"ignore_error"`
-	}
-	if err := unmarshal(&cmdStruct); err == nil && cmdStruct.Cmd != "" {
-		c.Cmd = cmdStruct.Cmd
-		c.Silent = cmdStruct.Silent
-		c.IgnoreError = cmdStruct.IgnoreError
-		return nil
-	}
-	var deferredCmd struct {
-		Defer string
-	}
-	if err := unmarshal(&deferredCmd); err == nil && deferredCmd.Defer != "" {
-		c.Defer = true
-		c.Cmd = deferredCmd.Defer
-		return nil
-	}
-	var deferredCall struct {
-		Defer Call
-	}
-	if err := unmarshal(&deferredCall); err == nil && deferredCall.Defer.Task != "" {
-		c.Defer = true
-		c.Task = deferredCall.Defer.Task
-		c.Vars = deferredCall.Defer.Vars
-		return nil
-	}
-	var taskCall struct {
-		Task string
-		Vars *Vars
-	}
-	if err := unmarshal(&taskCall); err != nil {
-		return err
-	}
-	c.Task = taskCall.Task
-	c.Vars = taskCall.Vars
-	return nil
+
+	return fmt.Errorf("yaml: line %d: cannot unmarshal %s into command", node.Line, node.ShortTag())
 }
 
-// UnmarshalYAML implements yaml.Unmarshaler interface
-func (d *Dep) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	var task string
-	if err := unmarshal(&task); err == nil {
+func (d *Dep) UnmarshalYAML(node *yaml.Node) error {
+	switch node.Kind {
+
+	case yaml.ScalarNode:
+		var task string
+		if err := node.Decode(&task); err != nil {
+			return err
+		}
 		d.Task = task
 		return nil
+
+	case yaml.MappingNode:
+		var taskCall struct {
+			Task string
+			Vars *Vars
+		}
+		if err := node.Decode(&taskCall); err != nil {
+			return err
+		}
+		d.Task = taskCall.Task
+		d.Vars = taskCall.Vars
+		return nil
 	}
-	var taskCall struct {
-		Task string
-		Vars *Vars
-	}
-	if err := unmarshal(&taskCall); err != nil {
-		return err
-	}
-	d.Task = taskCall.Task
-	d.Vars = taskCall.Vars
-	return nil
+
+	return fmt.Errorf("cannot unmarshal %s into dependency", node.ShortTag())
 }
