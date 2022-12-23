@@ -370,7 +370,8 @@
         },
         "interval": {
           "description": "Sets a different watch interval when using `--watch`, the default being 5 seconds. This string should be a valid Go duration: https://pkg.go.dev/time#ParseDuration.",
-          "$ref": "#/definitions/3/run"
+          "type": "string",
+          "pattern": "^[0-9]+(?:m|s|ms)$"
         }
       },
       "additionalProperties": false,
