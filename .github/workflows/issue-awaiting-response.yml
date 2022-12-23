@@ -10,6 +10,7 @@ jobs:
     steps:
       - uses: actions/github-script@v6
         with:
+          github-token: ${{secrets.GH_PAT}}
           script: |
             const issue = await github.rest.issues.get({
               owner: context.repo.owner,
