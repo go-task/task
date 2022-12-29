@@ -3,6 +3,7 @@ package taskfile
 import (
 	"fmt"
 	"strconv"
+	"time"
 
 	"gopkg.in/yaml.v3"
 )
@@ -20,7 +21,7 @@ type Taskfile struct {
 	Silent     bool
 	Dotenv     []string
 	Run        string
-	Interval   string
+	Interval   time.Duration
 }
 
 func (tf *Taskfile) UnmarshalYAML(node *yaml.Node) error {
@@ -39,7 +40,7 @@ func (tf *Taskfile) UnmarshalYAML(node *yaml.Node) error {
 			Silent     bool
 			Dotenv     []string
 			Run        string
-			Interval   string
+			Interval   time.Duration
 		}
 		if err := node.Decode(&taskfile); err != nil {
 			return err

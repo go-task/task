@@ -9,6 +9,7 @@ import (
 	"strings"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	"github.com/go-task/task/v3/internal/compiler"
 	"github.com/go-task/task/v3/internal/execext"
@@ -45,7 +46,7 @@ type Executor struct {
 	Parallel    bool
 	Color       bool
 	Concurrency int
-	Interval    string
+	Interval    time.Duration
 
 	Stdin  io.Reader
 	Stdout io.Writer
