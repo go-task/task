@@ -45,7 +45,7 @@ func Merge(t1, t2 *Taskfile, includedTaskfile *IncludedTaskfile, namespaces ...s
 
 		// Set the task to internal if EITHER the included task or the included
 		// taskfile are marked as internal
-		task.Internal = task.Internal || includedTaskfile.Internal
+		task.Internal = task.Internal || (includedTaskfile != nil && includedTaskfile.Internal)
 
 		// Add namespaces to dependencies, commands and aliases
 		for _, dep := range task.Deps {

@@ -4,6 +4,8 @@
 
 - Small bug fix: closing "Taskfile.yml" once we're done reading it
   ([#963](https://github.com/go-task/task/issues/963), [#964](https://github.com/go-task/task/pull/964) by @HeCorr).
+- Fixes a bug in v2 that caused a panic when using a `Taskfile_{{OS}}.yml` file
+  ([#961](https://github.com/go-task/task/issues/961), [#971](https://github.com/go-task/task/pull/971) by @pd93).
 - Add `--json` flag (alias `-j`) with the intent to improve support for code
   editors and add room to other possible integrations. This is basic for now,
   but we plan to add more info in the near future
