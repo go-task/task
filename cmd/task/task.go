@@ -69,6 +69,7 @@ func main() {
 		summary     bool
 		exitCode    bool
 		parallel    bool
+		propStatus  bool
 		concurrency int
 		dir         string
 		entrypoint  string
@@ -89,6 +90,7 @@ func main() {
 	pflag.BoolVarP(&verbose, "verbose", "v", false, "enables verbose mode")
 	pflag.BoolVarP(&silent, "silent", "s", false, "disables echoing")
 	pflag.BoolVarP(&parallel, "parallel", "p", false, "executes tasks provided on command line in parallel")
+	pflag.BoolVar(&propStatus, "propagate-status", false, "propagates out of date status from dependencies to dependents")
 	pflag.BoolVarP(&dry, "dry", "n", false, "compiles and prints tasks in the order that they would be run, without executing them")
 	pflag.BoolVar(&summary, "summary", false, "show summary about a task")
 	pflag.BoolVarP(&exitCode, "exit-code", "x", false, "pass-through the exit code of the task command")
@@ -145,6 +147,8 @@ func main() {
 
 	e := task.Executor{
 		Force:       force,
+		PropStatus:  propStatus,
+		OutOfDate:   false,
 		Watch:       watch,
 		Verbose:     verbose,
 		Silent:      silent,

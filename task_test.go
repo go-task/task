@@ -1696,3 +1696,19 @@ func TestUserWorkingDirectory(t *testing.T) {
 	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "default"}))
 	assert.Equal(t, fmt.Sprintf("%s\n", wd), buff.String())
 }
+
+func TestPropagateStatus(t *testing.T) {
+	const dir = "testdata/out_of_date_dependency"
+	var buff bytes.Buffer
+	e := &task.Executor{
+		Dir:        dir,
+		Stdout:     &buff,
+		Stderr:     &buff,
+		Silent:     false,
+		PropStatus: true,
+	}
+	assert.NoError(t, e.Setup())
+	err := e.Run(context.Background(), taskfile.Call{Task: "target"})
+	assert.NoError(t, err)
+	assert.Equal(t, "task: Task \"second-dep\" is up to date\ntask: [first-dep] echo First\nFirst\ntask: [target] echo Target\nTarget", strings.TrimSpace(buff.String()))
+}

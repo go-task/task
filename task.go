@@ -44,6 +44,8 @@ type Executor struct {
 	Summary     bool
 	Parallel    bool
 	Color       bool
+	PropStatus  bool
+	OutOfDate   bool
 	Concurrency int
 	Interval    string
 
@@ -154,7 +156,7 @@ func (e *Executor) RunTask(ctx context.Context, call taskfile.Call) error {
 				return err
 			}
 
-			if upToDate && preCondMet {
+			if (upToDate && preCondMet) && !(e.OutOfDate && upToDate) {
 				if !e.Silent {
 					e.Logger.Errf(logger.Magenta, `task: Task "%s" is up to date`, t.Name())
 				}
@@ -184,6 +186,9 @@ func (e *Executor) RunTask(ctx context.Context, call taskfile.Call) error {
 
 				return &TaskRunError{t.Task, err}
 			}
+		}
+		if e.PropStatus && !e.OutOfDate {
+			e.OutOfDate = true
 		}
 		e.Logger.VerboseErrf(logger.Magenta, `task: "%s" finished`, call.Task)
 		return nil
@@ -224,7 +229,6 @@ func (e *Executor) runDeps(ctx context.Context, t *taskfile.Task) error {
 			return nil
 		})
 	}
-
 	return g.Wait()
 }
 
