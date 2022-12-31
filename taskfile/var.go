@@ -84,6 +84,7 @@ func (vs *Vars) Range(yield func(key string, value Var) error) error {
 // variables
 func (vs *Vars) ToCacheMap() (m map[string]interface{}) {
 	m = make(map[string]interface{}, vs.Len())
+
 	_ = vs.Range(func(k string, v Var) error {
 		if v.Sh != "" {
 			// Dynamic variable is not yet resolved; trigger
@@ -98,6 +99,20 @@ func (vs *Vars) ToCacheMap() (m map[string]interface{}) {
 		}
 		return nil
 	})
+
+	return
+}
+
+func (vs *Vars) ToStringMap() (m map[string]string) {
+	m = make(map[string]string, vs.Len())
+
+	_ = vs.Range(func(k string, v Var) error {
+		if v.Static != "" {
+			m[k] = v.Static
+		}
+		return nil
+	})
+
 	return
 }
 

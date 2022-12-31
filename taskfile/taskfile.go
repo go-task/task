@@ -22,6 +22,7 @@ type Taskfile struct {
 	Dotenv     []string
 	Run        string
 	Interval   time.Duration
+	Container  *Container
 }
 
 func (tf *Taskfile) UnmarshalYAML(node *yaml.Node) error {
@@ -41,6 +42,7 @@ func (tf *Taskfile) UnmarshalYAML(node *yaml.Node) error {
 			Dotenv     []string
 			Run        string
 			Interval   time.Duration
+			Container  *Container
 		}
 		if err := node.Decode(&taskfile); err != nil {
 			return err
@@ -57,6 +59,7 @@ func (tf *Taskfile) UnmarshalYAML(node *yaml.Node) error {
 		tf.Dotenv = taskfile.Dotenv
 		tf.Run = taskfile.Run
 		tf.Interval = taskfile.Interval
+		tf.Container = taskfile.Container
 		if tf.Expansions <= 0 {
 			tf.Expansions = 2
 		}

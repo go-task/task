@@ -107,3 +107,14 @@ tasks:
     cmds:
       - echo '{{.GO_PACKAGES}}'
     silent: true
+
+  d:
+    container:
+      image: alpine
+      flags: [--cpus=1]
+    env:
+      MESSAGE: Hello
+    cmds:
+      - echo $MESSAGE 1
+      - echo $MESSAGE 2
+      - echo $MESSAGE 3
