@@ -16,6 +16,6 @@ func TestNormalizeFilename(t *testing.T) {
 		{"foo1bar2baz3", "foo1bar2baz3"},
 	}
 	for _, test := range tests {
-		assert.Equal(t, test.Out, (&Checksum{}).normalizeFilename(test.In))
+		assert.Equal(t, test.Out, NormalizeFilename(test.In))
 	}
 }

@@ -2,15 +2,19 @@ package status
 
 import (
 	"os"
+	"path/filepath"
 	"time"
 )
 
 // Timestamp checks if any source change compared with the generated files,
 // using file modifications timestamps.
 type Timestamp struct {
+	TempDir   string
+	Task      string
 	Dir       string
 	Sources   []string
 	Generates []string
+	Dry       bool
 }
 
 // IsUpToDate implements the Checker interface
@@ -28,17 +32,37 @@ func (t *Timestamp) IsUpToDate() (bool, error) {
 		return false, nil
 	}
 
+	timestampFile := t.timestampFilePath()
+
+	// if the file exists, add the file path to the generates
+	// if the generate file is old, the task will be executed
+	_, err = os.Stat(timestampFile)
+	if err == nil {
+		generates = append(generates, timestampFile)
+	}
+
+	// compare the time of the generates and sources. If the generates are old, the task will be executed
+
 	sourcesMaxTime, err := getMaxTime(sources...)
 	if err != nil || sourcesMaxTime.IsZero() {
 		return false, nil
 	}
 
-	generatesMinTime, err := getMinTime(generates...)
-	if err != nil || generatesMinTime.IsZero() {
+	generateMaxTime, err := getMaxTime(generates...)
+	if err != nil || generateMaxTime.IsZero() {
 		return false, nil
 	}
 
-	return !generatesMinTime.Before(sourcesMaxTime), nil
+	// create the timestamp file for the next execution
+	if !t.Dry {
+		_ = os.MkdirAll(filepath.Dir(timestampFile), 0o755)
+		_, err = os.Create(timestampFile)
+		if err != nil {
+			return false, err
+		}
+	}
+
+	return !generateMaxTime.Before(sourcesMaxTime), nil
 }
 
 func (t *Timestamp) Kind() string {
@@ -64,18 +88,6 @@ func (t *Timestamp) Value() (interface{}, error) {
 	return sourcesMaxTime, nil
 }
 
-func getMinTime(files ...string) (time.Time, error) {
-	var t time.Time
-	for _, f := range files {
-		info, err := os.Stat(f)
-		if err != nil {
-			return time.Time{}, err
-		}
-		t = minTime(t, info.ModTime())
-	}
-	return t, nil
-}
-
 func getMaxTime(files ...string) (time.Time, error) {
 	var t time.Time
 	for _, f := range files {
@@ -88,13 +100,6 @@ func getMaxTime(files ...string) (time.Time, error) {
 	return t, nil
 }
 
-func minTime(a, b time.Time) time.Time {
-	if !a.IsZero() && a.Before(b) {
-		return a
-	}
-	return b
-}
-
 func maxTime(a, b time.Time) time.Time {
 	if a.After(b) {
 		return a
@@ -105,4 +110,8 @@ func maxTime(a, b time.Time) time.Time {
 // OnError implements the Checker interface
 func (*Timestamp) OnError() error {
 	return nil
+}
+
+func (t *Timestamp) timestampFilePath() string {
+	return filepath.Join(t.TempDir, "timestamp", NormalizeFilename(t.Task))
 }
