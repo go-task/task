@@ -19,7 +19,7 @@ type Timestamp struct {
 
 // IsUpToDate implements the Checker interface
 func (t *Timestamp) IsUpToDate() (bool, error) {
-	if len(t.Sources) == 0 || len(t.Generates) == 0 {
+	if len(t.Sources) == 0 {
 		return false, nil
 	}
 

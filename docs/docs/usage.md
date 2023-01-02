@@ -595,9 +595,9 @@ The method `none` skips any validation and always run the task.
 
 :::info
 
-For the `checksum` (default) method to work, it is only necessary to
-inform the source files, but if you want to use the `timestamp` method, you
-also need to inform the generated files with `generates`.
+For the `checksum` (default) or `timestamp` method to work, it is only necessary to
+inform the source files.
+When the `timestamp` method is used, the last time of the running the task is considered as a generate.
 
 :::
 
