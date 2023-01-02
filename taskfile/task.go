@@ -33,6 +33,7 @@ type Task struct {
 	Prefix               string
 	IgnoreError          bool
 	Run                  string
+	Container            *Container
 	IncludeVars          *Vars
 	IncludedTaskfileVars *Vars
 	IncludedTaskfile     *IncludedTaskfile
@@ -90,6 +91,7 @@ func (t *Task) UnmarshalYAML(node *yaml.Node) error {
 			Prefix        string
 			IgnoreError   bool `yaml:"ignore_error"`
 			Run           string
+			Container     *Container
 		}
 		if err := node.Decode(&task); err != nil {
 			return err
@@ -115,6 +117,7 @@ func (t *Task) UnmarshalYAML(node *yaml.Node) error {
 		t.Prefix = task.Prefix
 		t.IgnoreError = task.IgnoreError
 		t.Run = task.Run
+		t.Container = task.Container
 		return nil
 	}
 

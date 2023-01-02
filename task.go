@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/go-task/task/v3/internal/compiler"
+	"github.com/go-task/task/v3/internal/container/docker"
 	"github.com/go-task/task/v3/internal/execext"
 	"github.com/go-task/task/v3/internal/logger"
 	"github.com/go-task/task/v3/internal/output"
@@ -127,6 +128,7 @@ func (e *Executor) RunTask(ctx context.Context, call taskfile.Call) error {
 	if err != nil {
 		return err
 	}
+
 	if !e.Watch && atomic.AddInt32(e.taskCallCount[t.Task], 1) >= MaximumTaskCall {
 		return &MaximumTaskCallExceededError{task: t.Task}
 	}
@@ -251,6 +253,20 @@ func (e *Executor) runCommand(ctx context.Context, t *taskfile.Task, call taskfi
 			return err
 		}
 		return nil
+	case t.Container != nil:
+		d := docker.Docker{
+			Image: t.Container.Image,
+			Env:   t.Env.ToStringMap(),
+			Flags: t.Container.Flags,
+
+			Stdin:  e.Stdin,
+			Stdout: e.Stdout,
+			Stderr: e.Stderr,
+		}
+		if err := d.Setup(); err != nil {
+			return err
+		}
+		return d.Exec(ctx, cmd.Cmd)
 	case cmd.Cmd != "":
 		if e.Verbose || (!cmd.Silent && !t.Silent && !e.Taskfile.Silent && !e.Silent) {
 			e.Logger.Errf(logger.Green, "task: [%s] %s", t.Name(), cmd.Cmd)
