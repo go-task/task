@@ -39,6 +39,12 @@ func (t *Timestamp) IsUpToDate() (bool, error) {
 	_, err = os.Stat(timestampFile)
 	if err == nil {
 		generates = append(generates, timestampFile)
+	} else {
+		// create the timestamp file for the next execution when the file does not exist
+		if !t.Dry {
+			_ = os.MkdirAll(filepath.Dir(timestampFile), 0o755)
+			_, _ = os.Create(timestampFile)
+		}
 	}
 
 	// compare the time of the generates and sources. If the generates are old, the task will be executed
@@ -53,13 +59,9 @@ func (t *Timestamp) IsUpToDate() (bool, error) {
 		return false, nil
 	}
 
-	// create the timestamp file for the next execution
+	// modify the metadata of the file to the the current time
 	if !t.Dry {
-		_ = os.MkdirAll(filepath.Dir(timestampFile), 0o755)
-		_, err = os.Create(timestampFile)
-		if err != nil {
-			return false, err
-		}
+		_ = os.Chtimes(timestampFile, time.Now(), time.Now())
 	}
 
 	return !generateMaxTime.Before(sourcesMaxTime), nil
