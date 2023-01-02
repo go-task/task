@@ -49,13 +49,15 @@ func (t *Timestamp) IsUpToDate() (bool, error) {
 
 	// compare the time of the generates and sources. If the generates are old, the task will be executed
 
-	sourcesMaxTime, err := getMaxTime(sources...)
-	if err != nil || sourcesMaxTime.IsZero() {
+	// get the max time of the generates
+	generateMaxTime, err := getMaxTime(generates...)
+	if err != nil || generateMaxTime.IsZero() {
 		return false, nil
 	}
 
-	generateMaxTime, err := getMaxTime(generates...)
-	if err != nil || generateMaxTime.IsZero() {
+	// check if any of the source files is newer than the max time of the generates
+	shouldUpdate, err := anyFileNewerThan(sources, generateMaxTime)
+	if err != nil {
 		return false, nil
 	}
 
@@ -64,7 +66,7 @@ func (t *Timestamp) IsUpToDate() (bool, error) {
 		_ = os.Chtimes(timestampFile, time.Now(), time.Now())
 	}
 
-	return !generateMaxTime.Before(sourcesMaxTime), nil
+	return !shouldUpdate, nil
 }
 
 func (t *Timestamp) Kind() string {
@@ -100,6 +102,21 @@ func getMaxTime(files ...string) (time.Time, error) {
 		t = maxTime(t, info.ModTime())
 	}
 	return t, nil
+}
+
+// if the modification time of any of the files is newer than the the given time, returns true
+// This function is lazy, as it stops when it finds a file newer than the given time
+func anyFileNewerThan(files []string, givenTime time.Time) (bool, error) {
+	for _, f := range files {
+		info, err := os.Stat(f)
+		if err != nil {
+			return false, err
+		}
+		if info.ModTime().After(givenTime) {
+			return true, nil
+		}
+	}
+	return false, nil
 }
 
 func maxTime(a, b time.Time) time.Time {
