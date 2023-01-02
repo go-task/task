@@ -47,6 +47,8 @@ func (t *Timestamp) IsUpToDate() (bool, error) {
 		}
 	}
 
+	taskTime := time.Now()
+
 	// compare the time of the generates and sources. If the generates are old, the task will be executed
 
 	// get the max time of the generates
@@ -63,7 +65,7 @@ func (t *Timestamp) IsUpToDate() (bool, error) {
 
 	// modify the metadata of the file to the the current time
 	if !t.Dry {
-		_ = os.Chtimes(timestampFile, time.Now(), time.Now())
+		_ = os.Chtimes(timestampFile, taskTime, taskTime)
 	}
 
 	return !shouldUpdate, nil
