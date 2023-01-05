@@ -439,6 +439,73 @@ tasks:
       - echo {{.TEXT}}
 ```
 
+## Platform specific tasks and commands
+
+If you want to restrict the running of tasks to explicit platforms, this can be achieved
+using the `platforms` key. Tasks can be restricted to a specific OS, architecture or a
+combination of both.
+
+The `build-windows` task below will run only on Windows, and on any architecture:
+
+```yaml
+version: '3'
+
+tasks:
+  build-windows:
+    platforms: [windows]
+    cmds:
+      - echo 'Running command on windows'
+```
+
+This can be restricted to a specific architecture as follows:
+
+```yaml
+version: '3'
+
+tasks:
+  build-windows-amd64:
+    platforms: [windows/amd64]
+    cmds:
+      - echo 'Running command on windows (amd64)'
+```
+
+It is also possible to restrict the task to specific architectures:
+
+```yaml
+version: '3'
+
+tasks:
+  build-amd64:
+    platforms: [amd64]
+    cmds:
+      - echo 'Running command on amd64'
+```
+
+Multiple platforms can be specified as follows:
+
+```yaml
+version: '3'
+
+tasks:
+  build-windows:
+    platforms: [windows/amd64, darwin]
+    cmds:
+      - echo 'Running command on windows (amd64) and darwin'
+```
+
+Individual commands can also be restricted to specific platforms:
+
+```yaml
+version: '3'
+
+tasks:
+  build-windows:
+    cmds:
+      - cmd: echo 'Running command on windows (amd64) and darwin'
+        platforms: [windows/amd64, darwin]
+      - cmd: echo 'Running on all platforms'
+```
+
 ## Calling another task
 
 When a task has many dependencies, they are executed concurrently. This will

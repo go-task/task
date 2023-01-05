@@ -14,6 +14,7 @@ type Cmd struct {
 	Vars        *Vars
 	IgnoreError bool
 	Defer       bool
+	Platforms   []*Platform
 }
 
 // Dep is a task dependency
@@ -40,11 +41,13 @@ func (c *Cmd) UnmarshalYAML(node *yaml.Node) error {
 			Cmd         string
 			Silent      bool
 			IgnoreError bool `yaml:"ignore_error"`
+			Platforms   []*Platform
 		}
 		if err := node.Decode(&cmdStruct); err == nil && cmdStruct.Cmd != "" {
 			c.Cmd = cmdStruct.Cmd
 			c.Silent = cmdStruct.Silent
 			c.IgnoreError = cmdStruct.IgnoreError
+			c.Platforms = cmdStruct.Platforms
 			return nil
 		}
 

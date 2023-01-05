@@ -1696,3 +1696,14 @@ func TestUserWorkingDirectory(t *testing.T) {
 	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "default"}))
 	assert.Equal(t, fmt.Sprintf("%s\n", wd), buff.String())
 }
+func TestPlatforms(t *testing.T) {
+	var buff bytes.Buffer
+	e := task.Executor{
+		Dir:    "testdata/platforms",
+		Stdout: &buff,
+		Stderr: &buff,
+	}
+	assert.NoError(t, e.Setup())
+	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "build-" + runtime.GOOS}))
+	assert.Equal(t, fmt.Sprintf("task: [build-%s] echo 'Running task on %s'\nRunning task on %s\n", runtime.GOOS, runtime.GOOS, runtime.GOOS), buff.String())
+}
