@@ -1,0 +1,55 @@
+version: '3'
+
+tasks:
+  build-windows:
+    platforms: [windows]
+    cmds:
+      - echo 'Running task on windows'
+
+  build-darwin:
+    platforms: [darwin]
+    cmds:
+      - echo 'Running task on darwin'
+
+  build-linux:
+    platforms: [linux]
+    cmds:
+      - echo 'Running task on linux'
+
+  build-freebsd:
+    platforms: [freebsd]
+    cmds:
+      - echo 'Running task on freebsd'
+
+  build-blank-os:
+    platforms: []
+    cmds:
+      - echo 'Running command'
+
+  build-multiple:
+    platforms: []
+    cmds:
+      - cmd: echo 'Running command'
+      - cmd: echo 'Running on Windows'
+        platforms: [windows]
+      - cmd: echo 'Running on Darwin'
+        platforms: [darwin]
+
+  build-amd64:
+    platforms: [amd64]
+    cmds:
+      - echo "Running command on amd64"
+
+  build-arm64:
+    platforms: [arm64]
+    cmds:
+      - echo "Running command on arm64"
+
+  build-mixed:
+    cmds:
+      - cmd: echo 'building on windows/arm64'
+        platforms: [windows/arm64]
+      - cmd: echo 'building on linux/amd64'
+        platforms: [linux/amd64]
+      - cmd: echo 'building on darwin'
+        platforms: [darwin]

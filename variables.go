@@ -68,6 +68,7 @@ func (e *Executor) compiledTask(call taskfile.Call, evaluateShVars bool) (*taskf
 		Run:                  r.Replace(origTask.Run),
 		IncludeVars:          origTask.IncludeVars,
 		IncludedTaskfileVars: origTask.IncludedTaskfileVars,
+		Platforms:            origTask.Platforms,
 	}
 	new.Dir, err = execext.Expand(new.Dir)
 	if err != nil {
@@ -130,6 +131,7 @@ func (e *Executor) compiledTask(call taskfile.Call, evaluateShVars bool) (*taskf
 				Vars:        r.ReplaceVars(cmd.Vars),
 				IgnoreError: cmd.IgnoreError,
 				Defer:       cmd.Defer,
+				Platforms:   cmd.Platforms,
 			})
 		}
 	}

@@ -36,6 +36,7 @@ type Task struct {
 	IncludeVars          *Vars
 	IncludedTaskfileVars *Vars
 	IncludedTaskfile     *IncludedTaskfile
+	Platforms            []*Platform
 }
 
 func (t *Task) Name() string {
@@ -90,6 +91,7 @@ func (t *Task) UnmarshalYAML(node *yaml.Node) error {
 			Prefix        string
 			IgnoreError   bool `yaml:"ignore_error"`
 			Run           string
+			Platforms     []*Platform
 		}
 		if err := node.Decode(&task); err != nil {
 			return err
@@ -115,6 +117,7 @@ func (t *Task) UnmarshalYAML(node *yaml.Node) error {
 		t.Prefix = task.Prefix
 		t.IgnoreError = task.IgnoreError
 		t.Run = task.Run
+		t.Platforms = task.Platforms
 		return nil
 	}
 
@@ -150,6 +153,7 @@ func (t *Task) DeepCopy() *Task {
 		IncludeVars:          t.IncludeVars.DeepCopy(),
 		IncludedTaskfileVars: t.IncludedTaskfileVars.DeepCopy(),
 		IncludedTaskfile:     t.IncludedTaskfile.DeepCopy(),
+		Platforms:            deepCopySlice(t.Platforms),
 	}
 	return c
 }
