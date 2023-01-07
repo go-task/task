@@ -155,6 +155,13 @@
           "run": {
             "description": "Specifies whether the task should run again or not if called more than once. Available options: `always`, `once` and `when_changed`.",
             "$ref": "#/definitions/3/run"
+          },
+          "platforms": {
+            "description": "Specifies which platforms the task should be run on.",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         }
       },
@@ -233,6 +240,13 @@
           "defer": {
             "description": "",
             "type": "boolean"
+          },
+          "platforms": {
+            "description": "Specifies which platforms the command should be run on.",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         },
         "additionalProperties": false,
