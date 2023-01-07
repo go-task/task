@@ -56,6 +56,8 @@ func (e *Executor) compiledTask(call taskfile.Call, evaluateShVars bool) (*taskf
 		Sources:              r.ReplaceSlice(origTask.Sources),
 		Generates:            r.ReplaceSlice(origTask.Generates),
 		Dir:                  r.Replace(origTask.Dir),
+		Set:                  origTask.Set,
+		Shopts:               origTask.Shopts,
 		Vars:                 nil,
 		Env:                  nil,
 		Dotenv:               r.ReplaceSlice(origTask.Dotenv),
@@ -125,9 +127,11 @@ func (e *Executor) compiledTask(call taskfile.Call, evaluateShVars bool) (*taskf
 				continue
 			}
 			new.Cmds = append(new.Cmds, &taskfile.Cmd{
-				Task:        r.Replace(cmd.Task),
-				Silent:      cmd.Silent,
 				Cmd:         r.Replace(cmd.Cmd),
+				Silent:      cmd.Silent,
+				Task:        r.Replace(cmd.Task),
+				Set:         cmd.Set,
+				Shopts:      cmd.Shopts,
 				Vars:        r.ReplaceVars(cmd.Vars),
 				IgnoreError: cmd.IgnoreError,
 				Defer:       cmd.Defer,

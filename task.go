@@ -21,6 +21,7 @@ import (
 	"github.com/go-task/task/v3/taskfile"
 
 	"github.com/sajari/fuzzy"
+	"golang.org/x/exp/constraints"
 	"golang.org/x/exp/slices"
 	"golang.org/x/sync/errgroup"
 )
@@ -283,17 +284,19 @@ func (e *Executor) runCommand(ctx context.Context, t *taskfile.Task, call taskfi
 		stdOut, stdErr, close := outputWrapper.WrapWriter(e.Stdout, e.Stderr, t.Prefix, outputTemplater)
 		defer func() {
 			if err := close(); err != nil {
-				e.Logger.Errf(logger.Red, "task: unable to close writter: %v", err)
+				e.Logger.Errf(logger.Red, "task: unable to close writer: %v", err)
 			}
 		}()
 
 		err = execext.RunCommand(ctx, &execext.RunCommandOptions{
-			Command: cmd.Cmd,
-			Dir:     t.Dir,
-			Env:     getEnviron(t),
-			Stdin:   e.Stdin,
-			Stdout:  stdOut,
-			Stderr:  stdErr,
+			Command:   cmd.Cmd,
+			Dir:       t.Dir,
+			Env:       getEnviron(t),
+			PosixOpts: uniqueJoinSlices(e.Taskfile.Set, t.Set, cmd.Set),
+			BashOpts:  uniqueJoinSlices(e.Taskfile.Shopts, t.Shopts, cmd.Shopts),
+			Stdin:     e.Stdin,
+			Stdout:    stdOut,
+			Stderr:    stdErr,
 		})
 		if execext.IsExitError(err) && cmd.IgnoreError {
 			e.Logger.VerboseErrf(logger.Yellow, "task: [%s] command error ignored: %v", t.Name(), err)
@@ -303,6 +306,20 @@ func (e *Executor) runCommand(ctx context.Context, t *taskfile.Task, call taskfi
 	default:
 		return nil
 	}
+}
+
+func uniqueJoinSlices[T constraints.Ordered](ss ...[]T) []T {
+	var length int
+	for _, s := range ss {
+		length += len(s)
+	}
+	r := make([]T, length)
+	var i int
+	for _, s := range ss {
+		i += copy(r[i:], s)
+	}
+	slices.Sort(r)
+	return slices.Compact(r)
 }
 
 func getEnviron(t *taskfile.Task) []string {

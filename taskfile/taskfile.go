@@ -15,6 +15,8 @@ type Taskfile struct {
 	Output     Output
 	Method     string
 	Includes   *IncludedTaskfiles
+	Set        []string
+	Shopts     []string
 	Vars       *Vars
 	Env        *Vars
 	Tasks      Tasks
@@ -34,6 +36,8 @@ func (tf *Taskfile) UnmarshalYAML(node *yaml.Node) error {
 			Output     Output
 			Method     string
 			Includes   *IncludedTaskfiles
+			Set        []string
+			Shopts     []string
 			Vars       *Vars
 			Env        *Vars
 			Tasks      Tasks
@@ -50,6 +54,8 @@ func (tf *Taskfile) UnmarshalYAML(node *yaml.Node) error {
 		tf.Output = taskfile.Output
 		tf.Method = taskfile.Method
 		tf.Includes = taskfile.Includes
+		tf.Set = taskfile.Set
+		tf.Shopts = taskfile.Shopts
 		tf.Vars = taskfile.Vars
 		tf.Env = taskfile.Env
 		tf.Tasks = taskfile.Tasks

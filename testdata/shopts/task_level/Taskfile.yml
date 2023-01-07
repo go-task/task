@@ -1,0 +1,14 @@
+version: '3'
+
+silent: true
+
+tasks:
+  pipefail:
+    set: [pipefail]
+    cmds:
+      - set -o | grep pipefail
+
+  globstar:
+    shopts: [globstar]
+    cmds:
+      - shopt | grep globstar

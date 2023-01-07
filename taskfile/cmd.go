@@ -11,6 +11,8 @@ type Cmd struct {
 	Cmd         string
 	Silent      bool
 	Task        string
+	Set         []string
+	Shopts      []string
 	Vars        *Vars
 	IgnoreError bool
 	Defer       bool
@@ -40,12 +42,16 @@ func (c *Cmd) UnmarshalYAML(node *yaml.Node) error {
 		var cmdStruct struct {
 			Cmd         string
 			Silent      bool
+			Set         []string
+			Shopts      []string
 			IgnoreError bool `yaml:"ignore_error"`
 			Platforms   []*Platform
 		}
 		if err := node.Decode(&cmdStruct); err == nil && cmdStruct.Cmd != "" {
 			c.Cmd = cmdStruct.Cmd
 			c.Silent = cmdStruct.Silent
+			c.Set = cmdStruct.Set
+			c.Shopts = cmdStruct.Shopts
 			c.IgnoreError = cmdStruct.IgnoreError
 			c.Platforms = cmdStruct.Platforms
 			return nil
