@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+- Add new `platforms:` attribute to `task` and `cmd`, so it's now possible to
+  choose in which platforms that given task or command will be run on. Possible
+  values are operating system (GOOS), architecture (GOARCH) or a combination of
+  the two. Example: `platforms: [linux]`, `platforms: [amd64]` or
+  `platforms: [linux/amd64]`. Other platforms will be skipped
+  ([#978](https://github.com/go-task/task/issues/978), [#980](https://github.com/go-task/task/pull/980) by @leaanthony).
+
 ## v3.19.1 - 2022-12-31
 
 - Small bug fix: closing `Taskfile.yml` once we're done reading it

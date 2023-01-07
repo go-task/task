@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"runtime"
 	"sort"
 	"strings"
 	"sync"
@@ -135,9 +136,7 @@ func (e *Executor) RunTask(ctx context.Context, call taskfile.Call) error {
 	defer release()
 
 	return e.startExecution(ctx, t, func(ctx context.Context) error {
-
-		// Check platform
-		if !ShouldRunOnCurrentPlatform(t.Platforms) {
+		if !shouldRunOnCurrentPlatform(t.Platforms) {
 			e.Logger.VerboseOutf(logger.Yellow, `task: "%s" not for current platform - ignored`, call.Task)
 			return nil
 		}
@@ -259,11 +258,11 @@ func (e *Executor) runCommand(ctx context.Context, t *taskfile.Task, call taskfi
 		}
 		return nil
 	case cmd.Cmd != "":
-		// Check platform
-		if !ShouldRunOnCurrentPlatform(cmd.Platforms) {
+		if !shouldRunOnCurrentPlatform(cmd.Platforms) {
 			e.Logger.VerboseOutf(logger.Yellow, `task: [%s] %s not for current platform - ignored`, t.Name(), cmd.Cmd)
 			return nil
 		}
+
 		if e.Verbose || (!cmd.Silent && !t.Silent && !e.Taskfile.Silent && !e.Silent) {
 			e.Logger.Errf(logger.Green, "task: [%s] %s", t.Name(), cmd.Cmd)
 		}
@@ -468,12 +467,12 @@ func FilterOutInternal() FilterFunc {
 	})
 }
 
-func ShouldRunOnCurrentPlatform(platforms []*taskfile.Platform) bool {
+func shouldRunOnCurrentPlatform(platforms []*taskfile.Platform) bool {
 	if len(platforms) == 0 {
 		return true
 	}
-	for _, platform := range platforms {
-		if platform.MatchesCurrentPlatform() {
+	for _, p := range platforms {
+		if (p.OS == "" || p.OS == runtime.GOOS) && (p.Arch == "" || p.Arch == runtime.GOARCH) {
 			return true
 		}
 	}

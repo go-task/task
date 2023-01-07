@@ -139,7 +139,7 @@ includes:
 | `prefix` | `string` | | Defines a string to prefix the output of tasks running in parallel. Only used when the output mode is `prefixed`. |
 | `ignore_error` | `bool` | `false` | Continue execution if errors happen while executing commands. |
 | `run` | `string` | The one declared globally in the Taskfile or `always` | Specifies whether the task should run again or not if called more than once. Available options: `always`, `once` and `when_changed`. |
-| `platforms` | `[]string` | All platforms | Specifies which platforms the task should be run on. |
+| `platforms` | `[]string` | All platforms | Specifies which platforms the task should be run on. [Valid GOOS and GOARCH values allowed](https://github.com/golang/go/blob/master/src/go/build/syslist.go). Task will be skipped otherwise. |
 
 :::info
 
@@ -190,7 +190,7 @@ tasks:
 | `vars` | [`map[string]Variable`](#variable) | | Optional additional variables to be passed to the referenced task. Only relevant when setting `task` instead of `cmd`. |
 | `ignore_error` | `bool` | `false` | Continue execution if errors happen while executing the command. |
 | `defer` | `string` | | Alternative to `cmd`, but schedules the command to be executed at the end of this task instead of immediately. This cannot be used together with `cmd`. |
-| `platforms` | `[]string` | All platforms | Specifies which platforms the command should be run on. |
+| `platforms` | `[]string` | All platforms | Specifies which platforms the command should be run on. [Valid GOOS and GOARCH values allowed](https://github.com/golang/go/blob/master/src/go/build/syslist.go). Command will be skipped otherwise. |
 
 :::info
 
