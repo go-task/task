@@ -6,13 +6,6 @@ includes:
     taskfile: ./docs
     dir: ./docs
 
-vars:
-  GIT_COMMIT:
-    sh: git log -n 1 --format=%h
-
-  GO_PACKAGES:
-    sh: go list ./...
-
 env:
   CGO_ENABLED: '0'
 
@@ -29,6 +22,9 @@ tasks:
       - './**/*.go'
     cmds:
       - go install -v -ldflags="-w -s -X main.version={{.GIT_COMMIT}}" ./cmd/task
+    vars:
+      GIT_COMMIT:
+        sh: git log -n 1 --format=%h
 
   mod:
     desc: Downloads and tidy Go modules
@@ -73,12 +69,18 @@ tasks:
     deps: [install]
     cmds:
       - go test {{catLines .GO_PACKAGES}}
+    vars:
+      GO_PACKAGES:
+        sh: go list ./...
 
   test:all:
     desc: Runs test suite with signals and watch tests included
     deps: [install, sleepit:build]
     cmds:
       - go test {{catLines .GO_PACKAGES}} -tags 'signals watch'
+    vars:
+      GO_PACKAGES:
+        sh: go list ./...
 
   test-release:
     desc: Tests release process without publishing
@@ -106,4 +108,7 @@ tasks:
   packages:
     cmds:
       - echo '{{.GO_PACKAGES}}'
+    vars:
+      GO_PACKAGES:
+        sh: go list ./...
     silent: true
