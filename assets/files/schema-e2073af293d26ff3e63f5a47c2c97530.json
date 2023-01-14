@@ -108,6 +108,20 @@
             "description": "The directory in which this task should run. Defaults to the current working directory.",
             "type": "string"
           },
+          "set": {
+            "description": "Enables POSIX shell options for all of a task's commands. See https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html",
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/3/set"
+            }
+          },
+          "shopt": {
+            "description": "Enables Bash shell options for all of a task's commands. See https://www.gnu.org/software/bash/manual/html_node/The-Shopt-Builtin.html",
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/3/shopt"
+            }
+          },
           "vars": {
             "description": "A set of variables that can be used in the task.",
             "$ref": "#/definitions/3/vars"
@@ -184,6 +198,14 @@
           }
         ]
       },
+      "set": {
+        "type": "string",
+        "enum": ["allexport", "a", "errexit", "e", "noexec", "n", "noglob", "f", "nounset", "u", "xtrace", "x", "pipefail"]
+      },
+      "shopt": {
+        "type": "string",
+        "enum": ["expand_aliases", "globstar", "nullglob"]
+      },
       "vars": {
         "type": "object",
         "patternProperties": {
@@ -232,6 +254,20 @@
           "silent": {
             "description": "Silent mode disables echoing of command before Task runs it",
             "type": "boolean"
+          },
+          "set": {
+            "description": "Enables POSIX shell options for this command. See https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html",
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/3/set"
+            }
+          },
+          "shopt": {
+            "description": "Enables Bash shell options for this command. See https://www.gnu.org/software/bash/manual/html_node/The-Shopt-Builtin.html",
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/3/shopt"
+            }
           },
           "ignore_error": {
             "description": "Prevent command from aborting the execution of task even after receiving a status code of 1",
@@ -370,6 +406,20 @@
         "silent": {
           "description": "Default 'silent' options for this Taskfile. If `false`, can be overidden with `true` in a task by task basis.",
           "type": "boolean"
+        },
+        "set": {
+          "description": "Enables POSIX shell options for all commands in the Taskfile. See https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/3/set"
+          }
+        },
+        "shopt": {
+          "description": "Enables Bash shell options for all commands in the Taskfile. See https://www.gnu.org/software/bash/manual/html_node/The-Shopt-Builtin.html",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/3/shopt"
+          }
         },
         "dotenv": {
           "type": "array",
