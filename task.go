@@ -400,23 +400,39 @@ func (e *Executor) GetTask(call taskfile.Call) (*taskfile.Task, error) {
 	return matchingTask, nil
 }
 
-type FilterFunc func(tasks []*taskfile.Task) []*taskfile.Task
+type FilterFunc func(task *taskfile.Task) bool
 
-func (e *Executor) GetTaskList(filters ...FilterFunc) []*taskfile.Task {
+func (e *Executor) GetTaskList(filters ...FilterFunc) ([]*taskfile.Task, error) {
 	tasks := make([]*taskfile.Task, 0, len(e.Taskfile.Tasks))
 
+	// Create an error group to wait for each task to be compiled
+	var g errgroup.Group
+
 	// Fetch and compile the list of tasks
-	for _, task := range e.Taskfile.Tasks {
-		compiledTask, err := e.FastCompiledTask(taskfile.Call{Task: task.Task})
-		if err == nil {
-			task = compiledTask
-		}
-		tasks = append(tasks, task)
+	for key := range e.Taskfile.Tasks {
+		task := e.Taskfile.Tasks[key]
+		g.Go(func() error {
+
+			// Check if we should filter the task
+			for _, filter := range filters {
+				if filter(task) {
+					return nil
+				}
+			}
+
+			// Compile the task
+			compiledTask, err := e.FastCompiledTask(taskfile.Call{Task: task.Task})
+			if err == nil {
+				task = compiledTask
+			}
+			tasks = append(tasks, task)
+			return nil
+		})
 	}
 
-	// Filter the tasks
-	for _, filter := range filters {
-		tasks = filter(tasks)
+	// Wait for all the go routines to finish
+	if err := g.Wait(); err != nil {
+		return nil, err
 	}
 
 	// Sort the tasks.
@@ -434,40 +450,17 @@ func (e *Executor) GetTaskList(filters ...FilterFunc) []*taskfile.Task {
 		return false
 	})
 
-	return tasks
-}
-
-// Filter is a generic task filtering function. It will remove each task in the
-// slice where the result of the given function is true.
-func Filter(f func(task *taskfile.Task) bool) FilterFunc {
-	return func(tasks []*taskfile.Task) []*taskfile.Task {
-		shift := 0
-		for _, task := range tasks {
-			if !f(task) {
-				tasks[shift] = task
-				shift++
-			}
-		}
-		// This loop stops any memory leaks
-		for j := shift; j < len(tasks); j++ {
-			tasks[j] = nil
-		}
-		return slices.Clip(tasks[:shift])
-	}
+	return tasks, nil
 }
 
 // FilterOutNoDesc removes all tasks that do not contain a description.
-func FilterOutNoDesc() FilterFunc {
-	return Filter(func(task *taskfile.Task) bool {
-		return task.Desc == ""
-	})
+func FilterOutNoDesc(task *taskfile.Task) bool {
+	return task.Desc == ""
 }
 
 // FilterOutInternal removes all tasks that are marked as internal.
-func FilterOutInternal() FilterFunc {
-	return Filter(func(task *taskfile.Task) bool {
-		return task.Internal
-	})
+func FilterOutInternal(task *taskfile.Task) bool {
+	return task.Internal
 }
 
 func shouldRunOnCurrentPlatform(platforms []*taskfile.Platform) bool {

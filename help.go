@@ -51,10 +51,10 @@ func (o ListOptions) Validate() error {
 // Filters returns the slice of FilterFunc which filters a list
 // of taskfile.Task according to the given ListOptions
 func (o ListOptions) Filters() []FilterFunc {
-	filters := []FilterFunc{FilterOutInternal()}
+	filters := []FilterFunc{FilterOutInternal}
 
 	if o.ListOnlyTasksWithDescriptions {
-		filters = append(filters, FilterOutNoDesc())
+		filters = append(filters, FilterOutNoDesc)
 	}
 
 	return filters
@@ -65,7 +65,10 @@ func (o ListOptions) Filters() []FilterFunc {
 // The function returns a boolean indicating whether tasks were found
 // and an error if one was encountered while preparing the output.
 func (e *Executor) ListTasks(o ListOptions) (bool, error) {
-	tasks := e.GetTaskList(o.Filters()...)
+	tasks, err := e.GetTaskList(o.Filters()...)
+	if err != nil {
+		return false, err
+	}
 	if o.FormatTaskListAsJSON {
 		output, err := e.ToEditorOutput(tasks)
 		if err != nil {
