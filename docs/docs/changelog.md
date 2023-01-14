@@ -5,6 +5,23 @@ sidebar_position: 7
 
 # Changelog
 
+## v3.20.0 - 2023-01-14
+
+- Improve behavior and performance of status checking when using the
+  `timestamp` mode
+  ([#976](https://github.com/go-task/task/issues/976), [#977](https://github.com/go-task/task/pull/977) by @aminya).
+- Performance optimizations were made for large Taskfiles
+  ([#982](https://github.com/go-task/task/pull/982) by @pd93).
+- Add ability to configure options for the [`set`](https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html)
+  and [`shopt`](https://www.gnu.org/software/bash/manual/html_node/The-Shopt-Builtin.html) builtins
+  ([#908](https://github.com/go-task/task/issues/908), [#929](https://github.com/go-task/task/pull/929) by @pd93, [Documentation](http://taskfile.dev/usage/#set-and-shopt)).
+- Add new `platforms:` attribute to `task` and `cmd`, so it's now possible to
+  choose in which platforms that given task or command will be run on. Possible
+  values are operating system (GOOS), architecture (GOARCH) or a combination of
+  the two. Example: `platforms: [linux]`, `platforms: [amd64]` or
+  `platforms: [linux/amd64]`. Other platforms will be skipped
+  ([#978](https://github.com/go-task/task/issues/978), [#980](https://github.com/go-task/task/pull/980) by @leaanthony).
+
 ## v3.19.1 - 2022-12-31
 
 - Small bug fix: closing `Taskfile.yml` once we're done reading it

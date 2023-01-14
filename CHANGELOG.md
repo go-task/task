@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v3.20.0 - 2023-01-14
 
 - Improve behavior and performance of status checking when using the
   `timestamp` mode
