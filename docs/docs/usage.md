@@ -439,6 +439,78 @@ tasks:
       - echo {{.TEXT}}
 ```
 
+## Platform specific tasks and commands
+
+If you want to restrict the running of tasks to explicit platforms, this can be achieved
+using the `platforms:` key. Tasks can be restricted to a specific OS, architecture or a
+combination of both.
+On a mismatch, the task or command will be skipped, and no error will be thrown.
+
+The values allowed as OS or Arch are valid `GOOS` and `GOARCH` values, as
+defined by the Go language
+[here](https://github.com/golang/go/blob/master/src/go/build/syslist.go).
+
+The `build-windows` task below will run only on Windows, and on any architecture:
+
+```yaml
+version: '3'
+
+tasks:
+  build-windows:
+    platforms: [windows]
+    cmds:
+      - echo 'Running command on Windows'
+```
+
+This can be restricted to a specific architecture as follows:
+
+```yaml
+version: '3'
+
+tasks:
+  build-windows-amd64:
+    platforms: [windows/amd64]
+    cmds:
+      - echo 'Running command on Windows (amd64)'
+```
+
+It is also possible to restrict the task to specific architectures:
+
+```yaml
+version: '3'
+
+tasks:
+  build-amd64:
+    platforms: [amd64]
+    cmds:
+      - echo 'Running command on amd64'
+```
+
+Multiple platforms can be specified as follows:
+
+```yaml
+version: '3'
+
+tasks:
+  build:
+    platforms: [windows/amd64, darwin]
+    cmds:
+      - echo 'Running command on Windows (amd64) and macOS'
+```
+
+Individual commands can also be restricted to specific platforms:
+
+```yaml
+version: '3'
+
+tasks:
+  build:
+    cmds:
+      - cmd: echo 'Running command on Windows (amd64) and macOS'
+        platforms: [windows/amd64, darwin]
+      - cmd: echo 'Running on all platforms'
+```
+
 ## Calling another task
 
 When a task has many dependencies, they are executed concurrently. This will

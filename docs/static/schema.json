@@ -155,6 +155,13 @@
           "run": {
             "description": "Specifies whether the task should run again or not if called more than once. Available options: `always`, `once` and `when_changed`.",
             "$ref": "#/definitions/3/run"
+          },
+          "platforms": {
+            "description": "Specifies which platforms the task should be run on.",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         }
       },
@@ -233,6 +240,13 @@
           "defer": {
             "description": "",
             "type": "boolean"
+          },
+          "platforms": {
+            "description": "Specifies which platforms the command should be run on.",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         },
         "additionalProperties": false,
@@ -370,7 +384,8 @@
         },
         "interval": {
           "description": "Sets a different watch interval when using `--watch`, the default being 5 seconds. This string should be a valid Go duration: https://pkg.go.dev/time#ParseDuration.",
-          "$ref": "#/definitions/3/run"
+          "type": "string",
+          "pattern": "^[0-9]+(?:m|s|ms)$"
         }
       },
       "additionalProperties": false,

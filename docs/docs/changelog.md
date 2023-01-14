@@ -1,9 +1,21 @@
 ---
 slug: /changelog/
-sidebar_position: 6
+sidebar_position: 7
 ---
 
 # Changelog
+
+## v3.19.1 - 2022-12-31
+
+- Small bug fix: closing `Taskfile.yml` once we're done reading it
+  ([#963](https://github.com/go-task/task/issues/963), [#964](https://github.com/go-task/task/pull/964) by @HeCorr).
+- Fixes a bug in v2 that caused a panic when using a `Taskfile_{{OS}}.yml` file
+  ([#961](https://github.com/go-task/task/issues/961), [#971](https://github.com/go-task/task/pull/971) by @pd93).
+- Fixed a bug where watch intervals set in the Taskfile were not being respected ([#969](https://github.com/go-task/task/pull/969), [#970](https://github.com/go-task/task/pull/970) by @pd93)
+- Add `--json` flag (alias `-j`) with the intent to improve support for code
+  editors and add room to other possible integrations. This is basic for now,
+  but we plan to add more info in the near future
+  ([#936](https://github.com/go-task/task/pull/936) by @davidalpert, [#764](https://github.com/go-task/task/issues/764)).
 
 ## v3.19.0 - 2022-12-05
 

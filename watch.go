@@ -10,10 +10,11 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/radovskyb/watcher"
+
 	"github.com/go-task/task/v3/internal/logger"
 	"github.com/go-task/task/v3/internal/status"
 	"github.com/go-task/task/v3/taskfile"
-	"github.com/radovskyb/watcher"
 )
 
 const defaultWatchInterval = 5 * time.Second
@@ -37,23 +38,14 @@ func (e *Executor) watchTasks(calls ...taskfile.Call) error {
 		}()
 	}
 
-	var watchIntervalString string
-
-	if e.Interval != "" {
-		watchIntervalString = e.Interval
-	} else if e.Taskfile.Interval != "" {
-		watchIntervalString = e.Taskfile.Interval
-	}
-
-	watchInterval := defaultWatchInterval
-
-	if watchIntervalString != "" {
-		var err error
-		watchInterval, err = parseWatchInterval(watchIntervalString)
-		if err != nil {
-			cancel()
-			return err
-		}
+	var watchInterval time.Duration
+	switch {
+	case e.Interval != 0:
+		watchInterval = e.Interval
+	case e.Taskfile.Interval != 0:
+		watchInterval = e.Taskfile.Interval
+	default:
+		watchInterval = defaultWatchInterval
 	}
 
 	e.Logger.VerboseOutf(logger.Green, "task: Watching for changes every %v", watchInterval)
@@ -184,12 +176,4 @@ func (e *Executor) registerWatchedFiles(w *watcher.Watcher, calls ...taskfile.Ca
 
 func shouldIgnoreFile(path string) bool {
 	return strings.Contains(path, "/.git") || strings.Contains(path, "/.task") || strings.Contains(path, "/node_modules")
-}
-
-func parseWatchInterval(watchInterval string) (time.Duration, error) {
-	v, err := time.ParseDuration(watchInterval)
-	if err != nil {
-		return 0, fmt.Errorf(`task: Could not parse watch interval "%s": %v`, watchInterval, err)
-	}
-	return v, nil
 }

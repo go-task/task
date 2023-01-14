@@ -2,6 +2,20 @@
 
 ## Unreleased
 
+- Add new `platforms:` attribute to `task` and `cmd`, so it's now possible to
+  choose in which platforms that given task or command will be run on. Possible
+  values are operating system (GOOS), architecture (GOARCH) or a combination of
+  the two. Example: `platforms: [linux]`, `platforms: [amd64]` or
+  `platforms: [linux/amd64]`. Other platforms will be skipped
+  ([#978](https://github.com/go-task/task/issues/978), [#980](https://github.com/go-task/task/pull/980) by @leaanthony).
+
+## v3.19.1 - 2022-12-31
+
+- Small bug fix: closing `Taskfile.yml` once we're done reading it
+  ([#963](https://github.com/go-task/task/issues/963), [#964](https://github.com/go-task/task/pull/964) by @HeCorr).
+- Fixes a bug in v2 that caused a panic when using a `Taskfile_{{OS}}.yml` file
+  ([#961](https://github.com/go-task/task/issues/961), [#971](https://github.com/go-task/task/pull/971) by @pd93).
+- Fixed a bug where watch intervals set in the Taskfile were not being respected ([#969](https://github.com/go-task/task/pull/969), [#970](https://github.com/go-task/task/pull/970) by @pd93)
 - Add `--json` flag (alias `-j`) with the intent to improve support for code
   editors and add room to other possible integrations. This is basic for now,
   but we plan to add more info in the near future

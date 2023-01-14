@@ -2,10 +2,11 @@
 // Note: type annotations allow type checking and IDEs autocompletion
 
 const {
-  GITHUB_URL,
-  TWITTER_URL,
+  CHINESE_URL,
   DISCORD_URL,
-  CHINESE_URL
+  GITHUB_URL,
+  MASTODON_URL,
+  TWITTER_URL
 } = require('./constants');
 const lightCodeTheme = require('./src/themes/prismLight');
 const darkCodeTheme = require('./src/themes/prismDark');
@@ -109,6 +110,11 @@ const config = {
             position: 'right'
           },
           {
+            href: MASTODON_URL,
+            label: 'Mastodon',
+            position: 'right'
+          },
+          {
             href: DISCORD_URL,
             label: 'Discord',
             position: 'right'
@@ -145,6 +151,10 @@ const config = {
               {
                 label: 'Twitter',
                 href: TWITTER_URL
+              },
+              {
+                label: 'Mastodon',
+                href: MASTODON_URL
               },
               {
                 label: 'Discord',

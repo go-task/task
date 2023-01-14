@@ -5,10 +5,12 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"runtime"
 	"sort"
 	"strings"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	"github.com/go-task/task/v3/internal/compiler"
 	"github.com/go-task/task/v3/internal/execext"
@@ -47,7 +49,7 @@ type Executor struct {
 	PropStatus  bool
 	OutOfDate   bool
 	Concurrency int
-	Interval    string
+	Interval    time.Duration
 
 	Stdin  io.Reader
 	Stdout io.Writer
@@ -136,6 +138,11 @@ func (e *Executor) RunTask(ctx context.Context, call taskfile.Call) error {
 	defer release()
 
 	return e.startExecution(ctx, t, func(ctx context.Context) error {
+		if !shouldRunOnCurrentPlatform(t.Platforms) {
+			e.Logger.VerboseOutf(logger.Yellow, `task: "%s" not for current platform - ignored`, call.Task)
+			return nil
+		}
+
 		e.Logger.VerboseErrf(logger.Magenta, `task: "%s" started`, call.Task)
 		if err := e.runDeps(ctx, t); err != nil {
 			return err
@@ -255,6 +262,11 @@ func (e *Executor) runCommand(ctx context.Context, t *taskfile.Task, call taskfi
 		}
 		return nil
 	case cmd.Cmd != "":
+		if !shouldRunOnCurrentPlatform(cmd.Platforms) {
+			e.Logger.VerboseOutf(logger.Yellow, `task: [%s] %s not for current platform - ignored`, t.Name(), cmd.Cmd)
+			return nil
+		}
+
 		if e.Verbose || (!cmd.Silent && !t.Silent && !e.Taskfile.Silent && !e.Silent) {
 			e.Logger.Errf(logger.Green, "task: [%s] %s", t.Name(), cmd.Cmd)
 		}
@@ -457,4 +469,16 @@ func FilterOutInternal() FilterFunc {
 	return Filter(func(task *taskfile.Task) bool {
 		return task.Internal
 	})
+}
+
+func shouldRunOnCurrentPlatform(platforms []*taskfile.Platform) bool {
+	if len(platforms) == 0 {
+		return true
+	}
+	for _, p := range platforms {
+		if (p.OS == "" || p.OS == runtime.GOOS) && (p.Arch == "" || p.Arch == runtime.GOARCH) {
+			return true
+		}
+	}
+	return false
 }

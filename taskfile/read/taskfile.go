@@ -197,6 +197,8 @@ func readTaskfile(file string) (*taskfile.Taskfile, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer f.Close()
+
 	var t taskfile.Taskfile
 	if err := yaml.NewDecoder(f).Decode(&t); err != nil {
 		return nil, fmt.Errorf("task: Failed to parse %s:\n%w", filepathext.TryAbsToRel(file), err)

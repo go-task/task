@@ -1,11 +1,11 @@
-name: issue needs triage
+name: issue closed
 
 on:
   issues:
-    types: [opened]
+    types: [closed]
 
 jobs:
-  issue-needs-triage:
+  issue-closed:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/github-script@v6
@@ -19,11 +19,11 @@ jobs:
                 repo: context.repo.repo,
               }
             )
-            if (labels.length === 0) {
-              github.rest.issues.addLabels({
-                issue_number: context.issue.number,
+            if (labels.find(label => label.name === 'needs triage')) {
+              github.rest.issues.removeLabel({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                labels: ['needs triage']
+                issue_number: context.issue.number,
+                name: 'needs triage'
               })
             }

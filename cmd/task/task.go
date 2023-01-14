@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"runtime/debug"
 	"strings"
+	"time"
 
 	"github.com/spf13/pflag"
 	"mvdan.cc/sh/v3/syntax"
@@ -75,7 +76,7 @@ func main() {
 		entrypoint  string
 		output      taskfile.Output
 		color       bool
-		interval    string
+		interval    time.Duration
 	)
 
 	pflag.BoolVar(&versionFlag, "version", false, "show Task version")
@@ -101,7 +102,7 @@ func main() {
 	pflag.StringVar(&output.Group.End, "output-group-end", "", "message template to print after a task's grouped output")
 	pflag.BoolVarP(&color, "color", "c", true, "colored output. Enabled by default. Set flag to false or use NO_COLOR=1 to disable")
 	pflag.IntVarP(&concurrency, "concurrency", "C", 0, "limit number tasks to run concurrently")
-	pflag.StringVarP(&interval, "interval", "I", "5s", "interval to watch for changes")
+	pflag.DurationVarP(&interval, "interval", "I", 0, "interval to watch for changes")
 	pflag.Parse()
 
 	if versionFlag {
