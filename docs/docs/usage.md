@@ -1420,6 +1420,31 @@ tasks:
     - ./app{{exeExt}} -h localhost -p 8080
 ```
 
+## `set` and `shopt`
+
+It's possible to specify options to the
+[`set`](https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html)
+and [`shopt`](https://www.gnu.org/software/bash/manual/html_node/The-Shopt-Builtin.html)
+builtins. This can be added at global, task or command level.
+
+```yaml
+version: '2'
+
+set: [pipefail]
+shopt: [globstar]
+
+tasks:
+  # `globstar` required for double star globs to work
+  default: echo **/*.go
+```
+
+:::info
+
+Keep in mind that not all options are available in the
+[shell interpreter library](https://github.com/mvdan/sh) that Task uses.
+
+:::
+
 ## Watch tasks
 
 With the flags `--watch` or `-w` task will watch for file changes

@@ -3,6 +3,7 @@ package execext
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -17,12 +18,14 @@ import (
 
 // RunCommandOptions is the options for the RunCommand func
 type RunCommandOptions struct {
-	Command string
-	Dir     string
-	Env     []string
-	Stdin   io.Reader
-	Stdout  io.Writer
-	Stderr  io.Writer
+	Command   string
+	Dir       string
+	Env       []string
+	PosixOpts []string
+	BashOpts  []string
+	Stdin     io.Reader
+	Stdout    io.Writer
+	Stderr    io.Writer
 }
 
 var (
@@ -36,9 +39,18 @@ func RunCommand(ctx context.Context, opts *RunCommandOptions) error {
 		return ErrNilOptions
 	}
 
-	p, err := syntax.NewParser().Parse(strings.NewReader(opts.Command), "")
-	if err != nil {
-		return err
+	// Set "-e" or "errexit" by default
+	opts.PosixOpts = append(opts.PosixOpts, "e")
+
+	// Format POSIX options into a slice that mvdan/sh understands
+	var params []string
+	for _, opt := range opts.PosixOpts {
+		if len(opt) == 1 {
+			params = append(params, fmt.Sprintf("-%s", opt))
+		} else {
+			params = append(params, "-o")
+			params = append(params, opt)
+		}
 	}
 
 	environ := opts.Env
@@ -47,7 +59,7 @@ func RunCommand(ctx context.Context, opts *RunCommandOptions) error {
 	}
 
 	r, err := interp.New(
-		interp.Params("-e"),
+		interp.Params(params...),
 		interp.Env(expand.ListEnviron(environ...)),
 		interp.ExecHandler(interp.DefaultExecHandler(15*time.Second)),
 		interp.OpenHandler(openHandler),
@@ -58,6 +70,25 @@ func RunCommand(ctx context.Context, opts *RunCommandOptions) error {
 		return err
 	}
 
+	parser := syntax.NewParser()
+
+	// Run any shopt commands
+	if len(opts.BashOpts) > 0 {
+		shoptCmdStr := fmt.Sprintf("shopt -s %s", strings.Join(opts.BashOpts, " "))
+		shoptCmd, err := parser.Parse(strings.NewReader(shoptCmdStr), "")
+		if err != nil {
+			return err
+		}
+		if err := r.Run(ctx, shoptCmd); err != nil {
+			return err
+		}
+	}
+
+	// Run the user-defined command
+	p, err := parser.Parse(strings.NewReader(opts.Command), "")
+	if err != nil {
+		return err
+	}
 	return r.Run(ctx, p)
 }
 

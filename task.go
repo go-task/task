@@ -16,6 +16,7 @@ import (
 	"github.com/go-task/task/v3/internal/execext"
 	"github.com/go-task/task/v3/internal/logger"
 	"github.com/go-task/task/v3/internal/output"
+	"github.com/go-task/task/v3/internal/slicesext"
 	"github.com/go-task/task/v3/internal/summary"
 	"github.com/go-task/task/v3/internal/templater"
 	"github.com/go-task/task/v3/taskfile"
@@ -283,17 +284,19 @@ func (e *Executor) runCommand(ctx context.Context, t *taskfile.Task, call taskfi
 		stdOut, stdErr, close := outputWrapper.WrapWriter(e.Stdout, e.Stderr, t.Prefix, outputTemplater)
 		defer func() {
 			if err := close(); err != nil {
-				e.Logger.Errf(logger.Red, "task: unable to close writter: %v", err)
+				e.Logger.Errf(logger.Red, "task: unable to close writer: %v", err)
 			}
 		}()
 
 		err = execext.RunCommand(ctx, &execext.RunCommandOptions{
-			Command: cmd.Cmd,
-			Dir:     t.Dir,
-			Env:     getEnviron(t),
-			Stdin:   e.Stdin,
-			Stdout:  stdOut,
-			Stderr:  stdErr,
+			Command:   cmd.Cmd,
+			Dir:       t.Dir,
+			Env:       getEnviron(t),
+			PosixOpts: slicesext.UniqueJoin(e.Taskfile.Set, t.Set, cmd.Set),
+			BashOpts:  slicesext.UniqueJoin(e.Taskfile.Shopt, t.Shopt, cmd.Shopt),
+			Stdin:     e.Stdin,
+			Stdout:    stdOut,
+			Stderr:    stdErr,
 		})
 		if execext.IsExitError(err) && cmd.IgnoreError {
 			e.Logger.VerboseErrf(logger.Yellow, "task: [%s] command error ignored: %v", t.Name(), err)
