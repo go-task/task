@@ -34,38 +34,46 @@ func (t *Timestamp) IsUpToDate() (bool, error) {
 
 	timestampFile := t.timestampFilePath()
 
-	// if the file exists, add the file path to the generates
-	// if the generate file is old, the task will be executed
+	// If the file exists, add the file path to the generates.
+	// If the generate file is old, the task will be executed.
 	_, err = os.Stat(timestampFile)
 	if err == nil {
 		generates = append(generates, timestampFile)
 	} else {
-		// create the timestamp file for the next execution when the file does not exist
+		// Create the timestamp file for the next execution when the file does not exist.
 		if !t.Dry {
-			_ = os.MkdirAll(filepath.Dir(timestampFile), 0o755)
-			_, _ = os.Create(timestampFile)
+			if err := os.MkdirAll(filepath.Dir(timestampFile), 0o755); err != nil {
+				return false, err
+			}
+			f, err := os.Create(timestampFile)
+			if err != nil {
+				return false, err
+			}
+			f.Close()
 		}
 	}
 
 	taskTime := time.Now()
 
-	// compare the time of the generates and sources. If the generates are old, the task will be executed
+	// Compare the time of the generates and sources. If the generates are old, the task will be executed.
 
-	// get the max time of the generates
+	// Get the max time of the generates.
 	generateMaxTime, err := getMaxTime(generates...)
 	if err != nil || generateMaxTime.IsZero() {
 		return false, nil
 	}
 
-	// check if any of the source files is newer than the max time of the generates
+	// Check if any of the source files is newer than the max time of the generates.
 	shouldUpdate, err := anyFileNewerThan(sources, generateMaxTime)
 	if err != nil {
 		return false, nil
 	}
 
-	// modify the metadata of the file to the the current time
+	// Modify the metadata of the file to the the current time.
 	if !t.Dry {
-		_ = os.Chtimes(timestampFile, taskTime, taskTime)
+		if err := os.Chtimes(timestampFile, taskTime, taskTime); err != nil {
+			return false, err
+		}
 	}
 
 	return !shouldUpdate, nil
@@ -106,8 +114,15 @@ func getMaxTime(files ...string) (time.Time, error) {
 	return t, nil
 }
 
-// if the modification time of any of the files is newer than the the given time, returns true
-// This function is lazy, as it stops when it finds a file newer than the given time
+func maxTime(a, b time.Time) time.Time {
+	if a.After(b) {
+		return a
+	}
+	return b
+}
+
+// If the modification time of any of the files is newer than the the given time, returns true.
+// This function is lazy, as it stops when it finds a file newer than the given time.
 func anyFileNewerThan(files []string, givenTime time.Time) (bool, error) {
 	for _, f := range files {
 		info, err := os.Stat(f)
@@ -121,18 +136,11 @@ func anyFileNewerThan(files []string, givenTime time.Time) (bool, error) {
 	return false, nil
 }
 
-func maxTime(a, b time.Time) time.Time {
-	if a.After(b) {
-		return a
-	}
-	return b
-}
-
 // OnError implements the Checker interface
 func (*Timestamp) OnError() error {
 	return nil
 }
 
 func (t *Timestamp) timestampFilePath() string {
-	return filepath.Join(t.TempDir, "timestamp", NormalizeFilename(t.Task))
+	return filepath.Join(t.TempDir, "timestamp", normalizeFilename(t.Task))
 }

@@ -85,6 +85,7 @@ func (c *Checksum) checksum(files ...string) (string, error) {
 		if _, err = io.Copy(h, f); err != nil {
 			return "", err
 		}
+		f.Close()
 	}
 
 	return fmt.Sprintf("%x", h.Sum(nil)), nil
@@ -109,12 +110,12 @@ func (*Checksum) Kind() string {
 }
 
 func (c *Checksum) checksumFilePath() string {
-	return filepath.Join(c.TempDir, "checksum", NormalizeFilename(c.Task))
+	return filepath.Join(c.TempDir, "checksum", normalizeFilename(c.Task))
 }
 
 var checksumFilenameRegexp = regexp.MustCompile("[^A-z0-9]")
 
 // replaces invalid caracters on filenames with "-"
-func NormalizeFilename(f string) string {
+func normalizeFilename(f string) string {
 	return checksumFilenameRegexp.ReplaceAllString(f, "-")
 }

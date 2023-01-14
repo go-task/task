@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Improve behavior and performance of status checking when using the
+  `timestamp` mode
+  ([#976](https://github.com/go-task/task/issues/976), [#977](https://github.com/go-task/task/pull/977) by @aminya).
 - Performance optimizations were made for large Taskfiles
   ([#982](https://github.com/go-task/task/pull/982) by @pd93).
 - Add ability to configure options for the [`set`](https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html)
