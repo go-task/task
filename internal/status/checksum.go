@@ -109,12 +109,12 @@ func (*Checksum) Kind() string {
 }
 
 func (c *Checksum) checksumFilePath() string {
-	return filepath.Join(c.TempDir, "checksum", c.normalizeFilename(c.Task))
+	return filepath.Join(c.TempDir, "checksum", NormalizeFilename(c.Task))
 }
 
 var checksumFilenameRegexp = regexp.MustCompile("[^A-z0-9]")
 
 // replaces invalid caracters on filenames with "-"
-func (*Checksum) normalizeFilename(f string) string {
+func NormalizeFilename(f string) string {
 	return checksumFilenameRegexp.ReplaceAllString(f, "-")
 }

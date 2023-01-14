@@ -87,9 +87,12 @@ func (e *Executor) getStatusChecker(t *taskfile.Task) (status.Checker, error) {
 
 func (e *Executor) timestampChecker(t *taskfile.Task) status.Checker {
 	return &status.Timestamp{
+		TempDir:   e.TempDir,
+		Task:      t.Name(),
 		Dir:       t.Dir,
 		Sources:   t.Sources,
 		Generates: t.Generates,
+		Dry:       e.Dry,
 	}
 }
 
