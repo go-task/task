@@ -11,4 +11,4 @@ tasks:
   globstar:
     cmds:
       - cmd: shopt | grep globstar
-        shopts: [globstar]
+        shopt: [globstar]

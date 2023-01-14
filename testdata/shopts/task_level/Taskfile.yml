@@ -9,6 +9,6 @@ tasks:
       - set -o | grep pipefail
 
   globstar:
-    shopts: [globstar]
+    shopt: [globstar]
     cmds:
       - shopt | grep globstar

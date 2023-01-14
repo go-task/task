@@ -24,7 +24,7 @@ type Task struct {
 	Preconditions        []*Precondition
 	Dir                  string
 	Set                  []string
-	Shopts               []string
+	Shopt                []string
 	Vars                 *Vars
 	Env                  *Vars
 	Dotenv               []string
@@ -84,7 +84,7 @@ func (t *Task) UnmarshalYAML(node *yaml.Node) error {
 			Preconditions []*Precondition
 			Dir           string
 			Set           []string
-			Shopts        []string
+			Shopt         []string
 			Vars          *Vars
 			Env           *Vars
 			Dotenv        []string
@@ -112,7 +112,7 @@ func (t *Task) UnmarshalYAML(node *yaml.Node) error {
 		t.Preconditions = task.Preconditions
 		t.Dir = task.Dir
 		t.Set = task.Set
-		t.Shopts = task.Shopts
+		t.Shopt = task.Shopt
 		t.Vars = task.Vars
 		t.Env = task.Env
 		t.Dotenv = task.Dotenv
@@ -147,7 +147,7 @@ func (t *Task) DeepCopy() *Task {
 		Preconditions:        deepCopySlice(t.Preconditions),
 		Dir:                  t.Dir,
 		Set:                  deepCopySlice(t.Set),
-		Shopts:               deepCopySlice(t.Shopts),
+		Shopt:                deepCopySlice(t.Shopt),
 		Vars:                 t.Vars.DeepCopy(),
 		Env:                  t.Env.DeepCopy(),
 		Dotenv:               deepCopySlice(t.Dotenv),

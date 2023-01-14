@@ -91,6 +91,8 @@ Some environment variables can be overriden to adjust Task behavior.
 | `dotenv` | `[]string` | | A list of `.env` file paths to be parsed. |
 | `run` | `string` | `always` | Default 'run' option for this Taskfile. Available options: `always`, `once` and `when_changed`. |
 | `interval` | `string` | `5s` | Sets a different watch interval when using `--watch`, the default being 5 seconds. This string should be a valid [Go Duration](https://pkg.go.dev/time#ParseDuration). |
+| `set` | `[]string` | | Specify options for the [`set` builtin](https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html). |
+| `shopt` | `[]string` | | Specify option for the [`shopt` builtin](https://www.gnu.org/software/bash/manual/html_node/The-Shopt-Builtin.html). |
 
 ### Include
 
@@ -140,6 +142,8 @@ includes:
 | `ignore_error` | `bool` | `false` | Continue execution if errors happen while executing commands. |
 | `run` | `string` | The one declared globally in the Taskfile or `always` | Specifies whether the task should run again or not if called more than once. Available options: `always`, `once` and `when_changed`. |
 | `platforms` | `[]string` | All platforms | Specifies which platforms the task should be run on. [Valid GOOS and GOARCH values allowed](https://github.com/golang/go/blob/master/src/go/build/syslist.go). Task will be skipped otherwise. |
+| `set` | `[]string` | | Specify options for the [`set` builtin](https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html). |
+| `shopt` | `[]string` | | Specify option for the [`shopt` builtin](https://www.gnu.org/software/bash/manual/html_node/The-Shopt-Builtin.html). |
 
 :::info
 
@@ -191,6 +195,8 @@ tasks:
 | `ignore_error` | `bool` | `false` | Continue execution if errors happen while executing the command. |
 | `defer` | `string` | | Alternative to `cmd`, but schedules the command to be executed at the end of this task instead of immediately. This cannot be used together with `cmd`. |
 | `platforms` | `[]string` | All platforms | Specifies which platforms the command should be run on. [Valid GOOS and GOARCH values allowed](https://github.com/golang/go/blob/master/src/go/build/syslist.go). Command will be skipped otherwise. |
+| `set` | `[]string` | | Specify options for the [`set` builtin](https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html). |
+| `shopt` | `[]string` | | Specify option for the [`shopt` builtin](https://www.gnu.org/software/bash/manual/html_node/The-Shopt-Builtin.html). |
 
 :::info
 

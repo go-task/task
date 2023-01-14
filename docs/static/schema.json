@@ -115,11 +115,11 @@
               "$ref": "#/definitions/3/set"
             }
           },
-          "shopts": {
+          "shopt": {
             "description": "Enables Bash shell options for all of a task's commands. See https://www.gnu.org/software/bash/manual/html_node/The-Shopt-Builtin.html",
             "type": "array",
             "items": {
-              "$ref": "#/definitions/3/shopts"
+              "$ref": "#/definitions/3/shopt"
             }
           },
           "vars": {
@@ -202,7 +202,7 @@
         "type": "string",
         "enum": ["allexport", "a", "errexit", "e", "noexec", "n", "noglob", "f", "nounset", "u", "xtrace", "x", "pipefail"]
       },
-      "shopts": {
+      "shopt": {
         "type": "string",
         "enum": ["expand_aliases", "globstar", "nullglob"]
       },
@@ -262,11 +262,11 @@
               "$ref": "#/definitions/3/set"
             }
           },
-          "shopts": {
+          "shopt": {
             "description": "Enables Bash shell options for this command. See https://www.gnu.org/software/bash/manual/html_node/The-Shopt-Builtin.html",
             "type": "array",
             "items": {
-              "$ref": "#/definitions/3/shopts"
+              "$ref": "#/definitions/3/shopt"
             }
           },
           "ignore_error": {
@@ -414,11 +414,11 @@
             "$ref": "#/definitions/3/set"
           }
         },
-        "shopts": {
+        "shopt": {
           "description": "Enables Bash shell options for all commands in the Taskfile. See https://www.gnu.org/software/bash/manual/html_node/The-Shopt-Builtin.html",
           "type": "array",
           "items": {
-            "$ref": "#/definitions/3/shopts"
+            "$ref": "#/definitions/3/shopt"
           }
         },
         "dotenv": {

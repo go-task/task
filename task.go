@@ -16,12 +16,12 @@ import (
 	"github.com/go-task/task/v3/internal/execext"
 	"github.com/go-task/task/v3/internal/logger"
 	"github.com/go-task/task/v3/internal/output"
+	"github.com/go-task/task/v3/internal/slicesext"
 	"github.com/go-task/task/v3/internal/summary"
 	"github.com/go-task/task/v3/internal/templater"
 	"github.com/go-task/task/v3/taskfile"
 
 	"github.com/sajari/fuzzy"
-	"golang.org/x/exp/constraints"
 	"golang.org/x/exp/slices"
 	"golang.org/x/sync/errgroup"
 )
@@ -292,8 +292,8 @@ func (e *Executor) runCommand(ctx context.Context, t *taskfile.Task, call taskfi
 			Command:   cmd.Cmd,
 			Dir:       t.Dir,
 			Env:       getEnviron(t),
-			PosixOpts: uniqueJoinSlices(e.Taskfile.Set, t.Set, cmd.Set),
-			BashOpts:  uniqueJoinSlices(e.Taskfile.Shopts, t.Shopts, cmd.Shopts),
+			PosixOpts: slicesext.UniqueJoin(e.Taskfile.Set, t.Set, cmd.Set),
+			BashOpts:  slicesext.UniqueJoin(e.Taskfile.Shopt, t.Shopt, cmd.Shopt),
 			Stdin:     e.Stdin,
 			Stdout:    stdOut,
 			Stderr:    stdErr,
@@ -306,20 +306,6 @@ func (e *Executor) runCommand(ctx context.Context, t *taskfile.Task, call taskfi
 	default:
 		return nil
 	}
-}
-
-func uniqueJoinSlices[T constraints.Ordered](ss ...[]T) []T {
-	var length int
-	for _, s := range ss {
-		length += len(s)
-	}
-	r := make([]T, length)
-	var i int
-	for _, s := range ss {
-		i += copy(r[i:], s)
-	}
-	slices.Sort(r)
-	return slices.Compact(r)
 }
 
 func getEnviron(t *taskfile.Task) []string {

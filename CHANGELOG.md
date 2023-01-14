@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Add ability to configure options for the [`set`](https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html)
+  and [`shopt`](https://www.gnu.org/software/bash/manual/html_node/The-Shopt-Builtin.html) builtins
+  ([#908](https://github.com/go-task/task/issues/908), [#929](https://github.com/go-task/task/pull/929) by @pd93, [Documentation](http://taskfile.dev/usage/#set-and-shopt)).
 - Add new `platforms:` attribute to `task` and `cmd`, so it's now possible to
   choose in which platforms that given task or command will be run on. Possible
   values are operating system (GOOS), architecture (GOARCH) or a combination of
