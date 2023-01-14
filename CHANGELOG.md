@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Performance optimizations were made for large Taskfiles
+  ([#982](https://github.com/go-task/task/pull/982) by @pd93).
 - Add ability to configure options for the [`set`](https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html)
   and [`shopt`](https://www.gnu.org/software/bash/manual/html_node/The-Shopt-Builtin.html) builtins
   ([#908](https://github.com/go-task/task/issues/908), [#929](https://github.com/go-task/task/pull/929) by @pd93, [Documentation](http://taskfile.dev/usage/#set-and-shopt)).
