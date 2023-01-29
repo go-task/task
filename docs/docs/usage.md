@@ -1428,7 +1428,7 @@ and [`shopt`](https://www.gnu.org/software/bash/manual/html_node/The-Shopt-Built
 builtins. This can be added at global, task or command level.
 
 ```yaml
-version: '2'
+version: '3'
 
 set: [pipefail]
 shopt: [globstar]
