@@ -11,7 +11,7 @@ channels listed below.
 This is just a way of saying "thank you", it won't give you any benefits like
 higher priority on issues or something similar.
 
-Companies who donate at least $100/month will be featured as a "Gold Sponsor"
+Companies who donate at least $50/month will be featured as a "Gold Sponsor"
 in the website homepage and on the GitHub repository README. Make contact with
 [@andreynering] with the logo you want to be shown.
 Suspect businesses (gambling, casinos, etc) won't be allowed, though.
