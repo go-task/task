@@ -9,7 +9,7 @@ sidebar_position: 3
 
 Create a file called `Taskfile.yml` in the root of your project.
 The `cmds` attribute should contain the commands of a task.
-The example below allows compiling a Go app and uses [Minify][minify] to concat
+The example below allows compiling a Go app and uses [esbuild](https://esbuild.github.io/) to concat
 and minify multiple CSS files into a single one.
 
 ```yaml
@@ -22,7 +22,7 @@ tasks:
 
   assets:
     cmds:
-      - minify -o public/style.css src/css
+      - esbuild --bundle --minify css/index.css > public/bundle.css
 ```
 
 Running the tasks is as simple as running:
@@ -384,7 +384,7 @@ tasks:
 
   assets:
     cmds:
-      - minify -o public/style.css src/css
+      - esbuild --bundle --minify css/index.css > public/bundle.css
 ```
 
 In the above example, `assets` will always run right before `build` if you run
@@ -401,11 +401,11 @@ tasks:
 
   js:
     cmds:
-      - minify -o public/script.js src/js
+      - esbuild --bundle --minify js/index.js > public/bundle.js
 
   css:
     cmds:
-      - minify -o public/style.css src/css
+      - esbuild --bundle --minify css/index.css > public/bundle.css
 ```
 
 If there is more than one dependency, they always run in parallel for better
@@ -583,19 +583,19 @@ tasks:
 
   js:
     cmds:
-      - minify -o public/script.js src/js
+      - esbuild --bundle --minify js/index.js > public/bundle.js
     sources:
       - src/js/**/*.js
     generates:
-      - public/script.js
+      - public/bundle.js
 
   css:
     cmds:
-      - minify -o public/style.css src/css
+      - esbuild --bundle --minify css/index.css > public/bundle.css
     sources:
       - src/css/**/*.css
     generates:
-      - public/style.css
+      - public/bundle.css
 ```
 
 `sources` and `generates` can be files or file patterns. When given,
@@ -1059,11 +1059,11 @@ tasks:
 
   js:
     cmds:
-      - minify -o public/script.js src/js
+      - esbuild --bundle --minify js/index.js > public/bundle.js
 
   css:
     cmds:
-      - minify -o public/style.css src/css
+      - esbuild --bundle --minify css/index.css > public/bundle.css
 ```
 
 would print the following output:
@@ -1456,4 +1456,3 @@ either setting `interval: '500ms'` in the root of the Taskfile passing it
 as an argument like `--interval=500ms`.
 
 [gotemplate]: https://golang.org/pkg/text/template/
-[minify]: https://github.com/tdewolff/minify/tree/master/cmd/minify
