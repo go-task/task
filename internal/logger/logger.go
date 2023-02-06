@@ -34,6 +34,11 @@ func Red() PrintFunc {
 }
 
 func envColor(env string, defaultColor color.Attribute) color.Attribute {
+	_, err := strconv.Atoi(os.Getenv("FORCE_COLOR"))
+	if err == nil {
+		color.NoColor = false
+	}
+
 	override, err := strconv.Atoi(os.Getenv(env))
 	if err == nil {
 		return color.Attribute(override)
