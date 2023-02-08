@@ -11,6 +11,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/Masterminds/semver/v3"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/go-task/task/v3"
@@ -726,9 +727,9 @@ func TestCyclicDep(t *testing.T) {
 func TestTaskVersion(t *testing.T) {
 	tests := []struct {
 		Dir     string
-		Version string
+		Version *semver.Version
 	}{
-		{"testdata/version/v2", "2"},
+		{"testdata/version/v2", semver.MustParse("2")},
 	}
 
 	for _, test := range tests {

@@ -10,7 +10,7 @@ const NamespaceSeparator = ":"
 
 // Merge merges the second Taskfile into the first
 func Merge(t1, t2 *Taskfile, includedTaskfile *IncludedTaskfile, namespaces ...string) error {
-	if t1.Version != t2.Version {
+	if !t1.Version.Equal(t2.Version) {
 		return fmt.Errorf(`task: Taskfiles versions should match. First is "%s" but second is "%s"`, t1.Version, t2.Version)
 	}
 

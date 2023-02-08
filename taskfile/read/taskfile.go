@@ -58,11 +58,6 @@ func Taskfile(readerNode *ReaderNode) (*taskfile.Taskfile, string, error) {
 		return nil, "", err
 	}
 
-	v, err := t.ParsedVersion()
-	if err != nil {
-		return nil, "", err
-	}
-
 	// Annotate any included Taskfile reference with a base directory for resolving relative paths
 	_ = t.Includes.Range(func(key string, includedFile taskfile.IncludedTaskfile) error {
 		// Set the base directory for resolving relative paths, but only if not already set
@@ -74,7 +69,7 @@ func Taskfile(readerNode *ReaderNode) (*taskfile.Taskfile, string, error) {
 	})
 
 	err = t.Includes.Range(func(namespace string, includedTask taskfile.IncludedTaskfile) error {
-		if v >= 3.0 {
+		if t.Version.Compare(taskfile.V3) >= 0 {
 			tr := templater.Templater{Vars: t.Vars, RemoveNoValue: true}
 			includedTask = taskfile.IncludedTaskfile{
 				Taskfile:       tr.Replace(includedTask.Taskfile),
@@ -123,7 +118,7 @@ func Taskfile(readerNode *ReaderNode) (*taskfile.Taskfile, string, error) {
 			return err
 		}
 
-		if v >= 3.0 && len(includedTaskfile.Dotenv) > 0 {
+		if t.Version.Compare(taskfile.V3) >= 0 && len(includedTaskfile.Dotenv) > 0 {
 			return ErrIncludedTaskfilesCantHaveDotenvs
 		}
 
@@ -168,7 +163,7 @@ func Taskfile(readerNode *ReaderNode) (*taskfile.Taskfile, string, error) {
 		return nil, "", err
 	}
 
-	if v < 3.0 {
+	if t.Version.Compare(taskfile.V3) < 0 {
 		path = filepathext.SmartJoin(readerNode.Dir, fmt.Sprintf("Taskfile_%s.yml", runtime.GOOS))
 		if _, err = os.Stat(path); err == nil {
 			osTaskfile, err := readTaskfile(path)

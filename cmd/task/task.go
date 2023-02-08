@@ -178,11 +178,6 @@ func main() {
 	if err := e.Setup(); err != nil {
 		log.Fatal(err)
 	}
-	v, err := e.Taskfile.ParsedVersion()
-	if err != nil {
-		log.Fatal(err)
-		return
-	}
 
 	if listOptions.ShouldListTasks() {
 		if foundTasks, err := e.ListTasks(listOptions); !foundTasks || err != nil {
@@ -201,7 +196,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	if v >= 3.0 {
+	if e.Taskfile.Version.Compare(taskfile.V3) >= 0 {
 		calls, globals = args.ParseV3(tasksAndVars...)
 	} else {
 		calls, globals = args.ParseV2(tasksAndVars...)

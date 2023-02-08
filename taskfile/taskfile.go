@@ -2,15 +2,20 @@ package taskfile
 
 import (
 	"fmt"
-	"strconv"
 	"time"
 
+	"github.com/Masterminds/semver/v3"
 	"gopkg.in/yaml.v3"
+)
+
+var (
+	V3 = semver.MustParse("3")
+	V2 = semver.MustParse("2")
 )
 
 // Taskfile represents a Taskfile.yml
 type Taskfile struct {
-	Version    string
+	Version    *semver.Version
 	Expansions int
 	Output     Output
 	Method     string
@@ -31,7 +36,7 @@ func (tf *Taskfile) UnmarshalYAML(node *yaml.Node) error {
 
 	case yaml.MappingNode:
 		var taskfile struct {
-			Version    string
+			Version    *semver.Version
 			Expansions int
 			Output     Output
 			Method     string
@@ -76,13 +81,4 @@ func (tf *Taskfile) UnmarshalYAML(node *yaml.Node) error {
 	}
 
 	return fmt.Errorf("yaml: line %d: cannot unmarshal %s into taskfile", node.Line, node.ShortTag())
-}
-
-// ParsedVersion returns the version as a float64
-func (tf *Taskfile) ParsedVersion() (float64, error) {
-	v, err := strconv.ParseFloat(tf.Version, 64)
-	if err != nil {
-		return 0, fmt.Errorf(`task: Could not parse taskfile version "%s": %v`, tf.Version, err)
-	}
-	return v, nil
 }
