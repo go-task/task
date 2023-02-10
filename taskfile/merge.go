@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-// NamespaceSeparator contains the character that separates namescapes
+// NamespaceSeparator contains the character that separates namespaces
 const NamespaceSeparator = ":"
 
 // Merge merges the second Taskfile into the first
@@ -20,11 +20,6 @@ func Merge(t1, t2 *Taskfile, includedTaskfile *IncludedTaskfile, namespaces ...s
 	if t2.Output.IsSet() {
 		t1.Output = t2.Output
 	}
-
-	if t1.Includes == nil {
-		t1.Includes = &IncludedTaskfiles{}
-	}
-	t1.Includes.Merge(t2.Includes)
 
 	if t1.Vars == nil {
 		t1.Vars = &Vars{}

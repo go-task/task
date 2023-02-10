@@ -61,14 +61,6 @@ func (tfs *IncludedTaskfiles) Len() int {
 	return len(tfs.Keys)
 }
 
-// Merge merges the given IncludedTaskfiles into the caller one
-func (tfs *IncludedTaskfiles) Merge(other *IncludedTaskfiles) {
-	_ = other.Range(func(key string, value IncludedTaskfile) error {
-		tfs.Set(key, value)
-		return nil
-	})
-}
-
 // Set sets a value to a given key
 func (tfs *IncludedTaskfiles) Set(key string, includedTaskfile IncludedTaskfile) {
 	if tfs.Mapping == nil {
