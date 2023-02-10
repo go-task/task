@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Fixed a bug where tasks were sometimes incorrectly marked as internal ([#1007](https://github.com/go-task/task/pull/1007) by @pd93).
+
 ## v3.20.0 - 2023-01-14
 
 - Improve behavior and performance of status checking when using the
