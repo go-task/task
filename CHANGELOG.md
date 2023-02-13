@@ -4,7 +4,7 @@
 
 - Fixed a bug where tasks were sometimes incorrectly marked as internal ([#1007](https://github.com/go-task/task/pull/1007) by @pd93).
 - Update to Go 1.20 (bump minimum version to 1.19) ([#1010](https://github.com/go-task/task/pull/1010) by @pd93)
-- Added environment variable `FORCE_COLOR` support to force color output. Usefull for environments without TTY. ([#1003](https://github.com/go-task/task/pull/1003) by @automation-stack)
+- Added environment variable `FORCE_COLOR` support to force color output. Usefull for environments without TTY ([#1003](https://github.com/go-task/task/pull/1003) by @automation-stack)
 
 ## v3.20.0 - 2023-01-14
 
