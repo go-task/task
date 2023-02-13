@@ -34,8 +34,7 @@ func Red() PrintFunc {
 }
 
 func envColor(env string, defaultColor color.Attribute) color.Attribute {
-	_, err := strconv.Atoi(os.Getenv("FORCE_COLOR"))
-	if err == nil {
+	if os.Getenv("FORCE_COLOR") != "" {
 		color.NoColor = false
 	}
 
