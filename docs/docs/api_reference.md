@@ -73,7 +73,7 @@ Some environment variables can be overriden to adjust Task behavior.
 | `TASK_COLOR_YELLOW` | `33` | Color used for yellow. |
 | `TASK_COLOR_MAGENTA` | `35` | Color used for magenta. |
 | `TASK_COLOR_RED` | `31` | Color used for red. |
-| `FORCE_COLOR` | `undefined` | Force color output usage. |
+| `FORCE_COLOR` | | Force color output usage. |
 
 ## Schema
 
