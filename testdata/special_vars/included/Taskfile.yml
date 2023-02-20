@@ -6,3 +6,4 @@ tasks:
       - echo included/TASK={{.TASK}}
       - echo included/ROOT_DIR={{.ROOT_DIR}}
       - echo included/TASKFILE_DIR={{.TASKFILE_DIR}}
+      - echo included/TASK_VERSION={{.TASK_VERSION}}
