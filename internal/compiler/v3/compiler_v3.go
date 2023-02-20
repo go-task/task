@@ -12,6 +12,7 @@ import (
 	"github.com/go-task/task/v3/internal/filepathext"
 	"github.com/go-task/task/v3/internal/logger"
 	"github.com/go-task/task/v3/internal/templater"
+	"github.com/go-task/task/v3/internal/version"
 	"github.com/go-task/task/v3/taskfile"
 )
 
@@ -184,6 +185,7 @@ func (c *CompilerV3) getSpecialVars(t *taskfile.Task) (map[string]string, error)
 		"ROOT_DIR":         c.Dir,
 		"TASKFILE_DIR":     taskfileDir,
 		"USER_WORKING_DIR": c.UserWorkingDir,
+		"TASK_VERSION":     version.GetVersion(),
 	}, nil
 }
 

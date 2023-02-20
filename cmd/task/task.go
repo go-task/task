@@ -6,7 +6,6 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"runtime/debug"
 	"strings"
 	"time"
 
@@ -16,11 +15,8 @@ import (
 	"github.com/go-task/task/v3"
 	"github.com/go-task/task/v3/args"
 	"github.com/go-task/task/v3/internal/logger"
+	ver "github.com/go-task/task/v3/internal/version"
 	"github.com/go-task/task/v3/taskfile"
-)
-
-var (
-	version = ""
 )
 
 const usage = `Usage: task [-ilfwvsd] [--init] [--list] [--force] [--watch] [--verbose] [--silent] [--dir] [--taskfile] [--dry] [--summary] [task...]
@@ -104,7 +100,7 @@ func main() {
 	pflag.Parse()
 
 	if versionFlag {
-		fmt.Printf("Task version: %s\n", getVersion())
+		fmt.Printf("Task version: %s\n", ver.GetVersion())
 		return
 	}
 
@@ -254,22 +250,4 @@ func getArgs() ([]string, string, error) {
 		quotedCliArgs = append(quotedCliArgs, quotedCliArg)
 	}
 	return args[:doubleDashPos], strings.Join(quotedCliArgs, " "), nil
-}
-
-func getVersion() string {
-	if version != "" {
-		return version
-	}
-
-	info, ok := debug.ReadBuildInfo()
-	if !ok || info.Main.Version == "" {
-		return "unknown"
-	}
-
-	version = info.Main.Version
-	if info.Main.Sum != "" {
-		version += fmt.Sprintf(" (%s)", info.Main.Sum)
-	}
-
-	return version
 }

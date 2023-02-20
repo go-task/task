@@ -21,8 +21,9 @@ tasks:
     sources:
       - './**/*.go'
     cmds:
-      - go install -v -ldflags="-w -s -X main.version={{.GIT_COMMIT}}" ./cmd/task
+      - go install -v -ldflags="-w -s -X '{{.VERSION_VAR}}={{.GIT_COMMIT}}'" ./cmd/task
     vars:
+      VERSION_VAR: github.com/go-task/task/v3/internal/version.version
       GIT_COMMIT:
         sh: git log -n 1 --format=%h
 
@@ -112,3 +113,7 @@ tasks:
       GO_PACKAGES:
         sh: go list ./...
     silent: true
+
+  foo:
+    cmds:
+      - echo "{{.TASK_VERSION}}"
