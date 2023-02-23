@@ -41,10 +41,7 @@ const config = {
         },
         blog: false,
         theme: {
-          customCss: [
-            require.resolve('./src/css/custom.css'),
-            require.resolve('./src/css/carbon.css')
-          ]
+          customCss: [require.resolve('./src/css/custom.css')]
         },
         gtag: {
           trackingID: 'G-4RT25NXQ7N',
@@ -187,14 +184,7 @@ const config = {
         apiKey: '34b64ae4fc8d9da43d9a13d9710aaddc',
         indexName: 'taskfile'
       }
-    }),
-
-  scripts: [
-    {
-      src: '/js/carbon.js',
-      async: true
-    }
-  ]
+    })
 };
 
 module.exports = config;
