@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v3.21.0 - 2023-02-22
 
 - Added new `TASK_VERSION` special variable
   ([#990](https://github.com/go-task/task/issues/990), [#1014](https://github.com/go-task/task/pull/1014) by @ja1code).
