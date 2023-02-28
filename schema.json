@@ -314,6 +314,27 @@
       "run": {
         "type": "string",
         "enum": ["always", "once", "when_changed"]
+      },
+      "outputString": {
+        "type": "string",
+        "enum": ["interleaved", "prefix", "group"],
+        "default": "interleaved"
+      },
+      "outputObject": {
+        "type": "object",
+        "properties": {
+          "group": {
+            "type": "object",
+            "properties": {
+              "begin": {
+                "type": "string"
+              },
+              "end": {
+                "type": "string"
+              }
+            }
+          }
+        }
       }
     }
   },
@@ -336,9 +357,10 @@
         },
         "output": {
           "description": "Defines how the STDOUT and STDERR are printed when running tasks in parallel. The interleaved output prints lines in real time (default). The group output will print the entire output of a command once, after it finishes, so you won't have live feedback for commands that take a long time to run. The prefix output will prefix every line printed by a command with [task-name] as the prefix, but you can customize the prefix for a command with the prefix: attribute.",
-          "type": "string",
-          "enum": ["interleaved", "group", "prefixed"],
-          "default": "interleaved"
+          "anyOf": [
+            {"$ref": "#/definitions/3/outputString"},
+            {"$ref": "#/definitions/3/outputObject"}
+          ]
         },
         "method": {
           "description": "Defines which method is used to check the task is up-to-date. (default: checksum)",
