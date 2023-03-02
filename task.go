@@ -342,11 +342,15 @@ func (e *Executor) startExecution(ctx context.Context, t *taskfile.Task, execute
 	}
 
 	e.executionHashesMutex.Lock()
-	otherExecutionCtx, ok := e.executionHashes[h]
 
-	if ok {
+	if otherExecutionCtx, ok := e.executionHashes[h]; ok {
 		e.executionHashesMutex.Unlock()
 		e.Logger.VerboseErrf(logger.Magenta, "task: skipping execution of task: %s", h)
+
+		// Release our execution slot to avoid blocking other tasks while we wait
+		reacquire := e.releaseConcurrencyLimit()
+		defer reacquire()
+
 		<-otherExecutionCtx.Done()
 		return nil
 	}
