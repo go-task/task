@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Add a brand new `--global` (`-g`) flag that will run a Taskfile from your
+  `$HOME` directory. This is useful to have automation that you can run from
+  anywhere in your system!
+  ([Documentation](https://taskfile.dev/usage/#running-a-global-taskfile), [#1029](https://github.com/go-task/task/pull/1029) by @andreynering).
 - Add ability to set `error_only: true` on the `group` output mode. This will
   instruct Task to only print a command output if it returned with a non-zero
   exit code
