@@ -317,7 +317,7 @@
       },
       "outputString": {
         "type": "string",
-        "enum": ["interleaved", "prefix", "group"],
+        "enum": ["interleaved", "prefixed", "group"],
         "default": "interleaved"
       },
       "outputObject": {
