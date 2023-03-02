@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Fixed deadlock issue when using `run: once`
+  ([#715](https://github.com/go-task/task/issues/715), [#1025](https://github.com/go-task/task/pull/1025) by @theunrepentantgeek).
+
 ## v3.21.0 - 2023-02-22
 
 - Added new `TASK_VERSION` special variable
