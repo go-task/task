@@ -9,6 +9,9 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/Masterminds/semver/v3"
+	"github.com/sajari/fuzzy"
+
 	compilerv2 "github.com/go-task/task/v3/internal/compiler/v2"
 	compilerv3 "github.com/go-task/task/v3/internal/compiler/v3"
 	"github.com/go-task/task/v3/internal/execext"
@@ -17,8 +20,6 @@ import (
 	"github.com/go-task/task/v3/internal/output"
 	"github.com/go-task/task/v3/taskfile"
 	"github.com/go-task/task/v3/taskfile/read"
-
-	"github.com/sajari/fuzzy"
 )
 
 func (e *Executor) Setup() error {
@@ -32,11 +33,6 @@ func (e *Executor) Setup() error {
 
 	e.setupFuzzyModel()
 
-	v, err := e.Taskfile.ParsedVersion()
-	if err != nil {
-		return err
-	}
-
 	if err := e.setupTempDir(); err != nil {
 		return err
 	}
@@ -45,17 +41,17 @@ func (e *Executor) Setup() error {
 	if err := e.setupOutput(); err != nil {
 		return err
 	}
-	if err := e.setupCompiler(v); err != nil {
+	if err := e.setupCompiler(); err != nil {
 		return err
 	}
-	if err := e.readDotEnvFiles(v); err != nil {
+	if err := e.readDotEnvFiles(); err != nil {
 		return err
 	}
 
-	if err := e.doVersionChecks(v); err != nil {
+	if err := e.doVersionChecks(); err != nil {
 		return err
 	}
-	e.setupDefaults(v)
+	e.setupDefaults()
 	e.setupConcurrencyState()
 
 	return nil
@@ -163,8 +159,8 @@ func (e *Executor) setupOutput() error {
 	return err
 }
 
-func (e *Executor) setupCompiler(v float64) error {
-	if v < 3 {
+func (e *Executor) setupCompiler() error {
+	if e.Taskfile.Version.LessThan(taskfile.V3) {
 		var err error
 		e.taskvars, err = read.Taskvars(e.Dir)
 		if err != nil {
@@ -195,8 +191,8 @@ func (e *Executor) setupCompiler(v float64) error {
 	return nil
 }
 
-func (e *Executor) readDotEnvFiles(v float64) error {
-	if v < 3.0 {
+func (e *Executor) readDotEnvFiles() error {
+	if e.Taskfile.Version.LessThan(taskfile.V3) {
 		return nil
 	}
 
@@ -214,14 +210,14 @@ func (e *Executor) readDotEnvFiles(v float64) error {
 	return err
 }
 
-func (e *Executor) setupDefaults(v float64) {
+func (e *Executor) setupDefaults() {
 	// Color available only on v3
-	if v < 3 {
+	if e.Taskfile.Version.LessThan(taskfile.V3) {
 		e.Logger.Color = false
 	}
 
 	if e.Taskfile.Method == "" {
-		if v >= 3 {
+		if e.Taskfile.Version.Compare(taskfile.V3) >= 0 {
 			e.Taskfile.Method = "checksum"
 		} else {
 			e.Taskfile.Method = "timestamp"
@@ -248,37 +244,41 @@ func (e *Executor) setupConcurrencyState() {
 	}
 }
 
-func (e *Executor) doVersionChecks(v float64) error {
-	if v < 2 {
+func (e *Executor) doVersionChecks() error {
+	// Copy the version to avoid modifying the original
+	v := &semver.Version{}
+	*v = *e.Taskfile.Version
+
+	if v.LessThan(taskfile.V2) {
 		return fmt.Errorf(`task: Taskfile versions prior to v2 are not supported anymore`)
 	}
 
 	// consider as equal to the greater version if round
-	if v == 2.0 {
-		v = 2.6
+	if v.Equal(taskfile.V2) {
+		v = semver.MustParse("2.6")
 	}
-	if v == 3.0 {
-		v = 3.8
+	if v.Equal(taskfile.V3) {
+		v = semver.MustParse("3.8")
 	}
 
-	if v > 3.8 {
+	if v.GreaterThan(semver.MustParse("3.8")) {
 		return fmt.Errorf(`task: Taskfile versions greater than v3.8 not implemented in the version of Task`)
 	}
 
-	if v < 2.1 && !e.Taskfile.Output.IsSet() {
+	if v.LessThan(semver.MustParse("2.1")) && !e.Taskfile.Output.IsSet() {
 		return fmt.Errorf(`task: Taskfile option "output" is only available starting on Taskfile version v2.1`)
 	}
-	if v < 2.2 && e.Taskfile.Includes.Len() > 0 {
+	if v.LessThan(semver.MustParse("2.2")) && e.Taskfile.Includes.Len() > 0 {
 		return fmt.Errorf(`task: Including Taskfiles is only available starting on Taskfile version v2.2`)
 	}
-	if v >= 3.0 && e.Taskfile.Expansions > 2 {
+	if v.Compare(taskfile.V3) >= 0 && e.Taskfile.Expansions > 2 {
 		return fmt.Errorf(`task: The "expansions" setting is not available anymore on v3.0`)
 	}
-	if v < 3.8 && e.Taskfile.Output.Group.IsSet() {
+	if v.LessThan(semver.MustParse("3.8")) && e.Taskfile.Output.Group.IsSet() {
 		return fmt.Errorf(`task: Taskfile option "output.group" is only available starting on Taskfile version v3.8`)
 	}
 
-	if v <= 2.1 {
+	if v.Compare(semver.MustParse("2.1")) <= 0 {
 		err := errors.New(`task: Taskfile option "ignore_error" is only available starting on Taskfile version v2.1`)
 
 		for _, task := range e.Taskfile.Tasks {
@@ -293,7 +293,7 @@ func (e *Executor) doVersionChecks(v float64) error {
 		}
 	}
 
-	if v < 2.6 {
+	if v.LessThan(semver.MustParse("2.6")) {
 		for _, task := range e.Taskfile.Tasks {
 			if len(task.Preconditions) > 0 {
 				return errors.New(`task: Task option "preconditions" is only available starting on Taskfile version v2.6`)
@@ -301,7 +301,7 @@ func (e *Executor) doVersionChecks(v float64) error {
 		}
 	}
 
-	if v < 3 {
+	if v.LessThan(taskfile.V3) {
 		err := e.Taskfile.Includes.Range(func(_ string, taskfile taskfile.IncludedTaskfile) error {
 			if taskfile.AdvancedImport {
 				return errors.New(`task: Import with additional parameters is only available starting on Taskfile version v3`)
@@ -313,7 +313,7 @@ func (e *Executor) doVersionChecks(v float64) error {
 		}
 	}
 
-	if v < 3.7 {
+	if v.LessThan(semver.MustParse("3.7")) {
 		if e.Taskfile.Run != "" {
 			return errors.New(`task: Setting the "run" type is only available starting on Taskfile version v3.7`)
 		}
