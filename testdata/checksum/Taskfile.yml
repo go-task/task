@@ -9,4 +9,6 @@ tasks:
       - ./source.txt
     generates:
       - ./generated.txt
+    status:
+      - test -f ./generated.txt
     method: checksum

@@ -33,13 +33,16 @@ func (e *Executor) isTaskUpToDate(ctx context.Context, t *taskfile.Task) (bool, 
 		return false, nil
 	}
 
+	isUpToDateStatus := true
+	isUpToDateChecker := true
+
 	if len(t.Status) > 0 {
 		isUpToDate, err := e.isTaskUpToDateStatus(ctx, t)
 		if err != nil {
 			return false, err
 		}
 		if !isUpToDate {
-			return false, nil
+			isUpToDateStatus = false
 		}
 	}
 
@@ -53,11 +56,13 @@ func (e *Executor) isTaskUpToDate(ctx context.Context, t *taskfile.Task) (bool, 
 			return false, err
 		}
 		if !isUpToDate {
-			return false, nil
+			isUpToDateChecker = false
 		}
 	}
 
-	return true, nil
+	isUpToDate := isUpToDateStatus && isUpToDateChecker
+
+	return isUpToDate, nil
 }
 
 func (e *Executor) statusOnError(t *taskfile.Task) error {
