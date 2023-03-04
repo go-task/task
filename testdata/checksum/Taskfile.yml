@@ -9,6 +9,13 @@ tasks:
       - ./source.txt
     generates:
       - ./generated.txt
+    method: checksum
+
+  build-with-status:
+    cmds:
+      - cp ./source.txt ./generated.txt
+    sources:
+      - ./source.txt
     status:
       - test -f ./generated.txt
-    method: checksum
+
