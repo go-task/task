@@ -36,6 +36,7 @@ variable
 | `-o` | `--output` | `string` | Default set in the Taskfile or `intervealed` | Sets output style: [`interleaved`/`group`/`prefixed`]. |
 |      | `--output-group-begin` | `string` | | Message template to print before a task's grouped output. |
 |      | `--output-group-end` | `string` | | Message template to print after a task's grouped output. |
+|      | `--output-group-error-only` | `bool` | `false` | Swallow command output on zero exit code. |
 | `-p` | `--parallel` | `bool` | `false` | Executes tasks provided on command line in parallel. |
 | `-s` | `--silent` | `bool` | `false` | Disables echoing. |
 |      | `--status` | `bool` | `false` | Exits with non-zero exit code if any of the given tasks is not up-to-date. |
