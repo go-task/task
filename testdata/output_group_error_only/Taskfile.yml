@@ -1,0 +1,17 @@
+version: '3'
+
+silent: true
+
+output:
+  group:
+    error_only: true
+
+tasks:
+  passing: echo 'passing-output'
+
+  failing:
+    cmds:
+      - task: passing
+      - echo 'passing-output-2'
+      - echo 'passing-output-3'
+      - echo 'failing-output' && exit 1
