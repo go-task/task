@@ -451,8 +451,8 @@ func TestStatusChecksum(t *testing.T) {
 		files []string
 		task  string
 	}{
-		{[]string{"generated.txt",".task/checksum/build"}, "build"},
-		{[]string{"generated.txt",".task/checksum/build-with-status"}, "build-with-status"},
+		{[]string{"generated.txt", ".task/checksum/build"}, "build"},
+		{[]string{"generated.txt", ".task/checksum/build-with-status"}, "build-with-status"},
 	}
 
 	for _, test := range tests {
