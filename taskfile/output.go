@@ -53,6 +53,7 @@ func (s *Output) UnmarshalYAML(node *yaml.Node) error {
 // OutputGroup is the style options specific to the Group style.
 type OutputGroup struct {
 	Begin, End string
+	ErrorOnly  bool `yaml:"error_only"`
 }
 
 // IsSet returns true if and only if a custom output style is set.
