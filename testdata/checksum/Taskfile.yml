@@ -18,4 +18,3 @@ tasks:
       - ./source.txt
     status:
       - test -f ./generated.txt
-
