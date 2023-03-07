@@ -1,24 +1,29 @@
-package status
+package fingerprint
 
 import (
 	"os"
 	"path/filepath"
 	"time"
+
+	"github.com/go-task/task/v3/taskfile"
 )
 
-// Timestamp checks if any source change compared with the generated files,
+// TimestampChecker checks if any source change compared with the generated files,
 // using file modifications timestamps.
-type Timestamp struct {
-	TempDir   string
-	Task      string
-	Dir       string
-	Sources   []string
-	Generates []string
-	Dry       bool
+type TimestampChecker struct {
+	tempDir string
+	dry     bool
+}
+
+func NewTimestampChecker(tempDir string, dry bool) *TimestampChecker {
+	return &TimestampChecker{
+		tempDir: tempDir,
+		dry:     dry,
+	}
 }
 
 // IsUpToDate implements the Checker interface
-func (t *Timestamp) IsUpToDate() (bool, error) {
+func (checker *TimestampChecker) IsUpToDate(t *taskfile.Task) (bool, error) {
 	if len(t.Sources) == 0 {
 		return false, nil
 	}
@@ -32,7 +37,7 @@ func (t *Timestamp) IsUpToDate() (bool, error) {
 		return false, nil
 	}
 
-	timestampFile := t.timestampFilePath()
+	timestampFile := checker.timestampFilePath(t)
 
 	// If the file exists, add the file path to the generates.
 	// If the generate file is old, the task will be executed.
@@ -41,7 +46,7 @@ func (t *Timestamp) IsUpToDate() (bool, error) {
 		generates = append(generates, timestampFile)
 	} else {
 		// Create the timestamp file for the next execution when the file does not exist.
-		if !t.Dry {
+		if !checker.dry {
 			if err := os.MkdirAll(filepath.Dir(timestampFile), 0o755); err != nil {
 				return false, err
 			}
@@ -70,7 +75,7 @@ func (t *Timestamp) IsUpToDate() (bool, error) {
 	}
 
 	// Modify the metadata of the file to the the current time.
-	if !t.Dry {
+	if !checker.dry {
 		if err := os.Chtimes(timestampFile, taskTime, taskTime); err != nil {
 			return false, err
 		}
@@ -79,12 +84,12 @@ func (t *Timestamp) IsUpToDate() (bool, error) {
 	return !shouldUpdate, nil
 }
 
-func (t *Timestamp) Kind() string {
+func (checker *TimestampChecker) Kind() string {
 	return "timestamp"
 }
 
 // Value implements the Checker Interface
-func (t *Timestamp) Value() (interface{}, error) {
+func (checker *TimestampChecker) Value(t *taskfile.Task) (interface{}, error) {
 	sources, err := globs(t.Dir, t.Sources)
 	if err != nil {
 		return time.Now(), err
@@ -137,10 +142,10 @@ func anyFileNewerThan(files []string, givenTime time.Time) (bool, error) {
 }
 
 // OnError implements the Checker interface
-func (*Timestamp) OnError() error {
+func (*TimestampChecker) OnError(t *taskfile.Task) error {
 	return nil
 }
 
-func (t *Timestamp) timestampFilePath() string {
-	return filepath.Join(t.TempDir, "timestamp", normalizeFilename(t.Task))
+func (checker *TimestampChecker) timestampFilePath(t *taskfile.Task) string {
+	return filepath.Join(checker.tempDir, "timestamp", normalizeFilename(t.Task))
 }

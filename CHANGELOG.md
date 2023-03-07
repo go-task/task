@@ -5,6 +5,7 @@
 - Fixed bug where `.task/checksum` file was sometimes not being created when
   task also declares a `status:`
   ([#840](https://github.com/go-task/task/issues/840), [#1035](https://github.com/go-task/task/pull/1035) by @harelwa, [#1037](https://github.com/go-task/task/pull/1037) by @pd93).
+- Refactored and decoupled fingerprinting from the main Task executor ([#1039](https://github.com/go-task/task/issues/1039) by @pd93).
 - Fixed deadlock issue when using `run: once`
   ([#715](https://github.com/go-task/task/issues/715), [#1025](https://github.com/go-task/task/pull/1025) by @theunrepentantgeek).
 

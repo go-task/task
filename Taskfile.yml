@@ -27,6 +27,20 @@ tasks:
       GIT_COMMIT:
         sh: git log -n 1 --format=%h
 
+  generate:
+    desc: Runs Go generate to create mocks
+    aliases: [gen, g]
+    deps: [install:mockgen]
+    cmds:
+      - go generate ./...
+
+  install:mockgen:
+    desc: Installs mockgen; a tool to generate mock files
+    status:
+      - command -v mockgen &>/dev/null
+    cmds:
+      - go install github.com/golang/mock/mockgen@latest
+
   mod:
     desc: Downloads and tidy Go modules
     cmds:

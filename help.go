@@ -12,6 +12,7 @@ import (
 	"text/tabwriter"
 
 	"github.com/go-task/task/v3/internal/editors"
+	"github.com/go-task/task/v3/internal/fingerprint"
 	"github.com/go-task/task/v3/internal/logger"
 	"github.com/go-task/task/v3/taskfile"
 )
@@ -148,7 +149,7 @@ func (e *Executor) ToEditorOutput(tasks []*taskfile.Task) (*editors.Output, erro
 		Tasks: make([]editors.Task, len(tasks)),
 	}
 	for i, t := range tasks {
-		upToDate, err := e.isTaskUpToDate(context.Background(), t)
+		upToDate, err := fingerprint.IsTaskUpToDate(context.Background(), t, e.Taskfile.Method, e.TempDir, e.Dry, e.Logger)
 		if err != nil {
 			return nil, err
 		}

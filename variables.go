@@ -8,7 +8,7 @@ import (
 
 	"github.com/go-task/task/v3/internal/execext"
 	"github.com/go-task/task/v3/internal/filepathext"
-	"github.com/go-task/task/v3/internal/status"
+	"github.com/go-task/task/v3/internal/fingerprint"
 	"github.com/go-task/task/v3/internal/templater"
 	"github.com/go-task/task/v3/taskfile"
 )
@@ -161,8 +161,11 @@ func (e *Executor) compiledTask(call taskfile.Call, evaluateShVars bool) (*taskf
 	}
 
 	if len(origTask.Status) > 0 {
-		for _, checker := range []status.Checker{e.timestampChecker(&new), e.checksumChecker(&new)} {
-			value, err := checker.Value()
+		timestampChecker := fingerprint.NewTimestampChecker(e.TempDir, e.Dry)
+		checksumChecker := fingerprint.NewChecksumChecker(e.TempDir, e.Dry)
+
+		for _, checker := range []fingerprint.SourcesCheckable{timestampChecker, checksumChecker} {
+			value, err := checker.Value(&new)
 			if err != nil {
 				return nil, err
 			}

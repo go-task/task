@@ -4,6 +4,7 @@ require (
 	github.com/Masterminds/semver/v3 v3.2.0
 	github.com/fatih/color v1.14.1
 	github.com/go-task/slim-sprig v0.0.0-20210107165309-348f09dbbbc0
+	github.com/golang/mock v1.6.0
 	github.com/joho/godotenv v1.5.1
 	github.com/mattn/go-zglob v0.0.4
 	github.com/mitchellh/hashstructure/v2 v2.0.2
