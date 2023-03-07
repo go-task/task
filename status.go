@@ -29,36 +29,51 @@ func (e *Executor) Status(ctx context.Context, calls ...taskfile.Call) error {
 }
 
 func (e *Executor) isTaskUpToDate(ctx context.Context, t *taskfile.Task) (bool, error) {
-	isUpToDateStatus := true
-	isUpToDateChecker := true
+	var statusUpToDate bool
+	var sourcesUpToDate bool
+	var err error
 
-	if len(t.Status) > 0 {
-		isUpToDate, err := e.isTaskUpToDateStatus(ctx, t)
+	statusIsSet := len(t.Status) != 0
+	sourcesIsSet := len(t.Sources) != 0
+
+	// If status is set, check if it is up-to-date
+	if statusIsSet {
+		statusUpToDate, err = e.isTaskUpToDateStatus(ctx, t)
 		if err != nil {
 			return false, err
 		}
-		if !isUpToDate {
-			isUpToDateStatus = false
-		}
 	}
 
-	if len(t.Sources) > 0 {
+	// If sources is set, check if they are up-to-date
+	if sourcesIsSet {
 		checker, err := e.getStatusChecker(t)
 		if err != nil {
 			return false, err
 		}
-		isUpToDate, err := checker.IsUpToDate()
+		sourcesUpToDate, err = checker.IsUpToDate()
 		if err != nil {
 			return false, err
 		}
-		if !isUpToDate {
-			isUpToDateChecker = false
-		}
 	}
 
-	isUpToDate := isUpToDateStatus && isUpToDateChecker
+	// If both status and sources are set, the task is up-to-date if both are up-to-date
+	if statusIsSet && sourcesIsSet {
+		return statusUpToDate && sourcesUpToDate, nil
+	}
 
-	return isUpToDate, nil
+	// If only status is set, the task is up-to-date if the status is up-to-date
+	if statusIsSet {
+		return statusUpToDate, nil
+	}
+
+	// If only sources is set, the task is up-to-date if the sources are up-to-date
+	if sourcesIsSet {
+		return sourcesUpToDate, nil
+	}
+
+	// If no status or sources are set, the task should always run
+	// i.e. it is never considered "up-to-date"
+	return false, nil
 }
 
 func (e *Executor) statusOnError(t *taskfile.Task) error {
