@@ -1342,6 +1342,30 @@ Hello, World!
 ::endgroup::
 ```
 
+When using the `group` output, you may swallow the output of the executed command
+on standard output and standard error if it does not fail (zero exit code).
+
+```yaml
+version: '3'
+
+silent: true
+
+output:
+  group:
+    error_only: true
+
+tasks:
+  passes: echo 'output-of-passes'
+  errors: echo 'output-of-errors' && exit 1
+```
+
+```bash
+$ task passes
+$ task errors
+output-of-errors
+task: Failed to run task "errors": exit status 1
+```
+
 The `prefix` output will prefix every line printed by a command with
 `[task-name] ` as the prefix, but you can customize the prefix for a command
 with the `prefix:` attribute:

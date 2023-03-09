@@ -11,7 +11,7 @@ type Prefixed struct{}
 
 func (Prefixed) WrapWriter(stdOut, _ io.Writer, prefix string, _ Templater) (io.Writer, io.Writer, CloseFunc) {
 	pw := &prefixWriter{writer: stdOut, prefix: prefix}
-	return pw, pw, func() error { return pw.close() }
+	return pw, pw, func(error) error { return pw.close() }
 }
 
 type prefixWriter struct {

@@ -94,6 +94,7 @@ func main() {
 	pflag.StringVarP(&output.Name, "output", "o", "", "sets output style: [interleaved|group|prefixed]")
 	pflag.StringVar(&output.Group.Begin, "output-group-begin", "", "message template to print before a task's grouped output")
 	pflag.StringVar(&output.Group.End, "output-group-end", "", "message template to print after a task's grouped output")
+	pflag.BoolVar(&output.Group.ErrorOnly, "output-group-error-only", false, "swallow output from successful tasks")
 	pflag.BoolVarP(&color, "color", "c", true, "colored output. Enabled by default. Set flag to false or use NO_COLOR=1 to disable")
 	pflag.IntVarP(&concurrency, "concurrency", "C", 0, "limit number tasks to run concurrently")
 	pflag.DurationVarP(&interval, "interval", "I", 0, "interval to watch for changes")
@@ -136,6 +137,10 @@ func main() {
 		}
 		if output.Group.End != "" {
 			log.Fatal("task: You can't set --output-group-end without --output=group")
+			return
+		}
+		if output.Group.ErrorOnly {
+			log.Fatal("task: You can't set --output-group-error-only without --output=group")
 			return
 		}
 	}

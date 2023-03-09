@@ -2,6 +2,7 @@ package output_test
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"testing"
@@ -38,7 +39,7 @@ func TestGroup(t *testing.T) {
 	fmt.Fprintln(stdErr, "err")
 	assert.Equal(t, "", b.String())
 
-	assert.NoError(t, cleanup())
+	assert.NoError(t, cleanup(nil))
 	assert.Equal(t, "out\nout\nerr\nerr\nout\nerr\n", b.String())
 }
 
@@ -64,15 +65,42 @@ func TestGroupWithBeginEnd(t *testing.T) {
 		assert.Equal(t, "", b.String())
 		fmt.Fprintln(w, "baz")
 		assert.Equal(t, "", b.String())
-		assert.NoError(t, cleanup())
+		assert.NoError(t, cleanup(nil))
 		assert.Equal(t, "::group::example-value\nfoo\nbar\nbaz\n::endgroup::\n", b.String())
 	})
 	t.Run("no output", func(t *testing.T) {
 		var b bytes.Buffer
 		var _, _, cleanup = o.WrapWriter(&b, io.Discard, "", &tmpl)
-		assert.NoError(t, cleanup())
+		assert.NoError(t, cleanup(nil))
 		assert.Equal(t, "", b.String())
 	})
+}
+
+func TestGroupErrorOnlySwallowsOutputOnNoError(t *testing.T) {
+	var b bytes.Buffer
+	var o output.Output = output.Group{
+		ErrorOnly: true,
+	}
+	var stdOut, stdErr, cleanup = o.WrapWriter(&b, io.Discard, "", nil)
+
+	_, _ = fmt.Fprintln(stdOut, "std-out")
+	_, _ = fmt.Fprintln(stdErr, "std-err")
+
+	assert.NoError(t, cleanup(nil))
+	assert.Empty(t, b.String())
+}
+func TestGroupErrorOnlyShowsOutputOnError(t *testing.T) {
+	var b bytes.Buffer
+	var o output.Output = output.Group{
+		ErrorOnly: true,
+	}
+	var stdOut, stdErr, cleanup = o.WrapWriter(&b, io.Discard, "", nil)
+
+	_, _ = fmt.Fprintln(stdOut, "std-out")
+	_, _ = fmt.Fprintln(stdErr, "std-err")
+
+	assert.NoError(t, cleanup(errors.New("any-error")))
+	assert.Equal(t, "std-out\nstd-err\n", b.String())
 }
 
 func TestPrefixed(t *testing.T) {
@@ -87,7 +115,7 @@ func TestPrefixed(t *testing.T) {
 		assert.Equal(t, "[prefix] foo\n[prefix] bar\n", b.String())
 		fmt.Fprintln(w, "baz")
 		assert.Equal(t, "[prefix] foo\n[prefix] bar\n[prefix] baz\n", b.String())
-		assert.NoError(t, cleanup())
+		assert.NoError(t, cleanup(nil))
 	})
 
 	t.Run("multiple writes for a single line", func(t *testing.T) {
@@ -98,7 +126,7 @@ func TestPrefixed(t *testing.T) {
 			assert.Equal(t, "", b.String())
 		}
 
-		assert.NoError(t, cleanup())
+		assert.NoError(t, cleanup(nil))
 		assert.Equal(t, "[prefix] Test!\n", b.String())
 	})
 }

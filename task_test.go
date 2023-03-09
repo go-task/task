@@ -1576,6 +1576,36 @@ Bye!
 	t.Log(buff.String())
 	assert.Equal(t, strings.TrimSpace(buff.String()), expectedOutputOrder)
 }
+func TestOutputGroupErrorOnlySwallowsOutputOnSuccess(t *testing.T) {
+	const dir = "testdata/output_group_error_only"
+	var buff bytes.Buffer
+	e := task.Executor{
+		Dir:    dir,
+		Stdout: &buff,
+		Stderr: &buff,
+	}
+	assert.NoError(t, e.Setup())
+
+	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "passing"}))
+	t.Log(buff.String())
+	assert.Empty(t, buff.String())
+}
+
+func TestOutputGroupErrorOnlyShowsOutputOnFailure(t *testing.T) {
+	const dir = "testdata/output_group_error_only"
+	var buff bytes.Buffer
+	e := task.Executor{
+		Dir:    dir,
+		Stdout: &buff,
+		Stderr: &buff,
+	}
+	assert.NoError(t, e.Setup())
+
+	assert.Error(t, e.Run(context.Background(), taskfile.Call{Task: "failing"}))
+	t.Log(buff.String())
+	assert.Contains(t, "failing-output", strings.TrimSpace(buff.String()))
+	assert.NotContains(t, "passing", strings.TrimSpace(buff.String()))
+}
 
 func TestIncludedVars(t *testing.T) {
 	const dir = "testdata/include_with_vars"
