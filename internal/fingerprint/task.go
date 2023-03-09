@@ -10,10 +10,38 @@ import (
 type (
 	CheckerOption func(*CheckerConfig)
 	CheckerConfig struct {
+		method         string
+		dry            bool
+		tempDir        string
+		logger         *logger.Logger
 		statusChecker  StatusCheckable
 		sourcesChecker SourcesCheckable
 	}
 )
+
+func WithMethod(method string) CheckerOption {
+	return func(config *CheckerConfig) {
+		config.method = method
+	}
+}
+
+func WithDry(dry bool) CheckerOption {
+	return func(config *CheckerConfig) {
+		config.dry = dry
+	}
+}
+
+func WithTempDir(tempDir string) CheckerOption {
+	return func(config *CheckerConfig) {
+		config.tempDir = tempDir
+	}
+}
+
+func WithLogger(logger *logger.Logger) CheckerOption {
+	return func(config *CheckerConfig) {
+		config.logger = logger
+	}
+}
 
 func WithStatusChecker(checker StatusCheckable) CheckerOption {
 	return func(config *CheckerConfig) {
@@ -30,37 +58,38 @@ func WithSourcesChecker(checker SourcesCheckable) CheckerOption {
 func IsTaskUpToDate(
 	ctx context.Context,
 	t *taskfile.Task,
-	method string,
-	tempDir string,
-	dry bool,
-	logger *logger.Logger,
 	opts ...CheckerOption,
 ) (bool, error) {
 	var statusUpToDate bool
 	var sourcesUpToDate bool
 	var err error
 
-	// If the task method is set, override the default method
-	if t.Method != "" {
-		method = t.Method
-	}
-
-	// Get the default checkers
-	statusChecker := NewStatusChecker(logger)
-	sourcesChecker, err := NewSourcesChecker(method, tempDir, dry)
-	if err != nil {
-		return false, err
-	}
-
 	// Default config
 	config := &CheckerConfig{
-		statusChecker:  statusChecker,
-		sourcesChecker: sourcesChecker,
+		method:         "none",
+		tempDir:        "",
+		dry:            false,
+		logger:         nil,
+		statusChecker:  nil,
+		sourcesChecker: nil,
 	}
 
 	// Apply functional options
 	for _, opt := range opts {
 		opt(config)
+	}
+
+	// If no status checker was given, set up the default one
+	if config.statusChecker == nil {
+		config.statusChecker = NewStatusChecker(config.logger)
+	}
+
+	// If no sources checker was given, set up the default one
+	if config.sourcesChecker == nil {
+		config.sourcesChecker, err = NewSourcesChecker(config.method, config.tempDir, config.dry)
+		if err != nil {
+			return false, err
+		}
 	}
 
 	statusIsSet := len(t.Status) != 0

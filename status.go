@@ -18,8 +18,19 @@ func (e *Executor) Status(ctx context.Context, calls ...taskfile.Call) error {
 			return err
 		}
 
+		// Get the fingerprinting method to use
+		method := e.Taskfile.Method
+		if t.Method != "" {
+			method = t.Method
+		}
+
 		// Check if the task is up-to-date
-		isUpToDate, err := fingerprint.IsTaskUpToDate(ctx, t, e.Taskfile.Method, e.TempDir, e.Dry, e.Logger)
+		isUpToDate, err := fingerprint.IsTaskUpToDate(ctx, t,
+			fingerprint.WithMethod(method),
+			fingerprint.WithTempDir(e.TempDir),
+			fingerprint.WithDry(e.Dry),
+			fingerprint.WithLogger(e.Logger),
+		)
 		if err != nil {
 			return err
 		}

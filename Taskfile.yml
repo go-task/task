@@ -31,8 +31,12 @@ tasks:
     desc: Runs Go generate to create mocks
     aliases: [gen, g]
     deps: [install:mockgen]
+    sources:
+      - "internal/fingerprint/checker.go"
+    generates:
+      - "internal/fingerprint/checker_mock.go"
     cmds:
-      - go generate ./...
+      - mockgen -source=internal/fingerprint/checker.go -destination=internal/fingerprint/checker_mock.go -package=fingerprint
 
   install:mockgen:
     desc: Installs mockgen; a tool to generate mock files

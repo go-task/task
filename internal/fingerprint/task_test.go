@@ -164,10 +164,6 @@ func TestIsTaskUpToDate(t *testing.T) {
 			result, err := IsTaskUpToDate(
 				context.Background(),
 				tt.task,
-				"none",
-				"",
-				false,
-				nil,
 				WithStatusChecker(mockStatusChecker),
 				WithSourcesChecker(mockSourcesChecker),
 			)

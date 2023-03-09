@@ -6,8 +6,6 @@ import (
 	"github.com/go-task/task/v3/taskfile"
 )
 
-//go:generate mockgen -destination=checker_mock.go -package=fingerprint -source=checker.go
-
 // StatusCheckable defines any type that can check if the status of a task is up-to-date.
 type StatusCheckable interface {
 	IsUpToDate(ctx context.Context, t *taskfile.Task) (bool, error)
