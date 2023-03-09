@@ -331,6 +331,11 @@
               },
               "end": {
                 "type": "string"
+              },
+              "error_only": {
+                "description": "Swallows command output on zero exit code",
+                "type": "boolean",
+                "default": false
               }
             }
           }
