@@ -113,7 +113,3 @@ tasks:
       GO_PACKAGES:
         sh: go list ./...
     silent: true
-
-  foo:
-    cmds:
-      - echo "{{.TASK_VERSION}}"
