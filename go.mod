@@ -1,5 +1,7 @@
 module github.com/go-task/task/v3
 
+go 1.19
+
 require (
 	github.com/Masterminds/semver/v3 v3.2.0
 	github.com/fatih/color v1.14.1
@@ -26,5 +28,3 @@ require (
 	golang.org/x/term v0.3.0 // indirect
 	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127 // indirect
 )
-
-go 1.19
