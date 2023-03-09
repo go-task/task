@@ -170,9 +170,10 @@ This installation method is community owned.
 
 ### Go Modules
 
-First, make sure you have [Go][go] properly installed and setup.
+Ensure that you have a supported version of [Go][go] properly installed and setup. You can find
+the minimum required version of Go in the [go.mod](https://github.com/go-task/task/blob/master/go.mod#L3) file.
 
-You can easily install the latest release globally by running:
+You can then install the latest release globally by running:
 
 ```bash
 go install github.com/go-task/task/v3/cmd/task@latest
@@ -182,12 +183,6 @@ Or you can install into another directory:
 
 ```bash
 env GOBIN=/bin go install github.com/go-task/task/v3/cmd/task@latest
-```
-
-If using Go 1.15 or earlier, instead use:
-
-```bash
-env GO111MODULE=on go get -u github.com/go-task/task/v3/cmd/task@latest
 ```
 
 :::tip
