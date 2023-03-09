@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Add ability to set `error_only: true` on the `group` output mode. This will
+  instruct Task to only print a command output if it returned with a non-zero
+  exit code
+  ([#664](https://github.com/go-task/task/issues/664), [#1022](https://github.com/go-task/task/pull/1022) by @jaedle).
 - Fixed bug where `.task/checksum` file was sometimes not being created when
   task also declares a `status:`
   ([#840](https://github.com/go-task/task/issues/840), [#1035](https://github.com/go-task/task/pull/1035) by @harelwa, [#1037](https://github.com/go-task/task/pull/1037) by @pd93).

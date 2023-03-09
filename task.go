@@ -293,11 +293,9 @@ func (e *Executor) runCommand(ctx context.Context, t *taskfile.Task, call taskfi
 			Stdout:    stdOut,
 			Stderr:    stdErr,
 		})
-		defer func() {
-			if err := close(err); err != nil {
-				e.Logger.Errf(logger.Red, "task: unable to close writer: %v", err)
-			}
-		}()
+		if closeErr := close(err); closeErr != nil {
+			e.Logger.Errf(logger.Red, "task: unable to close writer: %v", closeErr)
+		}
 		if execext.IsExitError(err) && cmd.IgnoreError {
 			e.Logger.VerboseErrf(logger.Yellow, "task: [%s] command error ignored: %v", t.Name(), err)
 			return nil
