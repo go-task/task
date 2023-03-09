@@ -28,6 +28,7 @@ variable
 | `-n` | `--dry` | `bool` | `false` | Compiles and prints tasks in the order that they would be run, without executing them. |
 | `-x` | `--exit-code` | `bool` | `false` | Pass-through the exit code of the task command. |
 | `-f` | `--force` | `bool` | `false` | Forces execution even when the task is up-to-date. |
+| `-g` | `--global` | `bool` | `false` | Runs global Taskfile, from `$HOME/Taskfile.{yml,yaml}`. |
 | `-h` | `--help` | `bool` | `false` | Shows Task usage. |
 | `-i` | `--init` | `bool` | `false` | Creates a new Taskfile.yaml in the current folder. |
 | `-I` | `--interval` | `string` | `5s` | Sets a different watch interval when using `--watch`, the default being 5 seconds. This string should be a valid [Go Duration](https://pkg.go.dev/time#ParseDuration). |

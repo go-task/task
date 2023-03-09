@@ -81,6 +81,40 @@ In this example, we can run `cd <service>` and `task up` and as long as the
 `<service>` directory contains a `docker-compose.yml`, the Docker composition will be
 brought up.
 
+### Running a global Taskfile
+
+If you call Task with the `--global` (alias `-g`) flag, it will look for your
+home directory instead of your working directory. In short, Task will look for
+a Taskfile on either `$HOME/Taskfile.yml` or `$HOME/Taskfile.yaml` paths.
+
+This is useful to have automation that you can run from anywhere in your
+system!
+
+:::info
+
+When running your global Taskfile with `-g`, tasks will run on `$HOME` by
+default, and not on your working directory!
+
+As mentioned in the previous section, the `{{.USER_WORKING_DIR}}` special
+variable can be very handy here to run stuff on the directory you're calling
+`task -g` from.
+
+```yaml
+version: '3'
+
+tasks:
+  from-home:
+    cmds:
+      - pwd
+
+  from-working-directory:
+    dir: '{{.USER_WORKING_DIR}}'
+    cmds:
+      - pwd
+```
+
+:::
+
 ## Environment variables
 
 ### Task
