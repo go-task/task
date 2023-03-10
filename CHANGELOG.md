@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v3.22.0 - 2023-03-10
 
 - Add a brand new `--global` (`-g`) flag that will run a Taskfile from your
   `$HOME` directory. This is useful to have automation that you can run from
