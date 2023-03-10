@@ -13,7 +13,7 @@ require (
 	github.com/radovskyb/watcher v1.0.7
 	github.com/sajari/fuzzy v1.0.0
 	github.com/spf13/pflag v1.0.5
-	github.com/stretchr/testify v1.8.1
+	github.com/stretchr/testify v1.8.2
 	golang.org/x/exp v0.0.0-20230212135524-a684f29349b6
 	golang.org/x/sync v0.1.0
 	gopkg.in/yaml.v3 v3.0.1
