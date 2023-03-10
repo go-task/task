@@ -12,8 +12,8 @@ import (
 
 	"github.com/radovskyb/watcher"
 
+	"github.com/go-task/task/v3/internal/fingerprint"
 	"github.com/go-task/task/v3/internal/logger"
-	"github.com/go-task/task/v3/internal/status"
 	"github.com/go-task/task/v3/taskfile"
 )
 
@@ -142,7 +142,7 @@ func (e *Executor) registerWatchedFiles(w *watcher.Watcher, calls ...taskfile.Ca
 		}
 
 		for _, s := range task.Sources {
-			files, err := status.Glob(task.Dir, s)
+			files, err := fingerprint.Glob(task.Dir, s)
 			if err != nil {
 				return fmt.Errorf("task: %s: %w", s, err)
 			}

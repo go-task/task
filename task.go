@@ -13,7 +13,9 @@ import (
 	"time"
 
 	"github.com/go-task/task/v3/internal/compiler"
+	"github.com/go-task/task/v3/internal/env"
 	"github.com/go-task/task/v3/internal/execext"
+	"github.com/go-task/task/v3/internal/fingerprint"
 	"github.com/go-task/task/v3/internal/logger"
 	"github.com/go-task/task/v3/internal/output"
 	"github.com/go-task/task/v3/internal/slicesext"
@@ -157,7 +159,18 @@ func (e *Executor) RunTask(ctx context.Context, call taskfile.Call) error {
 				return err
 			}
 
-			upToDate, err := e.isTaskUpToDate(ctx, t)
+			// Get the fingerprinting method to use
+			method := e.Taskfile.Method
+			if t.Method != "" {
+				method = t.Method
+			}
+
+			upToDate, err := fingerprint.IsTaskUpToDate(ctx, t,
+				fingerprint.WithMethod(method),
+				fingerprint.WithTempDir(e.TempDir),
+				fingerprint.WithDry(e.Dry),
+				fingerprint.WithLogger(e.Logger),
+			)
 			if err != nil {
 				return err
 			}
@@ -286,7 +299,7 @@ func (e *Executor) runCommand(ctx context.Context, t *taskfile.Task, call taskfi
 		err = execext.RunCommand(ctx, &execext.RunCommandOptions{
 			Command:   cmd.Cmd,
 			Dir:       t.Dir,
-			Env:       getEnviron(t),
+			Env:       env.Get(t),
 			PosixOpts: slicesext.UniqueJoin(e.Taskfile.Set, t.Set, cmd.Set),
 			BashOpts:  slicesext.UniqueJoin(e.Taskfile.Shopt, t.Shopt, cmd.Shopt),
 			Stdin:     e.Stdin,
@@ -304,29 +317,6 @@ func (e *Executor) runCommand(ctx context.Context, t *taskfile.Task, call taskfi
 	default:
 		return nil
 	}
-}
-
-func getEnviron(t *taskfile.Task) []string {
-	if t.Env == nil {
-		return nil
-	}
-
-	environ := os.Environ()
-
-	for k, v := range t.Env.ToCacheMap() {
-		str, isString := v.(string)
-		if !isString {
-			continue
-		}
-
-		if _, alreadySet := os.LookupEnv(k); alreadySet {
-			continue
-		}
-
-		environ = append(environ, fmt.Sprintf("%s=%s", k, str))
-	}
-
-	return environ
 }
 
 func (e *Executor) startExecution(ctx context.Context, t *taskfile.Task, execute func(ctx context.Context) error) error {
