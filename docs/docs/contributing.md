@@ -17,7 +17,7 @@ discussions in your work.
 much more likely that your change will merged if it backwards compatible. Is
 there an approach you can take that maintains this compatibility? If not,
 consider opening an issue first so that API changes can be discussed before you
-invest you time into a PR.
+invest your time into a PR.
 
 ## 1. Setup
 
@@ -31,7 +31,7 @@ invest you time into a PR.
 
 - **Code style** - Try to maintain the existing code style where possible and
   ensure that code is formatted by `gofmt`. We use `golangci-lint` in our CI to
-  enforce a consistent style and best-practise. There's a `lint` command in
+  enforce a consistent style and best-practice. There's a `lint` command in
   the Taskfile to run this locally.
 - **Documentation** - Ensure that you add/update any relevant documentation. See
   the [updating documentation](#updating-documentation) section below.
@@ -48,10 +48,9 @@ run ./cmd/task --dir ./testdata/<my_test_dir> <task_name>`.
 ### Updating documentation
 
 Task uses [Docusaurus] to host a documentation server. This can be setup and run
-locally by using `task docs:setup` and `task docs:start` respectively (requires
-`nodejs` & `yarn`). All content is written in Markdown and is located in the
-`docs/docs` directory. All Markdown documents should have an 80 character line
-wrap limit.
+locally by using `task docs` (requires `nodejs` & `yarn`). All content is
+written in Markdown and is located in the `docs/docs` directory. All Markdown
+documents should have an 80 character line wrap limit.
 
 When making a change, consider whether a change to the [Usage Guide](./usage.md)
 is necessary. This document contains descriptions and examples of how to use
@@ -62,7 +61,7 @@ the [Taskfile Styleguide](./styleguide.md).
 
 If you added a new field, command or flag, ensure that you add it to the [API
 Reference](./api_reference.md). New fields also need to be added to the
-[JSON Schema](../static/schema.json). The descriptions for fields in the API
+[JSON Schema]. The descriptions for fields in the API
 reference and the schema should match.
 
 ### Writing tests
@@ -109,16 +108,17 @@ answer questions or contributing to other [community projects](./community.md).
 
 > I'm stuck, where can I get help?
 
-If you have questions, feel free to ask them in the `#help` channel on our
-[Discord server].
+If you have questions, feel free to ask them in the `#help` forum channel on our
+[Discord server] or open a [Discussion] on GitHub.
 
 ---
 
 [Go]: https://go.dev
-[install version 1.18+]: https://go.dev/doc/install
 [Node.js]: https://nodejs.org/en/
 [Yarn]: https://yarnpkg.com/
 [Docusaurus]: https://docusaurus.io
+[JSON Schema]: https://github.com/go-task/task/blob/master/docs/static/schema.json
 [open issues]: https://github.com/go-task/task/issues
 [good first issue]: https://github.com/go-task/task/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22
 [Discord server]: https://discord.gg/6TY36E39UK
+[Discussion]: https://github.com/go-task/task/discussions
