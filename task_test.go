@@ -1853,9 +1853,10 @@ func buildTask(t *testing.T) string {
 
 	binary := filepath.Join(temp, "task")
 	command := exec.Command("go", "build", "-o", binary, "cmd/task/task.go")
-	command.Stdout = os.Stdout
-	command.Stderr = os.Stderr
-	require.NoError(t, command.Run())
+	var output bytes.Buffer
+	command.Stdout = &output
+	command.Stderr = &output
+	require.NoError(t, command.Run(), &output)
 
 	return binary
 }
