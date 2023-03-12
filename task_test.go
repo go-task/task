@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -13,6 +14,7 @@ import (
 
 	"github.com/Masterminds/semver/v3"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/go-task/task/v3"
 	"github.com/go-task/task/v3/internal/filepathext"
@@ -1831,4 +1833,29 @@ func TestBashShellOptsCommandLevel(t *testing.T) {
 	err := e.Run(context.Background(), taskfile.Call{Task: "globstar"})
 	assert.NoError(t, err)
 	assert.Equal(t, "globstar\ton\n", buff.String())
+}
+
+func TestOverwriteEnvironment(t *testing.T) {
+	binary := buildTask(t)
+
+	cmd := exec.Command(binary)
+	cmd.Dir = "testdata/env_override"
+	cmd.Env = []string{"PREDEFINED=initial"}
+	require.NoError(t, cmd.Run())
+
+	output, err := os.ReadFile("testdata/env_override/output.txt")
+	require.NoError(t, err)
+	require.Equal(t, "PREDEFINED='overwritten'", string(output))
+}
+
+func buildTask(t *testing.T) string {
+	temp := t.TempDir()
+
+	binary := filepath.Join(temp, "task")
+	command := exec.Command("go", "build", "-o", binary, "cmd/task/task.go")
+	command.Stdout = os.Stdout
+	command.Stderr = os.Stderr
+	require.NoError(t, command.Run())
+
+	return binary
 }

@@ -1,0 +1,10 @@
+version: '3'
+
+silent: true
+
+tasks:
+  default:
+    env:
+      PREDEFINED: 'overwritten'
+    cmds:
+      - echo "PREDEFINED='$PREDEFINED'" > output.txt
