@@ -119,6 +119,10 @@ tasks:
 
 ### Task
 
+:::info
+Custom environment variables will **overwrite** any predefined environment variables from your shell.
+:::info
+
 You can use `env` to set custom environment variables for a specific task:
 
 ```yaml
