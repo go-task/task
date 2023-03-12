@@ -20,10 +20,6 @@ func Get(t *taskfile.Task) []string {
 			continue
 		}
 
-		if _, alreadySet := os.LookupEnv(k); alreadySet {
-			continue
-		}
-
 		environ = append(environ, fmt.Sprintf("%s=%s", k, str))
 	}
 

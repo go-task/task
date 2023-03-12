@@ -7,4 +7,4 @@ tasks:
     env:
       PREDEFINED: 'overwritten'
     cmds:
-      - echo "PREDEFINED='$PREDEFINED'" > output.txt
+      - echo -n "PREDEFINED='$PREDEFINED'" > output.txt
