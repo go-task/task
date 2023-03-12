@@ -45,6 +45,11 @@ There's a JetBrains IntelliJ plugin done by
 [@lechuckroh](https://github.com/lechuckroh), which has its code [here](https://github.com/lechuckroh/task-intellij-plugin)
 and is published [here](https://plugins.jetbrains.com/plugin/17058-taskfile).
 
+## Other Integrations
+
+- [mk](https://github.com/pycontribs/mk) command line tool recognizes Taskfiles
+  natively.
+
 ## Installation methods
 
 Some installation methods are maintained by third party:
