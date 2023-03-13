@@ -27,7 +27,19 @@ const config = {
 
   i18n: {
     defaultLocale: 'en',
-    locales: ['en']
+    locales: ['en', 'zh-Hans'],
+    localeConfigs: {
+      en: {
+        label: 'English',
+        direction: 'ltr',
+        htmlLang: 'en-US'
+      },
+      'zh-Hans': {
+        label: '简体中文',
+        direction: 'ltr',
+        htmlLang: 'zh-Hans'
+      }
+    }
   },
 
   presets: [
@@ -95,6 +107,16 @@ const config = {
             docId: 'donate',
             position: 'left',
             label: 'Donate'
+          },
+          {
+            type: 'localeDropdown',
+            position: 'left'
+            // dropdownItemsAfter: [
+            //   {
+            //     to: '/',
+            //     label: 'Help Us Translate ❤'
+            //   }
+            // ]
           },
           {
             href: GITHUB_URL,
