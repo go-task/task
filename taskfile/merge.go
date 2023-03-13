@@ -65,7 +65,9 @@ func Merge(t1, t2 *Taskfile, includedTaskfile *IncludedTaskfile, namespaces ...s
 		}
 
 		// Add the task to the merged taskfile
-		t1.Tasks[taskNameWithNamespace(k, namespaces...)] = task
+		taskNameWithNamespace := taskNameWithNamespace(k, namespaces...)
+		task.Task = taskNameWithNamespace
+		t1.Tasks[taskNameWithNamespace] = task
 	}
 
 	return nil

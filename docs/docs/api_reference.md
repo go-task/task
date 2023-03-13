@@ -34,6 +34,7 @@ variable
 | `-I` | `--interval` | `string` | `5s` | Sets a different watch interval when using `--watch`, the default being 5 seconds. This string should be a valid [Go Duration](https://pkg.go.dev/time#ParseDuration). |
 | `-l` | `--list` | `bool` | `false` | Lists tasks with description of current Taskfile. |
 | `-a` | `--list-all` | `bool` | `false` | Lists tasks with or without a description. |
+|      | `--json` | `bool` | `false` | See [JSON Output](#json-output) |
 | `-o` | `--output` | `string` | Default set in the Taskfile or `intervealed` | Sets output style: [`interleaved`/`group`/`prefixed`]. |
 |      | `--output-group-begin` | `string` | | Message template to print before a task's grouped output. |
 |      | `--output-group-end` | `string` | | Message template to print after a task's grouped output. |
@@ -46,6 +47,29 @@ variable
 | `-v` | `--verbose` | `bool` | `false` | Enables verbose mode. |
 |      | `--version` | `bool` | `false` | Show Task version. |
 | `-w` | `--watch` | `bool` | `false` | Enables watch of the given task. |
+
+## JSON Output
+
+When using the `--json` flag in combination with either the `--list` or `--list-all` flags, the output will be a JSON object with the following structure:
+
+```jsonc
+{
+  "tasks": [
+    {
+      "name": "",
+      "desc": "",
+      "summary": "",
+      "up_to_date": false,
+      "location": {
+        "line": 54,
+        "column": 3,
+        "taskfile": "/path/to/Taskfile.yml"
+      }
+    },
+    // ...
+  ]
+}
+```
 
 ## Special Variables
 

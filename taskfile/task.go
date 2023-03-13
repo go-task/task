@@ -6,9 +6,6 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// Tasks represents a group of tasks
-type Tasks map[string]*Task
-
 // Task represents a task
 type Task struct {
 	Task                 string
@@ -39,6 +36,7 @@ type Task struct {
 	IncludedTaskfileVars *Vars
 	IncludedTaskfile     *IncludedTaskfile
 	Platforms            []*Platform
+	Location             *Location
 }
 
 func (t *Task) Name() string {
@@ -162,6 +160,7 @@ func (t *Task) DeepCopy() *Task {
 		IncludedTaskfileVars: t.IncludedTaskfileVars.DeepCopy(),
 		IncludedTaskfile:     t.IncludedTaskfile.DeepCopy(),
 		Platforms:            deepCopySlice(t.Platforms),
+		Location:             t.Location.DeepCopy(),
 	}
 	return c
 }
