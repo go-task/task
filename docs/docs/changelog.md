@@ -5,6 +5,11 @@ sidebar_position: 7
 
 # Changelog
 
+## Unreleased
+
+- Added new `splitArgs` to the template system
+  (`{{splitArgs "foo bar 'foo bar baz'"}}`) to ensure string is splitted as sh arguments not whitespaces
+
 ## v3.22.0 - 2023-03-10
 
 - Add a brand new `--global` (`-g`) flag that will run a Taskfile from your
