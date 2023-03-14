@@ -704,11 +704,11 @@ func TestStatusVariables(t *testing.T) {
 
 func TestInit(t *testing.T) {
 	const dir = "testdata/init"
-	var file = filepathext.SmartJoin(dir, "Taskfile.yaml")
+	var file = filepathext.SmartJoin(dir, "Taskfile.yml")
 
 	_ = os.Remove(file)
 	if _, err := os.Stat(file); err == nil {
-		t.Errorf("Taskfile.yaml should not exist")
+		t.Errorf("Taskfile.yml should not exist")
 	}
 
 	if err := task.InitTaskfile(io.Discard, dir); err != nil {
@@ -716,7 +716,7 @@ func TestInit(t *testing.T) {
 	}
 
 	if _, err := os.Stat(file); err != nil {
-		t.Errorf("Taskfile.yaml should exist")
+		t.Errorf("Taskfile.yml should exist")
 	}
 	_ = os.Remove(file)
 }
