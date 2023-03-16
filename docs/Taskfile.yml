@@ -1,4 +1,4 @@
-version: '3'
+version: "3"
 
 tasks:
   yarn:install:
@@ -25,6 +25,12 @@ tasks:
     cmds:
       - npx docusaurus build
 
+  preview:
+    desc: Preview Website
+    deps: [build]
+    cmds:
+      - npx docusaurus serve
+
   clean:
     desc: Clean temp directories
     cmds:
@@ -39,4 +45,16 @@ tasks:
   upgrade:
     desc: Upgrade Docusaurus
     cmds:
-      - yarn upgrade @docusaurus/core@latest @docusaurus/preset-classic@latest
+      - yarn upgrade @docusaurus/core@latest @docusaurus/preset-classic@latest @docusaurus/module-type-aliases@latest
+
+  crowdin:push:
+    desc: Upload source files to a Crowdin project
+    deps: [yarn:install]
+    cmds:
+      - npx crowdin push
+
+  crowdin:pull:
+    desc: Download latest translations from Crowdin to the specified place
+    deps: [yarn:install]
+    cmds:
+      - npx crowdin pull --export-only-approved

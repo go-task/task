@@ -1,0 +1,32 @@
+name: Sync Translated Documents
+
+on:
+  workflow_dispatch:
+
+jobs:
+  sync-translated-documents:
+    runs-on: ubuntu-latest
+    if: github.repository == 'go-task/task'
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install Task
+        uses: arduino/setup-task@v1
+        with:
+          version: 3.x
+
+      - name: Sync Translated Documents
+        run: task crowdin:pull
+        env:
+          CROWDIN_PERSONAL_TOKEN: ${{ secrets.CROWDIN_PERSONAL_TOKEN }}
+        working-directory: ./docs
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v4
+        with:
+          commit-message: "docs: sync translated documents"
+          title: "docs: sync translated documents"
+          body: "- [x] Sync translated documents"
+          branch: feature/auto-sync-translated-documents
+          delete-branch: true
+          draft: true
