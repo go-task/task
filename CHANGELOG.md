@@ -5,7 +5,7 @@
 - Added new `splitArgs` to the template system
   (`{{splitArgs "foo bar 'foo bar baz'"}}`) to ensure string is splitted as
   arguments not whitespaces
-  ([#1040](https://github.com/go-task/task/issues/1040), [#1059](https://github.com/go-task/task/pull/1059)).
+  ([#1040](https://github.com/go-task/task/issues/1040), [#1059](https://github.com/go-task/task/pull/1059) by @dhanusaputra).
 
 ## v3.22.0 - 2023-03-10
 
