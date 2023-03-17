@@ -1046,6 +1046,8 @@ Task also adds the following functions:
 - `shellQuote`: Quotes a string to make it safe for use in shell scripts.
   Task uses [this Go function](https://pkg.go.dev/mvdan.cc/sh/v3@v3.4.0/syntax#Quote)
   for this. The Bash dialect is assumed.
+- `splitArgs`: Splits a string as if it were a command's arguments.
+  Task uses [this Go function](https://pkg.go.dev/mvdan.cc/sh/v3@v3.4.0/shell#Fields)
 
 Example:
 
