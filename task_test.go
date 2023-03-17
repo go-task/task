@@ -1843,7 +1843,10 @@ func TestSplitArgs(t *testing.T) {
 	}
 	assert.NoError(t, e.Setup())
 
-	err := e.Run(context.Background(), taskfile.Call{Task: "default"})
+	vars := &taskfile.Vars{}
+	vars.Set("CLI_ARGS", taskfile.Var{Static: "foo bar 'foo bar baz'"})
+
+	err := e.Run(context.Background(), taskfile.Call{Task: "default", Vars: vars})
 	assert.NoError(t, err)
 	assert.Equal(t, "3\n", buff.String())
 }

@@ -3,4 +3,4 @@ version: '3'
 tasks:
   default:
     cmds:
-      - cmd: echo '{{splitArgs "foo bar 'foo bar baz'" | len}}'
+      - cmd: echo '{{splitArgs .CLI_ARGS | len}}'
