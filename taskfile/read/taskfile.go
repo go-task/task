@@ -176,12 +176,18 @@ func Taskfile(readerNode *ReaderNode) (*taskfile.Taskfile, string, error) {
 		}
 	}
 
-	for name, task := range t.Tasks {
+	// Set the location of the Taskfile
+	t.Location = path
+
+	for _, task := range t.Tasks {
+		// If the task is not defined, create a new one
 		if task == nil {
 			task = &taskfile.Task{}
-			t.Tasks[name] = task
 		}
-		task.Task = name
+		// Set the location of the taskfile for each task
+		if task.Location.Taskfile == "" {
+			task.Location.Taskfile = path
+		}
 	}
 
 	return t, readerNode.Dir, nil

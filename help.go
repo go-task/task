@@ -11,6 +11,8 @@ import (
 	"strings"
 	"text/tabwriter"
 
+	"golang.org/x/sync/errgroup"
+
 	"github.com/go-task/task/v3/internal/editors"
 	"github.com/go-task/task/v3/internal/fingerprint"
 	"github.com/go-task/task/v3/internal/logger"
@@ -144,31 +146,43 @@ func (e *Executor) ListTaskNames(allTasks bool) {
 	}
 }
 
-func (e *Executor) ToEditorOutput(tasks []*taskfile.Task) (*editors.Output, error) {
-	o := &editors.Output{
-		Tasks: make([]editors.Task, len(tasks)),
+func (e *Executor) ToEditorOutput(tasks []*taskfile.Task) (*editors.Taskfile, error) {
+	o := &editors.Taskfile{
+		Tasks:    make([]editors.Task, len(tasks)),
+		Location: e.Taskfile.Location,
 	}
-	for i, t := range tasks {
-		// Get the fingerprinting method to use
-		method := e.Taskfile.Method
-		if t.Method != "" {
-			method = t.Method
-		}
-		upToDate, err := fingerprint.IsTaskUpToDate(context.Background(), t,
-			fingerprint.WithMethod(method),
-			fingerprint.WithTempDir(e.TempDir),
-			fingerprint.WithDry(e.Dry),
-			fingerprint.WithLogger(e.Logger),
-		)
-		if err != nil {
-			return nil, err
-		}
-		o.Tasks[i] = editors.Task{
-			Name:     t.Name(),
-			Desc:     t.Desc,
-			Summary:  t.Summary,
-			UpToDate: upToDate,
-		}
+	var g errgroup.Group
+	for i := range tasks {
+		task := tasks[i]
+		j := i
+		g.Go(func() error {
+			// Get the fingerprinting method to use
+			method := e.Taskfile.Method
+			if task.Method != "" {
+				method = task.Method
+			}
+			upToDate, err := fingerprint.IsTaskUpToDate(context.Background(), task,
+				fingerprint.WithMethod(method),
+				fingerprint.WithTempDir(e.TempDir),
+				fingerprint.WithDry(e.Dry),
+				fingerprint.WithLogger(e.Logger),
+			)
+			if err != nil {
+				return err
+			}
+			o.Tasks[j] = editors.Task{
+				Name:     task.Name(),
+				Desc:     task.Desc,
+				Summary:  task.Summary,
+				UpToDate: upToDate,
+				Location: &editors.Location{
+					Line:     task.Location.Line,
+					Column:   task.Location.Column,
+					Taskfile: task.Location.Taskfile,
+				},
+			}
+			return nil
+		})
 	}
-	return o, nil
+	return o, g.Wait()
 }
