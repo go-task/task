@@ -1,9 +1,10 @@
 package editors
 
 type (
-	// Output wraps task list output for use in editor integrations (e.g. VSCode, etc)
-	Output struct {
-		Tasks []Task `json:"tasks"`
+	// Taskfile wraps task list output for use in editor integrations (e.g. VSCode, etc)
+	Taskfile struct {
+		Tasks    []Task `json:"tasks"`
+		Location string `json:"location"`
 	}
 	// Task describes a single task
 	Task struct {

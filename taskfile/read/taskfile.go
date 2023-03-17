@@ -176,6 +176,9 @@ func Taskfile(readerNode *ReaderNode) (*taskfile.Taskfile, string, error) {
 		}
 	}
 
+	// Set the location of the Taskfile
+	t.Location = path
+
 	for _, task := range t.Tasks {
 		// If the task is not defined, create a new one
 		if task == nil {

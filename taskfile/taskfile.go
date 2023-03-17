@@ -15,6 +15,7 @@ var (
 
 // Taskfile represents a Taskfile.yml
 type Taskfile struct {
+	Location   string
 	Version    *semver.Version
 	Expansions int
 	Output     Output

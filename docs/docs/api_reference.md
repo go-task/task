@@ -67,7 +67,8 @@ When using the `--json` flag in combination with either the `--list` or `--list-
       }
     },
     // ...
-  ]
+  ],
+  "location": "/path/to/Taskfile.yml"
 }
 ```
 

@@ -146,9 +146,10 @@ func (e *Executor) ListTaskNames(allTasks bool) {
 	}
 }
 
-func (e *Executor) ToEditorOutput(tasks []*taskfile.Task) (*editors.Output, error) {
-	o := &editors.Output{
-		Tasks: make([]editors.Task, len(tasks)),
+func (e *Executor) ToEditorOutput(tasks []*taskfile.Task) (*editors.Taskfile, error) {
+	o := &editors.Taskfile{
+		Tasks:    make([]editors.Task, len(tasks)),
+		Location: e.Taskfile.Location,
 	}
 	var g errgroup.Group
 	for i := range tasks {
