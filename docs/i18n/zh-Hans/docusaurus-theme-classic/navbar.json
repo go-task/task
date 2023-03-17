@@ -12,7 +12,7 @@
     "description": "Navbar item with label Usage"
   },
   "item.label.API": {
-    "message": "API",
+    "message": "接口",
     "description": "Navbar item with label API"
   },
   "item.label.Donate": {
