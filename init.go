@@ -22,9 +22,11 @@ tasks:
     silent: true
 `
 
+const defaultTaskfileName = "Taskfile.yml"
+
 // InitTaskfile Taskfile creates a new Taskfile
 func InitTaskfile(w io.Writer, dir string) error {
-	f := filepathext.SmartJoin(dir, "Taskfile.yaml")
+	f := filepathext.SmartJoin(dir, defaultTaskfileName)
 
 	if _, err := os.Stat(f); err == nil {
 		return ErrTaskfileAlreadyExists
@@ -33,6 +35,6 @@ func InitTaskfile(w io.Writer, dir string) error {
 	if err := os.WriteFile(f, []byte(defaultTaskfile), 0o644); err != nil {
 		return err
 	}
-	fmt.Fprintf(w, "Taskfile.yaml created in the current directory\n")
+	fmt.Fprintf(w, "%s created in the current directory\n", defaultTaskfile)
 	return nil
 }

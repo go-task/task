@@ -56,7 +56,7 @@ _arguments \
     + '(operation)' \
         {-l,--list}'[list describable tasks]' \
         {-a,--list-all}'[list all tasks]' \
-        {-i,--init}'[create new Taskfile.yaml]' \
+        {-i,--init}'[create new Taskfile.yml]' \
         '(-*)'{-h,--help}'[show help]' \
         '(-*)--version[show version and exit]' \
         '*: :__task_list'

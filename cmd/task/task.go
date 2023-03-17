@@ -77,7 +77,7 @@ func main() {
 
 	pflag.BoolVar(&versionFlag, "version", false, "Show Task version.")
 	pflag.BoolVarP(&helpFlag, "help", "h", false, "Shows Task usage.")
-	pflag.BoolVarP(&init, "init", "i", false, "Creates a new Taskfile.yaml in the current folder.")
+	pflag.BoolVarP(&init, "init", "i", false, "Creates a new Taskfile.yml in the current folder.")
 	pflag.BoolVarP(&list, "list", "l", false, "Lists tasks with description of current Taskfile.")
 	pflag.BoolVarP(&listAll, "list-all", "a", false, "Lists tasks with or without a description.")
 	pflag.BoolVarP(&listJson, "json", "j", false, "Formats task list as JSON.")
