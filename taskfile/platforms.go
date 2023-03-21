@@ -15,6 +15,16 @@ type Platform struct {
 	Arch string
 }
 
+func (p *Platform) DeepCopy() *Platform {
+	if p == nil {
+		return nil
+	}
+	return &Platform{
+		OS:   p.OS,
+		Arch: p.Arch,
+	}
+}
+
 type ErrInvalidPlatform struct {
 	Platform string
 }
