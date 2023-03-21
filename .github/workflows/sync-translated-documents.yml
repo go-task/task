@@ -1,4 +1,4 @@
-name: Sync Translated Documents
+name: Sync Translations
 
 on:
   workflow_dispatch:
@@ -15,7 +15,7 @@ jobs:
         with:
           version: 3.x
 
-      - name: Sync Translated Documents
+      - name: Sync Translations
         run: task crowdin:pull
         env:
           CROWDIN_PERSONAL_TOKEN: ${{ secrets.CROWDIN_PERSONAL_TOKEN }}
@@ -31,4 +31,4 @@ jobs:
           delete-branch: true
           author: task-bot <106601941+task-bot@users.noreply.github.com>
           labels: translation
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.GH_PAT }}
