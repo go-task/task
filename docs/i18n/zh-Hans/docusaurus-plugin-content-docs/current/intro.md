@@ -14,7 +14,7 @@ Task 是一个任务运行器/构建工具，旨在比 [GNU Make](https://www.gn
 
 由于它是用 [Go](https://go.dev/) 编写的，Task 只是一个二进制文件，没有其他依赖项，这意味着您不需要为了使用构建工具而搞乱任何复杂的安装设置。
 
-[安装](installation.md) 后，您只需在名为 `Taskfile.yml` 的文件中使用简单的 [YAML](http://yaml.org/) 规则描述您的构建任务：
+[安装](installation.md) 后，您只需在名为 `Taskfile.yml` 的文件中使用简单的 [YAML][yaml] 规则描述您的构建任务：
 
 ```yaml title="Taskfile.yml"
 version: '3'
@@ -46,3 +46,4 @@ tasks:
 | [![Appwrite](/img/appwrite.svg)][appwrite] |
 
 </div>
+[yaml]: http://yaml.org/
