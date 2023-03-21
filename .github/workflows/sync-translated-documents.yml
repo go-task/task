@@ -24,9 +24,11 @@ jobs:
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v4
         with:
-          commit-message: "docs: sync translated documents"
-          title: "docs: sync translated documents"
-          body: "- [x] Sync translated documents"
-          branch: feature/auto-sync-translated-documents
+          commit-message: "Website: Sync translations"
+          title: "Website: Sync translations"
+          body: Synchonizing translations with Crowdin
+          branch: chore/sync-translations
           delete-branch: true
-          draft: true
+          author: task-bot <106601941+task-bot@users.noreply.github.com>
+          labels: translation
+          token: ${{ secrets.GITHUB_TOKEN }}

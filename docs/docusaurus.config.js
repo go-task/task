@@ -110,13 +110,13 @@ const config = {
           },
           {
             type: 'localeDropdown',
-            position: 'left'
-            // dropdownItemsAfter: [
-            //   {
-            //     to: '/',
-            //     label: 'Help Us Translate ❤'
-            //   }
-            // ]
+            position: 'left',
+            dropdownItemsAfter: [
+              {
+                to: '/translate/',
+                label: 'Help Us Translate'
+              }
+            ]
           },
           {
             href: GITHUB_URL,

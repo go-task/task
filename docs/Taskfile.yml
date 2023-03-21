@@ -28,8 +28,12 @@ tasks:
   preview:
     desc: Preview Website
     deps: [build]
+    aliases: [serve]
+    vars:
+      HOST: '{{default "localhost" .HOST}}'
+      PORT: '{{default "3001" .PORT}}'
     cmds:
-      - npx docusaurus serve
+      - npx docusaurus serve --no-open --host={{.HOST}} --port={{.PORT}}
 
   clean:
     desc: Clean temp directories
