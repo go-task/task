@@ -348,17 +348,9 @@
       "type": "object",
       "properties": {
         "version": {
-          "description": "Specify the Taskfile format that this file conforms to.",
-          "anyOf": [
-            {
-              "type": "number",
-              "enum": [3]
-            },
-            {
-              "type": "string",
-              "enum": ["3"]
-            }
-          ]
+          "description": "A version for the current Taskfile",
+          "type": "string",
+          "enum": ["2", "3"]
         },
         "output": {
           "description": "Defines how the STDOUT and STDERR are printed when running tasks in parallel. The interleaved output prints lines in real time (default). The group output will print the entire output of a command once, after it finishes, so you won't have live feedback for commands that take a long time to run. The prefix output will prefix every line printed by a command with [task-name] as the prefix, but you can customize the prefix for a command with the prefix: attribute.",
