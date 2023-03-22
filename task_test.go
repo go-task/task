@@ -691,7 +691,7 @@ func TestStatusVariables(t *testing.T) {
 	assert.NoError(t, e.Setup())
 	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "build"}))
 
-	assert.Contains(t, buff.String(), "d41d8cd98f00b204e9800998ecf8427e")
+	assert.Contains(t, buff.String(), "a41e7948dcd321db412ce61d3d5c9864")
 
 	inf, err := os.Stat(filepathext.SmartJoin(dir, "source.txt"))
 	assert.NoError(t, err)

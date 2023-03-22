@@ -37,12 +37,7 @@ func (checker *ChecksumChecker) IsUpToDate(t *taskfile.Task) (bool, error) {
 	data, _ := os.ReadFile(checksumFile)
 	oldMd5 := strings.TrimSpace(string(data))
 
-	sources, err := globs(t.Dir, t.Sources)
-	if err != nil {
-		return false, err
-	}
-
-	newMd5, err := checker.checksum(sources...)
+	newMd5, err := checker.checksum(t)
 	if err != nil {
 		return false, nil
 	}
@@ -74,7 +69,7 @@ func (checker *ChecksumChecker) IsUpToDate(t *taskfile.Task) (bool, error) {
 }
 
 func (checker *ChecksumChecker) Value(t *taskfile.Task) (interface{}, error) {
-	return checker.checksum()
+	return checker.checksum(t)
 }
 
 func (checker *ChecksumChecker) OnError(t *taskfile.Task) error {
@@ -88,10 +83,14 @@ func (*ChecksumChecker) Kind() string {
 	return "checksum"
 }
 
-func (c *ChecksumChecker) checksum(files ...string) (string, error) {
-	h := md5.New()
+func (c *ChecksumChecker) checksum(t *taskfile.Task) (string, error) {
+	sources, err := globs(t.Dir, t.Sources)
+	if err != nil {
+		return "", err
+	}
 
-	for _, f := range files {
+	h := md5.New()
+	for _, f := range sources {
 		// also sum the filename, so checksum changes for renaming a file
 		if _, err := io.Copy(h, strings.NewReader(filepath.Base(f))); err != nil {
 			return "", err
