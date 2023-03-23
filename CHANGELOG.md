@@ -14,6 +14,7 @@
   (`{{splitArgs "foo bar 'foo bar baz'"}}`) to ensure string is splitted as
   arguments not whitespaces
   ([#1040](https://github.com/go-task/task/issues/1040), [#1059](https://github.com/go-task/task/pull/1059) by @dhanusaputra).
+- Fix the value of `{{.CHECKSUM}}` variable in status ([#1076](https://github.com/go-task/task/issues/1076), [#1080](https://github.com/go-task/task/pull/1080) by @pd93).
 
 ## v3.22.0 - 2023-03-10
 
