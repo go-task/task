@@ -131,6 +131,9 @@ func (t *Task) UnmarshalYAML(node *yaml.Node) error {
 // DeepCopy creates a new instance of Task and copies
 // data by value from the source struct.
 func (t *Task) DeepCopy() *Task {
+	if t == nil {
+		return nil
+	}
 	c := &Task{
 		Task:                 t.Task,
 		Cmds:                 deepCopySlice(t.Cmds),
