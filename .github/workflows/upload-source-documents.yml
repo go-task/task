@@ -1,0 +1,34 @@
+name: Upload Source Documents
+
+on:
+  push:
+    branches: [master]
+
+jobs:
+  push_files_to_crowdin:
+    name: Push files to Crowdin
+    if: github.repository == 'go-task/task'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Verify changed files
+        uses: tj-actions/verify-changed-files@v14
+        id: verify-changed-files
+        with:
+          files: |
+            docs/docs
+            docs/blog
+            docs/i18n/en
+
+      - name: Install Task
+        uses: arduino/setup-task@v1
+        with:
+          version: 3.x
+
+      - name: Upload source documents
+        if: steps.verify-changed-files.outputs.files_changed == 'true'
+        run: task crowdin:push
+        env:
+          CROWDIN_PERSONAL_TOKEN: ${{ secrets.CROWDIN_PERSONAL_TOKEN }}
+        working-directory: ./docs
