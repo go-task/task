@@ -1,6 +1,8 @@
 ---
 slug: /api/
 sidebar_position: 4
+toc_min_heading_level: 2
+toc_max_heading_level: 5
 ---
 
 # API Reference
@@ -103,9 +105,7 @@ Some environment variables can be overriden to adjust Task behavior.
 | `TASK_COLOR_RED` | `31` | Color used for red. |
 | `FORCE_COLOR` | | Force color output usage. |
 
-## Schema
-
-### Taskfile
+## Taskfile Schema
 
 | Attribute | Type | Default | Description |
 | - | - | - | - |
@@ -141,6 +141,26 @@ Informing only a string like below is equivalent to setting that value to the `t
 ```yaml
 includes:
   foo: ./path
+```
+
+:::
+
+### Variable
+
+| Attribute | Type | Default | Description |
+| - | - | - | - |
+| *itself* | `string` | | A static value that will be set to the variable. |
+| `sh` | `string` | | A shell command. The output (`STDOUT`) will be assigned to the variable. |
+
+:::info
+
+Static and dynamic variables have different syntaxes, like below:
+
+```yaml
+vars:
+  STATIC: static
+  DYNAMIC:
+    sh: echo "dynamic"
 ```
 
 :::
@@ -193,27 +213,7 @@ tasks:
 
 :::
 
-### Dependency
-
-| Attribute | Type | Default | Description |
-| - | - | - | - |
-| `task` | `string` | | The task to be execute as a dependency. |
-| `vars` | [`map[string]Variable`](#variable) | | Optional additional variables to be passed to this task. |
-
-:::tip
-
-If you don't want to set additional variables, it's enough to declare the
-dependency as a list of strings (they will be assigned to `task`):
-
-```yaml
-tasks:
-  foo:
-    deps: [foo, bar]
-```
-
-:::
-
-### Command
+#### Command
 
 | Attribute | Type | Default | Description |
 | - | - | - | - |
@@ -241,27 +241,27 @@ tasks:
 
 :::
 
-### Variable
+#### Dependency
 
 | Attribute | Type | Default | Description |
 | - | - | - | - |
-| *itself* | `string` | | A static value that will be set to the variable. |
-| `sh` | `string` | | A shell command. The output (`STDOUT`) will be assigned to the variable. |
+| `task` | `string` | | The task to be execute as a dependency. |
+| `vars` | [`map[string]Variable`](#variable) | | Optional additional variables to be passed to this task. |
 
-:::info
+:::tip
 
-Static and dynamic variables have different syntaxes, like below:
+If you don't want to set additional variables, it's enough to declare the
+dependency as a list of strings (they will be assigned to `task`):
 
 ```yaml
-vars:
-  STATIC: static
-  DYNAMIC:
-    sh: echo "dynamic"
+tasks:
+  foo:
+    deps: [foo, bar]
 ```
 
 :::
 
-### Precondition
+#### Precondition
 
 | Attribute | Type | Default | Description |
 | - | - | - | - |
