@@ -2,6 +2,8 @@ name: Sync Translations
 
 on:
   workflow_dispatch:
+  schedule:
+    - cron: "0 0 * * *"
 
 jobs:
   sync-translated-documents:
@@ -32,3 +34,4 @@ jobs:
           author: task-bot <106601941+task-bot@users.noreply.github.com>
           labels: translation
           token: ${{ secrets.GH_PAT }}
+          draft: true
