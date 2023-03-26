@@ -14,6 +14,7 @@
   #1059 by @dhanusaputra).
 - Fix the value of `{{.CHECKSUM}}` variable in status (#1076, #1080 by @pd93).
 - Fixed deep copy implementation (#1072 by @pd93)
+- Created a tool to assist with releases (#1086 by @pd93).
 
 ## v3.22.0 - 2023-03-10
 
