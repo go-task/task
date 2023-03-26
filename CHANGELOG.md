@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+Task now has an [official extension for Visual Studio Code](https://marketplace.visualstudio.com/items?itemName=go-task.task) contributed by @pd93! :tada: The extension is maintained in a [new repository](https://github.com/go-task/task) under the `go-task` organization. We're looking to gather feedback from the community so please give it a go and let us know what you think via a [discussion](https://github.com/go-task/vscode-task/discussions), [issue](https://github.com/go-task/vscode-task/issues) or on our [Discord](https://discord.gg/6TY36E39UK)!
+
+> **Note**
+> The extension _requires_ v3.23.0 to be installed in order to work.
+
 - The website was integrated with [Crowdin](https://crowdin.com/project/taskfile)
   to allow the community to contribute with translations!
   [Chinese](https://taskfile.dev/zh-Hans/) is the first language available
