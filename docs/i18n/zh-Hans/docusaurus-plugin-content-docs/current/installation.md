@@ -11,7 +11,7 @@ Task 提供以下多种安装方式。 查看以下可用方法。
 
 ### Homebrew
 
-如果您使用的是 macOS 或 Linux 并安装了 [Homebrew](https://brew.sh/)，获取 Task 就像运行一样简单：
+如果您使用的是 macOS 或 Linux 并安装了 [Homebrew](https://brew.sh/)，获取 Task 就像运行以下命令一样简单：
 
 ```bash
 brew install go-task/tap/go-task
@@ -27,7 +27,7 @@ brew install go-task
 
 ### Snap
 
-Task 在 [Snapcraft](https://snapcraft.io/task) 中可用，但请记住，您的 Linux 发行版应该符合 Snaps 的基本约束才能正确安装：
+Task 在 [Snapcraft](https://snapcraft.io/task) 中可用，但请记住，您的 Linux 发行版应该符合 Snaps 的基本要求才能正确安装：
 
 ```bash
 sudo snap install task --classic
@@ -35,7 +35,7 @@ sudo snap install task --classic
 
 ### Chocolatey
 
-如果 Windows 上安装了 [Chocolatey][choco]，再安装 Task 只要这样：
+如果 Windows 上安装了 [Chocolatey](https://chocolatey.org/)，再安装 Task 只要这样：
 
 ```bash
 choco install go-task
@@ -45,7 +45,7 @@ choco install go-task
 
 ### Scoop
 
-如果 Windows 上安装了 [Scoop][scoop]，再安装 Task 只要这样：
+如果 Windows 上安装了 [Scoop](https://scoop.sh/)，再安装 Task 只要这样：
 
 ```cmd
 scoop install task
@@ -105,7 +105,7 @@ npm install -g @go-task/cli
 
 还支持 DEB 和 RPM 包。
 
-`task_checksums.txt` 文件包含每个文件的 SHA-256 校验和。
+`task_checksums.txt` 文件包含每个文件的 SHA-256 checksum。
 
 ### 安装脚本
 
@@ -125,9 +125,11 @@ sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d -b ~/.local/bin
 
 :::caution
 
+
 在 macOS 和 Windows 上，`~/.local/bin` 和 `~/bin` 默认情况下不会添加到 `$PATH`。
 
 :::
+
 
 ### GitHub Actions
 
@@ -160,9 +162,11 @@ env GOBIN=/bin go install github.com/go-task/task/v3/cmd/task@latest
 
 :::tip
 
+
 对于 CI 环境，我们建议改用 [安装脚本](#get-the-binary)，它更快更稳定，因为它只会下载最新发布的二进制文件。
 
 :::
+
 
 ## 自动完成
 
@@ -225,6 +229,3 @@ notepad $profile
 ```shell
 Invoke-Expression -Command path/to/task.ps1
 ```
-
-[choco]: https://chocolatey.org/
-[scoop]: https://scoop.sh/

@@ -34,7 +34,7 @@ If you omit a task name, "default" will be assumed.
 
 ## 支持的文件名称
 
-Task will look for the following file names, in order of priority:
+Task 会按以下顺序查找配置文件:
 
 - Taskfile.yml
 - Taskfile.yaml
@@ -71,6 +71,7 @@ This is useful to have automation that you can run from anywhere in your system!
 
 :::info
 
+
 When running your global Taskfile with `-g`, tasks will run on `$HOME` by default, and not on your working directory!
 
 As mentioned in the previous section, the `{{.USER_WORKING_DIR}}` special variable can be very handy here to run stuff on the directory you're calling `task -g` from.
@@ -91,11 +92,12 @@ tasks:
 
 :::
 
+
 ## 环境变量
 
 ### Task
 
-You can use `env` to set custom environment variables for a specific task:
+你可以使用 `env` 给每个 task 设置自定义环境变量:
 
 ```yaml
 version: '3'
@@ -124,9 +126,11 @@ tasks:
 
 :::info
 
+
 `env` supports expansion and retrieving output from a shell command just like variables, as you can see in the [Variables](#variables) section.
 
 :::
+
 
 ### .env 文件
 
@@ -154,7 +158,7 @@ tasks:
       - echo "Using $KEYNAME and endpoint $ENDPOINT"
 ```
 
-Dotenv files can also be specified at the task level:
+也可以在任务级指定 .env 文件：
 
 ```yaml
 version: '3'
@@ -188,9 +192,11 @@ tasks:
 
 :::info
 
-Please note that you are not currently able to use the `dotenv` key inside included Taskfiles.
+
+请注意，您目前无法在包含的 Taskfile 中使用 `dotenv` 键。
 
 :::
+
 
 ## 包含其他 Taskfile
 
@@ -234,11 +240,13 @@ includes:
 
 :::info
 
+
 The included Taskfiles must be using the same schema version as the main Taskfile uses.
 
 :::
 
-### Optional includes
+
+### 可选 includes
 
 Includes marked as optional will allow Task to continue execution as normal if the included file is missing.
 
@@ -256,7 +264,7 @@ tasks:
       - echo "This command can still be successfully executed if ./tests/Taskfile.yml does not exist"
 ```
 
-### Internal includes
+### 内部 includes
 
 Includes marked as internal will set all the tasks of the included file to be internal as well (see the [Internal tasks](#internal-tasks) section below). This is useful when including utility tasks that are not intended to be used directly by the user.
 
@@ -288,7 +296,7 @@ includes:
       DOCKER_IMAGE: frontend_image
 ```
 
-### 命名空间别名。
+### 命名空间别名
 
 When including a Taskfile, you can give the namespace a list of `aliases`. This works in the same way as [task aliases](#task-aliases) and can be used together to create shorter and easier-to-type commands.
 
@@ -303,11 +311,13 @@ includes:
 
 :::info
 
+
 Vars declared in the included Taskfile have preference over the variables in the including Taskfile! If you want a variable in an included Taskfile to be overridable, use the [default function](https://go-task.github.io/slim-sprig/defaults.html): `MY_VAR: '{{.MY_VAR | default "my-default-value"}}'`.
 
 :::
 
-## 内部 task
+
+## 内部 tasks
 
 Internal tasks are tasks that cannot be called directly by the user. They will not appear in the output when running `task --list|--list-all`. Other tasks may call internal tasks in the usual way. This is useful for creating reusable, function-like tasks that have no useful purpose on the command line.
 
@@ -388,9 +398,11 @@ If there is more than one dependency, they always run in parallel for better per
 
 :::tip
 
+
 You can also make the tasks given by the command line run in parallel by using the `--parallel` flag (alias `-p`). Example: `task --parallel js css`.
 
 :::
+
 
 If you want to pass information to dependencies, you can do that the same manner as you would to [call another task](#calling-another-task):
 
@@ -412,7 +424,7 @@ tasks:
       - echo {{.TEXT}}
 ```
 
-## 平台特定的 task 和 命令
+## 平台特定的 tasks 和 cmds
 
 If you want to restrict the running of tasks to explicit platforms, this can be achieved using the `platforms:` key. Tasks can be restricted to a specific OS, architecture or a combination of both. On a mismatch, the task or command will be skipped, and no error will be thrown.
 
@@ -479,7 +491,7 @@ tasks:
       - cmd: echo 'Running on all platforms'
 ```
 
-## 调用另一个任务
+## 调用另一个 task
 
 When a task has many dependencies, they are executed concurrently. This will often result in a faster build pipeline. However, in some situations, you may need to call other tasks serially. In this case, use the following syntax:
 
@@ -524,13 +536,15 @@ The above syntax is also supported in `deps`.
 
 :::tip
 
+
 NOTE: If you want to call a task declared in the root Taskfile from within an [included Taskfile](#including-other-taskfiles), add a leading `:` like this: `task: :task-name`.
 
 :::
 
-## Prevent unnecessary work
 
-### By fingerprinting locally generated files and their sources
+## 减少不必要的工作
+
+### 通过指纹识别本地生成的文件及其来源
 
 If a task generates something, you can inform Task the source and generated files, so Task will prevent running them if not necessary.
 
@@ -582,6 +596,7 @@ In situations where you need more flexibility the `status` keyword can be used. 
 
 :::info
 
+
 By default, task stores checksums on a local `.task` directory in the project's directory. Most of the time, you'll want to have this directory on `.gitignore` (or equivalent) so it isn't committed. (If you have a task for code generation that is committed it may make sense to commit the checksum of that task as well, though).
 
 If you want these files to be stored in another directory, you can set a `TASK_TEMP_DIR` environment variable in your machine. It can contain a relative path like `tmp/task` that will be interpreted as relative to the project directory, or an absolute or home path like `/tmp/.task` or `~/.task` (subdirectories will be created for each project).
@@ -592,7 +607,9 @@ export TASK_TEMP_DIR='~/.task'
 
 :::
 
+
 :::info
+
 
 Each task has only one checksum stored for its `sources`. If you want to distinguish a task by any of its input variables, you can add those variables as part of the task's label, and it will be considered a different task.
 
@@ -600,19 +617,24 @@ This is useful if you want to run a task once for each distinct set of inputs un
 
 :::
 
+
 :::tip
+
 
 The method `none` skips any validation and always run the task.
 
 :::
 
+
 :::info
+
 
 For the `checksum` (default) or `timestamp` method to work, it is only necessary to inform the source files. When the `timestamp` method is used, the last time of the running the task is considered as a generate.
 
 :::
 
-### Using programmatic checks to indicate a task is up to date.
+
+### 使用程序检查来表示任务是最新的。
 
 Alternatively, you can inform a sequence of tests as `status`. If no error is returned (exit status 0), the task is considered up-to-date:
 
@@ -666,7 +688,7 @@ tasks:
       - grep -q '"dev": false' ./vendor/composer/installed.json
 ```
 
-### Using programmatic checks to cancel the execution of a task and its dependencies
+### 使用程序检查取消任务及其依赖项的执行
 
 In addition to `status` checks, `preconditions` checks are the logical inverse of `status` checks.  That is, if you need a certain set of conditions to be _true_ you can use the `preconditions` stanza. `preconditions` are similar to `status` lines, except they support `sh` expansion, and they SHOULD all return 0.
 
@@ -710,7 +732,7 @@ tasks:
       - echo "I will not run"
 ```
 
-### Limiting when tasks run
+### 在任务运行时限制
 
 If a task executed by multiple `cmds` or multiple `deps` you can control when it is executed using `run`. `run` can also be set at the root of the Taskfile to change the behavior of all the tasks unless explicitly overridden.
 
@@ -765,9 +787,11 @@ $ TASK_VARIABLE=a-value task do-something
 
 :::tip
 
+
 A special variable `.TASK` is always available containing the task name.
 
 :::
+
 
 Since some shells do not support the above syntax to set environment variables (Windows) tasks also accept a similar style when not at the beginning of the command.
 
@@ -839,7 +863,7 @@ tasks:
       - yarn {{.CLI_ARGS}}
 ```
 
-## Doing task cleanup with `defer`
+## 使用 `defer` 做 task 清理
 
 With the `defer` keyword, it's possible to schedule cleanup to be run once the task finishes. The difference with just putting it as the last command is that this command will run even when the task fails.
 
@@ -873,13 +897,15 @@ tasks:
 
 :::info
 
+
 Due to the nature of how the [Go's own `defer` work](https://go.dev/tour/flowcontrol/13), the deferred commands are executed in the reverse order if you schedule multiple of them.
 
 :::
 
+
 ## Go 的模板引擎
 
-Task parse commands as [Go's template engine][gotemplate] before executing them. Variables are accessible through dot syntax (`.VARNAME`).
+Task parse commands as [Go's template engine](https://golang.org/pkg/text/template/) before executing them. Variables are accessible through dot syntax (`.VARNAME`).
 
 All functions by the Go's [slim-sprig lib](https://go-task.github.io/slim-sprig/) are available. The following example gets the current date in a given format:
 
@@ -1127,7 +1153,7 @@ tasks:
       - echo "This will print nothing" > /dev/null
 ```
 
-## Dry run mode
+## 试运行模式
 
 Dry run mode (`--dry`) compiles and steps through each task, printing the commands that would be run without executing them. This is useful for debugging your Taskfiles.
 
@@ -1263,9 +1289,11 @@ $ task default
 
 :::tip
 
+
 The `output` option can also be specified by the `--output` or `-o` flags.
 
 :::
+
 
 ## 交互式 CLI 应用
 
@@ -1317,14 +1345,14 @@ tasks:
 
 :::info
 
+
 Keep in mind that not all options are available in the [shell interpreter library](https://github.com/mvdan/sh) that Task uses.
 
 :::
+
 
 ## 观察任务
 
 With the flags `--watch` or `-w` task will watch for file changes and run the task again. This requires the `sources` attribute to be given, so task knows which files to watch.
 
 The default watch interval is 5 seconds, but it's possible to change it by either setting `interval: '500ms'` in the root of the Taskfile passing it as an argument like `--interval=500ms`.
-
-[gotemplate]: https://golang.org/pkg/text/template/
