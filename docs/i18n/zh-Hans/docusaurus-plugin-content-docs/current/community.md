@@ -39,7 +39,7 @@ JetBrains IntelliJ 插件由 [@lechuckroh](https://github.com/lechuckroh) 完成
 
 - [GitHub Actions](https://github.com/arduino/setup-task) 由 [@arduino](https://github.com/arduino) 维护
 - [AUR](https://aur.archlinux.org/packages/go-task-bin) 由 [@carlsmedstad](https://github.com/carlsmedstad) 维护
-- [Scoop](https://github.com/lukesampson/scoop-extras/blob/master/bucket/task.json)
+- [Scoop](https://github.com/ScoopInstaller/Main/blob/master/bucket/task.json)
 - [Fedora](https://packages.fedoraproject.org/pkgs/golang-github-task/go-task/)
 - [NixOS](https://github.com/NixOS/nixpkgs/blob/master/pkgs/development/tools/go-task/default.nix)
 
