@@ -114,6 +114,14 @@ You can also use Node and npm to install Task by installing
 npm install -g @go-task/cli
 ```
 
+### Winget
+
+If you are using Windows and installed the [winget](https://github.com/microsoft/winget-cli) package management tool, you can install Task from [winget-pkgs](https://github.com/microsoft/winget-pkgs).
+
+```bash
+winget install task.task
+```
+
 ## Get The Binary
 
 ### Binary
