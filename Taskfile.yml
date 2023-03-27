@@ -102,18 +102,10 @@ tasks:
     cmds:
       - goreleaser --snapshot --rm-dist
 
-  docs:changelog:
-    desc: Copy CHANGELOG.md to the documentation website
-    vars:
-      FILE: docs/docs/changelog.md
+  release:
+    desc: Prepare the project for a new release
     cmds:
-      - rm {{.FILE}}
-      - 'echo "---" >> {{.FILE}}'
-      - 'echo "slug: /changelog/" >> {{.FILE}}'
-      - 'echo "sidebar_position: 7" >> {{.FILE}}'
-      - 'echo "---" >> {{.FILE}}'
-      - 'echo "" >> {{.FILE}}'
-      - 'cat CHANGELOG.md >> {{.FILE}}'
+      - go run ./cmd/release {{.CLI_ARGS}}
 
   npm:publish:
     desc: Publish release to npm
