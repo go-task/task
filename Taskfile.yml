@@ -21,11 +21,7 @@ tasks:
     sources:
       - './**/*.go'
     cmds:
-      - go install -v -ldflags="-w -s -X '{{.VERSION_VAR}}={{.GIT_COMMIT}}'" ./cmd/task
-    vars:
-      VERSION_VAR: github.com/go-task/task/v3/internal/version.version
-      GIT_COMMIT:
-        sh: git log -n 1 --format=%h
+      - go install -v ./cmd/task
 
   generate:
     desc: Runs Go generate to create mocks
