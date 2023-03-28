@@ -26,6 +26,7 @@ var (
 	changelogReleaseRegex = regexp.MustCompile(`## Unreleased`)
 	changelogUserRegex    = regexp.MustCompile(`@(\w+)`)
 	changelogIssueRegex   = regexp.MustCompile(`#(\d+)`)
+	versionRegex          = regexp.MustCompile(`(?m)^  "version": "\d+\.\d+\.\d+",$`)
 )
 
 func main() {
@@ -52,6 +53,14 @@ func release() error {
 	fmt.Println(version)
 
 	if err := changelog(version); err != nil {
+		return err
+	}
+
+	if err := setJSONVersion("package.json", version); err != nil {
+		return err
+	}
+
+	if err := setJSONVersion("package-lock.json", version); err != nil {
 		return err
 	}
 
@@ -86,7 +95,7 @@ func changelog(version *semver.Version) error {
 	// Open changelog source file
 	b, err := os.ReadFile(changelogSource)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	changelog := string(b)
 	date := time.Now().Format("2006-01-02")
@@ -96,7 +105,7 @@ func changelog(version *semver.Version) error {
 
 	// Write the changelog to the source file
 	if err := os.WriteFile(changelogSource, []byte(changelog), 0644); err != nil {
-		panic(err)
+		return err
 	}
 
 	// Add the frontmatter to the changelog
@@ -107,9 +116,19 @@ func changelog(version *semver.Version) error {
 	changelog = changelogIssueRegex.ReplaceAllString(changelog, "[#$1](https://github.com/go-task/task/issues/$1)")
 
 	// Write the changelog to the target file
-	if err := os.WriteFile(changelogTarget, []byte(changelog), 0644); err != nil {
-		panic(err)
+	return os.WriteFile(changelogTarget, []byte(changelog), 0644)
+}
+
+func setJSONVersion(fileName string, version *semver.Version) error {
+	// Read the JSON file
+	b, err := os.ReadFile(fileName)
+	if err != nil {
+		return err
 	}
 
-	return nil
+	// Replace the version
+	new := versionRegex.ReplaceAllString(string(b), fmt.Sprintf(`  "version": "%s",`, version.String()))
+
+	// Write the JSON file
+	return os.WriteFile(fileName, []byte(new), 0644)
 }

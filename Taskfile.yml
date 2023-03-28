@@ -107,14 +107,6 @@ tasks:
     cmds:
       - go run ./cmd/release {{.CLI_ARGS}}
 
-  npm:bump:
-    desc: Bump version in package.json. Requires `jq`.
-    vars:
-      VERSION: '{{coalesce .CLI_ARGS .VERSION}}'
-    cmds:
-      - cat package.json | jq '.version = "{{.VERSION}}"' > temp.json; mv temp.json package.json
-      - cat package-lock.json | jq '.version = "{{.VERSION}}" | .packages."".version = "{{.VERSION}}"' > temp.json; mv temp.json package-lock.json
-
   npm:publish:
     desc: Publish release to npm
     cmds:
