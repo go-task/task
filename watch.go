@@ -20,7 +20,7 @@ import (
 const defaultWatchInterval = 5 * time.Second
 
 // watchTasks start watching the given tasks
-func (e *Executor) watchTasks(calls ...taskfile.Call) error {
+func (e *Executor) watchTasks(calls ...taskfile.Call) (bool, error) {
 	tasks := make([]string, len(calls))
 	for i, c := range calls {
 		tasks[i] = c.Task
@@ -55,12 +55,20 @@ func (e *Executor) watchTasks(calls ...taskfile.Call) error {
 	w.SetMaxEvents(1)
 
 	closeOnInterrupt(w)
+	reload := false
 
 	go func() {
 		for {
 			select {
 			case event := <-w.Event:
 				e.Logger.VerboseErrf(logger.Magenta, "task: received watch event: %v", event)
+
+				if event.Path == e.Taskfile.Location {
+					e.Logger.VerboseErrf(logger.Magenta, "task: reload taskfile")
+					reload = true
+					w.Close()
+					return
+				}
 
 				cancel()
 				ctx, cancel = context.WithCancel(context.Background())
@@ -90,7 +98,7 @@ func (e *Executor) watchTasks(calls ...taskfile.Call) error {
 
 	go func() {
 		// re-register every 5 seconds because we can have new files, but this process is expensive to run
-		for {
+		for !reload {
 			if err := e.registerWatchedFiles(w, calls...); err != nil {
 				e.Logger.Errf(logger.Red, "%v", err)
 			}
@@ -98,7 +106,12 @@ func (e *Executor) watchTasks(calls ...taskfile.Call) error {
 		}
 	}()
 
-	return w.Start(watchInterval)
+	e.Logger.VerboseOutf(logger.Green, "task: watching taskfile: %v", e.Taskfile.Location)
+	if err := w.Add(e.Taskfile.Location); err != nil {
+		e.Logger.Errf(logger.Red, "%v", err)
+	}
+
+	return reload, w.Start(watchInterval)
 }
 
 func isContextError(err error) bool {

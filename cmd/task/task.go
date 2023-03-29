@@ -160,89 +160,95 @@ func main() {
 		}
 	}
 
-	e := task.Executor{
-		Force:       force,
-		Watch:       watch,
-		Verbose:     verbose,
-		Silent:      silent,
-		Dir:         dir,
-		Dry:         dry,
-		Entrypoint:  entrypoint,
-		Summary:     summary,
-		Parallel:    parallel,
-		Color:       color,
-		Concurrency: concurrency,
-		Interval:    interval,
+	for {
+		e := task.Executor{
+			Force:       force,
+			Watch:       watch,
+			Verbose:     verbose,
+			Silent:      silent,
+			Dir:         dir,
+			Dry:         dry,
+			Entrypoint:  entrypoint,
+			Summary:     summary,
+			Parallel:    parallel,
+			Color:       color,
+			Concurrency: concurrency,
+			Interval:    interval,
 
-		Stdin:  os.Stdin,
-		Stdout: os.Stdout,
-		Stderr: os.Stderr,
+			Stdin:  os.Stdin,
+			Stdout: os.Stdout,
+			Stderr: os.Stderr,
 
-		OutputStyle: output,
-	}
-
-	var listOptions = task.NewListOptions(list, listAll, listJson)
-	if err := listOptions.Validate(); err != nil {
-		log.Fatal(err)
-	}
-
-	if (listOptions.ShouldListTasks()) && silent {
-		e.ListTaskNames(listAll)
-		return
-	}
-
-	if err := e.Setup(); err != nil {
-		log.Fatal(err)
-	}
-
-	if listOptions.ShouldListTasks() {
-		if foundTasks, err := e.ListTasks(listOptions); !foundTasks || err != nil {
-			os.Exit(1)
+			OutputStyle: output,
 		}
-		return
-	}
 
-	var (
-		calls   []taskfile.Call
-		globals *taskfile.Vars
-	)
-
-	tasksAndVars, cliArgs, err := getArgs()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	if e.Taskfile.Version.Compare(taskfile.V3) >= 0 {
-		calls, globals = args.ParseV3(tasksAndVars...)
-	} else {
-		calls, globals = args.ParseV2(tasksAndVars...)
-	}
-
-	globals.Set("CLI_ARGS", taskfile.Var{Static: cliArgs})
-	e.Taskfile.Vars.Merge(globals)
-
-	if !watch {
-		e.InterceptInterruptSignals()
-	}
-
-	ctx := context.Background()
-
-	if status {
-		if err := e.Status(ctx, calls...); err != nil {
+		var listOptions = task.NewListOptions(list, listAll, listJson)
+		if err := listOptions.Validate(); err != nil {
 			log.Fatal(err)
 		}
-		return
-	}
 
-	if err := e.Run(ctx, calls...); err != nil {
-		e.Logger.Errf(logger.Red, "%v", err)
-
-		if exitCode {
-			if err, ok := err.(*task.TaskRunError); ok {
-				os.Exit(err.ExitCode())
-			}
+		if (listOptions.ShouldListTasks()) && silent {
+			e.ListTaskNames(listAll)
+			return
 		}
-		os.Exit(1)
+
+		if err := e.Setup(); err != nil {
+			log.Fatal(err)
+		}
+
+		if listOptions.ShouldListTasks() {
+			if foundTasks, err := e.ListTasks(listOptions); !foundTasks || err != nil {
+				os.Exit(1)
+			}
+			return
+		}
+
+		var (
+			calls   []taskfile.Call
+			globals *taskfile.Vars
+		)
+
+		tasksAndVars, cliArgs, err := getArgs()
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		if e.Taskfile.Version.Compare(taskfile.V3) >= 0 {
+			calls, globals = args.ParseV3(tasksAndVars...)
+		} else {
+			calls, globals = args.ParseV2(tasksAndVars...)
+		}
+
+		globals.Set("CLI_ARGS", taskfile.Var{Static: cliArgs})
+		e.Taskfile.Vars.Merge(globals)
+
+		if !watch {
+			e.InterceptInterruptSignals()
+		}
+
+		ctx := context.Background()
+
+		if status {
+			if err := e.Status(ctx, calls...); err != nil {
+				log.Fatal(err)
+			}
+			return
+		}
+
+		if reload, err := e.Run(ctx, calls...); err != nil {
+			e.Logger.Errf(logger.Red, "%v", err)
+
+			if exitCode {
+				if err, ok := err.(*task.TaskRunError); ok {
+					os.Exit(err.ExitCode())
+				}
+			}
+			os.Exit(1)
+		} else if !reload {
+			return
+		}
+
+		fmt.Printf("Reload...\n")
 	}
 }
 

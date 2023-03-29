@@ -72,26 +72,26 @@ type Executor struct {
 }
 
 // Run runs Task
-func (e *Executor) Run(ctx context.Context, calls ...taskfile.Call) error {
+func (e *Executor) Run(ctx context.Context, calls ...taskfile.Call) (bool, error) {
 	// check if given tasks exist
 	for _, call := range calls {
 		task, err := e.GetTask(call)
 		if err != nil {
 			if _, ok := err.(*taskNotFoundError); ok {
 				if _, err := e.ListTasks(ListOptions{ListOnlyTasksWithDescriptions: true}); err != nil {
-					return err
+					return false, err
 				}
 			}
-			return err
+			return false, err
 		}
 
 		if task.Internal {
 			if _, ok := err.(*taskNotFoundError); ok {
 				if _, err := e.ListTasks(ListOptions{ListOnlyTasksWithDescriptions: true}); err != nil {
-					return err
+					return false, err
 				}
 			}
-			return &taskInternalError{taskName: call.Task}
+			return false, &taskInternalError{taskName: call.Task}
 		}
 	}
 
@@ -99,12 +99,12 @@ func (e *Executor) Run(ctx context.Context, calls ...taskfile.Call) error {
 		for i, c := range calls {
 			compiledTask, err := e.FastCompiledTask(c)
 			if err != nil {
-				return nil
+				return false, nil
 			}
 			summary.PrintSpaceBetweenSummaries(e.Logger, i)
 			summary.PrintTask(e.Logger, compiledTask)
 		}
-		return nil
+		return false, nil
 	}
 
 	if e.Watch {
@@ -118,11 +118,11 @@ func (e *Executor) Run(ctx context.Context, calls ...taskfile.Call) error {
 			g.Go(func() error { return e.RunTask(ctx, c) })
 		} else {
 			if err := e.RunTask(ctx, c); err != nil {
-				return err
+				return false, err
 			}
 		}
 	}
-	return g.Wait()
+	return false, g.Wait()
 }
 
 // RunTask runs a task by its name
