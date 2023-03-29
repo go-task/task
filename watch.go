@@ -10,7 +10,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/radovskyb/watcher"
+	"github.com/fsnotify/fsnotify"
 
 	"github.com/go-task/task/v3/internal/fingerprint"
 	"github.com/go-task/task/v3/internal/logger"
@@ -50,23 +50,28 @@ func (e *Executor) watchTasks(calls ...taskfile.Call) (bool, error) {
 
 	e.Logger.VerboseOutf(logger.Green, "task: Watching for changes every %v", watchInterval)
 
-	w := watcher.New()
+	w, err := fsnotify.NewWatcher()
+	if err != nil {
+		return false, err
+    }
 	defer w.Close()
-	w.SetMaxEvents(1)
 
-	closeOnInterrupt(w)
+	keepRunning := make(chan bool)
 	reload := false
 
 	go func() {
 		for {
 			select {
-			case event := <-w.Event:
+			case event, ok := <-w.Events:
+				if !ok {
+					return
+				}
 				e.Logger.VerboseErrf(logger.Magenta, "task: received watch event: %v", event)
 
-				if event.Path == e.Taskfile.Location {
+				if event.Name == e.Taskfile.Location {
 					e.Logger.VerboseErrf(logger.Magenta, "task: reload taskfile")
 					reload = true
-					w.Close()
+					keepRunning <- false
 					return
 				}
 
@@ -83,15 +88,11 @@ func (e *Executor) watchTasks(calls ...taskfile.Call) (bool, error) {
 						}
 					}()
 				}
-			case err := <-w.Error:
-				switch err {
-				case watcher.ErrWatchedFileDeleted:
-				default:
-					e.Logger.Errf(logger.Red, "%v", err)
+			case err, ok := <-w.Errors:
+				if !ok {
+					return
 				}
-			case <-w.Closed:
-				cancel()
-				return
+				e.Logger.Errf(logger.Red, "%v", err)
 			}
 		}
 	}()
@@ -111,7 +112,8 @@ func (e *Executor) watchTasks(calls ...taskfile.Call) (bool, error) {
 		e.Logger.Errf(logger.Red, "%v", err)
 	}
 
-	return reload, w.Start(watchInterval)
+	waitForInterrupt(keepRunning)
+	return reload, nil
 }
 
 func isContextError(err error) bool {
@@ -122,17 +124,22 @@ func isContextError(err error) bool {
 	return err == context.Canceled || err == context.DeadlineExceeded
 }
 
-func closeOnInterrupt(w *watcher.Watcher) {
+func waitForInterrupt(keepRunning chan bool) {
 	ch := make(chan os.Signal, 1)
 	signal.Notify(ch, os.Interrupt, syscall.SIGTERM)
 	go func() {
 		<-ch
-		w.Close()
+		keepRunning <- false
 	}()
+
+	<-keepRunning
 }
 
-func (e *Executor) registerWatchedFiles(w *watcher.Watcher, calls ...taskfile.Call) error {
-	watchedFiles := w.WatchedFiles()
+func (e *Executor) registerWatchedFiles(w *fsnotify.Watcher, calls ...taskfile.Call) error {
+	watchedFiles := make(map[string]bool)
+	for _, file := range w.WatchList() {
+		watchedFiles[file] = true
+	}
 
 	var registerTaskFiles func(taskfile.Call) error
 	registerTaskFiles = func(c taskfile.Call) error {
