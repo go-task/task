@@ -24,8 +24,8 @@ vars:
 	)
 	tests := []struct {
 		content  string
-		v        interface{}
-		expected interface{}
+		v        any
+		expected any
 	}{
 		{
 			yamlCmd,
@@ -38,8 +38,8 @@ vars:
 			&taskfile.Cmd{Task: "another-task", Vars: &taskfile.Vars{
 				Keys: []string{"PARAM1", "PARAM2"},
 				Mapping: map[string]taskfile.Var{
-					"PARAM1": taskfile.Var{Static: "VALUE1"},
-					"PARAM2": taskfile.Var{Static: "VALUE2"},
+					"PARAM1": {Static: "VALUE1"},
+					"PARAM2": {Static: "VALUE2"},
 				},
 			}},
 		},
@@ -54,7 +54,7 @@ vars:
 			&taskfile.Cmd{Task: "some_task", Vars: &taskfile.Vars{
 				Keys: []string{"PARAM1"},
 				Mapping: map[string]taskfile.Var{
-					"PARAM1": taskfile.Var{Static: "var"},
+					"PARAM1": {Static: "var"},
 				},
 			}, Defer: true},
 		},
@@ -69,8 +69,8 @@ vars:
 			&taskfile.Dep{Task: "another-task", Vars: &taskfile.Vars{
 				Keys: []string{"PARAM1", "PARAM2"},
 				Mapping: map[string]taskfile.Var{
-					"PARAM1": taskfile.Var{Static: "VALUE1"},
-					"PARAM2": taskfile.Var{Static: "VALUE2"},
+					"PARAM1": {Static: "VALUE1"},
+					"PARAM2": {Static: "VALUE2"},
 				},
 			}},
 		},

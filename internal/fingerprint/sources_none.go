@@ -10,7 +10,7 @@ func (NoneChecker) IsUpToDate(t *taskfile.Task) (bool, error) {
 	return false, nil
 }
 
-func (NoneChecker) Value(t *taskfile.Task) (interface{}, error) {
+func (NoneChecker) Value(t *taskfile.Task) (any, error) {
 	return "", nil
 }
 

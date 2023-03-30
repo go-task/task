@@ -34,9 +34,9 @@ func TestArgsV3(t *testing.T) {
 			ExpectedGlobals: &taskfile.Vars{
 				Keys: []string{"FOO", "BAR", "BAZ"},
 				Mapping: map[string]taskfile.Var{
-					"FOO": taskfile.Var{Static: "bar"},
-					"BAR": taskfile.Var{Static: "baz"},
-					"BAZ": taskfile.Var{Static: "foo"},
+					"FOO": {Static: "bar"},
+					"BAR": {Static: "baz"},
+					"BAZ": {Static: "foo"},
 				},
 			},
 		},
@@ -48,7 +48,7 @@ func TestArgsV3(t *testing.T) {
 			ExpectedGlobals: &taskfile.Vars{
 				Keys: []string{"CONTENT"},
 				Mapping: map[string]taskfile.Var{
-					"CONTENT": taskfile.Var{Static: "with some spaces"},
+					"CONTENT": {Static: "with some spaces"},
 				},
 			},
 		},
@@ -125,7 +125,7 @@ func TestArgsV2(t *testing.T) {
 					Vars: &taskfile.Vars{
 						Keys: []string{"FOO"},
 						Mapping: map[string]taskfile.Var{
-							"FOO": taskfile.Var{Static: "bar"},
+							"FOO": {Static: "bar"},
 						},
 					},
 				},
@@ -135,8 +135,8 @@ func TestArgsV2(t *testing.T) {
 					Vars: &taskfile.Vars{
 						Keys: []string{"BAR", "BAZ"},
 						Mapping: map[string]taskfile.Var{
-							"BAR": taskfile.Var{Static: "baz"},
-							"BAZ": taskfile.Var{Static: "foo"},
+							"BAR": {Static: "baz"},
+							"BAZ": {Static: "foo"},
 						},
 					},
 				},
@@ -150,7 +150,7 @@ func TestArgsV2(t *testing.T) {
 					Vars: &taskfile.Vars{
 						Keys: []string{"CONTENT"},
 						Mapping: map[string]taskfile.Var{
-							"CONTENT": taskfile.Var{Static: "with some spaces"},
+							"CONTENT": {Static: "with some spaces"},
 						},
 					},
 				},

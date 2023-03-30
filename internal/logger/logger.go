@@ -9,7 +9,7 @@ import (
 )
 
 type Color func() PrintFunc
-type PrintFunc func(io.Writer, string, ...interface{})
+type PrintFunc func(io.Writer, string, ...any)
 
 func Default() PrintFunc {
 	return color.New(envColor("TASK_COLOR_RESET", color.Reset)).FprintfFunc()
@@ -56,14 +56,14 @@ type Logger struct {
 }
 
 // Outf prints stuff to STDOUT.
-func (l *Logger) Outf(color Color, s string, args ...interface{}) {
+func (l *Logger) Outf(color Color, s string, args ...any) {
 	l.FOutf(l.Stdout, color, s+"\n", args...)
 }
 
 // FOutf prints stuff to the given writer.
-func (l *Logger) FOutf(w io.Writer, color Color, s string, args ...interface{}) {
+func (l *Logger) FOutf(w io.Writer, color Color, s string, args ...any) {
 	if len(args) == 0 {
-		s, args = "%s", []interface{}{s}
+		s, args = "%s", []any{s}
 	}
 	if !l.Color {
 		color = Default
@@ -73,16 +73,16 @@ func (l *Logger) FOutf(w io.Writer, color Color, s string, args ...interface{}) 
 }
 
 // VerboseOutf prints stuff to STDOUT if verbose mode is enabled.
-func (l *Logger) VerboseOutf(color Color, s string, args ...interface{}) {
+func (l *Logger) VerboseOutf(color Color, s string, args ...any) {
 	if l.Verbose {
 		l.Outf(color, s, args...)
 	}
 }
 
 // Errf prints stuff to STDERR.
-func (l *Logger) Errf(color Color, s string, args ...interface{}) {
+func (l *Logger) Errf(color Color, s string, args ...any) {
 	if len(args) == 0 {
-		s, args = "%s", []interface{}{s}
+		s, args = "%s", []any{s}
 	}
 	if !l.Color {
 		color = Default
@@ -92,7 +92,7 @@ func (l *Logger) Errf(color Color, s string, args ...interface{}) {
 }
 
 // VerboseErrf prints stuff to STDERR if verbose mode is enabled.
-func (l *Logger) VerboseErrf(color Color, s string, args ...interface{}) {
+func (l *Logger) VerboseErrf(color Color, s string, args ...any) {
 	if l.Verbose {
 		l.Errf(color, s, args...)
 	}

@@ -82,8 +82,8 @@ func (vs *Vars) Range(yield func(key string, value Var) error) error {
 
 // ToCacheMap converts Vars to a map containing only the static
 // variables
-func (vs *Vars) ToCacheMap() (m map[string]interface{}) {
-	m = make(map[string]interface{}, vs.Len())
+func (vs *Vars) ToCacheMap() (m map[string]any) {
+	m = make(map[string]any, vs.Len())
 	_ = vs.Range(func(k string, v Var) error {
 		if v.Sh != "" {
 			// Dynamic variable is not yet resolved; trigger
@@ -112,7 +112,7 @@ func (vs *Vars) Len() int {
 // Var represents either a static or dynamic variable.
 type Var struct {
 	Static string
-	Live   interface{}
+	Live   any
 	Sh     string
 	Dir    string
 }

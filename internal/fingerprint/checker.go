@@ -14,7 +14,7 @@ type StatusCheckable interface {
 // SourcesCheckable defines any type that can check if the sources of a task are up-to-date.
 type SourcesCheckable interface {
 	IsUpToDate(t *taskfile.Task) (bool, error)
-	Value(t *taskfile.Task) (interface{}, error)
+	Value(t *taskfile.Task) (any, error)
 	OnError(t *taskfile.Task) error
 	Kind() string
 }
