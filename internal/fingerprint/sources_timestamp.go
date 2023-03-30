@@ -89,7 +89,7 @@ func (checker *TimestampChecker) Kind() string {
 }
 
 // Value implements the Checker Interface
-func (checker *TimestampChecker) Value(t *taskfile.Task) (interface{}, error) {
+func (checker *TimestampChecker) Value(t *taskfile.Task) (any, error) {
 	sources, err := globs(t.Dir, t.Sources)
 	if err != nil {
 		return time.Now(), err

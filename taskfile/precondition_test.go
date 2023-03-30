@@ -12,8 +12,8 @@ import (
 func TestPreconditionParse(t *testing.T) {
 	tests := []struct {
 		content  string
-		v        interface{}
-		expected interface{}
+		v        any
+		expected any
 	}{
 		{
 			"test -f foo.txt",

@@ -68,7 +68,7 @@ func (checker *ChecksumChecker) IsUpToDate(t *taskfile.Task) (bool, error) {
 	return oldMd5 == newMd5, nil
 }
 
-func (checker *ChecksumChecker) Value(t *taskfile.Task) (interface{}, error) {
+func (checker *ChecksumChecker) Value(t *taskfile.Task) (any, error) {
 	return checker.checksum(t)
 }
 

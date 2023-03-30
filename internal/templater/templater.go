@@ -16,7 +16,7 @@ type Templater struct {
 	Vars          *taskfile.Vars
 	RemoveNoValue bool
 
-	cacheMap map[string]interface{}
+	cacheMap map[string]any
 	err      error
 }
 
