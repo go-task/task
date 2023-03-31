@@ -13,8 +13,8 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Verify changed files
-        uses: tj-actions/verify-changed-files@v14
-        id: verify-changed-files
+        uses: tj-actions/changed-files@v35
+        id: changed-files
         with:
           files: |
             docs/docs
@@ -28,7 +28,7 @@ jobs:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload source documents
-        if: steps.verify-changed-files.outputs.files_changed == 'true'
+        if: steps.changed-files-specific.outputs.any_changed == 'true'
         run: task crowdin:push
         env:
           CROWDIN_PERSONAL_TOKEN: ${{ secrets.CROWDIN_PERSONAL_TOKEN }}
