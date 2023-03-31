@@ -201,7 +201,7 @@ env GOBIN=/bin go install github.com/go-task/task/v3/cmd/task@latest
 
 :::tip
 
-For CI environments we recommend using the [install script](#get-the-binary)
+For CI environments we recommend using the [install script](#install-script)
 instead, which is faster and more stable, since it'll just download the latest
 released binary.
 
