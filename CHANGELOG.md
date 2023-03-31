@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- More improvements to the release tool (#1096 by @pd93)
+
 ## v3.23.0 - 2023-03-26
 
 Task now has an [official extension for Visual Studio Code](https://marketplace.visualstudio.com/items?itemName=task.vscode-task) contributed by @pd93! :tada: The extension is maintained in a [new repository](https://github.com/go-task/vscode-task) under the `go-task` organization. We're looking to gather feedback from the community so please give it a go and let us know what you think via a [discussion](https://github.com/go-task/vscode-task/discussions), [issue](https://github.com/go-task/vscode-task/issues) or on our [Discord](https://discord.gg/6TY36E39UK)!
