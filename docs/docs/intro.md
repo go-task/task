@@ -52,9 +52,9 @@ guide to check the full schema documentation and Task features.
 
 <div class="gold-sponsors">
 
-| [Appwrite][appwrite] |
-| - |
-| [![Appwrite](/img/appwrite.svg)][appwrite] |
+| [Appwrite](https://appwrite.io/?utm_source=taskfile.dev&utm_medium=website&utm_campaign=task_oss_fund)                       |
+| ---------------------------------------------------------------------------------------------------------------------------- |
+| [![Appwrite](/img/appwrite.svg)](https://appwrite.io/?utm_source=taskfile.dev&utm_medium=website&utm_campaign=task_oss_fund) |
 
 </div>
 
@@ -65,4 +65,3 @@ guide to check the full schema documentation and Task features.
 [snapcraft]: https://snapcraft.io/
 [scoop]: https://scoop.sh/
 [sh]: https://github.com/mvdan/sh
-[appwrite]: https://appwrite.io/?utm_source=taskfile.dev&utm_medium=website&utm_campaign=task_oss_fund
