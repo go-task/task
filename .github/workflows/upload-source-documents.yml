@@ -25,6 +25,7 @@ jobs:
         uses: arduino/setup-task@v1
         with:
           version: 3.x
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload source documents
         if: steps.verify-changed-files.outputs.files_changed == 'true'

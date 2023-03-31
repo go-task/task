@@ -162,6 +162,9 @@ by the Arduino team:
 ```yaml
 - name: Install Task
   uses: arduino/setup-task@v1
+  with:
+    version: 3.x
+    repo-token: ${{ secrets.GITHUB_TOKEN }}
 ```
 
 This installation method is community owned.

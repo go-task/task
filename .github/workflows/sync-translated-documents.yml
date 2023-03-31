@@ -16,6 +16,7 @@ jobs:
         uses: arduino/setup-task@v1
         with:
           version: 3.x
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Sync Translations
         run: task crowdin:pull
