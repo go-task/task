@@ -175,5 +175,6 @@ func (e *Executor) registerWatchedFiles(w *watcher.Watcher, calls ...taskfile.Ca
 }
 
 func shouldIgnoreFile(path string) bool {
-	return strings.Contains(path, "/.git") || strings.Contains(path, "/.task") || strings.Contains(path, "/node_modules")
+	return strings.Contains(path, "/.git") || strings.Contains(path, "/.hg") ||
+		strings.Contains(path, "/.task") || strings.Contains(path, "/node_modules")
 }
