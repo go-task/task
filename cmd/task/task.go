@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
@@ -51,29 +52,46 @@ func main() {
 	}
 
 	var (
-		versionFlag bool
-		helpFlag    bool
-		init        bool
-		list        bool
-		listAll     bool
-		listJson    bool
-		status      bool
-		force       bool
-		watch       bool
-		verbose     bool
-		silent      bool
-		dry         bool
-		summary     bool
-		exitCode    bool
-		parallel    bool
-		concurrency int
-		dir         string
-		entrypoint  string
-		output      taskfile.Output
-		color       bool
-		interval    time.Duration
-		global      bool
+		versionFlag   bool
+		helpFlag      bool
+		init          bool
+		list          bool
+		listAll       bool
+		listJson      bool
+		status        bool
+		force         bool
+		watch         bool
+		verbose       bool
+		silent        bool
+		dry           bool
+		summary       bool
+		exitCode      bool
+		parallel      bool
+		concurrency   int
+		concurrency64 int64
+		dir           string
+		entrypoint    string
+		output        taskfile.Output
+		color         bool
+		interval      time.Duration
+		global        bool
 	)
+
+	verbose, _ = strconv.ParseBool(getOsEnv("TASK_VERBOSE", "false"))
+	force, _ = strconv.ParseBool(getOsEnv("TASK_FORCE", "false"))
+	silent, _ = strconv.ParseBool(getOsEnv("TASK_SILENT", "false"))
+	parallel, _ = strconv.ParseBool(getOsEnv("TASK_PARALLEL", "false"))
+	dry, _ = strconv.ParseBool(getOsEnv("TASK_DRY_RUN", "false"))
+	exitCode, _ = strconv.ParseBool(getOsEnv("TASK_EXIT_CODE", "false"))
+	dir = getOsEnv("TASK_DIR", "")
+	entrypoint = getOsEnv("TASK_TASKFILE", "")
+	output.Name = getOsEnv("TASK_OUTPUT", "")
+	output.Group.Begin = getOsEnv("TASK_OUTPUT_GROUP_BEGIN", "")
+	output.Group.End = getOsEnv("TASK_OUTPUT_GROUP_END", "")
+	output.Group.ErrorOnly, _ = strconv.ParseBool(getOsEnv("TASK_OUTPUT_GROUP_ERROR_ONLY", ""))
+	concurrency64, _ = strconv.ParseInt(getOsEnv("TASK_CONCURRENCY", "0"), 10, 32)
+	concurrency = int(concurrency64)
+	global, _ = strconv.ParseBool(getOsEnv("TASK_GLOBAL", "false"))
 
 	pflag.BoolVar(&versionFlag, "version", false, "Show Task version.")
 	pflag.BoolVarP(&helpFlag, "help", "h", false, "Shows Task usage.")
@@ -82,24 +100,24 @@ func main() {
 	pflag.BoolVarP(&listAll, "list-all", "a", false, "Lists tasks with or without a description.")
 	pflag.BoolVarP(&listJson, "json", "j", false, "Formats task list as JSON.")
 	pflag.BoolVar(&status, "status", false, "Exits with non-zero exit code if any of the given tasks is not up-to-date.")
-	pflag.BoolVarP(&force, "force", "f", false, "Forces execution even when the task is up-to-date.")
+	pflag.BoolVarP(&force, "force", "f", force, "Forces execution even when the task is up-to-date.")
 	pflag.BoolVarP(&watch, "watch", "w", false, "Enables watch of the given task.")
-	pflag.BoolVarP(&verbose, "verbose", "v", false, "Enables verbose mode.")
-	pflag.BoolVarP(&silent, "silent", "s", false, "Disables echoing.")
-	pflag.BoolVarP(&parallel, "parallel", "p", false, "Executes tasks provided on command line in parallel.")
-	pflag.BoolVarP(&dry, "dry", "n", false, "Compiles and prints tasks in the order that they would be run, without executing them.")
+	pflag.BoolVarP(&verbose, "verbose", "v", verbose, "Enables verbose mode. (TASK_VERBOSE)")
+	pflag.BoolVarP(&silent, "silent", "s", silent, "Disables echoing. (TASK_SILENT)")
+	pflag.BoolVarP(&parallel, "parallel", "p", parallel, "Executes tasks provided on command line in parallel. (TASK_PARALLEL)")
+	pflag.BoolVarP(&dry, "dry", "n", dry, "Compiles and prints tasks in the order that they would be run, without executing them. (TASK_DRY)")
 	pflag.BoolVar(&summary, "summary", false, "Show summary about a task.")
-	pflag.BoolVarP(&exitCode, "exit-code", "x", false, "Pass-through the exit code of the task command.")
-	pflag.StringVarP(&dir, "dir", "d", "", "Sets directory of execution.")
-	pflag.StringVarP(&entrypoint, "taskfile", "t", "", `Choose which Taskfile to run. Defaults to "Taskfile.yml".`)
-	pflag.StringVarP(&output.Name, "output", "o", "", "Sets output style: [interleaved|group|prefixed].")
-	pflag.StringVar(&output.Group.Begin, "output-group-begin", "", "Message template to print before a task's grouped output.")
-	pflag.StringVar(&output.Group.End, "output-group-end", "", "Message template to print after a task's grouped output.")
-	pflag.BoolVar(&output.Group.ErrorOnly, "output-group-error-only", false, "Swallow output from successful tasks.")
-	pflag.BoolVarP(&color, "color", "c", true, "Colored output. Enabled by default. Set flag to false or use NO_COLOR=1 to disable.")
-	pflag.IntVarP(&concurrency, "concurrency", "C", 0, "Limit number tasks to run concurrently.")
+	pflag.BoolVarP(&exitCode, "exit-code", "x", exitCode, "Pass-through the exit code of the task command. (TASK_EXIT_CODE)")
+	pflag.StringVarP(&dir, "dir", "d", dir, "Sets directory of execution. (TASK_DIR)")
+	pflag.StringVarP(&entrypoint, "taskfile", "t", entrypoint, `Choose which Taskfile to run. Defaults to "Taskfile.yml". (TASK_TASKFILE)`)
+	pflag.StringVarP(&output.Name, "output", "o", output.Name, "Sets output style: [interleaved|group|prefixed]. (TASK_OUTPUT)")
+	pflag.StringVar(&output.Group.Begin, "output-group-begin", output.Group.Begin, "Message template to print before a task's grouped output. (TASK_OUTPUT_GROUP_BEGIN)")
+	pflag.StringVar(&output.Group.End, "output-group-end", output.Group.End, "Message template to print after a task's grouped output. (TASK_OUTPUT_GROUP_END)")
+	pflag.BoolVar(&output.Group.ErrorOnly, "output-group-error-only", output.Group.ErrorOnly, "Swallow output from successful tasks. (TASK_OUTPUT_GROUP_ERROR_ONLY)")
+	pflag.BoolVarP(&color, "color", "c", true, "Colored output. Enabled by default. Set flag to false or use NO_COLOR=1 to disable. (NO_COLOR)")
+	pflag.IntVarP(&concurrency, "concurrency", "C", concurrency, "Limit number tasks to run concurrently. (TASK_CONCURRENCY)")
 	pflag.DurationVarP(&interval, "interval", "I", 0, "Interval to watch for changes.")
-	pflag.BoolVarP(&global, "global", "g", false, "Runs global Taskfile, from $HOME/Taskfile.{yml,yaml}.")
+	pflag.BoolVarP(&global, "global", "g", global, "Runs global Taskfile, from $HOME/Taskfile.{yml,yaml}. (TASK_GLOBAL)")
 	pflag.Parse()
 
 	if versionFlag {
@@ -265,4 +283,11 @@ func getArgs() ([]string, string, error) {
 		quotedCliArgs = append(quotedCliArgs, quotedCliArg)
 	}
 	return args[:doubleDashPos], strings.Join(quotedCliArgs, " "), nil
+}
+
+func getOsEnv(key string, defaultValue string) string {
+	if res, err := os.LookupEnv(key); err {
+		return res
+	}
+	return defaultValue
 }
