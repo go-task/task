@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"gopkg.in/yaml.v3"
 
 	"github.com/go-task/task/v3/taskfile"
@@ -77,7 +78,7 @@ vars:
 	}
 	for _, test := range tests {
 		err := yaml.Unmarshal([]byte(test.content), test.v)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, test.expected, test.v)
 	}
 }
