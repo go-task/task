@@ -1,0 +1,38 @@
+{
+  "title": {
+    "message": "Task",
+    "description": "The title in the navbar"
+  },
+  "item.label.Installation": {
+    "message": "Installation",
+    "description": "Navbar item with label Installation"
+  },
+  "item.label.Usage": {
+    "message": "Usage",
+    "description": "Navbar item with label Usage"
+  },
+  "item.label.API": {
+    "message": "API",
+    "description": "Navbar item with label API"
+  },
+  "item.label.Donate": {
+    "message": "Donate",
+    "description": "Navbar item with label Donate"
+  },
+  "item.label.GitHub": {
+    "message": "GitHub",
+    "description": "Navbar item with label GitHub"
+  },
+  "item.label.Twitter": {
+    "message": "Twitter",
+    "description": "Navbar item with label Twitter"
+  },
+  "item.label.Mastodon": {
+    "message": "Mastodon",
+    "description": "Navbar item with label Mastodon"
+  },
+  "item.label.Discord": {
+    "message": "Discord",
+    "description": "Navbar item with label Discord"
+  }
+}

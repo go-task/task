@@ -1,0 +1,10 @@
+{
+  "version.label": {
+    "message": "Next",
+    "description": "The label for version current"
+  },
+  "sidebar.tutorialSidebar.link.Chinese | 中国人": {
+    "message": "Chinese | 中国人",
+    "description": "The label for link Chinese | 中国人 in sidebar tutorialSidebar, linking to https://task-zh.readthedocs.io/zh_CN/latest/"
+  }
+}
