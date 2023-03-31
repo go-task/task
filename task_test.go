@@ -397,7 +397,7 @@ func TestGenerates(t *testing.T) {
 		fileWithSpaces = "my text file.txt"
 	)
 
-	var srcFile = filepathext.SmartJoin(dir, srcTask)
+	srcFile := filepathext.SmartJoin(dir, srcTask)
 
 	for _, task := range []string{srcTask, relTask, absTask, fileWithSpaces} {
 		path := filepathext.SmartJoin(dir, task)
@@ -416,8 +416,8 @@ func TestGenerates(t *testing.T) {
 	assert.NoError(t, e.Setup())
 
 	for _, theTask := range []string{relTask, absTask, fileWithSpaces} {
-		var destFile = filepathext.SmartJoin(dir, theTask)
-		var upToDate = fmt.Sprintf("task: Task \"%s\" is up to date\n", srcTask) +
+		destFile := filepathext.SmartJoin(dir, theTask)
+		upToDate := fmt.Sprintf("task: Task \"%s\" is up to date\n", srcTask) +
 			fmt.Sprintf("task: Task \"%s\" is up to date\n", theTask)
 
 		// Run task for the first time.
@@ -704,7 +704,7 @@ func TestStatusVariables(t *testing.T) {
 
 func TestInit(t *testing.T) {
 	const dir = "testdata/init"
-	var file = filepathext.SmartJoin(dir, "Taskfile.yml")
+	file := filepathext.SmartJoin(dir, "Taskfile.yml")
 
 	_ = os.Remove(file)
 	if _, err := os.Stat(file); err == nil {
@@ -964,7 +964,8 @@ func TestIncludesOptional(t *testing.T) {
 		TrimSpace: true,
 		Files: map[string]string{
 			"called_dep.txt": "called_dep",
-		}}
+		},
+	}
 	tt.Run(t)
 }
 
@@ -1327,7 +1328,6 @@ func TestDisplaysErrorOnUnsupportedVersion(t *testing.T) {
 	err := e.Setup()
 	assert.Error(t, err)
 	assert.Equal(t, "task: Taskfile versions prior to v2 are not supported anymore", err.Error())
-
 }
 
 func TestShortTaskNotation(t *testing.T) {
@@ -1576,6 +1576,7 @@ Bye!
 	t.Log(buff.String())
 	assert.Equal(t, strings.TrimSpace(buff.String()), expectedOutputOrder)
 }
+
 func TestOutputGroupErrorOnlySwallowsOutputOnSuccess(t *testing.T) {
 	const dir = "testdata/output_group_error_only"
 	var buff bytes.Buffer

@@ -181,7 +181,7 @@ func main() {
 		OutputStyle: output,
 	}
 
-	var listOptions = task.NewListOptions(list, listAll, listJson)
+	listOptions := task.NewListOptions(list, listAll, listJson)
 	if err := listOptions.Validate(); err != nil {
 		log.Fatal(err)
 	}

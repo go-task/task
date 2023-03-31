@@ -17,7 +17,7 @@ import (
 func TestInterleaved(t *testing.T) {
 	var b bytes.Buffer
 	var o output.Output = output.Interleaved{}
-	var w, _, _ = o.WrapWriter(&b, io.Discard, "", nil)
+	w, _, _ := o.WrapWriter(&b, io.Discard, "", nil)
 
 	fmt.Fprintln(w, "foo\nbar")
 	assert.Equal(t, "foo\nbar\n", b.String())
@@ -28,7 +28,7 @@ func TestInterleaved(t *testing.T) {
 func TestGroup(t *testing.T) {
 	var b bytes.Buffer
 	var o output.Output = output.Group{}
-	var stdOut, stdErr, cleanup = o.WrapWriter(&b, io.Discard, "", nil)
+	stdOut, stdErr, cleanup := o.WrapWriter(&b, io.Discard, "", nil)
 
 	fmt.Fprintln(stdOut, "out\nout")
 	assert.Equal(t, "", b.String())
@@ -59,7 +59,7 @@ func TestGroupWithBeginEnd(t *testing.T) {
 	}
 	t.Run("simple", func(t *testing.T) {
 		var b bytes.Buffer
-		var w, _, cleanup = o.WrapWriter(&b, io.Discard, "", &tmpl)
+		w, _, cleanup := o.WrapWriter(&b, io.Discard, "", &tmpl)
 
 		fmt.Fprintln(w, "foo\nbar")
 		assert.Equal(t, "", b.String())
@@ -70,7 +70,7 @@ func TestGroupWithBeginEnd(t *testing.T) {
 	})
 	t.Run("no output", func(t *testing.T) {
 		var b bytes.Buffer
-		var _, _, cleanup = o.WrapWriter(&b, io.Discard, "", &tmpl)
+		_, _, cleanup := o.WrapWriter(&b, io.Discard, "", &tmpl)
 		assert.NoError(t, cleanup(nil))
 		assert.Equal(t, "", b.String())
 	})
@@ -81,7 +81,7 @@ func TestGroupErrorOnlySwallowsOutputOnNoError(t *testing.T) {
 	var o output.Output = output.Group{
 		ErrorOnly: true,
 	}
-	var stdOut, stdErr, cleanup = o.WrapWriter(&b, io.Discard, "", nil)
+	stdOut, stdErr, cleanup := o.WrapWriter(&b, io.Discard, "", nil)
 
 	_, _ = fmt.Fprintln(stdOut, "std-out")
 	_, _ = fmt.Fprintln(stdErr, "std-err")
@@ -89,12 +89,13 @@ func TestGroupErrorOnlySwallowsOutputOnNoError(t *testing.T) {
 	assert.NoError(t, cleanup(nil))
 	assert.Empty(t, b.String())
 }
+
 func TestGroupErrorOnlyShowsOutputOnError(t *testing.T) {
 	var b bytes.Buffer
 	var o output.Output = output.Group{
 		ErrorOnly: true,
 	}
-	var stdOut, stdErr, cleanup = o.WrapWriter(&b, io.Discard, "", nil)
+	stdOut, stdErr, cleanup := o.WrapWriter(&b, io.Discard, "", nil)
 
 	_, _ = fmt.Fprintln(stdOut, "std-out")
 	_, _ = fmt.Fprintln(stdErr, "std-err")
@@ -106,7 +107,7 @@ func TestGroupErrorOnlyShowsOutputOnError(t *testing.T) {
 func TestPrefixed(t *testing.T) {
 	var b bytes.Buffer
 	var o output.Output = output.Prefixed{}
-	var w, _, cleanup = o.WrapWriter(&b, io.Discard, "prefix", nil)
+	w, _, cleanup := o.WrapWriter(&b, io.Discard, "prefix", nil)
 
 	t.Run("simple use cases", func(t *testing.T) {
 		b.Reset()

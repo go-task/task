@@ -5,10 +5,19 @@
 - Add `.hg` (Mercurial) to the list of ignored directories when using
   `--watch` (#1098 from @misery).
 - More improvements to the release tool (#1096 by @pd93)
+- Enforce [gofumpt](https://github.com/mvdan/gofumpt) linter (#1099 by @pd93)
 
 ## v3.23.0 - 2023-03-26
 
-Task now has an [official extension for Visual Studio Code](https://marketplace.visualstudio.com/items?itemName=task.vscode-task) contributed by @pd93! :tada: The extension is maintained in a [new repository](https://github.com/go-task/vscode-task) under the `go-task` organization. We're looking to gather feedback from the community so please give it a go and let us know what you think via a [discussion](https://github.com/go-task/vscode-task/discussions), [issue](https://github.com/go-task/vscode-task/issues) or on our [Discord](https://discord.gg/6TY36E39UK)!
+Task now has an [official extension for Visual Studio
+Code](https://marketplace.visualstudio.com/items?itemName=task.vscode-task)
+contributed by @pd93! :tada: The extension is maintained in a [new
+repository](https://github.com/go-task/vscode-task) under the `go-task`
+organization. We're looking to gather feedback from the community so please give
+it a go and let us know what you think via a
+[discussion](https://github.com/go-task/vscode-task/discussions),
+[issue](https://github.com/go-task/vscode-task/issues) or on our
+[Discord](https://discord.gg/6TY36E39UK)!
 
 > **NOTE:**
 > The extension _requires_ v3.23.0 to be installed in order to work.

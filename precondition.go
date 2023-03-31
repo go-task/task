@@ -10,10 +10,8 @@ import (
 	"github.com/go-task/task/v3/taskfile"
 )
 
-var (
-	// ErrPreconditionFailed is returned when a precondition fails
-	ErrPreconditionFailed = errors.New("task: precondition not met")
-)
+// ErrPreconditionFailed is returned when a precondition fails
+var ErrPreconditionFailed = errors.New("task: precondition not met")
 
 func (e *Executor) areTaskPreconditionsMet(ctx context.Context, t *taskfile.Task) (bool, error) {
 	for _, p := range t.Preconditions {
@@ -22,7 +20,6 @@ func (e *Executor) areTaskPreconditionsMet(ctx context.Context, t *taskfile.Task
 			Dir:     t.Dir,
 			Env:     env.Get(t),
 		})
-
 		if err != nil {
 			e.Logger.Errf(logger.Magenta, "task: %s", p.Msg)
 			return false, ErrPreconditionFailed

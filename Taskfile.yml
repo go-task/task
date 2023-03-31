@@ -62,6 +62,14 @@ tasks:
     cmds:
       - golangci-lint run
 
+  lint:fix:
+    desc: Runs golangci-lint and fixes any issues
+    sources:
+      - './**/*.go'
+      - .golangci.yml
+    cmds:
+      - golangci-lint run --fix
+
   sleepit:build:
     desc: Builds the sleepit test helper
     sources:

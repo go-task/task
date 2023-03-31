@@ -28,10 +28,8 @@ type RunCommandOptions struct {
 	Stderr    io.Writer
 }
 
-var (
-	// ErrNilOptions is returned when a nil options is given
-	ErrNilOptions = errors.New("execext: nil options given")
-)
+// ErrNilOptions is returned when a nil options is given
+var ErrNilOptions = errors.New("execext: nil options given")
 
 // RunCommand runs a shell command
 func RunCommand(ctx context.Context, opts *RunCommandOptions) error {

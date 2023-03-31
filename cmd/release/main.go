@@ -104,7 +104,7 @@ func changelog(version *semver.Version) error {
 	changelog = changelogReleaseRegex.ReplaceAllString(changelog, fmt.Sprintf("## v%s - %s", version, date))
 
 	// Write the changelog to the source file
-	if err := os.WriteFile(changelogSource, []byte(changelog), 0644); err != nil {
+	if err := os.WriteFile(changelogSource, []byte(changelog), 0o644); err != nil {
 		return err
 	}
 
@@ -116,7 +116,7 @@ func changelog(version *semver.Version) error {
 	changelog = changelogIssueRegex.ReplaceAllString(changelog, "[#$1](https://github.com/go-task/task/issues/$1)")
 
 	// Write the changelog to the target file
-	return os.WriteFile(changelogTarget, []byte(changelog), 0644)
+	return os.WriteFile(changelogTarget, []byte(changelog), 0o644)
 }
 
 func setJSONVersion(fileName string, version *semver.Version) error {
@@ -130,5 +130,5 @@ func setJSONVersion(fileName string, version *semver.Version) error {
 	new := versionRegex.ReplaceAllString(string(b), fmt.Sprintf(`  "version": "%s",`, version.String()))
 
 	// Write the JSON file
-	return os.WriteFile(fileName, []byte(new), 0644)
+	return os.WriteFile(fileName, []byte(new), 0o644)
 }

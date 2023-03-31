@@ -25,14 +25,16 @@ func TestPreconditionParse(t *testing.T) {
 			&taskfile.Precondition{},
 			&taskfile.Precondition{Sh: "[ 1 = 0 ]", Msg: "[ 1 = 0 ] failed"},
 		},
-		{`
+		{
+			`
 sh: "[ 1 = 2 ]"
 msg: "1 is not 2"
 `,
 			&taskfile.Precondition{},
 			&taskfile.Precondition{Sh: "[ 1 = 2 ]", Msg: "1 is not 2"},
 		},
-		{`
+		{
+			`
 sh: "[ 1 = 2 ]"
 msg: "1 is not 2"
 `,

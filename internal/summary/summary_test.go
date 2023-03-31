@@ -147,7 +147,6 @@ func TestPrintDescriptionAsFallback(t *testing.T) {
 	summary.PrintTask(&l, taskWithoutSummaryOrDescription)
 
 	assert.Contains(t, buffer.String(), "\n(task does not have description or summary)\n")
-
 }
 
 func TestPrintAllWithSpaces(t *testing.T) {
@@ -169,5 +168,4 @@ func TestPrintAllWithSpaces(t *testing.T) {
 	assert.True(t, strings.HasPrefix(buffer.String(), "task: t1"))
 	assert.Contains(t, buffer.String(), "\n(task does not have description or summary)\n\n\ntask: t2")
 	assert.Contains(t, buffer.String(), "\n(task does not have description or summary)\n\n\ntask: t3")
-
 }

@@ -203,7 +203,6 @@ func TestArgsV2(t *testing.T) {
 			if test.ExpectedGlobals.Len() > 0 || globals.Len() > 0 {
 				assert.Equal(t, test.ExpectedGlobals, globals)
 			}
-
 		})
 	}
 }

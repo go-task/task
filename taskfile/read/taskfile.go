@@ -263,8 +263,8 @@ func checkCircularIncludes(node *ReaderNode) error {
 	if node.Parent == nil {
 		return errors.New("task: failed to check for include cycle: node.Parent was nil")
 	}
-	var curNode = node
-	var basePath = filepathext.SmartJoin(node.Dir, node.Entrypoint)
+	curNode := node
+	basePath := filepathext.SmartJoin(node.Dir, node.Entrypoint)
 	for curNode.Parent != nil {
 		curNode = curNode.Parent
 		curPath := filepathext.SmartJoin(curNode.Dir, curNode.Entrypoint)
