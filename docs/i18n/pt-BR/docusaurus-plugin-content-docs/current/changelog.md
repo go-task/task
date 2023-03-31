@@ -3,13 +3,13 @@ slug: /changelog/
 sidebar_position: 7
 ---
 
-# 更新日志
+# Changelog
 
 ## v3.23.0 - 2023-03-26
 
 Task now has an [official extension for Visual Studio Code](https://marketplace.visualstudio.com/items?itemName=task.vscode-task) contributed by [@pd93](https://github.com/pd93)! :tada: The extension is maintained in a [new repository](https://github.com/go-task/vscode-task) under the `go-task` organization. We're looking to gather feedback from the community so please give it a go and let us know what you think via a [discussion](https://github.com/go-task/vscode-task/discussions), [issue](https://github.com/go-task/vscode-task/issues) or on our [Discord](https://discord.gg/6TY36E39UK)!
 
-> **注意：** 扩展 _需要安装_ v3.23.0 才能正常工作。
+> **NOTE:** The extension _requires_ v3.23.0 to be installed in order to work.
 
 - The website was integrated with [Crowdin](https://crowdin.com/project/taskfile) to allow the community to contribute with translations! [Chinese](https://taskfile.dev/zh-Hans/) is the first language available ([#1057](https://github.com/go-task/task/issues/1057), [#1058](https://github.com/go-task/task/issues/1058) by [@misitebao](https://github.com/misitebao)).
 - Added task location data to the `--json` flag output ([#1056](https://github.com/go-task/task/issues/1056) by [@pd93](https://github.com/pd93))

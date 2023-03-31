@@ -35,14 +35,14 @@ tasks:
 - [易于安装](installation.md)：只需要下载一个二进制文件，添加到 `$PATH` 即可！ 或者，您也可以根据需要使用 [Homebrew](https://brew.sh/)、[Snapcraft](https://snapcraft.io/) 或 [Scoop](https://scoop.sh/) 进行安装。
 - 可以在 CI 中使用：只要添加 [这个命令](installation.md#安装脚本) 到 CI 安装脚本中，然后就可以把 Task 当做 CI 的一个功能来使用了。
 - 真正的跨平台：虽然大多数构建工具只能在 Linux 或 macOS 上运行良好，但由于 [这个用于 Go 的 shell 解释器](https://github.com/mvdan/sh)，Task 也支持 Windows。
-- 非常适合代码生成：如果给定的一组文件自上次运行以来没有更改（基于其时间戳或内容），您可以轻松地阻止任务运行。
+- 非常适合代码生成：如果给定的一组文件自上次运行以来没有更改（基于其时间戳或内容），您可以轻松地 [阻止任务运行](/usage#减少不必要的工作)。
 
 ## 金牌赞助商
 
 <div class="gold-sponsors">
 
-| [Appwrite][appwrite] |
-| - |
-| [![Appwrite](/img/appwrite.svg)][appwrite] |
+| [Appwrite](https://appwrite.io/?utm_source=taskfile.dev&utm_medium=website&utm_campaign=task_oss_fund)                       |
+| ---------------------------------------------------------------------------------------------------------------------------- |
+| [![Appwrite](/img/appwrite.svg)](https://appwrite.io/?utm_source=taskfile.dev&utm_medium=website&utm_campaign=task_oss_fund) |
 
 </div>
