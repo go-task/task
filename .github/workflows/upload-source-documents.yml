@@ -1,8 +1,7 @@
 name: Upload Source Documents
 
 on:
-  push:
-    branches: [master]
+  workflow_dispatch:
 
 jobs:
   push_files_to_crowdin:
@@ -12,15 +11,6 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Verify changed files
-        uses: tj-actions/changed-files@v35
-        id: changed-files
-        with:
-          files: |
-            docs/docs
-            docs/blog
-            docs/i18n/en
-
       - name: Install Task
         uses: arduino/setup-task@v1
         with:
@@ -28,7 +18,6 @@ jobs:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload source documents
-        if: steps.changed-files-specific.outputs.any_changed == 'true'
         run: task crowdin:push
         env:
           CROWDIN_PERSONAL_TOKEN: ${{ secrets.CROWDIN_PERSONAL_TOKEN }}
