@@ -30,9 +30,12 @@ invest your time into a PR.
 ## 2. Making changes
 
 - **Code style** - Try to maintain the existing code style where possible and
-  ensure that code is formatted by `gofmt`. We use `golangci-lint` in our CI to
-  enforce a consistent style and best-practice. There's a `lint` command in
-  the Taskfile to run this locally.
+  ensure that code is formatted by
+  [`gofumpt`](https://github.com/mvdan/gofumpt). We use
+  [`golangci-lint`](https://golangci-lint.run/) in our CI to enforce a
+  consistent style and best-practice. You can use the `task lint` command to run
+  this locally and the `task lint:fix` command to automatically fix any issues
+  that are found.
 - **Documentation** - Ensure that you add/update any relevant documentation. See
   the [updating documentation](#updating-documentation) section below.
 - **Tests** - Ensure that you add/update any relevant tests and that all tests
@@ -60,9 +63,9 @@ documentation and any examples are up-to-date. Ensure that any examples follow
 the [Taskfile Styleguide](./styleguide.md).
 
 If you added a new field, command or flag, ensure that you add it to the [API
-Reference](./api_reference.md). New fields also need to be added to the
-[JSON Schema]. The descriptions for fields in the API
-reference and the schema should match.
+Reference](./api_reference.md). New fields also need to be added to the [JSON
+Schema]. The descriptions for fields in the API reference and the schema should
+match.
 
 ### Writing tests
 
@@ -74,13 +77,13 @@ required to run the tests are stored.
 When making a changes, consider whether new tests are required. These tests
 should ensure that the functionality you are adding will continue to work in the
 future. Existing tests may also need updating if you have changed Task's
-behaviour.
+behavior.
 
 ## 3. Committing your code
 
-Try to write meaningful commit messages and avoid having too many commits on
-the PR. Most PRs should likely have a single commit (although for bigger PRs it
-may be reasonable to split it in a few). Git squash and rebase is your friend!
+Try to write meaningful commit messages and avoid having too many commits on the
+PR. Most PRs should likely have a single commit (although for bigger PRs it may
+be reasonable to split it in a few). Git squash and rebase is your friend!
 
 ## 4. Submitting a PR
 
@@ -117,8 +120,10 @@ If you have questions, feel free to ask them in the `#help` forum channel on our
 [Node.js]: https://nodejs.org/en/
 [Yarn]: https://yarnpkg.com/
 [Docusaurus]: https://docusaurus.io
-[JSON Schema]: https://github.com/go-task/task/blob/master/docs/static/schema.json
+[JSON Schema]:
+    https://github.com/go-task/task/blob/master/docs/static/schema.json
 [open issues]: https://github.com/go-task/task/issues
-[good first issue]: https://github.com/go-task/task/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22
+[good first issue]:
+    https://github.com/go-task/task/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22
 [Discord server]: https://discord.gg/6TY36E39UK
 [Discussion]: https://github.com/go-task/task/discussions

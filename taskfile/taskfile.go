@@ -34,7 +34,6 @@ type Taskfile struct {
 
 func (tf *Taskfile) UnmarshalYAML(node *yaml.Node) error {
 	switch node.Kind {
-
 	case yaml.MappingNode:
 		var taskfile struct {
 			Version    *semver.Version

@@ -19,10 +19,8 @@ Commands
   handle      Handle signals: on reception of SIGINT perform cleanup before exiting
   version     Show the sleepit version`
 
-var (
-	// Filled by the linker.
-	fullVersion = "unknown" // example: v0.0.9-8-g941583d027-dirty
-)
+// Filled by the linker.
+var fullVersion = "unknown" // example: v0.0.9-8-g941583d027-dirty
 
 func main() {
 	os.Exit(run(os.Args[1:]))

@@ -7,10 +7,8 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-var (
-	// ErrCantUnmarshalPrecondition is returned for invalid precond YAML.
-	ErrCantUnmarshalPrecondition = errors.New("task: Can't unmarshal precondition value")
-)
+// ErrCantUnmarshalPrecondition is returned for invalid precond YAML.
+var ErrCantUnmarshalPrecondition = errors.New("task: Can't unmarshal precondition value")
 
 // Precondition represents a precondition necessary for a task to run
 type Precondition struct {

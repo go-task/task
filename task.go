@@ -404,7 +404,6 @@ func (e *Executor) GetTaskList(filters ...FilterFunc) ([]*taskfile.Task, error) 
 	for key := range e.Taskfile.Tasks {
 		task := e.Taskfile.Tasks[key]
 		g.Go(func() error {
-
 			// Check if we should filter the task
 			for _, filter := range filters {
 				if filter(task) {

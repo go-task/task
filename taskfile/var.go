@@ -15,7 +15,6 @@ type Vars struct {
 
 func (vs *Vars) UnmarshalYAML(node *yaml.Node) error {
 	switch node.Kind {
-
 	case yaml.MappingNode:
 		// NOTE(@andreynering): on this style of custom unmarshalling,
 		// even number contains the keys, while odd numbers contains
