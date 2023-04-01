@@ -6,8 +6,6 @@ import (
 	"io"
 	"os"
 	"runtime"
-	"sort"
-	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -19,6 +17,7 @@ import (
 	"github.com/go-task/task/v3/internal/logger"
 	"github.com/go-task/task/v3/internal/output"
 	"github.com/go-task/task/v3/internal/slicesext"
+	"github.com/go-task/task/v3/internal/sort"
 	"github.com/go-task/task/v3/internal/summary"
 	"github.com/go-task/task/v3/internal/templater"
 	"github.com/go-task/task/v3/taskfile"
@@ -60,6 +59,7 @@ type Executor struct {
 	Compiler    compiler.Compiler
 	Output      output.Output
 	OutputStyle taskfile.Output
+	TaskSorter  sort.TaskSorter
 
 	taskvars   *taskfile.Vars
 	fuzzyModel *fuzzy.Model
@@ -431,20 +431,11 @@ func (e *Executor) GetTaskList(filters ...FilterFunc) ([]*taskfile.Task, error) 
 		return nil, err
 	}
 
-	// Sort the tasks.
-	// Tasks that are not namespaced should be listed before tasks that are.
-	// We detect this by searching for a ':' in the task name.
-	sort.Slice(tasks, func(i, j int) bool {
-		iContainsColon := strings.Contains(tasks[i].Task, ":")
-		jContainsColon := strings.Contains(tasks[j].Task, ":")
-		if iContainsColon == jContainsColon {
-			return tasks[i].Task < tasks[j].Task
-		}
-		if !iContainsColon && jContainsColon {
-			return true
-		}
-		return false
-	})
+	// Sort the tasks
+	if e.TaskSorter == nil {
+		e.TaskSorter = &sort.AlphaNumericWithRootTasksFirst{}
+	}
+	e.TaskSorter.Sort(tasks)
 
 	return tasks, nil
 }

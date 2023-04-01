@@ -15,6 +15,7 @@ import (
 	"github.com/go-task/task/v3"
 	"github.com/go-task/task/v3/args"
 	"github.com/go-task/task/v3/internal/logger"
+	"github.com/go-task/task/v3/internal/sort"
 	ver "github.com/go-task/task/v3/internal/version"
 	"github.com/go-task/task/v3/taskfile"
 )
@@ -57,6 +58,7 @@ func main() {
 		list        bool
 		listAll     bool
 		listJson    bool
+		taskSort    string
 		status      bool
 		force       bool
 		watch       bool
@@ -81,6 +83,7 @@ func main() {
 	pflag.BoolVarP(&list, "list", "l", false, "Lists tasks with description of current Taskfile.")
 	pflag.BoolVarP(&listAll, "list-all", "a", false, "Lists tasks with or without a description.")
 	pflag.BoolVarP(&listJson, "json", "j", false, "Formats task list as JSON.")
+	pflag.StringVar(&taskSort, "sort", "", "Changes the order of the tasks when listed.")
 	pflag.BoolVar(&status, "status", false, "Exits with non-zero exit code if any of the given tasks is not up-to-date.")
 	pflag.BoolVarP(&force, "force", "f", false, "Forces execution even when the task is up-to-date.")
 	pflag.BoolVarP(&watch, "watch", "w", false, "Enables watch of the given task.")
@@ -160,6 +163,14 @@ func main() {
 		}
 	}
 
+	var taskSorter sort.TaskSorter
+	switch taskSort {
+	case "none":
+		taskSorter = &sort.Noop{}
+	case "alphanumeric":
+		taskSorter = &sort.AlphaNumeric{}
+	}
+
 	e := task.Executor{
 		Force:       force,
 		Watch:       watch,
@@ -179,6 +190,7 @@ func main() {
 		Stderr: os.Stderr,
 
 		OutputStyle: output,
+		TaskSorter:  taskSorter,
 	}
 
 	listOptions := task.NewListOptions(list, listAll, listJson)

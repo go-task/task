@@ -7,7 +7,6 @@ import (
 	"io"
 	"log"
 	"os"
-	"sort"
 	"strings"
 	"text/tabwriter"
 
@@ -16,6 +15,7 @@ import (
 	"github.com/go-task/task/v3/internal/editors"
 	"github.com/go-task/task/v3/internal/fingerprint"
 	"github.com/go-task/task/v3/internal/logger"
+	"github.com/go-task/task/v3/internal/sort"
 	"github.com/go-task/task/v3/taskfile"
 )
 
@@ -129,19 +129,27 @@ func (e *Executor) ListTaskNames(allTasks bool) {
 	if e.Stdout != nil {
 		w = e.Stdout
 	}
-	// create a string slice from all map values (*taskfile.Task)
-	s := make([]string, 0, e.Taskfile.Tasks.Len())
-	for _, t := range e.Taskfile.Tasks.Values() {
-		if (allTasks || t.Desc != "") && !t.Internal {
-			s = append(s, strings.TrimRight(t.Task, ":"))
-			for _, alias := range t.Aliases {
-				s = append(s, strings.TrimRight(alias, ":"))
+
+	// Get the list of tasks and sort them
+	tasks := e.Taskfile.Tasks.Values()
+
+	// Sort the tasks
+	if e.TaskSorter == nil {
+		e.TaskSorter = &sort.AlphaNumericWithRootTasksFirst{}
+	}
+	e.TaskSorter.Sort(tasks)
+
+	// Create a list of task names
+	taskNames := make([]string, 0, e.Taskfile.Tasks.Len())
+	for _, task := range tasks {
+		if (allTasks || task.Desc != "") && !task.Internal {
+			taskNames = append(taskNames, strings.TrimRight(task.Task, ":"))
+			for _, alias := range task.Aliases {
+				taskNames = append(taskNames, strings.TrimRight(alias, ":"))
 			}
 		}
 	}
-	// sort and print all task names
-	sort.Strings(s)
-	for _, t := range s {
+	for _, t := range taskNames {
 		fmt.Fprintln(w, t)
 	}
 }
