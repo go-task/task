@@ -128,12 +128,14 @@ func Taskfile(readerNode *ReaderNode) (*taskfile.Taskfile, string, error) {
 				return err
 			}
 
+			// nolint: errcheck
 			includedTaskfile.Vars.Range(func(k string, v taskfile.Var) error {
 				o := v
 				o.Dir = dir
 				includedTaskfile.Vars.Set(k, o)
 				return nil
 			})
+			// nolint: errcheck
 			includedTaskfile.Env.Range(func(k string, v taskfile.Var) error {
 				o := v
 				o.Dir = dir

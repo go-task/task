@@ -21,6 +21,7 @@ func (t *Tasks) UnmarshalYAML(node *yaml.Node) error {
 			return err
 		}
 
+		// nolint: errcheck
 		tasks.Range(func(name string, task *Task) error {
 			// Set the task's name
 			if task == nil {

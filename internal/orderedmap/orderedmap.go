@@ -104,6 +104,7 @@ func (om *OrderedMap[K, V]) Range(fn func(key K, value V) error) error {
 
 // Merge merges the given Vars into the caller one
 func (om *OrderedMap[K, V]) Merge(other OrderedMap[K, V]) {
+	// nolint: errcheck
 	other.Range(func(key K, value V) error {
 		om.Set(key, value)
 		return nil
