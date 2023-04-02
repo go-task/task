@@ -30,10 +30,7 @@ func Merge(t1, t2 *Taskfile, includedTaskfile *IncludedTaskfile, namespaces ...s
 	t1.Vars.Merge(t2.Vars)
 	t1.Env.Merge(t2.Env)
 
-	if t1.Tasks == nil {
-		t1.Tasks = make(Tasks)
-	}
-	for k, v := range t2.Tasks {
+	t2.Tasks.Range(func(k string, v *Task) error {
 		// We do a deep copy of the task struct here to ensure that no data can
 		// be changed elsewhere once the taskfile is merged.
 		task := v.DeepCopy()
@@ -67,8 +64,10 @@ func Merge(t1, t2 *Taskfile, includedTaskfile *IncludedTaskfile, namespaces ...s
 		// Add the task to the merged taskfile
 		taskNameWithNamespace := taskNameWithNamespace(k, namespaces...)
 		task.Task = taskNameWithNamespace
-		t1.Tasks[taskNameWithNamespace] = task
-	}
+		t1.Tasks.Set(taskNameWithNamespace, task)
+
+		return nil
+	})
 
 	return nil
 }

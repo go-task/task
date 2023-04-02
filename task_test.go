@@ -791,7 +791,7 @@ func TestTaskVersion(t *testing.T) {
 			}
 			assert.NoError(t, e.Setup())
 			assert.Equal(t, test.Version, e.Taskfile.Version)
-			assert.Equal(t, 2, len(e.Taskfile.Tasks))
+			assert.Equal(t, 2, e.Taskfile.Tasks.Len())
 		})
 	}
 }

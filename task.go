@@ -357,14 +357,14 @@ func (e *Executor) startExecution(ctx context.Context, t *taskfile.Task, execute
 // If multiple tasks contain the same alias or no matches are found an error is returned.
 func (e *Executor) GetTask(call taskfile.Call) (*taskfile.Task, error) {
 	// Search for a matching task
-	matchingTask, ok := e.Taskfile.Tasks[call.Task]
-	if ok {
+	matchingTask := e.Taskfile.Tasks.Get(call.Task)
+	if matchingTask != nil {
 		return matchingTask, nil
 	}
 
 	// If didn't find one, search for a task with a matching alias
 	var aliasedTasks []string
-	for _, task := range e.Taskfile.Tasks {
+	for _, task := range e.Taskfile.Tasks.Values() {
 		if slices.Contains(task.Aliases, call.Task) {
 			aliasedTasks = append(aliasedTasks, task.Task)
 			matchingTask = task
@@ -395,28 +395,33 @@ func (e *Executor) GetTask(call taskfile.Call) (*taskfile.Task, error) {
 type FilterFunc func(task *taskfile.Task) bool
 
 func (e *Executor) GetTaskList(filters ...FilterFunc) ([]*taskfile.Task, error) {
-	tasks := make([]*taskfile.Task, 0, len(e.Taskfile.Tasks))
+	tasks := make([]*taskfile.Task, 0, e.Taskfile.Tasks.Len())
 
 	// Create an error group to wait for each task to be compiled
 	var g errgroup.Group
 
-	// Fetch and compile the list of tasks
-	for key := range e.Taskfile.Tasks {
-		task := e.Taskfile.Tasks[key]
-		g.Go(func() error {
-			// Check if we should filter the task
-			for _, filter := range filters {
-				if filter(task) {
-					return nil
-				}
+	// Filter tasks based on the given filter functions
+	for _, task := range e.Taskfile.Tasks.Values() {
+		var shouldFilter bool
+		for _, filter := range filters {
+			if filter(task) {
+				shouldFilter = true
 			}
+		}
+		if !shouldFilter {
+			tasks = append(tasks, task)
+		}
+	}
 
-			// Compile the task
+	// Compile the list of tasks
+	for i := range tasks {
+		task := tasks[i]
+		g.Go(func() error {
 			compiledTask, err := e.FastCompiledTask(taskfile.Call{Task: task.Task})
 			if err == nil {
 				task = compiledTask
 			}
-			tasks = append(tasks, task)
+			task = compiledTask
 			return nil
 		})
 	}

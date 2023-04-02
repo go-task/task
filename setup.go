@@ -94,10 +94,10 @@ func (e *Executor) setupFuzzyModel() {
 	model.SetThreshold(1) // because we want to build grammar based on every task name
 
 	var words []string
-	for taskName := range e.Taskfile.Tasks {
+	for _, taskName := range e.Taskfile.Tasks.Keys() {
 		words = append(words, taskName)
 
-		for _, task := range e.Taskfile.Tasks {
+		for _, task := range e.Taskfile.Tasks.Values() {
 			words = append(words, task.Aliases...)
 		}
 	}
@@ -232,9 +232,9 @@ func (e *Executor) setupDefaults() {
 func (e *Executor) setupConcurrencyState() {
 	e.executionHashes = make(map[string]context.Context)
 
-	e.taskCallCount = make(map[string]*int32, len(e.Taskfile.Tasks))
-	e.mkdirMutexMap = make(map[string]*sync.Mutex, len(e.Taskfile.Tasks))
-	for k := range e.Taskfile.Tasks {
+	e.taskCallCount = make(map[string]*int32, e.Taskfile.Tasks.Len())
+	e.mkdirMutexMap = make(map[string]*sync.Mutex, e.Taskfile.Tasks.Len())
+	for _, k := range e.Taskfile.Tasks.Keys() {
 		e.taskCallCount[k] = new(int32)
 		e.mkdirMutexMap[k] = &sync.Mutex{}
 	}
@@ -281,7 +281,7 @@ func (e *Executor) doVersionChecks() error {
 	if v.Compare(semver.MustParse("2.1")) <= 0 {
 		err := errors.New(`task: Taskfile option "ignore_error" is only available starting on Taskfile version v2.1`)
 
-		for _, task := range e.Taskfile.Tasks {
+		for _, task := range e.Taskfile.Tasks.Values() {
 			if task.IgnoreError {
 				return err
 			}
@@ -294,7 +294,7 @@ func (e *Executor) doVersionChecks() error {
 	}
 
 	if v.LessThan(semver.MustParse("2.6")) {
-		for _, task := range e.Taskfile.Tasks {
+		for _, task := range e.Taskfile.Tasks.Values() {
 			if len(task.Preconditions) > 0 {
 				return errors.New(`task: Task option "preconditions" is only available starting on Taskfile version v2.6`)
 			}
@@ -318,7 +318,7 @@ func (e *Executor) doVersionChecks() error {
 			return errors.New(`task: Setting the "run" type is only available starting on Taskfile version v3.7`)
 		}
 
-		for _, task := range e.Taskfile.Tasks {
+		for _, task := range e.Taskfile.Tasks.Values() {
 			if task.Run != "" {
 				return errors.New(`task: Setting the "run" type is only available starting on Taskfile version v3.7`)
 			}

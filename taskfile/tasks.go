@@ -4,40 +4,48 @@ import (
 	"fmt"
 
 	"gopkg.in/yaml.v3"
+
+	"github.com/go-task/task/v3/internal/orderedmap"
 )
 
 // Tasks represents a group of tasks
-type Tasks map[string]*Task
+type Tasks struct {
+	orderedmap.OrderedMap[string, *Task]
+}
 
 func (t *Tasks) UnmarshalYAML(node *yaml.Node) error {
 	switch node.Kind {
 	case yaml.MappingNode:
-		tasks := map[string]*Task{}
-		if err := node.Decode(tasks); err != nil {
+		tasks := orderedmap.New[string, *Task]()
+		if err := node.Decode(&tasks); err != nil {
 			return err
 		}
 
-		for name := range tasks {
+		tasks.Range(func(name string, task *Task) error {
 			// Set the task's name
-			if tasks[name] == nil {
-				tasks[name] = &Task{
+			if task == nil {
+				task = &Task{
 					Task: name,
 				}
 			}
-			tasks[name].Task = name
+			task.Task = name
 
 			// Set the task's location
 			for _, keys := range node.Content {
 				if keys.Value == name {
-					tasks[name].Location = &Location{
+					task.Location = &Location{
 						Line:   keys.Line,
 						Column: keys.Column,
 					}
 				}
 			}
-		}
+			tasks.Set(name, task)
+			return nil
+		})
 
-		*t = Tasks(tasks)
+		*t = Tasks{
+			OrderedMap: tasks,
+		}
 		return nil
 	}
 
