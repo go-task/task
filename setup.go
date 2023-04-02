@@ -202,7 +202,7 @@ func (e *Executor) readDotEnvFiles() error {
 	}
 
 	err = env.Range(func(key string, value taskfile.Var) error {
-		if _, ok := e.Taskfile.Env.Mapping[key]; !ok {
+		if ok := e.Taskfile.Env.Exists(key); !ok {
 			e.Taskfile.Env.Set(key, value)
 		}
 		return nil

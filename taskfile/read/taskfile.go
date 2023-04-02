@@ -128,16 +128,18 @@ func Taskfile(readerNode *ReaderNode) (*taskfile.Taskfile, string, error) {
 				return err
 			}
 
-			for k, v := range includedTaskfile.Vars.Mapping {
+			includedTaskfile.Vars.Range(func(k string, v taskfile.Var) error {
 				o := v
 				o.Dir = dir
-				includedTaskfile.Vars.Mapping[k] = o
-			}
-			for k, v := range includedTaskfile.Env.Mapping {
+				includedTaskfile.Vars.Set(k, o)
+				return nil
+			})
+			includedTaskfile.Env.Range(func(k string, v taskfile.Var) error {
 				o := v
 				o.Dir = dir
-				includedTaskfile.Env.Mapping[k] = o
-			}
+				includedTaskfile.Env.Set(k, o)
+				return nil
+			})
 
 			for _, task := range includedTaskfile.Tasks.Values() {
 				task.Dir = filepathext.SmartJoin(dir, task.Dir)

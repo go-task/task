@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/go-task/task/v3/args"
+	"github.com/go-task/task/v3/internal/orderedmap"
 	"github.com/go-task/task/v3/taskfile"
 )
 
@@ -32,12 +33,11 @@ func TestArgsV3(t *testing.T) {
 				{Task: "task-c"},
 			},
 			ExpectedGlobals: &taskfile.Vars{
-				Keys: []string{"FOO", "BAR", "BAZ"},
-				Mapping: map[string]taskfile.Var{
+				OrderedMap: orderedmap.FromMap(map[string]taskfile.Var{
 					"FOO": {Static: "bar"},
 					"BAR": {Static: "baz"},
 					"BAZ": {Static: "foo"},
-				},
+				}),
 			},
 		},
 		{
@@ -46,10 +46,9 @@ func TestArgsV3(t *testing.T) {
 				{Task: "task-a"},
 			},
 			ExpectedGlobals: &taskfile.Vars{
-				Keys: []string{"CONTENT"},
-				Mapping: map[string]taskfile.Var{
+				OrderedMap: orderedmap.FromMap(map[string]taskfile.Var{
 					"CONTENT": {Static: "with some spaces"},
-				},
+				}),
 			},
 		},
 		{
@@ -59,10 +58,9 @@ func TestArgsV3(t *testing.T) {
 				{Task: "task-b"},
 			},
 			ExpectedGlobals: &taskfile.Vars{
-				Keys: []string{"FOO"},
-				Mapping: map[string]taskfile.Var{
+				OrderedMap: orderedmap.FromMap(map[string]taskfile.Var{
 					"FOO": {Static: "bar"},
-				},
+				}),
 			},
 		},
 		{
@@ -83,11 +81,10 @@ func TestArgsV3(t *testing.T) {
 				{Task: "default"},
 			},
 			ExpectedGlobals: &taskfile.Vars{
-				Keys: []string{"FOO", "BAR"},
-				Mapping: map[string]taskfile.Var{
+				OrderedMap: orderedmap.FromMap(map[string]taskfile.Var{
 					"FOO": {Static: "bar"},
 					"BAR": {Static: "baz"},
-				},
+				}),
 			},
 		},
 	}
@@ -123,21 +120,19 @@ func TestArgsV2(t *testing.T) {
 				{
 					Task: "task-a",
 					Vars: &taskfile.Vars{
-						Keys: []string{"FOO"},
-						Mapping: map[string]taskfile.Var{
+						OrderedMap: orderedmap.FromMap(map[string]taskfile.Var{
 							"FOO": {Static: "bar"},
-						},
+						}),
 					},
 				},
 				{Task: "task-b"},
 				{
 					Task: "task-c",
 					Vars: &taskfile.Vars{
-						Keys: []string{"BAR", "BAZ"},
-						Mapping: map[string]taskfile.Var{
+						OrderedMap: orderedmap.FromMap(map[string]taskfile.Var{
 							"BAR": {Static: "baz"},
 							"BAZ": {Static: "foo"},
-						},
+						}),
 					},
 				},
 			},
@@ -148,10 +143,9 @@ func TestArgsV2(t *testing.T) {
 				{
 					Task: "task-a",
 					Vars: &taskfile.Vars{
-						Keys: []string{"CONTENT"},
-						Mapping: map[string]taskfile.Var{
+						OrderedMap: orderedmap.FromMap(map[string]taskfile.Var{
 							"CONTENT": {Static: "with some spaces"},
-						},
+						}),
 					},
 				},
 			},
@@ -163,10 +157,9 @@ func TestArgsV2(t *testing.T) {
 				{Task: "task-b"},
 			},
 			ExpectedGlobals: &taskfile.Vars{
-				Keys: []string{"FOO"},
-				Mapping: map[string]taskfile.Var{
+				OrderedMap: orderedmap.FromMap(map[string]taskfile.Var{
 					"FOO": {Static: "bar"},
-				},
+				}),
 			},
 		},
 		{
@@ -187,11 +180,10 @@ func TestArgsV2(t *testing.T) {
 				{Task: "default"},
 			},
 			ExpectedGlobals: &taskfile.Vars{
-				Keys: []string{"FOO", "BAR"},
-				Mapping: map[string]taskfile.Var{
+				OrderedMap: orderedmap.FromMap(map[string]taskfile.Var{
 					"FOO": {Static: "bar"},
 					"BAR": {Static: "baz"},
-				},
+				}),
 			},
 		},
 	}
