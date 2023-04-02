@@ -4,6 +4,8 @@ import (
 	"fmt"
 
 	"gopkg.in/yaml.v3"
+
+	"github.com/go-task/task/v3/internal/deepcopy"
 )
 
 // Task represents a task
@@ -136,22 +138,22 @@ func (t *Task) DeepCopy() *Task {
 	}
 	c := &Task{
 		Task:                 t.Task,
-		Cmds:                 deepCopySlice(t.Cmds),
-		Deps:                 deepCopySlice(t.Deps),
+		Cmds:                 deepcopy.Slice(t.Cmds),
+		Deps:                 deepcopy.Slice(t.Deps),
 		Label:                t.Label,
 		Desc:                 t.Desc,
 		Summary:              t.Summary,
-		Aliases:              deepCopySlice(t.Aliases),
-		Sources:              deepCopySlice(t.Sources),
-		Generates:            deepCopySlice(t.Generates),
-		Status:               deepCopySlice(t.Status),
-		Preconditions:        deepCopySlice(t.Preconditions),
+		Aliases:              deepcopy.Slice(t.Aliases),
+		Sources:              deepcopy.Slice(t.Sources),
+		Generates:            deepcopy.Slice(t.Generates),
+		Status:               deepcopy.Slice(t.Status),
+		Preconditions:        deepcopy.Slice(t.Preconditions),
 		Dir:                  t.Dir,
-		Set:                  deepCopySlice(t.Set),
-		Shopt:                deepCopySlice(t.Shopt),
+		Set:                  deepcopy.Slice(t.Set),
+		Shopt:                deepcopy.Slice(t.Shopt),
 		Vars:                 t.Vars.DeepCopy(),
 		Env:                  t.Env.DeepCopy(),
-		Dotenv:               deepCopySlice(t.Dotenv),
+		Dotenv:               deepcopy.Slice(t.Dotenv),
 		Silent:               t.Silent,
 		Interactive:          t.Interactive,
 		Internal:             t.Internal,
@@ -162,7 +164,7 @@ func (t *Task) DeepCopy() *Task {
 		IncludeVars:          t.IncludeVars.DeepCopy(),
 		IncludedTaskfileVars: t.IncludedTaskfileVars.DeepCopy(),
 		IncludedTaskfile:     t.IncludedTaskfile.DeepCopy(),
-		Platforms:            deepCopySlice(t.Platforms),
+		Platforms:            deepcopy.Slice(t.Platforms),
 		Location:             t.Location.DeepCopy(),
 	}
 	return c

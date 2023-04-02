@@ -5,6 +5,8 @@ import (
 
 	"golang.org/x/exp/slices"
 	"gopkg.in/yaml.v3"
+
+	"github.com/go-task/task/v3/internal/deepcopy"
 )
 
 // Vars is a string[string] variables map.
@@ -42,8 +44,8 @@ func (vs *Vars) DeepCopy() *Vars {
 		return nil
 	}
 	return &Vars{
-		Keys:    deepCopySlice(vs.Keys),
-		Mapping: deepCopyMap(vs.Mapping),
+		Keys:    deepcopy.Slice(vs.Keys),
+		Mapping: deepcopy.Map(vs.Mapping),
 	}
 }
 

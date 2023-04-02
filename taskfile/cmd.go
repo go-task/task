@@ -4,6 +4,8 @@ import (
 	"fmt"
 
 	"gopkg.in/yaml.v3"
+
+	"github.com/go-task/task/v3/internal/deepcopy"
 )
 
 // Cmd is a task command
@@ -27,12 +29,12 @@ func (c *Cmd) DeepCopy() *Cmd {
 		Cmd:         c.Cmd,
 		Silent:      c.Silent,
 		Task:        c.Task,
-		Set:         deepCopySlice(c.Set),
-		Shopt:       deepCopySlice(c.Shopt),
+		Set:         deepcopy.Slice(c.Set),
+		Shopt:       deepcopy.Slice(c.Shopt),
 		Vars:        c.Vars.DeepCopy(),
 		IgnoreError: c.IgnoreError,
 		Defer:       c.Defer,
-		Platforms:   deepCopySlice(c.Platforms),
+		Platforms:   deepcopy.Slice(c.Platforms),
 	}
 }
 
