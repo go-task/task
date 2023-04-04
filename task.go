@@ -141,7 +141,7 @@ func (e *Executor) RunTask(ctx context.Context, call taskfile.Call) error {
 			}
 
 			if upToDate && preCondMet {
-				if !e.Silent {
+				if e.Verbose || (!t.Silent && !e.Taskfile.Silent && !e.Silent) {
 					e.Logger.Errf(logger.Magenta, `task: Task "%s" is up to date`, t.Name())
 				}
 				return nil
