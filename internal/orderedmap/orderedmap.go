@@ -27,11 +27,27 @@ func New[K constraints.Ordered, V any]() OrderedMap[K, V] {
 	}
 }
 
-// FromMap will create a new OrderedMap from the given map.
+// FromMap will create a new OrderedMap from the given map. Since Golang maps
+// are unordered, the order of the created OrderedMap will be random.
 func FromMap[K constraints.Ordered, V any](m map[K]V) OrderedMap[K, V] {
 	om := New[K, V]()
 	om.m = m
 	om.s = maps.Keys(m)
+	return om
+}
+
+func FromMapWithOrder[K constraints.Ordered, V any](m map[K]V, order []K) OrderedMap[K, V] {
+	om := New[K, V]()
+	if len(m) != len(order) {
+		panic("length of map and order must be equal")
+	}
+	om.m = m
+	om.s = order
+	for key := range om.m {
+		if !slices.Contains(om.s, key) {
+			panic("order keys must match map keys")
+		}
+	}
 	return om
 }
 
@@ -124,7 +140,6 @@ func (om *OrderedMap[K, V]) UnmarshalYAML(node *yaml.Node) error {
 	// Odd numbers contain the values
 	case yaml.MappingNode:
 		for i := 0; i < len(node.Content); i += 2 {
-
 			// Decode the key
 			keyNode := node.Content[i]
 			var k K
