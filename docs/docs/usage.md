@@ -707,7 +707,7 @@ When the `timestamp` method is used, the last time of the running the task is co
 
 :::
 
-### Using programmatic checks to indicate a task is up to date.
+### Using programmatic checks to indicate a task is up to date
 
 Alternatively, you can inform a sequence of tests as `status`. If no error
 is returned (exit status 0), the task is considered up-to-date:
