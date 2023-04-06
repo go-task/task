@@ -89,7 +89,7 @@ tasks:
 
 ## Version 2.1
 
-Version 2.1 includes a global `output` option, to allow having more control over how commands output are printed to the console (see [documentation](usage.md#output-syntax) for more info):
+Version 2.1 includes a global `output` option, to allow having more control over how commands output are printed to the console (see [documentation][output] for more info):
 
 ```yaml
 version: '2'
@@ -103,7 +103,7 @@ tasks:
   prefix: server
 ```
 
-From this version it's also possible to ignore errors of a command or task (check documentation [here](usage.md#ignore-errors)):
+From this version it's also possible to ignore errors of a command or task (check documentation [here][ignore_errors]):
 
 ```yaml
 version: '2'
@@ -149,7 +149,7 @@ tasks:
       - aws s3 cp .env s3://myenvironment
 ```
 
-Please check the [documentation](usage.md#including-other-taskfiles)
+Please check the [documentation][includes]
 
 ## Version 3
 
@@ -202,3 +202,7 @@ tasks:
   - Global + CLI variables
   - Call variables
   - Task variables
+
+[output]: usage.md#output-syntax
+[ignore_errors]: usage.md#ignore-errors
+[includes]: usage.md#including-other-taskfiles

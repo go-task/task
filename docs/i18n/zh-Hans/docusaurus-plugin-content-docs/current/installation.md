@@ -35,7 +35,7 @@ sudo snap install task --classic
 
 ### Chocolatey
 
-如果 Windows 上安装了 [Chocolatey](https://chocolatey.org/)，再安装 Task 只要这样：
+如果 Windows 上安装了 [Chocolatey][choco]，再安装 Task 只要这样：
 
 ```bash
 choco install go-task
@@ -45,7 +45,7 @@ choco install go-task
 
 ### Scoop
 
-如果 Windows 上安装了 [Scoop](https://scoop.sh/)，再安装 Task 只要这样：
+如果 Windows 上安装了 [Scoop][scoop]，再安装 Task 只要这样：
 
 ```cmd
 scoop install task
@@ -97,6 +97,14 @@ nix-env -iA nixpkgs.go-task
 npm install -g @go-task/cli
 ```
 
+### Winget
+
+如果您正在使用 Windows 并且安装了 [winget](https://github.com/microsoft/winget-cli) 软件包管理工具，您可以从 [winget-pkgs](https://github.com/microsoft/winget-pkgs) 安装 Task。
+
+```bash
+winget install Task.Task
+```
+
 ## 获取二进制文件
 
 ### 二进制文件
@@ -125,11 +133,9 @@ sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d -b ~/.local/bin
 
 :::caution
 
-
 在 macOS 和 Windows 上，`~/.local/bin` 和 `~/bin` 默认情况下不会添加到 `$PATH`。
 
 :::
-
 
 ### GitHub Actions
 
@@ -138,6 +144,9 @@ sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d -b ~/.local/bin
 ```yaml
 - name: Install Task
   uses: arduino/setup-task@v1
+  with:
+    version: 3.x
+    repo-token: ${{ secrets.GITHUB_TOKEN }}
 ```
 
 这种安装方式是社区维护的。
@@ -162,11 +171,9 @@ env GOBIN=/bin go install github.com/go-task/task/v3/cmd/task@latest
 
 :::tip
 
-
-对于 CI 环境，我们建议改用 [安装脚本](#get-the-binary)，它更快更稳定，因为它只会下载最新发布的二进制文件。
+对于 CI 环境，我们建议改用 [安装脚本](#安装脚本)，它更快更稳定，因为它只会下载最新发布的二进制文件。
 
 :::
-
 
 ## 自动完成
 
@@ -229,3 +236,6 @@ notepad $profile
 ```shell
 Invoke-Expression -Command path/to/task.ps1
 ```
+
+[choco]: https://chocolatey.org/
+[scoop]: https://scoop.sh/

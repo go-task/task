@@ -4,11 +4,11 @@
     "description": "The title in the navbar"
   },
   "item.label.Installation": {
-    "message": "Installation",
+    "message": "Instalação",
     "description": "Navbar item with label Installation"
   },
   "item.label.Usage": {
-    "message": "Usage",
+    "message": "Guia de Uso",
     "description": "Navbar item with label Usage"
   },
   "item.label.API": {
@@ -16,7 +16,7 @@
     "description": "Navbar item with label API"
   },
   "item.label.Donate": {
-    "message": "Donate",
+    "message": "Doe",
     "description": "Navbar item with label Donate"
   },
   "item.label.GitHub": {
