@@ -1,7 +1,7 @@
 ---
 slug: /
 sidebar_position: 1
-title: Home
+title: Página Inicial
 ---
 
 # Task
@@ -10,11 +10,11 @@ title: Home
   <img id="logo" src="img/logo.svg" height="250px" width="250px" />
 </div>
 
-Task is a task runner / build tool that aims to be simpler and easier to use than, for example, [GNU Make](https://www.gnu.org/software/make/).
+Task é uma ferramenta de automatização de tarefas que foi criada para ser mais simples de usar do que outras similares, como por exemplo o [GNU Make][make].
 
-Since it's written in [Go](https://go.dev/), Task is just a single binary and has no other dependencies, which means you don't need to mess with any complicated install setups just to use a build tool.
+Por ser escrito em [Go][go], o Task é simplesmente um binário e não possui nenhuma outra dependência, o que significa que você não precisa lidar com um processo de instalação complicado apenas para usar uma ferramenta de automação.
 
-Once [installed](installation.md), you just need to describe your build tasks using a simple [YAML](http://yaml.org/) schema in a file called `Taskfile.yml`:
+Uma vez [instalado](installation.md), você só precisa só precisa escrever suas tarefas usando um esquema [YAML][yaml] simples num arquivo chamado `Taskfile.yml`:
 
 ```yaml title="Taskfile.yml"
 version: '3'
@@ -26,18 +26,18 @@ tasks:
     silent: true
 ```
 
-And call it by running `task hello` from your terminal.
+E invocá-lo ao rodar `task hello` do seu terminal.
 
-The above example is just the start, you can take a look at the [usage](/usage) guide to check the full schema documentation and Task features.
+O exemplo acima é apenas o começo. Você pode dar uma olhada no [guia de uso](/usage) para conferir a documentação completa do esquema e as funcionalidades do Task.
 
-## Features
+## Funcionalidades
 
-- [Easy installation](installation.md): just download a single binary, add to `$PATH` and you're done! Or you can also install using [Homebrew](https://brew.sh/), [Snapcraft](https://snapcraft.io/), or [Scoop](https://scoop.sh/) if you want.
-- Available on CIs: by adding [this simple command](installation.md#install-script) to install on your CI script and you're ready to use Task as part of your CI pipeline;
-- Truly cross-platform: while most build tools only work well on Linux or macOS, Task also supports Windows thanks to [this shell interpreter for Go](https://github.com/mvdan/sh).
-- Great for code generation: you can easily [prevent a task from running](/usage#prevent-unnecessary-work) if a given set of files haven't changed since last run (based either on its timestamp or content).
+- [Instalação fácil](installation.md): apenas baixe um único binário, adicione-o a `$PATH` e pronto! Ou você também pode instalá-lo usando [Homebrew][homebrew], [Snapcraft][snapcraft] ou [Scoop][scoop] se você quiser.
+- Disponível em CIs: adicionando [este script simples](installation.md#install-script) para instalá-lo no seu CI você estará pronto para usar o Task como parte do seu pipeline de CI;
+- Verdadeiramente multiplataforma: enquanto a maioria das ferramentas de compilação só funcionam bem no Linux ou macOS, o Task também suporta Windows graças [a este interpretador de shell para Go][sh].
+- Ótimo para a geração de código: você pode facilmente [impedir que uma tarefa execute](/usage#prevent-unnecessary-work) se um determinado conjunto de arquivos não tiver mudado desde a última execução (baseado na data de modificação ou conteúdo dos arquivos).
 
-## Gold Sponsors
+## Patrocinadores de Ouro
 
 <div class="gold-sponsors">
 
@@ -46,3 +46,10 @@ The above example is just the start, you can take a look at the [usage](/usage) 
 | [![Appwrite](/img/appwrite.svg)](https://appwrite.io/?utm_source=taskfile.dev&utm_medium=website&utm_campaign=task_oss_fund) |
 
 </div>
+[make]: https://www.gnu.org/software/make/
+[go]: https://go.dev/
+[yaml]: http://yaml.org/
+[homebrew]: https://brew.sh/
+[snapcraft]: https://snapcraft.io/
+[scoop]: https://scoop.sh/
+[sh]: https://github.com/mvdan/sh

@@ -11,7 +11,7 @@ Task offers many installation methods. Check out the available methods below.
 
 ### Homebrew
 
-If you're on macOS or Linux and have [Homebrew](https://brew.sh/) installed, getting Task is as simple as running:
+If you're on macOS or Linux and have [Homebrew][homebrew] installed, getting Task is as simple as running:
 
 ```bash
 brew install go-task/tap/go-task
@@ -27,7 +27,7 @@ brew install go-task
 
 ### Snap
 
-Task is available in [Snapcraft](https://snapcraft.io/task), but keep in mind that your Linux distribution should allow classic confinement for Snaps to Task work right:
+Task is available in [Snapcraft][snapcraft], but keep in mind that your Linux distribution should allow classic confinement for Snaps to Task work right:
 
 ```bash
 sudo snap install task --classic
@@ -35,7 +35,7 @@ sudo snap install task --classic
 
 ### Chocolatey
 
-If you're on Windows and have [Chocolatey](https://chocolatey.org/) installed, getting Task is as simple as running:
+If you're on Windows and have [Chocolatey][choco] installed, getting Task is as simple as running:
 
 ```bash
 choco install go-task
@@ -45,7 +45,7 @@ This installation method is community owned.
 
 ### Scoop
 
-If you're on Windows and have [Scoop](https://scoop.sh/) installed, getting Task is as simple as running:
+If you're on Windows and have [Scoop][scoop] installed, getting Task is as simple as running:
 
 ```cmd
 scoop install task
@@ -97,11 +97,19 @@ You can also use Node and npm to install Task by installing [this package](https
 npm install -g @go-task/cli
 ```
 
+### Winget
+
+If you are using Windows and installed the [winget](https://github.com/microsoft/winget-cli) package management tool, you can install Task from [winget-pkgs](https://github.com/microsoft/winget-pkgs).
+
+```bash
+winget install Task.Task
+```
+
 ## Get The Binary
 
 ### Binary
 
-You can download the binary from the [releases page on GitHub](https://github.com/go-task/task/releases) and add to your `$PATH`.
+You can download the binary from the [releases page on GitHub][releases] and add to your `$PATH`.
 
 DEB and RPM packages are also available.
 
@@ -109,7 +117,7 @@ The `task_checksums.txt` file contains the SHA-256 checksum for each file.
 
 ### Install Script
 
-We also have an [install script](https://github.com/go-task/task/blob/master/install-task.sh) which is very useful in scenarios like CI. Many thanks to [GoDownloader](https://github.com/goreleaser/godownloader) for enabling the easy generation of this script.
+We also have an [install script][installscript] which is very useful in scenarios like CI. Many thanks to [GoDownloader][godownloader] for enabling the easy generation of this script.
 
 By default, it installs on the `./bin` directory relative to the working directory:
 
@@ -125,11 +133,9 @@ sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d -b ~/.local/bin
 
 :::caution
 
-
 On macOS and Windows, `~/.local/bin` and `~/bin` are not added to `$PATH` by default.
 
 :::
-
 
 ### GitHub Actions
 
@@ -138,6 +144,9 @@ If you want to install Task in GitHub Actions you can try using [this action](ht
 ```yaml
 - name: Install Task
   uses: arduino/setup-task@v1
+  with:
+    version: 3.x
+    repo-token: ${{ secrets.GITHUB_TOKEN }}
 ```
 
 This installation method is community owned.
@@ -146,7 +155,7 @@ This installation method is community owned.
 
 ### Go Modules
 
-Ensure that you have a supported version of [Go](https://golang.org/) properly installed and setup. You can find the minimum required version of Go in the [go.mod](https://github.com/go-task/task/blob/master/go.mod#L3) file.
+Ensure that you have a supported version of [Go][go] properly installed and setup. You can find the minimum required version of Go in the [go.mod](https://github.com/go-task/task/blob/master/go.mod#L3) file.
 
 You can then install the latest release globally by running:
 
@@ -162,11 +171,9 @@ env GOBIN=/bin go install github.com/go-task/task/v3/cmd/task@latest
 
 :::tip
 
-
-For CI environments we recommend using the [install script](#get-the-binary) instead, which is faster and more stable, since it'll just download the latest released binary.
+For CI environments we recommend using the [install script](#install-script) instead, which is faster and more stable, since it'll just download the latest released binary.
 
 :::
-
 
 ## Setup completions
 
@@ -229,3 +236,12 @@ Add the line and save the file:
 ```shell
 Invoke-Expression -Command path/to/task.ps1
 ```
+
+[go]: https://golang.org/
+[snapcraft]: https://snapcraft.io/task
+[homebrew]: https://brew.sh/
+[installscript]: https://github.com/go-task/task/blob/master/install-task.sh
+[releases]: https://github.com/go-task/task/releases
+[godownloader]: https://github.com/goreleaser/godownloader
+[choco]: https://chocolatey.org/
+[scoop]: https://scoop.sh/

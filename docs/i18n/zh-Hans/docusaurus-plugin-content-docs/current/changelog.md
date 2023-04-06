@@ -7,7 +7,7 @@ sidebar_position: 7
 
 ## v3.23.0 - 2023-03-26
 
-Task now has an [official extension for Visual Studio Code](https://marketplace.visualstudio.com/items?itemName=task.vscode-task) contributed by [@pd93](https://github.com/pd93)! :tada: The extension is maintained in a [new repository](https://github.com/go-task/vscode-task) under the `go-task` organization. We're looking to gather feedback from the community so please give it a go and let us know what you think via a [discussion](https://github.com/go-task/vscode-task/discussions), [issue](https://github.com/go-task/vscode-task/issues) or on our [Discord](https://discord.gg/6TY36E39UK)!
+Task 现在已经有了一个由 [@pd93](https://github.com/pd93) 贡献的 [Visual Studio Code 官方扩展程序](https://marketplace.visualstudio.com/items?itemName=task.vscode-task)！ :tada:该扩展现在在 `go-task` 组织的 [新存储库](https://github.com/go-task/vscode-task) 中进行维护。 我们希望从社区收集反馈，请尝试并通过[discussion](https://github.com/go-task/vscode-task/discussions)、 [issue](https://github.com/go-task/vscode-task/issues) 或 [Discord](https://discord.gg/6TY36E39UK) 告诉我们您的想法！
 
 > **注意：** 扩展 _需要安装_ v3.23.0 才能正常工作。
 
