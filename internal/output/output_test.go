@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/go-task/task/v3/internal/orderedmap"
 	"github.com/go-task/task/v3/internal/output"
 	"github.com/go-task/task/v3/internal/templater"
 	"github.com/go-task/task/v3/taskfile"
@@ -47,10 +48,9 @@ func TestGroup(t *testing.T) {
 func TestGroupWithBeginEnd(t *testing.T) {
 	tmpl := templater.Templater{
 		Vars: &taskfile.Vars{
-			Keys: []string{"VAR1"},
-			Mapping: map[string]taskfile.Var{
+			OrderedMap: orderedmap.FromMap(map[string]taskfile.Var{
 				"VAR1": {Static: "example-value"},
-			},
+			}),
 		},
 	}
 

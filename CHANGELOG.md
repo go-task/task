@@ -4,10 +4,12 @@
 
 - Fix bug where "up-to-date" logs were not being omitted for silent tasks
   (#546, #1107 by @danquah).
-- Add `.hg` (Mercurial) to the list of ignored directories when using
-  `--watch` (#1098 by @misery).
+- Add `.hg` (Mercurial) to the list of ignored directories when using `--watch`
+  (#1098 by @misery).
 - More improvements to the release tool (#1096 by @pd93)
 - Enforce [gofumpt](https://github.com/mvdan/gofumpt) linter (#1099 by @pd93)
+- Add `--sort` flag for use with `--list` and `--list-all` (#946, #1105 by
+  @pd93)
 
 ## v3.23.0 - 2023-03-26
 

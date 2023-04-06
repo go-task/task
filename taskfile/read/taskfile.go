@@ -128,18 +128,22 @@ func Taskfile(readerNode *ReaderNode) (*taskfile.Taskfile, string, error) {
 				return err
 			}
 
-			for k, v := range includedTaskfile.Vars.Mapping {
+			// nolint: errcheck
+			includedTaskfile.Vars.Range(func(k string, v taskfile.Var) error {
 				o := v
 				o.Dir = dir
-				includedTaskfile.Vars.Mapping[k] = o
-			}
-			for k, v := range includedTaskfile.Env.Mapping {
+				includedTaskfile.Vars.Set(k, o)
+				return nil
+			})
+			// nolint: errcheck
+			includedTaskfile.Env.Range(func(k string, v taskfile.Var) error {
 				o := v
 				o.Dir = dir
-				includedTaskfile.Env.Mapping[k] = o
-			}
+				includedTaskfile.Env.Set(k, o)
+				return nil
+			})
 
-			for _, task := range includedTaskfile.Tasks {
+			for _, task := range includedTaskfile.Tasks.Values() {
 				task.Dir = filepathext.SmartJoin(dir, task.Dir)
 				task.IncludeVars = includedTask.Vars
 				task.IncludedTaskfileVars = includedTaskfile.Vars
@@ -151,10 +155,12 @@ func Taskfile(readerNode *ReaderNode) (*taskfile.Taskfile, string, error) {
 			return err
 		}
 
-		if includedTaskfile.Tasks["default"] != nil && t.Tasks[namespace] == nil {
+		if includedTaskfile.Tasks.Get("default") != nil && t.Tasks.Get(namespace) == nil {
 			defaultTaskName := fmt.Sprintf("%s:default", namespace)
-			t.Tasks[defaultTaskName].Aliases = append(t.Tasks[defaultTaskName].Aliases, namespace)
-			t.Tasks[defaultTaskName].Aliases = append(t.Tasks[defaultTaskName].Aliases, includedTask.Aliases...)
+			task := t.Tasks.Get(defaultTaskName)
+			task.Aliases = append(task.Aliases, namespace)
+			task.Aliases = append(task.Aliases, includedTask.Aliases...)
+			t.Tasks.Set(defaultTaskName, task)
 		}
 
 		return nil
@@ -179,7 +185,7 @@ func Taskfile(readerNode *ReaderNode) (*taskfile.Taskfile, string, error) {
 	// Set the location of the Taskfile
 	t.Location = path
 
-	for _, task := range t.Tasks {
+	for _, task := range t.Tasks.Values() {
 		// If the task is not defined, create a new one
 		if task == nil {
 			task = &taskfile.Task{}

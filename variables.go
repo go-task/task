@@ -91,7 +91,7 @@ func (e *Executor) compiledTask(call taskfile.Call, evaluateShVars bool) (*taskf
 				return nil, err
 			}
 			for key, value := range envs {
-				if _, ok := dotenvEnvs.Mapping[key]; !ok {
+				if ok := dotenvEnvs.Exists(key); !ok {
 					dotenvEnvs.Set(key, taskfile.Var{Static: value})
 				}
 			}
