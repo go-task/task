@@ -297,6 +297,7 @@ func TestStatus(t *testing.T) {
 	files := []string{
 		"foo.txt",
 		"bar.txt",
+		"baz.txt",
 	}
 
 	for _, f := range files {
@@ -316,8 +317,16 @@ func TestStatus(t *testing.T) {
 		Silent:  true,
 	}
 	assert.NoError(t, e.Setup())
+	// gen-foo creates foo.txt, and will always fail it's status check.
 	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "gen-foo"}))
+	// gen-foo creates bar.txt, and will pass its status-check the 3. time it
+	// is run. It creates bar.txt, but also lists it as its source. So, the checksum
+	// for the file won't match before after the second run as we the file
+	// only exists after the first run.
 	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "gen-bar"}))
+	// gen-silent-baz is marked as being silent, and should only produce output
+	// if e.Verbose is set to true.
+	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "gen-silent-baz"}))
 
 	for _, f := range files {
 		if _, err := os.Stat(filepathext.SmartJoin(dir, f)); err != nil {
@@ -325,6 +334,24 @@ func TestStatus(t *testing.T) {
 		}
 	}
 
+	// Run gen-bar a second time to produce a checksum file that matches bar.txt
+	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "gen-bar"}))
+
+	// Run gen-bar a third time, to make sure we've triggered the status check.
+	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "gen-bar"}))
+
+	// We're silent, so no output should have been produced.
+	assert.Empty(t, buff.String())
+
+	// Now, let's remove source file, and run the task again to to prepare
+	// for the next test.
+	err := os.Remove(filepathext.SmartJoin(dir, "bar.txt"))
+	assert.NoError(t, err)
+	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "gen-bar"}))
+	buff.Reset()
+
+	// Global silence switched of, so we should see output unless the task itself
+	// is silent.
 	e.Silent = false
 
 	// all: not up-to-date
@@ -343,6 +370,20 @@ func TestStatus(t *testing.T) {
 	// all: up-to-date
 	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "gen-bar"}))
 	assert.Equal(t, `task: Task "gen-bar" is up to date`, strings.TrimSpace(buff.String()))
+	buff.Reset()
+
+	// sources: not up-to-date, no output produced.
+	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "gen-silent-baz"}))
+	assert.Empty(t, buff.String())
+
+	// up-to-date, no output produced
+	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "gen-silent-baz"}))
+	assert.Empty(t, buff.String())
+
+	e.Verbose = true
+	// up-to-date, output produced due to Verbose mode.
+	assert.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "gen-silent-baz"}))
+	assert.Equal(t, `task: Task "gen-silent-baz" is up to date`, strings.TrimSpace(buff.String()))
 	buff.Reset()
 }
 

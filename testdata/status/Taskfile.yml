@@ -14,5 +14,12 @@ tasks:
       - touch bar.txt
     sources:
       - ./bar.txt
-    status: 
+    status:
       - test 1 = 1
+
+  gen-silent-baz:
+    silent: true
+    cmds:
+      - touch baz.txt
+    sources:
+      - ./baz.txt
