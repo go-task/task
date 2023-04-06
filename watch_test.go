@@ -36,11 +36,11 @@ Hello, World!
 		Watch:  true,
 	}
 
-	assert.NoError(t, e.Setup())
+	require.NoError(t, e.Setup())
 	buff.Reset()
 
 	err := os.MkdirAll(filepathext.SmartJoin(dir, "src"), 0755)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	err = os.WriteFile(filepathext.SmartJoin(dir, "src/a"), []byte("test"), 0644)
 	if err != nil {
@@ -74,7 +74,7 @@ Hello, World!
 	assert.Equal(t, expectedOutput, strings.TrimSpace(buff.String()))
 	buff.Reset()
 	err = os.RemoveAll(filepathext.SmartJoin(dir, ".task"))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	err = os.RemoveAll(filepathext.SmartJoin(dir, "src"))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 }

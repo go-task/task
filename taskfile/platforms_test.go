@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestPlatformParsing(t *testing.T) {
@@ -37,10 +38,10 @@ func TestPlatformParsing(t *testing.T) {
 			err := p.parsePlatform(test.Input)
 
 			if test.Error != "" {
-				assert.Error(t, err)
+				require.Error(t, err)
 				assert.Equal(t, test.Error, err.Error())
 			} else {
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.Equal(t, test.ExpectedOS, p.OS)
 				assert.Equal(t, test.ExpectedArch, p.Arch)
 			}
