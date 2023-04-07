@@ -7,10 +7,10 @@ sidebar_position: 3
 
 ## Getting started
 
-Create a file called `Taskfile.yml` in the root of your project.
-The `cmds` attribute should contain the commands of a task.
-The example below allows compiling a Go app and uses [esbuild](https://esbuild.github.io/) to concat
-and minify multiple CSS files into a single one.
+Create a file called `Taskfile.yml` in the root of your project. The `cmds`
+attribute should contain the commands of a task. The example below allows
+compiling a Go app and uses [esbuild](https://esbuild.github.io/) to concat and
+minify multiple CSS files into a single one.
 
 ```yaml
 version: '3'
@@ -31,10 +31,10 @@ Running the tasks is as simple as running:
 task assets build
 ```
 
-Task uses [mvdan.cc/sh](https://mvdan.cc/sh/), a native Go sh
-interpreter. So you can write sh/bash commands, and it will work even on
-Windows, where `sh` or `bash` are usually not available. Just remember any
-executable called must be available by the OS or in PATH.
+Task uses [mvdan.cc/sh](https://mvdan.cc/sh/), a native Go sh interpreter. So
+you can write sh/bash commands, and it will work even on Windows, where `sh` or
+`bash` are usually not available. Just remember any executable called must be
+available by the OS or in PATH.
 
 If you omit a task name, "default" will be assumed.
 
@@ -78,17 +78,16 @@ tasks:
 ```
 
 In this example, we can run `cd <service>` and `task up` and as long as the
-`<service>` directory contains a `docker-compose.yml`, the Docker composition will be
-brought up.
+`<service>` directory contains a `docker-compose.yml`, the Docker composition
+will be brought up.
 
 ### Running a global Taskfile
 
 If you call Task with the `--global` (alias `-g`) flag, it will look for your
-home directory instead of your working directory. In short, Task will look for
-a Taskfile on either `$HOME/Taskfile.yml` or `$HOME/Taskfile.yaml` paths.
+home directory instead of your working directory. In short, Task will look for a
+Taskfile on either `$HOME/Taskfile.yml` or `$HOME/Taskfile.yaml` paths.
 
-This is useful to have automation that you can run from anywhere in your
-system!
+This is useful to have automation that you can run from anywhere in your system!
 
 :::info
 
@@ -132,8 +131,8 @@ tasks:
       GREETING: Hey, there!
 ```
 
-Additionally, you can set global environment variables that will be available
-to all tasks:
+Additionally, you can set global environment variables that will be available to
+all tasks:
 
 ```yaml
 version: '3'
@@ -149,8 +148,8 @@ tasks:
 
 :::info
 
-`env` supports expansion and retrieving output from a shell command
-just like variables, as you can see in the [Variables](#variables) section.
+`env` supports expansion and retrieving output from a shell command just like
+variables, as you can see in the [Variables](#variables) section.
 
 :::
 
@@ -216,7 +215,8 @@ tasks:
 
 :::info
 
-Please note that you are not currently able to use the `dotenv` key inside included Taskfiles.
+Please note that you are not currently able to use the `dotenv` key inside
+included Taskfiles.
 
 :::
 
@@ -235,18 +235,19 @@ includes:
 
 The tasks described in the given Taskfiles will be available with the informed
 namespace. So, you'd call `task docs:serve` to run the `serve` task from
-`documentation/Taskfile.yml` or `task docker:build` to run the `build` task
-from the `DockerTasks.yml` file.
+`documentation/Taskfile.yml` or `task docker:build` to run the `build` task from
+the `DockerTasks.yml` file.
 
-Relative paths are resolved relative to the directory containing the including Taskfile.
+Relative paths are resolved relative to the directory containing the including
+Taskfile.
 
 ### OS-specific Taskfiles
 
-With `version: '2'`, task automatically includes any `Taskfile_{{OS}}.yml`
-if it exists (for example: `Taskfile_windows.yml`, `Taskfile_linux.yml` or
-`Taskfile_darwin.yml`). Since this behavior was a bit too implicit, it
-was removed on version 3, but you still can have a similar behavior by
-explicitly importing these files:
+With `version: '2'`, task automatically includes any `Taskfile_{{OS}}.yml` if it
+exists (for example: `Taskfile_windows.yml`, `Taskfile_linux.yml` or
+`Taskfile_darwin.yml`). Since this behavior was a bit too implicit, it was
+removed on version 3, but you still can have a similar behavior by explicitly
+importing these files:
 
 ```yaml
 version: '3'
@@ -257,9 +258,9 @@ includes:
 
 ### Directory of included Taskfile
 
-By default, included Taskfile's tasks are run in the current directory, even
-if the Taskfile is in another directory, but you can force its tasks to run
-in another directory by using this alternative syntax:
+By default, included Taskfile's tasks are run in the current directory, even if
+the Taskfile is in another directory, but you can force its tasks to run in
+another directory by using this alternative syntax:
 
 ```yaml
 version: '3'
@@ -293,15 +294,16 @@ includes:
 tasks:
   greet:
     cmds:
-      - echo "This command can still be successfully executed if ./tests/Taskfile.yml does not exist"
+      - echo "This command can still be successfully executed if
+        ./tests/Taskfile.yml does not exist"
 ```
 
 ### Internal includes
 
 Includes marked as internal will set all the tasks of the included file to be
-internal as well (see the [Internal tasks](#internal-tasks) section below).
-This is useful when including utility tasks that are not intended to be used
-directly by the user.
+internal as well (see the [Internal tasks](#internal-tasks) section below). This
+is useful when including utility tasks that are not intended to be used directly
+by the user.
 
 ```yaml
 version: '3'
@@ -314,8 +316,8 @@ includes:
 
 ### Vars of included Taskfiles
 
-You can also specify variables when including a Taskfile. This may be useful
-for having reusable Taskfile that can be tweaked or even included more than once:
+You can also specify variables when including a Taskfile. This may be useful for
+having reusable Taskfile that can be tweaked or even included more than once:
 
 ```yaml
 version: '3'
@@ -334,9 +336,9 @@ includes:
 
 ### Namespace aliases
 
-When including a Taskfile, you can give the namespace a list of `aliases`.
-This works in the same way as [task aliases](#task-aliases) and can be used
-together to create shorter and easier-to-type commands.
+When including a Taskfile, you can give the namespace a list of `aliases`. This
+works in the same way as [task aliases](#task-aliases) and can be used together
+to create shorter and easier-to-type commands.
 
 ```yaml
 version: '3'
@@ -349,9 +351,10 @@ includes:
 
 :::info
 
-Vars declared in the included Taskfile have preference over the
-variables in the including Taskfile! If you want a variable in an included Taskfile to be overridable,
-use the [default function](https://go-task.github.io/slim-sprig/defaults.html):
+Vars declared in the included Taskfile have preference over the variables in the
+including Taskfile! If you want a variable in an included Taskfile to be
+overridable, use the
+[default function](https://go-task.github.io/slim-sprig/defaults.html):
 `MY_VAR: '{{.MY_VAR | default "my-default-value"}}'`.
 
 :::
@@ -404,8 +407,8 @@ If the directory does not exist, `task` creates it.
 > another. If you want to force tasks to run serially, take a look at the
 > [Calling Another Task](#calling-another-task) section below.
 
-You may have tasks that depend on others. Just pointing them on `deps` will
-make them run automatically before running the parent task:
+You may have tasks that depend on others. Just pointing them on `deps` will make
+them run automatically before running the parent task:
 
 ```yaml
 version: '3'
@@ -447,13 +450,13 @@ performance.
 
 :::tip
 
-You can also make the tasks given by the command line run in parallel by
-using the `--parallel` flag (alias `-p`). Example: `task --parallel js css`.
+You can also make the tasks given by the command line run in parallel by using
+the `--parallel` flag (alias `-p`). Example: `task --parallel js css`.
 
 :::
 
-If you want to pass information to dependencies, you can do that the same
-manner as you would to [call another task](#calling-another-task):
+If you want to pass information to dependencies, you can do that the same manner
+as you would to [call another task](#calling-another-task):
 
 ```yaml
 version: '3'
@@ -462,9 +465,9 @@ tasks:
   default:
     deps:
       - task: echo_sth
-        vars: {TEXT: "before 1"}
+        vars: { TEXT: 'before 1' }
       - task: echo_sth
-        vars: {TEXT: "before 2"}
+        vars: { TEXT: 'before 2' }
     cmds:
       - echo "after"
 
@@ -475,16 +478,17 @@ tasks:
 
 ## Platform specific tasks and commands
 
-If you want to restrict the running of tasks to explicit platforms, this can be achieved
-using the `platforms:` key. Tasks can be restricted to a specific OS, architecture or a
-combination of both.
-On a mismatch, the task or command will be skipped, and no error will be thrown.
+If you want to restrict the running of tasks to explicit platforms, this can be
+achieved using the `platforms:` key. Tasks can be restricted to a specific OS,
+architecture or a combination of both. On a mismatch, the task or command will
+be skipped, and no error will be thrown.
 
 The values allowed as OS or Arch are valid `GOOS` and `GOARCH` values, as
 defined by the Go language
 [here](https://github.com/golang/go/blob/master/src/go/build/syslist.go).
 
-The `build-windows` task below will run only on Windows, and on any architecture:
+The `build-windows` task below will run only on Windows, and on any
+architecture:
 
 ```yaml
 version: '3'
@@ -548,8 +552,8 @@ tasks:
 ## Calling another task
 
 When a task has many dependencies, they are executed concurrently. This will
-often result in a faster build pipeline. However, in some situations, you may need
-to call other tasks serially. In this case, use the following syntax:
+often result in a faster build pipeline. However, in some situations, you may
+need to call other tasks serially. In this case, use the following syntax:
 
 ```yaml
 version: '3'
@@ -586,7 +590,7 @@ tasks:
   greet-pessimistically:
     cmds:
       - task: greet
-        vars: {RECIPIENT: "Cruel World"}
+        vars: { RECIPIENT: 'Cruel World' }
 ```
 
 The above syntax is also supported in `deps`.
@@ -632,13 +636,13 @@ tasks:
       - public/bundle.css
 ```
 
-`sources` and `generates` can be files or file patterns. When given,
-Task will compare the checksum of the source files to determine if it's
-necessary to run the task. If not, it will just print a message like
-`Task "js" is up to date`.
+`sources` and `generates` can be files or file patterns. When given, Task will
+compare the checksum of the source files to determine if it's necessary to run
+the task. If not, it will just print a message like `Task "js" is up to date`.
 
 If you prefer this check to be made by the modification timestamp of the files,
-instead of its checksum (content), just set the `method` property to `timestamp`.
+instead of its checksum (content), just set the `method` property to
+`timestamp`.
 
 ```yaml
 version: '3'
@@ -664,8 +668,8 @@ example.
 By default, task stores checksums on a local `.task` directory in the project's
 directory. Most of the time, you'll want to have this directory on `.gitignore`
 (or equivalent) so it isn't committed. (If you have a task for code generation
-that is committed it may make sense to commit the checksum of that task as
-well, though).
+that is committed it may make sense to commit the checksum of that task as well,
+though).
 
 If you want these files to be stored in another directory, you can set a
 `TASK_TEMP_DIR` environment variable in your machine. It can contain a relative
@@ -681,14 +685,13 @@ export TASK_TEMP_DIR='~/.task'
 
 :::info
 
-Each task has only one checksum stored for its `sources`. If you want
-to distinguish a task by any of its input variables, you can add those
-variables as part of the task's label, and it will be considered a different
-task.
+Each task has only one checksum stored for its `sources`. If you want to
+distinguish a task by any of its input variables, you can add those variables as
+part of the task's label, and it will be considered a different task.
 
-This is useful if you want to run a task once for each distinct set of
-inputs until the sources actually change. For example, if the sources depend
-on the value of a variable, or you if you want the task to rerun if some arguments
+This is useful if you want to run a task once for each distinct set of inputs
+until the sources actually change. For example, if the sources depend on the
+value of a variable, or you if you want the task to rerun if some arguments
 change even if the source has not.
 
 :::
@@ -701,16 +704,16 @@ The method `none` skips any validation and always run the task.
 
 :::info
 
-For the `checksum` (default) or `timestamp` method to work, it is only necessary to
-inform the source files.
-When the `timestamp` method is used, the last time of the running the task is considered as a generate.
+For the `checksum` (default) or `timestamp` method to work, it is only necessary
+to inform the source files. When the `timestamp` method is used, the last time
+of the running the task is considered as a generate.
 
 :::
 
 ### Using programmatic checks to indicate a task is up to date
 
-Alternatively, you can inform a sequence of tests as `status`. If no error
-is returned (exit status 0), the task is considered up-to-date:
+Alternatively, you can inform a sequence of tests as `status`. If no error is
+returned (exit status 0), the task is considered up-to-date:
 
 ```yaml
 version: '3'
@@ -728,20 +731,20 @@ tasks:
       - test -f directory/file2.txt
 ```
 
-Normally, you would use `sources` in combination with
-`generates` - but for tasks that generate remote artifacts (Docker images,
-deploys, CD releases) the checksum source and timestamps require either
-access to the artifact or for an out-of-band refresh of the `.checksum`
-fingerprint file.
+Normally, you would use `sources` in combination with `generates` - but for
+tasks that generate remote artifacts (Docker images, deploys, CD releases) the
+checksum source and timestamps require either access to the artifact or for an
+out-of-band refresh of the `.checksum` fingerprint file.
 
-Two special variables `{{.CHECKSUM}}` and `{{.TIMESTAMP}}` are available
-for interpolation within `status` commands, depending on the method assigned
-to fingerprint the sources. Only `source` globs are fingerprinted.
+Two special variables `{{.CHECKSUM}}` and `{{.TIMESTAMP}}` are available for
+interpolation within `status` commands, depending on the method assigned to
+fingerprint the sources. Only `source` globs are fingerprinted.
 
 Note that the `{{.TIMESTAMP}}` variable is a "live" Go `time.Time` struct, and
 can be formatted using any of the methods that `time.Time` responds to.
 
-See [the Go Time documentation](https://golang.org/pkg/time/) for more information.
+See [the Go Time documentation](https://golang.org/pkg/time/) for more
+information.
 
 You can use `--force` or `-f` if you want to force a task to run even when
 up-to-date.
@@ -749,7 +752,8 @@ up-to-date.
 Also, `task --status [tasks]...` will exit with a non-zero exit code if any of
 the tasks are not up-to-date.
 
-`status` can be combined with the [fingerprinting](#by-fingerprinting-locally-generated-files-and-their-sources)
+`status` can be combined with the
+[fingerprinting](#by-fingerprinting-locally-generated-files-and-their-sources)
 to have a task run if either the the source/generated artifacts changes, or the
 programmatic check fails:
 
@@ -775,11 +779,11 @@ tasks:
 
 ### Using programmatic checks to cancel the execution of a task and its dependencies
 
-In addition to `status` checks, `preconditions` checks are
-the logical inverse of `status` checks.  That is, if you need a certain set of
-conditions to be _true_ you can use the `preconditions` stanza.
-`preconditions` are similar to `status` lines, except they support `sh`
-expansion, and they SHOULD all return 0.
+In addition to `status` checks, `preconditions` checks are the logical inverse
+of `status` checks. That is, if you need a certain set of conditions to be
+_true_ you can use the `preconditions` stanza. `preconditions` are similar to
+`status` lines, except they support `sh` expansion, and they SHOULD all
+return 0.
 
 ```yaml
 version: '3'
@@ -793,21 +797,20 @@ tasks:
     # test existence of files
     preconditions:
       - test -f .env
-      - sh: "[ 1 = 0 ]"
+      - sh: '[ 1 = 0 ]'
         msg: "One doesn't equal Zero, Halting"
 ```
 
-Preconditions can set specific failure messages that can tell
-a user what steps to take using the `msg` field.
+Preconditions can set specific failure messages that can tell a user what steps
+to take using the `msg` field.
 
 If a task has a dependency on a sub-task with a precondition, and that
-precondition is not met - the calling task will fail.  Note that a task
-executed with a failing precondition will not run unless `--force` is
-given.
+precondition is not met - the calling task will fail. Note that a task executed
+with a failing precondition will not run unless `--force` is given.
 
 Unlike `status`, which will skip a task if it is up to date and continue
-executing tasks that depend on it, a `precondition` will fail a task, along
-with any other tasks that depend on it.
+executing tasks that depend on it, a `precondition` will fail a task, along with
+any other tasks that depend on it.
 
 ```yaml
 version: '3'
@@ -815,7 +818,7 @@ version: '3'
 tasks:
   task-will-fail:
     preconditions:
-      - sh: "exit 1"
+      - sh: 'exit 1'
 
   task-will-also-fail:
     deps:
@@ -829,17 +832,16 @@ tasks:
 
 ### Limiting when tasks run
 
-If a task executed by multiple `cmds` or multiple `deps` you can control
-when it is executed using `run`. `run` can also be set at the root
-of the Taskfile to change the behavior of all the tasks unless explicitly
-overridden.
+If a task executed by multiple `cmds` or multiple `deps` you can control when it
+is executed using `run`. `run` can also be set at the root of the Taskfile to
+change the behavior of all the tasks unless explicitly overridden.
 
 Supported values for `run`:
 
- * `always` (default) always attempt to invoke the task regardless of the
-  number of previous executions
- * `once` only invoke this task once regardless of the number of references
- * `when_changed` only invokes the task once for each unique set of variables
+- `always` (default) always attempt to invoke the task regardless of the number
+  of previous executions
+- `once` only invoke this task once regardless of the number of references
+- `when_changed` only invokes the task once for each unique set of variables
   passed into the task
 
 ```yaml
@@ -870,14 +872,16 @@ tasks:
 
 ## Variables
 
-When doing interpolation of variables, Task will look for the below.
-They are listed below in order of importance (i.e. most important first):
+When doing interpolation of variables, Task will look for the below. They are
+listed below in order of importance (i.e. most important first):
 
 - Variables declared in the task definition
-- Variables given while calling a task from another
-  (See [Calling another task](#calling-another-task) above)
-- Variables of the [included Taskfile](#including-other-taskfiles) (when the task is included)
-- Variables of the [inclusion of the Taskfile](#vars-of-included-taskfiles) (when the task is included)
+- Variables given while calling a task from another (See
+  [Calling another task](#calling-another-task) above)
+- Variables of the [included Taskfile](#including-other-taskfiles) (when the
+  task is included)
+- Variables of the [inclusion of the Taskfile](#vars-of-included-taskfiles)
+  (when the task is included)
 - Global variables (those declared in the `vars:` option in the Taskfile)
 - Environment variables
 
@@ -894,8 +898,8 @@ A special variable `.TASK` is always available containing the task name.
 :::
 
 Since some shells do not support the above syntax to set environment variables
-(Windows) tasks also accept a similar style when not at the beginning of
-the command.
+(Windows) tasks also accept a similar style when not at the beginning of the
+command.
 
 ```bash
 $ task write-file FILE=file.txt "CONTENT=Hello, World!" print "MESSAGE=All done!"
@@ -950,9 +954,8 @@ This works for all types of variables.
 
 ## Forwarding CLI arguments to commands
 
-If `--` is given in the CLI, all following parameters are added to a
-special `.CLI_ARGS` variable. This is useful to forward arguments to another
-command.
+If `--` is given in the CLI, all following parameters are added to a special
+`.CLI_ARGS` variable. This is useful to forward arguments to another command.
 
 The below example will run `yarn install`.
 
@@ -971,9 +974,9 @@ tasks:
 
 ## Doing task cleanup with `defer`
 
-With the `defer` keyword, it's possible to schedule cleanup to be run once
-the task finishes. The difference with just putting it as the last command is
-that this command will run even when the task fails.
+With the `defer` keyword, it's possible to schedule cleanup to be run once the
+task finishes. The difference with just putting it as the last command is that
+this command will run even when the task fails.
 
 In the example below, `rm -rf tmpdir/` will run even if the third command fails:
 
@@ -1014,11 +1017,12 @@ commands are executed in the reverse order if you schedule multiple of them.
 
 ## Go's template engine
 
-Task parse commands as [Go's template engine][gotemplate] before executing
-them. Variables are accessible through dot syntax (`.VARNAME`).
+Task parse commands as [Go's template engine][gotemplate] before executing them.
+Variables are accessible through dot syntax (`.VARNAME`).
 
-All functions by the Go's [slim-sprig lib](https://go-task.github.io/slim-sprig/)
-are available. The following example gets the current date in a given format:
+All functions by the Go's
+[slim-sprig lib](https://go-task.github.io/slim-sprig/) are available. The
+following example gets the current date in a given format:
 
 ```yaml
 version: '3'
@@ -1033,21 +1037,22 @@ Task also adds the following functions:
 
 - `OS`: Returns the operating system. Possible values are "windows", "linux",
   "darwin" (macOS) and "freebsd".
-- `ARCH`: return the architecture Task was compiled to: "386", "amd64", "arm"
-  or "s390x".
+- `ARCH`: return the architecture Task was compiled to: "386", "amd64", "arm" or
+  "s390x".
 - `splitLines`: Splits Unix (\n) and Windows (\r\n) styled newlines.
-- `catLines`: Replaces Unix (\n) and Windows (\r\n) styled newlines with a space.
+- `catLines`: Replaces Unix (\n) and Windows (\r\n) styled newlines with a
+  space.
 - `toSlash`: Does nothing on Unix, but on Windows converts a string from `\`
   path format to `/`.
 - `fromSlash`: Opposite of `toSlash`. Does nothing on Unix, but on Windows
   converts a string from `/` path format to `\`.
-- `exeExt`: Returns the right executable extension for the current OS
-  (`".exe"` for Windows, `""` for others).
-- `shellQuote`: Quotes a string to make it safe for use in shell scripts.
-  Task uses [this Go function](https://pkg.go.dev/mvdan.cc/sh/v3@v3.4.0/syntax#Quote)
+- `exeExt`: Returns the right executable extension for the current OS (`".exe"`
+  for Windows, `""` for others).
+- `shellQuote`: Quotes a string to make it safe for use in shell scripts. Task
+  uses [this Go function](https://pkg.go.dev/mvdan.cc/sh/v3@v3.4.0/syntax#Quote)
   for this. The Bash dialect is assumed.
-- `splitArgs`: Splits a string as if it were a command's arguments.
-  Task uses [this Go function](https://pkg.go.dev/mvdan.cc/sh/v3@v3.4.0/shell#Fields)
+- `splitArgs`: Splits a string as if it were a command's arguments. Task uses
+  [this Go function](https://pkg.go.dev/mvdan.cc/sh/v3@v3.4.0/shell#Fields)
 
 Example:
 
@@ -1076,8 +1081,8 @@ tasks:
 
 ## Help
 
-Running `task --list` (or `task -l`) lists all tasks with a description.
-The following Taskfile:
+Running `task --list` (or `task -l`) lists all tasks with a description. The
+following Taskfile:
 
 ```yaml
 version: '3'
@@ -1113,8 +1118,8 @@ If you want to see all tasks, there's a `--list-all` (alias `-a`) flag as well.
 
 ## Display summary of task
 
-Running `task --summary task-name` will show a summary of a task.
-The following Taskfile:
+Running `task --summary task-name` will show a summary of a task. The following
+Taskfile:
 
 ```yaml
 version: '3'
@@ -1135,7 +1140,7 @@ tasks:
       - your-build-tool
 ```
 
-with running ``task --summary release`` would print the following output:
+with running `task --summary release` would print the following output:
 
 ```
 task: release
@@ -1151,10 +1156,11 @@ dependencies:
 commands:
  - your-release-tool
 ```
-If a summary is missing, the description will be printed.
-If the task does not have a summary or a description, a warning is printed.
 
-Please note: *showing the summary will not execute the command*.
+If a summary is missing, the description will be printed. If the task does not
+have a summary or a description, a warning is printed.
+
+Please note: _showing the summary will not execute the command_.
 
 ## Task aliases
 
@@ -1162,8 +1168,8 @@ Aliases are alternative names for tasks. They can be used to make it easier and
 quicker to run tasks with long or hard-to-type names. You can use them on the
 command line, when [calling sub-tasks](#calling-another-task) in your Taskfile
 and when [including tasks](#including-other-taskfiles) with aliases from another
-Taskfile. They can also be used together with [namespace
-aliases](#namespace-aliases).
+Taskfile. They can also be used together with
+[namespace aliases](#namespace-aliases).
 
 ```yaml
 version: '3'
@@ -1182,9 +1188,9 @@ tasks:
 
 ## Overriding task name
 
-Sometimes you may want to override the task name printed on the summary, up-to-date
-messages to STDOUT, etc. In this case, you can just set `label:`, which can also
-be interpolated with variables:
+Sometimes you may want to override the task name printed on the summary,
+up-to-date messages to STDOUT, etc. In this case, you can just set `label:`,
+which can also be interpolated with variables:
 
 ```yaml
 version: '3'
@@ -1206,8 +1212,8 @@ tasks:
 
 ## Silent mode
 
-Silent mode disables the echoing of commands before Task runs it.
-For the following Taskfile:
+Silent mode disables the echoing of commands before Task runs it. For the
+following Taskfile:
 
 ```yaml
 version: '3'
@@ -1233,7 +1239,7 @@ Print something
 
 There are four ways to enable silent mode:
 
-* At command level:
+- At command level:
 
 ```yaml
 version: '3'
@@ -1245,7 +1251,7 @@ tasks:
         silent: true
 ```
 
-* At task level:
+- At task level:
 
 ```yaml
 version: '3'
@@ -1257,7 +1263,7 @@ tasks:
     silent: true
 ```
 
-* Globally at Taskfile level:
+- Globally at Taskfile level:
 
 ```yaml
 version: '3'
@@ -1270,7 +1276,7 @@ tasks:
       - echo "Print something"
 ```
 
-* Or globally with `--silent` or `-s` flag
+- Or globally with `--silent` or `-s` flag
 
 If you want to suppress STDOUT instead, just redirect a command to `/dev/null`:
 
@@ -1285,13 +1291,14 @@ tasks:
 
 ## Dry run mode
 
-Dry run mode (`--dry`) compiles and steps through each task, printing the commands
-that would be run without executing them. This is useful for debugging your Taskfiles.
+Dry run mode (`--dry`) compiles and steps through each task, printing the
+commands that would be run without executing them. This is useful for debugging
+your Taskfiles.
 
 ## Ignore errors
 
-You have the option to ignore errors during command execution.
-Given the following Taskfile:
+You have the option to ignore errors during command execution. Given the
+following Taskfile:
 
 ```yaml
 version: '3'
@@ -1303,8 +1310,9 @@ tasks:
       - echo "Hello World"
 ```
 
-Task will abort the execution after running `exit 1` because the status code `1` stands for `EXIT_FAILURE`.
-However, it is possible to continue with execution using `ignore_error`:
+Task will abort the execution after running `exit 1` because the status code `1`
+stands for `EXIT_FAILURE`. However, it is possible to continue with execution
+using `ignore_error`:
 
 ```yaml
 version: '3'
@@ -1318,13 +1326,13 @@ tasks:
 ```
 
 `ignore_error` can also be set for a task, which means errors will be suppressed
-for all commands. Nevertheless, keep in mind that this option will not propagate to other tasks
-called either by `deps` or `cmds`!
+for all commands. Nevertheless, keep in mind that this option will not propagate
+to other tasks called either by `deps` or `cmds`!
 
 ## Output syntax
 
-By default, Task just redirects the STDOUT and STDERR of the running commands
-to the shell in real-time. This is good for having live feedback for logging
+By default, Task just redirects the STDOUT and STDERR of the running commands to
+the shell in real-time. This is good for having live feedback for logging
 printed by commands, but the output can become messy if you have multiple
 commands running simultaneously and printing lots of stuff.
 
@@ -1350,11 +1358,12 @@ The `group` output will print the entire output of a command once after it
 finishes, so you will not have live feedback for commands that take a long time
 to run.
 
-When using the `group` output, you can optionally provide a templated message
-to print at the start and end of the group. This can be useful for instructing
-CI systems to group all of the output for a given task, such as with
+When using the `group` output, you can optionally provide a templated message to
+print at the start and end of the group. This can be useful for instructing CI
+systems to group all of the output for a given task, such as with
 [GitHub Actions' `::group::` command](https://docs.github.com/en/actions/learn-github-actions/workflow-commands-for-github-actions#grouping-log-lines)
-or [Azure Pipelines](https://docs.microsoft.com/en-us/azure/devops/pipelines/scripts/logging-commands?expand=1&view=azure-devops&tabs=bash#formatting-commands).
+or
+[Azure Pipelines](https://docs.microsoft.com/en-us/azure/devops/pipelines/scripts/logging-commands?expand=1&view=azure-devops&tabs=bash#formatting-commands).
 
 ```yaml
 version: '3'
@@ -1378,8 +1387,9 @@ Hello, World!
 ::endgroup::
 ```
 
-When using the `group` output, you may swallow the output of the executed command
-on standard output and standard error if it does not fail (zero exit code).
+When using the `group` output, you may swallow the output of the executed
+command on standard output and standard error if it does not fail (zero exit
+code).
 
 ```yaml
 version: '3'
@@ -1406,7 +1416,7 @@ The `prefix` output will prefix every line printed by a command with
 `[task-name] ` as the prefix, but you can customize the prefix for a command
 with the `prefix:` attribute:
 
- ```yaml
+```yaml
 version: '3'
 
 output: prefixed
@@ -1415,16 +1425,16 @@ tasks:
   default:
     deps:
       - task: print
-        vars: {TEXT: foo}
+        vars: { TEXT: foo }
       - task: print
-        vars: {TEXT: bar}
+        vars: { TEXT: bar }
       - task: print
-        vars: {TEXT: baz}
+        vars: { TEXT: baz }
 
   print:
     cmds:
       - echo "{{.TEXT}}"
-    prefix: "print-{{.TEXT}}"
+    prefix: 'print-{{.TEXT}}'
     silent: true
 ```
 
@@ -1466,8 +1476,8 @@ an issue about it.
 
 ## Short task syntax
 
-Starting on Task v3, you can now write tasks with a shorter syntax if they
-have the default settings (e.g. no custom `env:`, `vars:`, `desc:`, `silent:` , etc):
+Starting on Task v3, you can now write tasks with a shorter syntax if they have
+the default settings (e.g. no custom `env:`, `vars:`, `desc:`, `silent:` , etc):
 
 ```yaml
 version: '3'
@@ -1484,7 +1494,8 @@ tasks:
 
 It's possible to specify options to the
 [`set`](https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html)
-and [`shopt`](https://www.gnu.org/software/bash/manual/html_node/The-Shopt-Builtin.html)
+and
+[`shopt`](https://www.gnu.org/software/bash/manual/html_node/The-Shopt-Builtin.html)
 builtins. This can be added at global, task or command level.
 
 ```yaml
@@ -1507,12 +1518,14 @@ Keep in mind that not all options are available in the
 
 ## Watch tasks
 
-With the flags `--watch` or `-w` task will watch for file changes
-and run the task again. This requires the `sources` attribute to be given,
-so task knows which files to watch.
+With the flags `--watch` or `-w` task will watch for file changes and run the
+task again. This requires the `sources` attribute to be given, so task knows
+which files to watch.
 
 The default watch interval is 5 seconds, but it's possible to change it by
-either setting `interval: '500ms'` in the root of the Taskfile passing it
-as an argument like `--interval=500ms`.
+either setting `interval: '500ms'` in the root of the Taskfile passing it as an
+argument like `--interval=500ms`.
 
+<!-- prettier-ignore-start -->
 [gotemplate]: https://golang.org/pkg/text/template/
+<!-- prettier-ignore-end -->

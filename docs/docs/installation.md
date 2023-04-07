@@ -18,9 +18,11 @@ Task is as simple as running:
 brew install go-task/tap/go-task
 ```
 
-The above Formula is [maintained by ourselves](https://github.com/go-task/homebrew-tap/blob/master/Formula/go-task.rb).
+The above Formula is
+[maintained by ourselves](https://github.com/go-task/homebrew-tap/blob/master/Formula/go-task.rb).
 
-Recently, Task was also made available [on the official Homebrew repository](https://formulae.brew.sh/formula/go-task),
+Recently, Task was also made available
+[on the official Homebrew repository](https://formulae.brew.sh/formula/go-task),
 so you also have that option if you prefer:
 
 ```bash
@@ -29,9 +31,8 @@ brew install go-task
 
 ### Snap
 
-Task is available in [Snapcraft][snapcraft], but keep in mind that your
-Linux distribution should allow classic confinement for Snaps to Task work
-right:
+Task is available in [Snapcraft][snapcraft], but keep in mind that your Linux
+distribution should allow classic confinement for Snaps to Task work right:
 
 ```bash
 sudo snap install task --classic
@@ -39,8 +40,8 @@ sudo snap install task --classic
 
 ### Chocolatey
 
-If you're on Windows and have [Chocolatey][choco] installed, getting
-Task is as simple as running:
+If you're on Windows and have [Chocolatey][choco] installed, getting Task is as
+simple as running:
 
 ```bash
 choco install go-task
@@ -50,15 +51,15 @@ This installation method is community owned.
 
 ### Scoop
 
-If you're on Windows and have [Scoop][scoop] installed, getting
-Task is as simple as running:
+If you're on Windows and have [Scoop][scoop] installed, getting Task is as
+simple as running:
 
 ```cmd
 scoop install task
 ```
 
-This installation method is community owned. After a new release of Task, it
-may take some time until it's available on Scoop.
+This installation method is community owned. After a new release of Task, it may
+take some time until it's available on Scoop.
 
 ### AUR
 
@@ -84,26 +85,29 @@ This installation method is community owned.
 ### Fedora
 
 If you're on Fedora Linux you can install Task from the official
-[Fedora](https://packages.fedoraproject.org/pkgs/golang-github-task/go-task/) repository using `dnf`:
+[Fedora](https://packages.fedoraproject.org/pkgs/golang-github-task/go-task/)
+repository using `dnf`:
 
 ```cmd
 sudo dnf install go-task
 ```
 
-This installation method is community owned. After a new release of Task, it
-may take some time until it's available in [Fedora](https://packages.fedoraproject.org/pkgs/golang-github-task/go-task/).
+This installation method is community owned. After a new release of Task, it may
+take some time until it's available in
+[Fedora](https://packages.fedoraproject.org/pkgs/golang-github-task/go-task/).
 
 ### Nix
 
-If you're on NixOS or have Nix installed
-you can install Task from [nixpkgs](https://github.com/NixOS/nixpkgs):
+If you're on NixOS or have Nix installed you can install Task from
+[nixpkgs](https://github.com/NixOS/nixpkgs):
 
 ```cmd
 nix-env -iA nixpkgs.go-task
 ```
 
-This installation method is community owned. After a new release of Task, it
-may take some time until it's available in [nixpkgs](https://github.com/NixOS/nixpkgs).
+This installation method is community owned. After a new release of Task, it may
+take some time until it's available in
+[nixpkgs](https://github.com/NixOS/nixpkgs).
 
 ### npm
 
@@ -117,9 +121,8 @@ npm install -g @go-task/cli
 ### Winget
 
 If you are using Windows and installed the
-[winget](https://github.com/microsoft/winget-cli) package management tool,
-you can install Task from
-[winget-pkgs](https://github.com/microsoft/winget-pkgs).
+[winget](https://github.com/microsoft/winget-cli) package management tool, you
+can install Task from [winget-pkgs](https://github.com/microsoft/winget-pkgs).
 
 ```bash
 winget install Task.Task
@@ -129,8 +132,8 @@ winget install Task.Task
 
 ### Binary
 
-You can download the binary from the [releases page on GitHub][releases] and
-add to your `$PATH`.
+You can download the binary from the [releases page on GitHub][releases] and add
+to your `$PATH`.
 
 DEB and RPM packages are also available.
 
@@ -167,8 +170,7 @@ default.
 ### GitHub Actions
 
 If you want to install Task in GitHub Actions you can try using
-[this action](https://github.com/arduino/setup-task)
-by the Arduino team:
+[this action](https://github.com/arduino/setup-task) by the Arduino team:
 
 ```yaml
 - name: Install Task
@@ -184,8 +186,9 @@ This installation method is community owned.
 
 ### Go Modules
 
-Ensure that you have a supported version of [Go][go] properly installed and setup. You can find
-the minimum required version of Go in the [go.mod](https://github.com/go-task/task/blob/master/go.mod#L3) file.
+Ensure that you have a supported version of [Go][go] properly installed and
+setup. You can find the minimum required version of Go in the
+[go.mod](https://github.com/go-task/task/blob/master/go.mod#L3) file.
 
 You can then install the latest release globally by running:
 
@@ -269,6 +272,7 @@ Add the line and save the file:
 Invoke-Expression -Command path/to/task.ps1
 ```
 
+<!-- prettier-ignore-start -->
 [go]: https://golang.org/
 [snapcraft]: https://snapcraft.io/task
 [homebrew]: https://brew.sh/
@@ -277,3 +281,4 @@ Invoke-Expression -Command path/to/task.ps1
 [godownloader]: https://github.com/goreleaser/godownloader
 [choco]: https://chocolatey.org/
 [scoop]: https://scoop.sh/
+<!-- prettier-ignore-end -->

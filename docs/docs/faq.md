@@ -41,7 +41,7 @@ around this limitation using one of the following methods:
 - Use something like `{{if eq OS "windows"}}powershell {{end}}<my_cmd>` to
   detect windows and run the command in Powershell directly.
 - Use a shell on Windows that supports these commands as builtins, such as [Git
-  Bash] or [WSL].
+  Bash][git-bash] or [WSL][wsl].
 
 We want to make improvements to this part of Task and the issues below track
 this work. Constructive comments and contributions are very welcome!
@@ -50,5 +50,7 @@ this work. Constructive comments and contributions are very welcome!
 - [mvdan/sh#93](https://github.com/mvdan/sh/issues/93)
 - [mvdan/sh#97](https://github.com/mvdan/sh/issues/97)
 
-[Git Bash]: https://gitforwindows.org/
-[WSL]: https://learn.microsoft.com/en-us/windows/wsl/install
+<!-- prettier-ignore-start -->
+[git-bash]: https://gitforwindows.org/
+[wsl]: https://learn.microsoft.com/en-us/windows/wsl/install
+<!-- prettier-ignore-end -->

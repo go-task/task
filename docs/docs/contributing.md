@@ -11,21 +11,21 @@ before submitting a PR.
 ## Before you start
 
 - **Check existing work** - Is there an existing PR? Are there issues discussing
-the feature/change you want to make? Please make sure you consider/address these
-discussions in your work.
+  the feature/change you want to make? Please make sure you consider/address
+  these discussions in your work.
 - **Backwards compatibility** - Will your change break existing Taskfiles? It is
-much more likely that your change will merged if it backwards compatible. Is
-there an approach you can take that maintains this compatibility? If not,
-consider opening an issue first so that API changes can be discussed before you
-invest your time into a PR.
+  much more likely that your change will merged if it backwards compatible. Is
+  there an approach you can take that maintains this compatibility? If not,
+  consider opening an issue first so that API changes can be discussed before
+  you invest your time into a PR.
 
 ## 1. Setup
 
-- **Go** - Task is written in [Go]. We always support the latest two major Go
-  versions, so make sure your version is recent enough.
-- **Node.js** - [Node.js] is used to host Task's documentation server and is
-  required if you want to run this server locally.
-- **Yarn** - [Yarn] is the Node.js package manager used by Task.
+- **Go** - Task is written in [Go][go]. We always support the latest two major
+  Go versions, so make sure your version is recent enough.
+- **Node.js** - [Node.js][nodejs] is used to host Task's documentation server
+  and is required if you want to run this server locally.
+- **Yarn** - [Yarn][yarn] is the Node.js package manager used by Task.
 
 ## 2. Making changes
 
@@ -45,15 +45,15 @@ invest your time into a PR.
 ### Running your changes
 
 To run Task with working changes, you can use `go run ./cmd/task`. To run a
-development build of task against a test Taskfile in `testdata`, you can use `go
-run ./cmd/task --dir ./testdata/<my_test_dir> <task_name>`.
+development build of task against a test Taskfile in `testdata`, you can use
+`go run ./cmd/task --dir ./testdata/<my_test_dir> <task_name>`.
 
 ### Updating documentation
 
-Task uses [Docusaurus] to host a documentation server. This can be setup and run
-locally by using `task docs` (requires `nodejs` & `yarn`). All content is
-written in Markdown and is located in the `docs/docs` directory. All Markdown
-documents should have an 80 character line wrap limit.
+Task uses [Docusaurus][docusaurus] to host a documentation server. This can be
+setup and run locally by using `task docs` (requires `nodejs` & `yarn`). All
+content is written in Markdown and is located in the `docs/docs` directory. All
+Markdown documents should have an 80 character line wrap limit.
 
 When making a change, consider whether a change to the [Usage Guide](./usage.md)
 is necessary. This document contains descriptions and examples of how to use
@@ -62,10 +62,10 @@ to add a new section. If you're updating an existing feature, ensure that the
 documentation and any examples are up-to-date. Ensure that any examples follow
 the [Taskfile Styleguide](./styleguide.md).
 
-If you added a new field, command or flag, ensure that you add it to the [API
-Reference](./api_reference.md). New fields also need to be added to the [JSON
-Schema]. The descriptions for fields in the API reference and the schema should
-match.
+If you added a new field, command or flag, ensure that you add it to the
+[API Reference](./api_reference.md). New fields also need to be added to the
+[JSON Schema][json-schema]. The descriptions for fields in the API reference and
+the schema should match.
 
 ### Writing tests
 
@@ -102,8 +102,9 @@ be reasonable to split it in a few). Git squash and rebase is your friend!
 
 > I want to contribute, where do I start?
 
-Take a look at the list of [open issues]. We have a [good first issue] label for
-simpler issues that are ideal for first time contributions.
+Take a look at the list of [open issues][open-issues]. We have a [good first
+issue][good-first-issue] label for simpler issues that are ideal for first time
+contributions.
 
 All kinds of contributions are welcome, whether its a typo fix or a shiny new
 feature. You can also contribute by upvoting/commenting on issues, helping to
@@ -112,18 +113,18 @@ answer questions or contributing to other [community projects](./community.md).
 > I'm stuck, where can I get help?
 
 If you have questions, feel free to ask them in the `#help` forum channel on our
-[Discord server] or open a [Discussion] on GitHub.
+[Discord server][discord-server] or open a [Discussion][discussion] on GitHub.
 
 ---
 
-[Go]: https://go.dev
-[Node.js]: https://nodejs.org/en/
-[Yarn]: https://yarnpkg.com/
-[Docusaurus]: https://docusaurus.io
-[JSON Schema]:
-    https://github.com/go-task/task/blob/master/docs/static/schema.json
-[open issues]: https://github.com/go-task/task/issues
-[good first issue]:
-    https://github.com/go-task/task/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22
-[Discord server]: https://discord.gg/6TY36E39UK
-[Discussion]: https://github.com/go-task/task/discussions
+<!-- prettier-ignore-start -->
+[go]: https://go.dev
+[nodejs]: https://nodejs.org/en/
+[yarn]: https://yarnpkg.com/
+[docusaurus]: https://docusaurus.io
+[json-schema]: https://github.com/go-task/task/blob/master/docs/static/schema.json
+[open-issues]: https://github.com/go-task/task/issues
+[good-first-issue]: https://github.com/go-task/task/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22
+[discord-server]: https://discord.gg/6TY36E39UK
+[discussion]: https://github.com/go-task/task/discussions
+<!-- prettier-ignore-end -->
