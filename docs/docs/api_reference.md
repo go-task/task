@@ -51,6 +51,35 @@ variable
 |      | `--version` | `bool` | `false` | Show Task version. |
 | `-w` | `--watch` | `bool` | `false` | Enables watch of the given task. |
 
+## Exit Codes
+
+Task will sometimes exit with specific exit codes. These codes are split into three groups with the following ranges:
+
+- General errors (0-99)
+- Taskfile errors (100-199)
+- Task errors (200-299)
+
+A full list of the exit codes and their descriptions can be found below:
+
+| Code | Description                                                  |
+| ---- | ------------------------------------------------------------ |
+| 0    | Success                                                      |
+| 1    | An unknown error occurred                                    |
+| 100  | No Taskfile was found                                        |
+| 101  | A Taskfile already exists when trying to initialize one      |
+| 102  | The Taskfile is invalid or cannot be parsed                  |
+| 200  | The specified task could not be found                        |
+| 201  | An error occurred while executing a command inside of a task |
+| 202  | The user tried to invoke a task that is internal             |
+| 203  | There a multiple tasks with the same name or alias           |
+| 204  | A task was called too many times                             |
+
+These codes can also be found in the repository in [`errors/errors.go`](https://github.com/go-task/task/blob/master/errors/errors.go).
+
+:::info
+When Task is run with the `-x`/`--exit-code` flag, the exit code of any failed commands will be passed through to the user instead.
+:::
+
 ## JSON Output
 
 When using the `--json` flag in combination with either the `--list` or `--list-all` flags, the output will be a JSON object with the following structure:

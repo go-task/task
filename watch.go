@@ -12,6 +12,7 @@ import (
 
 	"github.com/radovskyb/watcher"
 
+	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/fingerprint"
 	"github.com/go-task/task/v3/internal/logger"
 	"github.com/go-task/task/v3/taskfile"
@@ -102,8 +103,8 @@ func (e *Executor) watchTasks(calls ...taskfile.Call) error {
 }
 
 func isContextError(err error) bool {
-	if taskRunErr, ok := err.(*TaskRunError); ok {
-		err = taskRunErr.err
+	if taskRunErr, ok := err.(*errors.TaskRunError); ok {
+		err = taskRunErr.Err
 	}
 
 	return err == context.Canceled || err == context.DeadlineExceeded
