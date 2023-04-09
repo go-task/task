@@ -14,7 +14,7 @@ import (
 	"github.com/go-task/task/v3/internal/env"
 	"github.com/go-task/task/v3/internal/execext"
 	"github.com/go-task/task/v3/internal/fingerprint"
-	"github.com/go-task/task/v3/internal/logger"
+	"github.com/go-task/task/v3/internal/log"
 	"github.com/go-task/task/v3/internal/output"
 	"github.com/go-task/task/v3/internal/slicesext"
 	"github.com/go-task/task/v3/internal/sort"
@@ -55,7 +55,6 @@ type Executor struct {
 	Stdout io.Writer
 	Stderr io.Writer
 
-	Logger      *logger.Logger
 	Compiler    compiler.Compiler
 	Output      output.Output
 	OutputStyle taskfile.Output
@@ -101,8 +100,8 @@ func (e *Executor) Run(ctx context.Context, calls ...taskfile.Call) error {
 			if err != nil {
 				return nil
 			}
-			summary.PrintSpaceBetweenSummaries(e.Logger, i)
-			summary.PrintTask(e.Logger, compiledTask)
+			summary.PrintSpaceBetweenSummaries(i)
+			summary.PrintTask(compiledTask)
 		}
 		return nil
 	}
@@ -140,11 +139,11 @@ func (e *Executor) RunTask(ctx context.Context, call taskfile.Call) error {
 
 	return e.startExecution(ctx, t, func(ctx context.Context) error {
 		if !shouldRunOnCurrentPlatform(t.Platforms) {
-			e.Logger.VerboseOutf(logger.Yellow, `task: "%s" not for current platform - ignored`, call.Task)
+			log.VerboseOutf(log.Yellow, `task: "%s" not for current platform - ignored`, call.Task)
 			return nil
 		}
 
-		e.Logger.VerboseErrf(logger.Magenta, `task: "%s" started`, call.Task)
+		log.VerboseErrf(log.Magenta, "task: %q started\n", call.Task)
 		if err := e.runDeps(ctx, t); err != nil {
 			return err
 		}
@@ -169,7 +168,6 @@ func (e *Executor) RunTask(ctx context.Context, call taskfile.Call) error {
 				fingerprint.WithMethod(method),
 				fingerprint.WithTempDir(e.TempDir),
 				fingerprint.WithDry(e.Dry),
-				fingerprint.WithLogger(e.Logger),
 			)
 			if err != nil {
 				return err
@@ -177,14 +175,14 @@ func (e *Executor) RunTask(ctx context.Context, call taskfile.Call) error {
 
 			if upToDate && preCondMet {
 				if e.Verbose || (!t.Silent && !e.Taskfile.Silent && !e.Silent) {
-					e.Logger.Errf(logger.Magenta, `task: Task "%s" is up to date`, t.Name())
+					log.Errf(log.Magenta, "task: Task %q is up to date\n", t.Name())
 				}
 				return nil
 			}
 		}
 
 		if err := e.mkdir(t); err != nil {
-			e.Logger.Errf(logger.Red, "task: cannot make directory %q: %v", t.Dir, err)
+			log.Errf(log.Red, "task: cannot make directory %q: %v\n", t.Dir, err)
 		}
 
 		for i := range t.Cmds {
@@ -195,18 +193,18 @@ func (e *Executor) RunTask(ctx context.Context, call taskfile.Call) error {
 
 			if err := e.runCommand(ctx, t, call, i); err != nil {
 				if err2 := e.statusOnError(t); err2 != nil {
-					e.Logger.VerboseErrf(logger.Yellow, "task: error cleaning status on error: %v", err2)
+					log.VerboseErrf(log.Yellow, "task: error cleaning status on error: %v\n", err2)
 				}
 
 				if execext.IsExitError(err) && t.IgnoreError {
-					e.Logger.VerboseErrf(logger.Yellow, "task: task error ignored: %v", err)
+					log.VerboseErrf(log.Yellow, "task: task error ignored: %v\n", err)
 					continue
 				}
 
 				return &TaskRunError{t.Task, err}
 			}
 		}
-		e.Logger.VerboseErrf(logger.Magenta, `task: "%s" finished`, call.Task)
+		log.VerboseErrf(log.Magenta, "task: %q finished\n", call.Task)
 		return nil
 	})
 }
@@ -254,7 +252,7 @@ func (e *Executor) runDeferred(t *taskfile.Task, call taskfile.Call, i int) {
 	defer cancel()
 
 	if err := e.runCommand(ctx, t, call, i); err != nil {
-		e.Logger.VerboseErrf(logger.Yellow, `task: ignored error in deferred cmd: %s`, err.Error())
+		log.VerboseErrf(log.Yellow, "task: ignored error in deferred cmd: %s\n", err.Error())
 	}
 }
 
@@ -273,12 +271,12 @@ func (e *Executor) runCommand(ctx context.Context, t *taskfile.Task, call taskfi
 		return nil
 	case cmd.Cmd != "":
 		if !shouldRunOnCurrentPlatform(cmd.Platforms) {
-			e.Logger.VerboseOutf(logger.Yellow, `task: [%s] %s not for current platform - ignored`, t.Name(), cmd.Cmd)
+			log.VerboseOutf(log.Yellow, `task: [%s] %s not for current platform - ignored`, t.Name(), cmd.Cmd)
 			return nil
 		}
 
 		if e.Verbose || (!cmd.Silent && !t.Silent && !e.Taskfile.Silent && !e.Silent) {
-			e.Logger.Errf(logger.Green, "task: [%s] %s", t.Name(), cmd.Cmd)
+			log.Errf(log.Green, "task: [%s] %s\n", t.Name(), cmd.Cmd)
 		}
 
 		if e.Dry {
@@ -307,10 +305,10 @@ func (e *Executor) runCommand(ctx context.Context, t *taskfile.Task, call taskfi
 			Stderr:    stdErr,
 		})
 		if closeErr := close(err); closeErr != nil {
-			e.Logger.Errf(logger.Red, "task: unable to close writer: %v", closeErr)
+			log.Errf(log.Red, "task: unable to close writer: %v\n", closeErr)
 		}
 		if execext.IsExitError(err) && cmd.IgnoreError {
-			e.Logger.VerboseErrf(logger.Yellow, "task: [%s] command error ignored: %v", t.Name(), err)
+			log.VerboseErrf(log.Yellow, "task: [%s] command error ignored: %v\n", t.Name(), err)
 			return nil
 		}
 		return err
@@ -333,7 +331,7 @@ func (e *Executor) startExecution(ctx context.Context, t *taskfile.Task, execute
 
 	if otherExecutionCtx, ok := e.executionHashes[h]; ok {
 		e.executionHashesMutex.Unlock()
-		e.Logger.VerboseErrf(logger.Magenta, "task: skipping execution of task: %s", h)
+		log.VerboseErrf(log.Magenta, "task: skipping execution of task: %s\n", h)
 
 		// Release our execution slot to avoid blocking other tasks while we wait
 		reacquire := e.releaseConcurrencyLimit()

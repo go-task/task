@@ -6,7 +6,7 @@ import (
 
 	"github.com/go-task/task/v3/internal/env"
 	"github.com/go-task/task/v3/internal/execext"
-	"github.com/go-task/task/v3/internal/logger"
+	"github.com/go-task/task/v3/internal/log"
 	"github.com/go-task/task/v3/taskfile"
 )
 
@@ -21,7 +21,7 @@ func (e *Executor) areTaskPreconditionsMet(ctx context.Context, t *taskfile.Task
 			Env:     env.Get(t),
 		})
 		if err != nil {
-			e.Logger.Errf(logger.Magenta, "task: %s", p.Msg)
+			log.Errf(log.Magenta, "task: %s\n", p.Msg)
 			return false, ErrPreconditionFailed
 		}
 	}

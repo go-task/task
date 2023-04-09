@@ -3,7 +3,6 @@ package fingerprint
 import (
 	"context"
 
-	"github.com/go-task/task/v3/internal/logger"
 	"github.com/go-task/task/v3/taskfile"
 )
 
@@ -13,7 +12,6 @@ type (
 		method         string
 		dry            bool
 		tempDir        string
-		logger         *logger.Logger
 		statusChecker  StatusCheckable
 		sourcesChecker SourcesCheckable
 	}
@@ -34,12 +32,6 @@ func WithDry(dry bool) CheckerOption {
 func WithTempDir(tempDir string) CheckerOption {
 	return func(config *CheckerConfig) {
 		config.tempDir = tempDir
-	}
-}
-
-func WithLogger(logger *logger.Logger) CheckerOption {
-	return func(config *CheckerConfig) {
-		config.logger = logger
 	}
 }
 
@@ -69,7 +61,6 @@ func IsTaskUpToDate(
 		method:         "none",
 		tempDir:        "",
 		dry:            false,
-		logger:         nil,
 		statusChecker:  nil,
 		sourcesChecker: nil,
 	}
@@ -81,7 +72,7 @@ func IsTaskUpToDate(
 
 	// If no status checker was given, set up the default one
 	if config.statusChecker == nil {
-		config.statusChecker = NewStatusChecker(config.logger)
+		config.statusChecker = NewStatusChecker()
 	}
 
 	// If no sources checker was given, set up the default one

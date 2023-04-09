@@ -3,42 +3,42 @@ package summary
 import (
 	"strings"
 
-	"github.com/go-task/task/v3/internal/logger"
+	"github.com/go-task/task/v3/internal/log"
 	"github.com/go-task/task/v3/taskfile"
 )
 
-func PrintTasks(l *logger.Logger, t *taskfile.Taskfile, c []taskfile.Call) {
+func PrintTasks(t *taskfile.Taskfile, c []taskfile.Call) {
 	for i, call := range c {
-		PrintSpaceBetweenSummaries(l, i)
-		PrintTask(l, t.Tasks.Get(call.Task))
+		PrintSpaceBetweenSummaries(i)
+		PrintTask(t.Tasks.Get(call.Task))
 	}
 }
 
-func PrintSpaceBetweenSummaries(l *logger.Logger, i int) {
+func PrintSpaceBetweenSummaries(i int) {
 	spaceRequired := i > 0
 	if !spaceRequired {
 		return
 	}
 
-	l.Outf(logger.Default, "")
-	l.Outf(logger.Default, "")
+	log.Outf(log.Default, "\n")
+	log.Outf(log.Default, "\n")
 }
 
-func PrintTask(l *logger.Logger, t *taskfile.Task) {
-	printTaskName(l, t)
-	printTaskDescribingText(t, l)
-	printTaskDependencies(l, t)
-	printTaskAliases(l, t)
-	printTaskCommands(l, t)
+func PrintTask(t *taskfile.Task) {
+	printTaskName(t)
+	printTaskDescribingText(t)
+	printTaskDependencies(t)
+	printTaskAliases(t)
+	printTaskCommands(t)
 }
 
-func printTaskDescribingText(t *taskfile.Task, l *logger.Logger) {
+func printTaskDescribingText(t *taskfile.Task) {
 	if hasSummary(t) {
-		printTaskSummary(l, t)
+		printTaskSummary(t)
 	} else if hasDescription(t) {
-		printTaskDescription(l, t)
+		printTaskDescription(t)
 	} else {
-		printNoDescriptionOrSummary(l)
+		printNoDescriptionOrSummary()
 	}
 }
 
@@ -46,31 +46,31 @@ func hasSummary(t *taskfile.Task) bool {
 	return t.Summary != ""
 }
 
-func printTaskSummary(l *logger.Logger, t *taskfile.Task) {
+func printTaskSummary(t *taskfile.Task) {
 	lines := strings.Split(t.Summary, "\n")
 	for i, line := range lines {
 		notLastLine := i+1 < len(lines)
 		if notLastLine || line != "" {
-			l.Outf(logger.Default, line)
+			log.Outf(log.Default, "%s\n", line)
 		}
 	}
 }
 
-func printTaskName(l *logger.Logger, t *taskfile.Task) {
-	l.FOutf(l.Stdout, logger.Default, "task: ")
-	l.FOutf(l.Stdout, logger.Green, "%s\n", t.Name())
-	l.Outf(logger.Default, "")
+func printTaskName(t *taskfile.Task) {
+	log.Outf(log.Default, "task: ")
+	log.Outf(log.Green, "%s\n", t.Name())
+	log.Outf(log.Default, "\n")
 }
 
-func printTaskAliases(l *logger.Logger, t *taskfile.Task) {
+func printTaskAliases(t *taskfile.Task) {
 	if len(t.Aliases) == 0 {
 		return
 	}
-	l.Outf(logger.Default, "")
-	l.Outf(logger.Default, "aliases:")
+	log.Outf(log.Default, "\n")
+	log.Outf(log.Default, "aliases:\n")
 	for _, alias := range t.Aliases {
-		l.FOutf(l.Stdout, logger.Default, " - ")
-		l.Outf(logger.Cyan, alias)
+		log.Outf(log.Default, " - ")
+		log.Outf(log.Cyan, "%s\n", alias)
 	}
 }
 
@@ -78,41 +78,41 @@ func hasDescription(t *taskfile.Task) bool {
 	return t.Desc != ""
 }
 
-func printTaskDescription(l *logger.Logger, t *taskfile.Task) {
-	l.Outf(logger.Default, t.Desc)
+func printTaskDescription(t *taskfile.Task) {
+	log.Outf(log.Default, "%s\n", t.Desc)
 }
 
-func printNoDescriptionOrSummary(l *logger.Logger) {
-	l.Outf(logger.Default, "(task does not have description or summary)")
+func printNoDescriptionOrSummary() {
+	log.Outf(log.Default, "(task does not have description or summary)\n")
 }
 
-func printTaskDependencies(l *logger.Logger, t *taskfile.Task) {
+func printTaskDependencies(t *taskfile.Task) {
 	if len(t.Deps) == 0 {
 		return
 	}
 
-	l.Outf(logger.Default, "")
-	l.Outf(logger.Default, "dependencies:")
+	log.Outf(log.Default, "\n")
+	log.Outf(log.Default, "dependencies:\n")
 
 	for _, d := range t.Deps {
-		l.Outf(logger.Default, " - %s", d.Task)
+		log.Outf(log.Default, " - %s\n", d.Task)
 	}
 }
 
-func printTaskCommands(l *logger.Logger, t *taskfile.Task) {
+func printTaskCommands(t *taskfile.Task) {
 	if len(t.Cmds) == 0 {
 		return
 	}
 
-	l.Outf(logger.Default, "")
-	l.Outf(logger.Default, "commands:")
+	log.Outf(log.Default, "\n")
+	log.Outf(log.Default, "commands:\n")
 	for _, c := range t.Cmds {
 		isCommand := c.Cmd != ""
-		l.FOutf(l.Stdout, logger.Default, " - ")
+		log.Outf(log.Default, " - ")
 		if isCommand {
-			l.FOutf(l.Stdout, logger.Yellow, "%s\n", c.Cmd)
+			log.Outf(log.Yellow, "%s\n", c.Cmd)
 		} else {
-			l.FOutf(l.Stdout, logger.Green, "Task: %s\n", c.Task)
+			log.Outf(log.Green, "Task: %s\n", c.Task)
 		}
 	}
 }

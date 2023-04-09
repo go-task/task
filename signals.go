@@ -5,7 +5,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/go-task/task/v3/internal/logger"
+	"github.com/go-task/task/v3/internal/log"
 )
 
 // NOTE(@andreynering): This function intercepts SIGINT and SIGTERM signals
@@ -20,11 +20,11 @@ func (e *Executor) InterceptInterruptSignals() {
 			sig := <-ch
 
 			if i < 3 {
-				e.Logger.Outf(logger.Yellow, `task: Signal received: "%s"`, sig)
+				log.Outf(log.Yellow, "task: Signal received: %q\n", sig)
 				continue
 			}
 
-			e.Logger.Errf(logger.Red, `task: Signal received for the third time: "%s". Forcing shutdown`, sig)
+			log.Errf(log.Red, "task: Signal received for the third time: %q. Forcing shutdown\n", sig)
 			os.Exit(1)
 		}
 	}()

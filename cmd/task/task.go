@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -14,7 +13,7 @@ import (
 
 	"github.com/go-task/task/v3"
 	"github.com/go-task/task/v3/args"
-	"github.com/go-task/task/v3/internal/logger"
+	"github.com/go-task/task/v3/internal/log"
 	"github.com/go-task/task/v3/internal/sort"
 	ver "github.com/go-task/task/v3/internal/version"
 	"github.com/go-task/task/v3/taskfile"
@@ -43,9 +42,6 @@ Options:
 `
 
 func main() {
-	log.SetFlags(0)
-	log.SetOutput(os.Stderr)
-
 	pflag.Usage = func() {
 		log.Print(usage)
 		pflag.PrintDefaults()
@@ -247,7 +243,7 @@ func main() {
 	}
 
 	if err := e.Run(ctx, calls...); err != nil {
-		e.Logger.Errf(logger.Red, "%v", err)
+		log.Errf(log.Red, "%v\n", err)
 
 		if exitCode {
 			if err, ok := err.(*task.TaskRunError); ok {

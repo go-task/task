@@ -16,7 +16,7 @@ import (
 	compilerv3 "github.com/go-task/task/v3/internal/compiler/v3"
 	"github.com/go-task/task/v3/internal/execext"
 	"github.com/go-task/task/v3/internal/filepathext"
-	"github.com/go-task/task/v3/internal/logger"
+	"github.com/go-task/task/v3/internal/log"
 	"github.com/go-task/task/v3/internal/output"
 	"github.com/go-task/task/v3/taskfile"
 	"github.com/go-task/task/v3/taskfile/read"
@@ -141,12 +141,10 @@ func (e *Executor) setupStdFiles() {
 }
 
 func (e *Executor) setupLogger() {
-	e.Logger = &logger.Logger{
-		Stdout:  e.Stdout,
-		Stderr:  e.Stderr,
-		Verbose: e.Verbose,
-		Color:   e.Color,
-	}
+	log.SetStdout(e.Stdout)
+	log.SetStderr(e.Stderr)
+	log.SetVerbose(e.Verbose)
+	log.SetColor(e.Color)
 }
 
 func (e *Executor) setupOutput() error {
@@ -172,7 +170,6 @@ func (e *Executor) setupCompiler() error {
 			Taskvars:     e.taskvars,
 			TaskfileVars: e.Taskfile.Vars,
 			Expansions:   e.Taskfile.Expansions,
-			Logger:       e.Logger,
 		}
 	} else {
 		userWorkingDir, err := os.Getwd()
@@ -184,7 +181,6 @@ func (e *Executor) setupCompiler() error {
 			UserWorkingDir: userWorkingDir,
 			TaskfileEnv:    e.Taskfile.Env,
 			TaskfileVars:   e.Taskfile.Vars,
-			Logger:         e.Logger,
 		}
 	}
 
@@ -213,7 +209,7 @@ func (e *Executor) readDotEnvFiles() error {
 func (e *Executor) setupDefaults() {
 	// Color available only on v3
 	if e.Taskfile.Version.LessThan(taskfile.V3) {
-		e.Logger.Color = false
+		log.SetColor(false)
 	}
 
 	if e.Taskfile.Method == "" {

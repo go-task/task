@@ -29,7 +29,6 @@ func (e *Executor) Status(ctx context.Context, calls ...taskfile.Call) error {
 			fingerprint.WithMethod(method),
 			fingerprint.WithTempDir(e.TempDir),
 			fingerprint.WithDry(e.Dry),
-			fingerprint.WithLogger(e.Logger),
 		)
 		if err != nil {
 			return err

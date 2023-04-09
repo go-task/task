@@ -4,13 +4,14 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"os"
 	"strings"
 	"sync"
 
 	"github.com/go-task/task/v3/internal/compiler"
 	"github.com/go-task/task/v3/internal/execext"
 	"github.com/go-task/task/v3/internal/filepathext"
-	"github.com/go-task/task/v3/internal/logger"
+	"github.com/go-task/task/v3/internal/log"
 	"github.com/go-task/task/v3/internal/templater"
 	"github.com/go-task/task/v3/internal/version"
 	"github.com/go-task/task/v3/taskfile"
@@ -24,8 +25,6 @@ type CompilerV3 struct {
 
 	TaskfileEnv  *taskfile.Vars
 	TaskfileVars *taskfile.Vars
-
-	Logger *logger.Logger
 
 	dynamicCache   map[string]string
 	muDynamicCache sync.Mutex
@@ -149,7 +148,7 @@ func (c *CompilerV3) HandleDynamicVar(v taskfile.Var, dir string) (string, error
 		Command: v.Sh,
 		Dir:     dir,
 		Stdout:  &stdout,
-		Stderr:  c.Logger.Stderr,
+		Stderr:  os.Stderr,
 	}
 	if err := execext.RunCommand(context.Background(), opts); err != nil {
 		return "", fmt.Errorf(`task: Command "%s" failed: %s`, opts.Command, err)
@@ -161,7 +160,7 @@ func (c *CompilerV3) HandleDynamicVar(v taskfile.Var, dir string) (string, error
 	result = strings.TrimSuffix(result, "\n")
 
 	c.dynamicCache[v.Sh] = result
-	c.Logger.VerboseErrf(logger.Magenta, `task: dynamic variable: '%s' result: '%s'`, v.Sh, result)
+	log.VerboseErrf(log.Magenta, "task: dynamic variable: %q result: %q\n", v.Sh, result)
 
 	return result, nil
 }
