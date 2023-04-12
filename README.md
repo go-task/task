@@ -18,10 +18,12 @@
 
 <div align="center">
 
-| [Appwrite][appwrite] |
-| - |
+| [Appwrite][appwrite]                                   |
+| ------------------------------------------------------ |
 | [![Appwrite](/docs/static/img/appwrite.svg)][appwrite] |
 
 </div>
 
+<!-- prettier-ignore-start -->
 [appwrite]: https://appwrite.io/?utm_source=task_github&utm_medium=social&utm_campaign=task_oss_fund
+<!-- prettier-ignore-end -->
