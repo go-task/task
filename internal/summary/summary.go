@@ -20,8 +20,8 @@ func PrintSpaceBetweenSummaries(l *logger.Logger, i int) {
 		return
 	}
 
-	l.Outf(logger.Default, "")
-	l.Outf(logger.Default, "")
+	l.Outf(logger.Default, "\n")
+	l.Outf(logger.Default, "\n")
 }
 
 func PrintTask(l *logger.Logger, t *taskfile.Task) {
@@ -51,26 +51,26 @@ func printTaskSummary(l *logger.Logger, t *taskfile.Task) {
 	for i, line := range lines {
 		notLastLine := i+1 < len(lines)
 		if notLastLine || line != "" {
-			l.Outf(logger.Default, line)
+			l.Outf(logger.Default, "%s\n", line)
 		}
 	}
 }
 
 func printTaskName(l *logger.Logger, t *taskfile.Task) {
-	l.FOutf(l.Stdout, logger.Default, "task: ")
-	l.FOutf(l.Stdout, logger.Green, "%s\n", t.Name())
-	l.Outf(logger.Default, "")
+	l.Outf(logger.Default, "task: ")
+	l.Outf(logger.Green, "%s\n", t.Name())
+	l.Outf(logger.Default, "\n")
 }
 
 func printTaskAliases(l *logger.Logger, t *taskfile.Task) {
 	if len(t.Aliases) == 0 {
 		return
 	}
-	l.Outf(logger.Default, "")
-	l.Outf(logger.Default, "aliases:")
+	l.Outf(logger.Default, "\n")
+	l.Outf(logger.Default, "aliases:\n")
 	for _, alias := range t.Aliases {
-		l.FOutf(l.Stdout, logger.Default, " - ")
-		l.Outf(logger.Cyan, alias)
+		l.Outf(logger.Default, " - ")
+		l.Outf(logger.Cyan, "%s\n", alias)
 	}
 }
 
@@ -79,11 +79,11 @@ func hasDescription(t *taskfile.Task) bool {
 }
 
 func printTaskDescription(l *logger.Logger, t *taskfile.Task) {
-	l.Outf(logger.Default, t.Desc)
+	l.Outf(logger.Default, "%s\n", t.Desc)
 }
 
 func printNoDescriptionOrSummary(l *logger.Logger) {
-	l.Outf(logger.Default, "(task does not have description or summary)")
+	l.Outf(logger.Default, "(task does not have description or summary)\n")
 }
 
 func printTaskDependencies(l *logger.Logger, t *taskfile.Task) {
@@ -91,11 +91,11 @@ func printTaskDependencies(l *logger.Logger, t *taskfile.Task) {
 		return
 	}
 
-	l.Outf(logger.Default, "")
-	l.Outf(logger.Default, "dependencies:")
+	l.Outf(logger.Default, "\n")
+	l.Outf(logger.Default, "dependencies:\n")
 
 	for _, d := range t.Deps {
-		l.Outf(logger.Default, " - %s", d.Task)
+		l.Outf(logger.Default, " - %s\n", d.Task)
 	}
 }
 
@@ -104,15 +104,15 @@ func printTaskCommands(l *logger.Logger, t *taskfile.Task) {
 		return
 	}
 
-	l.Outf(logger.Default, "")
-	l.Outf(logger.Default, "commands:")
+	l.Outf(logger.Default, "\n")
+	l.Outf(logger.Default, "commands:\n")
 	for _, c := range t.Cmds {
 		isCommand := c.Cmd != ""
-		l.FOutf(l.Stdout, logger.Default, " - ")
+		l.Outf(logger.Default, " - ")
 		if isCommand {
-			l.FOutf(l.Stdout, logger.Yellow, "%s\n", c.Cmd)
+			l.Outf(logger.Yellow, "%s\n", c.Cmd)
 		} else {
-			l.FOutf(l.Stdout, logger.Green, "Task: %s\n", c.Task)
+			l.Outf(logger.Green, "Task: %s\n", c.Task)
 		}
 	}
 }

@@ -21,7 +21,7 @@ func (e *Executor) areTaskPreconditionsMet(ctx context.Context, t *taskfile.Task
 			Env:     env.Get(t),
 		})
 		if err != nil {
-			e.Logger.Errf(logger.Magenta, "task: %s", p.Msg)
+			e.Logger.Errf(logger.Magenta, "task: %s\n", p.Msg)
 			return false, ErrPreconditionFailed
 		}
 	}

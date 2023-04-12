@@ -88,24 +88,24 @@ func (e *Executor) ListTasks(o ListOptions) (bool, error) {
 	}
 	if len(tasks) == 0 {
 		if o.ListOnlyTasksWithDescriptions {
-			e.Logger.Outf(logger.Yellow, "task: No tasks with description available. Try --list-all to list all tasks")
+			e.Logger.Outf(logger.Yellow, "task: No tasks with description available. Try --list-all to list all tasks\n")
 		} else if o.ListAllTasks {
-			e.Logger.Outf(logger.Yellow, "task: No tasks available")
+			e.Logger.Outf(logger.Yellow, "task: No tasks available\n")
 		}
 		return false, nil
 	}
-	e.Logger.Outf(logger.Default, "task: Available tasks for this project:")
+	e.Logger.Outf(logger.Default, "task: Available tasks for this project:\n")
 
 	// Format in tab-separated columns with a tab stop of 8.
 	w := tabwriter.NewWriter(e.Stdout, 0, 8, 6, ' ', 0)
 	for _, task := range tasks {
-		e.Logger.FOutf(w, logger.Yellow, "* ")
-		e.Logger.FOutf(w, logger.Green, task.Task)
-		e.Logger.FOutf(w, logger.Default, ": \t%s", task.Desc)
+		e.Logger.Outf(logger.Yellow, "* ")
+		e.Logger.Outf(logger.Green, task.Task)
+		e.Logger.Outf(logger.Default, ": \t%s", task.Desc)
 		if len(task.Aliases) > 0 {
-			e.Logger.FOutf(w, logger.Cyan, "\t(aliases: %s)", strings.Join(task.Aliases, ", "))
+			e.Logger.Outf(logger.Cyan, "\t(aliases: %s)", strings.Join(task.Aliases, ", "))
 		}
-		_, _ = fmt.Fprint(w, "\n")
+		e.Logger.Outf(logger.Default, "\n")
 	}
 	if err := w.Flush(); err != nil {
 		return false, err
