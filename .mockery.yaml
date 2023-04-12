@@ -1,0 +1,4 @@
+with-expecter: true
+keeptree: true
+case: underscore
+output: ./internal/mocks
