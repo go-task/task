@@ -10,11 +10,11 @@ title: Página Inicial
   <img id="logo" src="img/logo.svg" height="250px" width="250px" />
 </div>
 
-Task é uma ferramenta de automatização de tarefas que foi criada para ser mais simples de usar do que outras similares, como por exemplo o [GNU Make][make].
+Task is a task runner / build tool that aims to be simpler and easier to use than, for example, [GNU Make](https://www.gnu.org/software/make/).
 
-Por ser escrito em [Go][go], o Task é simplesmente um binário e não possui nenhuma outra dependência, o que significa que você não precisa lidar com um processo de instalação complicado apenas para usar uma ferramenta de automação.
+Por ser escrito em [Go](https://go.dev/), o Task é simplesmente um binário e não possui nenhuma outra dependência, o que significa que você não precisa lidar com um processo de instalação complicado apenas para usar uma ferramenta de automação.
 
-Uma vez [instalado](installation.md), você só precisa só precisa escrever suas tarefas usando um esquema [YAML][yaml] simples num arquivo chamado `Taskfile.yml`:
+Uma vez [instalado](installation.md), você só precisa só precisa escrever suas tarefas usando um esquema [YAML](http://yaml.org/) simples num arquivo chamado `Taskfile.yml`:
 
 ```yaml title="Taskfile.yml"
 version: '3'
@@ -32,10 +32,10 @@ O exemplo acima é apenas o começo. Você pode dar uma olhada no [guia de uso](
 
 ## Funcionalidades
 
-- [Instalação fácil](installation.md): apenas baixe um único binário, adicione-o a `$PATH` e pronto! Ou você também pode instalá-lo usando [Homebrew][homebrew], [Snapcraft][snapcraft] ou [Scoop][scoop] se você quiser.
-- Disponível em CIs: adicionando [este script simples](installation.md#install-script) para instalá-lo no seu CI você estará pronto para usar o Task como parte do seu pipeline de CI;
-- Verdadeiramente multiplataforma: enquanto a maioria das ferramentas de compilação só funcionam bem no Linux ou macOS, o Task também suporta Windows graças [a este interpretador de shell para Go][sh].
-- Ótimo para a geração de código: você pode facilmente [impedir que uma tarefa execute](/usage#prevent-unnecessary-work) se um determinado conjunto de arquivos não tiver mudado desde a última execução (baseado na data de modificação ou conteúdo dos arquivos).
+- [Instalação fácil](installation.md): apenas baixe um único binário, adicione-o a `$PATH` e pronto! Ou você também pode instalá-lo usando [Homebrew](https://brew.sh/), [Snapcraft](https://snapcraft.io/) ou [Scoop](https://scoop.sh/) se você quiser.
+- Available on CIs: by adding [this simple command](installation.md#install-script) to install on your CI script and you're ready to use Task as part of your CI pipeline;
+- Verdadeiramente multiplataforma: enquanto a maioria das ferramentas de compilação só funcionam bem no Linux ou macOS, o Task também suporta Windows graças [a este interpretador de shell para Go](https://github.com/mvdan/sh).
+- Great for code generation: you can easily [prevent a task from running](/usage#prevent-unnecessary-work) if a given set of files haven't changed since last run (based either on its timestamp or content).
 
 ## Patrocinadores de Ouro
 
@@ -46,10 +46,7 @@ O exemplo acima é apenas o começo. Você pode dar uma olhada no [guia de uso](
 | [![Appwrite](/img/appwrite.svg)](https://appwrite.io/?utm_source=taskfile.dev&utm_medium=website&utm_campaign=task_oss_fund) |
 
 </div>
-[make]: https://www.gnu.org/software/make/
-[go]: https://go.dev/
-[yaml]: http://yaml.org/
-[homebrew]: https://brew.sh/
-[snapcraft]: https://snapcraft.io/
-[scoop]: https://scoop.sh/
-[sh]: https://github.com/mvdan/sh
+
+<!-- prettier-ignore-start -->
+
+<!-- prettier-ignore-end -->

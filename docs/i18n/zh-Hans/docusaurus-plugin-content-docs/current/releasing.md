@@ -5,7 +5,7 @@ sidebar_position: 10
 
 # 发布
 
-Task 的发布流程是在 [GoReleaser](https://goreleaser.com/) 的帮助下完成的。 本地调用 Taskfile 的 `test-release` 任务可以测试发布流程。
+Task 的发布流程是在 [GoReleaser](https://goreleaser.com/) 的帮助下完成的。 本地调用 Taskfile 的 `test-release` task 可以测试发布流程。
 
 [GitHub Actions](https://github.com/go-task/task/actions) 会在新 tag 推送到 master 分支的时候，自动发布产出物（原生的可执行文件、DEB 和 RPM 包）。
 
@@ -23,8 +23,8 @@ Goreleaser 会自动向 [Homebrew tap](https://github.com/go-task/homebrew-tap) 
 
 [snap package](https://github.com/go-task/snap) 发布新版本需要手动执行下面步骤：
 
-* 更新 [snapcraft.yaml](https://github.com/go-task/snap/blob/master/snap/snapcraft.yaml#L2) 文件中的版本。
-* 把新的 `amd64`, `armhf` 和 `arm64` 移动到 [Snapcraft dashboard](https://snapcraft.io/task/releases) 的稳定通道。
+- 更新 [snapcraft.yaml](https://github.com/go-task/snap/blob/master/snap/snapcraft.yaml#L2) 文件中的版本。
+- 把新的 `amd64`, `armhf` 和 `arm64` 移动到 [Snapcraft dashboard](https://snapcraft.io/task/releases) 的稳定通道。
 
 # Scoop
 
@@ -33,3 +33,7 @@ Scoop 是一个 Windows 系统的命令行包管理工具。 Scoop 的包清单�
 # Nix
 
 Nix 安装由社区维护。 Nix 包的维护人员通常会在 [这个文件](https://github.com/NixOS/nixpkgs/blob/nixos-unstable/pkgs/development/tools/go-task/default.nix) 里维护版本。 如果发现 Task 版本是旧的，请提交一个 Issue 通知我们。
+
+<!-- prettier-ignore-start -->
+
+<!-- prettier-ignore-end -->

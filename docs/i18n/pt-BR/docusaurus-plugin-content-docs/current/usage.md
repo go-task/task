@@ -71,6 +71,7 @@ This is useful to have automation that you can run from anywhere in your system!
 
 :::info
 
+
 When running your global Taskfile with `-g`, tasks will run on `$HOME` by default, and not on your working directory!
 
 As mentioned in the previous section, the `{{.USER_WORKING_DIR}}` special variable can be very handy here to run stuff on the directory you're calling `task -g` from.
@@ -90,6 +91,7 @@ tasks:
 ```
 
 :::
+
 
 ## Environment variables
 
@@ -124,9 +126,11 @@ tasks:
 
 :::info
 
+
 `env` supports expansion and retrieving output from a shell command just like variables, as you can see in the [Variables](#variables) section.
 
 :::
+
 
 ### .env files
 
@@ -188,9 +192,11 @@ tasks:
 
 :::info
 
+
 Please note that you are not currently able to use the `dotenv` key inside included Taskfiles.
 
 :::
+
 
 ## Including other Taskfiles
 
@@ -234,9 +240,11 @@ includes:
 
 :::info
 
+
 The included Taskfiles must be using the same schema version as the main Taskfile uses.
 
 :::
+
 
 ### Optional includes
 
@@ -253,7 +261,8 @@ includes:
 tasks:
   greet:
     cmds:
-      - echo "This command can still be successfully executed if ./tests/Taskfile.yml does not exist"
+      - echo "This command can still be successfully executed if
+        ./tests/Taskfile.yml does not exist"
 ```
 
 ### Internal includes
@@ -303,9 +312,11 @@ includes:
 
 :::info
 
+
 Vars declared in the included Taskfile have preference over the variables in the including Taskfile! If you want a variable in an included Taskfile to be overridable, use the [default function](https://go-task.github.io/slim-sprig/defaults.html): `MY_VAR: '{{.MY_VAR | default "my-default-value"}}'`.
 
 :::
+
 
 ## Internal tasks
 
@@ -388,9 +399,11 @@ If there is more than one dependency, they always run in parallel for better per
 
 :::tip
 
+
 You can also make the tasks given by the command line run in parallel by using the `--parallel` flag (alias `-p`). Example: `task --parallel js css`.
 
 :::
+
 
 If you want to pass information to dependencies, you can do that the same manner as you would to [call another task](#calling-another-task):
 
@@ -401,9 +414,9 @@ tasks:
   default:
     deps:
       - task: echo_sth
-        vars: {TEXT: "before 1"}
+        vars: { TEXT: 'before 1' }
       - task: echo_sth
-        vars: {TEXT: "before 2"}
+        vars: { TEXT: 'before 2' }
     cmds:
       - echo "after"
 
@@ -517,16 +530,18 @@ tasks:
   greet-pessimistically:
     cmds:
       - task: greet
-        vars: {RECIPIENT: "Cruel World"}
+        vars: { RECIPIENT: 'Cruel World' }
 ```
 
 The above syntax is also supported in `deps`.
 
 :::tip
 
+
 NOTE: If you want to call a task declared in the root Taskfile from within an [included Taskfile](#including-other-taskfiles), add a leading `:` like this: `task: :task-name`.
 
 :::
+
 
 ## Prevent unnecessary work
 
@@ -582,6 +597,7 @@ In situations where you need more flexibility the `status` keyword can be used. 
 
 :::info
 
+
 By default, task stores checksums on a local `.task` directory in the project's directory. Most of the time, you'll want to have this directory on `.gitignore` (or equivalent) so it isn't committed. (If you have a task for code generation that is committed it may make sense to commit the checksum of that task as well, though).
 
 If you want these files to be stored in another directory, you can set a `TASK_TEMP_DIR` environment variable in your machine. It can contain a relative path like `tmp/task` that will be interpreted as relative to the project directory, or an absolute or home path like `/tmp/.task` or `~/.task` (subdirectories will be created for each project).
@@ -592,7 +608,9 @@ export TASK_TEMP_DIR='~/.task'
 
 :::
 
+
 :::info
+
 
 Each task has only one checksum stored for its `sources`. If you want to distinguish a task by any of its input variables, you can add those variables as part of the task's label, and it will be considered a different task.
 
@@ -600,19 +618,24 @@ This is useful if you want to run a task once for each distinct set of inputs un
 
 :::
 
+
 :::tip
+
 
 The method `none` skips any validation and always run the task.
 
 :::
 
+
 :::info
+
 
 For the `checksum` (default) or `timestamp` method to work, it is only necessary to inform the source files. When the `timestamp` method is used, the last time of the running the task is considered as a generate.
 
 :::
 
-### Using programmatic checks to indicate a task is up to date.
+
+### Using programmatic checks to indicate a task is up to date
 
 Alternatively, you can inform a sequence of tests as `status`. If no error is returned (exit status 0), the task is considered up-to-date:
 
@@ -668,7 +691,7 @@ tasks:
 
 ### Using programmatic checks to cancel the execution of a task and its dependencies
 
-In addition to `status` checks, `preconditions` checks are the logical inverse of `status` checks.  That is, if you need a certain set of conditions to be _true_ you can use the `preconditions` stanza. `preconditions` are similar to `status` lines, except they support `sh` expansion, and they SHOULD all return 0.
+In addition to `status` checks, `preconditions` checks are the logical inverse of `status` checks. That is, if you need a certain set of conditions to be _true_ you can use the `preconditions` stanza. `preconditions` are similar to `status` lines, except they support `sh` expansion, and they SHOULD all return 0.
 
 ```yaml
 version: '3'
@@ -682,13 +705,13 @@ tasks:
     # test existence of files
     preconditions:
       - test -f .env
-      - sh: "[ 1 = 0 ]"
+      - sh: '[ 1 = 0 ]'
         msg: "One doesn't equal Zero, Halting"
 ```
 
 Preconditions can set specific failure messages that can tell a user what steps to take using the `msg` field.
 
-If a task has a dependency on a sub-task with a precondition, and that precondition is not met - the calling task will fail.  Note that a task executed with a failing precondition will not run unless `--force` is given.
+If a task has a dependency on a sub-task with a precondition, and that precondition is not met - the calling task will fail. Note that a task executed with a failing precondition will not run unless `--force` is given.
 
 Unlike `status`, which will skip a task if it is up to date and continue executing tasks that depend on it, a `precondition` will fail a task, along with any other tasks that depend on it.
 
@@ -698,7 +721,7 @@ version: '3'
 tasks:
   task-will-fail:
     preconditions:
-      - sh: "exit 1"
+      - sh: 'exit 1'
 
   task-will-also-fail:
     deps:
@@ -716,9 +739,9 @@ If a task executed by multiple `cmds` or multiple `deps` you can control when it
 
 Supported values for `run`:
 
- * `always` (default) always attempt to invoke the task regardless of the number of previous executions
- * `once` only invoke this task once regardless of the number of references
- * `when_changed` only invokes the task once for each unique set of variables passed into the task
+- `always` (default) always attempt to invoke the task regardless of the number of previous executions
+- `once` only invoke this task once regardless of the number of references
+- `when_changed` only invokes the task once for each unique set of variables passed into the task
 
 ```yaml
 version: '3'
@@ -765,9 +788,11 @@ $ TASK_VARIABLE=a-value task do-something
 
 :::tip
 
+
 A special variable `.TASK` is always available containing the task name.
 
 :::
+
 
 Since some shells do not support the above syntax to set environment variables (Windows) tasks also accept a similar style when not at the beginning of the command.
 
@@ -873,13 +898,15 @@ tasks:
 
 :::info
 
+
 Due to the nature of how the [Go's own `defer` work](https://go.dev/tour/flowcontrol/13), the deferred commands are executed in the reverse order if you schedule multiple of them.
 
 :::
 
+
 ## Go's template engine
 
-Task parse commands as [Go's template engine][gotemplate] before executing them. Variables are accessible through dot syntax (`.VARNAME`).
+Task parse commands as [Go's template engine](https://golang.org/pkg/text/template/) before executing them. Variables are accessible through dot syntax (`.VARNAME`).
 
 All functions by the Go's [slim-sprig lib](https://go-task.github.io/slim-sprig/) are available. The following example gets the current date in a given format:
 
@@ -1004,9 +1031,10 @@ dependencies:
 commands:
  - your-release-tool
 ```
+
 If a summary is missing, the description will be printed. If the task does not have a summary or a description, a warning is printed.
 
-Please note: *showing the summary will not execute the command*.
+Please note: _showing the summary will not execute the command_.
 
 ## Task aliases
 
@@ -1077,7 +1105,7 @@ Print something
 
 There are four ways to enable silent mode:
 
-* At command level:
+- At command level:
 
 ```yaml
 version: '3'
@@ -1089,7 +1117,7 @@ tasks:
         silent: true
 ```
 
-* At task level:
+- At task level:
 
 ```yaml
 version: '3'
@@ -1101,7 +1129,7 @@ tasks:
     silent: true
 ```
 
-* Globally at Taskfile level:
+- Globally at Taskfile level:
 
 ```yaml
 version: '3'
@@ -1114,7 +1142,7 @@ tasks:
       - echo "Print something"
 ```
 
-* Or globally with `--silent` or `-s` flag
+- Or globally with `--silent` or `-s` flag
 
 If you want to suppress STDOUT instead, just redirect a command to `/dev/null`:
 
@@ -1232,7 +1260,7 @@ task: Failed to run task "errors": exit status 1
 
 The `prefix` output will prefix every line printed by a command with `[task-name]` as the prefix, but you can customize the prefix for a command with the `prefix:` attribute:
 
- ```yaml
+```yaml
 version: '3'
 
 output: prefixed
@@ -1241,16 +1269,16 @@ tasks:
   default:
     deps:
       - task: print
-        vars: {TEXT: foo}
+        vars: { TEXT: foo }
       - task: print
-        vars: {TEXT: bar}
+        vars: { TEXT: bar }
       - task: print
-        vars: {TEXT: baz}
+        vars: { TEXT: baz }
 
   print:
     cmds:
       - echo "{{.TEXT}}"
-    prefix: "print-{{.TEXT}}"
+    prefix: 'print-{{.TEXT}}'
     silent: true
 ```
 
@@ -1263,9 +1291,11 @@ $ task default
 
 :::tip
 
+
 The `output` option can also be specified by the `--output` or `-o` flags.
 
 :::
+
 
 ## Interactive CLI application
 
@@ -1317,9 +1347,11 @@ tasks:
 
 :::info
 
+
 Keep in mind that not all options are available in the [shell interpreter library](https://github.com/mvdan/sh) that Task uses.
 
 :::
+
 
 ## Watch tasks
 
@@ -1327,4 +1359,6 @@ With the flags `--watch` or `-w` task will watch for file changes and run the ta
 
 The default watch interval is 5 seconds, but it's possible to change it by either setting `interval: '500ms'` in the root of the Taskfile passing it as an argument like `--interval=500ms`.
 
-[gotemplate]: https://golang.org/pkg/text/template/
+<!-- prettier-ignore-start -->
+
+<!-- prettier-ignore-end -->
