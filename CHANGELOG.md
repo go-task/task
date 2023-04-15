@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Starting on this release, official binaries for FreeBSD will be available to
+  download (#1068).
+
 ## v3.24.0 - 2023-04-15
 
 - Fix Fish shell completion for tasks with aliases (#1113 by @patricksjackson).
