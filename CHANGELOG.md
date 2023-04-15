@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Fix Fish shell completion for tasks with aliases (#1113 by @patricksjackson).
 - The default branch was renamed from `master` to `main` (#1049, #1048 by
   @pd93).
 - Fix bug where "up-to-date" logs were not being omitted for silent tasks (#546,
