@@ -74,7 +74,7 @@ A full list of the exit codes and their descriptions can be found below:
 | 203  | There a multiple tasks with the same name or alias           |
 | 204  | A task was called too many times                             |
 
-These codes can also be found in the repository in [`errors/errors.go`](https://github.com/go-task/task/blob/master/errors/errors.go).
+These codes can also be found in the repository in [`errors/errors.go`](https://github.com/go-task/task/blob/main/errors/errors.go).
 
 :::info
 When Task is run with the `-x`/`--exit-code` flag, the exit code of any failed commands will be passed through to the user instead.
