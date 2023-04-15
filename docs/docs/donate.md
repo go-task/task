@@ -11,15 +11,15 @@ channels listed below.
 This is just a way of saying "thank you", it won't give you any benefits like
 higher priority on issues or something similar.
 
-Companies who donate at least $50/month will be featured as a "Gold Sponsor"
-in the website homepage and on the GitHub repository README. Make contact with
-[@andreynering] with the logo you want to be shown.
-Suspect businesses (gambling, casinos, etc) won't be allowed, though.
+Companies who donate at least $50/month will be featured as a "Gold Sponsor" in
+the website homepage and on the GitHub repository README. Make contact with
+[@andreynering] with the logo you want to be shown. Suspect businesses
+(gambling, casinos, etc) won't be allowed, though.
 
 ## GitHub Sponsors
 
-The preferred way to donate to the maintainers is via GitHub Sponsors.
-Just use the following links to do your donation:
+The preferred way to donate to the maintainers is via GitHub Sponsors. Just use
+the following links to do your donation:
 
 - [@andreynering](https://github.com/sponsors/andreynering)
 - [@pd93](https://github.com/sponsors/pd93)
@@ -46,4 +46,6 @@ You can donate to [@andreynering] via PayPal as well:
 And if you're Brazilian, you can also donate to [@andreynering] via PIX by
 [using this QR Code](/img/pix.png).
 
+<!-- prettier-ignore-start -->
 [@andreynering]: https://github.com/andreynering
+<!-- prettier-ignore-end -->

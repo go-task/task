@@ -40,13 +40,15 @@ guide to check the full schema documentation and Task features.
 - [Easy installation](installation.md): just download a single binary, add to
   `$PATH` and you're done! Or you can also install using [Homebrew][homebrew],
   [Snapcraft][snapcraft], or [Scoop][scoop] if you want.
-- Available on CIs: by adding [this simple command](installation.md#install-script)
-  to install on your CI script and you're ready to use Task as part of your CI pipeline;
+- Available on CIs: by adding
+  [this simple command](installation.md#install-script) to install on your CI
+  script and you're ready to use Task as part of your CI pipeline;
 - Truly cross-platform: while most build tools only work well on Linux or macOS,
   Task also supports Windows thanks to [this shell interpreter for Go][sh].
-- Great for code generation: you can easily [prevent a task from running](/usage#prevent-unnecessary-work)
-  if a given set of files haven't changed since last run (based either on its
-  timestamp or content).
+- Great for code generation: you can easily
+  [prevent a task from running](/usage#prevent-unnecessary-work) if a given set
+  of files haven't changed since last run (based either on its timestamp or
+  content).
 
 ## Gold Sponsors
 
@@ -58,6 +60,7 @@ guide to check the full schema documentation and Task features.
 
 </div>
 
+<!-- prettier-ignore-start -->
 [make]: https://www.gnu.org/software/make/
 [go]: https://go.dev/
 [yaml]: http://yaml.org/
@@ -65,3 +68,4 @@ guide to check the full schema documentation and Task features.
 [snapcraft]: https://snapcraft.io/
 [scoop]: https://scoop.sh/
 [sh]: https://github.com/mvdan/sh
+<!-- prettier-ignore-end -->

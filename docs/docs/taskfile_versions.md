@@ -40,9 +40,8 @@ The variable priority order was also different:
 
 ## Version 2.0
 
-At version 2, we introduced the `version:` key, to allow us to evolve Task
-with new features without breaking existing Taskfiles. The new syntax is as
-follows:
+At version 2, we introduced the `version:` key, to allow us to evolve Task with
+new features without breaking existing Taskfiles. The new syntax is as follows:
 
 ```yaml
 version: '2'
@@ -53,8 +52,8 @@ tasks:
       - echo "Hello, World!"
 ```
 
-Version 2 allows you to write global variables directly in the Taskfile,
-if you don't want to create a `Taskvars.yml`:
+Version 2 allows you to write global variables directly in the Taskfile, if you
+don't want to create a `Taskvars.yml`:
 
 ```yaml
 version: '2'
@@ -88,8 +87,8 @@ vars:
   FOO: foo
   BAR: bar
   BAZ: baz
-  FOOBAR: "{{.FOO}}{{.BAR}}"
-  FOOBARBAZ: "{{.FOOBAR}}{{.BAZ}}"
+  FOOBAR: '{{.FOO}}{{.BAR}}'
+  FOOBARBAZ: '{{.FOOBAR}}{{.BAZ}}'
 
 tasks:
   default:
@@ -99,9 +98,9 @@ tasks:
 
 ## Version 2.1
 
-Version 2.1 includes a global `output` option, to allow having more control
-over how commands output are printed to the console
-(see [documentation][output] for more info):
+Version 2.1 includes a global `output` option, to allow having more control over
+how commands output are printed to the console (see [documentation][output] for
+more info):
 
 ```yaml
 version: '2'
@@ -137,8 +136,7 @@ tasks:
 
 ## Version 2.2
 
-Version 2.2 comes with a global `includes` options to include other
-Taskfiles:
+Version 2.2 comes with a global `includes` options to include other Taskfiles:
 
 ```yaml
 version: '2'
@@ -175,10 +173,10 @@ These are some major changes done on `v3`:
 
 - Task's output will now be colored
 - Added support for `.env` like files
-- Added `label:` setting to task so one can override how the task name
-  appear in the logs
-- A global `method:` was added to allow setting the default method,
-  and Task's default changed to `checksum`
+- Added `label:` setting to task so one can override how the task name appear in
+  the logs
+- A global `method:` was added to allow setting the default method, and Task's
+  default changed to `checksum`
 - Two magic variables were added when using `status:`: `CHECKSUM` and
   `TIMESTAMP` which contains, respectively, the md5 checksum and greatest
   modification timestamp of the files listed on `sources:`
@@ -220,10 +218,10 @@ tasks:
   print: echo "Hello, World!"
 ```
 
-- There was a major refactor on how variables are handled. They're now easier
-  to understand. The `expansions:` setting was removed as it became unncessary.
-  This is the order in which Task will process variables, each level can see
-  the variables set by the previous one and override those.
+- There was a major refactor on how variables are handled. They're now easier to
+  understand. The `expansions:` setting was removed as it became unncessary.
+  This is the order in which Task will process variables, each level can see the
+  variables set by the previous one and override those.
   - Environment variables
   - Global + CLI variables
   - Call variables
