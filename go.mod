@@ -3,7 +3,7 @@ module github.com/go-task/task/v3
 go 1.19
 
 require (
-	github.com/Masterminds/semver/v3 v3.2.0
+	github.com/Masterminds/semver/v3 v3.2.1
 	github.com/fatih/color v1.15.0
 	github.com/go-task/slim-sprig v0.0.0-20210107165309-348f09dbbbc0
 	github.com/golang/mock v1.6.0
