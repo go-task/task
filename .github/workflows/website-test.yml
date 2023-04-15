@@ -3,7 +3,7 @@ name: Website Test
 on:
   pull_request:
     branches:
-      - master
+      - main
 
 jobs:
   website-test:
