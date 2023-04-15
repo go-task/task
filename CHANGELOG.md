@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- The default branch was renamed from `master` to `main` (#1049, #1048 by
+  @pd93).
 - Fix bug where "up-to-date" logs were not being omitted for silent tasks (#546,
   #1107 by @danquah).
 - Add `.hg` (Mercurial) to the list of ignored directories when using `--watch`
