@@ -17,9 +17,11 @@ task [--flags] [tasks...] [-- CLI_ARGS...]
 
 :::tip
 
+
 If `--` is given, all remaning arguments will be assigned to a special `CLI_ARGS` variable
 
 :::
+
 
 | Short | Flag                        | Type     | Default                                      | Description                                                                                                                                                            |
 | ----- | --------------------------- | -------- | -------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -35,6 +37,7 @@ If `--` is given, all remaning arguments will be assigned to a special `CLI_ARGS
 | `-I`  | `--interval`                | `string` | `5s`                                         | Sets a different watch interval when using `--watch`, the default being 5 seconds. This string should be a valid [Go Duration](https://pkg.go.dev/time#ParseDuration). |
 | `-l`  | `--list`                    | `bool`   | `false`                                      | Lists tasks with description of current Taskfile.                                                                                                                      |
 | `-a`  | `--list-all`                | `bool`   | `false`                                      | Lists tasks with or without a description.                                                                                                                             |
+|       | `--sort`                    | `string` | `default`                                    | Changes the order of the tasks when listed.                                                                                                                            |
 |       | `--json`                    | `bool`   | `false`                                      | See [JSON Output](#json-output)                                                                                                                                        |
 | `-o`  | `--output`                  | `string` | Default set in the Taskfile or `intervealed` | Sets output style: [`interleaved`/`group`/`prefixed`].                                                                                                                 |
 |       | `--output-group-begin`      | `string` |                                              | Message template to print before a task's grouped output.                                                                                                              |
@@ -66,7 +69,7 @@ When using the `--json` flag in combination with either the `--list` or `--list-
         "column": 3,
         "taskfile": "/path/to/Taskfile.yml"
       }
-    },
+    }
     // ...
   ],
   "location": "/path/to/Taskfile.yml"
@@ -135,6 +138,7 @@ Some environment variables can be overriden to adjust Task behavior.
 
 :::info
 
+
 Informing only a string like below is equivalent to setting that value to the `taskfile` attribute.
 
 ```yaml
@@ -144,14 +148,16 @@ includes:
 
 :::
 
+
 ### Variable
 
 | Attribute | Type     | Default | Description                                                              |
 | --------- | -------- | ------- | ------------------------------------------------------------------------ |
-| *itself*  | `string` |         | A static value that will be set to the variable.                         |
+| _itself_  | `string` |         | A static value that will be set to the variable.                         |
 | `sh`      | `string` |         | A shell command. The output (`STDOUT`) will be assigned to the variable. |
 
 :::info
+
 
 Static and dynamic variables have different syntaxes, like below:
 
@@ -163,6 +169,7 @@ vars:
 ```
 
 :::
+
 
 ### Task
 
@@ -195,6 +202,7 @@ vars:
 
 :::info
 
+
 These alternative syntaxes are available. They will set the given values to `cmds` and everything else will be set to their default values:
 
 ```yaml
@@ -210,6 +218,7 @@ tasks:
 ```
 
 :::
+
 
 #### Command
 
@@ -227,6 +236,7 @@ tasks:
 
 :::info
 
+
 If given as a a string, the value will be assigned to `cmd`:
 
 ```yaml
@@ -239,6 +249,7 @@ tasks:
 
 :::
 
+
 #### Dependency
 
 | Attribute | Type                               | Default | Description                                              |
@@ -247,6 +258,7 @@ tasks:
 | `vars`    | [`map[string]Variable`](#variable) |         | Optional additional variables to be passed to this task. |
 
 :::tip
+
 
 If you don't want to set additional variables, it's enough to declare the dependency as a list of strings (they will be assigned to `task`):
 
@@ -258,6 +270,7 @@ tasks:
 
 :::
 
+
 #### Precondition
 
 | Attribute | Type     | Default | Description                                                                                                  |
@@ -266,6 +279,7 @@ tasks:
 | `msg`     | `string` |         | Optional message to print if the precondition isn't met.                                                     |
 
 :::tip
+
 
 If you don't want to set a different message, you can declare a precondition like this and the value will be assigned to `sh`:
 

@@ -38,3 +38,7 @@ Windows 上的默认 shell（`cmd` 和 `powershell`）没有像 `rm` 和 `cp` �
 - [#197](https://github.com/go-task/task/issues/197)
 - [mvdan/sh#93](https://github.com/mvdan/sh/issues/93)
 - [mvdan/sh#97](https://github.com/mvdan/sh/issues/97)
+
+<!-- prettier-ignore-start -->
+
+<!-- prettier-ignore-end -->

@@ -17,9 +17,11 @@ task [--flags] [tasks...] [-- CLI_ARGS...]
 
 :::tip
 
+
 如果 `--` 给出，所有剩余参数将被分配给一个特殊的 `CLI_ARGS` 变量
 
 :::
+
 
 | 缩写   | 标志                          | 类型       | 默认                               | 描述                                                                                                  |
 | ---- | --------------------------- | -------- | -------------------------------- | --------------------------------------------------------------------------------------------------- |
@@ -35,6 +37,7 @@ task [--flags] [tasks...] [-- CLI_ARGS...]
 | `-I` | `--interval`                | `string` | `5s`                             | 使用 `--watch` 设置不同的观察间隔，默认为 5 秒。 这个字符串应该是一个有效的 [Go Duration](https://pkg.go.dev/time#ParseDuration)。 |
 | `-l` | `--list`                    | `bool`   | `false`                          | 列出当前文件的全部任务及对应描述。                                                                                   |
 | `-a` | `--list-all`                | `bool`   | `false`                          | 列出无论有没有描述的所有任务。                                                                                     |
+|      | `--sort`                    | `string` | `default`                        | 在列出时更改 task 的顺序。                                                                                    |
 |      | `--json`                    | `bool`   | `false`                          | 查看 [JSON 输出](#json-输出)                                                                              |
 | `-o` | `--output`                  | `string` | 在 Taskfile 中设置默认值或 `intervealed` | 设置输出样式：[`interleaved`/`group`/`prefixed`]。                                                          |
 |      | `--output-group-begin`      | `string` |                                  | 在任务组输出前打印的消息模板。                                                                                     |
@@ -66,7 +69,7 @@ task [--flags] [tasks...] [-- CLI_ARGS...]
         "column": 3,
         "taskfile": "/path/to/Taskfile.yml"
       }
-    },
+    }
     // ...
   ],
   "location": "/path/to/Taskfile.yml"
@@ -135,6 +138,7 @@ task [--flags] [tasks...] [-- CLI_ARGS...]
 
 :::info
 
+
 像下面这样只赋值一个字符串，和把这个值设置到 `taskfile` 属性是一样的。
 
 ```yaml
@@ -144,14 +148,16 @@ includes:
 
 :::
 
+
 ### Variable
 
 | 属性       | 类型       | 默认 | 描述                                 |
 | -------- | -------- | -- | ---------------------------------- |
-| *itself* | `string` |    | 将设置为变量的静态值。                        |
+| _itself_ | `string` |    | 将设置为变量的静态值。                        |
 | `sh`     | `string` |    | 一个 shell 命令。 输出 (`STDOUT`) 将分配给变量。 |
 
 :::info
+
 
 静态和动态变量有不同的语法，如下所示：
 
@@ -163,6 +169,7 @@ vars:
 ```
 
 :::
+
 
 ### Task
 
@@ -195,6 +202,7 @@ vars:
 
 :::info
 
+
 这些替代语法可用。 他们会将给定值设置为 `cmds`，其他所有内容都将设置为其默认值：
 
 ```yaml
@@ -210,6 +218,7 @@ tasks:
 ```
 
 :::
+
 
 #### Command
 
@@ -227,6 +236,7 @@ tasks:
 
 :::info
 
+
 如果以字符串形式给出，该值将分配给 `cmd`：
 
 ```yaml
@@ -239,6 +249,7 @@ tasks:
 
 :::
 
+
 #### Dependency
 
 | 属性     | 类型                                 | 默认 | 描述              |
@@ -247,6 +258,7 @@ tasks:
 | `vars` | [`map[string]Variable`](#variable) |    | 要传递给此任务的可选附加变量。 |
 
 :::tip
+
 
 如果你不想设置额外的变量，将依赖关系声明为一个字符串列表就足够了（它们将被分配给 `task`）。
 
@@ -258,6 +270,7 @@ tasks:
 
 :::
 
+
 #### Precondition
 
 | 属性    | 类型       | 默认 | 描述                                  |
@@ -266,6 +279,7 @@ tasks:
 | `msg` | `string` |    | 如果不满足先决条件，则打印可选消息。                  |
 
 :::tip
+
 
 如果你不想设置不同的消息，你可以像这样声明一个前提条件，值将被分配给 `sh`：
 

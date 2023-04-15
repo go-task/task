@@ -47,4 +47,4 @@ JetBrains IntelliJ 插件由 [@lechuckroh](https://github.com/lechuckroh) 完成
 
 同时，感谢所有 [代码贡献者](https://github.com/go-task/task/graphs/contributors)， [资金赞助](https://opencollective.com/task)，以及 [提交问题](https://github.com/go-task/task/issues?q=is%3Aissue) 和 [解答问题](https://github.com/go-task/task/discussions) 的人。
 
-如果你发现文档有哪些遗漏信息，欢迎提交 pull request。
+如果你发现文档有哪些遗漏信息，欢迎提交 PR。

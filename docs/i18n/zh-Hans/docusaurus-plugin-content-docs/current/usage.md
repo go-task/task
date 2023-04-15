@@ -71,6 +71,7 @@ tasks:
 
 :::info
 
+
 When running your global Taskfile with `-g`, tasks will run on `$HOME` by default, and not on your working directory!
 
 As mentioned in the previous section, the `{{.USER_WORKING_DIR}}` special variable can be very handy here to run stuff on the directory you're calling `task -g` from.
@@ -90,6 +91,7 @@ tasks:
 ```
 
 :::
+
 
 ## 环境变量
 
@@ -124,9 +126,11 @@ tasks:
 
 :::info
 
+
 `env` 支持扩展和检索 shell 命令的输出，就像变量一样，如您在 [变量](#变量) 部分中看到的那样。
 
 :::
+
 
 ### .env 文件
 
@@ -188,9 +192,11 @@ tasks:
 
 :::info
 
+
 请注意，您目前无法在包含的 Taskfile 中使用 `dotenv` 键。
 
 :::
+
 
 ## 包含其他 Taskfile
 
@@ -204,13 +210,13 @@ includes:
   docker: ./DockerTasks.yml
 ```
 
-The tasks described in the given Taskfiles will be available with the informed namespace. So, you'd call `task docs:serve` to run the `serve` task from `documentation/Taskfile.yml` or `task docker:build` to run the `build` task from the `DockerTasks.yml` file.
+给定的 Taskfile 中描述的任务将在指定的命名空间中提供。 因此，您可以从 `documentation/Taskfile.yml` 调用 `task docs:serve` 运行 `serve` task，或者从 `DockerTasks.yml` 文件调用 `task docker:build` 运行 `build` task。
 
 相对路径是相对于包含包含 Taskfile 的目录解析的。
 
 ### 操作系统特定 Taskfile
 
-With `version: '2'`, task automatically includes any `Taskfile_{{OS}}.yml` if it exists (for example: `Taskfile_windows.yml`, `Taskfile_linux.yml` or `Taskfile_darwin.yml`). Since this behavior was a bit too implicit, it was removed on version 3, but you still can have a similar behavior by explicitly importing these files:
+在 `version: '2'` 中，task 会自动尝试引入 `Taskfile_{{OS}}.yml` 文件 （例如`Taskfile_windows.yml`, `Taskfile_linux.yml` 或 `Taskfile_darwin.yml`）。 但是因为过于隐晦，在版本 3 中被移除了， 在版本 3 可以通过明确的引用来实现类似功能:
 
 ```yaml
 version: '3'
@@ -234,9 +240,11 @@ includes:
 
 :::info
 
+
 包含的 Taskfile 必须使用与主 Taskfile 使用的相同规则版本。
 
 :::
+
 
 ### 可选 includes
 
@@ -253,12 +261,13 @@ includes:
 tasks:
   greet:
     cmds:
-      - echo "This command can still be successfully executed if ./tests/Taskfile.yml does not exist"
+      - echo "This command can still be successfully executed if
+        ./tests/Taskfile.yml does not exist"
 ```
 
 ### 内部 includes
 
-Includes marked as internal will set all the tasks of the included file to be internal as well (see the [Internal tasks](#internal-tasks) section below). This is useful when including utility tasks that are not intended to be used directly by the user.
+标记为 internal 的包含会将包含文件的所有 task 也设置为内部 task（请参阅下面的 [内部-tasks](#内部-tasks) 部分）。 这在包含不打算由用户直接使用的实用程序任务时很有用。
 
 ```yaml
 version: '3'
@@ -303,9 +312,11 @@ includes:
 
 :::info
 
+
 Vars declared in the included Taskfile have preference over the variables in the including Taskfile! If you want a variable in an included Taskfile to be overridable, use the [default function](https://go-task.github.io/slim-sprig/defaults.html): `MY_VAR: '{{.MY_VAR | default "my-default-value"}}'`.
 
 :::
+
 
 ## 内部 tasks
 
@@ -348,7 +359,7 @@ tasks:
 
 > 依赖项并行运行，因此一项 task 的依赖项不应相互依赖。 如果您想强制任务顺序运行，请查看下面的 [调用另一个 task](#调用另一个-task) 部分。
 
-您可能有依赖于其它的 task。 将它们指向 `deps` 将使它们在运行父 task 之前自动运行：
+您可能有依赖于其它的 task。 Just pointing them on `deps` will make them run automatically before running the parent task:
 
 ```yaml
 version: '3'
@@ -388,11 +399,13 @@ tasks:
 
 :::tip
 
-您还可以使用 `--parallel` 标志（别名 `-p`）使命令行给出的 task 并行运行。 例如: `task --parallel js css`。
+
+You can also make the tasks given by the command line run in parallel by using the `--parallel` flag (alias `-p`). 例如: `task --parallel js css`。
 
 :::
 
-如果你想将信息传递给依赖项，你可以像 [调用另一个 task](#调用另一个-task) 一样以相同的方式进行：
+
+If you want to pass information to dependencies, you can do that the same manner as you would to [call another task](#calling-another-task):
 
 ```yaml
 version: '3'
@@ -401,9 +414,9 @@ tasks:
   default:
     deps:
       - task: echo_sth
-        vars: {TEXT: "before 1"}
+        vars: { TEXT: 'before 1' }
       - task: echo_sth
-        vars: {TEXT: "before 2"}
+        vars: { TEXT: 'before 2' }
     cmds:
       - echo "after"
 
@@ -414,11 +427,11 @@ tasks:
 
 ## 平台特定的 tasks 和 cmds
 
-如果您想将 task 的运行限制在明确的平台上，可以使用 `platforms:` 键来实现。 Task 可以限制在特定的操作系统、架构或两者的组合中。 如果不匹配，任务或命令将被跳过，并且不会抛出任何错误。
+If you want to restrict the running of tasks to explicit platforms, this can be achieved using the `platforms:` key. Tasks can be restricted to a specific OS, architecture or a combination of both. On a mismatch, the task or command will be skipped, and no error will be thrown.
 
 允许作为 OS 或 Arch 的值是有效的 `GOOS` 和 `GOARCH` 值，正如 [此处](https://github.com/golang/go/blob/master/src/go/build/syslist.go) 的 Go 语言所定义的那样。
 
-下面的 `build-windows` task 将仅在 Windows 所有架构上运行：
+The `build-windows` task below will run only on Windows, and on any architecture:
 
 ```yaml
 version: '3'
@@ -481,7 +494,7 @@ tasks:
 
 ## 调用另一个 task
 
-当一个 task 有很多依赖时，它们是并发执行的。 这通常会导致更快的构建管道。 但是，在某些情况下，您可能需要串行调用其他 task。 在这种情况下，请使用以下语法：
+当一个 task 有很多依赖时，它们是并发执行的。 这通常会导致更快的构建管道。 However, in some situations, you may need to call other tasks serially. 在这种情况下，请使用以下语法：
 
 ```yaml
 version: '3'
@@ -517,16 +530,18 @@ tasks:
   greet-pessimistically:
     cmds:
       - task: greet
-        vars: {RECIPIENT: "Cruel World"}
+        vars: { RECIPIENT: 'Cruel World' }
 ```
 
 `deps` 也支持上述语法。
 
 :::tip
 
+
 注意：如果您想从 [包含的 Taskfile](#包含其他-taskfile) 中调用在根 Taskfile 中声明的 task，请像这样添加 `:` 前缀：`task: :task-name`。
 
 :::
+
 
 ## 减少不必要的工作
 
@@ -562,7 +577,7 @@ tasks:
 
 `sources` and `generates` can be files or file patterns. When given, Task will compare the checksum of the source files to determine if it's necessary to run the task. If not, it will just print a message like `Task "js" is up to date`.
 
-如果您希望通过文件的修改 timestamp 而不是其 checksum（内容）来进行此检查，只需将 `method` 属性设置为 `timestamp` 即可。
+If you prefer this check to be made by the modification timestamp of the files, instead of its checksum (content), just set the `method` property to `timestamp`.
 
 ```yaml
 version: '3'
@@ -582,6 +597,7 @@ tasks:
 
 :::info
 
+
 By default, task stores checksums on a local `.task` directory in the project's directory. Most of the time, you'll want to have this directory on `.gitignore` (or equivalent) so it isn't committed. (If you have a task for code generation that is committed it may make sense to commit the checksum of that task as well, though).
 
 If you want these files to be stored in another directory, you can set a `TASK_TEMP_DIR` environment variable in your machine. It can contain a relative path like `tmp/task` that will be interpreted as relative to the project directory, or an absolute or home path like `/tmp/.task` or `~/.task` (subdirectories will be created for each project).
@@ -592,7 +608,9 @@ export TASK_TEMP_DIR='~/.task'
 
 :::
 
+
 :::info
+
 
 Each task has only one checksum stored for its `sources`. If you want to distinguish a task by any of its input variables, you can add those variables as part of the task's label, and it will be considered a different task.
 
@@ -600,19 +618,24 @@ This is useful if you want to run a task once for each distinct set of inputs un
 
 :::
 
+
 :::tip
+
 
 将 method 设置为 `none` 会跳过任何验证并始终运行任务。
 
 :::
 
+
 :::info
+
 
 For the `checksum` (default) or `timestamp` method to work, it is only necessary to inform the source files. When the `timestamp` method is used, the last time of the running the task is considered as a generate.
 
 :::
 
-### 使用程序检查来表示任务是最新的
+
+### Using programmatic checks to indicate a task is up to date
 
 Alternatively, you can inform a sequence of tests as `status`. If no error is returned (exit status 0), the task is considered up-to-date:
 
@@ -638,7 +661,7 @@ Two special variables `{{.CHECKSUM}}` and `{{.TIMESTAMP}}` are available for int
 
 Note that the `{{.TIMESTAMP}}` variable is a "live" Go `time.Time` struct, and can be formatted using any of the methods that `time.Time` responds to.
 
-有关详细信息，请参阅 [Go Time 文档](https://golang.org/pkg/time/)。
+See [the Go Time documentation](https://golang.org/pkg/time/) for more information.
 
 如果你想强制任务运行，即使是最新的，你也可以使用 `--force` 或 `-f`。
 
@@ -668,7 +691,7 @@ tasks:
 
 ### 使用程序检查取消任务及其依赖项的执行
 
-In addition to `status` checks, `preconditions` checks are the logical inverse of `status` checks.  That is, if you need a certain set of conditions to be _true_ you can use the `preconditions` stanza. `preconditions` are similar to `status` lines, except they support `sh` expansion, and they SHOULD all return 0.
+In addition to `status` checks, `preconditions` checks are the logical inverse of `status` checks. That is, if you need a certain set of conditions to be _true_ you can use the `preconditions` stanza. `preconditions` are similar to `status` lines, except they support `sh` expansion, and they SHOULD all return 0.
 
 ```yaml
 version: '3'
@@ -682,13 +705,13 @@ tasks:
     # test existence of files
     preconditions:
       - test -f .env
-      - sh: "[ 1 = 0 ]"
+      - sh: '[ 1 = 0 ]'
         msg: "One doesn't equal Zero, Halting"
 ```
 
 Preconditions can set specific failure messages that can tell a user what steps to take using the `msg` field.
 
-If a task has a dependency on a sub-task with a precondition, and that precondition is not met - the calling task will fail.  Note that a task executed with a failing precondition will not run unless `--force` is given.
+If a task has a dependency on a sub-task with a precondition, and that precondition is not met - the calling task will fail. Note that a task executed with a failing precondition will not run unless `--force` is given.
 
 Unlike `status`, which will skip a task if it is up to date and continue executing tasks that depend on it, a `precondition` will fail a task, along with any other tasks that depend on it.
 
@@ -698,7 +721,7 @@ version: '3'
 tasks:
   task-will-fail:
     preconditions:
-      - sh: "exit 1"
+      - sh: 'exit 1'
 
   task-will-also-fail:
     deps:
@@ -716,9 +739,9 @@ If a task executed by multiple `cmds` or multiple `deps` you can control when it
 
 `run` 支持的值：
 
- * `always` (default) always attempt to invoke the task regardless of the number of previous executions
- * `once` only invoke this task once regardless of the number of references
- * `when_changed` only invokes the task once for each unique set of variables passed into the task
+- `always` (default) always attempt to invoke the task regardless of the number of previous executions
+- `once` only invoke this task once regardless of the number of references
+- `when_changed` only invokes the task once for each unique set of variables passed into the task
 
 ```yaml
 version: '3'
@@ -748,7 +771,7 @@ tasks:
 
 ## 变量
 
-在进行变量插值时，Task 将查找以下内容。 它们按权重顺序列在下面（即最重要的第一位）：
+在进行变量插值时，Task 将查找以下内容。 They are listed below in order of importance (i.e. most important first):
 
 - Variables declared in the task definition
 - Variables given while calling a task from another (See [Calling another task](#calling-another-task) above)
@@ -765,9 +788,11 @@ $ TASK_VARIABLE=a-value task do-something
 
 :::tip
 
+
 A special variable `.TASK` is always available containing the task name.
 
 :::
+
 
 Since some shells do not support the above syntax to set environment variables (Windows) tasks also accept a similar style when not at the beginning of the command.
 
@@ -873,15 +898,17 @@ tasks:
 
 :::info
 
+
 Due to the nature of how the [Go's own `defer` work](https://go.dev/tour/flowcontrol/13), the deferred commands are executed in the reverse order if you schedule multiple of them.
 
 :::
 
+
 ## Go 的模板引擎
 
-任务在执行命令之前将命令解析为 [Go 的模板引擎][gotemplate]。 可以通过点语法 (`.VARNAME`) 访问变量。
+Task parse commands as [Go's template engine](https://golang.org/pkg/text/template/) before executing them. 可以通过点语法 (`.VARNAME`) 访问变量。
 
-Go 的 [slim-sprig 库](https://go-task.github.io/slim-sprig/) 的所有功能都可用。 以下示例按照给定格式获取当前日期：
+All functions by the Go's [slim-sprig lib](https://go-task.github.io/slim-sprig/) are available. The following example gets the current date in a given format:
 
 ```yaml
 version: '3'
@@ -931,7 +958,7 @@ tasks:
 
 ## 帮助
 
-运行 `task --list`（或 `task -l`）列出所有带有描述的任务。 以下 Taskfile：
+运行 `task --list`（或 `task -l`）列出所有带有描述的任务。 The following Taskfile:
 
 ```yaml
 version: '3'
@@ -967,7 +994,7 @@ tasks:
 
 ## 显示任务摘要
 
-运行 `task --summary task-name` 将显示任务的摘要。 以下 Taskfile：
+运行 `task --summary task-name` 将显示任务的摘要。 The following Taskfile:
 
 ```yaml
 version: '3'
@@ -1004,13 +1031,14 @@ dependencies:
 commands:
  - your-release-tool
 ```
-如果缺少摘要，将打印描述。 如果任务没有摘要或描述，则会打印一条警告。
 
-请注意：*显示摘要不会执行命令*。
+如果缺少摘要，将打印描述。 If the task does not have a summary or a description, a warning is printed.
+
+Please note: _showing the summary will not execute the command_.
 
 ## Task 别名
 
-Aliases 是 task 的替代名称。 它们可以使运行具有长名称或难以键入名称的 task 变得更加容易和快速。 您可以在命令行上使用它们，在您的 Taskfile 中 [调用子任务](#调用另一个-task) 时以及在 [包含来自另一个 Taskfile](#包含其他-taskfile) 的别名 task 时。 它们也可以与 [命名空间别名](#命名空间别名) 一起使用。
+Aliases 是 task 的替代名称。 它们可以使运行具有长名称或难以键入名称的 task 变得更加容易和快速。 您可以在命令行上使用它们，在您的 Taskfile 中 [调用子任务](#调用另一个-task) 时以及在 [包含来自另一个 Taskfile](#包含其他-taskfile) 的别名 task 时。 They can also be used together with [namespace aliases](#namespace-aliases).
 
 ```yaml
 version: '3'
@@ -1051,7 +1079,7 @@ tasks:
 
 ## 静默模式
 
-静默模式在 Task 运行命令之前禁用命令回显。 对于以下 Taskfile：
+静默模式在 Task 运行命令之前禁用命令回显。 For the following Taskfile:
 
 ```yaml
 version: '3'
@@ -1077,7 +1105,7 @@ Print something
 
 开启静默模式有四种方式：
 
-* 在 cmds 级别：
+- 在 cmds 级别：
 
 ```yaml
 version: '3'
@@ -1089,7 +1117,7 @@ tasks:
         silent: true
 ```
 
-* 在 task 级别：
+- 在 task 级别：
 
 ```yaml
 version: '3'
@@ -1101,7 +1129,7 @@ tasks:
     silent: true
 ```
 
-* 在 Taskfile 全局级别：
+- 在 Taskfile 全局级别：
 
 ```yaml
 version: '3'
@@ -1114,7 +1142,7 @@ tasks:
       - echo "Print something"
 ```
 
-* 或者全局使用 `--silent` 或 `-s` 标志
+- 或者全局使用 `--silent` 或 `-s` 标志
 
 如果您想改为禁止 STDOUT，只需将命令重定向到 `/dev/null`：
 
@@ -1133,7 +1161,7 @@ Dry run mode (`--dry`) compiles and steps through each task, printing the comman
 
 ## 忽略错误
 
-您可以选择在命令执行期间忽略错误。 给定以下 Taskfile：
+您可以选择在命令执行期间忽略错误。 Given the following Taskfile:
 
 ```yaml
 version: '3'
@@ -1232,7 +1260,7 @@ task: Failed to run task "errors": exit status 1
 
 The `prefix` output will prefix every line printed by a command with `[task-name]` as the prefix, but you can customize the prefix for a command with the `prefix:` attribute:
 
- ```yaml
+```yaml
 version: '3'
 
 output: prefixed
@@ -1241,16 +1269,16 @@ tasks:
   default:
     deps:
       - task: print
-        vars: {TEXT: foo}
+        vars: { TEXT: foo }
       - task: print
-        vars: {TEXT: bar}
+        vars: { TEXT: bar }
       - task: print
-        vars: {TEXT: baz}
+        vars: { TEXT: baz }
 
   print:
     cmds:
       - echo "{{.TEXT}}"
-    prefix: "print-{{.TEXT}}"
+    prefix: 'print-{{.TEXT}}'
     silent: true
 ```
 
@@ -1263,9 +1291,11 @@ $ task default
 
 :::tip
 
+
 The `output` option can also be specified by the `--output` or `-o` flags.
 
 :::
+
 
 ## 交互式 CLI 应用
 
@@ -1317,9 +1347,11 @@ tasks:
 
 :::info
 
+
 Keep in mind that not all options are available in the [shell interpreter library](https://github.com/mvdan/sh) that Task uses.
 
 :::
+
 
 ## 观察任务
 
@@ -1327,4 +1359,6 @@ With the flags `--watch` or `-w` task will watch for file changes and run the ta
 
 The default watch interval is 5 seconds, but it's possible to change it by either setting `interval: '500ms'` in the root of the Taskfile passing it as an argument like `--interval=500ms`.
 
-[gotemplate]: https://golang.org/pkg/text/template/
+<!-- prettier-ignore-start -->
+
+<!-- prettier-ignore-end -->

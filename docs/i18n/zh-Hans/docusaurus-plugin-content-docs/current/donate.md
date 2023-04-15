@@ -37,3 +37,7 @@ sidebar_position: 12
 ## PIX (仅巴西)
 
 如果你是巴西人，你也可以通过 PIX [使用这个QR码](/img/pix.png) 向 [@andreynering](https://github.com/andreynering) 捐款。
+
+<!-- prettier-ignore-start -->
+
+<!-- prettier-ignore-end -->

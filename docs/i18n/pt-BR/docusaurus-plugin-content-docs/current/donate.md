@@ -9,11 +9,11 @@ Se você acha esse projeto útil, considere doar usando um dos meios listados ab
 
 Esta é apenas uma maneira de dizer "obrigado", ele não lhe dará nenhum benefício como maior prioridade em issues ou algo parecido.
 
-As empresas que doarem pelo menos $50/mês ganharão destaque como "Patrocinador Ouro" na página do site e no README do repositório no GitHub. Faça contato com [@andreynering][] com o logotipo que você deseja ser mostrado no site. Nogócios suspeitos (apostas, cassinos, etc) não serão permitidos, porém.
+Companies who donate at least $50/month will be featured as a "Gold Sponsor" in the website homepage and on the GitHub repository README. Make contact with [@andreynering](https://github.com/andreynering) with the logo you want to be shown. Suspect businesses (gambling, casinos, etc) won't be allowed, though.
 
 ## GitHub Sponsors
 
-A forma sugerida de doar para os mantenedores é através do GitHub Sponsors. Basta usar os seguintes links para fazer a sua doação:
+A forma sugerida de doar para os mantenedores é através do GitHub Sponsors. Just use the following links to do your donation:
 
 - [@andreynering](https://github.com/sponsors/andreynering)
 - [@pd93](https://github.com/sponsors/pd93)
@@ -30,12 +30,14 @@ Se você preferir o [Open Collective](https://opencollective.com/task) você pod
 
 ## PayPal
 
-Você pode doar para [@andreynering][] através do PayPal também:
+You can donate to [@andreynering](https://github.com/andreynering) via PayPal as well:
 
 - [Qualquer valor - Doação única](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=GSVDU63RKG45A&currency_code=USD&source=url)
 
 ## PIX (somente para o Brasil)
 
-E se você é brasileiro, também pode doar para [@andreynering][] via PIX [usando este QR Code](/img/pix.png).
+And if you're Brazilian, you can also donate to [@andreynering](https://github.com/andreynering) via PIX by [using this QR Code](/img/pix.png).
 
-[@andreynering]: https://github.com/andreynering
+<!-- prettier-ignore-start -->
+
+<!-- prettier-ignore-end -->
