@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 
+	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/filepathext"
 )
 
@@ -29,7 +30,7 @@ func InitTaskfile(w io.Writer, dir string) error {
 	f := filepathext.SmartJoin(dir, defaultTaskfileName)
 
 	if _, err := os.Stat(f); err == nil {
-		return ErrTaskfileAlreadyExists
+		return errors.TaskfileAlreadyExistsError{}
 	}
 
 	if err := os.WriteFile(f, []byte(defaultTaskfile), 0o644); err != nil {

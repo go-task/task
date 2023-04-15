@@ -14,6 +14,7 @@ import (
 
 	"github.com/go-task/task/v3"
 	"github.com/go-task/task/v3/args"
+	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/logger"
 	"github.com/go-task/task/v3/internal/sort"
 	ver "github.com/go-task/task/v3/internal/version"
@@ -43,6 +44,17 @@ Options:
 `
 
 func main() {
+	if err := run(); err != nil {
+		if err, ok := err.(errors.TaskError); ok {
+			log.Print(err.Error())
+			os.Exit(err.Code())
+		}
+		os.Exit(errors.CodeUnknown)
+	}
+	os.Exit(errors.CodeOk)
+}
+
+func run() error {
 	log.SetFlags(0)
 	log.SetOutput(os.Stderr)
 
@@ -107,12 +119,12 @@ func main() {
 
 	if versionFlag {
 		fmt.Printf("Task version: %s\n", ver.GetVersion())
-		return
+		return nil
 	}
 
 	if helpFlag {
 		pflag.Usage()
-		return
+		return nil
 	}
 
 	if init {
@@ -123,25 +135,23 @@ func main() {
 		if err := task.InitTaskfile(os.Stdout, wd); err != nil {
 			log.Fatal(err)
 		}
-		return
+		return nil
 	}
 
 	if global && dir != "" {
 		log.Fatal("task: You can't set both --global and --dir")
-		return
+		return nil
 	}
 	if global {
 		home, err := os.UserHomeDir()
 		if err != nil {
-			log.Fatal("task: Failed to get user home directory: %w", err)
-			return
+			return fmt.Errorf("task: Failed to get user home directory: %w", err)
 		}
 		dir = home
 	}
 
 	if dir != "" && entrypoint != "" {
-		log.Fatal("task: You can't set both --dir and --taskfile")
-		return
+		return errors.New("task: You can't set both --dir and --taskfile")
 	}
 	if entrypoint != "" {
 		dir = filepath.Dir(entrypoint)
@@ -150,16 +160,13 @@ func main() {
 
 	if output.Name != "group" {
 		if output.Group.Begin != "" {
-			log.Fatal("task: You can't set --output-group-begin without --output=group")
-			return
+			return errors.New("task: You can't set --output-group-begin without --output=group")
 		}
 		if output.Group.End != "" {
-			log.Fatal("task: You can't set --output-group-end without --output=group")
-			return
+			return errors.New("task: You can't set --output-group-end without --output=group")
 		}
 		if output.Group.ErrorOnly {
-			log.Fatal("task: You can't set --output-group-error-only without --output=group")
-			return
+			return errors.New("task: You can't set --output-group-error-only without --output=group")
 		}
 	}
 
@@ -195,23 +202,27 @@ func main() {
 
 	listOptions := task.NewListOptions(list, listAll, listJson)
 	if err := listOptions.Validate(); err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	if (listOptions.ShouldListTasks()) && silent {
 		e.ListTaskNames(listAll)
-		return
+		return nil
 	}
 
 	if err := e.Setup(); err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	if listOptions.ShouldListTasks() {
-		if foundTasks, err := e.ListTasks(listOptions); !foundTasks || err != nil {
-			os.Exit(1)
+		foundTasks, err := e.ListTasks(listOptions)
+		if err != nil {
+			return err
 		}
-		return
+		if !foundTasks {
+			os.Exit(errors.CodeUnknown)
+		}
+		return nil
 	}
 
 	var (
@@ -221,7 +232,7 @@ func main() {
 
 	tasksAndVars, cliArgs, err := getArgs()
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	if e.Taskfile.Version.Compare(taskfile.V3) >= 0 {
@@ -240,22 +251,20 @@ func main() {
 	ctx := context.Background()
 
 	if status {
-		if err := e.Status(ctx, calls...); err != nil {
-			log.Fatal(err)
-		}
-		return
+		return e.Status(ctx, calls...)
 	}
 
 	if err := e.Run(ctx, calls...); err != nil {
 		e.Logger.Errf(logger.Red, "%v", err)
 
 		if exitCode {
-			if err, ok := err.(*task.TaskRunError); ok {
-				os.Exit(err.ExitCode())
+			if err, ok := err.(*errors.TaskRunError); ok {
+				os.Exit(err.TaskExitCode())
 			}
 		}
-		os.Exit(1)
+		return err
 	}
+	return nil
 }
 
 func getArgs() ([]string, string, error) {

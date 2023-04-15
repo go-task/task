@@ -1,7 +1,6 @@
 package read
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -9,6 +8,7 @@ import (
 
 	"gopkg.in/yaml.v3"
 
+	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/filepathext"
 	"github.com/go-task/task/v3/internal/sysinfo"
 	"github.com/go-task/task/v3/internal/templater"
@@ -208,7 +208,7 @@ func readTaskfile(file string) (*taskfile.Taskfile, error) {
 
 	var t taskfile.Taskfile
 	if err := yaml.NewDecoder(f).Decode(&t); err != nil {
-		return nil, fmt.Errorf("task: Failed to parse %s:\n%w", filepathext.TryAbsToRel(file), err)
+		return nil, &errors.TaskfileInvalidError{FilePath: filepathext.TryAbsToRel(file), Err: err}
 	}
 	return &t, nil
 }
@@ -229,7 +229,7 @@ func exists(path string) (string, error) {
 		}
 	}
 
-	return "", fmt.Errorf(`task: No Taskfile found in "%s". Use "task --init" to create a new one`, path)
+	return "", errors.TaskfileNotFoundError{Dir: path, Walk: false}
 }
 
 func existsWalk(path string) (string, error) {
@@ -254,7 +254,7 @@ func existsWalk(path string) (string, error) {
 		// Error if we reached the root directory and still haven't found a file
 		// OR if the user id of the directory changes
 		if path == parentPath || (parentOwner != owner) {
-			return "", fmt.Errorf(`task: No Taskfile found in "%s" (or any of the parent directories). Use "task --init" to create a new one`, origPath)
+			return "", errors.TaskfileNotFoundError{Dir: origPath, Walk: false}
 		}
 
 		owner = parentOwner

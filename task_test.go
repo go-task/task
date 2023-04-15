@@ -16,6 +16,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/go-task/task/v3"
+	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/filepathext"
 	"github.com/go-task/task/v3/taskfile"
 )
@@ -770,7 +771,7 @@ func TestCyclicDep(t *testing.T) {
 		Stderr: io.Discard,
 	}
 	require.NoError(t, e.Setup())
-	assert.IsType(t, &task.MaximumTaskCallExceededError{}, e.Run(context.Background(), taskfile.Call{Task: "task-1"}))
+	assert.IsType(t, &errors.TaskCalledTooManyTimesError{}, e.Run(context.Background(), taskfile.Call{Task: "task-1"}))
 }
 
 func TestTaskVersion(t *testing.T) {
@@ -1691,9 +1692,9 @@ func TestErrorCode(t *testing.T) {
 
 	err := e.Run(context.Background(), taskfile.Call{Task: "test-exit-code"})
 	require.Error(t, err)
-	casted, ok := err.(*task.TaskRunError)
+	casted, ok := err.(*errors.TaskRunError)
 	assert.True(t, ok, "cannot cast returned error to *task.TaskRunError")
-	assert.Equal(t, 42, casted.ExitCode(), "unexpected exit code from task")
+	assert.Equal(t, 42, casted.TaskExitCode(), "unexpected exit code from task")
 }
 
 func TestEvaluateSymlinksInPaths(t *testing.T) {

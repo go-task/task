@@ -10,6 +10,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/compiler"
 	"github.com/go-task/task/v3/internal/env"
 	"github.com/go-task/task/v3/internal/execext"
@@ -77,7 +78,7 @@ func (e *Executor) Run(ctx context.Context, calls ...taskfile.Call) error {
 	for _, call := range calls {
 		task, err := e.GetTask(call)
 		if err != nil {
-			if _, ok := err.(*taskNotFoundError); ok {
+			if _, ok := err.(*errors.TaskNotFoundError); ok {
 				if _, err := e.ListTasks(ListOptions{ListOnlyTasksWithDescriptions: true}); err != nil {
 					return err
 				}
@@ -86,12 +87,12 @@ func (e *Executor) Run(ctx context.Context, calls ...taskfile.Call) error {
 		}
 
 		if task.Internal {
-			if _, ok := err.(*taskNotFoundError); ok {
+			if _, ok := err.(*errors.TaskNotFoundError); ok {
 				if _, err := e.ListTasks(ListOptions{ListOnlyTasksWithDescriptions: true}); err != nil {
 					return err
 				}
 			}
-			return &taskInternalError{taskName: call.Task}
+			return &errors.TaskInternalError{TaskName: call.Task}
 		}
 	}
 
@@ -132,7 +133,7 @@ func (e *Executor) RunTask(ctx context.Context, call taskfile.Call) error {
 		return err
 	}
 	if !e.Watch && atomic.AddInt32(e.taskCallCount[t.Task], 1) >= MaximumTaskCall {
-		return &MaximumTaskCallExceededError{task: t.Task}
+		return &errors.TaskCalledTooManyTimesError{TaskName: t.Task}
 	}
 
 	release := e.acquireConcurrencyLimit()
@@ -203,7 +204,7 @@ func (e *Executor) RunTask(ctx context.Context, call taskfile.Call) error {
 					continue
 				}
 
-				return &TaskRunError{t.Task, err}
+				return &errors.TaskRunError{TaskName: t.Task, Err: err}
 			}
 		}
 		e.Logger.VerboseErrf(logger.Magenta, `task: "%s" finished`, call.Task)
@@ -372,9 +373,9 @@ func (e *Executor) GetTask(call taskfile.Call) (*taskfile.Task, error) {
 	}
 	// If we found multiple tasks
 	if len(aliasedTasks) > 1 {
-		return nil, &multipleTasksWithAliasError{
-			aliasName: call.Task,
-			taskNames: aliasedTasks,
+		return nil, &errors.TaskNameConflictError{
+			AliasName: call.Task,
+			TaskNames: aliasedTasks,
 		}
 	}
 	// If we found no tasks
@@ -383,9 +384,9 @@ func (e *Executor) GetTask(call taskfile.Call) (*taskfile.Task, error) {
 		if e.fuzzyModel != nil {
 			didYouMean = e.fuzzyModel.SpellCheck(call.Task)
 		}
-		return nil, &taskNotFoundError{
-			taskName:   call.Task,
-			didYouMean: didYouMean,
+		return nil, &errors.TaskNotFoundError{
+			TaskName:   call.Task,
+			DidYouMean: didYouMean,
 		}
 	}
 
