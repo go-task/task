@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v3.24.0 - 2023-04-15
 
 - Fix Fish shell completion for tasks with aliases (#1113 by @patricksjackson).
 - The default branch was renamed from `master` to `main` (#1049, #1048 by
