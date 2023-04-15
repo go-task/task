@@ -4,10 +4,11 @@ import (
 	"context"
 	"testing"
 
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
+	"github.com/go-task/task/v3/internal/mocks"
 	"github.com/go-task/task/v3/taskfile"
 )
 
@@ -28,8 +29,8 @@ func TestIsTaskUpToDate(t *testing.T) {
 	tests := []struct {
 		name                    string
 		task                    *taskfile.Task
-		setupMockStatusChecker  func(m *MockStatusCheckable)
-		setupMockSourcesChecker func(m *MockSourcesCheckable)
+		setupMockStatusChecker  func(m *mocks.StatusCheckable)
+		setupMockSourcesChecker func(m *mocks.SourcesCheckable)
 		expected                bool
 	}{
 		{
@@ -49,8 +50,8 @@ func TestIsTaskUpToDate(t *testing.T) {
 				Sources: []string{"sources"},
 			},
 			setupMockStatusChecker: nil,
-			setupMockSourcesChecker: func(m *MockSourcesCheckable) {
-				m.EXPECT().IsUpToDate(gomock.Any()).Return(true, nil)
+			setupMockSourcesChecker: func(m *mocks.SourcesCheckable) {
+				m.EXPECT().IsUpToDate(mock.Anything).Return(true, nil)
 			},
 			expected: true,
 		},
@@ -61,8 +62,8 @@ func TestIsTaskUpToDate(t *testing.T) {
 				Sources: []string{"sources"},
 			},
 			setupMockStatusChecker: nil,
-			setupMockSourcesChecker: func(m *MockSourcesCheckable) {
-				m.EXPECT().IsUpToDate(gomock.Any()).Return(false, nil)
+			setupMockSourcesChecker: func(m *mocks.SourcesCheckable) {
+				m.EXPECT().IsUpToDate(mock.Anything).Return(false, nil)
 			},
 			expected: false,
 		},
@@ -72,8 +73,8 @@ func TestIsTaskUpToDate(t *testing.T) {
 				Status:  []string{"status"},
 				Sources: nil,
 			},
-			setupMockStatusChecker: func(m *MockStatusCheckable) {
-				m.EXPECT().IsUpToDate(gomock.Any(), gomock.Any()).Return(true, nil)
+			setupMockStatusChecker: func(m *mocks.StatusCheckable) {
+				m.EXPECT().IsUpToDate(mock.Anything, mock.Anything).Return(true, nil)
 			},
 			setupMockSourcesChecker: nil,
 			expected:                true,
@@ -84,11 +85,11 @@ func TestIsTaskUpToDate(t *testing.T) {
 				Status:  []string{"status"},
 				Sources: []string{"sources"},
 			},
-			setupMockStatusChecker: func(m *MockStatusCheckable) {
-				m.EXPECT().IsUpToDate(gomock.Any(), gomock.Any()).Return(true, nil)
+			setupMockStatusChecker: func(m *mocks.StatusCheckable) {
+				m.EXPECT().IsUpToDate(mock.Anything, mock.Anything).Return(true, nil)
 			},
-			setupMockSourcesChecker: func(m *MockSourcesCheckable) {
-				m.EXPECT().IsUpToDate(gomock.Any()).Return(true, nil)
+			setupMockSourcesChecker: func(m *mocks.SourcesCheckable) {
+				m.EXPECT().IsUpToDate(mock.Anything).Return(true, nil)
 			},
 			expected: true,
 		},
@@ -98,11 +99,11 @@ func TestIsTaskUpToDate(t *testing.T) {
 				Status:  []string{"status"},
 				Sources: []string{"sources"},
 			},
-			setupMockStatusChecker: func(m *MockStatusCheckable) {
-				m.EXPECT().IsUpToDate(gomock.Any(), gomock.Any()).Return(true, nil)
+			setupMockStatusChecker: func(m *mocks.StatusCheckable) {
+				m.EXPECT().IsUpToDate(mock.Anything, mock.Anything).Return(true, nil)
 			},
-			setupMockSourcesChecker: func(m *MockSourcesCheckable) {
-				m.EXPECT().IsUpToDate(gomock.Any()).Return(false, nil)
+			setupMockSourcesChecker: func(m *mocks.SourcesCheckable) {
+				m.EXPECT().IsUpToDate(mock.Anything).Return(false, nil)
 			},
 			expected: false,
 		},
@@ -112,8 +113,8 @@ func TestIsTaskUpToDate(t *testing.T) {
 				Status:  []string{"status"},
 				Sources: nil,
 			},
-			setupMockStatusChecker: func(m *MockStatusCheckable) {
-				m.EXPECT().IsUpToDate(gomock.Any(), gomock.Any()).Return(false, nil)
+			setupMockStatusChecker: func(m *mocks.StatusCheckable) {
+				m.EXPECT().IsUpToDate(mock.Anything, mock.Anything).Return(false, nil)
 			},
 			setupMockSourcesChecker: nil,
 			expected:                false,
@@ -124,11 +125,11 @@ func TestIsTaskUpToDate(t *testing.T) {
 				Status:  []string{"status"},
 				Sources: []string{"sources"},
 			},
-			setupMockStatusChecker: func(m *MockStatusCheckable) {
-				m.EXPECT().IsUpToDate(gomock.Any(), gomock.Any()).Return(false, nil)
+			setupMockStatusChecker: func(m *mocks.StatusCheckable) {
+				m.EXPECT().IsUpToDate(mock.Anything, mock.Anything).Return(false, nil)
 			},
-			setupMockSourcesChecker: func(m *MockSourcesCheckable) {
-				m.EXPECT().IsUpToDate(gomock.Any()).Return(true, nil)
+			setupMockSourcesChecker: func(m *mocks.SourcesCheckable) {
+				m.EXPECT().IsUpToDate(mock.Anything).Return(true, nil)
 			},
 			expected: false,
 		},
@@ -138,25 +139,23 @@ func TestIsTaskUpToDate(t *testing.T) {
 				Status:  []string{"status"},
 				Sources: []string{"sources"},
 			},
-			setupMockStatusChecker: func(m *MockStatusCheckable) {
-				m.EXPECT().IsUpToDate(gomock.Any(), gomock.Any()).Return(false, nil)
+			setupMockStatusChecker: func(m *mocks.StatusCheckable) {
+				m.EXPECT().IsUpToDate(mock.Anything, mock.Anything).Return(false, nil)
 			},
-			setupMockSourcesChecker: func(m *MockSourcesCheckable) {
-				m.EXPECT().IsUpToDate(gomock.Any()).Return(false, nil)
+			setupMockSourcesChecker: func(m *mocks.SourcesCheckable) {
+				m.EXPECT().IsUpToDate(mock.Anything).Return(false, nil)
 			},
 			expected: false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ctrl := gomock.NewController(t)
-
-			mockStatusChecker := NewMockStatusCheckable(ctrl)
+			mockStatusChecker := mocks.NewStatusCheckable(t)
 			if tt.setupMockStatusChecker != nil {
 				tt.setupMockStatusChecker(mockStatusChecker)
 			}
 
-			mockSourcesChecker := NewMockSourcesCheckable(ctrl)
+			mockSourcesChecker := mocks.NewSourcesCheckable(t)
 			if tt.setupMockSourcesChecker != nil {
 				tt.setupMockSourcesChecker(mockSourcesChecker)
 			}

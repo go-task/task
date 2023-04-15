@@ -6,6 +6,9 @@ includes:
     taskfile: ./docs
     dir: ./docs
 
+vars:
+  BIN: "{{.ROOT_DIR}}/bin"
+
 env:
   CGO_ENABLED: '0'
 
@@ -26,20 +29,25 @@ tasks:
   generate:
     desc: Runs Go generate to create mocks
     aliases: [gen, g]
-    deps: [install:mockgen]
+    deps: [install:mockery]
     sources:
       - "internal/fingerprint/checker.go"
     generates:
-      - "internal/fingerprint/checker_mock.go"
+      - "internal/mocks/*.go"
     cmds:
-      - mockgen -source=internal/fingerprint/checker.go -destination=internal/fingerprint/checker_mock.go -package=fingerprint
+      - "{{.BIN}}/mockery --dir ./internal/fingerprint --name SourcesCheckable"
+      - "{{.BIN}}/mockery --dir ./internal/fingerprint --name StatusCheckable"
 
-  install:mockgen:
+  install:mockery:
     desc: Installs mockgen; a tool to generate mock files
+    vars:
+      MOCKERY_VERSION: v2.24.0
+    env:
+      GOBIN: "{{.BIN}}"
     status:
-      - command -v mockgen &>/dev/null
+      - go version -m {{.BIN}}/mockery | grep github.com/vektra/mockery | grep {{.MOCKERY_VERSION}}
     cmds:
-      - go install github.com/golang/mock/mockgen@latest
+      - go install github.com/vektra/mockery/v2@{{.MOCKERY_VERSION}}
 
   mod:
     desc: Downloads and tidy Go modules
@@ -75,15 +83,15 @@ tasks:
     sources:
       - ./cmd/sleepit/**/*.go
     generates:
-      - ./bin/sleepit
+      - "{{.BIN}}/sleepit"
     cmds:
-      - go build -o ./bin/sleepit{{exeExt}} ./cmd/sleepit
+      - go build -o {{.BIN}}/sleepit{{exeExt}} ./cmd/sleepit
 
   sleepit:run:
     desc: Builds the sleepit test helper
     deps: [sleepit:build]
     cmds:
-      - ./bin/sleepit {{.CLI_ARGS}}
+      - "{{.BIN}}/sleepit {{.CLI_ARGS}}"
     silent: true
 
   test:
