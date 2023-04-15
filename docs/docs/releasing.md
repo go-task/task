@@ -10,8 +10,8 @@ You can test the release process locally by calling the `test-release` task of
 the Taskfile.
 
 [GitHub Actions](https://github.com/go-task/task/actions) should release
-artifacts automatically when a new Git tag is pushed to master (raw executables
-and DEB and RPM packages).
+artifacts automatically when a new Git tag is pushed to `main` branch (raw
+executables and DEB and RPM packages).
 
 Since v3.15.0, raw executables can also be reproduced and verified locally by
 checking out a specific tag and calling `goreleaser build`, using the Go version
@@ -56,7 +56,7 @@ If you think its Task version is outdated, open an issue to let us know.
 [goreleaser]: https://goreleaser.com/
 [homebrewtap]: https://github.com/go-task/homebrew-tap
 [gotaskrb]: https://github.com/go-task/homebrew-tap/blob/master/Formula/go-task.rb
-[packagejson]: https://github.com/go-task/task/blob/master/package.json#L3
+[packagejson]: https://github.com/go-task/task/blob/main/package.json#L3
 [snappackage]: https://github.com/go-task/snap
 [snapcraftyaml]: https://github.com/go-task/snap/blob/master/snap/snapcraft.yaml#L2
 [snapcraftdashboard]: https://snapcraft.io/task/releases

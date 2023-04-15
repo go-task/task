@@ -188,7 +188,7 @@ This installation method is community owned.
 
 Ensure that you have a supported version of [Go][go] properly installed and
 setup. You can find the minimum required version of Go in the
-[go.mod](https://github.com/go-task/task/blob/master/go.mod#L3) file.
+[go.mod](https://github.com/go-task/task/blob/main/go.mod#L3) file.
 
 You can then install the latest release globally by running:
 
@@ -214,7 +214,7 @@ released binary.
 
 Download the autocompletion file corresponding to your shell.
 
-[All completions are available on the Task repository](https://github.com/go-task/task/tree/master/completion).
+[All completions are available on the Task repository](https://github.com/go-task/task/tree/main/completion).
 
 ### Bash
 
@@ -276,7 +276,7 @@ Invoke-Expression -Command path/to/task.ps1
 [go]: https://golang.org/
 [snapcraft]: https://snapcraft.io/task
 [homebrew]: https://brew.sh/
-[installscript]: https://github.com/go-task/task/blob/master/install-task.sh
+[installscript]: https://github.com/go-task/task/blob/main/install-task.sh
 [releases]: https://github.com/go-task/task/releases
 [godownloader]: https://github.com/goreleaser/godownloader
 [choco]: https://chocolatey.org/

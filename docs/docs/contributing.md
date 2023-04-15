@@ -122,7 +122,7 @@ If you have questions, feel free to ask them in the `#help` forum channel on our
 [nodejs]: https://nodejs.org/en/
 [yarn]: https://yarnpkg.com/
 [docusaurus]: https://docusaurus.io
-[json-schema]: https://github.com/go-task/task/blob/master/docs/static/schema.json
+[json-schema]: https://github.com/go-task/task/blob/main/docs/static/schema.json
 [open-issues]: https://github.com/go-task/task/issues
 [good-first-issue]: https://github.com/go-task/task/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22
 [discord-server]: https://discord.gg/6TY36E39UK

@@ -3,7 +3,7 @@ name: Upload Source Documents
 on:
   push:
     branches:
-      - master
+      - main
   workflow_dispatch:
 
 jobs:
