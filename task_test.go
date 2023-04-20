@@ -1892,3 +1892,15 @@ func TestSplitArgs(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, "3\n", buff.String())
 }
+
+func TestSingleCmdDep(t *testing.T) {
+	tt := fileContentTest{
+		Dir:    "testdata/single_cmd_dep",
+		Target: "foo",
+		Files: map[string]string{
+			"foo.txt": "foo\n",
+			"bar.txt": "bar\n",
+		},
+	}
+	tt.Run(t)
+}
