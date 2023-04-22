@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"path/filepath"
@@ -235,6 +236,12 @@ func run() error {
 	tasksAndVars, cliArgs, err := getArgs()
 	if err != nil {
 		return err
+	}
+
+	if shell {
+		e.Shell = true
+		// disable all other logs except purely shell output
+		e.Logger.Stdout = io.Discard
 	}
 
 	if e.Taskfile.Version.Compare(taskfile.V3) >= 0 {

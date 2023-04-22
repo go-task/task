@@ -279,6 +279,11 @@ func (e *Executor) runCommand(ctx context.Context, t *taskfile.Task, call taskfi
 			return nil
 		}
 
+		if e.Shell {
+			e.Logger.FOutf(e.Stdout, logger.Default, "%s\n", cmd.Cmd)
+			return nil
+		}
+
 		if e.Verbose || (!cmd.Silent && !t.Silent && !e.Taskfile.Silent && !e.Silent) {
 			e.Logger.Errf(logger.Green, "task: [%s] %s", t.Name(), cmd.Cmd)
 		}
