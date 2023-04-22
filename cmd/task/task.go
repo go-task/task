@@ -87,6 +87,7 @@ func run() error {
 		color       bool
 		interval    time.Duration
 		global      bool
+		shell       bool
 	)
 
 	pflag.BoolVar(&versionFlag, "version", false, "Show Task version.")
@@ -115,6 +116,7 @@ func run() error {
 	pflag.IntVarP(&concurrency, "concurrency", "C", 0, "Limit number tasks to run concurrently.")
 	pflag.DurationVarP(&interval, "interval", "I", 0, "Interval to watch for changes.")
 	pflag.BoolVarP(&global, "global", "g", false, "Runs global Taskfile, from $HOME/Taskfile.{yml,yaml}.")
+	pflag.BoolVarP(&shell, "shell", "", false, "Dump raw shell script")
 	pflag.Parse()
 
 	if versionFlag {

@@ -46,6 +46,7 @@ type Executor struct {
 	Verbose     bool
 	Silent      bool
 	Dry         bool
+	Shell       bool
 	Summary     bool
 	Parallel    bool
 	Color       bool
