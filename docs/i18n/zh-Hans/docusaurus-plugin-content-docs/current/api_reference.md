@@ -17,11 +17,9 @@ task [--flags] [tasks...] [-- CLI_ARGS...]
 
 :::tip
 
-
 如果 `--` 给出，所有剩余参数将被分配给一个特殊的 `CLI_ARGS` 变量
 
 :::
-
 
 | 缩写   | 标志                          | 类型       | 默认                               | 描述                                                                                                  |
 | ---- | --------------------------- | -------- | -------------------------------- | --------------------------------------------------------------------------------------------------- |
@@ -51,6 +49,35 @@ task [--flags] [tasks...] [-- CLI_ARGS...]
 | `-v` | `--verbose`                 | `bool`   | `false`                          | 启用详细模式。                                                                                             |
 |      | `--version`                 | `bool`   | `false`                          | 显示 Task 版本。                                                                                         |
 | `-w` | `--watch`                   | `bool`   | `false`                          | 启用给定任务的观察器。                                                                                         |
+
+## 退出码
+
+Task 有时会以特定的退出代码退出。 这些代码分为三组，范围如下：
+
+- 一般错误 (0-99)
+- Taskfile 错误 (100-199)
+- Task 错误 (200-299)
+
+可以在下面找到退出代码及其描述的完整列表：
+
+| 代码  | 描述                     |
+| --- | ---------------------- |
+| 0   | 成功                     |
+| 1   | 出现未知错误                 |
+| 100 | 找不到 Taskfile           |
+| 101 | 尝试初始化一个 Taskfile 时已经存在 |
+| 102 | Taskfile 无效或无法解析       |
+| 200 | 找不到指定的 task            |
+| 201 | 在 task 中执行命令时出错        |
+| 202 | 用户试图调用内部 task          |
+| 203 | 有多个具有相同名称或别名的 task     |
+| 204 | 一个 task 被调用了太多次        |
+
+这些代码也可以在存储库的 [`errors/errors.go`](https://github.com/go-task/task/blob/main/errors/errors.go) 中找到。
+
+:::info
+当使用 `-x`/`--exit-code` 标志运行 Task 时，任何失败命令的退出代码都将传递给用户。
+:::
 
 ## JSON 输出
 
@@ -138,7 +165,6 @@ task [--flags] [tasks...] [-- CLI_ARGS...]
 
 :::info
 
-
 像下面这样只赋值一个字符串，和把这个值设置到 `taskfile` 属性是一样的。
 
 ```yaml
@@ -148,7 +174,6 @@ includes:
 
 :::
 
-
 ### Variable
 
 | 属性       | 类型       | 默认 | 描述                                 |
@@ -157,7 +182,6 @@ includes:
 | `sh`     | `string` |    | 一个 shell 命令。 输出 (`STDOUT`) 将分配给变量。 |
 
 :::info
-
 
 静态和动态变量有不同的语法，如下所示：
 
@@ -169,7 +193,6 @@ vars:
 ```
 
 :::
-
 
 ### Task
 
@@ -196,12 +219,11 @@ vars:
 | `prefix`        | `string`                           |                            | 定义一个字符串作为并行运行 task 输出的前缀。 仅在输出模式是 `prefixed` 时使用。                                                                           |
 | `ignore_error`  | `bool`                             | `false`                    | 如果执行命令时发生错误，则继续执行。                                                                                                          |
 | `run`           | `string`                           | Taskfile 中全局声明的值或 `always` | 指定如果多次调用该任务是否应再次运行。 可用选项：`always`、`once` 和 `when_changed`。                                                                  |
-| `platforms`     | `[]string`                         | 所有平台                       | 指定应在哪些平台上运行任务。 允许使用 [有效的 GOOS 和 GOARCH 值](https://github.com/golang/go/blob/master/src/go/build/syslist.go)。 否则将跳过任务。       |
+| `platforms`     | `[]string`                         | 所有平台                       | 指定应在哪些平台上运行任务。 允许使用 [有效的 GOOS 和 GOARCH 值](https://github.com/golang/go/blob/main/src/go/build/syslist.go)。 否则将跳过任务。         |
 | `set`           | `[]string`                         |                            | 为 [内置 `set`](https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html) 指定选项。                                 |
 | `shopt`         | `[]string`                         |                            | 为 [内置 `shopt`](https://www.gnu.org/software/bash/manual/html_node/The-Shopt-Builtin.html) 指定选项。                             |
 
 :::info
-
 
 这些替代语法可用。 他们会将给定值设置为 `cmds`，其他所有内容都将设置为其默认值：
 
@@ -219,23 +241,21 @@ tasks:
 
 :::
 
-
 #### Command
 
-| 属性             | 类型                                 | 默认      | 描述                                                                                                                     |
-| -------------- | ---------------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `cmd`          | `string`                           |         | 要执行的 shell 命令                                                                                                          |
-| `silent`       | `bool`                             | `false` | 跳过此命令的一些输出。 请注意，命令的 STDOUT 和 STDERR 仍将被重定向。                                                                            |
-| `task`         | `string`                           |         | 执行另一个 task，而不执行命令。 不能与 `cmd` 同时设置。                                                                                     |
-| `vars`         | [`map[string]Variable`](#variable) |         | 要传递给引用任务的可选附加变量。 仅在设置 `task` 而不是 `cmd` 时相关。                                                                            |
-| `ignore_error` | `bool`                             | `false` | 执行命令的时候忽略错误，继续执行                                                                                                       |
-| `defer`        | `string`                           |         | `cmd` 的替代方法，但安排命令在此任务结束时执行，而不是立即执行。 不能与 `cmd` 一同使用。                                                                    |
-| `platforms`    | `[]string`                         | 所有平台    | 指定应在哪些平台上运行该命令。 允许使用 [有效的 GOOS 和 GOARCH 值](https://github.com/golang/go/blob/master/src/go/build/syslist.go)。 否则将跳过命令。 |
-| `set`          | `[]string`                         |         | 为 [内置 `set`](https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html) 指定选项。                            |
-| `shopt`        | `[]string`                         |         | 为 [内置 `shopt`](https://www.gnu.org/software/bash/manual/html_node/The-Shopt-Builtin.html) 指定选项。                        |
+| 属性             | 类型                                 | 默认      | 描述                                                                                                                   |
+| -------------- | ---------------------------------- | ------- | -------------------------------------------------------------------------------------------------------------------- |
+| `cmd`          | `string`                           |         | 要执行的 shell 命令                                                                                                        |
+| `silent`       | `bool`                             | `false` | 跳过此命令的一些输出。 请注意，命令的 STDOUT 和 STDERR 仍将被重定向。                                                                          |
+| `task`         | `string`                           |         | 执行另一个 task，而不执行命令。 不能与 `cmd` 同时设置。                                                                                   |
+| `vars`         | [`map[string]Variable`](#variable) |         | 要传递给引用任务的可选附加变量。 仅在设置 `task` 而不是 `cmd` 时相关。                                                                          |
+| `ignore_error` | `bool`                             | `false` | 执行命令的时候忽略错误，继续执行                                                                                                     |
+| `defer`        | `string`                           |         | `cmd` 的替代方法，但安排命令在此任务结束时执行，而不是立即执行。 不能与 `cmd` 一同使用。                                                                  |
+| `platforms`    | `[]string`                         | 所有平台    | 指定应在哪些平台上运行该命令。 允许使用 [有效的 GOOS 和 GOARCH 值](https://github.com/golang/go/blob/main/src/go/build/syslist.go)。 否则将跳过命令。 |
+| `set`          | `[]string`                         |         | 为 [内置 `set`](https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html) 指定选项。                          |
+| `shopt`        | `[]string`                         |         | 为 [内置 `shopt`](https://www.gnu.org/software/bash/manual/html_node/The-Shopt-Builtin.html) 指定选项。                      |
 
 :::info
-
 
 如果以字符串形式给出，该值将分配给 `cmd`：
 
@@ -249,7 +269,6 @@ tasks:
 
 :::
 
-
 #### Dependency
 
 | 属性     | 类型                                 | 默认 | 描述              |
@@ -258,7 +277,6 @@ tasks:
 | `vars` | [`map[string]Variable`](#variable) |    | 要传递给此任务的可选附加变量。 |
 
 :::tip
-
 
 如果你不想设置额外的变量，将依赖关系声明为一个字符串列表就足够了（它们将被分配给 `task`）。
 
@@ -270,7 +288,6 @@ tasks:
 
 :::
 
-
 #### Precondition
 
 | 属性    | 类型       | 默认 | 描述                                  |
@@ -279,7 +296,6 @@ tasks:
 | `msg` | `string` |    | 如果不满足先决条件，则打印可选消息。                  |
 
 :::tip
-
 
 如果你不想设置不同的消息，你可以像这样声明一个前提条件，值将被分配给 `sh`：
 

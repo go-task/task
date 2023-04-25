@@ -15,7 +15,7 @@ Some of the work to improve the Task ecosystem is done by the community, be it i
 
 ### JSON Schema
 
-Initial work on the schema was made by [@KROSF](https://github.com/KROSF) on [this Gist](https://gist.github.com/KROSF/c5435acf590acd632f71bb720f685895). The schema is currently available at https://taskfile.dev/schema.json and linked at https://json.schemastore.org/taskfile.json so it is be used automatically many code editors, like VSCode. Contributions can be done by editing [this file](https://github.com/go-task/task/blob/master/docs/static/schema.json).
+Initial work on the schema was made by [@KROSF](https://github.com/KROSF) on [this Gist](https://gist.github.com/KROSF/c5435acf590acd632f71bb720f685895). The schema is currently available at https://taskfile.dev/schema.json and linked at https://json.schemastore.org/taskfile.json so it is be used automatically many code editors, like VSCode. Contributions can be done by editing [this file](https://github.com/go-task/task/blob/main/docs/static/schema.json).
 
 ### Visual Studio Code extension
 

@@ -89,7 +89,7 @@ tasks:
 
 ## 版本 2.1
 
-2.1 版包括一个全局 `output` 选项，以允许更好地控制如何将命令输出打印到控制台（有关更多信息，请参阅 [文档](usage.md#输出语法)）：
+2.1 版包括一个全局 `output` 选项，以允许更好地控制如何将命令输出打印到控制台（有关更多信息，请参阅 [文档][output]）：
 
 ```yaml
 version: '2'
@@ -103,7 +103,7 @@ tasks:
   prefix: server
 ```
 
-从这个版本开始，也可以忽略命令或 task 的错误（在 [此处](usage.md#忽略错误) 查看文档）：
+从这个版本开始，也可以忽略命令或 task 的错误（在 [此处][ignore_errors] 查看文档）：
 
 ```yaml
 version: '2'
@@ -149,7 +149,7 @@ tasks:
       - aws s3 cp .env s3://myenvironment
 ```
 
-请检查 [文档](usage.md#包含其他-taskfile)
+请检查 [文档][includes]
 
 ## 版本 3
 
@@ -202,3 +202,7 @@ tasks:
   - 全局或 CLI 变量
   - 调用变量
   - Task 内的变量
+
+[output]: usage.md#输出语法
+[ignore_errors]: usage.md#忽略错误
+[includes]: usage.md#包含其他-taskfile
