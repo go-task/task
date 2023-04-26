@@ -15,7 +15,7 @@ sidebar_position: 8
 
 ### JSON Schema
 
-Schema 的初步工作是由 [@KROSF](https://github.com/KROSF) 在此 [Gist](https://gist.github.com/KROSF/c5435acf590acd632f71bb720f685895) 上完成的。 这个 Schema 目前在 https://taskfile.dev/schema.json 上可用，并在 https://json.schemastore.org/taskfile.json 上添加了链接，因此它可以自动在许多代码编辑器使用，例如 VSCode。 可以通过编辑 [此文件](https://github.com/go-task/task/blob/master/docs/static/schema.json) 来完成贡献。
+Schema 的初步工作是由 [@KROSF](https://github.com/KROSF) 在此 [Gist](https://gist.github.com/KROSF/c5435acf590acd632f71bb720f685895) 上完成的。 这个 Schema 目前在 https://taskfile.dev/schema.json 上可用，并在 https://json.schemastore.org/taskfile.json 上添加了链接，因此它可以自动在许多代码编辑器使用，例如 VSCode。 可以通过编辑 [此文件](https://github.com/go-task/task/blob/main/docs/static/schema.json) 来完成贡献。
 
 ### Visual Studio Code 扩展
 

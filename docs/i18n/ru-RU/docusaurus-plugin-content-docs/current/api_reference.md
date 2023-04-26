@@ -17,11 +17,9 @@ task [--flags] [tasks...] [-- CLI_ARGS...]
 
 :::tip
 
-
 If `--` is given, all remaning arguments will be assigned to a special `CLI_ARGS` variable
 
 :::
-
 
 | Short | Flag                        | Type     | Default                                      | Description                                                                                                                                                            |
 | ----- | --------------------------- | -------- | -------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -51,6 +49,35 @@ If `--` is given, all remaning arguments will be assigned to a special `CLI_ARGS
 | `-v`  | `--verbose`                 | `bool`   | `false`                                      | Enables verbose mode.                                                                                                                                                  |
 |       | `--version`                 | `bool`   | `false`                                      | Show Task version.                                                                                                                                                     |
 | `-w`  | `--watch`                   | `bool`   | `false`                                      | Enables watch of the given task.                                                                                                                                       |
+
+## Exit Codes
+
+Task will sometimes exit with specific exit codes. These codes are split into three groups with the following ranges:
+
+- General errors (0-99)
+- Taskfile errors (100-199)
+- Task errors (200-299)
+
+A full list of the exit codes and their descriptions can be found below:
+
+| Code | Description                                                  |
+| ---- | ------------------------------------------------------------ |
+| 0    | Success                                                      |
+| 1    | An unknown error occurred                                    |
+| 100  | No Taskfile was found                                        |
+| 101  | A Taskfile already exists when trying to initialize one      |
+| 102  | The Taskfile is invalid or cannot be parsed                  |
+| 200  | The specified task could not be found                        |
+| 201  | An error occurred while executing a command inside of a task |
+| 202  | The user tried to invoke a task that is internal             |
+| 203  | There a multiple tasks with the same name or alias           |
+| 204  | A task was called too many times                             |
+
+These codes can also be found in the repository in [`errors/errors.go`](https://github.com/go-task/task/blob/main/errors/errors.go).
+
+:::info
+When Task is run with the `-x`/`--exit-code` flag, the exit code of any failed commands will be passed through to the user instead.
+:::
 
 ## JSON Output
 
@@ -138,7 +165,6 @@ Some environment variables can be overriden to adjust Task behavior.
 
 :::info
 
-
 Informing only a string like below is equivalent to setting that value to the `taskfile` attribute.
 
 ```yaml
@@ -148,7 +174,6 @@ includes:
 
 :::
 
-
 ### Variable
 
 | Attribute | Type     | Default | Description                                                              |
@@ -157,7 +182,6 @@ includes:
 | `sh`      | `string` |         | A shell command. The output (`STDOUT`) will be assigned to the variable. |
 
 :::info
-
 
 Static and dynamic variables have different syntaxes, like below:
 
@@ -169,7 +193,6 @@ vars:
 ```
 
 :::
-
 
 ### Task
 
@@ -196,12 +219,11 @@ vars:
 | `prefix`        | `string`                           |                                                       | Defines a string to prefix the output of tasks running in parallel. Only used when the output mode is `prefixed`.                                                                                                                                                                                        |
 | `ignore_error`  | `bool`                             | `false`                                               | Continue execution if errors happen while executing commands.                                                                                                                                                                                                                                            |
 | `run`           | `string`                           | The one declared globally in the Taskfile or `always` | Specifies whether the task should run again or not if called more than once. Available options: `always`, `once` and `when_changed`.                                                                                                                                                                     |
-| `platforms`     | `[]string`                         | All platforms                                         | Specifies which platforms the task should be run on. [Valid GOOS and GOARCH values allowed](https://github.com/golang/go/blob/master/src/go/build/syslist.go). Task will be skipped otherwise.                                                                                                           |
+| `platforms`     | `[]string`                         | All platforms                                         | Specifies which platforms the task should be run on. [Valid GOOS and GOARCH values allowed](https://github.com/golang/go/blob/main/src/go/build/syslist.go). Task will be skipped otherwise.                                                                                                             |
 | `set`           | `[]string`                         |                                                       | Specify options for the [`set` builtin](https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html).                                                                                                                                                                                        |
 | `shopt`         | `[]string`                         |                                                       | Specify option for the [`shopt` builtin](https://www.gnu.org/software/bash/manual/html_node/The-Shopt-Builtin.html).                                                                                                                                                                                     |
 
 :::info
-
 
 These alternative syntaxes are available. They will set the given values to `cmds` and everything else will be set to their default values:
 
@@ -219,23 +241,21 @@ tasks:
 
 :::
 
-
 #### Command
 
-| Attribute      | Type                               | Default       | Description                                                                                                                                                                                          |
-| -------------- | ---------------------------------- | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `cmd`          | `string`                           |               | The shell command to be executed.                                                                                                                                                                    |
-| `silent`       | `bool`                             | `false`       | Skips some output for this command. Note that STDOUT and STDERR of the commands will still be redirected.                                                                                            |
-| `task`         | `string`                           |               | Set this to trigger execution of another task instead of running a command. This cannot be set together with `cmd`.                                                                                  |
-| `vars`         | [`map[string]Variable`](#variable) |               | Optional additional variables to be passed to the referenced task. Only relevant when setting `task` instead of `cmd`.                                                                               |
-| `ignore_error` | `bool`                             | `false`       | Continue execution if errors happen while executing the command.                                                                                                                                     |
-| `defer`        | `string`                           |               | Alternative to `cmd`, but schedules the command to be executed at the end of this task instead of immediately. This cannot be used together with `cmd`.                                              |
-| `platforms`    | `[]string`                         | All platforms | Specifies which platforms the command should be run on. [Valid GOOS and GOARCH values allowed](https://github.com/golang/go/blob/master/src/go/build/syslist.go). Command will be skipped otherwise. |
-| `set`          | `[]string`                         |               | Specify options for the [`set` builtin](https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html).                                                                                    |
-| `shopt`        | `[]string`                         |               | Specify option for the [`shopt` builtin](https://www.gnu.org/software/bash/manual/html_node/The-Shopt-Builtin.html).                                                                                 |
+| Attribute      | Type                               | Default       | Description                                                                                                                                                                                        |
+| -------------- | ---------------------------------- | ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `cmd`          | `string`                           |               | The shell command to be executed.                                                                                                                                                                  |
+| `silent`       | `bool`                             | `false`       | Skips some output for this command. Note that STDOUT and STDERR of the commands will still be redirected.                                                                                          |
+| `task`         | `string`                           |               | Set this to trigger execution of another task instead of running a command. This cannot be set together with `cmd`.                                                                                |
+| `vars`         | [`map[string]Variable`](#variable) |               | Optional additional variables to be passed to the referenced task. Only relevant when setting `task` instead of `cmd`.                                                                             |
+| `ignore_error` | `bool`                             | `false`       | Continue execution if errors happen while executing the command.                                                                                                                                   |
+| `defer`        | `string`                           |               | Alternative to `cmd`, but schedules the command to be executed at the end of this task instead of immediately. This cannot be used together with `cmd`.                                            |
+| `platforms`    | `[]string`                         | All platforms | Specifies which platforms the command should be run on. [Valid GOOS and GOARCH values allowed](https://github.com/golang/go/blob/main/src/go/build/syslist.go). Command will be skipped otherwise. |
+| `set`          | `[]string`                         |               | Specify options for the [`set` builtin](https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html).                                                                                  |
+| `shopt`        | `[]string`                         |               | Specify option for the [`shopt` builtin](https://www.gnu.org/software/bash/manual/html_node/The-Shopt-Builtin.html).                                                                               |
 
 :::info
-
 
 If given as a a string, the value will be assigned to `cmd`:
 
@@ -249,7 +269,6 @@ tasks:
 
 :::
 
-
 #### Dependency
 
 | Attribute | Type                               | Default | Description                                              |
@@ -258,7 +277,6 @@ tasks:
 | `vars`    | [`map[string]Variable`](#variable) |         | Optional additional variables to be passed to this task. |
 
 :::tip
-
 
 If you don't want to set additional variables, it's enough to declare the dependency as a list of strings (they will be assigned to `task`):
 
@@ -270,7 +288,6 @@ tasks:
 
 :::
 
-
 #### Precondition
 
 | Attribute | Type     | Default | Description                                                                                                  |
@@ -279,7 +296,6 @@ tasks:
 | `msg`     | `string` |         | Optional message to print if the precondition isn't met.                                                     |
 
 :::tip
-
 
 If you don't want to set a different message, you can declare a precondition like this and the value will be assigned to `sh`:
 

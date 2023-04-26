@@ -14,9 +14,9 @@ sidebar_position: 9
 
 ## 1. 设置
 
-- **Go** - Task 使用 [Go](https://go.dev) 编写。 我们始终支持最新的两个主要 Go 版本，因此请确保您的版本足够新。
-- **Node.js** - [Node.js](https://nodejs.org/en/) 用于托管 Task 的文档服务器，如果您想在本地运行此服务器，则需要它。
-- **Yarn** - [Yarn](https://yarnpkg.com/) 是 Task 使用的 Node.js 包管理器。
+- **Go** - Task 使用 [Go][go] 编写。 我们始终支持最新的两个主要 Go 版本，因此请确保您的版本足够新。
+- **Node.js** - [Node.js][nodejs] 用于托管 Task 的文档服务器，如果您想在本地运行此服务器，则需要它。
+- **Yarn** - [Yarn][yarn] 是 Task 使用的 Node.js 包管理器。
 
 ## 2. 进行变更
 
@@ -35,7 +35,7 @@ Task 用 [Docusaurus](https://docusaurus.io) 托管文档服务。 这可以通�
 
 进行变更时，请考虑是否有必要更改 [使用指南](./usage.md)。 本文档包含有关如何使用任务功能的说明和示例。 如果您要添加新功能，请尝试找到合适的位置来添加新部分。 如果您要更新现有功能，请确保文档和所有示例都是最新的。 确保任何示例都遵循 [Taskfile 风格指南](./styleguide.md)。
 
-如果您添加了新字段、命令或标志，请确保将其添加到 [API 参考](./api_reference.md) 中。 还需要将新字段添加到 [JSON Schema](https://github.com/go-task/task/blob/master/docs/static/schema.json) 中。 API 参考和 schema 中的字段描述应该匹配。
+如果您添加了新字段、命令或标志，请确保将其添加到 [API 参考](./api_reference.md) 中。 还需要将新字段添加到 [JSON Schema][json-schema] 中。 API 参考和 schema 中的字段描述应该匹配。
 
 ### 编写测试
 
@@ -58,16 +58,24 @@ Task 的大部分测试都保存在项目根目录的 `task_test.go` 文件中�
 
 > 我想贡献，我从哪里开始？
 
-查看 [未解决 Issue](https://github.com/go-task/task/issues) 的列表。 我们有一个 [good first issue](https://github.com/go-task/task/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) 标签，用于更简单的问题，非常适合首次贡献。
+查看 [未解决 Issue][open-issues] 的列表。 我们有一个 [good first issue][good-first-issue] 标签，用于更简单的问题，非常适合首次贡献。
 
 欢迎各种贡献，无论是拼写错误修复还是很小的新功能。 您还可以通过对 Issue 进行投票/评论、帮助回答问题或帮助 [其他社区项目](./community.md) 来做出贡献。
 
 > 我被困住了，我在哪里可以获得帮助？
 
-如果您有任何疑问，请随时在我们的 [Discord 服务器](https://discord.gg/6TY36E39UK) 上的 `#help` 论坛频道中提问，或在 GitHub 上打开 [讨论](https://github.com/go-task/task/discussions)。
+如果您有任何疑问，请随时在我们的 [Discord 服务器][discord-server] 上的 `#help` 论坛频道中提问，或在 GitHub 上打开 [讨论][discussion]。
 
 ---
 
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end -->
+[go]: https://go.dev
+[nodejs]: https://nodejs.org/en/
+[yarn]: https://yarnpkg.com/
+[json-schema]: https://github.com/go-task/task/blob/main/docs/static/schema.json
+[open-issues]: https://github.com/go-task/task/issues
+[good-first-issue]: https://github.com/go-task/task/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22
+[discord-server]: https://discord.gg/6TY36E39UK
+[discussion]: https://github.com/go-task/task/discussions

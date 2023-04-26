@@ -27,7 +27,7 @@ brew install go-task
 
 ### Snap
 
-Task 在 [Snapcraft](https://snapcraft.io/task) 中可用，但请记住，您的 Linux 发行版应该符合 Snaps 的基本要求才能正确安装：
+Task 在 [Snapcraft][snapcraft] 中可用，但请记住，您的 Linux 发行版应该符合 Snaps 的基本要求才能正确安装：
 
 ```bash
 sudo snap install task --classic
@@ -35,7 +35,7 @@ sudo snap install task --classic
 
 ### Chocolatey
 
-如果 Windows 上安装了 [Chocolatey](https://chocolatey.org/)，再安装 Task 只要这样：
+如果 Windows 上安装了 [Chocolatey][choco]，再安装 Task 只要这样：
 
 ```bash
 choco install go-task
@@ -45,7 +45,7 @@ choco install go-task
 
 ### Scoop
 
-如果 Windows 上安装了 [Scoop](https://scoop.sh/)，再安装 Task 只要这样：
+如果 Windows 上安装了 [Scoop][scoop]，再安装 Task 只要这样：
 
 ```cmd
 scoop install task
@@ -109,7 +109,7 @@ winget install Task.Task
 
 ### 二进制文件
 
-您可以从 [GitHub 上的发布页面](https://github.com/go-task/task/releases) 下载二进制文件并添加到您的 `$PATH` 中。
+您可以从 [GitHub 上的发布页面][releases] 下载二进制文件并添加到您的 `$PATH` 中。
 
 还支持 DEB 和 RPM 包。
 
@@ -117,7 +117,7 @@ winget install Task.Task
 
 ### 安装脚本
 
-我们还有一个 [安装脚本](https://github.com/go-task/task/blob/master/install-task.sh)，它在 CI 等场景中非常有用。 非常感谢 [GoDownloader](https://github.com/goreleaser/godownloader) 使这个脚本的生成变得容易。
+我们还有一个 [安装脚本][installscript]，它在 CI 等场景中非常有用。 非常感谢 [GoDownloader](https://github.com/goreleaser/godownloader) 使这个脚本的生成变得容易。
 
 默认情况下，它安装在相对于工作目录的 `./bin` 目录中：
 
@@ -133,11 +133,9 @@ sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d -b ~/.local/bin
 
 :::caution
 
-
 在 macOS 和 Windows 上，`~/.local/bin` 和 `~/bin` 默认情况下不会添加到 `$PATH`。
 
 :::
-
 
 ### GitHub Actions
 
@@ -157,7 +155,7 @@ sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d -b ~/.local/bin
 
 ### Go Modules
 
-确保您已正确安装和设置受支持的 [Go](https://golang.org/) 版本。 您可以在 [go.mod](https://github.com/go-task/task/blob/master/go.mod#L3) 文件中找到最低要求的 Go 版本。
+确保您已正确安装和设置受支持的 [Go][go] 版本。 您可以在 [go.mod](https://github.com/go-task/task/blob/main/go.mod#L3) 文件中找到最低要求的 Go 版本。
 
 然后，您可以通过运行以下命令全局安装最新版本：
 
@@ -173,17 +171,15 @@ env GOBIN=/bin go install github.com/go-task/task/v3/cmd/task@latest
 
 :::tip
 
-
 对于 CI 环境，我们建议改用 [安装脚本](#安装脚本)，它更快更稳定，因为它只会下载最新发布的二进制文件。
 
 :::
-
 
 ## 自动完成
 
 下载与您的 shell 对应的自动完成文件。
 
-[所有自动完成都在任务存储库中可用](https://github.com/go-task/task/tree/master/completion)。
+[所有自动完成都在 Task 存储库中可用](https://github.com/go-task/task/tree/main/completion)。
 
 ### Bash
 
@@ -244,3 +240,9 @@ Invoke-Expression -Command path/to/task.ps1
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end -->
+[go]: https://golang.org/
+[snapcraft]: https://snapcraft.io/task
+[installscript]: https://github.com/go-task/task/blob/main/install-task.sh
+[releases]: https://github.com/go-task/task/releases
+[choco]: https://chocolatey.org/
+[scoop]: https://scoop.sh/
