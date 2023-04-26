@@ -1,5 +1,8 @@
 blank_issues_enabled: false
 contact_links:
+  - name: Extension for Visual Studio Code
+    url: https://github.com/go-task/vscode-task
+    about: Issues related to the Visual Studio Code extension should be opened here.
   - name: Help forum on Discord
     url: https://discord.com/channels/974121106208354339/1025054680289660989
     about: 'The Discord #help channel is the best way to get help from the community.'

@@ -14,7 +14,7 @@ tasks:
     deps: [yarn:install]
     aliases: [s, start]
     vars:
-      HOST: '{{default "localhost" .HOST}}'
+      HOST: '{{default "0.0.0.0" .HOST}}'
       PORT: '{{default "3001" .PORT}}'
     cmds:
       - npx docusaurus start --no-open --host={{.HOST}} --port={{.PORT}}
