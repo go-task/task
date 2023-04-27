@@ -131,6 +131,7 @@ const config = {
           {
             href: MASTODON_URL,
             label: 'Mastodon',
+            rel: 'me',
             position: 'right'
           },
           {
@@ -173,7 +174,8 @@ const config = {
               },
               {
                 label: 'Mastodon',
-                href: MASTODON_URL
+                href: MASTODON_URL,
+                rel: 'me'
               },
               {
                 label: 'Discord',
