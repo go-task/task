@@ -43,6 +43,32 @@ tasks:
 Options:
 `
 
+var flags struct {
+	version     bool
+	help        bool
+	init        bool
+	list        bool
+	listAll     bool
+	listJson    bool
+	taskSort    string
+	status      bool
+	force       bool
+	watch       bool
+	verbose     bool
+	silent      bool
+	dry         bool
+	summary     bool
+	exitCode    bool
+	parallel    bool
+	concurrency int
+	dir         string
+	entrypoint  string
+	output      taskfile.Output
+	color       bool
+	interval    time.Duration
+	global      bool
+}
+
 func main() {
 	if err := run(); err != nil {
 		if err, ok := err.(errors.TaskError); ok {
@@ -64,71 +90,45 @@ func run() error {
 		pflag.PrintDefaults()
 	}
 
-	var (
-		versionFlag bool
-		helpFlag    bool
-		init        bool
-		list        bool
-		listAll     bool
-		listJson    bool
-		taskSort    string
-		status      bool
-		force       bool
-		watch       bool
-		verbose     bool
-		silent      bool
-		dry         bool
-		summary     bool
-		exitCode    bool
-		parallel    bool
-		concurrency int
-		dir         string
-		entrypoint  string
-		output      taskfile.Output
-		color       bool
-		interval    time.Duration
-		global      bool
-	)
-
-	pflag.BoolVar(&versionFlag, "version", false, "Show Task version.")
-	pflag.BoolVarP(&helpFlag, "help", "h", false, "Shows Task usage.")
-	pflag.BoolVarP(&init, "init", "i", false, "Creates a new Taskfile.yml in the current folder.")
-	pflag.BoolVarP(&list, "list", "l", false, "Lists tasks with description of current Taskfile.")
-	pflag.BoolVarP(&listAll, "list-all", "a", false, "Lists tasks with or without a description.")
-	pflag.BoolVarP(&listJson, "json", "j", false, "Formats task list as JSON.")
-	pflag.StringVar(&taskSort, "sort", "", "Changes the order of the tasks when listed.")
-	pflag.BoolVar(&status, "status", false, "Exits with non-zero exit code if any of the given tasks is not up-to-date.")
-	pflag.BoolVarP(&force, "force", "f", false, "Forces execution even when the task is up-to-date.")
-	pflag.BoolVarP(&watch, "watch", "w", false, "Enables watch of the given task.")
-	pflag.BoolVarP(&verbose, "verbose", "v", false, "Enables verbose mode.")
-	pflag.BoolVarP(&silent, "silent", "s", false, "Disables echoing.")
-	pflag.BoolVarP(&parallel, "parallel", "p", false, "Executes tasks provided on command line in parallel.")
-	pflag.BoolVarP(&dry, "dry", "n", false, "Compiles and prints tasks in the order that they would be run, without executing them.")
-	pflag.BoolVar(&summary, "summary", false, "Show summary about a task.")
-	pflag.BoolVarP(&exitCode, "exit-code", "x", false, "Pass-through the exit code of the task command.")
-	pflag.StringVarP(&dir, "dir", "d", "", "Sets directory of execution.")
-	pflag.StringVarP(&entrypoint, "taskfile", "t", "", `Choose which Taskfile to run. Defaults to "Taskfile.yml".`)
-	pflag.StringVarP(&output.Name, "output", "o", "", "Sets output style: [interleaved|group|prefixed].")
-	pflag.StringVar(&output.Group.Begin, "output-group-begin", "", "Message template to print before a task's grouped output.")
-	pflag.StringVar(&output.Group.End, "output-group-end", "", "Message template to print after a task's grouped output.")
-	pflag.BoolVar(&output.Group.ErrorOnly, "output-group-error-only", false, "Swallow output from successful tasks.")
-	pflag.BoolVarP(&color, "color", "c", true, "Colored output. Enabled by default. Set flag to false or use NO_COLOR=1 to disable.")
-	pflag.IntVarP(&concurrency, "concurrency", "C", 0, "Limit number tasks to run concurrently.")
-	pflag.DurationVarP(&interval, "interval", "I", 0, "Interval to watch for changes.")
-	pflag.BoolVarP(&global, "global", "g", false, "Runs global Taskfile, from $HOME/Taskfile.{yml,yaml}.")
+	pflag.BoolVar(&flags.version, "version", false, "Show Task version.")
+	pflag.BoolVarP(&flags.help, "help", "h", false, "Shows Task usage.")
+	pflag.BoolVarP(&flags.init, "init", "i", false, "Creates a new Taskfile.yml in the current folder.")
+	pflag.BoolVarP(&flags.list, "list", "l", false, "Lists tasks with description of current Taskfile.")
+	pflag.BoolVarP(&flags.listAll, "list-all", "a", false, "Lists tasks with or without a description.")
+	pflag.BoolVarP(&flags.listJson, "json", "j", false, "Formats task list as JSON.")
+	pflag.StringVar(&flags.taskSort, "sort", "", "Changes the order of the tasks when listed.")
+	pflag.BoolVar(&flags.status, "status", false, "Exits with non-zero exit code if any of the given tasks is not up-to-date.")
+	pflag.BoolVarP(&flags.force, "force", "f", false, "Forces execution even when the task is up-to-date.")
+	pflag.BoolVarP(&flags.watch, "watch", "w", false, "Enables watch of the given task.")
+	pflag.BoolVarP(&flags.verbose, "verbose", "v", false, "Enables verbose mode.")
+	pflag.BoolVarP(&flags.silent, "silent", "s", false, "Disables echoing.")
+	pflag.BoolVarP(&flags.parallel, "parallel", "p", false, "Executes tasks provided on command line in parallel.")
+	pflag.BoolVarP(&flags.dry, "dry", "n", false, "Compiles and prints tasks in the order that they would be run, without executing them.")
+	pflag.BoolVar(&flags.summary, "summary", false, "Show summary about a task.")
+	pflag.BoolVarP(&flags.exitCode, "exit-code", "x", false, "Pass-through the exit code of the task command.")
+	pflag.StringVarP(&flags.dir, "dir", "d", "", "Sets directory of execution.")
+	pflag.StringVarP(&flags.entrypoint, "taskfile", "t", "", `Choose which Taskfile to run. Defaults to "Taskfile.yml".`)
+	pflag.StringVarP(&flags.output.Name, "output", "o", "", "Sets output style: [interleaved|group|prefixed].")
+	pflag.StringVar(&flags.output.Group.Begin, "output-group-begin", "", "Message template to print before a task's grouped output.")
+	pflag.StringVar(&flags.output.Group.End, "output-group-end", "", "Message template to print after a task's grouped output.")
+	pflag.BoolVar(&flags.output.Group.ErrorOnly, "output-group-error-only", false, "Swallow output from successful tasks.")
+	pflag.BoolVarP(&flags.color, "color", "c", true, "Colored output. Enabled by default. Set flag to false or use NO_COLOR=1 to disable.")
+	pflag.IntVarP(&flags.concurrency, "concurrency", "C", 0, "Limit number tasks to run concurrently.")
+	pflag.DurationVarP(&flags.interval, "interval", "I", 0, "Interval to watch for changes.")
+	pflag.BoolVarP(&flags.global, "global", "g", false, "Runs global Taskfile, from $HOME/Taskfile.{yml,yaml}.")
 	pflag.Parse()
 
-	if versionFlag {
+	if flags.version {
 		fmt.Printf("Task version: %s\n", ver.GetVersion())
 		return nil
 	}
 
-	if helpFlag {
+	if flags.help {
 		pflag.Usage()
 		return nil
 	}
 
-	if init {
+	if flags.init {
 		wd, err := os.Getwd()
 		if err != nil {
 			log.Fatal(err)
@@ -139,40 +139,40 @@ func run() error {
 		return nil
 	}
 
-	if global && dir != "" {
+	if flags.global && flags.dir != "" {
 		log.Fatal("task: You can't set both --global and --dir")
 		return nil
 	}
-	if global {
+	if flags.global {
 		home, err := os.UserHomeDir()
 		if err != nil {
 			return fmt.Errorf("task: Failed to get user home directory: %w", err)
 		}
-		dir = home
+		flags.dir = home
 	}
 
-	if dir != "" && entrypoint != "" {
+	if flags.dir != "" && flags.entrypoint != "" {
 		return errors.New("task: You can't set both --dir and --taskfile")
 	}
-	if entrypoint != "" {
-		dir = filepath.Dir(entrypoint)
-		entrypoint = filepath.Base(entrypoint)
+	if flags.entrypoint != "" {
+		flags.dir = filepath.Dir(flags.entrypoint)
+		flags.entrypoint = filepath.Base(flags.entrypoint)
 	}
 
-	if output.Name != "group" {
-		if output.Group.Begin != "" {
+	if flags.output.Name != "group" {
+		if flags.output.Group.Begin != "" {
 			return errors.New("task: You can't set --output-group-begin without --output=group")
 		}
-		if output.Group.End != "" {
+		if flags.output.Group.End != "" {
 			return errors.New("task: You can't set --output-group-end without --output=group")
 		}
-		if output.Group.ErrorOnly {
+		if flags.output.Group.ErrorOnly {
 			return errors.New("task: You can't set --output-group-error-only without --output=group")
 		}
 	}
 
 	var taskSorter sort.TaskSorter
-	switch taskSort {
+	switch flags.taskSort {
 	case "none":
 		taskSorter = &sort.Noop{}
 	case "alphanumeric":
@@ -180,34 +180,34 @@ func run() error {
 	}
 
 	e := task.Executor{
-		Force:       force,
-		Watch:       watch,
-		Verbose:     verbose,
-		Silent:      silent,
-		Dir:         dir,
-		Dry:         dry,
-		Entrypoint:  entrypoint,
-		Summary:     summary,
-		Parallel:    parallel,
-		Color:       color,
-		Concurrency: concurrency,
-		Interval:    interval,
+		Force:       flags.force,
+		Watch:       flags.watch,
+		Verbose:     flags.verbose,
+		Silent:      flags.silent,
+		Dir:         flags.dir,
+		Dry:         flags.dry,
+		Entrypoint:  flags.entrypoint,
+		Summary:     flags.summary,
+		Parallel:    flags.parallel,
+		Color:       flags.color,
+		Concurrency: flags.concurrency,
+		Interval:    flags.interval,
 
 		Stdin:  os.Stdin,
 		Stdout: os.Stdout,
 		Stderr: os.Stderr,
 
-		OutputStyle: output,
+		OutputStyle: flags.output,
 		TaskSorter:  taskSorter,
 	}
 
-	listOptions := task.NewListOptions(list, listAll, listJson)
+	listOptions := task.NewListOptions(flags.list, flags.listAll, flags.listJson)
 	if err := listOptions.Validate(); err != nil {
 		return err
 	}
 
-	if (listOptions.ShouldListTasks()) && silent {
-		e.ListTaskNames(listAll)
+	if (listOptions.ShouldListTasks()) && flags.silent {
+		e.ListTaskNames(flags.listAll)
 		return nil
 	}
 
@@ -245,20 +245,20 @@ func run() error {
 	globals.Set("CLI_ARGS", taskfile.Var{Static: cliArgs})
 	e.Taskfile.Vars.Merge(globals)
 
-	if !watch {
+	if !flags.watch {
 		e.InterceptInterruptSignals()
 	}
 
 	ctx := context.Background()
 
-	if status {
+	if flags.status {
 		return e.Status(ctx, calls...)
 	}
 
 	if err := e.Run(ctx, calls...); err != nil {
 		e.Logger.Errf(logger.Red, "%v\n", err)
 
-		if exitCode {
+		if flags.exitCode {
 			if err, ok := err.(*errors.TaskRunError); ok {
 				os.Exit(err.TaskExitCode())
 			}
