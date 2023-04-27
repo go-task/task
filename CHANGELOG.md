@@ -4,6 +4,7 @@
 
 - Starting on this release, official binaries for FreeBSD will be available to
   download (#1068).
+- Fix some errors being unintendedly supressed (#1134 by @clintmod).
 
 ## v3.24.0 - 2023-04-15
 
