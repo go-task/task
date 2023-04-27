@@ -1,0 +1,50 @@
+version: '3'
+
+tasks:
+  silent:
+    desc: "silent"
+    silent: true
+    cmds:
+      - exit 0
+  chatty:
+    desc: "chatty"
+    silent: false
+    cmds:
+      - exit 0
+
+  # Test combinations of silent and chatty tasks
+  task-test-silent-calls-chatty-non-silenced:
+    silent: true
+    cmds:
+      - task: chatty
+
+  task-test-silent-calls-chatty-silenced:
+    silent: true
+    cmds:
+      - task: chatty
+        silent: true
+
+  task-test-no-cmds-calls-chatty-silenced:
+    silent: false
+    cmds:
+      - task: chatty
+        silent: true
+
+  task-test-chatty-calls-chatty-non-silenced:
+    silent: false
+    cmds:
+      - cmd: exit 0
+      - task: chatty
+
+  task-test-chatty-calls-chatty-silenced:
+    silent: false
+    cmds:
+      - cmd: exit 0
+      - task: chatty
+        silent: true
+
+  task-test-chatty-calls-silenced-cmd:
+    silent: false
+    cmds:
+      - cmd: exit 0
+        silent: true

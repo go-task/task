@@ -1892,3 +1892,77 @@ func TestSplitArgs(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, "3\n", buff.String())
 }
+
+func TestSilence(t *testing.T) {
+	var buff bytes.Buffer
+	e := task.Executor{
+		Dir:    "testdata/silent",
+		Stdout: &buff,
+		Stderr: &buff,
+		Silent: false,
+	}
+	require.NoError(t, e.Setup())
+
+	// First verify that the silent flag is in place.
+	task, err := e.GetTask(taskfile.Call{Task: "task-test-silent-calls-chatty-silenced"})
+	require.NoError(t, err, "Unable to look up task task-test-silent-calls-chatty-silenced")
+	require.True(t, task.Cmds[0].Silent, "The task task-test-silent-calls-chatty-silenced should have a silent call to chatty")
+
+	// Then test the two basic cases where the task is silent or not.
+	// A silenced task.
+	err = e.Run(context.Background(), taskfile.Call{Task: "silent"})
+	require.NoError(t, err)
+	require.Empty(t, buff.String(), "siWhile running lent: Expected not see output, because the task is silent")
+
+	buff.Reset()
+
+	// A chatty (not silent) task.
+	err = e.Run(context.Background(), taskfile.Call{Task: "chatty"})
+	require.NoError(t, err)
+	require.NotEmpty(t, buff.String(), "chWhile running atty: Expected to see output, because the task is not silent")
+
+	buff.Reset()
+
+	// Then test invoking the two task from other tasks.
+	// A silenced task that calls a chatty task.
+	err = e.Run(context.Background(), taskfile.Call{Task: "task-test-silent-calls-chatty-non-silenced"})
+	require.NoError(t, err)
+	require.NotEmpty(t, buff.String(), "While running task-test-silent-calls-chatty-non-silenced: Expected to see output. The task is silenced, but the called task is not. Silence does not propagate to called tasks.")
+
+	buff.Reset()
+
+	// A silent task that does a silent call to a chatty task.
+	err = e.Run(context.Background(), taskfile.Call{Task: "task-test-silent-calls-chatty-silenced"})
+	require.NoError(t, err)
+	require.Empty(t, buff.String(), "While running task-test-silent-calls-chatty-silenced: Expected not to see output. The task calls chatty task, but the call is silenced.")
+
+	buff.Reset()
+
+	// A chatty task that does a call to a chatty task.
+	err = e.Run(context.Background(), taskfile.Call{Task: "task-test-chatty-calls-chatty-non-silenced"})
+	require.NoError(t, err)
+	require.NotEmpty(t, buff.String(), "While running task-test-chatty-calls-chatty-non-silenced: Expected to see output. Both caller and callee are chatty and not silenced.")
+
+	buff.Reset()
+
+	// A chatty task that does a silenced call to a chatty task.
+	err = e.Run(context.Background(), taskfile.Call{Task: "task-test-chatty-calls-chatty-silenced"})
+	require.NoError(t, err)
+	require.NotEmpty(t, buff.String(), "While running task-test-chatty-calls-chatty-silenced: Expected to see output. Call to a chatty task is silenced, but the parent task is not.")
+
+	buff.Reset()
+
+	// A chatty task with no cmd's of its own that does a silenced call to a chatty task.
+	err = e.Run(context.Background(), taskfile.Call{Task: "task-test-no-cmds-calls-chatty-silenced"})
+	require.NoError(t, err)
+	require.Empty(t, buff.String(), "While running task-test-no-cmds-calls-chatty-silenced: Expected not to see output. While the task itself is not silenced, it does not have any cmds and only does an invocation of a silenced task.")
+
+	buff.Reset()
+
+	// A chatty task that does a silenced invocation of a task.
+	err = e.Run(context.Background(), taskfile.Call{Task: "task-test-chatty-calls-silenced-cmd"})
+	require.NoError(t, err)
+	require.Empty(t, buff.String(), "While running task-test-chatty-calls-silenced-cmd: Expected not to see output. While the task itself is not silenced, its call to the chatty task is silent.")
+
+	buff.Reset()
+}

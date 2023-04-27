@@ -177,7 +177,7 @@ func (e *Executor) RunTask(ctx context.Context, call taskfile.Call) error {
 			}
 
 			if upToDate && preCondMet {
-				if e.Verbose || (!t.Silent && !e.Taskfile.Silent && !e.Silent) {
+				if e.Verbose || (!call.Silent && !t.Silent && !e.Taskfile.Silent && !e.Silent) {
 					e.Logger.Errf(logger.Magenta, "task: Task %q is up to date\n", t.Name())
 				}
 				return nil
@@ -237,9 +237,8 @@ func (e *Executor) runDeps(ctx context.Context, t *taskfile.Task) error {
 
 	for _, d := range t.Deps {
 		d := d
-
 		g.Go(func() error {
-			err := e.RunTask(ctx, taskfile.Call{Task: d.Task, Vars: d.Vars})
+			err := e.RunTask(ctx, taskfile.Call{Task: d.Task, Vars: d.Vars, Silent: d.Silent})
 			if err != nil {
 				return err
 			}
@@ -267,7 +266,7 @@ func (e *Executor) runCommand(ctx context.Context, t *taskfile.Task, call taskfi
 		reacquire := e.releaseConcurrencyLimit()
 		defer reacquire()
 
-		err := e.RunTask(ctx, taskfile.Call{Task: cmd.Task, Vars: cmd.Vars})
+		err := e.RunTask(ctx, taskfile.Call{Task: cmd.Task, Vars: cmd.Vars, Silent: cmd.Silent})
 		if err != nil {
 			return err
 		}
@@ -278,7 +277,7 @@ func (e *Executor) runCommand(ctx context.Context, t *taskfile.Task, call taskfi
 			return nil
 		}
 
-		if e.Verbose || (!cmd.Silent && !t.Silent && !e.Taskfile.Silent && !e.Silent) {
+		if e.Verbose || (!call.Silent && !cmd.Silent && !t.Silent && !e.Taskfile.Silent && !e.Silent) {
 			e.Logger.Errf(logger.Green, "task: [%s] %s\n", t.Name(), cmd.Cmd)
 		}
 
