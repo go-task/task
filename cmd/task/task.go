@@ -15,7 +15,6 @@ import (
 	"github.com/go-task/task/v3"
 	"github.com/go-task/task/v3/args"
 	"github.com/go-task/task/v3/errors"
-	"github.com/go-task/task/v3/internal/logger"
 	"github.com/go-task/task/v3/internal/sort"
 	ver "github.com/go-task/task/v3/internal/version"
 	"github.com/go-task/task/v3/taskfile"
@@ -71,6 +70,10 @@ var flags struct {
 
 func main() {
 	if err := run(); err != nil {
+		if err, ok := err.(*errors.TaskRunError); ok && flags.exitCode {
+			log.Print(err.Error())
+			os.Exit(err.TaskExitCode())
+		}
 		if err, ok := err.(errors.TaskError); ok {
 			log.Print(err.Error())
 			os.Exit(err.Code())
@@ -255,17 +258,7 @@ func run() error {
 		return e.Status(ctx, calls...)
 	}
 
-	if err := e.Run(ctx, calls...); err != nil {
-		e.Logger.Errf(logger.Red, "%v\n", err)
-
-		if flags.exitCode {
-			if err, ok := err.(*errors.TaskRunError); ok {
-				os.Exit(err.TaskExitCode())
-			}
-		}
-		return err
-	}
-	return nil
+	return e.Run(ctx, calls...)
 }
 
 func getArgs() ([]string, string, error) {
