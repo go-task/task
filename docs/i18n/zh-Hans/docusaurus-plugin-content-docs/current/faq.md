@@ -1,6 +1,6 @@
 ---
 slug: /faq/
-sidebar_position: 5
+sidebar_position: 6
 ---
 
 # 常见问题

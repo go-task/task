@@ -1,6 +1,6 @@
 ---
 slug: /community/
-sidebar_position: 8
+sidebar_position: 9
 ---
 
 # 社区
@@ -11,27 +11,9 @@ sidebar_position: 8
 
 [@DeronW](https://github.com/DeronW) 在 [此存储库](https://github.com/DeronW/task) 中维护网站的 [中文翻译](https://task-zh.readthedocs.io/zh_CN/latest/)。
 
-## 编辑器集成
+## Integrations
 
-### JSON Schema
-
-Schema 的初步工作是由 [@KROSF](https://github.com/KROSF) 在此 [Gist](https://gist.github.com/KROSF/c5435acf590acd632f71bb720f685895) 上完成的。 这个 Schema 目前在 https://taskfile.dev/schema.json 上可用，并在 https://json.schemastore.org/taskfile.json 上添加了链接，因此它可以自动在许多代码编辑器使用，例如 VSCode。 可以通过编辑 [此文件](https://github.com/go-task/task/blob/main/docs/static/schema.json) 来完成贡献。
-
-### Visual Studio Code 扩展
-
-另外，在开发 Visual Studio Code 扩展过程中， 还有一些工作由 [@paulvarache](https://github.com/paulvarache) 完成， 代码在 [这里](https://github.com/paulvarache/vscode-taskfile) 并发布到了 [这里](https://marketplace.visualstudio.com/items?itemName=paulvarache.vscode-taskfile)。
-
-### Sublime Text 4 包
-
-通过 Sublime Text 的命令面板有一个简便的安装运行方法。 这个包是由 [@biozz](https://github.com/biozz) 开发的， 源代码在 [这里](https://github.com/biozz/sublime-taskfile) 并且发布到了包管理 [这里](https://packagecontrol.io/packages/Taskfile)。
-
-### IntelliJ 插件
-
-JetBrains IntelliJ 插件由 [@lechuckroh](https://github.com/lechuckroh) 完成， 代码在 [这里](https://github.com/lechuckroh/task-intellij-plugin) 并且发布到了 [这里](https://plugins.jetbrains.com/plugin/17058-taskfile)。
-
-## 其他集成
-
-- [mk](https://github.com/pycontribs/mk) 命令行工具可以原生识别任务文件。
+Many of our integrations are contributed and maintained by the community. You can view the full list of community integrations [here](./integrations#community-integrations).
 
 ## 安装方法
 
