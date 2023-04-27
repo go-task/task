@@ -142,8 +142,9 @@ func (e *Executor) compiledTask(call taskfile.Call, evaluateShVars bool) (*taskf
 				continue
 			}
 			new.Deps = append(new.Deps, &taskfile.Dep{
-				Task: r.Replace(dep.Task),
-				Vars: r.ReplaceVars(dep.Vars),
+				Task:   r.Replace(dep.Task),
+				Vars:   r.ReplaceVars(dep.Vars),
+				Silent: dep.Silent,
 			})
 		}
 	}

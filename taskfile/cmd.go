@@ -99,6 +99,7 @@ func (c *Cmd) UnmarshalYAML(node *yaml.Node) error {
 		if err := node.Decode(&taskCall); err == nil && taskCall.Task != "" {
 			c.Task = taskCall.Task
 			c.Vars = taskCall.Vars
+			c.Silent = cmdStruct.Silent
 			return nil
 		}
 
