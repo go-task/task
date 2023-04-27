@@ -255,7 +255,7 @@ func run() error {
 	}
 
 	if err := e.Run(ctx, calls...); err != nil {
-		e.Logger.Errf(logger.Red, "%v", err)
+		e.Logger.Errf(logger.Red, "%v\n", err)
 
 		if exitCode {
 			if err, ok := err.(*errors.TaskRunError); ok {

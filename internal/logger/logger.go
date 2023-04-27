@@ -64,7 +64,7 @@ type Logger struct {
 
 // Outf prints stuff to STDOUT.
 func (l *Logger) Outf(color Color, s string, args ...any) {
-	l.FOutf(l.Stdout, color, s+"\n", args...)
+	l.FOutf(l.Stdout, color, s, args...)
 }
 
 // FOutf prints stuff to the given writer.
@@ -95,7 +95,7 @@ func (l *Logger) Errf(color Color, s string, args ...any) {
 		color = Default
 	}
 	print := color()
-	print(l.Stderr, s+"\n", args...)
+	print(l.Stderr, s, args...)
 }
 
 // VerboseErrf prints stuff to STDERR if verbose mode is enabled.

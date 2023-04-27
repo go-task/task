@@ -34,7 +34,7 @@ func (e *Executor) watchTasks(calls ...taskfile.Call) error {
 		c := c
 		go func() {
 			if err := e.RunTask(ctx, c); err != nil && !isContextError(err) {
-				e.Logger.Errf(logger.Red, "%v", err)
+				e.Logger.Errf(logger.Red, "%v\n", err)
 			}
 		}()
 	}
@@ -49,7 +49,7 @@ func (e *Executor) watchTasks(calls ...taskfile.Call) error {
 		watchInterval = defaultWatchInterval
 	}
 
-	e.Logger.VerboseOutf(logger.Green, "task: Watching for changes every %v", watchInterval)
+	e.Logger.VerboseOutf(logger.Green, "task: Watching for changes every %v\n", watchInterval)
 
 	w := watcher.New()
 	defer w.Close()
@@ -61,7 +61,7 @@ func (e *Executor) watchTasks(calls ...taskfile.Call) error {
 		for {
 			select {
 			case event := <-w.Event:
-				e.Logger.VerboseErrf(logger.Magenta, "task: received watch event: %v", event)
+				e.Logger.VerboseErrf(logger.Magenta, "task: received watch event: %v\n", event)
 
 				cancel()
 				ctx, cancel = context.WithCancel(context.Background())
@@ -72,7 +72,7 @@ func (e *Executor) watchTasks(calls ...taskfile.Call) error {
 					c := c
 					go func() {
 						if err := e.RunTask(ctx, c); err != nil && !isContextError(err) {
-							e.Logger.Errf(logger.Red, "%v", err)
+							e.Logger.Errf(logger.Red, "%v\n", err)
 						}
 					}()
 				}
@@ -80,7 +80,7 @@ func (e *Executor) watchTasks(calls ...taskfile.Call) error {
 				switch err {
 				case watcher.ErrWatchedFileDeleted:
 				default:
-					e.Logger.Errf(logger.Red, "%v", err)
+					e.Logger.Errf(logger.Red, "%v\n", err)
 				}
 			case <-w.Closed:
 				cancel()
@@ -93,7 +93,7 @@ func (e *Executor) watchTasks(calls ...taskfile.Call) error {
 		// re-register every 5 seconds because we can have new files, but this process is expensive to run
 		for {
 			if err := e.registerWatchedFiles(w, calls...); err != nil {
-				e.Logger.Errf(logger.Red, "%v", err)
+				e.Logger.Errf(logger.Red, "%v\n", err)
 			}
 			time.Sleep(watchInterval)
 		}
@@ -161,7 +161,7 @@ func (e *Executor) registerWatchedFiles(w *watcher.Watcher, calls ...taskfile.Ca
 				if err := w.Add(absFile); err != nil {
 					return err
 				}
-				e.Logger.VerboseOutf(logger.Green, "task: watching new file: %v", absFile)
+				e.Logger.VerboseOutf(logger.Green, "task: watching new file: %v\n", absFile)
 			}
 		}
 		return nil
