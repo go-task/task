@@ -1,6 +1,6 @@
 ---
 slug: /community/
-sidebar_position: 8
+sidebar_position: 9
 ---
 
 # Community
@@ -11,27 +11,9 @@ Some of the work to improve the Task ecosystem is done by the community, be it i
 
 [@DeronW](https://github.com/DeronW) maintains the [Chinese translation](https://task-zh.readthedocs.io/zh_CN/latest/) of the website [on this repository](https://github.com/DeronW/task).
 
-## Editor Integrations
+## Integrations
 
-### JSON Schema
-
-Initial work on the schema was made by [@KROSF](https://github.com/KROSF) on [this Gist](https://gist.github.com/KROSF/c5435acf590acd632f71bb720f685895). The schema is currently available at https://taskfile.dev/schema.json and linked at https://json.schemastore.org/taskfile.json so it is be used automatically many code editors, like VSCode. Contributions can be done by editing [this file](https://github.com/go-task/task/blob/main/docs/static/schema.json).
-
-### Visual Studio Code extension
-
-Additionally, there's also some work done by [@paulvarache](https://github.com/paulvarache) in making an Visual Studio Code extension, which has its code [here](https://github.com/paulvarache/vscode-taskfile) and is published [here](https://marketplace.visualstudio.com/items?itemName=paulvarache.vscode-taskfile).
-
-### Sublime Text 4 package
-
-There is a convenience wrapper for initializing and running tasks from Sublime Text's command palette. The package is developed by [@biozz](https://github.com/biozz), the source code is available [here](https://github.com/biozz/sublime-taskfile) and it is published on Package Control [here](https://packagecontrol.io/packages/Taskfile).
-
-### IntelliJ plugin
-
-There's a JetBrains IntelliJ plugin done by [@lechuckroh](https://github.com/lechuckroh), which has its code [here](https://github.com/lechuckroh/task-intellij-plugin) and is published [here](https://plugins.jetbrains.com/plugin/17058-taskfile).
-
-## Other Integrations
-
-- [mk](https://github.com/pycontribs/mk) command line tool recognizes Taskfiles natively.
+Many of our integrations are contributed and maintained by the community. You can view the full list of community integrations [here](./integrations#community-integrations).
 
 ## Installation methods
 
