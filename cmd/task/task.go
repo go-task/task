@@ -49,6 +49,7 @@ func main() {
 			log.Print(err.Error())
 			os.Exit(err.Code())
 		}
+		log.Print(err.Error())
 		os.Exit(errors.CodeUnknown)
 	}
 	os.Exit(errors.CodeOk)
