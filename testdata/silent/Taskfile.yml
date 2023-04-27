@@ -48,3 +48,24 @@ tasks:
     cmds:
       - cmd: exit 0
         silent: true
+
+  # Now test with dependencies.
+  task-test-is-silent-depends-on-chatty-non-silenced:
+    silent: true
+    deps: [chatty, silent]
+
+  task-test-is-silent-depends-on-chatty-silenced:
+    silent: true
+    deps:
+      - task: chatty
+        silent: true
+      - task: silent
+        silent: false
+
+  task-test-is-chatty-depends-on-chatty-silenced:
+    silent: false
+    deps:
+      - task: chatty
+        silent: true
+      - task: silent
+        silent: false

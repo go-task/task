@@ -1965,4 +1965,26 @@ func TestSilence(t *testing.T) {
 	require.Empty(t, buff.String(), "While running task-test-chatty-calls-silenced-cmd: Expected not to see output. While the task itself is not silenced, its call to the chatty task is silent.")
 
 	buff.Reset()
+
+	// Then test calls via dependencies.
+	// A silent task that depends on a chatty task.
+	err = e.Run(context.Background(), taskfile.Call{Task: "task-test-is-silent-depends-on-chatty-non-silenced"})
+	require.NoError(t, err)
+	require.NotEmpty(t, buff.String(), "While running task-test-is-silent-depends-on-chatty-non-silenced: Expected to see output. The task is silent and depends on a chatty task. Dependencies does not inherit silence.")
+
+	buff.Reset()
+
+	// A silent task that depends on a silenced chatty task.
+	err = e.Run(context.Background(), taskfile.Call{Task: "task-test-is-silent-depends-on-chatty-silenced"})
+	require.NoError(t, err)
+	require.Empty(t, buff.String(), "While running task-test-is-silent-depends-on-chatty-silenced: Expected not to see output. The task is silent and has a silenced dependency on a chatty task.")
+
+	buff.Reset()
+
+	// A chatty task that, depends on a silenced chatty task.
+	err = e.Run(context.Background(), taskfile.Call{Task: "task-test-is-chatty-depends-on-chatty-silenced"})
+	require.NoError(t, err)
+	require.Empty(t, buff.String(), "While running task-test-is-chatty-depends-on-chatty-silenced: Expected not to see output. The task is chatty but does not have commands and has a silenced dependency on a chatty task.")
+
+	buff.Reset()
 }
