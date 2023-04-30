@@ -280,6 +280,7 @@ tasks:
 | --------- | ---------------------------------- | ------- | -------------------------------------------------------- |
 | `task`    | `string`                           |         | The task to be execute as a dependency.                  |
 | `vars`    | [`map[string]Variable`](#variable) |         | Optional additional variables to be passed to this task. |
+| `silent`  | `bool`                             | `false` | Hides task name and command from output. The command's output will still be redirected to `STDOUT` and `STDERR`. |
 
 :::tip
 

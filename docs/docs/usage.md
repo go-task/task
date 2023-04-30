@@ -468,6 +468,7 @@ tasks:
         vars: { TEXT: 'before 1' }
       - task: echo_sth
         vars: { TEXT: 'before 2' }
+        silent: true
     cmds:
       - echo "after"
 
@@ -574,8 +575,8 @@ tasks:
       - echo "Another task"
 ```
 
-Overriding variables in the called task is as simple as informing `vars`
-attribute:
+Using the `vars` and `silent` attributes you can choose to pass variables and
+toggle [silent mode](#silent-mode) on a call-by-call basis:
 
 ```yaml
 version: '3'
@@ -591,6 +592,7 @@ tasks:
     cmds:
       - task: greet
         vars: { RECIPIENT: 'Cruel World' }
+        silent: true
 ```
 
 The above syntax is also supported in `deps`.
