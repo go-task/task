@@ -7,6 +7,7 @@ require (
 	github.com/fatih/color v1.15.0
 	github.com/go-task/slim-sprig v0.0.0-20210107165309-348f09dbbbc0
 	github.com/joho/godotenv v1.5.1
+	github.com/landlock-lsm/go-landlock v0.0.0-20230225094210-7a98d7db83f2
 	github.com/mattn/go-zglob v0.0.4
 	github.com/mitchellh/hashstructure/v2 v2.0.2
 	github.com/radovskyb/watcher v1.0.7
@@ -28,4 +29,5 @@ require (
 	golang.org/x/sys v0.6.0 // indirect
 	golang.org/x/term v0.3.0 // indirect
 	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127 // indirect
+	kernel.org/pub/linux/libs/security/libcap/psx v1.2.66 // indirect
 )
