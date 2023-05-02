@@ -1892,3 +1892,27 @@ func TestSplitArgs(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, "3\n", buff.String())
 }
+
+func TestShell(t *testing.T) {
+	// reuse testdata/dry since 'shell' flag has similar behavior
+	const dir = "testdata/dry"
+
+	file := filepathext.SmartJoin(dir, "file.txt")
+	_ = os.Remove(file)
+
+	var buff bytes.Buffer
+
+	e := task.Executor{
+		Dir:    dir,
+		Stdout: &buff,
+		Stderr: io.Discard,
+		Shell:  true,
+	}
+	require.NoError(t, e.Setup())
+	require.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "build"}))
+
+	assert.Equal(t, "touch file.txt", strings.TrimSpace(buff.String()))
+	if _, err := os.Stat(file); err == nil {
+		t.Errorf("File should not exist %s", file)
+	}
+}

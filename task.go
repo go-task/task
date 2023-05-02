@@ -46,6 +46,7 @@ type Executor struct {
 	Verbose     bool
 	Silent      bool
 	Dry         bool
+	Shell       bool
 	Summary     bool
 	Parallel    bool
 	Color       bool
@@ -275,6 +276,11 @@ func (e *Executor) runCommand(ctx context.Context, t *taskfile.Task, call taskfi
 	case cmd.Cmd != "":
 		if !shouldRunOnCurrentPlatform(cmd.Platforms) {
 			e.Logger.VerboseOutf(logger.Yellow, "task: [%s] %s not for current platform - ignored\n", t.Name(), cmd.Cmd)
+			return nil
+		}
+
+		if e.Shell {
+			e.Logger.FOutf(e.Stdout, logger.Default, "%s\n", cmd.Cmd)
 			return nil
 		}
 
