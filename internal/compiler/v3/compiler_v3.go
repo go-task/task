@@ -10,6 +10,7 @@ import (
 	"github.com/go-task/task/v3/internal/compiler"
 	"github.com/go-task/task/v3/internal/execext"
 	"github.com/go-task/task/v3/internal/filepathext"
+	glob "github.com/go-task/task/v3/internal/fingerprint"
 	"github.com/go-task/task/v3/internal/logger"
 	"github.com/go-task/task/v3/internal/templater"
 	"github.com/go-task/task/v3/internal/version"
@@ -180,12 +181,18 @@ func (c *CompilerV3) getSpecialVars(t *taskfile.Task) (map[string]string, error)
 		return nil, err
 	}
 
+	sources, err := glob.Globs(t.Dir, t.Sources)
+	if err != nil {
+		return nil, err
+	}
+
 	return map[string]string{
 		"TASK":             t.Task,
 		"ROOT_DIR":         c.Dir,
 		"TASKFILE_DIR":     taskfileDir,
 		"USER_WORKING_DIR": c.UserWorkingDir,
 		"TASK_VERSION":     version.GetVersion(),
+		"SOURCES":          strings.Join(sources, ", "),
 	}, nil
 }
 

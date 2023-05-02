@@ -16,4 +16,7 @@ tasks:
       - echo root/TASK={{.TASK}}
       - echo root/ROOT_DIR={{.ROOT_DIR}}
       - echo root/TASKFILE_DIR={{.TASKFILE_DIR}}
-      - echo root/TASK_VERSION={{.TASK_VERSION}}
+      - echo root/TASK_VERSION="{{.TASK_VERSION}}"
+      - echo root/SOURCES="{{.SOURCES}}"
+    sources:
+     - '*.sh'

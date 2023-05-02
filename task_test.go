@@ -194,12 +194,14 @@ func TestSpecialVars(t *testing.T) {
 	assert.Contains(t, output, "root/ROOT_DIR="+toAbs("testdata/special_vars"))
 	assert.Contains(t, output, "root/TASKFILE_DIR="+toAbs("testdata/special_vars"))
 	assert.Contains(t, output, "root/TASK_VERSION=unknown")
+	assert.Contains(t, output, "root/SOURCES=install-task.sh")
 
 	// Included Taskfile
 	assert.Contains(t, output, "included/TASK=included:print")
 	assert.Contains(t, output, "included/ROOT_DIR="+toAbs("testdata/special_vars"))
 	assert.Contains(t, output, "included/TASKFILE_DIR="+toAbs("testdata/special_vars/included"))
 	assert.Contains(t, output, "included/TASK_VERSION=unknown")
+	assert.Contains(t, output, "root/SOURCES=install-task.sh")
 }
 
 func TestVarsInvalidTmpl(t *testing.T) {

@@ -49,3 +49,7 @@ func Glob(dir string, g string) ([]string, error) {
 	}
 	return files, nil
 }
+
+func Globs(dir string, g []string) ([]string, error) {
+	return globs(dir, g)
+}
