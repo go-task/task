@@ -31,7 +31,7 @@ The default shell on Windows (`cmd` and `powershell`) do not have commands like 
 
 - Use the `{{OS}}` function to run an OS-specific script.
 - Use something like `{{if eq OS "windows"}}powershell {{end}}<my_cmd>` to detect windows and run the command in Powershell directly.
-- Use a shell on Windows that supports these commands as builtins, such as [Git Bash][git-bash] or [WSL][wsl].
+- Use a shell on Windows that supports these commands as builtins, such as [Git Bash](https://gitforwindows.org/) or [WSL](https://learn.microsoft.com/en-us/windows/wsl/install).
 
 We want to make improvements to this part of Task and the issues below track this work. Constructive comments and contributions are very welcome!
 
@@ -42,5 +42,3 @@ We want to make improvements to this part of Task and the issues below track thi
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end -->
-[git-bash]: https://gitforwindows.org/
-[wsl]: https://learn.microsoft.com/en-us/windows/wsl/install

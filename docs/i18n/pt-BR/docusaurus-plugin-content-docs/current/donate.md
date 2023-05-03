@@ -9,7 +9,7 @@ Se você acha esse projeto útil, considere doar usando um dos meios listados ab
 
 Esta é apenas uma maneira de dizer "obrigado", ele não lhe dará nenhum benefício como maior prioridade em issues ou algo parecido.
 
-As empresas que doarem pelo menos $50/mês ganharão destaque como "Patrocinador Ouro" na página do site e no README do repositório no GitHub. Faça contato com [@andreynering][] com o logotipo que você deseja ser mostrado no site. Negócios suspeitos (apostas, cassinos, etc) não serão permitidos, porém.
+As empresas que doarem pelo menos $50/mês ganharão destaque como "Patrocinador Ouro" na página do site e no README do repositório no GitHub. Faça contato com [@andreynering](https://github.com/andreynering) com o logotipo que você deseja ser mostrado no site. Negócios suspeitos (apostas, cassinos, etc) não serão permitidos, porém.
 
 ## GitHub Sponsors
 
@@ -30,15 +30,14 @@ Se você preferir o [Open Collective](https://opencollective.com/task) você pod
 
 ## PayPal
 
-Você pode doar para [@andreynering][] através do PayPal também:
+Você pode doar para [@andreynering](https://github.com/andreynering) através do PayPal também:
 
 - [Qualquer valor - Doação única](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=GSVDU63RKG45A&currency_code=USD&source=url)
 
 ## PIX (somente para o Brasil)
 
-E se você é brasileiro, também pode doar para [@andreynering][] via PIX [usando este QR Code](/img/pix.png).
+E se você é brasileiro, também pode doar para [@andreynering](https://github.com/andreynering) via PIX [usando este QR Code](/img/pix.png).
 
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end -->
-[@andreynering]: https://github.com/andreynering

@@ -3,32 +3,32 @@ slug: /integrations/
 sidebar_position: 5
 ---
 
-# Integrations
+# 集成
 
-## Visual Studio Code Extension
+## Visual Studio Code 扩展
 
-Task has an [official extension for Visual Studio Code](https://marketplace.visualstudio.com/items?itemName=task.vscode-task). The code for this project can be found [here](https://github.com/go-task/vscode-task). To use this extension, you must have Task v3.23.0+ installed on your system.
+Task 有一个 [针对 Visual Studio Code 的官方扩展](https://marketplace.visualstudio.com/items?itemName=task.vscode-task)。 这个项目的代码可以在 [这里](https://github.com/go-task/vscode-task) 找到。 要使用此扩展，您的系统上必须安装 Task v3.23.0+。
 
-This extension provides the following features (and more):
+此扩展提供以下功能（以及更多）：
 
-- View tasks in the sidebar.
-- Run tasks from the sidebar and command palette.
-- Go to definition from the sidebar and command palette.
-- Run last task command.
-- Multi-root workspace support.
-- Initialize a Taskfile in the current workspace.
+- 在侧边栏中查看 task。
+- 从侧边栏和命令面板运行 task。
+- 从侧边栏和命令面板转到定义。
+- 运行上一个 task 命令。
+- 多根工作区支持。
+- 在当前工作空间中初始化一个 Taskfile。
 
-To get autocompletion and validation for your Taskfile, see the [Schema](#schema) section below.
+要获得 Taskfile 的自动完成和验证，请参阅下面的 [Schema](#schema) 部分。
 
 ![Task for Visual Studio Code](https://github.com/go-task/vscode-task/blob/main/res/preview.png?raw=true)
 
 ## Schema
 
-This was initially created by [@KROSF](https://github.com/KROSF) in [this Gist](https://gist.github.com/KROSF/c5435acf590acd632f71bb720f685895) and is now officially maintained in [this file](https://github.com/go-task/task/blob/master/docs/static/schema.json) and made available at https://taskfile.dev/schema.json. This schema can be used to validate Taskfiles and provide autocompletion in many code editors:
+这最初是由 [@KROSF](https://github.com/KROSF) 在 [这个 Gist](https://gist.github.com/KROSF/c5435acf590acd632f71bb720f685895) 中创建的，现在在 [这个](https://github.com/go-task/task/blob/main/docs/static/schema.json) 文件中正式维护，并在 https://taskfile.dev/schema.json 上提供。 这个 schema 可用于验证 Taskfile 并在许多代码编辑器中提供自动完成功能：
 
 ### Visual Studio Code
 
-To integrate the schema into VS Code, you need to install the [YAML extension](https://marketplace.visualstudio.com/items?itemName=redhat.vscode-yaml) by Red Hat. Any `Taskfile.yml` in your project should automatically be detected and validation/autocompletion should work. If this doesn't work or you want to manually configure it for files with a different name, you can add the following to your `settings.json`:
+要将 schema 集成到 VS Code 中，您需要安装 Red Hat 的 [YAML 扩展](https://marketplace.visualstudio.com/items?itemName=redhat.vscode-yaml)。 项目中的任何 `Taskfile.yml` 都应该被自动检测到，并且验证/自动完成应该可以工作。 如果这不起作用或者您想为具有不同名称的文件手动配置它，您可以将以下内容添加到您的 `settings.json`：
 
 ```json
 // settings.json
@@ -42,21 +42,21 @@ To integrate the schema into VS Code, you need to install the [YAML extension](h
 }
 ```
 
-You can also configure the schema directly inside of a Taskfile by adding the following comment to the top of the file:
+您还可以通过将以下注释添加到文件顶部来直接在 Taskfile 中配置 schema：
 
 ```yaml
 # yaml-language-server: $schema=https://taskfile.dev/schema.json
 version: '3'
 ```
 
-You can find more information on this in the [YAML language server project](https://github.com/redhat-developer/yaml-language-server).
+您可以在 [YAML 语言服务器项目](https://github.com/redhat-developer/yaml-language-server) 中找到更多相关信息。
 
-## Community Integrations
+## 社区集成
 
-In addition to our official integrations, there is an amazing community of developers who have created their own integrations for Task:
+除了我们的官方集成之外，还有一个很棒的开发人员社区，他们为 Task 创建了自己的集成：
 
-- [Sublime Text Plugin](https://packagecontrol.io/packages/Taskfile) [[source](https://github.com/biozz/sublime-taskfile)] by [@biozz](https://github.com/biozz)
-- [IntelliJ Plugin](https://plugins.jetbrains.com/plugin/17058-taskfile) [[source](https://github.com/lechuckroh/task-intellij-plugin)] by [@lechuckroh](https://github.com/lechuckroh)
-- [mk](https://github.com/pycontribs/mk) command line tool recognizes Taskfiles natively.
+- [Sublime Text Plugin](https://packagecontrol.io/packages/Taskfile) [[源码](https://github.com/biozz/sublime-taskfile)] 由 [@biozz](https://github.com/biozz)
+- [IntelliJ Plugin](https://plugins.jetbrains.com/plugin/17058-taskfile) [[源码](https://github.com/lechuckroh/task-intellij-plugin)] 由 [@lechuckroh](https://github.com/lechuckroh)
+- [mk](https://github.com/pycontribs/mk) 命令行工具本机识别 Taskfile。
 
-If you have made something that integrates with Task, please feel free to open a PR to add it to this list.
+如果你做了一些与 Task 集成的东西，请随意打开一个 PR 将它添加到这个列表中。

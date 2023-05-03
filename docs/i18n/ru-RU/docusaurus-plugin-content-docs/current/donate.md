@@ -9,7 +9,7 @@ If you find this project useful, you can consider donating by using one of the c
 
 This is just a way of saying "thank you", it won't give you any benefits like higher priority on issues or something similar.
 
-Companies who donate at least $50/month will be featured as a "Gold Sponsor" in the website homepage and on the GitHub repository README. Make contact with [@andreynering][] with the logo you want to be shown. Suspect businesses (gambling, casinos, etc) won't be allowed, though.
+Companies who donate at least $50/month will be featured as a "Gold Sponsor" in the website homepage and on the GitHub repository README. Make contact with [@andreynering](https://github.com/andreynering) with the logo you want to be shown. Suspect businesses (gambling, casinos, etc) won't be allowed, though.
 
 ## GitHub Sponsors
 
@@ -30,15 +30,14 @@ If you prefer [Open Collective](https://opencollective.com/task) you can donate 
 
 ## PayPal
 
-You can donate to [@andreynering][] via PayPal as well:
+You can donate to [@andreynering](https://github.com/andreynering) via PayPal as well:
 
 - [Any value - One-time donation](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=GSVDU63RKG45A&currency_code=USD&source=url)
 
 ## PIX (Brazil only)
 
-And if you're Brazilian, you can also donate to [@andreynering][] via PIX by [using this QR Code](/img/pix.png).
+And if you're Brazilian, you can also donate to [@andreynering](https://github.com/andreynering) via PIX by [using this QR Code](/img/pix.png).
 
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end -->
-[@andreynering]: https://github.com/andreynering

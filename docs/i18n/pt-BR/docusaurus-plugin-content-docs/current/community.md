@@ -13,7 +13,7 @@ Some of the work to improve the Task ecosystem is done by the community, be it i
 
 ## Integrations
 
-Many of our integrations are contributed and maintained by the community. You can view the full list of community integrations [here](./integrations#community-integrations).
+Many of our integrations are contributed and maintained by the community. You can view the full list of community integrations [here](/integrations#community-integrations).
 
 ## Installation methods
 
