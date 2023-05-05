@@ -7,7 +7,7 @@ import (
 // TaskfileNotFoundError is returned when no appropriate Taskfile is found when
 // searching the filesystem.
 type TaskfileNotFoundError struct {
-	Dir  string
+	URI  string
 	Walk bool
 }
 
@@ -16,7 +16,7 @@ func (err TaskfileNotFoundError) Error() string {
 	if err.Walk {
 		walkText = " (or any of the parent directories)"
 	}
-	return fmt.Sprintf(`task: No Taskfile found in "%s"%s. Use "task --init" to create a new one`, err.Dir, walkText)
+	return fmt.Sprintf(`task: No Taskfile found at "%s"%s`, err.URI, walkText)
 }
 
 func (err TaskfileNotFoundError) Code() int {
@@ -38,12 +38,12 @@ func (err TaskfileAlreadyExistsError) Code() int {
 // TaskfileInvalidError is returned when the Taskfile contains syntax errors or
 // cannot be parsed for some reason.
 type TaskfileInvalidError struct {
-	FilePath string
-	Err      error
+	URI string
+	Err error
 }
 
 func (err TaskfileInvalidError) Error() string {
-	return fmt.Sprintf("task: Failed to parse %s:\n%v", err.FilePath, err.Err)
+	return fmt.Sprintf("task: Failed to parse %s:\n%v", err.URI, err.Err)
 }
 
 func (err TaskfileInvalidError) Code() int {

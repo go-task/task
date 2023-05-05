@@ -76,13 +76,15 @@ func (e *Executor) setCurrentDir() error {
 
 func (e *Executor) readTaskfile() error {
 	var err error
-	e.Taskfile, e.Dir, err = read.Taskfile(&read.ReaderNode{
+	e.Taskfile, err = read.Taskfile(&read.FileNode{
 		Dir:        e.Dir,
 		Entrypoint: e.Entrypoint,
-		Parent:     nil,
-		Optional:   false,
 	})
-	return err
+	if err != nil {
+		return err
+	}
+	e.Dir = filepath.Dir(e.Taskfile.Location)
+	return nil
 }
 
 func (e *Executor) setupFuzzyModel() {
