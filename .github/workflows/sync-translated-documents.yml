@@ -27,12 +27,10 @@ jobs:
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v4
         with:
-          commit-message: "Website: Sync translations"
-          title: "Website: Sync translations"
-          body: Synchonizing translations with Crowdin
+          commit-message: "chore: sync translations"
+          title: "chore: sync translations"
           branch: chore/sync-translations
           delete-branch: true
           author: task-bot <106601941+task-bot@users.noreply.github.com>
           labels: translation
           token: ${{ secrets.GH_PAT }}
-          draft: true
