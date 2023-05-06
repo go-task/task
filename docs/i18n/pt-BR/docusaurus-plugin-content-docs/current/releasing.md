@@ -5,7 +5,7 @@ sidebar_position: 11
 
 # Releasing
 
-The release process of Task is done with the help of [GoReleaser][goreleaser]. You can test the release process locally by calling the `test-release` task of the Taskfile.
+The release process of Task is done with the help of [GoReleaser](https://goreleaser.com/). You can test the release process locally by calling the `test-release` task of the Taskfile.
 
 [GitHub Actions](https://github.com/go-task/task/actions) should release artifacts automatically when a new Git tag is pushed to `main` branch (raw executables and DEB and RPM packages).
 
@@ -13,18 +13,18 @@ Since v3.15.0, raw executables can also be reproduced and verified locally by ch
 
 # Homebrew
 
-Goreleaser will automatically push a new commit to the [Formula/go-task.rb][gotaskrb] file in the [Homebrew tap][homebrewtap] repository to release the new version.
+Goreleaser will automatically push a new commit to the [Formula/go-task.rb](https://github.com/go-task/homebrew-tap/blob/master/Formula/go-task.rb) file in the [Homebrew tap](https://github.com/go-task/homebrew-tap) repository to release the new version.
 
 # npm
 
-To release to npm update the version in the [`package.json`][packagejson] file and then run `task npm:publish` to push it.
+To release to npm update the version in the [`package.json`](https://github.com/go-task/task/blob/main/package.json#L3) file and then run `task npm:publish` to push it.
 
 # Snapcraft
 
-The [snap package][snappackage] requires to manual steps to release a new version:
+The [snap package](https://github.com/go-task/snap) requires to manual steps to release a new version:
 
-- Updating the current version on [snapcraft.yaml][snapcraftyaml].
-- Moving both `amd64`, `armhf` and `arm64` new artifacts to the stable channel on the [Snapcraft dashboard][snapcraftdashboard].
+- Updating the current version on [snapcraft.yaml](https://github.com/go-task/snap/blob/master/snap/snapcraft.yaml#L2).
+- Moving both `amd64`, `armhf` and `arm64` new artifacts to the stable channel on the [Snapcraft dashboard](https://snapcraft.io/task/releases).
 
 # Scoop
 
@@ -37,10 +37,3 @@ Nix is a community owned installation method. Nix package maintainers usually ta
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end -->
-[goreleaser]: https://goreleaser.com/
-[homebrewtap]: https://github.com/go-task/homebrew-tap
-[gotaskrb]: https://github.com/go-task/homebrew-tap/blob/master/Formula/go-task.rb
-[packagejson]: https://github.com/go-task/task/blob/main/package.json#L3
-[snappackage]: https://github.com/go-task/snap
-[snapcraftyaml]: https://github.com/go-task/snap/blob/master/snap/snapcraft.yaml#L2
-[snapcraftdashboard]: https://snapcraft.io/task/releases

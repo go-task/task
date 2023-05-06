@@ -17,9 +17,11 @@ task [--flags] [tasks...] [-- CLI_ARGS...]
 
 :::tip
 
+
 Se `--` é informado, todos os argumentos remanescentes serão atribuídos a uma variável especial chamada `CLI_ARGS`
 
 :::
+
 
 | Abreviação | Modificador                 | Tipo     | Predefinição                                                        | Descrição                                                                                                                                                                |
 | ---------- | --------------------------- | -------- | ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -76,8 +78,10 @@ Uma lista completa dos códigos de saída e suas descrições podem ser encontra
 Esses códigos também podem ser encontrados no repositório em [`errors/errors.go`](https://github.com/go-task/task/blob/main/errors/errors.go).
 
 :::info
-Quando o Task é executado com o modificador `-x`/`--exit-code`, o código de saída de todos os comandos falhados será passado para o usuário.
+
+When Task is run with the `-x`/`--exit-code` flag, the exit code of any failed commands will be passed through to the user instead.
 :::
+
 
 ## Saída em JSON
 
@@ -165,6 +169,7 @@ Some environment variables can be overriden to adjust Task behavior.
 
 :::info
 
+
 Informing only a string like below is equivalent to setting that value to the `taskfile` attribute.
 
 ```yaml
@@ -174,6 +179,7 @@ includes:
 
 :::
 
+
 ### Variable
 
 | Attribute | Type     | Default | Description                                                              |
@@ -182,6 +188,7 @@ includes:
 | `sh`      | `string` |         | A shell command. The output (`STDOUT`) will be assigned to the variable. |
 
 :::info
+
 
 Static and dynamic variables have different syntaxes, like below:
 
@@ -193,6 +200,7 @@ vars:
 ```
 
 :::
+
 
 ### Task
 
@@ -225,6 +233,7 @@ vars:
 
 :::info
 
+
 These alternative syntaxes are available. They will set the given values to `cmds` and everything else will be set to their default values:
 
 ```yaml
@@ -240,6 +249,7 @@ tasks:
 ```
 
 :::
+
 
 #### Command
 
@@ -257,6 +267,7 @@ tasks:
 
 :::info
 
+
 If given as a a string, the value will be assigned to `cmd`:
 
 ```yaml
@@ -269,6 +280,7 @@ tasks:
 
 :::
 
+
 #### Dependency
 
 | Attribute | Type                               | Default | Description                                              |
@@ -277,6 +289,7 @@ tasks:
 | `vars`    | [`map[string]Variable`](#variable) |         | Optional additional variables to be passed to this task. |
 
 :::tip
+
 
 If you don't want to set additional variables, it's enough to declare the dependency as a list of strings (they will be assigned to `task`):
 
@@ -288,6 +301,7 @@ tasks:
 
 :::
 
+
 #### Precondition
 
 | Attribute | Type     | Default | Description                                                                                                  |
@@ -296,6 +310,7 @@ tasks:
 | `msg`     | `string` |         | Optional message to print if the precondition isn't met.                                                     |
 
 :::tip
+
 
 If you don't want to set a different message, you can declare a precondition like this and the value will be assigned to `sh`:
 

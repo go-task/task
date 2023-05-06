@@ -24,7 +24,7 @@ To get autocompletion and validation for your Taskfile, see the [Schema](#schema
 
 ## Schema
 
-This was initially created by [@KROSF](https://github.com/KROSF) in [this Gist](https://gist.github.com/KROSF/c5435acf590acd632f71bb720f685895) and is now officially maintained in [this file](https://github.com/go-task/task/blob/master/docs/static/schema.json) and made available at https://taskfile.dev/schema.json. This schema can be used to validate Taskfiles and provide autocompletion in many code editors:
+This was initially created by [@KROSF](https://github.com/KROSF) in [this Gist](https://gist.github.com/KROSF/c5435acf590acd632f71bb720f685895) and is now officially maintained in [this file](https://github.com/go-task/task/blob/main/docs/static/schema.json) and made available at https://taskfile.dev/schema.json. This schema can be used to validate Taskfiles and provide autocompletion in many code editors:
 
 ### Visual Studio Code
 

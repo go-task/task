@@ -11,9 +11,9 @@ sidebar_position: 9
 
 [@DeronW](https://github.com/DeronW) 在 [此存储库](https://github.com/DeronW/task) 中维护网站的 [中文翻译](https://task-zh.readthedocs.io/zh_CN/latest/)。
 
-## Integrations
+## 集成
 
-Many of our integrations are contributed and maintained by the community. You can view the full list of community integrations [here](./integrations#community-integrations).
+我们的许多集成都是由社区贡献和维护的。 您可以在 [此处](/integrations#社区集成) 查看社区集成的完整列表。
 
 ## 安装方法
 
