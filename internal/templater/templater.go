@@ -15,8 +15,7 @@ import (
 // happen will be assigned to r.err, and consecutive calls to funcs will just
 // return the zero value.
 type Templater struct {
-	Vars          *taskfile.Vars
-	RemoveNoValue bool
+	Vars *taskfile.Vars
 
 	cacheMap map[string]any
 	err      error
@@ -62,10 +61,7 @@ func (r *Templater) replace(str string, extra map[string]any) string {
 		r.err = err
 		return ""
 	}
-	if r.RemoveNoValue {
-		return strings.ReplaceAll(b.String(), "<no value>", "")
-	}
-	return b.String()
+	return strings.ReplaceAll(b.String(), "<no value>", "")
 }
 
 func (r *Templater) ReplaceSlice(strs []string) []string {

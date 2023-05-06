@@ -42,7 +42,7 @@ func (e *Executor) compiledTask(call taskfile.Call, evaluateShVars bool) (*taskf
 		return nil, err
 	}
 
-	r := templater.Templater{Vars: vars, RemoveNoValue: e.Taskfile.Version.Compare(taskfile.V3) >= 0}
+	r := templater.Templater{Vars: vars}
 
 	new := taskfile.Task{
 		Task:                 origTask.Task,

@@ -91,47 +91,9 @@ func TestEnv(t *testing.T) {
 	tt.Run(t)
 }
 
-func TestVarsV2(t *testing.T) {
+func TestVars(t *testing.T) {
 	tt := fileContentTest{
-		Dir:       "testdata/vars/v2",
-		Target:    "default",
-		TrimSpace: true,
-		Files: map[string]string{
-			"foo.txt":              "foo",
-			"bar.txt":              "bar",
-			"baz.txt":              "baz",
-			"tmpl_foo.txt":         "foo",
-			"tmpl_bar.txt":         "bar",
-			"tmpl_foo2.txt":        "foo2",
-			"tmpl_bar2.txt":        "bar2",
-			"shtmpl_foo.txt":       "foo",
-			"shtmpl_foo2.txt":      "foo2",
-			"nestedtmpl_foo.txt":   "<no value>",
-			"nestedtmpl_foo2.txt":  "foo2",
-			"foo2.txt":             "foo2",
-			"bar2.txt":             "bar2",
-			"baz2.txt":             "baz2",
-			"tmpl2_foo.txt":        "<no value>",
-			"tmpl2_foo2.txt":       "foo2",
-			"tmpl2_bar.txt":        "<no value>",
-			"tmpl2_bar2.txt":       "bar2",
-			"shtmpl2_foo.txt":      "<no value>",
-			"shtmpl2_foo2.txt":     "foo2",
-			"nestedtmpl2_foo2.txt": "<no value>",
-			"override.txt":         "bar",
-			"nested.txt":           "Taskvars-TaskfileVars-TaskVars",
-			"task_name.txt":        "hello",
-		},
-	}
-	tt.Run(t)
-	// Ensure identical results when running hello task directly.
-	tt.Target = "hello"
-	tt.Run(t)
-}
-
-func TestVarsV3(t *testing.T) {
-	tt := fileContentTest{
-		Dir:    "testdata/vars/v3",
+		Dir:    "testdata/vars",
 		Target: "default",
 		Files: map[string]string{
 			"missing-var.txt":  "\n",
@@ -142,29 +104,6 @@ func TestVarsV3(t *testing.T) {
 		},
 	}
 	tt.Run(t)
-}
-
-func TestMultilineVars(t *testing.T) {
-	for _, dir := range []string{"testdata/vars/v2/multiline"} {
-		tt := fileContentTest{
-			Dir:       dir,
-			Target:    "default",
-			TrimSpace: false,
-			Files: map[string]string{
-				// Note:
-				// - task does not strip a trailing newline from var entries
-				// - task strips one trailing newline from shell output
-				// - the cat command adds a trailing newline
-				"echo_foobar.txt":      "foo\nbar\n",
-				"echo_n_foobar.txt":    "foo\nbar\n",
-				"echo_n_multiline.txt": "\n\nfoo\n  bar\nfoobar\n\nbaz\n\n",
-				"var_multiline.txt":    "\n\nfoo\n  bar\nfoobar\n\nbaz\n\n\n",
-				"var_catlines.txt":     "  foo   bar foobar  baz  \n",
-				"var_enumfile.txt":     "0:\n1:\n2:foo\n3:  bar\n4:foobar\n5:\n6:baz\n7:\n8:\n",
-			},
-		}
-		tt.Run(t)
-	}
 }
 
 func TestSpecialVars(t *testing.T) {
@@ -200,22 +139,6 @@ func TestSpecialVars(t *testing.T) {
 	assert.Contains(t, output, "included/ROOT_DIR="+toAbs("testdata/special_vars"))
 	assert.Contains(t, output, "included/TASKFILE_DIR="+toAbs("testdata/special_vars/included"))
 	assert.Contains(t, output, "included/TASK_VERSION=unknown")
-}
-
-func TestVarsInvalidTmpl(t *testing.T) {
-	const (
-		dir         = "testdata/vars/v2"
-		target      = "invalid-var-tmpl"
-		expectError = "template: :1: unexpected EOF"
-	)
-
-	e := &task.Executor{
-		Dir:    dir,
-		Stdout: io.Discard,
-		Stderr: io.Discard,
-	}
-	require.NoError(t, e.Setup(), "e.Setup()")
-	assert.EqualError(t, e.Run(context.Background(), taskfile.Call{Task: target}), expectError, "e.Run(target)")
 }
 
 func TestConcurrency(t *testing.T) {
@@ -910,8 +833,11 @@ func TestTaskVersion(t *testing.T) {
 	tests := []struct {
 		Dir     string
 		Version *semver.Version
+		wantErr bool
 	}{
-		{"testdata/version/v2", semver.MustParse("2")},
+		{"testdata/version/v1", semver.MustParse("1"), true},
+		{"testdata/version/v2", semver.MustParse("2"), true},
+		{"testdata/version/v3", semver.MustParse("3"), false},
 	}
 
 	for _, test := range tests {
@@ -921,7 +847,12 @@ func TestTaskVersion(t *testing.T) {
 				Stdout: io.Discard,
 				Stderr: io.Discard,
 			}
-			require.NoError(t, e.Setup())
+			err := e.Setup()
+			if test.wantErr {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
 			assert.Equal(t, test.Version, e.Taskfile.Version)
 			assert.Equal(t, 2, e.Taskfile.Tasks.Len())
 		})
@@ -1059,21 +990,6 @@ func TestIncludeCycle(t *testing.T) {
 	err := e.Setup()
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "task: include cycle detected between")
-}
-
-func TestIncorrectVersionIncludes(t *testing.T) {
-	const dir = "testdata/incorrect_includes"
-	expectedError := "task: Import with additional parameters is only available starting on Taskfile version v3"
-
-	var buff bytes.Buffer
-	e := task.Executor{
-		Dir:    dir,
-		Stdout: &buff,
-		Stderr: &buff,
-		Silent: true,
-	}
-
-	assert.EqualError(t, e.Setup(), expectedError)
 }
 
 func TestIncludesIncorrect(t *testing.T) {
@@ -1500,10 +1416,10 @@ func TestDisplaysErrorOnVersion1Schema(t *testing.T) {
 	}
 	err := e.Setup()
 	require.Error(t, err)
-	assert.Equal(t, "task: version 1 schemas are no longer supported", err.Error())
+	assert.Equal(t, "task: Taskfile schemas prior to v3 are no longer supported", err.Error())
 }
 
-func TestDisplaysWarningOnVersion2Schema(t *testing.T) {
+func TestDisplaysErrorOnVersion2Schema(t *testing.T) {
 	var buff bytes.Buffer
 	e := task.Executor{
 		Dir:    "testdata/version/v2",
@@ -1511,8 +1427,8 @@ func TestDisplaysWarningOnVersion2Schema(t *testing.T) {
 		Stderr: &buff,
 	}
 	err := e.Setup()
-	require.NoError(t, err)
-	assert.Equal(t, "task: version 2 schemas are deprecated and will be removed in a future release\nSee https://github.com/go-task/task/issues/1197 for more details\n", buff.String())
+	require.Error(t, err)
+	assert.Equal(t, "task: Taskfile schemas prior to v3 are no longer supported", err.Error())
 }
 
 func TestShortTaskNotation(t *testing.T) {

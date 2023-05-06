@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"runtime"
 	"time"
 
 	"gopkg.in/yaml.v3"
@@ -174,21 +173,19 @@ func Taskfile(
 		}
 
 		err = t.Includes.Range(func(namespace string, includedTask taskfile.IncludedTaskfile) error {
-			if t.Version.Compare(taskfile.V3) >= 0 {
-				tr := templater.Templater{Vars: t.Vars, RemoveNoValue: true}
-				includedTask = taskfile.IncludedTaskfile{
-					Taskfile:       tr.Replace(includedTask.Taskfile),
-					Dir:            tr.Replace(includedTask.Dir),
-					Optional:       includedTask.Optional,
-					Internal:       includedTask.Internal,
-					Aliases:        includedTask.Aliases,
-					AdvancedImport: includedTask.AdvancedImport,
-					Vars:           includedTask.Vars,
-					BaseDir:        includedTask.BaseDir,
-				}
-				if err := tr.Err(); err != nil {
-					return err
-				}
+			tr := templater.Templater{Vars: t.Vars}
+			includedTask = taskfile.IncludedTaskfile{
+				Taskfile:       tr.Replace(includedTask.Taskfile),
+				Dir:            tr.Replace(includedTask.Dir),
+				Optional:       includedTask.Optional,
+				Internal:       includedTask.Internal,
+				Aliases:        includedTask.Aliases,
+				AdvancedImport: includedTask.AdvancedImport,
+				Vars:           includedTask.Vars,
+				BaseDir:        includedTask.BaseDir,
+			}
+			if err := tr.Err(); err != nil {
+				return err
 			}
 
 			uri, err := includedTask.FullTaskfilePath()
@@ -219,7 +216,7 @@ func Taskfile(
 				return err
 			}
 
-			if t.Version.Compare(taskfile.V3) >= 0 && len(includedTaskfile.Dotenv) > 0 {
+			if len(includedTaskfile.Dotenv) > 0 {
 				return ErrIncludedTaskfilesCantHaveDotenvs
 			}
 
@@ -271,31 +268,6 @@ func Taskfile(
 		})
 		if err != nil {
 			return nil, err
-		}
-
-		if t.Version.Compare(taskfile.V3) < 0 {
-			if node, isFileNode := node.(*FileNode); isFileNode {
-				path := filepathext.SmartJoin(node.Dir, fmt.Sprintf("Taskfile_%s.yml", runtime.GOOS))
-				if _, err = os.Stat(path); err == nil {
-					osNode := &FileNode{
-						BaseNode:   NewBaseNode(WithParent(node)),
-						Entrypoint: path,
-						Dir:        node.Dir,
-					}
-					b, err := osNode.Read(context.Background())
-					if err != nil {
-						return nil, err
-					}
-					var osTaskfile *taskfile.Taskfile
-					if err := yaml.Unmarshal(b, &osTaskfile); err != nil {
-						return nil, &errors.TaskfileInvalidError{URI: filepathext.TryAbsToRel(node.Location()), Err: err}
-					}
-					t.Location = node.Location()
-					if err = taskfile.Merge(t, osTaskfile, nil); err != nil {
-						return nil, err
-					}
-				}
-			}
 		}
 
 		for _, task := range t.Tasks.Values() {

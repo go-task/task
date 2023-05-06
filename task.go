@@ -64,13 +64,12 @@ type Executor struct {
 	Stderr io.Writer
 
 	Logger         *logger.Logger
-	Compiler       compiler.Compiler
+	Compiler       *compiler.Compiler
 	Output         output.Output
 	OutputStyle    taskfile.Output
 	TaskSorter     sort.TaskSorter
 	UserWorkingDir string
 
-	taskvars   *taskfile.Vars
 	fuzzyModel *fuzzy.Model
 
 	concurrencySemaphore chan struct{}
@@ -349,7 +348,7 @@ func (e *Executor) runCommand(ctx context.Context, t *taskfile.Task, call taskfi
 			outputWrapper = output.Interleaved{}
 		}
 		vars, err := e.Compiler.FastGetVariables(t, call)
-		outputTemplater := &templater.Templater{Vars: vars, RemoveNoValue: true}
+		outputTemplater := &templater.Templater{Vars: vars}
 		if err != nil {
 			return fmt.Errorf("task: failed to get variables: %w", err)
 		}

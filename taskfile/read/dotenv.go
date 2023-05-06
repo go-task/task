@@ -11,7 +11,7 @@ import (
 	"github.com/go-task/task/v3/taskfile"
 )
 
-func Dotenv(c compiler.Compiler, tf *taskfile.Taskfile, dir string) (*taskfile.Vars, error) {
+func Dotenv(c *compiler.Compiler, tf *taskfile.Taskfile, dir string) (*taskfile.Vars, error) {
 	if len(tf.Dotenv) == 0 {
 		return nil, nil
 	}
@@ -23,7 +23,7 @@ func Dotenv(c compiler.Compiler, tf *taskfile.Taskfile, dir string) (*taskfile.V
 
 	env := &taskfile.Vars{}
 
-	tr := templater.Templater{Vars: vars, RemoveNoValue: true}
+	tr := templater.Templater{Vars: vars}
 
 	for _, dotEnvPath := range tf.Dotenv {
 		dotEnvPath = tr.Replace(dotEnvPath)
