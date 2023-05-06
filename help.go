@@ -99,13 +99,13 @@ func (e *Executor) ListTasks(o ListOptions) (bool, error) {
 	// Format in tab-separated columns with a tab stop of 8.
 	w := tabwriter.NewWriter(e.Stdout, 0, 8, 6, ' ', 0)
 	for _, task := range tasks {
-		e.Logger.Outf(logger.Yellow, "* ")
-		e.Logger.Outf(logger.Green, task.Task)
-		e.Logger.Outf(logger.Default, ": \t%s", task.Desc)
+		e.Logger.FOutf(w, logger.Yellow, "* ")
+		e.Logger.FOutf(w, logger.Green, task.Task)
+		e.Logger.FOutf(w, logger.Default, ": \t%s", task.Desc)
 		if len(task.Aliases) > 0 {
-			e.Logger.Outf(logger.Cyan, "\t(aliases: %s)", strings.Join(task.Aliases, ", "))
+			e.Logger.FOutf(w, logger.Cyan, "\t(aliases: %s)", strings.Join(task.Aliases, ", "))
 		}
-		e.Logger.Outf(logger.Default, "\n")
+		_, _ = fmt.Fprint(w, "\n")
 	}
 	if err := w.Flush(); err != nil {
 		return false, err
