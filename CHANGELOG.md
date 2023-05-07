@@ -7,6 +7,7 @@
 - Fix some errors being unintendedly supressed (#1134 by @clintmod).
 - Fix a nil pointer error when `version` is omitted from a Taskfile (#1148,
   #1149 by @pd93).
+- Fix duplicate error message when a task does not exists (#1141, #1144 by @pd93).
 
 ## v3.24.0 - 2023-04-15
 
