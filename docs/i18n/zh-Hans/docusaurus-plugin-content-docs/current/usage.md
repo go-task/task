@@ -71,7 +71,6 @@ tasks:
 
 :::info
 
-
 当使用 `-g` 运行全局 Taskfile 时，task 将默认在 `$HOME` 上运行，而不是在您的工作目录上！
 
 如前一节所述，`{{.USER_WORKING_DIR}}` 特殊变量在这里可以非常方便地在您从中调用 `task -g` 的目录中运行内容。
@@ -91,7 +90,6 @@ tasks:
 ```
 
 :::
-
 
 ## 环境变量
 
@@ -126,11 +124,9 @@ tasks:
 
 :::info
 
-
 `env` 支持扩展和检索 shell 命令的输出，就像变量一样，如您在 [变量](#变量) 部分中看到的那样。
 
 :::
-
 
 ### .env 文件
 
@@ -192,11 +188,9 @@ tasks:
 
 :::info
 
-
 请注意，您目前无法在包含的 Taskfile 中使用 `dotenv` 键。
 
 :::
-
 
 ## 包含其他 Taskfile
 
@@ -240,11 +234,9 @@ includes:
 
 :::info
 
-
 包含的 Taskfile 必须使用与主 Taskfile 使用的相同规则版本。
 
 :::
-
 
 ### 可选 includes
 
@@ -312,11 +304,9 @@ includes:
 
 :::info
 
-
 在包含的 Taskfile 中声明的变量优先于包含 Taskfile 中的变量！ 如果您希望包含的 Taskfile 中的变量可被覆盖，请使用 [默认方法](https://go-task.github.io/slim-sprig/defaults.html)：`MY_VAR: '{{.MY_VAR | default "my-default-value"}}'`。
 
 :::
-
 
 ## 内部 tasks
 
@@ -399,11 +389,9 @@ tasks:
 
 :::tip
 
-
 您还可以使用 `--parallel` 标志（别名 `-p`）使命令行给出的 task 并行运行。 例如: `task --parallel js css`。
 
 :::
-
 
 如果你想将信息传递给依赖项，你可以像 [调用另一个 task](#调用另一个-task) 一样以相同的方式进行：
 
@@ -537,11 +525,9 @@ tasks:
 
 :::tip
 
-
 注意：如果您想从 [包含的 Taskfile](#包含其他-taskfile) 中调用在根 Taskfile 中声明的 task，请像这样添加 `:` 前缀：`task: :task-name`。
 
 :::
-
 
 ## 减少不必要的工作
 
@@ -597,7 +583,6 @@ tasks:
 
 :::info
 
-
 默认情况，task 在本地项目的 `.task` 目录保存 checksums 值。 一般都会在 `.gitignore`（或类似配置）中忽略掉这个目录，这样它就不会被提交。 (如果您有一个已提交的代码生成任务，那么提交该任务的校验和也是有意义的)。
 
 如果你想要将这些文件存储在另一个目录中，你可以在你的机器中设置一个 `TASK_TEMP_DIR` 环境变量。 可以使用相对路径，比如 `tmp/task`，相对项目根目录，也可以用绝对路径、用户目录路径，比如 `/tmp/.task` 或 `~/.task`（每个项目单独创建子目录）。
@@ -608,9 +593,7 @@ export TASK_TEMP_DIR='~/.task'
 
 :::
 
-
 :::info
-
 
 每个 task 只为其 `sources` 存储一个 checksum。 如果您想通过任何输入变量来区分 task，您可以将这些变量添加为 task 标签的一部分，它将被视为不同的 task。
 
@@ -618,22 +601,17 @@ export TASK_TEMP_DIR='~/.task'
 
 :::
 
-
 :::tip
-
 
 将 method 设置为 `none` 会跳过任何验证并始终运行任务。
 
 :::
 
-
 :::info
-
 
 要使 `checksum`（默认）或 `timestamp` 方法起作用，只需要通知 source 文件即可。 当使用 `timestamp` 方法时，最后一次运行 task 被认为是一次生成。
 
 :::
-
 
 ### 使用程序检查来表示任务是最新的
 
@@ -788,11 +766,9 @@ $ TASK_VARIABLE=a-value task do-something
 
 :::tip
 
-
 A special variable `.TASK` is always available containing the task name.
 
 :::
-
 
 Since some shells do not support the above syntax to set environment variables (Windows) tasks also accept a similar style when not at the beginning of the command.
 
@@ -898,15 +874,13 @@ tasks:
 
 :::info
 
-
 Due to the nature of how the [Go's own `defer` work](https://go.dev/tour/flowcontrol/13), the deferred commands are executed in the reverse order if you schedule multiple of them.
 
 :::
 
-
 ## Go 的模板引擎
 
-Task 在执行命令之前将命令解析为 [Go 的模板引擎](https://golang.org/pkg/text/template/)。 可以通过点语法 (`.VARNAME`) 访问变量。
+Task 在执行命令之前将命令解析为 [Go 的模板引擎][gotemplate]。 可以通过点语法 (`.VARNAME`) 访问变量。
 
 All functions by the Go's [slim-sprig lib](https://go-task.github.io/slim-sprig/) are available. The following example gets the current date in a given format:
 
@@ -1291,11 +1265,9 @@ $ task default
 
 :::tip
 
-
 The `output` option can also be specified by the `--output` or `-o` flags.
 
 :::
-
 
 ## 交互式 CLI 应用
 
@@ -1347,11 +1319,9 @@ tasks:
 
 :::info
 
-
 Keep in mind that not all options are available in the [shell interpreter library](https://github.com/mvdan/sh) that Task uses.
 
 :::
-
 
 ## 观察任务
 
@@ -1362,3 +1332,4 @@ The default watch interval is 5 seconds, but it's possible to change it by eithe
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end -->
+[gotemplate]: https://golang.org/pkg/text/template/
