@@ -19,7 +19,7 @@ website [on this repository](https://github.com/DeronW/task).
 
 Many of our integrations are contributed and maintained by the community. You
 can view the full list of community integrations
-[here](./integrations#community-integrations).
+[here](/integrations#community-integrations).
 
 ## Installation methods
 
