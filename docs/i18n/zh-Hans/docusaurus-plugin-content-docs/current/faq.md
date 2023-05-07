@@ -31,7 +31,7 @@ Windows 上的默认 shell（`cmd` 和 `powershell`）没有像 `rm` 和 `cp` �
 
 - 使用 `{{OS}}` 函数运行特定于操作系统的脚本。
 - 使用 `{{if eq OS "windows"}}powershell {{end}}<my_cmd>` 之类的东西来检测 windows 并直接在 Powershell 中运行命令。
-- 在 Windows 上使用支持这些命令的 shell 作为内置命令，例如 [Git Bash](https://gitforwindows.org/) 或 [WSL](https://learn.microsoft.com/en-us/windows/wsl/install)。
+- 在 Windows 上使用支持这些命令的 shell 作为内置命令，例如 [Git Bash][git-bash] 或 [WSL][wsl]。
 
 我们希望对 Task 的这一部分进行改进，下面的 Issue 会跟踪这项工作。 非常欢迎建设性的意见和贡献！
 
@@ -42,3 +42,5 @@ Windows 上的默认 shell（`cmd` 和 `powershell`）没有像 `rm` 和 `cp` �
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end -->
+[git-bash]: https://gitforwindows.org/
+[wsl]: https://learn.microsoft.com/en-us/windows/wsl/install
