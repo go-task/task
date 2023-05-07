@@ -15,6 +15,7 @@ import (
 	"github.com/go-task/task/v3"
 	"github.com/go-task/task/v3/args"
 	"github.com/go-task/task/v3/errors"
+	"github.com/go-task/task/v3/internal/logger"
 	"github.com/go-task/task/v3/internal/sort"
 	ver "github.com/go-task/task/v3/internal/version"
 	"github.com/go-task/task/v3/taskfile"
@@ -70,15 +71,22 @@ var flags struct {
 
 func main() {
 	if err := run(); err != nil {
+		l := &logger.Logger{
+			Stdout:  os.Stdout,
+			Stderr:  os.Stderr,
+			Verbose: flags.verbose,
+			Color:   flags.color,
+		}
+
 		if err, ok := err.(*errors.TaskRunError); ok && flags.exitCode {
-			log.Print(err.Error())
+			l.Errf(logger.Red, "%v\n", err)
 			os.Exit(err.TaskExitCode())
 		}
 		if err, ok := err.(errors.TaskError); ok {
-			log.Print(err.Error())
+			l.Errf(logger.Red, "%v\n", err)
 			os.Exit(err.Code())
 		}
-		log.Print(err.Error())
+		l.Errf(logger.Red, "%v\n", err)
 		os.Exit(errors.CodeUnknown)
 	}
 	os.Exit(errors.CodeOk)
