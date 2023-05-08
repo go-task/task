@@ -76,7 +76,7 @@ Task 有时会以特定的退出代码退出。 这些代码分为三组，范�
 这些代码也可以在存储库的 [`errors/errors.go`](https://github.com/go-task/task/blob/main/errors/errors.go) 中找到。
 
 :::info
-When Task is run with the `-x`/`--exit-code` flag, the exit code of any failed commands will be passed through to the user instead.
+当使用 `-x`/`--exit-code` 标志运行 Task 时，任何失败命令的退出代码都将传递给用户。
 :::
 
 ## JSON 输出

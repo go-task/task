@@ -9,7 +9,7 @@ sidebar_position: 10
 
 :::note
 
-This document applies to the core [Task][task] repository _and_ [Task for Visual Studio Code][vscode-task].
+本文档适用于核心 [Task][task] 存储库 _和_ [Task for Visual Studio Code][vscode-task]。
 
 :::
 
@@ -20,9 +20,9 @@ This document applies to the core [Task][task] repository _and_ [Task for Visual
 
 ## 1. 设置
 
-- **Go** - Task is written in [Go][go]. 我们始终支持最新的两个主要 Go 版本，因此请确保您的版本足够新。
-- **Node.js** - [Node.js][nodejs] is used to host Task's documentation server and is required if you want to run this server locally. It is also required if you want to contribute to the Visual Studio Code extension.
-- **Yarn** - [Yarn][yarn] is the Node.js package manager used by Task.
+- **Go** - Task 使用 [Go][go] 编写。 我们始终支持最新的两个主要 Go 版本，因此请确保您的版本足够新。
+- **Node.js** - [Node.js][nodejs] 用于托管 Task 的文档服务器，如果您想在本地运行此服务器，则需要它。 如果您想为 Visual Studio Code 扩展做贡献，也需要它。
+- **Yarn** - [Yarn][yarn] 是 Task 使用的 Node.js 包管理器。
 
 ## 2. 进行变更
 
@@ -63,7 +63,7 @@ If you're not sure how to format your commit message, check out [Conventional Co
 
 - **描述变更** - 确保您提供对更改的全面描述。
 - **Issue/PR 链接** - 链接到之前相关的 Issue 或 PR。 请描述当前工作与之前的不同之处。
-- **Examples** - Add any examples or screenshots that you think are useful to demonstrate the effect of your changes.
+- **示例** - 添加您认为有助于展示更改效果的任何示例或屏幕截图。
 - **PR 草案** - 如果变更还未完成，但您想讨论它们，请将 PR 作为草稿打开并添加评论以开始讨论。 使用评论而不是 PR 描述允许稍后更新描述，同时保留讨论。
 
 ## 常见问题
@@ -76,7 +76,7 @@ Take a look at the list of [open issues for Task][task-open-issues] or [Task for
 
 > 我被困住了，我在哪里可以获得帮助？
 
-If you have questions, feel free to ask them in the `#help` forum channel on our [Discord server][discord-server] or open a [Discussion][discussion] on GitHub.
+如果您有任何疑问，请随时在我们的 [Discord 服务器][discord-server] 上的 `#help` 论坛频道中提问，或在 GitHub 上打开 [讨论][discussion]。
 
 ---
 
