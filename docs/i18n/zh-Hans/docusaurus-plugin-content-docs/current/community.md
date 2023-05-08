@@ -13,7 +13,7 @@ sidebar_position: 9
 
 ## 集成
 
-我们的许多集成都是由社区贡献和维护的。 You can view the full list of community integrations [here](/integrations#community-integrations).
+我们的许多集成都是由社区贡献和维护的。 您可以在 [此处](/integrations#社区集成) 查看社区集成的完整列表。
 
 ## 安装方法
 
