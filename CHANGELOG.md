@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added new 'SOURCES' special variable [#1146](https://github.com/go-task/task/pull/1146) by @hernandanielg).
 - Starting on this release, official binaries for FreeBSD will be available to
   download (#1068).
 - Fix some errors being unintendedly supressed (#1134 by @clintmod).
