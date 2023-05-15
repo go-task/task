@@ -1,7 +1,7 @@
 Register-ArgumentCompleter -CommandName task -ScriptBlock {
 	param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
 		if ($commandName -match '^-{1,2}[^-]*$') {
-			$listOutput = @(
+			return @(
 				'--concurrency=',
 				'--interval=',
 				'--output=interleaved',
@@ -15,10 +15,8 @@ Register-ArgumentCompleter -CommandName task -ScriptBlock {
 				'--status',
 				'--verbose',
 				'--watch'
-			)
-			$listOutput | Where-Object { $_ -like "$commandName*" } | ForEach-Object { $_ }
-		} else {
-			$listOutput = $(task --list-all --silent)
-			$listOutput | Where-Object { $_ -like "$commandName*" } | ForEach-Object { $_ }
-	}
+			) | Where-Object { $_ -like "$commandName*" } | ForEach-Object { $_ }
+		}
+
+		return $(task --list-all --silent) | Where-Object { $_ -like "$commandName*" } | ForEach-Object { $_ }
 }
