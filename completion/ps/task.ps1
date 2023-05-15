@@ -22,5 +22,5 @@ Register-ArgumentCompleter -CommandName task -ScriptBlock {
 			return $completions.Where{ $_.CompletionText -like "$commandName*" }
 		}
 
-		return $(task --list-all --silent) | Where-Object { $_ -like "$commandName*" } | ForEach-Object { $_ }
+		return $(task --list-all --silent) | Where-Object { $_ -like "$commandName*" }
 }
