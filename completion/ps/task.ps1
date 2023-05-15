@@ -16,15 +16,10 @@ Register-ArgumentCompleter -CommandName task -ScriptBlock {
 				'--verbose',
 				'--watch'
 			)
-			$reg = "^($commandName.*?)$"
-			$listOutput | Select-String $reg -AllMatches | ForEach-Object {
-				$_.Matches.Groups[1].Value;
-			}
+			$listOutput | Where-Object { $_ -like "$commandName*" } | ForEach-Object { $_ }
 		} else {
 			$listOutput = $(task --list-all --silent)
 			$reg = "^($commandName.*?)$"
-			$listOutput | Select-String $reg -AllMatches | ForEach-Object {
-				$_.Matches.Groups[1].Value;
-			}
+			$listOutput | Where-Object { $_ -like "$commandName*" } | ForEach-Object { $_ }
 	}
 }
