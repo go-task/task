@@ -19,7 +19,6 @@ Register-ArgumentCompleter -CommandName task -ScriptBlock {
 			$listOutput | Where-Object { $_ -like "$commandName*" } | ForEach-Object { $_ }
 		} else {
 			$listOutput = $(task --list-all --silent)
-			$reg = "^($commandName.*?)$"
 			$listOutput | Where-Object { $_ -like "$commandName*" } | ForEach-Object { $_ }
 	}
 }
