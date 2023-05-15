@@ -4,4 +4,4 @@ $scriptBlock = {
 	$listOutput | ForEach-Object { $_ }
 }
 
-Register-ArgumentCompleter -Native -CommandName task -ScriptBlock $scriptBlock
+Register-ArgumentCompleter -CommandName task -ScriptBlock $scriptBlock
