@@ -11,7 +11,7 @@ const sidebars = {
     },
     {
       type: 'link',
-      label: 'Chinese | 中国人',
+      label: 'Chinese | 中文',
       href: CHINESE_URL
     }
   ]
