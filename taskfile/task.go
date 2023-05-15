@@ -102,6 +102,9 @@ func (t *Task) UnmarshalYAML(node *yaml.Node) error {
 			return err
 		}
 		if task.Cmd != nil {
+			if task.Cmds != nil {
+				return fmt.Errorf("yaml: line %d: task cannot have both cmd and cmds", node.Line)
+			}
 			t.Cmds = []*Cmd{task.Cmd}
 		} else {
 			t.Cmds = task.Cmds
