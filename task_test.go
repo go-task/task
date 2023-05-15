@@ -646,6 +646,46 @@ func TestLabelInSummary(t *testing.T) {
 	assert.Contains(t, buff.String(), "foobar")
 }
 
+func TestPromptInSummary(t *testing.T) {
+	const dir = "testdata/prompt"
+	tests := []struct {
+		name      string
+		input     string
+		wantError bool
+	}{
+		{"test short approval", "y\n", false},
+		{"test long approval", "yes\n", false},
+		{"test uppercase approval", "Y\n", false},
+		{"test stops task", "n\n", true},
+		{"test junk value stops task", "foobar\n", true},
+		{"test Enter stops task", "\n", true},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			var inBuff bytes.Buffer
+			var outBuff bytes.Buffer
+
+			inBuff.Write([]byte(test.input))
+
+			e := task.Executor{
+				Dir:    dir,
+				Stdin:  &inBuff,
+				Stdout: &outBuff,
+			}
+			require.NoError(t, e.Setup())
+
+			err := e.Run(context.Background(), taskfile.Call{Task: "foo"})
+
+			if test.wantError {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+		})
+	}
+}
+
 func TestNoLabelInList(t *testing.T) {
 	const dir = "testdata/label_list"
 

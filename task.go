@@ -1,11 +1,13 @@
 package task
 
 import (
+	"bufio"
 	"context"
 	"fmt"
 	"io"
 	"os"
 	"runtime"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -33,6 +35,11 @@ const (
 	// This exists to prevent infinite loops on cyclic dependencies
 	MaximumTaskCall = 100
 )
+
+func shouldPromptContinue(input string) bool {
+	input = strings.ToLower(strings.TrimSpace(input))
+	return slices.Contains([]string{"y", "yes"}, input)
+}
 
 // Executor executes a Taskfile
 type Executor struct {
@@ -93,6 +100,22 @@ func (e *Executor) Run(ctx context.Context, calls ...taskfile.Call) error {
 				}
 			}
 			return &errors.TaskInternalError{TaskName: call.Task}
+		}
+
+		// check if the given task has a warning prompt
+		if task.Prompt != "" {
+
+			e.Logger.Outf(logger.Yellow, "task: %q [y/N]\n", task.Prompt)
+			reader := bufio.NewReader(e.Stdin)
+			userInput, err := reader.ReadString('\n')
+			if err != nil {
+				return err
+			}
+
+			userInput = strings.ToLower(strings.TrimSpace(userInput))
+			if !shouldPromptContinue(userInput) {
+				return &errors.TaskCancelledError{TaskName: call.Task}
+			}
 		}
 	}
 
