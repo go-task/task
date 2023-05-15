@@ -186,15 +186,6 @@ const config = {
                 href: 'https://opencollective.com/task'
               }
             ]
-          },
-          {
-            title: 'Translations',
-            items: [
-              {
-                label: 'Chinese | 中文',
-                href: CHINESE_URL
-              }
-            ]
           }
         ]
       },
