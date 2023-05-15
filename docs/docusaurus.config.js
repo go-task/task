@@ -191,7 +191,7 @@ const config = {
             title: 'Translations',
             items: [
               {
-                label: 'Chinese | 中国人',
+                label: 'Chinese | 中文',
                 href: CHINESE_URL
               }
             ]
