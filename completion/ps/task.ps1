@@ -19,7 +19,7 @@ Register-ArgumentCompleter -CommandName task -ScriptBlock {
 			[CompletionResult]::new('--watch ', '--watch', [CompletionResultType]::ParameterName, '--watch')
 		)
 
-		return $completions.Where{ $_.Tooltip -like "$commandName*" }
+		return $completions.Where{ $_.CompletionText.StartsWith($commandName) }
 	}
 
 	$tasks = $(task --list-all --json) | ConvertFrom-Json
@@ -28,7 +28,7 @@ Register-ArgumentCompleter -CommandName task -ScriptBlock {
 		$ava = $tasks.tasks
 	}
 	else {
-		$ava = $tasks.tasks | Where-Object { $_.name -like "$commandName*" }
+		$ava = $tasks.tasks | Where-Object { $_.name.StartsWith($commandName) }
 	}
 
 	$Mode = (Get-PSReadLineKeyHandler | Where-Object { $_.Key -eq "Tab" }).Function
