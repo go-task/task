@@ -24,21 +24,36 @@ Register-ArgumentCompleter -CommandName task -ScriptBlock {
 
 	$tasks = $(task --list-all --json) | ConvertFrom-Json
 
-	if ($commandName -ne '') {
+	$ava = $tasks.tasks | Where-Object { $_.name -like "$commandName*" }
+
+	if ($ava.Length -le 1) {
 		# user already input something, complete current word
-		return $tasks.tasks | Where-Object { $_.name -like "$commandName*" } | ForEach-Object { $_.name }
+		return $ava | ForEach-Object { $_.name }
 	}
 
-	# <tab> after <space>, show tasks with description
-	return $tasks.tasks | Where-Object { $_.name -like "$commandName*" } | ForEach-Object {
-		$desc = $_.name + "`n"
-		if ($_.summary -ne "") {
-			$desc = $_.name + "`t(" + $_.summary + ")`n"
+	$Longest = 0
+	$ava | ForEach-Object {
+		# Look for the longest completion so that we can format things nicely
+		if ($Longest -lt $_.name.Length) {
+			$Longest = $_.name.Length
 		}
-		elseif ($_.desc -ne "") {
-			$desc = $_.name + "`t(" + $_.desc + ")`n"
+	}
+
+	return $ava | ForEach-Object {
+		$desc = $_.name
+
+		while ($desc.Length -lt $Longest) {
+			$desc = $desc + " "
 		}
 
-		return $desc
+		if ($_.summary -ne "") {
+			$desc = $desc + " (" + $_.summary + ")"
+		}
+		elseif ($_.desc -ne "") {
+			$desc = $desc + " (" + $_.desc + ")"
+		}
+
+
+		return $desc + "`n"
 	}
 }
