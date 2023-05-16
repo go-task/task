@@ -5,6 +5,7 @@ Register-ArgumentCompleter -CommandName task -ScriptBlock {
 
 	if ($commandName.StartsWith('-')) {
 		$completions = @(
+			[CompletionResult]::new('--list-all ', '--list-all ', [CompletionResultType]::ParameterName, 'list all tasks'),
 			[CompletionResult]::new('--color ', '--color', [CompletionResultType]::ParameterName, '--color'),
 			[CompletionResult]::new('--concurrency=', '--concurrency=', [CompletionResultType]::ParameterName, 'concurrency'),
 			[CompletionResult]::new('--interval=', '--interval=', [CompletionResultType]::ParameterName, 'interval'),
