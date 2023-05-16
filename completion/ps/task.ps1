@@ -7,9 +7,9 @@ Register-ArgumentCompleter -CommandName task -ScriptBlock {
 			[CompletionResult]::new('--color ', '--color', [CompletionResultType]::ParameterName, '--color'),
 			[CompletionResult]::new('--concurrency=', '--concurrency=', [CompletionResultType]::ParameterName, 'concurrency'),
 			[CompletionResult]::new('--interval=', '--interval=', [CompletionResultType]::ParameterName, 'interval'),
-			[CompletionResult]::new('--output=interleaved ', '--output=interleaved', [CompletionResultType]::ParameterName, 'output style'),
-			[CompletionResult]::new('--output=group ', '--output=group', [CompletionResultType]::ParameterName, 'output style'),
-			[CompletionResult]::new('--output=prefixed ', '--output=prefixed', [CompletionResultType]::ParameterName, 'output style'),
+			[CompletionResult]::new('--output=interleaved ', '--output=interleaved', [CompletionResultType]::ParameterName, '--output='),
+			[CompletionResult]::new('--output=group ', '--output=group', [CompletionResultType]::ParameterName, '--output='),
+			[CompletionResult]::new('--output=prefixed ', '--output=prefixed', [CompletionResultType]::ParameterName, '--output='),
 			[CompletionResult]::new('--dry ', '--dry', [CompletionResultType]::ParameterName, '--dry'),
 			[CompletionResult]::new('--force ', '--force', [CompletionResultType]::ParameterName, '--force'),
 			[CompletionResult]::new('--parallel ', '--parallel', [CompletionResultType]::ParameterName, '--parallel'),
@@ -31,11 +31,29 @@ Register-ArgumentCompleter -CommandName task -ScriptBlock {
 		$ava = $tasks.tasks | Where-Object { $_.name -like "$commandName*" }
 	}
 
+	$Mode = (Get-PSReadLineKeyHandler | Where-Object { $_.Key -eq "Tab" }).Function
+
+	if ($Mode -eq "MenuComplete") {
+		# PS-Readline feature PSReadlineKeyHandler
+		return $ava | ForEach-Object {
+			$desc = $_.name
+
+			if ($_.summary -ne "") {
+				$desc = $_.summary
+			}
+			elseif ($_.desc -ne "") {
+				$desc = $_.desc
+			}
+
+			return	[CompletionResult]::new("$($_.name) ", "$($_.name) ", [CompletionResultType]::ParameterName, $desc)
+		}
+	}
 
 	if ($ava.Length -le 1) {
 		# user already input something, complete current word
 		return $ava | ForEach-Object { $_.name + " " }
 	}
+
 
 	$Longest = 0
 	$ava | ForEach-Object {
