@@ -23,5 +23,5 @@ Register-ArgumentCompleter -CommandName task -ScriptBlock {
 		return $completions.Where{ $_.CompletionText.StartsWith($commandName) }
 	}
 
-	return 	$(task --list-all --silent) | Where-Object { $_.StartsWith($commandName) }
+	return 	$(task --list-all --silent) | Where-Object { $_.StartsWith($commandName) } | ForEach-Object { return $_ + " " }
 }
