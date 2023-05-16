@@ -27,7 +27,7 @@ const config = {
 
   i18n: {
     defaultLocale: 'en',
-    locales: ['en', 'zh-Hans'],
+    locales: ['en', 'zh-Hans', 'fr-FR'],
     localeConfigs: {
       en: {
         label: 'English',
@@ -38,6 +38,11 @@ const config = {
         label: '简体中文',
         direction: 'ltr',
         htmlLang: 'zh-Hans'
+      },
+      'fr-FR': {
+        label: 'Français',
+        direction: 'ltr',
+        htmlLang: 'fr'
       }
     }
   },
