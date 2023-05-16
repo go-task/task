@@ -51,6 +51,7 @@ type Executor struct {
 	Entrypoint  string
 	Force       bool
 	ForceAll    bool
+	Insecure    bool
 	Watch       bool
 	Verbose     bool
 	Silent      bool

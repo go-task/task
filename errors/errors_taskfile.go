@@ -66,3 +66,20 @@ func (err *TaskfileNotTrustedError) Error() string {
 func (err *TaskfileNotTrustedError) Code() int {
 	return CodeTaskfileNotTrusted
 }
+
+// TaskfileNotSecureError is returned when the user attempts to download a
+// remote Taskfile over an insecure connection.
+type TaskfileNotSecureError struct {
+	URI string
+}
+
+func (err *TaskfileNotSecureError) Error() string {
+	return fmt.Sprintf(
+		`task: Taskfile %q cannot be downloaded over an insecure connection. You can override this by using the --insecure flag`,
+		err.URI,
+	)
+}
+
+func (err *TaskfileNotSecureError) Code() int {
+	return CodeTaskfileNotSecure
+}

@@ -14,6 +14,7 @@ const (
 	CodeTaskfileAlreadyExists
 	CodeTaskfileInvalid
 	CodeTaskfileNotTrusted
+	CodeTaskfileNotSecure
 )
 
 // Task related exit codes

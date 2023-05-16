@@ -33,7 +33,7 @@ var (
 // Taskfile reads a Taskfile for a given directory
 // Uses current dir when dir is left empty. Uses Taskfile.yml
 // or Taskfile.yaml when entrypoint is left empty
-func Taskfile(node Node, tempDir string, l *logger.Logger) (*taskfile.Taskfile, error) {
+func Taskfile(node Node, allowInsecure bool, tempDir string, l *logger.Logger) (*taskfile.Taskfile, error) {
 	var _taskfile func(Node) (*taskfile.Taskfile, error)
 	_taskfile = func(node Node) (*taskfile.Taskfile, error) {
 		t, err := node.Read()
@@ -71,7 +71,7 @@ func Taskfile(node Node, tempDir string, l *logger.Logger) (*taskfile.Taskfile, 
 				}
 			}
 
-			includeReaderNode, err := NewNodeFromIncludedTaskfile(node, includedTask, tempDir, l)
+			includeReaderNode, err := NewNodeFromIncludedTaskfile(node, includedTask, allowInsecure, tempDir, l)
 			if err != nil {
 				if includedTask.Optional {
 					return nil

@@ -76,7 +76,7 @@ func (e *Executor) readTaskfile() error {
 	e.Taskfile, err = read.Taskfile(&read.FileNode{
 		Dir:        e.Dir,
 		Entrypoint: e.Entrypoint,
-	}, e.TempDir, e.Logger)
+	}, e.Insecure, e.TempDir, e.Logger)
 	if err != nil {
 		return err
 	}
