@@ -54,6 +54,6 @@ Register-ArgumentCompleter -CommandName task -ScriptBlock {
 		}
 
 
-		return $desc + "`n"
+		return $desc
 	}
 }
