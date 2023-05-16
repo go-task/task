@@ -2,6 +2,7 @@ using namespace System.Management.Automation
 
 Register-ArgumentCompleter -CommandName task -ScriptBlock {
 	param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
+
 	if ($commandName.StartsWith('-')) {
 		$completions = @(
 			[CompletionResult]::new('--color ', '--color', [CompletionResultType]::ParameterName, '--color'),
@@ -22,62 +23,5 @@ Register-ArgumentCompleter -CommandName task -ScriptBlock {
 		return $completions.Where{ $_.CompletionText.StartsWith($commandName) }
 	}
 
-	$tasks = $(task --list-all --json) | ConvertFrom-Json
-
-	if ($commandName -eq "") {
-		$ava = $tasks.tasks
-	}
-	else {
-		$ava = $tasks.tasks | Where-Object { $_.name.StartsWith($commandName) }
-	}
-
-	$Mode = (Get-PSReadLineKeyHandler | Where-Object { $_.Key -eq "Tab" }).Function
-
-	if ($Mode -eq "MenuComplete") {
-		# PS-Readline feature PSReadlineKeyHandler
-		return $ava | ForEach-Object {
-			$desc = $_.name
-
-			if ($_.summary -ne "") {
-				$desc = $_.summary
-			}
-			elseif ($_.desc -ne "") {
-				$desc = $_.desc
-			}
-
-			return	[CompletionResult]::new("$($_.name) ", "$($_.name) ", [CompletionResultType]::ParameterName, $desc)
-		}
-	}
-
-	if ($ava.Length -le 1) {
-		# user already input something, complete current word
-		return $ava | ForEach-Object { $_.name + " " }
-	}
-
-
-	$Longest = 0
-	$ava | ForEach-Object {
-		# Look for the longest completion so that we can format things nicely
-		if ($Longest -lt $_.name.Length) {
-			$Longest = $_.name.Length
-		}
-	}
-
-	return $ava | ForEach-Object {
-		$desc = $_.name
-
-		while ($desc.Length -lt $Longest) {
-			$desc = $desc + " "
-		}
-
-		if ($_.summary -ne "") {
-			$desc = $desc + " (" + $_.summary + ")"
-		}
-		elseif ($_.desc -ne "") {
-			$desc = $desc + " (" + $_.desc + ")"
-		}
-
-
-		return $desc
-	}
+	return 	$(task --list-all --silent) | Where-Object { $_.StartsWith($commandName) }
 }
