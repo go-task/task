@@ -32,7 +32,7 @@ async function configCreatorAsync() {
 
     i18n: {
       defaultLocale: 'en',
-      locales: ['en', 'zh-Hans'],
+      locales: ['en', 'zh-Hans', 'pt-BR', 'ru-RU'],
       localeConfigs: {
         en: {
           label: 'English',
@@ -43,6 +43,16 @@ async function configCreatorAsync() {
           label: `简体中文 (${translationProgress['zh-CN'] || 0}%)`,
           direction: 'ltr',
           htmlLang: 'zh-Hans'
+        },
+        'pt-BR': {
+          label: `Português (${translationProgress['pt-BR'] || 0}%)`,
+          direction: 'ltr',
+          htmlLang: 'pt-BR'
+        },
+        'ru-RU': {
+          label: `Русский (${translationProgress['ru'] || 0}%)`,
+          direction: 'ltr',
+          htmlLang: 'ru-RU'
         }
       }
     },
