@@ -26,16 +26,13 @@ func (e *Executor) Setup() error {
 	if err := e.setCurrentDir(); err != nil {
 		return err
 	}
-
-	if err := e.readTaskfile(); err != nil {
-		return err
-	}
-
-	e.setupFuzzyModel()
-
 	if err := e.setupTempDir(); err != nil {
 		return err
 	}
+	if err := e.readTaskfile(); err != nil {
+		return err
+	}
+	e.setupFuzzyModel()
 	e.setupStdFiles()
 	e.setupLogger()
 	if err := e.setupOutput(); err != nil {
@@ -79,7 +76,7 @@ func (e *Executor) readTaskfile() error {
 	e.Taskfile, err = read.Taskfile(&read.FileNode{
 		Dir:        e.Dir,
 		Entrypoint: e.Entrypoint,
-	})
+	}, e.TempDir, e.Logger)
 	if err != nil {
 		return err
 	}

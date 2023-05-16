@@ -1,11 +1,14 @@
 package logger
 
 import (
+	"bufio"
 	"io"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/fatih/color"
+	"golang.org/x/exp/slices"
 )
 
 type (
@@ -103,4 +106,18 @@ func (l *Logger) VerboseErrf(color Color, s string, args ...any) {
 	if l.Verbose {
 		l.Errf(color, s, args...)
 	}
+}
+
+func (l *Logger) Prompt(color Color, s string, defaultValue string, continueValues ...string) (bool, error) {
+	if len(continueValues) == 0 {
+		return false, nil
+	}
+	l.Outf(color, "%s [%s/%s]\n", s, strings.ToLower(continueValues[0]), strings.ToUpper(defaultValue))
+	reader := bufio.NewReader(os.Stdin)
+	input, err := reader.ReadString('\n')
+	if err != nil {
+		return false, err
+	}
+	input = strings.TrimSpace(strings.ToLower(input))
+	return slices.Contains(continueValues, input), nil
 }

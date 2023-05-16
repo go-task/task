@@ -49,3 +49,20 @@ func (err TaskfileInvalidError) Error() string {
 func (err TaskfileInvalidError) Code() int {
 	return CodeTaskfileInvalid
 }
+
+// TaskfileNotTrustedError is returned when the user does not accept the trust
+// prompt when downloading a remote Taskfile.
+type TaskfileNotTrustedError struct {
+	URI string
+}
+
+func (err *TaskfileNotTrustedError) Error() string {
+	return fmt.Sprintf(
+		`task: Taskfile %q not trusted by user`,
+		err.URI,
+	)
+}
+
+func (err *TaskfileNotTrustedError) Code() int {
+	return CodeTaskfileNotTrusted
+}

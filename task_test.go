@@ -676,6 +676,7 @@ func TestPromptInSummary(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			var inBuff bytes.Buffer
 			var outBuff bytes.Buffer
+			var errBuff bytes.Buffer
 
 			inBuff.Write([]byte(test.input))
 
@@ -683,6 +684,7 @@ func TestPromptInSummary(t *testing.T) {
 				Dir:         dir,
 				Stdin:       &inBuff,
 				Stdout:      &outBuff,
+				Stderr:      &errBuff,
 				AssumesTerm: true,
 			}
 			require.NoError(t, e.Setup())

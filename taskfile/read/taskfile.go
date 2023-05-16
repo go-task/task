@@ -8,6 +8,7 @@ import (
 
 	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/filepathext"
+	"github.com/go-task/task/v3/internal/logger"
 	"github.com/go-task/task/v3/internal/sysinfo"
 	"github.com/go-task/task/v3/internal/templater"
 	"github.com/go-task/task/v3/taskfile"
@@ -32,7 +33,7 @@ var (
 // Taskfile reads a Taskfile for a given directory
 // Uses current dir when dir is left empty. Uses Taskfile.yml
 // or Taskfile.yaml when entrypoint is left empty
-func Taskfile(node Node) (*taskfile.Taskfile, error) {
+func Taskfile(node Node, tempDir string, l *logger.Logger) (*taskfile.Taskfile, error) {
 	var _taskfile func(Node) (*taskfile.Taskfile, error)
 	_taskfile = func(node Node) (*taskfile.Taskfile, error) {
 		t, err := node.Read()
@@ -70,7 +71,7 @@ func Taskfile(node Node) (*taskfile.Taskfile, error) {
 				}
 			}
 
-			includeReaderNode, err := NewNodeFromIncludedTaskfile(node, includedTask)
+			includeReaderNode, err := NewNodeFromIncludedTaskfile(node, includedTask, tempDir, l)
 			if err != nil {
 				if includedTask.Optional {
 					return nil

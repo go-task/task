@@ -3,6 +3,7 @@ package read
 import (
 	"strings"
 
+	"github.com/go-task/task/v3/internal/logger"
 	"github.com/go-task/task/v3/taskfile"
 )
 
@@ -13,9 +14,10 @@ type Node interface {
 	Location() string
 }
 
-func NewNodeFromIncludedTaskfile(parent Node, includedTaskfile taskfile.IncludedTaskfile) (Node, error) {
+func NewNodeFromIncludedTaskfile(parent Node, includedTaskfile taskfile.IncludedTaskfile, tempDir string, l *logger.Logger) (Node, error) {
 	switch getScheme(includedTaskfile.Taskfile) {
-	// TODO: Add support for other schemes.
+	case "https":
+		return NewHTTPNode(parent, includedTaskfile.Taskfile, includedTaskfile.Optional, tempDir, l)
 	// If no other scheme matches, we assume it's a file.
 	// This also allows users to explicitly set a file:// scheme.
 	default:

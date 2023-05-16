@@ -13,6 +13,7 @@ const (
 	CodeTaskfileNotFound int = iota + 100
 	CodeTaskfileAlreadyExists
 	CodeTaskfileInvalid
+	CodeTaskfileNotTrusted
 )
 
 // Task related exit codes
@@ -39,4 +40,12 @@ type TaskError interface {
 // errors.New function so that we don't need to alias that package.
 func New(text string) error {
 	return errors.New(text)
+}
+
+func Is(err, target error) bool {
+	return errors.Is(err, target)
+}
+
+func As(err error, target any) bool {
+	return errors.As(err, target)
 }
