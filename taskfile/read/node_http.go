@@ -48,12 +48,15 @@ func (node *HTTPNode) Location() string {
 func (node *HTTPNode) Read() (*taskfile.Taskfile, error) {
 	resp, err := http.Get(node.URL.String())
 	if err != nil {
-		return nil, errors.TaskfileNotFoundError{URI: node.URL.String()}
+		return nil, errors.TaskfileFetchFailedError{URI: node.URL.String()}
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, errors.TaskfileNotFoundError{URI: node.URL.String()}
+		return nil, errors.TaskfileFetchFailedError{
+			URI:            node.URL.String(),
+			HTTPStatusCode: resp.StatusCode,
+		}
 	}
 
 	// Read the entire response body

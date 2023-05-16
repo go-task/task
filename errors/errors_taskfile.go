@@ -2,6 +2,7 @@ package errors
 
 import (
 	"fmt"
+	"net/http"
 )
 
 // TaskfileNotFoundError is returned when no appropriate Taskfile is found when
@@ -16,7 +17,7 @@ func (err TaskfileNotFoundError) Error() string {
 	if err.Walk {
 		walkText = " (or any of the parent directories)"
 	}
-	return fmt.Sprintf(`task: No Taskfile found at "%s"%s`, err.URI, walkText)
+	return fmt.Sprintf(`task: No Taskfile found at %q%s`, err.URI, walkText)
 }
 
 func (err TaskfileNotFoundError) Code() int {
@@ -48,6 +49,25 @@ func (err TaskfileInvalidError) Error() string {
 
 func (err TaskfileInvalidError) Code() int {
 	return CodeTaskfileInvalid
+}
+
+// TaskfileFetchFailedError is returned when no appropriate Taskfile is found when
+// searching the filesystem.
+type TaskfileFetchFailedError struct {
+	URI            string
+	HTTPStatusCode int
+}
+
+func (err TaskfileFetchFailedError) Error() string {
+	var statusText string
+	if err.HTTPStatusCode != 0 {
+		statusText = fmt.Sprintf(" with status code %d (%s)", err.HTTPStatusCode, http.StatusText(err.HTTPStatusCode))
+	}
+	return fmt.Sprintf(`task: Download of %q failed%s`, err.URI, statusText)
+}
+
+func (err TaskfileFetchFailedError) Code() int {
+	return CodeTaskfileFetchFailed
 }
 
 // TaskfileNotTrustedError is returned when the user does not accept the trust

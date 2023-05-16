@@ -13,6 +13,7 @@ const (
 	CodeTaskfileNotFound int = iota + 100
 	CodeTaskfileAlreadyExists
 	CodeTaskfileInvalid
+	CodeTaskfileFetchFailed
 	CodeTaskfileNotTrusted
 	CodeTaskfileNotSecure
 )
