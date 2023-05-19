@@ -3,13 +3,13 @@ slug: /styleguide/
 sidebar_position: 7
 ---
 
-# 风格指南
+# Styleguide
 
-这是对 `Taskfile.yml` 文件的官方风格指南。 本指南包含一些基本说明，可让您的任务文件保持简洁易用。
+This is the official Task styleguide for `Taskfile.yml` files. This guide contains some basic instructions to keep your Taskfile clean and familiar to other users.
 
-这包含一般准则，但不一定需要严格遵守。 如果你需要或想要，请随时提出不同意见，并在某些时候以不同方式进行。 此外，请随时打开 Issue 或 PR，对本指南进行改进。
+This contains general guidelines, but they don't necessarily need to be strictly followed. Feel free to disagree and proceed differently at some point if you need or want to. Also, feel free to open issues or pull requests with improvements to this guide.
 
-## 使用 `Taskfile.yml` 而不是 `taskfile.yml`
+## Use `Taskfile.yml` and not `taskfile.yml`
 
 ```yaml
 # bad
@@ -20,20 +20,20 @@ taskfile.yml
 Taskfile.yml
 ```
 
-这对于 Linux 用户尤其重要。 Windows 和 macOS 的文件系统不区分大小写，因此 `taskfile.yml` 最终会正常工作，即使它不受官方支持。 不过，在 Linux 上，只有 `Taskfile.yml` 可以工作。
+This is important especially for Linux users. Windows and macOS have case insensitive filesystems, so `taskfile.yml` will end up working, even that not officially supported. On Linux, only `Taskfile.yml` will work, though.
 
-## 使用正确的关键字顺序
+## Use the correct order of keywords
 
 - `version:`
 - `includes:`
-- 可选配置命令，比如 `output:`、`silent:`、`method:` 和 `run:`
+- Configuration ones, like `output:`, `silent:`, `method:` and `run:`
 - `vars:`
-- `env:`、`dotenv:`
+- `env:`, `dotenv:`
 - `tasks:`
 
-## 使用 2 个空格缩进
+## Use 2 spaces for indentation
 
-这是 YAML 文件最常见的约定，Task 同样也遵循它。
+This is the most common convention for YAML files, and Task follows it.
 
 ```yaml
 # bad
@@ -50,7 +50,7 @@ tasks:
       - echo 'foo'
 ```
 
-## 用空行分隔主要部分
+## Separate with spaces the mains sections
 
 ```yaml
 # bad
@@ -84,7 +84,7 @@ tasks:
   # ...
 ```
 
-## 用空行分隔 task
+## Add spaces between tasks
 
 ```yaml
 # bad
@@ -119,7 +119,7 @@ tasks:
       - echo 'baz'
 ```
 
-## 使用大写变量名称
+## Use upper-case variable names
 
 ```yaml
 # bad
@@ -146,7 +146,7 @@ tasks:
       - go build -o {{.BINARY_NAME}} .
 ```
 
-## 模板中不要用空格包住变量
+## Don't wrap vars in spaces when templating
 
 ```yaml
 # bad
@@ -167,9 +167,9 @@ tasks:
       - echo '{{.MESSAGE}}'
 ```
 
-这个约定也被大多数人用于 Go 模板。
+This convention is also used by most people for any Go templating.
 
-## 用破折号分隔任务名称单词
+## Separate task name words with a dash
 
 ```yaml
 # bad
@@ -190,7 +190,7 @@ tasks:
       - echo 'Do something'
 ```
 
-## 使用冒号作为任务命名空间
+## Use colon for task namespacing
 
 ```yaml
 # good
@@ -206,4 +206,4 @@ tasks:
       - docker-compose ...
 ```
 
-这在使用包含的任务文件时也会自动完成。
+This is also done automatically when using included Taskfiles.
