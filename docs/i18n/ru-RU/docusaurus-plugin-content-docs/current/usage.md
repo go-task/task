@@ -3,11 +3,11 @@ slug: /usage/
 sidebar_position: 3
 ---
 
-# Usage
+# Использование
 
-## Getting started
+## Начало работы
 
-Create a file called `Taskfile.yml` in the root of your project. The `cmds` attribute should contain the commands of a task. The example below allows compiling a Go app and uses [esbuild](https://esbuild.github.io/) to concat and minify multiple CSS files into a single one.
+Создайте файл с именем `Taskfile.yml` в корне вашего проекта. Атрибут `cmds` должен содержать команды задачи. Пример ниже позволяет скомпилировать приложение Go и использовать [esbuild](https://esbuild.github.io/) чтобы собрать и минимизировать несколько CSS файлов в один.
 
 ```yaml
 version: '3'
@@ -22,32 +22,32 @@ tasks:
       - esbuild --bundle --minify css/index.css > public/bundle.css
 ```
 
-Running the tasks is as simple as running:
+Запуск задач настолько прост, что достаточно выполнить команду:
 
 ```bash
 task assets build
 ```
 
-Task uses [mvdan.cc/sh](https://mvdan.cc/sh/), a native Go sh interpreter. So you can write sh/bash commands, and it will work even on Windows, where `sh` or `bash` are usually not available. Just remember any executable called must be available by the OS or in PATH.
+Task использует [mvdan.cc/sh](https://mvdan.cc/sh/) - нативный интерпретатор sh на Go. Таким образом, вы можете писать команды sh / bash, и они будут работать даже в Windows, где обычно не доступны `sh` или `bash`. Просто помните, что любой исполняемый файл, который вызывается, должен быть доступен ОС или находиться в переменной PATH.
 
-If you omit a task name, "default" will be assumed.
+Если вы опустите имя задачи, то будет использоваться имя "default".
 
-## Supported file names
+## Поддерживаемые названия файлов
 
-Task will look for the following file names, in order of priority:
+Task будет искать следующие файлы, в порядке приоритета:
 
 - Taskfile.yml
 - Taskfile.yaml
 - Taskfile.dist.yml
 - Taskfile.dist.yaml
 
-The intention of having the `.dist` variants is to allow projects to have one committed version (`.dist`) while still allowing individual users to override the Taskfile by adding an additional `Taskfile.yml` (which would be on `.gitignore`).
+Идея создания вариантов `.dist` заключается в том, чтобы позволить проектам иметь одну фиксированную версию (`.dist`), при этом позволяя отдельным пользователям переопределить Taskfile, добавив дополнительный `Taskfile.yml` (который будет находится в `.gitignore`).
 
-### Running a Taskfile from a subdirectory
+### Запуск Taskfile из поддиректории
 
-If a Taskfile cannot be found in the current working directory, it will walk up the file tree until it finds one (similar to how `git` works). When running Task from a subdirectory like this, it will behave as if you ran it from the directory containing the Taskfile.
+Если Taskfile не найден в текущем рабочем каталоге, он будет искать его вверх по дереву файлов, пока не найдет его (похоже на то, как работает `git`). При запуске Task из подкаталога, он будет работать так, как будто вы запустили его из каталога, содержащего Taskfile.
 
-You can use this functionality along with the special `{{.USER_WORKING_DIR}}` variable to create some very useful reusable tasks. For example, if you have a monorepo with directories for each microservice, you can `cd` into a microservice directory and run a task command to bring it up without having to create multiple tasks or Taskfiles with identical content. For example:
+Вы можете использовать эту функцию вместе со специальной переменной `{{.USER_WORKING_DIR}}`, чтобы создавать переиспользуемые задачи. Например, если у вас есть монорепозиторий с каталогами для каждого микросервиса, вы можете `cd` в директорию микросервиса и запустить команду задачи, без создания нескольких задач или Taskfile с идентичным содержимым. Например:
 
 ```yaml
 version: '3'
@@ -61,19 +61,19 @@ tasks:
       - docker-compose up -d
 ```
 
-In this example, we can run `cd <service>` and `task up` and as long as the `<service>` directory contains a `docker-compose.yml`, the Docker composition will be brought up.
+В этом примере мы можем выполнить `cd <service>` и `task up`, и при условии, что каталог `<service>` содержит файл `docker-compose.yml`, Docker composition будет запущен.
 
-### Running a global Taskfile
+### Запуск глобального Taskfile
 
-If you call Task with the `--global` (alias `-g`) flag, it will look for your home directory instead of your working directory. In short, Task will look for a Taskfile on either `$HOME/Taskfile.yml` or `$HOME/Taskfile.yaml` paths.
+Если вы вызовите Task с помощью флага `--global` (псевдоним `-g`), будет искать ваш домашний каталог вместо рабочего каталога. Проще говоря, Task будет искать в `$HOME/Taskfile.yml` или `$HOME/Taskfile.yaml`.
 
-This is useful to have automation that you can run from anywhere in your system!
+Это полезно, чтобы иметь автоматизацию, которую можно запустить из любого места вашей системы!
 
 :::info
 
-When running your global Taskfile with `-g`, tasks will run on `$HOME` by default, and not on your working directory!
+Когда вы запускаете ваш глобальный Taskfile с помощью `-g`, task будут выполняться по умолчанию в директории `$HOME`, а не в вашей рабочей директории!
 
-As mentioned in the previous section, the `{{.USER_WORKING_DIR}}` special variable can be very handy here to run stuff on the directory you're calling `task -g` from.
+Как упоминалось в предыдущем разделе, специальная переменная `{{.USER_WORKING_DIR}}` может быть очень полезной для запуска команд в директории, из которой вы вызываете `task -g`.
 
 ```yaml
 version: '3'
@@ -91,11 +91,11 @@ tasks:
 
 :::
 
-## Environment variables
+## Переменные среды
 
 ### Task
 
-You can use `env` to set custom environment variables for a specific task:
+Вы можете использовать `env` для создания своих переменных среды для конкретной task:
 
 ```yaml
 version: '3'
@@ -108,7 +108,7 @@ tasks:
       GREETING: Hey, there!
 ```
 
-Additionally, you can set global environment variables that will be available to all tasks:
+Также, вы можете создавать глобальные переменные окружения, которые будут доступны всем task:
 
 ```yaml
 version: '3'
@@ -124,13 +124,13 @@ tasks:
 
 :::info
 
-`env` supports expansion and retrieving output from a shell command just like variables, as you can see in the [Variables](#variables) section.
+`env` поддерживает дополнение и извлечение вывода из команды shell или переменной, вы можете посмотреть в разделе [Переменные](#variables).
 
 :::
 
-### .env files
+### .env файлы
 
-You can also ask Task to include `.env` like files by using the `dotenv:` setting:
+Вы также можете попросить Task включать файлы, подобные `.env` используя настройку `dotenv:`:
 
 ```bash title=".env"
 KEYNAME=VALUE
@@ -154,7 +154,7 @@ tasks:
       - echo "Using $KEYNAME and endpoint $ENDPOINT"
 ```
 
-Dotenv files can also be specified at the task level:
+Dotenv файлы также могут быть указаны на уровне task:
 
 ```yaml
 version: '3'
@@ -169,7 +169,7 @@ tasks:
       - echo "Using $KEYNAME and endpoint $ENDPOINT"
 ```
 
-Environment variables specified explicitly at the task-level will override variables defined in dotfiles:
+Переменные окружения, определенные на уровне task, заменят переменные объявленные в dotenv файлах:
 
 ```yaml
 version: '3'
@@ -188,13 +188,13 @@ tasks:
 
 :::info
 
-Please note that you are not currently able to use the `dotenv` key inside included Taskfiles.
+Обратите внимание, в данный момент вы не можете использовать ключ `dotenv` во вложенных Taskfile.
 
 :::
 
-## Including other Taskfiles
+## Включение других Taskfile
 
-If you want to share tasks between different projects (Taskfiles), you can use the importing mechanism to include other Taskfiles using the `includes` keyword:
+Если вы хотите использовать task в других проектах (Taskfile), вы можете использовать механизм импорта для включения других Taskfile используя ключевое слово `includes`:
 
 ```yaml
 version: '3'
@@ -204,9 +204,9 @@ includes:
   docker: ./DockerTasks.yml
 ```
 
-The tasks described in the given Taskfiles will be available with the informed namespace. So, you'd call `task docs:serve` to run the `serve` task from `documentation/Taskfile.yml` or `task docker:build` to run the `build` task from the `DockerTasks.yml` file.
+Task, описанные в указанных Taskfile, будут доступны с указанным пространством имен. Таким образом, вы можете запустить `serve` task из файла `documentation/Taskfile.yml` с помощью команды `task docs:serve`, или запустить `build` task из файла `DockerTasks.yml` с помощью команды `task docker:build`.
 
-Relative paths are resolved relative to the directory containing the including Taskfile.
+Относительные пути разрешаются относительно каталога, содержащего включающий Taskfile.
 
 ### OS-specific Taskfiles
 
@@ -480,9 +480,9 @@ tasks:
       - cmd: echo 'Running on all platforms'
 ```
 
-## Calling another task
+## Вызов другой task
 
-When a task has many dependencies, they are executed concurrently. This will often result in a faster build pipeline. However, in some situations, you may need to call other tasks serially. In this case, use the following syntax:
+Когда task имеет много зависимостей, они выполняются параллельно. Это частно приводит к более быстрому построению пайплайна. Однако, в некоторых ситуациях вам может понадобиться вызвать другие task последовательно. В этом случае используйте следующий синтаксис:
 
 ```yaml
 version: '3'
@@ -503,7 +503,7 @@ tasks:
       - echo "Another task"
 ```
 
-Overriding variables in the called task is as simple as informing `vars` attribute:
+Переопределение переменных в вызываемой task делается через указание атрибута `vars`:
 
 ```yaml
 version: '3'
@@ -521,7 +521,7 @@ tasks:
         vars: { RECIPIENT: 'Cruel World' }
 ```
 
-The above syntax is also supported in `deps`.
+Указанный выше синтаксис также поддерживается в `deps`.
 
 :::tip
 

@@ -3,13 +3,13 @@ slug: /styleguide/
 sidebar_position: 7
 ---
 
-# Styleguide
+# Guide de style
 
-This is the official Task styleguide for `Taskfile.yml` files. This guide contains some basic instructions to keep your Taskfile clean and familiar to other users.
+Ceci est le guide officiel du style Task pour les fichiers `Taskfile.yml`. Ce guide contient quelques instructions de base pour garder votre Taskfile propre et familier à autres utilisateurs.
 
-This contains general guidelines, but they don't necessarily need to be strictly followed. Feel free to disagree and proceed differently at some point if you need or want to. Also, feel free to open issues or pull requests with improvements to this guide.
+Il contient des directives générales, mais elles ne doivent pas nécessairement être strictement respectées. N'hésitez pas à procéder différemment si vous en avez le besoin ou que vous le souhaitez. Aussi, n'hésitez pas à [ouvrir une issue](https://github. com/go-task/task/issues/new/choose) ou [faire une pull request](https://github. com/go-task/task/compare) pour améliorer ce guide.
 
-## Use `Taskfile.yml` and not `taskfile.yml`
+## Utiliser `Taskfile.yml` et non `taskfile.yml`
 
 ```yaml
 # bad
@@ -20,9 +20,9 @@ taskfile.yml
 Taskfile.yml
 ```
 
-This is important especially for Linux users. Windows and macOS have case insensitive filesystems, so `taskfile.yml` will end up working, even that not officially supported. On Linux, only `Taskfile.yml` will work, though.
+C'est important, surtout pour les utilisateurs Linux. Windows et MacOS ont un système de fichiers insensibles à la casse, donc `taskfile.yml` fonctionnera, même si ce n'est pas officiellement supporté. Sur Linux, uniquement `Taskfile.yml` fonctionnera.
 
-## Use the correct order of keywords
+## Utiliser les mots-clés dans l'ordre correct
 
 - `version:`
 - `includes:`
@@ -31,9 +31,9 @@ This is important especially for Linux users. Windows and macOS have case insens
 - `env:`, `dotenv:`
 - `tasks:`
 
-## Use 2 spaces for indentation
+## Utiliser 2 espaces pour l'indentation
 
-This is the most common convention for YAML files, and Task follows it.
+C'est la convention la plus courante pour les fichiers YAML et Task suit cette convention.
 
 ```yaml
 # bad
@@ -50,7 +50,7 @@ tasks:
       - echo 'foo'
 ```
 
-## Separate with spaces the mains sections
+## Séparer les sections principales avec un retour à la ligne
 
 ```yaml
 # bad
@@ -84,7 +84,7 @@ tasks:
   # ...
 ```
 
-## Add spaces between tasks
+## Ajouter des retours à la ligne entre les tâches
 
 ```yaml
 # bad
@@ -119,7 +119,7 @@ tasks:
       - echo 'baz'
 ```
 
-## Use upper-case variable names
+## Utiliser des noms de variables en majuscule
 
 ```yaml
 # bad
@@ -146,7 +146,7 @@ tasks:
       - go build -o {{.BINARY_NAME}} .
 ```
 
-## Don't wrap vars in spaces when templating
+## Ne pas mettre d'espaces autour des variables lors de l'utilisation
 
 ```yaml
 # bad
@@ -167,9 +167,9 @@ tasks:
       - echo '{{.MESSAGE}}'
 ```
 
-This convention is also used by most people for any Go templating.
+Cette convention est aussi utilisée par la plupart des gens pour n'importe quel modèle Go.
 
-## Separate task name words with a dash
+## Séparer les mots du nom de la tâche par un tiret
 
 ```yaml
 # bad
@@ -190,7 +190,7 @@ tasks:
       - echo 'Do something'
 ```
 
-## Use colon for task namespacing
+## Utiliser les deux-points pour nommer les namespaces de tâche
 
 ```yaml
 # good
@@ -206,4 +206,4 @@ tasks:
       - docker-compose ...
 ```
 
-This is also done automatically when using included Taskfiles.
+C'est aussi fait automatiquement quand vous incluez des Taskfiles.

@@ -3,21 +3,21 @@ slug: /taskfile-versions/
 sidebar_position: 12
 ---
 
-# Taskfile Versions
+# Версии Taskfile
 
-The Taskfile syntax and features changed with time. This document explains what changed on each version and how to upgrade your Taskfile.
+Синтаксис Taskfile и функции со временем изменяются. Этот документ объясняет, что изменилось в каждой версии и как обновить свой Taskfile.
 
-## What the Taskfile version mean
+## Что обозначает версия Taskfile
 
-The Taskfile version follows the Task version. E.g. the change to Taskfile version `2` means that Task `v2.0.0` should be release to support it.
+Версия Taskfile соответствует версии Task. Например: изменение на Taskfile версии `2` означает, что Task `v2.0.0` должна быть выпущена для ее поддержки.
 
-The `version:` key on Taskfile accepts a semver string, so either `2`, `2.0` or `2.0.0` is accepted. If you choose to use `2.0` Task will not enable future `2.1` features, but if you choose to use `2`, then any `2.x.x` features will be available, but not `3.0.0+`.
+`version:` ключ Taskfile принимает [semVer](https://semver.org/lang/ru/) строку. Пример: `2`, `2.0` или `2.0.0`. Если вы решите использовать Task версии `2.0`, то у вас не будет доступа к функциям версии `2.1`, но если вы решите использовать версию `2`, то любые функции версий `2.x.x` будут доступны, но не `3.0.0+`.
 
-## Version 1
+## Версия 1
 
-> NOTE: Taskfiles in version 1 are not supported on Task >= v3.0.0 anymore.
+> ПРИМЕЧАНИЕ: Taskfiles версии 1 больше не поддерживаются в версии Task >= v3.0.0.
 
-In the first version of the `Taskfile`, the `version:` key was not available, because the tasks was in the root of the YAML document. Like this:
+В первой версии `Taskfile` поле `version:` не доступно, потому что задачи были в корне документа YAML. Пример:
 
 ```yaml
 echo:
@@ -25,16 +25,16 @@ echo:
     - echo "Hello, World!"
 ```
 
-The variable priority order was also different:
+Порядок приоритетов переменных также отличается:
 
-1. Call variables
-2. Environment
-3. Task variables
-4. `Taskvars.yml` variables
+1. Вызов переменных
+2. Переменные среды
+3. Переменные Task
+4. Переменные `Taskvars.yml`
 
-## Version 2.0
+## Версия 2.0
 
-At version 2, we introduced the `version:` key, to allow us to evolve Task with new features without breaking existing Taskfiles. The new syntax is as follows:
+В версии 2 был добавлен ключ `version: `. Он позволяет выпускать обновления сохраняя обратную совместимость. Пример использования:
 
 ```yaml
 version: '2'
@@ -45,7 +45,7 @@ tasks:
       - echo "Hello, World!"
 ```
 
-Version 2 allows you to write global variables directly in the Taskfile, if you don't want to create a `Taskvars.yml`:
+Версия 2 позволяет создавать глобальные переменные непосредственно в Taskfile, если вы не хотите создавать `Taskvars.yml`:
 
 ```yaml
 version: '2'
@@ -59,15 +59,15 @@ tasks:
       - echo "{{.GREETING}}"
 ```
 
-The variable priority order changed to the following:
+Порядок приоритетов переменных также отличается:
 
-1. Task variables
+1. Переменные Task
 2. Call variables
-3. Taskfile variables
-4. Taskvars file variables
-5. Environment variables
+3. Переменные Taskfile
+4. Переменные `Taskvars.yml`
+5. Переменные окружения
 
-A new global option was added to configure the number of variables expansions (which default to 2):
+Добавлена новая глобальная опция для настройки количества расширений переменных (по умолчанию 2):
 
 ```yaml
 version: '2'
@@ -87,9 +87,9 @@ tasks:
       - echo "{{.FOOBARBAZ}}"
 ```
 
-## Version 2.1
+## Версия 2.1
 
-Version 2.1 includes a global `output` option, to allow having more control over how commands output are printed to the console (see [documentation][output] for more info):
+В версии 2.1 появилась глобальная опция `output`, которая позволяет иметь больше контроля над тем, как вывод команд печатается на консоли (см. [документацию][output]):
 
 ```yaml
 version: '2'
@@ -103,7 +103,7 @@ tasks:
   prefix: server
 ```
 
-From this version it's also possible to ignore errors of a command or task (check documentation [here][ignore_errors]):
+Начиная с этой версии можно игнорировать ошибки команды или задачи (смотрите документацию [здесь][ignore_errors]):
 
 ```yaml
 version: '2'
@@ -122,9 +122,9 @@ tasks:
     ignore_error: true
 ```
 
-## Version 2.2
+## Версия 2.2
 
-Version 2.2 comes with a global `includes` options to include other Taskfiles:
+В Версии 2.2 появилась новая глобальная опция `includes`, которая позволяет импортировать другие Taskfile'ы:
 
 ```yaml
 version: '2'
@@ -134,9 +134,9 @@ includes:
   docker: ./DockerTasks.yml
 ```
 
-## Version 2.6
+## Версия 2.6
 
-Version 2.6 comes with `preconditions` stanza in tasks.
+Версия 2.6 поставляется с `preconditions` опцией в задачах.
 
 ```yaml
 version: '2'
@@ -149,20 +149,20 @@ tasks:
       - aws s3 cp .env s3://myenvironment
 ```
 
-Please check the [documentation][includes]
+Пожалуйста, проверьте [документацию][includes]
 
-## Version 3
+## Версия 3
 
-These are some major changes done on `v3`:
+Основные изменения, сделанные в `v3`:
 
-- Task's output will now be colored
-- Added support for `.env` like files
-- Added `label:` setting to task so one can override how the task name appear in the logs
-- A global `method:` was added to allow setting the default method, and Task's default changed to `checksum`
-- Two magic variables were added when using `status:`: `CHECKSUM` and `TIMESTAMP` which contains, respectively, the md5 checksum and greatest modification timestamp of the files listed on `sources:`
-- Also, the `TASK` variable is always available with the current task name
-- CLI variables are always treated as global variables
-- Added `dir:` option to `includes` to allow choosing on which directory an included Taskfile will run:
+- Output задачи теперь цветной
+- Добавлена поддержка `.env` файлов
+- Добавлен параметр `label:`. Появилась возможность переопределить имя задачи в логах
+- Глобальный параметр `method:` был добавлен для установки метода по умолчанию, а задача по умолчанию изменена на `checksum`
+- Добавлены 2 магические переменные, используемые в функции `status:` - `CHECKSUM` и `TIMESTAMP`, которые содержат, контрольную сумму md5 и наибольшую отметку времени изменения файлов, перечисленных в `sources:`
+- Кроме того, переменная `TASK` всегда доступна по имени текущей задачи
+- Переменные CLI всегда считаются глобальными переменными
+- Добавлена опция `dir:` в `includes` для того, чтобы выбрать, в каком каталоге Taskfile будет запущен:
 
 ```yaml
 includes:
@@ -171,7 +171,7 @@ includes:
     dir: ./docs
 ```
 
-- Implemented short task syntax. All below syntaxes are equivalent:
+- Реализован короткий синтаксис задачи. Все синтаксисы ниже эквивалентны:
 
 ```yaml
 version: '3'
@@ -197,11 +197,11 @@ tasks:
   print: echo "Hello, World!"
 ```
 
-- There was a major refactor on how variables are handled. They're now easier to understand. The `expansions:` setting was removed as it became unncessary. This is the order in which Task will process variables, each level can see the variables set by the previous one and override those.
-  - Environment variables
-  - Global + CLI variables
+- Был произведён большой рефакторинг обработки переменных. Теперь всё стало более прозрачно. Параметр `expansions:` был удален. Это порядок, в котором Task будет обрабатывать переменные, каждый уровень может видеть переменные, объявленные на предыдущем и переопределять их.
+  - Переменные окружения
+  - Глобальные + CLI переменные
   - Call variables
-  - Task variables
+  - Переменные Task
 
 [output]: usage.md#output-syntax
 [ignore_errors]: usage.md#ignore-errors
