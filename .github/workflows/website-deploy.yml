@@ -25,6 +25,8 @@ jobs:
       - name: Build website
         run: yarn build
         working-directory: ./docs
+        env:
+          CROWDIN_PERSONAL_TOKEN: ${{ secrets.CROWDIN_PERSONAL_TOKEN }}
 
       - name: Website Deploy
         uses: peaceiris/actions-gh-pages@v3
