@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v3.25.0 - 2023-05-22
 
 - Support `silent:` when calling another tasks (#680, #1142 by @danquah).
 - Improve PowerShell completion script (#1168 by @trim21).
