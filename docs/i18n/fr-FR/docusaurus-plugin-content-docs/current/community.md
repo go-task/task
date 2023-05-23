@@ -3,30 +3,30 @@ slug: /community/
 sidebar_position: 9
 ---
 
-# Community
+# Communauté
 
-Some of the work to improve the Task ecosystem is done by the community, be it installation methods or integrations with code editor. I (the author) am thankful for everyone that helps me to improve the overall experience.
+Certains travaux d'amélioration de l'écosystème Task sont réalisés par la communauté, que ce soit des méthodes d'installation ou des intégrations avec l'éditeur de code. Moi (l'auteur) suis reconnaissant envers tout le monde qui m'aide à améliorer l'expérience globale.
 
-## Translations
+## Traductions
 
-[@DeronW](https://github.com/DeronW) maintains the [Chinese translation](https://task-zh.readthedocs.io/zh_CN/latest/) of the website [on this repository](https://github.com/DeronW/task).
+[@DeronW](https://github.com/DeronW) maintient la [traduction Chinoise](https://task-zh.readthedocs.io/zh_CN/latest/) du site [sur ce dépôt](https://github.com/DeronW/task).
 
-## Integrations
+## Intégrations
 
-Many of our integrations are contributed and maintained by the community. You can view the full list of community integrations [here](/integrations#community-integrations).
+Un grand nombre de nos intégrations sont apportées et maintenues par la communauté. Vous pouvez voir la liste complète des intégrations de la communauté [ici](/integrations#community-integrations).
 
-## Installation methods
+## Méthodes d'installation
 
-Some installation methods are maintained by third party:
+Certaines méthodes d'installation sont maintenues par un tiers :
 
-- [GitHub Actions](https://github.com/arduino/setup-task) by [@arduino](https://github.com/arduino)
-- [AUR](https://aur.archlinux.org/packages/go-task-bin) by [@carlsmedstad](https://github.com/carlsmedstad)
+- [Actions GitHub](https://github.com/arduino/setup-task) par [@arduino](https://github.com/arduino)
+- [AUR](https://aur.archlinux.org/packages/go-task-bin) par [@carlsmedstad](https://github.com/carlsmedstad)
 - [Scoop](https://github.com/ScoopInstaller/Main/blob/master/bucket/task.json)
 - [Fedora](https://packages.fedoraproject.org/pkgs/golang-github-task/go-task/)
 - [NixOS](https://github.com/NixOS/nixpkgs/blob/master/pkgs/development/tools/go-task/default.nix)
 
-## More
+## Plus d’infos
 
-Also, thanks for all the [code contributors](https://github.com/go-task/task/graphs/contributors), [financial contributors](https://opencollective.com/task), all those who [reported bugs](https://github.com/go-task/task/issues?q=is%3Aissue) and [answered questions](https://github.com/go-task/task/discussions).
+Aussi, merci à tous les [contributeurs](https://github.com/go-task/task/graphs/contributors), [contributeurs financiers](https://opencollective.com/task), tous ceux qui [ont signalé des bugs](https://github.com/go-task/task/issues?q=is%3Aissue) et [ont répondu aux questions](https://github.com/go-task/task/discussions).
 
-If you know something that is missing in this document, please submit a pull request.
+Si vous voyez quelque chose qui manque dans ce document, veuillez soumettre une pull request.

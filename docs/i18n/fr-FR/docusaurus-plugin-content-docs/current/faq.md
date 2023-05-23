@@ -5,7 +5,7 @@ sidebar_position: 6
 
 # FAQ
 
-This page contains a list of frequently asked questions about Task.
+Cette page contient une liste de question fréquemment posée à propos de Task.
 
 - [Why won't my task update my shell environment?](#why-wont-my-task-update-my-shell-environment)
 - ['x' builtin command doesn't work on Windows](#x-builtin-command-doesnt-work-on-windows)

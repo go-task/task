@@ -3,13 +3,13 @@ slug: /styleguide/
 sidebar_position: 7
 ---
 
-# Styleguide
+# Стайлгайд
 
-This is the official Task styleguide for `Taskfile.yml` files. This guide contains some basic instructions to keep your Taskfile clean and familiar to other users.
+Это официальный стайлгайд Task для `Taskfile.yml` файлов. Это руководство содержит некоторые базовые инструкции для того, чтобы ваш Taskfile был чистым и понятен другим пользователям.
 
-This contains general guidelines, but they don't necessarily need to be strictly followed. Feel free to disagree and proceed differently at some point if you need or want to. Also, feel free to open issues or pull requests with improvements to this guide.
+Этот стайлгайд содержит общие рекомендации по написанию кода, но не обязательно требует их строгого соблюдения. Можете не соглашаться с правилами и использовать другой подход, если вам это нужно или хотите это сделать. Кроме того, не стесняйтесь создавать Issue или PR с улучшениями этого гида.
 
-## Use `Taskfile.yml` and not `taskfile.yml`
+## Используйте `Taskfile.yml` вместо `taskfile.yml`
 
 ```yaml
 # bad
@@ -20,20 +20,20 @@ taskfile.yml
 Taskfile.yml
 ```
 
-This is important especially for Linux users. Windows and macOS have case insensitive filesystems, so `taskfile.yml` will end up working, even that not officially supported. On Linux, only `Taskfile.yml` will work, though.
+Это особенно важно для пользователей Linux. У Windows и macOS нечувствительные файловые системы, поэтому `taskfile.yml` в конечном итоге будет работать, даже если официально не поддерживается. В Linux только будет работать `Taskfile.yml`.
 
-## Use the correct order of keywords
+## Используйте правильный порядок ключевых слов
 
 - `version:`
 - `includes:`
-- Configuration ones, like `output:`, `silent:`, `method:` and `run:`
+- Конфигурационные параметры, такие как `output:`, `silent:`, `method:` и `run:`
 - `vars:`
 - `env:`, `dotenv:`
 - `tasks:`
 
-## Use 2 spaces for indentation
+## Используйте 2 пробела для отступа
 
-This is the most common convention for YAML files, and Task follows it.
+Это наиболее распространенное соглашение для YAML-файлов, и Task следует ему.
 
 ```yaml
 # bad
@@ -50,7 +50,7 @@ tasks:
       - echo 'foo'
 ```
 
-## Separate with spaces the mains sections
+## Разделяйте основные секции пробелами
 
 ```yaml
 # bad
@@ -84,7 +84,7 @@ tasks:
   # ...
 ```
 
-## Add spaces between tasks
+## Добавляйте пробелы между задачами
 
 ```yaml
 # bad
@@ -119,7 +119,7 @@ tasks:
       - echo 'baz'
 ```
 
-## Use upper-case variable names
+## Используйте имена переменных в верхнем регистре
 
 ```yaml
 # bad
@@ -146,7 +146,7 @@ tasks:
       - go build -o {{.BINARY_NAME}} .
 ```
 
-## Don't wrap vars in spaces when templating
+## Не заключайте переменные в пробелы при использовании их в шаблонах
 
 ```yaml
 # bad
@@ -167,9 +167,9 @@ tasks:
       - echo '{{.MESSAGE}}'
 ```
 
-This convention is also used by most people for any Go templating.
+Большинство людей использует это соглашение и для любых шаблонов в Go.
 
-## Separate task name words with a dash
+## Разделяйте слова в названии задач дефисом
 
 ```yaml
 # bad
@@ -190,7 +190,7 @@ tasks:
       - echo 'Do something'
 ```
 
-## Use colon for task namespacing
+## Используйте двоеточие для неймспейсов в названиях задач
 
 ```yaml
 # good
@@ -206,4 +206,4 @@ tasks:
       - docker-compose ...
 ```
 
-This is also done automatically when using included Taskfiles.
+Это также происходит автоматически при использовании включенных Taskfiles.

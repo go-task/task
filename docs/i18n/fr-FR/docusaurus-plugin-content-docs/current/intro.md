@@ -1,7 +1,7 @@
 ---
 slug: /
 sidebar_position: 1
-title: Home
+title: Accueil
 ---
 
 # Task
@@ -10,11 +10,11 @@ title: Home
   <img id="logo" src="img/logo.svg" height="250px" width="250px" />
 </div>
 
-Task is a task runner / build tool that aims to be simpler and easier to use than, for example, [GNU Make][make].
+Task est un exécuteur de tâches / de build qui vise à être plus simple et facile à utiliser que, par exemple, [GNU Make][make].
 
-Since it's written in [Go][go], Task is just a single binary and has no other dependencies, which means you don't need to mess with any complicated install setups just to use a build tool.
+Comme il est écrit en [Go][go], Task n'est qu'un binaire unique et n'a aucune dépendance. Cela signifie que vous n'avez pas besoin d'une installation compliquée simplement pour utiliser un outil de build.
 
-Once [installed](installation.md), you just need to describe your build tasks using a simple [YAML][yaml] schema in a file called `Taskfile.yml`:
+Une fois [installé](installation.md), il vous suffit de décrire vos tâches de build en utilisant un simple schéma [YAML][yaml] dans un fichier appelé `Taskfile.yml`:
 
 ```yaml title="Taskfile.yml"
 version: '3'
@@ -26,18 +26,18 @@ tasks:
     silent: true
 ```
 
-And call it by running `task hello` from your terminal.
+Et appelez-le en exécutant `task hello` depuis votre terminal.
 
-The above example is just the start, you can take a look at the [usage](/usage) guide to check the full schema documentation and Task features.
+L'exemple ci-dessus n'est que le début, vous pouvez jeter un coup d'œil au [guide d'utilisation](/usage) pour vérifier la documentation complète du schéma et les fonctionnalités de Task.
 
-## Features
+## Fonctionnalités
 
-- [Easy installation](installation.md): just download a single binary, add to `$PATH` and you're done! Or you can also install using [Homebrew][homebrew], [Snapcraft][snapcraft], or [Scoop][scoop] if you want.
-- Available on CIs: by adding [this simple command](installation.md#install-script) to install on your CI script and you're ready to use Task as part of your CI pipeline;
-- Truly cross-platform: while most build tools only work well on Linux or macOS, Task also supports Windows thanks to [this shell interpreter for Go][sh].
-- Great for code generation: you can easily [prevent a task from running](/usage#prevent-unnecessary-work) if a given set of files haven't changed since last run (based either on its timestamp or content).
+- [Installation facile](installation.md): il suffit de télécharger un seul binaire, ajoutez le à `$PATH` et vous avez terminé ! Ou vous pouvez également installer en utilisant [Homebrew][homebrew], [Snapcraft][snapcraft] ou [Scoop][scoop] si vous le souhaitez.
+- Disponible sur les CIs: en ajoutant [cette commande simple](installation.md#install-script) à installer sur votre script CI, vous êtes prêt à utiliser Task dans le cadre de votre pipeline CI ;
+- Multi-plateforme : alors que la plupart des outils de compilation ne fonctionnent bien que sous Linux ou macOS, Task prend également en charge Windows grâce à [cet interpréteur shell pour Go][sh].
+- Idéal pour la génération de code : vous pouvez facilement [empêcher une tâche de s'exécuter](/usage#prevent-unnecessary-work) si un ensemble donné de fichiers n'ont pas changé depuis le dernier lancement (basé soit sur son horodatage soit son contenu).
 
-## Gold Sponsors
+## Sponsors Or
 
 <div class="gold-sponsors">
 
