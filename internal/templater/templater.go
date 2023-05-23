@@ -29,7 +29,7 @@ func (r *Templater) Replace(str string) string {
 		return ""
 	}
 
-	templ, err := template.New("").Funcs(templateFuncs).Parse(str)
+	templ, err := template.New("").Funcs(TemplateFuncs).Parse(str)
 	if err != nil {
 		r.err = err
 		return ""

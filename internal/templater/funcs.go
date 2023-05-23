@@ -6,12 +6,13 @@ import (
 	"strings"
 	"text/template"
 
-	sprig "github.com/go-task/slim-sprig"
 	"mvdan.cc/sh/v3/shell"
 	"mvdan.cc/sh/v3/syntax"
+
+	sprig "github.com/go-task/slim-sprig"
 )
 
-var templateFuncs template.FuncMap
+var TemplateFuncs template.FuncMap
 
 func init() {
 	taskFuncs := template.FuncMap{
@@ -51,8 +52,8 @@ func init() {
 	taskFuncs["ToSlash"] = taskFuncs["toSlash"]
 	taskFuncs["ExeExt"] = taskFuncs["exeExt"]
 
-	templateFuncs = sprig.TxtFuncMap()
+	TemplateFuncs = sprig.TxtFuncMap()
 	for k, v := range taskFuncs {
-		templateFuncs[k] = v
+		TemplateFuncs[k] = v
 	}
 }

@@ -15,6 +15,7 @@ import (
 	"github.com/go-task/task/v3"
 	"github.com/go-task/task/v3/args"
 	"github.com/go-task/task/v3/errors"
+	"github.com/go-task/task/v3/internal/completion"
 	"github.com/go-task/task/v3/internal/logger"
 	"github.com/go-task/task/v3/internal/sort"
 	ver "github.com/go-task/task/v3/internal/version"
@@ -47,6 +48,7 @@ var flags struct {
 	version     bool
 	help        bool
 	init        bool
+	completion  string
 	list        bool
 	listAll     bool
 	listJson    bool
@@ -104,6 +106,7 @@ func run() error {
 	pflag.BoolVar(&flags.version, "version", false, "Show Task version.")
 	pflag.BoolVarP(&flags.help, "help", "h", false, "Shows Task usage.")
 	pflag.BoolVarP(&flags.init, "init", "i", false, "Creates a new Taskfile.yml in the current folder.")
+	pflag.StringVar(&flags.completion, "completion", "", "Generates shell completion script.")
 	pflag.BoolVarP(&flags.list, "list", "l", false, "Lists tasks with description of current Taskfile.")
 	pflag.BoolVarP(&flags.listAll, "list-all", "a", false, "Lists tasks with or without a description.")
 	pflag.BoolVarP(&flags.listJson, "json", "j", false, "Formats task list as JSON.")
@@ -224,6 +227,15 @@ func run() error {
 
 	if err := e.Setup(); err != nil {
 		return err
+	}
+
+	if flags.completion != "" {
+		script, err := completion.Compile(flags.completion, e.Taskfile.Tasks)
+		if err != nil {
+			return err
+		}
+		fmt.Println(script)
+		return nil
 	}
 
 	if listOptions.ShouldListTasks() {

@@ -27,8 +27,13 @@ tasks:
       - go install -v ./cmd/task
 
   generate:
+    desc: Run all generation tasks
+    aliases: [g, gen]
+    deps: [generate:mocks, generate:fixtures]
+
+  generate:mocks:
     desc: Runs Go generate to create mocks
-    aliases: [gen, g]
+    aliases: [g:mocks, gen:mocks]
     deps: [install:mockery]
     sources:
       - "internal/fingerprint/checker.go"
@@ -37,6 +42,16 @@ tasks:
     cmds:
       - "{{.BIN}}/mockery --dir ./internal/fingerprint --name SourcesCheckable"
       - "{{.BIN}}/mockery --dir ./internal/fingerprint --name StatusCheckable"
+
+  generate:fixtures:
+    desc: Generates fixtures
+    aliases: [g:fixtures, gen:fixtures]
+    sources:
+      - "internal/completion/templates/*"
+    generates:
+      - "internal/completion/testdata/**/*.golden"
+    cmds:
+      - go test ./internal/completion -update
 
   install:mockery:
     desc: Installs mockgen; a tool to generate mock files
