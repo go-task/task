@@ -25,3 +25,5 @@ jobs:
       - name: Test build website
         run: yarn build
         working-directory: ./docs
+        env:
+          CROWDIN_PERSONAL_TOKEN: ${{ secrets.CROWDIN_PERSONAL_TOKEN }}
