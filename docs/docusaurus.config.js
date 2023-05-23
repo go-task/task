@@ -2,7 +2,6 @@
 // Note: type annotations allow type checking and IDEs autocompletion
 
 const {
-  CHINESE_URL,
   DISCORD_URL,
   GITHUB_URL,
   MASTODON_URL,
@@ -204,15 +203,6 @@ const getConfig = async () => {
                 {
                   label: 'OpenCollective',
                   href: 'https://opencollective.com/task'
-                }
-              ]
-            },
-            {
-              title: 'Translations',
-              items: [
-                {
-                  label: 'Chinese | 中国人',
-                  href: CHINESE_URL
                 }
               ]
             }
