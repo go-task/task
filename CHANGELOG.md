@@ -2,8 +2,12 @@
 
 ## Unreleased
 
+- Support `silent:` when calling another tasks (#680, #1142 by @danquah).
+- Improve PowerShell completion script (#1168 by @trim21).
+- Add more languages to the website menu and show translation progress
+  percentage (#1173 by @misitebao).
 - Starting on this release, official binaries for FreeBSD will be available to
-  download (#1068).
+  download (#1068 by @andreynering).
 - Fix some errors being unintendedly supressed (#1134 by @clintmod).
 - Fix a nil pointer error when `version` is omitted from a Taskfile (#1148,
   #1149 by @pd93).
