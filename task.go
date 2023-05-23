@@ -52,6 +52,7 @@ type Executor struct {
 	Watch       bool
 	Verbose     bool
 	Silent      bool
+	AssumeYes   bool
 	Dry         bool
 	Summary     bool
 	Parallel    bool

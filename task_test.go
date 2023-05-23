@@ -704,6 +704,43 @@ func TestPromptWithIndirectTask(t *testing.T) {
 	assert.Contains(t, outBuff.String(), "show-prompt")
 	require.NoError(t, err)
 }
+
+func TestPromptAssumeYes(t *testing.T) {
+	const dir = "testdata/prompt"
+	tests := []struct {
+		name      string
+		assumeYes bool
+	}{
+		{"--yes flag should skip prompt", true},
+		{"task should raise errors.TaskCancelledError", false},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			var inBuff bytes.Buffer
+			var outBuff bytes.Buffer
+
+			// always cancel the prompt so we can require.Error
+			inBuff.Write([]byte("\n"))
+
+			e := task.Executor{
+				Dir:       dir,
+				Stdin:     &inBuff,
+				Stdout:    &outBuff,
+				AssumeYes: test.assumeYes,
+			}
+			require.NoError(t, e.Setup())
+
+			err := e.Run(context.Background(), taskfile.Call{Task: "foo"})
+
+			if !test.assumeYes {
+				require.Error(t, err)
+				return
+			}
+		})
+	}
+}
+
 func TestNoLabelInList(t *testing.T) {
 	const dir = "testdata/label_list"
 
