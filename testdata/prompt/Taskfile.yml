@@ -3,4 +3,14 @@ tasks:
   foo:
     prompt: Do you want to continue?
     cmds:
-      - echo 'foobar'
+      - echo 'foo'
+
+  bar:
+    cmds:
+      - task: show-prompt
+
+  show-prompt:
+    summary: some text for the summary
+    prompt: Do you want to continue?
+    cmds:
+      - echo 'show-prompt'

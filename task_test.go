@@ -686,6 +686,24 @@ func TestPromptInSummary(t *testing.T) {
 	}
 }
 
+func TestPromptWithIndirectTask(t *testing.T) {
+	const dir = "testdata/prompt"
+	var inBuff bytes.Buffer
+	var outBuff bytes.Buffer
+
+	inBuff.Write([]byte("y\n"))
+
+	e := task.Executor{
+		Dir:    dir,
+		Stdin:  &inBuff,
+		Stdout: &outBuff,
+	}
+	require.NoError(t, e.Setup())
+
+	err := e.Run(context.Background(), taskfile.Call{Task: "bar"})
+	assert.Contains(t, outBuff.String(), "show-prompt")
+	require.NoError(t, err)
+}
 func TestNoLabelInList(t *testing.T) {
 	const dir = "testdata/label_list"
 

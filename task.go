@@ -102,21 +102,6 @@ func (e *Executor) Run(ctx context.Context, calls ...taskfile.Call) error {
 			return &errors.TaskInternalError{TaskName: call.Task}
 		}
 
-		// check if the given task has a warning prompt
-		if task.Prompt != "" {
-
-			e.Logger.Outf(logger.Yellow, "task: %q [y/N]\n", task.Prompt)
-			reader := bufio.NewReader(e.Stdin)
-			userInput, err := reader.ReadString('\n')
-			if err != nil {
-				return err
-			}
-
-			userInput = strings.ToLower(strings.TrimSpace(userInput))
-			if !shouldPromptContinue(userInput) {
-				return &errors.TaskCancelledError{TaskName: call.Task}
-			}
-		}
 	}
 
 	if e.Summary {
@@ -161,6 +146,22 @@ func (e *Executor) RunTask(ctx context.Context, call taskfile.Call) error {
 
 	release := e.acquireConcurrencyLimit()
 	defer release()
+
+	// check if the given task has a warning prompt
+	if t.Prompt != "" && !e.AssumeYes {
+
+		e.Logger.Outf(logger.Yellow, "task: %q [y/N]\n", t.Prompt)
+		reader := bufio.NewReader(e.Stdin)
+		userInput, err := reader.ReadString('\n')
+		if err != nil {
+			return err
+		}
+
+		userInput = strings.ToLower(strings.TrimSpace(userInput))
+		if !shouldPromptContinue(userInput) {
+			return &errors.TaskCancelledError{TaskName: call.Task}
+		}
+	}
 
 	return e.startExecution(ctx, t, func(ctx context.Context) error {
 		if !shouldRunOnCurrentPlatform(t.Platforms) {
