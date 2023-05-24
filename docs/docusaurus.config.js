@@ -49,7 +49,7 @@ const getConfig = async () => {
           htmlLang: 'pt-BR'
         },
         'ru-RU': {
-          label: `русский (${translationProgress['ru'] || 0}%)`,
+          label: `Pусский (${translationProgress['ru'] || 0}%)`,
           direction: 'ltr',
           htmlLang: 'ru-RU'
         },
