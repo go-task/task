@@ -9,7 +9,7 @@ sidebar_position: 10
 
 :::note
 
-本文档适用于核心 [Task][task] 存储库 _和_ [Task for Visual Studio Code][vscode-task]。
+本文档适用于 [Task][task] 核心存储库 _和_ [Task for Visual Studio Code][vscode-task]。
 
 :::
 
@@ -55,7 +55,7 @@ Task 使用 [Docusaurus][docusaurus] 来托管文档服务器。 此代码位于
 
 ## 3. 提交代码
 
-尝试编写有意义的提交消息并避免在 PR 上有太多提交。 大多数 PR 应该有一个单一的提交（尽管对于更大的 PR 将它分成几个可能是合理的）。 Git squash(并和) 和 rebase(变基) 是你的好朋友!
+尝试编写有意义的提交消息并避免在 PR 上有太多提交。 大多数 PR 应该有一个单一的提交（尽管对于更大的 PR 将它分成几个可能是合理的）。 Git squash(并和) 和 rebase(变基) 是你的好伙伴!
 
 如果您不确定如何格式化提交消息，请查看 [约定式提交][conventional-commits]。 这种风格不是强制的，但它是使您的提交消息更具可读性和一致性的好方法。
 

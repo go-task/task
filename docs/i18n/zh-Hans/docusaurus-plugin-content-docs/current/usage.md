@@ -405,6 +405,7 @@ tasks:
         vars: { TEXT: 'before 1' }
       - task: echo_sth
         vars: { TEXT: 'before 2' }
+        silent: true
     cmds:
       - echo "after"
 
@@ -503,7 +504,7 @@ tasks:
       - echo "Another task"
 ```
 
-在被调用 task 中覆盖变量就像通知 `vars` 属性一样简单：
+使用 `vars` 和 `silent` 属性，您可以选择在逐个调用的基础上传递变量和切换 [静默模式](#静默模式)：
 
 ```yaml
 version: '3'
@@ -519,6 +520,7 @@ tasks:
     cmds:
       - task: greet
         vars: { RECIPIENT: 'Cruel World' }
+        silent: true
 ```
 
 `deps` 也支持上述语法。

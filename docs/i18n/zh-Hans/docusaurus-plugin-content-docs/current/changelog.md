@@ -5,6 +5,16 @@ sidebar_position: 8
 
 # 更新日志
 
+## v3.25.0 - 2023-05-22
+
+- 调用其他任务时支持 `silent:` （由 [@danquah](https://github.com/danquah) 在 [#680](https://github.com/go-task/task/issues/680)、[#1142](https://github.com/go-task/task/issues/1142) 完成）。
+- 改进 PowerShell 完成脚本（由 [@trim21](https://github.com/trim21) 在 [#1168](https://github.com/go-task/task/issues/1168) 完成）。
+- 在网站菜单中添加更多语言并显示翻译进度百分比（ by 由 [@misitebao](https://github.com/misitebao) 在 [#1173](https://github.com/go-task/task/issues/1173) 完成）。
+- 从此版本开始，FreeBSD 的官方二进制文件将可供下载（由 [@andreynering](https://github.com/andreynering) 在 [#1068](https://github.com/go-task/task/issues/1068) 完成）。
+- 修复一些被意外抑制的错误（由 [@clintmod](https://github.com/clintmod) 在 [#1134](https://github.com/go-task/task/issues/1134) 修复）。
+- 修复 Taskfile 中省略 `version` 时的 nil 指针错误（由 [@pd93](https://github.com/pd93) 在 [#1148](https://github.com/go-task/task/issues/1148)、[#1149](https://github.com/go-task/task/issues/1149) 修复）。
+- 修复 task 不存在时的重复错误消息（由 [@pd93](https://github.com/pd93) 在 [#1141](https://github.com/go-task/task/issues/1141)、[#1144](https://github.com/go-task/task/issues/1144) 修复）。
+
 ## v3.24.0 - 2023-04-15
 
 - 修复带有别名的 task 的 Fish shell 补全 ([#1113](https://github.com/go-task/task/issues/1113) by [@patricksjackson](https://github.com/patricksjackson))。
