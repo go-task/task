@@ -201,7 +201,7 @@ tasks:
   - 环境变量
   - 全局或 CLI 变量
   - 调用变量
-  - Task 内的变量
+  - Task 变量
 
 [output]: usage.md#输出语法
 [ignore_errors]: usage.md#忽略错误

@@ -42,9 +42,5 @@
   "link.item.label.OpenCollective": {
     "message": "OpenCollective",
     "description": "The label of footer link with label=OpenCollective linking to https://opencollective.com/task"
-  },
-  "link.item.label.Chinese | 中国人": {
-    "message": "Chinois | 中国人",
-    "description": "The label of footer link with label=Chinese | 中国人 linking to https://task-zh.readthedocs.io/zh_CN/latest/"
   }
 }

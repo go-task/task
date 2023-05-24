@@ -405,6 +405,7 @@ tasks:
         vars: { TEXT: 'before 1' }
       - task: echo_sth
         vars: { TEXT: 'before 2' }
+        silent: true
     cmds:
       - echo "after"
 
@@ -503,7 +504,7 @@ tasks:
       - echo "Another task"
 ```
 
-Переопределение переменных в вызываемой task делается через указание атрибута `vars`:
+Using the `vars` and `silent` attributes you can choose to pass variables and toggle [silent mode](#silent-mode) on a call-by-call basis:
 
 ```yaml
 version: '3'
@@ -519,6 +520,7 @@ tasks:
     cmds:
       - task: greet
         vars: { RECIPIENT: 'Cruel World' }
+        silent: true
 ```
 
 Указанный выше синтаксис также поддерживается в `deps`.
