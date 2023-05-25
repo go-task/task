@@ -219,7 +219,7 @@ tasks:
 ```
 
 - There was a major refactor on how variables are handled. They're now easier to
-  understand. The `expansions:` setting was removed as it became unncessary.
+  understand. The `expansions:` setting was removed as it became unnecessary.
   This is the order in which Task will process variables, each level can see the
   variables set by the previous one and override those.
   - Environment variables
