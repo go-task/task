@@ -3,32 +3,32 @@ slug: /integrations/
 sidebar_position: 5
 ---
 
-# Integrations
+# Интеграции
 
-## Visual Studio Code Extension
+## Расширение для Visual Studio Code
 
-Task has an [official extension for Visual Studio Code](https://marketplace.visualstudio.com/items?itemName=task.vscode-task). The code for this project can be found [here](https://github.com/go-task/vscode-task). To use this extension, you must have Task v3.23.0+ installed on your system.
+У Task есть официальное расширение для [Visual Studio Code](https://marketplace.visualstudio.com/items?itemName=task.vscode-task). Код для этого проекта можно найти [здесь](https://github.com/go-task/vscode-task). Чтобы использовать это расширение, на вашей системе должна быть установлена версия Task 3.23.0+.
 
-This extension provides the following features (and more):
+Это расширение предоставляет следующие функции:
 
-- View tasks in the sidebar.
-- Run tasks from the sidebar and command palette.
-- Go to definition from the sidebar and command palette.
-- Run last task command.
-- Multi-root workspace support.
-- Initialize a Taskfile in the current workspace.
+- Просмотр задач в боковой панели.
+- Запуск задач из боковой панели и командной строки.
+- Перейти к определению из боковой панели и командной строки.
+- Выполнить последнюю "task" команду.
+- Поддержка нескольких рабочих пространств.
+- Инициализировать Taskfile в текущем рабочем пространстве.
 
-To get autocompletion and validation for your Taskfile, see the [Schema](#schema) section below.
+Чтобы включить автозаполнение и проверку вашего Taskfile, см. раздел [Схема](#schema) ниже.
 
 ![Task for Visual Studio Code](https://github.com/go-task/vscode-task/blob/main/res/preview.png?raw=true)
 
-## Schema
+## Схема
 
-This was initially created by [@KROSF](https://github.com/KROSF) in [this Gist](https://gist.github.com/KROSF/c5435acf590acd632f71bb720f685895) and is now officially maintained in [this file](https://github.com/go-task/task/blob/main/docs/static/schema.json) and made available at https://taskfile.dev/schema.json. This schema can be used to validate Taskfiles and provide autocompletion in many code editors:
+Изначально была создана [@KROSF](https://github.com/KROSF) вот тут [this Gist](https://gist.github.com/KROSF/c5435acf590acd632f71bb720f685895) и теперь официально поддерживается в этом [файле](https://github.com/go-task/task/blob/main/docs/static/schema.json) и доступна по ссылке https://taskfile.dev/schema.json. Эта схема может быть использована для проверки Task файлов и автодополнения во многих редакторах кода:
 
 ### Visual Studio Code
 
-To integrate the schema into VS Code, you need to install the [YAML extension](https://marketplace.visualstudio.com/items?itemName=redhat.vscode-yaml) by Red Hat. Any `Taskfile.yml` in your project should automatically be detected and validation/autocompletion should work. If this doesn't work or you want to manually configure it for files with a different name, you can add the following to your `settings.json`:
+Чтобы интегрировать схему в VS Code, вам нужно установить [YAML расширение](https://marketplace.visualstudio.com/items?itemName=redhat.vscode-yaml) от Red Hat. Любой `Taskfile.yml` в вашем проекте должен автоматически быть обнаружен и валидирован/автодополнение должен работать. Если это не работает или вы хотите настроить его вручную для файлов с другим именем, вы можете добавить следующие в `settings.json`:
 
 ```json
 // settings.json
@@ -42,21 +42,21 @@ To integrate the schema into VS Code, you need to install the [YAML extension](h
 }
 ```
 
-You can also configure the schema directly inside of a Taskfile by adding the following comment to the top of the file:
+Вы также можете настроить схему непосредственно внутри Taskfile, добавив следующий комментарий в начале файла:
 
 ```yaml
 # yaml-language-server: $schema=https://taskfile.dev/schema.json
 version: '3'
 ```
 
-You can find more information on this in the [YAML language server project](https://github.com/redhat-developer/yaml-language-server).
+Вы можете найти дополнительную информацию об этом в [YAML language server project](https://github.com/redhat-developer/yaml-language-server).
 
-## Community Integrations
+## Интеграции сообщества
 
-In addition to our official integrations, there is an amazing community of developers who have created their own integrations for Task:
+В дополнение к нашей официальной интеграции, сообщество разработчиков разработало свои собственные интеграции для Task:
 
-- [Sublime Text Plugin](https://packagecontrol.io/packages/Taskfile) [[source](https://github.com/biozz/sublime-taskfile)] by [@biozz](https://github.com/biozz)
-- [IntelliJ Plugin](https://plugins.jetbrains.com/plugin/17058-taskfile) [[source](https://github.com/lechuckroh/task-intellij-plugin)] by [@lechuckroh](https://github.com/lechuckroh)
-- [mk](https://github.com/pycontribs/mk) command line tool recognizes Taskfiles natively.
+- Расширение для [Sublime Text](https://packagecontrol.io/packages/Taskfile) [[источник](https://github.com/biozz/sublime-taskfile)] [@biozz](https://github.com/biozz)
+- Расширение для [IntelliJ](https://plugins.jetbrains.com/plugin/17058-taskfile) [[источник](https://github.com/lechuckroh/task-intellij-plugin)] [@lechuckroh](https://github.com/lechuckroh)
+- [mk](https://github.com/pycontribs/mk) - инструмент командной строки распознает Taskfile'ы.
 
-If you have made something that integrates with Task, please feel free to open a PR to add it to this list.
+Если вы сделали что-то, что интегрируется с Task, пожалуйста, не стесняйтесь открыть PR, чтобы добавить его в этот список.

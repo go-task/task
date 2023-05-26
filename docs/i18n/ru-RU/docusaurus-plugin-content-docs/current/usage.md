@@ -208,9 +208,9 @@ Task, описанные в указанных Taskfile, будут доступ
 
 Относительные пути разрешаются относительно каталога, содержащего включающий Taskfile.
 
-### OS-specific Taskfiles
+### Специфичные для ОС Taskfile
 
-With `version: '2'`, task automatically includes any `Taskfile_{{OS}}.yml` if it exists (for example: `Taskfile_windows.yml`, `Taskfile_linux.yml` or `Taskfile_darwin.yml`). Since this behavior was a bit too implicit, it was removed on version 3, but you still can have a similar behavior by explicitly importing these files:
+С помощью `version: '2'` task автоматически включает любой `Taskfile_{{OS}}.yml`, если такой файл существует (например: `Taskfile_windows.yml`, `Taskfile_linux.yml` или `Taskfile_darwin.yml`). Так как такое поведение было несколько неявным, оно было удалено в версии 3. Тем не менее можно получить схожее поведение, явно импортировав соответствующие файлы:
 
 ```yaml
 version: '3'
@@ -219,9 +219,9 @@ includes:
   build: ./Taskfile_{{OS}}.yml
 ```
 
-### Directory of included Taskfile
+### Директория включенного Taskfile
 
-By default, included Taskfile's tasks are run in the current directory, even if the Taskfile is in another directory, but you can force its tasks to run in another directory by using this alternative syntax:
+По умолчанию task включенного Taskfile выполняются в текущем каталоге, даже если Taskfile находится в другом каталоге, но вы можете заставить задачи выполняться в другом каталоге, используя альтернативный синтаксис:
 
 ```yaml
 version: '3'
@@ -234,13 +234,13 @@ includes:
 
 :::info
 
-The included Taskfiles must be using the same schema version as the main Taskfile uses.
+Включенные Taskfile должны использовать ту же версию схемы, что и основной Taskfile.
 
 :::
 
-### Optional includes
+### Опциональные включения
 
-Includes marked as optional will allow Task to continue execution as normal if the included file is missing.
+Включения, отмеченные как необязательные, позволяют Task продолжать выполнение в нормальном режиме, если включенный файл отсутствует.
 
 ```yaml
 version: '3'
@@ -257,9 +257,9 @@ tasks:
         ./tests/Taskfile.yml does not exist"
 ```
 
-### Internal includes
+### Внутренние включения
 
-Includes marked as internal will set all the tasks of the included file to be internal as well (see the [Internal tasks](#internal-tasks) section below). This is useful when including utility tasks that are not intended to be used directly by the user.
+Включения, отмеченные как internal, устанавливают также все задачи включенного файла как internal (см. секцию [Внутренние task](#внутренние-task) ниже). Это полезно, когда включаются утилитарные task, которые не предназначены для прямого использования пользователем.
 
 ```yaml
 version: '3'
@@ -270,9 +270,9 @@ includes:
     internal: true
 ```
 
-### Vars of included Taskfiles
+### Переменные включенных Taskfile
 
-You can also specify variables when including a Taskfile. This may be useful for having reusable Taskfile that can be tweaked or even included more than once:
+Вы также можете указывать переменные при включении Taskfile. Это может быть полезно для создания переиспользуемого Taskfile, который можно настроить или даже включать более одного раза:
 
 ```yaml
 version: '3'
@@ -289,9 +289,9 @@ includes:
       DOCKER_IMAGE: frontend_image
 ```
 
-### Namespace aliases
+### Псевдонимы пространств имен
 
-When including a Taskfile, you can give the namespace a list of `aliases`. This works in the same way as [task aliases](#task-aliases) and can be used together to create shorter and easier-to-type commands.
+При включении Taskfile, вы можете дать пространству имен список `aliases`. Это работает так же, как и [псевдонимы task](#псевдонимы-task) и может использоваться вместе, чтобы создавать более короткие и легко набираемые команды.
 
 ```yaml
 version: '3'
@@ -304,13 +304,13 @@ includes:
 
 :::info
 
-Vars declared in the included Taskfile have preference over the variables in the including Taskfile! If you want a variable in an included Taskfile to be overridable, use the [default function](https://go-task.github.io/slim-sprig/defaults.html): `MY_VAR: '{{.MY_VAR | default "my-default-value"}}'`.
+Переменные, объявленные во включенном Taskfile, имеют приоритет над переменными включающего Taskfile! Если вы хотите, чтобы переменную включенного Taskfile можно было переопределить, используйте [функцию default](https://go-task.github.io/slim-sprig/defaults.html): `MY_VAR: '{{.MY_VAR | default "my-default-value"}}'`.
 
 :::
 
-## Internal tasks
+## Внутренние task
 
-Internal tasks are tasks that cannot be called directly by the user. They will not appear in the output when running `task --list|--list-all`. Other tasks may call internal tasks in the usual way. This is useful for creating reusable, function-like tasks that have no useful purpose on the command line.
+Внутренние task - это task, которые не могут быть вызваны напрямую пользователем. Они не будут отображаться в выводе при вызове команды `task --list|--list-all`. Другие task могут вызывать внутренние задачи обычным способом. Это полезно для создания переиспользуемых task, похожих на функции, которые не имеют практического значения при выполнении в командной строке.
 
 ```yaml
 version: '3'
@@ -328,9 +328,9 @@ tasks:
       - docker build -t {{.DOCKER_IMAGE}} .
 ```
 
-## Task directory
+## Директория task
 
-By default, tasks will be executed in the directory where the Taskfile is located. But you can easily make the task run in another folder, informing `dir`:
+По умолчанию, task выполняются в директории, где находится Taskfile. Но вы можете легко заставить task выполниться в другом каталоге, указав `dir`:
 
 ```yaml
 version: '3'
@@ -343,13 +343,13 @@ tasks:
       - caddy
 ```
 
-If the directory does not exist, `task` creates it.
+Если директории не существует, `task` создаст ее.
 
-## Task dependencies
+## Зависимости task
 
-> Dependencies run in parallel, so dependencies of a task should not depend one another. If you want to force tasks to run serially, take a look at the [Calling Another Task](#calling-another-task) section below.
+> Зависимости выполняются параллельно, поэтому зависимости task не должны зависеть друг от друга. Если вы хотите принудительно запустить задачи последовательно, обратите внимание на раздел [Вызов другой task](#вызов-другой-task), описанный ниже.
 
-You may have tasks that depend on others. Just pointing them on `deps` will make them run automatically before running the parent task:
+У вас могут быть task, которые зависят от других. Просто перечислите их в списке `deps`, и они будут автоматически запущены перед запуском родительской task:
 
 ```yaml
 version: '3'
@@ -365,9 +365,9 @@ tasks:
       - esbuild --bundle --minify css/index.css > public/bundle.css
 ```
 
-In the above example, `assets` will always run right before `build` if you run `task build`.
+В примере выше, `assets` будет всегда запускаться перед `build`, если вы запустите `task build`.
 
-A task can have only dependencies and no commands to group tasks together:
+Task может иметь зависимости без команд, чтобы группировать задачи вместе:
 
 ```yaml
 version: '3'
@@ -385,15 +385,15 @@ tasks:
       - esbuild --bundle --minify css/index.css > public/bundle.css
 ```
 
-If there is more than one dependency, they always run in parallel for better performance.
+Если есть более одной зависимости, то они всегда выполняются параллельно для лучшей производительности.
 
 :::tip
 
-You can also make the tasks given by the command line run in parallel by using the `--parallel` flag (alias `-p`). Example: `task --parallel js css`.
+Вы также можете запустить несколько task, указанные в командной строке, параллельно, используя флаг `--parallel` (псевдоним `-p`). Например: `task --parallel js css`.
 
 :::
 
-If you want to pass information to dependencies, you can do that the same manner as you would to [call another task](#calling-another-task):
+Если вы хотите передать информацию зависимостям, вы можете сделать это таким же образом, как и при [вызове другой task](#вызов-другой-task):
 
 ```yaml
 version: '3'
@@ -504,7 +504,7 @@ tasks:
       - echo "Another task"
 ```
 
-Using the `vars` and `silent` attributes you can choose to pass variables and toggle [silent mode](#silent-mode) on a call-by-call basis:
+Используя атрибуты `vars` и `silent`, вы можете выбирать, передавать ли переменные и включать или выключать [silent mode](#silent-mode) для вызова каждый раз отдельно:
 
 ```yaml
 version: '3'
@@ -1012,7 +1012,7 @@ If a summary is missing, the description will be printed. If the task does not h
 
 Please note: _showing the summary will not execute the command_.
 
-## Task aliases
+## Псевдонимы task
 
 Aliases are alternative names for tasks. They can be used to make it easier and quicker to run tasks with long or hard-to-type names. You can use them on the command line, when [calling sub-tasks](#calling-another-task) in your Taskfile and when [including tasks](#including-other-taskfiles) with aliases from another Taskfile. They can also be used together with [namespace aliases](#namespace-aliases).
 

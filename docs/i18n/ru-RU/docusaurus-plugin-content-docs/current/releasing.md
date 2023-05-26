@@ -3,7 +3,7 @@ slug: /releasing/
 sidebar_position: 11
 ---
 
-# Releasing
+# Релизы
 
 The release process of Task is done with the help of [GoReleaser][goreleaser]. You can test the release process locally by calling the `test-release` task of the Taskfile.
 
@@ -32,7 +32,7 @@ Scoop is a command-line package manager for the Windows operating system. Scoop 
 
 # Nix
 
-Nix is a community owned installation method. Nix package maintainers usually take care of updating versions there by editing [this file](https://github.com/NixOS/nixpkgs/blob/nixos-unstable/pkgs/development/tools/go-task/default.nix). If you think its Task version is outdated, open an issue to let us know.
+Nix - это метод установки, принадлежащий сообществу. Мейнтейнеры Nix пакетов позаботились об обновлении версий, редактируя [этот файл](https://github.com/NixOS/nixpkgs/blob/nixos-unstable/pkgs/development/tools/go-task/default.nix). Если вы считаете, что его версия Task устарела, откройте issue, чтобы уведомить нас.
 
 <!-- prettier-ignore-start -->
 
