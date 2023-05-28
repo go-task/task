@@ -3,7 +3,7 @@ slug: /community/
 sidebar_position: 9
 ---
 
-# Comunidade
+# Community
 
 Some of the work to improve the Task ecosystem is done by the community, be it installation methods or integrations with code editor. I (the author) am thankful for everyone that helps me to improve the overall experience.
 

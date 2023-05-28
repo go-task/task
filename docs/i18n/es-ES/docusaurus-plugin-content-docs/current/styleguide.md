@@ -3,7 +3,7 @@ slug: /styleguide/
 sidebar_position: 7
 ---
 
-# Guia de estilo
+# Styleguide
 
 This is the official Task styleguide for `Taskfile.yml` files. This guide contains some basic instructions to keep your Taskfile clean and familiar to other users.
 

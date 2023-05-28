@@ -3,7 +3,7 @@ slug: /faq/
 sidebar_position: 6
 ---
 
-# Perguntas frequentes
+# FAQ
 
 This page contains a list of frequently asked questions about Task.
 

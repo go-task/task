@@ -3,23 +3,23 @@ slug: /installation/
 sidebar_position: 2
 ---
 
-# Installation
+# Instalação
 
-Task offers many installation methods. Check out the available methods below.
+Há muitas maneiras possíveis de se instalar o Task. Confira os métodos disponíveis abaixo.
 
-## Package Managers
+## Gerenciador de Pacotes
 
 ### Homebrew
 
-If you're on macOS or Linux and have [Homebrew][homebrew] installed, getting Task is as simple as running:
+Se você estiver no macOS ou Linux e tiver o [Homebrew][homebrew] instalado, instalar o Task é tão simples quanto rodar:
 
 ```bash
 brew install go-task/tap/go-task
 ```
 
-The above Formula is [maintained by ourselves](https://github.com/go-task/homebrew-tap/blob/master/Formula/go-task.rb).
+A fórmula acima é [mantida por nós mesmos](https://github.com/go-task/homebrew-tap/blob/master/Formula/go-task.rb).
 
-Recently, Task was also made available [on the official Homebrew repository](https://formulae.brew.sh/formula/go-task), so you also have that option if you prefer:
+Recentemente, o Task também foi disponibilizado [no repositório oficial do Homebrew](https://formulae.brew.sh/formula/go-task), então você também tem essa opção, se preferir:
 
 ```bash
 brew install go-task
@@ -27,7 +27,7 @@ brew install go-task
 
 ### Snap
 
-Task is available in [Snapcraft][snapcraft], but keep in mind that your Linux distribution should allow classic confinement for Snaps to Task work right:
+O Task está disponível no [Snapcraft][snapcraft], mas tenha em mente que a sua distribuição Linux deve suportar confinamento clássico (*classic confinement*) para Snaps para o Task funcionar corretamente:
 
 ```bash
 sudo snap install task --classic
@@ -35,63 +35,63 @@ sudo snap install task --classic
 
 ### Chocolatey
 
-If you're on Windows and have [Chocolatey][choco] installed, getting Task is as simple as running:
+Se você estiver no Windows e tiver o [Chocolatey][choco] instalado, instalar o Task é tão simples quanto rodar:
 
 ```bash
 choco install go-task
 ```
 
-This installation method is community owned.
+Este método de instalação é mantido pela comunidade.
 
 ### Scoop
 
-If you're on Windows and have [Scoop][scoop] installed, getting Task is as simple as running:
+Se você está no Windows e tem o [Scoop][scoop] instalado, instalar o Task é tão simples quanto rodar:
 
 ```cmd
 scoop install task
 ```
 
-This installation method is community owned. After a new release of Task, it may take some time until it's available on Scoop.
+Este método de instalação é mantido pela comunidade. Após o lançamento de uma nova versão do Task, pode levar algum tempo até que esteja disponível no Scoop.
 
 ### AUR
 
-If you're on Arch Linux you can install Task from [AUR](https://aur.archlinux.org/packages/go-task-bin) using your favorite package manager such as `yay`, `pacaur` or `yaourt`:
+Se você estiver no Arch Linux, você pode instalar o Task a partir do [AUR](https://aur.archlinux.org/packages/go-task-bin) usando o seu gerenciador de pacotes favorito, como `yay`, `pacauro` ou `yaourt`:
 
 ```cmd
 yay -S go-task-bin
 ```
 
-Alternatively, there's [this package](https://aur.archlinux.org/packages/go-task) which installs from the source code instead of downloading the binary from the [releases page](https://github.com/go-task/task/releases):
+Alternativamente, há [este pacote](https://aur.archlinux.org/packages/go-task) que instala do código fonte ao invés de baixar o binário [do GitHub](https://github.com/go-task/task/releases):
 
 ```cmd
 yay -S go-task
 ```
 
-This installation method is community owned.
+Este método de instalação é mantido pela comunidade.
 
 ### Fedora
 
-If you're on Fedora Linux you can install Task from the official [Fedora](https://packages.fedoraproject.org/pkgs/golang-github-task/go-task/) repository using `dnf`:
+Se você estiver no Fedora Linux, você pode instalar o Task do [repositório oficial do Fedora](https://packages.fedoraproject.org/pkgs/golang-github-task/go-task/) usando `dnf`:
 
 ```cmd
 sudo dnf install go-task
 ```
 
-This installation method is community owned. After a new release of Task, it may take some time until it's available in [Fedora](https://packages.fedoraproject.org/pkgs/golang-github-task/go-task/).
+Este método de instalação é mantido pela comunidade. Após o lançamento de uma nova versão do Task, pode levar algum tempo até que ela esteja disponível no [Fedora](https://packages.fedoraproject.org/pkgs/golang-github-task/go-task/).
 
 ### Nix
 
-If you're on NixOS or have Nix installed you can install Task from [nixpkgs](https://github.com/NixOS/nixpkgs):
+Se você estiver no NixOS ou tiver o Nix instalado, você pode instalar o Task a partir do [nixpkgs](https://github.com/NixOS/nixpkgs):
 
 ```cmd
 nix-env -iA nixpkgs.go-task
 ```
 
-This installation method is community owned. After a new release of Task, it may take some time until it's available in [nixpkgs](https://github.com/NixOS/nixpkgs).
+Este método de instalação é mantido pela comunidade. Após o lançamento de uma nova versão do Task, pode levar algum tempo até que ela esteja disponível em [nixpkgs](https://github.com/NixOS/nixpkgs).
 
 ### npm
 
-You can also use Node and npm to install Task by installing [this package](https://www.npmjs.com/package/@go-task/cli).
+Você também pode usar o Node e o npm para instalar o Task instalando [este pacote](https://www.npmjs.com/package/@go-task/cli).
 
 ```bash
 npm install -g @go-task/cli
@@ -99,33 +99,33 @@ npm install -g @go-task/cli
 
 ### Winget
 
-If you are using Windows and installed the [winget](https://github.com/microsoft/winget-cli) package management tool, you can install Task from [winget-pkgs](https://github.com/microsoft/winget-pkgs).
+Se você estiver usando o Windows e instalando a ferramenta de gerenciamento de pacotes [winget](https://github.com/microsoft/winget-cli), você pode instalar o Task a partir de [winget-pkgs](https://github.com/microsoft/winget-pkgs).
 
 ```bash
 winget install Task.Task
 ```
 
-## Get The Binary
+## Baixe o Binário
 
-### Binary
+### Binário
 
-You can download the binary from the [releases page on GitHub][releases] and add to your `$PATH`.
+Você pode baixar o binário da [página de versões no GitHub][releases] e adicionar a sua variável de ambiente `$PATH`.
 
-DEB and RPM packages are also available.
+Os pacotes DEB e RPM também estão disponíveis.
 
-The `task_checksums.txt` file contains the SHA-256 checksum for each file.
+O arquivo `task_checksums.txt` contém a *checksum* SHA-256 para cada arquivo.
 
-### Install Script
+### Script de instalação
 
-We also have an [install script][installscript] which is very useful in scenarios like CI. Many thanks to [GoDownloader][godownloader] for enabling the easy generation of this script.
+Também temos um [script de instalação][installscript] que é muito útil em cenários, como CI. Muito obrigado ao [GoDownloader][godownloader] por permitir a geração fácil deste script.
 
-By default, it installs on the `./bin` directory relative to the working directory:
+Por padrão, o binário será baixado no diretório `./bin` em relação ao diretório atual:
 
 ```bash
 sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d
 ```
 
-It is possible to override the installation directory with the `-b` parameter. On Linux, common choices are `~/.local/bin` and `~/bin` to install for the current user or `/usr/local/bin` to install for all users:
+É possível substituir o diretório de instalação com o parâmetro `-b`. No Linux, escolhas comuns são `~/.local/bin` e `~/bin` para instalar para o usuário ou `/usr/local/bin` para instalar para todos os usuários:
 
 ```bash
 sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d -b ~/.local/bin
@@ -133,13 +133,13 @@ sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d -b ~/.local/bin
 
 :::caution
 
-On macOS and Windows, `~/.local/bin` and `~/bin` are not added to `$PATH` by default.
+No macOS e Windows, `~/.local/bin` e `~/bin` não são adicionados ao `$PATH` por padrão.
 
 :::
 
 ### GitHub Actions
 
-If you want to install Task in GitHub Actions you can try using [this action](https://github.com/arduino/setup-task) by the Arduino team:
+Se você quiser instalar o Task no GitHub Actions você pode tentar usar [esta *action*](https://github.com/arduino/setup-task) pela equipe do Arduino:
 
 ```yaml
 - name: Install Task
@@ -149,21 +149,21 @@ If you want to install Task in GitHub Actions you can try using [this action](ht
     repo-token: ${{ secrets.GITHUB_TOKEN }}
 ```
 
-This installation method is community owned.
+Este método de instalação é mantido pela comunidade.
 
-## Build From Source
+## Compilar do código-fonte
 
 ### Go Modules
 
-Ensure that you have a supported version of [Go][go] properly installed and setup. You can find the minimum required version of Go in the [go.mod](https://github.com/go-task/task/blob/main/go.mod#L3) file.
+Certifique-se de que você tem uma versão suportada do [Go][go] corretamente instalado e configurado. Você pode encontrar a versão mínima necessária do Go no arquivo [go.mod](https://github.com/go-task/task/blob/main/go.mod#L3).
 
-You can then install the latest release globally by running:
+Você pode então instalar a última versão globalmente ao rodar:
 
 ```bash
 go install github.com/go-task/task/v3/cmd/task@latest
 ```
 
-Or you can install into another directory:
+Ou você pode instalar em outro diretório rodando:
 
 ```bash
 env GOBIN=/bin go install github.com/go-task/task/v3/cmd/task@latest
@@ -171,27 +171,27 @@ env GOBIN=/bin go install github.com/go-task/task/v3/cmd/task@latest
 
 :::tip
 
-For CI environments we recommend using the [install script](#install-script) instead, which is faster and more stable, since it'll just download the latest released binary.
+Para ambientes com CI, recomendamos usar o [script de instalação](#install-script), que é mais rápido e mais estável, já que ele apenas baixará o último binário lançado.
 
 :::
 
-## Setup completions
+## Configurar *auto-complete* de terminal
 
-Download the autocompletion file corresponding to your shell.
+Baixe o arquivo de *auto-completion* correspondente ao seu terminal.
 
-[All completions are available on the Task repository](https://github.com/go-task/task/tree/main/completion).
+[Todos os scripts de *completion* estão disponíveis no repositório do Task](https://github.com/go-task/task/tree/main/completion).
 
 ### Bash
 
-First, ensure that you installed bash-completion using your package manager.
+Primeiro, certifique-se de que você instalou o *bash-completion* usando seu gerenciador de pacotes.
 
-Make the completion file executable:
+Torne o arquivo de *completion* executável:
 
 ```
 chmod +x path/to/task.bash
 ```
 
-After, add this to your `~/.bash_profile`:
+Depois, adicione isto ao seu `~/.bash_profile`:
 
 ```shell
 source path/to/task.bash
@@ -199,24 +199,24 @@ source path/to/task.bash
 
 ### ZSH
 
-Put the `_task` file somewhere in your `$FPATH`:
+Coloque o arquivo `_task` em algum lugar no seu `$FPATH`:
 
 ```shell
 mv path/to/_task /usr/local/share/zsh/site-functions/_task
 ```
 
-Ensure that the following is present in your `~/.zshrc`:
+Certifique-se de que o seguinte esteja presente em seu `~/.zshrc`:
 
 ```shell
 autoload -U compinit
 compinit -i
 ```
 
-ZSH version 5.7 or later is recommended.
+Recomenda-se ZSH versão 5.7 ou posterior.
 
 ### Fish
 
-Move the `task.fish` completion script:
+Mova o script de *completion* `task.fish`:
 
 ```shell
 mv path/to/task.fish ~/.config/fish/completions/task.fish
@@ -224,14 +224,14 @@ mv path/to/task.fish ~/.config/fish/completions/task.fish
 
 ### PowerShell
 
-Open your profile script with:
+Abra seu *profile script* rodando:
 
 ```
 mkdir -Path (Split-Path -Parent $profile) -ErrorAction SilentlyContinue
 notepad $profile
 ```
 
-Add the line and save the file:
+Adicione a seguinte linha e salve o arquivo:
 
 ```shell
 Invoke-Expression -Command path/to/task.ps1
