@@ -10,7 +10,7 @@ title: Página Inicial
   <img id="logo" src="img/logo.svg" height="250px" width="250px" />
 </div>
 
-Task é uma ferramenta de automatização de tarefas que foi criada para ser mais simples de usar do que outras similares, como por exemplo o [GNU Make][make].
+Task é uma ferramenta de automatização que foi criada para ser mais simples de usar do que outras similares, como por exemplo o [GNU Make][make].
 
 Por ser escrito em [Go][go], o Task é simplesmente um binário e não possui nenhuma outra dependência, o que significa que você não precisa lidar com um processo de instalação complicado apenas para usar uma ferramenta de automação.
 

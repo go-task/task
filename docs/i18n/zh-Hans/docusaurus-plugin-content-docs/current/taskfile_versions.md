@@ -197,7 +197,7 @@ tasks:
   print: echo "Hello, World!"
 ```
 
-- 对变量的处理方式进行了重大重构。 现在它们更容易理解了。 The `expansions:` setting was removed as it became unnecessary. 这是 Task 处理变量的顺序，每一层都可以看到前一层设置的变量并覆盖这些变量。
+- 对变量的处理方式进行了重大重构。 现在它们更容易理解了。 `expansions:` 设置被移除了，因为它变得不必要。 这是 Task 处理变量的顺序，每一层都可以看到前一层设置的变量并覆盖这些变量。
   - 环境变量
   - 全局或 CLI 变量
   - 调用变量
