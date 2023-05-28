@@ -8,3 +8,11 @@ updates:
       day: saturday
       time: '08:00'
       timezone: America/Sao_Paulo
+
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: saturday
+      time: '08:00'
+      timezone: America/Sao_Paulo
