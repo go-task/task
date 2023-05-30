@@ -32,5 +32,5 @@ jobs:
           branch: chore/sync-translations
           delete-branch: true
           author: task-bot <106601941+task-bot@users.noreply.github.com>
-          labels: translation
+          labels: "area: translation"
           token: ${{ secrets.GH_PAT }}
