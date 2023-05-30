@@ -31,13 +31,13 @@ jobs:
                 repo: context.repo.repo,
               }
             )
-            if (labels.find(label => label.name === 'awaiting response')) {
+            if (labels.find(label => label.name === 'state: awaiting response')) {
               if (comments[comments.length-1].user?.login === issue.data.user?.login) {
                 github.rest.issues.removeLabel({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
                   issue_number: context.issue.number,
-                  name: 'awaiting response'
+                  name: 'state: awaiting response'
                 })
               }
             }
