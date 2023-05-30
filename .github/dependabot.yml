@@ -8,6 +8,9 @@ updates:
       day: saturday
       time: '08:00'
       timezone: America/Sao_Paulo
+    labels:
+      - "area: dependencies"
+      - "lang: go"
 
   - package-ecosystem: npm
     directory: /
@@ -16,3 +19,6 @@ updates:
       day: saturday
       time: '08:00'
       timezone: America/Sao_Paulo
+    labels:
+      - "area: dependencies"
+      - "lang: javascript"
