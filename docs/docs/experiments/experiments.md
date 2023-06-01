@@ -27,8 +27,7 @@ You can enable an experimental feature by:
 1. Using the `TASK_X_<FEATURE>=1` environment variable. This is intended for
    permanently enabling experimental features in your environment.
 
-You can view the [full breaking changes proposal on
-GitHub][breaking-change-proposal].
+Flags will always override environment variables.
 
 ## Current Experimental Features and Deprecations
 
