@@ -25,6 +25,11 @@ Studio Code][vscode-task].
   there an approach you can take that maintains this compatibility? If not,
   consider opening an issue first so that API changes can be discussed before
   you invest your time into a PR.
+- **Experiments** - If there is no way to make your change backward compatible
+  then there is a procedure to introduce breaking changes into minor versions.
+  We call these "[experiments][experiments]". If you're intending to work on an
+  experiment, then please read the [experiments workflow][experiments-workflow]
+  document carefully and submit a proposal first.
 
 ## 1. Setup
 
