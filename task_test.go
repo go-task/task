@@ -508,9 +508,10 @@ func TestStatusChecksum(t *testing.T) {
 			}
 
 			var buff bytes.Buffer
+			tempdir := filepathext.SmartJoin(dir, ".task")
 			e := task.Executor{
 				Dir:     dir,
-				TempDir: filepathext.SmartJoin(dir, ".task"),
+				TempDir: tempdir,
 				Stdout:  &buff,
 				Stderr:  &buff,
 			}
@@ -522,9 +523,19 @@ func TestStatusChecksum(t *testing.T) {
 				require.NoError(t, err)
 			}
 
+			// Capture the modification time, so we can ensure the checksum file
+			// is not regenerated when the hash hasn't changed.
+			s, err := os.Stat(filepathext.SmartJoin(tempdir, "checksum/"+test.task))
+			require.NoError(t, err)
+			time := s.ModTime()
+
 			buff.Reset()
 			require.NoError(t, e.Run(context.Background(), taskfile.Call{Task: test.task}))
 			assert.Equal(t, `task: Task "`+test.task+`" is up to date`+"\n", buff.String())
+
+			s, err = os.Stat(filepathext.SmartJoin(tempdir, "checksum/"+test.task))
+			require.NoError(t, err)
+			assert.Equal(t, time, s.ModTime())
 		})
 	}
 }
