@@ -86,7 +86,7 @@ When using the `--json` flag in combination with either the `--list` or
 `--list-all` flags, the output will be a JSON object with the following
 structure:
 
-```jsonc
+```json
 {
   "tasks": [
     {
