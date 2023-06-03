@@ -6,6 +6,8 @@
   #1194 by @deviantintegral).
 - Added [experiments documentation](https://taskfile.dev/experiments) to the
   website (#1198 by @pd93).
+- Deprecated `version: 2` schema. This will be removed in the next major release
+  (#1197, #1198, #1199 by @pd93).
 
 ## v3.25.0 - 2023-05-22
 
