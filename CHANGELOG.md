@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Only rewrite checksum files in `.task` if the checksum has changed
+  (#1185, #1194 by @deviantintegral).
+
 ## v3.25.0 - 2023-05-22
 
 - Support `silent:` when calling another tasks (#680, #1142 by @danquah).
