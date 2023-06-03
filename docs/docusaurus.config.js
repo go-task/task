@@ -31,7 +31,7 @@ const getConfig = async () => {
 
     i18n: {
       defaultLocale: 'en',
-      locales: ['en', 'fr-FR', 'pt-BR', 'ru-RU', 'zh-Hans'],
+      locales: ['en', 'fr-FR', 'pt-BR', 'ru-RU', 'es-ES', 'zh-Hans'],
       localeConfigs: {
         en: {
           label: 'English',
@@ -52,6 +52,11 @@ const getConfig = async () => {
           label: `Pусский (${translationProgress['ru'] || 0}%)`,
           direction: 'ltr',
           htmlLang: 'ru-RU'
+        },
+        'es-ES': {
+          label: `Español (${translationProgress['es-ES'] || 0}%)`,
+          direction: 'ltr',
+          htmlLang: 'es-ES'
         },
         'zh-Hans': {
           label: `简体中文 (${translationProgress['zh-CN'] || 0}%)`,
