@@ -872,6 +872,27 @@ tasks:
       - sleep 5 # long operation like installing packages
 ```
 
+### Ensuring required variables are set
+
+If a task requires certain variables to be set, you can use `requires`. This is 
+useful when it might not be obvious which variables are needed, or if you want 
+to put a message out to users. Some tasks could have dangerous side effects if 
+run with un-set variables.
+
+Using `requires` you specify a list of strings, these strings are variable 
+names which are checked prior to running the task. If any variables are un-set
+the the task will error and not run. Environmental variables are also checked.
+
+```yaml
+version: '3'
+
+tasks:
+  docker-build:
+    cmds:
+      - "docker build {{.IMAGE_NAME}}:{{.IMAGE_TAG}}"
+    requires: [ IMAGE_NAME, IMAGE_TAG ]
+```
+
 ## Variables
 
 When doing interpolation of variables, Task will look for the below. They are
