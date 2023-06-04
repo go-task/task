@@ -1371,7 +1371,7 @@ func TestDynamicVariablesShouldRunOnTheTaskDir(t *testing.T) {
 	tt.Run(t)
 }
 
-func TestDisplaysErrorOnUnsupportedVersion(t *testing.T) {
+func TestDisplaysErrorOnVersion1Schema(t *testing.T) {
 	e := task.Executor{
 		Dir:    "testdata/version/v1",
 		Stdout: io.Discard,
@@ -1379,7 +1379,19 @@ func TestDisplaysErrorOnUnsupportedVersion(t *testing.T) {
 	}
 	err := e.Setup()
 	require.Error(t, err)
-	assert.Equal(t, "task: Taskfile versions prior to v2 are not supported anymore", err.Error())
+	assert.Equal(t, "task: version 1 schemas are no longer supported", err.Error())
+}
+
+func TestDisplaysWarningOnVersion2Schema(t *testing.T) {
+	var buff bytes.Buffer
+	e := task.Executor{
+		Dir:    "testdata/version/v2",
+		Stdout: io.Discard,
+		Stderr: &buff,
+	}
+	err := e.Setup()
+	require.NoError(t, err)
+	assert.Equal(t, "task: version 2 schemas are deprecated and will be removed in a future release\nSee https://github.com/go-task/task/issues/1197 for more details\n", buff.String())
 }
 
 func TestShortTaskNotation(t *testing.T) {
