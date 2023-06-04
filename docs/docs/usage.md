@@ -874,14 +874,16 @@ tasks:
 
 ### Ensuring required variables are set
 
-If a task requires certain variables to be set, you can use `requires`. This is 
-useful when it might not be obvious which variables are needed, or if you want 
-to put a message out to users. Some tasks could have dangerous side effects if 
-run with un-set variables.
+If you want to check that certain variables are set before running a task then
+you can use `requires`. This is useful when might not be clear to users which
+variables are needed, or if you want clear message about what is required. Also
+some tasks could have dangerous side effects if run with un-set variables.
 
-Using `requires` you specify a list of strings, these strings are variable 
-names which are checked prior to running the task. If any variables are un-set
-the the task will error and not run. Environmental variables are also checked.
+Using `requires` you specify a list of strings, these strings are variable names
+which are checked prior to running the task. If any variables are un-set the the
+task will error and not run. Environmental variables are also checked.
+
+> Note. Variables set to empty zero length strings, will pass the `requires` check
 
 ```yaml
 version: '3'
@@ -889,8 +891,10 @@ version: '3'
 tasks:
   docker-build:
     cmds:
-      - "docker build {{.IMAGE_NAME}}:{{.IMAGE_TAG}}"
-    requires: [ IMAGE_NAME, IMAGE_TAG ]
+      - 'docker build . -t {{.IMAGE_NAME}}:{{.IMAGE_TAG}}'
+
+    # Make sure these variables are set before running
+    requires: [IMAGE_NAME, IMAGE_TAG]
 ```
 
 ## Variables
