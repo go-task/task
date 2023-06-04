@@ -17,6 +17,7 @@ type Task struct {
 	Desc                 string
 	Prompt               string
 	Summary              string
+	Requires             []string
 	Aliases              []string
 	Sources              []string
 	Generates            []string
@@ -98,6 +99,7 @@ func (t *Task) UnmarshalYAML(node *yaml.Node) error {
 			IgnoreError   bool `yaml:"ignore_error"`
 			Run           string
 			Platforms     []*Platform
+			Requires      []string
 		}
 		if err := node.Decode(&task); err != nil {
 			return err
@@ -127,6 +129,7 @@ func (t *Task) UnmarshalYAML(node *yaml.Node) error {
 		t.IgnoreError = task.IgnoreError
 		t.Run = task.Run
 		t.Platforms = task.Platforms
+		t.Requires = task.Requires
 		return nil
 	}
 
@@ -170,6 +173,7 @@ func (t *Task) DeepCopy() *Task {
 		IncludedTaskfile:     t.IncludedTaskfile.DeepCopy(),
 		Platforms:            deepcopy.Slice(t.Platforms),
 		Location:             t.Location.DeepCopy(),
+		Requires:             deepcopy.Slice(t.Requires),
 	}
 	return c
 }
