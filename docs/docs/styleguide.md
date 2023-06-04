@@ -214,3 +214,27 @@ tasks:
 ```
 
 This is also done automatically when using included Taskfiles.
+
+## Prefer external scripts over complex multi-line commands
+
+```yaml
+# bad
+version: '3'
+
+tasks:
+  build:
+    cmds:
+      - |
+        for i in $(seq 1 10); do
+          echo $i
+          echo "some other complex logic"
+        done'
+
+# good
+version: '3'
+
+tasks:
+  build:
+    cmds:
+      - ./scripts/my_complex_script.sh
+```
