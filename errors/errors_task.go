@@ -99,18 +99,34 @@ func (err *TaskCalledTooManyTimesError) Code() int {
 	return CodeTaskCalledTooManyTimes
 }
 
-// TaskCancelledError is returned when the user does not accept an optional prompt to continue.
-type TaskCancelledError struct {
+// TaskCancelledByUserError is returned when the user does not accept an optional prompt to continue.
+type TaskCancelledByUserError struct {
 	TaskName string
 }
 
-func (err *TaskCancelledError) Error() string {
+func (err *TaskCancelledByUserError) Error() string {
 	return fmt.Sprintf(
-		`task: %q Cancelled by user`,
+		`task: Task "%q" cancelled by user`,
 		err.TaskName,
 	)
 }
 
-func (err *TaskCancelledError) Code() int {
+func (err *TaskCancelledByUserError) Code() int {
+	return CodeTaskCancelled
+}
+
+// TaskCancelledNoTerminalError is returned when trying to run a task with a prompt in a non-terminal environment.
+type TaskCancelledNoTerminalError struct {
+	TaskName string
+}
+
+func (err *TaskCancelledNoTerminalError) Error() string {
+	return fmt.Sprintf(
+		`task: Task "%q" cancelled because it has a prompt and the environment is not a terminal. Use --yes (-y) to run anyway.`,
+		err.TaskName,
+	)
+}
+
+func (err *TaskCancelledNoTerminalError) Code() int {
 	return CodeTaskCancelled
 }

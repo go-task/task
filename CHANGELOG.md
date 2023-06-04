@@ -8,6 +8,9 @@
   website (#1198 by @pd93).
 - Deprecated `version: 2` schema. This will be removed in the next major release
   (#1197, #1198, #1199 by @pd93).
+- Added a new `prompt:` prop to set a warning prompt to be shown before running
+  a potential dangurous task (#100, #1163 by @MaxCheetham,
+  [Documentation](https://taskfile.dev/usage/#warning-prompts))
 
 ## v3.25.0 - 2023-05-22
 

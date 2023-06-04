@@ -23,6 +23,7 @@ import (
 	"github.com/go-task/task/v3/internal/sort"
 	"github.com/go-task/task/v3/internal/summary"
 	"github.com/go-task/task/v3/internal/templater"
+	"github.com/go-task/task/v3/internal/term"
 	"github.com/go-task/task/v3/taskfile"
 
 	"github.com/sajari/fuzzy"
@@ -59,6 +60,7 @@ type Executor struct {
 	Color       bool
 	Concurrency int
 	Interval    time.Duration
+	AssumesTerm bool
 
 	Stdin  io.Reader
 	Stdout io.Writer
@@ -102,7 +104,6 @@ func (e *Executor) Run(ctx context.Context, calls ...taskfile.Call) error {
 			}
 			return &errors.TaskInternalError{TaskName: call.Task}
 		}
-
 	}
 
 	if e.Summary {
@@ -148,10 +149,13 @@ func (e *Executor) RunTask(ctx context.Context, call taskfile.Call) error {
 	release := e.acquireConcurrencyLimit()
 	defer release()
 
-	// check if the given task has a warning prompt
 	if t.Prompt != "" && !e.AssumeYes {
+		if !e.AssumesTerm && !term.IsTerminal() {
+			return &errors.TaskCancelledNoTerminalError{TaskName: call.Task}
+		}
 
 		e.Logger.Outf(logger.Yellow, "task: %q [y/N]\n", t.Prompt)
+
 		reader := bufio.NewReader(e.Stdin)
 		userInput, err := reader.ReadString('\n')
 		if err != nil {
@@ -160,7 +164,7 @@ func (e *Executor) RunTask(ctx context.Context, call taskfile.Call) error {
 
 		userInput = strings.ToLower(strings.TrimSpace(userInput))
 		if !shouldPromptContinue(userInput) {
-			return &errors.TaskCancelledError{TaskName: call.Task}
+			return &errors.TaskCancelledByUserError{TaskName: call.Task}
 		}
 	}
 
