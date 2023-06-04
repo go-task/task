@@ -89,7 +89,7 @@ type TaskCalledTooManyTimesError struct {
 
 func (err *TaskCalledTooManyTimesError) Error() string {
 	return fmt.Sprintf(
-		`task: maximum task call exceeded (%d) for task %q: probably an cyclic dep or infinite loop`,
+		`task: Maximum task call exceeded (%d) for task %q: probably an cyclic dep or infinite loop`,
 		err.MaximumTaskCall,
 		err.TaskName,
 	)
@@ -97,4 +97,20 @@ func (err *TaskCalledTooManyTimesError) Error() string {
 
 func (err *TaskCalledTooManyTimesError) Code() int {
 	return CodeTaskCalledTooManyTimes
+}
+
+// TaskCancelledError is returned when the user does not accept an optional prompt to continue.
+type TaskCancelledError struct {
+	TaskName string
+}
+
+func (err *TaskCancelledError) Error() string {
+	return fmt.Sprintf(
+		`task: %q Cancelled by user`,
+		err.TaskName,
+	)
+}
+
+func (err *TaskCancelledError) Code() int {
+	return CodeTaskCancelled
 }

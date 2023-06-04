@@ -56,6 +56,7 @@ var flags struct {
 	watch       bool
 	verbose     bool
 	silent      bool
+	assumeYes   bool
 	dry         bool
 	summary     bool
 	exitCode    bool
@@ -113,6 +114,7 @@ func run() error {
 	pflag.BoolVarP(&flags.watch, "watch", "w", false, "Enables watch of the given task.")
 	pflag.BoolVarP(&flags.verbose, "verbose", "v", false, "Enables verbose mode.")
 	pflag.BoolVarP(&flags.silent, "silent", "s", false, "Disables echoing.")
+	pflag.BoolVarP(&flags.assumeYes, "yes", "y", false, "Assume \"yes\" as answer to all prompts.")
 	pflag.BoolVarP(&flags.parallel, "parallel", "p", false, "Executes tasks provided on command line in parallel.")
 	pflag.BoolVarP(&flags.dry, "dry", "n", false, "Compiles and prints tasks in the order that they would be run, without executing them.")
 	pflag.BoolVar(&flags.summary, "summary", false, "Show summary about a task.")
@@ -195,6 +197,7 @@ func run() error {
 		Watch:       flags.watch,
 		Verbose:     flags.verbose,
 		Silent:      flags.silent,
+		AssumeYes:   flags.assumeYes,
 		Dir:         flags.dir,
 		Dry:         flags.dry,
 		Entrypoint:  flags.entrypoint,

@@ -1212,6 +1212,64 @@ tasks:
       - echo "{{.MESSAGE}}"
 ```
 
+## Warning Prompts
+
+Warning Prompts to prompt a user for confirmation before a task is executed.
+
+Below is an example using `prompt` with a dangerous command, that is called between two safe commands
+```yaml
+version: '3'
+
+tasks:
+  example:
+    cmds:
+      - task: not-dangerous
+      - task: dangerous
+      - task: another-not-dangerous
+
+  not-dangerous:
+    cmds:
+      - echo 'not dangerous command.'
+
+  another-not-dangerous:
+    cmds:
+      - echo 'another not dangerous command.'
+
+  dangerous:
+    prompt: This is a dangerous command.. Do you want to continue?
+    cmds:
+      - echo 'dangerous command.'
+
+```
+```bash
+❯ task dangerous
+task: "This is a dangerous command.. Do you want to continue?" [y/N]
+```
+
+### Prompt behaviour
+
+Warning prompts are called before executing a task. If a prompt is denied Task will exit with [Exit code](api_reference.md#exit-codes) 205. If approved, Task will continue as normal.
+
+```bash
+❯ taskd --dir ./testdata/prompt example
+task: [not-dangerous] echo 'not dangerous command.'
+not dangerous command.
+task: "This is a dangerous command.. Do you want to continue?" [y/N]
+y
+task: [dangerous] echo 'dangerous command.'
+dangerous command.
+task: [another-not-dangerous] echo 'another not dangerous command.'
+another not dangerous command.
+```
+
+### Skipping Warning Prompts
+
+To skip warning prompts automatically, you can use the [-y | --yes] option when calling the task. By including this option, all warnings, will be automatically confirmed, and no prompts will be shows.
+
+
+
+
+
 ## Silent mode
 
 Silent mode disables the echoing of commands before Task runs it. For the

@@ -1,11 +1,13 @@
 package task
 
 import (
+	"bufio"
 	"context"
 	"fmt"
 	"io"
 	"os"
 	"runtime"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -34,6 +36,11 @@ const (
 	MaximumTaskCall = 100
 )
 
+func shouldPromptContinue(input string) bool {
+	input = strings.ToLower(strings.TrimSpace(input))
+	return slices.Contains([]string{"y", "yes"}, input)
+}
+
 // Executor executes a Taskfile
 type Executor struct {
 	Taskfile *taskfile.Taskfile
@@ -45,6 +52,7 @@ type Executor struct {
 	Watch       bool
 	Verbose     bool
 	Silent      bool
+	AssumeYes   bool
 	Dry         bool
 	Summary     bool
 	Parallel    bool
@@ -94,6 +102,7 @@ func (e *Executor) Run(ctx context.Context, calls ...taskfile.Call) error {
 			}
 			return &errors.TaskInternalError{TaskName: call.Task}
 		}
+
 	}
 
 	if e.Summary {
@@ -138,6 +147,22 @@ func (e *Executor) RunTask(ctx context.Context, call taskfile.Call) error {
 
 	release := e.acquireConcurrencyLimit()
 	defer release()
+
+	// check if the given task has a warning prompt
+	if t.Prompt != "" && !e.AssumeYes {
+
+		e.Logger.Outf(logger.Yellow, "task: %q [y/N]\n", t.Prompt)
+		reader := bufio.NewReader(e.Stdin)
+		userInput, err := reader.ReadString('\n')
+		if err != nil {
+			return err
+		}
+
+		userInput = strings.ToLower(strings.TrimSpace(userInput))
+		if !shouldPromptContinue(userInput) {
+			return &errors.TaskCancelledError{TaskName: call.Task}
+		}
+	}
 
 	return e.startExecution(ctx, t, func(ctx context.Context) error {
 		if !shouldRunOnCurrentPlatform(t.Platforms) {

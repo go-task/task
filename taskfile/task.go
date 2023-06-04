@@ -15,6 +15,7 @@ type Task struct {
 	Deps                 []*Dep
 	Label                string
 	Desc                 string
+	Prompt               string
 	Summary              string
 	Aliases              []string
 	Sources              []string
@@ -76,6 +77,7 @@ func (t *Task) UnmarshalYAML(node *yaml.Node) error {
 			Deps          []*Dep
 			Label         string
 			Desc          string
+			Prompt        string
 			Summary       string
 			Aliases       []string
 			Sources       []string
@@ -104,6 +106,7 @@ func (t *Task) UnmarshalYAML(node *yaml.Node) error {
 		t.Deps = task.Deps
 		t.Label = task.Label
 		t.Desc = task.Desc
+		t.Prompt = task.Prompt
 		t.Summary = task.Summary
 		t.Aliases = task.Aliases
 		t.Sources = task.Sources
@@ -142,6 +145,7 @@ func (t *Task) DeepCopy() *Task {
 		Deps:                 deepcopy.Slice(t.Deps),
 		Label:                t.Label,
 		Desc:                 t.Desc,
+		Prompt:               t.Prompt,
 		Summary:              t.Summary,
 		Aliases:              deepcopy.Slice(t.Aliases),
 		Sources:              deepcopy.Slice(t.Sources),
