@@ -44,7 +44,7 @@ If `--` is given, all remaning arguments will be assigned to a special
 |       | `--output-group-error-only` | `bool`   | `false`                                      | Swallow command output on zero exit code.                                                                                                                              |
 | `-p`  | `--parallel`                | `bool`   | `false`                                      | Executes tasks provided on command line in parallel.                                                                                                                   |
 | `-s`  | `--silent`                  | `bool`   | `false`                                      | Disables echoing.                                                                                                                                                      |
-| `-y`  | `--yes`                     | `bool`   | `false`                                      | Assume "yes" as answer to all prompts.                                                                                                                                                      |
+| `-y`  | `--yes`                     | `bool`   | `false`                                      | Assume "yes" as answer to all prompts.                                                                                                                                 |
 |       | `--status`                  | `bool`   | `false`                                      | Exits with non-zero exit code if any of the given tasks is not up-to-date.                                                                                             |
 |       | `--summary`                 | `bool`   | `false`                                      | Show summary about a task.                                                                                                                                             |
 | `-t`  | `--taskfile`                | `string` | `Taskfile.yml` or `Taskfile.yaml`            |                                                                                                                                                                        |
@@ -80,8 +80,12 @@ A full list of the exit codes and their descriptions can be found below:
 These codes can also be found in the repository in
 [`errors/errors.go`](https://github.com/go-task/task/blob/main/errors/errors.go).
 
-:::info When Task is run with the `-x`/`--exit-code` flag, the exit code of any
-failed commands will be passed through to the user instead. :::
+:::info
+
+When Task is run with the `-x`/`--exit-code` flag, the exit code of any failed
+commands will be passed through to the user instead.
+
+:::
 
 ## JSON Output
 
@@ -280,10 +284,10 @@ tasks:
 
 #### Dependency
 
-| Attribute | Type                               | Default | Description                                              |
-| --------- | ---------------------------------- | ------- | -------------------------------------------------------- |
-| `task`    | `string`                           |         | The task to be execute as a dependency.                  |
-| `vars`    | [`map[string]Variable`](#variable) |         | Optional additional variables to be passed to this task. |
+| Attribute | Type                               | Default | Description                                                                                                      |
+| --------- | ---------------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------- |
+| `task`    | `string`                           |         | The task to be execute as a dependency.                                                                          |
+| `vars`    | [`map[string]Variable`](#variable) |         | Optional additional variables to be passed to this task.                                                         |
 | `silent`  | `bool`                             | `false` | Hides task name and command from output. The command's output will still be redirected to `STDOUT` and `STDERR`. |
 
 :::tip
