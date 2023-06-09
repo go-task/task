@@ -108,7 +108,7 @@ func run() error {
 	pflag.BoolVarP(&flags.list, "list", "l", false, "Lists tasks with description of current Taskfile.")
 	pflag.BoolVarP(&flags.listAll, "list-all", "a", false, "Lists tasks with or without a description.")
 	pflag.BoolVarP(&flags.listJson, "json", "j", false, "Formats task list as JSON.")
-	pflag.StringVar(&flags.taskSort, "sort", "", "Changes the order of the tasks when listed.")
+	pflag.StringVar(&flags.taskSort, "sort", "", "Changes the order of the tasks when listed. [default|alphanumeric|none].")
 	pflag.BoolVar(&flags.status, "status", false, "Exits with non-zero exit code if any of the given tasks is not up-to-date.")
 	pflag.BoolVarP(&flags.force, "force", "f", false, "Forces execution even when the task is up-to-date.")
 	pflag.BoolVarP(&flags.watch, "watch", "w", false, "Enables watch of the given task.")
