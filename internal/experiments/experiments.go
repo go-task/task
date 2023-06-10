@@ -1,15 +1,23 @@
 package experiments
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"reflect"
 	"strings"
+
+	"github.com/joho/godotenv"
 )
+
+const envPrefix = "TASK_X_"
 
 var Flags struct{}
 
 func Parse() error {
+	if err := readDotEnv(); err != nil {
+		return err
+	}
 	t := reflect.TypeOf(&Flags)
 	v := reflect.ValueOf(&Flags)
 	if t.Elem().Kind() != reflect.Struct {
@@ -34,10 +42,26 @@ func Parse() error {
 func envName(xName string) string {
 	xName = strings.ToUpper(xName)
 	xName = strings.ReplaceAll(xName, " ", "_")
-	xName = fmt.Sprintf("TASK_X_%s", xName)
+	xName = fmt.Sprintf("%s%s", envPrefix, xName)
 	return xName
 }
 
 func parseEnv(xName string) bool {
 	return os.Getenv(envName(xName)) == "1"
+}
+
+func readDotEnv() error {
+	env, err := godotenv.Read()
+	if errors.Is(err, os.ErrNotExist) {
+		return nil
+	} else if err != nil {
+		return err
+	}
+	// If the env var is an experiment, set it.
+	for key, value := range env {
+		if strings.HasPrefix(key, envPrefix) {
+			os.Setenv(key, value)
+		}
+	}
+	return nil
 }
