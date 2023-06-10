@@ -21,13 +21,19 @@ are intended to replace.
 
 You can enable an experimental feature by:
 
-1. Using the `--x-{feature}` flag. This is intended for one-off invocations of
-   Task to test out experimental features. You can also disable a feature by
-   specifying a falsy value such as `--x-{feature}=false`.
-1. Using the `TASK_X_{FEATURE}=1` environment variable. This is intended for
-   permanently enabling experimental features in your environment.
+1. Using the relevant environment variable in front of a task command. For
+   example, `TASK_X_{FEATURE}=1 task {my-task}`. This is intended for one-off
+   invocations of Task to test out experimental features.
+1. Using the relevant environment variable in your "dotfiles" (e.g. `.bashrc`,
+   `.zshrc` etc.). This is intended for permanently enabling experimental
+   features in your environment.
+1. Creating a `.env` file in the same directory as your root Taskfile that
+   contains the relevant environment variables. e.g.
 
-Flags will always override environment variables.
+```shell
+# .env
+TASK_X_FEATURE=1
+```
 
 ## Current Experimental Features and Deprecations
 
@@ -38,11 +44,11 @@ existing Taskfiles to the new behavior.
 
 <!-- EXPERIMENT TEMPLATE - Include sections as necessary...
 
-### ![experiment] <Feature> ([#{issue}](https://github.com/go-task/task/issues/{issue})), ...)
+### ![experiment] {Feature} ([#{issue}](https://github.com/go-task/task/issues/{issue})), ...)
 
-- Flag to enable: `--x-{feature}`
-- Env to enable: `TASK_X_{feature}`
+- Environment variable: `TASK_X_{feature}`
 - Deprecates: {list any existing functionality that will be deprecated by this experiment}
+- Breaks: {list any existing functionality that will be broken by this experiment}
 
 {Short description of the feature}
 
