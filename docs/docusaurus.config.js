@@ -210,6 +210,13 @@ const getConfig = async () => {
                   href: 'https://opencollective.com/task'
                 }
               ]
+            },
+            {
+              items: [
+                {
+                  html: '<a target="_blank" href="https://www.netlify.com"><img src="https://www.netlify.com/v3/img/components/netlify-color-accent.svg" alt="Deploys by Netlify" /></a>'
+                }
+              ]
             }
           ]
         },
