@@ -9,7 +9,7 @@ toc_max_heading_level: 5
 
 ## CLI
 
-Task command line tool has the following syntax:
+La commande Task a la syntaxe suivante :
 
 ```bash
 task [--flags] [tasks...] [-- CLI_ARGS...]
@@ -17,7 +17,7 @@ task [--flags] [tasks...] [-- CLI_ARGS...]
 
 :::tip
 
-If `--` is given, all remaning arguments will be assigned to a special `CLI_ARGS` variable
+Si `--` est renseigné, tous les arguments suivants seront assigné à la variable spéciale `CLI_ARGS`
 
 :::
 
@@ -43,6 +43,7 @@ If `--` is given, all remaning arguments will be assigned to a special `CLI_ARGS
 |       | `--output-group-error-only` | `bool`   | `false`                                      | Swallow command output on zero exit code.                                                                                                                              |
 | `-p`  | `--parallel`                | `bool`   | `false`                                      | Executes tasks provided on command line in parallel.                                                                                                                   |
 | `-s`  | `--silent`                  | `bool`   | `false`                                      | Disables echoing.                                                                                                                                                      |
+| `-y`  | `--yes`                     | `bool`   | `false`                                      | Assume "yes" as answer to all prompts.                                                                                                                                 |
 |       | `--status`                  | `bool`   | `false`                                      | Exits with non-zero exit code if any of the given tasks is not up-to-date.                                                                                             |
 |       | `--summary`                 | `bool`   | `false`                                      | Show summary about a task.                                                                                                                                             |
 | `-t`  | `--taskfile`                | `string` | `Taskfile.yml` or `Taskfile.yaml`            |                                                                                                                                                                        |
@@ -50,7 +51,7 @@ If `--` is given, all remaning arguments will be assigned to a special `CLI_ARGS
 |       | `--version`                 | `bool`   | `false`                                      | Show Task version.                                                                                                                                                     |
 | `-w`  | `--watch`                   | `bool`   | `false`                                      | Enables watch of the given task.                                                                                                                                       |
 
-## Exit Codes
+## Codes de sortie
 
 Task will sometimes exit with specific exit codes. These codes are split into three groups with the following ranges:
 
@@ -72,18 +73,21 @@ A full list of the exit codes and their descriptions can be found below:
 | 202  | The user tried to invoke a task that is internal             |
 | 203  | There a multiple tasks with the same name or alias           |
 | 204  | A task was called too many times                             |
+| 205  | A task was cancelled by the user                             |
 
 These codes can also be found in the repository in [`errors/errors.go`](https://github.com/go-task/task/blob/main/errors/errors.go).
 
 :::info
+
 When Task is run with the `-x`/`--exit-code` flag, the exit code of any failed commands will be passed through to the user instead.
+
 :::
 
 ## JSON Output
 
 When using the `--json` flag in combination with either the `--list` or `--list-all` flags, the output will be a JSON object with the following structure:
 
-```jsonc
+```json
 {
   "tasks": [
     {
@@ -202,6 +206,7 @@ vars:
 | `deps`          | [`[]Dependency`](#dependency)      |                                                       | A list of dependencies of this task. Tasks defined here will run in parallel before this task.                                                                                                                                                                                                           |
 | `label`         | `string`                           |                                                       | Overrides the name of the task in the output when a task is run. Supports variables.                                                                                                                                                                                                                     |
 | `desc`          | `string`                           |                                                       | A short description of the task. This is displayed when calling `task --list`.                                                                                                                                                                                                                           |
+| `prompt`        | `string`                           |                                                       | A prompt that will be presented before a task is run. Declining will cancel running the current and any subsequent tasks.                                                                                                                                                                                |
 | `summary`       | `string`                           |                                                       | A longer description of the task. This is displayed when calling `task --summary [task]`.                                                                                                                                                                                                                |
 | `aliases`       | `[]string`                         |                                                       | A list of alternative names by which the task can be called.                                                                                                                                                                                                                                             |
 | `sources`       | `[]string`                         |                                                       | A list of sources to check before running this task. Relevant for `checksum` and `timestamp` methods. Can be file paths or star globs.                                                                                                                                                                   |

@@ -43,6 +43,7 @@ Se `--` é informado, todos os argumentos remanescentes serão atribuídos a uma
 |            | `--output-group-error-only` | `bool`   | `false`                                                             | Oculta saída dos comandos que terminarem sem erro.                                                                                                                       |
 | `-p`       | `--parallel`                | `bool`   | `false`                                                             | Executa as tarefas fornecidas na linha de comando em paralelo.                                                                                                           |
 | `-s`       | `--silent`                  | `bool`   | `false`                                                             | Desabilita impressão.                                                                                                                                                    |
+| `-y`       | `--yes`                     | `bool`   | `false`                                                             | Assume "yes" as answer to all prompts.                                                                                                                                   |
 |            | `--status`                  | `bool`   | `false`                                                             | Sai com código de saída diferente de zero se alguma das tarefas especificadas não estiver atualizada.                                                                    |
 |            | `--summary`                 | `bool`   | `false`                                                             | Mostrar resumo sobre uma tarefa.                                                                                                                                         |
 | `-t`       | `--taskfile`                | `string` | `Taskfile.yml` ou `Taskfile.yaml`                                   |                                                                                                                                                                          |
@@ -52,7 +53,7 @@ Se `--` é informado, todos os argumentos remanescentes serão atribuídos a uma
 
 ## Códigos de saída
 
-O Task às vezes fecha com códigos de saída específicos. Estes códigos são divididos em três grupos com os seguintes intervalos:
+O Task às vezes fecha com códigos de saída específicos. These codes are split into three groups with the following ranges:
 
 - Erros gerais (0-99)
 - Erros de Taskfile (100-199)
@@ -72,18 +73,21 @@ Uma lista completa dos códigos de saída e suas descrições podem ser encontra
 | 202    | O usuário tentou invocar uma tarefa que é interna           |
 | 203    | Há várias tarefas com o mesmo nome ou apelido               |
 | 204    | Uma tarefa foi chamada muitas vezes                         |
+| 205    | A task was cancelled by the user                            |
 
-Esses códigos também podem ser encontrados no repositório em [`errors/errors.go`](https://github.com/go-task/task/blob/main/errors/errors.go).
+These codes can also be found in the repository in [`errors/errors.go`](https://github.com/go-task/task/blob/main/errors/errors.go).
 
 :::info
+
 When Task is run with the `-x`/`--exit-code` flag, the exit code of any failed commands will be passed through to the user instead.
+
 :::
 
 ## Saída em JSON
 
 Quando estiver usando o modificador `--json` em combinação com o modificador `--list` ou `--list-all`, a saída será um objeto JSON com a seguinte estrutura:
 
-```jsonc
+```json
 {
   "tasks": [
     {
@@ -202,6 +206,7 @@ vars:
 | `deps`          | [`[]Dependency`](#dependency)      |                                                       | A list of dependencies of this task. Tasks defined here will run in parallel before this task.                                                                                                                                                                                                           |
 | `label`         | `string`                           |                                                       | Overrides the name of the task in the output when a task is run. Supports variables.                                                                                                                                                                                                                     |
 | `desc`          | `string`                           |                                                       | A short description of the task. This is displayed when calling `task --list`.                                                                                                                                                                                                                           |
+| `prompt`        | `string`                           |                                                       | A prompt that will be presented before a task is run. Declining will cancel running the current and any subsequent tasks.                                                                                                                                                                                |
 | `summary`       | `string`                           |                                                       | A longer description of the task. This is displayed when calling `task --summary [task]`.                                                                                                                                                                                                                |
 | `aliases`       | `[]string`                         |                                                       | A list of alternative names by which the task can be called.                                                                                                                                                                                                                                             |
 | `sources`       | `[]string`                         |                                                       | A list of sources to check before running this task. Relevant for `checksum` and `timestamp` methods. Can be file paths or star globs.                                                                                                                                                                   |

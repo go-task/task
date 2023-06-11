@@ -1,6 +1,6 @@
 ---
 slug: /translate/
-sidebar_position: 14
+sidebar_position: 12
 ---
 
 # 翻译
