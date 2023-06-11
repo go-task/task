@@ -1,6 +1,6 @@
 ---
 slug: /contributing/
-sidebar_position: 10
+sidebar_position: 11
 ---
 
 # 贡献
@@ -17,6 +17,7 @@ sidebar_position: 10
 
 - **检查已有工作** - 是否已经存在 PR？ 是否存在 Issue 正在讨论您要进行的功能/更改？ 请确保你的工作中确实考虑了这些相关的讨论内容。
 - **向后兼容** - 你的变更是否破坏了已经存在的 Taskfile？ 向后兼容的变更会更容易被合并进去。 您是否可以采取一种方法来保持这种兼容性？ 如果没有，请考虑先提出一个 Issue，以便在您投入时间进行 PR 之前讨论 API 的更改。
+- **Experiments** - If there is no way to make your change backward compatible then there is a procedure to introduce breaking changes into minor versions. We call these "\[experiments\]\[experiments\]". If you're intending to work on an experiment, then please read the \[experiments workflow\]\[experiments-workflow\] document carefully and submit a proposal first.
 
 ## 1. 设置
 
