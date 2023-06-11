@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v3.26.0 = 2023-06-10
 
 - Only rewrite checksum files in `.task` if the checksum has changed (#1185,
   #1194 by @deviantintegral).
