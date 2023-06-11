@@ -508,9 +508,10 @@ func TestStatusChecksum(t *testing.T) {
 			}
 
 			var buff bytes.Buffer
+			tempdir := filepathext.SmartJoin(dir, ".task")
 			e := task.Executor{
 				Dir:     dir,
-				TempDir: filepathext.SmartJoin(dir, ".task"),
+				TempDir: tempdir,
 				Stdout:  &buff,
 				Stderr:  &buff,
 			}
@@ -522,9 +523,19 @@ func TestStatusChecksum(t *testing.T) {
 				require.NoError(t, err)
 			}
 
+			// Capture the modification time, so we can ensure the checksum file
+			// is not regenerated when the hash hasn't changed.
+			s, err := os.Stat(filepathext.SmartJoin(tempdir, "checksum/"+test.task))
+			require.NoError(t, err)
+			time := s.ModTime()
+
 			buff.Reset()
 			require.NoError(t, e.Run(context.Background(), taskfile.Call{Task: test.task}))
 			assert.Equal(t, `task: Task "`+test.task+`" is up to date`+"\n", buff.String())
+
+			s, err = os.Stat(filepathext.SmartJoin(tempdir, "checksum/"+test.task))
+			require.NoError(t, err)
+			assert.Equal(t, time, s.ModTime())
 		})
 	}
 }
@@ -644,6 +655,103 @@ func TestLabelInSummary(t *testing.T) {
 	require.NoError(t, e.Setup())
 	require.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "foo"}))
 	assert.Contains(t, buff.String(), "foobar")
+}
+
+func TestPromptInSummary(t *testing.T) {
+	const dir = "testdata/prompt"
+	tests := []struct {
+		name      string
+		input     string
+		wantError bool
+	}{
+		{"test short approval", "y\n", false},
+		{"test long approval", "yes\n", false},
+		{"test uppercase approval", "Y\n", false},
+		{"test stops task", "n\n", true},
+		{"test junk value stops task", "foobar\n", true},
+		{"test Enter stops task", "\n", true},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			var inBuff bytes.Buffer
+			var outBuff bytes.Buffer
+
+			inBuff.Write([]byte(test.input))
+
+			e := task.Executor{
+				Dir:         dir,
+				Stdin:       &inBuff,
+				Stdout:      &outBuff,
+				AssumesTerm: true,
+			}
+			require.NoError(t, e.Setup())
+
+			err := e.Run(context.Background(), taskfile.Call{Task: "foo"})
+
+			if test.wantError {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestPromptWithIndirectTask(t *testing.T) {
+	const dir = "testdata/prompt"
+	var inBuff bytes.Buffer
+	var outBuff bytes.Buffer
+
+	inBuff.Write([]byte("y\n"))
+
+	e := task.Executor{
+		Dir:         dir,
+		Stdin:       &inBuff,
+		Stdout:      &outBuff,
+		AssumesTerm: true,
+	}
+	require.NoError(t, e.Setup())
+
+	err := e.Run(context.Background(), taskfile.Call{Task: "bar"})
+	assert.Contains(t, outBuff.String(), "show-prompt")
+	require.NoError(t, err)
+}
+
+func TestPromptAssumeYes(t *testing.T) {
+	const dir = "testdata/prompt"
+	tests := []struct {
+		name      string
+		assumeYes bool
+	}{
+		{"--yes flag should skip prompt", true},
+		{"task should raise errors.TaskCancelledError", false},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			var inBuff bytes.Buffer
+			var outBuff bytes.Buffer
+
+			// always cancel the prompt so we can require.Error
+			inBuff.Write([]byte("\n"))
+
+			e := task.Executor{
+				Dir:       dir,
+				Stdin:     &inBuff,
+				Stdout:    &outBuff,
+				AssumeYes: test.assumeYes,
+			}
+			require.NoError(t, e.Setup())
+
+			err := e.Run(context.Background(), taskfile.Call{Task: "foo"})
+
+			if !test.assumeYes {
+				require.Error(t, err)
+				return
+			}
+		})
+	}
 }
 
 func TestNoLabelInList(t *testing.T) {
@@ -1360,7 +1468,7 @@ func TestDynamicVariablesShouldRunOnTheTaskDir(t *testing.T) {
 	tt.Run(t)
 }
 
-func TestDisplaysErrorOnUnsupportedVersion(t *testing.T) {
+func TestDisplaysErrorOnVersion1Schema(t *testing.T) {
 	e := task.Executor{
 		Dir:    "testdata/version/v1",
 		Stdout: io.Discard,
@@ -1368,7 +1476,19 @@ func TestDisplaysErrorOnUnsupportedVersion(t *testing.T) {
 	}
 	err := e.Setup()
 	require.Error(t, err)
-	assert.Equal(t, "task: Taskfile versions prior to v2 are not supported anymore", err.Error())
+	assert.Equal(t, "task: version 1 schemas are no longer supported", err.Error())
+}
+
+func TestDisplaysWarningOnVersion2Schema(t *testing.T) {
+	var buff bytes.Buffer
+	e := task.Executor{
+		Dir:    "testdata/version/v2",
+		Stdout: io.Discard,
+		Stderr: &buff,
+	}
+	err := e.Setup()
+	require.NoError(t, err)
+	assert.Equal(t, "task: version 2 schemas are deprecated and will be removed in a future release\nSee https://github.com/go-task/task/issues/1197 for more details\n", buff.String())
 }
 
 func TestShortTaskNotation(t *testing.T) {
@@ -1903,4 +2023,100 @@ func TestSingleCmdDep(t *testing.T) {
 		},
 	}
 	tt.Run(t)
+}
+
+func TestSilence(t *testing.T) {
+	var buff bytes.Buffer
+	e := task.Executor{
+		Dir:    "testdata/silent",
+		Stdout: &buff,
+		Stderr: &buff,
+		Silent: false,
+	}
+	require.NoError(t, e.Setup())
+
+	// First verify that the silent flag is in place.
+	task, err := e.GetTask(taskfile.Call{Task: "task-test-silent-calls-chatty-silenced"})
+	require.NoError(t, err, "Unable to look up task task-test-silent-calls-chatty-silenced")
+	require.True(t, task.Cmds[0].Silent, "The task task-test-silent-calls-chatty-silenced should have a silent call to chatty")
+
+	// Then test the two basic cases where the task is silent or not.
+	// A silenced task.
+	err = e.Run(context.Background(), taskfile.Call{Task: "silent"})
+	require.NoError(t, err)
+	require.Empty(t, buff.String(), "siWhile running lent: Expected not see output, because the task is silent")
+
+	buff.Reset()
+
+	// A chatty (not silent) task.
+	err = e.Run(context.Background(), taskfile.Call{Task: "chatty"})
+	require.NoError(t, err)
+	require.NotEmpty(t, buff.String(), "chWhile running atty: Expected to see output, because the task is not silent")
+
+	buff.Reset()
+
+	// Then test invoking the two task from other tasks.
+	// A silenced task that calls a chatty task.
+	err = e.Run(context.Background(), taskfile.Call{Task: "task-test-silent-calls-chatty-non-silenced"})
+	require.NoError(t, err)
+	require.NotEmpty(t, buff.String(), "While running task-test-silent-calls-chatty-non-silenced: Expected to see output. The task is silenced, but the called task is not. Silence does not propagate to called tasks.")
+
+	buff.Reset()
+
+	// A silent task that does a silent call to a chatty task.
+	err = e.Run(context.Background(), taskfile.Call{Task: "task-test-silent-calls-chatty-silenced"})
+	require.NoError(t, err)
+	require.Empty(t, buff.String(), "While running task-test-silent-calls-chatty-silenced: Expected not to see output. The task calls chatty task, but the call is silenced.")
+
+	buff.Reset()
+
+	// A chatty task that does a call to a chatty task.
+	err = e.Run(context.Background(), taskfile.Call{Task: "task-test-chatty-calls-chatty-non-silenced"})
+	require.NoError(t, err)
+	require.NotEmpty(t, buff.String(), "While running task-test-chatty-calls-chatty-non-silenced: Expected to see output. Both caller and callee are chatty and not silenced.")
+
+	buff.Reset()
+
+	// A chatty task that does a silenced call to a chatty task.
+	err = e.Run(context.Background(), taskfile.Call{Task: "task-test-chatty-calls-chatty-silenced"})
+	require.NoError(t, err)
+	require.NotEmpty(t, buff.String(), "While running task-test-chatty-calls-chatty-silenced: Expected to see output. Call to a chatty task is silenced, but the parent task is not.")
+
+	buff.Reset()
+
+	// A chatty task with no cmd's of its own that does a silenced call to a chatty task.
+	err = e.Run(context.Background(), taskfile.Call{Task: "task-test-no-cmds-calls-chatty-silenced"})
+	require.NoError(t, err)
+	require.Empty(t, buff.String(), "While running task-test-no-cmds-calls-chatty-silenced: Expected not to see output. While the task itself is not silenced, it does not have any cmds and only does an invocation of a silenced task.")
+
+	buff.Reset()
+
+	// A chatty task that does a silenced invocation of a task.
+	err = e.Run(context.Background(), taskfile.Call{Task: "task-test-chatty-calls-silenced-cmd"})
+	require.NoError(t, err)
+	require.Empty(t, buff.String(), "While running task-test-chatty-calls-silenced-cmd: Expected not to see output. While the task itself is not silenced, its call to the chatty task is silent.")
+
+	buff.Reset()
+
+	// Then test calls via dependencies.
+	// A silent task that depends on a chatty task.
+	err = e.Run(context.Background(), taskfile.Call{Task: "task-test-is-silent-depends-on-chatty-non-silenced"})
+	require.NoError(t, err)
+	require.NotEmpty(t, buff.String(), "While running task-test-is-silent-depends-on-chatty-non-silenced: Expected to see output. The task is silent and depends on a chatty task. Dependencies does not inherit silence.")
+
+	buff.Reset()
+
+	// A silent task that depends on a silenced chatty task.
+	err = e.Run(context.Background(), taskfile.Call{Task: "task-test-is-silent-depends-on-chatty-silenced"})
+	require.NoError(t, err)
+	require.Empty(t, buff.String(), "While running task-test-is-silent-depends-on-chatty-silenced: Expected not to see output. The task is silent and has a silenced dependency on a chatty task.")
+
+	buff.Reset()
+
+	// A chatty task that, depends on a silenced chatty task.
+	err = e.Run(context.Background(), taskfile.Call{Task: "task-test-is-chatty-depends-on-chatty-silenced"})
+	require.NoError(t, err)
+	require.Empty(t, buff.String(), "While running task-test-is-chatty-depends-on-chatty-silenced: Expected not to see output. The task is chatty but does not have commands and has a silenced dependency on a chatty task.")
+
+	buff.Reset()
 }

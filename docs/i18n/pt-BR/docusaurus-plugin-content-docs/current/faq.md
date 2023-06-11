@@ -1,14 +1,11 @@
 ---
 slug: /faq/
-sidebar_position: 5
+sidebar_position: 7
 ---
 
-# FAQ
+# Perguntas frequentes
 
 This page contains a list of frequently asked questions about Task.
-
-- [Why won't my task update my shell environment?](#why-wont-my-task-update-my-shell-environment)
-- ['x' builtin command doesn't work on Windows](#x-builtin-command-doesnt-work-on-windows)
 
 ## Why won't my task update my shell environment?
 
@@ -25,13 +22,59 @@ my-shell-env:
 
 Now run `eval $(task my-shell-env)` and the variables `$FOO` and `$BAR` will be available in your shell.
 
+## I can't reuse my shell in a task's commands
+
+Task runs each command as a separate shell process, so something you do in one command won't effect any future commands. For example, this won't work:
+
+```yaml
+version: '3'
+
+tasks:
+  foo:
+    cmds:
+      - a=foo
+      - echo $a
+      # outputs ""
+```
+
+To work around this you can either use a multiline command:
+
+```yaml
+version: '3'
+
+tasks:
+  foo:
+    cmds:
+      - |
+        a=foo
+        echo $a
+      # outputs "foo"
+```
+
+Or for more complex multi-line commands it is recommended to move your code into a separate file and call that instead:
+
+```yaml
+version: '3'
+
+tasks:
+  foo:
+    cmds:
+      - ./foo-printer.bash
+```
+
+```bash
+#!/bin/bash
+a=foo
+echo $a
+```
+
 ## 'x' builtin command doesn't work on Windows
 
 The default shell on Windows (`cmd` and `powershell`) do not have commands like `rm` and `cp` available as builtins. This means that these commands won't work. If you want to make your Taskfile fully cross-platform, you'll need to work around this limitation using one of the following methods:
 
 - Use the `{{OS}}` function to run an OS-specific script.
 - Use something like `{{if eq OS "windows"}}powershell {{end}}<my_cmd>` to detect windows and run the command in Powershell directly.
-- Use a shell on Windows that supports these commands as builtins, such as [Git Bash](https://gitforwindows.org/) or [WSL](https://learn.microsoft.com/en-us/windows/wsl/install).
+- Use a shell on Windows that supports these commands as builtins, such as [Git Bash][git-bash] or [WSL][wsl].
 
 We want to make improvements to this part of Task and the issues below track this work. Constructive comments and contributions are very welcome!
 
@@ -42,3 +85,5 @@ We want to make improvements to this part of Task and the issues below track thi
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end -->
+[git-bash]: https://gitforwindows.org/
+[wsl]: https://learn.microsoft.com/en-us/windows/wsl/install

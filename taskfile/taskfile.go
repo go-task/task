@@ -6,6 +6,8 @@ import (
 
 	"github.com/Masterminds/semver/v3"
 	"gopkg.in/yaml.v3"
+
+	"github.com/go-task/task/v3/errors"
 )
 
 var (
@@ -70,6 +72,9 @@ func (tf *Taskfile) UnmarshalYAML(node *yaml.Node) error {
 		tf.Interval = taskfile.Interval
 		if tf.Expansions <= 0 {
 			tf.Expansions = 2
+		}
+		if tf.Version == nil {
+			return errors.New("task: 'version' is required")
 		}
 		if tf.Vars == nil {
 			tf.Vars = &Vars{}

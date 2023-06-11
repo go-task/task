@@ -2,8 +2,29 @@
 
 ## Unreleased
 
+- Only rewrite checksum files in `.task` if the checksum has changed (#1185,
+  #1194 by @deviantintegral).
+- Added [experiments documentation](https://taskfile.dev/experiments) to the
+  website (#1198 by @pd93).
+- Deprecated `version: 2` schema. This will be removed in the next major release
+  (#1197, #1198, #1199 by @pd93).
+- Added a new `prompt:` prop to set a warning prompt to be shown before running
+  a potential dangurous task (#100, #1163 by @MaxCheetham,
+  [Documentation](https://taskfile.dev/usage/#warning-prompts))
+
+## v3.25.0 - 2023-05-22
+
+- Support `silent:` when calling another tasks (#680, #1142 by @danquah).
+- Improve PowerShell completion script (#1168 by @trim21).
+- Add more languages to the website menu and show translation progress
+  percentage (#1173 by @misitebao).
 - Starting on this release, official binaries for FreeBSD will be available to
-  download (#1068).
+  download (#1068 by @andreynering).
+- Fix some errors being unintendedly supressed (#1134 by @clintmod).
+- Fix a nil pointer error when `version` is omitted from a Taskfile (#1148,
+  #1149 by @pd93).
+- Fix duplicate error message when a task does not exists (#1141, #1144 by
+  @pd93).
 
 ## v3.24.0 - 2023-04-15
 

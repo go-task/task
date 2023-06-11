@@ -1,43 +1,44 @@
 ---
 slug: /donate/
-sidebar_position: 12
+sidebar_position: 15
 ---
 
-# Donate
+# Поддержать
 
-If you find this project useful, you can consider donating by using one of the channels listed below.
+Если вам нравится этот проект, вы можете подумать о том, чтобы пожертвовать, используя один из способов, перечисленных ниже.
 
-This is just a way of saying "thank you", it won't give you any benefits like higher priority on issues or something similar.
+Это просто способ сказать "спасибо", это не дает вам никаких преимуществ, таких как высший приоритет при рассмотрении проблем или что-то подобное.
 
-Companies who donate at least $50/month will be featured as a "Gold Sponsor" in the website homepage and on the GitHub repository README. Make contact with [@andreynering](https://github.com/andreynering) with the logo you want to be shown. Suspect businesses (gambling, casinos, etc) won't be allowed, though.
+Компании, которые пожертвуют не менее $50 в месяц, будут представлены как "Золотые спонсоры" на главной странице сайта и в README репозитория на GitHub. Свяжитесь с [@andreynering][] и предоставьте ему нужный логотип. Подозрительные бизнесы (связанные с азартными играми, казино и т.д.) не будут допущены к спонсорству.
 
 ## GitHub Sponsors
 
-The preferred way to donate to the maintainers is via GitHub Sponsors. Just use the following links to do your donation:
+Предпочтительный способ пожертвования для сопровождающих — через GitHub Sponsors. Просто используйте следующие ссылки, чтобы сделать пожертвование:
 
 - [@andreynering](https://github.com/sponsors/andreynering)
 - [@pd93](https://github.com/sponsors/pd93)
 
 ## Open Collective
 
-If you prefer [Open Collective](https://opencollective.com/task) you can donate by using these links:
+Если вы предпочитаете [Open Collective](https://opencollective.com/task), вы можете пожертвовать используя следующие ссылки:
 
-- [$2 per month](https://opencollective.com/task/contribute/backer-4034/checkout)
-- [$5 per month](https://opencollective.com/task/contribute/supporter-8404/checkout)
-- [$20 per month](https://opencollective.com/task/contribute/sponsor-4035/checkout)
-- [$50 per month](https://opencollective.com/task/contribute/sponsor-28775/checkout)
-- [Custom value - One-time donation option supported](https://opencollective.com/task/donate)
+- [$2 в месяц](https://opencollective.com/task/contribute/backer-4034/checkout)
+- [$5 в месяц](https://opencollective.com/task/contribute/supporter-8404/checkout)
+- [$20 в месяц](https://opencollective.com/task/contribute/sponsor-4035/checkout)
+- [$50 в месяц](https://opencollective.com/task/contribute/sponsor-28775/checkout)
+- [Любая сумма - Разовое пожертвование](https://opencollective.com/task/donate)
 
 ## PayPal
 
-You can donate to [@andreynering](https://github.com/andreynering) via PayPal as well:
+Вы можете сделать пожертвование [@andreynering][] через PayPal:
 
-- [Any value - One-time donation](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=GSVDU63RKG45A&currency_code=USD&source=url)
+- [Любая сумма - Разовое пожертвование](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=GSVDU63RKG45A&currency_code=USD&source=url)
 
-## PIX (Brazil only)
+## PIX (только для Бразилии)
 
-And if you're Brazilian, you can also donate to [@andreynering](https://github.com/andreynering) via PIX by [using this QR Code](/img/pix.png).
+Если вы из Бразилии, вы можете также пожертвовать [@andreynering][] через PIX [с помощью этого QR-кода](/img/pix.png).
 
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end -->
+[@andreynering]: https://github.com/andreynering

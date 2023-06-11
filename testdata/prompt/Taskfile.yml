@@ -1,0 +1,16 @@
+version: 3
+
+tasks:
+  foo:
+    prompt: Do you want to continue?
+    cmds:
+      - echo 'foo'
+
+  bar:
+    cmds:
+      - task: show-prompt
+
+  show-prompt:
+    prompt: Do you want to continue?
+    cmds:
+      - echo 'show-prompt'

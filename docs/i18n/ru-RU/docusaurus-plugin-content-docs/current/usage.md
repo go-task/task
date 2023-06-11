@@ -3,11 +3,11 @@ slug: /usage/
 sidebar_position: 3
 ---
 
-# Usage
+# Использование
 
-## Getting started
+## Начало работы
 
-Create a file called `Taskfile.yml` in the root of your project. The `cmds` attribute should contain the commands of a task. The example below allows compiling a Go app and uses [esbuild](https://esbuild.github.io/) to concat and minify multiple CSS files into a single one.
+Создайте файл с именем `Taskfile.yml` в корне вашего проекта. Атрибут `cmds` должен содержать команды задачи. Пример ниже позволяет скомпилировать приложение Go и использовать [esbuild](https://esbuild.github.io/) чтобы собрать и минимизировать несколько CSS файлов в один.
 
 ```yaml
 version: '3'
@@ -22,32 +22,32 @@ tasks:
       - esbuild --bundle --minify css/index.css > public/bundle.css
 ```
 
-Running the tasks is as simple as running:
+Запуск задач настолько прост, что достаточно выполнить команду:
 
 ```bash
 task assets build
 ```
 
-Task uses [mvdan.cc/sh](https://mvdan.cc/sh/), a native Go sh interpreter. So you can write sh/bash commands, and it will work even on Windows, where `sh` or `bash` are usually not available. Just remember any executable called must be available by the OS or in PATH.
+Task использует [mvdan.cc/sh](https://mvdan.cc/sh/) - нативный интерпретатор sh на Go. Таким образом, вы можете писать команды sh / bash, и они будут работать даже в Windows, где обычно не доступны `sh` или `bash`. Просто помните, что любой исполняемый файл, который вызывается, должен быть доступен ОС или находиться в переменной PATH.
 
-If you omit a task name, "default" will be assumed.
+Если вы опустите имя задачи, то будет использоваться имя "default".
 
-## Supported file names
+## Поддерживаемые названия файлов
 
-Task will look for the following file names, in order of priority:
+Task будет искать следующие файлы, в порядке приоритета:
 
 - Taskfile.yml
 - Taskfile.yaml
 - Taskfile.dist.yml
 - Taskfile.dist.yaml
 
-The intention of having the `.dist` variants is to allow projects to have one committed version (`.dist`) while still allowing individual users to override the Taskfile by adding an additional `Taskfile.yml` (which would be on `.gitignore`).
+Идея создания вариантов `.dist` заключается в том, чтобы позволить проектам иметь одну фиксированную версию (`.dist`), при этом позволяя отдельным пользователям переопределить Taskfile, добавив дополнительный `Taskfile.yml` (который будет находится в `.gitignore`).
 
-### Running a Taskfile from a subdirectory
+### Запуск Taskfile из поддиректории
 
-If a Taskfile cannot be found in the current working directory, it will walk up the file tree until it finds one (similar to how `git` works). When running Task from a subdirectory like this, it will behave as if you ran it from the directory containing the Taskfile.
+Если Taskfile не найден в текущем рабочем каталоге, он будет искать его вверх по дереву файлов, пока не найдет его (похоже на то, как работает `git`). При запуске Task из подкаталога, он будет работать так, как будто вы запустили его из каталога, содержащего Taskfile.
 
-You can use this functionality along with the special `{{.USER_WORKING_DIR}}` variable to create some very useful reusable tasks. For example, if you have a monorepo with directories for each microservice, you can `cd` into a microservice directory and run a task command to bring it up without having to create multiple tasks or Taskfiles with identical content. For example:
+Вы можете использовать эту функцию вместе со специальной переменной `{{.USER_WORKING_DIR}}`, чтобы создавать переиспользуемые задачи. Например, если у вас есть монорепозиторий с каталогами для каждого микросервиса, вы можете `cd` в директорию микросервиса и запустить команду задачи, без создания нескольких задач или Taskfile с идентичным содержимым. Например:
 
 ```yaml
 version: '3'
@@ -61,20 +61,19 @@ tasks:
       - docker-compose up -d
 ```
 
-In this example, we can run `cd <service>` and `task up` and as long as the `<service>` directory contains a `docker-compose.yml`, the Docker composition will be brought up.
+В этом примере мы можем выполнить `cd <service>` и `task up`, и при условии, что каталог `<service>` содержит файл `docker-compose.yml`, Docker composition будет запущен.
 
-### Running a global Taskfile
+### Запуск глобального Taskfile
 
-If you call Task with the `--global` (alias `-g`) flag, it will look for your home directory instead of your working directory. In short, Task will look for a Taskfile on either `$HOME/Taskfile.yml` or `$HOME/Taskfile.yaml` paths.
+Если вы вызовите Task с помощью флага `--global` (псевдоним `-g`), будет искать ваш домашний каталог вместо рабочего каталога. Проще говоря, Task будет искать в `$HOME/Taskfile.yml` или `$HOME/Taskfile.yaml`.
 
-This is useful to have automation that you can run from anywhere in your system!
+Это полезно, чтобы иметь автоматизацию, которую можно запустить из любого места вашей системы!
 
 :::info
 
+Когда вы запускаете ваш глобальный Taskfile с помощью `-g`, task будут выполняться по умолчанию в директории `$HOME`, а не в вашей рабочей директории!
 
-When running your global Taskfile with `-g`, tasks will run on `$HOME` by default, and not on your working directory!
-
-As mentioned in the previous section, the `{{.USER_WORKING_DIR}}` special variable can be very handy here to run stuff on the directory you're calling `task -g` from.
+Как упоминалось в предыдущем разделе, специальная переменная `{{.USER_WORKING_DIR}}` может быть очень полезной для запуска команд в директории, из которой вы вызываете `task -g`.
 
 ```yaml
 version: '3'
@@ -92,12 +91,11 @@ tasks:
 
 :::
 
-
-## Environment variables
+## Переменные среды
 
 ### Task
 
-You can use `env` to set custom environment variables for a specific task:
+Вы можете использовать `env` для создания своих переменных среды для конкретной task:
 
 ```yaml
 version: '3'
@@ -110,7 +108,7 @@ tasks:
       GREETING: Hey, there!
 ```
 
-Additionally, you can set global environment variables that will be available to all tasks:
+Также, вы можете создавать глобальные переменные окружения, которые будут доступны всем task:
 
 ```yaml
 version: '3'
@@ -126,15 +124,13 @@ tasks:
 
 :::info
 
-
-`env` supports expansion and retrieving output from a shell command just like variables, as you can see in the [Variables](#variables) section.
+`env` поддерживает дополнение и извлечение вывода из команды shell или переменной, вы можете посмотреть в разделе [Переменные](#variables).
 
 :::
 
+### .env файлы
 
-### .env files
-
-You can also ask Task to include `.env` like files by using the `dotenv:` setting:
+Вы также можете попросить Task включать файлы, подобные `.env` используя настройку `dotenv:`:
 
 ```bash title=".env"
 KEYNAME=VALUE
@@ -158,7 +154,7 @@ tasks:
       - echo "Using $KEYNAME and endpoint $ENDPOINT"
 ```
 
-Dotenv files can also be specified at the task level:
+Dotenv файлы также могут быть указаны на уровне task:
 
 ```yaml
 version: '3'
@@ -173,7 +169,7 @@ tasks:
       - echo "Using $KEYNAME and endpoint $ENDPOINT"
 ```
 
-Environment variables specified explicitly at the task-level will override variables defined in dotfiles:
+Переменные окружения, определенные на уровне task, заменят переменные объявленные в dotenv файлах:
 
 ```yaml
 version: '3'
@@ -192,15 +188,13 @@ tasks:
 
 :::info
 
-
-Please note that you are not currently able to use the `dotenv` key inside included Taskfiles.
+Обратите внимание, в данный момент вы не можете использовать ключ `dotenv` во вложенных Taskfile.
 
 :::
 
+## Включение других Taskfile
 
-## Including other Taskfiles
-
-If you want to share tasks between different projects (Taskfiles), you can use the importing mechanism to include other Taskfiles using the `includes` keyword:
+Если вы хотите использовать task в других проектах (Taskfile), вы можете использовать механизм импорта для включения других Taskfile используя ключевое слово `includes`:
 
 ```yaml
 version: '3'
@@ -210,13 +204,13 @@ includes:
   docker: ./DockerTasks.yml
 ```
 
-The tasks described in the given Taskfiles will be available with the informed namespace. So, you'd call `task docs:serve` to run the `serve` task from `documentation/Taskfile.yml` or `task docker:build` to run the `build` task from the `DockerTasks.yml` file.
+Task, описанные в указанных Taskfile, будут доступны с указанным пространством имен. Таким образом, вы можете запустить `serve` task из файла `documentation/Taskfile.yml` с помощью команды `task docs:serve`, или запустить `build` task из файла `DockerTasks.yml` с помощью команды `task docker:build`.
 
-Relative paths are resolved relative to the directory containing the including Taskfile.
+Относительные пути разрешаются относительно каталога, содержащего включающий Taskfile.
 
-### OS-specific Taskfiles
+### Специфичные для ОС Taskfile
 
-With `version: '2'`, task automatically includes any `Taskfile_{{OS}}.yml` if it exists (for example: `Taskfile_windows.yml`, `Taskfile_linux.yml` or `Taskfile_darwin.yml`). Since this behavior was a bit too implicit, it was removed on version 3, but you still can have a similar behavior by explicitly importing these files:
+С помощью `version: '2'` task автоматически включает любой `Taskfile_{{OS}}.yml`, если такой файл существует (например: `Taskfile_windows.yml`, `Taskfile_linux.yml` или `Taskfile_darwin.yml`). Так как такое поведение было несколько неявным, оно было удалено в версии 3. Тем не менее можно получить схожее поведение, явно импортировав соответствующие файлы:
 
 ```yaml
 version: '3'
@@ -225,9 +219,9 @@ includes:
   build: ./Taskfile_{{OS}}.yml
 ```
 
-### Directory of included Taskfile
+### Директория включенного Taskfile
 
-By default, included Taskfile's tasks are run in the current directory, even if the Taskfile is in another directory, but you can force its tasks to run in another directory by using this alternative syntax:
+По умолчанию task включенного Taskfile выполняются в текущем каталоге, даже если Taskfile находится в другом каталоге, но вы можете заставить задачи выполняться в другом каталоге, используя альтернативный синтаксис:
 
 ```yaml
 version: '3'
@@ -240,15 +234,13 @@ includes:
 
 :::info
 
-
-The included Taskfiles must be using the same schema version as the main Taskfile uses.
+Включенные Taskfile должны использовать ту же версию схемы, что и основной Taskfile.
 
 :::
 
+### Опциональные включения
 
-### Optional includes
-
-Includes marked as optional will allow Task to continue execution as normal if the included file is missing.
+Включения, отмеченные как необязательные, позволяют Task продолжать выполнение в нормальном режиме, если включенный файл отсутствует.
 
 ```yaml
 version: '3'
@@ -265,9 +257,9 @@ tasks:
         ./tests/Taskfile.yml does not exist"
 ```
 
-### Internal includes
+### Внутренние включения
 
-Includes marked as internal will set all the tasks of the included file to be internal as well (see the [Internal tasks](#internal-tasks) section below). This is useful when including utility tasks that are not intended to be used directly by the user.
+Включения, отмеченные как internal, устанавливают также все задачи включенного файла как internal (см. секцию [Внутренние task](#внутренние-task) ниже). Это полезно, когда включаются утилитарные task, которые не предназначены для прямого использования пользователем.
 
 ```yaml
 version: '3'
@@ -278,9 +270,9 @@ includes:
     internal: true
 ```
 
-### Vars of included Taskfiles
+### Переменные включенных Taskfile
 
-You can also specify variables when including a Taskfile. This may be useful for having reusable Taskfile that can be tweaked or even included more than once:
+Вы также можете указывать переменные при включении Taskfile. Это может быть полезно для создания переиспользуемого Taskfile, который можно настроить или даже включать более одного раза:
 
 ```yaml
 version: '3'
@@ -297,9 +289,9 @@ includes:
       DOCKER_IMAGE: frontend_image
 ```
 
-### Namespace aliases
+### Псевдонимы пространств имен
 
-When including a Taskfile, you can give the namespace a list of `aliases`. This works in the same way as [task aliases](#task-aliases) and can be used together to create shorter and easier-to-type commands.
+При включении Taskfile, вы можете дать пространству имен список `aliases`. Это работает так же, как и [псевдонимы task](#псевдонимы-task) и может использоваться вместе, чтобы создавать более короткие и легко набираемые команды.
 
 ```yaml
 version: '3'
@@ -312,15 +304,13 @@ includes:
 
 :::info
 
-
-Vars declared in the included Taskfile have preference over the variables in the including Taskfile! If you want a variable in an included Taskfile to be overridable, use the [default function](https://go-task.github.io/slim-sprig/defaults.html): `MY_VAR: '{{.MY_VAR | default "my-default-value"}}'`.
+Переменные, объявленные во включенном Taskfile, имеют приоритет над переменными включающего Taskfile! Если вы хотите, чтобы переменную включенного Taskfile можно было переопределить, используйте [функцию default](https://go-task.github.io/slim-sprig/defaults.html): `MY_VAR: '{{.MY_VAR | default "my-default-value"}}'`.
 
 :::
 
+## Внутренние task
 
-## Internal tasks
-
-Internal tasks are tasks that cannot be called directly by the user. They will not appear in the output when running `task --list|--list-all`. Other tasks may call internal tasks in the usual way. This is useful for creating reusable, function-like tasks that have no useful purpose on the command line.
+Внутренние task - это task, которые не могут быть вызваны напрямую пользователем. Они не будут отображаться в выводе при вызове команды `task --list|--list-all`. Другие task могут вызывать внутренние задачи обычным способом. Это полезно для создания переиспользуемых task, похожих на функции, которые не имеют практического значения при выполнении в командной строке.
 
 ```yaml
 version: '3'
@@ -338,9 +328,9 @@ tasks:
       - docker build -t {{.DOCKER_IMAGE}} .
 ```
 
-## Task directory
+## Директория task
 
-By default, tasks will be executed in the directory where the Taskfile is located. But you can easily make the task run in another folder, informing `dir`:
+По умолчанию, task выполняются в директории, где находится Taskfile. Но вы можете легко заставить task выполниться в другом каталоге, указав `dir`:
 
 ```yaml
 version: '3'
@@ -353,13 +343,13 @@ tasks:
       - caddy
 ```
 
-If the directory does not exist, `task` creates it.
+Если директории не существует, `task` создаст ее.
 
-## Task dependencies
+## Зависимости task
 
-> Dependencies run in parallel, so dependencies of a task should not depend one another. If you want to force tasks to run serially, take a look at the [Calling Another Task](#calling-another-task) section below.
+> Зависимости выполняются параллельно, поэтому зависимости task не должны зависеть друг от друга. Если вы хотите принудительно запустить задачи последовательно, обратите внимание на раздел [Вызов другой task](#вызов-другой-task), описанный ниже.
 
-You may have tasks that depend on others. Just pointing them on `deps` will make them run automatically before running the parent task:
+У вас могут быть task, которые зависят от других. Просто перечислите их в списке `deps`, и они будут автоматически запущены перед запуском родительской task:
 
 ```yaml
 version: '3'
@@ -375,9 +365,9 @@ tasks:
       - esbuild --bundle --minify css/index.css > public/bundle.css
 ```
 
-In the above example, `assets` will always run right before `build` if you run `task build`.
+В примере выше, `assets` будет всегда запускаться перед `build`, если вы запустите `task build`.
 
-A task can have only dependencies and no commands to group tasks together:
+Task может иметь зависимости без команд, чтобы группировать задачи вместе:
 
 ```yaml
 version: '3'
@@ -395,17 +385,15 @@ tasks:
       - esbuild --bundle --minify css/index.css > public/bundle.css
 ```
 
-If there is more than one dependency, they always run in parallel for better performance.
+Если есть более одной зависимости, то они всегда выполняются параллельно для лучшей производительности.
 
 :::tip
 
-
-You can also make the tasks given by the command line run in parallel by using the `--parallel` flag (alias `-p`). Example: `task --parallel js css`.
+Вы также можете запустить несколько task, указанные в командной строке, параллельно, используя флаг `--parallel` (псевдоним `-p`). Например: `task --parallel js css`.
 
 :::
 
-
-If you want to pass information to dependencies, you can do that the same manner as you would to [call another task](#calling-another-task):
+Если вы хотите передать информацию зависимостям, вы можете сделать это таким же образом, как и при [вызове другой task](#вызов-другой-task):
 
 ```yaml
 version: '3'
@@ -417,6 +405,7 @@ tasks:
         vars: { TEXT: 'before 1' }
       - task: echo_sth
         vars: { TEXT: 'before 2' }
+        silent: true
     cmds:
       - echo "after"
 
@@ -492,9 +481,9 @@ tasks:
       - cmd: echo 'Running on all platforms'
 ```
 
-## Calling another task
+## Вызов другой task
 
-When a task has many dependencies, they are executed concurrently. This will often result in a faster build pipeline. However, in some situations, you may need to call other tasks serially. In this case, use the following syntax:
+Когда task имеет много зависимостей, они выполняются параллельно. Это частно приводит к более быстрому построению пайплайна. Однако, в некоторых ситуациях вам может понадобиться вызвать другие task последовательно. В этом случае используйте следующий синтаксис:
 
 ```yaml
 version: '3'
@@ -515,7 +504,7 @@ tasks:
       - echo "Another task"
 ```
 
-Overriding variables in the called task is as simple as informing `vars` attribute:
+Используя атрибуты `vars` и `silent`, вы можете выбирать, передавать ли переменные и включать или выключать [silent mode](#silent-mode) для вызова каждый раз отдельно:
 
 ```yaml
 version: '3'
@@ -531,17 +520,16 @@ tasks:
     cmds:
       - task: greet
         vars: { RECIPIENT: 'Cruel World' }
+        silent: true
 ```
 
-The above syntax is also supported in `deps`.
+Указанный выше синтаксис также поддерживается в `deps`.
 
 :::tip
-
 
 NOTE: If you want to call a task declared in the root Taskfile from within an [included Taskfile](#including-other-taskfiles), add a leading `:` like this: `task: :task-name`.
 
 :::
-
 
 ## Prevent unnecessary work
 
@@ -597,7 +585,6 @@ In situations where you need more flexibility the `status` keyword can be used. 
 
 :::info
 
-
 By default, task stores checksums on a local `.task` directory in the project's directory. Most of the time, you'll want to have this directory on `.gitignore` (or equivalent) so it isn't committed. (If you have a task for code generation that is committed it may make sense to commit the checksum of that task as well, though).
 
 If you want these files to be stored in another directory, you can set a `TASK_TEMP_DIR` environment variable in your machine. It can contain a relative path like `tmp/task` that will be interpreted as relative to the project directory, or an absolute or home path like `/tmp/.task` or `~/.task` (subdirectories will be created for each project).
@@ -608,9 +595,7 @@ export TASK_TEMP_DIR='~/.task'
 
 :::
 
-
 :::info
-
 
 Each task has only one checksum stored for its `sources`. If you want to distinguish a task by any of its input variables, you can add those variables as part of the task's label, and it will be considered a different task.
 
@@ -618,22 +603,17 @@ This is useful if you want to run a task once for each distinct set of inputs un
 
 :::
 
-
 :::tip
-
 
 The method `none` skips any validation and always run the task.
 
 :::
 
-
 :::info
-
 
 For the `checksum` (default) or `timestamp` method to work, it is only necessary to inform the source files. When the `timestamp` method is used, the last time of the running the task is considered as a generate.
 
 :::
-
 
 ### Using programmatic checks to indicate a task is up to date
 
@@ -788,11 +768,9 @@ $ TASK_VARIABLE=a-value task do-something
 
 :::tip
 
-
 A special variable `.TASK` is always available containing the task name.
 
 :::
-
 
 Since some shells do not support the above syntax to set environment variables (Windows) tasks also accept a similar style when not at the beginning of the command.
 
@@ -898,15 +876,13 @@ tasks:
 
 :::info
 
-
 Due to the nature of how the [Go's own `defer` work](https://go.dev/tour/flowcontrol/13), the deferred commands are executed in the reverse order if you schedule multiple of them.
 
 :::
 
-
 ## Go's template engine
 
-Task parse commands as [Go's template engine](https://golang.org/pkg/text/template/) before executing them. Variables are accessible through dot syntax (`.VARNAME`).
+Task parse commands as [Go's template engine][gotemplate] before executing them. Variables are accessible through dot syntax (`.VARNAME`).
 
 All functions by the Go's [slim-sprig lib](https://go-task.github.io/slim-sprig/) are available. The following example gets the current date in a given format:
 
@@ -1036,7 +1012,7 @@ If a summary is missing, the description will be printed. If the task does not h
 
 Please note: _showing the summary will not execute the command_.
 
-## Task aliases
+## Псевдонимы task
 
 Aliases are alternative names for tasks. They can be used to make it easier and quicker to run tasks with long or hard-to-type names. You can use them on the command line, when [calling sub-tasks](#calling-another-task) in your Taskfile and when [including tasks](#including-other-taskfiles) with aliases from another Taskfile. They can also be used together with [namespace aliases](#namespace-aliases).
 
@@ -1076,6 +1052,60 @@ tasks:
     cmds:
       - echo "{{.MESSAGE}}"
 ```
+
+## Warning Prompts
+
+Warning Prompts to prompt a user for confirmation before a task is executed.
+
+Below is an example using `prompt` with a dangerous command, that is called between two safe commands:
+
+```yaml
+version: '3'
+
+tasks:
+  example:
+    cmds:
+      - task: not-dangerous
+      - task: dangerous
+      - task: another-not-dangerous
+
+  not-dangerous:
+    cmds:
+      - echo 'not dangerous command'
+
+  another-not-dangerous:
+    cmds:
+      - echo 'another not dangerous command'
+
+  dangerous:
+    prompt: This is a dangerous command... Do you want to continue?
+    cmds:
+      - echo 'dangerous command'
+```
+
+```bash
+❯ task dangerous
+task: "This is a dangerous command... Do you want to continue?" [y/N]
+```
+
+Warning prompts are called before executing a task. If a prompt is denied Task will exit with [exit code](api_reference.md#exit-codes) 205. If approved, Task will continue as normal.
+
+```bash
+❯ task example
+not dangerous command
+task: "This is a dangerous command. Do you want to continue?" [y/N]
+y
+dangerous command
+another not dangerous command
+```
+
+To skip warning prompts automatically, you can use the `--yes` (alias `-y`) option when calling the task. By including this option, all warnings, will be automatically confirmed, and no prompts will be shown.
+
+:::caution
+
+Tasks with prompts always fail by default on non-terminal environments, like a CI, where an `stdin` won't be available for the user to answer. In cases like, use `--yes` (`-y`) to force all tasks with a prompt to run.
+
+:::
 
 ## Silent mode
 
@@ -1291,11 +1321,9 @@ $ task default
 
 :::tip
 
-
 The `output` option can also be specified by the `--output` or `-o` flags.
 
 :::
-
 
 ## Interactive CLI application
 
@@ -1347,11 +1375,9 @@ tasks:
 
 :::info
 
-
 Keep in mind that not all options are available in the [shell interpreter library](https://github.com/mvdan/sh) that Task uses.
 
 :::
-
 
 ## Watch tasks
 
@@ -1362,3 +1388,4 @@ The default watch interval is 5 seconds, but it's possible to change it by eithe
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end -->
+[gotemplate]: https://golang.org/pkg/text/template/

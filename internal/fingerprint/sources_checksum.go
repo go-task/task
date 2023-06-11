@@ -42,7 +42,7 @@ func (checker *ChecksumChecker) IsUpToDate(t *taskfile.Task) (bool, error) {
 		return false, nil
 	}
 
-	if !checker.dry {
+	if !checker.dry && oldMd5 != newMd5 {
 		_ = os.MkdirAll(filepathext.SmartJoin(checker.tempDir, "checksum"), 0o755)
 		if err = os.WriteFile(checksumFile, []byte(newMd5+"\n"), 0o644); err != nil {
 			return false, err

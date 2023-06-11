@@ -69,6 +69,10 @@
             "description": "A short description of the task. This is displayed when calling `task --list`.",
             "type": "string"
           },
+          "prompt": {
+            "description": "A prompt that will be presented before a task is run. Declining will cancel running the current and any subsequent tasks.",
+            "type": "string"
+          },
           "summary": {
             "description": "A longer description of the task. This is displayed when calling `task --summary [task]`.",
             "type": "string"
@@ -245,6 +249,10 @@
           "vars": {
             "description": "Values passed to the task called",
             "$ref": "#/definitions/3/vars"
+          },
+          "silent": {
+            "description": "Hides task name and command from output. The command's output will still be redirected to `STDOUT` and `STDERR`.",
+            "type": "boolean"
           }
         }
       },

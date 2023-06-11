@@ -468,6 +468,7 @@ tasks:
         vars: { TEXT: 'before 1' }
       - task: echo_sth
         vars: { TEXT: 'before 2' }
+        silent: true
     cmds:
       - echo "after"
 
@@ -574,8 +575,8 @@ tasks:
       - echo "Another task"
 ```
 
-Overriding variables in the called task is as simple as informing `vars`
-attribute:
+Using the `vars` and `silent` attributes you can choose to pass variables and
+toggle [silent mode](#silent-mode) on a call-by-call basis:
 
 ```yaml
 version: '3'
@@ -591,6 +592,7 @@ tasks:
     cmds:
       - task: greet
         vars: { RECIPIENT: 'Cruel World' }
+        silent: true
 ```
 
 The above syntax is also supported in `deps`.
@@ -1209,6 +1211,67 @@ tasks:
     cmds:
       - echo "{{.MESSAGE}}"
 ```
+
+## Warning Prompts
+
+Warning Prompts to prompt a user for confirmation before a task is executed.
+
+Below is an example using `prompt` with a dangerous command, that is called
+between two safe commands:
+
+```yaml
+version: '3'
+
+tasks:
+  example:
+    cmds:
+      - task: not-dangerous
+      - task: dangerous
+      - task: another-not-dangerous
+
+  not-dangerous:
+    cmds:
+      - echo 'not dangerous command'
+
+  another-not-dangerous:
+    cmds:
+      - echo 'another not dangerous command'
+
+  dangerous:
+    prompt: This is a dangerous command... Do you want to continue?
+    cmds:
+      - echo 'dangerous command'
+```
+
+```bash
+❯ task dangerous
+task: "This is a dangerous command... Do you want to continue?" [y/N]
+```
+
+Warning prompts are called before executing a task. If a prompt is denied Task
+will exit with [exit code](api_reference.md#exit-codes) 205. If approved, Task
+will continue as normal.
+
+```bash
+❯ task example
+not dangerous command
+task: "This is a dangerous command. Do you want to continue?" [y/N]
+y
+dangerous command
+another not dangerous command
+```
+
+To skip warning prompts automatically, you can use the `--yes` (alias `-y`)
+option when calling the task. By including this option, all warnings, will be
+automatically confirmed, and no prompts will be shown.
+
+:::caution
+
+Tasks with prompts always fail by default on non-terminal environments, like a
+CI, where an `stdin` won't be available for the user to answer. In cases like,
+use `--yes` (`-y`) to force all tasks with a prompt to run.
+
+:::
 
 ## Silent mode
 

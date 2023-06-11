@@ -89,7 +89,7 @@ type TaskCalledTooManyTimesError struct {
 
 func (err *TaskCalledTooManyTimesError) Error() string {
 	return fmt.Sprintf(
-		`task: maximum task call exceeded (%d) for task %q: probably an cyclic dep or infinite loop`,
+		`task: Maximum task call exceeded (%d) for task %q: probably an cyclic dep or infinite loop`,
 		err.MaximumTaskCall,
 		err.TaskName,
 	)
@@ -97,4 +97,36 @@ func (err *TaskCalledTooManyTimesError) Error() string {
 
 func (err *TaskCalledTooManyTimesError) Code() int {
 	return CodeTaskCalledTooManyTimes
+}
+
+// TaskCancelledByUserError is returned when the user does not accept an optional prompt to continue.
+type TaskCancelledByUserError struct {
+	TaskName string
+}
+
+func (err *TaskCancelledByUserError) Error() string {
+	return fmt.Sprintf(
+		`task: Task "%q" cancelled by user`,
+		err.TaskName,
+	)
+}
+
+func (err *TaskCancelledByUserError) Code() int {
+	return CodeTaskCancelled
+}
+
+// TaskCancelledNoTerminalError is returned when trying to run a task with a prompt in a non-terminal environment.
+type TaskCancelledNoTerminalError struct {
+	TaskName string
+}
+
+func (err *TaskCancelledNoTerminalError) Error() string {
+	return fmt.Sprintf(
+		`task: Task "%q" cancelled because it has a prompt and the environment is not a terminal. Use --yes (-y) to run anyway.`,
+		err.TaskName,
+	)
+}
+
+func (err *TaskCancelledNoTerminalError) Code() int {
+	return CodeTaskCancelled
 }

@@ -1,6 +1,6 @@
 ---
 slug: /styleguide/
-sidebar_position: 6
+sidebar_position: 8
 ---
 
 # 风格指南
@@ -31,7 +31,7 @@ Taskfile.yml
 - `env:`、`dotenv:`
 - `tasks:`
 
-## 使用2 个空格缩进
+## 使用 2 个空格缩进
 
 这是 YAML 文件最常见的约定，Task 同样也遵循它。
 
@@ -207,3 +207,27 @@ tasks:
 ```
 
 这在使用包含的任务文件时也会自动完成。
+
+## Prefer external scripts over complex multi-line commands
+
+```yaml
+# bad
+version: '3'
+
+tasks:
+  build:
+    cmds:
+      - |
+        for i in $(seq 1 10); do
+          echo $i
+          echo "some other complex logic"
+        done'
+
+# good
+version: '3'
+
+tasks:
+  build:
+    cmds:
+      - ./scripts/my_complex_script.sh
+```

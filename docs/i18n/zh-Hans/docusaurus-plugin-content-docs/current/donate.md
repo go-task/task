@@ -1,6 +1,6 @@
 ---
 slug: /donate/
-sidebar_position: 12
+sidebar_position: 15
 ---
 
 # 赞助
@@ -9,7 +9,7 @@ sidebar_position: 12
 
 这只是一种表达“感谢”的方式，它不会给你任何好处，比如在 Issue 上的更高优先级或类似的东西。
 
-每月捐赠至少 50 美元的公司将在网站主页和 GitHub 存储库 README 中被标为“金牌赞助商”。 请与 [@andreynering](https://github.com/andreynering) 联系，说明你希望显示的标志。 不过，可疑的企业（赌博、赌场等）将不被允许。
+每月捐赠至少 50 美元的公司将在网站主页和 GitHub 存储库 README 中被标为“金牌赞助商”。 请与 [@andreynering][] 联系，说明你希望显示的标志。 不过，可疑的企业（赌博、赌场等）将不被允许。
 
 ## GitHub Sponsors
 
@@ -30,14 +30,15 @@ sidebar_position: 12
 
 ## PayPal
 
-你也可以通过 PayPal 向 [@andreynering](https://github.com/andreynering) 捐款。
+你也可以通过 PayPal 向 [@andreynering][] 捐款。
 
 - [任何金额 - 一次性捐款](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=GSVDU63RKG45A&currency_code=USD&source=url)
 
 ## PIX (仅巴西)
 
-如果你是巴西人，你也可以通过 PIX [使用这个QR码](/img/pix.png) 向 [@andreynering](https://github.com/andreynering) 捐款。
+如果你是巴西人，你也可以通过 PIX [使用这个QR码](/img/pix.png) 向 [@andreynering][] 捐款。
 
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end -->
+[@andreynering]: https://github.com/andreynering

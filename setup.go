@@ -250,7 +250,11 @@ func (e *Executor) doVersionChecks() error {
 	*v = *e.Taskfile.Version
 
 	if v.LessThan(taskfile.V2) {
-		return fmt.Errorf(`task: Taskfile versions prior to v2 are not supported anymore`)
+		return fmt.Errorf(`task: version 1 schemas are no longer supported`)
+	}
+
+	if v.LessThan(taskfile.V3) {
+		e.Logger.Errf(logger.Yellow, "task: version 2 schemas are deprecated and will be removed in a future release\nSee https://github.com/go-task/task/issues/1197 for more details\n")
 	}
 
 	// consider as equal to the greater version if round

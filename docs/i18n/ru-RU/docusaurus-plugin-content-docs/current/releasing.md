@@ -1,39 +1,46 @@
 ---
 slug: /releasing/
-sidebar_position: 10
+sidebar_position: 13
 ---
 
-# Releasing
+# Релизы
 
-The release process of Task is done with the help of [GoReleaser](https://goreleaser.com/). You can test the release process locally by calling the `test-release` task of the Taskfile.
+Процесс выпуска новой версии Task осуществляется с помощью [GoReleaser][goreleaser]. Вы можете протестировать процесс релиза новой версии локального, вызвав задачу `test-release` в Taskfile.
 
-[GitHub Actions](https://github.com/go-task/task/actions) should release artifacts automatically when a new Git tag is pushed to master (raw executables and DEB and RPM packages).
+[GitHub Actions](https://github.com/go-task/task/actions) должны автоматически выпускать артефакты, когда создаётся новый Git-тег в `main` ветке (сырые исполняемые файлы и пакеты DEB и RPM).
 
-Since v3.15.0, raw executables can also be reproduced and verified locally by checking out a specific tag and calling `goreleaser build`, using the Go version defined in the above GitHub Actions.
+Начиная с версии 3.15. сырые, необработанные исполняемые файлы также могут быть воспроизведены и проверены локально путем проверки конкретного тега и вызова `goreleaser build`, используя версию Go, определенную в GitHub Actions.
 
 # Homebrew
 
-Goreleaser will automatically push a new commit to the [Formula/go-task.rb](https://github.com/go-task/homebrew-tap/blob/master/Formula/go-task.rb) file in the [Homebrew tap](https://github.com/go-task/homebrew-tap) repository to release the new version.
+Goreleaser автоматически отправит новый коммит в файл [Formula/go-task.rb][gotaskrb] в репозитории [Homebrew tap][homebrewtap] для выпуска новой версии.
 
 # npm
 
-To release to npm update the version in the [`package.json`](https://github.com/go-task/task/blob/master/package.json#L3) file and then run `task npm:publish` to push it.
+Для выпуска npm обновите версию пакета в файле [`package.json`][packagejson] и затем выполнить `задачу npm:publish`, чтобы опубликовать его.
 
 # Snapcraft
 
-The [snap package](https://github.com/go-task/snap) requires to manual steps to release a new version:
+Для выпуска новой версии [Snap пакета][snappackage] необходимо:
 
-- Updating the current version on [snapcraft.yaml](https://github.com/go-task/snap/blob/master/snap/snapcraft.yaml#L2).
-- Moving both `amd64`, `armhf` and `arm64` new artifacts to the stable channel on the [Snapcraft dashboard](https://snapcraft.io/task/releases).
+- Обновить текущую версию в [snapcraft.yaml][snapcraftyaml].
+- Переместить `amd64`, `armhf` и `arm64` артефакты в стабильный канал на панели [Snapcraft][snapcraftdashboard].
 
 # Scoop
 
-Scoop is a command-line package manager for the Windows operating system. Scoop package manifests are maintained by the community. Scoop owners usually take care of updating versions there by editing [this file](https://github.com/ScoopInstaller/Main/blob/master/bucket/task.json). If you think its Task version is outdated, open an issue to let us know.
+Scoop - это менеджер пакетов командной строки для операционной системы Windows. Сообщество поддерживает манифесты пакета Scoop. Владельцы Scoop обычно заботятся об обновлении версий, редактируя [этот файл](https://github.com/ScoopInstaller/Main/blob/master/bucket/task.json). Если вы считаете, что его версия Task устарела, откройте issue, чтобы уведомить нас.
 
 # Nix
 
-Nix is a community owned installation method. Nix package maintainers usually take care of updating versions there by editing [this file](https://github.com/NixOS/nixpkgs/blob/nixos-unstable/pkgs/development/tools/go-task/default.nix). If you think its Task version is outdated, open an issue to let us know.
+Nix - это метод установки, принадлежащий сообществу. Мейнтейнеры Nix пакетов позаботились об обновлении версий, редактируя [этот файл](https://github.com/NixOS/nixpkgs/blob/nixos-unstable/pkgs/development/tools/go-task/default.nix). Если вы считаете, что его версия Task устарела, откройте issue, чтобы уведомить нас.
 
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end -->
+[goreleaser]: https://goreleaser.com/
+[homebrewtap]: https://github.com/go-task/homebrew-tap
+[gotaskrb]: https://github.com/go-task/homebrew-tap/blob/master/Formula/go-task.rb
+[packagejson]: https://github.com/go-task/task/blob/main/package.json#L3
+[snappackage]: https://github.com/go-task/snap
+[snapcraftyaml]: https://github.com/go-task/snap/blob/master/snap/snapcraft.yaml#L2
+[snapcraftdashboard]: https://snapcraft.io/task/releases

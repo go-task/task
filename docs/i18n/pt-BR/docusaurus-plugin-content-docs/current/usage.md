@@ -3,9 +3,9 @@ slug: /usage/
 sidebar_position: 3
 ---
 
-# Usage
+# Guia de Uso
 
-## Getting started
+## Primeiros passos
 
 Create a file called `Taskfile.yml` in the root of your project. The `cmds` attribute should contain the commands of a task. The example below allows compiling a Go app and uses [esbuild](https://esbuild.github.io/) to concat and minify multiple CSS files into a single one.
 
@@ -71,7 +71,6 @@ This is useful to have automation that you can run from anywhere in your system!
 
 :::info
 
-
 When running your global Taskfile with `-g`, tasks will run on `$HOME` by default, and not on your working directory!
 
 As mentioned in the previous section, the `{{.USER_WORKING_DIR}}` special variable can be very handy here to run stuff on the directory you're calling `task -g` from.
@@ -91,7 +90,6 @@ tasks:
 ```
 
 :::
-
 
 ## Environment variables
 
@@ -126,11 +124,9 @@ tasks:
 
 :::info
 
-
 `env` supports expansion and retrieving output from a shell command just like variables, as you can see in the [Variables](#variables) section.
 
 :::
-
 
 ### .env files
 
@@ -192,11 +188,9 @@ tasks:
 
 :::info
 
-
 Please note that you are not currently able to use the `dotenv` key inside included Taskfiles.
 
 :::
-
 
 ## Including other Taskfiles
 
@@ -240,11 +234,9 @@ includes:
 
 :::info
 
-
 The included Taskfiles must be using the same schema version as the main Taskfile uses.
 
 :::
-
 
 ### Optional includes
 
@@ -312,11 +304,9 @@ includes:
 
 :::info
 
-
 Vars declared in the included Taskfile have preference over the variables in the including Taskfile! If you want a variable in an included Taskfile to be overridable, use the [default function](https://go-task.github.io/slim-sprig/defaults.html): `MY_VAR: '{{.MY_VAR | default "my-default-value"}}'`.
 
 :::
-
 
 ## Internal tasks
 
@@ -399,11 +389,9 @@ If there is more than one dependency, they always run in parallel for better per
 
 :::tip
 
-
 You can also make the tasks given by the command line run in parallel by using the `--parallel` flag (alias `-p`). Example: `task --parallel js css`.
 
 :::
-
 
 If you want to pass information to dependencies, you can do that the same manner as you would to [call another task](#calling-another-task):
 
@@ -417,6 +405,7 @@ tasks:
         vars: { TEXT: 'before 1' }
       - task: echo_sth
         vars: { TEXT: 'before 2' }
+        silent: true
     cmds:
       - echo "after"
 
@@ -515,7 +504,7 @@ tasks:
       - echo "Another task"
 ```
 
-Overriding variables in the called task is as simple as informing `vars` attribute:
+Using the `vars` and `silent` attributes you can choose to pass variables and toggle [silent mode](#silent-mode) on a call-by-call basis:
 
 ```yaml
 version: '3'
@@ -531,17 +520,16 @@ tasks:
     cmds:
       - task: greet
         vars: { RECIPIENT: 'Cruel World' }
+        silent: true
 ```
 
 The above syntax is also supported in `deps`.
 
 :::tip
 
-
 NOTE: If you want to call a task declared in the root Taskfile from within an [included Taskfile](#including-other-taskfiles), add a leading `:` like this: `task: :task-name`.
 
 :::
-
 
 ## Prevent unnecessary work
 
@@ -597,7 +585,6 @@ In situations where you need more flexibility the `status` keyword can be used. 
 
 :::info
 
-
 By default, task stores checksums on a local `.task` directory in the project's directory. Most of the time, you'll want to have this directory on `.gitignore` (or equivalent) so it isn't committed. (If you have a task for code generation that is committed it may make sense to commit the checksum of that task as well, though).
 
 If you want these files to be stored in another directory, you can set a `TASK_TEMP_DIR` environment variable in your machine. It can contain a relative path like `tmp/task` that will be interpreted as relative to the project directory, or an absolute or home path like `/tmp/.task` or `~/.task` (subdirectories will be created for each project).
@@ -608,9 +595,7 @@ export TASK_TEMP_DIR='~/.task'
 
 :::
 
-
 :::info
-
 
 Each task has only one checksum stored for its `sources`. If you want to distinguish a task by any of its input variables, you can add those variables as part of the task's label, and it will be considered a different task.
 
@@ -618,22 +603,17 @@ This is useful if you want to run a task once for each distinct set of inputs un
 
 :::
 
-
 :::tip
-
 
 The method `none` skips any validation and always run the task.
 
 :::
 
-
 :::info
-
 
 For the `checksum` (default) or `timestamp` method to work, it is only necessary to inform the source files. When the `timestamp` method is used, the last time of the running the task is considered as a generate.
 
 :::
-
 
 ### Using programmatic checks to indicate a task is up to date
 
@@ -788,11 +768,9 @@ $ TASK_VARIABLE=a-value task do-something
 
 :::tip
 
-
 A special variable `.TASK` is always available containing the task name.
 
 :::
-
 
 Since some shells do not support the above syntax to set environment variables (Windows) tasks also accept a similar style when not at the beginning of the command.
 
@@ -898,15 +876,13 @@ tasks:
 
 :::info
 
-
 Due to the nature of how the [Go's own `defer` work](https://go.dev/tour/flowcontrol/13), the deferred commands are executed in the reverse order if you schedule multiple of them.
 
 :::
 
-
 ## Go's template engine
 
-Task parse commands as [Go's template engine](https://golang.org/pkg/text/template/) before executing them. Variables are accessible through dot syntax (`.VARNAME`).
+Task parse commands as [Go's template engine][gotemplate] before executing them. Variables are accessible through dot syntax (`.VARNAME`).
 
 All functions by the Go's [slim-sprig lib](https://go-task.github.io/slim-sprig/) are available. The following example gets the current date in a given format:
 
@@ -1076,6 +1052,60 @@ tasks:
     cmds:
       - echo "{{.MESSAGE}}"
 ```
+
+## Warning Prompts
+
+Warning Prompts to prompt a user for confirmation before a task is executed.
+
+Below is an example using `prompt` with a dangerous command, that is called between two safe commands:
+
+```yaml
+version: '3'
+
+tasks:
+  example:
+    cmds:
+      - task: not-dangerous
+      - task: dangerous
+      - task: another-not-dangerous
+
+  not-dangerous:
+    cmds:
+      - echo 'not dangerous command'
+
+  another-not-dangerous:
+    cmds:
+      - echo 'another not dangerous command'
+
+  dangerous:
+    prompt: This is a dangerous command... Do you want to continue?
+    cmds:
+      - echo 'dangerous command'
+```
+
+```bash
+❯ task dangerous
+task: "This is a dangerous command... Do you want to continue?" [y/N]
+```
+
+Warning prompts are called before executing a task. If a prompt is denied Task will exit with [exit code](api_reference.md#exit-codes) 205. If approved, Task will continue as normal.
+
+```bash
+❯ task example
+not dangerous command
+task: "This is a dangerous command. Do you want to continue?" [y/N]
+y
+dangerous command
+another not dangerous command
+```
+
+To skip warning prompts automatically, you can use the `--yes` (alias `-y`) option when calling the task. By including this option, all warnings, will be automatically confirmed, and no prompts will be shown.
+
+:::caution
+
+Tasks with prompts always fail by default on non-terminal environments, like a CI, where an `stdin` won't be available for the user to answer. In cases like, use `--yes` (`-y`) to force all tasks with a prompt to run.
+
+:::
 
 ## Silent mode
 
@@ -1291,11 +1321,9 @@ $ task default
 
 :::tip
 
-
 The `output` option can also be specified by the `--output` or `-o` flags.
 
 :::
-
 
 ## Interactive CLI application
 
@@ -1347,11 +1375,9 @@ tasks:
 
 :::info
 
-
 Keep in mind that not all options are available in the [shell interpreter library](https://github.com/mvdan/sh) that Task uses.
 
 :::
-
 
 ## Watch tasks
 
@@ -1362,3 +1388,4 @@ The default watch interval is 5 seconds, but it's possible to change it by eithe
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end -->
+[gotemplate]: https://golang.org/pkg/text/template/

@@ -27,10 +27,10 @@ func (checker *StatusChecker) IsUpToDate(ctx context.Context, t *taskfile.Task) 
 			Env:     env.Get(t),
 		})
 		if err != nil {
-			checker.logger.VerboseOutf(logger.Yellow, "task: status command %s exited non-zero: %s", s, err)
+			checker.logger.VerboseOutf(logger.Yellow, "task: status command %s exited non-zero: %s\n", s, err)
 			return false, nil
 		}
-		checker.logger.VerboseOutf(logger.Yellow, "task: status command %s exited zero", s)
+		checker.logger.VerboseOutf(logger.Yellow, "task: status command %s exited zero\n", s)
 	}
 	return true, nil
 }

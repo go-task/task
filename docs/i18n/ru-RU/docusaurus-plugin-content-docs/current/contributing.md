@@ -1,72 +1,101 @@
 ---
 slug: /contributing/
-sidebar_position: 9
+sidebar_position: 11
 ---
 
-# Contributing
+# Помощь проекту
 
-Contributions to Task are very welcome, but we ask that you read this document before submitting a PR.
+Любой вклад в Task очень приветствуется, но мы просим вас прочитать этот документ, прежде чем отправлять pull request(PR).
 
-## Before you start
+:::note
 
-- **Check existing work** - Is there an existing PR? Are there issues discussing the feature/change you want to make? Please make sure you consider/address these discussions in your work.
-- **Backwards compatibility** - Will your change break existing Taskfiles? It is much more likely that your change will merged if it backwards compatible. Is there an approach you can take that maintains this compatibility? If not, consider opening an issue first so that API changes can be discussed before you invest your time into a PR.
+Этот документ относится к основному репозиторию [Task][task] _и_ [ Task for Visual Studio Code][vscode-task]
 
-## 1. Setup
+:::
 
-- **Go** - Task is written in [Go](https://go.dev). We always support the latest two major Go versions, so make sure your version is recent enough.
-- **Node.js** - [Node.js](https://nodejs.org/en/) is used to host Task's documentation server and is required if you want to run this server locally.
-- **Yarn** - [Yarn](https://yarnpkg.com/) is the Node.js package manager used by Task.
+## Введение
 
-## 2. Making changes
+- **Текущее состояние разработки** - Проверьте уже открытые PR. Есть ли открытые "issues", обсуждающие особенности/изменения, которые вы хотите выполнить? Пожалуйста, убедитесь, что вы учитываете результаты этих обсуждений в своей работе.
+- **Обратная совместимость** - Повлияют ли ваши изменения на уже существующие TaskFile'ы? Скорее всего, ваше изменение будет применено, если оно обладает обратной совместимостью. Существует ли подход, который вы можете использовать для поддержания обратной совместимости? Если нет, откройте проблему(Вот тут ["Issues"](https://github.com/go-task/task/issues)), чтобы изменения API могли быть обсуждены до того, как вы потратите своё время на PR.
+- **Experiments** - If there is no way to make your change backward compatible then there is a procedure to introduce breaking changes into minor versions. We call these "\[experiments\]\[experiments\]". If you're intending to work on an experiment, then please read the \[experiments workflow\]\[experiments-workflow\] document carefully and submit a proposal first.
 
-- **Code style** - Try to maintain the existing code style where possible and ensure that code is formatted by [`gofumpt`](https://github.com/mvdan/gofumpt). We use [`golangci-lint`](https://golangci-lint.run/) in our CI to enforce a consistent style and best-practice. You can use the `task lint` command to run this locally and the `task lint:fix` command to automatically fix any issues that are found.
-- **Documentation** - Ensure that you add/update any relevant documentation. See the [updating documentation](#updating-documentation) section below.
-- **Tests** - Ensure that you add/update any relevant tests and that all tests are passing before submitting the PR. See the [writing tests](#writing-tests) section below.
+## 1. Настройка
 
-### Running your changes
+- **Go** - Task написан на [Go][go]. Мы всегда поддерживаем две последних основных версий Go, поэтому убедитесь, что у вас установлена актуальная версия.
+- **Node.js** - [Node.js][nodejs] используется для хостинга сервера документации Task и требуется для локального запуска этого сервера. Node.js также необходим для того, чтобы внести свой вклад в расширение Visual Studio Code.
+- **Yarn** - [Yarn][yarn] является менеджером пакетов Node.js, используемым в Task.
 
-To run Task with working changes, you can use `go run ./cmd/task`. To run a development build of task against a test Taskfile in `testdata`, you can use `go run ./cmd/task --dir ./testdata/<my_test_dir> <task_name>`.
+## 2. Внести изменения
 
-### Updating documentation
+- **Code style** - Настоятельно рекомендуем поддерживать существующий стиль кода по мере возможности. Код должен быть отформатирован [`gofumpt`][gofumpt] и проверен [`golangci-lint`][golangci-lint] линтером. Любые файлы Markdown или TypeScript должны быть отформатированы с помощью [Prettier][prettier]. Стиль кода внедряется нашим CI для обеспечения того, чтобы у всех был одинаковый стиль кода в рамках проекта. Вы можете использовать команду `task lint` для локальной проверки линтером и `task lint:fix` для автоматического исправления любых обнаруженных проблем.
+- **Документация** - Убедитесь, что вы добавляете/обновляете любую соответствующую документацию. Секцию [обновления документации](#updating-documentation) можно увидеть ниже.
+- **Тесты** - Убедитесь, что вы добавляете/обновляете любые релевантные тесты и что все тесты проходят перед отправкой PR. Секцию [написание тестов](#writing-tests) можно увидеть ниже.
 
-Task uses [Docusaurus](https://docusaurus.io) to host a documentation server. This can be setup and run locally by using `task docs` (requires `nodejs` & `yarn`). All content is written in Markdown and is located in the `docs/docs` directory. All Markdown documents should have an 80 character line wrap limit.
+### Запуск ваших изменений
 
-When making a change, consider whether a change to the [Usage Guide](./usage.md) is necessary. This document contains descriptions and examples of how to use Task features. If you're adding a new feature, try to find an appropriate place to add a new section. If you're updating an existing feature, ensure that the documentation and any examples are up-to-date. Ensure that any examples follow the [Taskfile Styleguide](./styleguide.md).
+Чтобы запустить Task с рабочими изменениями, используйте `go run ./cmd/task`. Для запуска тестовой сборки задачи с Taskfile в `testdata`, вы можете использовать `go run ./cmd/task --dir ./testdata/<my_test_dir> <task_name>`.
 
-If you added a new field, command or flag, ensure that you add it to the [API Reference](./api_reference.md). New fields also need to be added to the [JSON Schema](https://github.com/go-task/task/blob/master/docs/static/schema.json). The descriptions for fields in the API reference and the schema should match.
+Для запуска Task для Visual Studio кода, вы можете открыть проект в VSCode и нажать F5 (или любую другую клавишу, к которой вы привязали функцию отладки). Это откроет новое окно VSCode с запущенным расширением. Мы рекомендуем использовать функцию отладки, так как это позволит вам задать точки останова. Также вы можете запустить пакет задач `task package` для генерации `.vsix` файла, который может быть использован для ручной установки расширения.
 
-### Writing tests
+### Обновление документации
 
-Most of Task's test are held in the `task_test.go` file in the project root and this is where you'll most likely want to add new ones too. Most of these tests also have a subdirectory in the `testdata` directory where any Taskfiles/data required to run the tests are stored.
+Task использует [Docusaurus][docusaurus] для размещения сервера документации. Код для неё находится в основном Task репозитории. Документация может быть настроена и запущена локально с помощью `task docs` (требуется установка `nodejs` & `yarn`). Все содержимое написано в Markdown и находится в директории `docs/docs`. Все документы Markdown должны иметь максимальную длину строки 80 символов (этого требует Prettier).
 
-When making a changes, consider whether new tests are required. These tests should ensure that the functionality you are adding will continue to work in the future. Existing tests may also need updating if you have changed Task's behavior.
+При внесении изменений подумайте, является ли необходимым изменение [Руководства по использованию](./usage.md). Этот документ содержит описания и примеры использования Task функций. Если вы добавляете новую функцию, попробуйте найти подходящее место для добавления новой секции. Если вы обновляете существующую функцию, убедитесь, что документация и любые примеры актуальны. Убедитесь, что любые примеры следуют [Taskfile Styleguide](./styleguide.md).
 
-## 3. Committing your code
+Если вы добавили новое поле, команду или флаг, убедитесь, что вы добавляете его в [Справочник API](./api_reference.md). Новые поля также необходимо добавить в [JSON][json-schema] схему. Описания полей в справочнике API и JSON схеме должны совпадать.
 
-Try to write meaningful commit messages and avoid having too many commits on the PR. Most PRs should likely have a single commit (although for bigger PRs it may be reasonable to split it in a few). Git squash and rebase is your friend!
+### Написание тестов
 
-## 4. Submitting a PR
+Тесты расположены в файле `task_test.go` в корневом каталоге, рекомендуем добавлять новые тесты именно в него. Большинство этих тестов также имеют поддиректорию в `testdata`, где хранятся любые Taskfiles/данные, необходимые для запуска тестов.
 
-- **Describe your changes** - Ensure that you provide a comprehensive description of your changes.
-- **Issue/PR links** - Link any previous work such as related issues or PRs. Please describe how your changes differ to/extend this work.
-- **Examples** - Add any examples that you think are useful to demonstrate the effect of your changes.
-- **Draft PRs** - If your changes are incomplete, but you would like to discuss them, open the PR as a draft and add a comment to start a discussion. Using comments rather than the PR description allows the description to be updated later while preserving any discussions.
+При внесении изменений подумайте о необходимости новых тестов. Эти тесты должны гарантировать, что функционал, который вы добавили, продолжит работу в будущем. Существующие тесты также могут потребовать обновления, если вы изменили поведение Task.
 
-## FAQ
+Вы также можете добавить модульный тест для любых новых функций, которые добавляете. Модульные тесты должны следовать Go соглашению о местоположении в файле `*_test.o` в том же пакете, что и тестируемый код.
 
-> I want to contribute, where do I start?
+## 3. Внесение кода
 
-Take a look at the list of [open issues](https://github.com/go-task/task/issues). We have a [good first issue](https://github.com/go-task/task/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) label for simpler issues that are ideal for first time contributions.
+Попробуйте написать содержательное сообщение к коммиту и не иметь слишком много коммитов в PR. Большинство PR, желательно, должны иметь один коммит (хотя для больших PR может быть разумным разделить его несколько коммитов). Используйте git squash и rebase!
 
-All kinds of contributions are welcome, whether its a typo fix or a shiny new feature. You can also contribute by upvoting/commenting on issues, helping to answer questions or contributing to other [community projects](./community.md).
+Если вы не уверены, как отформатировать ваше сообщение, проверьте [Соглашение о коммитах][conventional-commits]. Этот стиль не используется в проекте, но это хороший способ сделать ваше сообщение для коммита более читаемым и последовательным.
 
-> I'm stuck, where can I get help?
+## 4. Отправка PR
 
-If you have questions, feel free to ask them in the `#help` forum channel on our [Discord server](https://discord.gg/6TY36E39UK) or open a [Discussion](https://github.com/go-task/task/discussions) on GitHub.
+- **Опишите ваши изменения** - Убедитесь, что вы предоставили подробное описание ваших изменений.
+- **Issue/PR ссылки** - Укажите ссылки на предыдущую работу, которая связанна с вашим PR. Пожалуйста, опишите, как ваши изменения изменяют или расширяют эту работу.
+- **Примеры** - Добавьте любые примеры или скриншоты, которые демонстрируют ваши изменения.
+- **Черновик PRs** - Если ваши изменения не закончены, но вы хотели бы обсудить их, открыть PR как черновик и добавьте комментарии, чтобы начать обсуждение. Использование комментариев, а не PR описания позволяет обновить описание позже при сохранении любых обсуждений.
+
+## Ответы на вопросы
+
+> Я хочу внести свой вклад, с чего начать?
+
+Ознакомьтесь со списком [open issues for Task][task-open-issues] или [Task for Visual Studio Code][vscode-task-open-issues]. У нас есть лейбл [good first issue][good-first-issue] для простейших проблем, который идеально подходит для контрибьюторов, который первых вносят свой вклад.
+
+Приветствуются всевозможные вклады, будь то маленький фикс или новая функция. Вы также можете внести свой вклад, комментируя вопросы, помогая ответить на вопросы или внести вклад в другие [проекты сообщества](./community.md).
+
+> Где можно получить помощь?
+
+Если у вас есть вопросы, не стесняйтесь спросить их в канале `#help` на нашем [Discord сервере][discord-server] или откройте [Discussion][discussion] на GitHub.
 
 ---
 
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end -->
+[task]: https://github.com/go-task/task
+[vscode-task]: https://github.com/go-task/vscode-task
+[go]: https://go.dev
+[gofumpt]: https://github.com/mvdan/gofumpt
+[golangci-lint]: https://golangci-lint.run
+[prettier]: https://prettier.io
+[nodejs]: https://nodejs.org/en/
+[yarn]: https://yarnpkg.com/
+[docusaurus]: https://docusaurus.io
+[json-schema]: https://github.com/go-task/task/blob/main/docs/static/schema.json
+[task-open-issues]: https://github.com/go-task/task/issues
+[vscode-task-open-issues]: https://github.com/go-task/vscode-task/issues
+[good-first-issue]: https://github.com/go-task/task/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22
+[discord-server]: https://discord.gg/6TY36E39UK
+[discussion]: https://github.com/go-task/task/discussions
+[conventional-commits]: https://www.conventionalcommits.org

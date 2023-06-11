@@ -1,14 +1,11 @@
 ---
 slug: /faq/
-sidebar_position: 5
+sidebar_position: 7
 ---
 
 # FAQ
 
 This page contains a list of frequently asked questions about Task.
-
-- [Why won't my task update my shell environment?](#why-wont-my-task-update-my-shell-environment)
-- ['x' builtin command doesn't work on Windows](#x-builtin-command-doesnt-work-on-windows)
 
 ## Why won't my task update my shell environment?
 
@@ -29,6 +26,54 @@ my-shell-env:
 
 Now run `eval $(task my-shell-env)` and the variables `$FOO` and `$BAR` will be
 available in your shell.
+
+## I can't reuse my shell in a task's commands
+
+Task runs each command as a separate shell process, so something you do in one
+command won't effect any future commands. For example, this won't work:
+
+```yaml
+version: '3'
+
+tasks:
+  foo:
+    cmds:
+      - a=foo
+      - echo $a
+      # outputs ""
+```
+
+To work around this you can either use a multiline command:
+
+```yaml
+version: '3'
+
+tasks:
+  foo:
+    cmds:
+      - |
+        a=foo
+        echo $a
+      # outputs "foo"
+```
+
+Or for more complex multi-line commands it is recommended to move your code into
+a separate file and call that instead:
+
+```yaml
+version: '3'
+
+tasks:
+  foo:
+    cmds:
+      - ./foo-printer.bash
+```
+
+```bash
+#!/bin/bash
+a=foo
+echo $a
+```
 
 ## 'x' builtin command doesn't work on Windows
 

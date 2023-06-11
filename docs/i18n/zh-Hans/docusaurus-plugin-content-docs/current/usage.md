@@ -71,10 +71,9 @@ tasks:
 
 :::info
 
+当使用 `-g` 运行全局 Taskfile 时，task 将默认在 `$HOME` 上运行，而不是在您的工作目录上！
 
-When running your global Taskfile with `-g`, tasks will run on `$HOME` by default, and not on your working directory!
-
-As mentioned in the previous section, the `{{.USER_WORKING_DIR}}` special variable can be very handy here to run stuff on the directory you're calling `task -g` from.
+如前一节所述，`{{.USER_WORKING_DIR}}` 特殊变量在这里可以非常方便地在您从中调用 `task -g` 的目录中运行内容。
 
 ```yaml
 version: '3'
@@ -91,7 +90,6 @@ tasks:
 ```
 
 :::
-
 
 ## 环境变量
 
@@ -126,11 +124,9 @@ tasks:
 
 :::info
 
-
 `env` 支持扩展和检索 shell 命令的输出，就像变量一样，如您在 [变量](#变量) 部分中看到的那样。
 
 :::
-
 
 ### .env 文件
 
@@ -192,11 +188,9 @@ tasks:
 
 :::info
 
-
 请注意，您目前无法在包含的 Taskfile 中使用 `dotenv` 键。
 
 :::
-
 
 ## 包含其他 Taskfile
 
@@ -210,7 +204,7 @@ includes:
   docker: ./DockerTasks.yml
 ```
 
-给定的 Taskfile 中描述的任务将在指定的命名空间中提供。 因此，您可以从 `documentation/Taskfile.yml` 调用 `task docs:serve` 运行 `serve` task，或者从 `DockerTasks.yml` 文件调用 `task docker:build` 运行 `build` task。
+给定的 Taskfile 中描述的任务将在指定的命名空间中提供。 因此，您可以调用 `task docs:serve` 从 `documentation/Taskfile.yml` 运行 `serve` task，或者调用 `task docker:build` 从 `DockerTasks.yml` 文件运行 `build` task。
 
 相对路径是相对于包含包含 Taskfile 的目录解析的。
 
@@ -240,11 +234,9 @@ includes:
 
 :::info
 
-
 包含的 Taskfile 必须使用与主 Taskfile 使用的相同规则版本。
 
 :::
-
 
 ### 可选 includes
 
@@ -278,7 +270,7 @@ includes:
     internal: true
 ```
 
-### 包含的 Taskfile 的变量
+### 包含 Taskfile 的变量
 
 您还可以在包含 Taskfile 时指定变量。 这对于拥有可以调整甚至多次包含的可重用 Taskfile 可能很有用：
 
@@ -312,15 +304,13 @@ includes:
 
 :::info
 
-
-Vars declared in the included Taskfile have preference over the variables in the including Taskfile! If you want a variable in an included Taskfile to be overridable, use the [default function](https://go-task.github.io/slim-sprig/defaults.html): `MY_VAR: '{{.MY_VAR | default "my-default-value"}}'`.
+在包含的 Taskfile 中声明的变量优先于包含 Taskfile 中的变量！ 如果您希望包含的 Taskfile 中的变量可被覆盖，请使用 [默认方法](https://go-task.github.io/slim-sprig/defaults.html)：`MY_VAR: '{{.MY_VAR | default "my-default-value"}}'`。
 
 :::
 
-
 ## 内部 tasks
 
-Internal tasks are tasks that cannot be called directly by the user. They will not appear in the output when running `task --list|--list-all`. Other tasks may call internal tasks in the usual way. This is useful for creating reusable, function-like tasks that have no useful purpose on the command line.
+内部 task 是用户不能直接调用的 task。 运行 `task --list|--list-all` 时，它们不会出现在输出中。 其他 task 可以照常调用内部 task。 这对于创建在命令行上没有用处的可重用、类似函数的 task 很有用。
 
 ```yaml
 version: '3'
@@ -359,7 +349,7 @@ tasks:
 
 > 依赖项并行运行，因此一项 task 的依赖项不应相互依赖。 如果您想强制任务顺序运行，请查看下面的 [调用另一个 task](#调用另一个-task) 部分。
 
-您可能有依赖于其它的 task。 Just pointing them on `deps` will make them run automatically before running the parent task:
+您可能有依赖于其它的 task。 将它们指向 `deps` 将使它们在运行父 task 之前自动运行：
 
 ```yaml
 version: '3'
@@ -399,13 +389,11 @@ tasks:
 
 :::tip
 
-
-You can also make the tasks given by the command line run in parallel by using the `--parallel` flag (alias `-p`). 例如: `task --parallel js css`。
+您还可以使用 `--parallel` 标志（别名 `-p`）使命令行给出的 task 并行运行。 例如: `task --parallel js css`。
 
 :::
 
-
-If you want to pass information to dependencies, you can do that the same manner as you would to [call another task](#calling-another-task):
+如果你想将信息传递给依赖项，你可以像 [调用另一个 task](#调用另一个-task) 一样以相同的方式进行：
 
 ```yaml
 version: '3'
@@ -417,6 +405,7 @@ tasks:
         vars: { TEXT: 'before 1' }
       - task: echo_sth
         vars: { TEXT: 'before 2' }
+        silent: true
     cmds:
       - echo "after"
 
@@ -427,11 +416,11 @@ tasks:
 
 ## 平台特定的 tasks 和 cmds
 
-If you want to restrict the running of tasks to explicit platforms, this can be achieved using the `platforms:` key. Tasks can be restricted to a specific OS, architecture or a combination of both. On a mismatch, the task or command will be skipped, and no error will be thrown.
+如果您想将 task 的运行限制在明确的平台上，可以使用 `platforms:` 键来实现。 Task 可以限制在特定的操作系统、架构或两者的组合中。 如果不匹配，任务或命令将被跳过，并且不会抛出任何错误。
 
 允许作为 OS 或 Arch 的值是有效的 `GOOS` 和 `GOARCH` 值，正如 [此处](https://github.com/golang/go/blob/master/src/go/build/syslist.go) 的 Go 语言所定义的那样。
 
-The `build-windows` task below will run only on Windows, and on any architecture:
+下面的 `build-windows` task 将仅在 Windows 所有架构上运行：
 
 ```yaml
 version: '3'
@@ -494,7 +483,7 @@ tasks:
 
 ## 调用另一个 task
 
-当一个 task 有很多依赖时，它们是并发执行的。 这通常会导致更快的构建管道。 However, in some situations, you may need to call other tasks serially. 在这种情况下，请使用以下语法：
+当一个 task 有很多依赖时，它们是并发执行的。 这通常会导致更快的构建管道。 但是，在某些情况下，您可能需要串行调用其他 task。 在这种情况下，请使用以下语法：
 
 ```yaml
 version: '3'
@@ -515,7 +504,7 @@ tasks:
       - echo "Another task"
 ```
 
-在被调用 task 中覆盖变量就像通知 `vars` 属性一样简单：
+使用 `vars` 和 `silent` 属性，您可以选择在逐个调用的基础上传递变量和切换 [静默模式](#静默模式)：
 
 ```yaml
 version: '3'
@@ -531,17 +520,16 @@ tasks:
     cmds:
       - task: greet
         vars: { RECIPIENT: 'Cruel World' }
+        silent: true
 ```
 
 `deps` 也支持上述语法。
 
 :::tip
 
-
 注意：如果您想从 [包含的 Taskfile](#包含其他-taskfile) 中调用在根 Taskfile 中声明的 task，请像这样添加 `:` 前缀：`task: :task-name`。
 
 :::
-
 
 ## 减少不必要的工作
 
@@ -575,9 +563,9 @@ tasks:
       - public/bundle.css
 ```
 
-`sources` and `generates` can be files or file patterns. When given, Task will compare the checksum of the source files to determine if it's necessary to run the task. If not, it will just print a message like `Task "js" is up to date`.
+`sources` 和 `generates` 可以配置具体文件或者使用匹配模式。 设置后， Task 会根据源文件的 checksum 来确定是否需要执行当前任务。 如果不需要执行， 则会输出像 `Task "js" is up to date` 这样的信息。
 
-If you prefer this check to be made by the modification timestamp of the files, instead of its checksum (content), just set the `method` property to `timestamp`.
+如果您希望通过文件的修改 timestamp 而不是其 checksum（内容）来进行此检查，只需将 `method` 属性设置为 `timestamp` 即可。
 
 ```yaml
 version: '3'
@@ -597,10 +585,9 @@ tasks:
 
 :::info
 
+默认情况，task 在本地项目的 `.task` 目录保存 checksums 值。 一般都会在 `.gitignore`（或类似配置）中忽略掉这个目录，这样它就不会被提交。 (如果您有一个已提交的代码生成任务，那么提交该任务的校验和也是有意义的)。
 
-By default, task stores checksums on a local `.task` directory in the project's directory. Most of the time, you'll want to have this directory on `.gitignore` (or equivalent) so it isn't committed. (If you have a task for code generation that is committed it may make sense to commit the checksum of that task as well, though).
-
-If you want these files to be stored in another directory, you can set a `TASK_TEMP_DIR` environment variable in your machine. It can contain a relative path like `tmp/task` that will be interpreted as relative to the project directory, or an absolute or home path like `/tmp/.task` or `~/.task` (subdirectories will be created for each project).
+如果你想要将这些文件存储在另一个目录中，你可以在你的机器中设置一个 `TASK_TEMP_DIR` 环境变量。 可以使用相对路径，比如 `tmp/task`，相对项目根目录，也可以用绝对路径、用户目录路径，比如 `/tmp/.task` 或 `~/.task`（每个项目单独创建子目录）。
 
 ```bash
 export TASK_TEMP_DIR='~/.task'
@@ -608,36 +595,29 @@ export TASK_TEMP_DIR='~/.task'
 
 :::
 
-
 :::info
 
+每个 task 只为其 `sources` 存储一个 checksum。 如果您想通过任何输入变量来区分 task，您可以将这些变量添加为 task 标签的一部分，它将被视为不同的 task。
 
-Each task has only one checksum stored for its `sources`. If you want to distinguish a task by any of its input variables, you can add those variables as part of the task's label, and it will be considered a different task.
-
-This is useful if you want to run a task once for each distinct set of inputs until the sources actually change. For example, if the sources depend on the value of a variable, or you if you want the task to rerun if some arguments change even if the source has not.
+如果您想为每个不同的输入集运行一次 task，直到 sources 实际发生变化，这将很有用。 例如，如果 sources 依赖于变量的值，或者您希望在某些参数发生变化时重新运行 task，即使 sources 没有发生变化也是如此。
 
 :::
 
-
 :::tip
-
 
 将 method 设置为 `none` 会跳过任何验证并始终运行任务。
 
 :::
 
-
 :::info
 
-
-For the `checksum` (default) or `timestamp` method to work, it is only necessary to inform the source files. When the `timestamp` method is used, the last time of the running the task is considered as a generate.
+要使 `checksum`（默认）或 `timestamp` 方法起作用，只需要通知 source 文件即可。 当使用 `timestamp` 方法时，最后一次运行 task 被认为是一次生成。
 
 :::
 
+### 使用程序检查来表示任务是最新的
 
-### Using programmatic checks to indicate a task is up to date
-
-Alternatively, you can inform a sequence of tests as `status`. If no error is returned (exit status 0), the task is considered up-to-date:
+或者，您可以通知一系列测试作为 `status`。 如果没有错误返回（退出状态 0），task 被认为是最新的：
 
 ```yaml
 version: '3'
@@ -655,19 +635,19 @@ tasks:
       - test -f directory/file2.txt
 ```
 
-Normally, you would use `sources` in combination with `generates` - but for tasks that generate remote artifacts (Docker images, deploys, CD releases) the checksum source and timestamps require either access to the artifact or for an out-of-band refresh of the `.checksum` fingerprint file.
+通常，您会将 `sources` 与 `generates` 结合使用 - 但对于生成远程工件（Docker 映像、部署、CD 版本）的 task，checksum source 和 timestamps 需要访问工件或 `.checksum` 指纹文件。
 
-Two special variables `{{.CHECKSUM}}` and `{{.TIMESTAMP}}` are available for interpolation within `status` commands, depending on the method assigned to fingerprint the sources. Only `source` globs are fingerprinted.
+两个特殊变量 `{{.CHECKSUM}}` 和 `{{.TIMESTAMP}}` 可用于 `status` 命令中的插值，具体取决于分配给 sources 的指纹方法。 只有 `source` 块才能生成指纹。
 
-Note that the `{{.TIMESTAMP}}` variable is a "live" Go `time.Time` struct, and can be formatted using any of the methods that `time.Time` responds to.
+请注意，`{{.TIMESTAMP}}` 变量是一个“实时”Go `time.Time` 结构，可以使用 `time.Time` 响应的任何方法进行格式化。
 
-See [the Go Time documentation](https://golang.org/pkg/time/) for more information.
+有关详细信息，请参阅 [Go Time 文档](https://golang.org/pkg/time/)。
 
 如果你想强制任务运行，即使是最新的，你也可以使用 `--force` 或 `-f`。
 
-Also, `task --status [tasks]...` will exit with a non-zero exit code if any of the tasks are not up-to-date.
+此外，如果任何 task 不是最新的，`task --status [tasks]...` 将以非零退出代码退出。
 
-`status` can be combined with the [fingerprinting](#by-fingerprinting-locally-generated-files-and-their-sources) to have a task run if either the the source/generated artifacts changes, or the programmatic check fails:
+如果 source/generated 的工件发生变化，或者程序检查失败，`status` 可以与 [指纹](#通过指纹识别本地生成的文件及其来源) 结合以运行任务：
 
 ```yaml
 version: '3'
@@ -691,7 +671,7 @@ tasks:
 
 ### 使用程序检查取消任务及其依赖项的执行
 
-In addition to `status` checks, `preconditions` checks are the logical inverse of `status` checks. That is, if you need a certain set of conditions to be _true_ you can use the `preconditions` stanza. `preconditions` are similar to `status` lines, except they support `sh` expansion, and they SHOULD all return 0.
+除了 `status` 检查之外，`preconditions` 检查是 `status` 检查的逻辑逆过程。 也就是说，如果您需要一组特定的条件为 _true_，您可以使用 `preconditions`。 `preconditions` 类似于 `status` 行，除了它们支持 `sh` 扩展，并且它们应该全部返回 0。
 
 ```yaml
 version: '3'
@@ -709,11 +689,11 @@ tasks:
         msg: "One doesn't equal Zero, Halting"
 ```
 
-Preconditions can set specific failure messages that can tell a user what steps to take using the `msg` field.
+先决条件可以设置特定的失败消息，这些消息可以使用 `msg` 字段告诉用户要采取什么步骤。
 
-If a task has a dependency on a sub-task with a precondition, and that precondition is not met - the calling task will fail. Note that a task executed with a failing precondition will not run unless `--force` is given.
+如果一个 task 依赖于一个具有前提条件的子 task，并且不满足该前提条件 - 调用 task 将失败。 请注意，除非给出 `--force` ，否则以失败的前提条件执行的 task 将不会运行。
 
-Unlike `status`, which will skip a task if it is up to date and continue executing tasks that depend on it, a `precondition` will fail a task, along with any other tasks that depend on it.
+与 `status` 判断 task 是最新状态时会跳过并继续执行不同， `precondition` 失败会导致 task 失败，以及所有依赖它的 task 都会失败。
 
 ```yaml
 version: '3'
@@ -735,13 +715,13 @@ tasks:
 
 ### 在任务运行时限制
 
-If a task executed by multiple `cmds` or multiple `deps` you can control when it is executed using `run`. `run` can also be set at the root of the Taskfile to change the behavior of all the tasks unless explicitly overridden.
+如果 task 由多个 `cmd` 或多个 `deps` 执行，您可以使用 `run` 控制何时执行。 `run` 也可以设置在 Taskfile 的根目录以更改所有任务的行为，除非被明确覆盖。
 
 `run` 支持的值：
 
-- `always` (default) always attempt to invoke the task regardless of the number of previous executions
-- `once` only invoke this task once regardless of the number of references
-- `when_changed` only invokes the task once for each unique set of variables passed into the task
+- `always` （默认）总是尝试调用 task，无论先前执行的次数如何
+- `once` 只调用一次这个任务，不管引用的数量
+- `when_changed` 只为传递给 task 的每个唯一变量集调用一次 task
 
 ```yaml
 version: '3'
@@ -771,14 +751,14 @@ tasks:
 
 ## 变量
 
-在进行变量插值时，Task 将查找以下内容。 They are listed below in order of importance (i.e. most important first):
+在进行变量插值时，Task 将查找以下内容。 它们按权重顺序列在下面（即最重要的第一位）：
 
-- Variables declared in the task definition
-- Variables given while calling a task from another (See [Calling another task](#calling-another-task) above)
-- Variables of the [included Taskfile](#including-other-taskfiles) (when the task is included)
-- Variables of the [inclusion of the Taskfile](#vars-of-included-taskfiles) (when the task is included)
-- Global variables (those declared in the `vars:` option in the Taskfile)
-- Environment variables
+- task 内部定义的变量
+- 被其它 task 调用时传入的变量(查看 [调用另一个 task](#调用另一个-task))
+- [包含其他 Taskfile](#包含其他-taskfile) 中的变量 (当包含其他 task 时)
+- [包含 Taskfile](#包含-taskfile-的变量) 的变量（包含 task 时）
+- 全局变量 (在 Taskfile 的 `vars:` 中声明)
+- 环境变量
 
 使用环境变量传输参数的示例：
 
@@ -788,19 +768,17 @@ $ TASK_VARIABLE=a-value task do-something
 
 :::tip
 
-
-A special variable `.TASK` is always available containing the task name.
+包含任务名称的特殊变量 `.TASK` 始终可用。
 
 :::
 
-
-Since some shells do not support the above syntax to set environment variables (Windows) tasks also accept a similar style when not at the beginning of the command.
+由于某些 shell 不支持上述语法来设置环境变量 (Windows)，task 在不在命令开头时也接受类似的样式。
 
 ```bash
 $ task write-file FILE=file.txt "CONTENT=Hello, World!" print "MESSAGE=All done!"
 ```
 
-Example of locally declared vars:
+本地声明的变量示例：
 
 ```yaml
 version: '3'
@@ -813,7 +791,7 @@ tasks:
       VAR: Hello!
 ```
 
-Example of global vars in a `Taskfile.yml`:
+`Taskfile.yml` 中的全局变量示例：
 
 ```yaml
 version: '3'
@@ -829,7 +807,7 @@ tasks:
 
 ### 动态变量
 
-The below syntax (`sh:` prop in a variable) is considered a dynamic variable. The value will be treated as a command and the output assigned. If there are one or more trailing newlines, the last newline will be trimmed.
+以下语法 (`sh:` prop in a variable) 被认为是动态变量。 该值将被视为命令并产生输出结果用于赋值。 如果有一个或多个尾随换行符，最后一个换行符将被修剪。
 
 ```yaml
 version: '3'
@@ -843,13 +821,13 @@ tasks:
         sh: git log -n 1 --format=%h
 ```
 
-This works for all types of variables.
+这适用于所有类型的变量。
 
 ## 将 CLI 参数转发到 cmds
 
-If `--` is given in the CLI, all following parameters are added to a special `.CLI_ARGS` variable. This is useful to forward arguments to another command.
+如果 `--` 在 CLI 中给出，则所有以下参数都将添加到特殊的 `.CLI_ARGS` 变量中。 这对于将参数转发给另一个命令很有用。
 
-The below example will run `yarn install`.
+下面的示例将运行 `yarn install`。
 
 ```bash
 $ task yarn -- install
@@ -866,9 +844,9 @@ tasks:
 
 ## 使用 `defer` 做 task 清理
 
-With the `defer` keyword, it's possible to schedule cleanup to be run once the task finishes. The difference with just putting it as the last command is that this command will run even when the task fails.
+使用 `defer` 关键字，可以安排在 task 完成后运行清理。 与仅将其作为最后一个命令的不同之处在于，即使 task 失败，该命令也会运行。
 
-In the example below, `rm -rf tmpdir/` will run even if the third command fails:
+在下面的示例中，即使第三个命令失败，`rm -rf tmpdir/` 也会运行：
 
 ```yaml
 version: '3'
@@ -881,7 +859,7 @@ tasks:
       - echo 'Do work on tmpdir/'
 ```
 
-If you want to move the cleanup command into another task, that is possible as well:
+使用其它 task 作为清理任务的命令时，可以这样：
 
 ```yaml
 version: '3'
@@ -898,17 +876,15 @@ tasks:
 
 :::info
 
-
-Due to the nature of how the [Go's own `defer` work](https://go.dev/tour/flowcontrol/13), the deferred commands are executed in the reverse order if you schedule multiple of them.
+由于 [Go 自身的 `defer` 工作方式](https://go.dev/tour/flowcontrol/13) 的性质，如果您安排多个 defer命令，则 defer 命令将以相反的顺序执行。
 
 :::
 
-
 ## Go 的模板引擎
 
-Task parse commands as [Go's template engine](https://golang.org/pkg/text/template/) before executing them. 可以通过点语法 (`.VARNAME`) 访问变量。
+Task 在执行命令之前将命令解析为 [Go 的模板引擎][gotemplate]。 可以通过点语法 (`.VARNAME`) 访问变量。
 
-All functions by the Go's [slim-sprig lib](https://go-task.github.io/slim-sprig/) are available. The following example gets the current date in a given format:
+Go 的 [slim-sprig 库](https://go-task.github.io/slim-sprig/) 的所有功能都可用。 以下示例按照给定格式获取当前日期：
 
 ```yaml
 version: '3'
@@ -921,17 +897,17 @@ tasks:
 
 Task 还增加了以下功能：
 
-- `OS`: Returns the operating system. Possible values are "windows", "linux", "darwin" (macOS) and "freebsd".
-- `ARCH`: return the architecture Task was compiled to: "386", "amd64", "arm" or "s390x".
-- `splitLines`: Splits Unix (\n) and Windows (\r\n) styled newlines.
-- `catLines`: Replaces Unix (\n) and Windows (\r\n) styled newlines with a space.
-- `toSlash`: Does nothing on Unix, but on Windows converts a string from `\` path format to `/`.
-- `fromSlash`: Opposite of `toSlash`. Does nothing on Unix, but on Windows converts a string from `/` path format to `\`.
-- `exeExt`: Returns the right executable extension for the current OS (`".exe"` for Windows, `""` for others).
-- `shellQuote`: Quotes a string to make it safe for use in shell scripts. Task uses [this Go function](https://pkg.go.dev/mvdan.cc/sh/v3@v3.4.0/syntax#Quote) for this. The Bash dialect is assumed.
-- `splitArgs`: Splits a string as if it were a command's arguments. Task uses [this Go function](https://pkg.go.dev/mvdan.cc/sh/v3@v3.4.0/shell#Fields)
+- `OS`：返回操作系统。 可能的值为“windows”、“linux”、“darwin”(macOS) 和“freebsd”。
+- `ARCH`：返回 Task 的编译架构为：“386”、“amd64”、“arm”或“s390x”。
+- `splitLines`：拆分 Unix (\n) 和 Windows (\r\n) 样式的换行符。
+- `catLines`：用空格替换 Unix (\n) 和 Windows (\r\n) 样式的换行符。
+- `toSlash`：在 Unix 上不执行任何操作，但在 Windows 上将字符串从 `\` 路径格式转换为 `/`。
+- `fromSlash`：与 `toSlash` 相反。 在 Unix 上不执行任何操作，但在 Windows 上将字符串从 `/` 路径格式转换为 `\`。
+- `exeExt`：返回当前操作系统的正确可执行文件扩展名（Windows 为`“.exe”`，其他操作系统为`“”`）。
+- `shellQuote`：引用一个字符串以使其在 shell 脚本中安全使用。 Task 为此使用了 [这个 Go 函数](https://pkg.go.dev/mvdan.cc/sh/v3@v3.4.0/syntax#Quote)。 假定使用 Bash 语法。
+- `splitArgs`：将字符串作为命令的参数进行拆分。 Task 使用 [这个 Go 函数](https://pkg.go.dev/mvdan.cc/sh/v3@v3.4.0/shell#Fields)
 
-Example:
+示例：
 
 ```yaml
 version: '3'
@@ -958,7 +934,7 @@ tasks:
 
 ## 帮助
 
-运行 `task --list`（或 `task -l`）列出所有带有描述的任务。 The following Taskfile:
+运行 `task --list`（或 `task -l`）列出所有带有描述的任务。 以下 Taskfile：
 
 ```yaml
 version: '3'
@@ -994,7 +970,7 @@ tasks:
 
 ## 显示任务摘要
 
-运行 `task --summary task-name` 将显示任务的摘要。 The following Taskfile:
+运行 `task --summary task-name` 将显示任务的摘要。 以下 Taskfile：
 
 ```yaml
 version: '3'
@@ -1003,10 +979,10 @@ tasks:
   release:
     deps: [build]
     summary: |
-      发布你的项目到 github
+      Release your project to github
 
-      它将在开始发布之前构建您的项目。
-      请确保您在开始之前已经设置了 GITHUB_TOKEN。
+      It will build your project before starting the release.
+      Please make sure that you have set GITHUB_TOKEN before starting.
     cmds:
       - your-release-tool
 
@@ -1020,10 +996,10 @@ tasks:
 ```
 task: release
 
-发布你的项目到 github
+Release your project to github
 
-它将在开始发布之前构建您的项目。
-请确保您在开始之前已经设置了 GITHUB_TOKEN。
+It will build your project before starting the release.
+Please make sure that you have set GITHUB_TOKEN before starting.
 
 dependencies:
  - build
@@ -1032,13 +1008,13 @@ commands:
  - your-release-tool
 ```
 
-如果缺少摘要，将打印描述。 If the task does not have a summary or a description, a warning is printed.
+如果缺少摘要，将打印描述。 如果任务没有摘要或描述，则会打印一条警告。
 
-Please note: _showing the summary will not execute the command_.
+请注意：_显示摘要不会执行命令_。
 
 ## Task 别名
 
-Aliases 是 task 的替代名称。 它们可以使运行具有长名称或难以键入名称的 task 变得更加容易和快速。 您可以在命令行上使用它们，在您的 Taskfile 中 [调用子任务](#调用另一个-task) 时以及在 [包含来自另一个 Taskfile](#包含其他-taskfile) 的别名 task 时。 They can also be used together with [namespace aliases](#namespace-aliases).
+Aliases 是 task 的替代名称。 它们可以使运行具有长名称或难以键入名称的 task 变得更加容易和快速。 您可以在命令行上使用它们，在您的 Taskfile 中 [调用子任务](#调用另一个-task) 时以及在 [包含来自另一个 Taskfile](#包含其他-taskfile) 的别名 task 时。 它们也可以与 [命名空间别名](#命名空间别名) 一起使用。
 
 ```yaml
 version: '3'
@@ -1057,7 +1033,7 @@ tasks:
 
 ## 覆盖 Task 名称
 
-Sometimes you may want to override the task name printed on the summary, up-to-date messages to STDOUT, etc. In this case, you can just set `label:`, which can also be interpolated with variables:
+有时你可能想覆盖打印在摘要上的 task 名称，最新消息到 STDOUT 等。 在这种情况下，你可以只设置 `label:`，也可以用变量进行插值：
 
 ```yaml
 version: '3'
@@ -1077,9 +1053,63 @@ tasks:
       - echo "{{.MESSAGE}}"
 ```
 
+## Warning Prompts
+
+Warning Prompts to prompt a user for confirmation before a task is executed.
+
+Below is an example using `prompt` with a dangerous command, that is called between two safe commands:
+
+```yaml
+version: '3'
+
+tasks:
+  example:
+    cmds:
+      - task: not-dangerous
+      - task: dangerous
+      - task: another-not-dangerous
+
+  not-dangerous:
+    cmds:
+      - echo 'not dangerous command'
+
+  another-not-dangerous:
+    cmds:
+      - echo 'another not dangerous command'
+
+  dangerous:
+    prompt: This is a dangerous command... Do you want to continue?
+    cmds:
+      - echo 'dangerous command'
+```
+
+```bash
+❯ task dangerous
+task: "This is a dangerous command... Do you want to continue?" [y/N]
+```
+
+Warning prompts are called before executing a task. If a prompt is denied Task will exit with [exit code](api_reference.md#exit-codes) 205. If approved, Task will continue as normal.
+
+```bash
+❯ task example
+not dangerous command
+task: "This is a dangerous command. Do you want to continue?" [y/N]
+y
+dangerous command
+another not dangerous command
+```
+
+To skip warning prompts automatically, you can use the `--yes` (alias `-y`) option when calling the task. By including this option, all warnings, will be automatically confirmed, and no prompts will be shown.
+
+:::caution
+
+Tasks with prompts always fail by default on non-terminal environments, like a CI, where an `stdin` won't be available for the user to answer. In cases like, use `--yes` (`-y`) to force all tasks with a prompt to run.
+
+:::
+
 ## 静默模式
 
-静默模式在 Task 运行命令之前禁用命令回显。 For the following Taskfile:
+静默模式在 Task 运行命令之前禁用命令回显。 对于以下 Taskfile：
 
 ```yaml
 version: '3'
@@ -1157,11 +1187,11 @@ tasks:
 
 ## 试运行模式
 
-Dry run mode (`--dry`) compiles and steps through each task, printing the commands that would be run without executing them. This is useful for debugging your Taskfiles.
+试运行模式 (`--dry`) 编译并逐步完成每个 task，打印将运行但不执行它们的命令。 这对于调试您的 Taskfile 很有用。
 
 ## 忽略错误
 
-您可以选择在命令执行期间忽略错误。 Given the following Taskfile:
+您可以选择在命令执行期间忽略错误。 给定以下 Taskfile：
 
 ```yaml
 version: '3'
@@ -1173,7 +1203,7 @@ tasks:
       - echo "Hello World"
 ```
 
-Task will abort the execution after running `exit 1` because the status code `1` stands for `EXIT_FAILURE`. However, it is possible to continue with execution using `ignore_error`:
+Task 将在运行 `exit 1` 后中止执行，因为状态代码 `1` 代表 `EXIT_FAILURE`。 但是，可以使用 `ignore_error` 继续执行：
 
 ```yaml
 version: '3'
@@ -1186,11 +1216,11 @@ tasks:
       - echo "Hello World"
 ```
 
-`ignore_error` can also be set for a task, which means errors will be suppressed for all commands. Nevertheless, keep in mind that this option will not propagate to other tasks called either by `deps` or `cmds`!
+也可以为 task 设置 `ignore_error`，这意味着所有命令的错误都将被忽略。 不过，请记住，此选项不会传播到由 deps 或 cmds 调用的其他 task！
 
 ## 输出语法
 
-By default, Task just redirects the STDOUT and STDERR of the running commands to the shell in real-time. This is good for having live feedback for logging printed by commands, but the output can become messy if you have multiple commands running simultaneously and printing lots of stuff.
+默认情况下，Task 只是将正在运行的命令的 STDOUT 和 STDERR 实时重定向到 shell。 这有利于通过命令打印日志记录的实时反馈，但如果同时运行多个命令并打印大量内容，输出可能会变得混乱。
 
 为了使其更具可定制性，目前您可以选择三种不同的输出选项：
 
@@ -1211,7 +1241,7 @@ tasks:
 
 `group` 输出将在命令完成后打印一次命令的全部输出，因此您不会对需要很长时间运行的命令有实时反馈。
 
-When using the `group` output, you can optionally provide a templated message to print at the start and end of the group. This can be useful for instructing CI systems to group all of the output for a given task, such as with [GitHub Actions' `::group::` command](https://docs.github.com/en/actions/learn-github-actions/workflow-commands-for-github-actions#grouping-log-lines) or [Azure Pipelines](https://docs.microsoft.com/en-us/azure/devops/pipelines/scripts/logging-commands?expand=1&view=azure-devops&tabs=bash#formatting-commands).
+使用 `group` 输出时，您可以选择提供模板化消息以在组的开始和结束处打印。 这对于指示 CI 系统对给定任务的所有输出进行分组非常有用，例如使用 [GitHub Actions 的 `::group::` 命令](https://docs.github.com/en/actions/learn-github-actions/workflow-commands-for-github-actions#grouping-log-lines) 或 [Azure Pipelines](https://docs.microsoft.com/en-us/azure/devops/pipelines/scripts/logging-commands?expand=1&view=azure-devops&tabs=bash#formatting-commands)。
 
 ```yaml
 version: '3'
@@ -1235,7 +1265,7 @@ Hello, World!
 ::endgroup::
 ```
 
-When using the `group` output, you may swallow the output of the executed command on standard output and standard error if it does not fail (zero exit code).
+使用 `group` 输出时，如果没有失败（零退出代码），您可以在标准输出和标准错误上执行命令的输出。
 
 ```yaml
 version: '3'
@@ -1258,7 +1288,7 @@ output-of-errors
 task: Failed to run task "errors": exit status 1
 ```
 
-The `prefix` output will prefix every line printed by a command with `[task-name]` as the prefix, but you can customize the prefix for a command with the `prefix:` attribute:
+`prefix` 输出将为命令打印的每一行添加前缀 `[task-name]` 作为前缀，但您可以使用 `prefix:` 属性自定义命令的前缀：
 
 ```yaml
 version: '3'
@@ -1291,17 +1321,15 @@ $ task default
 
 :::tip
 
-
-The `output` option can also be specified by the `--output` or `-o` flags.
+`output` 选项也可以由 `--output` 或 `-o` 标志指定。
 
 :::
 
-
 ## 交互式 CLI 应用
 
-When running interactive CLI applications inside Task they can sometimes behave weirdly, especially when the [output mode](#output-syntax) is set to something other than `interleaved` (the default), or when interactive apps are run in parallel with other tasks.
+Task 执行包含交互式的命令时有时会出现奇怪的结果， 尤其当 [输出模式](#输出语法) 设置的不是 `interleaved` （默认）， 或者当交互式应用与其它 task 并发执行时。
 
-The `interactive: true` tells Task this is an interactive application and Task will try to optimize for it:
+`interactive: true` 告诉 Task 这是一个交互式应用程序，Task 将尝试针对它进行优化：
 
 ```yaml
 version: '3'
@@ -1313,11 +1341,11 @@ tasks:
     interactive: true
 ```
 
-If you still have problems running an interactive app through Task, please open an issue about it.
+如果您在通过 Task 运行交互式应用程序时仍然遇到问题，请打开一个关于它的 Issue。
 
 ## 短 Task 语法
 
-Starting on Task v3, you can now write tasks with a shorter syntax if they have the default settings (e.g. no custom `env:`, `vars:`, `desc:`, `silent:` , etc):
+从 Task v3 开始，如果 task 具有默认设置（例如：没有自定义 `env:`、`vars:`、`desc:`、`silent:` 等），您现在可以使用更短的语法编写task：
 
 ```yaml
 version: '3'
@@ -1332,7 +1360,7 @@ tasks:
 
 ## `set` 和 `shopt`
 
-It's possible to specify options to the [`set`](https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html) and [`shopt`](https://www.gnu.org/software/bash/manual/html_node/The-Shopt-Builtin.html) builtins. This can be added at global, task or command level.
+可以为 [`set`](https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html) 和 [`shopt`](https://www.gnu.org/software/bash/manual/html_node/The-Shopt-Builtin.html) 内置函数指定选项。 这可以在全局、task 或命令级别添加。
 
 ```yaml
 version: '3'
@@ -1347,18 +1375,17 @@ tasks:
 
 :::info
 
-
-Keep in mind that not all options are available in the [shell interpreter library](https://github.com/mvdan/sh) that Task uses.
+请记住，并非所有选项在 Task 使用的 [shell 解释器库](https://github.com/mvdan/sh) 中都可用。
 
 :::
 
+## 观察 task
 
-## 观察任务
+使用 `--watch` 或 `-w` 参数可以观察文件变化，然后重新执行 task。 这需要配置 `sources` 属性，task 才知道观察哪些文件。
 
-With the flags `--watch` or `-w` task will watch for file changes and run the task again. This requires the `sources` attribute to be given, so task knows which files to watch.
-
-The default watch interval is 5 seconds, but it's possible to change it by either setting `interval: '500ms'` in the root of the Taskfile passing it as an argument like `--interval=500ms`.
+默认监控的时间间隔是 5 秒，但可以通过 Taskfile 中根属性 `interval: '500ms'` 设置，也可以通过命令行 参数 `--interval=500ms` 设置。
 
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end -->
+[gotemplate]: https://golang.org/pkg/text/template/

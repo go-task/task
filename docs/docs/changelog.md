@@ -1,9 +1,22 @@
 ---
 slug: /changelog/
-sidebar_position: 7
+sidebar_position: 9
 ---
 
 # Changelog
+
+## v3.25.0 - 2023-05-22
+
+- Support `silent:` when calling another tasks ([#680](https://github.com/go-task/task/issues/680), [#1142](https://github.com/go-task/task/issues/1142) by [@danquah](https://github.com/danquah)).
+- Improve PowerShell completion script ([#1168](https://github.com/go-task/task/issues/1168) by [@trim21](https://github.com/trim21)).
+- Add more languages to the website menu and show translation progress
+  percentage ([#1173](https://github.com/go-task/task/issues/1173) by [@misitebao](https://github.com/misitebao)).
+- Starting on this release, official binaries for FreeBSD will be available to
+  download ([#1068](https://github.com/go-task/task/issues/1068) by [@andreynering](https://github.com/andreynering)).
+- Fix some errors being unintendedly supressed ([#1134](https://github.com/go-task/task/issues/1134) by [@clintmod](https://github.com/clintmod)).
+- Fix a nil pointer error when `version` is omitted from a Taskfile ([#1148](https://github.com/go-task/task/issues/1148),
+  [#1149](https://github.com/go-task/task/issues/1149) by [@pd93](https://github.com/pd93)).
+- Fix duplicate error message when a task does not exists ([#1141](https://github.com/go-task/task/issues/1141), [#1144](https://github.com/go-task/task/issues/1144) by [@pd93](https://github.com/pd93)).
 
 ## v3.24.0 - 2023-04-15
 

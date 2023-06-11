@@ -8,8 +8,9 @@ import (
 
 // Dep is a task dependency
 type Dep struct {
-	Task string
-	Vars *Vars
+	Task   string
+	Vars   *Vars
+	Silent bool
 }
 
 func (d *Dep) DeepCopy() *Dep {
@@ -35,14 +36,16 @@ func (d *Dep) UnmarshalYAML(node *yaml.Node) error {
 
 	case yaml.MappingNode:
 		var taskCall struct {
-			Task string
-			Vars *Vars
+			Task   string
+			Vars   *Vars
+			Silent bool
 		}
 		if err := node.Decode(&taskCall); err != nil {
 			return err
 		}
 		d.Task = taskCall.Task
 		d.Vars = taskCall.Vars
+		d.Silent = taskCall.Silent
 		return nil
 	}
 

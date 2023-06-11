@@ -46,6 +46,7 @@ func (e *Executor) compiledTask(call taskfile.Call, evaluateShVars bool) (*taskf
 		Task:                 origTask.Task,
 		Label:                r.Replace(origTask.Label),
 		Desc:                 r.Replace(origTask.Desc),
+		Prompt:               r.Replace(origTask.Prompt),
 		Summary:              r.Replace(origTask.Summary),
 		Aliases:              origTask.Aliases,
 		Sources:              r.ReplaceSlice(origTask.Sources),
@@ -142,8 +143,9 @@ func (e *Executor) compiledTask(call taskfile.Call, evaluateShVars bool) (*taskf
 				continue
 			}
 			new.Deps = append(new.Deps, &taskfile.Dep{
-				Task: r.Replace(dep.Task),
-				Vars: r.ReplaceVars(dep.Vars),
+				Task:   r.Replace(dep.Task),
+				Vars:   r.ReplaceVars(dep.Vars),
+				Silent: dep.Silent,
 			})
 		}
 	}
