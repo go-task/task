@@ -20,17 +20,17 @@ func TestArgsV3(t *testing.T) {
 		{
 			Args: []string{"task-a", "task-b", "task-c"},
 			ExpectedCalls: []taskfile.Call{
-				{Task: "task-a"},
-				{Task: "task-b"},
-				{Task: "task-c"},
+				{Task: "task-a", Direct: true},
+				{Task: "task-b", Direct: true},
+				{Task: "task-c", Direct: true},
 			},
 		},
 		{
 			Args: []string{"task-a", "FOO=bar", "task-b", "task-c", "BAR=baz", "BAZ=foo"},
 			ExpectedCalls: []taskfile.Call{
-				{Task: "task-a"},
-				{Task: "task-b"},
-				{Task: "task-c"},
+				{Task: "task-a", Direct: true},
+				{Task: "task-b", Direct: true},
+				{Task: "task-c", Direct: true},
 			},
 			ExpectedGlobals: &taskfile.Vars{
 				OrderedMap: orderedmap.FromMapWithOrder(
@@ -46,7 +46,7 @@ func TestArgsV3(t *testing.T) {
 		{
 			Args: []string{"task-a", "CONTENT=with some spaces"},
 			ExpectedCalls: []taskfile.Call{
-				{Task: "task-a"},
+				{Task: "task-a", Direct: true},
 			},
 			ExpectedGlobals: &taskfile.Vars{
 				OrderedMap: orderedmap.FromMapWithOrder(
@@ -60,8 +60,8 @@ func TestArgsV3(t *testing.T) {
 		{
 			Args: []string{"FOO=bar", "task-a", "task-b"},
 			ExpectedCalls: []taskfile.Call{
-				{Task: "task-a"},
-				{Task: "task-b"},
+				{Task: "task-a", Direct: true},
+				{Task: "task-b", Direct: true},
 			},
 			ExpectedGlobals: &taskfile.Vars{
 				OrderedMap: orderedmap.FromMapWithOrder(
@@ -75,19 +75,19 @@ func TestArgsV3(t *testing.T) {
 		{
 			Args: nil,
 			ExpectedCalls: []taskfile.Call{
-				{Task: "default"},
+				{Task: "default", Direct: true},
 			},
 		},
 		{
 			Args: []string{},
 			ExpectedCalls: []taskfile.Call{
-				{Task: "default"},
+				{Task: "default", Direct: true},
 			},
 		},
 		{
 			Args: []string{"FOO=bar", "BAR=baz"},
 			ExpectedCalls: []taskfile.Call{
-				{Task: "default"},
+				{Task: "default", Direct: true},
 			},
 			ExpectedGlobals: &taskfile.Vars{
 				OrderedMap: orderedmap.FromMapWithOrder(
@@ -122,16 +122,17 @@ func TestArgsV2(t *testing.T) {
 		{
 			Args: []string{"task-a", "task-b", "task-c"},
 			ExpectedCalls: []taskfile.Call{
-				{Task: "task-a"},
-				{Task: "task-b"},
-				{Task: "task-c"},
+				{Task: "task-a", Direct: true},
+				{Task: "task-b", Direct: true},
+				{Task: "task-c", Direct: true},
 			},
 		},
 		{
 			Args: []string{"task-a", "FOO=bar", "task-b", "task-c", "BAR=baz", "BAZ=foo"},
 			ExpectedCalls: []taskfile.Call{
 				{
-					Task: "task-a",
+					Task:   "task-a",
+					Direct: true,
 					Vars: &taskfile.Vars{
 						OrderedMap: orderedmap.FromMapWithOrder(
 							map[string]taskfile.Var{
@@ -141,9 +142,10 @@ func TestArgsV2(t *testing.T) {
 						),
 					},
 				},
-				{Task: "task-b"},
+				{Task: "task-b", Direct: true},
 				{
-					Task: "task-c",
+					Task:   "task-c",
+					Direct: true,
 					Vars: &taskfile.Vars{
 						OrderedMap: orderedmap.FromMapWithOrder(
 							map[string]taskfile.Var{
@@ -160,7 +162,8 @@ func TestArgsV2(t *testing.T) {
 			Args: []string{"task-a", "CONTENT=with some spaces"},
 			ExpectedCalls: []taskfile.Call{
 				{
-					Task: "task-a",
+					Task:   "task-a",
+					Direct: true,
 					Vars: &taskfile.Vars{
 						OrderedMap: orderedmap.FromMapWithOrder(
 							map[string]taskfile.Var{
@@ -175,8 +178,8 @@ func TestArgsV2(t *testing.T) {
 		{
 			Args: []string{"FOO=bar", "task-a", "task-b"},
 			ExpectedCalls: []taskfile.Call{
-				{Task: "task-a"},
-				{Task: "task-b"},
+				{Task: "task-a", Direct: true},
+				{Task: "task-b", Direct: true},
 			},
 			ExpectedGlobals: &taskfile.Vars{
 				OrderedMap: orderedmap.FromMapWithOrder(
@@ -190,19 +193,19 @@ func TestArgsV2(t *testing.T) {
 		{
 			Args: nil,
 			ExpectedCalls: []taskfile.Call{
-				{Task: "default"},
+				{Task: "default", Direct: true},
 			},
 		},
 		{
 			Args: []string{},
 			ExpectedCalls: []taskfile.Call{
-				{Task: "default"},
+				{Task: "default", Direct: true},
 			},
 		},
 		{
 			Args: []string{"FOO=bar", "BAR=baz"},
 			ExpectedCalls: []taskfile.Call{
-				{Task: "default"},
+				{Task: "default", Direct: true},
 			},
 			ExpectedGlobals: &taskfile.Vars{
 				OrderedMap: orderedmap.FromMapWithOrder(

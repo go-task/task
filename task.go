@@ -50,6 +50,7 @@ type Executor struct {
 	TempDir     string
 	Entrypoint  string
 	Force       bool
+	ForceAll    bool
 	Watch       bool
 	Verbose     bool
 	Silent      bool
@@ -179,7 +180,8 @@ func (e *Executor) RunTask(ctx context.Context, call taskfile.Call) error {
 			return err
 		}
 
-		if !e.Force {
+		skipFingerprinting := e.ForceAll || (call.Direct && e.Force)
+		if !skipFingerprinting {
 			if err := ctx.Err(); err != nil {
 				return err
 			}

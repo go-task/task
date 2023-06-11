@@ -15,6 +15,7 @@ import (
 	"github.com/go-task/task/v3"
 	"github.com/go-task/task/v3/args"
 	"github.com/go-task/task/v3/errors"
+	"github.com/go-task/task/v3/internal/experiments"
 	"github.com/go-task/task/v3/internal/logger"
 	"github.com/go-task/task/v3/internal/sort"
 	ver "github.com/go-task/task/v3/internal/version"
@@ -53,6 +54,7 @@ var flags struct {
 	taskSort    string
 	status      bool
 	force       bool
+	forceAll    bool
 	watch       bool
 	verbose     bool
 	silent      bool
@@ -78,7 +80,6 @@ func main() {
 			Verbose: flags.verbose,
 			Color:   flags.color,
 		}
-
 		if err, ok := err.(*errors.TaskRunError); ok && flags.exitCode {
 			l.Errf(logger.Red, "%v\n", err)
 			os.Exit(err.TaskExitCode())
@@ -110,7 +111,6 @@ func run() error {
 	pflag.BoolVarP(&flags.listJson, "json", "j", false, "Formats task list as JSON.")
 	pflag.StringVar(&flags.taskSort, "sort", "", "Changes the order of the tasks when listed. [default|alphanumeric|none].")
 	pflag.BoolVar(&flags.status, "status", false, "Exits with non-zero exit code if any of the given tasks is not up-to-date.")
-	pflag.BoolVarP(&flags.force, "force", "f", false, "Forces execution even when the task is up-to-date.")
 	pflag.BoolVarP(&flags.watch, "watch", "w", false, "Enables watch of the given task.")
 	pflag.BoolVarP(&flags.verbose, "verbose", "v", false, "Enables verbose mode.")
 	pflag.BoolVarP(&flags.silent, "silent", "s", false, "Disables echoing.")
@@ -129,6 +129,15 @@ func run() error {
 	pflag.IntVarP(&flags.concurrency, "concurrency", "C", 0, "Limit number tasks to run concurrently.")
 	pflag.DurationVarP(&flags.interval, "interval", "I", 0, "Interval to watch for changes.")
 	pflag.BoolVarP(&flags.global, "global", "g", false, "Runs global Taskfile, from $HOME/{T,t}askfile.{yml,yaml}.")
+
+	// Gentle force experiment will override the force flag and add a new force-all flag
+	if experiments.GentleForce {
+		pflag.BoolVarP(&flags.force, "force", "f", false, "Forces execution of the directly called task.")
+		pflag.BoolVar(&flags.forceAll, "force-all", false, "Forces execution of the called task and all its dependant tasks.")
+	} else {
+		pflag.BoolVarP(&flags.forceAll, "force", "f", false, "Forces execution even when the task is up-to-date.")
+	}
+
 	pflag.Parse()
 
 	if flags.version {
@@ -194,6 +203,7 @@ func run() error {
 
 	e := task.Executor{
 		Force:       flags.force,
+		ForceAll:    flags.forceAll,
 		Watch:       flags.watch,
 		Verbose:     flags.verbose,
 		Silent:      flags.silent,
