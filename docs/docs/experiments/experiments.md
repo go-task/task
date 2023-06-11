@@ -21,10 +21,10 @@ are intended to replace.
 
 You can enable an experimental feature by:
 
-1. Using the `--x-<feature>` flag. This is intended for one-off invocations of
+1. Using the `--x-{feature}` flag. This is intended for one-off invocations of
    Task to test out experimental features. You can also disable a feature by
-   specifying a falsy value such as `--x-<feature>=false`.
-1. Using the `TASK_X_<FEATURE>=1` environment variable. This is intended for
+   specifying a falsy value such as `--x-{feature}=false`.
+1. Using the `TASK_X_{FEATURE}=1` environment variable. This is intended for
    permanently enabling experimental features in your environment.
 
 Flags will always override environment variables.
@@ -38,15 +38,15 @@ existing Taskfiles to the new behavior.
 
 <!-- EXPERIMENT TEMPLATE - Include sections as necessary...
 
-### ![experiment] <Feature> ([#<issue>](https://github.com/go-task/task/issues/<issue>)), ...)
+### ![experiment] <Feature> ([#{issue}](https://github.com/go-task/task/issues/{issue})), ...)
 
-- Flag to enable: `--x-<feature>`
-- Env to enable: `TASK_X_<feature>`
-- Deprecates: <list any existing functionality that will be deprecated by this experiment>
+- Flag to enable: `--x-{feature}`
+- Env to enable: `TASK_X_{feature}`
+- Deprecates: {list any existing functionality that will be deprecated by this experiment}
 
-<Short description of the feature>
+{Short description of the feature}
 
-<Short explanation of how users should migrate to the new behavior>
+{Short explanation of how users should migrate to the new behavior}
 
 -->
 
