@@ -10,7 +10,11 @@
   (#1197, #1198, #1199 by @pd93).
 - Added a new `prompt:` prop to set a warning prompt to be shown before running
   a potential dangurous task (#100, #1163 by @MaxCheetham,
-  [Documentation](https://taskfile.dev/usage/#warning-prompts))
+  [Documentation](https://taskfile.dev/usage/#warning-prompts)).
+- Added support for single command task syntax. With this change, it's now
+  possible to declare just `cmd:` in a task, avoiding the more complex
+  `cmds: []` when you have only a single command for that task
+  (#1130, #1131 by @timdp).
 
 ## v3.25.0 - 2023-05-22
 
