@@ -5,7 +5,7 @@ sidebar_position: 9
 
 # Changelog
 
-## v3.26.0 = 2023-06-10
+## v3.26.0 - 2023-06-10
 
 - Only rewrite checksum files in `.task` if the checksum has changed ([#1185](https://github.com/go-task/task/issues/1185),
   [#1194](https://github.com/go-task/task/issues/1194) by [@deviantintegral](https://github.com/deviantintegral)).
