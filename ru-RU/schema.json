@@ -43,6 +43,10 @@
             "description": "A list of commands to be executed.",
             "$ref": "#/definitions/3/cmds"
           },
+          "cmd": {
+            "description": "The command to be executed.",
+            "$ref": "#/definitions/3/cmd"
+          },
           "deps": {
             "description": "A list of dependencies of this task. Tasks defined here will run in parallel before this task.",
             "type": "array",
