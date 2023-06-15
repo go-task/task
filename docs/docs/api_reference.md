@@ -126,12 +126,13 @@ There are some special variables that is available on the templating system:
 | `TASKFILE_DIR`     | The absolute path of the included Taskfile.                                                                                                              |
 | `USER_WORKING_DIR` | The absolute path of the directory `task` was called from.                                                                                               |
 | `CHECKSUM`         | The checksum of the files listed in `sources`. Only available within the `status` prop and if method is set to `checksum`.                               |
-| `TIMESTAMP`        | The date object of the greatest timestamp of the files listes in `sources`. Only available within the `status` prop and if method is set to `timestamp`. |
+| `TIMESTAMP`        | The date object of the greatest timestamp of the files listed in `sources`. Only available within the `status` prop and if method is set to `timestamp`. |
 | `TASK_VERSION`     | The current version of task.                                                                                                                             |
+| `ITEM`             | The value of the current iteration when using the `for` property.                                                                                        |
 
 ## ENV
 
-Some environment variables can be overriden to adjust Task behavior.
+Some environment variables can be overridden to adjust Task behavior.
 
 | ENV                  | Default | Description                                                                                                       |
 | -------------------- | ------- | ----------------------------------------------------------------------------------------------------------------- |
@@ -262,8 +263,9 @@ tasks:
 | Attribute      | Type                               | Default       | Description                                                                                                                                                                                        |
 | -------------- | ---------------------------------- | ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `cmd`          | `string`                           |               | The shell command to be executed.                                                                                                                                                                  |
-| `silent`       | `bool`                             | `false`       | Skips some output for this command. Note that STDOUT and STDERR of the commands will still be redirected.                                                                                          |
 | `task`         | `string`                           |               | Set this to trigger execution of another task instead of running a command. This cannot be set together with `cmd`.                                                                                |
+| `for`          | [`For`](#for)                      |               | Runs the command once for each given value.                                                                                                                                                        |
+| `silent`       | `bool`                             | `false`       | Skips some output for this command. Note that STDOUT and STDERR of the commands will still be redirected.                                                                                          |
 | `vars`         | [`map[string]Variable`](#variable) |               | Optional additional variables to be passed to the referenced task. Only relevant when setting `task` instead of `cmd`.                                                                             |
 | `ignore_error` | `bool`                             | `false`       | Continue execution if errors happen while executing the command.                                                                                                                                   |
 | `defer`        | `string`                           |               | Alternative to `cmd`, but schedules the command to be executed at the end of this task instead of immediately. This cannot be used together with `cmd`.                                            |
@@ -305,6 +307,26 @@ tasks:
 ```
 
 :::
+
+#### For
+
+The `for` parameter can be defined as a string, a list of strings or a map. If
+it is defined as a string, you can give it any of the following values:
+
+- `source` - Will run the command for each source file defined on the task.
+  (Glob patterns will be resolved, so `*.go` will run for every Go file that
+  matches).
+
+If it is defined as a list of strings, the command will be run for each value.
+
+Finally, the `for` parameter can be defined as a map when you want to use a
+variable to define the values to loop over:
+
+| Attribute | Type     | Default          | Description                                  |
+| --------- | -------- | ---------------- | -------------------------------------------- |
+| `var`     | `string` |                  | The name of the variable to use as an input. |
+| `split`   | `string` | (any whitespace) | What string the variable should be split on. |
+| `as`      | `string` | `ITEM`           | The name of the iterator variable.           |
 
 #### Precondition
 
