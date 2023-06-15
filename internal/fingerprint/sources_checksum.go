@@ -84,7 +84,7 @@ func (*ChecksumChecker) Kind() string {
 }
 
 func (c *ChecksumChecker) checksum(t *taskfile.Task) (string, error) {
-	sources, err := globs(t.Dir, t.Sources)
+	sources, err := Globs(t.Dir, t.Sources)
 	if err != nil {
 		return "", err
 	}

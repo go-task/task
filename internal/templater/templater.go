@@ -5,6 +5,8 @@ import (
 	"strings"
 	"text/template"
 
+	"golang.org/x/exp/maps"
+
 	"github.com/go-task/task/v3/taskfile"
 )
 
@@ -25,6 +27,14 @@ func (r *Templater) ResetCache() {
 }
 
 func (r *Templater) Replace(str string) string {
+	return r.replace(str, nil)
+}
+
+func (r *Templater) ReplaceWithExtra(str string, extra map[string]any) string {
+	return r.replace(str, extra)
+}
+
+func (r *Templater) replace(str string, extra map[string]any) string {
 	if r.err != nil || str == "" {
 		return ""
 	}
@@ -40,7 +50,15 @@ func (r *Templater) Replace(str string) string {
 	}
 
 	var b bytes.Buffer
-	if err = templ.Execute(&b, r.cacheMap); err != nil {
+	if extra == nil {
+		err = templ.Execute(&b, r.cacheMap)
+	} else {
+		// Copy the map to avoid modifying the cached map
+		m := maps.Clone(r.cacheMap)
+		maps.Copy(m, extra)
+		err = templ.Execute(&b, m)
+	}
+	if err != nil {
 		r.err = err
 		return ""
 	}
@@ -63,6 +81,14 @@ func (r *Templater) ReplaceSlice(strs []string) []string {
 }
 
 func (r *Templater) ReplaceVars(vars *taskfile.Vars) *taskfile.Vars {
+	return r.replaceVars(vars, nil)
+}
+
+func (r *Templater) ReplaceVarsWithExtra(vars *taskfile.Vars, extra map[string]any) *taskfile.Vars {
+	return r.replaceVars(vars, extra)
+}
+
+func (r *Templater) replaceVars(vars *taskfile.Vars, extra map[string]any) *taskfile.Vars {
 	if r.err != nil || vars.Len() == 0 {
 		return nil
 	}
@@ -70,9 +96,9 @@ func (r *Templater) ReplaceVars(vars *taskfile.Vars) *taskfile.Vars {
 	var new taskfile.Vars
 	_ = vars.Range(func(k string, v taskfile.Var) error {
 		new.Set(k, taskfile.Var{
-			Static: r.Replace(v.Static),
+			Static: r.ReplaceWithExtra(v.Static, extra),
 			Live:   v.Live,
-			Sh:     r.Replace(v.Sh),
+			Sh:     r.ReplaceWithExtra(v.Sh, extra),
 		})
 		return nil
 	})

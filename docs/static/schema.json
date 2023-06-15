@@ -207,6 +207,9 @@
           },
           {
             "$ref": "#/definitions/3/task_call"
+          },
+          {
+            "$ref": "#/definitions/3/for_call"
           }
         ]
       },
@@ -272,7 +275,9 @@
             "description": "Hides task name and command from output. The command's output will still be redirected to `STDOUT` and `STDERR`.",
             "type": "boolean"
           }
-        }
+        },
+        "additionalProperties": false,
+        "required": ["task"]
       },
       "cmd_call": {
         "type": "object",
@@ -317,6 +322,75 @@
         },
         "additionalProperties": false,
         "required": ["cmd"]
+      },
+      "for_call": {
+        "type": "object",
+        "properties": {
+          "for": {
+            "anyOf": [
+              {
+                "$ref": "#/definitions/3/for_list"
+              },
+              {
+                "$ref": "#/definitions/3/for_source"
+              },
+              {
+                "$ref": "#/definitions/3/for_var"
+              }
+            ]
+          },
+          "cmd": {
+            "description": "Command to run",
+            "type": "string"
+          },
+          "task": {
+            "description": "Task to run",
+            "type": "string"
+          },
+          "vars": {
+            "description": "Values passed to the task called",
+            "$ref": "#/definitions/3/vars"
+          }
+        },
+        "oneOf": [
+          {"required": ["cmd"]},
+          {"required": ["task"]}
+        ],
+        "additionalProperties": false,
+        "required": ["for"]
+      },
+      "for_list": {
+        "description": "List of values to iterate over",
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "for_source": {
+        "description": "List of values to iterate over",
+        "type": "string",
+        "enum": ["source"]
+      },
+      "for_var": {
+        "description": "List of values to iterate over",
+        "type": "object",
+        "properties": {
+          "var": {
+            "description": "Name of the variable to iterate over",
+            "type": "string"
+          },
+          "split": {
+            "description": "String to split the variable on",
+            "type": "string"
+          },
+          "as": {
+            "description": "What the loop variable should be named",
+            "default": "ITEM",
+            "type": "string"
+          }
+        },
+        "additionalProperties": false,
+        "required": ["var"]
       },
       "precondition": {
         "anyOf": [
