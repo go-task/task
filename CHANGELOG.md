@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Added the ability to
+  [loop over commands and tasks](https://taskfile.dev/usage/#looping-over-values)
+  using `for` (#82, #1220 by @pd93).
 - Fixed variable propagation in multi-level includes (#778, #996, #1256 by
   @hudclark).
 - Fixed a bug where the `--exit-code` code flag was not returning the correct
