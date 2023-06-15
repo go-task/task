@@ -11,8 +11,9 @@ import (
 // Cmd is a task command
 type Cmd struct {
 	Cmd         string
-	Silent      bool
 	Task        string
+	For         *For
+	Silent      bool
 	Set         []string
 	Shopt       []string
 	Vars        *Vars
@@ -27,8 +28,9 @@ func (c *Cmd) DeepCopy() *Cmd {
 	}
 	return &Cmd{
 		Cmd:         c.Cmd,
-		Silent:      c.Silent,
 		Task:        c.Task,
+		For:         c.For.DeepCopy(),
+		Silent:      c.Silent,
 		Set:         deepcopy.Slice(c.Set),
 		Shopt:       deepcopy.Slice(c.Shopt),
 		Vars:        c.Vars.DeepCopy(),
@@ -54,6 +56,7 @@ func (c *Cmd) UnmarshalYAML(node *yaml.Node) error {
 		// A command with additional options
 		var cmdStruct struct {
 			Cmd         string
+			For         *For
 			Silent      bool
 			Set         []string
 			Shopt       []string
@@ -62,6 +65,7 @@ func (c *Cmd) UnmarshalYAML(node *yaml.Node) error {
 		}
 		if err := node.Decode(&cmdStruct); err == nil && cmdStruct.Cmd != "" {
 			c.Cmd = cmdStruct.Cmd
+			c.For = cmdStruct.For
 			c.Silent = cmdStruct.Silent
 			c.Set = cmdStruct.Set
 			c.Shopt = cmdStruct.Shopt
@@ -95,10 +99,12 @@ func (c *Cmd) UnmarshalYAML(node *yaml.Node) error {
 		var taskCall struct {
 			Task string
 			Vars *Vars
+			For  *For
 		}
 		if err := node.Decode(&taskCall); err == nil && taskCall.Task != "" {
 			c.Task = taskCall.Task
 			c.Vars = taskCall.Vars
+			c.For = taskCall.For
 			c.Silent = cmdStruct.Silent
 			return nil
 		}

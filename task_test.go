@@ -2207,3 +2207,59 @@ func TestForce(t *testing.T) {
 		})
 	}
 }
+
+func TestFor(t *testing.T) {
+	tests := []struct {
+		name           string
+		expectedOutput string
+	}{
+		{
+			name:           "loop-explicit",
+			expectedOutput: "a\nb\nc\n",
+		},
+		{
+			name:           "loop-sources",
+			expectedOutput: "bar\nfoo\n",
+		},
+		{
+			name:           "loop-sources-glob",
+			expectedOutput: "bar\nfoo\n",
+		},
+		{
+			name:           "loop-vars",
+			expectedOutput: "foo\nbar\n",
+		},
+		{
+			name:           "loop-vars-sh",
+			expectedOutput: "bar\nfoo\n",
+		},
+		{
+			name:           "loop-task",
+			expectedOutput: "foo\nbar\n",
+		},
+		{
+			name:           "loop-task-as",
+			expectedOutput: "foo\nbar\n",
+		},
+		{
+			name:           "loop-different-tasks",
+			expectedOutput: "1\n2\n3\n",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			var buff bytes.Buffer
+			e := task.Executor{
+				Dir:    "testdata/for",
+				Stdout: &buff,
+				Stderr: &buff,
+				Silent: true,
+				Force:  true,
+			}
+			require.NoError(t, e.Setup())
+			require.NoError(t, e.Run(context.Background(), taskfile.Call{Task: test.name, Direct: true}))
+			assert.Equal(t, test.expectedOutput, buff.String())
+		})
+	}
+}

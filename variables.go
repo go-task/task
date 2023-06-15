@@ -124,10 +124,60 @@ func (e *Executor) compiledTask(call taskfile.Call, evaluateShVars bool) (*taskf
 			if cmd == nil {
 				continue
 			}
+			if cmd.For != nil {
+				var list []string
+				// Get the list from the explicit forh list
+				if cmd.For.List != nil && len(cmd.For.List) > 0 {
+					list = cmd.For.List
+				}
+				// Get the list from the task sources
+				if cmd.For.From == "source" {
+					list, err = fingerprint.Globs(new.Dir, new.Sources)
+					if err != nil {
+						return nil, err
+					}
+				}
+				// Get the list from a variable and split it up
+				if cmd.For.Var != "" {
+					if vars != nil {
+						v := vars.Get(cmd.For.Var)
+						if cmd.For.Split != "" {
+							list = strings.Split(v.Static, cmd.For.Split)
+						} else {
+							list = strings.Fields(v.Static)
+						}
+					}
+				}
+				// Name the iterator variable
+				var as string
+				if cmd.For.As != "" {
+					as = cmd.For.As
+				} else {
+					as = "ITEM"
+				}
+				// Create a new command for each item in the list
+				for _, loopValue := range list {
+					extra := map[string]any{
+						as: loopValue,
+					}
+					new.Cmds = append(new.Cmds, &taskfile.Cmd{
+						Cmd:         r.ReplaceWithExtra(cmd.Cmd, extra),
+						Task:        r.ReplaceWithExtra(cmd.Task, extra),
+						Silent:      cmd.Silent,
+						Set:         cmd.Set,
+						Shopt:       cmd.Shopt,
+						Vars:        r.ReplaceVarsWithExtra(cmd.Vars, extra),
+						IgnoreError: cmd.IgnoreError,
+						Defer:       cmd.Defer,
+						Platforms:   cmd.Platforms,
+					})
+				}
+				continue
+			}
 			new.Cmds = append(new.Cmds, &taskfile.Cmd{
 				Cmd:         r.Replace(cmd.Cmd),
-				Silent:      cmd.Silent,
 				Task:        r.Replace(cmd.Task),
+				Silent:      cmd.Silent,
 				Set:         cmd.Set,
 				Shopt:       cmd.Shopt,
 				Vars:        r.ReplaceVars(cmd.Vars),

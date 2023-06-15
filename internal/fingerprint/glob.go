@@ -10,7 +10,7 @@ import (
 	"github.com/go-task/task/v3/internal/filepathext"
 )
 
-func globs(dir string, globs []string) ([]string, error) {
+func Globs(dir string, globs []string) ([]string, error) {
 	files := make([]string, 0)
 	for _, g := range globs {
 		f, err := Glob(dir, g)
