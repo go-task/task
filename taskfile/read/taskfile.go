@@ -21,9 +21,13 @@ var (
 
 	defaultTaskfiles = []string{
 		"Taskfile.yml",
+		"taskfile.yml",
 		"Taskfile.yaml",
+		"taskfile.yaml",
 		"Taskfile.dist.yml",
+		"taskfile.dist.yml",
 		"Taskfile.dist.yaml",
+		"taskfile.dist.yaml",
 	}
 )
 

@@ -43,9 +43,13 @@ If you omit a task name, "default" will be assumed.
 Task will look for the following file names, in order of priority:
 
 - Taskfile.yml
+- taskfile.yml
 - Taskfile.yaml
+- taskfile.yaml
 - Taskfile.dist.yml
+- taskfile.dist.yml
 - Taskfile.dist.yaml
+- taskfile.dist.yaml
 
 The intention of having the `.dist` variants is to allow projects to have one
 committed version (`.dist`) while still allowing individual users to override
@@ -85,7 +89,7 @@ will be brought up.
 
 If you call Task with the `--global` (alias `-g`) flag, it will look for your
 home directory instead of your working directory. In short, Task will look for a
-Taskfile on either `$HOME/Taskfile.yml` or `$HOME/Taskfile.yaml` paths.
+Taskfile that matches `$HOME/{T,t}askfile.{yml,yaml}` .
 
 This is useful to have automation that you can run from anywhere in your system!
 
