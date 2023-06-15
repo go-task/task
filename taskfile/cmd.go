@@ -97,15 +97,16 @@ func (c *Cmd) UnmarshalYAML(node *yaml.Node) error {
 
 		// A task call
 		var taskCall struct {
-			Task string
-			Vars *Vars
-			For  *For
+			Task   string
+			Vars   *Vars
+			For    *For
+			Silent bool
 		}
 		if err := node.Decode(&taskCall); err == nil && taskCall.Task != "" {
 			c.Task = taskCall.Task
 			c.Vars = taskCall.Vars
 			c.For = taskCall.For
-			c.Silent = cmdStruct.Silent
+			c.Silent = taskCall.Silent
 			return nil
 		}
 
