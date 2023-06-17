@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Allow Taskfiles starting with lowercase characters (#947, #1221 by @pd93).
+  - e.g. `taskfile.yml`, `taskfile.yaml`, `taskfile.dist.yml` &
+    `taskfile.dist.yaml`
 - Bug fixed were made to the
   [npm installation method](https://taskfile.dev/installation/#npm).
   (#1190, by @sounisi5011).
@@ -19,8 +22,8 @@
   [Documentation](https://taskfile.dev/usage/#warning-prompts)).
 - Added support for single command task syntax. With this change, it's now
   possible to declare just `cmd:` in a task, avoiding the more complex
-  `cmds: []` when you have only a single command for that task
-  (#1130, #1131 by @timdp).
+  `cmds: []` when you have only a single command for that task (#1130, #1131 by
+  @timdp).
 
 ## v3.25.0 - 2023-05-22
 

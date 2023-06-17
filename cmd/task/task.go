@@ -128,7 +128,7 @@ func run() error {
 	pflag.BoolVarP(&flags.color, "color", "c", true, "Colored output. Enabled by default. Set flag to false or use NO_COLOR=1 to disable.")
 	pflag.IntVarP(&flags.concurrency, "concurrency", "C", 0, "Limit number tasks to run concurrently.")
 	pflag.DurationVarP(&flags.interval, "interval", "I", 0, "Interval to watch for changes.")
-	pflag.BoolVarP(&flags.global, "global", "g", false, "Runs global Taskfile, from $HOME/Taskfile.{yml,yaml}.")
+	pflag.BoolVarP(&flags.global, "global", "g", false, "Runs global Taskfile, from $HOME/{T,t}askfile.{yml,yaml}.")
 	pflag.Parse()
 
 	if flags.version {
