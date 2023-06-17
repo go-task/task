@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Bug fixed were made to the
+  [npm installation method](https://taskfile.dev/installation/#npm).
+  (#1190, by @sounisi5011).
+
 ## v3.26.0 - 2023-06-10
 
 - Only rewrite checksum files in `.task` if the checksum has changed (#1185,
