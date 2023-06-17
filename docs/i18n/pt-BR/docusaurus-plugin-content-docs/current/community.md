@@ -24,6 +24,7 @@ Some installation methods are maintained by third party:
 - [Scoop](https://github.com/ScoopInstaller/Main/blob/master/bucket/task.json)
 - [Fedora](https://packages.fedoraproject.org/pkgs/golang-github-task/go-task/)
 - [NixOS](https://github.com/NixOS/nixpkgs/blob/master/pkgs/development/tools/go-task/default.nix)
+- [Conda](https://github.com/conda-forge/go-task-feedstock/)
 
 ## More
 
