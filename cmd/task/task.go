@@ -15,7 +15,6 @@ import (
 	"github.com/go-task/task/v3"
 	"github.com/go-task/task/v3/args"
 	"github.com/go-task/task/v3/errors"
-	"github.com/go-task/task/v3/internal/experiments"
 	"github.com/go-task/task/v3/internal/logger"
 	"github.com/go-task/task/v3/internal/sort"
 	ver "github.com/go-task/task/v3/internal/version"
@@ -97,11 +96,6 @@ func main() {
 func run() error {
 	log.SetFlags(0)
 	log.SetOutput(os.Stderr)
-
-	// Experiments must be parsed before pflag.Parse() is called
-	if err := experiments.Parse(); err != nil {
-		return err
-	}
 
 	pflag.Usage = func() {
 		log.Print(usage)
