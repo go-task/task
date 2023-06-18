@@ -13,7 +13,7 @@ func ParseV3(args ...string) ([]taskfile.Call, *taskfile.Vars) {
 
 	for _, arg := range args {
 		if !strings.Contains(arg, "=") {
-			calls = append(calls, taskfile.Call{Task: arg})
+			calls = append(calls, taskfile.Call{Task: arg, Direct: true})
 			continue
 		}
 
@@ -22,7 +22,7 @@ func ParseV3(args ...string) ([]taskfile.Call, *taskfile.Vars) {
 	}
 
 	if len(calls) == 0 {
-		calls = append(calls, taskfile.Call{Task: "default"})
+		calls = append(calls, taskfile.Call{Task: "default", Direct: true})
 	}
 
 	return calls, globals
@@ -35,7 +35,7 @@ func ParseV2(args ...string) ([]taskfile.Call, *taskfile.Vars) {
 
 	for _, arg := range args {
 		if !strings.Contains(arg, "=") {
-			calls = append(calls, taskfile.Call{Task: arg})
+			calls = append(calls, taskfile.Call{Task: arg, Direct: true})
 			continue
 		}
 
@@ -52,7 +52,7 @@ func ParseV2(args ...string) ([]taskfile.Call, *taskfile.Vars) {
 	}
 
 	if len(calls) == 0 {
-		calls = append(calls, taskfile.Call{Task: "default"})
+		calls = append(calls, taskfile.Call{Task: "default", Direct: true})
 	}
 
 	return calls, globals

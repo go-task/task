@@ -11,13 +11,13 @@ import (
 
 const envPrefix = "TASK_X_"
 
-var TestExperiment bool
+var GentleForce bool
 
 func init() {
 	if err := readDotEnv(); err != nil {
 		panic(err)
 	}
-	TestExperiment = parseEnv("TestExperiment")
+	GentleForce = parseEnv("GENTLE_FORCE")
 }
 
 func parseEnv(xName string) bool {

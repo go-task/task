@@ -1,0 +1,19 @@
+version: "3"
+
+tasks:
+  task-with-dep:
+    status: [ test true ]
+    deps: [ indirect ]
+    cmds:
+      - echo "direct"
+
+  task-with-subtask:
+    status: [ test true ]
+    cmds:
+      - task: indirect
+      - echo "direct"
+
+  indirect:
+    status: [ test true ]
+    cmds:
+      - echo "indirect"

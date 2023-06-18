@@ -6,8 +6,10 @@
   - e.g. `taskfile.yml`, `taskfile.yaml`, `taskfile.dist.yml` &
     `taskfile.dist.yaml`
 - Bug fixed were made to the
-  [npm installation method](https://taskfile.dev/installation/#npm).
-  (#1190, by @sounisi5011).
+  [npm installation method](https://taskfile.dev/installation/#npm). (#1190, by
+  @sounisi5011).
+- Added the [gentle force experiment](https://taskfile.dev/experiments) as a
+  draft (#1200, #1216 by @pd93).
 
 ## v3.26.0 - 2023-06-10
 
