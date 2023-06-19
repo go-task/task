@@ -1,9 +1,17 @@
 ---
 slug: /changelog/
-sidebar_position: 8
+sidebar_position: 9
 ---
 
 # Changelog
+
+## v3.26.0 - 2023-06-10
+
+- Only rewrite checksum files in `.task` if the checksum has changed ([#1185](https://github.com/go-task/task/issues/1185), [#1194](https://github.com/go-task/task/issues/1194) by [@deviantintegral](https://github.com/deviantintegral)).
+- Added [experiments documentation](https://taskfile.dev/experiments) to the website ([#1198](https://github.com/go-task/task/issues/1198) by [@pd93](https://github.com/pd93)).
+- Deprecated `version: 2` schema. This will be removed in the next major release ([#1197](https://github.com/go-task/task/issues/1197), [#1198](https://github.com/go-task/task/issues/1198), [#1199](https://github.com/go-task/task/issues/1199) by [@pd93](https://github.com/pd93)).
+- Added a new `prompt:` prop to set a warning prompt to be shown before running a potential dangurous task ([#100](https://github.com/go-task/task/issues/100), [#1163](https://github.com/go-task/task/issues/1163) by [@MaxCheetham](https://github.com/MaxCheetham), [Documentation](https://taskfile.dev/usage/#warning-prompts)).
+- Added support for single command task syntax. With this change, it's now possible to declare just `cmd:` in a task, avoiding the more complex `cmds: []` when you have only a single command for that task ([#1130](https://github.com/go-task/task/issues/1130), [#1131](https://github.com/go-task/task/issues/1131) by [@timdp](https://github.com/timdp)).
 
 ## v3.25.0 - 2023-05-22
 

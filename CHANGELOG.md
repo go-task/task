@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+- Allow Taskfiles starting with lowercase characters (#947, #1221 by @pd93).
+  - e.g. `taskfile.yml`, `taskfile.yaml`, `taskfile.dist.yml` &
+    `taskfile.dist.yaml`
+- Bug fixed were made to the
+  [npm installation method](https://taskfile.dev/installation/#npm). (#1190, by
+  @sounisi5011).
+- Added the [gentle force experiment](https://taskfile.dev/experiments) as a
+  draft (#1200, #1216 by @pd93).
+
+## v3.26.0 - 2023-06-10
+
 - Only rewrite checksum files in `.task` if the checksum has changed (#1185,
   #1194 by @deviantintegral).
 - Added [experiments documentation](https://taskfile.dev/experiments) to the
@@ -10,7 +21,11 @@
   (#1197, #1198, #1199 by @pd93).
 - Added a new `prompt:` prop to set a warning prompt to be shown before running
   a potential dangurous task (#100, #1163 by @MaxCheetham,
-  [Documentation](https://taskfile.dev/usage/#warning-prompts))
+  [Documentation](https://taskfile.dev/usage/#warning-prompts)).
+- Added support for single command task syntax. With this change, it's now
+  possible to declare just `cmd:` in a task, avoiding the more complex
+  `cmds: []` when you have only a single command for that task (#1130, #1131 by
+  @timdp).
 
 ## v3.25.0 - 2023-05-22
 

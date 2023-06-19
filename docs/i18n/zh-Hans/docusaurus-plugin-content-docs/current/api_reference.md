@@ -21,38 +21,39 @@ task [--flags] [tasks...] [-- CLI_ARGS...]
 
 :::
 
-| 缩写   | 标志                          | 类型       | 默认                               | 描述                                                                                                  |
-| ---- | --------------------------- | -------- | -------------------------------- | --------------------------------------------------------------------------------------------------- |
-| `-c` | `--color`                   | `bool`   | `true`                           | 彩色输出。 默认开启。 设置为 `false` 或使用 `NO_COLOR=1` 禁用。                                                        |
-| `-C` | `--concurrency`             | `int`    | `0`                              | 限制并发运行的 task 数。 零意味着无限。                                                                             |
-| `-d` | `--dir`                     | `string` | 工作目录                             | 设置执行目录。                                                                                             |
-| `-n` | `--dry`                     | `bool`   | `false`                          | 按运行顺序编译和打印 task，而不执行它们。                                                                             |
-| `-x` | `--exit-code`               | `bool`   | `false`                          | 传递 task 命令的退出代码。                                                                                    |
-| `-f` | `--force`                   | `bool`   | `false`                          | 即使 task 是最新的也强制执行。                                                                                  |
-| `-g` | `--global`                  | `bool`   | `false`                          | 从 `$HOME/Taskfile.{yml,yaml}` 运行全局 Taskfile。                                                        |
-| `-h` | `--help`                    | `bool`   | `false`                          | 显示 Task 使用情况。                                                                                       |
-| `-i` | `--init`                    | `bool`   | `false`                          | 在当前目录创建一个新的 Taskfile.yml。                                                                           |
-| `-I` | `--interval`                | `string` | `5s`                             | 使用 `--watch` 设置不同的观察间隔，默认为 5 秒。 这个字符串应该是一个有效的 [Go Duration](https://pkg.go.dev/time#ParseDuration)。 |
-| `-l` | `--list`                    | `bool`   | `false`                          | 列出当前文件的全部 task 及对应描述。                                                                               |
-| `-a` | `--list-all`                | `bool`   | `false`                          | 列出无论有没有描述的所有 task。                                                                                  |
-|      | `--sort`                    | `string` | `default`                        | 在列出时更改 task 的顺序。                                                                                    |
-|      | `--json`                    | `bool`   | `false`                          | 查看 [JSON 输出](#json-输出)                                                                              |
-| `-o` | `--output`                  | `string` | 在 Taskfile 中设置默认值或 `intervealed` | 设置输出样式：[`interleaved`/`group`/`prefixed`]。                                                          |
-|      | `--output-group-begin`      | `string` |                                  | 在任务组输出前打印的消息模板。                                                                                     |
-|      | `--output-group-end`        | `string` |                                  | 在任务组输出后打印的消息模板。                                                                                     |
-|      | `--output-group-error-only` | `bool`   | `false`                          | 在退出码为 0 时忽略命令输出。                                                                                    |
-| `-p` | `--parallel`                | `bool`   | `false`                          | 并行执行命令行上提供的 task。                                                                                   |
-| `-s` | `--silent`                  | `bool`   | `false`                          | 禁用回显。                                                                                               |
-|      | `--status`                  | `bool`   | `false`                          | 如果任何给定 task 不是最新的，则以非 0 退出码退出。                                                                      |
-|      | `--summary`                 | `bool`   | `false`                          | 显示有关 task 的摘要。                                                                                      |
-| `-t` | `--taskfile`                | `string` | `Taskfile.yml` 或 `Taskfile.yaml` |                                                                                                     |
-| `-v` | `--verbose`                 | `bool`   | `false`                          | 启用详细模式。                                                                                             |
-|      | `--version`                 | `bool`   | `false`                          | 显示 Task 版本。                                                                                         |
-| `-w` | `--watch`                   | `bool`   | `false`                          | 启用给定 task 的观察器。                                                                                     |
+| 缩写   | 标志                          | 类型       | 默认                               | 描述                                                                                                                                                                                                             |
+| ---- | --------------------------- | -------- | -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `-c` | `--color`                   | `bool`   | `true`                           | 彩色输出。 默认开启。 设置为 `false` 或使用 `NO_COLOR=1` 禁用。                                                                                                                                                                   |
+| `-C` | `--concurrency`             | `int`    | `0`                              | 限制并发运行的 task 数。 零意味着无限。                                                                                                                                                                                        |
+| `-d` | `--dir`                     | `string` | 工作目录                             | 设置执行目录。                                                                                                                                                                                                        |
+| `-n` | `--dry`                     | `bool`   | `false`                          | 按运行顺序编译和打印 task，而不执行它们。                                                                                                                                                                                        |
+| `-x` | `--exit-code`               | `bool`   | `false`                          | 传递 task 命令的退出代码。                                                                                                                                                                                               |
+| `-f` | `--force`                   | `bool`   | `false`                          | 即使 task 是最新的也强制执行。                                                                                                                                                                                             |
+| `-g` | `--global`                  | `bool`   | `false`                          | 从 `$HOME/Taskfile.{yml,yaml}` 运行全局 Taskfile。                                                                                                                                                                   |
+| `-h` | `--help`                    | `bool`   | `false`                          | 显示 Task 使用情况。                                                                                                                                                                                                  |
+| `-i` | `--init`                    | `bool`   | `false`                          | 在当前目录创建一个新的 Taskfile.yml。                                                                                                                                                                                      |
+| `-I` | `--interval`                | `string` | `5s`                             | 使用 `--watch` 设置不同的观察间隔，默认为 5 秒。 这个字符串应该是一个有效的 [Go Duration](https://pkg.go.dev/time#ParseDuration)。                                                                                                            |
+| `-l` | `--list`                    | `bool`   | `false`                          | 列出当前文件的全部 task 及对应描述。                                                                                                                                                                                          |
+| `-a` | `--list-all`                | `bool`   | `false`                          | 列出无论有没有描述的所有 task。                                                                                                                                                                                             |
+|      | `--sort`                    | `string` | `default`                        | Changes the order of the tasks when listed.<br />`default` - Alphanumeric with root tasks first<br />`alphanumeric` - Alphanumeric<br />`none` - No sorting (As they appear in the Taskfile) |
+|      | `--json`                    | `bool`   | `false`                          | 查看 [JSON 输出](#json-输出)                                                                                                                                                                                         |
+| `-o` | `--output`                  | `string` | 在 Taskfile 中设置默认值或 `intervealed` | 设置输出样式：[`interleaved`/`group`/`prefixed`]。                                                                                                                                                                     |
+|      | `--output-group-begin`      | `string` |                                  | 在任务组输出前打印的消息模板。                                                                                                                                                                                                |
+|      | `--output-group-end`        | `string` |                                  | 在任务组输出后打印的消息模板。                                                                                                                                                                                                |
+|      | `--output-group-error-only` | `bool`   | `false`                          | 在退出码为 0 时忽略命令输出。                                                                                                                                                                                               |
+| `-p` | `--parallel`                | `bool`   | `false`                          | 并行执行命令行上提供的 task。                                                                                                                                                                                              |
+| `-s` | `--silent`                  | `bool`   | `false`                          | 禁用回显。                                                                                                                                                                                                          |
+| `-y` | `--yes`                     | `bool`   | `false`                          | Assume "yes" as answer to all prompts.                                                                                                                                                                         |
+|      | `--status`                  | `bool`   | `false`                          | 如果任何给定 task 不是最新的，则以非 0 退出码退出。                                                                                                                                                                                 |
+|      | `--summary`                 | `bool`   | `false`                          | 显示有关 task 的摘要。                                                                                                                                                                                                 |
+| `-t` | `--taskfile`                | `string` | `Taskfile.yml` 或 `Taskfile.yaml` |                                                                                                                                                                                                                |
+| `-v` | `--verbose`                 | `bool`   | `false`                          | 启用详细模式。                                                                                                                                                                                                        |
+|      | `--version`                 | `bool`   | `false`                          | 显示 Task 版本。                                                                                                                                                                                                    |
+| `-w` | `--watch`                   | `bool`   | `false`                          | 启用给定 task 的观察器。                                                                                                                                                                                                |
 
 ## 退出码
 
-Task 有时会以特定的退出代码退出。 这些代码分为三组，范围如下：
+Task 有时会以特定的退出代码退出。 These codes are split into three groups with the following ranges:
 
 - 一般错误 (0-99)
 - Taskfile 错误 (100-199)
@@ -60,30 +61,33 @@ Task 有时会以特定的退出代码退出。 这些代码分为三组，范�
 
 可以在下面找到退出代码及其描述的完整列表：
 
-| 代码  | 描述                     |
-| --- | ---------------------- |
-| 0   | 成功                     |
-| 1   | 出现未知错误                 |
-| 100 | 找不到 Taskfile           |
-| 101 | 尝试初始化一个 Taskfile 时已经存在 |
-| 102 | Taskfile 无效或无法解析       |
-| 200 | 找不到指定的 task            |
-| 201 | 在 task 中执行命令时出错        |
-| 202 | 用户试图调用内部 task          |
-| 203 | 有多个具有相同名称或别名的 task     |
-| 204 | 一个 task 被调用了太多次        |
+| 代码  | 描述                               |
+| --- | -------------------------------- |
+| 0   | 成功                               |
+| 1   | 出现未知错误                           |
+| 100 | 找不到 Taskfile                     |
+| 101 | 尝试初始化一个 Taskfile 时已经存在           |
+| 102 | Taskfile 无效或无法解析                 |
+| 200 | 找不到指定的 task                      |
+| 201 | 在 task 中执行命令时出错                  |
+| 202 | 用户试图调用内部 task                    |
+| 203 | 有多个具有相同名称或别名的 task               |
+| 204 | 一个 task 被调用了太多次                  |
+| 205 | A task was cancelled by the user |
 
-这些代码也可以在存储库的 [`errors/errors.go`](https://github.com/go-task/task/blob/main/errors/errors.go) 中找到。
+These codes can also be found in the repository in [`errors/errors.go`](https://github.com/go-task/task/blob/main/errors/errors.go).
 
 :::info
-当使用 `-x`/`--exit-code` 标志运行 Task 时，任何失败命令的退出代码都将传递给用户。
+
+When Task is run with the `-x`/`--exit-code` flag, the exit code of any failed commands will be passed through to the user instead.
+
 :::
 
 ## JSON 输出
 
 将 `--json` 标志与 `--list` 或 `--list-all` 标志结合使用时，将输出具有以下结构的 JSON 对象：
 
-```jsonc
+```json
 {
   "tasks": [
     {
@@ -202,6 +206,7 @@ vars:
 | `deps`          | [`[]Dependency`](#dependency)      |                            | 此 task 的依赖项列表。 此处定义的 task 将在此 task 之前并行运行。                                                                                                 |
 | `label`         | `string`                           |                            | 运行 task 时覆盖输出中的 task 名称。 支持变量。                                                                                                             |
 | `desc`          | `string`                           |                            | task 的简短描述。 这在调用 `task --list` 时显示。                                                                                                        |
+| `prompt`        | `string`                           |                            | A prompt that will be presented before a task is run. Declining will cancel running the current and any subsequent tasks.                  |
 | `summary`       | `string`                           |                            | task 的较长描述。 这在调用 `task --summary [task]` 时显示。                                                                                              |
 | `aliases`       | `[]string`                         |                            | 可以调用 task 的别名列表。                                                                                                                           |
 | `sources`       | `[]string`                         |                            | 运行此 task 之前要检查的源列表。 与 `checksum` 和 `timestamp` 方法相关。 可以是文件路径或星号。                                                                           |

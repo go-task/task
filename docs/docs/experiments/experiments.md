@@ -21,13 +21,19 @@ are intended to replace.
 
 You can enable an experimental feature by:
 
-1. Using the `--x-<feature>` flag. This is intended for one-off invocations of
-   Task to test out experimental features. You can also disable a feature by
-   specifying a falsy value such as `--x-<feature>=false`.
-1. Using the `TASK_X_<FEATURE>=1` environment variable. This is intended for
-   permanently enabling experimental features in your environment.
+1. Using the relevant environment variable in front of a task command. For
+   example, `TASK_X_{FEATURE}=1 task {my-task}`. This is intended for one-off
+   invocations of Task to test out experimental features.
+1. Using the relevant environment variable in your "dotfiles" (e.g. `.bashrc`,
+   `.zshrc` etc.). This is intended for permanently enabling experimental
+   features in your environment.
+1. Creating a `.env` file in the same directory as your root Taskfile that
+   contains the relevant environment variables. e.g.
 
-Flags will always override environment variables.
+```shell
+# .env
+TASK_X_FEATURE=1
+```
 
 ## Current Experimental Features and Deprecations
 
@@ -38,15 +44,15 @@ existing Taskfiles to the new behavior.
 
 <!-- EXPERIMENT TEMPLATE - Include sections as necessary...
 
-### ![experiment] <Feature> ([#<issue>](https://github.com/go-task/task/issues/<issue>)), ...)
+### ![experiment] {Feature} ([#{issue}](https://github.com/go-task/task/issues/{issue})), ...)
 
-- Flag to enable: `--x-<feature>`
-- Env to enable: `TASK_X_<feature>`
-- Deprecates: <list any existing functionality that will be deprecated by this experiment>
+- Environment variable: `TASK_X_{feature}`
+- Deprecates: {list any existing functionality that will be deprecated by this experiment}
+- Breaks: {list any existing functionality that will be broken by this experiment}
 
-<Short description of the feature>
+{Short description of the feature}
 
-<Short explanation of how users should migrate to the new behavior>
+{Short explanation of how users should migrate to the new behavior}
 
 -->
 
@@ -63,6 +69,27 @@ version 3 as soon as possible.
 
 A list of changes between version 2 and version 3 are available in the [Task v3
 Release Notes][version-3-release-notes].
+
+### ![experiment] Gentle Force ([#1200](https://github.com/go-task/task/issues/1200))
+
+- Environment variable: `TASK_X_FORCE=1`
+- Breaks: `--force` flag
+
+The `--force` flag currently forces _all_ tasks to run regardless of the status
+checks. This can be useful, but we have found that most of the time users only
+expect the direct task they are calling to be forced and _not_ all of its
+dependant tasks.
+
+This experiment changes the `--force` flag to only force the directly called
+task. All dependant tasks will have their statuses checked as normal and will
+only run if Task considers them to be out of date. A new `--force-all` flag will
+also be added to maintain the current behavior for users that need this
+functionality.
+
+If you want to migrate, but continue to force all dependant tasks to run, you
+should replace all uses of the `--force` flag with `--force-all`. Alternatively,
+if you want to adopt the new behavior, you can continue to use the `--force`
+flag as you do now!
 
 <!-- prettier-ignore-start -->
 [breaking-change-proposal]: https://github.com/go-task/task/discussions/1191

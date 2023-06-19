@@ -75,6 +75,7 @@ func (t *Task) UnmarshalYAML(node *yaml.Node) error {
 	case yaml.MappingNode:
 		var task struct {
 			Cmds          []*Cmd
+			Cmd           *Cmd
 			Deps          []*Dep
 			Label         string
 			Desc          string
@@ -104,7 +105,14 @@ func (t *Task) UnmarshalYAML(node *yaml.Node) error {
 		if err := node.Decode(&task); err != nil {
 			return err
 		}
-		t.Cmds = task.Cmds
+		if task.Cmd != nil {
+			if task.Cmds != nil {
+				return fmt.Errorf("yaml: line %d: task cannot have both cmd and cmds", node.Line)
+			}
+			t.Cmds = []*Cmd{task.Cmd}
+		} else {
+			t.Cmds = task.Cmds
+		}
 		t.Deps = task.Deps
 		t.Label = task.Label
 		t.Desc = task.Desc

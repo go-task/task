@@ -1,14 +1,11 @@
 ---
 slug: /faq/
-sidebar_position: 6
+sidebar_position: 7
 ---
 
 # 常见问题
 
 此页面包含有关 Task 的常见问题列表。
-
-- [为什么我的 task 不会更新我的 shell 环境？](#为什么我的-task-不会更新我的-shell-环境)
-- [内置的 'x' 命令在 Windows 上不起作用](#内置的-x-命令在-windows-上不起作用)
 
 ## 为什么我的 task 不会更新我的 shell 环境？
 
@@ -24,6 +21,52 @@ my-shell-env:
 ```
 
 现在运行 `eval $(task my-shell-env)` 变量 `$FOO` 和 `$BAR` 将在您的 shell 中可用。
+
+## I can't reuse my shell in a task's commands
+
+Task runs each command as a separate shell process, so something you do in one command won't effect any future commands. For example, this won't work:
+
+```yaml
+version: '3'
+
+tasks:
+  foo:
+    cmds:
+      - a=foo
+      - echo $a
+      # outputs ""
+```
+
+To work around this you can either use a multiline command:
+
+```yaml
+version: '3'
+
+tasks:
+  foo:
+    cmds:
+      - |
+        a=foo
+        echo $a
+      # outputs "foo"
+```
+
+Or for more complex multi-line commands it is recommended to move your code into a separate file and call that instead:
+
+```yaml
+version: '3'
+
+tasks:
+  foo:
+    cmds:
+      - ./foo-printer.bash
+```
+
+```bash
+#!/bin/bash
+a=foo
+echo $a
+```
 
 ## 内置的 'x' 命令在 Windows 上不起作用
 

@@ -1,6 +1,6 @@
 ---
 slug: /contributing/
-sidebar_position: 10
+sidebar_position: 11
 ---
 
 # Помощь проекту
@@ -17,6 +17,7 @@ sidebar_position: 10
 
 - **Текущее состояние разработки** - Проверьте уже открытые PR. Есть ли открытые "issues", обсуждающие особенности/изменения, которые вы хотите выполнить? Пожалуйста, убедитесь, что вы учитываете результаты этих обсуждений в своей работе.
 - **Обратная совместимость** - Повлияют ли ваши изменения на уже существующие TaskFile'ы? Скорее всего, ваше изменение будет применено, если оно обладает обратной совместимостью. Существует ли подход, который вы можете использовать для поддержания обратной совместимости? Если нет, откройте проблему(Вот тут ["Issues"](https://github.com/go-task/task/issues)), чтобы изменения API могли быть обсуждены до того, как вы потратите своё время на PR.
+- **Experiments** - If there is no way to make your change backward compatible then there is a procedure to introduce breaking changes into minor versions. We call these "\[experiments\]\[experiments\]". If you're intending to work on an experiment, then please read the \[experiments workflow\]\[experiments-workflow\] document carefully and submit a proposal first.
 
 ## 1. Настройка
 

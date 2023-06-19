@@ -1,6 +1,6 @@
 ---
 slug: /community/
-sidebar_position: 9
+sidebar_position: 10
 ---
 
 # Communauté
@@ -24,6 +24,7 @@ Certaines méthodes d'installation sont maintenues par un tiers :
 - [Scoop](https://github.com/ScoopInstaller/Main/blob/master/bucket/task.json)
 - [Fedora](https://packages.fedoraproject.org/pkgs/golang-github-task/go-task/)
 - [NixOS](https://github.com/NixOS/nixpkgs/blob/master/pkgs/development/tools/go-task/default.nix)
+- [Conda](https://github.com/conda-forge/go-task-feedstock/)
 
 ## Plus d’infos
 

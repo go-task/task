@@ -1,6 +1,6 @@
 ---
 slug: /styleguide/
-sidebar_position: 7
+sidebar_position: 8
 ---
 
 # Guide de style
@@ -207,3 +207,27 @@ tasks:
 ```
 
 C'est aussi fait automatiquement quand vous incluez des Taskfiles.
+
+## Prefer external scripts over complex multi-line commands
+
+```yaml
+# bad
+version: '3'
+
+tasks:
+  build:
+    cmds:
+      - |
+        for i in $(seq 1 10); do
+          echo $i
+          echo "some other complex logic"
+        done'
+
+# good
+version: '3'
+
+tasks:
+  build:
+    cmds:
+      - ./scripts/my_complex_script.sh
+```

@@ -2013,6 +2013,18 @@ func TestSplitArgs(t *testing.T) {
 	assert.Equal(t, "3\n", buff.String())
 }
 
+func TestSingleCmdDep(t *testing.T) {
+	tt := fileContentTest{
+		Dir:    "testdata/single_cmd_dep",
+		Target: "foo",
+		Files: map[string]string{
+			"foo.txt": "foo\n",
+			"bar.txt": "bar\n",
+		},
+	}
+	tt.Run(t)
+}
+
 func TestSilence(t *testing.T) {
 	var buff bytes.Buffer
 	e := task.Executor{
@@ -2107,4 +2119,50 @@ func TestSilence(t *testing.T) {
 	require.Empty(t, buff.String(), "While running task-test-is-chatty-depends-on-chatty-silenced: Expected not to see output. The task is chatty but does not have commands and has a silenced dependency on a chatty task.")
 
 	buff.Reset()
+}
+
+func TestForce(t *testing.T) {
+	tests := []struct {
+		name     string
+		env      map[string]string
+		force    bool
+		forceAll bool
+	}{
+		{
+			name:  "force",
+			force: true,
+		},
+		{
+			name:     "force-all",
+			forceAll: true,
+		},
+		{
+			name:  "force with gentle force experiment",
+			force: true,
+			env: map[string]string{
+				"TASK_X_GENTLE_FORCE": "1",
+			},
+		},
+		{
+			name:     "force-all with gentle force experiment",
+			forceAll: true,
+			env: map[string]string{
+				"TASK_X_GENTLE_FORCE": "1",
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var buff bytes.Buffer
+			e := task.Executor{
+				Dir:      "testdata/force",
+				Stdout:   &buff,
+				Stderr:   &buff,
+				Force:    tt.force,
+				ForceAll: tt.forceAll,
+			}
+			require.NoError(t, e.Setup())
+			require.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "task-with-dep", Direct: true}))
+		})
+	}
 }
