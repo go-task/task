@@ -8,7 +8,7 @@ import (
 )
 
 func (e *Executor) areTaskRequiredVarsSet(ctx context.Context, t *taskfile.Task, call taskfile.Call) error {
-	if len(t.Requires) == 0 {
+	if len(t.Requires.Vars) == 0 {
 		return nil
 	}
 
@@ -18,7 +18,7 @@ func (e *Executor) areTaskRequiredVarsSet(ctx context.Context, t *taskfile.Task,
 	}
 
 	var missingVars []string
-	for _, requiredVar := range t.Requires {
+	for _, requiredVar := range t.Requires.Vars {
 		if !vars.Exists(requiredVar) {
 			missingVars = append(missingVars, requiredVar)
 		}
