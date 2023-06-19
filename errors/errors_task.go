@@ -139,7 +139,7 @@ type TaskMissingRequiredVars struct {
 
 func (err *TaskMissingRequiredVars) Error() string {
 	return fmt.Sprintf(
-		`task: Task "%q" cancelled because it is missing required variables: %s`,
+		`task: Task %q cancelled because it is missing required variables: %s`,
 		err.TaskName,
 		strings.Join(err.MissingVars, ", "),
 	)
