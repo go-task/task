@@ -7,14 +7,14 @@ import (
 	"github.com/go-task/task/v3/taskfile"
 )
 
-func (e *Executor) areTaskRequiredVarsSet(ctx context.Context, t *taskfile.Task, call taskfile.Call) (bool, error) {
+func (e *Executor) areTaskRequiredVarsSet(ctx context.Context, t *taskfile.Task, call taskfile.Call) error {
 	if len(t.Requires) == 0 {
-		return true, nil
+		return nil
 	}
 
 	vars, err := e.Compiler.GetVariables(t, call)
 	if err != nil {
-		return false, err
+		return err
 	}
 
 	var missingVars []string
@@ -25,11 +25,11 @@ func (e *Executor) areTaskRequiredVarsSet(ctx context.Context, t *taskfile.Task,
 	}
 
 	if len(missingVars) > 0 {
-		return false, &errors.TaskMissingRequiredVars{
+		return &errors.TaskMissingRequiredVars{
 			TaskName:    t.Name(),
 			MissingVars: missingVars,
 		}
 	}
 
-	return true, nil
+	return nil
 }
