@@ -131,7 +131,7 @@ func (err *TaskCancelledNoTerminalError) Code() int {
 	return CodeTaskCancelled
 }
 
-// TaskCancelledNoTerminalError is returned when trying to run a task with a prompt in a non-terminal environment.
+// TaskMissingRequiredVars is returned when a task is missing required variables.
 type TaskMissingRequiredVars struct {
 	TaskName    string
 	MissingVars []string
