@@ -184,6 +184,10 @@
             "items": {
               "type": "string"
             }
+          },
+          "requires": {
+            "description": "A list of variables which should be set if this task is to run, if any of these variables are unset the task will error and not run",
+            "$ref": "#/definitions/3/requires_obj"
           }
         }
       },
@@ -208,7 +212,21 @@
       },
       "set": {
         "type": "string",
-        "enum": ["allexport", "a", "errexit", "e", "noexec", "n", "noglob", "f", "nounset", "u", "xtrace", "x", "pipefail"]
+        "enum": [
+          "allexport",
+          "a",
+          "errexit",
+          "e",
+          "noexec",
+          "n",
+          "noglob",
+          "f",
+          "nounset",
+          "u",
+          "xtrace",
+          "x",
+          "pipefail"
+        ]
       },
       "shopt": {
         "type": "string",
@@ -352,6 +370,18 @@
             }
           }
         }
+      },
+      "requires_obj": {
+        "type": "object",
+        "properties": {
+          "vars": {
+            "description": "List of variables that must be defined for the task to run",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
       }
     }
   },
@@ -375,8 +405,8 @@
         "output": {
           "description": "Defines how the STDOUT and STDERR are printed when running tasks in parallel. The interleaved output prints lines in real time (default). The group output will print the entire output of a command once, after it finishes, so you won't have live feedback for commands that take a long time to run. The prefix output will prefix every line printed by a command with [task-name] as the prefix, but you can customize the prefix for a command with the prefix: attribute.",
           "anyOf": [
-            {"$ref": "#/definitions/3/outputString"},
-            {"$ref": "#/definitions/3/outputObject"}
+            { "$ref": "#/definitions/3/outputString" },
+            { "$ref": "#/definitions/3/outputObject" }
           ]
         },
         "method": {
