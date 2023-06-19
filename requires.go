@@ -8,7 +8,7 @@ import (
 )
 
 func (e *Executor) areTaskRequiredVarsSet(ctx context.Context, t *taskfile.Task, call taskfile.Call) error {
-	if len(t.Requires.Vars) == 0 {
+	if t.Requires == nil || len(t.Requires.Vars) == 0 {
 		return nil
 	}
 
