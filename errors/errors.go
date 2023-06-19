@@ -23,6 +23,7 @@ const (
 	CodeTaskNameConflict
 	CodeTaskCalledTooManyTimes
 	CodeTaskCancelled
+	CodeTaskMissingRequiredVars
 )
 
 // TaskError extends the standard error interface with a Code method. This code will

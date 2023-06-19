@@ -2,9 +2,8 @@ package task
 
 import (
 	"context"
-	"errors"
-	"strings"
 
+	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/taskfile"
 )
 
@@ -18,7 +17,7 @@ func (e *Executor) areTaskRequiredVarsSet(ctx context.Context, t *taskfile.Task,
 		return false, err
 	}
 
-	missingVars := []string{}
+	var missingVars []string
 	for _, requiredVar := range t.Requires {
 		if !vars.Exists(requiredVar) {
 			missingVars = append(missingVars, requiredVar)
@@ -26,7 +25,10 @@ func (e *Executor) areTaskRequiredVarsSet(ctx context.Context, t *taskfile.Task,
 	}
 
 	if len(missingVars) > 0 {
-		return false, errors.New("required variables not set: " + strings.Join(missingVars, ","))
+		return false, &errors.TaskMissingRequiredVars{
+			TaskName:    t.Name(),
+			MissingVars: missingVars,
+		}
 	}
 
 	return true, nil
