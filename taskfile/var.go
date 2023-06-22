@@ -1,7 +1,16 @@
 package taskfile
 
 import (
+	"bytes"
+	"context"
 	"fmt"
+	"io"
+	"os"
+	"strings"
+
+	"golang.org/x/sync/singleflight"
+
+	"github.com/go-task/task/v3/internal/execext"
 
 	"gopkg.in/yaml.v3"
 
@@ -26,6 +35,8 @@ func (vs *Vars) ToCacheMap() (m map[string]any) {
 
 		if v.Live != nil {
 			m[k] = v.Live
+		} else if v.Lazy != nil {
+			m[k] = v.Lazy
 		} else {
 			m[k] = v.Static
 		}
@@ -75,6 +86,7 @@ type Var struct {
 	Live   any
 	Sh     string
 	Dir    string
+	Lazy   *LazySh
 }
 
 func (v *Var) UnmarshalYAML(node *yaml.Node) error {
@@ -90,14 +102,60 @@ func (v *Var) UnmarshalYAML(node *yaml.Node) error {
 
 	case yaml.MappingNode:
 		var sh struct {
-			Sh string
+			Sh   string
+			Lazy bool
 		}
 		if err := node.Decode(&sh); err != nil {
 			return err
+		}
+		if sh.Lazy {
+			v.Lazy = &LazySh{
+				Sh:     sh.Sh,
+				Sf:     &singleflight.Group{},
+				Stderr: os.Stderr,
+			}
+			return nil
 		}
 		v.Sh = sh.Sh
 		return nil
 	}
 
 	return fmt.Errorf("yaml: line %d: cannot unmarshal %s into variable", node.Line, node.ShortTag())
+}
+
+type LazySh struct {
+	Sh     string
+	Dir    string
+	Val    string
+	Done   bool
+	Sf     *singleflight.Group
+	Stderr io.Writer
+}
+
+func (l *LazySh) String() string {
+	val, err, _ := l.Sf.Do("", func() (any, error) {
+		if l.Done {
+			return l.Val, nil
+		}
+
+		var stdout bytes.Buffer
+		opts := &execext.RunCommandOptions{
+			Command: l.Sh,
+			Dir:     l.Dir,
+			Stdout:  &stdout,
+			Stderr:  l.Stderr,
+		}
+		if err := execext.RunCommand(context.Background(), opts); err != nil {
+			return "", fmt.Errorf(`task: Command "%s" failed: %s`, opts.Command, err)
+		}
+		result := strings.TrimSuffix(stdout.String(), "\r\n")
+		result = strings.TrimSuffix(result, "\n")
+		l.Val = result
+		l.Done = true
+		return result, nil
+	})
+	if err != nil {
+		panic(err)
+	}
+	return val.(string)
 }
