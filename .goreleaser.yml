@@ -7,7 +7,6 @@ build:
     - linux
     - freebsd
   goarch:
-    - '386'
     - amd64
     - s390x
   goarm:
