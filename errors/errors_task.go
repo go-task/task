@@ -105,10 +105,7 @@ type TaskCancelledByUserError struct {
 }
 
 func (err *TaskCancelledByUserError) Error() string {
-	return fmt.Sprintf(
-		`task: Task "%q" cancelled by user`,
-		err.TaskName,
-	)
+	return fmt.Sprintf(`task: Task %q cancelled by user`, err.TaskName)
 }
 
 func (err *TaskCancelledByUserError) Code() int {
@@ -122,7 +119,7 @@ type TaskCancelledNoTerminalError struct {
 
 func (err *TaskCancelledNoTerminalError) Error() string {
 	return fmt.Sprintf(
-		`task: Task "%q" cancelled because it has a prompt and the environment is not a terminal. Use --yes (-y) to run anyway.`,
+		`task: Task %q cancelled because it has a prompt and the environment is not a terminal. Use --yes (-y) to run anyway.`,
 		err.TaskName,
 	)
 }
