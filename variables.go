@@ -2,6 +2,7 @@ package task
 
 import (
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/joho/godotenv"
@@ -135,6 +136,12 @@ func (e *Executor) compiledTask(call taskfile.Call, evaluateShVars bool) (*taskf
 					list, err = fingerprint.Globs(new.Dir, new.Sources)
 					if err != nil {
 						return nil, err
+					}
+					// Make the paths relative to the task dir
+					for i, v := range list {
+						if list[i], err = filepath.Rel(new.Dir, v); err != nil {
+							return nil, err
+						}
 					}
 				}
 				// Get the list from a variable and split it up
