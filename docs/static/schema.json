@@ -332,7 +332,7 @@
                 "$ref": "#/definitions/3/for_list"
               },
               {
-                "$ref": "#/definitions/3/for_source"
+                "$ref": "#/definitions/3/for_attribute"
               },
               {
                 "$ref": "#/definitions/3/for_var"
@@ -360,19 +360,19 @@
         "required": ["for"]
       },
       "for_list": {
-        "description": "List of values to iterate over",
+        "description": "A list of values to iterate over",
         "type": "array",
         "items": {
           "type": "string"
         }
       },
-      "for_source": {
-        "description": "List of values to iterate over",
+      "for_attribute": {
+        "description": "The task attribute to iterate over",
         "type": "string",
-        "enum": ["source"]
+        "enum": ["sources"]
       },
       "for_var": {
-        "description": "List of values to iterate over",
+        "description": "Which variables to iterate over. The variable will be split using any whitespace character by default. This can be changed by using the `split` attribute.",
         "type": "object",
         "properties": {
           "var": {
