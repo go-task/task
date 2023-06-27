@@ -13,7 +13,7 @@ tasks:
       - foo.txt
       - bar.txt
     cmds:
-      - for: source
+      - for: sources
         cmd: cat "{{.ITEM}}"
 
   # Loop over the task's sources when globbed
@@ -21,7 +21,7 @@ tasks:
     sources:
       - "*.txt"
     cmds:
-      - for: source
+      - for: sources
         cmd: cat "{{.ITEM}}"
 
   # Loop over the contents of a variable

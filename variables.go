@@ -126,12 +126,12 @@ func (e *Executor) compiledTask(call taskfile.Call, evaluateShVars bool) (*taskf
 			}
 			if cmd.For != nil {
 				var list []string
-				// Get the list from the explicit forh list
+				// Get the list from the explicit for list
 				if cmd.For.List != nil && len(cmd.For.List) > 0 {
 					list = cmd.For.List
 				}
 				// Get the list from the task sources
-				if cmd.For.From == "source" {
+				if cmd.For.From == "sources" {
 					list, err = fingerprint.Globs(new.Dir, new.Sources)
 					if err != nil {
 						return nil, err
