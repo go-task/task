@@ -11,7 +11,7 @@ thankful for everyone that helps me to improve the overall experience.
 
 ## Translations
 
-We use [crowdin](https://crowdin.com/project/taskfile) to translate our document.
+We use [Crowdin](https://crowdin.com/project/taskfile) to translate our document.
 
 ## Integrations
 
