@@ -11,9 +11,7 @@ thankful for everyone that helps me to improve the overall experience.
 
 ## Translations
 
-[@DeronW](https://github.com/DeronW) maintains the
-[Chinese translation](https://task-zh.readthedocs.io/zh_CN/latest/) of the
-website [on this repository](https://github.com/DeronW/task).
+We use [crowdin](https://crowdin.com/project/taskfile) to translate our document.
 
 ## Integrations
 
