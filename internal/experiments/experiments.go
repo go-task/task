@@ -1,7 +1,6 @@
 package experiments
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -17,9 +16,7 @@ const envPrefix = "TASK_X_"
 var GentleForce bool
 
 func init() {
-	if err := readDotEnv(); err != nil {
-		panic(err)
-	}
+	readDotEnv()
 	GentleForce = parseEnv("GENTLE_FORCE")
 }
 
@@ -28,21 +25,14 @@ func parseEnv(xName string) bool {
 	return os.Getenv(envName) == "1"
 }
 
-func readDotEnv() error {
-	env, err := godotenv.Read()
-	if errors.Is(err, os.ErrNotExist) {
-		return nil
-	}
-	if err != nil {
-		return err
-	}
+func readDotEnv() {
+	env, _ := godotenv.Read()
 	// If the env var is an experiment, set it.
 	for key, value := range env {
 		if strings.HasPrefix(key, envPrefix) {
 			os.Setenv(key, value)
 		}
 	}
-	return nil
 }
 
 func List(l *logger.Logger) error {
