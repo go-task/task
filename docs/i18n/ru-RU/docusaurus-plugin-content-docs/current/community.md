@@ -9,7 +9,7 @@ sidebar_position: 10
 
 ## Переводчики
 
-[@DeronW](https://github.com/DeronW) поддерживает [Китайский перевод](https://task-zh.readthedocs.io/zh_CN/latest/) на сайте [в этом репозитории](https://github.com/DeronW/task).
+We use [Crowdin](https://crowdin.com/project/taskfile) to translate our document.
 
 ## Интеграции
 

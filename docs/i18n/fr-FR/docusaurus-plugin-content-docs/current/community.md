@@ -9,7 +9,7 @@ Certains travaux d'amélioration de l'écosystème Task sont réalisés par la c
 
 ## Traductions
 
-[@DeronW](https://github.com/DeronW) maintient la [traduction Chinoise](https://task-zh.readthedocs.io/zh_CN/latest/) du site [sur ce dépôt](https://github.com/DeronW/task).
+We use [Crowdin](https://crowdin.com/project/taskfile) to translate our document.
 
 ## Intégrations
 

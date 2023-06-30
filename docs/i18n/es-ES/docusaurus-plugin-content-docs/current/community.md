@@ -9,7 +9,7 @@ Some of the work to improve the Task ecosystem is done by the community, be it i
 
 ## Translations
 
-[@DeronW](https://github.com/DeronW) maintains the [Chinese translation](https://task-zh.readthedocs.io/zh_CN/latest/) of the website [on this repository](https://github.com/DeronW/task).
+We use [Crowdin](https://crowdin.com/project/taskfile) to translate our document.
 
 ## Integrations
 
