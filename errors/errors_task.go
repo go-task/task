@@ -130,3 +130,21 @@ func (err *TaskCancelledNoTerminalError) Error() string {
 func (err *TaskCancelledNoTerminalError) Code() int {
 	return CodeTaskCancelled
 }
+
+// TaskMissingRequiredVars is returned when a task is missing required variables.
+type TaskMissingRequiredVars struct {
+	TaskName    string
+	MissingVars []string
+}
+
+func (err *TaskMissingRequiredVars) Error() string {
+	return fmt.Sprintf(
+		`task: Task %q cancelled because it is missing required variables: %s`,
+		err.TaskName,
+		strings.Join(err.MissingVars, ", "),
+	)
+}
+
+func (err *TaskMissingRequiredVars) Code() int {
+	return CodeTaskMissingRequiredVars
+}

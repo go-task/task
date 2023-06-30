@@ -186,6 +186,10 @@ func (e *Executor) RunTask(ctx context.Context, call taskfile.Call) error {
 				return err
 			}
 
+			if err := e.areTaskRequiredVarsSet(ctx, t, call); err != nil {
+				return err
+			}
+
 			preCondMet, err := e.areTaskPreconditionsMet(ctx, t)
 			if err != nil {
 				return err
