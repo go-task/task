@@ -5,6 +5,21 @@ sidebar_position: 9
 
 # Changelog
 
+## v3.27.0 - 2023-06-29
+
+- Allow Taskfiles starting with lowercase characters ([#947](https://github.com/go-task/task/issues/947), [#1221](https://github.com/go-task/task/issues/1221) by [@pd93](https://github.com/pd93)).
+  - e.g. `taskfile.yml`, `taskfile.yaml`, `taskfile.dist.yml` &
+    `taskfile.dist.yaml`
+- Bug fixes were made to the
+  [npm installation method](https://taskfile.dev/installation/#npm). ([#1190](https://github.com/go-task/task/issues/1190), by
+  [@sounisi5011](https://github.com/sounisi5011)).
+- Added the [gentle force experiment](https://taskfile.dev/experiments) as a
+  draft ([#1200](https://github.com/go-task/task/issues/1200), [#1216](https://github.com/go-task/task/issues/1216) by [@pd93](https://github.com/pd93)).
+- Added an `--experiments` flag to allow you to see which experiments are
+  enabled ([#1242](https://github.com/go-task/task/issues/1242) by [@pd93](https://github.com/pd93)).
+- Added ability to specify which variables are required in a task ([#1203](https://github.com/go-task/task/issues/1203), [#1204](https://github.com/go-task/task/issues/1204)
+  by [@benc](https://github.com/benc)-uk).
+
 ## v3.26.0 - 2023-06-10
 
 - Only rewrite checksum files in `.task` if the checksum has changed ([#1185](https://github.com/go-task/task/issues/1185),
@@ -18,8 +33,8 @@ sidebar_position: 9
   [Documentation](https://taskfile.dev/usage/#warning-prompts)).
 - Added support for single command task syntax. With this change, it's now
   possible to declare just `cmd:` in a task, avoiding the more complex
-  `cmds: []` when you have only a single command for that task
-  ([#1130](https://github.com/go-task/task/issues/1130), [#1131](https://github.com/go-task/task/issues/1131) by [@timdp](https://github.com/timdp)).
+  `cmds: []` when you have only a single command for that task ([#1130](https://github.com/go-task/task/issues/1130), [#1131](https://github.com/go-task/task/issues/1131) by
+  [@timdp](https://github.com/timdp)).
 
 ## v3.25.0 - 2023-05-22
 

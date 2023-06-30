@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v3.27.0 - 2023-06-29
 
 - Allow Taskfiles starting with lowercase characters (#947, #1221 by @pd93).
   - e.g. `taskfile.yml`, `taskfile.yaml`, `taskfile.dist.yml` &
