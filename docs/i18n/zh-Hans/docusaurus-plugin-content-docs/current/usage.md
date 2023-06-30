@@ -37,9 +37,13 @@ Task 使用 [mvdan.cc/sh](https://mvdan.cc/sh/)，一个原生的 Go sh 解释�
 Task 会按以下顺序查找配置文件:
 
 - Taskfile.yml
+- taskfile.yml
 - Taskfile.yaml
+- taskfile.yaml
 - Taskfile.dist.yml
+- taskfile.dist.yml
 - Taskfile.dist.yaml
+- taskfile.dist.yaml
 
 使用 `.dist` 变体的目的是允许项目有一个提交版本 (`.dist`)，同时仍然允许个人用户通过添加额外的 `Taskfile.yml`（将在 `.gitignore` 上）来覆盖 Taskfile。
 
@@ -65,7 +69,7 @@ tasks:
 
 ### 运行全局 Taskfile
 
-如果您使用 `--global`（别名 `-g`）标志调用 Task，它将查找您的 home 目录而不是您的工作目录。 简而言之，Task 将在 `$HOME/Taskfile.yml` 或 `$HOME/Taskfile.yaml` 路径上寻找 Taskfile。
+如果您使用 `--global`（别名 `-g`）标志调用 Task，它将查找您的 home 目录而不是您的工作目录。 In short, Task will look for a Taskfile that matches `$HOME/{T,t}askfile.{yml,yaml}` .
 
 这对于您可以在系统的任何地方运行的自动化很有用！
 

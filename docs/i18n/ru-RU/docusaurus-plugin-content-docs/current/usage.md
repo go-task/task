@@ -37,9 +37,13 @@ Task использует [mvdan.cc/sh](https://mvdan.cc/sh/) - нативный
 Task будет искать следующие файлы, в порядке приоритета:
 
 - Taskfile.yml
+- taskfile.yml
 - Taskfile.yaml
+- taskfile.yaml
 - Taskfile.dist.yml
+- taskfile.dist.yml
 - Taskfile.dist.yaml
+- taskfile.dist.yaml
 
 Идея создания вариантов `.dist` заключается в том, чтобы позволить проектам иметь одну фиксированную версию (`.dist`), при этом позволяя отдельным пользователям переопределить Taskfile, добавив дополнительный `Taskfile.yml` (который будет находится в `.gitignore`).
 
@@ -65,7 +69,7 @@ tasks:
 
 ### Запуск глобального Taskfile
 
-Если вы вызовите Task с помощью флага `--global` (псевдоним `-g`), будет искать ваш домашний каталог вместо рабочего каталога. Проще говоря, Task будет искать в `$HOME/Taskfile.yml` или `$HOME/Taskfile.yaml`.
+Если вы вызовите Task с помощью флага `--global` (псевдоним `-g`), будет искать ваш домашний каталог вместо рабочего каталога. In short, Task will look for a Taskfile that matches `$HOME/{T,t}askfile.{yml,yaml}` .
 
 Это полезно, чтобы иметь автоматизацию, которую можно запустить из любого места вашей системы!
 

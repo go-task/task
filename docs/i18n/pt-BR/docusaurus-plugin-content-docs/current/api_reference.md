@@ -7,7 +7,7 @@ toc_max_heading_level: 5
 
 # Referência da API
 
-## CLI
+## Linha de comando
 
 O comando "task" tem a seguinte sintaxe:
 
@@ -21,39 +21,39 @@ Se `--` é informado, todos os argumentos remanescentes serão atribuídos a uma
 
 :::
 
-| Abreviação | Modificador                 | Tipo     | Predefinição                                                        | Descrição                                                                                                                                                                                                      |
-| ---------- | --------------------------- | -------- | ------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `-c`       | `--color`                   | `bool`   | `true`                                                              | Saída colorida. Habilitado por padrão. Defina o modificador como `false` ou use `NO_COLOR=1` para desativar.                                                                                                   |
-| `-C`       | `--concurrency`             | `int`    | `0`                                                                 | Limitar número de tarefas a serem executadas simultaneamente. Zero significa ilimitado.                                                                                                                        |
-| `-d`       | `--dir`                     | `string` | Pasta atual                                                         | Define a pasta de execução.                                                                                                                                                                                    |
-| `-n`       | `--dry`                     | `bool`   | `false`                                                             | Compila e imprime as tarefas na ordem em que elas seriam executadas, sem executá-las.                                                                                                                          |
-| `-x`       | `--exit-code`               | `bool`   | `false`                                                             | Faz com que o código de saída do comando sendo executado seja repassado pelo Task.                                                                                                                             |
-| `-f`       | `--force`                   | `bool`   | `false`                                                             | Força a execução mesmo quando a tarefa está atualizada.                                                                                                                                                        |
-| `-g`       | `--global`                  | `bool`   | `false`                                                             | Executa o Taskfile global, de `$HOME/Taskfile.{yml,yaml}`.                                                                                                                                                     |
-| `-h`       | `--help`                    | `bool`   | `false`                                                             | Mostra a ajuda do Task.                                                                                                                                                                                        |
-| `-i`       | `--init`                    | `bool`   | `false`                                                             | Cria um novo Taskfile.yml na pasta atual.                                                                                                                                                                      |
-| `-I`       | `--interval`                | `string` | `5s`                                                                | Define um intervalo de tempo diferente ao usar `--watch`, o padrão sendo 5 segundos. Este valor deve ser um [Go Duration](https://pkg.go.dev/time#ParseDuration) válido.                                       |
-| `-l`       | `--list`                    | `bool`   | `false`                                                             | Lista as tarefas com descrição do Taskfile atual.                                                                                                                                                              |
-| `-a`       | `--list-all`                | `bool`   | `false`                                                             | Lista todas as tarefas, com ou sem descrição.                                                                                                                                                                  |
-|            | `--sort`                    | `string` | `default`                                                           | Changes the order of the tasks when listed.<br />`default` - Alphanumeric with root tasks first<br />`alphanumeric` - Alphanumeric<br />`none` - No sorting (As they appear in the Taskfile) |
-|            | `--json`                    | `bool`   | `false`                                                             | Imprime a saída em [JSON](#json-output).                                                                                                                                                                       |
-| `-o`       | `--output`                  | `string` | O padrão é o que está definido no Taskfile, ou então `intervealed`. | Configura o estilo de saída: [`interleaved`/`group`/`prefixed`].                                                                                                                                               |
-|            | `--output-group-begin`      | `string` |                                                                     | Formato de mensagem a imprimir antes da saída agrupada de uma tarefa.                                                                                                                                          |
-|            | `--output-group-end`        | `string` |                                                                     | Formato de mensagem a imprimir depois da saída agrupada de uma tarefa.                                                                                                                                         |
-|            | `--output-group-error-only` | `bool`   | `false`                                                             | Oculta saída dos comandos que terminarem sem erro.                                                                                                                                                             |
-| `-p`       | `--parallel`                | `bool`   | `false`                                                             | Executa as tarefas fornecidas na linha de comando em paralelo.                                                                                                                                                 |
-| `-s`       | `--silent`                  | `bool`   | `false`                                                             | Desabilita impressão.                                                                                                                                                                                          |
-| `-y`       | `--yes`                     | `bool`   | `false`                                                             | Assume "yes" as answer to all prompts.                                                                                                                                                                         |
-|            | `--status`                  | `bool`   | `false`                                                             | Sai com código de saída diferente de zero se alguma das tarefas especificadas não estiver atualizada.                                                                                                          |
-|            | `--summary`                 | `bool`   | `false`                                                             | Mostrar resumo sobre uma tarefa.                                                                                                                                                                               |
-| `-t`       | `--taskfile`                | `string` | `Taskfile.yml` ou `Taskfile.yaml`                                   |                                                                                                                                                                                                                |
-| `-v`       | `--verbose`                 | `bool`   | `false`                                                             | Habilita modo verboso.                                                                                                                                                                                         |
-|            | `--version`                 | `bool`   | `false`                                                             | Mostrar versão do Task.                                                                                                                                                                                        |
-| `-w`       | `--watch`                   | `bool`   | `false`                                                             | Habilita o monitoramento de tarefas.                                                                                                                                                                           |
+| Abreviação | Modificador                 | Tipo     | Predefinição                                                        | Descrição                                                                                                                                                                                                                                                       |
+| ---------- | --------------------------- | -------- | ------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `-c`       | `--color`                   | `bool`   | `true`                                                              | Saída colorida. Habilitado por padrão. Defina o modificador como `false` ou use `NO_COLOR=1` para desativar.                                                                                                                                                    |
+| `-C`       | `--concurrency`             | `int`    | `0`                                                                 | Limitar número de tarefas a serem executadas simultaneamente. Zero significa ilimitado.                                                                                                                                                                         |
+| `-d`       | `--dir`                     | `string` | Pasta atual                                                         | Define a pasta de execução.                                                                                                                                                                                                                                     |
+| `-n`       | `--dry`                     | `bool`   | `false`                                                             | Compila e imprime as tarefas na ordem em que elas seriam executadas, sem executá-las.                                                                                                                                                                           |
+| `-x`       | `--exit-code`               | `bool`   | `false`                                                             | Faz com que o código de saída do comando sendo executado seja repassado pelo Task.                                                                                                                                                                              |
+| `-f`       | `--force`                   | `bool`   | `false`                                                             | Força a execução mesmo quando a tarefa está atualizada.                                                                                                                                                                                                         |
+| `-g`       | `--global`                  | `bool`   | `false`                                                             | Executa o Taskfile global, de `$HOME/Taskfile.{yml,yaml}`.                                                                                                                                                                                                      |
+| `-h`       | `--help`                    | `bool`   | `false`                                                             | Mostra a ajuda do Task.                                                                                                                                                                                                                                         |
+| `-i`       | `--init`                    | `bool`   | `false`                                                             | Cria um novo Taskfile.yml na pasta atual.                                                                                                                                                                                                                       |
+| `-I`       | `--interval`                | `string` | `5s`                                                                | Define um intervalo de tempo diferente ao usar `--watch`, o padrão sendo 5 segundos. Este valor deve ser um [Go Duration](https://pkg.go.dev/time#ParseDuration) válido.                                                                                        |
+| `-l`       | `--list`                    | `bool`   | `false`                                                             | Lista as tarefas com descrição do Taskfile atual.                                                                                                                                                                                                               |
+| `-a`       | `--list-all`                | `bool`   | `false`                                                             | Lista todas as tarefas, com ou sem descrição.                                                                                                                                                                                                                   |
+|            | `--sort`                    | `string` | `default`                                                           | Muda order das terafas quando listadas.<br />`default` - Ordem alfabética com as tarefas fo Taskfile raíz listadas por primeiro<br />`alphanumeric` - Alfabética<br />`none` - Sem ordenação (mantém a mesma ordem de declaração no Taskfile) |
+|            | `--json`                    | `bool`   | `false`                                                             | Imprime a saída em [JSON](#json-output).                                                                                                                                                                                                                        |
+| `-o`       | `--output`                  | `string` | O padrão é o que está definido no Taskfile, ou então `intervealed`. | Configura o estilo de saída: [`interleaved`/`group`/`prefixed`].                                                                                                                                                                                                |
+|            | `--output-group-begin`      | `string` |                                                                     | Formato de mensagem a imprimir antes da saída agrupada de uma tarefa.                                                                                                                                                                                           |
+|            | `--output-group-end`        | `string` |                                                                     | Formato de mensagem a imprimir depois da saída agrupada de uma tarefa.                                                                                                                                                                                          |
+|            | `--output-group-error-only` | `bool`   | `false`                                                             | Oculta saída dos comandos que terminarem sem erro.                                                                                                                                                                                                              |
+| `-p`       | `--parallel`                | `bool`   | `false`                                                             | Executa as tarefas fornecidas na linha de comando em paralelo.                                                                                                                                                                                                  |
+| `-s`       | `--silent`                  | `bool`   | `false`                                                             | Desabilita impressão.                                                                                                                                                                                                                                           |
+| `-y`       | `--yes`                     | `bool`   | `false`                                                             | Assuma "sim" como resposta a todos os prompts.                                                                                                                                                                                                                  |
+|            | `--status`                  | `bool`   | `false`                                                             | Sai com código de saída diferente de zero se alguma das tarefas especificadas não estiver atualizada.                                                                                                                                                           |
+|            | `--summary`                 | `bool`   | `false`                                                             | Mostrar resumo sobre uma tarefa.                                                                                                                                                                                                                                |
+| `-t`       | `--taskfile`                | `string` | `Taskfile.yml` ou `Taskfile.yaml`                                   |                                                                                                                                                                                                                                                                 |
+| `-v`       | `--verbose`                 | `bool`   | `false`                                                             | Habilita modo verboso.                                                                                                                                                                                                                                          |
+|            | `--version`                 | `bool`   | `false`                                                             | Mostrar versão do Task.                                                                                                                                                                                                                                         |
+| `-w`       | `--watch`                   | `bool`   | `false`                                                             | Habilita o monitoramento de tarefas.                                                                                                                                                                                                                            |
 
 ## Códigos de saída
 
-O Task às vezes fecha com códigos de saída específicos. These codes are split into three groups with the following ranges:
+O Task às vezes fecha com códigos de saída específicos. Estes códigos são divididos em três grupos com os seguintes intervalos:
 
 - Erros gerais (0-99)
 - Erros de Taskfile (100-199)
@@ -73,13 +73,13 @@ Uma lista completa dos códigos de saída e suas descrições podem ser encontra
 | 202    | O usuário tentou invocar uma tarefa que é interna           |
 | 203    | Há várias tarefas com o mesmo nome ou apelido               |
 | 204    | Uma tarefa foi chamada muitas vezes                         |
-| 205    | A task was cancelled by the user                            |
+| 205    | A tarefa foi cancelada pelo usuário                         |
 
-These codes can also be found in the repository in [`errors/errors.go`](https://github.com/go-task/task/blob/main/errors/errors.go).
+Esses códigos também podem ser encontrados no repositório em [`errors/errors.go`](https://github.com/go-task/task/blob/main/errors/errors.go).
 
 :::info
 
-When Task is run with the `-x`/`--exit-code` flag, the exit code of any failed commands will be passed through to the user instead.
+Quando o Task é executado com o modificador `-x`/`--exit-code`, o código de saída de todos os comandos falhados será passado para o usuário.
 
 :::
 
@@ -109,56 +109,56 @@ Quando estiver usando o modificador `--json` em combinação com o modificador `
 
 ## Variáveis Especiais
 
-There are some special variables that is available on the templating system:
+Há algumas variáveis especiais que são acessíveis via template:
 
-| Var                | Description                                                                                                                                              |
-| ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `CLI_ARGS`         | Contain all extra arguments passed after `--` when calling Task through the CLI.                                                                         |
-| `TASK`             | The name of the current task.                                                                                                                            |
-| `ROOT_DIR`         | The absolute path of the root Taskfile.                                                                                                                  |
-| `TASKFILE_DIR`     | The absolute path of the included Taskfile.                                                                                                              |
-| `USER_WORKING_DIR` | The absolute path of the directory `task` was called from.                                                                                               |
-| `CHECKSUM`         | The checksum of the files listed in `sources`. Only available within the `status` prop and if method is set to `checksum`.                               |
-| `TIMESTAMP`        | The date object of the greatest timestamp of the files listes in `sources`. Only available within the `status` prop and if method is set to `timestamp`. |
-| `TASK_VERSION`     | The current version of task.                                                                                                                             |
+| Variável           | Descrição                                                                                                                                                              |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `CLI_ARGS`         | Contém todos os argumentos extras passados depois de `--` quando invocando o Task via linha de comando.                                                                |
+| `TASK`             | O nome da tarefa atual.                                                                                                                                                |
+| `ROOT_DIR`         | O caminho absoluto para o Taskfile raíz.                                                                                                                               |
+| `TASKFILE_DIR`     | O caminho absoluto para o Taskfile incluído.                                                                                                                           |
+| `USER_WORKING_DIR` | O caminho absoluto a partir do qual o comando `task` foi invocado.                                                                                                     |
+| `CHECKSUM`         | O "checksum" dos arquivos listados em `sources`. Apenas disponível dentro do atributo `status` e se o método estiver configurado como `checksum`.                      |
+| `TIMESTAMP`        | A maior data de modificação entre os arquivos listados em `sources`. Apenas disponível dentro do atributo `status` e se o método estiver configurado como `timestamp`. |
+| `TASK_VERSION`     | A versão atual do Task.                                                                                                                                                |
 
 ## ENV
 
-Some environment variables can be overriden to adjust Task behavior.
+Algumas variáveis de ambiente podem ser configuradas para mudar o comportamento do Task.
 
-| ENV                  | Default | Description                                                                                                       |
-| -------------------- | ------- | ----------------------------------------------------------------------------------------------------------------- |
-| `TASK_TEMP_DIR`      | `.task` | Location of the temp dir. Can relative to the project like `tmp/task` or absolute like `/tmp/.task` or `~/.task`. |
-| `TASK_COLOR_RESET`   | `0`     | Color used for white.                                                                                             |
-| `TASK_COLOR_BLUE`    | `34`    | Color used for blue.                                                                                              |
-| `TASK_COLOR_GREEN`   | `32`    | Color used for green.                                                                                             |
-| `TASK_COLOR_CYAN`    | `36`    | Color used for cyan.                                                                                              |
-| `TASK_COLOR_YELLOW`  | `33`    | Color used for yellow.                                                                                            |
-| `TASK_COLOR_MAGENTA` | `35`    | Color used for magenta.                                                                                           |
-| `TASK_COLOR_RED`     | `31`    | Color used for red.                                                                                               |
-| `FORCE_COLOR`        |         | Force color output usage.                                                                                         |
+| Variável de Ambiente | Padrão  | Descrição                                                                                                                                   |
+| -------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `TASK_TEMP_DIR`      | `.task` | Caminho da pasta temporária. Pode ser um caminho relativo ao projeto como `tmp/task` ou um caminho absoluto como `/tmp/.task` ou `~/.task`. |
+| `TASK_COLOR_RESET`   | `0`     | Cor utilizada para branco.                                                                                                                  |
+| `TASK_COLOR_BLUE`    | `34`    | Cor utilizada para azul.                                                                                                                    |
+| `TASK_COLOR_GREEN`   | `32`    | Cor utilizada para verde.                                                                                                                   |
+| `TASK_COLOR_CYAN`    | `36`    | Cor utilizada para ciano.                                                                                                                   |
+| `TASK_COLOR_YELLOW`  | `33`    | Cor utilizada para amarelo.                                                                                                                 |
+| `TASK_COLOR_MAGENTA` | `35`    | Cor utilizada para magenta.                                                                                                                 |
+| `TASK_COLOR_RED`     | `31`    | Cor utilizada para vermelho.                                                                                                                |
+| `FORCE_COLOR`        |         | Forçar saída colorida no terminal.                                                                                                          |
 
-## Taskfile Schema
+## Esquema do Taskfile
 
-| Attribute  | Type                               | Default       | Description                                                                                                                                                            |
-| ---------- | ---------------------------------- | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `version`  | `string`                           |               | Version of the Taskfile. The current version is `3`.                                                                                                                   |
-| `output`   | `string`                           | `interleaved` | Output mode. Available options: `interleaved`, `group` and `prefixed`.                                                                                                 |
-| `method`   | `string`                           | `checksum`    | Default method in this Taskfile. Can be overriden in a task by task basis. Available options: `checksum`, `timestamp` and `none`.                                      |
-| `includes` | [`map[string]Include`](#include)   |               | Additional Taskfiles to be included.                                                                                                                                   |
-| `vars`     | [`map[string]Variable`](#variable) |               | A set of global variables.                                                                                                                                             |
-| `env`      | [`map[string]Variable`](#variable) |               | A set of global environment variables.                                                                                                                                 |
-| `tasks`    | [`map[string]Task`](#task)         |               | A set of task definitions.                                                                                                                                             |
-| `silent`   | `bool`                             | `false`       | Default 'silent' options for this Taskfile. If `false`, can be overidden with `true` in a task by task basis.                                                          |
-| `dotenv`   | `[]string`                         |               | A list of `.env` file paths to be parsed.                                                                                                                              |
-| `run`      | `string`                           | `always`      | Default 'run' option for this Taskfile. Available options: `always`, `once` and `when_changed`.                                                                        |
-| `interval` | `string`                           | `5s`          | Sets a different watch interval when using `--watch`, the default being 5 seconds. This string should be a valid [Go Duration](https://pkg.go.dev/time#ParseDuration). |
-| `set`      | `[]string`                         |               | Specify options for the [`set` builtin](https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html).                                                      |
-| `shopt`    | `[]string`                         |               | Specify option for the [`shopt` builtin](https://www.gnu.org/software/bash/manual/html_node/The-Shopt-Builtin.html).                                                   |
+| Atributo   | Tipo                               | Padrão        | Descrição                                                                                                                                                                                           |
+| ---------- | ---------------------------------- | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `version`  | `string`                           |               | Versão do Taskfile. A versão mais atual é a `3`.                                                                                                                                                    |
+| `output`   | `string`                           | `interleaved` | Mode de saída. Opções disponíveis: `interleaved`, `group` e `prefixed`.                                                                                                                             |
+| `method`   | `string`                           | `checksum`    | O método padrão deste Taskfile. Pode ser sobre-escrito em cada tarefa individual. Opções disponíveis: `checksum` (conteúdo dos arquivos), `timestamp` (data/hora de modificação) e `none` (nenhum). |
+| `includes` | [`map[string]Include`](#include)   |               | Taskfiles adicionais a serem incluídos.                                                                                                                                                             |
+| `vars`     | [`map[string]Variable`](#variable) |               | Um conjunto de variáveis globais.                                                                                                                                                                   |
+| `env`      | [`map[string]Variable`](#variable) |               | Um conjunto de variáveis de ambiente globais.                                                                                                                                                       |
+| `tasks`    | [`map[string]Task`](#task)         |               | Um conjunto de tarefas.                                                                                                                                                                             |
+| `silent`   | `bool`                             | `false`       | Opção padrão para `silent` para este Taskfile. Se `false`, pode ser sobre-escrito com `true` em cada tarefa individual.                                                                             |
+| `dotenv`   | `[]string`                         |               | Uma lista de arquivos `.env` para serem incluídos.                                                                                                                                                  |
+| `run`      | `string`                           | `always`      | Opção padrão para `run` para este Taskfile. Opções disponíveis: `always` (sempre), `once` (uma vez) e `when_changed` (quando mudou).                                                                |
+| `interval` | `string`                           | `5s`          | Configura um intervalo de tempo diferente para `--watch`, sendo que o padrão é de 5 segundos. Essa string deve ser um [Go Duration](https://pkg.go.dev/time#ParseDuration) válido.                  |
+| `set`      | `[]string`                         |               | Configura opções para o builtin [`set`](https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html).                                                                                   |
+| `shopt`    | `[]string`                         |               | Configura opções para o builtin [`shopt`](https://www.gnu.org/software/bash/manual/html_node/The-Shopt-Builtin.html).                                                                               |
 
 ### Include
 
-| Attribute  | Type                  | Default                       | Description                                                                                                                                                                                                                                              |
+| Atributo   | Tipo                  | Padrão                        | Descrição                                                                                                                                                                                                                                                |
 | ---------- | --------------------- | ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `taskfile` | `string`              |                               | The path for the Taskfile or directory to be included. If a directory, Task will look for files named `Taskfile.yml` or `Taskfile.yaml` inside that directory. If a relative path, resolved relative to the directory containing the including Taskfile. |
 | `dir`      | `string`              | The parent Taskfile directory | The working directory of the included tasks when run.                                                                                                                                                                                                    |
@@ -180,10 +180,10 @@ includes:
 
 ### Variable
 
-| Attribute | Type     | Default | Description                                                              |
-| --------- | -------- | ------- | ------------------------------------------------------------------------ |
-| _itself_  | `string` |         | A static value that will be set to the variable.                         |
-| `sh`      | `string` |         | A shell command. The output (`STDOUT`) will be assigned to the variable. |
+| Atributo | Tipo     | Padrão | Descrição                                                                |
+| -------- | -------- | ------ | ------------------------------------------------------------------------ |
+| _itself_ | `string` |        | A static value that will be set to the variable.                         |
+| `sh`     | `string` |        | A shell command. The output (`STDOUT`) will be assigned to the variable. |
 
 :::info
 
@@ -200,7 +200,7 @@ vars:
 
 ### Task
 
-| Attribute       | Type                               | Default                                               | Description                                                                                                                                                                                                                                                                                              |
+| Atributo        | Tipo                               | Padrão                                                | Descrição                                                                                                                                                                                                                                                                                                |
 | --------------- | ---------------------------------- | ----------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `cmds`          | [`[]Command`](#command)            |                                                       | A list of shell commands to be executed.                                                                                                                                                                                                                                                                 |
 | `deps`          | [`[]Dependency`](#dependency)      |                                                       | A list of dependencies of this task. Tasks defined here will run in parallel before this task.                                                                                                                                                                                                           |
@@ -248,7 +248,7 @@ tasks:
 
 #### Command
 
-| Attribute      | Type                               | Default       | Description                                                                                                                                                                                        |
+| Atributo       | Tipo                               | Padrão        | Descrição                                                                                                                                                                                          |
 | -------------- | ---------------------------------- | ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `cmd`          | `string`                           |               | The shell command to be executed.                                                                                                                                                                  |
 | `silent`       | `bool`                             | `false`       | Skips some output for this command. Note that STDOUT and STDERR of the commands will still be redirected.                                                                                          |
@@ -276,11 +276,11 @@ tasks:
 
 #### Dependency
 
-| Attribute | Type                               | Default | Description                                                                                                      |
-| --------- | ---------------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------- |
-| `task`    | `string`                           |         | The task to be execute as a dependency.                                                                          |
-| `vars`    | [`map[string]Variable`](#variable) |         | Optional additional variables to be passed to this task.                                                         |
-| `silent`  | `bool`                             | `false` | Hides task name and command from output. The command's output will still be redirected to `STDOUT` and `STDERR`. |
+| Atributo | Tipo                               | Padrão  | Descrição                                                                                                        |
+| -------- | ---------------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------- |
+| `task`   | `string`                           |         | The task to be execute as a dependency.                                                                          |
+| `vars`   | [`map[string]Variable`](#variable) |         | Optional additional variables to be passed to this task.                                                         |
+| `silent` | `bool`                             | `false` | Hides task name and command from output. The command's output will still be redirected to `STDOUT` and `STDERR`. |
 
 :::tip
 
@@ -296,10 +296,10 @@ tasks:
 
 #### Precondition
 
-| Attribute | Type     | Default | Description                                                                                                  |
-| --------- | -------- | ------- | ------------------------------------------------------------------------------------------------------------ |
-| `sh`      | `string` |         | Command to be executed. If a non-zero exit code is returned, the task errors without executing its commands. |
-| `msg`     | `string` |         | Optional message to print if the precondition isn't met.                                                     |
+| Atributo | Tipo     | Padrão | Descrição                                                                                                    |
+| -------- | -------- | ------ | ------------------------------------------------------------------------------------------------------------ |
+| `sh`     | `string` |        | Command to be executed. If a non-zero exit code is returned, the task errors without executing its commands. |
+| `msg`    | `string` |        | Optional message to print if the precondition isn't met.                                                     |
 
 :::tip
 

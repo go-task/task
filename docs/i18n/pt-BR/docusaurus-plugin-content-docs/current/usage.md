@@ -37,9 +37,13 @@ If you omit a task name, "default" will be assumed.
 Task will look for the following file names, in order of priority:
 
 - Taskfile.yml
+- taskfile.yml
 - Taskfile.yaml
+- taskfile.yaml
 - Taskfile.dist.yml
+- taskfile.dist.yml
 - Taskfile.dist.yaml
+- taskfile.dist.yaml
 
 The intention of having the `.dist` variants is to allow projects to have one committed version (`.dist`) while still allowing individual users to override the Taskfile by adding an additional `Taskfile.yml` (which would be on `.gitignore`).
 
@@ -65,7 +69,7 @@ In this example, we can run `cd <service>` and `task up` and as long as the `<se
 
 ### Running a global Taskfile
 
-If you call Task with the `--global` (alias `-g`) flag, it will look for your home directory instead of your working directory. In short, Task will look for a Taskfile on either `$HOME/Taskfile.yml` or `$HOME/Taskfile.yaml` paths.
+If you call Task with the `--global` (alias `-g`) flag, it will look for your home directory instead of your working directory. In short, Task will look for a Taskfile that matches `$HOME/{T,t}askfile.{yml,yaml}` .
 
 This is useful to have automation that you can run from anywhere in your system!
 

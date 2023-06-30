@@ -9,7 +9,7 @@ sidebar_position: 10
 
 ## 翻译
 
-[@DeronW](https://github.com/DeronW) 在 [此存储库](https://github.com/DeronW/task) 中维护网站的 [中文翻译](https://task-zh.readthedocs.io/zh_CN/latest/)。
+We use [Crowdin](https://crowdin.com/project/taskfile) to translate our document.
 
 ## 集成
 
