@@ -5,6 +5,11 @@ sidebar_position: 9
 
 # Changelog
 
+## v3.27.1 - 2023-06-30
+
+- Fix panic when a `.env` directory (not file) is present on current directory
+  ([#1244](https://github.com/go-task/task/issues/1244), [#1245](https://github.com/go-task/task/issues/1245) by [@pd93](https://github.com/pd93)).
+
 ## v3.27.0 - 2023-06-29
 
 - Allow Taskfiles starting with lowercase characters ([#947](https://github.com/go-task/task/issues/947), [#1221](https://github.com/go-task/task/issues/1221) by [@pd93](https://github.com/pd93)).

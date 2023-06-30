@@ -1,5 +1,10 @@
 # Changelog
 
+## v3.27.1 - 2023-06-30
+
+- Fix panic when a `.env` directory (not file) is present on current directory
+  (#1244, #1245 by @pd93).
+
 ## v3.27.0 - 2023-06-29
 
 - Allow Taskfiles starting with lowercase characters (#947, #1221 by @pd93).
