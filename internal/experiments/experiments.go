@@ -5,8 +5,11 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"text/tabwriter"
 
 	"github.com/joho/godotenv"
+
+	"github.com/go-task/task/v3/internal/logger"
 )
 
 const envPrefix = "TASK_X_"
@@ -40,4 +43,12 @@ func readDotEnv() error {
 		}
 	}
 	return nil
+}
+
+func List(l *logger.Logger) error {
+	w := tabwriter.NewWriter(os.Stdout, 0, 8, 6, ' ', 0)
+	l.FOutf(w, logger.Yellow, "* ")
+	l.FOutf(w, logger.Green, "GENTLE_FORCE")
+	l.FOutf(w, logger.Default, ": \t%t\n", GentleForce)
+	return w.Flush()
 }

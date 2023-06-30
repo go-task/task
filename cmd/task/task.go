@@ -70,6 +70,7 @@ var flags struct {
 	color       bool
 	interval    time.Duration
 	global      bool
+	experiments bool
 }
 
 func main() {
@@ -129,6 +130,7 @@ func run() error {
 	pflag.IntVarP(&flags.concurrency, "concurrency", "C", 0, "Limit number tasks to run concurrently.")
 	pflag.DurationVarP(&flags.interval, "interval", "I", 0, "Interval to watch for changes.")
 	pflag.BoolVarP(&flags.global, "global", "g", false, "Runs global Taskfile, from $HOME/{T,t}askfile.{yml,yaml}.")
+	pflag.BoolVar(&flags.experiments, "experiments", false, "Lists all the available experiments and whether or not they are enabled.")
 
 	// Gentle force experiment will override the force flag and add a new force-all flag
 	if experiments.GentleForce {
@@ -148,6 +150,16 @@ func run() error {
 	if flags.help {
 		pflag.Usage()
 		return nil
+	}
+
+	if flags.experiments {
+		l := &logger.Logger{
+			Stdout:  os.Stdout,
+			Stderr:  os.Stderr,
+			Verbose: flags.verbose,
+			Color:   flags.color,
+		}
+		return experiments.List(l)
 	}
 
 	if flags.init {

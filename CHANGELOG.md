@@ -10,6 +10,8 @@
   @sounisi5011).
 - Added the [gentle force experiment](https://taskfile.dev/experiments) as a
   draft (#1200, #1216 by @pd93).
+- Added an `--experiments` flag to allow you to see which experiments are
+  enabled (#1242 by @pd93).
 - Added ability to specify which variables are required in a task (#1203, #1204
   by @benc-uk).
 
