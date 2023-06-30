@@ -5,13 +5,15 @@
 - Allow Taskfiles starting with lowercase characters (#947, #1221 by @pd93).
   - e.g. `taskfile.yml`, `taskfile.yaml`, `taskfile.dist.yml` &
     `taskfile.dist.yaml`
-- Bug fixed were made to the
+- Bug fixes were made to the
   [npm installation method](https://taskfile.dev/installation/#npm). (#1190, by
   @sounisi5011).
 - Added the [gentle force experiment](https://taskfile.dev/experiments) as a
   draft (#1200, #1216 by @pd93).
 - Added an `--experiments` flag to allow you to see which experiments are
   enabled (#1242 by @pd93).
+- Added ability to specify which variables are required in a task (#1203, #1204
+  by @benc-uk).
 
 ## v3.26.0 - 2023-06-10
 

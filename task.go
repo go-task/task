@@ -155,7 +155,7 @@ func (e *Executor) RunTask(ctx context.Context, call taskfile.Call) error {
 			return &errors.TaskCancelledNoTerminalError{TaskName: call.Task}
 		}
 
-		e.Logger.Outf(logger.Yellow, "task: %q [y/N]\n", t.Prompt)
+		e.Logger.Outf(logger.Yellow, "task: %q [y/N]: ", t.Prompt)
 
 		reader := bufio.NewReader(e.Stdin)
 		userInput, err := reader.ReadString('\n')
@@ -183,6 +183,10 @@ func (e *Executor) RunTask(ctx context.Context, call taskfile.Call) error {
 		skipFingerprinting := e.ForceAll || (call.Direct && e.Force)
 		if !skipFingerprinting {
 			if err := ctx.Err(); err != nil {
+				return err
+			}
+
+			if err := e.areTaskRequiredVarsSet(ctx, t, call); err != nil {
 				return err
 			}
 

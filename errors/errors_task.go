@@ -105,10 +105,7 @@ type TaskCancelledByUserError struct {
 }
 
 func (err *TaskCancelledByUserError) Error() string {
-	return fmt.Sprintf(
-		`task: Task "%q" cancelled by user`,
-		err.TaskName,
-	)
+	return fmt.Sprintf(`task: Task %q cancelled by user`, err.TaskName)
 }
 
 func (err *TaskCancelledByUserError) Code() int {
@@ -122,11 +119,29 @@ type TaskCancelledNoTerminalError struct {
 
 func (err *TaskCancelledNoTerminalError) Error() string {
 	return fmt.Sprintf(
-		`task: Task "%q" cancelled because it has a prompt and the environment is not a terminal. Use --yes (-y) to run anyway.`,
+		`task: Task %q cancelled because it has a prompt and the environment is not a terminal. Use --yes (-y) to run anyway.`,
 		err.TaskName,
 	)
 }
 
 func (err *TaskCancelledNoTerminalError) Code() int {
 	return CodeTaskCancelled
+}
+
+// TaskMissingRequiredVars is returned when a task is missing required variables.
+type TaskMissingRequiredVars struct {
+	TaskName    string
+	MissingVars []string
+}
+
+func (err *TaskMissingRequiredVars) Error() string {
+	return fmt.Sprintf(
+		`task: Task %q cancelled because it is missing required variables: %s`,
+		err.TaskName,
+		strings.Join(err.MissingVars, ", "),
+	)
+}
+
+func (err *TaskMissingRequiredVars) Code() int {
+	return CodeTaskMissingRequiredVars
 }
