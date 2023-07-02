@@ -61,19 +61,20 @@ Task 有时会以特定的退出代码退出。 These codes are split into three
 
 可以在下面找到退出代码及其描述的完整列表：
 
-| 代码  | 描述                               |
-| --- | -------------------------------- |
-| 0   | 成功                               |
-| 1   | 出现未知错误                           |
-| 100 | 找不到 Taskfile                     |
-| 101 | 尝试初始化一个 Taskfile 时已经存在           |
-| 102 | Taskfile 无效或无法解析                 |
-| 200 | 找不到指定的 task                      |
-| 201 | 在 task 中执行命令时出错                  |
-| 202 | 用户试图调用内部 task                    |
-| 203 | 有多个具有相同名称或别名的 task               |
-| 204 | 一个 task 被调用了太多次                  |
-| 205 | A task was cancelled by the user |
+| 代码  | 描述                                                        |
+| --- | --------------------------------------------------------- |
+| 0   | 成功                                                        |
+| 1   | 出现未知错误                                                    |
+| 100 | 找不到 Taskfile                                              |
+| 101 | 尝试初始化一个 Taskfile 时已经存在                                    |
+| 102 | Taskfile 无效或无法解析                                          |
+| 200 | 找不到指定的 task                                               |
+| 201 | 在 task 中执行命令时出错                                           |
+| 202 | 用户试图调用内部 task                                             |
+| 203 | 有多个具有相同名称或别名的 task                                        |
+| 204 | 一个 task 被调用了太多次                                           |
+| 205 | A task was cancelled by the user                          |
+| 206 | A task was not executed due to missing required variables |
 
 These codes can also be found in the repository in [`errors/errors.go`](https://github.com/go-task/task/blob/main/errors/errors.go).
 
@@ -126,7 +127,7 @@ When Task is run with the `-x`/`--exit-code` flag, the exit code of any failed c
 
 可以覆盖某些环境变量以调整 Task 行为。
 
-| 环境变量                 | 默认      | 描述                                                           |
+| ENV                  | 默认      | 描述                                                           |
 | -------------------- | ------- | ------------------------------------------------------------ |
 | `TASK_TEMP_DIR`      | `.task` | 临时目录的位置。 可以相对于项目比如 `tmp/task` 或绝对如 `/tmp/.task` 或 `~/.task`。 |
 | `TASK_COLOR_RESET`   | `0`     | 用于白色的颜色。                                                     |
@@ -200,33 +201,35 @@ vars:
 
 ### Task
 
-| 属性              | 类型                                 | 默认                         | 描述                                                                                                                                         |
-| --------------- | ---------------------------------- | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| `cmds`          | [`[]Command`](#command)            |                            | 要执行的 shell 命令列表。                                                                                                                           |
-| `deps`          | [`[]Dependency`](#dependency)      |                            | 此 task 的依赖项列表。 此处定义的 task 将在此 task 之前并行运行。                                                                                                 |
-| `label`         | `string`                           |                            | 运行 task 时覆盖输出中的 task 名称。 支持变量。                                                                                                             |
-| `desc`          | `string`                           |                            | task 的简短描述。 这在调用 `task --list` 时显示。                                                                                                        |
-| `prompt`        | `string`                           |                            | A prompt that will be presented before a task is run. Declining will cancel running the current and any subsequent tasks.                  |
-| `summary`       | `string`                           |                            | task 的较长描述。 这在调用 `task --summary [task]` 时显示。                                                                                              |
-| `aliases`       | `[]string`                         |                            | 可以调用 task 的别名列表。                                                                                                                           |
-| `sources`       | `[]string`                         |                            | 运行此 task 之前要检查的源列表。 与 `checksum` 和 `timestamp` 方法相关。 可以是文件路径或星号。                                                                           |
-| `generates`     | `[]string`                         |                            | 此 task 要生成的文件列表。 与 `timestamp` 方法相关。 可以是文件路径或星号。                                                                                           |
-| `status`        | `[]string`                         |                            | 用于检查此 task 是否应运行的命令列表。 否则跳过该 task。 这个方法会覆盖 `method`、`sources` 和 `generates`。                                                               |
-| `preconditions` | [`[]Precondition`](#precondition)  |                            | 用于检查此 task 是否应运行的命令列表。 如果不满足条件，task 将出错。                                                                                                   |
-| `dir`           | `string`                           |                            | 此 task 应运行的目录。 默认为当前工作目录。                                                                                                                  |
-| `vars`          | [`map[string]Variable`](#variable) |                            | 可在 task 中使用的一组变量。                                                                                                                          |
-| `env`           | [`map[string]Variable`](#variable) |                            | 一组可用于 shell 命令的环境变量。                                                                                                                       |
-| `dotenv`        | `[]string`                         |                            | 要解析的 `.env` 文件路径列表。                                                                                                                        |
-| `silent`        | `bool`                             | `false`                    | 从输出中隐藏 task 名称和命令。 命令的输出仍将重定向到 `STDOUT` 和 `STDERR`。 当与 `--list` 标志结合使用时，task 描述将被隐藏。                                                       |
-| `interactive`   | `bool`                             | `false`                    | 告诉 task 该命令是交互式的。                                                                                                                          |
-| `internal`      | `bool`                             | `false`                    | 停止在命令行上调用 task。 当与 `--list` 一起使用时，它也会从输出中省略。                                                                                               |
-| `method`        | `string`                           | `checksum`                 | 定义用于检查 task 是最新的方法。 `timestamp` 将比较 sources 的时间戳并生成文件。 `checksum` 将检查 checksum（您可能想忽略 .gitignore 文件中的 .task 文件夹）。 `none` 跳过任何验证并始终运行 task。 |
-| `prefix`        | `string`                           |                            | 定义一个字符串作为并行运行 task 输出的前缀。 仅在输出模式是 `prefixed` 时使用。                                                                                          |
-| `ignore_error`  | `bool`                             | `false`                    | 如果执行命令时发生错误，则继续执行。                                                                                                                         |
-| `run`           | `string`                           | Taskfile 中全局声明的值或 `always` | 指定如果多次调用该 task 是否应再次运行。 可用选项：`always`、`once` 和 `when_changed`。                                                                             |
-| `platforms`     | `[]string`                         | 所有平台                       | 指定应在哪些平台上运行 task。 允许使用 [有效的 GOOS 和 GOARCH 值](https://github.com/golang/go/blob/main/src/go/build/syslist.go)。 否则将跳过 task。                  |
-| `set`           | `[]string`                         |                            | 为 [内置 `set`](https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html) 指定选项。                                                |
-| `shopt`         | `[]string`                         |                            | 为 [内置 `shopt`](https://www.gnu.org/software/bash/manual/html_node/The-Shopt-Builtin.html) 指定选项。                                            |
+| 属性              | 类型                                 | 默认                         | 描述                                                                                                                                          |
+| --------------- | ---------------------------------- | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `cmds`          | [`[]Command`](#command)            |                            | 要执行的 shell 命令列表。                                                                                                                            |
+| `deps`          | [`[]Dependency`](#dependency)      |                            | 此 task 的依赖项列表。 此处定义的 task 将在此 task 之前并行运行。                                                                                                  |
+| `label`         | `string`                           |                            | 运行 task 时覆盖输出中的 task 名称。 支持变量。                                                                                                              |
+| `desc`          | `string`                           |                            | task 的简短描述。 这在调用 `task --list` 时显示。                                                                                                         |
+| `prompt`        | `string`                           |                            | A prompt that will be presented before a task is run. Declining will cancel running the current and any subsequent tasks.                   |
+| `summary`       | `string`                           |                            | task 的较长描述。 这在调用 `task --summary [task]` 时显示。                                                                                               |
+| `aliases`       | `[]string`                         |                            | 可以调用 task 的别名列表。                                                                                                                            |
+| `sources`       | `[]string`                         |                            | 运行此 task 之前要检查的源列表。 与 `checksum` 和 `timestamp` 方法相关。 可以是文件路径或星号。                                                                            |
+| `generates`     | `[]string`                         |                            | 此 task 要生成的文件列表。 与 `timestamp` 方法相关。 可以是文件路径或星号。                                                                                            |
+| `status`        | `[]string`                         |                            | 用于检查此 task 是否应运行的命令列表。 否则跳过该 task。 这个方法会覆盖 `method`、`sources` 和 `generates`。                                                                |
+| `requires`      | `[]string`                         |                            | A list of variables which should be set if this task is to run, if any of these variables are unset the task will error and not run.        |
+| `preconditions` | [`[]Precondition`](#precondition)  |                            | 用于检查此 task 是否应运行的命令列表。 如果不满足条件，task 将出错。                                                                                                    |
+| `requires`      | [`Requires`](#requires)            |                            | A list of required variables which should be set if this task is to run, if any variables listed are unset the task will error and not run. |
+| `dir`           | `string`                           |                            | 此 task 应运行的目录。 默认为当前工作目录。                                                                                                                   |
+| `vars`          | [`map[string]Variable`](#variable) |                            | 可在 task 中使用的一组变量。                                                                                                                           |
+| `env`           | [`map[string]Variable`](#variable) |                            | 一组可用于 shell 命令的环境变量。                                                                                                                        |
+| `dotenv`        | `[]string`                         |                            | 要解析的 `.env` 文件路径列表。                                                                                                                         |
+| `silent`        | `bool`                             | `false`                    | 从输出中隐藏 task 名称和命令。 命令的输出仍将重定向到 `STDOUT` 和 `STDERR`。 当与 `--list` 标志结合使用时，task 描述将被隐藏。                                                        |
+| `interactive`   | `bool`                             | `false`                    | 告诉 task 该命令是交互式的。                                                                                                                           |
+| `internal`      | `bool`                             | `false`                    | 停止在命令行上调用 task。 当与 `--list` 一起使用时，它也会从输出中省略。                                                                                                |
+| `method`        | `string`                           | `checksum`                 | 定义用于检查 task 是最新的方法。 `timestamp` 将比较 sources 的时间戳并生成文件。 `checksum` 将检查 checksum（您可能想忽略 .gitignore 文件中的 .task 文件夹）。 `none` 跳过任何验证并始终运行 task。  |
+| `prefix`        | `string`                           |                            | 定义一个字符串作为并行运行 task 输出的前缀。 仅在输出模式是 `prefixed` 时使用。                                                                                           |
+| `ignore_error`  | `bool`                             | `false`                    | 如果执行命令时发生错误，则继续执行。                                                                                                                          |
+| `run`           | `string`                           | Taskfile 中全局声明的值或 `always` | 指定如果多次调用该 task 是否应再次运行。 可用选项：`always`、`once` 和 `when_changed`。                                                                              |
+| `platforms`     | `[]string`                         | 所有平台                       | 指定应在哪些平台上运行 task。 允许使用 [有效的 GOOS 和 GOARCH 值](https://github.com/golang/go/blob/main/src/go/build/syslist.go)。 否则将跳过 task。                   |
+| `set`           | `[]string`                         |                            | 为 [内置 `set`](https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html) 指定选项。                                                 |
+| `shopt`         | `[]string`                         |                            | 为 [内置 `shopt`](https://www.gnu.org/software/bash/manual/html_node/The-Shopt-Builtin.html) 指定选项。                                             |
 
 :::info
 
@@ -312,3 +315,9 @@ tasks:
 ```
 
 :::
+
+#### Requires
+
+| Attribute | Type       | Default | Description                                                                                        |
+| --------- | ---------- | ------- | -------------------------------------------------------------------------------------------------- |
+| `vars`    | `[]string` |         | List of variable or environment variable names that must be set if this task is to execute and run |

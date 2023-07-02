@@ -753,6 +753,42 @@ tasks:
       - sleep 5 # long operation like installing packages
 ```
 
+### Ensuring required variables are set
+
+If you want to check that certain variables are set before running a task then you can use `requires`. This is useful when might not be clear to users which variables are needed, or if you want clear message about what is required. Also some tasks could have dangerous side effects if run with un-set variables.
+
+Using `requires` you specify an array of strings in the `vars` sub-section under `requires`, these strings are variable names which are checked prior to running the task. If any variables are un-set the the task will error and not run.
+
+Environmental variables are also checked.
+
+Syntax:
+
+```yaml
+requires: 
+  vars: [] # Array of strings
+```
+
+:::note
+
+Variables set to empty zero length strings, will pass the `requires` check.
+
+:::
+
+Example of using `requires`:
+
+```yaml
+version: '3'
+
+tasks:
+  docker-build:
+    cmds:
+      - 'docker build . -t {{.IMAGE_NAME}}:{{.IMAGE_TAG}}'
+
+    # Make sure these variables are set before running
+    requires: 
+      vars: [IMAGE_NAME, IMAGE_TAG]
+```
+
 ## 变量
 
 在进行变量插值时，Task 将查找以下内容。 它们按权重顺序列在下面（即最重要的第一位）：
