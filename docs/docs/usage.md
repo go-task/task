@@ -1260,7 +1260,8 @@ tasks:
 
 ## Warning Prompts
 
-Warning Prompts to prompt a user for confirmation before a task is executed.
+Warning Prompts are used to prompt a user for confirmation before a task is
+executed.
 
 Below is an example using `prompt` with a dangerous command, that is called
 between two safe commands:
@@ -1314,7 +1315,7 @@ automatically confirmed, and no prompts will be shown.
 :::caution
 
 Tasks with prompts always fail by default on non-terminal environments, like a
-CI, where an `stdin` won't be available for the user to answer. In cases like,
+CI, where an `stdin` won't be available for the user to answer. In those cases,
 use `--yes` (`-y`) to force all tasks with a prompt to run.
 
 :::
