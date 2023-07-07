@@ -22,9 +22,9 @@ my-shell-env:
 
 现在运行 `eval $(task my-shell-env)` 变量 `$FOO` 和 `$BAR` 将在您的 shell 中可用。
 
-## I can't reuse my shell in a task's commands
+## 我不能在多个命令中重用我的 shell
 
-Task runs each command as a separate shell process, so something you do in one command won't effect any future commands. For example, this won't work:
+Task runs each command as a separate shell process, so something you do in one command won't effect any future commands. 比如：
 
 ```yaml
 version: '3'
@@ -51,7 +51,7 @@ tasks:
       # outputs "foo"
 ```
 
-Or for more complex multi-line commands it is recommended to move your code into a separate file and call that instead:
+对于更复杂的多行命令，建议将您的代码移动到个单独的文件，然后调用对应的脚本文件：
 
 ```yaml
 version: '3'

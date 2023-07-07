@@ -76,11 +76,11 @@ Task 有时会以特定的退出代码退出。 These codes are split into three
 | 205 | A task was cancelled by the user                          |
 | 206 | A task was not executed due to missing required variables |
 
-These codes can also be found in the repository in [`errors/errors.go`](https://github.com/go-task/task/blob/main/errors/errors.go).
+这些代码也可以在代码库的 [`errors/errors.go`](https://github.com/go-task/task/blob/main/errors/errors.go) 文件中找到。
 
 :::info
 
-When Task is run with the `-x`/`--exit-code` flag, the exit code of any failed commands will be passed through to the user instead.
+当使用 `-x`/`--exit-code` 标志运行 Task 时，任何失败命令的退出代码都将传递给用户。
 
 :::
 

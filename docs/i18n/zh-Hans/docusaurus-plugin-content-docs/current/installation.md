@@ -25,6 +25,21 @@ brew install go-task/tap/go-task
 brew install go-task
 ```
 
+### Tea
+
+If you're on macOS or Linux and have [tea][tea] installed, getting Task is as simple as running:
+
+```bash
+tea task
+```
+
+or, if you have tea’s magic enabled:
+
+```bash
+task
+```
+这种安装方式是社区维护的。 After a new release of Task, they are automatically released by tea in a minimum of time.
+
 ### Snap
 
 Task 在 [Snapcraft][snapcraft] 中可用，但请记住，您的 Linux 发行版应该符合 Snaps 的基本要求才能正确安装：
@@ -51,7 +66,7 @@ choco install go-task
 scoop install task
 ```
 
-这种安装方式是社区维护的。 新版 Task 发布后，需要过一段时间才能通过 Scoop 安装。
+This installation method is community owned. 新版 Task 发布后，需要过一段时间才能通过 Scoop 安装。
 
 ### AUR
 
@@ -149,7 +164,7 @@ sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d -b ~/.local/bin
     repo-token: ${{ secrets.GITHUB_TOKEN }}
 ```
 
-这种安装方式是社区维护的。
+This installation method is community owned.
 
 ## 从源码构建
 
@@ -246,3 +261,4 @@ Invoke-Expression -Command path/to/task.ps1
 [releases]: https://github.com/go-task/task/releases
 [choco]: https://chocolatey.org/
 [scoop]: https://scoop.sh/
+[tea]: https://tea.xyz/

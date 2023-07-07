@@ -69,7 +69,7 @@ tasks:
 
 ### 运行全局 Taskfile
 
-如果您使用 `--global`（别名 `-g`）标志调用 Task，它将查找您的 home 目录而不是您的工作目录。 In short, Task will look for a Taskfile that matches `$HOME/{T,t}askfile.{yml,yaml}` .
+如果您使用 `--global`（别名 `-g`）标志调用 Task，它将查找您的 home 目录而不是您的工作目录。 简而言之，task 将寻找匹配 `$HOME/{T,t}askfile.{yml,yaml}` 的 配置文件。
 
 这对于您可以在系统的任何地方运行的自动化很有用！
 
@@ -753,9 +753,9 @@ tasks:
       - sleep 5 # long operation like installing packages
 ```
 
-### Ensuring required variables are set
+### 确保设置所需变量
 
-If you want to check that certain variables are set before running a task then you can use `requires`. This is useful when might not be clear to users which variables are needed, or if you want clear message about what is required. Also some tasks could have dangerous side effects if run with un-set variables.
+如果想要在运行任务之前检查是否设置了某些变量，那么 您可以使用 `requires`。 这可以显示一个明确的消息，帮助用户了解哪些变量是必需的。 比如，一些任务如果使用未设置的变量，可能会产生危险的副作用。
 
 Using `requires` you specify an array of strings in the `vars` sub-section under `requires`, these strings are variable names which are checked prior to running the task. If any variables are un-set the the task will error and not run.
 
@@ -1093,9 +1093,9 @@ tasks:
       - echo "{{.MESSAGE}}"
 ```
 
-## Warning Prompts
+## 警告提示
 
-Warning Prompts to prompt a user for confirmation before a task is executed.
+Warning Prompts are used to prompt a user for confirmation before a task is executed.
 
 Below is an example using `prompt` with a dangerous command, that is called between two safe commands:
 
@@ -1143,7 +1143,7 @@ To skip warning prompts automatically, you can use the `--yes` (alias `-y`) opti
 
 :::caution
 
-Tasks with prompts always fail by default on non-terminal environments, like a CI, where an `stdin` won't be available for the user to answer. In cases like, use `--yes` (`-y`) to force all tasks with a prompt to run.
+Tasks with prompts always fail by default on non-terminal environments, like a CI, where an `stdin` won't be available for the user to answer. In those cases, use `--yes` (`-y`) to force all tasks with a prompt to run.
 
 :::
 

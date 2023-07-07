@@ -25,6 +25,21 @@ Recentemente, o Task também foi disponibilizado [no repositório oficial do Hom
 brew install go-task
 ```
 
+### Tea
+
+If you're on macOS or Linux and have [tea][tea] installed, getting Task is as simple as running:
+
+```bash
+tea task
+```
+
+or, if you have tea’s magic enabled:
+
+```bash
+task
+```
+Este método de instalação é mantido pela comunidade. After a new release of Task, they are automatically released by tea in a minimum of time.
+
 ### Snap
 
 O Task está disponível no [Snapcraft][snapcraft], mas tenha em mente que a sua distribuição Linux deve suportar confinamento clássico (*classic confinement*) para Snaps para o Task funcionar corretamente:
@@ -51,7 +66,7 @@ Se você está no Windows e tem o [Scoop][scoop] instalado, instalar o Task é t
 scoop install task
 ```
 
-Este método de instalação é mantido pela comunidade. Após o lançamento de uma nova versão do Task, pode levar algum tempo até que esteja disponível no Scoop.
+This installation method is community owned. Após o lançamento de uma nova versão do Task, pode levar algum tempo até que esteja disponível no Scoop.
 
 ### AUR
 
@@ -149,7 +164,7 @@ Se você quiser instalar o Task no GitHub Actions você pode tentar usar [esta *
     repo-token: ${{ secrets.GITHUB_TOKEN }}
 ```
 
-Este método de instalação é mantido pela comunidade.
+This installation method is community owned.
 
 ## Compilar do código-fonte
 
@@ -248,3 +263,4 @@ Invoke-Expression -Command path/to/task.ps1
 [godownloader]: https://github.com/goreleaser/godownloader
 [choco]: https://chocolatey.org/
 [scoop]: https://scoop.sh/
+[tea]: https://tea.xyz/
