@@ -1,0 +1,9 @@
+version: "3"
+
+vars:
+  RECEIVER: "world"
+
+tasks:
+  greet:
+    cmds:
+      - echo 'Hello {{.RECEIVER}}'

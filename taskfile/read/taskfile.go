@@ -149,7 +149,10 @@ func Taskfile(readerNode *ReaderNode) (*taskfile.Taskfile, string, error) {
 
 			for _, task := range includedTaskfile.Tasks.Values() {
 				task.Dir = filepathext.SmartJoin(dir, task.Dir)
-				task.IncludeVars = includedTask.Vars
+				if task.IncludeVars == nil {
+					task.IncludeVars = &taskfile.Vars{}
+				}
+				task.IncludeVars.Merge(includedTask.Vars)
 				task.IncludedTaskfileVars = includedTaskfile.Vars
 				task.IncludedTaskfile = &includedTask
 			}

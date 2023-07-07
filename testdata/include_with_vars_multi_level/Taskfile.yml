@@ -1,0 +1,17 @@
+version: "3"
+
+includes:
+  lib:
+    taskfile: lib/Taskfile.yml
+    internal: true
+  foo:
+    taskfile: foo/Taskfile.yml
+  bar:
+    taskfile: bar/Taskfile.yml
+
+tasks:
+  default:
+    cmds:
+      - task: lib:greet
+      - task: foo:lib:greet
+      - task: bar:lib:greet
