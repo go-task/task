@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Fixed variable propagation in multi-level includes (#778, #996, #1256 by
+  @hudclark).
+
 ## v3.27.1 - 2023-06-30
 
 - Fix panic when a `.env` directory (not file) is present on current directory
