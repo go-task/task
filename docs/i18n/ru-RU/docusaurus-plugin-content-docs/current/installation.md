@@ -25,6 +25,21 @@ brew install go-task/tap/go-task
 brew install go-task
 ```
 
+### Tea
+
+If you're on macOS or Linux and have [tea][tea] installed, getting Task is as simple as running:
+
+```bash
+tea task
+```
+
+or, if you have tea’s magic enabled:
+
+```bash
+task
+```
+Этот метод установки находится под управлением сообщества. After a new release of Task, they are automatically released by tea in a minimum of time.
+
 ### Snap
 
 Task доступен в [Snapcraft][snapcraft], но имейте в виду, что ваш Linux дистрибутив должен иметь классическое ограничение для Snaps, чтобы Task работал правильно:
@@ -51,7 +66,7 @@ choco install go-task
 scoop install task
 ```
 
-Этот метод установки находится под управлением сообщества. После нового релиза Task может потребоваться некоторое время, пока он станет доступен в Scoop.
+This installation method is community owned. После нового релиза Task может потребоваться некоторое время, пока он станет доступен в Scoop.
 
 ### AUR
 
@@ -149,7 +164,7 @@ sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d -b ~/.local/bin
     repo-token: ${{ secrets.GITHUB_TOKEN }}
 ```
 
-Этот метод установки находится под управлением сообщества.
+This installation method is community owned.
 
 ## Сборка из исходного кода
 
@@ -248,3 +263,4 @@ Invoke-Expression -Command path/to/task.ps1
 [godownloader]: https://github.com/goreleaser/godownloader
 [choco]: https://chocolatey.org/
 [scoop]: https://scoop.sh/
+[tea]: https://tea.xyz/

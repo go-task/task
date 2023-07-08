@@ -25,6 +25,21 @@ Recently, Task was also made available [on the official Homebrew repository](htt
 brew install go-task
 ```
 
+### Tea
+
+If you're on macOS or Linux and have [tea][tea] installed, getting Task is as simple as running:
+
+```bash
+tea task
+```
+
+or, if you have tea’s magic enabled:
+
+```bash
+task
+```
+This installation method is community owned. After a new release of Task, they are automatically released by tea in a minimum of time.
+
 ### Snap
 
 Task is available in [Snapcraft][snapcraft], but keep in mind that your Linux distribution should allow classic confinement for Snaps to Task work right:
@@ -248,3 +263,4 @@ Invoke-Expression -Command path/to/task.ps1
 [godownloader]: https://github.com/goreleaser/godownloader
 [choco]: https://chocolatey.org/
 [scoop]: https://scoop.sh/
+[tea]: https://tea.xyz/
