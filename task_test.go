@@ -1798,6 +1798,29 @@ VAR_2 is included-default-var2
 	assert.Equal(t, strings.TrimSpace(buff.String()), expectedOutputOrder)
 }
 
+func TestIncludedVarsMultiLevel(t *testing.T) {
+	const dir = "testdata/include_with_vars_multi_level"
+	var buff bytes.Buffer
+	e := task.Executor{
+		Dir:    dir,
+		Stdout: &buff,
+		Stderr: &buff,
+	}
+	require.NoError(t, e.Setup())
+
+	expectedOutputOrder := strings.TrimSpace(`
+task: [lib:greet] echo 'Hello world'
+Hello world
+task: [foo:lib:greet] echo 'Hello foo'
+Hello foo
+task: [bar:lib:greet] echo 'Hello bar'
+Hello bar
+`)
+	require.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "default"}))
+	t.Log(buff.String())
+	assert.Equal(t, strings.TrimSpace(buff.String()), expectedOutputOrder)
+}
+
 func TestErrorCode(t *testing.T) {
 	const dir = "testdata/error_code"
 

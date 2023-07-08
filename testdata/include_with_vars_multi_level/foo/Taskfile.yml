@@ -1,0 +1,7 @@
+version: "3"
+
+includes:
+  lib:
+    taskfile: ../lib/Taskfile.yml
+    vars:
+      RECEIVER: "foo"
