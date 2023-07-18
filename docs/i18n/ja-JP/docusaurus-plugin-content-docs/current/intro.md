@@ -10,11 +10,11 @@ title: Home
   <img id="logo" src="img/logo.svg" height="250px" width="250px" />
 </div>
 
-Task is a task runner / build tool that aims to be simpler and easier to use than, for example, [GNU Make][make].
+Taskは[GNU Make][make]のようにシンプルで簡単に使えるタスクランナー・ビルドツールです。
 
-Since it's written in [Go][go], Task is just a single binary and has no other dependencies, which means you don't need to mess with any complicated install setups just to use a build tool.
+[Go][go]で書かれているため、Taskはシングルバイナリで他の依存関係がありません。つまり、複雑なインストールセットアップがありません。
 
-Once [installed](installation.md), you just need to describe your build tasks using a simple [YAML][yaml] schema in a file called `Taskfile.yml`:
+一度[インストール](installation.md)したら、シンプルな[YAML][yaml]スキーマを利用して、`Taskfile.yml`というファイルにビルドタスクを記述するだけでいいです。
 
 ```yaml title="Taskfile.yml"
 version: '3'
@@ -26,18 +26,18 @@ tasks:
     silent: true
 ```
 
-And call it by running `task hello` from your terminal.
+記述後はターミナル上で`task hello`と実行することでそのタスクが実行されます。
 
-The above example is just the start, you can take a look at the [usage](/usage) guide to check the full schema documentation and Task features.
+上記の例は始まりに過ぎません。 全てのスキーマやTaskの機能については、[usage](/usage)ガイドを確認するといいでしょう。
 
-## Features
+## 機能紹介
 
-- [Easy installation](installation.md): just download a single binary, add to `$PATH` and you're done! Or you can also install using [Homebrew][homebrew], [Snapcraft][snapcraft], or [Scoop][scoop] if you want.
-- Available on CIs: by adding [this simple command](installation.md#install-script) to install on your CI script and you're ready to use Task as part of your CI pipeline;
-- Truly cross-platform: while most build tools only work well on Linux or macOS, Task also supports Windows thanks to [this shell interpreter for Go][sh].
-- Great for code generation: you can easily [prevent a task from running](/usage#prevent-unnecessary-work) if a given set of files haven't changed since last run (based either on its timestamp or content).
+- [簡単なインストール方法](installation.md): シングルバイナリをダウンロードして、`$PATH`に追加するだけで完了です！ または[Homebrew][homebrew]、[Snapcraft][snapcraft]、[Scoop][scoop]を使ってインストールすることができます。
+- Clで使用可能: [シンプルなコマンド](installation.md#install-script)でCIスクリプトに追加することでCIパイプラインでTaskを使うことができます。
+- 真のクロスプラットフォーム: ほとんどのビルドツールはLinuxまたはmacOSだけで使用可能ですが、Taskは[Goのシェルインタープリタ][sh]を使うことでWindowsもサポートしています。
+- コード生成に適している: 特定のファイル群が最後に実行されてから変更されていない場合(タイムスタンプや内容に基づき)、簡単に[タスクの実行を防ぐ](/usage#prevent-unnecessary-work)ことができます。
 
-## Gold Sponsors
+## ゴールドスポンサー
 
 <div class="gold-sponsors">
 

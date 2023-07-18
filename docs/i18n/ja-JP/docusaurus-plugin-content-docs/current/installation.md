@@ -3,23 +3,23 @@ slug: /installation/
 sidebar_position: 2
 ---
 
-# Installation
+# インストール方法
 
-Task offers many installation methods. Check out the available methods below.
+Taskは多くのインストール方法を提供します。 以下にある利用可能な方法を確認してください。
 
-## Package Managers
+## パッケージマネージャー
 
 ### Homebrew
 
-If you're on macOS or Linux and have [Homebrew][homebrew] installed, getting Task is as simple as running:
+macOSやLinuxを使っていて、[Homebrew][homebrew]をインストールしている場合は、以下を実行することで簡単にTaskをインストールできます:
 
 ```bash
 brew install go-task/tap/go-task
 ```
 
-The above Formula is [maintained by ourselves](https://github.com/go-task/homebrew-tap/blob/master/Formula/go-task.rb).
+上記のFormulaは[私たちが管理しています](https://github.com/go-task/homebrew-tap/blob/master/Formula/go-task.rb)。
 
-Recently, Task was also made available [on the official Homebrew repository](https://formulae.brew.sh/formula/go-task), so you also have that option if you prefer:
+最近、Taskは[公式のHomebrewリポジトリ](https://formulae.brew.sh/formula/go-task)でも利用可能になったので、以下の方法でもインストールできます:
 
 ```bash
 brew install go-task
@@ -27,22 +27,22 @@ brew install go-task
 
 ### Tea
 
-If you're on macOS or Linux and have [tea][tea] installed, getting Task is as simple as running:
+macOSやLinuxを使っていて、[tea][tea]をインストールしている場合は、以下を実行することで簡単にTaskをインストールできます:
 
 ```bash
 tea task
 ```
 
-or, if you have tea’s magic enabled:
+teaの魔法が有効になっている場合:
 
 ```bash
 task
 ```
-This installation method is community owned. After a new release of Task, they are automatically released by tea in a minimum of time.
+このインストール方法はコミュニティが所有しています。 Taskの新しいリリースが出来た後、自動的にteaが最小限の時間でリリースします。
 
 ### Snap
 
-Task is available in [Snapcraft][snapcraft], but keep in mind that your Linux distribution should allow classic confinement for Snaps to Task work right:
+Taskは[ Snapcraft][snapcraft]で提供されていますが、Snapを適切に動作させるためには、あなたのLinux distributionがクラシックな制限を許可することを念頭に置いておいてください:
 
 ```bash
 sudo snap install task --classic
@@ -50,63 +50,63 @@ sudo snap install task --classic
 
 ### Chocolatey
 
-If you're on Windows and have [Chocolatey][choco] installed, getting Task is as simple as running:
+Windowsを使っていて、[Chocolatey][choco]をインストールしていれば、以下を実行することで簡単にTaskをインストールできます:
 
 ```bash
 choco install go-task
 ```
 
-This installation method is community owned.
+このインストール方法はコミュニティーが所有しています。
 
 ### Scoop
 
-If you're on Windows and have [Scoop][scoop] installed, getting Task is as simple as running:
+Windowsを使っていて、[Scoop][scoop]をインストールしていれば、以下を実行することで簡単にTaskをインストールできます:
 
 ```cmd
 scoop install task
 ```
 
-This installation method is community owned. After a new release of Task, it may take some time until it's available on Scoop.
+このインストール方法はコミュニティーが所有しています。 Taskの新しいリリースが出来た後、Scoopで利用可能になるには時間がかかるかもしれません。
 
 ### AUR
 
-If you're on Arch Linux you can install Task from [AUR](https://aur.archlinux.org/packages/go-task-bin) using your favorite package manager such as `yay`, `pacaur` or `yaourt`:
+Arch Linuxを使っていれば、あなたの好きなパッケージマネージャ(`yay`、`pacaur`、または`yaourt`など)を使って[AUR](https://aur.archlinux.org/packages/go-task-bin)からTaskをインストールできます:
 
 ```cmd
 yay -S go-task-bin
 ```
 
-Alternatively, there's [this package](https://aur.archlinux.org/packages/go-task) which installs from the source code instead of downloading the binary from the [releases page](https://github.com/go-task/task/releases):
+あるいは、[リリースページ](https://github.com/go-task/task/releases)からバイナリをダウンロードする代わりに、ソースコードからインストールする[パッケージ](https://aur.archlinux.org/packages/go-task)もあります：
 
 ```cmd
 yay -S go-task
 ```
 
-This installation method is community owned.
+このインストール方法はコミュニティーが所有しています。
 
 ### Fedora
 
-If you're on Fedora Linux you can install Task from the official [Fedora](https://packages.fedoraproject.org/pkgs/golang-github-task/go-task/) repository using `dnf`:
+Fedora Linuxを使っている場合、`dnf`を使って、公式の[Fedora](https://packages.fedoraproject.org/pkgs/golang-github-task/go-task/)リポジトリからTaskをインストールできます:
 
 ```cmd
 sudo dnf install go-task
 ```
 
-This installation method is community owned. After a new release of Task, it may take some time until it's available in [Fedora](https://packages.fedoraproject.org/pkgs/golang-github-task/go-task/).
+このインストール方法はコミュニティーが所有しています。 Taskの新しいリリースが出来た後、[Fedora](https://packages.fedoraproject.org/pkgs/golang-github-task/go-task/)で利用可能になるには時間がかかるかもしれません。
 
 ### Nix
 
-If you're on NixOS or have Nix installed you can install Task from [nixpkgs](https://github.com/NixOS/nixpkgs):
+NixOSを使っている場合、またはNixをインストールしている場合、[nixpkgs](https://github.com/NixOS/nixpkgs)からTaskをインストールできます。
 
 ```cmd
 nix-env -iA nixpkgs.go-task
 ```
 
-This installation method is community owned. After a new release of Task, it may take some time until it's available in [nixpkgs](https://github.com/NixOS/nixpkgs).
+このインストール方法はコミュニティーが所有しています。 Taskの新しいリリースが出来た後、[nixpkgs](https://github.com/NixOS/nixpkgs)で利用可能になるには時間がかかるかもしれません。
 
 ### npm
 
-You can also use Node and npm to install Task by installing [this package](https://www.npmjs.com/package/@go-task/cli).
+Nodeとnpmを使って[このパッケージ](https://www.npmjs.com/package/@go-task/cli)をインストールすることでTaskをインストールすることもできます。
 
 ```bash
 npm install -g @go-task/cli
@@ -114,33 +114,33 @@ npm install -g @go-task/cli
 
 ### Winget
 
-If you are using Windows and installed the [winget](https://github.com/microsoft/winget-cli) package management tool, you can install Task from [winget-pkgs](https://github.com/microsoft/winget-pkgs).
+Windowsを使っていて、[winget](https://github.com/microsoft/winget-cli)パッケージマネジメントツールをインストールしていれば、[winget-pkgs](https://github.com/microsoft/winget-pkgs)からTaskをインストールできます。
 
 ```bash
 winget install Task.Task
 ```
 
-## Get The Binary
+## バイナリの取得
 
-### Binary
+### バイナリ
 
-You can download the binary from the [releases page on GitHub][releases] and add to your `$PATH`.
+[GitHubのリリースページ][releases]からバイナリをダウンロードして`$PATH`に追加することでインストールできます。
 
-DEB and RPM packages are also available.
+DEBとRPMパッケージも利用可能です。
 
-The `task_checksums.txt` file contains the SHA-256 checksum for each file.
+`task_checksums.txt`ファイルには、各バイナリファイルのSHA-256チェックサムが記載されています。
 
-### Install Script
+### スクリプトを使ったインストール
 
-We also have an [install script][installscript] which is very useful in scenarios like CI. Many thanks to [GoDownloader][godownloader] for enabling the easy generation of this script.
+[install script][installscript]もあり、CIのような場面で非常に有用です。 [GoDownloader][godownloader]のおかげで、スクリプトを簡単に生成することができました。
 
-By default, it installs on the `./bin` directory relative to the working directory:
+デフォルトでは作業ディレクトリに相対的な`./bin`ディレクトリにインストールされます:
 
 ```bash
 sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d
 ```
 
-It is possible to override the installation directory with the `-b` parameter. On Linux, common choices are `~/.local/bin` and `~/bin` to install for the current user or `/usr/local/bin` to install for all users:
+`-b`パラメータでインストールディレクトリを上書きすることができます。 Linuxでは、現在のユーザー向けには`~/.local/bin`や`~/bin`、すべてのユーザー向けには`/usr/local/bin`をインストール先として選択することが一般的です:
 
 ```bash
 sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d -b ~/.local/bin
@@ -148,13 +148,13 @@ sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d -b ~/.local/bin
 
 :::caution
 
-On macOS and Windows, `~/.local/bin` and `~/bin` are not added to `$PATH` by default.
+macOSとWindowsでは`~/.local/bin`と`~/bin`は、`$PATH`にデフォルトで追加されていません。
 
 :::
 
 ### GitHub Actions
 
-If you want to install Task in GitHub Actions you can try using [this action](https://github.com/arduino/setup-task) by the Arduino team:
+GitHub ActionsでTaskをインストールしたい場合、Arduinoチームの[action](https://github.com/arduino/setup-task)を使用してみてください:
 
 ```yaml
 - name: Install Task
@@ -164,21 +164,21 @@ If you want to install Task in GitHub Actions you can try using [this action](ht
     repo-token: ${{ secrets.GITHUB_TOKEN }}
 ```
 
-This installation method is community owned.
+このインストール方法はコミュニティーが所有しています。
 
-## Build From Source
+## ソースコードからビルド
 
-### Go Modules
+### Goモジュール
 
-Ensure that you have a supported version of [Go][go] properly installed and setup. You can find the minimum required version of Go in the [go.mod](https://github.com/go-task/task/blob/main/go.mod#L3) file.
+[Go][go]のサポート対象のバージョンが適切にインストールおよびセットアップされていることを確認してください。 Goの必要な最小バージョンは[go.mod](https://github.com/go-task/task/blob/main/go.mod#L3)ファイルから確認できます。
 
-You can then install the latest release globally by running:
+以下を実行することで最新のリリースをグローバルにインストールできます:
 
 ```bash
 go install github.com/go-task/task/v3/cmd/task@latest
 ```
 
-Or you can install into another directory:
+別のディレクトリにインストールすることもできます:
 
 ```bash
 env GOBIN=/bin go install github.com/go-task/task/v3/cmd/task@latest
@@ -186,27 +186,27 @@ env GOBIN=/bin go install github.com/go-task/task/v3/cmd/task@latest
 
 :::tip
 
-For CI environments we recommend using the [install script](#install-script) instead, which is faster and more stable, since it'll just download the latest released binary.
+CI環境では、最新リリースのバイナリを早く、安定して提供する[install script](#install-script)を使うことをおすすめします。
 
 :::
 
-## Setup completions
+## 補完のセットアップ
 
-Download the autocompletion file corresponding to your shell.
+使用しているシェルに対応した自動補完ファイルをダウンロードしてください。
 
-[All completions are available on the Task repository](https://github.com/go-task/task/tree/main/completion).
+[シェルに対応した自動補完ファイルはTaskリポジトリにあります](https://github.com/go-task/task/tree/main/completion)。
 
 ### Bash
 
-First, ensure that you installed bash-completion using your package manager.
+まず、パッケージマネージャを使用してbash-completionがインストールされていることを確認します。
 
-Make the completion file executable:
+補完ファイルを実行可能にします:
 
 ```
 chmod +x path/to/task.bash
 ```
 
-After, add this to your `~/.bash_profile`:
+その後、以下の行を`~/.bash_profile`に追加してください:
 
 ```shell
 source path/to/task.bash
@@ -214,24 +214,24 @@ source path/to/task.bash
 
 ### ZSH
 
-Put the `_task` file somewhere in your `$FPATH`:
+`_task`ファイルを`$FPATH`のどこかに置きます:
 
 ```shell
 mv path/to/_task /usr/local/share/zsh/site-functions/_task
 ```
 
-Ensure that the following is present in your `~/.zshrc`:
+`~/.zshrc`に以下の内容が含まれていることを確認してください:
 
 ```shell
 autoload -U compinit
 compinit -i
 ```
 
-ZSH version 5.7 or later is recommended.
+ZSHバージョンは5.7以降をおすすめします。
 
 ### Fish
 
-Move the `task.fish` completion script:
+` task.fish`補完スクリプトを移動させます:
 
 ```shell
 mv path/to/task.fish ~/.config/fish/completions/task.fish
@@ -239,14 +239,14 @@ mv path/to/task.fish ~/.config/fish/completions/task.fish
 
 ### PowerShell
 
-Open your profile script with:
+プロファイルスクリプトを開きます:
 
 ```
 mkdir -Path (Split-Path -Parent $profile) -ErrorAction SilentlyContinue
 notepad $profile
 ```
 
-Add the line and save the file:
+以下の行を追加してファイルを保存します:
 
 ```shell
 Invoke-Expression -Command path/to/task.ps1
