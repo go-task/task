@@ -3,7 +3,7 @@ slug: /donate/
 sidebar_position: 15
 ---
 
-# Donate
+# 寄付
 
 If you find this project useful, you can consider donating by using one of the channels listed below.
 
@@ -34,7 +34,7 @@ You can donate to [@andreynering][] via PayPal as well:
 
 - [Any value - One-time donation](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=GSVDU63RKG45A&currency_code=USD&source=url)
 
-## PIX (Brazil only)
+## PIX (ブラジルのみ)
 
 And if you're Brazilian, you can also donate to [@andreynering][] via PIX by [using this QR Code](/img/pix.png).
 
