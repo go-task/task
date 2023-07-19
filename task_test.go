@@ -137,6 +137,7 @@ func TestVarsV3(t *testing.T) {
 			"missing-var.txt":  "\n",
 			"var-order.txt":    "ABCDEF\n",
 			"dependent-sh.txt": "123456\n",
+			"lazy-sh.txt":      "LMNOPQ\n",
 			"with-call.txt":    "Hi, ABC123!\n",
 			"from-dot-env.txt": "From .env file\n",
 		},
@@ -2188,4 +2189,25 @@ func TestForce(t *testing.T) {
 			require.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "task-with-dep", Direct: true}))
 		})
 	}
+}
+
+func TestLazyVar(t *testing.T) {
+	tt := fileContentTest{
+		Dir:    "testdata/lazy_vars",
+		Target: "default",
+		Files: map[string]string{
+			"basic.txt":                       "123\n",
+			"env.txt":                         "1234\n",
+			"override-by-task.txt":            "ABC\n",
+			"callee-deps.txt":                 "ABC\n",
+			"callee-task.txt":                 "ABC\n",
+			"var-in-dotenv-global.txt":        "var_in_dot_env_1\n",
+			"var-in-dotenv-task.txt":          "var_in_dot_env_2\n",
+			"not-exists.txt":                  "a\n",
+			"dir-name.txt":                    "lazy_vars\n",
+			"dir-name-in-child.txt":           "lazy_vars\n",
+			"dir-name-in-child-with-vars.txt": "child_dir\n",
+		},
+	}
+	tt.Run(t)
 }

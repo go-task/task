@@ -69,10 +69,16 @@ func (r *Templater) ReplaceVars(vars *taskfile.Vars) *taskfile.Vars {
 
 	var new taskfile.Vars
 	_ = vars.Range(func(k string, v taskfile.Var) error {
+		var lazy *taskfile.LazySh
+		if v.Lazy != nil {
+			v.Lazy.Sh = r.Replace(v.Lazy.Sh)
+			lazy = v.Lazy
+		}
 		new.Set(k, taskfile.Var{
 			Static: r.Replace(v.Static),
 			Live:   v.Live,
 			Sh:     r.Replace(v.Sh),
+			Lazy:   lazy,
 		})
 		return nil
 	})

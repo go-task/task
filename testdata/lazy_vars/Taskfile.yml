@@ -1,0 +1,108 @@
+version: '3'
+
+vars:
+  VAR_MUST_NOT_EXEC: {sh: 'echo "this should not be executed" && exit 1', lazy: true}
+  VAR_1: {sh: echo 1, lazy: true}
+  VAR_2: {sh: echo 2, lazy: true}
+  VAR_3: {sh: echo 3, lazy: true}
+  VAR_4: {sh: echo 4, lazy: true}
+  VAR_NO: {sh: 'echo "{{.VAR_1}}{{.VAR_2}}{{.VAR_3}} Root VAR_NO" && exit 1', lazy: true}
+
+  VAR_A: {sh: 'echo NO_A && exit 1', lazy: true}
+  VAR_B: {sh: 'echo NO_B && exit 1', lazy: true}
+  VAR_C: {sh: 'echo NO_C && exit 1', lazy: true}
+
+  VAR_a: {sh: 'echo {{.VAR_NOT_EXISTS}}a', lazy: true}
+
+  VAR_DIR: {sh: 'basename "$(pwd)"', lazy: true}
+
+  VAR_DOTENV_GLOBAL: {sh: 'echo global', lazy: true}
+
+env:
+  ENV_1: "{{.VAR_1}}"
+  ENV_2:
+    sh: echo "{{.VAR_2}}"
+
+tasks:
+  default:
+    - task: basic
+    - task: env
+    - task: override-by-task
+    - task: var-in-dotenv-global
+    - task: var-in-dotenv-task
+    - task: not-exists
+    - task: dir-name
+    - task: dir-name-in-child
+    - task: dir-name-in-child-with-vars
+
+  basic:
+    vars:
+      VAR_2: {sh: 'echo "{{.VAR_1}}2"', lazy: true}
+      VAR_NO: {sh: 'echo "Basic VAR_NO" && exit 1', lazy: true}
+    cmd: echo "{{.VAR_2}}3" > basic.txt
+
+  env:
+    env:
+      ENV_3: "{{.VAR_3}}"
+      ENV_4:
+        sh: echo "{{.VAR_4}}"
+    cmd: echo "${ENV_1}${ENV_2}${ENV_3}${ENV_4}" > env.txt
+
+  override-by-task:
+    deps:
+      - task: callee-deps
+        vars:
+          VAR_A: A
+          VAR_B: {sh: 'echo B', lazy: true}
+          VAR_C: {sh: 'echo C', lazy: true}
+    vars:
+      VAR_A: A
+      VAR_B: {sh: 'echo B', lazy: true}
+      VAR_C: {sh: 'echo C', lazy: true}
+    cmds:
+      - task: callee-task
+        vars:
+          VAR_A: A
+          VAR_B: {sh: 'echo B', lazy: true}
+          VAR_C: {sh: 'echo C', lazy: true}
+      - echo "{{.VAR_A}}{{.VAR_B}}{{.VAR_C}}" > override-by-task.txt
+
+  callee-deps:
+    internal: true
+    vars:
+      VAR_B: '{{default "NO" .VAR_B}}'
+    cmd: echo "{{.VAR_A}}{{.VAR_B}}{{.VAR_C}}" > callee-deps.txt
+
+  callee-task:
+    internal: true
+    vars:
+      VAR_B: '{{default "NO" .VAR_B}}'
+    cmd: echo "{{.VAR_A}}{{.VAR_B}}{{.VAR_C}}" > callee-task.txt
+
+  var-in-dotenv-global:
+    dotenv: [ ".env.{{.VAR_DOTENV_GLOBAL}}" ]
+    cmd: echo "$VAR_IN_DOTENV" > var-in-dotenv-global.txt
+
+  var-in-dotenv-task:
+    dotenv: [ ".env.{{.VAR_DOTENV_TASK}}" ]
+    vars:
+      VAR_DOTENV_TASK: {sh: 'echo task', lazy: true}
+    cmd: echo "$VAR_IN_DOTENV" > var-in-dotenv-task.txt
+
+  not-exists:
+    vars:
+      VAR_NOT_EXISTS: exists
+    cmd: echo "{{.VAR_a}}" > not-exists.txt
+
+  dir-name:
+    cmd: echo "{{.VAR_DIR}}" > dir-name.txt
+
+  dir-name-in-child:
+    dir: child_dir
+    cmd: echo "{{.VAR_DIR}}" > ../dir-name-in-child.txt
+
+  dir-name-in-child-with-vars:
+    dir: child_dir
+    vars:
+      VAR_DIR: {sh: 'basename "$(pwd)"'}
+    cmd: echo "{{.VAR_DIR}}" > ../dir-name-in-child-with-vars.txt

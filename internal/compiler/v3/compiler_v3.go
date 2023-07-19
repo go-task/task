@@ -64,6 +64,14 @@ func (c *CompilerV3) getVariables(t *taskfile.Task, call *taskfile.Call, evaluat
 				return nil
 			}
 
+			if v.Lazy != nil {
+				v.Lazy.Dir = dir
+				v.Lazy.Sh = tr.Replace(v.Lazy.Sh)
+				v.Lazy.Stderr = c.Logger.Stderr
+				result.Set(k, taskfile.Var{Lazy: v.Lazy})
+				return nil
+			}
+
 			v = taskfile.Var{
 				Static: tr.Replace(v.Static),
 				Sh:     tr.Replace(v.Sh),

@@ -11,11 +11,18 @@ vars:
   VAR_2: {sh: 'echo "{{.VAR_1}}2"'}
   VAR_3: {sh: 'echo "{{.VAR_2}}3"'}
 
+  VAR_MUST_NOT_EXEC: {sh: 'echo "this should not be executed" && exit 1', lazy: true}
+  VAR_L: {sh: 'echo L', lazy: true}
+  VAR_M: {sh: 'echo "{{.VAR_L}}M"', lazy: true}
+  VAR_N: {sh: 'echo "{{.VAR_M}}N"', lazy: true}
+  VAR_O: {sh: 'echo "this should not be executed" && exit 1"', lazy: true}
+
 tasks:
   default:
     - task: missing-var
     - task: var-order
     - task: dependent-sh
+    - task: lazy-sh
     - task: with-call
     - task: from-dot-env
 
@@ -36,6 +43,14 @@ tasks:
       VAR_6: {sh: 'echo "{{.VAR_5}}6"'}
     cmds:
       - echo '{{.VAR_6}}' > dependent-sh.txt
+
+  lazy-sh:
+    vars:
+      VAR_O: {sh: 'echo "{{.VAR_N}}O"', lazy: true}
+      VAR_P: {sh: 'echo "{{.VAR_O}}P"', lazy: true}
+      VAR_Q: {sh: 'echo "{{.VAR_P}}Q"', lazy: true}
+    cmds:
+      - echo '{{.VAR_Q}}' > lazy-sh.txt
 
   with-call:
     - task: called-task
