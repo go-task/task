@@ -4,6 +4,8 @@
 
 - Fixed variable propagation in multi-level includes (#778, #996, #1256 by
   @hudclark).
+- Fixed a bug where the `--exit-code` code flag was not returning the correct
+  exit code when calling commands indirectly (#1266, #1270 by @pd93).
 
 ## v3.27.1 - 2023-06-30
 
