@@ -239,6 +239,10 @@ func (e *Executor) RunTask(ctx context.Context, call taskfile.Call) error {
 					continue
 				}
 
+				if !call.Direct {
+					return err
+				}
+
 				return &errors.TaskRunError{TaskName: t.Task, Err: err}
 			}
 		}

@@ -1,6 +1,10 @@
 version: '3'
 
 tasks:
-  test-exit-code:
+  direct:
     cmds:
       - exit 42
+
+  indirect:
+    cmds:
+      - task: direct

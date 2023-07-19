@@ -1823,21 +1823,39 @@ Hello bar
 
 func TestErrorCode(t *testing.T) {
 	const dir = "testdata/error_code"
-
-	var buff bytes.Buffer
-	e := &task.Executor{
-		Dir:    dir,
-		Stdout: &buff,
-		Stderr: &buff,
-		Silent: true,
+	tests := []struct {
+		name     string
+		task     string
+		expected int
+	}{
+		{
+			name:     "direct task",
+			task:     "direct",
+			expected: 42,
+		}, {
+			name:     "indirect task",
+			task:     "indirect",
+			expected: 42,
+		},
 	}
-	require.NoError(t, e.Setup())
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			var buff bytes.Buffer
+			e := &task.Executor{
+				Dir:    dir,
+				Stdout: &buff,
+				Stderr: &buff,
+				Silent: true,
+			}
+			require.NoError(t, e.Setup())
 
-	err := e.Run(context.Background(), taskfile.Call{Task: "test-exit-code"})
-	require.Error(t, err)
-	casted, ok := err.(*errors.TaskRunError)
-	assert.True(t, ok, "cannot cast returned error to *task.TaskRunError")
-	assert.Equal(t, 42, casted.TaskExitCode(), "unexpected exit code from task")
+			err := e.Run(context.Background(), taskfile.Call{Task: test.task, Direct: true})
+			require.Error(t, err)
+			taskRunErr, ok := err.(*errors.TaskRunError)
+			assert.True(t, ok, "cannot cast returned error to *task.TaskRunError")
+			assert.Equal(t, test.expected, taskRunErr.TaskExitCode(), "unexpected exit code from task")
+		})
+	}
 }
 
 func TestEvaluateSymlinksInPaths(t *testing.T) {
