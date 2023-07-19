@@ -883,17 +883,16 @@ you can use `requires`. This is useful when might not be clear to users which
 variables are needed, or if you want clear message about what is required. Also
 some tasks could have dangerous side effects if run with un-set variables.
 
-Using `requires` you specify an array of strings in the `vars` sub-section 
-under `requires`, these strings are variable names which are checked prior to 
-running the task. If any variables are un-set the the task will error and not 
-run. 
+Using `requires` you specify an array of strings in the `vars` sub-section under
+`requires`, these strings are variable names which are checked prior to running
+the task. If any variables are un-set the the task will error and not run.
 
 Environmental variables are also checked.
 
 Syntax:
 
 ```yaml
-requires: 
+requires:
   vars: [] # Array of strings
 ```
 
@@ -914,7 +913,7 @@ tasks:
       - 'docker build . -t {{.IMAGE_NAME}}:{{.IMAGE_TAG}}'
 
     # Make sure these variables are set before running
-    requires: 
+    requires:
       vars: [IMAGE_NAME, IMAGE_TAG]
 ```
 
@@ -1041,6 +1040,26 @@ tasks:
 This will also work if you use globbing syntax in your sources. For example, if
 you specify a source for `*.txt`, the loop will iterate over all files that
 match that glob.
+
+Source paths will always be returned as paths relative to the task directory. If
+you need to convert this to an absolute path, you can use the built-in
+`joinPath` function:
+
+```yaml
+version: '3'
+
+tasks:
+  default:
+    vars:
+      MY_DIR: /path/to/dir
+    dir: '{{.MY_DIR}}'
+    sources:
+      - foo.txt
+      - bar.txt
+    cmds:
+      - for: sources
+        cmd: cat {{ joinPath .MY_DIR .ITEM }}
+```
 
 ### Looping over variables
 

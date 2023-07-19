@@ -6,9 +6,10 @@ import (
 	"strings"
 	"text/template"
 
-	sprig "github.com/go-task/slim-sprig"
 	"mvdan.cc/sh/v3/shell"
 	"mvdan.cc/sh/v3/syntax"
+
+	sprig "github.com/go-task/slim-sprig"
 )
 
 var templateFuncs template.FuncMap
@@ -45,6 +46,12 @@ func init() {
 		},
 		// IsSH is deprecated.
 		"IsSH": func() bool { return true },
+		"joinPath": func(elem ...string) string {
+			return filepath.Join(elem...)
+		},
+		"relPath": func(basePath, targetPath string) (string, error) {
+			return filepath.Rel(basePath, targetPath)
+		},
 	}
 	// Deprecated aliases for renamed functions.
 	taskFuncs["FromSlash"] = taskFuncs["fromSlash"]
