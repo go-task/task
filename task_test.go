@@ -1922,6 +1922,20 @@ func TestUserWorkingDirectory(t *testing.T) {
 	assert.Equal(t, fmt.Sprintf("%s\n", wd), buff.String())
 }
 
+func TestUserWorkingDirectoryPwd(t *testing.T) {
+	var buff bytes.Buffer
+	e := task.Executor{
+		Dir:    "testdata/user_working_dir_pwd",
+		Stdout: &buff,
+		Stderr: &buff,
+	}
+	wd, err := os.Getwd()
+	require.NoError(t, err)
+	require.NoError(t, e.Setup())
+	require.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "included:default"}))
+	assert.Equal(t, fmt.Sprintf("%s\n", wd), buff.String())
+}
+
 func TestPlatforms(t *testing.T) {
 	var buff bytes.Buffer
 	e := task.Executor{

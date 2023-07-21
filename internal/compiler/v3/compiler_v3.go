@@ -84,6 +84,10 @@ func (c *CompilerV3) getVariables(t *taskfile.Task, call *taskfile.Call, evaluat
 
 	var taskRangeFunc func(k string, v taskfile.Var) error
 	if t != nil {
+		if strings.HasSuffix(t.Dir, "{{.USER_WORKING_DIR}}") {
+			t.Dir = "{{.USER_WORKING_DIR}}"
+		}
+
 		// NOTE(@andreynering): We're manually joining these paths here because
 		// this is the raw task, not the compiled one.
 		tr := templater.Templater{Vars: result, RemoveNoValue: true}

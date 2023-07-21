@@ -1,0 +1,8 @@
+version: '3'
+
+tasks:
+  default:
+    dir: '{{.USER_WORKING_DIR}}'
+    cmds:
+      - pwd
+    silent: true
