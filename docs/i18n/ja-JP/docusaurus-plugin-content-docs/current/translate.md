@@ -3,13 +3,13 @@ slug: /translate/
 sidebar_position: 12
 ---
 
-# Translate
+# 翻訳
 
-Want to help us translate this documentation? In this document we explain how.
+このドキュメントの翻訳を手伝ってくれませんか？ このドキュメントではどのように翻訳に協力できるかを説明します。
 
-Do NOT edit translated markdown files directly on the GitHub repository! We use [Crowdin][crowdin] to allow contributors on work on translations. The repository is periodically updated with progress from Crowdin.
+※GitHubリポジトリ上にある翻訳されたマークダウンファイルを直接編集しないでください！ 翻訳作業は[Crowdin][crowdin]を使っています。 リポジトリはCrowdinからの進捗状況で定期的に更新されます。
 
-If you want to have access to the Crowdin project to be able to suggest translations, please ask for access on the [#translations channel on our Discord server][discord]. If a given language is not being shown to Crowdin yet, just ask and we can configure it.
+翻訳に協力するためにCrowdinプロジェクトへのアクセスが必要な場合は、[Discordサーバーの#translationsチャンネル][discord]でCrowdinへのアクセスを依頼してください。 特定の言語がまだCrowdinに表示されていない場合は依頼してください。
 
 <!-- prettier-ignore-start -->
 

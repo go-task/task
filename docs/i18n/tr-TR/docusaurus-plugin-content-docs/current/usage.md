@@ -3,11 +3,11 @@ slug: /usage/
 sidebar_position: 3
 ---
 
-# 使い方
+# Kullanım
 
-## はじめに
+## Başlangıç
 
-プロジェクトのルートに`Taskfile.yml`というファイルを作成します。 `cmds`属性にはタスクのコマンドを記載する必要があります。 以下の例はGoアプリをコンパイルするタスクと、[esbuild](https://esbuild.github.io/)を使って複数のCSSファイルを結合・小さくして1つのファイルにするタスクがあります。
+Projenizin kök dizininde `Taskfile.yml` isimli bir dosya oluşturun. `cmds` bir görevin komutlarını içermelidir. The example below allows compiling a Go app and uses [esbuild](https://esbuild.github.io/) to concat and minify multiple CSS files into a single one.
 
 ```yaml
 version: '3'
@@ -22,19 +22,19 @@ tasks:
       - esbuild --bundle --minify css/index.css > public/bundle.css
 ```
 
-タスクは以下のように簡単に実行できます:
+Running the tasks is as simple as running:
 
 ```bash
 task assets build
 ```
 
-Taskは[mvdan.cc/sh](https://mvdan.cc/sh/)というネイティブなGo shインタプリタを使用しています。 なのでsh/bashコマンドを書いても、Windowsのような`sh`や`bash`が無いような環境でも動かすことが可能です。 実行可能なファイルはOSからアクセスできる場所、もしくはPATH内にある必要があることを覚えておいてください。
+Task uses [mvdan.cc/sh](https://mvdan.cc/sh/), a native Go sh interpreter. So you can write sh/bash commands, and it will work even on Windows, where `sh` or `bash` are usually not available. Just remember any executable called must be available by the OS or in PATH.
 
-タスク名を省略すると、"default"が実行されます。
+If you omit a task name, "default" will be assumed.
 
-## サポートされているファイル名
+## Desteklenen dosya isimleri
 
-Taskは以下のような優先順位でファイルを探します:
+Task, öncelik sırasına göre aşağıdaki dosya isimlerine bakar:
 
 - Taskfile.yml
 - taskfile.yml
@@ -45,13 +45,13 @@ Taskは以下のような優先順位でファイルを探します:
 - Taskfile.dist.yaml
 - taskfile.dist.yaml
 
-`.dist`が存在する意図は、プロジェクトが1つの固定されたバージョン(`.dist`)を持つ一方で、個々のユーザーが`Taskfile.yml`を追加することでTaskfileを上書きできるようにすることです(個々が追加したTaskfileは`.gitignore`に追加されている)
+The intention of having the `.dist` variants is to allow projects to have one committed version (`.dist`) while still allowing individual users to override the Taskfile by adding an additional `Taskfile.yml` (which would be on `.gitignore`).
 
-### サブディレクトリからTaskfileを実行する
+### Taskfile'ı alt-dizinden çalıştırma
 
-カレントワーキングディレクトリからTaskfileが見つからなかったときは、見つかるまでファイルツリーを走査します(`git`の動きに似ています)。 このようにタスクをサブディレクトリで実行すると、Taskfileがあるディレクトリから実行したかのように動きます。
+If a Taskfile cannot be found in the current working directory, it will walk up the file tree until it finds one (similar to how `git` works). When running Task from a subdirectory like this, it will behave as if you ran it from the directory containing the Taskfile.
 
-このような機能を特別な`{{.USER_WORKING_DIR}}`変数を使うことで、非常に便利で再利用可能なタスクを作成できます。 例えば、各マイクロサービスごとのディレクトリがあるモノリポがある場合、同じ内容の複数のタスクやTaskfileを作らずに、マイクロサービスのディレクトリに`cd`で移動し、タスクコマンドを実行することができます。 例:
+You can use this functionality along with the special `{{.USER_WORKING_DIR}}` variable to create some very useful reusable tasks. For example, if you have a monorepo with directories for each microservice, you can `cd` into a microservice directory and run a task command to bring it up without having to create multiple tasks or Taskfiles with identical content. For example:
 
 ```yaml
 version: '3'
@@ -65,11 +65,11 @@ tasks:
       - docker-compose up -d
 ```
 
-上記の例では、`cd <service>`と`task up`を実行すると、`<service>`ディレクトリに`docker-copmose.yml`があれば、Docker compositionが立ち上がります。
+In this example, we can run `cd <service>` and `task up` and as long as the `<service>` directory contains a `docker-compose.yml`, the Docker composition will be brought up.
 
-### グローバルなTaskfileを実行する
+### Bir küresel Taskfile çalıştırma
 
-`--global` (エイリアス `-g`) フラグと一緒にTaskを実行すると、ワーキングディレクトリの代わりにホームディレクトリからTaskfileを探します。 つまり、Taskは`$HOME/{T,t}askfile.{yml,yaml}`にマッチするファイルを探します。
+If you call Task with the `--global` (alias `-g`) flag, it will look for your home directory instead of your working directory. In short, Task will look for a Taskfile that matches `$HOME/{T,t}askfile.{yml,yaml}` .
 
 This is useful to have automation that you can run from anywhere in your system!
 
@@ -95,11 +95,11 @@ tasks:
 
 :::
 
-## 環境変数
+## Ortam değişkenleri
 
-### タスク
+### Task
 
-`env`を使用して特定のタスクにカスタム環境変数を設定できます:
+You can use `env` to set custom environment variables for a specific task:
 
 ```yaml
 version: '3'
@@ -112,7 +112,7 @@ tasks:
       GREETING: Hey, there!
 ```
 
-また、すべてのタスクに適用できるグローバルな環境変数を設定することもできます:
+Additionally, you can set global environment variables that will be available to all tasks:
 
 ```yaml
 version: '3'
@@ -132,7 +132,7 @@ tasks:
 
 :::
 
-### .envファイル
+### .env files
 
 You can also ask Task to include `.env` like files by using the `dotenv:` setting:
 
