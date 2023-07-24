@@ -5,13 +5,13 @@ sidebar_position: 7
 
 # FAQ
 
-This page contains a list of frequently asked questions about Task.
+このページはTaskに関するよくある質問についてまとめたものです。
 
-## Why won't my task update my shell environment?
+## タスクがシェル環境を更新しないのはなぜですか？
 
-This is a limitation of how shells work. Task runs as a subprocess of your current shell, so it can't change the environment of the shell that started it. This limitation is shared by other task runners and build tools too.
+これはシェルの仕組みの制限です。 Taskは現在のシェルのサブプロセスとして実行されるため、それを起動したシェルの環境を変更することができません。 この制限は他のタスクランナーやビルドツールでも同様です。
 
-A common way to work around this is to create a task that will generate output that can be parsed by your shell. For example, to set an environment variable on your shell you can write a task like this:
+これを回避する一般的な方法は、シェルが解析できる出力を生成するタスクを作成することです。 例えば、シェルの環境変数を設定するには以下のようなタスクを書くことができます:
 
 ```yaml
 my-shell-env:
@@ -20,11 +20,11 @@ my-shell-env:
     - echo "export BAR=bar"
 ```
 
-Now run `eval $(task my-shell-env)` and the variables `$FOO` and `$BAR` will be available in your shell.
+そして、`eval $(task my-shell-env)`を実行することで、変数`$FOO`と`$BAR`がシェルで使用可能になります。
 
-## I can't reuse my shell in a task's commands
+## タスクのコマンドでシェルを再利用できません
 
-Task runs each command as a separate shell process, so something you do in one command won't effect any future commands. For example, this won't work:
+Taskはそれぞれのコマンドを異なるシェルプロセスとして実行するため、一つのコマンドが他のコマンドには影響されることはありません。 例えば、以下は上手く動きません:
 
 ```yaml
 version: '3'
@@ -37,7 +37,7 @@ tasks:
       # outputs ""
 ```
 
-To work around this you can either use a multiline command:
+これを上手く動かすためには複数行コマンドを利用します:
 
 ```yaml
 version: '3'
@@ -51,7 +51,7 @@ tasks:
       # outputs "foo"
 ```
 
-Or for more complex multi-line commands it is recommended to move your code into a separate file and call that instead:
+もっと複雑なコマンドの場合は、ファイルを用意してそれを呼び出すようにすることを推奨します:
 
 ```yaml
 version: '3'
@@ -68,15 +68,15 @@ a=foo
 echo $a
 ```
 
-## 'x' builtin command doesn't work on Windows
+## 'x'組み込みコマンドがWindowsで動作しません
 
-The default shell on Windows (`cmd` and `powershell`) do not have commands like `rm` and `cp` available as builtins. This means that these commands won't work. If you want to make your Taskfile fully cross-platform, you'll need to work around this limitation using one of the following methods:
+Windowsのデフォルトシェル(`cmd`と`powershell`)は、組み込みシェルとして`rm`や`cp`がありません。 つまり、これらのコマンドは動作しません。 Taskfileをクロスプラットフォームにしたい場合は、次のいずれかの方法で制限を回避する必要があります:
 
-- Use the `{{OS}}` function to run an OS-specific script.
-- Use something like `{{if eq OS "windows"}}powershell {{end}}<my_cmd>` to detect windows and run the command in Powershell directly.
-- Use a shell on Windows that supports these commands as builtins, such as [Git Bash][git-bash] or [WSL][wsl].
+- `{{OS}}`関数を使用して、OS固有のスクリプトを実行する。
+- `{{if eq OS "windows"}}powershell {{end}}<my_cmd>`のようにWindowsかを判別して、Powershellを実行する。
+- Windowsでこれらのコマンドを組み込みでサポートするシェルを使ってください。例えば[Git Bash][git-bash]または[WSL][wsl]などがあります。
 
-We want to make improvements to this part of Task and the issues below track this work. Constructive comments and contributions are very welcome!
+私たちはTaskのこの部分に改善したいと思っており、以下のIssueがそれを追跡するものです。 建設的なコメントやコントリビュートは大歓迎です！
 
 - [#197](https://github.com/go-task/task/issues/197)
 - [mvdan/sh#93](https://github.com/mvdan/sh/issues/93)

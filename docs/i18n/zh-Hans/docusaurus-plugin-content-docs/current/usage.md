@@ -937,10 +937,10 @@ tasks:
 
 Task 还增加了以下功能：
 
-- `OS`：返回操作系统。 可能的值为“windows”、“linux”、“darwin”(macOS) 和“freebsd”。
-- `ARCH`：返回 Task 的编译架构为：“386”、“amd64”、“arm”或“s390x”。
-- `splitLines`：拆分 Unix (\n) 和 Windows (\r\n) 样式的换行符。
-- `catLines`：用空格替换 Unix (\n) 和 Windows (\r\n) 样式的换行符。
+- `OS`：返回操作系统。 Possible values are `windows`, `linux`, `darwin` (macOS) and `freebsd`.
+- `ARCH`: return the architecture Task was compiled to: `386`, `amd64`, `arm` or `s390x`.
+- `splitLines`: Splits Unix (`\n`) and Windows (`\r\n`) styled newlines.
+- `catLines`: Replaces Unix (`\n`) and Windows (`\r\n`) styled newlines with a space.
 - `toSlash`：在 Unix 上不执行任何操作，但在 Windows 上将字符串从 `\` 路径格式转换为 `/`。
 - `fromSlash`：与 `toSlash` 相反。 在 Unix 上不执行任何操作，但在 Windows 上将字符串从 `/` 路径格式转换为 `\`。
 - `exeExt`：返回当前操作系统的正确可执行文件扩展名（Windows 为`“.exe”`，其他操作系统为`“”`）。

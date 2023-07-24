@@ -3,13 +3,13 @@ slug: /styleguide/
 sidebar_position: 8
 ---
 
-# スタイルガイド
+# Styleguide
 
-これは`Taskfile.yml`の公式Taskスタイルガイドです。 このガイドには、Taskfileを整理し、他ユーザーにとっても理解しやすいように保つための基本的な手順が含まれています。
+This is the official Task styleguide for `Taskfile.yml` files. This guide contains some basic instructions to keep your Taskfile clean and familiar to other users.
 
-これには一般的なガイドラインが含まれていますが、必ずしも厳密に従う必要はありません。 必要であったり、あるいは違う方法を取りたい場合は自由にしてください。 また、このガイドの改善点について、IssueまたはPull Requestを開くことも自由です。
+This contains general guidelines, but they don't necessarily need to be strictly followed. Feel free to disagree and proceed differently at some point if you need or want to. Also, feel free to open issues or pull requests with improvements to this guide.
 
-## `taskfile.yml`ではなく`Taskfile.yml`を使用してください
+## Use `Taskfile.yml` and not `taskfile.yml`
 
 ```yaml
 # bad
@@ -20,7 +20,7 @@ taskfile.yml
 Taskfile.yml
 ```
 
-これはLinuxユーザーにとって特に重要です。 WindowsとmacOSは大文字と小文字を区別しないファイルシステム持っているので、公式にはサポートされていないにもかかわらず、`taskfile.yml`は正常に動作します。 Linuxでは`Taskfile.yml`だけが動作します。
+This is important especially for Linux users. Windows and macOS have case insensitive filesystems, so `taskfile.yml` will end up working, even that not officially supported. On Linux, only `Taskfile.yml` will work, though.
 
 ## Use the correct order of keywords
 
@@ -31,9 +31,9 @@ Taskfile.yml
 - `env:`, `dotenv:`
 - `tasks:`
 
-## インデントにはスペース2つを使用してください
+## Use 2 spaces for indentation
 
-これはYAMLファイルの最も一般的な慣習であり、Taskはそれに倣うものです。
+This is the most common convention for YAML files, and Task follows it.
 
 ```yaml
 # bad

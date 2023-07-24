@@ -3,7 +3,7 @@ slug: /contributing/
 sidebar_position: 11
 ---
 
-# コントリビュート
+# Contributing
 
 Contributions to Task are very welcome, but we ask that you read this document before submitting a PR.
 
@@ -13,7 +13,7 @@ This document applies to the core [Task][task] repository _and_ [Task for Visual
 
 :::
 
-## 始める前に
+## Before you start
 
 - **Check existing work** - Is there an existing PR? Are there issues discussing the feature/change you want to make? Please make sure you consider/address these discussions in your work.
 - **Backwards compatibility** - Will your change break existing Taskfiles? It is much more likely that your change will merged if it backwards compatible. Is there an approach you can take that maintains this compatibility? If not, consider opening an issue first so that API changes can be discussed before you invest your time into a PR.
@@ -68,7 +68,7 @@ If you're not sure how to format your commit message, check out [Conventional Co
 
 ## FAQ
 
-> コントリビュートしたいのですが、どうすればいいですか？
+> I want to contribute, where do I start?
 
 Take a look at the list of [open issues for Task][task-open-issues] or [Task for Visual Studio Code][vscode-task-open-issues]. We have a [good first issue][good-first-issue] label for simpler issues that are ideal for first time contributions.
 

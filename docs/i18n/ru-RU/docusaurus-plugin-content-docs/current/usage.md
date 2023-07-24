@@ -937,10 +937,10 @@ tasks:
 
 Task also adds the following functions:
 
-- `OS`: Returns the operating system. Possible values are "windows", "linux", "darwin" (macOS) and "freebsd".
-- `ARCH`: return the architecture Task was compiled to: "386", "amd64", "arm" or "s390x".
-- `splitLines`: Splits Unix (\n) and Windows (\r\n) styled newlines.
-- `catLines`: Replaces Unix (\n) and Windows (\r\n) styled newlines with a space.
+- `OS`: Returns the operating system. Possible values are `windows`, `linux`, `darwin` (macOS) and `freebsd`.
+- `ARCH`: return the architecture Task was compiled to: `386`, `amd64`, `arm` or `s390x`.
+- `splitLines`: Splits Unix (`\n`) and Windows (`\r\n`) styled newlines.
+- `catLines`: Replaces Unix (`\n`) and Windows (`\r\n`) styled newlines with a space.
 - `toSlash`: Does nothing on Unix, but on Windows converts a string from `\` path format to `/`.
 - `fromSlash`: Opposite of `toSlash`. Does nothing on Unix, but on Windows converts a string from `/` path format to `\`.
 - `exeExt`: Returns the right executable extension for the current OS (`".exe"` for Windows, `""` for others).
