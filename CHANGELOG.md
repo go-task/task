@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v3.28.0 - 2023-07-24
 
 - Added the ability to
   [loop over commands and tasks](https://taskfile.dev/usage/#looping-over-values)
