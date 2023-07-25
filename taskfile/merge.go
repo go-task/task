@@ -41,7 +41,9 @@ func Merge(t1, t2 *Taskfile, includedTaskfile *IncludedTaskfile, namespaces ...s
 
 		// Add namespaces to dependencies, commands and aliases
 		for _, dep := range task.Deps {
-			dep.Task = taskNameWithNamespace(dep.Task, namespaces...)
+			if dep != nil && dep.Task != "" {
+				dep.Task = taskNameWithNamespace(dep.Task, namespaces...)
+			}
 		}
 		for _, cmd := range task.Cmds {
 			if cmd != nil && cmd.Task != "" {
