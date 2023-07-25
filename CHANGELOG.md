@@ -6,6 +6,8 @@
   @hudclark).
 - Fixed a bug where the `--exit-code` code flag was not returning the correct
   exit code when calling commands indirectly (#1266, #1270 by @pd93).
+- Fixed a `nil` panic when a dependency was commented out or left empty (#1263
+  by @neomantra).
 
 ## v3.27.1 - 2023-06-30
 
