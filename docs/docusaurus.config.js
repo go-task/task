@@ -31,17 +31,36 @@ const getConfig = async () => {
 
     i18n: {
       defaultLocale: 'en',
-      locales: ['en', 'fr-FR', 'pt-BR', 'ru-RU', 'es-ES', 'zh-Hans'],
+      locales: [
+        'en',
+        'es-ES',
+        'fr-FR',
+        'ja-JP',
+        'pt-BR',
+        'ru-RU',
+        'tr-TR',
+        'zh-Hans'
+      ],
       localeConfigs: {
         en: {
           label: 'English',
           direction: 'ltr',
           htmlLang: 'en-US'
         },
+        'es-ES': {
+          label: `Español (${translationProgress['es-ES'] || 0}%)`,
+          direction: 'ltr',
+          htmlLang: 'es-ES'
+        },
         'fr-FR': {
           label: `Français (${translationProgress['fr'] || 0}%)`,
           direction: 'ltr',
           htmlLang: 'fr-FR'
+        },
+        'ja-JP': {
+          label: `日本語 (${translationProgress['ja'] || 0}%)`,
+          direction: 'ltr',
+          htmlLang: 'ja-JP'
         },
         'pt-BR': {
           label: `Português (${translationProgress['pt-BR'] || 0}%)`,
@@ -53,10 +72,10 @@ const getConfig = async () => {
           direction: 'ltr',
           htmlLang: 'ru-RU'
         },
-        'es-ES': {
-          label: `Español (${translationProgress['es-ES'] || 0}%)`,
+        'tr-TR': {
+          label: `Türkçe (${translationProgress['tr'] || 0}%)`,
           direction: 'ltr',
-          htmlLang: 'es-ES'
+          htmlLang: 'tr-TR'
         },
         'zh-Hans': {
           label: `简体中文 (${translationProgress['zh-CN'] || 0}%)`,
