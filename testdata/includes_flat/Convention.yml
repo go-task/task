@@ -1,0 +1,10 @@
+version: '3'
+
+tasks:
+  init:
+    cmd: exit 0
+    silent: true
+
+  build:
+    cmd: echo "Build!"
+    silent: true

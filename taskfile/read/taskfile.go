@@ -81,6 +81,7 @@ func Taskfile(readerNode *ReaderNode) (*taskfile.Taskfile, string, error) {
 				Optional:       includedTask.Optional,
 				Internal:       includedTask.Internal,
 				Aliases:        includedTask.Aliases,
+				Flat:           includedTask.Flat,
 				AdvancedImport: includedTask.AdvancedImport,
 				Vars:           includedTask.Vars,
 				BaseDir:        includedTask.BaseDir,
