@@ -1,26 +1,26 @@
 {
   "link.title.Pages": {
-    "message": "Pages",
+    "message": "ページ",
     "description": "The title of the footer links column with title=Pages in the footer"
   },
   "link.title.Community": {
-    "message": "Community",
+    "message": "コミュニティー",
     "description": "The title of the footer links column with title=Community in the footer"
   },
   "link.title.Translations": {
-    "message": "Translations",
+    "message": "翻訳",
     "description": "The title of the footer links column with title=Translations in the footer"
   },
   "link.item.label.Installation": {
-    "message": "Installation",
+    "message": "インストール方法",
     "description": "The label of footer link with label=Installation linking to /installation/"
   },
   "link.item.label.Usage": {
-    "message": "Usage",
+    "message": "使い方",
     "description": "The label of footer link with label=Usage linking to /usage/"
   },
   "link.item.label.Donate": {
-    "message": "Donate",
+    "message": "寄付",
     "description": "The label of footer link with label=Donate linking to /donate/"
   },
   "link.item.label.GitHub": {

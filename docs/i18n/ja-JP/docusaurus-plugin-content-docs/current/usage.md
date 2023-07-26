@@ -71,13 +71,13 @@ tasks:
 
 `--global` (エイリアス `-g`) フラグと一緒にTaskを実行すると、ワーキングディレクトリの代わりにホームディレクトリからTaskfileを探します。 つまり、Taskは`$HOME/{T,t}askfile.{yml,yaml}`にマッチするファイルを探します。
 
-This is useful to have automation that you can run from anywhere in your system!
+これはシステム内のどこからでも自動化処理を実行可能にする便利な機能です！
 
 :::info
 
-When running your global Taskfile with `-g`, tasks will run on `$HOME` by default, and not on your working directory!
+グローバルなTaskfileを`-g`で実行するとき、タスクはワーキンクディレクトリではなく、デフォルトでは`$HOME`ディレクトリで実行されます！
 
-As mentioned in the previous section, the `{{.USER_WORKING_DIR}}` special variable can be very handy here to run stuff on the directory you're calling `task -g` from.
+前述したように、`{{.USER_WORKING_DIR}}`という特別な変数は非常に便利で、`task -g`を呼び出しているディレクトリで実行させることができます。
 
 ```yaml
 version: '3'
@@ -128,13 +128,13 @@ tasks:
 
 :::info
 
-`env` supports expansion and retrieving output from a shell command just like variables, as you can see in the [Variables](#variables) section.
+`env`は変数と同様に、シェルコマンドからの出力を取得して展開することが可能です。詳細は[変数](#variables)セクションを参照してください。
 
 :::
 
 ### .envファイル
 
-You can also ask Task to include `.env` like files by using the `dotenv:` setting:
+`dotenv:`設定を使用してTaskに`.env`のようなファイルを読み込ませることもできます:
 
 ```bash title=".env"
 KEYNAME=VALUE
@@ -158,7 +158,7 @@ tasks:
       - echo "Using $KEYNAME and endpoint $ENDPOINT"
 ```
 
-Dotenv files can also be specified at the task level:
+dotenvファイルはタスクレベルでも使用可能です:
 
 ```yaml
 version: '3'
@@ -173,7 +173,7 @@ tasks:
       - echo "Using $KEYNAME and endpoint $ENDPOINT"
 ```
 
-Environment variables specified explicitly at the task-level will override variables defined in dotfiles:
+タスクレベルで明示的に定義された環境変数は、dotenvで読み込んだ変数を上書きします:
 
 ```yaml
 version: '3'
@@ -192,11 +192,11 @@ tasks:
 
 :::info
 
-Please note that you are not currently able to use the `dotenv` key inside included Taskfiles.
+インクルードされたTaskfile内では、`dotenv`設定が現在は使えないことに注意してください。
 
 :::
 
-## Including other Taskfiles
+## 他のTaskfileをインクルードする
 
 If you want to share tasks between different projects (Taskfiles), you can use the importing mechanism to include other Taskfiles using the `includes` keyword:
 
@@ -764,7 +764,7 @@ Environmental variables are also checked.
 Syntax:
 
 ```yaml
-requires: 
+requires:
   vars: [] # Array of strings
 ```
 
@@ -785,11 +785,11 @@ tasks:
       - 'docker build . -t {{.IMAGE_NAME}}:{{.IMAGE_TAG}}'
 
     # Make sure these variables are set before running
-    requires: 
+    requires:
       vars: [IMAGE_NAME, IMAGE_TAG]
 ```
 
-## Variables
+## 変数
 
 When doing interpolation of variables, Task will look for the below. They are listed below in order of importance (i.e. most important first):
 
@@ -862,6 +862,168 @@ tasks:
 ```
 
 This works for all types of variables.
+
+## Looping over values
+
+Task allows you to loop over certain values and execute a command for each. There are a number of ways to do this depending on the type of value you want to loop over.
+
+### Looping over a static list
+
+The simplest kind of loop is an explicit one. This is useful when you want to loop over a set of values that are known ahead of time.
+
+```yaml
+version: '3'
+
+tasks:
+  default:
+    cmds:
+      - for: ['foo.txt', 'bar.txt']
+        cmd: cat {{ .ITEM }}
+```
+
+### Looping over your task's sources
+
+You are also able to loop over the sources of your task:
+
+```yaml
+version: '3'
+
+tasks:
+  default:
+    sources:
+      - foo.txt
+      - bar.txt
+    cmds:
+      - for: sources
+        cmd: cat {{ .ITEM }}
+```
+
+This will also work if you use globbing syntax in your sources. For example, if you specify a source for `*.txt`, the loop will iterate over all files that match that glob.
+
+Source paths will always be returned as paths relative to the task directory. If you need to convert this to an absolute path, you can use the built-in `joinPath` function:
+
+```yaml
+version: '3'
+
+tasks:
+  default:
+    vars:
+      MY_DIR: /path/to/dir
+    dir: '{{.MY_DIR}}'
+    sources:
+      - foo.txt
+      - bar.txt
+    cmds:
+      - for: sources
+        cmd: cat {{ joinPath .MY_DIR .ITEM }}
+```
+
+### Looping over variables
+
+To loop over the contents of a variable, you simply need to specify the variable you want to loop over. By default, variables will be split on any whitespace characters.
+
+```yaml
+version: '3'
+
+tasks:
+  default:
+    vars:
+      my_var: foo.txt bar.txt
+    cmds:
+      - for:
+          var: my_var
+        cmd: cat {{ .ITEM }}
+```
+
+If you need to split on a different character, you can do this by specifying the `split` property:
+
+```yaml
+version: '3'
+
+tasks:
+  default:
+    vars:
+      my_var: foo.txt,bar.txt
+    cmds:
+      - for:
+          var: my_var
+          split: ','
+        cmd: cat {{ .ITEM }}
+```
+
+All of this also works with dynamic variables!
+
+```yaml
+version: '3'
+
+tasks:
+  default:
+    vars:
+      my_var:
+        sh: find -type f -name '*.txt'
+    cmds:
+      - for:
+          var: my_var
+        cmd: cat {{ .ITEM }}
+```
+
+### Renaming variables
+
+If you want to rename the iterator variable to make it clearer what the value contains, you can do so by specifying the `as` property:
+
+```yaml
+version: '3'
+
+tasks:
+  default:
+    vars:
+      my_var: foo.txt bar.txt
+    cmds:
+      - for:
+          var: my_var
+          as: FILE
+        cmd: cat {{ .FILE }}
+```
+
+### Looping over tasks
+
+Because the `for` property is defined at the `cmds` level, you can also use it alongside the `task` keyword to run tasks multiple times with different variables.
+
+```yaml
+version: '3'
+
+tasks:
+  default:
+    cmds:
+      - for: [foo, bar]
+        task: my-task
+        vars:
+          FILE: '{{ .ITEM }}'
+
+  my-task:
+    cmds:
+      - echo '{{ .FILE }}'
+```
+
+Or if you want to run different tasks depending on the value of the loop:
+
+```yaml
+version: '3'
+
+tasks:
+  default:
+    cmds:
+      - for: [foo, bar]
+        task: task-{{ .ITEM }}
+
+  task-foo:
+    cmds:
+      - echo 'foo'
+
+  task-bar:
+    cmds:
+      - echo 'bar'
+```
 
 ## Forwarding CLI arguments to commands
 
@@ -1008,9 +1170,9 @@ would print the following output:
 
 If you want to see all tasks, there's a `--list-all` (alias `-a`) flag as well.
 
-## Display summary of task
+## タスクの概要を表示する
 
-Running `task --summary task-name` will show a summary of a task. The following Taskfile:
+`task --summary task-name`を実行することでタスクの概要が表示されます。 Taskfileの例:
 
 ```yaml
 version: '3'
@@ -1031,7 +1193,7 @@ tasks:
       - your-build-tool
 ```
 
-with running `task --summary release` would print the following output:
+`task --summary release`を実行することで、以下のように出力されます:
 
 ```
 task: release
@@ -1048,11 +1210,11 @@ commands:
  - your-release-tool
 ```
 
-If a summary is missing, the description will be printed. If the task does not have a summary or a description, a warning is printed.
+summaryがない場合はdescriptionが表示されます。 summaryもdescriptionもない場合は警告が表示されます。
 
-Please note: _showing the summary will not execute the command_.
+注意: _概要を表示するときはコマンドは実行されません_。
 
-## Task aliases
+## タスクのエイリアス
 
 Aliases are alternative names for tasks. They can be used to make it easier and quicker to run tasks with long or hard-to-type names. You can use them on the command line, when [calling sub-tasks](#calling-another-task) in your Taskfile and when [including tasks](#including-other-taskfiles) with aliases from another Taskfile. They can also be used together with [namespace aliases](#namespace-aliases).
 
@@ -1071,7 +1233,7 @@ tasks:
       - echo "generating..."
 ```
 
-## Overriding task name
+## タスク名の上書き
 
 Sometimes you may want to override the task name printed on the summary, up-to-date messages to STDOUT, etc. In this case, you can just set `label:`, which can also be interpolated with variables:
 
@@ -1093,7 +1255,7 @@ tasks:
       - echo "{{.MESSAGE}}"
 ```
 
-## Warning Prompts
+## 警告プロンプト
 
 Warning Prompts are used to prompt a user for confirmation before a task is executed.
 
@@ -1147,7 +1309,7 @@ Tasks with prompts always fail by default on non-terminal environments, like a C
 
 :::
 
-## Silent mode
+## サイレントモード
 
 Silent mode disables the echoing of commands before Task runs it. For the following Taskfile:
 
@@ -1365,7 +1527,7 @@ The `output` option can also be specified by the `--output` or `-o` flags.
 
 :::
 
-## Interactive CLI application
+## 対話型CLIアプリケーション
 
 When running interactive CLI applications inside Task they can sometimes behave weirdly, especially when the [output mode](#output-syntax) is set to something other than `interleaved` (the default), or when interactive apps are run in parallel with other tasks.
 
@@ -1398,7 +1560,7 @@ tasks:
     - ./app{{exeExt}} -h localhost -p 8080
 ```
 
-## `set` and `shopt`
+## `set`と`shopt`
 
 It's possible to specify options to the [`set`](https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html) and [`shopt`](https://www.gnu.org/software/bash/manual/html_node/The-Shopt-Builtin.html) builtins. This can be added at global, task or command level.
 

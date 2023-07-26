@@ -55,9 +55,9 @@ task [--flags] [tasks...] [-- CLI_ARGS...]
 
 Task 有时会以特定的退出代码退出。 These codes are split into three groups with the following ranges:
 
-- 一般错误 (0-99)
-- Taskfile 错误 (100-199)
-- Task 错误 (200-299)
+- General errors (0-99)
+- Taskfile errors (100-199)
+- Task errors (200-299)
 
 可以在下面找到退出代码及其描述的完整列表：
 
@@ -112,20 +112,21 @@ Task 有时会以特定的退出代码退出。 These codes are split into three
 
 模板系统上有一些可用的特殊变量：
 
-| 变量                 | 描述                                                                            |
-| ------------------ | ----------------------------------------------------------------------------- |
-| `CLI_ARGS`         | 当通过 CLI 调用 Task 时，传递包含在 `--` 之后的所有额外参数。                                       |
-| `TASK`             | 当前 task 的名称。                                                                  |
-| `ROOT_DIR`         | 根 Taskfile 的绝对路径。                                                             |
-| `TASKFILE_DIR`     | 包含 Taskfile 的绝对路径                                                             |
-| `USER_WORKING_DIR` | 调用 `task` 的目录的绝对路径。                                                           |
-| `CHECKSUM`         | 在 `sources` 中列出的文件的 checksum。 仅在 `status` 参数中可用，并且如果 method 设置为 `checksum`。   |
-| `TIMESTAMP`        | 在 `sources` 中列出的文件的最大时间戳的日期对象。 仅在 `status` 参数中可用，并且如果 method 设置为 `timestamp`。 |
-| `TASK_VERSION`     | Task 的当前版本。                                                                   |
+| 变量                 | 描述                                                                                                                         |
+| ------------------ | -------------------------------------------------------------------------------------------------------------------------- |
+| `CLI_ARGS`         | 当通过 CLI 调用 Task 时，传递包含在 `--` 之后的所有额外参数。                                                                                    |
+| `TASK`             | 当前 task 的名称。                                                                                                               |
+| `ROOT_DIR`         | 根 Taskfile 的绝对路径。                                                                                                          |
+| `TASKFILE_DIR`     | 包含 Taskfile 的绝对路径                                                                                                          |
+| `USER_WORKING_DIR` | 调用 `task` 的目录的绝对路径。                                                                                                        |
+| `CHECKSUM`         | 在 `sources` 中列出的文件的 checksum。 仅在 `status` 参数中可用，并且如果 method 设置为 `checksum`。                                                |
+| `TIMESTAMP`        | The date object of the greatest timestamp of the files listed in `sources`. 仅在 `status` 参数中可用，并且如果 method 设置为 `timestamp`。 |
+| `TASK_VERSION`     | Task 的当前版本。                                                                                                                |
+| `ITEM`             | The value of the current iteration when using the `for` property.                                                          |
 
 ## 环境变量
 
-可以覆盖某些环境变量以调整 Task 行为。
+Some environment variables can be overridden to adjust Task behavior.
 
 | ENV                  | 默认      | 描述                                                           |
 | -------------------- | ------- | ------------------------------------------------------------ |
@@ -254,8 +255,9 @@ tasks:
 | 属性             | 类型                                 | 默认      | 描述                                                                                                                   |
 | -------------- | ---------------------------------- | ------- | -------------------------------------------------------------------------------------------------------------------- |
 | `cmd`          | `string`                           |         | 要执行的 shell 命令                                                                                                        |
-| `silent`       | `bool`                             | `false` | 跳过此命令的一些输出。 请注意，命令的 STDOUT 和 STDERR 仍将被重定向。                                                                          |
 | `task`         | `string`                           |         | 执行另一个 task，而不执行命令。 不能与 `cmd` 同时设置。                                                                                   |
+| `for`          | [`For`](#for)                      |         | Runs the command once for each given value.                                                                          |
+| `silent`       | `bool`                             | `false` | 跳过此命令的一些输出。 请注意，命令的 STDOUT 和 STDERR 仍将被重定向。                                                                          |
 | `vars`         | [`map[string]Variable`](#variable) |         | 要传递给引用 task 的可选附加变量。 仅在设置 `task` 而不是 `cmd` 时相关。                                                                      |
 | `ignore_error` | `bool`                             | `false` | 执行命令的时候忽略错误，继续执行                                                                                                     |
 | `defer`        | `string`                           |         | `cmd` 的替代方法，但安排命令在此 task 结束时执行，而不是立即执行。 不能与 `cmd` 一同使用。                                                              |
@@ -297,12 +299,28 @@ tasks:
 
 :::
 
+#### For
+
+The `for` parameter can be defined as a string, a list of strings or a map. If it is defined as a string, you can give it any of the following values:
+
+- `source` - Will run the command for each source file defined on the task. (Glob patterns will be resolved, so `*.go` will run for every Go file that matches).
+
+If it is defined as a list of strings, the command will be run for each value.
+
+Finally, the `for` parameter can be defined as a map when you want to use a variable to define the values to loop over:
+
+| 属性      | 类型       | 默认               | 描述                                           |
+| ------- | -------- | ---------------- | -------------------------------------------- |
+| `var`   | `string` |                  | The name of the variable to use as an input. |
+| `split` | `string` | (any whitespace) | What string the variable should be split on. |
+| `as`    | `string` | `ITEM`           | The name of the iterator variable.           |
+
 #### Precondition
 
-| 属性    | 类型       | 默认 | 描述                                      |
-| ----- | -------- | -- | --------------------------------------- |
-| `sh`  | `string` |    | 要执行的命令。 如果返回非零退出码， task 将在不执行其命令的情况下出错。 |
-| `msg` | `string` |    | 如果不满足先决条件，则打印可选消息。                      |
+| Attribute | Type     | Default | Description                             |
+| --------- | -------- | ------- | --------------------------------------- |
+| `sh`      | `string` |         | 要执行的命令。 如果返回非零退出码， task 将在不执行其命令的情况下出错。 |
+| `msg`     | `string` |         | 如果不满足先决条件，则打印可选消息。                      |
 
 :::tip
 

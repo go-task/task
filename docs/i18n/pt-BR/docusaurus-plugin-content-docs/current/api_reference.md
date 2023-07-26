@@ -55,9 +55,9 @@ Se `--` é informado, todos os argumentos remanescentes serão atribuídos a uma
 
 O Task às vezes fecha com códigos de saída específicos. Estes códigos são divididos em três grupos com os seguintes intervalos:
 
-- Erros gerais (0-99)
-- Erros de Taskfile (100-199)
-- Erros de execução de tarefa (200-299)
+- General errors (0-99)
+- Taskfile errors (100-199)
+- Task errors (200-299)
 
 Uma lista completa dos códigos de saída e suas descrições podem ser encontradas abaixo:
 
@@ -112,20 +112,21 @@ Quando estiver usando o modificador `--json` em combinação com o modificador `
 
 Há algumas variáveis especiais que são acessíveis via template:
 
-| Variável           | Descrição                                                                                                                                                              |
-| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `CLI_ARGS`         | Contém todos os argumentos extras passados depois de `--` quando invocando o Task via linha de comando.                                                                |
-| `TASK`             | O nome da tarefa atual.                                                                                                                                                |
-| `ROOT_DIR`         | O caminho absoluto para o Taskfile raíz.                                                                                                                               |
-| `TASKFILE_DIR`     | O caminho absoluto para o Taskfile incluído.                                                                                                                           |
-| `USER_WORKING_DIR` | O caminho absoluto a partir do qual o comando `task` foi invocado.                                                                                                     |
-| `CHECKSUM`         | O "checksum" dos arquivos listados em `sources`. Apenas disponível dentro do atributo `status` e se o método estiver configurado como `checksum`.                      |
-| `TIMESTAMP`        | A maior data de modificação entre os arquivos listados em `sources`. Apenas disponível dentro do atributo `status` e se o método estiver configurado como `timestamp`. |
-| `TASK_VERSION`     | A versão atual do Task.                                                                                                                                                |
+| Variável           | Descrição                                                                                                                                                                     |
+| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `CLI_ARGS`         | Contém todos os argumentos extras passados depois de `--` quando invocando o Task via linha de comando.                                                                       |
+| `TASK`             | O nome da tarefa atual.                                                                                                                                                       |
+| `ROOT_DIR`         | O caminho absoluto para o Taskfile raíz.                                                                                                                                      |
+| `TASKFILE_DIR`     | O caminho absoluto para o Taskfile incluído.                                                                                                                                  |
+| `USER_WORKING_DIR` | O caminho absoluto a partir do qual o comando `task` foi invocado.                                                                                                            |
+| `CHECKSUM`         | O "checksum" dos arquivos listados em `sources`. Apenas disponível dentro do atributo `status` e se o método estiver configurado como `checksum`.                             |
+| `TIMESTAMP`        | The date object of the greatest timestamp of the files listed in `sources`. Apenas disponível dentro do atributo `status` e se o método estiver configurado como `timestamp`. |
+| `TASK_VERSION`     | A versão atual do Task.                                                                                                                                                       |
+| `ITEM`             | The value of the current iteration when using the `for` property.                                                                                                             |
 
 ## ENV
 
-Algumas variáveis de ambiente podem ser configuradas para mudar o comportamento do Task.
+Some environment variables can be overridden to adjust Task behavior.
 
 | ENV                  | Padrão  | Descrição                                                                                                                                   |
 | -------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -254,8 +255,9 @@ tasks:
 | Atributo       | Tipo                               | Padrão        | Descrição                                                                                                                                                                                          |
 | -------------- | ---------------------------------- | ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `cmd`          | `string`                           |               | The shell command to be executed.                                                                                                                                                                  |
-| `silent`       | `bool`                             | `false`       | Skips some output for this command. Note that STDOUT and STDERR of the commands will still be redirected.                                                                                          |
 | `task`         | `string`                           |               | Set this to trigger execution of another task instead of running a command. This cannot be set together with `cmd`.                                                                                |
+| `for`          | [`For`](#for)                      |               | Runs the command once for each given value.                                                                                                                                                        |
+| `silent`       | `bool`                             | `false`       | Skips some output for this command. Note that STDOUT and STDERR of the commands will still be redirected.                                                                                          |
 | `vars`         | [`map[string]Variable`](#variable) |               | Optional additional variables to be passed to the referenced task. Only relevant when setting `task` instead of `cmd`.                                                                             |
 | `ignore_error` | `bool`                             | `false`       | Continue execution if errors happen while executing the command.                                                                                                                                   |
 | `defer`        | `string`                           |               | Alternative to `cmd`, but schedules the command to be executed at the end of this task instead of immediately. This cannot be used together with `cmd`.                                            |
@@ -297,12 +299,28 @@ tasks:
 
 :::
 
+#### For
+
+The `for` parameter can be defined as a string, a list of strings or a map. If it is defined as a string, you can give it any of the following values:
+
+- `source` - Will run the command for each source file defined on the task. (Glob patterns will be resolved, so `*.go` will run for every Go file that matches).
+
+If it is defined as a list of strings, the command will be run for each value.
+
+Finally, the `for` parameter can be defined as a map when you want to use a variable to define the values to loop over:
+
+| Atributo | Tipo     | Padrão           | Descrição                                    |
+| -------- | -------- | ---------------- | -------------------------------------------- |
+| `var`    | `string` |                  | The name of the variable to use as an input. |
+| `split`  | `string` | (any whitespace) | What string the variable should be split on. |
+| `as`     | `string` | `ITEM`           | The name of the iterator variable.           |
+
 #### Precondition
 
-| Atributo | Tipo     | Padrão | Descrição                                                                                                    |
-| -------- | -------- | ------ | ------------------------------------------------------------------------------------------------------------ |
-| `sh`     | `string` |        | Command to be executed. If a non-zero exit code is returned, the task errors without executing its commands. |
-| `msg`    | `string` |        | Optional message to print if the precondition isn't met.                                                     |
+| Attribute | Type     | Default | Description                                                                                                  |
+| --------- | -------- | ------- | ------------------------------------------------------------------------------------------------------------ |
+| `sh`      | `string` |         | Command to be executed. If a non-zero exit code is returned, the task errors without executing its commands. |
+| `msg`     | `string` |         | Optional message to print if the precondition isn't met.                                                     |
 
 :::tip
 

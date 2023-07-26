@@ -9,7 +9,7 @@ sidebar_position: 8
 
 これには一般的なガイドラインが含まれていますが、必ずしも厳密に従う必要はありません。 必要であったり、あるいは違う方法を取りたい場合は自由にしてください。 また、このガイドの改善点について、IssueまたはPull Requestを開くことも自由です。
 
-## `taskfile.yml`ではなく`Taskfile.yml`を使用してください
+## `taskfile.yml`ではなく`Taskfile.yml`を使用する
 
 ```yaml
 # bad
@@ -22,16 +22,16 @@ Taskfile.yml
 
 これはLinuxユーザーにとって特に重要です。 WindowsとmacOSは大文字と小文字を区別しないファイルシステム持っているので、公式にはサポートされていないにもかかわらず、`taskfile.yml`は正常に動作します。 Linuxでは`Taskfile.yml`だけが動作します。
 
-## Use the correct order of keywords
+## キーワードを正しい順序にする
 
 - `version:`
 - `includes:`
-- Configuration ones, like `output:`, `silent:`, `method:` and `run:`
+- 設定項目として、`output:`、`silent:`、`method:`、そして`run:`があります。
 - `vars:`
 - `env:`, `dotenv:`
 - `tasks:`
 
-## インデントにはスペース2つを使用してください
+## インデントにはスペース2つを使用する
 
 これはYAMLファイルの最も一般的な慣習であり、Taskはそれに倣うものです。
 
@@ -50,7 +50,7 @@ tasks:
       - echo 'foo'
 ```
 
-## Separate with spaces the mains sections
+## メインセクションをスペースで分ける
 
 ```yaml
 # bad
@@ -84,7 +84,7 @@ tasks:
   # ...
 ```
 
-## Add spaces between tasks
+## タスク間にスペースを設ける
 
 ```yaml
 # bad
@@ -119,7 +119,7 @@ tasks:
       - echo 'baz'
 ```
 
-## Use upper-case variable names
+## 変数名は大文字で定義する
 
 ```yaml
 # bad
@@ -146,7 +146,7 @@ tasks:
       - go build -o {{.BINARY_NAME}} .
 ```
 
-## Don't wrap vars in spaces when templating
+## テンプレート記法で変数名の前後に空白を設けない
 
 ```yaml
 # bad
@@ -167,9 +167,9 @@ tasks:
       - echo '{{.MESSAGE}}'
 ```
 
-This convention is also used by most people for any Go templating.
+この書き方は多くの人によってGoのテンプレート作成にも使われています。
 
-## Separate task name words with a dash
+## タスク名の単語をハイフンで区切る
 
 ```yaml
 # bad
@@ -190,7 +190,7 @@ tasks:
       - echo 'Do something'
 ```
 
-## Use colon for task namespacing
+## タスクの名前空間にコロンを使用する
 
 ```yaml
 # good
@@ -206,9 +206,9 @@ tasks:
       - docker-compose ...
 ```
 
-This is also done automatically when using included Taskfiles.
+これはインクルードされたタスクファイルを使用する場合に、自動的に行われます。
 
-## Prefer external scripts over complex multi-line commands
+## 複雑な複数行のコマンドの使用は避け、外部スクリプトを使用する
 
 ```yaml
 # bad
