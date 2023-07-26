@@ -9,7 +9,7 @@ sidebar_position: 6
 
 Task has an [official extension for Visual Studio Code](https://marketplace.visualstudio.com/items?itemName=task.vscode-task). El código de ese proyecto puede ser encontrado [aquí](https://github.com/go-task/vscode-task). Para usar la extensión es necesario tener instalada la versión v3.23.0+ de Task.
 
-This extension provides the following features (and more):
+La extensión proporciona las siguientes funcionalidades (y más...):
 
 - View tasks in the sidebar.
 - Ejecuta tareas desde la barra lateral y la paleta de comandos.

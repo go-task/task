@@ -764,7 +764,7 @@ Environmental variables are also checked.
 Syntax:
 
 ```yaml
-requires: 
+requires:
   vars: [] # Array of strings
 ```
 
@@ -785,7 +785,7 @@ tasks:
       - 'docker build . -t {{.IMAGE_NAME}}:{{.IMAGE_TAG}}'
 
     # Make sure these variables are set before running
-    requires: 
+    requires:
       vars: [IMAGE_NAME, IMAGE_TAG]
 ```
 
@@ -862,6 +862,168 @@ tasks:
 ```
 
 This works for all types of variables.
+
+## Looping over values
+
+Task allows you to loop over certain values and execute a command for each. There are a number of ways to do this depending on the type of value you want to loop over.
+
+### Looping over a static list
+
+The simplest kind of loop is an explicit one. This is useful when you want to loop over a set of values that are known ahead of time.
+
+```yaml
+version: '3'
+
+tasks:
+  default:
+    cmds:
+      - for: ['foo.txt', 'bar.txt']
+        cmd: cat {{ .ITEM }}
+```
+
+### Looping over your task's sources
+
+You are also able to loop over the sources of your task:
+
+```yaml
+version: '3'
+
+tasks:
+  default:
+    sources:
+      - foo.txt
+      - bar.txt
+    cmds:
+      - for: sources
+        cmd: cat {{ .ITEM }}
+```
+
+This will also work if you use globbing syntax in your sources. For example, if you specify a source for `*.txt`, the loop will iterate over all files that match that glob.
+
+Source paths will always be returned as paths relative to the task directory. If you need to convert this to an absolute path, you can use the built-in `joinPath` function:
+
+```yaml
+version: '3'
+
+tasks:
+  default:
+    vars:
+      MY_DIR: /path/to/dir
+    dir: '{{.MY_DIR}}'
+    sources:
+      - foo.txt
+      - bar.txt
+    cmds:
+      - for: sources
+        cmd: cat {{ joinPath .MY_DIR .ITEM }}
+```
+
+### Looping over variables
+
+To loop over the contents of a variable, you simply need to specify the variable you want to loop over. By default, variables will be split on any whitespace characters.
+
+```yaml
+version: '3'
+
+tasks:
+  default:
+    vars:
+      my_var: foo.txt bar.txt
+    cmds:
+      - for:
+          var: my_var
+        cmd: cat {{ .ITEM }}
+```
+
+If you need to split on a different character, you can do this by specifying the `split` property:
+
+```yaml
+version: '3'
+
+tasks:
+  default:
+    vars:
+      my_var: foo.txt,bar.txt
+    cmds:
+      - for:
+          var: my_var
+          split: ','
+        cmd: cat {{ .ITEM }}
+```
+
+All of this also works with dynamic variables!
+
+```yaml
+version: '3'
+
+tasks:
+  default:
+    vars:
+      my_var:
+        sh: find -type f -name '*.txt'
+    cmds:
+      - for:
+          var: my_var
+        cmd: cat {{ .ITEM }}
+```
+
+### Renaming variables
+
+If you want to rename the iterator variable to make it clearer what the value contains, you can do so by specifying the `as` property:
+
+```yaml
+version: '3'
+
+tasks:
+  default:
+    vars:
+      my_var: foo.txt bar.txt
+    cmds:
+      - for:
+          var: my_var
+          as: FILE
+        cmd: cat {{ .FILE }}
+```
+
+### Looping over tasks
+
+Because the `for` property is defined at the `cmds` level, you can also use it alongside the `task` keyword to run tasks multiple times with different variables.
+
+```yaml
+version: '3'
+
+tasks:
+  default:
+    cmds:
+      - for: [foo, bar]
+        task: my-task
+        vars:
+          FILE: '{{ .ITEM }}'
+
+  my-task:
+    cmds:
+      - echo '{{ .FILE }}'
+```
+
+Or if you want to run different tasks depending on the value of the loop:
+
+```yaml
+version: '3'
+
+tasks:
+  default:
+    cmds:
+      - for: [foo, bar]
+        task: task-{{ .ITEM }}
+
+  task-foo:
+    cmds:
+      - echo 'foo'
+
+  task-bar:
+    cmds:
+      - echo 'bar'
+```
 
 ## Forwarding CLI arguments to commands
 
