@@ -17,7 +17,7 @@ task [--flags] [tasks...] [-- CLI_ARGS...]
 
 :::tip
 
-如果 `--` 给出，所有剩余参数将被分配给一个特殊的 `CLI_ARGS` 变量
+If `--` is given, all remaining arguments will be assigned to a special `CLI_ARGS` variable
 
 :::
 
@@ -61,20 +61,20 @@ Task 有时会以特定的退出代码退出。 These codes are split into three
 
 可以在下面找到退出代码及其描述的完整列表：
 
-| 代码  | 描述                                                        |
-| --- | --------------------------------------------------------- |
-| 0   | 成功                                                        |
-| 1   | 出现未知错误                                                    |
-| 100 | 找不到 Taskfile                                              |
-| 101 | 尝试初始化一个 Taskfile 时已经存在                                    |
-| 102 | Taskfile 无效或无法解析                                          |
-| 200 | 找不到指定的 task                                               |
-| 201 | 在 task 中执行命令时出错                                           |
-| 202 | 用户试图调用内部 task                                             |
-| 203 | 有多个具有相同名称或别名的 task                                        |
-| 204 | 一个 task 被调用了太多次                                           |
-| 205 | A task was cancelled by the user                          |
-| 206 | A task was not executed due to missing required variables |
+| 代码  | 描述                     |
+| --- | ---------------------- |
+| 0   | 成功                     |
+| 1   | 出现未知错误                 |
+| 100 | 找不到 Taskfile           |
+| 101 | 尝试初始化一个 Taskfile 时已经存在 |
+| 102 | Taskfile 无效或无法解析       |
+| 200 | 找不到指定的 task            |
+| 201 | 在 task 中执行命令时出错        |
+| 202 | 用户试图调用内部 task          |
+| 203 | 有多个具有相同名称或别名的 task     |
+| 204 | 一个 task 被调用了太多次        |
+| 205 | 操作被用户取消                |
+| 206 | 由于缺少所需变量，任务未执行         |
 
 这些代码也可以在代码库的 [`errors/errors.go`](https://github.com/go-task/task/blob/main/errors/errors.go) 文件中找到。
 
@@ -122,7 +122,7 @@ Task 有时会以特定的退出代码退出。 These codes are split into three
 | `CHECKSUM`         | 在 `sources` 中列出的文件的 checksum。 仅在 `status` 参数中可用，并且如果 method 设置为 `checksum`。                                                |
 | `TIMESTAMP`        | The date object of the greatest timestamp of the files listed in `sources`. 仅在 `status` 参数中可用，并且如果 method 设置为 `timestamp`。 |
 | `TASK_VERSION`     | Task 的当前版本。                                                                                                                |
-| `ITEM`             | The value of the current iteration when using the `for` property.                                                          |
+| `ITEM`             | The value of the current iteration when using the `for` property. Can be changed to a different variable name using `as:`. |
 
 ## 环境变量
 
@@ -146,12 +146,12 @@ Some environment variables can be overridden to adjust Task behavior.
 | ---------- | ---------------------------------- | ------------- | ------------------------------------------------------------------------------------------------- |
 | `version`  | `string`                           |               | Taskfile 的版本。 当前版本是 `3`。                                                                          |
 | `output`   | `string`                           | `interleaved` | 输出模式。 可用选项: `interleaved`、`group` 和 `prefixed`                                                    |
-| `method`   | `string`                           | `checksum`    | Taskfile 中的默认方法。 可以在 task 基础上覆盖。 可用选项：`checksum`、`timestamp` 和 `none`。                            |
+| `method`   | `string`                           | `checksum`    | Taskfile 中的默认方法。 Can be overridden in a task by task basis. 可用选项：`checksum`、`timestamp` 和 `none`。 |
 | `includes` | [`map[string]Include`](#include)   |               | 要包含的其他 Taskfile。                                                                                  |
 | `vars`     | [`map[string]Variable`](#variable) |               | 一组全局变量。                                                                                           |
 | `env`      | [`map[string]Variable`](#variable) |               | 一组全局环境变量。                                                                                         |
 | `tasks`    | [`map[string]Task`](#task)         |               | 一组 task 定义。                                                                                       |
-| `silent`   | `bool`                             | `false`       | 此 Taskfile 的默认“silent”选项。 如果为 `false`，则可以在 task 的基础上用 `true` 覆盖。                                  |
+| `silent`   | `bool`                             | `false`       | 此 Taskfile 的默认“silent”选项。 If `false`, can be overridden with `true` in a task by task basis.      |
 | `dotenv`   | `[]string`                         |               | 要解析的 `.env` 文件路径列表。                                                                               |
 | `run`      | `string`                           | `always`      | Taskfile 中默认的 'run' 选项。 可用选项: `always`、`once` 和 `when_changed`。                                   |
 | `interval` | `string`                           | `5s`          | 设置 `--watch` 模式下的观察时间，默认 5 秒。 这个字符串应该是一个有效的 [Go Duration](https://pkg.go.dev/time#ParseDuration)。 |
