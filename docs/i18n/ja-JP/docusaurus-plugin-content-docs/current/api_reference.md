@@ -17,7 +17,7 @@ task [--flags] [tasks...] [-- CLI_ARGS...]
 
 :::tip
 
-`--`が指定された場合、それ以降のすべての引数は特殊な`CLI_ARGS`変数に格納されます
+If `--` is given, all remaining arguments will be assigned to a special `CLI_ARGS` variable
 
 :::
 
@@ -122,7 +122,7 @@ There are some special variables that is available on the templating system:
 | `CHECKSUM`         | The checksum of the files listed in `sources`. Only available within the `status` prop and if method is set to `checksum`.                               |
 | `TIMESTAMP`        | The date object of the greatest timestamp of the files listed in `sources`. Only available within the `status` prop and if method is set to `timestamp`. |
 | `TASK_VERSION`     | The current version of task.                                                                                                                             |
-| `ITEM`             | The value of the current iteration when using the `for` property.                                                                                        |
+| `ITEM`             | The value of the current iteration when using the `for` property. Can be changed to a different variable name using `as:`.                               |
 
 ## ENV
 
@@ -146,12 +146,12 @@ Some environment variables can be overridden to adjust Task behavior.
 | ---------- | ---------------------------------- | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `version`  | `string`                           |               | Version of the Taskfile. The current version is `3`.                                                                                                                   |
 | `output`   | `string`                           | `interleaved` | Output mode. Available options: `interleaved`, `group` and `prefixed`.                                                                                                 |
-| `method`   | `string`                           | `checksum`    | Default method in this Taskfile. Can be overriden in a task by task basis. Available options: `checksum`, `timestamp` and `none`.                                      |
+| `method`   | `string`                           | `checksum`    | Default method in this Taskfile. Can be overridden in a task by task basis. Available options: `checksum`, `timestamp` and `none`.                                     |
 | `includes` | [`map[string]Include`](#include)   |               | Additional Taskfiles to be included.                                                                                                                                   |
 | `vars`     | [`map[string]Variable`](#variable) |               | A set of global variables.                                                                                                                                             |
 | `env`      | [`map[string]Variable`](#variable) |               | A set of global environment variables.                                                                                                                                 |
 | `tasks`    | [`map[string]Task`](#task)         |               | A set of task definitions.                                                                                                                                             |
-| `silent`   | `bool`                             | `false`       | Default 'silent' options for this Taskfile. If `false`, can be overidden with `true` in a task by task basis.                                                          |
+| `silent`   | `bool`                             | `false`       | Default 'silent' options for this Taskfile. If `false`, can be overridden with `true` in a task by task basis.                                                         |
 | `dotenv`   | `[]string`                         |               | A list of `.env` file paths to be parsed.                                                                                                                              |
 | `run`      | `string`                           | `always`      | Default 'run' option for this Taskfile. Available options: `always`, `once` and `when_changed`.                                                                        |
 | `interval` | `string`                           | `5s`          | Sets a different watch interval when using `--watch`, the default being 5 seconds. This string should be a valid [Go Duration](https://pkg.go.dev/time#ParseDuration). |

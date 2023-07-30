@@ -5,6 +5,13 @@ sidebar_position: 9
 
 # Changelog
 
+## v3.28.0 - 2023-07-24
+
+- Added the ability to [loop over commands and tasks](https://taskfile.dev/usage/#looping-over-values) using `for` ([#82](https://github.com/go-task/task/issues/82), [#1220](https://github.com/go-task/task/issues/1220) by [@pd93](https://github.com/pd93)).
+- Fixed variable propagation in multi-level includes ([#778](https://github.com/go-task/task/issues/778), [#996](https://github.com/go-task/task/issues/996), [#1256](https://github.com/go-task/task/issues/1256) by [@hudclark](https://github.com/hudclark)).
+- Fixed a bug where the `--exit-code` code flag was not returning the correct exit code when calling commands indirectly ([#1266](https://github.com/go-task/task/issues/1266), [#1270](https://github.com/go-task/task/issues/1270) by [@pd93](https://github.com/pd93)).
+- Fixed a `nil` panic when a dependency was commented out or left empty ([#1263](https://github.com/go-task/task/issues/1263) by [@neomantra](https://github.com/neomantra)).
+
 ## v3.27.1 - 2023-06-30
 
 - Fix panic when a `.env` directory (not file) is present on current directory ([#1244](https://github.com/go-task/task/issues/1244), [#1245](https://github.com/go-task/task/issues/1245) by [@pd93](https://github.com/pd93)).

@@ -17,7 +17,7 @@ task [--flags] [tasks...] [-- CLI_ARGS...]
 
 :::tip
 
-Se `--` é informado, todos os argumentos remanescentes serão atribuídos a uma variável especial chamada `CLI_ARGS`
+If `--` is given, all remaining arguments will be assigned to a special `CLI_ARGS` variable
 
 :::
 
@@ -122,7 +122,7 @@ Há algumas variáveis especiais que são acessíveis via template:
 | `CHECKSUM`         | O "checksum" dos arquivos listados em `sources`. Apenas disponível dentro do atributo `status` e se o método estiver configurado como `checksum`.                             |
 | `TIMESTAMP`        | The date object of the greatest timestamp of the files listed in `sources`. Apenas disponível dentro do atributo `status` e se o método estiver configurado como `timestamp`. |
 | `TASK_VERSION`     | A versão atual do Task.                                                                                                                                                       |
-| `ITEM`             | The value of the current iteration when using the `for` property.                                                                                                             |
+| `ITEM`             | The value of the current iteration when using the `for` property. Can be changed to a different variable name using `as:`.                                                    |
 
 ## ENV
 
@@ -142,21 +142,21 @@ Some environment variables can be overridden to adjust Task behavior.
 
 ## Esquema do Taskfile
 
-| Atributo   | Tipo                               | Padrão        | Descrição                                                                                                                                                                                           |
-| ---------- | ---------------------------------- | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `version`  | `string`                           |               | Versão do Taskfile. A versão mais atual é a `3`.                                                                                                                                                    |
-| `output`   | `string`                           | `interleaved` | Mode de saída. Opções disponíveis: `interleaved`, `group` e `prefixed`.                                                                                                                             |
-| `method`   | `string`                           | `checksum`    | O método padrão deste Taskfile. Pode ser sobre-escrito em cada tarefa individual. Opções disponíveis: `checksum` (conteúdo dos arquivos), `timestamp` (data/hora de modificação) e `none` (nenhum). |
-| `includes` | [`map[string]Include`](#include)   |               | Taskfiles adicionais a serem incluídos.                                                                                                                                                             |
-| `vars`     | [`map[string]Variable`](#variable) |               | Um conjunto de variáveis globais.                                                                                                                                                                   |
-| `env`      | [`map[string]Variable`](#variable) |               | Um conjunto de variáveis de ambiente globais.                                                                                                                                                       |
-| `tasks`    | [`map[string]Task`](#task)         |               | Um conjunto de tarefas.                                                                                                                                                                             |
-| `silent`   | `bool`                             | `false`       | Opção padrão para `silent` para este Taskfile. Se `false`, pode ser sobre-escrito com `true` em cada tarefa individual.                                                                             |
-| `dotenv`   | `[]string`                         |               | Uma lista de arquivos `.env` para serem incluídos.                                                                                                                                                  |
-| `run`      | `string`                           | `always`      | Opção padrão para `run` para este Taskfile. Opções disponíveis: `always` (sempre), `once` (uma vez) e `when_changed` (quando mudou).                                                                |
-| `interval` | `string`                           | `5s`          | Configura um intervalo de tempo diferente para `--watch`, sendo que o padrão é de 5 segundos. Essa string deve ser um [Go Duration](https://pkg.go.dev/time#ParseDuration) válido.                  |
-| `set`      | `[]string`                         |               | Configura opções para o builtin [`set`](https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html).                                                                                   |
-| `shopt`    | `[]string`                         |               | Configura opções para o builtin [`shopt`](https://www.gnu.org/software/bash/manual/html_node/The-Shopt-Builtin.html).                                                                               |
+| Atributo   | Tipo                               | Padrão        | Descrição                                                                                                                                                                                    |
+| ---------- | ---------------------------------- | ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `version`  | `string`                           |               | Versão do Taskfile. A versão mais atual é a `3`.                                                                                                                                             |
+| `output`   | `string`                           | `interleaved` | Mode de saída. Opções disponíveis: `interleaved`, `group` e `prefixed`.                                                                                                                      |
+| `method`   | `string`                           | `checksum`    | O método padrão deste Taskfile. Can be overridden in a task by task basis. Opções disponíveis: `checksum` (conteúdo dos arquivos), `timestamp` (data/hora de modificação) e `none` (nenhum). |
+| `includes` | [`map[string]Include`](#include)   |               | Taskfiles adicionais a serem incluídos.                                                                                                                                                      |
+| `vars`     | [`map[string]Variable`](#variable) |               | Um conjunto de variáveis globais.                                                                                                                                                            |
+| `env`      | [`map[string]Variable`](#variable) |               | Um conjunto de variáveis de ambiente globais.                                                                                                                                                |
+| `tasks`    | [`map[string]Task`](#task)         |               | Um conjunto de tarefas.                                                                                                                                                                      |
+| `silent`   | `bool`                             | `false`       | Opção padrão para `silent` para este Taskfile. If `false`, can be overridden with `true` in a task by task basis.                                                                            |
+| `dotenv`   | `[]string`                         |               | Uma lista de arquivos `.env` para serem incluídos.                                                                                                                                           |
+| `run`      | `string`                           | `always`      | Opção padrão para `run` para este Taskfile. Opções disponíveis: `always` (sempre), `once` (uma vez) e `when_changed` (quando mudou).                                                         |
+| `interval` | `string`                           | `5s`          | Configura um intervalo de tempo diferente para `--watch`, sendo que o padrão é de 5 segundos. Essa string deve ser um [Go Duration](https://pkg.go.dev/time#ParseDuration) válido.           |
+| `set`      | `[]string`                         |               | Configura opções para o builtin [`set`](https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html).                                                                            |
+| `shopt`    | `[]string`                         |               | Configura opções para o builtin [`shopt`](https://www.gnu.org/software/bash/manual/html_node/The-Shopt-Builtin.html).                                                                        |
 
 ### Include
 

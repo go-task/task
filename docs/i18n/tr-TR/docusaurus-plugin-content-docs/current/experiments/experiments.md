@@ -3,19 +3,19 @@ slug: /experiments/
 sidebar_position: 5
 ---
 
-# Experiments
+# Deneyler
 
 :::caution
 
-All experimental features are subject to breaking changes and/or removal _at any time_. We strongly recommend that you do not use these features in a production environment. They are intended for testing and feedback only.
+Tüm deneysel özellikler, _herhangi bir zamanda_ önemli değişikliklere ve/veya kaldırmaya tabidir. Bu özellikleri bir üretim ortamında kullanmamanızı kesinlikle öneririz. Yanlızca test ve geri bildirim amaçlıdır.
 
 :::
 
-In order to allow Task to evolve quickly, we roll out breaking changes to minor versions behind experimental flags. This allows us to gather feedback on breaking changes before committing to a major release. This document describes the current set of experimental features and the deprecated feature that they are intended to replace.
+Task'ın hızlı bir şekilde gelişmesine izin vermek için, deneysel bayrakların arkasındaki küçük sürümlerde büyük değişiklikler yapıyoruz. Bu, büyük bir sürüm yayınlanmadan önce son değişiklikler hakkında geri bildirim toplamamızı sağlar. Bu belgede, mevcut deneysel özellik grubu ve bunların yerini alması amaçlanan kullanımdan kaldırılmış özellik açıklanmaktadır.
 
-You can enable an experimental feature by:
+Deneysel bir özelliği şu şekilde etkinleştirebilirsiniz:
 
-1. Using the relevant environment variable in front of a task command. For example, `TASK_X_{FEATURE}=1 task {my-task}`. This is intended for one-off invocations of Task to test out experimental features.
+1. İlgili ortam değişkenini bir görev komutunun önünde kullanma. Örneğin, `TASK_X_{FEATURE}=1 task {my-task}`. Bu, Task'ın deneysel özellikleri test etmek için tek seferlik çağrıları için tasarlanmıştır.
 1. Using the relevant environment variable in your "dotfiles" (e.g. `.bashrc`, `.zshrc` etc.). This is intended for permanently enabling experimental features in your environment.
 1. Creating a `.env` file in the same directory as your root Taskfile that contains the relevant environment variables. e.g.
 

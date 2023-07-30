@@ -900,7 +900,7 @@ tasks:
 
 This will also work if you use globbing syntax in your sources. For example, if you specify a source for `*.txt`, the loop will iterate over all files that match that glob.
 
-Source paths will always be returned as paths relative to the task directory. If you need to convert this to an absolute path, you can use the built-in `joinPath` function:
+Source paths will always be returned as paths relative to the task directory. If you need to convert this to an absolute path, you can use the built-in `joinPath` function. There are some [special variables](/api/#special-variables) that you may find useful for this.
 
 ```yaml
 version: '3'
@@ -915,7 +915,7 @@ tasks:
       - bar.txt
     cmds:
       - for: sources
-        cmd: cat {{ joinPath .MY_DIR .ITEM }}
+        cmd: cat {{joinPath .MY_DIR .ITEM}}
 ```
 
 ### Looping over variables
@@ -928,11 +928,10 @@ version: '3'
 tasks:
   default:
     vars:
-      my_var: foo.txt bar.txt
+      MY_VAR: foo.txt bar.txt
     cmds:
-      - for:
-          var: my_var
-        cmd: cat {{ .ITEM }}
+      - for: { var: MY_VAR }
+        cmd: cat {{.ITEM}}
 ```
 
 If you need to split on a different character, you can do this by specifying the `split` property:
@@ -943,12 +942,10 @@ version: '3'
 tasks:
   default:
     vars:
-      my_var: foo.txt,bar.txt
+      MY_VAR: foo.txt,bar.txt
     cmds:
-      - for:
-          var: my_var
-          split: ','
-        cmd: cat {{ .ITEM }}
+      - for: { var: MY_VAR, split: ',' }
+        cmd: cat {{.ITEM}}
 ```
 
 All of this also works with dynamic variables!
@@ -959,12 +956,11 @@ version: '3'
 tasks:
   default:
     vars:
-      my_var:
+      MY_VAR:
         sh: find -type f -name '*.txt'
     cmds:
-      - for:
-          var: my_var
-        cmd: cat {{ .ITEM }}
+      - for: { var: MY_VAR }
+        cmd: cat {{.ITEM}}
 ```
 
 ### Renaming variables
@@ -977,12 +973,10 @@ version: '3'
 tasks:
   default:
     vars:
-      my_var: foo.txt bar.txt
+      MY_VAR: foo.txt bar.txt
     cmds:
-      - for:
-          var: my_var
-          as: FILE
-        cmd: cat {{ .FILE }}
+      - for: { var: MY_VAR, as: FILE }
+        cmd: cat {{.FILE}}
 ```
 
 ### Looping over tasks
@@ -998,11 +992,11 @@ tasks:
       - for: [foo, bar]
         task: my-task
         vars:
-          FILE: '{{ .ITEM }}'
+          FILE: '{{.ITEM}}'
 
   my-task:
     cmds:
-      - echo '{{ .FILE }}'
+      - echo '{{.FILE}}'
 ```
 
 Or if you want to run different tasks depending on the value of the loop:
@@ -1014,7 +1008,7 @@ tasks:
   default:
     cmds:
       - for: [foo, bar]
-        task: task-{{ .ITEM }}
+        task: task-{{.ITEM}}
 
   task-foo:
     cmds:
