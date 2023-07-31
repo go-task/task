@@ -4,6 +4,7 @@
 
 - Fix a missing a line break on log when using `--watch` mode (#1285, #1297 by
   @FilipSolich).
+- Fix `defer` on JSON Schema (#1288 by @calvinmclean and @andreynering).
 
 ## v3.28.0 - 2023-07-24
 
