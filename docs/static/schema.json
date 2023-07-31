@@ -209,6 +209,9 @@
             "$ref": "#/definitions/3/task_call"
           },
           {
+            "$ref": "#/definitions/3/defer_call"
+          },
+          {
             "$ref": "#/definitions/3/for_call"
           }
         ]
@@ -308,10 +311,6 @@
             "description": "Prevent command from aborting the execution of task even after receiving a status code of 1",
             "type": "boolean"
           },
-          "defer": {
-            "description": "",
-            "type": "boolean"
-          },
           "platforms": {
             "description": "Specifies which platforms the command should be run on.",
             "type": "array",
@@ -322,6 +321,17 @@
         },
         "additionalProperties": false,
         "required": ["cmd"]
+      },
+      "defer_call": {
+        "type": "object",
+        "properties": {
+          "defer": {
+            "description": "Run a command when the task completes. This command will run even when the task fails",
+            "type": "string"
+          }
+        },
+        "additionalProperties": false,
+        "required": ["defer"]
       },
       "for_call": {
         "type": "object",
