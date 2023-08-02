@@ -865,7 +865,7 @@ tasks:
 
 ## Looping over values
 
-Task allows you to loop over certain values and execute a command for each. There are a number of ways to do this depending on the type of value you want to loop over.
+As of v3.28.0, Task allows you to loop over certain values and execute a command for each. There are a number of ways to do this depending on the type of value you want to loop over.
 
 ### Looping over a static list
 
