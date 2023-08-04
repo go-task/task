@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Fix a missing a line break on log when using `--watch` mode (#1285, #1297 by
+  @FilipSolich).
+
 ## v3.28.0 - 2023-07-24
 
 - Added the ability to

@@ -27,7 +27,7 @@ func (e *Executor) watchTasks(calls ...taskfile.Call) error {
 		tasks[i] = c.Task
 	}
 
-	e.Logger.Errf(logger.Green, "task: Started watching for tasks: %s", strings.Join(tasks, ", "))
+	e.Logger.Errf(logger.Green, "task: Started watching for tasks: %s\n", strings.Join(tasks, ", "))
 
 	ctx, cancel := context.WithCancel(context.Background())
 	for _, c := range calls {
