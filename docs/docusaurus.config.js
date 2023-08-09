@@ -96,7 +96,10 @@ const getConfig = async () => {
           },
           blog: false,
           theme: {
-            customCss: [require.resolve('./src/css/custom.css')]
+            customCss: [
+              require.resolve('./src/css/custom.css'),
+              require.resolve('./src/css/carbon.css')
+            ]
           },
           gtag: {
             trackingID: 'G-4RT25NXQ7N',
@@ -109,6 +112,13 @@ const getConfig = async () => {
           }
         })
       ]
+    ],
+
+    scripts: [
+      {
+        src: '/js/carbon.js',
+        async: true
+      }
     ],
 
     themeConfig:
