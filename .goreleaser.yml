@@ -1,28 +1,28 @@
-build:
-  binary: task
-  main: ./cmd/task
-  goos:
-    - windows
-    - darwin
-    - linux
-    - freebsd
-  goarch:
-    - '386'
-    - amd64
-    - arm
-    - arm64
-  goarm:
-    - '6'
-  ignore:
-    - goos: darwin
-      goarch: '386'
-  env:
-    - CGO_ENABLED=0
-  mod_timestamp: '{{ .CommitTimestamp }}'
-  flags:
-    - -trimpath
-  ldflags:
-    - -s -w # Don't set main.version.
+builds:
+  - binary: task
+    main: ./cmd/task
+    goos:
+      - windows
+      - darwin
+      - linux
+      - freebsd
+    goarch:
+      - '386'
+      - amd64
+      - arm
+      - arm64
+    goarm:
+      - '6'
+    ignore:
+      - goos: darwin
+        goarch: '386'
+    env:
+      - CGO_ENABLED=0
+    mod_timestamp: '{{ .CommitTimestamp }}'
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w # Don't set main.version.
 
 gomod:
   proxy: true
@@ -72,7 +72,7 @@ brews:
     license: MIT
     homepage: https://taskfile.dev
     folder: Formula
-    tap:
+    repository:
       owner: go-task
       name: homebrew-tap
     test:
