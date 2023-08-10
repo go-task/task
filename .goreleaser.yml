@@ -85,3 +85,40 @@ brews:
     commit_author:
       name: task-bot
       email: 106601941+task-bot@users.noreply.github.com
+
+winget:
+  - name: Task
+    publisher: Task
+    short_description: A task runner / simpler Make alternative written in Go
+    description: Task is a task runner / build tool that aims to be simpler and easier to use than, for example, GNU Make.
+    license: MIT
+    homepage: https://taskfile.dev/
+    publisher_url: https://taskfile.dev/
+    publisher_support_url: https://github.com/go-task/task/issues
+    package_identifier: Task.Task
+    commit_author:
+      name: task-bot
+      email: 106601941+task-bot@users.noreply.github.com
+    commit_msg_template: "chore: bump {{PackageIdentifier}} to {{.Tag}}"
+    release_notes_url: https://github.com/go-task/task/releases/tag/{{.Tag}}
+    tags:
+      - build
+      - build-tool
+      - devops
+      - go
+      - make
+      - makefile
+      - runner
+      - task
+      - task-runner
+      - taskfile
+      - tool
+    repository:
+      owner: microsoft
+      name: winget-pkgs
+      pull_request:
+        enabled: true
+        base:
+          owner: go-task
+          name: winget-pkgs
+          branch: "bump-task-to-{{.Tag}}"
