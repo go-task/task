@@ -156,12 +156,8 @@ func TestSignalSentToProcessGroup(t *testing.T) {
 
 			err := sut.Wait()
 
-			// In case of a subprocess failing, Task always returns exit code 1, not the
-			// exit code returned by the subprocess. This is understandable, since Task
-			// supports parallel execution: if two parallel subprocess fail, each with a
-			// different exit code, which one should Task report? This would be a race.
 			var wantErr *exec.ExitError
-			const wantExitStatus = 1 // Task always returns exit code 1 in case of error
+			const wantExitStatus = 201
 			if errors.As(err, &wantErr) {
 				if wantErr.ExitCode() != wantExitStatus {
 					t.Errorf(
