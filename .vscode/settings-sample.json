@@ -1,0 +1,5 @@
+{
+  "yaml.schemas": {
+    "./docs/static/schema.json": "Taskfile.yml"
+  }
+}
