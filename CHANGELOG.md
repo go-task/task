@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Update to Go 1.21 (bump minimum version to 1.20) (#1302 by @pd93)
 - Fix a missing a line break on log when using `--watch` mode (#1285, #1297 by
   @FilipSolich).
 - Fix `defer` on JSON Schema (#1288 by @calvinmclean and @andreynering).
