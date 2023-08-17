@@ -68,7 +68,7 @@ func IsTaskUpToDate(
 	config := &CheckerConfig{
 		method:         "none",
 		tempDir:        "",
-		dry:            false,
+		dry:            true,
 		logger:         nil,
 		statusChecker:  nil,
 		sourcesChecker: nil,
