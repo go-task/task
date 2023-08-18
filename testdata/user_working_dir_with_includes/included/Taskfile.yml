@@ -1,0 +1,8 @@
+version: '3'
+
+tasks:
+  echo:
+    dir: '{{.USER_WORKING_DIR}}'
+    cmds:
+      - pwd
+    silent: true

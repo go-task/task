@@ -153,7 +153,7 @@ func (it *IncludedTaskfile) resolvePath(path string) (string, error) {
 		return "", err
 	}
 
-	if filepath.IsAbs(path) {
+	if filepathext.IsAbs(path) {
 		return path, nil
 	}
 

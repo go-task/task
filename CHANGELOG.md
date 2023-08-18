@@ -6,6 +6,9 @@
 - Fix a missing a line break on log when using `--watch` mode (#1285, #1297 by
   @FilipSolich).
 - Fix `defer` on JSON Schema (#1288 by @calvinmclean and @andreynering).
+- Fix bug in usage of special variables like `{{.USER_WORKING_DIR}}` in
+  combination with `includes` (#1046, #1205, #1250, #1293, #1312, #1274 by
+  @andarto, #1309 by @andreynering).
 
 ## v3.28.0 - 2023-07-24
 
