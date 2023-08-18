@@ -198,7 +198,7 @@ tasks:
 
 ## 他のTaskfileをインクルードする
 
-If you want to share tasks between different projects (Taskfiles), you can use the importing mechanism to include other Taskfiles using the `includes` keyword:
+異なるプロジェクト(Taskfile)間でタスクを共有したい場合、`includes`キーワードを利用して他のTaskfileをインクルードするためのインポートメカニズムを利用できます。
 
 ```yaml
 version: '3'
@@ -208,13 +208,13 @@ includes:
   docker: ./DockerTasks.yml
 ```
 
-The tasks described in the given Taskfiles will be available with the informed namespace. So, you'd call `task docs:serve` to run the `serve` task from `documentation/Taskfile.yml` or `task docker:build` to run the `build` task from the `DockerTasks.yml` file.
+指定されたTaskfileに記述されたタスクは、指定された名前空間で利用できるようになります。 なので、`documentation/Taskfile.yml`から`serve`タスクを実行するには、`task docs:serve`を呼び、`DockerTasks.yml`から`build`タスクを実行するには、`task docker:build`を呼び出します。
 
-Relative paths are resolved relative to the directory containing the including Taskfile.
+相対パスはインクルードするTaskfileが含まれているディレクトリに対して解決されます。
 
-### OS-specific Taskfiles
+### OS固有のTaskfile
 
-With `version: '2'`, task automatically includes any `Taskfile_{{OS}}.yml` if it exists (for example: `Taskfile_windows.yml`, `Taskfile_linux.yml` or `Taskfile_darwin.yml`). Since this behavior was a bit too implicit, it was removed on version 3, but you still can have a similar behavior by explicitly importing these files:
+`version: '2'`では、taskは`Taskfile_{{OS}}.yml`が存在する場合、自動的にインクルードします。(例えば:  `Taskfile_windows.yml`、`Taskfile_linux.yml`、`Taskfile_darwin.yml`など) この挙動は少し分かりづらかったため、バージョン3で削除されましたが、これらのファイルを明示的にインポートすることで同様の挙動を持たせることができます。
 
 ```yaml
 version: '3'
@@ -223,9 +223,9 @@ includes:
   build: ./Taskfile_{{OS}}.yml
 ```
 
-### Directory of included Taskfile
+### インクルードされたTaskfileのディレクトリ
 
-By default, included Taskfile's tasks are run in the current directory, even if the Taskfile is in another directory, but you can force its tasks to run in another directory by using this alternative syntax:
+デフォルトでは、インクルードされたTaskfileのタスクは、Taskfileが別のディレクトリにあったとしても、現在のディレクトリで実行されます。 ですが、代替構文を利用することで、強制的にタスクを別のディレクトリで実行させることができます:
 
 ```yaml
 version: '3'
@@ -238,13 +238,13 @@ includes:
 
 :::info
 
-The included Taskfiles must be using the same schema version as the main Taskfile uses.
+インクルードされるTaskfileは、メインのTaskfileが使用しているスキーマバージョンと同様のものである必要があります。
 
 :::
 
-### Optional includes
+### 任意のインクルード
 
-Includes marked as optional will allow Task to continue execution as normal if the included file is missing.
+オプショナルとしてマークされたインクルードは、インクルードされるファイルが見つからない場合でも、タスクの実行を通常通り続行させます。
 
 ```yaml
 version: '3'
@@ -261,9 +261,9 @@ tasks:
         ./tests/Taskfile.yml does not exist"
 ```
 
-### Internal includes
+### 内部のインクルード
 
-Includes marked as internal will set all the tasks of the included file to be internal as well (see the [Internal tasks](#internal-tasks) section below). This is useful when including utility tasks that are not intended to be used directly by the user.
+インターナルとしてマークされたインクルードは、インクルードされるファイルの全てのタスクもインターナルとします(下記の [インターナルタスク](#internal-tasks)セクションを参照)。 これはユーザーが直接使用することを意図していないユーティリティタスクをインクルードする際に便利です。
 
 ```yaml
 version: '3'
@@ -274,9 +274,9 @@ includes:
     internal: true
 ```
 
-### Vars of included Taskfiles
+### インクルードされるTaskfileの変数
 
-You can also specify variables when including a Taskfile. This may be useful for having reusable Taskfile that can be tweaked or even included more than once:
+Taskfileをインクルードする際に変数を使用することもできます。 これは一度に複数回インクルードするような再利用可能なTaskfileを持つのに便利です。
 
 ```yaml
 version: '3'
@@ -1019,11 +1019,11 @@ tasks:
       - echo 'bar'
 ```
 
-## Forwarding CLI arguments to commands
+## CLI引数をコマンドにフォワード
 
-If `--` is given in the CLI, all following parameters are added to a special `.CLI_ARGS` variable. This is useful to forward arguments to another command.
+CLIで`--`が渡されると、次に続く全てのパラメータが、`.CLI_ARGS`という特別な変数に追加されます。 これは引数を別のコマンドにフォワードするのに便利です。
 
-The below example will run `yarn install`.
+以下の例では`yarn install`を実行します。
 
 ```bash
 $ task yarn -- install
@@ -1038,7 +1038,7 @@ tasks:
       - yarn {{.CLI_ARGS}}
 ```
 
-## Doing task cleanup with `defer`
+## `defer`を使ったタスクのクリーンアップ
 
 With the `defer` keyword, it's possible to schedule cleanup to be run once the task finishes. The difference with just putting it as the last command is that this command will run even when the task fails.
 
@@ -1076,7 +1076,7 @@ Due to the nature of how the [Go's own `defer` work](https://go.dev/tour/flowcon
 
 :::
 
-## Go's template engine
+## Goのテンプレートエンジン
 
 Task parse commands as [Go's template engine][gotemplate] before executing them. Variables are accessible through dot syntax (`.VARNAME`).
 
@@ -1103,7 +1103,7 @@ Task also adds the following functions:
 - `shellQuote`: Quotes a string to make it safe for use in shell scripts. Task uses [this Go function](https://pkg.go.dev/mvdan.cc/sh/v3@v3.4.0/syntax#Quote) for this. The Bash dialect is assumed.
 - `splitArgs`: Splits a string as if it were a command's arguments. Task uses [this Go function](https://pkg.go.dev/mvdan.cc/sh/v3@v3.4.0/shell#Fields)
 
-Example:
+例:
 
 ```yaml
 version: '3'
@@ -1128,7 +1128,7 @@ tasks:
         {{end}}EOF
 ```
 
-## Help
+## ヘルプ
 
 Running `task --list` (or `task -l`) lists all tasks with a description. The following Taskfile:
 
@@ -1381,11 +1381,11 @@ tasks:
       - echo "This will print nothing" > /dev/null
 ```
 
-## Dry run mode
+## ドライランモード
 
 Dry run mode (`--dry`) compiles and steps through each task, printing the commands that would be run without executing them. This is useful for debugging your Taskfiles.
 
-## Ignore errors
+## エラーを無視する
 
 You have the option to ignore errors during command execution. Given the following Taskfile:
 
@@ -1414,7 +1414,7 @@ tasks:
 
 `ignore_error` can also be set for a task, which means errors will be suppressed for all commands. Nevertheless, keep in mind that this option will not propagate to other tasks called either by `deps` or `cmds`!
 
-## Output syntax
+## 出力構文
 
 By default, Task just redirects the STDOUT and STDERR of the running commands to the shell in real-time. This is good for having live feedback for logging printed by commands, but the output can become messy if you have multiple commands running simultaneously and printing lots of stuff.
 
@@ -1523,9 +1523,9 @@ The `output` option can also be specified by the `--output` or `-o` flags.
 
 ## 対話型CLIアプリケーション
 
-When running interactive CLI applications inside Task they can sometimes behave weirdly, especially when the [output mode](#output-syntax) is set to something other than `interleaved` (the default), or when interactive apps are run in parallel with other tasks.
+Task内で対話型CLIアプリケーションを実行する際、時折変な挙動をすることがあり、特に[出力モード](#output-syntax)が`交互`(デフォルト)に設定されていない、または対話型アプリが他のタスクと並行して実行される場合に発生します。
 
-The `interactive: true` tells Task this is an interactive application and Task will try to optimize for it:
+`interactive: true`は、これが対話型アプリケーションであることをTaskに伝え、Taskはそれに最適化しようとします:
 
 ```yaml
 version: '3'
@@ -1537,11 +1537,11 @@ tasks:
     interactive: true
 ```
 
-If you still have problems running an interactive app through Task, please open an issue about it.
+対話側アプリをTaskを通して実行する際に依然として問題がある場合は、それについてのIssueを作ってください。
 
-## Short task syntax
+## 短いタスク構文
 
-Starting on Task v3, you can now write tasks with a shorter syntax if they have the default settings (e.g. no custom `env:`, `vars:`, `desc:`, `silent:` , etc):
+Task v3から、デフォルトの設定(例: カスタムな `env:`、`vars`、`desc:`、`silent:`などがない場合)を持つタスクは、より短い構文で記述することができます:
 
 ```yaml
 version: '3'
@@ -1556,7 +1556,7 @@ tasks:
 
 ## `set`と`shopt`
 
-It's possible to specify options to the [`set`](https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html) and [`shopt`](https://www.gnu.org/software/bash/manual/html_node/The-Shopt-Builtin.html) builtins. This can be added at global, task or command level.
+[`set`](https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html)および[`shopt`](https://www.gnu.org/software/bash/manual/html_node/The-Shopt-Builtin.html)の組み込みコマンドにオプションを渡すことが可能です。 これは、グローバル、タスク、またはコマンドのそれぞれのレベルで設定することができます。
 
 ```yaml
 version: '3'
@@ -1571,11 +1571,11 @@ tasks:
 
 :::info
 
-Keep in mind that not all options are available in the [shell interpreter library](https://github.com/mvdan/sh) that Task uses.
+Taskが使用する[シェルインタプリタライブラリ](https://github.com/mvdan/sh)で利用可能なオプションは全てがあるわけではないことに注意してください。
 
 :::
 
-## Watch tasks
+## タスクのウォッチ
 
 With the flags `--watch` or `-w` task will watch for file changes and run the task again. This requires the `sources` attribute to be given, so task knows which files to watch.
 

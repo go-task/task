@@ -17,7 +17,7 @@ task [--flags] [tasks...] [-- CLI_ARGS...]
 
 :::tip
 
-If `--` is given, all remaining arguments will be assigned to a special `CLI_ARGS` variable
+`--`が渡されると、次に続く全てのパラメータは`CLI_ARGS`という特別な変数に格納されます
 
 :::
 
@@ -61,20 +61,20 @@ Task will sometimes exit with specific exit codes. These codes are split into th
 
 A full list of the exit codes and their descriptions can be found below:
 
-| Code | Description                                                  |
-| ---- | ------------------------------------------------------------ |
-| 0    | Success                                                      |
-| 1    | An unknown error occurred                                    |
-| 100  | No Taskfile was found                                        |
-| 101  | A Taskfile already exists when trying to initialize one      |
-| 102  | The Taskfile is invalid or cannot be parsed                  |
-| 200  | The specified task could not be found                        |
-| 201  | An error occurred while executing a command inside of a task |
-| 202  | The user tried to invoke a task that is internal             |
-| 203  | There a multiple tasks with the same name or alias           |
-| 204  | A task was called too many times                             |
-| 205  | A task was cancelled by the user                             |
-| 206  | A task was not executed due to missing required variables    |
+| コード | 説明                                                           |
+| --- | ------------------------------------------------------------ |
+| 0   | Success                                                      |
+| 1   | An unknown error occurred                                    |
+| 100 | No Taskfile was found                                        |
+| 101 | A Taskfile already exists when trying to initialize one      |
+| 102 | The Taskfile is invalid or cannot be parsed                  |
+| 200 | The specified task could not be found                        |
+| 201 | An error occurred while executing a command inside of a task |
+| 202 | The user tried to invoke a task that is internal             |
+| 203 | There a multiple tasks with the same name or alias           |
+| 204 | A task was called too many times                             |
+| 205 | A task was cancelled by the user                             |
+| 206 | A task was not executed due to missing required variables    |
 
 These codes can also be found in the repository in [`errors/errors.go`](https://github.com/go-task/task/blob/main/errors/errors.go).
 
@@ -124,11 +124,11 @@ There are some special variables that is available on the templating system:
 | `TASK_VERSION`     | The current version of task.                                                                                                                             |
 | `ITEM`             | The value of the current iteration when using the `for` property. Can be changed to a different variable name using `as:`.                               |
 
-## ENV
+## 環境変数
 
 Some environment variables can be overridden to adjust Task behavior.
 
-| ENV                  | Default | Description                                                                                                       |
+| 環境変数                 | デフォルト値  | 説明                                                                                                                |
 | -------------------- | ------- | ----------------------------------------------------------------------------------------------------------------- |
 | `TASK_TEMP_DIR`      | `.task` | Location of the temp dir. Can relative to the project like `tmp/task` or absolute like `/tmp/.task` or `~/.task`. |
 | `TASK_COLOR_RESET`   | `0`     | Color used for white.                                                                                             |
@@ -140,9 +140,9 @@ Some environment variables can be overridden to adjust Task behavior.
 | `TASK_COLOR_RED`     | `31`    | Color used for red.                                                                                               |
 | `FORCE_COLOR`        |         | Force color output usage.                                                                                         |
 
-## Taskfile Schema
+## Taskfileのスキーマ
 
-| Attribute  | Type                               | Default       | Description                                                                                                                                                            |
+| 属性         | 型                                  | デフォルト値        | 説明                                                                                                                                                                     |
 | ---------- | ---------------------------------- | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `version`  | `string`                           |               | Version of the Taskfile. The current version is `3`.                                                                                                                   |
 | `output`   | `string`                           | `interleaved` | Output mode. Available options: `interleaved`, `group` and `prefixed`.                                                                                                 |
@@ -182,10 +182,10 @@ includes:
 
 ### Variable
 
-| Attribute | Type     | Default | Description                                                              |
-| --------- | -------- | ------- | ------------------------------------------------------------------------ |
-| _itself_  | `string` |         | A static value that will be set to the variable.                         |
-| `sh`      | `string` |         | A shell command. The output (`STDOUT`) will be assigned to the variable. |
+| 属性       | 型        | デフォルト値 | 説明                                                                       |
+| -------- | -------- | ------ | ------------------------------------------------------------------------ |
+| _itself_ | `string` |        | A static value that will be set to the variable.                         |
+| `sh`     | `string` |        | A shell command. The output (`STDOUT`) will be assigned to the variable. |
 
 :::info
 
@@ -202,7 +202,7 @@ vars:
 
 ### Task
 
-| Attribute       | Type                               | Default                                               | Description                                                                                                                                                                                                                                                                                              |
+| 属性              | 型                                  | デフォルト値                                                | 説明                                                                                                                                                                                                                                                                                                       |
 | --------------- | ---------------------------------- | ----------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `cmds`          | [`[]Command`](#command)            |                                                       | A list of shell commands to be executed.                                                                                                                                                                                                                                                                 |
 | `deps`          | [`[]Dependency`](#dependency)      |                                                       | A list of dependencies of this task. Tasks defined here will run in parallel before this task.                                                                                                                                                                                                           |
