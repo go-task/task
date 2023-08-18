@@ -3,36 +3,36 @@ slug: /releasing/
 sidebar_position: 13
 ---
 
-# Releasing
+# リリース
 
-The release process of Task is done with the help of [GoReleaser][goreleaser]. You can test the release process locally by calling the `test-release` task of the Taskfile.
+Taskのリリースプロセスは[GoReleaser][goreleaser]の助けを借りて行われます。 ローカルでリリースプロセスをテストするには、Taskfileの`test-release`タスクを呼び出します。
 
-[GitHub Actions](https://github.com/go-task/task/actions) should release artifacts automatically when a new Git tag is pushed to `main` branch (raw executables and DEB and RPM packages).
+[GitHub Actions](https://github.com/go-task/task/actions)は、新しいGitタグが`main`ブランチにプッシュされると、自動的に成果物(実行ファイルおよびDEBとRPMパッケージ)をリリースするはずです。
 
-Since v3.15.0, raw executables can also be reproduced and verified locally by checking out a specific tag and calling `goreleaser build`, using the Go version defined in the above GitHub Actions.
+v3.15.0以降、特定のタグをチェックアウトし、上記のGitHub Actionsで定義されたGoバージョンを使用して`goreleaser build`を呼び出すことで、実行ファイルをローカルでも再現して検証することができます。
 
 # Homebrew
 
-Goreleaser will automatically push a new commit to the [Formula/go-task.rb][gotaskrb] file in the [Homebrew tap][homebrewtap] repository to release the new version.
+Goreleaserは新しいバージョンをリリースするために、[Homebrew tap][homebrewtap]リポジトリの[Formula/go-task.rb][gotaskrb]に新しいコミットを自動的にプッシュします。
 
 # npm
 
-To release to npm update the version in the [`package.json`][packagejson] file and then run `task npm:publish` to push it.
+npmにリリースするには、[`package.json`][packagejson]でバージョンを更新し、`task npm:publish`を実行してプッシュします。
 
 # Snapcraft
 
-The [snap package][snappackage] requires to manual steps to release a new version:
+[snapパッケージ][snappackage]をリリースするには、マニュアルのステップが必要です:
 
-- Updating the current version on [snapcraft.yaml][snapcraftyaml].
-- Moving both `amd64`, `armhf` and `arm64` new artifacts to the stable channel on the [Snapcraft dashboard][snapcraftdashboard].
+- [snapcraft.yaml][snapcraftyaml]で現在のバージョンを更新する。
+- [Snapcraftダッシュボード][snapcraftdashboard]で、`amd64`、`armhf`、`arm64`の新しい成果物を全てstableチャンネルに移動させる。
 
 # Scoop
 
-Scoop is a command-line package manager for the Windows operating system. Scoop package manifests are maintained by the community. Scoop owners usually take care of updating versions there by editing [this file](https://github.com/ScoopInstaller/Main/blob/master/bucket/task.json). If you think its Task version is outdated, open an issue to let us know.
+ScoopはWindowsオペレーティングシステム用のコマンドラインパッケージマネージャーです。 Scoopパッケージマニフェストはコミュニティによって管理されています。 Scoopの所有者は通常、[このファイル](https://github.com/ScoopInstaller/Main/blob/master/bucket/task.json)を編集することでバージョンを更新します。 Taskのバージョンが古くなっていると思われる場合は、Issueを作成してお知らせください。
 
 # Nix
 
-Nix is a community owned installation method. Nix package maintainers usually take care of updating versions there by editing [this file](https://github.com/NixOS/nixpkgs/blob/nixos-unstable/pkgs/development/tools/go-task/default.nix). If you think its Task version is outdated, open an issue to let us know.
+Nixはコミュニティが所有するインストール方法です。 Nixパッケージのメンテナは通常、[このファイル](https://github.com/NixOS/nixpkgs/blob/nixos-unstable/pkgs/development/tools/go-task/default.nix)を編集してバージョンを更新します。 Taskのバージョンが古くなっていると思われる場合は、Issueを作成してお知らせください。
 
 <!-- prettier-ignore-start -->
 

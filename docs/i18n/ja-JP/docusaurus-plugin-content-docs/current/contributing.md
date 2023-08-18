@@ -19,13 +19,13 @@ This document applies to the core [Task][task] repository _and_ [Task for Visual
 - **Backwards compatibility** - Will your change break existing Taskfiles? It is much more likely that your change will merged if it backwards compatible. Is there an approach you can take that maintains this compatibility? If not, consider opening an issue first so that API changes can be discussed before you invest your time into a PR.
 - **Experiments** - If there is no way to make your change backward compatible then there is a procedure to introduce breaking changes into minor versions. We call these "\[experiments\]\[experiments\]". If you're intending to work on an experiment, then please read the \[experiments workflow\]\[experiments-workflow\] document carefully and submit a proposal first.
 
-## 1. Setup
+## 1. セットアップ
 
-- **Go** - Task is written in [Go][go]. We always support the latest two major Go versions, so make sure your version is recent enough.
+- **Go** - Taskは[Go][go]で書かれています。 We always support the latest two major Go versions, so make sure your version is recent enough.
 - **Node.js** - [Node.js][nodejs] is used to host Task's documentation server and is required if you want to run this server locally. It is also required if you want to contribute to the Visual Studio Code extension.
 - **Yarn** - [Yarn][yarn] is the Node.js package manager used by Task.
 
-## 2. Making changes
+## 2. 変更を加える
 
 - **Code style** - Try to maintain the existing code style where possible. Go code should be formatted by [`gofumpt`][gofumpt] and linted using [`golangci-lint`][golangci-lint]. Any Markdown or TypeScript files should be formatted and linted by [Prettier][prettier]. This style is enforced by our CI to ensure that we have a consistent style across the project. You can use the `task lint` command to lint the code locally and the `task lint:fix` command to automatically fix any issues that are found.
 - **Documentation** - Ensure that you add/update any relevant documentation. See the [updating documentation](#updating-documentation) section below.
@@ -37,7 +37,7 @@ To run Task with working changes, you can use `go run ./cmd/task`. To run a deve
 
 To run Task for Visual Studio Code, you can open the project in VSCode and hit F5 (or whatever you debug keybind is set to). This will open a new VSCode window with the extension running. Debugging this way is recommended as it will allow you to set breakpoints and step through the code. Otherwise, you can run `task package` which will generate a `.vsix` file that can be used to manually install the extension.
 
-### Updating documentation
+### ドキュメントの更新
 
 Task uses [Docusaurus][docusaurus] to host a documentation server. The code for this is located in the core Task repository. This can be setup and run locally by using `task docs` (requires `nodejs` & `yarn`). All content is written in Markdown and is located in the `docs/docs` directory. All Markdown documents should have an 80 character line wrap limit (enforced by Prettier).
 
