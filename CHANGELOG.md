@@ -2,10 +2,6 @@
 
 ## v3.29.1 - 2023-08-26
 
-- Fix automate release process.
-
-## v3.29.0 - 2023-08-26
-
 - Update to Go 1.21 (bump minimum version to 1.20) (#1302 by @pd93)
 - Fix a missing a line break on log when using `--watch` mode (#1285, #1297 by
   @FilipSolich).
