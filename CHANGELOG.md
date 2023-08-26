@@ -9,6 +9,9 @@
 - Fix bug in usage of special variables like `{{.USER_WORKING_DIR}}` in
   combination with `includes` (#1046, #1205, #1250, #1293, #1312, #1274 by
   @andarto, #1309 by @andreynering).
+- Fix bug on `--status` flag. Running this flag should not have side-effects:
+  it should not update the checksum on `.task`, only report its status (#1305,
+  #1307 by @visciang, #1313 by @andreynering).
 
 ## v3.28.0 - 2023-07-24
 

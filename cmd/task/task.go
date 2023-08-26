@@ -221,7 +221,7 @@ func run() error {
 		Silent:      flags.silent,
 		AssumeYes:   flags.assumeYes,
 		Dir:         flags.dir,
-		Dry:         flags.dry,
+		Dry:         flags.dry || flags.status,
 		Entrypoint:  flags.entrypoint,
 		Summary:     flags.summary,
 		Parallel:    flags.parallel,
