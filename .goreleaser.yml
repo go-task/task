@@ -113,6 +113,7 @@ winget:
       - task-runner
       - taskfile
       - tool
+    skip_upload: true
     repository:
       owner: microsoft
       name: winget-pkgs
