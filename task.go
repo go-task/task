@@ -67,11 +67,12 @@ type Executor struct {
 	Stdout io.Writer
 	Stderr io.Writer
 
-	Logger      *logger.Logger
-	Compiler    compiler.Compiler
-	Output      output.Output
-	OutputStyle taskfile.Output
-	TaskSorter  sort.TaskSorter
+	Logger         *logger.Logger
+	Compiler       compiler.Compiler
+	Output         output.Output
+	OutputStyle    taskfile.Output
+	TaskSorter     sort.TaskSorter
+	UserWorkingDir string
 
 	taskvars   *taskfile.Vars
 	fuzzyModel *fuzzy.Model

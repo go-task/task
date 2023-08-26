@@ -1940,6 +1940,26 @@ func TestUserWorkingDirectory(t *testing.T) {
 	assert.Equal(t, fmt.Sprintf("%s\n", wd), buff.String())
 }
 
+func TestUserWorkingDirectoryWithIncluded(t *testing.T) {
+	wd, err := os.Getwd()
+	require.NoError(t, err)
+
+	wd = filepathext.SmartJoin(wd, "testdata/user_working_dir_with_includes/somedir")
+
+	var buff bytes.Buffer
+	e := task.Executor{
+		UserWorkingDir: wd,
+		Dir:            "testdata/user_working_dir_with_includes",
+		Stdout:         &buff,
+		Stderr:         &buff,
+	}
+
+	require.NoError(t, err)
+	require.NoError(t, e.Setup())
+	require.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "included:echo"}))
+	assert.Equal(t, fmt.Sprintf("%s\n", wd), buff.String())
+}
+
 func TestPlatforms(t *testing.T) {
 	var buff bytes.Buffer
 	e := task.Executor{
