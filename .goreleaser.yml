@@ -99,7 +99,7 @@ winget:
     commit_author:
       name: task-bot
       email: 106601941+task-bot@users.noreply.github.com
-    commit_msg_template: "chore: bump {{PackageIdentifier}} to {{.Tag}}"
+    commit_msg_template: "chore: bump {{.PackageIdentifier}} to {{.Tag}}"
     release_notes_url: https://github.com/go-task/task/releases/tag/{{.Tag}}
     tags:
       - build
