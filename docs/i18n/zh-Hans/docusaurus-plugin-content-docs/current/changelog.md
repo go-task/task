@@ -5,6 +5,14 @@ sidebar_position: 9
 
 # 更新日志
 
+## v3.29.1 - 2023-08-26
+
+- Update to Go 1.21 (bump minimum version to 1.20) ([#1302](https://github.com/go-task/task/issues/1302) by [@pd93](https://github.com/pd93))
+- Fix a missing a line break on log when using `--watch` mode ([#1285](https://github.com/go-task/task/issues/1285), [#1297](https://github.com/go-task/task/issues/1297) by [@FilipSolich](https://github.com/FilipSolich)).
+- Fix `defer` on JSON Schema ([#1288](https://github.com/go-task/task/issues/1288) by [@calvinmclean](https://github.com/calvinmclean) and [@andreynering](https://github.com/andreynering)).
+- Fix bug in usage of special variables like `{{.USER_WORKING_DIR}}` in combination with `includes` ([#1046](https://github.com/go-task/task/issues/1046), [#1205](https://github.com/go-task/task/issues/1205), [#1250](https://github.com/go-task/task/issues/1250), [#1293](https://github.com/go-task/task/issues/1293), [#1312](https://github.com/go-task/task/issues/1312), [#1274](https://github.com/go-task/task/issues/1274) by [@andarto](https://github.com/andarto), [#1309](https://github.com/go-task/task/issues/1309) by [@andreynering](https://github.com/andreynering)).
+- Fix bug on `--status` flag. Running this flag should not have side-effects: it should not update the checksum on `.task`, only report its status ([#1305](https://github.com/go-task/task/issues/1305), [#1307](https://github.com/go-task/task/issues/1307) by [@visciang](https://github.com/visciang), [#1313](https://github.com/go-task/task/issues/1313) by [@andreynering](https://github.com/andreynering)).
+
 ## v3.28.0 - 2023-07-24
 
 - Added the ability to [loop over commands and tasks](https://taskfile.dev/usage/#looping-over-values) using `for` ([#82](https://github.com/go-task/task/issues/82), [#1220](https://github.com/go-task/task/issues/1220) by [@pd93](https://github.com/pd93)).

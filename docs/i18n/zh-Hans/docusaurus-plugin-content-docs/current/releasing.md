@@ -26,9 +26,13 @@ Goreleaser 会自动向 [Homebrew tap](https://github.com/go-task/homebrew-tap) 
 - 更新 [snapcraft.yaml](https://github.com/go-task/snap/blob/master/snap/snapcraft.yaml#L2) 文件中的版本。
 - 把新的 `amd64`, `armhf` 和 `arm64` 移动到 [Snapcraft dashboard][snapcraftdashboard] 的稳定通道。
 
+# winget
+
+winget also requires manual steps to be completed. By running `task test-release` locally, manifest files will be generated on `dist/winget/manifests/t/Task/Task/v{version}`. [Upload the manifest directory into this fork](https://github.com/go-task/winget-pkgs/tree/master/manifests/t/Task/Task) and open a pull request into [this repository](https://github.com/microsoft/winget-pkgs).
+
 # Scoop
 
-Scoop 是一个 Windows 系统的命令行包管理工具。 Scoop 的包清单由社区维护。 Scoop 的维护人通常会在 [这个文件](https://github.com/lukesampson/scoop-extras/blob/master/bucket/task.json) 里维护版本。 如果发现 Task 版本是旧的，请提交一个 Issue 通知我们。
+Scoop 是一个 Windows 系统的命令行包管理工具。 Scoop 的包清单由社区维护。 Scoop 的维护人通常会在 [这个文件](https://github.com/lukesampson/scoop-extras/blob/master/bucket/task.json) 里维护版本。 If you think its Task version is outdated, open an issue to let us know.
 
 # Nix
 

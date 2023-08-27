@@ -26,6 +26,10 @@ The [snap package][snappackage] requires to manual steps to release a new versio
 - Updating the current version on [snapcraft.yaml][snapcraftyaml].
 - Moving both `amd64`, `armhf` and `arm64` new artifacts to the stable channel on the [Snapcraft dashboard][snapcraftdashboard].
 
+# winget
+
+winget also requires manual steps to be completed. By running `task test-release` locally, manifest files will be generated on `dist/winget/manifests/t/Task/Task/v{version}`. [Upload the manifest directory into this fork](https://github.com/go-task/winget-pkgs/tree/master/manifests/t/Task/Task) and open a pull request into [this repository](https://github.com/microsoft/winget-pkgs).
+
 # Scoop
 
 Scoop is a command-line package manager for the Windows operating system. Scoop package manifests are maintained by the community. Scoop owners usually take care of updating versions there by editing [this file](https://github.com/ScoopInstaller/Main/blob/master/bucket/task.json). If you think its Task version is outdated, open an issue to let us know.
