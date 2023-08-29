@@ -23,6 +23,7 @@ import (
 )
 
 func (e *Executor) Setup() error {
+	e.setupLogger()
 	if err := e.setCurrentDir(); err != nil {
 		return err
 	}
@@ -34,7 +35,6 @@ func (e *Executor) Setup() error {
 	}
 	e.setupFuzzyModel()
 	e.setupStdFiles()
-	e.setupLogger()
 	if err := e.setupOutput(); err != nil {
 		return err
 	}
