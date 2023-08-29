@@ -5,11 +5,11 @@ import (
 	"path/filepath"
 	"strings"
 
+	"gopkg.in/yaml.v3"
+
 	"github.com/go-task/task/v3/internal/execext"
 	"github.com/go-task/task/v3/internal/filepathext"
 	omap "github.com/go-task/task/v3/internal/omap"
-
-	"gopkg.in/yaml.v3"
 )
 
 // Include represents information about included taskfiles

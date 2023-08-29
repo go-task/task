@@ -43,13 +43,7 @@ func TestSortFunc(t *testing.T) {
 	om.Set(1, "one")
 	om.Set(2, "two")
 	om.SortFunc(func(a, b int) int {
-		if a < b {
-			return 1
-		}
-		if a > b {
-			return -1
-		}
-		return 0
+		return b - a
 	})
 	assert.Equal(t, []int{3, 2, 1}, om.s)
 }

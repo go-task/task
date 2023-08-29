@@ -4,11 +4,11 @@ import (
 	"bufio"
 	"io"
 	"os"
+	"slices"
 	"strconv"
 	"strings"
 
 	"github.com/fatih/color"
-	"golang.org/x/exp/slices"
 
 	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/term"

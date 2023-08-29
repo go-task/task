@@ -1,26 +1,26 @@
 package omap
 
 import (
+	"cmp"
 	"fmt"
+	"slices"
 
-	"golang.org/x/exp/constraints"
-	"golang.org/x/exp/maps"
-	"golang.org/x/exp/slices"
 	"gopkg.in/yaml.v3"
 
 	"github.com/go-task/task/v3/internal/deepcopy"
+	"github.com/go-task/task/v3/internal/exp"
 )
 
 // An OrderedMap is a wrapper around a regular map that maintains an ordered
 // list of the map's keys. This allows you to run deterministic and ordered
 // operations on the map such as printing/serializing/iterating.
-type OrderedMap[K constraints.Ordered, V any] struct {
+type OrderedMap[K cmp.Ordered, V any] struct {
 	s []K
 	m map[K]V
 }
 
 // New will create a new OrderedMap of the given type and return it.
-func New[K constraints.Ordered, V any]() OrderedMap[K, V] {
+func New[K cmp.Ordered, V any]() OrderedMap[K, V] {
 	return OrderedMap[K, V]{
 		s: make([]K, 0),
 		m: make(map[K]V),
@@ -29,14 +29,14 @@ func New[K constraints.Ordered, V any]() OrderedMap[K, V] {
 
 // FromMap will create a new OrderedMap from the given map. Since Golang maps
 // are unordered, the order of the created OrderedMap will be random.
-func FromMap[K constraints.Ordered, V any](m map[K]V) OrderedMap[K, V] {
+func FromMap[K cmp.Ordered, V any](m map[K]V) OrderedMap[K, V] {
 	om := New[K, V]()
 	om.m = m
-	om.s = maps.Keys(m)
+	om.s = exp.Keys(m)
 	return om
 }
 
-func FromMapWithOrder[K constraints.Ordered, V any](m map[K]V, order []K) OrderedMap[K, V] {
+func FromMapWithOrder[K cmp.Ordered, V any](m map[K]V, order []K) OrderedMap[K, V] {
 	om := New[K, V]()
 	if len(m) != len(order) {
 		panic("length of map and order must be equal")

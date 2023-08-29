@@ -1,11 +1,11 @@
 package slicesext
 
 import (
-	"golang.org/x/exp/constraints"
-	"golang.org/x/exp/slices"
+	"cmp"
+	"slices"
 )
 
-func UniqueJoin[T constraints.Ordered](ss ...[]T) []T {
+func UniqueJoin[T cmp.Ordered](ss ...[]T) []T {
 	var length int
 	for _, s := range ss {
 		length += len(s)
