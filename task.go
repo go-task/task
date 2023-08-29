@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"runtime"
+	"slices"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -24,7 +25,6 @@ import (
 	"github.com/go-task/task/v3/taskfile/ast"
 
 	"github.com/sajari/fuzzy"
-	"golang.org/x/exp/slices"
 	"golang.org/x/sync/errgroup"
 )
 

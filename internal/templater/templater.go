@@ -2,10 +2,9 @@ package templater
 
 import (
 	"bytes"
+	"maps"
 	"strings"
 	"text/template"
-
-	"golang.org/x/exp/maps"
 
 	"github.com/go-task/task/v3/taskfile/ast"
 )

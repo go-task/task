@@ -5,12 +5,12 @@ import (
 	"io"
 	"os"
 	"path"
+	"slices"
 	"strings"
 	"text/tabwriter"
 
 	"github.com/joho/godotenv"
 	"github.com/spf13/pflag"
-	"golang.org/x/exp/slices"
 
 	"github.com/go-task/task/v3/internal/logger"
 )
