@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"github.com/go-task/task/v3/errors"
+	"github.com/go-task/task/v3/internal/experiments"
 	"github.com/go-task/task/v3/internal/logger"
 	"github.com/go-task/task/v3/taskfile"
 )
@@ -16,6 +17,14 @@ type Node interface {
 }
 
 func NewNodeFromIncludedTaskfile(parent Node, includedTaskfile taskfile.IncludedTaskfile, allowInsecure bool, tempDir string, l *logger.Logger) (Node, error) {
+	// TODO: Remove this condition when the remote taskfiles experiment is complete
+	if !experiments.RemoteTaskfiles {
+		path, err := includedTaskfile.FullTaskfilePath()
+		if err != nil {
+			return nil, err
+		}
+		return NewFileNode(parent, path, includedTaskfile.Optional)
+	}
 	switch getScheme(includedTaskfile.Taskfile) {
 	case "http":
 		if !allowInsecure {
