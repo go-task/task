@@ -42,39 +42,51 @@ func Merge(t1, t2 *Taskfile, includedTaskfile *IncludedTaskfile, namespaces ...s
 		// Add namespaces to dependencies, commands and aliases
 		for _, dep := range task.Deps {
 			if dep != nil && dep.Task != "" {
-				dep.Task = taskNameWithNamespace(dep.Task, namespaces...)
+				dep.Task = taskName(includedTaskfile.Flat, dep.Task, namespaces...)
 			}
 		}
 		for _, cmd := range task.Cmds {
 			if cmd != nil && cmd.Task != "" {
-				cmd.Task = taskNameWithNamespace(cmd.Task, namespaces...)
+				cmd.Task = taskName(includedTaskfile.Flat, cmd.Task, namespaces...)
 			}
 		}
 		for i, alias := range task.Aliases {
-			task.Aliases[i] = taskNameWithNamespace(alias, namespaces...)
+			task.Aliases[i] = taskName(includedTaskfile.Flat, alias, namespaces...)
 		}
 		// Add namespace aliases
 		if includedTaskfile != nil {
 			for _, namespaceAlias := range includedTaskfile.Aliases {
-				task.Aliases = append(task.Aliases, taskNameWithNamespace(task.Task, namespaceAlias))
+				task.Aliases = append(task.Aliases, taskName(includedTaskfile.Flat, task.Task, namespaceAlias))
 				for _, alias := range v.Aliases {
-					task.Aliases = append(task.Aliases, taskNameWithNamespace(alias, namespaceAlias))
+					task.Aliases = append(task.Aliases, taskName(includedTaskfile.Flat, alias, namespaceAlias))
 				}
 			}
 		}
 
 		// Add the task to the merged taskfile
-		taskNameWithNamespace := taskNameWithNamespace(k, namespaces...)
+		taskNameWithNamespace := taskName(includedTaskfile.Flat, k, namespaces...)
 		task.Task = taskNameWithNamespace
-		t1.Tasks.Set(taskNameWithNamespace, task)
+
+		if t1.Tasks.Exists(taskNameWithNamespace) {
+			t1.Tasks.Get(taskNameWithNamespace).Merge(task)
+		} else {
+			t1.Tasks.Set(taskNameWithNamespace, task)
+		}
 
 		return nil
 	})
 }
 
+func taskName(flat bool, taskName string, namespaces ...string) string {
+	if flat {
+		return taskName
+	}
+	return taskNameWithNamespace(taskName, namespaces...)
+}
+
 func taskNameWithNamespace(taskName string, namespaces ...string) string {
-	if strings.HasPrefix(taskName, ":") {
-		return strings.TrimPrefix(taskName, ":")
+	if strings.HasPrefix(taskName, NamespaceSeparator) {
+		return strings.TrimPrefix(taskName, NamespaceSeparator)
 	}
 	return strings.Join(append(namespaces, taskName), NamespaceSeparator)
 }

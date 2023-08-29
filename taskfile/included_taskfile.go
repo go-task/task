@@ -17,6 +17,7 @@ type IncludedTaskfile struct {
 	Dir            string
 	Optional       bool
 	Internal       bool
+	Flat           bool
 	Aliases        []string
 	AdvancedImport bool
 	Vars           *Vars
@@ -101,6 +102,7 @@ func (it *IncludedTaskfile) UnmarshalYAML(node *yaml.Node) error {
 			Dir      string
 			Optional bool
 			Internal bool
+			Flat     bool
 			Aliases  []string
 			Vars     *Vars
 		}
@@ -112,6 +114,7 @@ func (it *IncludedTaskfile) UnmarshalYAML(node *yaml.Node) error {
 		it.Optional = includedTaskfile.Optional
 		it.Internal = includedTaskfile.Internal
 		it.Aliases = includedTaskfile.Aliases
+		it.Flat = includedTaskfile.Flat
 		it.AdvancedImport = true
 		it.Vars = includedTaskfile.Vars
 		return nil
@@ -131,6 +134,7 @@ func (it *IncludedTaskfile) DeepCopy() *IncludedTaskfile {
 		Dir:            it.Dir,
 		Optional:       it.Optional,
 		Internal:       it.Internal,
+		Flat:           it.Flat,
 		AdvancedImport: it.AdvancedImport,
 		Vars:           it.Vars.DeepCopy(),
 		BaseDir:        it.BaseDir,

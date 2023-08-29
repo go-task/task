@@ -1,0 +1,10 @@
+version: '3'
+
+includes:
+  BuildConvention:
+    taskfile: ./Convention.yml
+    flat: true
+
+tasks:
+  init:
+    cmd: echo "Init!"

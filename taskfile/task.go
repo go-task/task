@@ -185,3 +185,14 @@ func (t *Task) DeepCopy() *Task {
 	}
 	return c
 }
+
+func (t1 *Task) Merge(t2 *Task) error {
+
+	// Please help me here :)
+
+	if &t2.Silent != nil {
+		t1.Silent = t2.Silent
+	}
+
+	return nil
+}
