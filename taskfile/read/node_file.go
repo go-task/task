@@ -18,13 +18,8 @@ type FileNode struct {
 	Entrypoint string
 }
 
-func NewFileNode(includedTaskfile taskfile.IncludedTaskfile, parent Node) (*FileNode, error) {
-	path, err := includedTaskfile.FullTaskfilePath()
-	if err != nil {
-		return nil, err
-	}
-
-	path, err = exists(path)
+func NewFileNode(parent Node, path string, optional bool) (*FileNode, error) {
+	path, err := exists(path)
 	if err != nil {
 		return nil, err
 	}
@@ -32,7 +27,7 @@ func NewFileNode(includedTaskfile taskfile.IncludedTaskfile, parent Node) (*File
 	return &FileNode{
 		BaseNode: BaseNode{
 			parent:   parent,
-			optional: includedTaskfile.Optional,
+			optional: optional,
 		},
 		Dir:        filepath.Dir(path),
 		Entrypoint: filepath.Base(path),

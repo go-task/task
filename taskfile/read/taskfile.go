@@ -70,7 +70,7 @@ func Taskfile(node Node) (*taskfile.Taskfile, error) {
 				}
 			}
 
-			includeReaderNode, err := NewNode(includedTask, node)
+			includeReaderNode, err := NewNodeFromIncludedTaskfile(node, includedTask)
 			if err != nil {
 				if includedTask.Optional {
 					return nil
