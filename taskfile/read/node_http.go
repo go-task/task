@@ -109,7 +109,7 @@ func (node *HTTPNode) Read() (*taskfile.Taskfile, error) {
 func (node *HTTPNode) getCachePath() string {
 	h := sha256.New()
 	h.Write([]byte(node.URL.String()))
-	return filepath.Join(node.TempDir, base64.URLEncoding.EncodeToString(h.Sum(nil)))
+	return filepath.Join(node.TempDir, "remote", base64.URLEncoding.EncodeToString(h.Sum(nil)))
 }
 
 func (node *HTTPNode) getHashFromCache() (string, error) {
@@ -123,5 +123,8 @@ func (node *HTTPNode) getHashFromCache() (string, error) {
 
 func (node *HTTPNode) toCache(hash []byte) error {
 	path := node.getCachePath()
+	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+		return err
+	}
 	return os.WriteFile(path, hash, 0o644)
 }
