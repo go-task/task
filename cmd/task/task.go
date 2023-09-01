@@ -72,6 +72,8 @@ var flags struct {
 	interval    time.Duration
 	global      bool
 	experiments bool
+	download    bool
+	offline     bool
 }
 
 func main() {
@@ -142,6 +144,12 @@ func run() error {
 		pflag.BoolVarP(&flags.forceAll, "force", "f", false, "Forces execution even when the task is up-to-date.")
 	}
 
+	// Remote Taskfiles experiment will adds the "download" and "offline" flags
+	if experiments.RemoteTaskfiles {
+		pflag.BoolVar(&flags.download, "download", false, "Downloads a cached version of a remote Taskfile.")
+		pflag.BoolVar(&flags.offline, "offline", false, "Forces Task to only use local or cached Taskfiles.")
+	}
+
 	pflag.Parse()
 
 	if flags.version {
@@ -173,6 +181,10 @@ func run() error {
 			log.Fatal(err)
 		}
 		return nil
+	}
+
+	if flags.download && flags.offline {
+		return errors.New("task: You can't set both --download and --offline flags")
 	}
 
 	if flags.global && flags.dir != "" {
@@ -219,6 +231,8 @@ func run() error {
 		Force:       flags.force,
 		ForceAll:    flags.forceAll,
 		Insecure:    flags.insecure,
+		Download:    flags.download,
+		Offline:     flags.offline,
 		Watch:       flags.watch,
 		Verbose:     flags.verbose,
 		Silent:      flags.silent,

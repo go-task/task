@@ -16,6 +16,7 @@ const (
 	CodeTaskfileFetchFailed
 	CodeTaskfileNotTrusted
 	CodeTaskfileNotSecure
+	CodeTaskfileCacheNotFound
 )
 
 // Task related exit codes

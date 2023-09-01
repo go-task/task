@@ -73,10 +73,17 @@ func (e *Executor) setCurrentDir() error {
 
 func (e *Executor) readTaskfile() error {
 	var err error
-	e.Taskfile, err = read.Taskfile(&read.FileNode{
-		Dir:        e.Dir,
-		Entrypoint: e.Entrypoint,
-	}, e.Insecure, e.TempDir, e.Logger)
+	e.Taskfile, err = read.Taskfile(
+		&read.FileNode{
+			Dir:        e.Dir,
+			Entrypoint: e.Entrypoint,
+		},
+		e.Insecure,
+		e.Download,
+		e.Offline,
+		e.TempDir,
+		e.Logger,
+	)
 	if err != nil {
 		return err
 	}

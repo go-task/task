@@ -103,3 +103,20 @@ func (err *TaskfileNotSecureError) Error() string {
 func (err *TaskfileNotSecureError) Code() int {
 	return CodeTaskfileNotSecure
 }
+
+// TaskfileCacheNotFound is returned when the user attempts to use an offline
+// (cached) Taskfile but the files does not exist in the cache.
+type TaskfileCacheNotFound struct {
+	URI string
+}
+
+func (err *TaskfileCacheNotFound) Error() string {
+	return fmt.Sprintf(
+		`task: Taskfile %q was not found in the cache. Remove the --offline flag to use a remote copy or download it using the --download flag`,
+		err.URI,
+	)
+}
+
+func (err *TaskfileCacheNotFound) Code() int {
+	return CodeTaskfileCacheNotFound
+}

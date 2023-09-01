@@ -1,14 +1,11 @@
 package read
 
 import (
+	"io"
 	"os"
 	"path/filepath"
 
-	"gopkg.in/yaml.v3"
-
-	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/filepathext"
-	"github.com/go-task/task/v3/taskfile"
 )
 
 // A FileNode is a node that reads a taskfile from the local filesystem.
@@ -38,7 +35,11 @@ func (node *FileNode) Location() string {
 	return filepathext.SmartJoin(node.Dir, node.Entrypoint)
 }
 
-func (node *FileNode) Read() (*taskfile.Taskfile, error) {
+func (node *FileNode) Remote() bool {
+	return false
+}
+
+func (node *FileNode) Read() ([]byte, error) {
 	if node.Dir == "" {
 		d, err := os.Getwd()
 		if err != nil {
@@ -60,11 +61,5 @@ func (node *FileNode) Read() (*taskfile.Taskfile, error) {
 	}
 	defer f.Close()
 
-	var t taskfile.Taskfile
-	if err := yaml.NewDecoder(f).Decode(&t); err != nil {
-		return nil, &errors.TaskfileInvalidError{URI: filepathext.TryAbsToRel(path), Err: err}
-	}
-
-	t.Location = path
-	return &t, nil
+	return io.ReadAll(f)
 }

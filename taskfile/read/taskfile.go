@@ -6,6 +6,8 @@ import (
 	"path/filepath"
 	"runtime"
 
+	"gopkg.in/yaml.v3"
+
 	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/filepathext"
 	"github.com/go-task/task/v3/internal/logger"
@@ -30,13 +32,112 @@ var (
 	}
 )
 
+func readTaskfile(
+	node Node,
+	download,
+	offline bool,
+	tempDir string,
+	l *logger.Logger,
+) (*taskfile.Taskfile, error) {
+	var b []byte
+
+	cache, err := NewCache(tempDir)
+	if err != nil {
+		return nil, err
+	}
+
+	// If the file is remote, check if we have a cached copy
+	// If we're told to download, skip the cache
+	if node.Remote() && !download {
+		if b, err = cache.read(node); !errors.Is(err, os.ErrNotExist) && err != nil {
+			return nil, err
+		}
+
+		if b != nil {
+			l.VerboseOutf(logger.Magenta, "task: [%s] Fetched cached copy\n", node.Location())
+		}
+	}
+
+	// If the file is remote, we found nothing in the cache and we're not
+	// allowed to download it then we can't do anything.
+	if node.Remote() && b == nil && offline {
+		if b == nil && offline {
+			return nil, &errors.TaskfileCacheNotFound{URI: node.Location()}
+		}
+	}
+
+	// If we still don't have a copy, get the file in the usual way
+	if b == nil {
+		b, err = node.Read()
+		if err != nil {
+			return nil, err
+		}
+
+		// If the node was remote, we need to check the checksum
+		if node.Remote() {
+			l.VerboseOutf(logger.Magenta, "task: [%s] Fetched remote copy\n", node.Location())
+
+			// Get the checksums
+			checksum := cache.checksum(b)
+			cachedChecksum := cache.readChecksum(node)
+
+			// If the checksum doesn't exist, prompt the user to continue
+			if cachedChecksum == "" {
+				if cont, err := l.Prompt(logger.Yellow, fmt.Sprintf("The task you are attempting to run depends on the remote Taskfile at %q.\n--- Make sure you trust the source of this Taskfile before continuing ---\nContinue?", node.Location()), "n", "y", "yes"); err != nil {
+					return nil, err
+				} else if !cont {
+					return nil, &errors.TaskfileNotTrustedError{URI: node.Location()}
+				}
+			} else if checksum != cachedChecksum {
+				// If there is a cached hash, but it doesn't match the expected hash, prompt the user to continue
+				if cont, err := l.Prompt(logger.Yellow, fmt.Sprintf("The Taskfile at %q has changed since you last used it!\n--- Make sure you trust the source of this Taskfile before continuing ---\nContinue?", node.Location()), "n", "y", "yes"); err != nil {
+					return nil, err
+				} else if !cont {
+					return nil, &errors.TaskfileNotTrustedError{URI: node.Location()}
+				}
+			}
+
+			// If the hash has changed (or is new), store it in the cache
+			if checksum != cachedChecksum {
+				if err := cache.writeChecksum(node, checksum); err != nil {
+					return nil, err
+				}
+			}
+		}
+	}
+
+	// If the file is remote and we need to cache it
+	if node.Remote() && download {
+		l.VerboseOutf(logger.Magenta, "task: [%s] Caching downloaded file\n", node.Location())
+		// Cache the file for later
+		if err = cache.write(node, b); err != nil {
+			return nil, err
+		}
+	}
+
+	var t taskfile.Taskfile
+	if err := yaml.Unmarshal(b, &t); err != nil {
+		return nil, &errors.TaskfileInvalidError{URI: filepathext.TryAbsToRel(node.Location()), Err: err}
+	}
+	t.Location = node.Location()
+
+	return &t, nil
+}
+
 // Taskfile reads a Taskfile for a given directory
 // Uses current dir when dir is left empty. Uses Taskfile.yml
 // or Taskfile.yaml when entrypoint is left empty
-func Taskfile(node Node, allowInsecure bool, tempDir string, l *logger.Logger) (*taskfile.Taskfile, error) {
+func Taskfile(
+	node Node,
+	allowInsecure bool,
+	download bool,
+	offline bool,
+	tempDir string,
+	l *logger.Logger,
+) (*taskfile.Taskfile, error) {
 	var _taskfile func(Node) (*taskfile.Taskfile, error)
 	_taskfile = func(node Node) (*taskfile.Taskfile, error) {
-		t, err := node.Read()
+		t, err := readTaskfile(node, download, offline, tempDir, l)
 		if err != nil {
 			return nil, err
 		}
@@ -157,10 +258,15 @@ func Taskfile(node Node, allowInsecure bool, tempDir string, l *logger.Logger) (
 						Entrypoint: path,
 						Dir:        node.Dir,
 					}
-					osTaskfile, err := osNode.Read()
+					b, err := osNode.Read()
 					if err != nil {
 						return nil, err
 					}
+					var osTaskfile *taskfile.Taskfile
+					if err := yaml.Unmarshal(b, &osTaskfile); err != nil {
+						return nil, &errors.TaskfileInvalidError{URI: filepathext.TryAbsToRel(node.Location()), Err: err}
+					}
+					t.Location = node.Location()
 					if err = taskfile.Merge(t, osTaskfile, nil); err != nil {
 						return nil, err
 					}

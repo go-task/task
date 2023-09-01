@@ -10,14 +10,20 @@ import (
 )
 
 type Node interface {
-	Read() (*taskfile.Taskfile, error)
+	Read() ([]byte, error)
 	Parent() Node
 	Optional() bool
 	Location() string
+	Remote() bool
 }
 
-func NewNodeFromIncludedTaskfile(parent Node, includedTaskfile taskfile.IncludedTaskfile, allowInsecure bool, tempDir string, l *logger.Logger) (Node, error) {
-	// TODO: Remove this condition when the remote taskfiles experiment is complete
+func NewNodeFromIncludedTaskfile(
+	parent Node,
+	includedTaskfile taskfile.IncludedTaskfile,
+	allowInsecure bool,
+	tempDir string,
+	l *logger.Logger,
+) (Node, error) {
 	if !experiments.RemoteTaskfiles {
 		path, err := includedTaskfile.FullTaskfilePath()
 		if err != nil {
@@ -30,9 +36,9 @@ func NewNodeFromIncludedTaskfile(parent Node, includedTaskfile taskfile.Included
 		if !allowInsecure {
 			return nil, &errors.TaskfileNotSecureError{URI: includedTaskfile.Taskfile}
 		}
-		return NewHTTPNode(parent, includedTaskfile.Taskfile, includedTaskfile.Optional, tempDir, l)
+		return NewHTTPNode(parent, includedTaskfile.Taskfile, includedTaskfile.Optional)
 	case "https":
-		return NewHTTPNode(parent, includedTaskfile.Taskfile, includedTaskfile.Optional, tempDir, l)
+		return NewHTTPNode(parent, includedTaskfile.Taskfile, includedTaskfile.Optional)
 	// If no other scheme matches, we assume it's a file.
 	// This also allows users to explicitly set a file:// scheme.
 	default:
