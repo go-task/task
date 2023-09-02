@@ -1,6 +1,7 @@
 package read
 
 import (
+	"context"
 	"strings"
 
 	"github.com/go-task/task/v3/errors"
@@ -10,7 +11,7 @@ import (
 )
 
 type Node interface {
-	Read() ([]byte, error)
+	Read(ctx context.Context) ([]byte, error)
 	Parent() Node
 	Optional() bool
 	Location() string

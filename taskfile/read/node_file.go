@@ -1,6 +1,7 @@
 package read
 
 import (
+	"context"
 	"io"
 	"os"
 	"path/filepath"
@@ -39,7 +40,7 @@ func (node *FileNode) Remote() bool {
 	return false
 }
 
-func (node *FileNode) Read() ([]byte, error) {
+func (node *FileNode) Read(ctx context.Context) ([]byte, error) {
 	if node.Dir == "" {
 		d, err := os.Getwd()
 		if err != nil {

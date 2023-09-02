@@ -1,6 +1,7 @@
 package read
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -68,7 +69,7 @@ func readTaskfile(
 
 	// If we still don't have a copy, get the file in the usual way
 	if b == nil {
-		b, err = node.Read()
+		b, err = node.Read(context.Background())
 		if err != nil {
 			return nil, err
 		}
@@ -258,7 +259,7 @@ func Taskfile(
 						Entrypoint: path,
 						Dir:        node.Dir,
 					}
-					b, err := osNode.Read()
+					b, err := osNode.Read(context.Background())
 					if err != nil {
 						return nil, err
 					}

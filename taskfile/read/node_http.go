@@ -1,6 +1,7 @@
 package read
 
 import (
+	"context"
 	"io"
 	"net/http"
 	"net/url"
@@ -36,8 +37,13 @@ func (node *HTTPNode) Remote() bool {
 	return true
 }
 
-func (node *HTTPNode) Read() ([]byte, error) {
-	resp, err := http.Get(node.URL.String())
+func (node *HTTPNode) Read(ctx context.Context) ([]byte, error) {
+	req, err := http.NewRequest("GET", node.URL.String(), nil)
+	if err != nil {
+		return nil, errors.TaskfileFetchFailedError{URI: node.URL.String()}
+	}
+
+	resp, err := http.DefaultClient.Do(req.WithContext(ctx))
 	if err != nil {
 		return nil, errors.TaskfileFetchFailedError{URI: node.URL.String()}
 	}
