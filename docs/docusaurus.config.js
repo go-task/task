@@ -94,7 +94,7 @@ const getConfig = async () => {
             routeBasePath: '/',
             sidebarPath: require.resolve('./sidebars.js')
           },
-          blog: false,
+          blog: {},
           theme: {
             customCss: [
               require.resolve('./src/css/custom.css'),
@@ -154,6 +154,11 @@ const getConfig = async () => {
               docId: 'api_reference',
               position: 'left',
               label: 'API'
+            },
+            {
+              to: 'blog',
+              label: 'Blog',
+              position: 'left'
             },
             {
               type: 'doc',
