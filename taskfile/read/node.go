@@ -6,8 +6,6 @@ import (
 
 	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/experiments"
-	"github.com/go-task/task/v3/internal/logger"
-	"github.com/go-task/task/v3/taskfile"
 )
 
 type Node interface {
@@ -17,36 +15,26 @@ type Node interface {
 	Remote() bool
 }
 
-func NewNodeFromIncludedTaskfile(
+func NewNode(
 	parent Node,
-	includedTaskfile taskfile.IncludedTaskfile,
+	uri string,
 	allowInsecure bool,
-	tempDir string,
-	l *logger.Logger,
 ) (Node, error) {
 	if !experiments.RemoteTaskfiles {
-		path, err := includedTaskfile.FullTaskfilePath()
-		if err != nil {
-			return nil, err
-		}
-		return NewFileNode(parent, path)
+		return NewFileNode(parent, uri)
 	}
-	switch getScheme(includedTaskfile.Taskfile) {
+	switch getScheme(uri) {
 	case "http":
 		if !allowInsecure {
-			return nil, &errors.TaskfileNotSecureError{URI: includedTaskfile.Taskfile}
+			return nil, &errors.TaskfileNotSecureError{URI: uri}
 		}
-		return NewHTTPNode(parent, includedTaskfile.Taskfile)
+		return NewHTTPNode(parent, uri)
 	case "https":
-		return NewHTTPNode(parent, includedTaskfile.Taskfile)
+		return NewHTTPNode(parent, uri)
 	// If no other scheme matches, we assume it's a file.
 	// This also allows users to explicitly set a file:// scheme.
 	default:
-		path, err := includedTaskfile.FullTaskfilePath()
-		if err != nil {
-			return nil, err
-		}
-		return NewFileNode(parent, path)
+		return NewFileNode(parent, uri)
 	}
 }
 

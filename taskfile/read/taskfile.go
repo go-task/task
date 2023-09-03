@@ -173,7 +173,12 @@ func Taskfile(
 				}
 			}
 
-			includeReaderNode, err := NewNodeFromIncludedTaskfile(node, includedTask, allowInsecure, tempDir, l)
+			uri, err := includedTask.FullTaskfilePath()
+			if err != nil {
+				return err
+			}
+
+			includeReaderNode, err := NewNode(node, uri, allowInsecure)
 			if err != nil {
 				if includedTask.Optional {
 					return nil
