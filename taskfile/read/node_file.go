@@ -16,7 +16,7 @@ type FileNode struct {
 	Entrypoint string
 }
 
-func NewFileNode(parent Node, path string, optional bool) (*FileNode, error) {
+func NewFileNode(parent Node, path string) (*FileNode, error) {
 	path, err := exists(path)
 	if err != nil {
 		return nil, err
@@ -24,8 +24,7 @@ func NewFileNode(parent Node, path string, optional bool) (*FileNode, error) {
 
 	return &FileNode{
 		BaseNode: BaseNode{
-			parent:   parent,
-			optional: optional,
+			parent: parent,
 		},
 		Dir:        filepath.Dir(path),
 		Entrypoint: filepath.Base(path),

@@ -5,14 +5,9 @@ package read
 // and it designed to be embedded in other node types so that this boilerplate
 // code does not need to be repeated.
 type BaseNode struct {
-	parent   Node
-	optional bool
+	parent Node
 }
 
 func (node *BaseNode) Parent() Node {
 	return node.parent
-}
-
-func (node *BaseNode) Optional() bool {
-	return node.optional
 }

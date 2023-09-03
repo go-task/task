@@ -13,7 +13,6 @@ import (
 type Node interface {
 	Read(ctx context.Context) ([]byte, error)
 	Parent() Node
-	Optional() bool
 	Location() string
 	Remote() bool
 }
@@ -30,16 +29,16 @@ func NewNodeFromIncludedTaskfile(
 		if err != nil {
 			return nil, err
 		}
-		return NewFileNode(parent, path, includedTaskfile.Optional)
+		return NewFileNode(parent, path)
 	}
 	switch getScheme(includedTaskfile.Taskfile) {
 	case "http":
 		if !allowInsecure {
 			return nil, &errors.TaskfileNotSecureError{URI: includedTaskfile.Taskfile}
 		}
-		return NewHTTPNode(parent, includedTaskfile.Taskfile, includedTaskfile.Optional)
+		return NewHTTPNode(parent, includedTaskfile.Taskfile)
 	case "https":
-		return NewHTTPNode(parent, includedTaskfile.Taskfile, includedTaskfile.Optional)
+		return NewHTTPNode(parent, includedTaskfile.Taskfile)
 	// If no other scheme matches, we assume it's a file.
 	// This also allows users to explicitly set a file:// scheme.
 	default:
@@ -47,7 +46,7 @@ func NewNodeFromIncludedTaskfile(
 		if err != nil {
 			return nil, err
 		}
-		return NewFileNode(parent, path, includedTaskfile.Optional)
+		return NewFileNode(parent, path)
 	}
 }
 

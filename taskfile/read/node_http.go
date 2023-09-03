@@ -15,15 +15,14 @@ type HTTPNode struct {
 	URL *url.URL
 }
 
-func NewHTTPNode(parent Node, urlString string, optional bool) (*HTTPNode, error) {
+func NewHTTPNode(parent Node, urlString string) (*HTTPNode, error) {
 	url, err := url.Parse(urlString)
 	if err != nil {
 		return nil, err
 	}
 	return &HTTPNode{
 		BaseNode: BaseNode{
-			parent:   parent,
-			optional: optional,
+			parent: parent,
 		},
 		URL: url,
 	}, nil

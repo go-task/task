@@ -253,8 +253,7 @@ func Taskfile(
 				if _, err = os.Stat(path); err == nil {
 					osNode := &FileNode{
 						BaseNode: BaseNode{
-							parent:   node,
-							optional: false,
+							parent: node,
 						},
 						Entrypoint: path,
 						Dir:        node.Dir,
