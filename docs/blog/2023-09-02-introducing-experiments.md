@@ -80,7 +80,7 @@ gather feedback from the community before making them the default behavior in a
 future major release.
 
 To prepare users for the next major release, we will maintain a list of
-[deprecated features][deprecations] and [experiements][experiments] on our docs
+[deprecated features][deprecations] and [experiments][experiments] on our docs
 website and publish information on how to migrate to the new behavior.
 
 You can read the [full breaking change proposal][breaking-change-proposal] and
@@ -92,7 +92,7 @@ Taskfiles][remote-taskfiles-experiment] experiments.
 
 v2 has been [officially deprecated][deprecate-version-2-schema]. If you're still
 using a Taskfile with `version: "2"` at the top we _strongly recommend_ that you
-upgrade as soon as possible. Removing This will allow us to tidy up the codebase
+upgrade as soon as possible. Removing v2 will allow us to tidy up the codebase
 and focus on new functionality instead.
 
 When v4 is released, we will continue to support v3 for a period of time (bug
