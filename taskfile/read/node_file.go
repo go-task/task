@@ -16,12 +16,11 @@ type FileNode struct {
 	Entrypoint string
 }
 
-func NewFileNode(parent Node, path string) (*FileNode, error) {
-	path, err := exists(path)
+func NewFileNode(parent Node, uri string) (*FileNode, error) {
+	path, err := exists(uri)
 	if err != nil {
 		return nil, err
 	}
-
 	return &FileNode{
 		BaseNode: BaseNode{
 			parent: parent,

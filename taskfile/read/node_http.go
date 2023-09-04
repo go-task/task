@@ -15,10 +15,13 @@ type HTTPNode struct {
 	URL *url.URL
 }
 
-func NewHTTPNode(parent Node, urlString string) (*HTTPNode, error) {
-	url, err := url.Parse(urlString)
+func NewHTTPNode(parent Node, uri string, allowInsecure bool) (*HTTPNode, error) {
+	url, err := url.Parse(uri)
 	if err != nil {
 		return nil, err
+	}
+	if url.Scheme == "http" && !allowInsecure {
+		return nil, &errors.TaskfileNotSecureError{URI: uri}
 	}
 	return &HTTPNode{
 		BaseNode: BaseNode{

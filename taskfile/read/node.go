@@ -20,22 +20,21 @@ func NewNode(
 	uri string,
 	allowInsecure bool,
 ) (Node, error) {
-	if !experiments.RemoteTaskfiles {
-		return NewFileNode(parent, uri)
-	}
+	var node Node
+	var err error
 	switch getScheme(uri) {
 	case "http":
-		if !allowInsecure {
-			return nil, &errors.TaskfileNotSecureError{URI: uri}
-		}
-		return NewHTTPNode(parent, uri)
+		node, err = NewHTTPNode(parent, uri, allowInsecure)
 	case "https":
-		return NewHTTPNode(parent, uri)
-	// If no other scheme matches, we assume it's a file.
-	// This also allows users to explicitly set a file:// scheme.
+		node, err = NewHTTPNode(parent, uri, allowInsecure)
 	default:
-		return NewFileNode(parent, uri)
+		// If no other scheme matches, we assume it's a file
+		node, err = NewFileNode(parent, uri)
 	}
+	if node.Remote() && !experiments.RemoteTaskfiles {
+		return nil, errors.New("task: Remote taskfiles are not enabled. You can read more about this experiment and how to enable it at https://taskfile.dev/experiments/remote-taskfiles")
+	}
+	return node, err
 }
 
 func getScheme(uri string) string {
