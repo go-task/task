@@ -1,6 +1,6 @@
 ---
 slug: /changelog/
-sidebar_position: 9
+sidebar_position: 14
 ---
 
 # 更新日志
