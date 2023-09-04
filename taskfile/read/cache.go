@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 type Cache struct {
@@ -22,7 +23,7 @@ func NewCache(dir string) (*Cache, error) {
 	}, nil
 }
 
-func (c *Cache) checksum(b []byte) string {
+func checksum(b []byte) string {
 	h := sha256.New()
 	h.Write(b)
 	return base64.StdEncoding.EncodeToString(h.Sum(nil))
@@ -46,7 +47,7 @@ func (c *Cache) readChecksum(node Node) string {
 }
 
 func (c *Cache) key(node Node) string {
-	return base64.StdEncoding.EncodeToString([]byte(node.Location()))
+	return strings.TrimRight(checksum([]byte(node.Location())), "=")
 }
 
 func (c *Cache) cacheFilePath(node Node) string {

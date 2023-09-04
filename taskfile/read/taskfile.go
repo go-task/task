@@ -79,7 +79,7 @@ func readTaskfile(
 			l.VerboseOutf(logger.Magenta, "task: [%s] Fetched remote copy\n", node.Location())
 
 			// Get the checksums
-			checksum := cache.checksum(b)
+			checksum := checksum(b)
 			cachedChecksum := cache.readChecksum(node)
 
 			// If the checksum doesn't exist, prompt the user to continue
