@@ -1,6 +1,6 @@
 ---
 slug: /experiments/
-sidebar_position: 5
+sidebar_position: 6
 ---
 
 # Deneyler
@@ -11,7 +11,9 @@ Tüm deneysel özellikler, _herhangi bir zamanda_ önemli değişikliklere ve/ve
 
 :::
 
-Task'ın hızlı bir şekilde gelişmesine izin vermek için, deneysel bayrakların arkasındaki küçük sürümlerde büyük değişiklikler yapıyoruz. Bu, büyük bir sürüm yayınlanmadan önce son değişiklikler hakkında geri bildirim toplamamızı sağlar. Bu belgede, mevcut deneysel özellik grubu ve bunların yerini alması amaçlanan kullanımdan kaldırılmış özellik açıklanmaktadır.
+Task'ın hızlı bir şekilde gelişmesine izin vermek için, deneysel bayrakların arkasındaki küçük sürümlerde büyük değişiklikler yapıyoruz. Bu, büyük bir sürüm yayınlanmadan önce son değişiklikler hakkında geri bildirim toplamamızı sağlar. This document describes the current set of experimental features and their status in the [workflow](#workflow).
+
+You can view a full list of active experiments in the "Experiments" section of the sidebar.
 
 Deneysel bir özelliği şu şekilde etkinleştirebilirsiniz:
 
@@ -28,43 +30,49 @@ TASK_X_FEATURE=1
 
 Each section below details an experiment or deprecation and explains what the flags/environment variables to enable the experiment are and how the feature's behavior will change. It will also explain what you need to do to migrate any existing Taskfiles to the new behavior.
 
-<!-- EXPERIMENT TEMPLATE - Include sections as necessary...
+## Workflow
 
-### ![experiment] {Feature} ([#{issue}](https://github.com/go-task/task/issues/{issue})), ...)
+Experiments are a way for us to test out new features in Task before committing to them in a major release. Because this concept is built around the idea of feedback from our community, we have built a workflow for the process of introducing these changes. This ensures that experiments are given the attention and time that they need and that we are getting the best possible results out of them.
 
-- Environment variable: `TASK_X_{feature}`
-- Deprecates: {list any existing functionality that will be deprecated by this experiment}
-- Breaks: {list any existing functionality that will be broken by this experiment}
+The sections below describe the various stages that an experiment must go through from its proposal all the way to being released in a major version of Task.
 
-{Short description of the feature}
+### 1. Proposal
 
-{Short explanation of how users should migrate to the new behavior}
+All experimental features start with a proposal in the form of a GitHub issue. If the maintainers decide that an issue has enough support and is a breaking change or is complex/controversial enough to require user feedback, then the issue will be marked with the ![proposal][] label. At this point, the issue becomes a proposal and a period of consultation begins. During this period, we request that users provide feedback on the proposal and how it might effect their use of Task. It is up to the discretion of the maintainers to decide how long this period lasts.
 
--->
+### 2. Draft
 
-### ![deprecated][] Version 2 Schema ([#1197][deprecate-version-2-schema])
+Once a proposal's consultation ends, a contributor may pick up the work and begin the initial implementation. Once a PR is opened, the maintainers will ensure that it meets the requirements for an experimental feature (i.e. flags are in the right format etc) and merge the feature. Once this code is released, the status will be updated via the ![draft][] label. This indicates that an implementation is now available for use in a release and the experiment is open for feedback.
 
-The Taskfile v2 schema was introduced in March 2018 and replaced by version 3 in August the following year. Users have had a long time to update and so we feel that it is time to tidy up the codebase and focus on new functionality instead.
+:::note
 
-This notice does not mean that we are immediately removing support for version 2 schemas. However, support will not be extended to future major releases and we _strongly recommend_ that anybody still using a version 2 schema upgrades to version 3 as soon as possible.
+During the draft period, major changes to the implementation may be made based on the feedback received from users. There are _no stability guarantees_ and experimental features may be abandoned _at any time_.
 
-A list of changes between version 2 and version 3 are available in the [Task v3 Release Notes][version-3-release-notes].
+:::
 
-### ![experiment][] Gentle Force ([#1200](https://github.com/go-task/task/issues/1200))
+### 3. Candidate
 
-- Environment variable: `TASK_X_FORCE=1`
-- Breaks: `--force` flag
+Once an acceptable level of consensus has been reached by the community and feedback/changes are less frequent/significant, the status may be updated via the ![candidate][] label. This indicates that a proposal is _likely_ to accepted and will enter a period for final comments and minor changes.
 
-The `--force` flag currently forces _all_ tasks to run regardless of the status checks. This can be useful, but we have found that most of the time users only expect the direct task they are calling to be forced and _not_ all of its dependant tasks.
+### 4. Stable
 
-This experiment changes the `--force` flag to only force the directly called task. All dependant tasks will have their statuses checked as normal and will only run if Task considers them to be out of date. A new `--force-all` flag will also be added to maintain the current behavior for users that need this functionality.
+Once a suitable amount of time has passed with no changes or feedback, an experiment will be given the ![stable][] label. At this point, the functionality will be treated like any other feature in Task and any changes _must_ be backward compatible. This allows users to migrate to the new functionality without having to worry about anything breaking in future releases. This provides the best experience for users migrating to a new major version.
 
-If you want to migrate, but continue to force all dependant tasks to run, you should replace all uses of the `--force` flag with `--force-all`. Alternatively, if you want to adopt the new behavior, you can continue to use the `--force` flag as you do now!
+### 5. Released
+
+When making a new major release of Task, all experiments marked as ![stable][] will move to ![released][] and their behaviors will become the new default in Task. Experiments in an earlier stage (i.e. not stable) cannot be released and so will continue to be experiments in the new version.
+
+### Abandoned / Superseded
+
+If an experiment is unsuccessful at any point then it will be given the ![abandoned][] or ![superseded][] labels depending on which is more suitable. These experiments will be removed from Task.
 
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end -->
-[deprecate-version-2-schema]: https://github.com/go-task/task/issues/1197
-[version-3-release-notes]: https://github.com/go-task/task/releases/tag/v3.0.0
-[deprecated]: https://img.shields.io/badge/deprecated-red
-[experiment]: https://img.shields.io/badge/experiment-yellow
+[proposal]: https://img.shields.io/badge/experiment:%20proposal-purple
+[draft]: https://img.shields.io/badge/experiment:%20draft-purple
+[candidate]: https://img.shields.io/badge/experiment:%20candidate-purple
+[stable]: https://img.shields.io/badge/experiment:%20stable-purple
+[released]: https://img.shields.io/badge/experiment:%20released-purple
+[abandoned]: https://img.shields.io/badge/experiment:%20abandoned-purple
+[superseded]: https://img.shields.io/badge/experiment:%20superseded-purple

@@ -1,6 +1,6 @@
 ---
 slug: /community/
-sidebar_position: 10
+sidebar_position: 9
 ---
 
 # 社区
@@ -9,7 +9,7 @@ sidebar_position: 10
 
 ## 翻译
 
-我们使用 [Crowdin](https://crowdin.com/project/taskfile) 翻译我们的文档。
+We use [Crowdin](https://crowdin.com/project/taskfile) to translate our document.
 
 ## 集成
 
