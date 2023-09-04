@@ -295,6 +295,13 @@ func run() error {
 		calls, globals = args.ParseV2(tasksAndVars...)
 	}
 
+	// If there are no calls, run the default task instead
+	// Unless the download flag is specified, in which case we want to download
+	// the Taskfile and do nothing else
+	if len(calls) == 0 && !flags.download {
+		calls = append(calls, taskfile.Call{Task: "default", Direct: true})
+	}
+
 	globals.Set("CLI_ARGS", taskfile.Var{Static: cliArgs})
 	e.Taskfile.Vars.Merge(globals)
 
