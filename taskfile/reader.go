@@ -141,7 +141,19 @@ func (r *Reader) include(node Node) error {
 			}
 
 			// Create an edge between the Taskfiles
-			return r.graph.AddEdge(node.Location(), includeNode.Location())
+			err = r.graph.AddEdge(node.Location(), includeNode.Location())
+			if errors.Is(err, graph.ErrEdgeAlreadyExists) {
+				edge, err := r.graph.Edge(node.Location(), includeNode.Location())
+				if err != nil {
+					return err
+				}
+				return &errors.TaskfileDuplicateIncludeError{
+					URI:         node.Location(),
+					IncludedURI: includeNode.Location(),
+					Namespaces:  []string{namespace, edge.Properties.Data.(*ast.Include).Namespace},
+				}
+			}
+			return err
 		})
 		return nil
 	})

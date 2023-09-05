@@ -3,6 +3,7 @@ package errors
 import (
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/Masterminds/semver/v3"
@@ -173,4 +174,20 @@ func (err *TaskfileNetworkTimeoutError) Error() string {
 
 func (err *TaskfileNetworkTimeoutError) Code() int {
 	return CodeTaskfileNetworkTimeout
+}
+
+type TaskfileDuplicateIncludeError struct {
+	URI         string
+	IncludedURI string
+	Namespaces  []string
+}
+
+func (err *TaskfileDuplicateIncludeError) Error() string {
+	return fmt.Sprintf(
+		`task: Taskfile %q attempted to include %q multiple times with namespaces: %s`, err.URI, err.IncludedURI, strings.Join(err.Namespaces, ", "),
+	)
+}
+
+func (err *TaskfileDuplicateIncludeError) Code() int {
+	return CodeTaskfileDuplicateInclude
 }

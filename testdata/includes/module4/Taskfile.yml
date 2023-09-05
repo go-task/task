@@ -1,0 +1,6 @@
+version: '3'
+
+tasks:
+  gen_dir:
+    cmds:
+      - echo included_directory_with_dir > included_directory_with_dir.txt
