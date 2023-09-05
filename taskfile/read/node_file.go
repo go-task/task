@@ -11,20 +11,26 @@ import (
 
 // A FileNode is a node that reads a taskfile from the local filesystem.
 type FileNode struct {
-	BaseNode
+	*BaseNode
 	Dir        string
 	Entrypoint string
 }
 
-func NewFileNode(parent Node, uri string) (*FileNode, error) {
-	path, err := exists(uri)
+func NewFileNode(uri string, opts ...NodeOption) (*FileNode, error) {
+	base := NewBaseNode(opts...)
+	if uri == "" {
+		d, err := os.Getwd()
+		if err != nil {
+			return nil, err
+		}
+		uri = d
+	}
+	path, err := existsWalk(uri)
 	if err != nil {
 		return nil, err
 	}
 	return &FileNode{
-		BaseNode: BaseNode{
-			parent: parent,
-		},
+		BaseNode:   base,
 		Dir:        filepath.Dir(path),
 		Entrypoint: filepath.Base(path),
 	}, nil
@@ -39,26 +45,10 @@ func (node *FileNode) Remote() bool {
 }
 
 func (node *FileNode) Read(ctx context.Context) ([]byte, error) {
-	if node.Dir == "" {
-		d, err := os.Getwd()
-		if err != nil {
-			return nil, err
-		}
-		node.Dir = d
-	}
-
-	path, err := existsWalk(node.Location())
-	if err != nil {
-		return nil, err
-	}
-	node.Dir = filepath.Dir(path)
-	node.Entrypoint = filepath.Base(path)
-
-	f, err := os.Open(path)
+	f, err := os.Open(node.Location())
 	if err != nil {
 		return nil, err
 	}
 	defer f.Close()
-
 	return io.ReadAll(f)
 }

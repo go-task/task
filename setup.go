@@ -72,12 +72,13 @@ func (e *Executor) setCurrentDir() error {
 }
 
 func (e *Executor) readTaskfile() error {
-	var err error
+	uri := filepath.Join(e.Dir, e.Entrypoint)
+	node, err := read.NewNode(uri, e.Insecure)
+	if err != nil {
+		return err
+	}
 	e.Taskfile, err = read.Taskfile(
-		&read.FileNode{
-			Dir:        e.Dir,
-			Entrypoint: e.Entrypoint,
-		},
+		node,
 		e.Insecure,
 		e.Download,
 		e.Offline,
@@ -87,7 +88,6 @@ func (e *Executor) readTaskfile() error {
 	if err != nil {
 		return err
 	}
-	e.Dir = filepath.Dir(e.Taskfile.Location)
 	return nil
 }
 

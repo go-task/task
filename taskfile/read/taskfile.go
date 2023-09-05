@@ -130,7 +130,7 @@ func readTaskfile(
 // or Taskfile.yaml when entrypoint is left empty
 func Taskfile(
 	node Node,
-	allowInsecure bool,
+	insecure bool,
 	download bool,
 	offline bool,
 	tempDir string,
@@ -178,7 +178,10 @@ func Taskfile(
 				return err
 			}
 
-			includeReaderNode, err := NewNode(node, uri, allowInsecure)
+			includeReaderNode, err := NewNode(uri, insecure,
+				WithParent(node),
+				WithOptional(includedTask.Optional),
+			)
 			if err != nil {
 				if includedTask.Optional {
 					return nil
@@ -257,9 +260,7 @@ func Taskfile(
 				path := filepathext.SmartJoin(node.Dir, fmt.Sprintf("Taskfile_%s.yml", runtime.GOOS))
 				if _, err = os.Stat(path); err == nil {
 					osNode := &FileNode{
-						BaseNode: BaseNode{
-							parent: node,
-						},
+						BaseNode:   NewBaseNode(WithParent(node)),
 						Entrypoint: path,
 						Dir:        node.Dir,
 					}
@@ -295,6 +296,11 @@ func Taskfile(
 	return _taskfile(node)
 }
 
+// exists will check if a file at the given path exists. If it does, it will
+// return the path to it. If it does not, it will search the search for any
+// files at the given path with any of the default Taskfile files names. If any
+// of these match a file, the first matching path will be returned. If no files
+// are found, an error will be returned.
 func exists(path string) (string, error) {
 	fi, err := os.Stat(path)
 	if err != nil {
@@ -314,6 +320,11 @@ func exists(path string) (string, error) {
 	return "", errors.TaskfileNotFoundError{URI: path, Walk: false}
 }
 
+// existsWalk will check if a file at the given path exists by calling the
+// exists function. If a file is not found, it will walk up the directory tree
+// calling the exists function until it finds a file or reaches the root
+// directory. On supported operating systems, it will also check if the user ID
+// of the directory changes and abort if it does.
 func existsWalk(path string) (string, error) {
 	origPath := path
 	owner, err := sysinfo.Owner(path)
