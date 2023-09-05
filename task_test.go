@@ -981,8 +981,8 @@ func TestIncludes(t *testing.T) {
 			"included_directory.txt":                    "included_directory",
 			"included_directory_without_dir.txt":        "included_directory_without_dir",
 			"included_taskfile_without_dir.txt":         "included_taskfile_without_dir",
-			"./module2/included_directory_with_dir.txt": "included_directory_with_dir",
-			"./module2/included_taskfile_with_dir.txt":  "included_taskfile_with_dir",
+			"./module3/included_taskfile_with_dir.txt":  "included_taskfile_with_dir",
+			"./module4/included_directory_with_dir.txt": "included_directory_with_dir",
 			"os_include.txt":                            "os",
 		},
 	}

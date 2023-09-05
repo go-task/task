@@ -6,13 +6,13 @@ includes:
   included_without_dir:
     taskfile:  ./module1
   included_taskfile_without_dir:
-    taskfile:  ./module1/Taskfile.yml
-  included_with_dir:
-    taskfile:  ./module2
-    dir:  ./module2
-  included_taskfile_with_dir:
     taskfile:  ./module2/Taskfile.yml
-    dir:  ./module2
+  included_with_dir:
+    taskfile:  ./module3
+    dir:  ./module3
+  included_taskfile_with_dir:
+    taskfile:  ./module4/Taskfile.yml
+    dir:  ./module4
   included_os: ./Taskfile_{{OS}}.yml
 
 tasks:
