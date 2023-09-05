@@ -108,37 +108,42 @@ func TestVars(t *testing.T) {
 
 func TestSpecialVars(t *testing.T) {
 	const dir = "testdata/special_vars"
-	const target = "default"
-
-	var buff bytes.Buffer
-	e := &task.Executor{
-		Dir:    dir,
-		Stdout: &buff,
-		Stderr: &buff,
-		Silent: true,
-	}
-	require.NoError(t, e.Setup())
-	require.NoError(t, e.Run(context.Background(), ast.Call{Task: target}))
-
 	toAbs := func(rel string) string {
 		abs, err := filepath.Abs(rel)
-		require.NoError(t, err)
+		assert.NoError(t, err)
 		return abs
 	}
 
-	output := buff.String()
+	tests := []struct {
+		target   string
+		expected string
+	}{
+		// Root
+		{target: "print-task", expected: "print-task"},
+		{target: "print-root-dir", expected: toAbs(dir)},
+		{target: "print-taskfile-dir", expected: toAbs(dir)},
+		{target: "print-task-version", expected: "unknown"},
+		// Included
+		{target: "included:print-task", expected: "included:print-task"},
+		{target: "included:print-root-dir", expected: toAbs(dir)},
+		{target: "included:print-taskfile-dir", expected: toAbs(dir) + "/included"},
+		{target: "included:print-task-version", expected: "unknown"},
+	}
 
-	// Root Taskfile
-	assert.Contains(t, output, "root/TASK=print")
-	assert.Contains(t, output, "root/ROOT_DIR="+toAbs("testdata/special_vars"))
-	assert.Contains(t, output, "root/TASKFILE_DIR="+toAbs("testdata/special_vars"))
-	assert.Contains(t, output, "root/TASK_VERSION=unknown")
-
-	// Included Taskfile
-	assert.Contains(t, output, "included/TASK=included:print")
-	assert.Contains(t, output, "included/ROOT_DIR="+toAbs("testdata/special_vars"))
-	assert.Contains(t, output, "included/TASKFILE_DIR="+toAbs("testdata/special_vars/included"))
-	assert.Contains(t, output, "included/TASK_VERSION=unknown")
+	for _, test := range tests {
+		t.Run(test.target, func(t *testing.T) {
+			var buff bytes.Buffer
+			e := &task.Executor{
+				Dir:    dir,
+				Stdout: &buff,
+				Stderr: &buff,
+				Silent: true,
+			}
+			require.NoError(t, e.Setup())
+			require.NoError(t, e.Run(context.Background(), ast.Call{Task: test.target}))
+			assert.Equal(t, test.expected+"\n", buff.String())
+		})
+	}
 }
 
 func TestConcurrency(t *testing.T) {

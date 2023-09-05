@@ -1,9 +1,7 @@
 version: '3'
 
 tasks:
-  print:
-    cmds:
-      - echo included/TASK={{.TASK}}
-      - echo included/ROOT_DIR={{.ROOT_DIR}}
-      - echo included/TASKFILE_DIR={{.TASKFILE_DIR}}
-      - echo included/TASK_VERSION={{.TASK_VERSION}}
+  print-task: echo {{.TASK}}
+  print-root-dir: echo {{.ROOT_DIR}}
+  print-taskfile-dir: echo {{.TASKFILE_DIR}}
+  print-task-version: echo {{.TASK_VERSION}}
