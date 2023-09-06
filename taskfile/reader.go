@@ -153,6 +153,12 @@ func (r *Reader) include(node Node) error {
 					Namespaces:  []string{namespace, edge.Properties.Data.(*ast.Include).Namespace},
 				}
 			}
+			if errors.Is(err, graph.ErrEdgeCreatesCycle) {
+				return errors.TaskfileCycleError{
+					Source:      node.Location(),
+					Destination: includeNode.Location(),
+				}
+			}
 			return err
 		})
 		return nil

@@ -20,6 +20,7 @@ const (
 	CodeTaskfileVersionCheckError
 	CodeTaskfileNetworkTimeout
 	CodeTaskfileDuplicateInclude
+	CodeTaskfileCycle
 )
 
 // Task related exit codes
