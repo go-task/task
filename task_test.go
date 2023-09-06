@@ -1199,15 +1199,15 @@ func TestIncludesInterpolation(t *testing.T) {
 		expectedErr    bool
 		expectedOutput string
 	}{
-		{"include", "include", false, "includes_interpolation\n"},
-		{"include with dir", "include-with-dir", false, "included\n"},
+		{"include", "include", false, "include\n"},
+		{"include_with_dir", "include-with-dir", false, "included\n"},
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			var buff bytes.Buffer
 			e := task.Executor{
-				Dir:    dir,
+				Dir:    filepath.Join(dir, test.name),
 				Stdout: &buff,
 				Stderr: &buff,
 				Silent: true,
