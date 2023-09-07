@@ -80,6 +80,21 @@ func (r *Templater) ReplaceSlice(strs []string) []string {
 	return new
 }
 
+func (r *Templater) ReplaceGlobs(globs []*taskfile.Glob) []*taskfile.Glob {
+	if r.err != nil || len(globs) == 0 {
+		return nil
+	}
+
+	new := make([]*taskfile.Glob, len(globs))
+	for i, g := range globs {
+		new[i] = &taskfile.Glob{
+			Glob:   r.Replace(g.Glob),
+			Negate: g.Negate,
+		}
+	}
+	return new
+}
+
 func (r *Templater) ReplaceVars(vars *taskfile.Vars) *taskfile.Vars {
 	return r.replaceVars(vars, nil)
 }

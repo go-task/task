@@ -6,7 +6,9 @@ tasks:
       - cp ./source.txt ./generated.txt
     sources:
       - ./**/glob-with-inexistent-file.txt
-      - ./source.txt
+      - ./*.txt
+      - exclude: ./ignore_me.txt
+      - exclude: ./generated.txt
     generates:
       - ./generated.txt
     method: checksum

@@ -19,8 +19,8 @@ type Task struct {
 	Summary              string
 	Requires             *Requires
 	Aliases              []string
-	Sources              []string
-	Generates            []string
+	Sources              []*Glob
+	Generates            []*Glob
 	Status               []string
 	Preconditions        []*Precondition
 	Dir                  string
@@ -83,8 +83,8 @@ func (t *Task) UnmarshalYAML(node *yaml.Node) error {
 			Prompt        string
 			Summary       string
 			Aliases       []string
-			Sources       []string
-			Generates     []string
+			Sources       []*Glob
+			Generates     []*Glob
 			Status        []string
 			Preconditions []*Precondition
 			Dir           string
