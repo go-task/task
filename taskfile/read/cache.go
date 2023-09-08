@@ -2,7 +2,6 @@ package read
 
 import (
 	"crypto/sha256"
-	"encoding/base64"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -26,7 +25,7 @@ func NewCache(dir string) (*Cache, error) {
 func checksum(b []byte) string {
 	h := sha256.New()
 	h.Write(b)
-	return base64.StdEncoding.EncodeToString(h.Sum(nil))
+	return fmt.Sprintf("%x", h.Sum(nil))
 }
 
 func (c *Cache) write(node Node, b []byte) error {
