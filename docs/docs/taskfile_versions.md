@@ -29,7 +29,7 @@ These are some major changes done on `v3`:
 - A global `method:` was added to allow setting the default method, and Task's
   default changed to `checksum`
 - Two magic variables were added when using `status:`: `CHECKSUM` and
-  `TIMESTAMP` which contains, respectively, the md5 checksum and greatest
+  `TIMESTAMP` which contains, respectively, the XXH3 checksum and greatest
   modification timestamp of the files listed on `sources:`
 - Also, the `TASK` variable is always available with the current task name
 - CLI variables are always treated as global variables

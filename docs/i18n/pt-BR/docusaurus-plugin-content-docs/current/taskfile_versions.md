@@ -21,7 +21,7 @@ These are some major changes done on `v3`:
 - Added support for `.env` like files
 - Added `label:` setting to task so one can override how the task name appear in the logs
 - A global `method:` was added to allow setting the default method, and Task's default changed to `checksum`
-- Two magic variables were added when using `status:`: `CHECKSUM` and `TIMESTAMP` which contains, respectively, the md5 checksum and greatest modification timestamp of the files listed on `sources:`
+- Two magic variables were added when using `status:`: `CHECKSUM` and `TIMESTAMP` which contains, respectively, the XXH3 checksum and greatest modification timestamp of the files listed on `sources:`
 - Also, the `TASK` variable is always available with the current task name
 - CLI variables are always treated as global variables
 - Added `dir:` option to `includes` to allow choosing on which directory an included Taskfile will run:

@@ -840,7 +840,7 @@ func TestStatusVariables(t *testing.T) {
 	require.NoError(t, e.Setup())
 	require.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "build"}))
 
-	assert.Contains(t, buff.String(), "a41e7948dcd321db412ce61d3d5c9864")
+	assert.Contains(t, buff.String(), "3e464c4b03f4b65d740e1e130d4d108a")
 
 	inf, err := os.Stat(filepathext.SmartJoin(dir, "source.txt"))
 	require.NoError(t, err)
