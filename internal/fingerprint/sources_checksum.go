@@ -91,16 +91,17 @@ func (c *ChecksumChecker) checksum(t *taskfile.Task) (string, error) {
 	}
 
 	h := xxh3.New()
+	buf := make([]byte, 128*1024)
 	for _, f := range sources {
 		// also sum the filename, so checksum changes for renaming a file
-		if _, err := io.Copy(h, strings.NewReader(filepath.Base(f))); err != nil {
+		if _, err := io.CopyBuffer(h, strings.NewReader(filepath.Base(f)), buf); err != nil {
 			return "", err
 		}
 		f, err := os.Open(f)
 		if err != nil {
 			return "", err
 		}
-		if _, err = io.Copy(h, f); err != nil {
+		if _, err = io.CopyBuffer(h, f, buf); err != nil {
 			return "", err
 		}
 		f.Close()
