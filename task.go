@@ -79,6 +79,7 @@ type Executor struct {
 
 	concurrencySemaphore chan struct{}
 	taskCallCount        map[string]*int32
+	taskSeparated        *int32
 	mkdirMutexMap        map[string]*sync.Mutex
 	executionHashes      map[string]context.Context
 	executionHashesMutex sync.Mutex
@@ -137,8 +138,6 @@ func (e *Executor) Run(ctx context.Context, calls ...taskfile.Call) error {
 	}
 	return g.Wait()
 }
-
-var taskOutputSeparated = false
 
 // RunTask runs a task by its name
 func (e *Executor) RunTask(ctx context.Context, call taskfile.Call) error {
@@ -226,9 +225,8 @@ func (e *Executor) RunTask(ctx context.Context, call taskfile.Call) error {
 			e.Logger.Errf(logger.Red, "task: cannot make directory %q: %v\n", t.Dir, err)
 		}
 
-		if !taskOutputSeparated {
+		if atomic.CompareAndSwapInt32(e.taskSeparated, 0, 1) {
 			e.runCommandHook(ctx, t, call, e.Taskfile.Cmds.TaskSeparator, "separator")
-			taskOutputSeparated = true
 		}
 		for i := range t.Cmds {
 			if t.Cmds[i].Defer {
@@ -253,9 +251,8 @@ func (e *Executor) RunTask(ctx context.Context, call taskfile.Call) error {
 				return &errors.TaskRunError{TaskName: t.Task, Err: err}
 			}
 		}
-		if !taskOutputSeparated {
+		if atomic.CompareAndSwapInt32(e.taskSeparated, 0, 1) {
 			e.runCommandHook(ctx, t, call, e.Taskfile.Cmds.TaskSeparator, "separator")
-			taskOutputSeparated = true
 		}
 		e.Logger.VerboseErrf(logger.Magenta, "task: %q finished\n", call.Task)
 		return nil
@@ -347,7 +344,7 @@ func (e *Executor) runCommand(ctx context.Context, t *taskfile.Task, call taskfi
 		stdOut, stdErr, closer := outputWrapper.WrapWriter(e.Stdout, e.Stderr, t.Prefix, outputTemplater)
 
 		e.runCommandHook(ctx, t, call, e.Taskfile.Cmds.Pre, "pre")
-		taskOutputSeparated = false
+		atomic.StoreInt32(e.taskSeparated, 0)
 		err = execext.RunCommand(ctx, &execext.RunCommandOptions{
 			Command:   cmd.Cmd,
 			Dir:       t.Dir,
