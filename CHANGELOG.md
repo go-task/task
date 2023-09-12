@@ -2,7 +2,10 @@
 
 ## Unreleased
 
-- Prep work for remote Taskfiles (#1316 by @pd93).
+- Prep work for Remote Taskfiles (#1316 by @pd93).
+- Added the
+  [Remote Taskfiles experiment](https://taskfile.dev/experiments/remote-taskfiles)
+  as a draft (#1152, #1317 by @pd93).
 
 ## v3.29.1 - 2023-08-26
 
@@ -42,7 +45,8 @@
 - Bug fixes were made to the
   [npm installation method](https://taskfile.dev/installation/#npm). (#1190, by
   @sounisi5011).
-- Added the [gentle force experiment](https://taskfile.dev/experiments) as a
+- Added the
+  [gentle force experiment](https://taskfile.dev/experiments/gentle-force) as a
   draft (#1200, #1216 by @pd93).
 - Added an `--experiments` flag to allow you to see which experiments are
   enabled (#1242 by @pd93).

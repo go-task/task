@@ -53,6 +53,7 @@ var flags struct {
 	listJson    bool
 	taskSort    string
 	status      bool
+	insecure    bool
 	force       bool
 	forceAll    bool
 	watch       bool
@@ -71,6 +72,8 @@ var flags struct {
 	interval    time.Duration
 	global      bool
 	experiments bool
+	download    bool
+	offline     bool
 }
 
 func main() {
@@ -112,6 +115,7 @@ func run() error {
 	pflag.BoolVarP(&flags.listJson, "json", "j", false, "Formats task list as JSON.")
 	pflag.StringVar(&flags.taskSort, "sort", "", "Changes the order of the tasks when listed. [default|alphanumeric|none].")
 	pflag.BoolVar(&flags.status, "status", false, "Exits with non-zero exit code if any of the given tasks is not up-to-date.")
+	pflag.BoolVar(&flags.insecure, "insecure", false, "Forces Task to download Taskfiles over insecure connections.")
 	pflag.BoolVarP(&flags.watch, "watch", "w", false, "Enables watch of the given task.")
 	pflag.BoolVarP(&flags.verbose, "verbose", "v", false, "Enables verbose mode.")
 	pflag.BoolVarP(&flags.silent, "silent", "s", false, "Disables echoing.")
@@ -138,6 +142,12 @@ func run() error {
 		pflag.BoolVar(&flags.forceAll, "force-all", false, "Forces execution of the called task and all its dependant tasks.")
 	} else {
 		pflag.BoolVarP(&flags.forceAll, "force", "f", false, "Forces execution even when the task is up-to-date.")
+	}
+
+	// Remote Taskfiles experiment will adds the "download" and "offline" flags
+	if experiments.RemoteTaskfiles {
+		pflag.BoolVar(&flags.download, "download", false, "Downloads a cached version of a remote Taskfile.")
+		pflag.BoolVar(&flags.offline, "offline", false, "Forces Task to only use local or cached Taskfiles.")
 	}
 
 	pflag.Parse()
@@ -171,6 +181,10 @@ func run() error {
 			log.Fatal(err)
 		}
 		return nil
+	}
+
+	if flags.download && flags.offline {
+		return errors.New("task: You can't set both --download and --offline flags")
 	}
 
 	if flags.global && flags.dir != "" {
@@ -216,6 +230,9 @@ func run() error {
 	e := task.Executor{
 		Force:       flags.force,
 		ForceAll:    flags.forceAll,
+		Insecure:    flags.insecure,
+		Download:    flags.download,
+		Offline:     flags.offline,
 		Watch:       flags.watch,
 		Verbose:     flags.verbose,
 		Silent:      flags.silent,
@@ -276,6 +293,13 @@ func run() error {
 		calls, globals = args.ParseV3(tasksAndVars...)
 	} else {
 		calls, globals = args.ParseV2(tasksAndVars...)
+	}
+
+	// If there are no calls, run the default task instead
+	// Unless the download flag is specified, in which case we want to download
+	// the Taskfile and do nothing else
+	if len(calls) == 0 && !flags.download {
+		calls = append(calls, taskfile.Call{Task: "default", Direct: true})
 	}
 
 	globals.Set("CLI_ARGS", taskfile.Var{Static: cliArgs})

@@ -676,6 +676,7 @@ func TestPromptInSummary(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			var inBuff bytes.Buffer
 			var outBuff bytes.Buffer
+			var errBuff bytes.Buffer
 
 			inBuff.Write([]byte(test.input))
 
@@ -683,6 +684,7 @@ func TestPromptInSummary(t *testing.T) {
 				Dir:         dir,
 				Stdin:       &inBuff,
 				Stdout:      &outBuff,
+				Stderr:      &errBuff,
 				AssumesTerm: true,
 			}
 			require.NoError(t, e.Setup())
@@ -702,6 +704,7 @@ func TestPromptWithIndirectTask(t *testing.T) {
 	const dir = "testdata/prompt"
 	var inBuff bytes.Buffer
 	var outBuff bytes.Buffer
+	var errBuff bytes.Buffer
 
 	inBuff.Write([]byte("y\n"))
 
@@ -709,6 +712,7 @@ func TestPromptWithIndirectTask(t *testing.T) {
 		Dir:         dir,
 		Stdin:       &inBuff,
 		Stdout:      &outBuff,
+		Stderr:      &errBuff,
 		AssumesTerm: true,
 	}
 	require.NoError(t, e.Setup())
@@ -732,6 +736,7 @@ func TestPromptAssumeYes(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			var inBuff bytes.Buffer
 			var outBuff bytes.Buffer
+			var errBuff bytes.Buffer
 
 			// always cancel the prompt so we can require.Error
 			inBuff.Write([]byte("\n"))
@@ -740,6 +745,7 @@ func TestPromptAssumeYes(t *testing.T) {
 				Dir:       dir,
 				Stdin:     &inBuff,
 				Stdout:    &outBuff,
+				Stderr:    &errBuff,
 				AssumeYes: test.assumeYes,
 			}
 			require.NoError(t, e.Setup())

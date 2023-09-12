@@ -23,21 +23,18 @@ import (
 )
 
 func (e *Executor) Setup() error {
+	e.setupLogger()
 	if err := e.setCurrentDir(); err != nil {
 		return err
 	}
-
-	if err := e.readTaskfile(); err != nil {
-		return err
-	}
-
-	e.setupFuzzyModel()
-
 	if err := e.setupTempDir(); err != nil {
 		return err
 	}
+	if err := e.readTaskfile(); err != nil {
+		return err
+	}
+	e.setupFuzzyModel()
 	e.setupStdFiles()
-	e.setupLogger()
 	if err := e.setupOutput(); err != nil {
 		return err
 	}
@@ -75,15 +72,22 @@ func (e *Executor) setCurrentDir() error {
 }
 
 func (e *Executor) readTaskfile() error {
-	var err error
-	e.Taskfile, err = read.Taskfile(&read.FileNode{
-		Dir:        e.Dir,
-		Entrypoint: e.Entrypoint,
-	})
+	uri := filepath.Join(e.Dir, e.Entrypoint)
+	node, err := read.NewNode(uri, e.Insecure)
 	if err != nil {
 		return err
 	}
-	e.Dir = filepath.Dir(e.Taskfile.Location)
+	e.Taskfile, err = read.Taskfile(
+		node,
+		e.Insecure,
+		e.Download,
+		e.Offline,
+		e.TempDir,
+		e.Logger,
+	)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

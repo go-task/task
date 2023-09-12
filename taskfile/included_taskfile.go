@@ -3,6 +3,7 @@ package taskfile
 import (
 	"fmt"
 	"path/filepath"
+	"strings"
 
 	"github.com/go-task/task/v3/internal/execext"
 	"github.com/go-task/task/v3/internal/filepathext"
@@ -148,6 +149,11 @@ func (it *IncludedTaskfile) FullDirPath() (string, error) {
 }
 
 func (it *IncludedTaskfile) resolvePath(path string) (string, error) {
+	// If the file is remote, we don't need to resolve the path
+	if strings.Contains(it.Taskfile, "://") {
+		return path, nil
+	}
+
 	path, err := execext.Expand(path)
 	if err != nil {
 		return "", err

@@ -73,22 +73,16 @@ func TestArgsV3(t *testing.T) {
 			},
 		},
 		{
-			Args: nil,
-			ExpectedCalls: []taskfile.Call{
-				{Task: "default", Direct: true},
-			},
+			Args:          nil,
+			ExpectedCalls: []taskfile.Call{},
 		},
 		{
-			Args: []string{},
-			ExpectedCalls: []taskfile.Call{
-				{Task: "default", Direct: true},
-			},
+			Args:          []string{},
+			ExpectedCalls: []taskfile.Call{},
 		},
 		{
-			Args: []string{"FOO=bar", "BAR=baz"},
-			ExpectedCalls: []taskfile.Call{
-				{Task: "default", Direct: true},
-			},
+			Args:          []string{"FOO=bar", "BAR=baz"},
+			ExpectedCalls: []taskfile.Call{},
 			ExpectedGlobals: &taskfile.Vars{
 				OrderedMap: orderedmap.FromMapWithOrder(
 					map[string]taskfile.Var{
@@ -191,22 +185,16 @@ func TestArgsV2(t *testing.T) {
 			},
 		},
 		{
-			Args: nil,
-			ExpectedCalls: []taskfile.Call{
-				{Task: "default", Direct: true},
-			},
+			Args:          nil,
+			ExpectedCalls: []taskfile.Call{},
 		},
 		{
-			Args: []string{},
-			ExpectedCalls: []taskfile.Call{
-				{Task: "default", Direct: true},
-			},
+			Args:          []string{},
+			ExpectedCalls: []taskfile.Call{},
 		},
 		{
-			Args: []string{"FOO=bar", "BAR=baz"},
-			ExpectedCalls: []taskfile.Call{
-				{Task: "default", Direct: true},
-			},
+			Args:          []string{"FOO=bar", "BAR=baz"},
+			ExpectedCalls: []taskfile.Call{},
 			ExpectedGlobals: &taskfile.Vars{
 				OrderedMap: orderedmap.FromMapWithOrder(
 					map[string]taskfile.Var{

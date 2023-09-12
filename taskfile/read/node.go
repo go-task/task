@@ -1,30 +1,39 @@
 package read
 
 import (
+	"context"
 	"strings"
 
-	"github.com/go-task/task/v3/taskfile"
+	"github.com/go-task/task/v3/errors"
+	"github.com/go-task/task/v3/internal/experiments"
 )
 
 type Node interface {
-	Read() (*taskfile.Taskfile, error)
+	Read(ctx context.Context) ([]byte, error)
 	Parent() Node
-	Optional() bool
 	Location() string
+	Optional() bool
+	Remote() bool
 }
 
-func NewNodeFromIncludedTaskfile(parent Node, includedTaskfile taskfile.IncludedTaskfile) (Node, error) {
-	switch getScheme(includedTaskfile.Taskfile) {
-	// TODO: Add support for other schemes.
-	// If no other scheme matches, we assume it's a file.
-	// This also allows users to explicitly set a file:// scheme.
+func NewNode(
+	uri string,
+	insecure bool,
+	opts ...NodeOption,
+) (Node, error) {
+	var node Node
+	var err error
+	switch getScheme(uri) {
+	case "http", "https":
+		node, err = NewHTTPNode(uri, insecure, opts...)
 	default:
-		path, err := includedTaskfile.FullTaskfilePath()
-		if err != nil {
-			return nil, err
-		}
-		return NewFileNode(parent, path, includedTaskfile.Optional)
+		// If no other scheme matches, we assume it's a file
+		node, err = NewFileNode(uri, opts...)
 	}
+	if node.Remote() && !experiments.RemoteTaskfiles {
+		return nil, errors.New("task: Remote taskfiles are not enabled. You can read more about this experiment and how to enable it at https://taskfile.dev/experiments/remote-taskfiles")
+	}
+	return node, err
 }
 
 func getScheme(uri string) string {

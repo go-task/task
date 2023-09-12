@@ -2,6 +2,7 @@ package experiments
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"strings"
 	"text/tabwriter"
@@ -13,11 +14,16 @@ import (
 
 const envPrefix = "TASK_X_"
 
-var GentleForce bool
+// A list of experiments.
+var (
+	GentleForce     bool
+	RemoteTaskfiles bool
+)
 
 func init() {
 	readDotEnv()
 	GentleForce = parseEnv("GENTLE_FORCE")
+	RemoteTaskfiles = parseEnv("REMOTE_TASKFILES")
 }
 
 func parseEnv(xName string) bool {
@@ -35,10 +41,15 @@ func readDotEnv() {
 	}
 }
 
-func List(l *logger.Logger) error {
-	w := tabwriter.NewWriter(os.Stdout, 0, 8, 6, ' ', 0)
+func printExperiment(w io.Writer, l *logger.Logger, name string, value bool) {
 	l.FOutf(w, logger.Yellow, "* ")
-	l.FOutf(w, logger.Green, "GENTLE_FORCE")
-	l.FOutf(w, logger.Default, ": \t%t\n", GentleForce)
+	l.FOutf(w, logger.Green, name)
+	l.FOutf(w, logger.Default, ": \t%t\n", value)
+}
+
+func List(l *logger.Logger) error {
+	w := tabwriter.NewWriter(os.Stdout, 0, 8, 0, ' ', 0)
+	printExperiment(w, l, "GENTLE_FORCE", GentleForce)
+	printExperiment(w, l, "REMOTE_TASKFILES", RemoteTaskfiles)
 	return w.Flush()
 }
