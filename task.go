@@ -336,6 +336,7 @@ func (e *Executor) runCommand(ctx context.Context, t *taskfile.Task, call taskfi
 		}
 		stdOut, stdErr, close := outputWrapper.WrapWriter(e.Stdout, e.Stderr, t.Prefix, outputTemplater)
 
+		e.runCommandHook(ctx, t, stdOut, stdErr, e.Taskfile.Cmds.Pre, "pre")
 		err = execext.RunCommand(ctx, &execext.RunCommandOptions{
 			Command:   cmd.Cmd,
 			Dir:       t.Dir,
@@ -346,6 +347,8 @@ func (e *Executor) runCommand(ctx context.Context, t *taskfile.Task, call taskfi
 			Stdout:    stdOut,
 			Stderr:    stdErr,
 		})
+		e.runCommandHook(ctx, t, stdOut, stdErr, e.Taskfile.Cmds.Post, "post")
+
 		if closeErr := close(err); closeErr != nil {
 			e.Logger.Errf(logger.Red, "task: unable to close writer: %v\n", closeErr)
 		}
@@ -356,6 +359,21 @@ func (e *Executor) runCommand(ctx context.Context, t *taskfile.Task, call taskfi
 		return err
 	default:
 		return nil
+	}
+}
+
+func (e *Executor) runCommandHook(ctx context.Context, t *taskfile.Task, stdOut io.Writer, stdErr io.Writer, cmd string, kind string) {
+	if cmd == "" {
+		return
+	}
+	if err := execext.RunCommand(ctx, &execext.RunCommandOptions{
+		Command: cmd,
+		Dir:     t.Dir,
+		Env:     env.Get(t),
+		Stdout:  stdOut,
+		Stderr:  stdErr,
+	}); err != nil {
+		e.Logger.Errf(logger.Red, "task: unable to run %s-command: %w", kind, err)
 	}
 }
 
