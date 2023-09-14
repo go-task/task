@@ -25,7 +25,7 @@ func NewFileNode(uri string, opts ...NodeOption) (*FileNode, error) {
 		}
 		uri = d
 	}
-	path, err := existsWalk(uri)
+	path, err := Exists(uri)
 	if err != nil {
 		return nil, err
 	}

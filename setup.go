@@ -27,10 +27,10 @@ func (e *Executor) Setup() error {
 	if err := e.setCurrentDir(); err != nil {
 		return err
 	}
-	if err := e.readTaskfile(); err != nil {
+	if err := e.setupTempDir(); err != nil {
 		return err
 	}
-	if err := e.setupTempDir(); err != nil {
+	if err := e.readTaskfile(); err != nil {
 		return err
 	}
 	e.setupFuzzyModel()
@@ -55,19 +55,32 @@ func (e *Executor) Setup() error {
 }
 
 func (e *Executor) setCurrentDir() error {
+	// Default the directory to the current working directory
 	if e.Dir == "" {
 		wd, err := os.Getwd()
 		if err != nil {
 			return err
 		}
 		e.Dir = wd
-	} else if !filepath.IsAbs(e.Dir) {
-		abs, err := filepath.Abs(e.Dir)
+	}
+
+	// Ensure we have an absolute path
+	abs, err := filepath.Abs(e.Dir)
+	if err != nil {
+		return err
+	}
+	e.Dir = abs
+
+	// If no entrypoint is specified, we need to search for a taskfile
+	if e.Entrypoint == "" {
+		root, err := read.ExistsWalk(e.Dir)
 		if err != nil {
 			return err
 		}
-		e.Dir = abs
+		e.Dir = filepath.Dir(root)
+		e.Entrypoint = filepath.Base(root)
 	}
+
 	return nil
 }
 
@@ -88,7 +101,6 @@ func (e *Executor) readTaskfile() error {
 	if err != nil {
 		return err
 	}
-	e.Dir = filepath.Dir(e.Taskfile.Location)
 	return nil
 }
 
