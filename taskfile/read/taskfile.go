@@ -42,8 +42,8 @@ func readTaskfile(
 ) (*taskfile.Taskfile, error) {
 	var b []byte
 	var err error
-
 	var cache *Cache
+
 	if node.Remote() {
 		cache, err = NewCache(tempDir)
 		if err != nil {
@@ -300,12 +300,12 @@ func Taskfile(
 	return _taskfile(node)
 }
 
-// exists will check if a file at the given path exists. If it does, it will
+// Exists will check if a file at the given path Exists. If it does, it will
 // return the path to it. If it does not, it will search the search for any
 // files at the given path with any of the default Taskfile files names. If any
 // of these match a file, the first matching path will be returned. If no files
 // are found, an error will be returned.
-func exists(path string) (string, error) {
+func Exists(path string) (string, error) {
 	fi, err := os.Stat(path)
 	if err != nil {
 		return "", err
@@ -324,19 +324,19 @@ func exists(path string) (string, error) {
 	return "", errors.TaskfileNotFoundError{URI: path, Walk: false}
 }
 
-// existsWalk will check if a file at the given path exists by calling the
+// ExistsWalk will check if a file at the given path exists by calling the
 // exists function. If a file is not found, it will walk up the directory tree
 // calling the exists function until it finds a file or reaches the root
 // directory. On supported operating systems, it will also check if the user ID
 // of the directory changes and abort if it does.
-func existsWalk(path string) (string, error) {
+func ExistsWalk(path string) (string, error) {
 	origPath := path
 	owner, err := sysinfo.Owner(path)
 	if err != nil {
 		return "", err
 	}
 	for {
-		fpath, err := exists(path)
+		fpath, err := Exists(path)
 		if err == nil {
 			return fpath, nil
 		}
