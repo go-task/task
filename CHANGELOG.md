@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Fixed an issue where some special variables weren't being set correctly
+  (#1331, #1334 by @pd93)
+
 ## v3.30.0 - 2023-09-13
 
 - Prep work for Remote Taskfiles (#1316 by @pd93).
