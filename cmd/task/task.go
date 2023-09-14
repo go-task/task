@@ -74,6 +74,7 @@ var flags struct {
 	experiments bool
 	download    bool
 	offline     bool
+	maxRuns     int
 }
 
 func main() {
@@ -135,6 +136,7 @@ func run() error {
 	pflag.DurationVarP(&flags.interval, "interval", "I", 0, "Interval to watch for changes.")
 	pflag.BoolVarP(&flags.global, "global", "g", false, "Runs global Taskfile, from $HOME/{T,t}askfile.{yml,yaml}.")
 	pflag.BoolVar(&flags.experiments, "experiments", false, "Lists all the available experiments and whether or not they are enabled.")
+	pflag.IntVar(&flags.maxRuns, "max-runs", task.MaximumTaskCall, "Set the maximum number of runs per task before being considered infinte or cyclic and therefore terminated.")
 
 	// Gentle force experiment will override the force flag and add a new force-all flag
 	if experiments.GentleForce {
@@ -227,6 +229,10 @@ func run() error {
 		taskSorter = &sort.AlphaNumeric{}
 	}
 
+	if flags.maxRuns < 1 {
+		return errors.New("task: You can't set --max-runs to less than 1")
+	}
+
 	e := task.Executor{
 		Force:       flags.force,
 		ForceAll:    flags.forceAll,
@@ -245,6 +251,7 @@ func run() error {
 		Color:       flags.color,
 		Concurrency: flags.concurrency,
 		Interval:    flags.interval,
+		MaxRuns:     flags.maxRuns,
 
 		Stdin:  os.Stdin,
 		Stdout: os.Stdout,

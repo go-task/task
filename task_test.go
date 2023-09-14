@@ -218,6 +218,12 @@ func TestVarsInvalidTmpl(t *testing.T) {
 	assert.EqualError(t, e.Run(context.Background(), taskfile.Call{Task: target}), expectError, "e.Run(target)")
 }
 
+func TestMaxRuns(t *testing.T) {
+	const (
+		dir = "testdata/for"
+	)
+}
+
 func TestConcurrency(t *testing.T) {
 	const (
 		dir    = "testdata/concurrency"
@@ -2286,6 +2292,35 @@ func TestFor(t *testing.T) {
 			require.NoError(t, e.Setup())
 			require.NoError(t, e.Run(context.Background(), taskfile.Call{Task: test.name, Direct: true}))
 			assert.Equal(t, test.expectedOutput, buff.String())
+		})
+	}
+}
+
+func TestTooManyRuns(t *testing.T) {
+	tests := []struct {
+		name          string
+		expectedError string
+	}{
+		{
+			name:          "loop-too-many",
+			expectedError: `task: Failed to run task "loop-too-many": task: Maximum task call exceeded (4) for task "looped-task": probably an cyclic dep or infinite loop`,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			var buff bytes.Buffer
+			e := task.Executor{
+				Dir:     "testdata/for",
+				Stdout:  &buff,
+				Stderr:  &buff,
+				Silent:  true,
+				Force:   true,
+				MaxRuns: 4, // task contains 5 loops
+			}
+
+			require.NoError(t, e.Setup())
+			assert.EqualError(t, e.Run(context.Background(), taskfile.Call{Task: test.name, Direct: true}), test.expectedError)
 		})
 	}
 }

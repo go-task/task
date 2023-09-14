@@ -76,6 +76,16 @@ tasks:
           var: FOO
         task: task-{{.ITEM}}
 
+  loop-too-many:
+    vars:
+      FOO: foo.txt foo.txt foo.txt foo.txt foo.txt
+    cmds:
+      - for:
+          var: FOO
+        task: looped-task
+        vars:
+          FILE: "{{.ITEM}}"
+
   looped-task:
     internal: true
     cmd: cat "{{.FILE}}"

@@ -33,7 +33,8 @@ import (
 
 const (
 	// MaximumTaskCall is the max number of times a task can be called.
-	// This exists to prevent infinite loops on cyclic dependencies
+	// This exists to prevent infinite loops on cyclic dependencies.
+	// Used as the default value if max-runs flag is not set.
 	MaximumTaskCall = 100
 )
 
@@ -64,6 +65,7 @@ type Executor struct {
 	Color       bool
 	Concurrency int
 	Interval    time.Duration
+	MaxRuns     int
 	AssumesTerm bool
 
 	Stdin  io.Reader
@@ -127,6 +129,11 @@ func (e *Executor) Run(ctx context.Context, calls ...taskfile.Call) error {
 		return e.watchTasks(calls...)
 	}
 
+	// if executor wasn't created through CLI, (i.e. for testing)
+	if e.MaxRuns == 0 {
+		e.MaxRuns = MaximumTaskCall
+	}
+
 	g, ctx := errgroup.WithContext(ctx)
 	for _, c := range calls {
 		c := c
@@ -147,8 +154,8 @@ func (e *Executor) RunTask(ctx context.Context, call taskfile.Call) error {
 	if err != nil {
 		return err
 	}
-	if !e.Watch && atomic.AddInt32(e.taskCallCount[t.Task], 1) >= MaximumTaskCall {
-		return &errors.TaskCalledTooManyTimesError{TaskName: t.Task}
+	if !e.Watch && atomic.AddInt32(e.taskCallCount[t.Task], 1) > int32(e.MaxRuns) {
+		return &errors.TaskCalledTooManyTimesError{TaskName: t.Task, MaximumTaskCall: e.MaxRuns}
 	}
 
 	release := e.acquireConcurrencyLimit()
