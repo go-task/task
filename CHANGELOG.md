@@ -1,6 +1,6 @@
 # Changelog
 
-## v3.31.0 - 2023-09-14
+## Unreleased
 
 - Added a `--max-runs` flag, which sets the maximum number of times a task
   should run before being considered an infinite loop or a cyclic dep,

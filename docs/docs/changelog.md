@@ -5,16 +5,6 @@ sidebar_position: 14
 
 # Changelog
 
-## v3.31.0 - 2023-09-14
-
-- Added a `--max-runs` flag, which sets the maximum number of times a task
-  should run before being considered an infinite loop or a cyclic dep,
-  and therefore killed ([#1321](https://github.com/go-task/task/issues/1321) by [@bogwro](https://github.com/bogwro)).
-- Added a test task in `testdata/for` and a test case in `task_test` to test `--max-runs` behavior.
-- Fixed a bug where `TaskCalledTooManyTimes` error always shows 0 as number
-  of exceeded max runs.
-- Fixed a bug where a task will be one run short from the number specified by`MaximumTaskCall`.
-
 ## v3.30.0 - 2023-09-13
 
 - Prep work for Remote Taskfiles ([#1316](https://github.com/go-task/task/issues/1316) by [@pd93](https://github.com/pd93)).

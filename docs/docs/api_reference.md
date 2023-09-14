@@ -51,6 +51,7 @@ If `--` is given, all remaining arguments will be assigned to a special
 | `-v`  | `--verbose`                 | `bool`   | `false`                                      | Enables verbose mode.                                                                                                                                                                        |
 |       | `--version`                 | `bool`   | `false`                                      | Show Task version.                                                                                                                                                                           |
 | `-w`  | `--watch`                   | `bool`   | `false`                                      | Enables watch of the given task.                                                                                                                                                             |
+|       | `--max-runs`                | `int`    | `100`                                          | Maximum number of runs per task before being considered infinte loop or cyclic dep and therefore terminated.                                                                                                                                |
 
 ## Exit Codes
 
