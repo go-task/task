@@ -293,7 +293,7 @@ includes:
       DOCKER_IMAGE: frontend_image
 ```
 
-### Namespace aliases
+### ネームスペースのエイリアス
 
 When including a Taskfile, you can give the namespace a list of `aliases`. This works in the same way as [task aliases](#task-aliases) and can be used together to create shorter and easier-to-type commands.
 
@@ -312,7 +312,7 @@ Vars declared in the included Taskfile have preference over the variables in the
 
 :::
 
-## Internal tasks
+## インターナルタスク
 
 Internal tasks are tasks that cannot be called directly by the user. They will not appear in the output when running `task --list|--list-all`. Other tasks may call internal tasks in the usual way. This is useful for creating reusable, function-like tasks that have no useful purpose on the command line.
 
@@ -332,7 +332,7 @@ tasks:
       - docker build -t {{.DOCKER_IMAGE}} .
 ```
 
-## Task directory
+## タスクディレクトリ
 
 By default, tasks will be executed in the directory where the Taskfile is located. But you can easily make the task run in another folder, informing `dir`:
 
@@ -349,7 +349,7 @@ tasks:
 
 If the directory does not exist, `task` creates it.
 
-## Task dependencies
+## タスクの依存関係
 
 > Dependencies run in parallel, so dependencies of a task should not depend one another. If you want to force tasks to run serially, take a look at the [Calling Another Task](#calling-another-task) section below.
 
