@@ -13,6 +13,7 @@ sidebar_position: 14
 - Added a test task in `testdata/for` and a test case in `task_test` to test `--max-runs` behavior.
 - Fixed a bug where `TaskCalledTooManyTimes` error always shows 0 as number
   of exceeded max runs.
+- Fixed a bug where a task will be one run short from the number specified by`MaximumTaskCall`.
 
 ## v3.30.0 - 2023-09-13
 

@@ -5,9 +5,12 @@
 - Added a `--max-runs` flag, which sets the maximum number of times a task
   should run before being considered an infinite loop or a cyclic dep,
   and therefore killed (#1321 by @bogwro).
-- Added a test task in `testdata/for` and test case to test `--max-runs` behavior.
+- Added a test task in `testdata/for` and test case to test `--max-runs`
+  behavior.
 - Fixed a bug where `TaskCalledTooManyTimes` error always shows 0 as number
   of exceeded max runs.
+- Fixed a bug where a task will be one run short from the number specified
+  by`MaximumTaskCall`.
 
 ## v3.30.0 - 2023-09-13
 
