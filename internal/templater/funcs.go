@@ -9,7 +9,7 @@ import (
 	"mvdan.cc/sh/v3/shell"
 	"mvdan.cc/sh/v3/syntax"
 
-	sprig "github.com/go-task/slim-sprig"
+	sprig "github.com/go-task/slim-sprig/v3"
 )
 
 var templateFuncs template.FuncMap
