@@ -27,10 +27,10 @@ func (e *Executor) Setup() error {
 	if err := e.setCurrentDir(); err != nil {
 		return err
 	}
-	if err := e.setupTempDir(); err != nil {
+	if err := e.readTaskfile(); err != nil {
 		return err
 	}
-	if err := e.readTaskfile(); err != nil {
+	if err := e.setupTempDir(); err != nil {
 		return err
 	}
 	e.setupFuzzyModel()
@@ -88,6 +88,7 @@ func (e *Executor) readTaskfile() error {
 	if err != nil {
 		return err
 	}
+	e.Dir = filepath.Dir(e.Taskfile.Location)
 	return nil
 }
 
