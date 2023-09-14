@@ -5,6 +5,17 @@ sidebar_position: 14
 
 # Changelog
 
+## v3.30.0 - 2023-09-13
+
+- Prep work for Remote Taskfiles ([#1316](https://github.com/go-task/task/issues/1316) by [@pd93](https://github.com/pd93)).
+- Added the
+  [Remote Taskfiles experiment](https://taskfile.dev/experiments/remote-taskfiles)
+  as a draft ([#1152](https://github.com/go-task/task/issues/1152), [#1317](https://github.com/go-task/task/issues/1317) by [@pd93](https://github.com/pd93)).
+- Improve performance of content checksuming on `sources:` by replacing md5 with
+  [XXH3](https://xxhash.com/) which is much faster. This is a soft breaking
+  change because checksums will be invalidated when upgrading to this release
+  ([#1325](https://github.com/go-task/task/issues/1325) by [@ReillyBrogan](https://github.com/ReillyBrogan)).
+
 ## v3.29.1 - 2023-08-26
 
 - Update to Go 1.21 (bump minimum version to 1.20) ([#1302](https://github.com/go-task/task/issues/1302) by [@pd93](https://github.com/pd93))
@@ -14,8 +25,8 @@ sidebar_position: 14
 - Fix bug in usage of special variables like `{{.USER_WORKING_DIR}}` in
   combination with `includes` ([#1046](https://github.com/go-task/task/issues/1046), [#1205](https://github.com/go-task/task/issues/1205), [#1250](https://github.com/go-task/task/issues/1250), [#1293](https://github.com/go-task/task/issues/1293), [#1312](https://github.com/go-task/task/issues/1312), [#1274](https://github.com/go-task/task/issues/1274) by
   [@andarto](https://github.com/andarto), [#1309](https://github.com/go-task/task/issues/1309) by [@andreynering](https://github.com/andreynering)).
-- Fix bug on `--status` flag. Running this flag should not have side-effects:
-  it should not update the checksum on `.task`, only report its status ([#1305](https://github.com/go-task/task/issues/1305),
+- Fix bug on `--status` flag. Running this flag should not have side-effects: it
+  should not update the checksum on `.task`, only report its status ([#1305](https://github.com/go-task/task/issues/1305),
   [#1307](https://github.com/go-task/task/issues/1307) by [@visciang](https://github.com/visciang), [#1313](https://github.com/go-task/task/issues/1313) by [@andreynering](https://github.com/andreynering)).
 
 ## v3.28.0 - 2023-07-24
@@ -43,7 +54,8 @@ sidebar_position: 14
 - Bug fixes were made to the
   [npm installation method](https://taskfile.dev/installation/#npm). ([#1190](https://github.com/go-task/task/issues/1190), by
   [@sounisi5011](https://github.com/sounisi5011)).
-- Added the [gentle force experiment](https://taskfile.dev/experiments) as a
+- Added the
+  [gentle force experiment](https://taskfile.dev/experiments/gentle-force) as a
   draft ([#1200](https://github.com/go-task/task/issues/1200), [#1216](https://github.com/go-task/task/issues/1216) by [@pd93](https://github.com/pd93)).
 - Added an `--experiments` flag to allow you to see which experiments are
   enabled ([#1242](https://github.com/go-task/task/issues/1242) by [@pd93](https://github.com/pd93)).

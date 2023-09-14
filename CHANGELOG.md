@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v3.30.0 - 2023-09-13
 
 - Prep work for Remote Taskfiles (#1316 by @pd93).
 - Added the
