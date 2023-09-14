@@ -6,6 +6,10 @@
 - Added the
   [Remote Taskfiles experiment](https://taskfile.dev/experiments/remote-taskfiles)
   as a draft (#1152, #1317 by @pd93).
+- Improve performance of content checksuming on `sources:` by replacing md5 with
+  [XXH3](https://xxhash.com/) which is much faster. This is a soft breaking
+  change because checksums will be invalidated when upgrading to this release
+  (#1325 by @ReillyBrogan).
 
 ## v3.29.1 - 2023-08-26
 
