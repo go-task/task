@@ -311,13 +311,13 @@ func Exists(path string) (string, error) {
 		return "", err
 	}
 	if fi.Mode().IsRegular() {
-		return path, nil
+		return filepath.Abs(path)
 	}
 
 	for _, n := range defaultTaskfiles {
 		fpath := filepathext.SmartJoin(path, n)
 		if _, err := os.Stat(fpath); err == nil {
-			return fpath, nil
+			return filepath.Abs(fpath)
 		}
 	}
 

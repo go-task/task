@@ -55,6 +55,11 @@ func (e *Executor) Setup() error {
 }
 
 func (e *Executor) setCurrentDir() error {
+	// If the entrypoint is already set, we don't need to do anything
+	if e.Entrypoint != "" {
+		return nil
+	}
+
 	// Default the directory to the current working directory
 	if e.Dir == "" {
 		wd, err := os.Getwd()
@@ -64,22 +69,13 @@ func (e *Executor) setCurrentDir() error {
 		e.Dir = wd
 	}
 
-	// Ensure we have an absolute path
-	abs, err := filepath.Abs(e.Dir)
+	// Search for a taskfile
+	root, err := read.ExistsWalk(e.Dir)
 	if err != nil {
 		return err
 	}
-	e.Dir = abs
-
-	// If no entrypoint is specified, we need to search for a taskfile
-	if e.Entrypoint == "" {
-		root, err := read.ExistsWalk(e.Dir)
-		if err != nil {
-			return err
-		}
-		e.Dir = filepath.Dir(root)
-		e.Entrypoint = filepath.Base(root)
-	}
+	e.Dir = filepath.Dir(root)
+	e.Entrypoint = filepath.Base(root)
 
 	return nil
 }
