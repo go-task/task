@@ -218,12 +218,6 @@ func TestVarsInvalidTmpl(t *testing.T) {
 	assert.EqualError(t, e.Run(context.Background(), taskfile.Call{Task: target}), expectError, "e.Run(target)")
 }
 
-func TestMaxRuns(t *testing.T) {
-	const (
-		dir = "testdata/for"
-	)
-}
-
 func TestConcurrency(t *testing.T) {
 	const (
 		dir    = "testdata/concurrency"
