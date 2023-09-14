@@ -41,10 +41,14 @@ func readTaskfile(
 	l *logger.Logger,
 ) (*taskfile.Taskfile, error) {
 	var b []byte
+	var err error
 
-	cache, err := NewCache(tempDir)
-	if err != nil {
-		return nil, err
+	var cache *Cache
+	if node.Remote() {
+		cache, err = NewCache(tempDir)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// If the file is remote, check if we have a cached copy
