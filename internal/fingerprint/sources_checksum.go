@@ -1,13 +1,14 @@
 package fingerprint
 
 import (
-	"crypto/md5"
 	"fmt"
 	"io"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
+
+	"github.com/zeebo/xxh3"
 
 	"github.com/go-task/task/v3/internal/filepathext"
 	"github.com/go-task/task/v3/taskfile"
@@ -35,16 +36,16 @@ func (checker *ChecksumChecker) IsUpToDate(t *taskfile.Task) (bool, error) {
 	checksumFile := checker.checksumFilePath(t)
 
 	data, _ := os.ReadFile(checksumFile)
-	oldMd5 := strings.TrimSpace(string(data))
+	oldHash := strings.TrimSpace(string(data))
 
-	newMd5, err := checker.checksum(t)
+	newHash, err := checker.checksum(t)
 	if err != nil {
 		return false, nil
 	}
 
-	if !checker.dry && oldMd5 != newMd5 {
+	if !checker.dry && oldHash != newHash {
 		_ = os.MkdirAll(filepathext.SmartJoin(checker.tempDir, "checksum"), 0o755)
-		if err = os.WriteFile(checksumFile, []byte(newMd5+"\n"), 0o644); err != nil {
+		if err = os.WriteFile(checksumFile, []byte(newHash+"\n"), 0o644); err != nil {
 			return false, err
 		}
 	}
@@ -65,7 +66,7 @@ func (checker *ChecksumChecker) IsUpToDate(t *taskfile.Task) (bool, error) {
 		}
 	}
 
-	return oldMd5 == newMd5, nil
+	return oldHash == newHash, nil
 }
 
 func (checker *ChecksumChecker) Value(t *taskfile.Task) (any, error) {
@@ -89,23 +90,25 @@ func (c *ChecksumChecker) checksum(t *taskfile.Task) (string, error) {
 		return "", err
 	}
 
-	h := md5.New()
+	h := xxh3.New()
+	buf := make([]byte, 128*1024)
 	for _, f := range sources {
 		// also sum the filename, so checksum changes for renaming a file
-		if _, err := io.Copy(h, strings.NewReader(filepath.Base(f))); err != nil {
+		if _, err := io.CopyBuffer(h, strings.NewReader(filepath.Base(f)), buf); err != nil {
 			return "", err
 		}
 		f, err := os.Open(f)
 		if err != nil {
 			return "", err
 		}
-		if _, err = io.Copy(h, f); err != nil {
+		if _, err = io.CopyBuffer(h, f, buf); err != nil {
 			return "", err
 		}
 		f.Close()
 	}
 
-	return fmt.Sprintf("%x", h.Sum(nil)), nil
+	hash := h.Sum128()
+	return fmt.Sprintf("%x%x", hash.Hi, hash.Lo), nil
 }
 
 func (checker *ChecksumChecker) checksumFilePath(t *taskfile.Task) string {

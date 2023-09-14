@@ -13,6 +13,7 @@ require (
 	github.com/sajari/fuzzy v1.0.0
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.8.4
+	github.com/zeebo/xxh3 v1.0.2
 	golang.org/x/exp v0.0.0-20230212135524-a684f29349b6
 	golang.org/x/sync v0.3.0
 	golang.org/x/term v0.12.0
@@ -22,6 +23,7 @@ require (
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/klauspost/cpuid/v2 v2.0.9 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.17 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
