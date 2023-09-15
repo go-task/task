@@ -5,6 +5,11 @@ sidebar_position: 14
 
 # Changelog
 
+## v3.30.1 - 2023-09-14
+
+- Fixed a regression where some special variables weren't being set correctly
+  ([#1331](https://github.com/go-task/task/issues/1331), [#1334](https://github.com/go-task/task/issues/1334) by [@pd93](https://github.com/pd93)).
+
 ## v3.30.0 - 2023-09-13
 
 - Prep work for Remote Taskfiles ([#1316](https://github.com/go-task/task/issues/1316) by [@pd93](https://github.com/pd93)).

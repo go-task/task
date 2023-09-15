@@ -1,9 +1,9 @@
 # Changelog
 
-## Unreleased
+## v3.30.1 - 2023-09-14
 
-- Fixed an issue where some special variables weren't being set correctly
-  (#1331, #1334 by @pd93)
+- Fixed a regression where some special variables weren't being set correctly
+  (#1331, #1334 by @pd93).
 
 ## v3.30.0 - 2023-09-13
 
