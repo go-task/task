@@ -255,7 +255,19 @@ func (r *Reader) readNode(node Node) (*ast.Taskfile, error) {
 	if err := yaml.Unmarshal(b, &t); err != nil {
 		return nil, &errors.TaskfileInvalidError{URI: filepathext.TryAbsToRel(node.Location()), Err: err}
 	}
+
+	// Set the taskfile/task's locations
 	t.Location = node.Location()
+	for _, task := range t.Tasks.Values() {
+		// If the task is not defined, create a new one
+		if task == nil {
+			task = &ast.Task{}
+		}
+		// Set the location of the taskfile for each task
+		if task.Location.Taskfile == "" {
+			task.Location.Taskfile = t.Location
+		}
+	}
 
 	return &t, nil
 }
