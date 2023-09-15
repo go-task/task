@@ -13,7 +13,7 @@ Taskfile. For example:
 ```yaml
 version: '3'
 
-include:
+includes:
   my-remote-namespace: https://raw.githubusercontent.com/my-org/my-repo/main/Taskfile.yml
 ```
 
