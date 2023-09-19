@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Fixed a nil pointer error when running a Taskfile with no contents (#1341,
+  #1342 by @pd93).
+- Added a new [exit code](https://taskfile.dev/api/#exit-codes) (107) for when a
+  Taskfile does not contain a schema version (#1342 by @pd93).
+
 ## v3.30.1 - 2023-09-14
 
 - Fixed a regression where some special variables weren't being set correctly

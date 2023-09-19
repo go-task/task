@@ -120,3 +120,20 @@ func (err *TaskfileCacheNotFound) Error() string {
 func (err *TaskfileCacheNotFound) Code() int {
 	return CodeTaskfileCacheNotFound
 }
+
+// TaskfileVersionNotDefined is returned when the user attempts to run a
+// Taskfile that does not contain a Taskfile schema version key.
+type TaskfileVersionNotDefined struct {
+	URI string
+}
+
+func (err *TaskfileVersionNotDefined) Error() string {
+	return fmt.Sprintf(
+		`task: Taskfile %q does not contain a schema version key`,
+		err.URI,
+	)
+}
+
+func (err *TaskfileVersionNotDefined) Code() int {
+	return CodeTaskfileVersionNotDefined
+}
