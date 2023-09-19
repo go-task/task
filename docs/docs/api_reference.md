@@ -70,6 +70,11 @@ A full list of the exit codes and their descriptions can be found below:
 | 100  | No Taskfile was found                                        |
 | 101  | A Taskfile already exists when trying to initialize one      |
 | 102  | The Taskfile is invalid or cannot be parsed                  |
+| 103  | A remote Taskfile could not be downlaoded                    |
+| 104  | A remote Taskfile was not trusted by the user                |
+| 105  | A remote Taskfile was could not be fetched securely          |
+| 106  | No cache was found for a remote Taskfile in offline mode     |
+| 107  | No schema version was defined in the Taskfile                |
 | 200  | The specified task could not be found                        |
 | 201  | An error occurred while executing a command inside of a task |
 | 202  | The user tried to invoke a task that is internal             |
@@ -128,7 +133,7 @@ There are some special variables that is available on the templating system:
 | `CHECKSUM`         | The checksum of the files listed in `sources`. Only available within the `status` prop and if method is set to `checksum`.                               |
 | `TIMESTAMP`        | The date object of the greatest timestamp of the files listed in `sources`. Only available within the `status` prop and if method is set to `timestamp`. |
 | `TASK_VERSION`     | The current version of task.                                                                                                                             |
-| `ITEM`             | The value of the current iteration when using the `for` property. Can be changed to a different variable name using `as:`.                                                                                        |
+| `ITEM`             | The value of the current iteration when using the `for` property. Can be changed to a different variable name using `as:`.                               |
 
 ## ENV
 
@@ -152,12 +157,12 @@ Some environment variables can be overridden to adjust Task behavior.
 | ---------- | ---------------------------------- | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `version`  | `string`                           |               | Version of the Taskfile. The current version is `3`.                                                                                                                   |
 | `output`   | `string`                           | `interleaved` | Output mode. Available options: `interleaved`, `group` and `prefixed`.                                                                                                 |
-| `method`   | `string`                           | `checksum`    | Default method in this Taskfile. Can be overridden in a task by task basis. Available options: `checksum`, `timestamp` and `none`.                                      |
+| `method`   | `string`                           | `checksum`    | Default method in this Taskfile. Can be overridden in a task by task basis. Available options: `checksum`, `timestamp` and `none`.                                     |
 | `includes` | [`map[string]Include`](#include)   |               | Additional Taskfiles to be included.                                                                                                                                   |
 | `vars`     | [`map[string]Variable`](#variable) |               | A set of global variables.                                                                                                                                             |
 | `env`      | [`map[string]Variable`](#variable) |               | A set of global environment variables.                                                                                                                                 |
 | `tasks`    | [`map[string]Task`](#task)         |               | A set of task definitions.                                                                                                                                             |
-| `silent`   | `bool`                             | `false`       | Default 'silent' options for this Taskfile. If `false`, can be overridden with `true` in a task by task basis.                                                          |
+| `silent`   | `bool`                             | `false`       | Default 'silent' options for this Taskfile. If `false`, can be overridden with `true` in a task by task basis.                                                         |
 | `dotenv`   | `[]string`                         |               | A list of `.env` file paths to be parsed.                                                                                                                              |
 | `run`      | `string`                           | `always`      | Default 'run' option for this Taskfile. Available options: `always`, `once` and `when_changed`.                                                                        |
 | `interval` | `string`                           | `5s`          | Sets a different watch interval when using `--watch`, the default being 5 seconds. This string should be a valid [Go Duration](https://pkg.go.dev/time#ParseDuration). |
