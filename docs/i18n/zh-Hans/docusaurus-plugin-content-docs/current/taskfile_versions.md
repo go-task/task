@@ -21,7 +21,7 @@ Taskfile 文件的 `version:` 关键字接受语义化字符串， 所以 `2`, `
 - 支持类 `.env` 文件
 - 添加 `label:` 设置后可以覆盖任务名称在日志中的显示方式
 - 添加了全局 `method:` 允许设置默认方法，Task 的默认值更改为 `checksum`
-- 使用 `status:`: `CHECKSUM` 和 `TIMESTAMP` 时新增了两个魔术变量，分别包含 `sources:` 列出的文件的 XXH3 checksum 和最大修改时间戳
+- Two magic variables were added when using `status:`: `CHECKSUM` and `TIMESTAMP` which contains, respectively, the XXH3 checksum and greatest modification timestamp of the files listed on `sources:`
 - 另外，`TASK` 变量总是可以使用当前的任务名称
 - CLI 变量始终被视为全局变量
 - 向 `includes` 添加了 `dir:` 选项，以允许选择包含的任务文件将在哪个目录上运行：

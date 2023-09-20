@@ -17,7 +17,7 @@ Task имеет множество способов установки. Прос
 brew install go-task/tap/go-task
 ```
 
-Данная Formula [поддерживается нами](https://github.com/go-task/homebrew-tap/blob/master/Formula/go-task.rb).
+The above Formula is [maintained by ourselves](https://github.com/go-task/homebrew-tap/blob/main/Formula/go-task.rb).
 
 Недавно Task стал доступен [в официальном репозитории Homebrew](https://formulae.brew.sh/formula/go-task), поэтому вы можете использовать:
 

@@ -12,7 +12,7 @@ This experiment allows you to specify a remote Taskfile URL when including a Tas
 ```yaml
 version: '3'
 
-include:
+includes:
   my-remote-namespace: https://raw.githubusercontent.com/my-org/my-repo/main/Taskfile.yml
 ```
 

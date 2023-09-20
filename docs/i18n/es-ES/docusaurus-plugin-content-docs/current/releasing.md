@@ -43,8 +43,8 @@ Nix is a community owned installation method. Nix package maintainers usually ta
 <!-- prettier-ignore-end -->
 [goreleaser]: https://goreleaser.com/
 [homebrewtap]: https://github.com/go-task/homebrew-tap
-[gotaskrb]: https://github.com/go-task/homebrew-tap/blob/master/Formula/go-task.rb
+[gotaskrb]: https://github.com/go-task/homebrew-tap/blob/main/Formula/go-task.rb
 [packagejson]: https://github.com/go-task/task/blob/main/package.json#L3
 [snappackage]: https://github.com/go-task/snap
-[snapcraftyaml]: https://github.com/go-task/snap/blob/master/snap/snapcraft.yaml#L2
+[snapcraftyaml]: https://github.com/go-task/snap/blob/main/snap/snapcraft.yaml#L2
 [snapcraftdashboard]: https://snapcraft.io/task/releases

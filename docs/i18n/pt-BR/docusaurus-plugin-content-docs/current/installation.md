@@ -17,7 +17,7 @@ Se você estiver no macOS ou Linux e tiver o [Homebrew][homebrew] instalado, ins
 brew install go-task/tap/go-task
 ```
 
-A fórmula acima é [mantida por nós mesmos](https://github.com/go-task/homebrew-tap/blob/master/Formula/go-task.rb).
+The above Formula is [maintained by ourselves](https://github.com/go-task/homebrew-tap/blob/main/Formula/go-task.rb).
 
 Recentemente, o Task também foi disponibilizado [no repositório oficial do Homebrew](https://formulae.brew.sh/formula/go-task), então você também tem essa opção, se preferir:
 

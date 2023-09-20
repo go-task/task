@@ -13,7 +13,7 @@ sidebar_position: 13
 
 # Homebrew
 
-Goreleaser автоматически отправит новый коммит в файл [Formula/go-task.rb][gotaskrb] в репозитории [Homebrew tap][homebrewtap] для выпуска новой версии.
+Goreleaser will automatically push a new commit to the [Formula/go-task.rb][gotaskrb] file in the [Homebrew tap][homebrewtap] repository to release the new version.
 
 # npm
 
@@ -23,7 +23,7 @@ Goreleaser автоматически отправит новый коммит �
 
 Для выпуска новой версии [Snap пакета][snappackage] необходимо:
 
-- Обновить текущую версию в [snapcraft.yaml][snapcraftyaml].
+- Updating the current version on [snapcraft.yaml][snapcraftyaml].
 - Переместить `amd64`, `armhf` и `arm64` артефакты в стабильный канал на панели [Snapcraft][snapcraftdashboard].
 
 # winget
@@ -43,8 +43,8 @@ Nix - это метод установки, принадлежащий сооб�
 <!-- prettier-ignore-end -->
 [goreleaser]: https://goreleaser.com/
 [homebrewtap]: https://github.com/go-task/homebrew-tap
-[gotaskrb]: https://github.com/go-task/homebrew-tap/blob/master/Formula/go-task.rb
+[gotaskrb]: https://github.com/go-task/homebrew-tap/blob/main/Formula/go-task.rb
 [packagejson]: https://github.com/go-task/task/blob/main/package.json#L3
 [snappackage]: https://github.com/go-task/snap
-[snapcraftyaml]: https://github.com/go-task/snap/blob/master/snap/snapcraft.yaml#L2
+[snapcraftyaml]: https://github.com/go-task/snap/blob/main/snap/snapcraft.yaml#L2
 [snapcraftdashboard]: https://snapcraft.io/task/releases

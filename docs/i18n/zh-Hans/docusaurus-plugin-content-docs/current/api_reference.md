@@ -61,20 +61,25 @@ Task 有时会以特定的退出代码退出。 These codes are split into three
 
 可以在下面找到退出代码及其描述的完整列表：
 
-| 代码  | 描述                     |
-| --- | ---------------------- |
-| 0   | 成功                     |
-| 1   | 出现未知错误                 |
-| 100 | 找不到 Taskfile           |
-| 101 | 尝试初始化一个 Taskfile 时已经存在 |
-| 102 | Taskfile 无效或无法解析       |
-| 200 | 找不到指定的 task            |
-| 201 | 在 task 中执行命令时出错        |
-| 202 | 用户试图调用内部 task          |
-| 203 | 有多个具有相同名称或别名的 task     |
-| 204 | 一个 task 被调用了太多次        |
-| 205 | 操作被用户取消                |
-| 206 | 由于缺少所需变量，任务未执行         |
+| 代码  | 描述                                                       |
+| --- | -------------------------------------------------------- |
+| 0   | 成功                                                       |
+| 1   | 出现未知错误                                                   |
+| 100 | 找不到 Taskfile                                             |
+| 101 | 尝试初始化一个 Taskfile 时已经存在                                   |
+| 102 | Taskfile 无效或无法解析                                         |
+| 103 | A remote Taskfile could not be downlaoded                |
+| 104 | A remote Taskfile was not trusted by the user            |
+| 105 | A remote Taskfile was could not be fetched securely      |
+| 106 | No cache was found for a remote Taskfile in offline mode |
+| 107 | No schema version was defined in the Taskfile            |
+| 200 | 找不到指定的 task                                              |
+| 201 | 在 task 中执行命令时出错                                          |
+| 202 | 用户试图调用内部 task                                            |
+| 203 | 有多个具有相同名称或别名的 task                                       |
+| 204 | 一个 task 被调用了太多次                                          |
+| 205 | 操作被用户取消                                                  |
+| 206 | 由于缺少所需变量，任务未执行                                           |
 
 这些代码也可以在代码库的 [`errors/errors.go`](https://github.com/go-task/task/blob/main/errors/errors.go) 文件中找到。
 

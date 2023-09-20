@@ -17,7 +17,7 @@ Task 提供以下多种安装方式。 查看以下可用方法。
 brew install go-task/tap/go-task
 ```
 
-上面的公式是 [我们自己维护](https://github.com/go-task/homebrew-tap/blob/master/Formula/go-task.rb) 的。
+The above Formula is [maintained by ourselves](https://github.com/go-task/homebrew-tap/blob/main/Formula/go-task.rb).
 
 最近，[官方 Homebrew 存储库](https://formulae.brew.sh/formula/go-task) 中也提供了 Task，因此如果您愿意，也可以使用该选项：
 
