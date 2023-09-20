@@ -13,7 +13,7 @@ v3.15.0以降、特定のタグをチェックアウトし、上記のGitHub Act
 
 # Homebrew
 
-Goreleaserは新しいバージョンをリリースするために、[Homebrew tap][homebrewtap]リポジトリの[Formula/go-task.rb][gotaskrb]に新しいコミットを自動的にプッシュします。
+Goreleaser will automatically push a new commit to the [Formula/go-task.rb][gotaskrb] file in the [Homebrew tap][homebrewtap] repository to release the new version.
 
 # npm
 
@@ -23,7 +23,7 @@ npmにリリースするには、[`package.json`][packagejson]でバージョン
 
 [snapパッケージ][snappackage]をリリースするには、マニュアルのステップが必要です:
 
-- [snapcraft.yaml][snapcraftyaml]で現在のバージョンを更新する。
+- Updating the current version on [snapcraft.yaml][snapcraftyaml].
 - [Snapcraftダッシュボード][snapcraftdashboard]で、`amd64`、`armhf`、`arm64`の新しい成果物を全てstableチャンネルに移動させる。
 
 # winget
@@ -43,8 +43,8 @@ Nixはコミュニティが所有するインストール方法です。 Nixパ�
 <!-- prettier-ignore-end -->
 [goreleaser]: https://goreleaser.com/
 [homebrewtap]: https://github.com/go-task/homebrew-tap
-[gotaskrb]: https://github.com/go-task/homebrew-tap/blob/master/Formula/go-task.rb
+[gotaskrb]: https://github.com/go-task/homebrew-tap/blob/main/Formula/go-task.rb
 [packagejson]: https://github.com/go-task/task/blob/main/package.json#L3
 [snappackage]: https://github.com/go-task/snap
-[snapcraftyaml]: https://github.com/go-task/snap/blob/master/snap/snapcraft.yaml#L2
+[snapcraftyaml]: https://github.com/go-task/snap/blob/main/snap/snapcraft.yaml#L2
 [snapcraftdashboard]: https://snapcraft.io/task/releases

@@ -17,7 +17,7 @@ macOSやLinuxを使っていて、[Homebrew][homebrew]をインストールし�
 brew install go-task/tap/go-task
 ```
 
-上記のFormulaは[私たちが管理しています](https://github.com/go-task/homebrew-tap/blob/master/Formula/go-task.rb)。
+The above Formula is [maintained by ourselves](https://github.com/go-task/homebrew-tap/blob/main/Formula/go-task.rb).
 
 最近、Taskは[公式のHomebrewリポジトリ](https://formulae.brew.sh/formula/go-task)でも利用可能になったので、以下の方法でもインストールできます:
 

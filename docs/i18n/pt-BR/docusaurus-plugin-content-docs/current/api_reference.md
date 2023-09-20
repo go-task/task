@@ -68,6 +68,11 @@ Uma lista completa dos códigos de saída e suas descrições podem ser encontra
 | 100    | Nenhum Arquivo foi encontrado                               |
 | 101    | Um arquivo Taskfile já existe ao tentar inicializar um      |
 | 102    | O arquivo Taskfile é inválido ou não pode ser analisado     |
+| 103    | A remote Taskfile could not be downlaoded                   |
+| 104    | A remote Taskfile was not trusted by the user               |
+| 105    | A remote Taskfile was could not be fetched securely         |
+| 106    | No cache was found for a remote Taskfile in offline mode    |
+| 107    | No schema version was defined in the Taskfile               |
 | 200    | A tarefa especificada não pôde ser encontrada               |
 | 201    | Ocorreu um erro ao executar um comando dentro de uma tarefa |
 | 202    | O usuário tentou invocar uma tarefa que é interna           |

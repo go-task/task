@@ -13,7 +13,7 @@ Task 的发布流程是在 [GoReleaser][goreleaser] 的帮助下完成的。 本
 
 # Homebrew
 
-Goreleaser 会自动向 [Homebrew tap](https://github.com/go-task/homebrew-tap) 仓库中的 [Formula/go-task.rb](https://github.com/go-task/homebrew-tap/blob/master/Formula/go-task.rb) 文件推送一个新的提交，以发布新的版本。
+Goreleaser will automatically push a new commit to the [Formula/go-task.rb][gotaskrb] file in the [Homebrew tap][homebrewtap] repository to release the new version.
 
 # npm
 
@@ -23,7 +23,7 @@ Goreleaser 会自动向 [Homebrew tap](https://github.com/go-task/homebrew-tap) 
 
 [snap package](https://github.com/go-task/snap) 发布新版本需要手动执行下面步骤：
 
-- 更新 [snapcraft.yaml](https://github.com/go-task/snap/blob/master/snap/snapcraft.yaml#L2) 文件中的版本。
+- Updating the current version on [snapcraft.yaml][snapcraftyaml].
 - 把新的 `amd64`, `armhf` 和 `arm64` 移动到 [Snapcraft dashboard][snapcraftdashboard] 的稳定通道。
 
 # winget
@@ -42,5 +42,8 @@ Nix 安装由社区维护。 Nix 包的维护人员通常会在 [这个文件](h
 
 <!-- prettier-ignore-end -->
 [goreleaser]: https://goreleaser.com/
+[homebrewtap]: https://github.com/go-task/homebrew-tap
+[gotaskrb]: https://github.com/go-task/homebrew-tap/blob/main/Formula/go-task.rb
 [packagejson]: https://github.com/go-task/task/blob/main/package.json#L3
+[snapcraftyaml]: https://github.com/go-task/snap/blob/main/snap/snapcraft.yaml#L2
 [snapcraftdashboard]: https://snapcraft.io/task/releases
