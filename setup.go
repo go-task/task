@@ -157,10 +157,13 @@ func (e *Executor) setupStdFiles() {
 
 func (e *Executor) setupLogger() {
 	e.Logger = &logger.Logger{
-		Stdout:  e.Stdout,
-		Stderr:  e.Stderr,
-		Verbose: e.Verbose,
-		Color:   e.Color,
+		Stdin:      e.Stdin,
+		Stdout:     e.Stdout,
+		Stderr:     e.Stderr,
+		Verbose:    e.Verbose,
+		Color:      e.Color,
+		AssumeYes:  e.AssumeYes,
+		AssumeTerm: e.AssumeTerm,
 	}
 }
 

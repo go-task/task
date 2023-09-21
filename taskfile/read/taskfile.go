@@ -86,19 +86,19 @@ func readTaskfile(
 			checksum := checksum(b)
 			cachedChecksum := cache.readChecksum(node)
 
-			// If the checksum doesn't exist, prompt the user to continue
+			var msg string
 			if cachedChecksum == "" {
-				if cont, err := l.Prompt(logger.Yellow, fmt.Sprintf("The task you are attempting to run depends on the remote Taskfile at %q.\n--- Make sure you trust the source of this Taskfile before continuing ---\nContinue?", node.Location()), "n", "y", "yes"); err != nil {
-					return nil, err
-				} else if !cont {
-					return nil, &errors.TaskfileNotTrustedError{URI: node.Location()}
-				}
+				// If the checksum doesn't exist, prompt the user to continue
+				msg = fmt.Sprintf("The task you are attempting to run depends on the remote Taskfile at %q.\n--- Make sure you trust the source of this Taskfile before continuing ---\nContinue?", node.Location())
 			} else if checksum != cachedChecksum {
 				// If there is a cached hash, but it doesn't match the expected hash, prompt the user to continue
-				if cont, err := l.Prompt(logger.Yellow, fmt.Sprintf("The Taskfile at %q has changed since you last used it!\n--- Make sure you trust the source of this Taskfile before continuing ---\nContinue?", node.Location()), "n", "y", "yes"); err != nil {
-					return nil, err
-				} else if !cont {
+				msg = fmt.Sprintf("The Taskfile at %q has changed since you last used it!\n--- Make sure you trust the source of this Taskfile before continuing ---\nContinue?", node.Location())
+			}
+			if msg != "" {
+				if err := l.Prompt(logger.Yellow, msg, "n", "y", "yes"); errors.Is(err, logger.ErrPromptCancelled) {
 					return nil, &errors.TaskfileNotTrustedError{URI: node.Location()}
+				} else if err != nil {
+					return nil, err
 				}
 			}
 

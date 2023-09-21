@@ -9,6 +9,14 @@ import (
 
 	"github.com/fatih/color"
 	"golang.org/x/exp/slices"
+
+	"github.com/go-task/task/v3/errors"
+	"github.com/go-task/task/v3/internal/term"
+)
+
+var (
+	ErrPromptCancelled = errors.New("prompt cancelled")
+	ErrNoTerminal      = errors.New("no terminal")
 )
 
 type (
@@ -59,10 +67,13 @@ func envColor(env string, defaultColor color.Attribute) color.Attribute {
 // Logger is just a wrapper that prints stuff to STDOUT or STDERR,
 // with optional color.
 type Logger struct {
-	Stdout  io.Writer
-	Stderr  io.Writer
-	Verbose bool
-	Color   bool
+	Stdin      io.Reader
+	Stdout     io.Writer
+	Stderr     io.Writer
+	Verbose    bool
+	Color      bool
+	AssumeYes  bool
+	AssumeTerm bool // Used for testing
 }
 
 // Outf prints stuff to STDOUT.
@@ -108,16 +119,32 @@ func (l *Logger) VerboseErrf(color Color, s string, args ...any) {
 	}
 }
 
-func (l *Logger) Prompt(color Color, s string, defaultValue string, continueValues ...string) (bool, error) {
-	if len(continueValues) == 0 {
-		return false, nil
+func (l *Logger) Prompt(color Color, prompt string, defaultValue string, continueValues ...string) error {
+	if l.AssumeYes {
+		l.Outf(color, "%s [assuming yes]\n", prompt)
+		return nil
 	}
-	l.Outf(color, "%s [%s/%s]\n", s, strings.ToLower(continueValues[0]), strings.ToUpper(defaultValue))
-	reader := bufio.NewReader(os.Stdin)
+
+	if !l.AssumeTerm && !term.IsTerminal() {
+		return ErrNoTerminal
+	}
+
+	if len(continueValues) == 0 {
+		return errors.New("no continue values provided")
+	}
+
+	l.Outf(color, "%s [%s/%s]\n", prompt, strings.ToLower(continueValues[0]), strings.ToUpper(defaultValue))
+
+	reader := bufio.NewReader(l.Stdin)
 	input, err := reader.ReadString('\n')
 	if err != nil {
-		return false, err
+		return err
 	}
+
 	input = strings.TrimSpace(strings.ToLower(input))
-	return slices.Contains(continueValues, input), nil
+	if !slices.Contains(continueValues, input) {
+		return ErrPromptCancelled
+	}
+
+	return nil
 }

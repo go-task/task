@@ -1,13 +1,11 @@
 package task
 
 import (
-	"bufio"
 	"context"
 	"fmt"
 	"io"
 	"os"
 	"runtime"
-	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -23,7 +21,6 @@ import (
 	"github.com/go-task/task/v3/internal/sort"
 	"github.com/go-task/task/v3/internal/summary"
 	"github.com/go-task/task/v3/internal/templater"
-	"github.com/go-task/task/v3/internal/term"
 	"github.com/go-task/task/v3/taskfile"
 
 	"github.com/sajari/fuzzy"
@@ -36,11 +33,6 @@ const (
 	// This exists to prevent infinite loops on cyclic dependencies
 	MaximumTaskCall = 1000
 )
-
-func shouldPromptContinue(input string) bool {
-	input = strings.ToLower(strings.TrimSpace(input))
-	return slices.Contains([]string{"y", "yes"}, input)
-}
 
 // Executor executes a Taskfile
 type Executor struct {
@@ -58,13 +50,13 @@ type Executor struct {
 	Verbose     bool
 	Silent      bool
 	AssumeYes   bool
+	AssumeTerm  bool // Used for testing
 	Dry         bool
 	Summary     bool
 	Parallel    bool
 	Color       bool
 	Concurrency int
 	Interval    time.Duration
-	AssumesTerm bool
 
 	Stdin  io.Reader
 	Stdout io.Writer
@@ -182,22 +174,13 @@ func (e *Executor) RunTask(ctx context.Context, call taskfile.Call) error {
 	release := e.acquireConcurrencyLimit()
 	defer release()
 
-	if t.Prompt != "" && !e.AssumeYes {
-		if !e.AssumesTerm && !term.IsTerminal() {
+	if t.Prompt != "" {
+		if err := e.Logger.Prompt(logger.Yellow, t.Prompt, "n", "y", "yes"); errors.Is(err, logger.ErrNoTerminal) {
 			return &errors.TaskCancelledNoTerminalError{TaskName: call.Task}
-		}
-
-		e.Logger.Outf(logger.Yellow, "task: %q [y/N]: ", t.Prompt)
-
-		reader := bufio.NewReader(e.Stdin)
-		userInput, err := reader.ReadString('\n')
-		if err != nil {
-			return err
-		}
-
-		userInput = strings.ToLower(strings.TrimSpace(userInput))
-		if !shouldPromptContinue(userInput) {
+		} else if errors.Is(err, logger.ErrPromptCancelled) {
 			return &errors.TaskCancelledByUserError{TaskName: call.Task}
+		} else if err != nil {
+			return err
 		}
 	}
 
