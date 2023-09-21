@@ -54,6 +54,16 @@ Taskfiles:
    code `104` (not trusted) and nothing will run. If you accept the prompt, the
    checksum will be updated and the remote Taskfile will run.
 
+Sometimes you need to run Task in an environment that does not have an
+interactive terminal, so you are not able to accept a prompt. In these cases you
+are able to tell task to accept these prompts automatically by using the `--yes`
+flag. Before enabling this flag, you should:
+
+1. Be sure that you trust the source and contents of the remote Taskfile.
+2. Consider using a pinned version of the remote Taskfile (e.g. A link
+   containing a commit hash) to prevent Task from automatically accepting a
+   prompt that says a remote Taskfile has changed.
+
 Task currently supports both `http` and `https` URLs. However, the `http`
 requests will not execute by default unless you run the task with the
 `--insecure` flag. This is to protect you from accidentally running a remote
