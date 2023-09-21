@@ -51,28 +51,18 @@ func readTaskfile(
 		}
 	}
 
-	// If the file is remote, check if we have a cached copy
-	// If we're told to download, skip the cache
-	if node.Remote() && !download {
-		if b, err = cache.read(node); !errors.Is(err, os.ErrNotExist) && err != nil {
+	// If the file is remote and we're in offline mode, check if we have a cached copy
+	if node.Remote() && offline {
+		if b, err = cache.read(node); errors.Is(err, os.ErrNotExist) {
+			return nil, &errors.TaskfileCacheNotFound{URI: node.Location()}
+		} else if err != nil {
 			return nil, err
 		}
+		l.VerboseOutf(logger.Magenta, "task: [%s] Fetched cached copy\n", node.Location())
 
-		if b != nil {
-			l.VerboseOutf(logger.Magenta, "task: [%s] Fetched cached copy\n", node.Location())
-		}
-	}
+	} else {
 
-	// If the file is remote, we found nothing in the cache and we're not
-	// allowed to download it then we can't do anything.
-	if node.Remote() && b == nil && offline {
-		if b == nil && offline {
-			return nil, &errors.TaskfileCacheNotFound{URI: node.Location()}
-		}
-	}
-
-	// If we still don't have a copy, get the file in the usual way
-	if b == nil {
+		// Read the file
 		b, err = node.Read(context.Background())
 		if err != nil {
 			return nil, err
@@ -108,15 +98,15 @@ func readTaskfile(
 					return nil, err
 				}
 			}
-		}
-	}
 
-	// If the file is remote and we need to cache it
-	if node.Remote() && download {
-		l.VerboseOutf(logger.Magenta, "task: [%s] Caching downloaded file\n", node.Location())
-		// Cache the file for later
-		if err = cache.write(node, b); err != nil {
-			return nil, err
+			// If we need to download (cache) it
+			if download {
+				l.VerboseOutf(logger.Magenta, "task: [%s] Caching downloaded file\n", node.Location())
+				// Cache the file for later
+				if err = cache.write(node, b); err != nil {
+					return nil, err
+				}
+			}
 		}
 	}
 
