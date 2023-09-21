@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Enabled the `--yes` flag for the
+  [Remote Taskfiles experiment](https://taskfile.dev/experiments/remote-taskfiles)
+  (#1344 by @pd93).
 - Add ability to set `watch: true` in a task to automatically run it in watch
   mode (#231, #1361 by @andreynering).
 - Fixed a bug on the watch mode where paths that contained `.git` (like
