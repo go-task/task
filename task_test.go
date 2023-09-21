@@ -828,6 +828,24 @@ func TestListCanListDescOnly(t *testing.T) {
 	}
 }
 
+func TestListDescInterpolation(t *testing.T) {
+	const dir = "testdata/list_desc_interpolation"
+
+	var buff bytes.Buffer
+	e := task.Executor{
+		Dir:    dir,
+		Stdout: &buff,
+		Stderr: &buff,
+	}
+
+	require.NoError(t, e.Setup())
+	if _, err := e.ListTasks(task.ListOptions{ListOnlyTasksWithDescriptions: true}); err != nil {
+		t.Error(err)
+	}
+
+	assert.Contains(t, buff.String(), "bar")
+}
+
 func TestStatusVariables(t *testing.T) {
 	const dir = "testdata/status_vars"
 
