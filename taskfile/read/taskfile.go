@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"time"
 
 	"gopkg.in/yaml.v3"
 
@@ -62,14 +63,34 @@ func readTaskfile(
 
 	} else {
 
+		downloaded := false
+		timeout := time.Second * 10
+		ctx, cf := context.WithTimeout(context.Background(), timeout)
+		defer cf()
+
 		// Read the file
-		b, err = node.Read(context.Background())
-		if err != nil {
+		b, err = node.Read(ctx)
+		// If we timed out then we likely have a network issue
+		if errors.Is(ctx.Err(), context.DeadlineExceeded) {
+			// If a download was requested, then we can't use a cached copy
+			if download {
+				return nil, &errors.TaskfileNetworkTimeout{URI: node.Location(), Timeout: timeout}
+			}
+			// Search for any cached copies
+			if b, err = cache.read(node); errors.Is(err, os.ErrNotExist) {
+				return nil, &errors.TaskfileNetworkTimeout{URI: node.Location(), Timeout: timeout, CheckedCache: true}
+			} else if err != nil {
+				return nil, err
+			}
+			l.VerboseOutf(logger.Magenta, "task: [%s] Network timeout. Fetched cached copy\n", node.Location())
+		} else if err != nil {
 			return nil, err
+		} else {
+			downloaded = true
 		}
 
 		// If the node was remote, we need to check the checksum
-		if node.Remote() {
+		if node.Remote() && downloaded {
 			l.VerboseOutf(logger.Magenta, "task: [%s] Fetched remote copy\n", node.Location())
 
 			// Get the checksums

@@ -18,6 +18,7 @@ const (
 	CodeTaskfileNotSecure
 	CodeTaskfileCacheNotFound
 	CodeTaskfileVersionNotDefined
+	CodeTaskfileNetworkTimeout
 )
 
 // Task related exit codes
