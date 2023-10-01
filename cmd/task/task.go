@@ -45,35 +45,36 @@ Options:
 `
 
 var flags struct {
-	version     bool
-	help        bool
-	init        bool
-	list        bool
-	listAll     bool
-	listJson    bool
-	taskSort    string
-	status      bool
-	insecure    bool
-	force       bool
-	forceAll    bool
-	watch       bool
-	verbose     bool
-	silent      bool
-	assumeYes   bool
-	dry         bool
-	summary     bool
-	exitCode    bool
-	parallel    bool
-	concurrency int
-	dir         string
-	entrypoint  string
-	output      taskfile.Output
-	color       bool
-	interval    time.Duration
-	global      bool
-	experiments bool
-	download    bool
-	offline     bool
+	version        bool
+	help           bool
+	init           bool
+	list           bool
+	listAll        bool
+	listJson       bool
+	listJsonSimple bool
+	taskSort       string
+	status         bool
+	insecure       bool
+	force          bool
+	forceAll       bool
+	watch          bool
+	verbose        bool
+	silent         bool
+	assumeYes      bool
+	dry            bool
+	summary        bool
+	exitCode       bool
+	parallel       bool
+	concurrency    int
+	dir            string
+	entrypoint     string
+	output         taskfile.Output
+	color          bool
+	interval       time.Duration
+	global         bool
+	experiments    bool
+	download       bool
+	offline        bool
 }
 
 func main() {
@@ -113,6 +114,7 @@ func run() error {
 	pflag.BoolVarP(&flags.list, "list", "l", false, "Lists tasks with description of current Taskfile.")
 	pflag.BoolVarP(&flags.listAll, "list-all", "a", false, "Lists tasks with or without a description.")
 	pflag.BoolVarP(&flags.listJson, "json", "j", false, "Formats task list as JSON.")
+	pflag.BoolVarP(&flags.listJsonSimple, "json-simple", "J", false, "Formats task list as JSON (simple).")
 	pflag.StringVar(&flags.taskSort, "sort", "", "Changes the order of the tasks when listed. [default|alphanumeric|none].")
 	pflag.BoolVar(&flags.status, "status", false, "Exits with non-zero exit code if any of the given tasks is not up-to-date.")
 	pflag.BoolVar(&flags.insecure, "insecure", false, "Forces Task to download Taskfiles over insecure connections.")
@@ -254,7 +256,7 @@ func run() error {
 		TaskSorter:  taskSorter,
 	}
 
-	listOptions := task.NewListOptions(flags.list, flags.listAll, flags.listJson)
+	listOptions := task.NewListOptions(flags.list, flags.listAll, flags.listJson, flags.listJsonSimple)
 	if err := listOptions.Validate(); err != nil {
 		return err
 	}

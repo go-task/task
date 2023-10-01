@@ -24,14 +24,16 @@ type ListOptions struct {
 	ListOnlyTasksWithDescriptions bool
 	ListAllTasks                  bool
 	FormatTaskListAsJSON          bool
+	FormatTaskListAsJSONSimple    bool
 }
 
 // NewListOptions creates a new ListOptions instance
-func NewListOptions(list, listAll, listAsJson bool) ListOptions {
+func NewListOptions(list, listAll, listAsJson, listAsJsonSimple bool) ListOptions {
 	return ListOptions{
 		ListOnlyTasksWithDescriptions: list,
 		ListAllTasks:                  listAll,
 		FormatTaskListAsJSON:          listAsJson,
+		FormatTaskListAsJSONSimple:    listAsJsonSimple,
 	}
 }
 
@@ -47,6 +49,9 @@ func (o ListOptions) Validate() error {
 	}
 	if o.FormatTaskListAsJSON && !o.ShouldListTasks() {
 		return fmt.Errorf("task: --json only applies to --list or --list-all")
+	}
+	if o.FormatTaskListAsJSONSimple && !o.ShouldListTasks() {
+		return fmt.Errorf("task: --json-simple only applies to --list or --list-all")
 	}
 	return nil
 }
@@ -71,6 +76,22 @@ func (e *Executor) ListTasks(o ListOptions) (bool, error) {
 	tasks, err := e.GetTaskList(o.Filters()...)
 	if err != nil {
 		return false, err
+	}
+	if o.FormatTaskListAsJSONSimple {
+		output := make(map[string]any)
+
+		for i := range tasks {
+			task := tasks[i]
+			output[task.Name()] = task.Desc
+		}
+
+		encoder := json.NewEncoder(e.Stdout)
+		encoder.SetIndent("", "  ")
+		if err := encoder.Encode(output); err != nil {
+			return false, err
+		}
+
+		return len(tasks) > 0, nil
 	}
 	if o.FormatTaskListAsJSON {
 		output, err := e.ToEditorOutput(tasks)
