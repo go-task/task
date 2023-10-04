@@ -176,6 +176,16 @@ func (e *Executor) registerWatchedFiles(w *watcher.Watcher, calls ...taskfile.Ca
 }
 
 func shouldIgnoreFile(path string) bool {
-	return strings.Contains(path, "/.git/") || strings.Contains(path, "/.hg/") ||
-		strings.Contains(path, "/.task/") || strings.Contains(path, "/node_modules/")
+	ignorePaths := []string{
+		"/.task",
+		"/.git",
+		"/.hg",
+		"/.node_modules",
+	}
+	for _, p := range ignorePaths {
+		if strings.Contains(path, fmt.Sprintf("%s/", p)) || strings.HasSuffix(path, p) {
+			return true
+		}
+	}
+	return false
 }
