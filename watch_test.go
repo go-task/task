@@ -6,6 +6,7 @@ package task_test
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"os"
 	"strings"
 	"testing"
@@ -78,4 +79,22 @@ Hello, World!
 	require.NoError(t, err)
 	err = os.RemoveAll(filepathext.SmartJoin(dir, "src"))
 	require.NoError(t, err)
+}
+
+func TestShouldIgnoreFile(t *testing.T) {
+	tt := []struct {
+		path   string
+		expect bool
+	}{
+		{"/.git/hooks", true},
+		{"/.github/workflows/build.yaml", false},
+	}
+
+	for k, ct := range tt {
+		ct := ct
+		t.Run(fmt.Sprintf("ignore - %d", k), func(t *testing.T) {
+			t.Parallel()
+			require.Equal(t, shouldIgnoreFile(ct.path), ct.expect)
+		})
+	}
 }
