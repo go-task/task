@@ -469,13 +469,14 @@ func (e *Executor) GetTaskList(filters ...FilterFunc) ([]*taskfile.Task, error) 
 
 	// Compile the list of tasks
 	for i := range tasks {
-		task := tasks[i]
+		idx := i
+		task := tasks[idx]
 		g.Go(func() error {
 			compiledTask, err := e.FastCompiledTask(taskfile.Call{Task: task.Task})
 			if err == nil {
 				task = compiledTask
 			}
-			task = compiledTask
+			tasks[idx] = compiledTask
 			return nil
 		})
 	}
