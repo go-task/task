@@ -681,11 +681,11 @@ func TestPromptInSummary(t *testing.T) {
 			inBuff.Write([]byte(test.input))
 
 			e := task.Executor{
-				Dir:         dir,
-				Stdin:       &inBuff,
-				Stdout:      &outBuff,
-				Stderr:      &errBuff,
-				AssumesTerm: true,
+				Dir:        dir,
+				Stdin:      &inBuff,
+				Stdout:     &outBuff,
+				Stderr:     &errBuff,
+				AssumeTerm: true,
 			}
 			require.NoError(t, e.Setup())
 
@@ -709,11 +709,11 @@ func TestPromptWithIndirectTask(t *testing.T) {
 	inBuff.Write([]byte("y\n"))
 
 	e := task.Executor{
-		Dir:         dir,
-		Stdin:       &inBuff,
-		Stdout:      &outBuff,
-		Stderr:      &errBuff,
-		AssumesTerm: true,
+		Dir:        dir,
+		Stdin:      &inBuff,
+		Stdout:     &outBuff,
+		Stderr:     &errBuff,
+		AssumeTerm: true,
 	}
 	require.NoError(t, e.Setup())
 
