@@ -1,8 +1,8 @@
 version: '3'
 
 vars:
-  foo: bar
+  FOO: bar
 
 tasks:
   foo:
-    desc: "task has desc with {{ .foo }} var"
+    desc: "task has desc with {{.FOO}} var"

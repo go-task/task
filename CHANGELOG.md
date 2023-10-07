@@ -17,6 +17,7 @@
   have been reaching this limit organically now that we have loops. This check
   exists to detect recursive calls, but will be removed in favor of a better
   algorithm soon (#1321, #1332).
+- Fixed templating on descriptions on `task --list` (#1343 by @blackjid).
 
 ## v3.30.1 - 2023-09-14
 
