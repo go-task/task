@@ -113,10 +113,15 @@ tasks:
       GO_PACKAGES:
         sh: go list ./...
 
-  test-release:
+  goreleaser:test:
     desc: Tests release process without publishing
     cmds:
       - goreleaser --snapshot --clean
+
+  goreleaser:install:
+    desc: Installs goreleaser
+    cmds:
+      - go install github.com/goreleaser/goreleaser@latest
 
   release:
     desc: Prepare the project for a new release
