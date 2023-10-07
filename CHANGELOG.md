@@ -18,6 +18,8 @@
   exists to detect recursive calls, but will be removed in favor of a better
   algorithm soon (#1321, #1332).
 - Fixed templating on descriptions on `task --list` (#1343 by @blackjid).
+- Fixed a bug where precondition errors were incorrectly being printed when
+  task execution was aborted (#1337, #1338 by @sylv-io).
 
 ## v3.30.1 - 2023-09-14
 
