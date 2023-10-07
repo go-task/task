@@ -41,6 +41,7 @@ type Task struct {
 	IncludedTaskfile     *IncludedTaskfile
 	Platforms            []*Platform
 	Location             *Location
+	Watch                bool
 }
 
 func (t *Task) Name() string {
@@ -101,6 +102,7 @@ func (t *Task) UnmarshalYAML(node *yaml.Node) error {
 			Run           string
 			Platforms     []*Platform
 			Requires      *Requires
+			Watch         bool
 		}
 		if err := node.Decode(&task); err != nil {
 			return err
@@ -138,6 +140,7 @@ func (t *Task) UnmarshalYAML(node *yaml.Node) error {
 		t.Run = task.Run
 		t.Platforms = task.Platforms
 		t.Requires = task.Requires
+		t.Watch = task.Watch
 		return nil
 	}
 

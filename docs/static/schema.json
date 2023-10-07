@@ -188,6 +188,11 @@
           "requires": {
             "description": "A list of variables which should be set if this task is to run, if any of these variables are unset the task will error and not run",
             "$ref": "#/definitions/3/requires_obj"
+          },
+          "watch": {
+            "description": "Configures a task to run in watch mode automatically.",
+            "type": "boolean",
+            "default": false
           }
         }
       },
