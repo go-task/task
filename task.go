@@ -123,12 +123,13 @@ func (e *Executor) Run(ctx context.Context, calls ...taskfile.Call) error {
 		return nil
 	}
 
-	if e.Watch {
-		return e.watchTasks(calls...)
+	regularCalls, watchCalls, err := e.splitRegularAndWatchCalls(calls...)
+	if err != nil {
+		return err
 	}
 
 	g, ctx := errgroup.WithContext(ctx)
-	for _, c := range calls {
+	for _, c := range regularCalls {
 		c := c
 		if e.Parallel {
 			g.Go(func() error { return e.RunTask(ctx, c) })
@@ -138,7 +139,31 @@ func (e *Executor) Run(ctx context.Context, calls ...taskfile.Call) error {
 			}
 		}
 	}
-	return g.Wait()
+	if err := g.Wait(); err != nil {
+		return err
+	}
+
+	if len(watchCalls) > 0 {
+		return e.watchTasks(watchCalls...)
+	}
+
+	return nil
+}
+
+func (e *Executor) splitRegularAndWatchCalls(calls ...taskfile.Call) (regularCalls []taskfile.Call, watchCalls []taskfile.Call, err error) {
+	for _, c := range calls {
+		t, err := e.GetTask(c)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		if e.Watch || t.Watch {
+			watchCalls = append(watchCalls, c)
+		} else {
+			regularCalls = append(regularCalls, c)
+		}
+	}
+	return
 }
 
 // RunTask runs a task by its name

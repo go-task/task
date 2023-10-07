@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add ability to set `watch: true` in a task to automatically run it in watch
+  mode (#231, #1361 by @andreynering).
 - Fixed a nil pointer error when running a Taskfile with no contents (#1341,
   #1342 by @pd93).
 - Added a new [exit code](https://taskfile.dev/api/#exit-codes) (107) for when a
