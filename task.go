@@ -34,7 +34,7 @@ import (
 const (
 	// MaximumTaskCall is the max number of times a task can be called.
 	// This exists to prevent infinite loops on cyclic dependencies
-	MaximumTaskCall = 100
+	MaximumTaskCall = 1000
 )
 
 func shouldPromptContinue(input string) bool {
@@ -173,7 +173,10 @@ func (e *Executor) RunTask(ctx context.Context, call taskfile.Call) error {
 		return err
 	}
 	if !e.Watch && atomic.AddInt32(e.taskCallCount[t.Task], 1) >= MaximumTaskCall {
-		return &errors.TaskCalledTooManyTimesError{TaskName: t.Task}
+		return &errors.TaskCalledTooManyTimesError{
+			TaskName:        t.Task,
+			MaximumTaskCall: MaximumTaskCall,
+		}
 	}
 
 	release := e.acquireConcurrencyLimit()

@@ -8,6 +8,10 @@
   #1342 by @pd93).
 - Added a new [exit code](https://taskfile.dev/api/#exit-codes) (107) for when a
   Taskfile does not contain a schema version (#1342 by @pd93).
+- Increased limit of maximum task calls from 100 to 1000 for now, as some people
+  have been reaching this limit organically now that we have loops. This check
+  exists to detect recursive calls, but will be removed in favor of a better
+  algorithm soon (#1321, #1332).
 
 ## v3.30.1 - 2023-09-14
 
