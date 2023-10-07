@@ -180,7 +180,7 @@ func shouldIgnoreFile(path string) bool {
 		"/.task",
 		"/.git",
 		"/.hg",
-		"/.node_modules",
+		"/node_modules",
 	}
 	for _, p := range ignorePaths {
 		if strings.Contains(path, fmt.Sprintf("%s/", p)) || strings.HasSuffix(path, p) {
