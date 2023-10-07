@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v3.31.0 - 2023-10-07
 
 - Enabled the `--yes` flag for the
   [Remote Taskfiles experiment](https://taskfile.dev/experiments/remote-taskfiles)

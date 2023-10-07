@@ -5,6 +5,27 @@ sidebar_position: 14
 
 # Changelog
 
+## v3.31.0 - 2023-10-07
+
+- Enabled the `--yes` flag for the
+  [Remote Taskfiles experiment](https://taskfile.dev/experiments/remote-taskfiles)
+  ([#1344](https://github.com/go-task/task/issues/1344) by [@pd93](https://github.com/pd93)).
+- Add ability to set `watch: true` in a task to automatically run it in watch
+  mode ([#231](https://github.com/go-task/task/issues/231), [#1361](https://github.com/go-task/task/issues/1361) by [@andreynering](https://github.com/andreynering)).
+- Fixed a bug on the watch mode where paths that contained `.git` (like
+  `.github`), for example, were also being ignored ([#1356](https://github.com/go-task/task/issues/1356) by [@butuzov](https://github.com/butuzov)).
+- Fixed a nil pointer error when running a Taskfile with no contents ([#1341](https://github.com/go-task/task/issues/1341),
+  [#1342](https://github.com/go-task/task/issues/1342) by [@pd93](https://github.com/pd93)).
+- Added a new [exit code](https://taskfile.dev/api/#exit-codes) (107) for when a
+  Taskfile does not contain a schema version ([#1342](https://github.com/go-task/task/issues/1342) by [@pd93](https://github.com/pd93)).
+- Increased limit of maximum task calls from 100 to 1000 for now, as some people
+  have been reaching this limit organically now that we have loops. This check
+  exists to detect recursive calls, but will be removed in favor of a better
+  algorithm soon ([#1321](https://github.com/go-task/task/issues/1321), [#1332](https://github.com/go-task/task/issues/1332)).
+- Fixed templating on descriptions on `task --list` ([#1343](https://github.com/go-task/task/issues/1343) by [@blackjid](https://github.com/blackjid)).
+- Fixed a bug where precondition errors were incorrectly being printed when
+  task execution was aborted ([#1337](https://github.com/go-task/task/issues/1337), [#1338](https://github.com/go-task/task/issues/1338) by [@sylv](https://github.com/sylv)-io).
+
 ## v3.30.1 - 2023-09-14
 
 - Fixed a regression where some special variables weren't being set correctly
