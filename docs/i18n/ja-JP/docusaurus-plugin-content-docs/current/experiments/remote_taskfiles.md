@@ -37,6 +37,11 @@ Running commands from sources that you do not control is always a potential secu
 1. When running a task from a remote Taskfile for the first time, Task will print a warning to the console asking you to check that you are sure that you trust the source of the Taskfile. If you do not accept the prompt, then Task will exit with code `104` (not trusted) and nothing will run. If you accept the prompt, the remote Taskfile will run and further calls to the remote Taskfile will not prompt you again.
 2. Whenever you run a remote Taskfile, Task will create and store a checksum of the file that you are running. If the checksum changes, then Task will print another warning to the console to inform you that the contents of the remote file has changed. If you do not accept the prompt, then Task will exit with code `104` (not trusted) and nothing will run. If you accept the prompt, the checksum will be updated and the remote Taskfile will run.
 
+Sometimes you need to run Task in an environment that does not have an interactive terminal, so you are not able to accept a prompt. In these cases you are able to tell task to accept these prompts automatically by using the `--yes` flag. Before enabling this flag, you should:
+
+1. Be sure that you trust the source and contents of the remote Taskfile.
+2. Consider using a pinned version of the remote Taskfile (e.g. A link containing a commit hash) to prevent Task from automatically accepting a prompt that says a remote Taskfile has changed.
+
 Task currently supports both `http` and `https` URLs. However, the `http` requests will not execute by default unless you run the task with the `--insecure` flag. This is to protect you from accidentally running a remote Taskfile that is hosted on and unencrypted connection. Sources that are not protected by TLS are vulnerable to [man-in-the-middle attacks][man-in-the-middle-attacks] and should be avoided unless you know what you are doing.
 
 ## Caching & Running Offline
