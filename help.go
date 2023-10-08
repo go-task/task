@@ -24,14 +24,16 @@ type ListOptions struct {
 	ListOnlyTasksWithDescriptions bool
 	ListAllTasks                  bool
 	FormatTaskListAsJSON          bool
+	NoStatus                      bool
 }
 
 // NewListOptions creates a new ListOptions instance
-func NewListOptions(list, listAll, listAsJson bool) ListOptions {
+func NewListOptions(list, listAll, listAsJson, noStatus bool) ListOptions {
 	return ListOptions{
 		ListOnlyTasksWithDescriptions: list,
 		ListAllTasks:                  listAll,
 		FormatTaskListAsJSON:          listAsJson,
+		NoStatus:                      noStatus,
 	}
 }
 
@@ -47,6 +49,9 @@ func (o ListOptions) Validate() error {
 	}
 	if o.FormatTaskListAsJSON && !o.ShouldListTasks() {
 		return fmt.Errorf("task: --json only applies to --list or --list-all")
+	}
+	if o.NoStatus && !o.FormatTaskListAsJSON {
+		return fmt.Errorf("task: --no-status only applies to --json with --list or --list-all")
 	}
 	return nil
 }
@@ -73,7 +78,7 @@ func (e *Executor) ListTasks(o ListOptions) (bool, error) {
 		return false, err
 	}
 	if o.FormatTaskListAsJSON {
-		output, err := e.ToEditorOutput(tasks)
+		output, err := e.ToEditorOutput(tasks, o.NoStatus)
 		if err != nil {
 			return false, err
 		}
@@ -154,7 +159,7 @@ func (e *Executor) ListTaskNames(allTasks bool) {
 	}
 }
 
-func (e *Executor) ToEditorOutput(tasks []*taskfile.Task) (*editors.Taskfile, error) {
+func (e *Executor) ToEditorOutput(tasks []*taskfile.Task, noStatus bool) (*editors.Taskfile, error) {
 	o := &editors.Taskfile{
 		Tasks:    make([]editors.Task, len(tasks)),
 		Location: e.Taskfile.Location,
@@ -163,34 +168,51 @@ func (e *Executor) ToEditorOutput(tasks []*taskfile.Task) (*editors.Taskfile, er
 	for i := range tasks {
 		task := tasks[i]
 		j := i
-		g.Go(func() error {
-			// Get the fingerprinting method to use
-			method := e.Taskfile.Method
-			if task.Method != "" {
-				method = task.Method
-			}
-			upToDate, err := fingerprint.IsTaskUpToDate(context.Background(), task,
-				fingerprint.WithMethod(method),
-				fingerprint.WithTempDir(e.TempDir),
-				fingerprint.WithDry(e.Dry),
-				fingerprint.WithLogger(e.Logger),
-			)
-			if err != nil {
-				return err
-			}
-			o.Tasks[j] = editors.Task{
-				Name:     task.Name(),
-				Desc:     task.Desc,
-				Summary:  task.Summary,
-				UpToDate: upToDate,
-				Location: &editors.Location{
-					Line:     task.Location.Line,
-					Column:   task.Location.Column,
-					Taskfile: task.Location.Taskfile,
-				},
-			}
-			return nil
-		})
+		if noStatus {
+			g.Go(func() error {
+				o.Tasks[j] = editors.Task{
+					Name:     task.Name(),
+					Desc:     task.Desc,
+					Summary:  task.Summary,
+					UpToDate: false,
+					Location: &editors.Location{
+						Line:     task.Location.Line,
+						Column:   task.Location.Column,
+						Taskfile: task.Location.Taskfile,
+					},
+				}
+				return nil
+			})
+		} else {
+			g.Go(func() error {
+				// Get the fingerprinting method to use
+				method := e.Taskfile.Method
+				if task.Method != "" {
+					method = task.Method
+				}
+				upToDate, err := fingerprint.IsTaskUpToDate(context.Background(), task,
+					fingerprint.WithMethod(method),
+					fingerprint.WithTempDir(e.TempDir),
+					fingerprint.WithDry(e.Dry),
+					fingerprint.WithLogger(e.Logger),
+				)
+				if err != nil {
+					return err
+				}
+				o.Tasks[j] = editors.Task{
+					Name:     task.Name(),
+					Desc:     task.Desc,
+					Summary:  task.Summary,
+					UpToDate: upToDate,
+					Location: &editors.Location{
+						Line:     task.Location.Line,
+						Column:   task.Location.Column,
+						Taskfile: task.Location.Taskfile,
+					},
+				}
+				return nil
+			})
+		}
 	}
 	return o, g.Wait()
 }
