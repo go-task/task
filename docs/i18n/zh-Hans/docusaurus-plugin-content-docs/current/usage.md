@@ -1581,6 +1581,28 @@ tasks:
 
 默认监控的时间间隔是 5 秒，但可以通过 Taskfile 中根属性 `interval: '500ms'` 设置，也可以通过命令行 参数 `--interval=500ms` 设置。
 
+Also, it's possible to set `watch: true` in a given task and it'll automatically run in watch mode:
+
+```yaml
+version: '3'
+
+interval: 500ms
+
+tasks:
+  build:
+    desc: Builds the Go application
+    sources:
+      - '**/*.go'
+    cmds:
+      - go build  # ...
+```
+
+:::info
+
+Note that when setting `watch: true` to a task, it'll only run in watch mode when running from the CLI via `task my-watch-task`, but won't run in watch mode if called by another task, either directly or as a dependency.
+
+:::
+
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end -->

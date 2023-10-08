@@ -1581,6 +1581,28 @@ With the flags `--watch` or `-w` task will watch for file changes and run the ta
 
 The default watch interval is 5 seconds, but it's possible to change it by either setting `interval: '500ms'` in the root of the Taskfile passing it as an argument like `--interval=500ms`.
 
+Also, it's possible to set `watch: true` in a given task and it'll automatically run in watch mode:
+
+```yaml
+version: '3'
+
+interval: 500ms
+
+tasks:
+  build:
+    desc: Builds the Go application
+    sources:
+      - '**/*.go'
+    cmds:
+      - go build  # ...
+```
+
+:::info
+
+Note that when setting `watch: true` to a task, it'll only run in watch mode when running from the CLI via `task my-watch-task`, but won't run in watch mode if called by another task, either directly or as a dependency.
+
+:::
+
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end -->

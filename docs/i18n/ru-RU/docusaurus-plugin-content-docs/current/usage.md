@@ -418,13 +418,13 @@ tasks:
       - echo {{.TEXT}}
 ```
 
-## Platform specific tasks and commands
+## Платформно-зависимые tasks и команды
 
-If you want to restrict the running of tasks to explicit platforms, this can be achieved using the `platforms:` key. Tasks can be restricted to a specific OS, architecture or a combination of both. On a mismatch, the task or command will be skipped, and no error will be thrown.
+Если вы хотите ограничить запуск tasks определенными платформами, вы можете сделать это используя ключ `platforms:`. Tasks могут быть ограничены определенной ОС, архитектурой или комбинацией этих элементов. В случае несоответствия, task или команда будут пропущены, и ошибка не вернется.
 
-The values allowed as OS or Arch are valid `GOOS` and `GOARCH` values, as defined by the Go language [here](https://github.com/golang/go/blob/master/src/go/build/syslist.go).
+Разрешенные значения ОС и архитектур или `GOOS` и `GOARCH` определены языком Go [здесь](https://github.com/golang/go/blob/master/src/go/build/syslist.go).
 
-The `build-windows` task below will run only on Windows, and on any architecture:
+Task ниже `build-windows` будет выполняться только на Windows любой архитектуры:
 
 ```yaml
 version: '3'
@@ -436,7 +436,7 @@ tasks:
       - echo 'Running command on Windows'
 ```
 
-This can be restricted to a specific architecture as follows:
+Это можно ограничить определенной архитектурой следующим образом:
 
 ```yaml
 version: '3'
@@ -448,7 +448,7 @@ tasks:
       - echo 'Running command on Windows (amd64)'
 ```
 
-It is also possible to restrict the task to specific architectures:
+Также можно ограничить task определенными архитектурами:
 
 ```yaml
 version: '3'
@@ -460,7 +460,7 @@ tasks:
       - echo 'Running command on amd64'
 ```
 
-Multiple platforms can be specified as follows:
+Несколько платформ можно указать так:
 
 ```yaml
 version: '3'
@@ -472,7 +472,7 @@ tasks:
       - echo 'Running command on Windows (amd64) and macOS'
 ```
 
-Individual commands can also be restricted to specific platforms:
+Отдельные команды также могут быть ограничены определенными платформами:
 
 ```yaml
 version: '3'
@@ -1580,6 +1580,28 @@ Keep in mind that not all options are available in the [shell interpreter librar
 With the flags `--watch` or `-w` task will watch for file changes and run the task again. This requires the `sources` attribute to be given, so task knows which files to watch.
 
 The default watch interval is 5 seconds, but it's possible to change it by either setting `interval: '500ms'` in the root of the Taskfile passing it as an argument like `--interval=500ms`.
+
+Also, it's possible to set `watch: true` in a given task and it'll automatically run in watch mode:
+
+```yaml
+version: '3'
+
+interval: 500ms
+
+tasks:
+  build:
+    desc: Builds the Go application
+    sources:
+      - '**/*.go'
+    cmds:
+      - go build  # ...
+```
+
+:::info
+
+Note that when setting `watch: true` to a task, it'll only run in watch mode when running from the CLI via `task my-watch-task`, but won't run in watch mode if called by another task, either directly or as a dependency.
+
+:::
 
 <!-- prettier-ignore-start -->
 
