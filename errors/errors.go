@@ -29,6 +29,8 @@ const (
 	CodeTaskCalledTooManyTimes
 	CodeTaskCancelled
 	CodeTaskMissingRequiredVars
+	CodeTaskRequiredStrictVarsEmpty
+	CodeTaskRequiredStrictVarsLimitFail
 )
 
 // TaskError extends the standard error interface with a Code method. This code will

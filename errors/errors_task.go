@@ -145,3 +145,39 @@ func (err *TaskMissingRequiredVars) Error() string {
 func (err *TaskMissingRequiredVars) Code() int {
 	return CodeTaskMissingRequiredVars
 }
+
+// TaskRequiredStrictVarsEmpty is returned when a task required vars are empty.
+type TaskRequiredStrictVarsEmpty struct {
+	TaskName    string
+	InvalidVars []string
+}
+
+func (err *TaskRequiredStrictVarsEmpty) Error() string {
+	return fmt.Sprintf(
+		`task: Task %q cancelled because the required vars are empty string: %s`,
+		err.TaskName,
+		strings.Join(err.InvalidVars, ", "),
+	)
+}
+
+func (err *TaskRequiredStrictVarsEmpty) Code() int {
+	return CodeTaskRequiredStrictVarsEmpty
+}
+
+// TaskRequiredStrictVarsLimitFail is returned when a task required vars don't match the limit_values.
+type TaskRequiredStrictVarsLimitFail struct {
+	TaskName    string
+	InvalidVars []string
+}
+
+func (err *TaskRequiredStrictVarsLimitFail) Error() string {
+	return fmt.Sprintf(
+		`task: Task %q cancelled because the required vars don't match the limits provided': %s`,
+		err.TaskName,
+		strings.Join(err.InvalidVars, ", "),
+	)
+}
+
+func (err *TaskRequiredStrictVarsLimitFail) Code() int {
+	return CodeTaskRequiredStrictVarsLimitFail
+}

@@ -1,0 +1,44 @@
+version: '3'
+
+vars:
+  VAR_EMPTY: ""
+  VAR_OK: "Testing123"
+  VAR_ONE: "one"
+  VAR_TWO: "two"
+  VAR_THREE: "three"
+
+tasks:
+  require_strict_ok:
+    requires_strict:
+      vars: [VAR_OK]
+    cmds:
+      - echo '{{.VAR_OK}}'
+
+  # Will return an error because the value of VAR_EMPTY is an empty string
+  require_strict_empty:
+    requires_strict:
+      vars: [ VAR_EMPTY ]
+    cmds:
+      - echo '{{.VAR_EMPTY}}'
+
+  requires_strict_limit:
+    requires_strict:
+      vars: [VAR_ONE, VAR_THREE, VAR_TWO]
+      limit_values:
+        VAR_TWO:
+          - "foo"
+          - "bar"
+          - "two"
+    cmds:
+      - echo '{{.VAR_TWO}}'
+
+  requires_strict_limit_fail:
+    requires_strict:
+      vars: [VAR_ONE, VAR_THREE, VAR_TWO]
+      limit_values:
+        VAR_TWO:
+          - "foo"
+          - "bar"
+    cmds:
+      - echo '{{.VAR_TWO}}'
+

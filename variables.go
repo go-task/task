@@ -70,6 +70,7 @@ func (e *Executor) compiledTask(call taskfile.Call, evaluateShVars bool) (*taskf
 		Platforms:            origTask.Platforms,
 		Location:             origTask.Location,
 		Requires:             origTask.Requires,
+		RequiresStrict:       origTask.RequiresStrict,
 		Watch:                origTask.Watch,
 	}
 	new.Dir, err = execext.Expand(new.Dir)

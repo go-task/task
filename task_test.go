@@ -2307,3 +2307,34 @@ func TestFor(t *testing.T) {
 		})
 	}
 }
+
+func TestRequireStrictVars(t *testing.T) {
+	const dir = "testdata/vars/v3"
+	const entry = "TaskfileRequireStrict.yml"
+
+	var buff bytes.Buffer
+	e := &task.Executor{
+		Dir:        dir,
+		Entrypoint: entry,
+		Force:      true,
+		Stdout:     &buff,
+		Stderr:     &buff,
+	}
+
+	require.NoError(t, e.Setup())
+
+	tests := []struct {
+		exe    *task.Executor
+		target string
+		err    error
+	}{
+		{exe: e, target: "require_strict_empty", err: &errors.TaskRequiredStrictVarsEmpty{}},
+		{exe: e, target: "require_strict_ok", err: nil},
+		{exe: e, target: "requires_strict_limit", err: nil},
+		{exe: e, target: "requires_strict_limit_fail", err: &errors.TaskRequiredStrictVarsLimitFail{}},
+	}
+	for _, test := range tests {
+		err := e.Run(context.Background(), taskfile.Call{Task: test.target})
+		assert.IsType(t, test.err, err)
+	}
+}
