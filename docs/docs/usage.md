@@ -1817,6 +1817,7 @@ interval: 500ms
 tasks:
   build:
     desc: Builds the Go application
+    watch: true
     sources:
       - '**/*.go'
     cmds:
