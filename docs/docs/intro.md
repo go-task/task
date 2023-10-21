@@ -50,16 +50,6 @@ guide to check the full schema documentation and Task features.
   of files haven't changed since last run (based either on its timestamp or
   content).
 
-## Gold Sponsors
-
-<div class="gold-sponsors">
-
-| [Appwrite](https://appwrite.io/?utm_source=taskfile.dev&utm_medium=website&utm_campaign=task_oss_fund)                       |
-| ---------------------------------------------------------------------------------------------------------------------------- |
-| [![Appwrite](/img/appwrite.svg)](https://appwrite.io/?utm_source=taskfile.dev&utm_medium=website&utm_campaign=task_oss_fund) |
-
-</div>
-
 <!-- prettier-ignore-start -->
 [make]: https://www.gnu.org/software/make/
 [go]: https://go.dev/
