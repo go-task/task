@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Fix bug where dynamic `vars:` and `env:` were being executed when they should
+  actually be skipped by `platforms:` (#1273, #1377 by @andreynering).
+
 ## v3.31.0 - 2023-10-07
 
 - Enabled the `--yes` flag for the

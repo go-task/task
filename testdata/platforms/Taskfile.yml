@@ -2,31 +2,37 @@ version: '3'
 
 tasks:
   build-windows:
+    deps: [failed-var-other-platform]
     platforms: [windows]
     cmds:
       - echo 'Running task on windows'
 
   build-darwin:
+    deps: [failed-var-other-platform]
     platforms: [darwin]
     cmds:
       - echo 'Running task on darwin'
 
   build-linux:
+    deps: [failed-var-other-platform]
     platforms: [linux]
     cmds:
       - echo 'Running task on linux'
 
   build-freebsd:
+    deps: [failed-var-other-platform]
     platforms: [freebsd]
     cmds:
       - echo 'Running task on freebsd'
 
   build-blank-os:
+    deps: [failed-var-other-platform]
     platforms: []
     cmds:
       - echo 'Running command'
 
   build-multiple:
+    deps: [failed-var-other-platform]
     platforms: []
     cmds:
       - cmd: echo 'Running command'
@@ -36,16 +42,19 @@ tasks:
         platforms: [darwin]
 
   build-amd64:
+    deps: [failed-var-other-platform]
     platforms: [amd64]
     cmds:
       - echo "Running command on amd64"
 
   build-arm64:
+    deps: [failed-var-other-platform]
     platforms: [arm64]
     cmds:
       - echo "Running command on arm64"
 
   build-mixed:
+    deps: [failed-var-other-platform]
     cmds:
       - cmd: echo 'building on windows/arm64'
         platforms: [windows/arm64]
@@ -53,3 +62,10 @@ tasks:
         platforms: [linux/amd64]
       - cmd: echo 'building on darwin'
         platforms: [darwin]
+
+  failed-var-other-platform:
+    platforms: [__test__]
+    env:
+      EXAMPLE_VAR: {sh: exit 1}
+    vars:
+      EXAMPLE_VAR: {sh: exit 2}

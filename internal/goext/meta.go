@@ -32,6 +32,7 @@ var knownOS = map[string]struct{}{
 	"solaris":   {},
 	"windows":   {},
 	"zos":       {},
+	"__test__":  {},
 }
 
 var knownArch = map[string]struct{}{
