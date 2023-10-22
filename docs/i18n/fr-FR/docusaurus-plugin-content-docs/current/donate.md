@@ -13,7 +13,7 @@ Les entreprises qui font un don d'au moins 50$/mois seront présentées comme un
 
 ## Sponsors GitHub
 
-La façon préférée de faire un don aux mainteneurs du projet est d'utiliser les sponsors GitHub. Utilisez simplement le lien suivant pour faire votre don :
+La façon préférée de faire un don aux mainteneurs du projet est d'utiliser les sponsors GitHub. Just use the following links to do your donation. We suggest a 50/50 split to each maintainer of the total amount you plan to donate to the project.
 
 - [@andreynering](https://github.com/sponsors/andreynering)
 - [@pd93](https://github.com/sponsors/pd93)

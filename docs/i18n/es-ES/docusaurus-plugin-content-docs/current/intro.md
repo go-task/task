@@ -37,16 +37,6 @@ The above example is just the start, you can take a look at the [usage](/usage) 
 - Truly cross-platform: while most build tools only work well on Linux or macOS, Task also supports Windows thanks to [this shell interpreter for Go][sh].
 - Great for code generation: you can easily [prevent a task from running](/usage#prevent-unnecessary-work) if a given set of files haven't changed since last run (based either on its timestamp or content).
 
-## Gold Sponsors
-
-<div class="gold-sponsors">
-
-| [Appwrite](https://appwrite.io/?utm_source=taskfile.dev&utm_medium=website&utm_campaign=task_oss_fund)                       |
-| ---------------------------------------------------------------------------------------------------------------------------- |
-| [![Appwrite](/img/appwrite.svg)](https://appwrite.io/?utm_source=taskfile.dev&utm_medium=website&utm_campaign=task_oss_fund) |
-
-</div>
-
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end -->

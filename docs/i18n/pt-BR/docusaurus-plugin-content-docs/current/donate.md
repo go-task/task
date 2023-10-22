@@ -13,7 +13,7 @@ As empresas que doarem pelo menos $50/mês ganharão destaque como "Patrocinador
 
 ## GitHub Sponsors
 
-A forma sugerida de doar para os mantenedores é através do GitHub Sponsors. Basta usar os seguintes links para fazer a sua doação:
+A forma sugerida de doar para os mantenedores é através do GitHub Sponsors. Just use the following links to do your donation. We suggest a 50/50 split to each maintainer of the total amount you plan to donate to the project.
 
 - [@andreynering](https://github.com/sponsors/andreynering)
 - [@pd93](https://github.com/sponsors/pd93)

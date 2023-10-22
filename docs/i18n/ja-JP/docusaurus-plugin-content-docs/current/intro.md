@@ -30,22 +30,12 @@ tasks:
 
 上記の例は始まりに過ぎません。 全てのスキーマやTaskの機能については、[usage](/usage)ガイドを確認するといいでしょう。
 
-## 機能紹介
+## Features
 
 - [簡単なインストール方法](installation.md): シングルバイナリをダウンロードして、`$PATH`に追加するだけで完了です！ または[Homebrew][homebrew]、[Snapcraft][snapcraft]、[Scoop][scoop]を使ってインストールすることができます。
 - Clで使用可能: [シンプルなコマンド](installation.md#install-script)でCIスクリプトに追加することでCIパイプラインでTaskを使うことができます。
 - 真のクロスプラットフォーム: ほとんどのビルドツールはLinuxまたはmacOSだけで使用可能ですが、Taskは[Goのシェルインタープリタ][sh]を使うことでWindowsもサポートしています。
 - コード生成に適している: 特定のファイル群が最後に実行されてから変更されていない場合(タイムスタンプや内容に基づき)、簡単に[タスクの実行を防ぐ](/usage#prevent-unnecessary-work)ことができます。
-
-## ゴールドスポンサー
-
-<div class="gold-sponsors">
-
-| [Appwrite](https://appwrite.io/?utm_source=taskfile.dev&utm_medium=website&utm_campaign=task_oss_fund)                       |
-| ---------------------------------------------------------------------------------------------------------------------------- |
-| [![Appwrite](/img/appwrite.svg)](https://appwrite.io/?utm_source=taskfile.dev&utm_medium=website&utm_campaign=task_oss_fund) |
-
-</div>
 
 <!-- prettier-ignore-start -->
 

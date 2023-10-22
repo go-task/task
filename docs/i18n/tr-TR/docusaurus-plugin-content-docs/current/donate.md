@@ -13,7 +13,7 @@ Companies who donate at least $50/month will be featured as a "Gold Sponsor" in 
 
 ## GitHub Sponsorları
 
-The preferred way to donate to the maintainers is via GitHub Sponsors. Just use the following links to do your donation:
+The preferred way to donate to the maintainers is via GitHub Sponsors. Just use the following links to do your donation. We suggest a 50/50 split to each maintainer of the total amount you plan to donate to the project.
 
 - [@andreynering](https://github.com/sponsors/andreynering)
 - [@pd93](https://github.com/sponsors/pd93)
