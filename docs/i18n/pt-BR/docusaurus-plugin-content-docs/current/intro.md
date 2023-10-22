@@ -30,22 +30,12 @@ E invocá-lo ao rodar `task hello` do seu terminal.
 
 O exemplo acima é apenas o começo. Você pode dar uma olhada no [guia de uso](/usage) para conferir a documentação completa do esquema e as funcionalidades do Task.
 
-## Funcionalidades
+## Features
 
 - [Instalação fácil](installation.md): apenas baixe um único binário, adicione-o a `$PATH` e pronto! Ou você também pode instalá-lo usando [Homebrew][homebrew], [Snapcraft][snapcraft] ou [Scoop][scoop] se você quiser.
 - Disponível em CIs: adicionando [este script simples](installation.md#install-script) para instalá-lo no seu CI você estará pronto para usar o Task como parte do seu pipeline de CI;
 - Verdadeiramente multiplataforma: enquanto a maioria das ferramentas de compilação só funcionam bem no Linux ou macOS, o Task também suporta Windows graças [a este interpretador de shell para Go][sh].
 - Ótimo para a geração de código: você pode facilmente [impedir que uma tarefa execute](/usage#prevent-unnecessary-work) se um determinado conjunto de arquivos não tiver mudado desde a última execução (baseado na data de modificação ou conteúdo dos arquivos).
-
-## Patrocinadores de Ouro
-
-<div class="gold-sponsors">
-
-| [Appwrite](https://appwrite.io/?utm_source=taskfile.dev&utm_medium=website&utm_campaign=task_oss_fund)                       |
-| ---------------------------------------------------------------------------------------------------------------------------- |
-| [![Appwrite](/img/appwrite.svg)](https://appwrite.io/?utm_source=taskfile.dev&utm_medium=website&utm_campaign=task_oss_fund) |
-
-</div>
 
 <!-- prettier-ignore-start -->
 

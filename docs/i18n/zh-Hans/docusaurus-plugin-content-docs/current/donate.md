@@ -13,7 +13,7 @@ sidebar_position: 16
 
 ## GitHub Sponsors
 
-捐赠给维护者的首选方式是通过 GitHub Sponsors。 只需使用以下链接就可以进行捐赠：
+捐赠给维护者的首选方式是通过 GitHub Sponsors。 Just use the following links to do your donation. We suggest a 50/50 split to each maintainer of the total amount you plan to donate to the project.
 
 - [@andreynering](https://github.com/sponsors/andreynering)
 - [@pd93](https://github.com/sponsors/pd93)
