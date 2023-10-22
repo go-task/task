@@ -73,8 +73,8 @@ func Merge(t1, t2 *Taskfile, includedTaskfile *IncludedTaskfile, namespaces ...s
 }
 
 func taskNameWithNamespace(taskName string, namespaces ...string) string {
-	if strings.HasPrefix(taskName, ":") {
-		return strings.TrimPrefix(taskName, ":")
+	if strings.HasPrefix(taskName, NamespaceSeparator) {
+		return strings.TrimPrefix(taskName, NamespaceSeparator)
 	}
 	return strings.Join(append(namespaces, taskName), NamespaceSeparator)
 }
