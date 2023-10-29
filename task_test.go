@@ -1572,6 +1572,18 @@ func TestDotenvShouldAllowMissingEnv(t *testing.T) {
 	tt.Run(t)
 }
 
+func TestDotenvIsLoadBeforeRequiringVars(t *testing.T) {
+	tt := fileContentTest{
+		Dir:       "testdata/dotenv/requiring_env",
+		Target:    "default",
+		TrimSpace: false,
+		Files: map[string]string{
+			"include.txt": "REQUIRED_ENV='123' REQUIRED_TASK_ENV='456'\n",
+		},
+	}
+	tt.Run(t)
+}
+
 func TestDotenvHasLocalEnvInPath(t *testing.T) {
 	tt := fileContentTest{
 		Dir:       "testdata/dotenv/local_env_in_path",

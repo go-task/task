@@ -120,6 +120,9 @@ func (c *CompilerV3) getVariables(t *taskfile.Task, call *taskfile.Call, evaluat
 	if err := t.Vars.Range(taskRangeFunc); err != nil {
 		return nil, err
 	}
+	if err := t.Env.Range(taskRangeFunc); err != nil {
+		return nil, err
+	}
 
 	return result, nil
 }

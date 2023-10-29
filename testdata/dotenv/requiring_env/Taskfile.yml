@@ -1,0 +1,13 @@
+version: '3'
+
+dotenv: ['.env']
+
+tasks:
+  default:
+    dotenv: ['.task.env']
+    requires:
+      vars:
+        - REQUIRED_ENV
+        - REQUIRED_TASK_ENV
+    cmds:
+      - echo "REQUIRED_ENV='$REQUIRED_ENV' REQUIRED_TASK_ENV='$REQUIRED_TASK_ENV'" > include.txt
