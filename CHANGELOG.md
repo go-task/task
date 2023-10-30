@@ -4,6 +4,7 @@
 
 - Fix bug where dynamic `vars:` and `env:` were being executed when they should
   actually be skipped by `platforms:` (#1273, #1377 by @andreynering).
+- Fix `schema.json` to make `silent` valid in `cmds` that use `for` (#1385, #1386 by @iainvm).
 
 ## v3.31.0 - 2023-10-07
 

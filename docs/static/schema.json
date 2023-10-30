@@ -370,6 +370,10 @@
             "description": "Command to run",
             "type": "string"
           },
+          "silent": {
+            "description": "Silent mode disables echoing of command before Task runs it",
+            "type": "boolean"
+          },
           "task": {
             "description": "Task to run",
             "type": "string"
