@@ -114,6 +114,9 @@ func (c *CompilerV3) getVariables(t *taskfile.Task, call *taskfile.Call, evaluat
 		return result, nil
 	}
 
+	if err := t.Env.Range(taskRangeFunc); err != nil {
+		return nil, err
+	}
 	if err := call.Vars.Range(rangeFunc); err != nil {
 		return nil, err
 	}
@@ -148,8 +151,10 @@ func (c *CompilerV3) HandleDynamicVar(v taskfile.Var, dir string) (string, error
 	opts := &execext.RunCommandOptions{
 		Command: v.Sh,
 		Dir:     dir,
-		Stdout:  &stdout,
-		Stderr:  c.Logger.Stderr,
+		// TODO: Should we pass the current environment to the command?
+		Env:    []string{},
+		Stdout: &stdout,
+		Stderr: c.Logger.Stderr,
 	}
 	if err := execext.RunCommand(context.Background(), opts); err != nil {
 		return "", fmt.Errorf(`task: Command "%s" failed: %s`, opts.Command, err)

@@ -1542,6 +1542,18 @@ func TestDotenvShouldIncludeAllEnvFiles(t *testing.T) {
 	tt.Run(t)
 }
 
+func TestDotenvShouldLoadBeforeTaskVars(t *testing.T) {
+	tt := fileContentTest{
+		Dir:       "testdata/dotenv/load_dotenv_before_vars",
+		Target:    "default",
+		TrimSpace: false,
+		Files: map[string]string{
+			"include.txt": "AWS_ACCESS_KEY_ID='123'\n",
+		},
+	}
+	tt.Run(t)
+}
+
 func TestDotenvShouldErrorWhenIncludingDependantDotenvs(t *testing.T) {
 	const dir = "testdata/dotenv/error_included_envs"
 	const entry = "Taskfile.yml"

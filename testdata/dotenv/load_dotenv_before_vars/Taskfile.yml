@@ -1,0 +1,11 @@
+version: '3'
+
+dotenv: ['.env']
+
+tasks:
+  default:
+    vars:
+      AWS_ACCESS_KEY_ID:
+        sh: echo $SHT_DO_SPACES_ACCESS_ID
+    cmds:
+      - echo "AWS_ACCESS_KEY_ID='$AWS_ACCESS_KEY_ID'" > include.txt
