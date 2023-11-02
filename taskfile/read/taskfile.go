@@ -113,17 +113,14 @@ func readTaskfile(
 				}
 			}
 
-			// If the hash has changed (or is new), store it in the cache
+			// If the hash has changed (or is new)
 			if checksum != cachedChecksum {
+				// Store the checksum
 				if err := cache.writeChecksum(node, checksum); err != nil {
 					return nil, err
 				}
-			}
-
-			// If we need to download (cache) it
-			if download {
+				// Cache the file
 				l.VerboseOutf(logger.Magenta, "task: [%s] Caching downloaded file\n", node.Location())
-				// Cache the file for later
 				if err = cache.write(node, b); err != nil {
 					return nil, err
 				}

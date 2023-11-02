@@ -270,6 +270,12 @@ func run() error {
 		return err
 	}
 
+	// If the download flag is specified, we should stop execution as soon as
+	// taskfile is downloaded
+	if flags.download {
+		return nil
+	}
+
 	if listOptions.ShouldListTasks() {
 		foundTasks, err := e.ListTasks(listOptions)
 		if err != nil {
@@ -298,9 +304,7 @@ func run() error {
 	}
 
 	// If there are no calls, run the default task instead
-	// Unless the download flag is specified, in which case we want to download
-	// the Taskfile and do nothing else
-	if len(calls) == 0 && !flags.download {
+	if len(calls) == 0 {
 		calls = append(calls, taskfile.Call{Task: "default", Direct: true})
 	}
 
