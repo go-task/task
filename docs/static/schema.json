@@ -189,6 +189,10 @@
             "description": "A list of variables which should be set if this task is to run, if any of these variables are unset the task will error and not run",
             "$ref": "#/definitions/3/requires_obj"
           },
+          "requires_strict": {
+            "description": "A list of variables which should be set if this task is to run, if any of these variables are unset or have a length of zero the task will error and not run",
+            "$ref": "#/definitions/3/requires_strict_obj"
+          },
           "watch": {
             "description": "Configures a task to run in watch mode automatically.",
             "type": "boolean",
@@ -478,6 +482,25 @@
           "vars": {
             "description": "List of variables that must be defined for the task to run",
             "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "requires_strict_obj": {
+        "type": "object",
+        "properties": {
+          "vars": {
+            "description": "List of variables that must be defined and not empty for the task to run",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "limit_values": {
+            "description": "A dictionary of list that allow matching vars against allowed values",
+            "type": "object",
             "items": {
               "type": "string"
             }
