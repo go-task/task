@@ -91,6 +91,7 @@ func (e *Executor) readTaskfile() error {
 		e.Insecure,
 		e.Download,
 		e.Offline,
+		e.Timeout,
 		e.TempDir,
 		e.Logger,
 	)

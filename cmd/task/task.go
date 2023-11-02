@@ -75,6 +75,7 @@ var flags struct {
 	experiments bool
 	download    bool
 	offline     bool
+	timeout     time.Duration
 }
 
 func main() {
@@ -150,6 +151,7 @@ func run() error {
 	if experiments.RemoteTaskfiles {
 		pflag.BoolVar(&flags.download, "download", false, "Downloads a cached version of a remote Taskfile.")
 		pflag.BoolVar(&flags.offline, "offline", false, "Forces Task to only use local or cached Taskfiles.")
+		pflag.DurationVar(&flags.timeout, "timeout", time.Second*10, "Timeout for downloading remote Taskfiles.")
 	}
 
 	pflag.Parse()
@@ -235,6 +237,7 @@ func run() error {
 		Insecure:    flags.insecure,
 		Download:    flags.download,
 		Offline:     flags.offline,
+		Timeout:     flags.timeout,
 		Watch:       flags.watch,
 		Verbose:     flags.verbose,
 		Silent:      flags.silent,

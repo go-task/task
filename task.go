@@ -46,6 +46,7 @@ type Executor struct {
 	Insecure    bool
 	Download    bool
 	Offline     bool
+	Timeout     time.Duration
 	Watch       bool
 	Verbose     bool
 	Silent      bool

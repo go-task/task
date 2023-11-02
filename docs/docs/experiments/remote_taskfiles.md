@@ -74,16 +74,17 @@ you are doing.
 
 ## Caching & Running Offline
 
-If for whatever reason, you don't have access to the internet, but you still
-need to be able to run your tasks, you are able to use the `--download` flag to
-store a cached copy of the remote Taskfile.
+Whenever you run a remote Taskfile, the latest copy will be downloaded from the
+internet and cached locally. If for whatever reason, you lose access to the
+internet, you will still be able to run your tasks by specifying the `--offline`
+flag. This will tell Task to use the latest cached version of the file instead
+of trying to download it. You are able to use the `--download` flag to update
+the cached version of the remote files without running any tasks.
 
-<!-- TODO: The following behavior may change -->
-
-If Task detects that you have a local copy of the remote Taskfile, it will use
-your local copy instead of downloading the remote file. You can force Task to
-work offline by using the `--offline` flag. This will prevent Task from making
-any calls to remote sources.
+By default, Task will timeout requests to download remote files after 10 seconds
+and look for a cached copy instead. This timeout can be configured by setting
+the `--timeout` flag and specifying a duration. For example, `--timeout 5s` will
+set the timeout to 5 seconds.
 
 <!-- prettier-ignore-start -->
 [remote-taskfiles-experiment]: https://github.com/go-task/task/issues/1317

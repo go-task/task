@@ -38,6 +38,7 @@ func readTaskfile(
 	node Node,
 	download,
 	offline bool,
+	timeout time.Duration,
 	tempDir string,
 	l *logger.Logger,
 ) (*taskfile.Taskfile, error) {
@@ -64,7 +65,6 @@ func readTaskfile(
 	} else {
 
 		downloaded := false
-		timeout := time.Second * 10
 		ctx, cf := context.WithTimeout(context.Background(), timeout)
 		defer cf()
 
@@ -145,12 +145,13 @@ func Taskfile(
 	insecure bool,
 	download bool,
 	offline bool,
+	timeout time.Duration,
 	tempDir string,
 	l *logger.Logger,
 ) (*taskfile.Taskfile, error) {
 	var _taskfile func(Node) (*taskfile.Taskfile, error)
 	_taskfile = func(node Node) (*taskfile.Taskfile, error) {
-		t, err := readTaskfile(node, download, offline, tempDir, l)
+		t, err := readTaskfile(node, download, offline, timeout, tempDir, l)
 		if err != nil {
 			return nil, err
 		}
