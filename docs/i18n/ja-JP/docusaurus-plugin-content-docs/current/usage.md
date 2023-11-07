@@ -295,7 +295,7 @@ includes:
 
 ### ネームスペースのエイリアス
 
-When including a Taskfile, you can give the namespace a list of `aliases`. This works in the same way as [task aliases](#task-aliases) and can be used together to create shorter and easier-to-type commands.
+Taskfileをインクルードする際は、ネームスペースに`エイリアス`のリストを渡すことができます。 これは[タスクエイリアス](#task-aliases)と同じように機能し、短くてタイプしやすいコマンドを使用するために一緒に使うことができます。
 
 ```yaml
 version: '3'
@@ -308,13 +308,13 @@ includes:
 
 :::info
 
-Vars declared in the included Taskfile have preference over the variables in the including Taskfile! If you want a variable in an included Taskfile to be overridable, use the [default function](https://go-task.github.io/slim-sprig/defaults.html): `MY_VAR: '{{.MY_VAR | default "my-default-value"}}'`.
+インクルードされたTaskfileで宣言された変数は、インクルードしているTaskfile内の変数よりも優先されます！ インクルードされたTaskfileの変数を上書き可能にしたい場合は、[default関数](https://go-task.github.io/slim-sprig/defaults.html)を使用してください: `MY_VAR: '{{.MY_VAR | default "my-default-value"}}'`。
 
 :::
 
 ## インターナルタスク
 
-Internal tasks are tasks that cannot be called directly by the user. They will not appear in the output when running `task --list|--list-all`. Other tasks may call internal tasks in the usual way. This is useful for creating reusable, function-like tasks that have no useful purpose on the command line.
+内部タスクはユーザーが直接呼び出すことができないタスクです。 `task --list|--list-all`を実行したときの出力に表示されません。 他のタスクは通常通り内部タスクを呼び出すことができます。 これはコマンドライン上で明確な用途を持たないが、再利用可能で関数のようなタスクを作成するのに便利です。
 
 ```yaml
 version: '3'
@@ -334,7 +334,7 @@ tasks:
 
 ## タスクディレクトリ
 
-By default, tasks will be executed in the directory where the Taskfile is located. But you can easily make the task run in another folder, informing `dir`:
+デフォルトでは、タスクはTaskfileが配置されているディレクトリで実行されます。 ですが、`dir:`を指定することでタスクを簡単に別のディレクトリで実行させることができます。
 
 ```yaml
 version: '3'
@@ -347,13 +347,13 @@ tasks:
       - caddy
 ```
 
-If the directory does not exist, `task` creates it.
+ディレクトリが存在しない場合、`task`が作成します。
 
 ## タスクの依存関係
 
-> Dependencies run in parallel, so dependencies of a task should not depend one another. If you want to force tasks to run serially, take a look at the [Calling Another Task](#calling-another-task) section below.
+> 依存関係は並列して実行されるため、実行されるタスクの依存関係が互いに依存しないようにする必要があります。 もしタスクを逐次実行するようにしたい場合は、下記の[別のタスクを呼び出す](#calling-another-task)セクションを参照してください。
 
-You may have tasks that depend on others. Just pointing them on `deps` will make them run automatically before running the parent task:
+他のタスクに依存するタスクがあるかもしれません。 `deps`にそれらを指定することで、親タスクを実行する前に自動で実行されるようになります。
 
 ```yaml
 version: '3'
@@ -369,9 +369,9 @@ tasks:
       - esbuild --bundle --minify css/index.css > public/bundle.css
 ```
 
-In the above example, `assets` will always run right before `build` if you run `task build`.
+上記の例では、`task build`を実行すると、`assets`は常に`build`前に実行されます。
 
-A task can have only dependencies and no commands to group tasks together:
+タスクは、自身のコマンドを持たずに、グループ化するためだけの依存関係のみを持たせることができます。
 
 ```yaml
 version: '3'
@@ -389,15 +389,15 @@ tasks:
       - esbuild --bundle --minify css/index.css > public/bundle.css
 ```
 
-If there is more than one dependency, they always run in parallel for better performance.
+依存関係が複数ある場合、常に並列で実行されることでパフォーマンスが向上します。
 
 :::tip
 
-You can also make the tasks given by the command line run in parallel by using the `--parallel` flag (alias `-p`). Example: `task --parallel js css`.
+コマンドラインで`--parallel`フラグ(エイリアス `-p`)を使用して、指定されたタスクを並列して実行することができます。 例: `task --parallel js css`。
 
 :::
 
-If you want to pass information to dependencies, you can do that the same manner as you would to [call another task](#calling-another-task):
+依存関係に情報を渡したい場合は、[別のタスクを呼び出す](#calling-another-task)のと同じ方法で行うことができます。
 
 ```yaml
 version: '3'
@@ -418,13 +418,13 @@ tasks:
       - echo {{.TEXT}}
 ```
 
-## Platform specific tasks and commands
+## プラットフォーム固有のタスクとコマンド
 
-If you want to restrict the running of tasks to explicit platforms, this can be achieved using the `platforms:` key. Tasks can be restricted to a specific OS, architecture or a combination of both. On a mismatch, the task or command will be skipped, and no error will be thrown.
+タスクの実行を明示的なプラットフォームに制限したい場合は、`platforms:`キーを使用することができます。 タスクは特定のOS、アーキテクチャ、またはその両方の組み合わせに制限させることができます。 一致しない場合、タスクまたはコマンドはスキップされ、エラーは発生しません。
 
-The values allowed as OS or Arch are valid `GOOS` and `GOARCH` values, as defined by the Go language [here](https://github.com/golang/go/blob/master/src/go/build/syslist.go).
+OSまたはArchとして許可されている値は[ここ](https://github.com/golang/go/blob/master/src/go/build/syslist.go)でGo言語によって定義されている有効な`GOOS`と`GOARCH`の値らです。
 
-The `build-windows` task below will run only on Windows, and on any architecture:
+以下の`build-windows`タスクはWindowsと任意のアーキテクチャで実行されます:
 
 ```yaml
 version: '3'
@@ -436,7 +436,7 @@ tasks:
       - echo 'Running command on Windows'
 ```
 
-This can be restricted to a specific architecture as follows:
+以下のように特定のアーキテクチャに制限することもできます:
 
 ```yaml
 version: '3'
@@ -448,7 +448,7 @@ tasks:
       - echo 'Running command on Windows (amd64)'
 ```
 
-It is also possible to restrict the task to specific architectures:
+また、特定のアーキテクチャのみに制限することも可能です:
 
 ```yaml
 version: '3'
@@ -460,7 +460,7 @@ tasks:
       - echo 'Running command on amd64'
 ```
 
-Multiple platforms can be specified as follows:
+複数のプラットフォームは以下のように指定できます:
 
 ```yaml
 version: '3'
@@ -472,7 +472,7 @@ tasks:
       - echo 'Running command on Windows (amd64) and macOS'
 ```
 
-Individual commands can also be restricted to specific platforms:
+それぞれのコマンドも特定のプラットフォームに制限することが可能です:
 
 ```yaml
 version: '3'
@@ -485,7 +485,7 @@ tasks:
       - cmd: echo 'Running on all platforms'
 ```
 
-## Calling another task
+## 別のタスクを呼び出す
 
 When a task has many dependencies, they are executed concurrently. This will often result in a faster build pipeline. However, in some situations, you may need to call other tasks serially. In this case, use the following syntax:
 
@@ -1130,7 +1130,7 @@ tasks:
 
 ## ヘルプ
 
-Running `task --list` (or `task -l`) lists all tasks with a description. The following Taskfile:
+`task --list`(または`task -l`)を実行すると、説明付きで全てのタスクが一覧表示されます。 Taskfileの例:
 
 ```yaml
 version: '3'
@@ -1155,14 +1155,14 @@ tasks:
       - esbuild --bundle --minify css/index.css > public/bundle.css
 ```
 
-would print the following output:
+上記のTaskfileの場合、以下のような出力が表示されます:
 
 ```bash
 * build:   Build the go binary.
 * test:    Run all the go tests.
 ```
 
-If you want to see all tasks, there's a `--list-all` (alias `-a`) flag as well.
+全てのタスクを見たい場合は、`--list-all`(エイリアス `-a`)のフラグを使用してください。
 
 ## タスクの概要を表示する
 
@@ -1383,11 +1383,11 @@ tasks:
 
 ## ドライランモード
 
-Dry run mode (`--dry`) compiles and steps through each task, printing the commands that would be run without executing them. This is useful for debugging your Taskfiles.
+ドライランモード(`--dry`)は各タスクをコンパイルし、実際にはコマンドの内容は実行せずに、タスク内の各ステップで実行されるコマンドを表示します。 これはTaskfileをデバッグする際に便利です。
 
 ## エラーを無視する
 
-You have the option to ignore errors during command execution. Given the following Taskfile:
+コマンド実行時のエラーを無視するオプションがあります。 以下のTaskfileを参照してください:
 
 ```yaml
 version: '3'
@@ -1399,7 +1399,7 @@ tasks:
       - echo "Hello World"
 ```
 
-Task will abort the execution after running `exit 1` because the status code `1` stands for `EXIT_FAILURE`. However, it is possible to continue with execution using `ignore_error`:
+Taskは`exit 1`を実行した後、実行が中止されます。なぜならステータスコード`1`は`EXIT_FAILURE`を意味するためです。 しかしながら、`ignore_error`を使用することで、実行を継続させることが可能です:
 
 ```yaml
 version: '3'
@@ -1412,7 +1412,7 @@ tasks:
       - echo "Hello World"
 ```
 
-`ignore_error` can also be set for a task, which means errors will be suppressed for all commands. Nevertheless, keep in mind that this option will not propagate to other tasks called either by `deps` or `cmds`!
+`ignore_error`はタスク全体に対しても設定することができます。つまり、全てのコマンドに対してエラーが抑制されます。 一方で`deps`や`cmds`によって呼び出された他のタスクには伝播しないことに注意してください！
 
 ## 出力構文
 

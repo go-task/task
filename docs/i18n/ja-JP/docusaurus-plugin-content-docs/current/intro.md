@@ -30,7 +30,7 @@ tasks:
 
 上記の例は始まりに過ぎません。 全てのスキーマやTaskの機能については、[usage](/usage)ガイドを確認するといいでしょう。
 
-## Features
+## 特徴
 
 - [簡単なインストール方法](installation.md): シングルバイナリをダウンロードして、`$PATH`に追加するだけで完了です！ または[Homebrew][homebrew]、[Snapcraft][snapcraft]、[Scoop][scoop]を使ってインストールすることができます。
 - Clで使用可能: [シンプルなコマンド](installation.md#install-script)でCIスクリプトに追加することでCIパイプラインでTaskを使うことができます。
