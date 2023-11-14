@@ -208,10 +208,10 @@ tasks:
 
 C'est aussi fait automatiquement quand vous incluez des Taskfiles.
 
-## Prefer external scripts over complex multi-line commands
+## Préférer les scripts externes à des commandes complexes à plusieurs lignes
 
 ```yaml
-# bad
+# Incorrect
 version: '3'
 
 tasks:
@@ -223,7 +223,7 @@ tasks:
           echo "some other complex logic"
         done'
 
-# good
+# Correct
 version: '3'
 
 tasks:

@@ -3,23 +3,23 @@ slug: /experiments/
 sidebar_position: 6
 ---
 
-# Experiments
+# Expérimentations
 
 :::caution
 
-All experimental features are subject to breaking changes and/or removal _at any time_. We strongly recommend that you do not use these features in a production environment. They are intended for testing and feedback only.
+Toutes les fonctionnalités expérimentales sont sujettes à des changements brisant la fonctionnalité et/ou à la suppression de cette dernière _à tout moment _. Nous vous recommandons fortement de ne pas utiliser ces fonctionnalités dans en production. Ils sont seulement destinés à être testés et obtenir des retours dessus.
 
 :::
 
-In order to allow Task to evolve quickly, we roll out breaking changes to minor versions behind experimental flags. This allows us to gather feedback on breaking changes before committing to a major release. This document describes the current set of experimental features and their status in the [workflow](#workflow).
+Afin de permettre à Task d'évoluer rapidement, nous déployons des changements cassants sur des versions mineures activables par des options expérimentales. Cela nous permet d'obtenir des retours sur des changements brisants des fonctionnalités avant de les livrer dans une version majeure. Ce document décrit l'ensemble actuel de fonctionnalités expérimentales et leur statut dans le [workflow](#workflow).
 
-You can view a full list of active experiments in the "Experiments" section of the sidebar.
+Vous pouvez consulter une liste complète des expérimentations en cours dans la section "Expérimentations" de la barre latérale .
 
-You can enable an experimental feature by:
+Vous pouvez activer une fonctionnalité expérimentale par:
 
-1. Using the relevant environment variable in front of a task command. For example, `TASK_X_{FEATURE}=1 task {my-task}`. This is intended for one-off invocations of Task to test out experimental features.
-1. Using the relevant environment variable in your "dotfiles" (e.g. `.bashrc`, `.zshrc` etc.). This is intended for permanently enabling experimental features in your environment.
-1. Creating a `.env` file in the same directory as your root Taskfile that contains the relevant environment variables. e.g.
+1. Utiliser la variable d'environnement pertinente devant une commande Task. Par exemple, `TASK_X_{FEATURE}=1 task {my-task}`. Ceci est prévu pour faire appel à une expérimentation durant une seule commande Task afin de tester une fonctionnalité expérimentale.
+1. Utiliser la variable d'environnement pertinente dans vos "dotfiles" (par exemple `.bashrc`, `.zshrc` etc.). Ceci est destiné à l'activation permanente des fonctionnalités expérimentales dans votre environnement.
+1. Création d'un fichier `.env` dans le même répertoire que votre fichier Taskfile contenant les variables d'environnement pertinentes pour vos tests. Par exemple :
 
 ```shell
 # .env

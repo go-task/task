@@ -3,10 +3,10 @@ slug: /deprecations/
 sidebar_position: 7
 ---
 
-# Deprecations
+# Dépréciations
 
-As Task evolves, it occasionally outgrows some of its functionality. This can be because they are no longer useful, because another feature has replaced it or because of a change in the way that Task works internally.
+Au fur et à mesure que Task évolue, certaines de ses fonctionnalités peuvent se montrer obsolètes. Cela peut être dû au fait qu'elles ne sont plus utiles, parce qu'une autre fonctionnalité l'a remplacée ou à cause d'un changement dans la façon dont la tâche fonctionne.
 
-When this happens, we mark the functionality as deprecated. This means that it will be removed in a future version of Task. This functionality will continue to work until that time, but we strongly recommend that you do not implement this functionality in new Taskfiles and make a plan to migrate away from it as soon as possible.
+Lorsque cela se produit, nous marquons la fonctionnalité comme obsolète. Cela signifie que sera supprimé dans une future version de Task. La fonctionnalité continuera de fonctionner en attendant, mais il vous est fortement recommandé de ne plus l'utiliser et de planifier un plan de migration pour changer toutes les tâches pouvant l'utiliser.
 
-You can view a full list of active deprecations in the "Deprecations" section of the sidebar.
+Vous pouvez afficher une liste complète des dépréciations actives dans la section "Dépréciations" de la barre latérale.
