@@ -60,6 +60,12 @@ tasks:
     cmds:
       - rm -rf dist/
       - rm -rf tmp/
+    deps: [clean:test]
+
+  clean:test:
+    desc: Cleans test temp files and folders
+    cmds:
+      - git clean -fdX -q -d testdata/
 
   lint:
     desc: Runs golangci-lint
@@ -97,7 +103,7 @@ tasks:
   test:
     desc: Runs test suite
     aliases: [t]
-    deps: [install]
+    deps: [install, clean:test]
     cmds:
       - go test {{catLines .GO_PACKAGES}}
     vars:
