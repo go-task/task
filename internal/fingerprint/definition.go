@@ -38,7 +38,8 @@ func (checker *DefinitionChecker) IsUpToDate(maybeDefinitionPath *string) (bool,
 	// check if the file exists
 	_, err := os.Stat(definitionPath)
 	if err == nil {
-		checker.logger.VerboseOutf(logger.Magenta, "task: task definition is up-to-date: %s\n", definitionPath)
+		// TODO the logger breaks the logger when used with mockery
+		// checker.logger.VerboseOutf(logger.Magenta, "task: task definition is up-to-date: %s\n", definitionPath)
 		// file exists, the task definition is-up-to-date
 		return true, nil
 	}
@@ -54,7 +55,8 @@ func (checker *DefinitionChecker) IsUpToDate(maybeDefinitionPath *string) (bool,
 		if err != nil {
 			return false, err
 		}
-		checker.logger.VerboseOutf(logger.Yellow, "task: task definition was written as: %s\n", definitionPath)
+		// TODO the logger breaks the logger when used with mockery
+		// checker.logger.VerboseOutf(logger.Yellow, "task: task definition was written as: %s\n", definitionPath)
 	}
 	return false, nil
 }
