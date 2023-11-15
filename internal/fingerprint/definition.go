@@ -8,7 +8,7 @@ import (
 	"github.com/mitchellh/hashstructure/v2"
 
 	"github.com/go-task/task/v3/internal/logger"
-	"github.com/go-task/task/v3/taskfile"
+	"github.com/go-task/task/v3/taskfile/ast"
 )
 
 // DefinitionChecker checks if the task definition and any of its variables/environment variables change.
@@ -39,12 +39,12 @@ func (checker *DefinitionChecker) IsUpToDate(maybeDefinitionPath *string) (bool,
 	_, err := os.Stat(definitionPath)
 	if err == nil {
 		checker.logger.VerboseOutf(logger.Magenta, "task: task definition is up-to-date: %s\n", definitionPath)
-		// file exists, the task definition is up to
+		// file exists, the task definition is-up-to-date
 		return true, nil
 	}
 
 	// task is not up-to-date as the file does not exist
-	// create the hash file if not in dry mode
+	// create the definition file if not in dry mode for the later runs
 	if !checker.dry {
 		// create the file
 		if err := os.MkdirAll(filepath.Dir(definitionPath), 0o755); err != nil {
@@ -59,7 +59,7 @@ func (checker *DefinitionChecker) IsUpToDate(maybeDefinitionPath *string) (bool,
 	return false, nil
 }
 
-func (checker *DefinitionChecker) HashDefinition(t *taskfile.Task) (*string, error) {
+func (checker *DefinitionChecker) HashDefinition(t *ast.Task) (*string, error) {
 	// hash the task
 	hash, err := hashstructure.Hash(t, hashstructure.FormatV2, nil)
 	if err != nil {

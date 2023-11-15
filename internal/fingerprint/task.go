@@ -111,7 +111,7 @@ func IsTaskUpToDate(
 	// if the status or sources are set, check if the definition is up-to-date
 	// TODO: allow caching based on the task definition even if status or sources are not set
 	if sourcesIsSet || statusIsSet {
-		// if other conditions are , check if the definition is up-to-date
+		// check if the definition is up-to-date
 		isDefinitionUpToDate, err := config.definitionChecker.IsUpToDate(maybeDefinitionPath)
 		if err != nil {
 			return false, err
@@ -145,15 +145,11 @@ func IsTaskUpToDate(
 	// If both status and sources are set, the task is up-to-date if both are up-to-date
 	if statusIsSet && sourcesIsSet {
 		isUpToDate = statusUpToDate && sourcesUpToDate
-	}
-
-	// If only status is set, the task is up-to-date if the status is up-to-date
-	if statusIsSet {
+	} else if statusIsSet {
+		// If only status is set, the task is up-to-date if the status is up-to-date
 		isUpToDate = statusUpToDate
-	}
-
-	// If only sources is set, the task is up-to-date if the sources are up-to-date
-	if sourcesIsSet {
+	} else if sourcesIsSet {
+		// If only sources is set, the task is up-to-date if the sources are up-to-date
 		isUpToDate = sourcesUpToDate
 	}
 
