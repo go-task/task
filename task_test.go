@@ -541,6 +541,7 @@ func TestAliasSummary(t *testing.T) {
 
 func TestLabelUpToDate(t *testing.T) {
 	const dir = "testdata/label_uptodate"
+	os.RemoveAll(filepathext.SmartJoin(dir, ".task"))
 
 	var buff bytes.Buffer
 	e := task.Executor{
@@ -550,11 +551,15 @@ func TestLabelUpToDate(t *testing.T) {
 	}
 	require.NoError(t, e.Setup())
 	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "foo"}))
+	assert.NotContains(t, buff.String(), "foobar") // first run
+
+	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "foo"}))
 	assert.Contains(t, buff.String(), "foobar")
 }
 
 func TestLabelSummary(t *testing.T) {
 	const dir = "testdata/label_summary"
+	os.RemoveAll(filepathext.SmartJoin(dir, ".task"))
 
 	var buff bytes.Buffer
 	e := task.Executor{
@@ -589,12 +594,13 @@ func TestLabelWithVariableExpansion(t *testing.T) {
 		Stderr: &buff,
 	}
 	require.NoError(t, e.Setup())
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "foo"}))
+	require.NoError(t, e.Run(context.Background(), ast.Call{Task: "foo"}))
 	assert.Contains(t, buff.String(), "foobaz")
 }
 
 func TestLabelInSummary(t *testing.T) {
 	const dir = "testdata/label_summary"
+	os.RemoveAll(filepathext.SmartJoin(dir, ".task"))
 
 	var buff bytes.Buffer
 	e := task.Executor{
@@ -603,7 +609,7 @@ func TestLabelInSummary(t *testing.T) {
 		Stderr: &buff,
 	}
 	require.NoError(t, e.Setup())
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "foo"}))
+	require.NoError(t, e.Run(context.Background(), ast.Call{Task: "foo"}))
 	assert.Contains(t, buff.String(), "foobar")
 }
 
