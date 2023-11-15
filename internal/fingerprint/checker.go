@@ -18,3 +18,10 @@ type SourcesCheckable interface {
 	OnError(t *ast.Task) error
 	Kind() string
 }
+
+// DefinitionCheckable defines any type that checks the definition of a task.
+type DefinitionCheckable interface {
+	HashDefinition(t *taskfile.Task) (*string, error)
+	IsUpToDate(maybeDefinitionPath *string) (bool, error)
+	Cleanup(definitionPath *string) error
+}
