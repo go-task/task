@@ -5,9 +5,10 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/mitchellh/hashstructure/v2"
+
 	"github.com/go-task/task/v3/internal/logger"
 	"github.com/go-task/task/v3/taskfile"
-	"github.com/mitchellh/hashstructure/v2"
 )
 
 // DefinitionChecker checks if the task definition and any of its variables/environment variables change.

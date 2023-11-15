@@ -140,7 +140,7 @@ func IsTaskUpToDate(
 
 	// If no status or sources are set, the task should always run
 	// i.e. it is never considered "up-to-date"
-	var isUpToDate = false
+	isUpToDate := false
 
 	// If both status and sources are set, the task is up-to-date if both are up-to-date
 	if statusIsSet && sourcesIsSet {
