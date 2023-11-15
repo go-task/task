@@ -483,7 +483,7 @@ func TestAlias(t *testing.T) {
 	}
 	require.NoError(t, e.Setup())
 	require.NoError(t, e.Run(context.Background(), ast.Call{Task: "f"}))
-	assert.Equal(t, string(data), buff.String())
+	assert.Equal(t, unifyLineEndings(string(data)), buff.String())
 }
 
 func TestDuplicateAlias(t *testing.T) {
@@ -515,7 +515,7 @@ func TestAliasSummary(t *testing.T) {
 	}
 	require.NoError(t, e.Setup())
 	require.NoError(t, e.Run(context.Background(), ast.Call{Task: "f"}))
-	assert.Equal(t, string(data), buff.String())
+	assert.Equal(t, unifyLineEndings(string(data)), buff.String())
 }
 
 func TestLabelUpToDate(t *testing.T) {
@@ -1302,12 +1302,7 @@ func TestSummary(t *testing.T) {
 	data, err := os.ReadFile(filepathext.SmartJoin(dir, "task-with-summary.txt"))
 	require.NoError(t, err)
 
-	expectedOutput := string(data)
-	if runtime.GOOS == "windows" {
-		expectedOutput = strings.ReplaceAll(expectedOutput, "\r\n", "\n")
-	}
-
-	assert.Equal(t, expectedOutput, buff.String())
+	assert.Equal(t, unifyLineEndings(string(data)), buff.String())
 }
 
 func TestWhenNoDirAttributeItRunsInSameDirAsTaskfile(t *testing.T) {
@@ -2248,4 +2243,8 @@ func TestFor(t *testing.T) {
 			assert.Equal(t, test.expectedOutput, buff.String())
 		})
 	}
+}
+
+func unifyLineEndings(s string) string {
+	return strings.ReplaceAll(s, "\r\n", "\n")
 }
