@@ -16,7 +16,7 @@ require (
 	github.com/zeebo/xxh3 v1.0.2
 	golang.org/x/exp v0.0.0-20230212135524-a684f29349b6
 	golang.org/x/sync v0.5.0
-	golang.org/x/term v0.13.0
+	golang.org/x/term v0.14.0
 	gopkg.in/yaml.v3 v3.0.1
 	mvdan.cc/sh/v3 v3.7.0
 )
