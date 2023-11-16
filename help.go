@@ -168,51 +168,42 @@ func (e *Executor) ToEditorOutput(tasks []*taskfile.Task, noStatus bool) (*edito
 	for i := range tasks {
 		task := tasks[i]
 		j := i
-		if noStatus {
-			g.Go(func() error {
-				o.Tasks[j] = editors.Task{
-					Name:     task.Name(),
-					Desc:     task.Desc,
-					Summary:  task.Summary,
-					UpToDate: false,
-					Location: &editors.Location{
-						Line:     task.Location.Line,
-						Column:   task.Location.Column,
-						Taskfile: task.Location.Taskfile,
-					},
-				}
+		g.Go(func() error {
+			o.Tasks[j] = editors.Task{
+				Name:     task.Name(),
+				Desc:     task.Desc,
+				Summary:  task.Summary,
+				UpToDate: false,
+				Location: &editors.Location{
+					Line:     task.Location.Line,
+					Column:   task.Location.Column,
+					Taskfile: task.Location.Taskfile,
+				},
+			}
+
+			if noStatus {
 				return nil
-			})
-		} else {
-			g.Go(func() error {
-				// Get the fingerprinting method to use
-				method := e.Taskfile.Method
-				if task.Method != "" {
-					method = task.Method
-				}
-				upToDate, err := fingerprint.IsTaskUpToDate(context.Background(), task,
-					fingerprint.WithMethod(method),
-					fingerprint.WithTempDir(e.TempDir),
-					fingerprint.WithDry(e.Dry),
-					fingerprint.WithLogger(e.Logger),
-				)
-				if err != nil {
-					return err
-				}
-				o.Tasks[j] = editors.Task{
-					Name:     task.Name(),
-					Desc:     task.Desc,
-					Summary:  task.Summary,
-					UpToDate: upToDate,
-					Location: &editors.Location{
-						Line:     task.Location.Line,
-						Column:   task.Location.Column,
-						Taskfile: task.Location.Taskfile,
-					},
-				}
-				return nil
-			})
-		}
+			}
+
+			// Get the fingerprinting method to use
+			method := e.Taskfile.Method
+			if task.Method != "" {
+				method = task.Method
+			}
+			upToDate, err := fingerprint.IsTaskUpToDate(context.Background(), task,
+				fingerprint.WithMethod(method),
+				fingerprint.WithTempDir(e.TempDir),
+				fingerprint.WithDry(e.Dry),
+				fingerprint.WithLogger(e.Logger),
+			)
+			if err != nil {
+				return err
+			}
+
+			o.Tasks[j].UpToDate = upToDate
+
+			return nil
+		})
 	}
 	return o, g.Wait()
 }

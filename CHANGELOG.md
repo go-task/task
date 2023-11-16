@@ -5,6 +5,8 @@
 - Fix bug where dynamic `vars:` and `env:` were being executed when they should
   actually be skipped by `platforms:` (#1273, #1377 by @andreynering).
 - Fix `schema.json` to make `silent` valid in `cmds` that use `for` (#1385, #1386 by @iainvm).
+- Add new `--no-status` flag to skip expensive status checks when running
+  `task --list --json` (#1348, #1368 by @amancevice).
 
 ## v3.31.0 - 2023-10-07
 
