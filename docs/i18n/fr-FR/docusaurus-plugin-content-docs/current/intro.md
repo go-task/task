@@ -30,7 +30,7 @@ Et appelez-le en exécutant `task hello` depuis votre terminal.
 
 L'exemple ci-dessus n'est que le début, vous pouvez jeter un coup d'œil au [guide d'utilisation](/usage) pour vérifier la documentation complète du schéma et les fonctionnalités de Task.
 
-## Features
+## Fonctionnalités
 
 - [Installation facile](installation.md): il suffit de télécharger un seul binaire, ajoutez le à `$PATH` et vous avez terminé ! Ou vous pouvez également installer en utilisant [Homebrew][homebrew], [Snapcraft][snapcraft] ou [Scoop][scoop] si vous le souhaitez.
 - Disponible sur les CIs: en ajoutant [cette commande simple](installation.md#install-script) à installer sur votre script CI, vous êtes prêt à utiliser Task dans le cadre de votre pipeline CI ;

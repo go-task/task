@@ -9,7 +9,7 @@ Certains travaux d'amélioration de l'écosystème Task sont réalisés par la c
 
 ## Traductions
 
-We use [Crowdin](https://crowdin.com/project/taskfile) to translate our document.
+Nous utilisons [Crowdin](https://crowdin.com/project/taskfile) pour traduire nos documents.
 
 ## Intégrations
 
