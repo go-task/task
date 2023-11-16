@@ -65,7 +65,7 @@ tasks:
   clean:test:
     desc: Cleans test temp files and folders
     cmds:
-      - git clean -fdX -q -d testdata/
+      - git clean -fdX -q -d testdata/ internal/fingerprint/testdata/
 
   lint:
     desc: Runs golangci-lint

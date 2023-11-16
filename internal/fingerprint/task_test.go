@@ -2,12 +2,14 @@ package fingerprint
 
 import (
 	"context"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
+	"github.com/go-task/task/v3/internal/filepathext"
 	"github.com/go-task/task/v3/internal/mocks"
 	"github.com/go-task/task/v3/taskfile/ast"
 )
@@ -26,6 +28,9 @@ import (
 // | false             | true               | false              |
 // | false             | false              | false              |
 func TestIsTaskUpToDate(t *testing.T) {
+	tempDir := filepathext.SmartJoin("testdata", ".task")
+	os.RemoveAll(tempDir)
+
 	tests := []struct {
 		name                    string
 		task                    *ast.Task
@@ -44,7 +49,19 @@ func TestIsTaskUpToDate(t *testing.T) {
 			expected:                false,
 		},
 		{
-			name: "expect TRUE when no status is defined and sources are up-to-date",
+			name: "expect False when no status is defined and sources are up-to-date for the first time",
+			task: &ast.Task{
+				Status:  nil,
+				Sources: []*ast.Glob{{Glob: "sources"}},
+			},
+			setupMockStatusChecker: nil,
+			setupMockSourcesChecker: func(m *mocks.SourcesCheckable) {
+				m.EXPECT().IsUpToDate(mock.Anything).Return(true, nil)
+			},
+			expected: false,
+		},
+		{
+			name: "expect False when no status is defined and sources are up-to-date for the second time",
 			task: &ast.Task{
 				Status:  nil,
 				Sources: []*ast.Glob{{Glob: "sources"}},
@@ -68,7 +85,19 @@ func TestIsTaskUpToDate(t *testing.T) {
 			expected: false,
 		},
 		{
-			name: "expect TRUE when status is up-to-date and sources are not defined",
+			name: "expect False when status is up-to-date and sources are not defined for the first time",
+			task: &ast.Task{
+				Status:  []string{"status"},
+				Sources: nil,
+			},
+			setupMockStatusChecker: func(m *mocks.StatusCheckable) {
+				m.EXPECT().IsUpToDate(mock.Anything, mock.Anything).Return(true, nil)
+			},
+			setupMockSourcesChecker: nil,
+			expected:                false,
+		},
+		{
+			name: "expect TRUE when status is up-to-date and sources are not defined for the second time",
 			task: &ast.Task{
 				Status:  []string{"status"},
 				Sources: nil,
@@ -80,7 +109,21 @@ func TestIsTaskUpToDate(t *testing.T) {
 			expected:                true,
 		},
 		{
-			name: "expect TRUE when status and sources are up-to-date",
+			name: "expect False when status and sources are up-to-date for the first time",
+			task: &ast.Task{
+				Status:  []string{"status"},
+				Sources: []*ast.Glob{{Glob: "sources"}},
+			},
+			setupMockStatusChecker: func(m *mocks.StatusCheckable) {
+				m.EXPECT().IsUpToDate(mock.Anything, mock.Anything).Return(true, nil)
+			},
+			setupMockSourcesChecker: func(m *mocks.SourcesCheckable) {
+				m.EXPECT().IsUpToDate(mock.Anything).Return(true, nil)
+			},
+			expected: false,
+		},
+		{
+			name: "expect True when status and sources are up-to-date for the second time",
 			task: &ast.Task{
 				Status:  []string{"status"},
 				Sources: []*ast.Glob{{Glob: "sources"}},
@@ -165,6 +208,9 @@ func TestIsTaskUpToDate(t *testing.T) {
 				tt.task,
 				WithStatusChecker(mockStatusChecker),
 				WithSourcesChecker(mockSourcesChecker),
+				func(config *CheckerConfig) {
+					config.tempDir = tempDir
+				},
 			)
 			require.NoError(t, err)
 			assert.Equal(t, tt.expected, result)

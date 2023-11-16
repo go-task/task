@@ -586,6 +586,7 @@ func TestLabelInStatus(t *testing.T) {
 
 func TestLabelWithVariableExpansion(t *testing.T) {
 	const dir = "testdata/label_var"
+	os.RemoveAll(filepathext.SmartJoin(dir, ".task"))
 
 	var buff bytes.Buffer
 	e := task.Executor{
