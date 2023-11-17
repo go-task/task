@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"time"
 
 	"gopkg.in/yaml.v3"
 
@@ -37,6 +38,7 @@ func readTaskfile(
 	node Node,
 	download,
 	offline bool,
+	timeout time.Duration,
 	tempDir string,
 	l *logger.Logger,
 ) (*taskfile.Taskfile, error) {
@@ -51,35 +53,44 @@ func readTaskfile(
 		}
 	}
 
-	// If the file is remote, check if we have a cached copy
-	// If we're told to download, skip the cache
-	if node.Remote() && !download {
-		if b, err = cache.read(node); !errors.Is(err, os.ErrNotExist) && err != nil {
-			return nil, err
-		}
-
-		if b != nil {
-			l.VerboseOutf(logger.Magenta, "task: [%s] Fetched cached copy\n", node.Location())
-		}
-	}
-
-	// If the file is remote, we found nothing in the cache and we're not
-	// allowed to download it then we can't do anything.
-	if node.Remote() && b == nil && offline {
-		if b == nil && offline {
+	// If the file is remote and we're in offline mode, check if we have a cached copy
+	if node.Remote() && offline {
+		if b, err = cache.read(node); errors.Is(err, os.ErrNotExist) {
 			return nil, &errors.TaskfileCacheNotFound{URI: node.Location()}
-		}
-	}
-
-	// If we still don't have a copy, get the file in the usual way
-	if b == nil {
-		b, err = node.Read(context.Background())
-		if err != nil {
+		} else if err != nil {
 			return nil, err
+		}
+		l.VerboseOutf(logger.Magenta, "task: [%s] Fetched cached copy\n", node.Location())
+
+	} else {
+
+		downloaded := false
+		ctx, cf := context.WithTimeout(context.Background(), timeout)
+		defer cf()
+
+		// Read the file
+		b, err = node.Read(ctx)
+		// If we timed out then we likely have a network issue
+		if node.Remote() && errors.Is(ctx.Err(), context.DeadlineExceeded) {
+			// If a download was requested, then we can't use a cached copy
+			if download {
+				return nil, &errors.TaskfileNetworkTimeout{URI: node.Location(), Timeout: timeout}
+			}
+			// Search for any cached copies
+			if b, err = cache.read(node); errors.Is(err, os.ErrNotExist) {
+				return nil, &errors.TaskfileNetworkTimeout{URI: node.Location(), Timeout: timeout, CheckedCache: true}
+			} else if err != nil {
+				return nil, err
+			}
+			l.VerboseOutf(logger.Magenta, "task: [%s] Network timeout. Fetched cached copy\n", node.Location())
+		} else if err != nil {
+			return nil, err
+		} else {
+			downloaded = true
 		}
 
 		// If the node was remote, we need to check the checksum
-		if node.Remote() {
+		if node.Remote() && downloaded {
 			l.VerboseOutf(logger.Magenta, "task: [%s] Fetched remote copy\n", node.Location())
 
 			// Get the checksums
@@ -102,21 +113,18 @@ func readTaskfile(
 				}
 			}
 
-			// If the hash has changed (or is new), store it in the cache
+			// If the hash has changed (or is new)
 			if checksum != cachedChecksum {
+				// Store the checksum
 				if err := cache.writeChecksum(node, checksum); err != nil {
 					return nil, err
 				}
+				// Cache the file
+				l.VerboseOutf(logger.Magenta, "task: [%s] Caching downloaded file\n", node.Location())
+				if err = cache.write(node, b); err != nil {
+					return nil, err
+				}
 			}
-		}
-	}
-
-	// If the file is remote and we need to cache it
-	if node.Remote() && download {
-		l.VerboseOutf(logger.Magenta, "task: [%s] Caching downloaded file\n", node.Location())
-		// Cache the file for later
-		if err = cache.write(node, b); err != nil {
-			return nil, err
 		}
 	}
 
@@ -137,12 +145,13 @@ func Taskfile(
 	insecure bool,
 	download bool,
 	offline bool,
+	timeout time.Duration,
 	tempDir string,
 	l *logger.Logger,
 ) (*taskfile.Taskfile, error) {
 	var _taskfile func(Node) (*taskfile.Taskfile, error)
 	_taskfile = func(node Node) (*taskfile.Taskfile, error) {
-		t, err := readTaskfile(node, download, offline, tempDir, l)
+		t, err := readTaskfile(node, download, offline, timeout, tempDir, l)
 		if err != nil {
 			return nil, err
 		}

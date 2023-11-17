@@ -3,6 +3,7 @@ package errors
 import (
 	"fmt"
 	"net/http"
+	"time"
 )
 
 // TaskfileNotFoundError is returned when no appropriate Taskfile is found when
@@ -136,4 +137,27 @@ func (err *TaskfileVersionNotDefined) Error() string {
 
 func (err *TaskfileVersionNotDefined) Code() int {
 	return CodeTaskfileVersionNotDefined
+}
+
+// TaskfileNetworkTimeout is returned when the user attempts to use a remote
+// Taskfile but a network connection could not be established within the timeout.
+type TaskfileNetworkTimeout struct {
+	URI          string
+	Timeout      time.Duration
+	CheckedCache bool
+}
+
+func (err *TaskfileNetworkTimeout) Error() string {
+	var cacheText string
+	if err.CheckedCache {
+		cacheText = " and no offline copy was found in the cache"
+	}
+	return fmt.Sprintf(
+		`task: Network connection timed out after %s while attempting to download Taskfile %q%s`,
+		err.Timeout, err.URI, cacheText,
+	)
+}
+
+func (err *TaskfileNetworkTimeout) Code() int {
+	return CodeTaskfileNetworkTimeout
 }

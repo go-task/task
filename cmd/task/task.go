@@ -75,6 +75,7 @@ var flags struct {
 	experiments bool
 	download    bool
 	offline     bool
+	timeout     time.Duration
 }
 
 func main() {
@@ -150,6 +151,7 @@ func run() error {
 	if experiments.RemoteTaskfiles {
 		pflag.BoolVar(&flags.download, "download", false, "Downloads a cached version of a remote Taskfile.")
 		pflag.BoolVar(&flags.offline, "offline", false, "Forces Task to only use local or cached Taskfiles.")
+		pflag.DurationVar(&flags.timeout, "timeout", time.Second*10, "Timeout for downloading remote Taskfiles.")
 	}
 
 	pflag.Parse()
@@ -235,6 +237,7 @@ func run() error {
 		Insecure:    flags.insecure,
 		Download:    flags.download,
 		Offline:     flags.offline,
+		Timeout:     flags.timeout,
 		Watch:       flags.watch,
 		Verbose:     flags.verbose,
 		Silent:      flags.silent,
@@ -270,6 +273,12 @@ func run() error {
 		return err
 	}
 
+	// If the download flag is specified, we should stop execution as soon as
+	// taskfile is downloaded
+	if flags.download {
+		return nil
+	}
+
 	if listOptions.ShouldListTasks() {
 		foundTasks, err := e.ListTasks(listOptions)
 		if err != nil {
@@ -298,9 +307,7 @@ func run() error {
 	}
 
 	// If there are no calls, run the default task instead
-	// Unless the download flag is specified, in which case we want to download
-	// the Taskfile and do nothing else
-	if len(calls) == 0 && !flags.download {
+	if len(calls) == 0 {
 		calls = append(calls, taskfile.Call{Task: "default", Direct: true})
 	}
 

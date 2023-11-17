@@ -2,9 +2,16 @@
 
 ## Unreleased
 
+- The
+  [Remote Taskfiles experiment](https://taskfile.dev/experiments/remote-taskfiles)
+  now prefers remote files over cached ones by default (#1317, #1345 by @pd93).
+- Added `--timeout` flag to the
+  [Remote Taskfiles experiment](https://taskfile.dev/experiments/remote-taskfiles)
+  (#1317, #1345 by @pd93).
 - Fix bug where dynamic `vars:` and `env:` were being executed when they should
   actually be skipped by `platforms:` (#1273, #1377 by @andreynering).
-- Fix `schema.json` to make `silent` valid in `cmds` that use `for` (#1385, #1386 by @iainvm).
+- Fix `schema.json` to make `silent` valid in `cmds` that use `for` (#1385,
+  #1386 by @iainvm).
 - Add new `--no-status` flag to skip expensive status checks when running
   `task --list --json` (#1348, #1368 by @amancevice).
 
@@ -12,7 +19,7 @@
 
 - Enabled the `--yes` flag for the
   [Remote Taskfiles experiment](https://taskfile.dev/experiments/remote-taskfiles)
-  (#1344 by @pd93).
+  (#1317, #1344 by @pd93).
 - Add ability to set `watch: true` in a task to automatically run it in watch
   mode (#231, #1361 by @andreynering).
 - Fixed a bug on the watch mode where paths that contained `.git` (like
@@ -26,8 +33,8 @@
   exists to detect recursive calls, but will be removed in favor of a better
   algorithm soon (#1321, #1332).
 - Fixed templating on descriptions on `task --list` (#1343 by @blackjid).
-- Fixed a bug where precondition errors were incorrectly being printed when
-  task execution was aborted (#1337, #1338 by @sylv-io).
+- Fixed a bug where precondition errors were incorrectly being printed when task
+  execution was aborted (#1337, #1338 by @sylv-io).
 
 ## v3.30.1 - 2023-09-14
 
