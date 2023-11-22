@@ -3,15 +3,15 @@ slug: /faq/
 sidebar_position: 15
 ---
 
-# FAQ
+# ЧАВО
 
-This page contains a list of frequently asked questions about Task.
+Эта страница содержит список часто задаваемых вопросов о Task.
 
-## Why won't my task update my shell environment?
+## Почему task не обновляет мои переменные среды оболочки?
 
-This is a limitation of how shells work. Task runs as a subprocess of your current shell, so it can't change the environment of the shell that started it. This limitation is shared by other task runners and build tools too.
+Это ограничение работы оболочек. Task запускается как подпроцесс вашей текущей оболочки, поэтому он не может сменить переменные среды оболочки, которая запустила его. Это ограничение есть и в других task runners и инструментах сборки тоже.
 
-A common way to work around this is to create a task that will generate output that can be parsed by your shell. For example, to set an environment variable on your shell you can write a task like this:
+Самый простой способ обойти это - создать задачу, генерирующую вывод, который может быть проанализирован вашей оболочкой. Например, чтобы установить переменные среды в вашей оболочке, вы можете написать task, похожую на:
 
 ```yaml
 my-shell-env:
@@ -20,11 +20,11 @@ my-shell-env:
     - echo "export BAR=bar"
 ```
 
-Now run `eval $(task my-shell-env)` and the variables `$FOO` and `$BAR` will be available in your shell.
+Теперь запустите `eval $(task my-shell-env)`, после этого переменные `$FOO` и `$BAR` будут доступны в вашей оболочке.
 
-## I can't reuse my shell in a task's commands
+## Я не могу переиспользовать свою оболочку в командах task's
 
-Task runs each command as a separate shell process, so something you do in one command won't effect any future commands. For example, this won't work:
+Task запускает каждую команду в качестве отдельного процесса оболочки, поэтому действия в одной команде не повлияют на другие команды. Например, это не сработает:
 
 ```yaml
 version: '3'
@@ -37,7 +37,7 @@ tasks:
       # outputs ""
 ```
 
-To work around this you can either use a multiline command:
+Чтобы обойти это, вы можете использовать многострочную команду:
 
 ```yaml
 version: '3'
@@ -51,7 +51,7 @@ tasks:
       # outputs "foo"
 ```
 
-Or for more complex multi-line commands it is recommended to move your code into a separate file and call that instead:
+Или для более сложных многострочных команд рекомендуется перенести ваш код в отдельный файл, и вызвать его вместо команды:
 
 ```yaml
 version: '3'
