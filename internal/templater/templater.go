@@ -111,9 +111,9 @@ func (r *Templater) replaceVars(vars *taskfile.Vars, extra map[string]any) *task
 	var new taskfile.Vars
 	_ = vars.Range(func(k string, v taskfile.Var) error {
 		new.Set(k, taskfile.Var{
-			Static: r.ReplaceWithExtra(v.Static, extra),
-			Live:   v.Live,
-			Sh:     r.ReplaceWithExtra(v.Sh, extra),
+			Value: r.ReplaceWithExtra(v.Value, extra),
+			Live:  v.Live,
+			Sh:    r.ReplaceWithExtra(v.Sh, extra),
 		})
 		return nil
 	})

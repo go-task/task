@@ -49,7 +49,7 @@ func TestGroupWithBeginEnd(t *testing.T) {
 	tmpl := templater.Templater{
 		Vars: &taskfile.Vars{
 			OrderedMap: orderedmap.FromMap(map[string]taskfile.Var{
-				"VAR1": {Static: "example-value"},
+				"VAR1": {Value: "example-value"},
 			}),
 		},
 	}

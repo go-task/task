@@ -35,9 +35,9 @@ func TestArgsV3(t *testing.T) {
 			ExpectedGlobals: &taskfile.Vars{
 				OrderedMap: orderedmap.FromMapWithOrder(
 					map[string]taskfile.Var{
-						"FOO": {Static: "bar"},
-						"BAR": {Static: "baz"},
-						"BAZ": {Static: "foo"},
+						"FOO": {Value: "bar"},
+						"BAR": {Value: "baz"},
+						"BAZ": {Value: "foo"},
 					},
 					[]string{"FOO", "BAR", "BAZ"},
 				),
@@ -51,7 +51,7 @@ func TestArgsV3(t *testing.T) {
 			ExpectedGlobals: &taskfile.Vars{
 				OrderedMap: orderedmap.FromMapWithOrder(
 					map[string]taskfile.Var{
-						"CONTENT": {Static: "with some spaces"},
+						"CONTENT": {Value: "with some spaces"},
 					},
 					[]string{"CONTENT"},
 				),
@@ -66,7 +66,7 @@ func TestArgsV3(t *testing.T) {
 			ExpectedGlobals: &taskfile.Vars{
 				OrderedMap: orderedmap.FromMapWithOrder(
 					map[string]taskfile.Var{
-						"FOO": {Static: "bar"},
+						"FOO": {Value: "bar"},
 					},
 					[]string{"FOO"},
 				),
@@ -86,8 +86,8 @@ func TestArgsV3(t *testing.T) {
 			ExpectedGlobals: &taskfile.Vars{
 				OrderedMap: orderedmap.FromMapWithOrder(
 					map[string]taskfile.Var{
-						"FOO": {Static: "bar"},
-						"BAR": {Static: "baz"},
+						"FOO": {Value: "bar"},
+						"BAR": {Value: "baz"},
 					},
 					[]string{"FOO", "BAR"},
 				),
@@ -130,7 +130,7 @@ func TestArgsV2(t *testing.T) {
 					Vars: &taskfile.Vars{
 						OrderedMap: orderedmap.FromMapWithOrder(
 							map[string]taskfile.Var{
-								"FOO": {Static: "bar"},
+								"FOO": {Value: "bar"},
 							},
 							[]string{"FOO"},
 						),
@@ -143,8 +143,8 @@ func TestArgsV2(t *testing.T) {
 					Vars: &taskfile.Vars{
 						OrderedMap: orderedmap.FromMapWithOrder(
 							map[string]taskfile.Var{
-								"BAR": {Static: "baz"},
-								"BAZ": {Static: "foo"},
+								"BAR": {Value: "baz"},
+								"BAZ": {Value: "foo"},
 							},
 							[]string{"BAR", "BAZ"},
 						),
@@ -161,7 +161,7 @@ func TestArgsV2(t *testing.T) {
 					Vars: &taskfile.Vars{
 						OrderedMap: orderedmap.FromMapWithOrder(
 							map[string]taskfile.Var{
-								"CONTENT": {Static: "with some spaces"},
+								"CONTENT": {Value: "with some spaces"},
 							},
 							[]string{"CONTENT"},
 						),
@@ -178,7 +178,7 @@ func TestArgsV2(t *testing.T) {
 			ExpectedGlobals: &taskfile.Vars{
 				OrderedMap: orderedmap.FromMapWithOrder(
 					map[string]taskfile.Var{
-						"FOO": {Static: "bar"},
+						"FOO": {Value: "bar"},
 					},
 					[]string{"FOO"},
 				),
@@ -198,8 +198,8 @@ func TestArgsV2(t *testing.T) {
 			ExpectedGlobals: &taskfile.Vars{
 				OrderedMap: orderedmap.FromMapWithOrder(
 					map[string]taskfile.Var{
-						"FOO": {Static: "bar"},
-						"BAR": {Static: "baz"},
+						"FOO": {Value: "bar"},
+						"BAR": {Value: "baz"},
 					},
 					[]string{"FOO", "BAR"},
 				),

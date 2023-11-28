@@ -96,7 +96,7 @@ func (e *Executor) compiledTask(call taskfile.Call, evaluateShVars bool) (*taskf
 			}
 			for key, value := range envs {
 				if ok := dotenvEnvs.Exists(key); !ok {
-					dotenvEnvs.Set(key, taskfile.Var{Static: value})
+					dotenvEnvs.Set(key, taskfile.Var{Value: value})
 				}
 			}
 		}
@@ -112,7 +112,7 @@ func (e *Executor) compiledTask(call taskfile.Call, evaluateShVars bool) (*taskf
 			if err != nil {
 				return err
 			}
-			new.Env.Set(k, taskfile.Var{Static: static})
+			new.Env.Set(k, taskfile.Var{Value: static})
 			return nil
 		})
 		if err != nil {
@@ -150,9 +150,9 @@ func (e *Executor) compiledTask(call taskfile.Call, evaluateShVars bool) (*taskf
 					if vars != nil {
 						v := vars.Get(cmd.For.Var)
 						if cmd.For.Split != "" {
-							list = strings.Split(v.Static, cmd.For.Split)
+							list = strings.Split(v.Value, cmd.For.Split)
 						} else {
-							list = strings.Fields(v.Static)
+							list = strings.Fields(v.Value)
 						}
 					}
 				}

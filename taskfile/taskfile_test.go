@@ -41,8 +41,8 @@ vars:
 				Task: "another-task", Vars: &taskfile.Vars{
 					OrderedMap: orderedmap.FromMapWithOrder(
 						map[string]taskfile.Var{
-							"PARAM1": {Static: "VALUE1"},
-							"PARAM2": {Static: "VALUE2"},
+							"PARAM1": {Value: "VALUE1"},
+							"PARAM2": {Value: "VALUE2"},
 						},
 						[]string{"PARAM1", "PARAM2"},
 					),
@@ -61,7 +61,7 @@ vars:
 				Task: "some_task", Vars: &taskfile.Vars{
 					OrderedMap: orderedmap.FromMapWithOrder(
 						map[string]taskfile.Var{
-							"PARAM1": {Static: "var"},
+							"PARAM1": {Value: "var"},
 						},
 						[]string{"PARAM1"},
 					),
@@ -81,8 +81,8 @@ vars:
 				Task: "another-task", Vars: &taskfile.Vars{
 					OrderedMap: orderedmap.FromMapWithOrder(
 						map[string]taskfile.Var{
-							"PARAM1": {Static: "VALUE1"},
-							"PARAM2": {Static: "VALUE2"},
+							"PARAM1": {Value: "VALUE1"},
+							"PARAM2": {Value: "VALUE2"},
 						},
 						[]string{"PARAM1", "PARAM2"},
 					),

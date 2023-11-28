@@ -311,7 +311,7 @@ func run() error {
 		calls = append(calls, taskfile.Call{Task: "default", Direct: true})
 	}
 
-	globals.Set("CLI_ARGS", taskfile.Var{Static: cliArgs})
+	globals.Set("CLI_ARGS", taskfile.Var{Value: cliArgs})
 	e.Taskfile.Vars.Merge(globals)
 
 	if !flags.watch {
