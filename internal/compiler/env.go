@@ -14,7 +14,7 @@ func GetEnviron() *taskfile.Vars {
 	for _, e := range os.Environ() {
 		keyVal := strings.SplitN(e, "=", 2)
 		key, val := keyVal[0], keyVal[1]
-		m.Set(key, taskfile.Var{Static: val})
+		m.Set(key, taskfile.Var{Value: val})
 	}
 	return m
 }

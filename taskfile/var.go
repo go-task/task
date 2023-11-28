@@ -27,7 +27,7 @@ func (vs *Vars) ToCacheMap() (m map[string]any) {
 		if v.Live != nil {
 			m[k] = v.Live
 		} else {
-			m[k] = v.Static
+			m[k] = v.Value
 		}
 		return nil
 	})
@@ -71,10 +71,10 @@ func (vs *Vars) DeepCopy() *Vars {
 
 // Var represents either a static or dynamic variable.
 type Var struct {
-	Static string
-	Live   any
-	Sh     string
-	Dir    string
+	Value string
+	Live  any
+	Sh    string
+	Dir   string
 }
 
 func (v *Var) UnmarshalYAML(node *yaml.Node) error {
@@ -85,7 +85,7 @@ func (v *Var) UnmarshalYAML(node *yaml.Node) error {
 		if err := node.Decode(&str); err != nil {
 			return err
 		}
-		v.Static = str
+		v.Value = str
 		return nil
 
 	case yaml.MappingNode:

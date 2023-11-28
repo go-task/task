@@ -50,7 +50,7 @@ func (c *CompilerV2) GetVariables(t *taskfile.Task, call taskfile.Call) (*taskfi
 		c:    c,
 		vars: compiler.GetEnviron(),
 	}
-	vr.vars.Set("TASK", taskfile.Var{Static: t.Task})
+	vr.vars.Set("TASK", taskfile.Var{Value: t.Task})
 
 	for _, vars := range []*taskfile.Vars{c.Taskvars, c.TaskfileVars, call.Vars, t.Vars} {
 		for i := 0; i < c.Expansions; i++ {
@@ -73,23 +73,23 @@ func (vr *varResolver) merge(vars *taskfile.Vars) {
 	tr := templater.Templater{Vars: vr.vars}
 	_ = vars.Range(func(k string, v taskfile.Var) error {
 		v = taskfile.Var{
-			Static: tr.Replace(v.Static),
-			Sh:     tr.Replace(v.Sh),
+			Value: tr.Replace(v.Value),
+			Sh:    tr.Replace(v.Sh),
 		}
 		static, err := vr.c.HandleDynamicVar(v, "")
 		if err != nil {
 			vr.err = err
 			return err
 		}
-		vr.vars.Set(k, taskfile.Var{Static: static})
+		vr.vars.Set(k, taskfile.Var{Value: static})
 		return nil
 	})
 	vr.err = tr.Err()
 }
 
 func (c *CompilerV2) HandleDynamicVar(v taskfile.Var, _ string) (string, error) {
-	if v.Static != "" || v.Sh == "" {
-		return v.Static, nil
+	if v.Value != "" || v.Sh == "" {
+		return v.Value, nil
 	}
 
 	c.muDynamicCache.Lock()

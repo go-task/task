@@ -2111,7 +2111,7 @@ func TestSplitArgs(t *testing.T) {
 	require.NoError(t, e.Setup())
 
 	vars := &taskfile.Vars{}
-	vars.Set("CLI_ARGS", taskfile.Var{Static: "foo bar 'foo bar baz'"})
+	vars.Set("CLI_ARGS", taskfile.Var{Value: "foo bar 'foo bar baz'"})
 
 	err := e.Run(context.Background(), taskfile.Call{Task: "default", Vars: vars})
 	require.NoError(t, err)

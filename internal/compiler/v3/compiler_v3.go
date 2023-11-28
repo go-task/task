@@ -51,7 +51,7 @@ func (c *CompilerV3) getVariables(t *taskfile.Task, call *taskfile.Call, evaluat
 			return nil, err
 		}
 		for k, v := range specialVars {
-			result.Set(k, taskfile.Var{Static: v})
+			result.Set(k, taskfile.Var{Value: v})
 		}
 	}
 
@@ -60,14 +60,14 @@ func (c *CompilerV3) getVariables(t *taskfile.Task, call *taskfile.Call, evaluat
 			tr := templater.Templater{Vars: result, RemoveNoValue: true}
 
 			if !evaluateShVars {
-				result.Set(k, taskfile.Var{Static: tr.Replace(v.Static)})
+				result.Set(k, taskfile.Var{Value: tr.Replace(v.Value)})
 				return nil
 			}
 
 			v = taskfile.Var{
-				Static: tr.Replace(v.Static),
-				Sh:     tr.Replace(v.Sh),
-				Dir:    v.Dir,
+				Value: tr.Replace(v.Value),
+				Sh:    tr.Replace(v.Sh),
+				Dir:   v.Dir,
 			}
 			if err := tr.Err(); err != nil {
 				return err
@@ -76,7 +76,7 @@ func (c *CompilerV3) getVariables(t *taskfile.Task, call *taskfile.Call, evaluat
 			if err != nil {
 				return err
 			}
-			result.Set(k, taskfile.Var{Static: static})
+			result.Set(k, taskfile.Var{Value: static})
 			return nil
 		}
 	}
@@ -125,8 +125,8 @@ func (c *CompilerV3) getVariables(t *taskfile.Task, call *taskfile.Call, evaluat
 }
 
 func (c *CompilerV3) HandleDynamicVar(v taskfile.Var, dir string) (string, error) {
-	if v.Static != "" || v.Sh == "" {
-		return v.Static, nil
+	if v.Value != "" || v.Sh == "" {
+		return v.Value, nil
 	}
 
 	c.muDynamicCache.Lock()

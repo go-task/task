@@ -42,7 +42,7 @@ func Dotenv(c compiler.Compiler, tf *taskfile.Taskfile, dir string) (*taskfile.V
 		}
 		for key, value := range envs {
 			if ok := env.Exists(key); !ok {
-				env.Set(key, taskfile.Var{Static: value})
+				env.Set(key, taskfile.Var{Value: value})
 			}
 		}
 	}
