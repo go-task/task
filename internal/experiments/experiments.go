@@ -18,12 +18,14 @@ const envPrefix = "TASK_X_"
 var (
 	GentleForce     bool
 	RemoteTaskfiles bool
+	AnyVariables    bool
 )
 
 func init() {
 	readDotEnv()
 	GentleForce = parseEnv("GENTLE_FORCE")
 	RemoteTaskfiles = parseEnv("REMOTE_TASKFILES")
+	AnyVariables = parseEnv("ANY_VARIABLES")
 }
 
 func parseEnv(xName string) bool {
@@ -51,5 +53,6 @@ func List(l *logger.Logger) error {
 	w := tabwriter.NewWriter(os.Stdout, 0, 8, 0, ' ', 0)
 	printExperiment(w, l, "GENTLE_FORCE", GentleForce)
 	printExperiment(w, l, "REMOTE_TASKFILES", RemoteTaskfiles)
+	printExperiment(w, l, "ANY_VARIABLES", AnyVariables)
 	return w.Flush()
 }
