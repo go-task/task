@@ -72,11 +72,22 @@ func (vr *varResolver) merge(vars *taskfile.Vars) {
 	}
 	tr := templater.Templater{Vars: vr.vars}
 	_ = vars.Range(func(k string, v taskfile.Var) error {
-		v = taskfile.Var{
-			Value: tr.Replace(v.Value),
-			Sh:    tr.Replace(v.Sh),
+		// Replace values
+		newVar := taskfile.Var{}
+		switch value := v.Value.(type) {
+		case string:
+			newVar.Value = tr.Replace(value)
+		default:
+			newVar.Value = value
 		}
-		static, err := vr.c.HandleDynamicVar(v, "")
+		newVar.Sh = tr.Replace(v.Sh)
+		// If the variable is not dynamic, we can set it and return
+		if newVar.Value != nil || newVar.Sh == "" {
+			vr.vars.Set(k, taskfile.Var{Value: newVar.Value})
+			return nil
+		}
+		// If the variable is dynamic, we need to resolve it first
+		static, err := vr.c.HandleDynamicVar(newVar, "")
 		if err != nil {
 			vr.err = err
 			return err
@@ -88,10 +99,6 @@ func (vr *varResolver) merge(vars *taskfile.Vars) {
 }
 
 func (c *CompilerV2) HandleDynamicVar(v taskfile.Var, _ string) (string, error) {
-	if v.Value != "" || v.Sh == "" {
-		return v.Value, nil
-	}
-
 	c.muDynamicCache.Lock()
 	defer c.muDynamicCache.Unlock()
 

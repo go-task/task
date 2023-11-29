@@ -108,6 +108,11 @@ func (e *Executor) compiledTask(call taskfile.Call, evaluateShVars bool) (*taskf
 	new.Env.Merge(r.ReplaceVars(origTask.Env))
 	if evaluateShVars {
 		err = new.Env.Range(func(k string, v taskfile.Var) error {
+			// If the variable is not dynamic, we can set it and return
+			if v.Value != nil || v.Sh == "" {
+				new.Env.Set(k, taskfile.Var{Value: v.Value})
+				return nil
+			}
 			static, err := e.Compiler.HandleDynamicVar(v, new.Dir)
 			if err != nil {
 				return err
@@ -149,10 +154,13 @@ func (e *Executor) compiledTask(call taskfile.Call, evaluateShVars bool) (*taskf
 				if cmd.For.Var != "" {
 					if vars != nil {
 						v := vars.Get(cmd.For.Var)
-						if cmd.For.Split != "" {
-							list = strings.Split(v.Value, cmd.For.Split)
-						} else {
-							list = strings.Fields(v.Value)
+						switch value := v.Value.(type) {
+						case string:
+							if cmd.For.Split != "" {
+								list = strings.Split(value, cmd.For.Split)
+							} else {
+								list = strings.Fields(value)
+							}
 						}
 					}
 				}

@@ -71,7 +71,7 @@ func (vs *Vars) DeepCopy() *Vars {
 
 // Var represents either a static or dynamic variable.
 type Var struct {
-	Value string
+	Value any
 	Live  any
 	Sh    string
 	Dir   string
