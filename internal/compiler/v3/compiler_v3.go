@@ -58,21 +58,26 @@ func (c *CompilerV3) getVariables(t *taskfile.Task, call *taskfile.Call, evaluat
 	getRangeFunc := func(dir string) func(k string, v taskfile.Var) error {
 		return func(k string, v taskfile.Var) error {
 			tr := templater.Templater{Vars: result, RemoveNoValue: true}
-
-			if !evaluateShVars {
-				result.Set(k, taskfile.Var{Value: tr.Replace(v.Value)})
-				return nil
+			// Replace values
+			newVar := taskfile.Var{}
+			switch value := v.Value.(type) {
+			case string:
+				newVar.Value = tr.Replace(value)
+			default:
+				newVar.Value = value
 			}
-
-			v = taskfile.Var{
-				Value: tr.Replace(v.Value),
-				Sh:    tr.Replace(v.Sh),
-				Dir:   v.Dir,
-			}
+			newVar.Sh = tr.Replace(v.Sh)
+			newVar.Dir = v.Dir
 			if err := tr.Err(); err != nil {
 				return err
 			}
-			static, err := c.HandleDynamicVar(v, dir)
+			// If the variable is not dynamic, we can set it and return
+			if !evaluateShVars || newVar.Value != nil || newVar.Sh == "" {
+				result.Set(k, taskfile.Var{Value: newVar.Value})
+				return nil
+			}
+			// If the variable is dynamic, we need to resolve it first
+			static, err := c.HandleDynamicVar(newVar, dir)
 			if err != nil {
 				return err
 			}
@@ -125,10 +130,6 @@ func (c *CompilerV3) getVariables(t *taskfile.Task, call *taskfile.Call, evaluat
 }
 
 func (c *CompilerV3) HandleDynamicVar(v taskfile.Var, dir string) (string, error) {
-	if v.Value != "" || v.Sh == "" {
-		return v.Value, nil
-	}
-
 	c.muDynamicCache.Lock()
 	defer c.muDynamicCache.Unlock()
 
