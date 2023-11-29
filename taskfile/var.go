@@ -5,6 +5,7 @@ import (
 
 	"gopkg.in/yaml.v3"
 
+	"github.com/go-task/task/v3/internal/experiments"
 	"github.com/go-task/task/v3/internal/orderedmap"
 )
 
@@ -78,6 +79,15 @@ type Var struct {
 }
 
 func (v *Var) UnmarshalYAML(node *yaml.Node) error {
+	if experiments.AnyVariables {
+		var value any
+		if err := node.Decode(&value); err != nil {
+			return err
+		}
+		v.Value = value
+		return nil
+	}
+
 	switch node.Kind {
 
 	case yaml.ScalarNode:
