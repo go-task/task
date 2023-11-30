@@ -2,6 +2,7 @@ package taskfile
 
 import (
 	"fmt"
+	"strings"
 
 	"gopkg.in/yaml.v3"
 
@@ -83,6 +84,13 @@ func (v *Var) UnmarshalYAML(node *yaml.Node) error {
 		var value any
 		if err := node.Decode(&value); err != nil {
 			return err
+		}
+		// If the value is a string and it starts with $, then it's a shell command
+		if str, ok := value.(string); ok {
+			if str, ok = strings.CutPrefix(str, "$"); ok {
+				v.Sh = str
+				return nil
+			}
 		}
 		v.Value = value
 		return nil
