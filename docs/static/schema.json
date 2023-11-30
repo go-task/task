@@ -249,7 +249,7 @@
           "^.*$": {
             "anyOf": [
               {
-                "type": ["boolean", "integer", "null", "number", "string"]
+                "type": ["boolean", "integer", "null", "number", "string", "object", "array"]
               },
               {
                 "$ref": "#/definitions/3/dynamic_var"
