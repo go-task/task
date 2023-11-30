@@ -10,7 +10,7 @@ import (
 
 type For struct {
 	From  string
-	List  []string
+	List  []any
 	Var   string
 	Split string
 	As    string
@@ -28,7 +28,7 @@ func (f *For) UnmarshalYAML(node *yaml.Node) error {
 		return nil
 
 	case yaml.SequenceNode:
-		var list []string
+		var list []any
 		if err := node.Decode(&list); err != nil {
 			return err
 		}

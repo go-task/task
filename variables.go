@@ -7,6 +7,7 @@ import (
 
 	"github.com/joho/godotenv"
 
+	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/execext"
 	"github.com/go-task/task/v3/internal/filepathext"
 	"github.com/go-task/task/v3/internal/fingerprint"
@@ -132,23 +133,24 @@ func (e *Executor) compiledTask(call taskfile.Call, evaluateShVars bool) (*taskf
 				continue
 			}
 			if cmd.For != nil {
-				var list []string
+				var list []any
 				// Get the list from the explicit for list
 				if cmd.For.List != nil && len(cmd.For.List) > 0 {
 					list = cmd.For.List
 				}
 				// Get the list from the task sources
 				if cmd.For.From == "sources" {
-					list, err = fingerprint.Globs(new.Dir, new.Sources)
+					glist, err := fingerprint.Globs(new.Dir, new.Sources)
 					if err != nil {
 						return nil, err
 					}
 					// Make the paths relative to the task dir
-					for i, v := range list {
-						if list[i], err = filepath.Rel(new.Dir, v); err != nil {
+					for i, v := range glist {
+						if glist[i], err = filepath.Rel(new.Dir, v); err != nil {
 							return nil, err
 						}
 					}
+					list = asAnySlice(glist)
 				}
 				// Get the list from a variable and split it up
 				if cmd.For.Var != "" {
@@ -157,9 +159,16 @@ func (e *Executor) compiledTask(call taskfile.Call, evaluateShVars bool) (*taskf
 						switch value := v.Value.(type) {
 						case string:
 							if cmd.For.Split != "" {
-								list = strings.Split(value, cmd.For.Split)
+								list = asAnySlice(strings.Split(value, cmd.For.Split))
 							} else {
-								list = strings.Fields(value)
+								list = asAnySlice(strings.Fields(value))
+							}
+						case []any:
+							list = value
+						default:
+							return nil, errors.TaskfileInvalidError{
+								URI: origTask.Location.Taskfile,
+								Err: errors.New("var must be a delimiter-separated string or a list"),
 							}
 						}
 					}
@@ -250,4 +259,12 @@ func (e *Executor) compiledTask(call taskfile.Call, evaluateShVars bool) (*taskf
 	}
 
 	return &new, r.Err()
+}
+
+func asAnySlice[T any](slice []T) []any {
+	ret := make([]any, len(slice))
+	for i, v := range slice {
+		ret[i] = v
+	}
+	return ret
 }
