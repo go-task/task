@@ -40,7 +40,7 @@ version:
 # winget
 
 winget also requires manual steps to be completed. By running
-`task test-release` locally, manifest files will be generated on
+`task goreleaser:test` locally, manifest files will be generated on
 `dist/winget/manifests/t/Task/Task/v{version}`.
 [Upload the manifest directory into this fork](https://github.com/go-task/winget-pkgs/tree/master/manifests/t/Task/Task)
 and open a pull request into
