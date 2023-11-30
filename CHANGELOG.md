@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v3.32.0 - 2023-11-29
 
 - Added ability to exclude some files from `sources:` by using `exclude:` (#225,
   #1324 by @pd93 and @andreynering).
