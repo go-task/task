@@ -8,16 +8,25 @@ import (
 
 	"github.com/go-task/task/v3/internal/execext"
 	"github.com/go-task/task/v3/internal/filepathext"
+	"github.com/go-task/task/v3/taskfile"
 )
 
-func Globs(dir string, globs []string) ([]string, error) {
-	files := make([]string, 0)
+func Globs(dir string, globs []*taskfile.Glob) ([]string, error) {
+	fileMap := make(map[string]bool)
 	for _, g := range globs {
-		f, err := Glob(dir, g)
+		matches, err := Glob(dir, g.Glob)
 		if err != nil {
 			continue
 		}
-		files = append(files, f...)
+		for _, match := range matches {
+			fileMap[match] = !g.Negate
+		}
+	}
+	files := make([]string, 0)
+	for file, includePath := range fileMap {
+		if includePath {
+			files = append(files, file)
+		}
 	}
 	sort.Strings(files)
 	return files, nil

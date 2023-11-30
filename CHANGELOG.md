@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added ability to exclude some files from `sources:` by using `exclude:` (#225,
+  #1324 by @pd93 and @andreynering).
 - The
   [Remote Taskfiles experiment](https://taskfile.dev/experiments/remote-taskfiles)
   now prefers remote files over cached ones by default (#1317, #1345 by @pd93).

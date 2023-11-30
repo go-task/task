@@ -642,11 +642,27 @@ tasks:
       - public/bundle.css
 ```
 
-`sources` and `generates` can be files or file patterns. When given, Task will
+`sources` and `generates` can be files or glob patterns. When given, Task will
 compare the checksum of the source files to determine if it's necessary to run
 the task. If not, it will just print a message like `Task "js" is up to date`.
 
-If you prefer this check to be made by the modification timestamp of the files,
+`exclude:` can also be used to exclude files from fingerprinting.
+Sources are evaluated in order, so `exclude:` must come after the positive
+glob it is negating.
+
+```yaml
+version: '3'
+
+tasks:
+  css:
+    sources:
+      - mysources/**/*.css
+      - exclude: mysources/ignoreme.css
+    generates:
+      - public/bundle.css
+```
+
+If you prefer these check to be made by the modification timestamp of the files,
 instead of its checksum (content), just set the `method` property to
 `timestamp`.
 
@@ -1001,9 +1017,9 @@ This works for all types of variables.
 
 ## Looping over values
 
-As of v3.28.0, Task allows you to loop over certain values and execute a
-command for each. There are a number of ways to do this depending on the type
-of value you want to loop over.
+As of v3.28.0, Task allows you to loop over certain values and execute a command
+for each. There are a number of ways to do this depending on the type of value
+you want to loop over.
 
 ### Looping over a static list
 
@@ -1043,9 +1059,8 @@ match that glob.
 
 Source paths will always be returned as paths relative to the task directory. If
 you need to convert this to an absolute path, you can use the built-in
-`joinPath` function.
-There are some [special variables](/api/#special-variables) that you may find
-useful for this.
+`joinPath` function. There are some [special variables](/api/#special-variables)
+that you may find useful for this.
 
 ```yaml
 version: '3'

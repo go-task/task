@@ -1891,27 +1891,47 @@ func TestEvaluateSymlinksInPaths(t *testing.T) {
 		Stderr: &buff,
 		Silent: false,
 	}
-	require.NoError(t, e.Setup())
-	err := e.Run(context.Background(), taskfile.Call{Task: "default"})
-	require.NoError(t, err)
-	assert.NotEqual(t, `task: Task "default" is up to date`, strings.TrimSpace(buff.String()))
-	buff.Reset()
-	err = e.Run(context.Background(), taskfile.Call{Task: "test-sym"})
-	require.NoError(t, err)
-	assert.NotEqual(t, `task: Task "test-sym" is up to date`, strings.TrimSpace(buff.String()))
-	buff.Reset()
-	err = e.Run(context.Background(), taskfile.Call{Task: "default"})
-	require.NoError(t, err)
-	assert.NotEqual(t, `task: Task "default" is up to date`, strings.TrimSpace(buff.String()))
-	buff.Reset()
-	err = e.Run(context.Background(), taskfile.Call{Task: "default"})
-	require.NoError(t, err)
-	assert.Equal(t, `task: Task "default" is up to date`, strings.TrimSpace(buff.String()))
-	buff.Reset()
-	err = e.Run(context.Background(), taskfile.Call{Task: "reset"})
-	require.NoError(t, err)
-	buff.Reset()
-	err = os.RemoveAll(dir + "/.task")
+	tests := []struct {
+		name     string
+		task     string
+		expected string
+	}{
+		{
+			name:     "default (1)",
+			task:     "default",
+			expected: "task: [default] echo \"some job\"\nsome job",
+		},
+		{
+			name:     "test-sym (1)",
+			task:     "test-sym",
+			expected: "task: [test-sym] echo \"shared file source changed\" > src/shared/b",
+		},
+		{
+			name:     "default (2)",
+			task:     "default",
+			expected: "task: [default] echo \"some job\"\nsome job",
+		},
+		{
+			name:     "default (3)",
+			task:     "default",
+			expected: `task: Task "default" is up to date`,
+		},
+		{
+			name:     "reset",
+			task:     "reset",
+			expected: "task: [reset] echo \"shared file source\" > src/shared/b\ntask: [reset] echo \"file source\" > src/a",
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			require.NoError(t, e.Setup())
+			err := e.Run(context.Background(), taskfile.Call{Task: test.task})
+			require.NoError(t, err)
+			assert.Equal(t, test.expected, strings.TrimSpace(buff.String()))
+			buff.Reset()
+		})
+	}
+	err := os.RemoveAll(dir + "/.task")
 	require.NoError(t, err)
 }
 
