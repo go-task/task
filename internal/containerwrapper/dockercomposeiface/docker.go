@@ -19,15 +19,13 @@ type DockerComposeWrapper struct {
 }
 
 func CreateDockerComposeWrapper(dockerContext string, project *types.Project) (DockerComposeWrapper, error) {
-	fmt.Println("Currently level:", logrus.GetLevel())
-
 	dockerCli, err := command.NewDockerCli()
 	if err != nil {
 		return DockerComposeWrapper{}, err
 	}
 
 	//Magic line to fix error:
-	//Failed to initialize: unable to resolve dockercomposeiface endpoint: no context store initialized
+	//Failed to initialize: unable to resolve docker endpoint: no context store initialized
 	myOpts := &flags.ClientOptions{Context: dockerContext, LogLevel: "error"}
 	err = dockerCli.Initialize(myOpts)
 	if err != nil {

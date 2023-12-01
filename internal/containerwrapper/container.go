@@ -16,13 +16,13 @@ import (
 )
 
 /*
-The input into the ContainerSetup is a valid ocker compose definition.
+The input into the ContainerSetup is a valid docker compose definition.
 The input is parsed and converted into a project, this has a few advantages:
 - The input required by the end user is a well known format
 - There is lots of documentation on the format
-- All of the parsing and validation is done by the dockercomposeiface compose-spec lib.
+- All the parsing and validation is done by compose-go lib.
 - The implementation is handled by the ContainerInterface, currently only
-dockercomposeiface compose is supported.
+docker compose is supported.
 */
 
 type ContainerSetup struct {
@@ -32,11 +32,11 @@ type ContainerSetup struct {
 }
 
 // UnmarshalYAML implements the yaml.Unmarshaler interface.
-// Using compose-go to handle the parsing of the dockercomposeiface components.
+// Using compose-go to handle the parsing of the contents.
 // Parsing all the components especially the volumes could be problematic
-// so instead we farm all that out to the compose-go loader package which
-// are designed to parse, load and validate the spec/schema.
-// dockercomposeiface-compose might be overkill for what is required however
+// instead we farm all that out to the compose-go loader package which
+// is designed to parse, load and validate the spec/schema.
+// docker compose might be overkill for what is required however
 // this helps provide a standard and consistent layout
 func (tdc *ContainerSetup) UnmarshalYAML(node *yaml.Node) error {
 	ctx := context.TODO()
@@ -63,13 +63,13 @@ func (tdc *ContainerSetup) UnmarshalYAML(node *yaml.Node) error {
 			hasher := sha1.New()
 			hasher.Write(b)
 			// The loader will try and generate a project name based on the file path
-			// however there is no real file and we are loading data via []bytes
+			// however there is no real file because we are loading data via []bytes
 			// We generate and force a project name
 			projectName := hex.EncodeToString(hasher.Sum(nil))
 			configDetails := compose_types.ConfigDetails{
 				WorkingDir: "/taskfile/in-memory/",
 				ConfigFiles: []compose_types.ConfigFile{
-					{Filename: "dockercomposeiface-compose.yaml", Content: b},
+					{Filename: "docker-compose.yaml", Content: b},
 				},
 				Environment: nil,
 			}
@@ -89,16 +89,16 @@ func (tdc *ContainerSetup) UnmarshalYAML(node *yaml.Node) error {
 	}
 
 	if len(tdc.project.Services) < 1 {
-		return fmt.Errorf("containerwrapper node missing definition, expecte")
+		return fmt.Errorf("containerwrapper node missing definition, expected at least 1 service definition")
 	}
-	// We don't create the ContainerInterface yet because that is only required if a task is being
+	// We don't create the ContainerInterface (tdc.CI) yet because that is only required if a task is being
 	// executed inside a container. At this point only a configuration has been detected and loaded.
-	// An example is that in CI/CD all tasks are executed in a container but not required when run locally.
+	// An example could be in a CI pipeline all tasks are executed in a container but not required when run locally.
 	return nil
 }
 
 // Initialize is responsible for creating the ContainerInterface and
-// running an form of container required initialization. It does not have to
+// running any form of container required initialization. It does not have to
 // start the containers.
 // If should be safe to execute multiple times.
 func (tdc *ContainerSetup) Initialize() error {
@@ -127,6 +127,8 @@ func (tdc *ContainerSetup) Cleanup(ctx context.Context) error {
 	return tdc.CI.Down(ctx)
 }
 
+// createBaseExecOptions creates an initial set of options
+// that all container execs might require.
 func (tdc *ContainerSetup) createBaseExecOptions() types.ExecOptions {
 	firstService := tdc.project.Services[0]
 	execOpt := types.ExecOptions{
@@ -156,8 +158,8 @@ func (tdc *ContainerSetup) Exec(ctx context.Context, cmd string, envVars []strin
 }
 
 /*
-addServiceLabels adds the labels dockercomposeiface expects to exist on services.
-This is required for future dockercomposeiface operations to work, such as finding
+addServiceLabels adds the labels docker compose expects to exist on services.
+This is required for future compose operations to work, such as finding
 containers that are part of a service.
 */
 func addServiceLabels(project *compose_types.Project) {

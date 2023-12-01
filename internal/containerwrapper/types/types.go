@@ -25,5 +25,5 @@ type ExecOptions struct {
 	Workdir string
 	Env     []string
 	User    string
-	Service string // Name of containerwrapper to execute the commands in.
+	Service string // Name of container to execute the commands in.
 }
