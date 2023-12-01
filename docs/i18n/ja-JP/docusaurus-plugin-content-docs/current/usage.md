@@ -567,9 +567,23 @@ tasks:
       - public/bundle.css
 ```
 
-`sources` and `generates` can be files or file patterns. When given, Task will compare the checksum of the source files to determine if it's necessary to run the task. If not, it will just print a message like `Task "js" is up to date`.
+`sources` and `generates` can be files or glob patterns. When given, Task will compare the checksum of the source files to determine if it's necessary to run the task. If not, it will just print a message like `Task "js" is up to date`.
 
-If you prefer this check to be made by the modification timestamp of the files, instead of its checksum (content), just set the `method` property to `timestamp`.
+`exclude:` can also be used to exclude files from fingerprinting. Sources are evaluated in order, so `exclude:` must come after the positive glob it is negating.
+
+```yaml
+version: '3'
+
+tasks:
+  css:
+    sources:
+      - mysources/**/*.css
+      - exclude: mysources/ignoreme.css
+    generates:
+      - public/bundle.css
+```
+
+If you prefer these check to be made by the modification timestamp of the files, instead of its checksum (content), just set the `method` property to `timestamp`.
 
 ```yaml
 version: '3'

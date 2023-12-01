@@ -28,7 +28,7 @@ npmにリリースするには、[`package.json`][packagejson]でバージョン
 
 # winget
 
-wingetもマニュアルのステップが必要です。 `task test-release`をローカルで実行すると、マニフェストファイルが`dist/winget/manifests/t/Task/Task/v{version}`に生成されます。 [マニフェストディレクトリをこのフォーク](https://github.com/go-task/winget-pkgs/tree/master/manifests/t/Task/Task)にアップロードし、[このリポジトリ](https://github.com/microsoft/winget-pkgs)にプルリクエストを作ってください。
+wingetもマニュアルのステップが必要です。 By running `task goreleaser:test` locally, manifest files will be generated on `dist/winget/manifests/t/Task/Task/v{version}`. [マニフェストディレクトリをこのフォーク](https://github.com/go-task/winget-pkgs/tree/master/manifests/t/Task/Task)にアップロードし、[このリポジトリ](https://github.com/microsoft/winget-pkgs)にプルリクエストを作ってください。
 
 # Scoop
 

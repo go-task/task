@@ -567,9 +567,23 @@ tasks:
       - public/bundle.css
 ```
 
-`sources` 和 `generates` 可以配置具体文件或者使用匹配模式。 设置后， Task 会根据源文件的 checksum 来确定是否需要执行当前任务。 如果不需要执行， 则会输出像 `Task "js" is up to date` 这样的信息。
+`sources` and `generates` can be files or glob patterns. 设置后， Task 会根据源文件的 checksum 来确定是否需要执行当前任务。 如果不需要执行， 则会输出像 `Task "js" is up to date` 这样的信息。
 
-如果您希望通过文件的修改 timestamp 而不是其 checksum（内容）来进行此检查，只需将 `method` 属性设置为 `timestamp` 即可。
+`exclude:` can also be used to exclude files from fingerprinting. Sources are evaluated in order, so `exclude:` must come after the positive glob it is negating.
+
+```yaml
+version: '3'
+
+tasks:
+  css:
+    sources:
+      - mysources/**/*.css
+      - exclude: mysources/ignoreme.css
+    generates:
+      - public/bundle.css
+```
+
+If you prefer these check to be made by the modification timestamp of the files, instead of its checksum (content), just set the `method` property to `timestamp`.
 
 ```yaml
 version: '3'

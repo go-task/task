@@ -5,9 +5,18 @@ sidebar_position: 14
 
 # Changelog
 
+## v3.32.0 - 2023-11-29
+
+- Added ability to exclude some files from `sources:` by using `exclude:` ([#225](https://github.com/go-task/task/issues/225), [#1324](https://github.com/go-task/task/issues/1324) by [@pd93](https://github.com/pd93) and [@andreynering](https://github.com/andreynering)).
+- The [Remote Taskfiles experiment](https://taskfile.dev/experiments/remote-taskfiles) now prefers remote files over cached ones by default ([#1317](https://github.com/go-task/task/issues/1317), [#1345](https://github.com/go-task/task/issues/1345) by [@pd93](https://github.com/pd93)).
+- Added `--timeout` flag to the [Remote Taskfiles experiment](https://taskfile.dev/experiments/remote-taskfiles) ([#1317](https://github.com/go-task/task/issues/1317), [#1345](https://github.com/go-task/task/issues/1345) by [@pd93](https://github.com/pd93)).
+- Fix bug where dynamic `vars:` and `env:` were being executed when they should actually be skipped by `platforms:` ([#1273](https://github.com/go-task/task/issues/1273), [#1377](https://github.com/go-task/task/issues/1377) by [@andreynering](https://github.com/andreynering)).
+- Fix `schema.json` to make `silent` valid in `cmds` that use `for` ([#1385](https://github.com/go-task/task/issues/1385), [#1386](https://github.com/go-task/task/issues/1386) by [@iainvm](https://github.com/iainvm)).
+- Add new `--no-status` flag to skip expensive status checks when running `task --list --json` ([#1348](https://github.com/go-task/task/issues/1348), [#1368](https://github.com/go-task/task/issues/1368) by [@amancevice](https://github.com/amancevice)).
+
 ## v3.31.0 - 2023-10-07
 
-- Enabled the `--yes` flag for the [Remote Taskfiles experiment](https://taskfile.dev/experiments/remote-taskfiles) ([#1344](https://github.com/go-task/task/issues/1344) by [@pd93](https://github.com/pd93)).
+- Enabled the `--yes` flag for the [Remote Taskfiles experiment](https://taskfile.dev/experiments/remote-taskfiles) ([#1317](https://github.com/go-task/task/issues/1317), [#1344](https://github.com/go-task/task/issues/1344) by [@pd93](https://github.com/pd93)).
 - Add ability to set `watch: true` in a task to automatically run it in watch mode ([#231](https://github.com/go-task/task/issues/231), [#1361](https://github.com/go-task/task/issues/1361) by [@andreynering](https://github.com/andreynering)).
 - Fixed a bug on the watch mode where paths that contained `.git` (like `.github`), for example, were also being ignored ([#1356](https://github.com/go-task/task/issues/1356) by [@butuzov](https://github.com/butuzov)).
 - Fixed a nil pointer error when running a Taskfile with no contents ([#1341](https://github.com/go-task/task/issues/1341), [#1342](https://github.com/go-task/task/issues/1342) by [@pd93](https://github.com/pd93)).
