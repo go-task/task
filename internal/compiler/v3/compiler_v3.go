@@ -98,9 +98,6 @@ func (c *CompilerV3) getVariables(t *taskfile.Task, call *taskfile.Call, evaluat
 	if err := c.TaskfileEnv.Range(rangeFunc); err != nil {
 		return nil, err
 	}
-	if err := c.TaskfileVars.Range(rangeFunc); err != nil {
-		return nil, err
-	}
 	if t != nil {
 		if err := t.IncludedTaskfileVars.Range(taskRangeFunc); err != nil {
 			return nil, err
@@ -118,6 +115,9 @@ func (c *CompilerV3) getVariables(t *taskfile.Task, call *taskfile.Call, evaluat
 		return nil, err
 	}
 	if err := t.Vars.Range(taskRangeFunc); err != nil {
+		return nil, err
+	}
+	if err := c.TaskfileVars.Range(rangeFunc); err != nil {
 		return nil, err
 	}
 
