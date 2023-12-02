@@ -169,6 +169,11 @@ func (e *Executor) compiledTask(call taskfile.Call, evaluateShVars bool) (*taskf
 								}
 							case []any:
 								list = value
+							case map[string]any:
+								return &taskfile.Task{}, errors.TaskfileInvalidError{
+									URI: origTask.Location.Taskfile,
+									Err: errors.New("sh is not supported with the 'Any Variables' experiment enabled.\nSee https://taskfile.dev/experiments/any-variables for more information."),
+								}
 							default:
 								return nil, errors.TaskfileInvalidError{
 									URI: origTask.Location.Taskfile,
