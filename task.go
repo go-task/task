@@ -478,8 +478,8 @@ func (e *Executor) GetTaskList(filters ...FilterFunc) ([]*taskfile.Task, error) 
 		task := tasks[idx]
 		g.Go(func() error {
 			compiledTask, err := e.FastCompiledTask(taskfile.Call{Task: task.Task})
-			if err == nil {
-				task = compiledTask
+			if err != nil {
+				return err
 			}
 			tasks[idx] = compiledTask
 			return nil
