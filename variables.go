@@ -156,19 +156,24 @@ func (e *Executor) compiledTask(call taskfile.Call, evaluateShVars bool) (*taskf
 				if cmd.For.Var != "" {
 					if vars != nil {
 						v := vars.Get(cmd.For.Var)
-						switch value := v.Value.(type) {
-						case string:
-							if cmd.For.Split != "" {
-								list = asAnySlice(strings.Split(value, cmd.For.Split))
-							} else {
-								list = asAnySlice(strings.Fields(value))
-							}
-						case []any:
-							list = value
-						default:
-							return nil, errors.TaskfileInvalidError{
-								URI: origTask.Location.Taskfile,
-								Err: errors.New("var must be a delimiter-separated string or a list"),
+						// If the variable is dynamic, then it hasn't been resolved yet
+						// and we can't use it as a list. This happens when fast compiling a task
+						// for use in --list or --list-all etc.
+						if v.Value != nil && v.Sh == "" {
+							switch value := v.Value.(type) {
+							case string:
+								if cmd.For.Split != "" {
+									list = asAnySlice(strings.Split(value, cmd.For.Split))
+								} else {
+									list = asAnySlice(strings.Fields(value))
+								}
+							case []any:
+								list = value
+							default:
+								return nil, errors.TaskfileInvalidError{
+									URI: origTask.Location.Taskfile,
+									Err: errors.New("var must be a delimiter-separated string or a list"),
+								}
 							}
 						}
 					}
