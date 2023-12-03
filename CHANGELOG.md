@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Added
+  [Any Variables experiment](https://taskfile.dev/experiments/any_variables)
+  (#1415, #1421 by @pd93).
 - Added `aliases` to `--json` flag output (#1430, #1431 by @pd93)
 
 ## v3.32.0 - 2023-11-29
