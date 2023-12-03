@@ -1,0 +1,80 @@
+version: '3'
+
+tasks:
+  default:
+    - task: dynamic
+    - task: string
+    - task: bool
+    - task: int
+    - task: string-array
+    - task: for-string
+    - task: for-int
+
+  dynamic:
+    vars:
+      STRING_A: '$echo "A"'
+      STRING_B: '$echo {{.STRING_A}}B'
+      STRING_C: '$echo {{.STRING_B}}C'
+    cmds:
+      - echo '{{.STRING_C}}'
+
+  string:
+    vars:
+      STRING_A: 'A'
+      STRING_B: '{{.STRING_A}}B'
+      STRING_C: '{{.STRING_B}}C'
+    cmds:
+      - echo '{{.STRING_C}}'
+
+  bool:
+    vars:
+      BOOL_TRUE: true
+      BOOL_FALSE: false
+      BOOL_A: '{{and .BOOL_TRUE .BOOL_FALSE}}'
+      BOOL_B: '{{or .BOOL_TRUE .BOOL_FALSE}}'
+      BOOL_C: '{{not .BOOL_TRUE}}'
+    cmds:
+      - echo '{{if .BOOL_TRUE}}A:{{.BOOL_A}} B:{{.BOOL_B}} C:{{.BOOL_C}}{{end}}'
+
+  int:
+    vars:
+      INT_100: 100
+      INT_10: 10
+    cmds:
+      - echo '100 + 10 = {{add .INT_100 .INT_10}}'
+      - echo '100 - 10 = {{sub .INT_100 .INT_10}}'
+      - echo '100 * 10 = {{mul .INT_100 .INT_10}}'
+      - echo '100 / 10 = {{div .INT_100 .INT_10}}'
+
+  string-array:
+    vars:
+      ARRAY_1: ['A', 'B', 'C']
+      ARRAY_2: ['D', 'E', 'F']
+    cmds:
+      - echo '{{append .ARRAY_1 "D"}}'
+      - echo '{{concat .ARRAY_1 .ARRAY_2}}'
+      - echo '{{join " " .ARRAY_1}}'
+
+  map:
+    vars:
+      MAP_1: {A: 1, B: 2, C: 3}
+      MAP_2: {D: 4, E: 5, F: 6}
+    cmds:
+      - echo '{{merge .MAP_1 .MAP_2}}'
+
+  for-string:
+    vars:
+      LIST: [foo, bar, baz]
+    cmds:
+      - for:
+          var: LIST
+        cmd: echo {{.ITEM}}
+
+  for-int:
+    vars:
+      LIST: [1, 2, 3]
+    cmds:
+      - for:
+          var: LIST
+        cmd: echo {{add .ITEM 100}}
+
