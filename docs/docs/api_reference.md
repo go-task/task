@@ -70,7 +70,7 @@ A full list of the exit codes and their descriptions can be found below:
 | 100  | No Taskfile was found                                        |
 | 101  | A Taskfile already exists when trying to initialize one      |
 | 102  | The Taskfile is invalid or cannot be parsed                  |
-| 103  | A remote Taskfile could not be downlaoded                    |
+| 103  | A remote Taskfile could not be downloaded                    |
 | 104  | A remote Taskfile was not trusted by the user                |
 | 105  | A remote Taskfile was could not be fetched securely          |
 | 106  | No cache was found for a remote Taskfile in offline mode     |
