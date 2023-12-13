@@ -68,7 +68,7 @@ Task 有时会以特定的退出代码退出。 These codes are split into three
 | 100 | 找不到 Taskfile                                             |
 | 101 | 尝试初始化一个 Taskfile 时已经存在                                   |
 | 102 | Taskfile 无效或无法解析                                         |
-| 103 | A remote Taskfile could not be downlaoded                |
+| 103 | A remote Taskfile could not be downloaded                |
 | 104 | A remote Taskfile was not trusted by the user            |
 | 105 | A remote Taskfile was could not be fetched securely      |
 | 106 | No cache was found for a remote Taskfile in offline mode |
