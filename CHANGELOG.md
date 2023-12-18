@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Added `aliases` to `--json` flag output (#1430, #1431 by @pd93)
+
 ## v3.32.0 - 2023-11-29
 
 - Added ability to exclude some files from `sources:` by using `exclude:` (#225,
