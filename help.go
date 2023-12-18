@@ -168,11 +168,16 @@ func (e *Executor) ToEditorOutput(tasks []*taskfile.Task, noStatus bool) (*edito
 	for i := range tasks {
 		task := tasks[i]
 		j := i
+		aliases := []string{}
+		if len(task.Aliases) > 0 {
+			aliases = task.Aliases
+		}
 		g.Go(func() error {
 			o.Tasks[j] = editors.Task{
 				Name:     task.Name(),
 				Desc:     task.Desc,
 				Summary:  task.Summary,
+				Aliases:  aliases,
 				UpToDate: false,
 				Location: &editors.Location{
 					Line:     task.Location.Line,

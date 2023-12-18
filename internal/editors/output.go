@@ -11,6 +11,7 @@ type (
 		Name     string    `json:"name"`
 		Desc     string    `json:"desc"`
 		Summary  string    `json:"summary"`
+		Aliases  []string  `json:"aliases"`
 		UpToDate bool      `json:"up_to_date"`
 		Location *Location `json:"location"`
 	}
