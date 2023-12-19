@@ -14,18 +14,11 @@ import (
 
 const (
 	changelogSource = "CHANGELOG.md"
-	changelogTarget = "docs/docs/changelog.md"
+	changelogTarget = "docs/docs/changelog.mdx"
 )
-
-const changelogTemplate = `---
-slug: /changelog/
-sidebar_position: 14
----`
 
 var (
 	changelogReleaseRegex = regexp.MustCompile(`## Unreleased`)
-	changelogUserRegex    = regexp.MustCompile(`@(\w+)`)
-	changelogIssueRegex   = regexp.MustCompile(`#(\d+)`)
 	versionRegex          = regexp.MustCompile(`(?m)^  "version": "\d+\.\d+\.\d+",$`)
 )
 
@@ -92,8 +85,22 @@ func bumpVersion(version *semver.Version, verb string) error {
 }
 
 func changelog(version *semver.Version) error {
+	// Open changelog target file
+	b, err := os.ReadFile(changelogTarget)
+	if err != nil {
+		return err
+	}
+
+	// Get the current frontmatter
+	currentChangelog := string(b)
+	sections := strings.SplitN(currentChangelog, "---", 3)
+	if len(sections) != 3 {
+		return errors.New("error: invalid frontmatter")
+	}
+	frontmatter := strings.TrimSpace(sections[1])
+
 	// Open changelog source file
-	b, err := os.ReadFile(changelogSource)
+	b, err = os.ReadFile(changelogSource)
 	if err != nil {
 		return err
 	}
@@ -109,11 +116,7 @@ func changelog(version *semver.Version) error {
 	}
 
 	// Add the frontmatter to the changelog
-	changelog = fmt.Sprintf("%s\n\n%s", changelogTemplate, changelog)
-
-	// Replace @user and #issue with full links
-	changelog = changelogUserRegex.ReplaceAllString(changelog, "[@$1](https://github.com/$1)")
-	changelog = changelogIssueRegex.ReplaceAllString(changelog, "[#$1](https://github.com/go-task/task/issues/$1)")
+	changelog = fmt.Sprintf("---\n%s\n---\n\n%s", frontmatter, changelog)
 
 	// Write the changelog to the target file
 	return os.WriteFile(changelogTarget, []byte(changelog), 0o644)
