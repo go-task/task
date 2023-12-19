@@ -5,6 +5,7 @@
 - Added
   [Any Variables experiment](https://taskfile.dev/experiments/any_variables)
   (#1415, #1421 by @pd93).
+- Updated Docusaurus to v3 (#1432 by @pd93).
 - Added `aliases` to `--json` flag output (#1430, #1431 by @pd93)
 
 ## v3.32.0 - 2023-11-29
@@ -529,8 +530,8 @@ it a go and let us know what you think via a
 
 - On `v3`, all CLI variables will be considered global variables (#336, #341)
 - Add support to `.env` like files (#324, #356).
-- Add `label:` to task so you can override the task name in the logs
-  ([#321](https://github.com/go-task/task/issues/321]), #337).
+- Add `label:` to task so you can override the task name in the logs (#321,
+  #337).
 - Refactor how variables work on version 3 (#311).
 - Disallow `expansions` on v3 since it has no effect.
 - `Taskvars.yml` is not automatically included anymore.
