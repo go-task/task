@@ -75,6 +75,7 @@ type Executor struct {
 
 	concurrencySemaphore chan struct{}
 	taskCallCount        map[string]*int32
+	taskSeparated        *int32
 	mkdirMutexMap        map[string]*sync.Mutex
 	executionHashes      map[string]context.Context
 	executionHashesMutex sync.Mutex
@@ -243,6 +244,9 @@ func (e *Executor) RunTask(ctx context.Context, call taskfile.Call) error {
 			e.Logger.Errf(logger.Red, "task: cannot make directory %q: %v\n", t.Dir, err)
 		}
 
+		if atomic.CompareAndSwapInt32(e.taskSeparated, 0, 1) {
+			e.runCommandHook(ctx, t, call, e.Taskfile.Cmds.TaskSeparator, "separator")
+		}
 		for i := range t.Cmds {
 			if t.Cmds[i].Defer {
 				defer e.runDeferred(t, call, i)
@@ -265,6 +269,9 @@ func (e *Executor) RunTask(ctx context.Context, call taskfile.Call) error {
 
 				return &errors.TaskRunError{TaskName: t.Task, Err: err}
 			}
+		}
+		if atomic.CompareAndSwapInt32(e.taskSeparated, 0, 1) {
+			e.runCommandHook(ctx, t, call, e.Taskfile.Cmds.TaskSeparator, "separator")
 		}
 		e.Logger.VerboseErrf(logger.Magenta, "task: %q finished\n", call.Task)
 		return nil
@@ -353,8 +360,10 @@ func (e *Executor) runCommand(ctx context.Context, t *taskfile.Task, call taskfi
 		if err != nil {
 			return fmt.Errorf("task: failed to get variables: %w", err)
 		}
-		stdOut, stdErr, close := outputWrapper.WrapWriter(e.Stdout, e.Stderr, t.Prefix, outputTemplater)
+		stdOut, stdErr, closer := outputWrapper.WrapWriter(e.Stdout, e.Stderr, t.Prefix, outputTemplater)
 
+		e.runCommandHook(ctx, t, call, e.Taskfile.Cmds.Pre, "pre")
+		atomic.StoreInt32(e.taskSeparated, 0)
 		err = execext.RunCommand(ctx, &execext.RunCommandOptions{
 			Command:   cmd.Cmd,
 			Dir:       t.Dir,
@@ -365,7 +374,9 @@ func (e *Executor) runCommand(ctx context.Context, t *taskfile.Task, call taskfi
 			Stdout:    stdOut,
 			Stderr:    stdErr,
 		})
-		if closeErr := close(err); closeErr != nil {
+		e.runCommandHook(ctx, t, call, e.Taskfile.Cmds.Post, "post")
+
+		if closeErr := closer(err); closeErr != nil {
 			e.Logger.Errf(logger.Red, "task: unable to close writer: %v\n", closeErr)
 		}
 		if execext.IsExitError(err) && cmd.IgnoreError {
@@ -375,6 +386,48 @@ func (e *Executor) runCommand(ctx context.Context, t *taskfile.Task, call taskfi
 		return err
 	default:
 		return nil
+	}
+}
+
+func (e *Executor) runCommandHook(ctx context.Context, t *taskfile.Task, call taskfile.Call, cmd string, kind string) {
+	if cmd == "" {
+		return
+	}
+
+	if e.Dry {
+		return
+	}
+
+	outputWrapper := e.Output
+	if t.Interactive {
+		outputWrapper = output.Interleaved{}
+	}
+	vars, err := e.Compiler.FastGetVariables(t, call)
+	outputTemplater := &templater.Templater{Vars: vars, RemoveNoValue: true}
+	if err != nil {
+		e.Logger.Errf(logger.Red, "task: failed to get variables for %s-command: %w", kind, err)
+		return
+	}
+	stdOut, stdErr, closer := outputWrapper.WrapWriter(e.Stdout, e.Stderr, t.Prefix, outputTemplater)
+
+	if err := execext.RunCommand(ctx, &execext.RunCommandOptions{
+		Command:   cmd,
+		Dir:       t.Dir,
+		Env:       env.Get(t),
+		PosixOpts: slicesext.UniqueJoin(e.Taskfile.Set, t.Set),
+		BashOpts:  slicesext.UniqueJoin(e.Taskfile.Shopt, t.Shopt),
+		Stdout:    stdOut,
+		Stderr:    stdErr,
+	}); err != nil {
+		e.Logger.Errf(logger.Red, "task: unable to run %s-command: %w", kind, err)
+	}
+
+	if closeErr := closer(err); closeErr != nil {
+		e.Logger.Errf(logger.Red, "task: unable to close writer: %v\n", closeErr)
+	}
+	if execext.IsExitError(err) {
+		e.Logger.VerboseErrf(logger.Yellow, "task: [%s] %s-command error ignored: %v\n", t.Name(), kind, err)
+		return
 	}
 }
 

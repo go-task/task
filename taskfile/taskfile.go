@@ -27,6 +27,7 @@ type Taskfile struct {
 	Shopt      []string
 	Vars       *Vars
 	Env        *Vars
+	Cmds       Cmds
 	Tasks      Tasks
 	Silent     bool
 	Dotenv     []string
@@ -47,6 +48,7 @@ func (tf *Taskfile) UnmarshalYAML(node *yaml.Node) error {
 			Shopt      []string
 			Vars       *Vars
 			Env        *Vars
+			Cmds       Cmds
 			Tasks      Tasks
 			Silent     bool
 			Dotenv     []string
@@ -66,6 +68,7 @@ func (tf *Taskfile) UnmarshalYAML(node *yaml.Node) error {
 		tf.Vars = taskfile.Vars
 		tf.Env = taskfile.Env
 		tf.Tasks = taskfile.Tasks
+		tf.Cmds = taskfile.Cmds
 		tf.Silent = taskfile.Silent
 		tf.Dotenv = taskfile.Dotenv
 		tf.Run = taskfile.Run
