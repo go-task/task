@@ -23,7 +23,7 @@ const initClient = () => {
  * Get translation progress
  * @return {object} translation progress
  */
-async function getTranslationProgress() {
+export async function getTranslationProgress() {
   let translationProgress = {};
   const { translationStatusApi } = initClient() || {};
 
@@ -44,7 +44,3 @@ async function getTranslationProgress() {
 
   return translationProgress;
 }
-
-module.exports = {
-  getTranslationProgress
-};

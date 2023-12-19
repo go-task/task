@@ -1,4 +1,4 @@
-module.exports = {
+export default {
   trailingComma: 'none',
   singleQuote: true,
   overrides: [
