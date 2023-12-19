@@ -9,7 +9,7 @@ const projectId = '574591';
 const initClient = () => {
   if (!personalToken) {
     console.warn(
-      'No crowding personal token, some features might not work as expected'
+      'No crowdin personal token, some features might not work as expected'
     );
     return null;
   }
