@@ -11,7 +11,7 @@
 ## v3.33.0 - 2023-12-20
 
 - Added
-  [Any Variables experiment](https://taskfile.dev/experiments/any_variables)
+  [Any Variables experiment](https://taskfile.dev/experiments/any-variables)
   (#1415, #1421 by @pd93).
 - Updated Docusaurus to v3 (#1432 by @pd93).
 - Added `aliases` to `--json` flag output (#1430, #1431 by @pd93).
