@@ -19,9 +19,8 @@ the website homepage and on the GitHub repository README. Make contact with
 ## GitHub Sponsors
 
 The preferred way to donate to the maintainers is via GitHub Sponsors. Just use
-the following links to do your donation.
-We suggest a 50/50 split to each maintainer of the total amount you plan to
-donate to the project.
+the following links to do your donation. We suggest a 50/50 split to each
+maintainer of the total amount you plan to donate to the project.
 
 - [@andreynering](https://github.com/sponsors/andreynering)
 - [@pd93](https://github.com/sponsors/pd93)
