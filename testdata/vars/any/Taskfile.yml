@@ -9,6 +9,8 @@ tasks:
     - task: string-array
     - task: for-string
     - task: for-int
+    - task: for-map
+    - task: for-multi-layer-map
 
   dynamic:
     vars:
@@ -78,3 +80,27 @@ tasks:
           var: LIST
         cmd: echo {{add .ITEM 100}}
 
+  for-map:
+    vars:
+      MAP:
+        KEY_1: value_1
+        KEY_2: value_2
+        KEY_3: value_3
+    cmds:
+      - for:
+          var: MAP
+        cmd: echo {{.ITEM}}
+
+  for-multi-layer-map:
+    vars:
+      MAP:
+        KEY_1:
+          SUBKEY: sub_value_1
+        KEY_2:
+          SUBKEY: sub_value_2
+        KEY_3:
+          SUBKEY: sub_value_3
+    cmds:
+      - for:
+          var: MAP
+        cmd: echo {{.ITEM.SUBKEY}}

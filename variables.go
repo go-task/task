@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/joho/godotenv"
+	"golang.org/x/exp/maps"
 
 	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/execext"
@@ -170,10 +171,7 @@ func (e *Executor) compiledTask(call taskfile.Call, evaluateShVars bool) (*taskf
 							case []any:
 								list = value
 							case map[string]any:
-								return &taskfile.Task{}, errors.TaskfileInvalidError{
-									URI: origTask.Location.Taskfile,
-									Err: errors.New("sh is not supported with the 'Any Variables' experiment enabled.\nSee https://taskfile.dev/experiments/any-variables for more information."),
-								}
+								list = maps.Values(value)
 							default:
 								return nil, errors.TaskfileInvalidError{
 									URI: origTask.Location.Taskfile,
