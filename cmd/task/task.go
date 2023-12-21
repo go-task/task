@@ -312,6 +312,7 @@ func run() error {
 	}
 
 	globals.Set("CLI_ARGS", taskfile.Var{Value: cliArgs})
+	globals.Set("CLI_FORCE", taskfile.Var{Value: flags.force || flags.forceAll})
 	e.Taskfile.Vars.Merge(globals)
 
 	if !flags.watch {
