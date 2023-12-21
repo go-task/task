@@ -68,17 +68,23 @@ func (c *CompilerV3) getVariables(t *taskfile.Task, call *taskfile.Call, evaluat
 			}
 			newVar.Sh = tr.Replace(v.Sh)
 			newVar.Dir = v.Dir
-			if err := tr.Err(); err != nil {
-				return err
-			}
 			// If the variable should not be evaluated, but is nil, set it to an empty string
 			// This stops empty interface errors when using the templater to replace values later
 			if !evaluateShVars && newVar.Value == nil {
 				result.Set(k, taskfile.Var{Value: ""})
 				return nil
 			}
+			// If the variable should not be evaluated and it is set, we can set it and return
+			if !evaluateShVars {
+				result.Set(k, taskfile.Var{Value: newVar.Value})
+				return nil
+			}
+			// Now we can check for errors since we've handled all the cases when we don't want to evaluate
+			if err := tr.Err(); err != nil {
+				return err
+			}
 			// If the variable is not dynamic, we can set it and return
-			if !evaluateShVars || newVar.Value != nil || newVar.Sh == "" {
+			if newVar.Value != nil || newVar.Sh == "" {
 				result.Set(k, taskfile.Var{Value: newVar.Value})
 				return nil
 			}
