@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v3.33.0 - 2023-12-20
 
 - Added
   [Any Variables experiment](https://taskfile.dev/experiments/any_variables)
