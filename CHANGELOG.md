@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v3.33.1 - 2023-12-21
 
 - Added support for looping over map variables with the
   [Any Variables experiment](https://taskfile.dev/experiments/any_variables)
