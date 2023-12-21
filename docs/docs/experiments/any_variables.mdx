@@ -49,7 +49,7 @@ tasks:
       - 'echo {{add .INT .FLOAT}}'
 ```
 
-Loops:
+Ranging:
 
 ```yaml
 version: 3
@@ -62,7 +62,58 @@ tasks:
       - 'echo {{range .ARRAY}}{{.}}{{end}}'
 ```
 
-etc.
+There are many more templating functions which can be used with the new types of
+variables. For a full list, see the
+[slim-sprig][slim-sprig] documentation.
+
+## Looping over variables
+
+Previously, you would have to use a delimiter separated string to loop over an
+arbitrary list of items in a variable and split them by using the `split` subkey
+to specify the delimiter:
+
+```yaml
+version: 3
+
+tasks:
+  foo:
+    vars:
+      LIST: 'foo,bar,baz'
+    cmds:
+      - for:
+          var: LIST
+          split: ','
+        cmd: echo {{.ITEM}}
+```
+
+Because this experiment adds support for array variables, the `for` keyword has
+been updated to support looping over arrays directly:
+
+```yaml
+version: 3
+
+tasks:
+  foo:
+    vars:
+      LIST: [foo, bar, baz]
+    cmds:
+      - for:
+          var: LIST
+        cmd: echo {{.ITEM}}
+```
+
+String splitting is still supported and remember that for simple cases, you have
+always been able to loop over an array without using variables at all:
+
+```yaml
+version: 3
+
+tasks:
+  foo:
+    cmds:
+      - for: [foo, bar, baz]
+        cmd: echo {{.ITEM}}
+```
 
 ## Migration
 
@@ -103,3 +154,7 @@ task:
 If your current Taskfile contains a string variable that begins with a `$`, you
 will now need to escape the `$` with a backslash (`\`) to stop Task from
 executing it as a command.
+
+<!-- prettier-ignore-start -->
+[slim-sprig]: https://go-task.github.io/slim-sprig/
+<!-- prettier-ignore-end -->
