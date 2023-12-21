@@ -49,7 +49,7 @@ accelerate. We can't thank you all enough for your help and support! :rocket:
 
 [![Star History Chart](https://api.star-history.com/svg?repos=go-task/task&type=Date)](https://star-history.com/#go-task/task&Date)
 
-## What's next? :thinking_face:
+## What's next? :thinking:
 
 It's extremely motivating to see so many people using and loving Task. However,
 in this time we've also seen an increase in the number of issues and feature
@@ -71,7 +71,7 @@ commitment to make. Smaller, more frequent major releases are also a significant
 inconvenience for users as they have to constantly keep up-to-date with our
 breaking changes. Fortunately, there is a better way.
 
-## What's going to change? :face_with_monocle:
+## What's going to change? :monocle:
 
 Going forwards, breaking changes will be allowed into _minor_ versions of Task
 as "experimental features". To access these features users will need opt-in by
@@ -102,7 +102,7 @@ with v3**.
 
 ## v4 When? :eyes:
 
-:shrug: When it's ready.
+:man_shrugging: When it's ready.
 
 In all seriousness, we don't have a timeline for this yet. We'll be working on
 the most serious deficiencies of the v3 API first and regularly evaluating the
