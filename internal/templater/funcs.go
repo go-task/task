@@ -6,10 +6,9 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/davecgh/go-spew/spew"
 	"mvdan.cc/sh/v3/shell"
 	"mvdan.cc/sh/v3/syntax"
-
-	"github.com/davecgh/go-spew/spew"
 
 	sprig "github.com/go-task/slim-sprig/v3"
 )
@@ -53,6 +52,16 @@ func init() {
 		},
 		"relPath": func(basePath, targetPath string) (string, error) {
 			return filepath.Rel(basePath, targetPath)
+		},
+		"merge": func(a, b map[string]any) map[string]any {
+			m := make(map[string]any, len(a)+len(b))
+			for k, v := range a {
+				m[k] = v
+			}
+			for k, v := range b {
+				m[k] = v
+			}
+			return m
 		},
 		"spew": func(v any) string {
 			return spew.Sdump(v)
