@@ -6,7 +6,9 @@
   [Any Variables experiment](https://taskfile.dev/experiments/any_variables)
   (#1415, #1421 by @pd93).
 - Updated Docusaurus to v3 (#1432 by @pd93).
-- Added `aliases` to `--json` flag output (#1430, #1431 by @pd93)
+- Added `aliases` to `--json` flag output (#1430, #1431 by @pd93).
+- Added new `CLI_FORCE` special variable containing whether the `--force` or
+  `--force-all` flags were set (#1412, #1434 by @pd93).
 
 ## v3.32.0 - 2023-11-29
 
