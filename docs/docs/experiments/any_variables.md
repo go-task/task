@@ -63,8 +63,7 @@ tasks:
 ```
 
 There are many more templating functions which can be used with the new types of
-variables. For a full list, see the
-[slim-sprig][slim-sprig] documentation.
+variables. For a full list, see the [slim-sprig][slim-sprig] documentation.
 
 ## Looping over variables
 
@@ -86,8 +85,8 @@ tasks:
         cmd: echo {{.ITEM}}
 ```
 
-Because this experiment adds support for array variables, the `for` keyword has
-been updated to support looping over arrays directly:
+Because this experiment adds support for "collection-type" variables, the `for`
+keyword has been updated to support looping over arrays directly:
 
 ```yaml
 version: 3
@@ -100,6 +99,30 @@ tasks:
       - for:
           var: LIST
         cmd: echo {{.ITEM}}
+```
+
+This also works for maps. When looping over a map we also make an additional
+`{{.KEY}}` variable availabe that holds the string value of the map key.
+Remember that maps are unordered, so the order in which the items are looped
+over is random:
+
+```yaml
+version: 3
+
+tasks:
+  foo:
+    vars:
+      MAP:
+        KEY_1:
+          SUBKEY: sub_value_1
+        KEY_2:
+          SUBKEY: sub_value_2
+        KEY_3:
+          SUBKEY: sub_value_3
+    cmds:
+      - for:
+          var: MAP
+        cmd: echo {{.KEY}} {{.ITEM.SUBKEY}}
 ```
 
 String splitting is still supported and remember that for simple cases, you have

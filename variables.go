@@ -133,6 +133,7 @@ func (e *Executor) compiledTask(call taskfile.Call, evaluateShVars bool) (*taskf
 				continue
 			}
 			if cmd.For != nil {
+				var keys []string
 				var list []any
 				// Get the list from the explicit for list
 				if cmd.For.List != nil && len(cmd.For.List) > 0 {
@@ -170,9 +171,9 @@ func (e *Executor) compiledTask(call taskfile.Call, evaluateShVars bool) (*taskf
 							case []any:
 								list = value
 							case map[string]any:
-								return &taskfile.Task{}, errors.TaskfileInvalidError{
-									URI: origTask.Location.Taskfile,
-									Err: errors.New("sh is not supported with the 'Any Variables' experiment enabled.\nSee https://taskfile.dev/experiments/any-variables for more information."),
+								for k, v := range value {
+									keys = append(keys, k)
+									list = append(list, v)
 								}
 							default:
 								return nil, errors.TaskfileInvalidError{
@@ -191,9 +192,12 @@ func (e *Executor) compiledTask(call taskfile.Call, evaluateShVars bool) (*taskf
 					as = "ITEM"
 				}
 				// Create a new command for each item in the list
-				for _, loopValue := range list {
+				for i, loopValue := range list {
 					extra := map[string]any{
 						as: loopValue,
+					}
+					if len(keys) > 0 {
+						extra["KEY"] = keys[i]
 					}
 					new.Cmds = append(new.Cmds, &taskfile.Cmd{
 						Cmd:         r.ReplaceWithExtra(cmd.Cmd, extra),
