@@ -32,7 +32,7 @@ tasks:
     vars:
       BOOL: false
     cmds:
-      - '{{ if .BOOL }}echo foo{{ end}}'
+      - '{{if .BOOL}}echo foo{{end}}'
 ```
 
 Arithmetic:
@@ -46,7 +46,7 @@ tasks:
       INT: 10
       FLOAT: 3.14159
     cmds:
-      - 'echo {{ add .INT .FLOAT }}'
+      - 'echo {{add .INT .FLOAT}}'
 ```
 
 Loops:
@@ -59,7 +59,7 @@ tasks:
     vars:
       ARRAY: [1, 2, 3]
     cmds:
-      - 'echo {{ range .ARRAY }}{{ . }}{{ end }}'
+      - 'echo {{range .ARRAY}}{{.}}{{end}}'
 ```
 
 etc.
@@ -81,7 +81,7 @@ task:
       CALCULATED_VAR:
         sh: 'echo hello'
     cmds:
-      - 'echo {{ .CALCULATED_VAR }}'
+      - 'echo {{.CALCULATED_VAR}}'
 ```
 
 With this experiment enabled, you will need to remove the `sh` subkey and define
@@ -97,7 +97,7 @@ task:
     vars:
       CALCULATED_VAR: '$echo hello'
     cmds:
-      - 'echo {{ .CALCULATED_VAR }}'
+      - 'echo {{.CALCULATED_VAR}}'
 ```
 
 If your current Taskfile contains a string variable that begins with a `$`, you
