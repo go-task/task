@@ -3,7 +3,7 @@ module.exports = {
   singleQuote: true,
   overrides: [
     {
-      files: '*.md',
+      files: ['*.md', '*.mdx'],
       options: {
         printWidth: 80,
         proseWrap: 'always'

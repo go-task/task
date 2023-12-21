@@ -4,7 +4,7 @@ slug: /experiments/gentle-force/
 
 # Gentle Force
 
-- Issue: [#1200][gentle-force-experiment]
+- Issue: #1200
 - Environment variable: `TASK_X_FORCE=1`
 - Breaks:
   - `--force` flag
@@ -24,7 +24,3 @@ If you want to migrate, but continue to force all dependant tasks to run, you
 should replace all uses of the `--force` flag with `--force-all`. Alternatively,
 if you want to adopt the new behavior, you can continue to use the `--force`
 flag as you do now!
-
-<!-- prettier-ignore-start -->
-[gentle-force-experiment]: https://github.com/go-task/task/issues/1200
-<!-- prettier-ignore-end -->

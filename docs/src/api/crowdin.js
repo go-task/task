@@ -9,7 +9,7 @@ const projectId = '574591';
 const initClient = () => {
   if (!personalToken) {
     console.warn(
-      'No crowding personal token, some features might not work as expected'
+      'No crowdin personal token, some features might not work as expected'
     );
     return null;
   }
@@ -23,7 +23,7 @@ const initClient = () => {
  * Get translation progress
  * @return {object} translation progress
  */
-async function getTranslationProgress() {
+export async function getTranslationProgress() {
   let translationProgress = {};
   const { translationStatusApi } = initClient() || {};
 
@@ -44,7 +44,3 @@ async function getTranslationProgress() {
 
   return translationProgress;
 }
-
-module.exports = {
-  getTranslationProgress
-};
