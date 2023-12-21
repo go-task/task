@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/joho/godotenv"
-	"golang.org/x/exp/maps"
 
 	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/execext"
@@ -134,6 +133,7 @@ func (e *Executor) compiledTask(call taskfile.Call, evaluateShVars bool) (*taskf
 				continue
 			}
 			if cmd.For != nil {
+				var keys []string
 				var list []any
 				// Get the list from the explicit for list
 				if cmd.For.List != nil && len(cmd.For.List) > 0 {
@@ -171,7 +171,10 @@ func (e *Executor) compiledTask(call taskfile.Call, evaluateShVars bool) (*taskf
 							case []any:
 								list = value
 							case map[string]any:
-								list = maps.Values(value)
+								for k, v := range value {
+									keys = append(keys, k)
+									list = append(list, v)
+								}
 							default:
 								return nil, errors.TaskfileInvalidError{
 									URI: origTask.Location.Taskfile,
@@ -189,9 +192,12 @@ func (e *Executor) compiledTask(call taskfile.Call, evaluateShVars bool) (*taskf
 					as = "ITEM"
 				}
 				// Create a new command for each item in the list
-				for _, loopValue := range list {
+				for i, loopValue := range list {
 					extra := map[string]any{
 						as: loopValue,
+					}
+					if len(keys) > 0 {
+						extra["KEY"] = keys[i]
 					}
 					new.Cmds = append(new.Cmds, &taskfile.Cmd{
 						Cmd:         r.ReplaceWithExtra(cmd.Cmd, extra),

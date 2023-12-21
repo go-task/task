@@ -89,7 +89,7 @@ tasks:
     cmds:
       - for:
           var: MAP
-        cmd: echo {{.ITEM}}
+        cmd: echo {{.KEY}} {{.ITEM}}
 
   for-multi-layer-map:
     vars:
@@ -103,4 +103,4 @@ tasks:
     cmds:
       - for:
           var: MAP
-        cmd: echo {{.ITEM.SUBKEY}}
+        cmd: echo {{.KEY}} {{.ITEM.SUBKEY}}
