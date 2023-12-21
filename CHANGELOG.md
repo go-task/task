@@ -5,6 +5,8 @@
 - Added support for looping over map variables with the
   [Any Variables experiment](https://taskfile.dev/experiments/any_variables)
   enabled (#1435, #1437 by @pd93).
+- Fixed a bug where dynamic variables were causing errors during fast
+  compilation (#1435, #1437 by @pd93)
 
 ## v3.33.0 - 2023-12-20
 
