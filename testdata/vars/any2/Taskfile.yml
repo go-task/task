@@ -19,3 +19,35 @@ tasks:
           {{- else}} and {{$child.name -}}
           {{- end -}}
         {{- end -}}"
+
+  json:
+    vars:
+      JSON_STRING:
+        sh: cat example.json
+      JSON:
+        json: "{{.JSON_STRING}}"
+    cmds:
+      - >-
+        echo "{{.JSON.name}} has {{len .JSON.children}} children called
+        {{- $children := .JSON.children -}}
+        {{- range $i, $child := $children -}}
+          {{- if lt $i (sub (len $children) 1)}} {{$child.name -}},
+          {{- else}} and {{$child.name -}}
+          {{- end -}}
+        {{- end -}}"
+
+  yaml:
+    vars:
+      YAML_STRING:
+        sh: cat example.yaml
+      YAML:
+        yaml: "{{.YAML_STRING}}"
+    cmds:
+      - >-
+        echo "{{.YAML.name}} has {{len .YAML.children}} children called
+        {{- $children := .YAML.children -}}
+        {{- range $i, $child := $children -}}
+          {{- if lt $i (sub (len $children) 1)}} {{$child.name -}},
+          {{- else}} and {{$child.name -}}
+          {{- end -}}
+        {{- end -}}"
