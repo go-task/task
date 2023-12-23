@@ -80,7 +80,7 @@ type Var struct {
 }
 
 func (v *Var) UnmarshalYAML(node *yaml.Node) error {
-	if experiments.AnyVariables {
+	if experiments.AnyVariables.Enabled {
 		var value any
 		if err := node.Decode(&value); err != nil {
 			return err
