@@ -81,19 +81,53 @@ type Var struct {
 
 func (v *Var) UnmarshalYAML(node *yaml.Node) error {
 	if experiments.AnyVariables.Enabled {
-		var value any
-		if err := node.Decode(&value); err != nil {
-			return err
+
+		// This implementation is not backwards-compatible and replaces the 'sh' key with map variables
+		if experiments.AnyVariables.Value == "1" {
+			var value any
+			if err := node.Decode(&value); err != nil {
+				return err
+			}
+			// If the value is a string and it starts with $, then it's a shell command
+			if str, ok := value.(string); ok {
+				if str, ok = strings.CutPrefix(str, "$"); ok {
+					v.Sh = str
+					return nil
+				}
+			}
+			v.Value = value
+			return nil
 		}
-		// If the value is a string and it starts with $, then it's a shell command
-		if str, ok := value.(string); ok {
-			if str, ok = strings.CutPrefix(str, "$"); ok {
-				v.Sh = str
+
+		// This implementation IS backwards-compatible and keeps the 'sh' key and allows map variables to be added under the `map` key
+		if experiments.AnyVariables.Value == "2" {
+			switch node.Kind {
+			case yaml.MappingNode:
+				key := node.Content[0].Value
+				switch key {
+				case "sh", "map":
+					var m struct {
+						Sh  string
+						Map any
+					}
+					if err := node.Decode(&m); err != nil {
+						return err
+					}
+					v.Sh = m.Sh
+					v.Value = m.Map
+					return nil
+				default:
+					return fmt.Errorf(`yaml: line %d: %q is not a valid variable type. Try "sh", "map" or using a scalar value`, node.Line, key)
+				}
+			default:
+				var value any
+				if err := node.Decode(&value); err != nil {
+					return err
+				}
+				v.Value = value
 				return nil
 			}
 		}
-		v.Value = value
-		return nil
 	}
 
 	switch node.Kind {

@@ -32,7 +32,7 @@ func init() {
 	readDotEnv()
 	GentleForce = New("GENTLE_FORCE")
 	RemoteTaskfiles = New("REMOTE_TASKFILES")
-	AnyVariables = New("ANY_VARIABLES")
+	AnyVariables = New("ANY_VARIABLES", "1", "2")
 }
 
 func New(xName string, enabledValues ...string) Experiment {
