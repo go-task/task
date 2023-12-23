@@ -1,0 +1,21 @@
+version: '3'
+
+tasks:
+  default:
+    - task: map
+    - task: json
+    - task: yaml
+
+  map:
+    vars:
+      MAP:
+        map: {"name":"Alice","age":30,"children":[{"name":"Bob","age":5},{"name":"Charlie","age":3},{"name":"Diane","age":1}]}
+    cmds:
+      - >-
+        echo "{{.MAP.name}} has {{len .MAP.children}} children called
+        {{- $children := .MAP.children -}}
+        {{- range $i, $child := $children -}}
+          {{- if lt $i (sub (len $children) 1)}} {{$child.name -}},
+          {{- else}} and {{$child.name -}}
+          {{- end -}}
+        {{- end -}}"
