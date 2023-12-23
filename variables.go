@@ -199,31 +199,19 @@ func (e *Executor) compiledTask(call ast.Call, evaluateShVars bool) (*ast.Task, 
 					if len(keys) > 0 {
 						extra["KEY"] = keys[i]
 					}
-					new.Cmds = append(new.Cmds, &ast.Cmd{
-						Cmd:         r.ReplaceWithExtra(cmd.Cmd, extra),
-						Task:        r.ReplaceWithExtra(cmd.Task, extra),
-						Silent:      cmd.Silent,
-						Set:         cmd.Set,
-						Shopt:       cmd.Shopt,
-						Vars:        r.ReplaceVarsWithExtra(cmd.Vars, extra),
-						IgnoreError: cmd.IgnoreError,
-						Defer:       cmd.Defer,
-						Platforms:   cmd.Platforms,
-					})
+					newCmd := cmd.DeepCopy()
+					newCmd.Cmd = r.ReplaceWithExtra(cmd.Cmd, extra)
+					newCmd.Task = r.ReplaceWithExtra(cmd.Task, extra)
+					newCmd.Vars = r.ReplaceVarsWithExtra(cmd.Vars, extra)
+					new.Cmds = append(new.Cmds, newCmd)
 				}
 				continue
 			}
-			new.Cmds = append(new.Cmds, &ast.Cmd{
-				Cmd:         r.Replace(cmd.Cmd),
-				Task:        r.Replace(cmd.Task),
-				Silent:      cmd.Silent,
-				Set:         cmd.Set,
-				Shopt:       cmd.Shopt,
-				Vars:        r.ReplaceVars(cmd.Vars),
-				IgnoreError: cmd.IgnoreError,
-				Defer:       cmd.Defer,
-				Platforms:   cmd.Platforms,
-			})
+			newCmd := cmd.DeepCopy()
+			newCmd.Cmd = r.Replace(cmd.Cmd)
+			newCmd.Task = r.Replace(cmd.Task)
+			newCmd.Vars = r.ReplaceVars(cmd.Vars)
+			new.Cmds = append(new.Cmds, newCmd)
 		}
 	}
 	if len(origTask.Deps) > 0 {
@@ -232,24 +220,23 @@ func (e *Executor) compiledTask(call ast.Call, evaluateShVars bool) (*ast.Task, 
 			if dep == nil {
 				continue
 			}
-			new.Deps = append(new.Deps, &ast.Dep{
-				Task:   r.Replace(dep.Task),
-				Vars:   r.ReplaceVars(dep.Vars),
-				Silent: dep.Silent,
-			})
+			newDep := dep.DeepCopy()
+			newDep.Task = r.Replace(dep.Task)
+			newDep.Vars = r.ReplaceVars(dep.Vars)
+			new.Deps = append(new.Deps, newDep)
 		}
 	}
 
 	if len(origTask.Preconditions) > 0 {
 		new.Preconditions = make([]*ast.Precondition, 0, len(origTask.Preconditions))
-		for _, precond := range origTask.Preconditions {
-			if precond == nil {
+		for _, precondition := range origTask.Preconditions {
+			if precondition == nil {
 				continue
 			}
-			new.Preconditions = append(new.Preconditions, &ast.Precondition{
-				Sh:  r.Replace(precond.Sh),
-				Msg: r.Replace(precond.Msg),
-			})
+			newPrecondition := precondition.DeepCopy()
+			newPrecondition.Sh = r.Replace(precondition.Sh)
+			newPrecondition.Msg = r.Replace(precondition.Msg)
+			new.Preconditions = append(new.Preconditions, newPrecondition)
 		}
 	}
 
@@ -272,7 +259,12 @@ func (e *Executor) compiledTask(call ast.Call, evaluateShVars bool) (*ast.Task, 
 		new.Status = r.ReplaceSlice(origTask.Status)
 	}
 
-	return &new, r.Err()
+	// We only care about templater errors if we are evaluating shell variables
+	if evaluateShVars && r.Err() != nil {
+		return &new, r.Err()
+	}
+
+	return &new, nil
 }
 
 func asAnySlice[T any](slice []T) []any {
