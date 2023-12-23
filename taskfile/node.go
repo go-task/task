@@ -30,7 +30,7 @@ func NewNode(
 		// If no other scheme matches, we assume it's a file
 		node, err = NewFileNode(uri, opts...)
 	}
-	if node.Remote() && !experiments.RemoteTaskfiles {
+	if node.Remote() && !experiments.RemoteTaskfiles.Enabled {
 		return nil, errors.New("task: Remote taskfiles are not enabled. You can read more about this experiment and how to enable it at https://taskfile.dev/experiments/remote-taskfiles")
 	}
 	return node, err
