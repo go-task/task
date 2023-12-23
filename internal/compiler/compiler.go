@@ -3,9 +3,12 @@ package compiler
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"strings"
 	"sync"
+
+	"gopkg.in/yaml.v3"
 
 	"github.com/go-task/task/v3/internal/execext"
 	"github.com/go-task/task/v3/internal/filepathext"
@@ -64,6 +67,8 @@ func (c *Compiler) getVariables(t *ast.Task, call *ast.Call, evaluateShVars bool
 				newVar.Value = value
 			}
 			newVar.Sh = tr.Replace(v.Sh)
+			newVar.Json = tr.Replace(v.Json)
+			newVar.Yaml = tr.Replace(v.Yaml)
 			newVar.Dir = v.Dir
 			// If the variable should not be evaluated, but is nil, set it to an empty string
 			// This stops empty interface errors when using the templater to replace values later
@@ -79,6 +84,18 @@ func (c *Compiler) getVariables(t *ast.Task, call *ast.Call, evaluateShVars bool
 			// Now we can check for errors since we've handled all the cases when we don't want to evaluate
 			if err := tr.Err(); err != nil {
 				return err
+			}
+			// Evaluate JSON
+			if newVar.Json != "" {
+				if err := json.Unmarshal([]byte(newVar.Json), &newVar.Value); err != nil {
+					return err
+				}
+			}
+			// Evaluate YAML
+			if newVar.Yaml != "" {
+				if err := yaml.Unmarshal([]byte(newVar.Yaml), &newVar.Value); err != nil {
+					return err
+				}
 			}
 			// If the variable is not dynamic, we can set it and return
 			if newVar.Value != nil || newVar.Sh == "" {
