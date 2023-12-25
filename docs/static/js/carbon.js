@@ -1,17 +1,20 @@
 (function () {
   function attachAd() {
-    var el = document.createElement('script');
-    el.setAttribute('type', 'text/javascript');
-    el.setAttribute('id', '_carbonads_js');
-    el.setAttribute(
-      'src',
-      '//cdn.carbonads.com/carbon.js?serve=CESI65QJ&placement=taskfiledev'
-    );
-    el.setAttribute('async', 'async');
-
     var wrapper = document.getElementById('sidebar-ads');
-    wrapper.innerHTML = '';
-    wrapper.appendChild(el);
+    if (wrapper) {
+
+      var el = document.createElement('script');
+      el.setAttribute('type', 'text/javascript');
+      el.setAttribute('id', '_carbonads_js');
+      el.setAttribute(
+        'src',
+        '//cdn.carbonads.com/carbon.js?serve=CESI65QJ&placement=taskfiledev'
+      );
+      el.setAttribute('async', 'async');
+
+      wrapper.innerHTML = '';
+      wrapper.appendChild(el);
+    }
   }
 
   setTimeout(function () {
