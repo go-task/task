@@ -14,21 +14,6 @@ followed. Feel free to disagree and proceed differently at some point if you
 need or want to. Also, feel free to open issues or pull requests with
 improvements to this guide.
 
-## Use `Taskfile.yml` and not `taskfile.yml`
-
-```yaml
-# bad
-taskfile.yml
-
-
-# good
-Taskfile.yml
-```
-
-This is important especially for Linux users. Windows and macOS have case
-insensitive filesystems, so `taskfile.yml` will end up working, even that not
-officially supported. On Linux, only `Taskfile.yml` will work, though.
-
 ## Use the correct order of keywords
 
 - `version:`
