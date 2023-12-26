@@ -22,7 +22,9 @@ the current set of experimental features and their status in the
 You can view a full list of active experiments in the "Experiments" section of
 the sidebar.
 
-You can enable an experimental feature by:
+## Enabling Experiments
+
+You can enable an experimental feature by doing one of the following:
 
 1. Using the relevant environment variable in front of a task command. For
    example, `TASK_X_{FEATURE}=1 task {my-task}`. This is intended for one-off
@@ -31,10 +33,10 @@ You can enable an experimental feature by:
    `.zshrc` etc.). This is intended for permanently enabling experimental
    features in your environment.
 1. Creating a `.env` file in the same directory as your root Taskfile that
-   contains the relevant environment variables. e.g.
+   contains the relevant environment variables. This allows you to enable an
+   experimental feature at a project level. For example:
 
-```shell
-# .env
+```shell title=".env"
 TASK_X_FEATURE=1
 ```
 

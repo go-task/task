@@ -2,12 +2,16 @@
 slug: /deprecations/version-2-schema/
 ---
 
-# Version 2 Schema
+# Version 2 Schema (#1197)
 
-- Issue: #1197
-- Breaks:
-  - Any Taskfiles that use the version 2 schema
-  - `Taskvar.yml` files
+:::warning
+
+This deprecation breaks the following functionality:
+
+- Any Taskfiles that use the version 2 schema
+- `Taskvar.yml` files
+
+:::
 
 The Taskfile v2 schema was introduced in March 2018 and replaced by version 3 in
 August the following year. Users have had a long time to update and so we feel

@@ -2,10 +2,23 @@
 slug: /experiments/remote-taskfiles/
 ---
 
-# Remote Taskfiles
+# Remote Taskfiles (#1317)
 
-- Issue: #1317
-- Environment variable: `TASK_X_REMOTE_TASKFILES=1`
+:::caution
+
+All experimental features are subject to breaking changes and/or removal _at any
+time_. We strongly recommend that you do not use these features in a production
+environment. They are intended for testing and feedback only.
+
+:::
+
+:::info
+
+To enable this experiment, set the environment variable:
+`TASK_X_REMOTE_TASKFILES=1`. Check out [our guide to enabling experiments
+][enabling-experiments] for more information.
+
+:::
 
 This experiment allows you to specify a remote Taskfile URL when including a
 Taskfile. For example:
@@ -87,5 +100,6 @@ the `--timeout` flag and specifying a duration. For example, `--timeout 5s` will
 set the timeout to 5 seconds.
 
 <!-- prettier-ignore-start -->
+[enabling-experiments]: /experiments/#enabling-experiments
 [man-in-the-middle-attacks]: https://en.wikipedia.org/wiki/Man-in-the-middle_attack
 <!-- prettier-ignore-end -->
