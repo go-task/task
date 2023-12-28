@@ -2,14 +2,13 @@ package dockercomposeiface
 
 import (
 	"context"
-	"fmt"
+
 	"github.com/compose-spec/compose-go/types"
 	"github.com/docker/cli/cli/command"
 	"github.com/docker/cli/cli/flags"
 	"github.com/docker/compose/v2/pkg/api"
 	"github.com/docker/compose/v2/pkg/compose"
 	cw_types "github.com/go-task/task/v3/internal/containerwrapper/types"
-	"github.com/sirupsen/logrus"
 )
 
 type DockerComposeWrapper struct {
@@ -33,7 +32,6 @@ func CreateDockerComposeWrapper(dockerContext string, project *types.Project) (D
 	}
 
 	srv := compose.NewComposeService(dockerCli)
-	fmt.Println("Currently level:", logrus.GetLevel())
 	return DockerComposeWrapper{srv, dockerCli, project}, nil
 }
 
