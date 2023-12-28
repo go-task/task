@@ -9,18 +9,21 @@ slug: /deprecations/version-2-schema/
   - Any Taskfiles that use the version 2 schema
   - `Taskvar.yml` files
 
-The Taskfile v2 schema was introduced in March 2018 and replaced by version 3 in
-August the following year. Users have had a long time to update and so we feel
-that it is time to tidy up the codebase and focus on new functionality instead.
+The Taskfile version 2 schema was introduced in March 2018 and replaced by
+version 3 in August 2019. In May 2023 [we published a deprecation
+notice][deprecation-notice] for the version 2 schema on the basis that the vast
+majority of users had already upgraded to version 3 and removing support for
+version 2 would allow us to tidy up the codebase and focus on new functionality
+instead.
 
-This notice does not mean that we are immediately removing support for version 2
-schemas. However, support will not be extended to future major releases and we
-_strongly recommend_ that anybody still using a version 2 schema upgrades to
-version 3 as soon as possible.
-
-A list of changes between version 2 and version 3 are available in the [Task v3
-Release Notes][version-3-release-notes].
+In December 2023, the final version of Task that supports the version 2 schema
+([v3.33.0][v3.33.0]) was published and all legacy code was removed from Task's
+main branch. To use a more recent version of Task, you will need to ensure that
+your Taskfile uses the version 3 schema instead. A list of changes between
+version 2 and version 3 are available in the [Task v3 Release Notes][v3.0.0].
 
 <!-- prettier-ignore-start -->
-[version-3-release-notes]: https://github.com/go-task/task/releases/tag/v3.0.0
+[v3.0.0]: https://github.com/go-task/task/releases/tag/v3.0.0
+[v3.33.0]: https://github.com/go-task/task/releases/tag/v3.33.0
+[deprecation-notice]: https://github.com/go-task/task/issues/1197
 <!-- prettier-ignore-end -->
