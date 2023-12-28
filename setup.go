@@ -85,7 +85,7 @@ func (e *Executor) readTaskfile() error {
 	if err != nil {
 		return err
 	}
-	e.Taskfile, err = taskfile.Taskfile(
+	e.Taskfile, err = taskfile.Read(
 		node,
 		e.Insecure,
 		e.Download,

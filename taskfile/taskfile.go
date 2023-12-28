@@ -136,10 +136,10 @@ func readTaskfile(
 	return &t, nil
 }
 
-// Taskfile reads a Taskfile for a given directory
-// Uses current dir when dir is left empty. Uses Taskfile.yml
-// or Taskfile.yaml when entrypoint is left empty
-func Taskfile(
+// Read reads a Read for a given directory
+// Uses current dir when dir is left empty. Uses Read.yml
+// or Read.yaml when entrypoint is left empty
+func Read(
 	node Node,
 	insecure bool,
 	download bool,
