@@ -17,8 +17,8 @@ import (
 	"github.com/go-task/task/v3/internal/filepathext"
 	"github.com/go-task/task/v3/internal/logger"
 	"github.com/go-task/task/v3/internal/output"
+	"github.com/go-task/task/v3/taskfile"
 	"github.com/go-task/task/v3/taskfile/ast"
-	"github.com/go-task/task/v3/taskfile/read"
 )
 
 func (e *Executor) Setup() error {
@@ -69,7 +69,7 @@ func (e *Executor) setCurrentDir() error {
 	}
 
 	// Search for a taskfile
-	root, err := read.ExistsWalk(e.Dir)
+	root, err := taskfile.ExistsWalk(e.Dir)
 	if err != nil {
 		return err
 	}
@@ -81,11 +81,11 @@ func (e *Executor) setCurrentDir() error {
 
 func (e *Executor) readTaskfile() error {
 	uri := filepath.Join(e.Dir, e.Entrypoint)
-	node, err := read.NewNode(uri, e.Insecure)
+	node, err := taskfile.NewNode(uri, e.Insecure)
 	if err != nil {
 		return err
 	}
-	e.Taskfile, err = read.Taskfile(
+	e.Taskfile, err = taskfile.Taskfile(
 		node,
 		e.Insecure,
 		e.Download,
@@ -201,7 +201,7 @@ func (e *Executor) readDotEnvFiles() error {
 		return nil
 	}
 
-	env, err := read.Dotenv(e.Compiler, e.Taskfile, e.Dir)
+	env, err := taskfile.Dotenv(e.Compiler, e.Taskfile, e.Dir)
 	if err != nil {
 		return err
 	}
