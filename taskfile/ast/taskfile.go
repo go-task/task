@@ -1,4 +1,4 @@
-package taskfile
+package ast
 
 import (
 	"fmt"
@@ -12,7 +12,7 @@ import (
 
 var V3 = semver.MustParse("3")
 
-// Taskfile represents a Taskfile.yml
+// Taskfile is the abstract syntax tree for a Taskfile
 type Taskfile struct {
 	Location string
 	Version  *semver.Version

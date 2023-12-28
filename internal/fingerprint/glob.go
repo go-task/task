@@ -8,10 +8,10 @@ import (
 
 	"github.com/go-task/task/v3/internal/execext"
 	"github.com/go-task/task/v3/internal/filepathext"
-	"github.com/go-task/task/v3/taskfile"
+	"github.com/go-task/task/v3/taskfile/ast"
 )
 
-func Globs(dir string, globs []*taskfile.Glob) ([]string, error) {
+func Globs(dir string, globs []*ast.Glob) ([]string, error) {
 	fileMap := make(map[string]bool)
 	for _, g := range globs {
 		matches, err := Glob(dir, g.Glob)

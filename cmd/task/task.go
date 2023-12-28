@@ -19,7 +19,7 @@ import (
 	"github.com/go-task/task/v3/internal/logger"
 	"github.com/go-task/task/v3/internal/sort"
 	ver "github.com/go-task/task/v3/internal/version"
-	"github.com/go-task/task/v3/taskfile"
+	"github.com/go-task/task/v3/taskfile/ast"
 )
 
 const usage = `Usage: task [flags...] [task...]
@@ -68,7 +68,7 @@ var flags struct {
 	concurrency int
 	dir         string
 	entrypoint  string
-	output      taskfile.Output
+	output      ast.Output
 	color       bool
 	interval    time.Duration
 	global      bool
@@ -291,8 +291,8 @@ func run() error {
 	}
 
 	var (
-		calls   []taskfile.Call
-		globals *taskfile.Vars
+		calls   []ast.Call
+		globals *ast.Vars
 	)
 
 	tasksAndVars, cliArgs, err := getArgs()
@@ -304,11 +304,11 @@ func run() error {
 
 	// If there are no calls, run the default task instead
 	if len(calls) == 0 {
-		calls = append(calls, taskfile.Call{Task: "default", Direct: true})
+		calls = append(calls, ast.Call{Task: "default", Direct: true})
 	}
 
-	globals.Set("CLI_ARGS", taskfile.Var{Value: cliArgs})
-	globals.Set("CLI_FORCE", taskfile.Var{Value: flags.force || flags.forceAll})
+	globals.Set("CLI_ARGS", ast.Var{Value: cliArgs})
+	globals.Set("CLI_FORCE", ast.Var{Value: flags.force || flags.forceAll})
 	e.Taskfile.Vars.Merge(globals)
 
 	if !flags.watch {

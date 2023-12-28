@@ -7,7 +7,7 @@ import (
 
 	"golang.org/x/exp/maps"
 
-	"github.com/go-task/task/v3/taskfile"
+	"github.com/go-task/task/v3/taskfile/ast"
 )
 
 // Templater is a help struct that allow us to call "replaceX" funcs multiple
@@ -15,7 +15,7 @@ import (
 // happen will be assigned to r.err, and consecutive calls to funcs will just
 // return the zero value.
 type Templater struct {
-	Vars *taskfile.Vars
+	Vars *ast.Vars
 
 	cacheMap map[string]any
 	err      error
@@ -76,14 +76,14 @@ func (r *Templater) ReplaceSlice(strs []string) []string {
 	return new
 }
 
-func (r *Templater) ReplaceGlobs(globs []*taskfile.Glob) []*taskfile.Glob {
+func (r *Templater) ReplaceGlobs(globs []*ast.Glob) []*ast.Glob {
 	if r.err != nil || len(globs) == 0 {
 		return nil
 	}
 
-	new := make([]*taskfile.Glob, len(globs))
+	new := make([]*ast.Glob, len(globs))
 	for i, g := range globs {
-		new[i] = &taskfile.Glob{
+		new[i] = &ast.Glob{
 			Glob:   r.Replace(g.Glob),
 			Negate: g.Negate,
 		}
@@ -91,22 +91,22 @@ func (r *Templater) ReplaceGlobs(globs []*taskfile.Glob) []*taskfile.Glob {
 	return new
 }
 
-func (r *Templater) ReplaceVars(vars *taskfile.Vars) *taskfile.Vars {
+func (r *Templater) ReplaceVars(vars *ast.Vars) *ast.Vars {
 	return r.replaceVars(vars, nil)
 }
 
-func (r *Templater) ReplaceVarsWithExtra(vars *taskfile.Vars, extra map[string]any) *taskfile.Vars {
+func (r *Templater) ReplaceVarsWithExtra(vars *ast.Vars, extra map[string]any) *ast.Vars {
 	return r.replaceVars(vars, extra)
 }
 
-func (r *Templater) replaceVars(vars *taskfile.Vars, extra map[string]any) *taskfile.Vars {
+func (r *Templater) replaceVars(vars *ast.Vars, extra map[string]any) *ast.Vars {
 	if r.err != nil || vars.Len() == 0 {
 		return nil
 	}
 
-	var newVars taskfile.Vars
-	_ = vars.Range(func(k string, v taskfile.Var) error {
-		var newVar taskfile.Var
+	var newVars ast.Vars
+	_ = vars.Range(func(k string, v ast.Var) error {
+		var newVar ast.Var
 		switch value := v.Value.(type) {
 		case string:
 			newVar.Value = r.ReplaceWithExtra(value, extra)

@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/go-task/task/v3/taskfile"
+	"github.com/go-task/task/v3/taskfile/ast"
 )
 
-func Get(t *taskfile.Task) []string {
+func Get(t *ast.Task) []string {
 	if t.Env == nil {
 		return nil
 	}

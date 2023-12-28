@@ -3,7 +3,8 @@
 package mocks
 
 import (
-	taskfile "github.com/go-task/task/v3/taskfile"
+	ast "github.com/go-task/task/v3/taskfile/ast"
+
 	mock "github.com/stretchr/testify/mock"
 )
 
@@ -21,21 +22,21 @@ func (_m *SourcesCheckable) EXPECT() *SourcesCheckable_Expecter {
 }
 
 // IsUpToDate provides a mock function with given fields: t
-func (_m *SourcesCheckable) IsUpToDate(t *taskfile.Task) (bool, error) {
+func (_m *SourcesCheckable) IsUpToDate(t *ast.Task) (bool, error) {
 	ret := _m.Called(t)
 
 	var r0 bool
 	var r1 error
-	if rf, ok := ret.Get(0).(func(*taskfile.Task) (bool, error)); ok {
+	if rf, ok := ret.Get(0).(func(*ast.Task) (bool, error)); ok {
 		return rf(t)
 	}
-	if rf, ok := ret.Get(0).(func(*taskfile.Task) bool); ok {
+	if rf, ok := ret.Get(0).(func(*ast.Task) bool); ok {
 		r0 = rf(t)
 	} else {
 		r0 = ret.Get(0).(bool)
 	}
 
-	if rf, ok := ret.Get(1).(func(*taskfile.Task) error); ok {
+	if rf, ok := ret.Get(1).(func(*ast.Task) error); ok {
 		r1 = rf(t)
 	} else {
 		r1 = ret.Error(1)
@@ -50,14 +51,14 @@ type SourcesCheckable_IsUpToDate_Call struct {
 }
 
 // IsUpToDate is a helper method to define mock.On call
-//   - t *taskfile.Task
+//   - t *ast.Task
 func (_e *SourcesCheckable_Expecter) IsUpToDate(t interface{}) *SourcesCheckable_IsUpToDate_Call {
 	return &SourcesCheckable_IsUpToDate_Call{Call: _e.mock.On("IsUpToDate", t)}
 }
 
-func (_c *SourcesCheckable_IsUpToDate_Call) Run(run func(t *taskfile.Task)) *SourcesCheckable_IsUpToDate_Call {
+func (_c *SourcesCheckable_IsUpToDate_Call) Run(run func(t *ast.Task)) *SourcesCheckable_IsUpToDate_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(*taskfile.Task))
+		run(args[0].(*ast.Task))
 	})
 	return _c
 }
@@ -67,7 +68,7 @@ func (_c *SourcesCheckable_IsUpToDate_Call) Return(_a0 bool, _a1 error) *Sources
 	return _c
 }
 
-func (_c *SourcesCheckable_IsUpToDate_Call) RunAndReturn(run func(*taskfile.Task) (bool, error)) *SourcesCheckable_IsUpToDate_Call {
+func (_c *SourcesCheckable_IsUpToDate_Call) RunAndReturn(run func(*ast.Task) (bool, error)) *SourcesCheckable_IsUpToDate_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -114,11 +115,11 @@ func (_c *SourcesCheckable_Kind_Call) RunAndReturn(run func() string) *SourcesCh
 }
 
 // OnError provides a mock function with given fields: t
-func (_m *SourcesCheckable) OnError(t *taskfile.Task) error {
+func (_m *SourcesCheckable) OnError(t *ast.Task) error {
 	ret := _m.Called(t)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(*taskfile.Task) error); ok {
+	if rf, ok := ret.Get(0).(func(*ast.Task) error); ok {
 		r0 = rf(t)
 	} else {
 		r0 = ret.Error(0)
@@ -133,14 +134,14 @@ type SourcesCheckable_OnError_Call struct {
 }
 
 // OnError is a helper method to define mock.On call
-//   - t *taskfile.Task
+//   - t *ast.Task
 func (_e *SourcesCheckable_Expecter) OnError(t interface{}) *SourcesCheckable_OnError_Call {
 	return &SourcesCheckable_OnError_Call{Call: _e.mock.On("OnError", t)}
 }
 
-func (_c *SourcesCheckable_OnError_Call) Run(run func(t *taskfile.Task)) *SourcesCheckable_OnError_Call {
+func (_c *SourcesCheckable_OnError_Call) Run(run func(t *ast.Task)) *SourcesCheckable_OnError_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(*taskfile.Task))
+		run(args[0].(*ast.Task))
 	})
 	return _c
 }
@@ -150,21 +151,21 @@ func (_c *SourcesCheckable_OnError_Call) Return(_a0 error) *SourcesCheckable_OnE
 	return _c
 }
 
-func (_c *SourcesCheckable_OnError_Call) RunAndReturn(run func(*taskfile.Task) error) *SourcesCheckable_OnError_Call {
+func (_c *SourcesCheckable_OnError_Call) RunAndReturn(run func(*ast.Task) error) *SourcesCheckable_OnError_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
 // Value provides a mock function with given fields: t
-func (_m *SourcesCheckable) Value(t *taskfile.Task) (interface{}, error) {
+func (_m *SourcesCheckable) Value(t *ast.Task) (interface{}, error) {
 	ret := _m.Called(t)
 
 	var r0 interface{}
 	var r1 error
-	if rf, ok := ret.Get(0).(func(*taskfile.Task) (interface{}, error)); ok {
+	if rf, ok := ret.Get(0).(func(*ast.Task) (interface{}, error)); ok {
 		return rf(t)
 	}
-	if rf, ok := ret.Get(0).(func(*taskfile.Task) interface{}); ok {
+	if rf, ok := ret.Get(0).(func(*ast.Task) interface{}); ok {
 		r0 = rf(t)
 	} else {
 		if ret.Get(0) != nil {
@@ -172,7 +173,7 @@ func (_m *SourcesCheckable) Value(t *taskfile.Task) (interface{}, error) {
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(*taskfile.Task) error); ok {
+	if rf, ok := ret.Get(1).(func(*ast.Task) error); ok {
 		r1 = rf(t)
 	} else {
 		r1 = ret.Error(1)
@@ -187,14 +188,14 @@ type SourcesCheckable_Value_Call struct {
 }
 
 // Value is a helper method to define mock.On call
-//   - t *taskfile.Task
+//   - t *ast.Task
 func (_e *SourcesCheckable_Expecter) Value(t interface{}) *SourcesCheckable_Value_Call {
 	return &SourcesCheckable_Value_Call{Call: _e.mock.On("Value", t)}
 }
 
-func (_c *SourcesCheckable_Value_Call) Run(run func(t *taskfile.Task)) *SourcesCheckable_Value_Call {
+func (_c *SourcesCheckable_Value_Call) Run(run func(t *ast.Task)) *SourcesCheckable_Value_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(*taskfile.Task))
+		run(args[0].(*ast.Task))
 	})
 	return _c
 }
@@ -204,7 +205,7 @@ func (_c *SourcesCheckable_Value_Call) Return(_a0 interface{}, _a1 error) *Sourc
 	return _c
 }
 
-func (_c *SourcesCheckable_Value_Call) RunAndReturn(run func(*taskfile.Task) (interface{}, error)) *SourcesCheckable_Value_Call {
+func (_c *SourcesCheckable_Value_Call) RunAndReturn(run func(*ast.Task) (interface{}, error)) *SourcesCheckable_Value_Call {
 	_c.Call.Return(run)
 	return _c
 }

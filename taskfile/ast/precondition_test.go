@@ -1,4 +1,4 @@
-package taskfile_test
+package ast_test
 
 import (
 	"testing"
@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"gopkg.in/yaml.v3"
 
-	"github.com/go-task/task/v3/taskfile"
+	"github.com/go-task/task/v3/taskfile/ast"
 )
 
 func TestPreconditionParse(t *testing.T) {
@@ -18,29 +18,29 @@ func TestPreconditionParse(t *testing.T) {
 	}{
 		{
 			"test -f foo.txt",
-			&taskfile.Precondition{},
-			&taskfile.Precondition{Sh: `test -f foo.txt`, Msg: "`test -f foo.txt` failed"},
+			&ast.Precondition{},
+			&ast.Precondition{Sh: `test -f foo.txt`, Msg: "`test -f foo.txt` failed"},
 		},
 		{
 			"sh: '[ 1 = 0 ]'",
-			&taskfile.Precondition{},
-			&taskfile.Precondition{Sh: "[ 1 = 0 ]", Msg: "[ 1 = 0 ] failed"},
+			&ast.Precondition{},
+			&ast.Precondition{Sh: "[ 1 = 0 ]", Msg: "[ 1 = 0 ] failed"},
 		},
 		{
 			`
 sh: "[ 1 = 2 ]"
 msg: "1 is not 2"
 `,
-			&taskfile.Precondition{},
-			&taskfile.Precondition{Sh: "[ 1 = 2 ]", Msg: "1 is not 2"},
+			&ast.Precondition{},
+			&ast.Precondition{Sh: "[ 1 = 2 ]", Msg: "1 is not 2"},
 		},
 		{
 			`
 sh: "[ 1 = 2 ]"
 msg: "1 is not 2"
 `,
-			&taskfile.Precondition{},
-			&taskfile.Precondition{Sh: "[ 1 = 2 ]", Msg: "1 is not 2"},
+			&ast.Precondition{},
+			&ast.Precondition{Sh: "[ 1 = 2 ]", Msg: "1 is not 2"},
 		},
 	}
 	for _, test := range tests {

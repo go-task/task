@@ -4,10 +4,10 @@ import (
 	"fmt"
 
 	"github.com/go-task/task/v3/internal/hash"
-	"github.com/go-task/task/v3/taskfile"
+	"github.com/go-task/task/v3/taskfile/ast"
 )
 
-func (e *Executor) GetHash(t *taskfile.Task) (string, error) {
+func (e *Executor) GetHash(t *ast.Task) (string, error) {
 	r := t.Run
 	if r == "" {
 		r = e.Taskfile.Run

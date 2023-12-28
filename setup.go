@@ -17,7 +17,7 @@ import (
 	"github.com/go-task/task/v3/internal/filepathext"
 	"github.com/go-task/task/v3/internal/logger"
 	"github.com/go-task/task/v3/internal/output"
-	"github.com/go-task/task/v3/taskfile"
+	"github.com/go-task/task/v3/taskfile/ast"
 	"github.com/go-task/task/v3/taskfile/read"
 )
 
@@ -197,7 +197,7 @@ func (e *Executor) setupCompiler() error {
 }
 
 func (e *Executor) readDotEnvFiles() error {
-	if e.Taskfile.Version.LessThan(taskfile.V3) {
+	if e.Taskfile.Version.LessThan(ast.V3) {
 		return nil
 	}
 
@@ -206,7 +206,7 @@ func (e *Executor) readDotEnvFiles() error {
 		return err
 	}
 
-	err = env.Range(func(key string, value taskfile.Var) error {
+	err = env.Range(func(key string, value ast.Var) error {
 		if ok := e.Taskfile.Env.Exists(key); !ok {
 			e.Taskfile.Env.Set(key, value)
 		}
@@ -244,12 +244,12 @@ func (e *Executor) doVersionChecks() error {
 	v := &semver.Version{}
 	*v = *e.Taskfile.Version
 
-	if v.LessThan(taskfile.V3) {
+	if v.LessThan(ast.V3) {
 		return fmt.Errorf(`task: Taskfile schemas prior to v3 are no longer supported`)
 	}
 
 	// consider as equal to the greater version if round
-	if v.Equal(taskfile.V3) {
+	if v.Equal(ast.V3) {
 		v = semver.MustParse("3.8")
 	}
 

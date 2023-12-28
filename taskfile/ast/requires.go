@@ -1,4 +1,4 @@
-package taskfile
+package ast
 
 import "github.com/go-task/task/v3/internal/deepcopy"
 

@@ -16,7 +16,7 @@ import (
 	"github.com/go-task/task/v3/internal/fingerprint"
 	"github.com/go-task/task/v3/internal/logger"
 	"github.com/go-task/task/v3/internal/sort"
-	"github.com/go-task/task/v3/taskfile"
+	"github.com/go-task/task/v3/taskfile/ast"
 )
 
 // ListOptions collects list-related options
@@ -57,7 +57,7 @@ func (o ListOptions) Validate() error {
 }
 
 // Filters returns the slice of FilterFunc which filters a list
-// of taskfile.Task according to the given ListOptions
+// of ast.Task according to the given ListOptions
 func (o ListOptions) Filters() []FilterFunc {
 	filters := []FilterFunc{FilterOutInternal}
 
@@ -159,7 +159,7 @@ func (e *Executor) ListTaskNames(allTasks bool) {
 	}
 }
 
-func (e *Executor) ToEditorOutput(tasks []*taskfile.Task, noStatus bool) (*editors.Taskfile, error) {
+func (e *Executor) ToEditorOutput(tasks []*ast.Task, noStatus bool) (*editors.Taskfile, error) {
 	o := &editors.Taskfile{
 		Tasks:    make([]editors.Task, len(tasks)),
 		Location: e.Taskfile.Location,
