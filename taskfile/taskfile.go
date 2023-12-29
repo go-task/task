@@ -252,7 +252,7 @@ func Read(
 				}
 			}
 
-			if err = ast.Merge(t, includedTaskfile, &includedTask, namespace); err != nil {
+			if err = Merge(t, includedTaskfile, &includedTask, namespace); err != nil {
 				return err
 			}
 

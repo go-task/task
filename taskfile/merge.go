@@ -1,15 +1,17 @@
-package ast
+package taskfile
 
 import (
 	"fmt"
 	"strings"
+
+	"github.com/go-task/task/v3/taskfile/ast"
 )
 
 // NamespaceSeparator contains the character that separates namespaces
 const NamespaceSeparator = ":"
 
 // Merge merges the second Taskfile into the first
-func Merge(t1, t2 *Taskfile, includedTaskfile *IncludedTaskfile, namespaces ...string) error {
+func Merge(t1, t2 *ast.Taskfile, includedTaskfile *ast.IncludedTaskfile, namespaces ...string) error {
 	if !t1.Version.Equal(t2.Version) {
 		return fmt.Errorf(`task: Taskfiles versions should match. First is "%s" but second is "%s"`, t1.Version, t2.Version)
 	}
@@ -18,15 +20,15 @@ func Merge(t1, t2 *Taskfile, includedTaskfile *IncludedTaskfile, namespaces ...s
 	}
 
 	if t1.Vars == nil {
-		t1.Vars = &Vars{}
+		t1.Vars = &ast.Vars{}
 	}
 	if t1.Env == nil {
-		t1.Env = &Vars{}
+		t1.Env = &ast.Vars{}
 	}
 	t1.Vars.Merge(t2.Vars)
 	t1.Env.Merge(t2.Env)
 
-	return t2.Tasks.Range(func(k string, v *Task) error {
+	return t2.Tasks.Range(func(k string, v *ast.Task) error {
 		// We do a deep copy of the task struct here to ensure that no data can
 		// be changed elsewhere once the taskfile is merged.
 		task := v.DeepCopy()
