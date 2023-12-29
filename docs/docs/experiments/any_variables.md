@@ -2,12 +2,31 @@
 slug: /experiments/any-variables/
 ---
 
-# Any Variables
+# Any Variables (#1415)
 
-- Issue: #1415
-- Environment variable: `TASK_X_ANY_VARIABLES=1`
-- Breaks:
-  - Dynamically defined variables (using the `sh` keyword)
+:::caution
+
+All experimental features are subject to breaking changes and/or removal _at any
+time_. We strongly recommend that you do not use these features in a production
+environment. They are intended for testing and feedback only.
+
+:::
+
+:::warning
+
+This experiment breaks the following functionality:
+
+- Dynamically defined variables (using the `sh` keyword)
+
+:::
+
+:::info
+
+To enable this experiment, set the environment variable:
+`TASK_X_ANY_VARIABLES=1`. Check out [our guide to enabling experiments
+][enabling-experiments] for more information.
+
+:::
 
 Currently, Task only supports string variables. This experiment allows you to
 specify and use the following variable types:
@@ -179,5 +198,6 @@ will now need to escape the `$` with a backslash (`\`) to stop Task from
 executing it as a command.
 
 <!-- prettier-ignore-start -->
+[enabling-experiments]: /experiments/#enabling-experiments
 [slim-sprig]: https://go-task.github.io/slim-sprig/
 <!-- prettier-ignore-end -->

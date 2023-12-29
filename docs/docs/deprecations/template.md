@@ -6,11 +6,16 @@ sidebar_position: -1 # Always push to the top
 draft: true # Hide in production
 ---
 
-# \{Name of Deprecated Feature\}
+# \{Name of Deprecated Feature\} (#\{Issue\})
 
-- Issue: #\{issue\}
-- Breaks:
-  - \{list any existing functionality that will be broken by this experiment\}
+:::warning
+
+This deprecation breaks the following functionality:
+
+- \{list any existing functionality that will be broken by this deprecation\}
+- \{if there are no breaking changes, remove this admonition\}
+
+:::
 
 \{Short description of the feature/behavior and why it is being deprecated\}
 
