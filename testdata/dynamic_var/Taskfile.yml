@@ -1,0 +1,26 @@
+version: 3
+
+tasks:
+  with-cache:
+    silent: true
+    vars:
+      FOO:
+        sh: mktemp
+      BAR:
+        sh: mktemp
+    cmds:
+      - echo {{ .FOO }}
+      - echo {{ .BAR }}
+
+  without-cache:
+    silent: true
+    vars:
+      FOO:
+        sh: mktemp
+        cache: false
+      BAR:
+        sh: mktemp
+        cache: false
+    cmds:
+      - echo {{ .FOO }}
+      - echo {{ .BAR }}

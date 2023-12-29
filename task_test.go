@@ -2327,3 +2327,35 @@ func TestFor(t *testing.T) {
 		})
 	}
 }
+
+func TestDynamicVarWithCache(t *testing.T) {
+	const dir = "testdata/dynamic_var"
+	var buff bytes.Buffer
+	e := task.Executor{
+		Dir:    dir,
+		Stdout: &buff,
+		Stderr: &buff,
+		Silent: true,
+	}
+	require.NoError(t, e.Setup())
+	require.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "with-cache"}))
+	results := strings.Split(strings.TrimSpace(buff.String()), "\n")
+	assert.Len(t, results, 2)
+	assert.Equal(t, results[0], results[1])
+}
+
+func TestDynamicVarWithoutCache(t *testing.T) {
+	const dir = "testdata/dynamic_var"
+	var buff bytes.Buffer
+	e := task.Executor{
+		Dir:    dir,
+		Stdout: &buff,
+		Stderr: &buff,
+		Silent: true,
+	}
+	require.NoError(t, e.Setup())
+	require.NoError(t, e.Run(context.Background(), taskfile.Call{Task: "without-cache"}))
+	results := strings.Split(strings.TrimSpace(buff.String()), "\n")
+	assert.Len(t, results, 2)
+	assert.NotEqual(t, results[0], results[1])
+}

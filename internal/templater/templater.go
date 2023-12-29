@@ -110,14 +110,13 @@ func (r *Templater) replaceVars(vars *taskfile.Vars, extra map[string]any) *task
 
 	var newVars taskfile.Vars
 	_ = vars.Range(func(k string, v taskfile.Var) error {
-		var newVar taskfile.Var
+		newVar := v.DeepCopy()
 		switch value := v.Value.(type) {
 		case string:
 			newVar.Value = r.ReplaceWithExtra(value, extra)
 		}
-		newVar.Live = v.Live
 		newVar.Sh = r.ReplaceWithExtra(v.Sh, extra)
-		newVars.Set(k, newVar)
+		newVars.Set(k, *newVar)
 		return nil
 	})
 

@@ -59,7 +59,7 @@ func (c *CompilerV3) getVariables(t *taskfile.Task, call *taskfile.Call, evaluat
 		return func(k string, v taskfile.Var) error {
 			tr := templater.Templater{Vars: result, RemoveNoValue: true}
 			// Replace values
-			newVar := taskfile.Var{}
+			newVar := v.DeepCopy()
 			switch value := v.Value.(type) {
 			case string:
 				newVar.Value = tr.Replace(value)
@@ -67,7 +67,6 @@ func (c *CompilerV3) getVariables(t *taskfile.Task, call *taskfile.Call, evaluat
 				newVar.Value = value
 			}
 			newVar.Sh = tr.Replace(v.Sh)
-			newVar.Dir = v.Dir
 			// If the variable should not be evaluated, but is nil, set it to an empty string
 			// This stops empty interface errors when using the templater to replace values later
 			if !evaluateShVars && newVar.Value == nil {
@@ -89,7 +88,7 @@ func (c *CompilerV3) getVariables(t *taskfile.Task, call *taskfile.Call, evaluat
 				return nil
 			}
 			// If the variable is dynamic, we need to resolve it first
-			static, err := c.HandleDynamicVar(newVar, dir)
+			static, err := c.HandleDynamicVar(*newVar, dir)
 			if err != nil {
 				return err
 			}
@@ -173,7 +172,9 @@ func (c *CompilerV3) HandleDynamicVar(v taskfile.Var, dir string) (string, error
 	result := strings.TrimSuffix(stdout.String(), "\r\n")
 	result = strings.TrimSuffix(result, "\n")
 
-	c.dynamicCache[v.Sh] = result
+	if v.Cache {
+		c.dynamicCache[v.Sh] = result
+	}
 	c.Logger.VerboseErrf(logger.Magenta, "task: dynamic variable: %q result: %q\n", v.Sh, result)
 
 	return result, nil

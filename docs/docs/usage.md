@@ -646,9 +646,9 @@ tasks:
 compare the checksum of the source files to determine if it's necessary to run
 the task. If not, it will just print a message like `Task "js" is up to date`.
 
-`exclude:` can also be used to exclude files from fingerprinting.
-Sources are evaluated in order, so `exclude:` must come after the positive
-glob it is negating.
+`exclude:` can also be used to exclude files from fingerprinting. Sources are
+evaluated in order, so `exclude:` must come after the positive glob it is
+negating.
 
 ```yaml
 version: '3'
@@ -1014,6 +1014,59 @@ tasks:
 ```
 
 This works for all types of variables.
+
+### Dynamic variable caching
+
+By default, the output of dynamic variables is cached. This means that running
+the same command multiple times in the same task, will always give the same
+output:
+
+```yaml
+version: 3
+
+tasks:
+  test:
+    silent: true
+    vars:
+      FOO:
+        sh: mktemp
+      BAR:
+        sh: mktemp
+    cmds:
+      - echo {{ .FOO }}
+      - echo {{ .BAR }}
+```
+
+```txt
+/tmp/tmp.7qbwR3WxBc
+/tmp/tmp.7qbwR3WxBc
+```
+
+If you want to stop the result of a dynamic variable being cached, you can set
+the `cache` key to `false`:
+
+```yaml
+version: 3
+
+tasks:
+  test:
+    silent: true
+    vars:
+      FOO:
+        sh: mktemp
+        cache: false
+      BAR:
+        sh: mktemp
+        cache: false
+    cmds:
+      - echo {{ .FOO }}
+      - echo {{ .BAR }}
+```
+
+```txt
+/tmp/tmp.vGKqfv8fm7
+/tmp/tmp.4Jtfmihw58
+```
 
 ## Looping over values
 
@@ -1481,8 +1534,8 @@ task: "This is a dangerous command... Do you want to continue?" [y/N]
 ```
 
 Warning prompts are called before executing a task. If a prompt is denied Task
-will exit with [exit code](/api#exit-codes) 205. If approved, Task
-will continue as normal.
+will exit with [exit code](/api#exit-codes) 205. If approved, Task will continue
+as normal.
 
 ```bash
 ❯ task example
@@ -1836,7 +1889,7 @@ tasks:
     sources:
       - '**/*.go'
     cmds:
-      - go build  # ...
+      - go build # ...
 ```
 
 :::info

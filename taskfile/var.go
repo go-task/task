@@ -77,6 +77,7 @@ type Var struct {
 	Live  any
 	Sh    string
 	Dir   string
+	Cache bool
 }
 
 func (v *Var) UnmarshalYAML(node *yaml.Node) error {
@@ -108,14 +109,35 @@ func (v *Var) UnmarshalYAML(node *yaml.Node) error {
 
 	case yaml.MappingNode:
 		var sh struct {
-			Sh string
+			Sh    string
+			Cache *bool
 		}
 		if err := node.Decode(&sh); err != nil {
 			return err
+		}
+		if sh.Cache != nil {
+			v.Cache = *sh.Cache
+		} else {
+			v.Cache = true
 		}
 		v.Sh = sh.Sh
 		return nil
 	}
 
 	return fmt.Errorf("yaml: line %d: cannot unmarshal %s into variable", node.Line, node.ShortTag())
+}
+
+// DeepCopy creates a new instance of Var and copies
+// data by value from the source struct.
+func (vs *Var) DeepCopy() *Var {
+	if vs == nil {
+		return nil
+	}
+	return &Var{
+		Value: vs.Value,
+		Live:  vs.Live,
+		Sh:    vs.Sh,
+		Dir:   vs.Dir,
+		Cache: vs.Cache,
+	}
 }
