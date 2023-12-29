@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+- Removed support for `version: 2` schemas (#1197, #1447 by @pd93). See the
+  [deprecation notice on our website](https://taskfile.dev/deprecations/version-2-schema)
+- Refactored the public `read` and `taskfile` packages and introduced
+  `taskfile/ast` (#1450 by @pd93).
+- Updated the experiments and deprecations documentation format (#1445 by
+  @pd93).
+
 ## v3.33.1 - 2023-12-21
 
 - Added support for looping over map variables with the
