@@ -2,7 +2,6 @@
   function attachAd() {
     var wrapper = document.getElementById('sidebar-ads');
     if (wrapper) {
-
       var el = document.createElement('script');
       el.setAttribute('type', 'text/javascript');
       el.setAttribute('id', '_carbonads_js');
