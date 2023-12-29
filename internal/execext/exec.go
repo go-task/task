@@ -80,6 +80,7 @@ func RunCommand(ctx context.Context, opts *RunCommandOptions) error {
 		if err := r.Run(ctx, shoptCmd); err != nil {
 			return err
 		}
+
 	}
 
 	// Run the user-defined command

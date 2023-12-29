@@ -3,7 +3,7 @@ package taskfile
 import (
 	"fmt"
 
-	"gopkg.in/yaml.v3"
+	yaml "gopkg.in/yaml.v3"
 
 	"github.com/go-task/task/v3/internal/deepcopy"
 )
@@ -42,6 +42,7 @@ type Task struct {
 	Platforms            []*Platform
 	Location             *Location
 	Watch                bool
+	ForceContainer       bool
 }
 
 func (t *Task) Name() string {
@@ -75,34 +76,35 @@ func (t *Task) UnmarshalYAML(node *yaml.Node) error {
 	// Full task object
 	case yaml.MappingNode:
 		var task struct {
-			Cmds          []*Cmd
-			Cmd           *Cmd
-			Deps          []*Dep
-			Label         string
-			Desc          string
-			Prompt        string
-			Summary       string
-			Aliases       []string
-			Sources       []*Glob
-			Generates     []*Glob
-			Status        []string
-			Preconditions []*Precondition
-			Dir           string
-			Set           []string
-			Shopt         []string
-			Vars          *Vars
-			Env           *Vars
-			Dotenv        []string
-			Silent        bool
-			Interactive   bool
-			Internal      bool
-			Method        string
-			Prefix        string
-			IgnoreError   bool `yaml:"ignore_error"`
-			Run           string
-			Platforms     []*Platform
-			Requires      *Requires
-			Watch         bool
+			Cmds           []*Cmd
+			Cmd            *Cmd
+			Deps           []*Dep
+			Label          string
+			Desc           string
+			Prompt         string
+			Summary        string
+			Aliases        []string
+			Sources        []*Glob
+			Generates      []*Glob
+			Status         []string
+			Preconditions  []*Precondition
+			Dir            string
+			Set            []string
+			Shopt          []string
+			Vars           *Vars
+			Env            *Vars
+			Dotenv         []string
+			Silent         bool
+			Interactive    bool
+			Internal       bool
+			Method         string
+			Prefix         string
+			IgnoreError    bool `yaml:"ignore_error"`
+			Run            string
+			Platforms      []*Platform
+			Requires       *Requires
+			Watch          bool
+			ForceContainer bool `yaml:"force_container"`
 		}
 		if err := node.Decode(&task); err != nil {
 			return err
@@ -141,6 +143,7 @@ func (t *Task) UnmarshalYAML(node *yaml.Node) error {
 		t.Platforms = task.Platforms
 		t.Requires = task.Requires
 		t.Watch = task.Watch
+		t.ForceContainer = task.ForceContainer
 		return nil
 	}
 

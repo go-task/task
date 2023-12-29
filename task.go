@@ -70,6 +70,8 @@ type Executor struct {
 	TaskSorter     sort.TaskSorter
 	UserWorkingDir string
 
+	ForceContainer bool
+
 	taskvars   *taskfile.Vars
 	fuzzyModel *fuzzy.Model
 
@@ -121,6 +123,21 @@ func (e *Executor) Run(ctx context.Context, calls ...taskfile.Call) error {
 		return err
 	}
 
+	needContainer := e.isContainerRequired(calls...)
+	if needContainer {
+		e.Logger.VerboseErrf(logger.Magenta, "initializing containerwrapper and containerinterface\n")
+		if err := e.Taskfile.Container.Initialize(); err != nil {
+			return err
+		}
+		if err := e.Taskfile.Container.CI.Up(ctx); err != nil {
+			return err
+		}
+		//At this point all the required containers should be up and running.
+	}
+	if needContainer {
+		defer e.Taskfile.Container.Cleanup(ctx)
+	}
+
 	g, ctx := errgroup.WithContext(ctx)
 	for _, c := range regularCalls {
 		c := c
@@ -141,6 +158,26 @@ func (e *Executor) Run(ctx context.Context, calls ...taskfile.Call) error {
 	}
 
 	return nil
+}
+
+// isContainerRequired checks to see if a container
+// is needed by any of the tasks.
+func (e *Executor) isContainerRequired(calls ...taskfile.Call) bool {
+	needContainer := false
+	if e.ForceContainer {
+		needContainer = true
+	} else {
+		for _, c := range calls {
+			compiledTask, err := e.FastCompiledTask(c)
+			if err != nil {
+				return false
+			}
+			if compiledTask.ForceContainer {
+				needContainer = true
+			}
+		}
+	}
+	return needContainer
 }
 
 func (e *Executor) splitRegularAndWatchCalls(calls ...taskfile.Call) (regularCalls []taskfile.Call, watchCalls []taskfile.Call, err error) {
@@ -239,8 +276,11 @@ func (e *Executor) RunTask(ctx context.Context, call taskfile.Call) error {
 			}
 		}
 
-		if err := e.mkdir(t); err != nil {
-			e.Logger.Errf(logger.Red, "task: cannot make directory %q: %v\n", t.Dir, err)
+		// Only trying creating the directory if we are NOT executing in a container
+		if !e.ForceContainer && !t.ForceContainer {
+			if err := e.mkdir(t); err != nil {
+				e.Logger.Errf(logger.Red, "task: cannot make directory %q: %v\n", t.Dir, err)
+			}
 		}
 
 		for i := range t.Cmds {
@@ -343,6 +383,9 @@ func (e *Executor) runCommand(ctx context.Context, t *taskfile.Task, call taskfi
 		if e.Dry {
 			return nil
 		}
+		if e.ForceContainer || t.ForceContainer {
+			return e.Taskfile.Container.Exec(ctx, cmd.Cmd, env.Get(t), t.Dir, e.Logger)
+		}
 
 		outputWrapper := e.Output
 		if t.Interactive {
@@ -354,7 +397,6 @@ func (e *Executor) runCommand(ctx context.Context, t *taskfile.Task, call taskfi
 			return fmt.Errorf("task: failed to get variables: %w", err)
 		}
 		stdOut, stdErr, close := outputWrapper.WrapWriter(e.Stdout, e.Stderr, t.Prefix, outputTemplater)
-
 		err = execext.RunCommand(ctx, &execext.RunCommandOptions{
 			Command:   cmd.Cmd,
 			Dir:       t.Dir,
@@ -368,6 +410,7 @@ func (e *Executor) runCommand(ctx context.Context, t *taskfile.Task, call taskfi
 		if closeErr := close(err); closeErr != nil {
 			e.Logger.Errf(logger.Red, "task: unable to close writer: %v\n", closeErr)
 		}
+
 		if execext.IsExitError(err) && cmd.IgnoreError {
 			e.Logger.VerboseErrf(logger.Yellow, "task: [%s] command error ignored: %v\n", t.Name(), err)
 			return nil

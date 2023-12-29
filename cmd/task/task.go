@@ -45,37 +45,38 @@ Options:
 `
 
 var flags struct {
-	version     bool
-	help        bool
-	init        bool
-	list        bool
-	listAll     bool
-	listJson    bool
-	taskSort    string
-	status      bool
-	noStatus    bool
-	insecure    bool
-	force       bool
-	forceAll    bool
-	watch       bool
-	verbose     bool
-	silent      bool
-	assumeYes   bool
-	dry         bool
-	summary     bool
-	exitCode    bool
-	parallel    bool
-	concurrency int
-	dir         string
-	entrypoint  string
-	output      taskfile.Output
-	color       bool
-	interval    time.Duration
-	global      bool
-	experiments bool
-	download    bool
-	offline     bool
-	timeout     time.Duration
+	version        bool
+	help           bool
+	init           bool
+	list           bool
+	listAll        bool
+	listJson       bool
+	taskSort       string
+	status         bool
+	noStatus       bool
+	insecure       bool
+	force          bool
+	forceAll       bool
+	watch          bool
+	verbose        bool
+	silent         bool
+	assumeYes      bool
+	dry            bool
+	summary        bool
+	exitCode       bool
+	parallel       bool
+	concurrency    int
+	dir            string
+	entrypoint     string
+	output         taskfile.Output
+	color          bool
+	interval       time.Duration
+	global         bool
+	experiments    bool
+	download       bool
+	offline        bool
+	timeout        time.Duration
+	forceContainer bool
 }
 
 func main() {
@@ -117,7 +118,6 @@ func run() error {
 	pflag.BoolVarP(&flags.listJson, "json", "j", false, "Formats task list as JSON.")
 	pflag.StringVar(&flags.taskSort, "sort", "", "Changes the order of the tasks when listed. [default|alphanumeric|none].")
 	pflag.BoolVar(&flags.status, "status", false, "Exits with non-zero exit code if any of the given tasks is not up-to-date.")
-	pflag.BoolVar(&flags.noStatus, "no-status", false, "Ignore status when listing tasks as JSON")
 	pflag.BoolVar(&flags.insecure, "insecure", false, "Forces Task to download Taskfiles over insecure connections.")
 	pflag.BoolVarP(&flags.watch, "watch", "w", false, "Enables watch of the given task.")
 	pflag.BoolVarP(&flags.verbose, "verbose", "v", false, "Enables verbose mode.")
@@ -153,6 +153,8 @@ func run() error {
 		pflag.BoolVar(&flags.offline, "offline", false, "Forces Task to only use local or cached Taskfiles.")
 		pflag.DurationVar(&flags.timeout, "timeout", time.Second*10, "Timeout for downloading remote Taskfiles.")
 	}
+
+	pflag.BoolVar(&flags.forceContainer, "force-container", false, "Force the command to be executed in the container")
 
 	pflag.Parse()
 
@@ -257,6 +259,8 @@ func run() error {
 
 		OutputStyle: flags.output,
 		TaskSorter:  taskSorter,
+
+		ForceContainer: flags.forceContainer,
 	}
 
 	listOptions := task.NewListOptions(flags.list, flags.listAll, flags.listJson, flags.noStatus)

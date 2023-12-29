@@ -2,6 +2,7 @@ package taskfile
 
 import (
 	"fmt"
+	"github.com/go-task/task/v3/internal/containerwrapper"
 	"time"
 
 	"github.com/Masterminds/semver/v3"
@@ -32,6 +33,7 @@ type Taskfile struct {
 	Dotenv     []string
 	Run        string
 	Interval   time.Duration
+	Container  *containerwrapper.ContainerSetup
 }
 
 func (tf *Taskfile) UnmarshalYAML(node *yaml.Node) error {
@@ -52,6 +54,7 @@ func (tf *Taskfile) UnmarshalYAML(node *yaml.Node) error {
 			Dotenv     []string
 			Run        string
 			Interval   time.Duration
+			Container  *containerwrapper.ContainerSetup
 		}
 		if err := node.Decode(&taskfile); err != nil {
 			return err
@@ -82,6 +85,8 @@ func (tf *Taskfile) UnmarshalYAML(node *yaml.Node) error {
 		if tf.Env == nil {
 			tf.Env = &Vars{}
 		}
+
+		tf.Container = taskfile.Container
 		return nil
 	}
 
