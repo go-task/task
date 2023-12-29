@@ -10,54 +10,48 @@ import (
 	"github.com/go-task/task/v3/errors"
 )
 
-var (
-	V3 = semver.MustParse("3")
-	V2 = semver.MustParse("2")
-)
+var V3 = semver.MustParse("3")
 
 // Taskfile represents a Taskfile.yml
 type Taskfile struct {
-	Location   string
-	Version    *semver.Version
-	Expansions int
-	Output     Output
-	Method     string
-	Includes   *IncludedTaskfiles
-	Set        []string
-	Shopt      []string
-	Vars       *Vars
-	Env        *Vars
-	Tasks      Tasks
-	Silent     bool
-	Dotenv     []string
-	Run        string
-	Interval   time.Duration
+	Location string
+	Version  *semver.Version
+	Output   Output
+	Method   string
+	Includes *IncludedTaskfiles
+	Set      []string
+	Shopt    []string
+	Vars     *Vars
+	Env      *Vars
+	Tasks    Tasks
+	Silent   bool
+	Dotenv   []string
+	Run      string
+	Interval time.Duration
 }
 
 func (tf *Taskfile) UnmarshalYAML(node *yaml.Node) error {
 	switch node.Kind {
 	case yaml.MappingNode:
 		var taskfile struct {
-			Version    *semver.Version
-			Expansions int
-			Output     Output
-			Method     string
-			Includes   *IncludedTaskfiles
-			Set        []string
-			Shopt      []string
-			Vars       *Vars
-			Env        *Vars
-			Tasks      Tasks
-			Silent     bool
-			Dotenv     []string
-			Run        string
-			Interval   time.Duration
+			Version  *semver.Version
+			Output   Output
+			Method   string
+			Includes *IncludedTaskfiles
+			Set      []string
+			Shopt    []string
+			Vars     *Vars
+			Env      *Vars
+			Tasks    Tasks
+			Silent   bool
+			Dotenv   []string
+			Run      string
+			Interval time.Duration
 		}
 		if err := node.Decode(&taskfile); err != nil {
 			return err
 		}
 		tf.Version = taskfile.Version
-		tf.Expansions = taskfile.Expansions
 		tf.Output = taskfile.Output
 		tf.Method = taskfile.Method
 		tf.Includes = taskfile.Includes
@@ -70,9 +64,6 @@ func (tf *Taskfile) UnmarshalYAML(node *yaml.Node) error {
 		tf.Dotenv = taskfile.Dotenv
 		tf.Run = taskfile.Run
 		tf.Interval = taskfile.Interval
-		if tf.Expansions <= 0 {
-			tf.Expansions = 2
-		}
 		if tf.Version == nil {
 			return errors.New("task: 'version' is required")
 		}

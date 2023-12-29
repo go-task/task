@@ -82,8 +82,8 @@ tasks:
 
 :::caution
 
-v2 schema support is [deprecated][deprecate-version-2-schema] and will be
-removed in a future release.
+v2 schemas are [no longer supported by the latest version of
+Task][deprecate-version-2-schema].
 
 :::
 
@@ -106,8 +106,8 @@ Please check the [documentation][includes]
 
 :::caution
 
-v2 schema support is [deprecated][deprecate-version-2-schema] and will be
-removed in a future release.
+v2 schemas are [no longer supported by the latest version of
+Task][deprecate-version-2-schema].
 
 :::
 
@@ -125,8 +125,8 @@ includes:
 
 :::caution
 
-v2 schema support is [deprecated][deprecate-version-2-schema] and will be
-removed in a future release.
+v2 schemas are [no longer supported by the latest version of
+Task][deprecate-version-2-schema].
 
 :::
 
@@ -170,8 +170,8 @@ tasks:
 
 :::caution
 
-v2 schema support is [deprecated][deprecate-version-2-schema] and will be
-removed in a future release.
+v2 schemas are [no longer supported by the latest version of
+Task][deprecate-version-2-schema].
 
 :::
 
@@ -256,7 +256,7 @@ The variable priority order was also different:
 4. `Taskvars.yml` variables
 
 <!-- prettier-ignore-start -->
-[deprecate-version-2-schema]: https://github.com/go-task/task/issues/1197
+[deprecate-version-2-schema]: /deprecations/version-2-schema/
 [output]: /usage#output-syntax
 [ignore_errors]: /usage#ignore-errors
 [includes]: /usage#including-other-taskfiles

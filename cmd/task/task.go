@@ -300,11 +300,7 @@ func run() error {
 		return err
 	}
 
-	if e.Taskfile.Version.Compare(taskfile.V3) >= 0 {
-		calls, globals = args.ParseV3(tasksAndVars...)
-	} else {
-		calls, globals = args.ParseV2(tasksAndVars...)
-	}
+	calls, globals = args.Parse(tasksAndVars...)
 
 	// If there are no calls, run the default task instead
 	if len(calls) == 0 {

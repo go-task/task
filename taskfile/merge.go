@@ -13,10 +13,6 @@ func Merge(t1, t2 *Taskfile, includedTaskfile *IncludedTaskfile, namespaces ...s
 	if !t1.Version.Equal(t2.Version) {
 		return fmt.Errorf(`task: Taskfiles versions should match. First is "%s" but second is "%s"`, t1.Version, t2.Version)
 	}
-
-	if t2.Expansions != 0 && t2.Expansions != 2 {
-		t1.Expansions = t2.Expansions
-	}
 	if t2.Output.IsSet() {
 		t1.Output = t2.Output
 	}
