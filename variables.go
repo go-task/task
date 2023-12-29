@@ -211,6 +211,17 @@ func (e *Executor) compiledTask(call ast.Call, evaluateShVars bool) (*ast.Task, 
 			newCmd.Cmd = r.Replace(cmd.Cmd)
 			newCmd.Task = r.Replace(cmd.Task)
 			newCmd.Vars = r.ReplaceVars(cmd.Vars)
+			// Loop over the command's variables and resolve any references to other variables
+			err := cmd.Vars.Range(func(k string, v ast.Var) error {
+				if v.Ref != "" {
+					refVal := vars.Get(v.Ref)
+					newCmd.Vars.Set(k, refVal)
+				}
+				return nil
+			})
+			if err != nil {
+				return nil, err
+			}
 			new.Cmds = append(new.Cmds, newCmd)
 		}
 	}

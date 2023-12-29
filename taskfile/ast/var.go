@@ -76,6 +76,7 @@ type Var struct {
 	Value any
 	Live  any
 	Sh    string
+	Ref   string
 	Json  string
 	Yaml  string
 	Dir   string
@@ -107,9 +108,10 @@ func (v *Var) UnmarshalYAML(node *yaml.Node) error {
 			case yaml.MappingNode:
 				key := node.Content[0].Value
 				switch key {
-				case "sh", "map", "json", "yaml":
+				case "sh", "ref", "map", "json", "yaml":
 					var m struct {
 						Sh   string
+						Ref  string
 						Map  any
 						Json string
 						Yaml string
@@ -118,12 +120,13 @@ func (v *Var) UnmarshalYAML(node *yaml.Node) error {
 						return err
 					}
 					v.Sh = m.Sh
+					v.Ref = m.Ref
 					v.Value = m.Map
 					v.Json = m.Json
 					v.Yaml = m.Yaml
 					return nil
 				default:
-					return fmt.Errorf(`yaml: line %d: %q is not a valid variable type. Try "sh", "map", "json", "yaml" or using a scalar value`, node.Line, key)
+					return fmt.Errorf(`yaml: line %d: %q is not a valid variable type. Try "sh", "ref", "map", "json", "yaml" or using a scalar value`, node.Line, key)
 				}
 			default:
 				var value any

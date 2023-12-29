@@ -67,6 +67,7 @@ func (c *Compiler) getVariables(t *ast.Task, call *ast.Call, evaluateShVars bool
 				newVar.Value = value
 			}
 			newVar.Sh = tr.Replace(v.Sh)
+			newVar.Ref = v.Ref
 			newVar.Json = tr.Replace(v.Json)
 			newVar.Yaml = tr.Replace(v.Yaml)
 			newVar.Dir = v.Dir

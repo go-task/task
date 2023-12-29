@@ -113,6 +113,9 @@ func (r *Templater) replaceVars(vars *ast.Vars, extra map[string]any) *ast.Vars 
 		}
 		newVar.Live = v.Live
 		newVar.Sh = r.ReplaceWithExtra(v.Sh, extra)
+		newVar.Ref = v.Ref
+		newVar.Json = r.ReplaceWithExtra(v.Json, extra)
+		newVar.Yaml = r.ReplaceWithExtra(v.Yaml, extra)
 		newVars.Set(k, newVar)
 		return nil
 	})

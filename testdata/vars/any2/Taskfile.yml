@@ -11,14 +11,10 @@ tasks:
       MAP:
         map: {"name":"Alice","age":30,"children":[{"name":"Bob","age":5},{"name":"Charlie","age":3},{"name":"Diane","age":1}]}
     cmds:
-      - >-
-        echo "{{.MAP.name}} has {{len .MAP.children}} children called
-        {{- $children := .MAP.children -}}
-        {{- range $i, $child := $children -}}
-          {{- if lt $i (sub (len $children) 1)}} {{$child.name -}},
-          {{- else}} and {{$child.name -}}
-          {{- end -}}
-        {{- end -}}"
+      - task: print-var
+        vars:
+          VAR:
+            ref: MAP
 
   json:
     vars:
@@ -27,14 +23,10 @@ tasks:
       JSON:
         json: "{{.JSON_STRING}}"
     cmds:
-      - >-
-        echo "{{.JSON.name}} has {{len .JSON.children}} children called
-        {{- $children := .JSON.children -}}
-        {{- range $i, $child := $children -}}
-          {{- if lt $i (sub (len $children) 1)}} {{$child.name -}},
-          {{- else}} and {{$child.name -}}
-          {{- end -}}
-        {{- end -}}"
+      - task: print-var
+        vars:
+          VAR:
+            ref: JSON
 
   yaml:
     vars:
@@ -43,9 +35,16 @@ tasks:
       YAML:
         yaml: "{{.YAML_STRING}}"
     cmds:
+      - task: print-var
+        vars:
+          VAR:
+            ref: YAML
+
+  print-var:
+    cmds:
       - >-
-        echo "{{.YAML.name}} has {{len .YAML.children}} children called
-        {{- $children := .YAML.children -}}
+        echo "{{.VAR.name}} has {{len .VAR.children}} children called
+        {{- $children := .VAR.children -}}
         {{- range $i, $child := $children -}}
           {{- if lt $i (sub (len $children) 1)}} {{$child.name -}},
           {{- else}} and {{$child.name -}}
