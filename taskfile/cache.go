@@ -1,4 +1,4 @@
-package read
+package taskfile
 
 import (
 	"crypto/sha256"

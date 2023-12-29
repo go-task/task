@@ -12,15 +12,15 @@ import (
 	"github.com/go-task/task/v3/internal/logger"
 	"github.com/go-task/task/v3/internal/templater"
 	"github.com/go-task/task/v3/internal/version"
-	"github.com/go-task/task/v3/taskfile"
+	"github.com/go-task/task/v3/taskfile/ast"
 )
 
 type Compiler struct {
 	Dir            string
 	UserWorkingDir string
 
-	TaskfileEnv  *taskfile.Vars
-	TaskfileVars *taskfile.Vars
+	TaskfileEnv  *ast.Vars
+	TaskfileVars *ast.Vars
 
 	Logger *logger.Logger
 
@@ -28,19 +28,19 @@ type Compiler struct {
 	muDynamicCache sync.Mutex
 }
 
-func (c *Compiler) GetTaskfileVariables() (*taskfile.Vars, error) {
+func (c *Compiler) GetTaskfileVariables() (*ast.Vars, error) {
 	return c.getVariables(nil, nil, true)
 }
 
-func (c *Compiler) GetVariables(t *taskfile.Task, call taskfile.Call) (*taskfile.Vars, error) {
+func (c *Compiler) GetVariables(t *ast.Task, call ast.Call) (*ast.Vars, error) {
 	return c.getVariables(t, &call, true)
 }
 
-func (c *Compiler) FastGetVariables(t *taskfile.Task, call taskfile.Call) (*taskfile.Vars, error) {
+func (c *Compiler) FastGetVariables(t *ast.Task, call ast.Call) (*ast.Vars, error) {
 	return c.getVariables(t, &call, false)
 }
 
-func (c *Compiler) getVariables(t *taskfile.Task, call *taskfile.Call, evaluateShVars bool) (*taskfile.Vars, error) {
+func (c *Compiler) getVariables(t *ast.Task, call *ast.Call, evaluateShVars bool) (*ast.Vars, error) {
 	result := GetEnviron()
 	if t != nil {
 		specialVars, err := c.getSpecialVars(t)
@@ -48,15 +48,15 @@ func (c *Compiler) getVariables(t *taskfile.Task, call *taskfile.Call, evaluateS
 			return nil, err
 		}
 		for k, v := range specialVars {
-			result.Set(k, taskfile.Var{Value: v})
+			result.Set(k, ast.Var{Value: v})
 		}
 	}
 
-	getRangeFunc := func(dir string) func(k string, v taskfile.Var) error {
-		return func(k string, v taskfile.Var) error {
+	getRangeFunc := func(dir string) func(k string, v ast.Var) error {
+		return func(k string, v ast.Var) error {
 			tr := templater.Templater{Vars: result}
 			// Replace values
-			newVar := taskfile.Var{}
+			newVar := ast.Var{}
 			switch value := v.Value.(type) {
 			case string:
 				newVar.Value = tr.Replace(value)
@@ -68,12 +68,12 @@ func (c *Compiler) getVariables(t *taskfile.Task, call *taskfile.Call, evaluateS
 			// If the variable should not be evaluated, but is nil, set it to an empty string
 			// This stops empty interface errors when using the templater to replace values later
 			if !evaluateShVars && newVar.Value == nil {
-				result.Set(k, taskfile.Var{Value: ""})
+				result.Set(k, ast.Var{Value: ""})
 				return nil
 			}
 			// If the variable should not be evaluated and it is set, we can set it and return
 			if !evaluateShVars {
-				result.Set(k, taskfile.Var{Value: newVar.Value})
+				result.Set(k, ast.Var{Value: newVar.Value})
 				return nil
 			}
 			// Now we can check for errors since we've handled all the cases when we don't want to evaluate
@@ -82,7 +82,7 @@ func (c *Compiler) getVariables(t *taskfile.Task, call *taskfile.Call, evaluateS
 			}
 			// If the variable is not dynamic, we can set it and return
 			if newVar.Value != nil || newVar.Sh == "" {
-				result.Set(k, taskfile.Var{Value: newVar.Value})
+				result.Set(k, ast.Var{Value: newVar.Value})
 				return nil
 			}
 			// If the variable is dynamic, we need to resolve it first
@@ -90,13 +90,13 @@ func (c *Compiler) getVariables(t *taskfile.Task, call *taskfile.Call, evaluateS
 			if err != nil {
 				return err
 			}
-			result.Set(k, taskfile.Var{Value: static})
+			result.Set(k, ast.Var{Value: static})
 			return nil
 		}
 	}
 	rangeFunc := getRangeFunc(c.Dir)
 
-	var taskRangeFunc func(k string, v taskfile.Var) error
+	var taskRangeFunc func(k string, v ast.Var) error
 	if t != nil {
 		// NOTE(@andreynering): We're manually joining these paths here because
 		// this is the raw task, not the compiled one.
@@ -138,7 +138,7 @@ func (c *Compiler) getVariables(t *taskfile.Task, call *taskfile.Call, evaluateS
 	return result, nil
 }
 
-func (c *Compiler) HandleDynamicVar(v taskfile.Var, dir string) (string, error) {
+func (c *Compiler) HandleDynamicVar(v ast.Var, dir string) (string, error) {
 	c.muDynamicCache.Lock()
 	defer c.muDynamicCache.Unlock()
 
@@ -184,7 +184,7 @@ func (c *Compiler) ResetCache() {
 	c.dynamicCache = nil
 }
 
-func (c *Compiler) getSpecialVars(t *taskfile.Task) (map[string]string, error) {
+func (c *Compiler) getSpecialVars(t *ast.Task) (map[string]string, error) {
 	taskfileDir, err := c.getTaskfileDir(t)
 	if err != nil {
 		return nil, err
@@ -199,7 +199,7 @@ func (c *Compiler) getSpecialVars(t *taskfile.Task) (map[string]string, error) {
 	}, nil
 }
 
-func (c *Compiler) getTaskfileDir(t *taskfile.Task) (string, error) {
+func (c *Compiler) getTaskfileDir(t *ast.Task) (string, error) {
 	if t.IncludedTaskfile != nil {
 		return t.IncludedTaskfile.FullDirPath()
 	}

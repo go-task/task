@@ -3,22 +3,22 @@ package args
 import (
 	"strings"
 
-	"github.com/go-task/task/v3/taskfile"
+	"github.com/go-task/task/v3/taskfile/ast"
 )
 
 // Parse parses command line argument: tasks and global variables
-func Parse(args ...string) ([]taskfile.Call, *taskfile.Vars) {
-	calls := []taskfile.Call{}
-	globals := &taskfile.Vars{}
+func Parse(args ...string) ([]ast.Call, *ast.Vars) {
+	calls := []ast.Call{}
+	globals := &ast.Vars{}
 
 	for _, arg := range args {
 		if !strings.Contains(arg, "=") {
-			calls = append(calls, taskfile.Call{Task: arg, Direct: true})
+			calls = append(calls, ast.Call{Task: arg, Direct: true})
 			continue
 		}
 
 		name, value := splitVar(arg)
-		globals.Set(name, taskfile.Var{Value: value})
+		globals.Set(name, ast.Var{Value: value})
 	}
 
 	return calls, globals

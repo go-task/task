@@ -11,7 +11,7 @@ import (
 	"github.com/zeebo/xxh3"
 
 	"github.com/go-task/task/v3/internal/filepathext"
-	"github.com/go-task/task/v3/taskfile"
+	"github.com/go-task/task/v3/taskfile/ast"
 )
 
 // ChecksumChecker validates if a task is up to date by calculating its source
@@ -28,7 +28,7 @@ func NewChecksumChecker(tempDir string, dry bool) *ChecksumChecker {
 	}
 }
 
-func (checker *ChecksumChecker) IsUpToDate(t *taskfile.Task) (bool, error) {
+func (checker *ChecksumChecker) IsUpToDate(t *ast.Task) (bool, error) {
 	if len(t.Sources) == 0 {
 		return false, nil
 	}
@@ -72,11 +72,11 @@ func (checker *ChecksumChecker) IsUpToDate(t *taskfile.Task) (bool, error) {
 	return oldHash == newHash, nil
 }
 
-func (checker *ChecksumChecker) Value(t *taskfile.Task) (any, error) {
+func (checker *ChecksumChecker) Value(t *ast.Task) (any, error) {
 	return checker.checksum(t)
 }
 
-func (checker *ChecksumChecker) OnError(t *taskfile.Task) error {
+func (checker *ChecksumChecker) OnError(t *ast.Task) error {
 	if len(t.Sources) == 0 {
 		return nil
 	}
@@ -87,7 +87,7 @@ func (*ChecksumChecker) Kind() string {
 	return "checksum"
 }
 
-func (c *ChecksumChecker) checksum(t *taskfile.Task) (string, error) {
+func (c *ChecksumChecker) checksum(t *ast.Task) (string, error) {
 	sources, err := Globs(t.Dir, t.Sources)
 	if err != nil {
 		return "", err
@@ -114,7 +114,7 @@ func (c *ChecksumChecker) checksum(t *taskfile.Task) (string, error) {
 	return fmt.Sprintf("%x%x", hash.Hi, hash.Lo), nil
 }
 
-func (checker *ChecksumChecker) checksumFilePath(t *taskfile.Task) string {
+func (checker *ChecksumChecker) checksumFilePath(t *ast.Task) string {
 	return filepath.Join(checker.tempDir, "checksum", normalizeFilename(t.Name()))
 }
 

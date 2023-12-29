@@ -1,4 +1,4 @@
-package read
+package taskfile
 
 import (
 	"context"
@@ -14,7 +14,7 @@ import (
 	"github.com/go-task/task/v3/internal/logger"
 	"github.com/go-task/task/v3/internal/sysinfo"
 	"github.com/go-task/task/v3/internal/templater"
-	"github.com/go-task/task/v3/taskfile"
+	"github.com/go-task/task/v3/taskfile/ast"
 )
 
 var (
@@ -40,7 +40,7 @@ func readTaskfile(
 	timeout time.Duration,
 	tempDir string,
 	l *logger.Logger,
-) (*taskfile.Taskfile, error) {
+) (*ast.Taskfile, error) {
 	var b []byte
 	var err error
 	var cache *Cache
@@ -127,7 +127,7 @@ func readTaskfile(
 		}
 	}
 
-	var t taskfile.Taskfile
+	var t ast.Taskfile
 	if err := yaml.Unmarshal(b, &t); err != nil {
 		return nil, &errors.TaskfileInvalidError{URI: filepathext.TryAbsToRel(node.Location()), Err: err}
 	}
@@ -136,10 +136,10 @@ func readTaskfile(
 	return &t, nil
 }
 
-// Taskfile reads a Taskfile for a given directory
-// Uses current dir when dir is left empty. Uses Taskfile.yml
-// or Taskfile.yaml when entrypoint is left empty
-func Taskfile(
+// Read reads a Read for a given directory
+// Uses current dir when dir is left empty. Uses Read.yml
+// or Read.yaml when entrypoint is left empty
+func Read(
 	node Node,
 	insecure bool,
 	download bool,
@@ -147,9 +147,9 @@ func Taskfile(
 	timeout time.Duration,
 	tempDir string,
 	l *logger.Logger,
-) (*taskfile.Taskfile, error) {
-	var _taskfile func(Node) (*taskfile.Taskfile, error)
-	_taskfile = func(node Node) (*taskfile.Taskfile, error) {
+) (*ast.Taskfile, error) {
+	var _taskfile func(Node) (*ast.Taskfile, error)
+	_taskfile = func(node Node) (*ast.Taskfile, error) {
 		t, err := readTaskfile(node, download, offline, timeout, tempDir, l)
 		if err != nil {
 			return nil, err
@@ -162,7 +162,7 @@ func Taskfile(
 
 		// Annotate any included Taskfile reference with a base directory for resolving relative paths
 		if node, isFileNode := node.(*FileNode); isFileNode {
-			_ = t.Includes.Range(func(key string, includedFile taskfile.IncludedTaskfile) error {
+			_ = t.Includes.Range(func(key string, includedFile ast.IncludedTaskfile) error {
 				// Set the base directory for resolving relative paths, but only if not already set
 				if includedFile.BaseDir == "" {
 					includedFile.BaseDir = node.Dir
@@ -172,9 +172,9 @@ func Taskfile(
 			})
 		}
 
-		err = t.Includes.Range(func(namespace string, includedTask taskfile.IncludedTaskfile) error {
+		err = t.Includes.Range(func(namespace string, includedTask ast.IncludedTaskfile) error {
 			tr := templater.Templater{Vars: t.Vars}
-			includedTask = taskfile.IncludedTaskfile{
+			includedTask = ast.IncludedTaskfile{
 				Taskfile:       tr.Replace(includedTask.Taskfile),
 				Dir:            tr.Replace(includedTask.Dir),
 				Optional:       includedTask.Optional,
@@ -227,14 +227,14 @@ func Taskfile(
 				}
 
 				// nolint: errcheck
-				includedTaskfile.Vars.Range(func(k string, v taskfile.Var) error {
+				includedTaskfile.Vars.Range(func(k string, v ast.Var) error {
 					o := v
 					o.Dir = dir
 					includedTaskfile.Vars.Set(k, o)
 					return nil
 				})
 				// nolint: errcheck
-				includedTaskfile.Env.Range(func(k string, v taskfile.Var) error {
+				includedTaskfile.Env.Range(func(k string, v ast.Var) error {
 					o := v
 					o.Dir = dir
 					includedTaskfile.Env.Set(k, o)
@@ -244,7 +244,7 @@ func Taskfile(
 				for _, task := range includedTaskfile.Tasks.Values() {
 					task.Dir = filepathext.SmartJoin(dir, task.Dir)
 					if task.IncludeVars == nil {
-						task.IncludeVars = &taskfile.Vars{}
+						task.IncludeVars = &ast.Vars{}
 					}
 					task.IncludeVars.Merge(includedTask.Vars)
 					task.IncludedTaskfileVars = includedTaskfile.Vars
@@ -252,7 +252,7 @@ func Taskfile(
 				}
 			}
 
-			if err = taskfile.Merge(t, includedTaskfile, &includedTask, namespace); err != nil {
+			if err = Merge(t, includedTaskfile, &includedTask, namespace); err != nil {
 				return err
 			}
 
@@ -273,7 +273,7 @@ func Taskfile(
 		for _, task := range t.Tasks.Values() {
 			// If the task is not defined, create a new one
 			if task == nil {
-				task = &taskfile.Task{}
+				task = &ast.Task{}
 			}
 			// Set the location of the taskfile for each task
 			if task.Location.Taskfile == "" {

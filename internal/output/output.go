@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/go-task/task/v3/taskfile"
+	"github.com/go-task/task/v3/taskfile/ast"
 )
 
 // Templater executes a template engine.
@@ -20,8 +20,8 @@ type Output interface {
 
 type CloseFunc func(err error) error
 
-// Build the Output for the requested taskfile.Output.
-func BuildFor(o *taskfile.Output) (Output, error) {
+// Build the Output for the requested ast.Output.
+func BuildFor(o *ast.Output) (Output, error) {
 	switch o.Name {
 	case "interleaved", "":
 		if err := checkOutputGroupUnset(o); err != nil {
@@ -44,7 +44,7 @@ func BuildFor(o *taskfile.Output) (Output, error) {
 	}
 }
 
-func checkOutputGroupUnset(o *taskfile.Output) error {
+func checkOutputGroupUnset(o *ast.Output) error {
 	if o.Group.IsSet() {
 		return fmt.Errorf("task: output style %q does not support the group begin/end parameter", o.Name)
 	}

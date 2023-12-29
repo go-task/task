@@ -8,18 +8,18 @@ import (
 
 	"github.com/go-task/task/v3/args"
 	"github.com/go-task/task/v3/internal/orderedmap"
-	"github.com/go-task/task/v3/taskfile"
+	"github.com/go-task/task/v3/taskfile/ast"
 )
 
 func TestArgs(t *testing.T) {
 	tests := []struct {
 		Args            []string
-		ExpectedCalls   []taskfile.Call
-		ExpectedGlobals *taskfile.Vars
+		ExpectedCalls   []ast.Call
+		ExpectedGlobals *ast.Vars
 	}{
 		{
 			Args: []string{"task-a", "task-b", "task-c"},
-			ExpectedCalls: []taskfile.Call{
+			ExpectedCalls: []ast.Call{
 				{Task: "task-a", Direct: true},
 				{Task: "task-b", Direct: true},
 				{Task: "task-c", Direct: true},
@@ -27,14 +27,14 @@ func TestArgs(t *testing.T) {
 		},
 		{
 			Args: []string{"task-a", "FOO=bar", "task-b", "task-c", "BAR=baz", "BAZ=foo"},
-			ExpectedCalls: []taskfile.Call{
+			ExpectedCalls: []ast.Call{
 				{Task: "task-a", Direct: true},
 				{Task: "task-b", Direct: true},
 				{Task: "task-c", Direct: true},
 			},
-			ExpectedGlobals: &taskfile.Vars{
+			ExpectedGlobals: &ast.Vars{
 				OrderedMap: orderedmap.FromMapWithOrder(
-					map[string]taskfile.Var{
+					map[string]ast.Var{
 						"FOO": {Value: "bar"},
 						"BAR": {Value: "baz"},
 						"BAZ": {Value: "foo"},
@@ -45,12 +45,12 @@ func TestArgs(t *testing.T) {
 		},
 		{
 			Args: []string{"task-a", "CONTENT=with some spaces"},
-			ExpectedCalls: []taskfile.Call{
+			ExpectedCalls: []ast.Call{
 				{Task: "task-a", Direct: true},
 			},
-			ExpectedGlobals: &taskfile.Vars{
+			ExpectedGlobals: &ast.Vars{
 				OrderedMap: orderedmap.FromMapWithOrder(
-					map[string]taskfile.Var{
+					map[string]ast.Var{
 						"CONTENT": {Value: "with some spaces"},
 					},
 					[]string{"CONTENT"},
@@ -59,13 +59,13 @@ func TestArgs(t *testing.T) {
 		},
 		{
 			Args: []string{"FOO=bar", "task-a", "task-b"},
-			ExpectedCalls: []taskfile.Call{
+			ExpectedCalls: []ast.Call{
 				{Task: "task-a", Direct: true},
 				{Task: "task-b", Direct: true},
 			},
-			ExpectedGlobals: &taskfile.Vars{
+			ExpectedGlobals: &ast.Vars{
 				OrderedMap: orderedmap.FromMapWithOrder(
-					map[string]taskfile.Var{
+					map[string]ast.Var{
 						"FOO": {Value: "bar"},
 					},
 					[]string{"FOO"},
@@ -74,18 +74,18 @@ func TestArgs(t *testing.T) {
 		},
 		{
 			Args:          nil,
-			ExpectedCalls: []taskfile.Call{},
+			ExpectedCalls: []ast.Call{},
 		},
 		{
 			Args:          []string{},
-			ExpectedCalls: []taskfile.Call{},
+			ExpectedCalls: []ast.Call{},
 		},
 		{
 			Args:          []string{"FOO=bar", "BAR=baz"},
-			ExpectedCalls: []taskfile.Call{},
-			ExpectedGlobals: &taskfile.Vars{
+			ExpectedCalls: []ast.Call{},
+			ExpectedGlobals: &ast.Vars{
 				OrderedMap: orderedmap.FromMapWithOrder(
-					map[string]taskfile.Var{
+					map[string]ast.Var{
 						"FOO": {Value: "bar"},
 						"BAR": {Value: "baz"},
 					},

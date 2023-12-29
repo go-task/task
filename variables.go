@@ -12,27 +12,27 @@ import (
 	"github.com/go-task/task/v3/internal/filepathext"
 	"github.com/go-task/task/v3/internal/fingerprint"
 	"github.com/go-task/task/v3/internal/templater"
-	"github.com/go-task/task/v3/taskfile"
+	"github.com/go-task/task/v3/taskfile/ast"
 )
 
 // CompiledTask returns a copy of a task, but replacing variables in almost all
 // properties using the Go template package.
-func (e *Executor) CompiledTask(call taskfile.Call) (*taskfile.Task, error) {
+func (e *Executor) CompiledTask(call ast.Call) (*ast.Task, error) {
 	return e.compiledTask(call, true)
 }
 
 // FastCompiledTask is like CompiledTask, but it skippes dynamic variables.
-func (e *Executor) FastCompiledTask(call taskfile.Call) (*taskfile.Task, error) {
+func (e *Executor) FastCompiledTask(call ast.Call) (*ast.Task, error) {
 	return e.compiledTask(call, false)
 }
 
-func (e *Executor) compiledTask(call taskfile.Call, evaluateShVars bool) (*taskfile.Task, error) {
+func (e *Executor) compiledTask(call ast.Call, evaluateShVars bool) (*ast.Task, error) {
 	origTask, err := e.GetTask(call)
 	if err != nil {
 		return nil, err
 	}
 
-	var vars *taskfile.Vars
+	var vars *ast.Vars
 	if evaluateShVars {
 		vars, err = e.Compiler.GetVariables(origTask, call)
 	} else {
@@ -44,7 +44,7 @@ func (e *Executor) compiledTask(call taskfile.Call, evaluateShVars bool) (*taskf
 
 	r := templater.Templater{Vars: vars}
 
-	new := taskfile.Task{
+	new := ast.Task{
 		Task:                 origTask.Task,
 		Label:                r.Replace(origTask.Label),
 		Desc:                 r.Replace(origTask.Desc),
@@ -84,7 +84,7 @@ func (e *Executor) compiledTask(call taskfile.Call, evaluateShVars bool) (*taskf
 		new.Prefix = new.Task
 	}
 
-	dotenvEnvs := &taskfile.Vars{}
+	dotenvEnvs := &ast.Vars{}
 	if len(new.Dotenv) > 0 {
 		for _, dotEnvPath := range new.Dotenv {
 			dotEnvPath = filepathext.SmartJoin(new.Dir, dotEnvPath)
@@ -97,28 +97,28 @@ func (e *Executor) compiledTask(call taskfile.Call, evaluateShVars bool) (*taskf
 			}
 			for key, value := range envs {
 				if ok := dotenvEnvs.Exists(key); !ok {
-					dotenvEnvs.Set(key, taskfile.Var{Value: value})
+					dotenvEnvs.Set(key, ast.Var{Value: value})
 				}
 			}
 		}
 	}
 
-	new.Env = &taskfile.Vars{}
+	new.Env = &ast.Vars{}
 	new.Env.Merge(r.ReplaceVars(e.Taskfile.Env))
 	new.Env.Merge(r.ReplaceVars(dotenvEnvs))
 	new.Env.Merge(r.ReplaceVars(origTask.Env))
 	if evaluateShVars {
-		err = new.Env.Range(func(k string, v taskfile.Var) error {
+		err = new.Env.Range(func(k string, v ast.Var) error {
 			// If the variable is not dynamic, we can set it and return
 			if v.Value != nil || v.Sh == "" {
-				new.Env.Set(k, taskfile.Var{Value: v.Value})
+				new.Env.Set(k, ast.Var{Value: v.Value})
 				return nil
 			}
 			static, err := e.Compiler.HandleDynamicVar(v, new.Dir)
 			if err != nil {
 				return err
 			}
-			new.Env.Set(k, taskfile.Var{Value: static})
+			new.Env.Set(k, ast.Var{Value: static})
 			return nil
 		})
 		if err != nil {
@@ -127,7 +127,7 @@ func (e *Executor) compiledTask(call taskfile.Call, evaluateShVars bool) (*taskf
 	}
 
 	if len(origTask.Cmds) > 0 {
-		new.Cmds = make([]*taskfile.Cmd, 0, len(origTask.Cmds))
+		new.Cmds = make([]*ast.Cmd, 0, len(origTask.Cmds))
 		for _, cmd := range origTask.Cmds {
 			if cmd == nil {
 				continue
@@ -199,7 +199,7 @@ func (e *Executor) compiledTask(call taskfile.Call, evaluateShVars bool) (*taskf
 					if len(keys) > 0 {
 						extra["KEY"] = keys[i]
 					}
-					new.Cmds = append(new.Cmds, &taskfile.Cmd{
+					new.Cmds = append(new.Cmds, &ast.Cmd{
 						Cmd:         r.ReplaceWithExtra(cmd.Cmd, extra),
 						Task:        r.ReplaceWithExtra(cmd.Task, extra),
 						Silent:      cmd.Silent,
@@ -213,7 +213,7 @@ func (e *Executor) compiledTask(call taskfile.Call, evaluateShVars bool) (*taskf
 				}
 				continue
 			}
-			new.Cmds = append(new.Cmds, &taskfile.Cmd{
+			new.Cmds = append(new.Cmds, &ast.Cmd{
 				Cmd:         r.Replace(cmd.Cmd),
 				Task:        r.Replace(cmd.Task),
 				Silent:      cmd.Silent,
@@ -227,12 +227,12 @@ func (e *Executor) compiledTask(call taskfile.Call, evaluateShVars bool) (*taskf
 		}
 	}
 	if len(origTask.Deps) > 0 {
-		new.Deps = make([]*taskfile.Dep, 0, len(origTask.Deps))
+		new.Deps = make([]*ast.Dep, 0, len(origTask.Deps))
 		for _, dep := range origTask.Deps {
 			if dep == nil {
 				continue
 			}
-			new.Deps = append(new.Deps, &taskfile.Dep{
+			new.Deps = append(new.Deps, &ast.Dep{
 				Task:   r.Replace(dep.Task),
 				Vars:   r.ReplaceVars(dep.Vars),
 				Silent: dep.Silent,
@@ -241,12 +241,12 @@ func (e *Executor) compiledTask(call taskfile.Call, evaluateShVars bool) (*taskf
 	}
 
 	if len(origTask.Preconditions) > 0 {
-		new.Preconditions = make([]*taskfile.Precondition, 0, len(origTask.Preconditions))
+		new.Preconditions = make([]*ast.Precondition, 0, len(origTask.Preconditions))
 		for _, precond := range origTask.Preconditions {
 			if precond == nil {
 				continue
 			}
-			new.Preconditions = append(new.Preconditions, &taskfile.Precondition{
+			new.Preconditions = append(new.Preconditions, &ast.Precondition{
 				Sh:  r.Replace(precond.Sh),
 				Msg: r.Replace(precond.Msg),
 			})
@@ -262,7 +262,7 @@ func (e *Executor) compiledTask(call taskfile.Call, evaluateShVars bool) (*taskf
 			if err != nil {
 				return nil, err
 			}
-			vars.Set(strings.ToUpper(checker.Kind()), taskfile.Var{Live: value})
+			vars.Set(strings.ToUpper(checker.Kind()), ast.Var{Live: value})
 		}
 
 		// Adding new variables, requires us to refresh the templaters

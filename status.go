@@ -5,11 +5,11 @@ import (
 	"fmt"
 
 	"github.com/go-task/task/v3/internal/fingerprint"
-	"github.com/go-task/task/v3/taskfile"
+	"github.com/go-task/task/v3/taskfile/ast"
 )
 
 // Status returns an error if any the of given tasks is not up-to-date
-func (e *Executor) Status(ctx context.Context, calls ...taskfile.Call) error {
+func (e *Executor) Status(ctx context.Context, calls ...ast.Call) error {
 	for _, call := range calls {
 
 		// Compile the task
@@ -41,7 +41,7 @@ func (e *Executor) Status(ctx context.Context, calls ...taskfile.Call) error {
 	return nil
 }
 
-func (e *Executor) statusOnError(t *taskfile.Task) error {
+func (e *Executor) statusOnError(t *ast.Task) error {
 	method := t.Method
 	if method == "" {
 		method = e.Taskfile.Method

@@ -13,7 +13,7 @@ import (
 	"github.com/go-task/task/v3/internal/orderedmap"
 	"github.com/go-task/task/v3/internal/output"
 	"github.com/go-task/task/v3/internal/templater"
-	"github.com/go-task/task/v3/taskfile"
+	"github.com/go-task/task/v3/taskfile/ast"
 )
 
 func TestInterleaved(t *testing.T) {
@@ -47,8 +47,8 @@ func TestGroup(t *testing.T) {
 
 func TestGroupWithBeginEnd(t *testing.T) {
 	tmpl := templater.Templater{
-		Vars: &taskfile.Vars{
-			OrderedMap: orderedmap.FromMap(map[string]taskfile.Var{
+		Vars: &ast.Vars{
+			OrderedMap: orderedmap.FromMap(map[string]ast.Var{
 				"VAR1": {Value: "example-value"},
 			}),
 		},

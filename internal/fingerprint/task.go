@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/go-task/task/v3/internal/logger"
-	"github.com/go-task/task/v3/taskfile"
+	"github.com/go-task/task/v3/taskfile/ast"
 )
 
 type (
@@ -57,7 +57,7 @@ func WithSourcesChecker(checker SourcesCheckable) CheckerOption {
 
 func IsTaskUpToDate(
 	ctx context.Context,
-	t *taskfile.Task,
+	t *ast.Task,
 	opts ...CheckerOption,
 ) (bool, error) {
 	var statusUpToDate bool

@@ -21,7 +21,7 @@ import (
 	"github.com/go-task/task/v3/internal/sort"
 	"github.com/go-task/task/v3/internal/summary"
 	"github.com/go-task/task/v3/internal/templater"
-	"github.com/go-task/task/v3/taskfile"
+	"github.com/go-task/task/v3/taskfile/ast"
 
 	"github.com/sajari/fuzzy"
 	"golang.org/x/exp/slices"
@@ -36,7 +36,7 @@ const (
 
 // Executor executes a Taskfile
 type Executor struct {
-	Taskfile *taskfile.Taskfile
+	Taskfile *ast.Taskfile
 
 	Dir         string
 	TempDir     string
@@ -66,7 +66,7 @@ type Executor struct {
 	Logger         *logger.Logger
 	Compiler       *compiler.Compiler
 	Output         output.Output
-	OutputStyle    taskfile.Output
+	OutputStyle    ast.Output
 	TaskSorter     sort.TaskSorter
 	UserWorkingDir string
 
@@ -80,7 +80,7 @@ type Executor struct {
 }
 
 // Run runs Task
-func (e *Executor) Run(ctx context.Context, calls ...taskfile.Call) error {
+func (e *Executor) Run(ctx context.Context, calls ...ast.Call) error {
 	// check if given tasks exist
 	for _, call := range calls {
 		task, err := e.GetTask(call)
@@ -142,7 +142,7 @@ func (e *Executor) Run(ctx context.Context, calls ...taskfile.Call) error {
 	return nil
 }
 
-func (e *Executor) splitRegularAndWatchCalls(calls ...taskfile.Call) (regularCalls []taskfile.Call, watchCalls []taskfile.Call, err error) {
+func (e *Executor) splitRegularAndWatchCalls(calls ...ast.Call) (regularCalls []ast.Call, watchCalls []ast.Call, err error) {
 	for _, c := range calls {
 		t, err := e.GetTask(c)
 		if err != nil {
@@ -159,7 +159,7 @@ func (e *Executor) splitRegularAndWatchCalls(calls ...taskfile.Call) (regularCal
 }
 
 // RunTask runs a task by its name
-func (e *Executor) RunTask(ctx context.Context, call taskfile.Call) error {
+func (e *Executor) RunTask(ctx context.Context, call ast.Call) error {
 	t, err := e.FastCompiledTask(call)
 	if err != nil {
 		return err
@@ -270,7 +270,7 @@ func (e *Executor) RunTask(ctx context.Context, call taskfile.Call) error {
 	})
 }
 
-func (e *Executor) mkdir(t *taskfile.Task) error {
+func (e *Executor) mkdir(t *ast.Task) error {
 	if t.Dir == "" {
 		return nil
 	}
@@ -287,7 +287,7 @@ func (e *Executor) mkdir(t *taskfile.Task) error {
 	return nil
 }
 
-func (e *Executor) runDeps(ctx context.Context, t *taskfile.Task) error {
+func (e *Executor) runDeps(ctx context.Context, t *ast.Task) error {
 	g, ctx := errgroup.WithContext(ctx)
 
 	reacquire := e.releaseConcurrencyLimit()
@@ -296,7 +296,7 @@ func (e *Executor) runDeps(ctx context.Context, t *taskfile.Task) error {
 	for _, d := range t.Deps {
 		d := d
 		g.Go(func() error {
-			err := e.RunTask(ctx, taskfile.Call{Task: d.Task, Vars: d.Vars, Silent: d.Silent})
+			err := e.RunTask(ctx, ast.Call{Task: d.Task, Vars: d.Vars, Silent: d.Silent})
 			if err != nil {
 				return err
 			}
@@ -307,7 +307,7 @@ func (e *Executor) runDeps(ctx context.Context, t *taskfile.Task) error {
 	return g.Wait()
 }
 
-func (e *Executor) runDeferred(t *taskfile.Task, call taskfile.Call, i int) {
+func (e *Executor) runDeferred(t *ast.Task, call ast.Call, i int) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -316,7 +316,7 @@ func (e *Executor) runDeferred(t *taskfile.Task, call taskfile.Call, i int) {
 	}
 }
 
-func (e *Executor) runCommand(ctx context.Context, t *taskfile.Task, call taskfile.Call, i int) error {
+func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call ast.Call, i int) error {
 	cmd := t.Cmds[i]
 
 	switch {
@@ -324,7 +324,7 @@ func (e *Executor) runCommand(ctx context.Context, t *taskfile.Task, call taskfi
 		reacquire := e.releaseConcurrencyLimit()
 		defer reacquire()
 
-		err := e.RunTask(ctx, taskfile.Call{Task: cmd.Task, Vars: cmd.Vars, Silent: cmd.Silent})
+		err := e.RunTask(ctx, ast.Call{Task: cmd.Task, Vars: cmd.Vars, Silent: cmd.Silent})
 		if err != nil {
 			return err
 		}
@@ -377,7 +377,7 @@ func (e *Executor) runCommand(ctx context.Context, t *taskfile.Task, call taskfi
 	}
 }
 
-func (e *Executor) startExecution(ctx context.Context, t *taskfile.Task, execute func(ctx context.Context) error) error {
+func (e *Executor) startExecution(ctx context.Context, t *ast.Task, execute func(ctx context.Context) error) error {
 	h, err := e.GetHash(t)
 	if err != nil {
 		return err
@@ -413,7 +413,7 @@ func (e *Executor) startExecution(ctx context.Context, t *taskfile.Task, execute
 // GetTask will return the task with the name matching the given call from the taskfile.
 // If no task is found, it will search for tasks with a matching alias.
 // If multiple tasks contain the same alias or no matches are found an error is returned.
-func (e *Executor) GetTask(call taskfile.Call) (*taskfile.Task, error) {
+func (e *Executor) GetTask(call ast.Call) (*ast.Task, error) {
 	// Search for a matching task
 	matchingTask := e.Taskfile.Tasks.Get(call.Task)
 	if matchingTask != nil {
@@ -450,10 +450,10 @@ func (e *Executor) GetTask(call taskfile.Call) (*taskfile.Task, error) {
 	return matchingTask, nil
 }
 
-type FilterFunc func(task *taskfile.Task) bool
+type FilterFunc func(task *ast.Task) bool
 
-func (e *Executor) GetTaskList(filters ...FilterFunc) ([]*taskfile.Task, error) {
-	tasks := make([]*taskfile.Task, 0, e.Taskfile.Tasks.Len())
+func (e *Executor) GetTaskList(filters ...FilterFunc) ([]*ast.Task, error) {
+	tasks := make([]*ast.Task, 0, e.Taskfile.Tasks.Len())
 
 	// Create an error group to wait for each task to be compiled
 	var g errgroup.Group
@@ -476,7 +476,7 @@ func (e *Executor) GetTaskList(filters ...FilterFunc) ([]*taskfile.Task, error) 
 		idx := i
 		task := tasks[idx]
 		g.Go(func() error {
-			compiledTask, err := e.FastCompiledTask(taskfile.Call{Task: task.Task})
+			compiledTask, err := e.FastCompiledTask(ast.Call{Task: task.Task})
 			if err != nil {
 				return err
 			}
@@ -500,16 +500,16 @@ func (e *Executor) GetTaskList(filters ...FilterFunc) ([]*taskfile.Task, error) 
 }
 
 // FilterOutNoDesc removes all tasks that do not contain a description.
-func FilterOutNoDesc(task *taskfile.Task) bool {
+func FilterOutNoDesc(task *ast.Task) bool {
 	return task.Desc == ""
 }
 
 // FilterOutInternal removes all tasks that are marked as internal.
-func FilterOutInternal(task *taskfile.Task) bool {
+func FilterOutInternal(task *ast.Task) bool {
 	return task.Internal
 }
 
-func shouldRunOnCurrentPlatform(platforms []*taskfile.Platform) bool {
+func shouldRunOnCurrentPlatform(platforms []*ast.Platform) bool {
 	if len(platforms) == 0 {
 		return true
 	}

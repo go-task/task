@@ -1,4 +1,4 @@
-package read
+package taskfile
 
 import (
 	"context"
@@ -31,7 +31,7 @@ func NewNode(
 		node, err = NewFileNode(uri, opts...)
 	}
 	if node.Remote() && !experiments.RemoteTaskfiles {
-		return nil, errors.New("task: Remote taskfiles are not enabled. You can read more about this experiment and how to enable it at https://taskfile.dev/experiments/remote-taskfiles")
+		return nil, errors.New("task: Remote taskfiles are not enabled. You can read more about this experiment and how to enable it at https://ast.dev/experiments/remote-taskfiles")
 	}
 	return node, err
 }

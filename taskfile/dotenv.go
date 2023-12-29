@@ -1,4 +1,4 @@
-package read
+package taskfile
 
 import (
 	"os"
@@ -8,10 +8,10 @@ import (
 	"github.com/go-task/task/v3/internal/compiler"
 	"github.com/go-task/task/v3/internal/filepathext"
 	"github.com/go-task/task/v3/internal/templater"
-	"github.com/go-task/task/v3/taskfile"
+	"github.com/go-task/task/v3/taskfile/ast"
 )
 
-func Dotenv(c *compiler.Compiler, tf *taskfile.Taskfile, dir string) (*taskfile.Vars, error) {
+func Dotenv(c *compiler.Compiler, tf *ast.Taskfile, dir string) (*ast.Vars, error) {
 	if len(tf.Dotenv) == 0 {
 		return nil, nil
 	}
@@ -21,7 +21,7 @@ func Dotenv(c *compiler.Compiler, tf *taskfile.Taskfile, dir string) (*taskfile.
 		return nil, err
 	}
 
-	env := &taskfile.Vars{}
+	env := &ast.Vars{}
 
 	tr := templater.Templater{Vars: vars}
 
@@ -42,7 +42,7 @@ func Dotenv(c *compiler.Compiler, tf *taskfile.Taskfile, dir string) (*taskfile.
 		}
 		for key, value := range envs {
 			if ok := env.Exists(key); !ok {
-				env.Set(key, taskfile.Var{Value: value})
+				env.Set(key, ast.Var{Value: value})
 			}
 		}
 	}

@@ -4,10 +4,10 @@ import (
 	"context"
 
 	"github.com/go-task/task/v3/errors"
-	"github.com/go-task/task/v3/taskfile"
+	"github.com/go-task/task/v3/taskfile/ast"
 )
 
-func (e *Executor) areTaskRequiredVarsSet(ctx context.Context, t *taskfile.Task, call taskfile.Call) error {
+func (e *Executor) areTaskRequiredVarsSet(ctx context.Context, t *ast.Task, call ast.Call) error {
 	if t.Requires == nil || len(t.Requires.Vars) == 0 {
 		return nil
 	}

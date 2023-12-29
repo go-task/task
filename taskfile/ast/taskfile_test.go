@@ -1,4 +1,4 @@
-package taskfile_test
+package ast_test
 
 import (
 	"testing"
@@ -8,7 +8,7 @@ import (
 	"gopkg.in/yaml.v3"
 
 	"github.com/go-task/task/v3/internal/orderedmap"
-	"github.com/go-task/task/v3/taskfile"
+	"github.com/go-task/task/v3/taskfile/ast"
 )
 
 func TestCmdParse(t *testing.T) {
@@ -31,16 +31,16 @@ vars:
 	}{
 		{
 			yamlCmd,
-			&taskfile.Cmd{},
-			&taskfile.Cmd{Cmd: `echo "a string command"`},
+			&ast.Cmd{},
+			&ast.Cmd{Cmd: `echo "a string command"`},
 		},
 		{
 			yamlTaskCall,
-			&taskfile.Cmd{},
-			&taskfile.Cmd{
-				Task: "another-task", Vars: &taskfile.Vars{
+			&ast.Cmd{},
+			&ast.Cmd{
+				Task: "another-task", Vars: &ast.Vars{
 					OrderedMap: orderedmap.FromMapWithOrder(
-						map[string]taskfile.Var{
+						map[string]ast.Var{
 							"PARAM1": {Value: "VALUE1"},
 							"PARAM2": {Value: "VALUE2"},
 						},
@@ -51,16 +51,16 @@ vars:
 		},
 		{
 			yamlDeferredCmd,
-			&taskfile.Cmd{},
-			&taskfile.Cmd{Cmd: "echo 'test'", Defer: true},
+			&ast.Cmd{},
+			&ast.Cmd{Cmd: "echo 'test'", Defer: true},
 		},
 		{
 			yamlDeferredCall,
-			&taskfile.Cmd{},
-			&taskfile.Cmd{
-				Task: "some_task", Vars: &taskfile.Vars{
+			&ast.Cmd{},
+			&ast.Cmd{
+				Task: "some_task", Vars: &ast.Vars{
 					OrderedMap: orderedmap.FromMapWithOrder(
-						map[string]taskfile.Var{
+						map[string]ast.Var{
 							"PARAM1": {Value: "var"},
 						},
 						[]string{"PARAM1"},
@@ -71,16 +71,16 @@ vars:
 		},
 		{
 			yamlDep,
-			&taskfile.Dep{},
-			&taskfile.Dep{Task: "task-name"},
+			&ast.Dep{},
+			&ast.Dep{Task: "task-name"},
 		},
 		{
 			yamlTaskCall,
-			&taskfile.Dep{},
-			&taskfile.Dep{
-				Task: "another-task", Vars: &taskfile.Vars{
+			&ast.Dep{},
+			&ast.Dep{
+				Task: "another-task", Vars: &ast.Vars{
 					OrderedMap: orderedmap.FromMapWithOrder(
-						map[string]taskfile.Var{
+						map[string]ast.Var{
 							"PARAM1": {Value: "VALUE1"},
 							"PARAM2": {Value: "VALUE2"},
 						},

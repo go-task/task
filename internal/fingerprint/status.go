@@ -6,7 +6,7 @@ import (
 	"github.com/go-task/task/v3/internal/env"
 	"github.com/go-task/task/v3/internal/execext"
 	"github.com/go-task/task/v3/internal/logger"
-	"github.com/go-task/task/v3/taskfile"
+	"github.com/go-task/task/v3/taskfile/ast"
 )
 
 type StatusChecker struct {
@@ -19,7 +19,7 @@ func NewStatusChecker(logger *logger.Logger) StatusCheckable {
 	}
 }
 
-func (checker *StatusChecker) IsUpToDate(ctx context.Context, t *taskfile.Task) (bool, error) {
+func (checker *StatusChecker) IsUpToDate(ctx context.Context, t *ast.Task) (bool, error) {
 	for _, s := range t.Status {
 		err := execext.RunCommand(ctx, &execext.RunCommandOptions{
 			Command: s,

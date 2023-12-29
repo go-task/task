@@ -17,7 +17,7 @@ import (
 
 	"github.com/go-task/task/v3"
 	"github.com/go-task/task/v3/internal/filepathext"
-	"github.com/go-task/task/v3/taskfile"
+	"github.com/go-task/task/v3/taskfile/ast"
 )
 
 func TestFileWatcherInterval(t *testing.T) {
@@ -58,7 +58,7 @@ Hello, World!
 			case <-ctx.Done():
 				return
 			default:
-				err := e.Run(ctx, taskfile.Call{Task: "default"})
+				err := e.Run(ctx, ast.Task: "default"})
 				if err != nil {
 					return
 				}
