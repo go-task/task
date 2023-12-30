@@ -252,18 +252,34 @@
                 "type": ["boolean", "integer", "null", "number", "string", "object", "array"]
               },
               {
-                "$ref": "#/definitions/3/dynamic_var"
+                "$ref": "#/definitions/3/var_subkey"
               }
             ]
           }
         }
       },
-      "dynamic_var": {
+      "var_subkey": {
         "type": "object",
         "properties": {
           "sh": {
             "type": "string",
-            "description": "The value will be treated as a command and the output assigned"
+            "description": "The value will be treated as a command and the output assigned to the variable"
+          },
+          "ref": {
+            "type": "string",
+            "description": "The value will be used to lookup the value of another variable which will then be assigned to this variable"
+          },
+          "map": {
+            "type": "object",
+            "description": "The value will be treated as a literal map type and stored in the variable"
+          },
+          "json": {
+            "type": "string",
+            "description": "The value will parsed as a JSON string and stored in the variable"
+          },
+          "yaml": {
+            "type": "string",
+            "description": "The value will parsed as a YAML string and stored in the variable"
           },
           "additionalProperties": false
         }
