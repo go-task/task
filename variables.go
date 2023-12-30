@@ -234,6 +234,17 @@ func (e *Executor) compiledTask(call ast.Call, evaluateShVars bool) (*ast.Task, 
 			newDep := dep.DeepCopy()
 			newDep.Task = r.Replace(dep.Task)
 			newDep.Vars = r.ReplaceVars(dep.Vars)
+			// Loop over the dep's variables and resolve any references to other variables
+			err := dep.Vars.Range(func(k string, v ast.Var) error {
+				if v.Ref != "" {
+					refVal := vars.Get(v.Ref)
+					newDep.Vars.Set(k, refVal)
+				}
+				return nil
+			})
+			if err != nil {
+				return nil, err
+			}
 			new.Deps = append(new.Deps, newDep)
 		}
 	}
