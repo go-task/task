@@ -3,6 +3,9 @@ version: '3'
 tasks:
   default:
     - task: map
+    - task: ref
+    - task: ref-sh
+    - task: ref-dep
     - task: json
     - task: yaml
 
@@ -16,7 +19,7 @@ tasks:
           VAR:
             ref: MAP
 
-  map-ref:
+  ref:
     vars:
       MAP:
         map: {"name":"Alice","age":30,"children":[{"name":"Bob","age":5},{"name":"Charlie","age":3},{"name":"Diane","age":1}]}
@@ -28,7 +31,7 @@ tasks:
           VAR:
             ref: MAP_REF
 
-  map-ref-sh:
+  ref-sh:
     vars:
       JSON_STRING:
         sh: echo '{"name":"Alice","age":30,"children":[{"name":"Bob","age":5},{"name":"Charlie","age":3},{"name":"Diane","age":1}]}'
@@ -41,6 +44,16 @@ tasks:
         vars:
           VAR:
             ref: MAP_REF
+
+  ref-dep:
+    vars:
+      MAP:
+        map: {"name":"Alice","age":30,"children":[{"name":"Bob","age":5},{"name":"Charlie","age":3},{"name":"Diane","age":1}]}
+    deps:
+      - task: print-var
+        vars:
+          VAR:
+            ref: MAP
 
   json:
     vars:

@@ -225,7 +225,8 @@ tasks:
 ```
 
 This means that the type of the variable is maintained when it is passed to
-another Task. This also works when defining a variable:
+another Task. This also works the same way when calling `deps` and when defining
+a variable and can be used in any combination:
 
 ```yaml
 version: 3
@@ -236,8 +237,14 @@ tasks:
       FOO: [A, B, C] # <-- FOO is defined as an array
       BAR:
         ref: FOO # <-- BAR is defined as a reference to FOO
+    deps:
+      - task: bar
+        vars:
+          BAR:
+            ref: BAR # <-- BAR gets passed by reference to bar and maintains its type
+  bar:
     cmds:
-      - 'echo {{index .BAR 0}}' # <-- BAR refers to FOO so the task outputs 'A'
+      - 'echo {{index .BAR 0}}' # <-- BAR still refers to FOO so the task outputs 'A'
 ```
 
 </TabItem></Tabs>
