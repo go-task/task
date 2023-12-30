@@ -18,8 +18,9 @@ func (d *Dep) DeepCopy() *Dep {
 		return nil
 	}
 	return &Dep{
-		Task: d.Task,
-		Vars: d.Vars.DeepCopy(),
+		Task:   d.Task,
+		Vars:   d.Vars.DeepCopy(),
+		Silent: d.Silent,
 	}
 }
 
