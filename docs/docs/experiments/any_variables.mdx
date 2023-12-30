@@ -179,12 +179,12 @@ tasks:
       - 'echo {{.FOO.b}}'
 ```
 
-## Parsing variables by reference
+## Variables by reference
 
-Lastly, this proposal adds support for parsing variables by reference. This is
-really important now that variables can be types other than a string.
-Previously, to send a variable from one task to another, you would have to use
-the templating system to pass it:
+Lastly, this proposal adds support for defining and passing variables by
+reference. This is really important now that variables can be types other than a
+string. Previously, to send a variable from one task to another, you would have
+to use the templating system to pass it:
 
 ```yaml
 version: 3
@@ -225,7 +225,20 @@ tasks:
 ```
 
 This means that the type of the variable is maintained when it is passed to
-another Task.
+another Task. This also works when defining a variable:
+
+```yaml
+version: 3
+
+tasks:
+  foo:
+    vars:
+      FOO: [A, B, C] # <-- FOO is defined as an array
+      BAR:
+        ref: FOO # <-- BAR is defined as a reference to FOO
+    cmds:
+      - 'echo {{index .BAR 0}}' # <-- BAR refers to FOO so the task outputs 'A'
+```
 
 </TabItem></Tabs>
 

@@ -16,6 +16,32 @@ tasks:
           VAR:
             ref: MAP
 
+  map-ref:
+    vars:
+      MAP:
+        map: {"name":"Alice","age":30,"children":[{"name":"Bob","age":5},{"name":"Charlie","age":3},{"name":"Diane","age":1}]}
+      MAP_REF:
+        ref: MAP
+    cmds:
+      - task: print-var
+        vars:
+          VAR:
+            ref: MAP_REF
+
+  map-ref-sh:
+    vars:
+      JSON_STRING:
+        sh: echo '{"name":"Alice","age":30,"children":[{"name":"Bob","age":5},{"name":"Charlie","age":3},{"name":"Diane","age":1}]}'
+      JSON:
+        json: "{{.JSON_STRING}}"
+      MAP_REF:
+        ref: JSON
+    cmds:
+      - task: print-var
+        vars:
+          VAR:
+            ref: MAP_REF
+
   json:
     vars:
       JSON_STRING:
