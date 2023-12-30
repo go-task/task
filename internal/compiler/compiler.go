@@ -71,6 +71,10 @@ func (c *Compiler) getVariables(t *ast.Task, call *ast.Call, evaluateShVars bool
 			newVar.Json = tr.Replace(v.Json)
 			newVar.Yaml = tr.Replace(v.Yaml)
 			newVar.Dir = v.Dir
+			// If the variable is a reference, we can resolve it
+			if newVar.Ref != "" {
+				newVar.Value = result.Get(newVar.Ref).Value
+			}
 			// If the variable should not be evaluated, but is nil, set it to an empty string
 			// This stops empty interface errors when using the templater to replace values later
 			if !evaluateShVars && newVar.Value == nil {
