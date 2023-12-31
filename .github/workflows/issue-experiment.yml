@@ -17,7 +17,7 @@ jobs:
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: 'This issue has been marked as an experiment proposal! :test_tube: It will now enter a period of consultation during which we encourage the community to provide feedback on the proposed design. Please see the [experiment workflow documentation](https://taskfile.dev/experiments/workflow) for more information on how we release experiments.'
+              body: 'This issue has been marked as an experiment proposal! :test_tube: It will now enter a period of consultation during which we encourage the community to provide feedback on the proposed design. Please see the [experiment workflow documentation](https://taskfile.dev/experiments#workflow) for more information on how we release experiments.'
             })
   issue-experiment-draft:
     if: github.event.label.name == format('experiment{0} draft', ':')
@@ -31,7 +31,7 @@ jobs:
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: 'This experiment has been marked as a draft! :sparkles: This means that an initial implementation has been added to the latest release of Task! You can find information about this experiment and how to enable it in our [experiments documentation](https://taskfile.dev/experiments). Please see the [experiment workflow documentation](https://taskfile.dev/experiments/workflow) for more information on how we release experiments.'
+              body: 'This experiment has been marked as a draft! :sparkles: This means that an initial implementation has been added to the latest release of Task! You can find information about this experiment and how to enable it in our [experiments documentation](https://taskfile.dev/experiments). Please see the [experiment workflow documentation](https://taskfile.dev/experiments#workflow) for more information on how we release experiments.'
             })
   issue-experiment-candidate:
     if: github.event.label.name == format('experiment{0} candidate', ':')
@@ -45,7 +45,7 @@ jobs:
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: 'This experiment has been marked as a candidate! :fire: This means that the  implementation is nearing completion and we are entering a period for final comments and feedback! You can find information about this experiment and how to enable it in our [experiments documentation](https://taskfile.dev/experiments). Please see the [experiment workflow documentation](https://taskfile.dev/experiments/workflow) for more information on how we release experiments.'
+              body: 'This experiment has been marked as a candidate! :fire: This means that the  implementation is nearing completion and we are entering a period for final comments and feedback! You can find information about this experiment and how to enable it in our [experiments documentation](https://taskfile.dev/experiments). Please see the [experiment workflow documentation](https://taskfile.dev/experiments#workflow) for more information on how we release experiments.'
             })
   issue-experiment-stable:
     if: github.event.label.name == format('experiment{0} stable', ':')
@@ -59,7 +59,7 @@ jobs:
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: 'This experiment has been marked as stable! :metal: This means that the  implementation is now final and ready to be released. No more changes will be made and the experiment is safe to use in production! You can find information about this experiment and how to enable it in our [experiments documentation](https://taskfile.dev/experiments). Please see the [experiment workflow documentation](https://taskfile.dev/experiments/workflow) for more information on how we release experiments.'
+              body: 'This experiment has been marked as stable! :metal: This means that the  implementation is now final and ready to be released. No more changes will be made and the experiment is safe to use in production! You can find information about this experiment and how to enable it in our [experiments documentation](https://taskfile.dev/experiments). Please see the [experiment workflow documentation](https://taskfile.dev/experiments#workflow) for more information on how we release experiments.'
             })
   issue-experiment-released:
     if: github.event.label.name == format('experiment{0} released', ':')
@@ -73,7 +73,7 @@ jobs:
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: 'This experiment has been released! :rocket: This means that it is no longer an experiment and is available in the latest major version of Task. Please see the [experiment workflow documentation](https://taskfile.dev/experiments/workflow) for more information on how we release experiments.'
+              body: 'This experiment has been released! :rocket: This means that it is no longer an experiment and is available in the latest major version of Task. Please see the [experiment workflow documentation](https://taskfile.dev/experiments#workflow) for more information on how we release experiments.'
             })
             github.rest.issues.update({
               issue_number: context.issue.number,
@@ -93,7 +93,7 @@ jobs:
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: 'This experiment has been abandoned. :disappointed: This means that this feature will not be added to Task and any experimental functionality will be removed. Please see the [experiment workflow documentation](https://taskfile.dev/experiments/workflow) for more information on how we release experiments.'
+              body: 'This experiment has been abandoned. :disappointed: This means that this feature will not be added to Task and any experimental functionality will be removed. Please see the [experiment workflow documentation](https://taskfile.dev/experiments#workflow) for more information on how we release experiments.'
             })
             github.rest.issues.update({
               issue_number: context.issue.number,
@@ -113,7 +113,7 @@ jobs:
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: 'This experiment has been superseded. :seedling: This means that another experiment has replaced this one. Please see the [experiment workflow documentation](https://taskfile.dev/experiments/workflow) for more information on how we release experiments.'
+              body: 'This experiment has been superseded. :seedling: This means that another experiment has replaced this one. Please see the [experiment workflow documentation](https://taskfile.dev/experiments#workflow) for more information on how we release experiments.'
             })
             github.rest.issues.update({
               issue_number: context.issue.number,
