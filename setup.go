@@ -63,8 +63,7 @@ func (e *Executor) getRootNode() (taskfile.Node, error) {
 }
 
 func (e *Executor) readTaskfile(node taskfile.Node) error {
-	var err error
-	e.Taskfile, err = taskfile.Read(
+	reader := taskfile.NewReader(
 		node,
 		e.Insecure,
 		e.Download,
@@ -73,7 +72,11 @@ func (e *Executor) readTaskfile(node taskfile.Node) error {
 		e.TempDir,
 		e.Logger,
 	)
+	graph, err := reader.Read()
 	if err != nil {
+		return err
+	}
+	if err := graph.Visualize("./taskfile-dag.gv"); err != nil {
 		return err
 	}
 	return nil
