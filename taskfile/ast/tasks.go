@@ -5,18 +5,18 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	"github.com/go-task/task/v3/internal/orderedmap"
+	"github.com/go-task/task/v3/internal/omap"
 )
 
 // Tasks represents a group of tasks
 type Tasks struct {
-	orderedmap.OrderedMap[string, *Task]
+	omap.OrderedMap[string, *Task]
 }
 
 func (t *Tasks) UnmarshalYAML(node *yaml.Node) error {
 	switch node.Kind {
 	case yaml.MappingNode:
-		tasks := orderedmap.New[string, *Task]()
+		tasks := omap.New[string, *Task]()
 		if err := node.Decode(&tasks); err != nil {
 			return err
 		}

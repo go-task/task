@@ -7,12 +7,12 @@ import (
 	"gopkg.in/yaml.v3"
 
 	"github.com/go-task/task/v3/internal/experiments"
-	"github.com/go-task/task/v3/internal/orderedmap"
+	"github.com/go-task/task/v3/internal/omap"
 )
 
 // Vars is a string[string] variables map.
 type Vars struct {
-	orderedmap.OrderedMap[string, Var]
+	omap.OrderedMap[string, Var]
 }
 
 // ToCacheMap converts Vars to a map containing only the static

@@ -1,4 +1,4 @@
-package orderedmap
+package omap
 
 import (
 	"fmt"

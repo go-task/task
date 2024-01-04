@@ -7,7 +7,7 @@ import (
 
 	"github.com/go-task/task/v3/internal/execext"
 	"github.com/go-task/task/v3/internal/filepathext"
-	"github.com/go-task/task/v3/internal/orderedmap"
+	omap "github.com/go-task/task/v3/internal/omap"
 
 	"gopkg.in/yaml.v3"
 )
@@ -27,7 +27,7 @@ type Include struct {
 
 // Includes represents information about included tasksfiles
 type Includes struct {
-	orderedmap.OrderedMap[string, Include]
+	omap.OrderedMap[string, Include]
 }
 
 // UnmarshalYAML implements the yaml.Unmarshaler interface.

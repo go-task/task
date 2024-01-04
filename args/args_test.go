@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/go-task/task/v3/args"
-	"github.com/go-task/task/v3/internal/orderedmap"
+	"github.com/go-task/task/v3/internal/omap"
 	"github.com/go-task/task/v3/taskfile/ast"
 )
 
@@ -33,7 +33,7 @@ func TestArgs(t *testing.T) {
 				{Task: "task-c"},
 			},
 			ExpectedGlobals: &ast.Vars{
-				OrderedMap: orderedmap.FromMapWithOrder(
+				OrderedMap: omap.FromMapWithOrder(
 					map[string]ast.Var{
 						"FOO": {Value: "bar"},
 						"BAR": {Value: "baz"},
@@ -49,7 +49,7 @@ func TestArgs(t *testing.T) {
 				{Task: "task-a"},
 			},
 			ExpectedGlobals: &ast.Vars{
-				OrderedMap: orderedmap.FromMapWithOrder(
+				OrderedMap: omap.FromMapWithOrder(
 					map[string]ast.Var{
 						"CONTENT": {Value: "with some spaces"},
 					},
@@ -64,7 +64,7 @@ func TestArgs(t *testing.T) {
 				{Task: "task-b"},
 			},
 			ExpectedGlobals: &ast.Vars{
-				OrderedMap: orderedmap.FromMapWithOrder(
+				OrderedMap: omap.FromMapWithOrder(
 					map[string]ast.Var{
 						"FOO": {Value: "bar"},
 					},
@@ -84,7 +84,7 @@ func TestArgs(t *testing.T) {
 			Args:          []string{"FOO=bar", "BAR=baz"},
 			ExpectedCalls: []ast.Call{},
 			ExpectedGlobals: &ast.Vars{
-				OrderedMap: orderedmap.FromMapWithOrder(
+				OrderedMap: omap.FromMapWithOrder(
 					map[string]ast.Var{
 						"FOO": {Value: "bar"},
 						"BAR": {Value: "baz"},
