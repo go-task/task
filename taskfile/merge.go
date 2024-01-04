@@ -11,7 +11,7 @@ import (
 const NamespaceSeparator = ":"
 
 // Merge merges the second Taskfile into the first
-func Merge(t1, t2 *ast.Taskfile, include *ast.Include, namespaces ...string) error {
+func Merge(t1, t2 *ast.Taskfile, include *ast.Include) error {
 	if !t1.Version.Equal(t2.Version) {
 		return fmt.Errorf(`task: Taskfiles versions should match. First is "%s" but second is "%s"`, t1.Version, t2.Version)
 	}
@@ -28,7 +28,7 @@ func Merge(t1, t2 *ast.Taskfile, include *ast.Include, namespaces ...string) err
 	t1.Vars.Merge(t2.Vars)
 	t1.Env.Merge(t2.Env)
 
-	return t2.Tasks.Range(func(k string, v *ast.Task) error {
+	if err := t2.Tasks.Range(func(k string, v *ast.Task) error {
 		// We do a deep copy of the task struct here to ensure that no data can
 		// be changed elsewhere once the taskfile is merged.
 		task := v.DeepCopy()
@@ -40,16 +40,16 @@ func Merge(t1, t2 *ast.Taskfile, include *ast.Include, namespaces ...string) err
 		// Add namespaces to dependencies, commands and aliases
 		for _, dep := range task.Deps {
 			if dep != nil && dep.Task != "" {
-				dep.Task = taskNameWithNamespace(dep.Task, namespaces...)
+				dep.Task = taskNameWithNamespace(dep.Task, include.Namespace)
 			}
 		}
 		for _, cmd := range task.Cmds {
 			if cmd != nil && cmd.Task != "" {
-				cmd.Task = taskNameWithNamespace(cmd.Task, namespaces...)
+				cmd.Task = taskNameWithNamespace(cmd.Task, include.Namespace)
 			}
 		}
 		for i, alias := range task.Aliases {
-			task.Aliases[i] = taskNameWithNamespace(alias, namespaces...)
+			task.Aliases[i] = taskNameWithNamespace(alias, include.Namespace)
 		}
 		// Add namespace aliases
 		if include != nil {
@@ -62,17 +62,32 @@ func Merge(t1, t2 *ast.Taskfile, include *ast.Include, namespaces ...string) err
 		}
 
 		// Add the task to the merged taskfile
-		taskNameWithNamespace := taskNameWithNamespace(k, namespaces...)
+		taskNameWithNamespace := taskNameWithNamespace(k, include.Namespace)
 		task.Task = taskNameWithNamespace
 		t1.Tasks.Set(taskNameWithNamespace, task)
 
 		return nil
-	})
+	}); err != nil {
+		return err
+	}
+
+	// If the included Taskfile has a default task and the parent namespace has
+	// no task with a matching name, we can add an alias so that the user can
+	// run the included Taskfile's default task without specifying its full
+	// name. If the parent namespace has aliases, we add another alias for each
+	// of them.
+	if t2.Tasks.Get("default") != nil && t1.Tasks.Get(include.Namespace) == nil {
+		defaultTaskName := fmt.Sprintf("%s:default", include.Namespace)
+		t1.Tasks.Get(defaultTaskName).Aliases = append(t1.Tasks.Get(defaultTaskName).Aliases, include.Namespace)
+		t1.Tasks.Get(defaultTaskName).Aliases = append(t1.Tasks.Get(defaultTaskName).Aliases, include.Aliases...)
+	}
+
+	return nil
 }
 
-func taskNameWithNamespace(taskName string, namespaces ...string) string {
+func taskNameWithNamespace(taskName string, namespace string) string {
 	if strings.HasPrefix(taskName, NamespaceSeparator) {
 		return strings.TrimPrefix(taskName, NamespaceSeparator)
 	}
-	return strings.Join(append(namespaces, taskName), NamespaceSeparator)
+	return fmt.Sprintf("%s%s%s", namespace, NamespaceSeparator, taskName)
 }

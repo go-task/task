@@ -175,6 +175,7 @@ func Read(
 		err = t.Includes.Range(func(namespace string, include ast.Include) error {
 			tr := templater.Templater{Vars: t.Vars}
 			include = ast.Include{
+				Namespace:      include.Namespace,
 				Taskfile:       tr.Replace(include.Taskfile),
 				Dir:            tr.Replace(include.Dir),
 				Optional:       include.Optional,
@@ -252,16 +253,8 @@ func Read(
 				}
 			}
 
-			if err = Merge(t, includedTaskfile, &include, namespace); err != nil {
+			if err = Merge(t, includedTaskfile, &include); err != nil {
 				return err
-			}
-
-			if includedTaskfile.Tasks.Get("default") != nil && t.Tasks.Get(namespace) == nil {
-				defaultTaskName := fmt.Sprintf("%s:default", namespace)
-				task := t.Tasks.Get(defaultTaskName)
-				task.Aliases = append(task.Aliases, namespace)
-				task.Aliases = append(task.Aliases, include.Aliases...)
-				t.Tasks.Set(defaultTaskName, task)
 			}
 
 			return nil

@@ -14,6 +14,7 @@ import (
 
 // Include represents information about included taskfiles
 type Include struct {
+	Namespace      string
 	Taskfile       string
 	Dir            string
 	Optional       bool
@@ -45,6 +46,7 @@ func (includes *Includes) UnmarshalYAML(node *yaml.Node) error {
 			if err := valueNode.Decode(&v); err != nil {
 				return err
 			}
+			v.Namespace = keyNode.Value
 			includes.Set(keyNode.Value, v)
 		}
 		return nil
@@ -128,6 +130,7 @@ func (include *Include) DeepCopy() *Include {
 		return nil
 	}
 	return &Include{
+		Namespace:      include.Namespace,
 		Taskfile:       include.Taskfile,
 		Dir:            include.Dir,
 		Optional:       include.Optional,
