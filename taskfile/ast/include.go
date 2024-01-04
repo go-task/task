@@ -7,8 +7,8 @@ import (
 
 	"github.com/go-task/task/v3/internal/execext"
 	"github.com/go-task/task/v3/internal/filepathext"
+	"github.com/go-task/task/v3/internal/orderedmap"
 
-	"golang.org/x/exp/slices"
 	"gopkg.in/yaml.v3"
 )
 
@@ -27,8 +27,7 @@ type Include struct {
 
 // Includes represents information about included tasksfiles
 type Includes struct {
-	Keys    []string
-	Mapping map[string]Include
+	orderedmap.OrderedMap[string, Include]
 }
 
 // UnmarshalYAML implements the yaml.Unmarshaler interface.
@@ -60,31 +59,15 @@ func (includes *Includes) Len() int {
 	if includes == nil {
 		return 0
 	}
-	return len(includes.Keys)
+	return includes.OrderedMap.Len()
 }
 
-// Set sets a value to a given key
-func (includes *Includes) Set(namespace string, include Include) {
-	if includes.Mapping == nil {
-		includes.Mapping = make(map[string]Include, 1)
-	}
-	if !slices.Contains(includes.Keys, namespace) {
-		includes.Keys = append(includes.Keys, namespace)
-	}
-	includes.Mapping[namespace] = include
-}
-
-// Range allows you to loop into the included taskfiles in its right order
-func (includes *Includes) Range(yield func(namespace string, include Include) error) error {
+// Wrapper around OrderedMap.Set to ensure we don't get nil pointer errors
+func (includes *Includes) Range(f func(k string, v Include) error) error {
 	if includes == nil {
 		return nil
 	}
-	for _, k := range includes.Keys {
-		if err := yield(k, includes.Mapping[k]); err != nil {
-			return err
-		}
-	}
-	return nil
+	return includes.OrderedMap.Range(f)
 }
 
 func (include *Include) UnmarshalYAML(node *yaml.Node) error {
