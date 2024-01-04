@@ -18,7 +18,7 @@ type Taskfile struct {
 	Version  *semver.Version
 	Output   Output
 	Method   string
-	Includes *IncludedTaskfiles
+	Includes *Includes
 	Set      []string
 	Shopt    []string
 	Vars     *Vars
@@ -37,7 +37,7 @@ func (tf *Taskfile) UnmarshalYAML(node *yaml.Node) error {
 			Version  *semver.Version
 			Output   Output
 			Method   string
-			Includes *IncludedTaskfiles
+			Includes *Includes
 			Set      []string
 			Shopt    []string
 			Vars     *Vars

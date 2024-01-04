@@ -38,7 +38,7 @@ type Task struct {
 	Run                  string
 	IncludeVars          *Vars
 	IncludedTaskfileVars *Vars
-	IncludedTaskfile     *IncludedTaskfile
+	IncludedTaskfile     *Include
 	Platforms            []*Platform
 	Location             *Location
 	Watch                bool

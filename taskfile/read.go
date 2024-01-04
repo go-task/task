@@ -162,43 +162,43 @@ func Read(
 
 		// Annotate any included Taskfile reference with a base directory for resolving relative paths
 		if node, isFileNode := node.(*FileNode); isFileNode {
-			_ = t.Includes.Range(func(key string, includedFile ast.IncludedTaskfile) error {
+			_ = t.Includes.Range(func(namespace string, include ast.Include) error {
 				// Set the base directory for resolving relative paths, but only if not already set
-				if includedFile.BaseDir == "" {
-					includedFile.BaseDir = node.Dir
-					t.Includes.Set(key, includedFile)
+				if include.BaseDir == "" {
+					include.BaseDir = node.Dir
+					t.Includes.Set(namespace, include)
 				}
 				return nil
 			})
 		}
 
-		err = t.Includes.Range(func(namespace string, includedTask ast.IncludedTaskfile) error {
+		err = t.Includes.Range(func(namespace string, include ast.Include) error {
 			tr := templater.Templater{Vars: t.Vars}
-			includedTask = ast.IncludedTaskfile{
-				Taskfile:       tr.Replace(includedTask.Taskfile),
-				Dir:            tr.Replace(includedTask.Dir),
-				Optional:       includedTask.Optional,
-				Internal:       includedTask.Internal,
-				Aliases:        includedTask.Aliases,
-				AdvancedImport: includedTask.AdvancedImport,
-				Vars:           includedTask.Vars,
-				BaseDir:        includedTask.BaseDir,
+			include = ast.Include{
+				Taskfile:       tr.Replace(include.Taskfile),
+				Dir:            tr.Replace(include.Dir),
+				Optional:       include.Optional,
+				Internal:       include.Internal,
+				Aliases:        include.Aliases,
+				AdvancedImport: include.AdvancedImport,
+				Vars:           include.Vars,
+				BaseDir:        include.BaseDir,
 			}
 			if err := tr.Err(); err != nil {
 				return err
 			}
 
-			uri, err := includedTask.FullTaskfilePath()
+			uri, err := include.FullTaskfilePath()
 			if err != nil {
 				return err
 			}
 
 			includeReaderNode, err := NewNode(uri, insecure,
 				WithParent(node),
-				WithOptional(includedTask.Optional),
+				WithOptional(include.Optional),
 			)
 			if err != nil {
-				if includedTask.Optional {
+				if include.Optional {
 					return nil
 				}
 				return err
@@ -210,7 +210,7 @@ func Read(
 
 			includedTaskfile, err := _taskfile(includeReaderNode)
 			if err != nil {
-				if includedTask.Optional {
+				if include.Optional {
 					return nil
 				}
 				return err
@@ -220,8 +220,8 @@ func Read(
 				return ErrIncludedTaskfilesCantHaveDotenvs
 			}
 
-			if includedTask.AdvancedImport {
-				dir, err := includedTask.FullDirPath()
+			if include.AdvancedImport {
+				dir, err := include.FullDirPath()
 				if err != nil {
 					return err
 				}
@@ -246,13 +246,13 @@ func Read(
 					if task.IncludeVars == nil {
 						task.IncludeVars = &ast.Vars{}
 					}
-					task.IncludeVars.Merge(includedTask.Vars)
+					task.IncludeVars.Merge(include.Vars)
 					task.IncludedTaskfileVars = includedTaskfile.Vars
-					task.IncludedTaskfile = &includedTask
+					task.IncludedTaskfile = &include
 				}
 			}
 
-			if err = Merge(t, includedTaskfile, &includedTask, namespace); err != nil {
+			if err = Merge(t, includedTaskfile, &include, namespace); err != nil {
 				return err
 			}
 
@@ -260,7 +260,7 @@ func Read(
 				defaultTaskName := fmt.Sprintf("%s:default", namespace)
 				task := t.Tasks.Get(defaultTaskName)
 				task.Aliases = append(task.Aliases, namespace)
-				task.Aliases = append(task.Aliases, includedTask.Aliases...)
+				task.Aliases = append(task.Aliases, include.Aliases...)
 				t.Tasks.Set(defaultTaskName, task)
 			}
 
