@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"gopkg.in/yaml.v3"
 
-	"github.com/go-task/task/v3/internal/orderedmap"
+	"github.com/go-task/task/v3/internal/omap"
 	"github.com/go-task/task/v3/taskfile/ast"
 )
 
@@ -39,7 +39,7 @@ vars:
 			&ast.Cmd{},
 			&ast.Cmd{
 				Task: "another-task", Vars: &ast.Vars{
-					OrderedMap: orderedmap.FromMapWithOrder(
+					OrderedMap: omap.FromMapWithOrder(
 						map[string]ast.Var{
 							"PARAM1": {Value: "VALUE1"},
 							"PARAM2": {Value: "VALUE2"},
@@ -59,7 +59,7 @@ vars:
 			&ast.Cmd{},
 			&ast.Cmd{
 				Task: "some_task", Vars: &ast.Vars{
-					OrderedMap: orderedmap.FromMapWithOrder(
+					OrderedMap: omap.FromMapWithOrder(
 						map[string]ast.Var{
 							"PARAM1": {Value: "var"},
 						},
@@ -79,7 +79,7 @@ vars:
 			&ast.Dep{},
 			&ast.Dep{
 				Task: "another-task", Vars: &ast.Vars{
-					OrderedMap: orderedmap.FromMapWithOrder(
+					OrderedMap: omap.FromMapWithOrder(
 						map[string]ast.Var{
 							"PARAM1": {Value: "VALUE1"},
 							"PARAM2": {Value: "VALUE2"},
