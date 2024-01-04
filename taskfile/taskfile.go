@@ -16,9 +16,6 @@ import (
 )
 
 var (
-	// ErrIncludedTaskfilesCantHaveDotenvs is returned when a included Taskfile contains dotenvs
-	ErrIncludedTaskfilesCantHaveDotenvs = errors.New("task: Included Taskfiles can't have dotenv declarations. Please, move the dotenv declaration to the main Taskfile")
-
 	defaultTaskfiles = []string{
 		"Taskfile.yml",
 		"taskfile.yml",
@@ -29,7 +26,6 @@ var (
 		"Taskfile.dist.yaml",
 		"taskfile.dist.yaml",
 	}
-
 	allowedContentTypes = []string{
 		"text/plain",
 		"text/yaml",

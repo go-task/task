@@ -54,20 +54,25 @@ func (t1 *Tasks) Merge(t2 Tasks, include *Include) {
 		// taskfile are marked as internal
 		task.Internal = task.Internal || (include != nil && include.Internal)
 
-		// Add namespaces to dependencies, commands and aliases
+		// Add namespaces to task dependencies
 		for _, dep := range task.Deps {
 			if dep != nil && dep.Task != "" {
 				dep.Task = taskNameWithNamespace(dep.Task, include.Namespace)
 			}
 		}
+
+		// Add namespaces to task commands
 		for _, cmd := range task.Cmds {
 			if cmd != nil && cmd.Task != "" {
 				cmd.Task = taskNameWithNamespace(cmd.Task, include.Namespace)
 			}
 		}
+
+		// Add namespaces to task aliases
 		for i, alias := range task.Aliases {
 			task.Aliases[i] = taskNameWithNamespace(alias, include.Namespace)
 		}
+
 		// Add namespace aliases
 		if include != nil {
 			for _, namespaceAlias := range include.Aliases {
