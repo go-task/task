@@ -12,8 +12,8 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// IncludedTaskfile represents information about included taskfiles
-type IncludedTaskfile struct {
+// Include represents information about included taskfiles
+type Include struct {
 	Taskfile       string
 	Dir            string
 	Optional       bool
@@ -24,14 +24,14 @@ type IncludedTaskfile struct {
 	BaseDir        string // The directory from which the including taskfile was loaded; used to resolve relative paths
 }
 
-// IncludedTaskfiles represents information about included tasksfiles
-type IncludedTaskfiles struct {
+// Includes represents information about included tasksfiles
+type Includes struct {
 	Keys    []string
-	Mapping map[string]IncludedTaskfile
+	Mapping map[string]Include
 }
 
 // UnmarshalYAML implements the yaml.Unmarshaler interface.
-func (tfs *IncludedTaskfiles) UnmarshalYAML(node *yaml.Node) error {
+func (includes *Includes) UnmarshalYAML(node *yaml.Node) error {
 	switch node.Kind {
 	case yaml.MappingNode:
 		// NOTE(@andreynering): on this style of custom unmarshalling,
@@ -41,11 +41,11 @@ func (tfs *IncludedTaskfiles) UnmarshalYAML(node *yaml.Node) error {
 			keyNode := node.Content[i]
 			valueNode := node.Content[i+1]
 
-			var v IncludedTaskfile
+			var v Include
 			if err := valueNode.Decode(&v); err != nil {
 				return err
 			}
-			tfs.Set(keyNode.Value, v)
+			includes.Set(keyNode.Value, v)
 		}
 		return nil
 	}
@@ -54,38 +54,38 @@ func (tfs *IncludedTaskfiles) UnmarshalYAML(node *yaml.Node) error {
 }
 
 // Len returns the length of the map
-func (tfs *IncludedTaskfiles) Len() int {
-	if tfs == nil {
+func (includes *Includes) Len() int {
+	if includes == nil {
 		return 0
 	}
-	return len(tfs.Keys)
+	return len(includes.Keys)
 }
 
 // Set sets a value to a given key
-func (tfs *IncludedTaskfiles) Set(key string, includedTaskfile IncludedTaskfile) {
-	if tfs.Mapping == nil {
-		tfs.Mapping = make(map[string]IncludedTaskfile, 1)
+func (includes *Includes) Set(namespace string, include Include) {
+	if includes.Mapping == nil {
+		includes.Mapping = make(map[string]Include, 1)
 	}
-	if !slices.Contains(tfs.Keys, key) {
-		tfs.Keys = append(tfs.Keys, key)
+	if !slices.Contains(includes.Keys, namespace) {
+		includes.Keys = append(includes.Keys, namespace)
 	}
-	tfs.Mapping[key] = includedTaskfile
+	includes.Mapping[namespace] = include
 }
 
 // Range allows you to loop into the included taskfiles in its right order
-func (tfs *IncludedTaskfiles) Range(yield func(key string, includedTaskfile IncludedTaskfile) error) error {
-	if tfs == nil {
+func (includes *Includes) Range(yield func(namespace string, include Include) error) error {
+	if includes == nil {
 		return nil
 	}
-	for _, k := range tfs.Keys {
-		if err := yield(k, tfs.Mapping[k]); err != nil {
+	for _, k := range includes.Keys {
+		if err := yield(k, includes.Mapping[k]); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (it *IncludedTaskfile) UnmarshalYAML(node *yaml.Node) error {
+func (include *Include) UnmarshalYAML(node *yaml.Node) error {
 	switch node.Kind {
 
 	case yaml.ScalarNode:
@@ -93,7 +93,7 @@ func (it *IncludedTaskfile) UnmarshalYAML(node *yaml.Node) error {
 		if err := node.Decode(&str); err != nil {
 			return err
 		}
-		it.Taskfile = str
+		include.Taskfile = str
 		return nil
 
 	case yaml.MappingNode:
@@ -108,13 +108,13 @@ func (it *IncludedTaskfile) UnmarshalYAML(node *yaml.Node) error {
 		if err := node.Decode(&includedTaskfile); err != nil {
 			return err
 		}
-		it.Taskfile = includedTaskfile.Taskfile
-		it.Dir = includedTaskfile.Dir
-		it.Optional = includedTaskfile.Optional
-		it.Internal = includedTaskfile.Internal
-		it.Aliases = includedTaskfile.Aliases
-		it.AdvancedImport = true
-		it.Vars = includedTaskfile.Vars
+		include.Taskfile = includedTaskfile.Taskfile
+		include.Dir = includedTaskfile.Dir
+		include.Optional = includedTaskfile.Optional
+		include.Internal = includedTaskfile.Internal
+		include.Aliases = includedTaskfile.Aliases
+		include.AdvancedImport = true
+		include.Vars = includedTaskfile.Vars
 		return nil
 	}
 
@@ -123,34 +123,34 @@ func (it *IncludedTaskfile) UnmarshalYAML(node *yaml.Node) error {
 
 // DeepCopy creates a new instance of IncludedTaskfile and copies
 // data by value from the source struct.
-func (it *IncludedTaskfile) DeepCopy() *IncludedTaskfile {
-	if it == nil {
+func (include *Include) DeepCopy() *Include {
+	if include == nil {
 		return nil
 	}
-	return &IncludedTaskfile{
-		Taskfile:       it.Taskfile,
-		Dir:            it.Dir,
-		Optional:       it.Optional,
-		Internal:       it.Internal,
-		AdvancedImport: it.AdvancedImport,
-		Vars:           it.Vars.DeepCopy(),
-		BaseDir:        it.BaseDir,
+	return &Include{
+		Taskfile:       include.Taskfile,
+		Dir:            include.Dir,
+		Optional:       include.Optional,
+		Internal:       include.Internal,
+		AdvancedImport: include.AdvancedImport,
+		Vars:           include.Vars.DeepCopy(),
+		BaseDir:        include.BaseDir,
 	}
 }
 
 // FullTaskfilePath returns the fully qualified path to the included taskfile
-func (it *IncludedTaskfile) FullTaskfilePath() (string, error) {
-	return it.resolvePath(it.Taskfile)
+func (include *Include) FullTaskfilePath() (string, error) {
+	return include.resolvePath(include.Taskfile)
 }
 
 // FullDirPath returns the fully qualified path to the included taskfile's working directory
-func (it *IncludedTaskfile) FullDirPath() (string, error) {
-	return it.resolvePath(it.Dir)
+func (include *Include) FullDirPath() (string, error) {
+	return include.resolvePath(include.Dir)
 }
 
-func (it *IncludedTaskfile) resolvePath(path string) (string, error) {
+func (include *Include) resolvePath(path string) (string, error) {
 	// If the file is remote, we don't need to resolve the path
-	if strings.Contains(it.Taskfile, "://") {
+	if strings.Contains(include.Taskfile, "://") {
 		return path, nil
 	}
 
@@ -163,9 +163,9 @@ func (it *IncludedTaskfile) resolvePath(path string) (string, error) {
 		return path, nil
 	}
 
-	result, err := filepath.Abs(filepathext.SmartJoin(it.BaseDir, path))
+	result, err := filepath.Abs(filepathext.SmartJoin(include.BaseDir, path))
 	if err != nil {
-		return "", fmt.Errorf("task: error resolving path %s relative to %s: %w", path, it.BaseDir, err)
+		return "", fmt.Errorf("task: error resolving path %s relative to %s: %w", path, include.BaseDir, err)
 	}
 
 	return result, nil

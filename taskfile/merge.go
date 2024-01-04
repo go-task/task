@@ -11,7 +11,7 @@ import (
 const NamespaceSeparator = ":"
 
 // Merge merges the second Taskfile into the first
-func Merge(t1, t2 *ast.Taskfile, includedTaskfile *ast.IncludedTaskfile, namespaces ...string) error {
+func Merge(t1, t2 *ast.Taskfile, include *ast.Include, namespaces ...string) error {
 	if !t1.Version.Equal(t2.Version) {
 		return fmt.Errorf(`task: Taskfiles versions should match. First is "%s" but second is "%s"`, t1.Version, t2.Version)
 	}
@@ -35,7 +35,7 @@ func Merge(t1, t2 *ast.Taskfile, includedTaskfile *ast.IncludedTaskfile, namespa
 
 		// Set the task to internal if EITHER the included task or the included
 		// taskfile are marked as internal
-		task.Internal = task.Internal || (includedTaskfile != nil && includedTaskfile.Internal)
+		task.Internal = task.Internal || (include != nil && include.Internal)
 
 		// Add namespaces to dependencies, commands and aliases
 		for _, dep := range task.Deps {
@@ -52,8 +52,8 @@ func Merge(t1, t2 *ast.Taskfile, includedTaskfile *ast.IncludedTaskfile, namespa
 			task.Aliases[i] = taskNameWithNamespace(alias, namespaces...)
 		}
 		// Add namespace aliases
-		if includedTaskfile != nil {
-			for _, namespaceAlias := range includedTaskfile.Aliases {
+		if include != nil {
+			for _, namespaceAlias := range include.Aliases {
 				task.Aliases = append(task.Aliases, taskNameWithNamespace(task.Task, namespaceAlias))
 				for _, alias := range v.Aliases {
 					task.Aliases = append(task.Aliases, taskNameWithNamespace(alias, namespaceAlias))
