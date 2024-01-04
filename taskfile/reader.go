@@ -15,6 +15,15 @@ import (
 	"github.com/go-task/task/v3/taskfile/ast"
 )
 
+const (
+	taskfileUntrustedPrompt = `The task you are attempting to run depends on the remote Taskfile at %q.
+	--- Make sure you trust the source of this Taskfile before continuing ---
+	Continue?`
+	taskfileChangedPrompt = `The Taskfile at %q has changed since you last used it!
+	--- Make sure you trust the source of this Taskfile before continuing ---
+	Continue?`
+)
+
 // Read reads a Read for a given directory
 // Uses current dir when dir is left empty. Uses Read.yml
 // or Read.yaml when entrypoint is left empty
@@ -221,19 +230,17 @@ func readTaskfile(
 			checksum := checksum(b)
 			cachedChecksum := cache.readChecksum(node)
 
-			var msg string
+			var prompt string
 			if cachedChecksum == "" {
 				// If the checksum doesn't exist, prompt the user to continue
-				msg = fmt.Sprintf("The task you are attempting to run depends on the remote Taskfile at %q.\n--- Make sure you trust the source of this Taskfile before continuing ---\nContinue?", node.Location())
+				prompt = fmt.Sprintf(taskfileUntrustedPrompt, node.Location())
 			} else if checksum != cachedChecksum {
 				// If there is a cached hash, but it doesn't match the expected hash, prompt the user to continue
-				msg = fmt.Sprintf("The Taskfile at %q has changed since you last used it!\n--- Make sure you trust the source of this Taskfile before continuing ---\nContinue?", node.Location())
+				prompt = fmt.Sprintf(taskfileChangedPrompt, node.Location())
 			}
-			if msg != "" {
-				if err := l.Prompt(logger.Yellow, msg, "n", "y", "yes"); errors.Is(err, logger.ErrPromptCancelled) {
+			if prompt == "" {
+				if err := l.Prompt(logger.Yellow, prompt, "n", "y", "yes"); err != nil {
 					return nil, &errors.TaskfileNotTrustedError{URI: node.Location()}
-				} else if err != nil {
-					return nil, err
 				}
 			}
 
