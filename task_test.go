@@ -1789,7 +1789,7 @@ func TestErrorCode(t *testing.T) {
 			}
 			require.NoError(t, e.Setup())
 
-			err := e.Run(context.Background(), ast.Call{Task: test.task, Direct: true})
+			err := e.Run(context.Background(), ast.Call{Task: test.task})
 			require.Error(t, err)
 			taskRunErr, ok := err.(*errors.TaskRunError)
 			assert.True(t, ok, "cannot cast returned error to *task.TaskRunError")
@@ -2183,7 +2183,7 @@ func TestForce(t *testing.T) {
 				ForceAll: tt.forceAll,
 			}
 			require.NoError(t, e.Setup())
-			require.NoError(t, e.Run(context.Background(), ast.Call{Task: "task-with-dep", Direct: true}))
+			require.NoError(t, e.Run(context.Background(), ast.Call{Task: "task-with-dep"}))
 		})
 	}
 }
@@ -2238,7 +2238,7 @@ func TestFor(t *testing.T) {
 				Force:  true,
 			}
 			require.NoError(t, e.Setup())
-			require.NoError(t, e.Run(context.Background(), ast.Call{Task: test.name, Direct: true}))
+			require.NoError(t, e.Run(context.Background(), ast.Call{Task: test.name}))
 			assert.Equal(t, test.expectedOutput, buff.String())
 		})
 	}

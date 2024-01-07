@@ -13,7 +13,7 @@ func Parse(args ...string) ([]ast.Call, *ast.Vars) {
 
 	for _, arg := range args {
 		if !strings.Contains(arg, "=") {
-			calls = append(calls, ast.Call{Task: arg, Direct: true})
+			calls = append(calls, ast.Call{Task: arg})
 			continue
 		}
 

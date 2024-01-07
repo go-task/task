@@ -20,17 +20,17 @@ func TestArgs(t *testing.T) {
 		{
 			Args: []string{"task-a", "task-b", "task-c"},
 			ExpectedCalls: []ast.Call{
-				{Task: "task-a", Direct: true},
-				{Task: "task-b", Direct: true},
-				{Task: "task-c", Direct: true},
+				{Task: "task-a"},
+				{Task: "task-b"},
+				{Task: "task-c"},
 			},
 		},
 		{
 			Args: []string{"task-a", "FOO=bar", "task-b", "task-c", "BAR=baz", "BAZ=foo"},
 			ExpectedCalls: []ast.Call{
-				{Task: "task-a", Direct: true},
-				{Task: "task-b", Direct: true},
-				{Task: "task-c", Direct: true},
+				{Task: "task-a"},
+				{Task: "task-b"},
+				{Task: "task-c"},
 			},
 			ExpectedGlobals: &ast.Vars{
 				OrderedMap: orderedmap.FromMapWithOrder(
@@ -46,7 +46,7 @@ func TestArgs(t *testing.T) {
 		{
 			Args: []string{"task-a", "CONTENT=with some spaces"},
 			ExpectedCalls: []ast.Call{
-				{Task: "task-a", Direct: true},
+				{Task: "task-a"},
 			},
 			ExpectedGlobals: &ast.Vars{
 				OrderedMap: orderedmap.FromMapWithOrder(
@@ -60,8 +60,8 @@ func TestArgs(t *testing.T) {
 		{
 			Args: []string{"FOO=bar", "task-a", "task-b"},
 			ExpectedCalls: []ast.Call{
-				{Task: "task-a", Direct: true},
-				{Task: "task-b", Direct: true},
+				{Task: "task-a"},
+				{Task: "task-b"},
 			},
 			ExpectedGlobals: &ast.Vars{
 				OrderedMap: orderedmap.FromMapWithOrder(

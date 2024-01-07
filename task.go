@@ -199,7 +199,7 @@ func (e *Executor) RunTask(ctx context.Context, call ast.Call) error {
 			return err
 		}
 
-		skipFingerprinting := e.ForceAll || (call.Direct && e.Force)
+		skipFingerprinting := e.ForceAll || (!call.Indirect && e.Force)
 		if !skipFingerprinting {
 			if err := ctx.Err(); err != nil {
 				return err
@@ -258,7 +258,7 @@ func (e *Executor) RunTask(ctx context.Context, call ast.Call) error {
 					continue
 				}
 
-				if !call.Direct {
+				if call.Indirect {
 					return err
 				}
 
@@ -296,7 +296,7 @@ func (e *Executor) runDeps(ctx context.Context, t *ast.Task) error {
 	for _, d := range t.Deps {
 		d := d
 		g.Go(func() error {
-			err := e.RunTask(ctx, ast.Call{Task: d.Task, Vars: d.Vars, Silent: d.Silent})
+			err := e.RunTask(ctx, ast.Call{Task: d.Task, Vars: d.Vars, Silent: d.Silent, Indirect: true})
 			if err != nil {
 				return err
 			}
@@ -324,7 +324,7 @@ func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call ast.Call, i
 		reacquire := e.releaseConcurrencyLimit()
 		defer reacquire()
 
-		err := e.RunTask(ctx, ast.Call{Task: cmd.Task, Vars: cmd.Vars, Silent: cmd.Silent})
+		err := e.RunTask(ctx, ast.Call{Task: cmd.Task, Vars: cmd.Vars, Silent: cmd.Silent, Indirect: true})
 		if err != nil {
 			return err
 		}
