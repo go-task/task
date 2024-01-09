@@ -37,17 +37,6 @@ func TestSort(t *testing.T) {
 	assert.Equal(t, []int{1, 2, 3}, om.s)
 }
 
-func TestSortFunc(t *testing.T) {
-	om := New[int, string]()
-	om.Set(3, "three")
-	om.Set(1, "one")
-	om.Set(2, "two")
-	om.SortFunc(func(i, j int) bool {
-		return i > j
-	})
-	assert.Equal(t, []int{3, 2, 1}, om.s)
-}
-
 func TestKeysValues(t *testing.T) {
 	om := New[int, string]()
 	om.Set(3, "three")

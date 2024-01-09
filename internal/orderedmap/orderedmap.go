@@ -89,11 +89,6 @@ func (om *OrderedMap[K, V]) Sort() {
 	slices.Sort(om.s)
 }
 
-// SortFunc will sort the map using the given function.
-func (om *OrderedMap[K, V]) SortFunc(less func(i, j K) bool) {
-	slices.SortFunc(om.s, less)
-}
-
 // Keys will return a slice of the map's keys in order.
 func (om *OrderedMap[K, V]) Keys() []K {
 	return om.s
