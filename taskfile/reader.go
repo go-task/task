@@ -141,7 +141,7 @@ func Read(
 				}
 			}
 
-			if err = Merge(t, includedTaskfile, &include); err != nil {
+			if err = t.Merge(includedTaskfile, &include); err != nil {
 				return err
 			}
 
