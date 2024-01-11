@@ -9,6 +9,8 @@ import (
 	"mvdan.cc/sh/v3/shell"
 	"mvdan.cc/sh/v3/syntax"
 
+	"github.com/davecgh/go-spew/spew"
+
 	sprig "github.com/go-task/slim-sprig/v3"
 )
 
@@ -51,6 +53,9 @@ func init() {
 		},
 		"relPath": func(basePath, targetPath string) (string, error) {
 			return filepath.Rel(basePath, targetPath)
+		},
+		"spew": func(v any) string {
+			return spew.Sdump(v)
 		},
 	}
 	// Deprecated aliases for renamed functions.
