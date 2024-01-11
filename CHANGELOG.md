@@ -2,17 +2,22 @@
 
 ## Unreleased
 
-- Removed support for `version: 2` schemas (#1197, #1447 by @pd93). See the
+- Removed support for `version: 2` schemas. See the
   [deprecation notice on our website](https://taskfile.dev/deprecations/version-2-schema)
-- Refactored the public `read` and `taskfile` packages and introduced
-  `taskfile/ast` (#1450 by @pd93).
+  (#1197, #1447 by @pd93).
+- Added
+  [Any Variables experiment proposal 2](https://taskfile.dev/experiments/any-variables/?proposal=2)
+  (#1415, #1444 by @pd93).
 - Updated the experiments and deprecations documentation format (#1445 by
   @pd93).
-- Small change on the API when using as a library: `call.Direct` became
-  `call.Indirect` (#1459).
 - Added new template function: `spew`, which can be used to print variables for
-  debugging purposes (#1452).
-
+  debugging purposes (#1452 by @pd93).
+- Small change on the API when using as a library: `call.Direct` became
+  `call.Indirect` (#1459 by @pd93).
+- Refactored the public `read` and `taskfile` packages and introduced
+  `taskfile/ast` (#1450 by @pd93).
+- `ast.IncludedTaskfiles` renamed to `ast.Includes` and `orderedmap` package
+  renamed to `omap` plus some internal refactor work (#1456 by @pd93).
 
 ## v3.33.1 - 2023-12-21
 
