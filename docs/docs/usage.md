@@ -646,9 +646,9 @@ tasks:
 compare the checksum of the source files to determine if it's necessary to run
 the task. If not, it will just print a message like `Task "js" is up to date`.
 
-`exclude:` can also be used to exclude files from fingerprinting.
-Sources are evaluated in order, so `exclude:` must come after the positive
-glob it is negating.
+`exclude:` can also be used to exclude files from fingerprinting. Sources are
+evaluated in order, so `exclude:` must come after the positive glob it is
+negating.
 
 ```yaml
 version: '3'
@@ -1291,6 +1291,9 @@ Task also adds the following functions:
 - `relPath`: Converts an absolute path (second argument) into a relative path,
   based on a base path (first argument). The same as Go's
   [filepath.Rel](https://pkg.go.dev/path/filepath#Rel).
+- `merge`: Creates a new map that is a copy of the first map with the keys of
+  the second map merged into it. If there are duplicate keys, the value of the
+  second map is used.
 - `spew`: Returns the Go representation of a specific variable. Useful for
   debugging. Uses the [davecgh/go-spew](https://github.com/davecgh/go-spew)
   package.
@@ -1489,8 +1492,8 @@ task: "This is a dangerous command... Do you want to continue?" [y/N]
 ```
 
 Warning prompts are called before executing a task. If a prompt is denied Task
-will exit with [exit code](/api#exit-codes) 205. If approved, Task
-will continue as normal.
+will exit with [exit code](/api#exit-codes) 205. If approved, Task will continue
+as normal.
 
 ```bash
 ❯ task example
@@ -1844,7 +1847,7 @@ tasks:
     sources:
       - '**/*.go'
     cmds:
-      - go build  # ...
+      - go build # ...
 ```
 
 :::info
