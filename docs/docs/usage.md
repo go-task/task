@@ -1286,6 +1286,11 @@ Task also adds the following functions:
   for this. The Bash dialect is assumed.
 - `splitArgs`: Splits a string as if it were a command's arguments. Task uses
   [this Go function](https://pkg.go.dev/mvdan.cc/sh/v3@v3.4.0/shell#Fields)
+- `joinPath`: Joins any number of arguments into a path. The same as Go's
+  [filepath.Join](https://pkg.go.dev/path/filepath#Join).
+- `relPath`: Converts an absolute path (second argument) into a relative path,
+  based on a base path (first argument). The same as Go's
+  [filepath.Rel](https://pkg.go.dev/path/filepath#Rel).
 - `spew`: Returns the Go representation of a specific variable. Useful for
   debugging. Uses the [davecgh/go-spew](https://github.com/davecgh/go-spew)
   package.
