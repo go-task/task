@@ -53,15 +53,21 @@ func init() {
 		"relPath": func(basePath, targetPath string) (string, error) {
 			return filepath.Rel(basePath, targetPath)
 		},
-		"merge": func(a, b map[string]any) map[string]any {
-			m := make(map[string]any, len(a)+len(b))
-			for k, v := range a {
-				m[k] = v
+		"merge": func(base map[string]any, v ...map[string]any) map[string]any {
+			cap := len(v)
+			for _, m := range v {
+				cap += len(m)
 			}
-			for k, v := range b {
-				m[k] = v
+			result := make(map[string]any, cap)
+			for k, v := range base {
+				result[k] = v
 			}
-			return m
+			for _, m := range v {
+				for k, v := range m {
+					result[k] = v
+				}
+			}
+			return result
 		},
 		"spew": func(v any) string {
 			return spew.Sdump(v)
