@@ -10,6 +10,9 @@
   @pd93).
 - Small change on the API when using as a library: `call.Direct` became
   `call.Indirect` (#1459).
+- Added new template function: `spew`, which can be used to print variables for
+  debugging purposes (#1452).
+
 
 ## v3.33.1 - 2023-12-21
 
