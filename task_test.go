@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"strings"
 	"testing"
@@ -1421,7 +1422,7 @@ func TestDisplaysErrorOnVersion1Schema(t *testing.T) {
 	}
 	err := e.Setup()
 	require.Error(t, err)
-	assert.Equal(t, "task: Taskfile schemas prior to v3 are no longer supported", err.Error())
+	assert.Regexp(t, regexp.MustCompile(`task: Invalid schema version in Taskfile \".*testdata\/version\/v1\/Taskfile\.yml\":\nSchema version \(1\.0\.0\) no longer supported\. Please use v3 or above`), err.Error())
 }
 
 func TestDisplaysErrorOnVersion2Schema(t *testing.T) {
@@ -1433,7 +1434,7 @@ func TestDisplaysErrorOnVersion2Schema(t *testing.T) {
 	}
 	err := e.Setup()
 	require.Error(t, err)
-	assert.Equal(t, "task: Taskfile schemas prior to v3 are no longer supported", err.Error())
+	assert.Regexp(t, regexp.MustCompile(`task: Invalid schema version in Taskfile \".*testdata\/version\/v2\/Taskfile\.yml\":\nSchema version \(2\.0\.0\) no longer supported\. Please use v3 or above`), err.Error())
 }
 
 func TestShortTaskNotation(t *testing.T) {
