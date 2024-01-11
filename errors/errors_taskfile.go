@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"net/http"
 	"time"
+
+	"github.com/Masterminds/semver/v3"
 )
 
 // TaskfileNotFoundError is returned when no appropriate Taskfile is found when
@@ -122,21 +124,32 @@ func (err *TaskfileCacheNotFound) Code() int {
 	return CodeTaskfileCacheNotFound
 }
 
-// TaskfileVersionNotDefined is returned when the user attempts to run a
-// Taskfile that does not contain a Taskfile schema version key.
-type TaskfileVersionNotDefined struct {
-	URI string
+// TaskfileVersionCheckError is returned when the user attempts to run a
+// Taskfile that does not contain a Taskfile schema version key or if they try
+// to use a feature that is not supported by the schema version.
+type TaskfileVersionCheckError struct {
+	URI           string
+	SchemaVersion *semver.Version
+	Message       string
 }
 
-func (err *TaskfileVersionNotDefined) Error() string {
+func (err *TaskfileVersionCheckError) Error() string {
+	if err.SchemaVersion == nil {
+		return fmt.Sprintf(
+			`task: Missing schema version in Taskfile %q`,
+			err.URI,
+		)
+	}
 	return fmt.Sprintf(
-		`task: Taskfile %q does not contain a schema version key`,
+		"task: Invalid schema version in Taskfile %q:\nSchema version (%s) %s",
 		err.URI,
+		err.SchemaVersion.String(),
+		err.Message,
 	)
 }
 
-func (err *TaskfileVersionNotDefined) Code() int {
-	return CodeTaskfileVersionNotDefined
+func (err *TaskfileVersionCheckError) Code() int {
+	return CodeTaskfileVersionCheckError
 }
 
 // TaskfileNetworkTimeout is returned when the user attempts to use a remote

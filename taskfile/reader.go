@@ -45,7 +45,7 @@ func Read(
 
 		// Check that the Taskfile is set and has a schema version
 		if t == nil || t.Version == nil {
-			return nil, &errors.TaskfileVersionNotDefined{URI: node.Location()}
+			return nil, &errors.TaskfileVersionCheckError{URI: node.Location()}
 		}
 
 		// Annotate any included Taskfile reference with a base directory for resolving relative paths

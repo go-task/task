@@ -2,7 +2,6 @@ package task
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -12,11 +11,13 @@ import (
 	"github.com/Masterminds/semver/v3"
 	"github.com/sajari/fuzzy"
 
+	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/compiler"
 	"github.com/go-task/task/v3/internal/execext"
 	"github.com/go-task/task/v3/internal/filepathext"
 	"github.com/go-task/task/v3/internal/logger"
 	"github.com/go-task/task/v3/internal/output"
+	"github.com/go-task/task/v3/internal/version"
 	"github.com/go-task/task/v3/taskfile"
 	"github.com/go-task/task/v3/taskfile/ast"
 )
@@ -241,35 +242,31 @@ func (e *Executor) setupConcurrencyState() {
 
 func (e *Executor) doVersionChecks() error {
 	// Copy the version to avoid modifying the original
-	v := &semver.Version{}
-	*v = *e.Taskfile.Version
+	schemaVersion := &semver.Version{}
+	*schemaVersion = *e.Taskfile.Version
 
-	if v.LessThan(ast.V3) {
-		return fmt.Errorf(`task: Taskfile schemas prior to v3 are no longer supported`)
-	}
-
-	// consider as equal to the greater version if round
-	if v.Equal(ast.V3) {
-		v = semver.MustParse("3.8")
-	}
-
-	if v.GreaterThan(semver.MustParse("3.8")) {
-		return fmt.Errorf(`task: Taskfile versions greater than v3.8 not implemented in the version of Task`)
-	}
-
-	if v.LessThan(semver.MustParse("3.8")) && e.Taskfile.Output.Group.IsSet() {
-		return fmt.Errorf(`task: Taskfile option "output.group" is only available starting on Taskfile version v3.8`)
-	}
-
-	if v.LessThan(semver.MustParse("3.7")) {
-		if e.Taskfile.Run != "" {
-			return errors.New(`task: Setting the "run" type is only available starting on Taskfile version v3.7`)
+	// Error if the Taskfile uses a schema version below v3
+	if schemaVersion.LessThan(ast.V3) {
+		return &errors.TaskfileVersionCheckError{
+			URI:           e.Taskfile.Location,
+			SchemaVersion: schemaVersion,
+			Message:       `no longer supported. Please use v3 or above`,
 		}
+	}
 
-		for _, task := range e.Taskfile.Tasks.Values() {
-			if task.Run != "" {
-				return errors.New(`task: Setting the "run" type is only available starting on Taskfile version v3.7`)
-			}
+	// Get the current version of Task
+	// If we can't parse the version (e.g. when its "devel"), then ignore the current version checks
+	currentVersion, err := semver.NewVersion(version.GetVersion())
+	if err != nil {
+		return nil
+	}
+
+	// Error if the Taskfile uses a schema version above the current version of Task
+	if schemaVersion.GreaterThan(currentVersion) {
+		return &errors.TaskfileVersionCheckError{
+			URI:           e.Taskfile.Location,
+			SchemaVersion: schemaVersion,
+			Message:       fmt.Sprintf(`is greater than the current version of Task (%s)`, currentVersion.String()),
 		}
 	}
 

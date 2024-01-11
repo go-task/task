@@ -17,7 +17,7 @@ const (
 	CodeTaskfileNotTrusted
 	CodeTaskfileNotSecure
 	CodeTaskfileCacheNotFound
-	CodeTaskfileVersionNotDefined
+	CodeTaskfileVersionCheckError
 	CodeTaskfileNetworkTimeout
 )
 
