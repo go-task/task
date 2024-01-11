@@ -107,20 +107,20 @@ func (err *TaskfileNotSecureError) Code() int {
 	return CodeTaskfileNotSecure
 }
 
-// TaskfileCacheNotFound is returned when the user attempts to use an offline
+// TaskfileCacheNotFoundError is returned when the user attempts to use an offline
 // (cached) Taskfile but the files does not exist in the cache.
-type TaskfileCacheNotFound struct {
+type TaskfileCacheNotFoundError struct {
 	URI string
 }
 
-func (err *TaskfileCacheNotFound) Error() string {
+func (err *TaskfileCacheNotFoundError) Error() string {
 	return fmt.Sprintf(
 		`task: Taskfile %q was not found in the cache. Remove the --offline flag to use a remote copy or download it using the --download flag`,
 		err.URI,
 	)
 }
 
-func (err *TaskfileCacheNotFound) Code() int {
+func (err *TaskfileCacheNotFoundError) Code() int {
 	return CodeTaskfileCacheNotFound
 }
 
@@ -152,15 +152,15 @@ func (err *TaskfileVersionCheckError) Code() int {
 	return CodeTaskfileVersionCheckError
 }
 
-// TaskfileNetworkTimeout is returned when the user attempts to use a remote
+// TaskfileNetworkTimeoutError is returned when the user attempts to use a remote
 // Taskfile but a network connection could not be established within the timeout.
-type TaskfileNetworkTimeout struct {
+type TaskfileNetworkTimeoutError struct {
 	URI          string
 	Timeout      time.Duration
 	CheckedCache bool
 }
 
-func (err *TaskfileNetworkTimeout) Error() string {
+func (err *TaskfileNetworkTimeoutError) Error() string {
 	var cacheText string
 	if err.CheckedCache {
 		cacheText = " and no offline copy was found in the cache"
@@ -171,6 +171,6 @@ func (err *TaskfileNetworkTimeout) Error() string {
 	)
 }
 
-func (err *TaskfileNetworkTimeout) Code() int {
+func (err *TaskfileNetworkTimeoutError) Code() int {
 	return CodeTaskfileNetworkTimeout
 }
