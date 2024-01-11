@@ -12,6 +12,8 @@
   @pd93).
 - Added new template function: `spew`, which can be used to print variables for
   debugging purposes (#1452 by @pd93).
+- Added new template function: `merge`, which can be used to merge any number of
+  map variables (#1438, #1464 by @pd93).
 - Small change on the API when using as a library: `call.Direct` became
   `call.Indirect` (#1459 by @pd93).
 - Refactored the public `read` and `taskfile` packages and introduced
