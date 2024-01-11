@@ -189,7 +189,7 @@ func readTaskfile(
 	// If the file is remote and we're in offline mode, check if we have a cached copy
 	if node.Remote() && offline {
 		if b, err = cache.read(node); errors.Is(err, os.ErrNotExist) {
-			return nil, &errors.TaskfileCacheNotFound{URI: node.Location()}
+			return nil, &errors.TaskfileCacheNotFoundError{URI: node.Location()}
 		} else if err != nil {
 			return nil, err
 		}
@@ -207,11 +207,11 @@ func readTaskfile(
 		if node.Remote() && errors.Is(ctx.Err(), context.DeadlineExceeded) {
 			// If a download was requested, then we can't use a cached copy
 			if download {
-				return nil, &errors.TaskfileNetworkTimeout{URI: node.Location(), Timeout: timeout}
+				return nil, &errors.TaskfileNetworkTimeoutError{URI: node.Location(), Timeout: timeout}
 			}
 			// Search for any cached copies
 			if b, err = cache.read(node); errors.Is(err, os.ErrNotExist) {
-				return nil, &errors.TaskfileNetworkTimeout{URI: node.Location(), Timeout: timeout, CheckedCache: true}
+				return nil, &errors.TaskfileNetworkTimeoutError{URI: node.Location(), Timeout: timeout, CheckedCache: true}
 			} else if err != nil {
 				return nil, err
 			}
