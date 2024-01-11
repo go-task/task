@@ -24,7 +24,7 @@ Task 有一个 [针对 Visual Studio Code 的官方扩展](https://marketplace.v
 
 ## Schema
 
-这最初是由 [@KROSF](https://github.com/KROSF) 在 [这个 Gist](https://gist.github.com/KROSF/c5435acf590acd632f71bb720f685895) 中创建的，现在在 [这个](https://github.com/go-task/task/blob/main/docs/static/schema.json) 文件中正式维护，并在 https://taskfile.dev/schema.json 上提供。 这个 schema 可用于验证 Taskfile 并在许多代码编辑器中提供自动完成功能：
+This was initially created by @KROSF in [this Gist](https://gist.github.com/KROSF/c5435acf590acd632f71bb720f685895) and is now officially maintained in [this file](https://github.com/go-task/task/blob/main/docs/static/schema.json) and made available at https://taskfile.dev/schema.json. 这个 schema 可用于验证 Taskfile 并在许多代码编辑器中提供自动完成功能：
 
 ### Visual Studio Code
 
@@ -55,8 +55,8 @@ version: '3'
 
 除了我们的官方集成之外，还有一个很棒的开发人员社区，他们为 Task 创建了自己的集成：
 
-- [Sublime Text Plugin](https://packagecontrol.io/packages/Taskfile) [[源码](https://github.com/biozz/sublime-taskfile)] 由 [@biozz](https://github.com/biozz)
-- [IntelliJ Plugin](https://plugins.jetbrains.com/plugin/17058-taskfile) [[源码](https://github.com/lechuckroh/task-intellij-plugin)] 由 [@lechuckroh](https://github.com/lechuckroh)
+- [Sublime Text Plugin](https://packagecontrol.io/packages/Taskfile) [[source](https://github.com/biozz/sublime-taskfile)] by @biozz
+- [IntelliJ Plugin](https://plugins.jetbrains.com/plugin/17058-taskfile) [[source](https://github.com/lechuckroh/task-intellij-plugin)] by @lechuckroh
 - [mk](https://github.com/pycontribs/mk) 命令行工具本机识别 Taskfile。
 
 如果你做了一些与 Task 集成的东西，请随意打开一个 PR 将它添加到这个列表中。

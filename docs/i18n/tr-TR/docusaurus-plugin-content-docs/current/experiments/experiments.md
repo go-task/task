@@ -15,14 +15,15 @@ Task'ın hızlı bir şekilde gelişmesine izin vermek için, deneysel bayraklar
 
 You can view a full list of active experiments in the "Experiments" section of the sidebar.
 
-Deneysel bir özelliği şu şekilde etkinleştirebilirsiniz:
+## Enabling Experiments
+
+You can enable an experimental feature by doing one of the following:
 
 1. İlgili ortam değişkenini bir görev komutunun önünde kullanma. Örneğin, `TASK_X_{FEATURE}=1 task {my-task}`. Bu, Task'ın deneysel özellikleri test etmek için tek seferlik çağrıları için tasarlanmıştır.
 1. Using the relevant environment variable in your "dotfiles" (e.g. `.bashrc`, `.zshrc` etc.). This is intended for permanently enabling experimental features in your environment.
-1. Creating a `.env` file in the same directory as your root Taskfile that contains the relevant environment variables. e.g.
+1. Creating a `.env` file in the same directory as your root Taskfile that contains the relevant environment variables. This allows you to enable an experimental feature at a project level. For example:
 
-```shell
-# .env
+```shell title=".env"
 TASK_X_FEATURE=1
 ```
 

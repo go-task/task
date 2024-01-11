@@ -42,9 +42,9 @@ run ./cmd/task --dir ./testdata/<my_test_dir> <task_name>`。
 
 Task 使用 [Docusaurus][docusaurus] 来托管文档服务器。 此代码位于 Task 核心存储库中。 这可以通过使用 `task docs`（需要 `nodejs` 和 `yarn`）在本地设置和运行。 所有内容均使用 Markdown 编写，位于 `docs/docs` 目录中。 所有 Markdown 文档都应有 80 个字符的换行限制（由 Prettier 强制执行）。
 
-进行变更时，请考虑是否有必要更改 [使用指南](./usage.md)。 本文档包含有关如何使用任务功能的说明和示例。 如果您要添加新功能，请尝试找到合适的位置来添加新部分。 如果您要更新现有功能，请确保文档和所有示例都是最新的。 确保任何示例都遵循 [Taskfile 风格指南](./styleguide.md)。
+When making a change, consider whether a change to the [Usage Guide](/usage) is necessary. This document contains descriptions and examples of how to use Task features. If you're adding a new feature, try to find an appropriate place to add a new section. If you're updating an existing feature, ensure that the documentation and any examples are up-to-date. Ensure that any examples follow the [Taskfile Styleguide](/styleguide).
 
-如果您添加了新字段、命令或标志，请确保将其添加到 [API 参考](./api_reference.md) 中。 还需要将新字段添加到 [JSON Schema][json-schema] 中。 API 参考和 schema 中的字段描述应该匹配。
+If you added a new field, command or flag, ensure that you add it to the [API Reference](/api). 还需要将新字段添加到 [JSON Schema][json-schema] 中。 API 参考和 schema 中的字段描述应该匹配。
 
 ### 编写测试
 
@@ -73,7 +73,7 @@ Task 使用 [Docusaurus][docusaurus] 来托管文档服务器。 此代码位于
 
 查看 [Task][task-open-issues] 或 [Task for Visual Studio Code][vscode-task-open-issues] 的未解决问题列表。 我们有一个 [good first issue][good-first-issue] 标签，用于更简单的问题，非常适合首次贡献。
 
-欢迎各种贡献，无论是拼写错误修复还是很小的新功能。 您还可以通过对 Issue 进行投票/评论、帮助回答问题或帮助 [其他社区项目](./community.md) 来做出贡献。
+欢迎各种贡献，无论是拼写错误修复还是很小的新功能。 You can also contribute by upvoting/commenting on issues, helping to answer questions or contributing to other [community projects](/community).
 
 > 我被困住了，我在哪里可以获得帮助？
 

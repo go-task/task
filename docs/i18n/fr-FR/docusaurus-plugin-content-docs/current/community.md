@@ -19,8 +19,8 @@ Un grand nombre de nos intégrations sont apportées et maintenues par la commun
 
 Certaines méthodes d'installation sont maintenues par un tiers :
 
-- [Actions GitHub](https://github.com/arduino/setup-task) par [@arduino](https://github.com/arduino)
-- [AUR](https://aur.archlinux.org/packages/go-task-bin) par [@carlsmedstad](https://github.com/carlsmedstad)
+- [GitHub Actions](https://github.com/arduino/setup-task) by @arduino
+- [AUR](https://aur.archlinux.org/packages/go-task-bin) by @carlsmedstad
 - [Scoop](https://github.com/ScoopInstaller/Main/blob/master/bucket/task.json)
 - [Fedora](https://packages.fedoraproject.org/pkgs/golang-github-task/go-task/)
 - [NixOS](https://github.com/NixOS/nixpkgs/blob/master/pkgs/development/tools/go-task/default.nix)

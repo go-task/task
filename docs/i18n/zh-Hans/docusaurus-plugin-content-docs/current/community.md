@@ -19,8 +19,8 @@ We use [Crowdin](https://crowdin.com/project/taskfile) to translate our document
 
 有些安装方式是通过第三方维护的：
 
-- [GitHub Actions](https://github.com/arduino/setup-task) 由 [@arduino](https://github.com/arduino) 维护
-- [AUR](https://aur.archlinux.org/packages/go-task-bin) 由 [@carlsmedstad](https://github.com/carlsmedstad) 维护
+- [GitHub Actions](https://github.com/arduino/setup-task) by @arduino
+- [AUR](https://aur.archlinux.org/packages/go-task-bin) by @carlsmedstad
 - [Scoop](https://github.com/ScoopInstaller/Main/blob/master/bucket/task.json)
 - [Fedora](https://packages.fedoraproject.org/pkgs/golang-github-task/go-task/)
 - [NixOS](https://github.com/NixOS/nixpkgs/blob/master/pkgs/development/tools/go-task/default.nix)

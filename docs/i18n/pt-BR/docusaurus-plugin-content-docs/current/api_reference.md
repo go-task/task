@@ -120,6 +120,7 @@ Há algumas variáveis especiais que são acessíveis via template:
 | Variável           | Descrição                                                                                                                                                                     |
 | ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `CLI_ARGS`         | Contém todos os argumentos extras passados depois de `--` quando invocando o Task via linha de comando.                                                                       |
+| `CLI_FORCE`        | A boolean containing whether the `--force` or `--force-all` flags were set.                                                                                                   |
 | `TASK`             | O nome da tarefa atual.                                                                                                                                                       |
 | `ROOT_DIR`         | O caminho absoluto para o Taskfile raíz.                                                                                                                                      |
 | `TASKFILE_DIR`     | O caminho absoluto para o Taskfile incluído.                                                                                                                                  |

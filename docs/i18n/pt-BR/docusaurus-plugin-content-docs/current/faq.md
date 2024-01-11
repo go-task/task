@@ -78,7 +78,7 @@ The default shell on Windows (`cmd` and `powershell`) do not have commands like 
 
 We want to make improvements to this part of Task and the issues below track this work. Constructive comments and contributions are very welcome!
 
-- [#197](https://github.com/go-task/task/issues/197)
+- #197
 - [mvdan/sh#93](https://github.com/mvdan/sh/issues/93)
 - [mvdan/sh#97](https://github.com/mvdan/sh/issues/97)
 

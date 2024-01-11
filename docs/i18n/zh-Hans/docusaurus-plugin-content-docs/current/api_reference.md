@@ -120,6 +120,7 @@ Task 有时会以特定的退出代码退出。 These codes are split into three
 | 变量                 | 描述                                                                                                                         |
 | ------------------ | -------------------------------------------------------------------------------------------------------------------------- |
 | `CLI_ARGS`         | 当通过 CLI 调用 Task 时，传递包含在 `--` 之后的所有额外参数。                                                                                    |
+| `CLI_FORCE`        | A boolean containing whether the `--force` or `--force-all` flags were set.                                                |
 | `TASK`             | 当前 task 的名称。                                                                                                               |
 | `ROOT_DIR`         | 根 Taskfile 的绝对路径。                                                                                                          |
 | `TASKFILE_DIR`     | 包含 Taskfile 的绝对路径                                                                                                          |

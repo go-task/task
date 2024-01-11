@@ -2,12 +2,27 @@
 slug: /experiments/gentle-force/
 ---
 
-# Gentle Force
+# Gentle Force (#1200)
 
-- Issue: [#1200][gentle-force-experiment]
-- Environment variable: `TASK_X_FORCE=1`
-- Breaks:
-  - `--force` flag
+:::caution
+
+All experimental features are subject to breaking changes and/or removal _at any time_. We strongly recommend that you do not use these features in a production environment. They are intended for testing and feedback only.
+
+:::
+
+:::warning
+
+This experiment breaks the following functionality:
+
+- The `--force` flag
+
+:::
+
+:::info
+
+To enable this experiment, set the environment variable: `TASK_X_FORCE=1`. Check out [our guide to enabling experiments ][enabling-experiments] for more information.
+
+:::
 
 The `--force` flag currently forces _all_ tasks to run regardless of the status checks. This can be useful, but we have found that most of the time users only expect the direct task they are calling to be forced and _not_ all of its dependant tasks.
 
@@ -18,4 +33,4 @@ If you want to migrate, but continue to force all dependant tasks to run, you sh
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end -->
-[gentle-force-experiment]: https://github.com/go-task/task/issues/1200
+[enabling-experiments]: /experiments/#enabling-experiments

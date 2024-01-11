@@ -9,19 +9,6 @@ sidebar_position: 10
 
 这包含一般准则，但不一定需要严格遵守。 如果你需要或想要，请随时提出不同意见，并在某些时候以不同方式进行。 此外，请随时打开 Issue 或 PR，对本指南进行改进。
 
-## 使用 `Taskfile.yml` 而不是 `taskfile.yml`
-
-```yaml
-# bad
-taskfile.yml
-
-
-# good
-Taskfile.yml
-```
-
-这对于 Linux 用户尤其重要。 Windows 和 macOS 的文件系统不区分大小写，因此 `taskfile.yml` 最终会正常工作，即使它不受官方支持。 不过，在 Linux 上，只有 `Taskfile.yml` 可以工作。
-
 ## 使用正确的关键字顺序
 
 - `version:`

@@ -6,12 +6,17 @@ sidebar_position: -1 #Always push to the top
 draft: true #Hide in production
 ---
 
-# {Nom de la fonctionnalité obsolète}
+# \{Name of Deprecated Feature\} (#\{Issue\})
 
-- Issue: [#{issue}](https://github.com/go-task/task/issues/{issue})
-- Breaks:
-  - {lister toutes les fonctionnalités qui vont être brisées par ce changement}
+:::warning
 
-{Description rapide de la fonctionnalité et de la raison de sa dépréciation}
+This deprecation breaks the following functionality:
 
-{Courte explication des fonctionnalités à utiliser à la place, et comment les utilisateurs peuvent migrer vers cette autre fonctionnalité}
+- \{list any existing functionality that will be broken by this deprecation\}
+- \{if there are no breaking changes, remove this admonition\}
+
+:::
+
+\{Short description of the feature/behavior and why it is being deprecated\}
+
+\{Short explanation of any replacement features/behaviors and how users should migrate to it\}

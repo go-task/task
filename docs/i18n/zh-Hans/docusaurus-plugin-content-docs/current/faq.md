@@ -78,7 +78,7 @@ Windows 上的默认 shell（`cmd` 和 `powershell`）没有像 `rm` 和 `cp` �
 
 我们希望对 Task 的这一部分进行改进，下面的 Issue 会跟踪这项工作。 非常欢迎建设性的意见和贡献！
 
-- [#197](https://github.com/go-task/task/issues/197)
+- #197
 - [mvdan/sh#93](https://github.com/mvdan/sh/issues/93)
 - [mvdan/sh#97](https://github.com/mvdan/sh/issues/97)
 

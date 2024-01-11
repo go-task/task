@@ -9,19 +9,6 @@ Ceci est le guide officiel du style Task pour les fichiers `Taskfile.yml`. Ce gu
 
 Il contient des directives générales, mais elles ne doivent pas nécessairement être strictement respectées. N'hésitez pas à procéder différemment si vous en avez le besoin ou que vous le souhaitez. Aussi, n'hésitez pas à [ouvrir une issue](https://github. com/go-task/task/issues/new/choose) ou [faire une pull request](https://github. com/go-task/task/compare) pour améliorer ce guide.
 
-## Utiliser `Taskfile.yml` et non `taskfile.yml`
-
-```yaml
-# bad
-taskfile.yml
-
-
-# good
-Taskfile.yml
-```
-
-C'est important, surtout pour les utilisateurs Linux. Windows et MacOS ont un système de fichiers insensibles à la casse, donc `taskfile.yml` fonctionnera, même si ce n'est pas officiellement supporté. Sur Linux, uniquement `Taskfile.yml` fonctionnera.
-
 ## Utiliser les mots-clés dans l'ordre correct
 
 - `version:`

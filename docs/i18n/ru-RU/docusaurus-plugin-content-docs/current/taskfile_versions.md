@@ -69,7 +69,7 @@ tasks:
 
 :::caution
 
-v2 schema support is [deprecated][deprecate-version-2-schema] and will be removed in a future release.
+v2 schemas are [no longer supported by the latest version of Task][deprecate-version-2-schema].
 
 :::
 
@@ -86,13 +86,13 @@ tasks:
       - aws s3 cp .env s3://myenvironment
 ```
 
-Пожалуйста, проверьте [документацию][includes]
+Please check the [documentation][includes]
 
 ## Версия 2.2
 
 :::caution
 
-v2 schema support is [deprecated][deprecate-version-2-schema] and will be removed in a future release.
+v2 schemas are [no longer supported by the latest version of Task][deprecate-version-2-schema].
 
 :::
 
@@ -110,11 +110,11 @@ includes:
 
 :::caution
 
-v2 schema support is [deprecated][deprecate-version-2-schema] and will be removed in a future release.
+v2 schemas are [no longer supported by the latest version of Task][deprecate-version-2-schema].
 
 :::
 
-В версии 2.1 появилась глобальная опция `output`, которая позволяет иметь больше контроля над тем, как вывод команд печатается на консоли (см. [документацию][output]):
+Version 2.1 includes a global `output` option, to allow having more control over how commands output are printed to the console (see [documentation][output] for more info):
 
 ```yaml
 version: '2'
@@ -128,7 +128,7 @@ tasks:
   prefix: server
 ```
 
-Начиная с этой версии можно игнорировать ошибки команды или задачи (смотрите документацию [здесь][ignore_errors]):
+From this version it's also possible to ignore errors of a command or task (check documentation [here][ignore_errors]):
 
 ```yaml
 version: '2'
@@ -151,7 +151,7 @@ tasks:
 
 :::caution
 
-v2 schema support is [deprecated][deprecate-version-2-schema] and will be removed in a future release.
+v2 schemas are [no longer supported by the latest version of Task][deprecate-version-2-schema].
 
 :::
 
@@ -234,7 +234,7 @@ echo:
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end -->
-[output]: usage.md#output-syntax
-[ignore_errors]: usage.md#ignore-errors
-[includes]: usage.md#including-other-taskfiles
-[deprecate-version-2-schema]: https://github.com/go-task/task/issues/1197
+[deprecate-version-2-schema]: /deprecations/version-2-schema/
+[output]: /usage#output-syntax
+[ignore_errors]: /usage#ignore-errors
+[includes]: /usage#including-other-taskfiles
