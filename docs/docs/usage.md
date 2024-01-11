@@ -1292,8 +1292,8 @@ Task also adds the following functions:
   based on a base path (first argument). The same as Go's
   [filepath.Rel](https://pkg.go.dev/path/filepath#Rel).
 - `merge`: Creates a new map that is a copy of the first map with the keys of
-  the second map merged into it. If there are duplicate keys, the value of the
-  second map is used.
+  each subsequent map merged into it. If there is a duplicate key, the value of
+  the last map with that key is used.
 - `spew`: Returns the Go representation of a specific variable. Useful for
   debugging. Uses the [davecgh/go-spew](https://github.com/davecgh/go-spew)
   package.

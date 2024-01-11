@@ -61,9 +61,10 @@ tasks:
   map:
     vars:
       MAP_1: {A: 1, B: 2, C: 3}
-      MAP_2: {D: 4, E: 5, F: 6}
+      MAP_2: {B: 4, C: 5, D: 6}
+      MAP_3: {C: 7, D: 8, E: 9}
     cmds:
-      - echo '{{merge .MAP_1 .MAP_2}}'
+      - echo '{{merge .MAP_1 .MAP_2 .MAP_3}}'
 
   for-string:
     vars:
