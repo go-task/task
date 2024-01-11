@@ -8,6 +8,8 @@
   `taskfile/ast` (#1450 by @pd93).
 - Updated the experiments and deprecations documentation format (#1445 by
   @pd93).
+- Small change on the API when using as a library: `call.Direct` became
+  `call.Indirect` (#1459).
 
 ## v3.33.1 - 2023-12-21
 
