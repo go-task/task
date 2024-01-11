@@ -23,11 +23,11 @@ task [--flags] [tasks...] [-- CLI_ARGS...]
 
 | ショート | フラグ                         | 型        | デフォルト値                                       | 説明                                                                                                                                                                                                             |
 | ---- | --------------------------- | -------- | -------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `-c` | `--color`                   | `bool`   | `true`                                       | Colored output. Enabled by default. Set flag to `false` or use `NO_COLOR=1` to disable.                                                                                                                        |
-| `-C` | `--concurrency`             | `int`    | `0`                                          | Limit number tasks to run concurrently. Zero means unlimited.                                                                                                                                                  |
-| `-d` | `--dir`                     | `string` | ワーキングディレクトリ                                  | Sets directory of execution.                                                                                                                                                                                   |
-| `-n` | `--dry`                     | `bool`   | `false`                                      | Compiles and prints tasks in the order that they would be run, without executing them.                                                                                                                         |
-| `-x` | `--exit-code`               | `bool`   | `false`                                      | Pass-through the exit code of the task command.                                                                                                                                                                |
+| `-c` | `--color`                   | `bool`   | `true`                                       | 色付き出力。 デフォルトで有効。 `false`または` NO_COLOR=1`を使用することで無効にできます。                                                                                                                                                       |
+| `-C` | `--concurrency`             | `int`    | `0`                                          | 同時に実行するタスクを制限します。 0は無制限を意味します。                                                                                                                                                                                 |
+| `-d` | `--dir`                     | `string` | ワーキングディレクトリ                                  | 実行するディレクトリを指定します。                                                                                                                                                                                              |
+| `-n` | `--dry`                     | `bool`   | `false`                                      | タスクを実行せずに、コンパイルして実行される順番を表示します。                                                                                                                                                                                |
+| `-x` | `--exit-code`               | `bool`   | `false`                                      | taskコマンドの終了コードを変更や加工を行わずにそのまま伝えます。                                                                                                                                                                             |
 | `-f` | `--force`                   | `bool`   | `false`                                      | Forces execution even when the task is up-to-date.                                                                                                                                                             |
 | `-g` | `--global`                  | `bool`   | `false`                                      | Runs global Taskfile, from `$HOME/Taskfile.{yml,yaml}`.                                                                                                                                                        |
 | `-h` | `--help`                    | `bool`   | `false`                                      | Shows Task usage.                                                                                                                                                                                              |
@@ -36,20 +36,20 @@ task [--flags] [tasks...] [-- CLI_ARGS...]
 | `-l` | `--list`                    | `bool`   | `false`                                      | Lists tasks with description of current Taskfile.                                                                                                                                                              |
 | `-a` | `--list-all`                | `bool`   | `false`                                      | Lists tasks with or without a description.                                                                                                                                                                     |
 |      | `--sort`                    | `string` | `default`                                    | Changes the order of the tasks when listed.<br />`default` - Alphanumeric with root tasks first<br />`alphanumeric` - Alphanumeric<br />`none` - No sorting (As they appear in the Taskfile) |
-|      | `--json`                    | `bool`   | `false`                                      | See [JSON Output](#json-output)                                                                                                                                                                                |
+|      | `--json`                    | `bool`   | `false`                                      | [JSON出力](#json-output)を参照してください。                                                                                                                                                                               |
 | `-o` | `--output`                  | `string` | Default set in the Taskfile or `intervealed` | Sets output style: [`interleaved`/`group`/`prefixed`].                                                                                                                                                         |
 |      | `--output-group-begin`      | `string` |                                              | Message template to print before a task's grouped output.                                                                                                                                                      |
 |      | `--output-group-end`        | `string` |                                              | Message template to print after a task's grouped output.                                                                                                                                                       |
 |      | `--output-group-error-only` | `bool`   | `false`                                      | Swallow command output on zero exit code.                                                                                                                                                                      |
-| `-p` | `--parallel`                | `bool`   | `false`                                      | Executes tasks provided on command line in parallel.                                                                                                                                                           |
-| `-s` | `--silent`                  | `bool`   | `false`                                      | Disables echoing.                                                                                                                                                                                              |
+| `-p` | `--parallel`                | `bool`   | `false`                                      | コマンドラインで指定したタスクを並列に実行します。                                                                                                                                                                                      |
+| `-s` | `--silent`                  | `bool`   | `false`                                      | エコーを無効にします。                                                                                                                                                                                                    |
 | `-y` | `--yes`                     | `bool`   | `false`                                      | Assume "yes" as answer to all prompts.                                                                                                                                                                         |
 |      | `--status`                  | `bool`   | `false`                                      | Exits with non-zero exit code if any of the given tasks is not up-to-date.                                                                                                                                     |
-|      | `--summary`                 | `bool`   | `false`                                      | Show summary about a task.                                                                                                                                                                                     |
+|      | `--summary`                 | `bool`   | `false`                                      | タスクのサマリーを表示します。                                                                                                                                                                                                |
 | `-t` | `--taskfile`                | `string` | `Taskfile.yml`または`Taskfile.yaml`             |                                                                                                                                                                                                                |
-| `-v` | `--verbose`                 | `bool`   | `false`                                      | Enables verbose mode.                                                                                                                                                                                          |
-|      | `--version`                 | `bool`   | `false`                                      | Show Task version.                                                                                                                                                                                             |
-| `-w` | `--watch`                   | `bool`   | `false`                                      | Enables watch of the given task.                                                                                                                                                                               |
+| `-v` | `--verbose`                 | `bool`   | `false`                                      | 冗長モードを有効にします。                                                                                                                                                                                                  |
+|      | `--version`                 | `bool`   | `false`                                      | Taskのバージョンを表示。                                                                                                                                                                                                 |
+| `-w` | `--watch`                   | `bool`   | `false`                                      | 指定したタスクの監視を有効にします。                                                                                                                                                                                             |
 
 ## 終了コード
 
@@ -63,9 +63,9 @@ A full list of the exit codes and their descriptions can be found below:
 
 | コード | 説明                                                           |
 | --- | ------------------------------------------------------------ |
-| 0   | Success                                                      |
-| 1   | An unknown error occurred                                    |
-| 100 | No Taskfile was found                                        |
+| 0   | 成功                                                           |
+| 1   | 不明なエラー                                                       |
+| 100 | Taskfileが見つかりません                                             |
 | 101 | A Taskfile already exists when trying to initialize one      |
 | 102 | The Taskfile is invalid or cannot be parsed                  |
 | 103 | A remote Taskfile could not be downloaded                    |
@@ -81,7 +81,7 @@ A full list of the exit codes and their descriptions can be found below:
 | 205 | A task was cancelled by the user                             |
 | 206 | A task was not executed due to missing required variables    |
 
-These codes can also be found in the repository in [`errors/errors.go`](https://github.com/go-task/task/blob/main/errors/errors.go).
+これらのコードは[`errors/errors.go`](https://github.com/go-task/task/blob/main/errors/errors.go)にあります。
 
 :::info
 
@@ -117,9 +117,10 @@ When using the `--json` flag in combination with either the `--list` or `--list-
 
 There are some special variables that is available on the templating system:
 
-| Var                | Description                                                                                                                                              |
+| 変数                 | 説明                                                                                                                                                       |
 | ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `CLI_ARGS`         | Contain all extra arguments passed after `--` when calling Task through the CLI.                                                                         |
+| `CLI_FORCE`        | A boolean containing whether the `--force` or `--force-all` flags were set.                                                                              |
 | `TASK`             | The name of the current task.                                                                                                                            |
 | `ROOT_DIR`         | The absolute path of the root Taskfile.                                                                                                                  |
 | `TASKFILE_DIR`     | The absolute path of the included Taskfile.                                                                                                              |
@@ -136,14 +137,14 @@ Some environment variables can be overridden to adjust Task behavior.
 | 環境変数                 | デフォルト値  | 説明                                                                                                                |
 | -------------------- | ------- | ----------------------------------------------------------------------------------------------------------------- |
 | `TASK_TEMP_DIR`      | `.task` | Location of the temp dir. Can relative to the project like `tmp/task` or absolute like `/tmp/.task` or `~/.task`. |
-| `TASK_COLOR_RESET`   | `0`     | Color used for white.                                                                                             |
-| `TASK_COLOR_BLUE`    | `34`    | Color used for blue.                                                                                              |
-| `TASK_COLOR_GREEN`   | `32`    | Color used for green.                                                                                             |
-| `TASK_COLOR_CYAN`    | `36`    | Color used for cyan.                                                                                              |
-| `TASK_COLOR_YELLOW`  | `33`    | Color used for yellow.                                                                                            |
-| `TASK_COLOR_MAGENTA` | `35`    | Color used for magenta.                                                                                           |
-| `TASK_COLOR_RED`     | `31`    | Color used for red.                                                                                               |
-| `FORCE_COLOR`        |         | Force color output usage.                                                                                         |
+| `TASK_COLOR_RESET`   | `0`     | 白色に使われる。                                                                                                          |
+| `TASK_COLOR_BLUE`    | `34`    | 青色に使われる。                                                                                                          |
+| `TASK_COLOR_GREEN`   | `32`    | 緑色に使われる。                                                                                                          |
+| `TASK_COLOR_CYAN`    | `36`    | シアン色に使われる。                                                                                                        |
+| `TASK_COLOR_YELLOW`  | `33`    | 黄色に使われる。                                                                                                          |
+| `TASK_COLOR_MAGENTA` | `35`    | マゼンタ色に使われる。                                                                                                       |
+| `TASK_COLOR_RED`     | `31`    | 赤色に使われる。                                                                                                          |
+| `FORCE_COLOR`        |         | 色の出力を強制します。                                                                                                       |
 
 ## Taskfileのスキーマ
 
@@ -165,7 +166,7 @@ Some environment variables can be overridden to adjust Task behavior.
 
 ### Include
 
-| Attribute  | Type                  | Default                       | Description                                                                                                                                                                                                                                              |
+| 属性         | 型                     | デフォルト値                        | 説明                                                                                                                                                                                                                                                       |
 | ---------- | --------------------- | ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `taskfile` | `string`              |                               | The path for the Taskfile or directory to be included. If a directory, Task will look for files named `Taskfile.yml` or `Taskfile.yaml` inside that directory. If a relative path, resolved relative to the directory containing the including Taskfile. |
 | `dir`      | `string`              | The parent Taskfile directory | The working directory of the included tasks when run.                                                                                                                                                                                                    |
@@ -233,7 +234,7 @@ vars:
 | `prefix`        | `string`                           |                                                       | Defines a string to prefix the output of tasks running in parallel. Only used when the output mode is `prefixed`.                                                                                                                                                                                        |
 | `ignore_error`  | `bool`                             | `false`                                               | Continue execution if errors happen while executing commands.                                                                                                                                                                                                                                            |
 | `run`           | `string`                           | The one declared globally in the Taskfile or `always` | Specifies whether the task should run again or not if called more than once. Available options: `always`, `once` and `when_changed`.                                                                                                                                                                     |
-| `platforms`     | `[]string`                         | All platforms                                         | Specifies which platforms the task should be run on. [Valid GOOS and GOARCH values allowed](https://github.com/golang/go/blob/main/src/go/build/syslist.go). Task will be skipped otherwise.                                                                                                             |
+| `platforms`     | `[]string`                         | 全てのプラットフォーム                                           | Specifies which platforms the task should be run on. [Valid GOOS and GOARCH values allowed](https://github.com/golang/go/blob/main/src/go/build/syslist.go). Task will be skipped otherwise.                                                                                                             |
 | `set`           | `[]string`                         |                                                       | Specify options for the [`set` builtin](https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html).                                                                                                                                                                                        |
 | `shopt`         | `[]string`                         |                                                       | Specify option for the [`shopt` builtin](https://www.gnu.org/software/bash/manual/html_node/The-Shopt-Builtin.html).                                                                                                                                                                                     |
 
@@ -257,18 +258,18 @@ tasks:
 
 #### Command
 
-| Attribute      | Type                               | Default       | Description                                                                                                                                                                                        |
-| -------------- | ---------------------------------- | ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `cmd`          | `string`                           |               | The shell command to be executed.                                                                                                                                                                  |
-| `task`         | `string`                           |               | Set this to trigger execution of another task instead of running a command. This cannot be set together with `cmd`.                                                                                |
-| `for`          | [`For`](#for)                      |               | Runs the command once for each given value.                                                                                                                                                        |
-| `silent`       | `bool`                             | `false`       | Skips some output for this command. Note that STDOUT and STDERR of the commands will still be redirected.                                                                                          |
-| `vars`         | [`map[string]Variable`](#variable) |               | Optional additional variables to be passed to the referenced task. Only relevant when setting `task` instead of `cmd`.                                                                             |
-| `ignore_error` | `bool`                             | `false`       | Continue execution if errors happen while executing the command.                                                                                                                                   |
-| `defer`        | `string`                           |               | Alternative to `cmd`, but schedules the command to be executed at the end of this task instead of immediately. This cannot be used together with `cmd`.                                            |
-| `platforms`    | `[]string`                         | All platforms | Specifies which platforms the command should be run on. [Valid GOOS and GOARCH values allowed](https://github.com/golang/go/blob/main/src/go/build/syslist.go). Command will be skipped otherwise. |
-| `set`          | `[]string`                         |               | Specify options for the [`set` builtin](https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html).                                                                                  |
-| `shopt`        | `[]string`                         |               | Specify option for the [`shopt` builtin](https://www.gnu.org/software/bash/manual/html_node/The-Shopt-Builtin.html).                                                                               |
+| 属性             | 型                                  | デフォルト値      | 説明                                                                                                                                                                                                 |
+| -------------- | ---------------------------------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `cmd`          | `string`                           |             | The shell command to be executed.                                                                                                                                                                  |
+| `task`         | `string`                           |             | Set this to trigger execution of another task instead of running a command. This cannot be set together with `cmd`.                                                                                |
+| `for`          | [`For`](#for)                      |             | Runs the command once for each given value.                                                                                                                                                        |
+| `silent`       | `bool`                             | `false`     | Skips some output for this command. Note that STDOUT and STDERR of the commands will still be redirected.                                                                                          |
+| `vars`         | [`map[string]Variable`](#variable) |             | Optional additional variables to be passed to the referenced task. Only relevant when setting `task` instead of `cmd`.                                                                             |
+| `ignore_error` | `bool`                             | `false`     | Continue execution if errors happen while executing the command.                                                                                                                                   |
+| `defer`        | `string`                           |             | Alternative to `cmd`, but schedules the command to be executed at the end of this task instead of immediately. This cannot be used together with `cmd`.                                            |
+| `platforms`    | `[]string`                         | 全てのプラットフォーム | Specifies which platforms the command should be run on. [Valid GOOS and GOARCH values allowed](https://github.com/golang/go/blob/main/src/go/build/syslist.go). Command will be skipped otherwise. |
+| `set`          | `[]string`                         |             | Specify options for the [`set` builtin](https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html).                                                                                  |
+| `shopt`        | `[]string`                         |             | Specify option for the [`shopt` builtin](https://www.gnu.org/software/bash/manual/html_node/The-Shopt-Builtin.html).                                                                               |
 
 :::info
 
@@ -286,11 +287,11 @@ tasks:
 
 #### Dependency
 
-| Attribute | Type                               | Default | Description                                                                                                      |
-| --------- | ---------------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------- |
-| `task`    | `string`                           |         | The task to be execute as a dependency.                                                                          |
-| `vars`    | [`map[string]Variable`](#variable) |         | Optional additional variables to be passed to this task.                                                         |
-| `silent`  | `bool`                             | `false` | Hides task name and command from output. The command's output will still be redirected to `STDOUT` and `STDERR`. |
+| 属性       | 型                                  | デフォルト値  | 説明                                                                                                               |
+| -------- | ---------------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------- |
+| `task`   | `string`                           |         | The task to be execute as a dependency.                                                                          |
+| `vars`   | [`map[string]Variable`](#variable) |         | Optional additional variables to be passed to this task.                                                         |
+| `silent` | `bool`                             | `false` | Hides task name and command from output. The command's output will still be redirected to `STDOUT` and `STDERR`. |
 
 :::tip
 
@@ -322,10 +323,10 @@ Finally, the `for` parameter can be defined as a map when you want to use a vari
 
 #### Precondition
 
-| Attribute | Type     | Default | Description                                                                                                  |
-| --------- | -------- | ------- | ------------------------------------------------------------------------------------------------------------ |
-| `sh`      | `string` |         | Command to be executed. If a non-zero exit code is returned, the task errors without executing its commands. |
-| `msg`     | `string` |         | Optional message to print if the precondition isn't met.                                                     |
+| 属性    | 型        | デフォルト値 | 説明                                                                                                           |
+| ----- | -------- | ------ | ------------------------------------------------------------------------------------------------------------ |
+| `sh`  | `string` |        | Command to be executed. If a non-zero exit code is returned, the task errors without executing its commands. |
+| `msg` | `string` |        | Optional message to print if the precondition isn't met.                                                     |
 
 :::tip
 
@@ -339,8 +340,8 @@ tasks:
 
 :::
 
-#### Requires
+#### 必須
 
-| Attribute | Type       | Default | Description                                                                                        |
-| --------- | ---------- | ------- | -------------------------------------------------------------------------------------------------- |
-| `vars`    | `[]string` |         | List of variable or environment variable names that must be set if this task is to execute and run |
+| 属性     | 型          | デフォルト値 | 説明                               |
+| ------ | ---------- | ------ | -------------------------------- |
+| `vars` | `[]string` |        | タスクが実行されるために設定する必要がある変数や環境変数のリスト |

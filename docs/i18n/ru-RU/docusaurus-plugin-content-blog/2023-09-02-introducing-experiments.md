@@ -36,7 +36,7 @@ None of this would have been possible without the [150 or so (and growing) contr
 
 [![Star History Chart](https://api.star-history.com/svg?repos=go-task/task&type=Date)](https://star-history.com/#go-task/task&Date)
 
-## What's next? :thinking_face:
+## What's next? :thinking:
 
 It's extremely motivating to see so many people using and loving Task. However, in this time we've also seen an increase in the number of issues and feature requests. In particular, issues that require some kind of breaking change to Task. This isn't a bad thing, but as we grow we need to be more responsible about how we address these changes in a way that ensures stability and compatibility for existing users and their Taskfiles.
 
@@ -46,7 +46,7 @@ At this point you're probably thinking something like:
 
 And you'd be right... sort of. In theory, this sounds great, but the reality is that we don't have the time to commit to a major overhaul of Task in one big bang release. This would require a colossal amount of time and coordination and with full time jobs and personal lives to tend to, this is a difficult commitment to make. Smaller, more frequent major releases are also a significant inconvenience for users as they have to constantly keep up-to-date with our breaking changes. Fortunately, there is a better way.
 
-## What's going to change? :face_with_monocle:
+## What's going to change? :monocle:
 
 Going forwards, breaking changes will be allowed into _minor_ versions of Task as "experimental features". To access these features users will need opt-in by enabling feature flags. This will allow us to release new features slowly and gather feedback from the community before making them the default behavior in a future major release.
 
@@ -62,7 +62,7 @@ When v4 is released, we will continue to support v3 for a period of time (bug fi
 
 ## v4 When? :eyes:
 
-:shrug: When it's ready.
+:man_shrugging: When it's ready.
 
 In all seriousness, we don't have a timeline for this yet. We'll be working on the most serious deficiencies of the v3 API first and regularly evaluating the state of the project. When we feel its in a good, stable place and we have a clear upgrade path for users and a number of stable experiments, we'll start to think about v4.
 

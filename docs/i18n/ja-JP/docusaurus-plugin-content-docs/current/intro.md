@@ -14,7 +14,7 @@ Taskは[GNU Make][make]のようにシンプルで簡単に使えるタスクラ
 
 [Go][go]で書かれているため、Taskはシングルバイナリで他の依存関係がありません。つまり、複雑なインストールセットアップがありません。
 
-一度[インストール](installation.md)したら、シンプルな[YAML][yaml]スキーマを利用して、`Taskfile.yml`というファイルにビルドタスクを記述するだけでいいです。
+Once [installed](/installation), you just need to describe your build tasks using a simple [YAML][yaml] schema in a file called `Taskfile.yml`:
 
 ```yaml title="Taskfile.yml"
 version: '3'
@@ -32,8 +32,8 @@ tasks:
 
 ## 特徴
 
-- [簡単なインストール方法](installation.md): シングルバイナリをダウンロードして、`$PATH`に追加するだけで完了です！ または[Homebrew][homebrew]、[Snapcraft][snapcraft]、[Scoop][scoop]を使ってインストールすることができます。
-- Clで使用可能: [シンプルなコマンド](installation.md#install-script)でCIスクリプトに追加することでCIパイプラインでTaskを使うことができます。
+- [Easy installation](/installation): just download a single binary, add to `$PATH` and you're done! または[Homebrew][homebrew]、[Snapcraft][snapcraft]、[Scoop][scoop]を使ってインストールすることができます。
+- Available on CIs: by adding [this simple command](/installation#install-script) to install on your CI script and you're ready to use Task as part of your CI pipeline;
 - 真のクロスプラットフォーム: ほとんどのビルドツールはLinuxまたはmacOSだけで使用可能ですが、Taskは[Goのシェルインタープリタ][sh]を使うことでWindowsもサポートしています。
 - コード生成に適している: 特定のファイル群が最後に実行されてから変更されていない場合(タイムスタンプや内容に基づき)、簡単に[タスクの実行を防ぐ](/usage#prevent-unnecessary-work)ことができます。
 

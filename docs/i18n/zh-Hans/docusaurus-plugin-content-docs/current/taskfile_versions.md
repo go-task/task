@@ -69,7 +69,7 @@ tasks:
 
 :::caution
 
-v2 schema support is [deprecated][deprecate-version-2-schema] and will be removed in a future release.
+v2 schemas are [no longer supported by the latest version of Task][deprecate-version-2-schema].
 
 :::
 
@@ -86,13 +86,13 @@ tasks:
       - aws s3 cp .env s3://myenvironment
 ```
 
-请检查 [文档][includes]
+Please check the [documentation][includes]
 
 ## 版本 2.2
 
 :::caution
 
-v2 schema support is [deprecated][deprecate-version-2-schema] and will be removed in a future release.
+v2 schemas are [no longer supported by the latest version of Task][deprecate-version-2-schema].
 
 :::
 
@@ -110,11 +110,11 @@ includes:
 
 :::caution
 
-v2 schema support is [deprecated][deprecate-version-2-schema] and will be removed in a future release.
+v2 schemas are [no longer supported by the latest version of Task][deprecate-version-2-schema].
 
 :::
 
-2.1 版包括一个全局 `output` 选项，以允许更好地控制如何将命令输出打印到控制台（有关更多信息，请参阅 [文档][output]）：
+Version 2.1 includes a global `output` option, to allow having more control over how commands output are printed to the console (see [documentation][output] for more info):
 
 ```yaml
 version: '2'
@@ -128,7 +128,7 @@ tasks:
   prefix: server
 ```
 
-从这个版本开始，也可以忽略命令或 task 的错误（在 [此处][ignore_errors] 查看文档）：
+From this version it's also possible to ignore errors of a command or task (check documentation [here][ignore_errors]):
 
 ```yaml
 version: '2'
@@ -151,7 +151,7 @@ tasks:
 
 :::caution
 
-v2 schema support is [deprecated][deprecate-version-2-schema] and will be removed in a future release.
+v2 schemas are [no longer supported by the latest version of Task][deprecate-version-2-schema].
 
 :::
 
@@ -234,7 +234,7 @@ echo:
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end -->
-[output]: usage.md#输出语法
-[ignore_errors]: usage.md#忽略错误
-[includes]: usage.md#包含其他-taskfile
-[deprecate-version-2-schema]: https://github.com/go-task/task/issues/1197
+[deprecate-version-2-schema]: /deprecations/version-2-schema/
+[output]: /usage#output-syntax
+[ignore_errors]: /usage#ignore-errors
+[includes]: /usage#including-other-taskfiles

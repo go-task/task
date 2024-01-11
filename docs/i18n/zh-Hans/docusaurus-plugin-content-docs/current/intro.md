@@ -14,7 +14,7 @@ Task 是一个任务运行器/构建工具，旨在比 [GNU Make][make] 等更�
 
 由于它是用 [Go](https://go.dev/) 编写的，Task 只是一个二进制文件，没有其他依赖项，这意味着您不需要为了使用构建工具而烦恼任何复杂的安装设置。
 
-[安装](installation.md) 后，您只需在名为 `Taskfile.yml` 的文件中使用简单的 [YAML][yaml] 规则描述您的构建任务：
+Once [installed](/installation), you just need to describe your build tasks using a simple [YAML][yaml] schema in a file called `Taskfile.yml`:
 
 ```yaml title="Taskfile.yml"
 version: '3'
@@ -32,8 +32,8 @@ tasks:
 
 ## Features
 
-- [易于安装](installation.md)：只需要下载一个二进制文件，添加到 `$PATH` 即可！ 或者，您也可以根据需要使用 [Homebrew](https://brew.sh/)、[Snapcraft](https://snapcraft.io/) 或 [Scoop](https://scoop.sh/) 进行安装。
-- 可以在 CI 中使用：只要添加 [这个命令](installation.md#安装脚本) 到 CI 安装脚本中，然后就可以把 Task 当做 CI 的一个功能来使用了。
+- [Easy installation](/installation): just download a single binary, add to `$PATH` and you're done! 或者，您也可以根据需要使用 [Homebrew](https://brew.sh/)、[Snapcraft](https://snapcraft.io/) 或 [Scoop](https://scoop.sh/) 进行安装。
+- Available on CIs: by adding [this simple command](/installation#install-script) to install on your CI script and you're ready to use Task as part of your CI pipeline;
 - 真正的跨平台：虽然大多数构建工具只能在 Linux 或 macOS 上运行良好，但由于 [这个用于 Go 的 shell 解释器](https://github.com/mvdan/sh)，Task 也支持 Windows。
 - 非常适合代码生成：如果给定的一组文件自上次运行以来没有更改（基于其时间戳或内容），您可以轻松地 [阻止 task 运行](/usage#减少不必要的工作)。
 

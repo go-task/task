@@ -69,7 +69,7 @@ tasks:
 
 :::caution
 
-Le support du schéma v2 est [déprécié][deprecate-version-2-schema] et sera retiré dans une future version.
+v2 schemas are [no longer supported by the latest version of Task][deprecate-version-2-schema].
 
 :::
 
@@ -86,13 +86,13 @@ tasks:
       - aws s3 cp .env s3://myenvironment
 ```
 
-Veuillez consulter la [documentation][includes]
+Please check the [documentation][includes]
 
 ## Version 2.2
 
 :::caution
 
-Le support du schéma v2 est [déprécié][deprecate-version-2-schema] et sera retiré dans une future version.
+v2 schemas are [no longer supported by the latest version of Task][deprecate-version-2-schema].
 
 :::
 
@@ -110,11 +110,11 @@ includes:
 
 :::caution
 
-Le support du schéma v2 est [déprécié][deprecate-version-2-schema] et sera retiré dans une future version.
+v2 schemas are [no longer supported by the latest version of Task][deprecate-version-2-schema].
 
 :::
 
-La version 2.1 inclut une option globale `output` permettant d'avoir plus de contrôle sur la manière dont les logs sont affichés dans la console (voir la [documentation][output] pour plus d'informations):
+Version 2.1 includes a global `output` option, to allow having more control over how commands output are printed to the console (see [documentation][output] for more info):
 
 ```yaml
 version: '2'
@@ -128,7 +128,7 @@ tasks:
   prefix: server
 ```
 
-À partir de cette version, il est également possible d'ignorer les erreurs d'une commande ou d'une tâche (vérifiez la documentation [ici][ignore_errors] ) :
+From this version it's also possible to ignore errors of a command or task (check documentation [here][ignore_errors]):
 
 ```yaml
 version: '2'
@@ -151,7 +151,7 @@ tasks:
 
 :::caution
 
-Le support du schéma v2 est [déprécié][deprecate-version-2-schema] et sera retiré dans une future version.
+v2 schemas are [no longer supported by the latest version of Task][deprecate-version-2-schema].
 
 :::
 
@@ -234,7 +234,7 @@ L'ordre de priorité de la variable était également différent :
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end -->
-[output]: usage.md#output-syntax
-[ignore_errors]: usage.md#ignore-errors
-[includes]: usage.md#including-other-taskfiles
-[deprecate-version-2-schema]: https://github.com/go-task/task/issues/1197
+[deprecate-version-2-schema]: /deprecations/version-2-schema/
+[output]: /usage#output-syntax
+[ignore_errors]: /usage#ignore-errors
+[includes]: /usage#including-other-taskfiles

@@ -9,19 +9,6 @@ sidebar_position: 10
 
 これには一般的なガイドラインが含まれていますが、必ずしも厳密に従う必要はありません。 必要であったり、あるいは違う方法を取りたい場合は自由にしてください。 また、このガイドの改善点について、IssueまたはPull Requestを開くことも自由です。
 
-## `taskfile.yml`ではなく`Taskfile.yml`を使用する
-
-```yaml
-# bad
-taskfile.yml
-
-
-# good
-Taskfile.yml
-```
-
-これはLinuxユーザーにとって特に重要です。 WindowsとmacOSは大文字と小文字を区別しないファイルシステム持っているので、公式にはサポートされていないにもかかわらず、`taskfile.yml`は正常に動作します。 Linuxでは`Taskfile.yml`だけが動作します。
-
 ## キーワードを正しい順序にする
 
 - `version:`

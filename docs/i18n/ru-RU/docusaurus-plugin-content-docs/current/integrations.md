@@ -24,7 +24,7 @@ sidebar_position: 8
 
 ## Схема
 
-Изначально была создана [@KROSF](https://github.com/KROSF) вот тут [this Gist](https://gist.github.com/KROSF/c5435acf590acd632f71bb720f685895) и теперь официально поддерживается в этом [файле](https://github.com/go-task/task/blob/main/docs/static/schema.json) и доступна по ссылке https://taskfile.dev/schema.json. Эта схема может быть использована для проверки Task файлов и автодополнения во многих редакторах кода:
+This was initially created by @KROSF in [this Gist](https://gist.github.com/KROSF/c5435acf590acd632f71bb720f685895) and is now officially maintained in [this file](https://github.com/go-task/task/blob/main/docs/static/schema.json) and made available at https://taskfile.dev/schema.json. Эта схема может быть использована для проверки Task файлов и автодополнения во многих редакторах кода:
 
 ### Visual Studio Code
 
@@ -55,8 +55,8 @@ version: '3'
 
 В дополнение к нашей официальной интеграции, сообщество разработчиков разработало свои собственные интеграции для Task:
 
-- Расширение для [Sublime Text](https://packagecontrol.io/packages/Taskfile) [[источник](https://github.com/biozz/sublime-taskfile)] [@biozz](https://github.com/biozz)
-- Расширение для [IntelliJ](https://plugins.jetbrains.com/plugin/17058-taskfile) [[источник](https://github.com/lechuckroh/task-intellij-plugin)] [@lechuckroh](https://github.com/lechuckroh)
+- [Sublime Text Plugin](https://packagecontrol.io/packages/Taskfile) [[source](https://github.com/biozz/sublime-taskfile)] by @biozz
+- [IntelliJ Plugin](https://plugins.jetbrains.com/plugin/17058-taskfile) [[source](https://github.com/lechuckroh/task-intellij-plugin)] by @lechuckroh
 - [mk](https://github.com/pycontribs/mk) - инструмент командной строки распознает Taskfile'ы.
 
 Если вы сделали что-то, что интегрируется с Task, пожалуйста, не стесняйтесь открыть PR, чтобы добавить его в этот список.

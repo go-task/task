@@ -14,7 +14,7 @@ Task é uma ferramenta de automatização que foi criada para ser mais simples d
 
 Por ser escrito em [Go][go], o Task é simplesmente um binário e não possui nenhuma outra dependência, o que significa que você não precisa lidar com um processo de instalação complicado apenas para usar uma ferramenta de automação.
 
-Uma vez [instalado](installation.md), você só precisa só precisa escrever suas tarefas usando um esquema [YAML][yaml] simples num arquivo chamado `Taskfile.yml`:
+Once [installed](/installation), you just need to describe your build tasks using a simple [YAML][yaml] schema in a file called `Taskfile.yml`:
 
 ```yaml title="Taskfile.yml"
 version: '3'
@@ -32,8 +32,8 @@ O exemplo acima é apenas o começo. Você pode dar uma olhada no [guia de uso](
 
 ## Features
 
-- [Instalação fácil](installation.md): apenas baixe um único binário, adicione-o a `$PATH` e pronto! Ou você também pode instalá-lo usando [Homebrew][homebrew], [Snapcraft][snapcraft] ou [Scoop][scoop] se você quiser.
-- Disponível em CIs: adicionando [este script simples](installation.md#install-script) para instalá-lo no seu CI você estará pronto para usar o Task como parte do seu pipeline de CI;
+- [Easy installation](/installation): just download a single binary, add to `$PATH` and you're done! Ou você também pode instalá-lo usando [Homebrew][homebrew], [Snapcraft][snapcraft] ou [Scoop][scoop] se você quiser.
+- Available on CIs: by adding [this simple command](/installation#install-script) to install on your CI script and you're ready to use Task as part of your CI pipeline;
 - Verdadeiramente multiplataforma: enquanto a maioria das ferramentas de compilação só funcionam bem no Linux ou macOS, o Task também suporta Windows graças [a este interpretador de shell para Go][sh].
 - Ótimo para a geração de código: você pode facilmente [impedir que uma tarefa execute](/usage#prevent-unnecessary-work) se um determinado conjunto de arquivos não tiver mudado desde a última execução (baseado na data de modificação ou conteúdo dos arquivos).
 

@@ -78,7 +78,7 @@ Windowsのデフォルトシェル(`cmd`と`powershell`)は、組み込みシェ
 
 私たちはTaskのこの部分に改善したいと思っており、以下のIssueがそれを追跡するものです。 建設的なコメントやコントリビュートは大歓迎です！
 
-- [#197](https://github.com/go-task/task/issues/197)
+- #197
 - [mvdan/sh#93](https://github.com/mvdan/sh/issues/93)
 - [mvdan/sh#97](https://github.com/mvdan/sh/issues/97)
 

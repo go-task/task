@@ -120,6 +120,7 @@ There are some special variables that is available on the templating system:
 | Var                | Description                                                                                                                                              |
 | ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `CLI_ARGS`         | Contain all extra arguments passed after `--` when calling Task through the CLI.                                                                         |
+| `CLI_FORCE`        | A boolean containing whether the `--force` or `--force-all` flags were set.                                                                              |
 | `TASK`             | The name of the current task.                                                                                                                            |
 | `ROOT_DIR`         | The absolute path of the root Taskfile.                                                                                                                  |
 | `TASKFILE_DIR`     | The absolute path of the included Taskfile.                                                                                                              |

@@ -2,10 +2,19 @@
 slug: /experiments/remote-taskfiles/
 ---
 
-# Remote Taskfiles
+# Remote Taskfiles (#1317)
 
-- Issue: [#1317][remote-taskfiles-experiment]
-- Environment variable: `TASK_X_REMOTE_TASKFILES=1`
+:::caution
+
+All experimental features are subject to breaking changes and/or removal _at any time_. We strongly recommend that you do not use these features in a production environment. They are intended for testing and feedback only.
+
+:::
+
+:::info
+
+To enable this experiment, set the environment variable: `TASK_X_REMOTE_TASKFILES=1`. Check out [our guide to enabling experiments ][enabling-experiments] for more information.
+
+:::
 
 This experiment allows you to specify a remote Taskfile URL when including a Taskfile. For example:
 
@@ -53,5 +62,5 @@ By default, Task will timeout requests to download remote files after 10 seconds
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end -->
-[remote-taskfiles-experiment]: https://github.com/go-task/task/issues/1317
+[enabling-experiments]: /experiments/#enabling-experiments
 [man-in-the-middle-attacks]: https://en.wikipedia.org/wiki/Man-in-the-middle_attack

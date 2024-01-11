@@ -487,7 +487,7 @@ tasks:
 
 ## 別のタスクを呼び出す
 
-When a task has many dependencies, they are executed concurrently. This will often result in a faster build pipeline. However, in some situations, you may need to call other tasks serially. In this case, use the following syntax:
+タスクに多くの依存関係がある場合、依存しているものは同時に実行されます。 これによりビルドパイプラインが速くなります。 しかし、状況によっては、他のタスクを順番に呼び出したケースがあるかもしれません。 その場合、以下の構文を使用してください:
 
 ```yaml
 version: '3'
@@ -508,7 +508,7 @@ tasks:
       - echo "Another task"
 ```
 
-Using the `vars` and `silent` attributes you can choose to pass variables and toggle [silent mode](#silent-mode) on a call-by-call basis:
+`vars`属性で変数をを渡すことができ、`silent`属性で[サイレントモード](#silent-mode)を切り替えることができます:
 
 ```yaml
 version: '3'
@@ -527,11 +527,11 @@ tasks:
         silent: true
 ```
 
-The above syntax is also supported in `deps`.
+上記の構文は`deps`属性でもサポートされています。
 
 :::tip
 
-NOTE: If you want to call a task declared in the root Taskfile from within an [included Taskfile](#including-other-taskfiles), add a leading `:` like this: `task: :task-name`.
+[他のTaskfileをインクルードする](#including-other-taskfiles)でルートにあるTaskfileをインクルードしていて、そこに定義されたタスクを呼び出したい場合、以下のように先頭に`:`を付け加えてください。 `task: :task-name`。
 
 :::
 
@@ -1298,7 +1298,7 @@ tasks:
 task: "This is a dangerous command... Do you want to continue?" [y/N]
 ```
 
-Warning prompts are called before executing a task. If a prompt is denied Task will exit with [exit code](api_reference.md#exit-codes) 205. If approved, Task will continue as normal.
+Warning prompts are called before executing a task. If a prompt is denied Task will exit with [exit code](/api#exit-codes) 205. If approved, Task will continue as normal.
 
 ```bash
 ❯ task example

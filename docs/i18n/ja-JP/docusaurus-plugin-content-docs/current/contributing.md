@@ -41,9 +41,9 @@ To run Task for Visual Studio Code, you can open the project in VSCode and hit F
 
 Task uses [Docusaurus][docusaurus] to host a documentation server. The code for this is located in the core Task repository. This can be setup and run locally by using `task docs` (requires `nodejs` & `yarn`). All content is written in Markdown and is located in the `docs/docs` directory. All Markdown documents should have an 80 character line wrap limit (enforced by Prettier).
 
-When making a change, consider whether a change to the [Usage Guide](./usage.md) is necessary. This document contains descriptions and examples of how to use Task features. If you're adding a new feature, try to find an appropriate place to add a new section. If you're updating an existing feature, ensure that the documentation and any examples are up-to-date. Ensure that any examples follow the [Taskfile Styleguide](./styleguide.md).
+When making a change, consider whether a change to the [Usage Guide](/usage) is necessary. This document contains descriptions and examples of how to use Task features. If you're adding a new feature, try to find an appropriate place to add a new section. If you're updating an existing feature, ensure that the documentation and any examples are up-to-date. Ensure that any examples follow the [Taskfile Styleguide](/styleguide).
 
-If you added a new field, command or flag, ensure that you add it to the [API Reference](./api_reference.md). New fields also need to be added to the [JSON Schema][json-schema]. The descriptions for fields in the API reference and the schema should match.
+If you added a new field, command or flag, ensure that you add it to the [API Reference](/api). New fields also need to be added to the [JSON Schema][json-schema]. The descriptions for fields in the API reference and the schema should match.
 
 ### Writing tests
 
@@ -72,7 +72,7 @@ If you're not sure how to format your commit message, check out [Conventional Co
 
 Take a look at the list of [open issues for Task][task-open-issues] or [Task for Visual Studio Code][vscode-task-open-issues]. We have a [good first issue][good-first-issue] label for simpler issues that are ideal for first time contributions.
 
-All kinds of contributions are welcome, whether its a typo fix or a shiny new feature. You can also contribute by upvoting/commenting on issues, helping to answer questions or contributing to other [community projects](./community.md).
+All kinds of contributions are welcome, whether its a typo fix or a shiny new feature. You can also contribute by upvoting/commenting on issues, helping to answer questions or contributing to other [community projects](/community).
 
 > I'm stuck, where can I get help?
 

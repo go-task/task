@@ -15,14 +15,15 @@ Afin de permettre à Task d'évoluer rapidement, nous déployons des changements
 
 Vous pouvez consulter une liste complète des expérimentations en cours dans la section "Expérimentations" de la barre latérale .
 
-Vous pouvez activer une fonctionnalité expérimentale par:
+## Enabling Experiments
+
+You can enable an experimental feature by doing one of the following:
 
 1. Utiliser la variable d'environnement pertinente devant une commande Task. Par exemple, `TASK_X_{FEATURE}=1 task {my-task}`. Ceci est prévu pour faire appel à une expérimentation durant une seule commande Task afin de tester une fonctionnalité expérimentale.
 1. Utiliser la variable d'environnement pertinente dans vos "dotfiles" (par exemple `.bashrc`, `.zshrc` etc.). Ceci est destiné à l'activation permanente des fonctionnalités expérimentales dans votre environnement.
-1. Création d'un fichier `.env` dans le même répertoire que votre fichier Taskfile contenant les variables d'environnement pertinentes pour vos tests. Par exemple :
+1. Création d'un fichier `.env` dans le même répertoire que votre fichier Taskfile contenant les variables d'environnement pertinentes pour vos tests. This allows you to enable an experimental feature at a project level. For example:
 
-```shell
-# .env
+```shell title=".env"
 TASK_X_FEATURE=1
 ```
 
