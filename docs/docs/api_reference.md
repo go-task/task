@@ -128,8 +128,9 @@ There are some special variables that is available on the templating system:
 | `CLI_ARGS`         | Contain all extra arguments passed after `--` when calling Task through the CLI.                                                                         |
 | `CLI_FORCE`        | A boolean containing whether the `--force` or `--force-all` flags were set.                                                                              |
 | `TASK`             | The name of the current task.                                                                                                                            |
-| `ROOT_DIR`         | The absolute path of the root Taskfile.                                                                                                                  |
-| `TASKFILE_DIR`     | The absolute path of the included Taskfile.                                                                                                              |
+| `ROOT_TASKFILE`    | The absolute path of the root Taskfile.                                                                                                                  |
+| `ROOT_DIR`         | The absolute path of the root Taskfile directory.                                                                                                        |
+| `TASKFILE_DIR`     | The absolute path of the included Taskfile directory.                                                                                                    |
 | `USER_WORKING_DIR` | The absolute path of the directory `task` was called from.                                                                                               |
 | `CHECKSUM`         | The checksum of the files listed in `sources`. Only available within the `status` prop and if method is set to `checksum`.                               |
 | `TIMESTAMP`        | The date object of the greatest timestamp of the files listed in `sources`. Only available within the `status` prop and if method is set to `timestamp`. |

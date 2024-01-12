@@ -20,6 +20,7 @@ import (
 
 type Compiler struct {
 	Dir            string
+	Entrypoint     string
 	UserWorkingDir string
 
 	TaskfileEnv  *ast.Vars
@@ -214,6 +215,7 @@ func (c *Compiler) getSpecialVars(t *ast.Task) (map[string]string, error) {
 
 	return map[string]string{
 		"TASK":             t.Task,
+		"ROOT_TASKFILE":    filepathext.SmartJoin(c.Dir, c.Entrypoint),
 		"ROOT_DIR":         c.Dir,
 		"TASKFILE_DIR":     taskfileDir,
 		"USER_WORKING_DIR": c.UserWorkingDir,
