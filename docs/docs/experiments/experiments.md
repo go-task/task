@@ -13,39 +13,49 @@ environment. They are intended for testing and feedback only.
 
 :::
 
-In order to allow Task to evolve quickly, we roll out breaking changes to minor
-versions behind experimental flags. This allows us to gather feedback on
-breaking changes before committing to a major release. This document describes
-the current set of experimental features and their status in the
-[workflow](#workflow).
+In order to allow Task to evolve quickly, we sometimes roll out breaking changes
+to minor versions behind experimental flags. This allows us to gather feedback
+on breaking changes before committing to a major release. This process can also
+be used to gather feedback on important non-breaking features before their
+design is completed. This document describes the
+[experiment workflow](#workflow) and how you can get involved.
 
-You can view a full list of active experiments in the "Experiments" section of
-the sidebar.
+You can view the full list of active experiments in the sidebar submenu to the
+left of the page and click on each one to find out more about it.
 
 ## Enabling Experiments
 
-You can enable an experimental feature by doing one of the following:
+Task uses environment variables to detect whether or not an experiment is
+enabled. All of the experiment variables will begin with the same `TASK_X_`
+prefix followed by the name of the experiment. You can find the exact name for
+each experiment on their respective pages in the sidebar. If the variable is set
+`=1` then it will be enabled. Some experiments may have multiple proposals, in
+which case, you will need to set the variable equal to the number of the
+proposal that you want to enable (`=2`, `=3` etc).
 
-1. Using the relevant environment variable in front of a task command. For
+There are three main ways to set the environment variables for an experiment.
+Which method you use depends on how you intend to use the experiment:
+
+1. Prefixing your task commands with the relevant environment variable(s). For
    example, `TASK_X_{FEATURE}=1 task {my-task}`. This is intended for one-off
    invocations of Task to test out experimental features.
-1. Using the relevant environment variable in your "dotfiles" (e.g. `.bashrc`,
-   `.zshrc` etc.). This is intended for permanently enabling experimental
-   features in your environment.
+1. Adding the relevant environment variable(s) in your "dotfiles" (e.g.
+   `.bashrc`, `.zshrc` etc.). This will permanently enable experimental features
+   for your personal environment.
+
+   ```shell title="~/.bashrc"
+   export TASK_X_FEATURE=1
+   ```
+
 1. Creating a `.env` file in the same directory as your root Taskfile that
-   contains the relevant environment variables. This allows you to enable an
-   experimental feature at a project level. For example:
+   contains the relevant environment variable(s). This allows you to enable an
+   experimental feature at a project level. If you commit the `.env` file to
+   source control then other users of your project will also have these
+   experiments enabled.
 
-```shell title=".env"
-TASK_X_FEATURE=1
-```
-
-## Current Experimental Features and Deprecations
-
-Each section below details an experiment or deprecation and explains what the
-flags/environment variables to enable the experiment are and how the feature's
-behavior will change. It will also explain what you need to do to migrate any
-existing Taskfiles to the new behavior.
+   ```shell title=".env"
+   TASK_X_FEATURE=1
+   ```
 
 ## Workflow
 
@@ -65,11 +75,11 @@ Task.
 All experimental features start with a proposal in the form of a GitHub issue.
 If the maintainers decide that an issue has enough support and is a breaking
 change or is complex/controversial enough to require user feedback, then the
-issue will be marked with the ![proposal] label. At this point, the issue
-becomes a proposal and a period of consultation begins. During this period, we
-request that users provide feedback on the proposal and how it might effect
-their use of Task. It is up to the discretion of the maintainers to decide how
-long this period lasts.
+issue will be marked with the `experiment: proposal` label. At this point, the
+issue becomes a proposal and a period of consultation begins. During this
+period, we request that users provide feedback on the proposal and how it might
+effect their use of Task. It is up to the discretion of the maintainers to
+decide how long this period lasts.
 
 ### 2. Draft
 
@@ -77,9 +87,9 @@ Once a proposal's consultation ends, a contributor may pick up the work and
 begin the initial implementation. Once a PR is opened, the maintainers will
 ensure that it meets the requirements for an experimental feature (i.e. flags
 are in the right format etc) and merge the feature. Once this code is released,
-the status will be updated via the ![draft] label. This indicates that an
-implementation is now available for use in a release and the experiment is open
-for feedback.
+the status will be updated via the `experiment: draft` label. This indicates
+that an implementation is now available for use in a release and the experiment
+is open for feedback.
 
 :::note
 
@@ -93,37 +103,29 @@ experimental features may be abandoned _at any time_.
 
 Once an acceptable level of consensus has been reached by the community and
 feedback/changes are less frequent/significant, the status may be updated via
-the ![candidate] label. This indicates that a proposal is _likely_ to accepted
-and will enter a period for final comments and minor changes.
+the `experiment: candidate` label. This indicates that a proposal is _likely_ to
+accepted and will enter a period for final comments and minor changes.
 
 ### 4. Stable
 
 Once a suitable amount of time has passed with no changes or feedback, an
-experiment will be given the ![stable] label. At this point, the functionality
-will be treated like any other feature in Task and any changes _must_ be
-backward compatible. This allows users to migrate to the new functionality
-without having to worry about anything breaking in future releases. This
-provides the best experience for users migrating to a new major version.
+experiment will be given the `experiment: stable` label. At this point, the
+functionality will be treated like any other feature in Task and any changes
+_must_ be backward compatible. This allows users to migrate to the new
+functionality without having to worry about anything breaking in future
+releases. This provides the best experience for users migrating to a new major
+version.
 
 ### 5. Released
 
-When making a new major release of Task, all experiments marked as ![stable]
-will move to ![released] and their behaviors will become the new default in
-Task. Experiments in an earlier stage (i.e. not stable) cannot be released and
-so will continue to be experiments in the new version.
+When making a new major release of Task, all experiments marked as
+`experiment: stable` will move to `experiment: released` and their behaviors
+will become the new default in Task. Experiments in an earlier stage (i.e. not
+stable) cannot be released and so will continue to be experiments in the new
+version.
 
 ### Abandoned / Superseded
 
 If an experiment is unsuccessful at any point then it will be given the
-![abandoned] or ![superseded] labels depending on which is more suitable. These
-experiments will be removed from Task.
-
-<!-- prettier-ignore-start -->
-[proposal]: https://img.shields.io/badge/experiment:%20proposal-purple
-[draft]: https://img.shields.io/badge/experiment:%20draft-purple
-[candidate]: https://img.shields.io/badge/experiment:%20candidate-purple
-[stable]: https://img.shields.io/badge/experiment:%20stable-purple
-[released]: https://img.shields.io/badge/experiment:%20released-purple
-[abandoned]: https://img.shields.io/badge/experiment:%20abandoned-purple
-[superseded]: https://img.shields.io/badge/experiment:%20superseded-purple
-<!-- prettier-ignore-end -->
+`experiment: abandoned` or `experiment: superseded` labels depending on which is
+more suitable. These experiments will be removed from Task.
