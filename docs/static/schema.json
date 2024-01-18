@@ -348,7 +348,9 @@
         "defer": {
           "description": "Run a command when the task completes. This command will run even when the task fails",
           "anyOf": [
-            "string",
+            {
+              "type": "string"
+            },
             {
               "type": "object",
               "properties": {
