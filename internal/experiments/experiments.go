@@ -4,10 +4,12 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path"
 	"strings"
 	"text/tabwriter"
 
 	"github.com/joho/godotenv"
+	"github.com/spf13/pflag"
 	"golang.org/x/exp/slices"
 
 	"github.com/go-task/task/v3/internal/logger"
@@ -59,8 +61,28 @@ func getEnv(xName string) string {
 	return os.Getenv(envName)
 }
 
+func getEnvFilePath() string {
+	// Parse the CLI flags again to get the directory/taskfile being run
+	// We use a flagset here so that we can parse a subset of flags without exiting on error.
+	var dir, taskfile string
+	fs := pflag.NewFlagSet("experiments", pflag.ContinueOnError)
+	fs.StringVarP(&dir, "dir", "d", "", "Sets directory of execution.")
+	fs.StringVarP(&taskfile, "taskfile", "t", "", `Choose which Taskfile to run. Defaults to "Taskfile.yml".`)
+	_ = fs.Parse(os.Args[1:])
+	// If the directory is set, find a .env file in that directory.
+	if dir != "" {
+		return path.Join(dir, ".env")
+	}
+	// If the taskfile is set, find a .env file in the directory containing the Taskfile.
+	if taskfile != "" {
+		return path.Join(path.Dir(taskfile), ".env")
+	}
+	// Otherwise just use the current working directory.
+	return ".env"
+}
+
 func readDotEnv() {
-	env, _ := godotenv.Read()
+	env, _ := godotenv.Read(getEnvFilePath())
 	// If the env var is an experiment, set it.
 	for key, value := range env {
 		if strings.HasPrefix(key, envPrefix) {
