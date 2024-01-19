@@ -5,6 +5,8 @@
 - Removed support for `version: 2` schemas. See the
   [deprecation notice on our website](https://taskfile.dev/deprecations/version-2-schema)
   (#1197, #1447 by @pd93).
+- Fixed a couple of issues in the JSON Schema + added a CI step to ensure it's
+  correct (#1471, #1474, #1476 by @sirosen).
 - Added
   [Any Variables experiment proposal 2](https://taskfile.dev/experiments/any-variables/?proposal=2)
   (#1415, #1444 by @pd93).
