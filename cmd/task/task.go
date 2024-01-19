@@ -48,6 +48,13 @@ func run() error {
 	log.SetFlags(0)
 	log.SetOutput(os.Stderr)
 
+	if err := flags.Validate(); err != nil {
+		return err
+	}
+
+	dir := flags.Dir
+	entrypoint := flags.Entrypoint
+
 	if flags.Version {
 		fmt.Printf("Task version: %s\n", ver.GetVersion())
 		return nil
@@ -79,40 +86,17 @@ func run() error {
 		return nil
 	}
 
-	if flags.Download && flags.Offline {
-		return errors.New("task: You can't set both --download and --offline flags")
-	}
-
-	if flags.Global && flags.Dir != "" {
-		log.Fatal("task: You can't set both --global and --dir")
-		return nil
-	}
 	if flags.Global {
 		home, err := os.UserHomeDir()
 		if err != nil {
 			return fmt.Errorf("task: Failed to get user home directory: %w", err)
 		}
-		flags.Dir = home
+		dir = home
 	}
 
-	if flags.Dir != "" && flags.Entrypoint != "" {
-		return errors.New("task: You can't set both --dir and --taskfile")
-	}
-	if flags.Entrypoint != "" {
-		flags.Dir = filepath.Dir(flags.Entrypoint)
-		flags.Entrypoint = filepath.Base(flags.Entrypoint)
-	}
-
-	if flags.Output.Name != "group" {
-		if flags.Output.Group.Begin != "" {
-			return errors.New("task: You can't set --output-group-begin without --output=group")
-		}
-		if flags.Output.Group.End != "" {
-			return errors.New("task: You can't set --output-group-end without --output=group")
-		}
-		if flags.Output.Group.ErrorOnly {
-			return errors.New("task: You can't set --output-group-error-only without --output=group")
-		}
+	if entrypoint != "" {
+		dir = filepath.Dir(entrypoint)
+		entrypoint = filepath.Base(entrypoint)
 	}
 
 	var taskSorter sort.TaskSorter
@@ -124,6 +108,8 @@ func run() error {
 	}
 
 	e := task.Executor{
+		Dir:         dir,
+		Entrypoint:  entrypoint,
 		Force:       flags.Force,
 		ForceAll:    flags.ForceAll,
 		Insecure:    flags.Insecure,
@@ -134,9 +120,7 @@ func run() error {
 		Verbose:     flags.Verbose,
 		Silent:      flags.Silent,
 		AssumeYes:   flags.AssumeYes,
-		Dir:         flags.Dir,
 		Dry:         flags.Dry || flags.Status,
-		Entrypoint:  flags.Entrypoint,
 		Summary:     flags.Summary,
 		Parallel:    flags.Parallel,
 		Color:       flags.Color,
