@@ -38,30 +38,30 @@ func Read(
 ) (*ast.Taskfile, error) {
 	var _taskfile func(Node) (*ast.Taskfile, error)
 	_taskfile = func(node Node) (*ast.Taskfile, error) {
-		t, err := readTaskfile(node, download, offline, timeout, tempDir, l)
+		tf, err := readTaskfile(node, download, offline, timeout, tempDir, l)
 		if err != nil {
 			return nil, err
 		}
 
 		// Check that the Taskfile is set and has a schema version
-		if t == nil || t.Version == nil {
+		if tf == nil || tf.Version == nil {
 			return nil, &errors.TaskfileVersionCheckError{URI: node.Location()}
 		}
 
 		// Annotate any included Taskfile reference with a base directory for resolving relative paths
 		if node, isFileNode := node.(*FileNode); isFileNode {
-			_ = t.Includes.Range(func(namespace string, include ast.Include) error {
+			_ = tf.Includes.Range(func(namespace string, include ast.Include) error {
 				// Set the base directory for resolving relative paths, but only if not already set
 				if include.BaseDir == "" {
 					include.BaseDir = node.Dir
-					t.Includes.Set(namespace, include)
+					tf.Includes.Set(namespace, include)
 				}
 				return nil
 			})
 		}
 
-		err = t.Includes.Range(func(namespace string, include ast.Include) error {
-			tr := templater.Templater{Vars: t.Vars}
+		err = tf.Includes.Range(func(namespace string, include ast.Include) error {
+			tr := templater.Templater{Vars: tf.Vars}
 			include = ast.Include{
 				Namespace:      include.Namespace,
 				Taskfile:       tr.Replace(include.Taskfile),
@@ -141,7 +141,7 @@ func Read(
 				}
 			}
 
-			if err = t.Merge(includedTaskfile, &include); err != nil {
+			if err = tf.Merge(includedTaskfile, &include); err != nil {
 				return err
 			}
 
@@ -151,18 +151,18 @@ func Read(
 			return nil, err
 		}
 
-		for _, task := range t.Tasks.Values() {
+		for _, task := range tf.Tasks.Values() {
 			// If the task is not defined, create a new one
 			if task == nil {
 				task = &ast.Task{}
 			}
 			// Set the location of the taskfile for each task
 			if task.Location.Taskfile == "" {
-				task.Location.Taskfile = t.Location
+				task.Location.Taskfile = tf.Location
 			}
 		}
 
-		return t, nil
+		return tf, nil
 	}
 	return _taskfile(node)
 }
