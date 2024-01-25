@@ -18,7 +18,7 @@ function __task_list() {
         enabled=1
         cmd+=(--taskfile "$taskfile")
     else
-        for taskfile in Taskfile{,.dist}.{yaml,yml}; do
+        for taskfile in {T,t}askfile{,.dist}.{yaml,yml}; do
             if [[ -f "$taskfile" ]]; then
                 enabled=1
                 break
