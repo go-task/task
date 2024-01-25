@@ -27,7 +27,7 @@ tasks:
 
 Running the tasks is as simple as running:
 
-```bash
+```shell
 task assets build
 ```
 
@@ -162,11 +162,11 @@ variables, as you can see in the [Variables](#variables) section.
 You can also ask Task to include `.env` like files by using the `dotenv:`
 setting:
 
-```bash title=".env"
+```shell title=".env"
 KEYNAME=VALUE
 ```
 
-```bash title="testing/.env"
+```shell title="testing/.env"
 ENDPOINT=testing.com
 ```
 
@@ -699,7 +699,7 @@ path like `tmp/task` that will be interpreted as relative to the project
 directory, or an absolute or home path like `/tmp/.task` or `~/.task`
 (subdirectories will be created for each project).
 
-```bash
+```shell
 export TASK_TEMP_DIR='~/.task'
 ```
 
@@ -950,7 +950,7 @@ listed below in order of importance (i.e. most important first):
 
 Example of sending parameters with environment variables:
 
-```bash
+```shell
 $ TASK_VARIABLE=a-value task do-something
 ```
 
@@ -964,7 +964,7 @@ Since some shells do not support the above syntax to set environment variables
 (Windows) tasks also accept a similar style when not at the beginning of the
 command.
 
-```bash
+```shell
 $ task write-file FILE=file.txt "CONTENT=Hello, World!" print "MESSAGE=All done!"
 ```
 
@@ -1192,7 +1192,7 @@ If `--` is given in the CLI, all following parameters are added to a special
 
 The below example will run `yarn install`.
 
-```bash
+```shell
 $ task yarn -- install
 ```
 
@@ -1353,7 +1353,7 @@ tasks:
 
 would print the following output:
 
-```bash
+```shell
 * build:   Build the go binary.
 * test:    Run all the go tests.
 ```
@@ -1486,7 +1486,7 @@ tasks:
       - echo 'dangerous command'
 ```
 
-```bash
+```shell
 ❯ task dangerous
 task: "This is a dangerous command... Do you want to continue?" [y/N]
 ```
@@ -1495,7 +1495,7 @@ Warning prompts are called before executing a task. If a prompt is denied Task
 will exit with [exit code](/api#exit-codes) 205. If approved, Task will continue
 as normal.
 
-```bash
+```shell
 ❯ task example
 not dangerous command
 task: "This is a dangerous command. Do you want to continue?" [y/N]
@@ -1532,14 +1532,14 @@ tasks:
 
 Normally this will be printed:
 
-```sh
+```shell
 echo "Print something"
 Print something
 ```
 
 With silent mode on, the below will be printed instead:
 
-```sh
+```shell
 Print something
 ```
 
@@ -1686,7 +1686,7 @@ tasks:
     silent: true
 ```
 
-```bash
+```shell
 $ task default
 ::group::default
 Hello, World!
@@ -1711,7 +1711,7 @@ tasks:
   errors: echo 'output-of-errors' && exit 1
 ```
 
-```bash
+```shell
 $ task passes
 $ task errors
 output-of-errors
@@ -1744,7 +1744,7 @@ tasks:
     silent: true
 ```
 
-```bash
+```shell
 $ task default
 [print-foo] foo
 [print-bar] bar

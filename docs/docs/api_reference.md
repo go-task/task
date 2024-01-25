@@ -11,7 +11,7 @@ toc_max_heading_level: 5
 
 Task command line tool has the following syntax:
 
-```bash
+```shell
 task [--flags] [tasks...] [-- CLI_ARGS...]
 ```
 
