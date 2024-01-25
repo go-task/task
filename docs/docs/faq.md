@@ -69,7 +69,7 @@ tasks:
       - ./foo-printer.bash
 ```
 
-```bash
+```shell
 #!/bin/bash
 a=foo
 echo $a

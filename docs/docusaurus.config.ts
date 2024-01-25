@@ -254,7 +254,12 @@ const config: Config = {
     },
     prism: {
       theme: lightCodeTheme,
-      darkTheme: darkCodeTheme
+      darkTheme: darkCodeTheme,
+      additionalLanguages: [
+        "bash", // aka. shell
+        "json",
+        "powershell"
+      ]
     },
     // NOTE(@andreynering): Don't worry, these keys are meant to be public =)
     algolia: {

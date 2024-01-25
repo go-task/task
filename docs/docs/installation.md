@@ -14,7 +14,7 @@ Task offers many installation methods. Check out the available methods below.
 If you're on macOS or Linux and have [Homebrew][homebrew] installed, getting
 Task is as simple as running:
 
-```bash
+```shell
 brew install go-task/tap/go-task
 ```
 
@@ -25,24 +25,25 @@ Recently, Task was also made available
 [on the official Homebrew repository](https://formulae.brew.sh/formula/go-task),
 so you also have that option if you prefer:
 
-```bash
+```shell
 brew install go-task
 ```
 
 ### Tea
 
-If you're on macOS or Linux and have [tea][tea] installed, getting
-Task is as simple as running:
+If you're on macOS or Linux and have [tea][tea] installed, getting Task is as
+simple as running:
 
-```bash
+```shell
 tea task
 ```
 
 or, if you have tea’s magic enabled:
 
-```bash
+```shell
 task
 ```
+
 This installation method is community owned. After a new release of Task, they
 are automatically released by tea in a minimum of time.
 
@@ -51,7 +52,7 @@ are automatically released by tea in a minimum of time.
 Task is available in [Snapcraft][snapcraft], but keep in mind that your Linux
 distribution should allow classic confinement for Snaps to Task work right:
 
-```bash
+```shell
 sudo snap install task --classic
 ```
 
@@ -60,7 +61,7 @@ sudo snap install task --classic
 If you're on Windows and have [Chocolatey][choco] installed, getting Task is as
 simple as running:
 
-```bash
+```shell
 choco install go-task
 ```
 
@@ -71,7 +72,7 @@ This installation method is community owned.
 If you're on Windows and have [Scoop][scoop] installed, getting Task is as
 simple as running:
 
-```cmd
+```shell
 scoop install task
 ```
 
@@ -84,7 +85,7 @@ If you're on Arch Linux you can install Task from
 [AUR](https://aur.archlinux.org/packages/go-task-bin) using your favorite
 package manager such as `yay`, `pacaur` or `yaourt`:
 
-```cmd
+```shell
 yay -S go-task-bin
 ```
 
@@ -93,7 +94,7 @@ Alternatively, there's
 the source code instead of downloading the binary from the
 [releases page](https://github.com/go-task/task/releases):
 
-```cmd
+```shell
 yay -S go-task
 ```
 
@@ -105,7 +106,7 @@ If you're on Fedora Linux you can install Task from the official
 [Fedora](https://packages.fedoraproject.org/pkgs/golang-github-task/go-task/)
 repository using `dnf`:
 
-```cmd
+```shell
 sudo dnf install go-task
 ```
 
@@ -118,7 +119,7 @@ take some time until it's available in
 If you're on NixOS or have Nix installed you can install Task from
 [nixpkgs](https://github.com/NixOS/nixpkgs):
 
-```cmd
+```shell
 nix-env -iA nixpkgs.go-task
 ```
 
@@ -131,7 +132,7 @@ take some time until it's available in
 You can also use Node and npm to install Task by installing
 [this package](https://www.npmjs.com/package/@go-task/cli).
 
-```bash
+```shell
 npm install -g @go-task/cli
 ```
 
@@ -141,7 +142,7 @@ If you are using Windows and installed the
 [winget](https://github.com/microsoft/winget-cli) package management tool, you
 can install Task from [winget-pkgs](https://github.com/microsoft/winget-pkgs).
 
-```bash
+```shell
 winget install Task.Task
 ```
 
@@ -165,7 +166,7 @@ easy generation of this script.
 By default, it installs on the `./bin` directory relative to the working
 directory:
 
-```bash
+```shell
 sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d
 ```
 
@@ -173,7 +174,7 @@ It is possible to override the installation directory with the `-b` parameter.
 On Linux, common choices are `~/.local/bin` and `~/bin` to install for the
 current user or `/usr/local/bin` to install for all users:
 
-```bash
+```shell
 sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d -b ~/.local/bin
 ```
 
@@ -209,13 +210,13 @@ setup. You can find the minimum required version of Go in the
 
 You can then install the latest release globally by running:
 
-```bash
+```shell
 go install github.com/go-task/task/v3/cmd/task@latest
 ```
 
 Or you can install into another directory:
 
-```bash
+```shell
 env GOBIN=/bin go install github.com/go-task/task/v3/cmd/task@latest
 ```
 
@@ -239,7 +240,7 @@ First, ensure that you installed bash-completion using your package manager.
 
 Make the completion file executable:
 
-```
+```shell
 chmod +x path/to/task.bash
 ```
 
@@ -278,7 +279,7 @@ mv path/to/task.fish ~/.config/fish/completions/task.fish
 
 Open your profile script with:
 
-```
+```powershell
 mkdir -Path (Split-Path -Parent $profile) -ErrorAction SilentlyContinue
 notepad $profile
 ```
