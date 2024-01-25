@@ -118,6 +118,18 @@ tasks:
 
 :::
 
+### Reading a Taskfile from stdin
+
+Taskfile also supports reading from stdin. This is useful if you are generating
+Taskfiles dynamically and don't want write them to disk. This works just like
+any other program that supports stdin. For example:
+
+```shell
+task < <(cat ./Taskfile.yml)
+# OR
+cat ./Taskfile.yml | task
+```
+
 ## Environment variables
 
 ### Task
