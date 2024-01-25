@@ -65,3 +65,7 @@ func (node *HTTPNode) Read(ctx context.Context) ([]byte, error) {
 
 	return b, nil
 }
+
+func (node *HTTPNode) BaseDir() string {
+	return ""
+}

@@ -52,3 +52,7 @@ func (node *FileNode) Read(ctx context.Context) ([]byte, error) {
 	defer f.Close()
 	return io.ReadAll(f)
 }
+
+func (node *FileNode) BaseDir() string {
+	return node.Dir
+}

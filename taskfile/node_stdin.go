@@ -10,12 +10,14 @@ import (
 // A StdinNode is a node that reads a taskfile from the standard input stream.
 type StdinNode struct {
 	*BaseNode
+	Dir string
 }
 
-func NewStdinNode() (*StdinNode, error) {
+func NewStdinNode(dir string) (*StdinNode, error) {
 	base := NewBaseNode()
 	return &StdinNode{
 		BaseNode: base,
+		Dir:      dir,
 	}, nil
 }
 
@@ -37,4 +39,8 @@ func (node *StdinNode) Read(ctx context.Context) ([]byte, error) {
 		return nil, err
 	}
 	return stdin, nil
+}
+
+func (node *StdinNode) BaseDir() string {
+	return node.Dir
 }

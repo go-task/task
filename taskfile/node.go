@@ -16,6 +16,7 @@ type Node interface {
 	Location() string
 	Optional() bool
 	Remote() bool
+	BaseDir() string
 }
 
 func NewRootNode(
@@ -26,7 +27,7 @@ func NewRootNode(
 	// Check if there is something to read on STDIN
 	stat, _ := os.Stdin.Stat()
 	if (stat.Mode()&os.ModeCharDevice) == 0 && stat.Size() > 0 {
-		return NewStdinNode()
+		return NewStdinNode(dir)
 	}
 	// If no entrypoint is specified, search for a taskfile
 	if entrypoint == "" {
