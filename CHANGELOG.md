@@ -22,6 +22,8 @@
   `taskfile/ast` (#1450 by @pd93).
 - `ast.IncludedTaskfiles` renamed to `ast.Includes` and `orderedmap` package
   renamed to `omap` plus some internal refactor work (#1456 by @pd93).
+- Fix zsh completion script to allow lowercase `taskfile` file names (#1456 by
+  @xontab).
 
 ## v3.33.1 - 2023-12-21
 
