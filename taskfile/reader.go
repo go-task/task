@@ -48,12 +48,11 @@ func Read(
 			return nil, &errors.TaskfileVersionCheckError{URI: node.Location()}
 		}
 
-		// Annotate any included Taskfile reference with a base directory for resolving relative paths
-		if node, isFileNode := node.(*FileNode); isFileNode {
+		if dir := node.BaseDir(); dir != "" {
 			_ = tf.Includes.Range(func(namespace string, include ast.Include) error {
 				// Set the base directory for resolving relative paths, but only if not already set
 				if include.BaseDir == "" {
-					include.BaseDir = node.Dir
+					include.BaseDir = dir
 					tf.Includes.Set(namespace, include)
 				}
 				return nil
