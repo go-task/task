@@ -2,6 +2,8 @@ package taskfile
 
 import (
 	"context"
+	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/go-task/task/v3/errors"
@@ -14,6 +16,29 @@ type Node interface {
 	Location() string
 	Optional() bool
 	Remote() bool
+}
+
+func NewRootNode(
+	dir string,
+	entrypoint string,
+	insecure bool,
+) (Node, error) {
+	// Check if there is something to read on STDIN
+	stat, _ := os.Stdin.Stat()
+	if (stat.Mode()&os.ModeCharDevice) == 0 && stat.Size() > 0 {
+		return NewStdinNode()
+	}
+	// If no entrypoint is specified, search for a taskfile
+	if entrypoint == "" {
+		root, err := ExistsWalk(dir)
+		if err != nil {
+			return nil, err
+		}
+		return NewNode(root, insecure)
+	}
+	// Use the specified entrypoint
+	uri := filepath.Join(dir, entrypoint)
+	return NewNode(uri, insecure)
 }
 
 func NewNode(

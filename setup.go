@@ -67,22 +67,19 @@ func (e *Executor) setCurrentDir() error {
 			return err
 		}
 		e.Dir = wd
+	} else {
+		var err error
+		e.Dir, err = filepath.Abs(e.Dir)
+		if err != nil {
+			return err
+		}
 	}
-
-	// Search for a taskfile
-	root, err := taskfile.ExistsWalk(e.Dir)
-	if err != nil {
-		return err
-	}
-	e.Dir = filepath.Dir(root)
-	e.Entrypoint = filepath.Base(root)
 
 	return nil
 }
 
 func (e *Executor) readTaskfile() error {
-	uri := filepath.Join(e.Dir, e.Entrypoint)
-	node, err := taskfile.NewNode(uri, e.Insecure)
+	node, err := taskfile.NewRootNode(e.Dir, e.Entrypoint, e.Insecure)
 	if err != nil {
 		return err
 	}
