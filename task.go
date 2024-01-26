@@ -80,7 +80,7 @@ type Executor struct {
 }
 
 // Run runs Task
-func (e *Executor) Run(ctx context.Context, calls ...ast.Call) error {
+func (e *Executor) Run(ctx context.Context, calls ...*ast.Call) error {
 	// check if given tasks exist
 	for _, call := range calls {
 		task, err := e.GetTask(call)
@@ -142,7 +142,7 @@ func (e *Executor) Run(ctx context.Context, calls ...ast.Call) error {
 	return nil
 }
 
-func (e *Executor) splitRegularAndWatchCalls(calls ...ast.Call) (regularCalls []ast.Call, watchCalls []ast.Call, err error) {
+func (e *Executor) splitRegularAndWatchCalls(calls ...*ast.Call) (regularCalls []*ast.Call, watchCalls []*ast.Call, err error) {
 	for _, c := range calls {
 		t, err := e.GetTask(c)
 		if err != nil {
@@ -159,7 +159,7 @@ func (e *Executor) splitRegularAndWatchCalls(calls ...ast.Call) (regularCalls []
 }
 
 // RunTask runs a task by its name
-func (e *Executor) RunTask(ctx context.Context, call ast.Call) error {
+func (e *Executor) RunTask(ctx context.Context, call *ast.Call) error {
 	t, err := e.FastCompiledTask(call)
 	if err != nil {
 		return err
@@ -296,7 +296,7 @@ func (e *Executor) runDeps(ctx context.Context, t *ast.Task) error {
 	for _, d := range t.Deps {
 		d := d
 		g.Go(func() error {
-			err := e.RunTask(ctx, ast.Call{Task: d.Task, Vars: d.Vars, Silent: d.Silent, Indirect: true})
+			err := e.RunTask(ctx, &ast.Call{Task: d.Task, Vars: d.Vars, Silent: d.Silent, Indirect: true})
 			if err != nil {
 				return err
 			}
@@ -307,7 +307,7 @@ func (e *Executor) runDeps(ctx context.Context, t *ast.Task) error {
 	return g.Wait()
 }
 
-func (e *Executor) runDeferred(t *ast.Task, call ast.Call, i int) {
+func (e *Executor) runDeferred(t *ast.Task, call *ast.Call, i int) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -316,7 +316,7 @@ func (e *Executor) runDeferred(t *ast.Task, call ast.Call, i int) {
 	}
 }
 
-func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call ast.Call, i int) error {
+func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call *ast.Call, i int) error {
 	cmd := t.Cmds[i]
 
 	switch {
@@ -324,7 +324,7 @@ func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call ast.Call, i
 		reacquire := e.releaseConcurrencyLimit()
 		defer reacquire()
 
-		err := e.RunTask(ctx, ast.Call{Task: cmd.Task, Vars: cmd.Vars, Silent: cmd.Silent, Indirect: true})
+		err := e.RunTask(ctx, &ast.Call{Task: cmd.Task, Vars: cmd.Vars, Silent: cmd.Silent, Indirect: true})
 		if err != nil {
 			return err
 		}
@@ -413,9 +413,9 @@ func (e *Executor) startExecution(ctx context.Context, t *ast.Task, execute func
 // GetTask will return the task with the name matching the given call from the taskfile.
 // If no task is found, it will search for tasks with a matching alias.
 // If multiple tasks contain the same alias or no matches are found an error is returned.
-func (e *Executor) GetTask(call ast.Call) (*ast.Task, error) {
+func (e *Executor) GetTask(call *ast.Call) (*ast.Task, error) {
 	// Search for a matching task
-	matchingTask := e.Taskfile.Tasks.Get(call.Task)
+	matchingTask := e.Taskfile.Tasks.Get(call)
 	if matchingTask != nil {
 		return matchingTask, nil
 	}
@@ -476,7 +476,7 @@ func (e *Executor) GetTaskList(filters ...FilterFunc) ([]*ast.Task, error) {
 		idx := i
 		task := tasks[idx]
 		g.Go(func() error {
-			compiledTask, err := e.FastCompiledTask(ast.Call{Task: task.Task})
+			compiledTask, err := e.FastCompiledTask(&ast.Call{Task: task.Task})
 			if err != nil {
 				return err
 			}

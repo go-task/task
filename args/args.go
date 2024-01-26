@@ -7,13 +7,13 @@ import (
 )
 
 // Parse parses command line argument: tasks and global variables
-func Parse(args ...string) ([]ast.Call, *ast.Vars) {
-	calls := []ast.Call{}
+func Parse(args ...string) ([]*ast.Call, *ast.Vars) {
+	calls := []*ast.Call{}
 	globals := &ast.Vars{}
 
 	for _, arg := range args {
 		if !strings.Contains(arg, "=") {
-			calls = append(calls, ast.Call{Task: arg})
+			calls = append(calls, &ast.Call{Task: arg})
 			continue
 		}
 

@@ -61,10 +61,11 @@ func (t1 *Tasks) Merge(t2 Tasks, include *Include) {
 	// run the included Taskfile's default task without specifying its full
 	// name. If the parent namespace has aliases, we add another alias for each
 	// of them.
-	if t2.Get("default") != nil && t1.Get(include.Namespace) == nil {
+	if t2.Get(&Call{Task: "default"}) != nil && t1.Get(&Call{Task: include.Namespace}) == nil {
 		defaultTaskName := fmt.Sprintf("%s:default", include.Namespace)
-		t1.Get(defaultTaskName).Aliases = append(t1.Get(defaultTaskName).Aliases, include.Namespace)
-		t1.Get(defaultTaskName).Aliases = append(t1.Get(defaultTaskName).Aliases, include.Aliases...)
+		defaultTaskCall := &Call{Task: defaultTaskName}
+		t1.Get(defaultTaskCall).Aliases = append(t1.Get(defaultTaskCall).Aliases, include.Namespace)
+		t1.Get(defaultTaskCall).Aliases = append(t1.Get(defaultTaskCall).Aliases, include.Aliases...)
 	}
 }
 
