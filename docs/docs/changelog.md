@@ -5,10 +5,39 @@ sidebar_position: 14
 
 # Changelog
 
+## v3.34.0 - 2024-01-25
+
+- Removed support for `version: 2` schemas. See the
+  [deprecation notice on our website](https://taskfile.dev/deprecations/version-2-schema)
+  (#1197, #1447 by @pd93).
+- Fixed a couple of issues in the JSON Schema + added a CI step to ensure it's
+  correct (#1471, #1474, #1476 by @sirosen).
+- Added
+  [Any Variables experiment proposal 2](https://taskfile.dev/experiments/any-variables/?proposal=2)
+  (#1415, #1444 by @pd93).
+- Updated the experiments and deprecations documentation format (#1445 by
+  @pd93).
+- Added new template function: `spew`, which can be used to print variables for
+  debugging purposes (#1452 by @pd93).
+- Added new template function: `merge`, which can be used to merge any number of
+  map variables (#1438, #1464 by @pd93).
+- Small change on the API when using as a library: `call.Direct` became
+  `call.Indirect` (#1459 by @pd93).
+- Refactored the public `read` and `taskfile` packages and introduced
+  `taskfile/ast` (#1450 by @pd93).
+- `ast.IncludedTaskfiles` renamed to `ast.Includes` and `orderedmap` package
+  renamed to `omap` plus some internal refactor work (#1456 by @pd93).
+- Fix zsh completion script to allow lowercase `taskfile` file names (#1482 by
+  @xontab).
+- Improvements on how we check the Taskfile version (#1465 by @pd93).
+- Added a new `ROOT_TASKFILE` special variable (#1468, #1469 by @pd93).
+- Fix experiment flags in `.env` when the `--dir` or `--taskfile` flags were
+  used (#1478 by @pd93).
+
 ## v3.33.1 - 2023-12-21
 
 - Added support for looping over map variables with the
-  [Any Variables experiment](https://taskfile.dev/experiments/any_variables)
+  [Any Variables experiment](https://taskfile.dev/experiments/any-variables)
   enabled (#1435, #1437 by @pd93).
 - Fixed a bug where dynamic variables were causing errors during fast
   compilation (#1435, #1437 by @pd93)

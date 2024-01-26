@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v3.34.0 - 2024-01-25
 
 - Removed support for `version: 2` schemas. See the
   [deprecation notice on our website](https://taskfile.dev/deprecations/version-2-schema)
