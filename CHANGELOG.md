@@ -26,6 +26,8 @@
   @xontab).
 - Improvements on how we check the Taskfile version (#1465 by @pd93).
 - Added a new `ROOT_TASKFILE` special variable (#1468, #1469 by @pd93).
+- Fix experiment flags in `.env` when the `--dir` or `--taskfile` flags were
+  used (#1478 by @pd93).
 
 ## v3.33.1 - 2023-12-21
 
