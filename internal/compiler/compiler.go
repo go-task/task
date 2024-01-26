@@ -36,12 +36,12 @@ func (c *Compiler) GetTaskfileVariables() (*ast.Vars, error) {
 	return c.getVariables(nil, nil, true)
 }
 
-func (c *Compiler) GetVariables(t *ast.Task, call ast.Call) (*ast.Vars, error) {
-	return c.getVariables(t, &call, true)
+func (c *Compiler) GetVariables(t *ast.Task, call *ast.Call) (*ast.Vars, error) {
+	return c.getVariables(t, call, true)
 }
 
-func (c *Compiler) FastGetVariables(t *ast.Task, call ast.Call) (*ast.Vars, error) {
-	return c.getVariables(t, &call, false)
+func (c *Compiler) FastGetVariables(t *ast.Task, call *ast.Call) (*ast.Vars, error) {
+	return c.getVariables(t, call, false)
 }
 
 func (c *Compiler) getVariables(t *ast.Task, call *ast.Call, evaluateShVars bool) (*ast.Vars, error) {

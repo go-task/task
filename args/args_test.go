@@ -14,12 +14,12 @@ import (
 func TestArgs(t *testing.T) {
 	tests := []struct {
 		Args            []string
-		ExpectedCalls   []ast.Call
+		ExpectedCalls   []*ast.Call
 		ExpectedGlobals *ast.Vars
 	}{
 		{
 			Args: []string{"task-a", "task-b", "task-c"},
-			ExpectedCalls: []ast.Call{
+			ExpectedCalls: []*ast.Call{
 				{Task: "task-a"},
 				{Task: "task-b"},
 				{Task: "task-c"},
@@ -27,7 +27,7 @@ func TestArgs(t *testing.T) {
 		},
 		{
 			Args: []string{"task-a", "FOO=bar", "task-b", "task-c", "BAR=baz", "BAZ=foo"},
-			ExpectedCalls: []ast.Call{
+			ExpectedCalls: []*ast.Call{
 				{Task: "task-a"},
 				{Task: "task-b"},
 				{Task: "task-c"},
@@ -45,7 +45,7 @@ func TestArgs(t *testing.T) {
 		},
 		{
 			Args: []string{"task-a", "CONTENT=with some spaces"},
-			ExpectedCalls: []ast.Call{
+			ExpectedCalls: []*ast.Call{
 				{Task: "task-a"},
 			},
 			ExpectedGlobals: &ast.Vars{
@@ -59,7 +59,7 @@ func TestArgs(t *testing.T) {
 		},
 		{
 			Args: []string{"FOO=bar", "task-a", "task-b"},
-			ExpectedCalls: []ast.Call{
+			ExpectedCalls: []*ast.Call{
 				{Task: "task-a"},
 				{Task: "task-b"},
 			},
@@ -74,15 +74,15 @@ func TestArgs(t *testing.T) {
 		},
 		{
 			Args:          nil,
-			ExpectedCalls: []ast.Call{},
+			ExpectedCalls: []*ast.Call{},
 		},
 		{
 			Args:          []string{},
-			ExpectedCalls: []ast.Call{},
+			ExpectedCalls: []*ast.Call{},
 		},
 		{
 			Args:          []string{"FOO=bar", "BAR=baz"},
-			ExpectedCalls: []ast.Call{},
+			ExpectedCalls: []*ast.Call{},
 			ExpectedGlobals: &ast.Vars{
 				OrderedMap: omap.FromMapWithOrder(
 					map[string]ast.Var{

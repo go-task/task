@@ -9,7 +9,7 @@ import (
 )
 
 // Status returns an error if any the of given tasks is not up-to-date
-func (e *Executor) Status(ctx context.Context, calls ...ast.Call) error {
+func (e *Executor) Status(ctx context.Context, calls ...*ast.Call) error {
 	for _, call := range calls {
 
 		// Compile the task

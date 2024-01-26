@@ -21,7 +21,7 @@ import (
 const defaultWatchInterval = 5 * time.Second
 
 // watchTasks start watching the given tasks
-func (e *Executor) watchTasks(calls ...ast.Call) error {
+func (e *Executor) watchTasks(calls ...*ast.Call) error {
 	tasks := make([]string, len(calls))
 	for i, c := range calls {
 		tasks[i] = c.Task
@@ -119,24 +119,24 @@ func closeOnInterrupt(w *watcher.Watcher) {
 	}()
 }
 
-func (e *Executor) registerWatchedFiles(w *watcher.Watcher, calls ...ast.Call) error {
+func (e *Executor) registerWatchedFiles(w *watcher.Watcher, calls ...*ast.Call) error {
 	watchedFiles := w.WatchedFiles()
 
-	var registerTaskFiles func(ast.Call) error
-	registerTaskFiles = func(c ast.Call) error {
+	var registerTaskFiles func(*ast.Call) error
+	registerTaskFiles = func(c *ast.Call) error {
 		task, err := e.CompiledTask(c)
 		if err != nil {
 			return err
 		}
 
 		for _, d := range task.Deps {
-			if err := registerTaskFiles(ast.Call{Task: d.Task, Vars: d.Vars}); err != nil {
+			if err := registerTaskFiles(&ast.Call{Task: d.Task, Vars: d.Vars}); err != nil {
 				return err
 			}
 		}
 		for _, c := range task.Cmds {
 			if c.Task != "" {
-				if err := registerTaskFiles(ast.Call{Task: c.Task, Vars: c.Vars}); err != nil {
+				if err := registerTaskFiles(&ast.Call{Task: c.Task, Vars: c.Vars}); err != nil {
 					return err
 				}
 			}
