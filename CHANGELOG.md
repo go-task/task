@@ -1,5 +1,11 @@
 # Changelog
 
+## v3.34.1 - 2024-01-27
+
+- Fixed prompt regression on
+  [Remote Taskfiles experiment](https://taskfile.dev/experiments/remote-taskfiles/)
+  (#1486, #1487 by @pd93).
+
 ## v3.34.0 - 2024-01-25
 
 - Removed support for `version: 2` schemas. See the
