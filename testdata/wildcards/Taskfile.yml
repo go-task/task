@@ -1,0 +1,16 @@
+version: 3
+
+tasks:
+  wildcard-*:
+    cmds:
+      - echo "Hello {{index .MATCH 0}}"
+
+  '*-wildcard-*':
+    cmds:
+      - echo "Hello {{index .MATCH 0}} {{index .MATCH 1}}"
+
+  start-*:
+    vars:
+      SERVICE: "{{index .MATCH 0}}"
+    cmds:
+      - echo "Starting {{.SERVICE}}"
