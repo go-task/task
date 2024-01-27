@@ -2,6 +2,8 @@ package ast
 
 import (
 	"fmt"
+	"regexp"
+	"strings"
 
 	"gopkg.in/yaml.v3"
 
@@ -49,6 +51,30 @@ func (t *Task) Name() string {
 		return t.Label
 	}
 	return t.Task
+}
+
+// WildcardMatch will check if the given string matches the name of the Task and returns any wildcard values.
+func (t *Task) WildcardMatch(name string) (bool, []string) {
+	// Convert the name into a regex string
+	regexStr := fmt.Sprintf("^%s$", strings.ReplaceAll(t.Task, "*", "(.*)"))
+	regex := regexp.MustCompile(regexStr)
+	wildcards := regex.FindStringSubmatch(name)
+	wildcardCount := strings.Count(t.Task, "*")
+
+	// If there are no wildcards, return false
+	if len(wildcards) == 0 {
+		return false, nil
+	}
+
+	// Remove the first match, which is the full string
+	wildcards = wildcards[1:]
+
+	// If there are more/less wildcards than matches, return false
+	if len(wildcards) != wildcardCount {
+		return false, wildcards
+	}
+
+	return true, wildcards
 }
 
 func (t *Task) UnmarshalYAML(node *yaml.Node) error {

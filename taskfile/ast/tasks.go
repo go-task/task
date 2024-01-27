@@ -14,6 +14,31 @@ type Tasks struct {
 	omap.OrderedMap[string, *Task]
 }
 
+func (t *Tasks) Get(call *Call) *Task {
+	if call == nil {
+		return nil
+	}
+	var task *Task
+	// If there is a direct match, return it
+	if task = t.OrderedMap.Get(call.Task); task != nil {
+		return task
+	}
+	if call.Vars == nil {
+		call.Vars = &Vars{}
+	}
+	// Attempt a wildcard match
+	// TODO: We need to add a yield func to the Range method so that we can stop looping when we find a match
+	// For now, we can just nil check the task before each loop
+	_ = t.Range(func(key string, value *Task) error {
+		if match, wildcards := value.WildcardMatch(call.Task); match && task == nil {
+			task = value
+			call.Vars.Set("MATCH", Var{Value: wildcards})
+		}
+		return nil
+	})
+	return task
+}
+
 func (t1 *Tasks) Merge(t2 Tasks, include *Include) {
 	_ = t2.Range(func(k string, v *Task) error {
 		// We do a deep copy of the task struct here to ensure that no data can
