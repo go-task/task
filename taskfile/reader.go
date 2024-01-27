@@ -17,11 +17,11 @@ import (
 
 const (
 	taskfileUntrustedPrompt = `The task you are attempting to run depends on the remote Taskfile at %q.
-	--- Make sure you trust the source of this Taskfile before continuing ---
-	Continue?`
+--- Make sure you trust the source of this Taskfile before continuing ---
+Continue?`
 	taskfileChangedPrompt = `The Taskfile at %q has changed since you last used it!
-	--- Make sure you trust the source of this Taskfile before continuing ---
-	Continue?`
+--- Make sure you trust the source of this Taskfile before continuing ---
+Continue?`
 )
 
 // Read reads a Read for a given directory
@@ -238,7 +238,7 @@ func readTaskfile(
 				// If there is a cached hash, but it doesn't match the expected hash, prompt the user to continue
 				prompt = fmt.Sprintf(taskfileChangedPrompt, node.Location())
 			}
-			if prompt == "" {
+			if prompt != "" {
 				if err := l.Prompt(logger.Yellow, prompt, "n", "y", "yes"); err != nil {
 					return nil, &errors.TaskfileNotTrustedError{URI: node.Location()}
 				}
