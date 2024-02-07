@@ -164,6 +164,36 @@ func TestIsTaskUpToDate(t *testing.T) {
 			},
 			expected: false,
 		},
+		{
+			name: "expect False when requested to always check the definition for the first time",
+			task: &ast.Task{
+				Status:          []string{"status"},
+				Sources:         []*ast.Glob{{Glob: "sources"}},
+				DefinitionCheck: "always",
+			},
+			setupMockStatusChecker: func(m *mocks.StatusCheckable) {
+				m.EXPECT().IsUpToDate(mock.Anything, mock.Anything).Return(true, nil)
+			},
+			setupMockSourcesChecker: func(m *mocks.SourcesCheckable) {
+				m.EXPECT().IsUpToDate(mock.Anything).Return(true, nil)
+			},
+			expected: false,
+		},
+		{
+			name: "expect True when requested to always check the definition for the second time",
+			task: &ast.Task{
+				Status:          []string{"status"},
+				Sources:         []*ast.Glob{{Glob: "sources"}},
+				DefinitionCheck: "always",
+			},
+			setupMockStatusChecker: func(m *mocks.StatusCheckable) {
+				m.EXPECT().IsUpToDate(mock.Anything, mock.Anything).Return(true, nil)
+			},
+			setupMockSourcesChecker: func(m *mocks.SourcesCheckable) {
+				m.EXPECT().IsUpToDate(mock.Anything).Return(true, nil)
+			},
+			expected: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -184,6 +214,9 @@ func TestIsTaskUpToDate(t *testing.T) {
 				WithSourcesChecker(mockSourcesChecker),
 				func(config *CheckerConfig) {
 					config.tempDir = tempDir
+					if tt.task.DefinitionCheck != "" {
+						config.definitionCheck = tt.task.DefinitionCheck
+					}
 				},
 			)
 			require.NoError(t, err)
