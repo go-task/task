@@ -1205,6 +1205,53 @@ tasks:
       - yarn {{.CLI_ARGS}}
 ```
 
+## Wildcard arguments
+
+Another way to parse arguments into a task is to use a wildcard in your task's
+name. Wildcards are denoted by an asterisk (`*`) and can be used multiple times
+in a task's name to pass in multiple arguments.
+
+Matching arguments will be captured and stored in the `.MATCH` variable and can
+then be used in your task's commands like any other variable. This variable is
+an array of strings and so will need to be indexed to access the individual
+arguments. We suggest creating a named variable for each argument to make it
+clear what they contain:
+
+```yaml
+version: '3'
+
+tasks:
+  echo-*:
+    vars:
+      TEXT: '{{index .MATCH 0}}'
+    cmds:
+      - echo {{.TEXT}}
+
+  run-*-*:
+    vars:
+      ARG_1: '{{index .MATCH 0}}'
+      ARG_2: '{{index .MATCH 1}}'
+    cmds:
+      - echo {{.ARG_1}} {{.ARG_2}}
+```
+
+```shell
+# This call matches the "echo-*" task and the string "hello" is captured by the
+# wildcard and stored in the .MATCH variable. We then index the .MATCH array and
+# store the result in the .TEXT variable which is then echoed out in the cmds.
+$ task echo-hello
+hello
+# You can use whitespace in your arguments as long as you quote the task name
+$ task "echo-hello world"
+hello world
+# And you can pass multiple arguments
+$ task run-foo-bar
+foo bar
+```
+
+If multiple matching tasks are found, the first one listed in the Taskfile will
+be used. If you are using included Taskfiles,
+
 ## Doing task cleanup with `defer`
 
 With the `defer` keyword, it's possible to schedule cleanup to be run once the
