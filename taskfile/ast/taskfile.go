@@ -15,20 +15,21 @@ var V3 = semver.MustParse("3")
 
 // Taskfile is the abstract syntax tree for a Taskfile
 type Taskfile struct {
-	Location string
-	Version  *semver.Version
-	Output   Output
-	Method   string
-	Includes *Includes
-	Set      []string
-	Shopt    []string
-	Vars     *Vars
-	Env      *Vars
-	Tasks    Tasks
-	Silent   bool
-	Dotenv   []string
-	Run      string
-	Interval time.Duration
+	Location        string
+	Version         *semver.Version
+	Output          Output
+	Method          string
+	DefinitionCheck string
+	Includes        *Includes
+	Set             []string
+	Shopt           []string
+	Vars            *Vars
+	Env             *Vars
+	Tasks           Tasks
+	Silent          bool
+	Dotenv          []string
+	Run             string
+	Interval        time.Duration
 }
 
 // Merge merges the second Taskfile into the first
@@ -55,19 +56,20 @@ func (tf *Taskfile) UnmarshalYAML(node *yaml.Node) error {
 	switch node.Kind {
 	case yaml.MappingNode:
 		var taskfile struct {
-			Version  *semver.Version
-			Output   Output
-			Method   string
-			Includes *Includes
-			Set      []string
-			Shopt    []string
-			Vars     *Vars
-			Env      *Vars
-			Tasks    Tasks
-			Silent   bool
-			Dotenv   []string
-			Run      string
-			Interval time.Duration
+			Version         *semver.Version
+			Output          Output
+			Method          string
+			DefinitionCheck string `yaml:"definition_check"`
+			Includes        *Includes
+			Set             []string
+			Shopt           []string
+			Vars            *Vars
+			Env             *Vars
+			Tasks           Tasks
+			Silent          bool
+			Dotenv          []string
+			Run             string
+			Interval        time.Duration
 		}
 		if err := node.Decode(&taskfile); err != nil {
 			return err
@@ -75,6 +77,7 @@ func (tf *Taskfile) UnmarshalYAML(node *yaml.Node) error {
 		tf.Version = taskfile.Version
 		tf.Output = taskfile.Output
 		tf.Method = taskfile.Method
+		tf.DefinitionCheck = taskfile.DefinitionCheck
 		tf.Includes = taskfile.Includes
 		tf.Set = taskfile.Set
 		tf.Shopt = taskfile.Shopt

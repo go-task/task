@@ -11,6 +11,7 @@ type (
 	CheckerOption func(*CheckerConfig)
 	CheckerConfig struct {
 		method            string
+		definitionCheck   string
 		dry               bool
 		tempDir           string
 		logger            *logger.Logger
@@ -23,6 +24,12 @@ type (
 func WithMethod(method string) CheckerOption {
 	return func(config *CheckerConfig) {
 		config.method = method
+	}
+}
+
+func WithDefinitionCheck(definitionCheck string) CheckerOption {
+	return func(config *CheckerConfig) {
+		config.definitionCheck = definitionCheck
 	}
 }
 
@@ -68,6 +75,7 @@ func IsTaskUpToDate(
 	// Default config
 	config := &CheckerConfig{
 		method:            "none",
+		definitionCheck:   "auto",
 		tempDir:           "",
 		dry:               false,
 		logger:            nil,
@@ -147,9 +155,9 @@ func IsTaskUpToDate(
 		}
 	}
 
-	// if the status or sources are set, check if the definition is up-to-date
-	// TODO: allow caching based on the task definition even if status or sources are not set
-	if sourcesIsSet || statusIsSet {
+	// check if the definition is up-to-date when it is requested. By default (auto), it is only checked when sources are set but not the status
+	shouldCheckDefinition := config.definitionCheck == "always" || (config.definitionCheck == "auto" && (sourcesIsSet && !statusIsSet))
+	if shouldCheckDefinition {
 		// check if the definition is up-to-date
 		isDefinitionUpToDate, err := config.definitionChecker.IsUpToDate(maybeDefinitionPath)
 		if err != nil {

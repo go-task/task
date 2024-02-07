@@ -61,7 +61,7 @@ func TestIsTaskUpToDate(t *testing.T) {
 			expected: false,
 		},
 		{
-			name: "expect False when no status is defined and sources are up-to-date for the second time",
+			name: "expect True when no status is defined and sources are up-to-date for the second time",
 			task: &ast.Task{
 				Status:  nil,
 				Sources: []*ast.Glob{{Glob: "sources"}},
@@ -85,19 +85,7 @@ func TestIsTaskUpToDate(t *testing.T) {
 			expected: false,
 		},
 		{
-			name: "expect False when status is up-to-date and sources are not defined for the first time",
-			task: &ast.Task{
-				Status:  []string{"status"},
-				Sources: nil,
-			},
-			setupMockStatusChecker: func(m *mocks.StatusCheckable) {
-				m.EXPECT().IsUpToDate(mock.Anything, mock.Anything).Return(true, nil)
-			},
-			setupMockSourcesChecker: nil,
-			expected:                false,
-		},
-		{
-			name: "expect TRUE when status is up-to-date and sources are not defined for the second time",
+			name: "expect TRUE when status is up-to-date and sources are not defined",
 			task: &ast.Task{
 				Status:  []string{"status"},
 				Sources: nil,
@@ -109,21 +97,7 @@ func TestIsTaskUpToDate(t *testing.T) {
 			expected:                true,
 		},
 		{
-			name: "expect False when status and sources are up-to-date for the first time",
-			task: &ast.Task{
-				Status:  []string{"status"},
-				Sources: []*ast.Glob{{Glob: "sources"}},
-			},
-			setupMockStatusChecker: func(m *mocks.StatusCheckable) {
-				m.EXPECT().IsUpToDate(mock.Anything, mock.Anything).Return(true, nil)
-			},
-			setupMockSourcesChecker: func(m *mocks.SourcesCheckable) {
-				m.EXPECT().IsUpToDate(mock.Anything).Return(true, nil)
-			},
-			expected: false,
-		},
-		{
-			name: "expect True when status and sources are up-to-date for the second time",
+			name: "expect True when status and sources are up-to-date",
 			task: &ast.Task{
 				Status:  []string{"status"},
 				Sources: []*ast.Glob{{Glob: "sources"}},
