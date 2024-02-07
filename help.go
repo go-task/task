@@ -188,8 +188,13 @@ func (e *Executor) ToEditorOutput(tasks []*ast.Task, noStatus bool) (*editors.Ta
 			if task.Method != "" {
 				method = task.Method
 			}
+			definitionCheck := e.Taskfile.DefinitionCheck
+			if task.DefinitionCheck != "" {
+				definitionCheck = task.DefinitionCheck
+			}
 			upToDate, err := fingerprint.IsTaskUpToDate(context.Background(), task,
 				fingerprint.WithMethod(method),
+				fingerprint.WithDefinitionCheck(definitionCheck),
 				fingerprint.WithTempDir(e.TempDir),
 				fingerprint.WithDry(e.Dry),
 				fingerprint.WithLogger(e.Logger),

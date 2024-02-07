@@ -551,7 +551,7 @@ func TestLabelUpToDate(t *testing.T) {
 	}
 	require.NoError(t, e.Setup())
 	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "foo"}))
-	assert.NotContains(t, buff.String(), "foobar") // first run
+	assert.Contains(t, buff.String(), "foobar")
 
 	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "foo"}))
 	assert.Contains(t, buff.String(), "foobar")
@@ -595,7 +595,10 @@ func TestLabelWithVariableExpansion(t *testing.T) {
 		Stderr: &buff,
 	}
 	require.NoError(t, e.Setup())
-	require.NoError(t, e.Run(context.Background(), ast.Call{Task: "foo"}))
+	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "foo"}))
+	assert.Contains(t, buff.String(), "foobaz") // first run
+
+	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "foo"}))
 	assert.Contains(t, buff.String(), "foobaz")
 }
 
@@ -610,7 +613,8 @@ func TestLabelInSummary(t *testing.T) {
 		Stderr: &buff,
 	}
 	require.NoError(t, e.Setup())
-	require.NoError(t, e.Run(context.Background(), ast.Call{Task: "foo"}))
+
+	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "foo"}))
 	assert.Contains(t, buff.String(), "foobar")
 }
 
