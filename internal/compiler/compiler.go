@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"path/filepath"
 	"strings"
 	"sync"
 
@@ -208,24 +209,13 @@ func (c *Compiler) ResetCache() {
 }
 
 func (c *Compiler) getSpecialVars(t *ast.Task) (map[string]string, error) {
-	taskfileDir, err := c.getTaskfileDir(t)
-	if err != nil {
-		return nil, err
-	}
-
 	return map[string]string{
 		"TASK":             t.Task,
 		"ROOT_TASKFILE":    filepathext.SmartJoin(c.Dir, c.Entrypoint),
 		"ROOT_DIR":         c.Dir,
-		"TASKFILE_DIR":     taskfileDir,
+		"TASKFILE":         t.Location.Taskfile,
+		"TASKFILE_DIR":     filepath.Dir(t.Location.Taskfile),
 		"USER_WORKING_DIR": c.UserWorkingDir,
 		"TASK_VERSION":     version.GetVersion(),
 	}, nil
-}
-
-func (c *Compiler) getTaskfileDir(t *ast.Task) (string, error) {
-	if t.IncludedTaskfile != nil {
-		return t.IncludedTaskfile.FullDirPath()
-	}
-	return c.Dir, nil
 }

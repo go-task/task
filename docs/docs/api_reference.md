@@ -130,6 +130,7 @@ There are some special variables that is available on the templating system:
 | `TASK`             | The name of the current task.                                                                                                                            |
 | `ROOT_TASKFILE`    | The absolute path of the root Taskfile.                                                                                                                  |
 | `ROOT_DIR`         | The absolute path of the root Taskfile directory.                                                                                                        |
+| `TASKFILE`         | The absolute path of the included Taskfile.                                                                                                              |
 | `TASKFILE_DIR`     | The absolute path of the included Taskfile directory.                                                                                                    |
 | `USER_WORKING_DIR` | The absolute path of the directory `task` was called from.                                                                                               |
 | `CHECKSUM`         | The checksum of the files listed in `sources`. Only available within the `status` prop and if method is set to `checksum`.                               |

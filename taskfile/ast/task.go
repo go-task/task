@@ -40,7 +40,6 @@ type Task struct {
 	Run                  string
 	IncludeVars          *Vars
 	IncludedTaskfileVars *Vars
-	IncludedTaskfile     *Include
 	Platforms            []*Platform
 	Location             *Location
 	Watch                bool
@@ -207,7 +206,6 @@ func (t *Task) DeepCopy() *Task {
 		Run:                  t.Run,
 		IncludeVars:          t.IncludeVars.DeepCopy(),
 		IncludedTaskfileVars: t.IncludedTaskfileVars.DeepCopy(),
-		IncludedTaskfile:     t.IncludedTaskfile.DeepCopy(),
 		Platforms:            deepcopy.Slice(t.Platforms),
 		Location:             t.Location.DeepCopy(),
 		Requires:             t.Requires.DeepCopy(),
