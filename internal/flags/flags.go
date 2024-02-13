@@ -131,10 +131,6 @@ func Validate() error {
 		return nil
 	}
 
-	if Dir != "" && Entrypoint != "" {
-		return errors.New("task: You can't set both --dir and --taskfile")
-	}
-
 	if Output.Name != "group" {
 		if Output.Group.Begin != "" {
 			return errors.New("task: You can't set --output-group-begin without --output=group")

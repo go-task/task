@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/spf13/pflag"
@@ -92,11 +91,6 @@ func run() error {
 			return fmt.Errorf("task: Failed to get user home directory: %w", err)
 		}
 		dir = home
-	}
-
-	if entrypoint != "" {
-		dir = filepath.Dir(entrypoint)
-		entrypoint = filepath.Base(entrypoint)
 	}
 
 	var taskSorter sort.TaskSorter
