@@ -54,11 +54,11 @@ func (e *Executor) Setup() error {
 }
 
 func (e *Executor) getRootNode() (taskfile.Node, error) {
-	node, err := taskfile.NewRootNode(e.Dir, e.Entrypoint, e.Insecure)
+	node, err := taskfile.NewRootNode(e.Logger, e.Entrypoint, e.Dir, e.Insecure)
 	if err != nil {
 		return nil, err
 	}
-	e.Dir = node.BaseDir()
+	e.Dir = node.Dir()
 	return node, err
 }
 

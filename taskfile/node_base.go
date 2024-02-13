@@ -9,6 +9,7 @@ type (
 	BaseNode struct {
 		parent   Node
 		optional bool
+		dir      string
 	}
 )
 
@@ -16,6 +17,7 @@ func NewBaseNode(opts ...NodeOption) *BaseNode {
 	node := &BaseNode{
 		parent:   nil,
 		optional: false,
+		dir:      "",
 	}
 
 	// Apply options
@@ -44,4 +46,8 @@ func WithOptional(optional bool) NodeOption {
 
 func (node *BaseNode) Optional() bool {
 	return node.optional
+}
+
+func (node *BaseNode) Dir() string {
+	return node.dir
 }

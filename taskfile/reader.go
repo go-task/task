@@ -48,17 +48,6 @@ func Read(
 			return nil, &errors.TaskfileVersionCheckError{URI: node.Location()}
 		}
 
-		if dir := node.BaseDir(); dir != "" {
-			_ = tf.Includes.Range(func(namespace string, include ast.Include) error {
-				// Set the base directory for resolving relative paths, but only if not already set
-				if include.BaseDir == "" {
-					include.BaseDir = dir
-					tf.Includes.Set(namespace, include)
-				}
-				return nil
-			})
-		}
-
 		err = tf.Includes.Range(func(namespace string, include ast.Include) error {
 			cache := &templater.Cache{Vars: tf.Vars}
 			include = ast.Include{
@@ -70,18 +59,22 @@ func Read(
 				Aliases:        include.Aliases,
 				AdvancedImport: include.AdvancedImport,
 				Vars:           include.Vars,
-				BaseDir:        include.BaseDir,
 			}
 			if err := cache.Err(); err != nil {
 				return err
 			}
 
-			uri, err := include.FullTaskfilePath()
+			entrypoint, err := node.ResolveIncludeEntrypoint(include)
 			if err != nil {
 				return err
 			}
 
-			includeReaderNode, err := NewNode(uri, insecure,
+			dir, err := node.ResolveIncludeDir(include)
+			if err != nil {
+				return err
+			}
+
+			includeReaderNode, err := NewNode(l, entrypoint, dir, insecure,
 				WithParent(node),
 				WithOptional(include.Optional),
 			)
@@ -109,11 +102,6 @@ func Read(
 			}
 
 			if include.AdvancedImport {
-				dir, err := include.FullDirPath()
-				if err != nil {
-					return err
-				}
-
 				// nolint: errcheck
 				includedTaskfile.Vars.Range(func(k string, v ast.Var) error {
 					o := v

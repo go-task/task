@@ -2,13 +2,9 @@ package ast
 
 import (
 	"fmt"
-	"path/filepath"
-	"strings"
 
 	"gopkg.in/yaml.v3"
 
-	"github.com/go-task/task/v3/internal/execext"
-	"github.com/go-task/task/v3/internal/filepathext"
 	omap "github.com/go-task/task/v3/internal/omap"
 )
 
@@ -22,7 +18,6 @@ type Include struct {
 	Aliases        []string
 	AdvancedImport bool
 	Vars           *Vars
-	BaseDir        string // The directory from which the including taskfile was loaded; used to resolve relative paths
 }
 
 // Includes represents information about included tasksfiles
@@ -120,39 +115,5 @@ func (include *Include) DeepCopy() *Include {
 		Internal:       include.Internal,
 		AdvancedImport: include.AdvancedImport,
 		Vars:           include.Vars.DeepCopy(),
-		BaseDir:        include.BaseDir,
 	}
-}
-
-// FullTaskfilePath returns the fully qualified path to the included taskfile
-func (include *Include) FullTaskfilePath() (string, error) {
-	return include.resolvePath(include.Taskfile)
-}
-
-// FullDirPath returns the fully qualified path to the included taskfile's working directory
-func (include *Include) FullDirPath() (string, error) {
-	return include.resolvePath(include.Dir)
-}
-
-func (include *Include) resolvePath(path string) (string, error) {
-	// If the file is remote, we don't need to resolve the path
-	if strings.Contains(include.Taskfile, "://") {
-		return path, nil
-	}
-
-	path, err := execext.Expand(path)
-	if err != nil {
-		return "", err
-	}
-
-	if filepathext.IsAbs(path) {
-		return path, nil
-	}
-
-	result, err := filepath.Abs(filepathext.SmartJoin(include.BaseDir, path))
-	if err != nil {
-		return "", fmt.Errorf("task: error resolving path %s relative to %s: %w", path, include.BaseDir, err)
-	}
-
-	return result, nil
 }

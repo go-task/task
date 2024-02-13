@@ -73,7 +73,7 @@ func (fct fileContentTest) Run(t *testing.T) {
 
 	for name, expectContent := range fct.Files {
 		t.Run(fct.name(name), func(t *testing.T) {
-			path := filepathext.SmartJoin(fct.Dir, name)
+			path := filepathext.SmartJoin(e.Dir, name)
 			b, err := os.ReadFile(path)
 			require.NoError(t, err, "Error reading file")
 			s := string(b)
@@ -1123,8 +1123,8 @@ func TestIncludesOptionalExplicitFalse(t *testing.T) {
 
 func TestIncludesFromCustomTaskfile(t *testing.T) {
 	tt := fileContentTest{
+		Entrypoint: "testdata/includes_yaml/Custom.ext",
 		Dir:        "testdata/includes_yaml",
-		Entrypoint: "Custom.ext",
 		Target:     "default",
 		TrimSpace:  true,
 		Files: map[string]string{
@@ -1486,16 +1486,12 @@ func TestDotenvShouldIncludeAllEnvFiles(t *testing.T) {
 }
 
 func TestDotenvShouldErrorWhenIncludingDependantDotenvs(t *testing.T) {
-	const dir = "testdata/dotenv/error_included_envs"
-	const entry = "Taskfile.yml"
-
 	var buff bytes.Buffer
 	e := task.Executor{
-		Dir:        dir,
-		Entrypoint: entry,
-		Summary:    true,
-		Stdout:     &buff,
-		Stderr:     &buff,
+		Dir:     "testdata/dotenv/error_included_envs",
+		Summary: true,
+		Stdout:  &buff,
+		Stderr:  &buff,
 	}
 
 	err := e.Setup()
