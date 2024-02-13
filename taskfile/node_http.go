@@ -11,7 +11,6 @@ import (
 	"github.com/go-task/task/v3/internal/execext"
 	"github.com/go-task/task/v3/internal/filepathext"
 	"github.com/go-task/task/v3/internal/logger"
-	"github.com/go-task/task/v3/taskfile/ast"
 )
 
 // An HTTPNode is a node that reads a Taskfile from a remote location via HTTP.
@@ -76,16 +75,16 @@ func (node *HTTPNode) Read(ctx context.Context) ([]byte, error) {
 	return b, nil
 }
 
-func (node *HTTPNode) ResolveIncludeEntrypoint(include ast.Include) (string, error) {
-	ref, err := url.Parse(include.Taskfile)
+func (node *HTTPNode) ResolveIncludeEntrypoint(entrypoint string) (string, error) {
+	ref, err := url.Parse(entrypoint)
 	if err != nil {
 		return "", err
 	}
 	return node.URL.ResolveReference(ref).String(), nil
 }
 
-func (node *HTTPNode) ResolveIncludeDir(include ast.Include) (string, error) {
-	path, err := execext.Expand(include.Dir)
+func (node *HTTPNode) ResolveIncludeDir(dir string) (string, error) {
+	path, err := execext.Expand(dir)
 	if err != nil {
 		return "", err
 	}

@@ -10,7 +10,6 @@ import (
 	"github.com/go-task/task/v3/internal/execext"
 	"github.com/go-task/task/v3/internal/filepathext"
 	"github.com/go-task/task/v3/internal/logger"
-	"github.com/go-task/task/v3/taskfile/ast"
 )
 
 // A FileNode is a node that reads a taskfile from the local filesystem.
@@ -78,13 +77,13 @@ func resolveFileNodeEntrypointAndDir(l *logger.Logger, entrypoint, dir string) (
 	return entrypoint, dir, nil
 }
 
-func (node *FileNode) ResolveIncludeEntrypoint(include ast.Include) (string, error) {
+func (node *FileNode) ResolveIncludeEntrypoint(entrypoint string) (string, error) {
 	// If the file is remote, we don't need to resolve the path
-	if strings.Contains(include.Taskfile, "://") {
-		return include.Taskfile, nil
+	if strings.Contains(entrypoint, "://") {
+		return entrypoint, nil
 	}
 
-	path, err := execext.Expand(include.Taskfile)
+	path, err := execext.Expand(entrypoint)
 	if err != nil {
 		return "", err
 	}
@@ -99,8 +98,8 @@ func (node *FileNode) ResolveIncludeEntrypoint(include ast.Include) (string, err
 	return filepathext.SmartJoin(entrypointDir, path), nil
 }
 
-func (node *FileNode) ResolveIncludeDir(include ast.Include) (string, error) {
-	path, err := execext.Expand(include.Dir)
+func (node *FileNode) ResolveIncludeDir(dir string) (string, error) {
+	path, err := execext.Expand(dir)
 	if err != nil {
 		return "", err
 	}

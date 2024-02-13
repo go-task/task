@@ -64,12 +64,12 @@ func Read(
 				return err
 			}
 
-			entrypoint, err := node.ResolveIncludeEntrypoint(include)
+			entrypoint, err := node.ResolveIncludeEntrypoint(include.Taskfile)
 			if err != nil {
 				return err
 			}
 
-			dir, err := node.ResolveIncludeDir(include)
+			dir, err := node.ResolveIncludeDir(include.Dir)
 			if err != nil {
 				return err
 			}
