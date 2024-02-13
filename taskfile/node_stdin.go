@@ -44,7 +44,7 @@ func (node *StdinNode) Read(ctx context.Context) ([]byte, error) {
 	return stdin, nil
 }
 
-func (node *StdinNode) ResolveIncludeEntrypoint(entrypoint string) (string, error) {
+func (node *StdinNode) ResolveEntrypoint(entrypoint string) (string, error) {
 	// If the file is remote, we don't need to resolve the path
 	if strings.Contains(entrypoint, "://") {
 		return entrypoint, nil
@@ -62,7 +62,7 @@ func (node *StdinNode) ResolveIncludeEntrypoint(entrypoint string) (string, erro
 	return filepathext.SmartJoin(node.Dir(), path), nil
 }
 
-func (node *StdinNode) ResolveIncludeDir(dir string) (string, error) {
+func (node *StdinNode) ResolveDir(dir string) (string, error) {
 	path, err := execext.Expand(dir)
 	if err != nil {
 		return "", err

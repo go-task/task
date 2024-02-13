@@ -18,8 +18,8 @@ type Node interface {
 	Dir() string
 	Optional() bool
 	Remote() bool
-	ResolveIncludeEntrypoint(entrypoint string) (string, error)
-	ResolveIncludeDir(dir string) (string, error)
+	ResolveEntrypoint(entrypoint string) (string, error)
+	ResolveDir(dir string) (string, error)
 }
 
 func NewRootNode(
