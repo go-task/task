@@ -9,7 +9,6 @@ import (
 
 	"github.com/go-task/task/v3/internal/execext"
 	"github.com/go-task/task/v3/internal/filepathext"
-	"github.com/go-task/task/v3/taskfile/ast"
 )
 
 // A StdinNode is a node that reads a taskfile from the standard input stream.
@@ -45,13 +44,13 @@ func (node *StdinNode) Read(ctx context.Context) ([]byte, error) {
 	return stdin, nil
 }
 
-func (node *StdinNode) ResolveIncludeEntrypoint(include ast.Include) (string, error) {
+func (node *StdinNode) ResolveIncludeEntrypoint(entrypoint string) (string, error) {
 	// If the file is remote, we don't need to resolve the path
-	if strings.Contains(include.Taskfile, "://") {
-		return include.Taskfile, nil
+	if strings.Contains(entrypoint, "://") {
+		return entrypoint, nil
 	}
 
-	path, err := execext.Expand(include.Taskfile)
+	path, err := execext.Expand(entrypoint)
 	if err != nil {
 		return "", err
 	}
@@ -63,8 +62,8 @@ func (node *StdinNode) ResolveIncludeEntrypoint(include ast.Include) (string, er
 	return filepathext.SmartJoin(node.Dir(), path), nil
 }
 
-func (node *StdinNode) ResolveIncludeDir(include ast.Include) (string, error) {
-	path, err := execext.Expand(include.Dir)
+func (node *StdinNode) ResolveIncludeDir(dir string) (string, error) {
+	path, err := execext.Expand(dir)
 	if err != nil {
 		return "", err
 	}
