@@ -77,7 +77,7 @@ func resolveFileNodeEntrypointAndDir(l *logger.Logger, entrypoint, dir string) (
 	return entrypoint, dir, nil
 }
 
-func (node *FileNode) ResolveIncludeEntrypoint(entrypoint string) (string, error) {
+func (node *FileNode) ResolveEntrypoint(entrypoint string) (string, error) {
 	// If the file is remote, we don't need to resolve the path
 	if strings.Contains(entrypoint, "://") {
 		return entrypoint, nil
@@ -98,7 +98,7 @@ func (node *FileNode) ResolveIncludeEntrypoint(entrypoint string) (string, error
 	return filepathext.SmartJoin(entrypointDir, path), nil
 }
 
-func (node *FileNode) ResolveIncludeDir(dir string) (string, error) {
+func (node *FileNode) ResolveDir(dir string) (string, error) {
 	path, err := execext.Expand(dir)
 	if err != nil {
 		return "", err

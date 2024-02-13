@@ -75,7 +75,7 @@ func (node *HTTPNode) Read(ctx context.Context) ([]byte, error) {
 	return b, nil
 }
 
-func (node *HTTPNode) ResolveIncludeEntrypoint(entrypoint string) (string, error) {
+func (node *HTTPNode) ResolveEntrypoint(entrypoint string) (string, error) {
 	ref, err := url.Parse(entrypoint)
 	if err != nil {
 		return "", err
@@ -83,7 +83,7 @@ func (node *HTTPNode) ResolveIncludeEntrypoint(entrypoint string) (string, error
 	return node.URL.ResolveReference(ref).String(), nil
 }
 
-func (node *HTTPNode) ResolveIncludeDir(dir string) (string, error) {
+func (node *HTTPNode) ResolveDir(dir string) (string, error) {
 	path, err := execext.Expand(dir)
 	if err != nil {
 		return "", err
