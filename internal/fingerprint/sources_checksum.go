@@ -43,13 +43,6 @@ func (checker *ChecksumChecker) IsUpToDate(t *ast.Task) (bool, error) {
 		return false, nil
 	}
 
-	if !checker.dry && oldHash != newHash {
-		_ = os.MkdirAll(filepathext.SmartJoin(checker.tempDir, "checksum"), 0o755)
-		if err = os.WriteFile(checksumFile, []byte(newHash+"\n"), 0o644); err != nil {
-			return false, err
-		}
-	}
-
 	if len(t.Generates) > 0 {
 		// For each specified 'generates' field, check whether the files actually exist
 		for _, g := range t.Generates {
@@ -70,6 +63,22 @@ func (checker *ChecksumChecker) IsUpToDate(t *ast.Task) (bool, error) {
 	}
 
 	return oldHash == newHash, nil
+}
+
+func (checker *ChecksumChecker) Update(t *ast.Task) error {
+	if !checker.dry {
+		if len(t.Sources) == 0 {
+			return nil
+		}
+		checksumFile := checker.checksumFilePath(t)
+		newHash, err := checker.checksum(t)
+		if err != nil {
+			return nil
+		}
+		_ = os.MkdirAll(filepathext.SmartJoin(checker.tempDir, "checksum"), 0o755)
+		return os.WriteFile(checksumFile, []byte(newHash+"\n"), 0o644)
+	}
+	return nil
 }
 
 func (checker *ChecksumChecker) Value(t *ast.Task) (any, error) {

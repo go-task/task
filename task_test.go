@@ -294,10 +294,6 @@ func TestStatus(t *testing.T) {
 	assert.Equal(t, "task: [gen-foo] touch foo.txt", strings.TrimSpace(buff.String()))
 	buff.Reset()
 
-	// sources: not up-to-date
-	require.NoError(t, e.Run(context.Background(), ast.Call{Task: "gen-bar"}))
-	assert.Equal(t, "task: [gen-bar] touch bar.txt", strings.TrimSpace(buff.String()))
-	buff.Reset()
 	// all: up-to-date
 	require.NoError(t, e.Run(context.Background(), ast.Call{Task: "gen-bar"}))
 	assert.Equal(t, `task: Task "gen-bar" is up to date`, strings.TrimSpace(buff.String()))

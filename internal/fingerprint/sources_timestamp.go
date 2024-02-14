@@ -44,22 +44,7 @@ func (checker *TimestampChecker) IsUpToDate(t *ast.Task) (bool, error) {
 	_, err = os.Stat(timestampFile)
 	if err == nil {
 		generates = append(generates, timestampFile)
-	} else {
-		// Create the timestamp file for the next execution when the file does not exist.
-		if !checker.dry {
-			if err := os.MkdirAll(filepath.Dir(timestampFile), 0o755); err != nil {
-				return false, err
-			}
-			f, err := os.Create(timestampFile)
-			if err != nil {
-				return false, err
-			}
-			f.Close()
-		}
 	}
-
-	taskTime := time.Now()
-
 	// Compare the time of the generates and sources. If the generates are old, the task will be executed.
 
 	// Get the max time of the generates.
@@ -74,14 +59,39 @@ func (checker *TimestampChecker) IsUpToDate(t *ast.Task) (bool, error) {
 		return false, nil
 	}
 
-	// Modify the metadata of the file to the the current time.
-	if !checker.dry {
-		if err := os.Chtimes(timestampFile, taskTime, taskTime); err != nil {
-			return false, err
-		}
-	}
-
 	return !shouldUpdate, nil
+}
+
+func (checker *TimestampChecker) Update(t *ast.Task) error {
+	if !checker.dry {
+		generates, err := Globs(t.Dir, t.Generates)
+		if err != nil {
+			return nil
+		}
+		if len(generates) == 0 {
+			return nil
+		}
+
+		timestampFile := checker.timestampFilePath(t)
+		_, err = os.Stat(timestampFile)
+		if err == nil {
+			// Modify the metadata of the file to the the current time.
+			taskTime := time.Now()
+			return os.Chtimes(timestampFile, taskTime, taskTime)
+		}
+
+		// Compare the time of the generates and sources. If the generates are old, the task will be executed.
+		err = os.MkdirAll(filepath.Dir(timestampFile), 0o755)
+		if err != nil {
+			return err
+		}
+		f, err := os.Create(timestampFile)
+		if err != nil {
+			return err
+		}
+		return f.Close()
+	}
+	return nil
 }
 
 func (checker *TimestampChecker) Kind() string {

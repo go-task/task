@@ -55,13 +55,11 @@ func WithSourcesChecker(checker SourcesCheckable) CheckerOption {
 	}
 }
 
-func IsTaskUpToDate(
+func getConfig(
 	ctx context.Context,
 	t *ast.Task,
 	opts ...CheckerOption,
-) (bool, error) {
-	var statusUpToDate bool
-	var sourcesUpToDate bool
+) (*CheckerConfig, error) {
 	var err error
 
 	// Default config
@@ -88,12 +86,28 @@ func IsTaskUpToDate(
 	if config.sourcesChecker == nil {
 		config.sourcesChecker, err = NewSourcesChecker(config.method, config.tempDir, config.dry)
 		if err != nil {
-			return false, err
+			return nil, err
 		}
 	}
+	return config, nil
+}
+
+func IsTaskUpToDate(
+	ctx context.Context,
+	t *ast.Task,
+	opts ...CheckerOption,
+) (bool, error) {
+	var statusUpToDate bool
+	var sourcesUpToDate bool
+	var err error
 
 	statusIsSet := len(t.Status) != 0
 	sourcesIsSet := len(t.Sources) != 0
+
+	config, err := getConfig(ctx, t, opts...)
+	if err != nil {
+		return false, err
+	}
 
 	// If status is set, check if it is up-to-date
 	if statusIsSet {
@@ -129,4 +143,16 @@ func IsTaskUpToDate(
 	// If no status or sources are set, the task should always run
 	// i.e. it is never considered "up-to-date"
 	return false, nil
+}
+
+func UpdateTask(
+	ctx context.Context,
+	t *ast.Task,
+	opts ...CheckerOption,
+) error {
+	config, err := getConfig(ctx, t, opts...)
+	if err != nil {
+		return err
+	}
+	return config.sourcesChecker.Update(t)
 }

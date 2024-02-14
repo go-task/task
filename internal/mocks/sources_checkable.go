@@ -45,6 +45,10 @@ func (_m *SourcesCheckable) IsUpToDate(t *ast.Task) (bool, error) {
 	return r0, r1
 }
 
+func (_m *SourcesCheckable) Update(t *ast.Task) error {
+	return nil
+}
+
 // SourcesCheckable_IsUpToDate_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'IsUpToDate'
 type SourcesCheckable_IsUpToDate_Call struct {
 	*mock.Call
