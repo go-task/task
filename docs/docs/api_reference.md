@@ -214,6 +214,19 @@ vars:
 
 :::
 
+:::info
+
+In a variables map, variables defined later may reference variables defined
+earlier (declaration order is respected):
+
+```yaml
+vars:
+  FIRST_VAR: "hello"
+  SECOND_VAR: "{{.FIRST_VAR}} world"
+```
+
+:::
+
 ### Task
 
 | Attribute       | Type                               | Default                                               | Description                                                                                                                                                                                                                                                                                              |
