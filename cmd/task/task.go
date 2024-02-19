@@ -265,8 +265,7 @@ func run() error {
 	}
 
 	if (listOptions.ShouldListTasks()) && flags.silent {
-		e.ListTaskNames(flags.listAll)
-		return nil
+		return e.ListTaskNames(flags.listAll)
 	}
 
 	if err := e.Setup(); err != nil {
