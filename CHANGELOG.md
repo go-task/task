@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Bumped minimum Go version to 1.21 (#1500 by @pd93)
+
 ## v3.34.1 - 2024-01-27
 
 - Fixed prompt regression on
