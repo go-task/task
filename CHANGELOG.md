@@ -8,6 +8,8 @@
 - Add mention on the documentation to the fact that the variable declaration
   order is respected (#1510 by @kirkrodrigues).
 - Improved style guide docs (#1495 by @iwittkau).
+- Removed duplicated entry for `requires` on the API docs (#1491 by
+  @teatimeguest).
 
 ## v3.34.1 - 2024-01-27
 
