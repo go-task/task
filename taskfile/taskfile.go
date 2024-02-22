@@ -35,7 +35,10 @@ func Exists(path string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	if fi.Mode().IsRegular() {
+	if fi.Mode().IsRegular() ||
+		fi.Mode()&os.ModeDevice != 0 ||
+		fi.Mode()&os.ModeSymlink != 0 ||
+		fi.Mode()&os.ModeNamedPipe != 0 {
 		return filepath.Abs(path)
 	}
 
