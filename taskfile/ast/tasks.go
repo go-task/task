@@ -14,29 +14,34 @@ type Tasks struct {
 	omap.OrderedMap[string, *Task]
 }
 
-func (t *Tasks) Get(call *Call) *Task {
+type MatchingTask struct {
+	Task      *Task
+	Wildcards []string
+}
+
+func (t *Tasks) FindMatchingTasks(call *Call) []*MatchingTask {
 	if call == nil {
 		return nil
 	}
 	var task *Task
+	var matchingTasks []*MatchingTask
 	// If there is a direct match, return it
 	if task = t.OrderedMap.Get(call.Task); task != nil {
-		return task
-	}
-	if call.Vars == nil {
-		call.Vars = &Vars{}
+		matchingTasks = append(matchingTasks, &MatchingTask{Task: task, Wildcards: nil})
+		return matchingTasks
 	}
 	// Attempt a wildcard match
-	// TODO: We need to add a yield func to the Range method so that we can stop looping when we find a match
 	// For now, we can just nil check the task before each loop
 	_ = t.Range(func(key string, value *Task) error {
-		if match, wildcards := value.WildcardMatch(call.Task); match && task == nil {
-			task = value
-			call.Vars.Set("MATCH", Var{Value: wildcards})
+		if match, wildcards := value.WildcardMatch(call.Task); match {
+			matchingTasks = append(matchingTasks, &MatchingTask{
+				Task:      value,
+				Wildcards: wildcards,
+			})
 		}
 		return nil
 	})
-	return task
+	return matchingTasks
 }
 
 func (t1 *Tasks) Merge(t2 Tasks, include *Include) {
@@ -86,11 +91,10 @@ func (t1 *Tasks) Merge(t2 Tasks, include *Include) {
 	// run the included Taskfile's default task without specifying its full
 	// name. If the parent namespace has aliases, we add another alias for each
 	// of them.
-	if t2.Get(&Call{Task: "default"}) != nil && t1.Get(&Call{Task: include.Namespace}) == nil {
+	if t2.Get("default") != nil && t1.Get(include.Namespace) == nil {
 		defaultTaskName := fmt.Sprintf("%s:default", include.Namespace)
-		defaultTaskCall := &Call{Task: defaultTaskName}
-		t1.Get(defaultTaskCall).Aliases = append(t1.Get(defaultTaskCall).Aliases, include.Namespace)
-		t1.Get(defaultTaskCall).Aliases = append(t1.Get(defaultTaskCall).Aliases, include.Aliases...)
+		t1.Get(defaultTaskName).Aliases = append(t1.Get(defaultTaskName).Aliases, include.Namespace)
+		t1.Get(defaultTaskName).Aliases = append(t1.Get(defaultTaskName).Aliases, include.Aliases...)
 	}
 }
 

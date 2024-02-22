@@ -2253,33 +2253,44 @@ func TestFor(t *testing.T) {
 func TestWildcard(t *testing.T) {
 	tests := []struct {
 		name           string
+		call           string
 		expectedOutput string
 		wantErr        bool
 	}{
 		{
-			name:           "wildcard-foo",
+			name:           "basic wildcard",
+			call:           "wildcard-foo",
 			expectedOutput: "Hello foo\n",
 		},
 		{
-			name:           "foo-wildcard-bar",
+			name:           "double wildcard",
+			call:           "foo-wildcard-bar",
 			expectedOutput: "Hello foo bar\n",
 		},
 		{
-			name:           "start-foo",
+			name:           "store wildcard",
+			call:           "start-foo",
 			expectedOutput: "Starting foo\n",
 		},
 		{
-			name:           "matches-exactly-*",
-			expectedOutput: "I don't consume matches: \n",
+			name:           "matches exactly",
+			call:           "matches-exactly-*",
+			expectedOutput: "I don't consume matches: []\n",
 		},
 		{
-			name:    "no-match",
+			name:    "no matches",
+			call:    "no-match",
+			wantErr: true,
+		},
+		{
+			name:    "multiple matches",
+			call:    "wildcard-foo-bar",
 			wantErr: true,
 		},
 	}
 
 	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
+		t.Run(test.call, func(t *testing.T) {
 			var buff bytes.Buffer
 			e := task.Executor{
 				Dir:    "testdata/wildcards",
@@ -2290,10 +2301,10 @@ func TestWildcard(t *testing.T) {
 			}
 			require.NoError(t, e.Setup())
 			if test.wantErr {
-				require.Error(t, e.Run(context.Background(), &ast.Call{Task: test.name}))
+				require.Error(t, e.Run(context.Background(), &ast.Call{Task: test.call}))
 				return
 			}
-			require.NoError(t, e.Run(context.Background(), &ast.Call{Task: test.name}))
+			require.NoError(t, e.Run(context.Background(), &ast.Call{Task: test.call}))
 			assert.Equal(t, test.expectedOutput, buff.String())
 		})
 	}

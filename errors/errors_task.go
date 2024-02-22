@@ -65,15 +65,15 @@ func (err *TaskInternalError) Code() int {
 	return CodeTaskInternal
 }
 
-// TaskNameConflictError is returned when multiple tasks with the same name or
+// TaskNameConflictError is returned when multiple tasks with a matching name or
 // alias are found.
 type TaskNameConflictError struct {
-	AliasName string
+	Call      string
 	TaskNames []string
 }
 
 func (err *TaskNameConflictError) Error() string {
-	return fmt.Sprintf(`task: Multiple tasks (%s) with alias %q found`, strings.Join(err.TaskNames, ", "), err.AliasName)
+	return fmt.Sprintf(`task: Found multiple tasks (%s) that match %q`, strings.Join(err.TaskNames, ", "), err.Call)
 }
 
 func (err *TaskNameConflictError) Code() int {
