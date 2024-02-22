@@ -415,12 +415,28 @@ func (e *Executor) startExecution(ctx context.Context, t *ast.Task, execute func
 // If multiple tasks contain the same alias or no matches are found an error is returned.
 func (e *Executor) GetTask(call *ast.Call) (*ast.Task, error) {
 	// Search for a matching task
-	matchingTask := e.Taskfile.Tasks.Get(call)
-	if matchingTask != nil {
-		return matchingTask, nil
+	matchingTasks := e.Taskfile.Tasks.FindMatchingTasks(call)
+	switch len(matchingTasks) {
+	case 0: // Carry on
+	case 1:
+		if call.Vars == nil {
+			call.Vars = &ast.Vars{}
+		}
+		call.Vars.Set("MATCH", ast.Var{Value: matchingTasks[0].Wildcards})
+		return matchingTasks[0].Task, nil
+	default:
+		taskNames := make([]string, len(matchingTasks))
+		for i, matchingTask := range matchingTasks {
+			taskNames[i] = matchingTask.Task.Task
+		}
+		return nil, &errors.TaskNameConflictError{
+			Call:      call.Task,
+			TaskNames: taskNames,
+		}
 	}
 
 	// If didn't find one, search for a task with a matching alias
+	var matchingTask *ast.Task
 	var aliasedTasks []string
 	for _, task := range e.Taskfile.Tasks.Values() {
 		if slices.Contains(task.Aliases, call.Task) {
@@ -431,7 +447,7 @@ func (e *Executor) GetTask(call *ast.Call) (*ast.Task, error) {
 	// If we found multiple tasks
 	if len(aliasedTasks) > 1 {
 		return nil, &errors.TaskNameConflictError{
-			AliasName: call.Task,
+			Call:      call.Task,
 			TaskNames: aliasedTasks,
 		}
 	}

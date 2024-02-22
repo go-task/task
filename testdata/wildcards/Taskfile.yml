@@ -5,6 +5,10 @@ tasks:
     cmds:
       - echo "Hello {{index .MATCH 0}}"
 
+  wildcard-*-*:
+    cmds:
+      - echo "Hello {{index .MATCH 0}}"
+
   '*-wildcard-*':
     cmds:
       - echo "Hello {{index .MATCH 0}} {{index .MATCH 1}}"
