@@ -5,6 +5,8 @@
 - Bumped minimum Go version to 1.21 (#1500 by @pd93)
 - Fixed panic when using `--list` and `--silent` together with the Remote
   Taskfiles experiment (#1509, #1512 by @pd93).
+- Add mention on the documentation to the fact that the variable declaration
+  order is respected (#1510 by @kirkrodrigues).
 
 ## v3.34.1 - 2024-01-27
 
