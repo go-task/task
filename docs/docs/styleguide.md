@@ -3,27 +3,28 @@ slug: /styleguide/
 sidebar_position: 10
 ---
 
-# Styleguide
+# Style guide
 
-This is the official Task styleguide for `Taskfile.yml` files. This guide
-contains some basic instructions to keep your Taskfile clean and familiar to
-other users.
+This is the official style guide for `Taskfile.yml` files. It provides basic
+instructions for keeping your Taskfiles clean and familiar to other users.
 
-This contains general guidelines, but they don't necessarily need to be strictly
-followed. Feel free to disagree and proceed differently at some point if you
-need or want to. Also, feel free to open issues or pull requests with
-improvements to this guide.
+This guide contains general guidelines, but they do not necessarily need to be
+followed strictly. Feel free to disagree and do things differently if you need
+or want to. Any improvements to this guide are welcome! Please open an issue or
+create a pull request to contribute.
 
-## Use the correct order of keywords
+## Use the suggested ordering of the main sections
 
-- `version:`
-- `includes:`
-- Configuration ones, like `output:`, `silent:`, `method:` and `run:`
-- `vars:`
-- `env:`, `dotenv:`
-- `tasks:`
+```yaml
+version:
+includes:
+# optional configurations (output, silent, method, run, etc.)
+vars:
+env: # followed or replaced by dotenv
+tasks:
+```
 
-## Use 2 spaces for indentation
+## Use two spaces for indentation
 
 This is the most common convention for YAML files, and Task follows it.
 
@@ -42,7 +43,7 @@ tasks:
       - echo 'foo'
 ```
 
-## Separate with spaces the mains sections
+## Separate the main sections with empty lines
 
 ```yaml
 # bad
@@ -76,7 +77,7 @@ tasks:
   # ...
 ```
 
-## Add spaces between tasks
+## Separate tasks with empty lines
 
 ```yaml
 # bad
@@ -111,7 +112,7 @@ tasks:
       - echo 'baz'
 ```
 
-## Use upper-case variable names
+## Use only uppercase letters for variable names
 
 ```yaml
 # bad
@@ -138,7 +139,7 @@ tasks:
       - go build -o {{.BINARY_NAME}} .
 ```
 
-## Don't wrap vars in spaces when templating
+## Avoid using whitespace when templating variables
 
 ```yaml
 # bad
@@ -159,9 +160,10 @@ tasks:
       - echo '{{.MESSAGE}}'
 ```
 
-This convention is also used by most people for any Go templating.
+This convention is also commonly used in templates for the Go programming
+language.
 
-## Separate task name words with a dash
+## Use kebab case for task names
 
 ```yaml
 # bad
@@ -182,7 +184,7 @@ tasks:
       - echo 'Do something'
 ```
 
-## Use colon for task namespacing
+## Use a colon to separate the task namespace and name
 
 ```yaml
 # good
@@ -200,7 +202,7 @@ tasks:
 
 This is also done automatically when using included Taskfiles.
 
-## Prefer external scripts over complex multi-line commands
+## Prefer using external scripts instead of multi-line commands
 
 ```yaml
 # bad
