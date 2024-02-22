@@ -7,6 +7,7 @@
   Taskfiles experiment (#1509, #1512 by @pd93).
 - Add mention on the documentation to the fact that the variable declaration
   order is respected (#1510 by @kirkrodrigues).
+- Improved style guide docs (#1495 by @iwittkau).
 
 ## v3.34.1 - 2024-01-27
 
