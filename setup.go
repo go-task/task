@@ -221,6 +221,9 @@ func (e *Executor) setupDefaults() {
 	if e.Taskfile.Method == "" {
 		e.Taskfile.Method = "checksum"
 	}
+	if e.Taskfile.DefinitionCheck == "" {
+		e.Taskfile.DefinitionCheck = "auto"
+	}
 	if e.Taskfile.Run == "" {
 		e.Taskfile.Run = "always"
 	}

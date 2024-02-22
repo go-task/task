@@ -483,7 +483,7 @@ func TestAlias(t *testing.T) {
 	}
 	require.NoError(t, e.Setup())
 	require.NoError(t, e.Run(context.Background(), ast.Call{Task: "f"}))
-	assert.Equal(t, string(data), buff.String())
+	assert.Equal(t, unifyLineEndings(string(data)), buff.String())
 }
 
 func TestDuplicateAlias(t *testing.T) {
@@ -515,11 +515,12 @@ func TestAliasSummary(t *testing.T) {
 	}
 	require.NoError(t, e.Setup())
 	require.NoError(t, e.Run(context.Background(), ast.Call{Task: "f"}))
-	assert.Equal(t, string(data), buff.String())
+	assert.Equal(t, unifyLineEndings(string(data)), buff.String())
 }
 
 func TestLabelUpToDate(t *testing.T) {
 	const dir = "testdata/label_uptodate"
+	os.RemoveAll(filepathext.SmartJoin(dir, ".task"))
 
 	var buff bytes.Buffer
 	e := task.Executor{
@@ -530,10 +531,14 @@ func TestLabelUpToDate(t *testing.T) {
 	require.NoError(t, e.Setup())
 	require.NoError(t, e.Run(context.Background(), ast.Call{Task: "foo"}))
 	assert.Contains(t, buff.String(), "foobar")
+
+	require.NoError(t, e.Run(context.Background(), ast.Call{Task: "foo"}))
+	assert.Contains(t, buff.String(), "foobar")
 }
 
 func TestLabelSummary(t *testing.T) {
 	const dir = "testdata/label_summary"
+	os.RemoveAll(filepathext.SmartJoin(dir, ".task"))
 
 	var buff bytes.Buffer
 	e := task.Executor{
@@ -560,6 +565,7 @@ func TestLabelInStatus(t *testing.T) {
 
 func TestLabelWithVariableExpansion(t *testing.T) {
 	const dir = "testdata/label_var"
+	os.RemoveAll(filepathext.SmartJoin(dir, ".task"))
 
 	var buff bytes.Buffer
 	e := task.Executor{
@@ -569,11 +575,15 @@ func TestLabelWithVariableExpansion(t *testing.T) {
 	}
 	require.NoError(t, e.Setup())
 	require.NoError(t, e.Run(context.Background(), ast.Call{Task: "foo"}))
+	assert.Contains(t, buff.String(), "foobaz") // first run
+
+	require.NoError(t, e.Run(context.Background(), ast.Call{Task: "foo"}))
 	assert.Contains(t, buff.String(), "foobaz")
 }
 
 func TestLabelInSummary(t *testing.T) {
 	const dir = "testdata/label_summary"
+	os.RemoveAll(filepathext.SmartJoin(dir, ".task"))
 
 	var buff bytes.Buffer
 	e := task.Executor{
@@ -582,6 +592,9 @@ func TestLabelInSummary(t *testing.T) {
 		Stderr: &buff,
 	}
 	require.NoError(t, e.Setup())
+	require.NoError(t, e.Run(context.Background(), ast.Call{Task: "foo"}))
+	assert.Contains(t, buff.String(), "foobar") // first run
+
 	require.NoError(t, e.Run(context.Background(), ast.Call{Task: "foo"}))
 	assert.Contains(t, buff.String(), "foobar")
 }
@@ -1302,12 +1315,7 @@ func TestSummary(t *testing.T) {
 	data, err := os.ReadFile(filepathext.SmartJoin(dir, "task-with-summary.txt"))
 	require.NoError(t, err)
 
-	expectedOutput := string(data)
-	if runtime.GOOS == "windows" {
-		expectedOutput = strings.ReplaceAll(expectedOutput, "\r\n", "\n")
-	}
-
-	assert.Equal(t, expectedOutput, buff.String())
+	assert.Equal(t, unifyLineEndings(string(data)), buff.String())
 }
 
 func TestWhenNoDirAttributeItRunsInSameDirAsTaskfile(t *testing.T) {
@@ -2248,4 +2256,8 @@ func TestFor(t *testing.T) {
 			assert.Equal(t, test.expectedOutput, buff.String())
 		})
 	}
+}
+
+func unifyLineEndings(s string) string {
+	return strings.ReplaceAll(s, "\r\n", "\n")
 }
