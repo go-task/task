@@ -200,6 +200,7 @@ func (e *Executor) RunTask(ctx context.Context, call ast.Call) error {
 		}
 
 		skipFingerprinting := e.ForceAll || (!call.Indirect && e.Force)
+		var method string
 		if !skipFingerprinting {
 			if err := ctx.Err(); err != nil {
 				return err
@@ -215,7 +216,7 @@ func (e *Executor) RunTask(ctx context.Context, call ast.Call) error {
 			}
 
 			// Get the fingerprinting method to use
-			method := e.Taskfile.Method
+			method = e.Taskfile.Method
 			if t.Method != "" {
 				method = t.Method
 			}
@@ -263,6 +264,17 @@ func (e *Executor) RunTask(ctx context.Context, call ast.Call) error {
 				}
 
 				return &errors.TaskRunError{TaskName: t.Task, Err: err}
+			}
+		}
+		if !skipFingerprinting {
+			err := fingerprint.UpdateTask(ctx, t,
+				fingerprint.WithMethod(method),
+				fingerprint.WithTempDir(e.TempDir),
+				fingerprint.WithDry(e.Dry),
+				fingerprint.WithLogger(e.Logger),
+			)
+			if err != nil {
+				return err
 			}
 		}
 		e.Logger.VerboseErrf(logger.Magenta, "task: %q finished\n", call.Task)
