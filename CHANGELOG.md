@@ -2,7 +2,13 @@
 
 ## Unreleased
 
-- Bumped minimum Go version to 1.21 (#1500 by @pd93)
+- Added support for
+  [wildcards in task names](https://taskfile.dev/usage/#wildcard-arguments)
+  (#836, #1489 by @pd93).
+- Added the ability to
+  [run Taskfiles via stdin](https://taskfile.dev/usage/#reading-a-taskfile-from-stdin)
+  (#655, #1483 by @pd93).
+- Bumped minimum Go version to 1.21 (#1500 by @pd93).
 - Fixed panic when using `--list` and `--silent` together with the Remote
   Taskfiles experiment (#1509, #1512 by @pd93).
 - Add mention on the documentation to the fact that the variable declaration
