@@ -18,7 +18,7 @@ require (
 	golang.org/x/sync v0.6.0
 	golang.org/x/term v0.17.0
 	gopkg.in/yaml.v3 v3.0.1
-	mvdan.cc/sh/v3 v3.7.0
+	mvdan.cc/sh/v3 v3.8.0
 )
 
 require (
