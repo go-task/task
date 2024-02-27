@@ -121,16 +121,6 @@ func (e *Executor) ListTasks(o ListOptions) (bool, error) {
 // Only tasks with a non-empty description are printed if allTasks is false.
 // Otherwise, all task names are printed.
 func (e *Executor) ListTaskNames(allTasks bool) error {
-	// if called from cmd/task.go, e.Logger has not yet been initialized
-	if e.Logger == nil {
-		e.setupLogger()
-	}
-	// if called from cmd/task.go, e.Taskfile has not yet been parsed
-	if e.Taskfile == nil {
-		if err := e.readTaskfile(); err != nil {
-			return err
-		}
-	}
 	// use stdout if no output defined
 	var w io.Writer = os.Stdout
 	if e.Stdout != nil {
