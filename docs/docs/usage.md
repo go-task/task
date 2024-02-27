@@ -1888,8 +1888,8 @@ task again. This requires the `sources` attribute to be given, so task knows
 which files to watch.
 
 The default watch interval is 5 seconds, but it's possible to change it by
-either setting `interval: '500ms'` in the root of the Taskfile passing it as an
-argument like `--interval=500ms`.
+either setting `interval: '500ms'` in the root of the Taskfile or by passing it
+as an argument like `--interval=500ms`.
 
 Also, it's possible to set `watch: true` in a given task and it'll automatically
 run in watch mode:
