@@ -264,10 +264,6 @@ func run() error {
 		return err
 	}
 
-	if (listOptions.ShouldListTasks()) && flags.silent {
-		return e.ListTaskNames(flags.listAll)
-	}
-
 	if err := e.Setup(); err != nil {
 		return err
 	}
@@ -276,6 +272,10 @@ func run() error {
 	// taskfile is downloaded
 	if flags.download {
 		return nil
+	}
+
+	if (listOptions.ShouldListTasks()) && flags.silent {
+		return e.ListTaskNames(flags.listAll)
 	}
 
 	if listOptions.ShouldListTasks() {
