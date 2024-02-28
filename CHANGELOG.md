@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v3.35.0 - 2024-02-28
 
 - Added support for
   [wildcards in task names](https://taskfile.dev/usage/#wildcard-arguments)

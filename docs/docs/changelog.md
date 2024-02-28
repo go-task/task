@@ -5,6 +5,23 @@ sidebar_position: 14
 
 # Changelog
 
+## v3.35.0 - 2024-02-28
+
+- Added support for
+  [wildcards in task names](https://taskfile.dev/usage/#wildcard-arguments)
+  (#836, #1489 by @pd93).
+- Added the ability to
+  [run Taskfiles via stdin](https://taskfile.dev/usage/#reading-a-taskfile-from-stdin)
+  (#655, #1483 by @pd93).
+- Bumped minimum Go version to 1.21 (#1500 by @pd93).
+- Fixed bug related to the `--list` flag (#1509, #1512 by @pd93, #1514, #1520 by
+  @pd93).
+- Add mention on the documentation to the fact that the variable declaration
+  order is respected (#1510 by @kirkrodrigues).
+- Improved style guide docs (#1495 by @iwittkau).
+- Removed duplicated entry for `requires` on the API docs (#1491 by
+  @teatimeguest).
+
 ## v3.34.1 - 2024-01-27
 
 - Fixed prompt regression on
