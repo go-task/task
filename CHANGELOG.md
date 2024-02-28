@@ -9,8 +9,8 @@
   [run Taskfiles via stdin](https://taskfile.dev/usage/#reading-a-taskfile-from-stdin)
   (#655, #1483 by @pd93).
 - Bumped minimum Go version to 1.21 (#1500 by @pd93).
-- Fixed panic when using `--list` and `--silent` together with the Remote
-  Taskfiles experiment (#1509, #1512 by @pd93).
+- Fixed bug related to the `--list` flag (#1509, #1512 by @pd93, #1514, #1520 by
+  @pd93).
 - Add mention on the documentation to the fact that the variable declaration
   order is respected (#1510 by @kirkrodrigues).
 - Improved style guide docs (#1495 by @iwittkau).
