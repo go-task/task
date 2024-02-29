@@ -39,8 +39,8 @@ type Executor struct {
 	Taskfile *ast.Taskfile
 
 	Dir         string
-	TempDir     string
 	Entrypoint  string
+	TempDir     string
 	Force       bool
 	ForceAll    bool
 	Insecure    bool

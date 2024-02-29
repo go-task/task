@@ -7,7 +7,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"time"
 
 	"github.com/spf13/pflag"
 	"mvdan.cc/sh/v3/syntax"
@@ -16,77 +15,22 @@ import (
 	"github.com/go-task/task/v3/args"
 	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/experiments"
+	"github.com/go-task/task/v3/internal/flags"
 	"github.com/go-task/task/v3/internal/logger"
 	"github.com/go-task/task/v3/internal/sort"
 	ver "github.com/go-task/task/v3/internal/version"
 	"github.com/go-task/task/v3/taskfile/ast"
 )
 
-const usage = `Usage: task [flags...] [task...]
-
-Runs the specified task(s). Falls back to the "default" task if no task name
-was specified, or lists all tasks if an unknown task name was specified.
-
-Example: 'task hello' with the following 'Taskfile.yml' file will generate an
-'output.txt' file with the content "hello".
-
-'''
-version: '3'
-tasks:
-  hello:
-    cmds:
-      - echo "I am going to write a file named 'output.txt' now."
-      - echo "hello" > output.txt
-    generates:
-      - output.txt
-'''
-
-Options:
-`
-
-var flags struct {
-	version     bool
-	help        bool
-	init        bool
-	list        bool
-	listAll     bool
-	listJson    bool
-	taskSort    string
-	status      bool
-	noStatus    bool
-	insecure    bool
-	force       bool
-	forceAll    bool
-	watch       bool
-	verbose     bool
-	silent      bool
-	assumeYes   bool
-	dry         bool
-	summary     bool
-	exitCode    bool
-	parallel    bool
-	concurrency int
-	dir         string
-	entrypoint  string
-	output      ast.Output
-	color       bool
-	interval    time.Duration
-	global      bool
-	experiments bool
-	download    bool
-	offline     bool
-	timeout     time.Duration
-}
-
 func main() {
 	if err := run(); err != nil {
 		l := &logger.Logger{
 			Stdout:  os.Stdout,
 			Stderr:  os.Stderr,
-			Verbose: flags.verbose,
-			Color:   flags.color,
+			Verbose: flags.Verbose,
+			Color:   flags.Color,
 		}
-		if err, ok := err.(*errors.TaskRunError); ok && flags.exitCode {
+		if err, ok := err.(*errors.TaskRunError); ok && flags.ExitCode {
 			l.Errf(logger.Red, "%v\n", err)
 			os.Exit(err.TaskExitCode())
 		}
@@ -104,79 +48,34 @@ func run() error {
 	log.SetFlags(0)
 	log.SetOutput(os.Stderr)
 
-	pflag.Usage = func() {
-		log.Print(usage)
-		pflag.PrintDefaults()
+	if err := flags.Validate(); err != nil {
+		return err
 	}
 
-	pflag.BoolVar(&flags.version, "version", false, "Show Task version.")
-	pflag.BoolVarP(&flags.help, "help", "h", false, "Shows Task usage.")
-	pflag.BoolVarP(&flags.init, "init", "i", false, "Creates a new Taskfile.yml in the current folder.")
-	pflag.BoolVarP(&flags.list, "list", "l", false, "Lists tasks with description of current Taskfile.")
-	pflag.BoolVarP(&flags.listAll, "list-all", "a", false, "Lists tasks with or without a description.")
-	pflag.BoolVarP(&flags.listJson, "json", "j", false, "Formats task list as JSON.")
-	pflag.StringVar(&flags.taskSort, "sort", "", "Changes the order of the tasks when listed. [default|alphanumeric|none].")
-	pflag.BoolVar(&flags.status, "status", false, "Exits with non-zero exit code if any of the given tasks is not up-to-date.")
-	pflag.BoolVar(&flags.noStatus, "no-status", false, "Ignore status when listing tasks as JSON")
-	pflag.BoolVar(&flags.insecure, "insecure", false, "Forces Task to download Taskfiles over insecure connections.")
-	pflag.BoolVarP(&flags.watch, "watch", "w", false, "Enables watch of the given task.")
-	pflag.BoolVarP(&flags.verbose, "verbose", "v", false, "Enables verbose mode.")
-	pflag.BoolVarP(&flags.silent, "silent", "s", false, "Disables echoing.")
-	pflag.BoolVarP(&flags.assumeYes, "yes", "y", false, "Assume \"yes\" as answer to all prompts.")
-	pflag.BoolVarP(&flags.parallel, "parallel", "p", false, "Executes tasks provided on command line in parallel.")
-	pflag.BoolVarP(&flags.dry, "dry", "n", false, "Compiles and prints tasks in the order that they would be run, without executing them.")
-	pflag.BoolVar(&flags.summary, "summary", false, "Show summary about a task.")
-	pflag.BoolVarP(&flags.exitCode, "exit-code", "x", false, "Pass-through the exit code of the task command.")
-	pflag.StringVarP(&flags.dir, "dir", "d", "", "Sets directory of execution.")
-	pflag.StringVarP(&flags.entrypoint, "taskfile", "t", "", `Choose which Taskfile to run. Defaults to "Taskfile.yml".`)
-	pflag.StringVarP(&flags.output.Name, "output", "o", "", "Sets output style: [interleaved|group|prefixed].")
-	pflag.StringVar(&flags.output.Group.Begin, "output-group-begin", "", "Message template to print before a task's grouped output.")
-	pflag.StringVar(&flags.output.Group.End, "output-group-end", "", "Message template to print after a task's grouped output.")
-	pflag.BoolVar(&flags.output.Group.ErrorOnly, "output-group-error-only", false, "Swallow output from successful tasks.")
-	pflag.BoolVarP(&flags.color, "color", "c", true, "Colored output. Enabled by default. Set flag to false or use NO_COLOR=1 to disable.")
-	pflag.IntVarP(&flags.concurrency, "concurrency", "C", 0, "Limit number tasks to run concurrently.")
-	pflag.DurationVarP(&flags.interval, "interval", "I", 0, "Interval to watch for changes.")
-	pflag.BoolVarP(&flags.global, "global", "g", false, "Runs global Taskfile, from $HOME/{T,t}askfile.{yml,yaml}.")
-	pflag.BoolVar(&flags.experiments, "experiments", false, "Lists all the available experiments and whether or not they are enabled.")
+	dir := flags.Dir
+	entrypoint := flags.Entrypoint
 
-	// Gentle force experiment will override the force flag and add a new force-all flag
-	if experiments.GentleForce.Enabled {
-		pflag.BoolVarP(&flags.force, "force", "f", false, "Forces execution of the directly called task.")
-		pflag.BoolVar(&flags.forceAll, "force-all", false, "Forces execution of the called task and all its dependant tasks.")
-	} else {
-		pflag.BoolVarP(&flags.forceAll, "force", "f", false, "Forces execution even when the task is up-to-date.")
-	}
-
-	// Remote Taskfiles experiment will adds the "download" and "offline" flags
-	if experiments.RemoteTaskfiles.Enabled {
-		pflag.BoolVar(&flags.download, "download", false, "Downloads a cached version of a remote Taskfile.")
-		pflag.BoolVar(&flags.offline, "offline", false, "Forces Task to only use local or cached Taskfiles.")
-		pflag.DurationVar(&flags.timeout, "timeout", time.Second*10, "Timeout for downloading remote Taskfiles.")
-	}
-
-	pflag.Parse()
-
-	if flags.version {
+	if flags.Version {
 		fmt.Printf("Task version: %s\n", ver.GetVersion())
 		return nil
 	}
 
-	if flags.help {
+	if flags.Help {
 		pflag.Usage()
 		return nil
 	}
 
-	if flags.experiments {
+	if flags.Experiments {
 		l := &logger.Logger{
 			Stdout:  os.Stdout,
 			Stderr:  os.Stderr,
-			Verbose: flags.verbose,
-			Color:   flags.color,
+			Verbose: flags.Verbose,
+			Color:   flags.Color,
 		}
 		return experiments.List(l)
 	}
 
-	if flags.init {
+	if flags.Init {
 		wd, err := os.Getwd()
 		if err != nil {
 			log.Fatal(err)
@@ -187,44 +86,21 @@ func run() error {
 		return nil
 	}
 
-	if flags.download && flags.offline {
-		return errors.New("task: You can't set both --download and --offline flags")
-	}
-
-	if flags.global && flags.dir != "" {
-		log.Fatal("task: You can't set both --global and --dir")
-		return nil
-	}
-	if flags.global {
+	if flags.Global {
 		home, err := os.UserHomeDir()
 		if err != nil {
 			return fmt.Errorf("task: Failed to get user home directory: %w", err)
 		}
-		flags.dir = home
+		dir = home
 	}
 
-	if flags.dir != "" && flags.entrypoint != "" {
-		return errors.New("task: You can't set both --dir and --taskfile")
-	}
-	if flags.entrypoint != "" {
-		flags.dir = filepath.Dir(flags.entrypoint)
-		flags.entrypoint = filepath.Base(flags.entrypoint)
-	}
-
-	if flags.output.Name != "group" {
-		if flags.output.Group.Begin != "" {
-			return errors.New("task: You can't set --output-group-begin without --output=group")
-		}
-		if flags.output.Group.End != "" {
-			return errors.New("task: You can't set --output-group-end without --output=group")
-		}
-		if flags.output.Group.ErrorOnly {
-			return errors.New("task: You can't set --output-group-error-only without --output=group")
-		}
+	if entrypoint != "" {
+		dir = filepath.Dir(entrypoint)
+		entrypoint = filepath.Base(entrypoint)
 	}
 
 	var taskSorter sort.TaskSorter
-	switch flags.taskSort {
+	switch flags.TaskSort {
 	case "none":
 		taskSorter = &sort.Noop{}
 	case "alphanumeric":
@@ -232,34 +108,34 @@ func run() error {
 	}
 
 	e := task.Executor{
-		Force:       flags.force,
-		ForceAll:    flags.forceAll,
-		Insecure:    flags.insecure,
-		Download:    flags.download,
-		Offline:     flags.offline,
-		Timeout:     flags.timeout,
-		Watch:       flags.watch,
-		Verbose:     flags.verbose,
-		Silent:      flags.silent,
-		AssumeYes:   flags.assumeYes,
-		Dir:         flags.dir,
-		Dry:         flags.dry || flags.status,
-		Entrypoint:  flags.entrypoint,
-		Summary:     flags.summary,
-		Parallel:    flags.parallel,
-		Color:       flags.color,
-		Concurrency: flags.concurrency,
-		Interval:    flags.interval,
+		Dir:         dir,
+		Entrypoint:  entrypoint,
+		Force:       flags.Force,
+		ForceAll:    flags.ForceAll,
+		Insecure:    flags.Insecure,
+		Download:    flags.Download,
+		Offline:     flags.Offline,
+		Timeout:     flags.Timeout,
+		Watch:       flags.Watch,
+		Verbose:     flags.Verbose,
+		Silent:      flags.Silent,
+		AssumeYes:   flags.AssumeYes,
+		Dry:         flags.Dry || flags.Status,
+		Summary:     flags.Summary,
+		Parallel:    flags.Parallel,
+		Color:       flags.Color,
+		Concurrency: flags.Concurrency,
+		Interval:    flags.Interval,
 
 		Stdin:  os.Stdin,
 		Stdout: os.Stdout,
 		Stderr: os.Stderr,
 
-		OutputStyle: flags.output,
+		OutputStyle: flags.Output,
 		TaskSorter:  taskSorter,
 	}
 
-	listOptions := task.NewListOptions(flags.list, flags.listAll, flags.listJson, flags.noStatus)
+	listOptions := task.NewListOptions(flags.List, flags.ListAll, flags.ListJson, flags.NoStatus)
 	if err := listOptions.Validate(); err != nil {
 		return err
 	}
@@ -270,12 +146,12 @@ func run() error {
 
 	// If the download flag is specified, we should stop execution as soon as
 	// taskfile is downloaded
-	if flags.download {
+	if flags.Download {
 		return nil
 	}
 
-	if (listOptions.ShouldListTasks()) && flags.silent {
-		return e.ListTaskNames(flags.listAll)
+	if (listOptions.ShouldListTasks()) && flags.Silent {
+		return e.ListTaskNames(flags.ListAll)
 	}
 
 	if listOptions.ShouldListTasks() {
@@ -307,16 +183,16 @@ func run() error {
 	}
 
 	globals.Set("CLI_ARGS", ast.Var{Value: cliArgs})
-	globals.Set("CLI_FORCE", ast.Var{Value: flags.force || flags.forceAll})
+	globals.Set("CLI_FORCE", ast.Var{Value: flags.Force || flags.ForceAll})
 	e.Taskfile.Vars.Merge(globals)
 
-	if !flags.watch {
+	if !flags.Watch {
 		e.InterceptInterruptSignals()
 	}
 
 	ctx := context.Background()
 
-	if flags.status {
+	if flags.Status {
 		return e.Status(ctx, calls...)
 	}
 
