@@ -62,12 +62,7 @@ func (c *Compiler) getVariables(t *ast.Task, call *ast.Call, evaluateShVars bool
 			cache := &templater.Cache{Vars: result}
 			// Replace values
 			newVar := ast.Var{}
-			switch value := v.Value.(type) {
-			case string:
-				newVar.Value = templater.Replace(value, cache)
-			default:
-				newVar.Value = value
-			}
+			newVar.Value = templater.Replace(v.Value, cache)
 			newVar.Sh = templater.Replace(v.Sh, cache)
 			newVar.Ref = v.Ref
 			newVar.Json = templater.Replace(v.Json, cache)

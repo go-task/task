@@ -98,10 +98,7 @@ func ReplaceVarsWithExtra(vars *ast.Vars, cache *Cache, extra map[string]any) *a
 	var newVars ast.Vars
 	_ = vars.Range(func(k string, v ast.Var) error {
 		var newVar ast.Var
-		switch value := v.Value.(type) {
-		case string:
-			newVar.Value = ReplaceWithExtra(value, cache, extra)
-		}
+		newVar.Value = ReplaceWithExtra(v.Value, cache, extra)
 		newVar.Live = v.Live
 		newVar.Sh = ReplaceWithExtra(v.Sh, cache, extra)
 		newVar.Ref = v.Ref
