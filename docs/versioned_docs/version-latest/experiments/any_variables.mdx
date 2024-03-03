@@ -1,0 +1,346 @@
+---
+slug: /experiments/any-variables/
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# Any Variables (#1415)
+
+:::caution
+
+All experimental features are subject to breaking changes and/or removal _at any
+time_. We strongly recommend that you do not use these features in a production
+environment. They are intended for testing and feedback only.
+
+:::
+
+Currently, Task only supports string variables. This experiment allows you to
+specify and use the following variable types:
+
+- `string`
+- `bool`
+- `int`
+- `float`
+- `array`
+- `map`
+
+This allows you to have a lot more flexibility in how you use variables in
+Task's templating engine. There are two active proposals for this experiment.
+Click on the tabs below to switch between them.
+
+<Tabs defaultValue="1" queryString="proposal"
+  values={[
+    {label: 'Proposal 1', value: '1'},
+    {label: 'Proposal 2', value: '2'}
+  ]}>
+
+<TabItem value="1">
+
+:::warning
+
+This experiment proposal breaks the following functionality:
+
+- Dynamically defined variables (using the `sh` keyword)
+
+:::
+
+:::info
+
+To enable this experiment, set the environment variable:
+`TASK_X_ANY_VARIABLES=1`. Check out [our guide to enabling experiments
+][enabling-experiments] for more information.
+
+:::
+
+## Maps
+
+This proposal removes support for the `sh` keyword in favour of a new syntax for
+dynamically defined variables, This allows you to define a map directly as you
+would for any other type:
+
+```yaml
+version: 3
+
+tasks:
+  foo:
+    vars:
+      FOO: {a: 1, b: 2, c: 3} # <-- Directly defined map on the `FOO` key
+    cmds:
+      - 'echo {{.FOO.a}}'
+```
+
+## Migration
+
+Taskfiles with dynamically defined variables via the `sh` subkey will no longer
+work with this experiment enabled. In order to keep using dynamically defined
+variables, you will need to migrate your Taskfile to use the new syntax.
+
+Previously, you might have defined a dynamic variable like this:
+
+```yaml
+version: 3
+
+tasks:
+  foo:
+    vars:
+      CALCULATED_VAR:
+        sh: 'echo hello'
+    cmds:
+      - 'echo {{.CALCULATED_VAR}}'
+```
+
+With this experiment enabled, you will need to remove the `sh` subkey and define
+your command as a string that begins with a `$`. This will instruct Task to
+interpret the string as a command instead of a literal value and the variable
+will be populated with the output of the command. For example:
+
+```yaml
+version: 3
+
+tasks:
+  foo:
+    vars:
+      CALCULATED_VAR: '$echo hello'
+    cmds:
+      - 'echo {{.CALCULATED_VAR}}'
+```
+
+If your current Taskfile contains a string variable that begins with a `$`, you
+will now need to escape the `$` with a backslash (`\`) to stop Task from
+executing it as a command.
+
+</TabItem>
+
+<TabItem value="2">
+
+:::info
+
+To enable this experiment, set the environment variable:
+`TASK_X_ANY_VARIABLES=2`. Check out [our guide to enabling experiments
+][enabling-experiments] for more information.
+
+:::
+
+## Maps
+
+This proposal maintains backwards-compatibility and the `sh` subkey and adds
+another new `map` subkey for defining map variables:
+
+```yaml
+version: 3
+
+tasks:
+  foo:
+    vars:
+      FOO:
+        map: {a: 1, b: 2, c: 3} # <-- Defined using the `map' subkey instead of directly on 'FOO'
+      BAR: true # <-- Other types of variables are still defined directly on the key
+      BAZ:
+        sh: 'echo Hello Task' # <-- The `sh` subkey is still supported
+    cmds:
+      - 'echo {{.FOO.a}}'
+```
+
+## Parsing JSON and YAML
+
+In addition to the new `map` keyword, this proposal also adds support for the
+`json` and `yaml` keywords for parsing JSON and YAML strings into real
+objects/arrays. This is similar to the `fromJSON` template function, but means
+that you only have to parse the JSON/YAML once when you declare the variable,
+instead of every time you want to access a value.
+
+Before:
+
+```yaml
+version: 3
+
+tasks:
+  foo:
+    vars:
+      FOO: '{"a": 1, "b": 2, "c": 3}' # <-- JSON string
+    cmds:
+      - 'echo {{(fromJSON .FOO).a}}' # <-- Parse JSON string every time you want to access a value
+      - 'echo {{(fromJSON .FOO).b}}'
+```
+
+After:
+
+```yaml
+version: 3
+
+tasks:
+  foo:
+    vars:
+      FOO:
+        json: '{"a": 1, "b": 2, "c": 3}' # <-- JSON string parsed once
+    cmds:
+      - 'echo {{.FOO.a}}' # <-- Access values directly
+      - 'echo {{.FOO.b}}'
+```
+
+## Variables by reference
+
+Lastly, this proposal adds support for defining and passing variables by
+reference. This is really important now that variables can be types other than a
+string. Previously, to send a variable from one task to another, you would have
+to use the templating system to pass it:
+
+```yaml
+version: 3
+
+tasks:
+  foo:
+    vars:
+      FOO: [A, B, C] # <-- FOO is defined as an array
+    cmds:
+      - task: bar
+        vars:
+          FOO: '{{.FOO}}' # <-- FOO gets converted to a string when passed to bar
+  bar:
+    cmds:
+      - 'echo {{index .FOO 0}}' # <-- FOO is a string so the task outputs '91' which is the ASCII code for '[' instead of the expected 'A'
+```
+
+Unfortunately, this results in the value always being passed as a string as this
+is the output type of the templater and operations on the passed variable may
+not behave as expected. With this proposal, you can now pass variables by
+reference using the `ref` subkey:
+
+```yaml
+version: 3
+
+tasks:
+  foo:
+    vars:
+      FOO: [A, B, C] # <-- FOO is defined as an array
+    cmds:
+      - task: bar
+        vars:
+          FOO:
+            ref: FOO # <-- FOO gets passed by reference to bar and maintains its type
+  bar:
+    cmds:
+      - 'echo {{index .FOO 0}}' # <-- FOO is still a map so the task outputs 'A' as expected
+```
+
+This means that the type of the variable is maintained when it is passed to
+another Task. This also works the same way when calling `deps` and when defining
+a variable and can be used in any combination:
+
+```yaml
+version: 3
+
+tasks:
+  foo:
+    vars:
+      FOO: [A, B, C] # <-- FOO is defined as an array
+      BAR:
+        ref: FOO # <-- BAR is defined as a reference to FOO
+    deps:
+      - task: bar
+        vars:
+          BAR:
+            ref: BAR # <-- BAR gets passed by reference to bar and maintains its type
+  bar:
+    cmds:
+      - 'echo {{index .BAR 0}}' # <-- BAR still refers to FOO so the task outputs 'A'
+```
+
+</TabItem></Tabs>
+
+---
+
+## Common to both proposals
+
+Both proposals add support for all other variable types by directly defining
+them in the Taskfile. For example:
+
+### Evaluating booleans
+
+```yaml
+version: 3
+
+tasks:
+  foo:
+    vars:
+      BOOL: false
+    cmds:
+      - '{{if .BOOL}}echo foo{{end}}'
+```
+
+### Arithmetic
+
+```yaml
+version: 3
+
+tasks:
+  foo:
+    vars:
+      INT: 10
+      FLOAT: 3.14159
+    cmds:
+      - 'echo {{add .INT .FLOAT}}'
+```
+
+### Ranging
+
+```yaml
+version: 3
+
+tasks:
+  foo:
+    vars:
+      ARRAY: [1, 2, 3]
+    cmds:
+      - 'echo {{range .ARRAY}}{{.}}{{end}}'
+```
+
+There are many more templating functions which can be used with the new types of
+variables. For a full list, see the [slim-sprig][slim-sprig] documentation.
+
+## Looping over variables
+
+Previously, you would have to use a delimiter separated string to loop over an
+arbitrary list of items in a variable and split them by using the `split` subkey
+to specify the delimiter:
+
+```yaml
+version: 3
+
+tasks:
+  foo:
+    vars:
+      LIST: 'foo,bar,baz'
+    cmds:
+      - for:
+          var: LIST
+          split: ','
+        cmd: echo {{.ITEM}}
+```
+
+Both of these proposals add support for looping over "collection-type" variables
+using the `for` keyword, so now you are able to loop over a map/array variable
+directly:
+
+```yaml
+version: 3
+
+tasks:
+  foo:
+    vars:
+      LIST: [foo, bar, baz]
+    cmds:
+      - for:
+          var: LIST
+        cmd: echo {{.ITEM}}
+```
+
+When looping over a map we also make an additional `{{.KEY}}` variable availabe
+that holds the string value of the map key. Remember that maps are unordered, so
+the order in which the items are looped over is random.
+
+<!-- prettier-ignore-start -->
+[enabling-experiments]: /experiments/#enabling-experiments
+[slim-sprig]: https://go-task.github.io/slim-sprig/
+<!-- prettier-ignore-end -->
