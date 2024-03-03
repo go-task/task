@@ -136,7 +136,6 @@ func Read(
 					}
 					task.IncludeVars.Merge(include.Vars)
 					task.IncludedTaskfileVars = includedTaskfile.Vars
-					task.IncludedTaskfile = &include
 				}
 			}
 
