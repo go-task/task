@@ -2,13 +2,13 @@
 slug: /
 sidebar_position: 1
 title: Home
+hide_title: true
 ---
 
-# Task
-
 <div align="center">
-  <img id="logo" src="img/logo.svg" height="250px" width="250px" />
+  <img id="logo" src="/img/logo.svg" height="250px" width="250px" />
 </div>
+<br />
 
 Task is a task runner / build tool that aims to be simpler and easier to use
 than, for example, [GNU Make][make].
