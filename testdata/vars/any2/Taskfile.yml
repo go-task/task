@@ -3,6 +3,8 @@ version: '3'
 tasks:
   default:
     - task: map
+    - task: nested-map
+    - task: slice
     - task: ref
     - task: ref-sh
     - task: ref-dep
@@ -18,6 +20,24 @@ tasks:
         vars:
           VAR:
             ref: MAP
+
+  nested-map:
+    vars:
+      FOO: "foo"
+      nested:
+        map:
+          variables:
+            work: "{{.FOO}}"
+    cmds:
+      - echo {{.nested.variables.work}}
+
+  slice:
+    vars:
+      FOO: "foo"
+      BAR: "bar"
+      slice_variables_work: ["{{.FOO}}","{{.BAR}}"]
+    cmds:
+      - echo {{index .slice_variables_work 0}} {{index .slice_variables_work 1}}
 
   ref:
     vars:
