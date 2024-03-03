@@ -10,11 +10,14 @@ import (
 	"time"
 
 	"github.com/Masterminds/semver/v3"
+	"github.com/otiai10/copy"
 )
 
 const (
 	changelogSource = "CHANGELOG.md"
 	changelogTarget = "docs/docs/changelog.md"
+	docsSource      = "docs/docs"
+	docsTarget      = "docs/versioned_docs/version-latest"
 )
 
 var (
@@ -54,6 +57,10 @@ func release() error {
 	}
 
 	if err := setJSONVersion("package-lock.json", version); err != nil {
+		return err
+	}
+
+	if err := docs(); err != nil {
 		return err
 	}
 
@@ -134,4 +141,14 @@ func setJSONVersion(fileName string, version *semver.Version) error {
 
 	// Write the JSON file
 	return os.WriteFile(fileName, []byte(new), 0o644)
+}
+
+func docs() error {
+	if err := os.RemoveAll(docsTarget); err != nil {
+		return err
+	}
+	if err := copy.Copy(docsSource, docsTarget); err != nil {
+		return err
+	}
+	return nil
 }
