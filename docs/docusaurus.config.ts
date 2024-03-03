@@ -92,7 +92,19 @@ const config: Config = {
         docs: {
           routeBasePath: '/',
           sidebarPath: './sidebars.ts',
-          remarkPlugins: [remarkGithub, remarkGfm]
+          remarkPlugins: [remarkGithub, remarkGfm],
+          includeCurrentVersion: true,
+          versions: {
+            current: {
+              label: `Next 🚧`,
+              path: 'next',
+              badge: false
+            },
+            latest: {
+              label: 'Latest',
+              badge: false
+            }
+          }
         },
         blog: {},
         theme: {
@@ -173,6 +185,11 @@ const config: Config = {
               label: 'Help Us Translate'
             }
           ]
+        },
+        {
+          type: 'docsVersionDropdown',
+          position: 'right',
+          dropdownActiveClassDisabled: true,
         },
         {
           href: GITHUB_URL,
