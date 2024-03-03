@@ -86,6 +86,22 @@ func ReplaceGlobs(globs []*ast.Glob, cache *Cache) []*ast.Glob {
 	return new
 }
 
+func ReplaceVar(v ast.Var, cache *Cache) ast.Var {
+	return ReplaceVarWithExtra(v, cache, nil)
+}
+
+func ReplaceVarWithExtra(v ast.Var, cache *Cache, extra map[string]any) ast.Var {
+	return ast.Var{
+		Value: ReplaceWithExtra(v.Value, cache, extra),
+		Sh:    ReplaceWithExtra(v.Sh, cache, extra),
+		Live:  v.Live,
+		Ref:   v.Ref,
+		Dir:   v.Dir,
+		Json:  ReplaceWithExtra(v.Json, cache, extra),
+		Yaml:  ReplaceWithExtra(v.Yaml, cache, extra),
+	}
+}
+
 func ReplaceVars(vars *ast.Vars, cache *Cache) *ast.Vars {
 	return ReplaceVarsWithExtra(vars, cache, nil)
 }
@@ -97,14 +113,7 @@ func ReplaceVarsWithExtra(vars *ast.Vars, cache *Cache, extra map[string]any) *a
 
 	var newVars ast.Vars
 	_ = vars.Range(func(k string, v ast.Var) error {
-		var newVar ast.Var
-		newVar.Value = ReplaceWithExtra(v.Value, cache, extra)
-		newVar.Live = v.Live
-		newVar.Sh = ReplaceWithExtra(v.Sh, cache, extra)
-		newVar.Ref = v.Ref
-		newVar.Json = ReplaceWithExtra(v.Json, cache, extra)
-		newVar.Yaml = ReplaceWithExtra(v.Yaml, cache, extra)
-		newVars.Set(k, newVar)
+		newVars.Set(k, ReplaceVarWithExtra(v, cache, extra))
 		return nil
 	})
 

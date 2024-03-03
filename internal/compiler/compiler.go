@@ -61,13 +61,7 @@ func (c *Compiler) getVariables(t *ast.Task, call *ast.Call, evaluateShVars bool
 		return func(k string, v ast.Var) error {
 			cache := &templater.Cache{Vars: result}
 			// Replace values
-			newVar := ast.Var{}
-			newVar.Value = templater.Replace(v.Value, cache)
-			newVar.Sh = templater.Replace(v.Sh, cache)
-			newVar.Ref = v.Ref
-			newVar.Json = templater.Replace(v.Json, cache)
-			newVar.Yaml = templater.Replace(v.Yaml, cache)
-			newVar.Dir = v.Dir
+			newVar := templater.ReplaceVar(v, cache)
 			// If the variable is a reference, we can resolve it
 			if newVar.Ref != "" {
 				newVar.Value = result.Get(newVar.Ref).Value
