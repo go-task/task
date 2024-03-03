@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Fixed a bug where the `TASKFILE_DIR` variable was sometimes incorrect (#1522,
+  #1523 by @pd93).
+
 ## v3.35.0 - 2024-02-28
 
 - Added support for
