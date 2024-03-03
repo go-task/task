@@ -3,103 +3,87 @@ package templater
 import (
 	"bytes"
 	"maps"
+	"reflect"
 	"strings"
 	"text/template"
 
 	"github.com/go-task/task/v3/taskfile/ast"
 )
 
-// Templater is a help struct that allow us to call "replaceX" funcs multiple
+// Cache is a help struct that allow us to call "replaceX" funcs multiple
 // times, without having to check for error each time. The first error that
 // happen will be assigned to r.err, and consecutive calls to funcs will just
 // return the zero value.
-type Templater struct {
+type Cache struct {
 	Vars *ast.Vars
 
 	cacheMap map[string]any
 	err      error
 }
 
-func (r *Templater) ResetCache() {
+func (r *Cache) ResetCache() {
 	r.cacheMap = r.Vars.ToCacheMap()
 }
 
-func (r *Templater) Replace(str string) string {
-	return r.replace(str, nil)
+func (r *Cache) Err() error {
+	return r.err
 }
 
-func (r *Templater) ReplaceWithExtra(str string, extra map[string]any) string {
-	return r.replace(str, extra)
+func Replace[T any](v T, cache *Cache) T {
+	return ReplaceWithExtra(v, cache, nil)
 }
 
-func (r *Templater) replace(str string, extra map[string]any) string {
-	if r.err != nil || str == "" {
-		return ""
+func ReplaceWithExtra[T any](v T, cache *Cache, extra map[string]any) T {
+	// If there is already an error, do nothing
+	if cache.err != nil {
+		return v
 	}
 
-	templ, err := template.New("").Funcs(templateFuncs).Parse(str)
-	if err != nil {
-		r.err = err
-		return ""
+	// Initialize the cache map if it's not already initialized
+	if cache.cacheMap == nil {
+		cache.cacheMap = cache.Vars.ToCacheMap()
 	}
 
-	if r.cacheMap == nil {
-		r.cacheMap = r.Vars.ToCacheMap()
+	// Create a copy of the cache map to avoid editing the original
+	// If there is extra data, merge it with the cache map
+	data := maps.Clone(cache.cacheMap)
+	if extra != nil {
+		maps.Copy(data, extra)
 	}
 
-	var b bytes.Buffer
-	if extra == nil {
-		err = templ.Execute(&b, r.cacheMap)
-	} else {
-		// Copy the map to avoid modifying the cached map
-		m := maps.Clone(r.cacheMap)
-		maps.Copy(m, extra)
-		err = templ.Execute(&b, m)
+	original := reflect.ValueOf(&v)
+	copy := reflect.New(original.Type()).Elem()
+
+	// Replace the variables in the value
+	if err := replaceValue(copy, original, data); err != nil {
+		cache.err = err
+		return v
 	}
-	if err != nil {
-		r.err = err
-		return ""
-	}
-	return strings.ReplaceAll(b.String(), "<no value>", "")
+
+	return copy.Elem().Interface().(T)
 }
 
-func (r *Templater) ReplaceSlice(strs []string) []string {
-	if r.err != nil || len(strs) == 0 {
-		return nil
-	}
-
-	new := make([]string, len(strs))
-	for i, str := range strs {
-		new[i] = r.Replace(str)
-	}
-	return new
-}
-
-func (r *Templater) ReplaceGlobs(globs []*ast.Glob) []*ast.Glob {
-	if r.err != nil || len(globs) == 0 {
+func ReplaceGlobs(globs []*ast.Glob, cache *Cache) []*ast.Glob {
+	if cache.err != nil || len(globs) == 0 {
 		return nil
 	}
 
 	new := make([]*ast.Glob, len(globs))
 	for i, g := range globs {
 		new[i] = &ast.Glob{
-			Glob:   r.Replace(g.Glob),
+			Glob:   Replace(g.Glob, cache),
 			Negate: g.Negate,
 		}
 	}
 	return new
 }
 
-func (r *Templater) ReplaceVars(vars *ast.Vars) *ast.Vars {
-	return r.replaceVars(vars, nil)
+func ReplaceVars(vars *ast.Vars, cache *Cache) *ast.Vars {
+	return ReplaceVarsWithExtra(vars, cache, nil)
 }
 
-func (r *Templater) ReplaceVarsWithExtra(vars *ast.Vars, extra map[string]any) *ast.Vars {
-	return r.replaceVars(vars, extra)
-}
-
-func (r *Templater) replaceVars(vars *ast.Vars, extra map[string]any) *ast.Vars {
-	if r.err != nil || vars.Len() == 0 {
+func ReplaceVarsWithExtra(vars *ast.Vars, cache *Cache, extra map[string]any) *ast.Vars {
+	if cache.err != nil || vars.Len() == 0 {
 		return nil
 	}
 
@@ -108,13 +92,13 @@ func (r *Templater) replaceVars(vars *ast.Vars, extra map[string]any) *ast.Vars 
 		var newVar ast.Var
 		switch value := v.Value.(type) {
 		case string:
-			newVar.Value = r.ReplaceWithExtra(value, extra)
+			newVar.Value = ReplaceWithExtra(value, cache, extra)
 		}
 		newVar.Live = v.Live
-		newVar.Sh = r.ReplaceWithExtra(v.Sh, extra)
+		newVar.Sh = ReplaceWithExtra(v.Sh, cache, extra)
 		newVar.Ref = v.Ref
-		newVar.Json = r.ReplaceWithExtra(v.Json, extra)
-		newVar.Yaml = r.ReplaceWithExtra(v.Yaml, extra)
+		newVar.Json = ReplaceWithExtra(v.Json, cache, extra)
+		newVar.Yaml = ReplaceWithExtra(v.Yaml, cache, extra)
 		newVars.Set(k, newVar)
 		return nil
 	})
@@ -122,6 +106,91 @@ func (r *Templater) replaceVars(vars *ast.Vars, extra map[string]any) *ast.Vars 
 	return &newVars
 }
 
-func (r *Templater) Err() error {
-	return r.err
+// replaceValue is a recursive function that replaces all the string template
+// variables in the given value with the values in the data map. If the value is
+// a string, the function will replace the variables in the string and return
+// the new string. If the value is a struct or a slice, the function will
+// recursively call itself for each field or element of the struct or slice
+// until all strings inside the struct or slice are replaced.
+func replaceValue(copy, v reflect.Value, data map[string]any) error {
+	switch v.Kind() {
+
+	case reflect.Ptr:
+		// Unwrap the pointer
+		originalValue := v.Elem()
+		// If the pointer is nil, do nothing
+		if !originalValue.IsValid() {
+			return nil
+		}
+		// Create an empty copy from the original value's type
+		copy.Set(reflect.New(originalValue.Type()))
+		// Unwrap the newly created pointer and call replaceValue recursively
+		if err := replaceValue(copy.Elem(), originalValue, data); err != nil {
+			return err
+		}
+
+	case reflect.Interface:
+		// Unwrap the interface
+		originalValue := v.Elem()
+		// Create an empty copy from the original value's type
+		copyValue := reflect.New(originalValue.Type())
+		// Unwrap the newly created pointer and call replaceValue recursively
+		if err := replaceValue(copyValue.Elem(), originalValue, data); err != nil {
+			return err
+		}
+		copy.Set(copyValue)
+
+	case reflect.Struct:
+		// Loop over each field and call replaceValue recursively
+		for i := 0; i < v.NumField(); i += 1 {
+			if err := replaceValue(copy.Field(i), v.Field(i), data); err != nil {
+				return err
+			}
+		}
+
+	case reflect.Slice:
+		// Create an empty copy from the original value's type
+		copy.Set(reflect.MakeSlice(v.Type(), v.Len(), v.Cap()))
+		// Loop over each element and call replaceValue recursively
+		for i := 0; i < v.Len(); i += 1 {
+			if err := replaceValue(copy.Index(i), v.Index(i), data); err != nil {
+				return err
+			}
+		}
+
+	case reflect.Map:
+		// Create an empty copy from the original value's type
+		copy.Set(reflect.MakeMap(v.Type()))
+		// Loop over each key
+		for _, key := range v.MapKeys() {
+			// Create a copy of each map index
+			originalValue := v.MapIndex(key)
+			if originalValue.IsNil() {
+				continue
+			}
+			copyValue := reflect.New(originalValue.Type()).Elem()
+			// Call replaceValue recursively
+			if err := replaceValue(copyValue, originalValue, data); err != nil {
+				return err
+			}
+			copy.SetMapIndex(key, copyValue)
+		}
+
+	case reflect.String:
+		tpl, err := template.New("").Funcs(templateFuncs).Parse(v.String())
+		if err != nil {
+			return err
+		}
+		var b bytes.Buffer
+		if err := tpl.Execute(&b, data); err != nil {
+			return err
+		}
+		str := strings.ReplaceAll(b.String(), "<no value>", "")
+		copy.SetString(str)
+
+	default:
+		copy.Set(v)
+	}
+
+	return nil
 }

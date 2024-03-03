@@ -42,30 +42,30 @@ func (e *Executor) compiledTask(call *ast.Call, evaluateShVars bool) (*ast.Task,
 		return nil, err
 	}
 
-	r := templater.Templater{Vars: vars}
+	cache := &templater.Cache{Vars: vars}
 
 	new := ast.Task{
 		Task:                 origTask.Task,
-		Label:                r.Replace(origTask.Label),
-		Desc:                 r.Replace(origTask.Desc),
-		Prompt:               r.Replace(origTask.Prompt),
-		Summary:              r.Replace(origTask.Summary),
+		Label:                templater.Replace(origTask.Label, cache),
+		Desc:                 templater.Replace(origTask.Desc, cache),
+		Prompt:               templater.Replace(origTask.Prompt, cache),
+		Summary:              templater.Replace(origTask.Summary, cache),
 		Aliases:              origTask.Aliases,
-		Sources:              r.ReplaceGlobs(origTask.Sources),
-		Generates:            r.ReplaceGlobs(origTask.Generates),
-		Dir:                  r.Replace(origTask.Dir),
+		Sources:              templater.ReplaceGlobs(origTask.Sources, cache),
+		Generates:            templater.ReplaceGlobs(origTask.Generates, cache),
+		Dir:                  templater.Replace(origTask.Dir, cache),
 		Set:                  origTask.Set,
 		Shopt:                origTask.Shopt,
 		Vars:                 nil,
 		Env:                  nil,
-		Dotenv:               r.ReplaceSlice(origTask.Dotenv),
+		Dotenv:               templater.Replace(origTask.Dotenv, cache),
 		Silent:               origTask.Silent,
 		Interactive:          origTask.Interactive,
 		Internal:             origTask.Internal,
-		Method:               r.Replace(origTask.Method),
-		Prefix:               r.Replace(origTask.Prefix),
+		Method:               templater.Replace(origTask.Method, cache),
+		Prefix:               templater.Replace(origTask.Prefix, cache),
 		IgnoreError:          origTask.IgnoreError,
-		Run:                  r.Replace(origTask.Run),
+		Run:                  templater.Replace(origTask.Run, cache),
 		IncludeVars:          origTask.IncludeVars,
 		IncludedTaskfileVars: origTask.IncludedTaskfileVars,
 		Platforms:            origTask.Platforms,
@@ -104,9 +104,9 @@ func (e *Executor) compiledTask(call *ast.Call, evaluateShVars bool) (*ast.Task,
 	}
 
 	new.Env = &ast.Vars{}
-	new.Env.Merge(r.ReplaceVars(e.Taskfile.Env))
-	new.Env.Merge(r.ReplaceVars(dotenvEnvs))
-	new.Env.Merge(r.ReplaceVars(origTask.Env))
+	new.Env.Merge(templater.ReplaceVars(e.Taskfile.Env, cache))
+	new.Env.Merge(templater.ReplaceVars(dotenvEnvs, cache))
+	new.Env.Merge(templater.ReplaceVars(origTask.Env, cache))
 	if evaluateShVars {
 		err = new.Env.Range(func(k string, v ast.Var) error {
 			// If the variable is not dynamic, we can set it and return
@@ -200,17 +200,17 @@ func (e *Executor) compiledTask(call *ast.Call, evaluateShVars bool) (*ast.Task,
 						extra["KEY"] = keys[i]
 					}
 					newCmd := cmd.DeepCopy()
-					newCmd.Cmd = r.ReplaceWithExtra(cmd.Cmd, extra)
-					newCmd.Task = r.ReplaceWithExtra(cmd.Task, extra)
-					newCmd.Vars = r.ReplaceVarsWithExtra(cmd.Vars, extra)
+					newCmd.Cmd = templater.ReplaceWithExtra(cmd.Cmd, cache, extra)
+					newCmd.Task = templater.ReplaceWithExtra(cmd.Task, cache, extra)
+					newCmd.Vars = templater.ReplaceVarsWithExtra(cmd.Vars, cache, extra)
 					new.Cmds = append(new.Cmds, newCmd)
 				}
 				continue
 			}
 			newCmd := cmd.DeepCopy()
-			newCmd.Cmd = r.Replace(cmd.Cmd)
-			newCmd.Task = r.Replace(cmd.Task)
-			newCmd.Vars = r.ReplaceVars(cmd.Vars)
+			newCmd.Cmd = templater.Replace(cmd.Cmd, cache)
+			newCmd.Task = templater.Replace(cmd.Task, cache)
+			newCmd.Vars = templater.ReplaceVars(cmd.Vars, cache)
 			// Loop over the command's variables and resolve any references to other variables
 			err := cmd.Vars.Range(func(k string, v ast.Var) error {
 				if v.Ref != "" {
@@ -232,8 +232,8 @@ func (e *Executor) compiledTask(call *ast.Call, evaluateShVars bool) (*ast.Task,
 				continue
 			}
 			newDep := dep.DeepCopy()
-			newDep.Task = r.Replace(dep.Task)
-			newDep.Vars = r.ReplaceVars(dep.Vars)
+			newDep.Task = templater.Replace(dep.Task, cache)
+			newDep.Vars = templater.ReplaceVars(dep.Vars, cache)
 			// Loop over the dep's variables and resolve any references to other variables
 			err := dep.Vars.Range(func(k string, v ast.Var) error {
 				if v.Ref != "" {
@@ -256,8 +256,8 @@ func (e *Executor) compiledTask(call *ast.Call, evaluateShVars bool) (*ast.Task,
 				continue
 			}
 			newPrecondition := precondition.DeepCopy()
-			newPrecondition.Sh = r.Replace(precondition.Sh)
-			newPrecondition.Msg = r.Replace(precondition.Msg)
+			newPrecondition.Sh = templater.Replace(precondition.Sh, cache)
+			newPrecondition.Msg = templater.Replace(precondition.Msg, cache)
 			new.Preconditions = append(new.Preconditions, newPrecondition)
 		}
 	}
@@ -276,14 +276,14 @@ func (e *Executor) compiledTask(call *ast.Call, evaluateShVars bool) (*ast.Task,
 
 		// Adding new variables, requires us to refresh the templaters
 		// cache of the the values manually
-		r.ResetCache()
+		cache.ResetCache()
 
-		new.Status = r.ReplaceSlice(origTask.Status)
+		new.Status = templater.Replace(origTask.Status, cache)
 	}
 
 	// We only care about templater errors if we are evaluating shell variables
-	if evaluateShVars && r.Err() != nil {
-		return &new, r.Err()
+	if evaluateShVars && cache.Err() != nil {
+		return &new, cache.Err()
 	}
 
 	return &new, nil

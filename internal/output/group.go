@@ -3,6 +3,8 @@ package output
 import (
 	"bytes"
 	"io"
+
+	"github.com/go-task/task/v3/internal/templater"
 )
 
 type Group struct {
@@ -10,13 +12,13 @@ type Group struct {
 	ErrorOnly  bool
 }
 
-func (g Group) WrapWriter(stdOut, _ io.Writer, _ string, tmpl Templater) (io.Writer, io.Writer, CloseFunc) {
+func (g Group) WrapWriter(stdOut, _ io.Writer, _ string, cache *templater.Cache) (io.Writer, io.Writer, CloseFunc) {
 	gw := &groupWriter{writer: stdOut}
 	if g.Begin != "" {
-		gw.begin = tmpl.Replace(g.Begin) + "\n"
+		gw.begin = templater.Replace(g.Begin, cache) + "\n"
 	}
 	if g.End != "" {
-		gw.end = tmpl.Replace(g.End) + "\n"
+		gw.end = templater.Replace(g.End, cache) + "\n"
 	}
 	return gw, gw, func(err error) error {
 		if g.ErrorOnly && err == nil {

@@ -22,11 +22,10 @@ func Dotenv(c *compiler.Compiler, tf *ast.Taskfile, dir string) (*ast.Vars, erro
 	}
 
 	env := &ast.Vars{}
-
-	tr := templater.Templater{Vars: vars}
+	cache := &templater.Cache{Vars: vars}
 
 	for _, dotEnvPath := range tf.Dotenv {
-		dotEnvPath = tr.Replace(dotEnvPath)
+		dotEnvPath = templater.Replace(dotEnvPath, cache)
 		if dotEnvPath == "" {
 			continue
 		}

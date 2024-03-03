@@ -4,18 +4,12 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/go-task/task/v3/internal/templater"
 	"github.com/go-task/task/v3/taskfile/ast"
 )
 
-// Templater executes a template engine.
-// It is provided by the templater.Templater package.
-type Templater interface {
-	// Replace replaces the provided template string with a rendered string.
-	Replace(tmpl string) string
-}
-
 type Output interface {
-	WrapWriter(stdOut, stdErr io.Writer, prefix string, tmpl Templater) (io.Writer, io.Writer, CloseFunc)
+	WrapWriter(stdOut, stdErr io.Writer, prefix string, cache *templater.Cache) (io.Writer, io.Writer, CloseFunc)
 }
 
 type CloseFunc func(err error) error

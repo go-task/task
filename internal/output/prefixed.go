@@ -5,11 +5,13 @@ import (
 	"fmt"
 	"io"
 	"strings"
+
+	"github.com/go-task/task/v3/internal/templater"
 )
 
 type Prefixed struct{}
 
-func (Prefixed) WrapWriter(stdOut, _ io.Writer, prefix string, _ Templater) (io.Writer, io.Writer, CloseFunc) {
+func (Prefixed) WrapWriter(stdOut, _ io.Writer, prefix string, _ *templater.Cache) (io.Writer, io.Writer, CloseFunc) {
 	pw := &prefixWriter{writer: stdOut, prefix: prefix}
 	return pw, pw, func(error) error { return pw.close() }
 }

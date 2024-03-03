@@ -46,7 +46,7 @@ func TestGroup(t *testing.T) {
 }
 
 func TestGroupWithBeginEnd(t *testing.T) {
-	tmpl := templater.Templater{
+	tmpl := templater.Cache{
 		Vars: &ast.Vars{
 			OrderedMap: omap.FromMap(map[string]ast.Var{
 				"VAR1": {Value: "example-value"},
