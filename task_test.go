@@ -109,6 +109,7 @@ func TestVars(t *testing.T) {
 
 func TestSpecialVars(t *testing.T) {
 	const dir = "testdata/special_vars"
+	const subdir = "testdata/special_vars/subdir"
 	toAbs := func(rel string) string {
 		abs, err := filepath.Abs(rel)
 		assert.NoError(t, err)
@@ -122,28 +123,32 @@ func TestSpecialVars(t *testing.T) {
 		// Root
 		{target: "print-task", expected: "print-task"},
 		{target: "print-root-dir", expected: toAbs(dir)},
+		{target: "print-taskfile", expected: toAbs(dir) + "/Taskfile.yml"},
 		{target: "print-taskfile-dir", expected: toAbs(dir)},
 		{target: "print-task-version", expected: "unknown"},
 		// Included
 		{target: "included:print-task", expected: "included:print-task"},
 		{target: "included:print-root-dir", expected: toAbs(dir)},
+		{target: "included:print-taskfile", expected: toAbs(dir) + "/included/Taskfile.yml"},
 		{target: "included:print-taskfile-dir", expected: toAbs(dir) + "/included"},
 		{target: "included:print-task-version", expected: "unknown"},
 	}
 
-	for _, test := range tests {
-		t.Run(test.target, func(t *testing.T) {
-			var buff bytes.Buffer
-			e := &task.Executor{
-				Dir:    dir,
-				Stdout: &buff,
-				Stderr: &buff,
-				Silent: true,
-			}
-			require.NoError(t, e.Setup())
-			require.NoError(t, e.Run(context.Background(), &ast.Call{Task: test.target}))
-			assert.Equal(t, test.expected+"\n", buff.String())
-		})
+	for _, dir := range []string{dir, subdir} {
+		for _, test := range tests {
+			t.Run(test.target, func(t *testing.T) {
+				var buff bytes.Buffer
+				e := &task.Executor{
+					Dir:    dir,
+					Stdout: &buff,
+					Stderr: &buff,
+					Silent: true,
+				}
+				require.NoError(t, e.Setup())
+				require.NoError(t, e.Run(context.Background(), &ast.Call{Task: test.target}))
+				assert.Equal(t, test.expected+"\n", buff.String())
+			})
+		}
 	}
 }
 
