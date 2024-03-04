@@ -17,10 +17,8 @@ type StdinNode struct {
 }
 
 func NewStdinNode(dir string) (*StdinNode, error) {
-	base := NewBaseNode()
-	base.dir = dir
 	return &StdinNode{
-		BaseNode: base,
+		BaseNode: NewBaseNode(dir),
 	}, nil
 }
 

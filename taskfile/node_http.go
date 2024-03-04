@@ -20,8 +20,7 @@ type HTTPNode struct {
 }
 
 func NewHTTPNode(l *logger.Logger, entrypoint, dir string, insecure bool, opts ...NodeOption) (*HTTPNode, error) {
-	base := NewBaseNode(opts...)
-	base.dir = dir
+	base := NewBaseNode(dir, opts...)
 	url, err := url.Parse(entrypoint)
 	if err != nil {
 		return nil, err

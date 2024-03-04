@@ -20,12 +20,11 @@ type FileNode struct {
 
 func NewFileNode(l *logger.Logger, entrypoint, dir string, opts ...NodeOption) (*FileNode, error) {
 	var err error
-	base := NewBaseNode(opts...)
-	entrypoint, dir, err = resolveFileNodeEntrypointAndDir(l, entrypoint, dir)
+	base := NewBaseNode(dir, opts...)
+	entrypoint, base.dir, err = resolveFileNodeEntrypointAndDir(l, entrypoint, base.dir)
 	if err != nil {
 		return nil, err
 	}
-	base.dir = dir
 	return &FileNode{
 		BaseNode:   base,
 		Entrypoint: entrypoint,
