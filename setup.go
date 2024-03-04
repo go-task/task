@@ -24,13 +24,14 @@ import (
 
 func (e *Executor) Setup() error {
 	e.setupLogger()
-	if err := e.setCurrentDir(); err != nil {
+	node, err := e.getRootNode()
+	if err != nil {
 		return err
 	}
 	if err := e.setupTempDir(); err != nil {
 		return err
 	}
-	if err := e.readTaskfile(); err != nil {
+	if err := e.readTaskfile(node); err != nil {
 		return err
 	}
 	e.setupFuzzyModel()
@@ -44,45 +45,25 @@ func (e *Executor) Setup() error {
 	if err := e.readDotEnvFiles(); err != nil {
 		return err
 	}
-
 	if err := e.doVersionChecks(); err != nil {
 		return err
 	}
 	e.setupDefaults()
 	e.setupConcurrencyState()
-
 	return nil
 }
 
-func (e *Executor) setCurrentDir() error {
-	// If the entrypoint is already set, we don't need to do anything
-	if e.Entrypoint != "" {
-		return nil
-	}
-
-	// Default the directory to the current working directory
-	if e.Dir == "" {
-		wd, err := os.Getwd()
-		if err != nil {
-			return err
-		}
-		e.Dir = wd
-	} else {
-		var err error
-		e.Dir, err = filepath.Abs(e.Dir)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func (e *Executor) readTaskfile() error {
+func (e *Executor) getRootNode() (taskfile.Node, error) {
 	node, err := taskfile.NewRootNode(e.Dir, e.Entrypoint, e.Insecure)
 	if err != nil {
-		return err
+		return nil, err
 	}
+	e.Dir = node.BaseDir()
+	return node, err
+}
+
+func (e *Executor) readTaskfile(node taskfile.Node) error {
+	var err error
 	e.Taskfile, err = taskfile.Read(
 		node,
 		e.Insecure,
