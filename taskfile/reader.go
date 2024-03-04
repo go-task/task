@@ -3,7 +3,9 @@ package taskfile
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"os"
+	"strings"
 	"time"
 
 	"gopkg.in/yaml.v3"
@@ -76,6 +78,17 @@ func Read(
 				return err
 			}
 
+			//If we include a taskfile in a remote taskfile, then this taskfile is also remote
+			if node.Remote() {
+				nodeUrl, err := url.Parse(node.Location())
+				if err != nil {
+					return err
+				}
+				split := strings.Split(nodeUrl.Path, "/")
+				split[len(split)-1] = include.Taskfile
+				nodeUrl.Path = strings.Join(split, "/")
+				include.Taskfile = nodeUrl.String()
+			}
 			uri, err := include.FullTaskfilePath()
 			if err != nil {
 				return err
