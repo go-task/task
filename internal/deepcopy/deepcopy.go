@@ -76,9 +76,9 @@ func TraverseStringsFunc[T any](v T, fn func(v string) (string, error)) (T, erro
 				return nil
 			}
 			// Create an empty copy from the original value's type
-			copyValue := reflect.New(originalValue.Type())
+			copyValue := reflect.New(originalValue.Type()).Elem()
 			// Unwrap the newly created pointer and call traverseFunc recursively
-			if err := traverseFunc(copyValue.Elem(), originalValue); err != nil {
+			if err := traverseFunc(copyValue, originalValue); err != nil {
 				return err
 			}
 			copy.Set(copyValue)
