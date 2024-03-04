@@ -13,11 +13,11 @@ type (
 	}
 )
 
-func NewBaseNode(opts ...NodeOption) *BaseNode {
+func NewBaseNode(dir string, opts ...NodeOption) *BaseNode {
 	node := &BaseNode{
 		parent:   nil,
 		optional: false,
-		dir:      "",
+		dir:      dir,
 	}
 
 	// Apply options
