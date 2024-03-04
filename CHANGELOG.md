@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v3.35.1 - 2024-03-04
 
 - Fixed a bug where the `TASKFILE_DIR` variable was sometimes incorrect (#1522,
   #1523 by @pd93).
