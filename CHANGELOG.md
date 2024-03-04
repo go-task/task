@@ -4,6 +4,10 @@
 
 - Fixed a bug where the `TASKFILE_DIR` variable was sometimes incorrect (#1522,
   #1523 by @pd93).
+- Added a new `TASKFILE` special variable that holds the root Taskfile path
+  (#1523 by @pd93).
+- Fixed various issues related to running a Taskfile from a subdirectory (#1529,
+  #1530 by @pd93).
 
 ## v3.35.0 - 2024-02-28
 
