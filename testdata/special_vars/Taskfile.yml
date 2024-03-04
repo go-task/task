@@ -8,5 +8,6 @@ includes:
 tasks:
   print-task: echo {{.TASK}}
   print-root-dir: echo {{.ROOT_DIR}}
+  print-taskfile: echo {{.TASKFILE}}
   print-taskfile-dir: echo {{.TASKFILE_DIR}}
   print-task-version: echo {{.TASK_VERSION}}
