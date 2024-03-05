@@ -234,6 +234,7 @@ vars:
 | --------------- | ---------------------------------- | ----------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `cmds`          | [`[]Command`](#command)            |                                                       | A list of shell commands to be executed.                                                                                                                                                                                                                                                                 |
 | `deps`          | [`[]Dependency`](#dependency)      |                                                       | A list of dependencies of this task. Tasks defined here will run in parallel before this task.                                                                                                                                                                                                           |
+| `posts`         | [`[]Post`](#post)                  |                                                       | A list of post tasks of this task. Tasks defined here will run in parallel after this task.                                                                                                                                                                                                              |
 | `label`         | `string`                           |                                                       | Overrides the name of the task in the output when a task is run. Supports variables.                                                                                                                                                                                                                     |
 | `desc`          | `string`                           |                                                       | A short description of the task. This is displayed when calling `task --list`.                                                                                                                                                                                                                           |
 | `prompt`        | `string`                           |                                                       | A prompt that will be presented before a task is run. Declining will cancel running the current and any subsequent tasks.                                                                                                                                                                                |
@@ -324,6 +325,27 @@ dependency as a list of strings (they will be assigned to `task`):
 tasks:
   foo:
     deps: [foo, bar]
+```
+
+:::
+
+#### Post
+
+| Attribute | Type                               | Default | Description                                                                                                      |
+| --------- | ---------------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------- |
+| `task`    | `string`                           |         | The task to be execute as a post task.                                                                           |
+| `vars`    | [`map[string]Variable`](#variable) |         | Optional additional variables to be passed to this task.                                                         |
+| `silent`  | `bool`                             | `false` | Hides task name and command from output. The command's output will still be redirected to `STDOUT` and `STDERR`. |
+
+:::tip
+
+If you don't want to set additional variables, it's enough to declare the
+posts as a list of strings (they will be assigned to `task`):
+
+```yaml
+tasks:
+  foo:
+    posts: [foo, bar]
 ```
 
 :::

@@ -60,6 +60,20 @@
             ]
           }
         },
+        "posts": {
+          "description": "A list of tasks to run after this task has completed.",
+          "type": "array",
+          "items": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "$ref": "#/definitions/task_call"
+              }
+            ]
+          }
+        },
         "label": {
           "description": "Overrides the name of the task in the output when a task is run. Supports variables.",
           "type": "string"
@@ -162,7 +176,11 @@
         "method": {
           "description": "Defines which method is used to check the task is up-to-date. `timestamp` will compare the timestamp of the sources and generates files. `checksum` will check the checksum (You probably want to ignore the .task folder in your .gitignore file). `none` skips any validation and always run the task.",
           "type": "string",
-          "enum": ["none", "checksum", "timestamp"],
+          "enum": [
+            "none",
+            "checksum",
+            "timestamp"
+          ],
           "default": "none"
         },
         "prefix": {
@@ -240,7 +258,11 @@
     },
     "shopt": {
       "type": "string",
-      "enum": ["expand_aliases", "globstar", "nullglob"]
+      "enum": [
+        "expand_aliases",
+        "globstar",
+        "nullglob"
+      ]
     },
     "vars": {
       "type": "object",
@@ -248,7 +270,15 @@
         "^.*$": {
           "anyOf": [
             {
-              "type": ["boolean", "integer", "null", "number", "string", "object", "array"]
+              "type": [
+                "boolean",
+                "integer",
+                "null",
+                "number",
+                "string",
+                "object",
+                "array"
+              ]
             },
             {
               "$ref": "#/definitions/var_subkey"
@@ -300,7 +330,9 @@
         }
       },
       "additionalProperties": false,
-      "required": ["task"]
+      "required": [
+        "task"
+      ]
     },
     "cmd_call": {
       "type": "object",
@@ -340,7 +372,9 @@
         }
       },
       "additionalProperties": false,
-      "required": ["cmd"]
+      "required": [
+        "cmd"
+      ]
     },
     "defer_call": {
       "type": "object",
@@ -365,7 +399,9 @@
         }
       },
       "additionalProperties": false,
-      "required": ["defer"]
+      "required": [
+        "defer"
+      ]
     },
     "for_call": {
       "type": "object",
@@ -401,11 +437,21 @@
         }
       },
       "oneOf": [
-        {"required": ["cmd"]},
-        {"required": ["task"]}
+        {
+          "required": [
+            "cmd"
+          ]
+        },
+        {
+          "required": [
+            "task"
+          ]
+        }
       ],
       "additionalProperties": false,
-      "required": ["for"]
+      "required": [
+        "for"
+      ]
     },
     "for_list": {
       "description": "A list of values to iterate over",
@@ -417,7 +463,9 @@
     "for_attribute": {
       "description": "The task attribute to iterate over",
       "type": "string",
-      "enum": ["sources"]
+      "enum": [
+        "sources"
+      ]
     },
     "for_var": {
       "description": "Which variables to iterate over. The variable will be split using any whitespace character by default. This can be changed by using the `split` attribute.",
@@ -438,7 +486,9 @@
         }
       },
       "additionalProperties": false,
-      "required": ["var"]
+      "required": [
+        "var"
+      ]
     },
     "precondition": {
       "anyOf": [
@@ -484,11 +534,19 @@
     },
     "run": {
       "type": "string",
-      "enum": ["always", "once", "when_changed"]
+      "enum": [
+        "always",
+        "once",
+        "when_changed"
+      ]
     },
     "outputString": {
       "type": "string",
-      "enum": ["interleaved", "prefixed", "group"],
+      "enum": [
+        "interleaved",
+        "prefixed",
+        "group"
+      ],
       "default": "interleaved"
     },
     "outputObject": {
@@ -538,21 +596,31 @@
             },
             {
               "type": "number",
-              "enum": [3]
+              "enum": [
+                3
+              ]
             }
           ]
         },
         "output": {
           "description": "Defines how the STDOUT and STDERR are printed when running tasks in parallel. The interleaved output prints lines in real time (default). The group output will print the entire output of a command once, after it finishes, so you won't have live feedback for commands that take a long time to run. The prefix output will prefix every line printed by a command with [task-name] as the prefix, but you can customize the prefix for a command with the prefix: attribute.",
           "anyOf": [
-            { "$ref": "#/definitions/outputString" },
-            { "$ref": "#/definitions/outputObject" }
+            {
+              "$ref": "#/definitions/outputString"
+            },
+            {
+              "$ref": "#/definitions/outputObject"
+            }
           ]
         },
         "method": {
           "description": "Defines which method is used to check the task is up-to-date. (default: checksum)",
           "type": "string",
-          "enum": ["none", "checksum", "timestamp"],
+          "enum": [
+            "none",
+            "checksum",
+            "timestamp"
+          ],
           "default": "checksum"
         },
         "includes": {
@@ -648,16 +716,25 @@
         }
       },
       "additionalProperties": false,
-      "required": ["version"],
+      "required": [
+        "version"
+      ],
       "anyOf": [
         {
-          "required": ["includes"]
+          "required": [
+            "includes"
+          ]
         },
         {
-          "required": ["tasks"]
+          "required": [
+            "tasks"
+          ]
         },
         {
-          "required": ["includes", "tasks"]
+          "required": [
+            "includes",
+            "tasks"
+          ]
         }
       ]
     }
