@@ -493,6 +493,34 @@ tasks:
       - echo {{.TEXT}}
 ```
 
+## Post Tasks
+
+You may want to run other tasks at the end of a task. Just pointing them on `posts` will make
+them run automatically after running the current task:
+
+```yaml
+version: '3'
+
+tasks:
+  build-and-push:
+    deps: [assets]
+    cmds:
+      - go build -v -i main.go
+    posts:
+      - publish
+
+  assets:
+    cmds:
+      - esbuild --bundle --minify css/index.css > public/bundle.css
+  
+  publish:
+    cmds:
+      - npm publish --access public
+```
+
+If you want to pass information to dependencies, you can do that the same manner
+as you would to [call another task](#calling-another-task):
+
 ## Platform specific tasks and commands
 
 If you want to restrict the running of tasks to explicit platforms, this can be

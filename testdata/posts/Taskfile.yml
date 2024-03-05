@@ -1,0 +1,18 @@
+version: "3"
+
+tasks:
+  default:
+    cmds:
+      - echo 'Text' > d0.txt
+    posts:
+      - d1
+
+  d1:
+    cmds:
+      - echo 'Text' > d1.txt
+    posts:
+      - task: d2
+
+  d2:
+    cmds:
+      - echo 'Text' > d2.txt

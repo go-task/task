@@ -248,6 +248,29 @@ func (e *Executor) compiledTask(call *ast.Call, evaluateShVars bool) (*ast.Task,
 			new.Deps = append(new.Deps, newDep)
 		}
 	}
+	if len(origTask.Posts) > 0 {
+		new.Posts = make([]*ast.Post, 0, len(origTask.Posts))
+		for _, post := range origTask.Posts {
+			if post == nil {
+				continue
+			}
+			newPost := post.DeepCopy()
+			newPost.Task = r.Replace(post.Task)
+			newPost.Vars = r.ReplaceVars(post.Vars)
+			// Loop over the post's variables and resolve any references to other variables
+			err := post.Vars.Range(func(k string, v ast.Var) error {
+				if v.Ref != "" {
+					refVal := vars.Get(v.Ref)
+					newPost.Vars.Set(k, refVal)
+				}
+				return nil
+			})
+			if err != nil {
+				return nil, err
+			}
+			new.Posts = append(new.Posts, newPost)
+		}
+	}
 
 	if len(origTask.Preconditions) > 0 {
 		new.Preconditions = make([]*ast.Precondition, 0, len(origTask.Preconditions))

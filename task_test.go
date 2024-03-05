@@ -227,6 +227,34 @@ func TestDeps(t *testing.T) {
 	}
 }
 
+func TestPosts(t *testing.T) {
+	const dir = "testdata/posts"
+
+	files := []string{
+		"d1.txt",
+		"d2.txt",
+	}
+
+	for _, f := range files {
+		_ = os.Remove(filepathext.SmartJoin(dir, f))
+	}
+
+	e := &task.Executor{
+		Dir:    dir,
+		Stdout: io.Discard,
+		Stderr: io.Discard,
+	}
+	require.NoError(t, e.Setup())
+	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "default"}))
+
+	for _, f := range files {
+		f = filepathext.SmartJoin(dir, f)
+		if _, err := os.Stat(f); err != nil {
+			t.Errorf("File %s should exist", f)
+		}
+	}
+}
+
 func TestStatus(t *testing.T) {
 	const dir = "testdata/status"
 

@@ -23,6 +23,7 @@ vars:
 `
 		yamlDeferredCall = `defer: { task: some_task, vars: { PARAM1: "var" } }`
 		yamlDeferredCmd  = `defer: echo 'test'`
+		yamlPost         = `post-task-name`
 	)
 	tests := []struct {
 		content  string
@@ -88,6 +89,11 @@ vars:
 					),
 				},
 			},
+		},
+		{
+			yamlPost,
+			&ast.Post{},
+			&ast.Post{Task: "post-task-name"},
 		},
 	}
 	for _, test := range tests {
