@@ -521,6 +521,23 @@ tasks:
 If you want to pass information to dependencies, you can do that the same manner
 as you would to [call another task](#calling-another-task):
 
+```yaml
+tasks:
+  default:
+    cmds:
+      - echo "after"
+    posts:
+      - task: echo_sth
+        vars: { TEXT: 'before 1' }
+      - task: echo_sth
+        vars: { TEXT: 'before 2' }
+        silent: true
+
+  echo_sth:
+    cmds:
+      - echo {{.TEXT}}
+```
+
 ## Platform specific tasks and commands
 
 If you want to restrict the running of tasks to explicit platforms, this can be
