@@ -2199,7 +2199,7 @@ func TestForce(t *testing.T) {
 	}
 }
 
-func TestFor(t *testing.T) {
+func TestForCmds(t *testing.T) {
 	tests := []struct {
 		name           string
 		expectedOutput string
@@ -2242,7 +2242,63 @@ func TestFor(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			var buff bytes.Buffer
 			e := task.Executor{
-				Dir:    "testdata/for",
+				Dir:    "testdata/for/cmds",
+				Stdout: &buff,
+				Stderr: &buff,
+				Silent: true,
+				Force:  true,
+			}
+			require.NoError(t, e.Setup())
+			require.NoError(t, e.Run(context.Background(), &ast.Call{Task: test.name}))
+			assert.Equal(t, test.expectedOutput, buff.String())
+		})
+	}
+}
+
+func TestForDeps(t *testing.T) {
+	tests := []struct {
+		name           string
+		expectedOutput string
+	}{
+		{
+			name:           "loop-explicit",
+			expectedOutput: "a\nb\nc\n",
+		},
+		{
+			name:           "loop-sources",
+			expectedOutput: "bar\nfoo\n",
+		},
+		{
+			name:           "loop-sources-glob",
+			expectedOutput: "bar\nfoo\n",
+		},
+		{
+			name:           "loop-vars",
+			expectedOutput: "foo\nbar\n",
+		},
+		{
+			name:           "loop-vars-sh",
+			expectedOutput: "bar\nfoo\n",
+		},
+		{
+			name:           "loop-task",
+			expectedOutput: "foo\nbar\n",
+		},
+		{
+			name:           "loop-task-as",
+			expectedOutput: "foo\nbar\n",
+		},
+		{
+			name:           "loop-different-tasks",
+			expectedOutput: "1\n2\n3\n",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			var buff bytes.Buffer
+			e := task.Executor{
+				Dir:    "testdata/for/deps",
 				Stdout: &buff,
 				Stderr: &buff,
 				Silent: true,
