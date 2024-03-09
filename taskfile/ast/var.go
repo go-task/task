@@ -141,15 +141,10 @@ func (v *Var) UnmarshalYAML(node *yaml.Node) error {
 
 	switch node.Kind {
 
-	case yaml.ScalarNode:
-		var str string
-		if err := node.Decode(&str); err != nil {
-			return err
-		}
-		v.Value = str
-		return nil
-
 	case yaml.MappingNode:
+		if len(node.Content) > 2 || node.Content[0].Value != "sh" {
+			return fmt.Errorf(`task: line %d: maps cannot be assigned to variables`, node.Line)
+		}
 		var sh struct {
 			Sh string
 		}
@@ -158,7 +153,13 @@ func (v *Var) UnmarshalYAML(node *yaml.Node) error {
 		}
 		v.Sh = sh.Sh
 		return nil
-	}
 
-	return fmt.Errorf("yaml: line %d: cannot unmarshal %s into variable", node.Line, node.ShortTag())
+	default:
+		var value any
+		if err := node.Decode(&value); err != nil {
+			return err
+		}
+		v.Value = value
+		return nil
+	}
 }
