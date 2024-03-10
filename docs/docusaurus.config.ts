@@ -149,21 +149,9 @@ const config: Config = {
       items: [
         {
           type: 'doc',
-          docId: 'installation',
+          docId: 'intro',
           position: 'left',
-          label: 'Installation'
-        },
-        {
-          type: 'doc',
-          docId: 'usage',
-          position: 'left',
-          label: 'Usage'
-        },
-        {
-          type: 'doc',
-          docId: 'api_reference',
-          position: 'left',
-          label: 'API'
+          label: 'Docs'
         },
         {
           to: 'blog',
