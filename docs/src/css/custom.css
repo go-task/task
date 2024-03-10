@@ -76,3 +76,36 @@
 .gold-sponsors table img {
   width: 200px;
 }
+
+.header-icon-link::before {
+  content: '';
+  width: 24px;
+  height: 24px;
+  display: flex;
+  background-color: var(--ifm-navbar-link-color);
+  transition: background-color var(--ifm-transition-fast)
+    var(--ifm-transition-timing-default);
+  mask-size: contain;
+  mask-repeat: no-repeat;
+  mask-position: center;
+}
+
+.header-icon-link:hover::before {
+  background-color: var(--ifm-navbar-link-hover-color);
+}
+
+.icon-github::before {
+  mask-image: url('/img/icon-github.svg');
+}
+
+.icon-discord::before {
+  mask-image: url('/img/icon-discord.svg');
+}
+
+.icon-mastodon::before {
+  mask-image: url('/img/icon-mastodon.svg');
+}
+
+.icon-twitter::before {
+  mask-image: url('/img/icon-twitter.svg');
+}

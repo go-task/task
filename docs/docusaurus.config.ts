@@ -192,25 +192,25 @@ const config: Config = {
           dropdownActiveClassDisabled: true,
         },
         {
-          href: GITHUB_URL,
-          label: 'GitHub',
-          position: 'right'
-        },
-        {
           href: TWITTER_URL,
-          label: 'Twitter',
-          position: 'right'
+          position: 'right',
+          className: "header-icon-link icon-twitter",
         },
         {
           href: MASTODON_URL,
-          label: 'Mastodon',
           rel: 'me',
-          position: 'right'
+          position: 'right',
+          className: "header-icon-link icon-mastodon",
         },
         {
           href: DISCORD_URL,
-          label: 'Discord',
-          position: 'right'
+          position: 'right',
+          className: "header-icon-link icon-discord",
+        },
+        {
+          href: GITHUB_URL,
+          position: 'right',
+          className: "header-icon-link icon-github",
         }
       ]
     },
