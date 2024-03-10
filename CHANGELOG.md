@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- When using the
+  "[Any Variables](https://taskfile.dev/experiments/any-variables/)"
+  experiments, templating is now supported in collection-type variables (#1477,
+  #1511, #1526 by @pd93).
+
 ## v3.35.1 - 2024-03-04
 
 - Fixed a bug where the `TASKFILE_DIR` variable was sometimes incorrect (#1522,
