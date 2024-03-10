@@ -1785,7 +1785,7 @@ Hello bar
 `)
 	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "default"}))
 	t.Log(buff.String())
-	assert.Equal(t, strings.TrimSpace(buff.String()), expectedOutputOrder)
+	assert.Equal(t, expectedOutputOrder, strings.TrimSpace(buff.String()))
 }
 
 func TestErrorCode(t *testing.T) {

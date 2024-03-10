@@ -129,10 +129,10 @@ func (c *Compiler) getVariables(t *ast.Task, call *ast.Call, evaluateShVars bool
 		return nil, err
 	}
 	if t != nil {
-		if err := t.IncludedTaskfileVars.Range(taskRangeFunc); err != nil {
+		if err := t.IncludeVars.Range(rangeFunc); err != nil {
 			return nil, err
 		}
-		if err := t.IncludeVars.Range(rangeFunc); err != nil {
+		if err := t.IncludedTaskfileVars.Range(taskRangeFunc); err != nil {
 			return nil, err
 		}
 	}
