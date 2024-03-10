@@ -77,6 +77,14 @@
   width: 200px;
 }
 
+.menu__list-item:has(.header-icon-link) {
+  float: left;
+}
+
+.menu__list-item:has(.header-icon-link) .header-icon-link {
+  margin-top: 10px;
+}
+
 .header-icon-link::before {
   content: '';
   width: 24px;
