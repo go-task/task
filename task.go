@@ -348,7 +348,7 @@ func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call *ast.Call, 
 			outputWrapper = output.Interleaved{}
 		}
 		vars, err := e.Compiler.FastGetVariables(t, call)
-		outputTemplater := &templater.Templater{Vars: vars}
+		outputTemplater := &templater.Cache{Vars: vars}
 		if err != nil {
 			return fmt.Errorf("task: failed to get variables: %w", err)
 		}

@@ -59,20 +59,9 @@ func (c *Compiler) getVariables(t *ast.Task, call *ast.Call, evaluateShVars bool
 
 	getRangeFunc := func(dir string) func(k string, v ast.Var) error {
 		return func(k string, v ast.Var) error {
-			tr := templater.Templater{Vars: result}
+			cache := &templater.Cache{Vars: result}
 			// Replace values
-			newVar := ast.Var{}
-			switch value := v.Value.(type) {
-			case string:
-				newVar.Value = tr.Replace(value)
-			default:
-				newVar.Value = value
-			}
-			newVar.Sh = tr.Replace(v.Sh)
-			newVar.Ref = v.Ref
-			newVar.Json = tr.Replace(v.Json)
-			newVar.Yaml = tr.Replace(v.Yaml)
-			newVar.Dir = v.Dir
+			newVar := templater.ReplaceVar(v, cache)
 			// If the variable is a reference, we can resolve it
 			if newVar.Ref != "" {
 				newVar.Value = result.Get(newVar.Ref).Value
@@ -89,7 +78,7 @@ func (c *Compiler) getVariables(t *ast.Task, call *ast.Call, evaluateShVars bool
 				return nil
 			}
 			// Now we can check for errors since we've handled all the cases when we don't want to evaluate
-			if err := tr.Err(); err != nil {
+			if err := cache.Err(); err != nil {
 				return err
 			}
 			// Evaluate JSON
@@ -124,9 +113,9 @@ func (c *Compiler) getVariables(t *ast.Task, call *ast.Call, evaluateShVars bool
 	if t != nil {
 		// NOTE(@andreynering): We're manually joining these paths here because
 		// this is the raw task, not the compiled one.
-		tr := templater.Templater{Vars: result}
-		dir := tr.Replace(t.Dir)
-		if err := tr.Err(); err != nil {
+		cache := &templater.Cache{Vars: result}
+		dir := templater.Replace(t.Dir, cache)
+		if err := cache.Err(); err != nil {
 			return nil, err
 		}
 		dir = filepathext.SmartJoin(c.Dir, dir)
