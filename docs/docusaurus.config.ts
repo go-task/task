@@ -177,19 +177,19 @@ const config: Config = {
           label: 'Donate'
         },
         {
+          type: 'docsVersionDropdown',
+          position: 'right',
+          dropdownActiveClassDisabled: true,
+        },
+        {
           type: 'localeDropdown',
-          position: 'left',
+          position: 'right',
           dropdownItemsAfter: [
             {
               to: '/translate/',
               label: 'Help Us Translate'
             }
           ]
-        },
-        {
-          type: 'docsVersionDropdown',
-          position: 'right',
-          dropdownActiveClassDisabled: true,
         },
         {
           href: TWITTER_URL,
