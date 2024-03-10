@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Added support for
+  [looping over dependencies](https://taskfile.dev/usage/#looping-over-dependencies)
+  (#1299, #1541 by @pd93).
 - When using the
   "[Any Variables](https://taskfile.dev/experiments/any-variables/)"
   experiments, templating is now supported in collection-type variables (#1477,
