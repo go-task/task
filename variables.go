@@ -205,8 +205,8 @@ func (e *Executor) compiledTask(call *ast.Call, evaluateShVars bool) (*ast.Task,
 						extra["KEY"] = keys[i]
 					}
 					newDep := dep.DeepCopy()
-					newDep.Task = r.ReplaceWithExtra(dep.Task, extra)
-					newDep.Vars = r.ReplaceVarsWithExtra(dep.Vars, extra)
+					newDep.Task = templater.ReplaceWithExtra(dep.Task, cache, extra)
+					newDep.Vars = templater.ReplaceVarsWithExtra(dep.Vars, cache, extra)
 					new.Deps = append(new.Deps, newDep)
 				}
 				continue
