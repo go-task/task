@@ -48,6 +48,16 @@ tasks:
 and you run `task my-remote-namespace:hello`, it will print the text: "Hello
 from the remote Taskfile!" to your console.
 
+## Root remote Taskfiles
+
+You can also specify a remote Taskfile as the entrypoint for Task by using the
+`--taskfile` flag. This means you don't need to have any Taskfile defined
+locally at all. For example:
+
+```shell
+task --taskfile https://taskfile.dev hello
+```
+
 ## Security
 
 Running commands from sources that you do not control is always a potential
