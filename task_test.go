@@ -10,6 +10,7 @@ import (
 	"regexp"
 	"runtime"
 	"strings"
+	"sync"
 	"testing"
 
 	"github.com/Masterminds/semver/v3"
@@ -24,6 +25,21 @@ import (
 
 func init() {
 	_ = os.Setenv("NO_COLOR", "1")
+}
+
+// SyncBuffer is a threadsafe buffer for testing.
+// Some times replace stdout/stderr with a buffer to capture output.
+// stdout and stderr are threadsafe, but a regular bytes.Buffer is not.
+// Using this instead helps prevents race conditions with output.
+type SyncBuffer struct {
+	buf bytes.Buffer
+	mu  sync.Mutex
+}
+
+func (sb *SyncBuffer) Write(p []byte) (n int, err error) {
+	sb.mu.Lock()
+	defer sb.mu.Unlock()
+	return sb.buf.Write(p)
 }
 
 // fileContentTest provides a basic reusable test-case for running a Taskfile
@@ -2199,7 +2215,7 @@ func TestForce(t *testing.T) {
 	}
 }
 
-func TestFor(t *testing.T) {
+func TestForCmds(t *testing.T) {
 	tests := []struct {
 		name           string
 		expectedOutput string
@@ -2240,9 +2256,67 @@ func TestFor(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			var buff bytes.Buffer
+			var stdOut bytes.Buffer
+			var stdErr bytes.Buffer
 			e := task.Executor{
-				Dir:    "testdata/for",
+				Dir:    "testdata/for/cmds",
+				Stdout: &stdOut,
+				Stderr: &stdErr,
+				Silent: true,
+				Force:  true,
+			}
+			require.NoError(t, e.Setup())
+			require.NoError(t, e.Run(context.Background(), &ast.Call{Task: test.name}))
+			assert.Equal(t, test.expectedOutput, stdOut.String())
+		})
+	}
+}
+
+func TestForDeps(t *testing.T) {
+	tests := []struct {
+		name                   string
+		expectedOutputContains []string
+	}{
+		{
+			name:                   "loop-explicit",
+			expectedOutputContains: []string{"a\n", "b\n", "c\n"},
+		},
+		{
+			name:                   "loop-sources",
+			expectedOutputContains: []string{"bar\n", "foo\n"},
+		},
+		{
+			name:                   "loop-sources-glob",
+			expectedOutputContains: []string{"bar\n", "foo\n"},
+		},
+		{
+			name:                   "loop-vars",
+			expectedOutputContains: []string{"foo\n", "bar\n"},
+		},
+		{
+			name:                   "loop-vars-sh",
+			expectedOutputContains: []string{"bar\n", "foo\n"},
+		},
+		{
+			name:                   "loop-task",
+			expectedOutputContains: []string{"foo\n", "bar\n"},
+		},
+		{
+			name:                   "loop-task-as",
+			expectedOutputContains: []string{"foo\n", "bar\n"},
+		},
+		{
+			name:                   "loop-different-tasks",
+			expectedOutputContains: []string{"1\n", "2\n", "3\n"},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			// We need to use a sync buffer here as deps are run concurrently
+			var buff SyncBuffer
+			e := task.Executor{
+				Dir:    "testdata/for/deps",
 				Stdout: &buff,
 				Stderr: &buff,
 				Silent: true,
@@ -2250,7 +2324,9 @@ func TestFor(t *testing.T) {
 			}
 			require.NoError(t, e.Setup())
 			require.NoError(t, e.Run(context.Background(), &ast.Call{Task: test.name}))
-			assert.Equal(t, test.expectedOutput, buff.String())
+			for _, expectedOutputContains := range test.expectedOutputContains {
+				assert.Contains(t, buff.buf.String(), expectedOutputContains)
+			}
 		})
 	}
 }

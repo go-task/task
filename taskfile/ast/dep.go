@@ -9,6 +9,7 @@ import (
 // Dep is a task dependency
 type Dep struct {
 	Task   string
+	For    *For
 	Vars   *Vars
 	Silent bool
 }
@@ -19,6 +20,7 @@ func (d *Dep) DeepCopy() *Dep {
 	}
 	return &Dep{
 		Task:   d.Task,
+		For:    d.For.DeepCopy(),
 		Vars:   d.Vars.DeepCopy(),
 		Silent: d.Silent,
 	}
@@ -38,6 +40,7 @@ func (d *Dep) UnmarshalYAML(node *yaml.Node) error {
 	case yaml.MappingNode:
 		var taskCall struct {
 			Task   string
+			For    *For
 			Vars   *Vars
 			Silent bool
 		}
@@ -45,6 +48,7 @@ func (d *Dep) UnmarshalYAML(node *yaml.Node) error {
 			return err
 		}
 		d.Task = taskCall.Task
+		d.For = taskCall.For
 		d.Vars = taskCall.Vars
 		d.Silent = taskCall.Silent
 		return nil

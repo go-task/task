@@ -133,56 +133,9 @@ func (e *Executor) compiledTask(call *ast.Call, evaluateShVars bool) (*ast.Task,
 				continue
 			}
 			if cmd.For != nil {
-				var keys []string
-				var list []any
-				// Get the list from the explicit for list
-				if cmd.For.List != nil && len(cmd.For.List) > 0 {
-					list = cmd.For.List
-				}
-				// Get the list from the task sources
-				if cmd.For.From == "sources" {
-					glist, err := fingerprint.Globs(new.Dir, new.Sources)
-					if err != nil {
-						return nil, err
-					}
-					// Make the paths relative to the task dir
-					for i, v := range glist {
-						if glist[i], err = filepath.Rel(new.Dir, v); err != nil {
-							return nil, err
-						}
-					}
-					list = asAnySlice(glist)
-				}
-				// Get the list from a variable and split it up
-				if cmd.For.Var != "" {
-					if vars != nil {
-						v := vars.Get(cmd.For.Var)
-						// If the variable is dynamic, then it hasn't been resolved yet
-						// and we can't use it as a list. This happens when fast compiling a task
-						// for use in --list or --list-all etc.
-						if v.Value != nil && v.Sh == "" {
-							switch value := v.Value.(type) {
-							case string:
-								if cmd.For.Split != "" {
-									list = asAnySlice(strings.Split(value, cmd.For.Split))
-								} else {
-									list = asAnySlice(strings.Fields(value))
-								}
-							case []any:
-								list = value
-							case map[string]any:
-								for k, v := range value {
-									keys = append(keys, k)
-									list = append(list, v)
-								}
-							default:
-								return nil, errors.TaskfileInvalidError{
-									URI: origTask.Location.Taskfile,
-									Err: errors.New("var must be a delimiter-separated string or a list"),
-								}
-							}
-						}
-					}
+				list, keys, err := itemsFromFor(cmd.For, new.Dir, new.Sources, vars, origTask.Location)
+				if err != nil {
+					return nil, err
 				}
 				// Name the iterator variable
 				var as string
@@ -229,6 +182,33 @@ func (e *Executor) compiledTask(call *ast.Call, evaluateShVars bool) (*ast.Task,
 		new.Deps = make([]*ast.Dep, 0, len(origTask.Deps))
 		for _, dep := range origTask.Deps {
 			if dep == nil {
+				continue
+			}
+			if dep.For != nil {
+				list, keys, err := itemsFromFor(dep.For, new.Dir, new.Sources, vars, origTask.Location)
+				if err != nil {
+					return nil, err
+				}
+				// Name the iterator variable
+				var as string
+				if dep.For.As != "" {
+					as = dep.For.As
+				} else {
+					as = "ITEM"
+				}
+				// Create a new command for each item in the list
+				for i, loopValue := range list {
+					extra := map[string]any{
+						as: loopValue,
+					}
+					if len(keys) > 0 {
+						extra["KEY"] = keys[i]
+					}
+					newDep := dep.DeepCopy()
+					newDep.Task = r.ReplaceWithExtra(dep.Task, extra)
+					newDep.Vars = r.ReplaceVarsWithExtra(dep.Vars, extra)
+					new.Deps = append(new.Deps, newDep)
+				}
 				continue
 			}
 			newDep := dep.DeepCopy()
@@ -295,4 +275,65 @@ func asAnySlice[T any](slice []T) []any {
 		ret[i] = v
 	}
 	return ret
+}
+
+func itemsFromFor(
+	f *ast.For,
+	dir string,
+	sources []*ast.Glob,
+	vars *ast.Vars,
+	location *ast.Location,
+) ([]any, []string, error) {
+	var keys []string // The list of keys to loop over (only if looping over a map)
+	var values []any  // The list of values to loop over
+	// Get the list from the explicit for list
+	if f.List != nil && len(f.List) > 0 {
+		values = f.List
+	}
+	// Get the list from the task sources
+	if f.From == "sources" {
+		glist, err := fingerprint.Globs(dir, sources)
+		if err != nil {
+			return nil, nil, err
+		}
+		// Make the paths relative to the task dir
+		for i, v := range glist {
+			if glist[i], err = filepath.Rel(dir, v); err != nil {
+				return nil, nil, err
+			}
+		}
+		values = asAnySlice(glist)
+	}
+	// Get the list from a variable and split it up
+	if f.Var != "" {
+		if vars != nil {
+			v := vars.Get(f.Var)
+			// If the variable is dynamic, then it hasn't been resolved yet
+			// and we can't use it as a list. This happens when fast compiling a task
+			// for use in --list or --list-all etc.
+			if v.Value != nil && v.Sh == "" {
+				switch value := v.Value.(type) {
+				case string:
+					if f.Split != "" {
+						values = asAnySlice(strings.Split(value, f.Split))
+					} else {
+						values = asAnySlice(strings.Fields(value))
+					}
+				case []any:
+					values = value
+				case map[string]any:
+					for k, v := range value {
+						keys = append(keys, k)
+						values = append(values, v)
+					}
+				default:
+					return nil, nil, errors.TaskfileInvalidError{
+						URI: location.Taskfile,
+						Err: errors.New("loop var must be a delimiter-separated string, list or a map"),
+					}
+				}
+			}
+		}
+	}
+	return values, keys, nil
 }
