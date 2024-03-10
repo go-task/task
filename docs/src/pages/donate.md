@@ -1,6 +1,6 @@
 ---
 slug: /donate/
-sidebar_position: 16
+hide_table_of_contents: true
 ---
 
 # Donate

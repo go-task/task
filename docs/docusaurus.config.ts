@@ -171,8 +171,7 @@ const config: Config = {
           position: 'left'
         },
         {
-          type: 'doc',
-          docId: 'donate',
+          to: '/donate',
           position: 'left',
           label: 'Donate'
         },
