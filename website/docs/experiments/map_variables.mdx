@@ -1,11 +1,11 @@
 ---
-slug: /experiments/any-variables/
+slug: /experiments/map-variables/
 ---
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-# Any Variables (#1415)
+# Map Variables (#1585)
 
 :::caution
 
@@ -15,19 +15,9 @@ environment. They are intended for testing and feedback only.
 
 :::
 
-Currently, Task only supports string variables. This experiment allows you to
-specify and use the following variable types:
-
-- `string`
-- `bool`
-- `int`
-- `float`
-- `array`
-- `map`
-
-This allows you to have a lot more flexibility in how you use variables in
-Task's templating engine. There are two active proposals for this experiment.
-Click on the tabs below to switch between them.
+Currently, Task supports all variable types except for maps. This experiment
+adds two different proposals for map variables. Click on the tabs below to
+switch between them.
 
 <Tabs defaultValue="1" queryString="proposal"
   values={[
@@ -48,12 +38,10 @@ This experiment proposal breaks the following functionality:
 :::info
 
 To enable this experiment, set the environment variable:
-`TASK_X_ANY_VARIABLES=1`. Check out [our guide to enabling experiments
+`TASK_X_MAP_VARIABLES=1`. Check out [our guide to enabling experiments
 ][enabling-experiments] for more information.
 
 :::
-
-## Maps
 
 This proposal removes support for the `sh` keyword in favour of a new syntax for
 dynamically defined variables, This allows you to define a map directly as you
@@ -111,18 +99,15 @@ will now need to escape the `$` with a backslash (`\`) to stop Task from
 executing it as a command.
 
 </TabItem>
-
 <TabItem value="2">
 
 :::info
 
 To enable this experiment, set the environment variable:
-`TASK_X_ANY_VARIABLES=2`. Check out [our guide to enabling experiments
+`TASK_X_MAP_VARIABLES=2`. Check out [our guide to enabling experiments
 ][enabling-experiments] for more information.
 
 :::
-
-## Maps
 
 This proposal maintains backwards-compatibility and the `sh` subkey and adds
 another new `map` subkey for defining map variables:
@@ -150,7 +135,13 @@ objects/arrays. This is similar to the `fromJSON` template function, but means
 that you only have to parse the JSON/YAML once when you declare the variable,
 instead of every time you want to access a value.
 
-Before:
+<Tabs defaultValue="2"
+  values={[
+    {label: 'Before', value: '1'},
+    {label: 'After', value: '2'}
+  ]}>
+
+<TabItem value="1">
 
 ```yaml
 version: 3
@@ -164,7 +155,8 @@ tasks:
       - 'echo {{(fromJSON .FOO).b}}'
 ```
 
-After:
+</TabItem>
+<TabItem value="2">
 
 ```yaml
 version: 3
@@ -179,12 +171,26 @@ tasks:
       - 'echo {{.FOO.b}}'
 ```
 
+</TabItem></Tabs>
+
 ## Variables by reference
 
 Lastly, this proposal adds support for defining and passing variables by
 reference. This is really important now that variables can be types other than a
-string. Previously, to send a variable from one task to another, you would have
-to use the templating system to pass it:
+string.
+
+Previously, to send a variable from one task to another, you would have to use
+the templating system. Unfortunately, the templater _always_ outputs a string
+and operations on the passed variable may not have behaved as expected. With
+this proposal, you can now pass variables by reference using the `ref` subkey:
+
+<Tabs defaultValue="2"
+  values={[
+    {label: 'Before', value: '1'},
+    {label: 'After', value: '2'}
+  ]}>
+
+<TabItem value="1">
 
 ```yaml
 version: 3
@@ -202,10 +208,8 @@ tasks:
       - 'echo {{index .FOO 0}}' # <-- FOO is a string so the task outputs '91' which is the ASCII code for '[' instead of the expected 'A'
 ```
 
-Unfortunately, this results in the value always being passed as a string as this
-is the output type of the templater and operations on the passed variable may
-not behave as expected. With this proposal, you can now pass variables by
-reference using the `ref` subkey:
+</TabItem>
+<TabItem value="2">
 
 ```yaml
 version: 3
@@ -223,6 +227,8 @@ tasks:
     cmds:
       - 'echo {{index .FOO 0}}' # <-- FOO is still a map so the task outputs 'A' as expected
 ```
+
+</TabItem></Tabs>
 
 This means that the type of the variable is maintained when it is passed to
 another Task. This also works the same way when calling `deps` and when defining
@@ -249,27 +255,20 @@ tasks:
 
 </TabItem></Tabs>
 
----
+## Looping over maps
 
-## Common to both proposals
+This experiment also adds support for looping over maps using the `for` keyword,
+just like arrays. In addition to the `{{.ITEM}}` variable being populated when
+looping over a map, we also make an additional `{{.KEY}}` variable available
+that holds the string value of the map key.
 
-Both proposals add support for all other variable types by directly defining
-them in the Taskfile. For example:
+<Tabs defaultValue="1" queryString="proposal"
+  values={[
+    {label: 'Proposal 1', value: '1'},
+    {label: 'Proposal 2', value: '2'}
+  ]}>
 
-### Evaluating booleans
-
-```yaml
-version: 3
-
-tasks:
-  foo:
-    vars:
-      BOOL: false
-    cmds:
-      - '{{if .BOOL}}echo foo{{end}}'
-```
-
-### Arithmetic
+<TabItem value="1">
 
 ```yaml
 version: 3
@@ -277,51 +276,15 @@ version: 3
 tasks:
   foo:
     vars:
-      INT: 10
-      FLOAT: 3.14159
-    cmds:
-      - 'echo {{add .INT .FLOAT}}'
-```
-
-### Ranging
-
-```yaml
-version: 3
-
-tasks:
-  foo:
-    vars:
-      ARRAY: [1, 2, 3]
-    cmds:
-      - 'echo {{range .ARRAY}}{{.}}{{end}}'
-```
-
-There are many more templating functions which can be used with the new types of
-variables. For a full list, see the [slim-sprig][slim-sprig] documentation.
-
-## Looping over variables
-
-Previously, you would have to use a delimiter separated string to loop over an
-arbitrary list of items in a variable and split them by using the `split` subkey
-to specify the delimiter:
-
-```yaml
-version: 3
-
-tasks:
-  foo:
-    vars:
-      LIST: 'foo,bar,baz'
+      MAP: {a: 1, b: 2, c: 3}
     cmds:
       - for:
-          var: LIST
-          split: ','
-        cmd: echo {{.ITEM}}
+          var: MAP
+        cmd: 'echo "{{.KEY}}: {{.ITEM}}"'
 ```
 
-Both of these proposals add support for looping over "collection-type" variables
-using the `for` keyword, so now you are able to loop over a map/array variable
-directly:
+</TabItem>
+<TabItem value="2">
 
 ```yaml
 version: 3
@@ -329,18 +292,23 @@ version: 3
 tasks:
   foo:
     vars:
-      LIST: [foo, bar, baz]
+      map:
+        MAP: {a: 1, b: 2, c: 3}
     cmds:
       - for:
-          var: LIST
-        cmd: echo {{.ITEM}}
+          var: MAP
+        cmd: 'echo "{{.KEY}}: {{.ITEM}}"'
 ```
 
-When looping over a map we also make an additional `{{.KEY}}` variable availabe
-that holds the string value of the map key. Remember that maps are unordered, so
+:::note
+
+Remember that maps are unordered, so
 the order in which the items are looped over is random.
+
+:::
+
+</TabItem></Tabs>
 
 {/* prettier-ignore-start */}
 [enabling-experiments]: /experiments/#enabling-experiments
-[slim-sprig]: https://go-task.github.io/slim-sprig/
 {/* prettier-ignore-end */}
