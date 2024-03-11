@@ -265,6 +265,11 @@ func (e *Executor) RunTask(ctx context.Context, call *ast.Call) error {
 				return &errors.TaskRunError{TaskName: t.Task, Err: err}
 			}
 		}
+		if len(t.Posts) > 0 {
+			if err3 := e.runPosts(ctx, t, err); err3 != nil {
+				return err3
+			}
+		}
 		e.Logger.VerboseErrf(logger.Magenta, "task: %q finished\n", call.Task)
 		return nil
 	})
@@ -304,6 +309,25 @@ func (e *Executor) runDeps(ctx context.Context, t *ast.Task) error {
 		})
 	}
 
+	return g.Wait()
+}
+
+func (e *Executor) runPosts(ctx context.Context, t *ast.Task, err error) error {
+	g, ctx := errgroup.WithContext(ctx)
+
+	reacquire := e.releaseConcurrencyLimit()
+	defer reacquire()
+
+	for _, p := range t.Posts {
+		p := p
+		g.Go(func() error {
+			err2 := e.RunTask(ctx, &ast.Call{Task: p.Task, Vars: p.Vars, Silent: p.Silent, Indirect: true})
+			if err2 != nil {
+				return err2
+			}
+			return nil
+		})
+	}
 	return g.Wait()
 }
 

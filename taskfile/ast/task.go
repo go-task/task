@@ -15,6 +15,7 @@ type Task struct {
 	Task                 string
 	Cmds                 []*Cmd
 	Deps                 []*Dep
+	Posts                []*Post
 	Label                string
 	Desc                 string
 	Prompt               string
@@ -103,6 +104,7 @@ func (t *Task) UnmarshalYAML(node *yaml.Node) error {
 			Cmds          []*Cmd
 			Cmd           *Cmd
 			Deps          []*Dep
+			Posts         []*Post
 			Label         string
 			Desc          string
 			Prompt        string
@@ -141,6 +143,7 @@ func (t *Task) UnmarshalYAML(node *yaml.Node) error {
 			t.Cmds = task.Cmds
 		}
 		t.Deps = task.Deps
+		t.Posts = task.Posts
 		t.Label = task.Label
 		t.Desc = task.Desc
 		t.Prompt = task.Prompt
@@ -182,6 +185,7 @@ func (t *Task) DeepCopy() *Task {
 		Task:                 t.Task,
 		Cmds:                 deepcopy.Slice(t.Cmds),
 		Deps:                 deepcopy.Slice(t.Deps),
+		Posts:                deepcopy.Slice(t.Posts),
 		Label:                t.Label,
 		Desc:                 t.Desc,
 		Prompt:               t.Prompt,
