@@ -22,9 +22,9 @@ This experiment breaks the following functionality:
 
 :::info
 
-To enable this experiment, set the environment variable: `TASK_X_FORCE=1`. Check
-out [our guide to enabling experiments ][enabling-experiments] for more
-information.
+To enable this experiment, set the environment variable:
+`TASK_X_GENTLE_FORCE=1`. Check out [our guide to enabling experiments
+][enabling-experiments] for more information.
 
 :::
 
