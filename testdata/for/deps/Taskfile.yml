@@ -1,0 +1,111 @@
+version: "3"
+
+tasks:
+  # Loop over a list of values
+  loop-explicit:
+    deps:
+      - for: ["a", "b", "c"]
+        task: echo
+        vars:
+          TEXT: "{{.ITEM}}"
+
+  # Loop over the task's sources
+  loop-sources:
+    sources:
+      - foo.txt
+      - bar.txt
+    deps:
+      - for: sources
+        task: cat
+        vars:
+          FILE: "{{.ITEM}}"
+
+  # Loop over the task's sources when globbed
+  loop-sources-glob:
+    sources:
+      - "*.txt"
+    deps:
+      - for: sources
+        task: cat
+        vars:
+          FILE: "{{.ITEM}}"
+
+  # Loop over the contents of a variable
+  loop-vars:
+    vars:
+      FOO: foo.txt,bar.txt
+    deps:
+      - for:
+          var: FOO
+          split: ","
+        task: cat
+        vars:
+          FILE: "{{.ITEM}}"
+
+  # Loop over the output of a command (auto splits on " ")
+  loop-vars-sh:
+    vars:
+      FOO:
+        sh: ls *.txt
+    deps:
+      - for:
+          var: FOO
+        task: cat
+        vars:
+          FILE: "{{.ITEM}}"
+
+  # Loop over another task
+  loop-task:
+    vars:
+      FOO: foo.txt bar.txt
+    deps:
+      - for:
+          var: FOO
+        task: looped-task
+        vars:
+          FILE: "{{.ITEM}}"
+
+  # Loop over another task with the variable named differently
+  loop-task-as:
+    vars:
+      FOO: foo.txt bar.txt
+    deps:
+      - for:
+          var: FOO
+          as: FILE
+        task: looped-task
+        vars:
+          FILE: "{{.FILE}}"
+
+  # Loop over different tasks using the variable
+  loop-different-tasks:
+    vars:
+      FOO: "1 2 3"
+    deps:
+      - for:
+          var: FOO
+        task: task-{{.ITEM}}
+
+  looped-task:
+    internal: true
+    cmd: cat "{{.FILE}}"
+
+  task-1:
+    internal: true
+    cmd: echo "1"
+
+  task-2:
+    internal: true
+    cmd: echo "2"
+
+  task-3:
+    internal: true
+    cmd: echo "3"
+
+  echo:
+    cmds:
+      - echo "{{.TEXT}}"
+
+  cat:
+    cmds:
+      - cat "{{.FILE}}"

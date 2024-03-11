@@ -6,122 +6,116 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/go-task/task/v3/internal/deepcopy"
 	"github.com/go-task/task/v3/taskfile/ast"
 )
 
-// Templater is a help struct that allow us to call "replaceX" funcs multiple
+// Cache is a help struct that allow us to call "replaceX" funcs multiple
 // times, without having to check for error each time. The first error that
 // happen will be assigned to r.err, and consecutive calls to funcs will just
 // return the zero value.
-type Templater struct {
+type Cache struct {
 	Vars *ast.Vars
 
 	cacheMap map[string]any
 	err      error
 }
 
-func (r *Templater) ResetCache() {
+func (r *Cache) ResetCache() {
 	r.cacheMap = r.Vars.ToCacheMap()
 }
 
-func (r *Templater) Replace(str string) string {
-	return r.replace(str, nil)
+func (r *Cache) Err() error {
+	return r.err
 }
 
-func (r *Templater) ReplaceWithExtra(str string, extra map[string]any) string {
-	return r.replace(str, extra)
+func Replace[T any](v T, cache *Cache) T {
+	return ReplaceWithExtra(v, cache, nil)
 }
 
-func (r *Templater) replace(str string, extra map[string]any) string {
-	if r.err != nil || str == "" {
-		return ""
+func ReplaceWithExtra[T any](v T, cache *Cache, extra map[string]any) T {
+	// If there is already an error, do nothing
+	if cache.err != nil {
+		return v
 	}
 
-	templ, err := template.New("").Funcs(templateFuncs).Parse(str)
+	// Initialize the cache map if it's not already initialized
+	if cache.cacheMap == nil {
+		cache.cacheMap = cache.Vars.ToCacheMap()
+	}
+
+	// Create a copy of the cache map to avoid editing the original
+	// If there is extra data, merge it with the cache map
+	data := maps.Clone(cache.cacheMap)
+	if extra != nil {
+		maps.Copy(data, extra)
+	}
+
+	// Traverse the value and parse any template variables
+	copy, err := deepcopy.TraverseStringsFunc(v, func(v string) (string, error) {
+		tpl, err := template.New("").Funcs(templateFuncs).Parse(v)
+		if err != nil {
+			return v, err
+		}
+		var b bytes.Buffer
+		if err := tpl.Execute(&b, data); err != nil {
+			return v, err
+		}
+		return strings.ReplaceAll(b.String(), "<no value>", ""), nil
+	})
 	if err != nil {
-		r.err = err
-		return ""
+		cache.err = err
+		return v
 	}
 
-	if r.cacheMap == nil {
-		r.cacheMap = r.Vars.ToCacheMap()
-	}
-
-	var b bytes.Buffer
-	if extra == nil {
-		err = templ.Execute(&b, r.cacheMap)
-	} else {
-		// Copy the map to avoid modifying the cached map
-		m := maps.Clone(r.cacheMap)
-		maps.Copy(m, extra)
-		err = templ.Execute(&b, m)
-	}
-	if err != nil {
-		r.err = err
-		return ""
-	}
-	return strings.ReplaceAll(b.String(), "<no value>", "")
+	return copy
 }
 
-func (r *Templater) ReplaceSlice(strs []string) []string {
-	if r.err != nil || len(strs) == 0 {
-		return nil
-	}
-
-	new := make([]string, len(strs))
-	for i, str := range strs {
-		new[i] = r.Replace(str)
-	}
-	return new
-}
-
-func (r *Templater) ReplaceGlobs(globs []*ast.Glob) []*ast.Glob {
-	if r.err != nil || len(globs) == 0 {
+func ReplaceGlobs(globs []*ast.Glob, cache *Cache) []*ast.Glob {
+	if cache.err != nil || len(globs) == 0 {
 		return nil
 	}
 
 	new := make([]*ast.Glob, len(globs))
 	for i, g := range globs {
 		new[i] = &ast.Glob{
-			Glob:   r.Replace(g.Glob),
+			Glob:   Replace(g.Glob, cache),
 			Negate: g.Negate,
 		}
 	}
 	return new
 }
 
-func (r *Templater) ReplaceVars(vars *ast.Vars) *ast.Vars {
-	return r.replaceVars(vars, nil)
+func ReplaceVar(v ast.Var, cache *Cache) ast.Var {
+	return ReplaceVarWithExtra(v, cache, nil)
 }
 
-func (r *Templater) ReplaceVarsWithExtra(vars *ast.Vars, extra map[string]any) *ast.Vars {
-	return r.replaceVars(vars, extra)
+func ReplaceVarWithExtra(v ast.Var, cache *Cache, extra map[string]any) ast.Var {
+	return ast.Var{
+		Value: ReplaceWithExtra(v.Value, cache, extra),
+		Sh:    ReplaceWithExtra(v.Sh, cache, extra),
+		Live:  v.Live,
+		Ref:   v.Ref,
+		Dir:   v.Dir,
+		Json:  ReplaceWithExtra(v.Json, cache, extra),
+		Yaml:  ReplaceWithExtra(v.Yaml, cache, extra),
+	}
 }
 
-func (r *Templater) replaceVars(vars *ast.Vars, extra map[string]any) *ast.Vars {
-	if r.err != nil || vars.Len() == 0 {
+func ReplaceVars(vars *ast.Vars, cache *Cache) *ast.Vars {
+	return ReplaceVarsWithExtra(vars, cache, nil)
+}
+
+func ReplaceVarsWithExtra(vars *ast.Vars, cache *Cache, extra map[string]any) *ast.Vars {
+	if cache.err != nil || vars.Len() == 0 {
 		return nil
 	}
 
 	var newVars ast.Vars
 	_ = vars.Range(func(k string, v ast.Var) error {
-		var newVar ast.Var
-		switch value := v.Value.(type) {
-		case string:
-			newVar.Value = r.ReplaceWithExtra(value, extra)
-		}
-		newVar.Live = v.Live
-		newVar.Sh = r.ReplaceWithExtra(v.Sh, extra)
-		newVar.Ref = v.Ref
-		newVar.Json = r.ReplaceWithExtra(v.Json, extra)
-		newVar.Yaml = r.ReplaceWithExtra(v.Yaml, extra)
-		newVars.Set(k, newVar)
+		newVars.Set(k, ReplaceVarWithExtra(v, cache, extra))
 		return nil
 	})
 
 	return &newVars
-}
-
-func (r *Templater) Err() error {
-	return r.err
 }

@@ -60,11 +60,11 @@ func Read(
 		}
 
 		err = tf.Includes.Range(func(namespace string, include ast.Include) error {
-			tr := templater.Templater{Vars: tf.Vars}
+			cache := &templater.Cache{Vars: tf.Vars}
 			include = ast.Include{
 				Namespace:      include.Namespace,
-				Taskfile:       tr.Replace(include.Taskfile),
-				Dir:            tr.Replace(include.Dir),
+				Taskfile:       templater.Replace(include.Taskfile, cache),
+				Dir:            templater.Replace(include.Dir, cache),
 				Optional:       include.Optional,
 				Internal:       include.Internal,
 				Aliases:        include.Aliases,
@@ -72,7 +72,7 @@ func Read(
 				Vars:           include.Vars,
 				BaseDir:        include.BaseDir,
 			}
-			if err := tr.Err(); err != nil {
+			if err := cache.Err(); err != nil {
 				return err
 			}
 

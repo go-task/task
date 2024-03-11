@@ -80,10 +80,9 @@ flag. Before enabling this flag, you should:
 Task currently supports both `http` and `https` URLs. However, the `http`
 requests will not execute by default unless you run the task with the
 `--insecure` flag. This is to protect you from accidentally running a remote
-Taskfile that is hosted on and unencrypted connection. Sources that are not
-protected by TLS are vulnerable to [man-in-the-middle
-attacks][man-in-the-middle-attacks] and should be avoided unless you know what
-you are doing.
+Taskfile that is via an unencrypted connection. Sources that are not protected
+by TLS are vulnerable to [man-in-the-middle attacks][man-in-the-middle-attacks]
+and should be avoided unless you know what you are doing.
 
 ## Caching & Running Offline
 

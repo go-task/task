@@ -42,30 +42,30 @@ func (e *Executor) compiledTask(call *ast.Call, evaluateShVars bool) (*ast.Task,
 		return nil, err
 	}
 
-	r := templater.Templater{Vars: vars}
+	cache := &templater.Cache{Vars: vars}
 
 	new := ast.Task{
 		Task:                 origTask.Task,
-		Label:                r.Replace(origTask.Label),
-		Desc:                 r.Replace(origTask.Desc),
-		Prompt:               r.Replace(origTask.Prompt),
-		Summary:              r.Replace(origTask.Summary),
+		Label:                templater.Replace(origTask.Label, cache),
+		Desc:                 templater.Replace(origTask.Desc, cache),
+		Prompt:               templater.Replace(origTask.Prompt, cache),
+		Summary:              templater.Replace(origTask.Summary, cache),
 		Aliases:              origTask.Aliases,
-		Sources:              r.ReplaceGlobs(origTask.Sources),
-		Generates:            r.ReplaceGlobs(origTask.Generates),
-		Dir:                  r.Replace(origTask.Dir),
+		Sources:              templater.ReplaceGlobs(origTask.Sources, cache),
+		Generates:            templater.ReplaceGlobs(origTask.Generates, cache),
+		Dir:                  templater.Replace(origTask.Dir, cache),
 		Set:                  origTask.Set,
 		Shopt:                origTask.Shopt,
 		Vars:                 nil,
 		Env:                  nil,
-		Dotenv:               r.ReplaceSlice(origTask.Dotenv),
+		Dotenv:               templater.Replace(origTask.Dotenv, cache),
 		Silent:               origTask.Silent,
 		Interactive:          origTask.Interactive,
 		Internal:             origTask.Internal,
-		Method:               r.Replace(origTask.Method),
-		Prefix:               r.Replace(origTask.Prefix),
+		Method:               templater.Replace(origTask.Method, cache),
+		Prefix:               templater.Replace(origTask.Prefix, cache),
 		IgnoreError:          origTask.IgnoreError,
-		Run:                  r.Replace(origTask.Run),
+		Run:                  templater.Replace(origTask.Run, cache),
 		IncludeVars:          origTask.IncludeVars,
 		IncludedTaskfileVars: origTask.IncludedTaskfileVars,
 		Platforms:            origTask.Platforms,
@@ -104,9 +104,9 @@ func (e *Executor) compiledTask(call *ast.Call, evaluateShVars bool) (*ast.Task,
 	}
 
 	new.Env = &ast.Vars{}
-	new.Env.Merge(r.ReplaceVars(e.Taskfile.Env))
-	new.Env.Merge(r.ReplaceVars(dotenvEnvs))
-	new.Env.Merge(r.ReplaceVars(origTask.Env))
+	new.Env.Merge(templater.ReplaceVars(e.Taskfile.Env, cache))
+	new.Env.Merge(templater.ReplaceVars(dotenvEnvs, cache))
+	new.Env.Merge(templater.ReplaceVars(origTask.Env, cache))
 	if evaluateShVars {
 		err = new.Env.Range(func(k string, v ast.Var) error {
 			// If the variable is not dynamic, we can set it and return
@@ -133,56 +133,9 @@ func (e *Executor) compiledTask(call *ast.Call, evaluateShVars bool) (*ast.Task,
 				continue
 			}
 			if cmd.For != nil {
-				var keys []string
-				var list []any
-				// Get the list from the explicit for list
-				if cmd.For.List != nil && len(cmd.For.List) > 0 {
-					list = cmd.For.List
-				}
-				// Get the list from the task sources
-				if cmd.For.From == "sources" {
-					glist, err := fingerprint.Globs(new.Dir, new.Sources)
-					if err != nil {
-						return nil, err
-					}
-					// Make the paths relative to the task dir
-					for i, v := range glist {
-						if glist[i], err = filepath.Rel(new.Dir, v); err != nil {
-							return nil, err
-						}
-					}
-					list = asAnySlice(glist)
-				}
-				// Get the list from a variable and split it up
-				if cmd.For.Var != "" {
-					if vars != nil {
-						v := vars.Get(cmd.For.Var)
-						// If the variable is dynamic, then it hasn't been resolved yet
-						// and we can't use it as a list. This happens when fast compiling a task
-						// for use in --list or --list-all etc.
-						if v.Value != nil && v.Sh == "" {
-							switch value := v.Value.(type) {
-							case string:
-								if cmd.For.Split != "" {
-									list = asAnySlice(strings.Split(value, cmd.For.Split))
-								} else {
-									list = asAnySlice(strings.Fields(value))
-								}
-							case []any:
-								list = value
-							case map[string]any:
-								for k, v := range value {
-									keys = append(keys, k)
-									list = append(list, v)
-								}
-							default:
-								return nil, errors.TaskfileInvalidError{
-									URI: origTask.Location.Taskfile,
-									Err: errors.New("var must be a delimiter-separated string or a list"),
-								}
-							}
-						}
-					}
+				list, keys, err := itemsFromFor(cmd.For, new.Dir, new.Sources, vars, origTask.Location)
+				if err != nil {
+					return nil, err
 				}
 				// Name the iterator variable
 				var as string
@@ -200,17 +153,17 @@ func (e *Executor) compiledTask(call *ast.Call, evaluateShVars bool) (*ast.Task,
 						extra["KEY"] = keys[i]
 					}
 					newCmd := cmd.DeepCopy()
-					newCmd.Cmd = r.ReplaceWithExtra(cmd.Cmd, extra)
-					newCmd.Task = r.ReplaceWithExtra(cmd.Task, extra)
-					newCmd.Vars = r.ReplaceVarsWithExtra(cmd.Vars, extra)
+					newCmd.Cmd = templater.ReplaceWithExtra(cmd.Cmd, cache, extra)
+					newCmd.Task = templater.ReplaceWithExtra(cmd.Task, cache, extra)
+					newCmd.Vars = templater.ReplaceVarsWithExtra(cmd.Vars, cache, extra)
 					new.Cmds = append(new.Cmds, newCmd)
 				}
 				continue
 			}
 			newCmd := cmd.DeepCopy()
-			newCmd.Cmd = r.Replace(cmd.Cmd)
-			newCmd.Task = r.Replace(cmd.Task)
-			newCmd.Vars = r.ReplaceVars(cmd.Vars)
+			newCmd.Cmd = templater.Replace(cmd.Cmd, cache)
+			newCmd.Task = templater.Replace(cmd.Task, cache)
+			newCmd.Vars = templater.ReplaceVars(cmd.Vars, cache)
 			// Loop over the command's variables and resolve any references to other variables
 			err := cmd.Vars.Range(func(k string, v ast.Var) error {
 				if v.Ref != "" {
@@ -231,9 +184,36 @@ func (e *Executor) compiledTask(call *ast.Call, evaluateShVars bool) (*ast.Task,
 			if dep == nil {
 				continue
 			}
+			if dep.For != nil {
+				list, keys, err := itemsFromFor(dep.For, new.Dir, new.Sources, vars, origTask.Location)
+				if err != nil {
+					return nil, err
+				}
+				// Name the iterator variable
+				var as string
+				if dep.For.As != "" {
+					as = dep.For.As
+				} else {
+					as = "ITEM"
+				}
+				// Create a new command for each item in the list
+				for i, loopValue := range list {
+					extra := map[string]any{
+						as: loopValue,
+					}
+					if len(keys) > 0 {
+						extra["KEY"] = keys[i]
+					}
+					newDep := dep.DeepCopy()
+					newDep.Task = templater.ReplaceWithExtra(dep.Task, cache, extra)
+					newDep.Vars = templater.ReplaceVarsWithExtra(dep.Vars, cache, extra)
+					new.Deps = append(new.Deps, newDep)
+				}
+				continue
+			}
 			newDep := dep.DeepCopy()
-			newDep.Task = r.Replace(dep.Task)
-			newDep.Vars = r.ReplaceVars(dep.Vars)
+			newDep.Task = templater.Replace(dep.Task, cache)
+			newDep.Vars = templater.ReplaceVars(dep.Vars, cache)
 			// Loop over the dep's variables and resolve any references to other variables
 			err := dep.Vars.Range(func(k string, v ast.Var) error {
 				if v.Ref != "" {
@@ -256,8 +236,8 @@ func (e *Executor) compiledTask(call *ast.Call, evaluateShVars bool) (*ast.Task,
 				continue
 			}
 			newPrecondition := precondition.DeepCopy()
-			newPrecondition.Sh = r.Replace(precondition.Sh)
-			newPrecondition.Msg = r.Replace(precondition.Msg)
+			newPrecondition.Sh = templater.Replace(precondition.Sh, cache)
+			newPrecondition.Msg = templater.Replace(precondition.Msg, cache)
 			new.Preconditions = append(new.Preconditions, newPrecondition)
 		}
 	}
@@ -276,14 +256,14 @@ func (e *Executor) compiledTask(call *ast.Call, evaluateShVars bool) (*ast.Task,
 
 		// Adding new variables, requires us to refresh the templaters
 		// cache of the the values manually
-		r.ResetCache()
+		cache.ResetCache()
 
-		new.Status = r.ReplaceSlice(origTask.Status)
+		new.Status = templater.Replace(origTask.Status, cache)
 	}
 
 	// We only care about templater errors if we are evaluating shell variables
-	if evaluateShVars && r.Err() != nil {
-		return &new, r.Err()
+	if evaluateShVars && cache.Err() != nil {
+		return &new, cache.Err()
 	}
 
 	return &new, nil
@@ -295,4 +275,65 @@ func asAnySlice[T any](slice []T) []any {
 		ret[i] = v
 	}
 	return ret
+}
+
+func itemsFromFor(
+	f *ast.For,
+	dir string,
+	sources []*ast.Glob,
+	vars *ast.Vars,
+	location *ast.Location,
+) ([]any, []string, error) {
+	var keys []string // The list of keys to loop over (only if looping over a map)
+	var values []any  // The list of values to loop over
+	// Get the list from the explicit for list
+	if f.List != nil && len(f.List) > 0 {
+		values = f.List
+	}
+	// Get the list from the task sources
+	if f.From == "sources" {
+		glist, err := fingerprint.Globs(dir, sources)
+		if err != nil {
+			return nil, nil, err
+		}
+		// Make the paths relative to the task dir
+		for i, v := range glist {
+			if glist[i], err = filepath.Rel(dir, v); err != nil {
+				return nil, nil, err
+			}
+		}
+		values = asAnySlice(glist)
+	}
+	// Get the list from a variable and split it up
+	if f.Var != "" {
+		if vars != nil {
+			v := vars.Get(f.Var)
+			// If the variable is dynamic, then it hasn't been resolved yet
+			// and we can't use it as a list. This happens when fast compiling a task
+			// for use in --list or --list-all etc.
+			if v.Value != nil && v.Sh == "" {
+				switch value := v.Value.(type) {
+				case string:
+					if f.Split != "" {
+						values = asAnySlice(strings.Split(value, f.Split))
+					} else {
+						values = asAnySlice(strings.Fields(value))
+					}
+				case []any:
+					values = value
+				case map[string]any:
+					for k, v := range value {
+						keys = append(keys, k)
+						values = append(values, v)
+					}
+				default:
+					return nil, nil, errors.TaskfileInvalidError{
+						URI: location.Taskfile,
+						Err: errors.New("loop var must be a delimiter-separated string, list or a map"),
+					}
+				}
+			}
+		}
+	}
+	return values, keys, nil
 }

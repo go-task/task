@@ -1,7 +1,7 @@
 version: "3"
 
 vars:
-  RECEIVER: "world"
+  RECEIVER: '{{ .RECEIVER | default "world" }}'
 
 tasks:
   greet:

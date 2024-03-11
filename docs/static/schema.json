@@ -48,17 +48,7 @@
         },
         "deps": {
           "description": "A list of dependencies of this task. Tasks defined here will run in parallel before this task.",
-          "type": "array",
-          "items": {
-            "oneOf": [
-              {
-                "type": "string"
-              },
-              {
-                "$ref": "#/definitions/task_call"
-              }
-            ]
-          }
+          "$ref": "#/definitions/deps"
         },
         "label": {
           "description": "Overrides the name of the task in the output when a task is run. Supports variables.",
@@ -216,9 +206,25 @@
           "$ref": "#/definitions/defer_call"
         },
         {
-          "$ref": "#/definitions/for_call"
+          "$ref": "#/definitions/for_cmds_call"
         }
       ]
+    },
+    "deps": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          {
+            "type": "string"
+          },
+          {
+            "$ref": "#/definitions/task_call"
+          },
+          {
+            "$ref": "#/definitions/for_deps_call"
+          }
+        ]
+      }
     },
     "set": {
       "type": "string",
@@ -367,21 +373,11 @@
       "additionalProperties": false,
       "required": ["defer"]
     },
-    "for_call": {
+    "for_cmds_call": {
       "type": "object",
       "properties": {
         "for": {
-          "anyOf": [
-            {
-              "$ref": "#/definitions/for_list"
-            },
-            {
-              "$ref": "#/definitions/for_attribute"
-            },
-            {
-              "$ref": "#/definitions/for_var"
-            }
-          ]
+          "$ref": "#/definitions/for"
         },
         "cmd": {
           "description": "Command to run",
@@ -406,6 +402,45 @@
       ],
       "additionalProperties": false,
       "required": ["for"]
+    },
+    "for_deps_call": {
+      "type": "object",
+      "properties": {
+        "for": {
+          "$ref": "#/definitions/for"
+        },
+        "silent": {
+          "description": "Silent mode disables echoing of command before Task runs it",
+          "type": "boolean"
+        },
+        "task": {
+          "description": "Task to run",
+          "type": "string"
+        },
+        "vars": {
+          "description": "Values passed to the task called",
+          "$ref": "#/definitions/vars"
+        }
+      },
+      "oneOf": [
+        {"required": ["cmd"]},
+        {"required": ["task"]}
+      ],
+      "additionalProperties": false,
+      "required": ["for"]
+    },
+    "for": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/for_list"
+        },
+        {
+          "$ref": "#/definitions/for_attribute"
+        },
+        {
+          "$ref": "#/definitions/for_var"
+        }
+      ]
     },
     "for_list": {
       "description": "A list of values to iterate over",
