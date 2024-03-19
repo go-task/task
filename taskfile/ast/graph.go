@@ -70,10 +70,8 @@ func (tfg *TaskfileGraph) Merge() (*Taskfile, error) {
 		// Loop over edge that leads to a vertex that includes the current vertex
 		for _, edge := range predecessorMap[hash] {
 
-			// TODO: Enable goroutines
 			// Start a goroutine to process each included Taskfile
-			// g.Go(
-			err := func() error {
+			g.Go(func() error {
 				// Get the base vertex
 				vertex, err := tfg.Vertex(edge.Source)
 				if err != nil {
@@ -95,11 +93,10 @@ func (tfg *TaskfileGraph) Merge() (*Taskfile, error) {
 				}
 
 				return nil
-			}()
-			if err != nil {
+			})
+			if err := g.Wait(); err != nil {
 				return nil, err
 			}
-			// )
 		}
 
 		// Wait for all the go routines to finish
