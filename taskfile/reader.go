@@ -119,12 +119,12 @@ func (r *Reader) include(node Node) error {
 				return err
 			}
 
-			dir, err := node.ResolveDir(include.Dir)
+			include.Dir, err = node.ResolveDir(include.Dir)
 			if err != nil {
 				return err
 			}
 
-			includeNode, err := NewNode(r.logger, entrypoint, dir, r.insecure, r.timeout,
+			includeNode, err := NewNode(r.logger, entrypoint, include.Dir, r.insecure, r.timeout,
 				WithParent(node),
 			)
 			if err != nil {
