@@ -1,10 +1,10 @@
 version: '3'
 
 includes:
-  docs:
-    aliases: [d]
-    taskfile: ./docs
-    dir: ./docs
+  website:
+    aliases: [w, docs, d]
+    taskfile: ./website
+    dir: ./website
 
 vars:
   BIN: "{{.ROOT_DIR}}/bin"
