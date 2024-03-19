@@ -15,9 +15,9 @@ import (
 
 const (
 	changelogSource = "CHANGELOG.md"
-	changelogTarget = "docs/docs/changelog.md"
-	docsSource      = "docs/docs"
-	docsTarget      = "docs/versioned_docs/version-latest"
+	changelogTarget = "website/docs/changelog.md"
+	docsSource      = "website/docs"
+	docsTarget      = "website/versioned_docs/version-latest"
 )
 
 var (

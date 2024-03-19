@@ -19,10 +19,10 @@ jobs:
         uses: tj-actions/changed-files@v41
         with:
           files: |
-            docs/docs
-            docs/blog
-            docs/i18n/en
-            docs/src/pages
+            website/docs
+            website/blog
+            website/i18n/en
+            website/src/pages
 
       - name: Install Task
         uses: arduino/setup-task@v1
@@ -35,4 +35,4 @@ jobs:
         run: task crowdin:push
         env:
           CROWDIN_PERSONAL_TOKEN: ${{ secrets.CROWDIN_PERSONAL_TOKEN }}
-        working-directory: ./docs
+        working-directory: ./website
