@@ -52,9 +52,9 @@ func (t1 *Taskfile) Merge(t2 *Taskfile, include *Include) error {
 	if t1.Env == nil {
 		t1.Env = &Vars{}
 	}
-	t1.Vars.Merge(t2.Vars)
-	t1.Env.Merge(t2.Env)
-	t1.Tasks.Merge(t2.Tasks, include)
+	t1.Vars.Merge(t2.Vars, include)
+	t1.Env.Merge(t2.Env, include)
+	t1.Tasks.Merge(t2.Tasks, include, t1.Vars)
 	return nil
 }
 

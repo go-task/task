@@ -104,9 +104,9 @@ func (e *Executor) compiledTask(call *ast.Call, evaluateShVars bool) (*ast.Task,
 	}
 
 	new.Env = &ast.Vars{}
-	new.Env.Merge(templater.ReplaceVars(e.Taskfile.Env, cache))
-	new.Env.Merge(templater.ReplaceVars(dotenvEnvs, cache))
-	new.Env.Merge(templater.ReplaceVars(origTask.Env, cache))
+	new.Env.Merge(templater.ReplaceVars(e.Taskfile.Env, cache), nil)
+	new.Env.Merge(templater.ReplaceVars(dotenvEnvs, cache), nil)
+	new.Env.Merge(templater.ReplaceVars(origTask.Env, cache), nil)
 	if evaluateShVars {
 		err = new.Env.Range(func(k string, v ast.Var) error {
 			// If the variable is not dynamic, we can set it and return

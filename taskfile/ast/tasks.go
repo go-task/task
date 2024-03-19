@@ -6,6 +6,7 @@ import (
 
 	"gopkg.in/yaml.v3"
 
+	"github.com/go-task/task/v3/internal/filepathext"
 	"github.com/go-task/task/v3/internal/omap"
 )
 
@@ -44,7 +45,7 @@ func (t *Tasks) FindMatchingTasks(call *Call) []*MatchingTask {
 	return matchingTasks
 }
 
-func (t1 *Tasks) Merge(t2 Tasks, include *Include) {
+func (t1 *Tasks) Merge(t2 Tasks, include *Include, includedTaskfileVars *Vars) {
 	_ = t2.Range(func(k string, v *Task) error {
 		// We do a deep copy of the task struct here to ensure that no data can
 		// be changed elsewhere once the taskfile is merged.
@@ -81,6 +82,15 @@ func (t1 *Tasks) Merge(t2 Tasks, include *Include) {
 					task.Aliases = append(task.Aliases, taskNameWithNamespace(alias, namespaceAlias))
 				}
 			}
+		}
+
+		if include.AdvancedImport {
+			task.Dir = filepathext.SmartJoin(include.Dir, task.Dir)
+			if task.IncludeVars == nil {
+				task.IncludeVars = &Vars{}
+			}
+			task.IncludeVars.Merge(include.Vars, nil)
+			task.IncludedTaskfileVars = includedTaskfileVars
 		}
 
 		// Add the task to the merged taskfile

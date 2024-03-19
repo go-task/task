@@ -45,11 +45,17 @@ func (vs *Vars) Range(f func(k string, v Var) error) error {
 }
 
 // Wrapper around OrderedMap.Merge to ensure we don't get nil pointer errors
-func (vs *Vars) Merge(other *Vars) {
+func (vs *Vars) Merge(other *Vars, include *Include) {
 	if vs == nil || other == nil {
 		return
 	}
-	vs.OrderedMap.Merge(other.OrderedMap)
+	other.Range(func(key string, value Var) error {
+		if include != nil && include.AdvancedImport {
+			value.Dir = include.Dir
+		}
+		vs.Set(key, value)
+		return nil
+	})
 }
 
 // Wrapper around OrderedMap.Len to ensure we don't get nil pointer errors
