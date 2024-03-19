@@ -7,8 +7,6 @@ import (
 	"github.com/dominikbraun/graph"
 	"github.com/dominikbraun/graph/draw"
 	"golang.org/x/sync/errgroup"
-
-	"github.com/go-task/task/v3/internal/filepathext"
 )
 
 type TaskfileGraph struct {
@@ -86,31 +84,6 @@ func (tfg *TaskfileGraph) Merge() (*Taskfile, error) {
 				include, ok := edge.Properties.Data.(Include)
 				if !ok {
 					return fmt.Errorf("task: Failed to get merge options")
-				}
-
-				// Handle advanced imports
-				// i.e. where additional data is given when a Taskfile is included
-				if include.AdvancedImport {
-					includedVertex.Taskfile.Vars.Range(func(k string, v Var) error {
-						o := v
-						o.Dir = include.Dir
-						includedVertex.Taskfile.Vars.Set(k, o)
-						return nil
-					})
-					includedVertex.Taskfile.Env.Range(func(k string, v Var) error {
-						o := v
-						o.Dir = include.Dir
-						includedVertex.Taskfile.Env.Set(k, o)
-						return nil
-					})
-					for _, task := range includedVertex.Taskfile.Tasks.Values() {
-						task.Dir = filepathext.SmartJoin(include.Dir, task.Dir)
-						if task.IncludeVars == nil {
-							task.IncludeVars = &Vars{}
-						}
-						task.IncludeVars.Merge(include.Vars)
-						task.IncludedTaskfileVars = vertex.Taskfile.Vars
-					}
 				}
 
 				// Merge the included Taskfile into the parent Taskfile

@@ -178,7 +178,7 @@ func run() error {
 
 	globals.Set("CLI_ARGS", ast.Var{Value: cliArgs})
 	globals.Set("CLI_FORCE", ast.Var{Value: flags.Force || flags.ForceAll})
-	e.Taskfile.Vars.Merge(globals)
+	e.Taskfile.Vars.Merge(globals, nil)
 
 	if !flags.Watch {
 		e.InterceptInterruptSignals()
