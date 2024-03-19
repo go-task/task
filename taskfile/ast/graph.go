@@ -55,11 +55,13 @@ func (tfg *TaskfileGraph) Merge() (*Taskfile, error) {
 		return nil, err
 	}
 
-	for i := len(hashes) - 1; i >= 0; i-- {
+	// Loop over each vertex in reverse topological order except for the root vertex.
+	// This gives us a loop over every included Taskfile in an order which is safe to merge.
+	for i := len(hashes) - 1; i > 0; i-- {
 		hash := hashes[i]
 
-		// Get the current vertex
-		vertex, err := tfg.Vertex(hash)
+		// Get the included vertex
+		includedVertex, err := tfg.Vertex(hash)
 		if err != nil {
 			return nil, err
 		}
@@ -67,21 +69,21 @@ func (tfg *TaskfileGraph) Merge() (*Taskfile, error) {
 		// Create an error group to wait for all the included Taskfiles to be merged with all its parents
 		var g errgroup.Group
 
-		// Loop over each adjacent edge
+		// Loop over edge that leads to a vertex that includes the current vertex
 		for _, edge := range predecessorMap[hash] {
 
 			// TODO: Enable goroutines
 			// Start a goroutine to process each included Taskfile
 			// g.Go(
 			err := func() error {
-				// Get the child vertex
-				predecessorVertex, err := tfg.Vertex(edge.Source)
+				// Get the base vertex
+				vertex, err := tfg.Vertex(edge.Source)
 				if err != nil {
 					return err
 				}
 
 				// Get the merge options
-				include, ok := edge.Properties.Data.(*Include)
+				include, ok := edge.Properties.Data.(Include)
 				if !ok {
 					return fmt.Errorf("task: Failed to get merge options")
 				}
@@ -89,19 +91,19 @@ func (tfg *TaskfileGraph) Merge() (*Taskfile, error) {
 				// Handle advanced imports
 				// i.e. where additional data is given when a Taskfile is included
 				if include.AdvancedImport {
-					vertex.Taskfile.Vars.Range(func(k string, v Var) error {
+					includedVertex.Taskfile.Vars.Range(func(k string, v Var) error {
 						o := v
 						o.Dir = include.Dir
-						vertex.Taskfile.Vars.Set(k, o)
+						includedVertex.Taskfile.Vars.Set(k, o)
 						return nil
 					})
-					vertex.Taskfile.Env.Range(func(k string, v Var) error {
+					includedVertex.Taskfile.Env.Range(func(k string, v Var) error {
 						o := v
 						o.Dir = include.Dir
-						vertex.Taskfile.Env.Set(k, o)
+						includedVertex.Taskfile.Env.Set(k, o)
 						return nil
 					})
-					for _, task := range vertex.Taskfile.Tasks.Values() {
+					for _, task := range includedVertex.Taskfile.Tasks.Values() {
 						task.Dir = filepathext.SmartJoin(include.Dir, task.Dir)
 						if task.IncludeVars == nil {
 							task.IncludeVars = &Vars{}
@@ -112,9 +114,9 @@ func (tfg *TaskfileGraph) Merge() (*Taskfile, error) {
 				}
 
 				// Merge the included Taskfile into the parent Taskfile
-				if err := predecessorVertex.Taskfile.Merge(
-					vertex.Taskfile,
-					include,
+				if err := vertex.Taskfile.Merge(
+					includedVertex.Taskfile,
+					&include,
 				); err != nil {
 					return err
 				}
