@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path"
+	"path/filepath"
 	"slices"
 	"strings"
 	"text/tabwriter"
@@ -71,11 +71,11 @@ func getEnvFilePath() string {
 	_ = fs.Parse(os.Args[1:])
 	// If the directory is set, find a .env file in that directory.
 	if dir != "" {
-		return path.Join(dir, ".env")
+		return filepath.Join(dir, ".env")
 	}
 	// If the taskfile is set, find a .env file in the directory containing the Taskfile.
 	if taskfile != "" {
-		return path.Join(path.Dir(taskfile), ".env")
+		return filepath.Join(filepath.Dir(taskfile), ".env")
 	}
 	// Otherwise just use the current working directory.
 	return ".env"
