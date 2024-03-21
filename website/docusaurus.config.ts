@@ -179,6 +179,16 @@ const config: Config = {
           ]
         },
         {
+          href: GITHUB_URL,
+          position: 'right',
+          className: "header-icon-link icon-github",
+        },
+        {
+          href: DISCORD_URL,
+          position: 'right',
+          className: "header-icon-link icon-discord",
+        },
+        {
           href: TWITTER_URL,
           position: 'right',
           className: "header-icon-link icon-twitter",
@@ -188,16 +198,6 @@ const config: Config = {
           rel: 'me',
           position: 'right',
           className: "header-icon-link icon-mastodon",
-        },
-        {
-          href: DISCORD_URL,
-          position: 'right',
-          className: "header-icon-link icon-discord",
-        },
-        {
-          href: GITHUB_URL,
-          position: 'right',
-          className: "header-icon-link icon-github",
         }
       ]
     },
