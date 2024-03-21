@@ -4,20 +4,20 @@ slug: /experiments/any-variables/
 
 # Any Variables
 
--   Issue: #1415
--   Environment variable: `TASK_X_ANY_VARIABLES=1`
--   Breaks:
-    -   Dynamically defined variables (using the `sh` keyword)
+- Issue: #1415
+- Environment variable: `TASK_X_ANY_VARIABLES=1`
+- Breaks:
+  - Dynamically defined variables (using the `sh` keyword)
 
 Currently, Task only supports string variables. This experiment allows you to
 specify and use the following variable types:
 
--   `string`
--   `bool`
--   `int`
--   `float`
--   `array`
--   `map`
+- `string`
+- `bool`
+- `int`
+- `float`
+- `array`
+- `map`
 
 This allows you to have a lot more flexibility in how you use variables in
 Task's templating engine. For example:

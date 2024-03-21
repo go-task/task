@@ -3,11 +3,11 @@ slug: /usage/
 sidebar_position: 3
 ---
 
-# 使い方
+# Usage
 
-## はじめに
+## Getting started
 
-プロジェクトのルートに`Taskfile.yml`というファイルを作成します。 `cmds`属性にはタスクのコマンドを記載する必要があります。 以下の例はGoアプリをコンパイルするタスクと、[esbuild](https://esbuild.github.io/)を使って複数のCSSファイルを結合・小さくして1つのファイルにするタスクがあります。
+Create a file called `Taskfile.yml` in the root of your project. The `cmds` attribute should contain the commands of a task. The example below allows compiling a Go app and uses [esbuild](https://esbuild.github.io/) to concat and minify multiple CSS files into a single one.
 
 ```yaml
 version: '3'
@@ -22,19 +22,19 @@ tasks:
       - esbuild --bundle --minify css/index.css > public/bundle.css
 ```
 
-タスクは以下のように簡単に実行できます:
+Running the tasks is as simple as running:
 
 ```bash
 task assets build
 ```
 
-Taskは[mvdan.cc/sh](https://mvdan.cc/sh/)というネイティブなGo shインタプリタを使用しています。 なのでsh/bashコマンドを書いても、Windowsのような`sh`や`bash`が無いような環境でも動かすことが可能です。 実行可能なファイルはOSからアクセスできる場所、もしくはPATH内にある必要があることを覚えておいてください。
+Task uses [mvdan.cc/sh](https://mvdan.cc/sh/), a native Go sh interpreter. So you can write sh/bash commands, and it will work even on Windows, where `sh` or `bash` are usually not available. Just remember any executable called must be available by the OS or in PATH.
 
-タスク名を省略すると、"default"が実行されます。
+If you omit a task name, "default" will be assumed.
 
-## サポートされているファイル名
+## Supported file names
 
-Taskは以下のような優先順位でファイルを探します:
+Task will look for the following file names, in order of priority:
 
 - Taskfile.yml
 - taskfile.yml
@@ -45,13 +45,13 @@ Taskは以下のような優先順位でファイルを探します:
 - Taskfile.dist.yaml
 - taskfile.dist.yaml
 
-`.dist`が存在する意図は、プロジェクトが1つの固定されたバージョン(`.dist`)を持つ一方で、個々のユーザーが`Taskfile.yml`を追加することでTaskfileを上書きできるようにすることです(個々が追加したTaskfileは`.gitignore`に追加されている)
+The intention of having the `.dist` variants is to allow projects to have one committed version (`.dist`) while still allowing individual users to override the Taskfile by adding an additional `Taskfile.yml` (which would be on `.gitignore`).
 
-### サブディレクトリからTaskfileを実行する
+### Running a Taskfile from a subdirectory
 
-カレントワーキングディレクトリからTaskfileが見つからなかったときは、見つかるまでファイルツリーを走査します(`git`の動きに似ています)。 このようにタスクをサブディレクトリで実行すると、Taskfileがあるディレクトリから実行したかのように動きます。
+If a Taskfile cannot be found in the current working directory, it will walk up the file tree until it finds one (similar to how `git` works). When running Task from a subdirectory like this, it will behave as if you ran it from the directory containing the Taskfile.
 
-このような機能を特別な`{{.USER_WORKING_DIR}}`変数を使うことで、非常に便利で再利用可能なタスクを作成できます。 例えば、各マイクロサービスごとのディレクトリがあるモノリポがある場合、同じ内容の複数のタスクやTaskfileを作らずに、マイクロサービスのディレクトリに`cd`で移動し、タスクコマンドを実行することができます。 例:
+You can use this functionality along with the special `{{.USER_WORKING_DIR}}` variable to create some very useful reusable tasks. For example, if you have a monorepo with directories for each microservice, you can `cd` into a microservice directory and run a task command to bring it up without having to create multiple tasks or Taskfiles with identical content. For example:
 
 ```yaml
 version: '3'
@@ -65,19 +65,19 @@ tasks:
       - docker-compose up -d
 ```
 
-上記の例では、`cd <service>`と`task up`を実行すると、`<service>`ディレクトリに`docker-copmose.yml`があれば、Docker compositionが立ち上がります。
+In this example, we can run `cd <service>` and `task up` and as long as the `<service>` directory contains a `docker-compose.yml`, the Docker composition will be brought up.
 
-### グローバルなTaskfileを実行する
+### Running a global Taskfile
 
-`--global` (エイリアス `-g`) フラグと一緒にTaskを実行すると、ワーキングディレクトリの代わりにホームディレクトリからTaskfileを探します。 つまり、Taskは`$HOME/{T,t}askfile.{yml,yaml}`にマッチするファイルを探します。
+If you call Task with the `--global` (alias `-g`) flag, it will look for your home directory instead of your working directory. In short, Task will look for a Taskfile that matches `$HOME/{T,t}askfile.{yml,yaml}` .
 
-これはシステム内のどこからでも自動化処理を実行可能にする便利な機能です！
+This is useful to have automation that you can run from anywhere in your system!
 
 :::info
 
-グローバルなTaskfileを`-g`で実行するとき、タスクはワーキンクディレクトリではなく、デフォルトでは`$HOME`ディレクトリで実行されます！
+When running your global Taskfile with `-g`, tasks will run on `$HOME` by default, and not on your working directory!
 
-前述したように、`{{.USER_WORKING_DIR}}`という特別な変数は非常に便利で、`task -g`を呼び出しているディレクトリで実行させることができます。
+As mentioned in the previous section, the `{{.USER_WORKING_DIR}}` special variable can be very handy here to run stuff on the directory you're calling `task -g` from.
 
 ```yaml
 version: '3'
@@ -95,11 +95,11 @@ tasks:
 
 :::
 
-## 環境変数
+## Environment variables
 
-### タスク
+### Task
 
-`env`を使用して特定のタスクにカスタム環境変数を設定できます:
+You can use `env` to set custom environment variables for a specific task:
 
 ```yaml
 version: '3'
@@ -112,7 +112,7 @@ tasks:
       GREETING: Hey, there!
 ```
 
-また、すべてのタスクに適用できるグローバルな環境変数を設定することもできます:
+Additionally, you can set global environment variables that will be available to all tasks:
 
 ```yaml
 version: '3'
@@ -128,13 +128,13 @@ tasks:
 
 :::info
 
-`env`は変数と同様に、シェルコマンドからの出力を取得して展開することが可能です。詳細は[変数](#variables)セクションを参照してください。
+`env` supports expansion and retrieving output from a shell command just like variables, as you can see in the [Variables](#variables) section.
 
 :::
 
-### .envファイル
+### .env files
 
-`dotenv:`設定を使用してTaskに`.env`のようなファイルを読み込ませることもできます:
+You can also ask Task to include `.env` like files by using the `dotenv:` setting:
 
 ```bash title=".env"
 KEYNAME=VALUE
@@ -158,7 +158,7 @@ tasks:
       - echo "Using $KEYNAME and endpoint $ENDPOINT"
 ```
 
-dotenvファイルはタスクレベルでも使用可能です:
+Dotenv files can also be specified at the task level:
 
 ```yaml
 version: '3'
@@ -173,7 +173,7 @@ tasks:
       - echo "Using $KEYNAME and endpoint $ENDPOINT"
 ```
 
-タスクレベルで明示的に定義された環境変数は、dotenvで読み込んだ変数を上書きします:
+Environment variables specified explicitly at the task-level will override variables defined in dotfiles:
 
 ```yaml
 version: '3'
@@ -192,13 +192,13 @@ tasks:
 
 :::info
 
-インクルードされたTaskfile内では、`dotenv`設定が現在は使えないことに注意してください。
+Please note that you are not currently able to use the `dotenv` key inside included Taskfiles.
 
 :::
 
-## 他のTaskfileをインクルードする
+## Including other Taskfiles
 
-異なるプロジェクト(Taskfile)間でタスクを共有したい場合、`includes`キーワードを利用して他のTaskfileをインクルードするためのインポートメカニズムを利用できます。
+If you want to share tasks between different projects (Taskfiles), you can use the importing mechanism to include other Taskfiles using the `includes` keyword:
 
 ```yaml
 version: '3'
@@ -208,13 +208,13 @@ includes:
   docker: ./DockerTasks.yml
 ```
 
-指定されたTaskfileに記述されたタスクは、指定された名前空間で利用できるようになります。 なので、`documentation/Taskfile.yml`から`serve`タスクを実行するには、`task docs:serve`を呼び、`DockerTasks.yml`から`build`タスクを実行するには、`task docker:build`を呼び出します。
+The tasks described in the given Taskfiles will be available with the informed namespace. So, you'd call `task docs:serve` to run the `serve` task from `documentation/Taskfile.yml` or `task docker:build` to run the `build` task from the `DockerTasks.yml` file.
 
-相対パスはインクルードするTaskfileが含まれているディレクトリに対して解決されます。
+Relative paths are resolved relative to the directory containing the including Taskfile.
 
-### OS固有のTaskfile
+### OS-specific Taskfiles
 
-`version: '2'`では、taskは`Taskfile_{{OS}}.yml`が存在する場合、自動的にインクルードします。(例えば:  `Taskfile_windows.yml`、`Taskfile_linux.yml`、`Taskfile_darwin.yml`など) この挙動は少し分かりづらかったため、バージョン3で削除されましたが、これらのファイルを明示的にインポートすることで同様の挙動を持たせることができます。
+With `version: '2'`, task automatically includes any `Taskfile_{{OS}}.yml` if it exists (for example: `Taskfile_windows.yml`, `Taskfile_linux.yml` or `Taskfile_darwin.yml`). Since this behavior was a bit too implicit, it was removed on version 3, but you still can have a similar behavior by explicitly importing these files:
 
 ```yaml
 version: '3'
@@ -223,9 +223,9 @@ includes:
   build: ./Taskfile_{{OS}}.yml
 ```
 
-### インクルードされたTaskfileのディレクトリ
+### Directory of included Taskfile
 
-デフォルトでは、インクルードされたTaskfileのタスクは、Taskfileが別のディレクトリにあったとしても、現在のディレクトリで実行されます。 ですが、代替構文を利用することで、強制的にタスクを別のディレクトリで実行させることができます:
+By default, included Taskfile's tasks are run in the current directory, even if the Taskfile is in another directory, but you can force its tasks to run in another directory by using this alternative syntax:
 
 ```yaml
 version: '3'
@@ -238,13 +238,13 @@ includes:
 
 :::info
 
-インクルードされるTaskfileは、メインのTaskfileが使用しているスキーマバージョンと同様のものである必要があります。
+The included Taskfiles must be using the same schema version as the main Taskfile uses.
 
 :::
 
-### 任意のインクルード
+### Optional includes
 
-オプショナルとしてマークされたインクルードは、インクルードされるファイルが見つからない場合でも、タスクの実行を通常通り続行させます。
+Includes marked as optional will allow Task to continue execution as normal if the included file is missing.
 
 ```yaml
 version: '3'
@@ -261,9 +261,9 @@ tasks:
         ./tests/Taskfile.yml does not exist"
 ```
 
-### 内部のインクルード
+### Internal includes
 
-インターナルとしてマークされたインクルードは、インクルードされるファイルの全てのタスクもインターナルとします(下記の [インターナルタスク](#internal-tasks)セクションを参照)。 これはユーザーが直接使用することを意図していないユーティリティタスクをインクルードする際に便利です。
+Includes marked as internal will set all the tasks of the included file to be internal as well (see the [Internal tasks](#internal-tasks) section below). This is useful when including utility tasks that are not intended to be used directly by the user.
 
 ```yaml
 version: '3'
@@ -274,9 +274,9 @@ includes:
     internal: true
 ```
 
-### インクルードされるTaskfileの変数
+### Vars of included Taskfiles
 
-Taskfileをインクルードする際に変数を使用することもできます。 これは一度に複数回インクルードするような再利用可能なTaskfileを持つのに便利です。
+You can also specify variables when including a Taskfile. This may be useful for having reusable Taskfile that can be tweaked or even included more than once:
 
 ```yaml
 version: '3'
@@ -293,9 +293,9 @@ includes:
       DOCKER_IMAGE: frontend_image
 ```
 
-### ネームスペースのエイリアス
+### Namespace aliases
 
-Taskfileをインクルードする際は、ネームスペースに`エイリアス`のリストを渡すことができます。 これは[タスクエイリアス](#task-aliases)と同じように機能し、短くてタイプしやすいコマンドを使用するために一緒に使うことができます。
+When including a Taskfile, you can give the namespace a list of `aliases`. This works in the same way as [task aliases](#task-aliases) and can be used together to create shorter and easier-to-type commands.
 
 ```yaml
 version: '3'
@@ -308,13 +308,13 @@ includes:
 
 :::info
 
-インクルードされたTaskfileで宣言された変数は、インクルードしているTaskfile内の変数よりも優先されます！ インクルードされたTaskfileの変数を上書き可能にしたい場合は、[default関数](https://go-task.github.io/slim-sprig/defaults.html)を使用してください: `MY_VAR: '{{.MY_VAR | default "my-default-value"}}'`。
+Vars declared in the included Taskfile have preference over the variables in the including Taskfile! If you want a variable in an included Taskfile to be overridable, use the [default function](https://go-task.github.io/slim-sprig/defaults.html): `MY_VAR: '{{.MY_VAR | default "my-default-value"}}'`.
 
 :::
 
-## インターナルタスク
+## Internal tasks
 
-内部タスクはユーザーが直接呼び出すことができないタスクです。 `task --list|--list-all`を実行したときの出力に表示されません。 他のタスクは通常通り内部タスクを呼び出すことができます。 これはコマンドライン上で明確な用途を持たないが、再利用可能で関数のようなタスクを作成するのに便利です。
+Internal tasks are tasks that cannot be called directly by the user. They will not appear in the output when running `task --list|--list-all`. Other tasks may call internal tasks in the usual way. This is useful for creating reusable, function-like tasks that have no useful purpose on the command line.
 
 ```yaml
 version: '3'
@@ -332,9 +332,9 @@ tasks:
       - docker build -t {{.DOCKER_IMAGE}} .
 ```
 
-## タスクディレクトリ
+## Task directory
 
-デフォルトでは、タスクはTaskfileが配置されているディレクトリで実行されます。 ですが、`dir:`を指定することでタスクを簡単に別のディレクトリで実行させることができます。
+By default, tasks will be executed in the directory where the Taskfile is located. But you can easily make the task run in another folder, informing `dir`:
 
 ```yaml
 version: '3'
@@ -347,13 +347,13 @@ tasks:
       - caddy
 ```
 
-ディレクトリが存在しない場合、`task`が作成します。
+If the directory does not exist, `task` creates it.
 
-## タスクの依存関係
+## Task dependencies
 
-> 依存関係は並列して実行されるため、実行されるタスクの依存関係が互いに依存しないようにする必要があります。 もしタスクを逐次実行するようにしたい場合は、下記の[別のタスクを呼び出す](#calling-another-task)セクションを参照してください。
+> Dependencies run in parallel, so dependencies of a task should not depend one another. If you want to force tasks to run serially, take a look at the [Calling Another Task](#calling-another-task) section below.
 
-他のタスクに依存するタスクがあるかもしれません。 `deps`にそれらを指定することで、親タスクを実行する前に自動で実行されるようになります。
+You may have tasks that depend on others. Just pointing them on `deps` will make them run automatically before running the parent task:
 
 ```yaml
 version: '3'
@@ -369,9 +369,9 @@ tasks:
       - esbuild --bundle --minify css/index.css > public/bundle.css
 ```
 
-上記の例では、`task build`を実行すると、`assets`は常に`build`前に実行されます。
+In the above example, `assets` will always run right before `build` if you run `task build`.
 
-タスクは、自身のコマンドを持たずに、グループ化するためだけの依存関係のみを持たせることができます。
+A task can have only dependencies and no commands to group tasks together:
 
 ```yaml
 version: '3'
@@ -389,15 +389,15 @@ tasks:
       - esbuild --bundle --minify css/index.css > public/bundle.css
 ```
 
-依存関係が複数ある場合、常に並列で実行されることでパフォーマンスが向上します。
+If there is more than one dependency, they always run in parallel for better performance.
 
 :::tip
 
-コマンドラインで`--parallel`フラグ(エイリアス `-p`)を使用して、指定されたタスクを並列して実行することができます。 例: `task --parallel js css`。
+You can also make the tasks given by the command line run in parallel by using the `--parallel` flag (alias `-p`). Example: `task --parallel js css`.
 
 :::
 
-依存関係に情報を渡したい場合は、[別のタスクを呼び出す](#calling-another-task)のと同じ方法で行うことができます。
+If you want to pass information to dependencies, you can do that the same manner as you would to [call another task](#calling-another-task):
 
 ```yaml
 version: '3'
@@ -418,13 +418,13 @@ tasks:
       - echo {{.TEXT}}
 ```
 
-## プラットフォーム固有のタスクとコマンド
+## Platform specific tasks and commands
 
-タスクの実行を明示的なプラットフォームに制限したい場合は、`platforms:`キーを使用することができます。 タスクは特定のOS、アーキテクチャ、またはその両方の組み合わせに制限させることができます。 一致しない場合、タスクまたはコマンドはスキップされ、エラーは発生しません。
+If you want to restrict the running of tasks to explicit platforms, this can be achieved using the `platforms:` key. Tasks can be restricted to a specific OS, architecture or a combination of both. On a mismatch, the task or command will be skipped, and no error will be thrown.
 
-OSまたはArchとして許可されている値は[ここ](https://github.com/golang/go/blob/master/src/go/build/syslist.go)でGo言語によって定義されている有効な`GOOS`と`GOARCH`の値らです。
+The values allowed as OS or Arch are valid `GOOS` and `GOARCH` values, as defined by the Go language [here](https://github.com/golang/go/blob/master/src/go/build/syslist.go).
 
-以下の`build-windows`タスクはWindowsと任意のアーキテクチャで実行されます:
+The `build-windows` task below will run only on Windows, and on any architecture:
 
 ```yaml
 version: '3'
@@ -436,7 +436,7 @@ tasks:
       - echo 'Running command on Windows'
 ```
 
-以下のように特定のアーキテクチャに制限することもできます:
+This can be restricted to a specific architecture as follows:
 
 ```yaml
 version: '3'
@@ -448,7 +448,7 @@ tasks:
       - echo 'Running command on Windows (amd64)'
 ```
 
-また、特定のアーキテクチャのみに制限することも可能です:
+It is also possible to restrict the task to specific architectures:
 
 ```yaml
 version: '3'
@@ -460,7 +460,7 @@ tasks:
       - echo 'Running command on amd64'
 ```
 
-複数のプラットフォームは以下のように指定できます:
+Multiple platforms can be specified as follows:
 
 ```yaml
 version: '3'
@@ -472,7 +472,7 @@ tasks:
       - echo 'Running command on Windows (amd64) and macOS'
 ```
 
-それぞれのコマンドも特定のプラットフォームに制限することが可能です:
+Individual commands can also be restricted to specific platforms:
 
 ```yaml
 version: '3'
@@ -485,9 +485,9 @@ tasks:
       - cmd: echo 'Running on all platforms'
 ```
 
-## 別のタスクを呼び出す
+## Calling another task
 
-タスクに多くの依存関係がある場合、依存しているものは同時に実行されます。 これによりビルドパイプラインが速くなります。 しかし、状況によっては、他のタスクを順番に呼び出したケースがあるかもしれません。 その場合、以下の構文を使用してください:
+When a task has many dependencies, they are executed concurrently. This will often result in a faster build pipeline. However, in some situations, you may need to call other tasks serially. In this case, use the following syntax:
 
 ```yaml
 version: '3'
@@ -508,7 +508,7 @@ tasks:
       - echo "Another task"
 ```
 
-`vars`属性で変数をを渡すことができ、`silent`属性で[サイレントモード](#silent-mode)を切り替えることができます:
+Using the `vars` and `silent` attributes you can choose to pass variables and toggle [silent mode](#silent-mode) on a call-by-call basis:
 
 ```yaml
 version: '3'
@@ -527,19 +527,19 @@ tasks:
         silent: true
 ```
 
-上記の構文は`deps`属性でもサポートされています。
+The above syntax is also supported in `deps`.
 
 :::tip
 
-[他のTaskfileをインクルードする](#including-other-taskfiles)でルートにあるTaskfileをインクルードしていて、そこに定義されたタスクを呼び出したい場合、以下のように先頭に`:`を付け加えてください。 `task: :task-name`。
+NOTE: If you want to call a task declared in the root Taskfile from within an [included Taskfile](#including-other-taskfiles), add a leading `:` like this: `task: :task-name`.
 
 :::
 
-## 不必要な作業を防止する
+## Prevent unnecessary work
 
-### ローカルで生成されたファイルとそのソースにフィンガープリントを付与することで防止する
+### By fingerprinting locally generated files and their sources
 
-ローカルで生成されたファイルとそのソースのフィンガープリントを取ることで タスクがそれらを実行する必要がない場合には、実行しないようにすることができます。
+If a task generates something, you can inform Task the source and generated files, so Task will prevent running them if not necessary.
 
 ```yaml
 version: '3'
@@ -567,9 +567,9 @@ tasks:
       - public/bundle.css
 ```
 
-`sources` と `generates` は files または glob パターンになります。 指定されたとき、Task は ソースファイルのチェックサムを比較して、タスクを 実行する必要があるかどうかを判断します。 そうでない場合は、 `Task "js" is up to date` のようなメッセージを表示します。
+`sources` and `generates` can be files or glob patterns. When given, Task will compare the checksum of the source files to determine if it's necessary to run the task. If not, it will just print a message like `Task "js" is up to date`.
 
-`exclude:` は、フィンガープリントからファイルを除外するためにも使用できます。 ソースは順番に評価されるので、glob を設定した後に `exclude:` を設定する必要があります。
+`exclude:` can also be used to exclude files from fingerprinting. Sources are evaluated in order, so `exclude:` must come after the positive glob it is negating.
 
 ```yaml
 version: '3'
@@ -583,7 +583,7 @@ tasks:
       - public/bundle.css
 ```
 
-これらのチェックをファイルの変更タイムスタンプで行いたい場合は、チェックサム(内容) の代わりに タイムスタンプを使用してください。 `method`プロパティを `timestamp`に設定します。
+If you prefer these check to be made by the modification timestamp of the files, instead of its checksum (content), just set the `method` property to `timestamp`.
 
 ```yaml
 version: '3'
@@ -599,13 +599,13 @@ tasks:
     method: timestamp
 ```
 
-より柔軟性が必要な状況では、 `status` キーワードを使用することができます。 両方を組み合わせることもできます。 例については、[status](#using-programmatic-checks-to-indicate-a-task-is-up-to-date) のドキュメント をご覧ください。
+In situations where you need more flexibility the `status` keyword can be used. You can even combine the two. See the documentation for [status](#using-programmatic-checks-to-indicate-a-task-is-up-to-date) for an example.
 
 :::info
 
-デフォルトでは、タスクはプロジェクトのローカルディレクトリ `.task`にチェックサムを保存します。 ほとんどの場合、これを`.gitignore` (または同等のもの) に含めてコミットしないようにします。 (コード生成のタスクについては、そのタスクのチェックサムもコミットすることが合理的かもしれません)
+By default, task stores checksums on a local `.task` directory in the project's directory. Most of the time, you'll want to have this directory on `.gitignore` (or equivalent) so it isn't committed. (If you have a task for code generation that is committed it may make sense to commit the checksum of that task as well, though).
 
-これらのファイルを別のディレクトリに格納したい場合は、マシン上で `TASK_TEMP_DIR` 環境変数を設定できます。 環境変数は、プロジェクトディレクトリを基準とした相対パス`tmp/task`または絶対パスまたはホームディレクトリ `/tmp/.task` または `~/.task`を設定することができます。(各プロジェクト用のサブディレクトリが作成されます)
+If you want these files to be stored in another directory, you can set a `TASK_TEMP_DIR` environment variable in your machine. It can contain a relative path like `tmp/task` that will be interpreted as relative to the project directory, or an absolute or home path like `/tmp/.task` or `~/.task` (subdirectories will be created for each project).
 
 ```bash
 export TASK_TEMP_DIR='~/.task'
@@ -615,27 +615,27 @@ export TASK_TEMP_DIR='~/.task'
 
 :::info
 
-各タスクには、その`sources`のために保存されるチェックサムが1つだけあります。 タスクをその入力値で区別したい場合は、それらの変数をタスクのラベルの一部として追加することが可能です。そのタスクは異なるタスクと見なされます。
+Each task has only one checksum stored for its `sources`. If you want to distinguish a task by any of its input variables, you can add those variables as part of the task's label, and it will be considered a different task.
 
-これは、ソースが実際に変更されるまでに、それぞれの異なる入力セットごとにタスクを1回実行したい場合に便利です。 たとえば、ソースが変数の値に依存する場合や、ソースが変更されていなくてもいくつかの引数が変更された場合にタスクを再実行したい場合などです。
+This is useful if you want to run a task once for each distinct set of inputs until the sources actually change. For example, if the sources depend on the value of a variable, or you if you want the task to rerun if some arguments change even if the source has not.
 
 :::
 
 :::tip
 
-`none` メソッドは、すべての検証をスキップして常にタスクを実行します。
+The method `none` skips any validation and always run the task.
 
 :::
 
 :::info
 
-`checksum` (デフォルト) または`timestamp` 方式を使用するには、ソースファイルを指定するだけで十分です。 `timestamp` 方式を使用する場合、タスクが最後に実行された時間を基準にします。
+For the `checksum` (default) or `timestamp` method to work, it is only necessary to inform the source files. When the `timestamp` method is used, the last time of the running the task is considered as a generate.
 
 :::
 
-### プログラムチェックを使用してタスクが最新であることを示す
+### Using programmatic checks to indicate a task is up to date
 
-あるいは、プログラムによる一連のテストを`status`として指定することができます。 エラーが 返されない場合(終了ステータス0)、タスクは最新のものと見なされます。
+Alternatively, you can inform a sequence of tests as `status`. If no error is returned (exit status 0), the task is considered up-to-date:
 
 ```yaml
 version: '3'
@@ -653,19 +653,19 @@ tasks:
       - test -f directory/file2.txt
 ```
 
-通常は、`sources` と`generates` を組み合わせて使用しますが、リモートアーティファクト(Dockerイメージ、デプロイ、CDリリースなど)を生成するタスクの場合、チェックサムソースとタイムスタンプは直接リモートのアーティファクトへアクセスするか `.checksum`にあるフィンガープリントファイルを別の方法で更新する必要があります。
+Normally, you would use `sources` in combination with `generates` - but for tasks that generate remote artifacts (Docker images, deploys, CD releases) the checksum source and timestamps require either access to the artifact or for an out-of-band refresh of the `.checksum` fingerprint file.
 
-`status`コマンド内で `{{.CHECKSUM}}`と`{{.TIMESTAMP}}`という2つの特別な変数が利用可能ですが、これはソースをフィンガープリントする方法に応じて変わります。 `source` のglobだけがフィンガープリントされます。
+Two special variables `{{.CHECKSUM}}` and `{{.TIMESTAMP}}` are available for interpolation within `status` commands, depending on the method assigned to fingerprint the sources. Only `source` globs are fingerprinted.
 
-Note `{{.TIMESTAMP}}` 変数は実際の動作中のGo言語の`time.Time`構造体であり、`time.Time`が提供するメソッドを使用して、様々な形式で時刻をフォーマットすることができます。
+Note that the `{{.TIMESTAMP}}` variable is a "live" Go `time.Time` struct, and can be formatted using any of the methods that `time.Time` responds to.
 
-より詳しい情報は [the Go Time documentation](https://golang.org/pkg/time/) を参照してください。
+See [the Go Time documentation](https://golang.org/pkg/time/) for more information.
 
-タスクが最新であっても強制的に実行したい場合は、`--force` または `-f`を使用できます。
+You can use `--force` or `-f` if you want to force a task to run even when up-to-date.
 
-また、`task --status [tasks]...` は、いずれかのタスクが最新でない場合、０以外の終了コードで終了します。
+Also, `task --status [tasks]...` will exit with a non-zero exit code if any of the tasks are not up-to-date.
 
-`status` は、ソース/生成されたアーティファクトが変更された場合、またはプログラムチェックに失敗した場合にタスクを実行するために、[fingerprinting](#by-fingerprinting-locally-generated-files-and-their-sources)と組み合わせることができます。
+`status` can be combined with the [fingerprinting](#by-fingerprinting-locally-generated-files-and-their-sources) to have a task run if either the the source/generated artifacts changes, or the programmatic check fails:
 
 ```yaml
 version: '3'
@@ -687,9 +687,9 @@ tasks:
       - grep -q '"dev": false' ./vendor/composer/installed.json
 ```
 
-### プログラムチェックを使用してタスクとその依存関係の実行をキャンセルする
+### Using programmatic checks to cancel the execution of a task and its dependencies
 
-`status` チェックに加えて`preconditions`チェックもあります。これは、`status` チェックの論理的な逆になります。 つまり、_true_ になる特定の条件セットが必要な場合は、 `preconditions` スタンザを使用できます。 `preconditions` は `status` 行に似ていますが、異なる点は、 `sh` 展開をサポートしており、すべての条件が0を返すことを推奨しています。
+In addition to `status` checks, `preconditions` checks are the logical inverse of `status` checks. That is, if you need a certain set of conditions to be _true_ you can use the `preconditions` stanza. `preconditions` are similar to `status` lines, except they support `sh` expansion, and they SHOULD all return 0.
 
 ```yaml
 version: '3'
@@ -707,11 +707,11 @@ tasks:
         msg: "One doesn't equal Zero, Halting"
 ```
 
-Preconditionsは、 `msg`フィールドを使用して、ユーザーにどのステップを踏むべきか具体的な失敗メッセージを設定できます。
+Preconditions can set specific failure messages that can tell a user what steps to take using the `msg` field.
 
-あるタスクがサブタスクに依存しており、そのサブタスクのpreconditionが満たされていない場合 - 呼び出し元のタスクは失敗します。 Note preconditionに失敗したタスクは、 `--force`が与えられない限り実行されません。
+If a task has a dependency on a sub-task with a precondition, and that precondition is not met - the calling task will fail. Note that a task executed with a failing precondition will not run unless `--force` is given.
 
-`status`は最新であればタスクをスキップし、それに依存するタスクの実行を続けますが、`precondition`はタスクを失敗させ、それに依存する他のタスクも失敗させます。
+Unlike `status`, which will skip a task if it is up to date and continue executing tasks that depend on it, a `precondition` will fail a task, along with any other tasks that depend on it.
 
 ```yaml
 version: '3'
@@ -731,15 +731,15 @@ tasks:
       - echo "I will not run"
 ```
 
-### タスクの実行タイミングを制限する
+### Limiting when tasks run
 
-複数の`cmds` や複数の `deps`によって実行されるタスクがある場合、`run`を使用して実行タイミングを制御できます。 `run`はTaskfileのルートに設定して、明示的に上書きされない限り、すべてのタスクの振る舞いを変更することもできます。
+If a task executed by multiple `cmds` or multiple `deps` you can control when it is executed using `run`. `run` can also be set at the root of the Taskfile to change the behavior of all the tasks unless explicitly overridden.
 
-`run` でサポートされている値
+Supported values for `run`:
 
-- `always` (default) 以前の実行回数に関わらず、常にタスクを呼び出すことを試みます
-- `once` 参照回数に関わらず、このタスクを一度だけ呼び出します
-- `when_changed` タスクに渡される変数のユニークなセットごとに、タスクを一度だけ呼び出します
+- `always` (default) always attempt to invoke the task regardless of the number of previous executions
+- `once` only invoke this task once regardless of the number of references
+- `when_changed` only invokes the task once for each unique set of variables passed into the task
 
 ```yaml
 version: '3'
@@ -767,28 +767,28 @@ tasks:
       - sleep 5 # long operation like installing packages
 ```
 
-### 必要な変数が設定されていることを確認する
+### Ensuring required variables are set
 
-特定の変数がタスクの実行前に設定されていることを確認したい場合、`requires`を使用できます。 これは、ユーザーがどの変数が必要か明確でない場合や、必要なものが何かを明確に伝えたい場合に役立ちます。 また、一部のタスクは、未設定の変数で実行されると危険な副作用が発生する可能性があります。
+If you want to check that certain variables are set before running a task then you can use `requires`. This is useful when might not be clear to users which variables are needed, or if you want clear message about what is required. Also some tasks could have dangerous side effects if run with un-set variables.
 
-`requires` を使用すると、 `requires` の下の`vars`サブセクション内に文字列の配列を指定できます。これらの文字列は、タスクの実行前にチェックされる変数名です。 いずれかの変数が設定されていない場合、タスクはエラーとなり実行されません。
+Using `requires` you specify an array of strings in the `vars` sub-section under `requires`, these strings are variable names which are checked prior to running the task. If any variables are un-set the the task will error and not run.
 
-環境変数もチェックされます。
+Environmental variables are also checked.
 
-構文
+Syntax:
 
 ```yaml
 requires:
-  vars: [] # 文字列の配列
+  vars: [] # Array of strings
 ```
 
 :::note
 
-長さゼロの空文字列に設定された変数は、 `requires` チェックを通過します。
+Variables set to empty zero length strings, will pass the `requires` check.
 
 :::
 
-`requires`の使用例:
+Example of using `requires`:
 
 ```yaml
 version: '3'
@@ -798,12 +798,12 @@ tasks:
     cmds:
       - 'docker build . -t {{.IMAGE_NAME}}:{{.IMAGE_TAG}}'
 
-    # 実行前にこれらの変数が設定されていることを確認してください
+    # Make sure these variables are set before running
     requires:
       vars: [IMAGE_NAME, IMAGE_TAG]
 ```
 
-## 変数
+## Variables
 
 When doing interpolation of variables, Task will look for the below. They are listed below in order of importance (i.e. most important first):
 
@@ -1033,11 +1033,11 @@ tasks:
       - echo 'bar'
 ```
 
-## CLI引数をコマンドにフォワード
+## Forwarding CLI arguments to commands
 
-CLIで`--`が渡されると、次に続く全てのパラメータが、`.CLI_ARGS`という特別な変数に追加されます。 これは引数を別のコマンドにフォワードするのに便利です。
+If `--` is given in the CLI, all following parameters are added to a special `.CLI_ARGS` variable. This is useful to forward arguments to another command.
 
-以下の例では`yarn install`を実行します。
+The below example will run `yarn install`.
 
 ```bash
 $ task yarn -- install
@@ -1052,7 +1052,7 @@ tasks:
       - yarn {{.CLI_ARGS}}
 ```
 
-## `defer`を使ったタスクのクリーンアップ
+## Doing task cleanup with `defer`
 
 With the `defer` keyword, it's possible to schedule cleanup to be run once the task finishes. The difference with just putting it as the last command is that this command will run even when the task fails.
 
@@ -1090,7 +1090,7 @@ Due to the nature of how the [Go's own `defer` work](https://go.dev/tour/flowcon
 
 :::
 
-## Goのテンプレートエンジン
+## Go's template engine
 
 Task parse commands as [Go's template engine][gotemplate] before executing them. Variables are accessible through dot syntax (`.VARNAME`).
 
@@ -1117,7 +1117,7 @@ Task also adds the following functions:
 - `shellQuote`: Quotes a string to make it safe for use in shell scripts. Task uses [this Go function](https://pkg.go.dev/mvdan.cc/sh/v3@v3.4.0/syntax#Quote) for this. The Bash dialect is assumed.
 - `splitArgs`: Splits a string as if it were a command's arguments. Task uses [this Go function](https://pkg.go.dev/mvdan.cc/sh/v3@v3.4.0/shell#Fields)
 
-例:
+Example:
 
 ```yaml
 version: '3'
@@ -1142,9 +1142,9 @@ tasks:
         {{end}}EOF
 ```
 
-## ヘルプ
+## Help
 
-`task --list`(または`task -l`)を実行すると、説明付きで全てのタスクが一覧表示されます。 Taskfileの例:
+Running `task --list` (or `task -l`) lists all tasks with a description. The following Taskfile:
 
 ```yaml
 version: '3'
@@ -1169,18 +1169,18 @@ tasks:
       - esbuild --bundle --minify css/index.css > public/bundle.css
 ```
 
-上記のTaskfileの場合、以下のような出力が表示されます:
+would print the following output:
 
 ```bash
 * build:   Build the go binary.
 * test:    Run all the go tests.
 ```
 
-全てのタスクを見たい場合は、`--list-all`(エイリアス `-a`)のフラグを使用してください。
+If you want to see all tasks, there's a `--list-all` (alias `-a`) flag as well.
 
-## タスクの概要を表示する
+## Display summary of task
 
-`task --summary task-name`を実行することでタスクの概要が表示されます。 Taskfileの例:
+Running `task --summary task-name` will show a summary of a task. The following Taskfile:
 
 ```yaml
 version: '3'
@@ -1201,7 +1201,7 @@ tasks:
       - your-build-tool
 ```
 
-`task --summary release`を実行することで、以下のように出力されます:
+with running `task --summary release` would print the following output:
 
 ```
 task: release
@@ -1218,11 +1218,11 @@ commands:
  - your-release-tool
 ```
 
-summaryがない場合はdescriptionが表示されます。 summaryもdescriptionもない場合は警告が表示されます。
+If a summary is missing, the description will be printed. If the task does not have a summary or a description, a warning is printed.
 
-注意: _概要を表示するときはコマンドは実行されません_。
+Please note: _showing the summary will not execute the command_.
 
-## タスクのエイリアス
+## Task aliases
 
 Aliases are alternative names for tasks. They can be used to make it easier and quicker to run tasks with long or hard-to-type names. You can use them on the command line, when [calling sub-tasks](#calling-another-task) in your Taskfile and when [including tasks](#including-other-taskfiles) with aliases from another Taskfile. They can also be used together with [namespace aliases](#namespace-aliases).
 
@@ -1241,7 +1241,7 @@ tasks:
       - echo "generating..."
 ```
 
-## タスク名の上書き
+## Overriding task name
 
 Sometimes you may want to override the task name printed on the summary, up-to-date messages to STDOUT, etc. In this case, you can just set `label:`, which can also be interpolated with variables:
 
@@ -1263,7 +1263,7 @@ tasks:
       - echo "{{.MESSAGE}}"
 ```
 
-## 警告プロンプト
+## Warning Prompts
 
 Warning Prompts are used to prompt a user for confirmation before a task is executed.
 
@@ -1317,7 +1317,7 @@ Tasks with prompts always fail by default on non-terminal environments, like a C
 
 :::
 
-## サイレントモード
+## Silent mode
 
 Silent mode disables the echoing of commands before Task runs it. For the following Taskfile:
 
@@ -1395,13 +1395,13 @@ tasks:
       - echo "This will print nothing" > /dev/null
 ```
 
-## ドライランモード
+## Dry run mode
 
-ドライランモード(`--dry`)は各タスクをコンパイルし、実際にはコマンドの内容は実行せずに、タスク内の各ステップで実行されるコマンドを表示します。 これはTaskfileをデバッグする際に便利です。
+Dry run mode (`--dry`) compiles and steps through each task, printing the commands that would be run without executing them. This is useful for debugging your Taskfiles.
 
-## エラーを無視する
+## Ignore errors
 
-コマンド実行時のエラーを無視するオプションがあります。 以下のTaskfileを参照してください:
+You have the option to ignore errors during command execution. Given the following Taskfile:
 
 ```yaml
 version: '3'
@@ -1413,7 +1413,7 @@ tasks:
       - echo "Hello World"
 ```
 
-Taskは`exit 1`を実行した後、実行が中止されます。なぜならステータスコード`1`は`EXIT_FAILURE`を意味するためです。 しかしながら、`ignore_error`を使用することで、実行を継続させることが可能です:
+Task will abort the execution after running `exit 1` because the status code `1` stands for `EXIT_FAILURE`. However, it is possible to continue with execution using `ignore_error`:
 
 ```yaml
 version: '3'
@@ -1426,9 +1426,9 @@ tasks:
       - echo "Hello World"
 ```
 
-`ignore_error`はタスク全体に対しても設定することができます。つまり、全てのコマンドに対してエラーが抑制されます。 一方で`deps`や`cmds`によって呼び出された他のタスクには伝播しないことに注意してください！
+`ignore_error` can also be set for a task, which means errors will be suppressed for all commands. Nevertheless, keep in mind that this option will not propagate to other tasks called either by `deps` or `cmds`!
 
-## 出力構文
+## Output syntax
 
 By default, Task just redirects the STDOUT and STDERR of the running commands to the shell in real-time. This is good for having live feedback for logging printed by commands, but the output can become messy if you have multiple commands running simultaneously and printing lots of stuff.
 
@@ -1535,11 +1535,11 @@ The `output` option can also be specified by the `--output` or `-o` flags.
 
 :::
 
-## 対話型CLIアプリケーション
+## Interactive CLI application
 
-Task内で対話型CLIアプリケーションを実行する際、時折変な挙動をすることがあり、特に[出力モード](#output-syntax)が`交互`(デフォルト)に設定されていない、または対話型アプリが他のタスクと並行して実行される場合に発生します。
+When running interactive CLI applications inside Task they can sometimes behave weirdly, especially when the [output mode](#output-syntax) is set to something other than `interleaved` (the default), or when interactive apps are run in parallel with other tasks.
 
-`interactive: true`は、これが対話型アプリケーションであることをTaskに伝え、Taskはそれに最適化しようとします:
+The `interactive: true` tells Task this is an interactive application and Task will try to optimize for it:
 
 ```yaml
 version: '3'
@@ -1551,11 +1551,11 @@ tasks:
     interactive: true
 ```
 
-対話側アプリをTaskを通して実行する際に依然として問題がある場合は、それについてのIssueを作ってください。
+If you still have problems running an interactive app through Task, please open an issue about it.
 
-## 短いタスク構文
+## Short task syntax
 
-Task v3から、デフォルトの設定(例: カスタムな `env:`、`vars`、`desc:`、`silent:`などがない場合)を持つタスクは、より短い構文で記述することができます:
+Starting on Task v3, you can now write tasks with a shorter syntax if they have the default settings (e.g. no custom `env:`, `vars:`, `desc:`, `silent:` , etc):
 
 ```yaml
 version: '3'
@@ -1568,9 +1568,9 @@ tasks:
     - ./app{{exeExt}} -h localhost -p 8080
 ```
 
-## `set`と`shopt`
+## `set` and `shopt`
 
-[`set`](https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html)および[`shopt`](https://www.gnu.org/software/bash/manual/html_node/The-Shopt-Builtin.html)の組み込みコマンドにオプションを渡すことが可能です。 これは、グローバル、タスク、またはコマンドのそれぞれのレベルで設定することができます。
+It's possible to specify options to the [`set`](https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html) and [`shopt`](https://www.gnu.org/software/bash/manual/html_node/The-Shopt-Builtin.html) builtins. This can be added at global, task or command level.
 
 ```yaml
 version: '3'
@@ -1585,11 +1585,11 @@ tasks:
 
 :::info
 
-Taskが使用する[シェルインタプリタライブラリ](https://github.com/mvdan/sh)で利用可能なオプションは全てがあるわけではないことに注意してください。
+Keep in mind that not all options are available in the [shell interpreter library](https://github.com/mvdan/sh) that Task uses.
 
 :::
 
-## タスクのウォッチ
+## Watch tasks
 
 With the flags `--watch` or `-w` task will watch for file changes and run the task again. This requires the `sources` attribute to be given, so task knows which files to watch.
 
