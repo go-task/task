@@ -3,6 +3,7 @@ package errors
 import (
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/Masterminds/semver/v3"
@@ -173,4 +174,38 @@ func (err *TaskfileNetworkTimeoutError) Error() string {
 
 func (err *TaskfileNetworkTimeoutError) Code() int {
 	return CodeTaskfileNetworkTimeout
+}
+
+type TaskfileDuplicateIncludeError struct {
+	URI         string
+	IncludedURI string
+	Namespaces  []string
+}
+
+func (err *TaskfileDuplicateIncludeError) Error() string {
+	return fmt.Sprintf(
+		`task: Taskfile %q attempted to include %q multiple times with namespaces: %s`, err.URI, err.IncludedURI, strings.Join(err.Namespaces, ", "),
+	)
+}
+
+func (err *TaskfileDuplicateIncludeError) Code() int {
+	return CodeTaskfileDuplicateInclude
+}
+
+// TaskfileCycleError is returned when we detect that a Taskfile includes a
+// set of Taskfiles that include each other in a cycle.
+type TaskfileCycleError struct {
+	Source      string
+	Destination string
+}
+
+func (err TaskfileCycleError) Error() string {
+	return fmt.Sprintf("task: include cycle detected between %s <--> %s",
+		err.Source,
+		err.Destination,
+	)
+}
+
+func (err TaskfileCycleError) Code() int {
+	return CodeTaskfileCycle
 }

@@ -6,6 +6,7 @@ import (
 
 	"gopkg.in/yaml.v3"
 
+	"github.com/go-task/task/v3/internal/filepathext"
 	"github.com/go-task/task/v3/internal/omap"
 )
 
@@ -44,7 +45,7 @@ func (t *Tasks) FindMatchingTasks(call *Call) []*MatchingTask {
 	return matchingTasks
 }
 
-func (t1 *Tasks) Merge(t2 Tasks, include *Include) {
+func (t1 *Tasks) Merge(t2 Tasks, include *Include, includedTaskfileVars *Vars) {
 	_ = t2.Range(func(k string, v *Task) error {
 		// We do a deep copy of the task struct here to ensure that no data can
 		// be changed elsewhere once the taskfile is merged.
@@ -54,20 +55,25 @@ func (t1 *Tasks) Merge(t2 Tasks, include *Include) {
 		// taskfile are marked as internal
 		task.Internal = task.Internal || (include != nil && include.Internal)
 
-		// Add namespaces to dependencies, commands and aliases
+		// Add namespaces to task dependencies
 		for _, dep := range task.Deps {
 			if dep != nil && dep.Task != "" {
 				dep.Task = taskNameWithNamespace(dep.Task, include.Namespace)
 			}
 		}
+
+		// Add namespaces to task commands
 		for _, cmd := range task.Cmds {
 			if cmd != nil && cmd.Task != "" {
 				cmd.Task = taskNameWithNamespace(cmd.Task, include.Namespace)
 			}
 		}
+
+		// Add namespaces to task aliases
 		for i, alias := range task.Aliases {
 			task.Aliases[i] = taskNameWithNamespace(alias, include.Namespace)
 		}
+
 		// Add namespace aliases
 		if include != nil {
 			for _, namespaceAlias := range include.Aliases {
@@ -76,6 +82,15 @@ func (t1 *Tasks) Merge(t2 Tasks, include *Include) {
 					task.Aliases = append(task.Aliases, taskNameWithNamespace(alias, namespaceAlias))
 				}
 			}
+		}
+
+		if include.AdvancedImport {
+			task.Dir = filepathext.SmartJoin(include.Dir, task.Dir)
+			if task.IncludeVars == nil {
+				task.IncludeVars = &Vars{}
+			}
+			task.IncludeVars.Merge(include.Vars, nil)
+			task.IncludedTaskfileVars = includedTaskfileVars
 		}
 
 		// Add the task to the merged taskfile

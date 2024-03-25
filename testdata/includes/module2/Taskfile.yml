@@ -3,8 +3,4 @@ version: '3'
 tasks:
   gen_dir:
     cmds:
-      - echo included_directory_with_dir > included_directory_with_dir.txt
-
-  gen_file:
-    cmds:
-      - echo included_taskfile_with_dir > included_taskfile_with_dir.txt
+      - echo included_directory_without_dir > included_directory_without_dir.txt

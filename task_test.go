@@ -981,8 +981,8 @@ func TestIncludes(t *testing.T) {
 			"included_directory.txt":                    "included_directory",
 			"included_directory_without_dir.txt":        "included_directory_without_dir",
 			"included_taskfile_without_dir.txt":         "included_taskfile_without_dir",
-			"./module2/included_directory_with_dir.txt": "included_directory_with_dir",
-			"./module2/included_taskfile_with_dir.txt":  "included_taskfile_with_dir",
+			"./module3/included_taskfile_with_dir.txt":  "included_taskfile_with_dir",
+			"./module4/included_directory_with_dir.txt": "included_directory_with_dir",
 			"os_include.txt":                            "os",
 		},
 	}
@@ -1199,15 +1199,15 @@ func TestIncludesInterpolation(t *testing.T) {
 		expectedErr    bool
 		expectedOutput string
 	}{
-		{"include", "include", false, "includes_interpolation\n"},
-		{"include with dir", "include-with-dir", false, "included\n"},
+		{"include", "include", false, "include\n"},
+		{"include_with_dir", "include-with-dir", false, "included\n"},
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			var buff bytes.Buffer
 			e := task.Executor{
-				Dir:    dir,
+				Dir:    filepath.Join(dir, test.name),
 				Stdout: &buff,
 				Stderr: &buff,
 				Silent: true,
