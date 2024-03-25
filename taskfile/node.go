@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/experiments"
@@ -27,6 +28,7 @@ func NewRootNode(
 	entrypoint string,
 	dir string,
 	insecure bool,
+	timeout time.Duration,
 ) (Node, error) {
 	dir = getDefaultDir(entrypoint, dir)
 	// Check if there is something to read on STDIN
@@ -34,7 +36,7 @@ func NewRootNode(
 	if (stat.Mode()&os.ModeCharDevice) == 0 && stat.Size() > 0 {
 		return NewStdinNode(dir)
 	}
-	return NewNode(l, entrypoint, dir, insecure)
+	return NewNode(l, entrypoint, dir, insecure, timeout)
 }
 
 func NewNode(
@@ -42,13 +44,14 @@ func NewNode(
 	entrypoint string,
 	dir string,
 	insecure bool,
+	timeout time.Duration,
 	opts ...NodeOption,
 ) (Node, error) {
 	var node Node
 	var err error
 	switch getScheme(entrypoint) {
 	case "http", "https":
-		node, err = NewHTTPNode(l, entrypoint, dir, insecure, opts...)
+		node, err = NewHTTPNode(l, entrypoint, dir, insecure, timeout, opts...)
 	default:
 		// If no other scheme matches, we assume it's a file
 		node, err = NewFileNode(l, entrypoint, dir, opts...)

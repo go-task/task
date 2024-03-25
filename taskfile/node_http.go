@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/url"
 	"path/filepath"
+	"time"
 
 	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/execext"
@@ -19,7 +20,14 @@ type HTTPNode struct {
 	URL *url.URL
 }
 
-func NewHTTPNode(l *logger.Logger, entrypoint, dir string, insecure bool, opts ...NodeOption) (*HTTPNode, error) {
+func NewHTTPNode(
+	l *logger.Logger,
+	entrypoint string,
+	dir string,
+	insecure bool,
+	timeout time.Duration,
+	opts ...NodeOption,
+) (*HTTPNode, error) {
 	base := NewBaseNode(dir, opts...)
 	url, err := url.Parse(entrypoint)
 	if err != nil {
@@ -28,9 +36,14 @@ func NewHTTPNode(l *logger.Logger, entrypoint, dir string, insecure bool, opts .
 	if url.Scheme == "http" && !insecure {
 		return nil, &errors.TaskfileNotSecureError{URI: entrypoint}
 	}
-	url, err = RemoteExists(l, url)
+	ctx, cf := context.WithTimeout(context.Background(), timeout)
+	defer cf()
+	url, err = RemoteExists(ctx, l, url)
 	if err != nil {
 		return nil, err
+	}
+	if errors.Is(ctx.Err(), context.DeadlineExceeded) {
+		return nil, &errors.TaskfileNetworkTimeoutError{URI: url.String(), Timeout: timeout}
 	}
 	return &HTTPNode{
 		BaseNode: base,
