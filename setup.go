@@ -76,9 +76,6 @@ func (e *Executor) readTaskfile(node taskfile.Node) error {
 	if err != nil {
 		return err
 	}
-	if err := graph.Visualize("./taskfile-dag.gv"); err != nil {
-		return err
-	}
 	if e.Taskfile, err = graph.Merge(); err != nil {
 		return err
 	}
