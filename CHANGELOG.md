@@ -6,6 +6,12 @@
   [looping over dependencies](https://taskfile.dev/usage/#looping-over-dependencies)
   (#1299, #1541 by @pd93).
 - When using the
+  "[Remote Taskfiles](https://taskfile.dev/experiments/remote-taskfiles/)"
+  experiment, you are now able to use
+  [remote Taskfiles as your entrypoint](https://taskfile.dev/experiments/remote-taskfiles/#root-remote-taskfiles).
+  - `includes` in remote Taskfiles will now also resolve correctly (#1347 by
+    @pd93).
+- When using the
   "[Any Variables](https://taskfile.dev/experiments/any-variables/)"
   experiments, templating is now supported in collection-type variables (#1477,
   #1511, #1526 by @pd93).
