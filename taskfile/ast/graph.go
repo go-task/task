@@ -111,7 +111,7 @@ func (tfg *TaskfileGraph) Merge() (*Taskfile, error) {
 		return nil, err
 	}
 
-	rootVertex.Taskfile.Tasks.Range(func(name string, task *Task) error {
+	_ = rootVertex.Taskfile.Tasks.Range(func(name string, task *Task) error {
 		if task == nil {
 			task = &Task{}
 			rootVertex.Taskfile.Tasks.Set(name, task)

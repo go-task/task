@@ -49,7 +49,7 @@ func (vs *Vars) Merge(other *Vars, include *Include) {
 	if vs == nil || other == nil {
 		return
 	}
-	other.Range(func(key string, value Var) error {
+	_ = other.Range(func(key string, value Var) error {
 		if include != nil && include.AdvancedImport {
 			value.Dir = include.Dir
 		}
