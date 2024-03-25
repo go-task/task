@@ -74,7 +74,7 @@ func Read(
 				return err
 			}
 
-			includeReaderNode, err := NewNode(l, entrypoint, dir, insecure,
+			includeReaderNode, err := NewNode(l, entrypoint, dir, insecure, timeout,
 				WithParent(node),
 				WithOptional(include.Optional),
 			)
