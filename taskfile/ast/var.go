@@ -83,10 +83,10 @@ type Var struct {
 }
 
 func (v *Var) UnmarshalYAML(node *yaml.Node) error {
-	if experiments.AnyVariables.Enabled {
+	if experiments.MapVariables.Enabled {
 
 		// This implementation is not backwards-compatible and replaces the 'sh' key with map variables
-		if experiments.AnyVariables.Value == "1" {
+		if experiments.MapVariables.Value == "1" {
 			var value any
 			if err := node.Decode(&value); err != nil {
 				return err
@@ -103,7 +103,7 @@ func (v *Var) UnmarshalYAML(node *yaml.Node) error {
 		}
 
 		// This implementation IS backwards-compatible and keeps the 'sh' key and allows map variables to be added under the `map` key
-		if experiments.AnyVariables.Value == "2" {
+		if experiments.MapVariables.Value == "2" {
 			switch node.Kind {
 			case yaml.MappingNode:
 				key := node.Content[0].Value
@@ -141,15 +141,10 @@ func (v *Var) UnmarshalYAML(node *yaml.Node) error {
 
 	switch node.Kind {
 
-	case yaml.ScalarNode:
-		var str string
-		if err := node.Decode(&str); err != nil {
-			return err
-		}
-		v.Value = str
-		return nil
-
 	case yaml.MappingNode:
+		if len(node.Content) > 2 || node.Content[0].Value != "sh" {
+			return fmt.Errorf(`task: line %d: maps cannot be assigned to variables`, node.Line)
+		}
 		var sh struct {
 			Sh string
 		}
@@ -158,7 +153,13 @@ func (v *Var) UnmarshalYAML(node *yaml.Node) error {
 		}
 		v.Sh = sh.Sh
 		return nil
-	}
 
-	return fmt.Errorf("yaml: line %d: cannot unmarshal %s into variable", node.Line, node.ShortTag())
+	default:
+		var value any
+		if err := node.Decode(&value); err != nil {
+			return err
+		}
+		v.Value = value
+		return nil
+	}
 }
