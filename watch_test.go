@@ -58,7 +58,7 @@ Hello, World!
 			case <-ctx.Done():
 				return
 			default:
-				err := e.Run(ctx, ast.Task: "default"})
+				err := e.Run(ctx, ast.Task{"default"})
 				if err != nil {
 					return
 				}
