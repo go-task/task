@@ -22,7 +22,7 @@ type Include struct {
 
 // Includes represents information about included tasksfiles
 type Includes struct {
-	omap.OrderedMap[string, Include]
+	omap.OrderedMap[string, *Include]
 }
 
 // UnmarshalYAML implements the yaml.Unmarshaler interface.
@@ -41,7 +41,7 @@ func (includes *Includes) UnmarshalYAML(node *yaml.Node) error {
 				return err
 			}
 			v.Namespace = keyNode.Value
-			includes.Set(keyNode.Value, v)
+			includes.Set(keyNode.Value, &v)
 		}
 		return nil
 	}
@@ -58,7 +58,7 @@ func (includes *Includes) Len() int {
 }
 
 // Wrapper around OrderedMap.Set to ensure we don't get nil pointer errors
-func (includes *Includes) Range(f func(k string, v Include) error) error {
+func (includes *Includes) Range(f func(k string, v *Include) error) error {
 	if includes == nil {
 		return nil
 	}

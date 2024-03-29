@@ -96,11 +96,11 @@ func (r *Reader) include(node Node) error {
 	var g errgroup.Group
 
 	// Loop over each included taskfile
-	_ = vertex.Taskfile.Includes.Range(func(namespace string, include ast.Include) error {
+	_ = vertex.Taskfile.Includes.Range(func(namespace string, include *ast.Include) error {
 		// Start a goroutine to process each included Taskfile
 		g.Go(func() error {
 			cache := &templater.Cache{Vars: vertex.Taskfile.Vars}
-			include = ast.Include{
+			include = &ast.Include{
 				Namespace:      include.Namespace,
 				Taskfile:       templater.Replace(include.Taskfile, cache),
 				Dir:            templater.Replace(include.Dir, cache),
