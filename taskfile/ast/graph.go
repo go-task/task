@@ -79,7 +79,7 @@ func (tfg *TaskfileGraph) Merge() (*Taskfile, error) {
 				}
 
 				// Get the merge options
-				include, ok := edge.Properties.Data.(Include)
+				include, ok := edge.Properties.Data.(*Include)
 				if !ok {
 					return fmt.Errorf("task: Failed to get merge options")
 				}
@@ -87,7 +87,7 @@ func (tfg *TaskfileGraph) Merge() (*Taskfile, error) {
 				// Merge the included Taskfile into the parent Taskfile
 				if err := vertex.Taskfile.Merge(
 					includedVertex.Taskfile,
-					&include,
+					include,
 				); err != nil {
 					return err
 				}
