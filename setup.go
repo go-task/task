@@ -155,7 +155,7 @@ func (e *Executor) setupOutput() error {
 	}
 
 	var err error
-	e.Output, err = output.BuildFor(&e.OutputStyle)
+	e.Output, err = output.BuildFor(&e.OutputStyle, e.Color)
 	return err
 }
 

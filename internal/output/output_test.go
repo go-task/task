@@ -107,7 +107,7 @@ func TestGroupErrorOnlyShowsOutputOnError(t *testing.T) {
 
 func TestPrefixed(t *testing.T) {
 	var b bytes.Buffer
-	var o output.Output = output.Prefixed{}
+	var o output.Output = output.NewPrefixed(false)
 	w, _, cleanup := o.WrapWriter(&b, io.Discard, "prefix", nil)
 
 	t.Run("simple use cases", func(t *testing.T) {
@@ -130,5 +130,34 @@ func TestPrefixed(t *testing.T) {
 
 		require.NoError(t, cleanup(nil))
 		assert.Equal(t, "[prefix] Test!\n", b.String())
+	})
+}
+
+func wrapColor(string string, color string) string {
+	return fmt.Sprintf("%s%s\033[0m", color, string)
+}
+
+func TestPrefixedWithColor(t *testing.T) {
+	// We must set IsTTY to include color codes in the output
+	output.IsTTY = true
+
+	var b bytes.Buffer
+	var o output.Output = output.NewPrefixed(true)
+
+	writers := make([]io.Writer, 16)
+	for i := range writers {
+		writers[i], _, _ = o.WrapWriter(&b, io.Discard, fmt.Sprintf("prefix-%d", i), nil)
+	}
+
+	t.Run("colors should loop", func(t *testing.T) {
+		for i, w := range writers {
+			b.Reset()
+
+			color := output.PrefixColorSequence[i%len(output.PrefixColorSequence)]
+			prefix := wrapColor(fmt.Sprintf("prefix-%d", i), string(color))
+
+			fmt.Fprintln(w, "foo\nbar")
+			assert.Equal(t, fmt.Sprintf("[%s] foo\n[%s] bar\n", prefix, prefix), b.String())
+		}
 	})
 }

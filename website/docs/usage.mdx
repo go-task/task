@@ -1885,6 +1885,22 @@ $ task default
 [print-baz] baz
 ```
 
+When using the `prefix` output, you can optionally configure it to colorize each prefix.
+The chosen color is deterministic for a given set of tasks, where the color will cycle
+through a predefined sequence of colors. If more tasks are run than colors available, the
+color will cycle back and repeat. This can be useful for visually distinguishing tasks in
+the output when using the `prefix` output.
+```yaml
+version: '3'
+
+output:
+  prefixed:
+    color: true
+
+tasks:
+  # ...
+```
+
 :::tip
 
 The `output` option can also be specified by the `--output` or `-o` flags.

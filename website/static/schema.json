@@ -254,7 +254,15 @@
         "^.*$": {
           "anyOf": [
             {
-              "type": ["boolean", "integer", "null", "number", "string", "object", "array"]
+              "type": [
+                "boolean",
+                "integer",
+                "null",
+                "number",
+                "string",
+                "object",
+                "array"
+              ]
             },
             {
               "$ref": "#/definitions/var_subkey"
@@ -396,10 +404,7 @@
           "$ref": "#/definitions/vars"
         }
       },
-      "oneOf": [
-        {"required": ["cmd"]},
-        {"required": ["task"]}
-      ],
+      "oneOf": [{ "required": ["cmd"] }, { "required": ["task"] }],
       "additionalProperties": false,
       "required": ["for"]
     },
@@ -422,10 +427,7 @@
           "$ref": "#/definitions/vars"
         }
       },
-      "oneOf": [
-        {"required": ["cmd"]},
-        {"required": ["task"]}
-      ],
+      "oneOf": [{ "required": ["cmd"] }, { "required": ["task"] }],
       "additionalProperties": false,
       "required": ["for"]
     },
@@ -540,6 +542,16 @@
             },
             "error_only": {
               "description": "Swallows command output on zero exit code",
+              "type": "boolean",
+              "default": false
+            }
+          }
+        },
+        "prefixed": {
+          "type": "object",
+          "properties": {
+            "color": {
+              "description": "Use colors for task prefixes.",
               "type": "boolean",
               "default": false
             }

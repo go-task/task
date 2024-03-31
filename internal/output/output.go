@@ -15,7 +15,7 @@ type Output interface {
 type CloseFunc func(err error) error
 
 // Build the Output for the requested ast.Output.
-func BuildFor(o *ast.Output) (Output, error) {
+func BuildFor(o *ast.Output, color bool) (Output, error) {
 	switch o.Name {
 	case "interleaved", "":
 		if err := checkOutputGroupUnset(o); err != nil {
@@ -32,7 +32,7 @@ func BuildFor(o *ast.Output) (Output, error) {
 		if err := checkOutputGroupUnset(o); err != nil {
 			return nil, err
 		}
-		return Prefixed{}, nil
+		return NewPrefixed(color && o.Prefix.Color), nil
 	default:
 		return nil, fmt.Errorf(`task: output style %q not recognized`, o.Name)
 	}
