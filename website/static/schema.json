@@ -254,15 +254,7 @@
         "^.*$": {
           "anyOf": [
             {
-              "type": [
-                "boolean",
-                "integer",
-                "null",
-                "number",
-                "string",
-                "object",
-                "array"
-              ]
+              "type": ["boolean", "integer", "null", "number", "string", "object", "array"]
             },
             {
               "$ref": "#/definitions/var_subkey"
@@ -404,7 +396,10 @@
           "$ref": "#/definitions/vars"
         }
       },
-      "oneOf": [{ "required": ["cmd"] }, { "required": ["task"] }],
+      "oneOf": [
+        {"required": ["cmd"]},
+        {"required": ["task"]}
+      ],
       "additionalProperties": false,
       "required": ["for"]
     },
@@ -427,7 +422,10 @@
           "$ref": "#/definitions/vars"
         }
       },
-      "oneOf": [{ "required": ["cmd"] }, { "required": ["task"] }],
+      "oneOf": [
+        {"required": ["cmd"]},
+        {"required": ["task"]}
+      ],
       "additionalProperties": false,
       "required": ["for"]
     },

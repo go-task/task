@@ -80,7 +80,7 @@ func (g *OutputGroup) IsSet() bool {
 	return g.Begin != "" || g.End != ""
 }
 
-// OutputGroup is the style options specific to the Group style.
+// OutputPrefix is the style options specific to the Prefix style.
 type OutputPrefix struct {
 	Color bool `yaml:"color"`
 }
