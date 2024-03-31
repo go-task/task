@@ -26,6 +26,17 @@ func (e *Executor) FastCompiledTask(call *ast.Call) (*ast.Task, error) {
 	return e.compiledTask(call, false)
 }
 
+// UpdateCompiledTask updates parts of an already compiled task.
+func (e *Executor) UpdateCompiledTask(call *ast.Call, task *ast.Task) error {
+	origTask, err := e.GetTask(call)
+	if err != nil {
+		return err
+	}
+
+	err = e.compileCmds(call, origTask, task)
+	return err
+}
+
 func (e *Executor) compiledTask(call *ast.Call, evaluateShVars bool) (*ast.Task, error) {
 	origTask, err := e.GetTask(call)
 	if err != nil {
@@ -126,58 +137,10 @@ func (e *Executor) compiledTask(call *ast.Call, evaluateShVars bool) (*ast.Task,
 		}
 	}
 
-	if len(origTask.Cmds) > 0 {
-		new.Cmds = make([]*ast.Cmd, 0, len(origTask.Cmds))
-		for _, cmd := range origTask.Cmds {
-			if cmd == nil {
-				continue
-			}
-			if cmd.For != nil {
-				list, keys, err := itemsFromFor(cmd.For, new.Dir, new.Sources, vars, origTask.Location)
-				if err != nil {
-					return nil, err
-				}
-				// Name the iterator variable
-				var as string
-				if cmd.For.As != "" {
-					as = cmd.For.As
-				} else {
-					as = "ITEM"
-				}
-				// Create a new command for each item in the list
-				for i, loopValue := range list {
-					extra := map[string]any{
-						as: loopValue,
-					}
-					if len(keys) > 0 {
-						extra["KEY"] = keys[i]
-					}
-					newCmd := cmd.DeepCopy()
-					newCmd.Cmd = templater.ReplaceWithExtra(cmd.Cmd, cache, extra)
-					newCmd.Task = templater.ReplaceWithExtra(cmd.Task, cache, extra)
-					newCmd.Vars = templater.ReplaceVarsWithExtra(cmd.Vars, cache, extra)
-					new.Cmds = append(new.Cmds, newCmd)
-				}
-				continue
-			}
-			newCmd := cmd.DeepCopy()
-			newCmd.Cmd = templater.Replace(cmd.Cmd, cache)
-			newCmd.Task = templater.Replace(cmd.Task, cache)
-			newCmd.Vars = templater.ReplaceVars(cmd.Vars, cache)
-			// Loop over the command's variables and resolve any references to other variables
-			err := cmd.Vars.Range(func(k string, v ast.Var) error {
-				if v.Ref != "" {
-					refVal := vars.Get(v.Ref)
-					newCmd.Vars.Set(k, refVal)
-				}
-				return nil
-			})
-			if err != nil {
-				return nil, err
-			}
-			new.Cmds = append(new.Cmds, newCmd)
-		}
+	if err := e.compileCmds(call, origTask, &new); err != nil {
+		return nil, err
 	}
+
 	if len(origTask.Deps) > 0 {
 		new.Deps = make([]*ast.Dep, 0, len(origTask.Deps))
 		for _, dep := range origTask.Deps {
@@ -275,6 +238,72 @@ func asAnySlice[T any](slice []T) []any {
 		ret[i] = v
 	}
 	return ret
+}
+
+func (e *Executor) compileCmds(call *ast.Call, origTask *ast.Task, new *ast.Task) error {
+	if len(origTask.Cmds) == 0 {
+		return nil
+	}
+
+	vars, err := e.Compiler.GetVariables(origTask, call)
+	if err != nil {
+		return err
+	}
+
+	cache := &templater.Cache{Vars: vars}
+
+	new.Cmds = make([]*ast.Cmd, 0, len(origTask.Cmds))
+	for _, cmd := range origTask.Cmds {
+		if cmd == nil {
+			continue
+		}
+		if cmd.For != nil {
+			list, keys, err := itemsFromFor(cmd.For, new.Dir, new.Sources, vars, origTask.Location)
+			if err != nil {
+				return err
+			}
+			// Name the iterator variable
+			var as string
+			if cmd.For.As != "" {
+				as = cmd.For.As
+			} else {
+				as = "ITEM"
+			}
+			// Create a new command for each item in the list
+			for i, loopValue := range list {
+				extra := map[string]any{
+					as: loopValue,
+				}
+				if len(keys) > 0 {
+					extra["KEY"] = keys[i]
+				}
+				newCmd := cmd.DeepCopy()
+				newCmd.Cmd = templater.ReplaceWithExtra(cmd.Cmd, cache, extra)
+				newCmd.Task = templater.ReplaceWithExtra(cmd.Task, cache, extra)
+				newCmd.Vars = templater.ReplaceVarsWithExtra(cmd.Vars, cache, extra)
+				new.Cmds = append(new.Cmds, newCmd)
+			}
+			continue
+		}
+		newCmd := cmd.DeepCopy()
+		newCmd.Cmd = templater.Replace(cmd.Cmd, cache)
+		newCmd.Task = templater.Replace(cmd.Task, cache)
+		newCmd.Vars = templater.ReplaceVars(cmd.Vars, cache)
+		// Loop over the command's variables and resolve any references to other variables
+		err := cmd.Vars.Range(func(k string, v ast.Var) error {
+			if v.Ref != "" {
+				refVal := vars.Get(v.Ref)
+				newCmd.Vars.Set(k, refVal)
+			}
+			return nil
+		})
+		if err != nil {
+			return err
+		}
+		new.Cmds = append(new.Cmds, newCmd)
+	}
+
+	return nil
 }
 
 func itemsFromFor(
