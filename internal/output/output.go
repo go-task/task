@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/go-task/task/v3/internal/logger"
 	"github.com/go-task/task/v3/internal/templater"
 	"github.com/go-task/task/v3/taskfile/ast"
 )
@@ -15,7 +16,7 @@ type Output interface {
 type CloseFunc func(err error) error
 
 // Build the Output for the requested ast.Output.
-func BuildFor(o *ast.Output, color bool) (Output, error) {
+func BuildFor(o *ast.Output, logger *logger.Logger) (Output, error) {
 	switch o.Name {
 	case "interleaved", "":
 		if err := checkOutputGroupUnset(o); err != nil {
@@ -32,7 +33,7 @@ func BuildFor(o *ast.Output, color bool) (Output, error) {
 		if err := checkOutputGroupUnset(o); err != nil {
 			return nil, err
 		}
-		return NewPrefixed(color && o.Prefix.Color), nil
+		return NewPrefixed(logger, o.Prefix.Color), nil
 	default:
 		return nil, fmt.Errorf(`task: output style %q not recognized`, o.Name)
 	}

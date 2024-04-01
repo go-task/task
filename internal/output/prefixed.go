@@ -6,37 +6,38 @@ import (
 	"io"
 	"strings"
 
+	"github.com/go-task/task/v3/internal/logger"
 	"github.com/go-task/task/v3/internal/templater"
 )
 
 type Prefixed struct {
+	logger  *logger.Logger
 	seen    map[string]uint
 	counter *uint
-	Color   bool
+	color   bool
 }
 
-func NewPrefixed(color bool) Prefixed {
+func NewPrefixed(logger *logger.Logger, color bool) Prefixed {
 	var counter uint
 
 	return Prefixed{
-		Color:   color,
-		counter: &counter,
 		seen:    make(map[string]uint),
+		counter: &counter,
+		logger:  logger,
+		color:   color,
 	}
 }
 
 func (p Prefixed) WrapWriter(stdOut, _ io.Writer, prefix string, _ *templater.Cache) (io.Writer, io.Writer, CloseFunc) {
-	pw := &prefixWriter{writer: stdOut, prefix: prefix, color: p.Color, seen: p.seen, counter: p.counter}
+	pw := &prefixWriter{writer: stdOut, prefix: prefix, prefixed: &p}
 	return pw, pw, func(error) error { return pw.close() }
 }
 
 type prefixWriter struct {
-	writer  io.Writer
-	seen    map[string]uint
-	counter *uint
-	prefix  string
-	buff    bytes.Buffer
-	color   bool
+	writer   io.Writer
+	prefixed *Prefixed
+	prefix   string
+	buff     bytes.Buffer
 }
 
 func (pw *prefixWriter) Write(p []byte) (int, error) {
@@ -73,9 +74,9 @@ func (pw *prefixWriter) writeOutputLines(force bool) error {
 	}
 }
 
-var PrefixColorSequence = [][]byte{
-	nYellow, nBlue, nMagenta, nCyan, nGreen, nRed,
-	bYellow, bBlue, bMagenta, bCyan, bGreen, bRed,
+var PrefixColorSequence = []logger.Color{
+	logger.Yellow, logger.Blue, logger.Magenta, logger.Cyan, logger.Green, logger.Red,
+	// bYellow, bBlue, bMagenta, bCyan, bGreen, bRed,
 }
 
 func (pw *prefixWriter) writeLine(line string) error {
@@ -86,23 +87,26 @@ func (pw *prefixWriter) writeLine(line string) error {
 		line += "\n"
 	}
 
-	idx, ok := pw.seen[pw.prefix]
+	idx, ok := pw.prefixed.seen[pw.prefix]
 
 	if !ok {
-		idx = *pw.counter
-		pw.seen[pw.prefix] = idx
+		idx = *pw.prefixed.counter
+		pw.prefixed.seen[pw.prefix] = idx
 
-		*pw.counter += 1
+		*pw.prefixed.counter++
 	}
-
-	color := PrefixColorSequence[idx%uint(len(PrefixColorSequence))]
 
 	if _, err := fmt.Fprint(pw.writer, "["); err != nil {
 		return nil
 	}
 
-	if err := cW(pw.writer, pw.color, color, "%s", pw.prefix); err != nil {
-		return err
+	if pw.prefixed.color {
+		color := PrefixColorSequence[idx%uint(len(PrefixColorSequence))]
+		pw.prefixed.logger.FOutf(pw.writer, color, pw.prefix)
+	} else {
+		if _, err := fmt.Fprint(pw.writer, pw.prefix); err != nil {
+			return nil
+		}
 	}
 
 	if _, err := fmt.Fprint(pw.writer, "] "); err != nil {
