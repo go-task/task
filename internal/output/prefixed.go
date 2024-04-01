@@ -76,7 +76,7 @@ func (pw *prefixWriter) writeOutputLines(force bool) error {
 
 var PrefixColorSequence = []logger.Color{
 	logger.Yellow, logger.Blue, logger.Magenta, logger.Cyan, logger.Green, logger.Red,
-	// bYellow, bBlue, bMagenta, bCyan, bGreen, bRed,
+	logger.BrightYellow, logger.BrightBlue, logger.BrightMagenta, logger.BrightCyan, logger.BrightGreen, logger.BrightRed,
 }
 
 func (pw *prefixWriter) writeLine(line string) error {
