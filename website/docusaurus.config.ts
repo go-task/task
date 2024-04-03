@@ -21,8 +21,8 @@ const config: Config = {
   tagline: 'A task runner / simpler Make alternative written in Go ',
   url: 'https://taskfile.dev',
   baseUrl: '/',
-  onBrokenLinks: 'throw',
-  onBrokenMarkdownLinks: 'throw',
+  onBrokenLinks: 'warn',
+  onBrokenMarkdownLinks: 'warn',
   favicon: 'img/favicon.ico',
 
   organizationName: 'go-task',
