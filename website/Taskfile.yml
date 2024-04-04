@@ -49,7 +49,7 @@ tasks:
   upgrade:
     desc: Upgrade Docusaurus
     cmds:
-      - yarn upgrade @docusaurus/core@latest @docusaurus/preset-classic@latest @docusaurus/module-type-aliases@latest
+      - yarn upgrade @docusaurus/core@latest @docusaurus/preset-classic@latest @docusaurus/module-type-aliases@latest @docusaurus/tsconfig@latest @docusaurus/types@latest
 
   crowdin:push:
     desc: Upload source files to a Crowdin project
