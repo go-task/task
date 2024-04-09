@@ -1197,6 +1197,43 @@ tasks:
       - echo 'bar'
 ```
 
+### Looping over dependencies
+
+All of the above looping techniques can also be applied to the `deps` property.
+This allows you to combine loops with concurrency:
+
+```yaml
+version: '3'
+
+tasks:
+  default:
+    deps:
+      - for: [foo, bar]
+        task: my-task
+        vars:
+          FILE: '{{.ITEM}}'
+
+  my-task:
+    cmds:
+      - echo '{{.FILE}}'
+```
+
+It is important to note that as `deps` are run in parallel, the order in which
+the iterations are run is not guaranteed and the output may vary. For example,
+the output of the above example may be either:
+
+```shell
+foo
+bar
+```
+
+or
+
+```shell
+bar
+foo
+```
+
 ## Forwarding CLI arguments to commands
 
 If `--` is given in the CLI, all following parameters are added to a special
@@ -1917,6 +1954,6 @@ if called by another task, either directly or as a dependency.
 
 :::
 
-<!-- prettier-ignore-start -->
+{/* prettier-ignore-start */}
 [gotemplate]: https://golang.org/pkg/text/template/
-<!-- prettier-ignore-end -->
+{/* prettier-ignore-end */}

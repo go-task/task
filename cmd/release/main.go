@@ -15,7 +15,7 @@ import (
 
 const (
 	changelogSource = "CHANGELOG.md"
-	changelogTarget = "website/docs/changelog.md"
+	changelogTarget = "website/docs/changelog.mdx"
 	docsSource      = "website/docs"
 	docsTarget      = "website/versioned_docs/version-latest"
 )

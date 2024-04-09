@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v3.36.0 - 2024-04-08
 
 - Added support for
   [looping over dependencies](https://taskfile.dev/usage/#looping-over-dependencies)

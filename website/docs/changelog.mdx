@@ -5,6 +5,26 @@ sidebar_position: 14
 
 # Changelog
 
+## v3.36.0 - 2024-04-08
+
+- Added support for
+  [looping over dependencies](https://taskfile.dev/usage/#looping-over-dependencies)
+  (#1299, #1541 by @pd93).
+- When using the
+  "[Remote Taskfiles](https://taskfile.dev/experiments/remote-taskfiles/)"
+  experiment, you are now able to use
+  [remote Taskfiles as your entrypoint](https://taskfile.dev/experiments/remote-taskfiles/#root-remote-taskfiles).
+  - `includes` in remote Taskfiles will now also resolve correctly (#1347 by
+    @pd93).
+- When using the
+  "[Any Variables](https://taskfile.dev/experiments/any-variables/)"
+  experiments, templating is now supported in collection-type variables (#1477,
+  #1511, #1526 by @pd93).
+- Fixed a bug where variables being passed to an included Taskfile were not
+  available when defining global variables (#1503, #1533 by @pd93).
+- Improved support to customized colors by allowing 8-bit colors and multiple
+  ANSI attributes (#1576 by @pd93).
+
 ## v3.35.1 - 2024-03-04
 
 - Fixed a bug where the `TASKFILE_DIR` variable was sometimes incorrect (#1522,

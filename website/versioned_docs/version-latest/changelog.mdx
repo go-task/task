@@ -5,6 +5,52 @@ sidebar_position: 14
 
 # Changelog
 
+## v3.36.0 - 2024-04-08
+
+- Added support for
+  [looping over dependencies](https://taskfile.dev/usage/#looping-over-dependencies)
+  (#1299, #1541 by @pd93).
+- When using the
+  "[Remote Taskfiles](https://taskfile.dev/experiments/remote-taskfiles/)"
+  experiment, you are now able to use
+  [remote Taskfiles as your entrypoint](https://taskfile.dev/experiments/remote-taskfiles/#root-remote-taskfiles).
+  - `includes` in remote Taskfiles will now also resolve correctly (#1347 by
+    @pd93).
+- When using the
+  "[Any Variables](https://taskfile.dev/experiments/any-variables/)"
+  experiments, templating is now supported in collection-type variables (#1477,
+  #1511, #1526 by @pd93).
+- Fixed a bug where variables being passed to an included Taskfile were not
+  available when defining global variables (#1503, #1533 by @pd93).
+- Improved support to customized colors by allowing 8-bit colors and multiple
+  ANSI attributes (#1576 by @pd93).
+
+## v3.35.1 - 2024-03-04
+
+- Fixed a bug where the `TASKFILE_DIR` variable was sometimes incorrect (#1522,
+  #1523 by @pd93).
+- Added a new `TASKFILE` special variable that holds the root Taskfile path
+  (#1523 by @pd93).
+- Fixed various issues related to running a Taskfile from a subdirectory (#1529,
+  #1530 by @pd93).
+
+## v3.35.0 - 2024-02-28
+
+- Added support for
+  [wildcards in task names](https://taskfile.dev/usage/#wildcard-arguments)
+  (#836, #1489 by @pd93).
+- Added the ability to
+  [run Taskfiles via stdin](https://taskfile.dev/usage/#reading-a-taskfile-from-stdin)
+  (#655, #1483 by @pd93).
+- Bumped minimum Go version to 1.21 (#1500 by @pd93).
+- Fixed bug related to the `--list` flag (#1509, #1512 by @pd93, #1514, #1520 by
+  @pd93).
+- Add mention on the documentation to the fact that the variable declaration
+  order is respected (#1510 by @kirkrodrigues).
+- Improved style guide docs (#1495 by @iwittkau).
+- Removed duplicated entry for `requires` on the API docs (#1491 by
+  @teatimeguest).
+
 ## v3.34.1 - 2024-01-27
 
 - Fixed prompt regression on
