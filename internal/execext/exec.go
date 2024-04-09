@@ -103,6 +103,9 @@ func IsExitError(err error) bool {
 func Expand(s string) (string, error) {
 	s = filepath.ToSlash(s)
 	s = strings.ReplaceAll(s, " ", `\ `)
+	s = strings.ReplaceAll(s, "&", `\&`)
+	s = strings.ReplaceAll(s, "(", `\(`)
+	s = strings.ReplaceAll(s, ")", `\)`)
 	fields, err := shell.Fields(s, nil)
 	if err != nil {
 		return "", err
