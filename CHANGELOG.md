@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Fix error when a file or directory in the project contained a special char
+  like `&`, `(` or `)` (#1551, #1584 by @andreynering).
+
 ## v3.36.0 - 2024-04-08
 
 - Added support for
