@@ -154,6 +154,17 @@ Some environment variables can be overridden to adjust Task behavior.
 | `TASK_COLOR_RED`     | `31`    | Color used for red.                                                                                               |
 | `FORCE_COLOR`        |         | Force color output usage.                                                                                         |
 
+All color variables are [ANSI color codes][ansi]. You can specify multiple codes
+separated by a semicolon. For example: `31;1` will make the text bold and red.
+Task also supports 8-bit color (256 colors). You can specify these colors by
+using the sequence `38;2;R:G:B` for foreground colors and `48;2;R:G:B` for
+background colors where `R`, `G` and `B` should be replaced with values between
+0 and 255.
+
+For convenience, we allow foreground colors to be specified using shorthand,
+comma-separated syntax: `R,G,B`. For example, `255,0,0` is equivalent to
+`38;2;255:0:0`.
+
 ## Taskfile Schema
 
 | Attribute  | Type                               | Default       | Description                                                                                                                                                            |
@@ -373,3 +384,7 @@ tasks:
 | Attribute | Type       | Default | Description                                                                                        |
 | --------- | ---------- | ------- | -------------------------------------------------------------------------------------------------- |
 | `vars`    | `[]string` |         | List of variable or environment variable names that must be set if this task is to execute and run |
+
+{/* prettier-ignore-start */}
+[ansi]: https://en.wikipedia.org/wiki/ANSI_escape_code
+{/* prettier-ignore-end */}
