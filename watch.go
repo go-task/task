@@ -157,7 +157,7 @@ func (e *Executor) registerWatchedFiles(w *watcher.Watcher, calls ...*ast.Call) 
 				if err != nil {
 					return err
 				}
-				if shouldIgnoreFile(absFile) {
+				if ShouldIgnoreFile(absFile) {
 					continue
 				}
 				if _, ok := watchedFiles[absFile]; ok {
@@ -180,7 +180,7 @@ func (e *Executor) registerWatchedFiles(w *watcher.Watcher, calls ...*ast.Call) 
 	return nil
 }
 
-func shouldIgnoreFile(path string) bool {
+func ShouldIgnoreFile(path string) bool {
 	ignorePaths := []string{
 		"/.task",
 		"/.git",
