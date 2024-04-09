@@ -17,6 +17,8 @@
   #1511, #1526 by @pd93).
 - Fixed a bug where variables being passed to an included Taskfile were not
   available when defining global variables (#1503, #1533 by @pd93).
+- Improved support to customized colors by allowing 8-bit colors and multiple
+  ANSI attributes (#1576 by @pd93).
 
 ## v3.35.1 - 2024-03-04
 
