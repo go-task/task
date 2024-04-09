@@ -4,12 +4,9 @@ preserve_hierarchy: true
 
 files:
   - source: /docs/**/*
-    translation: /i18n/%locale%/docusaurus-plugin-content-docs/current/**/%original_file_name%
+    translation: /i18n/%locale%/docusaurus-plugin-content-docs/version-latest/**/%original_file_name%
     ignore:
       - /**/*.json
 
   - source: /blog/**/*
     translation: /i18n/%locale%/docusaurus-plugin-content-blog/**/%original_file_name%
-
-  - source: /i18n/en/**/*.json
-    translation: /i18n/%locale%/**/%original_file_name%
