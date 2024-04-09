@@ -947,8 +947,26 @@ tasks:
 
 ## Variables
 
-When doing interpolation of variables, Task will look for the below. They are
-listed below in order of importance (i.e. most important first):
+Task allows you to set variables using the `vars` keyword. The following
+variable types are supported:
+
+- `string`
+- `bool`
+- `int`
+- `float`
+- `array`
+
+:::note
+
+Maps are not supported by default, but there is an
+[experiment][map-variables] that can be enabled to add support. If
+you're interested in this functionality, we would appreciate your feedback.
+:pray:
+
+:::
+
+Variables can be set in many places in a Taskfile. When executing templates,
+Task will look for variables in the order listed below (most important first):
 
 - Variables declared in the task definition
 - Variables given while calling a task from another (See
@@ -1093,8 +1111,8 @@ tasks:
 ### Looping over variables
 
 To loop over the contents of a variable, you simply need to specify the variable
-you want to loop over. By default, variables will be split on any whitespace
-characters.
+you want to loop over. By default, string variables will be split on any
+whitespace characters.
 
 ```yaml
 version: '3'
@@ -1108,8 +1126,8 @@ tasks:
         cmd: cat {{.ITEM}}
 ```
 
-If you need to split on a different character, you can do this by specifying the
-`split` property:
+If you need to split a string on a different character, you can do this by
+specifying the `split` property:
 
 ```yaml
 version: '3'
@@ -1122,6 +1140,26 @@ tasks:
       - for: { var: MY_VAR, split: ',' }
         cmd: cat {{.ITEM}}
 ```
+
+You can also loop over arrays directly (and maps if you have the
+[maps experiment](/experiments/map-variables) enabled):
+
+```yaml
+version: 3
+
+tasks:
+  foo:
+    vars:
+      LIST: [foo, bar, baz]
+    cmds:
+      - for:
+          var: LIST
+        cmd: echo {{.ITEM}}
+```
+
+When looping over a map we also make an additional `{{.KEY}}` variable available
+that holds the string value of the map key. Remember that maps are unordered, so
+the order in which the items are looped over is random.
 
 All of this also works with dynamic variables!
 
@@ -1956,4 +1994,5 @@ if called by another task, either directly or as a dependency.
 
 {/* prettier-ignore-start */}
 [gotemplate]: https://golang.org/pkg/text/template/
+[map-variables]: ./experiments/map_variables.mdx
 {/* prettier-ignore-end */}
