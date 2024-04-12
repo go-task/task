@@ -238,6 +238,13 @@ func (e *Executor) RunTask(ctx context.Context, call *ast.Call) error {
 			}
 		}
 
+		// Update cmds for case where deps may have changed sources (and 'for' needs re-evaluation).
+		if len(t.Deps) > 0 && len(t.Sources) > 0 {
+			if err = e.UpdateCompiledTask(call, t); err != nil {
+				return err
+			}
+		}
+
 		if err := e.mkdir(t); err != nil {
 			e.Logger.Errf(logger.Red, "task: cannot make directory %q: %v\n", t.Dir, err)
 		}
