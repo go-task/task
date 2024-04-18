@@ -73,6 +73,10 @@ func init() {
 			return spew.Sdump(v)
 		},
 	}
+
+	// aliases
+	taskFuncs["q"] = taskFuncs["shellQuote"]
+
 	// Deprecated aliases for renamed functions.
 	taskFuncs["FromSlash"] = taskFuncs["fromSlash"]
 	taskFuncs["ToSlash"] = taskFuncs["toSlash"]
