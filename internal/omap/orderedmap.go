@@ -4,6 +4,7 @@ import (
 	"cmp"
 	"fmt"
 	"slices"
+	"sync"
 
 	"gopkg.in/yaml.v3"
 
@@ -15,15 +16,17 @@ import (
 // list of the map's keys. This allows you to run deterministic and ordered
 // operations on the map such as printing/serializing/iterating.
 type OrderedMap[K cmp.Ordered, V any] struct {
-	s []K
-	m map[K]V
+	mutex *sync.RWMutex
+	s     []K
+	m     map[K]V
 }
 
 // New will create a new OrderedMap of the given type and return it.
 func New[K cmp.Ordered, V any]() OrderedMap[K, V] {
 	return OrderedMap[K, V]{
-		s: make([]K, 0),
-		m: make(map[K]V),
+		mutex: &sync.RWMutex{},
+		s:     make([]K, 0),
+		m:     make(map[K]V),
 	}
 }
 
@@ -61,16 +64,31 @@ func (om *OrderedMap[K, V]) Set(key K, value V) {
 	if om.m == nil {
 		om.m = make(map[K]V)
 	}
+	if om.mutex == nil {
+		om.mutex = &sync.RWMutex{}
+	}
+	om.mutex.RLock()
 	if _, ok := om.m[key]; !ok {
 		om.s = append(om.s, key)
 	}
+	om.mutex.RUnlock()
+	om.mutex.Lock()
 	om.m[key] = value
+	om.mutex.Unlock()
 }
 
 // Get will return the value for a given key.
 // If the key does not exist, it will return the zero value of the value type.
 func (om *OrderedMap[K, V]) Get(key K) V {
+	if om.m == nil {
+		om.m = make(map[K]V)
+	}
+	if om.mutex == nil {
+		om.mutex = &sync.RWMutex{}
+	}
+	om.mutex.RLock()
 	value, ok := om.m[key]
+	om.mutex.RUnlock()
 	if !ok {
 		var zero V
 		return zero
@@ -80,7 +98,15 @@ func (om *OrderedMap[K, V]) Get(key K) V {
 
 // Exists will return whether or not the given key exists.
 func (om *OrderedMap[K, V]) Exists(key K) bool {
+	if om.m == nil {
+		om.m = make(map[K]V)
+	}
+	if om.mutex == nil {
+		om.mutex = &sync.RWMutex{}
+	}
+	om.mutex.RLock()
 	_, ok := om.m[key]
+	om.mutex.RUnlock()
 	return ok
 }
 
@@ -103,7 +129,7 @@ func (om *OrderedMap[K, V]) Keys() []K {
 func (om *OrderedMap[K, V]) Values() []V {
 	var values []V
 	for _, key := range om.s {
-		values = append(values, om.m[key])
+		values = append(values, om.Get(key))
 	}
 	return values
 }
@@ -111,7 +137,7 @@ func (om *OrderedMap[K, V]) Values() []V {
 // Range will iterate over the map and call the given function for each key/value.
 func (om *OrderedMap[K, V]) Range(fn func(key K, value V) error) error {
 	for _, key := range om.s {
-		if err := fn(key, om.m[key]); err != nil {
+		if err := fn(key, om.Get(key)); err != nil {
 			return err
 		}
 	}
