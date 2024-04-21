@@ -140,6 +140,8 @@ func (r *Reader) include(node Node) error {
 			}
 
 			// Create an edge between the Taskfiles
+			r.graph.Lock()
+			defer r.graph.Unlock()
 			edge, err := r.graph.Edge(node.Location(), includeNode.Location())
 			if err == graph.ErrEdgeNotFound {
 				// If the edge doesn't exist, create it

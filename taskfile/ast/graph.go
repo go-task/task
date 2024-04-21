@@ -3,6 +3,7 @@ package ast
 import (
 	"fmt"
 	"os"
+	"sync"
 
 	"github.com/dominikbraun/graph"
 	"github.com/dominikbraun/graph/draw"
@@ -10,6 +11,7 @@ import (
 )
 
 type TaskfileGraph struct {
+	sync.Mutex
 	graph.Graph[string, *TaskfileVertex]
 }
 
@@ -25,6 +27,7 @@ func taskfileHash(vertex *TaskfileVertex) string {
 
 func NewTaskfileGraph() *TaskfileGraph {
 	return &TaskfileGraph{
+		sync.Mutex{},
 		graph.New(taskfileHash,
 			graph.Directed(),
 			graph.PreventCycles(),
