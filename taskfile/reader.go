@@ -147,13 +147,16 @@ func (r *Reader) include(node Node) error {
 					node.Location(),
 					includeNode.Location(),
 					graph.EdgeData([]*ast.Include{include}),
+					graph.EdgeWeight(1),
 				)
 			} else {
 				// If the edge already exists
+				edgeData := append(edge.Properties.Data.([]*ast.Include), include)
 				err = r.graph.UpdateEdge(
 					node.Location(),
 					includeNode.Location(),
-					graph.EdgeData(append(edge.Properties.Data.([]*ast.Include), include)),
+					graph.EdgeData(edgeData),
+					graph.EdgeWeight(len(edgeData)),
 				)
 			}
 			if errors.Is(err, graph.ErrEdgeCreatesCycle) {
