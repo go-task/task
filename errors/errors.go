@@ -19,7 +19,7 @@ const (
 	CodeTaskfileCacheNotFound
 	CodeTaskfileVersionCheckError
 	CodeTaskfileNetworkTimeout
-	CodeTaskfileDuplicateInclude
+	_ // CodeTaskfileDuplicateInclude
 	CodeTaskfileCycle
 )
 
