@@ -64,7 +64,8 @@ func (c *Compiler) getVariables(t *ast.Task, call *ast.Call, evaluateShVars bool
 			newVar := templater.ReplaceVar(v, cache)
 			// If the variable is a reference, we can resolve it
 			if newVar.Ref != "" {
-				newVar.Value = result.Get(newVar.Ref).Value
+				refVal := templater.ResolveRef(newVar.Ref, cache)
+				newVar.Value = refVal
 			}
 			// If the variable should not be evaluated, but is nil, set it to an empty string
 			// This stops empty interface errors when using the templater to replace values later

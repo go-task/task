@@ -167,8 +167,8 @@ func (e *Executor) compiledTask(call *ast.Call, evaluateShVars bool) (*ast.Task,
 			// Loop over the command's variables and resolve any references to other variables
 			err := cmd.Vars.Range(func(k string, v ast.Var) error {
 				if v.Ref != "" {
-					refVal := vars.Get(v.Ref)
-					newCmd.Vars.Set(k, refVal)
+					refVal := templater.ResolveRef(v.Ref, cache)
+					newCmd.Vars.Set(k, ast.Var{Value: refVal})
 				}
 				return nil
 			})
@@ -217,8 +217,8 @@ func (e *Executor) compiledTask(call *ast.Call, evaluateShVars bool) (*ast.Task,
 			// Loop over the dep's variables and resolve any references to other variables
 			err := dep.Vars.Range(func(k string, v ast.Var) error {
 				if v.Ref != "" {
-					refVal := vars.Get(v.Ref)
-					newDep.Vars.Set(k, refVal)
+					refVal := templater.ResolveRef(v.Ref, cache)
+					newDep.Vars.Set(k, ast.Var{Value: refVal})
 				}
 				return nil
 			})

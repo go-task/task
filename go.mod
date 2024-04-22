@@ -8,6 +8,7 @@ require (
 	github.com/dominikbraun/graph v0.23.0
 	github.com/fatih/color v1.16.0
 	github.com/go-task/slim-sprig/v3 v3.0.0
+	github.com/go-task/template v0.0.0-20240422130016-8f6b279b1e90
 	github.com/joho/godotenv v1.5.1
 	github.com/mattn/go-zglob v0.0.4
 	github.com/mitchellh/hashstructure/v2 v2.0.2
