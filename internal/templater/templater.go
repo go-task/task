@@ -30,6 +30,16 @@ func (r *Cache) Err() error {
 }
 
 func ResolveRef(ref string, cache *Cache) any {
+	// If there is already an error, do nothing
+	if cache.err != nil {
+		return nil
+	}
+
+	// Initialize the cache map if it's not already initialized
+	if cache.cacheMap == nil {
+		cache.cacheMap = cache.Vars.ToCacheMap()
+	}
+
 	val, err := template.ResolveRef(ref, cache.cacheMap)
 	if err != nil {
 		cache.err = err
@@ -100,6 +110,9 @@ func ReplaceVar(v ast.Var, cache *Cache) ast.Var {
 }
 
 func ReplaceVarWithExtra(v ast.Var, cache *Cache, extra map[string]any) ast.Var {
+	if v.Ref != "" {
+		return ast.Var{Value: ResolveRef(v.Ref, cache)}
+	}
 	return ast.Var{
 		Value: ReplaceWithExtra(v.Value, cache, extra),
 		Sh:    ReplaceWithExtra(v.Sh, cache, extra),
