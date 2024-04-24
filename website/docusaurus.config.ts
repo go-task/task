@@ -31,56 +31,12 @@ const config: Config = {
 
   i18n: {
     defaultLocale: 'en',
-    locales: [
-      'en',
-      'es-ES',
-      'fr-FR',
-      'ja-JP',
-      'pt-BR',
-      'ru-RU',
-      'tr-TR',
-      'zh-Hans'
-    ],
+    locales: ['en'],
     localeConfigs: {
       en: {
         label: 'English',
         direction: 'ltr',
         htmlLang: 'en-US'
-      },
-      'es-ES': {
-        label: `Español (${translationProgress['es-ES'] || 0}%)`,
-        direction: 'ltr',
-        htmlLang: 'es-ES'
-      },
-      'fr-FR': {
-        label: `Français (${translationProgress['fr'] || 0}%)`,
-        direction: 'ltr',
-        htmlLang: 'fr-FR'
-      },
-      'ja-JP': {
-        label: `日本語 (${translationProgress['ja'] || 0}%)`,
-        direction: 'ltr',
-        htmlLang: 'ja-JP'
-      },
-      'pt-BR': {
-        label: `Português (${translationProgress['pt-BR'] || 0}%)`,
-        direction: 'ltr',
-        htmlLang: 'pt-BR'
-      },
-      'ru-RU': {
-        label: `Pусский (${translationProgress['ru'] || 0}%)`,
-        direction: 'ltr',
-        htmlLang: 'ru-RU'
-      },
-      'tr-TR': {
-        label: `Türkçe (${translationProgress['tr'] || 0}%)`,
-        direction: 'ltr',
-        htmlLang: 'tr-TR'
-      },
-      'zh-Hans': {
-        label: `简体中文 (${translationProgress['zh-CN'] || 0}%)`,
-        direction: 'ltr',
-        htmlLang: 'zh-Hans'
       }
     }
   },
@@ -167,16 +123,6 @@ const config: Config = {
           type: 'docsVersionDropdown',
           position: 'right',
           dropdownActiveClassDisabled: true,
-        },
-        {
-          type: 'localeDropdown',
-          position: 'right',
-          dropdownItemsAfter: [
-            {
-              to: '/translate/',
-              label: 'Help Us Translate'
-            }
-          ]
         },
         {
           href: GITHUB_URL,
