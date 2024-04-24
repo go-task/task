@@ -3,6 +3,7 @@ package flags
 import (
 	"errors"
 	"log"
+	"os"
 	"time"
 
 	"github.com/spf13/pflag"
@@ -68,6 +69,8 @@ var (
 )
 
 func init() {
+	log.SetFlags(0)
+	log.SetOutput(os.Stderr)
 	pflag.Usage = func() {
 		log.Print(usage)
 		pflag.PrintDefaults()

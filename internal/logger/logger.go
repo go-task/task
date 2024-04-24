@@ -138,6 +138,10 @@ func (l *Logger) VerboseErrf(color Color, s string, args ...any) {
 	}
 }
 
+func (l *Logger) Warnf(message string, args ...any) {
+	l.Errf(Yellow, message, args...)
+}
+
 func (l *Logger) Prompt(color Color, prompt string, defaultValue string, continueValues ...string) error {
 	if l.AssumeYes {
 		l.Outf(color, "%s [assuming yes]\n", prompt)
