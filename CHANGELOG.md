@@ -6,8 +6,8 @@
   [Any Variables experiment](https://taskfile.dev/blog/any-variables), but
   [_without support for maps_](https://github.com/go-task/task/issues/1415#issuecomment-2044756925)
   (#1415, #1547 by @pd93).
-- Refactored how Task reads, parses and merges Taskfiles using a DAG (#1563 by
-  @pd93).
+- Refactored how Task reads, parses and merges Taskfiles using a DAG (#1563,
+  #1607 by @pd93).
 - Fix error when a file or directory in the project contained a special char
   like `&`, `(` or `)` (#1551, #1584 by @andreynering).
 - Added alias `q` for template function `shellQuote` (#1601, #1603 by @vergenzt)
