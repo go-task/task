@@ -10,6 +10,7 @@
   @pd93).
 - Fix error when a file or directory in the project contained a special char
   like `&`, `(` or `)` (#1551, #1584 by @andreynering).
+- Added alias `q` for template function `shellQuote` (#1601 by @vergenzt)
 
 ## v3.36.0 - 2024-04-08
 
