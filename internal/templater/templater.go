@@ -4,10 +4,10 @@ import (
 	"bytes"
 	"maps"
 	"strings"
-	"text/template"
 
 	"github.com/go-task/task/v3/internal/deepcopy"
 	"github.com/go-task/task/v3/taskfile/ast"
+	"github.com/go-task/template"
 )
 
 // Cache is a help struct that allow us to call "replaceX" funcs multiple
@@ -27,6 +27,25 @@ func (r *Cache) ResetCache() {
 
 func (r *Cache) Err() error {
 	return r.err
+}
+
+func ResolveRef(ref string, cache *Cache) any {
+	// If there is already an error, do nothing
+	if cache.err != nil {
+		return nil
+	}
+
+	// Initialize the cache map if it's not already initialized
+	if cache.cacheMap == nil {
+		cache.cacheMap = cache.Vars.ToCacheMap()
+	}
+
+	val, err := template.ResolveRef(ref, cache.cacheMap)
+	if err != nil {
+		cache.err = err
+		return nil
+	}
+	return val
 }
 
 func Replace[T any](v T, cache *Cache) T {
@@ -91,6 +110,9 @@ func ReplaceVar(v ast.Var, cache *Cache) ast.Var {
 }
 
 func ReplaceVarWithExtra(v ast.Var, cache *Cache, extra map[string]any) ast.Var {
+	if v.Ref != "" {
+		return ast.Var{Value: ResolveRef(v.Ref, cache)}
+	}
 	return ast.Var{
 		Value: ReplaceWithExtra(v.Value, cache, extra),
 		Sh:    ReplaceWithExtra(v.Sh, cache, extra),

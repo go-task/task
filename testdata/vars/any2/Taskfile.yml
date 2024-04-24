@@ -8,6 +8,7 @@ tasks:
     - task: ref
     - task: ref-sh
     - task: ref-dep
+    - task: ref-resolver
     - task: json
     - task: yaml
 
@@ -16,10 +17,10 @@ tasks:
       MAP:
         map: {"name":"Alice","age":30,"children":[{"name":"Bob","age":5},{"name":"Charlie","age":3},{"name":"Diane","age":1}]}
     cmds:
-      - task: print-var
+      - task: print-story
         vars:
           VAR:
-            ref: MAP
+            ref: .MAP
 
   nested-map:
     vars:
@@ -44,12 +45,12 @@ tasks:
       MAP:
         map: {"name":"Alice","age":30,"children":[{"name":"Bob","age":5},{"name":"Charlie","age":3},{"name":"Diane","age":1}]}
       MAP_REF:
-        ref: MAP
+        ref: .MAP
     cmds:
-      - task: print-var
+      - task: print-story
         vars:
           VAR:
-            ref: MAP_REF
+            ref: .MAP_REF
 
   ref-sh:
     vars:
@@ -58,22 +59,34 @@ tasks:
       JSON:
         json: "{{.JSON_STRING}}"
       MAP_REF:
-        ref: JSON
+        ref: .JSON
     cmds:
-      - task: print-var
+      - task: print-story
         vars:
           VAR:
-            ref: MAP_REF
+            ref: .MAP_REF
 
   ref-dep:
     vars:
       MAP:
         map: {"name":"Alice","age":30,"children":[{"name":"Bob","age":5},{"name":"Charlie","age":3},{"name":"Diane","age":1}]}
     deps:
+      - task: print-story
+        vars:
+          VAR:
+            ref: .MAP
+
+  ref-resolver:
+    vars:
+      MAP:
+        map: {"name":"Alice","age":30,"children":[{"name":"Bob","age":5},{"name":"Charlie","age":3},{"name":"Diane","age":1}]}
+      MAP_REF:
+        ref: .MAP
+    cmds:
       - task: print-var
         vars:
           VAR:
-            ref: MAP
+            ref: (index .MAP_REF.children 0).name
 
   json:
     vars:
@@ -82,10 +95,10 @@ tasks:
       JSON:
         json: "{{.JSON_STRING}}"
     cmds:
-      - task: print-var
+      - task: print-story
         vars:
           VAR:
-            ref: JSON
+            ref: .JSON
 
   yaml:
     vars:
@@ -94,12 +107,16 @@ tasks:
       YAML:
         yaml: "{{.YAML_STRING}}"
     cmds:
-      - task: print-var
+      - task: print-story
         vars:
           VAR:
-            ref: YAML
+            ref: .YAML
 
   print-var:
+    cmds:
+      - echo "{{.VAR}}"
+
+  print-story:
     cmds:
       - >-
         echo "{{.VAR.name}} has {{len .VAR.children}} children called
