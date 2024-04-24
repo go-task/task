@@ -222,7 +222,7 @@ tasks:
       - task: bar
         vars:
           FOO:
-            ref: FOO # <-- FOO gets passed by reference to bar and maintains its type
+            ref: .FOO # <-- FOO gets passed by reference to bar and maintains its type
   bar:
     cmds:
       - 'echo {{index .FOO 0}}' # <-- FOO is still a map so the task outputs 'A' as expected
@@ -242,15 +242,36 @@ tasks:
     vars:
       FOO: [A, B, C] # <-- FOO is defined as an array
       BAR:
-        ref: FOO # <-- BAR is defined as a reference to FOO
+        ref: .FOO # <-- BAR is defined as a reference to FOO
     deps:
       - task: bar
         vars:
           BAR:
-            ref: BAR # <-- BAR gets passed by reference to bar and maintains its type
+            ref: .BAR # <-- BAR gets passed by reference to bar and maintains its type
   bar:
     cmds:
       - 'echo {{index .BAR 0}}' # <-- BAR still refers to FOO so the task outputs 'A'
+```
+
+All references use the same templating syntax as regular templates, so in
+addition to simply calling `.FOO`, you can also pass subkeys (`.FOO.BAR`) or
+indexes (`index .FOO 0`) and use functions (`len .FOO`):
+
+```yaml
+version: 3
+
+tasks:
+  foo:
+    vars:
+      FOO: [A, B, C] # <-- FOO is defined as an array
+    cmds:
+      - task: bar
+        vars:
+          FOO:
+            ref: index .FOO 0 # <-- The element at index 0 is passed by reference to bar
+  bar:
+    cmds:
+      - 'echo {{.MYVAR}}' # <-- FOO is just the letter 'A'
 ```
 
 </TabItem></Tabs>
