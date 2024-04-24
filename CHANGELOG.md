@@ -12,6 +12,10 @@
   like `&`, `(` or `)` (#1551, #1584 by @andreynering).
 - Added alias `q` for template function `shellQuote` (#1601, #1603 by @vergenzt)
 - Added support for `~` on ZSH completions (#1613 by @jwater7).
+- Added the ability to pass variables by reference using Go template syntax when
+  the
+  [Map Variables experiment](https://taskfile.dev/experiments/map-variables/) is
+  enabled (#1612 by @pd93).
 
 ## v3.36.0 - 2024-04-08
 
