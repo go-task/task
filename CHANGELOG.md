@@ -11,6 +11,7 @@
 - Fix error when a file or directory in the project contained a special char
   like `&`, `(` or `)` (#1551, #1584 by @andreynering).
 - Added alias `q` for template function `shellQuote` (#1601, #1603 by @vergenzt)
+- Added support for `~` on ZSH completions (#1613 by @jwater7).
 
 ## v3.36.0 - 2024-04-08
 
