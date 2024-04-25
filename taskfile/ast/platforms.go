@@ -6,6 +6,7 @@ import (
 
 	"gopkg.in/yaml.v3"
 
+	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/goext"
 )
 
@@ -30,7 +31,7 @@ type ErrInvalidPlatform struct {
 }
 
 func (err *ErrInvalidPlatform) Error() string {
-	return fmt.Sprintf(`task: Invalid platform "%s"`, err.Platform)
+	return fmt.Sprintf(`invalid platform "%s"`, err.Platform)
 }
 
 // UnmarshalYAML implements yaml.Unmarshaler interface.
@@ -39,14 +40,14 @@ func (p *Platform) UnmarshalYAML(node *yaml.Node) error {
 	case yaml.ScalarNode:
 		var platform string
 		if err := node.Decode(&platform); err != nil {
-			return err
+			return errors.NewTaskfileDecodeError(err, node)
 		}
 		if err := p.parsePlatform(platform); err != nil {
-			return err
+			return errors.NewTaskfileDecodeError(err, node)
 		}
 		return nil
 	}
-	return fmt.Errorf("yaml: line %d: cannot unmarshal %s into platform", node.Line, node.ShortTag())
+	return errors.NewTaskfileDecodeError(nil, node).WithTypeMessage("platform")
 }
 
 // parsePlatform takes a string representing an OS/Arch combination (or either on their own)

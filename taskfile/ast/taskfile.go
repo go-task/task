@@ -1,12 +1,13 @@
 package ast
 
 import (
-	"errors"
 	"fmt"
 	"time"
 
 	"github.com/Masterminds/semver/v3"
 	"gopkg.in/yaml.v3"
+
+	"github.com/go-task/task/v3/errors"
 )
 
 // NamespaceSeparator contains the character that separates namespaces
@@ -77,7 +78,7 @@ func (tf *Taskfile) UnmarshalYAML(node *yaml.Node) error {
 			Interval time.Duration
 		}
 		if err := node.Decode(&taskfile); err != nil {
-			return err
+			return errors.NewTaskfileDecodeError(err, node)
 		}
 		tf.Version = taskfile.Version
 		tf.Output = taskfile.Output
@@ -101,5 +102,5 @@ func (tf *Taskfile) UnmarshalYAML(node *yaml.Node) error {
 		return nil
 	}
 
-	return fmt.Errorf("yaml: line %d: cannot unmarshal %s into taskfile", node.Line, node.ShortTag())
+	return errors.NewTaskfileDecodeError(nil, node).WithTypeMessage("taskfile")
 }

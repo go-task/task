@@ -1,14 +1,12 @@
 package ast
 
 import (
-	"errors"
 	"fmt"
 
 	"gopkg.in/yaml.v3"
-)
 
-// ErrCantUnmarshalPrecondition is returned for invalid precond YAML.
-var ErrCantUnmarshalPrecondition = errors.New("task: Can't unmarshal precondition value")
+	"github.com/go-task/task/v3/errors"
+)
 
 // Precondition represents a precondition necessary for a task to run
 type Precondition struct {
@@ -33,7 +31,7 @@ func (p *Precondition) UnmarshalYAML(node *yaml.Node) error {
 	case yaml.ScalarNode:
 		var cmd string
 		if err := node.Decode(&cmd); err != nil {
-			return err
+			return errors.NewTaskfileDecodeError(err, node)
 		}
 		p.Sh = cmd
 		p.Msg = fmt.Sprintf("`%s` failed", cmd)
@@ -45,7 +43,7 @@ func (p *Precondition) UnmarshalYAML(node *yaml.Node) error {
 			Msg string
 		}
 		if err := node.Decode(&sh); err != nil {
-			return err
+			return errors.NewTaskfileDecodeError(err, node)
 		}
 		p.Sh = sh.Sh
 		p.Msg = sh.Msg
@@ -55,5 +53,5 @@ func (p *Precondition) UnmarshalYAML(node *yaml.Node) error {
 		return nil
 	}
 
-	return fmt.Errorf("yaml: line %d: cannot unmarshal %s into precondition", node.Line, node.ShortTag())
+	return errors.NewTaskfileDecodeError(nil, node).WithTypeMessage("precondition")
 }

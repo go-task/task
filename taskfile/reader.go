@@ -12,7 +12,6 @@ import (
 
 	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/compiler"
-	"github.com/go-task/task/v3/internal/filepathext"
 	"github.com/go-task/task/v3/internal/logger"
 	"github.com/go-task/task/v3/internal/templater"
 	"github.com/go-task/task/v3/taskfile/ast"
@@ -265,7 +264,12 @@ func (r *Reader) readNode(node Node) (*ast.Taskfile, error) {
 
 	var tf ast.Taskfile
 	if err := yaml.Unmarshal(b, &tf); err != nil {
-		return nil, &errors.TaskfileInvalidError{URI: filepathext.TryAbsToRel(node.Location()), Err: err}
+		// Decode the taskfile and add the file info the any errors
+		taskfileInvalidErr := &errors.TaskfileDecodeError{}
+		if errors.As(err, &taskfileInvalidErr) {
+			return nil, taskfileInvalidErr.WithFileInfo(node.Location(), b, 2)
+		}
+		return nil, err
 	}
 
 	// Check that the Taskfile is set and has a schema version

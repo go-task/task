@@ -1,9 +1,9 @@
 package ast
 
 import (
-	"fmt"
-
 	"gopkg.in/yaml.v3"
+
+	"github.com/go-task/task/v3/errors"
 )
 
 // Dep is a task dependency
@@ -32,7 +32,7 @@ func (d *Dep) UnmarshalYAML(node *yaml.Node) error {
 	case yaml.ScalarNode:
 		var task string
 		if err := node.Decode(&task); err != nil {
-			return err
+			return errors.NewTaskfileDecodeError(err, node)
 		}
 		d.Task = task
 		return nil
@@ -45,7 +45,7 @@ func (d *Dep) UnmarshalYAML(node *yaml.Node) error {
 			Silent bool
 		}
 		if err := node.Decode(&taskCall); err != nil {
-			return err
+			return errors.NewTaskfileDecodeError(err, node)
 		}
 		d.Task = taskCall.Task
 		d.For = taskCall.For
@@ -54,5 +54,5 @@ func (d *Dep) UnmarshalYAML(node *yaml.Node) error {
 		return nil
 	}
 
-	return fmt.Errorf("cannot unmarshal %s into dependency", node.ShortTag())
+	return errors.NewTaskfileDecodeError(nil, node).WithTypeMessage("dependency")
 }
