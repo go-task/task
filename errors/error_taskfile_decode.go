@@ -2,16 +2,35 @@ package errors
 
 import (
 	"bytes"
+	"embed"
 	"errors"
 	"fmt"
 	"regexp"
 	"strings"
 
+	"github.com/alecthomas/chroma/v2"
+	"github.com/alecthomas/chroma/v2/quick"
+	"github.com/alecthomas/chroma/v2/styles"
 	"github.com/fatih/color"
 	"gopkg.in/yaml.v3"
 )
 
+//go:embed themes/*.xml
+var embedded embed.FS
+
 var typeErrorRegex = regexp.MustCompile(`line \d+: (.*)`)
+
+func init() {
+	r, err := embedded.Open("themes/task.xml")
+	if err != nil {
+		panic(err)
+	}
+	style, err := chroma.NewXMLStyle(r)
+	if err != nil {
+		panic(err)
+	}
+	styles.Register(style)
+}
 
 type (
 	TaskfileDecodeError struct {
@@ -83,8 +102,7 @@ func (err *TaskfileDecodeError) Error() string {
 		}
 		columnIndicator := "^"
 
-		// Colors
-		line = highlight(line)
+		// Print each line
 		lineIndicator = color.RedString(lineIndicator)
 		columnIndicator = color.RedString(columnIndicator)
 		lineNumberFormat := fmt.Sprintf("%%%dd", maxLineNumberDigits)
@@ -124,7 +142,9 @@ func (err *TaskfileDecodeError) WithTypeMessage(t string) *TaskfileDecodeError {
 }
 
 func (err *TaskfileDecodeError) WithFileInfo(location string, b []byte, padding int) *TaskfileDecodeError {
-	lines := strings.Split(string(b), "\n")
+	buf := &bytes.Buffer{}
+	quick.Highlight(buf, string(b), "yaml", "terminal", "task")
+	lines := strings.Split(buf.String(), "\n")
 	start := max(err.Line-1-padding, 0)
 	end := min(err.Line+padding, len(lines)-1)
 
@@ -145,28 +165,6 @@ func extractTypeErrorMessage(message string) string {
 		return matches[1]
 	}
 	return message
-}
-
-func highlight(line string) string {
-	keyRE := regexp.MustCompile(`(.*-? +)?([a-zA-Z0-9_-]*)`)
-	valueRE := regexp.MustCompile(`(.*-? +["\[]?)?([a-zA-Z0-9_-]*)(["\]]?)`)
-
-	// Separate markup/comment
-	markup, comment, isComment := strings.Cut(line, "#")
-	if isComment {
-		comment = color.HiBlackString("#%s", comment)
-	}
-
-	// Separate key/value
-	key, value, isMapping := strings.Cut(markup, ":")
-	if isMapping {
-		key = keyRE.ReplaceAllString(key, fmt.Sprintf("$1%s$3", color.YellowString("$2")))
-		value = valueRE.ReplaceAllString(value, fmt.Sprintf("$1%s$3", color.CyanString("$2")))
-		return fmt.Sprintf("%s:%s%s", key, value, comment)
-	} else {
-		value = valueRE.ReplaceAllString(key, fmt.Sprintf("$1%s$3", color.CyanString("$2")))
-		return fmt.Sprintf("%s%s", value, comment)
-	}
 }
 
 func digits(number int) int {
