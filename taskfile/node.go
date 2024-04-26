@@ -30,9 +30,8 @@ func NewRootNode(
 	timeout time.Duration,
 ) (Node, error) {
 	dir = getDefaultDir(entrypoint, dir)
-	// Check if there is something to read on STDIN
-	stat, _ := os.Stdin.Stat()
-	if (stat.Mode()&os.ModeCharDevice) == 0 && stat.Size() > 0 {
+	// If the entrypoint is "-", we read from stdin
+	if entrypoint == "-" {
 		return NewStdinNode(dir)
 	}
 	return NewNode(l, entrypoint, dir, insecure, timeout)
