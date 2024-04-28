@@ -8,6 +8,7 @@ tasks:
     dotenv: ['.env']
     cmds:
       - echo "$FOO" > dotenv.txt
+      - echo "{{.FOO}}" > dotenv-2.txt
 
   dotenv-overridden-by-env:
     dotenv: ['.env']

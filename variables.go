@@ -125,6 +125,7 @@ func (e *Executor) compiledTask(call *ast.Call, evaluateShVars bool) (*ast.Task,
 			return nil, err
 		}
 	}
+	envCache := new.Env.ToCacheMap()
 
 	if len(origTask.Cmds) > 0 {
 		new.Cmds = make([]*ast.Cmd, 0, len(origTask.Cmds))
@@ -161,7 +162,7 @@ func (e *Executor) compiledTask(call *ast.Call, evaluateShVars bool) (*ast.Task,
 				continue
 			}
 			newCmd := cmd.DeepCopy()
-			newCmd.Cmd = templater.Replace(cmd.Cmd, cache)
+			newCmd.Cmd = templater.ReplaceWithExtra(cmd.Cmd, cache, envCache)
 			newCmd.Task = templater.Replace(cmd.Task, cache)
 			newCmd.Vars = templater.ReplaceVars(cmd.Vars, cache)
 			new.Cmds = append(new.Cmds, newCmd)
