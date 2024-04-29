@@ -5,7 +5,6 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"os"
 	"path/filepath"
 	"time"
 
@@ -30,8 +29,7 @@ func NewHTTPNode(
 	opts ...NodeOption,
 ) (*HTTPNode, error) {
 	base := NewBaseNode(dir, opts...)
-	entrypointWithEnv := os.ExpandEnv(entrypoint)
-	url, err := url.Parse(entrypointWithEnv)
+	url, err := url.Parse(entrypoint)
 	if err != nil {
 		return nil, err
 	}

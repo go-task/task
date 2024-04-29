@@ -48,13 +48,13 @@ tasks:
 and you run `task my-remote-namespace:hello`, it will print the text: "Hello
 from the remote Taskfile!" to your console.
 
-You can also reference environment variable in your URL to have authentication, for example :
+URL is processed by the templating system, so you can reference environment variable in your URL to have authentication, for example :
 
 ```yaml
 version: '3'
 
 includes:
-  my-remote-namespace: https://${TOKEN}@raw.githubusercontent.com/my-org/my-repo/main/Taskfile.yml
+  my-remote-namespace: https://{{.TOKEN}}@raw.githubusercontent.com/my-org/my-repo/main/Taskfile.yml
 ```
 
 `TOKEN=my-token task my-remote-namespace:hello` will be resolved by Task to `https://my-token@raw.githubusercontent.com/my-org/my-repo/main/Taskfile.yml`

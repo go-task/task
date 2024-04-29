@@ -3,6 +3,7 @@ package taskfile
 import (
 	"context"
 	"fmt"
+	"github.com/go-task/task/v3/internal/compiler"
 	"os"
 	"time"
 
@@ -97,9 +98,11 @@ func (r *Reader) include(node Node) error {
 
 	// Loop over each included taskfile
 	_ = vertex.Taskfile.Includes.Range(func(namespace string, include *ast.Include) error {
+		vars := compiler.GetEnviron()
+		vars.Merge(vertex.Taskfile.Vars, nil)
 		// Start a goroutine to process each included Taskfile
 		g.Go(func() error {
-			cache := &templater.Cache{Vars: vertex.Taskfile.Vars}
+			cache := &templater.Cache{Vars: vars}
 			include = &ast.Include{
 				Namespace:      include.Namespace,
 				Taskfile:       templater.Replace(include.Taskfile, cache),
