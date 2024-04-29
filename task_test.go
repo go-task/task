@@ -1200,8 +1200,10 @@ func TestIncludesInterpolation(t *testing.T) {
 		expectedOutput string
 	}{
 		{"include", "include", false, "include\n"},
+		{"include_with_env_variable", "include-with-env-variable", false, "include_with_env_variable\n"},
 		{"include_with_dir", "include-with-dir", false, "included\n"},
 	}
+	t.Setenv("MODULE", "included")
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {

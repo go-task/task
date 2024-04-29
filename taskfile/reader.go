@@ -11,6 +11,7 @@ import (
 	"gopkg.in/yaml.v3"
 
 	"github.com/go-task/task/v3/errors"
+	"github.com/go-task/task/v3/internal/compiler"
 	"github.com/go-task/task/v3/internal/filepathext"
 	"github.com/go-task/task/v3/internal/logger"
 	"github.com/go-task/task/v3/internal/templater"
@@ -97,9 +98,11 @@ func (r *Reader) include(node Node) error {
 
 	// Loop over each included taskfile
 	_ = vertex.Taskfile.Includes.Range(func(namespace string, include *ast.Include) error {
+		vars := compiler.GetEnviron()
+		vars.Merge(vertex.Taskfile.Vars, nil)
 		// Start a goroutine to process each included Taskfile
 		g.Go(func() error {
-			cache := &templater.Cache{Vars: vertex.Taskfile.Vars}
+			cache := &templater.Cache{Vars: vars}
 			include = &ast.Include{
 				Namespace:      include.Namespace,
 				Taskfile:       templater.Replace(include.Taskfile, cache),
