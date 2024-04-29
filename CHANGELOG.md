@@ -16,6 +16,8 @@
   the
   [Map Variables experiment](https://taskfile.dev/experiments/map-variables/) is
   enabled (#1612 by @pd93).
+- Added support for environment variables in the templating engine in `includes`
+  (#1610 by @vmaerten).
 
 ## v3.36.0 - 2024-04-08
 
