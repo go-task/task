@@ -14,17 +14,15 @@ type Prefixed struct {
 	logger  *logger.Logger
 	seen    map[string]uint
 	counter *uint
-	color   bool
 }
 
-func NewPrefixed(logger *logger.Logger, color bool) Prefixed {
+func NewPrefixed(logger *logger.Logger) Prefixed {
 	var counter uint
 
 	return Prefixed{
 		seen:    make(map[string]uint),
 		counter: &counter,
 		logger:  logger,
-		color:   color,
 	}
 }
 
@@ -100,14 +98,8 @@ func (pw *prefixWriter) writeLine(line string) error {
 		return nil
 	}
 
-	if pw.prefixed.color {
-		color := PrefixColorSequence[idx%uint(len(PrefixColorSequence))]
-		pw.prefixed.logger.FOutf(pw.writer, color, pw.prefix)
-	} else {
-		if _, err := fmt.Fprint(pw.writer, pw.prefix); err != nil {
-			return nil
-		}
-	}
+	color := PrefixColorSequence[idx%uint(len(PrefixColorSequence))]
+	pw.prefixed.logger.FOutf(pw.writer, color, pw.prefix)
 
 	if _, err := fmt.Fprint(pw.writer, "] "); err != nil {
 		return nil

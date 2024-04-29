@@ -33,7 +33,7 @@ func BuildFor(o *ast.Output, logger *logger.Logger) (Output, error) {
 		if err := checkOutputGroupUnset(o); err != nil {
 			return nil, err
 		}
-		return NewPrefixed(logger, o.Prefix.Color), nil
+		return NewPrefixed(logger), nil
 	default:
 		return nil, fmt.Errorf(`task: output style %q not recognized`, o.Name)
 	}

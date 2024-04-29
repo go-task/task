@@ -113,7 +113,7 @@ func TestPrefixed(t *testing.T) {
 		Color: false,
 	}
 
-	var o output.Output = output.NewPrefixed(l, false)
+	var o output.Output = output.NewPrefixed(l)
 	w, _, cleanup := o.WrapWriter(&b, io.Discard, "prefix", nil)
 
 	t.Run("simple use cases", func(t *testing.T) {
@@ -147,7 +147,7 @@ func TestPrefixedWithColor(t *testing.T) {
 		Color: true,
 	}
 
-	var o output.Output = output.NewPrefixed(l, true)
+	var o output.Output = output.NewPrefixed(l)
 
 	writers := make([]io.Writer, 16)
 	for i := range writers {

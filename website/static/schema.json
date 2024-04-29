@@ -544,16 +544,6 @@
               "default": false
             }
           }
-        },
-        "prefixed": {
-          "type": "object",
-          "properties": {
-            "color": {
-              "description": "Use colors for task prefixes.",
-              "type": "boolean",
-              "default": false
-            }
-          }
         }
       }
     },
