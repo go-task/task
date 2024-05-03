@@ -9,6 +9,14 @@ tasks:
     cmds:
       - echo "$FOO" > dotenv.txt
       - echo "{{.FOO}}" > dotenv-2.txt
+      - task: dotenv_called
+        vars:
+          FOO: "{{.FOO}}"
+
+  dotenv_called:
+    cmds:
+      - echo "$FOO" > dotenv-called.txt
+      - echo "{{.FOO}}" > dotenv-called-2.txt
 
   dotenv-overridden-by-env:
     dotenv: ['.env']

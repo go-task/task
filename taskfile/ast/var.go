@@ -36,6 +36,14 @@ func (vs *Vars) ToCacheMap() (m map[string]any) {
 	return
 }
 
+// FromCacheMap converts a map containing only the static variables
+// to Vars
+func (vs *Vars) MergeCacheMap(m map[string]any) {
+	for k, v := range m {
+		vs.Set(k, Var{Value: v})
+	}
+}
+
 // Wrapper around OrderedMap.Set to ensure we don't get nil pointer errors
 func (vs *Vars) Range(f func(k string, v Var) error) error {
 	if vs == nil {

@@ -141,3 +141,11 @@ func ReplaceVarsWithExtra(vars *ast.Vars, cache *Cache, extra map[string]any) *a
 
 	return &newVars
 }
+
+// MergeCacheMap merges a map into the cache
+func (vs *Cache) MergeCacheMap(m map[string]any) {
+	for k, v := range m {
+		vs.cacheMap[k] = v
+	}
+	vs.Vars.MergeCacheMap(vs.cacheMap)
+}

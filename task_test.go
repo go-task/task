@@ -1573,6 +1573,26 @@ func TestTaskDotenvWithBrackets(t *testing.T) {
 		},
 	}
 	tt.Run(t)
+
+	tt2 := fileContentTest{
+		Dir:       "testdata/dotenv_task/default",
+		Target:    "dotenv",
+		TrimSpace: true,
+		Files: map[string]string{
+			"dotenv-called.txt": "foo",
+		},
+	}
+	tt2.Run(t)
+
+	tt3 := fileContentTest{
+		Dir:       "testdata/dotenv_task/default",
+		Target:    "dotenv",
+		TrimSpace: true,
+		Files: map[string]string{
+			"dotenv-called-2.txt": "foo",
+		},
+	}
+	tt3.Run(t)
 }
 
 func TestTaskDotenvFail(t *testing.T) {

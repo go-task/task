@@ -107,6 +107,7 @@ func (e *Executor) compiledTask(call *ast.Call, evaluateShVars bool) (*ast.Task,
 	new.Env.Merge(templater.ReplaceVars(e.Taskfile.Env, cache), nil)
 	new.Env.Merge(templater.ReplaceVars(dotenvEnvs, cache), nil)
 	new.Env.Merge(templater.ReplaceVars(origTask.Env, cache), nil)
+	new.Env.Merge(templater.ReplaceVars(call.Vars, cache), nil)
 	if evaluateShVars {
 		err = new.Env.Range(func(k string, v ast.Var) error {
 			// If the variable is not dynamic, we can set it and return
@@ -126,6 +127,8 @@ func (e *Executor) compiledTask(call *ast.Call, evaluateShVars bool) (*ast.Task,
 		}
 	}
 	envCache := new.Env.ToCacheMap()
+	// merge envCache with cache
+	cache.MergeCacheMap(envCache)
 
 	if len(origTask.Cmds) > 0 {
 		new.Cmds = make([]*ast.Cmd, 0, len(origTask.Cmds))
@@ -162,7 +165,7 @@ func (e *Executor) compiledTask(call *ast.Call, evaluateShVars bool) (*ast.Task,
 				continue
 			}
 			newCmd := cmd.DeepCopy()
-			newCmd.Cmd = templater.ReplaceWithExtra(cmd.Cmd, cache, envCache)
+			newCmd.Cmd = templater.Replace(cmd.Cmd, cache)
 			newCmd.Task = templater.Replace(cmd.Task, cache)
 			newCmd.Vars = templater.ReplaceVars(cmd.Vars, cache)
 			new.Cmds = append(new.Cmds, newCmd)
