@@ -60,7 +60,6 @@ func (fct fileContentTest) Run(t *testing.T) {
 	for f := range fct.Files {
 		_ = os.Remove(filepathext.SmartJoin(fct.Dir, f))
 	}
-
 	e := &task.Executor{
 		Dir:        fct.Dir,
 		TempDir:    filepathext.SmartJoin(fct.Dir, ".task"),
@@ -68,6 +67,7 @@ func (fct fileContentTest) Run(t *testing.T) {
 		Stdout:     io.Discard,
 		Stderr:     io.Discard,
 	}
+
 	require.NoError(t, e.Setup(), "e.Setup()")
 	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: fct.Target}), "e.Run(target)")
 
@@ -96,16 +96,30 @@ func TestEmptyTask(t *testing.T) {
 }
 
 func TestEnv(t *testing.T) {
+	t.Setenv("QUX", "from_env")
 	tt := fileContentTest{
 		Dir:       "testdata/env",
 		Target:    "default",
 		TrimSpace: false,
 		Files: map[string]string{
-			"local.txt":  "GOOS='linux' GOARCH='amd64' CGO_ENABLED='0'\n",
-			"global.txt": "FOO='foo' BAR='overriden' BAZ='baz'\n",
+			"local.txt":         "GOOS='linux' GOARCH='amd64' CGO_ENABLED='0'\n",
+			"global.txt":        "FOO='foo' BAR='overriden' BAZ='baz'\n",
+			"not-overriden.txt": "QUX='from_env'\n",
 		},
 	}
 	tt.Run(t)
+
+	t.Setenv("TASK_X_ENV_PRECEDENCE", "1")
+
+	ttt := fileContentTest{
+		Dir:       "testdata/env",
+		Target:    "overriden",
+		TrimSpace: false,
+		Files: map[string]string{
+			"overriden.txt": "QUX='from_taskfile'\n",
+		},
+	}
+	ttt.Run(t)
 }
 
 func TestVars(t *testing.T) {

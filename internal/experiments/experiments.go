@@ -29,6 +29,7 @@ var (
 	RemoteTaskfiles Experiment
 	AnyVariables    Experiment
 	MapVariables    Experiment
+	EnvPrecedence   Experiment
 )
 
 func init() {
@@ -37,6 +38,7 @@ func init() {
 	RemoteTaskfiles = New("REMOTE_TASKFILES")
 	AnyVariables = New("ANY_VARIABLES", "1", "2")
 	MapVariables = New("MAP_VARIABLES", "1", "2")
+	EnvPrecedence = New("ENV_PRECEDENCE")
 }
 
 func New(xName string, enabledValues ...string) Experiment {
@@ -104,5 +106,6 @@ func List(l *logger.Logger) error {
 	printExperiment(w, l, GentleForce)
 	printExperiment(w, l, RemoteTaskfiles)
 	printExperiment(w, l, MapVariables)
+	printExperiment(w, l, EnvPrecedence)
 	return w.Flush()
 }
