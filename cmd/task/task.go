@@ -17,6 +17,7 @@ import (
 	"github.com/go-task/task/v3/internal/logger"
 	"github.com/go-task/task/v3/internal/sort"
 	ver "github.com/go-task/task/v3/internal/version"
+	"github.com/go-task/task/v3/taskfile"
 	"github.com/go-task/task/v3/taskfile/ast"
 )
 
@@ -125,7 +126,6 @@ func run() error {
 		OutputStyle: flags.Output,
 		TaskSorter:  taskSorter,
 	}
-
 	listOptions := task.NewListOptions(flags.List, flags.ListAll, flags.ListJson, flags.NoStatus)
 	if err := listOptions.Validate(); err != nil {
 		return err
@@ -135,7 +135,6 @@ func run() error {
 	if err != nil {
 		return err
 	}
-
 	if experiments.AnyVariables.Enabled {
 		logger.Warnf("The 'Any Variables' experiment flag is no longer required to use non-map variable types. If you wish to use map variables, please use 'TASK_X_MAP_VARIABLES' instead. See https://github.com/go-task/task/issues/1585\n")
 	}
@@ -144,6 +143,15 @@ func run() error {
 	// taskfile is downloaded
 	if flags.Download {
 		return nil
+	}
+
+	if flags.ClearCache {
+		cache, err := taskfile.NewCache(e.TempDir)
+		if err != nil {
+			return err
+		}
+		err = cache.Clear()
+		return err
 	}
 
 	if (listOptions.ShouldListTasks()) && flags.Silent {

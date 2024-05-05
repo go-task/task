@@ -66,3 +66,7 @@ func (c *Cache) filePath(node Node, suffix string) string {
 	}
 	return filepath.Join(c.dir, fmt.Sprintf("%s.%s.%s", prefix, c.key(node), suffix))
 }
+
+func (c *Cache) Clear() error {
+	return os.RemoveAll(c.dir)
+}
