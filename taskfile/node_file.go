@@ -112,3 +112,7 @@ func (node *FileNode) ResolveDir(dir string) (string, error) {
 	entrypointDir := filepath.Dir(node.Entrypoint)
 	return filepathext.SmartJoin(entrypointDir, path), nil
 }
+
+func (node *FileNode) Filename() string {
+	return filepath.Base(node.Entrypoint)
+}

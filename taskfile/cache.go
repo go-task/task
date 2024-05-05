@@ -50,9 +50,9 @@ func (c *Cache) key(node Node) string {
 }
 
 func (c *Cache) cacheFilePath(node Node) string {
-	return filepath.Join(c.dir, fmt.Sprintf("%s.yaml", c.key(node)))
+	return filepath.Join(c.dir, fmt.Sprintf("%s.%s.yaml", node.Filename(), c.key(node)))
 }
 
 func (c *Cache) checksumFilePath(node Node) string {
-	return filepath.Join(c.dir, fmt.Sprintf("%s.checksum", c.key(node)))
+	return filepath.Join(c.dir, fmt.Sprintf("%s.%s.checksum", node.Filename(), c.key(node)))
 }
