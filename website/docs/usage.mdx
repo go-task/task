@@ -121,13 +121,14 @@ tasks:
 ### Reading a Taskfile from stdin
 
 Taskfile also supports reading from stdin. This is useful if you are generating
-Taskfiles dynamically and don't want write them to disk. This works just like
-any other program that supports stdin. For example:
+Taskfiles dynamically and don't want write them to disk. To tell task to read
+from stdin, you must specify the `-t/--taskfile` flag with the special `-`
+value. You may then pipe into Task as you would any other program:
 
 ```shell
-task < <(cat ./Taskfile.yml)
+task -t - <(cat ./Taskfile.yml)
 # OR
-cat ./Taskfile.yml | task
+cat ./Taskfile.yml | task -t -
 ```
 
 ## Environment variables
