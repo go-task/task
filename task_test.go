@@ -19,6 +19,7 @@ import (
 
 	"github.com/go-task/task/v3"
 	"github.com/go-task/task/v3/errors"
+	"github.com/go-task/task/v3/internal/experiments"
 	"github.com/go-task/task/v3/internal/filepathext"
 	"github.com/go-task/task/v3/taskfile/ast"
 )
@@ -73,7 +74,6 @@ func (fct fileContentTest) Run(t *testing.T) {
 
 	require.NoError(t, e.Setup(), "e.Setup()")
 	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: fct.Target}), "e.Run(target)")
-
 	for name, expectContent := range fct.Files {
 		t.Run(fct.name(name), func(t *testing.T) {
 			path := filepathext.SmartJoin(e.Dir, name)
@@ -108,7 +108,7 @@ func TestEmptyTaskfile(t *testing.T) {
 }
 
 func TestEnv(t *testing.T) {
-	t.Setenv("QUX", "from_env")
+	t.Setenv("QUX", "from_os")
 	tt := fileContentTest{
 		Dir:       "testdata/env",
 		Target:    "default",
@@ -117,13 +117,12 @@ func TestEnv(t *testing.T) {
 			"local.txt":         "GOOS='linux' GOARCH='amd64' CGO_ENABLED='0'\n",
 			"global.txt":        "FOO='foo' BAR='overriden' BAZ='baz'\n",
 			"multiple_type.txt": "FOO='1' BAR='true' BAZ='1.1'\n",
-			"not-overriden.txt": "QUX='from_env'\n",
+			"not-overriden.txt": "QUX='from_os'\n",
 		},
 	}
 	tt.Run(t)
-
 	t.Setenv("TASK_X_ENV_PRECEDENCE", "1")
-
+	experiments.EnvPrecedence = experiments.New("ENV_PRECEDENCE")
 	ttt := fileContentTest{
 		Dir:       "testdata/env",
 		Target:    "overriden",
