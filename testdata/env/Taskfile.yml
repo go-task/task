@@ -14,6 +14,7 @@ tasks:
     cmds:
       - task: local
       - task: global
+      - task: multiple_type
 
   local:
     vars:
@@ -31,3 +32,11 @@ tasks:
       BAR: overriden
     cmds:
       - echo "FOO='$FOO' BAR='$BAR' BAZ='$BAZ'" > global.txt
+
+  multiple_type:
+    env:
+      FOO: 1
+      BAR: true
+      BAZ: 1.1
+    cmds:
+      - echo "FOO='$FOO' BAR='$BAR' BAZ='$BAZ'" > multiple_type.txt

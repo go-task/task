@@ -101,8 +101,9 @@ func TestEnv(t *testing.T) {
 		Target:    "default",
 		TrimSpace: false,
 		Files: map[string]string{
-			"local.txt":  "GOOS='linux' GOARCH='amd64' CGO_ENABLED='0'\n",
-			"global.txt": "FOO='foo' BAR='overriden' BAZ='baz'\n",
+			"local.txt":         "GOOS='linux' GOARCH='amd64' CGO_ENABLED='0'\n",
+			"global.txt":        "FOO='foo' BAR='overriden' BAZ='baz'\n",
+			"multiple_type.txt": "FOO='1' BAR='' BAZ='1.1'\n",
 		},
 	}
 	tt.Run(t)
