@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v3.37.0 - 2024-05-08
 
 - Released the
   [Any Variables experiment](https://taskfile.dev/blog/any-variables), but
