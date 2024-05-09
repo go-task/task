@@ -648,7 +648,7 @@
           "$ref": "#/definitions/tasks"
         },
         "silent": {
-          "description": "Default 'silent' options for this Taskfile. If `false`, can be overidden with `true` in a task by task basis.",
+          "description": "Default 'silent' options for this Taskfile. If `false`, can be overridden with `true` in a task by task basis.",
           "type": "boolean"
         },
         "set": {
