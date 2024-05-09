@@ -71,7 +71,7 @@ brews:
     description: Task runner / simpler Make alternative written in Go
     license: MIT
     homepage: https://taskfile.dev
-    folder: Formula
+    directory: Formula
     repository:
       owner: go-task
       name: homebrew-tap
