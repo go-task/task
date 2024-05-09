@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v3.37.1 - 2024-05-09
 
 - Fix bug where non-string values (numbers, bools) added to `env:` weren't been
   correctly exported (#1640, #1641 by @vmaerten and @andreynering).
