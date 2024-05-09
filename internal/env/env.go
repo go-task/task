@@ -29,7 +29,7 @@ func Get(t *ast.Task) []string {
 
 func isTypeAllowed(v any) bool {
 	switch v.(type) {
-	case string, int, float32, float64:
+	case string, bool, int, float32, float64:
 		return true
 	default:
 		return false
