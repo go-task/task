@@ -8,12 +8,14 @@ env:
   FOO: foo
   BAR: bar
   BAZ: "{{.BAZ}}"
+  QUX: from_taskfile
 
 tasks:
   default:
     cmds:
       - task: local
       - task: global
+      - task: not-overriden
 
   local:
     vars:
@@ -31,3 +33,11 @@ tasks:
       BAR: overriden
     cmds:
       - echo "FOO='$FOO' BAR='$BAR' BAZ='$BAZ'" > global.txt
+
+  not-overriden:
+    cmds:
+      - echo "QUX='$QUX'" > not-overriden.txt
+
+  overriden:
+    cmds:
+      - echo "QUX='$QUX'" > overriden.txt
