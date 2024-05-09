@@ -512,7 +512,7 @@
       "type": "object",
       "properties": {
         "exclude": {
-          "description": "File or glob patter to exclude from the list",
+          "description": "File or glob pattern to exclude from the list",
           "type": "string"
         }
       }
@@ -648,7 +648,7 @@
           "$ref": "#/definitions/tasks"
         },
         "silent": {
-          "description": "Default 'silent' options for this Taskfile. If `false`, can be overidden with `true` in a task by task basis.",
+          "description": "Default 'silent' options for this Taskfile. If `false`, can be overridden with `true` in a task by task basis.",
           "type": "boolean"
         },
         "set": {
