@@ -1042,7 +1042,7 @@ func TestIncludesIncorrect(t *testing.T) {
 
 	err := e.Setup()
 	require.Error(t, err)
-	assert.Contains(t, err.Error(), "task: Failed to parse testdata/includes_incorrect/incomplete.yml:")
+	assert.Contains(t, err.Error(), "Failed to parse testdata/includes_incorrect/incomplete.yml:", err.Error())
 }
 
 func TestIncludesEmptyMain(t *testing.T) {
