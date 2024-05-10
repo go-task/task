@@ -1,0 +1,113 @@
+package taskfile
+
+import (
+	"context"
+	"fmt"
+	"github.com/go-git/go-billy/v5/memfs"
+	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing"
+	"github.com/go-git/go-git/v5/storage/memory"
+	"github.com/go-task/task/v3/errors"
+	"github.com/go-task/task/v3/internal/execext"
+	"github.com/go-task/task/v3/internal/filepathext"
+	giturls "github.com/whilp/git-urls"
+	"io"
+	"net/url"
+	"path/filepath"
+	"strings"
+)
+
+// An GitNode is a node that reads a Taskfile from a remote location via HTTP.
+type GitNode struct {
+	*BaseNode
+	URL    *url.URL
+	rawUrl string
+	ref    string
+	path   string
+}
+
+func NewGitNode(
+	entrypoint string,
+	dir string,
+	insecure bool,
+	opts ...NodeOption,
+) (*GitNode, error) {
+	base := NewBaseNode(dir, opts...)
+	u, err := giturls.Parse(entrypoint)
+	if err != nil {
+		return nil, err
+	}
+	refQuery := u.Query().Get("ref")
+	ref, path := func() (string, string) {
+		x := strings.Split(refQuery, "//")
+		return x[0], x[1]
+	}()
+
+	rawUrl := u.String()
+	u.RawQuery = ""
+
+	if u.Scheme == "http" && !insecure {
+		return nil, &errors.TaskfileNotSecureError{URI: entrypoint}
+	}
+
+	return &GitNode{
+		BaseNode: base,
+		URL:      u,
+		rawUrl:   rawUrl,
+		ref:      ref,
+		path:     path,
+	}, nil
+}
+
+func (node *GitNode) Location() string {
+	return node.rawUrl
+}
+
+func (node *GitNode) Remote() bool {
+	return true
+}
+
+func (node *GitNode) Read(_ context.Context) ([]byte, error) {
+	fs := memfs.New()
+	storer := memory.NewStorage()
+	_, err := git.Clone(storer, fs, &git.CloneOptions{
+		URL:           node.URL.String(),
+		ReferenceName: plumbing.ReferenceName(node.ref),
+		Depth:         1,
+	})
+	if err != nil {
+		return nil, err
+	}
+	file, err := fs.Open(node.path)
+	if err != nil {
+		return nil, err
+	}
+	// Read the entire response body
+	b, err := io.ReadAll(file)
+	if err != nil {
+		return nil, err
+	}
+
+	return b, nil
+}
+
+func (node *GitNode) ResolveEntrypoint(entrypoint string) (string, error) {
+	dir, _ := filepath.Split(node.path)
+	return fmt.Sprintf("%s?ref=%s//%s", node.URL, node.ref, filepath.Join(dir, entrypoint)), nil
+}
+
+func (node *GitNode) ResolveDir(dir string) (string, error) {
+	path, err := execext.Expand(dir)
+	if err != nil {
+		return "", err
+	}
+
+	if filepathext.IsAbs(path) {
+		return path, nil
+	}
+
+	// NOTE: Uses the directory of the entrypoint (Taskfile), not the current working directory
+	// This means that files are included relative to one another
+	entrypointDir := filepath.Dir(node.Dir())
+	return filepathext.SmartJoin(entrypointDir, path), nil
+}

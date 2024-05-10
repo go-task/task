@@ -2,6 +2,7 @@ package taskfile
 
 import (
 	"context"
+	giturls "github.com/whilp/git-urls"
 	"os"
 	"path/filepath"
 	"strings"
@@ -48,11 +49,11 @@ func NewNode(
 ) (Node, error) {
 	var node Node
 	var err error
-	switch getScheme(entrypoint) {
-	case "http", "https":
+	if isGitNode(entrypoint) {
+		node, err = NewGitNode(entrypoint, dir, insecure, opts...)
+	} else if getScheme(entrypoint) == "http" || getScheme(entrypoint) == "https" {
 		node, err = NewHTTPNode(l, entrypoint, dir, insecure, timeout, opts...)
-	default:
-		// If no other scheme matches, we assume it's a file
+	} else {
 		node, err = NewFileNode(l, entrypoint, dir, opts...)
 	}
 	if node.Remote() && !experiments.RemoteTaskfiles.Enabled {
@@ -89,4 +90,11 @@ func getDefaultDir(entrypoint, dir string) string {
 	}
 
 	return dir
+}
+
+// TODO handle error
+func isGitNode(entrypoint string) bool {
+	u, _ := giturls.Parse(entrypoint)
+	u.Path = strings.TrimSuffix(u.Path, "/")
+	return strings.HasSuffix(u.Path, ".git") && (u.Scheme == "git" || u.Scheme == "ssh" || u.Scheme == "https" || u.Scheme == "http")
 }
