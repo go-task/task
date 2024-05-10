@@ -285,9 +285,9 @@
         "yaml": {
           "type": "string",
           "description": "The value will parsed as a YAML string and stored in the variable"
-        },
-        "additionalProperties": false
-      }
+        }
+      },
+      "additionalProperties": false
     },
     "task_call": {
       "type": "object",
