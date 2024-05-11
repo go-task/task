@@ -131,30 +131,7 @@ func run() error {
 		return err
 	}
 
-	// decodeErr := &taskfile.DecodeError{}
-	// if err := e.Setup(); errors.As(err, &decodeErr) {
-	// 	decodeErr.PrettyPrint(os.Stderr)
-	// 	os.Exit(1)
-	// } else if err != nil {
-	// 	log.Fatal(err)
-	// }
-	// v, err := e.Taskfile.ParsedVersion()
-	// if err != nil {
-	// 	log.Fatal(err)
-	// 	return
-	// }
-
 	err := e.Setup()
-	// spew.Dump(err)
-	// err = errors.Unwrap(err)
-	// spew.Dump(err)
-	// decodeErr := &ast.DecodeError{}
-	// if errors.As(err, &decodeErr) {
-	// 	if err := decodeErr.PrettyPrint(os.Stderr); err != nil {
-	// 		log.Fatal(err)
-	// 	}
-	// 	os.Exit(1)
-	// }
 	if err != nil {
 		return err
 	}
