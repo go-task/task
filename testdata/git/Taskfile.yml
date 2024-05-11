@@ -1,0 +1,18 @@
+version: '3'
+
+silent: false
+
+includes:
+  rust: 'git@github.com:pbstck/taskfiles.git?ref=v1//taskfile/rust.yml'
+  go_http: https://github.com/pbstck/taskfiles.git?ref=v1//taskfile/go.yml
+
+tasks:
+  default:
+    env:
+      CC: x86_64-w64-mingw32-gcc
+      CGO_ENABLED: 1
+      CGO_ENABLED2: 1.1
+      GOOS: windows
+      GOARCH: amd64
+    cmds:
+      - echo CC=$CC  CGO_ENABLED=$CGO_ENABLED CGO_ENABLED2=$CGO_ENABLED2 GOOS=$GOOS GOARCH=$GOARCH
