@@ -2,11 +2,12 @@ package taskfile
 
 import (
 	"context"
-	giturls "github.com/whilp/git-urls"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
+
+	giturls "github.com/whilp/git-urls"
 
 	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/experiments"
@@ -49,7 +50,11 @@ func NewNode(
 ) (Node, error) {
 	var node Node
 	var err error
-	if isGitNode(entrypoint) {
+	isGit, err := isGitNode(entrypoint)
+	if err != nil {
+		return nil, err
+	}
+	if isGit {
 		node, err = NewGitNode(entrypoint, dir, insecure, opts...)
 	} else if getScheme(entrypoint) == "http" || getScheme(entrypoint) == "https" {
 		node, err = NewHTTPNode(l, entrypoint, dir, insecure, timeout, opts...)
@@ -92,9 +97,11 @@ func getDefaultDir(entrypoint, dir string) string {
 	return dir
 }
 
-// TODO handle error
-func isGitNode(entrypoint string) bool {
+func isGitNode(entrypoint string) (bool, error) {
 	u, _ := giturls.Parse(entrypoint)
+	if u == nil {
+		return false, nil
+	}
 	u.Path = strings.TrimSuffix(u.Path, "/")
-	return strings.HasSuffix(u.Path, ".git") && (u.Scheme == "git" || u.Scheme == "ssh" || u.Scheme == "https" || u.Scheme == "http")
+	return strings.HasSuffix(u.Path, ".git") && (u.Scheme == "git" || u.Scheme == "ssh" || u.Scheme == "https" || u.Scheme == "http"), nil
 }
