@@ -64,10 +64,12 @@ includes:
 
 ## Git nodes
 
-You can also include a Taskfile from a Git node. We currently support only "scp-style" addresses like `git@example.com/foo/bar?ref=v1//Taskfiles.yml`
+You can also include a Taskfile from a Git node. We currently support ssh-style and http / https addresses like `git@example.com/foo/bar?ref=v1//Taskfiles.yml` and `https://example.com/foo/bar.git?ref=v1//Taskfiles.yml`.
 
 You need to follow this pattern : `<baseUrl>.git?ref=<ref>//<path>`.
 The `ref` parameter can be a branch name or a tag, and the `path` is the path to the Taskfile in the repository.
+
+If you want to use the SSH protocol, you need to make sure that your ssh-agent has your private ssh keys added so that they can be used during authentication.
 
 ## Security
 

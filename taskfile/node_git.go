@@ -19,7 +19,7 @@ import (
 	"github.com/go-task/task/v3/internal/filepathext"
 )
 
-// An GitNode is a node that reads a Taskfile from a remote location via HTTP.
+// An GitNode is a node that reads a Taskfile from a remote location via Git.
 type GitNode struct {
 	*BaseNode
 	URL    *url.URL
