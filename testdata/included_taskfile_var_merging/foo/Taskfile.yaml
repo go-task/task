@@ -1,0 +1,11 @@
+version: "3"
+
+vars:
+  DIR: foo
+
+tasks:
+  pwd:
+    dir: ./{{ .DIR }}
+    cmds:
+      - echo "{{ .DIR }}"
+      - pwd

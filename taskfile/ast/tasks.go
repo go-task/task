@@ -90,7 +90,7 @@ func (t1 *Tasks) Merge(t2 Tasks, include *Include, includedTaskfileVars *Vars) {
 				task.IncludeVars = &Vars{}
 			}
 			task.IncludeVars.Merge(include.Vars, nil)
-			task.IncludedTaskfileVars = includedTaskfileVars
+			task.IncludedTaskfileVars = includedTaskfileVars.DeepCopy()
 		}
 
 		// Add the task to the merged taskfile
