@@ -1237,6 +1237,34 @@ func TestIncludesInterpolation(t *testing.T) {
 	}
 }
 
+func TestIncludedTaskfileVarMerging(t *testing.T) {
+	const dir = "testdata/included_taskfile_var_merging"
+	tests := []struct {
+		name           string
+		task           string
+		expectedOutput string
+	}{
+		{"foo", "foo:pwd", "included_taskfile_var_merging/foo\n"},
+		{"bar", "bar:pwd", "included_taskfile_var_merging/bar\n"},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			var buff bytes.Buffer
+			e := task.Executor{
+				Dir:    dir,
+				Stdout: &buff,
+				Stderr: &buff,
+				Silent: true,
+			}
+			require.NoError(t, e.Setup())
+
+			err := e.Run(context.Background(), &ast.Call{Task: test.task})
+			require.NoError(t, err)
+			assert.Contains(t, buff.String(), test.expectedOutput)
+		})
+	}
+}
+
 func TestInternalTask(t *testing.T) {
 	const dir = "testdata/internal_task"
 	tests := []struct {
