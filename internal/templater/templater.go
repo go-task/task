@@ -2,6 +2,7 @@ package templater
 
 import (
 	"bytes"
+	"fmt"
 	"maps"
 	"strings"
 
@@ -40,7 +41,15 @@ func ResolveRef(ref string, cache *Cache) any {
 		cache.cacheMap = cache.Vars.ToCacheMap()
 	}
 
-	val, err := template.ResolveRef(ref, cache.cacheMap)
+	if ref == "." {
+		return cache.cacheMap
+	}
+	t, err := template.New("resolver").Funcs(templateFuncs).Parse(fmt.Sprintf("{{%s}}", ref))
+	if err != nil {
+		cache.err = err
+		return nil
+	}
+	val, err := t.ResolveRef(cache.cacheMap)
 	if err != nil {
 		cache.err = err
 		return nil
