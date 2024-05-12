@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Fixed a bug where an empty Taskfile would cause a panic (#1648 by @pd93).
+
 ## v3.37.1 - 2024-05-09
 
 - Fix bug where non-string values (numbers, bools) added to `env:` weren't been
