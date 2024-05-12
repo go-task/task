@@ -103,6 +103,10 @@ func (v *Var) UnmarshalYAML(node *yaml.Node) error {
 					v.Sh = str
 					return nil
 				}
+				if str, ok = strings.CutPrefix(str, "#"); ok {
+					v.Ref = str
+					return nil
+				}
 			}
 			v.Value = value
 			return nil
@@ -148,17 +152,22 @@ func (v *Var) UnmarshalYAML(node *yaml.Node) error {
 	switch node.Kind {
 
 	case yaml.MappingNode:
-		if len(node.Content) > 2 || node.Content[0].Value != "sh" {
+		key := node.Content[0].Value
+		switch key {
+		case "sh", "ref":
+			var m struct {
+				Sh  string
+				Ref string
+			}
+			if err := node.Decode(&m); err != nil {
+				return errors.NewTaskfileDecodeError(err, node)
+			}
+			v.Sh = m.Sh
+			v.Ref = m.Ref
+			return nil
+		default:
 			return errors.NewTaskfileDecodeError(nil, node).WithMessage("maps cannot be assigned to variables")
 		}
-		var sh struct {
-			Sh string
-		}
-		if err := node.Decode(&sh); err != nil {
-			return errors.NewTaskfileDecodeError(err, node)
-		}
-		v.Sh = sh.Sh
-		return nil
 
 	default:
 		var value any
