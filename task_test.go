@@ -95,6 +95,15 @@ func TestEmptyTask(t *testing.T) {
 	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "default"}))
 }
 
+func TestEmptyTaskfile(t *testing.T) {
+	e := &task.Executor{
+		Dir:    "testdata/empty_taskfile",
+		Stdout: io.Discard,
+		Stderr: io.Discard,
+	}
+	require.Error(t, e.Setup(), "e.Setup()")
+}
+
 func TestEnv(t *testing.T) {
 	tt := fileContentTest{
 		Dir:       "testdata/env",

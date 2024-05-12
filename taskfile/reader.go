@@ -263,23 +263,28 @@ func (r *Reader) readNode(node Node) (*ast.Taskfile, error) {
 		}
 	}
 
-	var t ast.Taskfile
-	if err := yaml.Unmarshal(b, &t); err != nil {
+	var tf ast.Taskfile
+	if err := yaml.Unmarshal(b, &tf); err != nil {
 		return nil, &errors.TaskfileInvalidError{URI: filepathext.TryAbsToRel(node.Location()), Err: err}
 	}
 
+	// Check that the Taskfile is set and has a schema version
+	if tf.Version == nil {
+		return nil, &errors.TaskfileVersionCheckError{URI: node.Location()}
+	}
+
 	// Set the taskfile/task's locations
-	t.Location = node.Location()
-	for _, task := range t.Tasks.Values() {
+	tf.Location = node.Location()
+	for _, task := range tf.Tasks.Values() {
 		// If the task is not defined, create a new one
 		if task == nil {
 			task = &ast.Task{}
 		}
 		// Set the location of the taskfile for each task
 		if task.Location.Taskfile == "" {
-			task.Location.Taskfile = t.Location
+			task.Location.Taskfile = tf.Location
 		}
 	}
 
-	return &t, nil
+	return &tf, nil
 }
