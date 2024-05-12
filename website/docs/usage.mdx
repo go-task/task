@@ -3,6 +3,9 @@ slug: /usage/
 sidebar_position: 3
 ---
 
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
 # Usage
 
 ## Getting started
@@ -964,6 +967,43 @@ Maps are not supported by default, but there is an
 you're interested in this functionality, we would appreciate your feedback.
 :pray:
 
+In the meantime, it is technically possible to define a map using a `ref` resolver and a templating function. For example:
+
+```yaml
+version: '3'
+
+tasks:
+  task-with-map:
+    vars:
+      FOO:
+        ref: dict "a" "1" "b" "2" "c" "3"
+    cmds:
+      - echo {{.FOO}}
+```
+
+```txt
+map[a:1 b:2 c:3]
+```
+
+OR by using the same technique with JSON:
+
+```yaml
+version: '3'
+
+tasks:
+  task-with-map:
+    vars:
+      JSON: '{"a": 1, "b": 2, "c": 3}'
+      FOO:
+        ref: "fromJson .JSON"
+    cmds:
+      - echo {{.FOO}}
+```
+
+```txt
+map[a:1 b:2 c:3]
+```
+
 :::
 
 Variables can be set in many places in a Taskfile. When executing
@@ -1046,6 +1086,103 @@ tasks:
 ```
 
 This works for all types of variables.
+
+### Referencing other variables
+
+Templating is great for referencing string values if you want to pass
+a value from one task to another. However, the templating engine is only able to
+output strings. If you want to pass something other than a string to another
+task then you will need to use a reference (`ref`) instead.
+
+<Tabs defaultValue="2"
+      values={[
+        { label: 'Templating Engine', value: '1' },
+        { label: 'Reference', value: '2' }
+      ]}>
+
+<TabItem value="1">
+
+```yaml
+version: 3
+
+tasks:
+  foo:
+    vars:
+      FOO: [A, B, C] # <-- FOO is defined as an array
+    cmds:
+      - task: bar
+        vars:
+          FOO: '{{.FOO}}' # <-- FOO gets converted to a string when passed to bar
+  bar:
+    cmds:
+      - 'echo {{index .FOO 0}}' # <-- FOO is a string so the task outputs '91' which is the ASCII code for '[' instead of the expected 'A'
+```
+
+</TabItem>
+<TabItem value="2">
+
+```yaml
+version: 3
+
+tasks:
+  foo:
+    vars:
+      FOO: [A, B, C] # <-- FOO is defined as an array
+    cmds:
+      - task: bar
+        vars:
+          FOO:
+            ref: .FOO # <-- FOO gets passed by reference to bar and maintains its type
+  bar:
+    cmds:
+      - 'echo {{index .FOO 0}}' # <-- FOO is still a map so the task outputs 'A' as expected
+```
+
+</TabItem></Tabs>
+
+This also works the same way when calling `deps` and when defining
+a variable and can be used in any combination:
+
+```yaml
+version: 3
+
+tasks:
+  foo:
+    vars:
+      FOO: [A, B, C] # <-- FOO is defined as an array
+      BAR:
+        ref: .FOO # <-- BAR is defined as a reference to FOO
+    deps:
+      - task: bar
+        vars:
+          BAR:
+            ref: .BAR # <-- BAR gets passed by reference to bar and maintains its type
+  bar:
+    cmds:
+      - 'echo {{index .BAR 0}}' # <-- BAR still refers to FOO so the task outputs 'A'
+```
+
+All references use the same templating syntax as regular templates, so in
+addition to simply calling `.FOO`, you can also pass subkeys (`.FOO.BAR`) or
+indexes (`index .FOO 0`) and use functions (`len .FOO`) as described in the
+[templating-reference][templating-reference]:
+
+```yaml
+version: 3
+
+tasks:
+  foo:
+    vars:
+      FOO: [A, B, C] # <-- FOO is defined as an array
+    cmds:
+      - task: bar
+        vars:
+          FOO:
+            ref: index .FOO 0 # <-- The element at index 0 is passed by reference to bar
+  bar:
+    cmds:
+      - 'echo {{.MYVAR}}' # <-- FOO is just the letter 'A'
+```
 
 ## Looping over values
 
@@ -1143,8 +1280,7 @@ tasks:
         cmd: cat {{.ITEM}}
 ```
 
-You can also loop over arrays directly (and maps if you have the
-[maps experiment](/experiments/map-variables) enabled):
+You can also loop over arrays directly and maps:
 
 ```yaml
 version: 3
