@@ -2426,3 +2426,48 @@ func TestWildcard(t *testing.T) {
 		})
 	}
 }
+
+func TestReference(t *testing.T) {
+	tests := []struct {
+		name           string
+		call           string
+		expectedOutput string
+	}{
+		{
+			name:           "reference in command",
+			call:           "ref-cmd",
+			expectedOutput: "1\n",
+		},
+		{
+			name:           "reference in dependency",
+			call:           "ref-dep",
+			expectedOutput: "1\n",
+		},
+		{
+			name:           "reference using templating resolver",
+			call:           "ref-resolver",
+			expectedOutput: "1\n",
+		},
+		{
+			name:           "reference using templating resolver and dynamic var",
+			call:           "ref-resolver-sh",
+			expectedOutput: "Alice has 3 children called Bob, Charlie, and Diane\n",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.call, func(t *testing.T) {
+			var buff bytes.Buffer
+			e := task.Executor{
+				Dir:    "testdata/var_references",
+				Stdout: &buff,
+				Stderr: &buff,
+				Silent: true,
+				Force:  true,
+			}
+			require.NoError(t, e.Setup())
+			require.NoError(t, e.Run(context.Background(), &ast.Call{Task: test.call}))
+			assert.Equal(t, test.expectedOutput, buff.String())
+		})
+	}
+}
