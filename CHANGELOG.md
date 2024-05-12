@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v3.37.2 - 2024-05-12
 
 - Fixed a bug where an empty Taskfile would cause a panic (#1648 by @pd93).
 - Fixed a bug where includes Taskfile variable were not being merged correctly
