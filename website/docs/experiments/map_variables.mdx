@@ -184,51 +184,6 @@ tasks:
       - 'echo {{.FOO.a}}'
 ```
 
-## Parsing JSON and YAML
-
-In addition to the new `map` keyword, this proposal also adds support for the
-`json` and `yaml` keywords for parsing JSON and YAML strings into real
-objects/arrays. This is similar to the `fromJSON` template function, but means
-that you only have to parse the JSON/YAML once when you declare the variable,
-instead of every time you want to access a value.
-
-<Tabs defaultValue="2"
-  values={[
-    {label: 'Before', value: '1'},
-    {label: 'After', value: '2'}
-  ]}>
-
-<TabItem value="1">
-
-```yaml
-version: 3
-
-tasks:
-  foo:
-    vars:
-      FOO: '{"a": 1, "b": 2, "c": 3}' # <-- JSON string
-    cmds:
-      - 'echo {{(fromJSON .FOO).a}}' # <-- Parse JSON string every time you want to access a value
-      - 'echo {{(fromJSON .FOO).b}}'
-```
-
-</TabItem>
-<TabItem value="2">
-
-```yaml
-version: 3
-
-tasks:
-  foo:
-    vars:
-      FOO:
-        json: '{"a": 1, "b": 2, "c": 3}' # <-- JSON string parsed once
-    cmds:
-      - 'echo {{.FOO.a}}' # <-- Access values directly
-      - 'echo {{.FOO.b}}'
-```
-
-</TabItem></Tabs>
 </TabItem></Tabs>
 
 ## Looping over maps

@@ -10,7 +10,6 @@ tasks:
     - task: ref-dep
     - task: ref-resolver
     - task: json
-    - task: yaml
 
   map:
     vars:
@@ -93,24 +92,12 @@ tasks:
       JSON_STRING:
         sh: cat example.json
       JSON:
-        json: "{{.JSON_STRING}}"
+        ref: "fromJson .JSON_STRING"
     cmds:
       - task: print-story
         vars:
           VAR:
             ref: .JSON
-
-  yaml:
-    vars:
-      YAML_STRING:
-        sh: cat example.yaml
-      YAML:
-        yaml: "{{.YAML_STRING}}"
-    cmds:
-      - task: print-story
-        vars:
-          VAR:
-            ref: .YAML
 
   print-var:
     cmds:

@@ -277,14 +277,6 @@
         "map": {
           "type": "object",
           "description": "The value will be treated as a literal map type and stored in the variable"
-        },
-        "json": {
-          "type": "string",
-          "description": "The value will parsed as a JSON string and stored in the variable"
-        },
-        "yaml": {
-          "type": "string",
-          "description": "The value will parsed as a YAML string and stored in the variable"
         }
       },
       "additionalProperties": false

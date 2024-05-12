@@ -128,8 +128,6 @@ func ReplaceVarWithExtra(v ast.Var, cache *Cache, extra map[string]any) ast.Var 
 		Live:  v.Live,
 		Ref:   v.Ref,
 		Dir:   v.Dir,
-		Json:  ReplaceWithExtra(v.Json, cache, extra),
-		Yaml:  ReplaceWithExtra(v.Yaml, cache, extra),
 	}
 }
 

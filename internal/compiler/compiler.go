@@ -3,14 +3,11 @@ package compiler
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 	"sync"
-
-	"gopkg.in/yaml.v3"
 
 	"github.com/go-task/task/v3/internal/execext"
 	"github.com/go-task/task/v3/internal/filepathext"
@@ -77,18 +74,6 @@ func (c *Compiler) getVariables(t *ast.Task, call *ast.Call, evaluateShVars bool
 			// Now we can check for errors since we've handled all the cases when we don't want to evaluate
 			if err := cache.Err(); err != nil {
 				return err
-			}
-			// Evaluate JSON
-			if newVar.Json != "" {
-				if err := json.Unmarshal([]byte(newVar.Json), &newVar.Value); err != nil {
-					return err
-				}
-			}
-			// Evaluate YAML
-			if newVar.Yaml != "" {
-				if err := yaml.Unmarshal([]byte(newVar.Yaml), &newVar.Value); err != nil {
-					return err
-				}
 			}
 			// If the variable is not dynamic, we can set it and return
 			if newVar.Value != nil || newVar.Sh == "" {
