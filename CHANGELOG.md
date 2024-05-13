@@ -20,7 +20,7 @@
 - Refactored how Task reads, parses and merges Taskfiles using a DAG (#1563,
   #1607 by @pd93).
 - Fix a bug which stopped tasks from using `stdin` as input (#1593, #1623 by
-  @pd03).
+  @pd93).
 - Fix error when a file or directory in the project contained a special char
   like `&`, `(` or `)` (#1551, #1584 by @andreynering).
 - Added alias `q` for template function `shellQuote` (#1601, #1603 by @vergenzt)
