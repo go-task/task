@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 	"slices"
 	"strings"
-	"text/tabwriter"
 
+	"github.com/Ladicle/tabwriter"
 	"github.com/joho/godotenv"
 	"github.com/spf13/pflag"
 
@@ -96,8 +96,7 @@ func readDotEnv() {
 func printExperiment(w io.Writer, l *logger.Logger, x Experiment) {
 	l.FOutf(w, logger.Yellow, "* ")
 	l.FOutf(w, logger.Green, x.Name)
-	l.FOutf(w, logger.Default, ": \t%s", x.String())
-	fmt.Fprintf(w, "\n")
+	l.FOutf(w, logger.Default, ": \t%s\n", x.String())
 }
 
 func List(l *logger.Logger) error {

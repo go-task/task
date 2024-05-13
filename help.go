@@ -7,8 +7,8 @@ import (
 	"io"
 	"os"
 	"strings"
-	"text/tabwriter"
 
+	"github.com/Ladicle/tabwriter"
 	"golang.org/x/sync/errgroup"
 
 	"github.com/go-task/task/v3/internal/editors"
@@ -105,18 +105,8 @@ func (e *Executor) ListTasks(o ListOptions) (bool, error) {
 	for _, task := range tasks {
 		e.Logger.FOutf(w, logger.Yellow, "* ")
 		e.Logger.FOutf(w, logger.Green, task.Task)
-		desc := strings.Split(strings.TrimSuffix(task.Desc, "\n"), "\n")
-
-		e.Logger.FOutf(w, logger.Default, ": \t%s", desc[0])
-
-		for _, d := range desc[1:] {
-			_, _ = fmt.Fprint(w, "\n")
-			// We need to keep the same color as if it was a new task to keep the output consistent
-			// because tabwriter cannot handle color codes
-			e.Logger.FOutf(w, logger.Yellow, "")
-			e.Logger.FOutf(w, logger.Green, "")
-			e.Logger.FOutf(w, logger.Default, "\t%s", d)
-		}
+		desc := strings.ReplaceAll(strings.TrimSuffix(task.Desc, "\n"), "\n", "\n\t")
+		e.Logger.FOutf(w, logger.Default, ": \t%s", desc)
 		if len(task.Aliases) > 0 {
 			e.Logger.FOutf(w, logger.Cyan, "\t(aliases: %s)", strings.Join(task.Aliases, ", "))
 		}
