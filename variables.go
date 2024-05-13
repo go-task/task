@@ -72,6 +72,7 @@ func (e *Executor) compiledTask(call *ast.Call, evaluateShVars bool) (*ast.Task,
 		Location:             origTask.Location,
 		Requires:             origTask.Requires,
 		Watch:                origTask.Watch,
+		Namespace:            origTask.Namespace,
 	}
 	new.Dir, err = execext.Expand(new.Dir)
 	if err != nil {
