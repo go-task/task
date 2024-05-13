@@ -111,7 +111,7 @@ func (e *Executor) ListTasks(o ListOptions) (bool, error) {
 
 		for _, d := range desc[1:] {
 			_, _ = fmt.Fprint(w, "\n")
-			//We need to keep the same color as if it was a new task to keep the output consistent
+			// We need to keep the same color as if it was a new task to keep the output consistent
 			// because tabwriter cannot handle color codes
 			e.Logger.FOutf(w, logger.Yellow, "")
 			e.Logger.FOutf(w, logger.Green, "")
