@@ -11,6 +11,7 @@ import (
 
 	"github.com/Masterminds/semver/v3"
 	"github.com/otiai10/copy"
+	"github.com/spf13/pflag"
 )
 
 const (
@@ -25,6 +26,16 @@ var (
 	versionRegex          = regexp.MustCompile(`(?m)^  "version": "\d+\.\d+\.\d+",$`)
 )
 
+// Flags
+var (
+	versionFlag bool
+)
+
+func init() {
+	pflag.BoolVarP(&versionFlag, "version", "v", false, "resolved version number")
+	pflag.Parse()
+}
+
 func main() {
 	if err := release(); err != nil {
 		fmt.Println(err)
@@ -33,7 +44,7 @@ func main() {
 }
 
 func release() error {
-	if len(os.Args) != 2 {
+	if len(pflag.Args()) != 1 {
 		return errors.New("error: expected version number")
 	}
 
@@ -42,11 +53,14 @@ func release() error {
 		return err
 	}
 
-	if err := bumpVersion(version, os.Args[1]); err != nil {
+	if err := bumpVersion(version, pflag.Arg(0)); err != nil {
 		return err
 	}
 
-	fmt.Println(version)
+	if versionFlag {
+		fmt.Println(version)
+		return nil
+	}
 
 	if err := changelog(version); err != nil {
 		return err
