@@ -228,7 +228,7 @@ func (e *Executor) RunTask(ctx context.Context, call *ast.Call) error {
 			}
 		}
 
-		if t.Prompt != "" {
+		if t.Prompt != "" && !e.Dry {
 			if err := e.Logger.Prompt(logger.Yellow, t.Prompt, "n", "y", "yes"); errors.Is(err, logger.ErrNoTerminal) {
 				return &errors.TaskCancelledNoTerminalError{TaskName: call.Task}
 			} else if errors.Is(err, logger.ErrPromptCancelled) {
