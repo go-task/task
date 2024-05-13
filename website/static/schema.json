@@ -496,7 +496,8 @@
           "description": "Failure message to display when the condition fails",
           "type": "string"
         }
-      }
+      },
+      "additionalProperties": false
     },
     "glob": {
       "anyOf": [
@@ -515,7 +516,8 @@
           "description": "File or glob pattern to exclude from the list",
           "type": "string"
         }
-      }
+      },
+      "additionalProperties": false
     },
     "run": {
       "type": "string",
@@ -545,7 +547,8 @@
             }
           }
         }
-      }
+      },
+      "additionalProperties": false
     },
     "requires_obj": {
       "type": "object",
@@ -557,7 +560,8 @@
             "type": "string"
           }
         }
-      }
+      },
+      "additionalProperties": false
     }
   },
   "allOf": [
