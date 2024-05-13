@@ -156,7 +156,7 @@ func (l *Logger) Prompt(color Color, prompt string, defaultValue string, continu
 		return errors.New("no continue values provided")
 	}
 
-	l.Outf(color, "%s [%s/%s]\n", prompt, strings.ToLower(continueValues[0]), strings.ToUpper(defaultValue))
+	l.Outf(color, "%s [%s/%s]: ", prompt, strings.ToLower(continueValues[0]), strings.ToUpper(defaultValue))
 
 	reader := bufio.NewReader(l.Stdin)
 	input, err := reader.ReadString('\n')
