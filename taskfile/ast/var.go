@@ -6,6 +6,8 @@ import (
 
 	"gopkg.in/yaml.v3"
 
+	"github.com/mitchellh/hashstructure/v2"
+
 	"github.com/go-task/task/v3/internal/experiments"
 	"github.com/go-task/task/v3/internal/omap"
 )
@@ -75,6 +77,13 @@ func (vs *Vars) DeepCopy() *Vars {
 	return &Vars{
 		OrderedMap: vs.OrderedMap.DeepCopy(),
 	}
+}
+
+func (vs *Vars) Hash() (uint64, error) {
+	if vs == nil {
+		return hashstructure.Hash([]Var{}, hashstructure.FormatV2, nil)
+	}
+	return hashstructure.Hash(vs.Values(), hashstructure.FormatV2, nil)
 }
 
 // Var represents either a static or dynamic variable.

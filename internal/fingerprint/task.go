@@ -10,18 +10,26 @@ import (
 type (
 	CheckerOption func(*CheckerConfig)
 	CheckerConfig struct {
-		method         string
-		dry            bool
-		tempDir        string
-		logger         *logger.Logger
-		statusChecker  StatusCheckable
-		sourcesChecker SourcesCheckable
+		method            string
+		definitionCheck   string
+		dry               bool
+		tempDir           string
+		logger            *logger.Logger
+		definitionChecker DefinitionCheckable
+		statusChecker     StatusCheckable
+		sourcesChecker    SourcesCheckable
 	}
 )
 
 func WithMethod(method string) CheckerOption {
 	return func(config *CheckerConfig) {
 		config.method = method
+	}
+}
+
+func WithDefinitionCheck(definitionCheck string) CheckerOption {
+	return func(config *CheckerConfig) {
+		config.definitionCheck = definitionCheck
 	}
 }
 
@@ -66,12 +74,14 @@ func IsTaskUpToDate(
 
 	// Default config
 	config := &CheckerConfig{
-		method:         "none",
-		tempDir:        "",
-		dry:            false,
-		logger:         nil,
-		statusChecker:  nil,
-		sourcesChecker: nil,
+		method:            "none",
+		definitionCheck:   "auto",
+		tempDir:           "",
+		dry:               false,
+		logger:            nil,
+		definitionChecker: nil,
+		statusChecker:     nil,
+		sourcesChecker:    nil,
 	}
 
 	// Apply functional options
@@ -92,8 +102,19 @@ func IsTaskUpToDate(
 		}
 	}
 
+	// if no definition checker was given, set up the default one
+	if config.definitionChecker == nil {
+		config.definitionChecker = NewDefinitionChecker(config.tempDir, config.dry, config.logger)
+	}
+
 	statusIsSet := len(t.Status) != 0
 	sourcesIsSet := len(t.Sources) != 0
+
+	// hash the task definition
+	maybeDefinitionPath, err := config.definitionChecker.HashDefinition(t)
+	if err != nil {
+		return false, err
+	}
 
 	// If status is set, check if it is up-to-date
 	if statusIsSet {
@@ -111,22 +132,39 @@ func IsTaskUpToDate(
 		}
 	}
 
-	// If both status and sources are set, the task is up-to-date if both are up-to-date
-	if statusIsSet && sourcesIsSet {
-		return statusUpToDate && sourcesUpToDate, nil
-	}
-
-	// If only status is set, the task is up-to-date if the status is up-to-date
-	if statusIsSet {
-		return statusUpToDate, nil
-	}
-
-	// If only sources is set, the task is up-to-date if the sources are up-to-date
-	if sourcesIsSet {
-		return sourcesUpToDate, nil
-	}
-
 	// If no status or sources are set, the task should always run
 	// i.e. it is never considered "up-to-date"
-	return false, nil
+	isUpToDate := false
+
+	// If both status and sources are set, the task is up-to-date if both are up-to-date
+	if statusIsSet && sourcesIsSet {
+		isUpToDate = statusUpToDate && sourcesUpToDate
+	} else if statusIsSet {
+		// If only status is set, the task is up-to-date if the status is up-to-date
+		isUpToDate = statusUpToDate
+	} else if sourcesIsSet {
+		// If only sources is set, the task is up-to-date if the sources are up-to-date
+		isUpToDate = sourcesUpToDate
+	}
+
+	if !isUpToDate {
+		// if the task is not up-to-date for any reason, remove the definition file from previous runs if it exists
+		err = config.definitionChecker.Cleanup(maybeDefinitionPath)
+		if err != nil {
+			return false, err
+		}
+	}
+
+	// check if the definition is up-to-date when it is requested. By default (auto), it is only checked when sources are set but not the status
+	shouldCheckDefinition := config.definitionCheck == "always" || (config.definitionCheck == "auto" && (sourcesIsSet && !statusIsSet))
+	if shouldCheckDefinition {
+		// check if the definition is up-to-date
+		isDefinitionUpToDate, err := config.definitionChecker.IsUpToDate(maybeDefinitionPath)
+		if err != nil {
+			return false, err
+		}
+		isUpToDate = isUpToDate && isDefinitionUpToDate
+	}
+
+	return isUpToDate, nil
 }

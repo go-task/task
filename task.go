@@ -210,8 +210,14 @@ func (e *Executor) RunTask(ctx context.Context, call *ast.Call) error {
 				method = t.Method
 			}
 
+			definitionCheck := e.Taskfile.DefinitionCheck
+			if t.DefinitionCheck != "" {
+				definitionCheck = t.DefinitionCheck
+			}
+
 			upToDate, err := fingerprint.IsTaskUpToDate(ctx, t,
 				fingerprint.WithMethod(method),
+				fingerprint.WithDefinitionCheck(definitionCheck),
 				fingerprint.WithTempDir(e.TempDir),
 				fingerprint.WithDry(e.Dry),
 				fingerprint.WithLogger(e.Logger),

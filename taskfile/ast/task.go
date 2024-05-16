@@ -35,6 +35,7 @@ type Task struct {
 	Interactive          bool
 	Internal             bool
 	Method               string
+	DefinitionCheck      string
 	Prefix               string
 	IgnoreError          bool
 	Run                  string
@@ -100,34 +101,35 @@ func (t *Task) UnmarshalYAML(node *yaml.Node) error {
 	// Full task object
 	case yaml.MappingNode:
 		var task struct {
-			Cmds          []*Cmd
-			Cmd           *Cmd
-			Deps          []*Dep
-			Label         string
-			Desc          string
-			Prompt        string
-			Summary       string
-			Aliases       []string
-			Sources       []*Glob
-			Generates     []*Glob
-			Status        []string
-			Preconditions []*Precondition
-			Dir           string
-			Set           []string
-			Shopt         []string
-			Vars          *Vars
-			Env           *Vars
-			Dotenv        []string
-			Silent        bool
-			Interactive   bool
-			Internal      bool
-			Method        string
-			Prefix        string
-			IgnoreError   bool `yaml:"ignore_error"`
-			Run           string
-			Platforms     []*Platform
-			Requires      *Requires
-			Watch         bool
+			Cmds            []*Cmd
+			Cmd             *Cmd
+			Deps            []*Dep
+			Label           string
+			Desc            string
+			Prompt          string
+			Summary         string
+			Aliases         []string
+			Sources         []*Glob
+			Generates       []*Glob
+			Status          []string
+			Preconditions   []*Precondition
+			Dir             string
+			Set             []string
+			Shopt           []string
+			Vars            *Vars
+			Env             *Vars
+			Dotenv          []string
+			Silent          bool
+			Interactive     bool
+			Internal        bool
+			Method          string
+			DefinitionCheck string `yaml:"definition_check"`
+			Prefix          string
+			IgnoreError     bool `yaml:"ignore_error"`
+			Run             string
+			Platforms       []*Platform
+			Requires        *Requires
+			Watch           bool
 		}
 		if err := node.Decode(&task); err != nil {
 			return err
@@ -160,6 +162,7 @@ func (t *Task) UnmarshalYAML(node *yaml.Node) error {
 		t.Interactive = task.Interactive
 		t.Internal = task.Internal
 		t.Method = task.Method
+		t.DefinitionCheck = task.DefinitionCheck
 		t.Prefix = task.Prefix
 		t.IgnoreError = task.IgnoreError
 		t.Run = task.Run
@@ -201,6 +204,7 @@ func (t *Task) DeepCopy() *Task {
 		Interactive:          t.Interactive,
 		Internal:             t.Internal,
 		Method:               t.Method,
+		DefinitionCheck:      t.DefinitionCheck,
 		Prefix:               t.Prefix,
 		IgnoreError:          t.IgnoreError,
 		Run:                  t.Run,
