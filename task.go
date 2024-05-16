@@ -35,8 +35,8 @@ const (
 )
 
 type TempDir struct {
-	Remote   string
-	Checksum string
+	Remote      string
+	Fingerprint string
 }
 
 // Executor executes a Taskfile
@@ -217,7 +217,7 @@ func (e *Executor) RunTask(ctx context.Context, call *ast.Call) error {
 
 			upToDate, err := fingerprint.IsTaskUpToDate(ctx, t,
 				fingerprint.WithMethod(method),
-				fingerprint.WithTempDir(e.TempDir.Checksum),
+				fingerprint.WithTempDir(e.TempDir.Fingerprint),
 				fingerprint.WithDry(e.Dry),
 				fingerprint.WithLogger(e.Logger),
 			)

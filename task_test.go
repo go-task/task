@@ -64,8 +64,8 @@ func (fct fileContentTest) Run(t *testing.T) {
 	e := &task.Executor{
 		Dir: fct.Dir,
 		TempDir: task.TempDir{
-			Remote:   filepathext.SmartJoin(fct.Dir, ".task"),
-			Checksum: filepathext.SmartJoin(fct.Dir, ".task"),
+			Remote:      filepathext.SmartJoin(fct.Dir, ".task"),
+			Fingerprint: filepathext.SmartJoin(fct.Dir, ".task"),
 		},
 		Entrypoint: fct.Entrypoint,
 		Stdout:     io.Discard,
@@ -277,8 +277,8 @@ func TestStatus(t *testing.T) {
 	e := &task.Executor{
 		Dir: dir,
 		TempDir: task.TempDir{
-			Remote:   filepathext.SmartJoin(dir, ".task"),
-			Checksum: filepathext.SmartJoin(dir, ".task"),
+			Remote:      filepathext.SmartJoin(dir, ".task"),
+			Fingerprint: filepathext.SmartJoin(dir, ".task"),
 		},
 		Stdout: &buff,
 		Stderr: &buff,
@@ -475,8 +475,8 @@ func TestStatusChecksum(t *testing.T) {
 
 			var buff bytes.Buffer
 			tempdir := task.TempDir{
-				Remote:   filepathext.SmartJoin(dir, ".task"),
-				Checksum: filepathext.SmartJoin(dir, ".task"),
+				Remote:      filepathext.SmartJoin(dir, ".task"),
+				Fingerprint: filepathext.SmartJoin(dir, ".task"),
 			}
 			e := task.Executor{
 				Dir:     dir,
@@ -494,7 +494,7 @@ func TestStatusChecksum(t *testing.T) {
 
 			// Capture the modification time, so we can ensure the checksum file
 			// is not regenerated when the hash hasn't changed.
-			s, err := os.Stat(filepathext.SmartJoin(tempdir.Checksum, "checksum/"+test.task))
+			s, err := os.Stat(filepathext.SmartJoin(tempdir.Fingerprint, "checksum/"+test.task))
 			require.NoError(t, err)
 			time := s.ModTime()
 
@@ -502,7 +502,7 @@ func TestStatusChecksum(t *testing.T) {
 			require.NoError(t, e.Run(context.Background(), &ast.Call{Task: test.task}))
 			assert.Equal(t, `task: Task "`+test.task+`" is up to date`+"\n", buff.String())
 
-			s, err = os.Stat(filepathext.SmartJoin(tempdir.Checksum, "checksum/"+test.task))
+			s, err = os.Stat(filepathext.SmartJoin(tempdir.Fingerprint, "checksum/"+test.task))
 			require.NoError(t, err)
 			assert.Equal(t, time, s.ModTime())
 		})
@@ -825,8 +825,8 @@ func TestStatusVariables(t *testing.T) {
 	e := task.Executor{
 		Dir: dir,
 		TempDir: task.TempDir{
-			Remote:   filepathext.SmartJoin(dir, ".task"),
-			Checksum: filepathext.SmartJoin(dir, ".task"),
+			Remote:      filepathext.SmartJoin(dir, ".task"),
+			Fingerprint: filepathext.SmartJoin(dir, ".task"),
 		},
 		Stdout:  &buff,
 		Stderr:  &buff,
@@ -977,8 +977,8 @@ func TestDryChecksum(t *testing.T) {
 	e := task.Executor{
 		Dir: dir,
 		TempDir: task.TempDir{
-			Remote:   filepathext.SmartJoin(dir, ".task"),
-			Checksum: filepathext.SmartJoin(dir, ".task"),
+			Remote:      filepathext.SmartJoin(dir, ".task"),
+			Fingerprint: filepathext.SmartJoin(dir, ".task"),
 		},
 		Stdout: io.Discard,
 		Stderr: io.Discard,

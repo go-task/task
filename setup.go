@@ -110,8 +110,8 @@ func (e *Executor) setupTempDir() error {
 
 	if os.Getenv("TASK_TEMP_DIR") == "" {
 		e.TempDir = TempDir{
-			Remote:   filepathext.SmartJoin(e.Dir, ".task"),
-			Checksum: filepathext.SmartJoin(e.Dir, ".task"),
+			Remote:      filepathext.SmartJoin(e.Dir, ".task"),
+			Fingerprint: filepathext.SmartJoin(e.Dir, ".task"),
 		}
 	} else if filepath.IsAbs(os.Getenv("TASK_TEMP_DIR")) || strings.HasPrefix(os.Getenv("TASK_TEMP_DIR"), "~") {
 		tempDir, err := execext.Expand(os.Getenv("TASK_TEMP_DIR"))
@@ -121,14 +121,14 @@ func (e *Executor) setupTempDir() error {
 		projectDir, _ := filepath.Abs(e.Dir)
 		projectName := filepath.Base(projectDir)
 		e.TempDir = TempDir{
-			Remote:   tempDir,
-			Checksum: filepathext.SmartJoin(tempDir, projectName),
+			Remote:      tempDir,
+			Fingerprint: filepathext.SmartJoin(tempDir, projectName),
 		}
 
 	} else {
 		e.TempDir = TempDir{
-			Remote:   filepathext.SmartJoin(e.Dir, os.Getenv("TASK_TEMP_DIR")),
-			Checksum: filepathext.SmartJoin(e.Dir, os.Getenv("TASK_TEMP_DIR")),
+			Remote:      filepathext.SmartJoin(e.Dir, os.Getenv("TASK_TEMP_DIR")),
+			Fingerprint: filepathext.SmartJoin(e.Dir, os.Getenv("TASK_TEMP_DIR")),
 		}
 	}
 
