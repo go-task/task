@@ -5,6 +5,8 @@
 - Fixed a couple of bugs with the `prompt:` feature (#1657 by @pd93).
 - Fixed JSON Schema to disallow invalid properties (#1657 by @pd93).
 - Added `TASK_EXE` special variable (#1616, #1624 by @pd93 and @andreynering).
+- Some YAML parsing errors will now show in a user friendlier way (#1619 by
+  @pd93).
 
 ## v3.37.2 - 2024-05-12
 
