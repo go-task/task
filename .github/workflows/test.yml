@@ -18,13 +18,13 @@ jobs:
     runs-on: ${{matrix.platform}}
     steps:
       - name: Set up Go ${{matrix.go-version}}
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@v5
         with:
           go-version: ${{matrix.go-version}}
         id: go
 
       - name: Check out code into the Go module directory
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Download Go modules
         run: go mod download

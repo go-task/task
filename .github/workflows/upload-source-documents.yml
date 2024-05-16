@@ -12,7 +12,7 @@ jobs:
     if: github.repository == 'go-task/task'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: Verify changed files
         id: changed-files
@@ -25,7 +25,7 @@ jobs:
             website/src/pages
 
       - name: Install Task
-        uses: arduino/setup-task@v1
+        uses: arduino/setup-task@v2
         with:
           version: 3.x
           repo-token: ${{ secrets.GITHUB_TOKEN }}
