@@ -2,6 +2,7 @@ package templater
 
 import (
 	"bytes"
+	"fmt"
 	"maps"
 	"strings"
 
@@ -40,7 +41,15 @@ func ResolveRef(ref string, cache *Cache) any {
 		cache.cacheMap = cache.Vars.ToCacheMap()
 	}
 
-	val, err := template.ResolveRef(ref, cache.cacheMap)
+	if ref == "." {
+		return cache.cacheMap
+	}
+	t, err := template.New("resolver").Funcs(templateFuncs).Parse(fmt.Sprintf("{{%s}}", ref))
+	if err != nil {
+		cache.err = err
+		return nil
+	}
+	val, err := t.ResolveRef(cache.cacheMap)
 	if err != nil {
 		cache.err = err
 		return nil
@@ -119,8 +128,6 @@ func ReplaceVarWithExtra(v ast.Var, cache *Cache, extra map[string]any) ast.Var 
 		Live:  v.Live,
 		Ref:   v.Ref,
 		Dir:   v.Dir,
-		Json:  ReplaceWithExtra(v.Json, cache, extra),
-		Yaml:  ReplaceWithExtra(v.Yaml, cache, extra),
 	}
 }
 

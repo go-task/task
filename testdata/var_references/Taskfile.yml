@@ -1,0 +1,74 @@
+version: '3'
+
+vars:
+  GLOBAL_VAR: [1, 2, 2, 2, 3, 3, 4, 5]
+
+tasks:
+  default:
+    - task: ref-cmd
+    - task: ref-dep
+    - task: ref-resolver
+    - task: ref-resolver-sh
+
+  ref-cmd:
+    vars:
+      VAR_REF:
+        ref: .GLOBAL_VAR
+    cmds:
+      - task: print-first
+        vars:
+          VAR:
+            ref: .VAR_REF
+
+  ref-dep:
+    vars:
+      VAR_REF:
+        ref: .GLOBAL_VAR
+    deps:
+      - task: print-first
+        vars:
+          VAR:
+            ref: .VAR_REF
+
+  ref-resolver:
+    vars:
+      VAR_REF:
+        ref: .GLOBAL_VAR
+    cmds:
+      - task: print-var
+        vars:
+          VAR:
+            ref: (index .VAR_REF 0)
+
+  ref-resolver-sh:
+    vars:
+      JSON_STRING:
+        sh: echo '{"name":"Alice","age":30,"children":[{"name":"Bob","age":5},{"name":"Charlie","age":3},{"name":"Diane","age":1}]}'
+      JSON:
+        ref: "fromJson .JSON_STRING"
+      VAR_REF:
+        ref: .JSON
+    cmds:
+      - task: print-story
+        vars:
+          VAR:
+            ref: .VAR_REF
+
+  print-var:
+    cmds:
+      - echo "{{.VAR}}"
+
+  print-first:
+    cmds:
+      - echo "{{index .VAR 0}}"
+
+  print-story:
+    cmds:
+      - >-
+        echo "{{.VAR.name}} has {{len .VAR.children}} children called
+        {{- $children := .VAR.children -}}
+        {{- range $i, $child := $children -}}
+          {{- if lt $i (sub (len $children) 1)}} {{$child.name -}},
+          {{- else}} and {{$child.name -}}
+          {{- end -}}
+        {{- end -}}"
