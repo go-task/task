@@ -1,13 +1,16 @@
 # Changelog
 
+## Unreleased
+
+- Fixed a couple of bugs with the `prompt:` feature (#1657 by @pd93).
+- Fixed JSON Schema to disallow invalid properties (#1657 by @pd93).
+- Added `TASK_EXE` special variable (#1616, #1624 by @pd93 and @andreynering).
+
 ## v3.37.2 - 2024-05-12
 
 - Fixed a bug where an empty Taskfile would cause a panic (#1648 by @pd93).
 - Fixed a bug where includes Taskfile variable were not being merged correctly
   (#1643, #1649 by @pd93).
-- Fixed a couple of bugs with the `prompt:` feature (#1657 by @pd93).
-- Fixed JSON Schema to disallow invalid properties (#1657 by @pd93).
-- Added `TASK_EXE` special variable (#1616, #1624 by @pd93 and @andreynering).
 
 ## v3.37.1 - 2024-05-09
 
