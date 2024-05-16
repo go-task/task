@@ -104,7 +104,7 @@ func (e *Executor) setupFuzzyModel() {
 }
 
 func (e *Executor) setupTempDir() error {
-	if &e.TempDir == nil {
+	if e.TempDir != (TempDir{}) {
 		return nil
 	}
 
