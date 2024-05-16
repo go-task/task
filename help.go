@@ -190,7 +190,7 @@ func (e *Executor) ToEditorOutput(tasks []*ast.Task, noStatus bool) (*editors.Ta
 			}
 			upToDate, err := fingerprint.IsTaskUpToDate(context.Background(), task,
 				fingerprint.WithMethod(method),
-				fingerprint.WithTempDir(e.TempDir),
+				fingerprint.WithTempDir(e.TempDir.Checksum),
 				fingerprint.WithDry(e.Dry),
 				fingerprint.WithLogger(e.Logger),
 			)

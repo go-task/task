@@ -27,7 +27,7 @@ func (e *Executor) Status(ctx context.Context, calls ...*ast.Call) error {
 		// Check if the task is up-to-date
 		isUpToDate, err := fingerprint.IsTaskUpToDate(ctx, t,
 			fingerprint.WithMethod(method),
-			fingerprint.WithTempDir(e.TempDir),
+			fingerprint.WithTempDir(e.TempDir.Checksum),
 			fingerprint.WithDry(e.Dry),
 			fingerprint.WithLogger(e.Logger),
 		)
@@ -46,7 +46,7 @@ func (e *Executor) statusOnError(t *ast.Task) error {
 	if method == "" {
 		method = e.Taskfile.Method
 	}
-	checker, err := fingerprint.NewSourcesChecker(method, e.TempDir, e.Dry)
+	checker, err := fingerprint.NewSourcesChecker(method, e.TempDir.Checksum, e.Dry)
 	if err != nil {
 		return err
 	}

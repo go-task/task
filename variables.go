@@ -221,8 +221,8 @@ func (e *Executor) compiledTask(call *ast.Call, evaluateShVars bool) (*ast.Task,
 	}
 
 	if len(origTask.Status) > 0 {
-		timestampChecker := fingerprint.NewTimestampChecker(e.TempDir, e.Dry)
-		checksumChecker := fingerprint.NewChecksumChecker(e.TempDir, e.Dry)
+		timestampChecker := fingerprint.NewTimestampChecker(e.TempDir.Checksum, e.Dry)
+		checksumChecker := fingerprint.NewChecksumChecker(e.TempDir.Checksum, e.Dry)
 
 		for _, checker := range []fingerprint.SourcesCheckable{timestampChecker, checksumChecker} {
 			value, err := checker.Value(&new)

@@ -34,13 +34,18 @@ const (
 	MaximumTaskCall = 1000
 )
 
+type TempDir struct {
+	Remote   string
+	Checksum string
+}
+
 // Executor executes a Taskfile
 type Executor struct {
 	Taskfile *ast.Taskfile
 
 	Dir         string
 	Entrypoint  string
-	TempDir     string
+	TempDir     TempDir
 	Force       bool
 	ForceAll    bool
 	Insecure    bool
@@ -212,7 +217,7 @@ func (e *Executor) RunTask(ctx context.Context, call *ast.Call) error {
 
 			upToDate, err := fingerprint.IsTaskUpToDate(ctx, t,
 				fingerprint.WithMethod(method),
-				fingerprint.WithTempDir(e.TempDir),
+				fingerprint.WithTempDir(e.TempDir.Checksum),
 				fingerprint.WithDry(e.Dry),
 				fingerprint.WithLogger(e.Logger),
 			)
