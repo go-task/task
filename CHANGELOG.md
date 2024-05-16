@@ -2,14 +2,25 @@
 
 ## Unreleased
 
-- Fixed a couple of bugs with the `prompt:` feature (#1657 by @pd93).
-- Fixed JSON Schema to disallow invalid properties (#1657 by @pd93).
 - Added `TASK_EXE` special variable (#1616, #1624 by @pd93 and @andreynering).
 - Some YAML parsing errors will now show in a more user friendly way (#1619 by
   @pd93).
+- [References](https://taskfile.dev/usage/#referencing-other-variables) are now
+  generally available (no experiments required) (#1654 by @pd93).
+- Templating functions can now be used in references (#1645, #1654 by @pd93).
 - Added a new
   [templating reference page](https://taskfile.dev/reference/templating/) to the
   documentation (#1614, #1653 by @pd93).
+- If using the
+  [Map Variables experiment (1)](https://taskfile.dev/experiments/map-variables/?proposal=1),
+  references are available by
+  [prefixing a string with a `#`](https://taskfile.dev/experiments/map-variables/?proposal=1#references)
+  (#1654 by @pd93).
+- If using the
+  [Map Variables experiment (2)](https://taskfile.dev/experiments/map-variables/?proposal=2),
+  the `yaml` and `json` keys are no longer available (#1654 by @pd93).
+- Fixed a couple of bugs with the `prompt:` feature (#1657 by @pd93).
+- Fixed JSON Schema to disallow invalid properties (#1657 by @pd93).
 
 ## v3.37.2 - 2024-05-12
 
