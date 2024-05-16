@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -196,6 +197,7 @@ func (c *Compiler) ResetCache() {
 func (c *Compiler) getSpecialVars(t *ast.Task) (map[string]string, error) {
 	return map[string]string{
 		"TASK":             t.Task,
+		"TASK_EXE":         filepath.ToSlash(os.Args[0]),
 		"ROOT_TASKFILE":    filepathext.SmartJoin(c.Dir, c.Entrypoint),
 		"ROOT_DIR":         c.Dir,
 		"TASKFILE":         t.Location.Taskfile,
