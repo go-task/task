@@ -131,7 +131,8 @@ func run() error {
 		return err
 	}
 
-	if err := e.Setup(); err != nil {
+	err := e.Setup()
+	if err != nil {
 		return err
 	}
 

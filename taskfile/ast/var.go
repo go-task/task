@@ -1,11 +1,11 @@
 package ast
 
 import (
-	"fmt"
 	"strings"
 
 	"gopkg.in/yaml.v3"
 
+	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/experiments"
 	"github.com/go-task/task/v3/internal/omap"
 )
@@ -95,7 +95,7 @@ func (v *Var) UnmarshalYAML(node *yaml.Node) error {
 		if experiments.MapVariables.Value == "1" {
 			var value any
 			if err := node.Decode(&value); err != nil {
-				return err
+				return errors.NewTaskfileDecodeError(err, node)
 			}
 			// If the value is a string and it starts with $, then it's a shell command
 			if str, ok := value.(string); ok {
@@ -123,7 +123,7 @@ func (v *Var) UnmarshalYAML(node *yaml.Node) error {
 						Yaml string
 					}
 					if err := node.Decode(&m); err != nil {
-						return err
+						return errors.NewTaskfileDecodeError(err, node)
 					}
 					v.Sh = m.Sh
 					v.Ref = m.Ref
@@ -132,12 +132,12 @@ func (v *Var) UnmarshalYAML(node *yaml.Node) error {
 					v.Yaml = m.Yaml
 					return nil
 				default:
-					return fmt.Errorf(`yaml: line %d: %q is not a valid variable type. Try "sh", "ref", "map", "json", "yaml" or using a scalar value`, node.Line, key)
+					return errors.NewTaskfileDecodeError(nil, node).WithMessage(`%q is not a valid variable type. Try "sh", "ref", "map", "json", "yaml" or using a scalar value`, key)
 				}
 			default:
 				var value any
 				if err := node.Decode(&value); err != nil {
-					return err
+					return errors.NewTaskfileDecodeError(err, node)
 				}
 				v.Value = value
 				return nil
@@ -149,13 +149,13 @@ func (v *Var) UnmarshalYAML(node *yaml.Node) error {
 
 	case yaml.MappingNode:
 		if len(node.Content) > 2 || node.Content[0].Value != "sh" {
-			return fmt.Errorf(`task: line %d: maps cannot be assigned to variables`, node.Line)
+			return errors.NewTaskfileDecodeError(nil, node).WithMessage("maps cannot be assigned to variables")
 		}
 		var sh struct {
 			Sh string
 		}
 		if err := node.Decode(&sh); err != nil {
-			return err
+			return errors.NewTaskfileDecodeError(err, node)
 		}
 		v.Sh = sh.Sh
 		return nil
@@ -163,7 +163,7 @@ func (v *Var) UnmarshalYAML(node *yaml.Node) error {
 	default:
 		var value any
 		if err := node.Decode(&value); err != nil {
-			return err
+			return errors.NewTaskfileDecodeError(err, node)
 		}
 		v.Value = value
 		return nil

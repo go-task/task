@@ -1,10 +1,9 @@
 package ast
 
 import (
-	"fmt"
-
 	"gopkg.in/yaml.v3"
 
+	"github.com/go-task/task/v3/errors"
 	omap "github.com/go-task/task/v3/internal/omap"
 )
 
@@ -38,7 +37,7 @@ func (includes *Includes) UnmarshalYAML(node *yaml.Node) error {
 
 			var v Include
 			if err := valueNode.Decode(&v); err != nil {
-				return err
+				return errors.NewTaskfileDecodeError(err, node)
 			}
 			v.Namespace = keyNode.Value
 			includes.Set(keyNode.Value, &v)
@@ -46,7 +45,7 @@ func (includes *Includes) UnmarshalYAML(node *yaml.Node) error {
 		return nil
 	}
 
-	return fmt.Errorf("yaml: line %d: cannot unmarshal %s into included taskfiles", node.Line, node.ShortTag())
+	return errors.NewTaskfileDecodeError(nil, node).WithTypeMessage("includes")
 }
 
 // Len returns the length of the map
@@ -71,7 +70,7 @@ func (include *Include) UnmarshalYAML(node *yaml.Node) error {
 	case yaml.ScalarNode:
 		var str string
 		if err := node.Decode(&str); err != nil {
-			return err
+			return errors.NewTaskfileDecodeError(err, node)
 		}
 		include.Taskfile = str
 		return nil
@@ -86,7 +85,7 @@ func (include *Include) UnmarshalYAML(node *yaml.Node) error {
 			Vars     *Vars
 		}
 		if err := node.Decode(&includedTaskfile); err != nil {
-			return err
+			return errors.NewTaskfileDecodeError(err, node)
 		}
 		include.Taskfile = includedTaskfile.Taskfile
 		include.Dir = includedTaskfile.Dir
@@ -98,7 +97,7 @@ func (include *Include) UnmarshalYAML(node *yaml.Node) error {
 		return nil
 	}
 
-	return fmt.Errorf("yaml: line %d: cannot unmarshal %s into included taskfile", node.Line, node.ShortTag())
+	return errors.NewTaskfileDecodeError(nil, node).WithTypeMessage("include")
 }
 
 // DeepCopy creates a new instance of IncludedTaskfile and copies

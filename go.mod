@@ -4,6 +4,7 @@ go 1.21.0
 
 require (
 	github.com/Masterminds/semver/v3 v3.2.1
+	github.com/alecthomas/chroma/v2 v2.13.0
 	github.com/davecgh/go-spew v1.1.1
 	github.com/dominikbraun/graph v0.23.0
 	github.com/fatih/color v1.16.0
@@ -25,6 +26,7 @@ require (
 )
 
 require (
+	github.com/dlclark/regexp2 v1.11.0 // indirect
 	github.com/klauspost/cpuid/v2 v2.0.9 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
