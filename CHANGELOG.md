@@ -5,6 +5,8 @@
 - Fixed a bug where an empty Taskfile would cause a panic (#1648 by @pd93).
 - Fixed a bug where includes Taskfile variable were not being merged correctly
   (#1643, #1649 by @pd93).
+- Fixed a couple of bugs with the `prompt:` feature (#1657 by @pd93).
+- Fixed JSON Schema to disallow invalid properties (#1657 by @pd93).
 
 ## v3.37.1 - 2024-05-09
 
