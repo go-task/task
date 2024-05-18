@@ -7,7 +7,7 @@ require (
 	github.com/alecthomas/chroma/v2 v2.13.0
 	github.com/davecgh/go-spew v1.1.1
 	github.com/dominikbraun/graph v0.23.0
-	github.com/fatih/color v1.16.0
+	github.com/fatih/color v1.17.0
 	github.com/go-task/slim-sprig/v3 v3.0.0
 	github.com/go-task/template v0.0.0-20240422130016-8f6b279b1e90
 	github.com/joho/godotenv v1.5.1
