@@ -203,6 +203,6 @@ func (c *Compiler) getSpecialVars(t *ast.Task) (map[string]string, error) {
 		"TASKFILE":         t.Location.Taskfile,
 		"TASKFILE_DIR":     filepath.Dir(t.Location.Taskfile),
 		"USER_WORKING_DIR": c.UserWorkingDir,
-		"TASK_VERSION":     version.GetVersion(),
+		"TASK_VERSION":     version.GetVersion(false),
 	}, nil
 }

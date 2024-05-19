@@ -7,7 +7,7 @@ import (
 
 var version = ""
 
-func GetVersion() string {
+func GetVersion(withSum bool) string {
 	if version != "" {
 		return version
 	}
@@ -18,7 +18,7 @@ func GetVersion() string {
 	}
 
 	ver := info.Main.Version
-	if info.Main.Sum != "" {
+	if info.Main.Sum != "" && withSum {
 		ver += fmt.Sprintf(" (%s)", info.Main.Sum)
 	}
 	return ver

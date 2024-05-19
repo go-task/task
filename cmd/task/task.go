@@ -58,7 +58,7 @@ func run() error {
 	entrypoint := flags.Entrypoint
 
 	if flags.Version {
-		fmt.Printf("Task version: %s\n", ver.GetVersion())
+		fmt.Printf("Task version: %s\n", ver.GetVersion(true))
 		return nil
 	}
 

@@ -238,7 +238,7 @@ func (e *Executor) doVersionChecks() error {
 
 	// Get the current version of Task
 	// If we can't parse the version (e.g. when its "devel"), then ignore the current version checks
-	currentVersion, err := semver.NewVersion(version.GetVersion())
+	currentVersion, err := semver.NewVersion(version.GetVersion(false))
 	if err != nil {
 		return nil
 	}
