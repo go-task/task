@@ -21,6 +21,7 @@
   the `yaml` and `json` keys are no longer available (#1654 by @pd93).
 - Fixed a couple of bugs with the `prompt:` feature (#1657 by @pd93).
 - Fixed JSON Schema to disallow invalid properties (#1657 by @pd93).
+- Fixed version checks not working as intended (#872, #1663 by @vmaerten).
 
 ## v3.37.2 - 2024-05-12
 
