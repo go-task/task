@@ -5,21 +5,25 @@ import (
 	"runtime/debug"
 )
 
-var version = ""
+var (
+	version = ""
+	sum     = ""
+)
 
-func GetVersion(withSum bool) string {
-	if version != "" {
-		return version
-	}
-
+func init() {
 	info, ok := debug.ReadBuildInfo()
 	if !ok || info.Main.Version == "" {
-		return "unknown"
+		version = "unknown"
+	} else {
+		version = info.Main.Version
+		sum = info.Main.Sum
 	}
+}
 
-	ver := info.Main.Version
-	if info.Main.Sum != "" && withSum {
-		ver += fmt.Sprintf(" (%s)", info.Main.Sum)
-	}
-	return ver
+func GetVersion() string {
+	return version
+}
+
+func GetVersionWithSum() string {
+	return fmt.Sprintf("%s (%s)", version, sum)
 }
