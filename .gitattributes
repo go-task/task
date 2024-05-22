@@ -1,1 +1,2 @@
 * text=auto
+*.mdx -linguist-detectable
