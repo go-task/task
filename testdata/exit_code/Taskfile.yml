@@ -1,0 +1,22 @@
+version: "3"
+
+tasks:
+  test_task:
+    - defer: |
+        if [ $DEFER_EXIT_CODE == {{.PARAM}} ]; then
+          echo test passed
+        else
+          echo test failed
+        fi
+
+  failed_task:
+    - defer: echo Testing Failure
+    - defer: { task: "test_task", vars: { PARAM: "1" } }
+    - echo 'cmd ran'
+    - exit 1
+
+  passed_task:
+    - defer: echo Testing Success
+    - defer: { task: "test_task", vars: { PARAM: "0" } }
+    - echo 'cmd ran'
+    - exit 0

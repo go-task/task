@@ -7,6 +7,7 @@ import (
 	"os"
 	"runtime"
 	"slices"
+	"strconv"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -262,12 +263,24 @@ func (e *Executor) RunTask(ctx context.Context, call *ast.Call) error {
 					return err
 				}
 
-				return &errors.TaskRunError{TaskName: t.Task, Err: err}
+				tre := &errors.TaskRunError{TaskName: t.Task, Err: err}
+				e.setExitCode(tre.TaskExitCode())
+
+				return tre
 			}
 		}
+		e.setExitCode(0)
 		e.Logger.VerboseErrf(logger.Magenta, "task: %q finished\n", call.Task)
 		return nil
 	})
+}
+
+func (e *Executor) setExitCode(code int) {
+	exit := os.Getenv("DEFER_EXIT_CODE")
+	if exit == "0" || exit == "" {
+		e.Logger.VerboseOutf(logger.Magenta, "task: setting exit status code to: %d \n", code)
+		os.Setenv("DEFER_EXIT_CODE", strconv.Itoa(code))
+	}
 }
 
 func (e *Executor) mkdir(t *ast.Task) error {

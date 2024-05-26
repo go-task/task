@@ -1653,6 +1653,36 @@ task-1 ran successfully
 	assert.Contains(t, buff.String(), expectedOutputOrder)
 }
 
+func TestPassedExitCode(t *testing.T) {
+	const dir = "testdata/exit_code"
+	var buff bytes.Buffer
+	e := task.Executor{
+		Dir:    dir,
+		Stdout: &buff,
+		Stderr: &buff,
+	}
+	require.NoError(t, e.Setup())
+
+	expectedOutputOrder := strings.TrimSpace(`test passed`)
+	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "passed_task"}))
+	assert.Contains(t, buff.String(), expectedOutputOrder)
+}
+
+func TestFailedExitCode(t *testing.T) {
+	const dir = "testdata/exit_code"
+	var buff bytes.Buffer
+	e := task.Executor{
+		Dir:    dir,
+		Stdout: &buff,
+		Stderr: &buff,
+	}
+	require.NoError(t, e.Setup())
+
+	expectedOutputOrder := strings.TrimSpace(`test passed`)
+	require.Error(t, e.Run(context.Background(), &ast.Call{Task: "failed_task"}))
+	assert.Contains(t, buff.String(), expectedOutputOrder)
+}
+
 func TestIgnoreNilElements(t *testing.T) {
 	tests := []struct {
 		name string
