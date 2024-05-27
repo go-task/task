@@ -123,10 +123,53 @@ tasks:
     cmds:
       - go install github.com/goreleaser/goreleaser@latest
 
-  release:
+  release:*:
     desc: Prepare the project for a new release
+    summary: |
+      This task will do the following:
+
+      - Update the version and date in the CHANGELOG.md file
+      - Update the version in the package.json and package-lock.json files
+      - Copy the latest docs to the "current" version on the website
+      - Commit the changes
+      - Create a new tag
+      - Push the commit/tag to the repository
+      - Create a GitHub release
+
+      To use the task, simply run "task release:<version>" where "<version>" is is one of:
+
+      - "major" - Bumps the major number
+      - "minor" - Bumps the minor number
+      - "patch" - Bumps the patch number
+      - A semver compatible version number (e.g. "1.2.3")
+    vars:
+      VERSION:
+        sh: "go run ./cmd/release --version {{index .MATCH 0}}"
+      COMPLETE_MESSAGE: |
+        Creating release with GoReleaser: https://github.com/go-task/task/actions/workflows/release.yml
+
+        Please wait for the CI to finish and then do the following:
+
+        - Copy the changelog for v{{.VERSION}} to the GitHub release
+        - Publish the package to NPM with `task npm:publish`
+        - Update and push the snapcraft manifest in https://github.com/go-task/snap/blob/main/snap/snapcraft.yaml
+    preconditions:
+      - sh: test $(git rev-parse --abbrev-ref HEAD) = "main"
+        msg: "You must be on the main branch to release"
+      - sh: "[[ -z $(git diff --shortstat main) ]]"
+        msg: "You must have a clean working tree to release"
+    prompt: "Are you sure you want to release version {{.VERSION}}?"
     cmds:
-      - go run ./cmd/release {{.CLI_ARGS}}
+      - cmd: echo "Releasing v{{.VERSION}}"
+        silent: true
+      - "go run ./cmd/release {{.VERSION}}"
+      - "git add --all"
+      - "git commit -m v{{.VERSION}}"
+      - "git push"
+      - "git tag v{{.VERSION}}"
+      - "git push origin tag v{{.VERSION}}"
+      - cmd: printf "%s" '{{.COMPLETE_MESSAGE}}'
+        silent: true
 
   npm:publish:
     desc: Publish release to npm

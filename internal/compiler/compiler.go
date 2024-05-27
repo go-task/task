@@ -3,13 +3,11 @@ package compiler
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
 	"sync"
-
-	"gopkg.in/yaml.v3"
 
 	"github.com/go-task/task/v3/internal/execext"
 	"github.com/go-task/task/v3/internal/filepathext"
@@ -62,10 +60,6 @@ func (c *Compiler) getVariables(t *ast.Task, call *ast.Call, evaluateShVars bool
 			cache := &templater.Cache{Vars: result}
 			// Replace values
 			newVar := templater.ReplaceVar(v, cache)
-			// If the variable is a reference, we can resolve it
-			if newVar.Ref != "" {
-				newVar.Value = result.Get(newVar.Ref).Value
-			}
 			// If the variable should not be evaluated, but is nil, set it to an empty string
 			// This stops empty interface errors when using the templater to replace values later
 			if !evaluateShVars && newVar.Value == nil {
@@ -80,18 +74,6 @@ func (c *Compiler) getVariables(t *ast.Task, call *ast.Call, evaluateShVars bool
 			// Now we can check for errors since we've handled all the cases when we don't want to evaluate
 			if err := cache.Err(); err != nil {
 				return err
-			}
-			// Evaluate JSON
-			if newVar.Json != "" {
-				if err := json.Unmarshal([]byte(newVar.Json), &newVar.Value); err != nil {
-					return err
-				}
-			}
-			// Evaluate YAML
-			if newVar.Yaml != "" {
-				if err := yaml.Unmarshal([]byte(newVar.Yaml), &newVar.Value); err != nil {
-					return err
-				}
 			}
 			// If the variable is not dynamic, we can set it and return
 			if newVar.Value != nil || newVar.Sh == "" {
@@ -200,6 +182,7 @@ func (c *Compiler) ResetCache() {
 func (c *Compiler) getSpecialVars(t *ast.Task) (map[string]string, error) {
 	return map[string]string{
 		"TASK":             t.Task,
+		"TASK_EXE":         filepath.ToSlash(os.Args[0]),
 		"ROOT_TASKFILE":    filepathext.SmartJoin(c.Dir, c.Entrypoint),
 		"ROOT_DIR":         c.Dir,
 		"TASKFILE":         t.Location.Taskfile,

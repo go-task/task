@@ -54,17 +54,16 @@ func (e *Executor) Setup() error {
 }
 
 func (e *Executor) getRootNode() (taskfile.Node, error) {
-	node, err := taskfile.NewRootNode(e.Dir, e.Entrypoint, e.Insecure)
+	node, err := taskfile.NewRootNode(e.Logger, e.Entrypoint, e.Dir, e.Insecure, e.Timeout)
 	if err != nil {
 		return nil, err
 	}
-	e.Dir = node.BaseDir()
+	e.Dir = node.Dir()
 	return node, err
 }
 
 func (e *Executor) readTaskfile(node taskfile.Node) error {
-	var err error
-	e.Taskfile, err = taskfile.Read(
+	reader := taskfile.NewReader(
 		node,
 		e.Insecure,
 		e.Download,
@@ -73,7 +72,11 @@ func (e *Executor) readTaskfile(node taskfile.Node) error {
 		e.TempDir,
 		e.Logger,
 	)
+	graph, err := reader.Read()
 	if err != nil {
+		return err
+	}
+	if e.Taskfile, err = graph.Merge(); err != nil {
 		return err
 	}
 	return nil

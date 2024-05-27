@@ -1,9 +1,9 @@
 package ast
 
 import (
-	"fmt"
-
 	"gopkg.in/yaml.v3"
+
+	"github.com/go-task/task/v3/errors"
 )
 
 // Output of the Task output
@@ -25,7 +25,7 @@ func (s *Output) UnmarshalYAML(node *yaml.Node) error {
 	case yaml.ScalarNode:
 		var name string
 		if err := node.Decode(&name); err != nil {
-			return err
+			return errors.NewTaskfileDecodeError(err, node)
 		}
 		s.Name = name
 		return nil
@@ -35,10 +35,10 @@ func (s *Output) UnmarshalYAML(node *yaml.Node) error {
 			Group *OutputGroup
 		}
 		if err := node.Decode(&tmp); err != nil {
-			return fmt.Errorf("task: output style must be a string or mapping with a \"group\" key: %w", err)
+			return errors.NewTaskfileDecodeError(err, node)
 		}
 		if tmp.Group == nil {
-			return fmt.Errorf("task: output style must have the \"group\" key when in mapping form")
+			return errors.NewTaskfileDecodeError(nil, node).WithMessage(`output style must have the "group" key when in mapping form`)
 		}
 		*s = Output{
 			Name:  "group",
@@ -47,7 +47,7 @@ func (s *Output) UnmarshalYAML(node *yaml.Node) error {
 		return nil
 	}
 
-	return fmt.Errorf("yaml: line %d: cannot unmarshal %s into output", node.Line, node.ShortTag())
+	return errors.NewTaskfileDecodeError(nil, node).WithTypeMessage("output")
 }
 
 // OutputGroup is the style options specific to the Group style.

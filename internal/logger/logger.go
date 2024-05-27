@@ -25,43 +25,62 @@ type (
 )
 
 func Default() PrintFunc {
-	return color.New(envColor("TASK_COLOR_RESET", color.Reset)).FprintfFunc()
+	return color.New(envColor("TASK_COLOR_RESET", color.Reset)...).FprintfFunc()
 }
 
 func Blue() PrintFunc {
-	return color.New(envColor("TASK_COLOR_BLUE", color.FgBlue)).FprintfFunc()
+	return color.New(envColor("TASK_COLOR_BLUE", color.FgBlue)...).FprintfFunc()
 }
 
 func Green() PrintFunc {
-	return color.New(envColor("TASK_COLOR_GREEN", color.FgGreen)).FprintfFunc()
+	return color.New(envColor("TASK_COLOR_GREEN", color.FgGreen)...).FprintfFunc()
 }
 
 func Cyan() PrintFunc {
-	return color.New(envColor("TASK_COLOR_CYAN", color.FgCyan)).FprintfFunc()
+	return color.New(envColor("TASK_COLOR_CYAN", color.FgCyan)...).FprintfFunc()
 }
 
 func Yellow() PrintFunc {
-	return color.New(envColor("TASK_COLOR_YELLOW", color.FgYellow)).FprintfFunc()
+	return color.New(envColor("TASK_COLOR_YELLOW", color.FgYellow)...).FprintfFunc()
 }
 
 func Magenta() PrintFunc {
-	return color.New(envColor("TASK_COLOR_MAGENTA", color.FgMagenta)).FprintfFunc()
+	return color.New(envColor("TASK_COLOR_MAGENTA", color.FgMagenta)...).FprintfFunc()
 }
 
 func Red() PrintFunc {
-	return color.New(envColor("TASK_COLOR_RED", color.FgRed)).FprintfFunc()
+	return color.New(envColor("TASK_COLOR_RED", color.FgRed)...).FprintfFunc()
 }
 
-func envColor(env string, defaultColor color.Attribute) color.Attribute {
+func envColor(env string, defaultColor color.Attribute) []color.Attribute {
 	if os.Getenv("FORCE_COLOR") != "" {
 		color.NoColor = false
 	}
 
-	override, err := strconv.Atoi(os.Getenv(env))
-	if err == nil {
-		return color.Attribute(override)
+	// Fetch the environment variable
+	override := os.Getenv(env)
+
+	// First, try splitting the string by commas (RGB shortcut syntax) and if it
+	// matches, then prepend the 256-color foreground escape sequence.
+	// Otherwise, split by semicolons (ANSI color codes) and use them as is.
+	attributeStrs := strings.Split(override, ",")
+	if len(attributeStrs) == 3 {
+		attributeStrs = append([]string{"38", "2"}, attributeStrs...)
+	} else {
+		attributeStrs = strings.Split(override, ";")
 	}
-	return defaultColor
+
+	// Loop over the attributes and convert them to integers
+	attributes := make([]color.Attribute, len(attributeStrs))
+	for i, attributeStr := range attributeStrs {
+		attribute, err := strconv.Atoi(attributeStr)
+		if err != nil {
+			return []color.Attribute{defaultColor}
+		}
+		attributes[i] = color.Attribute(attribute)
+	}
+
+	return attributes
 }
 
 // Logger is just a wrapper that prints stuff to STDOUT or STDERR,
@@ -119,6 +138,10 @@ func (l *Logger) VerboseErrf(color Color, s string, args ...any) {
 	}
 }
 
+func (l *Logger) Warnf(message string, args ...any) {
+	l.Errf(Yellow, message, args...)
+}
+
 func (l *Logger) Prompt(color Color, prompt string, defaultValue string, continueValues ...string) error {
 	if l.AssumeYes {
 		l.Outf(color, "%s [assuming yes]\n", prompt)
@@ -133,7 +156,7 @@ func (l *Logger) Prompt(color Color, prompt string, defaultValue string, continu
 		return errors.New("no continue values provided")
 	}
 
-	l.Outf(color, "%s [%s/%s]\n", prompt, strings.ToLower(continueValues[0]), strings.ToUpper(defaultValue))
+	l.Outf(color, "%s [%s/%s]: ", prompt, strings.ToLower(continueValues[0]), strings.ToUpper(defaultValue))
 
 	reader := bufio.NewReader(l.Stdin)
 	input, err := reader.ReadString('\n')

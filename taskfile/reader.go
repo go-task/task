@@ -6,9 +6,12 @@ import (
 	"os"
 	"time"
 
+	"github.com/dominikbraun/graph"
+	"golang.org/x/sync/errgroup"
 	"gopkg.in/yaml.v3"
 
 	"github.com/go-task/task/v3/errors"
+	"github.com/go-task/task/v3/internal/compiler"
 	"github.com/go-task/task/v3/internal/filepathext"
 	"github.com/go-task/task/v3/internal/logger"
 	"github.com/go-task/task/v3/internal/templater"
@@ -24,44 +27,83 @@ Continue?`
 Continue?`
 )
 
-// Read reads a Read for a given directory
-// Uses current dir when dir is left empty. Uses Read.yml
-// or Read.yaml when entrypoint is left empty
-func Read(
+// A Reader will recursively read Taskfiles from a given source using a directed
+// acyclic graph (DAG).
+type Reader struct {
+	graph    *ast.TaskfileGraph
+	node     Node
+	insecure bool
+	download bool
+	offline  bool
+	timeout  time.Duration
+	tempDir  string
+	logger   *logger.Logger
+}
+
+func NewReader(
 	node Node,
 	insecure bool,
 	download bool,
 	offline bool,
 	timeout time.Duration,
 	tempDir string,
-	l *logger.Logger,
-) (*ast.Taskfile, error) {
-	var _taskfile func(Node) (*ast.Taskfile, error)
-	_taskfile = func(node Node) (*ast.Taskfile, error) {
-		tf, err := readTaskfile(node, download, offline, timeout, tempDir, l)
-		if err != nil {
-			return nil, err
-		}
+	logger *logger.Logger,
+) *Reader {
+	return &Reader{
+		graph:    ast.NewTaskfileGraph(),
+		node:     node,
+		insecure: insecure,
+		download: download,
+		offline:  offline,
+		timeout:  timeout,
+		tempDir:  tempDir,
+		logger:   logger,
+	}
+}
 
-		// Check that the Taskfile is set and has a schema version
-		if tf == nil || tf.Version == nil {
-			return nil, &errors.TaskfileVersionCheckError{URI: node.Location()}
-		}
+func (r *Reader) Read() (*ast.TaskfileGraph, error) {
+	// Recursively loop through each Taskfile, adding vertices/edges to the graph
+	if err := r.include(r.node); err != nil {
+		return nil, err
+	}
 
-		if dir := node.BaseDir(); dir != "" {
-			_ = tf.Includes.Range(func(namespace string, include ast.Include) error {
-				// Set the base directory for resolving relative paths, but only if not already set
-				if include.BaseDir == "" {
-					include.BaseDir = dir
-					tf.Includes.Set(namespace, include)
-				}
-				return nil
-			})
-		}
+	return r.graph, nil
+}
 
-		err = tf.Includes.Range(func(namespace string, include ast.Include) error {
-			cache := &templater.Cache{Vars: tf.Vars}
-			include = ast.Include{
+func (r *Reader) include(node Node) error {
+	// Create a new vertex for the Taskfile
+	vertex := &ast.TaskfileVertex{
+		URI:      node.Location(),
+		Taskfile: nil,
+	}
+
+	// Add the included Taskfile to the DAG
+	// If the vertex already exists, we return early since its Taskfile has
+	// already been read and its children explored
+	if err := r.graph.AddVertex(vertex); err == graph.ErrVertexAlreadyExists {
+		return nil
+	} else if err != nil {
+		return err
+	}
+
+	// Read and parse the Taskfile from the file and add it to the vertex
+	var err error
+	vertex.Taskfile, err = r.readNode(node)
+	if err != nil {
+		return err
+	}
+
+	// Create an error group to wait for all included Taskfiles to be read
+	var g errgroup.Group
+
+	// Loop over each included taskfile
+	_ = vertex.Taskfile.Includes.Range(func(namespace string, include *ast.Include) error {
+		vars := compiler.GetEnviron()
+		vars.Merge(vertex.Taskfile.Vars, nil)
+		// Start a goroutine to process each included Taskfile
+		g.Go(func() error {
+			cache := &templater.Cache{Vars: vars}
+			include = &ast.Include{
 				Namespace:      include.Namespace,
 				Taskfile:       templater.Replace(include.Taskfile, cache),
 				Dir:            templater.Replace(include.Dir, cache),
@@ -70,20 +112,23 @@ func Read(
 				Aliases:        include.Aliases,
 				AdvancedImport: include.AdvancedImport,
 				Vars:           include.Vars,
-				BaseDir:        include.BaseDir,
 			}
 			if err := cache.Err(); err != nil {
 				return err
 			}
 
-			uri, err := include.FullTaskfilePath()
+			entrypoint, err := node.ResolveEntrypoint(include.Taskfile)
 			if err != nil {
 				return err
 			}
 
-			includeReaderNode, err := NewNode(uri, insecure,
+			include.Dir, err = node.ResolveDir(include.Dir)
+			if err != nil {
+				return err
+			}
+
+			includeNode, err := NewNode(r.logger, entrypoint, include.Dir, r.insecure, r.timeout,
 				WithParent(node),
-				WithOptional(include.Optional),
 			)
 			if err != nil {
 				if include.Optional {
@@ -92,111 +137,72 @@ func Read(
 				return err
 			}
 
-			if err := checkCircularIncludes(includeReaderNode); err != nil {
+			// Recurse into the included Taskfile
+			if err := r.include(includeNode); err != nil {
 				return err
 			}
 
-			includedTaskfile, err := _taskfile(includeReaderNode)
-			if err != nil {
-				if include.Optional {
-					return nil
-				}
-				return err
+			// Create an edge between the Taskfiles
+			r.graph.Lock()
+			defer r.graph.Unlock()
+			edge, err := r.graph.Edge(node.Location(), includeNode.Location())
+			if err == graph.ErrEdgeNotFound {
+				// If the edge doesn't exist, create it
+				err = r.graph.AddEdge(
+					node.Location(),
+					includeNode.Location(),
+					graph.EdgeData([]*ast.Include{include}),
+					graph.EdgeWeight(1),
+				)
+			} else {
+				// If the edge already exists
+				edgeData := append(edge.Properties.Data.([]*ast.Include), include)
+				err = r.graph.UpdateEdge(
+					node.Location(),
+					includeNode.Location(),
+					graph.EdgeData(edgeData),
+					graph.EdgeWeight(len(edgeData)),
+				)
 			}
-
-			if len(includedTaskfile.Dotenv) > 0 {
-				return ErrIncludedTaskfilesCantHaveDotenvs
-			}
-
-			if include.AdvancedImport {
-				dir, err := include.FullDirPath()
-				if err != nil {
-					return err
-				}
-
-				// nolint: errcheck
-				includedTaskfile.Vars.Range(func(k string, v ast.Var) error {
-					o := v
-					o.Dir = dir
-					includedTaskfile.Vars.Set(k, o)
-					return nil
-				})
-				// nolint: errcheck
-				includedTaskfile.Env.Range(func(k string, v ast.Var) error {
-					o := v
-					o.Dir = dir
-					includedTaskfile.Env.Set(k, o)
-					return nil
-				})
-
-				for _, task := range includedTaskfile.Tasks.Values() {
-					task.Dir = filepathext.SmartJoin(dir, task.Dir)
-					if task.IncludeVars == nil {
-						task.IncludeVars = &ast.Vars{}
-					}
-					task.IncludeVars.Merge(include.Vars)
-					task.IncludedTaskfileVars = includedTaskfile.Vars
+			if errors.Is(err, graph.ErrEdgeCreatesCycle) {
+				return errors.TaskfileCycleError{
+					Source:      node.Location(),
+					Destination: includeNode.Location(),
 				}
 			}
-
-			if err = tf.Merge(includedTaskfile, &include); err != nil {
-				return err
-			}
-
-			return nil
+			return err
 		})
-		if err != nil {
-			return nil, err
-		}
+		return nil
+	})
 
-		for _, task := range tf.Tasks.Values() {
-			// If the task is not defined, create a new one
-			if task == nil {
-				task = &ast.Task{}
-			}
-			// Set the location of the taskfile for each task
-			if task.Location.Taskfile == "" {
-				task.Location.Taskfile = tf.Location
-			}
-		}
-
-		return tf, nil
-	}
-	return _taskfile(node)
+	// Wait for all the go routines to finish
+	return g.Wait()
 }
 
-func readTaskfile(
-	node Node,
-	download,
-	offline bool,
-	timeout time.Duration,
-	tempDir string,
-	l *logger.Logger,
-) (*ast.Taskfile, error) {
+func (r *Reader) readNode(node Node) (*ast.Taskfile, error) {
 	var b []byte
 	var err error
 	var cache *Cache
 
 	if node.Remote() {
-		cache, err = NewCache(tempDir)
+		cache, err = NewCache(r.tempDir)
 		if err != nil {
 			return nil, err
 		}
 	}
 
 	// If the file is remote and we're in offline mode, check if we have a cached copy
-	if node.Remote() && offline {
+	if node.Remote() && r.offline {
 		if b, err = cache.read(node); errors.Is(err, os.ErrNotExist) {
 			return nil, &errors.TaskfileCacheNotFoundError{URI: node.Location()}
 		} else if err != nil {
 			return nil, err
 		}
-		l.VerboseOutf(logger.Magenta, "task: [%s] Fetched cached copy\n", node.Location())
-
+		r.logger.VerboseOutf(logger.Magenta, "task: [%s] Fetched cached copy\n", node.Location())
 	} else {
 
 		downloaded := false
-		ctx, cf := context.WithTimeout(context.Background(), timeout)
+		ctx, cf := context.WithTimeout(context.Background(), r.timeout)
 		defer cf()
 
 		// Read the file
@@ -204,16 +210,16 @@ func readTaskfile(
 		// If we timed out then we likely have a network issue
 		if node.Remote() && errors.Is(ctx.Err(), context.DeadlineExceeded) {
 			// If a download was requested, then we can't use a cached copy
-			if download {
-				return nil, &errors.TaskfileNetworkTimeoutError{URI: node.Location(), Timeout: timeout}
+			if r.download {
+				return nil, &errors.TaskfileNetworkTimeoutError{URI: node.Location(), Timeout: r.timeout}
 			}
 			// Search for any cached copies
 			if b, err = cache.read(node); errors.Is(err, os.ErrNotExist) {
-				return nil, &errors.TaskfileNetworkTimeoutError{URI: node.Location(), Timeout: timeout, CheckedCache: true}
+				return nil, &errors.TaskfileNetworkTimeoutError{URI: node.Location(), Timeout: r.timeout, CheckedCache: true}
 			} else if err != nil {
 				return nil, err
 			}
-			l.VerboseOutf(logger.Magenta, "task: [%s] Network timeout. Fetched cached copy\n", node.Location())
+			r.logger.VerboseOutf(logger.Magenta, "task: [%s] Network timeout. Fetched cached copy\n", node.Location())
 		} else if err != nil {
 			return nil, err
 		} else {
@@ -222,7 +228,7 @@ func readTaskfile(
 
 		// If the node was remote, we need to check the checksum
 		if node.Remote() && downloaded {
-			l.VerboseOutf(logger.Magenta, "task: [%s] Fetched remote copy\n", node.Location())
+			r.logger.VerboseOutf(logger.Magenta, "task: [%s] Fetched remote copy\n", node.Location())
 
 			// Get the checksums
 			checksum := checksum(b)
@@ -237,7 +243,7 @@ func readTaskfile(
 				prompt = fmt.Sprintf(taskfileChangedPrompt, node.Location())
 			}
 			if prompt != "" {
-				if err := l.Prompt(logger.Yellow, prompt, "n", "y", "yes"); err != nil {
+				if err := r.logger.Prompt(logger.Yellow, prompt, "n", "y", "yes"); err != nil {
 					return nil, &errors.TaskfileNotTrustedError{URI: node.Location()}
 				}
 			}
@@ -249,7 +255,7 @@ func readTaskfile(
 					return nil, err
 				}
 				// Cache the file
-				l.VerboseOutf(logger.Magenta, "task: [%s] Caching downloaded file\n", node.Location())
+				r.logger.VerboseOutf(logger.Magenta, "task: [%s] Caching downloaded file\n", node.Location())
 				if err = cache.write(node, b); err != nil {
 					return nil, err
 				}
@@ -257,33 +263,33 @@ func readTaskfile(
 		}
 	}
 
-	var t ast.Taskfile
-	if err := yaml.Unmarshal(b, &t); err != nil {
+	var tf ast.Taskfile
+	if err := yaml.Unmarshal(b, &tf); err != nil {
+		// Decode the taskfile and add the file info the any errors
+		taskfileInvalidErr := &errors.TaskfileDecodeError{}
+		if errors.As(err, &taskfileInvalidErr) {
+			return nil, taskfileInvalidErr.WithFileInfo(node.Location(), b, 2)
+		}
 		return nil, &errors.TaskfileInvalidError{URI: filepathext.TryAbsToRel(node.Location()), Err: err}
 	}
-	t.Location = node.Location()
 
-	return &t, nil
-}
+	// Check that the Taskfile is set and has a schema version
+	if tf.Version == nil {
+		return nil, &errors.TaskfileVersionCheckError{URI: node.Location()}
+	}
 
-func checkCircularIncludes(node Node) error {
-	if node == nil {
-		return errors.New("task: failed to check for include cycle: node was nil")
-	}
-	if node.Parent() == nil {
-		return errors.New("task: failed to check for include cycle: node.Parent was nil")
-	}
-	curNode := node
-	location := node.Location()
-	for curNode.Parent() != nil {
-		curNode = curNode.Parent()
-		curLocation := curNode.Location()
-		if curLocation == location {
-			return fmt.Errorf("task: include cycle detected between %s <--> %s",
-				curLocation,
-				node.Parent().Location(),
-			)
+	// Set the taskfile/task's locations
+	tf.Location = node.Location()
+	for _, task := range tf.Tasks.Values() {
+		// If the task is not defined, create a new one
+		if task == nil {
+			task = &ast.Task{}
+		}
+		// Set the location of the taskfile for each task
+		if task.Location.Taskfile == "" {
+			task.Location.Taskfile = tf.Location
 		}
 	}
-	return nil
+
+	return &tf, nil
 }

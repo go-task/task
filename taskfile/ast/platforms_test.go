@@ -26,10 +26,10 @@ func TestPlatformParsing(t *testing.T) {
 		{Input: "windows/amd64", ExpectedOS: "windows", ExpectedArch: "amd64"},
 		{Input: "windows/arm64", ExpectedOS: "windows", ExpectedArch: "arm64"},
 
-		{Input: "invalid", Error: `task: Invalid platform "invalid"`},
-		{Input: "invalid/invalid", Error: `task: Invalid platform "invalid/invalid"`},
-		{Input: "windows/invalid", Error: `task: Invalid platform "windows/invalid"`},
-		{Input: "invalid/amd64", Error: `task: Invalid platform "invalid/amd64"`},
+		{Input: "invalid", Error: `invalid platform "invalid"`},
+		{Input: "invalid/invalid", Error: `invalid platform "invalid/invalid"`},
+		{Input: "windows/invalid", Error: `invalid platform "windows/invalid"`},
+		{Input: "invalid/amd64", Error: `invalid platform "invalid/amd64"`},
 	}
 
 	for _, test := range tests {

@@ -1,10 +1,9 @@
 package ast
 
 import (
-	"fmt"
-
 	"gopkg.in/yaml.v3"
 
+	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/deepcopy"
 )
 
@@ -46,7 +45,7 @@ func (c *Cmd) UnmarshalYAML(node *yaml.Node) error {
 	case yaml.ScalarNode:
 		var cmd string
 		if err := node.Decode(&cmd); err != nil {
-			return err
+			return errors.NewTaskfileDecodeError(err, node)
 		}
 		c.Cmd = cmd
 		return nil
@@ -110,8 +109,8 @@ func (c *Cmd) UnmarshalYAML(node *yaml.Node) error {
 			return nil
 		}
 
-		return fmt.Errorf("yaml: line %d: invalid keys in command", node.Line)
+		return errors.NewTaskfileDecodeError(nil, node).WithMessage("invalid keys in command")
 	}
 
-	return fmt.Errorf("yaml: line %d: cannot unmarshal %s into command", node.Line, node.ShortTag())
+	return errors.NewTaskfileDecodeError(nil, node).WithTypeMessage("command")
 }

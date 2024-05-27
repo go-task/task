@@ -1,14 +1,9 @@
 package ast
 
 import (
-	"fmt"
-	"path/filepath"
-	"strings"
-
 	"gopkg.in/yaml.v3"
 
-	"github.com/go-task/task/v3/internal/execext"
-	"github.com/go-task/task/v3/internal/filepathext"
+	"github.com/go-task/task/v3/errors"
 	omap "github.com/go-task/task/v3/internal/omap"
 )
 
@@ -22,12 +17,11 @@ type Include struct {
 	Aliases        []string
 	AdvancedImport bool
 	Vars           *Vars
-	BaseDir        string // The directory from which the including taskfile was loaded; used to resolve relative paths
 }
 
 // Includes represents information about included tasksfiles
 type Includes struct {
-	omap.OrderedMap[string, Include]
+	omap.OrderedMap[string, *Include]
 }
 
 // UnmarshalYAML implements the yaml.Unmarshaler interface.
@@ -43,15 +37,15 @@ func (includes *Includes) UnmarshalYAML(node *yaml.Node) error {
 
 			var v Include
 			if err := valueNode.Decode(&v); err != nil {
-				return err
+				return errors.NewTaskfileDecodeError(err, node)
 			}
 			v.Namespace = keyNode.Value
-			includes.Set(keyNode.Value, v)
+			includes.Set(keyNode.Value, &v)
 		}
 		return nil
 	}
 
-	return fmt.Errorf("yaml: line %d: cannot unmarshal %s into included taskfiles", node.Line, node.ShortTag())
+	return errors.NewTaskfileDecodeError(nil, node).WithTypeMessage("includes")
 }
 
 // Len returns the length of the map
@@ -63,7 +57,7 @@ func (includes *Includes) Len() int {
 }
 
 // Wrapper around OrderedMap.Set to ensure we don't get nil pointer errors
-func (includes *Includes) Range(f func(k string, v Include) error) error {
+func (includes *Includes) Range(f func(k string, v *Include) error) error {
 	if includes == nil {
 		return nil
 	}
@@ -76,7 +70,7 @@ func (include *Include) UnmarshalYAML(node *yaml.Node) error {
 	case yaml.ScalarNode:
 		var str string
 		if err := node.Decode(&str); err != nil {
-			return err
+			return errors.NewTaskfileDecodeError(err, node)
 		}
 		include.Taskfile = str
 		return nil
@@ -91,7 +85,7 @@ func (include *Include) UnmarshalYAML(node *yaml.Node) error {
 			Vars     *Vars
 		}
 		if err := node.Decode(&includedTaskfile); err != nil {
-			return err
+			return errors.NewTaskfileDecodeError(err, node)
 		}
 		include.Taskfile = includedTaskfile.Taskfile
 		include.Dir = includedTaskfile.Dir
@@ -103,7 +97,7 @@ func (include *Include) UnmarshalYAML(node *yaml.Node) error {
 		return nil
 	}
 
-	return fmt.Errorf("yaml: line %d: cannot unmarshal %s into included taskfile", node.Line, node.ShortTag())
+	return errors.NewTaskfileDecodeError(nil, node).WithTypeMessage("include")
 }
 
 // DeepCopy creates a new instance of IncludedTaskfile and copies
@@ -120,39 +114,5 @@ func (include *Include) DeepCopy() *Include {
 		Internal:       include.Internal,
 		AdvancedImport: include.AdvancedImport,
 		Vars:           include.Vars.DeepCopy(),
-		BaseDir:        include.BaseDir,
 	}
-}
-
-// FullTaskfilePath returns the fully qualified path to the included taskfile
-func (include *Include) FullTaskfilePath() (string, error) {
-	return include.resolvePath(include.Taskfile)
-}
-
-// FullDirPath returns the fully qualified path to the included taskfile's working directory
-func (include *Include) FullDirPath() (string, error) {
-	return include.resolvePath(include.Dir)
-}
-
-func (include *Include) resolvePath(path string) (string, error) {
-	// If the file is remote, we don't need to resolve the path
-	if strings.Contains(include.Taskfile, "://") {
-		return path, nil
-	}
-
-	path, err := execext.Expand(path)
-	if err != nil {
-		return "", err
-	}
-
-	if filepathext.IsAbs(path) {
-		return path, nil
-	}
-
-	result, err := filepath.Abs(filepathext.SmartJoin(include.BaseDir, path))
-	if err != nil {
-		return "", fmt.Errorf("task: error resolving path %s relative to %s: %w", path, include.BaseDir, err)
-	}
-
-	return result, nil
 }

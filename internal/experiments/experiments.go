@@ -28,6 +28,7 @@ var (
 	GentleForce     Experiment
 	RemoteTaskfiles Experiment
 	AnyVariables    Experiment
+	MapVariables    Experiment
 )
 
 func init() {
@@ -35,6 +36,7 @@ func init() {
 	GentleForce = New("GENTLE_FORCE")
 	RemoteTaskfiles = New("REMOTE_TASKFILES")
 	AnyVariables = New("ANY_VARIABLES", "1", "2")
+	MapVariables = New("MAP_VARIABLES", "1", "2")
 }
 
 func New(xName string, enabledValues ...string) Experiment {
@@ -101,6 +103,6 @@ func List(l *logger.Logger) error {
 	w := tabwriter.NewWriter(os.Stdout, 0, 8, 0, ' ', 0)
 	printExperiment(w, l, GentleForce)
 	printExperiment(w, l, RemoteTaskfiles)
-	printExperiment(w, l, AnyVariables)
+	printExperiment(w, l, MapVariables)
 	return w.Flush()
 }

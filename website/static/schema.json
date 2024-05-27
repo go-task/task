@@ -277,17 +277,9 @@
         "map": {
           "type": "object",
           "description": "The value will be treated as a literal map type and stored in the variable"
-        },
-        "json": {
-          "type": "string",
-          "description": "The value will parsed as a JSON string and stored in the variable"
-        },
-        "yaml": {
-          "type": "string",
-          "description": "The value will parsed as a YAML string and stored in the variable"
-        },
-        "additionalProperties": false
-      }
+        }
+      },
+      "additionalProperties": false
     },
     "task_call": {
       "type": "object",
@@ -496,7 +488,8 @@
           "description": "Failure message to display when the condition fails",
           "type": "string"
         }
-      }
+      },
+      "additionalProperties": false
     },
     "glob": {
       "anyOf": [
@@ -512,10 +505,11 @@
       "type": "object",
       "properties": {
         "exclude": {
-          "description": "File or glob patter to exclude from the list",
+          "description": "File or glob pattern to exclude from the list",
           "type": "string"
         }
-      }
+      },
+      "additionalProperties": false
     },
     "run": {
       "type": "string",
@@ -545,7 +539,8 @@
             }
           }
         }
-      }
+      },
+      "additionalProperties": false
     },
     "requires_obj": {
       "type": "object",
@@ -557,7 +552,8 @@
             "type": "string"
           }
         }
-      }
+      },
+      "additionalProperties": false
     }
   },
   "allOf": [
@@ -648,7 +644,7 @@
           "$ref": "#/definitions/tasks"
         },
         "silent": {
-          "description": "Default 'silent' options for this Taskfile. If `false`, can be overidden with `true` in a task by task basis.",
+          "description": "Default 'silent' options for this Taskfile. If `false`, can be overridden with `true` in a task by task basis.",
           "type": "boolean"
         },
         "set": {

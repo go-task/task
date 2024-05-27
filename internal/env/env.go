@@ -13,19 +13,25 @@ func Get(t *ast.Task) []string {
 	}
 
 	environ := os.Environ()
-
 	for k, v := range t.Env.ToCacheMap() {
-		str, isString := v.(string)
-		if !isString {
+		if !isTypeAllowed(v) {
 			continue
 		}
 
 		if _, alreadySet := os.LookupEnv(k); alreadySet {
 			continue
 		}
-
-		environ = append(environ, fmt.Sprintf("%s=%s", k, str))
+		environ = append(environ, fmt.Sprintf("%s=%v", k, v))
 	}
 
 	return environ
+}
+
+func isTypeAllowed(v any) bool {
+	switch v.(type) {
+	case string, bool, int, float32, float64:
+		return true
+	default:
+		return false
+	}
 }

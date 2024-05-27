@@ -5,57 +5,54 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/experiments"
+	"github.com/go-task/task/v3/internal/logger"
 )
 
 type Node interface {
 	Read(ctx context.Context) ([]byte, error)
 	Parent() Node
 	Location() string
-	Optional() bool
+	Dir() string
 	Remote() bool
-	BaseDir() string
+	ResolveEntrypoint(entrypoint string) (string, error)
+	ResolveDir(dir string) (string, error)
 }
 
 func NewRootNode(
-	dir string,
+	l *logger.Logger,
 	entrypoint string,
+	dir string,
 	insecure bool,
+	timeout time.Duration,
 ) (Node, error) {
 	dir = getDefaultDir(entrypoint, dir)
-	// Check if there is something to read on STDIN
-	stat, _ := os.Stdin.Stat()
-	if (stat.Mode()&os.ModeCharDevice) == 0 && stat.Size() > 0 {
+	// If the entrypoint is "-", we read from stdin
+	if entrypoint == "-" {
 		return NewStdinNode(dir)
 	}
-	// If no entrypoint is specified, search for a taskfile
-	if entrypoint == "" {
-		root, err := ExistsWalk(dir)
-		if err != nil {
-			return nil, err
-		}
-		return NewNode(root, insecure)
-	}
-	// Use the specified entrypoint
-	uri := filepath.Join(dir, entrypoint)
-	return NewNode(uri, insecure)
+	return NewNode(l, entrypoint, dir, insecure, timeout)
 }
 
 func NewNode(
-	uri string,
+	l *logger.Logger,
+	entrypoint string,
+	dir string,
 	insecure bool,
+	timeout time.Duration,
 	opts ...NodeOption,
 ) (Node, error) {
 	var node Node
 	var err error
-	switch getScheme(uri) {
+	switch getScheme(entrypoint) {
 	case "http", "https":
-		node, err = NewHTTPNode(uri, insecure, opts...)
+		node, err = NewHTTPNode(l, entrypoint, dir, insecure, timeout, opts...)
 	default:
 		// If no other scheme matches, we assume it's a file
-		node, err = NewFileNode(uri, opts...)
+		node, err = NewFileNode(l, entrypoint, dir, opts...)
 	}
 	if node.Remote() && !experiments.RemoteTaskfiles.Enabled {
 		return nil, errors.New("task: Remote taskfiles are not enabled. You can read more about this experiment and how to enable it at https://taskfile.dev/experiments/remote-taskfiles")

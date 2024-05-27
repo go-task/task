@@ -3,9 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
 	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/spf13/pflag"
@@ -45,8 +43,12 @@ func main() {
 }
 
 func run() error {
-	log.SetFlags(0)
-	log.SetOutput(os.Stderr)
+	logger := &logger.Logger{
+		Stdout:  os.Stdout,
+		Stderr:  os.Stderr,
+		Verbose: flags.Verbose,
+		Color:   flags.Color,
+	}
 
 	if err := flags.Validate(); err != nil {
 		return err
@@ -56,7 +58,7 @@ func run() error {
 	entrypoint := flags.Entrypoint
 
 	if flags.Version {
-		fmt.Printf("Task version: %s\n", ver.GetVersion())
+		fmt.Printf("Task version: %s\n", ver.GetVersionWithSum())
 		return nil
 	}
 
@@ -66,22 +68,16 @@ func run() error {
 	}
 
 	if flags.Experiments {
-		l := &logger.Logger{
-			Stdout:  os.Stdout,
-			Stderr:  os.Stderr,
-			Verbose: flags.Verbose,
-			Color:   flags.Color,
-		}
-		return experiments.List(l)
+		return experiments.List(logger)
 	}
 
 	if flags.Init {
 		wd, err := os.Getwd()
 		if err != nil {
-			log.Fatal(err)
+			return err
 		}
 		if err := task.InitTaskfile(os.Stdout, wd); err != nil {
-			log.Fatal(err)
+			return err
 		}
 		return nil
 	}
@@ -92,11 +88,6 @@ func run() error {
 			return fmt.Errorf("task: Failed to get user home directory: %w", err)
 		}
 		dir = home
-	}
-
-	if entrypoint != "" {
-		dir = filepath.Dir(entrypoint)
-		entrypoint = filepath.Base(entrypoint)
 	}
 
 	var taskSorter sort.TaskSorter
@@ -140,8 +131,13 @@ func run() error {
 		return err
 	}
 
-	if err := e.Setup(); err != nil {
+	err := e.Setup()
+	if err != nil {
 		return err
+	}
+
+	if experiments.AnyVariables.Enabled {
+		logger.Warnf("The 'Any Variables' experiment flag is no longer required to use non-map variable types. If you wish to use map variables, please use 'TASK_X_MAP_VARIABLES' instead. See https://github.com/go-task/task/issues/1585\n")
 	}
 
 	// If the download flag is specified, we should stop execution as soon as
@@ -184,7 +180,7 @@ func run() error {
 
 	globals.Set("CLI_ARGS", ast.Var{Value: cliArgs})
 	globals.Set("CLI_FORCE", ast.Var{Value: flags.Force || flags.ForceAll})
-	e.Taskfile.Vars.Merge(globals)
+	e.Taskfile.Vars.Merge(globals, nil)
 
 	if !flags.Watch {
 		e.InterceptInterruptSignals()

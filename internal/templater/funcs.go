@@ -4,13 +4,13 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
-	"text/template"
 
 	"github.com/davecgh/go-spew/spew"
 	"mvdan.cc/sh/v3/shell"
 	"mvdan.cc/sh/v3/syntax"
 
 	sprig "github.com/go-task/slim-sprig/v3"
+	"github.com/go-task/template"
 )
 
 var templateFuncs template.FuncMap
@@ -73,12 +73,16 @@ func init() {
 			return spew.Sdump(v)
 		},
 	}
+
+	// aliases
+	taskFuncs["q"] = taskFuncs["shellQuote"]
+
 	// Deprecated aliases for renamed functions.
 	taskFuncs["FromSlash"] = taskFuncs["fromSlash"]
 	taskFuncs["ToSlash"] = taskFuncs["toSlash"]
 	taskFuncs["ExeExt"] = taskFuncs["exeExt"]
 
-	templateFuncs = sprig.TxtFuncMap()
+	templateFuncs = template.FuncMap(sprig.TxtFuncMap())
 	for k, v := range taskFuncs {
 		templateFuncs[k] = v
 	}

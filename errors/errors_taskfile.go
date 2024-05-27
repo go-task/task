@@ -174,3 +174,21 @@ func (err *TaskfileNetworkTimeoutError) Error() string {
 func (err *TaskfileNetworkTimeoutError) Code() int {
 	return CodeTaskfileNetworkTimeout
 }
+
+// TaskfileCycleError is returned when we detect that a Taskfile includes a
+// set of Taskfiles that include each other in a cycle.
+type TaskfileCycleError struct {
+	Source      string
+	Destination string
+}
+
+func (err TaskfileCycleError) Error() string {
+	return fmt.Sprintf("task: include cycle detected between %s <--> %s",
+		err.Source,
+		err.Destination,
+	)
+}
+
+func (err TaskfileCycleError) Code() int {
+	return CodeTaskfileCycle
+}

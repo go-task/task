@@ -1,0 +1,10 @@
+version: '3'
+
+tasks:
+  default:
+    cmds:
+      - task: hello
+
+  hello:
+    cmds:
+      - echo "Hello Task!"
