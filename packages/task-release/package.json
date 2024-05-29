@@ -1,8 +1,14 @@
 {
-  "name": "@go-task/cli",
-  "version": "3.37.2",
+  "name": "@go-task/cli-{platform}-{arch}",
+  "version": "{version}",
   "description": "A task runner / simpler Make alternative written in Go",
-  "files": [],
+  "type": "module",
+  "scripts": {
+    "release": "node release.js"
+  },
+  "files": [
+    "bin"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/go-task/task.git"
@@ -18,12 +24,11 @@
   "bugs": {
     "url": "https://github.com/go-task/task/issues"
   },
-  "homepage": "https://taskfile.dev",
-  "optionalDependencies": {
-    "@go-task/cli-darwin-x64": "3.34.1",
-    "@go-task/cli-darwin-arm64": "3.34.1",
-    "@go-task/cli-linux-x64": "3.34.1",
-    "@go-task/cli-linux-arm64": "3.34.1",
-    "@go-task/cli-win32-x64": "3.34.1"
-  }
+  "os": [
+    "{platform}"
+  ],
+  "cpu": [
+    "{arch}"
+  ],
+  "homepage": "https://taskfile.dev"
 }
