@@ -19,9 +19,22 @@ func (e *Executor) areTaskRequiredVarsSet(ctx context.Context, t *ast.Task, call
 
 	var missingVars []string
 	for _, requiredVar := range t.Requires.Vars {
-		if !vars.Exists(requiredVar) {
-			missingVars = append(missingVars, requiredVar)
+		v := vars.Get(requiredVar)
+
+		// Check and continue on positive conditions.
+		if v.Value != nil {
+			switch val := v.Value.(type) {
+			case string:
+				if len(val) > 0 {
+					continue
+				}
+			default:
+				continue
+			}
 		}
+
+		// The required variable is not available.
+		missingVars = append(missingVars, requiredVar)
 	}
 
 	if len(missingVars) > 0 {
