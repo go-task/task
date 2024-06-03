@@ -5,6 +5,8 @@
 - Added `TASK_EXE` special variable (#1616, #1624 by @pd93 and @andreynering).
 - Some YAML parsing errors will now show in a more user friendly way (#1619 by
   @pd93).
+- Prefixed outputs will now be colorized by default (#1572 by
+  @AlexanderArvidsson)
 - [References](https://taskfile.dev/usage/#referencing-other-variables) are now
   generally available (no experiments required) (#1654 by @pd93).
 - Templating functions can now be used in references (#1645, #1654 by @pd93).
