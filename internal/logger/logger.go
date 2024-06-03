@@ -52,6 +52,30 @@ func Red() PrintFunc {
 	return color.New(envColor("TASK_COLOR_RED", color.FgRed)...).FprintfFunc()
 }
 
+func BrightBlue() PrintFunc {
+	return color.New(envColor("TASK_COLOR_BRIGHT_BLUE", color.FgHiBlue)...).FprintfFunc()
+}
+
+func BrightGreen() PrintFunc {
+	return color.New(envColor("TASK_COLOR_BRIGHT_GREEN", color.FgHiGreen)...).FprintfFunc()
+}
+
+func BrightCyan() PrintFunc {
+	return color.New(envColor("TASK_COLOR_BRIGHT_CYAN", color.FgHiCyan)...).FprintfFunc()
+}
+
+func BrightYellow() PrintFunc {
+	return color.New(envColor("TASK_COLOR_BRIGHT_YELLOW", color.FgHiYellow)...).FprintfFunc()
+}
+
+func BrightMagenta() PrintFunc {
+	return color.New(envColor("TASK_COLOR_BRIGHT_MAGENTA", color.FgHiMagenta)...).FprintfFunc()
+}
+
+func BrightRed() PrintFunc {
+	return color.New(envColor("TASK_COLOR_BRIGHT_RED", color.FgHiRed)...).FprintfFunc()
+}
+
 func envColor(env string, defaultColor color.Attribute) []color.Attribute {
 	if os.Getenv("FORCE_COLOR") != "" {
 		color.NoColor = false
