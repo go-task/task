@@ -64,7 +64,10 @@ const config: Config = {
             }
           }
         },
-        blog: {},
+        blog: {
+          blogSidebarTitle: 'All posts',
+          blogSidebarCount: 'ALL'
+        },
         theme: {
           customCss: [
             './src/css/custom.css',
