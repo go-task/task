@@ -276,10 +276,10 @@ func (e *Executor) RunTask(ctx context.Context, call *ast.Call) error {
 }
 
 func (e *Executor) setExitCode(code int) {
-	exit := os.Getenv("DEFER_EXIT_CODE")
+	exit := os.Getenv("EXIT_CODE")
 	if exit == "0" || exit == "" {
 		e.Logger.VerboseOutf(logger.Magenta, "task: setting exit status code to: %d \n", code)
-		os.Setenv("DEFER_EXIT_CODE", strconv.Itoa(code))
+		os.Setenv("EXIT_CODE", strconv.Itoa(code))
 	}
 }
 
