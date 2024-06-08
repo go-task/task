@@ -265,7 +265,6 @@ func (e *Executor) RunTask(ctx context.Context, call *ast.Call) error {
 
 				tre := &errors.TaskRunError{TaskName: t.Task, Err: err}
 				e.setExitCode(tre.TaskExitCode())
-
 				return tre
 			}
 		}
