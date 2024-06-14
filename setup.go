@@ -132,6 +132,14 @@ func (e *Executor) setupTempDir() error {
 		}
 	}
 
+	if os.Getenv("TASK_REMOTE_DIR") != "" {
+		remoteTempDir, err := execext.Expand(os.Getenv("TASK_REMOTE_DIR"))
+		if err != nil {
+			return err
+		}
+		e.TempDir.Remote = remoteTempDir
+	}
+
 	return nil
 }
 

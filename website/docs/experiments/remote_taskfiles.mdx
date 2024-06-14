@@ -112,7 +112,12 @@ and look for a cached copy instead. This timeout can be configured by setting
 the `--timeout` flag and specifying a duration. For example, `--timeout 5s` will
 set the timeout to 5 seconds.
 
+By default, the cache is stored in the Task temp directory, represented by the `TASK_TEMP_DIR` [environment variable](../reference/environment.mdx)
+You can override the location of the cache by setting the `TASK_REMOTE_DIR` environment variable. This way, you can share the cache between different projects.
+
+
 {/* prettier-ignore-start */}
 [enabling-experiments]: ./experiments.mdx#enabling-experiments
 [man-in-the-middle-attacks]: https://en.wikipedia.org/wiki/Man-in-the-middle_attack
 {/* prettier-ignore-end */}
+
