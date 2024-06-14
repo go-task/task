@@ -150,8 +150,7 @@ func run() error {
 		if err != nil {
 			return err
 		}
-		err = cache.Clear()
-		return err
+		return cache.Clear()
 	}
 
 	if (listOptions.ShouldListTasks()) && flags.Silent {
