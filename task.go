@@ -275,10 +275,12 @@ func (e *Executor) RunTask(ctx context.Context, call *ast.Call) error {
 }
 
 func (e *Executor) setExitCode(code int) {
-	exit := os.Getenv("EXIT_CODE")
-	if exit == "0" || exit == "" {
+	exitVar := e.Taskfile.Vars.Get("EXIT_CODE")
+
+	var zero ast.Var
+	if exitVar == zero || exitVar.Value == "0" {
 		e.Logger.VerboseOutf(logger.Magenta, "task: setting exit status code to: %d \n", code)
-		os.Setenv("EXIT_CODE", strconv.Itoa(code))
+		e.Taskfile.Vars.Set("EXIT_CODE", ast.Var{Value: strconv.Itoa(code)})
 	}
 }
 

@@ -3,7 +3,7 @@ version: "3"
 tasks:
   test_task:
     - defer: |
-        if [ $EXIT_CODE == {{.PARAM}} ]; then
+        if [ {{.EXIT_CODE}} == {{.PARAM}} ]; then
           echo test passed
         else
           echo test failed
