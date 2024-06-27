@@ -11,11 +11,16 @@ builds:
       - amd64
       - arm
       - arm64
+      - riscv64
     goarm:
       - '6'
     ignore:
       - goos: darwin
         goarch: '386'
+      - goos: darwin
+        goarch: riscv64
+      - goos: windows
+        goarch: riscv64
     env:
       - CGO_ENABLED=0
     mod_timestamp: '{{ .CommitTimestamp }}'
