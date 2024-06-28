@@ -47,7 +47,7 @@ func (t *Tasks) FindMatchingTasks(call *Call) []*MatchingTask {
 }
 
 func (t1 *Tasks) Merge(t2 Tasks, include *Include, includedTaskfileVars *Vars) {
-	_ = t2.Range(func(k string, v *Task) error {
+	_ = t2.Range(func(name string, v *Task) error {
 		// We do a deep copy of the task struct here to ensure that no data can
 		// be changed elsewhere once the taskfile is merged.
 		task := v.DeepCopy()
@@ -95,7 +95,8 @@ func (t1 *Tasks) Merge(t2 Tasks, include *Include, includedTaskfileVars *Vars) {
 		}
 
 		// Add the task to the merged taskfile
-		taskNameWithNamespace := taskNameWithNamespace(k, include.Namespace)
+		taskNameWithNamespace := taskNameWithNamespace(name, include.Namespace)
+		task.Namespace = include.Namespace
 		task.Task = taskNameWithNamespace
 		t1.Set(taskNameWithNamespace, task)
 

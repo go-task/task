@@ -1,0 +1,15 @@
+version: '3'
+
+includes:
+  library:
+    taskfile: ../library/Taskfile.yml
+    dir: ../library
+
+tasks:
+  build:
+    run: once
+    deps: [library:build]
+    cmds:
+      - echo "build b"
+    sources:
+      - src/**/*

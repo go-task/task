@@ -15,7 +15,7 @@ func Empty(*ast.Task) (string, error) {
 }
 
 func Name(t *ast.Task) (string, error) {
-	return t.Task, nil
+	return fmt.Sprintf("%s:%s", t.Location.Taskfile, t.LocalName()), nil
 }
 
 func Hash(t *ast.Task) (string, error) {

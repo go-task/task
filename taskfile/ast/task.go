@@ -13,37 +13,39 @@ import (
 
 // Task represents a task
 type Task struct {
-	Task                 string
-	Cmds                 []*Cmd
-	Deps                 []*Dep
-	Label                string
-	Desc                 string
-	Prompt               string
-	Summary              string
-	Requires             *Requires
-	Aliases              []string
-	Sources              []*Glob
-	Generates            []*Glob
-	Status               []string
-	Preconditions        []*Precondition
-	Dir                  string
-	Set                  []string
-	Shopt                []string
-	Vars                 *Vars
-	Env                  *Vars
-	Dotenv               []string
-	Silent               bool
-	Interactive          bool
-	Internal             bool
-	Method               string
-	Prefix               string
-	IgnoreError          bool
-	Run                  string
+	Task          string
+	Cmds          []*Cmd
+	Deps          []*Dep
+	Label         string
+	Desc          string
+	Prompt        string
+	Summary       string
+	Requires      *Requires
+	Aliases       []string
+	Sources       []*Glob
+	Generates     []*Glob
+	Status        []string
+	Preconditions []*Precondition
+	Dir           string
+	Set           []string
+	Shopt         []string
+	Vars          *Vars
+	Env           *Vars
+	Dotenv        []string
+	Silent        bool
+	Interactive   bool
+	Internal      bool
+	Method        string
+	Prefix        string
+	IgnoreError   bool
+	Run           string
+	Platforms     []*Platform
+	Watch         bool
+	Location      *Location
+	// Populated during merging
+	Namespace            string
 	IncludeVars          *Vars
 	IncludedTaskfileVars *Vars
-	Platforms            []*Platform
-	Location             *Location
-	Watch                bool
 }
 
 func (t *Task) Name() string {
@@ -51,6 +53,13 @@ func (t *Task) Name() string {
 		return t.Label
 	}
 	return t.Task
+}
+
+func (t *Task) LocalName() string {
+	name := t.Task
+	name = strings.TrimPrefix(name, t.Namespace)
+	name = strings.TrimPrefix(name, ":")
+	return name
 }
 
 // WildcardMatch will check if the given string matches the name of the Task and returns any wildcard values.
@@ -210,6 +219,7 @@ func (t *Task) DeepCopy() *Task {
 		Platforms:            deepcopy.Slice(t.Platforms),
 		Location:             t.Location.DeepCopy(),
 		Requires:             t.Requires.DeepCopy(),
+		Namespace:            t.Namespace,
 	}
 	return c
 }

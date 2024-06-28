@@ -1,0 +1,9 @@
+version: '3'
+
+tasks:
+  build:
+    run: once
+    cmds:
+      - echo "build library"
+    sources:
+      - src/**/*
