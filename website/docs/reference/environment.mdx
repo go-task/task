@@ -8,10 +8,11 @@ sidebar_position: 4
 Task allows you to configure some behavior using environment variables. This
 page lists all the environment variables that Task supports.
 
-| ENV             | Default | Description                                                                                                       |
-| --------------- | ------- | ----------------------------------------------------------------------------------------------------------------- |
-| `TASK_TEMP_DIR` | `.task` | Location of the temp dir. Can relative to the project like `tmp/task` or absolute like `/tmp/.task` or `~/.task`. |
-| `FORCE_COLOR`   |         | Force color output usage.                                                                                         |
+| ENV               | Default | Description                                                                                                                                         |
+| ----------------- | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `TASK_TEMP_DIR`   | `.task`         | Location of the temp dir. Can relative to the project like `tmp/task` or absolute like `/tmp/.task` or `~/.task`.                           |
+| `TASK_REMOTE_DIR` | `TASK_TEMP_DIR` | Location of the remote temp dir (used for caching). Can relative to the project like `tmp/task` or absolute like `/tmp/.task` or `~/.task`. |
+| `FORCE_COLOR`     |                 | Force color output usage.                                                                                                                   |
 
 ## Custom Colors
 
