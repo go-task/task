@@ -3,6 +3,9 @@ slug: /usage/
 sidebar_position: 3
 ---
 
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
 # Usage
 
 ## Getting started
@@ -121,13 +124,14 @@ tasks:
 ### Reading a Taskfile from stdin
 
 Taskfile also supports reading from stdin. This is useful if you are generating
-Taskfiles dynamically and don't want write them to disk. This works just like
-any other program that supports stdin. For example:
+Taskfiles dynamically and don't want write them to disk. To tell task to read
+from stdin, you must specify the `-t/--taskfile` flag with the special `-`
+value. You may then pipe into Task as you would any other program:
 
 ```shell
-task < <(cat ./Taskfile.yml)
+task -t - <(cat ./Taskfile.yml)
 # OR
-cat ./Taskfile.yml | task
+cat ./Taskfile.yml | task -t -
 ```
 
 ## Environment variables
@@ -963,10 +967,48 @@ Maps are not supported by default, but there is an
 you're interested in this functionality, we would appreciate your feedback.
 :pray:
 
+In the meantime, it is technically possible to define a map using a `ref` resolver and a templating function. For example:
+
+```yaml
+version: '3'
+
+tasks:
+  task-with-map:
+    vars:
+      FOO:
+        ref: dict "a" "1" "b" "2" "c" "3"
+    cmds:
+      - echo {{.FOO}}
+```
+
+```txt
+map[a:1 b:2 c:3]
+```
+
+OR by using the same technique with JSON:
+
+```yaml
+version: '3'
+
+tasks:
+  task-with-map:
+    vars:
+      JSON: '{"a": 1, "b": 2, "c": 3}'
+      FOO:
+        ref: "fromJson .JSON"
+    cmds:
+      - echo {{.FOO}}
+```
+
+```txt
+map[a:1 b:2 c:3]
+```
+
 :::
 
-Variables can be set in many places in a Taskfile. When executing templates,
-Task will look for variables in the order listed below (most important first):
+Variables can be set in many places in a Taskfile. When executing
+[templates][templating-reference], Task will look for variables in the order
+listed below (most important first):
 
 - Variables declared in the task definition
 - Variables given while calling a task from another (See
@@ -1044,6 +1086,103 @@ tasks:
 ```
 
 This works for all types of variables.
+
+### Referencing other variables
+
+Templating is great for referencing string values if you want to pass
+a value from one task to another. However, the templating engine is only able to
+output strings. If you want to pass something other than a string to another
+task then you will need to use a reference (`ref`) instead.
+
+<Tabs defaultValue="2"
+      values={[
+        { label: 'Templating Engine', value: '1' },
+        { label: 'Reference', value: '2' }
+      ]}>
+
+<TabItem value="1">
+
+```yaml
+version: 3
+
+tasks:
+  foo:
+    vars:
+      FOO: [A, B, C] # <-- FOO is defined as an array
+    cmds:
+      - task: bar
+        vars:
+          FOO: '{{.FOO}}' # <-- FOO gets converted to a string when passed to bar
+  bar:
+    cmds:
+      - 'echo {{index .FOO 0}}' # <-- FOO is a string so the task outputs '91' which is the ASCII code for '[' instead of the expected 'A'
+```
+
+</TabItem>
+<TabItem value="2">
+
+```yaml
+version: 3
+
+tasks:
+  foo:
+    vars:
+      FOO: [A, B, C] # <-- FOO is defined as an array
+    cmds:
+      - task: bar
+        vars:
+          FOO:
+            ref: .FOO # <-- FOO gets passed by reference to bar and maintains its type
+  bar:
+    cmds:
+      - 'echo {{index .FOO 0}}' # <-- FOO is still a map so the task outputs 'A' as expected
+```
+
+</TabItem></Tabs>
+
+This also works the same way when calling `deps` and when defining
+a variable and can be used in any combination:
+
+```yaml
+version: 3
+
+tasks:
+  foo:
+    vars:
+      FOO: [A, B, C] # <-- FOO is defined as an array
+      BAR:
+        ref: .FOO # <-- BAR is defined as a reference to FOO
+    deps:
+      - task: bar
+        vars:
+          BAR:
+            ref: .BAR # <-- BAR gets passed by reference to bar and maintains its type
+  bar:
+    cmds:
+      - 'echo {{index .BAR 0}}' # <-- BAR still refers to FOO so the task outputs 'A'
+```
+
+All references use the same templating syntax as regular templates, so in
+addition to simply calling `.FOO`, you can also pass subkeys (`.FOO.BAR`) or
+indexes (`index .FOO 0`) and use functions (`len .FOO`) as described in the
+[templating-reference][templating-reference]:
+
+```yaml
+version: 3
+
+tasks:
+  foo:
+    vars:
+      FOO: [A, B, C] # <-- FOO is defined as an array
+    cmds:
+      - task: bar
+        vars:
+          FOO:
+            ref: index .FOO 0 # <-- The element at index 0 is passed by reference to bar
+  bar:
+    cmds:
+      - 'echo {{.MYVAR}}' # <-- FOO is just the letter 'A'
+```
 
 ## Looping over values
 
@@ -1141,8 +1280,7 @@ tasks:
         cmd: cat {{.ITEM}}
 ```
 
-You can also loop over arrays directly (and maps if you have the
-[maps experiment](/experiments/map-variables) enabled):
+You can also loop over arrays directly and maps:
 
 ```yaml
 version: 3
@@ -1381,81 +1519,6 @@ Due to the nature of how the
 commands are executed in the reverse order if you schedule multiple of them.
 
 :::
-
-## Go's template engine
-
-Task parse commands as [Go's template engine][gotemplate] before executing them.
-Variables are accessible through dot syntax (`.VARNAME`).
-
-All functions by the Go's
-[slim-sprig lib](https://go-task.github.io/slim-sprig/) are available. The
-following example gets the current date in a given format:
-
-```yaml
-version: '3'
-
-tasks:
-  print-date:
-    cmds:
-      - echo {{now | date "2006-01-02"}}
-```
-
-Task also adds the following functions:
-
-- `OS`: Returns the operating system. Possible values are `windows`, `linux`,
-  `darwin` (macOS) and `freebsd`.
-- `ARCH`: return the architecture Task was compiled to: `386`, `amd64`, `arm` or
-  `s390x`.
-- `splitLines`: Splits Unix (`\n`) and Windows (`\r\n`) styled newlines.
-- `catLines`: Replaces Unix (`\n`) and Windows (`\r\n`) styled newlines with a
-  space.
-- `toSlash`: Does nothing on Unix, but on Windows converts a string from `\`
-  path format to `/`.
-- `fromSlash`: Opposite of `toSlash`. Does nothing on Unix, but on Windows
-  converts a string from `/` path format to `\`.
-- `exeExt`: Returns the right executable extension for the current OS (`".exe"`
-  for Windows, `""` for others).
-- `shellQuote`: Quotes a string to make it safe for use in shell scripts. Task
-  uses [this Go function](https://pkg.go.dev/mvdan.cc/sh/v3@v3.4.0/syntax#Quote)
-  for this. The Bash dialect is assumed.
-- `splitArgs`: Splits a string as if it were a command's arguments. Task uses
-  [this Go function](https://pkg.go.dev/mvdan.cc/sh/v3@v3.4.0/shell#Fields)
-- `joinPath`: Joins any number of arguments into a path. The same as Go's
-  [filepath.Join](https://pkg.go.dev/path/filepath#Join).
-- `relPath`: Converts an absolute path (second argument) into a relative path,
-  based on a base path (first argument). The same as Go's
-  [filepath.Rel](https://pkg.go.dev/path/filepath#Rel).
-- `merge`: Creates a new map that is a copy of the first map with the keys of
-  each subsequent map merged into it. If there is a duplicate key, the value of
-  the last map with that key is used.
-- `spew`: Returns the Go representation of a specific variable. Useful for
-  debugging. Uses the [davecgh/go-spew](https://github.com/davecgh/go-spew)
-  package.
-
-Example:
-
-```yaml
-version: '3'
-
-tasks:
-  print-os:
-    cmds:
-      - echo '{{OS}} {{ARCH}}'
-      - echo '{{if eq OS "windows"}}windows-command{{else}}unix-command{{end}}'
-      # This will be path/to/file on Unix but path\to\file on Windows
-      - echo '{{fromSlash "path/to/file"}}'
-  enumerated-file:
-    vars:
-      CONTENT: |
-        foo
-        bar
-    cmds:
-      - |
-        cat << EOF > output.txt
-        {{range $i, $line := .CONTENT | splitLines -}}
-        {{printf "%3d" $i}}: {{$line}}
-        {{end}}EOF
-```
 
 ## Help
 
@@ -1995,4 +2058,5 @@ if called by another task, either directly or as a dependency.
 {/* prettier-ignore-start */}
 [gotemplate]: https://golang.org/pkg/text/template/
 [map-variables]: ./experiments/map_variables.mdx
+[templating-reference]: ./reference/templating.mdx
 {/* prettier-ignore-end */}

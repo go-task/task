@@ -12,7 +12,9 @@ function __task_list() {
     local taskfile item task desc
 
     cmd=(task)
-    taskfile="${(v)opt_args[(i)-t|--taskfile]}"
+    taskfile=${(Qv)opt_args[(i)-t|--taskfile]}
+    taskfile=${taskfile//\~/$HOME}
+
 
     if [[ -n "$taskfile" && -f "$taskfile" ]]; then
         enabled=1

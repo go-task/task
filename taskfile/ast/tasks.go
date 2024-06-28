@@ -6,6 +6,7 @@ import (
 
 	"gopkg.in/yaml.v3"
 
+	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/filepathext"
 	"github.com/go-task/task/v3/internal/omap"
 )
@@ -90,7 +91,7 @@ func (t1 *Tasks) Merge(t2 Tasks, include *Include, includedTaskfileVars *Vars) {
 				task.IncludeVars = &Vars{}
 			}
 			task.IncludeVars.Merge(include.Vars, nil)
-			task.IncludedTaskfileVars = includedTaskfileVars
+			task.IncludedTaskfileVars = includedTaskfileVars.DeepCopy()
 		}
 
 		// Add the task to the merged taskfile
@@ -122,7 +123,7 @@ func (t *Tasks) UnmarshalYAML(node *yaml.Node) error {
 	case yaml.MappingNode:
 		tasks := omap.New[string, *Task]()
 		if err := tasks.UnmarshalYAML(node); err != nil {
-			return err
+			return errors.NewTaskfileDecodeError(err, node)
 		}
 
 		// nolint: errcheck
@@ -154,7 +155,7 @@ func (t *Tasks) UnmarshalYAML(node *yaml.Node) error {
 		return nil
 	}
 
-	return fmt.Errorf("yaml: line %d: cannot unmarshal %s into tasks", node.Line, node.ShortTag())
+	return errors.NewTaskfileDecodeError(nil, node).WithTypeMessage("tasks")
 }
 
 func taskNameWithNamespace(taskName string, namespace string) string {

@@ -2,14 +2,62 @@
 
 ## Unreleased
 
+- Added `TASK_EXE` special variable (#1616, #1624 by @pd93 and @andreynering).
+- Some YAML parsing errors will now show in a more user friendly way (#1619 by
+  @pd93).
+- Prefixed outputs will now be colorized by default (#1572 by
+  @AlexanderArvidsson)
+- [References](https://taskfile.dev/usage/#referencing-other-variables) are now
+  generally available (no experiments required) (#1654 by @pd93).
+- Templating functions can now be used in references (#1645, #1654 by @pd93).
+- Added a new
+  [templating reference page](https://taskfile.dev/reference/templating/) to the
+  documentation (#1614, #1653 by @pd93).
+- If using the
+  [Map Variables experiment (1)](https://taskfile.dev/experiments/map-variables/?proposal=1),
+  references are available by
+  [prefixing a string with a `#`](https://taskfile.dev/experiments/map-variables/?proposal=1#references)
+  (#1654 by @pd93).
+- If using the
+  [Map Variables experiment (2)](https://taskfile.dev/experiments/map-variables/?proposal=2),
+  the `yaml` and `json` keys are no longer available (#1654 by @pd93).
+- Fixed a couple of bugs with the `prompt:` feature (#1657 by @pd93).
+- Fixed JSON Schema to disallow invalid properties (#1657 by @pd93).
+- Fixed version checks not working as intended (#872, #1663 by @vmaerten).
+- Starting releasing a binary for the `riscv64` architecture on Linux (#1699 by
+  @mengzhuo).
+
+## v3.37.2 - 2024-05-12
+
+- Fixed a bug where an empty Taskfile would cause a panic (#1648 by @pd93).
+- Fixed a bug where includes Taskfile variable were not being merged correctly
+  (#1643, #1649 by @pd93).
+
+## v3.37.1 - 2024-05-09
+
+- Fix bug where non-string values (numbers, bools) added to `env:` weren't been
+  correctly exported (#1640, #1641 by @vmaerten and @andreynering).
+
+## v3.37.0 - 2024-05-08
+
 - Released the
   [Any Variables experiment](https://taskfile.dev/blog/any-variables), but
   [_without support for maps_](https://github.com/go-task/task/issues/1415#issuecomment-2044756925)
   (#1415, #1547 by @pd93).
-- Refactored how Task reads, parses and merges Taskfiles using a DAG (#1563 by
+- Refactored how Task reads, parses and merges Taskfiles using a DAG (#1563,
+  #1607 by @pd93).
+- Fix a bug which stopped tasks from using `stdin` as input (#1593, #1623 by
   @pd93).
 - Fix error when a file or directory in the project contained a special char
   like `&`, `(` or `)` (#1551, #1584 by @andreynering).
+- Added alias `q` for template function `shellQuote` (#1601, #1603 by @vergenzt)
+- Added support for `~` on ZSH completions (#1613 by @jwater7).
+- Added the ability to pass variables by reference using Go template syntax when
+  the
+  [Map Variables experiment](https://taskfile.dev/experiments/map-variables/) is
+  enabled (#1612 by @pd93).
+- Added support for environment variables in the templating engine in `includes`
+  (#1610 by @vmaerten).
 
 ## v3.36.0 - 2024-04-08
 

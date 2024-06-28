@@ -27,6 +27,7 @@ type Experiment struct {
 var (
 	GentleForce     Experiment
 	RemoteTaskfiles Experiment
+	AnyVariables    Experiment
 	MapVariables    Experiment
 )
 
@@ -34,6 +35,7 @@ func init() {
 	readDotEnv()
 	GentleForce = New("GENTLE_FORCE")
 	RemoteTaskfiles = New("REMOTE_TASKFILES")
+	AnyVariables = New("ANY_VARIABLES", "1", "2")
 	MapVariables = New("MAP_VARIABLES", "1", "2")
 }
 

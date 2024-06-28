@@ -183,16 +183,6 @@ func (e *Executor) RunTask(ctx context.Context, call *ast.Call) error {
 	release := e.acquireConcurrencyLimit()
 	defer release()
 
-	if t.Prompt != "" {
-		if err := e.Logger.Prompt(logger.Yellow, t.Prompt, "n", "y", "yes"); errors.Is(err, logger.ErrNoTerminal) {
-			return &errors.TaskCancelledNoTerminalError{TaskName: call.Task}
-		} else if errors.Is(err, logger.ErrPromptCancelled) {
-			return &errors.TaskCancelledByUserError{TaskName: call.Task}
-		} else if err != nil {
-			return err
-		}
-	}
-
 	return e.startExecution(ctx, t, func(ctx context.Context) error {
 		e.Logger.VerboseErrf(logger.Magenta, "task: %q started\n", call.Task)
 		if err := e.runDeps(ctx, t); err != nil {
@@ -235,6 +225,16 @@ func (e *Executor) RunTask(ctx context.Context, call *ast.Call) error {
 					e.Logger.Errf(logger.Magenta, "task: Task %q is up to date\n", t.Name())
 				}
 				return nil
+			}
+		}
+
+		if t.Prompt != "" && !e.Dry {
+			if err := e.Logger.Prompt(logger.Yellow, t.Prompt, "n", "y", "yes"); errors.Is(err, logger.ErrNoTerminal) {
+				return &errors.TaskCancelledNoTerminalError{TaskName: call.Task}
+			} else if errors.Is(err, logger.ErrPromptCancelled) {
+				return &errors.TaskCancelledByUserError{TaskName: call.Task}
+			} else if err != nil {
+				return err
 			}
 		}
 

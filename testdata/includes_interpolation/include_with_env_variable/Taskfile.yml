@@ -1,0 +1,4 @@
+version: "3"
+
+includes:
+  include-with-env-variable: '../{{.MODULE}}/Taskfile.yml'

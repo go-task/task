@@ -12,14 +12,14 @@ const (
 const (
 	CodeTaskfileNotFound int = iota + 100
 	CodeTaskfileAlreadyExists
-	CodeTaskfileInvalid
+	CodeTaskfileDecode
 	CodeTaskfileFetchFailed
 	CodeTaskfileNotTrusted
 	CodeTaskfileNotSecure
 	CodeTaskfileCacheNotFound
 	CodeTaskfileVersionCheckError
 	CodeTaskfileNetworkTimeout
-	CodeTaskfileDuplicateInclude
+	CodeTaskfileInvalid
 	CodeTaskfileCycle
 )
 
@@ -57,4 +57,9 @@ func Is(err, target error) bool {
 // As wraps the standard errors.As function so that we don't need to alias that package.
 func As(err error, target any) bool {
 	return errors.As(err, target)
+}
+
+// Unwrap wraps the standard errors.Unwrap function so that we don't need to alias that package.
+func Unwrap(err error) error {
+	return errors.Unwrap(err)
 }

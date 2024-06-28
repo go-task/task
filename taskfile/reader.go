@@ -11,6 +11,7 @@ import (
 	"gopkg.in/yaml.v3"
 
 	"github.com/go-task/task/v3/errors"
+	"github.com/go-task/task/v3/internal/compiler"
 	"github.com/go-task/task/v3/internal/filepathext"
 	"github.com/go-task/task/v3/internal/logger"
 	"github.com/go-task/task/v3/internal/templater"
@@ -96,11 +97,13 @@ func (r *Reader) include(node Node) error {
 	var g errgroup.Group
 
 	// Loop over each included taskfile
-	_ = vertex.Taskfile.Includes.Range(func(namespace string, include ast.Include) error {
+	_ = vertex.Taskfile.Includes.Range(func(namespace string, include *ast.Include) error {
+		vars := compiler.GetEnviron()
+		vars.Merge(vertex.Taskfile.Vars, nil)
 		// Start a goroutine to process each included Taskfile
 		g.Go(func() error {
-			cache := &templater.Cache{Vars: vertex.Taskfile.Vars}
-			include = ast.Include{
+			cache := &templater.Cache{Vars: vars}
+			include = &ast.Include{
 				Namespace:      include.Namespace,
 				Taskfile:       templater.Replace(include.Taskfile, cache),
 				Dir:            templater.Replace(include.Dir, cache),
@@ -140,17 +143,26 @@ func (r *Reader) include(node Node) error {
 			}
 
 			// Create an edge between the Taskfiles
-			err = r.graph.AddEdge(node.Location(), includeNode.Location(), graph.EdgeData(include))
-			if errors.Is(err, graph.ErrEdgeAlreadyExists) {
-				edge, err := r.graph.Edge(node.Location(), includeNode.Location())
-				if err != nil {
-					return err
-				}
-				return &errors.TaskfileDuplicateIncludeError{
-					URI:         node.Location(),
-					IncludedURI: includeNode.Location(),
-					Namespaces:  []string{namespace, edge.Properties.Data.(*ast.Include).Namespace},
-				}
+			r.graph.Lock()
+			defer r.graph.Unlock()
+			edge, err := r.graph.Edge(node.Location(), includeNode.Location())
+			if err == graph.ErrEdgeNotFound {
+				// If the edge doesn't exist, create it
+				err = r.graph.AddEdge(
+					node.Location(),
+					includeNode.Location(),
+					graph.EdgeData([]*ast.Include{include}),
+					graph.EdgeWeight(1),
+				)
+			} else {
+				// If the edge already exists
+				edgeData := append(edge.Properties.Data.([]*ast.Include), include)
+				err = r.graph.UpdateEdge(
+					node.Location(),
+					includeNode.Location(),
+					graph.EdgeData(edgeData),
+					graph.EdgeWeight(len(edgeData)),
+				)
 			}
 			if errors.Is(err, graph.ErrEdgeCreatesCycle) {
 				return errors.TaskfileCycleError{
@@ -230,7 +242,7 @@ func (r *Reader) readNode(node Node) (*ast.Taskfile, error) {
 				// If there is a cached hash, but it doesn't match the expected hash, prompt the user to continue
 				prompt = fmt.Sprintf(taskfileChangedPrompt, node.Location())
 			}
-			if prompt == "" {
+			if prompt != "" {
 				if err := r.logger.Prompt(logger.Yellow, prompt, "n", "y", "yes"); err != nil {
 					return nil, &errors.TaskfileNotTrustedError{URI: node.Location()}
 				}
@@ -251,23 +263,33 @@ func (r *Reader) readNode(node Node) (*ast.Taskfile, error) {
 		}
 	}
 
-	var t = ast.Taskfile{Vars: ast.NewVars(), Env: ast.NewVars()}
-	if err := yaml.Unmarshal(b, &t); err != nil {
+	var tf = ast.Taskfile{Vars: ast.NewVars(), Env: ast.NewVars()}
+	if err := yaml.Unmarshal(b, &tf); err != nil {
+		// Decode the taskfile and add the file info the any errors
+		taskfileInvalidErr := &errors.TaskfileDecodeError{}
+		if errors.As(err, &taskfileInvalidErr) {
+			return nil, taskfileInvalidErr.WithFileInfo(node.Location(), b, 2)
+		}
 		return nil, &errors.TaskfileInvalidError{URI: filepathext.TryAbsToRel(node.Location()), Err: err}
 	}
 
+	// Check that the Taskfile is set and has a schema version
+	if tf.Version == nil {
+		return nil, &errors.TaskfileVersionCheckError{URI: node.Location()}
+	}
+
 	// Set the taskfile/task's locations
-	t.Location = node.Location()
-	for _, task := range t.Tasks.Values() {
+	tf.Location = node.Location()
+	for _, task := range tf.Tasks.Values() {
 		// If the task is not defined, create a new one
 		if task == nil {
 			task = &ast.Task{}
 		}
 		// Set the location of the taskfile for each task
 		if task.Location.Taskfile == "" {
-			task.Location.Taskfile = t.Location
+			task.Location.Taskfile = tf.Location
 		}
 	}
 
-	return &t, nil
+	return &tf, nil
 }

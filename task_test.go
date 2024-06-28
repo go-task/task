@@ -95,14 +95,24 @@ func TestEmptyTask(t *testing.T) {
 	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "default"}))
 }
 
+func TestEmptyTaskfile(t *testing.T) {
+	e := &task.Executor{
+		Dir:    "testdata/empty_taskfile",
+		Stdout: io.Discard,
+		Stderr: io.Discard,
+	}
+	require.Error(t, e.Setup(), "e.Setup()")
+}
+
 func TestEnv(t *testing.T) {
 	tt := fileContentTest{
 		Dir:       "testdata/env",
 		Target:    "default",
 		TrimSpace: false,
 		Files: map[string]string{
-			"local.txt":  "GOOS='linux' GOARCH='amd64' CGO_ENABLED='0'\n",
-			"global.txt": "FOO='foo' BAR='overriden' BAZ='baz'\n",
+			"local.txt":         "GOOS='linux' GOARCH='amd64' CGO_ENABLED='0'\n",
+			"global.txt":        "FOO='foo' BAR='overriden' BAZ='baz'\n",
+			"multiple_type.txt": "FOO='1' BAR='true' BAZ='1.1'\n",
 		},
 	}
 	tt.Run(t)
@@ -981,8 +991,8 @@ func TestIncludes(t *testing.T) {
 			"included_directory.txt":                    "included_directory",
 			"included_directory_without_dir.txt":        "included_directory_without_dir",
 			"included_taskfile_without_dir.txt":         "included_taskfile_without_dir",
-			"./module3/included_taskfile_with_dir.txt":  "included_taskfile_with_dir",
-			"./module4/included_directory_with_dir.txt": "included_directory_with_dir",
+			"./module2/included_directory_with_dir.txt": "included_directory_with_dir",
+			"./module2/included_taskfile_with_dir.txt":  "included_taskfile_with_dir",
 			"os_include.txt":                            "os",
 		},
 	}
@@ -1032,7 +1042,7 @@ func TestIncludesIncorrect(t *testing.T) {
 
 	err := e.Setup()
 	require.Error(t, err)
-	assert.Contains(t, err.Error(), "task: Failed to parse testdata/includes_incorrect/incomplete.yml:")
+	assert.Contains(t, err.Error(), "Failed to parse testdata/includes_incorrect/incomplete.yml:", err.Error())
 }
 
 func TestIncludesEmptyMain(t *testing.T) {
@@ -1200,8 +1210,10 @@ func TestIncludesInterpolation(t *testing.T) {
 		expectedOutput string
 	}{
 		{"include", "include", false, "include\n"},
+		{"include_with_env_variable", "include-with-env-variable", false, "include_with_env_variable\n"},
 		{"include_with_dir", "include-with-dir", false, "included\n"},
 	}
+	t.Setenv("MODULE", "included")
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
@@ -1221,6 +1233,34 @@ func TestIncludesInterpolation(t *testing.T) {
 				require.NoError(t, err)
 			}
 			assert.Equal(t, test.expectedOutput, buff.String())
+		})
+	}
+}
+
+func TestIncludedTaskfileVarMerging(t *testing.T) {
+	const dir = "testdata/included_taskfile_var_merging"
+	tests := []struct {
+		name           string
+		task           string
+		expectedOutput string
+	}{
+		{"foo", "foo:pwd", "included_taskfile_var_merging/foo\n"},
+		{"bar", "bar:pwd", "included_taskfile_var_merging/bar\n"},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			var buff bytes.Buffer
+			e := task.Executor{
+				Dir:    dir,
+				Stdout: &buff,
+				Stderr: &buff,
+				Silent: true,
+			}
+			require.NoError(t, e.Setup())
+
+			err := e.Run(context.Background(), &ast.Call{Task: test.task})
+			require.NoError(t, err)
+			assert.Contains(t, buff.String(), test.expectedOutput)
 		})
 	}
 }
@@ -2381,6 +2421,51 @@ func TestWildcard(t *testing.T) {
 				require.Error(t, e.Run(context.Background(), &ast.Call{Task: test.call}))
 				return
 			}
+			require.NoError(t, e.Run(context.Background(), &ast.Call{Task: test.call}))
+			assert.Equal(t, test.expectedOutput, buff.String())
+		})
+	}
+}
+
+func TestReference(t *testing.T) {
+	tests := []struct {
+		name           string
+		call           string
+		expectedOutput string
+	}{
+		{
+			name:           "reference in command",
+			call:           "ref-cmd",
+			expectedOutput: "1\n",
+		},
+		{
+			name:           "reference in dependency",
+			call:           "ref-dep",
+			expectedOutput: "1\n",
+		},
+		{
+			name:           "reference using templating resolver",
+			call:           "ref-resolver",
+			expectedOutput: "1\n",
+		},
+		{
+			name:           "reference using templating resolver and dynamic var",
+			call:           "ref-resolver-sh",
+			expectedOutput: "Alice has 3 children called Bob, Charlie, and Diane\n",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.call, func(t *testing.T) {
+			var buff bytes.Buffer
+			e := task.Executor{
+				Dir:    "testdata/var_references",
+				Stdout: &buff,
+				Stderr: &buff,
+				Silent: true,
+				Force:  true,
+			}
+			require.NoError(t, e.Setup())
 			require.NoError(t, e.Run(context.Background(), &ast.Call{Task: test.call}))
 			assert.Equal(t, test.expectedOutput, buff.String())
 		})

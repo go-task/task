@@ -164,17 +164,6 @@ func (e *Executor) compiledTask(call *ast.Call, evaluateShVars bool) (*ast.Task,
 			newCmd.Cmd = templater.Replace(cmd.Cmd, cache)
 			newCmd.Task = templater.Replace(cmd.Task, cache)
 			newCmd.Vars = templater.ReplaceVars(cmd.Vars, cache)
-			// Loop over the command's variables and resolve any references to other variables
-			err := cmd.Vars.Range(func(k string, v ast.Var) error {
-				if v.Ref != "" {
-					refVal := vars.Get(v.Ref)
-					newCmd.Vars.Set(k, refVal)
-				}
-				return nil
-			})
-			if err != nil {
-				return nil, err
-			}
 			new.Cmds = append(new.Cmds, newCmd)
 		}
 	}
@@ -214,17 +203,6 @@ func (e *Executor) compiledTask(call *ast.Call, evaluateShVars bool) (*ast.Task,
 			newDep := dep.DeepCopy()
 			newDep.Task = templater.Replace(dep.Task, cache)
 			newDep.Vars = templater.ReplaceVars(dep.Vars, cache)
-			// Loop over the dep's variables and resolve any references to other variables
-			err := dep.Vars.Range(func(k string, v ast.Var) error {
-				if v.Ref != "" {
-					refVal := vars.Get(v.Ref)
-					newDep.Vars.Set(k, refVal)
-				}
-				return nil
-			})
-			if err != nil {
-				return nil, err
-			}
 			new.Deps = append(new.Deps, newDep)
 		}
 	}

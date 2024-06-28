@@ -1,11 +1,10 @@
 package ast
 
 import (
-	"fmt"
-
 	"gopkg.in/yaml.v3"
 
-	omap "github.com/go-task/task/v3/internal/omap"
+	"github.com/go-task/task/v3/errors"
+	"github.com/go-task/task/v3/internal/omap"
 )
 
 // Include represents information about included taskfiles
@@ -22,7 +21,7 @@ type Include struct {
 
 // Includes represents information about included tasksfiles
 type Includes struct {
-	omap.OrderedMap[string, Include]
+	omap.OrderedMap[string, *Include]
 }
 
 // UnmarshalYAML implements the yaml.Unmarshaler interface.
@@ -46,15 +45,15 @@ func (includes *Includes) UnmarshalYAML(node *yaml.Node) error {
 
 			var v Include
 			if err := valueNode.Decode(&v); err != nil {
-				return err
+				return errors.NewTaskfileDecodeError(err, node)
 			}
 			v.Namespace = keyNode.Value
-			includes.OrderedMap.Set(keyNode.Value, v)
+			includes.Set(keyNode.Value, &v)
 		}
 		return nil
 	}
 
-	return fmt.Errorf("yaml: line %d: cannot unmarshal %s into included taskfiles", node.Line, node.ShortTag())
+	return errors.NewTaskfileDecodeError(nil, node).WithTypeMessage("includes")
 }
 
 // Len returns the length of the map
@@ -66,7 +65,7 @@ func (includes *Includes) Len() int {
 }
 
 // Wrapper around OrderedMap.Set to ensure we don't get nil pointer errors
-func (includes *Includes) Range(f func(k string, v Include) error) error {
+func (includes *Includes) Range(f func(k string, v *Include) error) error {
 	if includes == nil {
 		return nil
 	}
@@ -79,7 +78,7 @@ func (include *Include) UnmarshalYAML(node *yaml.Node) error {
 	case yaml.ScalarNode:
 		var str string
 		if err := node.Decode(&str); err != nil {
-			return err
+			return errors.NewTaskfileDecodeError(err, node)
 		}
 		include.Taskfile = str
 		return nil
@@ -94,7 +93,7 @@ func (include *Include) UnmarshalYAML(node *yaml.Node) error {
 			Vars     *Vars
 		}
 		if err := node.Decode(&includedTaskfile); err != nil {
-			return err
+			return errors.NewTaskfileDecodeError(err, node)
 		}
 		include.Taskfile = includedTaskfile.Taskfile
 		include.Dir = includedTaskfile.Dir
@@ -106,7 +105,7 @@ func (include *Include) UnmarshalYAML(node *yaml.Node) error {
 		return nil
 	}
 
-	return fmt.Errorf("yaml: line %d: cannot unmarshal %s into included taskfile", node.Line, node.ShortTag())
+	return errors.NewTaskfileDecodeError(nil, node).WithTypeMessage("include")
 }
 
 // DeepCopy creates a new instance of IncludedTaskfile and copies

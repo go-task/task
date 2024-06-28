@@ -11,7 +11,7 @@ linters:
 
 linters-settings:
   goimports:
-    local-prefixes: github.com/go-task/task
+    local-prefixes: github.com/go-task
   gofmt:
     rewrite-rules:
       - pattern: 'interface{}'

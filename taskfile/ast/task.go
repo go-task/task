@@ -7,6 +7,7 @@ import (
 
 	"gopkg.in/yaml.v3"
 
+	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/deepcopy"
 )
 
@@ -83,7 +84,7 @@ func (t *Task) UnmarshalYAML(node *yaml.Node) error {
 	case yaml.ScalarNode:
 		var cmd Cmd
 		if err := node.Decode(&cmd); err != nil {
-			return err
+			return errors.NewTaskfileDecodeError(err, node)
 		}
 		t.Cmds = append(t.Cmds, &cmd)
 		return nil
@@ -92,7 +93,7 @@ func (t *Task) UnmarshalYAML(node *yaml.Node) error {
 	case yaml.SequenceNode:
 		var cmds []*Cmd
 		if err := node.Decode(&cmds); err != nil {
-			return err
+			return errors.NewTaskfileDecodeError(err, node)
 		}
 		t.Cmds = cmds
 		return nil
@@ -130,11 +131,11 @@ func (t *Task) UnmarshalYAML(node *yaml.Node) error {
 			Watch         bool
 		}
 		if err := node.Decode(&task); err != nil {
-			return err
+			return errors.NewTaskfileDecodeError(err, node)
 		}
 		if task.Cmd != nil {
 			if task.Cmds != nil {
-				return fmt.Errorf("yaml: line %d: task cannot have both cmd and cmds", node.Line)
+				return errors.NewTaskfileDecodeError(nil, node).WithMessage("task cannot have both cmd and cmds")
 			}
 			t.Cmds = []*Cmd{task.Cmd}
 		} else {
@@ -169,7 +170,7 @@ func (t *Task) UnmarshalYAML(node *yaml.Node) error {
 		return nil
 	}
 
-	return fmt.Errorf("yaml: line %d: cannot unmarshal %s into task", node.Line, node.ShortTag())
+	return errors.NewTaskfileDecodeError(nil, node).WithTypeMessage("task")
 }
 
 // DeepCopy creates a new instance of Task and copies

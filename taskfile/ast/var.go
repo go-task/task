@@ -1,11 +1,11 @@
 package ast
 
 import (
-	"fmt"
 	"strings"
 
 	"gopkg.in/yaml.v3"
 
+	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/experiments"
 	"github.com/go-task/task/v3/internal/omap"
 )
@@ -121,8 +121,6 @@ type Var struct {
 	Live  any
 	Sh    string
 	Ref   string
-	Json  string
-	Yaml  string
 	Dir   string
 }
 
@@ -133,12 +131,16 @@ func (v *Var) UnmarshalYAML(node *yaml.Node) error {
 		if experiments.MapVariables.Value == "1" {
 			var value any
 			if err := node.Decode(&value); err != nil {
-				return err
+				return errors.NewTaskfileDecodeError(err, node)
 			}
 			// If the value is a string and it starts with $, then it's a shell command
 			if str, ok := value.(string); ok {
 				if str, ok = strings.CutPrefix(str, "$"); ok {
 					v.Sh = str
+					return nil
+				}
+				if str, ok = strings.CutPrefix(str, "#"); ok {
+					v.Ref = str
 					return nil
 				}
 			}
@@ -152,30 +154,26 @@ func (v *Var) UnmarshalYAML(node *yaml.Node) error {
 			case yaml.MappingNode:
 				key := node.Content[0].Value
 				switch key {
-				case "sh", "ref", "map", "json", "yaml":
+				case "sh", "ref", "map":
 					var m struct {
-						Sh   string
-						Ref  string
-						Map  any
-						Json string
-						Yaml string
+						Sh  string
+						Ref string
+						Map any
 					}
 					if err := node.Decode(&m); err != nil {
-						return err
+						return errors.NewTaskfileDecodeError(err, node)
 					}
 					v.Sh = m.Sh
 					v.Ref = m.Ref
 					v.Value = m.Map
-					v.Json = m.Json
-					v.Yaml = m.Yaml
 					return nil
 				default:
-					return fmt.Errorf(`yaml: line %d: %q is not a valid variable type. Try "sh", "ref", "map", "json", "yaml" or using a scalar value`, node.Line, key)
+					return errors.NewTaskfileDecodeError(nil, node).WithMessage(`%q is not a valid variable type. Try "sh", "ref", "map" or using a scalar value`, key)
 				}
 			default:
 				var value any
 				if err := node.Decode(&value); err != nil {
-					return err
+					return errors.NewTaskfileDecodeError(err, node)
 				}
 				v.Value = value
 				return nil
@@ -186,22 +184,27 @@ func (v *Var) UnmarshalYAML(node *yaml.Node) error {
 	switch node.Kind {
 
 	case yaml.MappingNode:
-		if len(node.Content) > 2 || node.Content[0].Value != "sh" {
-			return fmt.Errorf(`task: line %d: maps cannot be assigned to variables`, node.Line)
+		key := node.Content[0].Value
+		switch key {
+		case "sh", "ref":
+			var m struct {
+				Sh  string
+				Ref string
+			}
+			if err := node.Decode(&m); err != nil {
+				return errors.NewTaskfileDecodeError(err, node)
+			}
+			v.Sh = m.Sh
+			v.Ref = m.Ref
+			return nil
+		default:
+			return errors.NewTaskfileDecodeError(nil, node).WithMessage("maps cannot be assigned to variables")
 		}
-		var sh struct {
-			Sh string
-		}
-		if err := node.Decode(&sh); err != nil {
-			return err
-		}
-		v.Sh = sh.Sh
-		return nil
 
 	default:
 		var value any
 		if err := node.Decode(&value); err != nil {
-			return err
+			return errors.NewTaskfileDecodeError(err, node)
 		}
 		v.Value = value
 		return nil

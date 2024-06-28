@@ -3,6 +3,7 @@ package ast
 import (
 	"fmt"
 	"os"
+	"sync"
 
 	"github.com/dominikbraun/graph"
 	"github.com/dominikbraun/graph/draw"
@@ -10,6 +11,7 @@ import (
 )
 
 type TaskfileGraph struct {
+	sync.Mutex
 	graph.Graph[string, *TaskfileVertex]
 }
 
@@ -25,6 +27,7 @@ func taskfileHash(vertex *TaskfileVertex) string {
 
 func NewTaskfileGraph() *TaskfileGraph {
 	return &TaskfileGraph{
+		sync.Mutex{},
 		graph.New(taskfileHash,
 			graph.Directed(),
 			graph.PreventCycles(),
@@ -79,17 +82,19 @@ func (tfg *TaskfileGraph) Merge() (*Taskfile, error) {
 				}
 
 				// Get the merge options
-				include, ok := edge.Properties.Data.(Include)
+				includes, ok := edge.Properties.Data.([]*Include)
 				if !ok {
 					return fmt.Errorf("task: Failed to get merge options")
 				}
 
-				// Merge the included Taskfile into the parent Taskfile
-				if err := vertex.Taskfile.Merge(
-					includedVertex.Taskfile,
-					&include,
-				); err != nil {
-					return err
+				// Merge the included Taskfiles into the parent Taskfile
+				for _, include := range includes {
+					if err := vertex.Taskfile.Merge(
+						includedVertex.Taskfile,
+						include,
+					); err != nil {
+						return err
+					}
 				}
 
 				return nil

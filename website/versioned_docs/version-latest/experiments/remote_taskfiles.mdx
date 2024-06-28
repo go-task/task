@@ -48,6 +48,20 @@ tasks:
 and you run `task my-remote-namespace:hello`, it will print the text: "Hello
 from the remote Taskfile!" to your console.
 
+The Taskfile location is processed by the templating system, so you can
+reference environment variables in your URL if you need to add authentication.
+For example:
+
+```yaml
+version: '3'
+
+includes:
+  my-remote-namespace: https://{{.TOKEN}}@raw.githubusercontent.com/my-org/my-repo/main/Taskfile.yml
+```
+
+`TOKEN=my-token task my-remote-namespace:hello` will be resolved by Task to
+`https://my-token@raw.githubusercontent.com/my-org/my-repo/main/Taskfile.yml`
+
 ## Security
 
 Running commands from sources that you do not control is always a potential
@@ -99,6 +113,6 @@ the `--timeout` flag and specifying a duration. For example, `--timeout 5s` will
 set the timeout to 5 seconds.
 
 {/* prettier-ignore-start */}
-[enabling-experiments]: /experiments/#enabling-experiments
+[enabling-experiments]: ./experiments.mdx#enabling-experiments
 [man-in-the-middle-attacks]: https://en.wikipedia.org/wiki/Man-in-the-middle_attack
 {/* prettier-ignore-end */}
