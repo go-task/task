@@ -263,7 +263,7 @@ func (r *Reader) readNode(node Node) (*ast.Taskfile, error) {
 		}
 	}
 
-	var tf = ast.Taskfile{Vars: ast.NewVars(), Env: ast.NewVars()}
+	tf := ast.Taskfile{Vars: ast.NewVars(), Env: ast.NewVars()}
 	if err := yaml.Unmarshal(b, &tf); err != nil {
 		// Decode the taskfile and add the file info the any errors
 		taskfileInvalidErr := &errors.TaskfileDecodeError{}

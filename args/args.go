@@ -9,7 +9,7 @@ import (
 
 // Parse parses command line argument: tasks and global variables
 func Parse(args ...string) ([]*ast.Call, *ast.Vars) {
-	var calls = []*ast.Call{}
+	calls := []*ast.Call{}
 	globals := &ast.Vars{
 		OrderedMap: omap.New[string, ast.Var](),
 	}
