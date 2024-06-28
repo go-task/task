@@ -23,6 +23,8 @@
   the `yaml` and `json` keys are no longer available (#1654 by @pd93).
 - Added a new `TASK_REMOTE_DIR` environment variable to configure where cached
   remote Taskfiles are stored (#1661 by @vmaerten).
+- Added a new `--clear-cache` flag to clear the cache of remote Taskfiles (#1639
+  by @vmaerten).
 - Improved the readability of cached remote Taskfile filenames (#1636 by
   @vmaerten).
 - Starting releasing a binary for the `riscv64` architecture on Linux (#1699 by
