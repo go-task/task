@@ -812,7 +812,7 @@ func TestStatusVariables(t *testing.T) {
 		Verbose: true,
 	}
 	require.NoError(t, e.Setup())
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "build"}))
+	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "build", Vars: ast.NewVars()}))
 
 	assert.Contains(t, buff.String(), "3e464c4b03f4b65d740e1e130d4d108a")
 

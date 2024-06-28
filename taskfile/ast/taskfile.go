@@ -7,6 +7,8 @@ import (
 
 	"github.com/Masterminds/semver/v3"
 	"gopkg.in/yaml.v3"
+
+	"github.com/go-task/task/v3/internal/omap"
 )
 
 // NamespaceSeparator contains the character that separates namespaces
@@ -97,6 +99,9 @@ func (tf *Taskfile) UnmarshalYAML(node *yaml.Node) error {
 		}
 		if tf.Env == nil {
 			tf.Env = NewVars()
+		}
+		if tf.Tasks.OrderedMap == nil {
+			tf.Tasks.OrderedMap = omap.New[string, *Task]()
 		}
 		return nil
 	}

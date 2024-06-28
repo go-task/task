@@ -59,6 +59,14 @@ func (vs *Vars) Merge(other *Vars, include *Include) {
 	if vs == nil || other == nil {
 		return
 	}
+	if vs.OrderedMap == nil {
+		vs.OrderedMap = NewVars().OrderedMap
+	}
+
+	if other.OrderedMap == nil {
+		return
+	}
+
 	_ = other.Range(func(key string, value Var) error {
 		if include != nil && include.AdvancedImport {
 			value.Dir = include.Dir
@@ -86,6 +94,10 @@ func (vs *Vars) DeepCopy() *Vars {
 	if vs == nil {
 		return nil
 	}
+	if vs.OrderedMap == nil {
+		return NewVars()
+	}
+
 	return &Vars{
 		OrderedMap: vs.OrderedMap.DeepCopy(),
 	}
