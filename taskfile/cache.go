@@ -50,9 +50,19 @@ func (c *Cache) key(node Node) string {
 }
 
 func (c *Cache) cacheFilePath(node Node) string {
-	return filepath.Join(c.dir, fmt.Sprintf("%s.yaml", c.key(node)))
+	return c.filePath(node, "yaml")
 }
 
 func (c *Cache) checksumFilePath(node Node) string {
-	return filepath.Join(c.dir, fmt.Sprintf("%s.checksum", c.key(node)))
+	return c.filePath(node, "checksum")
+}
+
+func (c *Cache) filePath(node Node, suffix string) string {
+	lastDir, filename := node.FilenameAndLastDir()
+	prefix := filename
+	// Means it's not "", nor "." nor "/", so it's a valid directory
+	if len(lastDir) > 1 {
+		prefix = fmt.Sprintf("%s-%s", lastDir, filename)
+	}
+	return filepath.Join(c.dir, fmt.Sprintf("%s.%s.%s", prefix, c.key(node), suffix))
 }
