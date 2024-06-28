@@ -7,8 +7,8 @@ import (
 	"io"
 	"os"
 	"strings"
-	"text/tabwriter"
 
+	"github.com/Ladicle/tabwriter"
 	"golang.org/x/sync/errgroup"
 
 	"github.com/go-task/task/v3/internal/editors"
@@ -105,7 +105,8 @@ func (e *Executor) ListTasks(o ListOptions) (bool, error) {
 	for _, task := range tasks {
 		e.Logger.FOutf(w, logger.Yellow, "* ")
 		e.Logger.FOutf(w, logger.Green, task.Task)
-		e.Logger.FOutf(w, logger.Default, ": \t%s", task.Desc)
+		desc := strings.ReplaceAll(task.Desc, "\n", " ")
+		e.Logger.FOutf(w, logger.Default, ": \t%s", desc)
 		if len(task.Aliases) > 0 {
 			e.Logger.FOutf(w, logger.Cyan, "\t(aliases: %s)", strings.Join(task.Aliases, ", "))
 		}

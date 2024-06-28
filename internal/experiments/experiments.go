@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 	"slices"
 	"strings"
-	"text/tabwriter"
 
+	"github.com/Ladicle/tabwriter"
 	"github.com/joho/godotenv"
 	"github.com/spf13/pflag"
 
