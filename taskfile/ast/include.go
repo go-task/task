@@ -31,7 +31,7 @@ func (includes *Includes) UnmarshalYAML(node *yaml.Node) error {
 	}
 
 	if includes.OrderedMap == nil {
-		includes.OrderedMap = omap.New[string, Include]()
+		includes.OrderedMap = omap.New[string, *Include]()
 	}
 
 	switch node.Kind {
