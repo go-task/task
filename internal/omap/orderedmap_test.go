@@ -10,7 +10,7 @@ import (
 
 func TestFromMap(t *testing.T) {
 	m := map[int]string{3: "three", 1: "one", 2: "two"}
-	om := FromMap(m)
+	om := FromMap(m).(*orderedMap[int, string])
 	assert.Len(t, om.m, 3)
 	assert.Len(t, om.s, 3)
 	assert.ElementsMatch(t, []int{1, 2, 3}, om.s)
@@ -29,7 +29,7 @@ func TestSetGetExists(t *testing.T) {
 }
 
 func TestSort(t *testing.T) {
-	om := New[int, string]()
+	om := New[int, string]().(*orderedMap[int, string])
 	om.Set(3, "three")
 	om.Set(1, "one")
 	om.Set(2, "two")
@@ -38,7 +38,7 @@ func TestSort(t *testing.T) {
 }
 
 func TestSortFunc(t *testing.T) {
-	om := New[int, string]()
+	om := New[int, string]().(*orderedMap[int, string])
 	om.Set(3, "three")
 	om.Set(1, "one")
 	om.Set(2, "two")
@@ -49,7 +49,7 @@ func TestSortFunc(t *testing.T) {
 }
 
 func TestKeysValues(t *testing.T) {
-	om := New[int, string]()
+	om := New[int, string]().(*orderedMap[int, string])
 	om.Set(3, "three")
 	om.Set(1, "one")
 	om.Set(2, "two")
@@ -58,7 +58,7 @@ func TestKeysValues(t *testing.T) {
 }
 
 func Range(t *testing.T) {
-	om := New[int, string]()
+	om := New[int, string]().(*orderedMap[int, string])
 	om.Set(3, "three")
 	om.Set(1, "one")
 	om.Set(2, "two")
@@ -81,7 +81,7 @@ func Range(t *testing.T) {
 }
 
 func TestOrderedMapMerge(t *testing.T) {
-	om1 := New[string, int]()
+	om1 := New[string, int]().(*orderedMap[string, int])
 	om1.Set("a", 1)
 	om1.Set("b", 2)
 
@@ -109,8 +109,8 @@ func TestUnmarshalYAML(t *testing.T) {
 1: one
 2: two
 `
-	var om OrderedMap[int, string]
-	err := yaml.Unmarshal([]byte(yamlString), &om)
+	var om = New[int, string]()
+	err := yaml.Unmarshal([]byte(yamlString), om)
 	require.NoError(t, err)
 
 	expectedKeys := []int{3, 1, 2}

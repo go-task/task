@@ -69,7 +69,7 @@ func (fct fileContentTest) Run(t *testing.T) {
 		Stderr:     io.Discard,
 	}
 	require.NoError(t, e.Setup(), "e.Setup()")
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: fct.Target}), "e.Run(target)")
+	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: fct.Target, Vars: ast.NewVars()}), "e.Run(target)")
 
 	for name, expectContent := range fct.Files {
 		t.Run(fct.name(name), func(t *testing.T) {
@@ -2049,7 +2049,7 @@ func TestSplitArgs(t *testing.T) {
 	}
 	require.NoError(t, e.Setup())
 
-	vars := &ast.Vars{}
+	vars := ast.NewVars()
 	vars.Set("CLI_ARGS", ast.Var{Value: "foo bar 'foo bar baz'"})
 
 	err := e.Run(context.Background(), &ast.Call{Task: "default", Vars: vars})

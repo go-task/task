@@ -93,10 +93,10 @@ func (tf *Taskfile) UnmarshalYAML(node *yaml.Node) error {
 		tf.Run = taskfile.Run
 		tf.Interval = taskfile.Interval
 		if tf.Vars == nil {
-			tf.Vars = &Vars{}
+			tf.Vars = NewVars()
 		}
 		if tf.Env == nil {
-			tf.Env = &Vars{}
+			tf.Env = NewVars()
 		}
 		return nil
 	}

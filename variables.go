@@ -84,7 +84,7 @@ func (e *Executor) compiledTask(call *ast.Call, evaluateShVars bool) (*ast.Task,
 		new.Prefix = new.Task
 	}
 
-	dotenvEnvs := &ast.Vars{}
+	dotenvEnvs := ast.NewVars()
 	if len(new.Dotenv) > 0 {
 		for _, dotEnvPath := range new.Dotenv {
 			dotEnvPath = filepathext.SmartJoin(new.Dir, dotEnvPath)
@@ -103,7 +103,7 @@ func (e *Executor) compiledTask(call *ast.Call, evaluateShVars bool) (*ast.Task,
 		}
 	}
 
-	new.Env = &ast.Vars{}
+	new.Env = ast.NewVars()
 	new.Env.Merge(templater.ReplaceVars(e.Taskfile.Env, cache), nil)
 	new.Env.Merge(templater.ReplaceVars(dotenvEnvs, cache), nil)
 	new.Env.Merge(templater.ReplaceVars(origTask.Env, cache), nil)

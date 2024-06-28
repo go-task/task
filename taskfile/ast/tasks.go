@@ -114,10 +114,14 @@ func (t1 *Tasks) Merge(t2 Tasks, include *Include, includedTaskfileVars *Vars) {
 }
 
 func (t *Tasks) UnmarshalYAML(node *yaml.Node) error {
+	if t.OrderedMap == nil {
+		t.OrderedMap = omap.New[string, *Task]()
+	}
+
 	switch node.Kind {
 	case yaml.MappingNode:
 		tasks := omap.New[string, *Task]()
-		if err := node.Decode(&tasks); err != nil {
+		if err := tasks.UnmarshalYAML(node); err != nil {
 			return err
 		}
 

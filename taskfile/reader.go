@@ -251,7 +251,7 @@ func (r *Reader) readNode(node Node) (*ast.Taskfile, error) {
 		}
 	}
 
-	var t ast.Taskfile
+	var t = ast.Taskfile{Vars: ast.NewVars(), Env: ast.NewVars()}
 	if err := yaml.Unmarshal(b, &t); err != nil {
 		return nil, &errors.TaskfileInvalidError{URI: filepathext.TryAbsToRel(node.Location()), Err: err}
 	}

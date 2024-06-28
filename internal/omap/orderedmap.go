@@ -9,41 +9,44 @@ import (
 	"gopkg.in/yaml.v3"
 
 	"github.com/go-task/task/v3/internal/deepcopy"
-	"github.com/go-task/task/v3/internal/exp"
 )
 
-// An OrderedMap is a wrapper around a regular map that maintains an ordered
-// list of the map's keys. This allows you to run deterministic and ordered
-// operations on the map such as printing/serializing/iterating.
-type OrderedMap[K cmp.Ordered, V any] struct {
-	mutex *sync.RWMutex
-	s     []K
-	m     map[K]V
+type OrderedMap[K cmp.Ordered, V any] interface {
+	Get(key K) V
+	Set(key K, value V)
+	Len() int
+	Exists(key K) bool
+	Range(fn func(key K, value V) error) error
+	Values() []V
+	Keys() []K
+	Sort()
+	SortFunc(less func(i, j K) int)
+	DeepCopy() OrderedMap[K, V]
+	Merge(om OrderedMap[K, V])
+	yaml.Unmarshaler
 }
 
 // New will create a new OrderedMap of the given type and return it.
 func New[K cmp.Ordered, V any]() OrderedMap[K, V] {
-	return OrderedMap[K, V]{
-		mutex: &sync.RWMutex{},
-		s:     make([]K, 0),
-		m:     make(map[K]V),
-	}
+	return newOrderedMap[K, V]()
 }
 
 // FromMap will create a new OrderedMap from the given map. Since Golang maps
 // are unordered, the order of the created OrderedMap will be random.
 func FromMap[K cmp.Ordered, V any](m map[K]V) OrderedMap[K, V] {
-	om := New[K, V]()
-	om.m = m
-	om.s = exp.Keys(m)
+	om := newOrderedMap[K, V]()
+	for k, v := range m {
+		om.Set(k, v)
+	}
 	return om
 }
 
 func FromMapWithOrder[K cmp.Ordered, V any](m map[K]V, order []K) OrderedMap[K, V] {
-	om := New[K, V]()
 	if len(m) != len(order) {
 		panic("length of map and order must be equal")
 	}
+
+	om := newOrderedMap[K, V]()
 	om.m = m
 	om.s = order
 	for key := range om.m {
@@ -54,38 +57,44 @@ func FromMapWithOrder[K cmp.Ordered, V any](m map[K]V, order []K) OrderedMap[K, 
 	return om
 }
 
+// An OrderedMap is a wrapper around a regular map that maintains an ordered
+// list of the map's keys. This allows you to run deterministic and ordered
+// operations on the map such as printing/serializing/iterating.
+type orderedMap[K cmp.Ordered, V any] struct {
+	mutex sync.RWMutex
+	s     []K
+	m     map[K]V
+}
+
+func newOrderedMap[K cmp.Ordered, V any]() *orderedMap[K, V] {
+	return &orderedMap[K, V]{
+		s: make([]K, 0),
+		m: make(map[K]V),
+	}
+}
+
 // Len will return the number of items in the map.
-func (om *OrderedMap[K, V]) Len() int {
-	return len(om.s)
+func (om *orderedMap[K, V]) Len() (l int) {
+	om.mutex.RLock()
+	l = len(om.s)
+	om.mutex.RUnlock()
+
+	return
 }
 
 // Set will set the value for a given key.
-func (om *OrderedMap[K, V]) Set(key K, value V) {
-	if om.m == nil {
-		om.m = make(map[K]V)
-	}
-	if om.mutex == nil {
-		om.mutex = &sync.RWMutex{}
-	}
-	om.mutex.RLock()
+func (om *orderedMap[K, V]) Set(key K, value V) {
+	om.mutex.Lock()
 	if _, ok := om.m[key]; !ok {
 		om.s = append(om.s, key)
 	}
-	om.mutex.RUnlock()
-	om.mutex.Lock()
 	om.m[key] = value
 	om.mutex.Unlock()
 }
 
 // Get will return the value for a given key.
 // If the key does not exist, it will return the zero value of the value type.
-func (om *OrderedMap[K, V]) Get(key K) V {
-	if om.m == nil {
-		om.m = make(map[K]V)
-	}
-	if om.mutex == nil {
-		om.mutex = &sync.RWMutex{}
-	}
+func (om *orderedMap[K, V]) Get(key K) V {
 	om.mutex.RLock()
 	value, ok := om.m[key]
 	om.mutex.RUnlock()
@@ -97,13 +106,7 @@ func (om *OrderedMap[K, V]) Get(key K) V {
 }
 
 // Exists will return whether or not the given key exists.
-func (om *OrderedMap[K, V]) Exists(key K) bool {
-	if om.m == nil {
-		om.m = make(map[K]V)
-	}
-	if om.mutex == nil {
-		om.mutex = &sync.RWMutex{}
-	}
+func (om *orderedMap[K, V]) Exists(key K) bool {
 	om.mutex.RLock()
 	_, ok := om.m[key]
 	om.mutex.RUnlock()
@@ -111,32 +114,45 @@ func (om *OrderedMap[K, V]) Exists(key K) bool {
 }
 
 // Sort will sort the map.
-func (om *OrderedMap[K, V]) Sort() {
+func (om *orderedMap[K, V]) Sort() {
+	om.mutex.Lock()
 	slices.Sort(om.s)
+	om.mutex.Unlock()
 }
 
 // SortFunc will sort the map using the given function.
-func (om *OrderedMap[K, V]) SortFunc(less func(i, j K) int) {
+func (om *orderedMap[K, V]) SortFunc(less func(i, j K) int) {
+	om.mutex.Lock()
 	slices.SortFunc(om.s, less)
+	om.mutex.Unlock()
 }
 
 // Keys will return a slice of the map's keys in order.
-func (om *OrderedMap[K, V]) Keys() []K {
-	return om.s
+func (om *orderedMap[K, V]) Keys() []K {
+	om.mutex.RLock()
+	keys := deepcopy.Slice(om.s)
+	om.mutex.RUnlock()
+
+	return keys
 }
 
 // Values will return a slice of the map's values in order.
-func (om *OrderedMap[K, V]) Values() []V {
+func (om *orderedMap[K, V]) Values() []V {
 	var values []V
+
+	om.mutex.RLock()
 	for _, key := range om.s {
 		values = append(values, om.Get(key))
 	}
+	om.mutex.RUnlock()
+
 	return values
 }
 
 // Range will iterate over the map and call the given function for each key/value.
-func (om *OrderedMap[K, V]) Range(fn func(key K, value V) error) error {
-	for _, key := range om.s {
+func (om *orderedMap[K, V]) Range(fn func(key K, value V) error) error {
+	keys := om.Keys()
+	for _, key := range keys {
 		if err := fn(key, om.Get(key)); err != nil {
 			return err
 		}
@@ -145,7 +161,7 @@ func (om *OrderedMap[K, V]) Range(fn func(key K, value V) error) error {
 }
 
 // Merge merges the given Vars into the caller one
-func (om *OrderedMap[K, V]) Merge(other OrderedMap[K, V]) {
+func (om *orderedMap[K, V]) Merge(other OrderedMap[K, V]) {
 	// nolint: errcheck
 	other.Range(func(key K, value V) error {
 		om.Set(key, value)
@@ -153,14 +169,25 @@ func (om *OrderedMap[K, V]) Merge(other OrderedMap[K, V]) {
 	})
 }
 
-func (om *OrderedMap[K, V]) DeepCopy() OrderedMap[K, V] {
-	return OrderedMap[K, V]{
+func (om *orderedMap[K, V]) DeepCopy() OrderedMap[K, V] {
+	om.mutex.RLock()
+	o := orderedMap[K, V]{
 		s: deepcopy.Slice(om.s),
 		m: deepcopy.Map(om.m),
 	}
+	om.mutex.RUnlock()
+
+	return &o
 }
 
-func (om *OrderedMap[K, V]) UnmarshalYAML(node *yaml.Node) error {
+func (om *orderedMap[K, V]) UnmarshalYAML(node *yaml.Node) error {
+	if om == nil {
+		*om = orderedMap[K, V]{
+			m: make(map[K]V),
+			s: make([]K, 0),
+		}
+	}
+
 	switch node.Kind {
 	// Even numbers contain the keys
 	// Odd numbers contain the values

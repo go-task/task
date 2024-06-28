@@ -27,6 +27,14 @@ type Includes struct {
 
 // UnmarshalYAML implements the yaml.Unmarshaler interface.
 func (includes *Includes) UnmarshalYAML(node *yaml.Node) error {
+	if includes == nil {
+		*includes = Includes{}
+	}
+
+	if includes.OrderedMap == nil {
+		includes.OrderedMap = omap.New[string, Include]()
+	}
+
 	switch node.Kind {
 	case yaml.MappingNode:
 		// NOTE(@andreynering): on this style of custom unmarshalling,
@@ -41,7 +49,7 @@ func (includes *Includes) UnmarshalYAML(node *yaml.Node) error {
 				return err
 			}
 			v.Namespace = keyNode.Value
-			includes.Set(keyNode.Value, v)
+			includes.OrderedMap.Set(keyNode.Value, v)
 		}
 		return nil
 	}
