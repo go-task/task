@@ -27,6 +27,7 @@
   @vmaerten).
 - Starting releasing a binary for the `riscv64` architecture on Linux (#1699 by
   @mengzhuo).
+- Added `CLI_SILENT` and `CLI_VERBOSE` variables (#1480, #1669 by @Vince-Smith).
 - Fixed a couple of bugs with the `prompt:` feature (#1657 by @pd93).
 - Fixed JSON Schema to disallow invalid properties (#1657 by @pd93).
 - Fixed version checks not working as intended (#872, #1663 by @vmaerten).
