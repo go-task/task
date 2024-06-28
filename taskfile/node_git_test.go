@@ -53,3 +53,23 @@ func TestGitNode_httpsWithDir(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "https://github.com/foo/bar.git?ref=main//directory/common.yml", entrypoint)
 }
+
+func TestGitNode_FilenameAndDir(t *testing.T) {
+	node, err := NewGitNode("https://github.com/foo/bar.git?ref=main//directory/Taskfile.yml", "", false)
+	assert.NoError(t, err)
+	filename, dir := node.FilenameAndLastDir()
+	assert.Equal(t, "Taskfile.yml", filename)
+	assert.Equal(t, "directory", dir)
+
+	node, err = NewGitNode("https://github.com/foo/bar.git?ref=main//Taskfile.yml", "", false)
+	assert.NoError(t, err)
+	filename, dir = node.FilenameAndLastDir()
+	assert.Equal(t, "Taskfile.yml", filename)
+	assert.Equal(t, ".", dir)
+
+	node, err = NewGitNode("https://github.com/foo/bar.git?ref=main//multiple/directory/Taskfile.yml", "", false)
+	assert.NoError(t, err)
+	filename, dir = node.FilenameAndLastDir()
+	assert.Equal(t, "Taskfile.yml", filename)
+	assert.Equal(t, "directory", dir)
+}
