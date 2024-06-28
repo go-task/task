@@ -21,11 +21,13 @@
 - If using the
   [Map Variables experiment (2)](https://taskfile.dev/experiments/map-variables/?proposal=2),
   the `yaml` and `json` keys are no longer available (#1654 by @pd93).
+- Starting releasing a binary for the `riscv64` architecture on Linux (#1699 by
+  @mengzhuo).
 - Fixed a couple of bugs with the `prompt:` feature (#1657 by @pd93).
 - Fixed JSON Schema to disallow invalid properties (#1657 by @pd93).
 - Fixed version checks not working as intended (#872, #1663 by @vmaerten).
-- Starting releasing a binary for the `riscv64` architecture on Linux (#1699 by
-  @mengzhuo).
+- Fixed a bug where included tasks were run multiple times even if `run: once`
+  was set (#852, #1655 by @pd93).
 
 ## v3.37.2 - 2024-05-12
 
