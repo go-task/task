@@ -35,6 +35,8 @@
 - Fixed version checks not working as intended (#872, #1663 by @vmaerten).
 - Fixed a bug where included tasks were run multiple times even if `run: once`
   was set (#852, #1655 by @pd93).
+- Fixed some bugs related to column formatting in the terminal (#1350, #1637,
+  #1656 by @vmaerten).
 
 ## v3.37.2 - 2024-05-12
 
