@@ -146,7 +146,7 @@ func run() error {
 	}
 
 	if flags.ClearCache {
-		cache, err := taskfile.NewCache(e.TempDir)
+		cache, err := taskfile.NewCache(e.TempDir.Remote)
 		if err != nil {
 			return err
 		}
