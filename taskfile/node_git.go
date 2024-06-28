@@ -51,7 +51,6 @@ func NewGitNode(
 	if u.Scheme == "http" && !insecure {
 		return nil, &errors.TaskfileNotSecureError{URI: entrypoint}
 	}
-
 	return &GitNode{
 		BaseNode: base,
 		URL:      u,
@@ -115,5 +114,5 @@ func (node *GitNode) ResolveDir(dir string) (string, error) {
 }
 
 func (node *GitNode) FilenameAndLastDir() (string, string) {
-	return "", filepath.Base(node.Entrypoint)
+	return filepath.Base(node.path), filepath.Base(filepath.Dir(node.path))
 }

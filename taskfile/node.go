@@ -109,7 +109,3 @@ func getDefaultDir(entrypoint, dir string) string {
 
 	return dir
 }
-
-func isGitNode(entrypoint string) (bool, error) {
-
-}
