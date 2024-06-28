@@ -50,28 +50,41 @@ func NewNode(
 ) (Node, error) {
 	var node Node
 	var err error
-	isGit, err := isGitNode(entrypoint)
+	scheme, err := getScheme(entrypoint)
 	if err != nil {
 		return nil, err
 	}
-	if isGit {
+
+	switch scheme {
+	case "git":
 		node, err = NewGitNode(entrypoint, dir, insecure, opts...)
-	} else if getScheme(entrypoint) == "http" || getScheme(entrypoint) == "https" {
+	case "http", "https":
 		node, err = NewHTTPNode(l, entrypoint, dir, insecure, timeout, opts...)
-	} else {
+	default:
 		node, err = NewFileNode(l, entrypoint, dir, opts...)
+
 	}
+
 	if node.Remote() && !experiments.RemoteTaskfiles.Enabled {
 		return nil, errors.New("task: Remote taskfiles are not enabled. You can read more about this experiment and how to enable it at https://taskfile.dev/experiments/remote-taskfiles")
 	}
 	return node, err
 }
 
-func getScheme(uri string) string {
-	if i := strings.Index(uri, "://"); i != -1 {
-		return uri[:i]
+func getScheme(uri string) (string, error) {
+	u, _ := giturls.Parse(uri)
+	if u == nil {
+		return "", nil
 	}
-	return ""
+	u.Path = strings.TrimSuffix(u.Path, "/")
+	if strings.HasSuffix(u.Path, ".git") && (u.Scheme == "git" || u.Scheme == "ssh" || u.Scheme == "https" || u.Scheme == "http") {
+		return "git", nil
+	}
+
+	if i := strings.Index(uri, "://"); i != -1 {
+		return uri[:i], nil
+	}
+	return "", nil
 }
 
 func getDefaultDir(entrypoint, dir string) string {
@@ -98,10 +111,5 @@ func getDefaultDir(entrypoint, dir string) string {
 }
 
 func isGitNode(entrypoint string) (bool, error) {
-	u, _ := giturls.Parse(entrypoint)
-	if u == nil {
-		return false, nil
-	}
-	u.Path = strings.TrimSuffix(u.Path, "/")
-	return strings.HasSuffix(u.Path, ".git") && (u.Scheme == "git" || u.Scheme == "ssh" || u.Scheme == "https" || u.Scheme == "http"), nil
+
 }

@@ -113,3 +113,7 @@ func (node *GitNode) ResolveDir(dir string) (string, error) {
 	entrypointDir := filepath.Dir(node.Dir())
 	return filepathext.SmartJoin(entrypointDir, path), nil
 }
+
+func (node *GitNode) FilenameAndLastDir() (string, string) {
+	return "", filepath.Base(node.Entrypoint)
+}
