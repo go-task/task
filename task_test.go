@@ -1664,6 +1664,26 @@ func TestRunOnlyRunsJobsHashOnce(t *testing.T) {
 	tt.Run(t)
 }
 
+func TestRunOnceSharedDeps(t *testing.T) {
+	const dir = "testdata/run_once_shared_deps"
+
+	var buff bytes.Buffer
+	e := task.Executor{
+		Dir:      dir,
+		Stdout:   &buff,
+		Stderr:   &buff,
+		ForceAll: true,
+	}
+	require.NoError(t, e.Setup())
+	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "build"}))
+
+	rx := regexp.MustCompile(`task: \[service-[a,b]:library:build\] echo "build library"`)
+	matches := rx.FindAllStringSubmatch(buff.String(), -1)
+	assert.Len(t, matches, 1)
+	assert.Contains(t, buff.String(), `task: [service-a:build] echo "build a"`)
+	assert.Contains(t, buff.String(), `task: [service-b:build] echo "build b"`)
+}
+
 func TestDeferredCmds(t *testing.T) {
 	const dir = "testdata/deferred"
 	var buff bytes.Buffer
