@@ -147,13 +147,10 @@ func (t *Tasks) UnmarshalYAML(node *yaml.Node) error {
 					}
 				}
 			}
-			tasks.Set(name, task)
+			t.Set(name, task)
 			return nil
 		})
 
-		*t = Tasks{
-			OrderedMap: tasks.DeepCopy(),
-		}
 		return nil
 	}
 
