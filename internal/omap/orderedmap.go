@@ -6,11 +6,10 @@ import (
 	"slices"
 	"sync"
 
-	"golang.org/x/exp/maps"
-
 	"gopkg.in/yaml.v3"
 
 	"github.com/go-task/task/v3/internal/deepcopy"
+	"github.com/go-task/task/v3/internal/exp"
 )
 
 // An OrderedMap is a wrapper around a regular map that maintains an ordered
@@ -31,7 +30,7 @@ func New[K cmp.Ordered, V any]() OrderedMap[K, V] {
 // are unordered, the order of the created OrderedMap will be random.
 func FromMap[K cmp.Ordered, V any](m map[K]V) OrderedMap[K, V] {
 	mm := deepcopy.Map(m)
-	ms := maps.Keys(mm)
+	ms := exp.Keys(mm)
 	return OrderedMap[K, V]{
 		m: mm,
 		s: ms,
@@ -129,9 +128,8 @@ func (om *OrderedMap[K, V]) Keys() []K {
 
 // Values will return a slice of the map's values in order.
 func (om *OrderedMap[K, V]) Values() []V {
-	var values []V
-
 	om.mutex.RLock()
+	var values = make([]V, 0, len(om.m))
 	for _, key := range om.s {
 		values = append(values, om.m[key])
 	}
