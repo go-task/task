@@ -93,6 +93,6 @@ vars:
 	for _, test := range tests {
 		err := yaml.Unmarshal([]byte(test.content), test.v)
 		require.NoError(t, err)
-		assert.EqualValues(t, test.expected, test.v)
+		assert.Equal(t, test.expected, test.v)
 	}
 }

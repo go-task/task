@@ -26,10 +26,6 @@ type Includes struct {
 
 // UnmarshalYAML implements the yaml.Unmarshaler interface.
 func (includes *Includes) UnmarshalYAML(node *yaml.Node) error {
-	if includes == nil {
-		*includes = Includes{}
-	}
-
 	switch node.Kind {
 	case yaml.MappingNode:
 		// NOTE(@andreynering): on this style of custom unmarshalling,

@@ -109,7 +109,7 @@ func TestUnmarshalYAML(t *testing.T) {
 1: one
 2: two
 `
-	om := New[int, string]()
+	var om OrderedMap[int, string]
 	err := yaml.Unmarshal([]byte(yamlString), &om)
 	require.NoError(t, err)
 

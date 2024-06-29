@@ -69,7 +69,7 @@ func (fct fileContentTest) Run(t *testing.T) {
 		Stderr:     io.Discard,
 	}
 	require.NoError(t, e.Setup(), "e.Setup()")
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: fct.Target, Vars: &ast.Vars{}}), "e.Run(target)")
+	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: fct.Target}), "e.Run(target)")
 
 	for name, expectContent := range fct.Files {
 		t.Run(fct.name(name), func(t *testing.T) {
@@ -822,7 +822,7 @@ func TestStatusVariables(t *testing.T) {
 		Verbose: true,
 	}
 	require.NoError(t, e.Setup())
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "build", Vars: &ast.Vars{}}))
+	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "build"}))
 
 	assert.Contains(t, buff.String(), "3e464c4b03f4b65d740e1e130d4d108a")
 
