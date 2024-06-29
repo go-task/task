@@ -30,7 +30,7 @@ func New[K cmp.Ordered, V any]() OrderedMap[K, V] {
 // FromMap will create a new OrderedMap from the given map. Since Golang maps
 // are unordered, the order of the created OrderedMap will be random.
 func FromMap[K cmp.Ordered, V any](m map[K]V) OrderedMap[K, V] {
-	mm := maps.Clone(m)
+	mm := deepcopy.Map(m)
 	ms := maps.Keys(mm)
 	return OrderedMap[K, V]{
 		m: mm,
@@ -51,7 +51,7 @@ func FromMapWithOrder[K cmp.Ordered, V any](m map[K]V, order []K) OrderedMap[K, 
 
 	return OrderedMap[K, V]{
 		s: slices.Clone(order),
-		m: maps.Clone(m),
+		m: deepcopy.Map(m),
 	}
 }
 
