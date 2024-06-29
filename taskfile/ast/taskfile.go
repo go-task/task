@@ -88,7 +88,7 @@ func (tf *Taskfile) UnmarshalYAML(node *yaml.Node) error {
 		tf.Shopt = taskfile.Shopt
 		tf.Vars = taskfile.Vars
 		tf.Env = taskfile.Env
-		tf.Tasks.OrderedMap = taskfile.Tasks.DeepCopy()
+		tf.Tasks = taskfile.Tasks.DeepCopy()
 		tf.Silent = taskfile.Silent
 		tf.Dotenv = taskfile.Dotenv
 		tf.Run = taskfile.Run

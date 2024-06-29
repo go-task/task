@@ -16,6 +16,12 @@ type Tasks struct {
 	omap.OrderedMap[string, *Task]
 }
 
+func (t *Tasks) DeepCopy() Tasks {
+	return Tasks{
+		OrderedMap: t.OrderedMap.DeepCopy(),
+	}
+}
+
 type MatchingTask struct {
 	Task      *Task
 	Wildcards []string
@@ -46,7 +52,7 @@ func (t *Tasks) FindMatchingTasks(call *Call) []*MatchingTask {
 	return matchingTasks
 }
 
-func (t1 *Tasks) Merge(t2 *Tasks, include *Include, includedTaskfileVars *Vars) {
+func (t *Tasks) Merge(t2 *Tasks, include *Include, includedTaskfileVars *Vars) {
 	_ = t2.Range(func(k string, v *Task) error {
 		// We do a deep copy of the task struct here to ensure that no data can
 		// be changed elsewhere once the taskfile is merged.
@@ -97,7 +103,7 @@ func (t1 *Tasks) Merge(t2 *Tasks, include *Include, includedTaskfileVars *Vars) 
 		// Add the task to the merged taskfile
 		taskNameWithNamespace := taskNameWithNamespace(k, include.Namespace)
 		task.Task = taskNameWithNamespace
-		t1.Set(taskNameWithNamespace, task)
+		t.Set(taskNameWithNamespace, task)
 
 		return nil
 	})
@@ -107,10 +113,10 @@ func (t1 *Tasks) Merge(t2 *Tasks, include *Include, includedTaskfileVars *Vars) 
 	// run the included Taskfile's default task without specifying its full
 	// name. If the parent namespace has aliases, we add another alias for each
 	// of them.
-	if t2.Get("default") != nil && t1.Get(include.Namespace) == nil {
+	if t2.Get("default") != nil && t.Get(include.Namespace) == nil {
 		defaultTaskName := fmt.Sprintf("%s:default", include.Namespace)
-		t1.Get(defaultTaskName).Aliases = append(t1.Get(defaultTaskName).Aliases, include.Namespace)
-		t1.Get(defaultTaskName).Aliases = append(t1.Get(defaultTaskName).Aliases, include.Aliases...)
+		t.Get(defaultTaskName).Aliases = append(t.Get(defaultTaskName).Aliases, include.Namespace)
+		t.Get(defaultTaskName).Aliases = append(t.Get(defaultTaskName).Aliases, include.Aliases...)
 	}
 }
 
