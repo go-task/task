@@ -69,7 +69,6 @@ func (om *OrderedMap[K, V]) Set(key K, value V) {
 	if om.m == nil {
 		om.m = make(map[K]V)
 	}
-
 	if _, ok := om.m[key]; !ok {
 		om.s = append(om.s, key)
 	}
