@@ -4,7 +4,7 @@ import (
 	"gopkg.in/yaml.v3"
 
 	"github.com/go-task/task/v3/errors"
-	"github.com/go-task/task/v3/internal/omap"
+	omap "github.com/go-task/task/v3/internal/omap"
 )
 
 // Include represents information about included taskfiles
