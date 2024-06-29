@@ -41,7 +41,6 @@ func (vs *Vars) Range(f func(k string, v Var) error) error {
 	if vs == nil {
 		return nil
 	}
-
 	return vs.OrderedMap.Range(f)
 }
 
@@ -50,7 +49,6 @@ func (vs *Vars) Merge(other *Vars, include *Include) {
 	if vs == nil || other == nil {
 		return
 	}
-
 	_ = other.Range(func(key string, value Var) error {
 		if include != nil && include.AdvancedImport {
 			value.Dir = include.Dir
@@ -65,7 +63,6 @@ func (vs *Vars) Len() int {
 	if vs == nil {
 		return 0
 	}
-
 	return vs.OrderedMap.Len()
 }
 
@@ -75,18 +72,9 @@ func (vs *Vars) DeepCopy() *Vars {
 	if vs == nil {
 		return nil
 	}
-
 	return &Vars{
 		OrderedMap: vs.OrderedMap.DeepCopy(),
 	}
-}
-
-func (vs *Vars) UnmarshalYAML(value *yaml.Node) error {
-	if vs == nil {
-		*vs = Vars{}
-	}
-
-	return vs.OrderedMap.UnmarshalYAML(value)
 }
 
 // Var represents either a static or dynamic variable.
