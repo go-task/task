@@ -128,7 +128,7 @@ func (om *OrderedMap[K, V]) Keys() []K {
 // Values will return a slice of the map's values in order.
 func (om *OrderedMap[K, V]) Values() []V {
 	om.mutex.RLock()
-	var values = make([]V, 0, len(om.m))
+	values := make([]V, 0, len(om.m))
 	for _, key := range om.s {
 		values = append(values, om.m[key])
 	}
