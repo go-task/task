@@ -52,7 +52,7 @@ func (t *Tasks) FindMatchingTasks(call *Call) []*MatchingTask {
 	return matchingTasks
 }
 
-func (t1 *Tasks) Merge(t2 Tasks, include *Include, includedTaskfileVars *Vars) {
+func (t1 *Tasks) Merge(t2 *Tasks, include *Include, includedTaskfileVars *Vars) {
 	_ = t2.Range(func(name string, v *Task) error {
 		// We do a deep copy of the task struct here to ensure that no data can
 		// be changed elsewhere once the taskfile is merged.
