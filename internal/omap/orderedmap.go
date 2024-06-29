@@ -133,7 +133,7 @@ func (om *OrderedMap[K, V]) Values() []V {
 
 	om.mutex.RLock()
 	for _, key := range om.s {
-		values = append(values, om.Get(key))
+		values = append(values, om.m[key])
 	}
 	om.mutex.RUnlock()
 
