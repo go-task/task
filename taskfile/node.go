@@ -20,6 +20,7 @@ type Node interface {
 	Remote() bool
 	ResolveEntrypoint(entrypoint string) (string, error)
 	ResolveDir(dir string) (string, error)
+	FilenameAndLastDir() (string, string)
 }
 
 func NewRootNode(

@@ -72,3 +72,7 @@ func (node *StdinNode) ResolveDir(dir string) (string, error) {
 
 	return filepathext.SmartJoin(node.Dir(), path), nil
 }
+
+func (node *StdinNode) FilenameAndLastDir() (string, string) {
+	return "", "__stdin__"
+}

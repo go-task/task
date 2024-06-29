@@ -3,6 +3,7 @@ module github.com/go-task/task/v3
 go 1.21.0
 
 require (
+	github.com/Ladicle/tabwriter v1.0.0
 	github.com/Masterminds/semver/v3 v3.2.1
 	github.com/alecthomas/chroma/v2 v2.14.0
 	github.com/davecgh/go-spew v1.1.1
@@ -28,7 +29,7 @@ require (
 
 require (
 	github.com/dlclark/regexp2 v1.11.0 // indirect
-	github.com/klauspost/cpuid/v2 v2.2.7 // indirect
+	github.com/klauspost/cpuid/v2 v2.0.9 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect

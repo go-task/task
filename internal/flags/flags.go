@@ -65,6 +65,7 @@ var (
 	Experiments bool
 	Download    bool
 	Offline     bool
+	ClearCache  bool
 	Timeout     time.Duration
 )
 
@@ -119,6 +120,7 @@ func init() {
 		pflag.BoolVar(&Download, "download", false, "Downloads a cached version of a remote Taskfile.")
 		pflag.BoolVar(&Offline, "offline", false, "Forces Task to only use local or cached Taskfiles.")
 		pflag.DurationVar(&Timeout, "timeout", time.Second*10, "Timeout for downloading remote Taskfiles.")
+		pflag.BoolVar(&ClearCache, "clear-cache", false, "Clear the remote cache.")
 	}
 
 	pflag.Parse()
@@ -127,6 +129,10 @@ func init() {
 func Validate() error {
 	if Download && Offline {
 		return errors.New("task: You can't set both --download and --offline flags")
+	}
+
+	if Download && ClearCache {
+		return errors.New("task: You can't set both --download and --clear-cache flags")
 	}
 
 	if Global && Dir != "" {
