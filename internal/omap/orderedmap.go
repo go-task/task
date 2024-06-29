@@ -13,6 +13,15 @@ import (
 	"github.com/go-task/task/v3/internal/deepcopy"
 )
 
+// An OrderedMap is a wrapper around a regular map that maintains an ordered
+// list of the map's keys. This allows you to run deterministic and ordered
+// operations on the map such as printing/serializing/iterating.
+type OrderedMap[K cmp.Ordered, V any] struct {
+	mutex sync.RWMutex
+	s     []K
+	m     map[K]V
+}
+
 // New will create a new OrderedMap of the given type and return it.
 func New[K cmp.Ordered, V any]() OrderedMap[K, V] {
 	return OrderedMap[K, V]{}
@@ -44,15 +53,6 @@ func FromMapWithOrder[K cmp.Ordered, V any](m map[K]V, order []K) OrderedMap[K, 
 		s: slices.Clone(order),
 		m: maps.Clone(m),
 	}
-}
-
-// An OrderedMap is a wrapper around a regular map that maintains an ordered
-// list of the map's keys. This allows you to run deterministic and ordered
-// operations on the map such as printing/serializing/iterating.
-type OrderedMap[K cmp.Ordered, V any] struct {
-	mutex sync.RWMutex
-	s     []K
-	m     map[K]V
 }
 
 // Len will return the number of items in the map.
