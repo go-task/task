@@ -15,7 +15,6 @@ import (
 	"github.com/go-task/task/v3/internal/experiments"
 	"github.com/go-task/task/v3/internal/flags"
 	"github.com/go-task/task/v3/internal/logger"
-	"github.com/go-task/task/v3/internal/omap"
 	"github.com/go-task/task/v3/internal/sort"
 	ver "github.com/go-task/task/v3/internal/version"
 	"github.com/go-task/task/v3/taskfile/ast"
@@ -176,17 +175,7 @@ func run() error {
 
 	// If there are no calls, run the default task instead
 	if len(calls) == 0 {
-		calls = append(calls, &ast.Call{Task: "default", Vars: ast.NewVars()})
-	} else {
-		for _, call := range calls {
-			if call.Vars == nil {
-				call.Vars = ast.NewVars()
-			}
-		}
-	}
-
-	if globals.OrderedMap == nil {
-		globals.OrderedMap = omap.New[string, ast.Var]()
+		calls = append(calls, &ast.Call{Task: "default"})
 	}
 
 	globals.Set("CLI_ARGS", ast.Var{Value: cliArgs})

@@ -30,10 +30,6 @@ func (includes *Includes) UnmarshalYAML(node *yaml.Node) error {
 		*includes = Includes{}
 	}
 
-	if includes.OrderedMap == nil {
-		includes.OrderedMap = omap.New[string, *Include]()
-	}
-
 	switch node.Kind {
 	case yaml.MappingNode:
 		// NOTE(@andreynering): on this style of custom unmarshalling,

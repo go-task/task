@@ -46,7 +46,7 @@ func (t *Tasks) FindMatchingTasks(call *Call) []*MatchingTask {
 	return matchingTasks
 }
 
-func (t1 *Tasks) Merge(t2 Tasks, include *Include, includedTaskfileVars *Vars) {
+func (t1 *Tasks) Merge(t2 *Tasks, include *Include, includedTaskfileVars *Vars) {
 	_ = t2.Range(func(k string, v *Task) error {
 		// We do a deep copy of the task struct here to ensure that no data can
 		// be changed elsewhere once the taskfile is merged.
@@ -115,14 +115,10 @@ func (t1 *Tasks) Merge(t2 Tasks, include *Include, includedTaskfileVars *Vars) {
 }
 
 func (t *Tasks) UnmarshalYAML(node *yaml.Node) error {
-	if t.OrderedMap == nil {
-		t.OrderedMap = omap.New[string, *Task]()
-	}
-
 	switch node.Kind {
 	case yaml.MappingNode:
 		tasks := omap.New[string, *Task]()
-		if err := tasks.UnmarshalYAML(node); err != nil {
+		if err := node.Decode(&tasks); err != nil {
 			return errors.NewTaskfileDecodeError(err, node)
 		}
 
@@ -150,7 +146,7 @@ func (t *Tasks) UnmarshalYAML(node *yaml.Node) error {
 		})
 
 		*t = Tasks{
-			OrderedMap: tasks,
+			OrderedMap: tasks.DeepCopy(),
 		}
 		return nil
 	}

@@ -8,7 +8,6 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/go-task/task/v3/internal/logger"
-	"github.com/go-task/task/v3/internal/omap"
 	"github.com/go-task/task/v3/internal/summary"
 	"github.com/go-task/task/v3/taskfile/ast"
 )
@@ -157,13 +156,13 @@ func TestPrintAllWithSpaces(t *testing.T) {
 	t2 := &ast.Task{Task: "t2"}
 	t3 := &ast.Task{Task: "t3"}
 
-	tasks := ast.Tasks{OrderedMap: omap.New[string, *ast.Task]()}
-	tasks.Set("t1", t1)
-	tasks.Set("t2", t2)
-	tasks.Set("t3", t3)
+	var tf ast.Taskfile
+	tf.Tasks.Set("t1", t1)
+	tf.Tasks.Set("t2", t2)
+	tf.Tasks.Set("t3", t3)
 
 	summary.PrintTasks(&l,
-		&ast.Taskfile{Tasks: tasks},
+		&tf,
 		[]*ast.Call{{Task: "t1"}, {Task: "t2"}, {Task: "t3"}})
 
 	assert.True(t, strings.HasPrefix(buffer.String(), "task: t1"))

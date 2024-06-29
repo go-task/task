@@ -10,7 +10,7 @@ import (
 // GetEnviron the all return all environment variables encapsulated on a
 // ast.Vars
 func GetEnviron() *ast.Vars {
-	m := ast.NewVars()
+	m := &ast.Vars{}
 	for _, e := range os.Environ() {
 		keyVal := strings.SplitN(e, "=", 2)
 		key, val := keyVal[0], keyVal[1]

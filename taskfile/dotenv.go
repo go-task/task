@@ -21,7 +21,7 @@ func Dotenv(c *compiler.Compiler, tf *ast.Taskfile, dir string) (*ast.Vars, erro
 		return nil, err
 	}
 
-	env := ast.NewVars()
+	env := &ast.Vars{}
 	cache := &templater.Cache{Vars: vars}
 
 	for _, dotEnvPath := range tf.Dotenv {

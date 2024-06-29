@@ -8,7 +8,6 @@ import (
 	"gopkg.in/yaml.v3"
 
 	"github.com/go-task/task/v3/errors"
-	"github.com/go-task/task/v3/internal/omap"
 )
 
 // NamespaceSeparator contains the character that separates namespaces
@@ -56,7 +55,7 @@ func (t1 *Taskfile) Merge(t2 *Taskfile, include *Include) error {
 	}
 	t1.Vars.Merge(t2.Vars, include)
 	t1.Env.Merge(t2.Env, include)
-	t1.Tasks.Merge(t2.Tasks, include, t1.Vars)
+	t1.Tasks.Merge(&t2.Tasks, include, t1.Vars)
 	return nil
 }
 
@@ -89,19 +88,16 @@ func (tf *Taskfile) UnmarshalYAML(node *yaml.Node) error {
 		tf.Shopt = taskfile.Shopt
 		tf.Vars = taskfile.Vars
 		tf.Env = taskfile.Env
-		tf.Tasks = taskfile.Tasks
+		tf.Tasks.OrderedMap = taskfile.Tasks.DeepCopy()
 		tf.Silent = taskfile.Silent
 		tf.Dotenv = taskfile.Dotenv
 		tf.Run = taskfile.Run
 		tf.Interval = taskfile.Interval
 		if tf.Vars == nil {
-			tf.Vars = NewVars()
+			tf.Vars = &Vars{}
 		}
 		if tf.Env == nil {
-			tf.Env = NewVars()
-		}
-		if tf.Tasks.OrderedMap == nil {
-			tf.Tasks.OrderedMap = omap.New[string, *Task]()
+			tf.Env = &Vars{}
 		}
 		return nil
 	}

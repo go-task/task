@@ -15,12 +15,6 @@ type Vars struct {
 	omap.OrderedMap[string, Var]
 }
 
-func NewVars() *Vars {
-	return &Vars{
-		OrderedMap: omap.New[string, Var](),
-	}
-}
-
 // ToCacheMap converts Vars to a map containing only the static
 // variables
 func (vs *Vars) ToCacheMap() (m map[string]any) {
@@ -47,9 +41,6 @@ func (vs *Vars) Range(f func(k string, v Var) error) error {
 	if vs == nil {
 		return nil
 	}
-	if vs.OrderedMap == nil {
-		return nil
-	}
 
 	return vs.OrderedMap.Range(f)
 }
@@ -57,13 +48,6 @@ func (vs *Vars) Range(f func(k string, v Var) error) error {
 // Wrapper around OrderedMap.Merge to ensure we don't get nil pointer errors
 func (vs *Vars) Merge(other *Vars, include *Include) {
 	if vs == nil || other == nil {
-		return
-	}
-	if vs.OrderedMap == nil {
-		vs.OrderedMap = NewVars().OrderedMap
-	}
-
-	if other.OrderedMap == nil {
 		return
 	}
 
@@ -81,9 +65,6 @@ func (vs *Vars) Len() int {
 	if vs == nil {
 		return 0
 	}
-	if vs.OrderedMap == nil {
-		return 0
-	}
 
 	return vs.OrderedMap.Len()
 }
@@ -94,9 +75,6 @@ func (vs *Vars) DeepCopy() *Vars {
 	if vs == nil {
 		return nil
 	}
-	if vs.OrderedMap == nil {
-		return NewVars()
-	}
 
 	return &Vars{
 		OrderedMap: vs.OrderedMap.DeepCopy(),
@@ -106,10 +84,6 @@ func (vs *Vars) DeepCopy() *Vars {
 func (vs *Vars) UnmarshalYAML(value *yaml.Node) error {
 	if vs == nil {
 		*vs = Vars{}
-	}
-
-	if vs.OrderedMap == nil {
-		vs.OrderedMap = omap.New[string, Var]()
 	}
 
 	return vs.OrderedMap.UnmarshalYAML(value)

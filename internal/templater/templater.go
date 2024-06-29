@@ -6,9 +6,10 @@ import (
 	"maps"
 	"strings"
 
+	"github.com/go-task/template"
+
 	"github.com/go-task/task/v3/internal/deepcopy"
 	"github.com/go-task/task/v3/taskfile/ast"
-	"github.com/go-task/template"
 )
 
 // Cache is a help struct that allow us to call "replaceX" funcs multiple
@@ -140,7 +141,7 @@ func ReplaceVarsWithExtra(vars *ast.Vars, cache *Cache, extra map[string]any) *a
 		return nil
 	}
 
-	newVars := ast.NewVars()
+	newVars := &ast.Vars{}
 	_ = vars.Range(func(k string, v ast.Var) error {
 		newVars.Set(k, ReplaceVarWithExtra(v, cache, extra))
 		return nil
