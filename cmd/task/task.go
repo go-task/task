@@ -83,6 +83,15 @@ func run() error {
 		return nil
 	}
 
+	if flags.Completion != "" {
+		script, err := task.Completion(flags.Completion)
+		if err != nil {
+			return err
+		}
+		fmt.Println(script)
+		return nil
+	}
+
 	if flags.Global {
 		home, err := os.UserHomeDir()
 		if err != nil {
