@@ -89,7 +89,7 @@ func TestOrderedMapMerge(t *testing.T) {
 	om2.Set("b", 3)
 	om2.Set("c", 4)
 
-	om1.Merge(om2)
+	om1.Merge(&om2)
 
 	expectedKeys := []string{"a", "b", "c"}
 	expectedValues := []int{1, 3, 4}
