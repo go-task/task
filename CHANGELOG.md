@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v3.38.0 - 2024-06-30
 
 - Added `TASK_EXE` special variable (#1616, #1624 by @pd93 and @andreynering).
 - Some YAML parsing errors will now show in a more user friendly way (#1619 by
