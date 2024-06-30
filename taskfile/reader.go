@@ -109,6 +109,7 @@ func (r *Reader) include(node Node) error {
 				Dir:            templater.Replace(include.Dir, cache),
 				Optional:       include.Optional,
 				Internal:       include.Internal,
+				Flatten:        include.Flatten,
 				Aliases:        include.Aliases,
 				AdvancedImport: include.AdvancedImport,
 				Vars:           include.Vars,

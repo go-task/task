@@ -1,0 +1,9 @@
+version: '3'
+
+tasks:
+  truc:
+    cmds:
+      - echo included_directory > included_directory.txt
+  gen:
+    cmds:
+      - echo included_directory > included_directory.txt
