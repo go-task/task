@@ -6,7 +6,7 @@ includes:
     flatten: true
 
 tasks:
-  default:
+  gen:
     cmds:
-      - echo root_directory > root_directory.txt
+      - echo "gen multiple"
 

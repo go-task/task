@@ -1,9 +1,17 @@
 version: '3'
 
+includes:
+    nested:
+      taskfile: ../nested
+      flatten: true
+
 tasks:
-  truc:
-    cmds:
-      - echo included_directory > included_directory.txt
   gen:
     cmds:
-      - echo included_directory > included_directory.txt
+      - echo "gen from included"
+
+  with_deps:
+    deps:
+        - gen
+    cmds:
+      - echo "with_deps from included"

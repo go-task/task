@@ -1216,6 +1216,44 @@ func TestIncludesInternal(t *testing.T) {
 	}
 }
 
+func TestIncludesFlatten(t *testing.T) {
+	const dir = "testdata/includes_flatten"
+	tests := []struct {
+		name           string
+		taskfile       string
+		task           string
+		expectedErr    bool
+		expectedOutput string
+	}{
+		{"included flatten", "Taskfile.yml", "gen", false, "gen from included\n"},
+		{"included flatten with deps", "Taskfile.yml", "with_deps", false, "gen from included\nwith_deps from included\n"},
+		{"included flatten nested", "Taskfile.yml", "from_nested", false, "from nested\n"},
+		{"included flatten multiple same task", "Taskfile.multiple.yml", "gen", true, "task: Found multiple tasks (gen) included by \"included\"\""},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			var buff bytes.Buffer
+			e := task.Executor{
+				Dir:        dir,
+				Entrypoint: dir + "/" + test.taskfile,
+				Stdout:     &buff,
+				Stderr:     &buff,
+				Silent:     true,
+			}
+			err := e.Setup()
+			if test.expectedErr {
+				require.Error(t, err)
+				assert.Equal(t, test.expectedOutput, err.Error())
+			} else {
+				require.NoError(t, err)
+				_ = e.Run(context.Background(), &ast.Call{Task: test.task})
+				assert.Equal(t, test.expectedOutput, buff.String())
+			}
+		})
+	}
+}
+
 func TestIncludesInterpolation(t *testing.T) {
 	const dir = "testdata/includes_interpolation"
 	tests := []struct {
