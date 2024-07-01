@@ -6,6 +6,7 @@ includes:
     flatten: true
   included_module1:
     taskfile: ./module1
+    flatten: true
 
 tasks:
   default:

@@ -100,9 +100,9 @@ func (t1 *Tasks) Merge(t2 Tasks, include *Include, includedTaskfileVars *Vars) e
 		}
 
 		if t1.Get(taskName) != nil {
-			return &errors.TaskNameConflictError{
-				Call:      "",
-				TaskNames: []string{taskName},
+			return &errors.TaskNameFlattenConflictError{
+				TaskName: taskName,
+				Include:  include.Namespace,
 			}
 		}
 		// Add the task to the merged taskfile
