@@ -1,0 +1,12 @@
+version: '3'
+
+includes:
+  included:
+    taskfile: ./included
+    flatten: true
+
+tasks:
+  gen:
+    cmds:
+      - echo "gen multiple"
+

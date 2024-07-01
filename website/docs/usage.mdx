@@ -334,6 +334,117 @@ includes:
     internal: true
 ```
 
+### Flatten includes
+
+You can flatten the included Taskfile tasks into the main Taskfile by using the `flatten` option.
+It means that the included Taskfile tasks will be available without the namespace.
+
+
+<Tabs defaultValue="1"
+			values={[
+				{label: 'Taskfile.yml', value: '1'},
+				{label: 'Included.yml', value: '2'}
+			]}>
+
+	<TabItem value="1">
+
+		```yaml
+		version: '3'
+
+		includes:
+		  lib:
+		    taskfile: ./Included.yml
+		    flatten: true
+
+		tasks:
+		  greet:
+		    cmds:
+		      - echo "Greet"
+		      - task: foo
+		```
+
+
+	</TabItem>
+	<TabItem value="2">
+
+		```yaml
+		version: '3'
+
+		tasks:
+		  foo:
+		    cmds:
+		      - echo "Foo"
+		```
+
+
+	</TabItem></Tabs>
+
+
+If you run `task -a` it will print :
+
+```sh
+task: Available tasks for this project:
+* greet:
+* foo
+```
+
+You can run `task foo` directly without the namespace.
+
+You can also reference the task in other tasks without the namespace. So if you run `task greet` it will run `greet` and `foo` tasks and the output will be :
+
+```text
+```
+
+If multiple tasks have the same name, an error will be thrown:
+
+<Tabs defaultValue="1"
+			values={[
+				{label: 'Taskfile.yml', value: '1'},
+				{label: 'Included.yml', value: '2'}
+			]}>
+
+	<TabItem value="1">
+
+    ```yaml
+    version: '3'
+    includes:
+      lib:
+		    taskfile: ./Included.yml
+		    flatten: true
+
+		tasks:
+		  greet:
+		    cmds:
+		      - echo "Greet"
+		      - task: foo
+		```
+
+
+	</TabItem>
+	<TabItem value="2">
+
+		```yaml
+		version: '3'
+
+		tasks:
+		  greet:
+		    cmds:
+		       - echo "Foo"
+		```
+
+
+	</TabItem></Tabs>
+
+If you run `task -a` it will print:
+```text
+task: Found multiple tasks (greet) included by "lib"
+
+```
+
+
+
+
+
 ### Vars of included Taskfiles
 
 You can also specify variables when including a Taskfile. This may be useful for
