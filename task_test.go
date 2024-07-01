@@ -1225,10 +1225,10 @@ func TestIncludesFlatten(t *testing.T) {
 		expectedErr    bool
 		expectedOutput string
 	}{
-		{"included flatten", "Taskfile.yml", "gen", false, "gen from included\n"},
-		{"included flatten with deps", "Taskfile.yml", "with_deps", false, "gen from included\nwith_deps from included\n"},
-		{"included flatten nested", "Taskfile.yml", "from_nested", false, "from nested\n"},
-		{"included flatten multiple same task", "Taskfile.multiple.yml", "gen", true, "task: Found multiple tasks (gen) included by \"included\"\""},
+		{name: "included flatten", taskfile: "Taskfile.yml", task: "gen", expectedOutput: "gen from included\n"},
+		{name: "included flatten with deps", taskfile: "Taskfile.yml", task: "with_deps", expectedOutput: "gen from included\nwith_deps from included\n"},
+		{name: "included flatten nested", taskfile: "Taskfile.yml", task: "from_nested", expectedOutput: "from nested\n"},
+		{name: "included flatten multiple same task", taskfile: "Taskfile.multiple.yml", task: "gen", expectedErr: true, expectedOutput: "task: Found multiple tasks (gen) included by \"included\"\""},
 	}
 
 	for _, test := range tests {
@@ -1243,8 +1243,7 @@ func TestIncludesFlatten(t *testing.T) {
 			}
 			err := e.Setup()
 			if test.expectedErr {
-				require.Error(t, err)
-				assert.Equal(t, test.expectedOutput, err.Error())
+				assert.EqualError(t, err, test.expectedOutput)
 			} else {
 				require.NoError(t, err)
 				_ = e.Run(context.Background(), &ast.Call{Task: test.task})
