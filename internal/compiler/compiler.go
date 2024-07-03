@@ -180,10 +180,14 @@ func (c *Compiler) ResetCache() {
 }
 
 func (c *Compiler) getSpecialVars(t *ast.Task) (map[string]string, error) {
+	entrypoint := c.Entrypoint
+	if entrypoint == "" {
+		entrypoint = "Taskfile.yml"
+	}
 	return map[string]string{
 		"TASK":             t.Task,
 		"TASK_EXE":         filepath.ToSlash(os.Args[0]),
-		"ROOT_TASKFILE":    filepathext.SmartJoin(c.Dir, c.Entrypoint),
+		"ROOT_TASKFILE":    filepathext.SmartJoin(c.Dir, entrypoint),
 		"ROOT_DIR":         c.Dir,
 		"TASKFILE":         t.Location.Taskfile,
 		"TASKFILE_DIR":     filepath.Dir(t.Location.Taskfile),
