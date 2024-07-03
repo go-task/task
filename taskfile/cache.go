@@ -10,8 +10,8 @@ import (
 	"time"
 )
 
-// defaultCacheTTL is one day (24 hours).
-const defaultCacheTTL = time.Duration(time.Hour * 24)
+// DefaultCacheTTL is one day (24 hours).
+const DefaultCacheTTL = time.Duration(time.Hour * 24)
 
 type Cache struct {
 	dir string
@@ -31,7 +31,7 @@ func NewCache(dir string, opts ...CacheOption) (*Cache, error) {
 
 	cache := &Cache{
 		dir: dir,
-		ttl: defaultCacheTTL,
+		ttl: DefaultCacheTTL,
 	}
 
 	// Apply options.

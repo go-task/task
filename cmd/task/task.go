@@ -108,6 +108,7 @@ func run() error {
 		Download:    flags.Download,
 		Offline:     flags.Offline,
 		Timeout:     flags.Timeout,
+		CacheTTL:    flags.CacheTTL,
 		Watch:       flags.Watch,
 		Verbose:     flags.Verbose,
 		Silent:      flags.Silent,
