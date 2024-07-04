@@ -60,7 +60,9 @@ func (c *Cache) write(node Node, b []byte) error {
 }
 
 func (c *Cache) read(node Node) ([]byte, error) {
-	fi, err := os.Stat(c.cacheFilePath(node))
+	cfp := c.cacheFilePath(node)
+
+	fi, err := os.Stat(cfp)
 	if err != nil {
 		return nil, fmt.Errorf("could not stat cached file: %w", err)
 	}
@@ -70,7 +72,7 @@ func (c *Cache) read(node Node) ([]byte, error) {
 		return nil, ErrExpired
 	}
 
-	return os.ReadFile(c.cacheFilePath(node))
+	return os.ReadFile(cfp)
 }
 
 func (c *Cache) writeChecksum(node Node, checksum string) error {
