@@ -81,16 +81,16 @@ func TestCacheInsideTTL(t *testing.T) {
 }
 
 func TestCacheOutsideTTL(t *testing.T) {
-	// Prime a new Cache with a TTL of one second.
-	cache, fileNode := primeNewCache(t, t.TempDir(), WithTTL(time.Second))
+	// Prime a new Cache with an extremely short TTL.
+	cache, fileNode := primeNewCache(t, t.TempDir(), WithTTL(time.Millisecond))
 
 	// Write some bytes for the cached file.
 	writeBytes := []byte("some bytes")
 	err := cache.write(fileNode, writeBytes)
 	require.NoError(t, err, "writing bytes to cache")
 
-	// Sleep for two seconds so that the cached file is outside of TTL.
-	time.Sleep(2 * time.Second)
+	// Sleep for 5ms so that the cached file is outside of TTL.
+	time.Sleep(5 * time.Millisecond)
 
 	// Reading from the cache after sleeping past the end of TTL should get an error.
 	readBytes, err := cache.read(fileNode)
