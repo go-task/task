@@ -25,11 +25,11 @@ var discardLogger = &logger.Logger{
 	Stderr: io.Discard,
 }
 
-func primeNewCache(t *testing.T, tempDir string, cacheOpts ...CacheOption) (*Cache, *FileNode) {
+func primeNewCache(t *testing.T, cacheOpts ...CacheOption) (*Cache, *FileNode) {
 	t.Helper()
 
-	cache, err := NewCache(tempDir, cacheOpts...)
-	require.NoErrorf(t, err, "creating new cache in temporary directory '%s'", tempDir)
+	cache, err := NewCache(t.TempDir(), cacheOpts...)
+	require.NoErrorf(t, err, "creating new cache")
 
 	// Prime the temporary cache directory with a basic Taskfile.
 	filename := "Taskfile.yaml"
@@ -50,7 +50,7 @@ func primeNewCache(t *testing.T, tempDir string, cacheOpts ...CacheOption) (*Cac
 }
 
 func TestCache(t *testing.T) {
-	cache, fileNode := primeNewCache(t, t.TempDir())
+	cache, fileNode := primeNewCache(t)
 
 	// Attempt to read from cache, then write, then read again.
 	_, err := cache.read(fileNode)
@@ -67,7 +67,7 @@ func TestCache(t *testing.T) {
 
 func TestCacheInsideTTL(t *testing.T) {
 	// Prime a new Cache with a TTL of one minute.
-	cache, fileNode := primeNewCache(t, t.TempDir(), WithTTL(time.Minute))
+	cache, fileNode := primeNewCache(t, WithTTL(time.Minute))
 
 	// Write some bytes for the cached file.
 	writeBytes := []byte("some bytes")
@@ -82,7 +82,7 @@ func TestCacheInsideTTL(t *testing.T) {
 
 func TestCacheOutsideTTL(t *testing.T) {
 	// Prime a new Cache with an extremely short TTL.
-	cache, fileNode := primeNewCache(t, t.TempDir(), WithTTL(time.Millisecond))
+	cache, fileNode := primeNewCache(t, WithTTL(time.Millisecond))
 
 	// Write some bytes for the cached file.
 	writeBytes := []byte("some bytes")
