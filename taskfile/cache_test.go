@@ -10,13 +10,20 @@ import (
 )
 
 func TestNewCache(t *testing.T) {
-	cacheDir := t.TempDir()
-	_, err := taskfile.NewCache(cacheDir)
-	require.NoErrorf(t, err, "creating new cache in temporary directory '%s'", cacheDir)
-}
+	testCases := map[string]struct {
+		options []taskfile.CacheOption
+	}{
+		"no options set": {},
 
-func TestNewCacheWithTTL(t *testing.T) {
-	cacheDir := t.TempDir()
-	_, err := taskfile.NewCache(cacheDir, taskfile.WithTTL(time.Hour))
-	require.NoErrorf(t, err, "creating new cache in temporary directory '%s'", cacheDir)
+		"TTL option set": {
+			options: []taskfile.CacheOption{taskfile.WithTTL(time.Hour)},
+		},
+	}
+
+	for desc, testCase := range testCases {
+		t.Run(desc, func(t *testing.T) {
+			_, err := taskfile.NewCache(t.TempDir(), testCase.options...)
+			require.NoError(t, err, "creating new cache")
+		})
+	}
 }
