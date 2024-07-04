@@ -54,7 +54,7 @@ func TestCache(t *testing.T) {
 
 	// Attempt to read from cache, then write, then read again.
 	_, err := cache.read(fileNode)
-	require.ErrorAs(t, err, &os.ErrNotExist, "reading from cache before writing should match error type")
+	require.ErrorIs(t, err, os.ErrNotExist, "reading from cache before writing should match error type")
 
 	writeBytes := []byte("some bytes")
 	err = cache.write(fileNode, writeBytes)
