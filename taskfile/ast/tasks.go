@@ -2,7 +2,6 @@ package ast
 
 import (
 	"fmt"
-	"path"
 	"strings"
 
 	"gopkg.in/yaml.v3"
@@ -86,19 +85,18 @@ func (t1 *Tasks) Merge(t2 Tasks, include *Include, includedTaskfileVars *Vars) e
 				}
 			}
 
-			if include.AdvancedImport {
-				task.Dir = filepathext.SmartJoin(include.Dir, task.Dir)
-				if task.IncludeVars == nil {
-					task.IncludeVars = &Vars{}
-				}
-				task.IncludeVars.Merge(include.Vars, nil)
-				task.IncludedTaskfileVars = includedTaskfileVars.DeepCopy()
-			}
 			taskName = taskNameWithNamespace(name, include.Namespace)
 			task.Namespace = include.Namespace
 			task.Task = taskName
-		} else {
-			task.Dir = path.Join(include.Dir, task.Dir)
+		}
+
+		if include.AdvancedImport {
+			task.Dir = filepathext.SmartJoin(include.Dir, task.Dir)
+			if task.IncludeVars == nil {
+				task.IncludeVars = &Vars{}
+			}
+			task.IncludeVars.Merge(include.Vars, nil)
+			task.IncludedTaskfileVars = includedTaskfileVars.DeepCopy()
 		}
 
 		if t1.Get(taskName) != nil {
