@@ -45,7 +45,7 @@ tasks:
 ```
 Running `KEY=some task` before this experiment, the output would be `some`, but after this experiment, the output would be `other`.
 
-If you still want to get the OS variable, you can use the template function env like follow : `{{env.OS_VAR}}`.
+If you still want to get the OS variable, you can use the template function env like follow : `{{env "OS_VAR"}}`.
 
 ```yml
 version: '3'
