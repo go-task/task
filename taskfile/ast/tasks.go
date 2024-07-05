@@ -2,6 +2,7 @@ package ast
 
 import (
 	"fmt"
+	"path"
 	"strings"
 
 	"gopkg.in/yaml.v3"
@@ -51,7 +52,6 @@ func (t1 *Tasks) Merge(t2 Tasks, include *Include, includedTaskfileVars *Vars) e
 		// We do a deep copy of the task struct here to ensure that no data can
 		// be changed elsewhere once the taskfile is merged.
 		task := v.DeepCopy()
-
 		// Set the task to internal if EITHER the included task or the included
 		// taskfile are marked as internal
 		task.Internal = task.Internal || (include != nil && include.Internal)
@@ -97,6 +97,8 @@ func (t1 *Tasks) Merge(t2 Tasks, include *Include, includedTaskfileVars *Vars) e
 			taskName = taskNameWithNamespace(name, include.Namespace)
 			task.Namespace = include.Namespace
 			task.Task = taskName
+		} else {
+			task.Dir = path.Join(include.Dir, task.Dir)
 		}
 
 		if t1.Get(taskName) != nil {
