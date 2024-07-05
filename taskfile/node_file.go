@@ -10,6 +10,7 @@ import (
 	"github.com/go-task/task/v3/internal/execext"
 	"github.com/go-task/task/v3/internal/filepathext"
 	"github.com/go-task/task/v3/internal/logger"
+	"github.com/go-task/task/v3/taskfile/taskfile"
 )
 
 // A FileNode is a node that reads a taskfile from the local filesystem.
@@ -53,7 +54,7 @@ func (node *FileNode) Read(ctx context.Context) ([]byte, error) {
 func resolveFileNodeEntrypointAndDir(l *logger.Logger, entrypoint, dir string) (string, string, error) {
 	var err error
 	if entrypoint != "" {
-		entrypoint, err = Exists(l, entrypoint)
+		entrypoint, err = taskfile.Exists(l, entrypoint)
 		if err != nil {
 			return "", "", err
 		}
@@ -68,7 +69,7 @@ func resolveFileNodeEntrypointAndDir(l *logger.Logger, entrypoint, dir string) (
 			return "", "", err
 		}
 	}
-	entrypoint, err = ExistsWalk(l, dir)
+	entrypoint, err = taskfile.ExistsWalk(l, dir)
 	if err != nil {
 		return "", "", err
 	}

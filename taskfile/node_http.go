@@ -12,6 +12,7 @@ import (
 	"github.com/go-task/task/v3/internal/execext"
 	"github.com/go-task/task/v3/internal/filepathext"
 	"github.com/go-task/task/v3/internal/logger"
+	"github.com/go-task/task/v3/taskfile/taskfile"
 )
 
 // An HTTPNode is a node that reads a Taskfile from a remote location via HTTP.
@@ -38,7 +39,7 @@ func NewHTTPNode(
 	}
 	ctx, cf := context.WithTimeout(context.Background(), timeout)
 	defer cf()
-	url, err = RemoteExists(ctx, l, url)
+	url, err = taskfile.RemoteExists(ctx, l, url)
 	if err != nil {
 		return nil, err
 	}

@@ -16,7 +16,7 @@ import (
 )
 
 var (
-	defaultTaskfiles = []string{
+	DefaultTaskfiles = []string{
 		"Taskfile.yml",
 		"taskfile.yml",
 		"Taskfile.yaml",
@@ -67,7 +67,7 @@ func RemoteExists(ctx context.Context, l *logger.Logger, u *url.URL) (*url.URL, 
 
 	// If the request was not successful, append the default Taskfile names to
 	// the URL and return the URL of the first successful request
-	for _, taskfile := range defaultTaskfiles {
+	for _, taskfile := range DefaultTaskfiles {
 		// Fixes a bug with JoinPath where a leading slash is not added to the
 		// path if it is empty
 		if u.Path == "" {
@@ -110,7 +110,7 @@ func Exists(l *logger.Logger, path string) (string, error) {
 		return filepath.Abs(path)
 	}
 
-	for _, taskfile := range defaultTaskfiles {
+	for _, taskfile := range DefaultTaskfiles {
 		alt := filepathext.SmartJoin(path, taskfile)
 		if _, err := os.Stat(alt); err == nil {
 			l.VerboseOutf(logger.Magenta, "task: [%s] Not found - Using alternative (%s)\n", path, taskfile)
