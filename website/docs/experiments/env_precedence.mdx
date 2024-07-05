@@ -60,6 +60,11 @@ tasks:
 ```
 Running `KEY=some task`, the output would be `other` and `some`.
 
+Like other variables/envs, you can also fall back to a given value using the default template function:
+```yml
+MY_ENV: '{{.MY_ENV | default "fallback"}}'
+```
+
 {/* prettier-ignore-start */}
 [enabling-experiments]: ./experiments.mdx#enabling-experiments
 {/* prettier-ignore-end */}
