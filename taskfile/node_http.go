@@ -56,13 +56,10 @@ func (node *HTTPNode) Remote() bool {
 }
 
 func (node *HTTPNode) Read(ctx context.Context) ([]byte, error) {
-	url, err := RemoteExists(ctx, node.logger, node.URL)
+	url, err := RemoteExists(ctx, node.logger, node.URL, node.timeout)
+	node.URL = url
 	if err != nil {
 		return nil, err
-	}
-	node.URL = url
-	if errors.Is(ctx.Err(), context.DeadlineExceeded) {
-		return nil, &errors.TaskfileNetworkTimeoutError{URI: url.String(), Timeout: node.timeout}
 	}
 	req, err := http.NewRequest("GET", node.URL.String(), nil)
 	if err != nil {

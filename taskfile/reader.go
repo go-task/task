@@ -208,7 +208,7 @@ func (r *Reader) readNode(node Node) (*ast.Taskfile, error) {
 		// Read the file
 		b, err = node.Read(ctx)
 		// If we timed out then we likely have a network issue
-		if node.Remote() && errors.Is(ctx.Err(), context.DeadlineExceeded) {
+		if node.Remote() && errors.Is(err, &errors.TaskfileNetworkTimeoutError{}) {
 			// If a download was requested, then we can't use a cached copy
 			if r.download {
 				return nil, &errors.TaskfileNetworkTimeoutError{URI: node.Location(), Timeout: r.timeout}
