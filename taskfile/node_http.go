@@ -17,7 +17,9 @@ import (
 // An HTTPNode is a node that reads a Taskfile from a remote location via HTTP.
 type HTTPNode struct {
 	*BaseNode
-	URL *url.URL
+	URL     *url.URL
+	logger  *logger.Logger
+	timeout time.Duration
 }
 
 func NewHTTPNode(
@@ -36,18 +38,12 @@ func NewHTTPNode(
 	if url.Scheme == "http" && !insecure {
 		return nil, &errors.TaskfileNotSecureError{URI: entrypoint}
 	}
-	ctx, cf := context.WithTimeout(context.Background(), timeout)
-	defer cf()
-	url, err = RemoteExists(ctx, l, url)
-	if err != nil {
-		return nil, err
-	}
-	if errors.Is(ctx.Err(), context.DeadlineExceeded) {
-		return nil, &errors.TaskfileNetworkTimeoutError{URI: url.String(), Timeout: timeout}
-	}
+
 	return &HTTPNode{
 		BaseNode: base,
 		URL:      url,
+		timeout:  timeout,
+		logger:   l,
 	}, nil
 }
 
@@ -60,6 +56,14 @@ func (node *HTTPNode) Remote() bool {
 }
 
 func (node *HTTPNode) Read(ctx context.Context) ([]byte, error) {
+	url, err := RemoteExists(ctx, node.logger, node.URL)
+	if err != nil {
+		return nil, err
+	}
+	node.URL = url
+	if errors.Is(ctx.Err(), context.DeadlineExceeded) {
+		return nil, &errors.TaskfileNetworkTimeoutError{URI: url.String(), Timeout: node.timeout}
+	}
 	req, err := http.NewRequest("GET", node.URL.String(), nil)
 	if err != nil {
 		return nil, errors.TaskfileFetchFailedError{URI: node.URL.String()}
