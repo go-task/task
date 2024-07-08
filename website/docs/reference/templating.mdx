@@ -101,9 +101,11 @@ engine. If you define a variable with the same name as a special variable, the
 special variable will be overridden.
 
 | Var                | Description                                                                                                                                              |
-| ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+|--------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `CLI_ARGS`         | Contain all extra arguments passed after `--` when calling Task through the CLI.                                                                         |
 | `CLI_FORCE`        | A boolean containing whether the `--force` or `--force-all` flags were set.                                                                              |
+| `CLI_SILENT`       | A boolean containing whether the `--silent`  flag was set.                                                                                               |
+| `CLI_VERBOSE`      | A boolean containing whether the `--verbose`  flag was set.                                                                                              |
 | `TASK`             | The name of the current task.                                                                                                                            |
 | `TASK_EXE`         | The Task executable name or path.                                                                                                                        |
 | `ROOT_TASKFILE`    | The absolute path of the root Taskfile.                                                                                                                  |
