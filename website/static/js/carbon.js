@@ -1,6 +1,14 @@
 (function () {
   function attachAd() {
     var wrapper = document.getElementById('sidebar-ads');
+    var blogSidebar = document.querySelector('[class*="BlogSidebar"]');
+
+    if (!wrapper && blogSidebar) {
+      wrapper = document.createElement('div');
+      wrapper.id = 'sidebar-ads';
+      blogSidebar.appendChild(wrapper);
+    }
+
     if (wrapper) {
       var el = document.createElement('script');
       el.setAttribute('type', 'text/javascript');

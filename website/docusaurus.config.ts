@@ -9,6 +9,8 @@ import { DISCORD_URL } from './constants';
 import { GITHUB_URL } from './constants';
 import { MASTODON_URL } from './constants';
 import { TWITTER_URL } from './constants';
+import { STACK_OVERFLOW } from './constants';
+import { ANSWER_OVERFLOW } from './constants';
 
 import lightCodeTheme from './src/themes/prismLight';
 import darkCodeTheme from './src/themes/prismDark';
@@ -62,7 +64,10 @@ const config: Config = {
             }
           }
         },
-        blog: {},
+        blog: {
+          blogSidebarTitle: 'All posts',
+          blogSidebarCount: 'ALL'
+        },
         theme: {
           customCss: [
             './src/css/custom.css',
@@ -186,6 +191,14 @@ const config: Config = {
             {
               label: 'Discord',
               href: DISCORD_URL
+            },
+            {
+              label: 'Stack Overflow',
+              href: STACK_OVERFLOW
+            },
+            {
+              label: 'Answer Overflow',
+              href: ANSWER_OVERFLOW
             },
             {
               label: 'OpenCollective',

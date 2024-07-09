@@ -1,0 +1,13 @@
+version: 3
+tasks:
+  build:
+    aliases:
+      - b
+    desc: |
+      Multi-line escription with alias which is super long long long long long long
+      another line
+      third line long long long long long long long long
+  test:
+    aliases:
+      - t
+    desc: Single line description with alias

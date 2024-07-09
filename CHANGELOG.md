@@ -1,10 +1,12 @@
 # Changelog
 
-## Unreleased
+## v3.38.0 - 2024-06-30
 
 - Added `TASK_EXE` special variable (#1616, #1624 by @pd93 and @andreynering).
 - Some YAML parsing errors will now show in a more user friendly way (#1619 by
   @pd93).
+- Prefixed outputs will now be colorized by default (#1572 by
+  @AlexanderArvidsson)
 - [References](https://taskfile.dev/usage/#referencing-other-variables) are now
   generally available (no experiments required) (#1654 by @pd93).
 - Templating functions can now be used in references (#1645, #1654 by @pd93).
@@ -19,9 +21,22 @@
 - If using the
   [Map Variables experiment (2)](https://taskfile.dev/experiments/map-variables/?proposal=2),
   the `yaml` and `json` keys are no longer available (#1654 by @pd93).
+- Added a new `TASK_REMOTE_DIR` environment variable to configure where cached
+  remote Taskfiles are stored (#1661 by @vmaerten).
+- Added a new `--clear-cache` flag to clear the cache of remote Taskfiles (#1639
+  by @vmaerten).
+- Improved the readability of cached remote Taskfile filenames (#1636 by
+  @vmaerten).
+- Starting releasing a binary for the `riscv64` architecture on Linux (#1699 by
+  @mengzhuo).
+- Added `CLI_SILENT` and `CLI_VERBOSE` variables (#1480, #1669 by @Vince-Smith).
 - Fixed a couple of bugs with the `prompt:` feature (#1657 by @pd93).
 - Fixed JSON Schema to disallow invalid properties (#1657 by @pd93).
 - Fixed version checks not working as intended (#872, #1663 by @vmaerten).
+- Fixed a bug where included tasks were run multiple times even if `run: once`
+  was set (#852, #1655 by @pd93).
+- Fixed some bugs related to column formatting in the terminal (#1350, #1637,
+  #1656 by @vmaerten).
 
 ## v3.37.2 - 2024-05-12
 

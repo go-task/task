@@ -7,9 +7,11 @@ import (
 	"io"
 	"testing"
 
+	"github.com/fatih/color"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/go-task/task/v3/internal/logger"
 	"github.com/go-task/task/v3/internal/omap"
 	"github.com/go-task/task/v3/internal/output"
 	"github.com/go-task/task/v3/internal/templater"
@@ -107,7 +109,11 @@ func TestGroupErrorOnlyShowsOutputOnError(t *testing.T) {
 
 func TestPrefixed(t *testing.T) {
 	var b bytes.Buffer
-	var o output.Output = output.Prefixed{}
+	l := &logger.Logger{
+		Color: false,
+	}
+
+	var o output.Output = output.NewPrefixed(l)
 	w, _, cleanup := o.WrapWriter(&b, io.Discard, "prefix", nil)
 
 	t.Run("simple use cases", func(t *testing.T) {
@@ -130,5 +136,35 @@ func TestPrefixed(t *testing.T) {
 
 		require.NoError(t, cleanup(nil))
 		assert.Equal(t, "[prefix] Test!\n", b.String())
+	})
+}
+
+func TestPrefixedWithColor(t *testing.T) {
+	color.NoColor = false
+
+	var b bytes.Buffer
+	l := &logger.Logger{
+		Color: true,
+	}
+
+	var o output.Output = output.NewPrefixed(l)
+
+	writers := make([]io.Writer, 16)
+	for i := range writers {
+		writers[i], _, _ = o.WrapWriter(&b, io.Discard, fmt.Sprintf("prefix-%d", i), nil)
+	}
+
+	t.Run("colors should loop", func(t *testing.T) {
+		for i, w := range writers {
+			b.Reset()
+
+			color := output.PrefixColorSequence[i%len(output.PrefixColorSequence)]
+
+			var prefix bytes.Buffer
+			l.FOutf(&prefix, color, fmt.Sprintf("prefix-%d", i))
+
+			fmt.Fprintln(w, "foo\nbar")
+			assert.Equal(t, fmt.Sprintf("[%s] foo\n[%s] bar\n", prefix.String(), prefix.String()), b.String())
+		}
 	})
 }

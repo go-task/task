@@ -110,3 +110,8 @@ func (node *HTTPNode) ResolveDir(dir string) (string, error) {
 	entrypointDir := filepath.Dir(node.Dir())
 	return filepathext.SmartJoin(entrypointDir, path), nil
 }
+
+func (node *HTTPNode) FilenameAndLastDir() (string, string) {
+	dir, filename := filepath.Split(node.URL.Path)
+	return filepath.Base(dir), filename
+}

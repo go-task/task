@@ -6,20 +6,36 @@ import (
 	"io"
 	"strings"
 
+	"github.com/go-task/task/v3/internal/logger"
 	"github.com/go-task/task/v3/internal/templater"
 )
 
-type Prefixed struct{}
+type Prefixed struct {
+	logger  *logger.Logger
+	seen    map[string]uint
+	counter *uint
+}
 
-func (Prefixed) WrapWriter(stdOut, _ io.Writer, prefix string, _ *templater.Cache) (io.Writer, io.Writer, CloseFunc) {
-	pw := &prefixWriter{writer: stdOut, prefix: prefix}
+func NewPrefixed(logger *logger.Logger) Prefixed {
+	var counter uint
+
+	return Prefixed{
+		seen:    make(map[string]uint),
+		counter: &counter,
+		logger:  logger,
+	}
+}
+
+func (p Prefixed) WrapWriter(stdOut, _ io.Writer, prefix string, _ *templater.Cache) (io.Writer, io.Writer, CloseFunc) {
+	pw := &prefixWriter{writer: stdOut, prefix: prefix, prefixed: &p}
 	return pw, pw, func(error) error { return pw.close() }
 }
 
 type prefixWriter struct {
-	writer io.Writer
-	prefix string
-	buff   bytes.Buffer
+	writer   io.Writer
+	prefixed *Prefixed
+	prefix   string
+	buff     bytes.Buffer
 }
 
 func (pw *prefixWriter) Write(p []byte) (int, error) {
@@ -56,6 +72,11 @@ func (pw *prefixWriter) writeOutputLines(force bool) error {
 	}
 }
 
+var PrefixColorSequence = []logger.Color{
+	logger.Yellow, logger.Blue, logger.Magenta, logger.Cyan, logger.Green, logger.Red,
+	logger.BrightYellow, logger.BrightBlue, logger.BrightMagenta, logger.BrightCyan, logger.BrightGreen, logger.BrightRed,
+}
+
 func (pw *prefixWriter) writeLine(line string) error {
 	if line == "" {
 		return nil
@@ -63,6 +84,27 @@ func (pw *prefixWriter) writeLine(line string) error {
 	if !strings.HasSuffix(line, "\n") {
 		line += "\n"
 	}
-	_, err := fmt.Fprintf(pw.writer, "[%s] %s", pw.prefix, line)
+
+	idx, ok := pw.prefixed.seen[pw.prefix]
+
+	if !ok {
+		idx = *pw.prefixed.counter
+		pw.prefixed.seen[pw.prefix] = idx
+
+		*pw.prefixed.counter++
+	}
+
+	if _, err := fmt.Fprint(pw.writer, "["); err != nil {
+		return nil
+	}
+
+	color := PrefixColorSequence[idx%uint(len(PrefixColorSequence))]
+	pw.prefixed.logger.FOutf(pw.writer, color, pw.prefix)
+
+	if _, err := fmt.Fprint(pw.writer, "] "); err != nil {
+		return nil
+	}
+
+	_, err := fmt.Fprint(pw.writer, line)
 	return err
 }

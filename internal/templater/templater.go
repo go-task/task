@@ -49,7 +49,7 @@ func ResolveRef(ref string, cache *Cache) any {
 		cache.err = err
 		return nil
 	}
-	val, err := t.ResolveRef(cache.cacheMap)
+	val, err := t.Resolve(cache.cacheMap)
 	if err != nil {
 		cache.err = err
 		return nil
