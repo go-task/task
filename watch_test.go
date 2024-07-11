@@ -41,10 +41,10 @@ Hello, World!
 	require.NoError(t, e.Setup())
 	buff.Reset()
 
-	err := os.MkdirAll(filepathext.SmartJoin(dir, "src"), 0755)
+	err := os.MkdirAll(filepathext.SmartJoin(dir, "src"), 0o755)
 	require.NoError(t, err)
 
-	err = os.WriteFile(filepathext.SmartJoin(dir, "src/a"), []byte("test"), 0644)
+	err = os.WriteFile(filepathext.SmartJoin(dir, "src/a"), []byte("test"), 0o644)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -67,7 +67,7 @@ Hello, World!
 	}(ctx)
 
 	time.Sleep(10 * time.Millisecond)
-	err = os.WriteFile(filepathext.SmartJoin(dir, "src/a"), []byte("test updated"), 0644)
+	err = os.WriteFile(filepathext.SmartJoin(dir, "src/a"), []byte("test updated"), 0o644)
 	if err != nil {
 		t.Fatal(err)
 	}

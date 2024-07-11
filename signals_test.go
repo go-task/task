@@ -20,9 +20,7 @@ import (
 	"time"
 )
 
-var (
-	SLEEPIT, _ = filepath.Abs("./bin/sleepit")
-)
+var SLEEPIT, _ = filepath.Abs("./bin/sleepit")
 
 func TestSignalSentToProcessGroup(t *testing.T) {
 	task, err := getTaskPath()
