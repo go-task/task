@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-// DefaultCacheTTL is one day (24 hours).
+// DefaultCacheTTL is used when a value is not explicitly given to a new Cache.
 const DefaultCacheTTL = time.Duration(time.Hour * 24)
 
 type Cache struct {
