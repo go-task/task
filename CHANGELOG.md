@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Added
+  [Env Precedence Experiment](https://taskfile.dev/experiments/env-precedence)
+  (#1038, #1633 by @vmaerten).
 - Added a CI lint job to ensure that the docs are updated correctly (#1719 by
   @vmaerten).
 
