@@ -41,3 +41,18 @@ jobs:
 
       - name: check-jsonschema (metaschema)
         run: check-jsonschema --check-metaschema website/static/schema.json
+  check_doc:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Get changed files in the docs folder
+        id: changed-files-specific
+        uses: tj-actions/changed-files@v44
+        with:
+          files: website/versioned_docs/**
+
+      - uses: actions/github-script@v7
+        if: steps.changed-files-specific.outputs.any_changed == 'true'
+        with:
+          script: |
+            core.setFailed('website/versioned_docs has changed. Instead you need to update the docs in the website/docs folder.')
