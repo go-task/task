@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Added a CI lint job to ensure that the docs are updated correctly (#1719 by
+  @vmaerten).
+
 ## v3.38.0 - 2024-06-30
 
 - Added `TASK_EXE` special variable (#1616, #1624 by @pd93 and @andreynering).
