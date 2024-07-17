@@ -70,6 +70,8 @@ func (e *Executor) watchTasks(calls ...*ast.Call) error {
 
 				for _, c := range calls {
 					c := c
+					c.Vars.Set("CHANGED_ABS", ast.Var{Value: event.Path})
+					c.Vars.Set("CHANGED_FILE", ast.Var{Value: event.FileInfo.Name()})
 					go func() {
 						if err := e.RunTask(ctx, c); err != nil && !isContextError(err) {
 							e.Logger.Errf(logger.Red, "%v\n", err)
