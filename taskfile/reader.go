@@ -36,6 +36,7 @@ type Reader struct {
 	download bool
 	offline  bool
 	timeout  time.Duration
+	cacheTTL time.Duration
 	tempDir  string
 	logger   *logger.Logger
 }
@@ -46,6 +47,7 @@ func NewReader(
 	download bool,
 	offline bool,
 	timeout time.Duration,
+	cacheTTL time.Duration,
 	tempDir string,
 	logger *logger.Logger,
 ) *Reader {
@@ -56,6 +58,7 @@ func NewReader(
 		download: download,
 		offline:  offline,
 		timeout:  timeout,
+		cacheTTL: cacheTTL,
 		tempDir:  tempDir,
 		logger:   logger,
 	}
@@ -185,7 +188,7 @@ func (r *Reader) readNode(node Node) (*ast.Taskfile, error) {
 	var cache *Cache
 
 	if node.Remote() {
-		cache, err = NewCache(r.tempDir)
+		cache, err = NewCache(r.tempDir, WithTTL(r.cacheTTL))
 		if err != nil {
 			return nil, err
 		}

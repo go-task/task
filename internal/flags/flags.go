@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/pflag"
 
 	"github.com/go-task/task/v3/internal/experiments"
+	"github.com/go-task/task/v3/taskfile"
 	"github.com/go-task/task/v3/taskfile/ast"
 )
 
@@ -67,6 +68,7 @@ var (
 	Offline     bool
 	ClearCache  bool
 	Timeout     time.Duration
+	CacheTTL    time.Duration
 )
 
 func init() {
@@ -115,12 +117,14 @@ func init() {
 		pflag.BoolVarP(&ForceAll, "force", "f", false, "Forces execution even when the task is up-to-date.")
 	}
 
-	// Remote Taskfiles experiment will adds the "download" and "offline" flags
+	// Remote Taskfiles experiment will add the following flags.
 	if experiments.RemoteTaskfiles.Enabled {
 		pflag.BoolVar(&Download, "download", false, "Downloads a cached version of a remote Taskfile.")
 		pflag.BoolVar(&Offline, "offline", false, "Forces Task to only use local or cached Taskfiles.")
 		pflag.DurationVar(&Timeout, "timeout", time.Second*10, "Timeout for downloading remote Taskfiles.")
 		pflag.BoolVar(&ClearCache, "clear-cache", false, "Clear the remote cache.")
+		pflag.DurationVar(&CacheTTL, "remote-cache-ttl", taskfile.DefaultCacheTTL,
+			"TTL of remote Taskfiles downloaded into the local cache.")
 	}
 
 	pflag.Parse()

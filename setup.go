@@ -69,6 +69,7 @@ func (e *Executor) readTaskfile(node taskfile.Node) error {
 		e.Download,
 		e.Offline,
 		e.Timeout,
+		e.CacheTTL,
 		e.TempDir.Remote,
 		e.Logger,
 	)
