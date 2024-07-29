@@ -18,6 +18,9 @@ tasks:
       - task: lint
       - task: test
 
+  debug:
+    cmd: dlv debug ./cmd/task --headless --output=out/bin/debug_bin --listen=:5678 --api-version=2 -- {{.CLI_ARGS}}
+
   install:
     desc: Installs Task
     aliases: [i]
