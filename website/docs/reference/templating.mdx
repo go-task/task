@@ -102,6 +102,8 @@ special variable will be overridden.
 
 | Var                | Description                                                                                                                                              |
 |--------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `CHANGED_ABS`      | The absolute path to the file that triggered the task run. Only avaible when using [`watch`](../../usage/#watch-tasks).                                  |
+| `CHANGED_FILE`     | The name of the file that triggered the task run. Only avaible when using [`watch`](../../usage/#watch-tasks).                                           |
 | `CLI_ARGS`         | Contain all extra arguments passed after `--` when calling Task through the CLI.                                                                         |
 | `CLI_FORCE`        | A boolean containing whether the `--force` or `--force-all` flags were set.                                                                              |
 | `CLI_SILENT`       | A boolean containing whether the `--silent`  flag was set.                                                                                               |
