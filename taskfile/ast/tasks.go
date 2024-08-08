@@ -156,8 +156,8 @@ func (t *Tasks) UnmarshalYAML(node *yaml.Node) error {
 }
 
 func taskNameWithNamespace(taskName string, namespace string) string {
-	if strings.HasPrefix(taskName, NamespaceSeparator) {
+	if namespace == "" || strings.HasPrefix(taskName, NamespaceSeparator) {
 		return strings.TrimPrefix(taskName, NamespaceSeparator)
 	}
-	return fmt.Sprintf("%s%s%s", namespace, NamespaceSeparator, taskName)
+	return namespace + NamespaceSeparator + taskName
 }
