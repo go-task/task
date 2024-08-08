@@ -95,6 +95,7 @@ func (t *Task) UnmarshalYAML(node *yaml.Node) error {
 		if err := node.Decode(&cmd); err != nil {
 			return errors.NewTaskfileDecodeError(err, node)
 		}
+		t.Desc = cmd.Cmd
 		t.Cmds = append(t.Cmds, &cmd)
 		return nil
 
