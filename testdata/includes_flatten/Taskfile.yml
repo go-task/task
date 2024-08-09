@@ -1,0 +1,13 @@
+version: '3'
+
+includes:
+  included:
+    taskfile: ./included
+    dir: ./included
+    flatten: true
+
+tasks:
+  default:
+    cmds:
+      - echo root_directory > root_directory.txt
+

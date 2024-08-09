@@ -80,6 +80,19 @@ func (err *TaskNameConflictError) Code() int {
 	return CodeTaskNameConflict
 }
 
+type TaskNameFlattenConflictError struct {
+	TaskName string
+	Include  string
+}
+
+func (err *TaskNameFlattenConflictError) Error() string {
+	return fmt.Sprintf(`task: Found multiple tasks (%s) included by "%s""`, err.TaskName, err.Include)
+}
+
+func (err *TaskNameFlattenConflictError) Code() int {
+	return CodeTaskNameConflict
+}
+
 // TaskCalledTooManyTimesError is returned when the maximum task call limit is
 // exceeded. This is to prevent infinite loops and cyclic dependencies.
 type TaskCalledTooManyTimesError struct {
