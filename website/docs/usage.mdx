@@ -441,9 +441,63 @@ task: Found multiple tasks (greet) included by "lib"
 
 ```
 
+#### Flatten Override
+
+When using flatten, it may be desirable to override a specific command that is included. When enabled, you can avoid multiple task conflicts by instead overriding the task in the default namespace.
+
+If multiple tasks have the same name, the highest order task is executed:
+
+<Tabs defaultValue="1"
+			values={[
+				{label: 'Taskfile.yml', value: '1'},
+				{label: 'Included.yml', value: '2'}
+			]}>
+
+	<TabItem value="1">
+
+    ```yaml
+    version: '3'
+    includes:
+      lib:
+		    taskfile: ./Included.yml
+		    flatten: true
+        override: true
+
+		tasks:
+		  greet:
+		    cmds:
+		      - echo "Greet"
+		      - task: foo
+		```
 
 
+	</TabItem>
+	<TabItem value="2">
 
+		```yaml
+		version: '3'
+
+		tasks:
+		  greet:
+		    cmds:
+		       - echo "Foo"
+		```
+
+
+	</TabItem></Tabs>
+
+If you run `task -a` it will print:
+```text
+task: Available tasks for this project:
+* default:
+* greet:
+```
+
+If you run `task greet` it will print:
+```text
+Greet
+Foo
+```
 
 ### Vars of included Taskfiles
 

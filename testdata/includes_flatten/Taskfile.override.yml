@@ -1,0 +1,26 @@
+version: '3'
+
+includes:
+  included:
+    taskfile: ./included
+    dir: ./included
+    flatten: true
+    override: true
+
+tasks:
+  default:
+    cmds:
+      - echo root_directory > root_directory.txt
+
+  override:
+    cmds:
+      - echo "overridden task"
+
+  override_with_parent:
+    cmds:
+      - task included:override
+      - echo "overridden task"
+
+  unique:
+    cmds:
+      - echo "unique task"

@@ -99,13 +99,18 @@ func (t1 *Tasks) Merge(t2 Tasks, include *Include, includedTaskfileVars *Vars) e
 			task.IncludedTaskfileVars = includedTaskfileVars.DeepCopy()
 		}
 
+		// Check for task name conflicts, if t1 already has a task with the same name fail
+		// If marked as override, replace the task with t1's task
 		if t1.Get(taskName) != nil {
-			return &errors.TaskNameFlattenConflictError{
-				TaskName: taskName,
-				Include:  include.Namespace,
+			if include.Override {
+				return nil
+			} else {
+				return &errors.TaskNameFlattenConflictError{
+					TaskName: taskName,
+					Include:  include.Namespace,
+				}
 			}
 		}
-		// Add the task to the merged taskfile
 		t1.Set(taskName, task)
 
 		return nil

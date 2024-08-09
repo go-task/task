@@ -614,6 +614,10 @@
                       "description": "If `true`, the tasks from the included Taskfile will be available in the including Taskfile without a namespace. If a task with the same name already exists in the including Taskfile, an error will be thrown.",
                       "type": "boolean"
                     },
+                    "override": {
+                      "description": "If `true`, the tasks from the included Taskfile will be available in the including Taskfile without a namespace. If a task with the same name already exists in the including Taskfile, the included task is overridden.",
+                      "type": "boolean"
+                    },
                     "internal": {
                       "description": "Stops any task in the included Taskfile from being callable on the command line. These commands will also be omitted from the output when used with `--list`.",
                       "type": "boolean"

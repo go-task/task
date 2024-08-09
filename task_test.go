@@ -1229,6 +1229,13 @@ func TestIncludesFlatten(t *testing.T) {
 		{name: "included flatten with deps", taskfile: "Taskfile.yml", task: "with_deps", expectedOutput: "gen from included\nwith_deps from included\n"},
 		{name: "included flatten nested", taskfile: "Taskfile.yml", task: "from_nested", expectedOutput: "from nested\n"},
 		{name: "included flatten multiple same task", taskfile: "Taskfile.multiple.yml", task: "gen", expectedErr: true, expectedOutput: "task: Found multiple tasks (gen) included by \"included\"\""},
+
+		{name: "included flatten overridden", taskfile: "Taskfile.override.yml", task: "override", expectedOutput: "overridden task\n"},
+		{name: "included flatten override unique task", taskfile: "Taskfile.override.yml", task: "unique", expectedOutput: "unique task\n"},
+		{name: "included flatten override", taskfile: "Taskfile.override.yml", task: "gen", expectedOutput: "gen from included\n"},
+		{name: "included flatten override with parent", taskfile: "Taskfile.override.yml", task: "override_with_parent", expectedOutput: "task: [included:override] echo \"base task\"\nbase task\noverridden task\n"},
+		{name: "included flatten override with deps", taskfile: "Taskfile.override.yml", task: "with_deps", expectedOutput: "gen from included\nwith_deps from included\n"},
+		{name: "included flatten override nested", taskfile: "Taskfile.override.yml", task: "from_nested", expectedOutput: "from nested\n"},
 	}
 
 	for _, test := range tests {
