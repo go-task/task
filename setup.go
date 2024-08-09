@@ -133,8 +133,8 @@ func (e *Executor) setupTempDir() error {
 	}
 
 	if os.Getenv("TASK_REMOTE_DIR") != "" {
-		if filepath.IsAbs(os.Getenv("TASK_TEMP_DIR")) || strings.HasPrefix(os.Getenv("TASK_TEMP_DIR"), "~") {
-			remoteTempDir, err := execext.Expand(filepathext.SmartJoin(e.Dir, ".task"))
+		if filepath.IsAbs(os.Getenv("TASK_REMOTE_DIR")) || strings.HasPrefix(os.Getenv("TASK_REMOTE_DIR"), "~") {
+			remoteTempDir, err := execext.Expand(os.Getenv("TASK_REMOTE_DIR"))
 			if err != nil {
 				return err
 			}
