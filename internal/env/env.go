@@ -36,3 +36,10 @@ func isTypeAllowed(v any) bool {
 		return false
 	}
 }
+
+func GetEnvOrDefault(key, fallback string) string {
+	if value, ok := os.LookupEnv(key); ok {
+		return value
+	}
+	return fallback
+}
