@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"sync"
 
@@ -95,7 +96,7 @@ func (e *Executor) setupFuzzyModel() {
 		words = append(words, taskName)
 
 		for _, task := range e.Taskfile.Tasks.Values() {
-			words = append(words, task.Aliases...)
+			words = slices.Concat(words, task.Aliases)
 		}
 	}
 
