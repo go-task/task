@@ -200,7 +200,7 @@ func (e *Executor) RunTask(ctx context.Context, call *ast.Call) error {
 				return err
 			}
 
-			if err := e.areTaskRequiredVarsSet(ctx, t, call); err != nil {
+			if err := e.areTaskRequiredVarsSet(t, call); err != nil {
 				return err
 			}
 
