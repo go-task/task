@@ -85,7 +85,7 @@ func TraverseStringsFunc[T any](v T, fn func(v string) (string, error)) (T, erro
 
 		case reflect.Struct:
 			// Loop over each field and call traverseFunc recursively
-			for i := 0; i < v.NumField(); i += 1 {
+			for i := range v.NumField() {
 				if err := traverseFunc(copy.Field(i), v.Field(i)); err != nil {
 					return err
 				}
@@ -95,7 +95,7 @@ func TraverseStringsFunc[T any](v T, fn func(v string) (string, error)) (T, erro
 			// Create an empty copy from the original value's type
 			copy.Set(reflect.MakeSlice(v.Type(), v.Len(), v.Cap()))
 			// Loop over each element and call traverseFunc recursively
-			for i := 0; i < v.Len(); i += 1 {
+			for i := range v.Len() {
 				if err := traverseFunc(copy.Index(i), v.Index(i)); err != nil {
 					return err
 				}
