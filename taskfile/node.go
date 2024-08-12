@@ -54,7 +54,6 @@ func NewNode(
 	if err != nil {
 		return nil, err
 	}
-
 	switch scheme {
 	case "git":
 		node, err = NewGitNode(entrypoint, dir, insecure, opts...)
@@ -72,12 +71,11 @@ func NewNode(
 }
 
 func getScheme(uri string) (string, error) {
-	u, _ := giturls.Parse(uri)
+	u, err := giturls.Parse(uri)
 	if u == nil {
-		return "", nil
+		return "", err
 	}
-	u.Path = strings.TrimSuffix(u.Path, "/")
-	if strings.HasSuffix(u.Path, ".git") && (u.Scheme == "git" || u.Scheme == "ssh" || u.Scheme == "https" || u.Scheme == "http") {
+	if strings.HasSuffix(strings.Split(u.Path, "//")[0], ".git") && (u.Scheme == "git" || u.Scheme == "ssh" || u.Scheme == "https" || u.Scheme == "http") {
 		return "git", nil
 	}
 

@@ -39,14 +39,17 @@ func NewGitNode(
 	if err != nil {
 		return nil, err
 	}
-	refQuery := u.Query().Get("ref")
-	ref, path := func() (string, string) {
-		x := strings.Split(refQuery, "//")
+
+	basePath, path := func() (string, string) {
+		x := strings.Split(u.Path, "//")
 		return x[0], x[1]
 	}()
+	ref := u.Query().Get("ref")
 
 	rawUrl := u.String()
+
 	u.RawQuery = ""
+	u.Path = basePath
 
 	if u.Scheme == "http" && !insecure {
 		return nil, &errors.TaskfileNotSecureError{URI: entrypoint}
@@ -74,6 +77,7 @@ func (node *GitNode) Read(_ context.Context) ([]byte, error) {
 	_, err := git.Clone(storer, fs, &git.CloneOptions{
 		URL:           node.URL.String(),
 		ReferenceName: plumbing.ReferenceName(node.ref),
+		SingleBranch:  true,
 		Depth:         1,
 	})
 	if err != nil {
@@ -94,7 +98,11 @@ func (node *GitNode) Read(_ context.Context) ([]byte, error) {
 
 func (node *GitNode) ResolveEntrypoint(entrypoint string) (string, error) {
 	dir, _ := filepath.Split(node.path)
-	return fmt.Sprintf("%s?ref=%s//%s", node.URL, node.ref, filepath.Join(dir, entrypoint)), nil
+	resolvedEntrypoint := fmt.Sprintf("%s//%s", node.URL, filepath.Join(dir, entrypoint))
+	if node.ref != "" {
+		return fmt.Sprintf("%s//%s?ref=%s", resolvedEntrypoint, node.ref), nil
+	}
+	return resolvedEntrypoint, nil
 }
 
 func (node *GitNode) ResolveDir(dir string) (string, error) {
