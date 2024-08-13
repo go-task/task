@@ -96,6 +96,13 @@ func (r *Reader) include(node Node) error {
 	// Create an error group to wait for all included Taskfiles to be read
 	var g errgroup.Group
 
+	// It seems there's some data race related to the Go routines concurrenty
+	// processing multiple includes in a single Taskfile.  Uncommenting this makes
+	// the tests pass, which suggests a data race as the culprit.
+	//
+	// Uncomment this to make path-resolution bug go away
+	// g.SetLimit(1)
+
 	// Loop over each included taskfile
 	_ = vertex.Taskfile.Includes.Range(func(namespace string, include *ast.Include) error {
 		vars := compiler.GetEnviron()
