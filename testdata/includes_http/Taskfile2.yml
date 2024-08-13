@@ -1,0 +1,15 @@
+version: '3'
+
+includes:
+  local:
+    taskfile: "./Taskfile3.yml"
+    dir: ./dir-2
+  remote:
+    taskfile: "{{ .HTTP_URL }}/Taskfile3.yml"
+    dir: ./dir-2
+
+tasks:
+  check-pwd: |
+    [[ "$(pwd)" == "{{ .ROOT_DIR }}/dir-1" ]]
+
+  default: "true"

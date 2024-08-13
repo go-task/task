@@ -1,0 +1,42 @@
+version: '3'
+
+includes:
+  local:
+    taskfile: "./Taskfile2.yml"
+    dir: ./dir-1
+
+  remote:
+    taskfile: "{{ .HTTP_URL }}/Taskfile2.yml"
+    dir: ./dir-1
+
+  local-without-dir:
+    taskfile: "./Taskfile2.yml"
+
+  remote-without-dir:
+    taskfile: "{{ .HTTP_URL }}/Taskfile2.yml"
+
+  local-double-dir:
+    taskfile: "./Taskfile2.yml"
+    dir: ./parent/dir-1
+
+  remote-double-dir:
+    taskfile: "{{ .HTTP_URL }}/Taskfile2.yml"
+    dir: ./parent/dir-1
+
+  local-dot-dir:
+    taskfile: "./Taskfile2.yml"
+    dir: .
+
+  remote-dot-dir:
+    taskfile: "{{ .HTTP_URL }}/Taskfile2.yml"
+    dir: .
+
+tasks:
+  check-local:
+    cmds:
+      - task: local:check-pwd
+      - task: local:local:check-pwd
+  check-remote:
+    cmds:
+      - task: remote:check-pwd
+      - task: remote:remote:check-pwd

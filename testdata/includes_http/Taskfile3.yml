@@ -1,0 +1,7 @@
+version: '3'
+
+tasks:
+  check-pwd: |
+    [[ "$(pwd)" == "{{ .ROOT_DIR }}/dir-2" ]]
+
+  default: "true"

@@ -5,6 +5,8 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -12,6 +14,7 @@ import (
 	"strings"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/Masterminds/semver/v3"
 	"github.com/stretchr/testify/assert"
@@ -21,6 +24,7 @@ import (
 	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/experiments"
 	"github.com/go-task/task/v3/internal/filepathext"
+	"github.com/go-task/task/v3/internal/logger"
 	"github.com/go-task/task/v3/taskfile/ast"
 )
 
@@ -2518,4 +2522,101 @@ func TestReference(t *testing.T) {
 			assert.Equal(t, test.expectedOutput, buff.String())
 		})
 	}
+}
+
+func TestIncludesHttp(t *testing.T) {
+	dir, err := filepath.Abs("testdata/includes_http")
+	require.NoError(t, err)
+
+	srv := httptest.NewServer(http.FileServer(http.Dir(dir)))
+	defer srv.Close()
+	t.Setenv("HTTP_URL", srv.URL)
+
+	t.Cleanup(func() {
+		// This test fills the .task/remote directory with cache entries because the include URL
+		// is different on every test due to the dynamic nature of the TCP port in srv.URL
+		if err := os.RemoveAll(filepath.Join(dir, ".task")); err != nil {
+			t.Logf("error cleaning up: %s", err)
+		}
+	})
+
+	var buff SyncBuffer
+	e := task.Executor{
+		Dir:       dir,
+		Stdout:    &buff,
+		Stderr:    &buff,
+		Insecure:  true,
+		Download:  true,
+		AssumeYes: true,
+		Logger:    &logger.Logger{Stdout: &buff, Stderr: &buff, Verbose: true},
+		Timeout:   time.Minute,
+	}
+	require.NoError(t, e.Setup())
+
+	tasks := []string{
+		"check-local",
+		"check-remote",
+	}
+
+	for _, task := range tasks {
+		t.Run(task, func(t *testing.T) {
+			assert.NoError(t, e.Run(context.Background(), &ast.Call{Task: task}), "task %s failed", task)
+		})
+	}
+
+	t.Log("\noutput:\n", buff.buf.String())
+
+	tcs := []struct {
+		name, dir string
+	}{
+		{
+			name: "local:default",
+			dir:  filepath.Join(dir, "dir-1"),
+		},
+		{
+			name: "local:local:default",
+			dir:  filepath.Join(dir, "dir-2"),
+		},
+		{
+			name: "local-double-dir:local:default",
+			dir:  filepath.Join(dir, "dir-2"),
+		},
+		{
+			name: "local-dot-dir:local:default",
+			dir:  filepath.Join(dir, "dir-2"),
+		},
+		{
+			name: "local-without-dir:local:default",
+			dir:  filepath.Join(dir, "dir-2"),
+		},
+		{
+			name: "remote:default",
+			dir:  filepath.Join(dir, "dir-1"),
+		},
+		{
+			name: "remote:remote:default",
+			dir:  filepath.Join(dir, "dir-2"),
+		},
+		{
+			name: "remote-double-dir:remote:default",
+			dir:  filepath.Join(dir, "dir-2"),
+		},
+		{
+			name: "remote-dot-dir:remote:default",
+			dir:  filepath.Join(dir, "dir-2"),
+		},
+		{
+			name: "remote-without-dir:remote:default",
+			dir:  filepath.Join(dir, "dir-2"),
+		},
+	}
+
+	for _, tc := range tcs {
+		t.Run(tc.name, func(t *testing.T) {
+			task, err := e.CompiledTask(&ast.Call{Task: tc.name})
+			require.NoError(t, err)
+			assert.Equal(t, tc.dir, task.Dir)
+		})
+	}
+
 }
