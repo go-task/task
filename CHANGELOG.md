@@ -7,6 +7,7 @@
   (#1038, #1633 by @vmaerten).
 - Added a CI lint job to ensure that the docs are updated correctly (#1719 by
   @vmaerten).
+- Updated minimum required Go version to 1.22 (#1758 by @pd93).
 
 ## v3.38.0 - 2024-06-30
 
