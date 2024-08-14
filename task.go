@@ -200,7 +200,7 @@ func (e *Executor) RunTask(ctx context.Context, call *ast.Call) error {
 				return err
 			}
 
-			if err := e.areTaskRequiredVarsSet(ctx, t, call); err != nil {
+			if err := e.areTaskRequiredVarsSet(t, call); err != nil {
 				return err
 			}
 
@@ -494,14 +494,12 @@ func (e *Executor) GetTaskList(filters ...FilterFunc) ([]*ast.Task, error) {
 
 	// Compile the list of tasks
 	for i := range tasks {
-		idx := i
-		task := tasks[idx]
 		g.Go(func() error {
-			compiledTask, err := e.FastCompiledTask(&ast.Call{Task: task.Task})
+			compiledTask, err := e.FastCompiledTask(&ast.Call{Task: tasks[i].Task})
 			if err != nil {
 				return err
 			}
-			tasks[idx] = compiledTask
+			tasks[i] = compiledTask
 			return nil
 		})
 	}

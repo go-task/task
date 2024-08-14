@@ -1,15 +1,15 @@
 package task
 
 import (
+	"cmp"
 	"fmt"
 
 	"github.com/go-task/task/v3/internal/hash"
-	"github.com/go-task/task/v3/internal/slicesext"
 	"github.com/go-task/task/v3/taskfile/ast"
 )
 
 func (e *Executor) GetHash(t *ast.Task) (string, error) {
-	r := slicesext.FirstNonZero(t.Run, e.Taskfile.Run)
+	r := cmp.Or(t.Run, e.Taskfile.Run)
 	var h hash.HashFunc
 	switch r {
 	case "always":

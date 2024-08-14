@@ -266,7 +266,7 @@ func itemsFromFor(
 	var keys []string // The list of keys to loop over (only if looping over a map)
 	var values []any  // The list of values to loop over
 	// Get the list from the explicit for list
-	if f.List != nil && len(f.List) > 0 {
+	if len(f.List) > 0 {
 		values = f.List
 	}
 	// Get the list from the task sources

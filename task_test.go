@@ -825,7 +825,8 @@ func TestListDescInterpolation(t *testing.T) {
 		t.Error(err)
 	}
 
-	assert.Contains(t, buff.String(), "bar")
+	assert.Contains(t, buff.String(), "foo-var")
+	assert.Contains(t, buff.String(), "bar-var")
 }
 
 func TestStatusVariables(t *testing.T) {
