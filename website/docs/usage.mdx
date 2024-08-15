@@ -1520,6 +1520,20 @@ commands are executed in the reverse order if you schedule multiple of them.
 
 :::
 
+A special variable `.EXIT_CODE` is exposed when a command exited with a non-zero
+exit code. You can check its presence to know if the task completed successfully
+or not:
+
+```yaml
+version: '3'
+
+tasks:
+  default:
+    cmds:
+      - defer: echo '{{if .EXIT_CODE}}Failed with {{.EXIT_CODE}}!{{else}}Success!{{end}}'
+      - exit 1
+```
+
 ## Help
 
 Running `task --list` (or `task -l`) lists all tasks with a description. The
