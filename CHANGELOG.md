@@ -8,6 +8,8 @@
 - Added a CI lint job to ensure that the docs are updated correctly (#1719 by
   @vmaerten).
 - Updated minimum required Go version to 1.22 (#1758 by @pd93).
+- Expose a new `EXIT_CODE` special variable on `defer:` when a command finishes
+  with a non-zero exit code (#1484, #1762 by @dorimon-1 and @andreynering).
 
 ## v3.38.0 - 2024-06-30
 

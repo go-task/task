@@ -1738,6 +1738,34 @@ task-1 ran successfully
 	assert.Contains(t, buff.String(), expectedOutputOrder)
 }
 
+func TestExitCodeZero(t *testing.T) {
+	const dir = "testdata/exit_code"
+	var buff bytes.Buffer
+	e := task.Executor{
+		Dir:    dir,
+		Stdout: &buff,
+		Stderr: &buff,
+	}
+	require.NoError(t, e.Setup())
+
+	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "exit-zero"}))
+	assert.Equal(t, "EXIT_CODE=", strings.TrimSpace(buff.String()))
+}
+
+func TestExitCodeOne(t *testing.T) {
+	const dir = "testdata/exit_code"
+	var buff bytes.Buffer
+	e := task.Executor{
+		Dir:    dir,
+		Stdout: &buff,
+		Stderr: &buff,
+	}
+	require.NoError(t, e.Setup())
+
+	require.Error(t, e.Run(context.Background(), &ast.Call{Task: "exit-one"}))
+	assert.Equal(t, "EXIT_CODE=1", strings.TrimSpace(buff.String()))
+}
+
 func TestIgnoreNilElements(t *testing.T) {
 	tests := []struct {
 		name string

@@ -11,6 +11,8 @@ import (
 	"sync/atomic"
 	"time"
 
+	"mvdan.cc/sh/v3/interp"
+
 	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/compiler"
 	"github.com/go-task/task/v3/internal/env"
@@ -247,9 +249,11 @@ func (e *Executor) RunTask(ctx context.Context, call *ast.Call) error {
 			e.Logger.Errf(logger.Red, "task: cannot make directory %q: %v\n", t.Dir, err)
 		}
 
+		var deferredExitCode uint8
+
 		for i := range t.Cmds {
 			if t.Cmds[i].Defer {
-				defer e.runDeferred(t, call, i)
+				defer e.runDeferred(t, call, i, &deferredExitCode)
 				continue
 			}
 
@@ -258,9 +262,13 @@ func (e *Executor) RunTask(ctx context.Context, call *ast.Call) error {
 					e.Logger.VerboseErrf(logger.Yellow, "task: error cleaning status on error: %v\n", err2)
 				}
 
-				if execext.IsExitError(err) && t.IgnoreError {
-					e.Logger.VerboseErrf(logger.Yellow, "task: task error ignored: %v\n", err)
-					continue
+				exitCode, isExitError := interp.IsExitStatus(err)
+				if isExitError {
+					if t.IgnoreError {
+						e.Logger.VerboseErrf(logger.Yellow, "task: task error ignored: %v\n", err)
+						continue
+					}
+					deferredExitCode = exitCode
 				}
 
 				if call.Indirect {
@@ -312,9 +320,20 @@ func (e *Executor) runDeps(ctx context.Context, t *ast.Task) error {
 	return g.Wait()
 }
 
-func (e *Executor) runDeferred(t *ast.Task, call *ast.Call, i int) {
+func (e *Executor) runDeferred(t *ast.Task, call *ast.Call, i int, deferredExitCode *uint8) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
+
+	cmd := t.Cmds[i]
+	vars, _ := e.Compiler.FastGetVariables(t, call)
+	cache := &templater.Cache{Vars: vars}
+	extra := map[string]any{}
+
+	if deferredExitCode != nil && *deferredExitCode > 0 {
+		extra["EXIT_CODE"] = fmt.Sprintf("%d", *deferredExitCode)
+	}
+
+	cmd.Cmd = templater.ReplaceWithExtra(cmd.Cmd, cache, extra)
 
 	if err := e.runCommand(ctx, t, call, i); err != nil {
 		e.Logger.VerboseErrf(logger.Yellow, "task: ignored error in deferred cmd: %s\n", err.Error())
@@ -372,7 +391,7 @@ func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call *ast.Call, 
 		if closeErr := close(err); closeErr != nil {
 			e.Logger.Errf(logger.Red, "task: unable to close writer: %v\n", closeErr)
 		}
-		if execext.IsExitError(err) && cmd.IgnoreError {
+		if _, isExitError := interp.IsExitStatus(err); isExitError && cmd.IgnoreError {
 			e.Logger.VerboseErrf(logger.Yellow, "task: [%s] command error ignored: %v\n", t.Name(), err)
 			return nil
 		}

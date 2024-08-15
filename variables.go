@@ -161,6 +161,12 @@ func (e *Executor) compiledTask(call *ast.Call, evaluateShVars bool) (*ast.Task,
 				}
 				continue
 			}
+			// Defer commands are replaced in a lazy manner because
+			// we need to include EXIT_CODE.
+			if cmd.Defer {
+				new.Cmds = append(new.Cmds, cmd.DeepCopy())
+				continue
+			}
 			newCmd := cmd.DeepCopy()
 			newCmd.Cmd = templater.Replace(cmd.Cmd, cache)
 			newCmd.Task = templater.Replace(cmd.Task, cache)
