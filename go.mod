@@ -23,7 +23,7 @@ require (
 	golang.org/x/sync v0.8.0
 	golang.org/x/term v0.23.0
 	gopkg.in/yaml.v3 v3.0.1
-	mvdan.cc/sh/v3 v3.8.0
+	mvdan.cc/sh/v3 v3.9.0
 )
 
 require (
@@ -31,6 +31,7 @@ require (
 	github.com/klauspost/cpuid/v2 v2.0.9 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
+	github.com/muesli/cancelreader v0.2.2 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/stretchr/objx v0.5.2 // indirect
 	golang.org/x/sys v0.23.0 // indirect
