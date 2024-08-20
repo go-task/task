@@ -1,173 +1,11 @@
 ---
-slug: /api/
-sidebar_position: 4
+slug: /reference/schema
+sidebar_position: 2
 toc_min_heading_level: 2
 toc_max_heading_level: 5
 ---
 
-# API Reference
-
-## CLI
-
-Task command line tool has the following syntax:
-
-```shell
-task [--flags] [tasks...] [-- CLI_ARGS...]
-```
-
-:::tip
-
-If `--` is given, all remaining arguments will be assigned to a special
-`CLI_ARGS` variable
-
-:::
-
-| Short | Flag                        | Type     | Default                                      | Description                                                                                                                                                                                  |
-| ----- | --------------------------- | -------- | -------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `-c`  | `--color`                   | `bool`   | `true`                                       | Colored output. Enabled by default. Set flag to `false` or use `NO_COLOR=1` to disable.                                                                                                      |
-| `-C`  | `--concurrency`             | `int`    | `0`                                          | Limit number tasks to run concurrently. Zero means unlimited.                                                                                                                                |
-| `-d`  | `--dir`                     | `string` | Working directory                            | Sets directory of execution.                                                                                                                                                                 |
-| `-n`  | `--dry`                     | `bool`   | `false`                                      | Compiles and prints tasks in the order that they would be run, without executing them.                                                                                                       |
-| `-x`  | `--exit-code`               | `bool`   | `false`                                      | Pass-through the exit code of the task command.                                                                                                                                              |
-| `-f`  | `--force`                   | `bool`   | `false`                                      | Forces execution even when the task is up-to-date.                                                                                                                                           |
-| `-g`  | `--global`                  | `bool`   | `false`                                      | Runs global Taskfile, from `$HOME/Taskfile.{yml,yaml}`.                                                                                                                                      |
-| `-h`  | `--help`                    | `bool`   | `false`                                      | Shows Task usage.                                                                                                                                                                            |
-| `-i`  | `--init`                    | `bool`   | `false`                                      | Creates a new Taskfile.yml in the current folder.                                                                                                                                            |
-| `-I`  | `--interval`                | `string` | `5s`                                         | Sets a different watch interval when using `--watch`, the default being 5 seconds. This string should be a valid [Go Duration](https://pkg.go.dev/time#ParseDuration).                       |
-| `-l`  | `--list`                    | `bool`   | `false`                                      | Lists tasks with description of current Taskfile.                                                                                                                                            |
-| `-a`  | `--list-all`                | `bool`   | `false`                                      | Lists tasks with or without a description.                                                                                                                                                   |
-|       | `--sort`                    | `string` | `default`                                    | Changes the order of the tasks when listed.<br />`default` - Alphanumeric with root tasks first<br />`alphanumeric` - Alphanumeric<br />`none` - No sorting (As they appear in the Taskfile) |
-|       | `--json`                    | `bool`   | `false`                                      | See [JSON Output](#json-output)                                                                                                                                                              |
-| `-o`  | `--output`                  | `string` | Default set in the Taskfile or `intervealed` | Sets output style: [`interleaved`/`group`/`prefixed`].                                                                                                                                       |
-|       | `--output-group-begin`      | `string` |                                              | Message template to print before a task's grouped output.                                                                                                                                    |
-|       | `--output-group-end`        | `string` |                                              | Message template to print after a task's grouped output.                                                                                                                                     |
-|       | `--output-group-error-only` | `bool`   | `false`                                      | Swallow command output on zero exit code.                                                                                                                                                    |
-| `-p`  | `--parallel`                | `bool`   | `false`                                      | Executes tasks provided on command line in parallel.                                                                                                                                         |
-| `-s`  | `--silent`                  | `bool`   | `false`                                      | Disables echoing.                                                                                                                                                                            |
-| `-y`  | `--yes`                     | `bool`   | `false`                                      | Assume "yes" as answer to all prompts.                                                                                                                                                       |
-|       | `--status`                  | `bool`   | `false`                                      | Exits with non-zero exit code if any of the given tasks is not up-to-date.                                                                                                                   |
-|       | `--summary`                 | `bool`   | `false`                                      | Show summary about a task.                                                                                                                                                                   |
-| `-t`  | `--taskfile`                | `string` | `Taskfile.yml` or `Taskfile.yaml`            |                                                                                                                                                                                              |
-| `-v`  | `--verbose`                 | `bool`   | `false`                                      | Enables verbose mode.                                                                                                                                                                        |
-|       | `--version`                 | `bool`   | `false`                                      | Show Task version.                                                                                                                                                                           |
-| `-w`  | `--watch`                   | `bool`   | `false`                                      | Enables watch of the given task.                                                                                                                                                             |
-
-## Exit Codes
-
-Task will sometimes exit with specific exit codes. These codes are split into
-three groups with the following ranges:
-
-- General errors (0-99)
-- Taskfile errors (100-199)
-- Task errors (200-299)
-
-A full list of the exit codes and their descriptions can be found below:
-
-| Code | Description                                                  |
-| ---- | ------------------------------------------------------------ |
-| 0    | Success                                                      |
-| 1    | An unknown error occurred                                    |
-| 100  | No Taskfile was found                                        |
-| 101  | A Taskfile already exists when trying to initialize one      |
-| 102  | The Taskfile is invalid or cannot be parsed                  |
-| 103  | A remote Taskfile could not be downloaded                    |
-| 104  | A remote Taskfile was not trusted by the user                |
-| 105  | A remote Taskfile was could not be fetched securely          |
-| 106  | No cache was found for a remote Taskfile in offline mode     |
-| 107  | No schema version was defined in the Taskfile                |
-| 200  | The specified task could not be found                        |
-| 201  | An error occurred while executing a command inside of a task |
-| 202  | The user tried to invoke a task that is internal             |
-| 203  | There a multiple tasks with the same name or alias           |
-| 204  | A task was called too many times                             |
-| 205  | A task was cancelled by the user                             |
-| 206  | A task was not executed due to missing required variables    |
-
-These codes can also be found in the repository in
-[`errors/errors.go`](https://github.com/go-task/task/blob/main/errors/errors.go).
-
-:::info
-
-When Task is run with the `-x`/`--exit-code` flag, the exit code of any failed
-commands will be passed through to the user instead.
-
-:::
-
-## JSON Output
-
-When using the `--json` flag in combination with either the `--list` or
-`--list-all` flags, the output will be a JSON object with the following
-structure:
-
-```json
-{
-  "tasks": [
-    {
-      "name": "",
-      "desc": "",
-      "summary": "",
-      "up_to_date": false,
-      "location": {
-        "line": 54,
-        "column": 3,
-        "taskfile": "/path/to/Taskfile.yml"
-      }
-    }
-    // ...
-  ],
-  "location": "/path/to/Taskfile.yml"
-}
-```
-
-## Special Variables
-
-There are some special variables that is available on the templating system:
-
-| Var                | Description                                                                                                                                              |
-| ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `CLI_ARGS`         | Contain all extra arguments passed after `--` when calling Task through the CLI.                                                                         |
-| `CLI_FORCE`        | A boolean containing whether the `--force` or `--force-all` flags were set.                                                                              |
-| `CLI_SILENT`       | A boolean containing whether the `--silent` flag was set.                                                                              |
-| `CLI_VERBOSE`      | A boolean containing whether the `--verbose` flag was set.                                                                              |
-| `TASK`             | The name of the current task.                                                                                                                            |
-| `ROOT_TASKFILE`    | The absolute path of the root Taskfile.                                                                                                                  |
-| `ROOT_DIR`         | The absolute path of the root Taskfile directory.                                                                                                        |
-| `TASKFILE`         | The absolute path of the included Taskfile.                                                                                                              |
-| `TASKFILE_DIR`     | The absolute path of the included Taskfile directory.                                                                                                    |
-| `USER_WORKING_DIR` | The absolute path of the directory `task` was called from.                                                                                               |
-| `CHECKSUM`         | The checksum of the files listed in `sources`. Only available within the `status` prop and if method is set to `checksum`.                               |
-| `TIMESTAMP`        | The date object of the greatest timestamp of the files listed in `sources`. Only available within the `status` prop and if method is set to `timestamp`. |
-| `TASK_VERSION`     | The current version of task.                                                                                                                             |
-| `ITEM`             | The value of the current iteration when using the `for` property. Can be changed to a different variable name using `as:`.                               |
-
-## ENV
-
-Some environment variables can be overridden to adjust Task behavior.
-
-| ENV                  | Default | Description                                                                                                       |
-| -------------------- | ------- | ----------------------------------------------------------------------------------------------------------------- |
-| `TASK_TEMP_DIR`      | `.task` | Location of the temp dir. Can relative to the project like `tmp/task` or absolute like `/tmp/.task` or `~/.task`. |
-| `TASK_COLOR_RESET`   | `0`     | Color used for white.                                                                                             |
-| `TASK_COLOR_BLUE`    | `34`    | Color used for blue.                                                                                              |
-| `TASK_COLOR_GREEN`   | `32`    | Color used for green.                                                                                             |
-| `TASK_COLOR_CYAN`    | `36`    | Color used for cyan.                                                                                              |
-| `TASK_COLOR_YELLOW`  | `33`    | Color used for yellow.                                                                                            |
-| `TASK_COLOR_MAGENTA` | `35`    | Color used for magenta.                                                                                           |
-| `TASK_COLOR_RED`     | `31`    | Color used for red.                                                                                               |
-| `FORCE_COLOR`        |         | Force color output usage.                                                                                         |
-
-All color variables are [ANSI color codes][ansi]. You can specify multiple codes
-separated by a semicolon. For example: `31;1` will make the text bold and red.
-Task also supports 8-bit color (256 colors). You can specify these colors by
-using the sequence `38;2;R:G:B` for foreground colors and `48;2;R:G:B` for
-background colors where `R`, `G` and `B` should be replaced with values between
-0 and 255.
-
-For convenience, we allow foreground colors to be specified using shorthand,
-comma-separated syntax: `R,G,B`. For example, `255,0,0` is equivalent to
-`38;2;255:0:0`.
-
-## Taskfile Schema
+# Schema Reference
 
 | Attribute  | Type                               | Default       | Description                                                                                                                                                            |
 | ---------- | ---------------------------------- | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -185,7 +23,7 @@ comma-separated syntax: `R,G,B`. For example, `255,0,0` is equivalent to
 | `set`      | `[]string`                         |               | Specify options for the [`set` builtin](https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html).                                                      |
 | `shopt`    | `[]string`                         |               | Specify option for the [`shopt` builtin](https://www.gnu.org/software/bash/manual/html_node/The-Shopt-Builtin.html).                                                   |
 
-### Include
+## Include
 
 | Attribute  | Type                  | Default                       | Description                                                                                                                                                                                                                                              |
 | ---------- | --------------------- | ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -208,7 +46,7 @@ includes:
 
 :::
 
-### Variable
+## Variable
 
 | Attribute | Type     | Default | Description                                                              |
 | --------- | -------- | ------- | ------------------------------------------------------------------------ |
@@ -241,7 +79,7 @@ vars:
 
 :::
 
-### Task
+## Task
 
 | Attribute       | Type                               | Default                                               | Description                                                                                                                                                                                                                                                                                              |
 | --------------- | ---------------------------------- | ----------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -268,7 +106,7 @@ vars:
 | `prefix`        | `string`                           |                                                       | Defines a string to prefix the output of tasks running in parallel. Only used when the output mode is `prefixed`.                                                                                                                                                                                        |
 | `ignore_error`  | `bool`                             | `false`                                               | Continue execution if errors happen while executing commands.                                                                                                                                                                                                                                            |
 | `run`           | `string`                           | The one declared globally in the Taskfile or `always` | Specifies whether the task should run again or not if called more than once. Available options: `always`, `once` and `when_changed`.                                                                                                                                                                     |
-| `platforms`     | `[]string`                         | All platforms                                         | Specifies which platforms the task should be run on. [Valid GOOS and GOARCH values allowed](https://github.com/golang/go/blob/master/src/go/build/syslist.go). Task will be skipped otherwise.                                                                                                             |
+| `platforms`     | `[]string`                         | All platforms                                         | Specifies which platforms the task should be run on. [Valid GOOS and GOARCH values allowed](https://github.com/golang/go/blob/master/src/internal/syslist/syslist.go). Task will be skipped otherwise.                                                                                                             |
 | `set`           | `[]string`                         |                                                       | Specify options for the [`set` builtin](https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html).                                                                                                                                                                                        |
 | `shopt`         | `[]string`                         |                                                       | Specify option for the [`shopt` builtin](https://www.gnu.org/software/bash/manual/html_node/The-Shopt-Builtin.html).                                                                                                                                                                                     |
 
@@ -291,7 +129,7 @@ tasks:
 
 :::
 
-#### Command
+### Command
 
 | Attribute      | Type                               | Default       | Description                                                                                                                                                                                        |
 | -------------- | ---------------------------------- | ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -302,7 +140,7 @@ tasks:
 | `vars`         | [`map[string]Variable`](#variable) |               | Optional additional variables to be passed to the referenced task. Only relevant when setting `task` instead of `cmd`.                                                                             |
 | `ignore_error` | `bool`                             | `false`       | Continue execution if errors happen while executing the command.                                                                                                                                   |
 | `defer`        | `string`                           |               | Alternative to `cmd`, but schedules the command to be executed at the end of this task instead of immediately. This cannot be used together with `cmd`.                                            |
-| `platforms`    | `[]string`                         | All platforms | Specifies which platforms the command should be run on. [Valid GOOS and GOARCH values allowed](https://github.com/golang/go/blob/master/src/go/build/syslist.go). Command will be skipped otherwise. |
+| `platforms`    | `[]string`                         | All platforms | Specifies which platforms the command should be run on. [Valid GOOS and GOARCH values allowed](https://github.com/golang/go/blob/master/src/internal/syslist/syslist.go). Command will be skipped otherwise. |
 | `set`          | `[]string`                         |               | Specify options for the [`set` builtin](https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html).                                                                                  |
 | `shopt`        | `[]string`                         |               | Specify option for the [`shopt` builtin](https://www.gnu.org/software/bash/manual/html_node/The-Shopt-Builtin.html).                                                                               |
 
@@ -320,7 +158,7 @@ tasks:
 
 :::
 
-#### Dependency
+### Dependency
 
 | Attribute | Type                               | Default | Description                                                                                                      |
 | --------- | ---------------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------- |
@@ -341,7 +179,7 @@ tasks:
 
 :::
 
-#### For
+### For
 
 The `for` parameter can be defined as a string, a list of strings or a map. If
 it is defined as a string, you can give it any of the following values:
@@ -361,7 +199,7 @@ variable to define the values to loop over:
 | `split`   | `string` | (any whitespace) | What string the variable should be split on. |
 | `as`      | `string` | `ITEM`           | The name of the iterator variable.           |
 
-#### Precondition
+### Precondition
 
 | Attribute | Type     | Default | Description                                                                                                  |
 | --------- | -------- | ------- | ------------------------------------------------------------------------------------------------------------ |
@@ -381,12 +219,8 @@ tasks:
 
 :::
 
-#### Requires
+### Requires
 
 | Attribute | Type       | Default | Description                                                                                        |
 | --------- | ---------- | ------- | -------------------------------------------------------------------------------------------------- |
 | `vars`    | `[]string` |         | List of variable or environment variable names that must be set if this task is to execute and run |
-
-{/* prettier-ignore-start */}
-[ansi]: https://en.wikipedia.org/wiki/ANSI_escape_code
-{/* prettier-ignore-end */}

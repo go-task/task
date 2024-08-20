@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+- Added
+  [Env Precedence Experiment](https://taskfile.dev/experiments/env-precedence)
+  (#1038, #1633 by @vmaerten).
+- Added a CI lint job to ensure that the docs are updated correctly (#1719 by
+  @vmaerten).
+- Updated minimum required Go version to 1.22 (#1758 by @pd93).
+- Expose a new `EXIT_CODE` special variable on `defer:` when a command finishes
+  with a non-zero exit code (#1484, #1762 by @dorimon-1 and @andreynering).
+
+## v3.38.0 - 2024-06-30
+
 - Added `TASK_EXE` special variable (#1616, #1624 by @pd93 and @andreynering).
 - Some YAML parsing errors will now show in a more user friendly way (#1619 by
   @pd93).

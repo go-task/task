@@ -18,13 +18,3 @@ func UniqueJoin[T cmp.Ordered](ss ...[]T) []T {
 	slices.Sort(r)
 	return slices.Compact(r)
 }
-
-func FirstNonZero[T comparable](values ...T) T {
-	var zero T
-	for _, v := range values {
-		if v != zero {
-			return v
-		}
-	}
-	return zero
-}
