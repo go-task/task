@@ -2548,3 +2548,12 @@ func TestReference(t *testing.T) {
 		})
 	}
 }
+
+func TestRequires(t *testing.T) {
+	e := task.Executor{
+		Dir: "testdata/requires",
+	}
+	require.NoError(t, e.Setup())
+	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "requires-set"}))
+	require.Error(t, e.Run(context.Background(), &ast.Call{Task: "requires-not-set"}))
+}

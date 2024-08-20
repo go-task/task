@@ -1,0 +1,16 @@
+version: '3'
+
+vars:
+  FILE_VAR: 'file_var'
+
+tasks:
+  requires-set:
+    vars:
+      TASK_VAR: 'task_var'
+    requires:
+      vars: [FILE_VAR, TASK_VAR]
+  requires-not-set:
+    vars:
+      TASK_VAR: 'task_var'
+    requires:
+      vars: [FILE_VAR, TASK_VAR, NOT_SET_VAR]
