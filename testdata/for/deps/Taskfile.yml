@@ -9,6 +9,16 @@ tasks:
         vars:
           TEXT: "{{.ITEM}}"
 
+  loop-matrix:
+    deps:
+      - for:
+          matrix:
+            OS: ["windows", "linux", "darwin"]
+            ARCH: ["amd64", "arm64"]
+        task: echo
+        vars:
+          TEXT: "{{.ITEM.OS}}/{{.ITEM.ARCH}}"
+
   # Loop over the task's sources
   loop-sources:
     sources:
