@@ -4,7 +4,6 @@ import (
 	"context"
 	"os"
 	"path/filepath"
-	"strings"
 	"time"
 
 	"github.com/go-task/task/v3/errors"
@@ -12,8 +11,14 @@ import (
 	"github.com/go-task/task/v3/internal/logger"
 )
 
+type source struct {
+	FileContent   []byte
+	FileDirectory string
+	Filename      string
+}
+
 type Node interface {
-	Read(ctx context.Context) ([]byte, error)
+	Read(ctx context.Context) (*source, error)
 	Parent() Node
 	Location() string
 	Dir() string
@@ -46,26 +51,20 @@ func NewNode(
 	timeout time.Duration,
 	opts ...NodeOption,
 ) (Node, error) {
-	var node Node
-	var err error
-	switch getScheme(entrypoint) {
-	case "http", "https":
-		node, err = NewHTTPNode(l, entrypoint, dir, insecure, timeout, opts...)
-	default:
-		// If no other scheme matches, we assume it's a file
-		node, err = NewFileNode(l, entrypoint, dir, opts...)
+	remote, supported, err := NewRemoteNode(l, entrypoint, dir, insecure, timeout, opts...)
+	if err != nil {
+		return nil, err
 	}
-	if node.Remote() && !experiments.RemoteTaskfiles.Enabled {
+
+	if !supported {
+		// If no other scheme matches, we assume it's a file
+		return NewFileNode(l, entrypoint, dir, opts...)
+	}
+
+	if !experiments.RemoteTaskfiles.Enabled {
 		return nil, errors.New("task: Remote taskfiles are not enabled. You can read more about this experiment and how to enable it at https://taskfile.dev/experiments/remote-taskfiles")
 	}
-	return node, err
-}
-
-func getScheme(uri string) string {
-	if i := strings.Index(uri, "://"); i != -1 {
-		return uri[:i]
-	}
-	return ""
+	return remote, nil
 }
 
 func getDefaultDir(entrypoint, dir string) string {

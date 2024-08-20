@@ -184,6 +184,7 @@ func (r *Reader) readNode(node Node) (*ast.Taskfile, error) {
 	var b []byte
 	var err error
 	var cache *Cache
+	source := &source{}
 
 	if node.Remote() {
 		cache, err = NewCache(r.tempDir)
@@ -207,7 +208,7 @@ func (r *Reader) readNode(node Node) (*ast.Taskfile, error) {
 		defer cf()
 
 		// Read the file
-		b, err = node.Read(ctx)
+		source, err = node.Read(ctx)
 		// If we timed out then we likely have a network issue
 		if node.Remote() && errors.Is(ctx.Err(), context.DeadlineExceeded) {
 			// If a download was requested, then we can't use a cached copy
@@ -225,6 +226,7 @@ func (r *Reader) readNode(node Node) (*ast.Taskfile, error) {
 			return nil, err
 		} else {
 			downloaded = true
+			b = source.FileContent
 		}
 
 		// If the node was remote, we need to check the checksum
@@ -289,6 +291,9 @@ func (r *Reader) readNode(node Node) (*ast.Taskfile, error) {
 		// Set the location of the taskfile for each task
 		if task.Location.Taskfile == "" {
 			task.Location.Taskfile = tf.Location
+		}
+		if task.Location.TaskfileDir == "" {
+			task.Location.TaskfileDir = source.FileDirectory
 		}
 	}
 

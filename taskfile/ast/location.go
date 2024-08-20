@@ -1,9 +1,10 @@
 package ast
 
 type Location struct {
-	Line     int
-	Column   int
-	Taskfile string
+	Line        int
+	Column      int
+	Taskfile    string
+	TaskfileDir string
 }
 
 func (l *Location) DeepCopy() *Location {
@@ -11,8 +12,9 @@ func (l *Location) DeepCopy() *Location {
 		return nil
 	}
 	return &Location{
-		Line:     l.Line,
-		Column:   l.Column,
-		Taskfile: l.Taskfile,
+		Line:        l.Line,
+		Column:      l.Column,
+		Taskfile:    l.Taskfile,
+		TaskfileDir: l.TaskfileDir,
 	}
 }

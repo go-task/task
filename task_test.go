@@ -1057,6 +1057,7 @@ func TestIncludesRemote(t *testing.T) {
 	defer srv.Close()
 
 	tcs := []struct {
+		rootTaskfile string
 		firstRemote  string
 		secondRemote string
 		extraTasks   []string
@@ -1106,6 +1107,15 @@ func TestIncludesRemote(t *testing.T) {
 				"first:second-taskfile2-task",
 			},
 		},
+		{
+			firstRemote:  srv.URL + "/tasks.zip",
+			secondRemote: "./second/Taskfile.yml",
+		},
+		{
+			rootTaskfile: srv.URL + "/Taskfile.yml",
+			firstRemote:  "./first/Taskfile.yml",
+			secondRemote: "./second/Taskfile.yml",
+		},
 	}
 
 	tasks := []string{
@@ -1118,8 +1128,6 @@ func TestIncludesRemote(t *testing.T) {
 			t.Setenv("FIRST_REMOTE_URL", tc.firstRemote)
 			t.Setenv("SECOND_REMOTE_URL", tc.secondRemote)
 
-			var buff SyncBuffer
-
 			executors := []struct {
 				name     string
 				executor *task.Executor
@@ -1127,12 +1135,11 @@ func TestIncludesRemote(t *testing.T) {
 				{
 					name: "online, always download",
 					executor: &task.Executor{
-						Dir:      dir,
-						Stdout:   &buff,
-						Stderr:   &buff,
-						Timeout:  time.Minute,
-						Insecure: true,
-						Logger:   &logger.Logger{Stdout: &buff, Stderr: &buff, Verbose: true},
+						Dir:        dir,
+						Entrypoint: tc.rootTaskfile,
+						Timeout:    time.Minute,
+						Insecure:   true,
+						Verbose:    true,
 
 						// Without caching
 						AssumeYes: true,
@@ -1142,15 +1149,14 @@ func TestIncludesRemote(t *testing.T) {
 				// Disabled until we add caching support for directories
 				//
 				// {
-				// 	name: "offline, use cache",
+				// 	name: "offline, use-cache",
 				// 	executor: &task.Executor{
-				// 		Dir:      dir,
-				// 		Stdout:   &buff,
-				// 		Stderr:   &buff,
-				// 		Timeout:  time.Minute,
-				// 		Insecure: true,
-				// 		Logger:   &logger.Logger{Stdout: &buff, Stderr: &buff, Verbose: true},
-
+				// 		Dir:        dir,
+				// 		Entrypoint: tc.rootTaskfile,
+				// 		Timeout:    time.Minute,
+				// 		Insecure:   true,
+				// 		Verbose:    true,
+				//
 				// 		// With caching
 				// 		AssumeYes: false,
 				// 		Download:  false,
@@ -1161,6 +1167,13 @@ func TestIncludesRemote(t *testing.T) {
 
 			for j, e := range executors {
 				t.Run(fmt.Sprint(j), func(t *testing.T) {
+					var buff SyncBuffer
+					defer func() { t.Log("\noutput:\n", buff.buf.String()) }()
+
+					e.executor.Stderr = &buff
+					e.executor.Stdout = &buff
+					e.executor.Logger = &logger.Logger{Stderr: &buff, Stdout: &buff, Verbose: true}
+
 					require.NoError(t, e.executor.Setup())
 
 					for k, task := range tasks {
@@ -1189,8 +1202,6 @@ func TestIncludesRemote(t *testing.T) {
 					}
 				})
 			}
-
-			t.Log("\noutput:\n", buff.buf.String())
 		})
 	}
 }

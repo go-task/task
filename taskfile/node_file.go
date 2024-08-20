@@ -39,13 +39,21 @@ func (node *FileNode) Remote() bool {
 	return false
 }
 
-func (node *FileNode) Read(ctx context.Context) ([]byte, error) {
+func (node *FileNode) Read(ctx context.Context) (*source, error) {
 	f, err := os.Open(node.Location())
 	if err != nil {
 		return nil, err
 	}
 	defer f.Close()
-	return io.ReadAll(f)
+	b, err := io.ReadAll(f)
+	if err != nil {
+		return nil, err
+	}
+	return &source{
+		FileContent:   b,
+		FileDirectory: filepath.Dir(node.Location()),
+		Filename:      filepath.Base(node.Location()),
+	}, nil
 }
 
 // resolveFileNodeEntrypointAndDir resolves checks the values of entrypoint and dir and

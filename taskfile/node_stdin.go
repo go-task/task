@@ -30,7 +30,7 @@ func (node *StdinNode) Remote() bool {
 	return false
 }
 
-func (node *StdinNode) Read(ctx context.Context) ([]byte, error) {
+func (node *StdinNode) Read(ctx context.Context) (*source, error) {
 	var stdin []byte
 	scanner := bufio.NewScanner(os.Stdin)
 	for scanner.Scan() {
@@ -39,7 +39,10 @@ func (node *StdinNode) Read(ctx context.Context) ([]byte, error) {
 	if err := scanner.Err(); err != nil {
 		return nil, err
 	}
-	return stdin, nil
+	return &source{
+		FileContent: stdin,
+		Filename:    node.Location(),
+	}, nil
 }
 
 func (node *StdinNode) ResolveEntrypoint(entrypoint string) (string, error) {
