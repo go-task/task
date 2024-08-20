@@ -1,0 +1,11 @@
+version: '3'
+
+includes:
+  second: "{{ .SECOND_REMOTE_URL }}"
+
+tasks:
+  write-file:
+    requires:
+      vars: [CONTENT, OUTPUT_FILE]
+    cmd: |
+      echo "{{ .CONTENT }}" > "{{ .OUTPUT_FILE }}"

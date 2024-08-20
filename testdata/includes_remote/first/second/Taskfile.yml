@@ -1,0 +1,8 @@
+version: '3'
+
+tasks:
+  write-file:
+    requires:
+      vars: [CONTENT, OUTPUT_FILE]
+    cmd: |
+      echo "{{ .CONTENT }}" > "{{ .OUTPUT_FILE }}"
