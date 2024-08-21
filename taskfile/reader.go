@@ -180,6 +180,43 @@ func (r *Reader) include(node Node) error {
 }
 
 func (r *Reader) readNode(node Node) (*ast.Taskfile, error) {
+	b, err := r.loadNodeContent(node)
+	if err != nil {
+		return nil, err
+	}
+
+	var tf ast.Taskfile
+	if err := yaml.Unmarshal(b, &tf); err != nil {
+		// Decode the taskfile and add the file info the any errors
+		taskfileInvalidErr := &errors.TaskfileDecodeError{}
+		if errors.As(err, &taskfileInvalidErr) {
+			return nil, taskfileInvalidErr.WithFileInfo(node.Location(), b, 2)
+		}
+		return nil, &errors.TaskfileInvalidError{URI: filepathext.TryAbsToRel(node.Location()), Err: err}
+	}
+
+	// Check that the Taskfile is set and has a schema version
+	if tf.Version == nil {
+		return nil, &errors.TaskfileVersionCheckError{URI: node.Location()}
+	}
+
+	// Set the taskfile/task's locations
+	tf.Location = node.Location()
+	for _, task := range tf.Tasks.Values() {
+		// If the task is not defined, create a new one
+		if task == nil {
+			task = &ast.Task{}
+		}
+		// Set the location of the taskfile for each task
+		if task.Location.Taskfile == "" {
+			task.Location.Taskfile = tf.Location
+		}
+	}
+
+	return &tf, nil
+}
+
+func (r *Reader) loadNodeContent(node Node) ([]byte, error) {
 	var b []byte
 	var err error
 	var cache *Cache
@@ -263,33 +300,5 @@ func (r *Reader) readNode(node Node) (*ast.Taskfile, error) {
 		}
 	}
 
-	var tf ast.Taskfile
-	if err := yaml.Unmarshal(b, &tf); err != nil {
-		// Decode the taskfile and add the file info the any errors
-		taskfileInvalidErr := &errors.TaskfileDecodeError{}
-		if errors.As(err, &taskfileInvalidErr) {
-			return nil, taskfileInvalidErr.WithFileInfo(node.Location(), b, 2)
-		}
-		return nil, &errors.TaskfileInvalidError{URI: filepathext.TryAbsToRel(node.Location()), Err: err}
-	}
-
-	// Check that the Taskfile is set and has a schema version
-	if tf.Version == nil {
-		return nil, &errors.TaskfileVersionCheckError{URI: node.Location()}
-	}
-
-	// Set the taskfile/task's locations
-	tf.Location = node.Location()
-	for _, task := range tf.Tasks.Values() {
-		// If the task is not defined, create a new one
-		if task == nil {
-			task = &ast.Task{}
-		}
-		// Set the location of the taskfile for each task
-		if task.Location.Taskfile == "" {
-			task.Location.Taskfile = tf.Location
-		}
-	}
-
-	return &tf, nil
+	return b, nil
 }
