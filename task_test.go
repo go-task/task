@@ -1,6 +1,7 @@
 package task_test
 
 import (
+	"archive/zip"
 	"bytes"
 	"context"
 	"fmt"
@@ -1053,8 +1054,13 @@ func TestIncludesMultiLevel(t *testing.T) {
 func TestIncludesRemote(t *testing.T) {
 	dir := "testdata/includes_remote"
 
+	os.RemoveAll(filepath.Join(dir, ".task"))
+
 	srv := httptest.NewServer(http.FileServer(http.Dir(dir)))
 	defer srv.Close()
+
+	createZipFileOfDir(t, filepath.Join(dir, "tasks-root.zip"), dir)
+	createZipFileOfDir(t, filepath.Join(dir, "tasks-first.zip"), filepath.Join(dir, "first"))
 
 	tcs := []struct {
 		rootTaskfile string
@@ -1062,11 +1068,18 @@ func TestIncludesRemote(t *testing.T) {
 		secondRemote string
 		extraTasks   []string
 	}{
+		//
 		// NOTE: When adding content for tests that use `getGitRemoteURL`,
 		// you must commit the test data for the tests to be able to find it.
 		//
 		// These tests will not see data in the working tree because they clone
 		// this repo.
+		//
+		{
+			// Ensure non-remote includes still work
+			firstRemote:  "./first/Taskfile.yml",
+			secondRemote: "./second/Taskfile.yml",
+		},
 		{
 			firstRemote:  srv.URL + "/first/Taskfile.yml",
 			secondRemote: srv.URL + "/first/second/Taskfile.yml",
@@ -1108,13 +1121,35 @@ func TestIncludesRemote(t *testing.T) {
 			},
 		},
 		{
-			firstRemote:  srv.URL + "/tasks.zip",
+			firstRemote:  srv.URL + "/tasks-first.zip",
 			secondRemote: "./second/Taskfile.yml",
+			extraTasks: []string{
+				"first:check-if-neighbor-file-exists",
+				"first:second:check-if-neighbor-file-exists",
+			},
 		},
 		{
 			rootTaskfile: srv.URL + "/Taskfile.yml",
 			firstRemote:  "./first/Taskfile.yml",
 			secondRemote: "./second/Taskfile.yml",
+		},
+		{
+			rootTaskfile: getGitRemoteURL(t, dir),
+			firstRemote:  "./first/Taskfile.yml",
+			secondRemote: "./second/Taskfile.yml",
+			extraTasks: []string{
+				"first:check-if-neighbor-file-exists",
+				"first:second:check-if-neighbor-file-exists",
+			},
+		},
+		{
+			rootTaskfile: srv.URL + "/tasks-root.zip",
+			firstRemote:  "./first/Taskfile.yml",
+			secondRemote: "./second/Taskfile.yml",
+			extraTasks: []string{
+				"first:check-if-neighbor-file-exists",
+				"first:second:check-if-neighbor-file-exists",
+			},
 		},
 	}
 
@@ -1144,25 +1179,24 @@ func TestIncludesRemote(t *testing.T) {
 						// Without caching
 						AssumeYes: true,
 						Download:  true,
+						Offline:   false,
 					},
 				},
-				// Disabled until we add caching support for directories
-				//
-				// {
-				// 	name: "offline, use-cache",
-				// 	executor: &task.Executor{
-				// 		Dir:        dir,
-				// 		Entrypoint: tc.rootTaskfile,
-				// 		Timeout:    time.Minute,
-				// 		Insecure:   true,
-				// 		Verbose:    true,
-				//
-				// 		// With caching
-				// 		AssumeYes: false,
-				// 		Download:  false,
-				// 		Offline:   true,
-				// 	},
-				// },
+				{
+					name: "offline, use-cache",
+					executor: &task.Executor{
+						Dir:        dir,
+						Entrypoint: tc.rootTaskfile,
+						Timeout:    time.Minute,
+						Insecure:   true,
+						Verbose:    true,
+
+						// With caching
+						AssumeYes: false,
+						Download:  false,
+						Offline:   true,
+					},
+				},
 			}
 
 			for j, e := range executors {
@@ -1204,6 +1238,17 @@ func TestIncludesRemote(t *testing.T) {
 			}
 		})
 	}
+}
+
+func createZipFileOfDir(t *testing.T, zipFilePath string, dir string) {
+	f, err := os.OpenFile(zipFilePath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0o644)
+	require.NoError(t, err)
+	defer f.Close()
+
+	w := zip.NewWriter(f)
+	err = w.AddFS(os.DirFS(dir))
+	require.NoError(t, err)
+	w.Close()
 }
 
 func getGitRemoteURL(t *testing.T, path string) string {

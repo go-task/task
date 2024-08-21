@@ -40,7 +40,6 @@ func NewRemoteNode(
 	timeout time.Duration,
 	opts ...NodeOption,
 ) (*RemoteNode, bool, error) {
-
 	client := newGetterClient(dir)
 	proto, u, err := extractProtocolFromURL(client, entrypoint)
 	if err != nil {
@@ -90,21 +89,8 @@ func (r *RemoteNode) ResolveEntrypoint(entrypoint string) (string, error) {
 		return "", fmt.Errorf("could not resolve protocol for include %s: %w", entrypoint, err)
 	}
 
-	switch {
-	case childProto != "file":
-		return entrypoint, nil
-
-	case filepath.IsAbs(entrypoint):
-		return entrypoint, nil
-
-	case r.proto == "http" || r.proto == "https":
-		// In HTTP, relative includes aren't available locally and are downloaded from the same base URL.
-		base := *r.url
-		base.Path = filepath.Join(filepath.Dir(base.Path), entrypoint)
-
-		return base.String(), nil
-
-	default:
+	if childProto == "file" && !filepath.IsAbs(entrypoint) {
+		// Relative file paths are resolved as relative to our own source location
 		ctx, cancel := context.WithTimeout(context.Background(), r.timeout)
 		defer cancel()
 
@@ -113,8 +99,26 @@ func (r *RemoteNode) ResolveEntrypoint(entrypoint string) (string, error) {
 			return "", err
 		}
 
-		return filepathext.SmartJoin(src.FileDirectory, entrypoint), nil
+		relativePath := filepath.Join(src.FileDirectory, entrypoint)
+		if exists, err := fileExists(relativePath); err != nil {
+			return "", err
+		} else if exists {
+			return relativePath, nil
+		}
+
+		if r.proto == "http" || r.proto == "https" {
+			// In HTTP, if relative includes are not available locally (eg. from a ZIP file),
+			// we try to download them relative to the base URL.
+			rel, err := url.Parse(entrypoint)
+			if err != nil {
+				return "", fmt.Errorf("error parsing entrypoint %s as url: %w", entrypoint, err)
+			}
+
+			return r.url.ResolveReference(rel).String(), nil
+		}
 	}
+
+	return entrypoint, nil
 }
 
 func (r *RemoteNode) ResolveDir(dir string) (string, error) {
@@ -145,16 +149,16 @@ func (r *RemoteNode) FilenameAndLastDir() (string, string) {
 
 func (r *RemoteNode) loadSource(ctx context.Context) (*source, error) {
 	if r.cachedSource == nil {
-		r.logger.VerboseOutf(logger.Magenta, "task: [%s] Fetching remote taskfile from %s\n", r.Location(), r.client.Src)
-
 		dir, err := os.MkdirTemp("", "taskfile-remote-")
 		if err != nil {
 			return nil, err
 		}
+
 		r.client.Ctx = ctx
 		r.client.Src = r.Location()
 		r.client.Dst = dir
 
+		r.logger.VerboseOutf(logger.Magenta, "task: [%s] Fetching remote taskfile from %s into %s\n", r.Location(), r.client.Src, r.client.Dst)
 		if err := r.client.Get(); err != nil {
 			return nil, err
 		}
@@ -243,7 +247,8 @@ var getterURLRegexp = regexp.MustCompile(`^([A-Za-z0-9]+)::(.+)$`)
 
 func extractProtocolFromURL(client *getter.Client, src string) (string, *url.URL, error) {
 	if src == "" {
-		// If empty we assume current directory and let NodeFile logic deal with finding and appropriate file
+		// If empty we assume current directory and type `file` and let the FileNode logic
+		// deal with finding and appropriate file.
 		u, err := url.Parse(".")
 		return "file", u, err
 	}
@@ -307,6 +312,17 @@ func resolveTaskfileOverride(u *url.URL) (string, *url.URL) {
 	}
 
 	return "", u
+}
+
+func fileExists(path string) (bool, error) {
+	switch _, err := os.Stat(path); {
+	case errors.Is(err, os.ErrNotExist):
+		return false, nil
+	case err != nil:
+		return false, fmt.Errorf("error checking if file exists at %s: %w", path, err)
+	default:
+		return true, nil
+	}
 }
 
 // httpGetter wraps getter.HttpGetter to give us the ability

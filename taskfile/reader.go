@@ -181,10 +181,11 @@ func (r *Reader) include(node Node) error {
 }
 
 func (r *Reader) readNode(node Node) (*ast.Taskfile, error) {
-	var b []byte
-	var err error
-	var cache *Cache
-	source := &source{}
+	var (
+		err    error
+		cache  *Cache
+		source *source
+	)
 
 	if node.Remote() {
 		cache, err = NewCache(r.tempDir)
@@ -195,11 +196,19 @@ func (r *Reader) readNode(node Node) (*ast.Taskfile, error) {
 
 	// If the file is remote and we're in offline mode, check if we have a cached copy
 	if node.Remote() && r.offline {
-		if b, err = cache.read(node); errors.Is(err, os.ErrNotExist) {
+		if source, err = cache.read(node); errors.Is(err, os.ErrNotExist) {
 			return nil, &errors.TaskfileCacheNotFoundError{URI: node.Location()}
 		} else if err != nil {
 			return nil, err
 		}
+
+		// TODO: Find a cleaner way to override source when loading from the cache
+		// Without this later usages of ResolveEntrypoint will be relative to the old source location
+		// fr before it got moved into the cache.
+		if n, ok := node.(*RemoteNode); ok {
+			n.cachedSource = source
+		}
+
 		r.logger.VerboseOutf(logger.Magenta, "task: [%s] Fetched cached copy\n", node.Location())
 	} else {
 
@@ -216,17 +225,24 @@ func (r *Reader) readNode(node Node) (*ast.Taskfile, error) {
 				return nil, &errors.TaskfileNetworkTimeoutError{URI: node.Location(), Timeout: r.timeout}
 			}
 			// Search for any cached copies
-			if b, err = cache.read(node); errors.Is(err, os.ErrNotExist) {
+			if source, err = cache.read(node); errors.Is(err, os.ErrNotExist) {
 				return nil, &errors.TaskfileNetworkTimeoutError{URI: node.Location(), Timeout: r.timeout, CheckedCache: true}
 			} else if err != nil {
 				return nil, err
 			}
 			r.logger.VerboseOutf(logger.Magenta, "task: [%s] Network timeout. Fetched cached copy\n", node.Location())
+
+			// TODO: Find a cleaner way to override source when loading from the cache
+			// Without this later usages of ResolveEntrypoint will be relative to the old source location
+			// fr before it got moved into the cache.
+			if n, ok := node.(*RemoteNode); ok {
+				n.cachedSource = source
+			}
+
 		} else if err != nil {
 			return nil, err
 		} else {
 			downloaded = true
-			b = source.FileContent
 		}
 
 		// If the node was remote, we need to check the checksum
@@ -234,8 +250,11 @@ func (r *Reader) readNode(node Node) (*ast.Taskfile, error) {
 			r.logger.VerboseOutf(logger.Magenta, "task: [%s] Fetched remote copy\n", node.Location())
 
 			// Get the checksums
-			checksum := checksum(b)
 			cachedChecksum := cache.readChecksum(node)
+			checksum, err := checksumSource(*source)
+			if err != nil {
+				return nil, err
+			}
 
 			var prompt string
 			if cachedChecksum == "" {
@@ -253,25 +272,28 @@ func (r *Reader) readNode(node Node) (*ast.Taskfile, error) {
 
 			// If the hash has changed (or is new)
 			if checksum != cachedChecksum {
-				// Store the checksum
-				if err := cache.writeChecksum(node, checksum); err != nil {
-					return nil, err
-				}
 				// Cache the file
 				r.logger.VerboseOutf(logger.Magenta, "task: [%s] Caching downloaded file\n", node.Location())
-				if err = cache.write(node, b); err != nil {
+				if source, err = cache.write(node, *source); err != nil {
 					return nil, err
+				}
+
+				// TODO: Find a cleaner way to override source when loading from the cache
+				// Without this later usages of ResolveEntrypoint will be relative to the old source location
+				// fr before it got moved into the cache.
+				if n, ok := node.(*RemoteNode); ok {
+					n.cachedSource = source
 				}
 			}
 		}
 	}
 
 	var tf ast.Taskfile
-	if err := yaml.Unmarshal(b, &tf); err != nil {
+	if err := yaml.Unmarshal(source.FileContent, &tf); err != nil {
 		// Decode the taskfile and add the file info the any errors
 		taskfileInvalidErr := &errors.TaskfileDecodeError{}
 		if errors.As(err, &taskfileInvalidErr) {
-			return nil, taskfileInvalidErr.WithFileInfo(node.Location(), b, 2)
+			return nil, taskfileInvalidErr.WithFileInfo(node.Location(), source.FileContent, 2)
 		}
 		return nil, &errors.TaskfileInvalidError{URI: filepathext.TryAbsToRel(node.Location()), Err: err}
 	}
