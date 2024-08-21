@@ -506,7 +506,7 @@ be skipped, and no error will be thrown.
 
 The values allowed as OS or Arch are valid `GOOS` and `GOARCH` values, as
 defined by the Go language
-[here](https://github.com/golang/go/blob/master/src/go/build/syslist.go).
+[here](https://github.com/golang/go/blob/master/src/internal/syslist/syslist.go).
 
 The `build-windows` task below will run only on Windows, and on any
 architecture:
@@ -1228,7 +1228,7 @@ match that glob.
 
 Source paths will always be returned as paths relative to the task directory. If
 you need to convert this to an absolute path, you can use the built-in
-`joinPath` function. There are some [special variables](/api/#special-variables)
+`joinPath` function. There are some [special variables](/reference/templating/#special-variables)
 that you may find useful for this.
 
 ```yaml
@@ -1519,6 +1519,20 @@ Due to the nature of how the
 commands are executed in the reverse order if you schedule multiple of them.
 
 :::
+
+A special variable `.EXIT_CODE` is exposed when a command exited with a non-zero
+exit code. You can check its presence to know if the task completed successfully
+or not:
+
+```yaml
+version: '3'
+
+tasks:
+  default:
+    cmds:
+      - defer: echo '{{if .EXIT_CODE}}Failed with {{.EXIT_CODE}}!{{else}}Success!{{end}}'
+      - exit 1
+```
 
 ## Help
 
