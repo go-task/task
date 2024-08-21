@@ -1,7 +1,7 @@
 version: '3'
 
 includes:
-  second: "{{ .SECOND_REMOTE_URL }}"
+  second: ./second/Taskfile.yml
 
 tasks:
   write-file:
@@ -10,6 +10,5 @@ tasks:
     cmd: |
       echo "{{ .CONTENT }}" > "{{ .OUTPUT_FILE }}"
 
-  check-if-neighbor-file-exists:
-    cmd: |
-      [[ -f "{{ .TASKFILE_DIR }}/neighbor-of-first" ]]
+  first-taskfile2-task:
+    cmd: echo {{ .TASK }}

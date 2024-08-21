@@ -6,3 +6,7 @@ tasks:
       vars: [CONTENT, OUTPUT_FILE]
     cmd: |
       echo "{{ .CONTENT }}" > "{{ .OUTPUT_FILE }}"
+
+  check-if-neighbor-file-exists:
+    cmd: |
+      [[ -f "{{ .TASKFILE_DIR }}/neighbor-of-second" ]]
