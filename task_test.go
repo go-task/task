@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"regexp"
 	"runtime"
@@ -1058,7 +1059,13 @@ func TestIncludesRemote(t *testing.T) {
 	tcs := []struct {
 		firstRemote  string
 		secondRemote string
+		extraTasks   []string
 	}{
+		// NOTE: When adding content for tests that use `getGitRemoteURL`,
+		// you must commit the test data for the tests to be able to find it.
+		//
+		// These tests will not see data in the working tree because they clone
+		// this repo.
 		{
 			firstRemote:  srv.URL + "/first/Taskfile.yml",
 			secondRemote: srv.URL + "/first/second/Taskfile.yml",
@@ -1066,6 +1073,38 @@ func TestIncludesRemote(t *testing.T) {
 		{
 			firstRemote:  srv.URL + "/first/Taskfile.yml",
 			secondRemote: "./second/Taskfile.yml",
+		},
+		{
+			firstRemote:  getGitRemoteURL(t, dir+"/first"),
+			secondRemote: getGitRemoteURL(t, dir+"/first/second"),
+		},
+		{
+			firstRemote:  srv.URL + "/first/Taskfile.yml",
+			secondRemote: getGitRemoteURL(t, dir+"/first/second"),
+		},
+		{
+			firstRemote:  getGitRemoteURL(t, dir+"/first"),
+			secondRemote: srv.URL + "/first/second/Taskfile.yml",
+		},
+		{
+			firstRemote:  getGitRemoteURL(t, dir+"/first"),
+			secondRemote: "./second/Taskfile.yml",
+			extraTasks: []string{
+				"first:check-if-neighbor-file-exists",
+				"first:second:check-if-neighbor-file-exists",
+			},
+		},
+		{
+			firstRemote: getGitRemoteURL(t, dir+"/first") + "&taskfile=Taskfile2.yml",
+			extraTasks: []string{
+				"first:first-taskfile2-task",
+			},
+		},
+		{
+			firstRemote: getGitRemoteURL(t, dir+"/first") + "&taskfile=second/Taskfile2.yml",
+			extraTasks: []string{
+				"first:second-taskfile2-task",
+			},
 		},
 	}
 
@@ -1140,12 +1179,37 @@ func TestIncludesRemote(t *testing.T) {
 							assert.Equal(t, expectedContent, strings.TrimSpace(string(actualContent)))
 						})
 					}
+
+					for _, task := range tc.extraTasks {
+						t.Run(task, func(t *testing.T) {
+							require.NoError(t, e.executor.Run(context.Background(), &ast.Call{Task: task}))
+						})
+					}
 				})
 			}
 
 			t.Log("\noutput:\n", buff.buf.String())
 		})
 	}
+}
+
+func getGitRemoteURL(t *testing.T, path string) string {
+	repoRoot, err := exec.Command("git", "rev-parse", "--show-toplevel").Output()
+	require.NoError(t, err)
+
+	// This is to support Github Workflows on PRs where we are in a detached HEAD state.
+	branch := os.Getenv("GITHUB_REF")
+	if branch == "" {
+		b, err := exec.Command("git", "branch", "--show-current").Output()
+		require.NoError(t, err)
+		branch = string(b)
+	}
+
+	return fmt.Sprintf("git::file://%s//%s?ref=%s&depth=1",
+		strings.TrimSpace(string(repoRoot)),
+		path,
+		strings.TrimSpace(string(branch)),
+	)
 }
 
 func TestIncludeCycle(t *testing.T) {
