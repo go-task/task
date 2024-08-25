@@ -1181,7 +1181,7 @@ tasks:
             ref: index .FOO 0 # <-- The element at index 0 is passed by reference to bar
   bar:
     cmds:
-      - 'echo {{.MYVAR}}' # <-- FOO is just the letter 'A'
+      - 'echo {{.FOO}}' # <-- FOO is just the letter 'A'
 ```
 
 ## Looping over values
