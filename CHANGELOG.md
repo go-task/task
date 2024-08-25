@@ -12,6 +12,7 @@
   with a non-zero exit code (#1484, #1762 by @dorimon-1 and @andreynering).
 - Expose a new `ALIAS` special variable, which will contain the alias used to
   call the current task. Falls back to the task name. (#1764 by @DanStory).
+- Fixed `TASK_REMOTE_DIR` environment variable not working when the path was absolute. (#1715 by @vmaerten).
 
 ## v3.38.0 - 2024-06-30
 
