@@ -24,8 +24,7 @@ dist/
 
 # editors
 .idea/
-.vscode/*
-!.vscode/*-sample.json
+.vscode/settings.json
 .fleet/
 
 # exuberant ctags
