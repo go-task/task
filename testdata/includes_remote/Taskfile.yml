@@ -1,4 +1,4 @@
 version: '3'
 
 includes:
-  first: "{{ .FIRST_REMOTE_URL }}"
+  first: "{{.FIRST_REMOTE_URL}}"

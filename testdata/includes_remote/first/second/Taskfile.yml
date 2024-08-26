@@ -5,4 +5,4 @@ tasks:
     requires:
       vars: [CONTENT, OUTPUT_FILE]
     cmd: |
-      echo "{{ .CONTENT }}" > "{{ .OUTPUT_FILE }}"
+      echo "{{.CONTENT}}" > "{{.OUTPUT_FILE}}"
