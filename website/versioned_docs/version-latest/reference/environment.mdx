@@ -1,0 +1,48 @@
+---
+slug: /reference/environment
+sidebar_position: 4
+---
+
+# Environment Reference
+
+Task allows you to configure some behavior using environment variables. This
+page lists all the environment variables that Task supports.
+
+| ENV               | Default | Description                                                                                                                                         |
+| ----------------- | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `TASK_TEMP_DIR`   | `.task`         | Location of the temp dir. Can relative to the project like `tmp/task` or absolute like `/tmp/.task` or `~/.task`.                           |
+| `TASK_REMOTE_DIR` | `TASK_TEMP_DIR` | Location of the remote temp dir (used for caching). Can relative to the project like `tmp/task` or absolute like `/tmp/.task` or `~/.task`. |
+| `FORCE_COLOR`     |                 | Force color output usage.                                                                                                                   |
+
+## Custom Colors
+
+| ENV                         | Default | Description             |
+| --------------------------- | ------- | ----------------------- |
+| `TASK_COLOR_RESET`          | `0`     | Color used for white.   |
+| `TASK_COLOR_RED`            | `31`    | Color used for red.     |
+| `TASK_COLOR_GREEN`          | `32`    | Color used for green.   |
+| `TASK_COLOR_YELLOW`         | `33`    | Color used for yellow.  |
+| `TASK_COLOR_BLUE`           | `34`    | Color used for blue.    |
+| `TASK_COLOR_MAGENTA`        | `35`    | Color used for magenta. |
+| `TASK_COLOR_CYAN`           | `36`    | Color used for cyan.    |
+| `TASK_COLOR_BRIGHT_RED`     | `91`    | Color used for red.     |
+| `TASK_COLOR_BRIGHT_GREEN`   | `92`    | Color used for green.   |
+| `TASK_COLOR_BRIGHT_YELLOW`  | `93`    | Color used for yellow.  |
+| `TASK_COLOR_BRIGHT_BLUE`    | `94`    | Color used for blue.    |
+| `TASK_COLOR_BRIGHT_MAGENTA` | `95`    | Color used for magenta. |
+| `TASK_COLOR_BRIGHT_CYAN`    | `96`    | Color used for cyan.    |
+
+All color variables are [ANSI color codes][ansi]. You can specify multiple codes
+separated by a semicolon. For example: `31;1` will make the text bold and red.
+Task also supports 8-bit color (256 colors). You can specify these colors by
+using the sequence `38;2;R:G:B` for foreground colors and `48;2;R:G:B` for
+background colors where `R`, `G` and `B` should be replaced with values between
+0 and 255.
+
+For convenience, we allow foreground colors to be specified using shorthand,
+comma-separated syntax: `R,G,B`. For example, `255,0,0` is equivalent to
+`38;2;255:0:0`.
+
+{/* prettier-ignore-start */}
+[ansi]: https://en.wikipedia.org/wiki/ANSI_escape_code
+{/* prettier-ignore-end */}

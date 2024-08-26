@@ -161,6 +161,12 @@ func (e *Executor) compiledTask(call *ast.Call, evaluateShVars bool) (*ast.Task,
 				}
 				continue
 			}
+			// Defer commands are replaced in a lazy manner because
+			// we need to include EXIT_CODE.
+			if cmd.Defer {
+				new.Cmds = append(new.Cmds, cmd.DeepCopy())
+				continue
+			}
 			newCmd := cmd.DeepCopy()
 			newCmd.Cmd = templater.Replace(cmd.Cmd, cache)
 			newCmd.Task = templater.Replace(cmd.Task, cache)
@@ -266,7 +272,7 @@ func itemsFromFor(
 	var keys []string // The list of keys to loop over (only if looping over a map)
 	var values []any  // The list of values to loop over
 	// Get the list from the explicit for list
-	if f.List != nil && len(f.List) > 0 {
+	if len(f.List) > 0 {
 		values = f.List
 	}
 	// Get the list from the task sources
