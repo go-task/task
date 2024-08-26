@@ -1050,6 +1050,8 @@ func TestIncludesMultiLevel(t *testing.T) {
 }
 
 func TestIncludesRemote(t *testing.T) {
+	overrideExperimentValue(t, &experiments.RemoteTaskfiles, true, "1")
+
 	dir := "testdata/includes_remote"
 
 	srv := httptest.NewServer(http.FileServer(http.Dir(dir)))
@@ -2653,4 +2655,19 @@ func TestReference(t *testing.T) {
 			assert.Equal(t, test.expectedOutput, buff.String())
 		})
 	}
+}
+
+// overrideExperimentValue allows one to change the value of an experiment value for a set of tests,
+// with the value being restored to its previous state when tests complete.
+//
+// Typically experiments are controlled via TASK_X_ env vars, but we cannot use those in tests
+// because the experiment settings are parsed during experiments.init(), before any tests run.
+func overrideExperimentValue(t *testing.T, e *experiments.Experiment, enabled bool, val string) {
+	prev := *e
+	*e = experiments.Experiment{
+		Name:    prev.Name,
+		Enabled: enabled,
+		Value:   val,
+	}
+	t.Cleanup(func() { *e = prev })
 }
