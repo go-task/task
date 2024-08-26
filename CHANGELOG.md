@@ -13,6 +13,7 @@
 - Expose a new `ALIAS` special variable, which will contain the alias used to
   call the current task. Falls back to the task name. (#1764 by @DanStory).
 - Fixed `TASK_REMOTE_DIR` environment variable not working when the path was absolute. (#1715 by @vmaerten).
+- Added an option to declare an included Taskfile as flatten (#1704 by @vmaerten).
 
 ## v3.38.0 - 2024-06-30
 
