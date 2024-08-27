@@ -26,10 +26,6 @@ func (node *StdinNode) Location() string {
 	return "__stdin__"
 }
 
-func (node *StdinNode) Remote() bool {
-	return false
-}
-
 func (node *StdinNode) Read(ctx context.Context) (*source, error) {
 	var stdin []byte
 	scanner := bufio.NewScanner(os.Stdin)

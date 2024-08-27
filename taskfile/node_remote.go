@@ -75,10 +75,6 @@ func (r *RemoteNode) Location() string {
 	return r.proto + "::" + r.url.String()
 }
 
-func (r *RemoteNode) Remote() bool {
-	return true
-}
-
 func (r *RemoteNode) Read(ctx context.Context) (*source, error) {
 	return r.loadSource(ctx)
 }

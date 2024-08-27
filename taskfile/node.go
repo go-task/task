@@ -22,7 +22,6 @@ type Node interface {
 	Parent() Node
 	Location() string
 	Dir() string
-	Remote() bool
 	ResolveEntrypoint(entrypoint string) (string, error)
 	ResolveDir(dir string) (string, error)
 	FilenameAndLastDir() (string, string)

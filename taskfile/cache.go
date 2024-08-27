@@ -62,7 +62,7 @@ func checksumSource(s source) (string, error) {
 	return fmt.Sprintf("%x", h.Sum(nil))[:16], nil
 }
 
-func (c *Cache) write(node Node, src source) (*source, error) {
+func (c *Cache) write(node RemoteNode, src source) (*RemoteNode, error) {
 	// Clear metadata file so that if the rest of the operations fail part-way we don't
 	// end up in an inconsistent state where we've written the contents but have old metadata
 	if err := c.clearMetadata(node); err != nil {
@@ -112,10 +112,10 @@ func (c *Cache) write(node Node, src source) (*source, error) {
 		return nil, fmt.Errorf("error storing metadata for node %s: %w", node.Location(), err)
 	}
 
-	return &src, nil
+	return c.read(node)
 }
 
-func (c *Cache) read(node Node) (*source, error) {
+func (c *Cache) read(node RemoteNode) (*RemoteNode, error) {
 	path, err := c.contentsPath(node)
 	if err != nil {
 		return nil, err
@@ -133,14 +133,15 @@ func (c *Cache) read(node Node) (*source, error) {
 		return nil, err
 	}
 
-	return &source{
+	node.cachedSource = &source{
 		FileContent:   content,
 		FileDirectory: path,
 		Filename:      taskfileName,
-	}, nil
+	}
+	return &node, nil
 }
 
-func (c *Cache) readChecksum(node Node) string {
+func (c *Cache) readChecksum(node RemoteNode) string {
 	m, err := c.readMetadata(node)
 	if err != nil {
 		return ""
@@ -148,7 +149,7 @@ func (c *Cache) readChecksum(node Node) string {
 	return m.Checksum
 }
 
-func (c *Cache) clearMetadata(node Node) error {
+func (c *Cache) clearMetadata(node RemoteNode) error {
 	path, err := c.metadataFilePath(node)
 	if err != nil {
 		return fmt.Errorf("error clearing metadata file at %s: %w", path, err)
@@ -171,7 +172,7 @@ func (c *Cache) clearMetadata(node Node) error {
 	return nil
 }
 
-func (c *Cache) storeMetadata(node Node, m metadata) error {
+func (c *Cache) storeMetadata(node RemoteNode, m metadata) error {
 	path, err := c.metadataFilePath(node)
 	if err != nil {
 		return err
@@ -190,7 +191,7 @@ func (c *Cache) storeMetadata(node Node, m metadata) error {
 	return nil
 }
 
-func (c *Cache) readMetadata(node Node) (*metadata, error) {
+func (c *Cache) readMetadata(node RemoteNode) (*metadata, error) {
 	path, err := c.metadataFilePath(node)
 	if err != nil {
 		return nil, err
@@ -210,19 +211,19 @@ func (c *Cache) readMetadata(node Node) (*metadata, error) {
 	return m, nil
 }
 
-func (c *Cache) key(node Node) string {
+func (c *Cache) key(node RemoteNode) string {
 	return strings.TrimRight(checksum([]byte(node.Location())), "=")
 }
 
-func (c *Cache) contentsPath(node Node) (string, error) {
+func (c *Cache) contentsPath(node RemoteNode) (string, error) {
 	return c.cacheFilePath(node, "contents")
 }
 
-func (c *Cache) metadataFilePath(node Node) (string, error) {
+func (c *Cache) metadataFilePath(node RemoteNode) (string, error) {
 	return c.cacheFilePath(node, "metadata.yaml")
 }
 
-func (c *Cache) cacheFilePath(node Node, filename string) (string, error) {
+func (c *Cache) cacheFilePath(node RemoteNode, filename string) (string, error) {
 	lastDir, prefix := node.FilenameAndLastDir()
 	// Means it's not "", nor "." nor "/", so it's a valid directory
 	if len(lastDir) > 1 {

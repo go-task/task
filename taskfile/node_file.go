@@ -35,10 +35,6 @@ func (node *FileNode) Location() string {
 	return node.Entrypoint
 }
 
-func (node *FileNode) Remote() bool {
-	return false
-}
-
 func (node *FileNode) Read(ctx context.Context) (*source, error) {
 	f, err := os.Open(node.Location())
 	if err != nil {
