@@ -1050,7 +1050,7 @@ func TestIncludesMultiLevel(t *testing.T) {
 }
 
 func TestIncludesRemote(t *testing.T) {
-	overrideExperimentValue(t, &experiments.RemoteTaskfiles, true, "1")
+	enableExperimentForTest(t, &experiments.RemoteTaskfiles, "1")
 
 	dir := "testdata/includes_remote"
 
@@ -2657,16 +2657,16 @@ func TestReference(t *testing.T) {
 	}
 }
 
-// overrideExperimentValue allows one to change the value of an experiment value for a set of tests,
-// with the value being restored to its previous state when tests complete.
+// enableExperimentForTest enables the experiment behind pointer e for the duration of test t and sub-tests,
+// with the experiment being restored to its previous state when tests complete.
 //
 // Typically experiments are controlled via TASK_X_ env vars, but we cannot use those in tests
 // because the experiment settings are parsed during experiments.init(), before any tests run.
-func overrideExperimentValue(t *testing.T, e *experiments.Experiment, enabled bool, val string) {
+func enableExperimentForTest(t *testing.T, e *experiments.Experiment, val string) {
 	prev := *e
 	*e = experiments.Experiment{
 		Name:    prev.Name,
-		Enabled: enabled,
+		Enabled: true,
 		Value:   val,
 	}
 	t.Cleanup(func() { *e = prev })
