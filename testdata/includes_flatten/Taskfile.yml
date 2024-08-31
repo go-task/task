@@ -5,9 +5,11 @@ includes:
     taskfile: ./included
     dir: ./included
     flatten: true
+  with_default:
+    taskfile: ./Taskfile.with_default.yml
+    flatten: true
 
 tasks:
-  default:
-    cmds:
-      - echo root_directory > root_directory.txt
+  from_entrypoint: echo "from entrypoint"
+
 
