@@ -12,8 +12,16 @@
   with a non-zero exit code (#1484, #1762 by @dorimon-1 and @andreynering).
 - Expose a new `ALIAS` special variable, which will contain the alias used to
   call the current task. Falls back to the task name. (#1764 by @DanStory).
-- Fixed `TASK_REMOTE_DIR` environment variable not working when the path was absolute. (#1715 by @vmaerten).
-- Added an option to declare an included Taskfile as flatten (#1704 by @vmaerten).
+- Fixed `TASK_REMOTE_DIR` environment variable not working when the path was
+  absolute. (#1715 by @vmaerten).
+- Added an option to declare an included Taskfile as flattened (#1704 by
+  @vmaerten).
+- Added a new
+  [`--completion` flag](https://taskfile.dev/installation/#setup-completions) to
+  output completion scripts for various shells (#1157 by @pd93).
+  - This is now the preferred way to install completions.
+  - The completion scripts in the `completion` directory
+    [are now deprecated](https://taskfile.dev/deprecations/completion-scripts/).
 
 ## v3.38.0 - 2024-06-30
 
