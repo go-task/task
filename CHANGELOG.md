@@ -18,10 +18,13 @@
   @vmaerten).
 - Added a new
   [`--completion` flag](https://taskfile.dev/installation/#setup-completions) to
-  output completion scripts for various shells (#1157 by @pd93).
+  output completion scripts for various shells (#293, #1157 by @pd93).
   - This is now the preferred way to install completions.
   - The completion scripts in the `completion` directory
     [are now deprecated](https://taskfile.dev/deprecations/completion-scripts/).
+- Added the ability to
+  [loop over a matrix of values](https://taskfile.dev/usage/#looping-over-a-matrix)
+  (#1766, #1767 by @pd93).
 
 ## v3.38.0 - 2024-06-30
 
