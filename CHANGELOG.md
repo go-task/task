@@ -24,8 +24,9 @@
     [are now deprecated](https://taskfile.dev/deprecations/completion-scripts/).
 - Added the ability to
   [loop over a matrix of values](https://taskfile.dev/usage/#looping-over-a-matrix)
-  (#1766, #1767 by @pd93).
-- Fixed a bug in fish completion where aliases were not displayed (#1781, #1782 by @vmaerten)
+  (#1766, #1767, #1784 by @pd93).
+- Fixed a bug in fish completion where aliases were not displayed (#1781, #1782
+  by @vmaerten).
 
 ## v3.38.0 - 2024-06-30
 
