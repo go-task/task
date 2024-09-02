@@ -2375,6 +2375,10 @@ func TestForCmds(t *testing.T) {
 			expectedOutput: "a\nb\nc\n",
 		},
 		{
+			name:           "loop-matrix",
+			expectedOutput: "windows/amd64\nwindows/arm64\nlinux/amd64\nlinux/arm64\ndarwin/amd64\ndarwin/arm64\n",
+		},
+		{
 			name:           "loop-sources",
 			expectedOutput: "bar\nfoo\n",
 		},
@@ -2430,6 +2434,17 @@ func TestForDeps(t *testing.T) {
 		{
 			name:                   "loop-explicit",
 			expectedOutputContains: []string{"a\n", "b\n", "c\n"},
+		},
+		{
+			name: "loop-matrix",
+			expectedOutputContains: []string{
+				"windows/amd64\n",
+				"windows/arm64\n",
+				"linux/amd64\n",
+				"linux/arm64\n",
+				"darwin/amd64\n",
+				"darwin/arm64\n",
+			},
 		},
 		{
 			name:                   "loop-sources",
