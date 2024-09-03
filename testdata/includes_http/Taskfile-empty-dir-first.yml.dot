@@ -1,0 +1,14 @@
+strict digraph {
+
+
+	"/Users/pbitty/repos/go-task/task/testdata/includes_http/Taskfile-empty-dir-first.yml" [  weight=0 ];
+
+	"/Users/pbitty/repos/go-task/task/testdata/includes_http/Taskfile-empty-dir-first.yml" -> "http://127.0.0.1:49909/Taskfile2.yml" [  weight=3 ];
+
+	"http://127.0.0.1:49909/Taskfile2.yml" [  weight=0 ];
+
+	"http://127.0.0.1:49909/Taskfile2.yml" -> "http://127.0.0.1:49909/Taskfile3.yml" [  weight=2 ];
+
+	"http://127.0.0.1:49909/Taskfile3.yml" [  weight=0 ];
+
+}

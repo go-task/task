@@ -2540,83 +2540,58 @@ func TestIncludesHttp(t *testing.T) {
 		}
 	})
 
-	var buff SyncBuffer
-	e := task.Executor{
-		Dir:       dir,
-		Stdout:    &buff,
-		Stderr:    &buff,
-		Insecure:  true,
-		Download:  true,
-		AssumeYes: true,
-		Logger:    &logger.Logger{Stdout: &buff, Stderr: &buff, Verbose: true},
-		Timeout:   time.Minute,
-	}
-	require.NoError(t, e.Setup())
-
-	tasks := []string{
-		"check-local",
-		"check-remote",
+	taskfiles := []string{
+		"Taskfile-empty-dir-first.yml",
+		"Taskfile-empty-dir-last.yml",
 	}
 
-	for _, task := range tasks {
-		t.Run(task, func(t *testing.T) {
-			assert.NoError(t, e.Run(context.Background(), &ast.Call{Task: task}), "task %s failed", task)
+	for _, taskfile := range taskfiles {
+		t.Run(taskfile, func(t *testing.T) {
+			entrypoint := filepath.Join(dir, taskfile)
+
+			var buff SyncBuffer
+			e := task.Executor{
+				Entrypoint: entrypoint,
+				Dir:        dir,
+				Stdout:     &buff,
+				Stderr:     &buff,
+				Insecure:   true,
+				Download:   true,
+				AssumeYes:  true,
+				Logger:     &logger.Logger{Stdout: &buff, Stderr: &buff, Verbose: true},
+				Timeout:    time.Minute,
+			}
+			require.NoError(t, e.Setup())
+			defer func() { t.Log("output:", buff.buf.String()) }()
+
+			tcs := []struct {
+				name, dir string
+			}{
+				{
+					name: "remote-1:default",
+					dir:  filepath.Join(dir, "dir-1"),
+				},
+				{
+					name: "remote-2:default",
+					dir:  filepath.Join(dir, "dir-2"),
+				},
+				{
+					name: "remote:remote-1:default",
+					dir:  filepath.Join(dir, "dir-1"),
+				},
+				{
+					name: "remote:remote-2:default",
+					dir:  filepath.Join(dir, "dir-2"),
+				},
+			}
+
+			for _, tc := range tcs {
+				t.Run(tc.name, func(t *testing.T) {
+					task, err := e.CompiledTask(&ast.Call{Task: tc.name})
+					require.NoError(t, err)
+					assert.Equal(t, tc.dir, task.Dir)
+				})
+			}
 		})
 	}
-
-	t.Log("\noutput:\n", buff.buf.String())
-
-	tcs := []struct {
-		name, dir string
-	}{
-		{
-			name: "local:default",
-			dir:  filepath.Join(dir, "dir-1"),
-		},
-		{
-			name: "local:local:default",
-			dir:  filepath.Join(dir, "dir-2"),
-		},
-		{
-			name: "local-double-dir:local:default",
-			dir:  filepath.Join(dir, "dir-2"),
-		},
-		{
-			name: "local-dot-dir:local:default",
-			dir:  filepath.Join(dir, "dir-2"),
-		},
-		{
-			name: "local-without-dir:local:default",
-			dir:  filepath.Join(dir, "dir-2"),
-		},
-		{
-			name: "remote:default",
-			dir:  filepath.Join(dir, "dir-1"),
-		},
-		{
-			name: "remote:remote:default",
-			dir:  filepath.Join(dir, "dir-2"),
-		},
-		{
-			name: "remote-double-dir:remote:default",
-			dir:  filepath.Join(dir, "dir-2"),
-		},
-		{
-			name: "remote-dot-dir:remote:default",
-			dir:  filepath.Join(dir, "dir-2"),
-		},
-		{
-			name: "remote-without-dir:remote:default",
-			dir:  filepath.Join(dir, "dir-2"),
-		},
-	}
-
-	for _, tc := range tcs {
-		t.Run(tc.name, func(t *testing.T) {
-			task, err := e.CompiledTask(&ast.Call{Task: tc.name})
-			require.NoError(t, err)
-			assert.Equal(t, tc.dir, task.Dir)
-		})
-	}
-
 }
