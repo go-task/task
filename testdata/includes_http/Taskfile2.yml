@@ -9,7 +9,4 @@ includes:
     dir: ./dir-1
 
 tasks:
-  check-pwd: |
-    [[ "$(pwd)" == "{{ .ROOT_DIR }}/dir-1" ]]
-
   default: "true"
