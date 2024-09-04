@@ -19,6 +19,7 @@ import (
 
 	"github.com/go-task/task/v3"
 	"github.com/go-task/task/v3/errors"
+	"github.com/go-task/task/v3/internal/experiments"
 	"github.com/go-task/task/v3/internal/filepathext"
 	"github.com/go-task/task/v3/taskfile/ast"
 )
@@ -60,7 +61,6 @@ func (fct fileContentTest) Run(t *testing.T) {
 	for f := range fct.Files {
 		_ = os.Remove(filepathext.SmartJoin(fct.Dir, f))
 	}
-
 	e := &task.Executor{
 		Dir: fct.Dir,
 		TempDir: task.TempDir{
@@ -71,9 +71,9 @@ func (fct fileContentTest) Run(t *testing.T) {
 		Stdout:     io.Discard,
 		Stderr:     io.Discard,
 	}
+
 	require.NoError(t, e.Setup(), "e.Setup()")
 	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: fct.Target}), "e.Run(target)")
-
 	for name, expectContent := range fct.Files {
 		t.Run(fct.name(name), func(t *testing.T) {
 			path := filepathext.SmartJoin(e.Dir, name)
@@ -108,6 +108,7 @@ func TestEmptyTaskfile(t *testing.T) {
 }
 
 func TestEnv(t *testing.T) {
+	t.Setenv("QUX", "from_os")
 	tt := fileContentTest{
 		Dir:       "testdata/env",
 		Target:    "default",
@@ -116,9 +117,21 @@ func TestEnv(t *testing.T) {
 			"local.txt":         "GOOS='linux' GOARCH='amd64' CGO_ENABLED='0'\n",
 			"global.txt":        "FOO='foo' BAR='overriden' BAZ='baz'\n",
 			"multiple_type.txt": "FOO='1' BAR='true' BAZ='1.1'\n",
+			"not-overriden.txt": "QUX='from_os'\n",
 		},
 	}
 	tt.Run(t)
+	t.Setenv("TASK_X_ENV_PRECEDENCE", "1")
+	experiments.EnvPrecedence = experiments.New("ENV_PRECEDENCE")
+	ttt := fileContentTest{
+		Dir:       "testdata/env",
+		Target:    "overriden",
+		TrimSpace: false,
+		Files: map[string]string{
+			"overriden.txt": "QUX='from_taskfile'\n",
+		},
+	}
+	ttt.Run(t)
 }
 
 func TestVars(t *testing.T) {
@@ -812,7 +825,8 @@ func TestListDescInterpolation(t *testing.T) {
 		t.Error(err)
 	}
 
-	assert.Contains(t, buff.String(), "bar")
+	assert.Contains(t, buff.String(), "foo-var")
+	assert.Contains(t, buff.String(), "bar-var")
 }
 
 func TestStatusVariables(t *testing.T) {
@@ -1229,7 +1243,6 @@ func TestIncludesFlatten(t *testing.T) {
 		{name: "included flatten with deps", taskfile: "Taskfile.yml", task: "with_deps", expectedOutput: "gen from included\nwith_deps from included\n"},
 		{name: "included flatten nested", taskfile: "Taskfile.yml", task: "from_nested", expectedOutput: "from nested\n"},
 		{name: "included flatten multiple same task", taskfile: "Taskfile.multiple.yml", task: "gen", expectedErr: true, expectedOutput: "task: Found multiple tasks (gen) included by \"included\"\""},
-
 		{name: "included flatten overridden", taskfile: "Taskfile.override.yml", task: "override", expectedOutput: "overridden task\n"},
 		{name: "included flatten override unique task", taskfile: "Taskfile.override.yml", task: "unique", expectedOutput: "unique task\n"},
 		{name: "included flatten override", taskfile: "Taskfile.override.yml", task: "gen", expectedOutput: "gen from included\n"},
@@ -1766,6 +1779,34 @@ task-1 ran successfully
 `)
 	require.Error(t, e.Run(context.Background(), &ast.Call{Task: "task-2"}))
 	assert.Contains(t, buff.String(), expectedOutputOrder)
+}
+
+func TestExitCodeZero(t *testing.T) {
+	const dir = "testdata/exit_code"
+	var buff bytes.Buffer
+	e := task.Executor{
+		Dir:    dir,
+		Stdout: &buff,
+		Stderr: &buff,
+	}
+	require.NoError(t, e.Setup())
+
+	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "exit-zero"}))
+	assert.Equal(t, "EXIT_CODE=", strings.TrimSpace(buff.String()))
+}
+
+func TestExitCodeOne(t *testing.T) {
+	const dir = "testdata/exit_code"
+	var buff bytes.Buffer
+	e := task.Executor{
+		Dir:    dir,
+		Stdout: &buff,
+		Stderr: &buff,
+	}
+	require.NoError(t, e.Setup())
+
+	require.Error(t, e.Run(context.Background(), &ast.Call{Task: "exit-one"}))
+	assert.Equal(t, "EXIT_CODE=1", strings.TrimSpace(buff.String()))
 }
 
 func TestIgnoreNilElements(t *testing.T) {
@@ -2340,6 +2381,10 @@ func TestForCmds(t *testing.T) {
 			expectedOutput: "a\nb\nc\n",
 		},
 		{
+			name:           "loop-matrix",
+			expectedOutput: "windows/amd64\nwindows/arm64\nlinux/amd64\nlinux/arm64\ndarwin/amd64\ndarwin/arm64\n",
+		},
+		{
 			name:           "loop-sources",
 			expectedOutput: "bar\nfoo\n",
 		},
@@ -2395,6 +2440,17 @@ func TestForDeps(t *testing.T) {
 		{
 			name:                   "loop-explicit",
 			expectedOutputContains: []string{"a\n", "b\n", "c\n"},
+		},
+		{
+			name: "loop-matrix",
+			expectedOutputContains: []string{
+				"windows/amd64\n",
+				"windows/arm64\n",
+				"linux/amd64\n",
+				"linux/arm64\n",
+				"darwin/amd64\n",
+				"darwin/arm64\n",
+			},
 		},
 		{
 			name:                   "loop-sources",

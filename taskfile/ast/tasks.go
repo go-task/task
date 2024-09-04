@@ -2,6 +2,7 @@ package ast
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 
 	"gopkg.in/yaml.v3"
@@ -124,7 +125,7 @@ func (t1 *Tasks) Merge(t2 Tasks, include *Include, includedTaskfileVars *Vars) e
 	if t2.Get("default") != nil && t1.Get(include.Namespace) == nil {
 		defaultTaskName := fmt.Sprintf("%s:default", include.Namespace)
 		t1.Get(defaultTaskName).Aliases = append(t1.Get(defaultTaskName).Aliases, include.Namespace)
-		t1.Get(defaultTaskName).Aliases = append(t1.Get(defaultTaskName).Aliases, include.Aliases...)
+		t1.Get(defaultTaskName).Aliases = slices.Concat(t1.Get(defaultTaskName).Aliases, include.Aliases)
 	}
 	return err
 }

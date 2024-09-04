@@ -5,14 +5,16 @@ import (
 
 	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/deepcopy"
+	"github.com/go-task/task/v3/internal/omap"
 )
 
 type For struct {
-	From  string
-	List  []any
-	Var   string
-	Split string
-	As    string
+	From   string
+	List   []any
+	Matrix omap.OrderedMap[string, []any]
+	Var    string
+	Split  string
+	As     string
 }
 
 func (f *For) UnmarshalYAML(node *yaml.Node) error {
@@ -36,16 +38,21 @@ func (f *For) UnmarshalYAML(node *yaml.Node) error {
 
 	case yaml.MappingNode:
 		var forStruct struct {
-			Var   string
-			Split string
-			As    string
+			Matrix omap.OrderedMap[string, []any]
+			Var    string
+			Split  string
+			As     string
 		}
 		if err := node.Decode(&forStruct); err != nil {
 			return errors.NewTaskfileDecodeError(err, node)
 		}
-		if forStruct.Var == "" {
+		if forStruct.Var == "" && forStruct.Matrix.Len() == 0 {
 			return errors.NewTaskfileDecodeError(nil, node).WithMessage("invalid keys in for")
 		}
+		if forStruct.Var != "" && forStruct.Matrix.Len() != 0 {
+			return errors.NewTaskfileDecodeError(nil, node).WithMessage("cannot use both var and matrix in for")
+		}
+		f.Matrix = forStruct.Matrix
 		f.Var = forStruct.Var
 		f.Split = forStruct.Split
 		f.As = forStruct.As
@@ -60,10 +67,11 @@ func (f *For) DeepCopy() *For {
 		return nil
 	}
 	return &For{
-		From:  f.From,
-		List:  deepcopy.Slice(f.List),
-		Var:   f.Var,
-		Split: f.Split,
-		As:    f.As,
+		From:   f.From,
+		List:   deepcopy.Slice(f.List),
+		Matrix: f.Matrix.DeepCopy(),
+		Var:    f.Var,
+		Split:  f.Split,
+		As:     f.As,
 	}
 }

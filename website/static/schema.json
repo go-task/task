@@ -431,6 +431,9 @@
         },
         {
           "$ref": "#/definitions/for_var"
+        },
+        {
+          "$ref": "#/definitions/for_matrix"
         }
       ]
     },
@@ -466,6 +469,12 @@
       },
       "additionalProperties": false,
       "required": ["var"]
+    },
+    "for_matrix": {
+      "description": "A matrix of values to iterate over",
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["matrix"]
     },
     "precondition": {
       "anyOf": [

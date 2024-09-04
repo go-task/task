@@ -2,6 +2,34 @@
 
 ## Unreleased
 
+- Added
+  [Env Precedence Experiment](https://taskfile.dev/experiments/env-precedence)
+  (#1038, #1633 by @vmaerten).
+- Added a CI lint job to ensure that the docs are updated correctly (#1719 by
+  @vmaerten).
+- Updated minimum required Go version to 1.22 (#1758 by @pd93).
+- Expose a new `EXIT_CODE` special variable on `defer:` when a command finishes
+  with a non-zero exit code (#1484, #1762 by @dorimon-1 and @andreynering).
+- Expose a new `ALIAS` special variable, which will contain the alias used to
+  call the current task. Falls back to the task name. (#1764 by @DanStory).
+- Fixed `TASK_REMOTE_DIR` environment variable not working when the path was
+  absolute. (#1715 by @vmaerten).
+- Added an option to declare an included Taskfile as flattened (#1704 by
+  @vmaerten).
+- Added a new
+  [`--completion` flag](https://taskfile.dev/installation/#setup-completions) to
+  output completion scripts for various shells (#293, #1157 by @pd93).
+  - This is now the preferred way to install completions.
+  - The completion scripts in the `completion` directory
+    [are now deprecated](https://taskfile.dev/deprecations/completion-scripts/).
+- Added the ability to
+  [loop over a matrix of values](https://taskfile.dev/usage/#looping-over-a-matrix)
+  (#1766, #1767, #1784 by @pd93).
+- Fixed a bug in fish completion where aliases were not displayed (#1781, #1782
+  by @vmaerten).
+
+## v3.38.0 - 2024-06-30
+
 - Added `TASK_EXE` special variable (#1616, #1624 by @pd93 and @andreynering).
 - Some YAML parsing errors will now show in a more user friendly way (#1619 by
   @pd93).

@@ -7,6 +7,14 @@ tasks:
       - for: ["a", "b", "c"]
         cmd: echo "{{.ITEM}}"
 
+  loop-matrix:
+    cmds:
+      - for:
+          matrix:
+            OS: ["windows", "linux", "darwin"]
+            ARCH: ["amd64", "arm64"]
+        cmd: echo "{{.ITEM.OS}}/{{.ITEM.ARCH}}"
+
   # Loop over the task's sources
   loop-sources:
     sources:

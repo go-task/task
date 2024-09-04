@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"sync"
 
@@ -95,7 +96,7 @@ func (e *Executor) setupFuzzyModel() {
 		words = append(words, taskName)
 
 		for _, task := range e.Taskfile.Tasks.Values() {
-			words = append(words, task.Aliases...)
+			words = slices.Concat(words, task.Aliases)
 		}
 	}
 
@@ -133,8 +134,8 @@ func (e *Executor) setupTempDir() error {
 	}
 
 	if os.Getenv("TASK_REMOTE_DIR") != "" {
-		if filepath.IsAbs(os.Getenv("TASK_TEMP_DIR")) || strings.HasPrefix(os.Getenv("TASK_TEMP_DIR"), "~") {
-			remoteTempDir, err := execext.Expand(filepathext.SmartJoin(e.Dir, ".task"))
+		if filepath.IsAbs(os.Getenv("TASK_REMOTE_DIR")) || strings.HasPrefix(os.Getenv("TASK_REMOTE_DIR"), "~") {
+			remoteTempDir, err := execext.Expand(os.Getenv("TASK_REMOTE_DIR"))
 			if err != nil {
 				return err
 			}
