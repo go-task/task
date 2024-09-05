@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"io/fs"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -2530,7 +2531,6 @@ func TestIncludesHttp(t *testing.T) {
 
 	srv := httptest.NewServer(http.FileServer(http.Dir(dir)))
 	defer srv.Close()
-	t.Setenv("HTTP_URL", srv.URL)
 
 	t.Cleanup(func() {
 		// This test fills the .task/remote directory with cache entries because the include URL
@@ -2540,56 +2540,65 @@ func TestIncludesHttp(t *testing.T) {
 		}
 	})
 
-	taskfiles := []string{
-		"Taskfile-empty-dir-first.yml",
-		"Taskfile-empty-dir-last.yml",
+	taskfiles, err := fs.Glob(os.DirFS(dir), "root-taskfile-*.yml")
+	require.NoError(t, err)
+
+	remotes := []struct {
+		name string
+		root string
+	}{
+		{
+			name: "local",
+			root: ".",
+		},
+		{
+			name: "http-remote",
+			root: srv.URL,
+		},
 	}
 
 	for _, taskfile := range taskfiles {
 		t.Run(taskfile, func(t *testing.T) {
-			entrypoint := filepath.Join(dir, taskfile)
+			for _, remote := range remotes {
+				t.Run(remote.name, func(t *testing.T) {
+					t.Setenv("INCLUDE_ROOT", remote.root)
+					entrypoint := filepath.Join(dir, taskfile)
 
-			var buff SyncBuffer
-			e := task.Executor{
-				Entrypoint: entrypoint,
-				Dir:        dir,
-				Stdout:     &buff,
-				Stderr:     &buff,
-				Insecure:   true,
-				Download:   true,
-				AssumeYes:  true,
-				Logger:     &logger.Logger{Stdout: &buff, Stderr: &buff, Verbose: true},
-				Timeout:    time.Minute,
-			}
-			require.NoError(t, e.Setup())
-			defer func() { t.Log("output:", buff.buf.String()) }()
+					var buff SyncBuffer
+					e := task.Executor{
+						Entrypoint: entrypoint,
+						Dir:        dir,
+						Stdout:     &buff,
+						Stderr:     &buff,
+						Insecure:   true,
+						Download:   true,
+						AssumeYes:  true,
+						Logger:     &logger.Logger{Stdout: &buff, Stderr: &buff, Verbose: true},
+						Timeout:    time.Minute,
+					}
+					require.NoError(t, e.Setup())
+					defer func() { t.Log("output:", buff.buf.String()) }()
 
-			tcs := []struct {
-				name, dir string
-			}{
-				{
-					name: "remote-1:default",
-					dir:  filepath.Join(dir, "dir-1"),
-				},
-				{
-					name: "remote-2:default",
-					dir:  filepath.Join(dir, "dir-2"),
-				},
-				{
-					name: "remote:remote-1:default",
-					dir:  filepath.Join(dir, "dir-1"),
-				},
-				{
-					name: "remote:remote-2:default",
-					dir:  filepath.Join(dir, "dir-2"),
-				},
-			}
+					tcs := []struct {
+						name, dir string
+					}{
+						{
+							name: "second-with-dir-1:third-with-dir-1:default",
+							dir:  filepath.Join(dir, "dir-1"),
+						},
+						{
+							name: "second-with-dir-1:third-with-dir-2:default",
+							dir:  filepath.Join(dir, "dir-2"),
+						},
+					}
 
-			for _, tc := range tcs {
-				t.Run(tc.name, func(t *testing.T) {
-					task, err := e.CompiledTask(&ast.Call{Task: tc.name})
-					require.NoError(t, err)
-					assert.Equal(t, tc.dir, task.Dir)
+					for _, tc := range tcs {
+						t.Run(tc.name, func(t *testing.T) {
+							task, err := e.CompiledTask(&ast.Call{Task: tc.name})
+							require.NoError(t, err)
+							assert.Equal(t, tc.dir, task.Dir)
+						})
+					}
 				})
 			}
 		})
