@@ -1090,6 +1090,86 @@ func TestIncludesEmptyMain(t *testing.T) {
 	tt.Run(t)
 }
 
+func TestIncludesHttp(t *testing.T) {
+	dir, err := filepath.Abs("testdata/includes_http")
+	require.NoError(t, err)
+
+	srv := httptest.NewServer(http.FileServer(http.Dir(dir)))
+	defer srv.Close()
+
+	t.Cleanup(func() {
+		// This test fills the .task/remote directory with cache entries because the include URL
+		// is different on every test due to the dynamic nature of the TCP port in srv.URL
+		if err := os.RemoveAll(filepath.Join(dir, ".task")); err != nil {
+			t.Logf("error cleaning up: %s", err)
+		}
+	})
+
+	taskfiles, err := fs.Glob(os.DirFS(dir), "root-taskfile-*.yml")
+	require.NoError(t, err)
+
+	remotes := []struct {
+		name string
+		root string
+	}{
+		{
+			name: "local",
+			root: ".",
+		},
+		{
+			name: "http-remote",
+			root: srv.URL,
+		},
+	}
+
+	for _, taskfile := range taskfiles {
+		t.Run(taskfile, func(t *testing.T) {
+			for _, remote := range remotes {
+				t.Run(remote.name, func(t *testing.T) {
+					t.Setenv("INCLUDE_ROOT", remote.root)
+					entrypoint := filepath.Join(dir, taskfile)
+
+					var buff SyncBuffer
+					e := task.Executor{
+						Entrypoint: entrypoint,
+						Dir:        dir,
+						Stdout:     &buff,
+						Stderr:     &buff,
+						Insecure:   true,
+						Download:   true,
+						AssumeYes:  true,
+						Logger:     &logger.Logger{Stdout: &buff, Stderr: &buff, Verbose: true},
+						Timeout:    time.Minute,
+					}
+					require.NoError(t, e.Setup())
+					defer func() { t.Log("output:", buff.buf.String()) }()
+
+					tcs := []struct {
+						name, dir string
+					}{
+						{
+							name: "second-with-dir-1:third-with-dir-1:default",
+							dir:  filepath.Join(dir, "dir-1"),
+						},
+						{
+							name: "second-with-dir-1:third-with-dir-2:default",
+							dir:  filepath.Join(dir, "dir-2"),
+						},
+					}
+
+					for _, tc := range tcs {
+						t.Run(tc.name, func(t *testing.T) {
+							task, err := e.CompiledTask(&ast.Call{Task: tc.name})
+							require.NoError(t, err)
+							assert.Equal(t, tc.dir, task.Dir)
+						})
+					}
+				})
+			}
+		})
+	}
+}
+
 func TestIncludesDependencies(t *testing.T) {
 	tt := fileContentTest{
 		Dir:       "testdata/includes_deps",
@@ -2521,86 +2601,6 @@ func TestReference(t *testing.T) {
 			require.NoError(t, e.Setup())
 			require.NoError(t, e.Run(context.Background(), &ast.Call{Task: test.call}))
 			assert.Equal(t, test.expectedOutput, buff.String())
-		})
-	}
-}
-
-func TestIncludesHttp(t *testing.T) {
-	dir, err := filepath.Abs("testdata/includes_http")
-	require.NoError(t, err)
-
-	srv := httptest.NewServer(http.FileServer(http.Dir(dir)))
-	defer srv.Close()
-
-	t.Cleanup(func() {
-		// This test fills the .task/remote directory with cache entries because the include URL
-		// is different on every test due to the dynamic nature of the TCP port in srv.URL
-		if err := os.RemoveAll(filepath.Join(dir, ".task")); err != nil {
-			t.Logf("error cleaning up: %s", err)
-		}
-	})
-
-	taskfiles, err := fs.Glob(os.DirFS(dir), "root-taskfile-*.yml")
-	require.NoError(t, err)
-
-	remotes := []struct {
-		name string
-		root string
-	}{
-		{
-			name: "local",
-			root: ".",
-		},
-		{
-			name: "http-remote",
-			root: srv.URL,
-		},
-	}
-
-	for _, taskfile := range taskfiles {
-		t.Run(taskfile, func(t *testing.T) {
-			for _, remote := range remotes {
-				t.Run(remote.name, func(t *testing.T) {
-					t.Setenv("INCLUDE_ROOT", remote.root)
-					entrypoint := filepath.Join(dir, taskfile)
-
-					var buff SyncBuffer
-					e := task.Executor{
-						Entrypoint: entrypoint,
-						Dir:        dir,
-						Stdout:     &buff,
-						Stderr:     &buff,
-						Insecure:   true,
-						Download:   true,
-						AssumeYes:  true,
-						Logger:     &logger.Logger{Stdout: &buff, Stderr: &buff, Verbose: true},
-						Timeout:    time.Minute,
-					}
-					require.NoError(t, e.Setup())
-					defer func() { t.Log("output:", buff.buf.String()) }()
-
-					tcs := []struct {
-						name, dir string
-					}{
-						{
-							name: "second-with-dir-1:third-with-dir-1:default",
-							dir:  filepath.Join(dir, "dir-1"),
-						},
-						{
-							name: "second-with-dir-1:third-with-dir-2:default",
-							dir:  filepath.Join(dir, "dir-2"),
-						},
-					}
-
-					for _, tc := range tcs {
-						t.Run(tc.name, func(t *testing.T) {
-							task, err := e.CompiledTask(&ast.Call{Task: tc.name})
-							require.NoError(t, err)
-							assert.Equal(t, tc.dir, task.Dir)
-						})
-					}
-				})
-			}
 		})
 	}
 }
