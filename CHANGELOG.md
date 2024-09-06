@@ -27,6 +27,8 @@
   (#1766, #1767, #1784 by @pd93).
 - Fixed a bug in fish completion where aliases were not displayed (#1781, #1782
   by @vmaerten).
+- Fixed panic when having a flattened included Taskfile that contains a `default`
+  task (#1777, #1778 by @vmaerten).
 
 ## v3.38.0 - 2024-06-30
 
