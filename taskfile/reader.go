@@ -96,12 +96,6 @@ func (r *Reader) include(node Node) error {
 	// Create an error group to wait for all included Taskfiles to be read
 	var g errgroup.Group
 
-	// When disabling concurrent execution of the include processing, we make the
-	// parsing order deterministic and can expose certain bugs.
-	//
-	// See task_test.go:TestIncludesHttp
-	g.SetLimit(1)
-
 	// Loop over each included taskfile
 	_ = vertex.Taskfile.Includes.Range(func(namespace string, include *ast.Include) error {
 		vars := compiler.GetEnviron()
