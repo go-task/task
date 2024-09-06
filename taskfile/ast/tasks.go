@@ -112,12 +112,12 @@ func (t1 *Tasks) Merge(t2 Tasks, include *Include, includedTaskfileVars *Vars) e
 		return nil
 	})
 
-	// If the included Taskfile has a default task and the parent namespace has
+	// If the included Taskfile has a default task, being not flattened and the parent namespace has
 	// no task with a matching name, we can add an alias so that the user can
 	// run the included Taskfile's default task without specifying its full
 	// name. If the parent namespace has aliases, we add another alias for each
 	// of them.
-	if t2.Get("default") != nil && t1.Get(include.Namespace) == nil {
+	if t2.Get("default") != nil && t1.Get(include.Namespace) == nil && !include.Flatten {
 		defaultTaskName := fmt.Sprintf("%s:default", include.Namespace)
 		t1.Get(defaultTaskName).Aliases = append(t1.Get(defaultTaskName).Aliases, include.Namespace)
 		t1.Get(defaultTaskName).Aliases = slices.Concat(t1.Get(defaultTaskName).Aliases, include.Aliases)
