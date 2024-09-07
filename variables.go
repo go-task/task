@@ -274,7 +274,7 @@ func itemsFromFor(
 	var values []any  // The list of values to loop over
 	// Get the list from a matrix
 	if f.Matrix.Len() != 0 {
-		return asAnySlice(product(f.Matrix)), nil, nil
+		return asAnySlice(product(&f.Matrix)), nil, nil
 	}
 	// Get the list from the explicit for list
 	if len(f.List) > 0 {
@@ -329,7 +329,7 @@ func itemsFromFor(
 }
 
 // product generates the cartesian product of the input map of slices.
-func product(inputMap omap.OrderedMap[string, []any]) []map[string]any {
+func product(inputMap *omap.OrderedMap[string, []any]) []map[string]any {
 	if inputMap.Len() == 0 {
 		return nil
 	}
