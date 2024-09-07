@@ -109,6 +109,7 @@ func (r *Reader) include(node Node) error {
 				Dir:            templater.Replace(include.Dir, cache),
 				Optional:       include.Optional,
 				Internal:       include.Internal,
+				Flatten:        include.Flatten,
 				Aliases:        include.Aliases,
 				AdvancedImport: include.AdvancedImport,
 				Vars:           include.Vars,
@@ -207,8 +208,9 @@ func (r *Reader) readNode(node Node) (*ast.Taskfile, error) {
 
 		// Read the file
 		b, err = node.Read(ctx)
+		var taskfileNetworkTimeoutError *errors.TaskfileNetworkTimeoutError
 		// If we timed out then we likely have a network issue
-		if node.Remote() && errors.Is(ctx.Err(), context.DeadlineExceeded) {
+		if node.Remote() && errors.As(err, &taskfileNetworkTimeoutError) {
 			// If a download was requested, then we can't use a cached copy
 			if r.download {
 				return nil, &errors.TaskfileNetworkTimeoutError{URI: node.Location(), Timeout: r.timeout}

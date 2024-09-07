@@ -2,6 +2,7 @@ package ast
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 
 	"gopkg.in/yaml.v3"
@@ -52,43 +53,48 @@ func (t *Tasks) FindMatchingTasks(call *Call) []*MatchingTask {
 	return matchingTasks
 }
 
-func (t1 *Tasks) Merge(t2 *Tasks, include *Include, includedTaskfileVars *Vars) {
-	_ = t2.Range(func(name string, v *Task) error {
+func (t1 *Tasks) Merge(t2 Tasks, include *Include, includedTaskfileVars *Vars) error {
+	err := t2.Range(func(name string, v *Task) error {
 		// We do a deep copy of the task struct here to ensure that no data can
 		// be changed elsewhere once the taskfile is merged.
 		task := v.DeepCopy()
-
 		// Set the task to internal if EITHER the included task or the included
 		// taskfile are marked as internal
 		task.Internal = task.Internal || (include != nil && include.Internal)
-
-		// Add namespaces to task dependencies
-		for _, dep := range task.Deps {
-			if dep != nil && dep.Task != "" {
-				dep.Task = taskNameWithNamespace(dep.Task, include.Namespace)
-			}
-		}
-
-		// Add namespaces to task commands
-		for _, cmd := range task.Cmds {
-			if cmd != nil && cmd.Task != "" {
-				cmd.Task = taskNameWithNamespace(cmd.Task, include.Namespace)
-			}
-		}
-
-		// Add namespaces to task aliases
-		for i, alias := range task.Aliases {
-			task.Aliases[i] = taskNameWithNamespace(alias, include.Namespace)
-		}
-
-		// Add namespace aliases
-		if include != nil {
-			for _, namespaceAlias := range include.Aliases {
-				task.Aliases = append(task.Aliases, taskNameWithNamespace(task.Task, namespaceAlias))
-				for _, alias := range v.Aliases {
-					task.Aliases = append(task.Aliases, taskNameWithNamespace(alias, namespaceAlias))
+		taskName := name
+		if !include.Flatten {
+			// Add namespaces to task dependencies
+			for _, dep := range task.Deps {
+				if dep != nil && dep.Task != "" {
+					dep.Task = taskNameWithNamespace(dep.Task, include.Namespace)
 				}
 			}
+
+			// Add namespaces to task commands
+			for _, cmd := range task.Cmds {
+				if cmd != nil && cmd.Task != "" {
+					cmd.Task = taskNameWithNamespace(cmd.Task, include.Namespace)
+				}
+			}
+
+			// Add namespaces to task aliases
+			for i, alias := range task.Aliases {
+				task.Aliases[i] = taskNameWithNamespace(alias, include.Namespace)
+			}
+
+			// Add namespace aliases
+			if include != nil {
+				for _, namespaceAlias := range include.Aliases {
+					task.Aliases = append(task.Aliases, taskNameWithNamespace(task.Task, namespaceAlias))
+					for _, alias := range v.Aliases {
+						task.Aliases = append(task.Aliases, taskNameWithNamespace(alias, namespaceAlias))
+					}
+				}
+			}
+
+			taskName = taskNameWithNamespace(name, include.Namespace)
+			task.Namespace = include.Namespace
+			task.Task = taskName
 		}
 
 		if include.AdvancedImport {
@@ -100,25 +106,29 @@ func (t1 *Tasks) Merge(t2 *Tasks, include *Include, includedTaskfileVars *Vars) 
 			task.IncludedTaskfileVars = includedTaskfileVars.DeepCopy()
 		}
 
+		if t1.Get(taskName) != nil {
+			return &errors.TaskNameFlattenConflictError{
+				TaskName: taskName,
+				Include:  include.Namespace,
+			}
+		}
 		// Add the task to the merged taskfile
-		taskNameWithNamespace := taskNameWithNamespace(name, include.Namespace)
-		task.Namespace = include.Namespace
-		task.Task = taskNameWithNamespace
-		t1.Set(taskNameWithNamespace, task)
+		t1.Set(taskName, task)
 
 		return nil
 	})
 
-	// If the included Taskfile has a default task and the parent namespace has
+	// If the included Taskfile has a default task, being not flattened and the parent namespace has
 	// no task with a matching name, we can add an alias so that the user can
 	// run the included Taskfile's default task without specifying its full
 	// name. If the parent namespace has aliases, we add another alias for each
 	// of them.
-	if t2.Get("default") != nil && t1.Get(include.Namespace) == nil {
+	if t2.Get("default") != nil && t1.Get(include.Namespace) == nil && !include.Flatten {
 		defaultTaskName := fmt.Sprintf("%s:default", include.Namespace)
 		t1.Get(defaultTaskName).Aliases = append(t1.Get(defaultTaskName).Aliases, include.Namespace)
-		t1.Get(defaultTaskName).Aliases = append(t1.Get(defaultTaskName).Aliases, include.Aliases...)
+		t1.Get(defaultTaskName).Aliases = slices.Concat(t1.Get(defaultTaskName).Aliases, include.Aliases)
 	}
+	return err
 }
 
 func (t *Tasks) UnmarshalYAML(node *yaml.Node) error {

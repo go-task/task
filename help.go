@@ -160,23 +160,21 @@ func (e *Executor) ToEditorOutput(tasks []*ast.Task, noStatus bool) (*editors.Ta
 	}
 	var g errgroup.Group
 	for i := range tasks {
-		task := tasks[i]
-		j := i
 		aliases := []string{}
-		if len(task.Aliases) > 0 {
-			aliases = task.Aliases
+		if len(tasks[i].Aliases) > 0 {
+			aliases = tasks[i].Aliases
 		}
 		g.Go(func() error {
-			o.Tasks[j] = editors.Task{
-				Name:     task.Name(),
-				Desc:     task.Desc,
-				Summary:  task.Summary,
+			o.Tasks[i] = editors.Task{
+				Name:     tasks[i].Name(),
+				Desc:     tasks[i].Desc,
+				Summary:  tasks[i].Summary,
 				Aliases:  aliases,
 				UpToDate: false,
 				Location: &editors.Location{
-					Line:     task.Location.Line,
-					Column:   task.Location.Column,
-					Taskfile: task.Location.Taskfile,
+					Line:     tasks[i].Location.Line,
+					Column:   tasks[i].Location.Column,
+					Taskfile: tasks[i].Location.Taskfile,
 				},
 			}
 
@@ -186,10 +184,10 @@ func (e *Executor) ToEditorOutput(tasks []*ast.Task, noStatus bool) (*editors.Ta
 
 			// Get the fingerprinting method to use
 			method := e.Taskfile.Method
-			if task.Method != "" {
-				method = task.Method
+			if tasks[i].Method != "" {
+				method = tasks[i].Method
 			}
-			upToDate, err := fingerprint.IsTaskUpToDate(context.Background(), task,
+			upToDate, err := fingerprint.IsTaskUpToDate(context.Background(), tasks[i],
 				fingerprint.WithMethod(method),
 				fingerprint.WithTempDir(e.TempDir.Fingerprint),
 				fingerprint.WithDry(e.Dry),
@@ -199,7 +197,7 @@ func (e *Executor) ToEditorOutput(tasks []*ast.Task, noStatus bool) (*editors.Ta
 				return err
 			}
 
-			o.Tasks[j].UpToDate = upToDate
+			o.Tasks[i].UpToDate = upToDate
 
 			return nil
 		})
