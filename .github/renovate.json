@@ -10,7 +10,7 @@
     {
       "matchManagers": ["github-actions"],
       "groupName": "Github Action",
-      "labels": ["github_actions", "area: dependencies"],
+      "labels": ["area: github actions", "area: dependencies"],
       "matchPackageNames": [
         "*"
       ],
