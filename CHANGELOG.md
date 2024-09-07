@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v3.39.0 - 2024-09-07
 
 - Added
   [Env Precedence Experiment](https://taskfile.dev/experiments/env-precedence)
