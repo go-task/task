@@ -46,7 +46,7 @@ release:
   draft: true
 
 snapshot:
-  name_template: "{{.Tag}}"
+  version_template: "{{.Tag}}"
 
 checksum:
   name_template: "task_checksums.txt"
