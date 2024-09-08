@@ -50,15 +50,3 @@ tasks:
     desc: Upgrade Docusaurus
     cmds:
       - yarn upgrade @docusaurus/core@latest @docusaurus/preset-classic@latest @docusaurus/module-type-aliases@latest @docusaurus/tsconfig@latest @docusaurus/types@latest
-
-  crowdin:push:
-    desc: Upload source files to a Crowdin project
-    deps: [yarn:install]
-    cmds:
-      - npx crowdin push
-
-  crowdin:pull:
-    desc: Download latest translations from Crowdin to the specified place
-    deps: [yarn:install]
-    cmds:
-      - npx crowdin pull --export-only-approved
