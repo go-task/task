@@ -16,9 +16,6 @@ import { ANSWER_OVERFLOW } from './constants';
 import lightCodeTheme from './src/themes/prismLight';
 import darkCodeTheme from './src/themes/prismDark';
 
-import { getTranslationProgress } from './src/api/crowdin.js';
-const translationProgress = getTranslationProgress();
-
 const config: Config = {
   title: 'Task',
   tagline: 'A task runner / simpler Make alternative written in Go ',
