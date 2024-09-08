@@ -19,8 +19,8 @@
     "crowdin:sync": "docusaurus write-translations && crowdin upload && crowdin download"
   },
   "dependencies": {
-    "@docusaurus/core": "^3.2.0",
-    "@docusaurus/preset-classic": "^3.2.0",
+    "@docusaurus/core": "^3.5.2",
+    "@docusaurus/preset-classic": "^3.5.2",
     "@mdx-js/react": "^3.0.0",
     "clsx": "^2.0.0",
     "prism-react-renderer": "^2.1.0",
@@ -33,9 +33,9 @@
   "devDependencies": {
     "@crowdin/cli": "^3.19.2",
     "@crowdin/crowdin-api-client": "^1.33.0",
-    "@docusaurus/module-type-aliases": "^3.2.0",
-    "@docusaurus/tsconfig": "^3.2.0",
-    "@docusaurus/types": "^3.2.0",
+    "@docusaurus/module-type-aliases": "^3.5.2",
+    "@docusaurus/tsconfig": "^3.5.2",
+    "@docusaurus/types": "^3.5.2",
     "@types/react": "^18.2.29",
     "typescript": "^5.3.3"
   },
