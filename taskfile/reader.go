@@ -97,7 +97,7 @@ func (r *Reader) include(node Node) error {
 	var g errgroup.Group
 
 	// Loop over each included taskfile
-	_ = vertex.Taskfile.Includes.Range(func(namespace string, include *ast.Include) error {
+	for _, include := range vertex.Taskfile.Includes.All() {
 		vars := compiler.GetEnviron()
 		vars.Merge(vertex.Taskfile.Vars, nil)
 		// Start a goroutine to process each included Taskfile
@@ -173,8 +173,7 @@ func (r *Reader) include(node Node) error {
 			}
 			return err
 		})
-		return nil
-	})
+	}
 
 	// Wait for all the go routines to finish
 	return g.Wait()
@@ -282,7 +281,7 @@ func (r *Reader) readNode(node Node) (*ast.Taskfile, error) {
 
 	// Set the taskfile/task's locations
 	tf.Location = node.Location()
-	for _, task := range tf.Tasks.Values() {
+	for task := range tf.Tasks.Values(nil) {
 		// If the task is not defined, create a new one
 		if task == nil {
 			task = &ast.Task{}

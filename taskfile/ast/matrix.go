@@ -1,11 +1,14 @@
 package ast
 
 import (
+	"iter"
+
 	"github.com/elliotchance/orderedmap/v2"
 	"gopkg.in/yaml.v3"
 
 	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/deepcopy"
+	"github.com/go-task/task/v3/internal/sort"
 )
 
 type Matrix struct {
@@ -48,16 +51,31 @@ func (matrix *Matrix) Set(key string, value []any) bool {
 	return matrix.om.Set(key, value)
 }
 
-func (matrix *Matrix) Range(f func(k string, v []any) error) error {
-	if matrix == nil || matrix.om == nil {
-		return nil
-	}
-	for pair := matrix.om.Front(); pair != nil; pair = pair.Next() {
-		if err := f(pair.Key, pair.Value); err != nil {
-			return err
+// All returns an iterator that loops over all task key-value pairs.
+func (matrix *Matrix) All() iter.Seq2[string, []any] {
+	return matrix.om.Iterator()
+}
+
+// Keys returns an iterator that loops over all task keys.
+func (matrix *Matrix) Keys(sorter sort.Sorter) iter.Seq[string] {
+	return func(yield func(string) bool) {
+		for k := range matrix.All() {
+			if !yield(k) {
+				return
+			}
 		}
 	}
-	return nil
+}
+
+// Values returns an iterator that loops over all task values.
+func (matrix *Matrix) Values(sorter sort.Sorter) iter.Seq[[]any] {
+	return func(yield func([]any) bool) {
+		for _, v := range matrix.All() {
+			if !yield(v) {
+				return
+			}
+		}
+	}
 }
 
 func (matrix *Matrix) DeepCopy() *Matrix {

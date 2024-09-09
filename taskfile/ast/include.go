@@ -1,10 +1,13 @@
 package ast
 
 import (
+	"iter"
+
 	"github.com/elliotchance/orderedmap/v2"
 	"gopkg.in/yaml.v3"
 
 	"github.com/go-task/task/v3/errors"
+	"github.com/go-task/task/v3/internal/sort"
 )
 
 // Include represents information about included taskfiles
@@ -61,16 +64,34 @@ func (includes *Includes) Set(key string, value *Include) bool {
 	return includes.om.Set(key, value)
 }
 
-func (includes *Includes) Range(f func(k string, v *Include) error) error {
+// All returns an iterator that loops over all task key-value pairs.
+func (includes *Includes) All() iter.Seq2[string, *Include] {
 	if includes == nil || includes.om == nil {
-		return nil
+		return func(yield func(string, *Include) bool) {}
 	}
-	for pair := includes.om.Front(); pair != nil; pair = pair.Next() {
-		if err := f(pair.Key, pair.Value); err != nil {
-			return err
+	return includes.om.Iterator()
+}
+
+// Keys returns an iterator that loops over all task keys.
+func (includes *Includes) Keys(sorter sort.Sorter) iter.Seq[string] {
+	return func(yield func(string) bool) {
+		for k := range includes.All() {
+			if !yield(k) {
+				return
+			}
 		}
 	}
-	return nil
+}
+
+// Values returns an iterator that loops over all task values.
+func (includes *Includes) Values(sorter sort.Sorter) iter.Seq[*Include] {
+	return func(yield func(*Include) bool) {
+		for _, v := range includes.All() {
+			if !yield(v) {
+				return
+			}
+		}
+	}
 }
 
 // UnmarshalYAML implements the yaml.Unmarshaler interface.

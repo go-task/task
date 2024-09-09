@@ -1,6 +1,7 @@
 package ast
 
 import (
+	"iter"
 	"strings"
 
 	"github.com/elliotchance/orderedmap/v2"
@@ -9,6 +10,7 @@ import (
 	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/deepcopy"
 	"github.com/go-task/task/v3/internal/experiments"
+	"github.com/go-task/task/v3/internal/sort"
 )
 
 // Vars is a string[string] variables map.
@@ -52,32 +54,50 @@ func (vs *Vars) Set(key string, value Var) bool {
 	return vs.om.Set(key, value)
 }
 
-func (vs *Vars) Range(f func(k string, v Var) error) error {
+// All returns an iterator that loops over all task key-value pairs.
+func (vs *Vars) All() iter.Seq2[string, Var] {
 	if vs == nil || vs.om == nil {
-		return nil
+		return func(yield func(string, Var) bool) {}
 	}
-	for pair := vs.om.Front(); pair != nil; pair = pair.Next() {
-		if err := f(pair.Key, pair.Value); err != nil {
-			return err
+	return vs.om.Iterator()
+}
+
+// Keys returns an iterator that loops over all task keys.
+func (vs *Vars) Keys(sorter sort.Sorter) iter.Seq[string] {
+	return func(yield func(string) bool) {
+		for k := range vs.All() {
+			if !yield(k) {
+				return
+			}
 		}
 	}
-	return nil
+}
+
+// Values returns an iterator that loops over all task values.
+func (vs *Vars) Values(sorter sort.Sorter) iter.Seq[Var] {
+	return func(yield func(Var) bool) {
+		for _, v := range vs.All() {
+			if !yield(v) {
+				return
+			}
+		}
+	}
 }
 
 // ToCacheMap converts Vars to a map containing only the static
 // variables
 func (vs *Vars) ToCacheMap() (m map[string]any) {
 	m = make(map[string]any, vs.Len())
-	for pair := vs.om.Front(); pair != nil; pair = pair.Next() {
-		if pair.Value.Sh != "" {
+	for k, v := range vs.All() {
+		if v.Sh != "" {
 			// Dynamic variable is not yet resolved; trigger
 			// <no value> to be used in templates.
 			return nil
 		}
-		if pair.Value.Live != nil {
-			m[pair.Key] = pair.Value.Live
+		if v.Live != nil {
+			m[k] = v.Live
 		} else {
-			m[pair.Key] = pair.Value.Value
+			m[k] = v.Value
 		}
 	}
 	return

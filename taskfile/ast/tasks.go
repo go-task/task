@@ -2,6 +2,7 @@ package ast
 
 import (
 	"fmt"
+	"iter"
 	"slices"
 	"strings"
 
@@ -10,6 +11,7 @@ import (
 
 	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/filepathext"
+	"github.com/go-task/task/v3/internal/sort"
 )
 
 // Tasks represents a group of tasks
@@ -53,38 +55,47 @@ func (tasks *Tasks) Set(key string, value *Task) bool {
 	return tasks.om.Set(key, value)
 }
 
-func (tasks *Tasks) Range(f func(k string, v *Task) error) error {
-	if tasks == nil || tasks.om == nil {
-		return nil
+// All returns an iterator that loops over all task key-value pairs in the order
+// specified by the sorter.
+func (t *Tasks) All(sorter sort.Sorter) iter.Seq2[string, *Task] {
+	if t == nil || t.om == nil {
+		return func(yield func(string, *Task) bool) {}
 	}
-	for pair := tasks.om.Front(); pair != nil; pair = pair.Next() {
-		if err := f(pair.Key, pair.Value); err != nil {
-			return err
+	if sorter == nil {
+		return t.om.Iterator()
+	}
+	return func(yield func(string, *Task) bool) {
+		for _, key := range sorter(t.om.Keys(), nil) {
+			el := t.om.GetElement(key)
+			if !yield(el.Key, el.Value) {
+				return
+			}
 		}
 	}
-	return nil
 }
 
-func (tasks *Tasks) Keys() []string {
-	if tasks == nil {
-		return nil
+// Keys returns an iterator that loops over all task keys in the order specified
+// by the sorter.
+func (t *Tasks) Keys(sorter sort.Sorter) iter.Seq[string] {
+	return func(yield func(string) bool) {
+		for k := range t.All(sorter) {
+			if !yield(k) {
+				return
+			}
+		}
 	}
-	var keys []string
-	for pair := tasks.om.Front(); pair != nil; pair = pair.Next() {
-		keys = append(keys, pair.Key)
-	}
-	return keys
 }
 
-func (tasks *Tasks) Values() []*Task {
-	if tasks == nil {
-		return nil
+// Values returns an iterator that loops over all task values in the order
+// specified by the sorter.
+func (t *Tasks) Values(sorter sort.Sorter) iter.Seq[*Task] {
+	return func(yield func(*Task) bool) {
+		for _, v := range t.All(sorter) {
+			if !yield(v) {
+				return
+			}
+		}
 	}
-	var values []*Task
-	for pair := tasks.om.Front(); pair != nil; pair = pair.Next() {
-		values = append(values, pair.Value)
-	}
-	return values
 }
 
 type MatchingTask struct {
@@ -104,20 +115,19 @@ func (t *Tasks) FindMatchingTasks(call *Call) []*MatchingTask {
 	}
 	// Attempt a wildcard match
 	// For now, we can just nil check the task before each loop
-	_ = t.Range(func(key string, value *Task) error {
+	for _, value := range t.All(nil) {
 		if match, wildcards := value.WildcardMatch(call.Task); match {
 			matchingTasks = append(matchingTasks, &MatchingTask{
 				Task:      value,
 				Wildcards: wildcards,
 			})
 		}
-		return nil
-	})
+	}
 	return matchingTasks
 }
 
 func (t1 *Tasks) Merge(t2 *Tasks, include *Include, includedTaskfileVars *Vars) error {
-	err := t2.Range(func(name string, v *Task) error {
+	for name, v := range t2.All(nil) {
 		// We do a deep copy of the task struct here to ensure that no data can
 		// be changed elsewhere once the taskfile is merged.
 		task := v.DeepCopy()
@@ -177,9 +187,7 @@ func (t1 *Tasks) Merge(t2 *Tasks, include *Include, includedTaskfileVars *Vars) 
 		}
 		// Add the task to the merged taskfile
 		t1.Set(taskName, task)
-
-		return nil
-	})
+	}
 
 	// If the included Taskfile has a default task, is not flattened and the
 	// parent namespace has no task with a matching name, we can add an alias so
@@ -197,7 +205,7 @@ func (t1 *Tasks) Merge(t2 *Tasks, include *Include, includedTaskfileVars *Vars) 
 		}
 	}
 
-	return err
+	return nil
 }
 
 func (t *Tasks) UnmarshalYAML(node *yaml.Node) error {
