@@ -4,39 +4,37 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-
-	"github.com/go-task/task/v3/taskfile/ast"
 )
 
 func TestAlphaNumericWithRootTasksFirst_Sort(t *testing.T) {
 	t.Parallel()
 
-	task1 := &ast.Task{Task: "task1"}
-	task2 := &ast.Task{Task: "task2"}
-	task3 := &ast.Task{Task: "ns1:task3"}
-	task4 := &ast.Task{Task: "ns2:task4"}
-	task5 := &ast.Task{Task: "task5"}
-	task6 := &ast.Task{Task: "ns3:task6"}
+	item1 := "a-item1"
+	item2 := "m-item2"
+	item3 := "ns1:item3"
+	item4 := "ns2:item4"
+	item5 := "z-item5"
+	item6 := "ns3:item6"
 
 	tests := []struct {
 		name  string
-		tasks []*ast.Task
-		want  []*ast.Task
+		items []string
+		want  []string
 	}{
 		{
-			name:  "no namespace tasks sorted alphabetically first",
-			tasks: []*ast.Task{task3, task2, task1},
-			want:  []*ast.Task{task1, task2, task3},
+			name:  "no namespace items sorted alphabetically first",
+			items: []string{item3, item2, item1},
+			want:  []string{item1, item2, item3},
 		},
 		{
-			name:  "namespace tasks sorted alphabetically after non-namespaced tasks",
-			tasks: []*ast.Task{task3, task4, task5},
-			want:  []*ast.Task{task5, task3, task4},
+			name:  "namespace items sorted alphabetically after non-namespaced items",
+			items: []string{item3, item4, item5},
+			want:  []string{item5, item3, item4},
 		},
 		{
-			name:  "all tasks sorted alphabetically with root tasks first",
-			tasks: []*ast.Task{task6, task5, task4, task3, task2, task1},
-			want:  []*ast.Task{task1, task2, task5, task3, task4, task6},
+			name:  "all items sorted alphabetically with root items first",
+			items: []string{item6, item5, item4, item3, item2, item1},
+			want:  []string{item1, item2, item5, item3, item4, item6},
 		},
 	}
 
@@ -44,9 +42,8 @@ func TestAlphaNumericWithRootTasksFirst_Sort(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			s := &AlphaNumericWithRootTasksFirst{}
-			s.Sort(tt.tasks)
-			assert.Equal(t, tt.want, tt.tasks)
+			AlphaNumericWithRootTasksFirst(tt.items, nil)
+			assert.Equal(t, tt.want, tt.items)
 		})
 	}
 }
@@ -54,22 +51,22 @@ func TestAlphaNumericWithRootTasksFirst_Sort(t *testing.T) {
 func TestAlphaNumeric_Sort(t *testing.T) {
 	t.Parallel()
 
-	task1 := &ast.Task{Task: "task1"}
-	task2 := &ast.Task{Task: "task2"}
-	task3 := &ast.Task{Task: "ns1:task3"}
-	task4 := &ast.Task{Task: "ns2:task4"}
-	task5 := &ast.Task{Task: "task5"}
-	task6 := &ast.Task{Task: "ns3:task6"}
+	item1 := "a-item1"
+	item2 := "m-item2"
+	item3 := "ns1:item3"
+	item4 := "ns2:item4"
+	item5 := "z-item5"
+	item6 := "ns3:item6"
 
 	tests := []struct {
 		name  string
-		tasks []*ast.Task
-		want  []*ast.Task
+		items []string
+		want  []string
 	}{
 		{
-			name:  "all tasks sorted alphabetically",
-			tasks: []*ast.Task{task3, task2, task5, task1, task4, task6},
-			want:  []*ast.Task{task3, task4, task6, task1, task2, task5},
+			name:  "all items sorted alphabetically",
+			items: []string{item3, item2, item5, item1, item4, item6},
+			want:  []string{item1, item2, item3, item4, item6, item5},
 		},
 	}
 
@@ -77,9 +74,8 @@ func TestAlphaNumeric_Sort(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			s := &AlphaNumeric{}
-			s.Sort(tt.tasks)
-			assert.Equal(t, tt.tasks, tt.want)
+			AlphaNumeric(tt.items, nil)
+			assert.Equal(t, tt.want, tt.items)
 		})
 	}
 }

@@ -74,7 +74,7 @@ type Executor struct {
 	Compiler           *compiler.Compiler
 	Output             output.Output
 	OutputStyle        ast.Output
-	TaskSorter         sort.TaskSorter
+	TaskSorter         sort.Sorter
 	UserWorkingDir     string
 	EnableVersionCheck bool
 
@@ -511,8 +511,19 @@ func (e *Executor) GetTaskList(filters ...FilterFunc) ([]*ast.Task, error) {
 	// Create an error group to wait for each task to be compiled
 	var g errgroup.Group
 
+	// Sort the tasks
+	if e.TaskSorter == nil {
+		e.TaskSorter = sort.AlphaNumericWithRootTasksFirst
+	}
+	keys := e.Taskfile.Tasks.Keys()
+	e.TaskSorter(keys, nil)
+
 	// Filter tasks based on the given filter functions
-	for _, task := range e.Taskfile.Tasks.Values() {
+	for _, key := range keys {
+		task, ok := e.Taskfile.Tasks.Get(key)
+		if !ok {
+			continue
+		}
 		var shouldFilter bool
 		for _, filter := range filters {
 			if filter(task) {
@@ -540,12 +551,6 @@ func (e *Executor) GetTaskList(filters ...FilterFunc) ([]*ast.Task, error) {
 	if err := g.Wait(); err != nil {
 		return nil, err
 	}
-
-	// Sort the tasks
-	if e.TaskSorter == nil {
-		e.TaskSorter = &sort.AlphaNumericWithRootTasksFirst{}
-	}
-	e.TaskSorter.Sort(tasks)
 
 	return tasks, nil
 }
