@@ -5,6 +5,7 @@
     "group:allNonMajor",
     "schedule:monthly"
   ],
+  "mode": "full",
   "reviewers": ["team:developer"],
   "packageRules": [
     {
