@@ -1091,6 +1091,8 @@ func TestIncludesEmptyMain(t *testing.T) {
 }
 
 func TestIncludesHttp(t *testing.T) {
+	enableExperimentForTest(t, &experiments.RemoteTaskfiles, "1")
+
 	dir, err := filepath.Abs("testdata/includes_http")
 	require.NoError(t, err)
 
@@ -2603,4 +2605,19 @@ func TestReference(t *testing.T) {
 			assert.Equal(t, test.expectedOutput, buff.String())
 		})
 	}
+}
+
+// enableExperimentForTest enables the experiment behind pointer e for the duration of test t and sub-tests,
+// with the experiment being restored to its previous state when tests complete.
+//
+// Typically experiments are controlled via TASK_X_ env vars, but we cannot use those in tests
+// because the experiment settings are parsed during experiments.init(), before any tests run.
+func enableExperimentForTest(t *testing.T, e *experiments.Experiment, val string) {
+	prev := *e
+	*e = experiments.Experiment{
+		Name:    prev.Name,
+		Enabled: true,
+		Value:   val,
+	}
+	t.Cleanup(func() { *e = prev })
 }
