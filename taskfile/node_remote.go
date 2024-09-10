@@ -75,8 +75,8 @@ func (r *RemoteNode) Location() string {
 	return r.proto + "::" + r.url.String()
 }
 
-func (r *RemoteNode) Read(ctx context.Context) (*source, error) {
-	return r.loadSource(ctx)
+func (r *RemoteNode) Read() (*source, error) {
+	return r.loadSource()
 }
 
 func (r *RemoteNode) ResolveEntrypoint(entrypoint string) (string, error) {
@@ -87,10 +87,7 @@ func (r *RemoteNode) ResolveEntrypoint(entrypoint string) (string, error) {
 
 	if childProto == "file" && !filepath.IsAbs(entrypoint) {
 		// Relative file paths are resolved as relative to our own source location
-		ctx, cancel := context.WithTimeout(context.Background(), r.timeout)
-		defer cancel()
-
-		src, err := r.loadSource(ctx)
+		src, err := r.loadSource()
 		if err != nil {
 			return "", err
 		}
@@ -143,15 +140,29 @@ func (r *RemoteNode) FilenameAndLastDir() (string, string) {
 	return filepath.Base(dir), filename
 }
 
-func (r *RemoteNode) loadSource(ctx context.Context) (*source, error) {
+func (r *RemoteNode) loadSource() (*source, error) {
 	if r.cachedSource == nil {
 		dir, err := os.MkdirTemp("", "taskfile-remote-")
 		if err != nil {
 			return nil, err
 		}
 
+		ctx, cancel := context.WithTimeout(context.Background(), r.timeout)
+		defer cancel()
+
+		u := r.url
+		if r.proto == "http" || r.proto == "https" {
+			// HTTP and HTTPS entrypoint get filename auto-resolution before being handed off to go-getter
+			u, err = remoteExists(ctx, r.logger, r.url)
+			if err != nil {
+				return nil, err
+			} else if ctx.Err() != nil {
+				return nil, &errors.TaskfileNetworkTimeoutError{URI: u.String(), Timeout: r.timeout}
+			}
+		}
+
 		r.client.Ctx = ctx
-		r.client.Src = r.Location()
+		r.client.Src = r.proto + "::" + u.String()
 		r.client.Dst = dir
 
 		r.logger.VerboseOutf(logger.Magenta, "task: [%s] Fetching remote taskfile from %s into %s\n", r.Location(), r.client.Src, r.client.Dst)
@@ -279,17 +290,6 @@ func resolveHTTPEntrypoint(l *logger.Logger, insecure bool, timeout time.Duratio
 
 	if u.Scheme == "http" && !insecure {
 		return nil, &errors.TaskfileNotSecureError{URI: u.String()}
-	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
-	defer cancel()
-
-	// HTTP and HTTPS entrypoint get filename auto-resolution before being handed off to go-getter
-	u, err := RemoteExists(ctx, l, u)
-	if err != nil {
-		return nil, err
-	} else if ctx.Err() != nil {
-		return nil, &errors.TaskfileNetworkTimeoutError{URI: u.String(), Timeout: timeout}
 	}
 
 	return u, nil

@@ -1,7 +1,6 @@
 package taskfile
 
 import (
-	"context"
 	"os"
 	"path/filepath"
 	"time"
@@ -18,7 +17,7 @@ type source struct {
 }
 
 type Node interface {
-	Read(ctx context.Context) (*source, error)
+	Read() (*source, error)
 	Parent() Node
 	Location() string
 	Dir() string

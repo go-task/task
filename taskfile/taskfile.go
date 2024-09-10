@@ -8,7 +8,6 @@ import (
 	"path/filepath"
 	"slices"
 	"strings"
-	"time"
 
 	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/filepathext"
@@ -37,12 +36,12 @@ var (
 	}
 )
 
-// RemoteExists will check if a file at the given URL Exists. If it does, it
+// remoteExists will check if a file at the given URL Exists. If it does, it
 // will return its URL. If it does not, it will search the search for any files
 // at the given URL with any of the default Taskfile files names. If any of
 // these match a file, the first matching path will be returned. If no files are
 // found, an error will be returned.
-func RemoteExists(ctx context.Context, l *logger.Logger, u *url.URL, timeout time.Duration) (*url.URL, error) {
+func remoteExists(ctx context.Context, l *logger.Logger, u *url.URL) (*url.URL, error) {
 	// Create a new HEAD request for the given URL to check if the resource exists
 	req, err := http.NewRequest("HEAD", u.String(), nil)
 	if err != nil {
@@ -51,10 +50,9 @@ func RemoteExists(ctx context.Context, l *logger.Logger, u *url.URL, timeout tim
 
 	// Request the given URL
 	resp, err := http.DefaultClient.Do(req.WithContext(ctx))
-	if err != nil {
-		if errors.Is(ctx.Err(), context.DeadlineExceeded) {
-			return nil, &errors.TaskfileNetworkTimeoutError{URI: u.String(), Timeout: timeout}
-		}
+	if errors.Is(ctx.Err(), context.DeadlineExceeded) {
+		return nil, ctx.Err()
+	} else if err != nil {
 		return nil, errors.TaskfileFetchFailedError{URI: u.String()}
 	}
 	defer resp.Body.Close()

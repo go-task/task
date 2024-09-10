@@ -2,7 +2,6 @@ package taskfile
 
 import (
 	"bufio"
-	"context"
 	"fmt"
 	"os"
 	"strings"
@@ -26,7 +25,7 @@ func (node *StdinNode) Location() string {
 	return "__stdin__"
 }
 
-func (node *StdinNode) Read(ctx context.Context) (*source, error) {
+func (node *StdinNode) Read() (*source, error) {
 	var stdin []byte
 	scanner := bufio.NewScanner(os.Stdin)
 	for scanner.Scan() {

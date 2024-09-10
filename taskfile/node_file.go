@@ -1,7 +1,6 @@
 package taskfile
 
 import (
-	"context"
 	"io"
 	"os"
 	"path/filepath"
@@ -35,7 +34,7 @@ func (node *FileNode) Location() string {
 	return node.Entrypoint
 }
 
-func (node *FileNode) Read(ctx context.Context) (*source, error) {
+func (node *FileNode) Read() (*source, error) {
 	f, err := os.Open(node.Location())
 	if err != nil {
 		return nil, err

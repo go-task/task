@@ -1,7 +1,6 @@
 package taskfile
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"time"
@@ -186,10 +185,7 @@ func (r *Reader) readNode(node Node) (*ast.Taskfile, Node, error) {
 		return nil, nil, err
 	}
 
-	ctx, cf := context.WithTimeout(context.Background(), r.timeout)
-	defer cf()
-
-	src, err := node.Read(ctx)
+	src, err := node.Read()
 	if err != nil {
 		return nil, nil, err
 	}
@@ -252,16 +248,15 @@ func (r *Reader) loadNode(n Node) (Node, error) {
 		return cached, nil
 	}
 
-	ctx, cf := context.WithTimeout(context.Background(), r.timeout)
-	defer cf()
+	src, err := remote.Read()
 
-	src, err := remote.Read(ctx)
-	if errors.Is(ctx.Err(), context.DeadlineExceeded) {
+	var te errors.TaskfileNetworkTimeoutError
+	if errors.As(err, &te) {
 		// If we timed out then we likely have a network issue
 
 		// If a download was requested, then we can't use a cached copy
 		if r.download {
-			return nil, &errors.TaskfileNetworkTimeoutError{URI: remote.Location(), Timeout: r.timeout}
+			return nil, &errors.TaskfileNetworkTimeoutError{URI: remote.Location(), Timeout: te.Timeout}
 		}
 
 		// Search for any cached copies
