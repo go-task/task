@@ -334,6 +334,117 @@ includes:
     internal: true
 ```
 
+### Flatten includes
+
+You can flatten the included Taskfile tasks into the main Taskfile by using the `flatten` option.
+It means that the included Taskfile tasks will be available without the namespace.
+
+
+<Tabs defaultValue="1"
+			values={[
+				{label: 'Taskfile.yml', value: '1'},
+				{label: 'Included.yml', value: '2'}
+			]}>
+
+	<TabItem value="1">
+
+		```yaml
+		version: '3'
+
+		includes:
+		  lib:
+		    taskfile: ./Included.yml
+		    flatten: true
+
+		tasks:
+		  greet:
+		    cmds:
+		      - echo "Greet"
+		      - task: foo
+		```
+
+
+	</TabItem>
+	<TabItem value="2">
+
+		```yaml
+		version: '3'
+
+		tasks:
+		  foo:
+		    cmds:
+		      - echo "Foo"
+		```
+
+
+	</TabItem></Tabs>
+
+
+If you run `task -a` it will print :
+
+```sh
+task: Available tasks for this project:
+* greet:
+* foo
+```
+
+You can run `task foo` directly without the namespace.
+
+You can also reference the task in other tasks without the namespace. So if you run `task greet` it will run `greet` and `foo` tasks and the output will be :
+
+```text
+```
+
+If multiple tasks have the same name, an error will be thrown:
+
+<Tabs defaultValue="1"
+			values={[
+				{label: 'Taskfile.yml', value: '1'},
+				{label: 'Included.yml', value: '2'}
+			]}>
+
+	<TabItem value="1">
+
+    ```yaml
+    version: '3'
+    includes:
+      lib:
+		    taskfile: ./Included.yml
+		    flatten: true
+
+		tasks:
+		  greet:
+		    cmds:
+		      - echo "Greet"
+		      - task: foo
+		```
+
+
+	</TabItem>
+	<TabItem value="2">
+
+		```yaml
+		version: '3'
+
+		tasks:
+		  greet:
+		    cmds:
+		       - echo "Foo"
+		```
+
+
+	</TabItem></Tabs>
+
+If you run `task -a` it will print:
+```text
+task: Found multiple tasks (greet) included by "lib"
+
+```
+
+
+
+
+
 ### Vars of included Taskfiles
 
 You can also specify variables when including a Taskfile. This may be useful for
@@ -1181,14 +1292,14 @@ tasks:
             ref: index .FOO 0 # <-- The element at index 0 is passed by reference to bar
   bar:
     cmds:
-      - 'echo {{.MYVAR}}' # <-- FOO is just the letter 'A'
+      - 'echo {{.FOO}}' # <-- FOO is just the letter 'A'
 ```
 
 ## Looping over values
 
-As of v3.28.0, Task allows you to loop over certain values and execute a command
-for each. There are a number of ways to do this depending on the type of value
-you want to loop over.
+Task allows you to loop over certain values and execute a command for each.
+There are a number of ways to do this depending on the type of value you want to
+loop over.
 
 ### Looping over a static list
 
@@ -1203,6 +1314,37 @@ tasks:
     cmds:
       - for: ['foo.txt', 'bar.txt']
         cmd: cat {{ .ITEM }}
+```
+
+### Looping over a matrix
+
+If you need to loop over all permutations of multiple lists, you can use the
+`matrix` property. This should be familiar to anyone who has used a matrix in a
+CI/CD pipeline.
+
+```yaml
+version: '3'
+
+tasks:
+  default:
+    silent: true
+    cmds:
+      - for:
+          matrix:
+            OS: ["windows", "linux", "darwin"]
+            ARCH: ["amd64", "arm64"]
+        cmd: echo "{{.ITEM.OS}}/{{.ITEM.ARCH}}"
+```
+
+This will output:
+
+```txt
+windows/amd64
+windows/arm64
+linux/amd64
+linux/arm64
+darwin/amd64
+darwin/arm64
 ```
 
 ### Looping over your task's sources
@@ -1519,6 +1661,20 @@ Due to the nature of how the
 commands are executed in the reverse order if you schedule multiple of them.
 
 :::
+
+A special variable `.EXIT_CODE` is exposed when a command exited with a non-zero
+exit code. You can check its presence to know if the task completed successfully
+or not:
+
+```yaml
+version: '3'
+
+tasks:
+  default:
+    cmds:
+      - defer: echo '{{if .EXIT_CODE}}Failed with {{.EXIT_CODE}}!{{else}}Success!{{end}}'
+      - exit 1
+```
 
 ## Help
 

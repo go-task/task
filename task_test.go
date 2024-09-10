@@ -1468,6 +1468,8 @@ func TestIncludesFlatten(t *testing.T) {
 		expectedOutput string
 	}{
 		{name: "included flatten", taskfile: "Taskfile.yml", task: "gen", expectedOutput: "gen from included\n"},
+		{name: "included flatten with default", taskfile: "Taskfile.yml", task: "default", expectedOutput: "default from included flatten\n"},
+		{name: "included flatten can call entrypoint tasks", taskfile: "Taskfile.yml", task: "from_entrypoint", expectedOutput: "from entrypoint\n"},
 		{name: "included flatten with deps", taskfile: "Taskfile.yml", task: "with_deps", expectedOutput: "gen from included\nwith_deps from included\n"},
 		{name: "included flatten nested", taskfile: "Taskfile.yml", task: "from_nested", expectedOutput: "from nested\n"},
 		{name: "included flatten multiple same task", taskfile: "Taskfile.multiple.yml", task: "gen", expectedErr: true, expectedOutput: "task: Found multiple tasks (gen) included by \"included\"\""},
@@ -2603,6 +2605,10 @@ func TestForCmds(t *testing.T) {
 			expectedOutput: "a\nb\nc\n",
 		},
 		{
+			name:           "loop-matrix",
+			expectedOutput: "windows/amd64\nwindows/arm64\nlinux/amd64\nlinux/arm64\ndarwin/amd64\ndarwin/arm64\n",
+		},
+		{
 			name:           "loop-sources",
 			expectedOutput: "bar\nfoo\n",
 		},
@@ -2658,6 +2664,17 @@ func TestForDeps(t *testing.T) {
 		{
 			name:                   "loop-explicit",
 			expectedOutputContains: []string{"a\n", "b\n", "c\n"},
+		},
+		{
+			name: "loop-matrix",
+			expectedOutputContains: []string{
+				"windows/amd64\n",
+				"windows/arm64\n",
+				"linux/amd64\n",
+				"linux/arm64\n",
+				"darwin/amd64\n",
+				"darwin/arm64\n",
+			},
 		},
 		{
 			name:                   "loop-sources",

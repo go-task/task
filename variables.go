@@ -11,6 +11,7 @@ import (
 	"github.com/go-task/task/v3/internal/execext"
 	"github.com/go-task/task/v3/internal/filepathext"
 	"github.com/go-task/task/v3/internal/fingerprint"
+	"github.com/go-task/task/v3/internal/omap"
 	"github.com/go-task/task/v3/internal/templater"
 	"github.com/go-task/task/v3/taskfile/ast"
 )
@@ -271,9 +272,13 @@ func itemsFromFor(
 ) ([]any, []string, error) {
 	var keys []string // The list of keys to loop over (only if looping over a map)
 	var values []any  // The list of values to loop over
+	// Get the list from a matrix
+	if f.Matrix.Len() != 0 {
+		return asAnySlice(product(f.Matrix)), nil, nil
+	}
 	// Get the list from the explicit for list
 	if len(f.List) > 0 {
-		values = f.List
+		return f.List, nil, nil
 	}
 	// Get the list from the task sources
 	if f.From == "sources" {
@@ -321,4 +326,40 @@ func itemsFromFor(
 		}
 	}
 	return values, keys, nil
+}
+
+// product generates the cartesian product of the input map of slices.
+func product(inputMap omap.OrderedMap[string, []any]) []map[string]any {
+	if inputMap.Len() == 0 {
+		return nil
+	}
+
+	// Start with an empty product result
+	result := []map[string]any{{}}
+
+	// Iterate over each slice in the slices
+	_ = inputMap.Range(func(key string, slice []any) error {
+		var newResult []map[string]any
+
+		// For each combination in the current result
+		for _, combination := range result {
+			// Append each element from the current slice to the combinations
+			for _, item := range slice {
+				newComb := make(map[string]any, len(combination))
+				// Copy the existing combination
+				for k, v := range combination {
+					newComb[k] = v
+				}
+				// Add the current item with the corresponding key
+				newComb[key] = item
+				newResult = append(newResult, newComb)
+			}
+		}
+
+		// Update result with the new combinations
+		result = newResult
+		return nil
+	})
+
+	return result
 }

@@ -7,6 +7,7 @@ import remarkGfm from 'remark-gfm';
 
 import { DISCORD_URL } from './constants';
 import { GITHUB_URL } from './constants';
+import { BLUESKY_URL } from './constants';
 import { MASTODON_URL } from './constants';
 import { TWITTER_URL } from './constants';
 import { STACK_OVERFLOW } from './constants';
@@ -14,9 +15,6 @@ import { ANSWER_OVERFLOW } from './constants';
 
 import lightCodeTheme from './src/themes/prismLight';
 import darkCodeTheme from './src/themes/prismDark';
-
-import { getTranslationProgress } from './src/api/crowdin.js';
-const translationProgress = getTranslationProgress();
 
 const config: Config = {
   title: 'Task',
@@ -182,6 +180,11 @@ const config: Config = {
             {
               label: 'Twitter',
               href: TWITTER_URL
+            },
+						{
+              label: 'Bluesky',
+              href: BLUESKY_URL,
+              rel: 'me'
             },
             {
               label: 'Mastodon',

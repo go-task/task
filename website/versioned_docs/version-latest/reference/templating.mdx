@@ -101,10 +101,13 @@ engine. If you define a variable with the same name as a special variable, the
 special variable will be overridden.
 
 | Var                | Description                                                                                                                                              |
-| ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+|--------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `CLI_ARGS`         | Contain all extra arguments passed after `--` when calling Task through the CLI.                                                                         |
 | `CLI_FORCE`        | A boolean containing whether the `--force` or `--force-all` flags were set.                                                                              |
+| `CLI_SILENT`       | A boolean containing whether the `--silent`  flag was set.                                                                                               |
+| `CLI_VERBOSE`      | A boolean containing whether the `--verbose`  flag was set.                                                                                              |
 | `TASK`             | The name of the current task.                                                                                                                            |
+| `ALIAS`            | The alias used for the current task, otherwise matches `TASK`.                                                                                           |
 | `TASK_EXE`         | The Task executable name or path.                                                                                                                        |
 | `ROOT_TASKFILE`    | The absolute path of the root Taskfile.                                                                                                                  |
 | `ROOT_DIR`         | The absolute path of the root Taskfile directory.                                                                                                        |
@@ -115,6 +118,7 @@ special variable will be overridden.
 | `TIMESTAMP`        | The date object of the greatest timestamp of the files listed in `sources`. Only available within the `status` prop and if method is set to `timestamp`. |
 | `TASK_VERSION`     | The current version of task.                                                                                                                             |
 | `ITEM`             | The value of the current iteration when using the `for` property. Can be changed to a different variable name using `as:`.                               |
+| `EXIT_CODE`        | Available exclusively inside the `defer:` command. Contains the failed command exit code. Only set when non-zero.                                        |
 
 ## Functions
 

@@ -4,7 +4,7 @@ go 1.22.0
 
 require (
 	github.com/Ladicle/tabwriter v1.0.0
-	github.com/Masterminds/semver/v3 v3.2.1
+	github.com/Masterminds/semver/v3 v3.3.0
 	github.com/alecthomas/chroma/v2 v2.14.0
 	github.com/davecgh/go-spew v1.1.1
 	github.com/dominikbraun/graph v0.23.0
@@ -13,7 +13,7 @@ require (
 	github.com/go-task/template v0.1.0
 	github.com/hashicorp/go-getter v1.7.5
 	github.com/joho/godotenv v1.5.1
-	github.com/mattn/go-zglob v0.0.4
+	github.com/mattn/go-zglob v0.0.6
 	github.com/mitchellh/hashstructure/v2 v2.0.2
 	github.com/otiai10/copy v1.14.0
 	github.com/radovskyb/watcher v1.0.7
@@ -22,7 +22,7 @@ require (
 	github.com/stretchr/testify v1.9.0
 	github.com/zeebo/xxh3 v1.0.2
 	golang.org/x/sync v0.8.0
-	golang.org/x/term v0.23.0
+	golang.org/x/term v0.24.0
 	gopkg.in/yaml.v3 v3.0.1
 	mvdan.cc/sh/v3 v3.9.0
 )
@@ -58,7 +58,7 @@ require (
 	go.opencensus.io v0.23.0 // indirect
 	golang.org/x/net v0.1.0 // indirect
 	golang.org/x/oauth2 v0.1.0 // indirect
-	golang.org/x/sys v0.23.0 // indirect
+	golang.org/x/sys v0.25.0 // indirect
 	golang.org/x/text v0.4.0 // indirect
 	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
 	google.golang.org/api v0.100.0 // indirect
