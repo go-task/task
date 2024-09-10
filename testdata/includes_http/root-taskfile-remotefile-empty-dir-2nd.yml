@@ -6,4 +6,3 @@ includes:
     dir: ./dir-1
   second-no-dir:
     taskfile: "{{.INCLUDE_ROOT}}/child-taskfile2.yml"
-  
