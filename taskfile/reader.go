@@ -250,7 +250,7 @@ func (r *Reader) loadNode(n Node) (Node, error) {
 
 	src, err := remote.Read()
 
-	var te errors.TaskfileNetworkTimeoutError
+	var te *errors.TaskfileNetworkTimeoutError
 	if errors.As(err, &te) {
 		// If we timed out then we likely have a network issue
 
