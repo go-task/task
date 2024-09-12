@@ -57,8 +57,7 @@ func NewRemoteNode(
 		return nil, false, err
 	}
 
-	var tf string
-	tf, u = resolveTaskfileOverride(u)
+	tf, u := resolveTaskfileOverride(u)
 
 	return &RemoteNode{
 		BaseNode:         NewBaseNode(dir, opts...),

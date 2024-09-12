@@ -133,6 +133,8 @@ func (c *Cache) read(node RemoteNode) (*RemoteNode, error) {
 		return nil, err
 	}
 
+	// We change the node's source location but keep the rest of its metadata like entrypoint and dir intact
+	// Since we use a struct value (and not a pointer) we don't mutate the original one
 	node.cachedSource = &source{
 		FileContent:   content,
 		FileDirectory: path,
