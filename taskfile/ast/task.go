@@ -43,7 +43,7 @@ type Task struct {
 	Watch         bool
 	Location      *Location
 	// Populated during merging
-	Namespace            string
+	Namespace            []string
 	IncludeVars          *Vars
 	IncludedTaskfileVars *Vars
 }
@@ -57,8 +57,10 @@ func (t *Task) Name() string {
 
 func (t *Task) LocalName() string {
 	name := t.Task
-	name = strings.TrimPrefix(name, t.Namespace)
-	name = strings.TrimPrefix(name, ":")
+	for _, namespace := range t.Namespace {
+		name = strings.TrimPrefix(name, namespace)
+		name = strings.TrimPrefix(name, ":")
+	}
 	return name
 }
 
@@ -219,7 +221,7 @@ func (t *Task) DeepCopy() *Task {
 		Platforms:            deepcopy.Slice(t.Platforms),
 		Location:             t.Location.DeepCopy(),
 		Requires:             t.Requires.DeepCopy(),
-		Namespace:            t.Namespace,
+		Namespace:            append([]string{}, t.Namespace...),
 	}
 	return c
 }
