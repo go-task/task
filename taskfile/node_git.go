@@ -100,7 +100,7 @@ func (node *GitNode) ResolveEntrypoint(entrypoint string) (string, error) {
 	dir, _ := filepath.Split(node.path)
 	resolvedEntrypoint := fmt.Sprintf("%s//%s", node.URL, filepath.Join(dir, entrypoint))
 	if node.ref != "" {
-		return fmt.Sprintf("%s//%s?ref=%s", resolvedEntrypoint, node.ref), nil
+		return fmt.Sprintf("%s?ref=%s", resolvedEntrypoint, node.ref), nil
 	}
 	return resolvedEntrypoint, nil
 }

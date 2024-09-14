@@ -50,13 +50,11 @@ require (
 	github.com/sergi/go-diff v1.3.2-0.20230802210424-5b0b94c5c0d3 // indirect
 	github.com/skeema/knownhosts v1.2.2 // indirect
 	github.com/stretchr/objx v0.5.2 // indirect
-	golang.org/x/sys v0.25.0 // indirect
-	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127 // indirect
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
-	golang.org/x/crypto v0.21.0 // indirect
-	golang.org/x/mod v0.14.0 // indirect
-	golang.org/x/net v0.22.0 // indirect
-	golang.org/x/sys v0.21.0 // indirect
-	golang.org/x/tools v0.17.0 // indirect
+	golang.org/x/crypto v0.23.0 // indirect
+	golang.org/x/mod v0.17.0 // indirect
+	golang.org/x/net v0.25.0 // indirect
+	golang.org/x/sys v0.25.0 // indirect
+	golang.org/x/tools v0.21.0 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 )
