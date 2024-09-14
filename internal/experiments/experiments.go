@@ -72,6 +72,7 @@ func getEnvFilePath() string {
 	fs := pflag.NewFlagSet("experiments", pflag.ContinueOnError)
 	fs.StringVarP(&dir, "dir", "d", "", "Sets directory of execution.")
 	fs.StringVarP(&taskfile, "taskfile", "t", "", `Choose which Taskfile to run. Defaults to "Taskfile.yml".`)
+	fs.Usage = func() {}
 	_ = fs.Parse(os.Args[1:])
 	// If the directory is set, find a .env file in that directory.
 	if dir != "" {
