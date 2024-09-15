@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"maps"
 	"os"
 	"path/filepath"
 	"strings"
@@ -45,14 +46,12 @@ func (c *Compiler) FastGetVariables(t *ast.Task, call *ast.Call) (*ast.Vars, err
 
 func (c *Compiler) getVariables(t *ast.Task, call *ast.Call, evaluateShVars bool) (*ast.Vars, error) {
 	result := GetEnviron()
-	if t != nil {
-		specialVars, err := c.getSpecialVars(t, call)
-		if err != nil {
-			return nil, err
-		}
-		for k, v := range specialVars {
-			result.Set(k, ast.Var{Value: v})
-		}
+	specialVars, err := c.getSpecialVars(t, call)
+	if err != nil {
+		return nil, err
+	}
+	for k, v := range specialVars {
+		result.Set(k, ast.Var{Value: v})
 	}
 
 	getRangeFunc := func(dir string) func(k string, v ast.Var) error {
@@ -180,15 +179,18 @@ func (c *Compiler) ResetCache() {
 }
 
 func (c *Compiler) getSpecialVars(t *ast.Task, call *ast.Call) (map[string]string, error) {
-	return map[string]string{
-		"TASK":             t.Task,
-		"ALIAS":            call.Task,
+	allVars := map[string]string{
 		"TASK_EXE":         filepath.ToSlash(os.Args[0]),
 		"ROOT_TASKFILE":    filepathext.SmartJoin(c.Dir, c.Entrypoint),
 		"ROOT_DIR":         c.Dir,
-		"TASKFILE":         t.Location.Taskfile,
-		"TASKFILE_DIR":     filepath.Dir(t.Location.Taskfile),
 		"USER_WORKING_DIR": c.UserWorkingDir,
 		"TASK_VERSION":     version.GetVersion(),
-	}, nil
+	}
+	if t != nil {
+		maps.Copy(allVars, map[string]string{"TASK": t.Task, "TASKFILE": t.Location.Taskfile, "TASKFILE_DIR": filepath.Dir(t.Location.Taskfile)})
+	}
+	if call != nil {
+		maps.Copy(allVars, map[string]string{"ALIAS": call.Task})
+	}
+	return allVars, nil
 }
