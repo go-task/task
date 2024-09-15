@@ -172,7 +172,6 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) error {
 			if t.Method != "" {
 				method = t.Method
 			}
-
 			upToDate, err := fingerprint.IsTaskUpToDate(ctx, t,
 				fingerprint.WithMethod(method),
 				fingerprint.WithTempDir(e.TempDir.Fingerprint),
@@ -437,6 +436,7 @@ func (e *Executor) GetTask(call *Call) (*ast.Task, error) {
 			call.Vars = ast.NewVars()
 		}
 		call.Vars.Set("MATCH", ast.Var{Value: matchingTasks[0].Wildcards})
+		matchingTasks[0].Task.FullName = call.Task
 		return matchingTasks[0].Task, nil
 	}
 
@@ -467,7 +467,7 @@ func (e *Executor) GetTask(call *Call) (*ast.Task, error) {
 			DidYouMean: didYouMean,
 		}
 	}
-
+	matchingTask.FullName = matchingTask.Task
 	return matchingTask, nil
 }
 
