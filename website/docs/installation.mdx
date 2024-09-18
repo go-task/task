@@ -287,7 +287,7 @@ task --completion fish | source
 
 <TabItem value="4">
 ```powershell title="$PROFILE\Microsoft.PowerShell_profile.ps1"
-Invoke-Expression (&task --completion powershell)
+Invoke-Expression  (&task --completion powershell | Out-String)
 ```
 </TabItem></Tabs>
 
