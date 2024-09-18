@@ -5,6 +5,8 @@
 - Added Renovate configuration to automatically create PRs to keep dependencies
   up to date (#1783 by @vmaerten).
 - Fixed a bug where the help was displayed twice (#1805, #1806 by @vmaerten).
+- Fixed a bug where ZSH and PowerShell completions did not work when using the
+  recommended method. (#1813, #1809 by @vmaerten and @shirayu)
 
 ## v3.39.0 - 2024-09-07
 
