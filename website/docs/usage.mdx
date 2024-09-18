@@ -1060,6 +1060,40 @@ tasks:
       vars: [IMAGE_NAME, IMAGE_TAG]
 ```
 
+### Ensuring required variables have allowed values
+
+If you want to ensure that a variable is set to one of a predefined set of valid values before executing a task, you can use requires.
+This is particularly useful when there are strict requirements for what values a variable can take, and you want to provide clear feedback to the user when an invalid value is detected.
+
+To use `requires`, you specify an array of allowed values in the vars sub-section under requires. Task will check if the variable is set to one of the allowed values.
+If the variable does not match any of these values, the task will raise an error and stop execution.
+
+This check applies both to user-defined variables and environment variables.
+
+Example of using `requires`:
+
+```yaml
+version: '3'
+
+tasks:
+  deploy:
+    cmds:
+      - echo "deploying to {{.ENV}}"
+
+    requires:
+      vars:
+        - name: ENV
+          allowed_values: [dev, beta, prod]
+```
+
+If `ENV` is not one of 'dev', 'beta' or 'prod' an error will be raised.
+
+:::note
+
+This is supported only for string variables.
+
+:::
+
 ## Variables
 
 Task allows you to set variables using the `vars` keyword. The following

@@ -149,6 +149,39 @@ func TestVars(t *testing.T) {
 	tt.Run(t)
 }
 
+func TestRequires(t *testing.T) {
+	const dir = "testdata/requires"
+
+	var buff bytes.Buffer
+	e := &task.Executor{
+		Dir:    dir,
+		Stdout: &buff,
+		Stderr: &buff,
+	}
+
+	require.NoError(t, e.Setup())
+	require.ErrorContains(t, e.Run(context.Background(), &ast.Call{Task: "missing-var"}), "task: Task \"missing-var\" cancelled because it is missing required variables: foo")
+	buff.Reset()
+	require.NoError(t, e.Setup())
+
+	vars := &ast.Vars{}
+	vars.Set("foo", ast.Var{Value: "bar"})
+	require.NoError(t, e.Run(context.Background(), &ast.Call{
+		Task: "missing-var",
+		Vars: vars,
+	}))
+	buff.Reset()
+
+	require.NoError(t, e.Setup())
+	require.ErrorContains(t, e.Run(context.Background(), &ast.Call{Task: "validation-var", Vars: vars}), "task: Task \"validation-var\" cancelled because it is missing required variables:\n  - foo has an invalid value : 'bar' (allowed values : [one two])")
+	buff.Reset()
+
+	require.NoError(t, e.Setup())
+	vars.Set("foo", ast.Var{Value: "one"})
+	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "validation-var", Vars: vars}))
+	buff.Reset()
+}
+
 func TestSpecialVars(t *testing.T) {
 	const dir = "testdata/special_vars"
 	const subdir = "testdata/special_vars/subdir"

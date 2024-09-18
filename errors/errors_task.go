@@ -158,3 +158,29 @@ func (err *TaskMissingRequiredVars) Error() string {
 func (err *TaskMissingRequiredVars) Code() int {
 	return CodeTaskMissingRequiredVars
 }
+
+type NotAllowedVar struct {
+	Value         string
+	AllowedValues []string
+	Name          string
+}
+
+type TaskNotAllowedVars struct {
+	TaskName       string
+	NotAllowedVars []NotAllowedVar
+}
+
+func (err *TaskNotAllowedVars) Error() string {
+	var builder strings.Builder
+
+	builder.WriteString(fmt.Sprintf("task: Task %q cancelled because it is missing required variables:\n", err.TaskName))
+	for _, s := range err.NotAllowedVars {
+		builder.WriteString(fmt.Sprintf("  - %s has an invalid value : '%s' (allowed values : %v)\n", s.Name, s.Value, s.AllowedValues))
+	}
+
+	return builder.String()
+}
+
+func (err *TaskNotAllowedVars) Code() int {
+	return CodeTaskNotAllowedVars
+}
