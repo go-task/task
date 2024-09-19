@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Fix dynamic variables not working properly for a defer: statement (#1803,
+  #1818 by @vmaerten).
+
 ## v3.39.1 - 2024-09-18
 
 - Added Renovate configuration to automatically create PRs to keep dependencies
