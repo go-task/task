@@ -309,7 +309,7 @@ func itemsFromFor(
 					} else {
 						values = asAnySlice(strings.Fields(value))
 					}
-				case []any:
+				case []any, []string:
 					values = value
 				case map[string]any:
 					for k, v := range value {
