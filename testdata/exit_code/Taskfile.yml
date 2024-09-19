@@ -7,11 +7,15 @@ vars:
 
 tasks:
   exit-zero:
+    vars:
+      FOO: bar
     cmds:
-      - defer: echo {{.PREFIX}}{{.EXIT_CODE}}
+      - defer: echo FOO={{.FOO}} - {{.PREFIX}}{{.EXIT_CODE}}
       - exit 0
 
   exit-one:
+    vars:
+      FOO: bar
     cmds:
-      - defer: echo {{.PREFIX}}{{.EXIT_CODE}}
+      - defer: echo FOO={{.FOO}} - {{.PREFIX}}{{.EXIT_CODE}}
       - exit 1

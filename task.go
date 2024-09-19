@@ -324,8 +324,13 @@ func (e *Executor) runDeferred(t *ast.Task, call *ast.Call, i int, deferredExitC
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
+	origTask, err := e.GetTask(call)
+	if err != nil {
+		return
+	}
+
 	cmd := t.Cmds[i]
-	vars, _ := e.Compiler.FastGetVariables(t, call)
+	vars, _ := e.Compiler.FastGetVariables(origTask, call)
 	cache := &templater.Cache{Vars: vars}
 	extra := map[string]any{}
 
