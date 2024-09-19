@@ -84,6 +84,10 @@ func (checker *TimestampChecker) IsUpToDate(t *ast.Task) (bool, error) {
 	return !shouldUpdate, nil
 }
 
+func (checker *TimestampChecker) SetUpToDate(t *ast.Task) error {
+	return nil // TODO: implement
+}
+
 func (checker *TimestampChecker) Kind() string {
 	return "timestamp"
 }

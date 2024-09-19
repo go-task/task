@@ -29,51 +29,80 @@ func NewChecksumChecker(tempDir string, dry bool) *ChecksumChecker {
 }
 
 func (checker *ChecksumChecker) IsUpToDate(t *ast.Task) (bool, error) {
-	if len(t.Sources) == 0 {
+	if len(t.Sources) == 0 && len(t.Generates) == 0 {
 		return false, nil
 	}
 
 	checksumFile := checker.checksumFilePath(t)
 
 	data, _ := os.ReadFile(checksumFile)
-	oldHash := strings.TrimSpace(string(data))
+	oldHashes := strings.TrimSpace(string(data))
+	oldSourcesHash, oldGeneratesdHash, _ := strings.Cut(oldHashes, "\n")
 
-	newHash, err := checker.checksum(t)
+	newSourcesHash, err := checker.checksum(t, t.Sources)
 	if err != nil {
-		return false, nil
+		return false, err
 	}
 
-	if !checker.dry && oldHash != newHash {
+	newGeneratesHash, err := checker.checksum(t, t.Generates)
+	if err != nil {
+		return false, err
+	}
+
+	if !checker.dry && oldSourcesHash != newSourcesHash {
+		// make sure current sources hash are saved to file before executing the task,
+		// the proper "generated" hash will be saved after the task is executed
 		_ = os.MkdirAll(filepathext.SmartJoin(checker.tempDir, "checksum"), 0o755)
-		if err = os.WriteFile(checksumFile, []byte(newHash+"\n"), 0o644); err != nil {
+		if err = os.WriteFile(checksumFile, []byte(newSourcesHash+"\n"+"_"), 0o644); err != nil {
 			return false, err
 		}
 	}
 
-	if len(t.Generates) > 0 {
-		// For each specified 'generates' field, check whether the files actually exist
-		for _, g := range t.Generates {
-			if g.Negate {
-				continue
-			}
-			generates, err := Glob(t.Dir, g.Glob)
-			if os.IsNotExist(err) {
-				return false, nil
-			}
-			if err != nil {
-				return false, err
-			}
-			if len(generates) == 0 {
-				return false, nil
-			}
+	return oldSourcesHash == newSourcesHash && oldGeneratesdHash == newGeneratesHash, nil
+}
+
+func (checker *ChecksumChecker) SetUpToDate(t *ast.Task) error {
+	if len(t.Sources) == 0 && len(t.Generates) == 0 {
+		return nil
+	}
+
+	if checker.dry {
+		return nil
+	}
+
+	checksumFile := checker.checksumFilePath(t)
+
+	data, _ := os.ReadFile(checksumFile)
+	oldHashes := strings.TrimSpace(string(data))
+	oldSourcesHash, oldGeneratesdHash, _ := strings.Cut(oldHashes, "\n")
+
+	newSourcesHash, err := checker.checksum(t, t.Sources)
+	if err != nil {
+		return err
+	}
+
+	newGeneratesHash, err := checker.checksum(t, t.Generates)
+	if err != nil {
+		return err
+	}
+
+	if oldSourcesHash != newSourcesHash || oldGeneratesdHash != newGeneratesHash {
+		_ = os.MkdirAll(filepathext.SmartJoin(checker.tempDir, "checksum"), 0o755)
+		if err = os.WriteFile(checksumFile, []byte(oldSourcesHash+"\n"+newGeneratesHash+"\n"), 0o644); err != nil {
+			return err
 		}
 	}
 
-	return oldHash == newHash, nil
+	return nil
 }
 
 func (checker *ChecksumChecker) Value(t *ast.Task) (any, error) {
-	return checker.checksum(t)
+	c1, err := checker.checksum(t, t.Sources)
+	if err != nil {
+		return c1, err
+	}
+	c2, err := checker.checksum(t, t.Generates)
+	return c1 + "\n" + c2, err
 }
 
 func (checker *ChecksumChecker) OnError(t *ast.Task) error {
@@ -87,8 +116,8 @@ func (*ChecksumChecker) Kind() string {
 	return "checksum"
 }
 
-func (c *ChecksumChecker) checksum(t *ast.Task) (string, error) {
-	sources, err := Globs(t.Dir, t.Sources)
+func (c *ChecksumChecker) checksum(t *ast.Task, globs []*ast.Glob) (string, error) {
+	sources, err := Globs(t.Dir, globs)
 	if err != nil {
 		return "", err
 	}

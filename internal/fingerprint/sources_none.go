@@ -10,6 +10,10 @@ func (NoneChecker) IsUpToDate(t *ast.Task) (bool, error) {
 	return false, nil
 }
 
+func (NoneChecker) SetUpToDate(t *ast.Task) error {
+	return nil
+}
+
 func (NoneChecker) Value(t *ast.Task) (any, error) {
 	return "", nil
 }

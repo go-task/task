@@ -280,6 +280,20 @@ func (e *Executor) RunTask(ctx context.Context, call *ast.Call) error {
 				return &errors.TaskRunError{TaskName: t.Task, Err: err}
 			}
 		}
+		if !skipFingerprinting {
+			// Get the fingerprinting method to use
+			method := e.Taskfile.Method
+			if t.Method != "" {
+				method = t.Method
+			}
+			e.Logger.VerboseErrf(logger.Magenta, "task: %q setting task up to date\n", call.Task)
+			fingerprint.SetTaskUpToDate(ctx, t,
+				fingerprint.WithMethod(method),
+				fingerprint.WithTempDir(e.TempDir.Fingerprint),
+				fingerprint.WithDry(e.Dry),
+				fingerprint.WithLogger(e.Logger),
+			)
+		}
 		e.Logger.VerboseErrf(logger.Magenta, "task: %q finished\n", call.Task)
 		return nil
 	})
