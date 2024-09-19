@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v3.39.2 - 2024-09-19
 
 - Fix dynamic variables not working properly for a defer: statement (#1803,
   #1818 by @vmaerten).
