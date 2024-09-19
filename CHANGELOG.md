@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v3.39.1 - 2024-09-18
 
 - Added Renovate configuration to automatically create PRs to keep dependencies
   up to date (#1783 by @vmaerten).
