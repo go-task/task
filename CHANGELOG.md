@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Fixed output of some functions (e.g. `splitArgs`/`splitLines`) not working in
+  for loops (#1822, #1823 by @stawii).
+
 ## v3.39.2 - 2024-09-19
 
 - Fix dynamic variables not working properly for a defer: statement (#1803,
