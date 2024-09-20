@@ -63,5 +63,5 @@ func (v *VarsWithValidation) UnmarshalYAML(node *yaml.Node) error {
 		return nil
 	}
 
-	return errors.NewTaskfileDecodeError(nil, node).WithTypeMessage("precondition")
+	return errors.NewTaskfileDecodeError(nil, node).WithTypeMessage("requires")
 }
