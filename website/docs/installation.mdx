@@ -3,6 +3,9 @@ slug: /installation/
 sidebar_position: 2
 ---
 
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
 # Installation
 
 Task offers many installation methods. Check out the available methods below.
@@ -247,65 +250,76 @@ released binary.
 
 ## Setup completions
 
-Download the autocompletion file corresponding to your shell.
+Some installation methods will automatically install completions too, but if
+this isn't working for you or your chosen method doesn't include them, you can
+run `task --completion <shell>` to output a completion script for any supported
+shell. There are a couple of ways these completions can be added to your shell
+config:
 
-[All completions are available on the Task repository](https://github.com/go-task/task/tree/main/completion).
+### Option 1. Load the completions in your shell's startup config (Recommended)
 
-### Bash
+This method loads the completion script from the currently installed version of
+task every time you create a new shell. This ensures that your completions are
+always up-to-date.
 
-First, ensure that you installed bash-completion using your package manager.
+<Tabs values={[ {label: 'bash', value: '1'}, {label: 'zsh', value: '2'},
+    {label: 'fish', value: '3'},
+    {label: 'powershell', value: '4'}
+  ]}>
 
-Make the completion file executable:
+<TabItem value="1">
+```shell title="~/.bashrc"
+eval "$(task --completion bash)"
+```
+</TabItem>
 
+<TabItem value="2">
+```shell title="~/.zshrc"
+eval "$(task --completion zsh)"
+```
+</TabItem>
+
+<TabItem value="3">
+```shell title="~/.config/fish/config.fish"
+task --completion fish | source
+```
+</TabItem>
+
+<TabItem value="4">
+```powershell title="$PROFILE\Microsoft.PowerShell_profile.ps1"
+Invoke-Expression  (&task --completion powershell | Out-String)
+```
+</TabItem></Tabs>
+
+### Option 2. Copy the script to your shell's completions directory
+
+This method requires you to manually update the completions whenever Task is
+updated. However, it is useful if you want to modify the completions yourself.
+
+<Tabs
+  values={[
+    {label: 'bash', value: '1'},
+    {label: 'zsh', value: '2'},
+    {label: 'fish', value: '3'}
+  ]}>
+
+<TabItem value="1">
 ```shell
-chmod +x path/to/task.bash
+task --completion bash > /etc/bash_completion.d/task
 ```
+</TabItem>
 
-After, add this to your `~/.bash_profile`:
-
+<TabItem value="2">
 ```shell
-source path/to/task.bash
+task --completion zsh  > /usr/local/share/zsh/site-functions/_task
 ```
+</TabItem>
 
-### ZSH
-
-Put the `_task` file somewhere in your `$FPATH`:
-
+<TabItem value="3">
 ```shell
-mv path/to/_task /usr/local/share/zsh/site-functions/_task
+task --completion fish > ~/.config/fish/completions/task.fish
 ```
-
-Ensure that the following is present in your `~/.zshrc`:
-
-```shell
-autoload -U compinit
-compinit -i
-```
-
-ZSH version 5.7 or later is recommended.
-
-### Fish
-
-Move the `task.fish` completion script:
-
-```shell
-mv path/to/task.fish ~/.config/fish/completions/task.fish
-```
-
-### PowerShell
-
-Open your profile script with:
-
-```powershell
-mkdir -Path (Split-Path -Parent $profile) -ErrorAction SilentlyContinue
-notepad $profile
-```
-
-Add the line and save the file:
-
-```shell
-Invoke-Expression -Command path/to/task.ps1
-```
+</TabItem></Tabs>
 
 {/* prettier-ignore-start */}
 [go]: https://golang.org/

@@ -1,0 +1,48 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    "group:allNonMajor",
+    "schedule:monthly"
+  ],
+  "mode": "full",
+  "reviewers": ["team:developer"],
+  "packageRules": [
+    {
+      "matchManagers": ["github-actions"],
+      "groupName": "Github Action",
+      "labels": ["area: github actions", "area: dependencies"],
+      "matchPackageNames": [
+        "*"
+      ],
+      "matchUpdateTypes": [
+        "minor",
+        "patch"
+      ]
+    },
+    {
+      "matchManagers": ["npm", "nvm"],
+      "groupName": "Website",
+      "labels": ["lang: javascript", "area: dependencies"],
+      "matchPackageNames": [
+        "*"
+      ],
+      "matchUpdateTypes": [
+        "minor",
+        "patch"
+      ]
+    },
+    {
+      "matchManagers": ["gomod"],
+      "groupName": "golang",
+      "labels": ["lang: go", "area: dependencies"],
+      "matchPackageNames": [
+        "*"
+      ],
+      "matchUpdateTypes": [
+        "minor",
+        "patch"
+      ]
+    }
+  ]
+}

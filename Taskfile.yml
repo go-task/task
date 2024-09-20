@@ -27,7 +27,7 @@ tasks:
       - go install -v ./cmd/task
 
   generate:
-    desc: Runs Go generate to create mocks
+    desc: Runs Mockery to create mocks
     aliases: [gen, g]
     deps: [install:mockery]
     sources:
@@ -57,6 +57,7 @@ tasks:
 
   clean:
     desc: Cleans temp files and folders
+    aliases: [clear]
     cmds:
       - rm -rf dist/
       - rm -rf tmp/

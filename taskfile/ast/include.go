@@ -17,6 +17,7 @@ type Include struct {
 	Aliases        []string
 	AdvancedImport bool
 	Vars           *Vars
+	Flatten        bool
 }
 
 // Includes represents information about included tasksfiles
@@ -81,6 +82,7 @@ func (include *Include) UnmarshalYAML(node *yaml.Node) error {
 			Dir      string
 			Optional bool
 			Internal bool
+			Flatten  bool
 			Aliases  []string
 			Vars     *Vars
 		}
@@ -94,6 +96,7 @@ func (include *Include) UnmarshalYAML(node *yaml.Node) error {
 		include.Aliases = includedTaskfile.Aliases
 		include.AdvancedImport = true
 		include.Vars = includedTaskfile.Vars
+		include.Flatten = includedTaskfile.Flatten
 		return nil
 	}
 
@@ -114,5 +117,6 @@ func (include *Include) DeepCopy() *Include {
 		Internal:       include.Internal,
 		AdvancedImport: include.AdvancedImport,
 		Vars:           include.Vars.DeepCopy(),
+		Flatten:        include.Flatten,
 	}
 }

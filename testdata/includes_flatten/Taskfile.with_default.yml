@@ -1,0 +1,3 @@
+version: '3'
+tasks:
+  default: echo "default from included flatten"

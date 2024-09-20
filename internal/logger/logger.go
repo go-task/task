@@ -89,7 +89,7 @@ func envColor(env string, defaultColor color.Attribute) []color.Attribute {
 	// Otherwise, split by semicolons (ANSI color codes) and use them as is.
 	attributeStrs := strings.Split(override, ",")
 	if len(attributeStrs) == 3 {
-		attributeStrs = append([]string{"38", "2"}, attributeStrs...)
+		attributeStrs = slices.Concat([]string{"38", "2"}, attributeStrs)
 	} else {
 		attributeStrs = strings.Split(override, ";")
 	}

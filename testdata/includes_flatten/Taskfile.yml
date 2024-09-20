@@ -1,0 +1,15 @@
+version: '3'
+
+includes:
+  included:
+    taskfile: ./included
+    dir: ./included
+    flatten: true
+  with_default:
+    taskfile: ./Taskfile.with_default.yml
+    flatten: true
+
+tasks:
+  from_entrypoint: echo "from entrypoint"
+
+
