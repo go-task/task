@@ -311,6 +311,8 @@ func itemsFromFor(
 					}
 				case []string:
 					values = asAnySlice(value)
+				case []int:
+					values = asAnySlice(value)
 				case []any:
 					values = value
 				case map[string]any:
