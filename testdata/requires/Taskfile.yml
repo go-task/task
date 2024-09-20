@@ -15,4 +15,4 @@ tasks:
     requires:
       vars:
         - name: foo
-          allowed_values: ['one', 'two']
+          enum: ['one', 'two']

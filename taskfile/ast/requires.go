@@ -23,8 +23,8 @@ func (r *Requires) DeepCopy() *Requires {
 }
 
 type VarsWithValidation struct {
-	Name          string
-	AllowedValues []string
+	Name string
+	Enum []string
 }
 
 func (v *VarsWithValidation) DeepCopy() *VarsWithValidation {
@@ -32,8 +32,8 @@ func (v *VarsWithValidation) DeepCopy() *VarsWithValidation {
 		return nil
 	}
 	return &VarsWithValidation{
-		Name:          v.Name,
-		AllowedValues: v.AllowedValues,
+		Name: v.Name,
+		Enum: v.Enum,
 	}
 }
 
@@ -47,19 +47,19 @@ func (v *VarsWithValidation) UnmarshalYAML(node *yaml.Node) error {
 			return errors.NewTaskfileDecodeError(err, node)
 		}
 		v.Name = cmd
-		v.AllowedValues = nil
+		v.Enum = nil
 		return nil
 
 	case yaml.MappingNode:
 		var vv struct {
-			Name          string
-			AllowedValues []string `yaml:"allowed_values"`
+			Name string
+			Enum []string
 		}
 		if err := node.Decode(&vv); err != nil {
 			return errors.NewTaskfileDecodeError(err, node)
 		}
 		v.Name = vv.Name
-		v.AllowedValues = vv.AllowedValues
+		v.Enum = vv.Enum
 		return nil
 	}
 

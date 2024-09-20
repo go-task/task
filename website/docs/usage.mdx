@@ -1083,7 +1083,7 @@ tasks:
     requires:
       vars:
         - name: ENV
-          allowed_values: [dev, beta, prod]
+          enum: [dev, beta, prod]
 ```
 
 If `ENV` is not one of 'dev', 'beta' or 'prod' an error will be raised.

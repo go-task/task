@@ -24,11 +24,11 @@ func (e *Executor) areTaskRequiredVarsSet(t *ast.Task, call *ast.Call) error {
 		if !vars.Exists(requiredVar.Name) {
 			missingVars = append(missingVars, requiredVar.Name)
 		} else {
-			if isString && requiredVar.AllowedValues != nil && !slices.Contains(requiredVar.AllowedValues, value) {
+			if isString && requiredVar.Enum != nil && !slices.Contains(requiredVar.Enum, value) {
 				notAllowedValuesVars = append(notAllowedValuesVars, errors.NotAllowedVar{
-					Value:         value,
-					AllowedValues: requiredVar.AllowedValues,
-					Name:          requiredVar.Name,
+					Value: value,
+					Enum:  requiredVar.Enum,
+					Name:  requiredVar.Name,
 				})
 			}
 		}

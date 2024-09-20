@@ -564,10 +564,10 @@
                 "type": "object",
                 "properties": {
                   "name": { "type": "string" },
-                  "allowed_values": { "type": "array",
+                  "enum": { "type": "array",
                     "items": { "type": "string" } }
                 },
-                "required": ["name", "allowed_values"],
+                "required": ["name", "enum"],
                 "additionalProperties": false
               }
             ]
