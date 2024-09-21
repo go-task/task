@@ -4,6 +4,9 @@
 
 - Fixed output of some functions (e.g. `splitArgs`/`splitLines`) not working in
   for loops (#1822, #1823 by @stawii).
+- Added a new `TASK_OFFLINE` environment variable to configure the `--offline`
+  flag and expose it as a special variable in the templating system (#1470,
+  #1716 by @vmaerten and @pd93).
 
 ## v3.39.2 - 2024-09-19
 
