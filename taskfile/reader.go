@@ -244,11 +244,13 @@ func (r *Reader) readNode(node Node) (*ast.Taskfile, error) {
 				// If there is a cached hash, but it doesn't match the expected hash, prompt the user to continue
 				prompt = fmt.Sprintf(taskfileChangedPrompt, node.Location())
 			}
+			r.graph.Lock()
 			if prompt != "" {
 				if err := r.logger.Prompt(logger.Yellow, prompt, "n", "y", "yes"); err != nil {
 					return nil, &errors.TaskfileNotTrustedError{URI: node.Location()}
 				}
 			}
+			r.graph.Unlock()
 
 			// If the hash has changed (or is new)
 			if checksum != cachedChecksum {
