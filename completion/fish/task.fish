@@ -60,8 +60,10 @@ function __task_get_tasks --description "Prints all available tasks with their d
   end
 end
 
-complete -c $GO_TASK_PROGNAME -d 'Runs the specified task(s). Falls back to the "default" task if no task name was specified, or lists all tasks if an unknown task name was
-specified.' -xa "(__task_get_tasks)"
+complete -c $GO_TASK_PROGNAME \
+  -d 'Runs the specified task(s). Falls back to the "default" task if no task name was specified, or lists all tasks if an unknown task name was specified.' \
+  -xa "(__task_get_tasks)" \
+  -n "not __fish_seen_subcommand_from --"
 
 # Standard flags
 complete -c $GO_TASK_PROGNAME -s a -l list-all                  -d 'list all tasks'
