@@ -54,6 +54,7 @@ type Executor struct {
 	Download    bool
 	Offline     bool
 	Timeout     time.Duration
+	CacheTTL    time.Duration
 	Watch       bool
 	Verbose     bool
 	Silent      bool

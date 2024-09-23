@@ -2,24 +2,51 @@ package taskfile
 
 import (
 	"crypto/sha256"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 )
+
+// DefaultCacheTTL is used when a value is not explicitly given to a new Cache.
+const DefaultCacheTTL = time.Duration(time.Hour * 24)
 
 type Cache struct {
 	dir string
+	ttl time.Duration
 }
 
-func NewCache(dir string) (*Cache, error) {
+// ErrExpired is returned when a cached file has expired.
+var ErrExpired = errors.New("task: cache expired")
+
+type CacheOption func(*Cache)
+
+func NewCache(dir string, opts ...CacheOption) (*Cache, error) {
 	dir = filepath.Join(dir, "remote")
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return nil, err
 	}
-	return &Cache{
+
+	cache := &Cache{
 		dir: dir,
-	}, nil
+		ttl: DefaultCacheTTL,
+	}
+
+	// Apply options.
+	for _, opt := range opts {
+		opt(cache)
+	}
+
+	return cache, nil
+}
+
+// WithTTL will override the default TTL setting on a new Cache.
+func WithTTL(ttl time.Duration) CacheOption {
+	return func(cache *Cache) {
+		cache.ttl = ttl
+	}
 }
 
 func checksum(b []byte) string {
@@ -33,7 +60,19 @@ func (c *Cache) write(node Node, b []byte) error {
 }
 
 func (c *Cache) read(node Node) ([]byte, error) {
-	return os.ReadFile(c.cacheFilePath(node))
+	cfp := c.cacheFilePath(node)
+
+	fi, err := os.Stat(cfp)
+	if err != nil {
+		return nil, fmt.Errorf("could not stat cached file: %w", err)
+	}
+
+	expiresAt := fi.ModTime().Add(c.ttl)
+	if expiresAt.Before(time.Now()) {
+		return nil, ErrExpired
+	}
+
+	return os.ReadFile(cfp)
 }
 
 func (c *Cache) writeChecksum(node Node, checksum string) error {

@@ -104,20 +104,32 @@ Whenever you run a remote Taskfile, the latest copy will be downloaded from the
 internet and cached locally. If for whatever reason, you lose access to the
 internet, you will still be able to run your tasks by specifying the `--offline`
 flag. This will tell Task to use the latest cached version of the file instead
-of trying to download it. You are able to use the `--download` flag to update
-the cached version of the remote files without running any tasks. You are able
-to use the `--clear-cache` flag to clear all cached version of the remote files
-without running any tasks.
+of trying to download it.
 
-By default, Task will timeout requests to download remote files after 10 seconds
-and look for a cached copy instead. This timeout can be configured by setting
-the `--timeout` flag and specifying a duration. For example, `--timeout 5s` will
-set the timeout to 5 seconds.
+The flags to affect the caching behaviour are as follows:
+
+- `--download` (boolean): update the cached version of the remote files without
+  running any tasks.
+- `--clear-cache` (boolean): clear all cached version of the remote files
+  without running any tasks.
+- `--remote-cache-ttl` (duration): override the default time-to-live (TTL) of
+  remote Taskfiles in the cache, when there is a cached Taskfile present and
+  deciding whether to use the cached copy or download a newer version.
+
+By default, Task requests to download remote files will time out after 10
+seconds and look for a cached copy instead. This timeout can be configured by
+setting the `--timeout` flag and specifying a duration. For example,
+`--timeout 5s` will set the timeout to 5 seconds.
 
 By default, the cache is stored in the Task temp directory, represented by the
 `TASK_TEMP_DIR` [environment variable](../reference/environment.mdx) You can
 override the location of the cache by setting the `TASK_REMOTE_DIR` environment
 variable. This way, you can share the cache between different projects.
+
+The default TTL for remote Taskfiles in the cache is 24 hours. This can be
+overridden by the `--remote-cache-ttl` flag outlined above. The value must be
+specified as a duration, e.g. `30s`, `15m`, `4h`. More information on how
+[durations are parsed is available here](https://pkg.go.dev/time#ParseDuration).
 
 {/* prettier-ignore-start */}
 [enabling-experiments]: ./experiments.mdx#enabling-experiments
