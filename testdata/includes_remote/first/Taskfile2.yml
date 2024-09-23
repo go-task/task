@@ -1,0 +1,14 @@
+version: '3'
+
+includes:
+  second: ./second/Taskfile.yml
+
+tasks:
+  write-file:
+    requires:
+      vars: [CONTENT, OUTPUT_FILE]
+    cmd: |
+      echo "{{ .CONTENT }}" > "{{ .OUTPUT_FILE }}"
+
+  first-taskfile2-task:
+    cmd: echo {{ .TASK }}

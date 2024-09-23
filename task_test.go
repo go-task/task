@@ -1,17 +1,23 @@
 package task_test
 
 import (
+	"archive/zip"
 	"bytes"
 	"context"
 	"fmt"
 	"io"
+	"math/rand"
+	"net/http"
+	"net/http/httptest"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"regexp"
 	"runtime"
 	"strings"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/Masterminds/semver/v3"
 	"github.com/stretchr/testify/assert"
@@ -21,8 +27,11 @@ import (
 	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/experiments"
 	"github.com/go-task/task/v3/internal/filepathext"
+	"github.com/go-task/task/v3/internal/logger"
 	"github.com/go-task/task/v3/taskfile/ast"
 )
+
+var random = rand.New(rand.NewSource(time.Now().UnixNano()))
 
 func init() {
 	_ = os.Setenv("NO_COLOR", "1")
@@ -1040,6 +1049,225 @@ func TestIncludesMultiLevel(t *testing.T) {
 		},
 	}
 	tt.Run(t)
+}
+
+func TestIncludesRemote(t *testing.T) {
+	dir := "testdata/includes_remote"
+
+	os.RemoveAll(filepath.Join(dir, ".task"))
+
+	srv := httptest.NewServer(http.FileServer(http.Dir(dir)))
+	defer srv.Close()
+
+	createZipFileOfDir(t, filepath.Join(dir, "tasks-root.zip"), dir)
+	createZipFileOfDir(t, filepath.Join(dir, "tasks-first.zip"), filepath.Join(dir, "first"))
+
+	tcs := []struct {
+		rootTaskfile string
+		firstRemote  string
+		secondRemote string
+		extraTasks   []string
+	}{
+		//
+		// NOTE: When adding content for tests that use `getGitRemoteURL`,
+		// you must commit the test data for the tests to be able to find it.
+		//
+		// These tests will not see data in the working tree because they clone
+		// this repo.
+		//
+		{
+			// Ensure non-remote includes still work
+			firstRemote:  "./first/Taskfile.yml",
+			secondRemote: "./second/Taskfile.yml",
+		},
+		{
+			firstRemote:  srv.URL + "/first/Taskfile.yml",
+			secondRemote: srv.URL + "/first/second/Taskfile.yml",
+		},
+		{
+			firstRemote:  srv.URL + "/first/Taskfile.yml",
+			secondRemote: "./second/Taskfile.yml",
+		},
+		{
+			firstRemote:  getGitRemoteURL(t, dir+"/first"),
+			secondRemote: getGitRemoteURL(t, dir+"/first/second"),
+		},
+		{
+			firstRemote:  srv.URL + "/first/Taskfile.yml",
+			secondRemote: getGitRemoteURL(t, dir+"/first/second"),
+		},
+		{
+			firstRemote:  getGitRemoteURL(t, dir+"/first"),
+			secondRemote: srv.URL + "/first/second/Taskfile.yml",
+		},
+		{
+			firstRemote:  getGitRemoteURL(t, dir+"/first"),
+			secondRemote: "./second/Taskfile.yml",
+			extraTasks: []string{
+				"first:check-if-neighbor-file-exists",
+				"first:second:check-if-neighbor-file-exists",
+			},
+		},
+		{
+			firstRemote: getGitRemoteURL(t, dir+"/first") + "&taskfile=Taskfile2.yml",
+			extraTasks: []string{
+				"first:first-taskfile2-task",
+			},
+		},
+		{
+			firstRemote: getGitRemoteURL(t, dir+"/first") + "&taskfile=second/Taskfile2.yml",
+			extraTasks: []string{
+				"first:second-taskfile2-task",
+			},
+		},
+		{
+			firstRemote:  srv.URL + "/tasks-first.zip",
+			secondRemote: "./second/Taskfile.yml",
+			extraTasks: []string{
+				"first:check-if-neighbor-file-exists",
+				"first:second:check-if-neighbor-file-exists",
+			},
+		},
+		{
+			rootTaskfile: srv.URL + "/Taskfile.yml",
+			firstRemote:  "./first/Taskfile.yml",
+			secondRemote: "./second/Taskfile.yml",
+		},
+		{
+			rootTaskfile: getGitRemoteURL(t, dir),
+			firstRemote:  "./first/Taskfile.yml",
+			secondRemote: "./second/Taskfile.yml",
+			extraTasks: []string{
+				"first:check-if-neighbor-file-exists",
+				"first:second:check-if-neighbor-file-exists",
+			},
+		},
+		{
+			rootTaskfile: srv.URL + "/tasks-root.zip",
+			firstRemote:  "./first/Taskfile.yml",
+			secondRemote: "./second/Taskfile.yml",
+			extraTasks: []string{
+				"first:check-if-neighbor-file-exists",
+				"first:second:check-if-neighbor-file-exists",
+			},
+		},
+	}
+
+	tasks := []string{
+		"first:write-file",
+		"first:second:write-file",
+	}
+
+	for i, tc := range tcs {
+		t.Run(fmt.Sprint(i), func(t *testing.T) {
+			t.Setenv("FIRST_REMOTE_URL", tc.firstRemote)
+			t.Setenv("SECOND_REMOTE_URL", tc.secondRemote)
+
+			executors := []struct {
+				name     string
+				executor *task.Executor
+			}{
+				{
+					name: "online, always download",
+					executor: &task.Executor{
+						Dir:        dir,
+						Entrypoint: tc.rootTaskfile,
+						Timeout:    time.Minute,
+						Insecure:   true,
+						Verbose:    true,
+
+						// Without caching
+						AssumeYes: true,
+						Download:  true,
+						Offline:   false,
+					},
+				},
+				{
+					name: "offline, use-cache",
+					executor: &task.Executor{
+						Dir:        dir,
+						Entrypoint: tc.rootTaskfile,
+						Timeout:    time.Minute,
+						Insecure:   true,
+						Verbose:    true,
+
+						// With caching
+						AssumeYes: false,
+						Download:  false,
+						Offline:   true,
+					},
+				},
+			}
+
+			for j, e := range executors {
+				t.Run(fmt.Sprint(j), func(t *testing.T) {
+					var buff SyncBuffer
+					defer func() { t.Log("\noutput:\n", buff.buf.String()) }()
+
+					e.executor.Stderr = &buff
+					e.executor.Stdout = &buff
+					e.executor.Logger = &logger.Logger{Stderr: &buff, Stdout: &buff, Verbose: true}
+
+					require.NoError(t, e.executor.Setup())
+
+					for k, task := range tasks {
+						t.Run(task, func(t *testing.T) {
+							expectedContent := fmt.Sprint(random.Int63())
+							t.Setenv("CONTENT", expectedContent)
+
+							outputFile := fmt.Sprintf("%d.%d.txt", i, k)
+							t.Setenv("OUTPUT_FILE", outputFile)
+
+							path := filepath.Join(dir, outputFile)
+							require.NoError(t, os.RemoveAll(path))
+
+							require.NoError(t, e.executor.Run(context.Background(), &ast.Call{Task: task}))
+
+							actualContent, err := os.ReadFile(path)
+							require.NoError(t, err)
+							assert.Equal(t, expectedContent, strings.TrimSpace(string(actualContent)))
+						})
+					}
+
+					for _, task := range tc.extraTasks {
+						t.Run(task, func(t *testing.T) {
+							require.NoError(t, e.executor.Run(context.Background(), &ast.Call{Task: task}))
+						})
+					}
+				})
+			}
+		})
+	}
+}
+
+func createZipFileOfDir(t *testing.T, zipFilePath string, dir string) {
+	f, err := os.OpenFile(zipFilePath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0o644)
+	require.NoError(t, err)
+	defer f.Close()
+
+	w := zip.NewWriter(f)
+	err = w.AddFS(os.DirFS(dir))
+	require.NoError(t, err)
+	w.Close()
+}
+
+func getGitRemoteURL(t *testing.T, path string) string {
+	repoRoot, err := exec.Command("git", "rev-parse", "--show-toplevel").Output()
+	require.NoError(t, err)
+
+	// This is to support Github Workflows on PRs where we are in a detached HEAD state.
+	branch := os.Getenv("GITHUB_REF")
+	if branch == "" {
+		b, err := exec.Command("git", "branch", "--show-current").Output()
+		require.NoError(t, err)
+		branch = string(b)
+	}
+
+	return fmt.Sprintf("git::file://%s//%s?ref=%s&depth=1",
+		strings.TrimSpace(string(repoRoot)),
+		path,
+		strings.TrimSpace(string(branch)),
+	)
 }
 
 func TestIncludeCycle(t *testing.T) {

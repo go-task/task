@@ -1,7 +1,6 @@
 package taskfile
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"time"
@@ -88,7 +87,7 @@ func (r *Reader) include(node Node) error {
 
 	// Read and parse the Taskfile from the file and add it to the vertex
 	var err error
-	vertex.Taskfile, err = r.readNode(node)
+	vertex.Taskfile, node, err = r.readNode(node)
 	if err != nil {
 		return err
 	}
@@ -180,104 +179,30 @@ func (r *Reader) include(node Node) error {
 	return g.Wait()
 }
 
-func (r *Reader) readNode(node Node) (*ast.Taskfile, error) {
-	var b []byte
-	var err error
-	var cache *Cache
-
-	if node.Remote() {
-		cache, err = NewCache(r.tempDir)
-		if err != nil {
-			return nil, err
-		}
+func (r *Reader) readNode(node Node) (*ast.Taskfile, Node, error) {
+	node, err := r.loadNode(node)
+	if err != nil {
+		return nil, nil, err
 	}
 
-	// If the file is remote and we're in offline mode, check if we have a cached copy
-	if node.Remote() && r.offline {
-		if b, err = cache.read(node); errors.Is(err, os.ErrNotExist) {
-			return nil, &errors.TaskfileCacheNotFoundError{URI: node.Location()}
-		} else if err != nil {
-			return nil, err
-		}
-		r.logger.VerboseOutf(logger.Magenta, "task: [%s] Fetched cached copy\n", node.Location())
-	} else {
-
-		downloaded := false
-		ctx, cf := context.WithTimeout(context.Background(), r.timeout)
-		defer cf()
-
-		// Read the file
-		b, err = node.Read(ctx)
-		var taskfileNetworkTimeoutError *errors.TaskfileNetworkTimeoutError
-		// If we timed out then we likely have a network issue
-		if node.Remote() && errors.As(err, &taskfileNetworkTimeoutError) {
-			// If a download was requested, then we can't use a cached copy
-			if r.download {
-				return nil, &errors.TaskfileNetworkTimeoutError{URI: node.Location(), Timeout: r.timeout}
-			}
-			// Search for any cached copies
-			if b, err = cache.read(node); errors.Is(err, os.ErrNotExist) {
-				return nil, &errors.TaskfileNetworkTimeoutError{URI: node.Location(), Timeout: r.timeout, CheckedCache: true}
-			} else if err != nil {
-				return nil, err
-			}
-			r.logger.VerboseOutf(logger.Magenta, "task: [%s] Network timeout. Fetched cached copy\n", node.Location())
-		} else if err != nil {
-			return nil, err
-		} else {
-			downloaded = true
-		}
-
-		// If the node was remote, we need to check the checksum
-		if node.Remote() && downloaded {
-			r.logger.VerboseOutf(logger.Magenta, "task: [%s] Fetched remote copy\n", node.Location())
-
-			// Get the checksums
-			checksum := checksum(b)
-			cachedChecksum := cache.readChecksum(node)
-
-			var prompt string
-			if cachedChecksum == "" {
-				// If the checksum doesn't exist, prompt the user to continue
-				prompt = fmt.Sprintf(taskfileUntrustedPrompt, node.Location())
-			} else if checksum != cachedChecksum {
-				// If there is a cached hash, but it doesn't match the expected hash, prompt the user to continue
-				prompt = fmt.Sprintf(taskfileChangedPrompt, node.Location())
-			}
-			if prompt != "" {
-				if err := r.logger.Prompt(logger.Yellow, prompt, "n", "y", "yes"); err != nil {
-					return nil, &errors.TaskfileNotTrustedError{URI: node.Location()}
-				}
-			}
-
-			// If the hash has changed (or is new)
-			if checksum != cachedChecksum {
-				// Store the checksum
-				if err := cache.writeChecksum(node, checksum); err != nil {
-					return nil, err
-				}
-				// Cache the file
-				r.logger.VerboseOutf(logger.Magenta, "task: [%s] Caching downloaded file\n", node.Location())
-				if err = cache.write(node, b); err != nil {
-					return nil, err
-				}
-			}
-		}
+	src, err := node.Read()
+	if err != nil {
+		return nil, nil, err
 	}
 
 	var tf ast.Taskfile
-	if err := yaml.Unmarshal(b, &tf); err != nil {
+	if err := yaml.Unmarshal(src.FileContent, &tf); err != nil {
 		// Decode the taskfile and add the file info the any errors
 		taskfileInvalidErr := &errors.TaskfileDecodeError{}
 		if errors.As(err, &taskfileInvalidErr) {
-			return nil, taskfileInvalidErr.WithFileInfo(node.Location(), b, 2)
+			return nil, nil, taskfileInvalidErr.WithFileInfo(node.Location(), src.FileContent, 2)
 		}
-		return nil, &errors.TaskfileInvalidError{URI: filepathext.TryAbsToRel(node.Location()), Err: err}
+		return nil, nil, &errors.TaskfileInvalidError{URI: filepathext.TryAbsToRel(node.Location()), Err: err}
 	}
 
 	// Check that the Taskfile is set and has a schema version
 	if tf.Version == nil {
-		return nil, &errors.TaskfileVersionCheckError{URI: node.Location()}
+		return nil, nil, &errors.TaskfileVersionCheckError{URI: node.Location()}
 	}
 
 	// Set the taskfile/task's locations
@@ -291,7 +216,92 @@ func (r *Reader) readNode(node Node) (*ast.Taskfile, error) {
 		if task.Location.Taskfile == "" {
 			task.Location.Taskfile = tf.Location
 		}
+		if task.Location.TaskfileDir == "" {
+			task.Location.TaskfileDir = src.FileDirectory
+		}
 	}
 
-	return &tf, nil
+	return &tf, node, nil
+}
+
+func (r *Reader) loadNode(n Node) (Node, error) {
+	remote, ok := n.(*RemoteNode)
+	if !ok {
+		return n, nil
+	}
+
+	cache, err := NewCache(r.tempDir)
+	if err != nil {
+		return nil, err
+	}
+
+	if r.offline {
+		// In offline mode try to use cached copy
+		cached, err := cache.read(*remote)
+		if errors.Is(err, os.ErrNotExist) {
+			return nil, &errors.TaskfileCacheNotFoundError{URI: remote.Location()}
+		} else if err != nil {
+			return nil, err
+		}
+		r.logger.VerboseOutf(logger.Magenta, "task: [%s] Fetched cached copy\n", remote.Location())
+
+		return cached, nil
+	}
+
+	src, err := remote.Read()
+
+	var te *errors.TaskfileNetworkTimeoutError
+	if errors.As(err, &te) {
+		// If we timed out then we likely have a network issue
+
+		// If a download was requested, then we can't use a cached copy
+		if r.download {
+			return nil, &errors.TaskfileNetworkTimeoutError{URI: remote.Location(), Timeout: te.Timeout}
+		}
+
+		// Search for any cached copies
+		cached, err := cache.read(*remote)
+		if errors.Is(err, os.ErrNotExist) {
+			return nil, &errors.TaskfileNetworkTimeoutError{URI: remote.Location(), Timeout: r.timeout, CheckedCache: true}
+		} else if err != nil {
+			return nil, err
+		}
+		r.logger.VerboseOutf(logger.Magenta, "task: [%s] Network timeout. Fetched cached copy\n", remote.Location())
+
+		return cached, nil
+
+	} else if err != nil {
+		return nil, err
+	}
+	r.logger.VerboseOutf(logger.Magenta, "task: [%s] Fetched remote copy\n", remote.Location())
+
+	// Get the checksums
+	cachedChecksum := cache.readChecksum(*remote)
+	checksum, err := checksumSource(*src)
+	if err != nil {
+		return nil, err
+	}
+
+	var prompt string
+	if cachedChecksum == "" {
+		// If the checksum doesn't exist, prompt the user to continue
+		prompt = fmt.Sprintf(taskfileUntrustedPrompt, remote.Location())
+	} else if checksum != cachedChecksum {
+		// If there is a cached hash, but it doesn't match the expected hash, prompt the user to continue
+		prompt = fmt.Sprintf(taskfileChangedPrompt, remote.Location())
+	}
+
+	if prompt != "" {
+		if err := r.logger.Prompt(logger.Yellow, prompt, "n", "y", "yes"); err != nil {
+			return nil, &errors.TaskfileNotTrustedError{URI: remote.Location()}
+		}
+
+		// Cache the file
+		r.logger.VerboseOutf(logger.Magenta, "task: [%s] Caching downloaded file\n", remote.Location())
+		if remote, err = cache.write(*remote, *src); err != nil {
+			return nil, err
+		}
+	}
+
+	return remote, nil
 }

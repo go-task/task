@@ -1,11 +1,10 @@
 package taskfile
 
 import (
-	"context"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/go-task/task/v3/internal/execext"
 	"github.com/go-task/task/v3/internal/filepathext"
@@ -35,17 +34,21 @@ func (node *FileNode) Location() string {
 	return node.Entrypoint
 }
 
-func (node *FileNode) Remote() bool {
-	return false
-}
-
-func (node *FileNode) Read(ctx context.Context) ([]byte, error) {
+func (node *FileNode) Read() (*source, error) {
 	f, err := os.Open(node.Location())
 	if err != nil {
 		return nil, err
 	}
 	defer f.Close()
-	return io.ReadAll(f)
+	b, err := io.ReadAll(f)
+	if err != nil {
+		return nil, err
+	}
+	return &source{
+		FileContent:   b,
+		FileDirectory: filepath.Dir(node.Location()),
+		Filename:      filepath.Base(node.Location()),
+	}, nil
 }
 
 // resolveFileNodeEntrypointAndDir resolves checks the values of entrypoint and dir and
@@ -77,8 +80,12 @@ func resolveFileNodeEntrypointAndDir(l *logger.Logger, entrypoint, dir string) (
 }
 
 func (node *FileNode) ResolveEntrypoint(entrypoint string) (string, error) {
-	// If the file is remote, we don't need to resolve the path
-	if strings.Contains(entrypoint, "://") {
+	client := newGetterClient(node.Dir())
+	proto, _, err := extractProtocolFromURL(client, entrypoint)
+	if err != nil {
+		return "", fmt.Errorf("error determining protocol of include %s: %w", entrypoint, err)
+	} else if proto != "file" {
+		// If the file is remote, we don't need to resolve the path
 		return entrypoint, nil
 	}
 
