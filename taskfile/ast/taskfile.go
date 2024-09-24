@@ -29,7 +29,7 @@ type Taskfile struct {
 	Shopt    []string
 	Vars     *Vars
 	Env      *Vars
-	Tasks    Tasks
+	Tasks    *Tasks
 	Silent   bool
 	Dotenv   []string
 	Run      string
@@ -47,11 +47,17 @@ func (t1 *Taskfile) Merge(t2 *Taskfile, include *Include) error {
 	if t2.Output.IsSet() {
 		t1.Output = t2.Output
 	}
+	if t1.Includes == nil {
+		t1.Includes = NewIncludes()
+	}
 	if t1.Vars == nil {
-		t1.Vars = &Vars{}
+		t1.Vars = NewVars()
 	}
 	if t1.Env == nil {
-		t1.Env = &Vars{}
+		t1.Env = NewVars()
+	}
+	if t1.Tasks == nil {
+		t1.Tasks = NewTasks()
 	}
 	t1.Vars.Merge(t2.Vars, include)
 	t1.Env.Merge(t2.Env, include)
@@ -70,7 +76,7 @@ func (tf *Taskfile) UnmarshalYAML(node *yaml.Node) error {
 			Shopt    []string
 			Vars     *Vars
 			Env      *Vars
-			Tasks    Tasks
+			Tasks    *Tasks
 			Silent   bool
 			Dotenv   []string
 			Run      string
@@ -92,11 +98,17 @@ func (tf *Taskfile) UnmarshalYAML(node *yaml.Node) error {
 		tf.Dotenv = taskfile.Dotenv
 		tf.Run = taskfile.Run
 		tf.Interval = taskfile.Interval
+		if tf.Includes == nil {
+			tf.Includes = NewIncludes()
+		}
 		if tf.Vars == nil {
-			tf.Vars = &Vars{}
+			tf.Vars = NewVars()
 		}
 		if tf.Env == nil {
-			tf.Env = &Vars{}
+			tf.Env = NewVars()
+		}
+		if tf.Tasks == nil {
+			tf.Tasks = NewTasks()
 		}
 		return nil
 	}

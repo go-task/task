@@ -5,13 +5,12 @@ import (
 
 	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/deepcopy"
-	"github.com/go-task/task/v3/internal/omap"
 )
 
 type For struct {
 	From   string
 	List   []any
-	Matrix omap.OrderedMap[string, []any]
+	Matrix *Matrix
 	Var    string
 	Split  string
 	As     string
@@ -38,7 +37,7 @@ func (f *For) UnmarshalYAML(node *yaml.Node) error {
 
 	case yaml.MappingNode:
 		var forStruct struct {
-			Matrix omap.OrderedMap[string, []any]
+			Matrix *Matrix
 			Var    string
 			Split  string
 			As     string

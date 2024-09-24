@@ -17,7 +17,7 @@ func (e *Executor) areTaskRequiredVarsSet(t *ast.Task, call *ast.Call) error {
 
 	var missingVars []string
 	for _, requiredVar := range t.Requires.Vars {
-		if !vars.Exists(requiredVar) {
+		if _, ok := vars.Get(requiredVar); !ok {
 			missingVars = append(missingVars, requiredVar)
 		}
 	}

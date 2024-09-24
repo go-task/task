@@ -21,7 +21,7 @@ func Dotenv(c *compiler.Compiler, tf *ast.Taskfile, dir string) (*ast.Vars, erro
 		return nil, err
 	}
 
-	env := &ast.Vars{}
+	env := ast.NewVars()
 	cache := &templater.Cache{Vars: vars}
 
 	for _, dotEnvPath := range tf.Dotenv {
@@ -40,7 +40,7 @@ func Dotenv(c *compiler.Compiler, tf *ast.Taskfile, dir string) (*ast.Vars, erro
 			return nil, err
 		}
 		for key, value := range envs {
-			if ok := env.Exists(key); !ok {
+			if _, ok := env.Get(key); !ok {
 				env.Set(key, ast.Var{Value: value})
 			}
 		}
