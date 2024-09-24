@@ -249,14 +249,14 @@ func (r *Reader) readNode(node Node) (*ast.Taskfile, error) {
 			}
 
 			if prompt != "" {
-				r.promptMutex.Lock()
-				if err := r.logger.Prompt(logger.Yellow, prompt, "n", "y", "yes"); err != nil {
-					r.promptMutex.Unlock()
+				if err := func() error {
+					r.promptMutex.Lock()
+					defer r.promptMutex.Unlock()
+					return r.logger.Prompt(logger.Yellow, prompt, "n", "y", "yes")
+				}(); err != nil {
 					return nil, &errors.TaskfileNotTrustedError{URI: node.Location()}
 				}
-				r.promptMutex.Unlock()
 			}
-
 			// If the hash has changed (or is new)
 			if checksum != cachedChecksum {
 				// Store the checksum
