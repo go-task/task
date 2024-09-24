@@ -74,7 +74,6 @@ func (node *HTTPNode) Read(ctx context.Context) ([]byte, error) {
 		return nil, errors.TaskfileFetchFailedError{URI: node.URL.String()}
 	}
 	defer resp.Body.Close()
-
 	if resp.StatusCode != http.StatusOK {
 		return nil, errors.TaskfileFetchFailedError{
 			URI:            node.URL.String(),
