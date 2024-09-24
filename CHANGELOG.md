@@ -7,6 +7,8 @@
 - Added a new `TASK_OFFLINE` environment variable to configure the `--offline`
   flag and expose it as a special variable in the templating system (#1470,
   #1716 by @vmaerten and @pd93).
+- Fixed a bug where multiple remote includes caused all prompts to display
+  without waiting for user input (#1832, #1833 by @vmaerten and @pd93).
 
 ## v3.39.2 - 2024-09-19
 
