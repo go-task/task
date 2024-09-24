@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/dominikbraun/graph"
@@ -30,14 +31,15 @@ Continue?`
 // A Reader will recursively read Taskfiles from a given source using a directed
 // acyclic graph (DAG).
 type Reader struct {
-	graph    *ast.TaskfileGraph
-	node     Node
-	insecure bool
-	download bool
-	offline  bool
-	timeout  time.Duration
-	tempDir  string
-	logger   *logger.Logger
+	graph       *ast.TaskfileGraph
+	node        Node
+	insecure    bool
+	download    bool
+	offline     bool
+	timeout     time.Duration
+	tempDir     string
+	logger      *logger.Logger
+	promptMutex sync.Mutex
 }
 
 func NewReader(
@@ -50,14 +52,15 @@ func NewReader(
 	logger *logger.Logger,
 ) *Reader {
 	return &Reader{
-		graph:    ast.NewTaskfileGraph(),
-		node:     node,
-		insecure: insecure,
-		download: download,
-		offline:  offline,
-		timeout:  timeout,
-		tempDir:  tempDir,
-		logger:   logger,
+		graph:       ast.NewTaskfileGraph(),
+		node:        node,
+		insecure:    insecure,
+		download:    download,
+		offline:     offline,
+		timeout:     timeout,
+		tempDir:     tempDir,
+		logger:      logger,
+		promptMutex: sync.Mutex{},
 	}
 }
 
@@ -246,12 +249,12 @@ func (r *Reader) readNode(node Node) (*ast.Taskfile, error) {
 			}
 
 			if prompt != "" {
-				r.graph.Lock()
+				r.promptMutex.Lock()
 				if err := r.logger.Prompt(logger.Yellow, prompt, "n", "y", "yes"); err != nil {
-					r.graph.Unlock()
+					r.promptMutex.Unlock()
 					return nil, &errors.TaskfileNotTrustedError{URI: node.Location()}
 				}
-				r.graph.Unlock()
+				r.promptMutex.Unlock()
 			}
 
 			// If the hash has changed (or is new)
