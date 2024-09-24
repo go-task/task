@@ -1788,7 +1788,7 @@ func TestExitCodeZero(t *testing.T) {
 	require.NoError(t, e.Setup())
 
 	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "exit-zero"}))
-	assert.Equal(t, "EXIT_CODE=", strings.TrimSpace(buff.String()))
+	assert.Equal(t, "FOO=bar - DYNAMIC_FOO=bar - EXIT_CODE=", strings.TrimSpace(buff.String()))
 }
 
 func TestExitCodeOne(t *testing.T) {
@@ -1802,7 +1802,7 @@ func TestExitCodeOne(t *testing.T) {
 	require.NoError(t, e.Setup())
 
 	require.Error(t, e.Run(context.Background(), &ast.Call{Task: "exit-one"}))
-	assert.Equal(t, "EXIT_CODE=1", strings.TrimSpace(buff.String()))
+	assert.Equal(t, "FOO=bar - DYNAMIC_FOO=bar - EXIT_CODE=1", strings.TrimSpace(buff.String()))
 }
 
 func TestIgnoreNilElements(t *testing.T) {

@@ -2,9 +2,28 @@
 
 ## Unreleased
 
+- Fixed output of some functions (e.g. `splitArgs`/`splitLines`) not working in
+  for loops (#1822, #1823 by @stawii).
+- Added a new `TASK_OFFLINE` environment variable to configure the `--offline`
+  flag and expose it as a special variable in the templating system (#1470,
+  #1716 by @vmaerten and @pd93).
+- Fixed a bug where multiple remote includes caused all prompts to display
+  without waiting for user input (#1832, #1833 by @vmaerten and @pd93).
+
+## v3.39.2 - 2024-09-19
+
+- Fix dynamic variables not working properly for a defer: statement (#1803,
+  #1818 by @vmaerten).
+
+## v3.39.1 - 2024-09-18
+
 - Added Renovate configuration to automatically create PRs to keep dependencies
   up to date (#1783 by @vmaerten).
 - Fixed a bug where the help was displayed twice (#1805, #1806 by @vmaerten).
+- Fixed a bug where ZSH and PowerShell completions did not work when using the
+  recommended method. (#1813, #1809 by @vmaerten and @shirayu)
+- Fix variables not working properly for a `defer:` statement (#1803, #1814 by
+  @vmaerten and @andreynering).
 
 ## v3.39.0 - 2024-09-07
 
