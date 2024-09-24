@@ -112,6 +112,7 @@ func (r *Reader) include(node Node) error {
 				Flatten:        include.Flatten,
 				Aliases:        include.Aliases,
 				AdvancedImport: include.AdvancedImport,
+				Excludes:       include.Excludes,
 				Vars:           include.Vars,
 			}
 			if err := cache.Err(); err != nil {

@@ -1305,6 +1305,34 @@ func TestIncludesInterpolation(t *testing.T) {
 	}
 }
 
+func TestIncludesWithExclude(t *testing.T) {
+	var buff bytes.Buffer
+	e := task.Executor{
+		Dir:    "testdata/includes_with_excludes",
+		Silent: true,
+		Stdout: &buff,
+		Stderr: &buff,
+	}
+	require.NoError(t, e.Setup())
+
+	err := e.Run(context.Background(), &ast.Call{Task: "included:bar"})
+	require.NoError(t, err)
+	assert.Equal(t, "bar\n", buff.String())
+	buff.Reset()
+
+	err = e.Run(context.Background(), &ast.Call{Task: "included:foo"})
+	require.Error(t, err)
+	buff.Reset()
+
+	err = e.Run(context.Background(), &ast.Call{Task: "bar"})
+	require.Error(t, err)
+	buff.Reset()
+
+	err = e.Run(context.Background(), &ast.Call{Task: "foo"})
+	require.NoError(t, err)
+	assert.Equal(t, "foo\n", buff.String())
+}
+
 func TestIncludedTaskfileVarMerging(t *testing.T) {
 	const dir = "testdata/included_taskfile_var_merging"
 	tests := []struct {

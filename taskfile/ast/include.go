@@ -4,6 +4,7 @@ import (
 	"gopkg.in/yaml.v3"
 
 	"github.com/go-task/task/v3/errors"
+	"github.com/go-task/task/v3/internal/deepcopy"
 	omap "github.com/go-task/task/v3/internal/omap"
 )
 
@@ -15,6 +16,7 @@ type Include struct {
 	Optional       bool
 	Internal       bool
 	Aliases        []string
+	Excludes       []string
 	AdvancedImport bool
 	Vars           *Vars
 	Flatten        bool
@@ -84,6 +86,7 @@ func (include *Include) UnmarshalYAML(node *yaml.Node) error {
 			Internal bool
 			Flatten  bool
 			Aliases  []string
+			Excludes []string
 			Vars     *Vars
 		}
 		if err := node.Decode(&includedTaskfile); err != nil {
@@ -94,6 +97,7 @@ func (include *Include) UnmarshalYAML(node *yaml.Node) error {
 		include.Optional = includedTaskfile.Optional
 		include.Internal = includedTaskfile.Internal
 		include.Aliases = includedTaskfile.Aliases
+		include.Excludes = includedTaskfile.Excludes
 		include.AdvancedImport = true
 		include.Vars = includedTaskfile.Vars
 		include.Flatten = includedTaskfile.Flatten
@@ -115,6 +119,7 @@ func (include *Include) DeepCopy() *Include {
 		Dir:            include.Dir,
 		Optional:       include.Optional,
 		Internal:       include.Internal,
+		Excludes:       deepcopy.Slice(include.Excludes),
 		AdvancedImport: include.AdvancedImport,
 		Vars:           include.Vars.DeepCopy(),
 		Flatten:        include.Flatten,
