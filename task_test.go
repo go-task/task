@@ -40,7 +40,6 @@ type SyncBuffer struct {
 func (sb *SyncBuffer) Write(p []byte) (n int, err error) {
 	sb.mu.Lock()
 	defer sb.mu.Unlock()
-	fmt.Fprintln(os.Stderr, "len:", len(p))
 	return sb.buf.Write(p)
 }
 
