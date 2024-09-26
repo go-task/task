@@ -2489,6 +2489,8 @@ func TestForDeps(t *testing.T) {
 				Stderr: &buff,
 				Silent: true,
 				Force:  true,
+				// Force output of each dep to be grouped together to prevent interleaving
+				OutputStyle: ast.Output{Name: "group"},
 			}
 			require.NoError(t, e.Setup())
 			require.NoError(t, e.Run(context.Background(), &ast.Call{Task: test.name}))
