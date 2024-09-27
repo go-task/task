@@ -25,7 +25,7 @@ func (e *Executor) Status(ctx context.Context, calls ...*ast.Call) error {
 		}
 
 		// Check if the task is up-to-date
-		isUpToDate, err := fingerprint.IsTaskUpToDate(ctx, t,
+		isUpToDate, _, err := fingerprint.IsTaskUpToDate(ctx, t,
 			fingerprint.WithMethod(method),
 			fingerprint.WithTempDir(e.TempDir.Fingerprint),
 			fingerprint.WithDry(e.Dry),

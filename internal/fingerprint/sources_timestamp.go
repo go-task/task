@@ -23,18 +23,18 @@ func NewTimestampChecker(tempDir string, dry bool) *TimestampChecker {
 }
 
 // IsUpToDate implements the Checker interface
-func (checker *TimestampChecker) IsUpToDate(t *ast.Task) (bool, error) {
+func (checker *TimestampChecker) IsUpToDate(t *ast.Task) (bool, string, error) {
 	if len(t.Sources) == 0 {
-		return false, nil
+		return false, "", nil
 	}
 
 	sources, err := Globs(t.Dir, t.Sources)
 	if err != nil {
-		return false, nil
+		return false, "", nil
 	}
 	generates, err := Globs(t.Dir, t.Generates)
 	if err != nil {
-		return false, nil
+		return false, "", nil
 	}
 
 	timestampFile := checker.timestampFilePath(t)
@@ -48,11 +48,11 @@ func (checker *TimestampChecker) IsUpToDate(t *ast.Task) (bool, error) {
 		// Create the timestamp file for the next execution when the file does not exist.
 		if !checker.dry {
 			if err := os.MkdirAll(filepath.Dir(timestampFile), 0o755); err != nil {
-				return false, err
+				return false, "", err
 			}
 			f, err := os.Create(timestampFile)
 			if err != nil {
-				return false, err
+				return false, "", err
 			}
 			f.Close()
 		}
@@ -65,26 +65,26 @@ func (checker *TimestampChecker) IsUpToDate(t *ast.Task) (bool, error) {
 	// Get the max time of the generates.
 	generateMaxTime, err := getMaxTime(generates...)
 	if err != nil || generateMaxTime.IsZero() {
-		return false, nil
+		return false, "", nil
 	}
 
 	// Check if any of the source files is newer than the max time of the generates.
 	shouldUpdate, err := anyFileNewerThan(sources, generateMaxTime)
 	if err != nil {
-		return false, nil
+		return false, "", nil
 	}
 
 	// Modify the metadata of the file to the the current time.
 	if !checker.dry {
 		if err := os.Chtimes(timestampFile, taskTime, taskTime); err != nil {
-			return false, err
+			return false, "", err
 		}
 	}
 
-	return !shouldUpdate, nil
+	return !shouldUpdate, "", nil
 }
 
-func (checker *TimestampChecker) SetUpToDate(t *ast.Task) error {
+func (checker *TimestampChecker) SetUpToDate(t *ast.Task, sourceState string) error {
 	return nil // TODO: implement
 }
 

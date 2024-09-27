@@ -28,9 +28,9 @@ func NewChecksumChecker(tempDir string, dry bool) *ChecksumChecker {
 	}
 }
 
-func (checker *ChecksumChecker) IsUpToDate(t *ast.Task) (bool, error) {
+func (checker *ChecksumChecker) IsUpToDate(t *ast.Task) (bool, string, error) {
 	if len(t.Sources) == 0 && len(t.Generates) == 0 {
-		return false, nil
+		return false, "", nil
 	}
 
 	checksumFile := checker.checksumFilePath(t)
@@ -41,27 +41,18 @@ func (checker *ChecksumChecker) IsUpToDate(t *ast.Task) (bool, error) {
 
 	newSourcesHash, err := checker.checksum(t, t.Sources)
 	if err != nil {
-		return false, err
+		return false, "", err
 	}
 
 	newGeneratesHash, err := checker.checksum(t, t.Generates)
 	if err != nil {
-		return false, err
+		return false, "", err
 	}
 
-	if !checker.dry && oldSourcesHash != newSourcesHash {
-		// make sure current sources hash are saved to file before executing the task,
-		// the proper "generated" hash will be saved after the task is executed
-		_ = os.MkdirAll(filepathext.SmartJoin(checker.tempDir, "checksum"), 0o755)
-		if err = os.WriteFile(checksumFile, []byte(newSourcesHash+"\n"+"_"), 0o644); err != nil {
-			return false, err
-		}
-	}
-
-	return oldSourcesHash == newSourcesHash && oldGeneratesdHash == newGeneratesHash, nil
+	return oldSourcesHash == newSourcesHash && oldGeneratesdHash == newGeneratesHash, newSourcesHash, nil
 }
 
-func (checker *ChecksumChecker) SetUpToDate(t *ast.Task) error {
+func (checker *ChecksumChecker) SetUpToDate(t *ast.Task, sourceHash string) error {
 	if len(t.Sources) == 0 && len(t.Generates) == 0 {
 		return nil
 	}
@@ -70,15 +61,18 @@ func (checker *ChecksumChecker) SetUpToDate(t *ast.Task) error {
 		return nil
 	}
 
-	checksumFile := checker.checksumFilePath(t)
-
-	data, _ := os.ReadFile(checksumFile)
-	oldHashes := strings.TrimSpace(string(data))
-	oldSourcesHash, oldGeneratesdHash, _ := strings.Cut(oldHashes, "\n")
-
 	newSourcesHash, err := checker.checksum(t, t.Sources)
 	if err != nil {
 		return err
+	}
+
+	checksumFile := checker.checksumFilePath(t)
+
+	if sourceHash != "" && newSourcesHash != sourceHash {
+		// sources have changed since the task was executed, remove the checksum file
+		// since the next execution will have a different checksum
+		os.Remove(checksumFile)
+		return nil
 	}
 
 	newGeneratesHash, err := checker.checksum(t, t.Generates)
@@ -86,11 +80,9 @@ func (checker *ChecksumChecker) SetUpToDate(t *ast.Task) error {
 		return err
 	}
 
-	if oldSourcesHash != newSourcesHash || oldGeneratesdHash != newGeneratesHash {
-		_ = os.MkdirAll(filepathext.SmartJoin(checker.tempDir, "checksum"), 0o755)
-		if err = os.WriteFile(checksumFile, []byte(oldSourcesHash+"\n"+newGeneratesHash+"\n"), 0o644); err != nil {
-			return err
-		}
+	_ = os.MkdirAll(filepathext.SmartJoin(checker.tempDir, "checksum"), 0o755)
+	if err = os.WriteFile(checksumFile, []byte(newSourcesHash+"\n"+newGeneratesHash+"\n"), 0o644); err != nil {
+		return err
 	}
 
 	return nil

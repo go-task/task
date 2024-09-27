@@ -6,11 +6,11 @@ import "github.com/go-task/task/v3/taskfile/ast"
 // It will always report that the task is not up-to-date.
 type NoneChecker struct{}
 
-func (NoneChecker) IsUpToDate(t *ast.Task) (bool, error) {
-	return false, nil
+func (NoneChecker) IsUpToDate(t *ast.Task) (bool, string, error) {
+	return false, "", nil
 }
 
-func (NoneChecker) SetUpToDate(t *ast.Task) error {
+func (NoneChecker) SetUpToDate(t *ast.Task, sourceState string) error {
 	return nil
 }
 

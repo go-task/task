@@ -53,7 +53,7 @@ func TestIsTaskUpToDate(t *testing.T) {
 			},
 			setupMockStatusChecker: nil,
 			setupMockSourcesChecker: func(m *mocks.SourcesCheckable) {
-				m.EXPECT().IsUpToDate(mock.Anything).Return(true, nil)
+				m.EXPECT().IsUpToDate(mock.Anything).Return(true, "", nil)
 			},
 			expected: true,
 		},
@@ -65,7 +65,7 @@ func TestIsTaskUpToDate(t *testing.T) {
 			},
 			setupMockStatusChecker: nil,
 			setupMockSourcesChecker: func(m *mocks.SourcesCheckable) {
-				m.EXPECT().IsUpToDate(mock.Anything).Return(false, nil)
+				m.EXPECT().IsUpToDate(mock.Anything).Return(false, "", nil)
 			},
 			expected: false,
 		},
@@ -91,7 +91,7 @@ func TestIsTaskUpToDate(t *testing.T) {
 				m.EXPECT().IsUpToDate(mock.Anything, mock.Anything).Return(true, nil)
 			},
 			setupMockSourcesChecker: func(m *mocks.SourcesCheckable) {
-				m.EXPECT().IsUpToDate(mock.Anything).Return(true, nil)
+				m.EXPECT().IsUpToDate(mock.Anything).Return(true, "", nil)
 			},
 			expected: true,
 		},
@@ -105,7 +105,7 @@ func TestIsTaskUpToDate(t *testing.T) {
 				m.EXPECT().IsUpToDate(mock.Anything, mock.Anything).Return(true, nil)
 			},
 			setupMockSourcesChecker: func(m *mocks.SourcesCheckable) {
-				m.EXPECT().IsUpToDate(mock.Anything).Return(false, nil)
+				m.EXPECT().IsUpToDate(mock.Anything).Return(false, "", nil)
 			},
 			expected: false,
 		},
@@ -131,7 +131,7 @@ func TestIsTaskUpToDate(t *testing.T) {
 				m.EXPECT().IsUpToDate(mock.Anything, mock.Anything).Return(false, nil)
 			},
 			setupMockSourcesChecker: func(m *mocks.SourcesCheckable) {
-				m.EXPECT().IsUpToDate(mock.Anything).Return(true, nil)
+				m.EXPECT().IsUpToDate(mock.Anything).Return(true, "", nil)
 			},
 			expected: false,
 		},
@@ -145,7 +145,7 @@ func TestIsTaskUpToDate(t *testing.T) {
 				m.EXPECT().IsUpToDate(mock.Anything, mock.Anything).Return(false, nil)
 			},
 			setupMockSourcesChecker: func(m *mocks.SourcesCheckable) {
-				m.EXPECT().IsUpToDate(mock.Anything).Return(false, nil)
+				m.EXPECT().IsUpToDate(mock.Anything).Return(false, "", nil)
 			},
 			expected: false,
 		},
@@ -164,7 +164,7 @@ func TestIsTaskUpToDate(t *testing.T) {
 				tt.setupMockSourcesChecker(mockSourcesChecker)
 			}
 
-			result, err := IsTaskUpToDate(
+			result, _, err := IsTaskUpToDate(
 				context.Background(),
 				tt.task,
 				WithStatusChecker(mockStatusChecker),

@@ -22,7 +22,7 @@ func (_m *SourcesCheckable) EXPECT() *SourcesCheckable_Expecter {
 }
 
 // IsUpToDate provides a mock function with given fields: t
-func (_m *SourcesCheckable) IsUpToDate(t *ast.Task) (bool, error) {
+func (_m *SourcesCheckable) IsUpToDate(t *ast.Task) (bool, string, error) {
 	ret := _m.Called(t)
 
 	if len(ret) == 0 {
@@ -30,8 +30,9 @@ func (_m *SourcesCheckable) IsUpToDate(t *ast.Task) (bool, error) {
 	}
 
 	var r0 bool
-	var r1 error
-	if rf, ok := ret.Get(0).(func(*ast.Task) (bool, error)); ok {
+	var r1 string
+	var r2 error
+	if rf, ok := ret.Get(0).(func(*ast.Task) (bool, string, error)); ok {
 		return rf(t)
 	}
 	if rf, ok := ret.Get(0).(func(*ast.Task) bool); ok {
@@ -40,13 +41,19 @@ func (_m *SourcesCheckable) IsUpToDate(t *ast.Task) (bool, error) {
 		r0 = ret.Get(0).(bool)
 	}
 
-	if rf, ok := ret.Get(1).(func(*ast.Task) error); ok {
+	if rf, ok := ret.Get(1).(func(*ast.Task) string); ok {
 		r1 = rf(t)
 	} else {
-		r1 = ret.Error(1)
+		r1 = ret.Get(1).(string)
 	}
 
-	return r0, r1
+	if rf, ok := ret.Get(2).(func(*ast.Task) error); ok {
+		r2 = rf(t)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
 }
 
 // SourcesCheckable_IsUpToDate_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'IsUpToDate'
@@ -67,12 +74,12 @@ func (_c *SourcesCheckable_IsUpToDate_Call) Run(run func(t *ast.Task)) *SourcesC
 	return _c
 }
 
-func (_c *SourcesCheckable_IsUpToDate_Call) Return(_a0 bool, _a1 error) *SourcesCheckable_IsUpToDate_Call {
-	_c.Call.Return(_a0, _a1)
+func (_c *SourcesCheckable_IsUpToDate_Call) Return(upToDate bool, sourceState string, err error) *SourcesCheckable_IsUpToDate_Call {
+	_c.Call.Return(upToDate, sourceState, err)
 	return _c
 }
 
-func (_c *SourcesCheckable_IsUpToDate_Call) RunAndReturn(run func(*ast.Task) (bool, error)) *SourcesCheckable_IsUpToDate_Call {
+func (_c *SourcesCheckable_IsUpToDate_Call) RunAndReturn(run func(*ast.Task) (bool, string, error)) *SourcesCheckable_IsUpToDate_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -122,52 +129,6 @@ func (_c *SourcesCheckable_Kind_Call) RunAndReturn(run func() string) *SourcesCh
 	return _c
 }
 
-// SetUpToDate provides a mock function with given fields: t
-func (_m *SourcesCheckable) SetUpToDate(t *ast.Task) error {
-	ret := _m.Called(t)
-
-	if len(ret) == 0 {
-		panic("no return value specified for SetUpToDate")
-	}
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(*ast.Task) error); ok {
-		r0 = rf(t)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
-// SourcesCheckable_SetUpToDate_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'SetUpToDate'
-type SourcesCheckable_SetUpToDate_Call struct {
-	*mock.Call
-}
-
-// SetUpToDate is a helper method to define mock.On call
-//   - t *ast.Task
-func (_e *SourcesCheckable_Expecter) SetUpToDate(t interface{}) *SourcesCheckable_SetUpToDate_Call {
-	return &SourcesCheckable_SetUpToDate_Call{Call: _e.mock.On("SetUpToDate", t)}
-}
-
-func (_c *SourcesCheckable_SetUpToDate_Call) Run(run func(t *ast.Task)) *SourcesCheckable_SetUpToDate_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(*ast.Task))
-	})
-	return _c
-}
-
-func (_c *SourcesCheckable_SetUpToDate_Call) Return(_a0 error) *SourcesCheckable_SetUpToDate_Call {
-	_c.Call.Return(_a0)
-	return _c
-}
-
-func (_c *SourcesCheckable_SetUpToDate_Call) RunAndReturn(run func(*ast.Task) error) *SourcesCheckable_SetUpToDate_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
 // OnError provides a mock function with given fields: t
 func (_m *SourcesCheckable) OnError(t *ast.Task) error {
 	ret := _m.Called(t)
@@ -210,6 +171,53 @@ func (_c *SourcesCheckable_OnError_Call) Return(_a0 error) *SourcesCheckable_OnE
 }
 
 func (_c *SourcesCheckable_OnError_Call) RunAndReturn(run func(*ast.Task) error) *SourcesCheckable_OnError_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// SetUpToDate provides a mock function with given fields: t, sourceState
+func (_m *SourcesCheckable) SetUpToDate(t *ast.Task, sourceState string) error {
+	ret := _m.Called(t, sourceState)
+
+	if len(ret) == 0 {
+		panic("no return value specified for SetUpToDate")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(*ast.Task, string) error); ok {
+		r0 = rf(t, sourceState)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// SourcesCheckable_SetUpToDate_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'SetUpToDate'
+type SourcesCheckable_SetUpToDate_Call struct {
+	*mock.Call
+}
+
+// SetUpToDate is a helper method to define mock.On call
+//   - t *ast.Task
+//   - sourceState string
+func (_e *SourcesCheckable_Expecter) SetUpToDate(t interface{}, sourceState interface{}) *SourcesCheckable_SetUpToDate_Call {
+	return &SourcesCheckable_SetUpToDate_Call{Call: _e.mock.On("SetUpToDate", t, sourceState)}
+}
+
+func (_c *SourcesCheckable_SetUpToDate_Call) Run(run func(t *ast.Task, sourceState string)) *SourcesCheckable_SetUpToDate_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(*ast.Task), args[1].(string))
+	})
+	return _c
+}
+
+func (_c *SourcesCheckable_SetUpToDate_Call) Return(_a0 error) *SourcesCheckable_SetUpToDate_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *SourcesCheckable_SetUpToDate_Call) RunAndReturn(run func(*ast.Task, string) error) *SourcesCheckable_SetUpToDate_Call {
 	_c.Call.Return(run)
 	return _c
 }
