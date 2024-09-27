@@ -118,19 +118,31 @@ func (c *ChecksumChecker) checksum(t *ast.Task, globs []*ast.Glob) (string, erro
 	buf := make([]byte, 128*1024)
 	for _, f := range sources {
 		// also sum the filename, so checksum changes for renaming a file
-		if _, err := io.CopyBuffer(h, strings.NewReader(filepath.Base(f)), buf); err != nil {
-			return "", err
+		if rel, err := filepath.Rel(t.Dir, f); err == nil {
+			h.WriteString(rel)
+		} else {
+			// couldn't make a relative path, use the full path to be safe
+			h.WriteString(f)
 		}
-		f, err := os.Open(f)
-		if err != nil {
-			return "", err
+		// if we have a symlink here: we hash the link and *not* the target content
+		if fi, err := os.Stat(f); err == nil && fi.Mode()&os.ModeSymlink != 0 {
+			link, err := os.Readlink(f)
+			if err != nil {
+				return "", err
+			}
+			h.WriteString(link)
+		} else {
+			f, err := os.Open(f)
+			if err != nil {
+				return "", err
+			}
+			_, err = io.CopyBuffer(h, f, buf)
+			f.Close()
+			if err != nil {
+				return "", err
+			}
 		}
-		if _, err = io.CopyBuffer(h, f, buf); err != nil {
-			return "", err
-		}
-		f.Close()
 	}
-
 	hash := h.Sum128()
 	return fmt.Sprintf("%x%x", hash.Hi, hash.Lo), nil
 }
