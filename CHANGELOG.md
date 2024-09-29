@@ -9,8 +9,9 @@
   #1716 by @vmaerten and @pd93).
 - Fixed a bug where multiple remote includes caused all prompts to display
   without waiting for user input (#1832, #1833 by @vmaerten and @pd93).
-- When using the "[Remote Taskfiles](https://taskfile.dev/experiments/remote-taskfiles/)"
-  experiment, you can now include Taskfiles from Git repositories (#1652 by @vmaerten)
+- When using the "[Remote Taskfiles](https://taskfile.dev/experiments/remote-taskfiles/)".
+  experiment, you can now include Taskfiles from Git repositories (#1652 by @vmaerten).
+- Improved the error message when a dotenv file cannot be parsed (#1842 by @pbitty).
 
 ## v3.39.2 - 2024-09-19
 
