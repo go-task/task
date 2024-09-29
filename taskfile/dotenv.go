@@ -1,6 +1,7 @@
 package taskfile
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/joho/godotenv"
@@ -37,7 +38,7 @@ func Dotenv(c *compiler.Compiler, tf *ast.Taskfile, dir string) (*ast.Vars, erro
 
 		envs, err := godotenv.Read(dotEnvPath)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("error reading env file %s: %w", dotEnvPath, err)
 		}
 		for key, value := range envs {
 			if ok := env.Exists(key); !ok {

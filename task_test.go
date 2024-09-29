@@ -1657,6 +1657,18 @@ func TestDotenvHasEnvVarInPath(t *testing.T) {
 	tt.Run(t)
 }
 
+func TestTaskDotenvParseErrorMessage(t *testing.T) {
+	e := task.Executor{
+		Dir: "testdata/dotenv/parse_error",
+	}
+
+	path, _ := filepath.Abs(filepath.Join(e.Dir, ".env-with-error"))
+	expected := fmt.Sprintf("error reading env file %s:", path)
+
+	err := e.Setup()
+	require.ErrorContains(t, err, expected)
+}
+
 func TestTaskDotenv(t *testing.T) {
 	tt := fileContentTest{
 		Dir:       "testdata/dotenv_task/default",
