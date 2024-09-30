@@ -250,10 +250,6 @@ func (e *Executor) RunTask(ctx context.Context, call *ast.Call) error {
 			}
 		}
 
-		if err := e.mkdir(t); err != nil {
-			e.Logger.Errf(logger.Red, "task: cannot make directory %q: %v\n", t.Dir, err)
-		}
-
 		var deferredExitCode uint8
 
 		for i := range t.Cmds {
