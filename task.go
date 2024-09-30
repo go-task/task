@@ -168,6 +168,11 @@ func (e *Executor) splitRegularAndWatchCalls(calls ...*ast.Call) (regularCalls [
 // RunTask runs a task by its name
 func (e *Executor) RunTask(ctx context.Context, call *ast.Call) error {
 	t, err := e.FastCompiledTask(call)
+
+	if err := e.mkdir(t); err != nil {
+		e.Logger.Errf(logger.Red, "task: cannot make directory %q: %v\n", t.Dir, err)
+	}
+
 	if err != nil {
 		return err
 	}
