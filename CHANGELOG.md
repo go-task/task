@@ -2,6 +2,66 @@
 
 ## Unreleased
 
+- Fixed output of some functions (e.g. `splitArgs`/`splitLines`) not working in
+  for loops (#1822, #1823 by @stawii).
+- Added a new `TASK_OFFLINE` environment variable to configure the `--offline`
+  flag and expose it as a special variable in the templating system (#1470,
+  #1716 by @vmaerten and @pd93).
+- Fixed a bug where multiple remote includes caused all prompts to display
+  without waiting for user input (#1832, #1833 by @vmaerten and @pd93).
+- When using the "[Remote Taskfiles](https://taskfile.dev/experiments/remote-taskfiles/)".
+  experiment, you can now include Taskfiles from Git repositories (#1652 by @vmaerten).
+- Improved the error message when a dotenv file cannot be parsed (#1842 by @pbitty).
+- Fix issue with directory when using the remote experiment (#1757 by @pbitty).
+
+## v3.39.2 - 2024-09-19
+
+- Fix dynamic variables not working properly for a defer: statement (#1803,
+  #1818 by @vmaerten).
+
+## v3.39.1 - 2024-09-18
+
+- Added Renovate configuration to automatically create PRs to keep dependencies
+  up to date (#1783 by @vmaerten).
+- Fixed a bug where the help was displayed twice (#1805, #1806 by @vmaerten).
+- Fixed a bug where ZSH and PowerShell completions did not work when using the
+  recommended method. (#1813, #1809 by @vmaerten and @shirayu)
+- Fix variables not working properly for a `defer:` statement (#1803, #1814 by
+  @vmaerten and @andreynering).
+
+## v3.39.0 - 2024-09-07
+
+- Added
+  [Env Precedence Experiment](https://taskfile.dev/experiments/env-precedence)
+  (#1038, #1633 by @vmaerten).
+- Added a CI lint job to ensure that the docs are updated correctly (#1719 by
+  @vmaerten).
+- Updated minimum required Go version to 1.22 (#1758 by @pd93).
+- Expose a new `EXIT_CODE` special variable on `defer:` when a command finishes
+  with a non-zero exit code (#1484, #1762 by @dorimon-1 and @andreynering).
+- Expose a new `ALIAS` special variable, which will contain the alias used to
+  call the current task. Falls back to the task name. (#1764 by @DanStory).
+- Fixed `TASK_REMOTE_DIR` environment variable not working when the path was
+  absolute. (#1715 by @vmaerten).
+- Added an option to declare an included Taskfile as flattened (#1704 by
+  @vmaerten).
+- Added a new
+  [`--completion` flag](https://taskfile.dev/installation/#setup-completions) to
+  output completion scripts for various shells (#293, #1157 by @pd93).
+  - This is now the preferred way to install completions.
+  - The completion scripts in the `completion` directory
+    [are now deprecated](https://taskfile.dev/deprecations/completion-scripts/).
+- Added the ability to
+  [loop over a matrix of values](https://taskfile.dev/usage/#looping-over-a-matrix)
+  (#1766, #1767, #1784 by @pd93).
+- Fixed a bug in fish completion where aliases were not displayed (#1781, #1782
+  by @vmaerten).
+- Fixed panic when having a flattened included Taskfile that contains a
+  `default` task (#1777, #1778 by @vmaerten).
+- Optimized file existence checks for remote Taskfiles (#1713 by @vmaerten).
+
+## v3.38.0 - 2024-06-30
+
 - Added `TASK_EXE` special variable (#1616, #1624 by @pd93 and @andreynering).
 - Some YAML parsing errors will now show in a more user friendly way (#1619 by
   @pd93).

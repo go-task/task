@@ -82,6 +82,9 @@ func (node *FileNode) ResolveEntrypoint(entrypoint string) (string, error) {
 	if strings.Contains(entrypoint, "://") {
 		return entrypoint, nil
 	}
+	if strings.HasPrefix(entrypoint, "git") {
+		return entrypoint, nil
+	}
 
 	path, err := execext.Expand(entrypoint)
 	if err != nil {

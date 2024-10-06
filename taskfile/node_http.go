@@ -18,7 +18,9 @@ import (
 // An HTTPNode is a node that reads a Taskfile from a remote location via HTTP.
 type HTTPNode struct {
 	*BaseNode
-	URL *url.URL
+	URL     *url.URL
+	logger  *logger.Logger
+	timeout time.Duration
 }
 
 func NewHTTPNode(
@@ -37,18 +39,12 @@ func NewHTTPNode(
 	if url.Scheme == "http" && !insecure {
 		return nil, &errors.TaskfileNotSecureError{URI: entrypoint}
 	}
-	ctx, cf := context.WithTimeout(context.Background(), timeout)
-	defer cf()
-	url, err = taskfile.RemoteExists(ctx, l, url)
-	if err != nil {
-		return nil, err
-	}
-	if errors.Is(ctx.Err(), context.DeadlineExceeded) {
-		return nil, &errors.TaskfileNetworkTimeoutError{URI: url.String(), Timeout: timeout}
-	}
+
 	return &HTTPNode{
 		BaseNode: base,
 		URL:      url,
+		timeout:  timeout,
+		logger:   l,
 	}, nil
 }
 
@@ -61,6 +57,11 @@ func (node *HTTPNode) Remote() bool {
 }
 
 func (node *HTTPNode) Read(ctx context.Context) ([]byte, error) {
+	url, err := taskfile.RemoteExists(ctx, node.logger, node.URL, node.timeout)
+	if err != nil {
+		return nil, err
+	}
+	node.URL = url
 	req, err := http.NewRequest("GET", node.URL.String(), nil)
 	if err != nil {
 		return nil, errors.TaskfileFetchFailedError{URI: node.URL.String()}
@@ -68,10 +69,12 @@ func (node *HTTPNode) Read(ctx context.Context) ([]byte, error) {
 
 	resp, err := http.DefaultClient.Do(req.WithContext(ctx))
 	if err != nil {
+		if errors.Is(err, context.DeadlineExceeded) {
+			return nil, &errors.TaskfileNetworkTimeoutError{URI: node.URL.String(), Timeout: node.timeout}
+		}
 		return nil, errors.TaskfileFetchFailedError{URI: node.URL.String()}
 	}
 	defer resp.Body.Close()
-
 	if resp.StatusCode != http.StatusOK {
 		return nil, errors.TaskfileFetchFailedError{
 			URI:            node.URL.String(),
@@ -108,8 +111,12 @@ func (node *HTTPNode) ResolveDir(dir string) (string, error) {
 
 	// NOTE: Uses the directory of the entrypoint (Taskfile), not the current working directory
 	// This means that files are included relative to one another
-	entrypointDir := filepath.Dir(node.Dir())
-	return filepathext.SmartJoin(entrypointDir, path), nil
+	parent := node.Dir()
+	if node.Parent() != nil {
+		parent = node.Parent().Dir()
+	}
+
+	return filepathext.SmartJoin(parent, path), nil
 }
 
 func (node *HTTPNode) FilenameAndLastDir() (string, string) {

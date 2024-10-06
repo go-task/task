@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/dominikbraun/graph"
@@ -30,14 +31,15 @@ Continue?`
 // A Reader will recursively read Taskfiles from a given source using a directed
 // acyclic graph (DAG).
 type Reader struct {
-	graph    *ast.TaskfileGraph
-	node     Node
-	insecure bool
-	download bool
-	offline  bool
-	timeout  time.Duration
-	tempDir  string
-	logger   *logger.Logger
+	graph       *ast.TaskfileGraph
+	node        Node
+	insecure    bool
+	download    bool
+	offline     bool
+	timeout     time.Duration
+	tempDir     string
+	logger      *logger.Logger
+	promptMutex sync.Mutex
 }
 
 func NewReader(
@@ -50,14 +52,15 @@ func NewReader(
 	logger *logger.Logger,
 ) *Reader {
 	return &Reader{
-		graph:    ast.NewTaskfileGraph(),
-		node:     node,
-		insecure: insecure,
-		download: download,
-		offline:  offline,
-		timeout:  timeout,
-		tempDir:  tempDir,
-		logger:   logger,
+		graph:       ast.NewTaskfileGraph(),
+		node:        node,
+		insecure:    insecure,
+		download:    download,
+		offline:     offline,
+		timeout:     timeout,
+		tempDir:     tempDir,
+		logger:      logger,
+		promptMutex: sync.Mutex{},
 	}
 }
 
@@ -109,6 +112,7 @@ func (r *Reader) include(node Node) error {
 				Dir:            templater.Replace(include.Dir, cache),
 				Optional:       include.Optional,
 				Internal:       include.Internal,
+				Flatten:        include.Flatten,
 				Aliases:        include.Aliases,
 				AdvancedImport: include.AdvancedImport,
 				Vars:           include.Vars,
@@ -207,8 +211,9 @@ func (r *Reader) readNode(node Node) (*ast.Taskfile, error) {
 
 		// Read the file
 		b, err = node.Read(ctx)
+		var taskfileNetworkTimeoutError *errors.TaskfileNetworkTimeoutError
 		// If we timed out then we likely have a network issue
-		if node.Remote() && errors.Is(ctx.Err(), context.DeadlineExceeded) {
+		if node.Remote() && errors.As(err, &taskfileNetworkTimeoutError) {
 			// If a download was requested, then we can't use a cached copy
 			if r.download {
 				return nil, &errors.TaskfileNetworkTimeoutError{URI: node.Location(), Timeout: r.timeout}
@@ -242,12 +247,16 @@ func (r *Reader) readNode(node Node) (*ast.Taskfile, error) {
 				// If there is a cached hash, but it doesn't match the expected hash, prompt the user to continue
 				prompt = fmt.Sprintf(taskfileChangedPrompt, node.Location())
 			}
+
 			if prompt != "" {
-				if err := r.logger.Prompt(logger.Yellow, prompt, "n", "y", "yes"); err != nil {
+				if err := func() error {
+					r.promptMutex.Lock()
+					defer r.promptMutex.Unlock()
+					return r.logger.Prompt(logger.Yellow, prompt, "n", "y", "yes")
+				}(); err != nil {
 					return nil, &errors.TaskfileNotTrustedError{URI: node.Location()}
 				}
 			}
-
 			// If the hash has changed (or is new)
 			if checksum != cachedChecksum {
 				// Store the checksum

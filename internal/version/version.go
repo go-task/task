@@ -15,8 +15,12 @@ func init() {
 	if !ok || info.Main.Version == "" {
 		version = "unknown"
 	} else {
-		version = info.Main.Version
-		sum = info.Main.Sum
+		if version == "" {
+			version = info.Main.Version
+		}
+		if sum == "" {
+			sum = info.Main.Sum
+		}
 	}
 }
 

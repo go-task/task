@@ -1,0 +1,8 @@
+version: '3'
+
+includes:
+  second-with-dir-1:
+    taskfile: "{{.INCLUDE_ROOT}}/child-taskfile2.yml"
+    dir: ./dir-1
+  second-no-dir:
+    taskfile: "{{.INCLUDE_ROOT}}/child-taskfile2.yml"

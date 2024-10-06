@@ -6,8 +6,16 @@ includes:
     dir: ./included
 
 tasks:
-  print-task: echo {{.TASK}}
+  print-task:
+    aliases: [echo-task]
+    cmds:
+      - echo {{.TASK}}
   print-root-dir: echo {{.ROOT_DIR}}
   print-taskfile: echo {{.TASKFILE}}
   print-taskfile-dir: echo {{.TASKFILE_DIR}}
   print-task-version: echo {{.TASK_VERSION}}
+  print-task-alias:
+    aliases: [echo-task-alias]
+    cmds:
+      - echo "{{.ALIAS}}"
+  print-task-alias-default: echo "{{.ALIAS}}"

@@ -47,7 +47,7 @@ func (c *Compiler) FastGetVariables(t *ast.Task, call *ast.Call) (*ast.Vars, err
 func (c *Compiler) getVariables(t *ast.Task, call *ast.Call, evaluateShVars bool) (*ast.Vars, error) {
 	result := GetEnviron()
 	if t != nil {
-		specialVars, err := c.getSpecialVars(t)
+		specialVars, err := c.getSpecialVars(t, call)
 		if err != nil {
 			return nil, err
 		}
@@ -180,7 +180,7 @@ func (c *Compiler) ResetCache() {
 	c.dynamicCache = nil
 }
 
-func (c *Compiler) getSpecialVars(t *ast.Task) (map[string]string, error) {
+func (c *Compiler) getSpecialVars(t *ast.Task, call *ast.Call) (map[string]string, error) {
 	entrypoint := c.Entrypoint
 	if c.Entrypoint == "" {
 		entrypoint, _ = taskfile.GetAltTaskfile(c.Logger, c.Dir)
@@ -188,6 +188,7 @@ func (c *Compiler) getSpecialVars(t *ast.Task) (map[string]string, error) {
 
 	return map[string]string{
 		"TASK":             t.Task,
+		"ALIAS":            call.Task,
 		"TASK_EXE":         filepath.ToSlash(os.Args[0]),
 		"ROOT_TASKFILE":    filepathext.SmartJoin(c.Dir, entrypoint),
 		"ROOT_DIR":         c.Dir,

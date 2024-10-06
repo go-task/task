@@ -5,6 +5,90 @@ sidebar_position: 14
 
 # Changelog
 
+## v3.39.2 - 2024-09-19
+
+- Fix dynamic variables not working properly for a defer: statement (#1803,
+  #1818 by @vmaerten).
+
+## v3.39.1 - 2024-09-18
+
+- Added Renovate configuration to automatically create PRs to keep dependencies
+  up to date (#1783 by @vmaerten).
+- Fixed a bug where the help was displayed twice (#1805, #1806 by @vmaerten).
+- Fixed a bug where ZSH and PowerShell completions did not work when using the
+  recommended method. (#1813, #1809 by @vmaerten and @shirayu)
+- Fix variables not working properly for a `defer:` statement (#1803, #1814 by
+  @vmaerten and @andreynering).
+
+## v3.39.0 - 2024-09-07
+
+- Added
+  [Env Precedence Experiment](https://taskfile.dev/experiments/env-precedence)
+  (#1038, #1633 by @vmaerten).
+- Added a CI lint job to ensure that the docs are updated correctly (#1719 by
+  @vmaerten).
+- Updated minimum required Go version to 1.22 (#1758 by @pd93).
+- Expose a new `EXIT_CODE` special variable on `defer:` when a command finishes
+  with a non-zero exit code (#1484, #1762 by @dorimon-1 and @andreynering).
+- Expose a new `ALIAS` special variable, which will contain the alias used to
+  call the current task. Falls back to the task name. (#1764 by @DanStory).
+- Fixed `TASK_REMOTE_DIR` environment variable not working when the path was
+  absolute. (#1715 by @vmaerten).
+- Added an option to declare an included Taskfile as flattened (#1704 by
+  @vmaerten).
+- Added a new
+  [`--completion` flag](https://taskfile.dev/installation/#setup-completions) to
+  output completion scripts for various shells (#293, #1157 by @pd93).
+  - This is now the preferred way to install completions.
+  - The completion scripts in the `completion` directory
+    [are now deprecated](https://taskfile.dev/deprecations/completion-scripts/).
+- Added the ability to
+  [loop over a matrix of values](https://taskfile.dev/usage/#looping-over-a-matrix)
+  (#1766, #1767, #1784 by @pd93).
+- Fixed a bug in fish completion where aliases were not displayed (#1781, #1782
+  by @vmaerten).
+- Fixed panic when having a flattened included Taskfile that contains a
+  `default` task (#1777, #1778 by @vmaerten).
+- Optimized file existence checks for remote Taskfiles (#1713 by @vmaerten).
+
+## v3.38.0 - 2024-06-30
+
+- Added `TASK_EXE` special variable (#1616, #1624 by @pd93 and @andreynering).
+- Some YAML parsing errors will now show in a more user friendly way (#1619 by
+  @pd93).
+- Prefixed outputs will now be colorized by default (#1572 by
+  @AlexanderArvidsson)
+- [References](https://taskfile.dev/usage/#referencing-other-variables) are now
+  generally available (no experiments required) (#1654 by @pd93).
+- Templating functions can now be used in references (#1645, #1654 by @pd93).
+- Added a new
+  [templating reference page](https://taskfile.dev/reference/templating/) to the
+  documentation (#1614, #1653 by @pd93).
+- If using the
+  [Map Variables experiment (1)](https://taskfile.dev/experiments/map-variables/?proposal=1),
+  references are available by
+  [prefixing a string with a `#`](https://taskfile.dev/experiments/map-variables/?proposal=1#references)
+  (#1654 by @pd93).
+- If using the
+  [Map Variables experiment (2)](https://taskfile.dev/experiments/map-variables/?proposal=2),
+  the `yaml` and `json` keys are no longer available (#1654 by @pd93).
+- Added a new `TASK_REMOTE_DIR` environment variable to configure where cached
+  remote Taskfiles are stored (#1661 by @vmaerten).
+- Added a new `--clear-cache` flag to clear the cache of remote Taskfiles (#1639
+  by @vmaerten).
+- Improved the readability of cached remote Taskfile filenames (#1636 by
+  @vmaerten).
+- Starting releasing a binary for the `riscv64` architecture on Linux (#1699 by
+  @mengzhuo).
+- Added `CLI_SILENT` and `CLI_VERBOSE` variables (#1480, #1669 by @Vince-Smith).
+- Fixed a couple of bugs with the `prompt:` feature (#1657 by @pd93).
+- Fixed JSON Schema to disallow invalid properties (#1657 by @pd93).
+- Fixed version checks not working as intended (#872, #1663 by @vmaerten).
+- Fixed a bug where included tasks were run multiple times even if `run: once`
+  was set (#852, #1655 by @pd93).
+- Fixed some bugs related to column formatting in the terminal (#1350, #1637,
+  #1656 by @vmaerten).
+
 ## v3.37.2 - 2024-05-12
 
 - Fixed a bug where an empty Taskfile would cause a panic (#1648 by @pd93).
@@ -25,7 +109,7 @@ sidebar_position: 14
 - Refactored how Task reads, parses and merges Taskfiles using a DAG (#1563,
   #1607 by @pd93).
 - Fix a bug which stopped tasks from using `stdin` as input (#1593, #1623 by
-  @pd03).
+  @pd93).
 - Fix error when a file or directory in the project contained a special char
   like `&`, `(` or `)` (#1551, #1584 by @andreynering).
 - Added alias `q` for template function `shellQuote` (#1601, #1603 by @vergenzt)

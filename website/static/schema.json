@@ -431,6 +431,9 @@
         },
         {
           "$ref": "#/definitions/for_var"
+        },
+        {
+          "$ref": "#/definitions/for_matrix"
         }
       ]
     },
@@ -466,6 +469,12 @@
       },
       "additionalProperties": false,
       "required": ["var"]
+    },
+    "for_matrix": {
+      "description": "A matrix of values to iterate over",
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["matrix"]
     },
     "precondition": {
       "anyOf": [
@@ -608,6 +617,10 @@
                     },
                     "optional": {
                       "description": "If `true`, no errors will be thrown if the specified file does not exist.",
+                      "type": "boolean"
+                    },
+                    "flatten": {
+                      "description": "If `true`, the tasks from the included Taskfile will be available in the including Taskfile without a namespace. If a task with the same name already exists in the including Taskfile, an error will be thrown.",
                       "type": "boolean"
                     },
                     "internal": {

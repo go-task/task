@@ -1,0 +1,410 @@
+---
+slug: /reference/templating/
+sidebar_position: 3
+toc_min_heading_level: 2
+toc_max_heading_level: 5
+---
+
+# Templating Reference
+
+Task's templating engine uses Go's [text/template][text/template] package to
+interpolate values. For detailed information about the usage of Go's templating
+engine, we recommend reading [the official documentation][text/template].
+However, we will provide a basic overview of the main features here.
+
+## Basic Usage
+
+Most string values in Task (though, not all) can be templated. The templating
+engine uses double curly braces `{{` and `}}` to denote a template. Anything
+inside the curly braces will be executed as a Go template and the result will be
+inserted into the resulting string. For example:
+
+```yaml
+version: '3'
+
+tasks:
+  hello:
+    vars:
+      MESSAGE: 'Hello, World!'
+    cmds:
+      - 'echo {{.MESSAGE}}'
+```
+
+In this example, we have a task called `hello` with a single variable, `MESSAGE`
+defined. When the command is run, the templating engine will evaluate the
+variable and replace `{{.MESSAGE}}` with the variable's contents. This task will
+output `Hello, World!` to the terminal. Note that when referring to a variable,
+you must use dot notation.
+
+You are also able to do more complex things in templates, such as conditional
+logic:
+
+```yaml
+version: '3'
+
+tasks:
+  maybe-happy:
+    vars:
+      SMILE: ':\)'
+      FROWN: ':\('
+      HAPPY: true
+    cmds:
+      - 'echo {{if .HAPPY}}{{.SMILE}}{{else}}{{.FROWN}}{{end}}'
+```
+
+```txt
+:)
+```
+
+...calling functions and piping values:
+
+```yaml
+version: '3'
+
+tasks:
+  uniq:
+    vars:
+      NUMBERS: '0,1,1,1,2,2,3'
+    cmds:
+      - 'echo {{splitList "," .NUMBERS | uniq | join ", " }}!'
+```
+
+```txt
+0, 1, 2, 3
+```
+
+...looping over values with control flow operators:
+
+```yaml
+version: '3'
+
+tasks:
+  loop:
+    vars:
+      NUMBERS: [0, 1, 1, 1, 2, 2, 3]
+    cmds:
+      # Ranges over NUMBERS and prints the index and value of each number until it finds a number greater than 1
+      - "{{range $index, $num := .NUMBERS}}{{if gt $num 1 }}{{break}}{{end}}echo {{$index}}: {{$num}}\n{{end}}"
+```
+
+```txt
+0: 0
+1: 1
+2: 1
+3: 1
+```
+
+## Special Variables
+
+Task defines some special variables that are always available to the templating
+engine. If you define a variable with the same name as a special variable, the
+special variable will be overridden.
+
+| Var                | Description                                                                                                                                              |
+|--------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `CLI_ARGS`         | Contain all extra arguments passed after `--` when calling Task through the CLI.                                                                         |
+| `CLI_FORCE`        | A boolean containing whether the `--force` or `--force-all` flags were set.                                                                              |
+| `CLI_SILENT`       | A boolean containing whether the `--silent`  flag was set.                                                                                               |
+| `CLI_VERBOSE`      | A boolean containing whether the `--verbose`  flag was set.                                                                                              |
+| `TASK`             | The name of the current task.                                                                                                                            |
+| `ALIAS`            | The alias used for the current task, otherwise matches `TASK`.                                                                                           |
+| `TASK_EXE`         | The Task executable name or path.                                                                                                                        |
+| `ROOT_TASKFILE`    | The absolute path of the root Taskfile.                                                                                                                  |
+| `ROOT_DIR`         | The absolute path of the root Taskfile directory.                                                                                                        |
+| `TASKFILE`         | The absolute path of the included Taskfile.                                                                                                              |
+| `TASKFILE_DIR`     | The absolute path of the included Taskfile directory.                                                                                                    |
+| `USER_WORKING_DIR` | The absolute path of the directory `task` was called from.                                                                                               |
+| `CHECKSUM`         | The checksum of the files listed in `sources`. Only available within the `status` prop and if method is set to `checksum`.                               |
+| `TIMESTAMP`        | The date object of the greatest timestamp of the files listed in `sources`. Only available within the `status` prop and if method is set to `timestamp`. |
+| `TASK_VERSION`     | The current version of task.                                                                                                                             |
+| `ITEM`             | The value of the current iteration when using the `for` property. Can be changed to a different variable name using `as:`.                               |
+| `EXIT_CODE`        | Available exclusively inside the `defer:` command. Contains the failed command exit code. Only set when non-zero.                                        |
+
+## Functions
+
+Functions are provided at a few different levels in Task. Below, we list all the
+functions available for use in Task.
+
+:::note
+
+Functions marked with an asterisk (\*) also have `must` variants that will panic
+rather than erroring.
+
+:::
+
+### Built-in Functions
+
+The first set of functions are [provided by Golang
+itself][go-template-functions]:
+
+| Function   | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `and`      | Returns the boolean AND of its arguments by returning the first empty argument or the last argument. That is, `and x y` behaves as `if x then y else x`. Evaluation proceeds through the arguments left to right and returns when the result is determined.                                                                                                                                                                                                                                                                                                                                       |
+| `call`     | Returns the result of calling the first argument, which must be a function, with the remaining arguments as parameters. Thus `call .X.Y 1 2` is, in Go notation, `dot.X.Y(1, 2)` where `Y` is a func-valued field, map entry, or the like. The first argument must be the result of an evaluation that yields a value of function type (as distinct from a predefined function such as print). The function must return either one or two result values, the second of which is of type error. If the arguments don't match the function or the returned error value is non-nil, execution stops. |
+| `html`     | Returns the escaped HTML equivalent of the textual representation of its arguments. This function is unavailable in [html/template][html/template], with a few exceptions.                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| `index`    | Returns the result of indexing its first argument by the following arguments. Thus `index x 1 2 3` is, in Go syntax, `x[1][2][3]`. Each indexed item must be a map, slice, or array.                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `slice`    | slice returns the result of slicing its first argument by the remaining arguments. Thus `slice x 1 2` is, in Go syntax, `x[1:2]`, while `slice x` is `x[:]`, `slice x 1` is `x[1:]`, and `slice x 1 2 3` is `x[1:2:3]`. The first argument must be a string, slice, or array.                                                                                                                                                                                                                                                                                                                     |
+| `js`       | Returns the escaped JavaScript equivalent of the textual representation of its arguments.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| `len`      | Returns the integer length of its argument.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| `not`      | Returns the boolean negation of its single argument.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `or`       | Returns the boolean OR of its arguments by returning the first non-empty argument or the last argument, that is, `or x y` behaves as `if x then x else y`. Evaluation proceeds through the arguments left to right and returns when the result is determined.                                                                                                                                                                                                                                                                                                                                     |
+| `print`    | An alias for `fmt.Sprint`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| `printf`   | An alias for `fmt.Sprintf`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| `println`  | An alias for `fmt.Sprintln`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| `urlquery` | Returns the escaped value of the textual representation of its arguments in a form suitable for embedding in a URL query. This function is unavailable in [html/template][html/template], with a few exceptions.                                                                                                                                                                                                                                                                                                                                                                                  |
+
+### Slim-Sprig Functions
+
+In addition to the built-in functions, Task also provides a set of functions
+imported via the [slim-sprig][slim-sprig] package. We only provide a very basic
+description here for completeness. For detailed usage, please refer to the
+[slim-sprig documentation][slim-sprig]:
+
+#### [String Functions][string-functions]
+
+| Function                   | Description                                                                                                                                 |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `trim`                     | Removes space from either side of a string.                                                                                                 |
+| `trimAll`                  | Removes given characters from the front or back of a string.                                                                                |
+| `trimSuffix`               | Trims just the suffix from a string.                                                                                                        |
+| `trimPrefix`               | Trims just the prefix from a string.                                                                                                        |
+| `upper`                    | Converts the entire string to uppercase.                                                                                                    |
+| `lower`                    | Converts the entire string to lowercase.                                                                                                    |
+| `title`                    | Converts to title case.                                                                                                                     |
+| `repeat`                   | Repeats a string multiple times.                                                                                                            |
+| `substr`                   | Gets a substring from a string.                                                                                                             |
+| `trunc`                    | Truncates a string.                                                                                                                         |
+| `contains`                 | Tests to see if one string is contained inside of another.                                                                                  |
+| `hasPrefix`                | Tests whether a string has a given prefix.                                                                                                  |
+| `hasSuffix`                | Tests whether a string has a given suffix.                                                                                                  |
+| `quote`                    | Wraps a string in double quotes.                                                                                                            |
+| `squote`                   | Wraps a string in single quotes.                                                                                                            |
+| `cat`                      | Concatenates multiple strings together into one, separating them with spaces.                                                               |
+| `indent`                   | Indents every line in a given string to the specified indent width.                                                                         |
+| `nindent`                  | Identical to `indent`, but prepends a new line to the beginning of the string.                                                              |
+| `replace`                  | Replaces a string.                                                                                                                          |
+| `plural`                   | Pluralizes a string.                                                                                                                        |
+| `regexMatch`\*             | Returns true if the input string contains any match of the regular expression.                                                              |
+| `regexFindAll`\*           | Returns a slice of all matches of the regular expression in the input string.                                                               |
+| `regexFind`\*              | Returns the first (left most) match of the regular expression in the input string.                                                          |
+| `regexReplaceAll`\*        | Returns a copy of the input string, replacing matches of the Regexp with the replacement string replacement.                                |
+| `regexReplaceAllLiteral`\* | Returns a copy of the input string, replacing matches of the Regexp with the replacement string replacement without expanding `$`.          |
+| `regexSplit`\*             | Slices the input string into substrings separated by the expression and returns a slice of the substrings between those expression matches. |
+| `regexQuoteMeta`\*         | Returns a string that escapes all regular expression metacharacters inside the argument text.                                               |
+
+#### [String Slice Functions][string-list-functions]
+
+| Function    | Description                                                             |
+| ----------- | ----------------------------------------------------------------------- |
+| `join`      | Joins a list of strings into a single string, with the given separator. |
+| `splitList` | Splits a string into a list of strings.                                 |
+| `split`     | Splits a string into a map of strings where each key is an index.       |
+| `splitn`    | Identical to `split`, but stops splitting after `n` values.             |
+| `sortAlpha` | Sorts a list of strings into alphabetical (lexicographical) order.      |
+
+#### [Integer Functions][math-functions]
+
+| Function  | Description                                                                                             |
+| --------- | ------------------------------------------------------------------------------------------------------- |
+| `add`     | Sum a set of numbers.                                                                                   |
+| `add1`    | Increments a number by 1.                                                                               |
+| `sub`     | Subtracts one number from another.                                                                      |
+| `div`     | Performs integer division.                                                                              |
+| `mod`     | Modulo.                                                                                                 |
+| `mul`     | Multiplies a set of numbers.                                                                            |
+| `max`     | Returns the largest of a set of integers.                                                               |
+| `min`     | Returns the smallest of a set of integers.                                                              |
+| `floor`   | Returns the greatest float value less than or equal to input value                                      |
+| `ceil`    | Returns the greatest float value greater than or equal to input value                                   |
+| `round`   | Returns a float value with the remainder rounded to the given number to digits after the decimal point. |
+| `randInt` | Returns a random integer value from min (inclusive) to max (exclusive).                                 |
+
+#### [Integer Slice Functions][integer-list-functions]
+
+| Function    | Description                                                                 |
+| ----------- | --------------------------------------------------------------------------- |
+| `until`     | Builds a range of integers.                                                 |
+| `untilStep` | Builds a range of integers, but allows you to define a start, stop and step |
+| `seq`       | Works like the bash `seq` command.                                          |
+
+#### [Date Functions][date-functions]
+
+| Function         | Description                                                                    |
+| ---------------- | ------------------------------------------------------------------------------ |
+| `now`            | Gets the current date/time.                                                    |
+| `ago`            | Returns the duration since the given date/time.                                |
+| `date`           | Formats a date.                                                                |
+| `dateInZone`     | Identical to `date`, but with the given timezone.                              |
+| `duration`       | Formats the number of seconds into a string.                                   |
+| `durationRound`  | Identical to `duration`, but rounds the duration to the most significant unit. |
+| `unixEpoch`      | Returns the seconds since the unix epoch for the given date/time.              |
+| `dateModify`\*   | Modifies a date using the given input string.                                  |
+| `htmlDate`       | Formats a date for inserting into an HTML date picker input field.             |
+| `htmlDateInZone` | Identical to `htmlDate`, but with the given timezone.                          |
+| `toDate`\*       | Converts a string to a date/time.                                              |
+
+#### [Default Functions][default-functions]
+
+| Function   | Description                                                              |
+| ---------- | ------------------------------------------------------------------------ |
+| `default`  | Uses a default value if the given value is considered "zero" or "empty". |
+| `empty`    | Returns true if a value is considered "zero" or "empty".                 |
+| `coalesce` | Takes a list of values and returns the first non-empty one.              |
+| `all`      | Returns true if all values are non-empty.                                |
+| `any`      | Returns true if any value is non-empty.                                  |
+| `ternary`  | The ternary function takes two values, and a test value. If the test value is true, the first value will be returned. If the test value is empty, the second value will be returned.                                                                          |
+
+#### [Encoding Functions][encoding-functions]
+
+| Function         | Description                                                        |
+| ---------------- | ------------------------------------------------------------------ |
+| `fromJson`\*     | Decodes a JSON string into an object.                              |
+| `toJson`\*       | Encodes an object as a JSON string.                                |
+| `toPrettyJson`\* | Encodes an object as a JSON string with new lines and indentation. |
+| `toRawJson`\*    | Encodes an object as a JSON string with HTML characters unescaped. |
+| `b64enc`         | Encodes a string into base 64.                                     |
+| `b64dec`         | Decodes a string from base 64.                                     |
+| `b32enc`         | Encodes a string into base 32.                                     |
+| `b32dec`         | Decodes a string from base 32.                                     |
+
+#### [List Functions][list-functions]
+
+| Function    | Description                                                      |
+| ----------- | ---------------------------------------------------------------- |
+| `list`      | Creates a list from a set of values.                             |
+| `first`\*   | Gets the first value in a list.                                  |
+| `rest`\*    | Gets all values except the first value in the list.              |
+| `last`\*    | Gets the last value in the list.                                 |
+| `initial`\* | Get all values except the last value in the list.                |
+| `append`\*  | Adds a new value to the end of the list.                         |
+| `prepend`\* | Adds a new value to the start of the list.                       |
+| `concat`    | Joins two or more lists together.                                |
+| `reverse`\* | Reverses the order of a list.                                    |
+| `uniq`\*    | Generate a list with all of the duplicates removed.              |
+| `without`\* | Filters matching items out of a list.                            |
+| `has`\*     | Tests to see if a list has a particular element.                 |
+| `compact`\* | Removes entries with empty values.                               |
+| `slice`\*   | Returns a partial copy of a list given start and end parameters. |
+| `chunk`     | Splits a list into chunks of given size.                         |
+
+#### [Dictionary Functions][dictionary-functions]
+
+| Function           | Description                                                                                |
+| ------------------ | ------------------------------------------------------------------------------------------ |
+| `dict`             | Creates a dictionary from a set of key/value pairs.                                        |
+| `get`              | Gets the value from the dictionary with the given key.                                     |
+| `set`              | Adds a new key/value pair to a dictionary.                                                 |
+| `unset`            | Deletes a key from a dictionary.                                                           |
+| `hasKey`           | Returns true if a dictionary contains the given key.                                       |
+| `pluck`            | Gets a list of all of the matching values in a set of maps given a key.                    |
+| `dig`              | Returns the value in a nested map given a path of keys.                                    |
+| `merge`\*          | Merges two or more dictionaries into one.                                                  |
+| `mergeOverwrite`\* | Identical to `merge`, but giving precedence from right to left.                            |
+| `keys`             | Returns a list of all of the keys in a dictionary.                                         |
+| `pick`             | Creates a new dictionary containing only the given keys of an existing map.                |
+| `omit`             | Creates a new dictionary containing all the keys of an existing map except the ones given. |
+| `values`           | Returns a list of all the values in a dictionary.                                          |
+
+#### [Type Conversion Functions][type-conversion-functions]
+
+| Function    | Description                                            |
+| ----------- | ------------------------------------------------------ |
+| `atoi`      | Converts a string to an integer.                       |
+| `float64`   | Converts to a float64.                                 |
+| `int`       | Converts to an int at the system's width.              |
+| `int64`     | Converts to an int64.                                  |
+| `toDecimal` | Converts a unix octal to a int64.                      |
+| `toString`  | Converts to a string.                                  |
+| `toStrings` | Converts a list, slice, or array to a list of strings. |
+| `toStrings` | Produces a slice of strings from any list.             |
+| `toDecimal` | Given a unix octal permission, produce a decimal.      |
+
+#### [Path and Filepath Functions][path-functions]
+
+| Function  | Description                               |
+| --------- | ----------------------------------------- |
+| `base`    | Returns the last element of a path.       |
+| `dir`     | Returns the directory of a path.          |
+| `clean`   | Cleans up a path.                         |
+| `ext`     | Returns the file extension of a path.     |
+| `isAbs`   | Checks if a path is absolute.             |
+| `osBase`  | Returns the last element of a filepath.   |
+| `osDir`   | Returns the directory of a filepath.      |
+| `osClean` | Cleans up a filepath.                     |
+| `osExt`   | Returns the file extension of a filepath. |
+| `osIsAbs` | Checks if a filepath is absolute.         |
+
+#### [Flow Control Functions][flow-control-functions]
+
+| Function | Description                                                                   |
+| -------- | ----------------------------------------------------------------------------- |
+| `fail`   | Unconditionally returns an empty string and an error with the specified text. |
+
+#### [OS Functions][os-functions]
+
+| Function    | Description                                   |
+| ----------- | --------------------------------------------- |
+| `env`       | Reads an environment variable.                |
+| `expandenv` | Substitutes environment variables in a string |
+
+#### [Reflection Functions][reflection-functions]
+
+| Function     | Description                                            |
+| ------------ | ------------------------------------------------------ |
+| `kindOf`     | Returns the kind of a value.                           |
+| `kindIs`     | Verifies that a value is a particular kind.            |
+| `typeOf`     | Returns the underlying type of a value.                |
+| `typeIs`     | Verifies that a value is of a particular type.         |
+| `typeIsLike` | Identical to `typeIs`, but also dereferences pointers. |
+| `deepEqual`  | Returns true if two values are "deeply equal".         |
+
+#### [Cryptographic and Security Functions][crypto-functions]
+
+| Function     | Description                            |
+| ------------ | -------------------------------------- |
+| `sha1sum`    | Computes a string's SHA1 digest.       |
+| `sha256sum`  | Computes a string's SHA256 digest.     |
+| `adler32sum` | Computes a string's Adler-32 checksum. |
+
+### Task Functions
+
+Lastly, Task itself provides a few functions:
+
+| Function     | Description                                                                                                                                                                                            |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `OS`         | Returns the operating system. Possible values are `windows`, `linux`, `darwin` (macOS) and `freebsd`.                                                                                                  |
+| `ARCH`       | return the architecture Task was compiled to: `386`, `amd64`, `arm` or `s390x`.                                                                                                                        |
+| `splitLines` | Splits Unix (`\n`) and Windows (`\r\n`) styled newlines.                                                                                                                                               |
+| `catLines`   | Replaces Unix (`\n`) and Windows (`\r\n`) styled newlines with a space.                                                                                                                                |
+| `toSlash`    | Does nothing on Unix, but on Windows converts a string from `\` path format to `/`.                                                                                                                    |
+| `fromSlash`  | Opposite of `toSlash`. Does nothing on Unix, but on Windows converts a string from `/` path format to `\`.                                                                                             |
+| `exeExt`     | Returns the right executable extension for the current OS (`".exe"` for Windows, `""` for others).                                                                                                     |
+| `shellQuote` | (aliased to `q`): Quotes a string to make it safe for use in shell scripts. Task uses [this Go function](https://pkg.go.dev/mvdan.cc/sh/v3@v3.4.0/syntax#Quote) for this. The Bash dialect is assumed. |
+| `splitArgs`  | Splits a string as if it were a command's arguments. Task uses [this Go function](https://pkg.go.dev/mvdan.cc/sh/v3@v3.4.0/shell#Fields).                                                              |
+| `joinPath`   | Joins any number of arguments into a path. The same as Go's [filepath.Join](https://pkg.go.dev/path/filepath#Join).                                                                                    |
+| `relPath`    | Converts an absolute path (second argument) into a relative path, based on a base path (first argument). The same as Go's [filepath.Rel](https://pkg.go.dev/path/filepath#Rel).                        |
+| `merge`      | Creates a new map that is a copy of the first map with the keys of each subsequent map merged into it. If there is a duplicate key, the value of the last map with that key is used.                   |
+| `spew`       | Returns the Go representation of a specific variable. Useful for debugging. Uses the [davecgh/go-spew](https://github.com/davecgh/go-spew) package.                                                    |
+
+{/* prettier-ignore-start */}
+[text/template]: https://pkg.go.dev/text/template
+[html/template]: https://pkg.go.dev/html/template
+[go-template-functions]: https://pkg.go.dev/text/template#hdr-Functions
+[slim-sprig]: https://go-task.github.io/slim-sprig/
+[os-functions]: https://go-task.github.io/slim-sprig/os.html
+[string-functions]: https://go-task.github.io/slim-sprig/strings.html
+[string-list-functions]: https://go-task.github.io/slim-sprig/string_slice.html
+[math-functions]: https://go-task.github.io/slim-sprig/math.html
+[integer-list-functions]: https://go-task.github.io/slim-sprig/integer_slice.html
+[date-functions]: https://go-task.github.io/slim-sprig/date.html
+[default-functions]: https://go-task.github.io/slim-sprig/defaults.html
+[encoding-functions]: https://go-task.github.io/slim-sprig/encoding.html
+[list-functions]: https://go-task.github.io/slim-sprig/lists.html
+[dictionary-functions]: https://go-task.github.io/slim-sprig/dicts.html
+[type-conversion-functions]: https://go-task.github.io/slim-sprig/conversion.html
+[path-functions]: https://go-task.github.io/slim-sprig/paths.html
+[flow-control-functions]: https://go-task.github.io/slim-sprig/flow_control.html
+[os-functions]: https://go-task.github.io/slim-sprig/os.html
+[reflection-functions]: https://go-task.github.io/slim-sprig/reflection.html
+[crypto-functions]: https://go-task.github.io/slim-sprig/crypto.html
+{/* prettier-ignore-end */}

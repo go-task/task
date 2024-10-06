@@ -5,6 +5,9 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"io/fs"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -12,6 +15,7 @@ import (
 	"strings"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/Masterminds/semver/v3"
 	"github.com/stretchr/testify/assert"
@@ -19,7 +23,9 @@ import (
 
 	"github.com/go-task/task/v3"
 	"github.com/go-task/task/v3/errors"
+	"github.com/go-task/task/v3/internal/experiments"
 	"github.com/go-task/task/v3/internal/filepathext"
+	"github.com/go-task/task/v3/internal/logger"
 	"github.com/go-task/task/v3/taskfile/ast"
 )
 
@@ -60,7 +66,6 @@ func (fct fileContentTest) Run(t *testing.T) {
 	for f := range fct.Files {
 		_ = os.Remove(filepathext.SmartJoin(fct.Dir, f))
 	}
-
 	e := &task.Executor{
 		Dir: fct.Dir,
 		TempDir: task.TempDir{
@@ -71,9 +76,9 @@ func (fct fileContentTest) Run(t *testing.T) {
 		Stdout:     io.Discard,
 		Stderr:     io.Discard,
 	}
+
 	require.NoError(t, e.Setup(), "e.Setup()")
 	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: fct.Target}), "e.Run(target)")
-
 	for name, expectContent := range fct.Files {
 		t.Run(fct.name(name), func(t *testing.T) {
 			path := filepathext.SmartJoin(e.Dir, name)
@@ -108,6 +113,7 @@ func TestEmptyTaskfile(t *testing.T) {
 }
 
 func TestEnv(t *testing.T) {
+	t.Setenv("QUX", "from_os")
 	tt := fileContentTest{
 		Dir:       "testdata/env",
 		Target:    "default",
@@ -116,9 +122,21 @@ func TestEnv(t *testing.T) {
 			"local.txt":         "GOOS='linux' GOARCH='amd64' CGO_ENABLED='0'\n",
 			"global.txt":        "FOO='foo' BAR='overriden' BAZ='baz'\n",
 			"multiple_type.txt": "FOO='1' BAR='true' BAZ='1.1'\n",
+			"not-overriden.txt": "QUX='from_os'\n",
 		},
 	}
 	tt.Run(t)
+	t.Setenv("TASK_X_ENV_PRECEDENCE", "1")
+	experiments.EnvPrecedence = experiments.New("ENV_PRECEDENCE")
+	ttt := fileContentTest{
+		Dir:       "testdata/env",
+		Target:    "overriden",
+		TrimSpace: false,
+		Files: map[string]string{
+			"overriden.txt": "QUX='from_taskfile'\n",
+		},
+	}
+	ttt.Run(t)
 }
 
 func TestVars(t *testing.T) {
@@ -812,7 +830,8 @@ func TestListDescInterpolation(t *testing.T) {
 		t.Error(err)
 	}
 
-	assert.Contains(t, buff.String(), "bar")
+	assert.Contains(t, buff.String(), "foo-var")
+	assert.Contains(t, buff.String(), "bar-var")
 }
 
 func TestStatusVariables(t *testing.T) {
@@ -1072,6 +1091,88 @@ func TestIncludesEmptyMain(t *testing.T) {
 	tt.Run(t)
 }
 
+func TestIncludesHttp(t *testing.T) {
+	enableExperimentForTest(t, &experiments.RemoteTaskfiles, "1")
+
+	dir, err := filepath.Abs("testdata/includes_http")
+	require.NoError(t, err)
+
+	srv := httptest.NewServer(http.FileServer(http.Dir(dir)))
+	defer srv.Close()
+
+	t.Cleanup(func() {
+		// This test fills the .task/remote directory with cache entries because the include URL
+		// is different on every test due to the dynamic nature of the TCP port in srv.URL
+		if err := os.RemoveAll(filepath.Join(dir, ".task")); err != nil {
+			t.Logf("error cleaning up: %s", err)
+		}
+	})
+
+	taskfiles, err := fs.Glob(os.DirFS(dir), "root-taskfile-*.yml")
+	require.NoError(t, err)
+
+	remotes := []struct {
+		name string
+		root string
+	}{
+		{
+			name: "local",
+			root: ".",
+		},
+		{
+			name: "http-remote",
+			root: srv.URL,
+		},
+	}
+
+	for _, taskfile := range taskfiles {
+		t.Run(taskfile, func(t *testing.T) {
+			for _, remote := range remotes {
+				t.Run(remote.name, func(t *testing.T) {
+					t.Setenv("INCLUDE_ROOT", remote.root)
+					entrypoint := filepath.Join(dir, taskfile)
+
+					var buff SyncBuffer
+					e := task.Executor{
+						Entrypoint: entrypoint,
+						Dir:        dir,
+						Stdout:     &buff,
+						Stderr:     &buff,
+						Insecure:   true,
+						Download:   true,
+						AssumeYes:  true,
+						Logger:     &logger.Logger{Stdout: &buff, Stderr: &buff, Verbose: true},
+						Timeout:    time.Minute,
+					}
+					require.NoError(t, e.Setup())
+					defer func() { t.Log("output:", buff.buf.String()) }()
+
+					tcs := []struct {
+						name, dir string
+					}{
+						{
+							name: "second-with-dir-1:third-with-dir-1:default",
+							dir:  filepath.Join(dir, "dir-1"),
+						},
+						{
+							name: "second-with-dir-1:third-with-dir-2:default",
+							dir:  filepath.Join(dir, "dir-2"),
+						},
+					}
+
+					for _, tc := range tcs {
+						t.Run(tc.name, func(t *testing.T) {
+							task, err := e.CompiledTask(&ast.Call{Task: tc.name})
+							require.NoError(t, err)
+							assert.Equal(t, tc.dir, task.Dir)
+						})
+					}
+				})
+			}
+		})
+	}
+}
+
 func TestIncludesDependencies(t *testing.T) {
 	tt := fileContentTest{
 		Dir:       "testdata/includes_deps",
@@ -1212,6 +1313,45 @@ func TestIncludesInternal(t *testing.T) {
 				require.NoError(t, err)
 			}
 			assert.Equal(t, test.expectedOutput, buff.String())
+		})
+	}
+}
+
+func TestIncludesFlatten(t *testing.T) {
+	const dir = "testdata/includes_flatten"
+	tests := []struct {
+		name           string
+		taskfile       string
+		task           string
+		expectedErr    bool
+		expectedOutput string
+	}{
+		{name: "included flatten", taskfile: "Taskfile.yml", task: "gen", expectedOutput: "gen from included\n"},
+		{name: "included flatten with default", taskfile: "Taskfile.yml", task: "default", expectedOutput: "default from included flatten\n"},
+		{name: "included flatten can call entrypoint tasks", taskfile: "Taskfile.yml", task: "from_entrypoint", expectedOutput: "from entrypoint\n"},
+		{name: "included flatten with deps", taskfile: "Taskfile.yml", task: "with_deps", expectedOutput: "gen from included\nwith_deps from included\n"},
+		{name: "included flatten nested", taskfile: "Taskfile.yml", task: "from_nested", expectedOutput: "from nested\n"},
+		{name: "included flatten multiple same task", taskfile: "Taskfile.multiple.yml", task: "gen", expectedErr: true, expectedOutput: "task: Found multiple tasks (gen) included by \"included\"\""},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			var buff bytes.Buffer
+			e := task.Executor{
+				Dir:        dir,
+				Entrypoint: dir + "/" + test.taskfile,
+				Stdout:     &buff,
+				Stderr:     &buff,
+				Silent:     true,
+			}
+			err := e.Setup()
+			if test.expectedErr {
+				assert.EqualError(t, err, test.expectedOutput)
+			} else {
+				require.NoError(t, err)
+				_ = e.Run(context.Background(), &ast.Call{Task: test.task})
+				assert.Equal(t, test.expectedOutput, buff.String())
+			}
 		})
 	}
 }
@@ -1604,6 +1744,18 @@ func TestDotenvHasEnvVarInPath(t *testing.T) {
 	tt.Run(t)
 }
 
+func TestTaskDotenvParseErrorMessage(t *testing.T) {
+	e := task.Executor{
+		Dir: "testdata/dotenv/parse_error",
+	}
+
+	path, _ := filepath.Abs(filepath.Join(e.Dir, ".env-with-error"))
+	expected := fmt.Sprintf("error reading env file %s:", path)
+
+	err := e.Setup()
+	require.ErrorContains(t, err, expected)
+}
+
 func TestTaskDotenv(t *testing.T) {
 	tt := fileContentTest{
 		Dir:       "testdata/dotenv_task/default",
@@ -1722,6 +1874,34 @@ task-1 ran successfully
 `)
 	require.Error(t, e.Run(context.Background(), &ast.Call{Task: "task-2"}))
 	assert.Contains(t, buff.String(), expectedOutputOrder)
+}
+
+func TestExitCodeZero(t *testing.T) {
+	const dir = "testdata/exit_code"
+	var buff bytes.Buffer
+	e := task.Executor{
+		Dir:    dir,
+		Stdout: &buff,
+		Stderr: &buff,
+	}
+	require.NoError(t, e.Setup())
+
+	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "exit-zero"}))
+	assert.Equal(t, "FOO=bar - DYNAMIC_FOO=bar - EXIT_CODE=", strings.TrimSpace(buff.String()))
+}
+
+func TestExitCodeOne(t *testing.T) {
+	const dir = "testdata/exit_code"
+	var buff bytes.Buffer
+	e := task.Executor{
+		Dir:    dir,
+		Stdout: &buff,
+		Stderr: &buff,
+	}
+	require.NoError(t, e.Setup())
+
+	require.Error(t, e.Run(context.Background(), &ast.Call{Task: "exit-one"}))
+	assert.Equal(t, "FOO=bar - DYNAMIC_FOO=bar - EXIT_CODE=1", strings.TrimSpace(buff.String()))
 }
 
 func TestIgnoreNilElements(t *testing.T) {
@@ -2296,6 +2476,10 @@ func TestForCmds(t *testing.T) {
 			expectedOutput: "a\nb\nc\n",
 		},
 		{
+			name:           "loop-matrix",
+			expectedOutput: "windows/amd64\nwindows/arm64\nlinux/amd64\nlinux/arm64\ndarwin/amd64\ndarwin/arm64\n",
+		},
+		{
 			name:           "loop-sources",
 			expectedOutput: "bar\nfoo\n",
 		},
@@ -2353,6 +2537,17 @@ func TestForDeps(t *testing.T) {
 			expectedOutputContains: []string{"a\n", "b\n", "c\n"},
 		},
 		{
+			name: "loop-matrix",
+			expectedOutputContains: []string{
+				"windows/amd64\n",
+				"windows/arm64\n",
+				"linux/amd64\n",
+				"linux/arm64\n",
+				"darwin/amd64\n",
+				"darwin/arm64\n",
+			},
+		},
+		{
 			name:                   "loop-sources",
 			expectedOutputContains: []string{"bar\n", "foo\n"},
 		},
@@ -2392,6 +2587,8 @@ func TestForDeps(t *testing.T) {
 				Stderr: &buff,
 				Silent: true,
 				Force:  true,
+				// Force output of each dep to be grouped together to prevent interleaving
+				OutputStyle: ast.Output{Name: "group"},
 			}
 			require.NoError(t, e.Setup())
 			require.NoError(t, e.Run(context.Background(), &ast.Call{Task: test.name}))
@@ -2505,4 +2702,19 @@ func TestReference(t *testing.T) {
 			assert.Equal(t, test.expectedOutput, buff.String())
 		})
 	}
+}
+
+// enableExperimentForTest enables the experiment behind pointer e for the duration of test t and sub-tests,
+// with the experiment being restored to its previous state when tests complete.
+//
+// Typically experiments are controlled via TASK_X_ env vars, but we cannot use those in tests
+// because the experiment settings are parsed during experiments.init(), before any tests run.
+func enableExperimentForTest(t *testing.T, e *experiments.Experiment, val string) {
+	prev := *e
+	*e = experiments.Experiment{
+		Name:    prev.Name,
+		Enabled: true,
+		Value:   val,
+	}
+	t.Cleanup(func() { *e = prev })
 }

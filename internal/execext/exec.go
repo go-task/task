@@ -90,14 +90,6 @@ func RunCommand(ctx context.Context, opts *RunCommandOptions) error {
 	return r.Run(ctx, p)
 }
 
-// IsExitError returns true the given error is an exis status error
-func IsExitError(err error) bool {
-	if _, ok := interp.IsExitStatus(err); ok {
-		return true
-	}
-	return false
-}
-
 // Expand is a helper to mvdan.cc/shell.Fields that returns the first field
 // if available.
 func Expand(s string) (string, error) {

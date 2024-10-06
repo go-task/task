@@ -29,6 +29,7 @@ var (
 	RemoteTaskfiles Experiment
 	AnyVariables    Experiment
 	MapVariables    Experiment
+	EnvPrecedence   Experiment
 )
 
 func init() {
@@ -37,6 +38,7 @@ func init() {
 	RemoteTaskfiles = New("REMOTE_TASKFILES")
 	AnyVariables = New("ANY_VARIABLES", "1", "2")
 	MapVariables = New("MAP_VARIABLES", "1", "2")
+	EnvPrecedence = New("ENV_PRECEDENCE")
 }
 
 func New(xName string, enabledValues ...string) Experiment {
@@ -70,6 +72,7 @@ func getEnvFilePath() string {
 	fs := pflag.NewFlagSet("experiments", pflag.ContinueOnError)
 	fs.StringVarP(&dir, "dir", "d", "", "Sets directory of execution.")
 	fs.StringVarP(&taskfile, "taskfile", "t", "", `Choose which Taskfile to run. Defaults to "Taskfile.yml".`)
+	fs.Usage = func() {}
 	_ = fs.Parse(os.Args[1:])
 	// If the directory is set, find a .env file in that directory.
 	if dir != "" {
@@ -104,5 +107,6 @@ func List(l *logger.Logger) error {
 	printExperiment(w, l, GentleForce)
 	printExperiment(w, l, RemoteTaskfiles)
 	printExperiment(w, l, MapVariables)
+	printExperiment(w, l, EnvPrecedence)
 	return w.Flush()
 }
