@@ -182,15 +182,10 @@ func (c *Compiler) ResetCache() {
 
 func (c *Compiler) getSpecialVars(t *ast.Task) (map[string]string, error) {
 	entrypoint := c.Entrypoint
-	if entrypoint == "" {
-		for _, defaultName := range taskfile.DefaultTaskfiles {
-			alt := filepathext.SmartJoin(c.Dir, defaultName)
-			if _, err := os.Stat(alt); err == nil {
-				entrypoint = alt
-				break
-			}
-		}
+	if c.Entrypoint == "" {
+		entrypoint, _ = taskfile.GetAltTaskfile(c.Logger, c.Dir)
 	}
+
 	return map[string]string{
 		"TASK":             t.Task,
 		"TASK_EXE":         filepath.ToSlash(os.Args[0]),
