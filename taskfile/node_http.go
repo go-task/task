@@ -110,8 +110,12 @@ func (node *HTTPNode) ResolveDir(dir string) (string, error) {
 
 	// NOTE: Uses the directory of the entrypoint (Taskfile), not the current working directory
 	// This means that files are included relative to one another
-	entrypointDir := filepath.Dir(node.Dir())
-	return filepathext.SmartJoin(entrypointDir, path), nil
+	parent := node.Dir()
+	if node.Parent() != nil {
+		parent = node.Parent().Dir()
+	}
+
+	return filepathext.SmartJoin(parent, path), nil
 }
 
 func (node *HTTPNode) FilenameAndLastDir() (string, string) {

@@ -5,6 +5,9 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"io/fs"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -12,6 +15,7 @@ import (
 	"strings"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/Masterminds/semver/v3"
 	"github.com/stretchr/testify/assert"
@@ -21,6 +25,7 @@ import (
 	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/experiments"
 	"github.com/go-task/task/v3/internal/filepathext"
+	"github.com/go-task/task/v3/internal/logger"
 	"github.com/go-task/task/v3/taskfile/ast"
 )
 
@@ -1084,6 +1089,88 @@ func TestIncludesEmptyMain(t *testing.T) {
 		},
 	}
 	tt.Run(t)
+}
+
+func TestIncludesHttp(t *testing.T) {
+	enableExperimentForTest(t, &experiments.RemoteTaskfiles, "1")
+
+	dir, err := filepath.Abs("testdata/includes_http")
+	require.NoError(t, err)
+
+	srv := httptest.NewServer(http.FileServer(http.Dir(dir)))
+	defer srv.Close()
+
+	t.Cleanup(func() {
+		// This test fills the .task/remote directory with cache entries because the include URL
+		// is different on every test due to the dynamic nature of the TCP port in srv.URL
+		if err := os.RemoveAll(filepath.Join(dir, ".task")); err != nil {
+			t.Logf("error cleaning up: %s", err)
+		}
+	})
+
+	taskfiles, err := fs.Glob(os.DirFS(dir), "root-taskfile-*.yml")
+	require.NoError(t, err)
+
+	remotes := []struct {
+		name string
+		root string
+	}{
+		{
+			name: "local",
+			root: ".",
+		},
+		{
+			name: "http-remote",
+			root: srv.URL,
+		},
+	}
+
+	for _, taskfile := range taskfiles {
+		t.Run(taskfile, func(t *testing.T) {
+			for _, remote := range remotes {
+				t.Run(remote.name, func(t *testing.T) {
+					t.Setenv("INCLUDE_ROOT", remote.root)
+					entrypoint := filepath.Join(dir, taskfile)
+
+					var buff SyncBuffer
+					e := task.Executor{
+						Entrypoint: entrypoint,
+						Dir:        dir,
+						Stdout:     &buff,
+						Stderr:     &buff,
+						Insecure:   true,
+						Download:   true,
+						AssumeYes:  true,
+						Logger:     &logger.Logger{Stdout: &buff, Stderr: &buff, Verbose: true},
+						Timeout:    time.Minute,
+					}
+					require.NoError(t, e.Setup())
+					defer func() { t.Log("output:", buff.buf.String()) }()
+
+					tcs := []struct {
+						name, dir string
+					}{
+						{
+							name: "second-with-dir-1:third-with-dir-1:default",
+							dir:  filepath.Join(dir, "dir-1"),
+						},
+						{
+							name: "second-with-dir-1:third-with-dir-2:default",
+							dir:  filepath.Join(dir, "dir-2"),
+						},
+					}
+
+					for _, tc := range tcs {
+						t.Run(tc.name, func(t *testing.T) {
+							task, err := e.CompiledTask(&ast.Call{Task: tc.name})
+							require.NoError(t, err)
+							assert.Equal(t, tc.dir, task.Dir)
+						})
+					}
+				})
+			}
+		})
+	}
 }
 
 func TestIncludesDependencies(t *testing.T) {
@@ -2615,4 +2702,19 @@ func TestReference(t *testing.T) {
 			assert.Equal(t, test.expectedOutput, buff.String())
 		})
 	}
+}
+
+// enableExperimentForTest enables the experiment behind pointer e for the duration of test t and sub-tests,
+// with the experiment being restored to its previous state when tests complete.
+//
+// Typically experiments are controlled via TASK_X_ env vars, but we cannot use those in tests
+// because the experiment settings are parsed during experiments.init(), before any tests run.
+func enableExperimentForTest(t *testing.T, e *experiments.Experiment, val string) {
+	prev := *e
+	*e = experiments.Experiment{
+		Name:    prev.Name,
+		Enabled: true,
+		Value:   val,
+	}
+	t.Cleanup(func() { *e = prev })
 }
