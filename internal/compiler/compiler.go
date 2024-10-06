@@ -15,6 +15,7 @@ import (
 	"github.com/go-task/task/v3/internal/templater"
 	"github.com/go-task/task/v3/internal/version"
 	"github.com/go-task/task/v3/taskfile/ast"
+	"github.com/go-task/task/v3/taskfile/taskfile"
 )
 
 type Compiler struct {
@@ -180,11 +181,16 @@ func (c *Compiler) ResetCache() {
 }
 
 func (c *Compiler) getSpecialVars(t *ast.Task, call *ast.Call) (map[string]string, error) {
+	entrypoint := c.Entrypoint
+	if c.Entrypoint == "" {
+		entrypoint, _ = taskfile.GetAltTaskfile(c.Logger, c.Dir)
+	}
+
 	return map[string]string{
 		"TASK":             t.Task,
 		"ALIAS":            call.Task,
 		"TASK_EXE":         filepath.ToSlash(os.Args[0]),
-		"ROOT_TASKFILE":    filepathext.SmartJoin(c.Dir, c.Entrypoint),
+		"ROOT_TASKFILE":    filepathext.SmartJoin(c.Dir, entrypoint),
 		"ROOT_DIR":         c.Dir,
 		"TASKFILE":         t.Location.Taskfile,
 		"TASKFILE_DIR":     filepath.Dir(t.Location.Taskfile),
