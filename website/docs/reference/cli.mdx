@@ -62,25 +62,26 @@ four groups with the following ranges:
 
 A full list of the exit codes and their descriptions can be found below:
 
-| Code | Description                                                  |
-| ---- | ------------------------------------------------------------ |
-| 0    | Success                                                      |
-| 1    | An unknown error occurred                                    |
-| 100  | No Taskfile was found                                        |
-| 101  | A Taskfile already exists when trying to initialize one      |
-| 102  | The Taskfile is invalid or cannot be parsed                  |
-| 103  | A remote Taskfile could not be downloaded                    |
-| 104  | A remote Taskfile was not trusted by the user                |
-| 105  | A remote Taskfile was could not be fetched securely          |
-| 106  | No cache was found for a remote Taskfile in offline mode     |
-| 107  | No schema version was defined in the Taskfile                |
-| 200  | The specified task could not be found                        |
-| 201  | An error occurred while executing a command inside of a task |
-| 202  | The user tried to invoke a task that is internal             |
-| 203  | There a multiple tasks with the same name or alias           |
-| 204  | A task was called too many times                             |
-| 205  | A task was cancelled by the user                             |
-| 206  | A task was not executed due to missing required variables    |
+| Code | Description                                                         |
+|------|---------------------------------------------------------------------|
+| 0    | Success                                                             |
+| 1    | An unknown error occurred                                           |
+| 100  | No Taskfile was found                                               |
+| 101  | A Taskfile already exists when trying to initialize one             |
+| 102  | The Taskfile is invalid or cannot be parsed                         |
+| 103  | A remote Taskfile could not be downloaded                           |
+| 104  | A remote Taskfile was not trusted by the user                       |
+| 105  | A remote Taskfile was could not be fetched securely                 |
+| 106  | No cache was found for a remote Taskfile in offline mode            |
+| 107  | No schema version was defined in the Taskfile                       |
+| 200  | The specified task could not be found                               |
+| 201  | An error occurred while executing a command inside of a task        |
+| 202  | The user tried to invoke a task that is internal                    |
+| 203  | There a multiple tasks with the same name or alias                  |
+| 204  | A task was called too many times                                    |
+| 205  | A task was cancelled by the user                                    |
+| 206  | A task was not executed due to missing required variables           |
+| 207  | A task was not executed due to a variable having an incorrect value |
 
 These codes can also be found in the repository in
 [`errors/errors.go`](https://github.com/go-task/task/blob/main/errors/errors.go).

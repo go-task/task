@@ -1,0 +1,18 @@
+version: '3'
+
+tasks:
+  default:
+    - task: missing-var
+
+  missing-var:
+    requires:
+      vars:
+        - foo
+    cmd: echo "{{.foo}}"
+
+
+  validation-var:
+    requires:
+      vars:
+        - name: foo
+          enum: ['one', 'two']
