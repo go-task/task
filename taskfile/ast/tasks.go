@@ -87,7 +87,7 @@ func (t1 *Tasks) Merge(t2 Tasks, include *Include, includedTaskfileVars *Vars) e
 			}
 
 			taskName = taskNameWithNamespace(name, include.Namespace)
-			task.Namespace = include.Namespace
+			task.Namespace = append([]string{include.Namespace}, task.Namespace...)
 			task.Task = taskName
 		}
 
