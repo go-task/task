@@ -52,7 +52,7 @@ func (f *For) UnmarshalYAML(node *yaml.Node) error {
 		if forStruct.Var != "" && forStruct.Matrix.Len() != 0 {
 			return errors.NewTaskfileDecodeError(nil, node).WithMessage("cannot use both var and matrix in for")
 		}
-		f.Matrix = forStruct.Matrix
+		f.Matrix = forStruct.Matrix.DeepCopy()
 		f.Var = forStruct.Var
 		f.Split = forStruct.Split
 		f.As = forStruct.As
