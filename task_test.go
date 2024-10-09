@@ -479,6 +479,7 @@ func TestStatusChecksum(t *testing.T) {
 		task  string
 	}{
 		{[]string{"generated.txt", ".task/checksum/build"}, "build"},
+		{[]string{"generated-wildcard.txt", ".task/checksum/build-wildcard"}, "build-wildcard"},
 		{[]string{"generated.txt", ".task/checksum/build-with-status"}, "build-with-status"},
 	}
 

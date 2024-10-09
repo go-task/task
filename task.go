@@ -216,7 +216,6 @@ func (e *Executor) RunTask(ctx context.Context, call *ast.Call) error {
 			if t.Method != "" {
 				method = t.Method
 			}
-
 			upToDate, err := fingerprint.IsTaskUpToDate(ctx, t,
 				fingerprint.WithMethod(method),
 				fingerprint.WithTempDir(e.TempDir.Fingerprint),
@@ -452,6 +451,7 @@ func (e *Executor) GetTask(call *ast.Call) (*ast.Task, error) {
 			call.Vars = &ast.Vars{}
 		}
 		call.Vars.Set("MATCH", ast.Var{Value: matchingTasks[0].Wildcards})
+		matchingTasks[0].Task.FullName = call.Task
 		return matchingTasks[0].Task, nil
 	default:
 		taskNames := make([]string, len(matchingTasks))
@@ -491,7 +491,7 @@ func (e *Executor) GetTask(call *ast.Call) (*ast.Task, error) {
 			DidYouMean: didYouMean,
 		}
 	}
-
+	matchingTask.FullName = matchingTask.Task
 	return matchingTask, nil
 }
 
