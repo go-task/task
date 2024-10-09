@@ -112,12 +112,8 @@ func (t1 *Tasks) Merge(t2 Tasks, include *Include, includedTaskfileVars *Vars) e
 				Include:  include.Namespace,
 			}
 		}
-
-		if !slices.Contains(include.Excludes, taskName) {
-			println("taskName: ", taskName)
-			// Add the task to the merged taskfile
-			t1.Set(taskName, task)
-		}
+		// Add the task to the merged taskfile
+		t1.Set(taskName, task)
 
 		return nil
 	})
