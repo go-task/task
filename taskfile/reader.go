@@ -113,6 +113,7 @@ func (r *Reader) include(node Node) error {
 				Optional:       include.Optional,
 				Internal:       include.Internal,
 				Flatten:        include.Flatten,
+				Override:       include.Override,
 				Aliases:        include.Aliases,
 				AdvancedImport: include.AdvancedImport,
 				Vars:           include.Vars,
