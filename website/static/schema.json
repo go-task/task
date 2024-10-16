@@ -59,8 +59,11 @@
           "type": "string"
         },
         "prompt": {
-          "description": "A prompt that will be presented before a task is run. Declining will cancel running the current and any subsequent tasks.",
-          "type": "string"
+          "description": "One or more prompts that will be presented before a task is run. Declining will cancel running the current and any subsequent tasks.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         },
         "summary": {
           "description": "A longer description of the task. This is displayed when calling `task --summary [task]`.",
