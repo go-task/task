@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
-	"math/rand"
+	rand "math/rand/v2"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -29,8 +29,6 @@ import (
 	"github.com/go-task/task/v3/internal/logger"
 	"github.com/go-task/task/v3/taskfile/ast"
 )
-
-var random = rand.New(rand.NewSource(time.Now().UnixNano()))
 
 func init() {
 	_ = os.Setenv("NO_COLOR", "1")
@@ -1127,7 +1125,7 @@ func TestIncludesRemote(t *testing.T) {
 
 					for k, task := range tasks {
 						t.Run(task, func(t *testing.T) {
-							expectedContent := fmt.Sprint(random.Int63())
+							expectedContent := fmt.Sprint(rand.Int64())
 							t.Setenv("CONTENT", expectedContent)
 
 							outputFile := fmt.Sprintf("%d.%d.txt", i, k)
