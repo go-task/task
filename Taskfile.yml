@@ -35,13 +35,13 @@ tasks:
     generates:
       - "internal/mocks/*.go"
     cmds:
-      - "{{.BIN}}/mockery --dir ./internal/fingerprint --name SourcesCheckable"
-      - "{{.BIN}}/mockery --dir ./internal/fingerprint --name StatusCheckable"
+      - "GODEBUG=gotypesalias=0 {{.BIN}}/mockery --dir ./internal/fingerprint --name SourcesCheckable"
+      - "GODEBUG=gotypesalias=0 {{.BIN}}/mockery --dir ./internal/fingerprint --name StatusCheckable"
 
   install:mockery:
     desc: Installs mockgen; a tool to generate mock files
     vars:
-      MOCKERY_VERSION: v2.24.0
+      MOCKERY_VERSION: v2.46.0
     env:
       GOBIN: "{{.BIN}}"
     status:
