@@ -55,7 +55,8 @@ func (t1 *Taskfile) Merge(t2 *Taskfile, include *Include) error {
 	}
 	t1.Vars.Merge(t2.Vars, include)
 	t1.Env.Merge(t2.Env, include)
-	return t1.Tasks.Merge(t2.Tasks, include, t1.Vars)
+
+	return t1.Tasks.Merge(&t2.Tasks, include, t1.Vars)
 }
 
 func (tf *Taskfile) UnmarshalYAML(node *yaml.Node) error {
@@ -87,7 +88,7 @@ func (tf *Taskfile) UnmarshalYAML(node *yaml.Node) error {
 		tf.Shopt = taskfile.Shopt
 		tf.Vars = taskfile.Vars
 		tf.Env = taskfile.Env
-		tf.Tasks = taskfile.Tasks
+		tf.Tasks = taskfile.Tasks.DeepCopy()
 		tf.Silent = taskfile.Silent
 		tf.Dotenv = taskfile.Dotenv
 		tf.Run = taskfile.Run
