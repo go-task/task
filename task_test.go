@@ -5,6 +5,10 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"io/fs"
+	rand "math/rand/v2"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -12,6 +16,7 @@ import (
 	"strings"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/Masterminds/semver/v3"
 	"github.com/stretchr/testify/assert"
@@ -21,6 +26,7 @@ import (
 	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/experiments"
 	"github.com/go-task/task/v3/internal/filepathext"
+	"github.com/go-task/task/v3/internal/logger"
 	"github.com/go-task/task/v3/taskfile/ast"
 )
 
@@ -1075,6 +1081,107 @@ func TestIncludesMultiLevel(t *testing.T) {
 	tt.Run(t)
 }
 
+func TestIncludesRemote(t *testing.T) {
+	enableExperimentForTest(t, &experiments.RemoteTaskfiles, "1")
+
+	dir := "testdata/includes_remote"
+
+	srv := httptest.NewServer(http.FileServer(http.Dir(dir)))
+	defer srv.Close()
+
+	tcs := []struct {
+		firstRemote  string
+		secondRemote string
+	}{
+		{
+			firstRemote:  srv.URL + "/first/Taskfile.yml",
+			secondRemote: srv.URL + "/first/second/Taskfile.yml",
+		},
+		{
+			firstRemote:  srv.URL + "/first/Taskfile.yml",
+			secondRemote: "./second/Taskfile.yml",
+		},
+	}
+
+	tasks := []string{
+		"first:write-file",
+		"first:second:write-file",
+	}
+
+	for i, tc := range tcs {
+		t.Run(fmt.Sprint(i), func(t *testing.T) {
+			t.Setenv("FIRST_REMOTE_URL", tc.firstRemote)
+			t.Setenv("SECOND_REMOTE_URL", tc.secondRemote)
+
+			var buff SyncBuffer
+
+			executors := []struct {
+				name     string
+				executor *task.Executor
+			}{
+				{
+					name: "online, always download",
+					executor: &task.Executor{
+						Dir:      dir,
+						Stdout:   &buff,
+						Stderr:   &buff,
+						Timeout:  time.Minute,
+						Insecure: true,
+						Logger:   &logger.Logger{Stdout: &buff, Stderr: &buff, Verbose: true},
+
+						// Without caching
+						AssumeYes: true,
+						Download:  true,
+					},
+				},
+				{
+					name: "offline, use cache",
+					executor: &task.Executor{
+						Dir:      dir,
+						Stdout:   &buff,
+						Stderr:   &buff,
+						Timeout:  time.Minute,
+						Insecure: true,
+						Logger:   &logger.Logger{Stdout: &buff, Stderr: &buff, Verbose: true},
+
+						// With caching
+						AssumeYes: false,
+						Download:  false,
+						Offline:   true,
+					},
+				},
+			}
+
+			for j, e := range executors {
+				t.Run(fmt.Sprint(j), func(t *testing.T) {
+					require.NoError(t, e.executor.Setup())
+
+					for k, task := range tasks {
+						t.Run(task, func(t *testing.T) {
+							expectedContent := fmt.Sprint(rand.Int64())
+							t.Setenv("CONTENT", expectedContent)
+
+							outputFile := fmt.Sprintf("%d.%d.txt", i, k)
+							t.Setenv("OUTPUT_FILE", outputFile)
+
+							path := filepath.Join(dir, outputFile)
+							require.NoError(t, os.RemoveAll(path))
+
+							require.NoError(t, e.executor.Run(context.Background(), &ast.Call{Task: task}))
+
+							actualContent, err := os.ReadFile(path)
+							require.NoError(t, err)
+							assert.Equal(t, expectedContent, strings.TrimSpace(string(actualContent)))
+						})
+					}
+				})
+			}
+
+			t.Log("\noutput:\n", buff.buf.String())
+		})
+	}
+}
+
 func TestIncludeCycle(t *testing.T) {
 	const dir = "testdata/includes_cycle"
 
@@ -1117,6 +1224,88 @@ func TestIncludesEmptyMain(t *testing.T) {
 		},
 	}
 	tt.Run(t)
+}
+
+func TestIncludesHttp(t *testing.T) {
+	enableExperimentForTest(t, &experiments.RemoteTaskfiles, "1")
+
+	dir, err := filepath.Abs("testdata/includes_http")
+	require.NoError(t, err)
+
+	srv := httptest.NewServer(http.FileServer(http.Dir(dir)))
+	defer srv.Close()
+
+	t.Cleanup(func() {
+		// This test fills the .task/remote directory with cache entries because the include URL
+		// is different on every test due to the dynamic nature of the TCP port in srv.URL
+		if err := os.RemoveAll(filepath.Join(dir, ".task")); err != nil {
+			t.Logf("error cleaning up: %s", err)
+		}
+	})
+
+	taskfiles, err := fs.Glob(os.DirFS(dir), "root-taskfile-*.yml")
+	require.NoError(t, err)
+
+	remotes := []struct {
+		name string
+		root string
+	}{
+		{
+			name: "local",
+			root: ".",
+		},
+		{
+			name: "http-remote",
+			root: srv.URL,
+		},
+	}
+
+	for _, taskfile := range taskfiles {
+		t.Run(taskfile, func(t *testing.T) {
+			for _, remote := range remotes {
+				t.Run(remote.name, func(t *testing.T) {
+					t.Setenv("INCLUDE_ROOT", remote.root)
+					entrypoint := filepath.Join(dir, taskfile)
+
+					var buff SyncBuffer
+					e := task.Executor{
+						Entrypoint: entrypoint,
+						Dir:        dir,
+						Stdout:     &buff,
+						Stderr:     &buff,
+						Insecure:   true,
+						Download:   true,
+						AssumeYes:  true,
+						Logger:     &logger.Logger{Stdout: &buff, Stderr: &buff, Verbose: true},
+						Timeout:    time.Minute,
+					}
+					require.NoError(t, e.Setup())
+					defer func() { t.Log("output:", buff.buf.String()) }()
+
+					tcs := []struct {
+						name, dir string
+					}{
+						{
+							name: "second-with-dir-1:third-with-dir-1:default",
+							dir:  filepath.Join(dir, "dir-1"),
+						},
+						{
+							name: "second-with-dir-1:third-with-dir-2:default",
+							dir:  filepath.Join(dir, "dir-2"),
+						},
+					}
+
+					for _, tc := range tcs {
+						t.Run(tc.name, func(t *testing.T) {
+							task, err := e.CompiledTask(&ast.Call{Task: tc.name})
+							require.NoError(t, err)
+							assert.Equal(t, tc.dir, task.Dir)
+						})
+					}
+				})
+			}
+		})
+	}
 }
 
 func TestIncludesDependencies(t *testing.T) {
@@ -1690,6 +1879,18 @@ func TestDotenvHasEnvVarInPath(t *testing.T) {
 	tt.Run(t)
 }
 
+func TestTaskDotenvParseErrorMessage(t *testing.T) {
+	e := task.Executor{
+		Dir: "testdata/dotenv/parse_error",
+	}
+
+	path, _ := filepath.Abs(filepath.Join(e.Dir, ".env-with-error"))
+	expected := fmt.Sprintf("error reading env file %s:", path)
+
+	err := e.Setup()
+	require.ErrorContains(t, err, expected)
+}
+
 func TestTaskDotenv(t *testing.T) {
 	tt := fileContentTest{
 		Dir:       "testdata/dotenv_task/default",
@@ -1821,7 +2022,7 @@ func TestExitCodeZero(t *testing.T) {
 	require.NoError(t, e.Setup())
 
 	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "exit-zero"}))
-	assert.Equal(t, "FOO=bar - EXIT_CODE=", strings.TrimSpace(buff.String()))
+	assert.Equal(t, "FOO=bar - DYNAMIC_FOO=bar - EXIT_CODE=", strings.TrimSpace(buff.String()))
 }
 
 func TestExitCodeOne(t *testing.T) {
@@ -1835,7 +2036,7 @@ func TestExitCodeOne(t *testing.T) {
 	require.NoError(t, e.Setup())
 
 	require.Error(t, e.Run(context.Background(), &ast.Call{Task: "exit-one"}))
-	assert.Equal(t, "FOO=bar - EXIT_CODE=1", strings.TrimSpace(buff.String()))
+	assert.Equal(t, "FOO=bar - DYNAMIC_FOO=bar - EXIT_CODE=1", strings.TrimSpace(buff.String()))
 }
 
 func TestIgnoreNilElements(t *testing.T) {
@@ -2521,6 +2722,8 @@ func TestForDeps(t *testing.T) {
 				Stderr: &buff,
 				Silent: true,
 				Force:  true,
+				// Force output of each dep to be grouped together to prevent interleaving
+				OutputStyle: ast.Output{Name: "group"},
 			}
 			require.NoError(t, e.Setup())
 			require.NoError(t, e.Run(context.Background(), &ast.Call{Task: test.name}))
@@ -2634,4 +2837,19 @@ func TestReference(t *testing.T) {
 			assert.Equal(t, test.expectedOutput, buff.String())
 		})
 	}
+}
+
+// enableExperimentForTest enables the experiment behind pointer e for the duration of test t and sub-tests,
+// with the experiment being restored to its previous state when tests complete.
+//
+// Typically experiments are controlled via TASK_X_ env vars, but we cannot use those in tests
+// because the experiment settings are parsed during experiments.init(), before any tests run.
+func enableExperimentForTest(t *testing.T, e *experiments.Experiment, val string) {
+	prev := *e
+	*e = experiments.Experiment{
+		Name:    prev.Name,
+		Enabled: true,
+		Value:   val,
+	}
+	t.Cleanup(func() { *e = prev })
 }

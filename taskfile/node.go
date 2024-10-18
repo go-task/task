@@ -7,6 +7,8 @@ import (
 	"strings"
 	"time"
 
+	giturls "github.com/whilp/git-urls"
+
 	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/experiments"
 	"github.com/go-task/task/v3/internal/logger"
@@ -48,24 +50,39 @@ func NewNode(
 ) (Node, error) {
 	var node Node
 	var err error
-	switch getScheme(entrypoint) {
+	scheme, err := getScheme(entrypoint)
+	if err != nil {
+		return nil, err
+	}
+	switch scheme {
+	case "git":
+		node, err = NewGitNode(entrypoint, dir, insecure, opts...)
 	case "http", "https":
 		node, err = NewHTTPNode(l, entrypoint, dir, insecure, timeout, opts...)
 	default:
-		// If no other scheme matches, we assume it's a file
 		node, err = NewFileNode(l, entrypoint, dir, opts...)
+
 	}
+
 	if node.Remote() && !experiments.RemoteTaskfiles.Enabled {
 		return nil, errors.New("task: Remote taskfiles are not enabled. You can read more about this experiment and how to enable it at https://taskfile.dev/experiments/remote-taskfiles")
 	}
 	return node, err
 }
 
-func getScheme(uri string) string {
-	if i := strings.Index(uri, "://"); i != -1 {
-		return uri[:i]
+func getScheme(uri string) (string, error) {
+	u, err := giturls.Parse(uri)
+	if u == nil {
+		return "", err
 	}
-	return ""
+	if strings.HasSuffix(strings.Split(u.Path, "//")[0], ".git") && (u.Scheme == "git" || u.Scheme == "ssh" || u.Scheme == "https" || u.Scheme == "http") {
+		return "git", nil
+	}
+
+	if i := strings.Index(uri, "://"); i != -1 {
+		return uri[:i], nil
+	}
+	return "", nil
 }
 
 func getDefaultDir(entrypoint, dir string) string {

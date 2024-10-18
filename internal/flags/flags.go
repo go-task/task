@@ -1,9 +1,11 @@
 package flags
 
 import (
+	"cmp"
 	"errors"
 	"log"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/spf13/pflag"
@@ -77,7 +79,10 @@ func init() {
 		log.Print(usage)
 		pflag.PrintDefaults()
 	}
-
+	offline, err := strconv.ParseBool(cmp.Or(os.Getenv("TASK_OFFLINE"), "false"))
+	if err != nil {
+		offline = false
+	}
 	pflag.BoolVar(&Version, "version", false, "Show Task version.")
 	pflag.BoolVarP(&Help, "help", "h", false, "Shows Task usage.")
 	pflag.BoolVarP(&Init, "init", "i", false, "Creates a new Taskfile.yml in the current folder.")
@@ -120,7 +125,7 @@ func init() {
 	// Remote Taskfiles experiment will adds the "download" and "offline" flags
 	if experiments.RemoteTaskfiles.Enabled {
 		pflag.BoolVar(&Download, "download", false, "Downloads a cached version of a remote Taskfile.")
-		pflag.BoolVar(&Offline, "offline", false, "Forces Task to only use local or cached Taskfiles.")
+		pflag.BoolVar(&Offline, "offline", offline, "Forces Task to only use local or cached Taskfiles.")
 		pflag.DurationVar(&Timeout, "timeout", time.Second*10, "Timeout for downloading remote Taskfiles.")
 		pflag.BoolVar(&ClearCache, "clear-cache", false, "Clear the remote cache.")
 	}

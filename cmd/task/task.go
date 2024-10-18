@@ -198,6 +198,7 @@ func run() error {
 	globals.Set("CLI_FORCE", ast.Var{Value: flags.Force || flags.ForceAll})
 	globals.Set("CLI_SILENT", ast.Var{Value: flags.Silent})
 	globals.Set("CLI_VERBOSE", ast.Var{Value: flags.Verbose})
+	globals.Set("CLI_OFFLINE", ast.Var{Value: flags.Offline})
 	e.Taskfile.Vars.Merge(globals, nil)
 
 	if !flags.Watch {

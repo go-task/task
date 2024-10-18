@@ -9,13 +9,17 @@ tasks:
   exit-zero:
     vars:
       FOO: bar
+      DYNAMIC_FOO:
+        sh: echo 'bar'
     cmds:
-      - defer: echo FOO={{.FOO}} - {{.PREFIX}}{{.EXIT_CODE}}
+      - defer: echo FOO={{.FOO}} - DYNAMIC_FOO={{.DYNAMIC_FOO}} - {{.PREFIX}}{{.EXIT_CODE}}
       - exit 0
 
   exit-one:
     vars:
       FOO: bar
+      DYNAMIC_FOO:
+        sh: echo 'bar'
     cmds:
-      - defer: echo FOO={{.FOO}} - {{.PREFIX}}{{.EXIT_CODE}}
+      - defer: echo FOO={{.FOO}} - DYNAMIC_FOO={{.DYNAMIC_FOO}} - {{.PREFIX}}{{.EXIT_CODE}}
       - exit 1
