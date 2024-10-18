@@ -14,6 +14,7 @@
 - Improved the error message when a dotenv file cannot be parsed (#1842 by @pbitty).
 - Fix issue with directory when using the remote experiment (#1757 by @pbitty).
 - Fixed an issue where a special variable was used in combination with a dotenv file (#1232, #1810 by @vmaerten).
+- Refactor the way Task reads Taskfiles to improve readability (#1771 by @pbitty).
 
 ## v3.39.2 - 2024-09-19
 
