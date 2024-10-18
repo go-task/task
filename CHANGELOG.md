@@ -15,6 +15,7 @@
 - Fix issue with directory when using the remote experiment (#1757 by @pbitty).
 - Fixed an issue where a special variable was used in combination with a dotenv file (#1232, #1810 by @vmaerten).
 - Refactor the way Task reads Taskfiles to improve readability (#1771 by @pbitty).
+- Added a new option to ensure variable is within the list of values (#1827 by @vmaerten).
 
 ## v3.39.2 - 2024-09-19
 
