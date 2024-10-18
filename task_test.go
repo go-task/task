@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
+	rand "math/rand/v2"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -1045,6 +1046,107 @@ func TestIncludesMultiLevel(t *testing.T) {
 		},
 	}
 	tt.Run(t)
+}
+
+func TestIncludesRemote(t *testing.T) {
+	enableExperimentForTest(t, &experiments.RemoteTaskfiles, "1")
+
+	dir := "testdata/includes_remote"
+
+	srv := httptest.NewServer(http.FileServer(http.Dir(dir)))
+	defer srv.Close()
+
+	tcs := []struct {
+		firstRemote  string
+		secondRemote string
+	}{
+		{
+			firstRemote:  srv.URL + "/first/Taskfile.yml",
+			secondRemote: srv.URL + "/first/second/Taskfile.yml",
+		},
+		{
+			firstRemote:  srv.URL + "/first/Taskfile.yml",
+			secondRemote: "./second/Taskfile.yml",
+		},
+	}
+
+	tasks := []string{
+		"first:write-file",
+		"first:second:write-file",
+	}
+
+	for i, tc := range tcs {
+		t.Run(fmt.Sprint(i), func(t *testing.T) {
+			t.Setenv("FIRST_REMOTE_URL", tc.firstRemote)
+			t.Setenv("SECOND_REMOTE_URL", tc.secondRemote)
+
+			var buff SyncBuffer
+
+			executors := []struct {
+				name     string
+				executor *task.Executor
+			}{
+				{
+					name: "online, always download",
+					executor: &task.Executor{
+						Dir:      dir,
+						Stdout:   &buff,
+						Stderr:   &buff,
+						Timeout:  time.Minute,
+						Insecure: true,
+						Logger:   &logger.Logger{Stdout: &buff, Stderr: &buff, Verbose: true},
+
+						// Without caching
+						AssumeYes: true,
+						Download:  true,
+					},
+				},
+				{
+					name: "offline, use cache",
+					executor: &task.Executor{
+						Dir:      dir,
+						Stdout:   &buff,
+						Stderr:   &buff,
+						Timeout:  time.Minute,
+						Insecure: true,
+						Logger:   &logger.Logger{Stdout: &buff, Stderr: &buff, Verbose: true},
+
+						// With caching
+						AssumeYes: false,
+						Download:  false,
+						Offline:   true,
+					},
+				},
+			}
+
+			for j, e := range executors {
+				t.Run(fmt.Sprint(j), func(t *testing.T) {
+					require.NoError(t, e.executor.Setup())
+
+					for k, task := range tasks {
+						t.Run(task, func(t *testing.T) {
+							expectedContent := fmt.Sprint(rand.Int64())
+							t.Setenv("CONTENT", expectedContent)
+
+							outputFile := fmt.Sprintf("%d.%d.txt", i, k)
+							t.Setenv("OUTPUT_FILE", outputFile)
+
+							path := filepath.Join(dir, outputFile)
+							require.NoError(t, os.RemoveAll(path))
+
+							require.NoError(t, e.executor.Run(context.Background(), &ast.Call{Task: task}))
+
+							actualContent, err := os.ReadFile(path)
+							require.NoError(t, err)
+							assert.Equal(t, expectedContent, strings.TrimSpace(string(actualContent)))
+						})
+					}
+				})
+			}
+
+			t.Log("\noutput:\n", buff.buf.String())
+		})
+	}
 }
 
 func TestIncludeCycle(t *testing.T) {
