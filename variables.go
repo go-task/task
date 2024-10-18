@@ -8,6 +8,7 @@ import (
 	"github.com/joho/godotenv"
 
 	"github.com/go-task/task/v3/errors"
+	"github.com/go-task/task/v3/internal/env"
 	"github.com/go-task/task/v3/internal/execext"
 	"github.com/go-task/task/v3/internal/filepathext"
 	"github.com/go-task/task/v3/internal/fingerprint"
@@ -116,7 +117,7 @@ func (e *Executor) compiledTask(call *ast.Call, evaluateShVars bool) (*ast.Task,
 				new.Env.Set(k, ast.Var{Value: v.Value})
 				return nil
 			}
-			static, err := e.Compiler.HandleDynamicVar(v, new.Dir)
+			static, err := e.Compiler.HandleDynamicVar(v, new.Dir, env.GetFromVars(new.Env))
 			if err != nil {
 				return err
 			}

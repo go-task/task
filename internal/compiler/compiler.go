@@ -10,6 +10,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/go-task/task/v3/internal/env"
 	"github.com/go-task/task/v3/internal/execext"
 	"github.com/go-task/task/v3/internal/filepathext"
 	"github.com/go-task/task/v3/internal/logger"
@@ -80,7 +81,7 @@ func (c *Compiler) getVariables(t *ast.Task, call *ast.Call, evaluateShVars bool
 				return nil
 			}
 			// If the variable is dynamic, we need to resolve it first
-			static, err := c.HandleDynamicVar(newVar, dir)
+			static, err := c.HandleDynamicVar(newVar, dir, env.GetFromVars(result))
 			if err != nil {
 				return err
 			}
@@ -132,7 +133,7 @@ func (c *Compiler) getVariables(t *ast.Task, call *ast.Call, evaluateShVars bool
 	return result, nil
 }
 
-func (c *Compiler) HandleDynamicVar(v ast.Var, dir string) (string, error) {
+func (c *Compiler) HandleDynamicVar(v ast.Var, dir string, e []string) (string, error) {
 	c.muDynamicCache.Lock()
 	defer c.muDynamicCache.Unlock()
 
@@ -154,6 +155,7 @@ func (c *Compiler) HandleDynamicVar(v ast.Var, dir string) (string, error) {
 		Dir:     dir,
 		Stdout:  &stdout,
 		Stderr:  c.Logger.Stderr,
+		Env:     e,
 	}
 	if err := execext.RunCommand(context.Background(), opts); err != nil {
 		return "", fmt.Errorf(`task: Command "%s" failed: %s`, opts.Command, err)
