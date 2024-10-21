@@ -235,13 +235,15 @@ func (e *Executor) RunTask(ctx context.Context, call *ast.Call) error {
 			}
 		}
 
-		if t.Prompt != "" && !e.Dry {
-			if err := e.Logger.Prompt(logger.Yellow, t.Prompt, "n", "y", "yes"); errors.Is(err, logger.ErrNoTerminal) {
-				return &errors.TaskCancelledNoTerminalError{TaskName: call.Task}
-			} else if errors.Is(err, logger.ErrPromptCancelled) {
-				return &errors.TaskCancelledByUserError{TaskName: call.Task}
-			} else if err != nil {
-				return err
+		for _, p := range t.Prompt {
+			if p != "" && !e.Dry {
+				if err := e.Logger.Prompt(logger.Yellow, p, "n", "y", "yes"); errors.Is(err, logger.ErrNoTerminal) {
+					return &errors.TaskCancelledNoTerminalError{TaskName: call.Task}
+				} else if errors.Is(err, logger.ErrPromptCancelled) {
+					return &errors.TaskCancelledByUserError{TaskName: call.Task}
+				} else if err != nil {
+					return err
+				}
 			}
 		}
 

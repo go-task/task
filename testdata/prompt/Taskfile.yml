@@ -14,3 +14,10 @@ tasks:
     prompt: Do you want to continue?
     cmds:
       - echo 'show-prompt'
+
+  multi-prompt:
+    prompt:
+      - Do you want to continue?
+      - Are you sure?
+    cmds:
+      - echo 'multi-prompt'
