@@ -886,7 +886,7 @@ checksum source and timestamps require either access to the artifact or for an
 out-of-band refresh of the `.checksum` fingerprint file.
 
 Two special variables `{{.CHECKSUM}}` and `{{.TIMESTAMP}}` are available for
-interpolation within `status` commands, depending on the method assigned to
+interpolation within `cmds` and `status` commands, depending on the method assigned to
 fingerprint the sources. Only `source` globs are fingerprinted.
 
 Note that the `{{.TIMESTAMP}}` variable is a "live" Go `time.Time` struct, and
