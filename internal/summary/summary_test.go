@@ -13,6 +13,8 @@ import (
 )
 
 func TestPrintsDependenciesIfPresent(t *testing.T) {
+	t.Parallel()
+
 	buffer, l := createDummyLogger()
 	task := &ast.Task{
 		Deps: []*ast.Dep{
@@ -38,6 +40,8 @@ func createDummyLogger() (*bytes.Buffer, logger.Logger) {
 }
 
 func TestDoesNotPrintDependenciesIfMissing(t *testing.T) {
+	t.Parallel()
+
 	buffer, l := createDummyLogger()
 	task := &ast.Task{
 		Deps: []*ast.Dep{},
@@ -49,6 +53,8 @@ func TestDoesNotPrintDependenciesIfMissing(t *testing.T) {
 }
 
 func TestPrintTaskName(t *testing.T) {
+	t.Parallel()
+
 	buffer, l := createDummyLogger()
 	task := &ast.Task{
 		Task: "my-task-name",
@@ -60,6 +66,8 @@ func TestPrintTaskName(t *testing.T) {
 }
 
 func TestPrintTaskCommandsIfPresent(t *testing.T) {
+	t.Parallel()
+
 	buffer, l := createDummyLogger()
 	task := &ast.Task{
 		Cmds: []*ast.Cmd{
@@ -78,6 +86,8 @@ func TestPrintTaskCommandsIfPresent(t *testing.T) {
 }
 
 func TestDoesNotPrintCommandIfMissing(t *testing.T) {
+	t.Parallel()
+
 	buffer, l := createDummyLogger()
 	task := &ast.Task{
 		Cmds: []*ast.Cmd{},
@@ -89,6 +99,8 @@ func TestDoesNotPrintCommandIfMissing(t *testing.T) {
 }
 
 func TestLayout(t *testing.T) {
+	t.Parallel()
+
 	buffer, l := createDummyLogger()
 	task := &ast.Task{
 		Task:    "sample-task",
@@ -123,6 +135,8 @@ commands:
 }
 
 func TestPrintDescriptionAsFallback(t *testing.T) {
+	t.Parallel()
+
 	buffer, l := createDummyLogger()
 	taskWithoutSummary := &ast.Task{
 		Desc: "description",
@@ -150,6 +164,8 @@ func TestPrintDescriptionAsFallback(t *testing.T) {
 }
 
 func TestPrintAllWithSpaces(t *testing.T) {
+	t.Parallel()
+
 	buffer, l := createDummyLogger()
 
 	t1 := &ast.Task{Task: "t1"}

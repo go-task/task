@@ -8,6 +8,10 @@ linters:
     - goimports
     - gofmt
     - gofumpt
+    - paralleltest
+    - tenv
+    - thelper
+    - tparallel
 
 linters-settings:
   goimports:
