@@ -6,10 +6,13 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
+	"log"
 	rand "math/rand/v2"
 	"net/http"
+	"net/http/cgi"
 	"net/http/httptest"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"regexp"
 	"runtime"
@@ -1086,12 +1089,23 @@ func TestIncludesRemote(t *testing.T) {
 
 	dir := "testdata/includes_remote"
 
-	srv := httptest.NewServer(http.FileServer(http.Dir(dir)))
+	cwd, _ := os.Getwd()
+	gitHandler, gitSupported := createGitHTTPHandler(t, cwd)
+	if !gitSupported {
+		t.Log("git tests not supported and will be skipped")
+	}
+
+	mux := http.NewServeMux()
+	mux.Handle("/{path...}", http.FileServer(http.Dir(dir)))
+	mux.Handle("/repo.git/", http.StripPrefix("/repo.git", gitHandler))
+
+	srv := httptest.NewServer(mux)
 	defer srv.Close()
 
 	tcs := []struct {
 		firstRemote  string
 		secondRemote string
+		skip         bool
 	}{
 		{
 			firstRemote:  srv.URL + "/first/Taskfile.yml",
@@ -1100,6 +1114,11 @@ func TestIncludesRemote(t *testing.T) {
 		{
 			firstRemote:  srv.URL + "/first/Taskfile.yml",
 			secondRemote: "./second/Taskfile.yml",
+		},
+		{
+			firstRemote:  srv.URL + "/repo.git//" + dir + "/first/Taskfile.yml?ref=main",
+			secondRemote: "./second/Taskfile.yml",
+			skip:         !gitSupported,
 		},
 	}
 
@@ -1110,6 +1129,10 @@ func TestIncludesRemote(t *testing.T) {
 
 	for i, tc := range tcs {
 		t.Run(fmt.Sprint(i), func(t *testing.T) {
+			if tc.skip {
+				t.Skip()
+			}
+
 			t.Setenv("FIRST_REMOTE_URL", tc.firstRemote)
 			t.Setenv("SECOND_REMOTE_URL", tc.secondRemote)
 
@@ -1180,6 +1203,24 @@ func TestIncludesRemote(t *testing.T) {
 			t.Log("\noutput:\n", buff.buf.String())
 		})
 	}
+}
+
+func createGitHTTPHandler(t *testing.T, root string) (handler http.Handler, supported bool) {
+	executable, err := exec.LookPath("git")
+	if err != nil {
+		t.Log("git executable not found in PATH")
+		return nil, false
+	}
+	return &cgi.Handler{
+		Path:   executable,
+		Args:   []string{"http-backend"},
+		Logger: log.Default(),
+		Stderr: os.Stderr,
+		Env: []string{
+			"GIT_PROJECT_ROOT=" + root,
+			"GIT_HTTP_EXPORT_ALL=1",
+		},
+	}, true
 }
 
 func TestIncludeCycle(t *testing.T) {
