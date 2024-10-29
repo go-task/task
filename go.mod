@@ -8,7 +8,7 @@ require (
 	github.com/alecthomas/chroma/v2 v2.14.0
 	github.com/davecgh/go-spew v1.1.1
 	github.com/dominikbraun/graph v0.23.0
-	github.com/fatih/color v1.17.0
+	github.com/fatih/color v1.18.0
 	github.com/go-git/go-billy/v5 v5.6.0
 	github.com/go-git/go-git/v5 v5.12.0
 	github.com/go-task/slim-sprig/v3 v3.0.0
