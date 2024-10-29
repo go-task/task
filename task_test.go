@@ -1116,7 +1116,7 @@ func TestIncludesRemote(t *testing.T) {
 			secondRemote: "./second/Taskfile.yml",
 		},
 		{
-			firstRemote:  srv.URL + "/repo.git//" + dir + "/first/Taskfile.yml?ref=main",
+			firstRemote:  srv.URL + "/repo.git//" + dir + "/first/Taskfile.yml?ref=HEAD",
 			secondRemote: "./second/Taskfile.yml",
 			skip:         !gitSupported,
 		},
