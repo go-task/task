@@ -1212,6 +1212,28 @@ tasks:
       - echo "{{.GREETING}}"
 ```
 
+Example of a `default` value to be overriden from CLI:
+
+```yaml
+version: '3'
+
+  greet_user:
+    desc: "Greet the user with a name."
+    vars:
+      USER_NAME: '{{.USER_NAME| default "DefaultUser"}}'
+    cmds:
+      - echo "Hello, {{.USER_NAME}}!"
+```
+
+```shell
+$ task greet_user
+task: [greet_user] echo "Hello, DefaultUser!"
+Hello, DefaultUser!
+$ task greet_user USER_NAME="Bob"
+task: [greet_user] echo "Hello, Bob!"
+Hello, Bob!
+```
+
 ### Dynamic variables
 
 The below syntax (`sh:` prop in a variable) is considered a dynamic variable.
