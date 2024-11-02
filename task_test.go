@@ -1527,6 +1527,35 @@ func TestIncludesInterpolation(t *testing.T) {
 	}
 }
 
+func TestIncludesMissingTaskfile(t *testing.T) {
+	const dir = "testdata/includes_missing_taskfile"
+	const error = "no taskfile is specified for include \"included\""
+
+	tests := []struct {
+		name              string
+		task              string
+	}{
+		{"inlined_taskfile_empty", "empty inline taskfile"},
+		{"inlined_taskfile_null", "null inline taskfile"},
+		{"taskfile_empty", "empty taskfile"},
+		{"taskfile_null", "null taskfile"},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			var buff bytes.Buffer
+			e := task.Executor{
+				Dir:    filepath.Join(dir, test.name),
+				Stdout: &buff,
+				Stderr: &buff,
+				Silent: true,
+			}
+			err := e.Setup()
+			assert.ErrorContains(t, err, error)
+		})
+	}
+}
+
 func TestIncludedTaskfileVarMerging(t *testing.T) {
 	const dir = "testdata/included_taskfile_var_merging"
 	tests := []struct {

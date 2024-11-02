@@ -1,0 +1,9 @@
+version: '3'
+
+includes:
+  included: ''
+
+tasks:
+  task-1:
+    cmds:
+      - task: included:default
