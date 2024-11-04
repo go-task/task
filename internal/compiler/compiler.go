@@ -74,8 +74,8 @@ func (c *Compiler) getVariables(t *ast.Task, call *ast.Call, evaluateShVars bool
 			if err := cache.Err(); err != nil {
 				return err
 			}
-			// If the variable is not dynamic, we can set it and return
-			if newVar.Value != nil || newVar.Sh == "" {
+			// If the variable is already set, we can set it and return
+			if newVar.Value != nil {
 				result.Set(k, ast.Var{Value: newVar.Value})
 				return nil
 			}
@@ -136,10 +136,15 @@ func (c *Compiler) HandleDynamicVar(v ast.Var, dir string) (string, error) {
 	c.muDynamicCache.Lock()
 	defer c.muDynamicCache.Unlock()
 
+	// If the variable is not dynamic or it is empty, return an empty string
+	if v.Sh == nil || *v.Sh == "" {
+		return "", nil
+	}
+
 	if c.dynamicCache == nil {
 		c.dynamicCache = make(map[string]string, 30)
 	}
-	if result, ok := c.dynamicCache[v.Sh]; ok {
+	if result, ok := c.dynamicCache[*v.Sh]; ok {
 		return result, nil
 	}
 
@@ -150,7 +155,7 @@ func (c *Compiler) HandleDynamicVar(v ast.Var, dir string) (string, error) {
 
 	var stdout bytes.Buffer
 	opts := &execext.RunCommandOptions{
-		Command: v.Sh,
+		Command: *v.Sh,
 		Dir:     dir,
 		Stdout:  &stdout,
 		Stderr:  c.Logger.Stderr,
@@ -164,7 +169,7 @@ func (c *Compiler) HandleDynamicVar(v ast.Var, dir string) (string, error) {
 	result := strings.TrimSuffix(stdout.String(), "\r\n")
 	result = strings.TrimSuffix(result, "\n")
 
-	c.dynamicCache[v.Sh] = result
+	c.dynamicCache[*v.Sh] = result
 	c.Logger.VerboseErrf(logger.Magenta, "task: dynamic variable: %q result: %q\n", v.Sh, result)
 
 	return result, nil
