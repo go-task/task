@@ -23,7 +23,10 @@
 - Added a new option to ensure variable is within the list of values (#1827 by
   @vmaerten).
 - Allow multiple prompts to be specified for a task (#1861, #1866 by @mfbmina).
-- Added new template function: `numCPU`, which return the number of logical CPU's usable (#1890, #1887 by @Amoghrd).
+- Added new template function: `numCPU`, which returns the number of logical
+  CPUs usable (#1890, #1887 by @Amoghrd).
+- Fixed a bug where non-nil, empty dynamic variables are returned as an empty
+  interface (#1903, #1904 by @pd93).
 
 ## v3.39.2 - 2024-09-19
 
