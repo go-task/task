@@ -360,14 +360,7 @@
               "type": "string"
             },
             {
-              "type": "object",
-              "properties": {
-                "task": {
-                  "description": "Name of the task to defer",
-                  "type": "string"
-                }
-              },
-              "additionalProperties": false
+              "$ref": "#/definitions/task_call"
             }
           ]
         }
