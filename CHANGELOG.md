@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v3.40.0 - 2024-11-05
 
 - Fixed output of some functions (e.g. `splitArgs`/`splitLines`) not working in
   for loops (#1822, #1823 by @stawii).
