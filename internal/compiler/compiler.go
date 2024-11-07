@@ -175,7 +175,7 @@ func (c *Compiler) HandleDynamicVar(v ast.Var, dir string) (string, error) {
 	return result, nil
 }
 
-// ResetCache clear the dymanic variables cache
+// ResetCache clear the dynamic variables cache
 func (c *Compiler) ResetCache() {
 	c.muDynamicCache.Lock()
 	defer c.muDynamicCache.Unlock()
