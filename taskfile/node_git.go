@@ -8,11 +8,11 @@ import (
 	"path/filepath"
 	"strings"
 
+	giturls "github.com/chainguard-dev/git-urls"
 	"github.com/go-git/go-billy/v5/memfs"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/storage/memory"
-	giturls "github.com/whilp/git-urls"
 
 	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/execext"
