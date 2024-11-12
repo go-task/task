@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Fixed a security issue in `git-urls` by switching to the maintained fork `chainguard-dev/git-urls` (#1917 by
+  @AlekSi).
+
 ## v3.40.0 - 2024-11-05
 
 - Fixed output of some functions (e.g. `splitArgs`/`splitLines`) not working in
