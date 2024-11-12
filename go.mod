@@ -6,7 +6,6 @@ require (
 	github.com/Ladicle/tabwriter v1.0.0
 	github.com/Masterminds/semver/v3 v3.3.0
 	github.com/alecthomas/chroma/v2 v2.14.0
-	github.com/chainguard-dev/git-urls v1.0.2
 	github.com/davecgh/go-spew v1.1.1
 	github.com/dominikbraun/graph v0.23.0
 	github.com/fatih/color v1.18.0

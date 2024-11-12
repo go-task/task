@@ -8,7 +8,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	giturls "github.com/chainguard-dev/git-urls"
 	"github.com/go-git/go-billy/v5/memfs"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
@@ -17,6 +16,7 @@ import (
 	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/execext"
 	"github.com/go-task/task/v3/internal/filepathext"
+	"github.com/go-task/task/v3/internal/giturl"
 )
 
 // An GitNode is a node that reads a Taskfile from a remote location via Git.
@@ -35,7 +35,7 @@ func NewGitNode(
 	opts ...NodeOption,
 ) (*GitNode, error) {
 	base := NewBaseNode(dir, opts...)
-	u, err := giturls.Parse(entrypoint)
+	u, err := giturl.Parse(entrypoint)
 	if err != nil {
 		return nil, err
 	}

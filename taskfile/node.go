@@ -7,10 +7,9 @@ import (
 	"strings"
 	"time"
 
-	giturls "github.com/chainguard-dev/git-urls"
-
 	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/experiments"
+	"github.com/go-task/task/v3/internal/giturl"
 	"github.com/go-task/task/v3/internal/logger"
 )
 
@@ -71,7 +70,7 @@ func NewNode(
 }
 
 func getScheme(uri string) (string, error) {
-	u, err := giturls.Parse(uri)
+	u, err := giturl.Parse(uri)
 	if u == nil {
 		return "", err
 	}
