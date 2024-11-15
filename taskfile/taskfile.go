@@ -43,13 +43,13 @@ var (
 // found, an error will be returned.
 func RemoteExists(ctx context.Context, l *logger.Logger, u *url.URL, timeout time.Duration) (*url.URL, error) {
 	// Create a new HEAD request for the given URL to check if the resource exists
-	req, err := http.NewRequest("HEAD", u.String(), nil)
+	req, err := http.NewRequestWithContext(ctx, "HEAD", u.String(), nil)
 	if err != nil {
 		return nil, errors.TaskfileFetchFailedError{URI: u.String()}
 	}
 
 	// Request the given URL
-	resp, err := http.DefaultClient.Do(req.WithContext(ctx))
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		if errors.Is(ctx.Err(), context.DeadlineExceeded) {
 			return nil, &errors.TaskfileNetworkTimeoutError{URI: u.String(), Timeout: timeout}
