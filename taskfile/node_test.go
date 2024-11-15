@@ -7,6 +7,8 @@ import (
 )
 
 func TestScheme(t *testing.T) {
+	t.Parallel()
+
 	scheme, err := getScheme("https://github.com/foo/bar.git")
 	assert.NoError(t, err)
 	assert.Equal(t, "git", scheme)

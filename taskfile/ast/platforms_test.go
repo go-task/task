@@ -8,6 +8,8 @@ import (
 )
 
 func TestPlatformParsing(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		Input        string
 		ExpectedOS   string
@@ -34,6 +36,8 @@ func TestPlatformParsing(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.Input, func(t *testing.T) {
+			t.Parallel()
+
 			var p Platform
 			err := p.parsePlatform(test.Input)
 

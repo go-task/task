@@ -12,6 +12,8 @@ import (
 )
 
 func TestCmdParse(t *testing.T) {
+	t.Parallel()
+
 	const (
 		yamlCmd      = `echo "a string command"`
 		yamlDep      = `"task-name"`

@@ -7,6 +7,8 @@ import (
 )
 
 func TestNormalizeFilename(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		In, Out string
 	}{

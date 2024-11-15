@@ -26,6 +26,8 @@ import (
 // | false             | true               | false              |
 // | false             | false              | false              |
 func TestIsTaskUpToDate(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name                    string
 		task                    *ast.Task
@@ -150,6 +152,8 @@ func TestIsTaskUpToDate(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			mockStatusChecker := mocks.NewStatusCheckable(t)
 			if tt.setupMockStatusChecker != nil {
 				tt.setupMockStatusChecker(mockStatusChecker)

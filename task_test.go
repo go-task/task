@@ -64,6 +64,8 @@ func (fct fileContentTest) name(file string) string {
 }
 
 func (fct fileContentTest) Run(t *testing.T) {
+	t.Helper()
+
 	for f := range fct.Files {
 		_ = os.Remove(filepathext.SmartJoin(fct.Dir, f))
 	}
@@ -95,6 +97,8 @@ func (fct fileContentTest) Run(t *testing.T) {
 }
 
 func TestEmptyTask(t *testing.T) {
+	t.Parallel()
+
 	e := &task.Executor{
 		Dir:    "testdata/empty_task",
 		Stdout: io.Discard,
@@ -105,6 +109,8 @@ func TestEmptyTask(t *testing.T) {
 }
 
 func TestEmptyTaskfile(t *testing.T) {
+	t.Parallel()
+
 	e := &task.Executor{
 		Dir:    "testdata/empty_taskfile",
 		Stdout: io.Discard,
@@ -141,6 +147,8 @@ func TestEnv(t *testing.T) {
 }
 
 func TestVars(t *testing.T) {
+	t.Parallel()
+
 	tt := fileContentTest{
 		Dir:    "testdata/vars",
 		Target: "default",
@@ -152,10 +160,15 @@ func TestVars(t *testing.T) {
 			"from-dot-env.txt": "From .env file\n",
 		},
 	}
-	tt.Run(t)
+	t.Run("", func(t *testing.T) {
+		t.Parallel()
+		tt.Run(t)
+	})
 }
 
 func TestRequires(t *testing.T) {
+	t.Parallel()
+
 	const dir = "testdata/requires"
 
 	var buff bytes.Buffer
@@ -189,6 +202,8 @@ func TestRequires(t *testing.T) {
 }
 
 func TestSpecialVars(t *testing.T) {
+	t.Parallel()
+
 	const dir = "testdata/special_vars"
 	const subdir = "testdata/special_vars/subdir"
 	toAbs := func(rel string) string {
@@ -218,6 +233,8 @@ func TestSpecialVars(t *testing.T) {
 	for _, dir := range []string{dir, subdir} {
 		for _, test := range tests {
 			t.Run(test.target, func(t *testing.T) {
+				t.Parallel()
+
 				var buff bytes.Buffer
 				e := &task.Executor{
 					Dir:    dir,
@@ -234,6 +251,8 @@ func TestSpecialVars(t *testing.T) {
 }
 
 func TestConcurrency(t *testing.T) {
+	t.Parallel()
+
 	const (
 		dir    = "testdata/concurrency"
 		target = "default"
@@ -250,6 +269,8 @@ func TestConcurrency(t *testing.T) {
 }
 
 func TestParams(t *testing.T) {
+	t.Parallel()
+
 	tt := fileContentTest{
 		Dir:       "testdata/params",
 		Target:    "default",
@@ -267,10 +288,15 @@ func TestParams(t *testing.T) {
 			"german.txt":      "Welt!\n",
 		},
 	}
-	tt.Run(t)
+	t.Run("", func(t *testing.T) {
+		t.Parallel()
+		tt.Run(t)
+	})
 }
 
 func TestDeps(t *testing.T) {
+	t.Parallel()
+
 	const dir = "testdata/deps"
 
 	files := []string{
@@ -309,6 +335,8 @@ func TestDeps(t *testing.T) {
 }
 
 func TestStatus(t *testing.T) {
+	t.Parallel()
+
 	const dir = "testdata/status"
 
 	files := []string{
@@ -408,6 +436,8 @@ func TestStatus(t *testing.T) {
 }
 
 func TestPrecondition(t *testing.T) {
+	t.Parallel()
+
 	const dir = "testdata/precondition"
 
 	var buff bytes.Buffer
@@ -449,6 +479,8 @@ func TestPrecondition(t *testing.T) {
 }
 
 func TestGenerates(t *testing.T) {
+	t.Parallel()
+
 	const dir = "testdata/generates"
 
 	const (
@@ -505,7 +537,7 @@ func TestGenerates(t *testing.T) {
 	}
 }
 
-func TestStatusChecksum(t *testing.T) {
+func TestStatusChecksum(t *testing.T) { // nolint:paralleltest // cannot run in parallel
 	const dir = "testdata/checksum"
 
 	tests := []struct {
@@ -516,7 +548,7 @@ func TestStatusChecksum(t *testing.T) {
 		{[]string{"generated.txt", ".task/checksum/build-with-status"}, "build-with-status"},
 	}
 
-	for _, test := range tests {
+	for _, test := range tests { // nolint:paralleltest // cannot run in parallel
 		t.Run(test.task, func(t *testing.T) {
 			for _, f := range test.files {
 				_ = os.Remove(filepathext.SmartJoin(dir, f))
@@ -562,6 +594,8 @@ func TestStatusChecksum(t *testing.T) {
 }
 
 func TestAlias(t *testing.T) {
+	t.Parallel()
+
 	const dir = "testdata/alias"
 
 	data, err := os.ReadFile(filepathext.SmartJoin(dir, "alias.txt"))
@@ -579,6 +613,8 @@ func TestAlias(t *testing.T) {
 }
 
 func TestDuplicateAlias(t *testing.T) {
+	t.Parallel()
+
 	const dir = "testdata/alias"
 
 	var buff bytes.Buffer
@@ -593,6 +629,8 @@ func TestDuplicateAlias(t *testing.T) {
 }
 
 func TestAliasSummary(t *testing.T) {
+	t.Parallel()
+
 	const dir = "testdata/alias"
 
 	data, err := os.ReadFile(filepathext.SmartJoin(dir, "alias-summary.txt"))
@@ -611,6 +649,8 @@ func TestAliasSummary(t *testing.T) {
 }
 
 func TestLabelUpToDate(t *testing.T) {
+	t.Parallel()
+
 	const dir = "testdata/label_uptodate"
 
 	var buff bytes.Buffer
@@ -625,6 +665,8 @@ func TestLabelUpToDate(t *testing.T) {
 }
 
 func TestLabelSummary(t *testing.T) {
+	t.Parallel()
+
 	const dir = "testdata/label_summary"
 
 	var buff bytes.Buffer
@@ -640,6 +682,8 @@ func TestLabelSummary(t *testing.T) {
 }
 
 func TestLabelInStatus(t *testing.T) {
+	t.Parallel()
+
 	const dir = "testdata/label_status"
 
 	e := task.Executor{
@@ -651,6 +695,8 @@ func TestLabelInStatus(t *testing.T) {
 }
 
 func TestLabelWithVariableExpansion(t *testing.T) {
+	t.Parallel()
+
 	const dir = "testdata/label_var"
 
 	var buff bytes.Buffer
@@ -665,6 +711,8 @@ func TestLabelWithVariableExpansion(t *testing.T) {
 }
 
 func TestLabelInSummary(t *testing.T) {
+	t.Parallel()
+
 	const dir = "testdata/label_summary"
 
 	var buff bytes.Buffer
@@ -679,6 +727,8 @@ func TestLabelInSummary(t *testing.T) {
 }
 
 func TestPromptInSummary(t *testing.T) {
+	t.Parallel()
+
 	const dir = "testdata/prompt"
 	tests := []struct {
 		name      string
@@ -695,6 +745,8 @@ func TestPromptInSummary(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
 			var inBuff bytes.Buffer
 			var outBuff bytes.Buffer
 			var errBuff bytes.Buffer
@@ -722,6 +774,8 @@ func TestPromptInSummary(t *testing.T) {
 }
 
 func TestPromptWithIndirectTask(t *testing.T) {
+	t.Parallel()
+
 	const dir = "testdata/prompt"
 	var inBuff bytes.Buffer
 	var outBuff bytes.Buffer
@@ -744,6 +798,8 @@ func TestPromptWithIndirectTask(t *testing.T) {
 }
 
 func TestPromptAssumeYes(t *testing.T) {
+	t.Parallel()
+
 	const dir = "testdata/prompt"
 	tests := []struct {
 		name      string
@@ -755,6 +811,8 @@ func TestPromptAssumeYes(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
 			var inBuff bytes.Buffer
 			var outBuff bytes.Buffer
 			var errBuff bytes.Buffer
@@ -782,6 +840,8 @@ func TestPromptAssumeYes(t *testing.T) {
 }
 
 func TestNoLabelInList(t *testing.T) {
+	t.Parallel()
+
 	const dir = "testdata/label_list"
 
 	var buff bytes.Buffer
@@ -799,6 +859,8 @@ func TestNoLabelInList(t *testing.T) {
 
 // task -al case 1: listAll list all tasks
 func TestListAllShowsNoDesc(t *testing.T) {
+	t.Parallel()
+
 	const dir = "testdata/list_mixed_desc"
 
 	var buff bytes.Buffer
@@ -825,6 +887,8 @@ func TestListAllShowsNoDesc(t *testing.T) {
 
 // task -al case 2: !listAll list some tasks (only those with desc)
 func TestListCanListDescOnly(t *testing.T) {
+	t.Parallel()
+
 	const dir = "testdata/list_mixed_desc"
 
 	var buff bytes.Buffer
@@ -850,6 +914,8 @@ func TestListCanListDescOnly(t *testing.T) {
 }
 
 func TestListDescInterpolation(t *testing.T) {
+	t.Parallel()
+
 	const dir = "testdata/list_desc_interpolation"
 
 	var buff bytes.Buffer
@@ -869,6 +935,8 @@ func TestListDescInterpolation(t *testing.T) {
 }
 
 func TestStatusVariables(t *testing.T) {
+	t.Parallel()
+
 	const dir = "testdata/status_vars"
 
 	_ = os.RemoveAll(filepathext.SmartJoin(dir, ".task"))
@@ -901,6 +969,8 @@ func TestStatusVariables(t *testing.T) {
 }
 
 func TestInit(t *testing.T) {
+	t.Parallel()
+
 	const dir = "testdata/init"
 	file := filepathext.SmartJoin(dir, "Taskfile.yml")
 
@@ -920,6 +990,8 @@ func TestInit(t *testing.T) {
 }
 
 func TestCyclicDep(t *testing.T) {
+	t.Parallel()
+
 	const dir = "testdata/cyclic"
 
 	e := task.Executor{
@@ -932,6 +1004,8 @@ func TestCyclicDep(t *testing.T) {
 }
 
 func TestTaskVersion(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		Dir     string
 		Version *semver.Version
@@ -944,6 +1018,8 @@ func TestTaskVersion(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.Dir, func(t *testing.T) {
+			t.Parallel()
+
 			e := task.Executor{
 				Dir:    test.Dir,
 				Stdout: io.Discard,
@@ -962,6 +1038,8 @@ func TestTaskVersion(t *testing.T) {
 }
 
 func TestTaskIgnoreErrors(t *testing.T) {
+	t.Parallel()
+
 	const dir = "testdata/ignore_errors"
 
 	e := task.Executor{
@@ -978,6 +1056,8 @@ func TestTaskIgnoreErrors(t *testing.T) {
 }
 
 func TestExpand(t *testing.T) {
+	t.Parallel()
+
 	const dir = "testdata/expand"
 
 	home, err := os.UserHomeDir()
@@ -997,6 +1077,8 @@ func TestExpand(t *testing.T) {
 }
 
 func TestDry(t *testing.T) {
+	t.Parallel()
+
 	const dir = "testdata/dry"
 
 	file := filepathext.SmartJoin(dir, "file.txt")
@@ -1022,6 +1104,8 @@ func TestDry(t *testing.T) {
 // TestDryChecksum tests if the checksum file is not being written to disk
 // if the dry mode is enabled.
 func TestDryChecksum(t *testing.T) {
+	t.Parallel()
+
 	const dir = "testdata/dry_checksum"
 
 	checksumFile := filepathext.SmartJoin(dir, ".task/checksum/default")
@@ -1050,6 +1134,8 @@ func TestDryChecksum(t *testing.T) {
 }
 
 func TestIncludes(t *testing.T) {
+	t.Parallel()
+
 	tt := fileContentTest{
 		Dir:       "testdata/includes",
 		Target:    "default",
@@ -1064,10 +1150,15 @@ func TestIncludes(t *testing.T) {
 			"os_include.txt":                            "os",
 		},
 	}
-	tt.Run(t)
+	t.Run("", func(t *testing.T) {
+		t.Parallel()
+		tt.Run(t)
+	})
 }
 
 func TestIncludesMultiLevel(t *testing.T) {
+	t.Parallel()
+
 	tt := fileContentTest{
 		Dir:       "testdata/includes_multi_level",
 		Target:    "default",
@@ -1078,7 +1169,10 @@ func TestIncludesMultiLevel(t *testing.T) {
 			"called_three.txt": "three",
 		},
 	}
-	tt.Run(t)
+	t.Run("", func(t *testing.T) {
+		t.Parallel()
+		tt.Run(t)
+	})
 }
 
 func TestIncludesRemote(t *testing.T) {
@@ -1183,6 +1277,8 @@ func TestIncludesRemote(t *testing.T) {
 }
 
 func TestIncludeCycle(t *testing.T) {
+	t.Parallel()
+
 	const dir = "testdata/includes_cycle"
 
 	var buff bytes.Buffer
@@ -1199,6 +1295,8 @@ func TestIncludeCycle(t *testing.T) {
 }
 
 func TestIncludesIncorrect(t *testing.T) {
+	t.Parallel()
+
 	const dir = "testdata/includes_incorrect"
 
 	var buff bytes.Buffer
@@ -1215,6 +1313,8 @@ func TestIncludesIncorrect(t *testing.T) {
 }
 
 func TestIncludesEmptyMain(t *testing.T) {
+	t.Parallel()
+
 	tt := fileContentTest{
 		Dir:       "testdata/includes_empty",
 		Target:    "included:default",
@@ -1223,7 +1323,10 @@ func TestIncludesEmptyMain(t *testing.T) {
 			"file.txt": "default",
 		},
 	}
-	tt.Run(t)
+	t.Run("", func(t *testing.T) {
+		t.Parallel()
+		tt.Run(t)
+	})
 }
 
 func TestIncludesHttp(t *testing.T) {
@@ -1309,6 +1412,8 @@ func TestIncludesHttp(t *testing.T) {
 }
 
 func TestIncludesDependencies(t *testing.T) {
+	t.Parallel()
+
 	tt := fileContentTest{
 		Dir:       "testdata/includes_deps",
 		Target:    "default",
@@ -1319,10 +1424,15 @@ func TestIncludesDependencies(t *testing.T) {
 			"called_task.txt": "called_task",
 		},
 	}
-	tt.Run(t)
+	t.Run("", func(t *testing.T) {
+		t.Parallel()
+		tt.Run(t)
+	})
 }
 
 func TestIncludesCallingRoot(t *testing.T) {
+	t.Parallel()
+
 	tt := fileContentTest{
 		Dir:       "testdata/includes_call_root_task",
 		Target:    "included:call-root",
@@ -1331,10 +1441,15 @@ func TestIncludesCallingRoot(t *testing.T) {
 			"root_task.txt": "root task",
 		},
 	}
-	tt.Run(t)
+	t.Run("", func(t *testing.T) {
+		t.Parallel()
+		tt.Run(t)
+	})
 }
 
 func TestIncludesOptional(t *testing.T) {
+	t.Parallel()
+
 	tt := fileContentTest{
 		Dir:       "testdata/includes_optional",
 		Target:    "default",
@@ -1343,10 +1458,15 @@ func TestIncludesOptional(t *testing.T) {
 			"called_dep.txt": "called_dep",
 		},
 	}
-	tt.Run(t)
+	t.Run("", func(t *testing.T) {
+		t.Parallel()
+		tt.Run(t)
+	})
 }
 
 func TestIncludesOptionalImplicitFalse(t *testing.T) {
+	t.Parallel()
+
 	const dir = "testdata/includes_optional_implicit_false"
 	wd, _ := os.Getwd()
 
@@ -1365,6 +1485,8 @@ func TestIncludesOptionalImplicitFalse(t *testing.T) {
 }
 
 func TestIncludesOptionalExplicitFalse(t *testing.T) {
+	t.Parallel()
+
 	const dir = "testdata/includes_optional_explicit_false"
 	wd, _ := os.Getwd()
 
@@ -1383,6 +1505,8 @@ func TestIncludesOptionalExplicitFalse(t *testing.T) {
 }
 
 func TestIncludesFromCustomTaskfile(t *testing.T) {
+	t.Parallel()
+
 	tt := fileContentTest{
 		Entrypoint: "testdata/includes_yaml/Custom.ext",
 		Dir:        "testdata/includes_yaml",
@@ -1394,10 +1518,15 @@ func TestIncludesFromCustomTaskfile(t *testing.T) {
 			"included_with_custom_file.txt":    "included_with_custom_file",
 		},
 	}
-	tt.Run(t)
+	t.Run("", func(t *testing.T) {
+		t.Parallel()
+		tt.Run(t)
+	})
 }
 
 func TestIncludesRelativePath(t *testing.T) {
+	t.Parallel()
+
 	const dir = "testdata/includes_rel_path"
 
 	var buff bytes.Buffer
@@ -1418,6 +1547,8 @@ func TestIncludesRelativePath(t *testing.T) {
 }
 
 func TestIncludesInternal(t *testing.T) {
+	t.Parallel()
+
 	const dir = "testdata/internal_task"
 	tests := []struct {
 		name           string
@@ -1432,6 +1563,8 @@ func TestIncludesInternal(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
 			var buff bytes.Buffer
 			e := task.Executor{
 				Dir:    dir,
@@ -1453,6 +1586,8 @@ func TestIncludesInternal(t *testing.T) {
 }
 
 func TestIncludesFlatten(t *testing.T) {
+	t.Parallel()
+
 	const dir = "testdata/includes_flatten"
 	tests := []struct {
 		name           string
@@ -1471,6 +1606,8 @@ func TestIncludesFlatten(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
 			var buff bytes.Buffer
 			e := task.Executor{
 				Dir:        dir,
@@ -1491,7 +1628,7 @@ func TestIncludesFlatten(t *testing.T) {
 	}
 }
 
-func TestIncludesInterpolation(t *testing.T) {
+func TestIncludesInterpolation(t *testing.T) { // nolint:paralleltest // cannot run in parallel
 	const dir = "testdata/includes_interpolation"
 	tests := []struct {
 		name           string
@@ -1505,7 +1642,7 @@ func TestIncludesInterpolation(t *testing.T) {
 	}
 	t.Setenv("MODULE", "included")
 
-	for _, test := range tests {
+	for _, test := range tests { // nolint:paralleltest // cannot run in parallel
 		t.Run(test.name, func(t *testing.T) {
 			var buff bytes.Buffer
 			e := task.Executor{
@@ -1528,6 +1665,8 @@ func TestIncludesInterpolation(t *testing.T) {
 }
 
 func TestIncludedTaskfileVarMerging(t *testing.T) {
+	t.Parallel()
+
 	const dir = "testdata/included_taskfile_var_merging"
 	tests := []struct {
 		name           string
@@ -1539,6 +1678,8 @@ func TestIncludedTaskfileVarMerging(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
 			var buff bytes.Buffer
 			e := task.Executor{
 				Dir:    dir,
@@ -1556,6 +1697,8 @@ func TestIncludedTaskfileVarMerging(t *testing.T) {
 }
 
 func TestInternalTask(t *testing.T) {
+	t.Parallel()
+
 	const dir = "testdata/internal_task"
 	tests := []struct {
 		name           string
@@ -1570,6 +1713,8 @@ func TestInternalTask(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
 			var buff bytes.Buffer
 			e := task.Executor{
 				Dir:    dir,
@@ -1591,6 +1736,8 @@ func TestInternalTask(t *testing.T) {
 }
 
 func TestIncludesShadowedDefault(t *testing.T) {
+	t.Parallel()
+
 	tt := fileContentTest{
 		Dir:       "testdata/includes_shadowed_default",
 		Target:    "included",
@@ -1599,10 +1746,15 @@ func TestIncludesShadowedDefault(t *testing.T) {
 			"file.txt": "shadowed",
 		},
 	}
-	tt.Run(t)
+	t.Run("", func(t *testing.T) {
+		t.Parallel()
+		tt.Run(t)
+	})
 }
 
 func TestIncludesUnshadowedDefault(t *testing.T) {
+	t.Parallel()
+
 	tt := fileContentTest{
 		Dir:       "testdata/includes_unshadowed_default",
 		Target:    "included",
@@ -1611,10 +1763,15 @@ func TestIncludesUnshadowedDefault(t *testing.T) {
 			"file.txt": "included",
 		},
 	}
-	tt.Run(t)
+	t.Run("", func(t *testing.T) {
+		t.Parallel()
+		tt.Run(t)
+	})
 }
 
 func TestSupportedFileNames(t *testing.T) {
+	t.Parallel()
+
 	fileNames := []string{
 		"Taskfile.yml",
 		"Taskfile.yaml",
@@ -1623,6 +1780,8 @@ func TestSupportedFileNames(t *testing.T) {
 	}
 	for _, fileName := range fileNames {
 		t.Run(fileName, func(t *testing.T) {
+			t.Parallel()
+
 			tt := fileContentTest{
 				Dir:       fmt.Sprintf("testdata/file_names/%s", fileName),
 				Target:    "default",
@@ -1637,6 +1796,8 @@ func TestSupportedFileNames(t *testing.T) {
 }
 
 func TestSummary(t *testing.T) {
+	t.Parallel()
+
 	const dir = "testdata/summary"
 
 	var buff bytes.Buffer
@@ -1662,6 +1823,8 @@ func TestSummary(t *testing.T) {
 }
 
 func TestWhenNoDirAttributeItRunsInSameDirAsTaskfile(t *testing.T) {
+	t.Parallel()
+
 	const expected = "dir"
 	const dir = "testdata/" + expected
 	var out bytes.Buffer
@@ -1680,6 +1843,8 @@ func TestWhenNoDirAttributeItRunsInSameDirAsTaskfile(t *testing.T) {
 }
 
 func TestWhenDirAttributeAndDirExistsItRunsInThatDir(t *testing.T) {
+	t.Parallel()
+
 	const expected = "exists"
 	const dir = "testdata/dir/explicit_exists"
 	var out bytes.Buffer
@@ -1697,6 +1862,8 @@ func TestWhenDirAttributeAndDirExistsItRunsInThatDir(t *testing.T) {
 }
 
 func TestWhenDirAttributeItCreatesMissingAndRunsInThatDir(t *testing.T) {
+	t.Parallel()
+
 	const expected = "createme"
 	const dir = "testdata/dir/explicit_doesnt_exist/"
 	const toBeCreated = dir + expected
@@ -1724,6 +1891,8 @@ func TestWhenDirAttributeItCreatesMissingAndRunsInThatDir(t *testing.T) {
 }
 
 func TestDynamicVariablesRunOnTheNewCreatedDir(t *testing.T) {
+	t.Parallel()
+
 	const expected = "created"
 	const dir = "testdata/dir/dynamic_var_on_created_dir/"
 	const toBeCreated = dir + expected
@@ -1751,6 +1920,8 @@ func TestDynamicVariablesRunOnTheNewCreatedDir(t *testing.T) {
 }
 
 func TestDynamicVariablesShouldRunOnTheTaskDir(t *testing.T) {
+	t.Parallel()
+
 	tt := fileContentTest{
 		Dir:       "testdata/dir/dynamic_var",
 		Target:    "default",
@@ -1762,10 +1933,15 @@ func TestDynamicVariablesShouldRunOnTheTaskDir(t *testing.T) {
 			"subdirectory/from_interpolated_dir.txt":       "subdirectory\n",
 		},
 	}
-	tt.Run(t)
+	t.Run("", func(t *testing.T) {
+		t.Parallel()
+		tt.Run(t)
+	})
 }
 
 func TestDisplaysErrorOnVersion1Schema(t *testing.T) {
+	t.Parallel()
+
 	e := task.Executor{
 		Dir:    "testdata/version/v1",
 		Stdout: io.Discard,
@@ -1777,6 +1953,8 @@ func TestDisplaysErrorOnVersion1Schema(t *testing.T) {
 }
 
 func TestDisplaysErrorOnVersion2Schema(t *testing.T) {
+	t.Parallel()
+
 	var buff bytes.Buffer
 	e := task.Executor{
 		Dir:    "testdata/version/v2",
@@ -1789,6 +1967,8 @@ func TestDisplaysErrorOnVersion2Schema(t *testing.T) {
 }
 
 func TestShortTaskNotation(t *testing.T) {
+	t.Parallel()
+
 	const dir = "testdata/short_task_notation"
 
 	var buff bytes.Buffer
@@ -1804,6 +1984,8 @@ func TestShortTaskNotation(t *testing.T) {
 }
 
 func TestDotenvShouldIncludeAllEnvFiles(t *testing.T) {
+	t.Parallel()
+
 	tt := fileContentTest{
 		Dir:       "testdata/dotenv/default",
 		Target:    "default",
@@ -1812,10 +1994,15 @@ func TestDotenvShouldIncludeAllEnvFiles(t *testing.T) {
 			"include.txt": "INCLUDE1='from_include1' INCLUDE2='from_include2'\n",
 		},
 	}
-	tt.Run(t)
+	t.Run("", func(t *testing.T) {
+		t.Parallel()
+		tt.Run(t)
+	})
 }
 
 func TestDotenvShouldErrorWhenIncludingDependantDotenvs(t *testing.T) {
+	t.Parallel()
+
 	var buff bytes.Buffer
 	e := task.Executor{
 		Dir:     "testdata/dotenv/error_included_envs",
@@ -1830,6 +2017,8 @@ func TestDotenvShouldErrorWhenIncludingDependantDotenvs(t *testing.T) {
 }
 
 func TestDotenvShouldAllowMissingEnv(t *testing.T) {
+	t.Parallel()
+
 	tt := fileContentTest{
 		Dir:       "testdata/dotenv/missing_env",
 		Target:    "default",
@@ -1838,10 +2027,15 @@ func TestDotenvShouldAllowMissingEnv(t *testing.T) {
 			"include.txt": "INCLUDE1='' INCLUDE2=''\n",
 		},
 	}
-	tt.Run(t)
+	t.Run("", func(t *testing.T) {
+		t.Parallel()
+		tt.Run(t)
+	})
 }
 
 func TestDotenvHasLocalEnvInPath(t *testing.T) {
+	t.Parallel()
+
 	tt := fileContentTest{
 		Dir:       "testdata/dotenv/local_env_in_path",
 		Target:    "default",
@@ -1850,10 +2044,15 @@ func TestDotenvHasLocalEnvInPath(t *testing.T) {
 			"var.txt": "VAR='var_in_dot_env_1'\n",
 		},
 	}
-	tt.Run(t)
+	t.Run("", func(t *testing.T) {
+		t.Parallel()
+		tt.Run(t)
+	})
 }
 
 func TestDotenvHasLocalVarInPath(t *testing.T) {
+	t.Parallel()
+
 	tt := fileContentTest{
 		Dir:       "testdata/dotenv/local_var_in_path",
 		Target:    "default",
@@ -1862,11 +2061,14 @@ func TestDotenvHasLocalVarInPath(t *testing.T) {
 			"var.txt": "VAR='var_in_dot_env_3'\n",
 		},
 	}
-	tt.Run(t)
+	t.Run("", func(t *testing.T) {
+		t.Parallel()
+		tt.Run(t)
+	})
 }
 
-func TestDotenvHasEnvVarInPath(t *testing.T) {
-	os.Setenv("ENV_VAR", "testing")
+func TestDotenvHasEnvVarInPath(t *testing.T) { // nolint:paralleltest // cannot run in parallel
+	t.Setenv("ENV_VAR", "testing")
 
 	tt := fileContentTest{
 		Dir:       "testdata/dotenv/env_var_in_path",
@@ -1880,6 +2082,8 @@ func TestDotenvHasEnvVarInPath(t *testing.T) {
 }
 
 func TestTaskDotenvParseErrorMessage(t *testing.T) {
+	t.Parallel()
+
 	e := task.Executor{
 		Dir: "testdata/dotenv/parse_error",
 	}
@@ -1892,6 +2096,8 @@ func TestTaskDotenvParseErrorMessage(t *testing.T) {
 }
 
 func TestTaskDotenv(t *testing.T) {
+	t.Parallel()
+
 	tt := fileContentTest{
 		Dir:       "testdata/dotenv_task/default",
 		Target:    "dotenv",
@@ -1900,10 +2106,15 @@ func TestTaskDotenv(t *testing.T) {
 			"dotenv.txt": "foo",
 		},
 	}
-	tt.Run(t)
+	t.Run("", func(t *testing.T) {
+		t.Parallel()
+		tt.Run(t)
+	})
 }
 
 func TestTaskDotenvFail(t *testing.T) {
+	t.Parallel()
+
 	tt := fileContentTest{
 		Dir:       "testdata/dotenv_task/default",
 		Target:    "no-dotenv",
@@ -1912,10 +2123,15 @@ func TestTaskDotenvFail(t *testing.T) {
 			"no-dotenv.txt": "global",
 		},
 	}
-	tt.Run(t)
+	t.Run("", func(t *testing.T) {
+		t.Parallel()
+		tt.Run(t)
+	})
 }
 
 func TestTaskDotenvOverriddenByEnv(t *testing.T) {
+	t.Parallel()
+
 	tt := fileContentTest{
 		Dir:       "testdata/dotenv_task/default",
 		Target:    "dotenv-overridden-by-env",
@@ -1924,10 +2140,15 @@ func TestTaskDotenvOverriddenByEnv(t *testing.T) {
 			"dotenv-overridden-by-env.txt": "overridden",
 		},
 	}
-	tt.Run(t)
+	t.Run("", func(t *testing.T) {
+		t.Parallel()
+		tt.Run(t)
+	})
 }
 
 func TestTaskDotenvWithVarName(t *testing.T) {
+	t.Parallel()
+
 	tt := fileContentTest{
 		Dir:       "testdata/dotenv_task/default",
 		Target:    "dotenv-with-var-name",
@@ -1936,10 +2157,15 @@ func TestTaskDotenvWithVarName(t *testing.T) {
 			"dotenv-with-var-name.txt": "foo",
 		},
 	}
-	tt.Run(t)
+	t.Run("", func(t *testing.T) {
+		t.Parallel()
+		tt.Run(t)
+	})
 }
 
 func TestExitImmediately(t *testing.T) {
+	t.Parallel()
+
 	const dir = "testdata/exit_immediately"
 
 	var buff bytes.Buffer
@@ -1956,6 +2182,8 @@ func TestExitImmediately(t *testing.T) {
 }
 
 func TestRunOnlyRunsJobsHashOnce(t *testing.T) {
+	t.Parallel()
+
 	tt := fileContentTest{
 		Dir:    "testdata/run",
 		Target: "generate-hash",
@@ -1963,10 +2191,15 @@ func TestRunOnlyRunsJobsHashOnce(t *testing.T) {
 			"hash.txt": "starting 1\n1\n2\n",
 		},
 	}
-	tt.Run(t)
+	t.Run("", func(t *testing.T) {
+		t.Parallel()
+		tt.Run(t)
+	})
 }
 
 func TestRunOnceSharedDeps(t *testing.T) {
+	t.Parallel()
+
 	const dir = "testdata/run_once_shared_deps"
 
 	var buff bytes.Buffer
@@ -1987,6 +2220,8 @@ func TestRunOnceSharedDeps(t *testing.T) {
 }
 
 func TestDeferredCmds(t *testing.T) {
+	t.Parallel()
+
 	const dir = "testdata/deferred"
 	var buff bytes.Buffer
 	e := task.Executor{
@@ -2012,6 +2247,8 @@ task-1 ran successfully
 }
 
 func TestExitCodeZero(t *testing.T) {
+	t.Parallel()
+
 	const dir = "testdata/exit_code"
 	var buff bytes.Buffer
 	e := task.Executor{
@@ -2026,6 +2263,8 @@ func TestExitCodeZero(t *testing.T) {
 }
 
 func TestExitCodeOne(t *testing.T) {
+	t.Parallel()
+
 	const dir = "testdata/exit_code"
 	var buff bytes.Buffer
 	e := task.Executor{
@@ -2040,6 +2279,8 @@ func TestExitCodeOne(t *testing.T) {
 }
 
 func TestIgnoreNilElements(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name string
 		dir  string
@@ -2052,6 +2293,8 @@ func TestIgnoreNilElements(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
 			var buff bytes.Buffer
 			e := task.Executor{
 				Dir:    test.dir,
@@ -2067,6 +2310,8 @@ func TestIgnoreNilElements(t *testing.T) {
 }
 
 func TestOutputGroup(t *testing.T) {
+	t.Parallel()
+
 	const dir = "testdata/output_group"
 	var buff bytes.Buffer
 	e := task.Executor{
@@ -2092,6 +2337,8 @@ Bye!
 }
 
 func TestOutputGroupErrorOnlySwallowsOutputOnSuccess(t *testing.T) {
+	t.Parallel()
+
 	const dir = "testdata/output_group_error_only"
 	var buff bytes.Buffer
 	e := task.Executor{
@@ -2107,6 +2354,8 @@ func TestOutputGroupErrorOnlySwallowsOutputOnSuccess(t *testing.T) {
 }
 
 func TestOutputGroupErrorOnlyShowsOutputOnFailure(t *testing.T) {
+	t.Parallel()
+
 	const dir = "testdata/output_group_error_only"
 	var buff bytes.Buffer
 	e := task.Executor{
@@ -2123,6 +2372,8 @@ func TestOutputGroupErrorOnlyShowsOutputOnFailure(t *testing.T) {
 }
 
 func TestIncludedVars(t *testing.T) {
+	t.Parallel()
+
 	const dir = "testdata/include_with_vars"
 	var buff bytes.Buffer
 	e := task.Executor{
@@ -2152,6 +2403,8 @@ VAR_2 is included-default-var2
 }
 
 func TestIncludedVarsMultiLevel(t *testing.T) {
+	t.Parallel()
+
 	const dir = "testdata/include_with_vars_multi_level"
 	var buff bytes.Buffer
 	e := task.Executor{
@@ -2175,6 +2428,8 @@ Hello bar
 }
 
 func TestErrorCode(t *testing.T) {
+	t.Parallel()
+
 	const dir = "testdata/error_code"
 	tests := []struct {
 		name     string
@@ -2191,8 +2446,11 @@ func TestErrorCode(t *testing.T) {
 			expected: 42,
 		},
 	}
+
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
 			var buff bytes.Buffer
 			e := &task.Executor{
 				Dir:    dir,
@@ -2211,7 +2469,7 @@ func TestErrorCode(t *testing.T) {
 	}
 }
 
-func TestEvaluateSymlinksInPaths(t *testing.T) {
+func TestEvaluateSymlinksInPaths(t *testing.T) { // nolint:paralleltest // cannot run in parallel
 	const dir = "testdata/evaluate_symlinks_in_paths"
 	var buff bytes.Buffer
 	e := &task.Executor{
@@ -2251,7 +2509,7 @@ func TestEvaluateSymlinksInPaths(t *testing.T) {
 			expected: "task: [reset] echo \"shared file source\" > src/shared/b\ntask: [reset] echo \"file source\" > src/a",
 		},
 	}
-	for _, test := range tests {
+	for _, test := range tests { // nolint:paralleltest // cannot run in parallel
 		t.Run(test.name, func(t *testing.T) {
 			require.NoError(t, e.Setup())
 			err := e.Run(context.Background(), &ast.Call{Task: test.task})
@@ -2265,6 +2523,8 @@ func TestEvaluateSymlinksInPaths(t *testing.T) {
 }
 
 func TestTaskfileWalk(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string
 		dir      string
@@ -2286,6 +2546,8 @@ func TestTaskfileWalk(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
 			var buff bytes.Buffer
 			e := task.Executor{
 				Dir:    test.dir,
@@ -2300,6 +2562,8 @@ func TestTaskfileWalk(t *testing.T) {
 }
 
 func TestUserWorkingDirectory(t *testing.T) {
+	t.Parallel()
+
 	var buff bytes.Buffer
 	e := task.Executor{
 		Dir:    "testdata/user_working_dir",
@@ -2314,6 +2578,8 @@ func TestUserWorkingDirectory(t *testing.T) {
 }
 
 func TestUserWorkingDirectoryWithIncluded(t *testing.T) {
+	t.Parallel()
+
 	wd, err := os.Getwd()
 	require.NoError(t, err)
 
@@ -2334,6 +2600,8 @@ func TestUserWorkingDirectoryWithIncluded(t *testing.T) {
 }
 
 func TestPlatforms(t *testing.T) {
+	t.Parallel()
+
 	var buff bytes.Buffer
 	e := task.Executor{
 		Dir:    "testdata/platforms",
@@ -2346,6 +2614,8 @@ func TestPlatforms(t *testing.T) {
 }
 
 func TestPOSIXShellOptsGlobalLevel(t *testing.T) {
+	t.Parallel()
+
 	var buff bytes.Buffer
 	e := task.Executor{
 		Dir:    "testdata/shopts/global_level",
@@ -2360,6 +2630,8 @@ func TestPOSIXShellOptsGlobalLevel(t *testing.T) {
 }
 
 func TestPOSIXShellOptsTaskLevel(t *testing.T) {
+	t.Parallel()
+
 	var buff bytes.Buffer
 	e := task.Executor{
 		Dir:    "testdata/shopts/task_level",
@@ -2374,6 +2646,8 @@ func TestPOSIXShellOptsTaskLevel(t *testing.T) {
 }
 
 func TestPOSIXShellOptsCommandLevel(t *testing.T) {
+	t.Parallel()
+
 	var buff bytes.Buffer
 	e := task.Executor{
 		Dir:    "testdata/shopts/command_level",
@@ -2388,6 +2662,8 @@ func TestPOSIXShellOptsCommandLevel(t *testing.T) {
 }
 
 func TestBashShellOptsGlobalLevel(t *testing.T) {
+	t.Parallel()
+
 	var buff bytes.Buffer
 	e := task.Executor{
 		Dir:    "testdata/shopts/global_level",
@@ -2402,6 +2678,8 @@ func TestBashShellOptsGlobalLevel(t *testing.T) {
 }
 
 func TestBashShellOptsTaskLevel(t *testing.T) {
+	t.Parallel()
+
 	var buff bytes.Buffer
 	e := task.Executor{
 		Dir:    "testdata/shopts/task_level",
@@ -2416,6 +2694,8 @@ func TestBashShellOptsTaskLevel(t *testing.T) {
 }
 
 func TestBashShellOptsCommandLevel(t *testing.T) {
+	t.Parallel()
+
 	var buff bytes.Buffer
 	e := task.Executor{
 		Dir:    "testdata/shopts/command_level",
@@ -2430,6 +2710,8 @@ func TestBashShellOptsCommandLevel(t *testing.T) {
 }
 
 func TestSplitArgs(t *testing.T) {
+	t.Parallel()
+
 	var buff bytes.Buffer
 	e := task.Executor{
 		Dir:    "testdata/split_args",
@@ -2448,6 +2730,8 @@ func TestSplitArgs(t *testing.T) {
 }
 
 func TestSingleCmdDep(t *testing.T) {
+	t.Parallel()
+
 	tt := fileContentTest{
 		Dir:    "testdata/single_cmd_dep",
 		Target: "foo",
@@ -2456,10 +2740,15 @@ func TestSingleCmdDep(t *testing.T) {
 			"bar.txt": "bar\n",
 		},
 	}
-	tt.Run(t)
+	t.Run("", func(t *testing.T) {
+		t.Parallel()
+		tt.Run(t)
+	})
 }
 
 func TestSilence(t *testing.T) {
+	t.Parallel()
+
 	var buff bytes.Buffer
 	e := task.Executor{
 		Dir:    "testdata/silent",
@@ -2556,6 +2845,8 @@ func TestSilence(t *testing.T) {
 }
 
 func TestForce(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string
 		env      map[string]string
@@ -2587,6 +2878,8 @@ func TestForce(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			var buff bytes.Buffer
 			e := task.Executor{
 				Dir:      "testdata/force",
@@ -2602,6 +2895,8 @@ func TestForce(t *testing.T) {
 }
 
 func TestForCmds(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name           string
 		expectedOutput string
@@ -2646,6 +2941,8 @@ func TestForCmds(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
 			var stdOut bytes.Buffer
 			var stdErr bytes.Buffer
 			e := task.Executor{
@@ -2663,6 +2960,8 @@ func TestForCmds(t *testing.T) {
 }
 
 func TestForDeps(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name                   string
 		expectedOutputContains []string
@@ -2714,6 +3013,8 @@ func TestForDeps(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
 			// We need to use a sync buffer here as deps are run concurrently
 			var buff SyncBuffer
 			e := task.Executor{
@@ -2735,6 +3036,8 @@ func TestForDeps(t *testing.T) {
 }
 
 func TestWildcard(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name           string
 		call           string
@@ -2775,6 +3078,8 @@ func TestWildcard(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.call, func(t *testing.T) {
+			t.Parallel()
+
 			var buff bytes.Buffer
 			e := task.Executor{
 				Dir:    "testdata/wildcards",
@@ -2795,6 +3100,8 @@ func TestWildcard(t *testing.T) {
 }
 
 func TestReference(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name           string
 		call           string
@@ -2824,6 +3131,8 @@ func TestReference(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.call, func(t *testing.T) {
+			t.Parallel()
+
 			var buff bytes.Buffer
 			e := task.Executor{
 				Dir:    "testdata/var_references",
@@ -2845,6 +3154,8 @@ func TestReference(t *testing.T) {
 // Typically experiments are controlled via TASK_X_ env vars, but we cannot use those in tests
 // because the experiment settings are parsed during experiments.init(), before any tests run.
 func enableExperimentForTest(t *testing.T, e *experiments.Experiment, val string) {
+	t.Helper()
+
 	prev := *e
 	*e = experiments.Experiment{
 		Name:    prev.Name,

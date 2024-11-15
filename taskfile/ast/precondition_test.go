@@ -11,6 +11,8 @@ import (
 )
 
 func TestPreconditionParse(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		content  string
 		v        any

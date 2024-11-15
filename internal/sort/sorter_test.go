@@ -9,6 +9,8 @@ import (
 )
 
 func TestAlphaNumericWithRootTasksFirst_Sort(t *testing.T) {
+	t.Parallel()
+
 	task1 := &ast.Task{Task: "task1"}
 	task2 := &ast.Task{Task: "task2"}
 	task3 := &ast.Task{Task: "ns1:task3"}
@@ -40,6 +42,8 @@ func TestAlphaNumericWithRootTasksFirst_Sort(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			s := &AlphaNumericWithRootTasksFirst{}
 			s.Sort(tt.tasks)
 			assert.Equal(t, tt.want, tt.tasks)
@@ -48,6 +52,8 @@ func TestAlphaNumericWithRootTasksFirst_Sort(t *testing.T) {
 }
 
 func TestAlphaNumeric_Sort(t *testing.T) {
+	t.Parallel()
+
 	task1 := &ast.Task{Task: "task1"}
 	task2 := &ast.Task{Task: "task2"}
 	task3 := &ast.Task{Task: "ns1:task3"}
@@ -69,6 +75,8 @@ func TestAlphaNumeric_Sort(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			s := &AlphaNumeric{}
 			s.Sort(tt.tasks)
 			assert.Equal(t, tt.tasks, tt.want)

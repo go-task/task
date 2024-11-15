@@ -12,6 +12,8 @@ import (
 )
 
 func TestArgs(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		Args            []string
 		ExpectedCalls   []*ast.Call
@@ -97,6 +99,8 @@ func TestArgs(t *testing.T) {
 
 	for i, test := range tests {
 		t.Run(fmt.Sprintf("TestArgs%d", i+1), func(t *testing.T) {
+			t.Parallel()
+
 			calls, globals := args.Parse(test.Args...)
 			assert.Equal(t, test.ExpectedCalls, calls)
 			if test.ExpectedGlobals.Len() > 0 || globals.Len() > 0 {
