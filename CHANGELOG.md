@@ -5,6 +5,7 @@
 - Fixed a security issue in `git-urls` by switching to the maintained fork `chainguard-dev/git-urls` (#1917 by
   @AlekSi).
 - Added missing `platforms` property to `cmds` that use `for` (#1915 by @dkarter).
+- Added misspell linter to check for misspelled English words (#1883 by @christiandins).
 
 ## v3.40.0 - 2024-11-05
 
