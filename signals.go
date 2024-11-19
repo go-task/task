@@ -15,11 +15,15 @@ const interruptSignalsCount = 3
 // time to do cleanup work.
 func (e *Executor) InterceptInterruptSignals() {
 	ch := make(chan os.Signal, interruptSignalsCount)
-	signal.Notify(ch, os.Interrupt, syscall.SIGTERM)
+	signal.Notify(ch, os.Interrupt, syscall.SIGTERM, syscall.SIGURG)
 
 	go func() {
 		for i := range interruptSignalsCount {
 			sig := <-ch
+			if sig != os.Interrupt && sig != syscall.SIGTERM {
+				i--
+				continue
+			}
 
 			if i+1 >= interruptSignalsCount {
 				e.Logger.Errf(logger.Red, "task: Signal received for the third time: %q. Forcing shutdown\n", sig)
