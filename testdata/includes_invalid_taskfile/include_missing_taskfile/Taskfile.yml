@@ -1,0 +1,10 @@
+version: '3'
+
+includes:
+  included:
+    dir: '.'
+
+tasks:
+  default:
+    cmds:
+      - task: included:default

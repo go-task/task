@@ -1527,6 +1527,35 @@ func TestIncludesInterpolation(t *testing.T) {
 	}
 }
 
+func TestIncludesInvalidTaskfile(t *testing.T) {
+	const dir = "testdata/includes_invalid_taskfile"
+
+	tests := []struct {
+		name        string
+		expectedErr string
+	}{
+		{"include_empty_taskfile", "taskfile field in the include cannot be empty"},
+		{"include_empty_value", "taskfile of the include cannot be empty"},
+		{"include_missing_taskfile", "taskfile field in the include cannot be null"},
+		{"include_null_taskfile", "taskfile field in the include cannot be null"},
+		{"include_null_value", "value of the include cannot be null"},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			var buff bytes.Buffer
+			e := task.Executor{
+				Dir:    filepath.Join(dir, test.name),
+				Stdout: &buff,
+				Stderr: &buff,
+				Silent: true,
+			}
+			err := e.Setup()
+			assert.ErrorContains(t, err, test.expectedErr)
+		})
+	}
+}
+
 func TestIncludedTaskfileVarMerging(t *testing.T) {
 	const dir = "testdata/included_taskfile_var_merging"
 	tests := []struct {
