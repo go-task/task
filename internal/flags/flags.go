@@ -2,7 +2,6 @@ package flags
 
 import (
 	"cmp"
-	"errors"
 	"log"
 	"os"
 	"strconv"
@@ -10,6 +9,7 @@ import (
 
 	"github.com/spf13/pflag"
 
+	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/experiments"
 	"github.com/go-task/task/v3/taskfile/ast"
 )
