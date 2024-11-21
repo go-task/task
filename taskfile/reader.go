@@ -121,10 +121,6 @@ func (r *Reader) include(node Node) error {
 				return err
 			}
 
-			if include.Taskfile == "" {
-				return errors.New(fmt.Sprintf("no taskfile is specified for include %q", include.Namespace))
-			}
-
 			entrypoint, err := node.ResolveEntrypoint(include.Taskfile)
 			if err != nil {
 				return err
