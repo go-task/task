@@ -29,12 +29,17 @@ type Includes struct {
 func (includes *Includes) UnmarshalYAML(node *yaml.Node) error {
 	switch node.Kind {
 	case yaml.MappingNode:
-		// NOTE(@andreynering): on this style of custom unmarshalling,
+		// NOTE(@andreynering): on this style of custom unmarshaling,
 		// even number contains the keys, while odd numbers contains
 		// the values.
 		for i := 0; i < len(node.Content); i += 2 {
 			keyNode := node.Content[i]
 			valueNode := node.Content[i+1]
+
+			// Ensure the include value is not null, as it must be either a string or an include object.
+			if valueNode.Kind == yaml.ScalarNode && valueNode.Tag == "!!null" {
+				return errors.NewTaskfileDecodeError(nil, valueNode).WithMessage("value of the include cannot be null")
+			}
 
 			var v Include
 			if err := valueNode.Decode(&v); err != nil {
@@ -67,18 +72,20 @@ func (includes *Includes) Range(f func(k string, v *Include) error) error {
 
 func (include *Include) UnmarshalYAML(node *yaml.Node) error {
 	switch node.Kind {
-
 	case yaml.ScalarNode:
 		var str string
 		if err := node.Decode(&str); err != nil {
 			return errors.NewTaskfileDecodeError(err, node)
+		}
+		if str == "" {
+			return errors.NewTaskfileDecodeError(nil, node).WithMessage("taskfile of the include cannot be empty")
 		}
 		include.Taskfile = str
 		return nil
 
 	case yaml.MappingNode:
 		var includedTaskfile struct {
-			Taskfile string
+			Taskfile *string
 			Dir      string
 			Optional bool
 			Internal bool
@@ -89,7 +96,13 @@ func (include *Include) UnmarshalYAML(node *yaml.Node) error {
 		if err := node.Decode(&includedTaskfile); err != nil {
 			return errors.NewTaskfileDecodeError(err, node)
 		}
-		include.Taskfile = includedTaskfile.Taskfile
+		if includedTaskfile.Taskfile == nil {
+			return errors.NewTaskfileDecodeError(nil, node).WithMessage("taskfile field in the include cannot be null")
+		}
+		if *includedTaskfile.Taskfile == "" {
+			return errors.NewTaskfileDecodeError(nil, node).WithMessage("taskfile field in the include cannot be empty")
+		}
+		include.Taskfile = *includedTaskfile.Taskfile
 		include.Dir = includedTaskfile.Dir
 		include.Optional = includedTaskfile.Optional
 		include.Internal = includedTaskfile.Internal
