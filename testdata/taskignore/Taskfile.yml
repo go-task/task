@@ -1,0 +1,12 @@
+version: '3'
+
+tasks:
+   txt:
+    desc: Echo file names
+    sources:
+      - ./nested/ignore_me_too.json
+      - ./ignore_me.json
+      - ./dont_ignore.txt
+    cmds:
+      - for: sources
+        cmd: echo {{.ITEM}}
