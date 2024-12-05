@@ -132,16 +132,10 @@ func (e *Executor) ListTaskNames(allTasks bool) error {
 	if e.TaskSorter == nil {
 		e.TaskSorter = sort.AlphaNumericWithRootTasksFirst
 	}
-	keys := e.Taskfile.Tasks.Keys()
-	e.TaskSorter(keys, nil)
 
 	// Create a list of task names
 	taskNames := make([]string, 0, e.Taskfile.Tasks.Len())
-	for _, key := range keys {
-		task, ok := e.Taskfile.Tasks.Get(key)
-		if !ok {
-			continue
-		}
+	for task := range e.Taskfile.Tasks.Values(e.TaskSorter) {
 		if (allTasks || task.Desc != "") && !task.Internal {
 			taskNames = append(taskNames, strings.TrimRight(task.Task, ":"))
 			for _, alias := range task.Aliases {

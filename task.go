@@ -475,7 +475,7 @@ func (e *Executor) GetTask(call *ast.Call) (*ast.Task, error) {
 	// If didn't find one, search for a task with a matching alias
 	var matchingTask *ast.Task
 	var aliasedTasks []string
-	for _, task := range e.Taskfile.Tasks.Values() {
+	for task := range e.Taskfile.Tasks.Values(nil) {
 		if slices.Contains(task.Aliases, call.Task) {
 			aliasedTasks = append(aliasedTasks, task.Task)
 			matchingTask = task
@@ -515,15 +515,9 @@ func (e *Executor) GetTaskList(filters ...FilterFunc) ([]*ast.Task, error) {
 	if e.TaskSorter == nil {
 		e.TaskSorter = sort.AlphaNumericWithRootTasksFirst
 	}
-	keys := e.Taskfile.Tasks.Keys()
-	e.TaskSorter(keys, nil)
 
 	// Filter tasks based on the given filter functions
-	for _, key := range keys {
-		task, ok := e.Taskfile.Tasks.Get(key)
-		if !ok {
-			continue
-		}
+	for task := range e.Taskfile.Tasks.Values(e.TaskSorter) {
 		var shouldFilter bool
 		for _, filter := range filters {
 			if filter(task) {

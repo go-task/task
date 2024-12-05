@@ -100,12 +100,9 @@ func (e *Executor) setupFuzzyModel() {
 	model.SetThreshold(1) // because we want to build grammar based on every task name
 
 	var words []string
-	for _, taskName := range e.Taskfile.Tasks.Keys() {
-		words = append(words, taskName)
-
-		for _, task := range e.Taskfile.Tasks.Values() {
-			words = slices.Concat(words, task.Aliases)
-		}
+	for name, task := range e.Taskfile.Tasks.All(nil) {
+		words = append(words, name)
+		words = slices.Concat(words, task.Aliases)
 	}
 
 	model.Train(words)
@@ -222,12 +219,11 @@ func (e *Executor) readDotEnvFiles() error {
 		return err
 	}
 
-	err = env.Range(func(key string, value ast.Var) error {
-		if _, ok := e.Taskfile.Env.Get(key); !ok {
-			e.Taskfile.Env.Set(key, value)
+	for k, v := range env.All() {
+		if _, ok := e.Taskfile.Env.Get(k); !ok {
+			e.Taskfile.Env.Set(k, v)
 		}
-		return nil
-	})
+	}
 	return err
 }
 
@@ -245,7 +241,7 @@ func (e *Executor) setupConcurrencyState() {
 
 	e.taskCallCount = make(map[string]*int32, e.Taskfile.Tasks.Len())
 	e.mkdirMutexMap = make(map[string]*sync.Mutex, e.Taskfile.Tasks.Len())
-	for _, k := range e.Taskfile.Tasks.Keys() {
+	for k := range e.Taskfile.Tasks.Keys(nil) {
 		e.taskCallCount[k] = new(int32)
 		e.mkdirMutexMap[k] = &sync.Mutex{}
 	}

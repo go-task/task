@@ -2,6 +2,7 @@ package ast
 
 import (
 	"fmt"
+	"iter"
 	"slices"
 	"strings"
 	"sync"
@@ -11,6 +12,7 @@ import (
 
 	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/filepathext"
+	"github.com/go-task/task/v3/internal/sort"
 )
 
 type (
@@ -79,47 +81,47 @@ func (tasks *Tasks) Set(key string, value *Task) bool {
 	return tasks.om.Set(key, value)
 }
 
-// Range calls the provided function for each task in the map. The function
-// receives the task's key and value as arguments. If the function returns an
-// error, the iteration stops and the error is returned.
-func (tasks *Tasks) Range(f func(k string, v *Task) error) error {
-	if tasks == nil || tasks.om == nil {
-		return nil
+// All returns an iterator that loops over all task key-value pairs in the order
+// specified by the sorter.
+func (t *Tasks) All(sorter sort.Sorter) iter.Seq2[string, *Task] {
+	if t == nil || t.om == nil {
+		return func(yield func(string, *Task) bool) {}
 	}
-	for pair := tasks.om.Front(); pair != nil; pair = pair.Next() {
-		if err := f(pair.Key, pair.Value); err != nil {
-			return err
+	if sorter == nil {
+		return t.om.AllFromFront()
+	}
+	return func(yield func(string, *Task) bool) {
+		for _, key := range sorter(slices.Collect(t.om.Keys()), nil) {
+			el := t.om.GetElement(key)
+			if !yield(el.Key, el.Value) {
+				return
+			}
 		}
 	}
-	return nil
 }
 
-// Keys returns a slice of all the keys in the Tasks map.
-func (tasks *Tasks) Keys() []string {
-	if tasks == nil {
-		return nil
+// Keys returns an iterator that loops over all task keys in the order specified
+// by the sorter.
+func (t *Tasks) Keys(sorter sort.Sorter) iter.Seq[string] {
+	return func(yield func(string) bool) {
+		for k := range t.All(sorter) {
+			if !yield(k) {
+				return
+			}
+		}
 	}
-	defer tasks.mutex.RUnlock()
-	tasks.mutex.RLock()
-	var keys []string
-	for pair := tasks.om.Front(); pair != nil; pair = pair.Next() {
-		keys = append(keys, pair.Key)
-	}
-	return keys
 }
 
-// Values returns a slice of all the values in the Tasks map.
-func (tasks *Tasks) Values() []*Task {
-	if tasks == nil {
-		return nil
+// Values returns an iterator that loops over all task values in the order
+// specified by the sorter.
+func (t *Tasks) Values(sorter sort.Sorter) iter.Seq[*Task] {
+	return func(yield func(*Task) bool) {
+		for _, v := range t.All(sorter) {
+			if !yield(v) {
+				return
+			}
+		}
 	}
-	defer tasks.mutex.RUnlock()
-	tasks.mutex.RLock()
-	var values []*Task
-	for pair := tasks.om.Front(); pair != nil; pair = pair.Next() {
-		values = append(values, pair.Value)
-	}
-	return values
 }
 
 // FindMatchingTasks returns a list of tasks that match the given call. A task
@@ -138,22 +140,21 @@ func (t *Tasks) FindMatchingTasks(call *Call) []*MatchingTask {
 	}
 	// Attempt a wildcard match
 	// For now, we can just nil check the task before each loop
-	_ = t.Range(func(key string, value *Task) error {
+	for _, value := range t.All(nil) {
 		if match, wildcards := value.WildcardMatch(call.Task); match {
 			matchingTasks = append(matchingTasks, &MatchingTask{
 				Task:      value,
 				Wildcards: wildcards,
 			})
 		}
-		return nil
-	})
+	}
 	return matchingTasks
 }
 
 func (t1 *Tasks) Merge(t2 *Tasks, include *Include, includedTaskfileVars *Vars) error {
 	defer t2.mutex.RUnlock()
 	t2.mutex.RLock()
-	err := t2.Range(func(name string, v *Task) error {
+	for name, v := range t2.All(nil) {
 		// We do a deep copy of the task struct here to ensure that no data can
 		// be changed elsewhere once the taskfile is merged.
 		task := v.DeepCopy()
@@ -162,9 +163,9 @@ func (t1 *Tasks) Merge(t2 *Tasks, include *Include, includedTaskfileVars *Vars) 
 		task.Internal = task.Internal || (include != nil && include.Internal)
 		taskName := name
 
-		// if the task is in the exclude list, don't add it to the merged taskfile and early return
+		// if the task is in the exclude list, don't add it to the merged taskfile
 		if slices.Contains(include.Excludes, name) {
-			return nil
+			continue
 		}
 
 		if !include.Flatten {
@@ -219,9 +220,7 @@ func (t1 *Tasks) Merge(t2 *Tasks, include *Include, includedTaskfileVars *Vars) 
 		}
 		// Add the task to the merged taskfile
 		t1.Set(taskName, task)
-
-		return nil
-	})
+	}
 
 	// If the included Taskfile has a default task, is not flattened and the
 	// parent namespace has no task with a matching name, we can add an alias so
@@ -239,7 +238,7 @@ func (t1 *Tasks) Merge(t2 *Tasks, include *Include, includedTaskfileVars *Vars) 
 		}
 	}
 
-	return err
+	return nil
 }
 
 func (t *Tasks) UnmarshalYAML(node *yaml.Node) error {

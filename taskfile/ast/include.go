@@ -1,6 +1,7 @@
 package ast
 
 import (
+	"iter"
 	"sync"
 
 	"github.com/elliotchance/orderedmap/v3"
@@ -84,19 +85,31 @@ func (includes *Includes) Set(key string, value *Include) bool {
 	return includes.om.Set(key, value)
 }
 
+// All returns an iterator that loops over all task key-value pairs.
 // Range calls the provided function for each include in the map. The function
 // receives the include's key and value as arguments. If the function returns
 // an error, the iteration stops and the error is returned.
-func (includes *Includes) Range(f func(k string, v *Include) error) error {
+func (includes *Includes) All() iter.Seq2[string, *Include] {
 	if includes == nil || includes.om == nil {
-		return nil
+		return func(yield func(string, *Include) bool) {}
 	}
-	for pair := includes.om.Front(); pair != nil; pair = pair.Next() {
-		if err := f(pair.Key, pair.Value); err != nil {
-			return err
-		}
+	return includes.om.AllFromFront()
+}
+
+// Keys returns an iterator that loops over all task keys.
+func (includes *Includes) Keys() iter.Seq[string] {
+	if includes == nil || includes.om == nil {
+		return func(yield func(string) bool) {}
 	}
-	return nil
+	return includes.om.Keys()
+}
+
+// Values returns an iterator that loops over all task values.
+func (includes *Includes) Values() iter.Seq[*Include] {
+	if includes == nil || includes.om == nil {
+		return func(yield func(*Include) bool) {}
+	}
+	return includes.om.Values()
 }
 
 // UnmarshalYAML implements the yaml.Unmarshaler interface.
