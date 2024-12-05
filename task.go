@@ -451,7 +451,7 @@ func (e *Executor) GetTask(call *ast.Call) (*ast.Task, error) {
 	case 0: // Carry on
 	case 1:
 		if call.Vars == nil {
-			call.Vars = &ast.Vars{}
+			call.Vars = ast.NewVars()
 		}
 		call.Vars.Set("MATCH", ast.Var{Value: matchingTasks[0].Wildcards})
 		return matchingTasks[0].Task, nil

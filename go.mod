@@ -9,6 +9,7 @@ require (
 	github.com/chainguard-dev/git-urls v1.0.2
 	github.com/davecgh/go-spew v1.1.1
 	github.com/dominikbraun/graph v0.23.0
+	github.com/elliotchance/orderedmap/v2 v2.6.0
 	github.com/fatih/color v1.18.0
 	github.com/go-git/go-billy/v5 v5.6.0
 	github.com/go-git/go-git/v5 v5.12.0

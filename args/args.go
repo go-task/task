@@ -9,7 +9,7 @@ import (
 // Parse parses command line argument: tasks and global variables
 func Parse(args ...string) ([]*ast.Call, *ast.Vars) {
 	calls := []*ast.Call{}
-	globals := &ast.Vars{}
+	globals := ast.NewVars()
 
 	for _, arg := range args {
 		if !strings.Contains(arg, "=") {

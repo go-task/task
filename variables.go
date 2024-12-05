@@ -11,7 +11,6 @@ import (
 	"github.com/go-task/task/v3/internal/execext"
 	"github.com/go-task/task/v3/internal/filepathext"
 	"github.com/go-task/task/v3/internal/fingerprint"
-	"github.com/go-task/task/v3/internal/omap"
 	"github.com/go-task/task/v3/internal/templater"
 	"github.com/go-task/task/v3/taskfile/ast"
 )
@@ -86,7 +85,7 @@ func (e *Executor) compiledTask(call *ast.Call, evaluateShVars bool) (*ast.Task,
 		new.Prefix = new.Task
 	}
 
-	dotenvEnvs := &ast.Vars{}
+	dotenvEnvs := ast.NewVars()
 	if len(new.Dotenv) > 0 {
 		for _, dotEnvPath := range new.Dotenv {
 			dotEnvPath = filepathext.SmartJoin(new.Dir, dotEnvPath)
@@ -98,14 +97,14 @@ func (e *Executor) compiledTask(call *ast.Call, evaluateShVars bool) (*ast.Task,
 				return nil, err
 			}
 			for key, value := range envs {
-				if ok := dotenvEnvs.Exists(key); !ok {
+				if _, ok := dotenvEnvs.Get(key); !ok {
 					dotenvEnvs.Set(key, ast.Var{Value: value})
 				}
 			}
 		}
 	}
 
-	new.Env = &ast.Vars{}
+	new.Env = ast.NewVars()
 	new.Env.Merge(templater.ReplaceVars(e.Taskfile.Env, cache), nil)
 	new.Env.Merge(templater.ReplaceVars(dotenvEnvs, cache), nil)
 	new.Env.Merge(templater.ReplaceVars(origTask.Env, cache), nil)
@@ -297,11 +296,11 @@ func itemsFromFor(
 	// Get the list from a variable and split it up
 	if f.Var != "" {
 		if vars != nil {
-			v := vars.Get(f.Var)
+			v, ok := vars.Get(f.Var)
 			// If the variable is dynamic, then it hasn't been resolved yet
 			// and we can't use it as a list. This happens when fast compiling a task
 			// for use in --list or --list-all etc.
-			if v.Value != nil && v.Sh == nil {
+			if ok && v.Sh == nil {
 				switch value := v.Value.(type) {
 				case string:
 					if f.Split != "" {
@@ -333,7 +332,7 @@ func itemsFromFor(
 }
 
 // product generates the cartesian product of the input map of slices.
-func product(inputMap omap.OrderedMap[string, []any]) []map[string]any {
+func product(inputMap *ast.Matrix) []map[string]any {
 	if inputMap.Len() == 0 {
 		return nil
 	}
