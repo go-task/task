@@ -1,6 +1,7 @@
 package ast
 
 import (
+	"iter"
 	"strings"
 	"sync"
 
@@ -72,19 +73,28 @@ func (vars *Vars) Set(key string, value Var) bool {
 	return vars.om.Set(key, value)
 }
 
-// Range calls the provided function for each variable in the map. The function
-// receives the variable's key and value as arguments. If the function returns
-// an error, the iteration stops and the error is returned.
-func (vars *Vars) Range(f func(k string, v Var) error) error {
+// All returns an iterator that loops over all task key-value pairs.
+func (vars *Vars) All() iter.Seq2[string, Var] {
 	if vars == nil || vars.om == nil {
-		return nil
+		return func(yield func(string, Var) bool) {}
 	}
-	for pair := vars.om.Front(); pair != nil; pair = pair.Next() {
-		if err := f(pair.Key, pair.Value); err != nil {
-			return err
-		}
+	return vars.om.AllFromFront()
+}
+
+// Keys returns an iterator that loops over all task keys.
+func (vars *Vars) Keys() iter.Seq[string] {
+	if vars == nil || vars.om == nil {
+		return func(yield func(string) bool) {}
 	}
-	return nil
+	return vars.om.Keys()
+}
+
+// Values returns an iterator that loops over all task values.
+func (vars *Vars) Values() iter.Seq[Var] {
+	if vars == nil || vars.om == nil {
+		return func(yield func(Var) bool) {}
+	}
+	return vars.om.Values()
 }
 
 // ToCacheMap converts Vars to an unordered map containing only the static
@@ -93,16 +103,16 @@ func (vars *Vars) ToCacheMap() (m map[string]any) {
 	defer vars.mutex.RUnlock()
 	vars.mutex.RLock()
 	m = make(map[string]any, vars.Len())
-	for pair := vars.om.Front(); pair != nil; pair = pair.Next() {
-		if pair.Value.Sh != nil && *pair.Value.Sh != "" {
+	for k, v := range vars.All() {
+		if v.Sh != nil && *v.Sh != "" {
 			// Dynamic variable is not yet resolved; trigger
 			// <no value> to be used in templates.
 			return nil
 		}
-		if pair.Value.Live != nil {
-			m[pair.Key] = pair.Value.Live
+		if v.Live != nil {
+			m[k] = v.Live
 		} else {
-			m[pair.Key] = pair.Value.Value
+			m[k] = v.Value
 		}
 	}
 	return

@@ -1,6 +1,8 @@
 package ast
 
 import (
+	"iter"
+
 	"github.com/elliotchance/orderedmap/v3"
 	"gopkg.in/yaml.v3"
 
@@ -48,16 +50,28 @@ func (matrix *Matrix) Set(key string, value []any) bool {
 	return matrix.om.Set(key, value)
 }
 
-func (matrix *Matrix) Range(f func(k string, v []any) error) error {
+// All returns an iterator that loops over all task key-value pairs.
+func (matrix *Matrix) All() iter.Seq2[string, []any] {
 	if matrix == nil || matrix.om == nil {
-		return nil
+		return func(yield func(string, []any) bool) {}
 	}
-	for pair := matrix.om.Front(); pair != nil; pair = pair.Next() {
-		if err := f(pair.Key, pair.Value); err != nil {
-			return err
-		}
+	return matrix.om.AllFromFront()
+}
+
+// Keys returns an iterator that loops over all task keys.
+func (matrix *Matrix) Keys() iter.Seq[string] {
+	if matrix == nil || matrix.om == nil {
+		return func(yield func(string) bool) {}
 	}
-	return nil
+	return matrix.om.Keys()
+}
+
+// Values returns an iterator that loops over all task values.
+func (matrix *Matrix) Values() iter.Seq[[]any] {
+	if matrix == nil || matrix.om == nil {
+		return func(yield func([]any) bool) {}
+	}
+	return matrix.om.Values()
 }
 
 func (matrix *Matrix) DeepCopy() *Matrix {
