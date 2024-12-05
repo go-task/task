@@ -1,7 +1,7 @@
 package ast
 
 import (
-	"github.com/elliotchance/orderedmap/v2"
+	"github.com/elliotchance/orderedmap/v3"
 	"gopkg.in/yaml.v3"
 
 	"github.com/go-task/task/v3/errors"
