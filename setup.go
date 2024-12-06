@@ -46,9 +46,9 @@ func (e *Executor) Setup() error {
 	if err := e.readDotEnvFiles(); err != nil {
 		return err
 	}
-	if err := e.doVersionChecks(); err != nil {
-		return err
-	}
+	//if err := e.doVersionChecks(); err != nil {
+	//	return err
+	//}
 	e.setupDefaults()
 	e.setupConcurrencyState()
 	return nil
