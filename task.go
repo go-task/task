@@ -70,12 +70,13 @@ type Executor struct {
 	Stdout io.Writer
 	Stderr io.Writer
 
-	Logger         *logger.Logger
-	Compiler       *compiler.Compiler
-	Output         output.Output
-	OutputStyle    ast.Output
-	TaskSorter     sort.TaskSorter
-	UserWorkingDir string
+	Logger              *logger.Logger
+	Compiler            *compiler.Compiler
+	Output              output.Output
+	OutputStyle         ast.Output
+	TaskSorter          sort.TaskSorter
+	UserWorkingDir      string
+	DisableVersionCheck bool
 
 	fuzzyModel *fuzzy.Model
 
@@ -383,7 +384,7 @@ func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call *ast.Call, 
 		if err != nil {
 			return fmt.Errorf("task: failed to get variables: %w", err)
 		}
-		stdOut, stdErr, close := outputWrapper.WrapWriter(e.Stdout, e.Stderr, t.Prefix, outputTemplater)
+		stdOut, stdErr, closer := outputWrapper.WrapWriter(e.Stdout, e.Stderr, t.Prefix, outputTemplater)
 
 		err = execext.RunCommand(ctx, &execext.RunCommandOptions{
 			Command:   cmd.Cmd,
@@ -395,7 +396,7 @@ func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call *ast.Call, 
 			Stdout:    stdOut,
 			Stderr:    stdErr,
 		})
-		if closeErr := close(err); closeErr != nil {
+		if closeErr := closer(err); closeErr != nil {
 			e.Logger.Errf(logger.Red, "task: unable to close writer: %v\n", closeErr)
 		}
 		if _, isExitError := interp.IsExitStatus(err); isExitError && cmd.IgnoreError {

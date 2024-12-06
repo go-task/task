@@ -46,9 +46,9 @@ func (e *Executor) Setup() error {
 	if err := e.readDotEnvFiles(); err != nil {
 		return err
 	}
-	//if err := e.doVersionChecks(); err != nil {
-	//	return err
-	//}
+	if err := e.doVersionChecks(); err != nil {
+		return err
+	}
 	e.setupDefaults()
 	e.setupConcurrencyState()
 	return nil
@@ -246,6 +246,9 @@ func (e *Executor) setupConcurrencyState() {
 }
 
 func (e *Executor) doVersionChecks() error {
+	if e.DisableVersionCheck {
+		return nil
+	}
 	// Copy the version to avoid modifying the original
 	schemaVersion := &semver.Version{}
 	*schemaVersion = *e.Taskfile.Version
