@@ -246,6 +246,9 @@ func (e *Executor) setupConcurrencyState() {
 }
 
 func (e *Executor) doVersionChecks() error {
+	if !e.EnableVersionCheck {
+		return nil
+	}
 	// Copy the version to avoid modifying the original
 	schemaVersion := &semver.Version{}
 	*schemaVersion = *e.Taskfile.Version

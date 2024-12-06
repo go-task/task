@@ -132,8 +132,9 @@ func run() error {
 		Stdout: os.Stdout,
 		Stderr: os.Stderr,
 
-		OutputStyle: flags.Output,
-		TaskSorter:  taskSorter,
+		OutputStyle:        flags.Output,
+		TaskSorter:         taskSorter,
+		EnableVersionCheck: true,
 	}
 	listOptions := task.NewListOptions(flags.List, flags.ListAll, flags.ListJson, flags.NoStatus)
 	if err := listOptions.Validate(); err != nil {
