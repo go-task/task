@@ -2839,6 +2839,23 @@ func TestReference(t *testing.T) {
 	}
 }
 
+func TestTaskignore(t *testing.T) {
+	var buff bytes.Buffer
+	e := task.Executor{
+		Dir:    "testdata/taskignore",
+		Stdout: &buff,
+		Stderr: &buff,
+		Force:  true,
+		Silent: true,
+	}
+
+	require.NoError(t, e.Setup())
+
+	err := e.Run(context.Background(), &ast.Call{Task: "txt"})
+	assert.Equal(t, "dont_ignore.txt\n", buff.String())
+	require.NoError(t, err)
+}
+
 // enableExperimentForTest enables the experiment behind pointer e for the duration of test t and sub-tests,
 // with the experiment being restored to its previous state when tests complete.
 //
