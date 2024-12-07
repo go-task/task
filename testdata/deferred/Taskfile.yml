@@ -1,12 +1,14 @@
-version: "3"
+version: '3'
 
 tasks:
   task-1:
     - echo 'task-1 ran {{.PARAM}}'
 
   task-2:
-    - defer: { task: "task-1", vars: { PARAM: "successfully" } }
+    - defer: { task: 'task-1', vars: { PARAM: 'successfully' } }
+    - defer: { task: 'task-1', vars: { PARAM: 'successfully' }, silent: true }
     - defer: echo 'echo ran'
+      silent: true
     - defer: echo 'failing' && exit 2
     - echo 'cmd ran'
     - exit 1

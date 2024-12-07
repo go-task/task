@@ -2002,8 +2002,8 @@ cmd ran
 task: [task-2] exit 1
 task: [task-2] echo 'failing' && exit 2
 failing
-task: [task-2] echo 'echo ran'
 echo ran
+task-1 ran successfully
 task: [task-1] echo 'task-1 ran successfully'
 task-1 ran successfully
 `)
