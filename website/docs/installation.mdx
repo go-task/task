@@ -200,11 +200,13 @@ This installation method is community owned.
 
 If you are building a docker image that, among other utilities, must contain `Task` as well, you can copy over both the binary as well as the appropriate bash completion for your shell from the official `ghcr.io/go-task/task` docker image:
 
+> Note: The image is available only for `amd64` and `arm64v8` architectures and only for Task versions starting at `v3.40.2`
+
 ```Dockerfile
 FROM ubuntu:22.04
 # ...
-COPY --from=ghcr.io/go-task/task:v3.40.1 /usr/local/bin/task /usr/local/bin/task
-COPY --from=ghcr.io/go-task/task:v3.40.1 /etc/completion/bash/task.bash /etc/bash_completion.d/task
+COPY --from=ghcr.io/go-task/task:v3.40.2 /usr/local/bin/task /usr/local/bin/task
+COPY --from=ghcr.io/go-task/task:v3.40.2 /etc/completion/bash/task.bash /etc/bash_completion.d/task
 # ...
 ```
 
