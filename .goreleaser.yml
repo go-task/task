@@ -135,7 +135,6 @@ winget:
 dockers:
   - image_templates:
       - "ghcr.io/go-task/task:v{{.Version}}-amd64"
-      - "docker.io/taskfile/task:v{{.Version}}-amd64"
     use: buildx
     dockerfile: Dockerfile
     extra_files:
@@ -153,7 +152,6 @@ dockers:
       - "--label=org.opencontainers.image.description=Task is a task runner / build tool that aims to be simpler and easier to use than, for example, GNU Make."
   - image_templates:
       - "ghcr.io/go-task/task:v{{.Version}}-arm64v8"
-      - "docker.io/taskfile/task:v{{.Version}}-arm64v8"
     use: buildx
     goarch: arm64
     dockerfile: Dockerfile
@@ -181,13 +179,3 @@ docker_manifests:
     image_templates:
       - "ghcr.io/go-task/task:v{{.Version}}-amd64"
       - "ghcr.io/go-task/task:v{{.Version}}-arm64v8"
-
-  - name_template: "docker.io/taskfile/task:v{{.Version}}"
-    image_templates:
-      - "docker.io/taskfile/task:v{{.Version}}-amd64"
-      - "docker.io/taskfile/task:v{{.Version}}-arm64v8"
-
-  - name_template: "docker.io/taskfile/task:latest"
-    image_templates:
-      - "docker.io/taskfile/task:v{{.Version}}-amd64"
-      - "docker.io/taskfile/task:v{{.Version}}-arm64v8"
