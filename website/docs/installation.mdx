@@ -196,6 +196,18 @@ If you want to install Task in GitHub Actions you can try using
 
 This installation method is community owned.
 
+### Docker
+
+If you are building a docker image that, among other utilities, must contain `Task` as well, you can copy over both the binary as well as the appropriate bash completion for your shell from the official `ghcr.io/go-task/task` docker image:
+
+```Dockerfile
+FROM ubuntu:22.04
+# ...
+COPY --from=ghcr.io/go-task/task:v3.40.1 /usr/local/bin/task /usr/local/bin/task
+COPY --from=ghcr.io/go-task/task:v3.40.1 /etc/completion/bash/task.bash /etc/bash_completion.d/task
+# ...
+```
+
 ## Build From Source
 
 ### Go Modules
