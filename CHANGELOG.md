@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Fixed an issue where dynamic variables were not properly logged in verbose mode (#1920, #1921 by @mgbowman).
+
 ## v3.40.1 - 2024-12-06
 
 - Fixed a security issue in `git-urls` by switching to the maintained fork `chainguard-dev/git-urls` (#1917 by
