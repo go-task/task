@@ -2,8 +2,8 @@ package task
 
 import (
 	"context"
-	"errors"
 
+	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/env"
 	"github.com/go-task/task/v3/internal/execext"
 	"github.com/go-task/task/v3/internal/logger"

@@ -6,6 +6,12 @@
     "env": {
       "$ref": "#/definitions/vars"
     },
+    "platforms": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
     "tasks": {
       "type": "object",
       "patternProperties": {
@@ -59,8 +65,18 @@
           "type": "string"
         },
         "prompt": {
-          "description": "A prompt that will be presented before a task is run. Declining will cancel running the current and any subsequent tasks.",
-          "type": "string"
+          "description": "One or more prompts that will be presented before a task is run. Declining will cancel running the current and any subsequent tasks.",
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          ]
         },
         "summary": {
           "description": "A longer description of the task. This is displayed when calling `task --summary [task]`.",
@@ -169,10 +185,7 @@
         },
         "platforms": {
           "description": "Specifies which platforms the task should be run on.",
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+          "$ref": "#/definitions/platforms"
         },
         "requires": {
           "description": "A list of variables which should be set if this task is to run, if any of these variables are unset the task will error and not run",
@@ -331,10 +344,7 @@
         },
         "platforms": {
           "description": "Specifies which platforms the command should be run on.",
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+          "$ref": "#/definitions/platforms"
         }
       },
       "additionalProperties": false,
@@ -386,6 +396,10 @@
         "vars": {
           "description": "Values passed to the task called",
           "$ref": "#/definitions/vars"
+        },
+        "platforms": {
+          "description": "Specifies which platforms the command should be run on.",
+          "$ref": "#/definitions/platforms"
         }
       },
       "oneOf": [

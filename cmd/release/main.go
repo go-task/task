@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -12,6 +11,8 @@ import (
 	"github.com/Masterminds/semver/v3"
 	"github.com/otiai10/copy"
 	"github.com/spf13/pflag"
+
+	"github.com/go-task/task/v3/errors"
 )
 
 const (

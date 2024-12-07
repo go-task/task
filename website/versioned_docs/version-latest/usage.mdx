@@ -1060,6 +1060,40 @@ tasks:
       vars: [IMAGE_NAME, IMAGE_TAG]
 ```
 
+### Ensuring required variables have allowed values
+
+If you want to ensure that a variable is set to one of a predefined set of valid values before executing a task, you can use requires.
+This is particularly useful when there are strict requirements for what values a variable can take, and you want to provide clear feedback to the user when an invalid value is detected.
+
+To use `requires`, you specify an array of allowed values in the vars sub-section under requires. Task will check if the variable is set to one of the allowed values.
+If the variable does not match any of these values, the task will raise an error and stop execution.
+
+This check applies both to user-defined variables and environment variables.
+
+Example of using `requires`:
+
+```yaml
+version: '3'
+
+tasks:
+  deploy:
+    cmds:
+      - echo "deploying to {{.ENV}}"
+
+    requires:
+      vars:
+        - name: ENV
+          enum: [dev, beta, prod]
+```
+
+If `ENV` is not one of 'dev', 'beta' or 'prod' an error will be raised.
+
+:::note
+
+This is supported only for string variables.
+
+:::
+
 ## Variables
 
 Task allows you to set variables using the `vars` keyword. The following
@@ -1176,6 +1210,28 @@ tasks:
   greet:
     cmds:
       - echo "{{.GREETING}}"
+```
+
+Example of a `default` value to be overridden from CLI:
+
+```yaml
+version: '3'
+
+  greet_user:
+    desc: "Greet the user with a name."
+    vars:
+      USER_NAME: '{{.USER_NAME| default "DefaultUser"}}'
+    cmds:
+      - echo "Hello, {{.USER_NAME}}!"
+```
+
+```shell
+$ task greet_user
+task: [greet_user] echo "Hello, DefaultUser!"
+Hello, DefaultUser!
+$ task greet_user USER_NAME="Bob"
+task: [greet_user] echo "Hello, Bob!"
+Hello, Bob!
 ```
 
 ### Dynamic variables
@@ -1842,6 +1898,24 @@ tasks:
 ```shell
 ❯ task dangerous
 task: "This is a dangerous command... Do you want to continue?" [y/N]
+```
+
+Prompts can be a single value or a list of prompts, like below:
+
+```yaml
+version: '3'
+
+tasks:
+  example:
+    cmds:
+      - task: dangerous
+
+  dangerous:
+    prompt:
+     - This is a dangerous command... Do you want to continue?
+     - Are you sure?
+    cmds:
+      - echo 'dangerous command'
 ```
 
 Warning prompts are called before executing a task. If a prompt is denied Task

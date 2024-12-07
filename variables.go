@@ -112,7 +112,7 @@ func (e *Executor) compiledTask(call *ast.Call, evaluateShVars bool) (*ast.Task,
 	if evaluateShVars {
 		err = new.Env.Range(func(k string, v ast.Var) error {
 			// If the variable is not dynamic, we can set it and return
-			if v.Value != nil || v.Sh == "" {
+			if v.Value != nil || v.Sh == nil {
 				new.Env.Set(k, ast.Var{Value: v.Value})
 				return nil
 			}
@@ -301,7 +301,7 @@ func itemsFromFor(
 			// If the variable is dynamic, then it hasn't been resolved yet
 			// and we can't use it as a list. This happens when fast compiling a task
 			// for use in --list or --list-all etc.
-			if v.Value != nil && v.Sh == "" {
+			if v.Value != nil && v.Sh == nil {
 				switch value := v.Value.(type) {
 				case string:
 					if f.Split != "" {

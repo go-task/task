@@ -3,4 +3,4 @@ version: '3'
 tasks:
   default: |
     this_should_fail
-    echo "This shoudn't be print"
+    echo "This shouldn't be print"
