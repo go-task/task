@@ -1,27 +1,22 @@
 package version
 
 import (
-	"fmt"
 	"runtime/debug"
 )
 
 var (
-	version = ""
+	version = "unknown"
 	sum     = ""
 )
 
-func init() {
+func Init() {
 	info, ok := debug.ReadBuildInfo()
 	if !ok || info.Main.Version == "" {
-		version = "unknown"
-	} else {
-		if version == "" {
-			version = info.Main.Version
-		}
-		if sum == "" {
-			sum = info.Main.Sum
-		}
+		return
 	}
+
+	version = info.Main.Version
+	sum = info.Main.Sum
 }
 
 func GetVersion() string {
@@ -29,5 +24,9 @@ func GetVersion() string {
 }
 
 func GetVersionWithSum() string {
-	return fmt.Sprintf("%s (%s)", version, sum)
+	result := version
+	if sum != "" {
+		result += " (" + sum + ")"
+	}
+	return result
 }
