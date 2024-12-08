@@ -17,7 +17,6 @@ func Init() {
 
 	version = info.Main.Version
 	sum = info.Main.Sum
-
 }
 
 func GetVersion() string {
