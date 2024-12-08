@@ -166,11 +166,18 @@ dockers:
       - "--label=org.opencontainers.image.description=Task is a task runner / build tool that aims to be simpler and easier to use than, for example, GNU Make."
 
 docker_manifests:
-  - name_template: "ghcr.io/go-task/task:v{{.Version}}"
+  - name_template: "ghcr.io/go-task/task:v{{.Major}}.{{.Minor}}.{{.Patch}}"
     image_templates:
       - "ghcr.io/go-task/task:v{{.Version}}-amd64"
       - "ghcr.io/go-task/task:v{{.Version}}-arm64v8"
-
+  - name_template: "ghcr.io/go-task/task:v{{.Major}}.{{.Minor}}"
+    image_templates:
+      - "ghcr.io/go-task/task:v{{.Version}}-amd64"
+      - "ghcr.io/go-task/task:v{{.Version}}-arm64v8"
+  - name_template: "ghcr.io/go-task/task:v{{.Major}}"
+    image_templates:
+      - "ghcr.io/go-task/task:v{{.Version}}-amd64"
+      - "ghcr.io/go-task/task:v{{.Version}}-arm64v8"
   - name_template: "ghcr.io/go-task/task:latest"
     image_templates:
       - "ghcr.io/go-task/task:v{{.Version}}-amd64"
