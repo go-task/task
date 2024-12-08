@@ -206,7 +206,6 @@ If you are building a docker image that, among other utilities, must contain `Ta
 FROM ubuntu:22.04
 # ...
 COPY --from=ghcr.io/go-task/task:v3.40.2 /usr/local/bin/task /usr/local/bin/task
-COPY --from=ghcr.io/go-task/task:v3.40.2 /etc/completion/bash/task.bash /etc/bash_completion.d/task
 # ...
 ```
 

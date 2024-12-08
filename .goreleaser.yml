@@ -137,8 +137,6 @@ dockers:
       - "ghcr.io/go-task/task:v{{.Version}}-amd64"
     use: buildx
     dockerfile: Dockerfile
-    extra_files:
-      - completion/bash/task.bash
     build_flag_templates:
       - "--platform=linux/amd64"
       - "--label=org.opencontainers.image.created={{.Date}}"
@@ -155,8 +153,6 @@ dockers:
     use: buildx
     goarch: arm64
     dockerfile: Dockerfile
-    extra_files:
-      - completion/bash/task.bash
     build_flag_templates:
       - "--platform=linux/arm64/v8"
       - "--label=org.opencontainers.image.created={{.Date}}"
