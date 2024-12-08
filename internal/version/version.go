@@ -11,7 +11,7 @@ var (
 
 func Init() {
 	info, ok := debug.ReadBuildInfo()
-	if ok && info.Main.Version == "" {
+	if !ok || info.Main.Version == "" {
 		return
 	}
 
