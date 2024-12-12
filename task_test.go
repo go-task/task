@@ -43,6 +43,18 @@ type SyncBuffer struct {
 	mu  sync.Mutex
 }
 
+func (sb *SyncBuffer) String() string {
+	sb.mu.Lock()
+	defer sb.mu.Unlock()
+	return sb.buf.String()
+}
+
+func (sb *SyncBuffer) Reset() {
+	sb.mu.Lock()
+	defer sb.mu.Unlock()
+	sb.buf.Reset()
+}
+
 func (sb *SyncBuffer) Write(p []byte) (n int, err error) {
 	sb.mu.Lock()
 	defer sb.mu.Unlock()
@@ -218,7 +230,7 @@ func TestSpecialVars(t *testing.T) {
 	for _, dir := range []string{dir, subdir} {
 		for _, test := range tests {
 			t.Run(test.target, func(t *testing.T) {
-				var buff bytes.Buffer
+				var buff SyncBuffer
 				e := &task.Executor{
 					Dir:    dir,
 					Stdout: &buff,
@@ -227,7 +239,7 @@ func TestSpecialVars(t *testing.T) {
 				}
 				require.NoError(t, e.Setup())
 				require.NoError(t, e.Run(context.Background(), &ast.Call{Task: test.target}))
-				assert.Equal(t, test.expected+"\n", buff.String())
+				assert.Equal(t, test.expected+"\n", buff.buf.String())
 			})
 		}
 	}
@@ -325,7 +337,7 @@ func TestStatus(t *testing.T) {
 		}
 	}
 
-	var buff bytes.Buffer
+	var buff SyncBuffer
 	e := &task.Executor{
 		Dir: dir,
 		TempDir: task.TempDir{
@@ -361,7 +373,7 @@ func TestStatus(t *testing.T) {
 	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "gen-bar"}))
 
 	// We're silent, so no output should have been produced.
-	assert.Empty(t, buff.String())
+	assert.Empty(t, buff.buf.String())
 
 	// Now, let's remove source file, and run the task again to to prepare
 	// for the next test.
@@ -410,7 +422,7 @@ func TestStatus(t *testing.T) {
 func TestPrecondition(t *testing.T) {
 	const dir = "testdata/precondition"
 
-	var buff bytes.Buffer
+	var buff SyncBuffer
 	e := &task.Executor{
 		Dir:    dir,
 		Stdout: &buff,
@@ -525,7 +537,7 @@ func TestStatusChecksum(t *testing.T) {
 				require.Error(t, err)
 			}
 
-			var buff bytes.Buffer
+			var buff SyncBuffer
 			tempdir := task.TempDir{
 				Remote:      filepathext.SmartJoin(dir, ".task"),
 				Fingerprint: filepathext.SmartJoin(dir, ".task"),
@@ -1969,7 +1981,7 @@ func TestRunOnlyRunsJobsHashOnce(t *testing.T) {
 func TestRunOnceSharedDeps(t *testing.T) {
 	const dir = "testdata/run_once_shared_deps"
 
-	var buff bytes.Buffer
+	var buff SyncBuffer
 	e := task.Executor{
 		Dir:      dir,
 		Stdout:   &buff,
@@ -1980,10 +1992,10 @@ func TestRunOnceSharedDeps(t *testing.T) {
 	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "build"}))
 
 	rx := regexp.MustCompile(`task: \[service-[a,b]:library:build\] echo "build library"`)
-	matches := rx.FindAllStringSubmatch(buff.String(), -1)
+	matches := rx.FindAllStringSubmatch(buff.buf.String(), -1)
 	assert.Len(t, matches, 1)
-	assert.Contains(t, buff.String(), `task: [service-a:build] echo "build a"`)
-	assert.Contains(t, buff.String(), `task: [service-b:build] echo "build b"`)
+	assert.Contains(t, buff.buf.String(), `task: [service-a:build] echo "build a"`)
+	assert.Contains(t, buff.buf.String(), `task: [service-b:build] echo "build b"`)
 }
 
 func TestDeferredCmds(t *testing.T) {
@@ -2646,8 +2658,8 @@ func TestForCmds(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			var stdOut bytes.Buffer
-			var stdErr bytes.Buffer
+			var stdOut SyncBuffer
+			var stdErr SyncBuffer
 			e := task.Executor{
 				Dir:    "testdata/for/cmds",
 				Stdout: &stdOut,
@@ -2657,7 +2669,7 @@ func TestForCmds(t *testing.T) {
 			}
 			require.NoError(t, e.Setup())
 			require.NoError(t, e.Run(context.Background(), &ast.Call{Task: test.name}))
-			assert.Equal(t, test.expectedOutput, stdOut.String())
+			assert.Equal(t, test.expectedOutput, stdOut.buf.String())
 		})
 	}
 }
