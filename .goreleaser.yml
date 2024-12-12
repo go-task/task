@@ -143,10 +143,10 @@ dockers:
       - "--label=org.opencontainers.image.title={{.ProjectName}}"
       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
       - "--label=org.opencontainers.image.version={{.Version}}"
-      - "--label=org.opencontainers.image.url=https://github.com/go-task/task"
+      - "--label=org.opencontainers.image.url=https://taskfile.dev"
       - "--label=org.opencontainers.image.source=https://github.com/go-task/task"
       - "--label=org.opencontainers.image.licenses=MIT"
-      - "--label=org.opencontainers.image.authors=Andrey Nering <andrey@nering.com.br>"
+      - "--label=org.opencontainers.image.authors=The Task authors <task@taskfile.dev>"
       - "--label=org.opencontainers.image.description=Task is a task runner / build tool that aims to be simpler and easier to use than, for example, GNU Make."
   - image_templates:
       - "ghcr.io/go-task/task:v{{.Version}}-arm64v8"
@@ -159,10 +159,10 @@ dockers:
       - "--label=org.opencontainers.image.title={{.ProjectName}}"
       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
       - "--label=org.opencontainers.image.version={{.Version}}"
-      - "--label=org.opencontainers.image.url=https://github.com/go-task/task"
+      - "--label=org.opencontainers.image.url=https://taskfile.dev"
       - "--label=org.opencontainers.image.source=https://github.com/go-task/task"
       - "--label=org.opencontainers.image.licenses=MIT"
-      - "--label=org.opencontainers.image.authors=Andrey Nering <andrey@nering.com.br>"
+      - "--label=org.opencontainers.image.authors=The Task authors <task@taskfile.dev>"
       - "--label=org.opencontainers.image.description=Task is a task runner / build tool that aims to be simpler and easier to use than, for example, GNU Make."
 
 docker_manifests:
