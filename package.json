@@ -22,7 +22,7 @@
     "build-tool",
     "task-runner"
   ],
-  "author": "Andrey Nering",
+  "author": "The Task authors",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/go-task/task/issues"
