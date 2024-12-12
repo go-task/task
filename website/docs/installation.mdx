@@ -198,9 +198,13 @@ This installation method is community owned.
 
 ### Docker
 
-If you are building a docker image that, among other utilities, must contain `Task` as well, you can copy over both the binary as well as the appropriate bash completion for your shell from the official `ghcr.io/go-task/task` docker image:
+If you are building a Docker image that, among other utilities, must contain `task` as well, you can copy over both the binary as well as the appropriate Bash completion for your shell from the official `ghcr.io/go-task/task` Docker image:
 
-> Note: The image is available only for `amd64` and `arm64v8` architectures and only for Task versions starting at `v3.40.2`
+:::info
+
+The image is available only for `amd64` and `arm64v8` architectures and only for Task versions starting at v3.40.2.
+
+:::
 
 ```Dockerfile
 FROM ubuntu:22.04
