@@ -62,6 +62,16 @@ includes:
 `TOKEN=my-token task my-remote-namespace:hello` will be resolved by Task to
 `https://my-token@raw.githubusercontent.com/my-org/my-repo/main/Taskfile.yml`
 
+## Git nodes
+
+You can also include a Taskfile from a Git node. We currently support ssh-style and http / https addresses like `git@example.com/foo/bar.git//Taskfiles.yml?ref=v1` and `https://example.com/foo/bar.git//Taskfiles.yml?ref=v1`.
+
+You need to follow this pattern : `<baseUrl>.git//<path>?ref=<ref>`.
+The `ref` parameter, optional, can be a branch name or a tag, if not provided it'll pick up the default branch.
+The `path` is the path to the Taskfile in the repository.
+
+If you want to use the SSH protocol, you need to make sure that your ssh-agent has your private ssh keys added so that they can be used during authentication.
+
 ## Security
 
 Running commands from sources that you do not control is always a potential

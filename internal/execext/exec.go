@@ -2,7 +2,6 @@ package execext
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -14,6 +13,8 @@ import (
 	"mvdan.cc/sh/v3/interp"
 	"mvdan.cc/sh/v3/shell"
 	"mvdan.cc/sh/v3/syntax"
+
+	"github.com/go-task/task/v3/errors"
 )
 
 // RunCommandOptions is the options for the RunCommand func

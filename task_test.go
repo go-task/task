@@ -126,10 +126,10 @@ func TestEnv(t *testing.T) {
 		Target:    "default",
 		TrimSpace: false,
 		Files: map[string]string{
-			"local.txt":         "GOOS='linux' GOARCH='amd64' CGO_ENABLED='0'\n",
-			"global.txt":        "FOO='foo' BAR='overriden' BAZ='baz'\n",
-			"multiple_type.txt": "FOO='1' BAR='true' BAZ='1.1'\n",
-			"not-overriden.txt": "QUX='from_os'\n",
+			"local.txt":          "GOOS='linux' GOARCH='amd64' CGO_ENABLED='0'\n",
+			"global.txt":         "FOO='foo' BAR='overridden' BAZ='baz'\n",
+			"multiple_type.txt":  "FOO='1' BAR='true' BAZ='1.1'\n",
+			"not-overridden.txt": "QUX='from_os'\n",
 		},
 	}
 	tt.Run(t)
@@ -137,10 +137,10 @@ func TestEnv(t *testing.T) {
 	experiments.EnvPrecedence = experiments.New("ENV_PRECEDENCE")
 	ttt := fileContentTest{
 		Dir:       "testdata/env",
-		Target:    "overriden",
+		Target:    "overridden",
 		TrimSpace: false,
 		Files: map[string]string{
-			"overriden.txt": "QUX='from_taskfile'\n",
+			"overridden.txt": "QUX='from_taskfile'\n",
 		},
 	}
 	ttt.Run(t)
@@ -2237,8 +2237,8 @@ cmd ran
 task: [task-2] exit 1
 task: [task-2] echo 'failing' && exit 2
 failing
-task: [task-2] echo 'echo ran'
 echo ran
+task-1 ran successfully
 task: [task-1] echo 'task-1 ran successfully'
 task-1 ran successfully
 `)

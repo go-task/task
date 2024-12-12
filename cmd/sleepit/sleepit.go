@@ -159,7 +159,7 @@ func worker(
 	return workerDone
 }
 
-// Do some work and then return, so that the caller can decide wether to continue or not.
+// Do some work and then return, so that the caller can decide whether to continue or not.
 // Return true when all work is done.
 func doSomeWork(deadline time.Time) bool {
 	if time.Now().After(deadline) {

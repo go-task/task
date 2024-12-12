@@ -5,15 +5,28 @@
 
 linters:
   enable:
+    - depguard
     - goimports
     - gofmt
     - gofumpt
+    - misspell
+    - noctx
     - paralleltest
     - tenv
     - thelper
     - tparallel
 
 linters-settings:
+  depguard:
+    rules:
+      main:
+        files:
+          - "$all"
+          - "!$test"
+          - "!**/errors/*.go"
+        deny:
+          - pkg: "errors"
+            desc: "Use github.com/go-task/task/v3/errors instead"
   goimports:
     local-prefixes: github.com/go-task
   gofmt:
