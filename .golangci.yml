@@ -10,6 +10,7 @@ linters:
     - gofmt
     - gofumpt
     - misspell
+    - noctx
 
 linters-settings:
   depguard:
