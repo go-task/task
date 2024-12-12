@@ -11,6 +11,10 @@ linters:
     - gofumpt
     - misspell
     - noctx
+    - paralleltest
+    - tenv
+    - thelper
+    - tparallel
 
 linters-settings:
   depguard:

@@ -9,6 +9,8 @@ import (
 )
 
 func TestFromMap(t *testing.T) {
+	t.Parallel()
+
 	m := map[int]string{3: "three", 1: "one", 2: "two"}
 	om := FromMap(m)
 	assert.Len(t, om.m, 3)
@@ -20,6 +22,8 @@ func TestFromMap(t *testing.T) {
 }
 
 func TestSetGetExists(t *testing.T) {
+	t.Parallel()
+
 	om := New[int, string]()
 	assert.False(t, om.Exists(1))
 	assert.Equal(t, "", om.Get(1))
@@ -29,6 +33,8 @@ func TestSetGetExists(t *testing.T) {
 }
 
 func TestSort(t *testing.T) {
+	t.Parallel()
+
 	om := New[int, string]()
 	om.Set(3, "three")
 	om.Set(1, "one")
@@ -38,6 +44,8 @@ func TestSort(t *testing.T) {
 }
 
 func TestSortFunc(t *testing.T) {
+	t.Parallel()
+
 	om := New[int, string]()
 	om.Set(3, "three")
 	om.Set(1, "one")
@@ -49,6 +57,8 @@ func TestSortFunc(t *testing.T) {
 }
 
 func TestKeysValues(t *testing.T) {
+	t.Parallel()
+
 	om := New[int, string]()
 	om.Set(3, "three")
 	om.Set(1, "one")
@@ -58,6 +68,8 @@ func TestKeysValues(t *testing.T) {
 }
 
 func Range(t *testing.T) {
+	t.Helper()
+
 	om := New[int, string]()
 	om.Set(3, "three")
 	om.Set(1, "one")
@@ -81,6 +93,8 @@ func Range(t *testing.T) {
 }
 
 func TestOrderedMapMerge(t *testing.T) {
+	t.Parallel()
+
 	om1 := New[string, int]()
 	om1.Set("a", 1)
 	om1.Set("b", 2)
@@ -104,6 +118,8 @@ func TestOrderedMapMerge(t *testing.T) {
 }
 
 func TestUnmarshalYAML(t *testing.T) {
+	t.Parallel()
+
 	yamlString := `
 3: three
 1: one
