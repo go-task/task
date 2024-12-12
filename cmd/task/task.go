@@ -58,6 +58,9 @@ func run() error {
 	dir := flags.Dir
 	entrypoint := flags.Entrypoint
 
+	// Initialise version
+	ver.Init()
+
 	if flags.Version {
 		fmt.Printf("Task version: %s\n", ver.GetVersionWithSum())
 		return nil
