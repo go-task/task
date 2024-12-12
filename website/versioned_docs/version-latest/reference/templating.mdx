@@ -106,6 +106,7 @@ special variable will be overridden.
 | `CLI_FORCE`        | A boolean containing whether the `--force` or `--force-all` flags were set.                                                                              |
 | `CLI_SILENT`       | A boolean containing whether the `--silent`  flag was set.                                                                                               |
 | `CLI_VERBOSE`      | A boolean containing whether the `--verbose`  flag was set.                                                                                              |
+| `CLI_OFFLINE`      | A boolean containing whether the `--offline` flag was set.                                                                                               |
 | `TASK`             | The name of the current task.                                                                                                                            |
 | `ALIAS`            | The alias used for the current task, otherwise matches `TASK`.                                                                                           |
 | `TASK_EXE`         | The Task executable name or path.                                                                                                                        |
@@ -373,7 +374,8 @@ Lastly, Task itself provides a few functions:
 | Function     | Description                                                                                                                                                                                            |
 | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `OS`         | Returns the operating system. Possible values are `windows`, `linux`, `darwin` (macOS) and `freebsd`.                                                                                                  |
-| `ARCH`       | return the architecture Task was compiled to: `386`, `amd64`, `arm` or `s390x`.                                                                                                                        |
+| `ARCH`       | Returns the architecture Task was compiled to: `386`, `amd64`, `arm` or `s390x`.                                                                                                                        |
+| `numCPU`     | Returns the number of logical CPU's usable by the current process.                                                                                                                                     |
 | `splitLines` | Splits Unix (`\n`) and Windows (`\r\n`) styled newlines.                                                                                                                                               |
 | `catLines`   | Replaces Unix (`\n`) and Windows (`\r\n`) styled newlines with a space.                                                                                                                                |
 | `toSlash`    | Does nothing on Unix, but on Windows converts a string from `\` path format to `/`.                                                                                                                    |

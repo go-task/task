@@ -20,7 +20,7 @@ type Vars struct {
 func (vs *Vars) ToCacheMap() (m map[string]any) {
 	m = make(map[string]any, vs.Len())
 	_ = vs.Range(func(k string, v Var) error {
-		if v.Sh != "" {
+		if v.Sh != nil && *v.Sh != "" {
 			// Dynamic variable is not yet resolved; trigger
 			// <no value> to be used in templates.
 			return nil
@@ -81,7 +81,7 @@ func (vs *Vars) DeepCopy() *Vars {
 type Var struct {
 	Value any
 	Live  any
-	Sh    string
+	Sh    *string
 	Ref   string
 	Dir   string
 }
@@ -98,7 +98,7 @@ func (v *Var) UnmarshalYAML(node *yaml.Node) error {
 			// If the value is a string and it starts with $, then it's a shell command
 			if str, ok := value.(string); ok {
 				if str, ok = strings.CutPrefix(str, "$"); ok {
-					v.Sh = str
+					v.Sh = &str
 					return nil
 				}
 				if str, ok = strings.CutPrefix(str, "#"); ok {
@@ -118,7 +118,7 @@ func (v *Var) UnmarshalYAML(node *yaml.Node) error {
 				switch key {
 				case "sh", "ref", "map":
 					var m struct {
-						Sh  string
+						Sh  *string
 						Ref string
 						Map any
 					}
@@ -150,7 +150,7 @@ func (v *Var) UnmarshalYAML(node *yaml.Node) error {
 		switch key {
 		case "sh", "ref":
 			var m struct {
-				Sh  string
+				Sh  *string
 				Ref string
 			}
 			if err := node.Decode(&m); err != nil {

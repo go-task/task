@@ -75,11 +75,13 @@ func (c *Cmd) UnmarshalYAML(node *yaml.Node) error {
 
 		// A deferred command
 		var deferredCmd struct {
-			Defer string
+			Defer  string
+			Silent bool
 		}
 		if err := node.Decode(&deferredCmd); err == nil && deferredCmd.Defer != "" {
 			c.Defer = true
 			c.Cmd = deferredCmd.Defer
+			c.Silent = deferredCmd.Silent
 			return nil
 		}
 
@@ -91,6 +93,7 @@ func (c *Cmd) UnmarshalYAML(node *yaml.Node) error {
 			c.Defer = true
 			c.Task = deferredCall.Defer.Task
 			c.Vars = deferredCall.Defer.Vars
+			c.Silent = deferredCall.Defer.Silent
 			return nil
 		}
 
