@@ -203,6 +203,9 @@ func TestRequires(t *testing.T) {
 	require.NoError(t, e.Setup())
 	require.ErrorContains(t, e.Run(context.Background(), &ast.Call{Task: "require-before-compile"}), "task: Task \"require-before-compile\" cancelled because it is missing required variables: MY_VAR")
 	buff.Reset()
+
+	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "var-defined-in-task"}))
+	buff.Reset()
 }
 
 func TestSpecialVars(t *testing.T) {
