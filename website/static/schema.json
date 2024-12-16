@@ -653,6 +653,13 @@
                         "type": "string"
                       }
                     },
+                    "excludes": {
+                      "description": "A list of tasks to be excluded from inclusion.",
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
                     "vars": {
                       "description": "A set of variables to apply to the included Taskfile.",
                       "$ref": "#/definitions/vars"
