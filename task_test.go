@@ -199,6 +199,9 @@ func TestRequires(t *testing.T) {
 	vars.Set("foo", ast.Var{Value: "one"})
 	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "validation-var", Vars: vars}))
 	buff.Reset()
+
+	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "var-defined-in-task"}))
+	buff.Reset()
 }
 
 func TestSpecialVars(t *testing.T) {
