@@ -19,3 +19,6 @@ tasks:
     cmds:
       - echo "{{.ALIAS}}"
   print-task-alias-default: echo "{{.ALIAS}}"
+  print-task-dir:
+    dir: 'foo'
+    cmd: echo {{.TASK_DIR}}

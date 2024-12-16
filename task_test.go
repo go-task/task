@@ -222,6 +222,7 @@ func TestSpecialVars(t *testing.T) {
 		{target: "print-taskfile", expected: toAbs(dir) + "/Taskfile.yml"},
 		{target: "print-taskfile-dir", expected: toAbs(dir)},
 		{target: "print-task-version", expected: "unknown"},
+		{target: "print-task-dir", expected: toAbs(dir) + "/foo"},
 		// Included
 		{target: "included:print-task", expected: "included:print-task"},
 		{target: "included:print-root-dir", expected: toAbs(dir)},

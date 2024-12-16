@@ -192,7 +192,11 @@ func (c *Compiler) getSpecialVars(t *ast.Task, call *ast.Call) (map[string]strin
 		"TASK_VERSION":     version.GetVersion(),
 	}
 	if t != nil {
-		maps.Copy(allVars, map[string]string{"TASK": t.Task, "TASKFILE": t.Location.Taskfile, "TASKFILE_DIR": filepath.Dir(t.Location.Taskfile)})
+		TaskDir := t.Dir
+		if !filepath.IsAbs(t.Dir) {
+			TaskDir = filepathext.SmartJoin(c.Dir, t.Dir)
+		}
+		maps.Copy(allVars, map[string]string{"TASK": t.Task, "TASKFILE": t.Location.Taskfile, "TASKFILE_DIR": filepath.Dir(t.Location.Taskfile), "TASK_DIR": TaskDir})
 	}
 	if call != nil {
 		maps.Copy(allVars, map[string]string{"ALIAS": call.Task})
