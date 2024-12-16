@@ -16,3 +16,12 @@ tasks:
       vars:
         - name: foo
           enum: ['one', 'two']
+
+
+  require-before-compile:
+    requires:
+      vars: [ MY_VAR ]
+    cmd: |
+      {{range .MY_VAR | splitList " " }}
+        echo {{.}}
+      {{end}}

@@ -176,6 +176,10 @@ func (e *Executor) RunTask(ctx context.Context, call *ast.Call) error {
 		return nil
 	}
 
+	if err := e.areTaskRequiredVarsSet(t, call); err != nil {
+		return err
+	}
+
 	t, err = e.CompiledTask(call)
 	if err != nil {
 		return err
@@ -199,10 +203,6 @@ func (e *Executor) RunTask(ctx context.Context, call *ast.Call) error {
 		skipFingerprinting := e.ForceAll || (!call.Indirect && e.Force)
 		if !skipFingerprinting {
 			if err := ctx.Err(); err != nil {
-				return err
-			}
-
-			if err := e.areTaskRequiredVarsSet(t, call); err != nil {
 				return err
 			}
 
