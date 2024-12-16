@@ -1,0 +1,23 @@
+name: '✨ Feature Request'
+description: Suggest a new feature or enhancement for Task.
+labels: ['state: needs-triage']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for your feature request!
+
+        Before submitting, please check the list of [existing issues](https://github.com/go-task/task/issues) and make sure the same change was not already requested by someone else.
+        If your request is more of an idea than a feature request, consider opening a [discussion](https://github.com/go-task/task/discussions) instead.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: Describe the feature/enhancement you want to see in Task.
+      placeholder: |
+        - Give a general overview of the feature/enhancement.
+        - Explain problem is the change trying to solve.
+        - Give examples of how you would use the feature.
+    validations:
+      required: true
