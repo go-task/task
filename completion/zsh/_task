@@ -14,6 +14,13 @@ function __task_list() {
     taskfile=${(Qv)opt_args[(i)-t|--taskfile]}
     taskfile=${taskfile//\~/$HOME}
 
+    for arg in "${words[@]:0:$CURRENT}"; do
+        if [[ "$arg" = "--" ]]; then
+            # Use default completion for words after `--` as they are CLI_ARGS.
+            _default
+            return 0
+        fi
+    done
 
     if [[ -n "$taskfile" && -f "$taskfile" ]]; then
         enabled=1
@@ -40,6 +47,7 @@ function __task_list() {
 
 _task() {
     _arguments \
+        -S \
         '(-C --concurrency)'{-C,--concurrency}'[limit number of concurrent tasks]: ' \
         '(-p --parallel)'{-p,--parallel}'[run command-line tasks in parallel]' \
         '(-f --force)'{-f,--force}'[run even if task is up-to-date]' \
@@ -55,13 +63,13 @@ _task() {
         '(-t --taskfile)'{-t,--taskfile}'[specify a different taskfile]:taskfile:_files' \
         '(-v --verbose)'{-v,--verbose}'[verbose mode]' \
         '(-w --watch)'{-w,--watch}'[watch-mode for given tasks, re-run when inputs change]' \
+        '(operation)*: :__task_list' \
         + '(operation)' \
-            {-l,--list}'[list describable tasks]' \
-            {-a,--list-all}'[list all tasks]' \
-            {-i,--init}'[create new Taskfile.yml]' \
-            '(-*)'{-h,--help}'[show help]' \
-            '(-*)--version[show version and exit]' \
-            '*: :__task_list'
+            '(*)'{-l,--list}'[list describable tasks]' \
+            '(*)'{-a,--list-all}'[list all tasks]' \
+            '(*)'{-i,--init}'[create new Taskfile.yml]' \
+            '(- *)'{-h,--help}'[show help]' \
+            '(- *)--version[show version and exit]' \
 }
 
 # don't run the completion function when being source-ed or eval-ed
