@@ -90,12 +90,18 @@ func (e *Executor) watchTasks(calls ...*ast.Call) error {
 	}()
 
 	go func() {
-		// re-register every 5 seconds because we can have new files, but this process is expensive to run
+		// re-register every "watchInterval" duration because we can have new files, but this process is expensive to run
+
+		// need to differentiate between the first scan of the sources and any
+		// subsequent ones used to catch added files
+		initialScan := true
+
 		for {
-			if err := e.registerWatchedFiles(w, calls...); err != nil {
+			if err := e.registerWatchedFiles(w, initialScan, calls...); err != nil {
 				e.Logger.Errf(logger.Red, "%v\n", err)
 			}
 			time.Sleep(watchInterval)
+			initialScan = false
 		}
 	}()
 
@@ -119,7 +125,7 @@ func closeOnInterrupt(w *watcher.Watcher) {
 	}()
 }
 
-func (e *Executor) registerWatchedFiles(w *watcher.Watcher, calls ...*ast.Call) error {
+func (e *Executor) registerWatchedFiles(w *watcher.Watcher, initialScan bool, calls ...*ast.Call) error {
 	watchedFiles := w.WatchedFiles()
 
 	var registerTaskFiles func(*ast.Call) error
@@ -165,6 +171,13 @@ func (e *Executor) registerWatchedFiles(w *watcher.Watcher, calls ...*ast.Call) 
 				}
 				if err := w.Add(absFile); err != nil {
 					return err
+				}
+				if !initialScan {
+					fileInfo, err := os.Stat(absFile)
+					if err != nil {
+						return err
+					}
+					w.TriggerEvent(watcher.Create, fileInfo)
 				}
 				e.Logger.VerboseOutf(logger.Green, "task: watching new file: %v\n", absFile)
 			}
