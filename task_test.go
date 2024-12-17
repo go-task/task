@@ -220,10 +220,11 @@ func TestSpecialVars(t *testing.T) {
 			t.Run(test.target, func(t *testing.T) {
 				var buff bytes.Buffer
 				e := &task.Executor{
-					Dir:    dir,
-					Stdout: &buff,
-					Stderr: &buff,
-					Silent: true,
+					Dir:                dir,
+					Stdout:             &buff,
+					Stderr:             &buff,
+					Silent:             true,
+					EnableVersionCheck: true,
 				}
 				require.NoError(t, e.Setup())
 				require.NoError(t, e.Run(context.Background(), &ast.Call{Task: test.target}))
@@ -945,9 +946,10 @@ func TestTaskVersion(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.Dir, func(t *testing.T) {
 			e := task.Executor{
-				Dir:    test.Dir,
-				Stdout: io.Discard,
-				Stderr: io.Discard,
+				Dir:                test.Dir,
+				Stdout:             io.Discard,
+				Stderr:             io.Discard,
+				EnableVersionCheck: true,
 			}
 			err := e.Setup()
 			if test.wantErr {
@@ -1767,9 +1769,10 @@ func TestDynamicVariablesShouldRunOnTheTaskDir(t *testing.T) {
 
 func TestDisplaysErrorOnVersion1Schema(t *testing.T) {
 	e := task.Executor{
-		Dir:    "testdata/version/v1",
-		Stdout: io.Discard,
-		Stderr: io.Discard,
+		Dir:                "testdata/version/v1",
+		Stdout:             io.Discard,
+		Stderr:             io.Discard,
+		EnableVersionCheck: true,
 	}
 	err := e.Setup()
 	require.Error(t, err)
@@ -1779,9 +1782,10 @@ func TestDisplaysErrorOnVersion1Schema(t *testing.T) {
 func TestDisplaysErrorOnVersion2Schema(t *testing.T) {
 	var buff bytes.Buffer
 	e := task.Executor{
-		Dir:    "testdata/version/v2",
-		Stdout: io.Discard,
-		Stderr: &buff,
+		Dir:                "testdata/version/v2",
+		Stdout:             io.Discard,
+		Stderr:             &buff,
+		EnableVersionCheck: true,
 	}
 	err := e.Setup()
 	require.Error(t, err)
