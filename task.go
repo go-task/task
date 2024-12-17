@@ -70,13 +70,13 @@ type Executor struct {
 	Stdout io.Writer
 	Stderr io.Writer
 
-	Logger              *logger.Logger
-	Compiler            *compiler.Compiler
-	Output              output.Output
-	OutputStyle         ast.Output
-	TaskSorter          sort.TaskSorter
-	UserWorkingDir      string
-	DisableVersionCheck bool
+	Logger             *logger.Logger
+	Compiler           *compiler.Compiler
+	Output             output.Output
+	OutputStyle        ast.Output
+	TaskSorter         sort.TaskSorter
+	UserWorkingDir     string
+	EnableVersionCheck bool
 
 	fuzzyModel *fuzzy.Model
 

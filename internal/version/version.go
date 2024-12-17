@@ -10,7 +10,7 @@ var (
 	sum     = ""
 )
 
-func init() {
+func Init() {
 	info, ok := debug.ReadBuildInfo()
 	if !ok || info.Main.Version == "" {
 		version = "unknown"

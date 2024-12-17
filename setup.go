@@ -246,7 +246,7 @@ func (e *Executor) setupConcurrencyState() {
 }
 
 func (e *Executor) doVersionChecks() error {
-	if e.DisableVersionCheck {
+	if !e.EnableVersionCheck {
 		return nil
 	}
 	// Copy the version to avoid modifying the original
