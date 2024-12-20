@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"strings"
+	"sync"
 
 	"github.com/go-task/task/v3/internal/logger"
 	"github.com/go-task/task/v3/internal/templater"
@@ -12,7 +13,7 @@ import (
 
 type Prefixed struct {
 	logger  *logger.Logger
-	seen    map[string]uint
+	seen    *sync.Map
 	counter *uint
 }
 
@@ -20,7 +21,7 @@ func NewPrefixed(logger *logger.Logger) Prefixed {
 	var counter uint
 
 	return Prefixed{
-		seen:    make(map[string]uint),
+		seen:    &sync.Map{},
 		counter: &counter,
 		logger:  logger,
 	}
@@ -85,11 +86,11 @@ func (pw *prefixWriter) writeLine(line string) error {
 		line += "\n"
 	}
 
-	idx, ok := pw.prefixed.seen[pw.prefix]
+	idx, ok := pw.prefixed.seen.Load(pw.prefix)
 
 	if !ok {
 		idx = *pw.prefixed.counter
-		pw.prefixed.seen[pw.prefix] = idx
+		pw.prefixed.seen.Store(pw.prefix, idx)
 
 		*pw.prefixed.counter++
 	}
@@ -98,7 +99,7 @@ func (pw *prefixWriter) writeLine(line string) error {
 		return nil
 	}
 
-	color := PrefixColorSequence[idx%uint(len(PrefixColorSequence))]
+	color := PrefixColorSequence[idx.(uint)%uint(len(PrefixColorSequence))]
 	pw.prefixed.logger.FOutf(pw.writer, color, pw.prefix)
 
 	if _, err := fmt.Fprint(pw.writer, "] "); err != nil {
