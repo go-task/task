@@ -28,6 +28,8 @@ task: [default] echo "Hello, World!"
 Hello, World!
 task: [default] echo "Hello, World!"
 Hello, World!
+task: [default] echo "Hello, World!"
+Hello, World!
 	`)
 
 	var buff bytes.Buffer
@@ -68,6 +70,11 @@ Hello, World!
 
 	time.Sleep(10 * time.Millisecond)
 	err = os.WriteFile(filepathext.SmartJoin(dir, "src/a"), []byte("test updated"), 0644)
+	if err != nil {
+		t.Fatal(err)
+	}
+	time.Sleep(700 * time.Millisecond)
+	err = os.WriteFile(filepathext.SmartJoin(dir, "src/b"), []byte("test"), 0644)
 	if err != nil {
 		t.Fatal(err)
 	}
