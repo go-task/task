@@ -10,6 +10,14 @@ tasks:
         - foo
     cmd: echo "{{.foo}}"
 
+  var-defined-in-task:
+    vars:
+      foo: bar
+    requires:
+      vars:
+        - foo
+    cmd: echo "{{.foo}}"
+
 
   validation-var:
     requires:
