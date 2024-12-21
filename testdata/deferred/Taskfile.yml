@@ -2,13 +2,24 @@ version: '3'
 
 tasks:
   task-1:
-    - echo 'task-1 ran {{.PARAM}}'
+    cmds:
+      - echo 'task-1 ran {{.PARAM}}'
 
   task-2:
-    - defer: { task: 'task-1', vars: { PARAM: 'successfully' } }
-    - defer: { task: 'task-1', vars: { PARAM: 'successfully' }, silent: true }
-    - defer: echo 'echo ran'
-      silent: true
-    - defer: echo 'failing' && exit 2
-    - echo 'cmd ran'
-    - exit 1
+    cmds:
+      - defer: { task: 'task-1', vars: { PARAM: 'successfully' } }
+      - defer: { task: 'task-1', vars: { PARAM: 'successfully' }, silent: true }
+      - defer:
+          task: 'task-1'
+          vars:
+            PARAM: "{{if .EXIT_CODE}}EXIT_CODE : {{.EXIT_CODE}}{{else}}Success{{end}}"
+      - defer:
+          task: 'task-1'
+          vars:
+            PARAM:
+              sh: "{{if .EXIT_CODE}}echo Variable with SH - EXIT_CODE : {{.EXIT_CODE}}{{else}}echo Variable with SH : Success{{end}}"
+      - defer: echo 'echo ran'
+        silent: true
+      - defer: echo 'failing' && exit 2
+      - echo 'cmd ran'
+      - exit 1
