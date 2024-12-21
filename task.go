@@ -342,6 +342,22 @@ func (e *Executor) runDeferred(t *ast.Task, call *ast.Call, i int, deferredExitC
 
 	cmd.Cmd = templater.ReplaceWithExtra(cmd.Cmd, cache, extra)
 
+	if cmd.Vars != nil && cmd.Vars.Len() > 0 {
+		for _, key := range cmd.Vars.Keys() {
+			if v := cmd.Vars.Get(key); v.Value != "" || v.Sh != nil {
+				// Handle Value field
+				if str, isStr := v.Value.(string); isStr {
+					v.Value = templater.ReplaceWithExtra(str, cache, extra)
+				}
+				// Handle Sh field if it exists
+				if v.Sh != nil {
+					*v.Sh = templater.ReplaceWithExtra(*v.Sh, cache, extra)
+				}
+				cmd.Vars.Set(key, v)
+			}
+		}
+	}
+
 	if err := e.runCommand(ctx, t, call, i); err != nil {
 		e.Logger.VerboseErrf(logger.Yellow, "task: ignored error in deferred cmd: %s\n", err.Error())
 	}
