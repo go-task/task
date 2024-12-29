@@ -140,11 +140,11 @@ func ReplaceVarsWithExtra(vars *ast.Vars, cache *Cache, extra map[string]any) *a
 		return nil
 	}
 
-	var newVars ast.Vars
+	newVars := ast.NewVars()
 	_ = vars.Range(func(k string, v ast.Var) error {
 		newVars.Set(k, ReplaceVarWithExtra(v, cache, extra))
 		return nil
 	})
 
-	return &newVars
+	return newVars
 }
