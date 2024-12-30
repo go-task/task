@@ -176,7 +176,7 @@ func (e *Executor) RunTask(ctx context.Context, call *ast.Call) error {
 		return nil
 	}
 
-	if err := e.areTaskRequiredVarsSet(t, call); err != nil {
+	if err := e.areTaskRequiredVarsSet(t); err != nil {
 		return err
 	}
 
