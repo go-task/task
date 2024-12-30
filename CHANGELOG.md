@@ -2,16 +2,22 @@
 
 ## Unreleased
 
-- Fixed an issue where dynamic variables were not properly logged in verbose mode (#1920, #1921 by @mgbowman).
+- Fixed an issue where dynamic variables were not properly logged in verbose
+  mode (#1920, #1921 by @mgbowman).
 - Support `silent` for defer statements (#1877, #1879 by @danilobuerger).
-- Added an option to exclude some tasks from being included (#1859 by @vmaerten).
+- Added an option to exclude some tasks from being included (#1859 by
+  @vmaerten).
+- Fixed an issue where a required variable was incorrectly handled in a template
+  function (#1950, #1962 by @vmaerten).
 
 ## v3.40.1 - 2024-12-06
 
-- Fixed a security issue in `git-urls` by switching to the maintained fork `chainguard-dev/git-urls` (#1917 by
-  @AlekSi).
-- Added missing `platforms` property to `cmds` that use `for` (#1915 by @dkarter).
-- Added misspell linter to check for misspelled English words (#1883 by @christiandins).
+- Fixed a security issue in `git-urls` by switching to the maintained fork
+  `chainguard-dev/git-urls` (#1917 by @AlekSi).
+- Added missing `platforms` property to `cmds` that use `for` (#1915 by
+  @dkarter).
+- Added misspell linter to check for misspelled English words (#1883 by
+  @christiandins).
 
 ## v3.40.0 - 2024-11-05
 
@@ -305,8 +311,8 @@
 - Added the
   [Remote Taskfiles experiment](https://taskfile.dev/experiments/remote-taskfiles)
   as a draft (#1152, #1317 by @pd93).
-- Improve performance of content checksumming on `sources:` by replacing md5 with
-  [XXH3](https://xxhash.com/) which is much faster. This is a soft breaking
+- Improve performance of content checksumming on `sources:` by replacing md5
+  with [XXH3](https://xxhash.com/) which is much faster. This is a soft breaking
   change because checksums will be invalidated when upgrading to this release
   (#1325 by @ReillyBrogan).
 
@@ -453,8 +459,8 @@ it a go and let us know what you think via a
 - Fixed a bug where tasks were sometimes incorrectly marked as internal (#1007
   by @pd93).
 - Update to Go 1.20 (bump minimum version to 1.19) (#1010 by @pd93)
-- Added environment variable `FORCE_COLOR` support to force color output.
-  Useful for environments without TTY (#1003 by @automation-stack)
+- Added environment variable `FORCE_COLOR` support to force color output. Useful
+  for environments without TTY (#1003 by @automation-stack)
 
 ## v3.20.0 - 2023-01-14
 
