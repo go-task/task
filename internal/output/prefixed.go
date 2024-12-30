@@ -15,22 +15,21 @@ type Prefixed struct {
 	logger  *logger.Logger
 	seen    map[string]uint
 	counter *uint
-	mutex   *sync.Mutex
+	mutex   sync.Mutex
 }
 
-func NewPrefixed(logger *logger.Logger) Prefixed {
+func NewPrefixed(logger *logger.Logger) *Prefixed {
 	var counter uint
 
-	return Prefixed{
+	return &Prefixed{
 		seen:    make(map[string]uint),
 		counter: &counter,
 		logger:  logger,
-		mutex:   &sync.Mutex{},
 	}
 }
 
-func (p Prefixed) WrapWriter(stdOut, _ io.Writer, prefix string, _ *templater.Cache) (io.Writer, io.Writer, CloseFunc) {
-	pw := &prefixWriter{writer: stdOut, prefix: prefix, prefixed: &p}
+func (p *Prefixed) WrapWriter(stdOut, _ io.Writer, prefix string, _ *templater.Cache) (io.Writer, io.Writer, CloseFunc) {
+	pw := &prefixWriter{writer: stdOut, prefix: prefix, prefixed: p}
 	return pw, pw, func(error) error { return pw.close() }
 }
 
