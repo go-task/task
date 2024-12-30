@@ -4,6 +4,7 @@
 
 - Fixed an issue where dynamic variables were not properly logged in verbose mode (#1920, #1921 by @mgbowman).
 - Support `silent` for defer statements (#1877, #1879 by @danilobuerger).
+- Added an option to exclude some tasks from being included (#1859 by @vmaerten).
 
 ## v3.40.1 - 2024-12-06
 
