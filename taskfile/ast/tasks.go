@@ -56,6 +56,12 @@ func (t1 *Tasks) Merge(t2 Tasks, include *Include, includedTaskfileVars *Vars) e
 		// taskfile are marked as internal
 		task.Internal = task.Internal || (include != nil && include.Internal)
 		taskName := name
+
+		// if the task is in the exclude list, don't add it to the merged taskfile and early return
+		if slices.Contains(include.Excludes, name) {
+			return nil
+		}
+
 		if !include.Flatten {
 			// Add namespaces to task dependencies
 			for _, dep := range task.Deps {
