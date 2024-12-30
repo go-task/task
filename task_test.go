@@ -1670,6 +1670,7 @@ func TestIncludesInterpolation(t *testing.T) { // nolint:paralleltest // cannot 
 }
 
 func TestIncludesWithExclude(t *testing.T) {
+	t.Parallel()
 	var buff bytes.Buffer
 	e := task.Executor{
 		Dir:    "testdata/includes_with_excludes",
