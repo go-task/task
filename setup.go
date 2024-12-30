@@ -67,12 +67,12 @@ func (e *Executor) getRootNode() (taskfile.Node, error) {
 func (e *Executor) readTaskfile(node taskfile.Node) error {
 	reader := taskfile.NewReader(
 		node,
-		e.Insecure,
-		e.Download,
-		e.Offline,
-		e.Timeout,
-		e.TempDir.Remote,
-		e.Logger,
+		taskfile.WithInsecure(e.Insecure),
+		taskfile.WithDownload(e.Download),
+		taskfile.WithOffline(e.Offline),
+		taskfile.WithTimeout(e.Timeout),
+		taskfile.WithTempDir(e.TempDir.Remote),
+		taskfile.WithLogger(e.Logger),
 	)
 	graph, err := reader.Read()
 	if err != nil {

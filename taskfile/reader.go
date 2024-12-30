@@ -30,37 +30,75 @@ Continue?`
 
 // A Reader will recursively read Taskfiles from a given source using a directed
 // acyclic graph (DAG).
-type Reader struct {
-	graph       *ast.TaskfileGraph
-	node        Node
-	insecure    bool
-	download    bool
-	offline     bool
-	timeout     time.Duration
-	tempDir     string
-	logger      *logger.Logger
-	promptMutex sync.Mutex
-}
+type (
+	Reader struct {
+		graph       *ast.TaskfileGraph
+		node        Node
+		insecure    bool
+		download    bool
+		offline     bool
+		timeout     time.Duration
+		tempDir     string
+		logger      *logger.Logger
+		promptMutex sync.Mutex
+	}
+	ReaderOption func(*Reader)
+)
 
 func NewReader(
 	node Node,
-	insecure bool,
-	download bool,
-	offline bool,
-	timeout time.Duration,
-	tempDir string,
-	logger *logger.Logger,
+	opts ...ReaderOption,
 ) *Reader {
-	return &Reader{
+	reader := &Reader{
 		graph:       ast.NewTaskfileGraph(),
 		node:        node,
-		insecure:    insecure,
-		download:    download,
-		offline:     offline,
-		timeout:     timeout,
-		tempDir:     tempDir,
-		logger:      logger,
+		insecure:    false,
+		download:    false,
+		offline:     false,
+		timeout:     time.Second * 10,
+		tempDir:     os.TempDir(),
+		logger:      nil,
 		promptMutex: sync.Mutex{},
+	}
+	for _, opt := range opts {
+		opt(reader)
+	}
+	return reader
+}
+
+func WithInsecure(insecure bool) ReaderOption {
+	return func(r *Reader) {
+		r.insecure = insecure
+	}
+}
+
+func WithDownload(download bool) ReaderOption {
+	return func(r *Reader) {
+		r.download = download
+	}
+}
+
+func WithOffline(offline bool) ReaderOption {
+	return func(r *Reader) {
+		r.offline = offline
+	}
+}
+
+func WithTimeout(timeout time.Duration) ReaderOption {
+	return func(r *Reader) {
+		r.timeout = timeout
+	}
+}
+
+func WithTempDir(tempDir string) ReaderOption {
+	return func(r *Reader) {
+		r.tempDir = tempDir
+	}
+}
+
+func WithLogger(logger *logger.Logger) ReaderOption {
+	return func(r *Reader) {
+		r.logger = logger
 	}
 }
 
