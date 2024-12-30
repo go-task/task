@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"maps"
 	"os"
 	"path/filepath"
 	"strings"
@@ -192,10 +191,14 @@ func (c *Compiler) getSpecialVars(t *ast.Task, call *ast.Call) (map[string]strin
 		"TASK_VERSION":     version.GetVersion(),
 	}
 	if t != nil {
-		maps.Copy(allVars, map[string]string{"TASK": t.Task, "TASKFILE": t.Location.Taskfile, "TASKFILE_DIR": filepath.Dir(t.Location.Taskfile)})
+		allVars["TASK"] = t.Task
+		allVars["TASK_DIR"] = filepathext.SmartJoin(c.Dir, t.Dir)
+		allVars["TASKFILE"] = t.Location.Taskfile
+		allVars["TASKFILE_DIR"] = filepath.Dir(t.Location.Taskfile)
 	}
 	if call != nil {
-		maps.Copy(allVars, map[string]string{"ALIAS": call.Task})
+		allVars["ALIAS"] = call.Task
 	}
+
 	return allVars, nil
 }
