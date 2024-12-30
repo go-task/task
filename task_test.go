@@ -203,6 +203,9 @@ func TestRequires(t *testing.T) {
 	require.NoError(t, e.Setup())
 	require.ErrorContains(t, e.Run(context.Background(), &ast.Call{Task: "require-before-compile"}), "task: Task \"require-before-compile\" cancelled because it is missing required variables: MY_VAR")
 	buff.Reset()
+
+	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "var-defined-in-task"}))
+	buff.Reset()
 }
 
 func TestSpecialVars(t *testing.T) {
@@ -1671,6 +1674,7 @@ func TestIncludesInterpolation(t *testing.T) { // nolint:paralleltest // cannot 
 
 func TestIncludesWithExclude(t *testing.T) {
 	t.Parallel()
+
 	var buff bytes.Buffer
 	e := task.Executor{
 		Dir:    "testdata/includes_with_excludes",
