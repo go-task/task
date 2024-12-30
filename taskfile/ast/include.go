@@ -1,11 +1,11 @@
 package ast
 
 import (
+	"github.com/elliotchance/orderedmap/v2"
 	"gopkg.in/yaml.v3"
 
 	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/deepcopy"
-	omap "github.com/go-task/task/v3/internal/omap"
 )
 
 // Include represents information about included taskfiles
@@ -22,49 +22,86 @@ type Include struct {
 	Flatten        bool
 }
 
-// Includes represents information about included tasksfiles
+// Includes represents information about included taskfiles
 type Includes struct {
-	omap.OrderedMap[string, *Include]
+	om *orderedmap.OrderedMap[string, *Include]
+}
+
+type IncludeElement orderedmap.Element[string, *Include]
+
+func NewIncludes(els ...*IncludeElement) *Includes {
+	includes := &Includes{
+		om: orderedmap.NewOrderedMap[string, *Include](),
+	}
+	for _, el := range els {
+		includes.Set(el.Key, el.Value)
+	}
+	return includes
+}
+
+func (includes *Includes) Len() int {
+	if includes == nil || includes.om == nil {
+		return 0
+	}
+	return includes.om.Len()
+}
+
+func (includes *Includes) Get(key string) (*Include, bool) {
+	if includes == nil || includes.om == nil {
+		return &Include{}, false
+	}
+	return includes.om.Get(key)
+}
+
+func (includes *Includes) Set(key string, value *Include) bool {
+	if includes == nil {
+		includes = NewIncludes()
+	}
+	if includes.om == nil {
+		includes.om = orderedmap.NewOrderedMap[string, *Include]()
+	}
+	return includes.om.Set(key, value)
+}
+
+func (includes *Includes) Range(f func(k string, v *Include) error) error {
+	if includes == nil || includes.om == nil {
+		return nil
+	}
+	for pair := includes.om.Front(); pair != nil; pair = pair.Next() {
+		if err := f(pair.Key, pair.Value); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // UnmarshalYAML implements the yaml.Unmarshaler interface.
 func (includes *Includes) UnmarshalYAML(node *yaml.Node) error {
 	switch node.Kind {
 	case yaml.MappingNode:
-		// NOTE(@andreynering): on this style of custom unmarshalling,
-		// even number contains the keys, while odd numbers contains
-		// the values.
+		// NOTE: orderedmap does not have an unmarshaler, so we have to decode
+		// the map manually. We increment over 2 values at a time and assign
+		// them as a key-value pair.
 		for i := 0; i < len(node.Content); i += 2 {
 			keyNode := node.Content[i]
 			valueNode := node.Content[i+1]
 
+			// Decode the value node into an Include struct
 			var v Include
 			if err := valueNode.Decode(&v); err != nil {
 				return errors.NewTaskfileDecodeError(err, node)
 			}
+
+			// Set the include namespace
 			v.Namespace = keyNode.Value
+
+			// Add the include to the ordered map
 			includes.Set(keyNode.Value, &v)
 		}
 		return nil
 	}
 
 	return errors.NewTaskfileDecodeError(nil, node).WithTypeMessage("includes")
-}
-
-// Len returns the length of the map
-func (includes *Includes) Len() int {
-	if includes == nil {
-		return 0
-	}
-	return includes.OrderedMap.Len()
-}
-
-// Wrapper around OrderedMap.Set to ensure we don't get nil pointer errors
-func (includes *Includes) Range(f func(k string, v *Include) error) error {
-	if includes == nil {
-		return nil
-	}
-	return includes.OrderedMap.Range(f)
 }
 
 func (include *Include) UnmarshalYAML(node *yaml.Node) error {

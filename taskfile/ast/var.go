@@ -3,67 +3,97 @@ package ast
 import (
 	"strings"
 
+	"github.com/elliotchance/orderedmap/v2"
 	"gopkg.in/yaml.v3"
 
 	"github.com/go-task/task/v3/errors"
+	"github.com/go-task/task/v3/internal/deepcopy"
 	"github.com/go-task/task/v3/internal/experiments"
-	"github.com/go-task/task/v3/internal/omap"
 )
 
 // Vars is a string[string] variables map.
 type Vars struct {
-	omap.OrderedMap[string, Var]
+	om *orderedmap.OrderedMap[string, Var]
+}
+
+type VarElement orderedmap.Element[string, Var]
+
+func NewVars(els ...*VarElement) *Vars {
+	vs := &Vars{
+		om: orderedmap.NewOrderedMap[string, Var](),
+	}
+	for _, el := range els {
+		vs.Set(el.Key, el.Value)
+	}
+	return vs
+}
+
+func (vs *Vars) Len() int {
+	if vs == nil || vs.om == nil {
+		return 0
+	}
+	return vs.om.Len()
+}
+
+func (vs *Vars) Get(key string) (Var, bool) {
+	if vs == nil || vs.om == nil {
+		return Var{}, false
+	}
+	return vs.om.Get(key)
+}
+
+func (vs *Vars) Set(key string, value Var) bool {
+	if vs == nil {
+		vs = NewVars()
+	}
+	if vs.om == nil {
+		vs.om = orderedmap.NewOrderedMap[string, Var]()
+	}
+	return vs.om.Set(key, value)
+}
+
+func (vs *Vars) Range(f func(k string, v Var) error) error {
+	if vs == nil || vs.om == nil {
+		return nil
+	}
+	for pair := vs.om.Front(); pair != nil; pair = pair.Next() {
+		if err := f(pair.Key, pair.Value); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // ToCacheMap converts Vars to a map containing only the static
 // variables
 func (vs *Vars) ToCacheMap() (m map[string]any) {
 	m = make(map[string]any, vs.Len())
-	_ = vs.Range(func(k string, v Var) error {
-		if v.Sh != nil && *v.Sh != "" {
+	for pair := vs.om.Front(); pair != nil; pair = pair.Next() {
+		if pair.Value.Sh != nil && *pair.Value.Sh != "" {
 			// Dynamic variable is not yet resolved; trigger
 			// <no value> to be used in templates.
 			return nil
 		}
-
-		if v.Live != nil {
-			m[k] = v.Live
+		if pair.Value.Live != nil {
+			m[pair.Key] = pair.Value.Live
 		} else {
-			m[k] = v.Value
+			m[pair.Key] = pair.Value.Value
 		}
-		return nil
-	})
-	return
-}
-
-// Wrapper around OrderedMap.Set to ensure we don't get nil pointer errors
-func (vs *Vars) Range(f func(k string, v Var) error) error {
-	if vs == nil {
-		return nil
 	}
-	return vs.OrderedMap.Range(f)
+	return
 }
 
 // Wrapper around OrderedMap.Merge to ensure we don't get nil pointer errors
 func (vs *Vars) Merge(other *Vars, include *Include) {
-	if vs == nil || other == nil {
+	if vs == nil || vs.om == nil || other == nil {
 		return
 	}
-	_ = other.Range(func(key string, value Var) error {
+	for pair := other.om.Front(); pair != nil; pair = pair.Next() {
 		if include != nil && include.AdvancedImport {
-			value.Dir = include.Dir
+			pair.Value.Dir = include.Dir
 		}
-		vs.Set(key, value)
-		return nil
-	})
-}
-
-// Wrapper around OrderedMap.Len to ensure we don't get nil pointer errors
-func (vs *Vars) Len() int {
-	if vs == nil {
-		return 0
+		vs.om.Set(pair.Key, pair.Value)
 	}
-	return vs.OrderedMap.Len()
 }
 
 // DeepCopy creates a new instance of Vars and copies
@@ -73,8 +103,34 @@ func (vs *Vars) DeepCopy() *Vars {
 		return nil
 	}
 	return &Vars{
-		OrderedMap: vs.OrderedMap.DeepCopy(),
+		om: deepcopy.OrderedMap(vs.om),
 	}
+}
+
+func (vs *Vars) UnmarshalYAML(node *yaml.Node) error {
+	vs.om = orderedmap.NewOrderedMap[string, Var]()
+	switch node.Kind {
+	case yaml.MappingNode:
+		// NOTE: orderedmap does not have an unmarshaler, so we have to decode
+		// the map manually. We increment over 2 values at a time and assign
+		// them as a key-value pair.
+		for i := 0; i < len(node.Content); i += 2 {
+			keyNode := node.Content[i]
+			valueNode := node.Content[i+1]
+
+			// Decode the value node into a Task struct
+			var v Var
+			if err := valueNode.Decode(&v); err != nil {
+				return errors.NewTaskfileDecodeError(err, node)
+			}
+
+			// Add the task to the ordered map
+			vs.Set(keyNode.Value, v)
+		}
+		return nil
+	}
+
+	return errors.NewTaskfileDecodeError(nil, node).WithTypeMessage("vars")
 }
 
 // Var represents either a static or dynamic variable.

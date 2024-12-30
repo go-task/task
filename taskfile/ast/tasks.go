@@ -5,16 +5,86 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/elliotchance/orderedmap/v2"
 	"gopkg.in/yaml.v3"
 
 	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/filepathext"
-	"github.com/go-task/task/v3/internal/omap"
 )
 
 // Tasks represents a group of tasks
 type Tasks struct {
-	omap.OrderedMap[string, *Task]
+	om *orderedmap.OrderedMap[string, *Task]
+}
+
+type TaskElement orderedmap.Element[string, *Task]
+
+func NewTasks(els ...*TaskElement) *Tasks {
+	tasks := &Tasks{
+		om: orderedmap.NewOrderedMap[string, *Task](),
+	}
+	for _, el := range els {
+		tasks.Set(el.Key, el.Value)
+	}
+	return tasks
+}
+
+func (tasks *Tasks) Len() int {
+	if tasks == nil || tasks.om == nil {
+		return 0
+	}
+	return tasks.om.Len()
+}
+
+func (tasks *Tasks) Get(key string) (*Task, bool) {
+	if tasks == nil || tasks.om == nil {
+		return &Task{}, false
+	}
+	return tasks.om.Get(key)
+}
+
+func (tasks *Tasks) Set(key string, value *Task) bool {
+	if tasks == nil {
+		tasks = NewTasks()
+	}
+	if tasks.om == nil {
+		tasks.om = orderedmap.NewOrderedMap[string, *Task]()
+	}
+	return tasks.om.Set(key, value)
+}
+
+func (tasks *Tasks) Range(f func(k string, v *Task) error) error {
+	if tasks == nil || tasks.om == nil {
+		return nil
+	}
+	for pair := tasks.om.Front(); pair != nil; pair = pair.Next() {
+		if err := f(pair.Key, pair.Value); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (tasks *Tasks) Keys() []string {
+	if tasks == nil {
+		return nil
+	}
+	var keys []string
+	for pair := tasks.om.Front(); pair != nil; pair = pair.Next() {
+		keys = append(keys, pair.Key)
+	}
+	return keys
+}
+
+func (tasks *Tasks) Values() []*Task {
+	if tasks == nil {
+		return nil
+	}
+	var values []*Task
+	for pair := tasks.om.Front(); pair != nil; pair = pair.Next() {
+		values = append(values, pair.Value)
+	}
+	return values
 }
 
 type MatchingTask struct {
@@ -26,10 +96,9 @@ func (t *Tasks) FindMatchingTasks(call *Call) []*MatchingTask {
 	if call == nil {
 		return nil
 	}
-	var task *Task
 	var matchingTasks []*MatchingTask
 	// If there is a direct match, return it
-	if task = t.OrderedMap.Get(call.Task); task != nil {
+	if task, ok := t.Get(call.Task); ok {
 		matchingTasks = append(matchingTasks, &MatchingTask{Task: task, Wildcards: nil})
 		return matchingTasks
 	}
@@ -47,7 +116,7 @@ func (t *Tasks) FindMatchingTasks(call *Call) []*MatchingTask {
 	return matchingTasks
 }
 
-func (t1 *Tasks) Merge(t2 Tasks, include *Include, includedTaskfileVars *Vars) error {
+func (t1 *Tasks) Merge(t2 *Tasks, include *Include, includedTaskfileVars *Vars) error {
 	err := t2.Range(func(name string, v *Task) error {
 		// We do a deep copy of the task struct here to ensure that no data can
 		// be changed elsewhere once the taskfile is merged.
@@ -100,13 +169,13 @@ func (t1 *Tasks) Merge(t2 Tasks, include *Include, includedTaskfileVars *Vars) e
 		if include.AdvancedImport {
 			task.Dir = filepathext.SmartJoin(include.Dir, task.Dir)
 			if task.IncludeVars == nil {
-				task.IncludeVars = &Vars{}
+				task.IncludeVars = NewVars()
 			}
 			task.IncludeVars.Merge(include.Vars, nil)
 			task.IncludedTaskfileVars = includedTaskfileVars.DeepCopy()
 		}
 
-		if t1.Get(taskName) != nil {
+		if _, ok := t1.Get(taskName); ok {
 			return &errors.TaskNameFlattenConflictError{
 				TaskName: taskName,
 				Include:  include.Namespace,
@@ -118,52 +187,50 @@ func (t1 *Tasks) Merge(t2 Tasks, include *Include, includedTaskfileVars *Vars) e
 		return nil
 	})
 
-	// If the included Taskfile has a default task, being not flattened and the parent namespace has
-	// no task with a matching name, we can add an alias so that the user can
-	// run the included Taskfile's default task without specifying its full
-	// name. If the parent namespace has aliases, we add another alias for each
-	// of them.
-	if t2.Get("default") != nil && t1.Get(include.Namespace) == nil && !include.Flatten {
+	// If the included Taskfile has a default task, is not flattened and the
+	// parent namespace has no task with a matching name, we can add an alias so
+	// that the user can run the included Taskfile's default task without
+	// specifying its full name. If the parent namespace has aliases, we add
+	// another alias for each of them.
+	_, t2DefaultExists := t2.Get("default")
+	_, t1NamespaceExists := t1.Get(include.Namespace)
+	if t2DefaultExists && !t1NamespaceExists && !include.Flatten {
 		defaultTaskName := fmt.Sprintf("%s:default", include.Namespace)
-		t1.Get(defaultTaskName).Aliases = append(t1.Get(defaultTaskName).Aliases, include.Namespace)
-		t1.Get(defaultTaskName).Aliases = slices.Concat(t1.Get(defaultTaskName).Aliases, include.Aliases)
+		t1DefaultTask, ok := t1.Get(defaultTaskName)
+		if ok {
+			t1DefaultTask.Aliases = append(t1DefaultTask.Aliases, include.Namespace)
+			t1DefaultTask.Aliases = slices.Concat(t1DefaultTask.Aliases, include.Aliases)
+		}
 	}
+
 	return err
 }
 
 func (t *Tasks) UnmarshalYAML(node *yaml.Node) error {
 	switch node.Kind {
 	case yaml.MappingNode:
-		tasks := omap.New[string, *Task]()
-		if err := node.Decode(&tasks); err != nil {
-			return errors.NewTaskfileDecodeError(err, node)
-		}
+		// NOTE: orderedmap does not have an unmarshaler, so we have to decode
+		// the map manually. We increment over 2 values at a time and assign
+		// them as a key-value pair.
+		for i := 0; i < len(node.Content); i += 2 {
+			keyNode := node.Content[i]
+			valueNode := node.Content[i+1]
 
-		// nolint: errcheck
-		tasks.Range(func(name string, task *Task) error {
-			// Set the task's name
-			if task == nil {
-				task = &Task{
-					Task: name,
-				}
+			// Decode the value node into a Task struct
+			var v Task
+			if err := valueNode.Decode(&v); err != nil {
+				return errors.NewTaskfileDecodeError(err, node)
 			}
-			task.Task = name
 
-			// Set the task's location
-			for _, keys := range node.Content {
-				if keys.Value == name {
-					task.Location = &Location{
-						Line:   keys.Line,
-						Column: keys.Column,
-					}
-				}
+			// Set the task name and location
+			v.Task = keyNode.Value
+			v.Location = &Location{
+				Line:   keyNode.Line,
+				Column: keyNode.Column,
 			}
-			tasks.Set(name, task)
-			return nil
-		})
 
-		*t = Tasks{
-			OrderedMap: tasks,
+			// Add the task to the ordered map
+			t.Set(keyNode.Value, &v)
 		}
 		return nil
 	}

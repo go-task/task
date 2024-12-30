@@ -172,7 +172,7 @@ func TestPrintAllWithSpaces(t *testing.T) {
 	t2 := &ast.Task{Task: "t2"}
 	t3 := &ast.Task{Task: "t3"}
 
-	tasks := ast.Tasks{}
+	tasks := ast.NewTasks()
 	tasks.Set("t1", t1)
 	tasks.Set("t2", t2)
 	tasks.Set("t3", t3)

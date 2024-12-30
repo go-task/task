@@ -2755,7 +2755,7 @@ func TestSplitArgs(t *testing.T) {
 	}
 	require.NoError(t, e.Setup())
 
-	vars := &ast.Vars{}
+	vars := ast.NewVars()
 	vars.Set("CLI_ARGS", ast.Var{Value: "foo bar 'foo bar baz'"})
 
 	err := e.Run(context.Background(), &ast.Call{Task: "default", Vars: vars})

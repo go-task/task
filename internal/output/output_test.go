@@ -12,7 +12,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/go-task/task/v3/internal/logger"
-	"github.com/go-task/task/v3/internal/omap"
 	"github.com/go-task/task/v3/internal/output"
 	"github.com/go-task/task/v3/internal/templater"
 	"github.com/go-task/task/v3/taskfile/ast"
@@ -55,11 +54,12 @@ func TestGroupWithBeginEnd(t *testing.T) {
 	t.Parallel()
 
 	tmpl := templater.Cache{
-		Vars: &ast.Vars{
-			OrderedMap: omap.FromMap(map[string]ast.Var{
-				"VAR1": {Value: "example-value"},
-			}),
-		},
+		Vars: ast.NewVars(
+			&ast.VarElement{
+				Key:   "VAR1",
+				Value: ast.Var{Value: "example-value"},
+			},
+		),
 	}
 
 	var o output.Output = output.Group{
