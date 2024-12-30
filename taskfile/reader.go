@@ -132,7 +132,7 @@ func (r *Reader) include(node Node) error {
 				return err
 			}
 
-			includeNode, err := NewNode(r.logger, entrypoint, include.Dir, r.insecure, r.timeout,
+			includeNode, err := NewNode(entrypoint, include.Dir, r.insecure, r.timeout,
 				WithParent(node),
 			)
 			if err != nil {

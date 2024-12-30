@@ -11,7 +11,6 @@ import (
 	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/execext"
 	"github.com/go-task/task/v3/internal/filepathext"
-	"github.com/go-task/task/v3/internal/logger"
 )
 
 // An HTTPNode is a node that reads a Taskfile from a remote location via HTTP.
@@ -19,12 +18,10 @@ type HTTPNode struct {
 	*BaseNode
 	URL        *url.URL // stores url pointing actual remote file. (e.g. with Taskfile.yml)
 	entrypoint string   // stores entrypoint url. used for building graph vertices.
-	logger     *logger.Logger
 	timeout    time.Duration
 }
 
 func NewHTTPNode(
-	l *logger.Logger,
 	entrypoint string,
 	dir string,
 	insecure bool,
@@ -45,7 +42,6 @@ func NewHTTPNode(
 		URL:        url,
 		entrypoint: entrypoint,
 		timeout:    timeout,
-		logger:     l,
 	}, nil
 }
 
@@ -58,7 +54,7 @@ func (node *HTTPNode) Remote() bool {
 }
 
 func (node *HTTPNode) Read(ctx context.Context) ([]byte, error) {
-	url, err := RemoteExists(ctx, node.logger, node.URL, node.timeout)
+	url, err := RemoteExists(ctx, node.URL, node.timeout)
 	if err != nil {
 		return nil, err
 	}
