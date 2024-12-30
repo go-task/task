@@ -9,6 +9,8 @@
   @vmaerten).
 - Fixed an issue where a required variable was incorrectly handled in a template
   function (#1950, #1962 by @vmaerten).
+- Expose a new `TASK_DIR` special variable, which will contain the absolute path
+  of task directory. (#1959, #1961 by @vmaerten).
 
 ## v3.40.1 - 2024-12-06
 
