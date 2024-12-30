@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"strings"
+	"sync"
 
 	"github.com/go-task/task/v3/internal/logger"
 	"github.com/go-task/task/v3/internal/templater"
@@ -14,6 +15,7 @@ type Prefixed struct {
 	logger  *logger.Logger
 	seen    map[string]uint
 	counter *uint
+	mutex   *sync.Mutex
 }
 
 func NewPrefixed(logger *logger.Logger) Prefixed {
@@ -23,6 +25,7 @@ func NewPrefixed(logger *logger.Logger) Prefixed {
 		seen:    make(map[string]uint),
 		counter: &counter,
 		logger:  logger,
+		mutex:   &sync.Mutex{},
 	}
 }
 
@@ -84,6 +87,9 @@ func (pw *prefixWriter) writeLine(line string) error {
 	if !strings.HasSuffix(line, "\n") {
 		line += "\n"
 	}
+
+	defer pw.prefixed.mutex.Unlock()
+	pw.prefixed.mutex.Lock()
 
 	idx, ok := pw.prefixed.seen[pw.prefix]
 
