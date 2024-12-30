@@ -11,6 +11,11 @@
   function (#1950, #1962 by @vmaerten).
 - Expose a new `TASK_DIR` special variable, which will contain the absolute path
   of task directory. (#1959, #1961 by @vmaerten).
+- Fixed fatal bugs that caused concurrent map writes (#1605, #1972, #1974 by
+  @pd93, @GrahamDennis and @trim21.
+- Refactored internal ordered map implementation to use
+  [github.com/elliotchance/orderedmap](https://github.com/elliotchance/orderedmap)
+  (#1797 by @pd93).
 
 ## v3.40.1 - 2024-12-06
 
