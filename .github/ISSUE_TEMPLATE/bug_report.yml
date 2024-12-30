@@ -41,12 +41,13 @@ body:
     id: experiments
     attributes:
       label: Experiments Enabled
-      description: Do you have any of the following experiments enabled?
+      description: Do you have any experiments enabled? You can check by running `task --experiments`.
       multiple: true
       options:
         - Env Precedence
         - Gentle Force
-        - Map Variables
+        - Map Variables (1)
+        - Map Variables (2)
         - Remote Taskfiles
     validations:
       required: false
