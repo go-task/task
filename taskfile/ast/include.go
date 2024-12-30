@@ -1,6 +1,8 @@
 package ast
 
 import (
+	"sync"
+
 	"github.com/elliotchance/orderedmap/v2"
 	"gopkg.in/yaml.v3"
 
@@ -8,27 +10,33 @@ import (
 	"github.com/go-task/task/v3/internal/deepcopy"
 )
 
-// Include represents information about included taskfiles
-type Include struct {
-	Namespace      string
-	Taskfile       string
-	Dir            string
-	Optional       bool
-	Internal       bool
-	Aliases        []string
-	Excludes       []string
-	AdvancedImport bool
-	Vars           *Vars
-	Flatten        bool
-}
+type (
+	// Include represents information about included taskfiles
+	Include struct {
+		Namespace      string
+		Taskfile       string
+		Dir            string
+		Optional       bool
+		Internal       bool
+		Aliases        []string
+		Excludes       []string
+		AdvancedImport bool
+		Vars           *Vars
+		Flatten        bool
+	}
+	// Includes is an ordered map of namespaces to includes.
+	Includes struct {
+		om    *orderedmap.OrderedMap[string, *Include]
+		mutex sync.RWMutex
+	}
+	// An IncludeElement is a key-value pair that is used for initializing an
+	// Includes structure.
+	IncludeElement orderedmap.Element[string, *Include]
+)
 
-// Includes represents information about included taskfiles
-type Includes struct {
-	om *orderedmap.OrderedMap[string, *Include]
-}
-
-type IncludeElement orderedmap.Element[string, *Include]
-
+// NewIncludes creates a new instance of Includes and initializes it with the
+// provided set of elements, if any. The elements are added in the order they
+// are passed.
 func NewIncludes(els ...*IncludeElement) *Includes {
 	includes := &Includes{
 		om: orderedmap.NewOrderedMap[string, *Include](),
@@ -39,20 +47,31 @@ func NewIncludes(els ...*IncludeElement) *Includes {
 	return includes
 }
 
+// Len returns the number of includes in the Includes map.
 func (includes *Includes) Len() int {
 	if includes == nil || includes.om == nil {
 		return 0
 	}
+	defer includes.mutex.RUnlock()
+	includes.mutex.RLock()
 	return includes.om.Len()
 }
 
+// Get returns the value the the include with the provided key and a boolean
+// that indicates if the value was found or not. If the value is not found, the
+// returned include is a zero value and the bool is false.
 func (includes *Includes) Get(key string) (*Include, bool) {
 	if includes == nil || includes.om == nil {
 		return &Include{}, false
 	}
+	defer includes.mutex.RUnlock()
+	includes.mutex.RLock()
 	return includes.om.Get(key)
 }
 
+// Set sets the value of the include with the provided key to the provided
+// value. If the include already exists, its value is updated. If the include
+// does not exist, it is created.
 func (includes *Includes) Set(key string, value *Include) bool {
 	if includes == nil {
 		includes = NewIncludes()
@@ -60,9 +79,14 @@ func (includes *Includes) Set(key string, value *Include) bool {
 	if includes.om == nil {
 		includes.om = orderedmap.NewOrderedMap[string, *Include]()
 	}
+	defer includes.mutex.Unlock()
+	includes.mutex.Lock()
 	return includes.om.Set(key, value)
 }
 
+// Range calls the provided function for each include in the map. The function
+// receives the include's key and value as arguments. If the function returns
+// an error, the iteration stops and the error is returned.
 func (includes *Includes) Range(f func(k string, v *Include) error) error {
 	if includes == nil || includes.om == nil {
 		return nil
@@ -77,6 +101,9 @@ func (includes *Includes) Range(f func(k string, v *Include) error) error {
 
 // UnmarshalYAML implements the yaml.Unmarshaler interface.
 func (includes *Includes) UnmarshalYAML(node *yaml.Node) error {
+	if includes == nil || includes.om == nil {
+		*includes = *NewIncludes()
+	}
 	switch node.Kind {
 	case yaml.MappingNode:
 		// NOTE: orderedmap does not have an unmarshaler, so we have to decode

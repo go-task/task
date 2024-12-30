@@ -183,7 +183,7 @@ func TestRequires(t *testing.T) {
 	buff.Reset()
 	require.NoError(t, e.Setup())
 
-	vars := &ast.Vars{}
+	vars := ast.NewVars()
 	vars.Set("foo", ast.Var{Value: "bar"})
 	require.NoError(t, e.Run(context.Background(), &ast.Call{
 		Task: "missing-var",

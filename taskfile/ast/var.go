@@ -2,6 +2,7 @@ package ast
 
 import (
 	"strings"
+	"sync"
 
 	"github.com/elliotchance/orderedmap/v2"
 	"gopkg.in/yaml.v3"
@@ -11,52 +12,74 @@ import (
 	"github.com/go-task/task/v3/internal/experiments"
 )
 
-// Vars is a string[string] variables map.
-type Vars struct {
-	om *orderedmap.OrderedMap[string, Var]
-}
+type (
+	// Vars is an ordered map of variable names to values.
+	Vars struct {
+		om    *orderedmap.OrderedMap[string, Var]
+		mutex sync.RWMutex
+	}
+	// A VarElement is a key-value pair that is used for initializing a Vars
+	// structure.
+	VarElement orderedmap.Element[string, Var]
+)
 
-type VarElement orderedmap.Element[string, Var]
-
+// NewVars creates a new instance of Vars and initializes it with the provided
+// set of elements, if any. The elements are added in the order they are passed.
 func NewVars(els ...*VarElement) *Vars {
-	vs := &Vars{
+	vars := &Vars{
 		om: orderedmap.NewOrderedMap[string, Var](),
 	}
 	for _, el := range els {
-		vs.Set(el.Key, el.Value)
+		vars.Set(el.Key, el.Value)
 	}
-	return vs
+	return vars
 }
 
-func (vs *Vars) Len() int {
-	if vs == nil || vs.om == nil {
+// Len returns the number of variables in the Vars map.
+func (vars *Vars) Len() int {
+	if vars == nil || vars.om == nil {
 		return 0
 	}
-	return vs.om.Len()
+	defer vars.mutex.RUnlock()
+	vars.mutex.RLock()
+	return vars.om.Len()
 }
 
-func (vs *Vars) Get(key string) (Var, bool) {
-	if vs == nil || vs.om == nil {
+// Get returns the value the the variable with the provided key and a boolean
+// that indicates if the value was found or not. If the value is not found, the
+// returned variable is a zero value and the bool is false.
+func (vars *Vars) Get(key string) (Var, bool) {
+	if vars == nil || vars.om == nil {
 		return Var{}, false
 	}
-	return vs.om.Get(key)
+	defer vars.mutex.RUnlock()
+	vars.mutex.RLock()
+	return vars.om.Get(key)
 }
 
-func (vs *Vars) Set(key string, value Var) bool {
-	if vs == nil {
-		vs = NewVars()
+// Set sets the value of the variable with the provided key to the provided
+// value. If the variable already exists, its value is updated. If the variable
+// does not exist, it is created.
+func (vars *Vars) Set(key string, value Var) bool {
+	if vars == nil {
+		vars = NewVars()
 	}
-	if vs.om == nil {
-		vs.om = orderedmap.NewOrderedMap[string, Var]()
+	if vars.om == nil {
+		vars.om = orderedmap.NewOrderedMap[string, Var]()
 	}
-	return vs.om.Set(key, value)
+	defer vars.mutex.Unlock()
+	vars.mutex.Lock()
+	return vars.om.Set(key, value)
 }
 
-func (vs *Vars) Range(f func(k string, v Var) error) error {
-	if vs == nil || vs.om == nil {
+// Range calls the provided function for each variable in the map. The function
+// receives the variable's key and value as arguments. If the function returns
+// an error, the iteration stops and the error is returned.
+func (vars *Vars) Range(f func(k string, v Var) error) error {
+	if vars == nil || vars.om == nil {
 		return nil
 	}
-	for pair := vs.om.Front(); pair != nil; pair = pair.Next() {
+	for pair := vars.om.Front(); pair != nil; pair = pair.Next() {
 		if err := f(pair.Key, pair.Value); err != nil {
 			return err
 		}
@@ -64,11 +87,13 @@ func (vs *Vars) Range(f func(k string, v Var) error) error {
 	return nil
 }
 
-// ToCacheMap converts Vars to a map containing only the static
+// ToCacheMap converts Vars to an unordered map containing only the static
 // variables
-func (vs *Vars) ToCacheMap() (m map[string]any) {
-	m = make(map[string]any, vs.Len())
-	for pair := vs.om.Front(); pair != nil; pair = pair.Next() {
+func (vars *Vars) ToCacheMap() (m map[string]any) {
+	defer vars.mutex.RUnlock()
+	vars.mutex.RLock()
+	m = make(map[string]any, vars.Len())
+	for pair := vars.om.Front(); pair != nil; pair = pair.Next() {
 		if pair.Value.Sh != nil && *pair.Value.Sh != "" {
 			// Dynamic variable is not yet resolved; trigger
 			// <no value> to be used in templates.
@@ -83,31 +108,38 @@ func (vs *Vars) ToCacheMap() (m map[string]any) {
 	return
 }
 
-// Wrapper around OrderedMap.Merge to ensure we don't get nil pointer errors
-func (vs *Vars) Merge(other *Vars, include *Include) {
-	if vs == nil || vs.om == nil || other == nil {
+// Merge loops over other and merges it values with the variables in vars. If
+// the include parameter is not nil and its it is an advanced import, the
+// directory is set set to the value of the include parameter.
+func (vars *Vars) Merge(other *Vars, include *Include) {
+	if vars == nil || vars.om == nil || other == nil {
 		return
 	}
+	defer other.mutex.RUnlock()
+	other.mutex.RLock()
 	for pair := other.om.Front(); pair != nil; pair = pair.Next() {
 		if include != nil && include.AdvancedImport {
 			pair.Value.Dir = include.Dir
 		}
-		vs.om.Set(pair.Key, pair.Value)
+		vars.om.Set(pair.Key, pair.Value)
 	}
 }
 
-// DeepCopy creates a new instance of Vars and copies
-// data by value from the source struct.
 func (vs *Vars) DeepCopy() *Vars {
 	if vs == nil {
 		return nil
 	}
+	defer vs.mutex.RUnlock()
+	vs.mutex.RLock()
 	return &Vars{
 		om: deepcopy.OrderedMap(vs.om),
 	}
 }
 
 func (vs *Vars) UnmarshalYAML(node *yaml.Node) error {
+	if vs == nil || vs.om == nil {
+		*vs = *NewVars()
+	}
 	vs.om = orderedmap.NewOrderedMap[string, Var]()
 	switch node.Kind {
 	case yaml.MappingNode:
