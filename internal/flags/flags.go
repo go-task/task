@@ -9,9 +9,11 @@ import (
 
 	"github.com/spf13/pflag"
 
+	"github.com/go-task/task/v3"
 	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/env"
 	"github.com/go-task/task/v3/internal/experiments"
+	"github.com/go-task/task/v3/internal/sort"
 	"github.com/go-task/task/v3/taskfile/ast"
 )
 
@@ -161,4 +163,52 @@ func Validate() error {
 	}
 
 	return nil
+}
+
+// WithFlags is a special internal functional option that is used to pass flags
+// from the CLI directly to the executor.
+func WithFlags() task.ExecutorOption {
+	return func(e *task.Executor) {
+		// Set the sorter
+		var sorter sort.Sorter
+		switch TaskSort {
+		case "none":
+			sorter = nil
+		case "alphanumeric":
+			sorter = sort.AlphaNumeric
+		}
+
+		// Change the directory to the user's home directory if the global flag is set
+		dir := Dir
+		if Global {
+			home, err := os.UserHomeDir()
+			if err == nil {
+				dir = home
+			}
+		}
+
+		e.Options(
+			task.WithDir(dir),
+			task.WithEntrypoint(Entrypoint),
+			task.WithForce(Force),
+			task.WithForceAll(ForceAll),
+			task.WithInsecure(Insecure),
+			task.WithDownload(Download),
+			task.WithOffline(Offline),
+			task.WithTimeout(Timeout),
+			task.WithWatch(Watch),
+			task.WithVerbose(Verbose),
+			task.WithSilent(Silent),
+			task.WithAssumeYes(AssumeYes),
+			task.WithDry(Dry || Status),
+			task.WithSummary(Summary),
+			task.WithParallel(Parallel),
+			task.WithColor(Color),
+			task.WithConcurrency(Concurrency),
+			task.WithInterval(Interval),
+			task.WithOutputStyle(Output),
+			task.WithTaskSorter(sorter),
+			task.WithVersionCheck(true),
+		)
+	}
 }
