@@ -51,3 +51,11 @@ tasks:
   overridden:
     cmds:
       - echo "QUX='$QUX'" > overridden.txt
+
+  dynamic:
+    silent: true
+    vars:
+      DYNAMIC_FOO:
+        sh: echo $FOO
+    cmds:
+      - echo "{{ .DYNAMIC_FOO }}" > dynamic.txt
