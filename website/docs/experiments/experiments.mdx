@@ -57,6 +57,16 @@ Which method you use depends on how you intend to use the experiment:
    TASK_X_FEATURE=1
    ```
 
+1. Creating a `.task-experiments.yml` file in the same directory as your root Taskfile that
+   contains the experiment and the value you want to enable. This allows you to enable an
+   experimental feature at a project level. If you commit the `.task-experiments.yml` file to
+   source control then other users of your project will also have these
+   experiments enabled.
+
+   ```yaml title=".task-experiments.yml"
+   X_FEATURE: 1
+   ```
+
 ## Workflow
 
 Experiments are a way for us to test out new features in Task before committing
