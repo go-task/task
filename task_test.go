@@ -976,6 +976,39 @@ func TestStatusVariables(t *testing.T) {
 	assert.Contains(t, buff.String(), tf)
 }
 
+func TestCmdsVariables(t *testing.T) {
+	t.Parallel()
+
+	const dir = "testdata/cmds_vars"
+
+	_ = os.RemoveAll(filepathext.SmartJoin(dir, ".task"))
+
+	var buff bytes.Buffer
+	e := task.Executor{
+		Dir: dir,
+		TempDir: task.TempDir{
+			Remote:      filepathext.SmartJoin(dir, ".task"),
+			Fingerprint: filepathext.SmartJoin(dir, ".task"),
+		},
+		Stdout:  &buff,
+		Stderr:  &buff,
+		Silent:  false,
+		Verbose: true,
+	}
+	require.NoError(t, e.Setup())
+	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "build"}))
+
+	assert.Contains(t, buff.String(), "3e464c4b03f4b65d740e1e130d4d108a")
+
+	inf, err := os.Stat(filepathext.SmartJoin(dir, "source.txt"))
+	require.NoError(t, err)
+	ts := fmt.Sprintf("%d", inf.ModTime().Unix())
+	tf := inf.ModTime().String()
+
+	assert.Contains(t, buff.String(), ts)
+	assert.Contains(t, buff.String(), tf)
+}
+
 func TestInit(t *testing.T) {
 	t.Parallel()
 

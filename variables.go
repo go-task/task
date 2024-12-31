@@ -127,6 +127,23 @@ func (e *Executor) compiledTask(call *ast.Call, evaluateShVars bool) (*ast.Task,
 		}
 	}
 
+	if len(origTask.Sources) > 0 {
+		timestampChecker := fingerprint.NewTimestampChecker(e.TempDir.Fingerprint, e.Dry)
+		checksumChecker := fingerprint.NewChecksumChecker(e.TempDir.Fingerprint, e.Dry)
+
+		for _, checker := range []fingerprint.SourcesCheckable{timestampChecker, checksumChecker} {
+			value, err := checker.Value(&new)
+			if err != nil {
+				return nil, err
+			}
+			vars.Set(strings.ToUpper(checker.Kind()), ast.Var{Live: value})
+		}
+
+		// Adding new variables, requires us to refresh the templaters
+		// cache of the the values manually
+		cache.ResetCache()
+	}
+
 	if len(origTask.Cmds) > 0 {
 		new.Cmds = make([]*ast.Cmd, 0, len(origTask.Cmds))
 		for _, cmd := range origTask.Cmds {
@@ -228,21 +245,6 @@ func (e *Executor) compiledTask(call *ast.Call, evaluateShVars bool) (*ast.Task,
 	}
 
 	if len(origTask.Status) > 0 {
-		timestampChecker := fingerprint.NewTimestampChecker(e.TempDir.Fingerprint, e.Dry)
-		checksumChecker := fingerprint.NewChecksumChecker(e.TempDir.Fingerprint, e.Dry)
-
-		for _, checker := range []fingerprint.SourcesCheckable{timestampChecker, checksumChecker} {
-			value, err := checker.Value(&new)
-			if err != nil {
-				return nil, err
-			}
-			vars.Set(strings.ToUpper(checker.Kind()), ast.Var{Live: value})
-		}
-
-		// Adding new variables, requires us to refresh the templaters
-		// cache of the the values manually
-		cache.ResetCache()
-
 		new.Status = templater.Replace(origTask.Status, cache)
 	}
 
