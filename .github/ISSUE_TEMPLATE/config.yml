@@ -1,11 +1,11 @@
 blank_issues_enabled: false
 contact_links:
-  - name: Extension for Visual Studio Code
+  - name: '🔌 Task for Visual Studio Code'
     url: https://github.com/go-task/vscode-task
-    about: Issues related to the Visual Studio Code extension should be opened here.
-  - name: Help forum on Discord
-    url: https://discord.gg/6TY36E39UK
-    about: 'The Discord #help channel is the best way to get help from the community.'
-  - name: Questions, Ideas and General Discussions
+    about: 'Issues related to the Visual Studio Code extension should be opened here.'
+  - name: '💬 Help forum on Discord'
+    url: https://discord.com/channels/974121106208354339/1025054680289660989
+    about: 'The #help channel on our Discord is the best way to get help from the community.'
+  - name: '❓ Questions, Ideas and General Discussions'
     url: https://github.com/go-task/task/discussions
-    about: Ask questions and discuss general ideas with the community.
+    about: 'Ask questions and discuss general ideas with the community.'

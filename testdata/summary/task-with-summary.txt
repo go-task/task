@@ -5,8 +5,8 @@ line 2
 line 3
 
 dependencies:
- - dependend-task-1
- - dependend-task-2
+ - dependent-task-1
+ - dependent-task-2
 
 commands:
  - echo 'task-with-summary was executed'

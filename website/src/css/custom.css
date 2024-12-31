@@ -117,3 +117,7 @@
 .icon-twitter::before {
   mask-image: url('/img/icon-twitter.svg');
 }
+
+.icon-bluesky::before {
+  mask-image: url('/img/icon-bluesky.svg');
+}

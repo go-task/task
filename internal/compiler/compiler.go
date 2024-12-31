@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"maps"
 	"os"
 	"path/filepath"
 	"strings"
@@ -75,8 +74,8 @@ func (c *Compiler) getVariables(t *ast.Task, call *ast.Call, evaluateShVars bool
 			if err := cache.Err(); err != nil {
 				return err
 			}
-			// If the variable is not dynamic, we can set it and return
-			if newVar.Value != nil || newVar.Sh == "" {
+			// If the variable is already set, we can set it and return
+			if newVar.Value != nil {
 				result.Set(k, ast.Var{Value: newVar.Value})
 				return nil
 			}
@@ -137,10 +136,15 @@ func (c *Compiler) HandleDynamicVar(v ast.Var, dir string, e []string) (string, 
 	c.muDynamicCache.Lock()
 	defer c.muDynamicCache.Unlock()
 
+	// If the variable is not dynamic or it is empty, return an empty string
+	if v.Sh == nil || *v.Sh == "" {
+		return "", nil
+	}
+
 	if c.dynamicCache == nil {
 		c.dynamicCache = make(map[string]string, 30)
 	}
-	if result, ok := c.dynamicCache[v.Sh]; ok {
+	if result, ok := c.dynamicCache[*v.Sh]; ok {
 		return result, nil
 	}
 
@@ -151,7 +155,7 @@ func (c *Compiler) HandleDynamicVar(v ast.Var, dir string, e []string) (string, 
 
 	var stdout bytes.Buffer
 	opts := &execext.RunCommandOptions{
-		Command: v.Sh,
+		Command: *v.Sh,
 		Dir:     dir,
 		Stdout:  &stdout,
 		Stderr:  c.Logger.Stderr,
@@ -166,13 +170,13 @@ func (c *Compiler) HandleDynamicVar(v ast.Var, dir string, e []string) (string, 
 	result := strings.TrimSuffix(stdout.String(), "\r\n")
 	result = strings.TrimSuffix(result, "\n")
 
-	c.dynamicCache[v.Sh] = result
-	c.Logger.VerboseErrf(logger.Magenta, "task: dynamic variable: %q result: %q\n", v.Sh, result)
+	c.dynamicCache[*v.Sh] = result
+	c.Logger.VerboseErrf(logger.Magenta, "task: dynamic variable: %q result: %q\n", *v.Sh, result)
 
 	return result, nil
 }
 
-// ResetCache clear the dymanic variables cache
+// ResetCache clear the dynamic variables cache
 func (c *Compiler) ResetCache() {
 	c.muDynamicCache.Lock()
 	defer c.muDynamicCache.Unlock()
@@ -189,10 +193,14 @@ func (c *Compiler) getSpecialVars(t *ast.Task, call *ast.Call) (map[string]strin
 		"TASK_VERSION":     version.GetVersion(),
 	}
 	if t != nil {
-		maps.Copy(allVars, map[string]string{"TASK": t.Task, "TASKFILE": t.Location.Taskfile, "TASKFILE_DIR": filepath.Dir(t.Location.Taskfile)})
+		allVars["TASK"] = t.Task
+		allVars["TASK_DIR"] = filepathext.SmartJoin(c.Dir, t.Dir)
+		allVars["TASKFILE"] = t.Location.Taskfile
+		allVars["TASKFILE_DIR"] = filepath.Dir(t.Location.Taskfile)
 	}
 	if call != nil {
-		maps.Copy(allVars, map[string]string{"ALIAS": call.Task})
+		allVars["ALIAS"] = call.Task
 	}
+
 	return allVars, nil
 }

@@ -17,8 +17,9 @@ var templateFuncs template.FuncMap
 
 func init() {
 	taskFuncs := template.FuncMap{
-		"OS":   func() string { return runtime.GOOS },
-		"ARCH": func() string { return runtime.GOARCH },
+		"OS":     func() string { return runtime.GOOS },
+		"ARCH":   func() string { return runtime.GOARCH },
+		"numCPU": func() int { return runtime.NumCPU() },
 		"catLines": func(s string) string {
 			s = strings.ReplaceAll(s, "\r\n", " ")
 			return strings.ReplaceAll(s, "\n", " ")

@@ -122,7 +122,7 @@ tasks:
   goreleaser:install:
     desc: Installs goreleaser
     cmds:
-      - go install github.com/goreleaser/goreleaser@latest
+      - go install github.com/goreleaser/goreleaser/v2@latest
 
   release:*:
     desc: Prepare the project for a new release

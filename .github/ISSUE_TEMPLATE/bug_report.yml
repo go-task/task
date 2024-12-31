@@ -1,0 +1,69 @@
+name: '🐞 Bug Report'
+description: Report a bug in Task.
+labels: ['state: needs-triage']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for your bug report!
+
+        Before submitting, please check the list of [existing issues](https://github.com/go-task/task/issues) and make sure the same bug was not already reported by someone else.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: Describe the bug you're seeing.
+      placeholder: |
+        - What did you do?
+        - What did you expect to happen?
+        - What happened instead?
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: What version(s) of Task is the issue occurring on?
+    validations:
+      required: true
+
+  - type: input
+    id: os
+    attributes:
+      label: Operating system
+      description: What operating system(s) is the issue occurring on?
+    validations:
+      required: true
+
+  - type: dropdown
+    id: experiments
+    attributes:
+      label: Experiments Enabled
+      description: Do you have any experiments enabled? You can check by running `task --experiments`.
+      multiple: true
+      options:
+        - Env Precedence
+        - Gentle Force
+        - Map Variables (1)
+        - Map Variables (2)
+        - Remote Taskfiles
+    validations:
+      required: false
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Example Taskfile
+      description: |
+        If you have a Taskfile that reproduces the issue, please paste it here.
+        This will be automatically formatted into code, so no need for backticks.
+      render: YAML
+      placeholder: |
+        version: '3'
+
+        tasks:
+          default:
+            cmds:
+              - 'echo "This Taskfile is buggy :("'

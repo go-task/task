@@ -57,7 +57,7 @@ checksum:
 nfpms:
   - vendor: Task
     homepage: https://taskfile.dev
-    maintainer: Andrey Nering <andrey@nering.com.br>
+    maintainer: The Task authors <task@taskfile.dev>
     description: Simple task runner written in Go
     license: MIT
     conflicts:

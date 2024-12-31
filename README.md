@@ -10,6 +10,18 @@
   </p>
 
   <p>
-    <a href="https://taskfile.dev/installation/">Installation</a> | <a href="https://taskfile.dev/usage/">Documentation</a> | <a href="https://twitter.com/taskfiledev">Twitter</a> | <a href="https://fosstodon.org/@task">Mastodon</a> | <a href="https://discord.gg/6TY36E39UK">Discord</a>
+    <a href="https://taskfile.dev/installation/">Installation</a> | <a href="https://taskfile.dev/usage/">Documentation</a> | <a href="https://twitter.com/taskfiledev">Twitter</a> | <a href="https://bsky.app/profile/taskfile.dev">Bluesky</a> | <a href="https://fosstodon.org/@task">Mastodon</a> | <a href="https://discord.gg/6TY36E39UK">Discord</a>
   </p>
+
+  <h1>Gold Sponsors</h1>
+
+  <table>
+    <tr>
+      <td align="center" valign="middle">
+        <a target="_blank" href="https://devowl.io">
+          <img src="/website/static/img/devowl.io.svg" height="100px" title="devowl.io" />
+        </a>
+      </td>
+    </tr>
+  </table>
 </div>

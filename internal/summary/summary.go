@@ -10,7 +10,9 @@ import (
 func PrintTasks(l *logger.Logger, t *ast.Taskfile, c []*ast.Call) {
 	for i, call := range c {
 		PrintSpaceBetweenSummaries(l, i)
-		PrintTask(l, t.Tasks.Get(call.Task))
+		if task, ok := t.Tasks.Get(call.Task); ok {
+			PrintTask(l, task)
+		}
 	}
 }
 
