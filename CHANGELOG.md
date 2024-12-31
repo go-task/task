@@ -18,6 +18,8 @@
   (#1797 by @pd93).
 - Fixed a bug where variables defined at the task level were being ignored in
   the `requires` section. (#1960, #1955, #1768 by @vmaerten and @mokeko)
+- The `CHECKSUM` and `TIMESTAMP` variables are now accessible within `cmds` (#1872 by @niklasr22).
+
 ## v3.40.1 - 2024-12-06
 
 - Fixed a security issue in `git-urls` by switching to the maintained fork
