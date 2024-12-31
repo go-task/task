@@ -2,12 +2,15 @@ package experiments
 
 import (
 	"fmt"
-	"gopkg.in/yaml.v3"
 	"io"
 	"os"
 	"path/filepath"
 	"slices"
 	"strings"
+
+	"gopkg.in/yaml.v3"
+
+	"gopkg.in/yaml.v3"
 
 	"github.com/Ladicle/tabwriter"
 	"github.com/joho/godotenv"
@@ -16,8 +19,10 @@ import (
 	"github.com/go-task/task/v3/internal/logger"
 )
 
-const envPrefix = "TASK_X_"
-const defaultConfigFilename = ".task-experiments.yml"
+const (
+	envPrefix             = "TASK_X_"
+	defaultConfigFilename = ".task-experiments.yml"
+)
 
 type ExperimentConfigFile struct {
 	Experiments map[string]string `yaml:",inline"`
