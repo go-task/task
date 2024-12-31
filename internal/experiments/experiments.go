@@ -2,18 +2,24 @@ package experiments
 
 import (
 	"fmt"
-	"gopkg.in/yaml.v3"
 	"io"
 	"os"
 	"path/filepath"
 	"strings"
 
+	"gopkg.in/yaml.v3"
+
+	"gopkg.in/yaml.v3"
+
+	"github.com/Ladicle/tabwriter"
 	"github.com/joho/godotenv"
 	"github.com/spf13/pflag"
 )
 
-const envPrefix = "TASK_X_"
-const defaultConfigFilename = ".task-experiments.yml"
+const (
+	envPrefix             = "TASK_X_"
+	defaultConfigFilename = ".task-experiments.yml"
+)
 
 // A set of experiments that can be enabled or disabled.
 type ExperimentConfigFile struct {
