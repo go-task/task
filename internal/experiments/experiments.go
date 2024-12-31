@@ -2,6 +2,7 @@ package experiments
 
 import (
 	"fmt"
+	"gopkg.in/yaml.v3"
 	"io"
 	"os"
 	"path/filepath"
@@ -16,6 +17,11 @@ import (
 )
 
 const envPrefix = "TASK_X_"
+const defaultConfigFilename = ".task-experiments.yml"
+
+type ExperimentConfigFile struct {
+	Experiments map[string]string `yaml:",inline"`
+}
 
 type Experiment struct {
 	Name    string
@@ -32,8 +38,11 @@ var (
 	EnvPrecedence   Experiment
 )
 
+var ExperimentConfig ExperimentConfigFile
+
 func init() {
 	readDotEnv()
+	ExperimentConfig = readConfig()
 	GentleForce = New("GENTLE_FORCE")
 	RemoteTaskfiles = New("REMOTE_TASKFILES")
 	AnyVariables = New("ANY_VARIABLES", "1", "2")
@@ -45,7 +54,13 @@ func New(xName string, enabledValues ...string) Experiment {
 	if len(enabledValues) == 0 {
 		enabledValues = []string{"1"}
 	}
-	value := getEnv(xName)
+
+	value := ExperimentConfig.Experiments[xName]
+
+	if value == "" {
+		value = getEnv(xName)
+	}
+
 	return Experiment{
 		Name:    xName,
 		Enabled: slices.Contains(enabledValues, value),
@@ -65,7 +80,7 @@ func getEnv(xName string) string {
 	return os.Getenv(envName)
 }
 
-func getEnvFilePath() string {
+func getFilePath(filename string) string {
 	// Parse the CLI flags again to get the directory/taskfile being run
 	// We use a flagset here so that we can parse a subset of flags without exiting on error.
 	var dir, taskfile string
@@ -76,24 +91,39 @@ func getEnvFilePath() string {
 	_ = fs.Parse(os.Args[1:])
 	// If the directory is set, find a .env file in that directory.
 	if dir != "" {
-		return filepath.Join(dir, ".env")
+		return filepath.Join(dir, filename)
 	}
 	// If the taskfile is set, find a .env file in the directory containing the Taskfile.
 	if taskfile != "" {
-		return filepath.Join(filepath.Dir(taskfile), ".env")
+		return filepath.Join(filepath.Dir(taskfile), filename)
 	}
 	// Otherwise just use the current working directory.
-	return ".env"
+	return filename
 }
 
 func readDotEnv() {
-	env, _ := godotenv.Read(getEnvFilePath())
+	env, _ := godotenv.Read(getFilePath(".env"))
 	// If the env var is an experiment, set it.
 	for key, value := range env {
 		if strings.HasPrefix(key, envPrefix) {
 			os.Setenv(key, value)
 		}
 	}
+}
+
+func readConfig() ExperimentConfigFile {
+	var cfg ExperimentConfigFile
+	filename := getFilePath(defaultConfigFilename)
+	content, err := os.ReadFile(filename)
+	if err != nil {
+		return ExperimentConfigFile{}
+	}
+
+	if err := yaml.Unmarshal(content, &cfg); err != nil {
+		return ExperimentConfigFile{}
+	}
+
+	return cfg
 }
 
 func printExperiment(w io.Writer, l *logger.Logger, x Experiment) {
