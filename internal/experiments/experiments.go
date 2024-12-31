@@ -9,8 +9,6 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	"gopkg.in/yaml.v3"
-
 	"github.com/Ladicle/tabwriter"
 	"github.com/joho/godotenv"
 	"github.com/spf13/pflag"
