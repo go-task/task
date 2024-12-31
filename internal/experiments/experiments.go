@@ -2,6 +2,8 @@ package experiments
 
 import (
 	"fmt"
+	"gopkg.in/yaml.v3"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -11,8 +13,12 @@ import (
 )
 
 const envPrefix = "TASK_X_"
+const defaultConfigFilename = ".task-experiments.yml"
 
 // A set of experiments that can be enabled or disabled.
+type ExperimentConfigFile struct {
+	Experiments map[string]string `yaml:",inline"`
+}
 var (
 	GentleForce     Experiment
 	RemoteTaskfiles Experiment
@@ -24,8 +30,11 @@ var (
 // An internal list of all the initialized experiments used for iterating.
 var xList []Experiment
 
+var ExperimentConfig ExperimentConfigFile
+
 func init() {
 	readDotEnv()
+	ExperimentConfig = readConfig()
 	GentleForce = New("GENTLE_FORCE", "1")
 	RemoteTaskfiles = New("REMOTE_TASKFILES", "1")
 	AnyVariables = New("ANY_VARIABLES")
@@ -53,7 +62,7 @@ func getEnv(xName string) string {
 	return os.Getenv(envName)
 }
 
-func getEnvFilePath() string {
+func getFilePath(filename string) string {
 	// Parse the CLI flags again to get the directory/taskfile being run
 	// We use a flagset here so that we can parse a subset of flags without exiting on error.
 	var dir, taskfile string
@@ -64,18 +73,18 @@ func getEnvFilePath() string {
 	_ = fs.Parse(os.Args[1:])
 	// If the directory is set, find a .env file in that directory.
 	if dir != "" {
-		return filepath.Join(dir, ".env")
+		return filepath.Join(dir, filename)
 	}
 	// If the taskfile is set, find a .env file in the directory containing the Taskfile.
 	if taskfile != "" {
-		return filepath.Join(filepath.Dir(taskfile), ".env")
+		return filepath.Join(filepath.Dir(taskfile), filename)
 	}
 	// Otherwise just use the current working directory.
-	return ".env"
+	return filename
 }
 
 func readDotEnv() {
-	env, _ := godotenv.Read(getEnvFilePath())
+	env, _ := godotenv.Read(getFilePath(".env"))
 	// If the env var is an experiment, set it.
 	for key, value := range env {
 		if strings.HasPrefix(key, envPrefix) {
@@ -83,3 +92,18 @@ func readDotEnv() {
 		}
 	}
 }
+
+func readConfig() ExperimentConfigFile {
+	var cfg ExperimentConfigFile
+	filename := getFilePath(defaultConfigFilename)
+	}
+	if err != nil {
+	content, err := os.ReadFile(filename)
+		return ExperimentConfigFile{}
+
+	if err := yaml.Unmarshal(content, &cfg); err != nil {
+	}
+		return ExperimentConfigFile{}
+
+}
+	return cfg
