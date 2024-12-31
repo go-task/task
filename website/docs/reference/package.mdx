@@ -1,0 +1,29 @@
+---
+slug: /reference/package
+sidebar_position: 2
+---
+
+# Package API
+
+:::warning
+
+**_Task's package API is still experimental and subject to breaking changes._**
+
+This means that unlike our CLI, we may make breaking changes to the package API
+in minor (or even patch) releases. We try to avoid this when possible, but it
+may be necessary in order to improve the overall design of the package API.
+
+In the future we may stabilize the package API. However, this is not currently
+planned. For now, if you need to use Task as a Go package, we recommend pinning
+the version in your `go.mod` file. Where possible we will try to include a
+changelog entry for breaking changes to the package API.
+
+:::
+
+Task is primarily a CLI tool that is agnostic of any programming language.
+However, it is written in Go and therefore can also be used as a Go package too.
+This can be useful if you are already using Go in your project and you need to
+extend Task's functionality in some way.
+
+The full generated documentation for the package API is available on
+[pkg.go.dev](https://pkg.go.dev/github.com/go-task/task/v3).
