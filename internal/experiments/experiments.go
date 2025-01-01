@@ -14,12 +14,13 @@ import (
 	"github.com/spf13/pflag"
 )
 
-const (
-	envPrefix             = "TASK_X_"
-	defaultConfigFilename = ".task-experiments.yml"
-)
+const envPrefix = "TASK_X_"
 
-// A set of experiments that can be enabled or disabled.
+var defaultConfigFilenames = []string{
+	".task-experiments.yml",
+	".task-experiments.yaml",
+}
+
 type ExperimentConfigFile struct {
 	Experiments map[string]string `yaml:",inline"`
 }
@@ -99,8 +100,17 @@ func readDotEnv() {
 
 func readConfig() ExperimentConfigFile {
 	var cfg ExperimentConfigFile
-	filename := getFilePath(defaultConfigFilename)
+
+	var content []byte
+	var err error
+	for _, filename := range defaultConfigFilenames {
+		path := getFilePath(filename)
+		content, err = os.ReadFile(path)
+		if err == nil {
+			break
+		}
 	}
+
 	if err != nil {
 	content, err := os.ReadFile(filename)
 		return ExperimentConfigFile{}
