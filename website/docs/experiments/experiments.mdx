@@ -3,6 +3,9 @@ slug: /experiments/
 sidebar_position: 6
 ---
 
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
 # Experiments
 
 :::caution
@@ -39,7 +42,7 @@ Which method you use depends on how you intend to use the experiment:
 1. Prefixing your task commands with the relevant environment variable(s). For
    example, `TASK_X_{FEATURE}=1 task {my-task}`. This is intended for one-off
    invocations of Task to test out experimental features.
-1. Adding the relevant environment variable(s) in your "dotfiles" (e.g.
+2. Adding the relevant environment variable(s) in your "dotfiles" (e.g.
    `.bashrc`, `.zshrc` etc.). This will permanently enable experimental features
    for your personal environment.
 
@@ -47,25 +50,32 @@ Which method you use depends on how you intend to use the experiment:
    export TASK_X_FEATURE=1
    ```
 
-1. Creating a `.env` file in the same directory as your root Taskfile that
-   contains the relevant environment variable(s). This allows you to enable an
-   experimental feature at a project level. If you commit the `.env` file to
-   source control then other users of your project will also have these
-   experiments enabled.
+3. Creating a `.env` or a `.task-experiments.yml` file in the same directory as
+   your root Taskfile.\
+   The `.env` file should contain the relevant environment
+   variable(s), while the `.task-experiments.yml` file should use a YAML format
+   where each experiment is defined as a key with a corresponding value.
 
-   ```shell title=".env"
-   TASK_X_FEATURE=1
-   ```
+   This allows you to enable an experimental feature at a project level. If you
+   commit this file to source control, then other users of your project will
+   also have these experiments enabled.
 
-1. Creating a `.task-experiments.yml` file in the same directory as your root Taskfile that
-   contains the experiment and the value you want to enable. This allows you to enable an
-   experimental feature at a project level. If you commit the `.task-experiments.yml` file to
-   source control then other users of your project will also have these
-   experiments enabled.
+   If both files are present, the values in the `.task-experiments.yml` file
+   will take precedence.
 
-   ```yaml title=".task-experiments.yml"
-   X_FEATURE: 1
-   ```
+    <Tabs values={[ {label: '.task-experiments.yml', value: 'yaml'}, {label: '.env', value: 'env'}]}>
+     <TabItem value="yaml">
+       ```yaml title=".task-experiments.yml"
+        X_FEATURE: 1
+       ```
+     </TabItem>
+
+        <TabItem value="env">
+       ```shell title=".env"
+       TASK_X_FEATURE=1
+       ```
+     </TabItem>
+    </Tabs>
 
 ## Workflow
 
