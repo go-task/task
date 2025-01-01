@@ -41,11 +41,11 @@ var (
 	EnvPrecedence   Experiment
 )
 
-var ExperimentConfig ExperimentConfigFile
+var experimentConfig ExperimentConfigFile
 
 func init() {
 	readDotEnv()
-	ExperimentConfig = readConfig()
+	experimentConfig = readConfig()
 	GentleForce = New("GENTLE_FORCE")
 	RemoteTaskfiles = New("REMOTE_TASKFILES")
 	AnyVariables = New("ANY_VARIABLES", "1", "2")
@@ -58,7 +58,7 @@ func New(xName string, enabledValues ...string) Experiment {
 		enabledValues = []string{"1"}
 	}
 
-	value := ExperimentConfig.Experiments[xName]
+	value := experimentConfig.Experiments[xName]
 
 	if value == "" {
 		value = getEnv(xName)
