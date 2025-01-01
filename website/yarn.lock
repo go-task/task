@@ -2557,9 +2557,9 @@
     csstype "^3.0.2"
 
 "@types/react@^18.2.29":
-  version "18.3.14"
-  resolved "https://registry.yarnpkg.com/@types/react/-/react-18.3.14.tgz#7ce43bbca0e15e1c4f67ad33ea3f83d75aa6756b"
-  integrity sha512-NzahNKvjNhVjuPBQ+2G7WlxstQ+47kXZNHlUvFakDViuIEfGY926GqhMueQFZ7woG+sPiQKlF36XfrIUVSUfFg==
+  version "18.3.18"
+  resolved "https://registry.yarnpkg.com/@types/react/-/react-18.3.18.tgz#9b382c4cd32e13e463f97df07c2ee3bbcd26904b"
+  integrity sha512-t4yC+vtgnkYjNSKlFx1jkAhH8LgTo2N/7Qvi83kdEaUtMDiwpbLAktKDaAMlRcJ5eSxZkH74eEGt1ky31d7kfQ==
   dependencies:
     "@types/prop-types" "*"
     csstype "^3.0.2"
@@ -7350,9 +7350,9 @@ pretty-time@^1.1.0:
   integrity sha512-28iF6xPQrP8Oa6uxE6a1biz+lWeTOAPKggvjB8HAs6nVMKZwf5bG++632Dx614hIWgUPkgivRfG+a8uAXGTIbA==
 
 prism-react-renderer@^2.1.0, prism-react-renderer@^2.3.0:
-  version "2.4.0"
-  resolved "https://registry.yarnpkg.com/prism-react-renderer/-/prism-react-renderer-2.4.0.tgz#c5ea692029c2f8b3fd04f63662d04ffd4eaf10a0"
-  integrity sha512-327BsVCD/unU4CNLZTWVHyUHKnsqcvj2qbPlQ8MiBE2eq2rgctjigPA1Gp9HLF83kZ20zNN6jgizHJeEsyFYOw==
+  version "2.4.1"
+  resolved "https://registry.yarnpkg.com/prism-react-renderer/-/prism-react-renderer-2.4.1.tgz#ac63b7f78e56c8f2b5e76e823a976d5ede77e35f"
+  integrity sha512-ey8Ls/+Di31eqzUxC46h8MksNuGx/n0AAC8uKpwFau4RPDYLuE3EXTp8N8G2vX2N7UC/+IXeNUnlWBGGcAG+Ig==
   dependencies:
     "@types/prismjs" "^1.26.0"
     clsx "^2.0.0"
