@@ -130,6 +130,7 @@ func TestEnv(t *testing.T) {
 			"global.txt":         "FOO='foo' BAR='overridden' BAZ='baz'\n",
 			"multiple_type.txt":  "FOO='1' BAR='true' BAZ='1.1'\n",
 			"not-overridden.txt": "QUX='from_os'\n",
+			"dynamic.txt":        "foo\n",
 		},
 	}
 	tt.Run(t)
