@@ -1,6 +1,7 @@
 ---
 slug: /installation/
 sidebar_position: 2
+toc_max_heading_level: 4
 ---
 
 import Tabs from '@theme/Tabs';
@@ -19,7 +20,7 @@ are not maintained by the Task team and may not be up-to-date.
 
 ## Package Managers
 
-### [Homebrew][homebrew] ![][macos] ![][linux]
+### [Homebrew][homebrew] ![][macos] ![][linux] \{#homebrew}
 
 Task is available via our official Homebrew tap [[source](https://github.com/go-task/homebrew-tap/blob/main/Formula/go-task.rb)]:
 
@@ -35,7 +36,7 @@ repository [[package](https://formulae.brew.sh/formula/go-task)]
 brew install go-task
 ```
 
-### [Snap][snapcraft] ![][macos] ![][linux]
+### [Snap][snapcraft] ![][macos] ![][linux] \{#snap}
 
 Task is available on [Snapcraft][snapcraft] [[source](https://github.com/go-task/snap/blob/main/snap/snapcraft.yaml)], but keep in mind that your Linux
 distribution should allow classic confinement for Snaps to Task work correctly:
@@ -44,7 +45,7 @@ distribution should allow classic confinement for Snaps to Task work correctly:
 sudo snap install task --classic
 ```
 
-### [npm][npm] ![][macos] ![][linux] ![][windows]
+### [npm][npm] ![][macos] ![][linux] ![][windows] \{#npm}
 
 Npm can be used as cross-platform way to install Task globally or as a
 dependency of your project
@@ -54,7 +55,7 @@ dependency of your project
 npm install -g @go-task/cli
 ```
 
-### [pip][pip] ![][macos] ![][linux] ![][windows] ![][community]
+### [pip][pip] ![][macos] ![][linux] ![][windows] ![][community] \{#pip}
 
 Like npm, pip can be used as a cross-platform way to install Task
 [[package](https://pypi.org/project/go-task-bin)] [[source](https://github.com/Bing-su/pip-binary-factory/tree/main/task)]:
@@ -63,7 +64,7 @@ Like npm, pip can be used as a cross-platform way to install Task
 pip install go-task-bin
 ```
 
-### [WinGet][winget] ![][windows]
+### [WinGet][winget] ![][windows] \{#winget}
 
 Task is available via the [community repository](https://github.com/microsoft/winget-pkgs) [[source](https://github.com/microsoft/winget-pkgs/tree/master/manifests/t/Task/Task)]:
 
@@ -71,7 +72,7 @@ Task is available via the [community repository](https://github.com/microsoft/wi
 winget install Task.Task
 ```
 
-### [Chocolatey][choco] ![][windows] ![][community]
+### [Chocolatey][choco] ![][windows] ![][community] \{#chocolatey}
 
 [[package](https://community.chocolatey.org/packages/go-task)] [[source](https://github.com/Starz0r/ChocolateyPackagingScripts/blob/master/src/go-task_gh_build.py)]
 
@@ -79,7 +80,7 @@ winget install Task.Task
 choco install go-task
 ```
 
-### [Scoop][scoop] ![][windows] ![][community]
+### [Scoop][scoop] ![][windows] ![][community] \{#scoop}
 
 [[source](https://github.com/ScoopInstaller/Main/blob/master/bucket/task.json)]
 
@@ -87,7 +88,7 @@ choco install go-task
 scoop install task
 ```
 
-### Arch ([pacman][pacman]) ![][arch] ![][community]
+### Arch ([pacman][pacman]) ![][arch] ![][community] \{#arch}
 
 [[package](https://archlinux.org/packages/extra/x86_64/go-task/)] [[source](https://gitlab.archlinux.org/archlinux/packaging/packages/go-task)]
 
@@ -95,7 +96,7 @@ scoop install task
 pacman -S go-task
 ```
 
-### Fedora ([dnf][dnf]) ![][fedora] ![][community]
+### Fedora ([dnf][dnf]) ![][fedora] ![][community] \{#fedora}
 
 [[package](https://packages.fedoraproject.org/pkgs/golang-github-task/go-task/)] [[source](https://src.fedoraproject.org/rpms/golang-github-task)]
 
@@ -103,7 +104,7 @@ pacman -S go-task
 dnf install go-task
 ```
 
-### NixOS ([nix][nix]) ![][nixos] ![][linux] ![][community]
+### NixOS ([nix][nix]) ![][nixos] ![][linux] ![][community] \{#nix}
 
 [[source](https://github.com/NixOS/nixpkgs/blob/master/pkgs/by-name/go/go-task/package.nix)]
 
@@ -111,7 +112,7 @@ dnf install go-task
 nix-env -iA nixpkgs.go-task
 ```
 
-### [pacstall][pacstall] ![][debian] ![][ubuntu] ![][community]
+### [pacstall][pacstall] ![][debian] ![][ubuntu] ![][community] \{#pacstall}
 
 [[package](https://pacstall.dev/packages/go-task-deb)] [[source](https://github.com/pacstall/pacstall-programs/blob/master/packages/go-task-deb/go-task-deb.pacscript)]
 
@@ -119,7 +120,7 @@ nix-env -iA nixpkgs.go-task
 pacstall -I go-task-deb
 ```
 
-### [pkgx][pkgx] ![][macos] ![][linux] ![][community]
+### [pkgx][pkgx] ![][macos] ![][linux] ![][community] \{#pkgx}
 
 [[package](https://pkgx.dev/pkgs/taskfile.dev)] [[source](https://github.com/pkgxdev/pantry/blob/main/projects/taskfile.dev/package.yml)]
 
@@ -307,6 +308,8 @@ task --completion fish > ~/.config/fish/completions/task.fish
 [nix]: https://nixos.org
 [npm]: https://www.npmjs.com
 [pip]: https://pip.pypa.io
+[mise]: https://mise.jdx.dev
+[aqua]: https://aquaproj.github.io
 [pacstall]: https://github.com/pacstall/pacstall
 [pkgx]: https://pkgx.sh
 
