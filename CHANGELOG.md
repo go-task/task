@@ -22,6 +22,8 @@
   (#1872 by @niklasr22).
 - Updated [installation docs](https://taskfile.dev/installation) and added pip
   installation method (#935, #1989 by @pd93).
+- Fixed a bug where dynamic variables could not access environment variables
+  (#630, #1869 by @rohm1 and @pd93).
 
 ## v3.40.1 - 2024-12-06
 
