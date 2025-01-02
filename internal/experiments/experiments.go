@@ -17,12 +17,12 @@ import (
 const envPrefix = "TASK_X_"
 
 var defaultConfigFilenames = []string{
-	".task-experiments.yml",
-	".task-experiments.yaml",
+	".taskrc.yml",
+	".taskrc.yaml",
 }
 
 type ExperimentConfigFile struct {
-	Experiments map[string]string `yaml:",inline"`
+	Experiments map[string]string `yaml:"experiments"`
 }
 var (
 	GentleForce     Experiment

@@ -65,8 +65,9 @@ Which method you use depends on how you intend to use the experiment:
 
     <Tabs values={[ {label: '.task-experiments.yml', value: 'yaml'}, {label: '.env', value: 'env'}]}>
      <TabItem value="yaml">
-       ```yaml title=".task-experiments.yml"
-        X_FEATURE: 1
+       ```yaml title=".taskrc.yml"
+        experiments:
+          FEATURE: 1
        ```
      </TabItem>
 
