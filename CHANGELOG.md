@@ -18,7 +18,10 @@
   (#1797 by @pd93).
 - Fixed a bug where variables defined at the task level were being ignored in
   the `requires` section. (#1960, #1955, #1768 by @vmaerten and @mokeko)
-- The `CHECKSUM` and `TIMESTAMP` variables are now accessible within `cmds` (#1872 by @niklasr22).
+- The `CHECKSUM` and `TIMESTAMP` variables are now accessible within `cmds`
+  (#1872 by @niklasr22).
+- Updated [installation docs](https://taskfile.dev/installation) and added pip
+  installation method (#935, #1989 by @pd93).
 
 ## v3.40.1 - 2024-12-06
 
