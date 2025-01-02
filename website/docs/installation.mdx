@@ -1,6 +1,7 @@
 ---
 slug: /installation/
 sidebar_position: 2
+toc_max_heading_level: 4
 ---
 
 import Tabs from '@theme/Tabs';
@@ -10,32 +11,118 @@ import TabItem from '@theme/TabItem';
 
 Task offers many installation methods. Check out the available methods below.
 
+:::info
+
+Some of the methods below are marked as ![Community][community]. This means they
+are not maintained by the Task team and may not be up-to-date.
+
+:::
+
 ## Package Managers
 
-### Homebrew
+### [Homebrew][homebrew] ![][macos] ![][linux] \{#homebrew}
 
-If you're on macOS or Linux and have [Homebrew][homebrew] installed, getting
-Task is as simple as running:
+Task is available via our official Homebrew tap [[source](https://github.com/go-task/homebrew-tap/blob/main/Formula/go-task.rb)]:
 
 ```shell
 brew install go-task/tap/go-task
 ```
 
-The above Formula is
-[maintained by ourselves](https://github.com/go-task/homebrew-tap/blob/main/Formula/go-task.rb).
-
-Recently, Task was also made available
-[on the official Homebrew repository](https://formulae.brew.sh/formula/go-task),
-so you also have that option if you prefer:
+Alternatively it can be installed from the official Homebrew
+repository [[package](https://formulae.brew.sh/formula/go-task)]
+[[source](https://github.com/Homebrew/homebrew-core/blob/master/Formula/g/go-task.rb)] by running:
 
 ```shell
 brew install go-task
 ```
 
-### pkgx
+### [Snap][snapcraft] ![][macos] ![][linux] \{#snap}
 
-If you're on macOS or Linux and have [pkgx][pkgx] installed, getting Task is as
-simple as running:
+Task is available on [Snapcraft][snapcraft] [[source](https://github.com/go-task/snap/blob/main/snap/snapcraft.yaml)], but keep in mind that your Linux
+distribution should allow classic confinement for Snaps to Task work correctly:
+
+```shell
+sudo snap install task --classic
+```
+
+### [npm][npm] ![][macos] ![][linux] ![][windows] \{#npm}
+
+Npm can be used as cross-platform way to install Task globally or as a
+dependency of your project
+[[package](https://www.npmjs.com/package/@go-task/cli)] [[source](https://github.com/go-task/task/blob/main/package.json)]:
+
+```shell
+npm install -g @go-task/cli
+```
+
+### [pip][pip] ![][macos] ![][linux] ![][windows] ![][community] \{#pip}
+
+Like npm, pip can be used as a cross-platform way to install Task
+[[package](https://pypi.org/project/go-task-bin)] [[source](https://github.com/Bing-su/pip-binary-factory/tree/main/task)]:
+
+```shell
+pip install go-task-bin
+```
+
+### [WinGet][winget] ![][windows] \{#winget}
+
+Task is available via the [community repository](https://github.com/microsoft/winget-pkgs) [[source](https://github.com/microsoft/winget-pkgs/tree/master/manifests/t/Task/Task)]:
+
+```shell
+winget install Task.Task
+```
+
+### [Chocolatey][choco] ![][windows] ![][community] \{#chocolatey}
+
+[[package](https://community.chocolatey.org/packages/go-task)] [[source](https://github.com/Starz0r/ChocolateyPackagingScripts/blob/master/src/go-task_gh_build.py)]
+
+```shell
+choco install go-task
+```
+
+### [Scoop][scoop] ![][windows] ![][community] \{#scoop}
+
+[[source](https://github.com/ScoopInstaller/Main/blob/master/bucket/task.json)]
+
+```shell
+scoop install task
+```
+
+### Arch ([pacman][pacman]) ![][arch] ![][community] \{#arch}
+
+[[package](https://archlinux.org/packages/extra/x86_64/go-task/)] [[source](https://gitlab.archlinux.org/archlinux/packaging/packages/go-task)]
+
+```shell
+pacman -S go-task
+```
+
+### Fedora ([dnf][dnf]) ![][fedora] ![][community] \{#fedora}
+
+[[package](https://packages.fedoraproject.org/pkgs/golang-github-task/go-task/)] [[source](https://src.fedoraproject.org/rpms/golang-github-task)]
+
+```shell
+dnf install go-task
+```
+
+### NixOS ([nix][nix]) ![][nixos] ![][linux] ![][community] \{#nix}
+
+[[source](https://github.com/NixOS/nixpkgs/blob/master/pkgs/by-name/go/go-task/package.nix)]
+
+```shell
+nix-env -iA nixpkgs.go-task
+```
+
+### [pacstall][pacstall] ![][debian] ![][ubuntu] ![][community] \{#pacstall}
+
+[[package](https://pacstall.dev/packages/go-task-deb)] [[source](https://github.com/pacstall/pacstall-programs/blob/master/packages/go-task-deb/go-task-deb.pacscript)]
+
+```shell
+pacstall -I go-task-deb
+```
+
+### [pkgx][pkgx] ![][macos] ![][linux] ![][community] \{#pkgx}
+
+[[package](https://pkgx.dev/pkgs/taskfile.dev)] [[source](https://github.com/pkgxdev/pantry/blob/main/projects/taskfile.dev/package.yml)]
 
 ```shell
 pkgx task
@@ -46,107 +133,6 @@ or, if you have pkgx integration enabled:
 ```shell
 task
 ```
-
-This installation method is community owned. After a new release of Task, they
-are automatically released by pkgx in a minimum of time.
-
-### Snap
-
-Task is available in [Snapcraft][snapcraft], but keep in mind that your Linux
-distribution should allow classic confinement for Snaps to Task work right:
-
-```shell
-sudo snap install task --classic
-```
-
-### Chocolatey
-
-If you're on Windows and have [Chocolatey][choco] installed, getting Task is as
-simple as running:
-
-```shell
-choco install go-task
-```
-
-This installation method is community owned.
-
-### Scoop
-
-If you're on Windows and have [Scoop][scoop] installed, getting Task is as
-simple as running:
-
-```shell
-scoop install task
-```
-
-This installation method is community owned. After a new release of Task, it may
-take some time until it's available on Scoop.
-
-### Arch
-
-If you're on Arch Linux you can install Task from the official
-[Arch](https://archlinux.org/packages/extra/x86_64/go-task/) repository using `pacman`:
-
-```shell
-pacman -S go-task
-```
-
-This installation method is community owned.
-
-### Fedora
-
-If you're on Fedora Linux you can install Task from the official
-[Fedora](https://packages.fedoraproject.org/pkgs/golang-github-task/go-task/)
-repository using `dnf`:
-
-```shell
-sudo dnf install go-task
-```
-
-This installation method is community owned. After a new release of Task, it may
-take some time until it's available in
-[Fedora](https://packages.fedoraproject.org/pkgs/golang-github-task/go-task/).
-
-### Nix
-
-If you're on NixOS or have Nix installed you can install Task from
-[nixpkgs](https://github.com/NixOS/nixpkgs):
-
-```shell
-nix-env -iA nixpkgs.go-task
-```
-
-This installation method is community owned. After a new release of Task, it may
-take some time until it's available in
-[nixpkgs](https://github.com/NixOS/nixpkgs).
-
-### npm
-
-You can also use Node and npm to install Task by installing
-[this package](https://www.npmjs.com/package/@go-task/cli).
-
-```shell
-npm install -g @go-task/cli
-```
-
-### Winget
-
-If you are using Windows and installed the
-[winget](https://github.com/microsoft/winget-cli) package management tool, you
-can install Task from [winget-pkgs](https://github.com/microsoft/winget-pkgs).
-
-```shell
-winget install Task.Task
-```
-
-### Pacstall
-If you are using Debian or Ubuntu, and have [Pacstall](https://pacstall.dev/) installed, you can install Task by running:
-
-```shell
-pacstall -I go-task-deb
-```
-
-This installation method is community owned. After a new release of Task, it may take some time until it's available in [Pacstall](https://pacstall.dev/packages/go-task-deb).
 
 ## Get The Binary
 
@@ -312,13 +298,33 @@ task --completion fish > ~/.config/fish/completions/task.fish
 </TabItem></Tabs>
 
 {/* prettier-ignore-start */}
-[go]: https://golang.org/
+[homebrew]: https://brew.sh
 [snapcraft]: https://snapcraft.io/task
-[homebrew]: https://brew.sh/
-[installscript]: https://github.com/go-task/task/blob/main/install-task.sh
-[releases]: https://github.com/go-task/task/releases
+[winget]: https://github.com/microsoft/winget-cli
+[choco]: https://chocolatey.org
+[scoop]: https://scoop.sh
+[pacman]: https://wiki.archlinux.org/title/Pacman
+[dnf]: https://docs.fedoraproject.org/en-US/quick-docs/dnf
+[nix]: https://nixos.org
+[npm]: https://www.npmjs.com
+[pip]: https://pip.pypa.io
+[mise]: https://mise.jdx.dev
+[aqua]: https://aquaproj.github.io
+[pacstall]: https://github.com/pacstall/pacstall
+[pkgx]: https://pkgx.sh
+
+[go]: https://golang.org
 [godownloader]: https://github.com/goreleaser/godownloader
-[choco]: https://chocolatey.org/
-[scoop]: https://scoop.sh/
-[pkgx]: https://pkgx.sh/
+[releases]: https://github.com/go-task/task/releases
+[installscript]: https://github.com/go-task/task/blob/main/install-task.sh
+
+[community]: https://img.shields.io/badge/Community%20Owned-orange
+[windows]: https://custom-icon-badges.demolab.com/badge/Windows-0078D6?logo=windows11&logoColor=white
+[macos]: https://img.shields.io/badge/MacOS-000000?logo=apple&logoColor=F0F0F0
+[linux]: https://img.shields.io/badge/Linux-FCC624?logo=linux&logoColor=black
+[arch]: https://img.shields.io/badge/Arch%20Linux-1793D1?logo=arch-linux&logoColor=fff
+[fedora]: https://img.shields.io/badge/Fedora-51A2DA?logo=fedora&logoColor=fff
+[nixos]: https://img.shields.io/badge/NixOS-5277C3?logo=nixos&logoColor=fff
+[debian]: https://img.shields.io/badge/Debian-A81D33?logo=debian&logoColor=fff
+[ubuntu]: https://img.shields.io/badge/Ubuntu-E95420?logo=ubuntu&logoColor=fff
 {/* prettier-ignore-end */}
