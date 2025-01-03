@@ -60,8 +60,12 @@ func (t1 *Taskfile) Merge(t2 *Taskfile, include *Include) error {
 	if t1.Tasks == nil {
 		t1.Tasks = NewTasks()
 	}
+	if t1.Preconditions == nil {
+		t1.Preconditions = NewPreconditions()
+	}
 	t1.Vars.Merge(t2.Vars, include)
 	t1.Env.Merge(t2.Env, include)
+	// TODO:@vmaerten Merge precondition
 	return t1.Tasks.Merge(t2.Tasks, include, t1.Vars)
 }
 
@@ -100,6 +104,7 @@ func (tf *Taskfile) UnmarshalYAML(node *yaml.Node) error {
 		tf.Dotenv = taskfile.Dotenv
 		tf.Run = taskfile.Run
 		tf.Interval = taskfile.Interval
+		tf.Preconditions = taskfile.Preconditions
 		if tf.Includes == nil {
 			tf.Includes = NewIncludes()
 		}
@@ -112,7 +117,6 @@ func (tf *Taskfile) UnmarshalYAML(node *yaml.Node) error {
 		if tf.Tasks == nil {
 			tf.Tasks = NewTasks()
 		}
-
 		if tf.Preconditions == nil {
 			tf.Preconditions = NewPreconditions()
 		}
