@@ -12,7 +12,7 @@ require (
 	github.com/elliotchance/orderedmap/v2 v2.7.0
 	github.com/fatih/color v1.18.0
 	github.com/go-git/go-billy/v5 v5.6.1
-	github.com/go-git/go-git/v5 v5.13.0
+	github.com/go-git/go-git/v5 v5.13.1
 	github.com/go-task/slim-sprig/v3 v3.0.0
 	github.com/go-task/template v0.1.0
 	github.com/joho/godotenv v1.5.1
