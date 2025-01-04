@@ -21,7 +21,7 @@ var defaultConfigFilenames = []string{
 	".taskrc.yaml",
 }
 
-type ExperimentConfigFile struct {
+type experimentConfigFile struct {
 	Experiments map[string]string `yaml:"experiments"`
 }
 var (
@@ -34,6 +34,7 @@ var (
 
 // An internal list of all the initialized experiments used for iterating.
 var xList []Experiment
+var experimentConfig experimentConfigFile
 
 var ExperimentConfig ExperimentConfigFile
 
@@ -98,8 +99,8 @@ func readDotEnv() {
 	}
 }
 
-func readConfig() ExperimentConfigFile {
-	var cfg ExperimentConfigFile
+func readConfig() experimentConfigFile {
+	var cfg experimentConfigFile
 
 	var content []byte
 	var err error
@@ -112,10 +113,11 @@ func readConfig() ExperimentConfigFile {
 	}
 
 	if err != nil {
-	content, err := os.ReadFile(filename)
-		return ExperimentConfigFile{}
+		return experimentConfigFile{}
+	}
 
 	if err := yaml.Unmarshal(content, &cfg); err != nil {
+		return experimentConfigFile{}
 	}
 		return ExperimentConfigFile{}
 
