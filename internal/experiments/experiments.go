@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
+	"strconv"
 	"strings"
 
 	"gopkg.in/yaml.v3"
@@ -25,13 +26,13 @@ var defaultConfigFilenames = []string{
 }
 
 type experimentConfigFile struct {
-	Experiments map[string]string `yaml:"experiments"`
+	Experiments map[string]int `yaml:"experiments"`
 }
 
 type Experiment struct {
 	Name    string
 	Enabled bool
-	Value   string
+	Value   int
 }
 
 // A list of experiments.
@@ -50,20 +51,20 @@ func init() {
 	experimentConfig = readConfig()
 	GentleForce = New("GENTLE_FORCE")
 	RemoteTaskfiles = New("REMOTE_TASKFILES")
-	AnyVariables = New("ANY_VARIABLES", "1", "2")
-	MapVariables = New("MAP_VARIABLES", "1", "2")
+	AnyVariables = New("ANY_VARIABLES", 1, 2)
+	MapVariables = New("MAP_VARIABLES", 1, 2)
 	EnvPrecedence = New("ENV_PRECEDENCE")
 }
 
-func New(xName string, enabledValues ...string) Experiment {
+func New(xName string, enabledValues ...int) Experiment {
 	if len(enabledValues) == 0 {
-		enabledValues = []string{"1"}
+		enabledValues = []int{1}
 	}
 
 	value := experimentConfig.Experiments[xName]
 
-	if value == "" {
-		value = getEnv(xName)
+	if value == 0 {
+		value, _ = strconv.Atoi(getEnv(xName))
 	}
 
 	return Experiment{
@@ -75,7 +76,7 @@ func New(xName string, enabledValues ...string) Experiment {
 
 func (x Experiment) String() string {
 	if x.Enabled {
-		return fmt.Sprintf("on (%s)", x.Value)
+		return fmt.Sprintf("on (%d)", x.Value)
 	}
 	return "off"
 }
