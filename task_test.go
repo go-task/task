@@ -1707,6 +1707,8 @@ func TestIncludesInterpolation(t *testing.T) { // nolint:paralleltest // cannot 
 }
 
 func TestIncludesInvalidTaskfile(t *testing.T) {
+	t.Parallel()
+
 	const dir = "testdata/includes_invalid_taskfile"
 
 	tests := []struct {
