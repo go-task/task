@@ -178,7 +178,7 @@ func (v *Var) UnmarshalYAML(node *yaml.Node) error {
 	if experiments.MapVariables.Enabled() {
 
 		// This implementation is not backwards-compatible and replaces the 'sh' key with map variables
-		if experiments.MapVariables.Value == "1" {
+		if experiments.MapVariables.Value == 1 {
 			var value any
 			if err := node.Decode(&value); err != nil {
 				return errors.NewTaskfileDecodeError(err, node)
@@ -199,7 +199,7 @@ func (v *Var) UnmarshalYAML(node *yaml.Node) error {
 		}
 
 		// This implementation IS backwards-compatible and keeps the 'sh' key and allows map variables to be added under the `map` key
-		if experiments.MapVariables.Value == "2" {
+		if experiments.MapVariables.Value == 2 {
 			switch node.Kind {
 			case yaml.MappingNode:
 				key := node.Content[0].Value

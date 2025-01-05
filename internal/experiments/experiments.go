@@ -5,6 +5,8 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"slices"
+	"strconv"
 	"strings"
 
 	"gopkg.in/yaml.v3"
@@ -22,7 +24,7 @@ var defaultConfigFilenames = []string{
 }
 
 type experimentConfigFile struct {
-	Experiments map[string]string `yaml:"experiments"`
+	Experiments map[string]int `yaml:"experiments"`
 }
 var (
 	GentleForce     Experiment

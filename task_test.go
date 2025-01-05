@@ -1215,7 +1215,7 @@ func TestIncludesMultiLevel(t *testing.T) {
 }
 
 func TestIncludesRemote(t *testing.T) {
-	enableExperimentForTest(t, &experiments.RemoteTaskfiles, "1")
+	enableExperimentForTest(t, &experiments.RemoteTaskfiles, 1)
 
 	dir := "testdata/includes_remote"
 
@@ -1373,7 +1373,7 @@ func TestIncludesEmptyMain(t *testing.T) {
 }
 
 func TestIncludesHttp(t *testing.T) {
-	enableExperimentForTest(t, &experiments.RemoteTaskfiles, "1")
+	enableExperimentForTest(t, &experiments.RemoteTaskfiles, 1)
 
 	dir, err := filepath.Abs("testdata/includes_http")
 	require.NoError(t, err)
@@ -3332,7 +3332,7 @@ func TestVarInheritance(t *testing.T) {
 //
 // Typically experiments are controlled via TASK_X_ env vars, but we cannot use those in tests
 // because the experiment settings are parsed during experiments.init(), before any tests run.
-func enableExperimentForTest(t *testing.T, e *experiments.Experiment, val string) {
+func enableExperimentForTest(t *testing.T, e *experiments.Experiment, val int) {
 	t.Helper()
 	prev := *e
 	*e = experiments.Experiment{
