@@ -1724,6 +1724,8 @@ func TestIncludesInvalidTaskfile(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
 			var buff bytes.Buffer
 			e := task.Executor{
 				Dir:    filepath.Join(dir, test.name),
