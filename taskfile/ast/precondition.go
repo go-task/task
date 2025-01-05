@@ -4,12 +4,10 @@ import (
 	"fmt"
 	"sync"
 
-
+	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/deepcopy"
 
 	"gopkg.in/yaml.v3"
-
-	"github.com/go-task/task/v3/errors"
 )
 
 // Precondition represents a precondition necessary for a task to run
@@ -24,6 +22,12 @@ type (
 		Msg string
 	}
 )
+
+func NewPreconditions() *Preconditions {
+	return &Preconditions{
+		Preconditions: make([]*Precondition, 0),
+	}
+}
 
 func (p *Preconditions) DeepCopy() *Preconditions {
 	if p == nil {
@@ -43,12 +47,6 @@ func (p *Precondition) DeepCopy() *Precondition {
 	return &Precondition{
 		Sh:  p.Sh,
 		Msg: p.Msg,
-	}
-}
-
-func NewPreconditions() *Preconditions {
-	return &Preconditions{
-		Preconditions: make([]*Precondition, 0),
 	}
 }
 

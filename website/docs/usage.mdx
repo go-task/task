@@ -1019,6 +1019,21 @@ tasks:
       - echo "I will not run"
 ```
 
+They can be defined at two levels:
+
+- Global Level: Applies to all tasks.
+- Task Level: Applies only to a specific task.
+
+```yaml
+version: '3'
+
+preconditions:
+  - sh: 'exit 1'
+
+tasks:
+  task-will-fail: echo "I will not run"
+```
+
 ### Limiting when tasks run
 
 If a task executed by multiple `cmds` or multiple `deps` you can control when it
