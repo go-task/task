@@ -12,8 +12,14 @@ func Get(t *ast.Task) []string {
 	if t.Env == nil {
 		return nil
 	}
+
+	return GetFromVars(t.Env)
+}
+
+func GetFromVars(env *ast.Vars) []string {
 	environ := os.Environ()
-	for k, v := range t.Env.ToCacheMap() {
+
+	for k, v := range env.ToCacheMap() {
 		if !isTypeAllowed(v) {
 			continue
 		}

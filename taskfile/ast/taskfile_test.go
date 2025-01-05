@@ -7,11 +7,12 @@ import (
 	"github.com/stretchr/testify/require"
 	"gopkg.in/yaml.v3"
 
-	"github.com/go-task/task/v3/internal/omap"
 	"github.com/go-task/task/v3/taskfile/ast"
 )
 
 func TestCmdParse(t *testing.T) {
+	t.Parallel()
+
 	const (
 		yamlCmd      = `echo "a string command"`
 		yamlDep      = `"task-name"`
@@ -38,15 +39,21 @@ vars:
 			yamlTaskCall,
 			&ast.Cmd{},
 			&ast.Cmd{
-				Task: "another-task", Vars: &ast.Vars{
-					OrderedMap: omap.FromMapWithOrder(
-						map[string]ast.Var{
-							"PARAM1": {Value: "VALUE1"},
-							"PARAM2": {Value: "VALUE2"},
+				Task: "another-task",
+				Vars: ast.NewVars(
+					&ast.VarElement{
+						Key: "PARAM1",
+						Value: ast.Var{
+							Value: "VALUE1",
 						},
-						[]string{"PARAM1", "PARAM2"},
-					),
-				},
+					},
+					&ast.VarElement{
+						Key: "PARAM2",
+						Value: ast.Var{
+							Value: "VALUE2",
+						},
+					},
+				),
 			},
 		},
 		{
@@ -58,14 +65,15 @@ vars:
 			yamlDeferredCall,
 			&ast.Cmd{},
 			&ast.Cmd{
-				Task: "some_task", Vars: &ast.Vars{
-					OrderedMap: omap.FromMapWithOrder(
-						map[string]ast.Var{
-							"PARAM1": {Value: "var"},
+				Task: "some_task",
+				Vars: ast.NewVars(
+					&ast.VarElement{
+						Key: "PARAM1",
+						Value: ast.Var{
+							Value: "var",
 						},
-						[]string{"PARAM1"},
-					),
-				},
+					},
+				),
 				Defer: true,
 			},
 		},
@@ -78,15 +86,21 @@ vars:
 			yamlTaskCall,
 			&ast.Dep{},
 			&ast.Dep{
-				Task: "another-task", Vars: &ast.Vars{
-					OrderedMap: omap.FromMapWithOrder(
-						map[string]ast.Var{
-							"PARAM1": {Value: "VALUE1"},
-							"PARAM2": {Value: "VALUE2"},
+				Task: "another-task",
+				Vars: ast.NewVars(
+					&ast.VarElement{
+						Key: "PARAM1",
+						Value: ast.Var{
+							Value: "VALUE1",
 						},
-						[]string{"PARAM1", "PARAM2"},
-					),
-				},
+					},
+					&ast.VarElement{
+						Key: "PARAM2",
+						Value: ast.Var{
+							Value: "VALUE2",
+						},
+					},
+				),
 			},
 		},
 	}

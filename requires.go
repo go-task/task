@@ -7,23 +7,19 @@ import (
 	"github.com/go-task/task/v3/taskfile/ast"
 )
 
-func (e *Executor) areTaskRequiredVarsSet(t *ast.Task, call *ast.Call) error {
+func (e *Executor) areTaskRequiredVarsSet(t *ast.Task) error {
 	if t.Requires == nil || len(t.Requires.Vars) == 0 {
 		return nil
-	}
-
-	vars, err := e.Compiler.GetVariables(t, call)
-	if err != nil {
-		return err
 	}
 
 	var missingVars []string
 	var notAllowedValuesVars []errors.NotAllowedVar
 	for _, requiredVar := range t.Requires.Vars {
-		value, isString := vars.Get(requiredVar.Name).Value.(string)
-		if !vars.Exists(requiredVar.Name) {
+		value, ok := t.Vars.Get(requiredVar.Name)
+		if !ok {
 			missingVars = append(missingVars, requiredVar.Name)
 		} else {
+			value, isString := value.Value.(string)
 			if isString && requiredVar.Enum != nil && !slices.Contains(requiredVar.Enum, value) {
 				notAllowedValuesVars = append(notAllowedValuesVars, errors.NotAllowedVar{
 					Value: value,

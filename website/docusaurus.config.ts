@@ -129,21 +129,31 @@ const config: Config = {
         },
         {
           href: GITHUB_URL,
+          title: 'GitHub',
           position: 'right',
           className: "header-icon-link icon-github",
         },
         {
           href: DISCORD_URL,
+          title: 'Discord',
           position: 'right',
           className: "header-icon-link icon-discord",
         },
         {
           href: TWITTER_URL,
+          title: 'X (Twitter)',
           position: 'right',
           className: "header-icon-link icon-twitter",
         },
         {
+          href: BLUESKY_URL,
+          title: 'Bluesky',
+          position: 'right',
+          className: "header-icon-link icon-bluesky",
+        },
+        {
           href: MASTODON_URL,
+          title: 'Mastodon',
           rel: 'me',
           position: 'right',
           className: "header-icon-link icon-mastodon",
@@ -178,10 +188,14 @@ const config: Config = {
               href: GITHUB_URL
             },
             {
+              label: 'Discord',
+              href: DISCORD_URL
+            },
+            {
               label: 'Twitter',
               href: TWITTER_URL
             },
-						{
+            {
               label: 'Bluesky',
               href: BLUESKY_URL,
               rel: 'me'
@@ -190,10 +204,6 @@ const config: Config = {
               label: 'Mastodon',
               href: MASTODON_URL,
               rel: 'me'
-            },
-            {
-              label: 'Discord',
-              href: DISCORD_URL
             },
             {
               label: 'Stack Overflow',

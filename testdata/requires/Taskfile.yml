@@ -10,9 +10,26 @@ tasks:
         - foo
     cmd: echo "{{.foo}}"
 
+  var-defined-in-task:
+    vars:
+      FOO: bar
+    requires:
+      vars:
+        - FOO
+    cmd: echo "{{.FOO}}"
+
 
   validation-var:
     requires:
       vars:
         - name: foo
           enum: ['one', 'two']
+
+
+  require-before-compile:
+    requires:
+      vars: [ MY_VAR ]
+    cmd: |
+      {{range .MY_VAR | splitList " " }}
+        echo {{.}}
+      {{end}}

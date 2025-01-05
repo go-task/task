@@ -1,0 +1,17 @@
+version: '3'
+
+includes:
+  included:
+    taskfile: ./included/Taskfile.yml
+    excludes:
+        - foo
+  included_flatten:
+    taskfile: ./included/Taskfile.yml
+    flatten: true
+    excludes:
+      - bar
+
+tasks:
+  default:
+    cmds:
+      - echo "called_dep" > called_dep.txt

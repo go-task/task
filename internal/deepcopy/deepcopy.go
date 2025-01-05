@@ -2,6 +2,8 @@ package deepcopy
 
 import (
 	"reflect"
+
+	"github.com/elliotchance/orderedmap/v2"
 )
 
 type Copier[T any] interface {
@@ -33,6 +35,21 @@ func Map[K comparable, V any](orig map[K]V) map[K]V {
 			c[k] = copyable.DeepCopy()
 		} else {
 			c[k] = v
+		}
+	}
+	return c
+}
+
+func OrderedMap[K comparable, V any](orig *orderedmap.OrderedMap[K, V]) *orderedmap.OrderedMap[K, V] {
+	if orig.Len() == 0 {
+		return orderedmap.NewOrderedMap[K, V]()
+	}
+	c := orderedmap.NewOrderedMap[K, V]()
+	for pair := orig.Front(); pair != nil; pair = pair.Next() {
+		if copyable, ok := any(pair.Value).(Copier[V]); ok {
+			c.Set(pair.Key, copyable.DeepCopy())
+		} else {
+			c.Set(pair.Key, pair.Value)
 		}
 	}
 	return c

@@ -18,7 +18,7 @@ type Task struct {
 	Deps          []*Dep
 	Label         string
 	Desc          string
-	Prompt        string
+	Prompt        Prompt
 	Summary       string
 	Requires      *Requires
 	Aliases       []string
@@ -115,7 +115,7 @@ func (t *Task) UnmarshalYAML(node *yaml.Node) error {
 			Deps          []*Dep
 			Label         string
 			Desc          string
-			Prompt        string
+			Prompt        Prompt
 			Summary       string
 			Aliases       []string
 			Sources       []*Glob

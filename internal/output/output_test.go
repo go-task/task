@@ -12,13 +12,14 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/go-task/task/v3/internal/logger"
-	"github.com/go-task/task/v3/internal/omap"
 	"github.com/go-task/task/v3/internal/output"
 	"github.com/go-task/task/v3/internal/templater"
 	"github.com/go-task/task/v3/taskfile/ast"
 )
 
 func TestInterleaved(t *testing.T) {
+	t.Parallel()
+
 	var b bytes.Buffer
 	var o output.Output = output.Interleaved{}
 	w, _, _ := o.WrapWriter(&b, io.Discard, "", nil)
@@ -30,6 +31,8 @@ func TestInterleaved(t *testing.T) {
 }
 
 func TestGroup(t *testing.T) {
+	t.Parallel()
+
 	var b bytes.Buffer
 	var o output.Output = output.Group{}
 	stdOut, stdErr, cleanup := o.WrapWriter(&b, io.Discard, "", nil)
@@ -48,12 +51,15 @@ func TestGroup(t *testing.T) {
 }
 
 func TestGroupWithBeginEnd(t *testing.T) {
+	t.Parallel()
+
 	tmpl := templater.Cache{
-		Vars: &ast.Vars{
-			OrderedMap: omap.FromMap(map[string]ast.Var{
-				"VAR1": {Value: "example-value"},
-			}),
-		},
+		Vars: ast.NewVars(
+			&ast.VarElement{
+				Key:   "VAR1",
+				Value: ast.Var{Value: "example-value"},
+			},
+		),
 	}
 
 	var o output.Output = output.Group{
@@ -61,6 +67,8 @@ func TestGroupWithBeginEnd(t *testing.T) {
 		End:   "::endgroup::",
 	}
 	t.Run("simple", func(t *testing.T) {
+		t.Parallel()
+
 		var b bytes.Buffer
 		w, _, cleanup := o.WrapWriter(&b, io.Discard, "", &tmpl)
 
@@ -72,6 +80,8 @@ func TestGroupWithBeginEnd(t *testing.T) {
 		assert.Equal(t, "::group::example-value\nfoo\nbar\nbaz\n::endgroup::\n", b.String())
 	})
 	t.Run("no output", func(t *testing.T) {
+		t.Parallel()
+
 		var b bytes.Buffer
 		_, _, cleanup := o.WrapWriter(&b, io.Discard, "", &tmpl)
 		require.NoError(t, cleanup(nil))
@@ -80,6 +90,8 @@ func TestGroupWithBeginEnd(t *testing.T) {
 }
 
 func TestGroupErrorOnlySwallowsOutputOnNoError(t *testing.T) {
+	t.Parallel()
+
 	var b bytes.Buffer
 	var o output.Output = output.Group{
 		ErrorOnly: true,
@@ -94,6 +106,8 @@ func TestGroupErrorOnlySwallowsOutputOnNoError(t *testing.T) {
 }
 
 func TestGroupErrorOnlyShowsOutputOnError(t *testing.T) {
+	t.Parallel()
+
 	var b bytes.Buffer
 	var o output.Output = output.Group{
 		ErrorOnly: true,
@@ -107,7 +121,7 @@ func TestGroupErrorOnlyShowsOutputOnError(t *testing.T) {
 	assert.Equal(t, "std-out\nstd-err\n", b.String())
 }
 
-func TestPrefixed(t *testing.T) {
+func TestPrefixed(t *testing.T) { //nolint:paralleltest // cannot run in parallel
 	var b bytes.Buffer
 	l := &logger.Logger{
 		Color: false,
@@ -116,7 +130,7 @@ func TestPrefixed(t *testing.T) {
 	var o output.Output = output.NewPrefixed(l)
 	w, _, cleanup := o.WrapWriter(&b, io.Discard, "prefix", nil)
 
-	t.Run("simple use cases", func(t *testing.T) {
+	t.Run("simple use cases", func(t *testing.T) { //nolint:paralleltest // cannot run in parallel
 		b.Reset()
 
 		fmt.Fprintln(w, "foo\nbar")
@@ -126,7 +140,7 @@ func TestPrefixed(t *testing.T) {
 		require.NoError(t, cleanup(nil))
 	})
 
-	t.Run("multiple writes for a single line", func(t *testing.T) {
+	t.Run("multiple writes for a single line", func(t *testing.T) { //nolint:paralleltest // cannot run in parallel
 		b.Reset()
 
 		for _, char := range []string{"T", "e", "s", "t", "!"} {
@@ -140,6 +154,8 @@ func TestPrefixed(t *testing.T) {
 }
 
 func TestPrefixedWithColor(t *testing.T) {
+	t.Parallel()
+
 	color.NoColor = false
 
 	var b bytes.Buffer
@@ -155,6 +171,8 @@ func TestPrefixedWithColor(t *testing.T) {
 	}
 
 	t.Run("colors should loop", func(t *testing.T) {
+		t.Parallel()
+
 		for i, w := range writers {
 			b.Reset()
 
@@ -164,7 +182,11 @@ func TestPrefixedWithColor(t *testing.T) {
 			l.FOutf(&prefix, color, fmt.Sprintf("prefix-%d", i))
 
 			fmt.Fprintln(w, "foo\nbar")
-			assert.Equal(t, fmt.Sprintf("[%s] foo\n[%s] bar\n", prefix.String(), prefix.String()), b.String())
+			assert.Equal(
+				t,
+				fmt.Sprintf("[%s] foo\n[%s] bar\n", prefix.String(), prefix.String()),
+				b.String(),
+			)
 		}
 	})
 }

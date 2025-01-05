@@ -7,6 +7,8 @@ import (
 )
 
 func TestGitNode_ssh(t *testing.T) {
+	t.Parallel()
+
 	node, err := NewGitNode("git@github.com:foo/bar.git//Taskfile.yml?ref=main", "", false)
 	assert.NoError(t, err)
 	assert.Equal(t, "main", node.ref)
@@ -19,6 +21,8 @@ func TestGitNode_ssh(t *testing.T) {
 }
 
 func TestGitNode_sshWithDir(t *testing.T) {
+	t.Parallel()
+
 	node, err := NewGitNode("git@github.com:foo/bar.git//directory/Taskfile.yml?ref=main", "", false)
 	assert.NoError(t, err)
 	assert.Equal(t, "main", node.ref)
@@ -31,6 +35,8 @@ func TestGitNode_sshWithDir(t *testing.T) {
 }
 
 func TestGitNode_https(t *testing.T) {
+	t.Parallel()
+
 	node, err := NewGitNode("https://github.com/foo/bar.git//Taskfile.yml?ref=main", "", false)
 	assert.NoError(t, err)
 	assert.Equal(t, "main", node.ref)
@@ -43,6 +49,8 @@ func TestGitNode_https(t *testing.T) {
 }
 
 func TestGitNode_httpsWithDir(t *testing.T) {
+	t.Parallel()
+
 	node, err := NewGitNode("https://github.com/foo/bar.git//directory/Taskfile.yml?ref=main", "", false)
 	assert.NoError(t, err)
 	assert.Equal(t, "main", node.ref)
@@ -55,6 +63,8 @@ func TestGitNode_httpsWithDir(t *testing.T) {
 }
 
 func TestGitNode_FilenameAndDir(t *testing.T) {
+	t.Parallel()
+
 	node, err := NewGitNode("https://github.com/foo/bar.git//directory/Taskfile.yml?ref=main", "", false)
 	assert.NoError(t, err)
 	filename, dir := node.FilenameAndLastDir()

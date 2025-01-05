@@ -2,6 +2,40 @@
 
 ## Unreleased
 
+- Fixed an issue where dynamic variables were not properly logged in verbose
+  mode (#1920, #1921 by @mgbowman).
+- Support `silent` for defer statements (#1877, #1879 by @danilobuerger).
+- Added an option to exclude some tasks from being included (#1859 by
+  @vmaerten).
+- Fixed an issue where a required variable was incorrectly handled in a template
+  function (#1950, #1962 by @vmaerten).
+- Expose a new `TASK_DIR` special variable, which will contain the absolute path
+  of task directory. (#1959, #1961 by @vmaerten).
+- Fixed fatal bugs that caused concurrent map writes (#1605, #1972, #1974 by
+  @pd93, @GrahamDennis and @trim21.
+- Refactored internal ordered map implementation to use
+  [github.com/elliotchance/orderedmap](https://github.com/elliotchance/orderedmap)
+  (#1797 by @pd93).
+- Fixed a bug where variables defined at the task level were being ignored in
+  the `requires` section. (#1960, #1955, #1768 by @vmaerten and @mokeko)
+- The `CHECKSUM` and `TIMESTAMP` variables are now accessible within `cmds`
+  (#1872 by @niklasr22).
+- Updated [installation docs](https://taskfile.dev/installation) and added pip
+  installation method (#935, #1989 by @pd93).
+- Fixed a bug where dynamic variables could not access environment variables
+  (#630, #1869 by @rohm1 and @pd93).
+
+## v3.40.1 - 2024-12-06
+
+- Fixed a security issue in `git-urls` by switching to the maintained fork
+  `chainguard-dev/git-urls` (#1917 by @AlekSi).
+- Added missing `platforms` property to `cmds` that use `for` (#1915 by
+  @dkarter).
+- Added misspell linter to check for misspelled English words (#1883 by
+  @christiandins).
+
+## v3.40.0 - 2024-11-05
+
 - Fixed output of some functions (e.g. `splitArgs`/`splitLines`) not working in
   for loops (#1822, #1823 by @stawii).
 - Added a new `TASK_OFFLINE` environment variable to configure the `--offline`
@@ -9,13 +43,24 @@
   #1716 by @vmaerten and @pd93).
 - Fixed a bug where multiple remote includes caused all prompts to display
   without waiting for user input (#1832, #1833 by @vmaerten and @pd93).
-- When using the "[Remote Taskfiles](https://taskfile.dev/experiments/remote-taskfiles/)".
-  experiment, you can now include Taskfiles from Git repositories (#1652 by @vmaerten).
-- Improved the error message when a dotenv file cannot be parsed (#1842 by @pbitty).
+- When using the
+  "[Remote Taskfiles](https://taskfile.dev/experiments/remote-taskfiles/)".
+  experiment, you can now include Taskfiles from Git repositories (#1652 by
+  @vmaerten).
+- Improved the error message when a dotenv file cannot be parsed (#1842 by
+  @pbitty).
 - Fix issue with directory when using the remote experiment (#1757 by @pbitty).
-- Fixed an issue where a special variable was used in combination with a dotenv file (#1232, #1810 by @vmaerten).
-- Refactor the way Task reads Taskfiles to improve readability (#1771 by @pbitty).
-- Added a new option to ensure variable is within the list of values (#1827 by @vmaerten).
+- Fixed an issue where a special variable was used in combination with a dotenv
+  file (#1232, #1810 by @vmaerten).
+- Refactor the way Task reads Taskfiles to improve readability (#1771 by
+  @pbitty).
+- Added a new option to ensure variable is within the list of values (#1827 by
+  @vmaerten).
+- Allow multiple prompts to be specified for a task (#1861, #1866 by @mfbmina).
+- Added new template function: `numCPU`, which returns the number of logical
+  CPUs usable (#1890, #1887 by @Amoghrd).
+- Fixed a bug where non-nil, empty dynamic variables are returned as an empty
+  interface (#1903, #1904 by @pd93).
 
 ## v3.39.2 - 2024-09-19
 
@@ -281,8 +326,8 @@
 - Added the
   [Remote Taskfiles experiment](https://taskfile.dev/experiments/remote-taskfiles)
   as a draft (#1152, #1317 by @pd93).
-- Improve performance of content checksuming on `sources:` by replacing md5 with
-  [XXH3](https://xxhash.com/) which is much faster. This is a soft breaking
+- Improve performance of content checksumming on `sources:` by replacing md5
+  with [XXH3](https://xxhash.com/) which is much faster. This is a soft breaking
   change because checksums will be invalidated when upgrading to this release
   (#1325 by @ReillyBrogan).
 
@@ -341,7 +386,7 @@
 - Deprecated `version: 2` schema. This will be removed in the next major release
   (#1197, #1198, #1199 by @pd93).
 - Added a new `prompt:` prop to set a warning prompt to be shown before running
-  a potential dangurous task (#100, #1163 by @MaxCheetham,
+  a potential dangerous task (#100, #1163 by @MaxCheetham,
   [Documentation](https://taskfile.dev/usage/#warning-prompts)).
 - Added support for single command task syntax. With this change, it's now
   possible to declare just `cmd:` in a task, avoiding the more complex
@@ -356,7 +401,7 @@
   percentage (#1173 by @misitebao).
 - Starting on this release, official binaries for FreeBSD will be available to
   download (#1068 by @andreynering).
-- Fix some errors being unintendedly supressed (#1134 by @clintmod).
+- Fix some errors being unintendedly suppressed (#1134 by @clintmod).
 - Fix a nil pointer error when `version` is omitted from a Taskfile (#1148,
   #1149 by @pd93).
 - Fix duplicate error message when a task does not exists (#1141, #1144 by
@@ -429,8 +474,8 @@ it a go and let us know what you think via a
 - Fixed a bug where tasks were sometimes incorrectly marked as internal (#1007
   by @pd93).
 - Update to Go 1.20 (bump minimum version to 1.19) (#1010 by @pd93)
-- Added environment variable `FORCE_COLOR` support to force color output.
-  Usefull for environments without TTY (#1003 by @automation-stack)
+- Added environment variable `FORCE_COLOR` support to force color output. Useful
+  for environments without TTY (#1003 by @automation-stack)
 
 ## v3.20.0 - 2023-01-14
 
@@ -785,7 +830,7 @@ it a go and let us know what you think via a
 
 - Fix error code for the `--help` flag (#300, #330).
 - Print version to stdout instead of stderr (#299, #329).
-- Supress `context` errors when using the `--watch` flag (#313, #317).
+- Suppress `context` errors when using the `--watch` flag (#313, #317).
 - Support templating on description (#276, #283).
 
 ## v2.8.0 - 2019-12-07
@@ -794,7 +839,7 @@ it a go and let us know what you think via a
   parallel (#266).
 - Fixed bug where calling the `task` CLI only informing global vars would not
   execute the `default` task.
-- Add hability to silent all tasks by adding `silent: true` a the root of the
+- Add ability to silent all tasks by adding `silent: true` a the root of the
   Taskfile.
 
 ## v2.7.1 - 2019-11-10
@@ -936,7 +981,7 @@ document, since it describes in depth what changed for this version.
 ## v1.4.3 - 2017-09-07
 
 - Allow assigning variables to tasks at run time via CLI (#33)
-- Added suport for multiline variables from sh (#64)
+- Added support for multiline variables from sh (#64)
 - Fixes env: remove square braces and evaluate shell (#62)
 - Watch: change watch library and few fixes and improvements
 - When use watching, cancel and restart long running process on file change (#59
@@ -996,7 +1041,7 @@ document, since it describes in depth what changed for this version.
 - More tests and Travis integration
 - Watch a task (experimental)
 - Possibility to call another task
-- Fix "=" not being reconized in variables/environment variables
+- Fix "=" not being recognized in variables/environment variables
 - Tasks can now have a description, and help will print them (#10)
 - Task dependencies now run concurrently
 - Support for a default task (#16)

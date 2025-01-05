@@ -1,37 +1,114 @@
 package ast
 
 import (
+	"sync"
+
+	"github.com/elliotchance/orderedmap/v2"
 	"gopkg.in/yaml.v3"
 
 	"github.com/go-task/task/v3/errors"
-	omap "github.com/go-task/task/v3/internal/omap"
+	"github.com/go-task/task/v3/internal/deepcopy"
 )
 
-// Include represents information about included taskfiles
-type Include struct {
-	Namespace      string
-	Taskfile       string
-	Dir            string
-	Optional       bool
-	Internal       bool
-	Aliases        []string
-	AdvancedImport bool
-	Vars           *Vars
-	Flatten        bool
+type (
+	// Include represents information about included taskfiles
+	Include struct {
+		Namespace      string
+		Taskfile       string
+		Dir            string
+		Optional       bool
+		Internal       bool
+		Aliases        []string
+		Excludes       []string
+		AdvancedImport bool
+		Vars           *Vars
+		Flatten        bool
+	}
+	// Includes is an ordered map of namespaces to includes.
+	Includes struct {
+		om    *orderedmap.OrderedMap[string, *Include]
+		mutex sync.RWMutex
+	}
+	// An IncludeElement is a key-value pair that is used for initializing an
+	// Includes structure.
+	IncludeElement orderedmap.Element[string, *Include]
+)
+
+// NewIncludes creates a new instance of Includes and initializes it with the
+// provided set of elements, if any. The elements are added in the order they
+// are passed.
+func NewIncludes(els ...*IncludeElement) *Includes {
+	includes := &Includes{
+		om: orderedmap.NewOrderedMap[string, *Include](),
+	}
+	for _, el := range els {
+		includes.Set(el.Key, el.Value)
+	}
+	return includes
 }
 
-// Includes represents information about included tasksfiles
-type Includes struct {
-	omap.OrderedMap[string, *Include]
+// Len returns the number of includes in the Includes map.
+func (includes *Includes) Len() int {
+	if includes == nil || includes.om == nil {
+		return 0
+	}
+	defer includes.mutex.RUnlock()
+	includes.mutex.RLock()
+	return includes.om.Len()
+}
+
+// Get returns the value the the include with the provided key and a boolean
+// that indicates if the value was found or not. If the value is not found, the
+// returned include is a zero value and the bool is false.
+func (includes *Includes) Get(key string) (*Include, bool) {
+	if includes == nil || includes.om == nil {
+		return &Include{}, false
+	}
+	defer includes.mutex.RUnlock()
+	includes.mutex.RLock()
+	return includes.om.Get(key)
+}
+
+// Set sets the value of the include with the provided key to the provided
+// value. If the include already exists, its value is updated. If the include
+// does not exist, it is created.
+func (includes *Includes) Set(key string, value *Include) bool {
+	if includes == nil {
+		includes = NewIncludes()
+	}
+	if includes.om == nil {
+		includes.om = orderedmap.NewOrderedMap[string, *Include]()
+	}
+	defer includes.mutex.Unlock()
+	includes.mutex.Lock()
+	return includes.om.Set(key, value)
+}
+
+// Range calls the provided function for each include in the map. The function
+// receives the include's key and value as arguments. If the function returns
+// an error, the iteration stops and the error is returned.
+func (includes *Includes) Range(f func(k string, v *Include) error) error {
+	if includes == nil || includes.om == nil {
+		return nil
+	}
+	for pair := includes.om.Front(); pair != nil; pair = pair.Next() {
+		if err := f(pair.Key, pair.Value); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // UnmarshalYAML implements the yaml.Unmarshaler interface.
 func (includes *Includes) UnmarshalYAML(node *yaml.Node) error {
+	if includes == nil || includes.om == nil {
+		*includes = *NewIncludes()
+	}
 	switch node.Kind {
 	case yaml.MappingNode:
-		// NOTE(@andreynering): on this style of custom unmarshaling,
-		// even number contains the keys, while odd numbers contains
-		// the values.
+		// NOTE: orderedmap does not have an unmarshaler, so we have to decode
+		// the map manually. We increment over 2 values at a time and assign
+		// them as a key-value pair.
 		for i := 0; i < len(node.Content); i += 2 {
 			keyNode := node.Content[i]
 			valueNode := node.Content[i+1]
@@ -41,33 +118,22 @@ func (includes *Includes) UnmarshalYAML(node *yaml.Node) error {
 				return errors.NewTaskfileDecodeError(nil, valueNode).WithMessage("value of the include cannot be null")
 			}
 
+			// Decode the value node into an Include struct
 			var v Include
 			if err := valueNode.Decode(&v); err != nil {
 				return errors.NewTaskfileDecodeError(err, node)
 			}
+
+			// Set the include namespace
 			v.Namespace = keyNode.Value
+
+			// Add the include to the ordered map
 			includes.Set(keyNode.Value, &v)
 		}
 		return nil
 	}
 
 	return errors.NewTaskfileDecodeError(nil, node).WithTypeMessage("includes")
-}
-
-// Len returns the length of the map
-func (includes *Includes) Len() int {
-	if includes == nil {
-		return 0
-	}
-	return includes.OrderedMap.Len()
-}
-
-// Wrapper around OrderedMap.Set to ensure we don't get nil pointer errors
-func (includes *Includes) Range(f func(k string, v *Include) error) error {
-	if includes == nil {
-		return nil
-	}
-	return includes.OrderedMap.Range(f)
 }
 
 func (include *Include) UnmarshalYAML(node *yaml.Node) error {
@@ -91,6 +157,7 @@ func (include *Include) UnmarshalYAML(node *yaml.Node) error {
 			Internal bool
 			Flatten  bool
 			Aliases  []string
+			Excludes []string
 			Vars     *Vars
 		}
 		if err := node.Decode(&includedTaskfile); err != nil {
@@ -107,6 +174,7 @@ func (include *Include) UnmarshalYAML(node *yaml.Node) error {
 		include.Optional = includedTaskfile.Optional
 		include.Internal = includedTaskfile.Internal
 		include.Aliases = includedTaskfile.Aliases
+		include.Excludes = includedTaskfile.Excludes
 		include.AdvancedImport = true
 		include.Vars = includedTaskfile.Vars
 		include.Flatten = includedTaskfile.Flatten
@@ -128,6 +196,7 @@ func (include *Include) DeepCopy() *Include {
 		Dir:            include.Dir,
 		Optional:       include.Optional,
 		Internal:       include.Internal,
+		Excludes:       deepcopy.Slice(include.Excludes),
 		AdvancedImport: include.AdvancedImport,
 		Vars:           include.Vars.DeepCopy(),
 		Flatten:        include.Flatten,

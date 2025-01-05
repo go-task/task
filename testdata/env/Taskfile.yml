@@ -15,8 +15,9 @@ tasks:
     cmds:
       - task: local
       - task: global
-      - task: not-overriden
+      - task: not-overridden
       - task: multiple_type
+      - task: dynamic
 
   local:
     vars:
@@ -31,7 +32,7 @@ tasks:
 
   global:
     env:
-      BAR: overriden
+      BAR: overridden
     cmds:
       - echo "FOO='$FOO' BAR='$BAR' BAZ='$BAZ'" > global.txt
 
@@ -43,10 +44,18 @@ tasks:
     cmds:
       - echo "FOO='$FOO' BAR='$BAR' BAZ='$BAZ'" > multiple_type.txt
 
-  not-overriden:
+  not-overridden:
     cmds:
-      - echo "QUX='$QUX'" > not-overriden.txt
+      - echo "QUX='$QUX'" > not-overridden.txt
 
-  overriden:
+  overridden:
     cmds:
-      - echo "QUX='$QUX'" > overriden.txt
+      - echo "QUX='$QUX'" > overridden.txt
+
+  dynamic:
+    silent: true
+    vars:
+      DYNAMIC_FOO:
+        sh: echo $FOO
+    cmds:
+      - echo "{{ .DYNAMIC_FOO }}" > dynamic.txt

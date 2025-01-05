@@ -176,6 +176,10 @@ func (e *Executor) RunTask(ctx context.Context, call *ast.Call) error {
 		return nil
 	}
 
+	if err := e.areTaskRequiredVarsSet(t); err != nil {
+		return err
+	}
+
 	t, err = e.CompiledTask(call)
 	if err != nil {
 		return err
@@ -199,10 +203,6 @@ func (e *Executor) RunTask(ctx context.Context, call *ast.Call) error {
 		skipFingerprinting := e.ForceAll || (!call.Indirect && e.Force)
 		if !skipFingerprinting {
 			if err := ctx.Err(); err != nil {
-				return err
-			}
-
-			if err := e.areTaskRequiredVarsSet(t, call); err != nil {
 				return err
 			}
 
@@ -235,13 +235,15 @@ func (e *Executor) RunTask(ctx context.Context, call *ast.Call) error {
 			}
 		}
 
-		if t.Prompt != "" && !e.Dry {
-			if err := e.Logger.Prompt(logger.Yellow, t.Prompt, "n", "y", "yes"); errors.Is(err, logger.ErrNoTerminal) {
-				return &errors.TaskCancelledNoTerminalError{TaskName: call.Task}
-			} else if errors.Is(err, logger.ErrPromptCancelled) {
-				return &errors.TaskCancelledByUserError{TaskName: call.Task}
-			} else if err != nil {
-				return err
+		for _, p := range t.Prompt {
+			if p != "" && !e.Dry {
+				if err := e.Logger.Prompt(logger.Yellow, p, "n", "y", "yes"); errors.Is(err, logger.ErrNoTerminal) {
+					return &errors.TaskCancelledNoTerminalError{TaskName: call.Task}
+				} else if errors.Is(err, logger.ErrPromptCancelled) {
+					return &errors.TaskCancelledByUserError{TaskName: call.Task}
+				} else if err != nil {
+					return err
+				}
 			}
 		}
 
@@ -449,7 +451,7 @@ func (e *Executor) GetTask(call *ast.Call) (*ast.Task, error) {
 	case 0: // Carry on
 	case 1:
 		if call.Vars == nil {
-			call.Vars = &ast.Vars{}
+			call.Vars = ast.NewVars()
 		}
 		call.Vars.Set("MATCH", ast.Var{Value: matchingTasks[0].Wildcards})
 		return matchingTasks[0].Task, nil
