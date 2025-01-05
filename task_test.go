@@ -456,10 +456,10 @@ func TestStatus(t *testing.T) {
 	buff.Reset()
 }
 
-func TestPrecondition(t *testing.T) {
+func TestPreconditionLocal(t *testing.T) {
 	t.Parallel()
 
-	const dir = "testdata/precondition"
+	const dir = "testdata/precondition/local"
 
 	var buff bytes.Buffer
 	e := &task.Executor{
@@ -497,6 +497,48 @@ func TestPrecondition(t *testing.T) {
 		t.Errorf("Wrong output message: %s", buff.String())
 	}
 	buff.Reset()
+}
+
+func TestPreconditionGlobal(t *testing.T) {
+	t.Parallel()
+
+	var buff bytes.Buffer
+	e := &task.Executor{
+		Dir:    "testdata/precondition/global",
+		Stdout: &buff,
+		Stderr: &buff,
+	}
+
+	require.NoError(t, e.Setup())
+
+	// A global precondition that was not met
+	require.Error(t, e.Run(context.Background(), &ast.Call{Task: "impossible"}))
+
+	if buff.String() != "task: 1 != 0 obviously!\n" {
+		t.Errorf("Wrong output message: %s", buff.String())
+	}
+	buff.Reset()
+
+	e = &task.Executor{
+		Dir:    "testdata/precondition/global/with_local",
+		Stdout: &buff,
+		Stderr: &buff,
+	}
+
+	require.NoError(t, e.Setup())
+
+	// A global precondition that was met
+	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "foo"}))
+	if buff.String() != "" {
+		t.Errorf("Got Output when none was expected: %s", buff.String())
+	}
+
+	// A local precondition that was not met
+	require.Error(t, e.Run(context.Background(), &ast.Call{Task: "impossible"}))
+
+	if buff.String() != "task: 1 != 0 obviously!\n" {
+		t.Errorf("Wrong output message: %s", buff.String())
+	}
 }
 
 func TestGenerates(t *testing.T) {
