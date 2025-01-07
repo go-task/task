@@ -40,6 +40,20 @@ func (p *Preconditions) DeepCopy() *Preconditions {
 	}
 }
 
+func (p *Preconditions) Merge(other *Preconditions) {
+	if p == nil || p.Preconditions == nil || other == nil {
+		return
+	}
+
+	p.mutex.Lock()
+	defer p.mutex.Unlock()
+
+	other.mutex.RLock()
+	defer other.mutex.RUnlock()
+
+	p.Preconditions = append(p.Preconditions, deepcopy.Slice(other.Preconditions)...)
+}
+
 func (p *Precondition) DeepCopy() *Precondition {
 	if p == nil {
 		return nil
