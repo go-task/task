@@ -18,7 +18,7 @@ require (
 	github.com/joho/godotenv v1.5.1
 	github.com/mattn/go-zglob v0.0.6
 	github.com/mitchellh/hashstructure/v2 v2.0.2
-	github.com/otiai10/copy v1.14.0
+	github.com/otiai10/copy v1.14.1
 	github.com/radovskyb/watcher v1.0.7
 	github.com/sajari/fuzzy v1.0.0
 	github.com/spf13/pflag v1.0.5
@@ -46,6 +46,7 @@ require (
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/muesli/cancelreader v0.2.2 // indirect
+	github.com/otiai10/mint v1.6.3 // indirect
 	github.com/pjbgf/sha1cd v0.3.0 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/sergi/go-diff v1.3.2-0.20230802210424-5b0b94c5c0d3 // indirect
