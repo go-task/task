@@ -341,43 +341,43 @@ It means that the included Taskfile tasks will be available without the namespac
 
 
 <Tabs defaultValue="1"
-			values={[
-				{label: 'Taskfile.yml', value: '1'},
-				{label: 'Included.yml', value: '2'}
-			]}>
+      values={[
+        {label: 'Taskfile.yml', value: '1'},
+        {label: 'Included.yml', value: '2'}
+      ]}>
 
-	<TabItem value="1">
+  <TabItem value="1">
 
-		```yaml
-		version: '3'
+    ```yaml
+    version: '3'
 
-		includes:
-		  lib:
-		    taskfile: ./Included.yml
-		    flatten: true
+    includes:
+      lib:
+        taskfile: ./Included.yml
+        flatten: true
 
-		tasks:
-		  greet:
-		    cmds:
-		      - echo "Greet"
-		      - task: foo
-		```
-
-
-	</TabItem>
-	<TabItem value="2">
-
-		```yaml
-		version: '3'
-
-		tasks:
-		  foo:
-		    cmds:
-		      - echo "Foo"
-		```
+    tasks:
+      greet:
+        cmds:
+          - echo "Greet"
+          - task: foo
+    ```
 
 
-	</TabItem></Tabs>
+  </TabItem>
+  <TabItem value="2">
+
+    ```yaml
+    version: '3'
+
+    tasks:
+      foo:
+        cmds:
+          - echo "Foo"
+    ```
+
+
+  </TabItem></Tabs>
 
 
 If you run `task -a` it will print :
@@ -393,62 +393,102 @@ You can run `task foo` directly without the namespace.
 You can also reference the task in other tasks without the namespace. So if you run `task greet` it will run `greet` and `foo` tasks and the output will be :
 
 ```text
+Greet
+Foo
 ```
 
 If multiple tasks have the same name, an error will be thrown:
 
 <Tabs defaultValue="1"
-			values={[
-				{label: 'Taskfile.yml', value: '1'},
-				{label: 'Included.yml', value: '2'}
-			]}>
+      values={[
+        {label: 'Taskfile.yml', value: '1'},
+        {label: 'Included.yml', value: '2'}
+      ]}>
 
-	<TabItem value="1">
+  <TabItem value="1">
 
     ```yaml
     version: '3'
     includes:
       lib:
-		    taskfile: ./Included.yml
-		    flatten: true
+        taskfile: ./Included.yml
+        flatten: true
 
-		tasks:
-		  greet:
-		    cmds:
-		      - echo "Greet"
-		      - task: foo
-		```
-
-
-	</TabItem>
-	<TabItem value="2">
-
-		```yaml
-		version: '3'
-
-		tasks:
-		  greet:
-		    cmds:
-		       - echo "Foo"
-		```
+    tasks:
+      greet:
+        cmds:
+          - echo "Greet"
+          - task: foo
+    ```
 
 
-	</TabItem></Tabs>
+  </TabItem>
+  <TabItem value="2">
+
+    ```yaml
+    version: '3'
+
+    tasks:
+      greet:
+        cmds:
+          - echo "Foo"
+    ```
+
+
+  </TabItem></Tabs>
 
 If you run `task -a` it will print:
 ```text
 task: Found multiple tasks (greet) included by "lib"
-
 ```
 
+If you the included Taskfile has a task with the same name as a task in the main Taskfile,
+you may want to exclude it from the flattened tasks.
+
+You can do this by using the [`excludes` option](#exclude-tasks-from-being-included).
+
+### Exclude tasks from being included
+
+You can exclude tasks from being included by using the `excludes` option. This option takes the list of tasks to be excluded from this include.
+
+<Tabs defaultValue="1"
+      values={[
+        {label: 'Taskfile.yml', value: '1'},
+        {label: 'Included.yml', value: '2'}
+      ]}>
+
+  <TabItem value="1">
+    ```yaml
+    version: '3'
+      includes:
+        included:
+          taskfile: ./Included.yml
+          excludes: [foo]
+    ```
 
 
+  </TabItem>
+  <TabItem value="2">
 
+    ```yaml
+    version: '3'
+
+    tasks:
+      foo: echo "Foo"
+      bar: echo "Bar"
+    ```
+
+
+  </TabItem></Tabs>
+
+`task included:foo` will throw an error because the `foo` task is excluded but `task included:bar` will work and display `Bar`.
+
+It's compatible with the `flatten` option.
 
 ### Vars of included Taskfiles
 
 You can also specify variables when including a Taskfile. This may be useful for
-having reusable Taskfile that can be tweaked or even included more than once:
+having a reusable Taskfile that can be tweaked or even included more than once:
 
 ```yaml
 version: '3'
@@ -847,7 +887,7 @@ change even if the source has not.
 
 :::tip
 
-The method `none` skips any validation and always run the task.
+The method `none` skips any validation and always runs the task.
 
 :::
 
@@ -886,7 +926,7 @@ checksum source and timestamps require either access to the artifact or for an
 out-of-band refresh of the `.checksum` fingerprint file.
 
 Two special variables `{{.CHECKSUM}}` and `{{.TIMESTAMP}}` are available for
-interpolation within `status` commands, depending on the method assigned to
+interpolation within `cmds` and `status` commands, depending on the method assigned to
 fingerprint the sources. Only `source` globs are fingerprinted.
 
 Note that the `{{.TIMESTAMP}}` variable is a "live" Go `time.Time` struct, and
@@ -1028,7 +1068,7 @@ some tasks could have dangerous side effects if run with un-set variables.
 
 Using `requires` you specify an array of strings in the `vars` sub-section under
 `requires`, these strings are variable names which are checked prior to running
-the task. If any variables are un-set the the task will error and not run.
+the task. If any variables are un-set then the task will error and not run.
 
 Environmental variables are also checked.
 

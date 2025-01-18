@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v3.41.0 - 2025-01-18
 
 - Fixed an issue where dynamic variables were not properly logged in verbose
   mode (#1920, #1921 by @mgbowman).

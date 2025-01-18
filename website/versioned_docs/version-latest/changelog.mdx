@@ -5,12 +5,40 @@ sidebar_position: 14
 
 # Changelog
 
+## v3.41.0 - 2025-01-18
+
+- Fixed an issue where dynamic variables were not properly logged in verbose
+  mode (#1920, #1921 by @mgbowman).
+- Support `silent` for defer statements (#1877, #1879 by @danilobuerger).
+- Added an option to exclude some tasks from being included (#1859 by
+  @vmaerten).
+- Fixed an issue where a required variable was incorrectly handled in a template
+  function (#1950, #1962 by @vmaerten).
+- Expose a new `TASK_DIR` special variable, which will contain the absolute path
+  of task directory. (#1959, #1961 by @vmaerten).
+- Fixed fatal bugs that caused concurrent map writes (#1605, #1972, #1974 by
+  @pd93, @GrahamDennis and @trim21).
+- Refactored internal ordered map implementation to use
+  [github.com/elliotchance/orderedmap](https://github.com/elliotchance/orderedmap)
+  (#1797 by @pd93).
+- Fixed a bug where variables defined at the task level were being ignored in
+  the `requires` section. (#1960, #1955, #1768 by @vmaerten and @mokeko)
+- The `CHECKSUM` and `TIMESTAMP` variables are now accessible within `cmds`
+  (#1872 by @niklasr22).
+- Updated [installation docs](https://taskfile.dev/installation) and added pip
+  installation method (#935, #1989 by @pd93).
+- Fixed a bug where dynamic variables could not access environment variables
+  (#630, #1869 by @rohm1 and @pd93).
+- Disable version check for use as an external library (#1938 by @leaanthony).
+
 ## v3.40.1 - 2024-12-06
 
-- Fixed a security issue in `git-urls` by switching to the maintained fork `chainguard-dev/git-urls` (#1917 by
-  @AlekSi).
-- Added missing `platforms` property to `cmds` that use `for` (#1915 by @dkarter).
-- Added misspell linter to check for misspelled English words (#1883 by @christiandins).
+- Fixed a security issue in `git-urls` by switching to the maintained fork
+  `chainguard-dev/git-urls` (#1917 by @AlekSi).
+- Added missing `platforms` property to `cmds` that use `for` (#1915 by
+  @dkarter).
+- Added misspell linter to check for misspelled English words (#1883 by
+  @christiandins).
 
 ## v3.40.0 - 2024-11-05
 
@@ -304,8 +332,8 @@ sidebar_position: 14
 - Added the
   [Remote Taskfiles experiment](https://taskfile.dev/experiments/remote-taskfiles)
   as a draft (#1152, #1317 by @pd93).
-- Improve performance of content checksumming on `sources:` by replacing md5 with
-  [XXH3](https://xxhash.com/) which is much faster. This is a soft breaking
+- Improve performance of content checksumming on `sources:` by replacing md5
+  with [XXH3](https://xxhash.com/) which is much faster. This is a soft breaking
   change because checksums will be invalidated when upgrading to this release
   (#1325 by @ReillyBrogan).
 
@@ -452,8 +480,8 @@ it a go and let us know what you think via a
 - Fixed a bug where tasks were sometimes incorrectly marked as internal (#1007
   by @pd93).
 - Update to Go 1.20 (bump minimum version to 1.19) (#1010 by @pd93)
-- Added environment variable `FORCE_COLOR` support to force color output.
-  Useful for environments without TTY (#1003 by @automation-stack)
+- Added environment variable `FORCE_COLOR` support to force color output. Useful
+  for environments without TTY (#1003 by @automation-stack)
 
 ## v3.20.0 - 2023-01-14
 

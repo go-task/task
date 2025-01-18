@@ -1,6 +1,6 @@
 ---
 slug: /reference/schema
-sidebar_position: 2
+sidebar_position: 3
 toc_min_heading_level: 2
 toc_max_heading_level: 5
 ---
@@ -140,7 +140,7 @@ tasks:
 | `silent`       | `bool`                             | `false`       | Skips some output for this command. Note that STDOUT and STDERR of the commands will still be redirected.                                                                                          |
 | `vars`         | [`map[string]Variable`](#variable) |               | Optional additional variables to be passed to the referenced task. Only relevant when setting `task` instead of `cmd`.                                                                             |
 | `ignore_error` | `bool`                             | `false`       | Continue execution if errors happen while executing the command.                                                                                                                                   |
-| `defer`        | `string`                           |               | Alternative to `cmd`, but schedules the command to be executed at the end of this task instead of immediately. This cannot be used together with `cmd`.                                            |
+| `defer`        | [`Defer`](#defer)                  |               | Alternative to `cmd`, but schedules the command or a task to be executed at the end of this task instead of immediately. This cannot be used together with `cmd`.                                  |
 | `platforms`    | `[]string`                         | All platforms | Specifies which platforms the command should be run on. [Valid GOOS and GOARCH values allowed](https://github.com/golang/go/blob/master/src/internal/syslist/syslist.go). Command will be skipped otherwise. |
 | `set`          | `[]string`                         |               | Specify options for the [`set` builtin](https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html).                                                                                  |
 | `shopt`        | `[]string`                         |               | Specify option for the [`shopt` builtin](https://www.gnu.org/software/bash/manual/html_node/The-Shopt-Builtin.html).                                                                               |
@@ -179,6 +179,17 @@ tasks:
 ```
 
 :::
+
+### Defer
+
+The `defer` parameter defines a shell command to run, or a task to trigger, at the end of the current task instead of immediately.
+If defined as a string this is a shell command, otherwise it is a map defining a task to call:
+
+| Attribute | Type                               | Default | Description                                                       |
+| --------- | ---------------------------------- | ------- | ----------------------------------------------------------------- |
+| `task`    | `string`                           |         | The deferred task to trigger.                                     |
+| `vars`    | [`map[string]Variable`](#variable) |         | Optional additional variables to be passed to the deferred task.  |
+| `silent`  | `bool`                             | `false` | Hides task name and command from output. The command's output will still be redirected to `STDOUT` and `STDERR`. |
 
 ### For
 
