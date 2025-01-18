@@ -24,6 +24,7 @@
   installation method (#935, #1989 by @pd93).
 - Fixed a bug where dynamic variables could not access environment variables
   (#630, #1869 by @rohm1 and @pd93).
+- Disable version check for use as an external library (#1938 by @leaanthony).
 
 ## v3.40.1 - 2024-12-06
 
