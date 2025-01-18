@@ -18,7 +18,7 @@ func (e *Executor) InterceptInterruptSignals() {
 	signal.Notify(ch, os.Interrupt, syscall.SIGTERM)
 
 	go func() {
-		for i := 0; i < maxInterruptSignals; i++ {
+		for i := range maxInterruptSignals {
 			sig := <-ch
 
 			if i+1 >= maxInterruptSignals {
