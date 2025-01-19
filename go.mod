@@ -1,6 +1,6 @@
 module github.com/go-task/task/v3
 
-go 1.22.0
+go 1.23.3
 
 require (
 	github.com/Ladicle/tabwriter v1.0.0
@@ -13,7 +13,7 @@ require (
 	github.com/fatih/color v1.18.0
 	github.com/go-git/go-billy/v5 v5.6.1
 	github.com/go-git/go-git/v5 v5.13.1
-	github.com/go-task/slim-sprig/v3 v3.0.0
+	github.com/go-sprout/sprout v1.0.0
 	github.com/go-task/template v0.1.0
 	github.com/joho/godotenv v1.5.1
 	github.com/mattn/go-zglob v0.0.6
@@ -25,13 +25,13 @@ require (
 	github.com/stretchr/testify v1.10.0
 	github.com/zeebo/xxh3 v1.0.2
 	golang.org/x/sync v0.10.0
-	golang.org/x/term v0.27.0
+	golang.org/x/term v0.28.0
 	gopkg.in/yaml.v3 v3.0.1
 	mvdan.cc/sh/v3 v3.10.0
 )
 
 require (
-	dario.cat/mergo v1.0.0 // indirect
+	dario.cat/mergo v1.0.1 // indirect
 	github.com/Microsoft/go-winio v0.6.1 // indirect
 	github.com/ProtonMail/go-crypto v1.1.3 // indirect
 	github.com/cloudflare/circl v1.3.7 // indirect
@@ -45,17 +45,21 @@ require (
 	github.com/klauspost/cpuid/v2 v2.2.7 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
+	github.com/mitchellh/copystructure v1.2.0 // indirect
+	github.com/mitchellh/reflectwalk v1.0.2 // indirect
 	github.com/muesli/cancelreader v0.2.2 // indirect
 	github.com/pjbgf/sha1cd v0.3.0 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/sergi/go-diff v1.3.2-0.20230802210424-5b0b94c5c0d3 // indirect
 	github.com/skeema/knownhosts v1.3.0 // indirect
+	github.com/spf13/cast v1.7.1 // indirect
 	github.com/stretchr/objx v0.5.2 // indirect
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
-	golang.org/x/crypto v0.31.0 // indirect
+	golang.org/x/crypto v0.32.0 // indirect
 	golang.org/x/mod v0.18.0 // indirect
 	golang.org/x/net v0.33.0 // indirect
-	golang.org/x/sys v0.28.0 // indirect
+	golang.org/x/sys v0.29.0 // indirect
+	golang.org/x/text v0.21.0 // indirect
 	golang.org/x/tools v0.22.0 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 )
