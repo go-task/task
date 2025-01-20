@@ -121,6 +121,6 @@ func (node *HTTPNode) ResolveDir(dir string) (string, error) {
 }
 
 func (node *HTTPNode) FilenameAndLastDir() (string, string) {
-	dir, filename := filepath.Split(node.URL.Path)
+	dir, filename := filepath.Split(node.entrypoint)
 	return filepath.Base(dir), filename
 }

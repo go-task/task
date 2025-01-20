@@ -1239,6 +1239,10 @@ func TestIncludesRemote(t *testing.T) {
 			firstRemote:  srv.URL + "/first/Taskfile.yml",
 			secondRemote: "./second/Taskfile.yml",
 		},
+		{
+			firstRemote:  srv.URL + "/first/",
+			secondRemote: srv.URL + "/first/second/",
+		},
 	}
 
 	tasks := []string{
