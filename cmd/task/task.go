@@ -77,7 +77,15 @@ func run() error {
 		if err != nil {
 			return err
 		}
-		if err := task.InitTaskfile(os.Stdout, wd); err != nil {
+
+		verbosity := uint8(1) // Print filename only
+		if flags.Silent {
+			verbosity = 0 // Print nothing
+		} else if flags.Verbose {
+			verbosity = 2 // Print file contents + filename
+		}
+
+		if err := task.InitTaskfile(os.Stdout, wd, verbosity); err != nil {
 			return err
 		}
 		return nil

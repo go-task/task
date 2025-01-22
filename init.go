@@ -25,8 +25,16 @@ tasks:
 
 const defaultTaskfileName = "Taskfile.yml"
 
-// InitTaskfile Taskfile creates a new Taskfile
-func InitTaskfile(w io.Writer, dir string) error {
+// InitTaskfile creates a new Taskfile
+//
+// verbosity specifies how much to print to the terminal:
+//
+// 0 = Don't print anything
+//
+// 1 = Print filename only
+//
+// 2 = Print file contents + filename
+func InitTaskfile(w io.Writer, dir string, verbosity uint8) error {
 	f := filepathext.SmartJoin(dir, defaultTaskfileName)
 
 	if _, err := os.Stat(f); err == nil {
@@ -36,6 +44,12 @@ func InitTaskfile(w io.Writer, dir string) error {
 	if err := os.WriteFile(f, []byte(defaultTaskfile), 0o644); err != nil {
 		return err
 	}
-	fmt.Fprintf(w, "%s created in the current directory\n", defaultTaskfile)
+
+	if verbosity > 0 {
+		if verbosity > 1 {
+			fmt.Fprint(w, defaultTaskfile)
+		}
+		fmt.Fprintf(w, "%s created in the current directory\n", defaultTaskfileName)
+	}
 	return nil
 }
