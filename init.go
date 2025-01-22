@@ -47,7 +47,7 @@ func InitTaskfile(w io.Writer, dir string, verbosity uint8) error {
 
 	if verbosity > 0 {
 		if verbosity > 1 {
-			fmt.Fprint(w, defaultTaskfile)
+			fmt.Fprintf(w, "%s\n", defaultTaskfile)
 		}
 		fmt.Fprintf(w, "%s created in the current directory\n", defaultTaskfileName)
 	}
