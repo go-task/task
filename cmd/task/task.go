@@ -145,7 +145,7 @@ func run() error {
 	if err != nil {
 		return err
 	}
-	if experiments.AnyVariables.Enabled {
+	if experiments.AnyVariables().Enabled {
 		logger.Warnf("The 'Any Variables' experiment flag is no longer required to use non-map variable types. If you wish to use map variables, please use 'TASK_X_MAP_VARIABLES' instead. See https://github.com/go-task/task/issues/1585\n")
 	}
 

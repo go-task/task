@@ -135,7 +135,7 @@ func TestEnv(t *testing.T) {
 	}
 	tt.Run(t)
 	t.Setenv("TASK_X_ENV_PRECEDENCE", "1")
-	experiments.EnvPrecedence = experiments.New("ENV_PRECEDENCE")
+	experiments.EnvPrecedence = experiments.NewGetter("ENV_PRECEDENCE")
 	ttt := fileContentTest{
 		Dir:       "testdata/env",
 		Target:    "overridden",
@@ -1220,7 +1220,8 @@ func TestIncludesMultiLevel(t *testing.T) {
 }
 
 func TestIncludesRemote(t *testing.T) {
-	enableExperimentForTest(t, &experiments.RemoteTaskfiles, "1")
+	exp := experiments.RemoteTaskfiles()
+	enableExperimentForTest(t, &exp, "1")
 
 	dir := "testdata/includes_remote"
 
@@ -1374,7 +1375,8 @@ func TestIncludesEmptyMain(t *testing.T) {
 }
 
 func TestIncludesHttp(t *testing.T) {
-	enableExperimentForTest(t, &experiments.RemoteTaskfiles, "1")
+	exp := experiments.RemoteTaskfiles()
+	enableExperimentForTest(t, &exp, "1")
 
 	dir, err := filepath.Abs("testdata/includes_http")
 	require.NoError(t, err)
