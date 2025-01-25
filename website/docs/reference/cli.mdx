@@ -16,9 +16,9 @@ task [--flags] [tasks...] [-- CLI_ARGS...]
 If `--` is given, all remaining arguments will be assigned to a special
 `CLI_ARGS` variable
 
-## Flags
-
 :::
+
+## Flags
 
 | Short | Flag                        | Type     | Default                                      | Description                                                                                                                                                                                  |
 | ----- | --------------------------- | -------- | -------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -45,10 +45,29 @@ If `--` is given, all remaining arguments will be assigned to a special
 | `-y`  | `--yes`                     | `bool`   | `false`                                      | Assume "yes" as answer to all prompts.                                                                                                                                                       |
 |       | `--status`                  | `bool`   | `false`                                      | Exits with non-zero exit code if any of the given tasks is not up-to-date.                                                                                                                   |
 |       | `--summary`                 | `bool`   | `false`                                      | Show summary about a task.                                                                                                                                                                   |
-| `-t`  | `--taskfile`                | `string` | `Taskfile.yml` or `Taskfile.yaml`            |                                                                                                                                                                                              |
+| `-t`  | `--taskfile`                | `string` | `Taskfile.yml`                               | Taskfile path to run or initialize.<br/>The first `*` found when initializing will be replaced by "Taskfile".<br/>Example: `*.yaml` -> `Taskfile.yaml`                                       |
 | `-v`  | `--verbose`                 | `bool`   | `false`                                      | Enables verbose mode.                                                                                                                                                                        |
 |       | `--version`                 | `bool`   | `false`                                      | Show Task version.                                                                                                                                                                           |
 | `-w`  | `--watch`                   | `bool`   | `false`                                      | Enables watch of the given task.
+
+## Default Filenames
+
+Here is a list of default Taskfile names that will be tried in order:
+
+- `Taskfile.yml`
+- `taskfile.yml`
+- `Taskfile.yaml`
+- `taskfile.yaml`
+- `Taskfile.dist.yml`
+- `taskfile.dist.yml`
+- `Taskfile.dist.yaml`
+- `taskfile.dist.yaml`
+
+:::note
+
+You can use the `--taskfile` flag to run files of any name.
+
+:::
 
 ## Exit Codes
 
