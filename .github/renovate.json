@@ -3,7 +3,8 @@
   "extends": [
     "config:recommended",
     "group:allNonMajor",
-    "schedule:monthly"
+    "schedule:weekly",
+    ":semanticCommitTypeAll(chore)"
   ],
   "mode": "full",
   "reviewers": ["team:developer"],
