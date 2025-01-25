@@ -16,6 +16,8 @@ import (
 	"github.com/go-task/task/v3/internal/sysinfo"
 )
 
+const DefaultTaskInitFilename = "Taskfile.yml"
+
 var (
 	defaultTaskfiles = []string{
 		"Taskfile.yml",

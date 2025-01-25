@@ -13,6 +13,7 @@ import (
 	"github.com/go-task/task/v3/args"
 	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/experiments"
+	"github.com/go-task/task/v3/internal/filepathext"
 	"github.com/go-task/task/v3/internal/flags"
 	"github.com/go-task/task/v3/internal/logger"
 	"github.com/go-task/task/v3/internal/sort"
@@ -77,7 +78,13 @@ func run() error {
 		if err != nil {
 			return err
 		}
-		if err := task.InitTaskfile(os.Stdout, wd); err != nil {
+		name := taskfile.DefaultTaskInitFilename
+		if len(flags.Entrypoint) > 0 {
+			// Replace `*` with `Taskfile` so `*.yaml` results in `Taskfile.yaml`
+			name = strings.Replace(flags.Entrypoint, "*", "Taskfile", 1)
+		}
+		path := filepathext.SmartJoin(wd, name)
+		if err := task.InitTaskfile(os.Stdout, path); err != nil {
 			return err
 		}
 		return nil
