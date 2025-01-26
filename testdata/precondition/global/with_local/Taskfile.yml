@@ -1,0 +1,12 @@
+version: '3'
+
+preconditions:
+  - test -f foo.txt
+
+tasks:
+  foo:
+
+  impossible:
+    preconditions:
+      - sh: "[ 1 = 0 ]"
+        msg: "1 != 0 obviously!"

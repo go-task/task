@@ -1,0 +1,9 @@
+version: '3'
+
+preconditions:
+  - sh: "[ 1 = 0 ]"
+    msg: "1 != 0 obviously!"
+
+tasks:
+  impossible:
+    cmd: echo "won't run"
