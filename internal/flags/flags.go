@@ -115,7 +115,7 @@ func init() {
 	pflag.BoolVar(&Experiments, "experiments", false, "Lists all the available experiments and whether or not they are enabled.")
 
 	// Gentle force experiment will override the force flag and add a new force-all flag
-	if experiments.GentleForce.Enabled {
+	if experiments.GentleForce().Enabled {
 		pflag.BoolVarP(&Force, "force", "f", false, "Forces execution of the directly called task.")
 		pflag.BoolVar(&ForceAll, "force-all", false, "Forces execution of the called task and all its dependant tasks.")
 	} else {
@@ -123,7 +123,7 @@ func init() {
 	}
 
 	// Remote Taskfiles experiment will adds the "download" and "offline" flags
-	if experiments.RemoteTaskfiles.Enabled {
+	if experiments.RemoteTaskfiles().Enabled {
 		pflag.BoolVar(&Download, "download", false, "Downloads a cached version of a remote Taskfile.")
 		pflag.BoolVar(&Offline, "offline", offline, "Forces Task to only use local or cached Taskfiles.")
 		pflag.DurationVar(&Timeout, "timeout", time.Second*10, "Timeout for downloading remote Taskfiles.")
