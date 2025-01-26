@@ -7,6 +7,7 @@ import (
 
 	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/filepathext"
+	"github.com/go-task/task/v3/internal/logger"
 )
 
 const defaultTaskfile = `# https://taskfile.dev
@@ -34,7 +35,7 @@ const defaultTaskfileName = "Taskfile.yml"
 // 1 = Print filename only
 //
 // 2 = Print file contents + filename
-func InitTaskfile(w io.Writer, dir string, verbosity uint8) error {
+func InitTaskfile(w io.Writer, dir string, verbosity uint8, l *logger.Logger) error {
 	f := filepathext.SmartJoin(dir, defaultTaskfileName)
 
 	if _, err := os.Stat(f); err == nil {
@@ -49,7 +50,7 @@ func InitTaskfile(w io.Writer, dir string, verbosity uint8) error {
 		if verbosity > 1 {
 			fmt.Fprintf(w, "%s\n", defaultTaskfile)
 		}
-		fmt.Fprintf(w, "%s created in the current directory\n", defaultTaskfileName)
+		l.Outf(logger.Green, "%s created in the current directory\n", defaultTaskfileName)
 	}
 	return nil
 }
