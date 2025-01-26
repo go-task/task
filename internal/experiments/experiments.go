@@ -6,7 +6,10 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
+	"strconv"
 	"strings"
+
+	"gopkg.in/yaml.v3"
 
 	"github.com/Ladicle/tabwriter"
 	"github.com/joho/godotenv"
@@ -17,10 +20,19 @@ import (
 
 const envPrefix = "TASK_X_"
 
+var defaultConfigFilenames = []string{
+	".taskrc.yml",
+	".taskrc.yaml",
+}
+
+type experimentConfigFile struct {
+	Experiments map[string]int `yaml:"experiments"`
+}
+
 type Experiment struct {
 	Name    string
 	Enabled bool
-	Value   string
+	Value   int
 }
 
 // A list of experiments.
@@ -32,20 +44,29 @@ var (
 	EnvPrecedence   Experiment
 )
 
+var experimentConfig experimentConfigFile
+
 func init() {
 	readDotEnv()
+	experimentConfig = readConfig()
 	GentleForce = New("GENTLE_FORCE")
 	RemoteTaskfiles = New("REMOTE_TASKFILES")
-	AnyVariables = New("ANY_VARIABLES", "1", "2")
-	MapVariables = New("MAP_VARIABLES", "1", "2")
+	AnyVariables = New("ANY_VARIABLES", 1, 2)
+	MapVariables = New("MAP_VARIABLES", 1, 2)
 	EnvPrecedence = New("ENV_PRECEDENCE")
 }
 
-func New(xName string, enabledValues ...string) Experiment {
+func New(xName string, enabledValues ...int) Experiment {
 	if len(enabledValues) == 0 {
-		enabledValues = []string{"1"}
+		enabledValues = []int{1}
 	}
-	value := getEnv(xName)
+
+	value := experimentConfig.Experiments[xName]
+
+	if value == 0 {
+		value, _ = strconv.Atoi(getEnv(xName))
+	}
+
 	return Experiment{
 		Name:    xName,
 		Enabled: slices.Contains(enabledValues, value),
@@ -55,7 +76,7 @@ func New(xName string, enabledValues ...string) Experiment {
 
 func (x Experiment) String() string {
 	if x.Enabled {
-		return fmt.Sprintf("on (%s)", x.Value)
+		return fmt.Sprintf("on (%d)", x.Value)
 	}
 	return "off"
 }
@@ -65,7 +86,7 @@ func getEnv(xName string) string {
 	return os.Getenv(envName)
 }
 
-func getEnvFilePath() string {
+func getFilePath(filename string) string {
 	// Parse the CLI flags again to get the directory/taskfile being run
 	// We use a flagset here so that we can parse a subset of flags without exiting on error.
 	var dir, taskfile string
@@ -76,24 +97,48 @@ func getEnvFilePath() string {
 	_ = fs.Parse(os.Args[1:])
 	// If the directory is set, find a .env file in that directory.
 	if dir != "" {
-		return filepath.Join(dir, ".env")
+		return filepath.Join(dir, filename)
 	}
 	// If the taskfile is set, find a .env file in the directory containing the Taskfile.
 	if taskfile != "" {
-		return filepath.Join(filepath.Dir(taskfile), ".env")
+		return filepath.Join(filepath.Dir(taskfile), filename)
 	}
 	// Otherwise just use the current working directory.
-	return ".env"
+	return filename
 }
 
 func readDotEnv() {
-	env, _ := godotenv.Read(getEnvFilePath())
+	env, _ := godotenv.Read(getFilePath(".env"))
 	// If the env var is an experiment, set it.
 	for key, value := range env {
 		if strings.HasPrefix(key, envPrefix) {
 			os.Setenv(key, value)
 		}
 	}
+}
+
+func readConfig() experimentConfigFile {
+	var cfg experimentConfigFile
+
+	var content []byte
+	var err error
+	for _, filename := range defaultConfigFilenames {
+		path := getFilePath(filename)
+		content, err = os.ReadFile(path)
+		if err == nil {
+			break
+		}
+	}
+
+	if err != nil {
+		return experimentConfigFile{}
+	}
+
+	if err := yaml.Unmarshal(content, &cfg); err != nil {
+		return experimentConfigFile{}
+	}
+
+	return cfg
 }
 
 func printExperiment(w io.Writer, l *logger.Logger, x Experiment) {
