@@ -7,43 +7,19 @@
     ":semanticCommitTypeAll(chore)"
   ],
   "mode": "full",
-  "reviewers": ["team:developer"],
+  "addLabels":["area: dependencies"],
   "packageRules": [
     {
       "matchManagers": ["github-actions"],
-      "groupName": "Github Action",
-      "labels": ["area: github actions", "area: dependencies"],
-      "matchPackageNames": [
-        "*"
-      ],
-      "matchUpdateTypes": [
-        "minor",
-        "patch"
-      ]
+      "addLabels": ["area: github actions"]
     },
     {
-      "matchManagers": ["npm", "nvm"],
-      "groupName": "Website",
-      "labels": ["lang: javascript", "area: dependencies"],
-      "matchPackageNames": [
-        "*"
-      ],
-      "matchUpdateTypes": [
-        "minor",
-        "patch"
-      ]
+      "matchCategories": ["js", "node"],
+      "addLabels": ["lang: javascript"]
     },
     {
-      "matchManagers": ["gomod"],
-      "groupName": "golang",
-      "labels": ["lang: go", "area: dependencies"],
-      "matchPackageNames": [
-        "*"
-      ],
-      "matchUpdateTypes": [
-        "minor",
-        "patch"
-      ]
+      "matchCategories": ["golang"],
+      "addLabels": ["lang: go"]
     }
   ]
 }
