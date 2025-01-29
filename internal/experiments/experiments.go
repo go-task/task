@@ -23,22 +23,30 @@ type Experiment struct {
 	Value   string
 }
 
+type ExperimentGetter func() Experiment
+
 // A list of experiments.
 var (
-	GentleForce     Experiment
-	RemoteTaskfiles Experiment
-	AnyVariables    Experiment
-	MapVariables    Experiment
-	EnvPrecedence   Experiment
+	GentleForce     ExperimentGetter
+	RemoteTaskfiles ExperimentGetter
+	AnyVariables    ExperimentGetter
+	MapVariables    ExperimentGetter
+	EnvPrecedence   ExperimentGetter
 )
 
 func init() {
 	readDotEnv()
-	GentleForce = New("GENTLE_FORCE")
-	RemoteTaskfiles = New("REMOTE_TASKFILES")
-	AnyVariables = New("ANY_VARIABLES", "1", "2")
-	MapVariables = New("MAP_VARIABLES", "1", "2")
-	EnvPrecedence = New("ENV_PRECEDENCE")
+	GentleForce = NewGetter("GENTLE_FORCE")
+	RemoteTaskfiles = NewGetter("REMOTE_TASKFILES")
+	AnyVariables = NewGetter("ANY_VARIABLES", "1", "2")
+	MapVariables = NewGetter("MAP_VARIABLES", "1", "2")
+	EnvPrecedence = NewGetter("ENV_PRECEDENCE")
+}
+
+func NewGetter(xName string, enabledValues ...string) ExperimentGetter {
+	return func() Experiment {
+		return New(xName, enabledValues...)
+	}
 }
 
 func New(xName string, enabledValues ...string) Experiment {
@@ -104,9 +112,9 @@ func printExperiment(w io.Writer, l *logger.Logger, x Experiment) {
 
 func List(l *logger.Logger) error {
 	w := tabwriter.NewWriter(os.Stdout, 0, 8, 0, ' ', 0)
-	printExperiment(w, l, GentleForce)
-	printExperiment(w, l, RemoteTaskfiles)
-	printExperiment(w, l, MapVariables)
-	printExperiment(w, l, EnvPrecedence)
+	printExperiment(w, l, GentleForce())
+	printExperiment(w, l, RemoteTaskfiles())
+	printExperiment(w, l, MapVariables())
+	printExperiment(w, l, EnvPrecedence())
 	return w.Flush()
 }
