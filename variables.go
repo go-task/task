@@ -128,17 +128,18 @@ func (e *Executor) compiledTask(call *ast.Call, evaluateShVars bool) (*ast.Task,
 		}
 	}
 
-	if len(origTask.Sources) > 0 {
-		timestampChecker := fingerprint.NewTimestampChecker(e.TempDir.Fingerprint, e.Dry)
-		checksumChecker := fingerprint.NewChecksumChecker(e.TempDir.Fingerprint, e.Dry)
+	if len(origTask.Sources) > 0 && origTask.Method != "none" {
 
-		for _, checker := range []fingerprint.SourcesCheckable{timestampChecker, checksumChecker} {
-			value, err := checker.Value(&new)
-			if err != nil {
-				return nil, err
-			}
-			vars.Set(strings.ToUpper(checker.Kind()), ast.Var{Live: value})
+		var checker fingerprint.SourcesCheckable = fingerprint.NewChecksumChecker(e.TempDir.Fingerprint, e.Dry)
+		if origTask.Method == "timestamp" {
+			checker = fingerprint.NewTimestampChecker(e.TempDir.Fingerprint, e.Dry)
 		}
+
+		value, err := checker.Value(&new)
+		if err != nil {
+			return nil, err
+		}
+		vars.Set(strings.ToUpper(checker.Kind()), ast.Var{Live: value})
 
 		// Adding new variables, requires us to refresh the templaters
 		// cache of the the values manually
