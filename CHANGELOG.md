@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Made `--init` less verbose by default and respect `--silent` and `--verbose`
+  flags (#2009, #2011 by @HeCorr).
+- Fix a bug where an HTTP node's location was being mutated incorrectly (#2007
+  by @jeongukjae).
+
 ## v3.41.0 - 2025-01-18
 
 - Fixed an issue where dynamic variables were not properly logged in verbose

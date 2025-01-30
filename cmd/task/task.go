@@ -45,7 +45,7 @@ func main() {
 }
 
 func run() error {
-	logger := &logger.Logger{
+	log := &logger.Logger{
 		Stdout:  os.Stdout,
 		Stderr:  os.Stderr,
 		Verbose: flags.Verbose,
@@ -70,7 +70,7 @@ func run() error {
 	}
 
 	if flags.Experiments {
-		return experiments.List(logger)
+		return experiments.List(log)
 	}
 
 	if flags.Init {
@@ -87,6 +87,14 @@ func run() error {
 		if err := task.InitTaskfile(os.Stdout, path); err != nil {
 			return err
 		}
+
+		if !flags.Silent {
+			if flags.Verbose {
+				log.Outf(logger.Default, "%s\n", task.DefaultTaskfile)
+			}
+			log.Outf(logger.Green, "%s created in the current directory\n", task.DefaultTaskFilename)
+		}
+
 		return nil
 	}
 
@@ -153,7 +161,7 @@ func run() error {
 		return err
 	}
 	if experiments.AnyVariables.Enabled {
-		logger.Warnf("The 'Any Variables' experiment flag is no longer required to use non-map variable types. If you wish to use map variables, please use 'TASK_X_MAP_VARIABLES' instead. See https://github.com/go-task/task/issues/1585\n")
+		log.Warnf("The 'Any Variables' experiment flag is no longer required to use non-map variable types. If you wish to use map variables, please use 'TASK_X_MAP_VARIABLES' instead. See https://github.com/go-task/task/issues/1585\n")
 	}
 
 	// If the download flag is specified, we should stop execution as soon as

@@ -17,9 +17,10 @@ import (
 // An HTTPNode is a node that reads a Taskfile from a remote location via HTTP.
 type HTTPNode struct {
 	*BaseNode
-	URL     *url.URL
-	logger  *logger.Logger
-	timeout time.Duration
+	URL        *url.URL // stores url pointing actual remote file. (e.g. with Taskfile.yml)
+	entrypoint string   // stores entrypoint url. used for building graph vertices.
+	logger     *logger.Logger
+	timeout    time.Duration
 }
 
 func NewHTTPNode(
@@ -40,15 +41,16 @@ func NewHTTPNode(
 	}
 
 	return &HTTPNode{
-		BaseNode: base,
-		URL:      url,
-		timeout:  timeout,
-		logger:   l,
+		BaseNode:   base,
+		URL:        url,
+		entrypoint: entrypoint,
+		timeout:    timeout,
+		logger:     l,
 	}, nil
 }
 
 func (node *HTTPNode) Location() string {
-	return node.URL.String()
+	return node.entrypoint
 }
 
 func (node *HTTPNode) Remote() bool {
@@ -119,6 +121,6 @@ func (node *HTTPNode) ResolveDir(dir string) (string, error) {
 }
 
 func (node *HTTPNode) FilenameAndLastDir() (string, string) {
-	dir, filename := filepath.Split(node.URL.Path)
+	dir, filename := filepath.Split(node.entrypoint)
 	return filepath.Base(dir), filename
 }
