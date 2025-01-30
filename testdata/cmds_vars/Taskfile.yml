@@ -4,13 +4,13 @@ tasks:
   build-checksum:
     sources:
       - ./source.txt
-    status:
+    cmds:
       - echo "{{.CHECKSUM}}"
 
   build-ts:
     method: timestamp
     sources:
       - ./source.txt
-    status:
+    cmds:
       - echo '{{.TIMESTAMP.Unix}}'
       - echo '{{.TIMESTAMP}}'
