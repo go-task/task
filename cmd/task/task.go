@@ -104,7 +104,7 @@ func run() error {
 			if fi, err := os.Stat(path); err == nil && fi.IsDir() && path != wd {
 				name = filepathext.SmartJoin(name, task.DefaultTaskFilename)
 			}
-			log.Outf(logger.Green, "Taskfile created at %s\n", name)
+			log.Outf(logger.Green, "Taskfile created: %s\n", name)
 		}
 		return nil
 	}
