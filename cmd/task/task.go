@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	fp "path/filepath"
 	"strings"
 
 	"github.com/spf13/pflag"
@@ -78,23 +79,33 @@ func run() error {
 		if err != nil {
 			return err
 		}
-		name := taskfile.DefaultTaskInitFilename
-		if len(flags.Entrypoint) > 0 {
-			// Replace `*` with `Taskfile` so `*.yaml` results in `Taskfile.yaml`
-			name = strings.Replace(flags.Entrypoint, "*", "Taskfile", 1)
+		args, _, err := getArgs()
+		if err != nil {
+			return err
 		}
-		path := filepathext.SmartJoin(wd, name)
+		name := task.DefaultTaskFilename
+		path := wd
+		if len(args) > 0 {
+			name = args[0]
+			if fp.Base(name) == fp.Ext(name) {
+				// File has no name, only extension (i.e. `.yaml`)
+				// so prepend default file name to it
+				name = filepathext.SmartJoin(fp.Dir(name), "Taskfile"+fp.Ext(name))
+			}
+			path = filepathext.SmartJoin(wd, name)
+		}
 		if err := task.InitTaskfile(os.Stdout, path); err != nil {
 			return err
 		}
-
 		if !flags.Silent {
 			if flags.Verbose {
 				log.Outf(logger.Default, "%s\n", task.DefaultTaskfile)
 			}
-			log.Outf(logger.Green, "%s created in the current directory\n", task.DefaultTaskFilename)
+			if fi, err := os.Stat(path); err == nil && fi.IsDir() && path != wd {
+				name = filepathext.SmartJoin(name, task.DefaultTaskFilename)
+			}
+			log.Outf(logger.Green, "Taskfile created at %s\n", name)
 		}
-
 		return nil
 	}
 
