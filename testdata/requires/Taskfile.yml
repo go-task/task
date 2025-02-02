@@ -7,7 +7,7 @@ tasks:
   missing-var:
     requires:
       vars:
-        - foo
+        - FOO
     cmd: echo "{{.foo}}"
 
   var-defined-in-task:
@@ -19,10 +19,21 @@ tasks:
     cmd: echo "{{.FOO}}"
 
 
+  validation-var-dynamic:
+    vars:
+      FOO:
+        sh: echo "one"
+
+    requires:
+      vars:
+        - name: FOO
+          enum: ['one', 'two']
+
+
   validation-var:
     requires:
       vars:
-        - name: foo
+        - name: FOO
           enum: ['one', 'two']
 
 
