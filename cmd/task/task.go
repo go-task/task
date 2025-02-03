@@ -86,9 +86,7 @@ func run() error {
 		path := wd
 		if len(args) > 0 {
 			name := args[0]
-			if fp.Base(name) == fp.Ext(name) {
-				// File has no name, only extension (i.e. `.yaml`)
-				// so prepend default file name to it
+			if filepathext.IsExtOnly(name) {
 				name = filepathext.SmartJoin(fp.Dir(name), "Taskfile"+fp.Ext(name))
 			}
 			path = filepathext.SmartJoin(wd, name)
