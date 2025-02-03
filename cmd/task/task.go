@@ -101,11 +101,7 @@ func run() error {
 			if flags.Verbose {
 				log.Outf(logger.Default, "%s\n", task.DefaultTaskfile)
 			}
-			relPath, err := fp.Rel(wd, finalPath)
-			if err != nil {
-				relPath = finalPath
-			}
-			log.Outf(logger.Green, "Taskfile created: %s\n", relPath)
+			log.Outf(logger.Green, "Taskfile created: %s\n", filepathext.TryAbsToRel(finalPath))
 		}
 		return nil
 	}
