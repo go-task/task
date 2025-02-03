@@ -20,7 +20,7 @@ func TestInitDir(t *testing.T) {
 		t.Errorf("Taskfile.yml should not exist")
 	}
 
-	if err := task.InitTaskfile(io.Discard, dir); err != nil {
+	if _, err := task.InitTaskfile(io.Discard, dir); err != nil {
 		t.Error(err)
 	}
 
@@ -42,7 +42,7 @@ func TestInitFile(t *testing.T) {
 		t.Errorf("Tasks.yml should not exist")
 	}
 
-	if err := task.InitTaskfile(io.Discard, file); err != nil {
+	if _, err := task.InitTaskfile(io.Discard, file); err != nil {
 		t.Error(err)
 	}
 

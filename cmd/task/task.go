@@ -94,17 +94,19 @@ func run() error {
 			}
 			path = filepathext.SmartJoin(wd, name)
 		}
-		if err := task.InitTaskfile(os.Stdout, path); err != nil {
+		finalPath, err := task.InitTaskfile(os.Stdout, path)
+		if err != nil {
 			return err
 		}
 		if !flags.Silent {
 			if flags.Verbose {
 				log.Outf(logger.Default, "%s\n", task.DefaultTaskfile)
 			}
-			if fi, err := os.Stat(path); err == nil && fi.IsDir() && path != wd {
-				name = filepathext.SmartJoin(name, task.DefaultTaskFilename)
+			relPath, err := fp.Rel(wd, finalPath)
+			if err != nil {
+				relPath = finalPath
 			}
-			log.Outf(logger.Green, "Taskfile created: %s\n", name)
+			log.Outf(logger.Green, "Taskfile created: %s\n", relPath)
 		}
 		return nil
 	}

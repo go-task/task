@@ -28,23 +28,25 @@ const DefaultTaskFilename = "Taskfile.yml"
 //
 // path can be either a file path or a directory path.
 // If path is a directory, path/Taskfile.yml will be created.
-func InitTaskfile(w io.Writer, path string) error {
+//
+// The final file path is always returned and may be different from the input path.
+func InitTaskfile(w io.Writer, path string) (string, error) {
 	fi, err := os.Stat(path)
 	if err == nil && !fi.IsDir() {
-		return errors.TaskfileAlreadyExistsError{}
+		return path, errors.TaskfileAlreadyExistsError{}
 	}
 
 	if fi != nil && fi.IsDir() {
 		path = filepathext.SmartJoin(path, DefaultTaskFilename)
 		// path was a directory, so check if Taskfile.yml exists in it
 		if _, err := os.Stat(path); err == nil {
-			return errors.TaskfileAlreadyExistsError{}
+			return path, errors.TaskfileAlreadyExistsError{}
 		}
 	}
 
 	if err := os.WriteFile(path, []byte(DefaultTaskfile), 0o644); err != nil {
-		return err
+		return path, err
 	}
 
-	return nil
+	return path, nil
 }
