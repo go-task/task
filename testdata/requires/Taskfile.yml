@@ -18,13 +18,11 @@ tasks:
         - FOO
     cmd: echo "{{.FOO}}"
 
-
   validation-var:
     requires:
       vars:
         - name: foo
           enum: ['one', 'two']
-
 
   require-before-compile:
     requires:

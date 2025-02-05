@@ -12,33 +12,33 @@ tasks:
       GERMAN: "Welt!"
     deps:
       - task: write-file
-        vars: {CONTENT: Dependence1, FILE: dep1.txt}
+        vars: {CONTENT: Dependence1}
       - task: write-file
-        vars: {CONTENT: Dependence2, FILE: dep2.txt}
+        vars: {CONTENT: Dependence2}
       - task: write-file
-        vars: {CONTENT: "{{.SPANISH|replace \"mundo\" \"dependencia\"}}", FILE: spanish-dep.txt}
+        vars: {CONTENT: "{{.SPANISH|replace \"mundo\" \"dependencia\"}}"}
     cmds:
       - task: write-file
-        vars: {CONTENT: Hello, FILE: hello.txt}
+        vars: {CONTENT: Hello}
       - task: write-file
-        vars: {CONTENT: "$echo 'World'", FILE: world.txt}
+        vars: {CONTENT: "$echo 'World'"}
       - task: write-file
-        vars: {CONTENT: "!", FILE: exclamation.txt}
+        vars: {CONTENT: "!"}
       - task: write-file
-        vars: {CONTENT: "{{.SPANISH}}", FILE: spanish.txt}
+        vars: {CONTENT: "{{.SPANISH}}"}
       - task: write-file
-        vars: {CONTENT: "{{.PORTUGUESE}}", FILE: portuguese.txt}
+        vars: {CONTENT: "{{.PORTUGUESE}}"}
       - task: write-file
-        vars: {CONTENT: "{{.GERMAN}}", FILE: german.txt}
+        vars: {CONTENT: "{{.GERMAN}}"}
       - task: non-default
 
   write-file:
     cmds:
-      - echo {{.CONTENT}} > {{.FILE}}
+      - echo {{.CONTENT}}
 
   non-default:
     vars:
       PORTUGUESE: "{{.PORTUGUESE_HELLO_WORLD}}"
     cmds:
       - task: write-file
-        vars: {CONTENT: "{{.PORTUGUESE}}", FILE: portuguese2.txt}
+        vars: {CONTENT: "{{.PORTUGUESE}}"}

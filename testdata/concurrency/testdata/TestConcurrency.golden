@@ -1,0 +1,12 @@
+task: [t4] echo done 4
+done 4
+task: [t3] echo done 3
+done 3
+task: [t6] echo done 6
+done 6
+task: [t5] echo done 5
+done 5
+task: [t2] echo done 2
+done 2
+task: [t1] echo done 1
+done 1
