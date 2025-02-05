@@ -1,0 +1,13 @@
+version: '3'
+
+silent: true
+vars:
+  VAR: included-global-vars
+env:
+  ENV: included-global-vars
+
+tasks:
+  default:
+    cmds:
+      - 'echo "{{.VAR}}"'
+      - 'echo "$ENV"'

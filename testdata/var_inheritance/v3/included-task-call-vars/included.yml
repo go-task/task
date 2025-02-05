@@ -1,0 +1,21 @@
+version: '3'
+
+silent: true
+vars:
+  VAR: included-global-vars
+env:
+  ENV: included-global-vars
+
+tasks:
+  default:
+    dotenv:
+      - 'task.env'
+    cmds:
+      - task: called-task
+        vars:
+          VAR: included-task-call-vars
+
+  called-task:
+    cmds:
+      - 'echo "{{.VAR}}"'
+      - 'echo "$ENV"'

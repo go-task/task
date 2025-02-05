@@ -2,6 +2,7 @@ package task_test
 
 import (
 	"bytes"
+	"cmp"
 	"context"
 	"fmt"
 	"io"
@@ -134,8 +135,7 @@ func TestEnv(t *testing.T) {
 		},
 	}
 	tt.Run(t)
-	t.Setenv("TASK_X_ENV_PRECEDENCE", "1")
-	experiments.EnvPrecedence = experiments.New("ENV_PRECEDENCE")
+	enableExperimentForTest(t, &experiments.EnvPrecedence, "1")
 	ttt := fileContentTest{
 		Dir:       "testdata/env",
 		Target:    "overridden",
@@ -3203,6 +3203,110 @@ func TestReference(t *testing.T) {
 			require.NoError(t, e.Setup())
 			require.NoError(t, e.Run(context.Background(), &ast.Call{Task: test.call}))
 			assert.Equal(t, test.expectedOutput, buff.String())
+		})
+	}
+}
+
+func TestVarInheritance(t *testing.T) {
+	enableExperimentForTest(t, &experiments.EnvPrecedence, "1")
+	tests := []struct {
+		name string
+		want string
+		call string
+	}{
+		{
+			name: "shell",
+			want: "shell\nshell\n",
+		},
+		{
+			name: "entrypoint-global-dotenv",
+			want: "entrypoint-global-dotenv\nentrypoint-global-dotenv\n",
+		},
+		{
+			name: "entrypoint-global-vars",
+			want: "entrypoint-global-vars\nentrypoint-global-vars\n",
+		},
+		{
+			// We can't send env vars to a called task, so the env var is not overridden
+			name: "entrypoint-task-call-vars",
+			want: "entrypoint-task-call-vars\nentrypoint-global-vars\n",
+		},
+		{
+			// Dotenv doesn't set variables
+			name: "entrypoint-task-call-dotenv",
+			want: "entrypoint-task-call-vars\nentrypoint-task-call-dotenv\n",
+		},
+		{
+			name: "entrypoint-task-call-task-vars",
+			want: "entrypoint-task-call-task-vars\nentrypoint-task-call-task-vars\n",
+		},
+		{
+			// Dotenv doesn't set variables
+			name: "entrypoint-task-dotenv",
+			want: "entrypoint-global-vars\nentrypoint-task-dotenv\n",
+		},
+		{
+			name: "entrypoint-task-vars",
+			want: "entrypoint-task-vars\nentrypoint-task-vars\n",
+		},
+		// {
+		// 	// Dotenv not currently allowed in included taskfiles
+		// 	name: "included-global-dotenv",
+		// 	want: "included-global-dotenv\nincluded-global-dotenv\n",
+		// },
+		{
+			name: "included-global-vars",
+			want: "included-global-vars\nincluded-global-vars\n",
+			call: "included",
+		},
+		{
+			// We can't send env vars to a called task, so the env var is not overridden
+			name: "included-task-call-vars",
+			want: "included-task-call-vars\nincluded-global-vars\n",
+			call: "included",
+		},
+		{
+			// Dotenv doesn't set variables
+			// Dotenv not currently allowed in included taskfiles (but doesn't error in a task)
+			name: "included-task-call-dotenv",
+			want: "included-task-call-vars\nincluded-global-vars\n",
+			call: "included",
+		},
+		{
+			name: "included-task-call-task-vars",
+			want: "included-task-call-task-vars\nincluded-task-call-task-vars\n",
+			call: "included",
+		},
+		{
+			// Dotenv doesn't set variables
+			// Somehow dotenv is working here!
+			name: "included-task-dotenv",
+			want: "included-global-vars\nincluded-task-dotenv\n",
+			call: "included",
+		},
+		{
+			name: "included-task-vars",
+			want: "included-task-vars\nincluded-task-vars\n",
+			call: "included",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			var buff bytes.Buffer
+			t.Setenv("VAR", "shell")
+			t.Setenv("ENV", "shell")
+			e := task.Executor{
+				Dir:    fmt.Sprintf("testdata/var_inheritance/v3/%s", test.name),
+				Stdout: &buff,
+				Stderr: &buff,
+				Silent: true,
+				Force:  true,
+			}
+			call := cmp.Or(test.call, "default")
+			require.NoError(t, e.Setup())
+			require.NoError(t, e.Run(context.Background(), &ast.Call{Task: call}))
+			assert.Equal(t, test.want, buff.String())
 		})
 	}
 }
