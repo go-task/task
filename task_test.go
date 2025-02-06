@@ -180,12 +180,12 @@ func TestRequires(t *testing.T) {
 	}
 
 	require.NoError(t, e.Setup())
-	require.ErrorContains(t, e.Run(context.Background(), &ast.Call{Task: "missing-var"}), "task: Task \"missing-var\" cancelled because it is missing required variables: foo")
+	require.ErrorContains(t, e.Run(context.Background(), &ast.Call{Task: "missing-var"}), "task: Task \"missing-var\" cancelled because it is missing required variables: FOO")
 	buff.Reset()
 	require.NoError(t, e.Setup())
 
 	vars := ast.NewVars()
-	vars.Set("foo", ast.Var{Value: "bar"})
+	vars.Set("FOO", ast.Var{Value: "bar"})
 	require.NoError(t, e.Run(context.Background(), &ast.Call{
 		Task: "missing-var",
 		Vars: vars,
@@ -193,11 +193,15 @@ func TestRequires(t *testing.T) {
 	buff.Reset()
 
 	require.NoError(t, e.Setup())
-	require.ErrorContains(t, e.Run(context.Background(), &ast.Call{Task: "validation-var", Vars: vars}), "task: Task \"validation-var\" cancelled because it is missing required variables:\n  - foo has an invalid value : 'bar' (allowed values : [one two])")
+	require.ErrorContains(t, e.Run(context.Background(), &ast.Call{Task: "validation-var", Vars: vars}), "task: Task \"validation-var\" cancelled because it is missing required variables:\n  - FOO has an invalid value : 'bar' (allowed values : [one two])")
 	buff.Reset()
 
 	require.NoError(t, e.Setup())
-	vars.Set("foo", ast.Var{Value: "one"})
+	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "validation-var-dynamic", Vars: vars}))
+	buff.Reset()
+
+	require.NoError(t, e.Setup())
+	vars.Set("FOO", ast.Var{Value: "one"})
 	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "validation-var", Vars: vars}))
 	buff.Reset()
 

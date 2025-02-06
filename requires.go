@@ -13,20 +13,10 @@ func (e *Executor) areTaskRequiredVarsSet(t *ast.Task) error {
 	}
 
 	var missingVars []string
-	var notAllowedValuesVars []errors.NotAllowedVar
 	for _, requiredVar := range t.Requires.Vars {
-		value, ok := t.Vars.Get(requiredVar.Name)
+		_, ok := t.Vars.Get(requiredVar.Name)
 		if !ok {
 			missingVars = append(missingVars, requiredVar.Name)
-		} else {
-			value, isString := value.Value.(string)
-			if isString && requiredVar.Enum != nil && !slices.Contains(requiredVar.Enum, value) {
-				notAllowedValuesVars = append(notAllowedValuesVars, errors.NotAllowedVar{
-					Value: value,
-					Enum:  requiredVar.Enum,
-					Name:  requiredVar.Name,
-				})
-			}
 		}
 	}
 
@@ -35,6 +25,29 @@ func (e *Executor) areTaskRequiredVarsSet(t *ast.Task) error {
 			TaskName:    t.Name(),
 			MissingVars: missingVars,
 		}
+	}
+
+	return nil
+}
+
+func (e *Executor) areTaskRequiredVarsAllowedValuesSet(t *ast.Task) error {
+	if t.Requires == nil || len(t.Requires.Vars) == 0 {
+		return nil
+	}
+
+	var notAllowedValuesVars []errors.NotAllowedVar
+	for _, requiredVar := range t.Requires.Vars {
+		varValue, _ := t.Vars.Get(requiredVar.Name)
+
+		value, isString := varValue.Value.(string)
+		if isString && requiredVar.Enum != nil && !slices.Contains(requiredVar.Enum, value) {
+			notAllowedValuesVars = append(notAllowedValuesVars, errors.NotAllowedVar{
+				Value: value,
+				Enum:  requiredVar.Enum,
+				Name:  requiredVar.Name,
+			})
+		}
+
 	}
 
 	if len(notAllowedValuesVars) > 0 {
