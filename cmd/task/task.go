@@ -109,12 +109,12 @@ func run() error {
 		dir = home
 	}
 
-	var taskSorter sort.TaskSorter
+	var taskSorter sort.Sorter
 	switch flags.TaskSort {
 	case "none":
-		taskSorter = &sort.Noop{}
+		taskSorter = nil
 	case "alphanumeric":
-		taskSorter = &sort.AlphaNumeric{}
+		taskSorter = sort.AlphaNumeric
 	}
 
 	e := task.Executor{

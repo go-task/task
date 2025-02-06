@@ -103,18 +103,26 @@ func (c *Compiler) getVariables(t *ast.Task, call *ast.Call, evaluateShVars bool
 		taskRangeFunc = getRangeFunc(dir)
 	}
 
-	if err := c.TaskfileEnv.Range(rangeFunc); err != nil {
-		return nil, err
-	}
-	if err := c.TaskfileVars.Range(rangeFunc); err != nil {
-		return nil, err
-	}
-	if t != nil {
-		if err := t.IncludeVars.Range(rangeFunc); err != nil {
+	for k, v := range c.TaskfileEnv.All() {
+		if err := rangeFunc(k, v); err != nil {
 			return nil, err
 		}
-		if err := t.IncludedTaskfileVars.Range(taskRangeFunc); err != nil {
+	}
+	for k, v := range c.TaskfileVars.All() {
+		if err := rangeFunc(k, v); err != nil {
 			return nil, err
+		}
+	}
+	if t != nil {
+		for k, v := range t.IncludeVars.All() {
+			if err := rangeFunc(k, v); err != nil {
+				return nil, err
+			}
+		}
+		for k, v := range t.IncludedTaskfileVars.All() {
+			if err := taskRangeFunc(k, v); err != nil {
+				return nil, err
+			}
 		}
 	}
 
@@ -122,11 +130,15 @@ func (c *Compiler) getVariables(t *ast.Task, call *ast.Call, evaluateShVars bool
 		return result, nil
 	}
 
-	if err := call.Vars.Range(rangeFunc); err != nil {
-		return nil, err
+	for k, v := range call.Vars.All() {
+		if err := rangeFunc(k, v); err != nil {
+			return nil, err
+		}
 	}
-	if err := t.Vars.Range(taskRangeFunc); err != nil {
-		return nil, err
+	for k, v := range t.Vars.All() {
+		if err := taskRangeFunc(k, v); err != nil {
+			return nil, err
+		}
 	}
 
 	return result, nil

@@ -3,7 +3,7 @@ package deepcopy
 import (
 	"reflect"
 
-	"github.com/elliotchance/orderedmap/v2"
+	"github.com/elliotchance/orderedmap/v3"
 )
 
 type Copier[T any] interface {
