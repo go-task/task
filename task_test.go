@@ -965,9 +965,12 @@ func TestStatusVariables(t *testing.T) {
 		Verbose: true,
 	}
 	require.NoError(t, e.Setup())
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "build"}))
+	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "build-checksum"}))
 
 	assert.Contains(t, buff.String(), "3e464c4b03f4b65d740e1e130d4d108a")
+
+	buff.Reset()
+	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "build-ts"}))
 
 	inf, err := os.Stat(filepathext.SmartJoin(dir, "source.txt"))
 	require.NoError(t, err)
@@ -998,10 +1001,12 @@ func TestCmdsVariables(t *testing.T) {
 		Verbose: true,
 	}
 	require.NoError(t, e.Setup())
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "build"}))
+	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "build-checksum"}))
 
 	assert.Contains(t, buff.String(), "3e464c4b03f4b65d740e1e130d4d108a")
 
+	buff.Reset()
+	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "build-ts"}))
 	inf, err := os.Stat(filepathext.SmartJoin(dir, "source.txt"))
 	require.NoError(t, err)
 	ts := fmt.Sprintf("%d", inf.ModTime().Unix())
