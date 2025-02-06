@@ -55,3 +55,9 @@ func TryAbsToRel(abs string) string {
 
 	return rel
 }
+
+// IsExtOnly checks whether path points to a file with no name but with
+// an extension, i.e. ".yaml"
+func IsExtOnly(path string) bool {
+	return filepath.Base(path) == filepath.Ext(path)
+}

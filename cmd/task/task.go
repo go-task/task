@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	fp "path/filepath"
 	"strings"
 
 	"github.com/spf13/pflag"
@@ -13,6 +14,7 @@ import (
 	"github.com/go-task/task/v3/args"
 	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/experiments"
+	"github.com/go-task/task/v3/internal/filepathext"
 	"github.com/go-task/task/v3/internal/flags"
 	"github.com/go-task/task/v3/internal/logger"
 	"github.com/go-task/task/v3/internal/sort"
@@ -77,18 +79,28 @@ func run() error {
 		if err != nil {
 			return err
 		}
-
-		if err := task.InitTaskfile(os.Stdout, wd); err != nil {
+		args, _, err := getArgs()
+		if err != nil {
 			return err
 		}
-
+		path := wd
+		if len(args) > 0 {
+			name := args[0]
+			if filepathext.IsExtOnly(name) {
+				name = filepathext.SmartJoin(fp.Dir(name), "Taskfile"+fp.Ext(name))
+			}
+			path = filepathext.SmartJoin(wd, name)
+		}
+		finalPath, err := task.InitTaskfile(os.Stdout, path)
+		if err != nil {
+			return err
+		}
 		if !flags.Silent {
 			if flags.Verbose {
 				log.Outf(logger.Default, "%s\n", task.DefaultTaskfile)
 			}
-			log.Outf(logger.Green, "%s created in the current directory\n", task.DefaultTaskFilename)
+			log.Outf(logger.Green, "Taskfile created: %s\n", filepathext.TryAbsToRel(finalPath))
 		}
-
 		return nil
 	}
 
