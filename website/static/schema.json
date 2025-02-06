@@ -390,6 +390,10 @@
           "description": "Values passed to the task called",
           "$ref": "#/definitions/vars"
         },
+        "ignore_error": {
+          "description": "Prevent command from aborting the execution of task even after receiving a status code of 1",
+          "type": "boolean"
+        },
         "platforms": {
           "description": "Specifies which platforms the command should be run on.",
           "$ref": "#/definitions/platforms"
