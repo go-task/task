@@ -235,6 +235,12 @@ tasks:
 - **Type**: `string`
 - **Description**: Absolute path where the task is executed
 
+#### `TASK_SOURCES`
+
+- **Type**: `[]string`
+- **Description**: List of files referenced by task `sources` key. Empty if
+  task does not define `sources`.
+
 #### `USER_WORKING_DIR`
 
 - **Type**: `string`
