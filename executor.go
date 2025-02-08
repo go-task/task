@@ -7,6 +7,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/puzpuzpuz/xsync/v3"
 	"github.com/sajari/fuzzy"
 
 	"github.com/go-task/task/v3/internal/logger"
@@ -65,6 +66,7 @@ type (
 		mkdirMutexMap        map[string]*sync.Mutex
 		executionHashes      map[string]context.Context
 		executionHashesMutex sync.Mutex
+		watchedDirs          *xsync.MapOf[string, bool]
 	}
 	TempDir struct {
 		Remote      string
@@ -77,7 +79,6 @@ type (
 func NewExecutor(opts ...ExecutorOption) *Executor {
 	e := &Executor{
 		Timeout:              time.Second * 10,
-		Interval:             time.Second * 5,
 		Stdin:                os.Stdin,
 		Stdout:               os.Stdout,
 		Stderr:               os.Stderr,
@@ -254,8 +255,8 @@ func ExecutorWithConcurrency(concurrency int) ExecutorOption {
 	}
 }
 
-// ExecutorWithInterval sets the interval at which the [Executor] will check for
-// changes when watching tasks.
+// ExecutorWithInterval sets the interval at which the [Executor] will wait for
+// duplicated events before running a task.
 func ExecutorWithInterval(interval time.Duration) ExecutorOption {
 	return func(e *Executor) {
 		e.Interval = interval

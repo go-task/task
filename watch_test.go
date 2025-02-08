@@ -17,71 +17,72 @@ import (
 
 	"github.com/go-task/task/v3"
 	"github.com/go-task/task/v3/internal/filepathext"
-	"github.com/go-task/task/v3/taskfile/ast"
 )
 
-func TestFileWatcherInterval(t *testing.T) {
-	const dir = "testdata/watcher_interval"
+func TestFileWatch(t *testing.T) {
+	t.Parallel()
+
+	const dir = "testdata/watch"
+	_ = os.RemoveAll(filepathext.SmartJoin(dir, ".task"))
+	_ = os.RemoveAll(filepathext.SmartJoin(dir, "src"))
+
 	expectedOutput := strings.TrimSpace(`
 task: Started watching for tasks: default
-task: [default] echo "Hello, World!"
-Hello, World!
-task: [default] echo "Hello, World!"
-Hello, World!
+task: [default] echo "Task running!"
+Task running!
+task: task "default" finished running
+task: Task "default" is up to date
+task: task "default" finished running
 	`)
 
 	var buff bytes.Buffer
-	e := &task.NewExecutor(
-		task.WithDir(dir),
-		task.WithStdout(&buff),
-		task.WithStderr(&buff),
-		task.WithWatch(true),
+	e := task.NewExecutor(
+		task.ExecutorWithDir(dir),
+		task.ExecutorWithStdout(&buff),
+		task.ExecutorWithStderr(&buff),
+		task.ExecutorWithWatch(true),
 	)
 
 	require.NoError(t, e.Setup())
 	buff.Reset()
 
-	err := os.MkdirAll(filepathext.SmartJoin(dir, "src"), 0755)
+	dirPath := filepathext.SmartJoin(dir, "src")
+	filePath := filepathext.SmartJoin(dirPath, "a")
+
+	err := os.MkdirAll(dirPath, 0755)
 	require.NoError(t, err)
 
-	err = os.WriteFile(filepathext.SmartJoin(dir, "src/a"), []byte("test"), 0644)
-	if err != nil {
-		t.Fatal(err)
-	}
+	err = os.WriteFile(filePath, []byte("test"), 0644)
+	require.NoError(t, err)
 
-	ctx := context.Background()
-	ctx, cancel := context.WithCancel(ctx)
+	ctx, cancel := context.WithCancel(context.Background())
 
-	go func(ctx context.Context) {
+	go func() {
 		for {
 			select {
 			case <-ctx.Done():
 				return
 			default:
-				err := e.Run(ctx, &ast.Call{Task: "default"})
+				err := e.Run(ctx, &task.Call{Task: "default"})
 				if err != nil {
-					return
+					panic(err)
 				}
 			}
 		}
-	}(ctx)
+	}()
 
 	time.Sleep(10 * time.Millisecond)
-	err = os.WriteFile(filepathext.SmartJoin(dir, "src/a"), []byte("test updated"), 0644)
-	if err != nil {
-		t.Fatal(err)
-	}
-	time.Sleep(700 * time.Millisecond)
+	err = os.WriteFile(filePath, []byte("test updated"), 0644)
+	require.NoError(t, err)
+
+	time.Sleep(150 * time.Millisecond)
 	cancel()
 	assert.Equal(t, expectedOutput, strings.TrimSpace(buff.String()))
-	buff.Reset()
-	err = os.RemoveAll(filepathext.SmartJoin(dir, ".task"))
-	require.NoError(t, err)
-	err = os.RemoveAll(filepathext.SmartJoin(dir, "src"))
-	require.NoError(t, err)
 }
 
 func TestShouldIgnoreFile(t *testing.T) {
+	t.Parallel()
+
 	tt := []struct {
 		path   string
 		expect bool
