@@ -38,6 +38,13 @@ tasks:
       - "{{.BIN}}/mockery --dir ./internal/fingerprint --name SourcesCheckable"
       - "{{.BIN}}/mockery --dir ./internal/fingerprint --name StatusCheckable"
 
+  generate:fixtures:
+    desc: Runs tests and generates golden fixture files
+    aliases: [gen:fixtures, g:fixtures]
+    cmds:
+      - find ./testdata -name '*.golden' -delete
+      - go test -update ./...
+
   install:mockery:
     desc: Installs mockgen; a tool to generate mock files
     vars:
