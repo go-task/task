@@ -12,6 +12,7 @@ import (
 	"github.com/fatih/color"
 
 	"github.com/go-task/task/v3/errors"
+	"github.com/go-task/task/v3/internal/env"
 	"github.com/go-task/task/v3/internal/experiments"
 	"github.com/go-task/task/v3/internal/term"
 )
@@ -22,19 +23,19 @@ var (
 )
 
 var (
-	attrsReset       = envColor("TASK_COLOR_RESET", color.Reset)
-	attrsFgBlue      = envColor("TASK_COLOR_BLUE", color.FgBlue)
-	attrsFgGreen     = envColor("TASK_COLOR_GREEN", color.FgGreen)
-	attrsFgCyan      = envColor("TASK_COLOR_CYAN", color.FgCyan)
-	attrsFgYellow    = envColor("TASK_COLOR_YELLOW", color.FgYellow)
-	attrsFgMagenta   = envColor("TASK_COLOR_MAGENTA", color.FgMagenta)
-	attrsFgRed       = envColor("TASK_COLOR_RED", color.FgRed)
-	attrsFgHiBlue    = envColor("TASK_COLOR_BRIGHT_BLUE", color.FgHiBlue)
-	attrsFgHiGreen   = envColor("TASK_COLOR_BRIGHT_GREEN", color.FgHiGreen)
-	attrsFgHiCyan    = envColor("TASK_COLOR_BRIGHT_CYAN", color.FgHiCyan)
-	attrsFgHiYellow  = envColor("TASK_COLOR_BRIGHT_YELLOW", color.FgHiYellow)
-	attrsFgHiMagenta = envColor("TASK_COLOR_BRIGHT_MAGENTA", color.FgHiMagenta)
-	attrsFgHiRed     = envColor("TASK_COLOR_BRIGHT_RED", color.FgHiRed)
+	attrsReset       = envColor("COLOR_RESET", color.Reset)
+	attrsFgBlue      = envColor("COLOR_BLUE", color.FgBlue)
+	attrsFgGreen     = envColor("COLOR_GREEN", color.FgGreen)
+	attrsFgCyan      = envColor("COLOR_CYAN", color.FgCyan)
+	attrsFgYellow    = envColor("COLOR_YELLOW", color.FgYellow)
+	attrsFgMagenta   = envColor("COLOR_MAGENTA", color.FgMagenta)
+	attrsFgRed       = envColor("COLOR_RED", color.FgRed)
+	attrsFgHiBlue    = envColor("COLOR_BRIGHT_BLUE", color.FgHiBlue)
+	attrsFgHiGreen   = envColor("COLOR_BRIGHT_GREEN", color.FgHiGreen)
+	attrsFgHiCyan    = envColor("COLOR_BRIGHT_CYAN", color.FgHiCyan)
+	attrsFgHiYellow  = envColor("COLOR_BRIGHT_YELLOW", color.FgHiYellow)
+	attrsFgHiMagenta = envColor("COLOR_BRIGHT_MAGENTA", color.FgHiMagenta)
+	attrsFgHiRed     = envColor("COLOR_BRIGHT_RED", color.FgHiRed)
 )
 
 type (
@@ -94,13 +95,13 @@ func BrightRed() PrintFunc {
 	return color.New(attrsFgHiRed...).FprintfFunc()
 }
 
-func envColor(env string, defaultColor color.Attribute) []color.Attribute {
+func envColor(name string, defaultColor color.Attribute) []color.Attribute {
 	if os.Getenv("FORCE_COLOR") != "" {
 		color.NoColor = false
 	}
 
 	// Fetch the environment variable
-	override := os.Getenv(env)
+	override := env.GetTaskVar(name)
 
 	// First, try splitting the string by commas (RGB shortcut syntax) and if it
 	// matches, then prepend the 256-color foreground escape sequence.

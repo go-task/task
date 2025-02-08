@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/pflag"
 
 	"github.com/go-task/task/v3/errors"
+	"github.com/go-task/task/v3/internal/env"
 	"github.com/go-task/task/v3/internal/experiments"
 	"github.com/go-task/task/v3/taskfile/ast"
 )
@@ -79,7 +80,7 @@ func init() {
 		log.Print(usage)
 		pflag.PrintDefaults()
 	}
-	offline, err := strconv.ParseBool(cmp.Or(os.Getenv("TASK_OFFLINE"), "false"))
+	offline, err := strconv.ParseBool(cmp.Or(env.GetTaskVar("OFFLINE"), "false"))
 	if err != nil {
 		offline = false
 	}
