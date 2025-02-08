@@ -8,9 +8,11 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/Ladicle/tabwriter"
 	"github.com/fatih/color"
 
 	"github.com/go-task/task/v3/errors"
+	"github.com/go-task/task/v3/internal/experiments"
 	"github.com/go-task/task/v3/internal/term"
 )
 
@@ -19,61 +21,77 @@ var (
 	ErrNoTerminal      = errors.New("no terminal")
 )
 
+var (
+	attrsReset       = envColor("TASK_COLOR_RESET", color.Reset)
+	attrsFgBlue      = envColor("TASK_COLOR_BLUE", color.FgBlue)
+	attrsFgGreen     = envColor("TASK_COLOR_GREEN", color.FgGreen)
+	attrsFgCyan      = envColor("TASK_COLOR_CYAN", color.FgCyan)
+	attrsFgYellow    = envColor("TASK_COLOR_YELLOW", color.FgYellow)
+	attrsFgMagenta   = envColor("TASK_COLOR_MAGENTA", color.FgMagenta)
+	attrsFgRed       = envColor("TASK_COLOR_RED", color.FgRed)
+	attrsFgHiBlue    = envColor("TASK_COLOR_BRIGHT_BLUE", color.FgHiBlue)
+	attrsFgHiGreen   = envColor("TASK_COLOR_BRIGHT_GREEN", color.FgHiGreen)
+	attrsFgHiCyan    = envColor("TASK_COLOR_BRIGHT_CYAN", color.FgHiCyan)
+	attrsFgHiYellow  = envColor("TASK_COLOR_BRIGHT_YELLOW", color.FgHiYellow)
+	attrsFgHiMagenta = envColor("TASK_COLOR_BRIGHT_MAGENTA", color.FgHiMagenta)
+	attrsFgHiRed     = envColor("TASK_COLOR_BRIGHT_RED", color.FgHiRed)
+)
+
 type (
 	Color     func() PrintFunc
 	PrintFunc func(io.Writer, string, ...any)
 )
 
 func Default() PrintFunc {
-	return color.New(envColor("TASK_COLOR_RESET", color.Reset)...).FprintfFunc()
+	return color.New(attrsReset...).FprintfFunc()
 }
 
 func Blue() PrintFunc {
-	return color.New(envColor("TASK_COLOR_BLUE", color.FgBlue)...).FprintfFunc()
+	return color.New(attrsFgBlue...).FprintfFunc()
 }
 
 func Green() PrintFunc {
-	return color.New(envColor("TASK_COLOR_GREEN", color.FgGreen)...).FprintfFunc()
+	return color.New(attrsFgGreen...).FprintfFunc()
 }
 
 func Cyan() PrintFunc {
-	return color.New(envColor("TASK_COLOR_CYAN", color.FgCyan)...).FprintfFunc()
+	return color.New(attrsFgCyan...).FprintfFunc()
 }
 
 func Yellow() PrintFunc {
-	return color.New(envColor("TASK_COLOR_YELLOW", color.FgYellow)...).FprintfFunc()
+	return color.New(attrsFgYellow...).FprintfFunc()
 }
 
 func Magenta() PrintFunc {
-	return color.New(envColor("TASK_COLOR_MAGENTA", color.FgMagenta)...).FprintfFunc()
+	return color.New(attrsFgMagenta...).FprintfFunc()
 }
 
 func Red() PrintFunc {
-	return color.New(envColor("TASK_COLOR_RED", color.FgRed)...).FprintfFunc()
+	return color.New(attrsFgRed...).FprintfFunc()
 }
 
 func BrightBlue() PrintFunc {
-	return color.New(envColor("TASK_COLOR_BRIGHT_BLUE", color.FgHiBlue)...).FprintfFunc()
+	return color.New(attrsFgHiBlue...).FprintfFunc()
 }
 
 func BrightGreen() PrintFunc {
-	return color.New(envColor("TASK_COLOR_BRIGHT_GREEN", color.FgHiGreen)...).FprintfFunc()
+	return color.New(attrsFgHiGreen...).FprintfFunc()
 }
 
 func BrightCyan() PrintFunc {
-	return color.New(envColor("TASK_COLOR_BRIGHT_CYAN", color.FgHiCyan)...).FprintfFunc()
+	return color.New(attrsFgHiCyan...).FprintfFunc()
 }
 
 func BrightYellow() PrintFunc {
-	return color.New(envColor("TASK_COLOR_BRIGHT_YELLOW", color.FgHiYellow)...).FprintfFunc()
+	return color.New(attrsFgHiYellow...).FprintfFunc()
 }
 
 func BrightMagenta() PrintFunc {
-	return color.New(envColor("TASK_COLOR_BRIGHT_MAGENTA", color.FgHiMagenta)...).FprintfFunc()
+	return color.New(attrsFgHiMagenta...).FprintfFunc()
 }
 
 func BrightRed() PrintFunc {
-	return color.New(envColor("TASK_COLOR_BRIGHT_RED", color.FgHiRed)...).FprintfFunc()
+	return color.New(attrsFgHiRed...).FprintfFunc()
 }
 
 func envColor(env string, defaultColor color.Attribute) []color.Attribute {
@@ -194,4 +212,17 @@ func (l *Logger) Prompt(color Color, prompt string, defaultValue string, continu
 	}
 
 	return nil
+}
+
+func (l *Logger) PrintExperiments() error {
+	w := tabwriter.NewWriter(l.Stdout, 0, 8, 0, ' ', 0)
+	for _, x := range experiments.List() {
+		if !x.Active {
+			continue
+		}
+		l.FOutf(w, Yellow, "* ")
+		l.FOutf(w, Green, x.Name)
+		l.FOutf(w, Default, ": \t%s\n", x.String())
+	}
+	return w.Flush()
 }

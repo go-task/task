@@ -69,7 +69,7 @@ func run() error {
 	}
 
 	if flags.Experiments {
-		return experiments.List(log)
+		return log.PrintExperiments()
 	}
 
 	if flags.Init {
@@ -107,6 +107,10 @@ func run() error {
 			return fmt.Errorf("task: Failed to get user home directory: %w", err)
 		}
 		dir = home
+	}
+
+	if err := experiments.Validate(); err != nil {
+		log.Warnf("%s\n", err.Error())
 	}
 
 	var taskSorter sort.TaskSorter
@@ -153,9 +157,6 @@ func run() error {
 	err := e.Setup()
 	if err != nil {
 		return err
-	}
-	if experiments.AnyVariables.Enabled {
-		log.Warnf("The 'Any Variables' experiment flag is no longer required to use non-map variable types. If you wish to use map variables, please use 'TASK_X_MAP_VARIABLES' instead. See https://github.com/go-task/task/issues/1585\n")
 	}
 
 	// If the download flag is specified, we should stop execution as soon as

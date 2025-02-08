@@ -2,28 +2,28 @@ package experiments
 
 import (
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
 	"slices"
 	"strings"
 
-	"github.com/Ladicle/tabwriter"
 	"github.com/joho/godotenv"
 	"github.com/spf13/pflag"
-
-	"github.com/go-task/task/v3/internal/logger"
 )
 
 const envPrefix = "TASK_X_"
 
 type Experiment struct {
-	Name    string
-	Enabled bool
-	Value   string
+	Name    string // The name of the experiment.
+	Active  bool   // Whether it is possible to enable this experiment.
+	Enabled bool   // Whether this experiment is enabled.
+	Value   string // The version of the experiment that is enabled.
 }
 
-// A list of experiments.
+// An internal list of all the initialized experiments used for iterating.
+var xList []Experiment
+
+// A set of experiments that can be enabled or disabled.
 var (
 	GentleForce     Experiment
 	RemoteTaskfiles Experiment
@@ -34,23 +34,23 @@ var (
 
 func init() {
 	readDotEnv()
-	GentleForce = New("GENTLE_FORCE")
-	RemoteTaskfiles = New("REMOTE_TASKFILES")
-	AnyVariables = New("ANY_VARIABLES", "1", "2")
-	MapVariables = New("MAP_VARIABLES", "1", "2")
-	EnvPrecedence = New("ENV_PRECEDENCE")
+	GentleForce = newExperiment("GENTLE_FORCE", "1")
+	RemoteTaskfiles = newExperiment("REMOTE_TASKFILES", "1")
+	AnyVariables = newExperiment("ANY_VARIABLES")
+	MapVariables = newExperiment("MAP_VARIABLES", "1", "2")
+	EnvPrecedence = newExperiment("ENV_PRECEDENCE", "1")
 }
 
-func New(xName string, enabledValues ...string) Experiment {
-	if len(enabledValues) == 0 {
-		enabledValues = []string{"1"}
-	}
+func newExperiment(xName string, enabledValues ...string) Experiment {
 	value := getEnv(xName)
-	return Experiment{
+	x := Experiment{
 		Name:    xName,
+		Active:  len(enabledValues) > 0,
 		Enabled: slices.Contains(enabledValues, value),
 		Value:   value,
 	}
+	xList = append(xList, x)
+	return x
 }
 
 func (x Experiment) String() string {
@@ -96,17 +96,17 @@ func readDotEnv() {
 	}
 }
 
-func printExperiment(w io.Writer, l *logger.Logger, x Experiment) {
-	l.FOutf(w, logger.Yellow, "* ")
-	l.FOutf(w, logger.Green, x.Name)
-	l.FOutf(w, logger.Default, ": \t%s\n", x.String())
+// Validate checks if any experiments have been enabled while being inactive.
+// If one is found, the function returns an error.
+func Validate() error {
+	for _, x := range List() {
+		if !x.Active && x.Value != "" {
+			return fmt.Errorf("task: Experiment %q is not active and cannot be enabled", x.Name)
+		}
+	}
+	return nil
 }
 
-func List(l *logger.Logger) error {
-	w := tabwriter.NewWriter(os.Stdout, 0, 8, 0, ' ', 0)
-	printExperiment(w, l, GentleForce)
-	printExperiment(w, l, RemoteTaskfiles)
-	printExperiment(w, l, MapVariables)
-	printExperiment(w, l, EnvPrecedence)
-	return w.Flush()
+func List() []Experiment {
+	return xList
 }
