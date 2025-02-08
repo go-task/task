@@ -110,7 +110,7 @@ func (e *Executor) setupTempDir() error {
 		return nil
 	}
 
-	tempDir := env.GetTaskVar("TEMP_DIR")
+	tempDir := env.GetTaskEnv("TEMP_DIR")
 	if tempDir == "" {
 		e.TempDir = TempDir{
 			Remote:      filepathext.SmartJoin(e.Dir, ".task"),
@@ -135,7 +135,7 @@ func (e *Executor) setupTempDir() error {
 		}
 	}
 
-	remoteDir := env.GetTaskVar("REMOTE_DIR")
+	remoteDir := env.GetTaskEnv("REMOTE_DIR")
 	if remoteDir != "" {
 		if filepath.IsAbs(remoteDir) || strings.HasPrefix(remoteDir, "~") {
 			remoteTempDir, err := execext.Expand(remoteDir)

@@ -80,7 +80,7 @@ func init() {
 		log.Print(usage)
 		pflag.PrintDefaults()
 	}
-	offline, err := strconv.ParseBool(cmp.Or(env.GetTaskVar("OFFLINE"), "false"))
+	offline, err := strconv.ParseBool(cmp.Or(env.GetTaskEnv("OFFLINE"), "false"))
 	if err != nil {
 		offline = false
 	}

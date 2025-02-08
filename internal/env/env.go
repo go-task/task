@@ -45,6 +45,6 @@ func isTypeAllowed(v any) bool {
 	}
 }
 
-func GetTaskVar(key string) string {
+func GetTaskEnv(key string) string {
 	return os.Getenv(taskVarPrefix + key)
 }
