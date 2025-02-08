@@ -192,7 +192,7 @@ version: '3'
 env:
   ENV: testing
 
-dotenv: ['.env', '{{.ENV}}/.env.', '{{.HOME}}/.env']
+dotenv: ['.env', '{{.ENV}}/.env', '{{.HOME}}/.env']
 
 tasks:
   greet:
@@ -210,7 +210,7 @@ env:
 
 tasks:
   greet:
-    dotenv: ['.env', '{{.ENV}}/.env.', '{{.HOME}}/.env']
+    dotenv: ['.env', '{{.ENV}}/.env', '{{.HOME}}/.env']
     cmds:
       - echo "Using $KEYNAME and endpoint $ENDPOINT"
 ```
@@ -226,7 +226,7 @@ env:
 
 tasks:
   greet:
-    dotenv: ['.env', '{{.ENV}}/.env.', '{{.HOME}}/.env']
+    dotenv: ['.env', '{{.ENV}}/.env', '{{.HOME}}/.env']
     env:
       KEYNAME: DIFFERENT_VALUE
     cmds:
