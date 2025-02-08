@@ -1,0 +1,3 @@
+task: [/testdata/status] Not found - Using alternative (Taskfile.yml)
+task: "gen-silent-baz" started
+task: Task "gen-silent-baz" is up to date

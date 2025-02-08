@@ -19,7 +19,7 @@ tasks:
     - task: with-call
     - task: from-dot-env
 
-  missing-var: echo '{{.NON_EXISTING_VAR}}' > missing-var.txt
+  missing-var: echo '{{.NON_EXISTING_VAR}}'
 
   var-order:
     vars:
@@ -27,7 +27,7 @@ tasks:
       VAR_E: '{{.VAR_D}}E'
       VAR_F: '{{.VAR_E}}F'
     cmds:
-      - echo '{{.VAR_F}}' > var-order.txt
+      - echo '{{.VAR_F}}'
 
   dependent-sh:
     vars:
@@ -35,7 +35,7 @@ tasks:
       VAR_5: {sh: 'echo "{{.VAR_4}}5"'}
       VAR_6: {sh: 'echo "{{.VAR_5}}6"'}
     cmds:
-      - echo '{{.VAR_6}}' > dependent-sh.txt
+      - echo '{{.VAR_6}}'
 
   with-call:
     - task: called-task
@@ -46,6 +46,6 @@ tasks:
     vars:
       MESSAGE: Hi, {{.ABC123}}!
     cmds:
-      - echo "{{.MESSAGE}}" > with-call.txt
+      - echo "{{.MESSAGE}}"
 
-  from-dot-env: echo '{{.DOT_ENV_VAR}}' > from-dot-env.txt
+  from-dot-env: echo '{{.DOT_ENV_VAR}}'
