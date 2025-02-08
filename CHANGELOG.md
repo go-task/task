@@ -10,6 +10,9 @@
   @vmaerten).
 - Use only the relevant checker (timestamp or checksum) to improve performance
   (#2029, #2031 by @vmaerten).
+- Print warnings when attempting to enable an inactive experiment or an active
+  experiment with an invalid value (#1979, #2049 by @pd93).
+- Refactored the experiments package and added tests (#2049 by @pd93).
 
 ## v3.41.0 - 2025-01-18
 
