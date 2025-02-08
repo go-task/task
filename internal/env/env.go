@@ -8,6 +8,8 @@ import (
 	"github.com/go-task/task/v3/taskfile/ast"
 )
 
+const taskVarPrefix = "TASK_"
+
 func Get(t *ast.Task) []string {
 	if t.Env == nil {
 		return nil
@@ -23,7 +25,7 @@ func GetFromVars(env *ast.Vars) []string {
 		if !isTypeAllowed(v) {
 			continue
 		}
-		if !experiments.EnvPrecedence.Enabled {
+		if !experiments.EnvPrecedence.Enabled() {
 			if _, alreadySet := os.LookupEnv(k); alreadySet {
 				continue
 			}
@@ -41,4 +43,8 @@ func isTypeAllowed(v any) bool {
 	default:
 		return false
 	}
+}
+
+func GetTaskEnv(key string) string {
+	return os.Getenv(taskVarPrefix + key)
 }

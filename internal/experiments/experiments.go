@@ -2,28 +2,17 @@ package experiments
 
 import (
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
-	"slices"
 	"strings"
 
-	"github.com/Ladicle/tabwriter"
 	"github.com/joho/godotenv"
 	"github.com/spf13/pflag"
-
-	"github.com/go-task/task/v3/internal/logger"
 )
 
 const envPrefix = "TASK_X_"
 
-type Experiment struct {
-	Name    string
-	Enabled bool
-	Value   string
-}
-
-// A list of experiments.
+// A set of experiments that can be enabled or disabled.
 var (
 	GentleForce     Experiment
 	RemoteTaskfiles Experiment
@@ -32,32 +21,31 @@ var (
 	EnvPrecedence   Experiment
 )
 
+// An internal list of all the initialized experiments used for iterating.
+var xList []Experiment
+
 func init() {
 	readDotEnv()
-	GentleForce = New("GENTLE_FORCE")
-	RemoteTaskfiles = New("REMOTE_TASKFILES")
-	AnyVariables = New("ANY_VARIABLES", "1", "2")
+	GentleForce = New("GENTLE_FORCE", "1")
+	RemoteTaskfiles = New("REMOTE_TASKFILES", "1")
+	AnyVariables = New("ANY_VARIABLES")
 	MapVariables = New("MAP_VARIABLES", "1", "2")
-	EnvPrecedence = New("ENV_PRECEDENCE")
+	EnvPrecedence = New("ENV_PRECEDENCE", "1")
 }
 
-func New(xName string, enabledValues ...string) Experiment {
-	if len(enabledValues) == 0 {
-		enabledValues = []string{"1"}
+// Validate checks if any experiments have been enabled while being inactive.
+// If one is found, the function returns an error.
+func Validate() error {
+	for _, x := range List() {
+		if err := x.Valid(); err != nil {
+			return err
+		}
 	}
-	value := getEnv(xName)
-	return Experiment{
-		Name:    xName,
-		Enabled: slices.Contains(enabledValues, value),
-		Value:   value,
-	}
+	return nil
 }
 
-func (x Experiment) String() string {
-	if x.Enabled {
-		return fmt.Sprintf("on (%s)", x.Value)
-	}
-	return "off"
+func List() []Experiment {
+	return xList
 }
 
 func getEnv(xName string) string {
@@ -94,19 +82,4 @@ func readDotEnv() {
 			os.Setenv(key, value)
 		}
 	}
-}
-
-func printExperiment(w io.Writer, l *logger.Logger, x Experiment) {
-	l.FOutf(w, logger.Yellow, "* ")
-	l.FOutf(w, logger.Green, x.Name)
-	l.FOutf(w, logger.Default, ": \t%s\n", x.String())
-}
-
-func List(l *logger.Logger) error {
-	w := tabwriter.NewWriter(os.Stdout, 0, 8, 0, ' ', 0)
-	printExperiment(w, l, GentleForce)
-	printExperiment(w, l, RemoteTaskfiles)
-	printExperiment(w, l, MapVariables)
-	printExperiment(w, l, EnvPrecedence)
-	return w.Flush()
 }

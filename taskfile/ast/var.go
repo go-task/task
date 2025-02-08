@@ -175,7 +175,7 @@ type Var struct {
 }
 
 func (v *Var) UnmarshalYAML(node *yaml.Node) error {
-	if experiments.MapVariables.Enabled {
+	if experiments.MapVariables.Enabled() {
 
 		// This implementation is not backwards-compatible and replaces the 'sh' key with map variables
 		if experiments.MapVariables.Value == "1" {
