@@ -218,7 +218,7 @@ func (l *Logger) Prompt(color Color, prompt string, defaultValue string, continu
 func (l *Logger) PrintExperiments() error {
 	w := tabwriter.NewWriter(l.Stdout, 0, 8, 0, ' ', 0)
 	for _, x := range experiments.List() {
-		if !x.Active {
+		if !x.Active() {
 			continue
 		}
 		l.FOutf(w, Yellow, "* ")

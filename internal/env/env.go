@@ -25,7 +25,7 @@ func GetFromVars(env *ast.Vars) []string {
 		if !isTypeAllowed(v) {
 			continue
 		}
-		if !experiments.EnvPrecedence.Enabled {
+		if !experiments.EnvPrecedence.Enabled() {
 			if _, alreadySet := os.LookupEnv(k); alreadySet {
 				continue
 			}

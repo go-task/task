@@ -3327,12 +3327,11 @@ func TestVarInheritance(t *testing.T) {
 // because the experiment settings are parsed during experiments.init(), before any tests run.
 func enableExperimentForTest(t *testing.T, e *experiments.Experiment, val string) {
 	t.Helper()
-
 	prev := *e
 	*e = experiments.Experiment{
-		Name:    prev.Name,
-		Enabled: true,
-		Value:   val,
+		Name:          prev.Name,
+		AllowedValues: []string{val},
+		Value:         val,
 	}
 	t.Cleanup(func() { *e = prev })
 }

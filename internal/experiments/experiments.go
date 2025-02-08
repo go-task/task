@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"slices"
 	"strings"
 
 	"github.com/joho/godotenv"
@@ -12,16 +11,6 @@ import (
 )
 
 const envPrefix = "TASK_X_"
-
-type Experiment struct {
-	Name    string // The name of the experiment.
-	Active  bool   // Whether it is possible to enable this experiment.
-	Enabled bool   // Whether this experiment is enabled.
-	Value   string // The version of the experiment that is enabled.
-}
-
-// An internal list of all the initialized experiments used for iterating.
-var xList []Experiment
 
 // A set of experiments that can be enabled or disabled.
 var (
@@ -32,32 +21,44 @@ var (
 	EnvPrecedence   Experiment
 )
 
+// An internal list of all the initialized experiments used for iterating.
+var xList []Experiment
+
 func init() {
 	readDotEnv()
-	GentleForce = newExperiment("GENTLE_FORCE", "1")
-	RemoteTaskfiles = newExperiment("REMOTE_TASKFILES", "1")
-	AnyVariables = newExperiment("ANY_VARIABLES")
-	MapVariables = newExperiment("MAP_VARIABLES", "1", "2")
-	EnvPrecedence = newExperiment("ENV_PRECEDENCE", "1")
+	GentleForce = New("GENTLE_FORCE", "1")
+	RemoteTaskfiles = New("REMOTE_TASKFILES", "1")
+	AnyVariables = New("ANY_VARIABLES")
+	MapVariables = New("MAP_VARIABLES", "1", "2")
+	EnvPrecedence = New("ENV_PRECEDENCE", "1")
 }
 
-func newExperiment(xName string, enabledValues ...string) Experiment {
+// New creates a new experiment with the given name and sets the values that can
+// enable it.
+func New(xName string, allowedValues ...string) Experiment {
 	value := getEnv(xName)
 	x := Experiment{
-		Name:    xName,
-		Active:  len(enabledValues) > 0,
-		Enabled: slices.Contains(enabledValues, value),
-		Value:   value,
+		Name:          xName,
+		AllowedValues: allowedValues,
+		Value:         value,
 	}
 	xList = append(xList, x)
 	return x
 }
 
-func (x Experiment) String() string {
-	if x.Enabled {
-		return fmt.Sprintf("on (%s)", x.Value)
+// Validate checks if any experiments have been enabled while being inactive.
+// If one is found, the function returns an error.
+func Validate() error {
+	for _, x := range List() {
+		if err := x.Valid(); err != nil {
+			return err
+		}
 	}
-	return "off"
+	return nil
+}
+
+func List() []Experiment {
+	return xList
 }
 
 func getEnv(xName string) string {
@@ -94,19 +95,4 @@ func readDotEnv() {
 			os.Setenv(key, value)
 		}
 	}
-}
-
-// Validate checks if any experiments have been enabled while being inactive.
-// If one is found, the function returns an error.
-func Validate() error {
-	for _, x := range List() {
-		if !x.Active && x.Value != "" {
-			return fmt.Errorf("task: Experiment %q is not active and cannot be enabled", x.Name)
-		}
-	}
-	return nil
-}
-
-func List() []Experiment {
-	return xList
 }
