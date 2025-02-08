@@ -33,19 +33,6 @@ func init() {
 	EnvPrecedence = New("ENV_PRECEDENCE", "1")
 }
 
-// New creates a new experiment with the given name and sets the values that can
-// enable it.
-func New(xName string, allowedValues ...string) Experiment {
-	value := getEnv(xName)
-	x := Experiment{
-		Name:          xName,
-		AllowedValues: allowedValues,
-		Value:         value,
-	}
-	xList = append(xList, x)
-	return x
-}
-
 // Validate checks if any experiments have been enabled while being inactive.
 // If one is found, the function returns an error.
 func Validate() error {

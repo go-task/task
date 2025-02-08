@@ -5,26 +5,28 @@ import (
 	"strings"
 )
 
-type ExperimentHasInvalidValueError struct {
-	x Experiment
+type InvalidValueError struct {
+	Name          string
+	AllowedValues []string
+	Value         string
 }
 
-func (err ExperimentHasInvalidValueError) Error() string {
+func (err InvalidValueError) Error() string {
 	return fmt.Sprintf(
 		"task: Experiment %q has an invalid value %q (allowed values: %s)",
-		err.x.Name,
-		err.x.Value,
-		strings.Join(err.x.AllowedValues, ", "),
+		err.Name,
+		err.Value,
+		strings.Join(err.AllowedValues, ", "),
 	)
 }
 
-type ExperimentInactiveError struct {
-	x Experiment
+type InactiveError struct {
+	Name string
 }
 
-func (err ExperimentInactiveError) Error() string {
+func (err InactiveError) Error() string {
 	return fmt.Sprintf(
 		"task: Experiment %q is inactive and cannot be enabled",
-		err.x.Name,
+		err.Name,
 	)
 }
