@@ -8,6 +8,8 @@
   by @jeongukjae).
 - Fixed a bug where allowed values didn't work with dynamic var (#2032, #2033 by
   @vmaerten).
+- Use only the relevant checker (timestamp or checksum) to improve performance
+  (#2029, #2031 by @vmaerten).
 
 ## v3.41.0 - 2025-01-18
 
