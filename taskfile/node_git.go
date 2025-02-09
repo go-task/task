@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"net/url"
 	"path/filepath"
 	"strings"
 
@@ -22,10 +21,10 @@ import (
 // An GitNode is a node that reads a Taskfile from a remote location via Git.
 type GitNode struct {
 	*BaseNode
-	URL    *url.URL
-	rawUrl string
-	ref    string
-	path   string
+	fullURL  string
+	baseURL  string
+	ref      string
+	filepath string
 }
 
 func NewGitNode(
@@ -34,37 +33,37 @@ func NewGitNode(
 	insecure bool,
 	opts ...NodeOption,
 ) (*GitNode, error) {
-	base := NewBaseNode(dir, opts...)
-	u, err := giturls.Parse(entrypoint)
+	gitURL, err := giturls.Parse(entrypoint)
 	if err != nil {
 		return nil, err
 	}
-
-	basePath, path := func() (string, string) {
-		x := strings.Split(u.Path, "//")
-		return x[0], x[1]
-	}()
-	ref := u.Query().Get("ref")
-
-	rawUrl := u.String()
-
-	u.RawQuery = ""
-	u.Path = basePath
-
-	if u.Scheme == "http" && !insecure {
+	if gitURL.Scheme == "http" && !insecure {
 		return nil, &errors.TaskfileNotSecureError{URI: entrypoint}
 	}
+
+	urlPath, filepath := func() (string, string) {
+		x := strings.Split(gitURL.Path, "//")
+		return x[0], x[1]
+	}()
+
+	ref := gitURL.Query().Get("ref")
+	fullURL := gitURL.Redacted()
+
+	gitURL.RawQuery = ""
+	gitURL.Path = urlPath
+	baseURL := gitURL.String()
+
 	return &GitNode{
-		BaseNode: base,
-		URL:      u,
-		rawUrl:   rawUrl,
+		BaseNode: NewBaseNode(dir, opts...),
+		fullURL:  fullURL,
+		baseURL:  baseURL,
 		ref:      ref,
-		path:     path,
+		filepath: filepath,
 	}, nil
 }
 
 func (node *GitNode) Location() string {
-	return node.rawUrl
+	return node.fullURL
 }
 
 func (node *GitNode) Remote() bool {
@@ -75,7 +74,7 @@ func (node *GitNode) Read(_ context.Context) ([]byte, error) {
 	fs := memfs.New()
 	storer := memory.NewStorage()
 	_, err := git.Clone(storer, fs, &git.CloneOptions{
-		URL:           node.URL.String(),
+		URL:           node.baseURL,
 		ReferenceName: plumbing.ReferenceName(node.ref),
 		SingleBranch:  true,
 		Depth:         1,
@@ -83,7 +82,7 @@ func (node *GitNode) Read(_ context.Context) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	file, err := fs.Open(node.path)
+	file, err := fs.Open(node.filepath)
 	if err != nil {
 		return nil, err
 	}
@@ -97,8 +96,8 @@ func (node *GitNode) Read(_ context.Context) ([]byte, error) {
 }
 
 func (node *GitNode) ResolveEntrypoint(entrypoint string) (string, error) {
-	dir, _ := filepath.Split(node.path)
-	resolvedEntrypoint := fmt.Sprintf("%s//%s", node.URL, filepath.Join(dir, entrypoint))
+	dir, _ := filepath.Split(node.filepath)
+	resolvedEntrypoint := fmt.Sprintf("%s//%s", node.baseURL, filepath.Join(dir, entrypoint))
 	if node.ref != "" {
 		return fmt.Sprintf("%s?ref=%s", resolvedEntrypoint, node.ref), nil
 	}
