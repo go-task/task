@@ -21,7 +21,7 @@ type Node interface {
 	Remote() bool
 	ResolveEntrypoint(entrypoint string) (string, error)
 	ResolveDir(dir string) (string, error)
-	FilenameAndLastDir() (string, string)
+	FilenameAndLastDir() (lastDir string, file string) // TODO the return order is implemented opposite to the naming
 }
 
 func NewRootNode(
