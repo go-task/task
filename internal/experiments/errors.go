@@ -2,9 +2,10 @@ package experiments
 
 import (
 	"fmt"
-	"github.com/go-task/task/v3/internal/slicesext"
 	"strconv"
 	"strings"
+
+	"github.com/go-task/task/v3/internal/slicesext"
 )
 
 type InvalidValueError struct {

@@ -7,6 +7,7 @@ import (
 )
 
 func TestConvertIntToString(t *testing.T) {
+	t.Parallel()
 	input := []int{1, 2, 3, 4, 5}
 	expected := []string{"1", "2", "3", "4", "5"}
 	result := Convert(input, strconv.Itoa)
@@ -23,6 +24,7 @@ func TestConvertIntToString(t *testing.T) {
 }
 
 func TestConvertStringToInt(t *testing.T) {
+	t.Parallel()
 	input := []string{"1", "2", "3", "4", "5"}
 	expected := []int{1, 2, 3, 4, 5}
 	result := Convert(input, func(s string) int {
@@ -42,6 +44,7 @@ func TestConvertStringToInt(t *testing.T) {
 }
 
 func TestConvertFloatToInt(t *testing.T) {
+	t.Parallel()
 	input := []float64{1.1, 2.2, 3.7, 4.5, 5.9}
 	expected := []int{1, 2, 4, 5, 6}
 	result := Convert(input, func(f float64) int {
@@ -60,6 +63,7 @@ func TestConvertFloatToInt(t *testing.T) {
 }
 
 func TestConvertEmptySlice(t *testing.T) {
+	t.Parallel()
 	input := []int{}
 	result := Convert(input, strconv.Itoa)
 
@@ -69,6 +73,7 @@ func TestConvertEmptySlice(t *testing.T) {
 }
 
 func TestConvertNilSlice(t *testing.T) {
+	t.Parallel()
 	var input []int
 	result := Convert(input, strconv.Itoa)
 
