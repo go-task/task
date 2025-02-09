@@ -153,7 +153,7 @@ type TaskMissingRequiredVars struct {
 }
 
 func (v MissingVar) String() string {
-	if v.AllowedValues == nil || len(v.AllowedValues) == 0 {
+	if len(v.AllowedValues) == 0 {
 		return v.Name
 	}
 	return fmt.Sprintf("%s (allowed values: %v)", v.Name, v.AllowedValues)
