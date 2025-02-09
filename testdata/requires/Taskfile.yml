@@ -33,9 +33,9 @@ tasks:
   validation-var:
     requires:
       vars:
+        - ENV
         - name: FOO
           enum: ['one', 'two']
-
 
   require-before-compile:
     requires:

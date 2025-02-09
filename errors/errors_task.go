@@ -142,17 +142,33 @@ func (err *TaskCancelledNoTerminalError) Code() int {
 }
 
 // TaskMissingRequiredVars is returned when a task is missing required variables.
+
+type MissingVar struct {
+	Name          string
+	AllowedValues []string
+}
 type TaskMissingRequiredVars struct {
 	TaskName    string
-	MissingVars []string
+	MissingVars []MissingVar
+}
+
+func (v MissingVar) String() string {
+	if v.AllowedValues == nil || len(v.AllowedValues) == 0 {
+		return v.Name
+	}
+	return fmt.Sprintf("%s (allowed values: %v)", v.Name, v.AllowedValues)
 }
 
 func (err *TaskMissingRequiredVars) Error() string {
+	var vars []string
+	for _, v := range err.MissingVars {
+		vars = append(vars, v.String())
+	}
+
 	return fmt.Sprintf(
 		`task: Task %q cancelled because it is missing required variables: %s`,
 		err.TaskName,
-		strings.Join(err.MissingVars, ", "),
-	)
+		strings.Join(vars, ", "))
 }
 
 func (err *TaskMissingRequiredVars) Code() int {

@@ -12,11 +12,14 @@ func (e *Executor) areTaskRequiredVarsSet(t *ast.Task) error {
 		return nil
 	}
 
-	var missingVars []string
+	var missingVars []errors.MissingVar
 	for _, requiredVar := range t.Requires.Vars {
 		_, ok := t.Vars.Get(requiredVar.Name)
 		if !ok {
-			missingVars = append(missingVars, requiredVar.Name)
+			missingVars = append(missingVars, errors.MissingVar{
+				Name:          requiredVar.Name,
+				AllowedValues: requiredVar.Enum,
+			})
 		}
 	}
 
