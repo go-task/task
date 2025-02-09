@@ -205,7 +205,7 @@ func TestRequires(t *testing.T) {
 
 	vars = ast.NewVars()
 	require.NoError(t, e.Setup())
-	require.ErrorContains(t, e.Run(context.Background(), &ast.Call{Task: "validation-var", Vars: vars}), "task: Task \"validation-var\" cancelled because it is missing required variables: ENV, FOO (allowed values : [one two])")
+	require.ErrorContains(t, e.Run(context.Background(), &ast.Call{Task: "validation-var", Vars: vars}), "task: Task \"validation-var\" cancelled because it is missing required variables: ENV, FOO (allowed values: [one two])")
 	buff.Reset()
 
 	require.NoError(t, e.Setup())
