@@ -121,5 +121,5 @@ func (node *GitNode) ResolveDir(dir string) (string, error) {
 }
 
 func (node *GitNode) FilenameAndLastDir() (string, string) {
-	return filepath.Base(node.path), filepath.Base(filepath.Dir(node.path))
+	return filepath.Base(filepath.Dir(node.filepath)), filepath.Base(node.filepath)
 }
