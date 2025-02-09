@@ -67,19 +67,19 @@ func TestGitNode_FilenameAndDir(t *testing.T) {
 
 	node, err := NewGitNode("https://github.com/foo/bar.git//directory/Taskfile.yml?ref=main", "", false)
 	assert.NoError(t, err)
-	filename, dir := node.FilenameAndLastDir()
+	dir, filename := node.FilenameAndLastDir()
 	assert.Equal(t, "Taskfile.yml", filename)
 	assert.Equal(t, "directory", dir)
 
 	node, err = NewGitNode("https://github.com/foo/bar.git//Taskfile.yml?ref=main", "", false)
 	assert.NoError(t, err)
-	filename, dir = node.FilenameAndLastDir()
+	dir, filename = node.FilenameAndLastDir()
 	assert.Equal(t, "Taskfile.yml", filename)
 	assert.Equal(t, ".", dir)
 
 	node, err = NewGitNode("https://github.com/foo/bar.git//multiple/directory/Taskfile.yml?ref=main", "", false)
 	assert.NoError(t, err)
-	filename, dir = node.FilenameAndLastDir()
+	dir, filename = node.FilenameAndLastDir()
 	assert.Equal(t, "Taskfile.yml", filename)
 	assert.Equal(t, "directory", dir)
 }
