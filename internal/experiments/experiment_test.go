@@ -1,6 +1,7 @@
 package experiments_test
 
 import (
+	"strconv"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -15,8 +16,8 @@ func TestNew(t *testing.T) {
 	)
 	tests := []struct {
 		name          string
-		allowedValues []string
-		value         string
+		allowedValues []int
+		value         int
 		wantEnabled   bool
 		wantActive    bool
 		wantValid     error
@@ -28,7 +29,7 @@ func TestNew(t *testing.T) {
 		},
 		{
 			name:        `[] allowed, value="1"`,
-			value:       "1",
+			value:       1,
 			wantEnabled: false,
 			wantActive:  false,
 			wantValid: &experiments.InactiveError{
@@ -37,33 +38,33 @@ func TestNew(t *testing.T) {
 		},
 		{
 			name:          `[1] allowed, value=""`,
-			allowedValues: []string{"1"},
+			allowedValues: []int{1},
 			wantEnabled:   false,
 			wantActive:    true,
 		},
 		{
 			name:          `[1] allowed, value="1"`,
-			allowedValues: []string{"1"},
-			value:         "1",
+			allowedValues: []int{1},
+			value:         1,
 			wantEnabled:   true,
 			wantActive:    true,
 		},
 		{
 			name:          `[1] allowed, value="2"`,
-			allowedValues: []string{"1"},
-			value:         "2",
+			allowedValues: []int{1},
+			value:         2,
 			wantEnabled:   false,
 			wantActive:    true,
 			wantValid: &experiments.InvalidValueError{
 				Name:          exampleExperiment,
-				AllowedValues: []string{"1"},
-				Value:         "2",
+				AllowedValues: []int{1},
+				Value:         2,
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			t.Setenv(exampleExperimentEnv, tt.value)
+			t.Setenv(exampleExperimentEnv, strconv.Itoa(tt.value))
 			x := experiments.New(exampleExperiment, tt.allowedValues...)
 			assert.Equal(t, exampleExperiment, x.Name)
 			assert.Equal(t, tt.wantEnabled, x.Enabled())

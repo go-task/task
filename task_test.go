@@ -135,7 +135,7 @@ func TestEnv(t *testing.T) {
 		},
 	}
 	tt.Run(t)
-	enableExperimentForTest(t, &experiments.EnvPrecedence, "1")
+	enableExperimentForTest(t, &experiments.EnvPrecedence, 1)
 	ttt := fileContentTest{
 		Dir:       "testdata/env",
 		Target:    "overridden",
@@ -3224,7 +3224,7 @@ func TestReference(t *testing.T) {
 }
 
 func TestVarInheritance(t *testing.T) {
-	enableExperimentForTest(t, &experiments.EnvPrecedence, "1")
+	enableExperimentForTest(t, &experiments.EnvPrecedence, 1)
 	tests := []struct {
 		name string
 		want string
@@ -3337,7 +3337,7 @@ func enableExperimentForTest(t *testing.T, e *experiments.Experiment, val int) {
 	prev := *e
 	*e = experiments.Experiment{
 		Name:          prev.Name,
-		AllowedValues: []string{val},
+		AllowedValues: []int{val},
 		Value:         val,
 	}
 	t.Cleanup(func() { *e = prev })

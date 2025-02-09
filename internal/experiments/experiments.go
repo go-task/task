@@ -32,17 +32,19 @@ var (
 )
 
 // An internal list of all the initialized experiments used for iterating.
-var xList []Experiment
-var experimentConfig experimentConfigFile
+var (
+	xList            []Experiment
+	experimentConfig experimentConfigFile
+)
 
 func init() {
 	readDotEnv()
 	experimentConfig = readConfig()
-	GentleForce = New("GENTLE_FORCE", "1")
-	RemoteTaskfiles = New("REMOTE_TASKFILES", "1")
+	GentleForce = New("GENTLE_FORCE", 1)
+	RemoteTaskfiles = New("REMOTE_TASKFILES", 1)
 	AnyVariables = New("ANY_VARIABLES")
-	MapVariables = New("MAP_VARIABLES", "1", "2")
-	EnvPrecedence = New("ENV_PRECEDENCE", "1")
+	MapVariables = New("MAP_VARIABLES", 1, 2)
+	EnvPrecedence = New("ENV_PRECEDENCE", 1)
 }
 
 // Validate checks if any experiments have been enabled while being inactive.
