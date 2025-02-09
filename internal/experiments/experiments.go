@@ -6,6 +6,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/Masterminds/semver/v3"
+
 	"gopkg.in/yaml.v3"
 
 	"github.com/joho/godotenv"
@@ -21,6 +23,7 @@ var defaultConfigFilenames = []string{
 
 type experimentConfigFile struct {
 	Experiments map[string]int `yaml:"experiments"`
+	Version     *semver.Version
 }
 
 var (
