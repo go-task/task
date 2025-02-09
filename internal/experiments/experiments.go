@@ -2,16 +2,12 @@ package experiments
 
 import (
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
-	"slices"
-	"strconv"
 	"strings"
 
 	"gopkg.in/yaml.v3"
 
-	"github.com/Ladicle/tabwriter"
 	"github.com/joho/godotenv"
 	"github.com/spf13/pflag"
 )
@@ -26,6 +22,7 @@ var defaultConfigFilenames = []string{
 type experimentConfigFile struct {
 	Experiments map[string]int `yaml:"experiments"`
 }
+
 var (
 	GentleForce     Experiment
 	RemoteTaskfiles Experiment
@@ -38,11 +35,9 @@ var (
 var xList []Experiment
 var experimentConfig experimentConfigFile
 
-var ExperimentConfig ExperimentConfigFile
-
 func init() {
 	readDotEnv()
-	ExperimentConfig = readConfig()
+	experimentConfig = readConfig()
 	GentleForce = New("GENTLE_FORCE", "1")
 	RemoteTaskfiles = New("REMOTE_TASKFILES", "1")
 	AnyVariables = New("ANY_VARIABLES")
@@ -121,7 +116,6 @@ func readConfig() experimentConfigFile {
 	if err := yaml.Unmarshal(content, &cfg); err != nil {
 		return experimentConfigFile{}
 	}
-		return ExperimentConfigFile{}
 
-}
 	return cfg
+}
