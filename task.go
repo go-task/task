@@ -498,7 +498,7 @@ func (e *Executor) GetTaskList(filters ...FilterFunc) ([]*ast.Task, error) {
 	// Compile the list of tasks
 	for i := range tasks {
 		g.Go(func() error {
-			compiledTask, err := e.FastCompiledTask(&Call{Task: tasks[i].Task})
+			compiledTask, err := e.CompiledTaskForTaskList(&Call{Task: tasks[i].Task})
 			if err != nil {
 				return err
 			}
