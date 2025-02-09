@@ -16,7 +16,7 @@ import (
 // An HTTPNode is a node that reads a Taskfile from a remote location via HTTP.
 type HTTPNode struct {
 	*BaseNode
-	URL        *url.URL // stores url pointing actual remote file. (e.g. with Taskfile.yml)
+	url        *url.URL // stores url pointing actual remote file. (e.g. with Taskfile.yml)
 	entrypoint string   // stores entrypoint url. used for building graph vertices.
 	timeout    time.Duration
 }
@@ -34,13 +34,13 @@ func NewHTTPNode(
 		return nil, err
 	}
 	if url.Scheme == "http" && !insecure {
-		return nil, &errors.TaskfileNotSecureError{URI: entrypoint}
+		return nil, &errors.TaskfileNotSecureError{URI: url.Redacted()}
 	}
 
 	return &HTTPNode{
 		BaseNode:   base,
-		URL:        url,
-		entrypoint: entrypoint,
+		url:        url,
+		entrypoint: url.Redacted(),
 		timeout:    timeout,
 	}, nil
 }
@@ -54,27 +54,27 @@ func (node *HTTPNode) Remote() bool {
 }
 
 func (node *HTTPNode) Read(ctx context.Context) ([]byte, error) {
-	url, err := RemoteExists(ctx, node.URL, node.timeout)
+	url, err := RemoteExists(ctx, node.url, node.timeout)
 	if err != nil {
 		return nil, err
 	}
-	node.URL = url
-	req, err := http.NewRequest("GET", node.URL.String(), nil)
+	node.url = url
+	req, err := http.NewRequest("GET", node.url.String(), nil)
 	if err != nil {
-		return nil, errors.TaskfileFetchFailedError{URI: node.URL.String()}
+		return nil, errors.TaskfileFetchFailedError{URI: node.url.Redacted()}
 	}
 
 	resp, err := http.DefaultClient.Do(req.WithContext(ctx))
 	if err != nil {
 		if errors.Is(err, context.DeadlineExceeded) {
-			return nil, &errors.TaskfileNetworkTimeoutError{URI: node.URL.String(), Timeout: node.timeout}
+			return nil, &errors.TaskfileNetworkTimeoutError{URI: node.url.Redacted(), Timeout: node.timeout}
 		}
-		return nil, errors.TaskfileFetchFailedError{URI: node.URL.String()}
+		return nil, errors.TaskfileFetchFailedError{URI: node.url.Redacted()}
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
 		return nil, errors.TaskfileFetchFailedError{
-			URI:            node.URL.String(),
+			URI:            node.url.Redacted(),
 			HTTPStatusCode: resp.StatusCode,
 		}
 	}
@@ -93,7 +93,7 @@ func (node *HTTPNode) ResolveEntrypoint(entrypoint string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return node.URL.ResolveReference(ref).String(), nil
+	return node.url.ResolveReference(ref).String(), nil
 }
 
 func (node *HTTPNode) ResolveDir(dir string) (string, error) {
@@ -118,5 +118,9 @@ func (node *HTTPNode) ResolveDir(dir string) (string, error) {
 
 func (node *HTTPNode) FilenameAndLastDir() (string, string) {
 	dir, filename := filepath.Split(node.entrypoint)
+	dir = filepath.Base(dir)
+	if dir == node.url.Host {
+		dir = "."
+	}
 	return filepath.Base(dir), filename
 }
