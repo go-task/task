@@ -4,6 +4,8 @@
 
 - Made `--init` less verbose by default and respect `--silent` and `--verbose`
   flags (#2009, #2011 by @HeCorr).
+- `--init` now accepts a file name or directory as an argument (#2008, #2018 by
+  @HeCorr).
 - Fix a bug where an HTTP node's location was being mutated incorrectly (#2007
   by @jeongukjae).
 - Fixed a bug where allowed values didn't work with dynamic var (#2032, #2033 by

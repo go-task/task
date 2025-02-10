@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
-	fp "path/filepath"
+	"path/filepath"
 	"strings"
 
 	"github.com/spf13/pflag"
@@ -87,11 +87,11 @@ func run() error {
 		if len(args) > 0 {
 			name := args[0]
 			if filepathext.IsExtOnly(name) {
-				name = filepathext.SmartJoin(fp.Dir(name), "Taskfile"+fp.Ext(name))
+				name = filepathext.SmartJoin(filepath.Dir(name), "Taskfile"+filepath.Ext(name))
 			}
 			path = filepathext.SmartJoin(wd, name)
 		}
-		finalPath, err := task.InitTaskfile(os.Stdout, path)
+		finalPath, err := task.InitTaskfile(path)
 		if err != nil {
 			return err
 		}
