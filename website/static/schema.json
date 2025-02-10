@@ -678,6 +678,13 @@
           "description": "A set of global environment variables.",
           "$ref": "#/definitions/env"
         },
+        "preconditions": {
+          "description": "A list of commands to check if any task should run. If a condition is not met, the task will return an error.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/precondition"
+          }
+        },
         "tasks": {
           "description": "A set of task definitions.",
           "$ref": "#/definitions/tasks"
