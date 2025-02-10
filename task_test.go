@@ -235,6 +235,15 @@ func TestSpecialVars(t *testing.T) {
 		{target: "print-taskfile-dir", expected: toAbs(dir)},
 		{target: "print-task-version", expected: "unknown"},
 		{target: "print-task-dir", expected: toAbs(dir) + "/foo"},
+		{
+			target: "print-task-sources",
+			expected: "[" +
+				toAbs(dir) + "/sources-as-var/file.txt, " +
+				toAbs(dir) + "/sources-as-var/subdir1/file.txt, " +
+				toAbs(dir) + "/sources-as-var/subdir2/file.txt" +
+				"]",
+		},
+		{target: "print-task-sources-empty", expected: "[]"},
 		// Included
 		{target: "included:print-task", expected: "included:print-task"},
 		{target: "included:print-root-dir", expected: toAbs(dir)},
@@ -255,6 +264,9 @@ func TestSpecialVars(t *testing.T) {
 					Stderr:             &buff,
 					Silent:             true,
 					EnableVersionCheck: true,
+					// NOTE needed to enable Force to ignore fingerprints generated
+					// when setting source.
+					Force: true,
 				}
 				require.NoError(t, e.Setup())
 				require.NoError(t, e.Run(context.Background(), &ast.Call{Task: test.target}))
