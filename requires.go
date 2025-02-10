@@ -24,7 +24,7 @@ func (e *Executor) areTaskRequiredVarsSet(t *ast.Task) error {
 	}
 
 	if len(missingVars) > 0 {
-		return &errors.TaskMissingRequiredVars{
+		return &errors.TaskMissingRequiredVarsError{
 			TaskName:    t.Name(),
 			MissingVars: missingVars,
 		}
@@ -54,7 +54,7 @@ func (e *Executor) areTaskRequiredVarsAllowedValuesSet(t *ast.Task) error {
 	}
 
 	if len(notAllowedValuesVars) > 0 {
-		return &errors.TaskNotAllowedVars{
+		return &errors.TaskNotAllowedVarsError{
 			TaskName:       t.Name(),
 			NotAllowedVars: notAllowedValuesVars,
 		}
