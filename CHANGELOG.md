@@ -25,13 +25,12 @@ providing changelogs for our package API going forwards. The hope is that these
 changes will provide a better long-term experience for our users and allow to
 stabilize the API in the future. #121 now tracks this piece of work.
 
-- The
-  [`task.InitTaskfile`](https://pkg.go.dev/github.com/go-task/task/v3#InitTaskfile)
-  function no longer outputs any text (this is now the caller's responsibility)
-  and hence does not require an `io.Writer`. The remaining path argument can now
-  be a filename OR a directory. Finally, the function now returns two variables,
-  the full path of the generated file and an error (#2011, ff8c913 by @HeCorr
-  and @pd93).
+- [`task.InitTaskfile`](https://pkg.go.dev/github.com/go-task/task/v3#InitTaskfile)
+  (#2011, ff8c913 by @HeCorr and @pd93)
+  - No longer accepts an `io.Writer` (output is now the caller's
+    responsibility).
+  - The path argument can now be a filename OR a directory.
+  - The function now returns the full path of the generated file.
 
 ## v3.41.0 - 2025-01-18
 
