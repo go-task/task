@@ -1,6 +1,8 @@
 module github.com/go-task/task/v3
 
-go 1.22.0
+go 1.23.0
+
+toolchain go1.23.5
 
 require (
 	github.com/Ladicle/tabwriter v1.0.0
@@ -10,6 +12,7 @@ require (
 	github.com/davecgh/go-spew v1.1.1
 	github.com/dominikbraun/graph v0.23.0
 	github.com/elliotchance/orderedmap/v2 v2.7.0
+	github.com/elliotchance/orderedmap/v3 v3.1.0
 	github.com/fatih/color v1.18.0
 	github.com/go-git/go-billy/v5 v5.6.2
 	github.com/go-git/go-git/v5 v5.13.2
