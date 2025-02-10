@@ -26,8 +26,10 @@ func TestFileWatcherInterval(t *testing.T) {
 task: Started watching for tasks: default
 task: [default] echo "Hello, World!"
 Hello, World!
+task: task "default" finished running
 task: [default] echo "Hello, World!"
 Hello, World!
+task: task "default" finished running
 	`)
 
 	var buff bytes.Buffer

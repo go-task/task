@@ -2,6 +2,7 @@ package fingerprint
 
 import (
 	"os"
+	"path/filepath"
 	"sort"
 
 	"github.com/mattn/go-zglob"
@@ -11,29 +12,29 @@ import (
 	"github.com/go-task/task/v3/taskfile/ast"
 )
 
-func Globs(dir string, globs []*ast.Glob) ([]string, error) {
-	fileMap := make(map[string]bool)
+func Globs(dir string, gs []*ast.Glob) ([]string, error) {
+	return globs(dir, gs, false)
+}
+
+func GlobsDirs(dir string, gs []*ast.Glob) ([]string, error) {
+	return globs(dir, gs, true)
+}
+
+func globs(dir string, globs []*ast.Glob, dirOnly bool) ([]string, error) {
+	resultMap := make(map[string]bool)
 	for _, g := range globs {
-		matches, err := Glob(dir, g.Glob)
+		matches, err := glob(dir, g.Glob, dirOnly)
 		if err != nil {
 			continue
 		}
 		for _, match := range matches {
-			fileMap[match] = !g.Negate
+			resultMap[match] = !g.Negate
 		}
 	}
-	files := make([]string, 0)
-	for file, includePath := range fileMap {
-		if includePath {
-			files = append(files, file)
-		}
-	}
-	sort.Strings(files)
-	return files, nil
+	return collectKeys(resultMap), nil
 }
 
-func Glob(dir string, g string) ([]string, error) {
-	files := make([]string, 0)
+func glob(dir string, g string, dirOnly bool) ([]string, error) {
 	g = filepathext.SmartJoin(dir, g)
 
 	g, err := execext.Expand(g)
@@ -46,15 +47,36 @@ func Glob(dir string, g string) ([]string, error) {
 		return nil, err
 	}
 
+	results := make(map[string]bool, len(fs))
+
 	for _, f := range fs {
 		info, err := os.Stat(f)
 		if err != nil {
 			return nil, err
 		}
+		if dirOnly {
+			if info.IsDir() {
+				results[f] = true
+			} else {
+				results[filepath.Dir(f)] = true
+			}
+			continue
+		}
 		if info.IsDir() {
 			continue
 		}
-		files = append(files, f)
+		results[f] = true
 	}
-	return files, nil
+	return collectKeys(results), nil
+}
+
+func collectKeys(m map[string]bool) []string {
+	keys := make([]string, 0, len(m))
+	for k, v := range m {
+		if v {
+			keys = append(keys, k)
+		}
+	}
+	sort.Strings(keys)
+	return keys
 }

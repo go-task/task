@@ -6,19 +6,17 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"slices"
 	"strings"
 	"syscall"
-	"time"
 
-	"github.com/radovskyb/watcher"
+	"github.com/fsnotify/fsnotify"
 
 	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/fingerprint"
 	"github.com/go-task/task/v3/internal/logger"
 	"github.com/go-task/task/v3/taskfile/ast"
 )
-
-const defaultWatchInterval = 5 * time.Second
 
 // watchTasks start watching the given tasks
 func (e *Executor) watchTasks(calls ...*ast.Call) error {
@@ -33,73 +31,83 @@ func (e *Executor) watchTasks(calls ...*ast.Call) error {
 	for _, c := range calls {
 		c := c
 		go func() {
-			if err := e.RunTask(ctx, c); err != nil && !isContextError(err) {
+			err := e.RunTask(ctx, c)
+			if err == nil {
+				e.Logger.Errf(logger.Green, "task: task \"%s\" finished running\n", c.Task)
+			} else if !isContextError(err) {
 				e.Logger.Errf(logger.Red, "%v\n", err)
 			}
 		}()
 	}
 
-	var watchInterval time.Duration
-	switch {
-	case e.Interval != 0:
-		watchInterval = e.Interval
-	case e.Taskfile.Interval != 0:
-		watchInterval = e.Taskfile.Interval
-	default:
-		watchInterval = defaultWatchInterval
+	w, err := fsnotify.NewWatcher()
+	if err != nil {
+		cancel()
+		return err
 	}
-
-	e.Logger.VerboseOutf(logger.Green, "task: Watching for changes every %v\n", watchInterval)
-
-	w := watcher.New()
 	defer w.Close()
-	w.SetMaxEvents(1)
 
 	closeOnInterrupt(w)
 
 	go func() {
 		for {
 			select {
-			case event := <-w.Event:
+			case event, ok := <-w.Events:
+				switch {
+				case !ok:
+					cancel()
+					return
+				case event.Op == fsnotify.Chmod:
+					continue
+				}
 				e.Logger.VerboseErrf(logger.Magenta, "task: received watch event: %v\n", event)
-
-				cancel()
-				ctx, cancel = context.WithCancel(context.Background())
 
 				e.Compiler.ResetCache()
 
 				for _, c := range calls {
 					c := c
 					go func() {
-						if err := e.RunTask(ctx, c); err != nil && !isContextError(err) {
+						t, err := e.GetTask(c)
+						if err != nil {
+							e.Logger.Errf(logger.Red, "%v\n", err)
+							return
+						}
+						files, err := fingerprint.Globs(t.Dir, t.Sources)
+						if err != nil {
+							e.Logger.Errf(logger.Red, "%v\n", err)
+							return
+						}
+						relPath, _ := filepath.Rel(e.Dir, event.Name)
+						if !slices.Contains(files, relPath) {
+							e.Logger.VerboseErrf(logger.Magenta, "task: skipped for file not in sources: %s\n", relPath)
+							return
+						}
+						err = e.RunTask(ctx, c)
+						if err == nil {
+							e.Logger.Errf(logger.Green, "task: task \"%s\" finished running\n", c.Task)
+						} else if !isContextError(err) {
 							e.Logger.Errf(logger.Red, "%v\n", err)
 						}
 					}()
 				}
-			case err := <-w.Error:
-				switch err {
-				case watcher.ErrWatchedFileDeleted:
+			case err, ok := <-w.Errors:
+				switch {
+				case !ok:
+					cancel()
+					return
 				default:
 					e.Logger.Errf(logger.Red, "%v\n", err)
 				}
-			case <-w.Closed:
-				cancel()
-				return
 			}
 		}
 	}()
 
-	go func() {
-		// re-register every 5 seconds because we can have new files, but this process is expensive to run
-		for {
-			if err := e.registerWatchedFiles(w, calls...); err != nil {
-				e.Logger.Errf(logger.Red, "%v\n", err)
-			}
-			time.Sleep(watchInterval)
-		}
-	}()
+	if err := e.registerWatchedDirs(w, calls...); err != nil {
+		return err
+	}
 
-	return w.Start(watchInterval)
+	<-ctx.Done()
+	return nil
 }
 
 func isContextError(err error) bool {
@@ -107,10 +115,10 @@ func isContextError(err error) bool {
 		err = taskRunErr.Err
 	}
 
-	return err == context.Canceled || err == context.DeadlineExceeded
+	return errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded)
 }
 
-func closeOnInterrupt(w *watcher.Watcher) {
+func closeOnInterrupt(w *fsnotify.Watcher) {
 	ch := make(chan os.Signal, 1)
 	signal.Notify(ch, os.Interrupt, syscall.SIGTERM)
 	go func() {
@@ -119,61 +127,53 @@ func closeOnInterrupt(w *watcher.Watcher) {
 	}()
 }
 
-func (e *Executor) registerWatchedFiles(w *watcher.Watcher, calls ...*ast.Call) error {
-	watchedFiles := w.WatchedFiles()
+func (e *Executor) registerWatchedDirs(w *fsnotify.Watcher, calls ...*ast.Call) error {
+	watchedDirs := make(map[string]bool)
 
-	var registerTaskFiles func(*ast.Call) error
-	registerTaskFiles = func(c *ast.Call) error {
+	var registerTaskDirs func(*ast.Call) error
+	registerTaskDirs = func(c *ast.Call) error {
 		task, err := e.CompiledTask(c)
 		if err != nil {
 			return err
 		}
 
 		for _, d := range task.Deps {
-			if err := registerTaskFiles(&ast.Call{Task: d.Task, Vars: d.Vars}); err != nil {
+			if err := registerTaskDirs(&ast.Call{Task: d.Task, Vars: d.Vars}); err != nil {
 				return err
 			}
 		}
 		for _, c := range task.Cmds {
 			if c.Task != "" {
-				if err := registerTaskFiles(&ast.Call{Task: c.Task, Vars: c.Vars}); err != nil {
+				if err := registerTaskDirs(&ast.Call{Task: c.Task, Vars: c.Vars}); err != nil {
 					return err
 				}
 			}
 		}
 
-		globs, err := fingerprint.Globs(task.Dir, task.Sources)
+		dirs, err := fingerprint.GlobsDirs(task.Dir, task.Sources)
 		if err != nil {
 			return err
 		}
 
-		for _, s := range globs {
-			files, err := fingerprint.Glob(task.Dir, s)
-			if err != nil {
-				return fmt.Errorf("task: %s: %w", s, err)
+		for _, d := range dirs {
+			if watchedDirs[d] {
+				continue
 			}
-			for _, f := range files {
-				absFile, err := filepath.Abs(f)
-				if err != nil {
-					return err
-				}
-				if ShouldIgnoreFile(absFile) {
-					continue
-				}
-				if _, ok := watchedFiles[absFile]; ok {
-					continue
-				}
-				if err := w.Add(absFile); err != nil {
-					return err
-				}
-				e.Logger.VerboseOutf(logger.Green, "task: watching new file: %v\n", absFile)
+			if ShouldIgnoreFile(d) {
+				continue
 			}
+			if err := w.Add(d); err != nil {
+				return err
+			}
+			watchedDirs[d] = true
+			relPath, _ := filepath.Rel(e.Dir, d)
+			e.Logger.VerboseOutf(logger.Green, "task: watching new dir: %v\n", relPath)
 		}
 		return nil
 	}
 
 	for _, c := range calls {
-		if err := registerTaskFiles(c); err != nil {
+		if err := registerTaskDirs(c); err != nil {
 			return err
 		}
 	}

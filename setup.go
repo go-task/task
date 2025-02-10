@@ -52,6 +52,7 @@ func (e *Executor) Setup() error {
 	}
 	e.setupDefaults()
 	e.setupConcurrencyState()
+	e.warnDeprecations()
 	return nil
 }
 
@@ -282,4 +283,13 @@ func (e *Executor) doVersionChecks() error {
 	}
 
 	return nil
+}
+
+func (e *Executor) warnDeprecations() {
+	if e.Interval > 0 {
+		e.Logger.Errf(logger.Yellow, "task: WARNING: The `--interval` flag is deprecated and has no effect.\n")
+	}
+	if e.Taskfile.Interval > 0 {
+		e.Logger.Errf(logger.Yellow, "task: WARNING: The `interval:` setting is deprecated and has no effect.\n")
+	}
 }
