@@ -16,6 +16,22 @@
   experiment with an invalid value (#1979, #2049 by @pd93).
 - Refactored the experiments package and added tests (#2049 by @pd93).
 
+#### Package API
+
+Unlike our CLI tool,
+[Task's package API is not currently stable](https://taskfile.dev/reference/package).
+In an effort to ease the pain of breaking changes for our users, we will be
+providing changelogs for our package API going forwards. The hope is that these
+changes will provide a better long-term experience for our users and allow to
+stabilize the API in the future. #121 now tracks this piece of work.
+
+- [`task.InitTaskfile`](https://pkg.go.dev/github.com/go-task/task/v3#InitTaskfile)
+  (#2011, ff8c913 by @HeCorr and @pd93)
+  - No longer accepts an `io.Writer` (output is now the caller's
+    responsibility).
+  - The path argument can now be a filename OR a directory.
+  - The function now returns the full path of the generated file.
+
 ## v3.41.0 - 2025-01-18
 
 - Fixed an issue where dynamic variables were not properly logged in verbose
