@@ -1,0 +1,12 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Attach to dlv",
+            "type": "go",
+            "mode": "remote",
+            "port": 5678,
+            "request": "attach",
+        }
+    ]
+}
