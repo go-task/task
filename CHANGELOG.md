@@ -25,6 +25,7 @@ providing changelogs for our package API going forwards. The hope is that these
 changes will provide a better long-term experience for our users and allow to
 stabilize the API in the future. #121 now tracks this piece of work.
 
+- Bumped the minimum required Go version to 1.23 (#2059 by @pd93).
 - [`task.InitTaskfile`](https://pkg.go.dev/github.com/go-task/task/v3#InitTaskfile)
   (#2011, ff8c913 by @HeCorr and @pd93)
   - No longer accepts an `io.Writer` (output is now the caller's
