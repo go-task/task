@@ -12,7 +12,7 @@ var (
 
 func init() {
 	info, ok := debug.ReadBuildInfo()
-	if !ok || info.Main.Version == "" {
+	if !ok || info.Main.Version == "(devel)" || info.Main.Version == "" {
 		version = "unknown"
 	} else {
 		if version == "" {
