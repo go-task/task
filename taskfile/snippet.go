@@ -59,7 +59,7 @@ func NewSnippet(b []byte, opts ...SnippetOption) *Snippet {
 	// Syntax highlight the input and split it into lines
 	buf := &bytes.Buffer{}
 	if err := quick.Highlight(buf, string(b), "yaml", "terminal", "task"); err != nil {
-		buf.WriteString(string(b))
+		buf.Write(b)
 	}
 	linesRaw := strings.Split(string(b), "\n")
 	linesHighlighted := strings.Split(buf.String(), "\n")
