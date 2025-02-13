@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/spf13/pflag"
@@ -13,6 +14,7 @@ import (
 	"github.com/go-task/task/v3/args"
 	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/experiments"
+	"github.com/go-task/task/v3/internal/filepathext"
 	"github.com/go-task/task/v3/internal/flags"
 	"github.com/go-task/task/v3/internal/logger"
 	"github.com/go-task/task/v3/internal/sort"
@@ -44,7 +46,7 @@ func main() {
 }
 
 func run() error {
-	logger := &logger.Logger{
+	log := &logger.Logger{
 		Stdout:  os.Stdout,
 		Stderr:  os.Stderr,
 		Verbose: flags.Verbose,
@@ -69,7 +71,7 @@ func run() error {
 	}
 
 	if flags.Experiments {
-		return experiments.List(logger)
+		return log.PrintExperiments()
 	}
 
 	if flags.Init {
@@ -77,8 +79,27 @@ func run() error {
 		if err != nil {
 			return err
 		}
-		if err := task.InitTaskfile(os.Stdout, wd); err != nil {
+		args, _, err := getArgs()
+		if err != nil {
 			return err
+		}
+		path := wd
+		if len(args) > 0 {
+			name := args[0]
+			if filepathext.IsExtOnly(name) {
+				name = filepathext.SmartJoin(filepath.Dir(name), "Taskfile"+filepath.Ext(name))
+			}
+			path = filepathext.SmartJoin(wd, name)
+		}
+		finalPath, err := task.InitTaskfile(path)
+		if err != nil {
+			return err
+		}
+		if !flags.Silent {
+			if flags.Verbose {
+				log.Outf(logger.Default, "%s\n", task.DefaultTaskfile)
+			}
+			log.Outf(logger.Green, "Taskfile created: %s\n", filepathext.TryAbsToRel(finalPath))
 		}
 		return nil
 	}
@@ -98,6 +119,10 @@ func run() error {
 			return fmt.Errorf("task: Failed to get user home directory: %w", err)
 		}
 		dir = home
+	}
+
+	if err := experiments.Validate(); err != nil {
+		log.Warnf("%s\n", err.Error())
 	}
 
 	var taskSorter sort.TaskSorter
@@ -144,9 +169,6 @@ func run() error {
 	err := e.Setup()
 	if err != nil {
 		return err
-	}
-	if experiments.AnyVariables.Enabled {
-		logger.Warnf("The 'Any Variables' experiment flag is no longer required to use non-map variable types. If you wish to use map variables, please use 'TASK_X_MAP_VARIABLES' instead. See https://github.com/go-task/task/issues/1585\n")
 	}
 
 	// If the download flag is specified, we should stop execution as soon as

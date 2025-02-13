@@ -14,6 +14,7 @@ import (
 
 	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/compiler"
+	"github.com/go-task/task/v3/internal/env"
 	"github.com/go-task/task/v3/internal/execext"
 	"github.com/go-task/task/v3/internal/filepathext"
 	"github.com/go-task/task/v3/internal/logger"
@@ -109,13 +110,14 @@ func (e *Executor) setupTempDir() error {
 		return nil
 	}
 
-	if os.Getenv("TASK_TEMP_DIR") == "" {
+	tempDir := env.GetTaskEnv("TEMP_DIR")
+	if tempDir == "" {
 		e.TempDir = TempDir{
 			Remote:      filepathext.SmartJoin(e.Dir, ".task"),
 			Fingerprint: filepathext.SmartJoin(e.Dir, ".task"),
 		}
-	} else if filepath.IsAbs(os.Getenv("TASK_TEMP_DIR")) || strings.HasPrefix(os.Getenv("TASK_TEMP_DIR"), "~") {
-		tempDir, err := execext.Expand(os.Getenv("TASK_TEMP_DIR"))
+	} else if filepath.IsAbs(tempDir) || strings.HasPrefix(tempDir, "~") {
+		tempDir, err := execext.Expand(tempDir)
 		if err != nil {
 			return err
 		}
@@ -128,14 +130,15 @@ func (e *Executor) setupTempDir() error {
 
 	} else {
 		e.TempDir = TempDir{
-			Remote:      filepathext.SmartJoin(e.Dir, os.Getenv("TASK_TEMP_DIR")),
-			Fingerprint: filepathext.SmartJoin(e.Dir, os.Getenv("TASK_TEMP_DIR")),
+			Remote:      filepathext.SmartJoin(e.Dir, tempDir),
+			Fingerprint: filepathext.SmartJoin(e.Dir, tempDir),
 		}
 	}
 
-	if os.Getenv("TASK_REMOTE_DIR") != "" {
-		if filepath.IsAbs(os.Getenv("TASK_REMOTE_DIR")) || strings.HasPrefix(os.Getenv("TASK_REMOTE_DIR"), "~") {
-			remoteTempDir, err := execext.Expand(os.Getenv("TASK_REMOTE_DIR"))
+	remoteDir := env.GetTaskEnv("REMOTE_DIR")
+	if remoteDir != "" {
+		if filepath.IsAbs(remoteDir) || strings.HasPrefix(remoteDir, "~") {
+			remoteTempDir, err := execext.Expand(remoteDir)
 			if err != nil {
 				return err
 			}

@@ -2,6 +2,7 @@ package task_test
 
 import (
 	"bytes"
+	"cmp"
 	"context"
 	"fmt"
 	"io"
@@ -134,8 +135,7 @@ func TestEnv(t *testing.T) {
 		},
 	}
 	tt.Run(t)
-	t.Setenv("TASK_X_ENV_PRECEDENCE", "1")
-	experiments.EnvPrecedence = experiments.New("ENV_PRECEDENCE")
+	enableExperimentForTest(t, &experiments.EnvPrecedence, "1")
 	ttt := fileContentTest{
 		Dir:       "testdata/env",
 		Target:    "overridden",
@@ -180,12 +180,12 @@ func TestRequires(t *testing.T) {
 	}
 
 	require.NoError(t, e.Setup())
-	require.ErrorContains(t, e.Run(context.Background(), &ast.Call{Task: "missing-var"}), "task: Task \"missing-var\" cancelled because it is missing required variables: foo")
+	require.ErrorContains(t, e.Run(context.Background(), &ast.Call{Task: "missing-var"}), "task: Task \"missing-var\" cancelled because it is missing required variables: FOO")
 	buff.Reset()
 	require.NoError(t, e.Setup())
 
 	vars := ast.NewVars()
-	vars.Set("foo", ast.Var{Value: "bar"})
+	vars.Set("FOO", ast.Var{Value: "bar"})
 	require.NoError(t, e.Run(context.Background(), &ast.Call{
 		Task: "missing-var",
 		Vars: vars,
@@ -193,11 +193,15 @@ func TestRequires(t *testing.T) {
 	buff.Reset()
 
 	require.NoError(t, e.Setup())
-	require.ErrorContains(t, e.Run(context.Background(), &ast.Call{Task: "validation-var", Vars: vars}), "task: Task \"validation-var\" cancelled because it is missing required variables:\n  - foo has an invalid value : 'bar' (allowed values : [one two])")
+	require.ErrorContains(t, e.Run(context.Background(), &ast.Call{Task: "validation-var", Vars: vars}), "task: Task \"validation-var\" cancelled because it is missing required variables:\n  - FOO has an invalid value : 'bar' (allowed values : [one two])")
 	buff.Reset()
 
 	require.NoError(t, e.Setup())
-	vars.Set("foo", ast.Var{Value: "one"})
+	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "validation-var-dynamic", Vars: vars}))
+	buff.Reset()
+
+	require.NoError(t, e.Setup())
+	vars.Set("FOO", ast.Var{Value: "one"})
 	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "validation-var", Vars: vars}))
 	buff.Reset()
 
@@ -965,9 +969,12 @@ func TestStatusVariables(t *testing.T) {
 		Verbose: true,
 	}
 	require.NoError(t, e.Setup())
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "build"}))
+	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "build-checksum"}))
 
 	assert.Contains(t, buff.String(), "3e464c4b03f4b65d740e1e130d4d108a")
+
+	buff.Reset()
+	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "build-ts"}))
 
 	inf, err := os.Stat(filepathext.SmartJoin(dir, "source.txt"))
 	require.NoError(t, err)
@@ -998,10 +1005,12 @@ func TestCmdsVariables(t *testing.T) {
 		Verbose: true,
 	}
 	require.NoError(t, e.Setup())
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "build"}))
+	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "build-checksum"}))
 
 	assert.Contains(t, buff.String(), "3e464c4b03f4b65d740e1e130d4d108a")
 
+	buff.Reset()
+	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "build-ts"}))
 	inf, err := os.Stat(filepathext.SmartJoin(dir, "source.txt"))
 	require.NoError(t, err)
 	ts := fmt.Sprintf("%d", inf.ModTime().Unix())
@@ -1009,27 +1018,6 @@ func TestCmdsVariables(t *testing.T) {
 
 	assert.Contains(t, buff.String(), ts)
 	assert.Contains(t, buff.String(), tf)
-}
-
-func TestInit(t *testing.T) {
-	t.Parallel()
-
-	const dir = "testdata/init"
-	file := filepathext.SmartJoin(dir, "Taskfile.yml")
-
-	_ = os.Remove(file)
-	if _, err := os.Stat(file); err == nil {
-		t.Errorf("Taskfile.yml should not exist")
-	}
-
-	if err := task.InitTaskfile(io.Discard, dir); err != nil {
-		t.Error(err)
-	}
-
-	if _, err := os.Stat(file); err != nil {
-		t.Errorf("Taskfile.yml should exist")
-	}
-	_ = os.Remove(file)
 }
 
 func TestCyclicDep(t *testing.T) {
@@ -1238,6 +1226,10 @@ func TestIncludesRemote(t *testing.T) {
 		{
 			firstRemote:  srv.URL + "/first/Taskfile.yml",
 			secondRemote: "./second/Taskfile.yml",
+		},
+		{
+			firstRemote:  srv.URL + "/first/",
+			secondRemote: srv.URL + "/first/second/",
 		},
 	}
 
@@ -3224,6 +3216,110 @@ func TestReference(t *testing.T) {
 	}
 }
 
+func TestVarInheritance(t *testing.T) {
+	enableExperimentForTest(t, &experiments.EnvPrecedence, "1")
+	tests := []struct {
+		name string
+		want string
+		call string
+	}{
+		{
+			name: "shell",
+			want: "shell\nshell\n",
+		},
+		{
+			name: "entrypoint-global-dotenv",
+			want: "entrypoint-global-dotenv\nentrypoint-global-dotenv\n",
+		},
+		{
+			name: "entrypoint-global-vars",
+			want: "entrypoint-global-vars\nentrypoint-global-vars\n",
+		},
+		{
+			// We can't send env vars to a called task, so the env var is not overridden
+			name: "entrypoint-task-call-vars",
+			want: "entrypoint-task-call-vars\nentrypoint-global-vars\n",
+		},
+		{
+			// Dotenv doesn't set variables
+			name: "entrypoint-task-call-dotenv",
+			want: "entrypoint-task-call-vars\nentrypoint-task-call-dotenv\n",
+		},
+		{
+			name: "entrypoint-task-call-task-vars",
+			want: "entrypoint-task-call-task-vars\nentrypoint-task-call-task-vars\n",
+		},
+		{
+			// Dotenv doesn't set variables
+			name: "entrypoint-task-dotenv",
+			want: "entrypoint-global-vars\nentrypoint-task-dotenv\n",
+		},
+		{
+			name: "entrypoint-task-vars",
+			want: "entrypoint-task-vars\nentrypoint-task-vars\n",
+		},
+		// {
+		// 	// Dotenv not currently allowed in included taskfiles
+		// 	name: "included-global-dotenv",
+		// 	want: "included-global-dotenv\nincluded-global-dotenv\n",
+		// },
+		{
+			name: "included-global-vars",
+			want: "included-global-vars\nincluded-global-vars\n",
+			call: "included",
+		},
+		{
+			// We can't send env vars to a called task, so the env var is not overridden
+			name: "included-task-call-vars",
+			want: "included-task-call-vars\nincluded-global-vars\n",
+			call: "included",
+		},
+		{
+			// Dotenv doesn't set variables
+			// Dotenv not currently allowed in included taskfiles (but doesn't error in a task)
+			name: "included-task-call-dotenv",
+			want: "included-task-call-vars\nincluded-global-vars\n",
+			call: "included",
+		},
+		{
+			name: "included-task-call-task-vars",
+			want: "included-task-call-task-vars\nincluded-task-call-task-vars\n",
+			call: "included",
+		},
+		{
+			// Dotenv doesn't set variables
+			// Somehow dotenv is working here!
+			name: "included-task-dotenv",
+			want: "included-global-vars\nincluded-task-dotenv\n",
+			call: "included",
+		},
+		{
+			name: "included-task-vars",
+			want: "included-task-vars\nincluded-task-vars\n",
+			call: "included",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			var buff bytes.Buffer
+			t.Setenv("VAR", "shell")
+			t.Setenv("ENV", "shell")
+			e := task.Executor{
+				Dir:    fmt.Sprintf("testdata/var_inheritance/v3/%s", test.name),
+				Stdout: &buff,
+				Stderr: &buff,
+				Silent: true,
+				Force:  true,
+			}
+			call := cmp.Or(test.call, "default")
+			require.NoError(t, e.Setup())
+			require.NoError(t, e.Run(context.Background(), &ast.Call{Task: call}))
+			assert.Equal(t, test.want, buff.String())
+		})
+	}
+}
+
 // enableExperimentForTest enables the experiment behind pointer e for the duration of test t and sub-tests,
 // with the experiment being restored to its previous state when tests complete.
 //
@@ -3231,12 +3327,11 @@ func TestReference(t *testing.T) {
 // because the experiment settings are parsed during experiments.init(), before any tests run.
 func enableExperimentForTest(t *testing.T, e *experiments.Experiment, val string) {
 	t.Helper()
-
 	prev := *e
 	*e = experiments.Experiment{
-		Name:    prev.Name,
-		Enabled: true,
-		Value:   val,
+		Name:          prev.Name,
+		AllowedValues: []string{val},
+		Value:         val,
 	}
 	t.Cleanup(func() { *e = prev })
 }

@@ -192,7 +192,7 @@ version: '3'
 env:
   ENV: testing
 
-dotenv: ['.env', '{{.ENV}}/.env.', '{{.HOME}}/.env']
+dotenv: ['.env', '{{.ENV}}/.env', '{{.HOME}}/.env']
 
 tasks:
   greet:
@@ -210,7 +210,7 @@ env:
 
 tasks:
   greet:
-    dotenv: ['.env', '{{.ENV}}/.env.', '{{.HOME}}/.env']
+    dotenv: ['.env', '{{.ENV}}/.env', '{{.HOME}}/.env']
     cmds:
       - echo "Using $KEYNAME and endpoint $ENDPOINT"
 ```
@@ -226,7 +226,7 @@ env:
 
 tasks:
   greet:
-    dotenv: ['.env', '{{.ENV}}/.env.', '{{.HOME}}/.env']
+    dotenv: ['.env', '{{.ENV}}/.env', '{{.HOME}}/.env']
     env:
       KEYNAME: DIFFERENT_VALUE
     cmds:
@@ -938,8 +938,8 @@ information.
 You can use `--force` or `-f` if you want to force a task to run even when
 up-to-date.
 
-Also, `task --status [tasks]...` will exit with a non-zero exit code if any of
-the tasks are not up-to-date.
+Also, `task --status [tasks]...` will exit with a non-zero [exit
+code](/reference/cli#exit-codes) if any of the tasks are not up-to-date.
 
 `status` can be combined with the
 [fingerprinting](#by-fingerprinting-locally-generated-files-and-their-sources)
@@ -1759,8 +1759,8 @@ commands are executed in the reverse order if you schedule multiple of them.
 :::
 
 A special variable `.EXIT_CODE` is exposed when a command exited with a non-zero
-exit code. You can check its presence to know if the task completed successfully
-or not:
+[exit code](/reference/cli#exit-codes). You can check its presence to know if
+the task completed successfully or not:
 
 ```yaml
 version: '3'
@@ -1959,8 +1959,8 @@ tasks:
 ```
 
 Warning prompts are called before executing a task. If a prompt is denied Task
-will exit with [exit code](/api#exit-codes) 205. If approved, Task will continue
-as normal.
+will exit with [exit code](/reference/cli#exit-codes) 205. If approved, Task
+will continue as normal.
 
 ```shell
 ❯ task example

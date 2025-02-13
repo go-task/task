@@ -12,7 +12,7 @@ linters:
     - misspell
     - noctx
     - paralleltest
-    - tenv
+    - usetesting
     - thelper
     - tparallel
 
@@ -29,6 +29,8 @@ linters-settings:
             desc: "Use github.com/go-task/task/v3/errors instead"
   goimports:
     local-prefixes: github.com/go-task
+  gofumpt:
+    module-path: github.com/go-task/task/v3
   gofmt:
     rewrite-rules:
       - pattern: 'interface{}'

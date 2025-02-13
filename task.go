@@ -185,6 +185,11 @@ func (e *Executor) RunTask(ctx context.Context, call *ast.Call) error {
 	if err != nil {
 		return err
 	}
+
+	if err := e.areTaskRequiredVarsAllowedValuesSet(t); err != nil {
+		return err
+	}
+
 	if !e.Watch && atomic.AddInt32(e.taskCallCount[t.Task], 1) >= MaximumTaskCall {
 		return &errors.TaskCalledTooManyTimesError{
 			TaskName:        t.Task,

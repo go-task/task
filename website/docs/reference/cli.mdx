@@ -16,9 +16,9 @@ task [--flags] [tasks...] [-- CLI_ARGS...]
 If `--` is given, all remaining arguments will be assigned to a special
 `CLI_ARGS` variable
 
-## Flags
-
 :::
+
+## Flags
 
 | Short | Flag                        | Type     | Default                                      | Description                                                                                                                                                                                  |
 | ----- | --------------------------- | -------- | -------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -45,7 +45,7 @@ If `--` is given, all remaining arguments will be assigned to a special
 | `-y`  | `--yes`                     | `bool`   | `false`                                      | Assume "yes" as answer to all prompts.                                                                                                                                                       |
 |       | `--status`                  | `bool`   | `false`                                      | Exits with non-zero exit code if any of the given tasks is not up-to-date.                                                                                                                   |
 |       | `--summary`                 | `bool`   | `false`                                      | Show summary about a task.                                                                                                                                                                   |
-| `-t`  | `--taskfile`                | `string` | `Taskfile.yml` or `Taskfile.yaml`            |                                                                                                                                                                                              |
+| `-t`  | `--taskfile`                | `string` |                                              | Taskfile path to run.<br />Check the list of default filenames [here](../usage/#supported-file-names).                                                                                        |
 | `-v`  | `--verbose`                 | `bool`   | `false`                                      | Enables verbose mode.                                                                                                                                                                        |
 |       | `--version`                 | `bool`   | `false`                                      | Show Task version.                                                                                                                                                                           |
 | `-w`  | `--watch`                   | `bool`   | `false`                                      | Enables watch of the given task.
@@ -58,7 +58,7 @@ four groups with the following ranges:
 - Success (0)
 - General errors (1-99)
 - Taskfile errors (100-199)
-- Task errors (200-299)
+- Task errors (200-255)
 
 A full list of the exit codes and their descriptions can be found below:
 

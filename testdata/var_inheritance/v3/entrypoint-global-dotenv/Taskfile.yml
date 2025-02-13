@@ -1,0 +1,11 @@
+version: '3'
+
+silent: true
+dotenv:
+  - 'global.env'
+
+tasks:
+  default:
+    cmds:
+      - 'echo "{{.VAR}}"'
+      - 'echo "$ENV"'
