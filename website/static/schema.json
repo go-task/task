@@ -363,6 +363,10 @@
               "$ref": "#/definitions/task_call"
             }
           ]
+        },
+        "silent": {
+          "description": "Hides task name and command from output. The command's output will still be redirected to `STDOUT` and `STDERR`.",
+          "type": "boolean"
         }
       },
       "additionalProperties": false,
