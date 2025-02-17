@@ -82,7 +82,7 @@ func (fct fileContentTest) Run(t *testing.T) {
 	}
 
 	require.NoError(t, e.Setup(), "e.Setup()")
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: fct.Target}), "e.Run(target)")
+	require.NoError(t, e.Run(context.Background(), &task.Call{Task: fct.Target}), "e.Run(target)")
 	for name, expectContent := range fct.Files {
 		t.Run(fct.name(name), func(t *testing.T) {
 			path := filepathext.SmartJoin(e.Dir, name)
@@ -106,7 +106,7 @@ func TestEmptyTask(t *testing.T) {
 		Stderr: io.Discard,
 	}
 	require.NoError(t, e.Setup(), "e.Setup()")
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "default"}))
+	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "default"}))
 }
 
 func TestEmptyTaskfile(t *testing.T) {
@@ -180,14 +180,14 @@ func TestRequires(t *testing.T) {
 	}
 
 	require.NoError(t, e.Setup())
-	require.ErrorContains(t, e.Run(context.Background(), &ast.Call{Task: "missing-var"}), "task: Task \"missing-var\" cancelled because it is missing required variables: FOO")
+	require.ErrorContains(t, e.Run(context.Background(), &task.Call{Task: "missing-var"}), "task: Task \"missing-var\" cancelled because it is missing required variables: FOO")
 	buff.Reset()
 	require.NoError(t, e.Setup())
 
 	vars := ast.NewVars()
 	vars.Set("FOO", ast.Var{Value: "bar"})
 
-	require.NoError(t, e.Run(context.Background(), &ast.Call{
+	require.NoError(t, e.Run(context.Background(), &task.Call{
 		Task: "missing-var",
 		Vars: vars,
 	}))
@@ -195,28 +195,28 @@ func TestRequires(t *testing.T) {
 
 	vars.Set("ENV", ast.Var{Value: "dev"})
 	require.NoError(t, e.Setup())
-	require.ErrorContains(t, e.Run(context.Background(), &ast.Call{Task: "validation-var", Vars: vars}), "task: Task \"validation-var\" cancelled because it is missing required variables:\n  - FOO has an invalid value : 'bar' (allowed values : [one two])")
+	require.ErrorContains(t, e.Run(context.Background(), &task.Call{Task: "validation-var", Vars: vars}), "task: Task \"validation-var\" cancelled because it is missing required variables:\n  - FOO has an invalid value : 'bar' (allowed values : [one two])")
 	buff.Reset()
 
 	require.NoError(t, e.Setup())
 	vars.Set("FOO", ast.Var{Value: "one"})
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "validation-var", Vars: vars}))
+	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "validation-var", Vars: vars}))
 	buff.Reset()
 
 	vars = ast.NewVars()
 	require.NoError(t, e.Setup())
-	require.ErrorContains(t, e.Run(context.Background(), &ast.Call{Task: "validation-var", Vars: vars}), "task: Task \"validation-var\" cancelled because it is missing required variables: ENV, FOO (allowed values: [one two])")
+	require.ErrorContains(t, e.Run(context.Background(), &task.Call{Task: "validation-var", Vars: vars}), "task: Task \"validation-var\" cancelled because it is missing required variables: ENV, FOO (allowed values: [one two])")
 	buff.Reset()
 
 	require.NoError(t, e.Setup())
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "validation-var-dynamic", Vars: vars}))
+	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "validation-var-dynamic", Vars: vars}))
 	buff.Reset()
 
 	require.NoError(t, e.Setup())
-	require.ErrorContains(t, e.Run(context.Background(), &ast.Call{Task: "require-before-compile"}), "task: Task \"require-before-compile\" cancelled because it is missing required variables: MY_VAR")
+	require.ErrorContains(t, e.Run(context.Background(), &task.Call{Task: "require-before-compile"}), "task: Task \"require-before-compile\" cancelled because it is missing required variables: MY_VAR")
 	buff.Reset()
 
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "var-defined-in-task"}))
+	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "var-defined-in-task"}))
 	buff.Reset()
 }
 
@@ -264,7 +264,7 @@ func TestSpecialVars(t *testing.T) {
 					EnableVersionCheck: true,
 				}
 				require.NoError(t, e.Setup())
-				require.NoError(t, e.Run(context.Background(), &ast.Call{Task: test.target}))
+				require.NoError(t, e.Run(context.Background(), &task.Call{Task: test.target}))
 				assert.Equal(t, test.expected+"\n", buff.String())
 			})
 		}
@@ -286,7 +286,7 @@ func TestConcurrency(t *testing.T) {
 		Concurrency: 1,
 	}
 	require.NoError(t, e.Setup(), "e.Setup()")
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: target}), "e.Run(target)")
+	require.NoError(t, e.Run(context.Background(), &task.Call{Task: target}), "e.Run(target)")
 }
 
 func TestParams(t *testing.T) {
@@ -345,7 +345,7 @@ func TestDeps(t *testing.T) {
 		Stderr: io.Discard,
 	}
 	require.NoError(t, e.Setup())
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "default"}))
+	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "default"}))
 
 	for _, f := range files {
 		f = filepathext.SmartJoin(dir, f)
@@ -387,15 +387,15 @@ func TestStatus(t *testing.T) {
 	}
 	require.NoError(t, e.Setup())
 	// gen-foo creates foo.txt, and will always fail it's status check.
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "gen-foo"}))
+	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "gen-foo"}))
 	// gen-foo creates bar.txt, and will pass its status-check the 3. time it
 	// is run. It creates bar.txt, but also lists it as its source. So, the checksum
 	// for the file won't match before after the second run as we the file
 	// only exists after the first run.
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "gen-bar"}))
+	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "gen-bar"}))
 	// gen-silent-baz is marked as being silent, and should only produce output
 	// if e.Verbose is set to true.
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "gen-silent-baz"}))
+	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "gen-silent-baz"}))
 
 	for _, f := range files {
 		if _, err := os.Stat(filepathext.SmartJoin(dir, f)); err != nil {
@@ -404,10 +404,10 @@ func TestStatus(t *testing.T) {
 	}
 
 	// Run gen-bar a second time to produce a checksum file that matches bar.txt
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "gen-bar"}))
+	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "gen-bar"}))
 
 	// Run gen-bar a third time, to make sure we've triggered the status check.
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "gen-bar"}))
+	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "gen-bar"}))
 
 	// We're silent, so no output should have been produced.
 	assert.Empty(t, buff.String())
@@ -416,7 +416,7 @@ func TestStatus(t *testing.T) {
 	// for the next test.
 	err := os.Remove(filepathext.SmartJoin(dir, "bar.txt"))
 	require.NoError(t, err)
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "gen-bar"}))
+	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "gen-bar"}))
 	buff.Reset()
 
 	// Global silence switched of, so we should see output unless the task itself
@@ -424,34 +424,34 @@ func TestStatus(t *testing.T) {
 	e.Silent = false
 
 	// all: not up-to-date
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "gen-foo"}))
+	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "gen-foo"}))
 	assert.Equal(t, "task: [gen-foo] touch foo.txt", strings.TrimSpace(buff.String()))
 	buff.Reset()
 	// status: not up-to-date
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "gen-foo"}))
+	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "gen-foo"}))
 	assert.Equal(t, "task: [gen-foo] touch foo.txt", strings.TrimSpace(buff.String()))
 	buff.Reset()
 
 	// sources: not up-to-date
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "gen-bar"}))
+	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "gen-bar"}))
 	assert.Equal(t, "task: [gen-bar] touch bar.txt", strings.TrimSpace(buff.String()))
 	buff.Reset()
 	// all: up-to-date
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "gen-bar"}))
+	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "gen-bar"}))
 	assert.Equal(t, `task: Task "gen-bar" is up to date`, strings.TrimSpace(buff.String()))
 	buff.Reset()
 
 	// sources: not up-to-date, no output produced.
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "gen-silent-baz"}))
+	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "gen-silent-baz"}))
 	assert.Empty(t, buff.String())
 
 	// up-to-date, no output produced
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "gen-silent-baz"}))
+	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "gen-silent-baz"}))
 	assert.Empty(t, buff.String())
 
 	e.Verbose = true
 	// up-to-date, output produced due to Verbose mode.
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "gen-silent-baz"}))
+	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "gen-silent-baz"}))
 	assert.Equal(t, `task: Task "gen-silent-baz" is up to date`, strings.TrimSpace(buff.String()))
 	buff.Reset()
 }
@@ -470,13 +470,13 @@ func TestPrecondition(t *testing.T) {
 
 	// A precondition that has been met
 	require.NoError(t, e.Setup())
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "foo"}))
+	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "foo"}))
 	if buff.String() != "" {
 		t.Errorf("Got Output when none was expected: %s", buff.String())
 	}
 
 	// A precondition that was not met
-	require.Error(t, e.Run(context.Background(), &ast.Call{Task: "impossible"}))
+	require.Error(t, e.Run(context.Background(), &task.Call{Task: "impossible"}))
 
 	if buff.String() != "task: 1 != 0 obviously!\n" {
 		t.Errorf("Wrong output message: %s", buff.String())
@@ -484,7 +484,7 @@ func TestPrecondition(t *testing.T) {
 	buff.Reset()
 
 	// Calling a task with a precondition in a dependency fails the task
-	require.Error(t, e.Run(context.Background(), &ast.Call{Task: "depends_on_impossible"}))
+	require.Error(t, e.Run(context.Background(), &task.Call{Task: "depends_on_impossible"}))
 
 	if buff.String() != "task: 1 != 0 obviously!\n" {
 		t.Errorf("Wrong output message: %s", buff.String())
@@ -492,7 +492,7 @@ func TestPrecondition(t *testing.T) {
 	buff.Reset()
 
 	// Calling a task with a precondition in a cmd fails the task
-	require.Error(t, e.Run(context.Background(), &ast.Call{Task: "executes_failing_task_as_cmd"}))
+	require.Error(t, e.Run(context.Background(), &task.Call{Task: "executes_failing_task_as_cmd"}))
 	if buff.String() != "task: 1 != 0 obviously!\n" {
 		t.Errorf("Wrong output message: %s", buff.String())
 	}
@@ -535,7 +535,7 @@ func TestGenerates(t *testing.T) {
 			fmt.Sprintf("task: Task \"%s\" is up to date\n", theTask)
 
 		// Run task for the first time.
-		require.NoError(t, e.Run(context.Background(), &ast.Call{Task: theTask}))
+		require.NoError(t, e.Run(context.Background(), &task.Call{Task: theTask}))
 
 		if _, err := os.Stat(srcFile); err != nil {
 			t.Errorf("File should exist: %v", err)
@@ -550,7 +550,7 @@ func TestGenerates(t *testing.T) {
 		buff.Reset()
 
 		// Re-run task to ensure it's now found to be up-to-date.
-		require.NoError(t, e.Run(context.Background(), &ast.Call{Task: theTask}))
+		require.NoError(t, e.Run(context.Background(), &task.Call{Task: theTask}))
 		if buff.String() != upToDate {
 			t.Errorf("Wrong output message: %s", buff.String())
 		}
@@ -591,7 +591,7 @@ func TestStatusChecksum(t *testing.T) { // nolint:paralleltest // cannot run in 
 			}
 			require.NoError(t, e.Setup())
 
-			require.NoError(t, e.Run(context.Background(), &ast.Call{Task: test.task}))
+			require.NoError(t, e.Run(context.Background(), &task.Call{Task: test.task}))
 			for _, f := range test.files {
 				_, err := os.Stat(filepathext.SmartJoin(dir, f))
 				require.NoError(t, err)
@@ -604,7 +604,7 @@ func TestStatusChecksum(t *testing.T) { // nolint:paralleltest // cannot run in 
 			time := s.ModTime()
 
 			buff.Reset()
-			require.NoError(t, e.Run(context.Background(), &ast.Call{Task: test.task}))
+			require.NoError(t, e.Run(context.Background(), &task.Call{Task: test.task}))
 			assert.Equal(t, `task: Task "`+test.task+`" is up to date`+"\n", buff.String())
 
 			s, err = os.Stat(filepathext.SmartJoin(tempdir.Fingerprint, "checksum/"+test.task))
@@ -629,7 +629,7 @@ func TestAlias(t *testing.T) {
 		Stderr: &buff,
 	}
 	require.NoError(t, e.Setup())
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "f"}))
+	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "f"}))
 	assert.Equal(t, string(data), buff.String())
 }
 
@@ -645,7 +645,7 @@ func TestDuplicateAlias(t *testing.T) {
 		Stderr: &buff,
 	}
 	require.NoError(t, e.Setup())
-	require.Error(t, e.Run(context.Background(), &ast.Call{Task: "x"}))
+	require.Error(t, e.Run(context.Background(), &task.Call{Task: "x"}))
 	assert.Equal(t, "", buff.String())
 }
 
@@ -665,7 +665,7 @@ func TestAliasSummary(t *testing.T) {
 		Stderr:  &buff,
 	}
 	require.NoError(t, e.Setup())
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "f"}))
+	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "f"}))
 	assert.Equal(t, string(data), buff.String())
 }
 
@@ -681,7 +681,7 @@ func TestLabelUpToDate(t *testing.T) {
 		Stderr: &buff,
 	}
 	require.NoError(t, e.Setup())
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "foo"}))
+	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "foo"}))
 	assert.Contains(t, buff.String(), "foobar")
 }
 
@@ -698,7 +698,7 @@ func TestLabelSummary(t *testing.T) {
 		Stderr:  &buff,
 	}
 	require.NoError(t, e.Setup())
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "foo"}))
+	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "foo"}))
 	assert.Contains(t, buff.String(), "foobar")
 }
 
@@ -711,7 +711,7 @@ func TestLabelInStatus(t *testing.T) {
 		Dir: dir,
 	}
 	require.NoError(t, e.Setup())
-	err := e.Status(context.Background(), &ast.Call{Task: "foo"})
+	err := e.Status(context.Background(), &task.Call{Task: "foo"})
 	assert.ErrorContains(t, err, "foobar")
 }
 
@@ -727,7 +727,7 @@ func TestLabelWithVariableExpansion(t *testing.T) {
 		Stderr: &buff,
 	}
 	require.NoError(t, e.Setup())
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "foo"}))
+	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "foo"}))
 	assert.Contains(t, buff.String(), "foobaz")
 }
 
@@ -743,7 +743,7 @@ func TestLabelInSummary(t *testing.T) {
 		Stderr: &buff,
 	}
 	require.NoError(t, e.Setup())
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "foo"}))
+	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "foo"}))
 	assert.Contains(t, buff.String(), "foobar")
 }
 
@@ -783,7 +783,7 @@ func TestPromptInSummary(t *testing.T) {
 			}
 			require.NoError(t, e.Setup())
 
-			err := e.Run(context.Background(), &ast.Call{Task: "foo"})
+			err := e.Run(context.Background(), &task.Call{Task: "foo"})
 
 			if test.wantError {
 				require.Error(t, err)
@@ -813,7 +813,7 @@ func TestPromptWithIndirectTask(t *testing.T) {
 	}
 	require.NoError(t, e.Setup())
 
-	err := e.Run(context.Background(), &ast.Call{Task: "bar"})
+	err := e.Run(context.Background(), &task.Call{Task: "bar"})
 	assert.Contains(t, outBuff.String(), "show-prompt")
 	require.NoError(t, err)
 }
@@ -850,7 +850,7 @@ func TestPromptAssumeYes(t *testing.T) {
 			}
 			require.NoError(t, e.Setup())
 
-			err := e.Run(context.Background(), &ast.Call{Task: "foo"})
+			err := e.Run(context.Background(), &task.Call{Task: "foo"})
 
 			if !test.assumeYes {
 				require.Error(t, err)
@@ -976,12 +976,12 @@ func TestStatusVariables(t *testing.T) {
 		Verbose: true,
 	}
 	require.NoError(t, e.Setup())
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "build-checksum"}))
+	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "build-checksum"}))
 
 	assert.Contains(t, buff.String(), "3e464c4b03f4b65d740e1e130d4d108a")
 
 	buff.Reset()
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "build-ts"}))
+	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "build-ts"}))
 
 	inf, err := os.Stat(filepathext.SmartJoin(dir, "source.txt"))
 	require.NoError(t, err)
@@ -1012,12 +1012,12 @@ func TestCmdsVariables(t *testing.T) {
 		Verbose: true,
 	}
 	require.NoError(t, e.Setup())
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "build-checksum"}))
+	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "build-checksum"}))
 
 	assert.Contains(t, buff.String(), "3e464c4b03f4b65d740e1e130d4d108a")
 
 	buff.Reset()
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "build-ts"}))
+	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "build-ts"}))
 	inf, err := os.Stat(filepathext.SmartJoin(dir, "source.txt"))
 	require.NoError(t, err)
 	ts := fmt.Sprintf("%d", inf.ModTime().Unix())
@@ -1038,7 +1038,7 @@ func TestCyclicDep(t *testing.T) {
 		Stderr: io.Discard,
 	}
 	require.NoError(t, e.Setup())
-	assert.IsType(t, &errors.TaskCalledTooManyTimesError{}, e.Run(context.Background(), &ast.Call{Task: "task-1"}))
+	assert.IsType(t, &errors.TaskCalledTooManyTimesError{}, e.Run(context.Background(), &task.Call{Task: "task-1"}))
 }
 
 func TestTaskVersion(t *testing.T) {
@@ -1088,10 +1088,10 @@ func TestTaskIgnoreErrors(t *testing.T) {
 	}
 	require.NoError(t, e.Setup())
 
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "task-should-pass"}))
-	require.Error(t, e.Run(context.Background(), &ast.Call{Task: "task-should-fail"}))
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "cmd-should-pass"}))
-	require.Error(t, e.Run(context.Background(), &ast.Call{Task: "cmd-should-fail"}))
+	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "task-should-pass"}))
+	require.Error(t, e.Run(context.Background(), &task.Call{Task: "task-should-fail"}))
+	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "cmd-should-pass"}))
+	require.Error(t, e.Run(context.Background(), &task.Call{Task: "cmd-should-fail"}))
 }
 
 func TestExpand(t *testing.T) {
@@ -1111,7 +1111,7 @@ func TestExpand(t *testing.T) {
 		Stderr: &buff,
 	}
 	require.NoError(t, e.Setup())
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "pwd"}))
+	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "pwd"}))
 	assert.Equal(t, home, strings.TrimSpace(buff.String()))
 }
 
@@ -1132,7 +1132,7 @@ func TestDry(t *testing.T) {
 		Dry:    true,
 	}
 	require.NoError(t, e.Setup())
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "build"}))
+	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "build"}))
 
 	assert.Equal(t, "task: [build] touch file.txt", strings.TrimSpace(buff.String()))
 	if _, err := os.Stat(file); err == nil {
@@ -1161,13 +1161,13 @@ func TestDryChecksum(t *testing.T) {
 		Dry:    true,
 	}
 	require.NoError(t, e.Setup())
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "default"}))
+	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "default"}))
 
 	_, err := os.Stat(checksumFile)
 	require.Error(t, err, "checksum file should not exist")
 
 	e.Dry = false
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "default"}))
+	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "default"}))
 	_, err = os.Stat(checksumFile)
 	require.NoError(t, err, "checksum file should exist")
 }
@@ -1240,9 +1240,9 @@ func TestIncludesRemote(t *testing.T) {
 		},
 	}
 
-	tasks := []string{
-		"first:write-file",
-		"first:second:write-file",
+	taskCalls := []*task.Call{
+		{Task: "first:write-file"},
+		{Task: "first:second:write-file"},
 	}
 
 	for i, tc := range tcs {
@@ -1293,8 +1293,8 @@ func TestIncludesRemote(t *testing.T) {
 				t.Run(fmt.Sprint(j), func(t *testing.T) {
 					require.NoError(t, e.executor.Setup())
 
-					for k, task := range tasks {
-						t.Run(task, func(t *testing.T) {
+					for k, taskCall := range taskCalls {
+						t.Run(taskCall.Task, func(t *testing.T) {
 							expectedContent := fmt.Sprint(rand.Int64())
 							t.Setenv("CONTENT", expectedContent)
 
@@ -1304,7 +1304,7 @@ func TestIncludesRemote(t *testing.T) {
 							path := filepath.Join(dir, outputFile)
 							require.NoError(t, os.RemoveAll(path))
 
-							require.NoError(t, e.executor.Run(context.Background(), &ast.Call{Task: task}))
+							require.NoError(t, e.executor.Run(context.Background(), taskCall))
 
 							actualContent, err := os.ReadFile(path)
 							require.NoError(t, err)
@@ -1443,7 +1443,7 @@ func TestIncludesHttp(t *testing.T) {
 
 					for _, tc := range tcs {
 						t.Run(tc.name, func(t *testing.T) {
-							task, err := e.CompiledTask(&ast.Call{Task: tc.name})
+							task, err := e.CompiledTask(&task.Call{Task: tc.name})
 							require.NoError(t, err)
 							assert.Equal(t, tc.dir, task.Dir)
 						})
@@ -1581,11 +1581,11 @@ func TestIncludesRelativePath(t *testing.T) {
 
 	require.NoError(t, e.Setup())
 
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "common:pwd"}))
+	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "common:pwd"}))
 	assert.Contains(t, buff.String(), "testdata/includes_rel_path/common")
 
 	buff.Reset()
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "included:common:pwd"}))
+	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "included:common:pwd"}))
 	assert.Contains(t, buff.String(), "testdata/includes_rel_path/common")
 }
 
@@ -1617,7 +1617,7 @@ func TestIncludesInternal(t *testing.T) {
 			}
 			require.NoError(t, e.Setup())
 
-			err := e.Run(context.Background(), &ast.Call{Task: test.task})
+			err := e.Run(context.Background(), &task.Call{Task: test.task})
 			if test.expectedErr {
 				require.Error(t, err)
 			} else {
@@ -1664,7 +1664,7 @@ func TestIncludesFlatten(t *testing.T) {
 				assert.EqualError(t, err, test.expectedOutput)
 			} else {
 				require.NoError(t, err)
-				_ = e.Run(context.Background(), &ast.Call{Task: test.task})
+				_ = e.Run(context.Background(), &task.Call{Task: test.task})
 				assert.Equal(t, test.expectedOutput, buff.String())
 			}
 		})
@@ -1696,7 +1696,7 @@ func TestIncludesInterpolation(t *testing.T) { // nolint:paralleltest // cannot 
 			}
 			require.NoError(t, e.Setup())
 
-			err := e.Run(context.Background(), &ast.Call{Task: test.task})
+			err := e.Run(context.Background(), &task.Call{Task: test.task})
 			if test.expectedErr {
 				require.Error(t, err)
 			} else {
@@ -1719,20 +1719,20 @@ func TestIncludesWithExclude(t *testing.T) {
 	}
 	require.NoError(t, e.Setup())
 
-	err := e.Run(context.Background(), &ast.Call{Task: "included:bar"})
+	err := e.Run(context.Background(), &task.Call{Task: "included:bar"})
 	require.NoError(t, err)
 	assert.Equal(t, "bar\n", buff.String())
 	buff.Reset()
 
-	err = e.Run(context.Background(), &ast.Call{Task: "included:foo"})
+	err = e.Run(context.Background(), &task.Call{Task: "included:foo"})
 	require.Error(t, err)
 	buff.Reset()
 
-	err = e.Run(context.Background(), &ast.Call{Task: "bar"})
+	err = e.Run(context.Background(), &task.Call{Task: "bar"})
 	require.Error(t, err)
 	buff.Reset()
 
-	err = e.Run(context.Background(), &ast.Call{Task: "foo"})
+	err = e.Run(context.Background(), &task.Call{Task: "foo"})
 	require.NoError(t, err)
 	assert.Equal(t, "foo\n", buff.String())
 }
@@ -1762,7 +1762,7 @@ func TestIncludedTaskfileVarMerging(t *testing.T) {
 			}
 			require.NoError(t, e.Setup())
 
-			err := e.Run(context.Background(), &ast.Call{Task: test.task})
+			err := e.Run(context.Background(), &task.Call{Task: test.task})
 			require.NoError(t, err)
 			assert.Contains(t, buff.String(), test.expectedOutput)
 		})
@@ -1797,7 +1797,7 @@ func TestInternalTask(t *testing.T) {
 			}
 			require.NoError(t, e.Setup())
 
-			err := e.Run(context.Background(), &ast.Call{Task: test.task})
+			err := e.Run(context.Background(), &task.Call{Task: test.task})
 			if test.expectedErr {
 				require.Error(t, err)
 			} else {
@@ -1882,7 +1882,7 @@ func TestSummary(t *testing.T) {
 		Silent:  true,
 	}
 	require.NoError(t, e.Setup())
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "task-with-summary"}, &ast.Call{Task: "other-task-with-summary"}))
+	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "task-with-summary"}, &task.Call{Task: "other-task-with-summary"}))
 
 	data, err := os.ReadFile(filepathext.SmartJoin(dir, "task-with-summary.txt"))
 	require.NoError(t, err)
@@ -1908,7 +1908,7 @@ func TestWhenNoDirAttributeItRunsInSameDirAsTaskfile(t *testing.T) {
 	}
 
 	require.NoError(t, e.Setup())
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "whereami"}))
+	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "whereami"}))
 
 	// got should be the "dir" part of "testdata/dir"
 	got := strings.TrimSuffix(filepath.Base(out.String()), "\n")
@@ -1928,7 +1928,7 @@ func TestWhenDirAttributeAndDirExistsItRunsInThatDir(t *testing.T) {
 	}
 
 	require.NoError(t, e.Setup())
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "whereami"}))
+	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "whereami"}))
 
 	got := strings.TrimSuffix(filepath.Base(out.String()), "\n")
 	assert.Equal(t, expected, got, "Mismatch in the working directory")
@@ -1954,7 +1954,7 @@ func TestWhenDirAttributeItCreatesMissingAndRunsInThatDir(t *testing.T) {
 		t.Errorf("Directory should not exist: %v", err)
 	}
 	require.NoError(t, e.Setup())
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: target}))
+	require.NoError(t, e.Run(context.Background(), &task.Call{Task: target}))
 
 	got := strings.TrimSuffix(filepath.Base(out.String()), "\n")
 	assert.Equal(t, expected, got, "Mismatch in the working directory")
@@ -1983,7 +1983,7 @@ func TestDynamicVariablesRunOnTheNewCreatedDir(t *testing.T) {
 		t.Errorf("Directory should not exist: %v", err)
 	}
 	require.NoError(t, e.Setup())
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: target}))
+	require.NoError(t, e.Run(context.Background(), &task.Call{Task: target}))
 
 	got := strings.TrimSuffix(filepath.Base(out.String()), "\n")
 	assert.Equal(t, expected, got, "Mismatch in the working directory")
@@ -2054,7 +2054,7 @@ func TestShortTaskNotation(t *testing.T) {
 		Silent: true,
 	}
 	require.NoError(t, e.Setup())
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "default"}))
+	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "default"}))
 	assert.Equal(t, "string-slice-1\nstring-slice-2\nstring\n", buff.String())
 }
 
@@ -2252,7 +2252,7 @@ func TestExitImmediately(t *testing.T) {
 	}
 	require.NoError(t, e.Setup())
 
-	require.Error(t, e.Run(context.Background(), &ast.Call{Task: "default"}))
+	require.Error(t, e.Run(context.Background(), &task.Call{Task: "default"}))
 	assert.Contains(t, buff.String(), `"this_should_fail": executable file not found in $PATH`)
 }
 
@@ -2285,7 +2285,7 @@ func TestRunOnceSharedDeps(t *testing.T) {
 		ForceAll: true,
 	}
 	require.NoError(t, e.Setup())
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "build"}))
+	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "build"}))
 
 	rx := regexp.MustCompile(`task: \[service-[a,b]:library:build\] echo "build library"`)
 	matches := rx.FindAllStringSubmatch(buff.String(), -1)
@@ -2317,7 +2317,7 @@ task-1 ran successfully
 task: [task-1] echo 'task-1 ran successfully'
 task-1 ran successfully
 `)
-	require.Error(t, e.Run(context.Background(), &ast.Call{Task: "task-2"}))
+	require.Error(t, e.Run(context.Background(), &task.Call{Task: "task-2"}))
 	assert.Contains(t, buff.String(), expectedOutputOrder)
 }
 
@@ -2333,7 +2333,7 @@ func TestExitCodeZero(t *testing.T) {
 	}
 	require.NoError(t, e.Setup())
 
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "exit-zero"}))
+	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "exit-zero"}))
 	assert.Equal(t, "FOO=bar - DYNAMIC_FOO=bar - EXIT_CODE=", strings.TrimSpace(buff.String()))
 }
 
@@ -2349,7 +2349,7 @@ func TestExitCodeOne(t *testing.T) {
 	}
 	require.NoError(t, e.Setup())
 
-	require.Error(t, e.Run(context.Background(), &ast.Call{Task: "exit-one"}))
+	require.Error(t, e.Run(context.Background(), &task.Call{Task: "exit-one"}))
 	assert.Equal(t, "FOO=bar - DYNAMIC_FOO=bar - EXIT_CODE=1", strings.TrimSpace(buff.String()))
 }
 
@@ -2378,7 +2378,7 @@ func TestIgnoreNilElements(t *testing.T) {
 				Silent: true,
 			}
 			require.NoError(t, e.Setup())
-			require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "default"}))
+			require.NoError(t, e.Run(context.Background(), &task.Call{Task: "default"}))
 			assert.Equal(t, "string-slice-1\n", buff.String())
 		})
 	}
@@ -2406,7 +2406,7 @@ task: [bye] echo 'Bye!'
 Bye!
 ::endgroup::
 `)
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "bye"}))
+	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "bye"}))
 	t.Log(buff.String())
 	assert.Equal(t, strings.TrimSpace(buff.String()), expectedOutputOrder)
 }
@@ -2423,7 +2423,7 @@ func TestOutputGroupErrorOnlySwallowsOutputOnSuccess(t *testing.T) {
 	}
 	require.NoError(t, e.Setup())
 
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "passing"}))
+	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "passing"}))
 	t.Log(buff.String())
 	assert.Empty(t, buff.String())
 }
@@ -2440,7 +2440,7 @@ func TestOutputGroupErrorOnlyShowsOutputOnFailure(t *testing.T) {
 	}
 	require.NoError(t, e.Setup())
 
-	require.Error(t, e.Run(context.Background(), &ast.Call{Task: "failing"}))
+	require.Error(t, e.Run(context.Background(), &task.Call{Task: "failing"}))
 	t.Log(buff.String())
 	assert.Contains(t, "failing-output", strings.TrimSpace(buff.String()))
 	assert.NotContains(t, "passing", strings.TrimSpace(buff.String()))
@@ -2472,7 +2472,7 @@ VAR_1 is included-default-var1
 task: [included3:task1] echo "VAR_2 is included-default-var2"
 VAR_2 is included-default-var2
 `)
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "task1"}))
+	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "task1"}))
 	t.Log(buff.String())
 	assert.Equal(t, strings.TrimSpace(buff.String()), expectedOutputOrder)
 }
@@ -2497,7 +2497,7 @@ Hello foo
 task: [bar:lib:greet] echo 'Hello bar'
 Hello bar
 `)
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "default"}))
+	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "default"}))
 	t.Log(buff.String())
 	assert.Equal(t, expectedOutputOrder, strings.TrimSpace(buff.String()))
 }
@@ -2535,7 +2535,7 @@ func TestErrorCode(t *testing.T) {
 			}
 			require.NoError(t, e.Setup())
 
-			err := e.Run(context.Background(), &ast.Call{Task: test.task})
+			err := e.Run(context.Background(), &task.Call{Task: test.task})
 			require.Error(t, err)
 			taskRunErr, ok := err.(*errors.TaskRunError)
 			assert.True(t, ok, "cannot cast returned error to *task.TaskRunError")
@@ -2587,7 +2587,7 @@ func TestEvaluateSymlinksInPaths(t *testing.T) { // nolint:paralleltest // canno
 	for _, test := range tests { // nolint:paralleltest // cannot run in parallel
 		t.Run(test.name, func(t *testing.T) {
 			require.NoError(t, e.Setup())
-			err := e.Run(context.Background(), &ast.Call{Task: test.task})
+			err := e.Run(context.Background(), &task.Call{Task: test.task})
 			require.NoError(t, err)
 			assert.Equal(t, test.expected, strings.TrimSpace(buff.String()))
 			buff.Reset()
@@ -2630,7 +2630,7 @@ func TestTaskfileWalk(t *testing.T) {
 				Stderr: &buff,
 			}
 			require.NoError(t, e.Setup())
-			require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "default"}))
+			require.NoError(t, e.Run(context.Background(), &task.Call{Task: "default"}))
 			assert.Equal(t, test.expected, buff.String())
 		})
 	}
@@ -2648,7 +2648,7 @@ func TestUserWorkingDirectory(t *testing.T) {
 	wd, err := os.Getwd()
 	require.NoError(t, err)
 	require.NoError(t, e.Setup())
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "default"}))
+	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "default"}))
 	assert.Equal(t, fmt.Sprintf("%s\n", wd), buff.String())
 }
 
@@ -2670,7 +2670,7 @@ func TestUserWorkingDirectoryWithIncluded(t *testing.T) {
 
 	require.NoError(t, err)
 	require.NoError(t, e.Setup())
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "included:echo"}))
+	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "included:echo"}))
 	assert.Equal(t, fmt.Sprintf("%s\n", wd), buff.String())
 }
 
@@ -2684,7 +2684,7 @@ func TestPlatforms(t *testing.T) {
 		Stderr: &buff,
 	}
 	require.NoError(t, e.Setup())
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "build-" + runtime.GOOS}))
+	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "build-" + runtime.GOOS}))
 	assert.Equal(t, fmt.Sprintf("task: [build-%s] echo 'Running task on %s'\nRunning task on %s\n", runtime.GOOS, runtime.GOOS, runtime.GOOS), buff.String())
 }
 
@@ -2699,7 +2699,7 @@ func TestPOSIXShellOptsGlobalLevel(t *testing.T) {
 	}
 	require.NoError(t, e.Setup())
 
-	err := e.Run(context.Background(), &ast.Call{Task: "pipefail"})
+	err := e.Run(context.Background(), &task.Call{Task: "pipefail"})
 	require.NoError(t, err)
 	assert.Equal(t, "pipefail\ton\n", buff.String())
 }
@@ -2715,7 +2715,7 @@ func TestPOSIXShellOptsTaskLevel(t *testing.T) {
 	}
 	require.NoError(t, e.Setup())
 
-	err := e.Run(context.Background(), &ast.Call{Task: "pipefail"})
+	err := e.Run(context.Background(), &task.Call{Task: "pipefail"})
 	require.NoError(t, err)
 	assert.Equal(t, "pipefail\ton\n", buff.String())
 }
@@ -2731,7 +2731,7 @@ func TestPOSIXShellOptsCommandLevel(t *testing.T) {
 	}
 	require.NoError(t, e.Setup())
 
-	err := e.Run(context.Background(), &ast.Call{Task: "pipefail"})
+	err := e.Run(context.Background(), &task.Call{Task: "pipefail"})
 	require.NoError(t, err)
 	assert.Equal(t, "pipefail\ton\n", buff.String())
 }
@@ -2747,7 +2747,7 @@ func TestBashShellOptsGlobalLevel(t *testing.T) {
 	}
 	require.NoError(t, e.Setup())
 
-	err := e.Run(context.Background(), &ast.Call{Task: "globstar"})
+	err := e.Run(context.Background(), &task.Call{Task: "globstar"})
 	require.NoError(t, err)
 	assert.Equal(t, "globstar\ton\n", buff.String())
 }
@@ -2763,7 +2763,7 @@ func TestBashShellOptsTaskLevel(t *testing.T) {
 	}
 	require.NoError(t, e.Setup())
 
-	err := e.Run(context.Background(), &ast.Call{Task: "globstar"})
+	err := e.Run(context.Background(), &task.Call{Task: "globstar"})
 	require.NoError(t, err)
 	assert.Equal(t, "globstar\ton\n", buff.String())
 }
@@ -2779,7 +2779,7 @@ func TestBashShellOptsCommandLevel(t *testing.T) {
 	}
 	require.NoError(t, e.Setup())
 
-	err := e.Run(context.Background(), &ast.Call{Task: "globstar"})
+	err := e.Run(context.Background(), &task.Call{Task: "globstar"})
 	require.NoError(t, err)
 	assert.Equal(t, "globstar\ton\n", buff.String())
 }
@@ -2799,7 +2799,7 @@ func TestSplitArgs(t *testing.T) {
 	vars := ast.NewVars()
 	vars.Set("CLI_ARGS", ast.Var{Value: "foo bar 'foo bar baz'"})
 
-	err := e.Run(context.Background(), &ast.Call{Task: "default", Vars: vars})
+	err := e.Run(context.Background(), &task.Call{Task: "default", Vars: vars})
 	require.NoError(t, err)
 	assert.Equal(t, "3\n", buff.String())
 }
@@ -2834,20 +2834,20 @@ func TestSilence(t *testing.T) {
 	require.NoError(t, e.Setup())
 
 	// First verify that the silent flag is in place.
-	task, err := e.GetTask(&ast.Call{Task: "task-test-silent-calls-chatty-silenced"})
+	fetchedTask, err := e.GetTask(&task.Call{Task: "task-test-silent-calls-chatty-silenced"})
 	require.NoError(t, err, "Unable to look up task task-test-silent-calls-chatty-silenced")
-	require.True(t, task.Cmds[0].Silent, "The task task-test-silent-calls-chatty-silenced should have a silent call to chatty")
+	require.True(t, fetchedTask.Cmds[0].Silent, "The task task-test-silent-calls-chatty-silenced should have a silent call to chatty")
 
 	// Then test the two basic cases where the task is silent or not.
 	// A silenced task.
-	err = e.Run(context.Background(), &ast.Call{Task: "silent"})
+	err = e.Run(context.Background(), &task.Call{Task: "silent"})
 	require.NoError(t, err)
 	require.Empty(t, buff.String(), "siWhile running lent: Expected not see output, because the task is silent")
 
 	buff.Reset()
 
 	// A chatty (not silent) task.
-	err = e.Run(context.Background(), &ast.Call{Task: "chatty"})
+	err = e.Run(context.Background(), &task.Call{Task: "chatty"})
 	require.NoError(t, err)
 	require.NotEmpty(t, buff.String(), "chWhile running atty: Expected to see output, because the task is not silent")
 
@@ -2855,42 +2855,42 @@ func TestSilence(t *testing.T) {
 
 	// Then test invoking the two task from other tasks.
 	// A silenced task that calls a chatty task.
-	err = e.Run(context.Background(), &ast.Call{Task: "task-test-silent-calls-chatty-non-silenced"})
+	err = e.Run(context.Background(), &task.Call{Task: "task-test-silent-calls-chatty-non-silenced"})
 	require.NoError(t, err)
 	require.NotEmpty(t, buff.String(), "While running task-test-silent-calls-chatty-non-silenced: Expected to see output. The task is silenced, but the called task is not. Silence does not propagate to called tasks.")
 
 	buff.Reset()
 
 	// A silent task that does a silent call to a chatty task.
-	err = e.Run(context.Background(), &ast.Call{Task: "task-test-silent-calls-chatty-silenced"})
+	err = e.Run(context.Background(), &task.Call{Task: "task-test-silent-calls-chatty-silenced"})
 	require.NoError(t, err)
 	require.Empty(t, buff.String(), "While running task-test-silent-calls-chatty-silenced: Expected not to see output. The task calls chatty task, but the call is silenced.")
 
 	buff.Reset()
 
 	// A chatty task that does a call to a chatty task.
-	err = e.Run(context.Background(), &ast.Call{Task: "task-test-chatty-calls-chatty-non-silenced"})
+	err = e.Run(context.Background(), &task.Call{Task: "task-test-chatty-calls-chatty-non-silenced"})
 	require.NoError(t, err)
 	require.NotEmpty(t, buff.String(), "While running task-test-chatty-calls-chatty-non-silenced: Expected to see output. Both caller and callee are chatty and not silenced.")
 
 	buff.Reset()
 
 	// A chatty task that does a silenced call to a chatty task.
-	err = e.Run(context.Background(), &ast.Call{Task: "task-test-chatty-calls-chatty-silenced"})
+	err = e.Run(context.Background(), &task.Call{Task: "task-test-chatty-calls-chatty-silenced"})
 	require.NoError(t, err)
 	require.NotEmpty(t, buff.String(), "While running task-test-chatty-calls-chatty-silenced: Expected to see output. Call to a chatty task is silenced, but the parent task is not.")
 
 	buff.Reset()
 
 	// A chatty task with no cmd's of its own that does a silenced call to a chatty task.
-	err = e.Run(context.Background(), &ast.Call{Task: "task-test-no-cmds-calls-chatty-silenced"})
+	err = e.Run(context.Background(), &task.Call{Task: "task-test-no-cmds-calls-chatty-silenced"})
 	require.NoError(t, err)
 	require.Empty(t, buff.String(), "While running task-test-no-cmds-calls-chatty-silenced: Expected not to see output. While the task itself is not silenced, it does not have any cmds and only does an invocation of a silenced task.")
 
 	buff.Reset()
 
 	// A chatty task that does a silenced invocation of a task.
-	err = e.Run(context.Background(), &ast.Call{Task: "task-test-chatty-calls-silenced-cmd"})
+	err = e.Run(context.Background(), &task.Call{Task: "task-test-chatty-calls-silenced-cmd"})
 	require.NoError(t, err)
 	require.Empty(t, buff.String(), "While running task-test-chatty-calls-silenced-cmd: Expected not to see output. While the task itself is not silenced, its call to the chatty task is silent.")
 
@@ -2898,21 +2898,21 @@ func TestSilence(t *testing.T) {
 
 	// Then test calls via dependencies.
 	// A silent task that depends on a chatty task.
-	err = e.Run(context.Background(), &ast.Call{Task: "task-test-is-silent-depends-on-chatty-non-silenced"})
+	err = e.Run(context.Background(), &task.Call{Task: "task-test-is-silent-depends-on-chatty-non-silenced"})
 	require.NoError(t, err)
 	require.NotEmpty(t, buff.String(), "While running task-test-is-silent-depends-on-chatty-non-silenced: Expected to see output. The task is silent and depends on a chatty task. Dependencies does not inherit silence.")
 
 	buff.Reset()
 
 	// A silent task that depends on a silenced chatty task.
-	err = e.Run(context.Background(), &ast.Call{Task: "task-test-is-silent-depends-on-chatty-silenced"})
+	err = e.Run(context.Background(), &task.Call{Task: "task-test-is-silent-depends-on-chatty-silenced"})
 	require.NoError(t, err)
 	require.Empty(t, buff.String(), "While running task-test-is-silent-depends-on-chatty-silenced: Expected not to see output. The task is silent and has a silenced dependency on a chatty task.")
 
 	buff.Reset()
 
 	// A chatty task that, depends on a silenced chatty task.
-	err = e.Run(context.Background(), &ast.Call{Task: "task-test-is-chatty-depends-on-chatty-silenced"})
+	err = e.Run(context.Background(), &task.Call{Task: "task-test-is-chatty-depends-on-chatty-silenced"})
 	require.NoError(t, err)
 	require.Empty(t, buff.String(), "While running task-test-is-chatty-depends-on-chatty-silenced: Expected not to see output. The task is chatty but does not have commands and has a silenced dependency on a chatty task.")
 
@@ -2964,7 +2964,7 @@ func TestForce(t *testing.T) {
 				ForceAll: tt.forceAll,
 			}
 			require.NoError(t, e.Setup())
-			require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "task-with-dep"}))
+			require.NoError(t, e.Run(context.Background(), &task.Call{Task: "task-with-dep"}))
 		})
 	}
 }
@@ -3036,7 +3036,7 @@ func TestForCmds(t *testing.T) {
 				Force:  true,
 			}
 			require.NoError(t, e.Setup())
-			err := e.Run(context.Background(), &ast.Call{Task: test.name})
+			err := e.Run(context.Background(), &task.Call{Task: test.name})
 			if test.wantErr {
 				require.Error(t, err)
 			} else {
@@ -3131,7 +3131,7 @@ func TestForDeps(t *testing.T) {
 				OutputStyle: ast.Output{Name: "group"},
 			}
 			require.NoError(t, e.Setup())
-			err := e.Run(context.Background(), &ast.Call{Task: test.name})
+			err := e.Run(context.Background(), &task.Call{Task: test.name})
 			if test.wantErr {
 				require.Error(t, err)
 			} else {
@@ -3199,10 +3199,10 @@ func TestWildcard(t *testing.T) {
 			}
 			require.NoError(t, e.Setup())
 			if test.wantErr {
-				require.Error(t, e.Run(context.Background(), &ast.Call{Task: test.call}))
+				require.Error(t, e.Run(context.Background(), &task.Call{Task: test.call}))
 				return
 			}
-			require.NoError(t, e.Run(context.Background(), &ast.Call{Task: test.call}))
+			require.NoError(t, e.Run(context.Background(), &task.Call{Task: test.call}))
 			assert.Equal(t, test.expectedOutput, buff.String())
 		})
 	}
@@ -3251,7 +3251,7 @@ func TestReference(t *testing.T) {
 				Force:  true,
 			}
 			require.NoError(t, e.Setup())
-			require.NoError(t, e.Run(context.Background(), &ast.Call{Task: test.call}))
+			require.NoError(t, e.Run(context.Background(), &task.Call{Task: test.call}))
 			assert.Equal(t, test.expectedOutput, buff.String())
 		})
 	}
@@ -3355,7 +3355,7 @@ func TestVarInheritance(t *testing.T) {
 			}
 			call := cmp.Or(test.call, "default")
 			require.NoError(t, e.Setup())
-			require.NoError(t, e.Run(context.Background(), &ast.Call{Task: call}))
+			require.NoError(t, e.Run(context.Background(), &task.Call{Task: call}))
 			assert.Equal(t, test.want, buff.String())
 		})
 	}

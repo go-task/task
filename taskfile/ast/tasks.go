@@ -24,12 +24,6 @@ type (
 	// A TaskElement is a key-value pair that is used for initializing a Tasks
 	// structure.
 	TaskElement orderedmap.Element[string, *Task]
-	// MatchingTask represents a task that matches a given call. It includes the
-	// task itself and a list of wildcards that were matched.
-	MatchingTask struct {
-		Task      *Task
-		Wildcards []string
-	}
 )
 
 // NewTasks creates a new instance of Tasks and initializes it with the provided
@@ -122,33 +116,6 @@ func (t *Tasks) Values(sorter sort.Sorter) iter.Seq[*Task] {
 			}
 		}
 	}
-}
-
-// FindMatchingTasks returns a list of tasks that match the given call. A task
-// matches a call if its name is equal to the call's task name or if it matches
-// a wildcard pattern. The function returns a list of MatchingTask structs, each
-// containing a task and a list of wildcards that were matched.
-func (t *Tasks) FindMatchingTasks(call *Call) []*MatchingTask {
-	if call == nil {
-		return nil
-	}
-	var matchingTasks []*MatchingTask
-	// If there is a direct match, return it
-	if task, ok := t.Get(call.Task); ok {
-		matchingTasks = append(matchingTasks, &MatchingTask{Task: task, Wildcards: nil})
-		return matchingTasks
-	}
-	// Attempt a wildcard match
-	// For now, we can just nil check the task before each loop
-	for _, value := range t.All(nil) {
-		if match, wildcards := value.WildcardMatch(call.Task); match {
-			matchingTasks = append(matchingTasks, &MatchingTask{
-				Task:      value,
-				Wildcards: wildcards,
-			})
-		}
-	}
-	return matchingTasks
 }
 
 func (t1 *Tasks) Merge(t2 *Tasks, include *Include, includedTaskfileVars *Vars) error {

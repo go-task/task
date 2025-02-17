@@ -7,10 +7,10 @@ import (
 	"github.com/go-task/task/v3/taskfile/ast"
 )
 
-func PrintTasks(l *logger.Logger, t *ast.Taskfile, c []*ast.Call) {
+func PrintTasks(l *logger.Logger, t *ast.Taskfile, c []string) {
 	for i, call := range c {
 		PrintSpaceBetweenSummaries(l, i)
-		if task, ok := t.Tasks.Get(call.Task); ok {
+		if task, ok := t.Tasks.Get(call); ok {
 			PrintTask(l, task)
 		}
 	}

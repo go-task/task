@@ -201,7 +201,7 @@ func run() error {
 	}
 
 	var (
-		calls   []*ast.Call
+		calls   []*task.Call
 		globals *ast.Vars
 	)
 
@@ -214,7 +214,7 @@ func run() error {
 
 	// If there are no calls, run the default task instead
 	if len(calls) == 0 {
-		calls = append(calls, &ast.Call{Task: "default"})
+		calls = append(calls, &task.Call{Task: "default"})
 	}
 
 	globals.Set("CLI_ARGS", ast.Var{Value: cliArgs})

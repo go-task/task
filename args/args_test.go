@@ -6,6 +6,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/go-task/task/v3"
 	"github.com/go-task/task/v3/args"
 	"github.com/go-task/task/v3/taskfile/ast"
 )
@@ -15,12 +16,12 @@ func TestArgs(t *testing.T) {
 
 	tests := []struct {
 		Args            []string
-		ExpectedCalls   []*ast.Call
+		ExpectedCalls   []*task.Call
 		ExpectedGlobals *ast.Vars
 	}{
 		{
 			Args: []string{"task-a", "task-b", "task-c"},
-			ExpectedCalls: []*ast.Call{
+			ExpectedCalls: []*task.Call{
 				{Task: "task-a"},
 				{Task: "task-b"},
 				{Task: "task-c"},
@@ -28,7 +29,7 @@ func TestArgs(t *testing.T) {
 		},
 		{
 			Args: []string{"task-a", "FOO=bar", "task-b", "task-c", "BAR=baz", "BAZ=foo"},
-			ExpectedCalls: []*ast.Call{
+			ExpectedCalls: []*task.Call{
 				{Task: "task-a"},
 				{Task: "task-b"},
 				{Task: "task-c"},
@@ -56,7 +57,7 @@ func TestArgs(t *testing.T) {
 		},
 		{
 			Args: []string{"task-a", "CONTENT=with some spaces"},
-			ExpectedCalls: []*ast.Call{
+			ExpectedCalls: []*task.Call{
 				{Task: "task-a"},
 			},
 			ExpectedGlobals: ast.NewVars(
@@ -70,7 +71,7 @@ func TestArgs(t *testing.T) {
 		},
 		{
 			Args: []string{"FOO=bar", "task-a", "task-b"},
-			ExpectedCalls: []*ast.Call{
+			ExpectedCalls: []*task.Call{
 				{Task: "task-a"},
 				{Task: "task-b"},
 			},
@@ -85,15 +86,15 @@ func TestArgs(t *testing.T) {
 		},
 		{
 			Args:          nil,
-			ExpectedCalls: []*ast.Call{},
+			ExpectedCalls: []*task.Call{},
 		},
 		{
 			Args:          []string{},
-			ExpectedCalls: []*ast.Call{},
+			ExpectedCalls: []*task.Call{},
 		},
 		{
 			Args:          []string{"FOO=bar", "BAR=baz"},
-			ExpectedCalls: []*ast.Call{},
+			ExpectedCalls: []*task.Call{},
 			ExpectedGlobals: ast.NewVars(
 				&ast.VarElement{
 					Key: "FOO",

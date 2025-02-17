@@ -1,4 +1,4 @@
-package compiler
+package task
 
 import (
 	"bytes"
@@ -36,16 +36,16 @@ func (c *Compiler) GetTaskfileVariables() (*ast.Vars, error) {
 	return c.getVariables(nil, nil, true)
 }
 
-func (c *Compiler) GetVariables(t *ast.Task, call *ast.Call) (*ast.Vars, error) {
+func (c *Compiler) GetVariables(t *ast.Task, call *Call) (*ast.Vars, error) {
 	return c.getVariables(t, call, true)
 }
 
-func (c *Compiler) FastGetVariables(t *ast.Task, call *ast.Call) (*ast.Vars, error) {
+func (c *Compiler) FastGetVariables(t *ast.Task, call *Call) (*ast.Vars, error) {
 	return c.getVariables(t, call, false)
 }
 
-func (c *Compiler) getVariables(t *ast.Task, call *ast.Call, evaluateShVars bool) (*ast.Vars, error) {
-	result := GetEnviron()
+func (c *Compiler) getVariables(t *ast.Task, call *Call, evaluateShVars bool) (*ast.Vars, error) {
+	result := env.GetEnviron()
 	specialVars, err := c.getSpecialVars(t, call)
 	if err != nil {
 		return nil, err
@@ -196,7 +196,7 @@ func (c *Compiler) ResetCache() {
 	c.dynamicCache = nil
 }
 
-func (c *Compiler) getSpecialVars(t *ast.Task, call *ast.Call) (map[string]string, error) {
+func (c *Compiler) getSpecialVars(t *ast.Task, call *Call) (map[string]string, error) {
 	allVars := map[string]string{
 		"TASK_EXE":         filepath.ToSlash(os.Args[0]),
 		"ROOT_TASKFILE":    filepathext.SmartJoin(c.Dir, c.Entrypoint),
