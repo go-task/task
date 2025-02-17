@@ -19,7 +19,7 @@ type (
 		Line     int
 		Column   int
 		Tag      string
-		Snippet  *Snippet
+		Snippet  string
 		Err      error
 	}
 )
@@ -62,7 +62,7 @@ func (err *TaskfileDecodeError) Error() string {
 		}
 	}
 	fmt.Fprintln(buf, color.RedString("file: %s:%d:%d", err.Location, err.Line, err.Column))
-	fmt.Fprint(buf, err.Snippet.String())
+	fmt.Fprint(buf, err.Snippet)
 	return buf.String()
 }
 
@@ -84,7 +84,7 @@ func (err *TaskfileDecodeError) WithTypeMessage(t string) *TaskfileDecodeError {
 	return err
 }
 
-func (err *TaskfileDecodeError) WithFileInfo(location string, snippet *Snippet) *TaskfileDecodeError {
+func (err *TaskfileDecodeError) WithFileInfo(location string, snippet string) *TaskfileDecodeError {
 	err.Location = location
 	err.Snippet = snippet
 	return err
