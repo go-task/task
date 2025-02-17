@@ -187,6 +187,17 @@ func TestSnippetString(t *testing.T) {
 			want: "  3 | \x1b[33mtasks\x1b[0m\x1b[1m\x1b[30m:\x1b[0m\x1b[1m\x1b[30m\x1b[0m\n  4 | \x1b[1m\x1b[30m  \x1b[0m\x1b[33mdefault\x1b[0m\x1b[1m\x1b[30m:\x1b[0m\x1b[1m\x1b[30m\x1b[0m\n> 5 | \x1b[1m\x1b[30m    \x1b[0m\x1b[33mvars\x1b[0m\x1b[1m\x1b[30m:\x1b[0m\x1b[1m\x1b[30m\x1b[0m\n    |     ^\n  6 | \x1b[1m\x1b[30m      \x1b[0m\x1b[33mFOO\x1b[0m\x1b[1m\x1b[30m:\x1b[0m\x1b[1m\x1b[30m \x1b[0m\x1b[36mfoo\x1b[0m\x1b[1m\x1b[30m\x1b[0m\n  7 | \x1b[1m\x1b[30m      \x1b[0m\x1b[33mBAR\x1b[0m\x1b[1m\x1b[30m:\x1b[0m\x1b[1m\x1b[30m \x1b[0m\x1b[36mbar\x1b[0m\x1b[1m\x1b[30m\x1b[0m",
 		},
 		{
+			name: "5th line, 5th column, padding=2, no indicators",
+			b:    []byte(sample),
+			opts: []SnippetOption{
+				SnippetWithLine(5),
+				SnippetWithColumn(5),
+				SnippetWithPadding(2),
+				SnippetWithNoIndicators(),
+			},
+			want: "  3 | \x1b[33mtasks\x1b[0m\x1b[1m\x1b[30m:\x1b[0m\x1b[1m\x1b[30m\x1b[0m\n  4 | \x1b[1m\x1b[30m  \x1b[0m\x1b[33mdefault\x1b[0m\x1b[1m\x1b[30m:\x1b[0m\x1b[1m\x1b[30m\x1b[0m\n  5 | \x1b[1m\x1b[30m    \x1b[0m\x1b[33mvars\x1b[0m\x1b[1m\x1b[30m:\x1b[0m\x1b[1m\x1b[30m\x1b[0m\n  6 | \x1b[1m\x1b[30m      \x1b[0m\x1b[33mFOO\x1b[0m\x1b[1m\x1b[30m:\x1b[0m\x1b[1m\x1b[30m \x1b[0m\x1b[36mfoo\x1b[0m\x1b[1m\x1b[30m\x1b[0m\n  7 | \x1b[1m\x1b[30m      \x1b[0m\x1b[33mBAR\x1b[0m\x1b[1m\x1b[30m:\x1b[0m\x1b[1m\x1b[30m \x1b[0m\x1b[36mbar\x1b[0m\x1b[1m\x1b[30m\x1b[0m",
+		},
+		{
 			name: "10th line, 1st column",
 			b:    []byte(sample),
 			opts: []SnippetOption{

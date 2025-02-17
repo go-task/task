@@ -35,12 +35,13 @@ func init() {
 type (
 	SnippetOption func(*Snippet)
 	Snippet       struct {
-		lines   []string
-		start   int
-		end     int
-		line    int
-		column  int
-		padding int
+		lines        []string
+		start        int
+		end          int
+		line         int
+		column       int
+		padding      int
+		noIndicators bool
 	}
 )
 
@@ -87,6 +88,12 @@ func SnippetWithPadding(padding int) SnippetOption {
 	}
 }
 
+func SnippetWithNoIndicators() SnippetOption {
+	return func(snippet *Snippet) {
+		snippet.noIndicators = true
+	}
+}
+
 func (snippet *Snippet) String() string {
 	buf := &bytes.Buffer{}
 
@@ -105,8 +112,8 @@ func (snippet *Snippet) String() string {
 		currentLine := snippet.start + i
 		lineNumber := fmt.Sprintf(lineNumberFormat, currentLine)
 
-		// If this is a padding line, print it as normal
-		if currentLine != snippet.line {
+		// If this is a padding line or indicators are disabled, print it as normal
+		if currentLine != snippet.line || snippet.noIndicators {
 			fmt.Fprintf(buf, "%s %s | %s", lineIndicatorSpacer, lineNumber, line)
 			continue
 		}
