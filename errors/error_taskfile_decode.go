@@ -2,35 +2,15 @@ package errors
 
 import (
 	"bytes"
-	"embed"
 	"errors"
 	"fmt"
 	"regexp"
-	"strings"
 
-	"github.com/alecthomas/chroma/v2"
-	"github.com/alecthomas/chroma/v2/quick"
-	"github.com/alecthomas/chroma/v2/styles"
 	"github.com/fatih/color"
 	"gopkg.in/yaml.v3"
 )
 
-//go:embed themes/*.xml
-var embedded embed.FS
-
 var typeErrorRegex = regexp.MustCompile(`line \d+: (.*)`)
-
-func init() {
-	r, err := embedded.Open("themes/task.xml")
-	if err != nil {
-		panic(err)
-	}
-	style, err := chroma.NewXMLStyle(r)
-	if err != nil {
-		panic(err)
-	}
-	styles.Register(style)
-}
 
 type (
 	TaskfileDecodeError struct {
@@ -39,14 +19,8 @@ type (
 		Line     int
 		Column   int
 		Tag      string
-		Snippet  TaskfileSnippet
+		Snippet  *Snippet
 		Err      error
-	}
-	TaskfileSnippet struct {
-		Lines     []string
-		StartLine int
-		EndLine   int
-		Padding   int
 	}
 )
 
@@ -88,38 +62,7 @@ func (err *TaskfileDecodeError) Error() string {
 		}
 	}
 	fmt.Fprintln(buf, color.RedString("file: %s:%d:%d", err.Location, err.Line, err.Column))
-
-	// Print the snippet
-	maxLineNumberDigits := digits(err.Snippet.EndLine)
-	lineNumberSpacer := strings.Repeat(" ", maxLineNumberDigits)
-	columnSpacer := strings.Repeat(" ", err.Column-1)
-	for i, line := range err.Snippet.Lines {
-		currentLine := err.Snippet.StartLine + i + 1
-
-		lineIndicator := " "
-		if currentLine == err.Line {
-			lineIndicator = ">"
-		}
-		columnIndicator := "^"
-
-		// Print each line
-		lineIndicator = color.RedString(lineIndicator)
-		columnIndicator = color.RedString(columnIndicator)
-		lineNumberFormat := fmt.Sprintf("%%%dd", maxLineNumberDigits)
-		lineNumber := fmt.Sprintf(lineNumberFormat, currentLine)
-		fmt.Fprintf(buf, "%s %s | %s", lineIndicator, lineNumber, line)
-
-		// Print the column indicator
-		if currentLine == err.Line {
-			fmt.Fprintf(buf, "\n  %s | %s%s", lineNumberSpacer, columnSpacer, columnIndicator)
-		}
-
-		// If there are more lines to print, add a newline
-		if i < len(err.Snippet.Lines)-1 {
-			fmt.Fprintln(buf)
-		}
-	}
-
+	fmt.Fprint(buf, err.Snippet.String())
 	return buf.String()
 }
 
@@ -141,23 +84,9 @@ func (err *TaskfileDecodeError) WithTypeMessage(t string) *TaskfileDecodeError {
 	return err
 }
 
-func (err *TaskfileDecodeError) WithFileInfo(location string, b []byte, padding int) *TaskfileDecodeError {
-	buf := &bytes.Buffer{}
-	if err := quick.Highlight(buf, string(b), "yaml", "terminal", "task"); err != nil {
-		buf.WriteString(string(b))
-	}
-	lines := strings.Split(buf.String(), "\n")
-	start := max(err.Line-1-padding, 0)
-	end := min(err.Line+padding, len(lines)-1)
-
+func (err *TaskfileDecodeError) WithFileInfo(location string, snippet *Snippet) *TaskfileDecodeError {
 	err.Location = location
-	err.Snippet = TaskfileSnippet{
-		Lines:     lines[start:end],
-		StartLine: start,
-		EndLine:   end,
-		Padding:   padding,
-	}
-
+	err.Snippet = snippet
 	return err
 }
 
@@ -167,13 +96,4 @@ func extractTypeErrorMessage(message string) string {
 		return matches[1]
 	}
 	return message
-}
-
-func digits(number int) int {
-	count := 0
-	for number != 0 {
-		number /= 10
-		count += 1
-	}
-	return count
 }

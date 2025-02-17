@@ -195,7 +195,8 @@ func (r *Reader) readNode(node Node) (*ast.Taskfile, error) {
 		// Decode the taskfile and add the file info the any errors
 		taskfileInvalidErr := &errors.TaskfileDecodeError{}
 		if errors.As(err, &taskfileInvalidErr) {
-			return nil, taskfileInvalidErr.WithFileInfo(node.Location(), b, 2)
+			snippet := errors.NewSnippet(b, taskfileInvalidErr.Line, taskfileInvalidErr.Column, 2)
+			return nil, taskfileInvalidErr.WithFileInfo(node.Location(), snippet)
 		}
 		return nil, &errors.TaskfileInvalidError{URI: filepathext.TryAbsToRel(node.Location()), Err: err}
 	}
