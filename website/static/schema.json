@@ -29,6 +29,12 @@
                   },
                   {
                     "$ref": "#/definitions/task_call"
+                  },
+                  {
+                    "$ref": "#/definitions/defer_task_call"
+                  },
+                  {
+                    "$ref": "#/definitions/defer_cmd_call"
                   }
                 ]
               }
@@ -216,7 +222,10 @@
           "$ref": "#/definitions/task_call"
         },
         {
-          "$ref": "#/definitions/defer_call"
+          "$ref": "#/definitions/defer_task_call"
+        },
+        {
+          "$ref": "#/definitions/defer_cmd_call"
         },
         {
           "$ref": "#/definitions/for_cmds_call"
@@ -350,19 +359,31 @@
       "additionalProperties": false,
       "required": ["cmd"]
     },
-    "defer_call": {
+    "defer_task_call": {
       "type": "object",
       "properties": {
         "defer": {
           "description": "Run a command when the task completes. This command will run even when the task fails",
           "anyOf": [
             {
-              "type": "string"
-            },
-            {
               "$ref": "#/definitions/task_call"
             }
           ]
+        }
+      },
+      "additionalProperties": false,
+      "required": ["defer"]
+    },
+    "defer_cmd_call": {
+      "type": "object",
+      "properties": {
+        "defer": {
+          "description": "Name of the command to defer",
+          "type": "string"
+        },
+        "silent": {
+          "description": "Hides task name and command from output. The command's output will still be redirected to `STDOUT` and `STDERR`.",
+          "type": "boolean"
         }
       },
       "additionalProperties": false,
