@@ -46,9 +46,6 @@ type Snippet struct {
 // first character in the file would be 1:1 (line 1, column 1). The padding
 // determines the number of lines to include before and after the chosen line.
 func NewSnippet(b []byte, line, column, padding int) *Snippet {
-	line = max(line, 1)
-	column = max(column, 1)
-
 	// Syntax highlight the snippet
 	buf := &bytes.Buffer{}
 	if err := quick.Highlight(buf, string(b), "yaml", "terminal", "task"); err != nil {
@@ -78,7 +75,7 @@ func (snippet *Snippet) String() string {
 	lineNumberFormat := fmt.Sprintf("%%%dd", maxLineNumberDigits)
 	lineNumberSpacer := strings.Repeat(" ", maxLineNumberDigits)
 	lineIndicatorSpacer := strings.Repeat(" ", len(lineIndicator))
-	columnSpacer := strings.Repeat(" ", snippet.column-1)
+	columnSpacer := strings.Repeat(" ", max(snippet.column-1, 0))
 
 	// Loop over each line in the snippet
 	for i, line := range snippet.lines {
@@ -97,6 +94,13 @@ func (snippet *Snippet) String() string {
 
 		// Otherwise, print the line with indicators
 		fmt.Fprintf(buf, "%s %s | %s", color.RedString(lineIndicator), lineNumber, line)
+		if snippet.column > 0 {
+			fmt.Fprintf(buf, "\n%s %s | %s%s", lineIndicatorSpacer, lineNumberSpacer, columnSpacer, color.RedString(columnIndicator))
+		}
+	}
+
+	// If there are lines, but no line is selected, print the column indicator under all the lines
+	if len(snippet.lines) > 0 && snippet.line == 0 && snippet.column > 0 {
 		fmt.Fprintf(buf, "\n%s %s | %s%s", lineIndicatorSpacer, lineNumberSpacer, columnSpacer, color.RedString(columnIndicator))
 	}
 
