@@ -35,13 +35,14 @@ func init() {
 type (
 	SnippetOption func(*Snippet)
 	Snippet       struct {
-		lines        []string
-		start        int
-		end          int
-		line         int
-		column       int
-		padding      int
-		noIndicators bool
+		linesRaw         []string
+		linesHighlighted []string
+		start            int
+		end              int
+		line             int
+		column           int
+		padding          int
+		noIndicators     bool
 	}
 )
 
@@ -60,12 +61,14 @@ func NewSnippet(b []byte, opts ...SnippetOption) *Snippet {
 	if err := quick.Highlight(buf, string(b), "yaml", "terminal", "task"); err != nil {
 		buf.WriteString(string(b))
 	}
-	lines := strings.Split(buf.String(), "\n")
+	linesRaw := strings.Split(string(b), "\n")
+	linesHighlighted := strings.Split(buf.String(), "\n")
 
 	// Work out the start and end lines of the snippet
 	snippet.start = max(snippet.line-snippet.padding, 1)
-	snippet.end = min(snippet.line+snippet.padding, len(lines)-1)
-	snippet.lines = lines[snippet.start-1 : snippet.end]
+	snippet.end = min(snippet.line+snippet.padding, len(linesRaw)-1)
+	snippet.linesRaw = linesRaw[snippet.start-1 : snippet.end]
+	snippet.linesHighlighted = linesHighlighted[snippet.start-1 : snippet.end]
 
 	return snippet
 }
@@ -104,7 +107,7 @@ func (snippet *Snippet) String() string {
 	columnSpacer := strings.Repeat(" ", max(snippet.column-1, 0))
 
 	// Loop over each line in the snippet
-	for i, line := range snippet.lines {
+	for i, lineHighlighted := range snippet.linesHighlighted {
 		if i > 0 {
 			fmt.Fprintln(buf)
 		}
@@ -114,19 +117,21 @@ func (snippet *Snippet) String() string {
 
 		// If this is a padding line or indicators are disabled, print it as normal
 		if currentLine != snippet.line || snippet.noIndicators {
-			fmt.Fprintf(buf, "%s %s | %s", lineIndicatorSpacer, lineNumber, line)
+			fmt.Fprintf(buf, "%s %s | %s", lineIndicatorSpacer, lineNumber, lineHighlighted)
 			continue
 		}
 
 		// Otherwise, print the line with indicators
-		fmt.Fprintf(buf, "%s %s | %s", color.RedString(lineIndicator), lineNumber, line)
-		if snippet.column > 0 {
+		fmt.Fprintf(buf, "%s %s | %s", color.RedString(lineIndicator), lineNumber, lineHighlighted)
+
+		// Only print the column indicator if the column is in bounds
+		if snippet.column > 0 && snippet.column <= len(snippet.linesRaw[i]) {
 			fmt.Fprintf(buf, "\n%s %s | %s%s", lineIndicatorSpacer, lineNumberSpacer, columnSpacer, color.RedString(columnIndicator))
 		}
 	}
 
 	// If there are lines, but no line is selected, print the column indicator under all the lines
-	if len(snippet.lines) > 0 && snippet.line == 0 && snippet.column > 0 {
+	if len(snippet.linesHighlighted) > 0 && snippet.line == 0 && snippet.column > 0 {
 		fmt.Fprintf(buf, "\n%s %s | %s%s", lineIndicatorSpacer, lineNumberSpacer, columnSpacer, color.RedString(columnIndicator))
 	}
 

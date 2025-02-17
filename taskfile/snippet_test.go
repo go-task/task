@@ -34,7 +34,10 @@ func TestNewSnippet(t *testing.T) {
 				SnippetWithColumn(1),
 			},
 			want: &Snippet{
-				lines: []string{
+				linesRaw: []string{
+					"version: 3",
+				},
+				linesHighlighted: []string{
 					"\x1b[33mversion\x1b[0m\x1b[1m\x1b[30m:\x1b[0m\x1b[1m\x1b[30m \x1b[0m\x1b[36m3\x1b[0m\x1b[1m\x1b[30m\x1b[0m",
 				},
 				start:   1,
@@ -53,7 +56,12 @@ func TestNewSnippet(t *testing.T) {
 				SnippetWithPadding(2),
 			},
 			want: &Snippet{
-				lines: []string{
+				linesRaw: []string{
+					"version: 3",
+					"",
+					"tasks:",
+				},
+				linesHighlighted: []string{
 					"\x1b[33mversion\x1b[0m\x1b[1m\x1b[30m:\x1b[0m\x1b[1m\x1b[30m \x1b[0m\x1b[36m3\x1b[0m\x1b[1m\x1b[30m\x1b[0m",
 					"\x1b[1m\x1b[30m\x1b[0m",
 					"\x1b[33mtasks\x1b[0m\x1b[1m\x1b[30m:\x1b[0m\x1b[1m\x1b[30m\x1b[0m",
@@ -222,7 +230,7 @@ func TestSnippetString(t *testing.T) {
 				SnippetWithLine(10),
 				SnippetWithColumn(24),
 			},
-			want: "> 10 | \x1b[1m\x1b[30m      \x1b[0m\x1b[1m\x1b[30m- \x1b[0m\x1b[36mecho \"{{.BAR}}\"\x1b[0m\x1b[1m\x1b[30m\x1b[0m\n     |                        ^",
+			want: "> 10 | \x1b[1m\x1b[30m      \x1b[0m\x1b[1m\x1b[30m- \x1b[0m\x1b[36mecho \"{{.BAR}}\"\x1b[0m\x1b[1m\x1b[30m\x1b[0m",
 		},
 		{
 			name: "10th line, 23rd column, padding=2",
