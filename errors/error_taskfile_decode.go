@@ -2,9 +2,11 @@ package errors
 
 import (
 	"bytes"
+	"cmp"
 	"errors"
 	"fmt"
 	"regexp"
+	"strings"
 
 	"github.com/fatih/color"
 	"gopkg.in/yaml.v3"
@@ -63,6 +65,43 @@ func (err *TaskfileDecodeError) Error() string {
 	}
 	fmt.Fprintln(buf, color.RedString("file: %s:%d:%d", err.Location, err.Line, err.Column))
 	fmt.Fprint(buf, err.Snippet)
+	return buf.String()
+}
+
+func (err *TaskfileDecodeError) Debug() string {
+	const indentWidth = 2
+	buf := &bytes.Buffer{}
+	fmt.Fprintln(buf, "TaskfileDecodeError:")
+
+	// Recursively loop through the error chain and print any details
+	var debug func(error, int)
+	debug = func(err error, indent int) {
+		indentStr := strings.Repeat(" ", indent*indentWidth)
+
+		// Nothing left to unwrap
+		if err == nil {
+			fmt.Fprintf(buf, "%sEnd of chain\n", indentStr)
+			return
+		}
+
+		// Taskfile decode error
+		decodeErr := &TaskfileDecodeError{}
+		if errors.As(err, &decodeErr) {
+			fmt.Fprintf(buf, "%s%s (%s:%d:%d)\n",
+				indentStr,
+				cmp.Or(decodeErr.Message, "<no_message>"),
+				decodeErr.Location,
+				decodeErr.Line,
+				decodeErr.Column,
+			)
+			debug(errors.Unwrap(err), indent+1)
+			return
+		}
+
+		fmt.Fprintf(buf, "%s%s\n", indentStr, err)
+		debug(errors.Unwrap(err), indent+1)
+	}
+	debug(err, 0)
 	return buf.String()
 }
 
