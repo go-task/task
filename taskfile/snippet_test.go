@@ -21,19 +21,18 @@ tasks:
 
 func TestNewSnippet(t *testing.T) {
 	tests := []struct {
-		name    string
-		b       []byte
-		line    int
-		column  int
-		padding int
-		want    *Snippet
+		name string
+		b    []byte
+		opts []SnippetOption
+		want *Snippet
 	}{
 		{
-			name:    "first line, first column",
-			b:       []byte(sample),
-			line:    1,
-			column:  1,
-			padding: 0,
+			name: "first line, first column",
+			b:    []byte(sample),
+			opts: []SnippetOption{
+				SnippetWithLine(1),
+				SnippetWithColumn(1),
+			},
 			want: &Snippet{
 				lines: []string{
 					"\x1b[33mversion\x1b[0m\x1b[1m\x1b[30m:\x1b[0m\x1b[1m\x1b[30m \x1b[0m\x1b[36m3\x1b[0m\x1b[1m\x1b[30m\x1b[0m",
@@ -46,11 +45,13 @@ func TestNewSnippet(t *testing.T) {
 			},
 		},
 		{
-			name:    "first line, first column, padding=2",
-			b:       []byte(sample),
-			line:    1,
-			column:  1,
-			padding: 2,
+			name: "first line, first column, padding=2",
+			b:    []byte(sample),
+			opts: []SnippetOption{
+				SnippetWithLine(1),
+				SnippetWithColumn(1),
+				SnippetWithPadding(2),
+			},
 			want: &Snippet{
 				lines: []string{
 					"\x1b[33mversion\x1b[0m\x1b[1m\x1b[30m:\x1b[0m\x1b[1m\x1b[30m \x1b[0m\x1b[36m3\x1b[0m\x1b[1m\x1b[30m\x1b[0m",
@@ -67,7 +68,7 @@ func TestNewSnippet(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := NewSnippet(tt.b, tt.line, tt.column, tt.padding)
+			got := NewSnippet(tt.b, tt.opts...)
 			require.Equal(t, tt.want, got)
 		})
 	}
@@ -75,169 +76,186 @@ func TestNewSnippet(t *testing.T) {
 
 func TestSnippetString(t *testing.T) {
 	tests := []struct {
-		name    string
-		b       []byte
-		line    int
-		column  int
-		padding int
-		want    string
+		name string
+		b    []byte
+		opts []SnippetOption
+		want string
 	}{
 		{
-			name:    "empty",
-			b:       []byte{},
-			line:    1,
-			column:  1,
-			padding: 0,
-			want:    "",
+			name: "empty",
+			b:    []byte{},
+			opts: []SnippetOption{
+				SnippetWithLine(1),
+				SnippetWithColumn(1),
+			},
+			want: "",
 		},
 		{
-			name:    "0th line, 0th column (no indicators)",
-			b:       []byte(sample),
-			line:    0,
-			column:  0,
-			padding: 0,
-			want:    "",
+			name: "0th line, 0th column (no indicators)",
+			b:    []byte(sample),
+			want: "",
 		},
 		{
-			name:    "1st line, 0th column (line indicator only)",
-			b:       []byte(sample),
-			line:    1,
-			column:  0,
-			padding: 0,
-			want:    "> 1 | \x1b[33mversion\x1b[0m\x1b[1m\x1b[30m:\x1b[0m\x1b[1m\x1b[30m \x1b[0m\x1b[36m3\x1b[0m\x1b[1m\x1b[30m\x1b[0m",
+			name: "1st line, 0th column (line indicator only)",
+			b:    []byte(sample),
+			opts: []SnippetOption{
+				SnippetWithLine(1),
+			},
+			want: "> 1 | \x1b[33mversion\x1b[0m\x1b[1m\x1b[30m:\x1b[0m\x1b[1m\x1b[30m \x1b[0m\x1b[36m3\x1b[0m\x1b[1m\x1b[30m\x1b[0m",
 		},
 		{
-			name:    "0th line, 1st column (column indicator only)",
-			b:       []byte(sample),
-			line:    0,
-			column:  1,
-			padding: 0,
-			want:    "",
+			name: "0th line, 1st column (column indicator only)",
+			b:    []byte(sample),
+			opts: []SnippetOption{
+				SnippetWithColumn(1),
+			},
+			want: "",
 		},
 		{
-			name:    "0th line, 1st column, padding=2 (column indicator only)",
-			b:       []byte(sample),
-			line:    0,
-			column:  1,
-			padding: 2,
-			want:    "  1 | \x1b[33mversion\x1b[0m\x1b[1m\x1b[30m:\x1b[0m\x1b[1m\x1b[30m \x1b[0m\x1b[36m3\x1b[0m\x1b[1m\x1b[30m\x1b[0m\n  2 | \x1b[1m\x1b[30m\x1b[0m\n    | ^",
+			name: "0th line, 1st column, padding=2 (column indicator only)",
+			b:    []byte(sample),
+			opts: []SnippetOption{
+				SnippetWithColumn(1),
+				SnippetWithPadding(2),
+			},
+			want: "  1 | \x1b[33mversion\x1b[0m\x1b[1m\x1b[30m:\x1b[0m\x1b[1m\x1b[30m \x1b[0m\x1b[36m3\x1b[0m\x1b[1m\x1b[30m\x1b[0m\n  2 | \x1b[1m\x1b[30m\x1b[0m\n    | ^",
 		},
 		{
-			name:    "1st line, 1st column",
-			b:       []byte(sample),
-			line:    1,
-			column:  1,
-			padding: 0,
-			want:    "> 1 | \x1b[33mversion\x1b[0m\x1b[1m\x1b[30m:\x1b[0m\x1b[1m\x1b[30m \x1b[0m\x1b[36m3\x1b[0m\x1b[1m\x1b[30m\x1b[0m\n    | ^",
+			name: "1st line, 1st column",
+			b:    []byte(sample),
+			opts: []SnippetOption{
+				SnippetWithLine(1),
+				SnippetWithColumn(1),
+			},
+			want: "> 1 | \x1b[33mversion\x1b[0m\x1b[1m\x1b[30m:\x1b[0m\x1b[1m\x1b[30m \x1b[0m\x1b[36m3\x1b[0m\x1b[1m\x1b[30m\x1b[0m\n    | ^",
 		},
 		{
-			name:    "1st line, 10th column",
-			b:       []byte(sample),
-			line:    1,
-			column:  10,
-			padding: 0,
-			want:    "> 1 | \x1b[33mversion\x1b[0m\x1b[1m\x1b[30m:\x1b[0m\x1b[1m\x1b[30m \x1b[0m\x1b[36m3\x1b[0m\x1b[1m\x1b[30m\x1b[0m\n    |          ^",
+			name: "1st line, 10th column",
+			b:    []byte(sample),
+			opts: []SnippetOption{
+				SnippetWithLine(1),
+				SnippetWithColumn(10),
+			},
+			want: "> 1 | \x1b[33mversion\x1b[0m\x1b[1m\x1b[30m:\x1b[0m\x1b[1m\x1b[30m \x1b[0m\x1b[36m3\x1b[0m\x1b[1m\x1b[30m\x1b[0m\n    |          ^",
 		},
 		{
-			name:    "1st line, 1st column, padding=2",
-			b:       []byte(sample),
-			line:    1,
-			column:  1,
-			padding: 2,
-			want:    "> 1 | \x1b[33mversion\x1b[0m\x1b[1m\x1b[30m:\x1b[0m\x1b[1m\x1b[30m \x1b[0m\x1b[36m3\x1b[0m\x1b[1m\x1b[30m\x1b[0m\n    | ^\n  2 | \x1b[1m\x1b[30m\x1b[0m\n  3 | \x1b[33mtasks\x1b[0m\x1b[1m\x1b[30m:\x1b[0m\x1b[1m\x1b[30m\x1b[0m",
+			name: "1st line, 1st column, padding=2",
+			b:    []byte(sample),
+			opts: []SnippetOption{
+				SnippetWithLine(1),
+				SnippetWithColumn(1),
+				SnippetWithPadding(2),
+			},
+			want: "> 1 | \x1b[33mversion\x1b[0m\x1b[1m\x1b[30m:\x1b[0m\x1b[1m\x1b[30m \x1b[0m\x1b[36m3\x1b[0m\x1b[1m\x1b[30m\x1b[0m\n    | ^\n  2 | \x1b[1m\x1b[30m\x1b[0m\n  3 | \x1b[33mtasks\x1b[0m\x1b[1m\x1b[30m:\x1b[0m\x1b[1m\x1b[30m\x1b[0m",
 		},
 		{
-			name:    "1st line, 10th column, padding=2",
-			b:       []byte(sample),
-			line:    1,
-			column:  10,
-			padding: 2,
-			want:    "> 1 | \x1b[33mversion\x1b[0m\x1b[1m\x1b[30m:\x1b[0m\x1b[1m\x1b[30m \x1b[0m\x1b[36m3\x1b[0m\x1b[1m\x1b[30m\x1b[0m\n    |          ^\n  2 | \x1b[1m\x1b[30m\x1b[0m\n  3 | \x1b[33mtasks\x1b[0m\x1b[1m\x1b[30m:\x1b[0m\x1b[1m\x1b[30m\x1b[0m",
+			name: "1st line, 10th column, padding=2",
+			b:    []byte(sample),
+			opts: []SnippetOption{
+				SnippetWithLine(1),
+				SnippetWithColumn(10),
+				SnippetWithPadding(2),
+			},
+			want: "> 1 | \x1b[33mversion\x1b[0m\x1b[1m\x1b[30m:\x1b[0m\x1b[1m\x1b[30m \x1b[0m\x1b[36m3\x1b[0m\x1b[1m\x1b[30m\x1b[0m\n    |          ^\n  2 | \x1b[1m\x1b[30m\x1b[0m\n  3 | \x1b[33mtasks\x1b[0m\x1b[1m\x1b[30m:\x1b[0m\x1b[1m\x1b[30m\x1b[0m",
 		},
 		{
-			name:    "5th line, 1st column",
-			b:       []byte(sample),
-			line:    5,
-			column:  1,
-			padding: 0,
-			want:    "> 5 | \x1b[1m\x1b[30m    \x1b[0m\x1b[33mvars\x1b[0m\x1b[1m\x1b[30m:\x1b[0m\x1b[1m\x1b[30m\x1b[0m\n    | ^",
+			name: "5th line, 1st column",
+			b:    []byte(sample),
+			opts: []SnippetOption{
+				SnippetWithLine(5),
+				SnippetWithColumn(1),
+			},
+			want: "> 5 | \x1b[1m\x1b[30m    \x1b[0m\x1b[33mvars\x1b[0m\x1b[1m\x1b[30m:\x1b[0m\x1b[1m\x1b[30m\x1b[0m\n    | ^",
 		},
 		{
-			name:    "5th line, 5th column",
-			b:       []byte(sample),
-			line:    5,
-			column:  5,
-			padding: 0,
-			want:    "> 5 | \x1b[1m\x1b[30m    \x1b[0m\x1b[33mvars\x1b[0m\x1b[1m\x1b[30m:\x1b[0m\x1b[1m\x1b[30m\x1b[0m\n    |     ^",
+			name: "5th line, 5th column",
+			b:    []byte(sample),
+			opts: []SnippetOption{
+				SnippetWithLine(5),
+				SnippetWithColumn(5),
+			},
+			want: "> 5 | \x1b[1m\x1b[30m    \x1b[0m\x1b[33mvars\x1b[0m\x1b[1m\x1b[30m:\x1b[0m\x1b[1m\x1b[30m\x1b[0m\n    |     ^",
 		},
 		{
-			name:    "5th line, 5th column, padding=2",
-			b:       []byte(sample),
-			line:    5,
-			column:  5,
-			padding: 2,
-			want:    "  3 | \x1b[33mtasks\x1b[0m\x1b[1m\x1b[30m:\x1b[0m\x1b[1m\x1b[30m\x1b[0m\n  4 | \x1b[1m\x1b[30m  \x1b[0m\x1b[33mdefault\x1b[0m\x1b[1m\x1b[30m:\x1b[0m\x1b[1m\x1b[30m\x1b[0m\n> 5 | \x1b[1m\x1b[30m    \x1b[0m\x1b[33mvars\x1b[0m\x1b[1m\x1b[30m:\x1b[0m\x1b[1m\x1b[30m\x1b[0m\n    |     ^\n  6 | \x1b[1m\x1b[30m      \x1b[0m\x1b[33mFOO\x1b[0m\x1b[1m\x1b[30m:\x1b[0m\x1b[1m\x1b[30m \x1b[0m\x1b[36mfoo\x1b[0m\x1b[1m\x1b[30m\x1b[0m\n  7 | \x1b[1m\x1b[30m      \x1b[0m\x1b[33mBAR\x1b[0m\x1b[1m\x1b[30m:\x1b[0m\x1b[1m\x1b[30m \x1b[0m\x1b[36mbar\x1b[0m\x1b[1m\x1b[30m\x1b[0m",
+			name: "5th line, 5th column, padding=2",
+			b:    []byte(sample),
+			opts: []SnippetOption{
+				SnippetWithLine(5),
+				SnippetWithColumn(5),
+				SnippetWithPadding(2),
+			},
+			want: "  3 | \x1b[33mtasks\x1b[0m\x1b[1m\x1b[30m:\x1b[0m\x1b[1m\x1b[30m\x1b[0m\n  4 | \x1b[1m\x1b[30m  \x1b[0m\x1b[33mdefault\x1b[0m\x1b[1m\x1b[30m:\x1b[0m\x1b[1m\x1b[30m\x1b[0m\n> 5 | \x1b[1m\x1b[30m    \x1b[0m\x1b[33mvars\x1b[0m\x1b[1m\x1b[30m:\x1b[0m\x1b[1m\x1b[30m\x1b[0m\n    |     ^\n  6 | \x1b[1m\x1b[30m      \x1b[0m\x1b[33mFOO\x1b[0m\x1b[1m\x1b[30m:\x1b[0m\x1b[1m\x1b[30m \x1b[0m\x1b[36mfoo\x1b[0m\x1b[1m\x1b[30m\x1b[0m\n  7 | \x1b[1m\x1b[30m      \x1b[0m\x1b[33mBAR\x1b[0m\x1b[1m\x1b[30m:\x1b[0m\x1b[1m\x1b[30m \x1b[0m\x1b[36mbar\x1b[0m\x1b[1m\x1b[30m\x1b[0m",
 		},
 		{
-			name:    "10th line, 1st column",
-			b:       []byte(sample),
-			line:    10,
-			column:  1,
-			padding: 0,
-			want:    "> 10 | \x1b[1m\x1b[30m      \x1b[0m\x1b[1m\x1b[30m- \x1b[0m\x1b[36mecho \"{{.BAR}}\"\x1b[0m\x1b[1m\x1b[30m\x1b[0m\n     | ^",
+			name: "10th line, 1st column",
+			b:    []byte(sample),
+			opts: []SnippetOption{
+				SnippetWithLine(10),
+				SnippetWithColumn(1),
+			},
+			want: "> 10 | \x1b[1m\x1b[30m      \x1b[0m\x1b[1m\x1b[30m- \x1b[0m\x1b[36mecho \"{{.BAR}}\"\x1b[0m\x1b[1m\x1b[30m\x1b[0m\n     | ^",
 		},
 		{
-			name:    "10th line, 23rd column",
-			b:       []byte(sample),
-			line:    10,
-			column:  23,
-			padding: 0,
-			want:    "> 10 | \x1b[1m\x1b[30m      \x1b[0m\x1b[1m\x1b[30m- \x1b[0m\x1b[36mecho \"{{.BAR}}\"\x1b[0m\x1b[1m\x1b[30m\x1b[0m\n     |                       ^",
+			name: "10th line, 23rd column",
+			b:    []byte(sample),
+			opts: []SnippetOption{
+				SnippetWithLine(10),
+				SnippetWithColumn(23),
+			},
+			want: "> 10 | \x1b[1m\x1b[30m      \x1b[0m\x1b[1m\x1b[30m- \x1b[0m\x1b[36mecho \"{{.BAR}}\"\x1b[0m\x1b[1m\x1b[30m\x1b[0m\n     |                       ^",
 		},
 		{
-			name:    "10th line, 24th column (out of bounds)",
-			b:       []byte(sample),
-			line:    10,
-			column:  24,
-			padding: 0,
-			want:    "> 10 | \x1b[1m\x1b[30m      \x1b[0m\x1b[1m\x1b[30m- \x1b[0m\x1b[36mecho \"{{.BAR}}\"\x1b[0m\x1b[1m\x1b[30m\x1b[0m\n     |                        ^",
+			name: "10th line, 24th column (out of bounds)",
+			b:    []byte(sample),
+			opts: []SnippetOption{
+				SnippetWithLine(10),
+				SnippetWithColumn(24),
+			},
+			want: "> 10 | \x1b[1m\x1b[30m      \x1b[0m\x1b[1m\x1b[30m- \x1b[0m\x1b[36mecho \"{{.BAR}}\"\x1b[0m\x1b[1m\x1b[30m\x1b[0m\n     |                        ^",
 		},
 		{
-			name:    "10th line, 23rd column, padding=2",
-			b:       []byte(sample),
-			line:    10,
-			column:  23,
-			padding: 2,
-			want:    "   8 | \x1b[1m\x1b[30m    \x1b[0m\x1b[33mcmds\x1b[0m\x1b[1m\x1b[30m:\x1b[0m\x1b[1m\x1b[30m\x1b[0m\n   9 | \x1b[1m\x1b[30m      \x1b[0m\x1b[1m\x1b[30m- \x1b[0m\x1b[36mecho \"{{.FOO}}\"\x1b[0m\x1b[1m\x1b[30m\x1b[0m\n> 10 | \x1b[1m\x1b[30m      \x1b[0m\x1b[1m\x1b[30m- \x1b[0m\x1b[36mecho \"{{.BAR}}\"\x1b[0m\x1b[1m\x1b[30m\x1b[0m\n     |                       ^",
+			name: "10th line, 23rd column, padding=2",
+			b:    []byte(sample),
+			opts: []SnippetOption{
+				SnippetWithLine(10),
+				SnippetWithColumn(23),
+				SnippetWithPadding(2),
+			},
+			want: "   8 | \x1b[1m\x1b[30m    \x1b[0m\x1b[33mcmds\x1b[0m\x1b[1m\x1b[30m:\x1b[0m\x1b[1m\x1b[30m\x1b[0m\n   9 | \x1b[1m\x1b[30m      \x1b[0m\x1b[1m\x1b[30m- \x1b[0m\x1b[36mecho \"{{.FOO}}\"\x1b[0m\x1b[1m\x1b[30m\x1b[0m\n> 10 | \x1b[1m\x1b[30m      \x1b[0m\x1b[1m\x1b[30m- \x1b[0m\x1b[36mecho \"{{.BAR}}\"\x1b[0m\x1b[1m\x1b[30m\x1b[0m\n     |                       ^",
 		},
 		{
-			name:    "5th line, 5th column, padding=100",
-			b:       []byte(sample),
-			line:    5,
-			column:  5,
-			padding: 100,
-			want:    "   1 | \x1b[33mversion\x1b[0m\x1b[1m\x1b[30m:\x1b[0m\x1b[1m\x1b[30m \x1b[0m\x1b[36m3\x1b[0m\x1b[1m\x1b[30m\x1b[0m\n   2 | \x1b[1m\x1b[30m\x1b[0m\n   3 | \x1b[33mtasks\x1b[0m\x1b[1m\x1b[30m:\x1b[0m\x1b[1m\x1b[30m\x1b[0m\n   4 | \x1b[1m\x1b[30m  \x1b[0m\x1b[33mdefault\x1b[0m\x1b[1m\x1b[30m:\x1b[0m\x1b[1m\x1b[30m\x1b[0m\n>  5 | \x1b[1m\x1b[30m    \x1b[0m\x1b[33mvars\x1b[0m\x1b[1m\x1b[30m:\x1b[0m\x1b[1m\x1b[30m\x1b[0m\n     |     ^\n   6 | \x1b[1m\x1b[30m      \x1b[0m\x1b[33mFOO\x1b[0m\x1b[1m\x1b[30m:\x1b[0m\x1b[1m\x1b[30m \x1b[0m\x1b[36mfoo\x1b[0m\x1b[1m\x1b[30m\x1b[0m\n   7 | \x1b[1m\x1b[30m      \x1b[0m\x1b[33mBAR\x1b[0m\x1b[1m\x1b[30m:\x1b[0m\x1b[1m\x1b[30m \x1b[0m\x1b[36mbar\x1b[0m\x1b[1m\x1b[30m\x1b[0m\n   8 | \x1b[1m\x1b[30m    \x1b[0m\x1b[33mcmds\x1b[0m\x1b[1m\x1b[30m:\x1b[0m\x1b[1m\x1b[30m\x1b[0m\n   9 | \x1b[1m\x1b[30m      \x1b[0m\x1b[1m\x1b[30m- \x1b[0m\x1b[36mecho \"{{.FOO}}\"\x1b[0m\x1b[1m\x1b[30m\x1b[0m\n  10 | \x1b[1m\x1b[30m      \x1b[0m\x1b[1m\x1b[30m- \x1b[0m\x1b[36mecho \"{{.BAR}}\"\x1b[0m\x1b[1m\x1b[30m\x1b[0m",
+			name: "5th line, 5th column, padding=100",
+			b:    []byte(sample),
+			opts: []SnippetOption{
+				SnippetWithLine(5),
+				SnippetWithColumn(5),
+				SnippetWithPadding(100),
+			},
+			want: "   1 | \x1b[33mversion\x1b[0m\x1b[1m\x1b[30m:\x1b[0m\x1b[1m\x1b[30m \x1b[0m\x1b[36m3\x1b[0m\x1b[1m\x1b[30m\x1b[0m\n   2 | \x1b[1m\x1b[30m\x1b[0m\n   3 | \x1b[33mtasks\x1b[0m\x1b[1m\x1b[30m:\x1b[0m\x1b[1m\x1b[30m\x1b[0m\n   4 | \x1b[1m\x1b[30m  \x1b[0m\x1b[33mdefault\x1b[0m\x1b[1m\x1b[30m:\x1b[0m\x1b[1m\x1b[30m\x1b[0m\n>  5 | \x1b[1m\x1b[30m    \x1b[0m\x1b[33mvars\x1b[0m\x1b[1m\x1b[30m:\x1b[0m\x1b[1m\x1b[30m\x1b[0m\n     |     ^\n   6 | \x1b[1m\x1b[30m      \x1b[0m\x1b[33mFOO\x1b[0m\x1b[1m\x1b[30m:\x1b[0m\x1b[1m\x1b[30m \x1b[0m\x1b[36mfoo\x1b[0m\x1b[1m\x1b[30m\x1b[0m\n   7 | \x1b[1m\x1b[30m      \x1b[0m\x1b[33mBAR\x1b[0m\x1b[1m\x1b[30m:\x1b[0m\x1b[1m\x1b[30m \x1b[0m\x1b[36mbar\x1b[0m\x1b[1m\x1b[30m\x1b[0m\n   8 | \x1b[1m\x1b[30m    \x1b[0m\x1b[33mcmds\x1b[0m\x1b[1m\x1b[30m:\x1b[0m\x1b[1m\x1b[30m\x1b[0m\n   9 | \x1b[1m\x1b[30m      \x1b[0m\x1b[1m\x1b[30m- \x1b[0m\x1b[36mecho \"{{.FOO}}\"\x1b[0m\x1b[1m\x1b[30m\x1b[0m\n  10 | \x1b[1m\x1b[30m      \x1b[0m\x1b[1m\x1b[30m- \x1b[0m\x1b[36mecho \"{{.BAR}}\"\x1b[0m\x1b[1m\x1b[30m\x1b[0m",
 		},
 		{
-			name:    "11th line (out of bounds), 1st column",
-			b:       []byte(sample),
-			line:    11,
-			column:  1,
-			padding: 0,
-			want:    "",
+			name: "11th line (out of bounds), 1st column",
+			b:    []byte(sample),
+			opts: []SnippetOption{
+				SnippetWithLine(11),
+				SnippetWithColumn(1),
+			},
+			want: "",
 		},
 		{
-			name:    "11th line (out of bounds), 1st column, padding=2",
-			b:       []byte(sample),
-			line:    11,
-			column:  1,
-			padding: 2,
-			want:    "   9 | \x1b[1m\x1b[30m      \x1b[0m\x1b[1m\x1b[30m- \x1b[0m\x1b[36mecho \"{{.FOO}}\"\x1b[0m\x1b[1m\x1b[30m\x1b[0m\n  10 | \x1b[1m\x1b[30m      \x1b[0m\x1b[1m\x1b[30m- \x1b[0m\x1b[36mecho \"{{.BAR}}\"\x1b[0m\x1b[1m\x1b[30m\x1b[0m",
+			name: "11th line (out of bounds), 1st column, padding=2",
+			b:    []byte(sample),
+			opts: []SnippetOption{
+				SnippetWithLine(11),
+				SnippetWithColumn(1),
+				SnippetWithPadding(2),
+			},
+			want: "   9 | \x1b[1m\x1b[30m      \x1b[0m\x1b[1m\x1b[30m- \x1b[0m\x1b[36mecho \"{{.FOO}}\"\x1b[0m\x1b[1m\x1b[30m\x1b[0m\n  10 | \x1b[1m\x1b[30m      \x1b[0m\x1b[1m\x1b[30m- \x1b[0m\x1b[36mecho \"{{.BAR}}\"\x1b[0m\x1b[1m\x1b[30m\x1b[0m",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			snippet := NewSnippet(tt.b, tt.line, tt.column, tt.padding)
+			snippet := NewSnippet(tt.b, tt.opts...)
 			got := snippet.String()
 			if strings.Contains(got, "\t") {
 				t.Fatalf("tab character found in snippet - check the sample string")

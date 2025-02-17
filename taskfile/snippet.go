@@ -32,39 +32,58 @@ func init() {
 	styles.Register(style)
 }
 
-type Snippet struct {
-	lines   []string
-	start   int
-	end     int
-	line    int
-	column  int
-	padding int
-}
+type (
+	SnippetOption func(*Snippet)
+	Snippet       struct {
+		lines   []string
+		start   int
+		end     int
+		line    int
+		column  int
+		padding int
+	}
+)
 
 // NewSnippet creates a new snippet from a byte slice and a line and column
 // number. The line and column numbers should be 1-indexed. For example, the
 // first character in the file would be 1:1 (line 1, column 1). The padding
 // determines the number of lines to include before and after the chosen line.
-func NewSnippet(b []byte, line, column, padding int) *Snippet {
-	// Syntax highlight the snippet
+func NewSnippet(b []byte, opts ...SnippetOption) *Snippet {
+	snippet := &Snippet{}
+	for _, opt := range opts {
+		opt(snippet)
+	}
+
+	// Syntax highlight the input and split it into lines
 	buf := &bytes.Buffer{}
 	if err := quick.Highlight(buf, string(b), "yaml", "terminal", "task"); err != nil {
 		buf.WriteString(string(b))
 	}
+	lines := strings.Split(buf.String(), "\n")
 
 	// Work out the start and end lines of the snippet
-	lines := strings.Split(buf.String(), "\n")
-	start := max(line-padding, 1)
-	end := min(line+padding, len(lines)-1)
+	snippet.start = max(snippet.line-snippet.padding, 1)
+	snippet.end = min(snippet.line+snippet.padding, len(lines)-1)
+	snippet.lines = lines[snippet.start-1 : snippet.end]
 
-	// Return the snippet
-	return &Snippet{
-		lines:   lines[start-1 : end],
-		start:   start,
-		end:     end,
-		line:    line,
-		column:  column,
-		padding: padding,
+	return snippet
+}
+
+func SnippetWithLine(line int) SnippetOption {
+	return func(snippet *Snippet) {
+		snippet.line = line
+	}
+}
+
+func SnippetWithColumn(column int) SnippetOption {
+	return func(snippet *Snippet) {
+		snippet.column = column
+	}
+}
+
+func SnippetWithPadding(padding int) SnippetOption {
+	return func(snippet *Snippet) {
+		snippet.padding = padding
 	}
 }
 
