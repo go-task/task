@@ -2975,6 +2975,7 @@ func TestForCmds(t *testing.T) {
 	tests := []struct {
 		name           string
 		expectedOutput string
+		wantErr        bool
 	}{
 		{
 			name:           "loop-explicit",
@@ -2983,6 +2984,14 @@ func TestForCmds(t *testing.T) {
 		{
 			name:           "loop-matrix",
 			expectedOutput: "windows/amd64\nwindows/arm64\nlinux/amd64\nlinux/arm64\ndarwin/amd64\ndarwin/arm64\n",
+		},
+		{
+			name:           "loop-matrix-ref",
+			expectedOutput: "windows/amd64\nwindows/arm64\nlinux/amd64\nlinux/arm64\ndarwin/amd64\ndarwin/arm64\n",
+		},
+		{
+			name:    "loop-matrix-ref-error",
+			wantErr: true,
 		},
 		{
 			name:           "loop-sources",
@@ -3018,18 +3027,22 @@ func TestForCmds(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
-			var stdOut bytes.Buffer
-			var stdErr bytes.Buffer
-			e := task.Executor{
+			buf := &bytes.Buffer{}
+			e := &task.Executor{
 				Dir:    "testdata/for/cmds",
-				Stdout: &stdOut,
-				Stderr: &stdErr,
+				Stdout: buf,
+				Stderr: buf,
 				Silent: true,
 				Force:  true,
 			}
 			require.NoError(t, e.Setup())
-			require.NoError(t, e.Run(context.Background(), &ast.Call{Task: test.name}))
-			assert.Equal(t, test.expectedOutput, stdOut.String())
+			err := e.Run(context.Background(), &ast.Call{Task: test.name})
+			if test.wantErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+			}
+			assert.Equal(t, test.expectedOutput, buf.String())
 		})
 	}
 }
@@ -3040,6 +3053,7 @@ func TestForDeps(t *testing.T) {
 	tests := []struct {
 		name                   string
 		expectedOutputContains []string
+		wantErr                bool
 	}{
 		{
 			name:                   "loop-explicit",
@@ -3055,6 +3069,21 @@ func TestForDeps(t *testing.T) {
 				"darwin/amd64\n",
 				"darwin/arm64\n",
 			},
+		},
+		{
+			name: "loop-matrix-ref",
+			expectedOutputContains: []string{
+				"windows/amd64\n",
+				"windows/arm64\n",
+				"linux/amd64\n",
+				"linux/arm64\n",
+				"darwin/amd64\n",
+				"darwin/arm64\n",
+			},
+		},
+		{
+			name:    "loop-matrix-ref-error",
+			wantErr: true,
 		},
 		{
 			name:                   "loop-sources",
@@ -3091,20 +3120,25 @@ func TestForDeps(t *testing.T) {
 			t.Parallel()
 
 			// We need to use a sync buffer here as deps are run concurrently
-			var buff SyncBuffer
-			e := task.Executor{
+			buf := &SyncBuffer{}
+			e := &task.Executor{
 				Dir:    "testdata/for/deps",
-				Stdout: &buff,
-				Stderr: &buff,
+				Stdout: buf,
+				Stderr: buf,
 				Silent: true,
 				Force:  true,
 				// Force output of each dep to be grouped together to prevent interleaving
 				OutputStyle: ast.Output{Name: "group"},
 			}
 			require.NoError(t, e.Setup())
-			require.NoError(t, e.Run(context.Background(), &ast.Call{Task: test.name}))
+			err := e.Run(context.Background(), &ast.Call{Task: test.name})
+			if test.wantErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+			}
 			for _, expectedOutputContains := range test.expectedOutputContains {
-				assert.Contains(t, buff.buf.String(), expectedOutputContains)
+				assert.Contains(t, buf.buf.String(), expectedOutputContains)
 			}
 		})
 	}

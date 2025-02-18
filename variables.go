@@ -1,6 +1,7 @@
 package task
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -151,7 +152,7 @@ func (e *Executor) compiledTask(call *ast.Call, evaluateShVars bool) (*ast.Task,
 				continue
 			}
 			if cmd.For != nil {
-				list, keys, err := itemsFromFor(cmd.For, new.Dir, new.Sources, vars, origTask.Location)
+				list, keys, err := itemsFromFor(cmd.For, new.Dir, new.Sources, vars, origTask.Location, cache)
 				if err != nil {
 					return nil, err
 				}
@@ -198,7 +199,7 @@ func (e *Executor) compiledTask(call *ast.Call, evaluateShVars bool) (*ast.Task,
 				continue
 			}
 			if dep.For != nil {
-				list, keys, err := itemsFromFor(dep.For, new.Dir, new.Sources, vars, origTask.Location)
+				list, keys, err := itemsFromFor(dep.For, new.Dir, new.Sources, vars, origTask.Location, cache)
 				if err != nil {
 					return nil, err
 				}
@@ -270,11 +271,18 @@ func itemsFromFor(
 	sources []*ast.Glob,
 	vars *ast.Vars,
 	location *ast.Location,
+	cache *templater.Cache,
 ) ([]any, []string, error) {
 	var keys []string // The list of keys to loop over (only if looping over a map)
 	var values []any  // The list of values to loop over
 	// Get the list from a matrix
 	if f.Matrix.Len() != 0 {
+		if err := resolveMatrixRefs(f.Matrix, cache); err != nil {
+			return nil, nil, errors.TaskfileInvalidError{
+				URI: location.Taskfile,
+				Err: err,
+			}
+		}
 		return asAnySlice(product(f.Matrix)), nil, nil
 	}
 	// Get the list from the explicit for list
@@ -333,9 +341,27 @@ func itemsFromFor(
 	return values, keys, nil
 }
 
+func resolveMatrixRefs(matrix *ast.Matrix, cache *templater.Cache) error {
+	if matrix.Len() == 0 {
+		return nil
+	}
+	for _, row := range matrix.All() {
+		if row.Ref != "" {
+			v := templater.ResolveRef(row.Ref, cache)
+			switch value := v.(type) {
+			case []any:
+				row.Value = value
+			default:
+				return fmt.Errorf("matrix reference %q must resolve to a list", row.Ref)
+			}
+		}
+	}
+	return nil
+}
+
 // product generates the cartesian product of the input map of slices.
-func product(inputMap *ast.Matrix) []map[string]any {
-	if inputMap.Len() == 0 {
+func product(matrix *ast.Matrix) []map[string]any {
+	if matrix.Len() == 0 {
 		return nil
 	}
 
@@ -343,13 +369,13 @@ func product(inputMap *ast.Matrix) []map[string]any {
 	result := []map[string]any{{}}
 
 	// Iterate over each slice in the slices
-	for key, slice := range inputMap.All() {
+	for key, row := range matrix.All() {
 		var newResult []map[string]any
 
 		// For each combination in the current result
 		for _, combination := range result {
 			// Append each element from the current slice to the combinations
-			for _, item := range slice {
+			for _, item := range row.Value {
 				newComb := make(map[string]any, len(combination))
 				// Copy the existing combination
 				for k, v := range combination {

@@ -1,5 +1,10 @@
 version: "3"
 
+vars:
+  OS_VAR: ["windows", "linux", "darwin"]
+  ARCH_VAR: ["amd64", "arm64"]
+  NOT_A_LIST: "not a list"
+
 tasks:
   # Loop over a list of values
   loop-explicit:
@@ -13,6 +18,26 @@ tasks:
           matrix:
             OS: ["windows", "linux", "darwin"]
             ARCH: ["amd64", "arm64"]
+        cmd: echo "{{.ITEM.OS}}/{{.ITEM.ARCH}}"
+
+  loop-matrix-ref:
+    cmds:
+      - for:
+          matrix:
+            OS:
+              ref: .OS_VAR
+            ARCH:
+              ref: .ARCH_VAR
+        cmd: echo "{{.ITEM.OS}}/{{.ITEM.ARCH}}"
+
+  loop-matrix-ref-error:
+    cmds:
+      - for:
+          matrix:
+            OS:
+              ref: .OS_VAR
+            ARCH:
+              ref: .NOT_A_LIST
         cmd: echo "{{.ITEM.OS}}/{{.ITEM.ARCH}}"
 
   # Loop over the task's sources

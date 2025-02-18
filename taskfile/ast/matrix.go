@@ -10,15 +10,25 @@ import (
 	"github.com/go-task/task/v3/internal/deepcopy"
 )
 
-type Matrix struct {
-	om *orderedmap.OrderedMap[string, []any]
-}
-
-type MatrixElement orderedmap.Element[string, []any]
+type (
+	// Matrix is an ordered map of variable names to arrays of values.
+	Matrix struct {
+		om *orderedmap.OrderedMap[string, *MatrixRow]
+	}
+	// A MatrixElement is a key-value pair that is used for initializing a
+	// Matrix structure.
+	MatrixElement orderedmap.Element[string, *MatrixRow]
+	// A MatrixRow list of values for a matrix key or a reference to another
+	// variable.
+	MatrixRow struct {
+		Ref   string
+		Value []any
+	}
+)
 
 func NewMatrix(els ...*MatrixElement) *Matrix {
 	matrix := &Matrix{
-		om: orderedmap.NewOrderedMap[string, []any](),
+		om: orderedmap.NewOrderedMap[string, *MatrixRow](),
 	}
 	for _, el := range els {
 		matrix.Set(el.Key, el.Value)
@@ -33,27 +43,27 @@ func (matrix *Matrix) Len() int {
 	return matrix.om.Len()
 }
 
-func (matrix *Matrix) Get(key string) ([]any, bool) {
+func (matrix *Matrix) Get(key string) (*MatrixRow, bool) {
 	if matrix == nil || matrix.om == nil {
 		return nil, false
 	}
 	return matrix.om.Get(key)
 }
 
-func (matrix *Matrix) Set(key string, value []any) bool {
+func (matrix *Matrix) Set(key string, value *MatrixRow) bool {
 	if matrix == nil {
 		matrix = NewMatrix()
 	}
 	if matrix.om == nil {
-		matrix.om = orderedmap.NewOrderedMap[string, []any]()
+		matrix.om = orderedmap.NewOrderedMap[string, *MatrixRow]()
 	}
 	return matrix.om.Set(key, value)
 }
 
 // All returns an iterator that loops over all task key-value pairs.
-func (matrix *Matrix) All() iter.Seq2[string, []any] {
+func (matrix *Matrix) All() iter.Seq2[string, *MatrixRow] {
 	if matrix == nil || matrix.om == nil {
-		return func(yield func(string, []any) bool) {}
+		return func(yield func(string, *MatrixRow) bool) {}
 	}
 	return matrix.om.AllFromFront()
 }
@@ -67,9 +77,9 @@ func (matrix *Matrix) Keys() iter.Seq[string] {
 }
 
 // Values returns an iterator that loops over all task values.
-func (matrix *Matrix) Values() iter.Seq[[]any] {
+func (matrix *Matrix) Values() iter.Seq[*MatrixRow] {
 	if matrix == nil || matrix.om == nil {
-		return func(yield func([]any) bool) {}
+		return func(yield func(*MatrixRow) bool) {}
 	}
 	return matrix.om.Values()
 }
@@ -93,14 +103,36 @@ func (matrix *Matrix) UnmarshalYAML(node *yaml.Node) error {
 			keyNode := node.Content[i]
 			valueNode := node.Content[i+1]
 
-			// Decode the value node into a Matrix struct
-			var v []any
-			if err := valueNode.Decode(&v); err != nil {
-				return errors.NewTaskfileDecodeError(err, node)
-			}
+			switch valueNode.Kind {
+			case yaml.SequenceNode:
+				// Decode the value node into a Matrix struct
+				var v []any
+				if err := valueNode.Decode(&v); err != nil {
+					return errors.NewTaskfileDecodeError(err, node)
+				}
 
-			// Add the task to the ordered map
-			matrix.Set(keyNode.Value, v)
+				// Add the row to the ordered map
+				matrix.Set(keyNode.Value, &MatrixRow{
+					Value: v,
+				})
+
+			case yaml.MappingNode:
+				// Decode the value node into a Matrix struct
+				var refStruct struct {
+					Ref string
+				}
+				if err := valueNode.Decode(&refStruct); err != nil {
+					return errors.NewTaskfileDecodeError(err, node)
+				}
+
+				// Add the reference to the ordered map
+				matrix.Set(keyNode.Value, &MatrixRow{
+					Ref: refStruct.Ref,
+				})
+
+			default:
+				return errors.NewTaskfileDecodeError(nil, node).WithMessage("matrix values must be an array or a reference")
+			}
 		}
 		return nil
 	}

@@ -1,5 +1,10 @@
 version: "3"
 
+vars:
+  OS_VAR: ["windows", "linux", "darwin"]
+  ARCH_VAR: ["amd64", "arm64"]
+  NOT_A_LIST: "not a list"
+
 tasks:
   # Loop over a list of values
   loop-explicit:
@@ -15,6 +20,30 @@ tasks:
           matrix:
             OS: ["windows", "linux", "darwin"]
             ARCH: ["amd64", "arm64"]
+        task: echo
+        vars:
+          TEXT: "{{.ITEM.OS}}/{{.ITEM.ARCH}}"
+
+  loop-matrix-ref:
+    deps:
+      - for:
+          matrix:
+            OS:
+              ref: .OS_VAR
+            ARCH:
+              ref: .ARCH_VAR
+        task: echo
+        vars:
+          TEXT: "{{.ITEM.OS}}/{{.ITEM.ARCH}}"
+
+  loop-matrix-ref-error:
+    deps:
+      - for:
+          matrix:
+            OS:
+              ref: .OS_VAR
+            ARCH:
+              ref: .NOT_A_LIST
         task: echo
         vars:
           TEXT: "{{.ITEM.OS}}/{{.ITEM.ARCH}}"
