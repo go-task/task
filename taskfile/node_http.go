@@ -97,7 +97,7 @@ func (node *HTTPNode) ResolveEntrypoint(entrypoint string) (string, error) {
 }
 
 func (node *HTTPNode) ResolveDir(dir string) (string, error) {
-	path, err := execext.Expand(dir)
+	path, err := execext.ExpandFirst(dir)
 	if err != nil {
 		return "", err
 	}

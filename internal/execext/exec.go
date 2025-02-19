@@ -11,7 +11,6 @@ import (
 
 	"mvdan.cc/sh/v3/expand"
 	"mvdan.cc/sh/v3/interp"
-	"mvdan.cc/sh/v3/shell"
 	"mvdan.cc/sh/v3/syntax"
 
 	"github.com/go-task/task/v3/errors"
@@ -93,20 +92,51 @@ func RunCommand(ctx context.Context, opts *RunCommandOptions) error {
 
 // Expand is a helper to mvdan.cc/shell.Fields that returns the first field
 // if available.
-func Expand(s string) (string, error) {
+func ExpandFirst(s string) (string, error) {
+	fields, err := Expand(s)
+	if err != nil {
+		return "", err
+	}
+	if len(fields) == 0 {
+		return "", nil
+	}
+	return fields[0], nil
+}
+
+// Expand is a helper to mvdan.cc/shell.Fields that returns the first field
+// if available.
+func Expand(s string) ([]string, error) {
 	s = filepath.ToSlash(s)
 	s = strings.ReplaceAll(s, " ", `\ `)
 	s = strings.ReplaceAll(s, "&", `\&`)
 	s = strings.ReplaceAll(s, "(", `\(`)
 	s = strings.ReplaceAll(s, ")", `\)`)
-	fields, err := shell.Fields(s, nil)
+	fields, err := Fields(s, nil)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	if len(fields) > 0 {
-		return fields[0], nil
+	return fields, nil
+}
+
+func Fields(s string, env func(string) string) ([]string, error) {
+	p := syntax.NewParser()
+	var words []*syntax.Word
+	err := p.Words(strings.NewReader(s), func(w *syntax.Word) bool {
+		words = append(words, w)
+		return true
+	})
+	if err != nil {
+		return nil, err
 	}
-	return "", nil
+	if env == nil {
+		env = os.Getenv
+	}
+	cfg := &expand.Config{
+		Env:      expand.FuncEnviron(env),
+		ReadDir2: os.ReadDir,
+		GlobStar: true,
+	}
+	return expand.Fields(cfg, words...)
 }
 
 func execHandler(next interp.ExecHandlerFunc) interp.ExecHandlerFunc {
