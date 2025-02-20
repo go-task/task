@@ -120,6 +120,22 @@ tasks:
     cmds:
       - go install github.com/goreleaser/goreleaser/v2@latest
 
+  gorelease:install:
+    desc: "Installs gorelease: https://pkg.go.dev/golang.org/x/exp/cmd/gorelease"
+    status:
+      - command -v gorelease
+    cmds:
+      - go install golang.org/x/exp/cmd/gorelease@latest
+
+  api:check:
+    desc: Checks what changes have been made to the public API
+    deps: [gorelease:install]
+    vars:
+      LATEST:
+        sh: git describe --tags --abbrev=0
+    cmds:
+      - gorelease -base={{.LATEST}}
+
   release:*:
     desc: Prepare the project for a new release
     summary: |
