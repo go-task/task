@@ -15,6 +15,8 @@
 - Print warnings when attempting to enable an inactive experiment or an active
   experiment with an invalid value (#1979, #2049 by @pd93).
 - Refactored the experiments package and added tests (#2049 by @pd93).
+- Show allowed values when a variable with an enum is missing (#2027, 2052 by
+  @vmaerten).
 
 #### Package API
 
