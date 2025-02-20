@@ -144,7 +144,7 @@ func (err *TaskfileDecodeError) WithTypeMessage(t string) *TaskfileDecodeError {
 func (err *TaskfileDecodeError) WithFileInfo(location string, b []byte, padding int) *TaskfileDecodeError {
 	buf := &bytes.Buffer{}
 	if err := quick.Highlight(buf, string(b), "yaml", "terminal", "task"); err != nil {
-		buf.WriteString(string(b))
+		buf.Write(b)
 	}
 	lines := strings.Split(buf.String(), "\n")
 	start := max(err.Line-1-padding, 0)

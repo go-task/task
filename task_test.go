@@ -772,7 +772,7 @@ func TestPromptInSummary(t *testing.T) {
 			var outBuff bytes.Buffer
 			var errBuff bytes.Buffer
 
-			inBuff.Write([]byte(test.input))
+			inBuff.WriteString(test.input)
 
 			e := task.Executor{
 				Dir:        dir,
@@ -802,7 +802,7 @@ func TestPromptWithIndirectTask(t *testing.T) {
 	var outBuff bytes.Buffer
 	var errBuff bytes.Buffer
 
-	inBuff.Write([]byte("y\n"))
+	inBuff.WriteString("y\n")
 
 	e := task.Executor{
 		Dir:        dir,
@@ -839,7 +839,7 @@ func TestPromptAssumeYes(t *testing.T) {
 			var errBuff bytes.Buffer
 
 			// always cancel the prompt so we can require.Error
-			inBuff.Write([]byte("\n"))
+			inBuff.WriteByte('\n')
 
 			e := task.Executor{
 				Dir:       dir,
