@@ -14,7 +14,6 @@ import (
 	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/compiler"
 	"github.com/go-task/task/v3/internal/filepathext"
-	"github.com/go-task/task/v3/internal/logger"
 	"github.com/go-task/task/v3/internal/templater"
 	"github.com/go-task/task/v3/taskfile/ast"
 )
@@ -31,7 +30,10 @@ Continue?`
 // A Reader will recursively read Taskfiles from a given source using a directed
 // acyclic graph (DAG).
 type (
-	Reader struct {
+	ReaderOption     func(*Reader)
+	ReaderDebugFunc  func(string)
+	ReaderPromptFunc func(string) error
+	Reader           struct {
 		graph       *ast.TaskfileGraph
 		node        Node
 		insecure    bool
@@ -39,10 +41,10 @@ type (
 		offline     bool
 		timeout     time.Duration
 		tempDir     string
-		logger      *logger.Logger
+		debugFunc   ReaderDebugFunc
+		promptFunc  ReaderPromptFunc
 		promptMutex sync.Mutex
 	}
-	ReaderOption func(*Reader)
 )
 
 func NewReader(
@@ -57,7 +59,8 @@ func NewReader(
 		offline:     false,
 		timeout:     time.Second * 10,
 		tempDir:     os.TempDir(),
-		logger:      nil,
+		debugFunc:   nil,
+		promptFunc:  nil,
 		promptMutex: sync.Mutex{},
 	}
 	for _, opt := range opts {
@@ -96,9 +99,26 @@ func WithTempDir(tempDir string) ReaderOption {
 	}
 }
 
-func WithLogger(logger *logger.Logger) ReaderOption {
+// WithDebugFunc sets the debug function to be used by the reader. If set, this
+// function will be called with debug messages. This can be useful if the caller
+// wants to log debug messages from the reader. By default, no debug function is
+// set and the logs are not written.
+func WithDebugFunc(debugFunc ReaderDebugFunc) ReaderOption {
 	return func(r *Reader) {
-		r.logger = logger
+		r.debugFunc = debugFunc
+	}
+}
+
+// WithPromptFunc sets the prompt function to be used by the reader. If set,
+// this function will be called with prompt messages. The function should
+// optionally log the message to the user and return nil if the prompt is
+// accepted and the execution should continue. Otherwise, it should return an
+// error which describes why the the prompt was rejected. This can then be
+// caught and used later when calling the Read method. By default, no prompt
+// function is set and all prompts are automatically accepted.
+func WithPromptFunc(promptFunc ReaderPromptFunc) ReaderOption {
+	return func(r *Reader) {
+		r.promptFunc = promptFunc
 	}
 }
 
@@ -109,6 +129,19 @@ func (r *Reader) Read() (*ast.TaskfileGraph, error) {
 	}
 
 	return r.graph, nil
+}
+
+func (r *Reader) debugf(format string, a ...any) {
+	if r.debugFunc != nil {
+		r.debugFunc(fmt.Sprintf(format, a...))
+	}
+}
+
+func (r *Reader) promptf(format string, a ...any) error {
+	if r.promptFunc != nil {
+		return r.promptFunc(fmt.Sprintf(format, a...))
+	}
+	return nil
 }
 
 func (r *Reader) include(node Node) error {
@@ -279,7 +312,7 @@ func (r *Reader) loadNodeContent(node Node) ([]byte, error) {
 		} else if err != nil {
 			return nil, err
 		}
-		r.logger.VerboseOutf(logger.Magenta, "task: [%s] Fetched cached copy\n", node.Location())
+		r.debugf("task: [%s] Fetched cached copy\n", node.Location())
 
 		return cached, nil
 	}
@@ -303,14 +336,14 @@ func (r *Reader) loadNodeContent(node Node) ([]byte, error) {
 		} else if err != nil {
 			return nil, err
 		}
-		r.logger.VerboseOutf(logger.Magenta, "task: [%s] Network timeout. Fetched cached copy\n", node.Location())
+		r.debugf("task: [%s] Network timeout. Fetched cached copy\n", node.Location())
 
 		return cached, nil
 
 	} else if err != nil {
 		return nil, err
 	}
-	r.logger.VerboseOutf(logger.Magenta, "task: [%s] Fetched remote copy\n", node.Location())
+	r.debugf("task: [%s] Fetched remote copy\n", node.Location())
 
 	// Get the checksums
 	checksum := checksum(b)
@@ -319,17 +352,17 @@ func (r *Reader) loadNodeContent(node Node) ([]byte, error) {
 	var prompt string
 	if cachedChecksum == "" {
 		// If the checksum doesn't exist, prompt the user to continue
-		prompt = fmt.Sprintf(taskfileUntrustedPrompt, node.Location())
+		prompt = taskfileUntrustedPrompt
 	} else if checksum != cachedChecksum {
 		// If there is a cached hash, but it doesn't match the expected hash, prompt the user to continue
-		prompt = fmt.Sprintf(taskfileChangedPrompt, node.Location())
+		prompt = taskfileChangedPrompt
 	}
 
 	if prompt != "" {
 		if err := func() error {
 			r.promptMutex.Lock()
 			defer r.promptMutex.Unlock()
-			return r.logger.Prompt(logger.Yellow, prompt, "n", "y", "yes")
+			return r.promptf(prompt, node.Location())
 		}(); err != nil {
 			return nil, &errors.TaskfileNotTrustedError{URI: node.Location()}
 		}
@@ -340,7 +373,7 @@ func (r *Reader) loadNodeContent(node Node) ([]byte, error) {
 		}
 
 		// Cache the file
-		r.logger.VerboseOutf(logger.Magenta, "task: [%s] Caching downloaded file\n", node.Location())
+		r.debugf("task: [%s] Caching downloaded file\n", node.Location())
 		if err = cache.write(node, b); err != nil {
 			return nil, err
 		}

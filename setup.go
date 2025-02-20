@@ -65,6 +65,12 @@ func (e *Executor) getRootNode() (taskfile.Node, error) {
 }
 
 func (e *Executor) readTaskfile(node taskfile.Node) error {
+	debugFunc := func(s string) {
+		e.Logger.VerboseOutf(logger.Magenta, s)
+	}
+	promptFunc := func(s string) error {
+		return e.Logger.Prompt(logger.Yellow, s, "n", "y", "yes")
+	}
 	reader := taskfile.NewReader(
 		node,
 		taskfile.WithInsecure(e.Insecure),
@@ -72,7 +78,8 @@ func (e *Executor) readTaskfile(node taskfile.Node) error {
 		taskfile.WithOffline(e.Offline),
 		taskfile.WithTimeout(e.Timeout),
 		taskfile.WithTempDir(e.TempDir.Remote),
-		taskfile.WithLogger(e.Logger),
+		taskfile.WithDebugFunc(debugFunc),
+		taskfile.WithPromptFunc(promptFunc),
 	)
 	graph, err := reader.Read()
 	if err != nil {
