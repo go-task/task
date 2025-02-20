@@ -27,13 +27,18 @@ Continue?`
 Continue?`
 )
 
-// A Reader will recursively read Taskfiles from a given source using a directed
-// acyclic graph (DAG).
 type (
-	ReaderOption     func(*Reader)
-	ReaderDebugFunc  func(string)
+	// ReaderDebugFunc is a function that is called when the reader wants to
+	// log debug messages
+	ReaderDebugFunc func(string)
+	// ReaderPromptFunc is a function that is called when the reader wants to
+	// prompt the user in some way
 	ReaderPromptFunc func(string) error
-	Reader           struct {
+	// ReaderOption is a function that configures a Reader.
+	ReaderOption func(*Reader)
+	// A Reader will recursively read Taskfiles from a given source using a directed
+	// acyclic graph (DAG).
+	Reader struct {
 		graph       *ast.TaskfileGraph
 		node        Node
 		insecure    bool
@@ -47,6 +52,7 @@ type (
 	}
 )
 
+// NewReader constructs a new Taskfile Reader using the given Node and options.
 func NewReader(
 	node Node,
 	opts ...ReaderOption,
@@ -69,30 +75,40 @@ func NewReader(
 	return reader
 }
 
+// WithInsecure enables insecure connections when reading remote taskfiles. By
+// default, secure connections are rejected.
 func WithInsecure(insecure bool) ReaderOption {
 	return func(r *Reader) {
 		r.insecure = insecure
 	}
 }
 
+// WithDownload forces the reader to download a fresh copy of the taskfile from
+// the remote source.
 func WithDownload(download bool) ReaderOption {
 	return func(r *Reader) {
 		r.download = download
 	}
 }
 
+// WithOffline stops the reader from being able to make network connections.
+// It will still be able to read local files and cached copies of remote files.
 func WithOffline(offline bool) ReaderOption {
 	return func(r *Reader) {
 		r.offline = offline
 	}
 }
 
+// WithTimeout sets the timeout for reading remote taskfiles. By default, the
+// timeout is set to 10 seconds.
 func WithTimeout(timeout time.Duration) ReaderOption {
 	return func(r *Reader) {
 		r.timeout = timeout
 	}
 }
 
+// WithTempDir sets the temporary directory to be used by the reader. By
+// default, the reader uses `os.TempDir()`.
 func WithTempDir(tempDir string) ReaderOption {
 	return func(r *Reader) {
 		r.tempDir = tempDir
