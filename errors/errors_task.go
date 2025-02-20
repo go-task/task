@@ -141,21 +141,37 @@ func (err *TaskCancelledNoTerminalError) Code() int {
 	return CodeTaskCancelled
 }
 
-// TaskMissingRequiredVars is returned when a task is missing required variables.
-type TaskMissingRequiredVars struct {
+// TaskMissingRequiredVarsError is returned when a task is missing required variables.
+
+type MissingVar struct {
+	Name          string
+	AllowedValues []string
+}
+type TaskMissingRequiredVarsError struct {
 	TaskName    string
-	MissingVars []string
+	MissingVars []MissingVar
 }
 
-func (err *TaskMissingRequiredVars) Error() string {
+func (v MissingVar) String() string {
+	if len(v.AllowedValues) == 0 {
+		return v.Name
+	}
+	return fmt.Sprintf("%s (allowed values: %v)", v.Name, v.AllowedValues)
+}
+
+func (err *TaskMissingRequiredVarsError) Error() string {
+	var vars []string
+	for _, v := range err.MissingVars {
+		vars = append(vars, v.String())
+	}
+
 	return fmt.Sprintf(
 		`task: Task %q cancelled because it is missing required variables: %s`,
 		err.TaskName,
-		strings.Join(err.MissingVars, ", "),
-	)
+		strings.Join(vars, ", "))
 }
 
-func (err *TaskMissingRequiredVars) Code() int {
+func (err *TaskMissingRequiredVarsError) Code() int {
 	return CodeTaskMissingRequiredVars
 }
 
@@ -165,12 +181,12 @@ type NotAllowedVar struct {
 	Name  string
 }
 
-type TaskNotAllowedVars struct {
+type TaskNotAllowedVarsError struct {
 	TaskName       string
 	NotAllowedVars []NotAllowedVar
 }
 
-func (err *TaskNotAllowedVars) Error() string {
+func (err *TaskNotAllowedVarsError) Error() string {
 	var builder strings.Builder
 
 	builder.WriteString(fmt.Sprintf("task: Task %q cancelled because it is missing required variables:\n", err.TaskName))
@@ -181,6 +197,6 @@ func (err *TaskNotAllowedVars) Error() string {
 	return builder.String()
 }
 
-func (err *TaskNotAllowedVars) Code() int {
+func (err *TaskNotAllowedVarsError) Code() int {
 	return CodeTaskNotAllowedVars
 }
