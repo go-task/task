@@ -7,6 +7,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"testing"
 
 	"github.com/Ladicle/tabwriter"
 	"github.com/fatih/color"
@@ -124,6 +125,12 @@ func envColor(name string, defaultColor color.Attribute) []color.Attribute {
 	}
 
 	return attributes
+}
+
+// NewTestLogger returns a noop test logger.
+func NewTestLogger(tb testing.TB) *Logger {
+	tb.Helper()
+	return &Logger{Stdout: io.Discard, Stderr: io.Discard, Verbose: false}
 }
 
 // Logger is just a wrapper that prints stuff to STDOUT or STDERR,
