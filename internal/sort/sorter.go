@@ -3,42 +3,38 @@ package sort
 import (
 	"sort"
 	"strings"
-
-	"github.com/go-task/task/v3/taskfile/ast"
 )
 
-type TaskSorter interface {
-	Sort([]*ast.Task)
-}
+// A Sorter is any function that sorts a set of tasks.
+type Sorter func(items []string, namespaces []string) []string
 
-type Noop struct{}
-
-func (s *Noop) Sort(tasks []*ast.Task) {}
-
-type AlphaNumeric struct{}
-
-// Tasks that are not namespaced should be listed before tasks that are.
-// We detect this by searching for a ':' in the task name.
-func (s *AlphaNumeric) Sort(tasks []*ast.Task) {
-	sort.Slice(tasks, func(i, j int) bool {
-		return tasks[i].Task < tasks[j].Task
+// AlphaNumeric sorts the JSON output so that tasks are in alpha numeric order
+// by task name.
+func AlphaNumeric(items []string, namespaces []string) []string {
+	sort.Slice(items, func(i, j int) bool {
+		return items[i] < items[j]
 	})
+	return items
 }
 
-type AlphaNumericWithRootTasksFirst struct{}
-
-// Tasks that are not namespaced should be listed before tasks that are.
-// We detect this by searching for a ':' in the task name.
-func (s *AlphaNumericWithRootTasksFirst) Sort(tasks []*ast.Task) {
-	sort.Slice(tasks, func(i, j int) bool {
-		iContainsColon := strings.Contains(tasks[i].Task, ":")
-		jContainsColon := strings.Contains(tasks[j].Task, ":")
+// AlphaNumericWithRootTasksFirst sorts the JSON output so that tasks are in
+// alpha numeric order by task name. It will also ensure that tasks that are not
+// namespaced will be listed before tasks that are. We detect this by searching
+// for a ':' in the task name.
+func AlphaNumericWithRootTasksFirst(items []string, namespaces []string) []string {
+	if len(namespaces) > 0 {
+		return AlphaNumeric(items, namespaces)
+	}
+	sort.Slice(items, func(i, j int) bool {
+		iContainsColon := strings.Contains(items[i], ":")
+		jContainsColon := strings.Contains(items[j], ":")
 		if iContainsColon == jContainsColon {
-			return tasks[i].Task < tasks[j].Task
+			return items[i] < items[j]
 		}
 		if !iContainsColon && jContainsColon {
 			return true
 		}
 		return false
 	})
+	return items
 }

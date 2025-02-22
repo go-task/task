@@ -74,7 +74,7 @@ type Executor struct {
 	Compiler           *compiler.Compiler
 	Output             output.Output
 	OutputStyle        ast.Output
-	TaskSorter         sort.TaskSorter
+	TaskSorter         sort.Sorter
 	UserWorkingDir     string
 	EnableVersionCheck bool
 
@@ -475,7 +475,7 @@ func (e *Executor) GetTask(call *ast.Call) (*ast.Task, error) {
 	// If didn't find one, search for a task with a matching alias
 	var matchingTask *ast.Task
 	var aliasedTasks []string
-	for _, task := range e.Taskfile.Tasks.Values() {
+	for task := range e.Taskfile.Tasks.Values(nil) {
 		if slices.Contains(task.Aliases, call.Task) {
 			aliasedTasks = append(aliasedTasks, task.Task)
 			matchingTask = task
@@ -511,8 +511,13 @@ func (e *Executor) GetTaskList(filters ...FilterFunc) ([]*ast.Task, error) {
 	// Create an error group to wait for each task to be compiled
 	var g errgroup.Group
 
+	// Sort the tasks
+	if e.TaskSorter == nil {
+		e.TaskSorter = sort.AlphaNumericWithRootTasksFirst
+	}
+
 	// Filter tasks based on the given filter functions
-	for _, task := range e.Taskfile.Tasks.Values() {
+	for task := range e.Taskfile.Tasks.Values(e.TaskSorter) {
 		var shouldFilter bool
 		for _, filter := range filters {
 			if filter(task) {
@@ -540,12 +545,6 @@ func (e *Executor) GetTaskList(filters ...FilterFunc) ([]*ast.Task, error) {
 	if err := g.Wait(); err != nil {
 		return nil, err
 	}
-
-	// Sort the tasks
-	if e.TaskSorter == nil {
-		e.TaskSorter = &sort.AlphaNumericWithRootTasksFirst{}
-	}
-	e.TaskSorter.Sort(tasks)
 
 	return tasks, nil
 }

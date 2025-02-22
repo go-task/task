@@ -110,21 +110,17 @@ func (e *Executor) compiledTask(call *ast.Call, evaluateShVars bool) (*ast.Task,
 	new.Env.Merge(templater.ReplaceVars(dotenvEnvs, cache), nil)
 	new.Env.Merge(templater.ReplaceVars(origTask.Env, cache), nil)
 	if evaluateShVars {
-		err = new.Env.Range(func(k string, v ast.Var) error {
+		for k, v := range new.Env.All() {
 			// If the variable is not dynamic, we can set it and return
 			if v.Value != nil || v.Sh == nil {
 				new.Env.Set(k, ast.Var{Value: v.Value})
-				return nil
+				continue
 			}
 			static, err := e.Compiler.HandleDynamicVar(v, new.Dir, env.GetFromVars(new.Env))
 			if err != nil {
-				return err
+				return nil, err
 			}
 			new.Env.Set(k, ast.Var{Value: static})
-			return nil
-		})
-		if err != nil {
-			return nil, err
 		}
 	}
 
@@ -306,7 +302,7 @@ func itemsFromFor(
 			// If the variable is dynamic, then it hasn't been resolved yet
 			// and we can't use it as a list. This happens when fast compiling a task
 			// for use in --list or --list-all etc.
-			if ok && v.Sh == nil {
+			if ok && v.Value != nil && v.Sh == nil {
 				switch value := v.Value.(type) {
 				case string:
 					if f.Split != "" {
@@ -347,7 +343,7 @@ func product(inputMap *ast.Matrix) []map[string]any {
 	result := []map[string]any{{}}
 
 	// Iterate over each slice in the slices
-	_ = inputMap.Range(func(key string, slice []any) error {
+	for key, slice := range inputMap.All() {
 		var newResult []map[string]any
 
 		// For each combination in the current result
@@ -367,8 +363,7 @@ func product(inputMap *ast.Matrix) []map[string]any {
 
 		// Update result with the new combinations
 		result = newResult
-		return nil
-	})
+	}
 
 	return result
 }
