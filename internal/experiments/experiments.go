@@ -29,7 +29,7 @@ func init() {
 	GentleForce = New("GENTLE_FORCE", "1")
 	RemoteTaskfiles = New("REMOTE_TASKFILES", "1")
 	AnyVariables = New("ANY_VARIABLES")
-	MapVariables = New("MAP_VARIABLES", "1", "2")
+	MapVariables = New("MAP_VARIABLES")
 	EnvPrecedence = New("ENV_PRECEDENCE", "1")
 }
 

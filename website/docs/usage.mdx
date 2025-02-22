@@ -1144,52 +1144,37 @@ variable types are supported:
 - `int`
 - `float`
 - `array`
+- `map`
 
 :::note
 
-Maps are not supported by default, but there is an
-[experiment][map-variables] that can be enabled to add support. If
-you're interested in this functionality, we would appreciate your feedback.
-:pray:
-
-In the meantime, it is technically possible to define a map using a `ref` resolver and a templating function. For example:
-
-```yaml
-version: '3'
-
-tasks:
-  task-with-map:
-    vars:
-      FOO:
-        ref: dict "a" "1" "b" "2" "c" "3"
-    cmds:
-      - echo {{.FOO}}
-```
-
-```txt
-map[a:1 b:2 c:3]
-```
-
-OR by using the same technique with JSON:
-
-```yaml
-version: '3'
-
-tasks:
-  task-with-map:
-    vars:
-      JSON: '{"a": 1, "b": 2, "c": 3}'
-      FOO:
-        ref: "fromJson .JSON"
-    cmds:
-      - echo {{.FOO}}
-```
-
-```txt
-map[a:1 b:2 c:3]
-```
+Defining a map requires that you use a special `map` subkey (see example below).
 
 :::
+
+```yaml
+version: 3
+
+tasks:
+  foo:
+    vars:
+      STRING: 'Hello, World!'
+      BOOL: true
+      INT: 42
+      FLOAT: 3.14
+      ARRAY: [1, 2, 3]
+      MAP:
+        map: {A: 1, B: 2, C: 3}
+    cmds:
+      - 'echo {{.STRING}}'  # Hello, World!
+      - 'echo {{.BOOL}}'    # true
+      - 'echo {{.INT}}'     # 42
+      - 'echo {{.FLOAT}}'   # 3.14
+      - 'echo {{.ARRAY}}'   # [1 2 3]
+      - 'echo {{.ARRAY.0}}' # 1
+      - 'echo {{.MAP}}'     # map[A:1 B:2 C:3]
+      - 'echo {{.MAP.A}}'   # 1
+```
 
 Variables can be set in many places in a Taskfile. When executing
 [templates][templating-reference], Task will look for variables in the order
@@ -1391,6 +1376,29 @@ tasks:
       - 'echo {{.FOO}}' # <-- FOO is just the letter 'A'
 ```
 
+### Parsing JSON/YAML into map variables
+
+If you have a raw JSON or YAML string that you want to process in Task, you can
+use a combination of the `ref` keyword and the `fromJson` or `fromYaml`
+templating functions to parse the string into a map variable. For example:
+
+```yaml
+version: '3'
+
+tasks:
+  task-with-map:
+    vars:
+      JSON: '{"a": 1, "b": 2, "c": 3}'
+      FOO:
+        ref: "fromJson .JSON"
+    cmds:
+      - echo {{.FOO}}
+```
+
+```txt
+map[a:1 b:2 c:3]
+```
+
 ## Looping over values
 
 Task allows you to loop over certain values and execute a command for each.
@@ -1518,7 +1526,7 @@ tasks:
         cmd: cat {{.ITEM}}
 ```
 
-You can also loop over arrays directly and maps:
+You can also loop over arrays and maps directly:
 
 ```yaml
 version: 3
@@ -2327,6 +2335,5 @@ if called by another task, either directly or as a dependency.
 
 {/* prettier-ignore-start */}
 [gotemplate]: https://golang.org/pkg/text/template/
-[map-variables]: ./experiments/map_variables.mdx
 [templating-reference]: ./reference/templating.mdx
 {/* prettier-ignore-end */}

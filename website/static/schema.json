@@ -276,7 +276,7 @@
         "^.*$": {
           "anyOf": [
             {
-              "type": ["boolean", "integer", "null", "number", "string", "object", "array"]
+              "type": ["boolean", "integer", "null", "number", "string", "array"]
             },
             {
               "$ref": "#/definitions/var_subkey"
