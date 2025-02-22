@@ -17,6 +17,11 @@
 - Refactored the experiments package and added tests (#2049 by @pd93).
 - Show allowed values when a variable with an enum is missing (#2027, 2052 by
   @vmaerten).
+- Refactored how snippets in error work and added tests (#2068 by @pd93).
+- Fixed a bug where errors decoding commands were sometimes unhelpful (#2068 by
+  @pd93).
+- Fixed a bug in the Taskfile schema where `defer` statements in the shorthand
+  `cmds` syntax were not considered valid (#2068 by @pd93).
 
 #### Package API
 
@@ -34,6 +39,18 @@ stabilize the API in the future. #121 now tracks this piece of work.
     responsibility).
   - The path argument can now be a filename OR a directory.
   - The function now returns the full path of the generated file.
+- [`TaskfileDecodeError.WithFileInfo`](https://pkg.go.dev/github.com/go-task/task/v3/errors#TaskfileDecodeError.WithFileInfo)
+  now accepts a string instead of the arguments required to generate a snippet
+  (#2068 by @pd93).
+  - The caller is now expected to create the snippet themselves (see below).
+- [`TaskfileSnippet`](https://pkg.go.dev/github.com/go-task/task/v3/taskfile#Snippet)
+  and related code moved from `v3/errors` to `v3/taskfile` (#2068 by @pd93).
+- Renamed `TaskMissingRequiredVars` to
+  [`TaskMissingRequiredVarsError`](https://pkg.go.dev/github.com/go-task/task/v3/errors#TaskMissingRequiredVarsError)
+  (#2052 by @vmaerten).
+- Renamed `TaskNotAllowedVars` to
+  [`TaskNotAllowedVarsError`](https://pkg.go.dev/github.com/go-task/task/v3/errors#TaskNotAllowedVarsError)
+  (#2052 by @vmaerten).
 
 ## v3.41.0 - 2025-01-18
 
