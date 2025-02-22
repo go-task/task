@@ -76,7 +76,7 @@ func NewReader(
 }
 
 // WithInsecure enables insecure connections when reading remote taskfiles. By
-// default, secure connections are rejected.
+// default, insecure connections are rejected.
 func WithInsecure(insecure bool) ReaderOption {
 	return func(r *Reader) {
 		r.insecure = insecure
