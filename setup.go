@@ -56,7 +56,7 @@ func (e *Executor) Setup() error {
 }
 
 func (e *Executor) getRootNode() (taskfile.Node, error) {
-	node, err := taskfile.NewRootNode(e.Logger, e.Entrypoint, e.Dir, e.Insecure, e.Timeout)
+	node, err := taskfile.NewRootNode(e.Entrypoint, e.Dir, e.Insecure, e.Timeout)
 	if err != nil {
 		return nil, err
 	}
@@ -65,14 +65,21 @@ func (e *Executor) getRootNode() (taskfile.Node, error) {
 }
 
 func (e *Executor) readTaskfile(node taskfile.Node) error {
+	debugFunc := func(s string) {
+		e.Logger.VerboseOutf(logger.Magenta, s)
+	}
+	promptFunc := func(s string) error {
+		return e.Logger.Prompt(logger.Yellow, s, "n", "y", "yes")
+	}
 	reader := taskfile.NewReader(
 		node,
-		e.Insecure,
-		e.Download,
-		e.Offline,
-		e.Timeout,
-		e.TempDir.Remote,
-		e.Logger,
+		taskfile.WithInsecure(e.Insecure),
+		taskfile.WithDownload(e.Download),
+		taskfile.WithOffline(e.Offline),
+		taskfile.WithTimeout(e.Timeout),
+		taskfile.WithTempDir(e.TempDir.Remote),
+		taskfile.WithDebugFunc(debugFunc),
+		taskfile.WithPromptFunc(promptFunc),
 	)
 	graph, err := reader.Read()
 	if err != nil {

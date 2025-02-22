@@ -11,7 +11,6 @@ import (
 
 	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/experiments"
-	"github.com/go-task/task/v3/internal/logger"
 )
 
 type Node interface {
@@ -26,7 +25,6 @@ type Node interface {
 }
 
 func NewRootNode(
-	l *logger.Logger,
 	entrypoint string,
 	dir string,
 	insecure bool,
@@ -37,11 +35,10 @@ func NewRootNode(
 	if entrypoint == "-" {
 		return NewStdinNode(dir)
 	}
-	return NewNode(l, entrypoint, dir, insecure, timeout)
+	return NewNode(entrypoint, dir, insecure, timeout)
 }
 
 func NewNode(
-	l *logger.Logger,
 	entrypoint string,
 	dir string,
 	insecure bool,
@@ -58,9 +55,9 @@ func NewNode(
 	case "git":
 		node, err = NewGitNode(entrypoint, dir, insecure, opts...)
 	case "http", "https":
-		node, err = NewHTTPNode(l, entrypoint, dir, insecure, timeout, opts...)
+		node, err = NewHTTPNode(entrypoint, dir, insecure, timeout, opts...)
 	default:
-		node, err = NewFileNode(l, entrypoint, dir, opts...)
+		node, err = NewFileNode(entrypoint, dir, opts...)
 
 	}
 

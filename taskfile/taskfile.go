@@ -12,7 +12,6 @@ import (
 
 	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/filepathext"
-	"github.com/go-task/task/v3/internal/logger"
 	"github.com/go-task/task/v3/internal/sysinfo"
 )
 
@@ -41,7 +40,7 @@ var (
 // at the given URL with any of the default Taskfile files names. If any of
 // these match a file, the first matching path will be returned. If no files are
 // found, an error will be returned.
-func RemoteExists(ctx context.Context, l *logger.Logger, u *url.URL, timeout time.Duration) (*url.URL, error) {
+func RemoteExists(ctx context.Context, u *url.URL, timeout time.Duration) (*url.URL, error) {
 	// Create a new HEAD request for the given URL to check if the resource exists
 	req, err := http.NewRequestWithContext(ctx, "HEAD", u.String(), nil)
 	if err != nil {
@@ -89,7 +88,6 @@ func RemoteExists(ctx context.Context, l *logger.Logger, u *url.URL, timeout tim
 
 		// If the request was successful, return the URL
 		if resp.StatusCode == http.StatusOK {
-			l.VerboseOutf(logger.Magenta, "task: [%s] Not found - Using alternative (%s)\n", alt.String(), taskfile)
 			return alt, nil
 		}
 	}
@@ -102,7 +100,7 @@ func RemoteExists(ctx context.Context, l *logger.Logger, u *url.URL, timeout tim
 // given path with any of the default Taskfile files names. If any of these
 // match a file, the first matching path will be returned. If no files are
 // found, an error will be returned.
-func Exists(l *logger.Logger, path string) (string, error) {
+func Exists(path string) (string, error) {
 	fi, err := os.Stat(path)
 	if err != nil {
 		return "", err
@@ -117,7 +115,6 @@ func Exists(l *logger.Logger, path string) (string, error) {
 	for _, taskfile := range defaultTaskfiles {
 		alt := filepathext.SmartJoin(path, taskfile)
 		if _, err := os.Stat(alt); err == nil {
-			l.VerboseOutf(logger.Magenta, "task: [%s] Not found - Using alternative (%s)\n", path, taskfile)
 			return filepath.Abs(alt)
 		}
 	}
@@ -130,14 +127,14 @@ func Exists(l *logger.Logger, path string) (string, error) {
 // calling the exists function until it finds a file or reaches the root
 // directory. On supported operating systems, it will also check if the user ID
 // of the directory changes and abort if it does.
-func ExistsWalk(l *logger.Logger, path string) (string, error) {
+func ExistsWalk(path string) (string, error) {
 	origPath := path
 	owner, err := sysinfo.Owner(path)
 	if err != nil {
 		return "", err
 	}
 	for {
-		fpath, err := Exists(l, path)
+		fpath, err := Exists(path)
 		if err == nil {
 			return fpath, nil
 		}
