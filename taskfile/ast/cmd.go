@@ -51,18 +51,53 @@ func (c *Cmd) UnmarshalYAML(node *yaml.Node) error {
 		return nil
 
 	case yaml.MappingNode:
-
-		// A command with additional options
 		var cmdStruct struct {
 			Cmd         string
+			Task        string
 			For         *For
 			Silent      bool
 			Set         []string
 			Shopt       []string
+			Vars        *Vars
 			IgnoreError bool `yaml:"ignore_error"`
+			Defer       *Defer
 			Platforms   []*Platform
 		}
-		if err := node.Decode(&cmdStruct); err == nil && cmdStruct.Cmd != "" {
+		if err := node.Decode(&cmdStruct); err != nil {
+			return errors.NewTaskfileDecodeError(err, node)
+		}
+		if cmdStruct.Defer != nil {
+
+			// A deferred command
+			if cmdStruct.Defer.Cmd != "" {
+				c.Defer = true
+				c.Cmd = cmdStruct.Defer.Cmd
+				c.Silent = cmdStruct.Silent
+				return nil
+			}
+
+			// A deferred task call
+			if cmdStruct.Defer.Task != "" {
+				c.Defer = true
+				c.Task = cmdStruct.Defer.Task
+				c.Vars = cmdStruct.Defer.Vars
+				c.Silent = cmdStruct.Defer.Silent
+				return nil
+			}
+			return nil
+		}
+
+		// A task call
+		if cmdStruct.Task != "" {
+			c.Task = cmdStruct.Task
+			c.Vars = cmdStruct.Vars
+			c.For = cmdStruct.For
+			c.Silent = cmdStruct.Silent
+			return nil
+		}
+
+		// A command with additional options
+		if cmdStruct.Cmd != "" {
 			c.Cmd = cmdStruct.Cmd
 			c.For = cmdStruct.For
 			c.Silent = cmdStruct.Silent
@@ -70,45 +105,6 @@ func (c *Cmd) UnmarshalYAML(node *yaml.Node) error {
 			c.Shopt = cmdStruct.Shopt
 			c.IgnoreError = cmdStruct.IgnoreError
 			c.Platforms = cmdStruct.Platforms
-			return nil
-		}
-
-		// A deferred command
-		var deferredCmd struct {
-			Defer  string
-			Silent bool
-		}
-		if err := node.Decode(&deferredCmd); err == nil && deferredCmd.Defer != "" {
-			c.Defer = true
-			c.Cmd = deferredCmd.Defer
-			c.Silent = deferredCmd.Silent
-			return nil
-		}
-
-		// A deferred task call
-		var deferredCall struct {
-			Defer Call
-		}
-		if err := node.Decode(&deferredCall); err == nil && deferredCall.Defer.Task != "" {
-			c.Defer = true
-			c.Task = deferredCall.Defer.Task
-			c.Vars = deferredCall.Defer.Vars
-			c.Silent = deferredCall.Defer.Silent
-			return nil
-		}
-
-		// A task call
-		var taskCall struct {
-			Task   string
-			Vars   *Vars
-			For    *For
-			Silent bool
-		}
-		if err := node.Decode(&taskCall); err == nil && taskCall.Task != "" {
-			c.Task = taskCall.Task
-			c.Vars = taskCall.Vars
-			c.For = taskCall.For
-			c.Silent = taskCall.Silent
 			return nil
 		}
 
