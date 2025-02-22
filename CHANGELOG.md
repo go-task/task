@@ -51,6 +51,18 @@ stabilize the API in the future. #121 now tracks this piece of work.
 - Renamed `TaskNotAllowedVars` to
   [`TaskNotAllowedVarsError`](https://pkg.go.dev/github.com/go-task/task/v3/errors#TaskNotAllowedVarsError)
   (#2052 by @vmaerten).
+- The
+  [`taskfile.Reader`](https://pkg.go.dev/github.com/go-task/task/v3/taskfile#Reader)
+  is now constructed using the functional options pattern (#2082 by @pd93).
+- Removed our internal `logger.Logger` from the entire `v3/taskfile` package
+  (#2082 by @pd93).
+  - Users are now expected to pass a custom debug/prompt functions into
+    [`taskfile.Reader`](https://pkg.go.dev/github.com/go-task/task/v3/taskfile#Reader)
+    if they want this functionality by using the new
+    [`WithDebugFunc`](https://pkg.go.dev/github.com/go-task/task/v3/taskfile#WithDebugFunc)
+    and
+    [`WithPromptFunc`](https://pkg.go.dev/github.com/go-task/task/v3/taskfile#WithPromptFunc)
+    functional options.
 
 ## v3.41.0 - 2025-01-18
 
