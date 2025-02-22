@@ -22,6 +22,7 @@
   @pd93).
 - Fixed a bug in the Taskfile schema where `defer` statements in the shorthand
   `cmds` syntax were not considered valid (#2068 by @pd93).
+- Refactored how task sorting functions work (#1798 by @pd93).
 
 #### Package API
 
@@ -63,6 +64,8 @@ stabilize the API in the future. #121 now tracks this piece of work.
     and
     [`WithPromptFunc`](https://pkg.go.dev/github.com/go-task/task/v3/taskfile#WithPromptFunc)
     functional options.
+- Remove `Range` functions in `v3/taskfile/ast` in favour of new iterator
+  functions (#1798 by @pd93).
 
 ## v3.41.0 - 2025-01-18
 
