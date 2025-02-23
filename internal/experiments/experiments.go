@@ -7,11 +7,9 @@ import (
 	"strings"
 
 	"github.com/Masterminds/semver/v3"
-
-	"gopkg.in/yaml.v3"
-
 	"github.com/joho/godotenv"
 	"github.com/spf13/pflag"
+	"gopkg.in/yaml.v3"
 )
 
 const envPrefix = "TASK_X_"
