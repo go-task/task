@@ -146,8 +146,7 @@ func Validate() error {
 	}
 
 	if Global && Dir != "" {
-		log.Fatal("task: You can't set both --global and --dir")
-		return nil
+		return errors.New("task: You can't set both --global and --dir")
 	}
 
 	if Output.Name != "group" {
@@ -160,6 +159,18 @@ func Validate() error {
 		if Output.Group.ErrorOnly {
 			return errors.New("task: You can't set --output-group-error-only without --output=group")
 		}
+	}
+
+	if List && ListAll {
+		return errors.New("task: cannot use --list and --list-all at the same time")
+	}
+
+	if ListJson && !List && !ListAll {
+		return errors.New("task: --json only applies to --list or --list-all")
+	}
+
+	if NoStatus && !ListJson {
+		return errors.New("task: --no-status only applies to --json with --list or --list-all")
 	}
 
 	return nil

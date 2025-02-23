@@ -112,10 +112,6 @@ func run() error {
 	if err := experiments.Validate(); err != nil {
 		log.Warnf("%s\n", err.Error())
 	}
-	listOptions := task.NewListOptions(flags.List, flags.ListAll, flags.ListJson, flags.NoStatus)
-	if err := listOptions.Validate(); err != nil {
-		return err
-	}
 
 	e := task.NewExecutor(flags.WithFlags())
 	if err := e.Setup(); err != nil {
@@ -136,11 +132,16 @@ func run() error {
 		return cache.Clear()
 	}
 
-	if (listOptions.ShouldListTasks()) && flags.Silent {
-		return e.ListTaskNames(flags.ListAll)
-	}
-
+	listOptions := task.NewListOptions(
+		flags.List,
+		flags.ListAll,
+		flags.ListJson,
+		flags.NoStatus,
+	)
 	if listOptions.ShouldListTasks() {
+		if flags.Silent {
+			return e.ListTaskNames(flags.ListAll)
+		}
 		foundTasks, err := e.ListTasks(listOptions)
 		if err != nil {
 			return err
