@@ -2,57 +2,17 @@ package ast
 
 import (
 	"fmt"
-	"sync"
-
 	"github.com/go-task/task/v3/errors"
-	"github.com/go-task/task/v3/internal/deepcopy"
-
 	"gopkg.in/yaml.v3"
 )
 
 // Precondition represents a precondition necessary for a task to run
 type (
-	Preconditions struct {
-		Preconditions []*Precondition
-		mutex         sync.RWMutex
-	}
-
 	Precondition struct {
 		Sh  string
 		Msg string
 	}
 )
-
-func NewPreconditions() *Preconditions {
-	return &Preconditions{
-		Preconditions: make([]*Precondition, 0),
-	}
-}
-
-func (p *Preconditions) DeepCopy() *Preconditions {
-	if p == nil {
-		return nil
-	}
-	defer p.mutex.RUnlock()
-	p.mutex.RLock()
-	return &Preconditions{
-		Preconditions: deepcopy.Slice(p.Preconditions),
-	}
-}
-
-func (p *Preconditions) Merge(other *Preconditions) {
-	if p == nil || p.Preconditions == nil || other == nil {
-		return
-	}
-
-	p.mutex.Lock()
-	defer p.mutex.Unlock()
-
-	other.mutex.RLock()
-	defer other.mutex.RUnlock()
-
-	p.Preconditions = append(p.Preconditions, deepcopy.Slice(other.Preconditions)...)
-}
 
 func (p *Precondition) DeepCopy() *Precondition {
 	if p == nil {
@@ -94,16 +54,4 @@ func (p *Precondition) UnmarshalYAML(node *yaml.Node) error {
 	}
 
 	return errors.NewTaskfileDecodeError(nil, node).WithTypeMessage("precondition")
-}
-
-func (p *Preconditions) UnmarshalYAML(node *yaml.Node) error {
-	if p == nil || p.Preconditions == nil {
-		*p = *NewPreconditions()
-	}
-
-	if err := node.Decode(&p.Preconditions); err != nil {
-		return errors.NewTaskfileDecodeError(err, node).WithTypeMessage("preconditions")
-	}
-
-	return nil
 }
