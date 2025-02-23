@@ -1034,6 +1034,13 @@ tasks:
   task-will-fail: echo "I will not run"
 ```
 
+:::info
+
+Please note that you are not currently able to use the `preconditions` key inside
+included Taskfiles. It'll produce an error.
+
+:::
+
 ### Limiting when tasks run
 
 If a task executed by multiple `cmds` or multiple `deps` you can control when it
