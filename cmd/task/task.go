@@ -113,7 +113,10 @@ func run() error {
 		log.Warnf("%s\n", err.Error())
 	}
 
-	e := task.NewExecutor(flags.WithFlags())
+	e := task.NewExecutor(
+		flags.WithFlags(),
+		task.WithVersionCheck(true),
+	)
 	if err := e.Setup(); err != nil {
 		return err
 	}
