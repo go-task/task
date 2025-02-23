@@ -23,6 +23,8 @@
 - Fixed a bug in the Taskfile schema where `defer` statements in the shorthand
   `cmds` syntax were not considered valid (#2068 by @pd93).
 - Refactored how task sorting functions work (#1798 by @pd93).
+- Added a new `.taskrc.yml` (or `.taskrc.yaml`) file to let users enable
+  experiments (similar to `.env`) (#1982 by @vmaerten).
 
 #### Package API
 
