@@ -539,6 +539,21 @@ func TestPreconditionGlobal(t *testing.T) {
 	if buff.String() != "task: 1 != 0 obviously!\n" {
 		t.Errorf("Wrong output message: %s", buff.String())
 	}
+
+	buff.Reset()
+
+	e = &task.Executor{
+		Dir:    "testdata/precondition/global/included",
+		Stdout: &buff,
+		Stderr: &buff,
+	}
+
+	err := e.Setup()
+	require.Error(t, err)
+
+	assert.Equal(t, "task: Included Taskfiles can't have preconditions declarations. Please, move the preconditions declaration to the main Taskfile", err.Error())
+	buff.Reset()
+
 }
 
 func TestGenerates(t *testing.T) {

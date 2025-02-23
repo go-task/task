@@ -34,20 +34,6 @@ func (p *Preconditions) DeepCopy() *Preconditions {
 	}
 }
 
-func (p *Preconditions) Merge(other *Preconditions) {
-	if p == nil || p.Values == nil || other == nil {
-		return
-	}
-
-	p.mutex.Lock()
-	defer p.mutex.Unlock()
-
-	other.mutex.RLock()
-	defer other.mutex.RUnlock()
-
-	p.Values = append(p.Values, deepcopy.Slice(other.Values)...)
-}
-
 func (p *Preconditions) UnmarshalYAML(node *yaml.Node) error {
 	if p == nil || p.Values == nil {
 		*p = *NewPreconditions()

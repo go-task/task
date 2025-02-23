@@ -18,6 +18,9 @@ var V3 = semver.MustParse("3")
 // ErrIncludedTaskfilesCantHaveDotenvs is returned when a included Taskfile contains dotenvs
 var ErrIncludedTaskfilesCantHaveDotenvs = errors.New("task: Included Taskfiles can't have dotenv declarations. Please, move the dotenv declaration to the main Taskfile")
 
+// ErrIncludedTaskfilesCantHavePreconditions is returned when a included Taskfile contains Preconditions
+var ErrIncludedTaskfilesCantHavePreconditions = errors.New("task: Included Taskfiles can't have preconditions declarations. Please, move the preconditions declaration to the main Taskfile")
+
 // Taskfile is the abstract syntax tree for a Taskfile
 type Taskfile struct {
 	Location      string
@@ -45,6 +48,9 @@ func (t1 *Taskfile) Merge(t2 *Taskfile, include *Include) error {
 	if len(t2.Dotenv) > 0 {
 		return ErrIncludedTaskfilesCantHaveDotenvs
 	}
+	if len(t2.Preconditions.Values) > 0 {
+		return ErrIncludedTaskfilesCantHavePreconditions
+	}
 	if t2.Output.IsSet() {
 		t1.Output = t2.Output
 	}
@@ -65,7 +71,6 @@ func (t1 *Taskfile) Merge(t2 *Taskfile, include *Include) error {
 	}
 	t1.Vars.Merge(t2.Vars, include)
 	t1.Env.Merge(t2.Env, include)
-	t1.Preconditions.Merge(t2.Preconditions)
 	return t1.Tasks.Merge(t2.Tasks, include, t1.Vars)
 }
 
