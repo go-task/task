@@ -50,7 +50,8 @@ stabilize the API in the future. #121 now tracks this piece of work.
   (#2068 by @pd93).
   - The caller is now expected to create the snippet themselves (see below).
 - [`TaskfileSnippet`](https://pkg.go.dev/github.com/go-task/task/v3/taskfile#Snippet)
-  and related code moved from `v3/errors` to `v3/taskfile` (#2068 by @pd93).
+  and related code moved from the `errors` package to the `taskfile` package
+  (#2068 by @pd93).
 - Renamed `TaskMissingRequiredVars` to
   [`TaskMissingRequiredVarsError`](https://pkg.go.dev/github.com/go-task/task/v3/errors#TaskMissingRequiredVarsError)
   (#2052 by @vmaerten).
@@ -60,8 +61,8 @@ stabilize the API in the future. #121 now tracks this piece of work.
 - The
   [`taskfile.Reader`](https://pkg.go.dev/github.com/go-task/task/v3/taskfile#Reader)
   is now constructed using the functional options pattern (#2082 by @pd93).
-- Removed our internal `logger.Logger` from the entire `v3/taskfile` package
-  (#2082 by @pd93).
+- Removed our internal `logger.Logger` from the entire `taskfile` package (#2082
+  by @pd93).
   - Users are now expected to pass a custom debug/prompt functions into
     [`taskfile.Reader`](https://pkg.go.dev/github.com/go-task/task/v3/taskfile#Reader)
     if they want this functionality by using the new
@@ -69,8 +70,15 @@ stabilize the API in the future. #121 now tracks this piece of work.
     and
     [`WithPromptFunc`](https://pkg.go.dev/github.com/go-task/task/v3/taskfile#WithPromptFunc)
     functional options.
-- Remove `Range` functions in `v3/taskfile/ast` in favour of new iterator
-  functions (#1798 by @pd93).
+- Remove `Range` functions in the `taskfile/ast` package in favour of new
+  iterator functions (#1798 by @pd93).
+- `ast.Call` was moved from the `taskfile/ast` package to the main `task`
+  package (#2084 by @pd93).
+- `ast.Tasks.FindMatchingTasks` was moved from the `taskfile/ast` package to the
+  `task.Executor.FindMatchingTasks` in the main `task` package (#2084 by @pd93).
+- The `Compiler` and its `GetVariables` and `FastGetVariables` methods were
+  moved from the `internal/compiler` package to the main `task` package (#2084
+  by @pd93).
 
 ## v3.41.0 - 2025-01-18
 
