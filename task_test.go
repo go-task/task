@@ -553,7 +553,6 @@ func TestPreconditionGlobal(t *testing.T) {
 
 	assert.Equal(t, "task: Included Taskfiles can't have preconditions declarations. Please, move the preconditions declaration to the main Taskfile", err.Error())
 	buff.Reset()
-
 }
 
 func TestGenerates(t *testing.T) {
