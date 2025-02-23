@@ -1412,6 +1412,27 @@ darwin/amd64
 darwin/arm64
 ```
 
+You can also use references to other variables as long as they are also lists:
+
+```yaml
+version: "3"
+
+vars:
+  OS_VAR: ["windows", "linux", "darwin"]
+  ARCH_VAR: ["amd64", "arm64"]
+
+tasks:
+  default:
+    cmds:
+      - for:
+          matrix:
+            OS:
+              ref: .OS_VAR
+            ARCH:
+              ref: .ARCH_VAR
+        cmd: echo "{{.ITEM.OS}}/{{.ITEM.ARCH}}"
+```
+
 ### Looping over your task's sources
 
 You are also able to loop over the sources of your task:

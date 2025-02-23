@@ -27,6 +27,7 @@
   experiments (similar to `.env`) (#1982 by @vmaerten).
 - Added new [Getting Started docs](https://taskfile.dev/getting-started) (#2086
   by @pd93).
+- Allow `matrix` to use references to other variables (#2065, #2069 by @pd93).
 
 #### Package API
 
