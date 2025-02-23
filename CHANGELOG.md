@@ -25,6 +25,8 @@
 - Refactored how task sorting functions work (#1798 by @pd93).
 - Added a new `.taskrc.yml` (or `.taskrc.yaml`) file to let users enable
   experiments (similar to `.env`) (#1982 by @vmaerten).
+- Added new [Getting Started docs](https://taskfile.dev/getting-started) (#2086
+  by @pd93).
 
 #### Package API
 
