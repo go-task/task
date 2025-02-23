@@ -12,6 +12,7 @@ import (
 	"github.com/go-task/task/v3/internal/env"
 	"github.com/go-task/task/v3/internal/execext"
 	"github.com/go-task/task/v3/internal/filepathext"
+	"github.com/go-task/task/v3/internal/fingerprint"
 	"github.com/go-task/task/v3/internal/logger"
 	"github.com/go-task/task/v3/internal/templater"
 	"github.com/go-task/task/v3/internal/version"
@@ -196,8 +197,8 @@ func (c *Compiler) ResetCache() {
 	c.dynamicCache = nil
 }
 
-func (c *Compiler) getSpecialVars(t *ast.Task, call *ast.Call) (map[string]string, error) {
-	allVars := map[string]string{
+func (c *Compiler) getSpecialVars(t *ast.Task, call *ast.Call) (map[string]any, error) {
+	allVars := map[string]any{
 		"TASK_EXE":         filepath.ToSlash(os.Args[0]),
 		"ROOT_TASKFILE":    filepathext.SmartJoin(c.Dir, c.Entrypoint),
 		"ROOT_DIR":         c.Dir,
@@ -205,10 +206,18 @@ func (c *Compiler) getSpecialVars(t *ast.Task, call *ast.Call) (map[string]strin
 		"TASK_VERSION":     version.GetVersion(),
 	}
 	if t != nil {
+		dir := filepathext.SmartJoin(c.Dir, t.Dir)
+
+		taskSources, err := fingerprint.Globs(dir, t.Sources)
+		if err != nil {
+			return allVars, fmt.Errorf("expand globs: %v", err)
+		}
+
 		allVars["TASK"] = t.Task
-		allVars["TASK_DIR"] = filepathext.SmartJoin(c.Dir, t.Dir)
+		allVars["TASK_DIR"] = dir
 		allVars["TASKFILE"] = t.Location.Taskfile
 		allVars["TASKFILE_DIR"] = filepath.Dir(t.Location.Taskfile)
+		allVars["TASK_SOURCES"] = taskSources
 	}
 	if call != nil {
 		allVars["ALIAS"] = call.Task
