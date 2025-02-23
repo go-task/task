@@ -48,7 +48,7 @@ func (node *StdinNode) ResolveEntrypoint(entrypoint string) (string, error) {
 		return entrypoint, nil
 	}
 
-	path, err := execext.Expand(entrypoint)
+	path, err := execext.ExpandFirst(entrypoint)
 	if err != nil {
 		return "", err
 	}
@@ -61,7 +61,7 @@ func (node *StdinNode) ResolveEntrypoint(entrypoint string) (string, error) {
 }
 
 func (node *StdinNode) ResolveDir(dir string) (string, error) {
-	path, err := execext.Expand(dir)
+	path, err := execext.ExpandFirst(dir)
 	if err != nil {
 		return "", err
 	}
