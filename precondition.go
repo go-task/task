@@ -2,6 +2,7 @@ package task
 
 import (
 	"context"
+	"slices"
 
 	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/env"
@@ -14,7 +15,7 @@ import (
 var ErrPreconditionFailed = errors.New("task: precondition not met")
 
 func (e *Executor) areTaskPreconditionsMet(ctx context.Context, t *ast.Task) (bool, error) {
-	for _, p := range t.Preconditions {
+	for _, p := range slices.Concat(e.Taskfile.Preconditions.Values, t.Preconditions) {
 		err := execext.RunCommand(ctx, &execext.RunCommandOptions{
 			Command: p.Sh,
 			Dir:     t.Dir,
