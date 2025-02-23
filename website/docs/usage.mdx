@@ -1,6 +1,6 @@
 ---
 slug: /usage/
-sidebar_position: 3
+sidebar_position: 4
 ---
 
 import Tabs from '@theme/Tabs';
@@ -8,56 +8,29 @@ import TabItem from '@theme/TabItem';
 
 # Usage
 
-## Getting started
+## Running Taskfiles
 
-Create a file called `Taskfile.yml` in the root of your project. The `cmds`
-attribute should contain the commands of a task. The example below allows
-compiling a Go app and uses [esbuild](https://esbuild.github.io/) to concat and
-minify multiple CSS files into a single one.
+Specific Taskfiles can be called by specifying the `--taskfile` flag. If you
+don't specify a Taskfile, Task will automatically look for a file with one of
+the [supported file names](#supported-file-names) in the current directory. If
+you want to search in a different directory, you can use the `--dir` flag.
 
-```yaml
-version: '3'
+### Supported file names
 
-tasks:
-  build:
-    cmds:
-      - go build -v -i main.go
+Task looks for files with the following names, in order of priority:
 
-  assets:
-    cmds:
-      - esbuild --bundle --minify css/index.css > public/bundle.css
-```
+- `Taskfile.yml`
+- `taskfile.yml`
+- `Taskfile.yaml`
+- `taskfile.yaml`
+- `Taskfile.dist.yml`
+- `taskfile.dist.yml`
+- `Taskfile.dist.yaml`
+- `taskfile.dist.yaml`
 
-Running the tasks is as simple as running:
-
-```shell
-task assets build
-```
-
-Task uses [mvdan.cc/sh](https://mvdan.cc/sh/), a native Go sh interpreter. So
-you can write sh/bash commands, and it will work even on Windows, where `sh` or
-`bash` are usually not available. Just remember any executable called must be
-available by the OS or in PATH.
-
-If you omit a task name, "default" will be assumed.
-
-## Supported file names
-
-Task will look for the following file names, in order of priority:
-
-- Taskfile.yml
-- taskfile.yml
-- Taskfile.yaml
-- taskfile.yaml
-- Taskfile.dist.yml
-- taskfile.dist.yml
-- Taskfile.dist.yaml
-- taskfile.dist.yaml
-
-The intention of having the `.dist` variants is to allow projects to have one
-committed version (`.dist`) while still allowing individual users to override
-the Taskfile by adding an additional `Taskfile.yml` (which would be on
-`.gitignore`).
+The `.dist` variants allow projects to have one committed file (`.dist`) while
+still allowing individual users to override the Taskfile by adding an additional
+`Taskfile.yml` (which would be in your `.gitignore`).
 
 ### Running a Taskfile from a subdirectory
 
@@ -263,11 +236,7 @@ Taskfile.
 
 ### OS-specific Taskfiles
 
-With `version: '2'`, task automatically includes any `Taskfile_{{OS}}.yml` if it
-exists (for example: `Taskfile_windows.yml`, `Taskfile_linux.yml` or
-`Taskfile_darwin.yml`). Since this behavior was a bit too implicit, it was
-removed on version 3, but you still can have a similar behavior by explicitly
-importing these files:
+You can include OS-specific Taskfiles by using a templating function:
 
 ```yaml
 version: '3'
