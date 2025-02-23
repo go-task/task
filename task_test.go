@@ -135,7 +135,7 @@ func TestEnv(t *testing.T) {
 		},
 	}
 	tt.Run(t)
-	enableExperimentForTest(t, &experiments.EnvPrecedence, "1")
+	enableExperimentForTest(t, &experiments.EnvPrecedence, 1)
 	ttt := fileContentTest{
 		Dir:       "testdata/env",
 		Target:    "overridden",
@@ -1215,7 +1215,7 @@ func TestIncludesMultiLevel(t *testing.T) {
 }
 
 func TestIncludesRemote(t *testing.T) {
-	enableExperimentForTest(t, &experiments.RemoteTaskfiles, "1")
+	enableExperimentForTest(t, &experiments.RemoteTaskfiles, 1)
 
 	dir := "testdata/includes_remote"
 
@@ -1373,7 +1373,7 @@ func TestIncludesEmptyMain(t *testing.T) {
 }
 
 func TestIncludesHttp(t *testing.T) {
-	enableExperimentForTest(t, &experiments.RemoteTaskfiles, "1")
+	enableExperimentForTest(t, &experiments.RemoteTaskfiles, 1)
 
 	dir, err := filepath.Abs("testdata/includes_http")
 	require.NoError(t, err)
@@ -3224,7 +3224,7 @@ func TestReference(t *testing.T) {
 }
 
 func TestVarInheritance(t *testing.T) {
-	enableExperimentForTest(t, &experiments.EnvPrecedence, "1")
+	enableExperimentForTest(t, &experiments.EnvPrecedence, 1)
 	tests := []struct {
 		name string
 		want string
@@ -3332,12 +3332,12 @@ func TestVarInheritance(t *testing.T) {
 //
 // Typically experiments are controlled via TASK_X_ env vars, but we cannot use those in tests
 // because the experiment settings are parsed during experiments.init(), before any tests run.
-func enableExperimentForTest(t *testing.T, e *experiments.Experiment, val string) {
+func enableExperimentForTest(t *testing.T, e *experiments.Experiment, val int) {
 	t.Helper()
 	prev := *e
 	*e = experiments.Experiment{
 		Name:          prev.Name,
-		AllowedValues: []string{val},
+		AllowedValues: []int{val},
 		Value:         val,
 	}
 	t.Cleanup(func() { *e = prev })

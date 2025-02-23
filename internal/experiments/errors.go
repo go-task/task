@@ -2,13 +2,16 @@ package experiments
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
+
+	"github.com/go-task/task/v3/internal/slicesext"
 )
 
 type InvalidValueError struct {
 	Name          string
-	AllowedValues []string
-	Value         string
+	AllowedValues []int
+	Value         int
 }
 
 func (err InvalidValueError) Error() string {
@@ -16,7 +19,7 @@ func (err InvalidValueError) Error() string {
 		"task: Experiment %q has an invalid value %q (allowed values: %s)",
 		err.Name,
 		err.Value,
-		strings.Join(err.AllowedValues, ", "),
+		strings.Join(slicesext.Convert(err.AllowedValues, strconv.Itoa), ", "),
 	)
 }
 
