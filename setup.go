@@ -13,7 +13,6 @@ import (
 	"github.com/sajari/fuzzy"
 
 	"github.com/go-task/task/v3/errors"
-	"github.com/go-task/task/v3/internal/compiler"
 	"github.com/go-task/task/v3/internal/env"
 	"github.com/go-task/task/v3/internal/execext"
 	"github.com/go-task/task/v3/internal/filepathext"
@@ -198,7 +197,7 @@ func (e *Executor) setupCompiler() error {
 		}
 	}
 
-	e.Compiler = &compiler.Compiler{
+	e.Compiler = &Compiler{
 		Dir:            e.Dir,
 		Entrypoint:     e.Entrypoint,
 		UserWorkingDir: e.UserWorkingDir,
@@ -214,7 +213,12 @@ func (e *Executor) readDotEnvFiles() error {
 		return nil
 	}
 
-	env, err := taskfile.Dotenv(e.Compiler, e.Taskfile, e.Dir)
+	vars, err := e.Compiler.GetTaskfileVariables()
+	if err != nil {
+		return err
+	}
+
+	env, err := taskfile.Dotenv(vars, e.Taskfile, e.Dir)
 	if err != nil {
 		return err
 	}

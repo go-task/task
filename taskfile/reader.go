@@ -12,7 +12,7 @@ import (
 	"gopkg.in/yaml.v3"
 
 	"github.com/go-task/task/v3/errors"
-	"github.com/go-task/task/v3/internal/compiler"
+	"github.com/go-task/task/v3/internal/env"
 	"github.com/go-task/task/v3/internal/filepathext"
 	"github.com/go-task/task/v3/internal/templater"
 	"github.com/go-task/task/v3/taskfile/ast"
@@ -188,7 +188,7 @@ func (r *Reader) include(node Node) error {
 
 	// Loop over each included taskfile
 	for _, include := range vertex.Taskfile.Includes.All() {
-		vars := compiler.GetEnviron()
+		vars := env.GetEnviron()
 		vars.Merge(vertex.Taskfile.Vars, nil)
 		// Start a goroutine to process each included Taskfile
 		g.Go(func() error {
@@ -281,6 +281,7 @@ func (r *Reader) readNode(node Node) (*ast.Taskfile, error) {
 		// Decode the taskfile and add the file info the any errors
 		taskfileDecodeErr := &errors.TaskfileDecodeError{}
 		if errors.As(err, &taskfileDecodeErr) {
+			fmt.Println(taskfileDecodeErr.Debug())
 			snippet := NewSnippet(b,
 				SnippetWithLine(taskfileDecodeErr.Line),
 				SnippetWithColumn(taskfileDecodeErr.Column),

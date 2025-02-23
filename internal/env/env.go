@@ -3,12 +3,25 @@ package env
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/go-task/task/v3/internal/experiments"
 	"github.com/go-task/task/v3/taskfile/ast"
 )
 
 const taskVarPrefix = "TASK_"
+
+// GetEnviron the all return all environment variables encapsulated on a
+// ast.Vars
+func GetEnviron() *ast.Vars {
+	m := ast.NewVars()
+	for _, e := range os.Environ() {
+		keyVal := strings.SplitN(e, "=", 2)
+		key, val := keyVal[0], keyVal[1]
+		m.Set(key, ast.Var{Value: val})
+	}
+	return m
+}
 
 func Get(t *ast.Task) []string {
 	if t.Env == nil {
