@@ -74,72 +74,73 @@ func NewReader(
 	return r
 }
 
-// Options loops through the given [ReaderOption] functions and applies them
-// to the [Reader].
+// Options loops through the given [ReaderOption] functions and applies them to
+// the [Reader].
 func (r *Reader) Options(opts ...ReaderOption) {
 	for _, opt := range opts {
 		opt(r)
 	}
 }
 
-// WithInsecure allows the [Reader] to make insecure connections when reading
-// remote taskfiles. By default, insecure connections are rejected.
-func WithInsecure(insecure bool) ReaderOption {
+// ReaderWithInsecure allows the [Reader] to make insecure connections when
+// reading remote taskfiles. By default, insecure connections are rejected.
+func ReaderWithInsecure(insecure bool) ReaderOption {
 	return func(r *Reader) {
 		r.insecure = insecure
 	}
 }
 
-// WithDownload forces the [Reader] to download a fresh copy of the taskfile
-// from the remote source.
-func WithDownload(download bool) ReaderOption {
+// ReaderWithDownload forces the [Reader] to download a fresh copy of the
+// taskfile from the remote source.
+func ReaderWithDownload(download bool) ReaderOption {
 	return func(r *Reader) {
 		r.download = download
 	}
 }
 
-// WithOffline stops the [Reader] from being able to make network connections.
-// It will still be able to read local files and cached copies of remote files.
-func WithOffline(offline bool) ReaderOption {
+// ReaderWithOffline stops the [Reader] from being able to make network
+// connections. It will still be able to read local files and cached copies of
+// remote files.
+func ReaderWithOffline(offline bool) ReaderOption {
 	return func(r *Reader) {
 		r.offline = offline
 	}
 }
 
-// WithTimeout sets the [Reader]'s timeout for fetching remote taskfiles. By
-// default, the timeout is set to 10 seconds.
-func WithTimeout(timeout time.Duration) ReaderOption {
+// ReaderWithTimeout sets the [Reader]'s timeout for fetching remote taskfiles.
+// By default, the timeout is set to 10 seconds.
+func ReaderWithTimeout(timeout time.Duration) ReaderOption {
 	return func(r *Reader) {
 		r.timeout = timeout
 	}
 }
 
-// WithTempDir sets the temporary directory that will be used by the [Reader].
-// By default, the reader uses [os.TempDir].
-func WithTempDir(tempDir string) ReaderOption {
+// ReaderWithTempDir sets the temporary directory that will be used by the
+// [Reader]. By default, the reader uses [os.TempDir].
+func ReaderWithTempDir(tempDir string) ReaderOption {
 	return func(r *Reader) {
 		r.tempDir = tempDir
 	}
 }
 
-// WithDebugFunc sets the debug function to be used by the [Reader]. If set,
-// this function will be called with debug messages. This can be useful if the
-// caller wants to log debug messages from the [Reader]. By default, no debug
-// function is set and the logs are not written.
-func WithDebugFunc(debugFunc ReaderDebugFunc) ReaderOption {
+// ReaderWithDebugFunc sets the debug function to be used by the [Reader]. If
+// set, this function will be called with debug messages. This can be useful if
+// the caller wants to log debug messages from the [Reader]. By default, no
+// debug function is set and the logs are not written.
+func ReaderWithDebugFunc(debugFunc ReaderDebugFunc) ReaderOption {
 	return func(r *Reader) {
 		r.debugFunc = debugFunc
 	}
 }
 
-// WithPromptFunc sets the prompt function to be used by the [Reader]. If set,
-// this function will be called with prompt messages. The function should
+// ReaderWithPromptFunc sets the prompt function to be used by the [Reader]. If
+// set, this function will be called with prompt messages. The function should
 // optionally log the message to the user and return nil if the prompt is
 // accepted and the execution should continue. Otherwise, it should return an
 // error which describes why the the prompt was rejected. This can then be
 // caught and used later when calling the [Reader.Read] method. By default, no
 // prompt function is set and all prompts are automatically accepted.
-func WithPromptFunc(promptFunc ReaderPromptFunc) ReaderOption {
+func ReaderWithPromptFunc(promptFunc ReaderPromptFunc) ReaderOption {
 	return func(r *Reader) {
 		r.promptFunc = promptFunc
 	}

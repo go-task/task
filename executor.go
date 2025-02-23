@@ -106,200 +106,203 @@ func (e *Executor) Options(opts ...ExecutorOption) {
 	}
 }
 
-// WithDir sets the working directory of the [Executor]. By default, the
+// ExecutorWithDir sets the working directory of the [Executor]. By default, the
 // directory is set to the user's current working directory.
-func WithDir(dir string) ExecutorOption {
+func ExecutorWithDir(dir string) ExecutorOption {
 	return func(e *Executor) {
 		e.Dir = dir
 	}
 }
 
-// WithEntrypoint sets the entrypoint (main Taskfile) of the [Executor]. By
-// default, Task will search for one of the default Taskfiles in the given
+// ExecutorWithEntrypoint sets the entrypoint (main Taskfile) of the [Executor].
+// By default, Task will search for one of the default Taskfiles in the given
 // directory.
-func WithEntrypoint(entrypoint string) ExecutorOption {
+func ExecutorWithEntrypoint(entrypoint string) ExecutorOption {
 	return func(e *Executor) {
 		e.Entrypoint = entrypoint
 	}
 }
 
-// WithTempDir sets the temporary directory that will be used by [Executor] for
-// storing temporary files like checksums and cached remote files. By default,
-// the temporary directory is set to the user's temporary directory.
-func WithTempDir(tempDir TempDir) ExecutorOption {
+// ExecutorWithTempDir sets the temporary directory that will be used by
+// [Executor] for storing temporary files like checksums and cached remote
+// files. By default, the temporary directory is set to the user's temporary
+// directory.
+func ExecutorWithTempDir(tempDir TempDir) ExecutorOption {
 	return func(e *Executor) {
 		e.TempDir = tempDir
 	}
 }
 
-// WithForce ensures that the [Executor] always runs a task, even when
+// ExecutorWithForce ensures that the [Executor] always runs a task, even when
 // fingerprinting or prompts would normally stop it.
-func WithForce(force bool) ExecutorOption {
+func ExecutorWithForce(force bool) ExecutorOption {
 	return func(e *Executor) {
 		e.Force = force
 	}
 }
 
-// WithForceAll ensures that the [Executor] always runs all tasks (including
-// subtasks), even when fingerprinting or prompts would normally stop them.
-func WithForceAll(forceAll bool) ExecutorOption {
+// ExecutorWithForceAll ensures that the [Executor] always runs all tasks
+// (including subtasks), even when fingerprinting or prompts would normally stop
+// them.
+func ExecutorWithForceAll(forceAll bool) ExecutorOption {
 	return func(e *Executor) {
 		e.ForceAll = forceAll
 	}
 }
 
-// WithInsecure allows the [Executor] to make insecure connections when reading
-// remote taskfiles. By default, insecure connections are rejected.
-func WithInsecure(insecure bool) ExecutorOption {
+// ExecutorWithInsecure allows the [Executor] to make insecure connections when
+// reading remote taskfiles. By default, insecure connections are rejected.
+func ExecutorWithInsecure(insecure bool) ExecutorOption {
 	return func(e *Executor) {
 		e.Insecure = insecure
 	}
 }
 
-// WithDownload forces the [Executor] to download a fresh copy of the taskfile
-// from the remote source.
-func WithDownload(download bool) ExecutorOption {
+// ExecutorWithDownload forces the [Executor] to download a fresh copy of the
+// taskfile from the remote source.
+func ExecutorWithDownload(download bool) ExecutorOption {
 	return func(e *Executor) {
 		e.Download = download
 	}
 }
 
-// WithOffline stops the [Executor] from being able to make network connections.
-// It will still be able to read local files and cached copies of remote files.
-func WithOffline(offline bool) ExecutorOption {
+// ExecutorWithOffline stops the [Executor] from being able to make network
+// connections. It will still be able to read local files and cached copies of
+// remote files.
+func ExecutorWithOffline(offline bool) ExecutorOption {
 	return func(e *Executor) {
 		e.Offline = offline
 	}
 }
 
-// WithTimeout sets the [Executor]'s timeout for fetching remote taskfiles. By
-// default, the timeout is set to 10 seconds.
-func WithTimeout(timeout time.Duration) ExecutorOption {
+// ExecutorWithTimeout sets the [Executor]'s timeout for fetching remote
+// taskfiles. By default, the timeout is set to 10 seconds.
+func ExecutorWithTimeout(timeout time.Duration) ExecutorOption {
 	return func(e *Executor) {
 		e.Timeout = timeout
 	}
 }
 
-// WithWatch tells the [Executor] to keep running in the background and watch
-// for changes to the fingerprint of the tasks that are run. When changes are
-// detected, a new task run is triggered.
-func WithWatch(watch bool) ExecutorOption {
+// ExecutorWithWatch tells the [Executor] to keep running in the background and
+// watch for changes to the fingerprint of the tasks that are run. When changes
+// are detected, a new task run is triggered.
+func ExecutorWithWatch(watch bool) ExecutorOption {
 	return func(e *Executor) {
 		e.Watch = watch
 	}
 }
 
-// WithVerbose tells the [Executor] to output more information about the tasks
-// that are run.
-func WithVerbose(verbose bool) ExecutorOption {
+// ExecutorWithVerbose tells the [Executor] to output more information about the
+// tasks that are run.
+func ExecutorWithVerbose(verbose bool) ExecutorOption {
 	return func(e *Executor) {
 		e.Verbose = verbose
 	}
 }
 
-// WithSilent tells the [Executor] to suppress all output except for the output
-// of the tasks that are run.
-func WithSilent(silent bool) ExecutorOption {
+// ExecutorWithSilent tells the [Executor] to suppress all output except for the
+// output of the tasks that are run.
+func ExecutorWithSilent(silent bool) ExecutorOption {
 	return func(e *Executor) {
 		e.Silent = silent
 	}
 }
 
-// WithAssumeYes tells the [Executor] to assume "yes" for all prompts.
-func WithAssumeYes(assumeYes bool) ExecutorOption {
+// ExecutorWithAssumeYes tells the [Executor] to assume "yes" for all prompts.
+func ExecutorWithAssumeYes(assumeYes bool) ExecutorOption {
 	return func(e *Executor) {
 		e.AssumeYes = assumeYes
 	}
 }
 
 // WithAssumeTerm is used for testing purposes to simulate a terminal.
-func WithDry(dry bool) ExecutorOption {
+func ExecutorWithDry(dry bool) ExecutorOption {
 	return func(e *Executor) {
 		e.Dry = dry
 	}
 }
 
-// WithSummary tells the [Executor] to output a summary of the given tasks
-// instead of running them.
-func WithSummary(summary bool) ExecutorOption {
+// ExecutorWithSummary tells the [Executor] to output a summary of the given
+// tasks instead of running them.
+func ExecutorWithSummary(summary bool) ExecutorOption {
 	return func(e *Executor) {
 		e.Summary = summary
 	}
 }
 
-// WithParallel tells the [Executor] to run tasks given in the same call
+// ExecutorWithParallel tells the [Executor] to run tasks given in the same call
 // in parallel.
-func WithParallel(parallel bool) ExecutorOption {
+func ExecutorWithParallel(parallel bool) ExecutorOption {
 	return func(e *Executor) {
 		e.Parallel = parallel
 	}
 }
 
-// WithColor tells the [Executor] whether or not to output using colorized
-// strings.
-func WithColor(color bool) ExecutorOption {
+// ExecutorWithColor tells the [Executor] whether or not to output using
+// colorized strings.
+func ExecutorWithColor(color bool) ExecutorOption {
 	return func(e *Executor) {
 		e.Color = color
 	}
 }
 
-// WithConcurrency sets the maximum number of tasks that the [Executor] can run
-// in parallel.
-func WithConcurrency(concurrency int) ExecutorOption {
+// ExecutorWithConcurrency sets the maximum number of tasks that the [Executor]
+// can run in parallel.
+func ExecutorWithConcurrency(concurrency int) ExecutorOption {
 	return func(e *Executor) {
 		e.Concurrency = concurrency
 	}
 }
 
-// WithInterval sets the interval at which the [Executor] will check for changes
-// when watching tasks.
-func WithInterval(interval time.Duration) ExecutorOption {
+// ExecutorWithInterval sets the interval at which the [Executor] will check for
+// changes when watching tasks.
+func ExecutorWithInterval(interval time.Duration) ExecutorOption {
 	return func(e *Executor) {
 		e.Interval = interval
 	}
 }
 
-// WithOutputStyle sets the output style of the [Executor]. By default, the
-// output style is set to the style defined in the Taskfile.
-func WithOutputStyle(outputStyle ast.Output) ExecutorOption {
+// ExecutorWithOutputStyle sets the output style of the [Executor]. By default,
+// the output style is set to the style defined in the Taskfile.
+func ExecutorWithOutputStyle(outputStyle ast.Output) ExecutorOption {
 	return func(e *Executor) {
 		e.OutputStyle = outputStyle
 	}
 }
 
-// WithTaskSorter sets the sorter that the [Executor] will use to sort tasks.
-// By default, the sorter is set to sort tasks alphabetically, but with tasks
-// with no namespace (in the root Taskfile) first.
-func WithTaskSorter(sorter sort.Sorter) ExecutorOption {
+// ExecutorWithTaskSorter sets the sorter that the [Executor] will use to sort
+// tasks. By default, the sorter is set to sort tasks alphabetically, but with
+// tasks with no namespace (in the root Taskfile) first.
+func ExecutorWithTaskSorter(sorter sort.Sorter) ExecutorOption {
 	return func(e *Executor) {
 		e.TaskSorter = sorter
 	}
 }
 
-// WithStdin sets the [Executor]'s standard input [io.Reader].
-func WithStdin(stdin io.Reader) ExecutorOption {
+// ExecutorWithStdin sets the [Executor]'s standard input [io.Reader].
+func ExecutorWithStdin(stdin io.Reader) ExecutorOption {
 	return func(e *Executor) {
 		e.Stdin = stdin
 	}
 }
 
-// WithStdout sets the [Executor]'s standard output [io.Writer].
-func WithStdout(stdout io.Writer) ExecutorOption {
+// ExecutorWithStdout sets the [Executor]'s standard output [io.Writer].
+func ExecutorWithStdout(stdout io.Writer) ExecutorOption {
 	return func(e *Executor) {
 		e.Stdout = stdout
 	}
 }
 
-// WithStderr sets the [Executor]'s standard error [io.Writer].
-func WithStderr(stderr io.Writer) ExecutorOption {
+// ExecutorWithStderr sets the [Executor]'s standard error [io.Writer].
+func ExecutorWithStderr(stderr io.Writer) ExecutorOption {
 	return func(e *Executor) {
 		e.Stderr = stderr
 	}
 }
 
-// WithIO sets the [Executor]'s standard input, output, and error to the same
-// [io.ReadWriter].
-func WithIO(rw io.ReadWriter) ExecutorOption {
+// ExecutorWithIO sets the [Executor]'s standard input, output, and error to the
+// same [io.ReadWriter].
+func ExecutorWithIO(rw io.ReadWriter) ExecutorOption {
 	return func(e *Executor) {
 		e.Stdin = rw
 		e.Stdout = rw
@@ -307,8 +310,9 @@ func WithIO(rw io.ReadWriter) ExecutorOption {
 	}
 }
 
-// WithVersionCheck tells the [Executor] whether or not to check the version of
-func WithVersionCheck(enableVersionCheck bool) ExecutorOption {
+// ExecutorWithVersionCheck tells the [Executor] whether or not to check the
+// version of
+func ExecutorWithVersionCheck(enableVersionCheck bool) ExecutorOption {
 	return func(e *Executor) {
 		e.EnableVersionCheck = enableVersionCheck
 	}

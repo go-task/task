@@ -176,9 +176,9 @@ func Validate() error {
 	return nil
 }
 
-// WithFlags is a special internal functional option that is used to pass flags
+// WithExecutorOptions is a special internal functional option that is used to pass flags
 // from the CLI directly to the executor.
-func WithFlags() task.ExecutorOption {
+func WithExecutorOptions() task.ExecutorOption {
 	return func(e *task.Executor) {
 		// Set the sorter
 		var sorter sort.Sorter
@@ -199,27 +199,27 @@ func WithFlags() task.ExecutorOption {
 		}
 
 		e.Options(
-			task.WithDir(dir),
-			task.WithEntrypoint(Entrypoint),
-			task.WithForce(Force),
-			task.WithForceAll(ForceAll),
-			task.WithInsecure(Insecure),
-			task.WithDownload(Download),
-			task.WithOffline(Offline),
-			task.WithTimeout(Timeout),
-			task.WithWatch(Watch),
-			task.WithVerbose(Verbose),
-			task.WithSilent(Silent),
-			task.WithAssumeYes(AssumeYes),
-			task.WithDry(Dry || Status),
-			task.WithSummary(Summary),
-			task.WithParallel(Parallel),
-			task.WithColor(Color),
-			task.WithConcurrency(Concurrency),
-			task.WithInterval(Interval),
-			task.WithOutputStyle(Output),
-			task.WithTaskSorter(sorter),
-			task.WithVersionCheck(true),
+			task.ExecutorWithDir(dir),
+			task.ExecutorWithEntrypoint(Entrypoint),
+			task.ExecutorWithForce(Force),
+			task.ExecutorWithForceAll(ForceAll),
+			task.ExecutorWithInsecure(Insecure),
+			task.ExecutorWithDownload(Download),
+			task.ExecutorWithOffline(Offline),
+			task.ExecutorWithTimeout(Timeout),
+			task.ExecutorWithWatch(Watch),
+			task.ExecutorWithVerbose(Verbose),
+			task.ExecutorWithSilent(Silent),
+			task.ExecutorWithAssumeYes(AssumeYes),
+			task.ExecutorWithDry(Dry || Status),
+			task.ExecutorWithSummary(Summary),
+			task.ExecutorWithParallel(Parallel),
+			task.ExecutorWithColor(Color),
+			task.ExecutorWithConcurrency(Concurrency),
+			task.ExecutorWithInterval(Interval),
+			task.ExecutorWithOutputStyle(Output),
+			task.ExecutorWithTaskSorter(sorter),
+			task.ExecutorWithVersionCheck(true),
 		)
 	}
 }
