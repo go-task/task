@@ -1,6 +1,7 @@
 package templater
 
 import (
+	"maps"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -60,13 +61,9 @@ func init() {
 				cap += len(m)
 			}
 			result := make(map[string]any, cap)
-			for k, v := range base {
-				result[k] = v
-			}
+			maps.Copy(result, base)
 			for _, m := range v {
-				for k, v := range m {
-					result[k] = v
-				}
+				maps.Copy(result, m)
 			}
 			return result
 		},
@@ -84,7 +81,5 @@ func init() {
 	taskFuncs["ExeExt"] = taskFuncs["exeExt"]
 
 	templateFuncs = template.FuncMap(sprig.TxtFuncMap())
-	for k, v := range taskFuncs {
-		templateFuncs[k] = v
-	}
+	maps.Copy(templateFuncs, taskFuncs)
 }

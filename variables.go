@@ -2,6 +2,7 @@ package task
 
 import (
 	"fmt"
+	"maps"
 	"os"
 	"path/filepath"
 	"strings"
@@ -378,9 +379,7 @@ func product(matrix *ast.Matrix) []map[string]any {
 			for _, item := range row.Value {
 				newComb := make(map[string]any, len(combination))
 				// Copy the existing combination
-				for k, v := range combination {
-					newComb[k] = v
-				}
+				maps.Copy(newComb, combination)
 				// Add the current item with the corresponding key
 				newComb[key] = item
 				newResult = append(newResult, newComb)
