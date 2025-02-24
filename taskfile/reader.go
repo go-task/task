@@ -281,7 +281,6 @@ func (r *Reader) readNode(node Node) (*ast.Taskfile, error) {
 		// Decode the taskfile and add the file info the any errors
 		taskfileDecodeErr := &errors.TaskfileDecodeError{}
 		if errors.As(err, &taskfileDecodeErr) {
-			fmt.Println(taskfileDecodeErr.Debug())
 			snippet := NewSnippet(b,
 				SnippetWithLine(taskfileDecodeErr.Line),
 				SnippetWithColumn(taskfileDecodeErr.Column),
