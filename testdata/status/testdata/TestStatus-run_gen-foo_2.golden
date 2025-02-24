@@ -1,0 +1,1 @@
+task: [gen-foo] touch foo.txt
