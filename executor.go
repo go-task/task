@@ -71,7 +71,11 @@ type (
 
 // NewExecutor creates a new [Executor] and applies the given functional options
 // to it.
-func NewExecutor(tf *ast.Taskfile, opts ...ExecutorOption) *Executor {
+func NewExecutor(graph *ast.TaskfileGraph, opts ...ExecutorOption) (*Executor, error) {
+	tf, err := graph.Merge()
+	if err != nil {
+		return nil, err
+	}
 	e := &Executor{
 		Taskfile:             tf,
 		Stdin:                os.Stdin,
@@ -91,7 +95,10 @@ func NewExecutor(tf *ast.Taskfile, opts ...ExecutorOption) *Executor {
 		executionHashesMutex: sync.Mutex{},
 	}
 	e.Options(opts...)
-	return e
+	if err := e.setup(); err != nil {
+		return nil, err
+	}
+	return e, nil
 }
 
 // Options loops through the given [ExecutorOption] functions and applies them

@@ -152,17 +152,12 @@ func run() error {
 		return err
 	}
 
-	tf, err := graph.Merge()
-	if err != nil {
-		return err
-	}
-
-	executor := task.NewExecutor(tf,
+	executor, err := task.NewExecutor(graph,
 		flags.WithFlags(),
 		task.WithDir(node.Dir()),
 		task.WithTempDir(tempDir),
 	)
-	if err := executor.Setup(); err != nil {
+	if err != nil {
 		return err
 	}
 

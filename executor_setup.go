@@ -18,7 +18,7 @@ import (
 	"github.com/go-task/task/v3/taskfile/ast"
 )
 
-func (e *Executor) Setup() error {
+func (e *Executor) setup() error {
 	e.setupLogger()
 	e.setupFuzzyModel()
 	e.setupStdFiles()
