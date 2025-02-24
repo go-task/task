@@ -1,6 +1,7 @@
 package sort
 
 import (
+	"slices"
 	"sort"
 	"strings"
 )
@@ -11,9 +12,7 @@ type Sorter func(items []string, namespaces []string) []string
 // AlphaNumeric sorts the JSON output so that tasks are in alpha numeric order
 // by task name.
 func AlphaNumeric(items []string, namespaces []string) []string {
-	sort.Slice(items, func(i, j int) bool {
-		return items[i] < items[j]
-	})
+	slices.Sort(items)
 	return items
 }
 
