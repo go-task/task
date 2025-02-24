@@ -56,7 +56,7 @@ func (checker *ChecksumChecker) IsUpToDate(t *ast.Task) (bool, error) {
 			if g.Negate {
 				continue
 			}
-			generates, err := Glob(t.Dir, g.Glob)
+			generates, err := glob(t.Dir, g.Glob, false)
 			if os.IsNotExist(err) {
 				return false, nil
 			}
