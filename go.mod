@@ -16,7 +16,6 @@ require (
 	github.com/go-task/slim-sprig/v3 v3.0.0
 	github.com/go-task/template v0.1.0
 	github.com/joho/godotenv v1.5.1
-	github.com/mattn/go-zglob v0.0.6
 	github.com/mitchellh/hashstructure/v2 v2.0.2
 	github.com/otiai10/copy v1.14.1
 	github.com/radovskyb/watcher v1.0.7
