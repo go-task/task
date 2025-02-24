@@ -4,18 +4,13 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"path/filepath"
 	"slices"
-	"strings"
 	"sync"
 
 	"github.com/Masterminds/semver/v3"
 	"github.com/sajari/fuzzy"
 
 	"github.com/go-task/task/v3/errors"
-	"github.com/go-task/task/v3/internal/env"
-	"github.com/go-task/task/v3/internal/execext"
-	"github.com/go-task/task/v3/internal/filepathext"
 	"github.com/go-task/task/v3/internal/logger"
 	"github.com/go-task/task/v3/internal/output"
 	"github.com/go-task/task/v3/internal/version"
@@ -25,16 +20,6 @@ import (
 
 func (e *Executor) Setup() error {
 	e.setupLogger()
-	node, err := e.getRootNode()
-	if err != nil {
-		return err
-	}
-	if err := e.setupTempDir(); err != nil {
-		return err
-	}
-	if err := e.readTaskfile(node); err != nil {
-		return err
-	}
 	e.setupFuzzyModel()
 	e.setupStdFiles()
 	if err := e.setupOutput(); err != nil {
@@ -51,46 +36,6 @@ func (e *Executor) Setup() error {
 	}
 	e.setupDefaults()
 	e.setupConcurrencyState()
-	return nil
-}
-
-func (e *Executor) getRootNode() (taskfile.Node, error) {
-	node, err := taskfile.NewRootNode(e.Entrypoint, e.Dir, e.Insecure, e.Timeout)
-	if err != nil {
-		return nil, err
-	}
-	e.Dir = node.Dir()
-	return node, err
-}
-
-func (e *Executor) readTaskfile(node taskfile.Node) error {
-	ctx, cf := context.WithTimeout(context.Background(), e.Timeout)
-	defer cf()
-	debugFunc := func(s string) {
-		e.Logger.VerboseOutf(logger.Magenta, s)
-	}
-	promptFunc := func(s string) error {
-		return e.Logger.Prompt(logger.Yellow, s, "n", "y", "yes")
-	}
-	reader := taskfile.NewReader(
-		taskfile.WithInsecure(e.Insecure),
-		taskfile.WithDownload(e.Download),
-		taskfile.WithOffline(e.Offline),
-		taskfile.WithTempDir(e.TempDir.Remote),
-		taskfile.WithCacheExpiryDuration(e.CacheExpiryDuration),
-		taskfile.WithDebugFunc(debugFunc),
-		taskfile.WithPromptFunc(promptFunc),
-	)
-	graph, err := reader.Read(ctx, node)
-	if err != nil {
-		if errors.Is(err, context.DeadlineExceeded) {
-			return &errors.TaskfileNetworkTimeoutError{URI: node.Location(), Timeout: e.Timeout}
-		}
-		return err
-	}
-	if e.Taskfile, err = graph.Merge(); err != nil {
-		return err
-	}
 	return nil
 }
 
@@ -113,52 +58,6 @@ func (e *Executor) setupFuzzyModel() {
 
 	model.Train(words)
 	e.fuzzyModel = model
-}
-
-func (e *Executor) setupTempDir() error {
-	if e.TempDir != (TempDir{}) {
-		return nil
-	}
-
-	tempDir := env.GetTaskEnv("TEMP_DIR")
-	if tempDir == "" {
-		e.TempDir = TempDir{
-			Remote:      filepathext.SmartJoin(e.Dir, ".task"),
-			Fingerprint: filepathext.SmartJoin(e.Dir, ".task"),
-		}
-	} else if filepath.IsAbs(tempDir) || strings.HasPrefix(tempDir, "~") {
-		tempDir, err := execext.ExpandLiteral(tempDir)
-		if err != nil {
-			return err
-		}
-		projectDir, _ := filepath.Abs(e.Dir)
-		projectName := filepath.Base(projectDir)
-		e.TempDir = TempDir{
-			Remote:      tempDir,
-			Fingerprint: filepathext.SmartJoin(tempDir, projectName),
-		}
-
-	} else {
-		e.TempDir = TempDir{
-			Remote:      filepathext.SmartJoin(e.Dir, tempDir),
-			Fingerprint: filepathext.SmartJoin(e.Dir, tempDir),
-		}
-	}
-
-	remoteDir := env.GetTaskEnv("REMOTE_DIR")
-	if remoteDir != "" {
-		if filepath.IsAbs(remoteDir) || strings.HasPrefix(remoteDir, "~") {
-			remoteTempDir, err := execext.ExpandLiteral(remoteDir)
-			if err != nil {
-				return err
-			}
-			e.TempDir.Remote = remoteTempDir
-		} else {
-			e.TempDir.Remote = filepathext.SmartJoin(e.Dir, ".task")
-		}
-	}
-
-	return nil
 }
 
 func (e *Executor) setupStdFiles() {

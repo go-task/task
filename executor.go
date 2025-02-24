@@ -26,27 +26,22 @@ type (
 	// within them.
 	Executor struct {
 		// Flags
-		Dir                 string
-		Entrypoint          string
-		TempDir             TempDir
-		Force               bool
-		ForceAll            bool
-		Insecure            bool
-		Download            bool
-		Offline             bool
-		Timeout             time.Duration
-		CacheExpiryDuration time.Duration
-		Watch               bool
-		Verbose             bool
-		Silent              bool
-		AssumeYes           bool
-		AssumeTerm          bool // Used for testing
-		Dry                 bool
-		Summary             bool
-		Parallel            bool
-		Color               bool
-		Concurrency         int
-		Interval            time.Duration
+		Dir         string
+		Entrypoint  string
+		TempDir     *TempDir
+		Force       bool
+		ForceAll    bool
+		Watch       bool
+		Verbose     bool
+		Silent      bool
+		AssumeYes   bool
+		AssumeTerm  bool // Used for testing
+		Dry         bool
+		Summary     bool
+		Parallel    bool
+		Color       bool
+		Concurrency int
+		Interval    time.Duration
 
 		// I/O
 		Stdin  io.Reader
@@ -72,17 +67,13 @@ type (
 		executionHashesMutex sync.Mutex
 		watchedDirs          *xsync.MapOf[string, bool]
 	}
-	TempDir struct {
-		Remote      string
-		Fingerprint string
-	}
 )
 
 // NewExecutor creates a new [Executor] and applies the given functional options
 // to it.
-func NewExecutor(opts ...ExecutorOption) *Executor {
+func NewExecutor(tf *ast.Taskfile, opts ...ExecutorOption) *Executor {
 	e := &Executor{
-		Timeout:              time.Second * 10,
+		Taskfile:             tf,
 		Stdin:                os.Stdin,
 		Stdout:               os.Stdout,
 		Stderr:               os.Stderr,
@@ -143,12 +134,12 @@ func (o *entrypointOption) ApplyToExecutor(e *Executor) {
 // WithTempDir sets the temporary directory that will be used by [Executor] for
 // storing temporary files like checksums and cached remote files. By default,
 // the temporary directory is set to the user's temporary directory.
-func WithTempDir(tempDir TempDir) ExecutorOption {
+func WithTempDir(tempDir *TempDir) ExecutorOption {
 	return &tempDirOption{tempDir}
 }
 
 type tempDirOption struct {
-	tempDir TempDir
+	tempDir *TempDir
 }
 
 func (o *tempDirOption) ApplyToExecutor(e *Executor) {
@@ -181,76 +172,6 @@ type forceAllOption struct {
 
 func (o *forceAllOption) ApplyToExecutor(e *Executor) {
 	e.ForceAll = o.forceAll
-}
-
-// WithInsecure allows the [Executor] to make insecure connections when reading
-// remote taskfiles. By default, insecure connections are rejected.
-func WithInsecure(insecure bool) ExecutorOption {
-	return &insecureOption{insecure}
-}
-
-type insecureOption struct {
-	insecure bool
-}
-
-func (o *insecureOption) ApplyToExecutor(e *Executor) {
-	e.Insecure = o.insecure
-}
-
-// WithDownload forces the [Executor] to download a fresh copy of the taskfile
-// from the remote source.
-func WithDownload(download bool) ExecutorOption {
-	return &downloadOption{download}
-}
-
-type downloadOption struct {
-	download bool
-}
-
-func (o *downloadOption) ApplyToExecutor(e *Executor) {
-	e.Download = o.download
-}
-
-// WithOffline stops the [Executor] from being able to make network connections.
-// It will still be able to read local files and cached copies of remote files.
-func WithOffline(offline bool) ExecutorOption {
-	return &offlineOption{offline}
-}
-
-type offlineOption struct {
-	offline bool
-}
-
-func (o *offlineOption) ApplyToExecutor(e *Executor) {
-	e.Offline = o.offline
-}
-
-// WithTimeout sets the [Executor]'s timeout for fetching remote taskfiles. By
-// default, the timeout is set to 10 seconds.
-func WithTimeout(timeout time.Duration) ExecutorOption {
-	return &timeoutOption{timeout}
-}
-
-type timeoutOption struct {
-	timeout time.Duration
-}
-
-func (o *timeoutOption) ApplyToExecutor(e *Executor) {
-	e.Timeout = o.timeout
-}
-
-// WithCacheExpiryDuration sets the duration after which the cache is considered
-// expired. By default, the cache is considered expired after 24 hours.
-func WithCacheExpiryDuration(duration time.Duration) ExecutorOption {
-	return &cacheExpiryDurationOption{duration: duration}
-}
-
-type cacheExpiryDurationOption struct {
-	duration time.Duration
-}
-
-func (o *cacheExpiryDurationOption) ApplyToExecutor(r *Executor) {
-	r.CacheExpiryDuration = o.duration
 }
 
 // WithWatch tells the [Executor] to keep running in the background and watch

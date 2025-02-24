@@ -16,6 +16,7 @@ import (
 	"github.com/go-task/task/v3/internal/flags"
 	"github.com/go-task/task/v3/internal/logger"
 	"github.com/go-task/task/v3/internal/version"
+	"github.com/go-task/task/v3/taskfile"
 	"github.com/go-task/task/v3/taskfile/ast"
 )
 
@@ -110,16 +111,69 @@ func run() error {
 		return nil
 	}
 
-	e := task.NewExecutor(
-		flags.WithFlags(),
-		task.WithVersionCheck(true),
+	if err := experiments.Validate(); err != nil {
+		log.Warnf("%s\n", err.Error())
+	}
+
+	// Create a new root node for the given entrypoint
+	node, err := taskfile.NewRootNode(
+		flags.Entrypoint,
+		flags.Dir,
+		flags.Insecure,
+		flags.Timeout,
 	)
-	if err := e.Setup(); err != nil {
+	if err != nil {
 		return err
 	}
 
+	tempDir, err := task.NewTempDir(node.Dir())
+	if err != nil {
+		return err
+	}
+
+	reader := taskfile.NewReader(
+		flags.WithFlags(),
+		taskfile.WithTempDir(tempDir.Remote),
+		taskfile.WithDebugFunc(func(s string) {
+			log.VerboseOutf(logger.Magenta, s)
+		}),
+		taskfile.WithPromptFunc(func(s string) error {
+			return log.Prompt(logger.Yellow, s, "n", "y", "yes")
+		}),
+	)
+
+	ctx, cf := context.WithTimeout(context.Background(), flags.Timeout)
+	defer cf()
+	graph, err := reader.Read(ctx, node)
+	if err != nil {
+		if errors.Is(err, context.DeadlineExceeded) {
+			return &errors.TaskfileNetworkTimeoutError{URI: node.Location(), Timeout: flags.Timeout}
+		}
+		return err
+	}
+
+	tf, err := graph.Merge()
+	if err != nil {
+		return err
+	}
+
+	executor := task.NewExecutor(tf,
+		flags.WithFlags(),
+		task.WithDir(node.Dir()),
+		task.WithTempDir(tempDir),
+	)
+	if err := executor.Setup(); err != nil {
+		return err
+	}
+
+	// If the download flag is specified, we should stop execution as soon as
+	// taskfile is downloaded
+	if flags.Download {
+		return nil
+	}
+
 	if flags.ClearCache {
-		cachePath := filepath.Join(e.TempDir.Remote, "remote")
+		cachePath := filepath.Join(executor.TempDir.Remote, "remote")
 		return os.RemoveAll(cachePath)
 	}
 
@@ -131,9 +185,9 @@ func run() error {
 	)
 	if listOptions.ShouldListTasks() {
 		if flags.Silent {
-			return e.ListTaskNames(flags.ListAll)
+			return executor.ListTaskNames(flags.ListAll)
 		}
-		foundTasks, err := e.ListTasks(listOptions)
+		foundTasks, err := executor.ListTasks(listOptions)
 		if err != nil {
 			return err
 		}
@@ -165,17 +219,17 @@ func run() error {
 	globals.Set("CLI_SILENT", ast.Var{Value: flags.Silent})
 	globals.Set("CLI_VERBOSE", ast.Var{Value: flags.Verbose})
 	globals.Set("CLI_OFFLINE", ast.Var{Value: flags.Offline})
-	e.Taskfile.Vars.Merge(globals, nil)
+	executor.Taskfile.Vars.Merge(globals, nil)
 
 	if !flags.Watch {
-		e.InterceptInterruptSignals()
+		executor.InterceptInterruptSignals()
 	}
 
-	ctx := context.Background()
+	ctx = context.Background()
 
 	if flags.Status {
-		return e.Status(ctx, calls...)
+		return executor.Status(ctx, calls...)
 	}
 
-	return e.Run(ctx, calls...)
+	return executor.Run(ctx, calls...)
 }
