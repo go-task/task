@@ -1,0 +1,34 @@
+{
+  "name": "@go-task/cli-{platform}-{arch}",
+  "version": "{version}",
+  "description": "A task runner / simpler Make alternative written in Go",
+  "type": "module",
+  "scripts": {
+    "release": "node release.js"
+  },
+  "files": [
+    "bin"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/go-task/task.git"
+  },
+  "keywords": [
+    "task",
+    "taskfile",
+    "build-tool",
+    "task-runner"
+  ],
+  "author": "Andrey Nering",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/go-task/task/issues"
+  },
+  "os": [
+    "{platform}"
+  ],
+  "cpu": [
+    "{arch}"
+  ],
+  "homepage": "https://taskfile.dev"
+}
