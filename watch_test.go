@@ -31,12 +31,12 @@ Hello, World!
 	`)
 
 	var buff bytes.Buffer
-	e := &task.Executor{
-		Dir:    dir,
-		Stdout: &buff,
-		Stderr: &buff,
-		Watch:  true,
-	}
+	e := &task.NewExecutor(
+		task.WithDir(dir),
+		task.WithStdout(&buff),
+		task.WithStderr(&buff),
+		task.WithWatch(true),
+	)
 
 	require.NoError(t, e.Setup())
 	buff.Reset()

@@ -28,16 +28,16 @@ Continue?`
 )
 
 type (
-	// ReaderDebugFunc is a function that is called when the reader wants to
+	// ReaderDebugFunc is a function that is called when the [Reader] wants to
 	// log debug messages
 	ReaderDebugFunc func(string)
-	// ReaderPromptFunc is a function that is called when the reader wants to
+	// ReaderPromptFunc is a function that is called when the [Reader] wants to
 	// prompt the user in some way
 	ReaderPromptFunc func(string) error
-	// ReaderOption is a function that configures a Reader.
+	// ReaderOption is a function that configures a [Reader].
 	ReaderOption func(*Reader)
-	// A Reader will recursively read Taskfiles from a given source using a directed
-	// acyclic graph (DAG).
+	// A Reader will recursively read Taskfiles from a given [Node] and build a
+	// [ast.TaskfileGraph] from them.
 	Reader struct {
 		graph       *ast.TaskfileGraph
 		node        Node
@@ -52,12 +52,13 @@ type (
 	}
 )
 
-// NewReader constructs a new Taskfile Reader using the given Node and options.
+// NewReader constructs a new Taskfile [Reader] using the given Node and
+// options.
 func NewReader(
 	node Node,
 	opts ...ReaderOption,
 ) *Reader {
-	reader := &Reader{
+	r := &Reader{
 		graph:       ast.NewTaskfileGraph(),
 		node:        node,
 		insecure:    false,
@@ -69,81 +70,90 @@ func NewReader(
 		promptFunc:  nil,
 		promptMutex: sync.Mutex{},
 	}
-	for _, opt := range opts {
-		opt(reader)
-	}
-	return reader
+	r.Options(opts...)
+	return r
 }
 
-// WithInsecure enables insecure connections when reading remote taskfiles. By
-// default, insecure connections are rejected.
-func WithInsecure(insecure bool) ReaderOption {
+// Options loops through the given [ReaderOption] functions and applies them to
+// the [Reader].
+func (r *Reader) Options(opts ...ReaderOption) {
+	for _, opt := range opts {
+		opt(r)
+	}
+}
+
+// ReaderWithInsecure allows the [Reader] to make insecure connections when
+// reading remote taskfiles. By default, insecure connections are rejected.
+func ReaderWithInsecure(insecure bool) ReaderOption {
 	return func(r *Reader) {
 		r.insecure = insecure
 	}
 }
 
-// WithDownload forces the reader to download a fresh copy of the taskfile from
-// the remote source.
-func WithDownload(download bool) ReaderOption {
+// ReaderWithDownload forces the [Reader] to download a fresh copy of the
+// taskfile from the remote source.
+func ReaderWithDownload(download bool) ReaderOption {
 	return func(r *Reader) {
 		r.download = download
 	}
 }
 
-// WithOffline stops the reader from being able to make network connections.
-// It will still be able to read local files and cached copies of remote files.
-func WithOffline(offline bool) ReaderOption {
+// ReaderWithOffline stops the [Reader] from being able to make network
+// connections. It will still be able to read local files and cached copies of
+// remote files.
+func ReaderWithOffline(offline bool) ReaderOption {
 	return func(r *Reader) {
 		r.offline = offline
 	}
 }
 
-// WithTimeout sets the timeout for reading remote taskfiles. By default, the
-// timeout is set to 10 seconds.
-func WithTimeout(timeout time.Duration) ReaderOption {
+// ReaderWithTimeout sets the [Reader]'s timeout for fetching remote taskfiles.
+// By default, the timeout is set to 10 seconds.
+func ReaderWithTimeout(timeout time.Duration) ReaderOption {
 	return func(r *Reader) {
 		r.timeout = timeout
 	}
 }
 
-// WithTempDir sets the temporary directory to be used by the reader. By
-// default, the reader uses `os.TempDir()`.
-func WithTempDir(tempDir string) ReaderOption {
+// ReaderWithTempDir sets the temporary directory that will be used by the
+// [Reader]. By default, the reader uses [os.TempDir].
+func ReaderWithTempDir(tempDir string) ReaderOption {
 	return func(r *Reader) {
 		r.tempDir = tempDir
 	}
 }
 
-// WithDebugFunc sets the debug function to be used by the reader. If set, this
-// function will be called with debug messages. This can be useful if the caller
-// wants to log debug messages from the reader. By default, no debug function is
-// set and the logs are not written.
-func WithDebugFunc(debugFunc ReaderDebugFunc) ReaderOption {
+// ReaderWithDebugFunc sets the debug function to be used by the [Reader]. If
+// set, this function will be called with debug messages. This can be useful if
+// the caller wants to log debug messages from the [Reader]. By default, no
+// debug function is set and the logs are not written.
+func ReaderWithDebugFunc(debugFunc ReaderDebugFunc) ReaderOption {
 	return func(r *Reader) {
 		r.debugFunc = debugFunc
 	}
 }
 
-// WithPromptFunc sets the prompt function to be used by the reader. If set,
-// this function will be called with prompt messages. The function should
+// ReaderWithPromptFunc sets the prompt function to be used by the [Reader]. If
+// set, this function will be called with prompt messages. The function should
 // optionally log the message to the user and return nil if the prompt is
 // accepted and the execution should continue. Otherwise, it should return an
 // error which describes why the the prompt was rejected. This can then be
-// caught and used later when calling the Read method. By default, no prompt
-// function is set and all prompts are automatically accepted.
-func WithPromptFunc(promptFunc ReaderPromptFunc) ReaderOption {
+// caught and used later when calling the [Reader.Read] method. By default, no
+// prompt function is set and all prompts are automatically accepted.
+func ReaderWithPromptFunc(promptFunc ReaderPromptFunc) ReaderOption {
 	return func(r *Reader) {
 		r.promptFunc = promptFunc
 	}
 }
 
+// Read will read the Taskfile defined by the [Reader]'s [Node] and recurse
+// through any [ast.Includes] it finds, reading each included Taskfile and
+// building an [ast.TaskfileGraph] as it goes. If any errors occur, they will be
+// returned immediately.
 func (r *Reader) Read() (*ast.TaskfileGraph, error) {
-	// Recursively loop through each Taskfile, adding vertices/edges to the graph
 	if err := r.include(r.node); err != nil {
 		return nil, err
 	}
-
 	return r.graph, nil
 }
 
