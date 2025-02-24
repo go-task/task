@@ -11,13 +11,15 @@ import (
 
 	"mvdan.cc/sh/v3/expand"
 	"mvdan.cc/sh/v3/interp"
-	"mvdan.cc/sh/v3/shell"
 	"mvdan.cc/sh/v3/syntax"
 
 	"github.com/go-task/task/v3/errors"
 )
 
-// RunCommandOptions is the options for the RunCommand func
+// ErrNilOptions is returned when a nil options is given
+var ErrNilOptions = errors.New("execext: nil options given")
+
+// RunCommandOptions is the options for the [RunCommand] func.
 type RunCommandOptions struct {
 	Command   string
 	Dir       string
@@ -28,9 +30,6 @@ type RunCommandOptions struct {
 	Stdout    io.Writer
 	Stderr    io.Writer
 }
-
-// ErrNilOptions is returned when a nil options is given
-var ErrNilOptions = errors.New("execext: nil options given")
 
 // RunCommand runs a shell command
 func RunCommand(ctx context.Context, opts *RunCommandOptions) error {
@@ -91,22 +90,53 @@ func RunCommand(ctx context.Context, opts *RunCommandOptions) error {
 	return r.Run(ctx, p)
 }
 
-// Expand is a helper to mvdan.cc/shell.Fields that returns the first field
-// if available.
-func Expand(s string) (string, error) {
+// Expand is a wrapper around [Fields] that also escapes some characters in the
+// input string.
+func Expand(s string) ([]string, error) {
 	s = filepath.ToSlash(s)
 	s = strings.ReplaceAll(s, " ", `\ `)
 	s = strings.ReplaceAll(s, "&", `\&`)
 	s = strings.ReplaceAll(s, "(", `\(`)
 	s = strings.ReplaceAll(s, ")", `\)`)
-	fields, err := shell.Fields(s, nil)
+	fields, err := Fields(s)
+	if err != nil {
+		return nil, err
+	}
+	return fields, nil
+}
+
+// ExpandFirst is a wrapper around [Expand] that also escapes some characters in
+// the input string. It only returns the first result.
+func ExpandFirst(s string) (string, error) {
+	fields, err := Expand(s)
 	if err != nil {
 		return "", err
 	}
-	if len(fields) > 0 {
-		return fields[0], nil
+	if len(fields) == 0 {
+		return "", nil
 	}
-	return "", nil
+	return fields[0], nil
+}
+
+// Fields is a wrapper around [expand.Fields] that is similar to [shell.Fields].
+// It differs in that it doesn't require an env function and it enables
+// globbing.
+func Fields(s string) ([]string, error) {
+	p := syntax.NewParser()
+	var words []*syntax.Word
+	err := p.Words(strings.NewReader(s), func(w *syntax.Word) bool {
+		words = append(words, w)
+		return true
+	})
+	if err != nil {
+		return nil, err
+	}
+	cfg := &expand.Config{
+		Env:      expand.FuncEnviron(os.Getenv),
+		ReadDir2: os.ReadDir,
+		GlobStar: true,
+	}
+	return expand.Fields(cfg, words...)
 }
 
 func execHandler(next interp.ExecHandlerFunc) interp.ExecHandlerFunc {
