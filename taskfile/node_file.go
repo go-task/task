@@ -84,7 +84,7 @@ func (node *FileNode) ResolveEntrypoint(entrypoint string) (string, error) {
 		return entrypoint, nil
 	}
 
-	path, err := execext.Expand(entrypoint)
+	path, err := execext.ExpandLiteral(entrypoint)
 	if err != nil {
 		return "", err
 	}
@@ -100,7 +100,7 @@ func (node *FileNode) ResolveEntrypoint(entrypoint string) (string, error) {
 }
 
 func (node *FileNode) ResolveDir(dir string) (string, error) {
-	path, err := execext.Expand(dir)
+	path, err := execext.ExpandLiteral(dir)
 	if err != nil {
 		return "", err
 	}
