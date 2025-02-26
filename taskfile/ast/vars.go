@@ -105,7 +105,7 @@ func (vars *Vars) ToCacheMap() (m map[string]any) {
 		if v.Sh != nil && *v.Sh != "" {
 			// Dynamic variable is not yet resolved; trigger
 			// <no value> to be used in templates.
-			return nil
+			continue
 		}
 		if v.Live != nil {
 			m[k] = v.Live
