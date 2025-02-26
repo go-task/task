@@ -2477,6 +2477,19 @@ VAR_2 is included-default-var2
 	assert.Equal(t, strings.TrimSpace(buff.String()), expectedOutputOrder)
 }
 
+func TestIncludeWithVarsInInclude(t *testing.T) {
+	t.Parallel()
+
+	const dir = "testdata/include_with_vars_inside_include"
+	var buff bytes.Buffer
+	e := task.Executor{
+		Dir:    dir,
+		Stdout: &buff,
+		Stderr: &buff,
+	}
+	require.NoError(t, e.Setup())
+}
+
 func TestIncludedVarsMultiLevel(t *testing.T) {
 	t.Parallel()
 
