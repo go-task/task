@@ -28,6 +28,9 @@
 - Added new [Getting Started docs](https://taskfile.dev/getting-started) (#2086
   by @pd93).
 - Allow `matrix` to use references to other variables (#2065, #2069 by @pd93).
+- Fixed a bug where, when a dynamic variable is provided, even if it is not
+  used, all other variables become unavailable in the templating system within
+  the include (#2092 by @vmaerten).
 
 #### Package API
 
