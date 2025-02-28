@@ -6,12 +6,14 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"sync"
 
 	"github.com/go-task/task/v3/internal/env"
 	"github.com/go-task/task/v3/internal/execext"
 	"github.com/go-task/task/v3/internal/filepathext"
+	"github.com/go-task/task/v3/internal/flags"
 	"github.com/go-task/task/v3/internal/logger"
 	"github.com/go-task/task/v3/internal/templater"
 	"github.com/go-task/task/v3/internal/version"
@@ -203,6 +205,11 @@ func (c *Compiler) getSpecialVars(t *ast.Task, call *Call) (map[string]string, e
 		"ROOT_DIR":         c.Dir,
 		"USER_WORKING_DIR": c.UserWorkingDir,
 		"TASK_VERSION":     version.GetVersion(),
+		"CLI_ARGS":         flags.CliArgs,
+		"CLI_FORCE":        strconv.FormatBool(flags.Force || flags.ForceAll),
+		"CLI_SILENT":       strconv.FormatBool(flags.Silent),
+		"CLI_VERBOSE":      strconv.FormatBool(flags.Verbose),
+		"CLI_OFFLINE":      strconv.FormatBool(flags.Offline),
 	}
 	if t != nil {
 		allVars["TASK"] = t.Task

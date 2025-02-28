@@ -20,7 +20,6 @@ import (
 	"github.com/go-task/task/v3/internal/sort"
 	ver "github.com/go-task/task/v3/internal/version"
 	"github.com/go-task/task/v3/taskfile"
-	"github.com/go-task/task/v3/taskfile/ast"
 )
 
 func main() {
@@ -201,28 +200,21 @@ func run() error {
 	}
 
 	var (
-		calls   []*task.Call
-		globals *ast.Vars
+		calls []*task.Call
 	)
 
 	tasksAndVars, cliArgs, err := getArgs()
 	if err != nil {
 		return err
 	}
+	flags.CliArgs = cliArgs
 
-	calls, globals = args.Parse(tasksAndVars...)
+	calls, _ = args.Parse(tasksAndVars...)
 
 	// If there are no calls, run the default task instead
 	if len(calls) == 0 {
 		calls = append(calls, &task.Call{Task: "default"})
 	}
-
-	globals.Set("CLI_ARGS", ast.Var{Value: cliArgs})
-	globals.Set("CLI_FORCE", ast.Var{Value: flags.Force || flags.ForceAll})
-	globals.Set("CLI_SILENT", ast.Var{Value: flags.Silent})
-	globals.Set("CLI_VERBOSE", ast.Var{Value: flags.Verbose})
-	globals.Set("CLI_OFFLINE", ast.Var{Value: flags.Offline})
-	e.Taskfile.Vars.Merge(globals, nil)
 
 	if !flags.Watch {
 		e.InterceptInterruptSignals()

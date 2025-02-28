@@ -71,6 +71,7 @@ var (
 	Offline     bool
 	ClearCache  bool
 	Timeout     time.Duration
+	CliArgs     string // Set indirectly.
 )
 
 func init() {
