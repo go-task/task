@@ -23,7 +23,7 @@ func NewStdinNode(dir string) (*StdinNode, error) {
 }
 
 func (node *StdinNode) Location() string {
-	return "__stdin__"
+	return "stdin"
 }
 
 func (node *StdinNode) Remote() bool {
@@ -74,5 +74,5 @@ func (node *StdinNode) ResolveDir(dir string) (string, error) {
 }
 
 func (node *StdinNode) FilenameAndLastDir() (string, string) {
-	return "", "__stdin__"
+	return "", "stdin"
 }
