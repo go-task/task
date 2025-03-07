@@ -43,26 +43,27 @@ type TempDir struct {
 type Executor struct {
 	Taskfile *ast.Taskfile
 
-	Dir         string
-	Entrypoint  string
-	TempDir     TempDir
-	Force       bool
-	ForceAll    bool
-	Insecure    bool
-	Download    bool
-	Offline     bool
-	Timeout     time.Duration
-	Watch       bool
-	Verbose     bool
-	Silent      bool
-	AssumeYes   bool
-	AssumeTerm  bool // Used for testing
-	Dry         bool
-	Summary     bool
-	Parallel    bool
-	Color       bool
-	Concurrency int
-	Interval    time.Duration
+	Dir            string
+	TaskWorkingDir string
+	Entrypoint     string
+	TempDir        TempDir
+	Force          bool
+	ForceAll       bool
+	Insecure       bool
+	Download       bool
+	Offline        bool
+	Timeout        time.Duration
+	Watch          bool
+	Verbose        bool
+	Silent         bool
+	AssumeYes      bool
+	AssumeTerm     bool // Used for testing
+	Dry            bool
+	Summary        bool
+	Parallel       bool
+	Color          bool
+	Concurrency    int
+	Interval       time.Duration
 
 	Stdin  io.Reader
 	Stdout io.Writer
