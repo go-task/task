@@ -22,6 +22,7 @@ type Compiler struct {
 	Dir            string
 	Entrypoint     string
 	UserWorkingDir string
+	TaskWorkingDir string
 
 	TaskfileEnv  *ast.Vars
 	TaskfileVars *ast.Vars
@@ -202,6 +203,7 @@ func (c *Compiler) getSpecialVars(t *ast.Task, call *Call) (map[string]string, e
 		"ROOT_TASKFILE":    filepathext.SmartJoin(c.Dir, c.Entrypoint),
 		"ROOT_DIR":         c.Dir,
 		"USER_WORKING_DIR": c.UserWorkingDir,
+		"TASK_WORKING_DIR": filepathext.SmartJoin(c.UserWorkingDir, c.TaskWorkingDir),
 		"TASK_VERSION":     version.GetVersion(),
 	}
 	if t != nil {
