@@ -120,7 +120,7 @@ func (e *Executor) setupTempDir() error {
 			Fingerprint: filepathext.SmartJoin(e.Dir, ".task"),
 		}
 	} else if filepath.IsAbs(tempDir) || strings.HasPrefix(tempDir, "~") {
-		tempDir, err := execext.Expand(tempDir)
+		tempDir, err := execext.ExpandLiteral(tempDir)
 		if err != nil {
 			return err
 		}
@@ -141,7 +141,7 @@ func (e *Executor) setupTempDir() error {
 	remoteDir := env.GetTaskEnv("REMOTE_DIR")
 	if remoteDir != "" {
 		if filepath.IsAbs(remoteDir) || strings.HasPrefix(remoteDir, "~") {
-			remoteTempDir, err := execext.Expand(remoteDir)
+			remoteTempDir, err := execext.ExpandLiteral(remoteDir)
 			if err != nil {
 				return err
 			}

@@ -106,7 +106,7 @@ func (node *GitNode) ResolveEntrypoint(entrypoint string) (string, error) {
 }
 
 func (node *GitNode) ResolveDir(dir string) (string, error) {
-	path, err := execext.Expand(dir)
+	path, err := execext.ExpandLiteral(dir)
 	if err != nil {
 		return "", err
 	}
