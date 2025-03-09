@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v3.42.0 - 2025-03-08
 
 - Made `--init` less verbose by default and respect `--silent` and `--verbose`
   flags (#2009, #2011 by @HeCorr).

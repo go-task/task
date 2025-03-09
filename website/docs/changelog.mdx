@@ -5,6 +5,89 @@ sidebar_position: 14
 
 # Changelog
 
+## v3.42.0 - 2025-03-08
+
+- Made `--init` less verbose by default and respect `--silent` and `--verbose`
+  flags (#2009, #2011 by @HeCorr).
+- `--init` now accepts a file name or directory as an argument (#2008, #2018 by
+  @HeCorr).
+- Fix a bug where an HTTP node's location was being mutated incorrectly (#2007
+  by @jeongukjae).
+- Fixed a bug where allowed values didn't work with dynamic var (#2032, #2033 by
+  @vmaerten).
+- Use only the relevant checker (timestamp or checksum) to improve performance
+  (#2029, #2031 by @vmaerten).
+- Print warnings when attempting to enable an inactive experiment or an active
+  experiment with an invalid value (#1979, #2049 by @pd93).
+- Refactored the experiments package and added tests (#2049 by @pd93).
+- Show allowed values when a variable with an enum is missing (#2027, #2052 by
+  @vmaerten).
+- Refactored how snippets in error work and added tests (#2068 by @pd93).
+- Fixed a bug where errors decoding commands were sometimes unhelpful (#2068 by
+  @pd93).
+- Fixed a bug in the Taskfile schema where `defer` statements in the shorthand
+  `cmds` syntax were not considered valid (#2068 by @pd93).
+- Refactored how task sorting functions work (#1798 by @pd93).
+- Added a new `.taskrc.yml` (or `.taskrc.yaml`) file to let users enable
+  experiments (similar to `.env`) (#1982 by @vmaerten).
+- Added new [Getting Started docs](https://taskfile.dev/getting-started) (#2086
+  by @pd93).
+- Allow `matrix` to use references to other variables (#2065, #2069 by @pd93).
+- Fixed a bug where, when a dynamic variable is provided, even if it is not
+  used, all other variables become unavailable in the templating system within
+  the include (#2092 by @vmaerten).
+
+#### Package API
+
+Unlike our CLI tool,
+[Task's package API is not currently stable](https://taskfile.dev/reference/package).
+In an effort to ease the pain of breaking changes for our users, we will be
+providing changelogs for our package API going forwards. The hope is that these
+changes will provide a better long-term experience for our users and allow to
+stabilize the API in the future. #121 now tracks this piece of work.
+
+- Bumped the minimum required Go version to 1.23 (#2059 by @pd93).
+- [`task.InitTaskfile`](https://pkg.go.dev/github.com/go-task/task/v3#InitTaskfile)
+  (#2011, ff8c913 by @HeCorr and @pd93)
+  - No longer accepts an `io.Writer` (output is now the caller's
+    responsibility).
+  - The path argument can now be a filename OR a directory.
+  - The function now returns the full path of the generated file.
+- [`TaskfileDecodeError.WithFileInfo`](https://pkg.go.dev/github.com/go-task/task/v3/errors#TaskfileDecodeError.WithFileInfo)
+  now accepts a string instead of the arguments required to generate a snippet
+  (#2068 by @pd93).
+  - The caller is now expected to create the snippet themselves (see below).
+- [`TaskfileSnippet`](https://pkg.go.dev/github.com/go-task/task/v3/taskfile#Snippet)
+  and related code moved from the `errors` package to the `taskfile` package
+  (#2068 by @pd93).
+- Renamed `TaskMissingRequiredVars` to
+  [`TaskMissingRequiredVarsError`](https://pkg.go.dev/github.com/go-task/task/v3/errors#TaskMissingRequiredVarsError)
+  (#2052 by @vmaerten).
+- Renamed `TaskNotAllowedVars` to
+  [`TaskNotAllowedVarsError`](https://pkg.go.dev/github.com/go-task/task/v3/errors#TaskNotAllowedVarsError)
+  (#2052 by @vmaerten).
+- The
+  [`taskfile.Reader`](https://pkg.go.dev/github.com/go-task/task/v3/taskfile#Reader)
+  is now constructed using the functional options pattern (#2082 by @pd93).
+- Removed our internal `logger.Logger` from the entire `taskfile` package (#2082
+  by @pd93).
+  - Users are now expected to pass a custom debug/prompt functions into
+    [`taskfile.Reader`](https://pkg.go.dev/github.com/go-task/task/v3/taskfile#Reader)
+    if they want this functionality by using the new
+    [`WithDebugFunc`](https://pkg.go.dev/github.com/go-task/task/v3/taskfile#WithDebugFunc)
+    and
+    [`WithPromptFunc`](https://pkg.go.dev/github.com/go-task/task/v3/taskfile#WithPromptFunc)
+    functional options.
+- Remove `Range` functions in the `taskfile/ast` package in favour of new
+  iterator functions (#1798 by @pd93).
+- `ast.Call` was moved from the `taskfile/ast` package to the main `task`
+  package (#2084 by @pd93).
+- `ast.Tasks.FindMatchingTasks` was moved from the `taskfile/ast` package to the
+  `task.Executor.FindMatchingTasks` in the main `task` package (#2084 by @pd93).
+- The `Compiler` and its `GetVariables` and `FastGetVariables` methods were
+  moved from the `internal/compiler` package to the main `task` package (#2084
+  by @pd93).
+
 ## v3.41.0 - 2025-01-18
 
 - Fixed an issue where dynamic variables were not properly logged in verbose
