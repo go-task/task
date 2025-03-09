@@ -23,6 +23,7 @@ import (
 	"github.com/go-task/task/v3/internal/templater"
 	"github.com/go-task/task/v3/taskfile/ast"
 
+	"github.com/puzpuzpuz/xsync/v3"
 	"github.com/sajari/fuzzy"
 	"golang.org/x/sync/errgroup"
 	"mvdan.cc/sh/v3/interp"
@@ -83,6 +84,7 @@ type Executor struct {
 	mkdirMutexMap        map[string]*sync.Mutex
 	executionHashes      map[string]context.Context
 	executionHashesMutex sync.Mutex
+	watchedDirs          *xsync.MapOf[string, bool]
 }
 
 // MatchingTask represents a task that matches a given call. It includes the
