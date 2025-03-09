@@ -43,7 +43,7 @@ archives:
       - completion/**/*
     format_overrides:
       - goos: windows
-        format: zip
+        formats: [zip]
 
 release:
   draft: true
