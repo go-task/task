@@ -1352,7 +1352,7 @@ func TestIncludesIncorrect(t *testing.T) {
 
 	err := e.Setup()
 	require.Error(t, err)
-	assert.Contains(t, err.Error(), "Failed to parse testdata/includes_incorrect/incomplete.yml:", err.Error())
+	assert.Contains(t, err.Error(), "Taskfile \"testdata/includes_incorrect/incomplete.yml\" is not valid", err.Error())
 }
 
 func TestIncludesEmptyMain(t *testing.T) {

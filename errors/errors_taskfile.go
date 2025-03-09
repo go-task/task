@@ -47,7 +47,7 @@ type TaskfileInvalidError struct {
 }
 
 func (err TaskfileInvalidError) Error() string {
-	return fmt.Sprintf("task: Failed to parse %s:\n%v", err.URI, err.Err)
+	return fmt.Sprintf("task: Taskfile %q is not valid (failed parsing).\n%v", err.URI, err.Err)
 }
 
 func (err TaskfileInvalidError) Code() int {
