@@ -11,13 +11,14 @@ var (
 )
 
 func init() {
-	info, ok := debug.ReadBuildInfo()
-	if !ok || info.Main.Version == "(devel)" || info.Main.Version == "" {
-		version = "unknown"
-	} else {
-		if version == "" {
+	if version == "" {
+		info, ok := debug.ReadBuildInfo()
+		if !ok || info.Main.Version == "(devel)" || info.Main.Version == "" {
+			version = "unknown"
+		} else {
 			version = info.Main.Version
 		}
+
 		if sum == "" {
 			sum = info.Main.Sum
 		}
