@@ -15,7 +15,7 @@
 - Print warnings when attempting to enable an inactive experiment or an active
   experiment with an invalid value (#1979, #2049 by @pd93).
 - Refactored the experiments package and added tests (#2049 by @pd93).
-- Show allowed values when a variable with an enum is missing (#2027, 2052 by
+- Show allowed values when a variable with an enum is missing (#2027, #2052 by
   @vmaerten).
 - Refactored how snippets in error work and added tests (#2068 by @pd93).
 - Fixed a bug where errors decoding commands were sometimes unhelpful (#2068 by
