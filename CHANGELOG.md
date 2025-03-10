@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v3.42.1 - 2025-03-10
 
 - Fixed a bug where some special variables caused a type error when used global
   variables (#2106, #2107 by @pd93).
