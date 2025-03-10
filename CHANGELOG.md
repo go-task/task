@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Fixed a bug where some special variables caused a type error when used global
+  variables (#2106, #2107 by @pd93).
+
 ## v3.42.0 - 2025-03-08
 
 - Made `--init` less verbose by default and respect `--silent` and `--verbose`
