@@ -34,7 +34,6 @@ func (t *Tracer) ToMermaidOutput() string {
     title Task Execution Timeline
     dateFormat YYYY-MM-DD HH:mm:ss.SSS
 	axisFormat %X
-    section Tasks
 `
 	dateFormat := "2006-01-02 15:04:05.000"
 	for _, span := range t.spans {
@@ -42,8 +41,8 @@ func (t *Tracer) ToMermaidOutput() string {
 			continue
 		}
 		name := strings.Replace(span.name, ":", "|", -1)
-		duration := span.endedAt.Sub(span.startedAt)
-		out += fmt.Sprintf("    %s-%v :done, %s, %s\n", name, duration, span.startedAt.Format(dateFormat), span.endedAt.Format(dateFormat))
+		duration := span.endedAt.Sub(span.startedAt).Truncate(time.Millisecond * 100)
+		out += fmt.Sprintf("    %s [%v] :done, %s, %s\n", name, duration, span.startedAt.Format(dateFormat), span.endedAt.Format(dateFormat))
 	}
 
 	return out
