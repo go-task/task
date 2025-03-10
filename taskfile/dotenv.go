@@ -12,10 +12,6 @@ import (
 )
 
 func Dotenv(vars *ast.Vars, tf *ast.Taskfile, dir string) (*ast.Vars, error) {
-	if len(tf.Dotenv) == 0 {
-		return nil, nil
-	}
-
 	env := ast.NewVars()
 	cache := &templater.Cache{Vars: vars}
 
