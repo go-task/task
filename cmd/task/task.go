@@ -222,7 +222,13 @@ func run() error {
 	globals.Set("CLI_SILENT", ast.Var{Value: flags.Silent})
 	globals.Set("CLI_VERBOSE", ast.Var{Value: flags.Verbose})
 	globals.Set("CLI_OFFLINE", ast.Var{Value: flags.Offline})
-	e.Taskfile.Vars.Merge(globals, nil)
+	// Merge the existing Taskfile vars into global, and the replace with
+	// the resultant list (order is important) thus ensuring that templating
+	// will be able to resove the Taskfile vars against the CLI special vars.
+	globals.Merge(e.Taskfile.Vars, nil)
+	e.Taskfile.Vars = globals
+	// Also update the compiler reference with the new Vars object.
+	e.Compiler.TaskfileVars = e.Taskfile.Vars
 
 	if !flags.Watch {
 		e.InterceptInterruptSignals()
