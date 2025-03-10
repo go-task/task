@@ -209,9 +209,16 @@ func (c *Compiler) getSpecialVars(t *ast.Task, call *Call) (map[string]string, e
 		allVars["TASK_DIR"] = filepathext.SmartJoin(c.Dir, t.Dir)
 		allVars["TASKFILE"] = t.Location.Taskfile
 		allVars["TASKFILE_DIR"] = filepath.Dir(t.Location.Taskfile)
+	} else {
+		allVars["TASK"] = ""
+		allVars["TASK_DIR"] = ""
+		allVars["TASKFILE"] = ""
+		allVars["TASKFILE_DIR"] = ""
 	}
 	if call != nil {
 		allVars["ALIAS"] = call.Task
+	} else {
+		allVars["ALIAS"] = ""
 	}
 
 	return allVars, nil
