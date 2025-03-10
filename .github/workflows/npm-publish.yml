@@ -1,0 +1,39 @@
+name: Test
+
+on:
+  push:
+    tags:
+      - v*
+    branches:
+      - main
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: 1.21.x
+        id: go
+
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v3
+
+      - name: Download Go modules
+        run: go mod download
+        env:
+          GOPROXY: https://proxy.golang.org
+
+      - name: Build
+        run: go build -o ./bin/task -v ./cmd/task
+
+      - name: publish
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '18.12.1'
+          registry-url: 'https://registry.npmjs.org'
+      - run: cd ./packages/task-release && npm run release
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
