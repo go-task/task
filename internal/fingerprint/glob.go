@@ -4,8 +4,6 @@ import (
 	"os"
 	"sort"
 
-	"github.com/mattn/go-zglob"
-
 	"github.com/go-task/task/v3/internal/execext"
 	"github.com/go-task/task/v3/internal/filepathext"
 	"github.com/go-task/task/v3/taskfile/ast"
@@ -36,12 +34,7 @@ func Glob(dir string, g string) ([]string, error) {
 	files := make([]string, 0)
 	g = filepathext.SmartJoin(dir, g)
 
-	g, err := execext.Expand(g)
-	if err != nil {
-		return nil, err
-	}
-
-	fs, err := zglob.GlobFollowSymlinks(g)
+	fs, err := execext.ExpandFields(g)
 	if err != nil {
 		return nil, err
 	}
