@@ -209,6 +209,10 @@ func (e *Executor) setupCompiler() error {
 }
 
 func (e *Executor) readDotEnvFiles() error {
+	if e.Taskfile == nil || len(e.Taskfile.Dotenv) == 0 {
+		return nil
+	}
+
 	if e.Taskfile.Version.LessThan(ast.V3) {
 		return nil
 	}
