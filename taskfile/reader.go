@@ -213,7 +213,7 @@ func (r *Reader) include(node Node) error {
 				Aliases:        include.Aliases,
 				AdvancedImport: include.AdvancedImport,
 				Excludes:       include.Excludes,
-				Vars:           include.Vars,
+				Vars:           templater.ReplaceVars(include.Vars, cache),
 			}
 			if err := cache.Err(); err != nil {
 				return err
