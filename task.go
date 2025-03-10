@@ -3,6 +3,7 @@ package task
 import (
 	"context"
 	"fmt"
+	"github.com/go-task/task/v3/internal/tracing"
 	"io"
 	"os"
 	"runtime"
@@ -83,6 +84,8 @@ type Executor struct {
 	mkdirMutexMap        map[string]*sync.Mutex
 	executionHashes      map[string]context.Context
 	executionHashesMutex sync.Mutex
+
+	tracer tracing.Tracer
 }
 
 // MatchingTask represents a task that matches a given call. It includes the
@@ -144,6 +147,9 @@ func (e *Executor) Run(ctx context.Context, calls ...*Call) error {
 			}
 		}
 	}
+	defer func() {
+		e.Logger.VerboseErrf(logger.Magenta, "%s\n", e.tracer.ToMermaidOutput())
+	}()
 	if err := g.Wait(); err != nil {
 		return err
 	}
@@ -210,6 +216,7 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) error {
 		if err := e.runDeps(ctx, t); err != nil {
 			return err
 		}
+		tracerSpan := e.tracer.Start(t.Name())
 
 		startedAt := time.Now()
 
@@ -297,6 +304,7 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) error {
 		taskDuration := time.Since(startedAt)
 
 		e.Logger.VerboseErrf(logger.Magenta, "task: %q finished in %v\n", t.Name(), taskDuration)
+		tracerSpan.Stop()
 		return nil
 	})
 }
