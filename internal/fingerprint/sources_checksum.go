@@ -28,52 +28,73 @@ func NewChecksumChecker(tempDir string, dry bool) *ChecksumChecker {
 	}
 }
 
-func (checker *ChecksumChecker) IsUpToDate(t *ast.Task) (bool, error) {
-	if len(t.Sources) == 0 {
-		return false, nil
+func (checker *ChecksumChecker) IsUpToDate(t *ast.Task) (bool, string, error) {
+	if len(t.Sources) == 0 && len(t.Generates) == 0 {
+		return false, "", nil
 	}
 
 	checksumFile := checker.checksumFilePath(t)
 
 	data, _ := os.ReadFile(checksumFile)
-	oldHash := strings.TrimSpace(string(data))
+	oldHashes := strings.TrimSpace(string(data))
+	oldSourcesHash, oldGeneratesdHash, _ := strings.Cut(oldHashes, "\n")
 
-	newHash, err := checker.checksum(t)
+	newSourcesHash, err := checker.checksum(t, t.Sources)
 	if err != nil {
-		return false, nil
+		return false, "", err
 	}
 
-	if !checker.dry && oldHash != newHash {
-		_ = os.MkdirAll(filepathext.SmartJoin(checker.tempDir, "checksum"), 0o755)
-		if err = os.WriteFile(checksumFile, []byte(newHash+"\n"), 0o644); err != nil {
-			return false, err
-		}
+	newGeneratesHash, err := checker.checksum(t, t.Generates)
+	if err != nil {
+		return false, "", err
 	}
 
-	if len(t.Generates) > 0 {
-		// For each specified 'generates' field, check whether the files actually exist
-		for _, g := range t.Generates {
-			if g.Negate {
-				continue
-			}
-			generates, err := Glob(t.Dir, g.Glob)
-			if os.IsNotExist(err) {
-				return false, nil
-			}
-			if err != nil {
-				return false, err
-			}
-			if len(generates) == 0 {
-				return false, nil
-			}
-		}
+	return oldSourcesHash == newSourcesHash && oldGeneratesdHash == newGeneratesHash, newSourcesHash, nil
+}
+
+func (checker *ChecksumChecker) SetUpToDate(t *ast.Task, sourceHash string) error {
+	if len(t.Sources) == 0 && len(t.Generates) == 0 {
+		return nil
 	}
 
-	return oldHash == newHash, nil
+	if checker.dry {
+		return nil
+	}
+
+	newSourcesHash, err := checker.checksum(t, t.Sources)
+	if err != nil {
+		return err
+	}
+
+	checksumFile := checker.checksumFilePath(t)
+
+	if sourceHash != "" && newSourcesHash != sourceHash {
+		// sources have changed since the task was executed, remove the checksum file
+		// since the next execution will have a different checksum
+		os.Remove(checksumFile)
+		return nil
+	}
+
+	newGeneratesHash, err := checker.checksum(t, t.Generates)
+	if err != nil {
+		return err
+	}
+
+	_ = os.MkdirAll(filepathext.SmartJoin(checker.tempDir, "checksum"), 0o755)
+	if err = os.WriteFile(checksumFile, []byte(newSourcesHash+"\n"+newGeneratesHash+"\n"), 0o644); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (checker *ChecksumChecker) Value(t *ast.Task) (any, error) {
-	return checker.checksum(t)
+	c1, err := checker.checksum(t, t.Sources)
+	if err != nil {
+		return c1, err
+	}
+	c2, err := checker.checksum(t, t.Generates)
+	return c1 + "\n" + c2, err
 }
 
 func (checker *ChecksumChecker) OnError(t *ast.Task) error {
@@ -87,8 +108,8 @@ func (*ChecksumChecker) Kind() string {
 	return "checksum"
 }
 
-func (c *ChecksumChecker) checksum(t *ast.Task) (string, error) {
-	sources, err := Globs(t.Dir, t.Sources)
+func (c *ChecksumChecker) checksum(t *ast.Task, globs []*ast.Glob) (string, error) {
+	sources, err := Globs(t.Dir, globs)
 	if err != nil {
 		return "", err
 	}
@@ -97,19 +118,31 @@ func (c *ChecksumChecker) checksum(t *ast.Task) (string, error) {
 	buf := make([]byte, 128*1024)
 	for _, f := range sources {
 		// also sum the filename, so checksum changes for renaming a file
-		if _, err := io.CopyBuffer(h, strings.NewReader(filepath.Base(f)), buf); err != nil {
-			return "", err
+		if rel, err := filepath.Rel(t.Dir, f); err == nil {
+			h.WriteString(rel)
+		} else {
+			// couldn't make a relative path, use the full path to be safe
+			h.WriteString(f)
 		}
-		f, err := os.Open(f)
-		if err != nil {
-			return "", err
+		// if we have a symlink here: we hash the link and *not* the target content
+		if fi, err := os.Stat(f); err == nil && fi.Mode()&os.ModeSymlink != 0 {
+			link, err := os.Readlink(f)
+			if err != nil {
+				return "", err
+			}
+			h.WriteString(link)
+		} else {
+			f, err := os.Open(f)
+			if err != nil {
+				return "", err
+			}
+			_, err = io.CopyBuffer(h, f, buf)
+			f.Close()
+			if err != nil {
+				return "", err
+			}
 		}
-		if _, err = io.CopyBuffer(h, f, buf); err != nil {
-			return "", err
-		}
-		f.Close()
 	}
-
 	hash := h.Sum128()
 	return fmt.Sprintf("%x%x", hash.Hi, hash.Lo), nil
 }
