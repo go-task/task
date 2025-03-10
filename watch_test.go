@@ -17,17 +17,23 @@ import (
 
 	"github.com/go-task/task/v3"
 	"github.com/go-task/task/v3/internal/filepathext"
-	"github.com/go-task/task/v3/taskfile/ast"
 )
 
-func TestFileWatcherInterval(t *testing.T) {
-	const dir = "testdata/watcher_interval"
+func TestFileWatch(t *testing.T) {
+	const dir = "testdata/watch"
+	_ = os.RemoveAll(filepathext.SmartJoin(dir, ".task"))
+	_ = os.RemoveAll(filepathext.SmartJoin(dir, "src"))
+
 	expectedOutput := strings.TrimSpace(`
 task: Started watching for tasks: default
 task: [default] echo "Hello, World!"
 Hello, World!
+task: task "default" finished running
 task: [default] echo "Hello, World!"
 Hello, World!
+task: task "default" finished running
+task: Task "default" is up to date
+task: task "default" finished running
 	`)
 
 	var buff bytes.Buffer
@@ -58,7 +64,7 @@ Hello, World!
 			case <-ctx.Done():
 				return
 			default:
-				err := e.Run(ctx, &ast.Call{Task: "default"})
+				err := e.Run(ctx, &task.Call{Task: "default"})
 				if err != nil {
 					return
 				}
@@ -71,14 +77,9 @@ Hello, World!
 	if err != nil {
 		t.Fatal(err)
 	}
-	time.Sleep(700 * time.Millisecond)
+	time.Sleep(150 * time.Millisecond)
 	cancel()
 	assert.Equal(t, expectedOutput, strings.TrimSpace(buff.String()))
-	buff.Reset()
-	err = os.RemoveAll(filepathext.SmartJoin(dir, ".task"))
-	require.NoError(t, err)
-	err = os.RemoveAll(filepathext.SmartJoin(dir, "src"))
-	require.NoError(t, err)
 }
 
 func TestShouldIgnoreFile(t *testing.T) {
