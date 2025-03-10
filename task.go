@@ -206,10 +206,12 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) error {
 	defer release()
 
 	return e.startExecution(ctx, t, func(ctx context.Context) error {
-		e.Logger.VerboseErrf(logger.Magenta, "task: %q started\n", call.Task)
+		e.Logger.VerboseErrf(logger.Magenta, "task: %q started\n", t.Name())
 		if err := e.runDeps(ctx, t); err != nil {
 			return err
 		}
+
+		startedAt := time.Now()
 
 		skipFingerprinting := e.ForceAll || (!call.Indirect && e.Force)
 		if !skipFingerprinting {
@@ -291,7 +293,10 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) error {
 				return &errors.TaskRunError{TaskName: t.Task, Err: err}
 			}
 		}
-		e.Logger.VerboseErrf(logger.Magenta, "task: %q finished\n", call.Task)
+
+		taskDuration := time.Since(startedAt)
+
+		e.Logger.VerboseErrf(logger.Magenta, "task: %q finished in %v\n", t.Name(), taskDuration)
 		return nil
 	})
 }
