@@ -3,13 +3,10 @@ package task
 import (
 	"context"
 	"fmt"
-	"io"
 	"os"
 	"runtime"
 	"slices"
-	"sync"
 	"sync/atomic"
-	"time"
 
 	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/env"
@@ -23,7 +20,6 @@ import (
 	"github.com/go-task/task/v3/internal/templater"
 	"github.com/go-task/task/v3/taskfile/ast"
 
-	"github.com/sajari/fuzzy"
 	"golang.org/x/sync/errgroup"
 	"mvdan.cc/sh/v3/interp"
 )
@@ -33,57 +29,6 @@ const (
 	// This exists to prevent infinite loops on cyclic dependencies
 	MaximumTaskCall = 1000
 )
-
-type TempDir struct {
-	Remote      string
-	Fingerprint string
-}
-
-// Executor executes a Taskfile
-type Executor struct {
-	Taskfile *ast.Taskfile
-
-	Dir         string
-	Entrypoint  string
-	TempDir     TempDir
-	Force       bool
-	ForceAll    bool
-	Insecure    bool
-	Download    bool
-	Offline     bool
-	Timeout     time.Duration
-	Watch       bool
-	Verbose     bool
-	Silent      bool
-	AssumeYes   bool
-	AssumeTerm  bool // Used for testing
-	Dry         bool
-	Summary     bool
-	Parallel    bool
-	Color       bool
-	Concurrency int
-	Interval    time.Duration
-
-	Stdin  io.Reader
-	Stdout io.Writer
-	Stderr io.Writer
-
-	Logger             *logger.Logger
-	Compiler           *Compiler
-	Output             output.Output
-	OutputStyle        ast.Output
-	TaskSorter         sort.Sorter
-	UserWorkingDir     string
-	EnableVersionCheck bool
-
-	fuzzyModel *fuzzy.Model
-
-	concurrencySemaphore chan struct{}
-	taskCallCount        map[string]*int32
-	mkdirMutexMap        map[string]*sync.Mutex
-	executionHashes      map[string]context.Context
-	executionHashesMutex sync.Mutex
-}
 
 // MatchingTask represents a task that matches a given call. It includes the
 // task itself and a list of wildcards that were matched.

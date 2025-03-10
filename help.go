@@ -41,20 +41,6 @@ func (o ListOptions) ShouldListTasks() bool {
 	return o.ListOnlyTasksWithDescriptions || o.ListAllTasks
 }
 
-// Validate validates that the collection of list-related options are in a valid configuration
-func (o ListOptions) Validate() error {
-	if o.ListOnlyTasksWithDescriptions && o.ListAllTasks {
-		return fmt.Errorf("task: cannot use --list and --list-all at the same time")
-	}
-	if o.FormatTaskListAsJSON && !o.ShouldListTasks() {
-		return fmt.Errorf("task: --json only applies to --list or --list-all")
-	}
-	if o.NoStatus && !o.FormatTaskListAsJSON {
-		return fmt.Errorf("task: --no-status only applies to --json with --list or --list-all")
-	}
-	return nil
-}
-
 // Filters returns the slice of FilterFunc which filters a list
 // of ast.Task according to the given ListOptions
 func (o ListOptions) Filters() []FilterFunc {
