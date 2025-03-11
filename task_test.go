@@ -33,20 +33,33 @@ import (
 )
 
 type (
-	PostProcessFn  func(*testing.T, []byte) []byte
+	// A PostProcessFn is a function that can be applied to the output of a test
+	// fixture before the file is written.
+	PostProcessFn func(*testing.T, []byte) []byte
+	// A TaskTestOption is a function that configures a [TaskTest].
 	TaskTestOption func(*TaskTest)
-	TaskTest       struct {
-		name           string
-		task           string
-		vars           map[string]any
-		executorOpts   []task.ExecutorOption
-		experiments    map[*experiments.Experiment]int
-		postProcessFns []PostProcessFn
-		wantSetupError bool
-		wantRunError   bool
+	// A TaskTest is a test wrapper around a [task.Executor] to make it easy to
+	// write tests for tasks. See [NewTaskTest] for information on creating and
+	// running TaskTests. These tests use fixture files to assert whether the
+	// result of a task is correct. If Task's behavior has been changed, the
+	// fixture files can be updated by running `task gen:fixtures`.
+	TaskTest struct {
+		name            string
+		task            string
+		vars            map[string]any
+		input           string
+		executorOpts    []task.ExecutorOption
+		experiments     map[*experiments.Experiment]int
+		postProcessFns  []PostProcessFn
+		wantSetupError  bool
+		wantRunError    bool
+		wantStatusError bool
 	}
 )
 
+// NewTaskTest sets up a new [task.Executor] with the given options and runs a
+// task with the given [TaskTestOption]s. The output of the task is written to a
+// set of fixture files depending on the configuration of the test.
 func NewTaskTest(t *testing.T, opts ...TaskTestOption) {
 	t.Helper()
 	tt := &TaskTest{
@@ -75,56 +88,95 @@ func NewTaskTest(t *testing.T, opts ...TaskTestOption) {
 
 // Functional options
 
+// WithName gives the test fixture output a name. This should be used when
+// running multiple [TaskTest]s in a single test function.
 func WithName(name string) TaskTestOption {
 	return func(tt *TaskTest) {
 		tt.name = name
 	}
 }
 
+// WithTask sets the name of the task to run. This should be used when the task
+// to run is not the default task.
 func WithTask(task string) TaskTestOption {
 	return func(tt *TaskTest) {
 		tt.task = task
 	}
 }
 
+// WithVar sets a variable to be passed to the task. This can be called multiple
+// times to set more than one variable.
 func WithVar(key string, value any) TaskTestOption {
 	return func(tt *TaskTest) {
 		tt.vars[key] = value
 	}
 }
 
+// WithInput tells the test to create a reader with the given input. This can be
+// used to simulate user input when a task requires it.
+func WithInput(input string) TaskTestOption {
+	return func(tt *TaskTest) {
+		tt.input = input
+	}
+}
+
+// WithExecutorOptions sets the [task.ExecutorOption]s to be used when creating
+// [task.Executor].
 func WithExecutorOptions(executorOpts ...task.ExecutorOption) TaskTestOption {
 	return func(tt *TaskTest) {
 		tt.executorOpts = append(tt.executorOpts, executorOpts...)
 	}
 }
 
+// WithExperiment sets an experiment to be enabled for the test. This can be
+// called multiple times to enable more than one experiment.
 func WithExperiment(experiment *experiments.Experiment, value int) TaskTestOption {
 	return func(tt *TaskTest) {
 		tt.experiments[experiment] = value
 	}
 }
 
+// WithPostProcessFn adds a [PostProcessFn] function to the test. Post-process
+// functions are run on the output of the task before a fixture is created. This
+// can be used to remove absolute paths, sort lines, etc. This can be called
+// multiple times to add more than one post-process function.
 func WithPostProcessFn(fn PostProcessFn) TaskTestOption {
 	return func(tt *TaskTest) {
 		tt.postProcessFns = append(tt.postProcessFns, fn)
 	}
 }
 
+// WithSetupError sets the test to expect an error during the setup phase of the
+// task execution. A fixture will be created with the output of any errors.
 func WithSetupError() TaskTestOption {
 	return func(tt *TaskTest) {
 		tt.wantSetupError = true
 	}
 }
 
+// WithRunError sets the test to expect an error during the run phase of the
+// task execution. A fixture will be created with the output of any errors.
 func WithRunError() TaskTestOption {
 	return func(tt *TaskTest) {
 		tt.wantRunError = true
 	}
 }
 
+// WithStatusError tells the test to make an additional call to
+// [task.Executor.Status] after the task has been run. A fixture will be created
+// with the output of any errors.
+func WithStatusError() TaskTestOption {
+	return func(tt *TaskTest) {
+		tt.wantStatusError = true
+	}
+}
+
 // Post-process functions
 
+// PPRemoveAbsolutePaths removes any absolute paths from the output of the task.
+// This is useful when the task output contains paths that are can be different
+// in different environments such as home directories. The function looks for
+// any paths that contain the current working directory and truncates them.
 func PPRemoveAbsolutePaths(t *testing.T, b []byte) []byte {
 	t.Helper()
 	wd, err := os.Getwd()
@@ -132,6 +184,9 @@ func PPRemoveAbsolutePaths(t *testing.T, b []byte) []byte {
 	return bytes.ReplaceAll(b, []byte(wd), nil)
 }
 
+// PPSortedLines sorts the lines of the output of the task. This is useful when
+// the order of the output is not important, but the output is expected to be
+// the same each time the task is run (e.g. when running tasks in parallel).
 func PPSortedLines(t *testing.T, b []byte) []byte {
 	t.Helper()
 	lines := strings.Split(strings.TrimSpace(string(b)), "\n")
@@ -141,16 +196,21 @@ func PPSortedLines(t *testing.T, b []byte) []byte {
 
 // Helpers
 
+// goldenFileName makes the file path for fixture files safe for all well-known
+// operating systems. Windows in particular has a lot of restrictions the
+// characters that can be used in file paths.
 func goldenFileName(t *testing.T) string {
 	t.Helper()
 	name := t.Name()
-	// Make the path safe for windows/linux
 	for _, c := range []string{` `, `<`, `>`, `:`, `"`, `/`, `\`, `|`, `?`, `*`} {
 		name = strings.ReplaceAll(name, c, "-")
 	}
 	return name
 }
 
+// writeFixture writes a fixture file for the test. The fixture file is created
+// using the [goldie.Goldie] package. The fixture file is created with the
+// output of the task, after any post-process functions have been applied.
 func (tt *TaskTest) writeFixture(
 	t *testing.T,
 	g *goldie.Goldie,
@@ -166,6 +226,8 @@ func (tt *TaskTest) writeFixture(
 	g.Assert(t, goldenFileName, b)
 }
 
+// writeFixtureBuffer ir a wrapper for writing the main output of the task to a
+// fixture file.
 func (tt *TaskTest) writeFixtureBuffer(
 	t *testing.T,
 	g *goldie.Goldie,
@@ -175,6 +237,8 @@ func (tt *TaskTest) writeFixtureBuffer(
 	tt.writeFixture(t, g, goldenFileName(t), buff.Bytes())
 }
 
+// writeFixtureErrSetup is a wrapper for writing the output of an error during
+// the setup phase of the task to a fixture file.
 func (tt *TaskTest) writeFixtureErrSetup(
 	t *testing.T,
 	g *goldie.Goldie,
@@ -184,6 +248,8 @@ func (tt *TaskTest) writeFixtureErrSetup(
 	tt.writeFixture(t, g, fmt.Sprintf("%s-err-setup", goldenFileName(t)), []byte(err.Error()))
 }
 
+// writeFixtureErrRun is a wrapper for writing the output of an error during the
+// run phase of the task to a fixture file.
 func (tt *TaskTest) writeFixtureErrRun(
 	t *testing.T,
 	g *goldie.Goldie,
@@ -193,6 +259,19 @@ func (tt *TaskTest) writeFixtureErrRun(
 	tt.writeFixture(t, g, fmt.Sprintf("%s-err-run", goldenFileName(t)), []byte(err.Error()))
 }
 
+// writeFixtureStatus is a wrapper for writing the output of an error when
+// making an additional call to [task.Executor.Status] to a fixture file.
+func (tt *TaskTest) writeFixtureStatus(
+	t *testing.T,
+	g *goldie.Goldie,
+	status string,
+) {
+	t.Helper()
+	tt.writeFixture(t, g, fmt.Sprintf("%s-err-status", goldenFileName(t)), []byte(status))
+}
+
+// run is the main function for running the test. It sets up the task executor,
+// runs the task, and writes the output to a fixture file.
 func (tt *TaskTest) run(t *testing.T) {
 	t.Helper()
 	f := func(t *testing.T) {
@@ -204,6 +283,14 @@ func (tt *TaskTest) run(t *testing.T) {
 			task.ExecutorWithStdout(&buf),
 			task.ExecutorWithStderr(&buf),
 		)
+
+		// If the test has input, create a reader for it and add it to the
+		// executor options
+		if tt.input != "" {
+			var reader bytes.Buffer
+			reader.WriteString(tt.input)
+			opts = append(opts, task.ExecutorWithStdin(&reader))
+		}
 
 		// Set up the task executor
 		e := task.NewExecutor(opts...)
@@ -242,6 +329,13 @@ func (tt *TaskTest) run(t *testing.T) {
 			return
 		} else {
 			require.NoError(t, err)
+		}
+
+		// If the status flag is set, run the status check
+		if tt.wantStatusError {
+			if err := e.Status(ctx, call); err != nil {
+				tt.writeFixtureStatus(t, g, err.Error())
+			}
 		}
 
 		tt.writeFixtureBuffer(t, g, buf)
@@ -825,140 +919,82 @@ func TestStatusChecksum(t *testing.T) { // nolint:paralleltest // cannot run in 
 func TestAlias(t *testing.T) {
 	t.Parallel()
 
-	const dir = "testdata/alias"
-
-	data, err := os.ReadFile(filepathext.SmartJoin(dir, "alias.txt"))
-	require.NoError(t, err)
-
-	var buff bytes.Buffer
-	e := task.NewExecutor(
-		task.ExecutorWithDir(dir),
-		task.ExecutorWithStdout(&buff),
-		task.ExecutorWithStderr(&buff),
+	NewTaskTest(t,
+		WithName("alias"),
+		WithExecutorOptions(
+			task.ExecutorWithDir("testdata/alias"),
+		),
+		WithTask("f"),
 	)
-	require.NoError(t, e.Setup())
-	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "f"}))
-	assert.Equal(t, string(data), buff.String())
+
+	NewTaskTest(t,
+		WithName("duplicate alias"),
+		WithExecutorOptions(
+			task.ExecutorWithDir("testdata/alias"),
+		),
+		WithTask("x"),
+		WithRunError(),
+	)
+
+	NewTaskTest(t,
+		WithName("alias summary"),
+		WithExecutorOptions(
+			task.ExecutorWithDir("testdata/alias"),
+			task.ExecutorWithSummary(true),
+		),
+		WithTask("f"),
+	)
 }
 
-func TestDuplicateAlias(t *testing.T) {
+func TestLabel(t *testing.T) {
 	t.Parallel()
 
-	const dir = "testdata/alias"
-
-	var buff bytes.Buffer
-	e := task.NewExecutor(
-		task.ExecutorWithDir(dir),
-		task.ExecutorWithStdout(&buff),
-		task.ExecutorWithStderr(&buff),
+	NewTaskTest(t,
+		WithName("up to date"),
+		WithExecutorOptions(
+			task.ExecutorWithDir("testdata/label_uptodate"),
+		),
+		WithTask("foo"),
 	)
-	require.NoError(t, e.Setup())
-	require.Error(t, e.Run(context.Background(), &task.Call{Task: "x"}))
-	assert.Equal(t, "", buff.String())
-}
 
-func TestAliasSummary(t *testing.T) {
-	t.Parallel()
-
-	const dir = "testdata/alias"
-
-	data, err := os.ReadFile(filepathext.SmartJoin(dir, "alias-summary.txt"))
-	require.NoError(t, err)
-
-	var buff bytes.Buffer
-	e := task.NewExecutor(
-		task.ExecutorWithDir(dir),
-		task.ExecutorWithStdout(&buff),
-		task.ExecutorWithStderr(&buff),
-		task.ExecutorWithSummary(true),
+	NewTaskTest(t,
+		WithName("summary"),
+		WithExecutorOptions(
+			task.ExecutorWithDir("testdata/label_summary"),
+			task.ExecutorWithSummary(true),
+		),
+		WithTask("foo"),
 	)
-	require.NoError(t, e.Setup())
-	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "f"}))
-	assert.Equal(t, string(data), buff.String())
-}
 
-func TestLabelUpToDate(t *testing.T) {
-	t.Parallel()
-
-	const dir = "testdata/label_uptodate"
-
-	var buff bytes.Buffer
-	e := task.NewExecutor(
-		task.ExecutorWithDir(dir),
-		task.ExecutorWithStdout(&buff),
-		task.ExecutorWithStderr(&buff),
+	NewTaskTest(t,
+		WithName("status"),
+		WithExecutorOptions(
+			task.ExecutorWithDir("testdata/label_status"),
+		),
+		WithTask("foo"),
+		WithStatusError(),
 	)
-	require.NoError(t, e.Setup())
-	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "foo"}))
-	assert.Contains(t, buff.String(), "foobar")
-}
 
-func TestLabelSummary(t *testing.T) {
-	t.Parallel()
-
-	const dir = "testdata/label_summary"
-
-	var buff bytes.Buffer
-	e := task.NewExecutor(
-		task.ExecutorWithDir(dir),
-		task.ExecutorWithStdout(&buff),
-		task.ExecutorWithStderr(&buff),
-		task.ExecutorWithSummary(true),
+	NewTaskTest(t,
+		WithName("var"),
+		WithExecutorOptions(
+			task.ExecutorWithDir("testdata/label_var"),
+		),
+		WithTask("foo"),
 	)
-	require.NoError(t, e.Setup())
-	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "foo"}))
-	assert.Contains(t, buff.String(), "foobar")
-}
 
-func TestLabelInStatus(t *testing.T) {
-	t.Parallel()
-
-	const dir = "testdata/label_status"
-
-	e := task.NewExecutor(
-		task.ExecutorWithDir(dir),
+	NewTaskTest(t,
+		WithName("label in summary"),
+		WithExecutorOptions(
+			task.ExecutorWithDir("testdata/label_summary"),
+		),
+		WithTask("foo"),
 	)
-	require.NoError(t, e.Setup())
-	err := e.Status(context.Background(), &task.Call{Task: "foo"})
-	assert.ErrorContains(t, err, "foobar")
-}
-
-func TestLabelWithVariableExpansion(t *testing.T) {
-	t.Parallel()
-
-	const dir = "testdata/label_var"
-
-	var buff bytes.Buffer
-	e := task.NewExecutor(
-		task.ExecutorWithDir(dir),
-		task.ExecutorWithStdout(&buff),
-		task.ExecutorWithStderr(&buff),
-	)
-	require.NoError(t, e.Setup())
-	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "foo"}))
-	assert.Contains(t, buff.String(), "foobaz")
-}
-
-func TestLabelInSummary(t *testing.T) {
-	t.Parallel()
-
-	const dir = "testdata/label_summary"
-
-	var buff bytes.Buffer
-	e := task.NewExecutor(
-		task.ExecutorWithDir(dir),
-		task.ExecutorWithStdout(&buff),
-		task.ExecutorWithStderr(&buff),
-	)
-	require.NoError(t, e.Setup())
-	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "foo"}))
-	assert.Contains(t, buff.String(), "foobar")
 }
 
 func TestPromptInSummary(t *testing.T) {
 	t.Parallel()
 
-	const dir = "testdata/prompt"
 	tests := []struct {
 		name      string
 		input     string
@@ -976,28 +1012,19 @@ func TestPromptInSummary(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
-			var inBuff bytes.Buffer
-			var outBuff bytes.Buffer
-			var errBuff bytes.Buffer
-
-			inBuff.WriteString(test.input)
-
-			e := task.NewExecutor(
-				task.ExecutorWithDir(dir),
-				task.ExecutorWithStdin(&inBuff),
-				task.ExecutorWithStdout(&outBuff),
-				task.ExecutorWithStderr(&errBuff),
-			)
-			e.AssumeTerm = true
-			require.NoError(t, e.Setup())
-
-			err := e.Run(context.Background(), &task.Call{Task: "foo"})
-
-			if test.wantError {
-				require.Error(t, err)
-			} else {
-				require.NoError(t, err)
+			opts := []TaskTestOption{
+				WithName(test.name),
+				WithExecutorOptions(
+					task.ExecutorWithDir("testdata/prompt"),
+					task.ExecutorWithAssumeTerm(true),
+				),
+				WithTask("foo"),
+				WithInput(test.input),
 			}
+			if test.wantError {
+				opts = append(opts, WithRunError())
+			}
+			NewTaskTest(t, opts...)
 		})
 	}
 }
@@ -1005,67 +1032,40 @@ func TestPromptInSummary(t *testing.T) {
 func TestPromptWithIndirectTask(t *testing.T) {
 	t.Parallel()
 
-	const dir = "testdata/prompt"
-	var inBuff bytes.Buffer
-	var outBuff bytes.Buffer
-	var errBuff bytes.Buffer
-
-	inBuff.WriteString("y\n")
-
-	e := task.NewExecutor(
-		task.ExecutorWithDir(dir),
-		task.ExecutorWithStdin(&inBuff),
-		task.ExecutorWithStdout(&outBuff),
-		task.ExecutorWithStderr(&errBuff),
+	NewTaskTest(t,
+		WithExecutorOptions(
+			task.ExecutorWithDir("testdata/prompt"),
+			task.ExecutorWithAssumeTerm(true),
+		),
+		WithTask("bar"),
+		WithInput("y\n"),
 	)
-	e.AssumeTerm = true
-	require.NoError(t, e.Setup())
-
-	err := e.Run(context.Background(), &task.Call{Task: "bar"})
-	assert.Contains(t, outBuff.String(), "show-prompt")
-	require.NoError(t, err)
 }
 
 func TestPromptAssumeYes(t *testing.T) {
 	t.Parallel()
 
-	const dir = "testdata/prompt"
-	tests := []struct {
-		name      string
-		assumeYes bool
-	}{
-		{"--yes flag should skip prompt", true},
-		{"task should raise errors.TaskCancelledError", false},
-	}
+	NewTaskTest(t,
+		WithName("--yes flag should skip prompt"),
+		WithExecutorOptions(
+			task.ExecutorWithDir("testdata/prompt"),
+			task.ExecutorWithAssumeTerm(true),
+			task.ExecutorWithAssumeYes(true),
+		),
+		WithTask("foo"),
+		WithInput("\n"),
+	)
 
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			t.Parallel()
-
-			var inBuff bytes.Buffer
-			var outBuff bytes.Buffer
-			var errBuff bytes.Buffer
-
-			// always cancel the prompt so we can require.Error
-			inBuff.WriteByte('\n')
-
-			e := task.NewExecutor(
-				task.ExecutorWithDir(dir),
-				task.ExecutorWithStdin(&inBuff),
-				task.ExecutorWithStdout(&outBuff),
-				task.ExecutorWithStderr(&errBuff),
-			)
-			e.AssumeTerm = true
-			require.NoError(t, e.Setup())
-
-			err := e.Run(context.Background(), &task.Call{Task: "foo"})
-
-			if !test.assumeYes {
-				require.Error(t, err)
-				return
-			}
-		})
-	}
+	NewTaskTest(t,
+		WithName("task should raise errors.TaskCancelledError"),
+		WithExecutorOptions(
+			task.ExecutorWithDir("testdata/prompt"),
+			task.ExecutorWithAssumeTerm(true),
+		),
+		WithTask("foo"),
+		WithInput("\n"),
+		WithRunError(),
+	)
 }
 
 func TestNoLabelInList(t *testing.T) {
