@@ -19,7 +19,6 @@ import (
 	"github.com/go-task/task/v3/internal/filepathext"
 	"github.com/go-task/task/v3/internal/flags"
 	"github.com/go-task/task/v3/internal/logger"
-	"github.com/go-task/task/v3/internal/sort"
 	ver "github.com/go-task/task/v3/internal/version"
 	"github.com/go-task/task/v3/taskfile"
 	"github.com/go-task/task/v3/taskfile/ast"
@@ -58,9 +57,6 @@ func run() error {
 	if err := flags.Validate(); err != nil {
 		return err
 	}
-
-	dir := flags.Dir
-	entrypoint := flags.Entrypoint
 
 	if flags.Version {
 		fmt.Printf("Task version: %s\n", ver.GetVersionWithSum())
@@ -115,63 +111,15 @@ func run() error {
 		return nil
 	}
 
-	if flags.Global {
-		home, err := os.UserHomeDir()
-		if err != nil {
-			return fmt.Errorf("task: Failed to get user home directory: %w", err)
-		}
-		dir = home
-	}
-
 	if err := experiments.Validate(); err != nil {
 		log.Warnf("%s\n", err.Error())
 	}
 
-	var taskSorter sort.Sorter
-	switch flags.TaskSort {
-	case "none":
-		taskSorter = nil
-	case "alphanumeric":
-		taskSorter = sort.AlphaNumeric
-	}
-
-	e := task.Executor{
-		Dir:         dir,
-		Entrypoint:  entrypoint,
-		Force:       flags.Force,
-		ForceAll:    flags.ForceAll,
-		Insecure:    flags.Insecure,
-		Download:    flags.Download,
-		Offline:     flags.Offline,
-		Timeout:     flags.Timeout,
-		Watch:       flags.Watch,
-		Verbose:     flags.Verbose,
-		Silent:      flags.Silent,
-		AssumeYes:   flags.AssumeYes,
-		Dry:         flags.Dry || flags.Status,
-		Summary:     flags.Summary,
-		Parallel:    flags.Parallel,
-		Color:       flags.Color,
-		Concurrency: flags.Concurrency,
-		Interval:    flags.Interval,
-
-		Stdin:  os.Stdin,
-		Stdout: os.Stdout,
-		Stderr: os.Stderr,
-
-		OutputStyle:        flags.Output,
-		TaskSorter:         taskSorter,
-		EnableVersionCheck: true,
-
-		Tracer: tracing.NewTracer(flags.ExecutionTraceOutput),
-	}
-	listOptions := task.NewListOptions(flags.List, flags.ListAll, flags.ListJson, flags.NoStatus)
-	if err := listOptions.Validate(); err != nil {
-		return err
-	}
-
-	err := e.Setup()
-	if err != nil {
+	e := task.NewExecutor(
+		flags.WithExecutorOptions(),
+		task.ExecutorWithVersionCheck(true),
+	)
+	if err := e.Setup(); err != nil {
 		return err
 	}
 
@@ -189,11 +137,16 @@ func run() error {
 		return cache.Clear()
 	}
 
-	if (listOptions.ShouldListTasks()) && flags.Silent {
-		return e.ListTaskNames(flags.ListAll)
-	}
-
+	listOptions := task.NewListOptions(
+		flags.List,
+		flags.ListAll,
+		flags.ListJson,
+		flags.NoStatus,
+	)
 	if listOptions.ShouldListTasks() {
+		if flags.Silent {
+			return e.ListTaskNames(flags.ListAll)
+		}
 		foundTasks, err := e.ListTasks(listOptions)
 		if err != nil {
 			return err

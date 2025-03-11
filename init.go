@@ -1,27 +1,17 @@
 package task
 
 import (
+	_ "embed"
 	"os"
 
 	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/filepathext"
 )
 
-const DefaultTaskfile = `# https://taskfile.dev
-
-version: '3'
-
-vars:
-  GREETING: Hello, World!
-
-tasks:
-  default:
-    cmds:
-      - echo "{{.GREETING}}"
-    silent: true
-`
-
 const defaultTaskFilename = "Taskfile.yml"
+
+//go:embed taskfile/templates/default.yml
+var DefaultTaskfile string
 
 // InitTaskfile creates a new Taskfile at path.
 //

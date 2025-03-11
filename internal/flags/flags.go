@@ -9,9 +9,11 @@ import (
 
 	"github.com/spf13/pflag"
 
+	"github.com/go-task/task/v3"
 	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/env"
 	"github.com/go-task/task/v3/internal/experiments"
+	"github.com/go-task/task/v3/internal/sort"
 	"github.com/go-task/task/v3/taskfile/ast"
 )
 
@@ -148,8 +150,7 @@ func Validate() error {
 	}
 
 	if Global && Dir != "" {
-		log.Fatal("task: You can't set both --global and --dir")
-		return nil
+		return errors.New("task: You can't set both --global and --dir")
 	}
 
 	if Output.Name != "group" {
@@ -164,5 +165,65 @@ func Validate() error {
 		}
 	}
 
+	if List && ListAll {
+		return errors.New("task: cannot use --list and --list-all at the same time")
+	}
+
+	if ListJson && !List && !ListAll {
+		return errors.New("task: --json only applies to --list or --list-all")
+	}
+
+	if NoStatus && !ListJson {
+		return errors.New("task: --no-status only applies to --json with --list or --list-all")
+	}
+
 	return nil
+}
+
+// WithExecutorOptions is a special internal functional option that is used to pass flags
+// from the CLI directly to the executor.
+func WithExecutorOptions() task.ExecutorOption {
+	return func(e *task.Executor) {
+		// Set the sorter
+		var sorter sort.Sorter
+		switch TaskSort {
+		case "none":
+			sorter = nil
+		case "alphanumeric":
+			sorter = sort.AlphaNumeric
+		}
+
+		// Change the directory to the user's home directory if the global flag is set
+		dir := Dir
+		if Global {
+			home, err := os.UserHomeDir()
+			if err == nil {
+				dir = home
+			}
+		}
+
+		e.Options(
+			task.ExecutorWithDir(dir),
+			task.ExecutorWithEntrypoint(Entrypoint),
+			task.ExecutorWithForce(Force),
+			task.ExecutorWithForceAll(ForceAll),
+			task.ExecutorWithInsecure(Insecure),
+			task.ExecutorWithDownload(Download),
+			task.ExecutorWithOffline(Offline),
+			task.ExecutorWithTimeout(Timeout),
+			task.ExecutorWithWatch(Watch),
+			task.ExecutorWithVerbose(Verbose),
+			task.ExecutorWithSilent(Silent),
+			task.ExecutorWithAssumeYes(AssumeYes),
+			task.ExecutorWithDry(Dry || Status),
+			task.ExecutorWithSummary(Summary),
+			task.ExecutorWithParallel(Parallel),
+			task.ExecutorWithColor(Color),
+			task.ExecutorWithConcurrency(Concurrency),
+			task.ExecutorWithInterval(Interval),
+			task.ExecutorWithOutputStyle(Output),
+			task.ExecutorWithTaskSorter(sorter),
+			task.ExecutorWithVersionCheck(true),
+		)
+	}
 }

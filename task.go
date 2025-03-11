@@ -3,13 +3,10 @@ package task
 import (
 	"context"
 	"fmt"
-	"io"
 	"os"
 	"runtime"
 	"slices"
-	"sync"
 	"sync/atomic"
-	"time"
 
 	"github.com/go-task/task/v3/internal/tracing"
 
@@ -25,7 +22,6 @@ import (
 	"github.com/go-task/task/v3/internal/templater"
 	"github.com/go-task/task/v3/taskfile/ast"
 
-	"github.com/sajari/fuzzy"
 	"golang.org/x/sync/errgroup"
 	"mvdan.cc/sh/v3/interp"
 )
