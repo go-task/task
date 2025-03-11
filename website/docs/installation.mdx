@@ -181,6 +181,11 @@ to install a specific version:
 sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d v3.36.0
 ```
 
+Parameters are order specific, to set both installation directory and version:
+```shell
+sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d -b ~/.local/bin v3.42.1
+```
+
 ### GitHub Actions
 
 If you want to install Task in GitHub Actions you can try using
