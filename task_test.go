@@ -1092,19 +1092,19 @@ func TestTraceOutput(t *testing.T) {
 		},
 	}
 
-	for _, test := range tests {
-		t.Run("should produce trace output for "+test.inputDir+"-"+test.task, func(t *testing.T) {
+	for _, tt := range tests {
+		t.Run("should produce trace output for "+tt.inputDir+"-"+tt.task, func(t *testing.T) {
 			t.Parallel()
 
 			outFile := t.TempDir() + "/tracing-gantt.out"
 
 			e := task.NewExecutor(
-				task.ExecutorWithDir("testdata/concurrency"),
+				task.ExecutorWithDir(tt.inputDir),
 				task.ExecutorWithTracer(outFile),
 			)
 			r := require.New(t)
 			r.NoError(e.Setup())
-			r.NoError(e.Run(context.Background(), &task.Call{Task: "default"}))
+			_ = e.Run(context.Background(), &task.Call{Task: tt.task})
 
 			contents, err := os.ReadFile(outFile)
 			r.NoError(err)
