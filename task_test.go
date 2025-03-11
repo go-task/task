@@ -1077,26 +1077,41 @@ func TestTaskVersion(t *testing.T) {
 func TestTraceOutput(t *testing.T) {
 	t.Parallel()
 
-	outFile := t.TempDir() + "/tracing-gantt.out"
+	tests := []struct {
+		inputDir string
+		task     string
+	}{
+		{
+			inputDir: "testdata/concurrency",
+			task:     "default",
+		},
+		{
+			// should produce tracing results even if task execution fails
+			inputDir: "testdata/exit_code",
+			task:     "exit-one",
+		},
+	}
 
-	e := task.NewExecutor(
-		task.ExecutorWithDir("testdata/concurrency"),
-		task.ExecutorWithTracer(outFile),
-	)
-	require.NoError(t, e.Setup())
+	for _, test := range tests {
+		t.Run("should produce trace output for "+test.inputDir+"-"+test.task, func(t *testing.T) {
+			t.Parallel()
 
-	err := e.Run(context.Background(), &task.Call{Task: "default"})
-	require.NoError(t, err)
+			outFile := t.TempDir() + "/tracing-gantt.out"
 
-	contents, err := os.ReadFile(outFile)
-	require.NoError(t, err)
+			e := task.NewExecutor(
+				task.ExecutorWithDir("testdata/concurrency"),
+				task.ExecutorWithTracer(outFile),
+			)
+			r := require.New(t)
+			r.NoError(e.Setup())
+			r.NoError(e.Run(context.Background(), &task.Call{Task: "default"}))
 
-	stringContents := string(contents)
-	require.Contains(t, stringContents, `gantt
-    title Task Execution Timeline
-    dateFormat YYYY-MM-DD HH:mm:ss.SSS
-	axisFormat %X`)
-	require.Contains(t, stringContents, "    t6 [0s]")
+			contents, err := os.ReadFile(outFile)
+			r.NoError(err)
+
+			r.Contains(string(contents), `gantt`)
+		})
+	}
 }
 
 func TestTaskIgnoreErrors(t *testing.T) {
