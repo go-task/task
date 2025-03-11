@@ -7,8 +7,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/go-task/task/v3/internal/tracing"
-
 	"github.com/spf13/pflag"
 	"mvdan.cc/sh/v3/syntax"
 
