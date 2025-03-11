@@ -1074,6 +1074,31 @@ func TestTaskVersion(t *testing.T) {
 	}
 }
 
+func TestTraceOutput(t *testing.T) {
+	t.Parallel()
+
+	outFile := t.TempDir() + "/tracing-gantt.out"
+
+	e := task.NewExecutor(
+		task.ExecutorWithDir("testdata/concurrency"),
+		task.ExecutorWithTracer(outFile),
+	)
+	require.NoError(t, e.Setup())
+
+	err := e.Run(context.Background(), &task.Call{Task: "default"})
+	require.NoError(t, err)
+
+	contents, err := os.ReadFile(outFile)
+	require.NoError(t, err)
+
+	stringContents := string(contents)
+	require.Contains(t, stringContents, `gantt
+    title Task Execution Timeline
+    dateFormat YYYY-MM-DD HH:mm:ss.SSS
+	axisFormat %X`)
+	require.Contains(t, stringContents, "    t6 [0s]")
+}
+
 func TestTaskIgnoreErrors(t *testing.T) {
 	t.Parallel()
 

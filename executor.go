@@ -7,6 +7,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/go-task/task/v3/internal/tracing"
+
 	"github.com/sajari/fuzzy"
 
 	"github.com/go-task/task/v3/internal/logger"
@@ -65,6 +67,8 @@ type (
 		mkdirMutexMap        map[string]*sync.Mutex
 		executionHashes      map[string]context.Context
 		executionHashesMutex sync.Mutex
+
+		Tracer tracing.Tracer
 	}
 	TempDir struct {
 		Remote      string
@@ -315,5 +319,12 @@ func ExecutorWithIO(rw io.ReadWriter) ExecutorOption {
 func ExecutorWithVersionCheck(enableVersionCheck bool) ExecutorOption {
 	return func(e *Executor) {
 		e.EnableVersionCheck = enableVersionCheck
+	}
+}
+
+// ExecutorWithTracer configures execution tracing
+func ExecutorWithTracer(outFile string) ExecutorOption {
+	return func(e *Executor) {
+		e.Tracer = tracing.NewTracer(outFile)
 	}
 }

@@ -224,6 +224,7 @@ func WithExecutorOptions() task.ExecutorOption {
 			task.ExecutorWithOutputStyle(Output),
 			task.ExecutorWithTaskSorter(sorter),
 			task.ExecutorWithVersionCheck(true),
+			task.ExecutorWithTracer(ExecutionTraceOutput),
 		)
 	}
 }
