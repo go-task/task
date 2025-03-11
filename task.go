@@ -96,7 +96,6 @@ func (e *Executor) Run(ctx context.Context, calls ...*Call) error {
 			}
 		}
 	}
-
 	if err := g.Wait(); err != nil {
 		return err
 	}
@@ -246,7 +245,6 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) error {
 				return &errors.TaskRunError{TaskName: t.Task, Err: err}
 			}
 		}
-
 		e.Logger.VerboseErrf(logger.Magenta, "task: %q finished\n", t.Name())
 		return nil
 	})
