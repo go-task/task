@@ -85,7 +85,7 @@ type Executor struct {
 	executionHashes      map[string]context.Context
 	executionHashesMutex sync.Mutex
 
-	tracer tracing.Tracer
+	Tracer tracing.Tracer
 }
 
 // MatchingTask represents a task that matches a given call. It includes the
@@ -148,7 +148,10 @@ func (e *Executor) Run(ctx context.Context, calls ...*Call) error {
 		}
 	}
 	defer func() {
-		e.Logger.VerboseErrf(logger.Magenta, "%s\n", e.tracer.ToMermaidOutput())
+		err := e.Tracer.WriteOutput()
+		if err != nil {
+			e.Logger.VerboseErrf(logger.Magenta, "failed to write execution trace: %v\n", err)
+		}
 	}()
 	if err := g.Wait(); err != nil {
 		return err
@@ -216,9 +219,7 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) error {
 		if err := e.runDeps(ctx, t); err != nil {
 			return err
 		}
-		tracerSpan := e.tracer.Start(t.Name())
-
-		startedAt := time.Now()
+		tracerSpan := e.Tracer.Start(t.Name())
 
 		skipFingerprinting := e.ForceAll || (!call.Indirect && e.Force)
 		if !skipFingerprinting {
@@ -301,9 +302,7 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) error {
 			}
 		}
 
-		taskDuration := time.Since(startedAt)
-
-		e.Logger.VerboseErrf(logger.Magenta, "task: %q finished in %v\n", t.Name(), taskDuration)
+		e.Logger.VerboseErrf(logger.Magenta, "task: %q finished\n", t.Name())
 		tracerSpan.Stop()
 		return nil
 	})

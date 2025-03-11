@@ -2,34 +2,68 @@ package tracing
 
 import (
 	"fmt"
+	"os"
 	"strings"
+	"sync"
 	"time"
 )
 
 type Tracer struct {
-	spans []*Span
+	mu      sync.Mutex
+	spans   []*Span
+	outFile string
+
+	timeFn func() time.Time
+}
+
+func NewTracer(outFile string) Tracer {
+	return Tracer{
+		outFile: outFile,
+	}
 }
 
 type Span struct {
+	parent    *Tracer
 	name      string
 	startedAt time.Time
 	endedAt   time.Time
 }
 
 func (t *Tracer) Start(name string) *Span {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+
+	if t.timeFn == nil {
+		t.timeFn = time.Now
+	}
+
 	result := &Span{
+		parent:    t,
 		name:      name,
-		startedAt: time.Now(),
+		startedAt: t.timeFn(),
 	}
 	t.spans = append(t.spans, result)
 	return result
 }
 
 func (s *Span) Stop() {
-	s.endedAt = time.Now()
+	s.parent.mu.Lock()
+	defer s.parent.mu.Unlock()
+
+	s.endedAt = s.parent.timeFn()
 }
 
-func (t *Tracer) ToMermaidOutput() string {
+func (t *Tracer) WriteOutput() error {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+
+	if t.outFile == "" {
+		return nil
+	}
+	return os.WriteFile(t.outFile, []byte(t.toMermaidOutput()), 0644)
+}
+
+func (t *Tracer) toMermaidOutput() string {
 	out := `gantt
     title Task Execution Timeline
     dateFormat YYYY-MM-DD HH:mm:ss.SSS

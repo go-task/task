@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/go-task/task/v3/internal/tracing"
 	"os"
 	"path/filepath"
 	"strings"
@@ -160,6 +161,8 @@ func run() error {
 		OutputStyle:        flags.Output,
 		TaskSorter:         taskSorter,
 		EnableVersionCheck: true,
+
+		Tracer: tracing.NewTracer(flags.ExecutionTraceOutput),
 	}
 	listOptions := task.NewListOptions(flags.List, flags.ListAll, flags.ListJson, flags.NoStatus)
 	if err := listOptions.Validate(); err != nil {
