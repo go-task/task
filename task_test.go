@@ -2475,6 +2475,10 @@ task: [included3:task1] echo "VAR_1 is included-default-var1"
 VAR_1 is included-default-var1
 task: [included3:task1] echo "VAR_2 is included-default-var2"
 VAR_2 is included-default-var2
+task: [included4:task1] echo "VAR_1 is included4-var1"
+VAR_1 is included4-var1
+task: [included4:task1] echo "VAR_2 is included-default-var2"
+VAR_2 is included-default-var2
 `)
 	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "task1"}))
 	t.Log(buff.String())

@@ -1,16 +1,23 @@
 version: "3"
 
+vars:
+  VAR_1: included4-var1
+
 includes:
   included1:
-    taskfile: include/Taskfile.include1.yml
+    taskfile: include/Taskfile.include.yml
     vars:
       VAR_1: included1-var1
   included2:
-    taskfile: include/Taskfile.include2.yml
+    taskfile: include/Taskfile.include.yml
     vars:
       VAR_1: included2-var1
   included3:
-    taskfile: include/Taskfile.include3.yml
+    taskfile: include/Taskfile.include.yml
+  included4:
+    taskfile: include/Taskfile.include.yml
+    vars:
+      VAR_1: "{{.VAR_1}}"
 
 tasks:
   task1:
@@ -18,3 +25,4 @@ tasks:
       - task: included1:task1
       - task: included2:task1
       - task: included3:task1
+      - task: included4:task1
