@@ -7,13 +7,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/go-task/task/v3/internal/tracing"
-
 	"github.com/sajari/fuzzy"
 
 	"github.com/go-task/task/v3/internal/logger"
 	"github.com/go-task/task/v3/internal/output"
 	"github.com/go-task/task/v3/internal/sort"
+	"github.com/go-task/task/v3/internal/tracing"
 	"github.com/go-task/task/v3/taskfile/ast"
 )
 
