@@ -1,13 +1,15 @@
 package tracing
 
 import (
-	"github.com/stretchr/testify/require"
 	"os"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestTracer_Start(t *testing.T) {
+	t.Parallel()
 	tracer := NewTracer(t.TempDir() + "/tracing.txt")
 
 	currentTime, err := time.Parse(time.DateTime, "2025-01-02 15:42:23")

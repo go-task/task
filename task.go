@@ -3,7 +3,6 @@ package task
 import (
 	"context"
 	"fmt"
-	"github.com/go-task/task/v3/internal/tracing"
 	"io"
 	"os"
 	"runtime"
@@ -11,6 +10,8 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/go-task/task/v3/internal/tracing"
 
 	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/env"
@@ -97,6 +98,13 @@ type MatchingTask struct {
 
 // Run runs Task
 func (e *Executor) Run(ctx context.Context, calls ...*Call) error {
+	defer func() {
+		err := e.Tracer.WriteOutput()
+		if err != nil {
+			e.Logger.VerboseErrf(logger.Magenta, "failed to write execution trace: %v\n", err)
+		}
+	}()
+
 	// check if given tasks exist
 	for _, call := range calls {
 		task, err := e.GetTask(call)
@@ -147,12 +155,7 @@ func (e *Executor) Run(ctx context.Context, calls ...*Call) error {
 			}
 		}
 	}
-	defer func() {
-		err := e.Tracer.WriteOutput()
-		if err != nil {
-			e.Logger.VerboseErrf(logger.Magenta, "failed to write execution trace: %v\n", err)
-		}
-	}()
+
 	if err := g.Wait(); err != nil {
 		return err
 	}
@@ -219,7 +222,8 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) error {
 		if err := e.runDeps(ctx, t); err != nil {
 			return err
 		}
-		tracerSpan := e.Tracer.Start(t.Name())
+		span := e.Tracer.Start(t.Name())
+		defer span.Stop()
 
 		skipFingerprinting := e.ForceAll || (!call.Indirect && e.Force)
 		if !skipFingerprinting {
@@ -303,7 +307,6 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) error {
 		}
 
 		e.Logger.VerboseErrf(logger.Magenta, "task: %q finished\n", t.Name())
-		tracerSpan.Stop()
 		return nil
 	})
 }

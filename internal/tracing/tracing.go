@@ -60,7 +60,7 @@ func (t *Tracer) WriteOutput() error {
 	if t.outFile == "" {
 		return nil
 	}
-	return os.WriteFile(t.outFile, []byte(t.toMermaidOutput()), 0644)
+	return os.WriteFile(t.outFile, []byte(t.toMermaidOutput()), 0o644)
 }
 
 func (t *Tracer) toMermaidOutput() string {
