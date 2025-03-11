@@ -35,19 +35,19 @@ tasks:
     generates:
       - "internal/mocks/*.go"
     cmds:
-      - "{{.BIN}}/mockery --dir ./internal/fingerprint --name SourcesCheckable"
-      - "{{.BIN}}/mockery --dir ./internal/fingerprint --name StatusCheckable"
+      - find . -type f -name *_mock.go -delete
+      - "{{.BIN}}/mockery"
 
   install:mockery:
     desc: Installs mockgen; a tool to generate mock files
     vars:
-      MOCKERY_VERSION: v2.24.0
+      MOCKERY_VERSION: v3.0.0-beta.1
     env:
       GOBIN: "{{.BIN}}"
     status:
       - go version -m {{.BIN}}/mockery | grep github.com/vektra/mockery | grep {{.MOCKERY_VERSION}}
     cmds:
-      - go install github.com/vektra/mockery/v2@{{.MOCKERY_VERSION}}
+      - go install github.com/vektra/mockery/v3@{{.MOCKERY_VERSION}}
 
   mod:
     desc: Downloads and tidy Go modules
