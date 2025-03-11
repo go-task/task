@@ -40,7 +40,10 @@ type MatchingTask struct {
 // Run runs Task
 func (e *Executor) Run(ctx context.Context, calls ...*Call) error {
 	defer func() {
-		err := e.Tracer.WriteOutput()
+		if e.tracer == nil {
+			return
+		}
+		err := e.tracer.WriteOutput()
 		if err != nil {
 			e.Logger.VerboseErrf(logger.Magenta, "failed to write execution trace: %v\n", err)
 		}
@@ -162,8 +165,10 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) error {
 		if err := e.runDeps(ctx, t); err != nil {
 			return err
 		}
-		span := e.Tracer.Start(t.Name())
-		defer span.Stop()
+		if e.tracer != nil {
+			span := e.tracer.Start(t.Name())
+			defer span.Stop()
+		}
 
 		skipFingerprinting := e.ForceAll || (!call.Indirect && e.Force)
 		if !skipFingerprinting {

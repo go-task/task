@@ -16,8 +16,8 @@ type Tracer struct {
 	timeFn func() time.Time
 }
 
-func NewTracer(outFile string) Tracer {
-	return Tracer{
+func NewTracer(outFile string) *Tracer {
+	return &Tracer{
 		outFile: outFile,
 	}
 }

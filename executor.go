@@ -67,7 +67,7 @@ type (
 		executionHashes      map[string]context.Context
 		executionHashesMutex sync.Mutex
 
-		Tracer tracing.Tracer
+		tracer *tracing.Tracer
 	}
 	TempDir struct {
 		Remote      string
@@ -324,6 +324,6 @@ func ExecutorWithVersionCheck(enableVersionCheck bool) ExecutorOption {
 // ExecutorWithTracer configures execution tracing
 func ExecutorWithTracer(outFile string) ExecutorOption {
 	return func(e *Executor) {
-		e.Tracer = tracing.NewTracer(outFile)
+		e.tracer = tracing.NewTracer(outFile)
 	}
 }
