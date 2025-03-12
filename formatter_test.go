@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/sebdah/goldie/v2"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/go-task/task/v3"
@@ -169,91 +168,53 @@ func (tt *FormatterTest) run(t *testing.T) {
 func TestNoLabelInList(t *testing.T) {
 	t.Parallel()
 
-	const dir = "testdata/label_list"
-
-	var buff bytes.Buffer
-	e := task.NewExecutor(
-		task.ExecutorWithDir(dir),
-		task.ExecutorWithStdout(&buff),
-		task.ExecutorWithStderr(&buff),
+	NewFormatterTest(t,
+		WithExecutorOptions(
+			task.ExecutorWithDir("testdata/label_list"),
+		),
+		WithListOptions(task.ListOptions{
+			ListOnlyTasksWithDescriptions: true,
+		}),
 	)
-	require.NoError(t, e.Setup())
-	if _, err := e.ListTasks(task.ListOptions{ListOnlyTasksWithDescriptions: true}); err != nil {
-		t.Error(err)
-	}
-	assert.Contains(t, buff.String(), "foo")
 }
 
 // task -al case 1: listAll list all tasks
 func TestListAllShowsNoDesc(t *testing.T) {
 	t.Parallel()
 
-	const dir = "testdata/list_mixed_desc"
-
-	var buff bytes.Buffer
-	e := task.NewExecutor(
-		task.ExecutorWithDir(dir),
-		task.ExecutorWithStdout(&buff),
-		task.ExecutorWithStderr(&buff),
+	NewFormatterTest(t,
+		WithExecutorOptions(
+			task.ExecutorWithDir("testdata/list_mixed_desc"),
+		),
+		WithListOptions(task.ListOptions{
+			ListAllTasks: true,
+		}),
 	)
-	require.NoError(t, e.Setup())
-
-	var title string
-	if _, err := e.ListTasks(task.ListOptions{ListAllTasks: true}); err != nil {
-		t.Error(err)
-	}
-	for _, title = range []string{
-		"foo",
-		"voo",
-		"doo",
-	} {
-		assert.Contains(t, buff.String(), title)
-	}
 }
 
 // task -al case 2: !listAll list some tasks (only those with desc)
 func TestListCanListDescOnly(t *testing.T) {
 	t.Parallel()
 
-	const dir = "testdata/list_mixed_desc"
-
-	var buff bytes.Buffer
-	e := task.NewExecutor(
-		task.ExecutorWithDir(dir),
-		task.ExecutorWithStdout(&buff),
-		task.ExecutorWithStderr(&buff),
+	NewFormatterTest(t,
+		WithExecutorOptions(
+			task.ExecutorWithDir("testdata/list_mixed_desc"),
+		),
+		WithListOptions(task.ListOptions{
+			ListOnlyTasksWithDescriptions: true,
+		}),
 	)
-	require.NoError(t, e.Setup())
-	if _, err := e.ListTasks(task.ListOptions{ListOnlyTasksWithDescriptions: true}); err != nil {
-		t.Error(err)
-	}
-
-	var title string
-	assert.Contains(t, buff.String(), "foo")
-	for _, title = range []string{
-		"voo",
-		"doo",
-	} {
-		assert.NotContains(t, buff.String(), title)
-	}
 }
 
 func TestListDescInterpolation(t *testing.T) {
 	t.Parallel()
 
-	const dir = "testdata/list_desc_interpolation"
-
-	var buff bytes.Buffer
-	e := task.NewExecutor(
-		task.ExecutorWithDir(dir),
-		task.ExecutorWithStdout(&buff),
-		task.ExecutorWithStderr(&buff),
+	NewFormatterTest(t,
+		WithExecutorOptions(
+			task.ExecutorWithDir("testdata/list_desc_interpolation"),
+		),
+		WithListOptions(task.ListOptions{
+			ListOnlyTasksWithDescriptions: true,
+		}),
 	)
-	require.NoError(t, e.Setup())
-	if _, err := e.ListTasks(task.ListOptions{ListOnlyTasksWithDescriptions: true}); err != nil {
-		t.Error(err)
-	}
-
-	assert.Contains(t, buff.String(), "foo-var")
-	assert.Contains(t, buff.String(), "bar-var")
 }
