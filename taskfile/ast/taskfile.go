@@ -18,22 +18,26 @@ var V3 = semver.MustParse("3")
 // ErrIncludedTaskfilesCantHaveDotenvs is returned when a included Taskfile contains dotenvs
 var ErrIncludedTaskfilesCantHaveDotenvs = errors.New("task: Included Taskfiles can't have dotenv declarations. Please, move the dotenv declaration to the main Taskfile")
 
+// ErrIncludedTaskfilesCantHavePreconditions is returned when a included Taskfile contains Preconditions
+var ErrIncludedTaskfilesCantHavePreconditions = errors.New("task: Included Taskfiles can't have preconditions declarations. Please, move the preconditions declaration to the main Taskfile")
+
 // Taskfile is the abstract syntax tree for a Taskfile
 type Taskfile struct {
-	Location string
-	Version  *semver.Version
-	Output   Output
-	Method   string
-	Includes *Includes
-	Set      []string
-	Shopt    []string
-	Vars     *Vars
-	Env      *Vars
-	Tasks    *Tasks
-	Silent   bool
-	Dotenv   []string
-	Run      string
-	Interval time.Duration
+	Location      string
+	Version       *semver.Version
+	Output        Output
+	Method        string
+	Includes      *Includes
+	Set           []string
+	Shopt         []string
+	Vars          *Vars
+	Env           *Vars
+	Preconditions *Preconditions
+	Tasks         *Tasks
+	Silent        bool
+	Dotenv        []string
+	Run           string
+	Interval      time.Duration
 }
 
 // Merge merges the second Taskfile into the first
@@ -43,6 +47,9 @@ func (t1 *Taskfile) Merge(t2 *Taskfile, include *Include) error {
 	}
 	if len(t2.Dotenv) > 0 {
 		return ErrIncludedTaskfilesCantHaveDotenvs
+	}
+	if len(t2.Preconditions.Values) > 0 {
+		return ErrIncludedTaskfilesCantHavePreconditions
 	}
 	if t2.Output.IsSet() {
 		t1.Output = t2.Output
@@ -59,6 +66,9 @@ func (t1 *Taskfile) Merge(t2 *Taskfile, include *Include) error {
 	if t1.Tasks == nil {
 		t1.Tasks = NewTasks()
 	}
+	if t1.Preconditions == nil {
+		t1.Preconditions = NewPreconditions()
+	}
 	t1.Vars.Merge(t2.Vars, include)
 	t1.Env.Merge(t2.Env, include)
 	return t1.Tasks.Merge(t2.Tasks, include, t1.Vars)
@@ -68,19 +78,20 @@ func (tf *Taskfile) UnmarshalYAML(node *yaml.Node) error {
 	switch node.Kind {
 	case yaml.MappingNode:
 		var taskfile struct {
-			Version  *semver.Version
-			Output   Output
-			Method   string
-			Includes *Includes
-			Set      []string
-			Shopt    []string
-			Vars     *Vars
-			Env      *Vars
-			Tasks    *Tasks
-			Silent   bool
-			Dotenv   []string
-			Run      string
-			Interval time.Duration
+			Version       *semver.Version
+			Output        Output
+			Method        string
+			Includes      *Includes
+			Preconditions *Preconditions
+			Set           []string
+			Shopt         []string
+			Vars          *Vars
+			Env           *Vars
+			Tasks         *Tasks
+			Silent        bool
+			Dotenv        []string
+			Run           string
+			Interval      time.Duration
 		}
 		if err := node.Decode(&taskfile); err != nil {
 			return errors.NewTaskfileDecodeError(err, node)
@@ -98,6 +109,7 @@ func (tf *Taskfile) UnmarshalYAML(node *yaml.Node) error {
 		tf.Dotenv = taskfile.Dotenv
 		tf.Run = taskfile.Run
 		tf.Interval = taskfile.Interval
+		tf.Preconditions = taskfile.Preconditions
 		if tf.Includes == nil {
 			tf.Includes = NewIncludes()
 		}
@@ -109,6 +121,9 @@ func (tf *Taskfile) UnmarshalYAML(node *yaml.Node) error {
 		}
 		if tf.Tasks == nil {
 			tf.Tasks = NewTasks()
+		}
+		if tf.Preconditions == nil {
+			tf.Preconditions = NewPreconditions()
 		}
 		return nil
 	}

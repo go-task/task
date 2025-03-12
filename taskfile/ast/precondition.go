@@ -9,10 +9,12 @@ import (
 )
 
 // Precondition represents a precondition necessary for a task to run
-type Precondition struct {
-	Sh  string
-	Msg string
-}
+type (
+	Precondition struct {
+		Sh  string
+		Msg string
+	}
+)
 
 func (p *Precondition) DeepCopy() *Precondition {
 	if p == nil {
