@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- The default taskfile (output when using the `--init` flag) is now an embedded
+  file in the binary instead of being stored in the code (#2112 by @pd93).
+
 #### Package API
 
 - The [`Executor`](https://pkg.go.dev/github.com/go-task/task/v3#Executor) now
