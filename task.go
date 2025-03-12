@@ -156,6 +156,8 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) error {
 			return err
 		}
 
+		var taskSuccess bool
+
 		skipFingerprinting := e.ForceAll || (!call.Indirect && e.Force)
 		if !skipFingerprinting {
 			if err := ctx.Err(); err != nil {
@@ -173,7 +175,7 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) error {
 				method = t.Method
 			}
 
-			upToDate, err := fingerprint.IsTaskUpToDate(ctx, t,
+			upToDate, sourcesState, err := fingerprint.IsTaskUpToDate(ctx, t,
 				fingerprint.WithMethod(method),
 				fingerprint.WithTempDir(e.TempDir.Fingerprint),
 				fingerprint.WithDry(e.Dry),
@@ -181,6 +183,21 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) error {
 			)
 			if err != nil {
 				return err
+			}
+
+			if !e.Dry {
+				defer func() {
+					if !taskSuccess {
+						return
+					}
+					e.Logger.VerboseErrf(logger.Magenta, "task: %q setting task up to date\n", call.Task)
+					fingerprint.SetTaskUpToDate(ctx, t, sourcesState,
+						fingerprint.WithMethod(method),
+						fingerprint.WithTempDir(e.TempDir.Fingerprint),
+						fingerprint.WithDry(e.Dry),
+						fingerprint.WithLogger(e.Logger),
+					)
+				}()
 			}
 
 			if upToDate && preCondMet {
@@ -236,6 +253,7 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) error {
 				return &errors.TaskRunError{TaskName: t.Task, Err: err}
 			}
 		}
+		taskSuccess = true
 		e.Logger.VerboseErrf(logger.Magenta, "task: %q finished\n", call.Task)
 		return nil
 	})
