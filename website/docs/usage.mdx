@@ -1702,8 +1702,9 @@ $ task run-foo-bar
 foo bar
 ```
 
-If multiple matching tasks are found, an error occurs. If you are using included
-Taskfiles, tasks in parent files will be considered first.
+If multiple matching tasks are found, the first one listed in the Taskfile will
+be used. If you are using included Taskfiles, tasks in parent files will be
+considered first.
 
 ## Doing task cleanup with `defer`
 
