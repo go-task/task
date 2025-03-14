@@ -1,0 +1,3 @@
+task: Available tasks for this project:
+* bar:       task has desc with bar-var
+* foo:       task has desc with foo-var
