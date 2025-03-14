@@ -1074,6 +1074,46 @@ func TestTaskVersion(t *testing.T) {
 	}
 }
 
+func TestTraceOutput(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		inputDir string
+		task     string
+	}{
+		{
+			inputDir: "testdata/concurrency",
+			task:     "default",
+		},
+		{
+			// should produce tracing results even if task execution fails
+			inputDir: "testdata/exit_code",
+			task:     "exit-one",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run("should produce trace output for "+tt.inputDir+"-"+tt.task, func(t *testing.T) {
+			t.Parallel()
+
+			outFile := t.TempDir() + "/tracing-gantt.out"
+
+			e := task.NewExecutor(
+				task.ExecutorWithDir(tt.inputDir),
+				task.ExecutorWithTracer(outFile),
+			)
+			r := require.New(t)
+			r.NoError(e.Setup())
+			_ = e.Run(context.Background(), &task.Call{Task: tt.task})
+
+			contents, err := os.ReadFile(outFile)
+			r.NoError(err)
+
+			r.Contains(string(contents), `gantt`)
+		})
+	}
+}
+
 func TestTaskIgnoreErrors(t *testing.T) {
 	t.Parallel()
 

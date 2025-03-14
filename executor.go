@@ -12,6 +12,7 @@ import (
 	"github.com/go-task/task/v3/internal/logger"
 	"github.com/go-task/task/v3/internal/output"
 	"github.com/go-task/task/v3/internal/sort"
+	"github.com/go-task/task/v3/internal/tracing"
 	"github.com/go-task/task/v3/taskfile/ast"
 )
 
@@ -65,6 +66,8 @@ type (
 		mkdirMutexMap        map[string]*sync.Mutex
 		executionHashes      map[string]context.Context
 		executionHashesMutex sync.Mutex
+
+		tracer *tracing.Tracer
 	}
 	TempDir struct {
 		Remote      string
@@ -315,5 +318,12 @@ func ExecutorWithIO(rw io.ReadWriter) ExecutorOption {
 func ExecutorWithVersionCheck(enableVersionCheck bool) ExecutorOption {
 	return func(e *Executor) {
 		e.EnableVersionCheck = enableVersionCheck
+	}
+}
+
+// ExecutorWithTracer configures execution tracing
+func ExecutorWithTracer(outFile string) ExecutorOption {
+	return func(e *Executor) {
+		e.tracer = tracing.NewTracer(outFile)
 	}
 }
