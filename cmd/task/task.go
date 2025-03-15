@@ -5,10 +5,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/spf13/pflag"
-	"mvdan.cc/sh/v3/syntax"
 
 	"github.com/go-task/task/v3"
 	"github.com/go-task/task/v3/args"
@@ -75,7 +73,7 @@ func run() error {
 		if err != nil {
 			return err
 		}
-		args, _, err := getArgs()
+		_, args, err := args.Get()
 		if err != nil {
 			return err
 		}
@@ -155,17 +153,12 @@ func run() error {
 		return nil
 	}
 
-	var (
-		calls   []*task.Call
-		globals *ast.Vars
-	)
-
-	tasksAndVars, cliArgs, err := getArgs()
+	// Parse the remaining arguments
+	argv, cliArgs, err := args.Get()
 	if err != nil {
 		return err
 	}
-
-	calls, globals = args.Parse(tasksAndVars...)
+	calls, globals := args.Parse(argv...)
 
 	// If there are no calls, run the default task instead
 	if len(calls) == 0 {
@@ -190,25 +183,4 @@ func run() error {
 	}
 
 	return e.Run(ctx, calls...)
-}
-
-func getArgs() ([]string, string, error) {
-	var (
-		args          = pflag.Args()
-		doubleDashPos = pflag.CommandLine.ArgsLenAtDash()
-	)
-
-	if doubleDashPos == -1 {
-		return args, "", nil
-	}
-
-	var quotedCliArgs []string
-	for _, arg := range args[doubleDashPos:] {
-		quotedCliArg, err := syntax.Quote(arg, syntax.LangBash)
-		if err != nil {
-			return nil, "", err
-		}
-		quotedCliArgs = append(quotedCliArgs, quotedCliArg)
-	}
-	return args[:doubleDashPos], strings.Join(quotedCliArgs, " "), nil
 }
