@@ -184,7 +184,7 @@ func WithExecutorOptions() task.ExecutorOption {
 		var sorter sort.Sorter
 		switch TaskSort {
 		case "none":
-			sorter = nil
+			sorter = sort.NoSort
 		case "alphanumeric":
 			sorter = sort.AlphaNumeric
 		}

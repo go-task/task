@@ -9,6 +9,11 @@ import (
 // A Sorter is any function that sorts a set of tasks.
 type Sorter func(items []string, namespaces []string) []string
 
+// NoSort leaves the tasks in the order they are defined.
+func NoSort(items []string, namespaces []string) []string {
+	return items
+}
+
 // AlphaNumeric sorts the JSON output so that tasks are in alpha numeric order
 // by task name.
 func AlphaNumeric(items []string, namespaces []string) []string {
