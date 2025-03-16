@@ -79,3 +79,35 @@ func TestAlphaNumeric_Sort(t *testing.T) {
 		})
 	}
 }
+
+func TestNoSort_Sort(t *testing.T) {
+	t.Parallel()
+
+	item1 := "a-item1"
+	item2 := "m-item2"
+	item3 := "ns1:item3"
+	item4 := "ns2:item4"
+	item5 := "z-item5"
+	item6 := "ns3:item6"
+
+	tests := []struct {
+		name  string
+		items []string
+		want  []string
+	}{
+		{
+			name:  "all items in order of definition",
+			items: []string{item3, item2, item5, item1, item4, item6},
+			want:  []string{item3, item2, item5, item1, item4, item6},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			NoSort(tt.items, nil)
+			assert.Equal(t, tt.want, tt.items)
+		})
+	}
+}
