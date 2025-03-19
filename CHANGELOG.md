@@ -7,6 +7,7 @@
 - Fixed a bug where sorting tasks by "none" would use the default sorting
   instead of leaving tasks in the order they were defined (#2124, #2125 by
   @trulede).
+- Fixed Fish completion on newer Fish versions (#2130 by @atusy).
 
 #### Package API
 
