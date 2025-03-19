@@ -73,6 +73,8 @@ var (
 	Offline     bool
 	ClearCache  bool
 	Timeout     time.Duration
+
+	ExecutionTraceOutput string
 )
 
 func init() {
@@ -132,6 +134,8 @@ func init() {
 		pflag.DurationVar(&Timeout, "timeout", time.Second*10, "Timeout for downloading remote Taskfiles.")
 		pflag.BoolVar(&ClearCache, "clear-cache", false, "Clear the remote cache.")
 	}
+
+	pflag.StringVar(&ExecutionTraceOutput, "execution-trace-output", "", "When supplied, generates a Mermaid Gantt chart of each task's invocation. Useful to visualize highly parallel execution.")
 
 	pflag.Parse()
 }
@@ -221,5 +225,9 @@ func WithExecutorOptions() task.ExecutorOption {
 			task.ExecutorWithTaskSorter(sorter),
 			task.ExecutorWithVersionCheck(true),
 		)
+
+		if ExecutionTraceOutput != "" {
+			task.ExecutorWithTracer(ExecutionTraceOutput)(e)
+		}
 	}
 }

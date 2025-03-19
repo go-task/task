@@ -39,6 +39,16 @@ type MatchingTask struct {
 
 // Run runs Task
 func (e *Executor) Run(ctx context.Context, calls ...*Call) error {
+	defer func() {
+		if e.tracer == nil {
+			return
+		}
+		err := e.tracer.WriteOutput()
+		if err != nil {
+			e.Logger.VerboseErrf(logger.Magenta, "failed to write execution trace: %v\n", err)
+		}
+	}()
+
 	// check if given tasks exist
 	for _, call := range calls {
 		task, err := e.GetTask(call)
@@ -151,9 +161,13 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) error {
 	defer release()
 
 	return e.startExecution(ctx, t, func(ctx context.Context) error {
-		e.Logger.VerboseErrf(logger.Magenta, "task: %q started\n", call.Task)
+		e.Logger.VerboseErrf(logger.Magenta, "task: %q started\n", t.Name())
 		if err := e.runDeps(ctx, t); err != nil {
 			return err
+		}
+		if e.tracer != nil {
+			span := e.tracer.Start(t.Name())
+			defer span.Stop()
 		}
 
 		skipFingerprinting := e.ForceAll || (!call.Indirect && e.Force)
@@ -236,7 +250,7 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) error {
 				return &errors.TaskRunError{TaskName: t.Task, Err: err}
 			}
 		}
-		e.Logger.VerboseErrf(logger.Magenta, "task: %q finished\n", call.Task)
+		e.Logger.VerboseErrf(logger.Magenta, "task: %q finished\n", t.Name())
 		return nil
 	})
 }
