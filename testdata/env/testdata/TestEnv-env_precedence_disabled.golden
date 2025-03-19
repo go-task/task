@@ -1,0 +1,5 @@
+GOOS='linux' GOARCH='amd64' CGO_ENABLED='0'
+FOO='foo' BAR='overridden' BAZ='baz'
+QUX='from_os'
+FOO='1' BAR='true' BAZ='1.1'
+foo

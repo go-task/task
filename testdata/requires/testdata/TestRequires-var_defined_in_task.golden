@@ -1,0 +1,2 @@
+task: [var-defined-in-task] echo "bar"
+bar

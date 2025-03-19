@@ -216,6 +216,14 @@ func ExecutorWithAssumeYes(assumeYes bool) ExecutorOption {
 }
 
 // WithAssumeTerm is used for testing purposes to simulate a terminal.
+func ExecutorWithAssumeTerm(assumeTerm bool) ExecutorOption {
+	return func(e *Executor) {
+		e.AssumeTerm = assumeTerm
+	}
+}
+
+// ExecutorWithDry tells the [Executor] to output the commands that would be run
+// without actually running them.
 func ExecutorWithDry(dry bool) ExecutorOption {
 	return func(e *Executor) {
 		e.Dry = dry

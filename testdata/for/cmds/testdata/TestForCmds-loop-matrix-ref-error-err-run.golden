@@ -1,0 +1,2 @@
+task: Failed to parse /home/pete/dev/github.com/go-task/task/testdata/for/cmds/Taskfile.yml:
+matrix reference ".NOT_A_LIST" must resolve to a list
