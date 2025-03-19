@@ -412,7 +412,6 @@ func (e *Executor) FindMatchingTasks(call *Call) []*MatchingTask {
 		return matchingTasks
 	}
 	// Attempt a wildcard match
-	// For now, we can just nil check the task before each loop
 	for _, value := range e.Taskfile.Tasks.All(nil) {
 		if match, wildcards := value.WildcardMatch(call.Task); match {
 			matchingTasks = append(matchingTasks, &MatchingTask{
@@ -430,23 +429,12 @@ func (e *Executor) FindMatchingTasks(call *Call) []*MatchingTask {
 func (e *Executor) GetTask(call *Call) (*ast.Task, error) {
 	// Search for a matching task
 	matchingTasks := e.FindMatchingTasks(call)
-	switch len(matchingTasks) {
-	case 0: // Carry on
-	case 1:
+	if len(matchingTasks) > 0 {
 		if call.Vars == nil {
 			call.Vars = ast.NewVars()
 		}
 		call.Vars.Set("MATCH", ast.Var{Value: matchingTasks[0].Wildcards})
 		return matchingTasks[0].Task, nil
-	default:
-		taskNames := make([]string, len(matchingTasks))
-		for i, matchingTask := range matchingTasks {
-			taskNames[i] = matchingTask.Task.Task
-		}
-		return nil, &errors.TaskNameConflictError{
-			Call:      call.Task,
-			TaskNames: taskNames,
-		}
 	}
 
 	// If didn't find one, search for a task with a matching alias
