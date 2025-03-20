@@ -67,6 +67,10 @@ func release() error {
 		return err
 	}
 
+	if err := setVersionFile("internal/version/version.txt", version); err != nil {
+		return err
+	}
+
 	if err := setJSONVersion("package.json", version); err != nil {
 		return err
 	}
@@ -142,6 +146,10 @@ func changelog(version *semver.Version) error {
 
 	// Write the changelog to the target file
 	return os.WriteFile(changelogTarget, []byte(changelog), 0o644)
+}
+
+func setVersionFile(fileName string, version *semver.Version) error {
+	return os.WriteFile(fileName, []byte(version.String()+"\n"), 0o644)
 }
 
 func setJSONVersion(fileName string, version *semver.Version) error {

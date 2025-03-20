@@ -10,7 +10,6 @@ import (
 	"testing"
 
 	"github.com/sebdah/goldie/v2"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/go-task/task/v3"
@@ -343,41 +342,31 @@ func TestSpecialVars(t *testing.T) {
 
 	const dir = "testdata/special_vars"
 	const subdir = "testdata/special_vars/subdir"
-	toAbs := func(rel string) string {
-		abs, err := filepath.Abs(rel)
-		assert.NoError(t, err)
-		return abs
-	}
 
-	tests := []struct {
-		target   string
-		expected string
-	}{
+	tests := []string{
 		// Root
-		{target: "print-task", expected: "print-task"},
-		{target: "print-root-dir", expected: toAbs(dir)},
-		{target: "print-taskfile", expected: toAbs(dir) + "/Taskfile.yml"},
-		{target: "print-taskfile-dir", expected: toAbs(dir)},
-		{target: "print-task-version", expected: "unknown"},
-		{target: "print-task-dir", expected: toAbs(dir) + "/foo"},
+		"print-task",
+		"print-root-dir",
+		"print-taskfile",
+		"print-taskfile-dir",
+		"print-task-dir",
 		// Included
-		{target: "included:print-task", expected: "included:print-task"},
-		{target: "included:print-root-dir", expected: toAbs(dir)},
-		{target: "included:print-taskfile", expected: toAbs(dir) + "/included/Taskfile.yml"},
-		{target: "included:print-taskfile-dir", expected: toAbs(dir) + "/included"},
-		{target: "included:print-task-version", expected: "unknown"},
+		"included:print-task",
+		"included:print-root-dir",
+		"included:print-taskfile",
+		"included:print-taskfile-dir",
 	}
 
 	for _, dir := range []string{dir, subdir} {
 		for _, test := range tests {
 			NewExecutorTest(t,
-				WithName(fmt.Sprintf("%s-%s", dir, test.target)),
+				WithName(fmt.Sprintf("%s-%s", dir, test)),
 				WithExecutorOptions(
 					task.WithDir(dir),
 					task.WithSilent(true),
 					task.WithVersionCheck(true),
 				),
-				WithTask(test.target),
+				WithTask(test),
 				WithPostProcessFn(PPRemoveAbsolutePaths),
 			)
 		}
