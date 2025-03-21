@@ -6,10 +6,10 @@ function __task_get_tasks --description "Prints all available tasks with their d
   set -l cmd_args
   eval "set cmd_args $(commandline --current-process)" # split commandline by arguments considering quotes and escapes
   for arg in $cmd_args
-    if test _$arg = _"--"
+    if test "_$arg" = "_--"
       break # ignore arguments to be passed to the task
     end
-    if test _$arg = _--global -o _$arg = _-g
+    if test "_$arg" = "_--global" -o "_$arg" = "_-g"
       set global_task true
       break
     end
