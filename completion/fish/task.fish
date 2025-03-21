@@ -3,8 +3,7 @@ set -l GO_TASK_PROGNAME task
 function __task_get_tasks --description "Prints all available tasks with their description" --inherit-variable GO_TASK_PROGNAME
   # Check if the global task is requested
   set -l global_task false
-  set -l cmd_args
-  eval "set cmd_args $(commandline --current-process)" # split commandline by arguments considering quotes and escapes
+  commandline --current-process | read --tokenize --list --local cmd_args
   for arg in $cmd_args
     if test "_$arg" = "_--"
       break # ignore arguments to be passed to the task
