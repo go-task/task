@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- Significant improvements were made to the watcher. We migrated from
+  [watcher](https://github.com/radovskyb/watcher) to
+  [fsnotify](https://github.com/fsnotify/fsnotify). The former library used
+  polling, which means Task had a high CPU usage when watching too many files.
+  `fsnotify` uses proper the APIs from each operating system to watch files,
+  which means a much better performance. The default interval changed from 5
+  seconds to 100 milliseconds, because now it configures the wait time for
+  duplicated events, instead of the polling time (#2048 by @andreynering, #1508,
+  #985, #1179).
 - The default taskfile (output when using the `--init` flag) is now an embedded
   file in the binary instead of being stored in the code (#2112 by @pd93).
 - Fixed a bug where sorting tasks by "none" would use the default sorting
