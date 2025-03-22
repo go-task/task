@@ -18,6 +18,11 @@ tasks:
       - task: lint
       - task: test
 
+  run:
+    desc: Runs Task
+    cmds:
+      - go run ./cmd/task {{.CLI_ARGS}}
+
   install:
     desc: Installs Task
     aliases: [i]
@@ -103,6 +108,12 @@ tasks:
       - "testdata/**/*"
     cmds:
       - go test ./...
+
+  test:watch:
+    desc: Runs test suite with watch tests included
+    deps: [sleepit:build]
+    cmds:
+      - go test ./... -tags 'watch'
 
   test:all:
     desc: Runs test suite with signals and watch tests included
