@@ -13,8 +13,11 @@
   #985, #1179).
 - The [Map Variables experiment](#1585) was made generally available so you can
   now
-  [define map variables in your Taskfiles!](https://taskfile.dev/next/usage/#variables)
+  [define map variables in your Taskfiles!](https://taskfile.dev/usage/#variables)
   (#1585, #1547, #2081 by @pd93).
+- Wildcards can now
+  [match multiple tasks](https://taskfile.dev/usage/#wildcard-arguments) (#2072,
+  #2121 by @pd93).
 - The default taskfile (output when using the `--init` flag) is now an embedded
   file in the binary instead of being stored in the code (#2112 by @pd93).
 - Fixed a bug where sorting tasks by "none" would use the default sorting
