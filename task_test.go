@@ -3196,9 +3196,9 @@ func TestWildcard(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name:    "multiple matches",
-			call:    "wildcard-foo-bar",
-			wantErr: true,
+			name:           "multiple matches",
+			call:           "wildcard-foo-bar",
+			expectedOutput: "Hello foo-bar\n",
 		},
 	}
 

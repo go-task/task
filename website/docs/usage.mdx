@@ -1682,36 +1682,45 @@ clear what they contain:
 version: '3'
 
 tasks:
-  echo-*:
+  start:*:*:
     vars:
-      TEXT: '{{index .MATCH 0}}'
+      SERVICE: "{{index .MATCH 0}}"
+      REPLICAS: "{{index .MATCH 1}}"
     cmds:
-      - echo {{.TEXT}}
+      - echo "Starting {{.SERVICE}} with {{.REPLICAS}} replicas"
 
-  run-*-*:
+  start:*:
     vars:
-      ARG_1: '{{index .MATCH 0}}'
-      ARG_2: '{{index .MATCH 1}}'
+      SERVICE: "{{index .MATCH 0}}"
     cmds:
-      - echo {{.ARG_1}} {{.ARG_2}}
+      - echo "Starting {{.SERVICE}}"
 ```
+
+This call matches the `start:*` task and the string "foo" is captured by the
+wildcard and stored in the `.MATCH` variable. We then index the `.MATCH` array
+and store the result in the `.SERVICE` variable which is then echoed out in the
+cmds:
 
 ```shell
-# This call matches the "echo-*" task and the string "hello" is captured by the
-# wildcard and stored in the .MATCH variable. We then index the .MATCH array and
-# store the result in the .TEXT variable which is then echoed out in the cmds.
-$ task echo-hello
-hello
-# You can use whitespace in your arguments as long as you quote the task name
-$ task "echo-hello world"
-hello world
-# And you can pass multiple arguments
-$ task run-foo-bar
-foo bar
+$ task start:foo
+Starting foo
 ```
 
-If multiple matching tasks are found, an error occurs. If you are using included
-Taskfiles, tasks in parent files will be considered first.
+You can use whitespace in your arguments as long as you quote the task name:
+
+```shell
+$ task "start:foo bar"
+Starting foo bar
+```
+
+If multiple matching tasks are found, the first one listed in the Taskfile will
+be used. If you are using included Taskfiles, tasks in parent files will be
+considered first.
+
+```shell
+$ task start:foo:3
+Starting foo with 3 replicas
+```
 
 ## Doing task cleanup with `defer`
 
