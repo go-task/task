@@ -172,7 +172,15 @@ func run() error {
 		calls = append(calls, &task.Call{Task: "default"})
 	}
 
-	globals.Set("CLI_ARGS", ast.Var{Value: cliArgs})
+	if experiments.SplitCLIArgs.Enabled() {
+		globals.Set("CLI_ARGS", ast.Var{Value: cliArgs})
+	} else {
+		quotedCLIArgs, err := cliArgsToQuotedString(cliArgs)
+		if err != nil {
+			return err
+		}
+		globals.Set("CLI_ARGS", ast.Var{Value: quotedCLIArgs})
+	}
 	globals.Set("CLI_FORCE", ast.Var{Value: flags.Force || flags.ForceAll})
 	globals.Set("CLI_SILENT", ast.Var{Value: flags.Silent})
 	globals.Set("CLI_VERBOSE", ast.Var{Value: flags.Verbose})
@@ -192,23 +200,27 @@ func run() error {
 	return e.Run(ctx, calls...)
 }
 
-func getArgs() ([]string, string, error) {
+func getArgs() ([]string, []string, error) {
 	var (
 		args          = pflag.Args()
 		doubleDashPos = pflag.CommandLine.ArgsLenAtDash()
 	)
 
 	if doubleDashPos == -1 {
-		return args, "", nil
+		return args, nil, nil
 	}
 
+	return args[:doubleDashPos], args[doubleDashPos:], nil
+}
+
+func cliArgsToQuotedString(args []string) (string, error) {
 	var quotedCliArgs []string
-	for _, arg := range args[doubleDashPos:] {
+	for _, arg := range args {
 		quotedCliArg, err := syntax.Quote(arg, syntax.LangBash)
 		if err != nil {
-			return nil, "", err
+			return "", err
 		}
 		quotedCliArgs = append(quotedCliArgs, quotedCliArg)
 	}
-	return args[:doubleDashPos], strings.Join(quotedCliArgs, " "), nil
+	return strings.Join(quotedCliArgs, " "), nil
 }

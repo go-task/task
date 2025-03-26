@@ -30,6 +30,7 @@ var (
 	AnyVariables    Experiment
 	MapVariables    Experiment
 	EnvPrecedence   Experiment
+	SplitCLIArgs    Experiment
 )
 
 // An internal list of all the initialized experiments used for iterating.
@@ -46,6 +47,7 @@ func init() {
 	AnyVariables = New("ANY_VARIABLES")
 	MapVariables = New("MAP_VARIABLES", 1, 2)
 	EnvPrecedence = New("ENV_PRECEDENCE", 1)
+	SplitCLIArgs = New("SPLIT_CLI_ARGS", 1)
 }
 
 // Validate checks if any experiments have been enabled while being inactive.
