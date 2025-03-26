@@ -28,13 +28,13 @@ tasks:
       CGO_ENABLED:
         sh: echo '0'
     cmds:
-      - echo "GOOS='$GOOS' GOARCH='$GOARCH' CGO_ENABLED='$CGO_ENABLED'" > local.txt
+      - echo "GOOS='$GOOS' GOARCH='$GOARCH' CGO_ENABLED='$CGO_ENABLED'"
 
   global:
     env:
       BAR: overridden
     cmds:
-      - echo "FOO='$FOO' BAR='$BAR' BAZ='$BAZ'" > global.txt
+      - echo "FOO='$FOO' BAR='$BAR' BAZ='$BAZ'"
 
   multiple_type:
     env:
@@ -42,15 +42,15 @@ tasks:
       BAR: true
       BAZ: 1.1
     cmds:
-      - echo "FOO='$FOO' BAR='$BAR' BAZ='$BAZ'" > multiple_type.txt
+      - echo "FOO='$FOO' BAR='$BAR' BAZ='$BAZ'"
 
   not-overridden:
     cmds:
-      - echo "QUX='$QUX'" > not-overridden.txt
+      - echo "QUX='$QUX'"
 
   overridden:
     cmds:
-      - echo "QUX='$QUX'" > overridden.txt
+      - echo "QUX='$QUX'"
 
   dynamic:
     silent: true
@@ -58,4 +58,4 @@ tasks:
       DYNAMIC_FOO:
         sh: echo $FOO
     cmds:
-      - echo "{{ .DYNAMIC_FOO }}" > dynamic.txt
+      - echo "{{ .DYNAMIC_FOO }}"
