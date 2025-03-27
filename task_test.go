@@ -233,6 +233,10 @@ func TestSpecialVars(t *testing.T) {
 		return abs
 	}
 
+	versionBytes, err := os.ReadFile("./internal/version/version.txt")
+	require.NoError(t, err)
+	version := strings.TrimSpace(string(versionBytes))
+
 	tests := []struct {
 		target   string
 		expected string
@@ -242,14 +246,14 @@ func TestSpecialVars(t *testing.T) {
 		{target: "print-root-dir", expected: toAbs(dir)},
 		{target: "print-taskfile", expected: toAbs(dir) + "/Taskfile.yml"},
 		{target: "print-taskfile-dir", expected: toAbs(dir)},
-		{target: "print-task-version", expected: "unknown"},
+		{target: "print-task-version", expected: version},
 		{target: "print-task-dir", expected: toAbs(dir) + "/foo"},
 		// Included
 		{target: "included:print-task", expected: "included:print-task"},
 		{target: "included:print-root-dir", expected: toAbs(dir)},
 		{target: "included:print-taskfile", expected: toAbs(dir) + "/included/Taskfile.yml"},
 		{target: "included:print-taskfile-dir", expected: toAbs(dir) + "/included"},
-		{target: "included:print-task-version", expected: "unknown"},
+		{target: "included:print-task-version", expected: version},
 	}
 
 	for _, dir := range []string{dir, subdir} {
