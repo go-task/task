@@ -24,6 +24,8 @@
   instead of leaving tasks in the order they were defined (#2124, #2125 by
   @trulede).
 - Fixed Fish completion on newer Fish versions (#2130 by @atusy).
+- Fixed a bug where undefined/null variables resolved to an empty string instead
+  of `nil` (#1911, #2144 by @pd93).
 
 #### Package API
 
