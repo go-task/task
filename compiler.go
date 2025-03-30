@@ -75,7 +75,7 @@ func (c *Compiler) getVariables(t *ast.Task, call *Call, evaluateShVars bool) (*
 				return err
 			}
 			// If the variable is already set, we can set it and return
-			if newVar.Value != nil {
+			if newVar.Value != nil || newVar.Sh == nil {
 				result.Set(k, ast.Var{Value: newVar.Value})
 				return nil
 			}
