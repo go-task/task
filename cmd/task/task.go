@@ -114,8 +114,8 @@ func run() error {
 	}
 
 	e := task.NewExecutor(
-		flags.WithExecutorOptions(),
-		task.ExecutorWithVersionCheck(true),
+		flags.WithFlags(),
+		task.WithVersionCheck(true),
 	)
 	if err := e.Setup(); err != nil {
 		return err

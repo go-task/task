@@ -18,7 +18,9 @@ import (
 
 type (
 	// An ExecutorOption is a functional option for an [Executor].
-	ExecutorOption func(*Executor)
+	ExecutorOption interface {
+		ApplyToExecutor(*Executor)
+	}
 	// An Executor is used for processing Taskfile(s) and executing the task(s)
 	// within them.
 	Executor struct {
@@ -103,226 +105,384 @@ func NewExecutor(opts ...ExecutorOption) *Executor {
 // to the [Executor].
 func (e *Executor) Options(opts ...ExecutorOption) {
 	for _, opt := range opts {
-		opt(e)
+		opt.ApplyToExecutor(e)
 	}
 }
 
-// ExecutorWithDir sets the working directory of the [Executor]. By default, the
+// WithDir sets the working directory of the [Executor]. By default, the
 // directory is set to the user's current working directory.
-func ExecutorWithDir(dir string) ExecutorOption {
-	return func(e *Executor) {
-		e.Dir = dir
-	}
+func WithDir(dir string) ExecutorOption {
+	return dirOption{dir}
 }
 
-// ExecutorWithEntrypoint sets the entrypoint (main Taskfile) of the [Executor].
-// By default, Task will search for one of the default Taskfiles in the given
+type dirOption struct {
+	dir string
+}
+
+func (o dirOption) ApplyToExecutor(e *Executor) {
+	e.Dir = o.dir
+}
+
+// WithEntrypoint sets the entrypoint (main Taskfile) of the [Executor]. By
+// default, Task will search for one of the default Taskfiles in the given
 // directory.
-func ExecutorWithEntrypoint(entrypoint string) ExecutorOption {
-	return func(e *Executor) {
-		e.Entrypoint = entrypoint
-	}
+func WithEntrypoint(entrypoint string) ExecutorOption {
+	return entrypointOption{entrypoint}
 }
 
-// ExecutorWithTempDir sets the temporary directory that will be used by
-// [Executor] for storing temporary files like checksums and cached remote
-// files. By default, the temporary directory is set to the user's temporary
-// directory.
-func ExecutorWithTempDir(tempDir TempDir) ExecutorOption {
-	return func(e *Executor) {
-		e.TempDir = tempDir
-	}
+type entrypointOption struct {
+	entrypoint string
 }
 
-// ExecutorWithForce ensures that the [Executor] always runs a task, even when
+func (o entrypointOption) ApplyToExecutor(e *Executor) {
+	e.Entrypoint = o.entrypoint
+}
+
+// WithTempDir sets the temporary directory that will be used by [Executor] for
+// storing temporary files like checksums and cached remote files. By default,
+// the temporary directory is set to the user's temporary directory.
+func WithTempDir(tempDir TempDir) ExecutorOption {
+	return tempDirOption{tempDir}
+}
+
+type tempDirOption struct {
+	tempDir TempDir
+}
+
+func (o tempDirOption) ApplyToExecutor(e *Executor) {
+	e.TempDir = o.tempDir
+}
+
+// WithForce ensures that the [Executor] always runs a task, even when
 // fingerprinting or prompts would normally stop it.
-func ExecutorWithForce(force bool) ExecutorOption {
-	return func(e *Executor) {
-		e.Force = force
-	}
+func WithForce(force bool) ExecutorOption {
+	return forceOption{force}
 }
 
-// ExecutorWithForceAll ensures that the [Executor] always runs all tasks
-// (including subtasks), even when fingerprinting or prompts would normally stop
-// them.
-func ExecutorWithForceAll(forceAll bool) ExecutorOption {
-	return func(e *Executor) {
-		e.ForceAll = forceAll
-	}
+type forceOption struct {
+	force bool
 }
 
-// ExecutorWithInsecure allows the [Executor] to make insecure connections when
-// reading remote taskfiles. By default, insecure connections are rejected.
-func ExecutorWithInsecure(insecure bool) ExecutorOption {
-	return func(e *Executor) {
-		e.Insecure = insecure
-	}
+func (o forceOption) ApplyToExecutor(e *Executor) {
+	e.Force = o.force
 }
 
-// ExecutorWithDownload forces the [Executor] to download a fresh copy of the
-// taskfile from the remote source.
-func ExecutorWithDownload(download bool) ExecutorOption {
-	return func(e *Executor) {
-		e.Download = download
-	}
+// WithForceAll ensures that the [Executor] always runs all tasks (including
+// subtasks), even when fingerprinting or prompts would normally stop them.
+func WithForceAll(forceAll bool) ExecutorOption {
+	return forceAllOption{forceAll}
 }
 
-// ExecutorWithOffline stops the [Executor] from being able to make network
-// connections. It will still be able to read local files and cached copies of
-// remote files.
-func ExecutorWithOffline(offline bool) ExecutorOption {
-	return func(e *Executor) {
-		e.Offline = offline
-	}
+type forceAllOption struct {
+	forceAll bool
 }
 
-// ExecutorWithTimeout sets the [Executor]'s timeout for fetching remote
-// taskfiles. By default, the timeout is set to 10 seconds.
-func ExecutorWithTimeout(timeout time.Duration) ExecutorOption {
-	return func(e *Executor) {
-		e.Timeout = timeout
-	}
+func (o forceAllOption) ApplyToExecutor(e *Executor) {
+	e.ForceAll = o.forceAll
 }
 
-// ExecutorWithWatch tells the [Executor] to keep running in the background and
-// watch for changes to the fingerprint of the tasks that are run. When changes
-// are detected, a new task run is triggered.
-func ExecutorWithWatch(watch bool) ExecutorOption {
-	return func(e *Executor) {
-		e.Watch = watch
-	}
+// WithInsecure allows the [Executor] to make insecure connections when reading
+// remote taskfiles. By default, insecure connections are rejected.
+func WithInsecure(insecure bool) ExecutorOption {
+	return insecureOption{insecure}
 }
 
-// ExecutorWithVerbose tells the [Executor] to output more information about the
-// tasks that are run.
-func ExecutorWithVerbose(verbose bool) ExecutorOption {
-	return func(e *Executor) {
-		e.Verbose = verbose
-	}
+type insecureOption struct {
+	insecure bool
 }
 
-// ExecutorWithSilent tells the [Executor] to suppress all output except for the
-// output of the tasks that are run.
-func ExecutorWithSilent(silent bool) ExecutorOption {
-	return func(e *Executor) {
-		e.Silent = silent
-	}
+func (o insecureOption) ApplyToExecutor(e *Executor) {
+	e.Insecure = o.insecure
 }
 
-// ExecutorWithAssumeYes tells the [Executor] to assume "yes" for all prompts.
-func ExecutorWithAssumeYes(assumeYes bool) ExecutorOption {
-	return func(e *Executor) {
-		e.AssumeYes = assumeYes
-	}
+// WithDownload forces the [Executor] to download a fresh copy of the taskfile
+// from the remote source.
+func WithDownload(download bool) ExecutorOption {
+	return downloadOption{download}
+}
+
+type downloadOption struct {
+	download bool
+}
+
+func (o downloadOption) ApplyToExecutor(e *Executor) {
+	e.Download = o.download
+}
+
+// WithOffline stops the [Executor] from being able to make network connections.
+// It will still be able to read local files and cached copies of remote files.
+func WithOffline(offline bool) ExecutorOption {
+	return offlineOption{offline}
+}
+
+type offlineOption struct {
+	offline bool
+}
+
+func (o offlineOption) ApplyToExecutor(e *Executor) {
+	e.Offline = o.offline
+}
+
+// WithTimeout sets the [Executor]'s timeout for fetching remote taskfiles. By
+// default, the timeout is set to 10 seconds.
+func WithTimeout(timeout time.Duration) ExecutorOption {
+	return timeoutOption{timeout}
+}
+
+type timeoutOption struct {
+	timeout time.Duration
+}
+
+func (o timeoutOption) ApplyToExecutor(e *Executor) {
+	e.Timeout = o.timeout
+}
+
+// WithWatch tells the [Executor] to keep running in the background and watch
+// for changes to the fingerprint of the tasks that are run. When changes are
+// detected, a new task run is triggered.
+func WithWatch(watch bool) ExecutorOption {
+	return watchOption{watch}
+}
+
+type watchOption struct {
+	watch bool
+}
+
+func (o watchOption) ApplyToExecutor(e *Executor) {
+	e.Watch = o.watch
+}
+
+// WithVerbose tells the [Executor] to output more information about the tasks
+// that are run.
+func WithVerbose(verbose bool) ExecutorOption {
+	return verboseOption{verbose}
+}
+
+type verboseOption struct {
+	verbose bool
+}
+
+func (o verboseOption) ApplyToExecutor(e *Executor) {
+	e.Verbose = o.verbose
+}
+
+// WithSilent tells the [Executor] to suppress all output except for the output
+// of the tasks that are run.
+func WithSilent(silent bool) ExecutorOption {
+	return silentOption{silent}
+}
+
+type silentOption struct {
+	silent bool
+}
+
+func (o silentOption) ApplyToExecutor(e *Executor) {
+	e.Silent = o.silent
+}
+
+// WithAssumeYes tells the [Executor] to assume "yes" for all prompts.
+func WithAssumeYes(assumeYes bool) ExecutorOption {
+	return assumeYesOption{assumeYes}
+}
+
+type assumeYesOption struct {
+	assumeYes bool
+}
+
+func (o assumeYesOption) ApplyToExecutor(e *Executor) {
+	e.AssumeYes = o.assumeYes
 }
 
 // WithAssumeTerm is used for testing purposes to simulate a terminal.
-func ExecutorWithAssumeTerm(assumeTerm bool) ExecutorOption {
-	return func(e *Executor) {
-		e.AssumeTerm = assumeTerm
-	}
+func WithAssumeTerm(assumeTerm bool) ExecutorOption {
+	return assumeTermOption{assumeTerm}
 }
 
-// ExecutorWithDry tells the [Executor] to output the commands that would be run
-// without actually running them.
-func ExecutorWithDry(dry bool) ExecutorOption {
-	return func(e *Executor) {
-		e.Dry = dry
-	}
+type assumeTermOption struct {
+	assumeTerm bool
 }
 
-// ExecutorWithSummary tells the [Executor] to output a summary of the given
-// tasks instead of running them.
-func ExecutorWithSummary(summary bool) ExecutorOption {
-	return func(e *Executor) {
-		e.Summary = summary
-	}
+func (o assumeTermOption) ApplyToExecutor(e *Executor) {
+	e.AssumeTerm = o.assumeTerm
 }
 
-// ExecutorWithParallel tells the [Executor] to run tasks given in the same call
+// WithDry tells the [Executor] to output the commands that would be run without
+// actually running them.
+func WithDry(dry bool) ExecutorOption {
+	return dryOption{dry}
+}
+
+type dryOption struct {
+	dry bool
+}
+
+func (o dryOption) ApplyToExecutor(e *Executor) {
+	e.Dry = o.dry
+}
+
+// WithSummary tells the [Executor] to output a summary of the given tasks
+// instead of running them.
+func WithSummary(summary bool) ExecutorOption {
+	return summaryOption{summary}
+}
+
+type summaryOption struct {
+	summary bool
+}
+
+func (o summaryOption) ApplyToExecutor(e *Executor) {
+	e.Summary = o.summary
+}
+
+// WithParallel tells the [Executor] to run tasks given in the same call in
+// parallel.
+func WithParallel(parallel bool) ExecutorOption {
+	return parallelOption{parallel}
+}
+
+type parallelOption struct {
+	parallel bool
+}
+
+func (o parallelOption) ApplyToExecutor(e *Executor) {
+	e.Parallel = o.parallel
+}
+
+// WithColor tells the [Executor] whether or not to output using colorized
+// strings.
+func WithColor(color bool) ExecutorOption {
+	return colorOption{color}
+}
+
+type colorOption struct {
+	color bool
+}
+
+func (o colorOption) ApplyToExecutor(e *Executor) {
+	e.Color = o.color
+}
+
+// WithConcurrency sets the maximum number of tasks that the [Executor] can run
 // in parallel.
-func ExecutorWithParallel(parallel bool) ExecutorOption {
-	return func(e *Executor) {
-		e.Parallel = parallel
-	}
+func WithConcurrency(concurrency int) ExecutorOption {
+	return concurrencyOption{concurrency}
 }
 
-// ExecutorWithColor tells the [Executor] whether or not to output using
-// colorized strings.
-func ExecutorWithColor(color bool) ExecutorOption {
-	return func(e *Executor) {
-		e.Color = color
-	}
+type concurrencyOption struct {
+	concurrency int
 }
 
-// ExecutorWithConcurrency sets the maximum number of tasks that the [Executor]
-// can run in parallel.
-func ExecutorWithConcurrency(concurrency int) ExecutorOption {
-	return func(e *Executor) {
-		e.Concurrency = concurrency
-	}
+func (o concurrencyOption) ApplyToExecutor(e *Executor) {
+	e.Concurrency = o.concurrency
 }
 
-// ExecutorWithInterval sets the interval at which the [Executor] will wait for
+// WithInterval sets the interval at which the [Executor] will wait for
 // duplicated events before running a task.
-func ExecutorWithInterval(interval time.Duration) ExecutorOption {
-	return func(e *Executor) {
-		e.Interval = interval
-	}
+func WithInterval(interval time.Duration) ExecutorOption {
+	return intervalOption{interval}
 }
 
-// ExecutorWithOutputStyle sets the output style of the [Executor]. By default,
-// the output style is set to the style defined in the Taskfile.
-func ExecutorWithOutputStyle(outputStyle ast.Output) ExecutorOption {
-	return func(e *Executor) {
-		e.OutputStyle = outputStyle
-	}
+type intervalOption struct {
+	interval time.Duration
 }
 
-// ExecutorWithTaskSorter sets the sorter that the [Executor] will use to sort
-// tasks. By default, the sorter is set to sort tasks alphabetically, but with
-// tasks with no namespace (in the root Taskfile) first.
-func ExecutorWithTaskSorter(sorter sort.Sorter) ExecutorOption {
-	return func(e *Executor) {
-		e.TaskSorter = sorter
-	}
+func (o intervalOption) ApplyToExecutor(e *Executor) {
+	e.Interval = o.interval
 }
 
-// ExecutorWithStdin sets the [Executor]'s standard input [io.Reader].
-func ExecutorWithStdin(stdin io.Reader) ExecutorOption {
-	return func(e *Executor) {
-		e.Stdin = stdin
-	}
+// WithOutputStyle sets the output style of the [Executor]. By default, the
+// output style is set to the style defined in the Taskfile.
+func WithOutputStyle(outputStyle ast.Output) ExecutorOption {
+	return outputStyleOption{outputStyle}
 }
 
-// ExecutorWithStdout sets the [Executor]'s standard output [io.Writer].
-func ExecutorWithStdout(stdout io.Writer) ExecutorOption {
-	return func(e *Executor) {
-		e.Stdout = stdout
-	}
+type outputStyleOption struct {
+	outputStyle ast.Output
 }
 
-// ExecutorWithStderr sets the [Executor]'s standard error [io.Writer].
-func ExecutorWithStderr(stderr io.Writer) ExecutorOption {
-	return func(e *Executor) {
-		e.Stderr = stderr
-	}
+func (o outputStyleOption) ApplyToExecutor(e *Executor) {
+	e.OutputStyle = o.outputStyle
 }
 
-// ExecutorWithIO sets the [Executor]'s standard input, output, and error to the
-// same [io.ReadWriter].
-func ExecutorWithIO(rw io.ReadWriter) ExecutorOption {
-	return func(e *Executor) {
-		e.Stdin = rw
-		e.Stdout = rw
-		e.Stderr = rw
-	}
+// WithTaskSorter sets the sorter that the [Executor] will use to sort tasks. By
+// default, the sorter is set to sort tasks alphabetically, but with tasks with
+// no namespace (in the root Taskfile) first.
+func WithTaskSorter(sorter sort.Sorter) ExecutorOption {
+	return taskSorterOption{sorter}
 }
 
-// ExecutorWithVersionCheck tells the [Executor] whether or not to check the
-// version of
-func ExecutorWithVersionCheck(enableVersionCheck bool) ExecutorOption {
-	return func(e *Executor) {
-		e.EnableVersionCheck = enableVersionCheck
-	}
+type taskSorterOption struct {
+	sorter sort.Sorter
+}
+
+func (o taskSorterOption) ApplyToExecutor(e *Executor) {
+	e.TaskSorter = o.sorter
+}
+
+// WithStdin sets the [Executor]'s standard input [io.Reader].
+func WithStdin(stdin io.Reader) ExecutorOption {
+	return stdinOption{stdin}
+}
+
+type stdinOption struct {
+	stdin io.Reader
+}
+
+func (o stdinOption) ApplyToExecutor(e *Executor) {
+	e.Stdin = o.stdin
+}
+
+// WithStdout sets the [Executor]'s standard output [io.Writer].
+func WithStdout(stdout io.Writer) ExecutorOption {
+	return stdoutOption{stdout}
+}
+
+type stdoutOption struct {
+	stdout io.Writer
+}
+
+func (o stdoutOption) ApplyToExecutor(e *Executor) {
+	e.Stdout = o.stdout
+}
+
+// WithStderr sets the [Executor]'s standard error [io.Writer].
+func WithStderr(stderr io.Writer) ExecutorOption {
+	return stderrOption{stderr}
+}
+
+type stderrOption struct {
+	stderr io.Writer
+}
+
+func (o stderrOption) ApplyToExecutor(e *Executor) {
+	e.Stderr = o.stderr
+}
+
+// WithIO sets the [Executor]'s standard input, output, and error to the same
+// [io.ReadWriter].
+func WithIO(rw io.ReadWriter) ExecutorOption {
+	return ioOption{rw}
+}
+
+type ioOption struct {
+	rw io.ReadWriter
+}
+
+func (o ioOption) ApplyToExecutor(e *Executor) {
+	e.Stdin = o.rw
+	e.Stdout = o.rw
+	e.Stderr = o.rw
+}
+
+// WithVersionCheck tells the [Executor] whether or not to check the version of
+func WithVersionCheck(enableVersionCheck bool) ExecutorOption {
+	return versionCheckOption{enableVersionCheck}
+}
+
+type versionCheckOption struct {
+	enableVersionCheck bool
+}
+
+func (o versionCheckOption) ApplyToExecutor(e *Executor) {
+	e.EnableVersionCheck = o.enableVersionCheck
 }

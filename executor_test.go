@@ -148,8 +148,8 @@ func (tt *ExecutorTest) run(t *testing.T) {
 
 		opts := append(
 			tt.executorOpts,
-			task.ExecutorWithStdout(&buf),
-			task.ExecutorWithStderr(&buf),
+			task.WithStdout(&buf),
+			task.WithStderr(&buf),
 		)
 
 		// If the test has input, create a reader for it and add it to the
@@ -157,7 +157,7 @@ func (tt *ExecutorTest) run(t *testing.T) {
 		if tt.input != "" {
 			var reader bytes.Buffer
 			reader.WriteString(tt.input)
-			opts = append(opts, task.ExecutorWithStdin(&reader))
+			opts = append(opts, task.WithStdin(&reader))
 		}
 
 		// Set up the task executor
@@ -221,7 +221,7 @@ func TestEmptyTask(t *testing.T) {
 	t.Parallel()
 	NewExecutorTest(t,
 		WithExecutorOptions(
-			task.ExecutorWithDir("testdata/empty_task"),
+			task.WithDir("testdata/empty_task"),
 		),
 	)
 }
@@ -230,7 +230,7 @@ func TestEmptyTaskfile(t *testing.T) {
 	t.Parallel()
 	NewExecutorTest(t,
 		WithExecutorOptions(
-			task.ExecutorWithDir("testdata/empty_taskfile"),
+			task.WithDir("testdata/empty_taskfile"),
 		),
 		WithSetupError(),
 		WithPostProcessFn(PPRemoveAbsolutePaths),
@@ -242,15 +242,15 @@ func TestEnv(t *testing.T) {
 	NewExecutorTest(t,
 		WithName("env precedence disabled"),
 		WithExecutorOptions(
-			task.ExecutorWithDir("testdata/env"),
-			task.ExecutorWithSilent(true),
+			task.WithDir("testdata/env"),
+			task.WithSilent(true),
 		),
 	)
 	NewExecutorTest(t,
 		WithName("env precedence enabled"),
 		WithExecutorOptions(
-			task.ExecutorWithDir("testdata/env"),
-			task.ExecutorWithSilent(true),
+			task.WithDir("testdata/env"),
+			task.WithSilent(true),
 		),
 		WithExperiment(&experiments.EnvPrecedence, 1),
 	)
@@ -260,8 +260,8 @@ func TestVars(t *testing.T) {
 	t.Parallel()
 	NewExecutorTest(t,
 		WithExecutorOptions(
-			task.ExecutorWithDir("testdata/vars"),
-			task.ExecutorWithSilent(true),
+			task.WithDir("testdata/vars"),
+			task.WithSilent(true),
 		),
 	)
 }
@@ -271,7 +271,7 @@ func TestRequires(t *testing.T) {
 	NewExecutorTest(t,
 		WithName("required var missing"),
 		WithExecutorOptions(
-			task.ExecutorWithDir("testdata/requires"),
+			task.WithDir("testdata/requires"),
 		),
 		WithTask("missing-var"),
 		WithRunError(),
@@ -279,7 +279,7 @@ func TestRequires(t *testing.T) {
 	NewExecutorTest(t,
 		WithName("required var ok"),
 		WithExecutorOptions(
-			task.ExecutorWithDir("testdata/requires"),
+			task.WithDir("testdata/requires"),
 		),
 		WithTask("missing-var"),
 		WithVar("FOO", "bar"),
@@ -287,7 +287,7 @@ func TestRequires(t *testing.T) {
 	NewExecutorTest(t,
 		WithName("fails validation"),
 		WithExecutorOptions(
-			task.ExecutorWithDir("testdata/requires"),
+			task.WithDir("testdata/requires"),
 		),
 		WithTask("validation-var"),
 		WithVar("ENV", "dev"),
@@ -297,7 +297,7 @@ func TestRequires(t *testing.T) {
 	NewExecutorTest(t,
 		WithName("passes validation"),
 		WithExecutorOptions(
-			task.ExecutorWithDir("testdata/requires"),
+			task.WithDir("testdata/requires"),
 		),
 		WithTask("validation-var"),
 		WithVar("FOO", "one"),
@@ -306,7 +306,7 @@ func TestRequires(t *testing.T) {
 	NewExecutorTest(t,
 		WithName("required var missing + fails validation"),
 		WithExecutorOptions(
-			task.ExecutorWithDir("testdata/requires"),
+			task.WithDir("testdata/requires"),
 		),
 		WithTask("validation-var"),
 		WithRunError(),
@@ -314,7 +314,7 @@ func TestRequires(t *testing.T) {
 	NewExecutorTest(t,
 		WithName("required var missing + fails validation"),
 		WithExecutorOptions(
-			task.ExecutorWithDir("testdata/requires"),
+			task.WithDir("testdata/requires"),
 		),
 		WithTask("validation-var-dynamic"),
 		WithVar("FOO", "one"),
@@ -323,7 +323,7 @@ func TestRequires(t *testing.T) {
 	NewExecutorTest(t,
 		WithName("require before compile"),
 		WithExecutorOptions(
-			task.ExecutorWithDir("testdata/requires"),
+			task.WithDir("testdata/requires"),
 		),
 		WithTask("require-before-compile"),
 		WithRunError(),
@@ -331,7 +331,7 @@ func TestRequires(t *testing.T) {
 	NewExecutorTest(t,
 		WithName("var defined in task"),
 		WithExecutorOptions(
-			task.ExecutorWithDir("testdata/requires"),
+			task.WithDir("testdata/requires"),
 		),
 		WithTask("var-defined-in-task"),
 	)
@@ -373,9 +373,9 @@ func TestSpecialVars(t *testing.T) {
 			NewExecutorTest(t,
 				WithName(fmt.Sprintf("%s-%s", dir, test.target)),
 				WithExecutorOptions(
-					task.ExecutorWithDir(dir),
-					task.ExecutorWithSilent(true),
-					task.ExecutorWithVersionCheck(true),
+					task.WithDir(dir),
+					task.WithSilent(true),
+					task.WithVersionCheck(true),
 				),
 				WithTask(test.target),
 				WithPostProcessFn(PPRemoveAbsolutePaths),
@@ -388,8 +388,8 @@ func TestConcurrency(t *testing.T) {
 	t.Parallel()
 	NewExecutorTest(t,
 		WithExecutorOptions(
-			task.ExecutorWithDir("testdata/concurrency"),
-			task.ExecutorWithConcurrency(1),
+			task.WithDir("testdata/concurrency"),
+			task.WithConcurrency(1),
 		),
 		WithPostProcessFn(PPSortedLines),
 	)
@@ -399,8 +399,8 @@ func TestParams(t *testing.T) {
 	t.Parallel()
 	NewExecutorTest(t,
 		WithExecutorOptions(
-			task.ExecutorWithDir("testdata/params"),
-			task.ExecutorWithSilent(true),
+			task.WithDir("testdata/params"),
+			task.WithSilent(true),
 		),
 		WithPostProcessFn(PPSortedLines),
 	)
@@ -410,8 +410,8 @@ func TestDeps(t *testing.T) {
 	t.Parallel()
 	NewExecutorTest(t,
 		WithExecutorOptions(
-			task.ExecutorWithDir("testdata/deps"),
-			task.ExecutorWithSilent(true),
+			task.WithDir("testdata/deps"),
+			task.WithSilent(true),
 		),
 		WithPostProcessFn(PPSortedLines),
 	)
@@ -441,8 +441,8 @@ func TestStatus(t *testing.T) {
 	NewExecutorTest(t,
 		WithName("run gen-foo 1 silent"),
 		WithExecutorOptions(
-			task.ExecutorWithDir(dir),
-			task.ExecutorWithSilent(true),
+			task.WithDir(dir),
+			task.WithSilent(true),
 		),
 		WithTask("gen-foo"),
 	)
@@ -453,8 +453,8 @@ func TestStatus(t *testing.T) {
 	NewExecutorTest(t,
 		WithName("run gen-bar 1 silent"),
 		WithExecutorOptions(
-			task.ExecutorWithDir(dir),
-			task.ExecutorWithSilent(true),
+			task.WithDir(dir),
+			task.WithSilent(true),
 		),
 		WithTask("gen-bar"),
 	)
@@ -463,8 +463,8 @@ func TestStatus(t *testing.T) {
 	NewExecutorTest(t,
 		WithName("run gen-baz silent"),
 		WithExecutorOptions(
-			task.ExecutorWithDir(dir),
-			task.ExecutorWithSilent(true),
+			task.WithDir(dir),
+			task.WithSilent(true),
 		),
 		WithTask("gen-silent-baz"),
 	)
@@ -479,8 +479,8 @@ func TestStatus(t *testing.T) {
 	NewExecutorTest(t,
 		WithName("run gen-bar 2 silent"),
 		WithExecutorOptions(
-			task.ExecutorWithDir(dir),
-			task.ExecutorWithSilent(true),
+			task.WithDir(dir),
+			task.WithSilent(true),
 		),
 		WithTask("gen-bar"),
 	)
@@ -488,8 +488,8 @@ func TestStatus(t *testing.T) {
 	NewExecutorTest(t,
 		WithName("run gen-bar 3 silent"),
 		WithExecutorOptions(
-			task.ExecutorWithDir(dir),
-			task.ExecutorWithSilent(true),
+			task.WithDir(dir),
+			task.WithSilent(true),
 		),
 		WithTask("gen-bar"),
 	)
@@ -501,8 +501,8 @@ func TestStatus(t *testing.T) {
 	NewExecutorTest(t,
 		WithName("run gen-bar 4 silent"),
 		WithExecutorOptions(
-			task.ExecutorWithDir(dir),
-			task.ExecutorWithSilent(true),
+			task.WithDir(dir),
+			task.WithSilent(true),
 		),
 		WithTask("gen-bar"),
 	)
@@ -510,7 +510,7 @@ func TestStatus(t *testing.T) {
 	NewExecutorTest(t,
 		WithName("run gen-foo 2"),
 		WithExecutorOptions(
-			task.ExecutorWithDir(dir),
+			task.WithDir(dir),
 		),
 		WithTask("gen-foo"),
 	)
@@ -518,7 +518,7 @@ func TestStatus(t *testing.T) {
 	NewExecutorTest(t,
 		WithName("run gen-foo 3"),
 		WithExecutorOptions(
-			task.ExecutorWithDir(dir),
+			task.WithDir(dir),
 		),
 		WithTask("gen-foo"),
 	)
@@ -526,7 +526,7 @@ func TestStatus(t *testing.T) {
 	NewExecutorTest(t,
 		WithName("run gen-bar 5"),
 		WithExecutorOptions(
-			task.ExecutorWithDir(dir),
+			task.WithDir(dir),
 		),
 		WithTask("gen-bar"),
 	)
@@ -534,7 +534,7 @@ func TestStatus(t *testing.T) {
 	NewExecutorTest(t,
 		WithName("run gen-bar 6"),
 		WithExecutorOptions(
-			task.ExecutorWithDir(dir),
+			task.WithDir(dir),
 		),
 		WithTask("gen-bar"),
 	)
@@ -542,7 +542,7 @@ func TestStatus(t *testing.T) {
 	NewExecutorTest(t,
 		WithName("run gen-baz 2"),
 		WithExecutorOptions(
-			task.ExecutorWithDir(dir),
+			task.WithDir(dir),
 		),
 		WithTask("gen-silent-baz"),
 	)
@@ -550,7 +550,7 @@ func TestStatus(t *testing.T) {
 	NewExecutorTest(t,
 		WithName("run gen-baz 3"),
 		WithExecutorOptions(
-			task.ExecutorWithDir(dir),
+			task.WithDir(dir),
 		),
 		WithTask("gen-silent-baz"),
 	)
@@ -558,8 +558,8 @@ func TestStatus(t *testing.T) {
 	NewExecutorTest(t,
 		WithName("run gen-baz 4 verbose"),
 		WithExecutorOptions(
-			task.ExecutorWithDir(dir),
-			task.ExecutorWithVerbose(true),
+			task.WithDir(dir),
+			task.WithVerbose(true),
 		),
 		WithTask("gen-silent-baz"),
 		WithPostProcessFn(PPRemoveAbsolutePaths),
@@ -572,14 +572,14 @@ func TestPrecondition(t *testing.T) {
 	NewExecutorTest(t,
 		WithName("a precondition has been met"),
 		WithExecutorOptions(
-			task.ExecutorWithDir(dir),
+			task.WithDir(dir),
 		),
 		WithTask("foo"),
 	)
 	NewExecutorTest(t,
 		WithName("a precondition was not met"),
 		WithExecutorOptions(
-			task.ExecutorWithDir(dir),
+			task.WithDir(dir),
 		),
 		WithTask("impossible"),
 		WithRunError(),
@@ -587,7 +587,7 @@ func TestPrecondition(t *testing.T) {
 	NewExecutorTest(t,
 		WithName("precondition in dependency fails the task"),
 		WithExecutorOptions(
-			task.ExecutorWithDir(dir),
+			task.WithDir(dir),
 		),
 		WithTask("depends_on_impossible"),
 		WithRunError(),
@@ -595,7 +595,7 @@ func TestPrecondition(t *testing.T) {
 	NewExecutorTest(t,
 		WithName("precondition in cmd fails the task"),
 		WithExecutorOptions(
-			task.ExecutorWithDir(dir),
+			task.WithDir(dir),
 		),
 		WithTask("executes_failing_task_as_cmd"),
 		WithRunError(),
@@ -608,7 +608,7 @@ func TestAlias(t *testing.T) {
 	NewExecutorTest(t,
 		WithName("alias"),
 		WithExecutorOptions(
-			task.ExecutorWithDir("testdata/alias"),
+			task.WithDir("testdata/alias"),
 		),
 		WithTask("f"),
 	)
@@ -616,7 +616,7 @@ func TestAlias(t *testing.T) {
 	NewExecutorTest(t,
 		WithName("duplicate alias"),
 		WithExecutorOptions(
-			task.ExecutorWithDir("testdata/alias"),
+			task.WithDir("testdata/alias"),
 		),
 		WithTask("x"),
 		WithRunError(),
@@ -625,8 +625,8 @@ func TestAlias(t *testing.T) {
 	NewExecutorTest(t,
 		WithName("alias summary"),
 		WithExecutorOptions(
-			task.ExecutorWithDir("testdata/alias"),
-			task.ExecutorWithSummary(true),
+			task.WithDir("testdata/alias"),
+			task.WithSummary(true),
 		),
 		WithTask("f"),
 	)
@@ -638,7 +638,7 @@ func TestLabel(t *testing.T) {
 	NewExecutorTest(t,
 		WithName("up to date"),
 		WithExecutorOptions(
-			task.ExecutorWithDir("testdata/label_uptodate"),
+			task.WithDir("testdata/label_uptodate"),
 		),
 		WithTask("foo"),
 	)
@@ -646,8 +646,8 @@ func TestLabel(t *testing.T) {
 	NewExecutorTest(t,
 		WithName("summary"),
 		WithExecutorOptions(
-			task.ExecutorWithDir("testdata/label_summary"),
-			task.ExecutorWithSummary(true),
+			task.WithDir("testdata/label_summary"),
+			task.WithSummary(true),
 		),
 		WithTask("foo"),
 	)
@@ -655,7 +655,7 @@ func TestLabel(t *testing.T) {
 	NewExecutorTest(t,
 		WithName("status"),
 		WithExecutorOptions(
-			task.ExecutorWithDir("testdata/label_status"),
+			task.WithDir("testdata/label_status"),
 		),
 		WithTask("foo"),
 		WithStatusError(),
@@ -664,7 +664,7 @@ func TestLabel(t *testing.T) {
 	NewExecutorTest(t,
 		WithName("var"),
 		WithExecutorOptions(
-			task.ExecutorWithDir("testdata/label_var"),
+			task.WithDir("testdata/label_var"),
 		),
 		WithTask("foo"),
 	)
@@ -672,7 +672,7 @@ func TestLabel(t *testing.T) {
 	NewExecutorTest(t,
 		WithName("label in summary"),
 		WithExecutorOptions(
-			task.ExecutorWithDir("testdata/label_summary"),
+			task.WithDir("testdata/label_summary"),
 		),
 		WithTask("foo"),
 	)
@@ -701,8 +701,8 @@ func TestPromptInSummary(t *testing.T) {
 			opts := []ExecutorTestOption{
 				WithName(test.name),
 				WithExecutorOptions(
-					task.ExecutorWithDir("testdata/prompt"),
-					task.ExecutorWithAssumeTerm(true),
+					task.WithDir("testdata/prompt"),
+					task.WithAssumeTerm(true),
 				),
 				WithTask("foo"),
 				WithInput(test.input),
@@ -720,8 +720,8 @@ func TestPromptWithIndirectTask(t *testing.T) {
 
 	NewExecutorTest(t,
 		WithExecutorOptions(
-			task.ExecutorWithDir("testdata/prompt"),
-			task.ExecutorWithAssumeTerm(true),
+			task.WithDir("testdata/prompt"),
+			task.WithAssumeTerm(true),
 		),
 		WithTask("bar"),
 		WithInput("y\n"),
@@ -734,9 +734,9 @@ func TestPromptAssumeYes(t *testing.T) {
 	NewExecutorTest(t,
 		WithName("--yes flag should skip prompt"),
 		WithExecutorOptions(
-			task.ExecutorWithDir("testdata/prompt"),
-			task.ExecutorWithAssumeTerm(true),
-			task.ExecutorWithAssumeYes(true),
+			task.WithDir("testdata/prompt"),
+			task.WithAssumeTerm(true),
+			task.WithAssumeYes(true),
 		),
 		WithTask("foo"),
 		WithInput("\n"),
@@ -745,8 +745,8 @@ func TestPromptAssumeYes(t *testing.T) {
 	NewExecutorTest(t,
 		WithName("task should raise errors.TaskCancelledError"),
 		WithExecutorOptions(
-			task.ExecutorWithDir("testdata/prompt"),
-			task.ExecutorWithAssumeTerm(true),
+			task.WithDir("testdata/prompt"),
+			task.WithAssumeTerm(true),
 		),
 		WithTask("foo"),
 		WithInput("\n"),
@@ -781,9 +781,9 @@ func TestForCmds(t *testing.T) {
 		opts := []ExecutorTestOption{
 			WithName(test.name),
 			WithExecutorOptions(
-				task.ExecutorWithDir("testdata/for/cmds"),
-				task.ExecutorWithSilent(true),
-				task.ExecutorWithForce(true),
+				task.WithDir("testdata/for/cmds"),
+				task.WithSilent(true),
+				task.WithForce(true),
 			),
 			WithTask(test.name),
 			WithPostProcessFn(PPRemoveAbsolutePaths),
@@ -822,11 +822,11 @@ func TestForDeps(t *testing.T) {
 		opts := []ExecutorTestOption{
 			WithName(test.name),
 			WithExecutorOptions(
-				task.ExecutorWithDir("testdata/for/deps"),
-				task.ExecutorWithSilent(true),
-				task.ExecutorWithForce(true),
+				task.WithDir("testdata/for/deps"),
+				task.WithSilent(true),
+				task.WithForce(true),
 				// Force output of each dep to be grouped together to prevent interleaving
-				task.ExecutorWithOutputStyle(ast.Output{Name: "group"}),
+				task.WithOutputStyle(ast.Output{Name: "group"}),
 			),
 			WithTask(test.name),
 			WithPostProcessFn(PPRemoveAbsolutePaths),
@@ -868,9 +868,9 @@ func TestReference(t *testing.T) {
 		NewExecutorTest(t,
 			WithName(test.name),
 			WithExecutorOptions(
-				task.ExecutorWithDir("testdata/var_references"),
-				task.ExecutorWithSilent(true),
-				task.ExecutorWithForce(true),
+				task.WithDir("testdata/var_references"),
+				task.WithSilent(true),
+				task.WithForce(true),
 			),
 			WithTask(cmp.Or(test.call, "default")),
 		)
@@ -936,9 +936,9 @@ func TestVarInheritance(t *testing.T) {
 		NewExecutorTest(t,
 			WithName(test.name),
 			WithExecutorOptions(
-				task.ExecutorWithDir(fmt.Sprintf("testdata/var_inheritance/v3/%s", test.name)),
-				task.ExecutorWithSilent(true),
-				task.ExecutorWithForce(true),
+				task.WithDir(fmt.Sprintf("testdata/var_inheritance/v3/%s", test.name)),
+				task.WithSilent(true),
+				task.WithForce(true),
 			),
 			WithTask(cmp.Or(test.call, "default")),
 		)

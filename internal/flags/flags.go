@@ -176,50 +176,54 @@ func Validate() error {
 	return nil
 }
 
-// WithExecutorOptions is a special internal functional option that is used to pass flags
-// from the CLI directly to the executor.
-func WithExecutorOptions() task.ExecutorOption {
-	return func(e *task.Executor) {
-		// Set the sorter
-		var sorter sort.Sorter
-		switch TaskSort {
-		case "none":
-			sorter = sort.NoSort
-		case "alphanumeric":
-			sorter = sort.AlphaNumeric
-		}
+// WithFlags is a special internal functional option that is used to pass flags
+// from the CLI into any constructor that accepts functional options.
+func WithFlags() task.ExecutorOption {
+	return &flagsOption{}
+}
 
-		// Change the directory to the user's home directory if the global flag is set
-		dir := Dir
-		if Global {
-			home, err := os.UserHomeDir()
-			if err == nil {
-				dir = home
-			}
-		}
+type flagsOption struct{}
 
-		e.Options(
-			task.ExecutorWithDir(dir),
-			task.ExecutorWithEntrypoint(Entrypoint),
-			task.ExecutorWithForce(Force),
-			task.ExecutorWithForceAll(ForceAll),
-			task.ExecutorWithInsecure(Insecure),
-			task.ExecutorWithDownload(Download),
-			task.ExecutorWithOffline(Offline),
-			task.ExecutorWithTimeout(Timeout),
-			task.ExecutorWithWatch(Watch),
-			task.ExecutorWithVerbose(Verbose),
-			task.ExecutorWithSilent(Silent),
-			task.ExecutorWithAssumeYes(AssumeYes),
-			task.ExecutorWithDry(Dry || Status),
-			task.ExecutorWithSummary(Summary),
-			task.ExecutorWithParallel(Parallel),
-			task.ExecutorWithColor(Color),
-			task.ExecutorWithConcurrency(Concurrency),
-			task.ExecutorWithInterval(Interval),
-			task.ExecutorWithOutputStyle(Output),
-			task.ExecutorWithTaskSorter(sorter),
-			task.ExecutorWithVersionCheck(true),
-		)
+func (o *flagsOption) ApplyToExecutor(e *task.Executor) {
+	// Set the sorter
+	var sorter sort.Sorter
+	switch TaskSort {
+	case "none":
+		sorter = sort.NoSort
+	case "alphanumeric":
+		sorter = sort.AlphaNumeric
 	}
+
+	// Change the directory to the user's home directory if the global flag is set
+	dir := Dir
+	if Global {
+		home, err := os.UserHomeDir()
+		if err == nil {
+			dir = home
+		}
+	}
+
+	e.Options(
+		task.WithDir(dir),
+		task.WithEntrypoint(Entrypoint),
+		task.WithForce(Force),
+		task.WithForceAll(ForceAll),
+		task.WithInsecure(Insecure),
+		task.WithDownload(Download),
+		task.WithOffline(Offline),
+		task.WithTimeout(Timeout),
+		task.WithWatch(Watch),
+		task.WithVerbose(Verbose),
+		task.WithSilent(Silent),
+		task.WithAssumeYes(AssumeYes),
+		task.WithDry(Dry || Status),
+		task.WithSummary(Summary),
+		task.WithParallel(Parallel),
+		task.WithColor(Color),
+		task.WithConcurrency(Concurrency),
+		task.WithInterval(Interval),
+		task.WithOutputStyle(Output),
+		task.WithTaskSorter(sorter),
+		task.WithVersionCheck(true),
+	)
 }
