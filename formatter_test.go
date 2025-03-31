@@ -116,8 +116,8 @@ func (tt *FormatterTest) run(t *testing.T) {
 
 		opts := append(
 			tt.executorOpts,
-			task.ExecutorWithStdout(&buf),
-			task.ExecutorWithStderr(&buf),
+			task.WithStdout(&buf),
+			task.WithStderr(&buf),
 		)
 
 		// Set up the task executor
@@ -170,7 +170,7 @@ func TestNoLabelInList(t *testing.T) {
 
 	NewFormatterTest(t,
 		WithExecutorOptions(
-			task.ExecutorWithDir("testdata/label_list"),
+			task.WithDir("testdata/label_list"),
 		),
 		WithListOptions(task.ListOptions{
 			ListOnlyTasksWithDescriptions: true,
@@ -184,7 +184,7 @@ func TestListAllShowsNoDesc(t *testing.T) {
 
 	NewFormatterTest(t,
 		WithExecutorOptions(
-			task.ExecutorWithDir("testdata/list_mixed_desc"),
+			task.WithDir("testdata/list_mixed_desc"),
 		),
 		WithListOptions(task.ListOptions{
 			ListAllTasks: true,
@@ -198,7 +198,7 @@ func TestListCanListDescOnly(t *testing.T) {
 
 	NewFormatterTest(t,
 		WithExecutorOptions(
-			task.ExecutorWithDir("testdata/list_mixed_desc"),
+			task.WithDir("testdata/list_mixed_desc"),
 		),
 		WithListOptions(task.ListOptions{
 			ListOnlyTasksWithDescriptions: true,
@@ -211,7 +211,7 @@ func TestListDescInterpolation(t *testing.T) {
 
 	NewFormatterTest(t,
 		WithExecutorOptions(
-			task.ExecutorWithDir("testdata/list_desc_interpolation"),
+			task.WithDir("testdata/list_desc_interpolation"),
 		),
 		WithListOptions(task.ListOptions{
 			ListOnlyTasksWithDescriptions: true,
