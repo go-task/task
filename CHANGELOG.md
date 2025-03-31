@@ -30,7 +30,7 @@
 #### Package API
 
 - The [`Executor`](https://pkg.go.dev/github.com/go-task/task/v3#Executor) now
-  uses the functional options pattern (#2085 by @pd93).
+  uses the functional options pattern (#2085, #2147 by @pd93).
 
 ## v3.42.1 - 2025-03-10
 
