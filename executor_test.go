@@ -2,6 +2,7 @@ package task_test
 
 import (
 	"bytes"
+	"cmp"
 	"context"
 	"fmt"
 	"os"
@@ -751,4 +752,195 @@ func TestPromptAssumeYes(t *testing.T) {
 		WithInput("\n"),
 		WithRunError(),
 	)
+}
+
+func TestForCmds(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name    string
+		wantErr bool
+	}{
+		{name: "loop-explicit"},
+		{name: "loop-matrix"},
+		{name: "loop-matrix-ref"},
+		{
+			name:    "loop-matrix-ref-error",
+			wantErr: true,
+		},
+		{name: "loop-sources"},
+		{name: "loop-sources-glob"},
+		{name: "loop-vars"},
+		{name: "loop-vars-sh"},
+		{name: "loop-task"},
+		{name: "loop-task-as"},
+		{name: "loop-different-tasks"},
+	}
+
+	for _, test := range tests {
+		opts := []ExecutorTestOption{
+			WithName(test.name),
+			WithExecutorOptions(
+				task.ExecutorWithDir("testdata/for/cmds"),
+				task.ExecutorWithSilent(true),
+				task.ExecutorWithForce(true),
+			),
+			WithTask(test.name),
+			WithPostProcessFn(PPRemoveAbsolutePaths),
+		}
+		if test.wantErr {
+			opts = append(opts, WithRunError())
+		}
+		NewExecutorTest(t, opts...)
+	}
+}
+
+func TestForDeps(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name    string
+		wantErr bool
+	}{
+		{name: "loop-explicit"},
+		{name: "loop-matrix"},
+		{name: "loop-matrix-ref"},
+		{
+			name:    "loop-matrix-ref-error",
+			wantErr: true,
+		},
+		{name: "loop-sources"},
+		{name: "loop-sources-glob"},
+		{name: "loop-vars"},
+		{name: "loop-vars-sh"},
+		{name: "loop-task"},
+		{name: "loop-task-as"},
+		{name: "loop-different-tasks"},
+	}
+
+	for _, test := range tests {
+		opts := []ExecutorTestOption{
+			WithName(test.name),
+			WithExecutorOptions(
+				task.ExecutorWithDir("testdata/for/deps"),
+				task.ExecutorWithSilent(true),
+				task.ExecutorWithForce(true),
+				// Force output of each dep to be grouped together to prevent interleaving
+				task.ExecutorWithOutputStyle(ast.Output{Name: "group"}),
+			),
+			WithTask(test.name),
+			WithPostProcessFn(PPRemoveAbsolutePaths),
+			WithPostProcessFn(PPSortedLines),
+		}
+		if test.wantErr {
+			opts = append(opts, WithRunError())
+		}
+		NewExecutorTest(t, opts...)
+	}
+}
+
+func TestReference(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name string
+		call string
+	}{
+		{
+			name: "reference in command",
+			call: "ref-cmd",
+		},
+		{
+			name: "reference in dependency",
+			call: "ref-dep",
+		},
+		{
+			name: "reference using templating resolver",
+			call: "ref-resolver",
+		},
+		{
+			name: "reference using templating resolver and dynamic var",
+			call: "ref-resolver-sh",
+		},
+	}
+
+	for _, test := range tests {
+		NewExecutorTest(t,
+			WithName(test.name),
+			WithExecutorOptions(
+				task.ExecutorWithDir("testdata/var_references"),
+				task.ExecutorWithSilent(true),
+				task.ExecutorWithForce(true),
+			),
+			WithTask(cmp.Or(test.call, "default")),
+		)
+	}
+}
+
+func TestVarInheritance(t *testing.T) {
+	enableExperimentForTest(t, &experiments.EnvPrecedence, 1)
+	tests := []struct {
+		name string
+		call string
+	}{
+		{name: "shell"},
+		{name: "entrypoint-global-dotenv"},
+		{name: "entrypoint-global-vars"},
+		// We can't send env vars to a called task, so the env var is not overridden
+		{name: "entrypoint-task-call-vars"},
+		// Dotenv doesn't set variables
+		{name: "entrypoint-task-call-dotenv"},
+		{name: "entrypoint-task-call-task-vars"},
+		// Dotenv doesn't set variables
+		{name: "entrypoint-task-dotenv"},
+		{name: "entrypoint-task-vars"},
+		// {
+		// 	// Dotenv not currently allowed in included taskfiles
+		// 	name: "included-global-dotenv",
+		// 	want: "included-global-dotenv\nincluded-global-dotenv\n",
+		// },
+		{
+			name: "included-global-vars",
+			call: "included",
+		},
+		{
+			// We can't send env vars to a called task, so the env var is not overridden
+			name: "included-task-call-vars",
+			call: "included",
+		},
+		{
+			// Dotenv doesn't set variables
+			// Dotenv not currently allowed in included taskfiles (but doesn't error in a task)
+			name: "included-task-call-dotenv",
+			call: "included",
+		},
+		{
+			name: "included-task-call-task-vars",
+			call: "included",
+		},
+		{
+			// Dotenv doesn't set variables
+			// Somehow dotenv is working here!
+			name: "included-task-dotenv",
+			call: "included",
+		},
+		{
+			name: "included-task-vars",
+			call: "included",
+		},
+	}
+
+	t.Setenv("VAR", "shell")
+	t.Setenv("ENV", "shell")
+	for _, test := range tests {
+		NewExecutorTest(t,
+			WithName(test.name),
+			WithExecutorOptions(
+				task.ExecutorWithDir(fmt.Sprintf("testdata/var_inheritance/v3/%s", test.name)),
+				task.ExecutorWithSilent(true),
+				task.ExecutorWithForce(true),
+			),
+			WithTask(cmp.Or(test.call, "default")),
+		)
+	}
 }
