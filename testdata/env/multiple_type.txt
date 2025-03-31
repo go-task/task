@@ -1,0 +1,1 @@
+FOO='1' BAR='true' BAZ='1.1'

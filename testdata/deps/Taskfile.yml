@@ -7,50 +7,50 @@ tasks:
   d1:
     deps: [d11, d12, d13]
     cmds:
-      - echo 'Text' > d1.txt
+      - echo 'd1'
 
   d2:
     deps: [d21, d22, d23]
     cmds:
-      - echo 'Text' > d2.txt
+      - echo 'd2'
 
   d3:
     deps: [d31, d32, d33]
     cmds:
-      - echo 'Text' > d3.txt
+      - echo 'd3'
 
   d11:
     cmds:
-      - echo 'Text' > d11.txt
+      - echo 'd11'
 
   d12:
     cmds:
-      - echo 'Text' > d12.txt
+      - echo 'd12'
 
   d13:
     cmds:
-      - echo 'Text' > d13.txt
+      - echo 'd13'
 
   d21:
     cmds:
-      - echo 'Text' > d21.txt
+      - echo 'd21'
 
   d22:
     cmds:
-      - echo 'Text' > d22.txt
+      - echo 'd22'
 
   d23:
     cmds:
-      - echo 'Text' > d23.txt
+      - echo 'd23'
 
   d31:
     cmds:
-      - echo 'Text' > d31.txt
+      - echo 'd31'
 
   d32:
     cmds:
-      - echo 'Text' > d32.txt
+      - echo 'd32'
 
   d33:
     cmds:
-      - echo 'Text' > d33.txt
+      - echo 'd33'

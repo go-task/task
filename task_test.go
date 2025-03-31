@@ -2,7 +2,6 @@ package task_test
 
 import (
 	"bytes"
-	"cmp"
 	"context"
 	"fmt"
 	"io"
@@ -14,12 +13,15 @@ import (
 	"path/filepath"
 	"regexp"
 	"runtime"
+	"slices"
+	"sort"
 	"strings"
 	"sync"
 	"testing"
 	"time"
 
 	"github.com/Masterminds/semver/v3"
+	"github.com/sebdah/goldie/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -32,6 +34,231 @@ import (
 
 func init() {
 	_ = os.Setenv("NO_COLOR", "1")
+}
+
+type (
+	TestOption interface {
+		ExecutorTestOption
+		FormatterTestOption
+	}
+	TaskTest struct {
+		name           string
+		experiments    map[*experiments.Experiment]int
+		postProcessFns []PostProcessFn
+	}
+)
+
+// goldenFileName makes the file path for fixture files safe for all well-known
+// operating systems. Windows in particular has a lot of restrictions the
+// characters that can be used in file paths.
+func goldenFileName(t *testing.T) string {
+	t.Helper()
+	name := t.Name()
+	for _, c := range []string{` `, `<`, `>`, `:`, `"`, `/`, `\`, `|`, `?`, `*`} {
+		name = strings.ReplaceAll(name, c, "-")
+	}
+	return name
+}
+
+// writeFixture writes a fixture file for the test. The fixture file is created
+// using the [goldie.Goldie] package. The fixture file is created with the
+// output of the task, after any post-process functions have been applied.
+func (tt *TaskTest) writeFixture(
+	t *testing.T,
+	g *goldie.Goldie,
+	goldenFileSuffix string,
+	b []byte,
+) {
+	t.Helper()
+	// Apply any post-process functions
+	for _, fn := range tt.postProcessFns {
+		b = fn(t, b)
+	}
+	// Write the fixture file
+	goldenFileName := goldenFileName(t)
+	if goldenFileSuffix != "" {
+		goldenFileName += "-" + goldenFileSuffix
+	}
+	g.Assert(t, goldenFileName, b)
+}
+
+// writeFixtureBuffer is a wrapper for writing the main output of the task to a
+// fixture file.
+func (tt *TaskTest) writeFixtureBuffer(
+	t *testing.T,
+	g *goldie.Goldie,
+	buff bytes.Buffer,
+) {
+	t.Helper()
+	tt.writeFixture(t, g, "", buff.Bytes())
+}
+
+// writeFixtureErrSetup is a wrapper for writing the output of an error during
+// the setup phase of the task to a fixture file.
+func (tt *TaskTest) writeFixtureErrSetup(
+	t *testing.T,
+	g *goldie.Goldie,
+	err error,
+) {
+	t.Helper()
+	tt.writeFixture(t, g, "err-setup", []byte(err.Error()))
+}
+
+// Functional options
+
+// WithName gives the test fixture output a name. This should be used when
+// running multiple tests in a single test function.
+func WithName(name string) TestOption {
+	return &nameTestOption{name: name}
+}
+
+type nameTestOption struct {
+	name string
+}
+
+func (opt *nameTestOption) applyToExecutorTest(t *ExecutorTest) {
+	t.name = opt.name
+}
+
+func (opt *nameTestOption) applyToFormatterTest(t *FormatterTest) {
+	t.name = opt.name
+}
+
+// WithTask sets the name of the task to run. This should be used when the task
+// to run is not the default task.
+func WithTask(task string) TestOption {
+	return &taskTestOption{task: task}
+}
+
+type taskTestOption struct {
+	task string
+}
+
+func (opt *taskTestOption) applyToExecutorTest(t *ExecutorTest) {
+	t.task = opt.task
+}
+
+func (opt *taskTestOption) applyToFormatterTest(t *FormatterTest) {
+	t.task = opt.task
+}
+
+// WithVar sets a variable to be passed to the task. This can be called multiple
+// times to set more than one variable.
+func WithVar(key string, value any) TestOption {
+	return &varTestOption{key: key, value: value}
+}
+
+type varTestOption struct {
+	key   string
+	value any
+}
+
+func (opt *varTestOption) applyToExecutorTest(t *ExecutorTest) {
+	t.vars[opt.key] = opt.value
+}
+
+func (opt *varTestOption) applyToFormatterTest(t *FormatterTest) {
+	t.vars[opt.key] = opt.value
+}
+
+// WithExecutorOptions sets the [task.ExecutorOption]s to be used when creating
+// a [task.Executor].
+func WithExecutorOptions(executorOpts ...task.ExecutorOption) TestOption {
+	return &executorOptionsTestOption{executorOpts: executorOpts}
+}
+
+type executorOptionsTestOption struct {
+	executorOpts []task.ExecutorOption
+}
+
+func (opt *executorOptionsTestOption) applyToExecutorTest(t *ExecutorTest) {
+	t.executorOpts = slices.Concat(t.executorOpts, opt.executorOpts)
+}
+
+func (opt *executorOptionsTestOption) applyToFormatterTest(t *FormatterTest) {
+	t.executorOpts = slices.Concat(t.executorOpts, opt.executorOpts)
+}
+
+// WithExperiment sets an experiment to be enabled for the test. This can be
+// called multiple times to enable more than one experiment.
+func WithExperiment(experiment *experiments.Experiment, value int) TestOption {
+	return &experimentTestOption{experiment: experiment, value: value}
+}
+
+type experimentTestOption struct {
+	experiment *experiments.Experiment
+	value      int
+}
+
+func (opt *experimentTestOption) applyToExecutorTest(t *ExecutorTest) {
+	t.experiments[opt.experiment] = opt.value
+}
+
+func (opt *experimentTestOption) applyToFormatterTest(t *FormatterTest) {
+	t.experiments[opt.experiment] = opt.value
+}
+
+// WithPostProcessFn adds a [PostProcessFn] function to the test. Post-process
+// functions are run on the output of the task before a fixture is created. This
+// can be used to remove absolute paths, sort lines, etc. This can be called
+// multiple times to add more than one post-process function.
+func WithPostProcessFn(fn PostProcessFn) TestOption {
+	return &postProcessFnTestOption{fn: fn}
+}
+
+type postProcessFnTestOption struct {
+	fn PostProcessFn
+}
+
+func (opt *postProcessFnTestOption) applyToExecutorTest(t *ExecutorTest) {
+	t.postProcessFns = append(t.postProcessFns, opt.fn)
+}
+
+func (opt *postProcessFnTestOption) applyToFormatterTest(t *FormatterTest) {
+	t.postProcessFns = append(t.postProcessFns, opt.fn)
+}
+
+// WithSetupError sets the test to expect an error during the setup phase of the
+// task execution. A fixture will be created with the output of any errors.
+func WithSetupError() TestOption {
+	return &setupErrorTestOption{}
+}
+
+type setupErrorTestOption struct{}
+
+func (opt *setupErrorTestOption) applyToExecutorTest(t *ExecutorTest) {
+	t.wantSetupError = true
+}
+
+func (opt *setupErrorTestOption) applyToFormatterTest(t *FormatterTest) {
+	t.wantSetupError = true
+}
+
+// Post-processing
+
+// A PostProcessFn is a function that can be applied to the output of a test
+// fixture before the file is written.
+type PostProcessFn func(*testing.T, []byte) []byte
+
+// PPRemoveAbsolutePaths removes any absolute paths from the output of the task.
+// This is useful when the task output contains paths that are can be different
+// in different environments such as home directories. The function looks for
+// any paths that contain the current working directory and truncates them.
+func PPRemoveAbsolutePaths(t *testing.T, b []byte) []byte {
+	t.Helper()
+	wd, err := os.Getwd()
+	require.NoError(t, err)
+	return bytes.ReplaceAll(b, []byte(wd), nil)
+}
+
+// PPSortedLines sorts the lines of the output of the task. This is useful when
+// the order of the output is not important, but the output is expected to be
+// the same each time the task is run (e.g. when running tasks in parallel).
+func PPSortedLines(t *testing.T, b []byte) []byte {
+	t.Helper()
+	lines := strings.Split(strings.TrimSpace(string(b)), "\n")
+	sort.Strings(lines)
+	return []byte(strings.Join(lines, "\n") + "\n")
 }
 
 // SyncBuffer is a threadsafe buffer for testing.
@@ -95,409 +322,6 @@ func (fct fileContentTest) Run(t *testing.T) {
 			assert.Equal(t, expectContent, s, "unexpected file content in %s", path)
 		})
 	}
-}
-
-func TestEmptyTask(t *testing.T) {
-	t.Parallel()
-
-	e := task.NewExecutor(
-		task.ExecutorWithDir("testdata/empty_task"),
-		task.ExecutorWithStdout(io.Discard),
-		task.ExecutorWithStderr(io.Discard),
-	)
-
-	require.NoError(t, e.Setup(), "e.Setup()")
-	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "default"}))
-}
-
-func TestEmptyTaskfile(t *testing.T) {
-	t.Parallel()
-
-	e := task.NewExecutor(
-		task.ExecutorWithDir("testdata/empty_taskfile"),
-		task.ExecutorWithStdout(io.Discard),
-		task.ExecutorWithStderr(io.Discard),
-	)
-
-	require.Error(t, e.Setup(), "e.Setup()")
-}
-
-func TestEnv(t *testing.T) {
-	t.Setenv("QUX", "from_os")
-	tt := fileContentTest{
-		Dir:       "testdata/env",
-		Target:    "default",
-		TrimSpace: false,
-		Files: map[string]string{
-			"local.txt":          "GOOS='linux' GOARCH='amd64' CGO_ENABLED='0'\n",
-			"global.txt":         "FOO='foo' BAR='overridden' BAZ='baz'\n",
-			"multiple_type.txt":  "FOO='1' BAR='true' BAZ='1.1'\n",
-			"not-overridden.txt": "QUX='from_os'\n",
-			"dynamic.txt":        "foo\n",
-		},
-	}
-	tt.Run(t)
-	enableExperimentForTest(t, &experiments.EnvPrecedence, 1)
-	ttt := fileContentTest{
-		Dir:       "testdata/env",
-		Target:    "overridden",
-		TrimSpace: false,
-		Files: map[string]string{
-			"overridden.txt": "QUX='from_taskfile'\n",
-		},
-	}
-	ttt.Run(t)
-}
-
-func TestVars(t *testing.T) {
-	t.Parallel()
-
-	tt := fileContentTest{
-		Dir:    "testdata/vars",
-		Target: "default",
-		Files: map[string]string{
-			"missing-var.txt":  "\n",
-			"var-order.txt":    "ABCDEF\n",
-			"dependent-sh.txt": "123456\n",
-			"with-call.txt":    "Hi, ABC123!\n",
-			"from-dot-env.txt": "From .env file\n",
-		},
-	}
-	t.Run("", func(t *testing.T) {
-		t.Parallel()
-		tt.Run(t)
-	})
-}
-
-func TestRequires(t *testing.T) {
-	t.Parallel()
-
-	const dir = "testdata/requires"
-
-	var buff bytes.Buffer
-	e := task.NewExecutor(
-		task.ExecutorWithDir(dir),
-		task.ExecutorWithStdout(&buff),
-		task.ExecutorWithStderr(&buff),
-	)
-
-	require.NoError(t, e.Setup())
-	require.ErrorContains(t, e.Run(context.Background(), &task.Call{Task: "missing-var"}), "task: Task \"missing-var\" cancelled because it is missing required variables: FOO")
-	buff.Reset()
-	require.NoError(t, e.Setup())
-
-	vars := ast.NewVars()
-	vars.Set("FOO", ast.Var{Value: "bar"})
-
-	require.NoError(t, e.Run(context.Background(), &task.Call{
-		Task: "missing-var",
-		Vars: vars,
-	}))
-	buff.Reset()
-
-	vars.Set("ENV", ast.Var{Value: "dev"})
-	require.NoError(t, e.Setup())
-	require.ErrorContains(t, e.Run(context.Background(), &task.Call{Task: "validation-var", Vars: vars}), "task: Task \"validation-var\" cancelled because it is missing required variables:\n  - FOO has an invalid value : 'bar' (allowed values : [one two])")
-	buff.Reset()
-
-	require.NoError(t, e.Setup())
-	vars.Set("FOO", ast.Var{Value: "one"})
-	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "validation-var", Vars: vars}))
-	buff.Reset()
-
-	vars = ast.NewVars()
-	require.NoError(t, e.Setup())
-	require.ErrorContains(t, e.Run(context.Background(), &task.Call{Task: "validation-var", Vars: vars}), "task: Task \"validation-var\" cancelled because it is missing required variables: ENV, FOO (allowed values: [one two])")
-	buff.Reset()
-
-	require.NoError(t, e.Setup())
-	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "validation-var-dynamic", Vars: vars}))
-	buff.Reset()
-
-	require.NoError(t, e.Setup())
-	require.ErrorContains(t, e.Run(context.Background(), &task.Call{Task: "require-before-compile"}), "task: Task \"require-before-compile\" cancelled because it is missing required variables: MY_VAR")
-	buff.Reset()
-
-	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "var-defined-in-task"}))
-	buff.Reset()
-}
-
-func TestSpecialVars(t *testing.T) {
-	t.Parallel()
-
-	const dir = "testdata/special_vars"
-	const subdir = "testdata/special_vars/subdir"
-	toAbs := func(rel string) string {
-		abs, err := filepath.Abs(rel)
-		assert.NoError(t, err)
-		return abs
-	}
-
-	tests := []struct {
-		target   string
-		expected string
-	}{
-		// Root
-		{target: "print-task", expected: "print-task"},
-		{target: "print-root-dir", expected: toAbs(dir)},
-		{target: "print-taskfile", expected: toAbs(dir) + "/Taskfile.yml"},
-		{target: "print-taskfile-dir", expected: toAbs(dir)},
-		{target: "print-task-version", expected: "unknown"},
-		{target: "print-task-dir", expected: toAbs(dir) + "/foo"},
-		// Included
-		{target: "included:print-task", expected: "included:print-task"},
-		{target: "included:print-root-dir", expected: toAbs(dir)},
-		{target: "included:print-taskfile", expected: toAbs(dir) + "/included/Taskfile.yml"},
-		{target: "included:print-taskfile-dir", expected: toAbs(dir) + "/included"},
-		{target: "included:print-task-version", expected: "unknown"},
-	}
-
-	for _, dir := range []string{dir, subdir} {
-		for _, test := range tests {
-			t.Run(test.target, func(t *testing.T) {
-				t.Parallel()
-
-				var buff bytes.Buffer
-				e := task.NewExecutor(
-					task.ExecutorWithDir(dir),
-					task.ExecutorWithStdout(&buff),
-					task.ExecutorWithStderr(&buff),
-					task.ExecutorWithSilent(true),
-					task.ExecutorWithVersionCheck(true),
-				)
-				require.NoError(t, e.Setup())
-				require.NoError(t, e.Run(context.Background(), &task.Call{Task: test.target}))
-				assert.Equal(t, test.expected+"\n", buff.String())
-			})
-		}
-	}
-}
-
-func TestConcurrency(t *testing.T) {
-	t.Parallel()
-
-	const (
-		dir    = "testdata/concurrency"
-		target = "default"
-	)
-	e := task.NewExecutor(
-		task.ExecutorWithDir(dir),
-		task.ExecutorWithStdout(io.Discard),
-		task.ExecutorWithStderr(io.Discard),
-		task.ExecutorWithConcurrency(1),
-	)
-	require.NoError(t, e.Setup(), "e.Setup()")
-	require.NoError(t, e.Run(context.Background(), &task.Call{Task: target}), "e.Run(target)")
-}
-
-func TestParams(t *testing.T) {
-	t.Parallel()
-
-	tt := fileContentTest{
-		Dir:       "testdata/params",
-		Target:    "default",
-		TrimSpace: false,
-		Files: map[string]string{
-			"hello.txt":       "Hello\n",
-			"world.txt":       "World\n",
-			"exclamation.txt": "!\n",
-			"dep1.txt":        "Dependence1\n",
-			"dep2.txt":        "Dependence2\n",
-			"spanish.txt":     "¡Holla mundo!\n",
-			"spanish-dep.txt": "¡Holla dependencia!\n",
-			"portuguese.txt":  "Olá, mundo!\n",
-			"portuguese2.txt": "Olá, mundo!\n",
-			"german.txt":      "Welt!\n",
-		},
-	}
-	t.Run("", func(t *testing.T) {
-		t.Parallel()
-		tt.Run(t)
-	})
-}
-
-func TestDeps(t *testing.T) {
-	t.Parallel()
-
-	const dir = "testdata/deps"
-
-	files := []string{
-		"d1.txt",
-		"d2.txt",
-		"d3.txt",
-		"d11.txt",
-		"d12.txt",
-		"d13.txt",
-		"d21.txt",
-		"d22.txt",
-		"d23.txt",
-		"d31.txt",
-		"d32.txt",
-		"d33.txt",
-	}
-
-	for _, f := range files {
-		_ = os.Remove(filepathext.SmartJoin(dir, f))
-	}
-
-	e := task.NewExecutor(
-		task.ExecutorWithDir(dir),
-		task.ExecutorWithStdout(io.Discard),
-		task.ExecutorWithStderr(io.Discard),
-	)
-	require.NoError(t, e.Setup())
-	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "default"}))
-
-	for _, f := range files {
-		f = filepathext.SmartJoin(dir, f)
-		if _, err := os.Stat(f); err != nil {
-			t.Errorf("File %s should exist", f)
-		}
-	}
-}
-
-func TestStatus(t *testing.T) {
-	t.Parallel()
-
-	const dir = "testdata/status"
-
-	files := []string{
-		"foo.txt",
-		"bar.txt",
-		"baz.txt",
-	}
-
-	for _, f := range files {
-		path := filepathext.SmartJoin(dir, f)
-		_ = os.Remove(path)
-		if _, err := os.Stat(path); err == nil {
-			t.Errorf("File should not exist: %v", err)
-		}
-	}
-
-	var buff bytes.Buffer
-	e := task.NewExecutor(
-		task.ExecutorWithDir(dir),
-		task.ExecutorWithStdout(&buff),
-		task.ExecutorWithStderr(&buff),
-		task.ExecutorWithSilent(true),
-		task.ExecutorWithTempDir(task.TempDir{
-			Remote:      filepathext.SmartJoin(dir, ".task"),
-			Fingerprint: filepathext.SmartJoin(dir, ".task"),
-		}),
-	)
-	require.NoError(t, e.Setup())
-	// gen-foo creates foo.txt, and will always fail it's status check.
-	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "gen-foo"}))
-	// gen-foo creates bar.txt, and will pass its status-check the 3. time it
-	// is run. It creates bar.txt, but also lists it as its source. So, the checksum
-	// for the file won't match before after the second run as we the file
-	// only exists after the first run.
-	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "gen-bar"}))
-	// gen-silent-baz is marked as being silent, and should only produce output
-	// if e.Verbose is set to true.
-	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "gen-silent-baz"}))
-
-	for _, f := range files {
-		if _, err := os.Stat(filepathext.SmartJoin(dir, f)); err != nil {
-			t.Errorf("File should exist: %v", err)
-		}
-	}
-
-	// Run gen-bar a second time to produce a checksum file that matches bar.txt
-	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "gen-bar"}))
-
-	// Run gen-bar a third time, to make sure we've triggered the status check.
-	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "gen-bar"}))
-
-	// We're silent, so no output should have been produced.
-	assert.Empty(t, buff.String())
-
-	// Now, let's remove source file, and run the task again to to prepare
-	// for the next test.
-	err := os.Remove(filepathext.SmartJoin(dir, "bar.txt"))
-	require.NoError(t, err)
-	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "gen-bar"}))
-	buff.Reset()
-
-	// Global silence switched of, so we should see output unless the task itself
-	// is silent.
-	e.Silent = false
-
-	// all: not up-to-date
-	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "gen-foo"}))
-	assert.Equal(t, "task: [gen-foo] touch foo.txt", strings.TrimSpace(buff.String()))
-	buff.Reset()
-	// status: not up-to-date
-	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "gen-foo"}))
-	assert.Equal(t, "task: [gen-foo] touch foo.txt", strings.TrimSpace(buff.String()))
-	buff.Reset()
-
-	// sources: not up-to-date
-	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "gen-bar"}))
-	assert.Equal(t, "task: [gen-bar] touch bar.txt", strings.TrimSpace(buff.String()))
-	buff.Reset()
-	// all: up-to-date
-	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "gen-bar"}))
-	assert.Equal(t, `task: Task "gen-bar" is up to date`, strings.TrimSpace(buff.String()))
-	buff.Reset()
-
-	// sources: not up-to-date, no output produced.
-	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "gen-silent-baz"}))
-	assert.Empty(t, buff.String())
-
-	// up-to-date, no output produced
-	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "gen-silent-baz"}))
-	assert.Empty(t, buff.String())
-
-	e.Verbose = true
-	// up-to-date, output produced due to Verbose mode.
-	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "gen-silent-baz"}))
-	assert.Equal(t, `task: Task "gen-silent-baz" is up to date`, strings.TrimSpace(buff.String()))
-	buff.Reset()
-}
-
-func TestPrecondition(t *testing.T) {
-	t.Parallel()
-
-	const dir = "testdata/precondition"
-
-	var buff bytes.Buffer
-	e := task.NewExecutor(
-		task.ExecutorWithDir(dir),
-		task.ExecutorWithStdout(&buff),
-		task.ExecutorWithStderr(&buff),
-	)
-
-	// A precondition that has been met
-	require.NoError(t, e.Setup())
-	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "foo"}))
-	if buff.String() != "" {
-		t.Errorf("Got Output when none was expected: %s", buff.String())
-	}
-
-	// A precondition that was not met
-	require.Error(t, e.Run(context.Background(), &task.Call{Task: "impossible"}))
-
-	if buff.String() != "task: 1 != 0 obviously!\n" {
-		t.Errorf("Wrong output message: %s", buff.String())
-	}
-	buff.Reset()
-
-	// Calling a task with a precondition in a dependency fails the task
-	require.Error(t, e.Run(context.Background(), &task.Call{Task: "depends_on_impossible"}))
-
-	if buff.String() != "task: 1 != 0 obviously!\n" {
-		t.Errorf("Wrong output message: %s", buff.String())
-	}
-	buff.Reset()
-
-	// Calling a task with a precondition in a cmd fails the task
-	require.Error(t, e.Run(context.Background(), &task.Call{Task: "executes_failing_task_as_cmd"}))
-	if buff.String() != "task: 1 != 0 obviously!\n" {
-		t.Errorf("Wrong output message: %s", buff.String())
-	}
-	buff.Reset()
 }
 
 func TestGenerates(t *testing.T) {
@@ -613,344 +437,6 @@ func TestStatusChecksum(t *testing.T) { // nolint:paralleltest // cannot run in 
 			assert.Equal(t, time, s.ModTime())
 		})
 	}
-}
-
-func TestAlias(t *testing.T) {
-	t.Parallel()
-
-	const dir = "testdata/alias"
-
-	data, err := os.ReadFile(filepathext.SmartJoin(dir, "alias.txt"))
-	require.NoError(t, err)
-
-	var buff bytes.Buffer
-	e := task.NewExecutor(
-		task.ExecutorWithDir(dir),
-		task.ExecutorWithStdout(&buff),
-		task.ExecutorWithStderr(&buff),
-	)
-	require.NoError(t, e.Setup())
-	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "f"}))
-	assert.Equal(t, string(data), buff.String())
-}
-
-func TestDuplicateAlias(t *testing.T) {
-	t.Parallel()
-
-	const dir = "testdata/alias"
-
-	var buff bytes.Buffer
-	e := task.NewExecutor(
-		task.ExecutorWithDir(dir),
-		task.ExecutorWithStdout(&buff),
-		task.ExecutorWithStderr(&buff),
-	)
-	require.NoError(t, e.Setup())
-	require.Error(t, e.Run(context.Background(), &task.Call{Task: "x"}))
-	assert.Equal(t, "", buff.String())
-}
-
-func TestAliasSummary(t *testing.T) {
-	t.Parallel()
-
-	const dir = "testdata/alias"
-
-	data, err := os.ReadFile(filepathext.SmartJoin(dir, "alias-summary.txt"))
-	require.NoError(t, err)
-
-	var buff bytes.Buffer
-	e := task.NewExecutor(
-		task.ExecutorWithDir(dir),
-		task.ExecutorWithStdout(&buff),
-		task.ExecutorWithStderr(&buff),
-		task.ExecutorWithSummary(true),
-	)
-	require.NoError(t, e.Setup())
-	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "f"}))
-	assert.Equal(t, string(data), buff.String())
-}
-
-func TestLabelUpToDate(t *testing.T) {
-	t.Parallel()
-
-	const dir = "testdata/label_uptodate"
-
-	var buff bytes.Buffer
-	e := task.NewExecutor(
-		task.ExecutorWithDir(dir),
-		task.ExecutorWithStdout(&buff),
-		task.ExecutorWithStderr(&buff),
-	)
-	require.NoError(t, e.Setup())
-	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "foo"}))
-	assert.Contains(t, buff.String(), "foobar")
-}
-
-func TestLabelSummary(t *testing.T) {
-	t.Parallel()
-
-	const dir = "testdata/label_summary"
-
-	var buff bytes.Buffer
-	e := task.NewExecutor(
-		task.ExecutorWithDir(dir),
-		task.ExecutorWithStdout(&buff),
-		task.ExecutorWithStderr(&buff),
-		task.ExecutorWithSummary(true),
-	)
-	require.NoError(t, e.Setup())
-	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "foo"}))
-	assert.Contains(t, buff.String(), "foobar")
-}
-
-func TestLabelInStatus(t *testing.T) {
-	t.Parallel()
-
-	const dir = "testdata/label_status"
-
-	e := task.NewExecutor(
-		task.ExecutorWithDir(dir),
-	)
-	require.NoError(t, e.Setup())
-	err := e.Status(context.Background(), &task.Call{Task: "foo"})
-	assert.ErrorContains(t, err, "foobar")
-}
-
-func TestLabelWithVariableExpansion(t *testing.T) {
-	t.Parallel()
-
-	const dir = "testdata/label_var"
-
-	var buff bytes.Buffer
-	e := task.NewExecutor(
-		task.ExecutorWithDir(dir),
-		task.ExecutorWithStdout(&buff),
-		task.ExecutorWithStderr(&buff),
-	)
-	require.NoError(t, e.Setup())
-	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "foo"}))
-	assert.Contains(t, buff.String(), "foobaz")
-}
-
-func TestLabelInSummary(t *testing.T) {
-	t.Parallel()
-
-	const dir = "testdata/label_summary"
-
-	var buff bytes.Buffer
-	e := task.NewExecutor(
-		task.ExecutorWithDir(dir),
-		task.ExecutorWithStdout(&buff),
-		task.ExecutorWithStderr(&buff),
-	)
-	require.NoError(t, e.Setup())
-	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "foo"}))
-	assert.Contains(t, buff.String(), "foobar")
-}
-
-func TestPromptInSummary(t *testing.T) {
-	t.Parallel()
-
-	const dir = "testdata/prompt"
-	tests := []struct {
-		name      string
-		input     string
-		wantError bool
-	}{
-		{"test short approval", "y\n", false},
-		{"test long approval", "yes\n", false},
-		{"test uppercase approval", "Y\n", false},
-		{"test stops task", "n\n", true},
-		{"test junk value stops task", "foobar\n", true},
-		{"test Enter stops task", "\n", true},
-	}
-
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			t.Parallel()
-
-			var inBuff bytes.Buffer
-			var outBuff bytes.Buffer
-			var errBuff bytes.Buffer
-
-			inBuff.WriteString(test.input)
-
-			e := task.NewExecutor(
-				task.ExecutorWithDir(dir),
-				task.ExecutorWithStdin(&inBuff),
-				task.ExecutorWithStdout(&outBuff),
-				task.ExecutorWithStderr(&errBuff),
-			)
-			e.AssumeTerm = true
-			require.NoError(t, e.Setup())
-
-			err := e.Run(context.Background(), &task.Call{Task: "foo"})
-
-			if test.wantError {
-				require.Error(t, err)
-			} else {
-				require.NoError(t, err)
-			}
-		})
-	}
-}
-
-func TestPromptWithIndirectTask(t *testing.T) {
-	t.Parallel()
-
-	const dir = "testdata/prompt"
-	var inBuff bytes.Buffer
-	var outBuff bytes.Buffer
-	var errBuff bytes.Buffer
-
-	inBuff.WriteString("y\n")
-
-	e := task.NewExecutor(
-		task.ExecutorWithDir(dir),
-		task.ExecutorWithStdin(&inBuff),
-		task.ExecutorWithStdout(&outBuff),
-		task.ExecutorWithStderr(&errBuff),
-	)
-	e.AssumeTerm = true
-	require.NoError(t, e.Setup())
-
-	err := e.Run(context.Background(), &task.Call{Task: "bar"})
-	assert.Contains(t, outBuff.String(), "show-prompt")
-	require.NoError(t, err)
-}
-
-func TestPromptAssumeYes(t *testing.T) {
-	t.Parallel()
-
-	const dir = "testdata/prompt"
-	tests := []struct {
-		name      string
-		assumeYes bool
-	}{
-		{"--yes flag should skip prompt", true},
-		{"task should raise errors.TaskCancelledError", false},
-	}
-
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			t.Parallel()
-
-			var inBuff bytes.Buffer
-			var outBuff bytes.Buffer
-			var errBuff bytes.Buffer
-
-			// always cancel the prompt so we can require.Error
-			inBuff.WriteByte('\n')
-
-			e := task.NewExecutor(
-				task.ExecutorWithDir(dir),
-				task.ExecutorWithStdin(&inBuff),
-				task.ExecutorWithStdout(&outBuff),
-				task.ExecutorWithStderr(&errBuff),
-			)
-			e.AssumeTerm = true
-			require.NoError(t, e.Setup())
-
-			err := e.Run(context.Background(), &task.Call{Task: "foo"})
-
-			if !test.assumeYes {
-				require.Error(t, err)
-				return
-			}
-		})
-	}
-}
-
-func TestNoLabelInList(t *testing.T) {
-	t.Parallel()
-
-	const dir = "testdata/label_list"
-
-	var buff bytes.Buffer
-	e := task.NewExecutor(
-		task.ExecutorWithDir(dir),
-		task.ExecutorWithStdout(&buff),
-		task.ExecutorWithStderr(&buff),
-	)
-	require.NoError(t, e.Setup())
-	if _, err := e.ListTasks(task.ListOptions{ListOnlyTasksWithDescriptions: true}); err != nil {
-		t.Error(err)
-	}
-	assert.Contains(t, buff.String(), "foo")
-}
-
-// task -al case 1: listAll list all tasks
-func TestListAllShowsNoDesc(t *testing.T) {
-	t.Parallel()
-
-	const dir = "testdata/list_mixed_desc"
-
-	var buff bytes.Buffer
-	e := task.NewExecutor(
-		task.ExecutorWithDir(dir),
-		task.ExecutorWithStdout(&buff),
-		task.ExecutorWithStderr(&buff),
-	)
-	require.NoError(t, e.Setup())
-
-	var title string
-	if _, err := e.ListTasks(task.ListOptions{ListAllTasks: true}); err != nil {
-		t.Error(err)
-	}
-	for _, title = range []string{
-		"foo",
-		"voo",
-		"doo",
-	} {
-		assert.Contains(t, buff.String(), title)
-	}
-}
-
-// task -al case 2: !listAll list some tasks (only those with desc)
-func TestListCanListDescOnly(t *testing.T) {
-	t.Parallel()
-
-	const dir = "testdata/list_mixed_desc"
-
-	var buff bytes.Buffer
-	e := task.NewExecutor(
-		task.ExecutorWithDir(dir),
-		task.ExecutorWithStdout(&buff),
-		task.ExecutorWithStderr(&buff),
-	)
-	require.NoError(t, e.Setup())
-	if _, err := e.ListTasks(task.ListOptions{ListOnlyTasksWithDescriptions: true}); err != nil {
-		t.Error(err)
-	}
-
-	var title string
-	assert.Contains(t, buff.String(), "foo")
-	for _, title = range []string{
-		"voo",
-		"doo",
-	} {
-		assert.NotContains(t, buff.String(), title)
-	}
-}
-
-func TestListDescInterpolation(t *testing.T) {
-	t.Parallel()
-
-	const dir = "testdata/list_desc_interpolation"
-
-	var buff bytes.Buffer
-	e := task.NewExecutor(
-		task.ExecutorWithDir(dir),
-		task.ExecutorWithStdout(&buff),
-		task.ExecutorWithStderr(&buff),
-	)
-	require.NoError(t, e.Setup())
-	if _, err := e.ListTasks(task.ListOptions{ListOnlyTasksWithDescriptions: true}); err != nil {
-		t.Error(err)
-	}
-
-	assert.Contains(t, buff.String(), "foo-var")
-	assert.Contains(t, buff.String(), "bar-var")
 }
 
 func TestStatusVariables(t *testing.T) {
@@ -2986,181 +2472,6 @@ func TestForce(t *testing.T) {
 	}
 }
 
-func TestForCmds(t *testing.T) {
-	t.Parallel()
-
-	tests := []struct {
-		name           string
-		expectedOutput string
-		wantErr        bool
-	}{
-		{
-			name:           "loop-explicit",
-			expectedOutput: "a\nb\nc\n",
-		},
-		{
-			name:           "loop-matrix",
-			expectedOutput: "windows/amd64\nwindows/arm64\nlinux/amd64\nlinux/arm64\ndarwin/amd64\ndarwin/arm64\n",
-		},
-		{
-			name:           "loop-matrix-ref",
-			expectedOutput: "windows/amd64\nwindows/arm64\nlinux/amd64\nlinux/arm64\ndarwin/amd64\ndarwin/arm64\n",
-		},
-		{
-			name:    "loop-matrix-ref-error",
-			wantErr: true,
-		},
-		{
-			name:           "loop-sources",
-			expectedOutput: "bar\nfoo\n",
-		},
-		{
-			name:           "loop-sources-glob",
-			expectedOutput: "bar\nfoo\n",
-		},
-		{
-			name:           "loop-vars",
-			expectedOutput: "foo\nbar\n",
-		},
-		{
-			name:           "loop-vars-sh",
-			expectedOutput: "bar\nfoo\n",
-		},
-		{
-			name:           "loop-task",
-			expectedOutput: "foo\nbar\n",
-		},
-		{
-			name:           "loop-task-as",
-			expectedOutput: "foo\nbar\n",
-		},
-		{
-			name:           "loop-different-tasks",
-			expectedOutput: "1\n2\n3\n",
-		},
-	}
-
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			t.Parallel()
-
-			buf := &bytes.Buffer{}
-			e := task.NewExecutor(
-				task.ExecutorWithDir("testdata/for/cmds"),
-				task.ExecutorWithStdout(buf),
-				task.ExecutorWithStderr(buf),
-				task.ExecutorWithSilent(true),
-				task.ExecutorWithForce(true),
-			)
-			require.NoError(t, e.Setup())
-			err := e.Run(context.Background(), &task.Call{Task: test.name})
-			if test.wantErr {
-				require.Error(t, err)
-			} else {
-				require.NoError(t, err)
-			}
-			assert.Equal(t, test.expectedOutput, buf.String())
-		})
-	}
-}
-
-func TestForDeps(t *testing.T) {
-	t.Parallel()
-
-	tests := []struct {
-		name                   string
-		expectedOutputContains []string
-		wantErr                bool
-	}{
-		{
-			name:                   "loop-explicit",
-			expectedOutputContains: []string{"a\n", "b\n", "c\n"},
-		},
-		{
-			name: "loop-matrix",
-			expectedOutputContains: []string{
-				"windows/amd64\n",
-				"windows/arm64\n",
-				"linux/amd64\n",
-				"linux/arm64\n",
-				"darwin/amd64\n",
-				"darwin/arm64\n",
-			},
-		},
-		{
-			name: "loop-matrix-ref",
-			expectedOutputContains: []string{
-				"windows/amd64\n",
-				"windows/arm64\n",
-				"linux/amd64\n",
-				"linux/arm64\n",
-				"darwin/amd64\n",
-				"darwin/arm64\n",
-			},
-		},
-		{
-			name:    "loop-matrix-ref-error",
-			wantErr: true,
-		},
-		{
-			name:                   "loop-sources",
-			expectedOutputContains: []string{"bar\n", "foo\n"},
-		},
-		{
-			name:                   "loop-sources-glob",
-			expectedOutputContains: []string{"bar\n", "foo\n"},
-		},
-		{
-			name:                   "loop-vars",
-			expectedOutputContains: []string{"foo\n", "bar\n"},
-		},
-		{
-			name:                   "loop-vars-sh",
-			expectedOutputContains: []string{"bar\n", "foo\n"},
-		},
-		{
-			name:                   "loop-task",
-			expectedOutputContains: []string{"foo\n", "bar\n"},
-		},
-		{
-			name:                   "loop-task-as",
-			expectedOutputContains: []string{"foo\n", "bar\n"},
-		},
-		{
-			name:                   "loop-different-tasks",
-			expectedOutputContains: []string{"1\n", "2\n", "3\n"},
-		},
-	}
-
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			t.Parallel()
-
-			// We need to use a sync buffer here as deps are run concurrently
-			buf := &SyncBuffer{}
-			e := task.NewExecutor(
-				task.ExecutorWithDir("testdata/for/deps"),
-				task.ExecutorWithStdout(buf),
-				task.ExecutorWithStderr(buf),
-				task.ExecutorWithSilent(true),
-				task.ExecutorWithForce(true),
-				// Force output of each dep to be grouped together to prevent interleaving
-				task.ExecutorWithOutputStyle(ast.Output{Name: "group"}),
-			)
-			require.NoError(t, e.Setup())
-			err := e.Run(context.Background(), &task.Call{Task: test.name})
-			if test.wantErr {
-				require.Error(t, err)
-			} else {
-				require.NoError(t, err)
-			}
-			for _, expectedOutputContains := range test.expectedOutputContains {
-				assert.Contains(t, buf.buf.String(), expectedOutputContains)
-			}
-		})
-	}
-}
-
 func TestWildcard(t *testing.T) {
 	t.Parallel()
 
@@ -3221,159 +2532,6 @@ func TestWildcard(t *testing.T) {
 			}
 			require.NoError(t, e.Run(context.Background(), &task.Call{Task: test.call}))
 			assert.Equal(t, test.expectedOutput, buff.String())
-		})
-	}
-}
-
-func TestReference(t *testing.T) {
-	t.Parallel()
-
-	tests := []struct {
-		name           string
-		call           string
-		expectedOutput string
-	}{
-		{
-			name:           "reference in command",
-			call:           "ref-cmd",
-			expectedOutput: "1\n",
-		},
-		{
-			name:           "reference in dependency",
-			call:           "ref-dep",
-			expectedOutput: "1\n",
-		},
-		{
-			name:           "reference using templating resolver",
-			call:           "ref-resolver",
-			expectedOutput: "1\n",
-		},
-		{
-			name:           "reference using templating resolver and dynamic var",
-			call:           "ref-resolver-sh",
-			expectedOutput: "Alice has 3 children called Bob, Charlie, and Diane\n",
-		},
-	}
-
-	for _, test := range tests {
-		t.Run(test.call, func(t *testing.T) {
-			t.Parallel()
-
-			var buff bytes.Buffer
-			e := task.NewExecutor(
-				task.ExecutorWithDir("testdata/var_references"),
-				task.ExecutorWithStdout(&buff),
-				task.ExecutorWithStderr(&buff),
-				task.ExecutorWithSilent(true),
-				task.ExecutorWithForce(true),
-			)
-			require.NoError(t, e.Setup())
-			require.NoError(t, e.Run(context.Background(), &task.Call{Task: test.call}))
-			assert.Equal(t, test.expectedOutput, buff.String())
-		})
-	}
-}
-
-func TestVarInheritance(t *testing.T) {
-	enableExperimentForTest(t, &experiments.EnvPrecedence, 1)
-	tests := []struct {
-		name string
-		want string
-		call string
-	}{
-		{
-			name: "shell",
-			want: "shell\nshell\n",
-		},
-		{
-			name: "entrypoint-global-dotenv",
-			want: "entrypoint-global-dotenv\nentrypoint-global-dotenv\n",
-		},
-		{
-			name: "entrypoint-global-vars",
-			want: "entrypoint-global-vars\nentrypoint-global-vars\n",
-		},
-		{
-			// We can't send env vars to a called task, so the env var is not overridden
-			name: "entrypoint-task-call-vars",
-			want: "entrypoint-task-call-vars\nentrypoint-global-vars\n",
-		},
-		{
-			// Dotenv doesn't set variables
-			name: "entrypoint-task-call-dotenv",
-			want: "entrypoint-task-call-vars\nentrypoint-task-call-dotenv\n",
-		},
-		{
-			name: "entrypoint-task-call-task-vars",
-			want: "entrypoint-task-call-task-vars\nentrypoint-task-call-task-vars\n",
-		},
-		{
-			// Dotenv doesn't set variables
-			name: "entrypoint-task-dotenv",
-			want: "entrypoint-global-vars\nentrypoint-task-dotenv\n",
-		},
-		{
-			name: "entrypoint-task-vars",
-			want: "entrypoint-task-vars\nentrypoint-task-vars\n",
-		},
-		// {
-		// 	// Dotenv not currently allowed in included taskfiles
-		// 	name: "included-global-dotenv",
-		// 	want: "included-global-dotenv\nincluded-global-dotenv\n",
-		// },
-		{
-			name: "included-global-vars",
-			want: "included-global-vars\nincluded-global-vars\n",
-			call: "included",
-		},
-		{
-			// We can't send env vars to a called task, so the env var is not overridden
-			name: "included-task-call-vars",
-			want: "included-task-call-vars\nincluded-global-vars\n",
-			call: "included",
-		},
-		{
-			// Dotenv doesn't set variables
-			// Dotenv not currently allowed in included taskfiles (but doesn't error in a task)
-			name: "included-task-call-dotenv",
-			want: "included-task-call-vars\nincluded-global-vars\n",
-			call: "included",
-		},
-		{
-			name: "included-task-call-task-vars",
-			want: "included-task-call-task-vars\nincluded-task-call-task-vars\n",
-			call: "included",
-		},
-		{
-			// Dotenv doesn't set variables
-			// Somehow dotenv is working here!
-			name: "included-task-dotenv",
-			want: "included-global-vars\nincluded-task-dotenv\n",
-			call: "included",
-		},
-		{
-			name: "included-task-vars",
-			want: "included-task-vars\nincluded-task-vars\n",
-			call: "included",
-		},
-	}
-
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			var buff bytes.Buffer
-			t.Setenv("VAR", "shell")
-			t.Setenv("ENV", "shell")
-			e := task.NewExecutor(
-				task.ExecutorWithDir(fmt.Sprintf("testdata/var_inheritance/v3/%s", test.name)),
-				task.ExecutorWithStdout(&buff),
-				task.ExecutorWithStderr(&buff),
-				task.ExecutorWithSilent(true),
-				task.ExecutorWithForce(true),
-			)
-			call := cmp.Or(test.call, "default")
-			require.NoError(t, e.Setup())
-			require.NoError(t, e.Run(context.Background(), &task.Call{Task: call}))
-			assert.Equal(t, test.want, buff.String())
 		})
 	}
 }

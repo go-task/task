@@ -1,0 +1,2 @@
+task: Task "validation-var" cancelled because it is missing required variables:
+  - FOO has an invalid value : 'bar' (allowed values : [one two])

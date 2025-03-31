@@ -1,0 +1,1 @@
+task: Task "require-before-compile" cancelled because it is missing required variables: MY_VAR
