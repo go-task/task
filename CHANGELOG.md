@@ -30,7 +30,13 @@
 #### Package API
 
 - The [`Executor`](https://pkg.go.dev/github.com/go-task/task/v3#Executor) now
-  uses the functional options pattern (#2085, #2147 by @pd93).
+  uses the functional options pattern (#2085, #2147, #2148 by @pd93).
+- The functional options for the
+  [`taskfile.Reader`](https://pkg.go.dev/github.com/go-task/task/v3/taskfile#Reader)
+  and
+  [`taskfile.Snippet`](https://pkg.go.dev/github.com/go-task/task/v3/taskfile#Snippet)
+  types no longer have the `Reader`/`Snippet` respective prefixes (#2148 by
+  @pd93).
 
 ## v3.42.1 - 2025-03-10
 
