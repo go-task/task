@@ -72,13 +72,13 @@ func (e *Executor) readTaskfile(node taskfile.Node) error {
 	}
 	reader := taskfile.NewReader(
 		node,
-		taskfile.ReaderWithInsecure(e.Insecure),
-		taskfile.ReaderWithDownload(e.Download),
-		taskfile.ReaderWithOffline(e.Offline),
-		taskfile.ReaderWithTimeout(e.Timeout),
-		taskfile.ReaderWithTempDir(e.TempDir.Remote),
-		taskfile.ReaderWithDebugFunc(debugFunc),
-		taskfile.ReaderWithPromptFunc(promptFunc),
+		taskfile.WithInsecure(e.Insecure),
+		taskfile.WithDownload(e.Download),
+		taskfile.WithOffline(e.Offline),
+		taskfile.WithTimeout(e.Timeout),
+		taskfile.WithTempDir(e.TempDir.Remote),
+		taskfile.WithDebugFunc(debugFunc),
+		taskfile.WithPromptFunc(promptFunc),
 	)
 	graph, err := reader.Read()
 	if err != nil {

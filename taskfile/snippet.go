@@ -33,8 +33,10 @@ func init() {
 }
 
 type (
-	// SnippetOption is a function that configures a [Snippet].
-	SnippetOption func(*Snippet)
+	// A SnippetOption is any type that can apply a configuration to a [Snippet].
+	SnippetOption interface {
+		ApplyToSnippet(*Snippet)
+	}
 	// A Snippet is a syntax highlighted snippet of a Taskfile with optional
 	// padding and a line and column indicator.
 	Snippet struct {
@@ -55,9 +57,7 @@ type (
 // determines the number of lines to include before and after the chosen line.
 func NewSnippet(b []byte, opts ...SnippetOption) *Snippet {
 	snippet := &Snippet{}
-	for _, opt := range opts {
-		opt(snippet)
-	}
+	snippet.Options(opts...)
 
 	// Syntax highlight the input and split it into lines
 	buf := &bytes.Buffer{}
@@ -80,40 +80,61 @@ func NewSnippet(b []byte, opts ...SnippetOption) *Snippet {
 // to the [Snippet].
 func (s *Snippet) Options(opts ...SnippetOption) {
 	for _, opt := range opts {
-		opt(s)
+		opt.ApplyToSnippet(s)
 	}
 }
 
-// SnippetWithLine specifies the line number that the [Snippet] should center
-// around and point to.
-func SnippetWithLine(line int) SnippetOption {
-	return func(snippet *Snippet) {
-		snippet.line = line
-	}
+// WithLine specifies the line number that the [Snippet] should center around
+// and point to.
+func WithLine(line int) SnippetOption {
+	return &lineOption{line: line}
 }
 
-// SnippetWithColumn specifies the column number that the [Snippet] should
-// point to.
-func SnippetWithColumn(column int) SnippetOption {
-	return func(snippet *Snippet) {
-		snippet.column = column
-	}
+type lineOption struct {
+	line int
 }
 
-// SnippetWithPadding specifies the number of lines to include before and after
-// the selected line in the [Snippet].
-func SnippetWithPadding(padding int) SnippetOption {
-	return func(snippet *Snippet) {
-		snippet.padding = padding
-	}
+func (o *lineOption) ApplyToSnippet(s *Snippet) {
+	s.line = o.line
 }
 
-// SnippetWithNoIndicators specifies that the [Snippet] should not include line
-// or column indicators.
-func SnippetWithNoIndicators() SnippetOption {
-	return func(snippet *Snippet) {
-		snippet.noIndicators = true
-	}
+// WithColumn specifies the column number that the [Snippet] should point to.
+func WithColumn(column int) SnippetOption {
+	return &columnOption{column: column}
+}
+
+type columnOption struct {
+	column int
+}
+
+func (o *columnOption) ApplyToSnippet(s *Snippet) {
+	s.column = o.column
+}
+
+// WithPadding specifies the number of lines to include before and after the
+// selected line in the [Snippet].
+func WithPadding(padding int) SnippetOption {
+	return &paddingOption{padding: padding}
+}
+
+type paddingOption struct {
+	padding int
+}
+
+func (o *paddingOption) ApplyToSnippet(s *Snippet) {
+	s.padding = o.padding
+}
+
+// WithNoIndicators specifies that the [Snippet] should not include line or
+// column indicators.
+func WithNoIndicators() SnippetOption {
+	return &noIndicatorsOption{}
+}
+
+type noIndicatorsOption struct{}
+
+func (o *noIndicatorsOption) ApplyToSnippet(s *Snippet) {
+	s.noIndicators = true
 }
 
 func (s *Snippet) String() string {
