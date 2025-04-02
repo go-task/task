@@ -475,7 +475,7 @@
     "for_attribute": {
       "description": "The task attribute to iterate over",
       "type": "string",
-      "enum": ["sources"]
+      "enum": ["sources", "generates"]
     },
     "for_var": {
       "description": "Which variables to iterate over. The variable will be split using any whitespace character by default. This can be changed by using the `split` attribute.",

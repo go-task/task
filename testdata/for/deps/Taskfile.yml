@@ -69,6 +69,27 @@ tasks:
         vars:
           FILE: "{{.ITEM}}"
 
+  # Loop over the task's generates
+  loop-generates:
+    generates:
+      - foo.txt
+      - bar.txt
+    deps:
+      - for: generates
+        task: cat
+        vars:
+          FILE: "{{.ITEM}}"
+
+  # Loop over the task's generates when globbed
+  loop-generates-glob:
+    generates:
+      - "*.txt"
+    deps:
+      - for: generates
+        task: cat
+        vars:
+          FILE: "{{.ITEM}}"
+
   # Loop over the contents of a variable
   loop-vars:
     vars:
