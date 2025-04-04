@@ -1,15 +1,15 @@
 version: '3'
 
 vars:
+  contents1:
+    sh: "cat a"
   pwd1:
     sh: "pwd"
 
 tasks:
-  all:
-    dir: .
+  run:
     vars:
-      pwd1_local:
-        sh: "pwd"
+      contents1_local:
+        sh: "cat a"
     cmds:
-      - cmd: 'echo "global var: {{ .pwd1 }}"'
-      - cmd: 'echo "local var: {{ .pwd1_local }}"'
+      - cmd: 'echo "contents: {{ .contents1 }} {{ .contents1_local }} {{ .pwd1 }}"'

@@ -3287,6 +3287,12 @@ func TestResolveShellVarsInSubdirs(t *testing.T) {
 	)
 	require.NoError(t, e.Setup())
 	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "all"}))
+
+	output := buff.String()
+	require.Contains(t, output, `[s2:all] global var: BBB`)
+	require.Contains(t, output, `[s1:all] global var: AAA`)
+	require.Contains(t, output, `[s1:all] local var: AAA`)
+	require.Contains(t, output, `[s2:all] local var: BBB`)
 }
 
 func TestVarInheritance(t *testing.T) {
