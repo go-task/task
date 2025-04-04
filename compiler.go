@@ -156,13 +156,16 @@ func (c *Compiler) HandleDynamicVar(v ast.Var, dir string, e []string) (string, 
 	if c.dynamicCache == nil {
 		c.dynamicCache = make(map[string]string, 30)
 	}
-	if result, ok := c.dynamicCache[*v.Sh]; ok {
-		return result, nil
-	}
 
 	// NOTE(@andreynering): If a var have a specific dir, use this instead
 	if v.Dir != "" {
 		dir = v.Dir
+	}
+
+	cacheKey := *v.Sh + "-" + dir
+
+	if result, ok := c.dynamicCache[cacheKey]; ok {
+		return result, nil
 	}
 
 	var stdout bytes.Buffer
@@ -182,7 +185,7 @@ func (c *Compiler) HandleDynamicVar(v ast.Var, dir string, e []string) (string, 
 	result := strings.TrimSuffix(stdout.String(), "\r\n")
 	result = strings.TrimSuffix(result, "\n")
 
-	c.dynamicCache[*v.Sh] = result
+	c.dynamicCache[cacheKey] = result
 	c.Logger.VerboseErrf(logger.Magenta, "task: dynamic variable: %q result: %q\n", *v.Sh, result)
 
 	return result, nil
