@@ -3277,22 +3277,22 @@ func TestReference(t *testing.T) {
 func TestResolveShellVarsInSubdirs(t *testing.T) {
 	t.Parallel()
 
-	var buff bytes.Buffer
-	e := task.NewExecutor(
-		task.ExecutorWithDir("testdata/includes_shell_vars"),
-		task.ExecutorWithStdout(&buff),
-		task.ExecutorWithStderr(&buff),
-		task.ExecutorWithSilent(true),
-		task.ExecutorWithForce(true),
-	)
-	require.NoError(t, e.Setup())
-	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "all"}))
+	for range 10 { // multiple runs just in case it passes on accident
+		var buff bytes.Buffer
+		e := task.NewExecutor(
+			task.ExecutorWithDir("testdata/includes_shell_vars"),
+			task.ExecutorWithStdout(&buff),
+			task.ExecutorWithStderr(&buff),
+			task.ExecutorWithSilent(true),
+			task.ExecutorWithForce(true),
+		)
+		require.NoError(t, e.Setup())
+		require.NoError(t, e.Run(context.Background(), &task.Call{Task: "all"}))
 
-	output := buff.String()
-	require.Contains(t, output, `[s2:all] global var: BBB`)
-	require.Contains(t, output, `[s1:all] global var: AAA`)
-	require.Contains(t, output, `[s1:all] local var: AAA`)
-	require.Contains(t, output, `[s2:all] local var: BBB`)
+		output := buff.String()
+		require.Contains(t, output, `[s1:all] ./a`)
+		require.Contains(t, output, `[s2:all] ./b`)
+	}
 }
 
 func TestVarInheritance(t *testing.T) {
