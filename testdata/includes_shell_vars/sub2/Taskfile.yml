@@ -1,10 +1,10 @@
 version: '3'
 
 vars:
-  pwd2:
+  files:
     sh: "find ."
 
 tasks:
   all:
     cmds:
-      - cmd: 'echo "{{.pwd2}}"'
+      - cmd: 'echo  "{{.files}}"'
