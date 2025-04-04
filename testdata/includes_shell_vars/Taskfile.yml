@@ -15,6 +15,6 @@ includes:
 tasks:
   all:
     deps:
-      - s1:run
-      - s2:run
+      - s1:all
+      - s2:all
 

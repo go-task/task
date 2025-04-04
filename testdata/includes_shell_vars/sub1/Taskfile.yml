@@ -1,15 +1,17 @@
 version: '3'
 
 vars:
+  pwd1:
+    sh: "find ."
   contents1:
     sh: "cat a"
-  pwd1:
-    sh: "pwd"
 
 tasks:
-  run:
+  all:
+    dir: .
     vars:
       contents1_local:
         sh: "cat a"
     cmds:
-      - cmd: 'echo "contents: {{ .contents1 }} {{ .contents1_local }} {{ .pwd1 }}"'
+      - cmd: 'echo "contents: {{ .contents1 }} {{ .contents1_local }}"'
+      - cmd: 'echo {{.pwd1}}'
