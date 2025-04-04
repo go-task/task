@@ -1,0 +1,15 @@
+version: '3'
+
+vars:
+  pwd1:
+    sh: "pwd"
+
+tasks:
+  all:
+    dir: .
+    vars:
+      pwd1_local:
+        sh: "pwd"
+    cmds:
+      - cmd: 'echo "global var: {{ .pwd1 }}"'
+      - cmd: 'echo "local var: {{ .pwd1_local }}"'

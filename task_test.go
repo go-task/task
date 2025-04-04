@@ -3274,6 +3274,21 @@ func TestReference(t *testing.T) {
 	}
 }
 
+func TestResolveShellVarsInSubdirs(t *testing.T) {
+	t.Parallel()
+
+	var buff bytes.Buffer
+	e := task.NewExecutor(
+		task.ExecutorWithDir("testdata/includes_shell_vars"),
+		task.ExecutorWithStdout(&buff),
+		task.ExecutorWithStderr(&buff),
+		task.ExecutorWithSilent(true),
+		task.ExecutorWithForce(true),
+	)
+	require.NoError(t, e.Setup())
+	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "all"}))
+}
+
 func TestVarInheritance(t *testing.T) {
 	enableExperimentForTest(t, &experiments.EnvPrecedence, 1)
 	tests := []struct {

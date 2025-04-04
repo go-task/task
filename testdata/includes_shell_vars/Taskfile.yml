@@ -1,0 +1,20 @@
+version: '3'
+
+run: when_changed
+silent: true
+output: prefixed
+
+includes:
+  s1:
+    taskfile: sub1
+    dir: sub1
+  s2:
+    taskfile: sub2
+    dir: sub2
+
+tasks:
+  all:
+    deps:
+      - s1:all
+      - s2:all
+
