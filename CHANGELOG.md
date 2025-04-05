@@ -20,6 +20,9 @@
   #2121 by @pd93).
 - The default taskfile (output when using the `--init` flag) is now an embedded
   file in the binary instead of being stored in the code (#2112 by @pd93).
+- Improved the way we report the Task version when using the `--version` flag or
+  `{{.TASK_VERSION}}` variable. This should now be more consistent and easier
+  for package maintainers to use (#2131 by @pd93).
 - Fixed a bug where sorting tasks by "none" would use the default sorting
   instead of leaving tasks in the order they were defined (#2124, #2125 by
   @trulede).
