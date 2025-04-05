@@ -11,6 +11,7 @@ import (
 
 	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/experiments"
+	"github.com/go-task/task/v3/internal/fsext"
 )
 
 type Node interface {
@@ -30,7 +31,7 @@ func NewRootNode(
 	insecure bool,
 	timeout time.Duration,
 ) (Node, error) {
-	dir = getDefaultDir(entrypoint, dir)
+	dir = fsext.DefaultDir(entrypoint, dir)
 	// If the entrypoint is "-", we read from stdin
 	if entrypoint == "-" {
 		return NewStdinNode(dir)
