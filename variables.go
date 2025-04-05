@@ -153,7 +153,7 @@ func (e *Executor) compiledTask(call *Call, evaluateShVars bool) (*ast.Task, err
 				continue
 			}
 			if cmd.For != nil {
-				list, keys, err := itemsFromFor(cmd.For, new.Dir, new.Sources, vars, origTask.Location, cache)
+				list, keys, err := itemsFromFor(cmd.For, new.Dir, new.Sources, new.Generates, vars, origTask.Location, cache)
 				if err != nil {
 					return nil, err
 				}
@@ -200,7 +200,7 @@ func (e *Executor) compiledTask(call *Call, evaluateShVars bool) (*ast.Task, err
 				continue
 			}
 			if dep.For != nil {
-				list, keys, err := itemsFromFor(dep.For, new.Dir, new.Sources, vars, origTask.Location, cache)
+				list, keys, err := itemsFromFor(dep.For, new.Dir, new.Sources, new.Generates, vars, origTask.Location, cache)
 				if err != nil {
 					return nil, err
 				}
@@ -270,6 +270,7 @@ func itemsFromFor(
 	f *ast.For,
 	dir string,
 	sources []*ast.Glob,
+	generates []*ast.Glob,
 	vars *ast.Vars,
 	location *ast.Location,
 	cache *templater.Cache,
@@ -293,6 +294,20 @@ func itemsFromFor(
 	// Get the list from the task sources
 	if f.From == "sources" {
 		glist, err := fingerprint.Globs(dir, sources)
+		if err != nil {
+			return nil, nil, err
+		}
+		// Make the paths relative to the task dir
+		for i, v := range glist {
+			if glist[i], err = filepath.Rel(dir, v); err != nil {
+				return nil, nil, err
+			}
+		}
+		values = asAnySlice(glist)
+	}
+	// Get the list from the task generates
+	if f.From == "generates" {
+		glist, err := fingerprint.Globs(dir, generates)
 		if err != nil {
 			return nil, nil, err
 		}

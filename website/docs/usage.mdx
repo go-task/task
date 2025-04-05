@@ -1483,6 +1483,48 @@ tasks:
         cmd: cat {{joinPath .MY_DIR .ITEM}}
 ```
 
+### Looping over your task's generates
+
+Similar to sources, you can also loop over the generates of your task:
+
+```yaml
+version: '3'
+
+tasks:
+  default:
+    generates:
+      - foo.txt
+      - bar.txt
+    cmds:
+      - for: generates
+        cmd: cat {{ .ITEM }}
+```
+
+This will also work if you use globbing syntax in your generates. For example, if
+you specify a generate for `*.txt`, the loop will iterate over all files that
+match that glob.
+
+Generate paths will always be returned as paths relative to the task directory. If
+you need to convert this to an absolute path, you can use the built-in
+`joinPath` function. There are some [special variables](/reference/templating/#special-variables)
+that you may find useful for this.
+
+```yaml
+version: '3'
+
+tasks:
+  default:
+    vars:
+      MY_DIR: /path/to/dir
+    dir: '{{.MY_DIR}}'
+    generates:
+      - foo.txt
+      - bar.txt
+    cmds:
+      - for: generates
+        cmd: cat {{joinPath .MY_DIR .ITEM}}
+```
+
 ### Looping over variables
 
 To loop over the contents of a variable, you simply need to specify the variable

@@ -199,6 +199,9 @@ it is defined as a string, you can give it any of the following values:
 - `sources` - Will run the command for each source file defined on the task.
   (Glob patterns will be resolved, so `*.go` will run for every Go file that
   matches).
+- `generates` - Will run the command for each file defined in the task's generates
+  list. (Glob patterns will be resolved, so `*.txt` will run for every text file
+  that matches).
 
 If it is defined as a list of strings, the command will be run for each value.
 

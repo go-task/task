@@ -57,6 +57,23 @@ tasks:
       - for: sources
         cmd: cat "{{.ITEM}}"
 
+  # Loop over the task's generates
+  loop-generates:
+    generates:
+      - foo.txt
+      - bar.txt
+    cmds:
+      - for: generates
+        cmd: cat "{{.ITEM}}"
+
+  # Loop over the task's generates when globbed
+  loop-generates-glob:
+    generates:
+      - "*.txt"
+    cmds:
+      - for: generates
+        cmd: cat "{{.ITEM}}"
+
   # Loop over the contents of a variable
   loop-vars:
     vars:
