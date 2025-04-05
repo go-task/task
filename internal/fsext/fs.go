@@ -8,6 +8,11 @@ import (
 	"github.com/go-task/task/v3/internal/sysinfo"
 )
 
+// DefaultDir will return the default directory given an entrypoint or
+// directory. If the directory is set, it will ensure it is an absolute path and
+// return it. If the entrypoint is set, but the directory is not, it will leave
+// the directory blank. If both are empty, it will default the directory to the
+// current working directory.
 func DefaultDir(entrypoint, dir string) string {
 	// If the directory is set, ensure it is an absolute path
 	if dir != "" {
@@ -51,6 +56,11 @@ func Search(entrypoint, dir string, possibleFilenames []string) (string, string,
 		}
 		if dir == "" {
 			dir = filepath.Dir(entrypoint)
+		} else {
+			dir, err = filepath.Abs(dir)
+			if err != nil {
+				return "", "", err
+			}
 		}
 		return entrypoint, dir, nil
 	}
