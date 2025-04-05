@@ -309,45 +309,38 @@ You can flatten the included Taskfile tasks into the main Taskfile by using the 
 It means that the included Taskfile tasks will be available without the namespace.
 
 
-<Tabs defaultValue="1"
-      values={[
-        {label: 'Taskfile.yml', value: '1'},
-        {label: 'Included.yml', value: '2'}
-      ]}>
+<Tabs defaultValue="1">
+<TabItem value="1" label="Taskfile.yml">
 
-  <TabItem value="1">
+```yaml
+version: '3'
 
-    ```yaml
-    version: '3'
+includes:
+  lib:
+    taskfile: ./Included.yml
+    flatten: true
 
-    includes:
-      lib:
-        taskfile: ./Included.yml
-        flatten: true
+tasks:
+  greet:
+    cmds:
+      - echo "Greet"
+      - task: foo
+```
 
-    tasks:
-      greet:
-        cmds:
-          - echo "Greet"
-          - task: foo
-    ```
+</TabItem>
+<TabItem value="2" label="Included.yml">
 
+```yaml
+version: '3'
 
-  </TabItem>
-  <TabItem value="2">
+tasks:
+  foo:
+    cmds:
+      - echo "Foo"
+```
 
-    ```yaml
-    version: '3'
-
-    tasks:
-      foo:
-        cmds:
-          - echo "Foo"
-    ```
-
-
-  </TabItem></Tabs>
-
+</TabItem>
+</Tabs>
 
 If you run `task -a` it will print :
 
@@ -368,43 +361,37 @@ Foo
 
 If multiple tasks have the same name, an error will be thrown:
 
-<Tabs defaultValue="1"
-      values={[
-        {label: 'Taskfile.yml', value: '1'},
-        {label: 'Included.yml', value: '2'}
-      ]}>
+<Tabs defaultValue="1">
+<TabItem value="1" label="Taskfile.yml">
 
-  <TabItem value="1">
+```yaml
+version: '3'
+includes:
+  lib:
+    taskfile: ./Included.yml
+    flatten: true
 
-    ```yaml
-    version: '3'
-    includes:
-      lib:
-        taskfile: ./Included.yml
-        flatten: true
+tasks:
+  greet:
+    cmds:
+      - echo "Greet"
+      - task: foo
+```
 
-    tasks:
-      greet:
-        cmds:
-          - echo "Greet"
-          - task: foo
-    ```
+</TabItem>
+<TabItem value="2" label="Included.yml">
 
+```yaml
+version: '3'
 
-  </TabItem>
-  <TabItem value="2">
+tasks:
+  greet:
+    cmds:
+      - echo "Foo"
+```
 
-    ```yaml
-    version: '3'
-
-    tasks:
-      greet:
-        cmds:
-          - echo "Foo"
-    ```
-
-
-  </TabItem></Tabs>
+</TabItem>
+</Tabs>
 
 If you run `task -a` it will print:
 ```text
@@ -420,35 +407,29 @@ You can do this by using the [`excludes` option](#exclude-tasks-from-being-inclu
 
 You can exclude tasks from being included by using the `excludes` option. This option takes the list of tasks to be excluded from this include.
 
-<Tabs defaultValue="1"
-      values={[
-        {label: 'Taskfile.yml', value: '1'},
-        {label: 'Included.yml', value: '2'}
-      ]}>
+<Tabs defaultValue="1">
+<TabItem value="1" label="Taskfile.yml">
 
-  <TabItem value="1">
-    ```yaml
-    version: '3'
-      includes:
-        included:
-          taskfile: ./Included.yml
-          excludes: [foo]
-    ```
+```yaml
+version: '3'
+  includes:
+    included:
+      taskfile: ./Included.yml
+      excludes: [foo]
+```
 
+</TabItem>
+<TabItem value="2" label="Included.yml">
 
-  </TabItem>
-  <TabItem value="2">
+```yaml
+version: '3'
 
-    ```yaml
-    version: '3'
+tasks:
+  foo: echo "Foo"
+  bar: echo "Bar"
+```
 
-    tasks:
-      foo: echo "Foo"
-      bar: echo "Bar"
-    ```
-
-
-  </TabItem></Tabs>
+</TabItem></Tabs>
 
 `task included:foo` will throw an error because the `foo` task is excluded but `task included:bar` will work and display `Bar`.
 
@@ -1255,13 +1236,8 @@ a value from one task to another. However, the templating engine is only able to
 output strings. If you want to pass something other than a string to another
 task then you will need to use a reference (`ref`) instead.
 
-<Tabs defaultValue="2"
-      values={[
-        { label: 'Templating Engine', value: '1' },
-        { label: 'Reference', value: '2' }
-      ]}>
-
-<TabItem value="1">
+<Tabs defaultValue="2">
+<TabItem value="1" label="Templating Engine">
 
 ```yaml
 version: 3
@@ -1280,7 +1256,7 @@ tasks:
 ```
 
 </TabItem>
-<TabItem value="2">
+<TabItem value="2" label="Reference">
 
 ```yaml
 version: 3
@@ -1299,7 +1275,8 @@ tasks:
       - 'echo {{index .FOO 0}}' # <-- FOO is still a map so the task outputs 'A' as expected
 ```
 
-</TabItem></Tabs>
+</TabItem>
+</Tabs>
 
 This also works the same way when calling `deps` and when defining
 a variable and can be used in any combination:
@@ -1441,9 +1418,13 @@ tasks:
         cmd: echo "{{.ITEM.OS}}/{{.ITEM.ARCH}}"
 ```
 
-### Looping over your task's sources
+### Looping over your task's sources or generated files
 
-You are also able to loop over the sources of your task:
+You are also able to loop over the sources of your task or the files it
+generates:
+
+<Tabs defaultValue="1" groupId="sources-generates">
+<TabItem value="1" label="Sources">
 
 ```yaml
 version: '3'
@@ -1458,14 +1439,37 @@ tasks:
         cmd: cat {{ .ITEM }}
 ```
 
-This will also work if you use globbing syntax in your sources. For example, if
-you specify a source for `*.txt`, the loop will iterate over all files that
-match that glob.
+</TabItem>
+<TabItem value="2" label="Generates">
 
-Source paths will always be returned as paths relative to the task directory. If
-you need to convert this to an absolute path, you can use the built-in
-`joinPath` function. There are some [special variables](/reference/templating/#special-variables)
-that you may find useful for this.
+```yaml
+version: '3'
+
+tasks:
+  default:
+    generates:
+      - foo.txt
+      - bar.txt
+    cmds:
+      - for: generates
+        cmd: cat {{ .ITEM }}
+```
+
+</TabItem>
+</Tabs>
+
+This will also work if you use globbing syntax in `sources` or `generates`. For
+example, if you specify a source for `*.txt`, the loop will iterate over all
+files that match that glob.
+
+Paths will always be returned as paths relative to the task directory. If you
+need to convert this to an absolute path, you can use the built-in `joinPath`
+function. There are some [special
+variables](/reference/templating/#special-variables) that you may find useful
+for this.
+
+<Tabs defaultValue="1" groupId="sources-generates">
+<TabItem value="1" label="Sources">
 
 ```yaml
 version: '3'
@@ -1483,31 +1487,8 @@ tasks:
         cmd: cat {{joinPath .MY_DIR .ITEM}}
 ```
 
-### Looping over your task's generates
-
-Similar to sources, you can also loop over the generates of your task:
-
-```yaml
-version: '3'
-
-tasks:
-  default:
-    generates:
-      - foo.txt
-      - bar.txt
-    cmds:
-      - for: generates
-        cmd: cat {{ .ITEM }}
-```
-
-This will also work if you use globbing syntax in your generates. For example, if
-you specify a generate for `*.txt`, the loop will iterate over all files that
-match that glob.
-
-Generate paths will always be returned as paths relative to the task directory. If
-you need to convert this to an absolute path, you can use the built-in
-`joinPath` function. There are some [special variables](/reference/templating/#special-variables)
-that you may find useful for this.
+</TabItem>
+<TabItem value="2" label="Generates">
 
 ```yaml
 version: '3'
@@ -1524,6 +1505,9 @@ tasks:
       - for: generates
         cmd: cat {{joinPath .MY_DIR .ITEM}}
 ```
+
+</TabItem>
+</Tabs>
 
 ### Looping over variables
 

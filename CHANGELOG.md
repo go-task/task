@@ -18,6 +18,9 @@
 - Wildcards can now
   [match multiple tasks](https://taskfile.dev/usage/#wildcard-arguments) (#2072,
   #2121 by @pd93).
+- Added the ability to
+  [loop over the files specified by the `generates` keyword](https://taskfile.dev/usage/#looping-over-your-tasks-sources-or-generated-files).
+  This works the same way as looping over sources (#2151 by @sedyh).
 - Added the ability to resolve variables when defining an include variable
   (#2108, #2113 @pd93).
 - The default taskfile (output when using the `--init` flag) is now an embedded
