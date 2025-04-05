@@ -18,6 +18,8 @@
 - Wildcards can now
   [match multiple tasks](https://taskfile.dev/usage/#wildcard-arguments) (#2072,
   #2121 by @pd93).
+- Added the ability to resolve variables when defining an include variable
+  (#2108, #2113 @pd93).
 - The default taskfile (output when using the `--init` flag) is now an embedded
   file in the binary instead of being stored in the code (#2112 by @pd93).
 - Improved the way we report the Task version when using the `--version` flag or
