@@ -9,8 +9,11 @@ import (
 )
 
 func TestDefaultDir(t *testing.T) {
+	t.Parallel()
+
 	wd, err := os.Getwd()
 	require.NoError(t, err)
+
 	tests := []struct {
 		name       string
 		entrypoint string
@@ -50,14 +53,18 @@ func TestDefaultDir(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			require.Equal(t, tt.expected, DefaultDir(tt.entrypoint, tt.dir))
 		})
 	}
 }
 
 func TestSearch(t *testing.T) {
+	t.Parallel()
+
 	wd, err := os.Getwd()
 	require.NoError(t, err)
+
 	tests := []struct {
 		name               string
 		entrypoint         string
@@ -135,6 +142,7 @@ func TestSearch(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			entrypoint, dir, err := Search(tt.entrypoint, tt.dir, tt.possibleFilenames)
 			require.NoError(t, err)
 			require.Equal(t, tt.expectedEntrypoint, entrypoint)
