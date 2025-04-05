@@ -8,6 +8,11 @@ const (
 	CodeUnknown            // Used when no other exit code is appropriate
 )
 
+// TaskRC related exit codes
+const (
+	CodeTaskRCNotFoundError int = iota + 50
+)
+
 // Taskfile related exit codes
 const (
 	CodeTaskfileNotFound int = iota + 100

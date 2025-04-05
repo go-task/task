@@ -6,46 +6,47 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/Masterminds/semver/v3"
 	"github.com/joho/godotenv"
-	"gopkg.in/yaml.v3"
+
+	"github.com/go-task/task/v3/taskrc"
 )
 
 const envPrefix = "TASK_X_"
 
-var defaultConfigFilenames = []string{
-	".taskrc.yml",
-	".taskrc.yaml",
-}
-
-type experimentConfigFile struct {
-	Experiments map[string]int `yaml:"experiments"`
-	Version     *semver.Version
-}
-
 // Active experiments.
 var (
-	GentleForce     = New("GENTLE_FORCE", 1)
-	RemoteTaskfiles = New("REMOTE_TASKFILES", 1)
-	EnvPrecedence   = New("ENV_PRECEDENCE", 1)
+	GentleForce     Experiment
+	RemoteTaskfiles Experiment
+	EnvPrecedence   Experiment
 )
 
 // Inactive experiments. These are experiments that cannot be enabled, but are
 // preserved for error handling.
 var (
-	AnyVariables = New("ANY_VARIABLES")
-	MapVariables = New("MAP_VARIABLES")
+	AnyVariables Experiment
+	MapVariables Experiment
 )
 
 // An internal list of all the initialized experiments used for iterating.
-var (
-	xList            []Experiment
-	experimentConfig experimentConfigFile
-)
+var xList []Experiment
 
 func Parse(dir string) {
+	// Read any .env files
 	readDotEnv(dir)
-	experimentConfig = readConfig(dir)
+
+	// Create a node for the Task config reader
+	node, _ := taskrc.NewNode("", dir)
+
+	// Read the Task config file
+	reader := taskrc.NewReader()
+	config, _ := reader.Read(node)
+
+	// Initialize the experiments
+	GentleForce = New("GENTLE_FORCE", config, 1)
+	RemoteTaskfiles = New("REMOTE_TASKFILES", config, 1)
+	EnvPrecedence = New("ENV_PRECEDENCE", config, 1)
+	AnyVariables = New("ANY_VARIABLES", config)
+	MapVariables = New("MAP_VARIABLES", config)
 }
 
 // Validate checks if any experiments have been enabled while being inactive.
@@ -76,35 +77,15 @@ func getFilePath(filename, dir string) string {
 }
 
 func readDotEnv(dir string) {
-	env, _ := godotenv.Read(getFilePath(".env", dir))
+	env, err := godotenv.Read(getFilePath(".env", dir))
+	if err != nil {
+		return
+	}
+
 	// If the env var is an experiment, set it.
 	for key, value := range env {
 		if strings.HasPrefix(key, envPrefix) {
 			os.Setenv(key, value)
 		}
 	}
-}
-
-func readConfig(dir string) experimentConfigFile {
-	var cfg experimentConfigFile
-
-	var content []byte
-	var err error
-	for _, filename := range defaultConfigFilenames {
-		path := getFilePath(filename, dir)
-		content, err = os.ReadFile(path)
-		if err == nil {
-			break
-		}
-	}
-
-	if err != nil {
-		return experimentConfigFile{}
-	}
-
-	if err := yaml.Unmarshal(content, &cfg); err != nil {
-		return experimentConfigFile{}
-	}
-
-	return cfg
 }

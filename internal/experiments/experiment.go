@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"slices"
 	"strconv"
+
+	"github.com/go-task/task/v3/taskrc/ast"
 )
 
 type Experiment struct {
@@ -14,8 +16,11 @@ type Experiment struct {
 
 // New creates a new experiment with the given name and sets the values that can
 // enable it.
-func New(xName string, allowedValues ...int) Experiment {
-	value := experimentConfig.Experiments[xName]
+func New(xName string, config *ast.TaskRC, allowedValues ...int) Experiment {
+	var value int
+	if config != nil {
+		value = config.Experiments[xName]
+	}
 
 	if value == 0 {
 		value, _ = strconv.Atoi(getEnv(xName))
