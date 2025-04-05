@@ -17,7 +17,7 @@ import (
 	"github.com/go-task/task/v3/internal/filepathext"
 	"github.com/go-task/task/v3/internal/flags"
 	"github.com/go-task/task/v3/internal/logger"
-	ver "github.com/go-task/task/v3/internal/version"
+	"github.com/go-task/task/v3/internal/version"
 	"github.com/go-task/task/v3/taskfile"
 	"github.com/go-task/task/v3/taskfile/ast"
 )
@@ -57,7 +57,7 @@ func run() error {
 	}
 
 	if flags.Version {
-		fmt.Printf("Task version: %s\n", ver.GetVersionWithSum())
+		fmt.Println(version.GetVersionWithBuildInfo())
 		return nil
 	}
 
