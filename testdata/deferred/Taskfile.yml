@@ -12,3 +12,18 @@ tasks:
     - defer: echo 'failing' && exit 2
     - echo 'cmd ran'
     - exit 1
+
+  parent:
+    vars:
+      VAR1: "value-from-parent"
+    cmds:
+      - defer:
+          task: child
+          vars:
+            VAR1: 'task deferred {{.VAR1}}'
+      - task: child
+        vars:
+          VAR1: 'task immediate {{.VAR1}}'
+  child:
+    cmds:
+    - cmd: echo "child {{.VAR1}}"
