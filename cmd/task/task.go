@@ -56,6 +56,10 @@ func run() error {
 		return err
 	}
 
+	if err := experiments.Validate(); err != nil {
+		log.Warnf("%s\n", err.Error())
+	}
+
 	if flags.Version {
 		fmt.Println(version.GetVersionWithBuildInfo())
 		return nil
@@ -107,10 +111,6 @@ func run() error {
 		}
 		fmt.Println(script)
 		return nil
-	}
-
-	if err := experiments.Validate(); err != nil {
-		log.Warnf("%s\n", err.Error())
 	}
 
 	e := task.NewExecutor(
