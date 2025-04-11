@@ -9,6 +9,7 @@ import (
 
 	"github.com/go-task/task/v3/internal/execext"
 	"github.com/go-task/task/v3/internal/filepathext"
+	"github.com/go-task/task/v3/internal/fsext"
 )
 
 // A FileNode is a node that reads a taskfile from the local filesystem.
@@ -20,7 +21,7 @@ type FileNode struct {
 func NewFileNode(entrypoint, dir string, opts ...NodeOption) (*FileNode, error) {
 	var err error
 	base := NewBaseNode(dir, opts...)
-	entrypoint, base.dir, err = resolveFileNodeEntrypointAndDir(entrypoint, base.dir)
+	entrypoint, base.dir, err = fsext.Search(entrypoint, base.dir, defaultTaskfiles)
 	if err != nil {
 		return nil, err
 	}
@@ -45,34 +46,6 @@ func (node *FileNode) Read(ctx context.Context) ([]byte, error) {
 	}
 	defer f.Close()
 	return io.ReadAll(f)
-}
-
-// resolveFileNodeEntrypointAndDir resolves checks the values of entrypoint and dir and
-// populates them with default values if necessary.
-func resolveFileNodeEntrypointAndDir(entrypoint, dir string) (string, string, error) {
-	var err error
-	if entrypoint != "" {
-		entrypoint, err = Exists(entrypoint)
-		if err != nil {
-			return "", "", err
-		}
-		if dir == "" {
-			dir = filepath.Dir(entrypoint)
-		}
-		return entrypoint, dir, nil
-	}
-	if dir == "" {
-		dir, err = os.Getwd()
-		if err != nil {
-			return "", "", err
-		}
-	}
-	entrypoint, err = ExistsWalk(dir)
-	if err != nil {
-		return "", "", err
-	}
-	dir = filepath.Dir(entrypoint)
-	return entrypoint, dir, nil
 }
 
 func (node *FileNode) ResolveEntrypoint(entrypoint string) (string, error) {
