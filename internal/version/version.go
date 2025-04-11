@@ -53,15 +53,15 @@ func GetVersion() string {
 // the commit hash and dirty status if available. This will only work when built
 // within inside of a Git checkout.
 func GetVersionWithBuildInfo() string {
-	var buildInfo string
+	var buildMetadata []string
 	if commit != "" {
-		buildInfo += commit
+		buildMetadata = append(buildMetadata, commit)
 	}
 	if dirty {
-		buildInfo += "-dirty"
+		buildMetadata = append(buildMetadata, "dirty")
 	}
-	if buildInfo != "" {
-		return version + "-" + buildInfo
+	if len(buildMetadata) > 0 {
+		return version + "+" + strings.Join(buildMetadata, ".")
 	}
 	return version
 }
