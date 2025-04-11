@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"time"
 )
 
 const remoteCacheDir = "remote"
@@ -32,6 +33,25 @@ func (node *CacheNode) Write(data []byte) error {
 		return err
 	}
 	return os.WriteFile(node.Location(), data, 0o644)
+}
+
+func (node *CacheNode) ReadTimestamp() time.Time {
+	b, err := os.ReadFile(node.timestampPath())
+	if err != nil {
+		return time.Time{}.UTC()
+	}
+	timestamp, err := time.Parse(time.RFC3339, string(b))
+	if err != nil {
+		return time.Time{}.UTC()
+	}
+	return timestamp.UTC()
+}
+
+func (node *CacheNode) WriteTimestamp(t time.Time) error {
+	if err := node.CreateCacheDir(); err != nil {
+		return err
+	}
+	return os.WriteFile(node.timestampPath(), []byte(t.Format(time.RFC3339)), 0o644)
 }
 
 func (node *CacheNode) ReadChecksum() string {
@@ -76,6 +96,10 @@ func (node *CacheNode) Location() string {
 
 func (node *CacheNode) checksumPath() string {
 	return node.filePath("checksum")
+}
+
+func (node *CacheNode) timestampPath() string {
+	return node.filePath("timestamp")
 }
 
 func (node *CacheNode) filePath(suffix string) string {

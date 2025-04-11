@@ -27,26 +27,27 @@ type (
 	// within them.
 	Executor struct {
 		// Flags
-		Dir         string
-		Entrypoint  string
-		TempDir     TempDir
-		Force       bool
-		ForceAll    bool
-		Insecure    bool
-		Download    bool
-		Offline     bool
-		Timeout     time.Duration
-		Watch       bool
-		Verbose     bool
-		Silent      bool
-		AssumeYes   bool
-		AssumeTerm  bool // Used for testing
-		Dry         bool
-		Summary     bool
-		Parallel    bool
-		Color       bool
-		Concurrency int
-		Interval    time.Duration
+		Dir                 string
+		Entrypoint          string
+		TempDir             TempDir
+		Force               bool
+		ForceAll            bool
+		Insecure            bool
+		Download            bool
+		Offline             bool
+		Timeout             time.Duration
+		CacheExpiryDuration time.Duration
+		Watch               bool
+		Verbose             bool
+		Silent              bool
+		AssumeYes           bool
+		AssumeTerm          bool // Used for testing
+		Dry                 bool
+		Summary             bool
+		Parallel            bool
+		Color               bool
+		Concurrency         int
+		Interval            time.Duration
 
 		// I/O
 		Stdin  io.Reader
@@ -238,6 +239,20 @@ type timeoutOption struct {
 
 func (o *timeoutOption) ApplyToExecutor(e *Executor) {
 	e.Timeout = o.timeout
+}
+
+// WithCacheExpiryDuration sets the duration after which the cache is considered
+// expired. By default, the cache is considered expired after 24 hours.
+func WithCacheExpiryDuration(duration time.Duration) ExecutorOption {
+	return &cacheExpiryDurationOption{duration: duration}
+}
+
+type cacheExpiryDurationOption struct {
+	duration time.Duration
+}
+
+func (o *cacheExpiryDurationOption) ApplyToExecutor(r *Executor) {
+	r.CacheExpiryDuration = o.duration
 }
 
 // WithWatch tells the [Executor] to keep running in the background and watch
