@@ -71,7 +71,6 @@ func (e *Executor) readTaskfile(node taskfile.Node) error {
 		return e.Logger.Prompt(logger.Yellow, s, "n", "y", "yes")
 	}
 	reader := taskfile.NewReader(
-		node,
 		taskfile.WithInsecure(e.Insecure),
 		taskfile.WithDownload(e.Download),
 		taskfile.WithOffline(e.Offline),
@@ -80,7 +79,7 @@ func (e *Executor) readTaskfile(node taskfile.Node) error {
 		taskfile.WithDebugFunc(debugFunc),
 		taskfile.WithPromptFunc(promptFunc),
 	)
-	graph, err := reader.Read()
+	graph, err := reader.Read(node)
 	if err != nil {
 		return err
 	}
