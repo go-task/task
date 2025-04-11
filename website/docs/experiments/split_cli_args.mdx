@@ -1,0 +1,136 @@
+---
+slug: /experiments/split-cli-args/
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# Split CLI Args (#2139)
+
+:::caution
+
+All experimental features are subject to breaking changes and/or removal _at any
+time_. We strongly recommend that you do not use these features in a production
+environment. They are intended for testing and feedback only.
+
+:::
+
+:::warning
+
+This experiment breaks the following functionality:
+
+- The `CLI_ARGS` variable will no longer work in arguments to string templating
+  functions.
+- Outputting the `CLI_ARGS` variable directly will result in a string
+  representation of an array (including the enclosing square brackets).
+
+:::
+
+:::info
+
+To enable this experiment, set the environment variable:
+`TASK_X_SPLIT_CLI_ARGS=1`. Check out [our guide to enabling experiments
+][enabling-experiments] for more information.
+
+:::
+
+This experiment changes the type of the `CLI_ARGS` variable from a string to an
+array of strings. This allows the user to more easily mutate and iterate over
+individual arguments. Arguments will no longer be quoted if they contain a
+space. However whitespace will still be escaped in arguments if the arguments
+are quoted properly. For example:
+
+```yaml
+version: '3'
+
+tasks:
+  default:
+    silent: true
+    cmds:
+      - "echo 'args: {{.CLI_ARGS}}'"
+      - "echo 'first arg: {{index .CLI_ARGS 0}}'"
+      - for: { var: CLI_ARGS, as: FILENAME }
+        cmd: echo "{{.FILENAME}}"
+```
+
+<Tabs defaultValue="2"
+  values={[
+    {label: 'Before', value: '1'},
+    {label: 'After', value: '2'}
+  ]}>
+
+<TabItem value="1">
+
+```shell
+$ task -- foo.txt bar.txt "hello world.txt"
+```
+```
+args: foo.txt bar.txt hello world.txt
+first arg: 102
+foo.txt
+bar.txt
+'hello
+world.txt'
+```
+
+</TabItem>
+<TabItem value="2">
+
+```shell
+$ TASK_X_SPLIT_CLI_ARGS=1 task -- foo.txt bar.txt "hello world.txt"
+```
+```
+args: [foo.txt bar.txt hello world.txt]
+first arg: foo.txt
+foo.txt
+bar.txt
+hello world.txt
+```
+
+</TabItem>
+</Tabs>
+
+## Migrating
+
+If you with to enable this experiments, but you don't want any behavior to
+change, you should update any uses of the `CLI_ARGS` variable to use the use the
+`join` function to convert the array back to a string. For example:
+
+<Tabs defaultValue="2"
+  values={[
+    {label: 'Before', value: '1'},
+    {label: 'After', value: '2'}
+  ]}>
+
+<TabItem value="1">
+
+```yaml
+version: '3'
+
+tasks:
+  example:
+    cmds:
+      - echo "CLI_ARGS: {{.CLI_ARGS}}"
+```
+
+</TabItem>
+<TabItem value="2">
+
+```yaml
+version: '3'
+
+tasks:
+  example:
+    cmds:
+      - echo "CLI_ARGS: {{join " " .CLI_ARGS}}"
+```
+
+</TabItem>
+</Tabs>
+
+Otherwise, if you want the new behavior, you can simply enable the experiment
+and update your tasks to use the new array of arguments.
+
+{/* prettier-ignore-start */}
+[enabling-experiments]: ./experiments.mdx#enabling-experiments
+{/* prettier-ignore-end */}
