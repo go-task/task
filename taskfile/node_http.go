@@ -8,7 +8,6 @@ import (
 	"net/url"
 	"path/filepath"
 	"strings"
-	"time"
 
 	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/execext"
@@ -20,14 +19,12 @@ type HTTPNode struct {
 	*BaseNode
 	URL        *url.URL // stores url pointing actual remote file. (e.g. with Taskfile.yml)
 	entrypoint string   // stores entrypoint url. used for building graph vertices.
-	timeout    time.Duration
 }
 
 func NewHTTPNode(
 	entrypoint string,
 	dir string,
 	insecure bool,
-	timeout time.Duration,
 	opts ...NodeOption,
 ) (*HTTPNode, error) {
 	base := NewBaseNode(dir, opts...)
@@ -43,7 +40,6 @@ func NewHTTPNode(
 		BaseNode:   base,
 		URL:        url,
 		entrypoint: entrypoint,
-		timeout:    timeout,
 	}, nil
 }
 
@@ -56,7 +52,7 @@ func (node *HTTPNode) Read() ([]byte, error) {
 }
 
 func (node *HTTPNode) ReadContext(ctx context.Context) ([]byte, error) {
-	url, err := RemoteExists(ctx, node.URL, node.timeout)
+	url, err := RemoteExists(ctx, node.URL)
 	if err != nil {
 		return nil, err
 	}
@@ -68,8 +64,8 @@ func (node *HTTPNode) ReadContext(ctx context.Context) ([]byte, error) {
 
 	resp, err := http.DefaultClient.Do(req.WithContext(ctx))
 	if err != nil {
-		if errors.Is(err, context.DeadlineExceeded) {
-			return nil, &errors.TaskfileNetworkTimeoutError{URI: node.URL.String(), Timeout: node.timeout}
+		if ctx.Err() != nil {
+			return nil, err
 		}
 		return nil, errors.TaskfileFetchFailedError{URI: node.URL.String()}
 	}

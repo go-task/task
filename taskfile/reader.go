@@ -43,7 +43,6 @@ type (
 		insecure            bool
 		download            bool
 		offline             bool
-		timeout             time.Duration
 		tempDir             string
 		cacheExpiryDuration time.Duration
 		debugFunc           DebugFunc
@@ -60,7 +59,6 @@ func NewReader(opts ...ReaderOption) *Reader {
 		insecure:            false,
 		download:            false,
 		offline:             false,
-		timeout:             time.Second * 10,
 		tempDir:             os.TempDir(),
 		cacheExpiryDuration: 0,
 		debugFunc:           nil,
@@ -119,20 +117,6 @@ type offlineOption struct {
 
 func (o *offlineOption) ApplyToReader(r *Reader) {
 	r.offline = o.offline
-}
-
-// WithTimeout sets the [Reader]'s timeout for fetching remote taskfiles. By
-// default, the timeout is set to 10 seconds.
-func WithTimeout(timeout time.Duration) ReaderOption {
-	return &timeoutOption{timeout: timeout}
-}
-
-type timeoutOption struct {
-	timeout time.Duration
-}
-
-func (o *timeoutOption) ApplyToReader(r *Reader) {
-	r.timeout = o.timeout
 }
 
 // WithTempDir sets the temporary directory that will be used by the [Reader].
@@ -202,8 +186,8 @@ func (o *promptFuncOption) ApplyToReader(r *Reader) {
 // through any [ast.Includes] it finds, reading each included Taskfile and
 // building an [ast.TaskfileGraph] as it goes. If any errors occur, they will be
 // returned immediately.
-func (r *Reader) Read(node Node) (*ast.TaskfileGraph, error) {
-	if err := r.include(node); err != nil {
+func (r *Reader) Read(ctx context.Context, node Node) (*ast.TaskfileGraph, error) {
+	if err := r.include(ctx, node); err != nil {
 		return nil, err
 	}
 	return r.graph, nil
@@ -222,7 +206,7 @@ func (r *Reader) promptf(format string, a ...any) error {
 	return nil
 }
 
-func (r *Reader) include(node Node) error {
+func (r *Reader) include(ctx context.Context, node Node) error {
 	// Create a new vertex for the Taskfile
 	vertex := &ast.TaskfileVertex{
 		URI:      node.Location(),
@@ -240,7 +224,7 @@ func (r *Reader) include(node Node) error {
 
 	// Read and parse the Taskfile from the file and add it to the vertex
 	var err error
-	vertex.Taskfile, err = r.readNode(node)
+	vertex.Taskfile, err = r.readNode(ctx, node)
 	if err != nil {
 		return err
 	}
@@ -281,7 +265,7 @@ func (r *Reader) include(node Node) error {
 				return err
 			}
 
-			includeNode, err := NewNode(entrypoint, include.Dir, r.insecure, r.timeout,
+			includeNode, err := NewNode(entrypoint, include.Dir, r.insecure,
 				WithParent(node),
 			)
 			if err != nil {
@@ -292,7 +276,7 @@ func (r *Reader) include(node Node) error {
 			}
 
 			// Recurse into the included Taskfile
-			if err := r.include(includeNode); err != nil {
+			if err := r.include(ctx, includeNode); err != nil {
 				return err
 			}
 
@@ -332,8 +316,8 @@ func (r *Reader) include(node Node) error {
 	return g.Wait()
 }
 
-func (r *Reader) readNode(node Node) (*ast.Taskfile, error) {
-	b, err := r.readNodeContent(node)
+func (r *Reader) readNode(ctx context.Context, node Node) (*ast.Taskfile, error) {
+	b, err := r.readNodeContent(ctx, node)
 	if err != nil {
 		return nil, err
 	}
@@ -374,14 +358,14 @@ func (r *Reader) readNode(node Node) (*ast.Taskfile, error) {
 	return &tf, nil
 }
 
-func (r *Reader) readNodeContent(node Node) ([]byte, error) {
+func (r *Reader) readNodeContent(ctx context.Context, node Node) ([]byte, error) {
 	if node, isRemote := node.(RemoteNode); isRemote {
-		return r.readRemoteNodeContent(node)
+		return r.readRemoteNodeContent(ctx, node)
 	}
 	return node.Read()
 }
 
-func (r *Reader) readRemoteNodeContent(node RemoteNode) ([]byte, error) {
+func (r *Reader) readRemoteNodeContent(ctx context.Context, node RemoteNode) ([]byte, error) {
 	cache := NewCacheNode(node, r.tempDir)
 	now := time.Now().UTC()
 	timestamp := cache.ReadTimestamp()
@@ -422,10 +406,6 @@ func (r *Reader) readRemoteNodeContent(node RemoteNode) ([]byte, error) {
 			return b, nil
 		}
 	}
-
-	// If we have not been forced to be offline, try to fetch the remote file
-	ctx, cf := context.WithTimeout(context.Background(), r.timeout)
-	defer cf()
 
 	// Try to read the remote file
 	b, err := node.ReadContext(ctx)
