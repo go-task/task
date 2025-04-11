@@ -39,15 +39,16 @@ type (
 	// A Reader will recursively read Taskfiles from a given [Node] and build a
 	// [ast.TaskfileGraph] from them.
 	Reader struct {
-		graph       *ast.TaskfileGraph
-		insecure    bool
-		download    bool
-		offline     bool
-		timeout     time.Duration
-		tempDir     string
-		debugFunc   DebugFunc
-		promptFunc  PromptFunc
-		promptMutex sync.Mutex
+		graph               *ast.TaskfileGraph
+		insecure            bool
+		download            bool
+		offline             bool
+		timeout             time.Duration
+		tempDir             string
+		cacheExpiryDuration time.Duration
+		debugFunc           DebugFunc
+		promptFunc          PromptFunc
+		promptMutex         sync.Mutex
 	}
 )
 
@@ -55,15 +56,16 @@ type (
 // options.
 func NewReader(opts ...ReaderOption) *Reader {
 	r := &Reader{
-		graph:       ast.NewTaskfileGraph(),
-		insecure:    false,
-		download:    false,
-		offline:     false,
-		timeout:     time.Second * 10,
-		tempDir:     os.TempDir(),
-		debugFunc:   nil,
-		promptFunc:  nil,
-		promptMutex: sync.Mutex{},
+		graph:               ast.NewTaskfileGraph(),
+		insecure:            false,
+		download:            false,
+		offline:             false,
+		timeout:             time.Second * 10,
+		tempDir:             os.TempDir(),
+		cacheExpiryDuration: 0,
+		debugFunc:           nil,
+		promptFunc:          nil,
+		promptMutex:         sync.Mutex{},
 	}
 	r.Options(opts...)
 	return r
@@ -145,6 +147,20 @@ type tempDirOption struct {
 
 func (o *tempDirOption) ApplyToReader(r *Reader) {
 	r.tempDir = o.tempDir
+}
+
+// WithCacheExpiryDuration sets the duration after which the cache is considered
+// expired. By default, the cache is considered expired after 24 hours.
+func WithCacheExpiryDuration(duration time.Duration) ReaderOption {
+	return &cacheExpiryDurationOption{duration: duration}
+}
+
+type cacheExpiryDurationOption struct {
+	duration time.Duration
+}
+
+func (o *cacheExpiryDurationOption) ApplyToReader(r *Reader) {
+	r.cacheExpiryDuration = o.duration
 }
 
 // WithDebugFunc sets the debug function to be used by the [Reader]. If set,
@@ -367,6 +383,10 @@ func (r *Reader) readNodeContent(node Node) ([]byte, error) {
 
 func (r *Reader) readRemoteNodeContent(node RemoteNode) ([]byte, error) {
 	cache := NewCacheNode(node, r.tempDir)
+	now := time.Now().UTC()
+	timestamp := cache.ReadTimestamp()
+	expiry := timestamp.Add(r.cacheExpiryDuration)
+	cacheValid := now.Before(expiry)
 
 	// If we have not been been forced to download, check the cache
 	if !r.download {
@@ -383,11 +403,20 @@ func (r *Reader) readRemoteNodeContent(node RemoteNode) ([]byte, error) {
 				}
 			}
 
+		// If the cache is expired
+		case !cacheValid:
+			r.debugf("cache expired at %s\n", expiry.Format(time.RFC3339))
+			// If we can't fetch a fresh copy, we should use the cache anyway
+			if r.offline {
+				r.debugf("in offline mode, using expired cache\n")
+				return b, nil
+			}
+
 		// Some other error
 		case err != nil:
 			return nil, err
 
-		// Found cache, return it
+		// Found valid cache, return it
 		default:
 			r.debugf("cache found\n")
 			return b, nil
@@ -408,7 +437,7 @@ func (r *Reader) readRemoteNodeContent(node RemoteNode) ([]byte, error) {
 	checksum := checksum(b)
 	prompt := cache.ChecksumPrompt(checksum)
 
-	// If we need to prompt the user, do it and cache the file
+	// Prompt the user if required
 	if prompt != "" {
 		if err := func() error {
 			r.promptMutex.Lock()
@@ -417,17 +446,22 @@ func (r *Reader) readRemoteNodeContent(node RemoteNode) ([]byte, error) {
 		}(); err != nil {
 			return nil, &errors.TaskfileNotTrustedError{URI: node.Location()}
 		}
+	}
 
-		// Store the checksum
-		if err := cache.WriteChecksum(checksum); err != nil {
-			return nil, err
-		}
+	// Store the checksum
+	if err := cache.WriteChecksum(checksum); err != nil {
+		return nil, err
+	}
 
-		// Cache the file
-		r.debugf("task: [%s] Caching downloaded file\n", node.Location())
-		if err = cache.Write(b); err != nil {
-			return nil, err
-		}
+	// Store the timestamp
+	if err := cache.WriteTimestamp(now); err != nil {
+		return nil, err
+	}
+
+	// Cache the file
+	r.debugf("caching %q to %q\n", node.Location(), cache.Location())
+	if err = cache.Write(b); err != nil {
+		return nil, err
 	}
 
 	return b, nil

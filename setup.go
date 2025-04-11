@@ -76,6 +76,7 @@ func (e *Executor) readTaskfile(node taskfile.Node) error {
 		taskfile.WithOffline(e.Offline),
 		taskfile.WithTimeout(e.Timeout),
 		taskfile.WithTempDir(e.TempDir.Remote),
+		taskfile.WithCacheExpiryDuration(e.CacheExpiryDuration),
 		taskfile.WithDebugFunc(debugFunc),
 		taskfile.WithPromptFunc(promptFunc),
 	)
