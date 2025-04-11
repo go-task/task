@@ -18,7 +18,6 @@ import (
 	"github.com/go-task/task/v3/internal/flags"
 	"github.com/go-task/task/v3/internal/logger"
 	"github.com/go-task/task/v3/internal/version"
-	"github.com/go-task/task/v3/taskfile"
 	"github.com/go-task/task/v3/taskfile/ast"
 )
 
@@ -121,18 +120,9 @@ func run() error {
 		return err
 	}
 
-	// If the download flag is specified, we should stop execution as soon as
-	// taskfile is downloaded
-	if flags.Download {
-		return nil
-	}
-
 	if flags.ClearCache {
-		cache, err := taskfile.NewCache(e.TempDir.Remote)
-		if err != nil {
-			return err
-		}
-		return cache.Clear()
+		cachePath := filepath.Join(e.TempDir.Remote, "remote")
+		return os.RemoveAll(cachePath)
 	}
 
 	listOptions := task.NewListOptions(

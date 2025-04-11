@@ -14,14 +14,18 @@ import (
 )
 
 type Node interface {
-	Read(ctx context.Context) ([]byte, error)
+	Read() ([]byte, error)
 	Parent() Node
 	Location() string
 	Dir() string
-	Remote() bool
 	ResolveEntrypoint(entrypoint string) (string, error)
 	ResolveDir(dir string) (string, error)
-	FilenameAndLastDir() (string, string)
+}
+
+type RemoteNode interface {
+	Node
+	ReadContext(ctx context.Context) ([]byte, error)
+	CacheKey() string
 }
 
 func NewRootNode(
@@ -35,35 +39,35 @@ func NewRootNode(
 	if entrypoint == "-" {
 		return NewStdinNode(dir)
 	}
-	return NewNode(entrypoint, dir, insecure, timeout)
+	return NewNode(entrypoint, dir, insecure)
 }
 
 func NewNode(
 	entrypoint string,
 	dir string,
 	insecure bool,
-	timeout time.Duration,
 	opts ...NodeOption,
 ) (Node, error) {
 	var node Node
 	var err error
+
 	scheme, err := getScheme(entrypoint)
 	if err != nil {
 		return nil, err
 	}
+
 	switch scheme {
 	case "git":
 		node, err = NewGitNode(entrypoint, dir, insecure, opts...)
 	case "http", "https":
-		node, err = NewHTTPNode(entrypoint, dir, insecure, timeout, opts...)
+		node, err = NewHTTPNode(entrypoint, dir, insecure, opts...)
 	default:
 		node, err = NewFileNode(entrypoint, dir, opts...)
-
 	}
-
-	if node.Remote() && !experiments.RemoteTaskfiles.Enabled() {
+	if _, isRemote := node.(RemoteNode); isRemote && !experiments.RemoteTaskfiles.Enabled() {
 		return nil, errors.New("task: Remote taskfiles are not enabled. You can read more about this experiment and how to enable it at https://taskfile.dev/experiments/remote-taskfiles")
 	}
+
 	return node, err
 }
 
@@ -72,6 +76,7 @@ func getScheme(uri string) (string, error) {
 	if u == nil {
 		return "", err
 	}
+
 	if strings.HasSuffix(strings.Split(u.Path, "//")[0], ".git") && (u.Scheme == "git" || u.Scheme == "ssh" || u.Scheme == "https" || u.Scheme == "http") {
 		return "git", nil
 	}
@@ -79,6 +84,7 @@ func getScheme(uri string) (string, error) {
 	if i := strings.Index(uri, "://"); i != -1 {
 		return uri[:i], nil
 	}
+
 	return "", nil
 }
 

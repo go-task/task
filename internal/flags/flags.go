@@ -40,39 +40,40 @@ Options:
 `
 
 var (
-	Version     bool
-	Help        bool
-	Init        bool
-	Completion  string
-	List        bool
-	ListAll     bool
-	ListJson    bool
-	TaskSort    string
-	Status      bool
-	NoStatus    bool
-	Insecure    bool
-	Force       bool
-	ForceAll    bool
-	Watch       bool
-	Verbose     bool
-	Silent      bool
-	AssumeYes   bool
-	Dry         bool
-	Summary     bool
-	ExitCode    bool
-	Parallel    bool
-	Concurrency int
-	Dir         string
-	Entrypoint  string
-	Output      ast.Output
-	Color       bool
-	Interval    time.Duration
-	Global      bool
-	Experiments bool
-	Download    bool
-	Offline     bool
-	ClearCache  bool
-	Timeout     time.Duration
+	Version             bool
+	Help                bool
+	Init                bool
+	Completion          string
+	List                bool
+	ListAll             bool
+	ListJson            bool
+	TaskSort            string
+	Status              bool
+	NoStatus            bool
+	Insecure            bool
+	Force               bool
+	ForceAll            bool
+	Watch               bool
+	Verbose             bool
+	Silent              bool
+	AssumeYes           bool
+	Dry                 bool
+	Summary             bool
+	ExitCode            bool
+	Parallel            bool
+	Concurrency         int
+	Dir                 string
+	Entrypoint          string
+	Output              ast.Output
+	Color               bool
+	Interval            time.Duration
+	Global              bool
+	Experiments         bool
+	Download            bool
+	Offline             bool
+	ClearCache          bool
+	Timeout             time.Duration
+	CacheExpiryDuration time.Duration
 )
 
 func init() {
@@ -131,6 +132,7 @@ func init() {
 		pflag.BoolVar(&Offline, "offline", offline, "Forces Task to only use local or cached Taskfiles.")
 		pflag.DurationVar(&Timeout, "timeout", time.Second*10, "Timeout for downloading remote Taskfiles.")
 		pflag.BoolVar(&ClearCache, "clear-cache", false, "Clear the remote cache.")
+		pflag.DurationVar(&CacheExpiryDuration, "expiry", 0, "Expiry duration for cached remote Taskfiles.")
 	}
 
 	pflag.Parse()
@@ -212,6 +214,7 @@ func (o *flagsOption) ApplyToExecutor(e *task.Executor) {
 		task.WithDownload(Download),
 		task.WithOffline(Offline),
 		task.WithTimeout(Timeout),
+		task.WithCacheExpiryDuration(CacheExpiryDuration),
 		task.WithWatch(Watch),
 		task.WithVerbose(Verbose),
 		task.WithSilent(Silent),
