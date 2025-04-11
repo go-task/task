@@ -71,7 +71,11 @@ func (node *GitNode) Remote() bool {
 	return true
 }
 
-func (node *GitNode) Read(_ context.Context) ([]byte, error) {
+func (node *GitNode) Read() ([]byte, error) {
+	return node.ReadContext(context.Background())
+}
+
+func (node *GitNode) ReadContext(_ context.Context) ([]byte, error) {
 	fs := memfs.New()
 	storer := memory.NewStorage()
 	_, err := git.Clone(storer, fs, &git.CloneOptions{
@@ -121,6 +125,13 @@ func (node *GitNode) ResolveDir(dir string) (string, error) {
 	return filepathext.SmartJoin(entrypointDir, path), nil
 }
 
-func (node *GitNode) FilenameAndLastDir() (string, string) {
-	return filepath.Base(node.path), filepath.Base(filepath.Dir(node.path))
+func (node *GitNode) CacheKey() string {
+	checksum := strings.TrimRight(checksum([]byte(node.Location())), "=")
+	prefix := filepath.Base(filepath.Dir(node.path))
+	lastDir := filepath.Base(node.path)
+	// Means it's not "", nor "." nor "/", so it's a valid directory
+	if len(lastDir) > 1 {
+		prefix = fmt.Sprintf("%s-%s", lastDir, prefix)
+	}
+	return fmt.Sprintf("%s.%s", prefix, checksum)
 }

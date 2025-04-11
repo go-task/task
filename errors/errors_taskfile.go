@@ -155,19 +155,14 @@ func (err *TaskfileVersionCheckError) Code() int {
 // TaskfileNetworkTimeoutError is returned when the user attempts to use a remote
 // Taskfile but a network connection could not be established within the timeout.
 type TaskfileNetworkTimeoutError struct {
-	URI          string
-	Timeout      time.Duration
-	CheckedCache bool
+	URI     string
+	Timeout time.Duration
 }
 
 func (err *TaskfileNetworkTimeoutError) Error() string {
-	var cacheText string
-	if err.CheckedCache {
-		cacheText = " and no offline copy was found in the cache"
-	}
 	return fmt.Sprintf(
-		`task: Network connection timed out after %s while attempting to download Taskfile %q%s`,
-		err.Timeout, err.URI, cacheText,
+		`task: Network connection timed out after %s while attempting to download Taskfile %q`,
+		err.Timeout, err.URI,
 	)
 }
 

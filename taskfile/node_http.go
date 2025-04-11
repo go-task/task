@@ -2,10 +2,12 @@ package taskfile
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"net/http"
 	"net/url"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/go-task/task/v3/errors"
@@ -49,11 +51,11 @@ func (node *HTTPNode) Location() string {
 	return node.entrypoint
 }
 
-func (node *HTTPNode) Remote() bool {
-	return true
+func (node *HTTPNode) Read() ([]byte, error) {
+	return node.ReadContext(context.Background())
 }
 
-func (node *HTTPNode) Read(ctx context.Context) ([]byte, error) {
+func (node *HTTPNode) ReadContext(ctx context.Context) ([]byte, error) {
 	url, err := RemoteExists(ctx, node.URL, node.timeout)
 	if err != nil {
 		return nil, err
@@ -116,7 +118,14 @@ func (node *HTTPNode) ResolveDir(dir string) (string, error) {
 	return filepathext.SmartJoin(parent, path), nil
 }
 
-func (node *HTTPNode) FilenameAndLastDir() (string, string) {
+func (node *HTTPNode) CacheKey() string {
+	checksum := strings.TrimRight(checksum([]byte(node.Location())), "=")
 	dir, filename := filepath.Split(node.entrypoint)
-	return filepath.Base(dir), filename
+	lastDir := filepath.Base(dir)
+	prefix := filename
+	// Means it's not "", nor "." nor "/", so it's a valid directory
+	if len(lastDir) > 1 {
+		prefix = fmt.Sprintf("%s-%s", lastDir, filename)
+	}
+	return fmt.Sprintf("%s.%s", prefix, checksum)
 }

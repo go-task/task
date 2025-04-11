@@ -317,7 +317,7 @@ func (r *Reader) include(node Node) error {
 }
 
 func (r *Reader) readNode(node Node) (*ast.Taskfile, error) {
-	b, err := r.loadNodeContent(node)
+	b, err := r.readNodeContent(node)
 	if err != nil {
 		return nil, err
 	}
@@ -358,72 +358,57 @@ func (r *Reader) readNode(node Node) (*ast.Taskfile, error) {
 	return &tf, nil
 }
 
-func (r *Reader) loadNodeContent(node Node) ([]byte, error) {
-	if !node.Remote() {
-		ctx, cf := context.WithTimeout(context.Background(), r.timeout)
-		defer cf()
-		return node.Read(ctx)
+func (r *Reader) readNodeContent(node Node) ([]byte, error) {
+	if node, isRemote := node.(RemoteNode); isRemote {
+		return r.readRemoteNodeContent(node)
+	}
+	return node.Read()
+}
+
+func (r *Reader) readRemoteNodeContent(node RemoteNode) ([]byte, error) {
+	cache := NewCacheNode(node, r.tempDir)
+
+	// If we have not been been forced to download, check the cache
+	if !r.download {
+		r.debugf("checking cache for %q in %q\n", node.Location(), cache.Location())
+		b, err := cache.Read()
+		switch {
+		// If the cache doesn't exist, we need to download the file
+		case errors.Is(err, os.ErrNotExist):
+			r.debugf("no cache found\n")
+			// If we couldn't find a cached copy, and we are offline, we can't do anything
+			if r.offline {
+				return nil, &errors.TaskfileCacheNotFoundError{
+					URI: node.Location(),
+				}
+			}
+
+		// Some other error
+		case err != nil:
+			return nil, err
+
+		// Found cache, return it
+		default:
+			r.debugf("cache found\n")
+			return b, nil
+		}
 	}
 
-	cache, err := NewCache(r.tempDir)
+	// If we have not been forced to be offline, try to fetch the remote file
+	ctx, cf := context.WithTimeout(context.Background(), r.timeout)
+	defer cf()
+
+	// Try to read the remote file
+	b, err := node.ReadContext(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	if r.offline {
-		// In offline mode try to use cached copy
-		cached, err := cache.read(node)
-		if errors.Is(err, os.ErrNotExist) {
-			return nil, &errors.TaskfileCacheNotFoundError{URI: node.Location()}
-		} else if err != nil {
-			return nil, err
-		}
-		r.debugf("task: [%s] Fetched cached copy\n", node.Location())
-
-		return cached, nil
-	}
-
-	ctx, cf := context.WithTimeout(context.Background(), r.timeout)
-	defer cf()
-
-	b, err := node.Read(ctx)
-	if errors.Is(err, &errors.TaskfileNetworkTimeoutError{}) {
-		// If we timed out then we likely have a network issue
-
-		// If a download was requested, then we can't use a cached copy
-		if r.download {
-			return nil, &errors.TaskfileNetworkTimeoutError{URI: node.Location(), Timeout: r.timeout}
-		}
-
-		// Search for any cached copies
-		cached, err := cache.read(node)
-		if errors.Is(err, os.ErrNotExist) {
-			return nil, &errors.TaskfileNetworkTimeoutError{URI: node.Location(), Timeout: r.timeout, CheckedCache: true}
-		} else if err != nil {
-			return nil, err
-		}
-		r.debugf("task: [%s] Network timeout. Fetched cached copy\n", node.Location())
-
-		return cached, nil
-
-	} else if err != nil {
-		return nil, err
-	}
-	r.debugf("task: [%s] Fetched remote copy\n", node.Location())
-
-	// Get the checksums
+	r.debugf("found remote file at %q\n", node.Location())
 	checksum := checksum(b)
-	cachedChecksum := cache.readChecksum(node)
+	prompt := cache.ChecksumPrompt(checksum)
 
-	var prompt string
-	if cachedChecksum == "" {
-		// If the checksum doesn't exist, prompt the user to continue
-		prompt = taskfileUntrustedPrompt
-	} else if checksum != cachedChecksum {
-		// If there is a cached hash, but it doesn't match the expected hash, prompt the user to continue
-		prompt = taskfileChangedPrompt
-	}
-
+	// If we need to prompt the user, do it and cache the file
 	if prompt != "" {
 		if err := func() error {
 			r.promptMutex.Lock()
@@ -434,13 +419,13 @@ func (r *Reader) loadNodeContent(node Node) ([]byte, error) {
 		}
 
 		// Store the checksum
-		if err := cache.writeChecksum(node, checksum); err != nil {
+		if err := cache.WriteChecksum(checksum); err != nil {
 			return nil, err
 		}
 
 		// Cache the file
 		r.debugf("task: [%s] Caching downloaded file\n", node.Location())
-		if err = cache.write(node, b); err != nil {
+		if err = cache.Write(b); err != nil {
 			return nil, err
 		}
 	}
