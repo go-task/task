@@ -14,14 +14,18 @@ import (
 )
 
 type Node interface {
-	Read(ctx context.Context) ([]byte, error)
+	Read() ([]byte, error)
 	Parent() Node
 	Location() string
 	Dir() string
-	Remote() bool
 	ResolveEntrypoint(entrypoint string) (string, error)
 	ResolveDir(dir string) (string, error)
-	FilenameAndLastDir() (string, string)
+}
+
+type RemoteNode interface {
+	Node
+	ReadContext(ctx context.Context) ([]byte, error)
+	CacheKey() string
 }
 
 func NewRootNode(
@@ -58,10 +62,8 @@ func NewNode(
 		node, err = NewHTTPNode(entrypoint, dir, insecure, timeout, opts...)
 	default:
 		node, err = NewFileNode(entrypoint, dir, opts...)
-
 	}
-
-	if node.Remote() && !experiments.RemoteTaskfiles.Enabled() {
+	if _, isRemote := node.(RemoteNode); isRemote && !experiments.RemoteTaskfiles.Enabled() {
 		return nil, errors.New("task: Remote taskfiles are not enabled. You can read more about this experiment and how to enable it at https://taskfile.dev/experiments/remote-taskfiles")
 	}
 	return node, err

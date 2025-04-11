@@ -2,7 +2,6 @@ package taskfile
 
 import (
 	"bufio"
-	"context"
 	"fmt"
 	"os"
 	"strings"
@@ -30,7 +29,7 @@ func (node *StdinNode) Remote() bool {
 	return false
 }
 
-func (node *StdinNode) Read(ctx context.Context) ([]byte, error) {
+func (node *StdinNode) Read() ([]byte, error) {
 	var stdin []byte
 	scanner := bufio.NewScanner(os.Stdin)
 	for scanner.Scan() {
@@ -71,8 +70,4 @@ func (node *StdinNode) ResolveDir(dir string) (string, error) {
 	}
 
 	return filepathext.SmartJoin(node.Dir(), path), nil
-}
-
-func (node *StdinNode) FilenameAndLastDir() (string, string) {
-	return "", "__stdin__"
 }
