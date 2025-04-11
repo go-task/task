@@ -2,13 +2,13 @@ package taskfile
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"net/url"
 	"os"
 	"path/filepath"
 	"slices"
 	"strings"
-	"time"
 
 	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/filepathext"
@@ -40,7 +40,7 @@ var (
 // at the given URL with any of the default Taskfile files names. If any of
 // these match a file, the first matching path will be returned. If no files are
 // found, an error will be returned.
-func RemoteExists(ctx context.Context, u *url.URL, timeout time.Duration) (*url.URL, error) {
+func RemoteExists(ctx context.Context, u *url.URL) (*url.URL, error) {
 	// Create a new HEAD request for the given URL to check if the resource exists
 	req, err := http.NewRequestWithContext(ctx, "HEAD", u.String(), nil)
 	if err != nil {
@@ -50,8 +50,8 @@ func RemoteExists(ctx context.Context, u *url.URL, timeout time.Duration) (*url.
 	// Request the given URL
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		if errors.Is(ctx.Err(), context.DeadlineExceeded) {
-			return nil, &errors.TaskfileNetworkTimeoutError{URI: u.String(), Timeout: timeout}
+		if ctx.Err() != nil {
+			return nil, fmt.Errorf("checking remote file: %w", ctx.Err())
 		}
 		return nil, errors.TaskfileFetchFailedError{URI: u.String()}
 	}

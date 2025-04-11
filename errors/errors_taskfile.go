@@ -152,22 +152,22 @@ func (err *TaskfileVersionCheckError) Code() int {
 	return CodeTaskfileVersionCheckError
 }
 
-// TaskfileNetworkTimeoutError is returned when the user attempts to use a remote
-// Taskfile but a network connection could not be established within the timeout.
-type TaskfileNetworkTimeoutError struct {
+// TaskfileReadTimeoutError is returned when the user attempts to read a
+// Taskfile but it could not be completed within the context timeout.
+type TaskfileReadTimeoutError struct {
 	URI     string
 	Timeout time.Duration
 }
 
-func (err *TaskfileNetworkTimeoutError) Error() string {
+func (err *TaskfileReadTimeoutError) Error() string {
 	return fmt.Sprintf(
-		`task: Network connection timed out after %s while attempting to download Taskfile %q`,
+		`task: Context timed out after %s while attempting to read Taskfile %q`,
 		err.Timeout, err.URI,
 	)
 }
 
-func (err *TaskfileNetworkTimeoutError) Code() int {
-	return CodeTaskfileNetworkTimeout
+func (err *TaskfileReadTimeoutError) Code() int {
+	return CodeTaskfileReadTimeout
 }
 
 // TaskfileCycleError is returned when we detect that a Taskfile includes a
