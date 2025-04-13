@@ -371,50 +371,63 @@ func (r *Reader) readRemoteNodeContent(ctx context.Context, node RemoteNode) ([]
 	timestamp := cache.ReadTimestamp()
 	expiry := timestamp.Add(r.cacheExpiryDuration)
 	cacheValid := now.Before(expiry)
+	var cacheFound bool
 
-	// If we have not been been forced to download, check the cache
-	if !r.download {
-		r.debugf("checking cache for %q in %q\n", node.Location(), cache.Location())
-		b, err := cache.Read()
-		switch {
-		// If the cache doesn't exist, we need to download the file
-		case errors.Is(err, os.ErrNotExist):
-			r.debugf("no cache found\n")
-			// If we couldn't find a cached copy, and we are offline, we can't do anything
-			if r.offline {
-				return nil, &errors.TaskfileCacheNotFoundError{
-					URI: node.Location(),
-				}
+	r.debugf("checking cache for %q in %q\n", node.Location(), cache.Location())
+	cachedBytes, err := cache.Read()
+	switch {
+	// If the cache doesn't exist, we need to download the file
+	case errors.Is(err, os.ErrNotExist):
+		r.debugf("no cache found\n")
+		// If we couldn't find a cached copy, and we are offline, we can't do anything
+		if r.offline {
+			return nil, &errors.TaskfileCacheNotFoundError{
+				URI: node.Location(),
 			}
-
-		// If the cache is expired
-		case !cacheValid:
-			r.debugf("cache expired at %s\n", expiry.Format(time.RFC3339))
-			// If we can't fetch a fresh copy, we should use the cache anyway
-			if r.offline {
-				r.debugf("in offline mode, using expired cache\n")
-				return b, nil
-			}
-
-		// Some other error
-		case err != nil:
-			return nil, err
-
-		// Found valid cache, return it
-		default:
-			r.debugf("cache found\n")
-			return b, nil
 		}
+
+	// If the cache is expired
+	case !cacheValid:
+		r.debugf("cache expired at %s\n", expiry.Format(time.RFC3339))
+		cacheFound = true
+		// If we can't fetch a fresh copy, we should use the cache anyway
+		if r.offline {
+			r.debugf("in offline mode, using expired cache\n")
+			return cachedBytes, nil
+		}
+
+	// Some other error
+	case err != nil:
+		return nil, err
+
+	// Found valid cache
+	default:
+		r.debugf("cache found\n")
+		// Not being forced to redownload, return cache
+		if !r.download {
+			return cachedBytes, nil
+		}
+		cacheFound = true
 	}
 
 	// Try to read the remote file
-	b, err := node.ReadContext(ctx)
+	r.debugf("downloading remote file: %s\n", node.Location())
+	downloadedBytes, err := node.ReadContext(ctx)
 	if err != nil {
+		// If the context timed out or was cancelled, but we found a cached version, use that
+		if ctx.Err() != nil && cacheFound {
+			if cacheValid {
+				r.debugf("failed to fetch remote file: %s: using cache\n", ctx.Err().Error())
+			} else {
+				r.debugf("failed to fetch remote file: %s: using expired cache\n", ctx.Err().Error())
+			}
+			return cachedBytes, nil
+		}
 		return nil, err
 	}
 
 	r.debugf("found remote file at %q\n", node.Location())
-	checksum := checksum(b)
+	checksum := checksum(downloadedBytes)
 	prompt := cache.ChecksumPrompt(checksum)
 
 	// Prompt the user if required
@@ -440,9 +453,9 @@ func (r *Reader) readRemoteNodeContent(ctx context.Context, node RemoteNode) ([]
 
 	// Cache the file
 	r.debugf("caching %q to %q\n", node.Location(), cache.Location())
-	if err = cache.Write(b); err != nil {
+	if err = cache.Write(downloadedBytes); err != nil {
 		return nil, err
 	}
 
-	return b, nil
+	return downloadedBytes, nil
 }
