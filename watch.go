@@ -87,6 +87,8 @@ func (e *Executor) watchTasks(calls ...*Call) error {
 
 				for _, c := range calls {
 					c := c
+					c.Vars.Set("CHANGED_ABS", ast.Var{Value: event.Path})
+					c.Vars.Set("CHANGED_FILE", ast.Var{Value: event.FileInfo.Name()})
 					go func() {
 						t, err := e.GetTask(c)
 						if err != nil {
