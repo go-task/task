@@ -167,7 +167,7 @@ tasks:
       - Push the commit/tag to the repository
       - Create a GitHub release
 
-      To use the task, simply run "task release:<version>" where "<version>" is is one of:
+      To use the task, run "task release:<version>" where "<version>" is is one of:
 
       - "major" - Bumps the major number
       - "minor" - Bumps the minor number

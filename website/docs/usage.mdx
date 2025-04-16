@@ -1301,8 +1301,8 @@ tasks:
 ```
 
 All references use the same templating syntax as regular templates, so in
-addition to simply calling `.FOO`, you can also pass subkeys (`.FOO.BAR`) or
-indexes (`index .FOO 0`) and use functions (`len .FOO`) as described in the
+addition to calling `.FOO`, you can also pass subkeys (`.FOO.BAR`) or indexes
+(`index .FOO 0`) and use functions (`len .FOO`) as described in the
 [templating-reference][templating-reference]:
 
 ```yaml
@@ -1511,9 +1511,9 @@ tasks:
 
 ### Looping over variables
 
-To loop over the contents of a variable, you simply need to specify the variable
-you want to loop over. By default, string variables will be split on any
-whitespace characters.
+To loop over the contents of a variable, use the `var` key followed by the name
+of the variable you want to loop over. By default, string variables will be
+split on any whitespace characters.
 
 ```yaml
 version: '3'
