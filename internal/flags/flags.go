@@ -105,7 +105,7 @@ func init() {
 	pflag.BoolVarP(&Dry, "dry", "n", false, "Compiles and prints tasks in the order that they would be run, without executing them.")
 	pflag.BoolVar(&Summary, "summary", false, "Show summary about a task.")
 	pflag.BoolVarP(&ExitCode, "exit-code", "x", false, "Pass-through the exit code of the task command.")
-	pflag.StringVarP(&Dir, "dir", "d", "", "Sets the starting directory to search for the Taskfile.")
+	pflag.StringVarP(&Dir, "dir", "d", "", "Sets the directory in which Task will execute and look for a Taskfile.")
 	pflag.StringVarP(&Entrypoint, "taskfile", "t", "", `Choose which Taskfile to run. Defaults to "Taskfile.yml".`)
 	pflag.StringVarP(&Output.Name, "output", "o", "", "Sets output style: [interleaved|group|prefixed].")
 	pflag.StringVar(&Output.Group.Begin, "output-group-begin", "", "Message template to print before a task's grouped output.")
