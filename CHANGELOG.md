@@ -11,8 +11,8 @@
   seconds to 100 milliseconds, because now it configures the wait time for
   duplicated events, instead of the polling time (#2048 by @andreynering, #1508,
   #985, #1179).
-- The [Map Variables experiment](#1585) was made generally available so you can
-  now
+- The [Map Variables experiment](https://github.com/go-task/task/issues/1585)
+  was made generally available so you can now
   [define map variables in your Taskfiles!](https://taskfile.dev/usage/#variables)
   (#1585, #1547, #2081 by @pd93).
 - Wildcards can now
@@ -22,7 +22,14 @@
   [loop over the files specified by the `generates` keyword](https://taskfile.dev/usage/#looping-over-your-tasks-sources-or-generated-files).
   This works the same way as looping over sources (#2151 by @sedyh).
 - Added the ability to resolve variables when defining an include variable
-  (#2108, #2113 @pd93).
+  (#2108, #2113 by @pd93).
+- A few changes have been made to the
+  [Remote Taskfiles experiment](https://github.com/go-task/task/issues/1317)
+  (#1402, #2176 by @pd93):
+  - Cached files are now prioritized over remote ones.
+  - Added an `--expiry` flag which sets the TTL for a remote file cache. By
+    default the value will be 0 (caching disabled). If Task is running in
+    offline mode or fails to make a connection, it will fallback on the cache.
 - The default taskfile (output when using the `--init` flag) is now an embedded
   file in the binary instead of being stored in the code (#2112 by @pd93).
 - Improved the way we report the Task version when using the `--version` flag or
@@ -56,6 +63,9 @@
   Instead nodes are passed directly into the
   [`Reader.Read`](https://pkg.go.dev/github.com/go-task/task/v3/taskfile#Reader.Read)
   method (#2169 by @pd93).
+- [`Reader.Read`](https://pkg.go.dev/github.com/go-task/task/v3/taskfile#Reader.Read)
+  also now accepts a [`context.Context`](https://pkg.go.dev/context#Context)
+  (#2176 by @pd93).
 
 ## v3.42.1 - 2025-03-10
 
