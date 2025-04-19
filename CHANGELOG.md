@@ -30,6 +30,9 @@
   - Added an `--expiry` flag which sets the TTL for a remote file cache. By
     default the value will be 0 (caching disabled). If Task is running in
     offline mode or fails to make a connection, it will fallback on the cache.
+- `.taskrc` files can now be used from subdirectories and will be searched for
+  recursively up the file tree in the same way that Taskfiles are (#2159, #2166
+  by @pd93).
 - The default taskfile (output when using the `--init` flag) is now an embedded
   file in the binary instead of being stored in the code (#2112 by @pd93).
 - Improved the way we report the Task version when using the `--version` flag or
