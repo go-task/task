@@ -2,6 +2,9 @@
 slug: /experiments/remote-taskfiles/
 ---
 
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
 # Remote Taskfiles (#1317)
 
 :::caution
@@ -20,33 +23,151 @@ To enable this experiment, set the environment variable:
 
 :::
 
-This experiment allows you to specify a remote Taskfile URL when including a
-Taskfile. For example:
+:::danger
+Never run remote Taskfiles from sources that you do not trust.
+:::
 
-```yaml
-version: '3'
+This experiment allows you to use Taskfiles which are stored in remote
+locations. This applies to both the root Taskfile (aka. Entrypoint) and also
+when including Taskfiles.
 
-includes:
-  my-remote-namespace: https://raw.githubusercontent.com/my-org/my-repo/main/Taskfile.yml
-```
+Task uses "nodes" to reference remote Taskfiles. There are a few different types
+of node which you can use:
 
-This works exactly the same way that including a local file does. Any tasks in
-the remote Taskfile will be available to run from your main Taskfile via the
-namespace `my-remote-namespace`. For example, if the remote file contains the
-following:
+<Tabs groupId="method" queryString>
+<TabItem value="http" label="HTTP/HTTPS">
+
+`https://raw.githubusercontent.com/go-task/task/main/website/static/Taskfile.yml`
+
+This is the most basic type of remote node and works by downloading the file
+from the specified URL. The file must be a valid Taskfile and can be of any
+name. If a file is not found at the specified URL, Task will append each of the
+[supported file names][supported-file-names] in turn until it finds a valid
+file. If it still does not find a valid Taskfile, an error is returned.
+
+</TabItem>
+<TabItem value="git-http" label="Git over HTTP">
+
+`https://github.com/go-task/task.git//website/static/Taskfile.yml?ref=main`
+
+This type of node works by downloading the file from a Git repository over
+HTTP/HTTPS. The first part of the URL is the base URL of the Git repository.
+This is the same URL that you would use to clone the repo over HTTP.
+
+- You can optionally add the path to the Taskfile in the repository by appending
+`//<path>` to the URL.
+- You can also optionally specify a branch or tag to use by appending
+`?ref=<ref>` to the end of the URL. If you omit a reference, the default branch
+will be used.
+
+</TabItem>
+<TabItem value="git-ssh" label="Git over SSH">
+
+`git@github.com/go-task/task.git//website/static/Taskfile.yml?ref=main`
+
+This type of node works by downloading the file from a Git repository over SSH.
+The first part of the URL is the user and base URL of the Git repository. This
+is the same URL that you would use to clone the repo over SSH.
+
+To use Git over SSH, you need to make sure that your SSH agent has your private
+SSH keys added so that they can be used during authentication.
+
+- You can optionally add the path to the Taskfile in the repository by appending
+`//<path>` to the URL.
+- You can also optionally specify a branch or tag to use by appending
+`?ref=<ref>` to the end of the URL. If you omit a reference, the default branch
+will be used.
+
+</TabItem>
+</Tabs>
+
+Task has an [example remote Taskfile][example-remote-taskfile] in our repository
+that you can use for testing and that we will use throughout this document:
 
 ```yaml
 version: '3'
 
 tasks:
-  hello:
-    silent: true
+  default:
     cmds:
-      - echo "Hello from the remote Taskfile!"
+      - task: hello
+
+  hello:
+    cmds:
+      - echo "Hello Task!"
 ```
 
-and you run `task my-remote-namespace:hello`, it will print the text: "Hello
-from the remote Taskfile!" to your console.
+## Specifying a remote entrypoint
+
+By default, Task will look for one of the [supported file
+names][supported-file-names] on your local filesystem. If you want to use a
+remote file instead, you can pass its URI into the `--taskfile`/`-t` flag just
+like you would to specify a different local file. For example:
+
+<Tabs groupId="method" queryString>
+<TabItem value="http" label="HTTP/HTTPS">
+```shell
+$ task --taskfile https://raw.githubusercontent.com/go-task/task/main/website/static/Taskfile.yml
+task: [hello] echo "Hello Task!"
+Hello Task!
+```
+</TabItem>
+<TabItem value="git-http" label="Git over HTTP">
+```shell
+$ task --taskfile https://github.com/go-task/task.git//website/static/Taskfile.yml?ref=main
+task: [hello] echo "Hello Task!"
+Hello Task!
+```
+</TabItem>
+<TabItem value="git-ssh" label="Git over SSH">
+```shell
+$ task --taskfile git@github.com/go-task/task.git//website/static/Taskfile.yml?ref=main
+task: [hello] echo "Hello Task!"
+Hello Task!
+```
+</TabItem>
+</Tabs>
+
+## Including remote Taskfiles
+
+Including a remote file works exactly the same way that including a local file
+does. You just need to replace the local path with a remote URI. Any tasks in
+the remote Taskfile will be available to run from your main Taskfile.
+
+<Tabs groupId="method" queryString>
+<TabItem value="http" label="HTTP/HTTPS">
+```yaml
+version: '3'
+
+includes:
+  my-remote-namespace: https://raw.githubusercontent.com/go-task/task/main/website/static/Taskfile.yml
+```
+</TabItem>
+<TabItem value="git-http" label="Git over HTTP">
+```yaml
+version: '3'
+
+includes:
+  my-remote-namespace: https://github.com/go-task/task.git//website/static/Taskfile.yml?ref=main
+```
+</TabItem>
+<TabItem value="git-ssh" label="Git over SSH">
+```yaml
+version: '3'
+
+includes:
+  my-remote-namespace: git@github.com/go-task/task.git//website/static/Taskfile.yml?ref=main
+```
+</TabItem>
+</Tabs>
+
+```shell
+$ task my-remote-namespace:hello
+task: [hello] echo "Hello Task!"
+Hello Task!
+```
+
+### Authenticating using environment variables
 
 The Taskfile location is processed by the templating system, so you can
 reference environment variables in your URL if you need to add authentication.
@@ -58,19 +179,6 @@ version: '3'
 includes:
   my-remote-namespace: https://{{.TOKEN}}@raw.githubusercontent.com/my-org/my-repo/main/Taskfile.yml
 ```
-
-`TOKEN=my-token task my-remote-namespace:hello` will be resolved by Task to
-`https://my-token@raw.githubusercontent.com/my-org/my-repo/main/Taskfile.yml`
-
-## Git nodes
-
-You can also include a Taskfile from a Git node. We currently support ssh-style and http / https addresses like `git@example.com/foo/bar.git//Taskfiles.yml?ref=v1` and `https://example.com/foo/bar.git//Taskfiles.yml?ref=v1`.
-
-You need to follow this pattern : `<baseUrl>.git//<path>?ref=<ref>`.
-The `ref` parameter, optional, can be a branch name or a tag, if not provided it'll pick up the default branch.
-The `path` is the path to the Taskfile in the repository.
-
-If you want to use the SSH protocol, you need to make sure that your ssh-agent has your private ssh keys added so that they can be used during authentication.
 
 ## Security
 
@@ -104,20 +212,26 @@ flag. Before enabling this flag, you should:
 Task currently supports both `http` and `https` URLs. However, the `http`
 requests will not execute by default unless you run the task with the
 `--insecure` flag. This is to protect you from accidentally running a remote
-Taskfile that is via an unencrypted connection. Sources that are not protected
-by TLS are vulnerable to [man-in-the-middle attacks][man-in-the-middle-attacks]
-and should be avoided unless you know what you are doing.
+Taskfile that is downloaded via an unencrypted connection. Sources that are not
+protected by TLS are vulnerable to [man-in-the-middle
+attacks][man-in-the-middle-attacks] and should be avoided unless you know what
+you are doing.
 
 ## Caching & Running Offline
 
 Whenever you run a remote Taskfile, the latest copy will be downloaded from the
-internet and cached locally. If for whatever reason, you lose access to the
-internet, you will still be able to run your tasks by specifying the `--offline`
-flag. This will tell Task to use the latest cached version of the file instead
-of trying to download it. You are able to use the `--download` flag to update
-the cached version of the remote files without running any tasks. You are able
-to use the `--clear-cache` flag to clear all cached version of the remote files
-without running any tasks.
+internet and cached locally. This cached file will be used for all future
+invocations of the Taskfile until the cache expires. Once it expires, Task will
+download the latest copy of the file and update the cache. By default, the cache
+is set to expire immediately. This means that Task will always fetch the latest
+version. However, the cache expiry duration can be modified by setting the
+`--expiry` flag.
+
+If for any reason you lose access to the internet or you are running Task in
+offline mode (via the `--offline` flag or `TASK_OFFLINE` environment variable),
+Task will run the any available cached files _even if they are expired_. This
+means that you should never be stuck without the ability to run your tasks as
+long as you have downloaded a remote Taskfile at least once.
 
 By default, Task will timeout requests to download remote files after 10 seconds
 and look for a cached copy instead. This timeout can be configured by setting
@@ -129,7 +243,14 @@ By default, the cache is stored in the Task temp directory, represented by the
 override the location of the cache by setting the `TASK_REMOTE_DIR` environment
 variable. This way, you can share the cache between different projects.
 
+You can force Task to ignore the cache and download the latest version
+by using the `--download` flag.
+
+You can use the `--clear-cache` flag to clear all cached remote files.
+
 {/* prettier-ignore-start */}
 [enabling-experiments]: ./experiments.mdx#enabling-experiments
 [man-in-the-middle-attacks]: https://en.wikipedia.org/wiki/Man-in-the-middle_attack
+[supported-file-names]: https://taskfile.dev/usage/#supported-file-names
+[example-remote-taskfile]: https://raw.githubusercontent.com/go-task/task/main/website/static/Taskfile.yml
 {/* prettier-ignore-end */}

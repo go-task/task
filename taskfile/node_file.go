@@ -1,7 +1,6 @@
 package taskfile
 
 import (
-	"context"
 	"io"
 	"os"
 	"path/filepath"
@@ -34,11 +33,7 @@ func (node *FileNode) Location() string {
 	return node.Entrypoint
 }
 
-func (node *FileNode) Remote() bool {
-	return false
-}
-
-func (node *FileNode) Read(ctx context.Context) ([]byte, error) {
+func (node *FileNode) Read() ([]byte, error) {
 	f, err := os.Open(node.Location())
 	if err != nil {
 		return nil, err
@@ -113,8 +108,4 @@ func (node *FileNode) ResolveDir(dir string) (string, error) {
 	// This means that files are included relative to one another
 	entrypointDir := filepath.Dir(node.Entrypoint)
 	return filepathext.SmartJoin(entrypointDir, path), nil
-}
-
-func (node *FileNode) FilenameAndLastDir() (string, string) {
-	return "", filepath.Base(node.Entrypoint)
 }

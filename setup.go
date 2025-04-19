@@ -64,6 +64,8 @@ func (e *Executor) getRootNode() (taskfile.Node, error) {
 }
 
 func (e *Executor) readTaskfile(node taskfile.Node) error {
+	ctx, cf := context.WithTimeout(context.Background(), e.Timeout)
+	defer cf()
 	debugFunc := func(s string) {
 		e.Logger.VerboseOutf(logger.Magenta, s)
 	}
@@ -74,13 +76,16 @@ func (e *Executor) readTaskfile(node taskfile.Node) error {
 		taskfile.WithInsecure(e.Insecure),
 		taskfile.WithDownload(e.Download),
 		taskfile.WithOffline(e.Offline),
-		taskfile.WithTimeout(e.Timeout),
 		taskfile.WithTempDir(e.TempDir.Remote),
+		taskfile.WithCacheExpiryDuration(e.CacheExpiryDuration),
 		taskfile.WithDebugFunc(debugFunc),
 		taskfile.WithPromptFunc(promptFunc),
 	)
-	graph, err := reader.Read(node)
+	graph, err := reader.Read(ctx, node)
 	if err != nil {
+		if errors.Is(err, context.DeadlineExceeded) {
+			return &errors.TaskfileNetworkTimeoutError{URI: node.Location(), Timeout: e.Timeout}
+		}
 		return err
 	}
 	if e.Taskfile, err = graph.Merge(); err != nil {

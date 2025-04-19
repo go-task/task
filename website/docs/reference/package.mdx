@@ -117,7 +117,8 @@ Taskfiles) by calling the `Read` method on the reader and pass the `Node` as an
 argument:
 
 ```go
-tfg, err := reader.Read(node)
+ctx := context.Background()
+tfg, err := reader.Read(ctx, node)
 // handle error
 ```
 
