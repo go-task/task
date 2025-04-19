@@ -40,7 +40,6 @@ type (
 	// [ast.TaskfileGraph] from them.
 	Reader struct {
 		graph       *ast.TaskfileGraph
-		node        Node
 		insecure    bool
 		download    bool
 		offline     bool
@@ -54,13 +53,9 @@ type (
 
 // NewReader constructs a new Taskfile [Reader] using the given Node and
 // options.
-func NewReader(
-	node Node,
-	opts ...ReaderOption,
-) *Reader {
+func NewReader(opts ...ReaderOption) *Reader {
 	r := &Reader{
 		graph:       ast.NewTaskfileGraph(),
-		node:        node,
 		insecure:    false,
 		download:    false,
 		offline:     false,
@@ -191,8 +186,8 @@ func (o *promptFuncOption) ApplyToReader(r *Reader) {
 // through any [ast.Includes] it finds, reading each included Taskfile and
 // building an [ast.TaskfileGraph] as it goes. If any errors occur, they will be
 // returned immediately.
-func (r *Reader) Read() (*ast.TaskfileGraph, error) {
-	if err := r.include(r.node); err != nil {
+func (r *Reader) Read(node Node) (*ast.TaskfileGraph, error) {
+	if err := r.include(node); err != nil {
 		return nil, err
 	}
 	return r.graph, nil
