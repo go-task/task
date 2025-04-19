@@ -4,6 +4,7 @@ import (
 	"context"
 	"io"
 	"os"
+	"path/filepath"
 	"sync"
 	"time"
 
@@ -121,6 +122,7 @@ type dirOption struct {
 }
 
 func (o *dirOption) ApplyToExecutor(e *Executor) {
+	e.UserWorkingDir, _ = filepath.Abs(o.dir)
 	e.Dir = o.dir
 }
 
