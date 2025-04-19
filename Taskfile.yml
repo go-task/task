@@ -32,16 +32,23 @@ tasks:
       - go install -v ./cmd/task
 
   generate:
-    desc: Runs Mockery to create mocks
     aliases: [gen, g]
+    desc: Runs all generate tasks
+    cmds:
+      - task: generate:mocks
+      - task: generate:fixtures
+
+  generate:mocks:
+    desc: Runs Mockery to create mocks
+    aliases: [gen:mocks, g:mocks]
     deps: [install:mockery]
     sources:
       - "internal/fingerprint/checker.go"
     generates:
       - "internal/mocks/*.go"
     cmds:
-      - "{{.BIN}}/mockery --dir ./internal/fingerprint --name SourcesCheckable"
-      - "{{.BIN}}/mockery --dir ./internal/fingerprint --name StatusCheckable"
+      - find . -type f -name *_mock.go -delete
+      - "{{.BIN}}/mockery"
 
   generate:fixtures:
     desc: Runs tests and generates golden fixture files
@@ -53,13 +60,13 @@ tasks:
   install:mockery:
     desc: Installs mockgen; a tool to generate mock files
     vars:
-      MOCKERY_VERSION: v2.24.0
+      MOCKERY_VERSION: v3.2.2
     env:
       GOBIN: "{{.BIN}}"
     status:
       - go version -m {{.BIN}}/mockery | grep github.com/vektra/mockery | grep {{.MOCKERY_VERSION}}
     cmds:
-      - go install github.com/vektra/mockery/v2@{{.MOCKERY_VERSION}}
+      - GOBIN="{{.BIN}}" go install github.com/vektra/mockery/v3@{{.MOCKERY_VERSION}}
 
   mod:
     desc: Downloads and tidy Go modules
