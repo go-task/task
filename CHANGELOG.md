@@ -36,6 +36,7 @@
   of `nil` (#1911, #2144 by @pd93).
 - The `USER_WORKING_DIR` special now will now properly account for the `--dir`
   (`-d`) flag, if given (#2102, #2103 by @jaynis, #2186 by @andreynering).
+- Fix Fish completions when `--global` (`-g`) is given (#2134 by @atusy).
 
 #### Package API
 
