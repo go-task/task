@@ -34,6 +34,8 @@
 - Fixed Fish completion on newer Fish versions (#2130 by @atusy).
 - Fixed a bug where undefined/null variables resolved to an empty string instead
   of `nil` (#1911, #2144 by @pd93).
+- The `USER_WORKING_DIR` special now will now properly account for the `--dir`
+  (`-d`) flag, if given (#2102, #2103 by @jaynis, #2186 by @andreynering).
 
 #### Package API
 
