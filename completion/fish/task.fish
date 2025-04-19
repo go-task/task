@@ -1,8 +1,25 @@
-set GO_TASK_PROGNAME task
+set -l GO_TASK_PROGNAME task
 
 function __task_get_tasks --description "Prints all available tasks with their description" --inherit-variable GO_TASK_PROGNAME
+  # Check if the global task is requested
+  set -l global_task false
+  commandline --current-process | read --tokenize --list --local cmd_args
+  for arg in $cmd_args
+    if test "_$arg" = "_--"
+      break # ignore arguments to be passed to the task
+    end
+    if test "_$arg" = "_--global" -o "_$arg" = "_-g"
+      set global_task true
+      break
+    end
+  end
+
   # Read the list of tasks (and potential errors)
-  $GO_TASK_PROGNAME --list-all 2>&1 | read -lz rawOutput
+  if $global_task
+    $GO_TASK_PROGNAME --global --list-all
+  else
+    $GO_TASK_PROGNAME --list-all
+  end 2>&1 | read -lz rawOutput
 
   # Return on non-zero exit code (for cases when there is no Taskfile found or etc.)
   if test $status -ne 0
