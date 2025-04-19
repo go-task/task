@@ -2148,7 +2148,7 @@ func TestUserWorkingDirectory(t *testing.T) {
 
 	var buff bytes.Buffer
 	e := task.NewExecutor(
-		task.WithDir("testdata/user_working_dir"),
+		task.WithEntrypoint("testdata/user_working_dir/Taskfile.yml"),
 		task.WithStdout(&buff),
 		task.WithStderr(&buff),
 	)
