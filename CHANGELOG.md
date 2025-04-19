@@ -50,6 +50,12 @@
   [`taskfile.Snippet`](https://pkg.go.dev/github.com/go-task/task/v3/taskfile#Snippet)
   types no longer have the `Reader`/`Snippet` respective prefixes (#2148 by
   @pd93).
+- [`taskfile.Reader`](https://pkg.go.dev/github.com/go-task/task/v3/taskfile#Reader)
+  no longer accepts a
+  [`taskfile.Node`](https://pkg.go.dev/github.com/go-task/task/v3/taskfile#Node).
+  Instead nodes are passed directly into the
+  [`Reader.Read`](https://pkg.go.dev/github.com/go-task/task/v3/taskfile#Reader.Read)
+  method (#2169 by @pd93).
 
 ## v3.42.1 - 2025-03-10
 
