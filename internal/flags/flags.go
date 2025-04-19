@@ -4,6 +4,7 @@ import (
 	"cmp"
 	"log"
 	"os"
+	"path/filepath"
 	"strconv"
 	"time"
 
@@ -77,6 +78,26 @@ var (
 )
 
 func init() {
+	// Config files can enable experiments which alter the availability and/or
+	// behavior of some flags, so we need to parse the experiments before the
+	// flags. However, we need the --taskfile and --dir flags before we can
+	// parse the experiments as they can alter the location of the config files.
+	// Because of this circular dependency, we parse the flags twice. First, we
+	// get the --taskfile and --dir flags, then we parse the experiments, then
+	// we parse the flags again to get the full set. We use a flagset here so
+	// that we can parse a subset of flags without exiting on error.
+	var dir, entrypoint string
+	fs := pflag.NewFlagSet("experiments", pflag.ContinueOnError)
+	fs.StringVarP(&dir, "dir", "d", "", "")
+	fs.StringVarP(&entrypoint, "taskfile", "t", "", "")
+	fs.Usage = func() {}
+	_ = fs.Parse(os.Args[1:])
+
+	// Parse the experiments
+	dir = cmp.Or(dir, filepath.Dir(entrypoint))
+	experiments.Parse(dir)
+
+	// Parse the rest of the flags
 	log.SetFlags(0)
 	log.SetOutput(os.Stderr)
 	pflag.Usage = func() {

@@ -3,9 +3,35 @@ package args
 import (
 	"strings"
 
+	"github.com/spf13/pflag"
+	"mvdan.cc/sh/v3/syntax"
+
 	"github.com/go-task/task/v3"
 	"github.com/go-task/task/v3/taskfile/ast"
 )
+
+// Get fetches the remaining arguments after CLI parsing and splits them into
+// two groups: the arguments before the double dash (--) and the arguments after
+// the double dash.
+func Get() ([]string, []string, error) {
+	args := pflag.Args()
+	doubleDashPos := pflag.CommandLine.ArgsLenAtDash()
+
+	if doubleDashPos == -1 {
+		return args, nil, nil
+	}
+
+	var quotedCliArgs []string
+	for _, arg := range args[doubleDashPos:] {
+		quotedCliArg, err := syntax.Quote(arg, syntax.LangBash)
+		if err != nil {
+			return nil, nil, err
+		}
+		quotedCliArgs = append(quotedCliArgs, quotedCliArg)
+	}
+
+	return args[:doubleDashPos], quotedCliArgs, nil
+}
 
 // Parse parses command line argument: tasks and global variables
 func Parse(args ...string) ([]*task.Call, *ast.Vars) {

@@ -2,8 +2,6 @@ package taskfile
 
 import (
 	"context"
-	"os"
-	"path/filepath"
 	"strings"
 	"time"
 
@@ -11,6 +9,7 @@ import (
 
 	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/experiments"
+	"github.com/go-task/task/v3/internal/fsext"
 )
 
 type Node interface {
@@ -34,7 +33,7 @@ func NewRootNode(
 	insecure bool,
 	timeout time.Duration,
 ) (Node, error) {
-	dir = getDefaultDir(entrypoint, dir)
+	dir = fsext.DefaultDir(entrypoint, dir)
 	// If the entrypoint is "-", we read from stdin
 	if entrypoint == "-" {
 		return NewStdinNode(dir)
@@ -86,27 +85,4 @@ func getScheme(uri string) (string, error) {
 	}
 
 	return "", nil
-}
-
-func getDefaultDir(entrypoint, dir string) string {
-	// If the entrypoint and dir are empty, we default the directory to the current working directory
-	if dir == "" {
-		if entrypoint == "" {
-			wd, err := os.Getwd()
-			if err != nil {
-				return ""
-			}
-			dir = wd
-		}
-		return dir
-	}
-
-	// If the directory is set, ensure it is an absolute path
-	var err error
-	dir, err = filepath.Abs(dir)
-	if err != nil {
-		return ""
-	}
-
-	return dir
 }
