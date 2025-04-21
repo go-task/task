@@ -3,6 +3,8 @@ slug: /getting-started/
 sidebar_position: 3
 ---
 
+import AvailableSinceBadge from '../src/components/AvailableSince';
+
 # Getting Started
 
 The following guide will help introduce you to the basics of Task. We'll cover
@@ -18,8 +20,13 @@ Once Task is installed, you can create your first Taskfile by running:
 task --init
 ```
 
-This will create a file called `Taskfile.yml` in the current directory. If you
-want to create the file in another directory, you can pass an absolute or
+This will create a file called `Taskfile.yml` in the current directory.
+
+---
+
+<AvailableSinceBadge version="v3.42.0" />
+
+If you want to create the file in another directory, you can pass an absolute or
 relative path to the directory into the command:
 
 ```shell
@@ -32,6 +39,9 @@ the file:
 ```shell
 task --init Custom.yml
 ```
+
+---
+
 
 This will create a Taskfile that looks something like this:
 
