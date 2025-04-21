@@ -1811,7 +1811,7 @@ task-1 ran successfully
 	assert.Contains(t, buff.String(), expectedOutputOrder)
 	buff.Reset()
 	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "parent"}))
-	assert.Contains(t, buff.String(), "child task deferred")
+	assert.Contains(t, buff.String(), "child task deferred value-from-parent")
 }
 
 func TestExitCodeZero(t *testing.T) {
