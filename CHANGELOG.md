@@ -49,6 +49,7 @@
 - The `USER_WORKING_DIR` special now will now properly account for the `--dir`
   (`-d`) flag, if given (#2102, #2103 by @jaynis, #2186 by @andreynering).
 - Fix Fish completions when `--global` (`-g`) is given (#2134 by @atusy).
+- Fixed variables not available when using `defer:` (#1909, #2173 by @vmaerten).
 
 #### Package API
 
