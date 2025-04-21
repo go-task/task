@@ -8,7 +8,7 @@ import (
 	giturls "github.com/chainguard-dev/git-urls"
 
 	"github.com/go-task/task/v3/errors"
-	"github.com/go-task/task/v3/internal/experiments"
+	"github.com/go-task/task/v3/experiments"
 	"github.com/go-task/task/v3/internal/fsext"
 )
 

@@ -12,8 +12,8 @@ import (
 	"github.com/fatih/color"
 
 	"github.com/go-task/task/v3/errors"
+	"github.com/go-task/task/v3/experiments"
 	"github.com/go-task/task/v3/internal/env"
-	"github.com/go-task/task/v3/internal/experiments"
 	"github.com/go-task/task/v3/internal/term"
 )
 

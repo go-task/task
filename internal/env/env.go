@@ -5,7 +5,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/go-task/task/v3/internal/experiments"
+	"github.com/go-task/task/v3/experiments"
 	"github.com/go-task/task/v3/taskfile/ast"
 )
 

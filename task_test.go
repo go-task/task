@@ -27,7 +27,7 @@ import (
 
 	"github.com/go-task/task/v3"
 	"github.com/go-task/task/v3/errors"
-	"github.com/go-task/task/v3/internal/experiments"
+	"github.com/go-task/task/v3/experiments"
 	"github.com/go-task/task/v3/internal/filepathext"
 	"github.com/go-task/task/v3/taskfile/ast"
 )
