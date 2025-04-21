@@ -1,6 +1,6 @@
 # Changelog
 
-## v3.43.0 - 2025-04-21
+## v3.43.1 - 2025-04-21
 
 - Significant improvements were made to the watcher. We migrated from
   [watcher](https://github.com/radovskyb/watcher) to
