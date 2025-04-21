@@ -76,7 +76,7 @@ func run() error {
 		if err != nil {
 			return err
 		}
-		_, args, err := args.Get()
+		args, _, err := args.Get()
 		if err != nil {
 			return err
 		}

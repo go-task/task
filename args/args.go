@@ -13,24 +13,24 @@ import (
 // Get fetches the remaining arguments after CLI parsing and splits them into
 // two groups: the arguments before the double dash (--) and the arguments after
 // the double dash.
-func Get() ([]string, []string, error) {
+func Get() ([]string, string, error) {
 	args := pflag.Args()
 	doubleDashPos := pflag.CommandLine.ArgsLenAtDash()
 
 	if doubleDashPos == -1 {
-		return args, nil, nil
+		return args, "", nil
 	}
 
 	var quotedCliArgs []string
 	for _, arg := range args[doubleDashPos:] {
 		quotedCliArg, err := syntax.Quote(arg, syntax.LangBash)
 		if err != nil {
-			return nil, nil, err
+			return nil, "", err
 		}
 		quotedCliArgs = append(quotedCliArgs, quotedCliArg)
 	}
 
-	return args[:doubleDashPos], quotedCliArgs, nil
+	return args[:doubleDashPos], strings.Join(quotedCliArgs, " "), nil
 }
 
 // Parse parses command line argument: tasks and global variables
