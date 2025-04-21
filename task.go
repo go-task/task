@@ -297,6 +297,8 @@ func (e *Executor) runDeferred(t *ast.Task, call *Call, i int, deferredExitCode 
 	}
 
 	cmd.Cmd = templater.ReplaceWithExtra(cmd.Cmd, cache, extra)
+	cmd.Task = templater.ReplaceWithExtra(cmd.Task, cache, extra)
+	cmd.Vars = templater.ReplaceVarsWithExtra(cmd.Vars, cache, extra)
 
 	if err := e.runCommand(ctx, t, call, i); err != nil {
 		e.Logger.VerboseErrf(logger.Yellow, "task: ignored error in deferred cmd: %s\n", err.Error())
