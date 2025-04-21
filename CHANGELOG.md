@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Fixed regresion of `CLI_ARGS` being exposed as the wrong type (#2190, #2191 by
+  @vmaerten).
+
 ## v3.43.1 - 2025-04-21
 
 - Significant improvements were made to the watcher. We migrated from
