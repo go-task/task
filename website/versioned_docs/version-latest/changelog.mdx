@@ -5,6 +5,77 @@ sidebar_position: 14
 
 # Changelog
 
+## v3.43.0 - 2025-04-21
+
+- Significant improvements were made to the watcher. We migrated from
+  [watcher](https://github.com/radovskyb/watcher) to
+  [fsnotify](https://github.com/fsnotify/fsnotify). The former library used
+  polling, which means Task had a high CPU usage when watching too many files.
+  `fsnotify` uses proper the APIs from each operating system to watch files,
+  which means a much better performance. The default interval changed from 5
+  seconds to 100 milliseconds, because now it configures the wait time for
+  duplicated events, instead of the polling time (#2048 by @andreynering, #1508,
+  #985, #1179).
+- The [Map Variables experiment](https://github.com/go-task/task/issues/1585)
+  was made generally available so you can now
+  [define map variables in your Taskfiles!](https://taskfile.dev/usage/#variables)
+  (#1585, #1547, #2081 by @pd93).
+- Wildcards can now
+  [match multiple tasks](https://taskfile.dev/usage/#wildcard-arguments) (#2072,
+  #2121 by @pd93).
+- Added the ability to
+  [loop over the files specified by the `generates` keyword](https://taskfile.dev/usage/#looping-over-your-tasks-sources-or-generated-files).
+  This works the same way as looping over sources (#2151 by @sedyh).
+- Added the ability to resolve variables when defining an include variable
+  (#2108, #2113 by @pd93).
+- A few changes have been made to the
+  [Remote Taskfiles experiment](https://github.com/go-task/task/issues/1317)
+  (#1402, #2176 by @pd93):
+  - Cached files are now prioritized over remote ones.
+  - Added an `--expiry` flag which sets the TTL for a remote file cache. By
+    default the value will be 0 (caching disabled). If Task is running in
+    offline mode or fails to make a connection, it will fallback on the cache.
+- `.taskrc` files can now be used from subdirectories and will be searched for
+  recursively up the file tree in the same way that Taskfiles are (#2159, #2166
+  by @pd93).
+- The default taskfile (output when using the `--init` flag) is now an embedded
+  file in the binary instead of being stored in the code (#2112 by @pd93).
+- Improved the way we report the Task version when using the `--version` flag or
+  `{{.TASK_VERSION}}` variable. This should now be more consistent and easier
+  for package maintainers to use (#2131 by @pd93).
+- Fixed a bug where globstar (`**`) matching in `sources` only resolved the
+  first result (#2073, #2075 by @pd93).
+- Fixed a bug where sorting tasks by "none" would use the default sorting
+  instead of leaving tasks in the order they were defined (#2124, #2125 by
+  @trulede).
+- Fixed Fish completion on newer Fish versions (#2130 by @atusy).
+- Fixed a bug where undefined/null variables resolved to an empty string instead
+  of `nil` (#1911, #2144 by @pd93).
+- The `USER_WORKING_DIR` special now will now properly account for the `--dir`
+  (`-d`) flag, if given (#2102, #2103 by @jaynis, #2186 by @andreynering).
+- Fix Fish completions when `--global` (`-g`) is given (#2134 by @atusy).
+- Fixed variables not available when using `defer:` (#1909, #2173 by @vmaerten).
+
+#### Package API
+
+- The [`Executor`](https://pkg.go.dev/github.com/go-task/task/v3#Executor) now
+  uses the functional options pattern (#2085, #2147, #2148 by @pd93).
+- The functional options for the
+  [`taskfile.Reader`](https://pkg.go.dev/github.com/go-task/task/v3/taskfile#Reader)
+  and
+  [`taskfile.Snippet`](https://pkg.go.dev/github.com/go-task/task/v3/taskfile#Snippet)
+  types no longer have the `Reader`/`Snippet` respective prefixes (#2148 by
+  @pd93).
+- [`taskfile.Reader`](https://pkg.go.dev/github.com/go-task/task/v3/taskfile#Reader)
+  no longer accepts a
+  [`taskfile.Node`](https://pkg.go.dev/github.com/go-task/task/v3/taskfile#Node).
+  Instead nodes are passed directly into the
+  [`Reader.Read`](https://pkg.go.dev/github.com/go-task/task/v3/taskfile#Reader.Read)
+  method (#2169 by @pd93).
+- [`Reader.Read`](https://pkg.go.dev/github.com/go-task/task/v3/taskfile#Reader.Read)
+  also now accepts a [`context.Context`](https://pkg.go.dev/context#Context)
+  (#2176 by @pd93).
+
 ## v3.42.1 - 2025-03-10
 
 - Fixed a bug where some special variables caused a type error when used global
