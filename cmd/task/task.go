@@ -144,18 +144,23 @@ func run() error {
 	}
 
 	// Parse the remaining arguments
-	argv, cliArgs, err := args.Get()
+	cliArgsPreDash, cliArgsPostDash, err := args.Get()
 	if err != nil {
 		return err
 	}
-	calls, globals := args.Parse(argv...)
+	calls, globals := args.Parse(cliArgsPreDash...)
 
 	// If there are no calls, run the default task instead
 	if len(calls) == 0 {
 		calls = append(calls, &task.Call{Task: "default"})
 	}
 
-	globals.Set("CLI_ARGS", ast.Var{Value: cliArgs})
+	cliArgsPostDashQuoted, err := args.ToQuotedString(cliArgsPostDash)
+	if err != nil {
+		return err
+	}
+	globals.Set("CLI_ARGS", ast.Var{Value: cliArgsPostDashQuoted})
+	globals.Set("CLI_ARGS_LIST", ast.Var{Value: cliArgsPostDash})
 	globals.Set("CLI_FORCE", ast.Var{Value: flags.Force || flags.ForceAll})
 	globals.Set("CLI_SILENT", ast.Var{Value: flags.Silent})
 	globals.Set("CLI_VERBOSE", ast.Var{Value: flags.Verbose})

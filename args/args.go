@@ -13,24 +13,14 @@ import (
 // Get fetches the remaining arguments after CLI parsing and splits them into
 // two groups: the arguments before the double dash (--) and the arguments after
 // the double dash.
-func Get() ([]string, string, error) {
+func Get() ([]string, []string, error) {
 	args := pflag.Args()
 	doubleDashPos := pflag.CommandLine.ArgsLenAtDash()
 
 	if doubleDashPos == -1 {
-		return args, "", nil
+		return args, nil, nil
 	}
-
-	var quotedCliArgs []string
-	for _, arg := range args[doubleDashPos:] {
-		quotedCliArg, err := syntax.Quote(arg, syntax.LangBash)
-		if err != nil {
-			return nil, "", err
-		}
-		quotedCliArgs = append(quotedCliArgs, quotedCliArg)
-	}
-
-	return args[:doubleDashPos], strings.Join(quotedCliArgs, " "), nil
+	return args[:doubleDashPos], args[doubleDashPos:], nil
 }
 
 // Parse parses command line argument: tasks and global variables
@@ -49,6 +39,18 @@ func Parse(args ...string) ([]*task.Call, *ast.Vars) {
 	}
 
 	return calls, globals
+}
+
+func ToQuotedString(args []string) (string, error) {
+	var quotedCliArgs []string
+	for _, arg := range args {
+		quotedCliArg, err := syntax.Quote(arg, syntax.LangBash)
+		if err != nil {
+			return "", err
+		}
+		quotedCliArgs = append(quotedCliArgs, quotedCliArg)
+	}
+	return strings.Join(quotedCliArgs, " "), nil
 }
 
 func splitVar(s string) (string, string) {
