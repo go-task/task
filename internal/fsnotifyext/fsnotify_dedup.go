@@ -32,7 +32,7 @@ func (d *Deduper) GetChan() <-chan fsnotify.Event {
 			switch {
 			case !ok:
 				return
-			case event.Op == fsnotify.Chmod:
+			case event.Has(fsnotify.Chmod):
 				continue
 			}
 
