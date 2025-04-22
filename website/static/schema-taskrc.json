@@ -9,6 +9,15 @@
       "additionalProperties": {
         "type": "integer"
       }
+    },    "remote": {
+      "type": "object",
+      "properties": {
+        "cache-expiry": {
+          "type": "string",
+          "description": "Duration format (e.g. '5s', '10m', '1h30m') compatible with Go time.Duration"
+        }
+      },
+      "additionalProperties": false
     }
   },
   "additionalProperties": false

@@ -2,6 +2,7 @@ package flags
 
 import (
 	"cmp"
+	"github.com/go-task/task/v3/taskrc"
 	"log"
 	"os"
 	"path/filepath"
@@ -95,7 +96,14 @@ func init() {
 
 	// Parse the experiments
 	dir = cmp.Or(dir, filepath.Dir(entrypoint))
-	experiments.Parse(dir)
+
+	node, _ := taskrc.NewNode("", dir)
+
+	reader := taskrc.NewReader()
+	config, _ := reader.Read(node)
+
+	expiry := getDurationValue(config.Remote.Expiry, "REMOTE_EXPIRY", 0)
+	experiments.ParseWithConfig(dir, config)
 
 	// Parse the rest of the flags
 	log.SetFlags(0)
@@ -153,7 +161,7 @@ func init() {
 		pflag.BoolVar(&Offline, "offline", offline, "Forces Task to only use local or cached Taskfiles.")
 		pflag.DurationVar(&Timeout, "timeout", time.Second*10, "Timeout for downloading remote Taskfiles.")
 		pflag.BoolVar(&ClearCache, "clear-cache", false, "Clear the remote cache.")
-		pflag.DurationVar(&CacheExpiryDuration, "expiry", 0, "Expiry duration for cached remote Taskfiles.")
+		pflag.DurationVar(&CacheExpiryDuration, "expiry", expiry, "Expiry duration for cached remote Taskfiles.")
 	}
 
 	pflag.Parse()
@@ -250,4 +258,63 @@ func (o *flagsOption) ApplyToExecutor(e *task.Executor) {
 		task.WithTaskSorter(sorter),
 		task.WithVersionCheck(true),
 	)
+}
+
+//func getEffectiveValueFromConfig[T any](config any, fieldName string, envVar string, defaultValue T) T {
+//	v := reflect.ValueOf(config)
+//	if v.Kind() == reflect.Ptr {
+//		v = v.Elem()
+//	}
+//
+//	if v.Kind() != reflect.Struct {
+//		return defaultValue
+//	}
+//
+//	field := v.FieldByName(fieldName)
+//	if field.IsValid() && !field.IsZero() && field.Kind() == reflect.Ptr {
+//		// Return value from struct
+//		actual := field.Elem()
+//		if actual.IsValid() {
+//			return actual.Interface().(T)
+//		}
+//	}
+//
+//	envVal := os.Getenv(envVar)
+//	if envVal != "" {
+//		var parsed any
+//		var err error
+//
+//		switch any(defaultValue).(type) {
+//		case int:
+//			parsedInt, e := strconv.Atoi(envVal)
+//			parsed, err = parsedInt, e
+//		case string:
+//			parsed = envVal
+//		case bool:
+//			parsedBool, e := strconv.ParseBool(envVal)
+//			parsed, err = parsedBool, e
+//		default:
+//			return defaultValue // unsupported type
+//		}
+//
+//		if err == nil {
+//			return parsed.(T)
+//		}
+//	}
+//
+//	return defaultValue
+//}
+
+func getDurationValue(configValue *time.Duration, envVarName string, defaultValue time.Duration) time.Duration {
+	if configValue != nil {
+		return *configValue
+	}
+
+	if envVal := env.GetTaskEnv(envVarName); envVal != "" {
+		if intVal, err := time.ParseDuration(envVal); err == nil {
+			return intVal
+		}
+	}
+
+	return defaultValue
 }

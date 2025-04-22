@@ -2,6 +2,7 @@ package experiments
 
 import (
 	"fmt"
+	"github.com/go-task/task/v3/taskrc/ast"
 	"os"
 	"path/filepath"
 	"strings"
@@ -31,15 +32,19 @@ var (
 var xList []Experiment
 
 func Parse(dir string) {
-	// Read any .env files
-	readDotEnv(dir)
-
 	// Create a node for the Task config reader
 	node, _ := taskrc.NewNode("", dir)
 
 	// Read the Task config file
 	reader := taskrc.NewReader()
 	config, _ := reader.Read(node)
+
+	ParseWithConfig(dir, config)
+}
+
+func ParseWithConfig(dir string, config *ast.TaskRC) {
+	// Read any .env files
+	readDotEnv(dir)
 
 	// Initialize the experiments
 	GentleForce = New("GENTLE_FORCE", config, 1)
