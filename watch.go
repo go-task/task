@@ -71,12 +71,9 @@ func (e *Executor) watchTasks(calls ...*Call) error {
 		for {
 			select {
 			case event, ok := <-eventsChan:
-				switch {
-				case !ok:
+				if !ok {
 					cancel()
 					return
-				case event.Op == fsnotify.Chmod:
-					continue
 				}
 				e.Logger.VerboseErrf(logger.Magenta, "task: received watch event: %v\n", event)
 
