@@ -19,7 +19,7 @@ func NewDeduper(w *fsnotify.Watcher, waitTime time.Duration) *Deduper {
 	}
 }
 
-func (d *Deduper) GetChan() chan fsnotify.Event {
+func (d *Deduper) GetChan() <-chan fsnotify.Event {
 	channel := make(chan fsnotify.Event)
 
 	go func() {
