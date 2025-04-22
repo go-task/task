@@ -1,4 +1,4 @@
-import type {Config} from '@docusaurus/types';
+import type { Config } from '@docusaurus/types';
 import type * as Preset from '@docusaurus/preset-classic';
 import { EnumChangefreq } from 'sitemap';
 
@@ -40,6 +40,7 @@ const config: Config = {
       }
     }
   },
+  plugins: [require.resolve('./plugins/webpack-alias-plugin')],
 
   presets: [
     [
@@ -67,10 +68,7 @@ const config: Config = {
           blogSidebarCount: 'ALL'
         },
         theme: {
-          customCss: [
-            './src/css/custom.css',
-            './src/css/carbon.css',
-          ]
+          customCss: ['./src/css/custom.css', './src/css/carbon.css']
         },
         gtag: {
           trackingID: 'G-4RT25NXQ7N',
@@ -81,7 +79,7 @@ const config: Config = {
           priority: 0.5,
           ignorePatterns: ['/tags/**']
         }
-      } satisfies Preset.Options,
+      } satisfies Preset.Options
     ]
   ],
 
@@ -92,7 +90,7 @@ const config: Config = {
     }
   ],
 
-  themeConfig:{
+  themeConfig: {
     metadata: [
       {
         name: 'og:image',
@@ -125,38 +123,38 @@ const config: Config = {
         {
           type: 'docsVersionDropdown',
           position: 'right',
-          dropdownActiveClassDisabled: true,
+          dropdownActiveClassDisabled: true
         },
         {
           href: GITHUB_URL,
           title: 'GitHub',
           position: 'right',
-          className: "header-icon-link icon-github",
+          className: 'header-icon-link icon-github'
         },
         {
           href: DISCORD_URL,
           title: 'Discord',
           position: 'right',
-          className: "header-icon-link icon-discord",
+          className: 'header-icon-link icon-discord'
         },
         {
           href: TWITTER_URL,
           title: 'X (Twitter)',
           position: 'right',
-          className: "header-icon-link icon-twitter",
+          className: 'header-icon-link icon-twitter'
         },
         {
           href: BLUESKY_URL,
           title: 'Bluesky',
           position: 'right',
-          className: "header-icon-link icon-bluesky",
+          className: 'header-icon-link icon-bluesky'
         },
         {
           href: MASTODON_URL,
           title: 'Mastodon',
           rel: 'me',
           position: 'right',
-          className: "header-icon-link icon-mastodon",
+          className: 'header-icon-link icon-mastodon'
         }
       ]
     },
@@ -232,9 +230,9 @@ const config: Config = {
       theme: lightCodeTheme,
       darkTheme: darkCodeTheme,
       additionalLanguages: [
-        "bash", // aka. shell
-        "json",
-        "powershell"
+        'bash', // aka. shell
+        'json',
+        'powershell'
       ]
     },
     // NOTE(@andreynering): Don't worry, these keys are meant to be public =)
@@ -243,7 +241,7 @@ const config: Config = {
       apiKey: '34b64ae4fc8d9da43d9a13d9710aaddc',
       indexName: 'taskfile'
     }
-  } satisfies Preset.ThemeConfig,
+  } satisfies Preset.ThemeConfig
 };
 
 export default config;
