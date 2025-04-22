@@ -19,6 +19,9 @@ func NewDeduper(w *fsnotify.Watcher, waitTime time.Duration) *Deduper {
 	}
 }
 
+// GetChan returns a chan of deduplicated [fsnotify.Event].
+//
+// [fsnotify.Chmod] operations will be skipped.
 func (d *Deduper) GetChan() <-chan fsnotify.Event {
 	channel := make(chan fsnotify.Event)
 
