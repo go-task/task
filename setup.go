@@ -95,7 +95,7 @@ func (e *Executor) readTaskfile(node taskfile.Node) error {
 }
 
 func (e *Executor) setupFuzzyModel() {
-	if e.Taskfile != nil {
+	if e.Taskfile == nil {
 		return
 	}
 
