@@ -9,7 +9,8 @@
       "additionalProperties": {
         "type": "integer"
       }
-    },    "remote": {
+    },
+    "remote": {
       "type": "object",
       "properties": {
         "cache-expiry": {

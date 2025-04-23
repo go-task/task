@@ -12,5 +12,5 @@ type TaskRC struct {
 }
 
 type remote struct {
-	Expiry *time.Duration `yaml:"expiry"`
+	CacheExpiry *time.Duration `yaml:"cache-expiry"`
 }

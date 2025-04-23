@@ -102,7 +102,7 @@ func init() {
 	reader := taskrc.NewReader()
 	config, _ := reader.Read(node)
 
-	expiry := getDurationValue(config.Remote.Expiry, "REMOTE_EXPIRY", 0)
+	expiry := getDurationValue(config.Remote.CacheExpiry, "REMOTE_CACHE_EXPIRY", 0)
 	experiments.ParseWithConfig(dir, config)
 
 	// Parse the rest of the flags
