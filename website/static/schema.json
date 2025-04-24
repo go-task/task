@@ -123,6 +123,10 @@
             "$ref": "#/definitions/precondition"
           }
         },
+        "precondition": {
+          "description": "A single command to check if this task should run. If a condition is not met, the task will error. Use `preconditions` for multiple checks.",
+          "$ref": "#/definitions/precondition"
+        },
         "dir": {
           "description": "The directory in which this task should run. Defaults to the current working directory.",
           "type": "string"
