@@ -2,10 +2,11 @@ package experiments
 
 import (
 	"fmt"
-	"github.com/go-task/task/v3/taskrc/ast"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/go-task/task/v3/taskrc/ast"
 
 	"github.com/joho/godotenv"
 

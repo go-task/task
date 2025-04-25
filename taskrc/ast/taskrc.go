@@ -1,8 +1,9 @@
 package ast
 
 import (
-	"github.com/Masterminds/semver/v3"
 	"time"
+
+	"github.com/Masterminds/semver/v3"
 )
 
 type TaskRC struct {

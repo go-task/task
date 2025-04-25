@@ -2,12 +2,13 @@ package flags
 
 import (
 	"cmp"
-	"github.com/go-task/task/v3/taskrc"
 	"log"
 	"os"
 	"path/filepath"
 	"strconv"
 	"time"
+
+	"github.com/go-task/task/v3/taskrc"
 
 	"github.com/spf13/pflag"
 
