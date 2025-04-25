@@ -260,51 +260,6 @@ func (o *flagsOption) ApplyToExecutor(e *task.Executor) {
 	)
 }
 
-//func getEffectiveValueFromConfig[T any](config any, fieldName string, envVar string, defaultValue T) T {
-//	v := reflect.ValueOf(config)
-//	if v.Kind() == reflect.Ptr {
-//		v = v.Elem()
-//	}
-//
-//	if v.Kind() != reflect.Struct {
-//		return defaultValue
-//	}
-//
-//	field := v.FieldByName(fieldName)
-//	if field.IsValid() && !field.IsZero() && field.Kind() == reflect.Ptr {
-//		// Return value from struct
-//		actual := field.Elem()
-//		if actual.IsValid() {
-//			return actual.Interface().(T)
-//		}
-//	}
-//
-//	envVal := os.Getenv(envVar)
-//	if envVal != "" {
-//		var parsed any
-//		var err error
-//
-//		switch any(defaultValue).(type) {
-//		case int:
-//			parsedInt, e := strconv.Atoi(envVal)
-//			parsed, err = parsedInt, e
-//		case string:
-//			parsed = envVal
-//		case bool:
-//			parsedBool, e := strconv.ParseBool(envVal)
-//			parsed, err = parsedBool, e
-//		default:
-//			return defaultValue // unsupported type
-//		}
-//
-//		if err == nil {
-//			return parsed.(T)
-//		}
-//	}
-//
-//	return defaultValue
-//}
-
 func getDurationValue(configValue *time.Duration, envVarName string, defaultValue time.Duration) time.Duration {
 	if configValue != nil {
 		return *configValue
