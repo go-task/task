@@ -1961,7 +1961,19 @@ VAR_1 is included-default-var1
 VAR_2 is included-default-var2
 VAR_1 is included4-var1
 VAR_2 is included-default-var2
+VAR_1 is from-command-line
+VAR_2 is included-default-var2
 `)
+	// Set one command line argument for the include 5
+	vars := ast.NewVars(
+				&ast.VarElement{
+					Key: "COMMAND_LINE_VAR",
+					Value: ast.Var{
+						Value: "from-command-line",
+					},
+				})
+	e.Taskfile.Vars.Merge(vars, nil)
+
 	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "task1"}))
 	t.Log(buff.String())
 	assert.Equal(t, strings.TrimSpace(buff.String()), expectedOutputOrder)

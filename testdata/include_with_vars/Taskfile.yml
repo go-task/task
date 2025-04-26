@@ -18,6 +18,10 @@ includes:
     taskfile: include/Taskfile.include.yml
     vars:
       VAR_1: "{{.VAR_1}}"
+  included5: 
+    taskfile: include/Taskfile.include.yml
+    vars:
+      VAR_1: "{{.COMMAND_LINE_VAR}}"
 
 tasks:
   task1:
@@ -26,3 +30,4 @@ tasks:
       - task: included2:task1
       - task: included3:task1
       - task: included4:task1
+      - task: included5:task1
