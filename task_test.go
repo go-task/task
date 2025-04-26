@@ -1948,25 +1948,18 @@ func TestIncludedVars(t *testing.T) {
 		task.WithDir(dir),
 		task.WithStdout(&buff),
 		task.WithStderr(&buff),
+		task.WithSilent(true),
 	)
 	require.NoError(t, e.Setup())
 
 	expectedOutputOrder := strings.TrimSpace(`
-task: [included1:task1] echo "VAR_1 is included1-var1"
 VAR_1 is included1-var1
-task: [included1:task1] echo "VAR_2 is included-default-var2"
 VAR_2 is included-default-var2
-task: [included2:task1] echo "VAR_1 is included2-var1"
 VAR_1 is included2-var1
-task: [included2:task1] echo "VAR_2 is included-default-var2"
 VAR_2 is included-default-var2
-task: [included3:task1] echo "VAR_1 is included-default-var1"
 VAR_1 is included-default-var1
-task: [included3:task1] echo "VAR_2 is included-default-var2"
 VAR_2 is included-default-var2
-task: [included4:task1] echo "VAR_1 is included4-var1"
 VAR_1 is included4-var1
-task: [included4:task1] echo "VAR_2 is included-default-var2"
 VAR_2 is included-default-var2
 `)
 	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "task1"}))
