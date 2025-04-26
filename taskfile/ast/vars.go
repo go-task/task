@@ -117,8 +117,8 @@ func (vars *Vars) ToCacheMap() (m map[string]any) {
 }
 
 // Merge loops over other and merges it values with the variables in vars. If
-// the include parameter is not nil and its it is an advanced import, the
-// directory is set set to the value of the include parameter.
+// the include parameter is not nil and it is an advanced import, the
+// directory is set to the value of the include parameter.
 func (vars *Vars) Merge(other *Vars, include *Include) {
 	if vars == nil || vars.om == nil || other == nil {
 		return
