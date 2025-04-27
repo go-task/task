@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Fixed fuzzy suggestions not working when misspelling a task name (#2192, #2200
+  by @vmaerten).
+
 ## v3.43.3 - 2025-04-27
 
 Reverted the changes made in #2113 and #2186 that affected the
