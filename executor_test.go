@@ -937,3 +937,24 @@ func TestVarInheritance(t *testing.T) {
 		)
 	}
 }
+
+func TestFuzzyModel(t *testing.T) {
+	t.Parallel()
+
+	NewExecutorTest(t,
+		WithName("fuzzy"),
+		WithExecutorOptions(
+			task.WithDir("testdata/fuzzy"),
+		),
+		WithTask("instal"),
+		WithRunError(),
+	)
+
+	NewExecutorTest(t,
+		WithName("not-fuzzy"),
+		WithExecutorOptions(
+			task.WithDir("testdata/fuzzy"),
+		),
+		WithTask("install"),
+	)
+}
