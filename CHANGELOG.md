@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+Reverted the changes made in #2113 and #2186 that affected the
+`USER_WORKING_DIR` and built-in variables. This fixes #2206, #2195, #2207 and
+#2208.
+
 ## v3.43.2 - 2025-04-21
 
 - Fixed regresion of `CLI_ARGS` being exposed as the wrong type (#2190, #2191 by
