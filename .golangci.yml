@@ -5,8 +5,10 @@ formatters:
     - gofmt
     - gofumpt
     - goimports
+    - gci
   settings:
     gofmt:
+      simplify: true
       rewrite-rules:
         - pattern: interface{}
           replacement: any
@@ -15,6 +17,12 @@ formatters:
     goimports:
       local-prefixes:
         - github.com/go-task
+    gci:
+      sections:
+        - standard
+        - default
+        - prefix(github.com/go-task)
+        - localmodule
   exclusions:
     generated: lax
     paths:

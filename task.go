@@ -8,6 +8,9 @@ import (
 	"slices"
 	"sync/atomic"
 
+	"golang.org/x/sync/errgroup"
+	"mvdan.cc/sh/v3/interp"
+
 	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/env"
 	"github.com/go-task/task/v3/internal/execext"
@@ -19,9 +22,6 @@ import (
 	"github.com/go-task/task/v3/internal/summary"
 	"github.com/go-task/task/v3/internal/templater"
 	"github.com/go-task/task/v3/taskfile/ast"
-
-	"golang.org/x/sync/errgroup"
-	"mvdan.cc/sh/v3/interp"
 )
 
 const (

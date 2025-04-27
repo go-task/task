@@ -98,6 +98,15 @@ tasks:
     cmds:
       - golangci-lint run --fix
 
+  format:
+    desc: Runs golangci-lint and formats any Go files
+    aliases: [fmt, f]
+    sources:
+      - './**/*.go'
+      - .golangci.yml
+    cmds:
+      - golangci-lint fmt
+
   sleepit:build:
     desc: Builds the sleepit test helper
     sources:

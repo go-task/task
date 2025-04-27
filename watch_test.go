@@ -49,10 +49,10 @@ task: task "default" finished running
 	dirPath := filepathext.SmartJoin(dir, "src")
 	filePath := filepathext.SmartJoin(dirPath, "a")
 
-	err := os.MkdirAll(dirPath, 0755)
+	err := os.MkdirAll(dirPath, 0o755)
 	require.NoError(t, err)
 
-	err = os.WriteFile(filePath, []byte("test"), 0644)
+	err = os.WriteFile(filePath, []byte("test"), 0o644)
 	require.NoError(t, err)
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -72,7 +72,7 @@ task: task "default" finished running
 	}()
 
 	time.Sleep(10 * time.Millisecond)
-	err = os.WriteFile(filePath, []byte("test updated"), 0644)
+	err = os.WriteFile(filePath, []byte("test updated"), 0o644)
 	require.NoError(t, err)
 
 	time.Sleep(150 * time.Millisecond)

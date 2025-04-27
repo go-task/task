@@ -933,6 +933,7 @@ func TestIncludesHttp(t *testing.T) {
 
 					for _, tc := range tcs {
 						t.Run(tc.name, func(t *testing.T) {
+							t.Parallel()
 							task, err := e.CompiledTask(&task.Call{Task: tc.name})
 							require.NoError(t, err)
 							assert.Equal(t, tc.dir, task.Dir)
