@@ -1116,14 +1116,14 @@ tasks:
       MAP:
         map: {A: 1, B: 2, C: 3}
     cmds:
-      - 'echo {{.STRING}}'  # Hello, World!
-      - 'echo {{.BOOL}}'    # true
-      - 'echo {{.INT}}'     # 42
-      - 'echo {{.FLOAT}}'   # 3.14
-      - 'echo {{.ARRAY}}'   # [1 2 3]
-      - 'echo {{.ARRAY.0}}' # 1
-      - 'echo {{.MAP}}'     # map[A:1 B:2 C:3]
-      - 'echo {{.MAP.A}}'   # 1
+      - 'echo {{.STRING}}'        # Hello, World!
+      - 'echo {{.BOOL}}'          # true
+      - 'echo {{.INT}}'           # 42
+      - 'echo {{.FLOAT}}'         # 3.14
+      - 'echo {{.ARRAY}}'         # [1 2 3]
+      - 'echo {{index .ARRAY 0}}' # 1
+      - 'echo {{.MAP}}'           # map[A:1 B:2 C:3]
+      - 'echo {{.MAP.A}}'         # 1
 ```
 
 Variables can be set in many places in a Taskfile. When executing
