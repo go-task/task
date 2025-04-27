@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v3.43.3 - 2025-04-27
 
 Reverted the changes made in #2113 and #2186 that affected the
 `USER_WORKING_DIR` and built-in variables. This fixes #2206, #2195, #2207 and

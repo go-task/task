@@ -61,12 +61,6 @@ In this example, we can run `cd <service>` and `task up` and as long as the
 `<service>` directory contains a `docker-compose.yml`, the Docker composition
 will be brought up.
 
-:::info
-
-`.USER_WORKING_DIR` will contain the value of the `--dir` (`-d`) flag, if given.
-
-:::
-
 ### Running a global Taskfile
 
 If you call Task with the `--global` (alias `-g`) flag, it will look for your
@@ -1122,14 +1116,14 @@ tasks:
       MAP:
         map: {A: 1, B: 2, C: 3}
     cmds:
-      - 'echo {{.STRING}}'  # Hello, World!
-      - 'echo {{.BOOL}}'    # true
-      - 'echo {{.INT}}'     # 42
-      - 'echo {{.FLOAT}}'   # 3.14
-      - 'echo {{.ARRAY}}'   # [1 2 3]
-      - 'echo {{.ARRAY.0}}' # 1
-      - 'echo {{.MAP}}'     # map[A:1 B:2 C:3]
-      - 'echo {{.MAP.A}}'   # 1
+      - 'echo {{.STRING}}'        # Hello, World!
+      - 'echo {{.BOOL}}'          # true
+      - 'echo {{.INT}}'           # 42
+      - 'echo {{.FLOAT}}'         # 3.14
+      - 'echo {{.ARRAY}}'         # [1 2 3]
+      - 'echo {{index .ARRAY 0}}' # 1
+      - 'echo {{.MAP}}'           # map[A:1 B:2 C:3]
+      - 'echo {{.MAP.A}}'         # 1
 ```
 
 Variables can be set in many places in a Taskfile. When executing
