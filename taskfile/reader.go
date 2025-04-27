@@ -249,7 +249,7 @@ func (r *Reader) include(ctx context.Context, node Node) error {
 				Aliases:        include.Aliases,
 				AdvancedImport: include.AdvancedImport,
 				Excludes:       include.Excludes,
-				Vars:           templater.ReplaceVars(include.Vars, cache),
+				Vars:           include.Vars,
 			}
 			if err := cache.Err(); err != nil {
 				return err
