@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added `toYaml` and `fromYaml` templating functions (#2217, #2219 by @pd93).
 - Fixed fuzzy suggestions not working when misspelling a task name (#2192, #2200
   by @vmaerten).
 - Fixed a bug where taskfiles in directories containing spaces created
