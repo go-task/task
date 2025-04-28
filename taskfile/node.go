@@ -17,6 +17,8 @@ type Node interface {
 	Parent() Node
 	Location() string
 	Dir() string
+	Checksum() string
+	Verify(checksum string) bool
 	ResolveEntrypoint(entrypoint string) (string, error)
 	ResolveDir(dir string) (string, error)
 }

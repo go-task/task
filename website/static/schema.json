@@ -684,6 +684,10 @@
                     "vars": {
                       "description": "A set of variables to apply to the included Taskfile.",
                       "$ref": "#/definitions/vars"
+                    },
+                    "checksum": {
+                      "description": "The checksum of the file you expect to include. If the checksum does not match, the file will not be included.",
+                      "type": "string"
                     }
                   }
                 }

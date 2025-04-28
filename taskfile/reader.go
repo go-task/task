@@ -250,6 +250,7 @@ func (r *Reader) include(ctx context.Context, node Node) error {
 				AdvancedImport: include.AdvancedImport,
 				Excludes:       include.Excludes,
 				Vars:           include.Vars,
+				Checksum:       include.Checksum,
 			}
 			if err := cache.Err(); err != nil {
 				return err
@@ -267,6 +268,7 @@ func (r *Reader) include(ctx context.Context, node Node) error {
 
 			includeNode, err := NewNode(entrypoint, include.Dir, r.insecure,
 				WithParent(node),
+				WithChecksum(include.Checksum),
 			)
 			if err != nil {
 				if include.Optional {
@@ -362,7 +364,24 @@ func (r *Reader) readNodeContent(ctx context.Context, node Node) ([]byte, error)
 	if node, isRemote := node.(RemoteNode); isRemote {
 		return r.readRemoteNodeContent(ctx, node)
 	}
-	return node.Read()
+
+	// Read the Taskfile
+	b, err := node.Read()
+	if err != nil {
+		return nil, err
+	}
+
+	// If the given checksum doesn't match the sum pinned in the Taskfile
+	checksum := checksum(b)
+	if !node.Verify(checksum) {
+		return nil, &errors.TaskfileDoesNotMatchChecksum{
+			URI:              node.Location(),
+			ExpectedChecksum: node.Checksum(),
+			ActualChecksum:   checksum,
+		}
+	}
+
+	return b, nil
 }
 
 func (r *Reader) readRemoteNodeContent(ctx context.Context, node RemoteNode) ([]byte, error) {
@@ -427,17 +446,29 @@ func (r *Reader) readRemoteNodeContent(ctx context.Context, node RemoteNode) ([]
 	}
 
 	r.debugf("found remote file at %q\n", node.Location())
-	checksum := checksum(downloadedBytes)
-	prompt := cache.ChecksumPrompt(checksum)
 
-	// Prompt the user if required
-	if prompt != "" {
-		if err := func() error {
-			r.promptMutex.Lock()
-			defer r.promptMutex.Unlock()
-			return r.promptf(prompt, node.Location())
-		}(); err != nil {
-			return nil, &errors.TaskfileNotTrustedError{URI: node.Location()}
+	// If the given checksum doesn't match the sum pinned in the Taskfile
+	checksum := checksum(downloadedBytes)
+	if !node.Verify(checksum) {
+		return nil, &errors.TaskfileDoesNotMatchChecksum{
+			URI:              node.Location(),
+			ExpectedChecksum: node.Checksum(),
+			ActualChecksum:   checksum,
+		}
+	}
+
+	// If there is no manual checksum pin, run the automatic checks
+	if node.Checksum() == "" {
+		// Prompt the user if required
+		prompt := cache.ChecksumPrompt(checksum)
+		if prompt != "" {
+			if err := func() error {
+				r.promptMutex.Lock()
+				defer r.promptMutex.Unlock()
+				return r.promptf(prompt, node.Location())
+			}(); err != nil {
+				return nil, &errors.TaskfileNotTrustedError{URI: node.Location()}
+			}
 		}
 	}
 
