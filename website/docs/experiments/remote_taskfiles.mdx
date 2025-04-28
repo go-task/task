@@ -224,8 +224,18 @@ internet and cached locally. This cached file will be used for all future
 invocations of the Taskfile until the cache expires. Once it expires, Task will
 download the latest copy of the file and update the cache. By default, the cache
 is set to expire immediately. This means that Task will always fetch the latest
-version. However, the cache expiry duration can be modified by setting the
-`--expiry` flag.
+version. However, the cache expiry duration can be modified by:
+- Setting the `--expiry` flag
+- Configuring it in your taskrc file:
+```yaml
+remote:
+  cache-expiry: 24h
+```
+
+The expiry duration should be specified in a format like "24h", "30m", "1h30m", etc.
+
+
+
 
 If for any reason you lose access to the internet or you are running Task in
 offline mode (via the `--offline` flag or `TASK_OFFLINE` environment variable),
