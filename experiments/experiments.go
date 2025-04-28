@@ -6,11 +6,10 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/go-task/task/v3/taskrc"
 	"github.com/go-task/task/v3/taskrc/ast"
 
 	"github.com/joho/godotenv"
-
-	"github.com/go-task/task/v3/taskrc"
 )
 
 const envPrefix = "TASK_X_"

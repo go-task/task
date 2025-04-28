@@ -8,8 +8,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/go-task/task/v3/taskrc"
-
 	"github.com/spf13/pflag"
 
 	"github.com/go-task/task/v3"
@@ -18,6 +16,7 @@ import (
 	"github.com/go-task/task/v3/internal/env"
 	"github.com/go-task/task/v3/internal/sort"
 	"github.com/go-task/task/v3/taskfile/ast"
+	"github.com/go-task/task/v3/taskrc"
 )
 
 const usage = `Usage: task [flags...] [task...]
