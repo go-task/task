@@ -24,14 +24,14 @@ func init() {
 		"numCPU":       runtime.NumCPU,
 		"catLines":     catLines,
 		"splitLines":   splitLines,
-		"fromSlash":    fromSlash,
-		"toSlash":      toSlash,
+		"fromSlash":    filepath.FromSlash,
+		"toSlash":      filepath.ToSlash,
 		"exeExt":       exeExt,
 		"shellQuote":   shellQuote,
 		"splitArgs":    splitArgs,
 		"IsSH":         IsSH, // Deprecated
-		"joinPath":     joinPath,
-		"relPath":      relPath,
+		"joinPath":     filepath.Join,
+		"relPath":      filepath.Rel,
 		"merge":        merge,
 		"spew":         spew.Sdump,
 		"fromYaml":     fromYaml,
@@ -70,14 +70,6 @@ func splitLines(s string) []string {
 	return strings.Split(s, "\n")
 }
 
-func fromSlash(path string) string {
-	return filepath.FromSlash(path)
-}
-
-func toSlash(path string) string {
-	return filepath.ToSlash(path)
-}
-
 func exeExt() string {
 	if runtime.GOOS == "windows" {
 		return ".exe"
@@ -96,14 +88,6 @@ func splitArgs(s string) ([]string, error) {
 // Deprecated: now always returns true
 func IsSH() bool {
 	return true
-}
-
-func joinPath(elem ...string) string {
-	return filepath.Join(elem...)
-}
-
-func relPath(basePath, targetPath string) (string, error) {
-	return filepath.Rel(basePath, targetPath)
 }
 
 func merge(base map[string]any, v ...map[string]any) map[string]any {
