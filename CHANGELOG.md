@@ -4,6 +4,8 @@
 
 - Fixed fuzzy suggestions not working when misspelling a task name (#2192, #2200
   by @vmaerten).
+- Fixed a bug where taskfiles in directories containing spaces created
+  directories in the wrong location (#2208, #2216 by @pd93).
 
 ## v3.43.3 - 2025-04-27
 
