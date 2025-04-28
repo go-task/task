@@ -90,15 +90,6 @@ func RunCommand(ctx context.Context, opts *RunCommandOptions) error {
 	return r.Run(ctx, p)
 }
 
-func escape(s string) string {
-	s = filepath.ToSlash(s)
-	s = strings.ReplaceAll(s, " ", `\ `)
-	s = strings.ReplaceAll(s, "&", `\&`)
-	s = strings.ReplaceAll(s, "(", `\(`)
-	s = strings.ReplaceAll(s, ")", `\)`)
-	return s
-}
-
 // ExpandLiteral is a wrapper around [expand.Literal]. It will escape the input
 // string, expand any shell symbols (such as '~') and resolve any environment
 // variables.
@@ -106,25 +97,17 @@ func ExpandLiteral(s string) (string, error) {
 	if s == "" {
 		return "", nil
 	}
-	s = escape(s)
 	p := syntax.NewParser()
-	var words []*syntax.Word
-	err := p.Words(strings.NewReader(s), func(w *syntax.Word) bool {
-		words = append(words, w)
-		return true
-	})
+	word, err := p.Document(strings.NewReader(s))
 	if err != nil {
 		return "", err
-	}
-	if len(words) == 0 {
-		return "", nil
 	}
 	cfg := &expand.Config{
 		Env:      expand.FuncEnviron(os.Getenv),
 		ReadDir2: os.ReadDir,
 		GlobStar: true,
 	}
-	return expand.Literal(cfg, words[0])
+	return expand.Literal(cfg, word)
 }
 
 // ExpandFields is a wrapper around [expand.Fields]. It will escape the input
@@ -132,7 +115,6 @@ func ExpandLiteral(s string) (string, error) {
 // variables. It also expands brace expressions ({a.b}) and globs (*/**) and
 // returns the results as a list of strings.
 func ExpandFields(s string) ([]string, error) {
-	s = escape(s)
 	p := syntax.NewParser()
 	var words []*syntax.Word
 	err := p.Words(strings.NewReader(s), func(w *syntax.Word) bool {
