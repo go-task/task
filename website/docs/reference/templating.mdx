@@ -398,6 +398,10 @@ Lastly, Task itself provides a few functions:
 | `spew`       | Returns the Go representation of a specific variable. Useful for debugging. Uses the [davecgh/go-spew](https://github.com/davecgh/go-spew) package.                                                    |
 | `fromYaml`\* | Decodes a YAML string into an object.                                                                                                                                                                  |
 | `toYaml`\*   | Encodes an object as a YAML string.                                                                                                                                                                    |
+| `uuid`       | Generates a new pseudo-random UUIDv4 string.                                                                                                                                                           |
+| `randInt`    | Generates a new pseudo-random, non-negative, 32bit integer. Generated numbers are not suitable for security-sensitive work.                                                                            |
+| `randIntN`   | Generates a new pseudo-random, non-negative, 32bit integer in the half-open interval `[0,n)`. Generated numbers are not suitable for security-sensitive work.                                          |
+| `randFloat`  | Generates a new pseudo-random, 32bit float in the half-open interval `[0.0,1.0)`. Generated numbers are not suitable for security-sensitive work.                                                      |
 
 {/* prettier-ignore-start */}
 [text/template]: https://pkg.go.dev/text/template
