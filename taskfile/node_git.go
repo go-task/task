@@ -40,13 +40,10 @@ func NewGitNode(
 		return nil, err
 	}
 
-	basePath, path := func() (string, string) {
-		x := strings.Split(u.Path, "//")
-		return x[0], x[1]
-	}()
+	basePath, path := splitPath(u)
 	ref := u.Query().Get("ref")
 
-	rawUrl := u.String()
+	rawUrl := u.Redacted()
 
 	u.RawQuery = ""
 	u.Path = basePath
@@ -127,11 +124,23 @@ func (node *GitNode) ResolveDir(dir string) (string, error) {
 
 func (node *GitNode) CacheKey() string {
 	checksum := strings.TrimRight(checksum([]byte(node.Location())), "=")
-	prefix := filepath.Base(filepath.Dir(node.path))
-	lastDir := filepath.Base(node.path)
+	lastDir := filepath.Base(filepath.Dir(node.path))
+	prefix := filepath.Base(node.path)
 	// Means it's not "", nor "." nor "/", so it's a valid directory
 	if len(lastDir) > 1 {
-		prefix = fmt.Sprintf("%s-%s", lastDir, prefix)
+		prefix = fmt.Sprintf("%s.%s", lastDir, prefix)
 	}
-	return fmt.Sprintf("%s.%s", prefix, checksum)
+	return fmt.Sprintf("git.%s.%s.%s", node.URL.Host, prefix, checksum)
+}
+
+func splitPath(u *url.URL) (string, string) {
+	x := strings.Split(u.Path, "//")
+	switch len(x) {
+	case 0:
+		return "", ""
+	case 1:
+		return x[0], ""
+	default:
+		return x[0], x[1]
+	}
 }

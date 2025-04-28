@@ -36,11 +36,11 @@ var (
 // at the given URL with any of the default Taskfile files names. If any of
 // these match a file, the first matching path will be returned. If no files are
 // found, an error will be returned.
-func RemoteExists(ctx context.Context, u *url.URL) (*url.URL, error) {
+func RemoteExists(ctx context.Context, u url.URL) (*url.URL, error) {
 	// Create a new HEAD request for the given URL to check if the resource exists
 	req, err := http.NewRequestWithContext(ctx, "HEAD", u.String(), nil)
 	if err != nil {
-		return nil, errors.TaskfileFetchFailedError{URI: u.String()}
+		return nil, errors.TaskfileFetchFailedError{URI: u.Redacted()}
 	}
 
 	// Request the given URL
@@ -49,7 +49,7 @@ func RemoteExists(ctx context.Context, u *url.URL) (*url.URL, error) {
 		if ctx.Err() != nil {
 			return nil, fmt.Errorf("checking remote file: %w", ctx.Err())
 		}
-		return nil, errors.TaskfileFetchFailedError{URI: u.String()}
+		return nil, errors.TaskfileFetchFailedError{URI: u.Redacted()}
 	}
 	defer resp.Body.Close()
 
@@ -61,7 +61,7 @@ func RemoteExists(ctx context.Context, u *url.URL) (*url.URL, error) {
 	if resp.StatusCode == http.StatusOK && slices.ContainsFunc(allowedContentTypes, func(s string) bool {
 		return strings.Contains(contentType, s)
 	}) {
-		return u, nil
+		return &u, nil
 	}
 
 	// If the request was not successful, append the default Taskfile names to
@@ -78,7 +78,7 @@ func RemoteExists(ctx context.Context, u *url.URL) (*url.URL, error) {
 		// Try the alternative URL
 		resp, err = http.DefaultClient.Do(req)
 		if err != nil {
-			return nil, errors.TaskfileFetchFailedError{URI: u.String()}
+			return nil, errors.TaskfileFetchFailedError{URI: u.Redacted()}
 		}
 		defer resp.Body.Close()
 
@@ -88,5 +88,5 @@ func RemoteExists(ctx context.Context, u *url.URL) (*url.URL, error) {
 		}
 	}
 
-	return nil, errors.TaskfileNotFoundError{URI: u.String(), Walk: false}
+	return nil, errors.TaskfileNotFoundError{URI: u.Redacted(), Walk: false}
 }
