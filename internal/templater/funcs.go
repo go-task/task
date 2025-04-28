@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/davecgh/go-spew/spew"
+	"gopkg.in/yaml.v3"
 	"mvdan.cc/sh/v3/shell"
 	"mvdan.cc/sh/v3/syntax"
 
@@ -18,58 +19,25 @@ var templateFuncs template.FuncMap
 
 func init() {
 	taskFuncs := template.FuncMap{
-		"OS":     func() string { return runtime.GOOS },
-		"ARCH":   func() string { return runtime.GOARCH },
-		"numCPU": func() int { return runtime.NumCPU() },
-		"catLines": func(s string) string {
-			s = strings.ReplaceAll(s, "\r\n", " ")
-			return strings.ReplaceAll(s, "\n", " ")
-		},
-		"splitLines": func(s string) []string {
-			s = strings.ReplaceAll(s, "\r\n", "\n")
-			return strings.Split(s, "\n")
-		},
-		"fromSlash": func(path string) string {
-			return filepath.FromSlash(path)
-		},
-		"toSlash": func(path string) string {
-			return filepath.ToSlash(path)
-		},
-		"exeExt": func() string {
-			if runtime.GOOS == "windows" {
-				return ".exe"
-			}
-			return ""
-		},
-		"shellQuote": func(str string) (string, error) {
-			return syntax.Quote(str, syntax.LangBash)
-		},
-		"splitArgs": func(s string) ([]string, error) {
-			return shell.Fields(s, nil)
-		},
-		// IsSH is deprecated.
-		"IsSH": func() bool { return true },
-		"joinPath": func(elem ...string) string {
-			return filepath.Join(elem...)
-		},
-		"relPath": func(basePath, targetPath string) (string, error) {
-			return filepath.Rel(basePath, targetPath)
-		},
-		"merge": func(base map[string]any, v ...map[string]any) map[string]any {
-			cap := len(v)
-			for _, m := range v {
-				cap += len(m)
-			}
-			result := make(map[string]any, cap)
-			maps.Copy(result, base)
-			for _, m := range v {
-				maps.Copy(result, m)
-			}
-			return result
-		},
-		"spew": func(v any) string {
-			return spew.Sdump(v)
-		},
+		"OS":           os,
+		"ARCH":         arch,
+		"numCPU":       runtime.NumCPU,
+		"catLines":     catLines,
+		"splitLines":   splitLines,
+		"fromSlash":    filepath.FromSlash,
+		"toSlash":      filepath.ToSlash,
+		"exeExt":       exeExt,
+		"shellQuote":   shellQuote,
+		"splitArgs":    splitArgs,
+		"IsSH":         IsSH, // Deprecated
+		"joinPath":     filepath.Join,
+		"relPath":      filepath.Rel,
+		"merge":        merge,
+		"spew":         spew.Sdump,
+		"fromYaml":     fromYaml,
+		"mustFromYaml": mustFromYaml,
+		"toYaml":       toYaml,
+		"mustToYaml":   mustToYaml,
 	}
 
 	// aliases
@@ -82,4 +50,79 @@ func init() {
 
 	templateFuncs = template.FuncMap(sprig.TxtFuncMap())
 	maps.Copy(templateFuncs, taskFuncs)
+}
+
+func os() string {
+	return runtime.GOOS
+}
+
+func arch() string {
+	return runtime.GOARCH
+}
+
+func catLines(s string) string {
+	s = strings.ReplaceAll(s, "\r\n", " ")
+	return strings.ReplaceAll(s, "\n", " ")
+}
+
+func splitLines(s string) []string {
+	s = strings.ReplaceAll(s, "\r\n", "\n")
+	return strings.Split(s, "\n")
+}
+
+func exeExt() string {
+	if runtime.GOOS == "windows" {
+		return ".exe"
+	}
+	return ""
+}
+
+func shellQuote(str string) (string, error) {
+	return syntax.Quote(str, syntax.LangBash)
+}
+
+func splitArgs(s string) ([]string, error) {
+	return shell.Fields(s, nil)
+}
+
+// Deprecated: now always returns true
+func IsSH() bool {
+	return true
+}
+
+func merge(base map[string]any, v ...map[string]any) map[string]any {
+	cap := len(v)
+	for _, m := range v {
+		cap += len(m)
+	}
+	result := make(map[string]any, cap)
+	maps.Copy(result, base)
+	for _, m := range v {
+		maps.Copy(result, m)
+	}
+	return result
+}
+
+func fromYaml(v string) any {
+	output, _ := mustFromYaml(v)
+	return output
+}
+
+func mustFromYaml(v string) (any, error) {
+	var output any
+	err := yaml.Unmarshal([]byte(v), &output)
+	return output, err
+}
+
+func toYaml(v any) string {
+	output, _ := yaml.Marshal(v)
+	return string(output)
+}
+
+func mustToYaml(v any) (string, error) {
+	output, err := yaml.Marshal(v)
+	if err != nil {
+		return "", err
+	}
+	return string(output), nil
 }
