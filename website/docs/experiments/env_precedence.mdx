@@ -35,7 +35,7 @@ environment variable take precedence over the OS variable.
 Consider the following example:
 
 ```yml
-version: '3'
+version: '3.39'  # Environment precedence experiment was added in v3.39.0
 
 tasks:
   default:
@@ -51,7 +51,7 @@ If you still want to get the OS variable, you can use the template function env
 like follow : `{{env "OS_VAR"}}`.
 
 ```yml
-version: '3'
+version: '3.39'
 
 tasks:
   default:
