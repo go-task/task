@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added `uuid`, `randInt` and `randIntN` template functions (#1346, #2225 by
+  @pd93).
 - Added new `CLI_ARGS_LIST` array variable which contains the arguments passed
   to Task after the `--` (the same as `CLI_ARGS`, but an array instead of a
   string). (#2138, #2139, #2140 by @pd93).
