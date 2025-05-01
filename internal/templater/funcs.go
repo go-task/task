@@ -2,11 +2,13 @@ package templater
 
 import (
 	"maps"
+	"math/rand/v2"
 	"path/filepath"
 	"runtime"
 	"strings"
 
 	"github.com/davecgh/go-spew/spew"
+	"github.com/google/uuid"
 	"gopkg.in/yaml.v3"
 	"mvdan.cc/sh/v3/shell"
 	"mvdan.cc/sh/v3/syntax"
@@ -38,6 +40,9 @@ func init() {
 		"mustFromYaml": mustFromYaml,
 		"toYaml":       toYaml,
 		"mustToYaml":   mustToYaml,
+		"uuid":         uuid.New,
+		"randInt":      rand.Int,
+		"randIntN":     rand.IntN,
 	}
 
 	// aliases
