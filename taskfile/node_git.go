@@ -49,7 +49,7 @@ func NewGitNode(
 	u.Path = basePath
 
 	if u.Scheme == "http" && !insecure {
-		return nil, &errors.TaskfileNotSecureError{URI: entrypoint}
+		return nil, &errors.TaskfileNotSecureError{URI: u.Redacted()}
 	}
 	return &GitNode{
 		BaseNode: base,
