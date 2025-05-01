@@ -43,7 +43,6 @@ func init() {
 		"uuid":         uuid.New,
 		"randInt":      rand.Int,
 		"randIntN":     rand.IntN,
-		"randFloat":    rand.Float32,
 	}
 
 	// aliases
