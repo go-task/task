@@ -16,7 +16,7 @@ import (
 
 // An HTTPNode is a node that reads a Taskfile from a remote location via HTTP.
 type HTTPNode struct {
-	*BaseNode
+	*baseNode
 	URL *url.URL // stores url pointing actual remote file. (e.g. with Taskfile.yml)
 }
 
@@ -35,7 +35,7 @@ func NewHTTPNode(
 		return nil, &errors.TaskfileNotSecureError{URI: url.Redacted()}
 	}
 	return &HTTPNode{
-		BaseNode: base,
+		baseNode: base,
 		URL:      url,
 	}, nil
 }
