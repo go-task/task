@@ -40,7 +40,7 @@ func NewGitNode(
 		return nil, err
 	}
 
-	basePath, path := splitPath(u)
+	basePath, path := splitURLOnDoubleSlash(u)
 	ref := u.Query().Get("ref")
 
 	rawUrl := u.Redacted()
@@ -133,7 +133,7 @@ func (node *GitNode) CacheKey() string {
 	return fmt.Sprintf("git.%s.%s.%s", node.URL.Host, prefix, checksum)
 }
 
-func splitPath(u *url.URL) (string, string) {
+func splitURLOnDoubleSlash(u *url.URL) (string, string) {
 	x := strings.Split(u.Path, "//")
 	switch len(x) {
 	case 0:
