@@ -15,6 +15,8 @@
 - Added support for dual JSON schema files, allowing changes without affecting
   the current schema. The current schemas will only be updated during releases.
   (#2211 by @vmaerten).
+- Improved fingerprint documentation by specifying that the method can be set at
+  the root level to apply to all tasks (#2233 by @vmaerten).
 
 ## v3.43.3 - 2025-04-27
 
