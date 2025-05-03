@@ -17,9 +17,6 @@
       "GENTLE_FORCE": {
         "type": "number",
         "enum": [0, 1]
-      },
-      "additionalProperties": {
-        "type": "integer"
       }
     }
   },
