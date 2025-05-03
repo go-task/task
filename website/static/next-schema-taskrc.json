@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "title": "Taskrc YAML Schema",
+  "description": "Schema for .taskrc files.",
+  "type": "object",
+  "properties": {
+    "experiments": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "integer"
+      }
+    }
+  },
+  "additionalProperties": false
+}
