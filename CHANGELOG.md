@@ -12,6 +12,9 @@
   by @vmaerten).
 - Fixed a bug where taskfiles in directories containing spaces created
   directories in the wrong location (#2208, #2216 by @pd93).
+- Added support for dual JSON schema files, allowing changes without affecting
+  the current schema. The current schemas will only be updated during releases.
+  (#2211 by @vmaerten).
 
 ## v3.43.3 - 2025-04-27
 
