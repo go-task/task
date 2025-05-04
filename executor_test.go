@@ -958,3 +958,23 @@ func TestFuzzyModel(t *testing.T) {
 		WithTask("install"),
 	)
 }
+
+func TestIncludeChecksum(t *testing.T) {
+	t.Parallel()
+
+	NewExecutorTest(t,
+		WithName("correct"),
+		WithExecutorOptions(
+			task.WithDir("testdata/includes_checksum/correct"),
+		),
+	)
+
+	NewExecutorTest(t,
+		WithName("incorrect"),
+		WithExecutorOptions(
+			task.WithDir("testdata/includes_checksum/incorrect"),
+		),
+		WithSetupError(),
+		WithPostProcessFn(PPRemoveAbsolutePaths),
+	)
+}
