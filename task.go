@@ -226,6 +226,7 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) error {
 						e.Logger.VerboseErrf(logger.Yellow, "task: task error ignored: %v\n", err)
 						continue
 					}
+					e.Logger.VerboseErrf(logger.Red, "task: %q failed: %v\n", call.Task, err)
 					deferredExitCode = exitCode
 				}
 
