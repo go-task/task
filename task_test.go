@@ -702,6 +702,7 @@ func TestIncludesRemote(t *testing.T) {
 	enableExperimentForTest(t, &experiments.RemoteTaskfiles, 1)
 
 	dir := "testdata/includes_remote"
+	os.RemoveAll(filepath.Join(dir, ".task", "remote"))
 
 	srv := httptest.NewServer(http.FileServer(http.Dir(dir)))
 	defer srv.Close()
@@ -777,8 +778,8 @@ func TestIncludesRemote(t *testing.T) {
 				},
 			}
 
-			for j, e := range executors {
-				t.Run(fmt.Sprint(j), func(t *testing.T) {
+			for _, e := range executors {
+				t.Run(e.name, func(t *testing.T) {
 					require.NoError(t, e.executor.Setup())
 
 					for k, taskCall := range taskCalls {

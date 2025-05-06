@@ -13,8 +13,8 @@ import (
 
 // A FileNode is a node that reads a taskfile from the local filesystem.
 type FileNode struct {
-	*BaseNode
-	Entrypoint string
+	*baseNode
+	entrypoint string
 }
 
 func NewFileNode(entrypoint, dir string, opts ...NodeOption) (*FileNode, error) {
@@ -25,13 +25,13 @@ func NewFileNode(entrypoint, dir string, opts ...NodeOption) (*FileNode, error) 
 		return nil, err
 	}
 	return &FileNode{
-		BaseNode:   base,
-		Entrypoint: entrypoint,
+		baseNode:   base,
+		entrypoint: entrypoint,
 	}, nil
 }
 
 func (node *FileNode) Location() string {
-	return node.Entrypoint
+	return node.entrypoint
 }
 
 func (node *FileNode) Read() ([]byte, error) {
@@ -63,7 +63,7 @@ func (node *FileNode) ResolveEntrypoint(entrypoint string) (string, error) {
 
 	// NOTE: Uses the directory of the entrypoint (Taskfile), not the current working directory
 	// This means that files are included relative to one another
-	entrypointDir := filepath.Dir(node.Entrypoint)
+	entrypointDir := filepath.Dir(node.entrypoint)
 	return filepathext.SmartJoin(entrypointDir, path), nil
 }
 
@@ -79,6 +79,6 @@ func (node *FileNode) ResolveDir(dir string) (string, error) {
 
 	// NOTE: Uses the directory of the entrypoint (Taskfile), not the current working directory
 	// This means that files are included relative to one another
-	entrypointDir := filepath.Dir(node.Entrypoint)
+	entrypointDir := filepath.Dir(node.entrypoint)
 	return filepathext.SmartJoin(entrypointDir, path), nil
 }
