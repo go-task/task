@@ -128,6 +128,7 @@ func ExpandFields(s string) ([]string, error) {
 		Env:      expand.FuncEnviron(os.Getenv),
 		ReadDir2: os.ReadDir,
 		GlobStar: true,
+		NullGlob: true,
 	}
 	return expand.Fields(cfg, words...)
 }
