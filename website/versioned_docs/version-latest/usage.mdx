@@ -3,6 +3,7 @@ slug: /usage/
 sidebar_position: 4
 ---
 
+import AvailableSinceBadge from '~/components/AvailableSince';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
@@ -304,6 +305,8 @@ includes:
 ```
 
 ### Flatten includes
+
+<AvailableSinceBadge version="v3.39.0" />
 
 You can flatten the included Taskfile tasks into the main Taskfile by using the `flatten` option.
 It means that the included Taskfile tasks will be available without the namespace.
@@ -1094,7 +1097,7 @@ variable types are supported:
 - `int`
 - `float`
 - `array`
-- `map`
+- `map` <AvailableSinceBadge version="v3.43.1" />
 
 :::note
 
@@ -1367,6 +1370,7 @@ tasks:
 ```
 
 ### Looping over a matrix
+<AvailableSinceBadge version="v3.39.0" />
 
 If you need to loop over all permutations of multiple lists, you can use the
 `matrix` property. This should be familiar to anyone who has used a matrix in a
@@ -1441,7 +1445,7 @@ tasks:
 
 </TabItem>
 <TabItem value="2" label="Generates">
-
+<AvailableSinceBadge version="v3.43.1" />
 ```yaml
 version: '3'
 
@@ -1489,7 +1493,7 @@ tasks:
 
 </TabItem>
 <TabItem value="2" label="Generates">
-
+<AvailableSinceBadge version="v3.43.1" />
 ```yaml
 version: '3'
 
