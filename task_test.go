@@ -2501,6 +2501,11 @@ func TestWildcard(t *testing.T) {
 			expectedOutput: "Starting foo\n",
 		},
 		{
+			name:           "alias",
+			call:           "s-foo",
+			expectedOutput: "Starting foo\n",
+		},
+		{
 			name:           "matches exactly",
 			call:           "matches-exactly-*",
 			expectedOutput: "I don't consume matches: []\n",
