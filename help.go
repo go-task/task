@@ -149,6 +149,7 @@ func (e *Executor) ToEditorOutput(tasks []*ast.Task, noStatus bool) (*editors.Ta
 		g.Go(func() error {
 			o.Tasks[i] = editors.Task{
 				Name:     tasks[i].Name(),
+				Task:     tasks[i].Task,
 				Desc:     tasks[i].Desc,
 				Summary:  tasks[i].Summary,
 				Aliases:  aliases,

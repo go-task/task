@@ -42,9 +42,10 @@ type (
 		FormatterTestOption
 	}
 	TaskTest struct {
-		name           string
-		experiments    map[*experiments.Experiment]int
-		postProcessFns []PostProcessFn
+		name                string
+		experiments         map[*experiments.Experiment]int
+		postProcessFns      []PostProcessFn
+		fixtureTemplateData any
 	}
 )
 
@@ -79,7 +80,11 @@ func (tt *TaskTest) writeFixture(
 	if goldenFileSuffix != "" {
 		goldenFileName += "-" + goldenFileSuffix
 	}
-	g.Assert(t, goldenFileName, b)
+	if tt.fixtureTemplateData != nil {
+		g.AssertWithTemplate(t, goldenFileName, tt.fixtureTemplateData, b)
+	} else {
+		g.Assert(t, goldenFileName, b)
+	}
 }
 
 // writeFixtureBuffer is a wrapper for writing the main output of the task to a
@@ -232,6 +237,26 @@ func (opt *setupErrorTestOption) applyToExecutorTest(t *ExecutorTest) {
 
 func (opt *setupErrorTestOption) applyToFormatterTest(t *FormatterTest) {
 	t.wantSetupError = true
+}
+
+// WithFixtureTemplateData sets up data defined in the golden file using golang
+// template. Useful if the golden file can change depending on the test.
+// Example template: {{ .Value }}
+// Example data definition: struct{ Value string }{Value: "value"}
+func WithFixtureTemplateData(data any) TestOption {
+	return &fixtureTemplateDataTestOption{data: data}
+}
+
+type fixtureTemplateDataTestOption struct {
+	data any
+}
+
+func (opt *fixtureTemplateDataTestOption) applyToExecutorTest(t *ExecutorTest) {
+	t.fixtureTemplateData = opt.data
+}
+
+func (opt *fixtureTemplateDataTestOption) applyToFormatterTest(t *FormatterTest) {
+	t.fixtureTemplateData = opt.data
 }
 
 // Post-processing
