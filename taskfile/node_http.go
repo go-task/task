@@ -17,7 +17,7 @@ import (
 // An HTTPNode is a node that reads a Taskfile from a remote location via HTTP.
 type HTTPNode struct {
 	*baseNode
-	URL *url.URL // stores url pointing actual remote file. (e.g. with Taskfile.yml)
+	url *url.URL // stores url pointing actual remote file. (e.g. with Taskfile.yml)
 }
 
 func NewHTTPNode(
@@ -36,12 +36,12 @@ func NewHTTPNode(
 	}
 	return &HTTPNode{
 		baseNode: base,
-		URL:      url,
+		url:      url,
 	}, nil
 }
 
 func (node *HTTPNode) Location() string {
-	return node.URL.Redacted()
+	return node.url.Redacted()
 }
 
 func (node *HTTPNode) Read() ([]byte, error) {
@@ -49,7 +49,7 @@ func (node *HTTPNode) Read() ([]byte, error) {
 }
 
 func (node *HTTPNode) ReadContext(ctx context.Context) ([]byte, error) {
-	url, err := RemoteExists(ctx, *node.URL)
+	url, err := RemoteExists(ctx, *node.url)
 	if err != nil {
 		return nil, err
 	}
@@ -87,7 +87,7 @@ func (node *HTTPNode) ResolveEntrypoint(entrypoint string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return node.URL.ResolveReference(ref).String(), nil
+	return node.url.ResolveReference(ref).String(), nil
 }
 
 func (node *HTTPNode) ResolveDir(dir string) (string, error) {
@@ -112,12 +112,12 @@ func (node *HTTPNode) ResolveDir(dir string) (string, error) {
 
 func (node *HTTPNode) CacheKey() string {
 	checksum := strings.TrimRight(checksum([]byte(node.Location())), "=")
-	dir, filename := filepath.Split(node.URL.Path)
+	dir, filename := filepath.Split(node.url.Path)
 	lastDir := filepath.Base(dir)
 	prefix := filename
 	// Means it's not "", nor "." nor "/", so it's a valid directory
 	if len(lastDir) > 1 {
 		prefix = fmt.Sprintf("%s.%s", lastDir, filename)
 	}
-	return fmt.Sprintf("http.%s.%s.%s", node.URL.Host, prefix, checksum)
+	return fmt.Sprintf("http.%s.%s.%s", node.url.Host, prefix, checksum)
 }
