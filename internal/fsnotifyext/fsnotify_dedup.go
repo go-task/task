@@ -2,7 +2,6 @@ package fsnotifyext
 
 import (
 	"math"
-	"sync"
 	"time"
 
 	"github.com/fsnotify/fsnotify"
@@ -11,7 +10,6 @@ import (
 type Deduper struct {
 	w        *fsnotify.Watcher
 	waitTime time.Duration
-	mutex    sync.Mutex
 }
 
 func NewDeduper(w *fsnotify.Watcher, waitTime time.Duration) *Deduper {
@@ -21,31 +19,28 @@ func NewDeduper(w *fsnotify.Watcher, waitTime time.Duration) *Deduper {
 	}
 }
 
-func (d *Deduper) GetChan() chan fsnotify.Event {
+// GetChan returns a chan of deduplicated [fsnotify.Event].
+//
+// [fsnotify.Chmod] operations will be skipped.
+func (d *Deduper) GetChan() <-chan fsnotify.Event {
 	channel := make(chan fsnotify.Event)
-	timers := make(map[string]*time.Timer)
 
 	go func() {
+		timers := make(map[string]*time.Timer)
 		for {
 			event, ok := <-d.w.Events
 			switch {
 			case !ok:
 				return
-			case event.Op == fsnotify.Chmod:
+			case event.Has(fsnotify.Chmod):
 				continue
 			}
 
-			d.mutex.Lock()
 			timer, ok := timers[event.String()]
-			d.mutex.Unlock()
-
 			if !ok {
 				timer = time.AfterFunc(math.MaxInt64, func() { channel <- event })
 				timer.Stop()
-
-				d.mutex.Lock()
 				timers[event.String()] = timer
-				d.mutex.Unlock()
 			}
 
 			timer.Reset(d.waitTime)
