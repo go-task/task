@@ -9,6 +9,10 @@
   string). (#2138, #2139, #2140 by @pd93).
 - Added `toYaml` and `fromYaml` templating functions (#2217, #2219 by @pd93).
 - Added `task` field the `--list --json` output (#2256 by @aleksandersh).
+- When using the
+  [Remote Taskfiles experiment](https://github.com/go-task/task/issues/1317),
+  any credentials used in the URL will now be redacted in Task's output (#2100,
+  #2220 by @pd93).
 - Fixed fuzzy suggestions not working when misspelling a task name (#2192, #2200
   by @vmaerten).
 - Fixed a bug where taskfiles in directories containing spaces created
