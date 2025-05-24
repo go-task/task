@@ -187,3 +187,24 @@ func (err TaskfileCycleError) Error() string {
 func (err TaskfileCycleError) Code() int {
 	return CodeTaskfileCycle
 }
+
+// TaskfileDoesNotMatchChecksum is returned when a Taskfile's checksum does not
+// match the one pinned in the parent Taskfile.
+type TaskfileDoesNotMatchChecksum struct {
+	URI              string
+	ExpectedChecksum string
+	ActualChecksum   string
+}
+
+func (err *TaskfileDoesNotMatchChecksum) Error() string {
+	return fmt.Sprintf(
+		"task: The checksum of the Taskfile at %q does not match!\ngot: %q\nwant: %q",
+		err.URI,
+		err.ActualChecksum,
+		err.ExpectedChecksum,
+	)
+}
+
+func (err *TaskfileDoesNotMatchChecksum) Code() int {
+	return CodeTaskfileDoesNotMatchChecksum
+}

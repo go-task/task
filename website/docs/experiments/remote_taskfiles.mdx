@@ -182,9 +182,11 @@ includes:
 
 ## Security
 
+### Automatic checksums
+
 Running commands from sources that you do not control is always a potential
-security risk. For this reason, we have added some checks when using remote
-Taskfiles:
+security risk. For this reason, we have added some automatic checks when using
+remote Taskfiles:
 
 1. When running a task from a remote Taskfile for the first time, Task will
    print a warning to the console asking you to check that you are sure that you
@@ -208,6 +210,38 @@ flag. Before enabling this flag, you should:
 2. Consider using a pinned version of the remote Taskfile (e.g. A link
    containing a commit hash) to prevent Task from automatically accepting a
    prompt that says a remote Taskfile has changed.
+
+### Manual checksum pinning
+
+Alternatively, if you expect the contents of your remote files to be a constant
+value, you can pin the checksum of the included file instead:
+
+```yaml
+version: '3'
+
+includes:
+  included:
+    taskfile: https://taskfile.dev
+    checksum: c153e97e0b3a998a7ed2e61064c6ddaddd0de0c525feefd6bba8569827d8efe9
+```
+
+This will disable the automatic checksum prompts discussed above. However, if
+the checksums do not match, Task will exit immediately with an error. When
+setting this up for the first time, you may not know the correct value of the
+checksum. There are a couple of ways you can obtain this:
+
+1. Add the include normally without the `checksum` key. The first time you run
+   the included Taskfile, a `.task/remote` temporary directory is created. Find
+   the correct set of files for your included Taskfile and open the file that
+   ends with `.checksum`. You can copy the contents of this file and paste it
+   into the `checksum` key of your include. This method is safest as it allows
+   you to inspect the downloaded Taskfile before you pin it.
+2. Alternatively, add the include with a temporary random value in the
+   `checksum` key. When you try to run the Taskfile, you will get an error that
+   will report the incorrect expected checksum and the actual checksum. You can
+   copy the actual checksum and replace your temporary random value.
+
+### TLS
 
 Task currently supports both `http` and `https` URLs. However, the `http`
 requests will not execute by default unless you run the task with the
