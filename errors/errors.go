@@ -26,6 +26,7 @@ const (
 	CodeTaskfileNetworkTimeout
 	CodeTaskfileInvalid
 	CodeTaskfileCycle
+	CodeTaskfileDoesNotMatchChecksum
 )
 
 // Task related exit codes
