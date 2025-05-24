@@ -11,13 +11,13 @@ import (
 const remoteCacheDir = "remote"
 
 type CacheNode struct {
-	*BaseNode
+	*baseNode
 	source RemoteNode
 }
 
 func NewCacheNode(source RemoteNode, dir string) *CacheNode {
 	return &CacheNode{
-		BaseNode: &BaseNode{
+		baseNode: &baseNode{
 			dir: filepath.Join(dir, remoteCacheDir),
 		},
 		source: source,

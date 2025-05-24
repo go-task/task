@@ -21,8 +21,8 @@ import (
 
 // An GitNode is a node that reads a Taskfile from a remote location via Git.
 type GitNode struct {
-	*BaseNode
-	URL    *url.URL
+	*baseNode
+	url    *url.URL
 	rawUrl string
 	ref    string
 	path   string
@@ -40,23 +40,20 @@ func NewGitNode(
 		return nil, err
 	}
 
-	basePath, path := func() (string, string) {
-		x := strings.Split(u.Path, "//")
-		return x[0], x[1]
-	}()
+	basePath, path := splitURLOnDoubleSlash(u)
 	ref := u.Query().Get("ref")
 
-	rawUrl := u.String()
+	rawUrl := u.Redacted()
 
 	u.RawQuery = ""
 	u.Path = basePath
 
 	if u.Scheme == "http" && !insecure {
-		return nil, &errors.TaskfileNotSecureError{URI: entrypoint}
+		return nil, &errors.TaskfileNotSecureError{URI: u.Redacted()}
 	}
 	return &GitNode{
-		BaseNode: base,
-		URL:      u,
+		baseNode: base,
+		url:      u,
 		rawUrl:   rawUrl,
 		ref:      ref,
 		path:     path,
@@ -79,7 +76,7 @@ func (node *GitNode) ReadContext(_ context.Context) ([]byte, error) {
 	fs := memfs.New()
 	storer := memory.NewStorage()
 	_, err := git.Clone(storer, fs, &git.CloneOptions{
-		URL:           node.URL.String(),
+		URL:           node.url.String(),
 		ReferenceName: plumbing.ReferenceName(node.ref),
 		SingleBranch:  true,
 		Depth:         1,
@@ -102,7 +99,7 @@ func (node *GitNode) ReadContext(_ context.Context) ([]byte, error) {
 
 func (node *GitNode) ResolveEntrypoint(entrypoint string) (string, error) {
 	dir, _ := filepath.Split(node.path)
-	resolvedEntrypoint := fmt.Sprintf("%s//%s", node.URL, filepath.Join(dir, entrypoint))
+	resolvedEntrypoint := fmt.Sprintf("%s//%s", node.url, filepath.Join(dir, entrypoint))
 	if node.ref != "" {
 		return fmt.Sprintf("%s?ref=%s", resolvedEntrypoint, node.ref), nil
 	}
@@ -127,11 +124,23 @@ func (node *GitNode) ResolveDir(dir string) (string, error) {
 
 func (node *GitNode) CacheKey() string {
 	checksum := strings.TrimRight(checksum([]byte(node.Location())), "=")
-	prefix := filepath.Base(filepath.Dir(node.path))
-	lastDir := filepath.Base(node.path)
+	lastDir := filepath.Base(filepath.Dir(node.path))
+	prefix := filepath.Base(node.path)
 	// Means it's not "", nor "." nor "/", so it's a valid directory
 	if len(lastDir) > 1 {
-		prefix = fmt.Sprintf("%s-%s", lastDir, prefix)
+		prefix = fmt.Sprintf("%s.%s", lastDir, prefix)
 	}
-	return fmt.Sprintf("%s.%s", prefix, checksum)
+	return fmt.Sprintf("git.%s.%s.%s", node.url.Host, prefix, checksum)
+}
+
+func splitURLOnDoubleSlash(u *url.URL) (string, string) {
+	x := strings.Split(u.Path, "//")
+	switch len(x) {
+	case 0:
+		return "", ""
+	case 1:
+		return x[0], ""
+	default:
+		return x[0], x[1]
+	}
 }

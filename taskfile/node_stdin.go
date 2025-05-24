@@ -12,12 +12,12 @@ import (
 
 // A StdinNode is a node that reads a taskfile from the standard input stream.
 type StdinNode struct {
-	*BaseNode
+	*baseNode
 }
 
 func NewStdinNode(dir string) (*StdinNode, error) {
 	return &StdinNode{
-		BaseNode: NewBaseNode(dir),
+		baseNode: NewBaseNode(dir),
 	}, nil
 }
 
