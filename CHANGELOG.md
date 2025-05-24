@@ -9,6 +9,10 @@
   string). (#2138, #2139, #2140 by @pd93).
 - Added `toYaml` and `fromYaml` templating functions (#2217, #2219 by @pd93).
 - Added `task` field the `--list --json` output (#2256 by @aleksandersh).
+- Added the ability to
+  [pin included taskfiles](https://taskfile.dev/next/experiments/remote-taskfiles/#manual-checksum-pinning)
+  by specifying a checksum. This works with both local and remote Taskfiles
+  (#2222, #2223 by @pd93).
 - When using the
   [Remote Taskfiles experiment](https://github.com/go-task/task/issues/1317),
   any credentials used in the URL will now be redacted in Task's output (#2100,
