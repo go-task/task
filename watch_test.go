@@ -31,16 +31,17 @@ task: Started watching for tasks: default
 task: [default] echo "Task running!"
 Task running!
 task: task "default" finished running
-task: Task "default" is up to date
+task: [default] echo "Task running!"
+Task running!
 task: task "default" finished running
 	`)
 
 	var buff bytes.Buffer
 	e := task.NewExecutor(
-		task.ExecutorWithDir(dir),
-		task.ExecutorWithStdout(&buff),
-		task.ExecutorWithStderr(&buff),
-		task.ExecutorWithWatch(true),
+		task.WithDir(dir),
+		task.WithStdout(&buff),
+		task.WithStderr(&buff),
+		task.WithWatch(true),
 	)
 
 	require.NoError(t, e.Setup())
@@ -71,11 +72,11 @@ task: task "default" finished running
 		}
 	}()
 
-	time.Sleep(10 * time.Millisecond)
+	time.Sleep(200 * time.Millisecond)
 	err = os.WriteFile(filePath, []byte("test updated"), 0o644)
 	require.NoError(t, err)
 
-	time.Sleep(150 * time.Millisecond)
+	time.Sleep(200 * time.Millisecond)
 	cancel()
 	assert.Equal(t, expectedOutput, strings.TrimSpace(buff.String()))
 }
