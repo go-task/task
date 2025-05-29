@@ -27,6 +27,14 @@ func (err TaskfileNotFoundError) Code() int {
 	return CodeTaskfileNotFound
 }
 
+func (err TaskfileNotFoundError) Is(target error) bool {
+	_, ok := target.(TaskfileNotFoundError)
+	if ok {
+		return true
+	}
+	return false
+}
+
 // TaskfileAlreadyExistsError is returned on creating a Taskfile if one already
 // exists.
 type TaskfileAlreadyExistsError struct{}

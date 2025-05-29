@@ -115,6 +115,10 @@ func run() error {
 		task.WithVersionCheck(true),
 	)
 	if err := e.Setup(); err != nil {
+		if errors.Is(err, errors.TaskfileNotFoundError{}) {
+			return errors.New("No supported taskfile was found: " +
+				"please check the documentation for a list of supported file names.")
+		}
 		return err
 	}
 
