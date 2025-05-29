@@ -15,6 +15,7 @@ import (
 	"github.com/go-task/task/v3/internal/filepathext"
 	"github.com/go-task/task/v3/internal/flags"
 	"github.com/go-task/task/v3/internal/logger"
+	"github.com/go-task/task/v3/internal/tui"
 	"github.com/go-task/task/v3/internal/version"
 	"github.com/go-task/task/v3/taskfile/ast"
 )
@@ -99,6 +100,10 @@ func run() error {
 			log.Outf(logger.Green, "Taskfile created: %s\n", filepathext.TryAbsToRel(finalPath))
 		}
 		return nil
+	}
+
+	if flags.TUI {
+		return tui.Run()
 	}
 
 	if flags.Completion != "" {
