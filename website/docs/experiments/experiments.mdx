@@ -1,7 +1,10 @@
 ---
 slug: /experiments/
-sidebar_position: 6
+sidebar_position: 7
 ---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
 
 # Experiments
 
@@ -39,7 +42,7 @@ Which method you use depends on how you intend to use the experiment:
 1. Prefixing your task commands with the relevant environment variable(s). For
    example, `TASK_X_{FEATURE}=1 task {my-task}`. This is intended for one-off
    invocations of Task to test out experimental features.
-1. Adding the relevant environment variable(s) in your "dotfiles" (e.g.
+2. Adding the relevant environment variable(s) in your "dotfiles" (e.g.
    `.bashrc`, `.zshrc` etc.). This will permanently enable experimental features
    for your personal environment.
 
@@ -47,15 +50,33 @@ Which method you use depends on how you intend to use the experiment:
    export TASK_X_FEATURE=1
    ```
 
-1. Creating a `.env` file in the same directory as your root Taskfile that
-   contains the relevant environment variable(s). This allows you to enable an
-   experimental feature at a project level. If you commit the `.env` file to
-   source control then other users of your project will also have these
-   experiments enabled.
+3. Creating a `.env` or a `.taskrc.yml` file in the same directory as
+   your root Taskfile.\
+   The `.env` file should contain the relevant environment
+   variable(s), while the `.taskrc.yml` file should use a YAML format
+   where each experiment is defined as a key with a corresponding value.
 
-   ```shell title=".env"
-   TASK_X_FEATURE=1
-   ```
+   This allows you to enable an experimental feature at a project level. If you
+   commit this file to source control, then other users of your project will
+   also have these experiments enabled.
+
+   If both files are present, the values in the `.taskrc.yml` file
+   will take precedence.
+
+   <Tabs values={[ {label: '.taskrc.yml', value: 'yaml'}, {label: '.env', value: 'env'}]}>
+   <TabItem value="yaml">
+    ```yaml title=".taskrc.yml"
+    experiments:
+      FEATURE: 1
+    ```
+   </TabItem>
+
+   <TabItem value="env">
+    ```shell title=".env"
+    TASK_X_FEATURE=1
+    ```
+   </TabItem>
+   </Tabs>
 
 ## Workflow
 
@@ -75,11 +96,11 @@ Task.
 All experimental features start with a proposal in the form of a GitHub issue.
 If the maintainers decide that an issue has enough support and is a breaking
 change or is complex/controversial enough to require user feedback, then the
-issue will be marked with the `experiment: proposal` label. At this point, the
-issue becomes a proposal and a period of consultation begins. During this
-period, we request that users provide feedback on the proposal and how it might
-effect their use of Task. It is up to the discretion of the maintainers to
-decide how long this period lasts.
+issue will be marked with the `status: proposal` label. At this point, the issue
+becomes a proposal and a period of consultation begins. During this period, we
+request that users provide feedback on the proposal and how it might effect
+their use of Task. It is up to the discretion of the maintainers to decide how
+long this period lasts.
 
 ### 2. Draft
 
@@ -87,9 +108,9 @@ Once a proposal's consultation ends, a contributor may pick up the work and
 begin the initial implementation. Once a PR is opened, the maintainers will
 ensure that it meets the requirements for an experimental feature (i.e. flags
 are in the right format etc) and merge the feature. Once this code is released,
-the status will be updated via the `experiment: draft` label. This indicates
-that an implementation is now available for use in a release and the experiment
-is open for feedback.
+the status will be updated via the `status: draft` label. This indicates that an
+implementation is now available for use in a release and the experiment is open
+for feedback.
 
 :::note
 
@@ -103,13 +124,13 @@ experimental features may be abandoned _at any time_.
 
 Once an acceptable level of consensus has been reached by the community and
 feedback/changes are less frequent/significant, the status may be updated via
-the `experiment: candidate` label. This indicates that a proposal is _likely_ to
+the `status: candidate` label. This indicates that a proposal is _likely_ to
 accepted and will enter a period for final comments and minor changes.
 
 ### 4. Stable
 
 Once a suitable amount of time has passed with no changes or feedback, an
-experiment will be given the `experiment: stable` label. At this point, the
+experiment will be given the `status: stable` label. At this point, the
 functionality will be treated like any other feature in Task and any changes
 _must_ be backward compatible. This allows users to migrate to the new
 functionality without having to worry about anything breaking in future
@@ -118,14 +139,13 @@ version.
 
 ### 5. Released
 
-When making a new major release of Task, all experiments marked as
-`experiment: stable` will move to `experiment: released` and their behaviors
-will become the new default in Task. Experiments in an earlier stage (i.e. not
-stable) cannot be released and so will continue to be experiments in the new
-version.
+When making a new major release of Task, all experiments marked as `status:
+stable` will move to `status: released` and their behaviors will become the new
+default in Task. Experiments in an earlier stage (i.e. not stable) cannot be
+released and so will continue to be experiments in the new version.
 
 ### Abandoned / Superseded
 
-If an experiment is unsuccessful at any point then it will be given the
-`experiment: abandoned` or `experiment: superseded` labels depending on which is
-more suitable. These experiments will be removed from Task.
+If an experiment is unsuccessful at any point then it will be given the `status:
+abandoned` or `status: superseded` labels depending on which is more suitable.
+These experiments will be removed from Task.

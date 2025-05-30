@@ -13,7 +13,7 @@ jobs:
     name: Lint
     strategy:
       matrix:
-        go-version: [1.22.x, 1.23.x]
+        go-version: [1.23.x, 1.24.x]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/setup-go@v5
@@ -23,9 +23,9 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v6
+        uses: golangci/golangci-lint-action@v8
         with:
-          version: v1.60.1
+          version: v2.1.0
 
   lint-jsonschema:
     runs-on: ubuntu-latest
@@ -47,7 +47,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Get changed files in the docs folder
         id: changed-files-specific
-        uses: tj-actions/changed-files@v45
+        uses: tj-actions/changed-files@v46
         with:
           files: website/versioned_docs/**
 
@@ -56,3 +56,19 @@ jobs:
         with:
           script: |
             core.setFailed('website/versioned_docs has changed. Instead you need to update the docs in the website/docs folder.')
+  check_schema:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Get changed files in the docs folder
+        id: changed-files-specific
+        uses: tj-actions/changed-files@v46
+        with:
+          files: |
+            website/static/schema.json
+            website/static/schema-taskrc.json
+      - uses: actions/github-script@v7
+        if: steps.changed-files-specific.outputs.any_changed == 'true'
+        with:
+          script: |
+            core.setFailed('schema.json or schema-taskrc.json has changed. Instead you need to update next-schema.json or next-schema-taskrc.json.')

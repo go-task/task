@@ -179,7 +179,8 @@ func TestPrintAllWithSpaces(t *testing.T) {
 
 	summary.PrintTasks(&l,
 		&ast.Taskfile{Tasks: tasks},
-		[]*ast.Call{{Task: "t1"}, {Task: "t2"}, {Task: "t3"}})
+		[]string{"t1", "t2", "t3"},
+	)
 
 	assert.True(t, strings.HasPrefix(buffer.String(), "task: t1"))
 	assert.Contains(t, buffer.String(), "\n(task does not have description or summary)\n\n\ntask: t2")

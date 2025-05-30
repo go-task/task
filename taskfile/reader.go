@@ -12,9 +12,8 @@ import (
 	"gopkg.in/yaml.v3"
 
 	"github.com/go-task/task/v3/errors"
-	"github.com/go-task/task/v3/internal/compiler"
+	"github.com/go-task/task/v3/internal/env"
 	"github.com/go-task/task/v3/internal/filepathext"
-	"github.com/go-task/task/v3/internal/logger"
 	"github.com/go-task/task/v3/internal/templater"
 	"github.com/go-task/task/v3/taskfile/ast"
 )
@@ -28,52 +27,186 @@ Continue?`
 Continue?`
 )
 
-// A Reader will recursively read Taskfiles from a given source using a directed
-// acyclic graph (DAG).
-type Reader struct {
-	graph       *ast.TaskfileGraph
-	node        Node
-	insecure    bool
-	download    bool
-	offline     bool
-	timeout     time.Duration
-	tempDir     string
-	logger      *logger.Logger
-	promptMutex sync.Mutex
+type (
+	// DebugFunc is a function that can be called to log debug messages.
+	DebugFunc func(string)
+	// PromptFunc is a function that can be called to prompt the user for input.
+	PromptFunc func(string) error
+	// A ReaderOption is any type that can apply a configuration to a [Reader].
+	ReaderOption interface {
+		ApplyToReader(*Reader)
+	}
+	// A Reader will recursively read Taskfiles from a given [Node] and build a
+	// [ast.TaskfileGraph] from them.
+	Reader struct {
+		graph               *ast.TaskfileGraph
+		insecure            bool
+		download            bool
+		offline             bool
+		tempDir             string
+		cacheExpiryDuration time.Duration
+		debugFunc           DebugFunc
+		promptFunc          PromptFunc
+		promptMutex         sync.Mutex
+	}
+)
+
+// NewReader constructs a new Taskfile [Reader] using the given Node and
+// options.
+func NewReader(opts ...ReaderOption) *Reader {
+	r := &Reader{
+		graph:               ast.NewTaskfileGraph(),
+		insecure:            false,
+		download:            false,
+		offline:             false,
+		tempDir:             os.TempDir(),
+		cacheExpiryDuration: 0,
+		debugFunc:           nil,
+		promptFunc:          nil,
+		promptMutex:         sync.Mutex{},
+	}
+	r.Options(opts...)
+	return r
 }
 
-func NewReader(
-	node Node,
-	insecure bool,
-	download bool,
-	offline bool,
-	timeout time.Duration,
-	tempDir string,
-	logger *logger.Logger,
-) *Reader {
-	return &Reader{
-		graph:       ast.NewTaskfileGraph(),
-		node:        node,
-		insecure:    insecure,
-		download:    download,
-		offline:     offline,
-		timeout:     timeout,
-		tempDir:     tempDir,
-		logger:      logger,
-		promptMutex: sync.Mutex{},
+// Options loops through the given [ReaderOption] functions and applies them to
+// the [Reader].
+func (r *Reader) Options(opts ...ReaderOption) {
+	for _, opt := range opts {
+		opt.ApplyToReader(r)
 	}
 }
 
-func (r *Reader) Read() (*ast.TaskfileGraph, error) {
-	// Recursively loop through each Taskfile, adding vertices/edges to the graph
-	if err := r.include(r.node); err != nil {
+// WithInsecure allows the [Reader] to make insecure connections when reading
+// remote taskfiles. By default, insecure connections are rejected.
+func WithInsecure(insecure bool) ReaderOption {
+	return &insecureOption{insecure: insecure}
+}
+
+type insecureOption struct {
+	insecure bool
+}
+
+func (o *insecureOption) ApplyToReader(r *Reader) {
+	r.insecure = o.insecure
+}
+
+// WithDownload forces the [Reader] to download a fresh copy of the taskfile
+// from the remote source.
+func WithDownload(download bool) ReaderOption {
+	return &downloadOption{download: download}
+}
+
+type downloadOption struct {
+	download bool
+}
+
+func (o *downloadOption) ApplyToReader(r *Reader) {
+	r.download = o.download
+}
+
+// WithOffline stops the [Reader] from being able to make network connections.
+// It will still be able to read local files and cached copies of remote files.
+func WithOffline(offline bool) ReaderOption {
+	return &offlineOption{offline: offline}
+}
+
+type offlineOption struct {
+	offline bool
+}
+
+func (o *offlineOption) ApplyToReader(r *Reader) {
+	r.offline = o.offline
+}
+
+// WithTempDir sets the temporary directory that will be used by the [Reader].
+// By default, the reader uses [os.TempDir].
+func WithTempDir(tempDir string) ReaderOption {
+	return &tempDirOption{tempDir: tempDir}
+}
+
+type tempDirOption struct {
+	tempDir string
+}
+
+func (o *tempDirOption) ApplyToReader(r *Reader) {
+	r.tempDir = o.tempDir
+}
+
+// WithCacheExpiryDuration sets the duration after which the cache is considered
+// expired. By default, the cache is considered expired after 24 hours.
+func WithCacheExpiryDuration(duration time.Duration) ReaderOption {
+	return &cacheExpiryDurationOption{duration: duration}
+}
+
+type cacheExpiryDurationOption struct {
+	duration time.Duration
+}
+
+func (o *cacheExpiryDurationOption) ApplyToReader(r *Reader) {
+	r.cacheExpiryDuration = o.duration
+}
+
+// WithDebugFunc sets the debug function to be used by the [Reader]. If set,
+// this function will be called with debug messages. This can be useful if the
+// caller wants to log debug messages from the [Reader]. By default, no debug
+// function is set and the logs are not written.
+func WithDebugFunc(debugFunc DebugFunc) ReaderOption {
+	return &debugFuncOption{debugFunc: debugFunc}
+}
+
+type debugFuncOption struct {
+	debugFunc DebugFunc
+}
+
+func (o *debugFuncOption) ApplyToReader(r *Reader) {
+	r.debugFunc = o.debugFunc
+}
+
+// WithPromptFunc sets the prompt function to be used by the [Reader]. If set,
+// this function will be called with prompt messages. The function should
+// optionally log the message to the user and return nil if the prompt is
+// accepted and the execution should continue. Otherwise, it should return an
+// error which describes why the prompt was rejected. This can then be caught
+// and used later when calling the [Reader.Read] method. By default, no prompt
+// function is set and all prompts are automatically accepted.
+func WithPromptFunc(promptFunc PromptFunc) ReaderOption {
+	return &promptFuncOption{promptFunc: promptFunc}
+}
+
+type promptFuncOption struct {
+	promptFunc PromptFunc
+}
+
+func (o *promptFuncOption) ApplyToReader(r *Reader) {
+	r.promptFunc = o.promptFunc
+}
+
+// Read will read the Taskfile defined by the [Reader]'s [Node] and recurse
+// through any [ast.Includes] it finds, reading each included Taskfile and
+// building an [ast.TaskfileGraph] as it goes. If any errors occur, they will be
+// returned immediately.
+func (r *Reader) Read(ctx context.Context, node Node) (*ast.TaskfileGraph, error) {
+	if err := r.include(ctx, node); err != nil {
 		return nil, err
 	}
-
 	return r.graph, nil
 }
 
-func (r *Reader) include(node Node) error {
+func (r *Reader) debugf(format string, a ...any) {
+	if r.debugFunc != nil {
+		r.debugFunc(fmt.Sprintf(format, a...))
+	}
+}
+
+func (r *Reader) promptf(format string, a ...any) error {
+	if r.promptFunc != nil {
+		return r.promptFunc(fmt.Sprintf(format, a...))
+	}
+	return nil
+}
+
+func (r *Reader) include(ctx context.Context, node Node) error {
 	// Create a new vertex for the Taskfile
 	vertex := &ast.TaskfileVertex{
 		URI:      node.Location(),
@@ -91,7 +224,7 @@ func (r *Reader) include(node Node) error {
 
 	// Read and parse the Taskfile from the file and add it to the vertex
 	var err error
-	vertex.Taskfile, err = r.readNode(node)
+	vertex.Taskfile, err = r.readNode(ctx, node)
 	if err != nil {
 		return err
 	}
@@ -100,8 +233,8 @@ func (r *Reader) include(node Node) error {
 	var g errgroup.Group
 
 	// Loop over each included taskfile
-	_ = vertex.Taskfile.Includes.Range(func(namespace string, include *ast.Include) error {
-		vars := compiler.GetEnviron()
+	for _, include := range vertex.Taskfile.Includes.All() {
+		vars := env.GetEnviron()
 		vars.Merge(vertex.Taskfile.Vars, nil)
 		// Start a goroutine to process each included Taskfile
 		g.Go(func() error {
@@ -117,6 +250,7 @@ func (r *Reader) include(node Node) error {
 				AdvancedImport: include.AdvancedImport,
 				Excludes:       include.Excludes,
 				Vars:           include.Vars,
+				Checksum:       include.Checksum,
 			}
 			if err := cache.Err(); err != nil {
 				return err
@@ -132,8 +266,9 @@ func (r *Reader) include(node Node) error {
 				return err
 			}
 
-			includeNode, err := NewNode(r.logger, entrypoint, include.Dir, r.insecure, r.timeout,
+			includeNode, err := NewNode(entrypoint, include.Dir, r.insecure,
 				WithParent(node),
+				WithChecksum(include.Checksum),
 			)
 			if err != nil {
 				if include.Optional {
@@ -143,7 +278,7 @@ func (r *Reader) include(node Node) error {
 			}
 
 			// Recurse into the included Taskfile
-			if err := r.include(includeNode); err != nil {
+			if err := r.include(ctx, includeNode); err != nil {
 				return err
 			}
 
@@ -177,15 +312,14 @@ func (r *Reader) include(node Node) error {
 			}
 			return err
 		})
-		return nil
-	})
+	}
 
 	// Wait for all the go routines to finish
 	return g.Wait()
 }
 
-func (r *Reader) readNode(node Node) (*ast.Taskfile, error) {
-	b, err := r.loadNodeContent(node)
+func (r *Reader) readNode(ctx context.Context, node Node) (*ast.Taskfile, error) {
+	b, err := r.readNodeContent(ctx, node)
 	if err != nil {
 		return nil, err
 	}
@@ -193,9 +327,14 @@ func (r *Reader) readNode(node Node) (*ast.Taskfile, error) {
 	var tf ast.Taskfile
 	if err := yaml.Unmarshal(b, &tf); err != nil {
 		// Decode the taskfile and add the file info the any errors
-		taskfileInvalidErr := &errors.TaskfileDecodeError{}
-		if errors.As(err, &taskfileInvalidErr) {
-			return nil, taskfileInvalidErr.WithFileInfo(node.Location(), b, 2)
+		taskfileDecodeErr := &errors.TaskfileDecodeError{}
+		if errors.As(err, &taskfileDecodeErr) {
+			snippet := NewSnippet(b,
+				WithLine(taskfileDecodeErr.Line),
+				WithColumn(taskfileDecodeErr.Column),
+				WithPadding(2),
+			)
+			return nil, taskfileDecodeErr.WithFileInfo(node.Location(), snippet.String())
 		}
 		return nil, &errors.TaskfileInvalidError{URI: filepathext.TryAbsToRel(node.Location()), Err: err}
 	}
@@ -207,7 +346,7 @@ func (r *Reader) readNode(node Node) (*ast.Taskfile, error) {
 
 	// Set the taskfile/task's locations
 	tf.Location = node.Location()
-	for _, task := range tf.Tasks.Values() {
+	for task := range tf.Tasks.Values(nil) {
 		// If the task is not defined, create a new one
 		if task == nil {
 			task = &ast.Task{}
@@ -221,92 +360,133 @@ func (r *Reader) readNode(node Node) (*ast.Taskfile, error) {
 	return &tf, nil
 }
 
-func (r *Reader) loadNodeContent(node Node) ([]byte, error) {
-	if !node.Remote() {
-		ctx, cf := context.WithTimeout(context.Background(), r.timeout)
-		defer cf()
-		return node.Read(ctx)
+func (r *Reader) readNodeContent(ctx context.Context, node Node) ([]byte, error) {
+	if node, isRemote := node.(RemoteNode); isRemote {
+		return r.readRemoteNodeContent(ctx, node)
 	}
 
-	cache, err := NewCache(r.tempDir)
+	// Read the Taskfile
+	b, err := node.Read()
 	if err != nil {
 		return nil, err
 	}
 
-	if r.offline {
-		// In offline mode try to use cached copy
-		cached, err := cache.read(node)
-		if errors.Is(err, os.ErrNotExist) {
-			return nil, &errors.TaskfileCacheNotFoundError{URI: node.Location()}
-		} else if err != nil {
-			return nil, err
-		}
-		r.logger.VerboseOutf(logger.Magenta, "task: [%s] Fetched cached copy\n", node.Location())
-
-		return cached, nil
-	}
-
-	ctx, cf := context.WithTimeout(context.Background(), r.timeout)
-	defer cf()
-
-	b, err := node.Read(ctx)
-	if errors.Is(err, &errors.TaskfileNetworkTimeoutError{}) {
-		// If we timed out then we likely have a network issue
-
-		// If a download was requested, then we can't use a cached copy
-		if r.download {
-			return nil, &errors.TaskfileNetworkTimeoutError{URI: node.Location(), Timeout: r.timeout}
-		}
-
-		// Search for any cached copies
-		cached, err := cache.read(node)
-		if errors.Is(err, os.ErrNotExist) {
-			return nil, &errors.TaskfileNetworkTimeoutError{URI: node.Location(), Timeout: r.timeout, CheckedCache: true}
-		} else if err != nil {
-			return nil, err
-		}
-		r.logger.VerboseOutf(logger.Magenta, "task: [%s] Network timeout. Fetched cached copy\n", node.Location())
-
-		return cached, nil
-
-	} else if err != nil {
-		return nil, err
-	}
-	r.logger.VerboseOutf(logger.Magenta, "task: [%s] Fetched remote copy\n", node.Location())
-
-	// Get the checksums
+	// If the given checksum doesn't match the sum pinned in the Taskfile
 	checksum := checksum(b)
-	cachedChecksum := cache.readChecksum(node)
-
-	var prompt string
-	if cachedChecksum == "" {
-		// If the checksum doesn't exist, prompt the user to continue
-		prompt = fmt.Sprintf(taskfileUntrustedPrompt, node.Location())
-	} else if checksum != cachedChecksum {
-		// If there is a cached hash, but it doesn't match the expected hash, prompt the user to continue
-		prompt = fmt.Sprintf(taskfileChangedPrompt, node.Location())
-	}
-
-	if prompt != "" {
-		if err := func() error {
-			r.promptMutex.Lock()
-			defer r.promptMutex.Unlock()
-			return r.logger.Prompt(logger.Yellow, prompt, "n", "y", "yes")
-		}(); err != nil {
-			return nil, &errors.TaskfileNotTrustedError{URI: node.Location()}
-		}
-
-		// Store the checksum
-		if err := cache.writeChecksum(node, checksum); err != nil {
-			return nil, err
-		}
-
-		// Cache the file
-		r.logger.VerboseOutf(logger.Magenta, "task: [%s] Caching downloaded file\n", node.Location())
-		if err = cache.write(node, b); err != nil {
-			return nil, err
+	if !node.Verify(checksum) {
+		return nil, &errors.TaskfileDoesNotMatchChecksum{
+			URI:              node.Location(),
+			ExpectedChecksum: node.Checksum(),
+			ActualChecksum:   checksum,
 		}
 	}
 
 	return b, nil
+}
+
+func (r *Reader) readRemoteNodeContent(ctx context.Context, node RemoteNode) ([]byte, error) {
+	cache := NewCacheNode(node, r.tempDir)
+	now := time.Now().UTC()
+	timestamp := cache.ReadTimestamp()
+	expiry := timestamp.Add(r.cacheExpiryDuration)
+	cacheValid := now.Before(expiry)
+	var cacheFound bool
+
+	r.debugf("checking cache for %q in %q\n", node.Location(), cache.Location())
+	cachedBytes, err := cache.Read()
+	switch {
+	// If the cache doesn't exist, we need to download the file
+	case errors.Is(err, os.ErrNotExist):
+		r.debugf("no cache found\n")
+		// If we couldn't find a cached copy, and we are offline, we can't do anything
+		if r.offline {
+			return nil, &errors.TaskfileCacheNotFoundError{
+				URI: node.Location(),
+			}
+		}
+
+	// If the cache is expired
+	case !cacheValid:
+		r.debugf("cache expired at %s\n", expiry.Format(time.RFC3339))
+		cacheFound = true
+		// If we can't fetch a fresh copy, we should use the cache anyway
+		if r.offline {
+			r.debugf("in offline mode, using expired cache\n")
+			return cachedBytes, nil
+		}
+
+	// Some other error
+	case err != nil:
+		return nil, err
+
+	// Found valid cache
+	default:
+		r.debugf("cache found\n")
+		// Not being forced to redownload, return cache
+		if !r.download {
+			return cachedBytes, nil
+		}
+		cacheFound = true
+	}
+
+	// Try to read the remote file
+	r.debugf("downloading remote file: %s\n", node.Location())
+	downloadedBytes, err := node.ReadContext(ctx)
+	if err != nil {
+		// If the context timed out or was cancelled, but we found a cached version, use that
+		if ctx.Err() != nil && cacheFound {
+			if cacheValid {
+				r.debugf("failed to fetch remote file: %s: using cache\n", ctx.Err().Error())
+			} else {
+				r.debugf("failed to fetch remote file: %s: using expired cache\n", ctx.Err().Error())
+			}
+			return cachedBytes, nil
+		}
+		return nil, err
+	}
+
+	r.debugf("found remote file at %q\n", node.Location())
+
+	// If the given checksum doesn't match the sum pinned in the Taskfile
+	checksum := checksum(downloadedBytes)
+	if !node.Verify(checksum) {
+		return nil, &errors.TaskfileDoesNotMatchChecksum{
+			URI:              node.Location(),
+			ExpectedChecksum: node.Checksum(),
+			ActualChecksum:   checksum,
+		}
+	}
+
+	// If there is no manual checksum pin, run the automatic checks
+	if node.Checksum() == "" {
+		// Prompt the user if required
+		prompt := cache.ChecksumPrompt(checksum)
+		if prompt != "" {
+			if err := func() error {
+				r.promptMutex.Lock()
+				defer r.promptMutex.Unlock()
+				return r.promptf(prompt, node.Location())
+			}(); err != nil {
+				return nil, &errors.TaskfileNotTrustedError{URI: node.Location()}
+			}
+		}
+	}
+
+	// Store the checksum
+	if err := cache.WriteChecksum(checksum); err != nil {
+		return nil, err
+	}
+
+	// Store the timestamp
+	if err := cache.WriteTimestamp(now); err != nil {
+		return nil, err
+	}
+
+	// Cache the file
+	r.debugf("caching %q to %q\n", node.Location(), cache.Location())
+	if err = cache.Write(downloadedBytes); err != nil {
+		return nil, err
+	}
+
+	return downloadedBytes, nil
 }

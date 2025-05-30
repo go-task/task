@@ -1,0 +1,10 @@
+version: "3"
+
+vars:
+  INCLUDE: include
+  FOO:
+    sh : echo bar
+
+includes:
+  included1:
+    taskfile: '{{.INCLUDE}}/Taskfile.include.yml'

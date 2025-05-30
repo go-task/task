@@ -1,6 +1,6 @@
 ---
 slug: /contributing/
-sidebar_position: 11
+sidebar_position: 12
 ---
 
 # Contributing
@@ -43,12 +43,16 @@ Studio Code][vscode-task].
 ## 2. Making changes
 
 - **Code style** - Try to maintain the existing code style where possible. Go
-  code should be formatted by [`gofumpt`][gofumpt] and linted using
-  [`golangci-lint`][golangci-lint]. Any Markdown or TypeScript files should be
-  formatted and linted by [Prettier][prettier]. This style is enforced by our CI
-  to ensure that we have a consistent style across the project. You can use the
-  `task lint` command to lint the code locally and the `task lint:fix` command
-  to automatically fix any issues that are found.
+  code should be formatted and linted by [`golangci-lint`][golangci-lint]. This
+  wraps the [`gofumpt`][gofumpt] and [`gci`][gci] formatters and a number of
+  linters. We recommend that you take a look at the [golangci-lint
+  docs][golangci-lint-docs] for a guide on how to setup your editor to
+  auto-format your code. Any Markdown or TypeScript files should be formatted
+  and linted by [Prettier][prettier]. This style is enforced by our CI to ensure
+  that we have a consistent style across the project. You can use the `task
+  lint` command to lint the code locally and the `task lint:fix` command to try
+  to automatically fix any issues that are found. You can also use the `task
+  fmt` command to auto-format the files if your editor doesn't do it for you.
 - **Documentation** - Ensure that you add/update any relevant documentation. See
   the [updating documentation](#updating-documentation) section below.
 - **Tests** - Ensure that you add/update any relevant tests and that all tests
@@ -73,8 +77,9 @@ install the extension.
 Task uses [Docusaurus][docusaurus] to host a documentation server. The code for
 this is located in the core Task repository. This can be setup and run locally
 by using `task website` (requires `nodejs` & `yarn`). All content is written in
-Markdown and is located in the `website/docs` directory. All Markdown documents
-should have an 80 character line wrap limit (enforced by Prettier).
+[MDX][mdx] (an extension of Markdown) and is located in the `website/docs`
+directory. All Markdown documents should have an 80 character line wrap limit
+(enforced by Prettier).
 
 When making a change, consider whether a change to the [Usage Guide](/usage) is
 necessary. This document contains descriptions and examples of how to use Task
@@ -154,7 +159,9 @@ If you have questions, feel free to ask them in the `#help` forum channel on our
 [vscode-task]: https://github.com/go-task/vscode-task
 [go]: https://go.dev
 [gofumpt]: https://github.com/mvdan/gofumpt
+[gci]: https://github.com/daixiang0/gci
 [golangci-lint]: https://golangci-lint.run
+[golangci-lint-docs]: https://golangci-lint.run/welcome/integrations/
 [prettier]: https://prettier.io
 [nodejs]: https://nodejs.org/en/
 [yarn]: https://yarnpkg.com/
@@ -166,4 +173,5 @@ If you have questions, feel free to ask them in the `#help` forum channel on our
 [discord-server]: https://discord.gg/6TY36E39UK
 [discussion]: https://github.com/go-task/task/discussions
 [conventional-commits]: https://www.conventionalcommits.org
+[mdx]: https://mdxjs.com/
 {/* prettier-ignore-end */}

@@ -2,10 +2,200 @@
 
 ## Unreleased
 
+- Added `uuid`, `randInt` and `randIntN` template functions (#1346, #2225 by
+  @pd93).
+- Added new `CLI_ARGS_LIST` array variable which contains the arguments passed
+  to Task after the `--` (the same as `CLI_ARGS`, but an array instead of a
+  string). (#2138, #2139, #2140 by @pd93).
+- Added `toYaml` and `fromYaml` templating functions (#2217, #2219 by @pd93).
+- Added `task` field the `--list --json` output (#2256 by @aleksandersh).
+- Added the ability to
+  [pin included taskfiles](https://taskfile.dev/next/experiments/remote-taskfiles/#manual-checksum-pinning)
+  by specifying a checksum. This works with both local and remote Taskfiles
+  (#2222, #2223 by @pd93).
+- When using the
+  [Remote Taskfiles experiment](https://github.com/go-task/task/issues/1317),
+  any credentials used in the URL will now be redacted in Task's output (#2100,
+  #2220 by @pd93).
+- Fixed fuzzy suggestions not working when misspelling a task name (#2192, #2200
+  by @vmaerten).
+- Fixed a bug where taskfiles in directories containing spaces created
+  directories in the wrong location (#2208, #2216 by @pd93).
+- Added support for dual JSON schema files, allowing changes without affecting
+  the current schema. The current schemas will only be updated during releases.
+  (#2211 by @vmaerten).
+- Improved fingerprint documentation by specifying that the method can be set at
+  the root level to apply to all tasks (#2233 by @vmaerten).
+
+## v3.43.3 - 2025-04-27
+
+Reverted the changes made in #2113 and #2186 that affected the
+`USER_WORKING_DIR` and built-in variables. This fixes #2206, #2195, #2207 and
+#2208.
+
+## v3.43.2 - 2025-04-21
+
+- Fixed regresion of `CLI_ARGS` being exposed as the wrong type (#2190, #2191 by
+  @vmaerten).
+
+## v3.43.1 - 2025-04-21
+
+- Significant improvements were made to the watcher. We migrated from
+  [watcher](https://github.com/radovskyb/watcher) to
+  [fsnotify](https://github.com/fsnotify/fsnotify). The former library used
+  polling, which means Task had a high CPU usage when watching too many files.
+  `fsnotify` uses proper the APIs from each operating system to watch files,
+  which means a much better performance. The default interval changed from 5
+  seconds to 100 milliseconds, because now it configures the wait time for
+  duplicated events, instead of the polling time (#2048 by @andreynering, #1508,
+  #985, #1179).
+- The [Map Variables experiment](https://github.com/go-task/task/issues/1585)
+  was made generally available so you can now
+  [define map variables in your Taskfiles!](https://taskfile.dev/usage/#variables)
+  (#1585, #1547, #2081 by @pd93).
+- Wildcards can now
+  [match multiple tasks](https://taskfile.dev/usage/#wildcard-arguments) (#2072,
+  #2121 by @pd93).
+- Added the ability to
+  [loop over the files specified by the `generates` keyword](https://taskfile.dev/usage/#looping-over-your-tasks-sources-or-generated-files).
+  This works the same way as looping over sources (#2151 by @sedyh).
+- Added the ability to resolve variables when defining an include variable
+  (#2108, #2113 by @pd93).
+- A few changes have been made to the
+  [Remote Taskfiles experiment](https://github.com/go-task/task/issues/1317)
+  (#1402, #2176 by @pd93):
+  - Cached files are now prioritized over remote ones.
+  - Added an `--expiry` flag which sets the TTL for a remote file cache. By
+    default the value will be 0 (caching disabled). If Task is running in
+    offline mode or fails to make a connection, it will fallback on the cache.
+- `.taskrc` files can now be used from subdirectories and will be searched for
+  recursively up the file tree in the same way that Taskfiles are (#2159, #2166
+  by @pd93).
+- The default taskfile (output when using the `--init` flag) is now an embedded
+  file in the binary instead of being stored in the code (#2112 by @pd93).
+- Improved the way we report the Task version when using the `--version` flag or
+  `{{.TASK_VERSION}}` variable. This should now be more consistent and easier
+  for package maintainers to use (#2131 by @pd93).
+- Fixed a bug where globstar (`**`) matching in `sources` only resolved the
+  first result (#2073, #2075 by @pd93).
+- Fixed a bug where sorting tasks by "none" would use the default sorting
+  instead of leaving tasks in the order they were defined (#2124, #2125 by
+  @trulede).
+- Fixed Fish completion on newer Fish versions (#2130 by @atusy).
+- Fixed a bug where undefined/null variables resolved to an empty string instead
+  of `nil` (#1911, #2144 by @pd93).
+- The `USER_WORKING_DIR` special now will now properly account for the `--dir`
+  (`-d`) flag, if given (#2102, #2103 by @jaynis, #2186 by @andreynering).
+- Fix Fish completions when `--global` (`-g`) is given (#2134 by @atusy).
+- Fixed variables not available when using `defer:` (#1909, #2173 by @vmaerten).
+
+#### Package API
+
+- The [`Executor`](https://pkg.go.dev/github.com/go-task/task/v3#Executor) now
+  uses the functional options pattern (#2085, #2147, #2148 by @pd93).
+- The functional options for the
+  [`taskfile.Reader`](https://pkg.go.dev/github.com/go-task/task/v3/taskfile#Reader)
+  and
+  [`taskfile.Snippet`](https://pkg.go.dev/github.com/go-task/task/v3/taskfile#Snippet)
+  types no longer have the `Reader`/`Snippet` respective prefixes (#2148 by
+  @pd93).
+- [`taskfile.Reader`](https://pkg.go.dev/github.com/go-task/task/v3/taskfile#Reader)
+  no longer accepts a
+  [`taskfile.Node`](https://pkg.go.dev/github.com/go-task/task/v3/taskfile#Node).
+  Instead nodes are passed directly into the
+  [`Reader.Read`](https://pkg.go.dev/github.com/go-task/task/v3/taskfile#Reader.Read)
+  method (#2169 by @pd93).
+- [`Reader.Read`](https://pkg.go.dev/github.com/go-task/task/v3/taskfile#Reader.Read)
+  also now accepts a [`context.Context`](https://pkg.go.dev/context#Context)
+  (#2176 by @pd93).
+
+## v3.42.1 - 2025-03-10
+
+- Fixed a bug where some special variables caused a type error when used global
+  variables (#2106, #2107 by @pd93).
+
+## v3.42.0 - 2025-03-08
+
 - Made `--init` less verbose by default and respect `--silent` and `--verbose`
   flags (#2009, #2011 by @HeCorr).
+- `--init` now accepts a file name or directory as an argument (#2008, #2018 by
+  @HeCorr).
 - Fix a bug where an HTTP node's location was being mutated incorrectly (#2007
   by @jeongukjae).
+- Fixed a bug where allowed values didn't work with dynamic var (#2032, #2033 by
+  @vmaerten).
+- Use only the relevant checker (timestamp or checksum) to improve performance
+  (#2029, #2031 by @vmaerten).
+- Print warnings when attempting to enable an inactive experiment or an active
+  experiment with an invalid value (#1979, #2049 by @pd93).
+- Refactored the experiments package and added tests (#2049 by @pd93).
+- Show allowed values when a variable with an enum is missing (#2027, #2052 by
+  @vmaerten).
+- Refactored how snippets in error work and added tests (#2068 by @pd93).
+- Fixed a bug where errors decoding commands were sometimes unhelpful (#2068 by
+  @pd93).
+- Fixed a bug in the Taskfile schema where `defer` statements in the shorthand
+  `cmds` syntax were not considered valid (#2068 by @pd93).
+- Refactored how task sorting functions work (#1798 by @pd93).
+- Added a new `.taskrc.yml` (or `.taskrc.yaml`) file to let users enable
+  experiments (similar to `.env`) (#1982 by @vmaerten).
+- Added new [Getting Started docs](https://taskfile.dev/getting-started) (#2086
+  by @pd93).
+- Allow `matrix` to use references to other variables (#2065, #2069 by @pd93).
+- Fixed a bug where, when a dynamic variable is provided, even if it is not
+  used, all other variables become unavailable in the templating system within
+  the include (#2092 by @vmaerten).
+
+#### Package API
+
+Unlike our CLI tool,
+[Task's package API is not currently stable](https://taskfile.dev/reference/package).
+In an effort to ease the pain of breaking changes for our users, we will be
+providing changelogs for our package API going forwards. The hope is that these
+changes will provide a better long-term experience for our users and allow to
+stabilize the API in the future. #121 now tracks this piece of work.
+
+- Bumped the minimum required Go version to 1.23 (#2059 by @pd93).
+- [`task.InitTaskfile`](https://pkg.go.dev/github.com/go-task/task/v3#InitTaskfile)
+  (#2011, ff8c913 by @HeCorr and @pd93)
+  - No longer accepts an `io.Writer` (output is now the caller's
+    responsibility).
+  - The path argument can now be a filename OR a directory.
+  - The function now returns the full path of the generated file.
+- [`TaskfileDecodeError.WithFileInfo`](https://pkg.go.dev/github.com/go-task/task/v3/errors#TaskfileDecodeError.WithFileInfo)
+  now accepts a string instead of the arguments required to generate a snippet
+  (#2068 by @pd93).
+  - The caller is now expected to create the snippet themselves (see below).
+- [`TaskfileSnippet`](https://pkg.go.dev/github.com/go-task/task/v3/taskfile#Snippet)
+  and related code moved from the `errors` package to the `taskfile` package
+  (#2068 by @pd93).
+- Renamed `TaskMissingRequiredVars` to
+  [`TaskMissingRequiredVarsError`](https://pkg.go.dev/github.com/go-task/task/v3/errors#TaskMissingRequiredVarsError)
+  (#2052 by @vmaerten).
+- Renamed `TaskNotAllowedVars` to
+  [`TaskNotAllowedVarsError`](https://pkg.go.dev/github.com/go-task/task/v3/errors#TaskNotAllowedVarsError)
+  (#2052 by @vmaerten).
+- The
+  [`taskfile.Reader`](https://pkg.go.dev/github.com/go-task/task/v3/taskfile#Reader)
+  is now constructed using the functional options pattern (#2082 by @pd93).
+- Removed our internal `logger.Logger` from the entire `taskfile` package (#2082
+  by @pd93).
+  - Users are now expected to pass a custom debug/prompt functions into
+    [`taskfile.Reader`](https://pkg.go.dev/github.com/go-task/task/v3/taskfile#Reader)
+    if they want this functionality by using the new
+    [`WithDebugFunc`](https://pkg.go.dev/github.com/go-task/task/v3/taskfile#WithDebugFunc)
+    and
+    [`WithPromptFunc`](https://pkg.go.dev/github.com/go-task/task/v3/taskfile#WithPromptFunc)
+    functional options.
+- Remove `Range` functions in the `taskfile/ast` package in favour of new
+  iterator functions (#1798 by @pd93).
+- `ast.Call` was moved from the `taskfile/ast` package to the main `task`
+  package (#2084 by @pd93).
+- `ast.Tasks.FindMatchingTasks` was moved from the `taskfile/ast` package to the
+  `task.Executor.FindMatchingTasks` in the main `task` package (#2084 by @pd93).
+- The `Compiler` and its `GetVariables` and `FastGetVariables` methods were
+  moved from the `internal/compiler` package to the main `task` package (#2084
+  by @pd93).
 
 ## v3.41.0 - 2025-01-18
 

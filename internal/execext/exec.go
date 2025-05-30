@@ -11,13 +11,15 @@ import (
 
 	"mvdan.cc/sh/v3/expand"
 	"mvdan.cc/sh/v3/interp"
-	"mvdan.cc/sh/v3/shell"
 	"mvdan.cc/sh/v3/syntax"
 
 	"github.com/go-task/task/v3/errors"
 )
 
-// RunCommandOptions is the options for the RunCommand func
+// ErrNilOptions is returned when a nil options is given
+var ErrNilOptions = errors.New("execext: nil options given")
+
+// RunCommandOptions is the options for the [RunCommand] func.
 type RunCommandOptions struct {
 	Command   string
 	Dir       string
@@ -28,9 +30,6 @@ type RunCommandOptions struct {
 	Stdout    io.Writer
 	Stderr    io.Writer
 }
-
-// ErrNilOptions is returned when a nil options is given
-var ErrNilOptions = errors.New("execext: nil options given")
 
 // RunCommand runs a shell command
 func RunCommand(ctx context.Context, opts *RunCommandOptions) error {
@@ -91,22 +90,47 @@ func RunCommand(ctx context.Context, opts *RunCommandOptions) error {
 	return r.Run(ctx, p)
 }
 
-// Expand is a helper to mvdan.cc/shell.Fields that returns the first field
-// if available.
-func Expand(s string) (string, error) {
-	s = filepath.ToSlash(s)
-	s = strings.ReplaceAll(s, " ", `\ `)
-	s = strings.ReplaceAll(s, "&", `\&`)
-	s = strings.ReplaceAll(s, "(", `\(`)
-	s = strings.ReplaceAll(s, ")", `\)`)
-	fields, err := shell.Fields(s, nil)
+// ExpandLiteral is a wrapper around [expand.Literal]. It will escape the input
+// string, expand any shell symbols (such as '~') and resolve any environment
+// variables.
+func ExpandLiteral(s string) (string, error) {
+	if s == "" {
+		return "", nil
+	}
+	p := syntax.NewParser()
+	word, err := p.Document(strings.NewReader(s))
 	if err != nil {
 		return "", err
 	}
-	if len(fields) > 0 {
-		return fields[0], nil
+	cfg := &expand.Config{
+		Env:      expand.FuncEnviron(os.Getenv),
+		ReadDir2: os.ReadDir,
+		GlobStar: true,
 	}
-	return "", nil
+	return expand.Literal(cfg, word)
+}
+
+// ExpandFields is a wrapper around [expand.Fields]. It will escape the input
+// string, expand any shell symbols (such as '~') and resolve any environment
+// variables. It also expands brace expressions ({a.b}) and globs (*/**) and
+// returns the results as a list of strings.
+func ExpandFields(s string) ([]string, error) {
+	p := syntax.NewParser()
+	var words []*syntax.Word
+	err := p.Words(strings.NewReader(s), func(w *syntax.Word) bool {
+		words = append(words, w)
+		return true
+	})
+	if err != nil {
+		return nil, err
+	}
+	cfg := &expand.Config{
+		Env:      expand.FuncEnviron(os.Getenv),
+		ReadDir2: os.ReadDir,
+		GlobStar: true,
+		NullGlob: true,
+	}
+	return expand.Fields(cfg, words...)
 }
 
 func execHandler(next interp.ExecHandlerFunc) interp.ExecHandlerFunc {

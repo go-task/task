@@ -1,0 +1,17 @@
+version: '3'
+
+silent: true
+dotenv:
+  - 'global.env'
+vars:
+  VAR: entrypoint-global-vars
+env:
+  ENV: entrypoint-global-vars
+
+tasks:
+  default:
+    dotenv:
+      - 'task.env'
+    cmds:
+      - 'echo "{{.VAR}}"'
+      - 'echo "$ENV"'

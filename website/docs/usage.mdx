@@ -1,6 +1,6 @@
 ---
 slug: /usage/
-sidebar_position: 3
+sidebar_position: 4
 ---
 
 import Tabs from '@theme/Tabs';
@@ -8,56 +8,29 @@ import TabItem from '@theme/TabItem';
 
 # Usage
 
-## Getting started
+## Running Taskfiles
 
-Create a file called `Taskfile.yml` in the root of your project. The `cmds`
-attribute should contain the commands of a task. The example below allows
-compiling a Go app and uses [esbuild](https://esbuild.github.io/) to concat and
-minify multiple CSS files into a single one.
+Specific Taskfiles can be called by specifying the `--taskfile` flag. If you
+don't specify a Taskfile, Task will automatically look for a file with one of
+the [supported file names](#supported-file-names) in the current directory. If
+you want to search in a different directory, you can use the `--dir` flag.
 
-```yaml
-version: '3'
+### Supported file names
 
-tasks:
-  build:
-    cmds:
-      - go build -v -i main.go
+Task looks for files with the following names, in order of priority:
 
-  assets:
-    cmds:
-      - esbuild --bundle --minify css/index.css > public/bundle.css
-```
+- `Taskfile.yml`
+- `taskfile.yml`
+- `Taskfile.yaml`
+- `taskfile.yaml`
+- `Taskfile.dist.yml`
+- `taskfile.dist.yml`
+- `Taskfile.dist.yaml`
+- `taskfile.dist.yaml`
 
-Running the tasks is as simple as running:
-
-```shell
-task assets build
-```
-
-Task uses [mvdan.cc/sh](https://mvdan.cc/sh/), a native Go sh interpreter. So
-you can write sh/bash commands, and it will work even on Windows, where `sh` or
-`bash` are usually not available. Just remember any executable called must be
-available by the OS or in PATH.
-
-If you omit a task name, "default" will be assumed.
-
-## Supported file names
-
-Task will look for the following file names, in order of priority:
-
-- Taskfile.yml
-- taskfile.yml
-- Taskfile.yaml
-- taskfile.yaml
-- Taskfile.dist.yml
-- taskfile.dist.yml
-- Taskfile.dist.yaml
-- taskfile.dist.yaml
-
-The intention of having the `.dist` variants is to allow projects to have one
-committed version (`.dist`) while still allowing individual users to override
-the Taskfile by adding an additional `Taskfile.yml` (which would be on
-`.gitignore`).
+The `.dist` variants allow projects to have one committed file (`.dist`) while
+still allowing individual users to override the Taskfile by adding an additional
+`Taskfile.yml` (which would be in your `.gitignore`).
 
 ### Running a Taskfile from a subdirectory
 
@@ -192,7 +165,7 @@ version: '3'
 env:
   ENV: testing
 
-dotenv: ['.env', '{{.ENV}}/.env.', '{{.HOME}}/.env']
+dotenv: ['.env', '{{.ENV}}/.env', '{{.HOME}}/.env']
 
 tasks:
   greet:
@@ -210,7 +183,7 @@ env:
 
 tasks:
   greet:
-    dotenv: ['.env', '{{.ENV}}/.env.', '{{.HOME}}/.env']
+    dotenv: ['.env', '{{.ENV}}/.env', '{{.HOME}}/.env']
     cmds:
       - echo "Using $KEYNAME and endpoint $ENDPOINT"
 ```
@@ -226,7 +199,7 @@ env:
 
 tasks:
   greet:
-    dotenv: ['.env', '{{.ENV}}/.env.', '{{.HOME}}/.env']
+    dotenv: ['.env', '{{.ENV}}/.env', '{{.HOME}}/.env']
     env:
       KEYNAME: DIFFERENT_VALUE
     cmds:
@@ -263,11 +236,7 @@ Taskfile.
 
 ### OS-specific Taskfiles
 
-With `version: '2'`, task automatically includes any `Taskfile_{{OS}}.yml` if it
-exists (for example: `Taskfile_windows.yml`, `Taskfile_linux.yml` or
-`Taskfile_darwin.yml`). Since this behavior was a bit too implicit, it was
-removed on version 3, but you still can have a similar behavior by explicitly
-importing these files:
+You can include OS-specific Taskfiles by using a templating function:
 
 ```yaml
 version: '3'
@@ -340,45 +309,38 @@ You can flatten the included Taskfile tasks into the main Taskfile by using the 
 It means that the included Taskfile tasks will be available without the namespace.
 
 
-<Tabs defaultValue="1"
-      values={[
-        {label: 'Taskfile.yml', value: '1'},
-        {label: 'Included.yml', value: '2'}
-      ]}>
+<Tabs defaultValue="1">
+<TabItem value="1" label="Taskfile.yml">
 
-  <TabItem value="1">
+```yaml
+version: '3'
 
-    ```yaml
-    version: '3'
+includes:
+  lib:
+    taskfile: ./Included.yml
+    flatten: true
 
-    includes:
-      lib:
-        taskfile: ./Included.yml
-        flatten: true
+tasks:
+  greet:
+    cmds:
+      - echo "Greet"
+      - task: foo
+```
 
-    tasks:
-      greet:
-        cmds:
-          - echo "Greet"
-          - task: foo
-    ```
+</TabItem>
+<TabItem value="2" label="Included.yml">
 
+```yaml
+version: '3'
 
-  </TabItem>
-  <TabItem value="2">
+tasks:
+  foo:
+    cmds:
+      - echo "Foo"
+```
 
-    ```yaml
-    version: '3'
-
-    tasks:
-      foo:
-        cmds:
-          - echo "Foo"
-    ```
-
-
-  </TabItem></Tabs>
-
+</TabItem>
+</Tabs>
 
 If you run `task -a` it will print :
 
@@ -399,50 +361,44 @@ Foo
 
 If multiple tasks have the same name, an error will be thrown:
 
-<Tabs defaultValue="1"
-      values={[
-        {label: 'Taskfile.yml', value: '1'},
-        {label: 'Included.yml', value: '2'}
-      ]}>
+<Tabs defaultValue="1">
+<TabItem value="1" label="Taskfile.yml">
 
-  <TabItem value="1">
+```yaml
+version: '3'
+includes:
+  lib:
+    taskfile: ./Included.yml
+    flatten: true
 
-    ```yaml
-    version: '3'
-    includes:
-      lib:
-        taskfile: ./Included.yml
-        flatten: true
+tasks:
+  greet:
+    cmds:
+      - echo "Greet"
+      - task: foo
+```
 
-    tasks:
-      greet:
-        cmds:
-          - echo "Greet"
-          - task: foo
-    ```
+</TabItem>
+<TabItem value="2" label="Included.yml">
 
+```yaml
+version: '3'
 
-  </TabItem>
-  <TabItem value="2">
+tasks:
+  greet:
+    cmds:
+      - echo "Foo"
+```
 
-    ```yaml
-    version: '3'
-
-    tasks:
-      greet:
-        cmds:
-          - echo "Foo"
-    ```
-
-
-  </TabItem></Tabs>
+</TabItem>
+</Tabs>
 
 If you run `task -a` it will print:
 ```text
 task: Found multiple tasks (greet) included by "lib"
 ```
 
-If you the included Taskfile has a task with the same name as a task in the main Taskfile,
+If the included Taskfile has a task with the same name as a task in the main Taskfile,
 you may want to exclude it from the flattened tasks.
 
 You can do this by using the [`excludes` option](#exclude-tasks-from-being-included).
@@ -451,35 +407,29 @@ You can do this by using the [`excludes` option](#exclude-tasks-from-being-inclu
 
 You can exclude tasks from being included by using the `excludes` option. This option takes the list of tasks to be excluded from this include.
 
-<Tabs defaultValue="1"
-      values={[
-        {label: 'Taskfile.yml', value: '1'},
-        {label: 'Included.yml', value: '2'}
-      ]}>
+<Tabs defaultValue="1">
+<TabItem value="1" label="Taskfile.yml">
 
-  <TabItem value="1">
-    ```yaml
-    version: '3'
-      includes:
-        included:
-          taskfile: ./Included.yml
-          excludes: [foo]
-    ```
+```yaml
+version: '3'
+  includes:
+    included:
+      taskfile: ./Included.yml
+      excludes: [foo]
+```
 
+</TabItem>
+<TabItem value="2" label="Included.yml">
 
-  </TabItem>
-  <TabItem value="2">
+```yaml
+version: '3'
 
-    ```yaml
-    version: '3'
+tasks:
+  foo: echo "Foo"
+  bar: echo "Bar"
+```
 
-    tasks:
-      foo: echo "Foo"
-      bar: echo "Bar"
-    ```
-
-
-  </TabItem></Tabs>
+</TabItem></Tabs>
 
 `task included:foo` will throw an error because the `foo` task is excluded but `task included:bar` will work and display `Bar`.
 
@@ -831,7 +781,10 @@ tasks:
 
 If you prefer these check to be made by the modification timestamp of the files,
 instead of its checksum (content), just set the `method` property to
-`timestamp`.
+`timestamp`. This can be done at two levels:
+
+At the task level for a specific task:
+
 
 ```yaml
 version: '3'
@@ -846,6 +799,24 @@ tasks:
       - app{{exeExt}}
     method: timestamp
 ```
+
+At the root level of the Taskfile to apply it globally to all tasks:
+
+```yaml
+version: '3'
+
+method: timestamp  # Will be the default for all tasks
+
+tasks:
+  build:
+    cmds:
+      - go build .
+    sources:
+      - ./*.go
+    generates:
+      - app{{exeExt}}
+```
+
 
 In situations where you need more flexibility the `status` keyword can be used.
 You can even combine the two. See the documentation for
@@ -1144,52 +1115,37 @@ variable types are supported:
 - `int`
 - `float`
 - `array`
+- `map`
 
 :::note
 
-Maps are not supported by default, but there is an
-[experiment][map-variables] that can be enabled to add support. If
-you're interested in this functionality, we would appreciate your feedback.
-:pray:
-
-In the meantime, it is technically possible to define a map using a `ref` resolver and a templating function. For example:
-
-```yaml
-version: '3'
-
-tasks:
-  task-with-map:
-    vars:
-      FOO:
-        ref: dict "a" "1" "b" "2" "c" "3"
-    cmds:
-      - echo {{.FOO}}
-```
-
-```txt
-map[a:1 b:2 c:3]
-```
-
-OR by using the same technique with JSON:
-
-```yaml
-version: '3'
-
-tasks:
-  task-with-map:
-    vars:
-      JSON: '{"a": 1, "b": 2, "c": 3}'
-      FOO:
-        ref: "fromJson .JSON"
-    cmds:
-      - echo {{.FOO}}
-```
-
-```txt
-map[a:1 b:2 c:3]
-```
+Defining a map requires that you use a special `map` subkey (see example below).
 
 :::
+
+```yaml
+version: 3
+
+tasks:
+  foo:
+    vars:
+      STRING: 'Hello, World!'
+      BOOL: true
+      INT: 42
+      FLOAT: 3.14
+      ARRAY: [1, 2, 3]
+      MAP:
+        map: {A: 1, B: 2, C: 3}
+    cmds:
+      - 'echo {{.STRING}}'        # Hello, World!
+      - 'echo {{.BOOL}}'          # true
+      - 'echo {{.INT}}'           # 42
+      - 'echo {{.FLOAT}}'         # 3.14
+      - 'echo {{.ARRAY}}'         # [1 2 3]
+      - 'echo {{index .ARRAY 0}}' # 1
+      - 'echo {{.MAP}}'           # map[A:1 B:2 C:3]
+      - 'echo {{.MAP.A}}'         # 1
+```
 
 Variables can be set in many places in a Taskfile. When executing
 [templates][templating-reference], Task will look for variables in the order
@@ -1301,13 +1257,8 @@ a value from one task to another. However, the templating engine is only able to
 output strings. If you want to pass something other than a string to another
 task then you will need to use a reference (`ref`) instead.
 
-<Tabs defaultValue="2"
-      values={[
-        { label: 'Templating Engine', value: '1' },
-        { label: 'Reference', value: '2' }
-      ]}>
-
-<TabItem value="1">
+<Tabs defaultValue="2">
+<TabItem value="1" label="Templating Engine">
 
 ```yaml
 version: 3
@@ -1326,7 +1277,7 @@ tasks:
 ```
 
 </TabItem>
-<TabItem value="2">
+<TabItem value="2" label="Reference">
 
 ```yaml
 version: 3
@@ -1345,7 +1296,8 @@ tasks:
       - 'echo {{index .FOO 0}}' # <-- FOO is still a map so the task outputs 'A' as expected
 ```
 
-</TabItem></Tabs>
+</TabItem>
+</Tabs>
 
 This also works the same way when calling `deps` and when defining
 a variable and can be used in any combination:
@@ -1370,8 +1322,8 @@ tasks:
 ```
 
 All references use the same templating syntax as regular templates, so in
-addition to simply calling `.FOO`, you can also pass subkeys (`.FOO.BAR`) or
-indexes (`index .FOO 0`) and use functions (`len .FOO`) as described in the
+addition to calling `.FOO`, you can also pass subkeys (`.FOO.BAR`) or indexes
+(`index .FOO 0`) and use functions (`len .FOO`) as described in the
 [templating-reference][templating-reference]:
 
 ```yaml
@@ -1389,6 +1341,29 @@ tasks:
   bar:
     cmds:
       - 'echo {{.FOO}}' # <-- FOO is just the letter 'A'
+```
+
+### Parsing JSON/YAML into map variables
+
+If you have a raw JSON or YAML string that you want to process in Task, you can
+use a combination of the `ref` keyword and the `fromJson` or `fromYaml`
+templating functions to parse the string into a map variable. For example:
+
+```yaml
+version: '3'
+
+tasks:
+  task-with-map:
+    vars:
+      JSON: '{"a": 1, "b": 2, "c": 3}'
+      FOO:
+        ref: "fromJson .JSON"
+    cmds:
+      - echo {{.FOO}}
+```
+
+```txt
+map[a:1 b:2 c:3]
 ```
 
 ## Looping over values
@@ -1443,9 +1418,34 @@ darwin/amd64
 darwin/arm64
 ```
 
-### Looping over your task's sources
+You can also use references to other variables as long as they are also lists:
 
-You are also able to loop over the sources of your task:
+```yaml
+version: "3"
+
+vars:
+  OS_VAR: ["windows", "linux", "darwin"]
+  ARCH_VAR: ["amd64", "arm64"]
+
+tasks:
+  default:
+    cmds:
+      - for:
+          matrix:
+            OS:
+              ref: .OS_VAR
+            ARCH:
+              ref: .ARCH_VAR
+        cmd: echo "{{.ITEM.OS}}/{{.ITEM.ARCH}}"
+```
+
+### Looping over your task's sources or generated files
+
+You are also able to loop over the sources of your task or the files it
+generates:
+
+<Tabs defaultValue="1" groupId="sources-generates">
+<TabItem value="1" label="Sources">
 
 ```yaml
 version: '3'
@@ -1460,14 +1460,37 @@ tasks:
         cmd: cat {{ .ITEM }}
 ```
 
-This will also work if you use globbing syntax in your sources. For example, if
-you specify a source for `*.txt`, the loop will iterate over all files that
-match that glob.
+</TabItem>
+<TabItem value="2" label="Generates">
 
-Source paths will always be returned as paths relative to the task directory. If
-you need to convert this to an absolute path, you can use the built-in
-`joinPath` function. There are some [special variables](/reference/templating/#special-variables)
-that you may find useful for this.
+```yaml
+version: '3'
+
+tasks:
+  default:
+    generates:
+      - foo.txt
+      - bar.txt
+    cmds:
+      - for: generates
+        cmd: cat {{ .ITEM }}
+```
+
+</TabItem>
+</Tabs>
+
+This will also work if you use globbing syntax in `sources` or `generates`. For
+example, if you specify a source for `*.txt`, the loop will iterate over all
+files that match that glob.
+
+Paths will always be returned as paths relative to the task directory. If you
+need to convert this to an absolute path, you can use the built-in `joinPath`
+function. There are some [special
+variables](/reference/templating/#special-variables) that you may find useful
+for this.
+
+<Tabs defaultValue="1" groupId="sources-generates">
+<TabItem value="1" label="Sources">
 
 ```yaml
 version: '3'
@@ -1485,11 +1508,33 @@ tasks:
         cmd: cat {{joinPath .MY_DIR .ITEM}}
 ```
 
+</TabItem>
+<TabItem value="2" label="Generates">
+
+```yaml
+version: '3'
+
+tasks:
+  default:
+    vars:
+      MY_DIR: /path/to/dir
+    dir: '{{.MY_DIR}}'
+    generates:
+      - foo.txt
+      - bar.txt
+    cmds:
+      - for: generates
+        cmd: cat {{joinPath .MY_DIR .ITEM}}
+```
+
+</TabItem>
+</Tabs>
+
 ### Looping over variables
 
-To loop over the contents of a variable, you simply need to specify the variable
-you want to loop over. By default, string variables will be split on any
-whitespace characters.
+To loop over the contents of a variable, use the `var` key followed by the name
+of the variable you want to loop over. By default, string variables will be
+split on any whitespace characters.
 
 ```yaml
 version: '3'
@@ -1518,7 +1563,7 @@ tasks:
         cmd: cat {{.ITEM}}
 ```
 
-You can also loop over arrays directly and maps:
+You can also loop over arrays and maps directly:
 
 ```yaml
 version: 3
@@ -1684,36 +1729,45 @@ clear what they contain:
 version: '3'
 
 tasks:
-  echo-*:
+  start:*:*:
     vars:
-      TEXT: '{{index .MATCH 0}}'
+      SERVICE: "{{index .MATCH 0}}"
+      REPLICAS: "{{index .MATCH 1}}"
     cmds:
-      - echo {{.TEXT}}
+      - echo "Starting {{.SERVICE}} with {{.REPLICAS}} replicas"
 
-  run-*-*:
+  start:*:
     vars:
-      ARG_1: '{{index .MATCH 0}}'
-      ARG_2: '{{index .MATCH 1}}'
+      SERVICE: "{{index .MATCH 0}}"
     cmds:
-      - echo {{.ARG_1}} {{.ARG_2}}
+      - echo "Starting {{.SERVICE}}"
 ```
+
+This call matches the `start:*` task and the string "foo" is captured by the
+wildcard and stored in the `.MATCH` variable. We then index the `.MATCH` array
+and store the result in the `.SERVICE` variable which is then echoed out in the
+cmds:
 
 ```shell
-# This call matches the "echo-*" task and the string "hello" is captured by the
-# wildcard and stored in the .MATCH variable. We then index the .MATCH array and
-# store the result in the .TEXT variable which is then echoed out in the cmds.
-$ task echo-hello
-hello
-# You can use whitespace in your arguments as long as you quote the task name
-$ task "echo-hello world"
-hello world
-# And you can pass multiple arguments
-$ task run-foo-bar
-foo bar
+$ task start:foo
+Starting foo
 ```
 
-If multiple matching tasks are found, an error occurs. If you are using included
-Taskfiles, tasks in parent files will be considered first.
+You can use whitespace in your arguments as long as you quote the task name:
+
+```shell
+$ task "start:foo bar"
+Starting foo bar
+```
+
+If multiple matching tasks are found, the first one listed in the Taskfile will
+be used. If you are using included Taskfiles, tasks in parent files will be
+considered first.
+
+```shell
+$ task start:foo:3
+Starting foo with 3 replicas
+```
 
 ## Doing task cleanup with `defer`
 
@@ -2295,9 +2349,11 @@ With the flags `--watch` or `-w` task will watch for file changes and run the
 task again. This requires the `sources` attribute to be given, so task knows
 which files to watch.
 
-The default watch interval is 5 seconds, but it's possible to change it by
-either setting `interval: '500ms'` in the root of the Taskfile or by passing it
-as an argument like `--interval=500ms`.
+The default watch interval is 100 milliseconds, but it's possible to change it
+by either setting `interval: '500ms'` in the root of the Taskfile or by passing
+it as an argument like `--interval=500ms`.
+This interval is the time Task will wait for duplicated events. It will only run
+the task again once, even if multiple changes happen within the interval.
 
 Also, it's possible to set `watch: true` in a given task and it'll automatically
 run in watch mode:
@@ -2327,6 +2383,5 @@ if called by another task, either directly or as a dependency.
 
 {/* prettier-ignore-start */}
 [gotemplate]: https://golang.org/pkg/text/template/
-[map-variables]: ./experiments/map_variables.mdx
 [templating-reference]: ./reference/templating.mdx
 {/* prettier-ignore-end */}

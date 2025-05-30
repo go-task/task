@@ -1,35 +1,64 @@
-# NOTE(@andreynering): The linters listed here are additions on top of
-# those enabled by default:
-#
-# https://golangci-lint.run/usage/linters/#enabled-by-default
+version: "2"
+
+formatters:
+  enable:
+    - gofmt
+    - gofumpt
+    - goimports
+    - gci
+  settings:
+    gofmt:
+      simplify: true
+      rewrite-rules:
+        - pattern: interface{}
+          replacement: any
+    gofumpt:
+      module-path: github.com/go-task/task/v3
+    goimports:
+      local-prefixes:
+        - github.com/go-task
+    gci:
+      sections:
+        - standard
+        - default
+        - prefix(github.com/go-task)
+        - localmodule
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
 
 linters:
   enable:
     - depguard
-    - goimports
-    - gofmt
-    - gofumpt
+    - mirror
     - misspell
     - noctx
     - paralleltest
-    - tenv
     - thelper
     - tparallel
-
-linters-settings:
-  depguard:
-    rules:
-      main:
-        files:
-          - "$all"
-          - "!$test"
-          - "!**/errors/*.go"
-        deny:
-          - pkg: "errors"
-            desc: "Use github.com/go-task/task/v3/errors instead"
-  goimports:
-    local-prefixes: github.com/go-task
-  gofmt:
-    rewrite-rules:
-      - pattern: 'interface{}'
-        replacement: 'any'
+    - usetesting
+  settings:
+    depguard:
+      rules:
+        main:
+          files:
+            - $all
+            - '!$test'
+            - '!**/errors/*.go'
+          deny:
+            - pkg: errors
+              desc: Use github.com/go-task/task/v3/errors instead
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    paths:
+      - third_party$
+      - builtin$
+      - examples$

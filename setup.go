@@ -13,7 +13,7 @@ import (
 	"github.com/sajari/fuzzy"
 
 	"github.com/go-task/task/v3/errors"
-	"github.com/go-task/task/v3/internal/compiler"
+	"github.com/go-task/task/v3/internal/env"
 	"github.com/go-task/task/v3/internal/execext"
 	"github.com/go-task/task/v3/internal/filepathext"
 	"github.com/go-task/task/v3/internal/logger"
@@ -55,7 +55,7 @@ func (e *Executor) Setup() error {
 }
 
 func (e *Executor) getRootNode() (taskfile.Node, error) {
-	node, err := taskfile.NewRootNode(e.Logger, e.Entrypoint, e.Dir, e.Insecure, e.Timeout)
+	node, err := taskfile.NewRootNode(e.Entrypoint, e.Dir, e.Insecure, e.Timeout)
 	if err != nil {
 		return nil, err
 	}
@@ -64,17 +64,28 @@ func (e *Executor) getRootNode() (taskfile.Node, error) {
 }
 
 func (e *Executor) readTaskfile(node taskfile.Node) error {
+	ctx, cf := context.WithTimeout(context.Background(), e.Timeout)
+	defer cf()
+	debugFunc := func(s string) {
+		e.Logger.VerboseOutf(logger.Magenta, s)
+	}
+	promptFunc := func(s string) error {
+		return e.Logger.Prompt(logger.Yellow, s, "n", "y", "yes")
+	}
 	reader := taskfile.NewReader(
-		node,
-		e.Insecure,
-		e.Download,
-		e.Offline,
-		e.Timeout,
-		e.TempDir.Remote,
-		e.Logger,
+		taskfile.WithInsecure(e.Insecure),
+		taskfile.WithDownload(e.Download),
+		taskfile.WithOffline(e.Offline),
+		taskfile.WithTempDir(e.TempDir.Remote),
+		taskfile.WithCacheExpiryDuration(e.CacheExpiryDuration),
+		taskfile.WithDebugFunc(debugFunc),
+		taskfile.WithPromptFunc(promptFunc),
 	)
-	graph, err := reader.Read()
+	graph, err := reader.Read(ctx, node)
 	if err != nil {
+		if errors.Is(err, context.DeadlineExceeded) {
+			return &errors.TaskfileNetworkTimeoutError{URI: node.Location(), Timeout: e.Timeout}
+		}
 		return err
 	}
 	if e.Taskfile, err = graph.Merge(); err != nil {
@@ -84,7 +95,7 @@ func (e *Executor) readTaskfile(node taskfile.Node) error {
 }
 
 func (e *Executor) setupFuzzyModel() {
-	if e.Taskfile != nil {
+	if e.Taskfile == nil {
 		return
 	}
 
@@ -92,12 +103,9 @@ func (e *Executor) setupFuzzyModel() {
 	model.SetThreshold(1) // because we want to build grammar based on every task name
 
 	var words []string
-	for _, taskName := range e.Taskfile.Tasks.Keys() {
-		words = append(words, taskName)
-
-		for _, task := range e.Taskfile.Tasks.Values() {
-			words = slices.Concat(words, task.Aliases)
-		}
+	for name, task := range e.Taskfile.Tasks.All(nil) {
+		words = append(words, name)
+		words = slices.Concat(words, task.Aliases)
 	}
 
 	model.Train(words)
@@ -109,13 +117,14 @@ func (e *Executor) setupTempDir() error {
 		return nil
 	}
 
-	if os.Getenv("TASK_TEMP_DIR") == "" {
+	tempDir := env.GetTaskEnv("TEMP_DIR")
+	if tempDir == "" {
 		e.TempDir = TempDir{
 			Remote:      filepathext.SmartJoin(e.Dir, ".task"),
 			Fingerprint: filepathext.SmartJoin(e.Dir, ".task"),
 		}
-	} else if filepath.IsAbs(os.Getenv("TASK_TEMP_DIR")) || strings.HasPrefix(os.Getenv("TASK_TEMP_DIR"), "~") {
-		tempDir, err := execext.Expand(os.Getenv("TASK_TEMP_DIR"))
+	} else if filepath.IsAbs(tempDir) || strings.HasPrefix(tempDir, "~") {
+		tempDir, err := execext.ExpandLiteral(tempDir)
 		if err != nil {
 			return err
 		}
@@ -128,14 +137,15 @@ func (e *Executor) setupTempDir() error {
 
 	} else {
 		e.TempDir = TempDir{
-			Remote:      filepathext.SmartJoin(e.Dir, os.Getenv("TASK_TEMP_DIR")),
-			Fingerprint: filepathext.SmartJoin(e.Dir, os.Getenv("TASK_TEMP_DIR")),
+			Remote:      filepathext.SmartJoin(e.Dir, tempDir),
+			Fingerprint: filepathext.SmartJoin(e.Dir, tempDir),
 		}
 	}
 
-	if os.Getenv("TASK_REMOTE_DIR") != "" {
-		if filepath.IsAbs(os.Getenv("TASK_REMOTE_DIR")) || strings.HasPrefix(os.Getenv("TASK_REMOTE_DIR"), "~") {
-			remoteTempDir, err := execext.Expand(os.Getenv("TASK_REMOTE_DIR"))
+	remoteDir := env.GetTaskEnv("REMOTE_DIR")
+	if remoteDir != "" {
+		if filepath.IsAbs(remoteDir) || strings.HasPrefix(remoteDir, "~") {
+			remoteTempDir, err := execext.ExpandLiteral(remoteDir)
 			if err != nil {
 				return err
 			}
@@ -191,7 +201,7 @@ func (e *Executor) setupCompiler() error {
 		}
 	}
 
-	e.Compiler = &compiler.Compiler{
+	e.Compiler = &Compiler{
 		Dir:            e.Dir,
 		Entrypoint:     e.Entrypoint,
 		UserWorkingDir: e.UserWorkingDir,
@@ -203,21 +213,29 @@ func (e *Executor) setupCompiler() error {
 }
 
 func (e *Executor) readDotEnvFiles() error {
+	if e.Taskfile == nil || len(e.Taskfile.Dotenv) == 0 {
+		return nil
+	}
+
 	if e.Taskfile.Version.LessThan(ast.V3) {
 		return nil
 	}
 
-	env, err := taskfile.Dotenv(e.Compiler, e.Taskfile, e.Dir)
+	vars, err := e.Compiler.GetTaskfileVariables()
 	if err != nil {
 		return err
 	}
 
-	err = env.Range(func(key string, value ast.Var) error {
-		if _, ok := e.Taskfile.Env.Get(key); !ok {
-			e.Taskfile.Env.Set(key, value)
+	env, err := taskfile.Dotenv(vars, e.Taskfile, e.Dir)
+	if err != nil {
+		return err
+	}
+
+	for k, v := range env.All() {
+		if _, ok := e.Taskfile.Env.Get(k); !ok {
+			e.Taskfile.Env.Set(k, v)
 		}
-		return nil
-	})
+	}
 	return err
 }
 
@@ -235,7 +253,7 @@ func (e *Executor) setupConcurrencyState() {
 
 	e.taskCallCount = make(map[string]*int32, e.Taskfile.Tasks.Len())
 	e.mkdirMutexMap = make(map[string]*sync.Mutex, e.Taskfile.Tasks.Len())
-	for _, k := range e.Taskfile.Tasks.Keys() {
+	for k := range e.Taskfile.Tasks.Keys(nil) {
 		e.taskCallCount[k] = new(int32)
 		e.mkdirMutexMap[k] = &sync.Mutex{}
 	}

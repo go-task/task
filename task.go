@@ -3,18 +3,15 @@ package task
 import (
 	"context"
 	"fmt"
-	"io"
 	"os"
 	"runtime"
 	"slices"
-	"sync"
 	"sync/atomic"
-	"time"
 
+	"golang.org/x/sync/errgroup"
 	"mvdan.cc/sh/v3/interp"
 
 	"github.com/go-task/task/v3/errors"
-	"github.com/go-task/task/v3/internal/compiler"
 	"github.com/go-task/task/v3/internal/env"
 	"github.com/go-task/task/v3/internal/execext"
 	"github.com/go-task/task/v3/internal/fingerprint"
@@ -25,9 +22,6 @@ import (
 	"github.com/go-task/task/v3/internal/summary"
 	"github.com/go-task/task/v3/internal/templater"
 	"github.com/go-task/task/v3/taskfile/ast"
-
-	"github.com/sajari/fuzzy"
-	"golang.org/x/sync/errgroup"
 )
 
 const (
@@ -36,59 +30,15 @@ const (
 	MaximumTaskCall = 1000
 )
 
-type TempDir struct {
-	Remote      string
-	Fingerprint string
-}
-
-// Executor executes a Taskfile
-type Executor struct {
-	Taskfile *ast.Taskfile
-
-	Dir         string
-	Entrypoint  string
-	TempDir     TempDir
-	Force       bool
-	ForceAll    bool
-	Insecure    bool
-	Download    bool
-	Offline     bool
-	Timeout     time.Duration
-	Watch       bool
-	Verbose     bool
-	Silent      bool
-	AssumeYes   bool
-	AssumeTerm  bool // Used for testing
-	Dry         bool
-	Summary     bool
-	Parallel    bool
-	Color       bool
-	Concurrency int
-	Interval    time.Duration
-
-	Stdin  io.Reader
-	Stdout io.Writer
-	Stderr io.Writer
-
-	Logger             *logger.Logger
-	Compiler           *compiler.Compiler
-	Output             output.Output
-	OutputStyle        ast.Output
-	TaskSorter         sort.TaskSorter
-	UserWorkingDir     string
-	EnableVersionCheck bool
-
-	fuzzyModel *fuzzy.Model
-
-	concurrencySemaphore chan struct{}
-	taskCallCount        map[string]*int32
-	mkdirMutexMap        map[string]*sync.Mutex
-	executionHashes      map[string]context.Context
-	executionHashesMutex sync.Mutex
+// MatchingTask represents a task that matches a given call. It includes the
+// task itself and a list of wildcards that were matched.
+type MatchingTask struct {
+	Task      *ast.Task
+	Wildcards []string
 }
 
 // Run runs Task
-func (e *Executor) Run(ctx context.Context, calls ...*ast.Call) error {
+func (e *Executor) Run(ctx context.Context, calls ...*Call) error {
 	// check if given tasks exist
 	for _, call := range calls {
 		task, err := e.GetTask(call)
@@ -150,7 +100,7 @@ func (e *Executor) Run(ctx context.Context, calls ...*ast.Call) error {
 	return nil
 }
 
-func (e *Executor) splitRegularAndWatchCalls(calls ...*ast.Call) (regularCalls []*ast.Call, watchCalls []*ast.Call, err error) {
+func (e *Executor) splitRegularAndWatchCalls(calls ...*Call) (regularCalls []*Call, watchCalls []*Call, err error) {
 	for _, c := range calls {
 		t, err := e.GetTask(c)
 		if err != nil {
@@ -167,7 +117,7 @@ func (e *Executor) splitRegularAndWatchCalls(calls ...*ast.Call) (regularCalls [
 }
 
 // RunTask runs a task by its name
-func (e *Executor) RunTask(ctx context.Context, call *ast.Call) error {
+func (e *Executor) RunTask(ctx context.Context, call *Call) error {
 	t, err := e.FastCompiledTask(call)
 	if err != nil {
 		return err
@@ -185,6 +135,11 @@ func (e *Executor) RunTask(ctx context.Context, call *ast.Call) error {
 	if err != nil {
 		return err
 	}
+
+	if err := e.areTaskRequiredVarsAllowedValuesSet(t); err != nil {
+		return err
+	}
+
 	if !e.Watch && atomic.AddInt32(e.taskCallCount[t.Task], 1) >= MaximumTaskCall {
 		return &errors.TaskCalledTooManyTimesError{
 			TaskName:        t.Task,
@@ -312,7 +267,7 @@ func (e *Executor) runDeps(ctx context.Context, t *ast.Task) error {
 	for _, d := range t.Deps {
 		d := d
 		g.Go(func() error {
-			err := e.RunTask(ctx, &ast.Call{Task: d.Task, Vars: d.Vars, Silent: d.Silent, Indirect: true})
+			err := e.RunTask(ctx, &Call{Task: d.Task, Vars: d.Vars, Silent: d.Silent, Indirect: true})
 			if err != nil {
 				return err
 			}
@@ -323,7 +278,7 @@ func (e *Executor) runDeps(ctx context.Context, t *ast.Task) error {
 	return g.Wait()
 }
 
-func (e *Executor) runDeferred(t *ast.Task, call *ast.Call, i int, deferredExitCode *uint8) {
+func (e *Executor) runDeferred(t *ast.Task, call *Call, i int, deferredExitCode *uint8) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -342,13 +297,15 @@ func (e *Executor) runDeferred(t *ast.Task, call *ast.Call, i int, deferredExitC
 	}
 
 	cmd.Cmd = templater.ReplaceWithExtra(cmd.Cmd, cache, extra)
+	cmd.Task = templater.ReplaceWithExtra(cmd.Task, cache, extra)
+	cmd.Vars = templater.ReplaceVarsWithExtra(cmd.Vars, cache, extra)
 
 	if err := e.runCommand(ctx, t, call, i); err != nil {
 		e.Logger.VerboseErrf(logger.Yellow, "task: ignored error in deferred cmd: %s\n", err.Error())
 	}
 }
 
-func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call *ast.Call, i int) error {
+func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call *Call, i int) error {
 	cmd := t.Cmds[i]
 
 	switch {
@@ -356,7 +313,7 @@ func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call *ast.Call, 
 		reacquire := e.releaseConcurrencyLimit()
 		defer reacquire()
 
-		err := e.RunTask(ctx, &ast.Call{Task: cmd.Task, Vars: cmd.Vars, Silent: cmd.Silent, Indirect: true})
+		err := e.RunTask(ctx, &Call{Task: cmd.Task, Vars: cmd.Vars, Silent: cmd.Silent, Indirect: true})
 		if err != nil {
 			return err
 		}
@@ -442,35 +399,50 @@ func (e *Executor) startExecution(ctx context.Context, t *ast.Task, execute func
 	return execute(ctx)
 }
 
+// FindMatchingTasks returns a list of tasks that match the given call. A task
+// matches a call if its name is equal to the call's task name or if it matches
+// a wildcard pattern. The function returns a list of MatchingTask structs, each
+// containing a task and a list of wildcards that were matched.
+func (e *Executor) FindMatchingTasks(call *Call) []*MatchingTask {
+	if call == nil {
+		return nil
+	}
+	var matchingTasks []*MatchingTask
+	// If there is a direct match, return it
+	if task, ok := e.Taskfile.Tasks.Get(call.Task); ok {
+		matchingTasks = append(matchingTasks, &MatchingTask{Task: task, Wildcards: nil})
+		return matchingTasks
+	}
+	// Attempt a wildcard match
+	for _, value := range e.Taskfile.Tasks.All(nil) {
+		if match, wildcards := value.WildcardMatch(call.Task); match {
+			matchingTasks = append(matchingTasks, &MatchingTask{
+				Task:      value,
+				Wildcards: wildcards,
+			})
+		}
+	}
+	return matchingTasks
+}
+
 // GetTask will return the task with the name matching the given call from the taskfile.
 // If no task is found, it will search for tasks with a matching alias.
 // If multiple tasks contain the same alias or no matches are found an error is returned.
-func (e *Executor) GetTask(call *ast.Call) (*ast.Task, error) {
+func (e *Executor) GetTask(call *Call) (*ast.Task, error) {
 	// Search for a matching task
-	matchingTasks := e.Taskfile.Tasks.FindMatchingTasks(call)
-	switch len(matchingTasks) {
-	case 0: // Carry on
-	case 1:
+	matchingTasks := e.FindMatchingTasks(call)
+	if len(matchingTasks) > 0 {
 		if call.Vars == nil {
 			call.Vars = ast.NewVars()
 		}
 		call.Vars.Set("MATCH", ast.Var{Value: matchingTasks[0].Wildcards})
 		return matchingTasks[0].Task, nil
-	default:
-		taskNames := make([]string, len(matchingTasks))
-		for i, matchingTask := range matchingTasks {
-			taskNames[i] = matchingTask.Task.Task
-		}
-		return nil, &errors.TaskNameConflictError{
-			Call:      call.Task,
-			TaskNames: taskNames,
-		}
 	}
 
 	// If didn't find one, search for a task with a matching alias
 	var matchingTask *ast.Task
 	var aliasedTasks []string
-	for _, task := range e.Taskfile.Tasks.Values() {
+	for task := range e.Taskfile.Tasks.Values(nil) {
 		if slices.Contains(task.Aliases, call.Task) {
 			aliasedTasks = append(aliasedTasks, task.Task)
 			matchingTask = task
@@ -506,8 +478,13 @@ func (e *Executor) GetTaskList(filters ...FilterFunc) ([]*ast.Task, error) {
 	// Create an error group to wait for each task to be compiled
 	var g errgroup.Group
 
+	// Sort the tasks
+	if e.TaskSorter == nil {
+		e.TaskSorter = sort.AlphaNumericWithRootTasksFirst
+	}
+
 	// Filter tasks based on the given filter functions
-	for _, task := range e.Taskfile.Tasks.Values() {
+	for task := range e.Taskfile.Tasks.Values(e.TaskSorter) {
 		var shouldFilter bool
 		for _, filter := range filters {
 			if filter(task) {
@@ -522,7 +499,7 @@ func (e *Executor) GetTaskList(filters ...FilterFunc) ([]*ast.Task, error) {
 	// Compile the list of tasks
 	for i := range tasks {
 		g.Go(func() error {
-			compiledTask, err := e.FastCompiledTask(&ast.Call{Task: tasks[i].Task})
+			compiledTask, err := e.FastCompiledTask(&Call{Task: tasks[i].Task})
 			if err != nil {
 				return err
 			}
@@ -535,12 +512,6 @@ func (e *Executor) GetTaskList(filters ...FilterFunc) ([]*ast.Task, error) {
 	if err := g.Wait(); err != nil {
 		return nil, err
 	}
-
-	// Sort the tasks
-	if e.TaskSorter == nil {
-		e.TaskSorter = &sort.AlphaNumericWithRootTasksFirst{}
-	}
-	e.TaskSorter.Sort(tasks)
 
 	return tasks, nil
 }

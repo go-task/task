@@ -155,19 +155,14 @@ func (err *TaskfileVersionCheckError) Code() int {
 // TaskfileNetworkTimeoutError is returned when the user attempts to use a remote
 // Taskfile but a network connection could not be established within the timeout.
 type TaskfileNetworkTimeoutError struct {
-	URI          string
-	Timeout      time.Duration
-	CheckedCache bool
+	URI     string
+	Timeout time.Duration
 }
 
 func (err *TaskfileNetworkTimeoutError) Error() string {
-	var cacheText string
-	if err.CheckedCache {
-		cacheText = " and no offline copy was found in the cache"
-	}
 	return fmt.Sprintf(
-		`task: Network connection timed out after %s while attempting to download Taskfile %q%s`,
-		err.Timeout, err.URI, cacheText,
+		`task: Network connection timed out after %s while attempting to download Taskfile %q`,
+		err.Timeout, err.URI,
 	)
 }
 
@@ -191,4 +186,25 @@ func (err TaskfileCycleError) Error() string {
 
 func (err TaskfileCycleError) Code() int {
 	return CodeTaskfileCycle
+}
+
+// TaskfileDoesNotMatchChecksum is returned when a Taskfile's checksum does not
+// match the one pinned in the parent Taskfile.
+type TaskfileDoesNotMatchChecksum struct {
+	URI              string
+	ExpectedChecksum string
+	ActualChecksum   string
+}
+
+func (err *TaskfileDoesNotMatchChecksum) Error() string {
+	return fmt.Sprintf(
+		"task: The checksum of the Taskfile at %q does not match!\ngot: %q\nwant: %q",
+		err.URI,
+		err.ActualChecksum,
+		err.ExpectedChecksum,
+	)
+}
+
+func (err *TaskfileDoesNotMatchChecksum) Code() int {
+	return CodeTaskfileDoesNotMatchChecksum
 }

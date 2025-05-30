@@ -31,13 +31,8 @@ some of the examples below for some inspiration.
 No more comparing strings to "true" or "false". Now you can use actual boolean
 values in your templates:
 
-<Tabs defaultValue="2"
-  values={[
-    {label: 'Before', value: '1'},
-    {label: 'After', value: '2'}
-  ]}>
-
-<TabItem value="1">
+<Tabs defaultValue="2">
+<TabItem value="1" label="Before">
 
 ```yaml
 version: 3
@@ -51,7 +46,7 @@ tasks:
 ```
 
 </TabItem>
-<TabItem value="2">
+<TabItem value="2" label="After">
 
 ```yaml
 version: 3
@@ -64,7 +59,8 @@ tasks:
       - '{{if .BOOL}}echo foo{{end}}' # <-- No need to compare to "true"
 ```
 
-</TabItem></Tabs>
+</TabItem>
+</Tabs>
 
 ### Arithmetic
 
@@ -114,13 +110,8 @@ to specify the delimiter. However, we have now added support for looping over
 "collection-type" variables using the `for` keyword, so now you are able to loop
 over list variables directly:
 
-<Tabs defaultValue="2"
-  values={[
-    {label: 'Before', value: '1'},
-    {label: 'After', value: '2'}
-  ]}>
-
-<TabItem value="1">
+<Tabs defaultValue="2">
+<TabItem value="1" label="Before">
 
 ```yaml
 version: 3
@@ -137,7 +128,7 @@ tasks:
 ```
 
 </TabItem>
-<TabItem value="2">
+<TabItem value="2" label="After">
 
 ```yaml
 version: 3
@@ -152,7 +143,8 @@ tasks:
         cmd: echo {{.ITEM}}
 ```
 
-</TabItem></Tabs>
+</TabItem>
+</Tabs>
 
 ## What about maps?
 

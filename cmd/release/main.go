@@ -16,10 +16,14 @@ import (
 )
 
 const (
-	changelogSource = "CHANGELOG.md"
-	changelogTarget = "website/docs/changelog.mdx"
-	docsSource      = "website/docs"
-	docsTarget      = "website/versioned_docs/version-latest"
+	changelogSource    = "CHANGELOG.md"
+	changelogTarget    = "website/docs/changelog.mdx"
+	docsSource         = "website/docs"
+	docsTarget         = "website/versioned_docs/version-latest"
+	schemaSource       = "website/static/next-schema.json"
+	schemaTarget       = "website/static/schema.json"
+	schemaTaskrcSource = "website/static/next-schema-taskrc.json"
+	schemaTaskrcTarget = "website/static/schema-taskrc.json"
 )
 
 var (
@@ -67,6 +71,10 @@ func release() error {
 		return err
 	}
 
+	if err := setVersionFile("internal/version/version.txt", version); err != nil {
+		return err
+	}
+
 	if err := setJSONVersion("package.json", version); err != nil {
 		return err
 	}
@@ -76,6 +84,10 @@ func release() error {
 	}
 
 	if err := docs(); err != nil {
+		return err
+	}
+
+	if err := schema(); err != nil {
 		return err
 	}
 
@@ -144,6 +156,10 @@ func changelog(version *semver.Version) error {
 	return os.WriteFile(changelogTarget, []byte(changelog), 0o644)
 }
 
+func setVersionFile(fileName string, version *semver.Version) error {
+	return os.WriteFile(fileName, []byte(version.String()+"\n"), 0o644)
+}
+
 func setJSONVersion(fileName string, version *semver.Version) error {
 	// Read the JSON file
 	b, err := os.ReadFile(fileName)
@@ -163,6 +179,16 @@ func docs() error {
 		return err
 	}
 	if err := copy.Copy(docsSource, docsTarget); err != nil {
+		return err
+	}
+	return nil
+}
+
+func schema() error {
+	if err := copy.Copy(schemaSource, schemaTarget); err != nil {
+		return err
+	}
+	if err := copy.Copy(schemaTaskrcSource, schemaTaskrcTarget); err != nil {
 		return err
 	}
 	return nil

@@ -2,33 +2,28 @@ package taskfile
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"net/http"
 	"net/url"
 	"path/filepath"
-	"time"
+	"strings"
 
 	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/execext"
 	"github.com/go-task/task/v3/internal/filepathext"
-	"github.com/go-task/task/v3/internal/logger"
 )
 
 // An HTTPNode is a node that reads a Taskfile from a remote location via HTTP.
 type HTTPNode struct {
-	*BaseNode
-	URL        *url.URL // stores url pointing actual remote file. (e.g. with Taskfile.yml)
-	entrypoint string   // stores entrypoint url. used for building graph vertices.
-	logger     *logger.Logger
-	timeout    time.Duration
+	*baseNode
+	url *url.URL // stores url pointing actual remote file. (e.g. with Taskfile.yml)
 }
 
 func NewHTTPNode(
-	l *logger.Logger,
 	entrypoint string,
 	dir string,
 	insecure bool,
-	timeout time.Duration,
 	opts ...NodeOption,
 ) (*HTTPNode, error) {
 	base := NewBaseNode(dir, opts...)
@@ -37,48 +32,43 @@ func NewHTTPNode(
 		return nil, err
 	}
 	if url.Scheme == "http" && !insecure {
-		return nil, &errors.TaskfileNotSecureError{URI: entrypoint}
+		return nil, &errors.TaskfileNotSecureError{URI: url.Redacted()}
 	}
-
 	return &HTTPNode{
-		BaseNode:   base,
-		URL:        url,
-		entrypoint: entrypoint,
-		timeout:    timeout,
-		logger:     l,
+		baseNode: base,
+		url:      url,
 	}, nil
 }
 
 func (node *HTTPNode) Location() string {
-	return node.entrypoint
+	return node.url.Redacted()
 }
 
-func (node *HTTPNode) Remote() bool {
-	return true
+func (node *HTTPNode) Read() ([]byte, error) {
+	return node.ReadContext(context.Background())
 }
 
-func (node *HTTPNode) Read(ctx context.Context) ([]byte, error) {
-	url, err := RemoteExists(ctx, node.logger, node.URL, node.timeout)
+func (node *HTTPNode) ReadContext(ctx context.Context) ([]byte, error) {
+	url, err := RemoteExists(ctx, *node.url)
 	if err != nil {
 		return nil, err
 	}
-	node.URL = url
-	req, err := http.NewRequest("GET", node.URL.String(), nil)
+	req, err := http.NewRequest("GET", url.String(), nil)
 	if err != nil {
-		return nil, errors.TaskfileFetchFailedError{URI: node.URL.String()}
+		return nil, errors.TaskfileFetchFailedError{URI: node.Location()}
 	}
 
 	resp, err := http.DefaultClient.Do(req.WithContext(ctx))
 	if err != nil {
-		if errors.Is(err, context.DeadlineExceeded) {
-			return nil, &errors.TaskfileNetworkTimeoutError{URI: node.URL.String(), Timeout: node.timeout}
+		if ctx.Err() != nil {
+			return nil, err
 		}
-		return nil, errors.TaskfileFetchFailedError{URI: node.URL.String()}
+		return nil, errors.TaskfileFetchFailedError{URI: node.Location()}
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
 		return nil, errors.TaskfileFetchFailedError{
-			URI:            node.URL.String(),
+			URI:            node.Location(),
 			HTTPStatusCode: resp.StatusCode,
 		}
 	}
@@ -97,11 +87,11 @@ func (node *HTTPNode) ResolveEntrypoint(entrypoint string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return node.URL.ResolveReference(ref).String(), nil
+	return node.url.ResolveReference(ref).String(), nil
 }
 
 func (node *HTTPNode) ResolveDir(dir string) (string, error) {
-	path, err := execext.Expand(dir)
+	path, err := execext.ExpandLiteral(dir)
 	if err != nil {
 		return "", err
 	}
@@ -120,7 +110,14 @@ func (node *HTTPNode) ResolveDir(dir string) (string, error) {
 	return filepathext.SmartJoin(parent, path), nil
 }
 
-func (node *HTTPNode) FilenameAndLastDir() (string, string) {
-	dir, filename := filepath.Split(node.entrypoint)
-	return filepath.Base(dir), filename
+func (node *HTTPNode) CacheKey() string {
+	checksum := strings.TrimRight(checksum([]byte(node.Location())), "=")
+	dir, filename := filepath.Split(node.url.Path)
+	lastDir := filepath.Base(dir)
+	prefix := filename
+	// Means it's not "", nor "." nor "/", so it's a valid directory
+	if len(lastDir) > 1 {
+		prefix = fmt.Sprintf("%s.%s", lastDir, filename)
+	}
+	return fmt.Sprintf("http.%s.%s.%s", node.url.Host, prefix, checksum)
 }

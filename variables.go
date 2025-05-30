@@ -1,6 +1,8 @@
 package task
 
 import (
+	"fmt"
+	"maps"
 	"os"
 	"path/filepath"
 	"strings"
@@ -18,16 +20,16 @@ import (
 
 // CompiledTask returns a copy of a task, but replacing variables in almost all
 // properties using the Go template package.
-func (e *Executor) CompiledTask(call *ast.Call) (*ast.Task, error) {
+func (e *Executor) CompiledTask(call *Call) (*ast.Task, error) {
 	return e.compiledTask(call, true)
 }
 
 // FastCompiledTask is like CompiledTask, but it skippes dynamic variables.
-func (e *Executor) FastCompiledTask(call *ast.Call) (*ast.Task, error) {
+func (e *Executor) FastCompiledTask(call *Call) (*ast.Task, error) {
 	return e.compiledTask(call, false)
 }
 
-func (e *Executor) compiledTask(call *ast.Call, evaluateShVars bool) (*ast.Task, error) {
+func (e *Executor) compiledTask(call *Call, evaluateShVars bool) (*ast.Task, error) {
 	origTask, err := e.GetTask(call)
 	if err != nil {
 		return nil, err
@@ -75,7 +77,7 @@ func (e *Executor) compiledTask(call *ast.Call, evaluateShVars bool) (*ast.Task,
 		Watch:                origTask.Watch,
 		Namespace:            origTask.Namespace,
 	}
-	new.Dir, err = execext.Expand(new.Dir)
+	new.Dir, err = execext.ExpandLiteral(new.Dir)
 	if err != nil {
 		return nil, err
 	}
@@ -110,35 +112,34 @@ func (e *Executor) compiledTask(call *ast.Call, evaluateShVars bool) (*ast.Task,
 	new.Env.Merge(templater.ReplaceVars(dotenvEnvs, cache), nil)
 	new.Env.Merge(templater.ReplaceVars(origTask.Env, cache), nil)
 	if evaluateShVars {
-		err = new.Env.Range(func(k string, v ast.Var) error {
+		for k, v := range new.Env.All() {
 			// If the variable is not dynamic, we can set it and return
 			if v.Value != nil || v.Sh == nil {
 				new.Env.Set(k, ast.Var{Value: v.Value})
-				return nil
+				continue
 			}
 			static, err := e.Compiler.HandleDynamicVar(v, new.Dir, env.GetFromVars(new.Env))
 			if err != nil {
-				return err
+				return nil, err
 			}
 			new.Env.Set(k, ast.Var{Value: static})
-			return nil
-		})
-		if err != nil {
-			return nil, err
 		}
 	}
 
-	if len(origTask.Sources) > 0 {
-		timestampChecker := fingerprint.NewTimestampChecker(e.TempDir.Fingerprint, e.Dry)
-		checksumChecker := fingerprint.NewChecksumChecker(e.TempDir.Fingerprint, e.Dry)
+	if len(origTask.Sources) > 0 && origTask.Method != "none" {
+		var checker fingerprint.SourcesCheckable
 
-		for _, checker := range []fingerprint.SourcesCheckable{timestampChecker, checksumChecker} {
-			value, err := checker.Value(&new)
-			if err != nil {
-				return nil, err
-			}
-			vars.Set(strings.ToUpper(checker.Kind()), ast.Var{Live: value})
+		if origTask.Method == "timestamp" {
+			checker = fingerprint.NewTimestampChecker(e.TempDir.Fingerprint, e.Dry)
+		} else {
+			checker = fingerprint.NewChecksumChecker(e.TempDir.Fingerprint, e.Dry)
 		}
+
+		value, err := checker.Value(&new)
+		if err != nil {
+			return nil, err
+		}
+		vars.Set(strings.ToUpper(checker.Kind()), ast.Var{Live: value})
 
 		// Adding new variables, requires us to refresh the templaters
 		// cache of the the values manually
@@ -152,7 +153,7 @@ func (e *Executor) compiledTask(call *ast.Call, evaluateShVars bool) (*ast.Task,
 				continue
 			}
 			if cmd.For != nil {
-				list, keys, err := itemsFromFor(cmd.For, new.Dir, new.Sources, vars, origTask.Location)
+				list, keys, err := itemsFromFor(cmd.For, new.Dir, new.Sources, new.Generates, vars, origTask.Location, cache)
 				if err != nil {
 					return nil, err
 				}
@@ -199,7 +200,7 @@ func (e *Executor) compiledTask(call *ast.Call, evaluateShVars bool) (*ast.Task,
 				continue
 			}
 			if dep.For != nil {
-				list, keys, err := itemsFromFor(dep.For, new.Dir, new.Sources, vars, origTask.Location)
+				list, keys, err := itemsFromFor(dep.For, new.Dir, new.Sources, new.Generates, vars, origTask.Location, cache)
 				if err != nil {
 					return nil, err
 				}
@@ -269,13 +270,21 @@ func itemsFromFor(
 	f *ast.For,
 	dir string,
 	sources []*ast.Glob,
+	generates []*ast.Glob,
 	vars *ast.Vars,
 	location *ast.Location,
+	cache *templater.Cache,
 ) ([]any, []string, error) {
 	var keys []string // The list of keys to loop over (only if looping over a map)
 	var values []any  // The list of values to loop over
 	// Get the list from a matrix
 	if f.Matrix.Len() != 0 {
+		if err := resolveMatrixRefs(f.Matrix, cache); err != nil {
+			return nil, nil, errors.TaskfileInvalidError{
+				URI: location.Taskfile,
+				Err: err,
+			}
+		}
 		return asAnySlice(product(f.Matrix)), nil, nil
 	}
 	// Get the list from the explicit for list
@@ -296,6 +305,20 @@ func itemsFromFor(
 		}
 		values = asAnySlice(glist)
 	}
+	// Get the list from the task generates
+	if f.From == "generates" {
+		glist, err := fingerprint.Globs(dir, generates)
+		if err != nil {
+			return nil, nil, err
+		}
+		// Make the paths relative to the task dir
+		for i, v := range glist {
+			if glist[i], err = filepath.Rel(dir, v); err != nil {
+				return nil, nil, err
+			}
+		}
+		values = asAnySlice(glist)
+	}
 	// Get the list from a variable and split it up
 	if f.Var != "" {
 		if vars != nil {
@@ -303,7 +326,7 @@ func itemsFromFor(
 			// If the variable is dynamic, then it hasn't been resolved yet
 			// and we can't use it as a list. This happens when fast compiling a task
 			// for use in --list or --list-all etc.
-			if ok && v.Sh == nil {
+			if ok && v.Value != nil && v.Sh == nil {
 				switch value := v.Value.(type) {
 				case string:
 					if f.Split != "" {
@@ -334,9 +357,27 @@ func itemsFromFor(
 	return values, keys, nil
 }
 
+func resolveMatrixRefs(matrix *ast.Matrix, cache *templater.Cache) error {
+	if matrix.Len() == 0 {
+		return nil
+	}
+	for _, row := range matrix.All() {
+		if row.Ref != "" {
+			v := templater.ResolveRef(row.Ref, cache)
+			switch value := v.(type) {
+			case []any:
+				row.Value = value
+			default:
+				return fmt.Errorf("matrix reference %q must resolve to a list", row.Ref)
+			}
+		}
+	}
+	return nil
+}
+
 // product generates the cartesian product of the input map of slices.
-func product(inputMap *ast.Matrix) []map[string]any {
-	if inputMap.Len() == 0 {
+func product(matrix *ast.Matrix) []map[string]any {
+	if matrix.Len() == 0 {
 		return nil
 	}
 
@@ -344,18 +385,16 @@ func product(inputMap *ast.Matrix) []map[string]any {
 	result := []map[string]any{{}}
 
 	// Iterate over each slice in the slices
-	_ = inputMap.Range(func(key string, slice []any) error {
+	for key, row := range matrix.All() {
 		var newResult []map[string]any
 
 		// For each combination in the current result
 		for _, combination := range result {
 			// Append each element from the current slice to the combinations
-			for _, item := range slice {
+			for _, item := range row.Value {
 				newComb := make(map[string]any, len(combination))
 				// Copy the existing combination
-				for k, v := range combination {
-					newComb[k] = v
-				}
+				maps.Copy(newComb, combination)
 				// Add the current item with the corresponding key
 				newComb[key] = item
 				newResult = append(newResult, newComb)
@@ -364,8 +403,7 @@ func product(inputMap *ast.Matrix) []map[string]any {
 
 		// Update result with the new combinations
 		result = newResult
-		return nil
-	})
+	}
 
 	return result
 }

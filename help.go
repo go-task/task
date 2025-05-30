@@ -41,20 +41,6 @@ func (o ListOptions) ShouldListTasks() bool {
 	return o.ListOnlyTasksWithDescriptions || o.ListAllTasks
 }
 
-// Validate validates that the collection of list-related options are in a valid configuration
-func (o ListOptions) Validate() error {
-	if o.ListOnlyTasksWithDescriptions && o.ListAllTasks {
-		return fmt.Errorf("task: cannot use --list and --list-all at the same time")
-	}
-	if o.FormatTaskListAsJSON && !o.ShouldListTasks() {
-		return fmt.Errorf("task: --json only applies to --list or --list-all")
-	}
-	if o.NoStatus && !o.FormatTaskListAsJSON {
-		return fmt.Errorf("task: --no-status only applies to --json with --list or --list-all")
-	}
-	return nil
-}
-
 // Filters returns the slice of FilterFunc which filters a list
 // of ast.Task according to the given ListOptions
 func (o ListOptions) Filters() []FilterFunc {
@@ -128,18 +114,14 @@ func (e *Executor) ListTaskNames(allTasks bool) error {
 		w = e.Stdout
 	}
 
-	// Get the list of tasks and sort them
-	tasks := e.Taskfile.Tasks.Values()
-
 	// Sort the tasks
 	if e.TaskSorter == nil {
-		e.TaskSorter = &sort.AlphaNumericWithRootTasksFirst{}
+		e.TaskSorter = sort.AlphaNumericWithRootTasksFirst
 	}
-	e.TaskSorter.Sort(tasks)
 
 	// Create a list of task names
 	taskNames := make([]string, 0, e.Taskfile.Tasks.Len())
-	for _, task := range tasks {
+	for task := range e.Taskfile.Tasks.Values(e.TaskSorter) {
 		if (allTasks || task.Desc != "") && !task.Internal {
 			taskNames = append(taskNames, strings.TrimRight(task.Task, ":"))
 			for _, alias := range task.Aliases {
@@ -167,6 +149,7 @@ func (e *Executor) ToEditorOutput(tasks []*ast.Task, noStatus bool) (*editors.Ta
 		g.Go(func() error {
 			o.Tasks[i] = editors.Task{
 				Name:     tasks[i].Name(),
+				Task:     tasks[i].Task,
 				Desc:     tasks[i].Desc,
 				Summary:  tasks[i].Summary,
 				Aliases:  aliases,

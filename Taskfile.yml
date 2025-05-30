@@ -18,6 +18,11 @@ tasks:
       - task: lint
       - task: test
 
+  run:
+    desc: Runs Task
+    cmds:
+      - go run ./cmd/task {{.CLI_ARGS}}
+
   install:
     desc: Installs Task
     aliases: [i]
@@ -27,27 +32,41 @@ tasks:
       - go install -v ./cmd/task
 
   generate:
-    desc: Runs Mockery to create mocks
     aliases: [gen, g]
+    desc: Runs all generate tasks
+    cmds:
+      - task: generate:mocks
+      - task: generate:fixtures
+
+  generate:mocks:
+    desc: Runs Mockery to create mocks
+    aliases: [gen:mocks, g:mocks]
     deps: [install:mockery]
     sources:
       - "internal/fingerprint/checker.go"
     generates:
       - "internal/mocks/*.go"
     cmds:
-      - "{{.BIN}}/mockery --dir ./internal/fingerprint --name SourcesCheckable"
-      - "{{.BIN}}/mockery --dir ./internal/fingerprint --name StatusCheckable"
+      - find . -type f -name *_mock.go -delete
+      - "{{.BIN}}/mockery"
+
+  generate:fixtures:
+    desc: Runs tests and generates golden fixture files
+    aliases: [gen:fixtures, g:fixtures]
+    cmds:
+      - find ./testdata -name '*.golden' -delete
+      - go test -update ./...
 
   install:mockery:
     desc: Installs mockgen; a tool to generate mock files
     vars:
-      MOCKERY_VERSION: v2.24.0
+      MOCKERY_VERSION: v3.2.2
     env:
       GOBIN: "{{.BIN}}"
     status:
       - go version -m {{.BIN}}/mockery | grep github.com/vektra/mockery | grep {{.MOCKERY_VERSION}}
     cmds:
-      - go install github.com/vektra/mockery/v2@{{.MOCKERY_VERSION}}
+      - GOBIN="{{.BIN}}" go install github.com/vektra/mockery/v3@{{.MOCKERY_VERSION}}
 
   mod:
     desc: Downloads and tidy Go modules
@@ -79,6 +98,15 @@ tasks:
     cmds:
       - golangci-lint run --fix
 
+  format:
+    desc: Runs golangci-lint and formats any Go files
+    aliases: [fmt, f]
+    sources:
+      - './**/*.go'
+      - .golangci.yml
+    cmds:
+      - golangci-lint fmt
+
   sleepit:build:
     desc: Builds the sleepit test helper
     sources:
@@ -98,21 +126,23 @@ tasks:
   test:
     desc: Runs test suite
     aliases: [t]
-    deps: [install]
+    sources:
+      - "**/*.go"
+      - "testdata/**/*"
     cmds:
-      - go test {{catLines .GO_PACKAGES}}
-    vars:
-      GO_PACKAGES:
-        sh: go list ./...
+      - go test ./...
+
+  test:watch:
+    desc: Runs test suite with watch tests included
+    deps: [sleepit:build]
+    cmds:
+      - go test ./... -tags 'watch'
 
   test:all:
     desc: Runs test suite with signals and watch tests included
-    deps: [install, sleepit:build]
+    deps: [sleepit:build]
     cmds:
-      - go test {{catLines .GO_PACKAGES}} -tags 'signals watch'
-    vars:
-      GO_PACKAGES:
-        sh: go list ./...
+      - go test -tags 'signals watch' ./...
 
   goreleaser:test:
     desc: Tests release process without publishing
@@ -123,6 +153,22 @@ tasks:
     desc: Installs goreleaser
     cmds:
       - go install github.com/goreleaser/goreleaser/v2@latest
+
+  gorelease:install:
+    desc: "Installs gorelease: https://pkg.go.dev/golang.org/x/exp/cmd/gorelease"
+    status:
+      - command -v gorelease
+    cmds:
+      - go install golang.org/x/exp/cmd/gorelease@latest
+
+  api:check:
+    desc: Checks what changes have been made to the public API
+    deps: [gorelease:install]
+    vars:
+      LATEST:
+        sh: git describe --tags --abbrev=0
+    cmds:
+      - gorelease -base={{.LATEST}}
 
   release:*:
     desc: Prepare the project for a new release
@@ -137,7 +183,7 @@ tasks:
       - Push the commit/tag to the repository
       - Create a GitHub release
 
-      To use the task, simply run "task release:<version>" where "<version>" is is one of:
+      To use the task, run "task release:<version>" where "<version>" is is one of:
 
       - "major" - Bumps the major number
       - "minor" - Bumps the minor number
@@ -176,11 +222,3 @@ tasks:
     desc: Publish release to npm
     cmds:
       - npm publish --access=public
-
-  packages:
-    cmds:
-      - echo '{{.GO_PACKAGES}}'
-    vars:
-      GO_PACKAGES:
-        sh: go list ./...
-    silent: true

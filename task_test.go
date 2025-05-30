@@ -13,25 +13,277 @@ import (
 	"path/filepath"
 	"regexp"
 	"runtime"
+	"slices"
+	"sort"
 	"strings"
 	"sync"
 	"testing"
 	"time"
 
 	"github.com/Masterminds/semver/v3"
+	"github.com/sebdah/goldie/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/go-task/task/v3"
 	"github.com/go-task/task/v3/errors"
-	"github.com/go-task/task/v3/internal/experiments"
+	"github.com/go-task/task/v3/experiments"
 	"github.com/go-task/task/v3/internal/filepathext"
-	"github.com/go-task/task/v3/internal/logger"
 	"github.com/go-task/task/v3/taskfile/ast"
 )
 
 func init() {
 	_ = os.Setenv("NO_COLOR", "1")
+}
+
+type (
+	TestOption interface {
+		ExecutorTestOption
+		FormatterTestOption
+	}
+	TaskTest struct {
+		name                string
+		experiments         map[*experiments.Experiment]int
+		postProcessFns      []PostProcessFn
+		fixtureTemplateData any
+	}
+)
+
+// goldenFileName makes the file path for fixture files safe for all well-known
+// operating systems. Windows in particular has a lot of restrictions the
+// characters that can be used in file paths.
+func goldenFileName(t *testing.T) string {
+	t.Helper()
+	name := t.Name()
+	for _, c := range []string{` `, `<`, `>`, `:`, `"`, `/`, `\`, `|`, `?`, `*`} {
+		name = strings.ReplaceAll(name, c, "-")
+	}
+	return name
+}
+
+// writeFixture writes a fixture file for the test. The fixture file is created
+// using the [goldie.Goldie] package. The fixture file is created with the
+// output of the task, after any post-process functions have been applied.
+func (tt *TaskTest) writeFixture(
+	t *testing.T,
+	g *goldie.Goldie,
+	goldenFileSuffix string,
+	b []byte,
+) {
+	t.Helper()
+	// Apply any post-process functions
+	for _, fn := range tt.postProcessFns {
+		b = fn(t, b)
+	}
+	// Write the fixture file
+	goldenFileName := goldenFileName(t)
+	if goldenFileSuffix != "" {
+		goldenFileName += "-" + goldenFileSuffix
+	}
+	if tt.fixtureTemplateData != nil {
+		g.AssertWithTemplate(t, goldenFileName, tt.fixtureTemplateData, b)
+	} else {
+		g.Assert(t, goldenFileName, b)
+	}
+}
+
+// writeFixtureBuffer is a wrapper for writing the main output of the task to a
+// fixture file.
+func (tt *TaskTest) writeFixtureBuffer(
+	t *testing.T,
+	g *goldie.Goldie,
+	buff bytes.Buffer,
+) {
+	t.Helper()
+	tt.writeFixture(t, g, "", buff.Bytes())
+}
+
+// writeFixtureErrSetup is a wrapper for writing the output of an error during
+// the setup phase of the task to a fixture file.
+func (tt *TaskTest) writeFixtureErrSetup(
+	t *testing.T,
+	g *goldie.Goldie,
+	err error,
+) {
+	t.Helper()
+	tt.writeFixture(t, g, "err-setup", []byte(err.Error()))
+}
+
+// Functional options
+
+// WithName gives the test fixture output a name. This should be used when
+// running multiple tests in a single test function.
+func WithName(name string) TestOption {
+	return &nameTestOption{name: name}
+}
+
+type nameTestOption struct {
+	name string
+}
+
+func (opt *nameTestOption) applyToExecutorTest(t *ExecutorTest) {
+	t.name = opt.name
+}
+
+func (opt *nameTestOption) applyToFormatterTest(t *FormatterTest) {
+	t.name = opt.name
+}
+
+// WithTask sets the name of the task to run. This should be used when the task
+// to run is not the default task.
+func WithTask(task string) TestOption {
+	return &taskTestOption{task: task}
+}
+
+type taskTestOption struct {
+	task string
+}
+
+func (opt *taskTestOption) applyToExecutorTest(t *ExecutorTest) {
+	t.task = opt.task
+}
+
+func (opt *taskTestOption) applyToFormatterTest(t *FormatterTest) {
+	t.task = opt.task
+}
+
+// WithVar sets a variable to be passed to the task. This can be called multiple
+// times to set more than one variable.
+func WithVar(key string, value any) TestOption {
+	return &varTestOption{key: key, value: value}
+}
+
+type varTestOption struct {
+	key   string
+	value any
+}
+
+func (opt *varTestOption) applyToExecutorTest(t *ExecutorTest) {
+	t.vars[opt.key] = opt.value
+}
+
+func (opt *varTestOption) applyToFormatterTest(t *FormatterTest) {
+	t.vars[opt.key] = opt.value
+}
+
+// WithExecutorOptions sets the [task.ExecutorOption]s to be used when creating
+// a [task.Executor].
+func WithExecutorOptions(executorOpts ...task.ExecutorOption) TestOption {
+	return &executorOptionsTestOption{executorOpts: executorOpts}
+}
+
+type executorOptionsTestOption struct {
+	executorOpts []task.ExecutorOption
+}
+
+func (opt *executorOptionsTestOption) applyToExecutorTest(t *ExecutorTest) {
+	t.executorOpts = slices.Concat(t.executorOpts, opt.executorOpts)
+}
+
+func (opt *executorOptionsTestOption) applyToFormatterTest(t *FormatterTest) {
+	t.executorOpts = slices.Concat(t.executorOpts, opt.executorOpts)
+}
+
+// WithExperiment sets an experiment to be enabled for the test. This can be
+// called multiple times to enable more than one experiment.
+func WithExperiment(experiment *experiments.Experiment, value int) TestOption {
+	return &experimentTestOption{experiment: experiment, value: value}
+}
+
+type experimentTestOption struct {
+	experiment *experiments.Experiment
+	value      int
+}
+
+func (opt *experimentTestOption) applyToExecutorTest(t *ExecutorTest) {
+	t.experiments[opt.experiment] = opt.value
+}
+
+func (opt *experimentTestOption) applyToFormatterTest(t *FormatterTest) {
+	t.experiments[opt.experiment] = opt.value
+}
+
+// WithPostProcessFn adds a [PostProcessFn] function to the test. Post-process
+// functions are run on the output of the task before a fixture is created. This
+// can be used to remove absolute paths, sort lines, etc. This can be called
+// multiple times to add more than one post-process function.
+func WithPostProcessFn(fn PostProcessFn) TestOption {
+	return &postProcessFnTestOption{fn: fn}
+}
+
+type postProcessFnTestOption struct {
+	fn PostProcessFn
+}
+
+func (opt *postProcessFnTestOption) applyToExecutorTest(t *ExecutorTest) {
+	t.postProcessFns = append(t.postProcessFns, opt.fn)
+}
+
+func (opt *postProcessFnTestOption) applyToFormatterTest(t *FormatterTest) {
+	t.postProcessFns = append(t.postProcessFns, opt.fn)
+}
+
+// WithSetupError sets the test to expect an error during the setup phase of the
+// task execution. A fixture will be created with the output of any errors.
+func WithSetupError() TestOption {
+	return &setupErrorTestOption{}
+}
+
+type setupErrorTestOption struct{}
+
+func (opt *setupErrorTestOption) applyToExecutorTest(t *ExecutorTest) {
+	t.wantSetupError = true
+}
+
+func (opt *setupErrorTestOption) applyToFormatterTest(t *FormatterTest) {
+	t.wantSetupError = true
+}
+
+// WithFixtureTemplateData sets up data defined in the golden file using golang
+// template. Useful if the golden file can change depending on the test.
+// Example template: {{ .Value }}
+// Example data definition: struct{ Value string }{Value: "value"}
+func WithFixtureTemplateData(data any) TestOption {
+	return &fixtureTemplateDataTestOption{data: data}
+}
+
+type fixtureTemplateDataTestOption struct {
+	data any
+}
+
+func (opt *fixtureTemplateDataTestOption) applyToExecutorTest(t *ExecutorTest) {
+	t.fixtureTemplateData = opt.data
+}
+
+func (opt *fixtureTemplateDataTestOption) applyToFormatterTest(t *FormatterTest) {
+	t.fixtureTemplateData = opt.data
+}
+
+// Post-processing
+
+// A PostProcessFn is a function that can be applied to the output of a test
+// fixture before the file is written.
+type PostProcessFn func(*testing.T, []byte) []byte
+
+// PPRemoveAbsolutePaths removes any absolute paths from the output of the task.
+// This is useful when the task output contains paths that are can be different
+// in different environments such as home directories. The function looks for
+// any paths that contain the current working directory and truncates them.
+func PPRemoveAbsolutePaths(t *testing.T, b []byte) []byte {
+	t.Helper()
+	wd, err := os.Getwd()
+	require.NoError(t, err)
+	return bytes.ReplaceAll(b, []byte(wd), nil)
+}
+
+// PPSortedLines sorts the lines of the output of the task. This is useful when
+// the order of the output is not important, but the output is expected to be
+// the same each time the task is run (e.g. when running tasks in parallel).
+func PPSortedLines(t *testing.T, b []byte) []byte {
+	t.Helper()
+	lines := strings.Split(strings.TrimSpace(string(b)), "\n")
+	sort.Strings(lines)
+	return []byte(strings.Join(lines, "\n") + "\n")
 }
 
 // SyncBuffer is a threadsafe buffer for testing.
@@ -69,19 +321,20 @@ func (fct fileContentTest) Run(t *testing.T) {
 	for f := range fct.Files {
 		_ = os.Remove(filepathext.SmartJoin(fct.Dir, f))
 	}
-	e := &task.Executor{
-		Dir: fct.Dir,
-		TempDir: task.TempDir{
+
+	e := task.NewExecutor(
+		task.WithDir(fct.Dir),
+		task.WithTempDir(task.TempDir{
 			Remote:      filepathext.SmartJoin(fct.Dir, ".task"),
 			Fingerprint: filepathext.SmartJoin(fct.Dir, ".task"),
-		},
-		Entrypoint: fct.Entrypoint,
-		Stdout:     io.Discard,
-		Stderr:     io.Discard,
-	}
+		}),
+		task.WithEntrypoint(fct.Entrypoint),
+		task.WithStdout(io.Discard),
+		task.WithStderr(io.Discard),
+	)
 
 	require.NoError(t, e.Setup(), "e.Setup()")
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: fct.Target}), "e.Run(target)")
+	require.NoError(t, e.Run(context.Background(), &task.Call{Task: fct.Target}), "e.Run(target)")
 	for name, expectContent := range fct.Files {
 		t.Run(fct.name(name), func(t *testing.T) {
 			path := filepathext.SmartJoin(e.Dir, name)
@@ -94,398 +347,6 @@ func (fct fileContentTest) Run(t *testing.T) {
 			assert.Equal(t, expectContent, s, "unexpected file content in %s", path)
 		})
 	}
-}
-
-func TestEmptyTask(t *testing.T) {
-	t.Parallel()
-
-	e := &task.Executor{
-		Dir:    "testdata/empty_task",
-		Stdout: io.Discard,
-		Stderr: io.Discard,
-	}
-	require.NoError(t, e.Setup(), "e.Setup()")
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "default"}))
-}
-
-func TestEmptyTaskfile(t *testing.T) {
-	t.Parallel()
-
-	e := &task.Executor{
-		Dir:    "testdata/empty_taskfile",
-		Stdout: io.Discard,
-		Stderr: io.Discard,
-	}
-	require.Error(t, e.Setup(), "e.Setup()")
-}
-
-func TestEnv(t *testing.T) {
-	t.Setenv("QUX", "from_os")
-	tt := fileContentTest{
-		Dir:       "testdata/env",
-		Target:    "default",
-		TrimSpace: false,
-		Files: map[string]string{
-			"local.txt":          "GOOS='linux' GOARCH='amd64' CGO_ENABLED='0'\n",
-			"global.txt":         "FOO='foo' BAR='overridden' BAZ='baz'\n",
-			"multiple_type.txt":  "FOO='1' BAR='true' BAZ='1.1'\n",
-			"not-overridden.txt": "QUX='from_os'\n",
-			"dynamic.txt":        "foo\n",
-		},
-	}
-	tt.Run(t)
-	t.Setenv("TASK_X_ENV_PRECEDENCE", "1")
-	experiments.EnvPrecedence = experiments.New("ENV_PRECEDENCE")
-	ttt := fileContentTest{
-		Dir:       "testdata/env",
-		Target:    "overridden",
-		TrimSpace: false,
-		Files: map[string]string{
-			"overridden.txt": "QUX='from_taskfile'\n",
-		},
-	}
-	ttt.Run(t)
-}
-
-func TestVars(t *testing.T) {
-	t.Parallel()
-
-	tt := fileContentTest{
-		Dir:    "testdata/vars",
-		Target: "default",
-		Files: map[string]string{
-			"missing-var.txt":  "\n",
-			"var-order.txt":    "ABCDEF\n",
-			"dependent-sh.txt": "123456\n",
-			"with-call.txt":    "Hi, ABC123!\n",
-			"from-dot-env.txt": "From .env file\n",
-		},
-	}
-	t.Run("", func(t *testing.T) {
-		t.Parallel()
-		tt.Run(t)
-	})
-}
-
-func TestRequires(t *testing.T) {
-	t.Parallel()
-
-	const dir = "testdata/requires"
-
-	var buff bytes.Buffer
-	e := &task.Executor{
-		Dir:    dir,
-		Stdout: &buff,
-		Stderr: &buff,
-	}
-
-	require.NoError(t, e.Setup())
-	require.ErrorContains(t, e.Run(context.Background(), &ast.Call{Task: "missing-var"}), "task: Task \"missing-var\" cancelled because it is missing required variables: foo")
-	buff.Reset()
-	require.NoError(t, e.Setup())
-
-	vars := ast.NewVars()
-	vars.Set("foo", ast.Var{Value: "bar"})
-	require.NoError(t, e.Run(context.Background(), &ast.Call{
-		Task: "missing-var",
-		Vars: vars,
-	}))
-	buff.Reset()
-
-	require.NoError(t, e.Setup())
-	require.ErrorContains(t, e.Run(context.Background(), &ast.Call{Task: "validation-var", Vars: vars}), "task: Task \"validation-var\" cancelled because it is missing required variables:\n  - foo has an invalid value : 'bar' (allowed values : [one two])")
-	buff.Reset()
-
-	require.NoError(t, e.Setup())
-	vars.Set("foo", ast.Var{Value: "one"})
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "validation-var", Vars: vars}))
-	buff.Reset()
-
-	require.NoError(t, e.Setup())
-	require.ErrorContains(t, e.Run(context.Background(), &ast.Call{Task: "require-before-compile"}), "task: Task \"require-before-compile\" cancelled because it is missing required variables: MY_VAR")
-	buff.Reset()
-
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "var-defined-in-task"}))
-	buff.Reset()
-}
-
-func TestSpecialVars(t *testing.T) {
-	t.Parallel()
-
-	const dir = "testdata/special_vars"
-	const subdir = "testdata/special_vars/subdir"
-	toAbs := func(rel string) string {
-		abs, err := filepath.Abs(rel)
-		assert.NoError(t, err)
-		return abs
-	}
-
-	tests := []struct {
-		target   string
-		expected string
-	}{
-		// Root
-		{target: "print-task", expected: "print-task"},
-		{target: "print-root-dir", expected: toAbs(dir)},
-		{target: "print-taskfile", expected: toAbs(dir) + "/Taskfile.yml"},
-		{target: "print-taskfile-dir", expected: toAbs(dir)},
-		{target: "print-task-version", expected: "unknown"},
-		{target: "print-task-dir", expected: toAbs(dir) + "/foo"},
-		// Included
-		{target: "included:print-task", expected: "included:print-task"},
-		{target: "included:print-root-dir", expected: toAbs(dir)},
-		{target: "included:print-taskfile", expected: toAbs(dir) + "/included/Taskfile.yml"},
-		{target: "included:print-taskfile-dir", expected: toAbs(dir) + "/included"},
-		{target: "included:print-task-version", expected: "unknown"},
-	}
-
-	for _, dir := range []string{dir, subdir} {
-		for _, test := range tests {
-			t.Run(test.target, func(t *testing.T) {
-				t.Parallel()
-
-				var buff bytes.Buffer
-				e := &task.Executor{
-					Dir:                dir,
-					Stdout:             &buff,
-					Stderr:             &buff,
-					Silent:             true,
-					EnableVersionCheck: true,
-				}
-				require.NoError(t, e.Setup())
-				require.NoError(t, e.Run(context.Background(), &ast.Call{Task: test.target}))
-				assert.Equal(t, test.expected+"\n", buff.String())
-			})
-		}
-	}
-}
-
-func TestConcurrency(t *testing.T) {
-	t.Parallel()
-
-	const (
-		dir    = "testdata/concurrency"
-		target = "default"
-	)
-
-	e := &task.Executor{
-		Dir:         dir,
-		Stdout:      io.Discard,
-		Stderr:      io.Discard,
-		Concurrency: 1,
-	}
-	require.NoError(t, e.Setup(), "e.Setup()")
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: target}), "e.Run(target)")
-}
-
-func TestParams(t *testing.T) {
-	t.Parallel()
-
-	tt := fileContentTest{
-		Dir:       "testdata/params",
-		Target:    "default",
-		TrimSpace: false,
-		Files: map[string]string{
-			"hello.txt":       "Hello\n",
-			"world.txt":       "World\n",
-			"exclamation.txt": "!\n",
-			"dep1.txt":        "Dependence1\n",
-			"dep2.txt":        "Dependence2\n",
-			"spanish.txt":     "¡Holla mundo!\n",
-			"spanish-dep.txt": "¡Holla dependencia!\n",
-			"portuguese.txt":  "Olá, mundo!\n",
-			"portuguese2.txt": "Olá, mundo!\n",
-			"german.txt":      "Welt!\n",
-		},
-	}
-	t.Run("", func(t *testing.T) {
-		t.Parallel()
-		tt.Run(t)
-	})
-}
-
-func TestDeps(t *testing.T) {
-	t.Parallel()
-
-	const dir = "testdata/deps"
-
-	files := []string{
-		"d1.txt",
-		"d2.txt",
-		"d3.txt",
-		"d11.txt",
-		"d12.txt",
-		"d13.txt",
-		"d21.txt",
-		"d22.txt",
-		"d23.txt",
-		"d31.txt",
-		"d32.txt",
-		"d33.txt",
-	}
-
-	for _, f := range files {
-		_ = os.Remove(filepathext.SmartJoin(dir, f))
-	}
-
-	e := &task.Executor{
-		Dir:    dir,
-		Stdout: io.Discard,
-		Stderr: io.Discard,
-	}
-	require.NoError(t, e.Setup())
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "default"}))
-
-	for _, f := range files {
-		f = filepathext.SmartJoin(dir, f)
-		if _, err := os.Stat(f); err != nil {
-			t.Errorf("File %s should exist", f)
-		}
-	}
-}
-
-func TestStatus(t *testing.T) {
-	t.Parallel()
-
-	const dir = "testdata/status"
-
-	files := []string{
-		"foo.txt",
-		"bar.txt",
-		"baz.txt",
-	}
-
-	for _, f := range files {
-		path := filepathext.SmartJoin(dir, f)
-		_ = os.Remove(path)
-		if _, err := os.Stat(path); err == nil {
-			t.Errorf("File should not exist: %v", err)
-		}
-	}
-
-	var buff bytes.Buffer
-	e := &task.Executor{
-		Dir: dir,
-		TempDir: task.TempDir{
-			Remote:      filepathext.SmartJoin(dir, ".task"),
-			Fingerprint: filepathext.SmartJoin(dir, ".task"),
-		},
-		Stdout: &buff,
-		Stderr: &buff,
-		Silent: true,
-	}
-	require.NoError(t, e.Setup())
-	// gen-foo creates foo.txt, and will always fail it's status check.
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "gen-foo"}))
-	// gen-foo creates bar.txt, and will pass its status-check the 3. time it
-	// is run. It creates bar.txt, but also lists it as its source. So, the checksum
-	// for the file won't match before after the second run as we the file
-	// only exists after the first run.
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "gen-bar"}))
-	// gen-silent-baz is marked as being silent, and should only produce output
-	// if e.Verbose is set to true.
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "gen-silent-baz"}))
-
-	for _, f := range files {
-		if _, err := os.Stat(filepathext.SmartJoin(dir, f)); err != nil {
-			t.Errorf("File should exist: %v", err)
-		}
-	}
-
-	// Run gen-bar a second time to produce a checksum file that matches bar.txt
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "gen-bar"}))
-
-	// Run gen-bar a third time, to make sure we've triggered the status check.
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "gen-bar"}))
-
-	// We're silent, so no output should have been produced.
-	assert.Empty(t, buff.String())
-
-	// Now, let's remove source file, and run the task again to to prepare
-	// for the next test.
-	err := os.Remove(filepathext.SmartJoin(dir, "bar.txt"))
-	require.NoError(t, err)
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "gen-bar"}))
-	buff.Reset()
-
-	// Global silence switched of, so we should see output unless the task itself
-	// is silent.
-	e.Silent = false
-
-	// all: not up-to-date
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "gen-foo"}))
-	assert.Equal(t, "task: [gen-foo] touch foo.txt", strings.TrimSpace(buff.String()))
-	buff.Reset()
-	// status: not up-to-date
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "gen-foo"}))
-	assert.Equal(t, "task: [gen-foo] touch foo.txt", strings.TrimSpace(buff.String()))
-	buff.Reset()
-
-	// sources: not up-to-date
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "gen-bar"}))
-	assert.Equal(t, "task: [gen-bar] touch bar.txt", strings.TrimSpace(buff.String()))
-	buff.Reset()
-	// all: up-to-date
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "gen-bar"}))
-	assert.Equal(t, `task: Task "gen-bar" is up to date`, strings.TrimSpace(buff.String()))
-	buff.Reset()
-
-	// sources: not up-to-date, no output produced.
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "gen-silent-baz"}))
-	assert.Empty(t, buff.String())
-
-	// up-to-date, no output produced
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "gen-silent-baz"}))
-	assert.Empty(t, buff.String())
-
-	e.Verbose = true
-	// up-to-date, output produced due to Verbose mode.
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "gen-silent-baz"}))
-	assert.Equal(t, `task: Task "gen-silent-baz" is up to date`, strings.TrimSpace(buff.String()))
-	buff.Reset()
-}
-
-func TestPrecondition(t *testing.T) {
-	t.Parallel()
-
-	const dir = "testdata/precondition"
-
-	var buff bytes.Buffer
-	e := &task.Executor{
-		Dir:    dir,
-		Stdout: &buff,
-		Stderr: &buff,
-	}
-
-	// A precondition that has been met
-	require.NoError(t, e.Setup())
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "foo"}))
-	if buff.String() != "" {
-		t.Errorf("Got Output when none was expected: %s", buff.String())
-	}
-
-	// A precondition that was not met
-	require.Error(t, e.Run(context.Background(), &ast.Call{Task: "impossible"}))
-
-	if buff.String() != "task: 1 != 0 obviously!\n" {
-		t.Errorf("Wrong output message: %s", buff.String())
-	}
-	buff.Reset()
-
-	// Calling a task with a precondition in a dependency fails the task
-	require.Error(t, e.Run(context.Background(), &ast.Call{Task: "depends_on_impossible"}))
-
-	if buff.String() != "task: 1 != 0 obviously!\n" {
-		t.Errorf("Wrong output message: %s", buff.String())
-	}
-	buff.Reset()
-
-	// Calling a task with a precondition in a cmd fails the task
-	require.Error(t, e.Run(context.Background(), &ast.Call{Task: "executes_failing_task_as_cmd"}))
-	if buff.String() != "task: 1 != 0 obviously!\n" {
-		t.Errorf("Wrong output message: %s", buff.String())
-	}
-	buff.Reset()
 }
 
 func TestGenerates(t *testing.T) {
@@ -511,11 +372,11 @@ func TestGenerates(t *testing.T) {
 	}
 
 	buff := bytes.NewBuffer(nil)
-	e := &task.Executor{
-		Dir:    dir,
-		Stdout: buff,
-		Stderr: buff,
-	}
+	e := task.NewExecutor(
+		task.WithDir(dir),
+		task.WithStdout(buff),
+		task.WithStderr(buff),
+	)
 	require.NoError(t, e.Setup())
 
 	for _, theTask := range []string{relTask, absTask, fileWithSpaces} {
@@ -524,7 +385,7 @@ func TestGenerates(t *testing.T) {
 			fmt.Sprintf("task: Task \"%s\" is up to date\n", theTask)
 
 		// Run task for the first time.
-		require.NoError(t, e.Run(context.Background(), &ast.Call{Task: theTask}))
+		require.NoError(t, e.Run(context.Background(), &task.Call{Task: theTask}))
 
 		if _, err := os.Stat(srcFile); err != nil {
 			t.Errorf("File should exist: %v", err)
@@ -539,7 +400,7 @@ func TestGenerates(t *testing.T) {
 		buff.Reset()
 
 		// Re-run task to ensure it's now found to be up-to-date.
-		require.NoError(t, e.Run(context.Background(), &ast.Call{Task: theTask}))
+		require.NoError(t, e.Run(context.Background(), &task.Call{Task: theTask}))
 		if buff.String() != upToDate {
 			t.Errorf("Wrong output message: %s", buff.String())
 		}
@@ -568,19 +429,19 @@ func TestStatusChecksum(t *testing.T) { // nolint:paralleltest // cannot run in 
 			}
 
 			var buff bytes.Buffer
-			tempdir := task.TempDir{
+			tempDir := task.TempDir{
 				Remote:      filepathext.SmartJoin(dir, ".task"),
 				Fingerprint: filepathext.SmartJoin(dir, ".task"),
 			}
-			e := task.Executor{
-				Dir:     dir,
-				TempDir: tempdir,
-				Stdout:  &buff,
-				Stderr:  &buff,
-			}
+			e := task.NewExecutor(
+				task.WithDir(dir),
+				task.WithStdout(&buff),
+				task.WithStderr(&buff),
+				task.WithTempDir(tempDir),
+			)
 			require.NoError(t, e.Setup())
 
-			require.NoError(t, e.Run(context.Background(), &ast.Call{Task: test.task}))
+			require.NoError(t, e.Run(context.Background(), &task.Call{Task: test.task}))
 			for _, f := range test.files {
 				_, err := os.Stat(filepathext.SmartJoin(dir, f))
 				require.NoError(t, err)
@@ -588,360 +449,19 @@ func TestStatusChecksum(t *testing.T) { // nolint:paralleltest // cannot run in 
 
 			// Capture the modification time, so we can ensure the checksum file
 			// is not regenerated when the hash hasn't changed.
-			s, err := os.Stat(filepathext.SmartJoin(tempdir.Fingerprint, "checksum/"+test.task))
+			s, err := os.Stat(filepathext.SmartJoin(tempDir.Fingerprint, "checksum/"+test.task))
 			require.NoError(t, err)
 			time := s.ModTime()
 
 			buff.Reset()
-			require.NoError(t, e.Run(context.Background(), &ast.Call{Task: test.task}))
+			require.NoError(t, e.Run(context.Background(), &task.Call{Task: test.task}))
 			assert.Equal(t, `task: Task "`+test.task+`" is up to date`+"\n", buff.String())
 
-			s, err = os.Stat(filepathext.SmartJoin(tempdir.Fingerprint, "checksum/"+test.task))
+			s, err = os.Stat(filepathext.SmartJoin(tempDir.Fingerprint, "checksum/"+test.task))
 			require.NoError(t, err)
 			assert.Equal(t, time, s.ModTime())
 		})
 	}
-}
-
-func TestAlias(t *testing.T) {
-	t.Parallel()
-
-	const dir = "testdata/alias"
-
-	data, err := os.ReadFile(filepathext.SmartJoin(dir, "alias.txt"))
-	require.NoError(t, err)
-
-	var buff bytes.Buffer
-	e := task.Executor{
-		Dir:    dir,
-		Stdout: &buff,
-		Stderr: &buff,
-	}
-	require.NoError(t, e.Setup())
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "f"}))
-	assert.Equal(t, string(data), buff.String())
-}
-
-func TestDuplicateAlias(t *testing.T) {
-	t.Parallel()
-
-	const dir = "testdata/alias"
-
-	var buff bytes.Buffer
-	e := task.Executor{
-		Dir:    dir,
-		Stdout: &buff,
-		Stderr: &buff,
-	}
-	require.NoError(t, e.Setup())
-	require.Error(t, e.Run(context.Background(), &ast.Call{Task: "x"}))
-	assert.Equal(t, "", buff.String())
-}
-
-func TestAliasSummary(t *testing.T) {
-	t.Parallel()
-
-	const dir = "testdata/alias"
-
-	data, err := os.ReadFile(filepathext.SmartJoin(dir, "alias-summary.txt"))
-	require.NoError(t, err)
-
-	var buff bytes.Buffer
-	e := task.Executor{
-		Dir:     dir,
-		Summary: true,
-		Stdout:  &buff,
-		Stderr:  &buff,
-	}
-	require.NoError(t, e.Setup())
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "f"}))
-	assert.Equal(t, string(data), buff.String())
-}
-
-func TestLabelUpToDate(t *testing.T) {
-	t.Parallel()
-
-	const dir = "testdata/label_uptodate"
-
-	var buff bytes.Buffer
-	e := task.Executor{
-		Dir:    dir,
-		Stdout: &buff,
-		Stderr: &buff,
-	}
-	require.NoError(t, e.Setup())
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "foo"}))
-	assert.Contains(t, buff.String(), "foobar")
-}
-
-func TestLabelSummary(t *testing.T) {
-	t.Parallel()
-
-	const dir = "testdata/label_summary"
-
-	var buff bytes.Buffer
-	e := task.Executor{
-		Dir:     dir,
-		Summary: true,
-		Stdout:  &buff,
-		Stderr:  &buff,
-	}
-	require.NoError(t, e.Setup())
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "foo"}))
-	assert.Contains(t, buff.String(), "foobar")
-}
-
-func TestLabelInStatus(t *testing.T) {
-	t.Parallel()
-
-	const dir = "testdata/label_status"
-
-	e := task.Executor{
-		Dir: dir,
-	}
-	require.NoError(t, e.Setup())
-	err := e.Status(context.Background(), &ast.Call{Task: "foo"})
-	assert.ErrorContains(t, err, "foobar")
-}
-
-func TestLabelWithVariableExpansion(t *testing.T) {
-	t.Parallel()
-
-	const dir = "testdata/label_var"
-
-	var buff bytes.Buffer
-	e := task.Executor{
-		Dir:    dir,
-		Stdout: &buff,
-		Stderr: &buff,
-	}
-	require.NoError(t, e.Setup())
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "foo"}))
-	assert.Contains(t, buff.String(), "foobaz")
-}
-
-func TestLabelInSummary(t *testing.T) {
-	t.Parallel()
-
-	const dir = "testdata/label_summary"
-
-	var buff bytes.Buffer
-	e := task.Executor{
-		Dir:    dir,
-		Stdout: &buff,
-		Stderr: &buff,
-	}
-	require.NoError(t, e.Setup())
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "foo"}))
-	assert.Contains(t, buff.String(), "foobar")
-}
-
-func TestPromptInSummary(t *testing.T) {
-	t.Parallel()
-
-	const dir = "testdata/prompt"
-	tests := []struct {
-		name      string
-		input     string
-		wantError bool
-	}{
-		{"test short approval", "y\n", false},
-		{"test long approval", "yes\n", false},
-		{"test uppercase approval", "Y\n", false},
-		{"test stops task", "n\n", true},
-		{"test junk value stops task", "foobar\n", true},
-		{"test Enter stops task", "\n", true},
-	}
-
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			t.Parallel()
-
-			var inBuff bytes.Buffer
-			var outBuff bytes.Buffer
-			var errBuff bytes.Buffer
-
-			inBuff.Write([]byte(test.input))
-
-			e := task.Executor{
-				Dir:        dir,
-				Stdin:      &inBuff,
-				Stdout:     &outBuff,
-				Stderr:     &errBuff,
-				AssumeTerm: true,
-			}
-			require.NoError(t, e.Setup())
-
-			err := e.Run(context.Background(), &ast.Call{Task: "foo"})
-
-			if test.wantError {
-				require.Error(t, err)
-			} else {
-				require.NoError(t, err)
-			}
-		})
-	}
-}
-
-func TestPromptWithIndirectTask(t *testing.T) {
-	t.Parallel()
-
-	const dir = "testdata/prompt"
-	var inBuff bytes.Buffer
-	var outBuff bytes.Buffer
-	var errBuff bytes.Buffer
-
-	inBuff.Write([]byte("y\n"))
-
-	e := task.Executor{
-		Dir:        dir,
-		Stdin:      &inBuff,
-		Stdout:     &outBuff,
-		Stderr:     &errBuff,
-		AssumeTerm: true,
-	}
-	require.NoError(t, e.Setup())
-
-	err := e.Run(context.Background(), &ast.Call{Task: "bar"})
-	assert.Contains(t, outBuff.String(), "show-prompt")
-	require.NoError(t, err)
-}
-
-func TestPromptAssumeYes(t *testing.T) {
-	t.Parallel()
-
-	const dir = "testdata/prompt"
-	tests := []struct {
-		name      string
-		assumeYes bool
-	}{
-		{"--yes flag should skip prompt", true},
-		{"task should raise errors.TaskCancelledError", false},
-	}
-
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			t.Parallel()
-
-			var inBuff bytes.Buffer
-			var outBuff bytes.Buffer
-			var errBuff bytes.Buffer
-
-			// always cancel the prompt so we can require.Error
-			inBuff.Write([]byte("\n"))
-
-			e := task.Executor{
-				Dir:       dir,
-				Stdin:     &inBuff,
-				Stdout:    &outBuff,
-				Stderr:    &errBuff,
-				AssumeYes: test.assumeYes,
-			}
-			require.NoError(t, e.Setup())
-
-			err := e.Run(context.Background(), &ast.Call{Task: "foo"})
-
-			if !test.assumeYes {
-				require.Error(t, err)
-				return
-			}
-		})
-	}
-}
-
-func TestNoLabelInList(t *testing.T) {
-	t.Parallel()
-
-	const dir = "testdata/label_list"
-
-	var buff bytes.Buffer
-	e := task.Executor{
-		Dir:    dir,
-		Stdout: &buff,
-		Stderr: &buff,
-	}
-	require.NoError(t, e.Setup())
-	if _, err := e.ListTasks(task.ListOptions{ListOnlyTasksWithDescriptions: true}); err != nil {
-		t.Error(err)
-	}
-	assert.Contains(t, buff.String(), "foo")
-}
-
-// task -al case 1: listAll list all tasks
-func TestListAllShowsNoDesc(t *testing.T) {
-	t.Parallel()
-
-	const dir = "testdata/list_mixed_desc"
-
-	var buff bytes.Buffer
-	e := task.Executor{
-		Dir:    dir,
-		Stdout: &buff,
-		Stderr: &buff,
-	}
-
-	require.NoError(t, e.Setup())
-
-	var title string
-	if _, err := e.ListTasks(task.ListOptions{ListAllTasks: true}); err != nil {
-		t.Error(err)
-	}
-	for _, title = range []string{
-		"foo",
-		"voo",
-		"doo",
-	} {
-		assert.Contains(t, buff.String(), title)
-	}
-}
-
-// task -al case 2: !listAll list some tasks (only those with desc)
-func TestListCanListDescOnly(t *testing.T) {
-	t.Parallel()
-
-	const dir = "testdata/list_mixed_desc"
-
-	var buff bytes.Buffer
-	e := task.Executor{
-		Dir:    dir,
-		Stdout: &buff,
-		Stderr: &buff,
-	}
-
-	require.NoError(t, e.Setup())
-	if _, err := e.ListTasks(task.ListOptions{ListOnlyTasksWithDescriptions: true}); err != nil {
-		t.Error(err)
-	}
-
-	var title string
-	assert.Contains(t, buff.String(), "foo")
-	for _, title = range []string{
-		"voo",
-		"doo",
-	} {
-		assert.NotContains(t, buff.String(), title)
-	}
-}
-
-func TestListDescInterpolation(t *testing.T) {
-	t.Parallel()
-
-	const dir = "testdata/list_desc_interpolation"
-
-	var buff bytes.Buffer
-	e := task.Executor{
-		Dir:    dir,
-		Stdout: &buff,
-		Stderr: &buff,
-	}
-
-	require.NoError(t, e.Setup())
-	if _, err := e.ListTasks(task.ListOptions{ListOnlyTasksWithDescriptions: true}); err != nil {
-		t.Error(err)
-	}
-
-	assert.Contains(t, buff.String(), "foo-var")
-	assert.Contains(t, buff.String(), "bar-var")
 }
 
 func TestStatusVariables(t *testing.T) {
@@ -953,21 +473,24 @@ func TestStatusVariables(t *testing.T) {
 	_ = os.Remove(filepathext.SmartJoin(dir, "generated.txt"))
 
 	var buff bytes.Buffer
-	e := task.Executor{
-		Dir: dir,
-		TempDir: task.TempDir{
+	e := task.NewExecutor(
+		task.WithDir(dir),
+		task.WithTempDir(task.TempDir{
 			Remote:      filepathext.SmartJoin(dir, ".task"),
 			Fingerprint: filepathext.SmartJoin(dir, ".task"),
-		},
-		Stdout:  &buff,
-		Stderr:  &buff,
-		Silent:  false,
-		Verbose: true,
-	}
+		}),
+		task.WithStdout(&buff),
+		task.WithStderr(&buff),
+		task.WithSilent(false),
+		task.WithVerbose(true),
+	)
 	require.NoError(t, e.Setup())
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "build"}))
+	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "build-checksum"}))
 
 	assert.Contains(t, buff.String(), "3e464c4b03f4b65d740e1e130d4d108a")
+
+	buff.Reset()
+	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "build-ts"}))
 
 	inf, err := os.Stat(filepathext.SmartJoin(dir, "source.txt"))
 	require.NoError(t, err)
@@ -986,22 +509,24 @@ func TestCmdsVariables(t *testing.T) {
 	_ = os.RemoveAll(filepathext.SmartJoin(dir, ".task"))
 
 	var buff bytes.Buffer
-	e := task.Executor{
-		Dir: dir,
-		TempDir: task.TempDir{
+	e := task.NewExecutor(
+		task.WithDir(dir),
+		task.WithTempDir(task.TempDir{
 			Remote:      filepathext.SmartJoin(dir, ".task"),
 			Fingerprint: filepathext.SmartJoin(dir, ".task"),
-		},
-		Stdout:  &buff,
-		Stderr:  &buff,
-		Silent:  false,
-		Verbose: true,
-	}
+		}),
+		task.WithStdout(&buff),
+		task.WithStderr(&buff),
+		task.WithSilent(false),
+		task.WithVerbose(true),
+	)
 	require.NoError(t, e.Setup())
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "build"}))
+	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "build-checksum"}))
 
 	assert.Contains(t, buff.String(), "3e464c4b03f4b65d740e1e130d4d108a")
 
+	buff.Reset()
+	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "build-ts"}))
 	inf, err := os.Stat(filepathext.SmartJoin(dir, "source.txt"))
 	require.NoError(t, err)
 	ts := fmt.Sprintf("%d", inf.ModTime().Unix())
@@ -1016,13 +541,13 @@ func TestCyclicDep(t *testing.T) {
 
 	const dir = "testdata/cyclic"
 
-	e := task.Executor{
-		Dir:    dir,
-		Stdout: io.Discard,
-		Stderr: io.Discard,
-	}
+	e := task.NewExecutor(
+		task.WithDir(dir),
+		task.WithStdout(io.Discard),
+		task.WithStderr(io.Discard),
+	)
 	require.NoError(t, e.Setup())
-	assert.IsType(t, &errors.TaskCalledTooManyTimesError{}, e.Run(context.Background(), &ast.Call{Task: "task-1"}))
+	assert.IsType(t, &errors.TaskCalledTooManyTimesError{}, e.Run(context.Background(), &task.Call{Task: "task-1"}))
 }
 
 func TestTaskVersion(t *testing.T) {
@@ -1042,12 +567,12 @@ func TestTaskVersion(t *testing.T) {
 		t.Run(test.Dir, func(t *testing.T) {
 			t.Parallel()
 
-			e := task.Executor{
-				Dir:                test.Dir,
-				Stdout:             io.Discard,
-				Stderr:             io.Discard,
-				EnableVersionCheck: true,
-			}
+			e := task.NewExecutor(
+				task.WithDir(test.Dir),
+				task.WithStdout(io.Discard),
+				task.WithStderr(io.Discard),
+				task.WithVersionCheck(true),
+			)
 			err := e.Setup()
 			if test.wantErr {
 				require.Error(t, err)
@@ -1065,17 +590,17 @@ func TestTaskIgnoreErrors(t *testing.T) {
 
 	const dir = "testdata/ignore_errors"
 
-	e := task.Executor{
-		Dir:    dir,
-		Stdout: io.Discard,
-		Stderr: io.Discard,
-	}
+	e := task.NewExecutor(
+		task.WithDir(dir),
+		task.WithStdout(io.Discard),
+		task.WithStderr(io.Discard),
+	)
 	require.NoError(t, e.Setup())
 
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "task-should-pass"}))
-	require.Error(t, e.Run(context.Background(), &ast.Call{Task: "task-should-fail"}))
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "cmd-should-pass"}))
-	require.Error(t, e.Run(context.Background(), &ast.Call{Task: "cmd-should-fail"}))
+	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "task-should-pass"}))
+	require.Error(t, e.Run(context.Background(), &task.Call{Task: "task-should-fail"}))
+	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "cmd-should-pass"}))
+	require.Error(t, e.Run(context.Background(), &task.Call{Task: "cmd-should-fail"}))
 }
 
 func TestExpand(t *testing.T) {
@@ -1089,13 +614,13 @@ func TestExpand(t *testing.T) {
 	}
 	var buff bytes.Buffer
 
-	e := task.Executor{
-		Dir:    dir,
-		Stdout: &buff,
-		Stderr: &buff,
-	}
+	e := task.NewExecutor(
+		task.WithDir(dir),
+		task.WithStdout(&buff),
+		task.WithStderr(&buff),
+	)
 	require.NoError(t, e.Setup())
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "pwd"}))
+	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "pwd"}))
 	assert.Equal(t, home, strings.TrimSpace(buff.String()))
 }
 
@@ -1109,14 +634,14 @@ func TestDry(t *testing.T) {
 
 	var buff bytes.Buffer
 
-	e := task.Executor{
-		Dir:    dir,
-		Stdout: &buff,
-		Stderr: &buff,
-		Dry:    true,
-	}
+	e := task.NewExecutor(
+		task.WithDir(dir),
+		task.WithStdout(&buff),
+		task.WithStderr(&buff),
+		task.WithDry(true),
+	)
 	require.NoError(t, e.Setup())
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "build"}))
+	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "build"}))
 
 	assert.Equal(t, "task: [build] touch file.txt", strings.TrimSpace(buff.String()))
 	if _, err := os.Stat(file); err == nil {
@@ -1134,24 +659,24 @@ func TestDryChecksum(t *testing.T) {
 	checksumFile := filepathext.SmartJoin(dir, ".task/checksum/default")
 	_ = os.Remove(checksumFile)
 
-	e := task.Executor{
-		Dir: dir,
-		TempDir: task.TempDir{
+	e := task.NewExecutor(
+		task.WithDir(dir),
+		task.WithTempDir(task.TempDir{
 			Remote:      filepathext.SmartJoin(dir, ".task"),
 			Fingerprint: filepathext.SmartJoin(dir, ".task"),
-		},
-		Stdout: io.Discard,
-		Stderr: io.Discard,
-		Dry:    true,
-	}
+		}),
+		task.WithStdout(io.Discard),
+		task.WithStderr(io.Discard),
+		task.WithDry(true),
+	)
 	require.NoError(t, e.Setup())
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "default"}))
+	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "default"}))
 
 	_, err := os.Stat(checksumFile)
 	require.Error(t, err, "checksum file should not exist")
 
 	e.Dry = false
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "default"}))
+	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "default"}))
 	_, err = os.Stat(checksumFile)
 	require.NoError(t, err, "checksum file should exist")
 }
@@ -1199,9 +724,10 @@ func TestIncludesMultiLevel(t *testing.T) {
 }
 
 func TestIncludesRemote(t *testing.T) {
-	enableExperimentForTest(t, &experiments.RemoteTaskfiles, "1")
+	enableExperimentForTest(t, &experiments.RemoteTaskfiles, 1)
 
 	dir := "testdata/includes_remote"
+	os.RemoveAll(filepath.Join(dir, ".task", "remote"))
 
 	srv := httptest.NewServer(http.FileServer(http.Dir(dir)))
 	defer srv.Close()
@@ -1224,9 +750,9 @@ func TestIncludesRemote(t *testing.T) {
 		},
 	}
 
-	tasks := []string{
-		"first:write-file",
-		"first:second:write-file",
+	taskCalls := []*task.Call{
+		{Task: "first:write-file"},
+		{Task: "first:second:write-file"},
 	}
 
 	for i, tc := range tcs {
@@ -1242,43 +768,47 @@ func TestIncludesRemote(t *testing.T) {
 			}{
 				{
 					name: "online, always download",
-					executor: &task.Executor{
-						Dir:      dir,
-						Stdout:   &buff,
-						Stderr:   &buff,
-						Timeout:  time.Minute,
-						Insecure: true,
-						Logger:   &logger.Logger{Stdout: &buff, Stderr: &buff, Verbose: true},
+					executor: task.NewExecutor(
+						task.WithDir(dir),
+						task.WithStdout(&buff),
+						task.WithStderr(&buff),
+						task.WithTimeout(time.Minute),
+						task.WithInsecure(true),
+						task.WithStdout(&buff),
+						task.WithStderr(&buff),
+						task.WithVerbose(true),
 
 						// Without caching
-						AssumeYes: true,
-						Download:  true,
-					},
+						task.WithAssumeYes(true),
+						task.WithDownload(true),
+					),
 				},
 				{
 					name: "offline, use cache",
-					executor: &task.Executor{
-						Dir:      dir,
-						Stdout:   &buff,
-						Stderr:   &buff,
-						Timeout:  time.Minute,
-						Insecure: true,
-						Logger:   &logger.Logger{Stdout: &buff, Stderr: &buff, Verbose: true},
+					executor: task.NewExecutor(
+						task.WithDir(dir),
+						task.WithStdout(&buff),
+						task.WithStderr(&buff),
+						task.WithTimeout(time.Minute),
+						task.WithInsecure(true),
+						task.WithStdout(&buff),
+						task.WithStderr(&buff),
+						task.WithVerbose(true),
 
 						// With caching
-						AssumeYes: false,
-						Download:  false,
-						Offline:   true,
-					},
+						task.WithAssumeYes(false),
+						task.WithDownload(false),
+						task.WithOffline(true),
+					),
 				},
 			}
 
-			for j, e := range executors {
-				t.Run(fmt.Sprint(j), func(t *testing.T) {
+			for _, e := range executors {
+				t.Run(e.name, func(t *testing.T) {
 					require.NoError(t, e.executor.Setup())
 
-					for k, task := range tasks {
-						t.Run(task, func(t *testing.T) {
+					for k, taskCall := range taskCalls {
+						t.Run(taskCall.Task, func(t *testing.T) {
 							expectedContent := fmt.Sprint(rand.Int64())
 							t.Setenv("CONTENT", expectedContent)
 
@@ -1288,7 +818,7 @@ func TestIncludesRemote(t *testing.T) {
 							path := filepath.Join(dir, outputFile)
 							require.NoError(t, os.RemoveAll(path))
 
-							require.NoError(t, e.executor.Run(context.Background(), &ast.Call{Task: task}))
+							require.NoError(t, e.executor.Run(context.Background(), taskCall))
 
 							actualContent, err := os.ReadFile(path)
 							require.NoError(t, err)
@@ -1309,12 +839,12 @@ func TestIncludeCycle(t *testing.T) {
 	const dir = "testdata/includes_cycle"
 
 	var buff bytes.Buffer
-	e := task.Executor{
-		Dir:    dir,
-		Stdout: &buff,
-		Stderr: &buff,
-		Silent: true,
-	}
+	e := task.NewExecutor(
+		task.WithDir(dir),
+		task.WithStdout(&buff),
+		task.WithStderr(&buff),
+		task.WithSilent(true),
+	)
 
 	err := e.Setup()
 	require.Error(t, err)
@@ -1327,12 +857,12 @@ func TestIncludesIncorrect(t *testing.T) {
 	const dir = "testdata/includes_incorrect"
 
 	var buff bytes.Buffer
-	e := task.Executor{
-		Dir:    dir,
-		Stdout: &buff,
-		Stderr: &buff,
-		Silent: true,
-	}
+	e := task.NewExecutor(
+		task.WithDir(dir),
+		task.WithStdout(&buff),
+		task.WithStderr(&buff),
+		task.WithSilent(true),
+	)
 
 	err := e.Setup()
 	require.Error(t, err)
@@ -1357,7 +887,7 @@ func TestIncludesEmptyMain(t *testing.T) {
 }
 
 func TestIncludesHttp(t *testing.T) {
-	enableExperimentForTest(t, &experiments.RemoteTaskfiles, "1")
+	enableExperimentForTest(t, &experiments.RemoteTaskfiles, 1)
 
 	dir, err := filepath.Abs("testdata/includes_http")
 	require.NoError(t, err)
@@ -1398,17 +928,19 @@ func TestIncludesHttp(t *testing.T) {
 					entrypoint := filepath.Join(dir, taskfile)
 
 					var buff SyncBuffer
-					e := task.Executor{
-						Entrypoint: entrypoint,
-						Dir:        dir,
-						Stdout:     &buff,
-						Stderr:     &buff,
-						Insecure:   true,
-						Download:   true,
-						AssumeYes:  true,
-						Logger:     &logger.Logger{Stdout: &buff, Stderr: &buff, Verbose: true},
-						Timeout:    time.Minute,
-					}
+					e := task.NewExecutor(
+						task.WithEntrypoint(entrypoint),
+						task.WithDir(dir),
+						task.WithStdout(&buff),
+						task.WithStderr(&buff),
+						task.WithInsecure(true),
+						task.WithDownload(true),
+						task.WithAssumeYes(true),
+						task.WithStdout(&buff),
+						task.WithStderr(&buff),
+						task.WithVerbose(true),
+						task.WithTimeout(time.Minute),
+					)
 					require.NoError(t, e.Setup())
 					defer func() { t.Log("output:", buff.buf.String()) }()
 
@@ -1427,7 +959,8 @@ func TestIncludesHttp(t *testing.T) {
 
 					for _, tc := range tcs {
 						t.Run(tc.name, func(t *testing.T) {
-							task, err := e.CompiledTask(&ast.Call{Task: tc.name})
+							t.Parallel()
+							task, err := e.CompiledTask(&task.Call{Task: tc.name})
 							require.NoError(t, err)
 							assert.Equal(t, tc.dir, task.Dir)
 						})
@@ -1500,11 +1033,11 @@ func TestIncludesOptionalImplicitFalse(t *testing.T) {
 	message := "stat %s/%s/TaskfileOptional.yml: no such file or directory"
 	expected := fmt.Sprintf(message, wd, dir)
 
-	e := task.Executor{
-		Dir:    dir,
-		Stdout: io.Discard,
-		Stderr: io.Discard,
-	}
+	e := task.NewExecutor(
+		task.WithDir(dir),
+		task.WithStdout(io.Discard),
+		task.WithStderr(io.Discard),
+	)
 
 	err := e.Setup()
 	require.Error(t, err)
@@ -1520,11 +1053,11 @@ func TestIncludesOptionalExplicitFalse(t *testing.T) {
 	message := "stat %s/%s/TaskfileOptional.yml: no such file or directory"
 	expected := fmt.Sprintf(message, wd, dir)
 
-	e := task.Executor{
-		Dir:    dir,
-		Stdout: io.Discard,
-		Stderr: io.Discard,
-	}
+	e := task.NewExecutor(
+		task.WithDir(dir),
+		task.WithStdout(io.Discard),
+		task.WithStderr(io.Discard),
+	)
 
 	err := e.Setup()
 	require.Error(t, err)
@@ -1557,19 +1090,19 @@ func TestIncludesRelativePath(t *testing.T) {
 	const dir = "testdata/includes_rel_path"
 
 	var buff bytes.Buffer
-	e := task.Executor{
-		Dir:    dir,
-		Stdout: &buff,
-		Stderr: &buff,
-	}
+	e := task.NewExecutor(
+		task.WithDir(dir),
+		task.WithStdout(&buff),
+		task.WithStderr(&buff),
+	)
 
 	require.NoError(t, e.Setup())
 
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "common:pwd"}))
+	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "common:pwd"}))
 	assert.Contains(t, buff.String(), "testdata/includes_rel_path/common")
 
 	buff.Reset()
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "included:common:pwd"}))
+	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "included:common:pwd"}))
 	assert.Contains(t, buff.String(), "testdata/includes_rel_path/common")
 }
 
@@ -1593,15 +1126,15 @@ func TestIncludesInternal(t *testing.T) {
 			t.Parallel()
 
 			var buff bytes.Buffer
-			e := task.Executor{
-				Dir:    dir,
-				Stdout: &buff,
-				Stderr: &buff,
-				Silent: true,
-			}
+			e := task.NewExecutor(
+				task.WithDir(dir),
+				task.WithStdout(&buff),
+				task.WithStderr(&buff),
+				task.WithSilent(true),
+			)
 			require.NoError(t, e.Setup())
 
-			err := e.Run(context.Background(), &ast.Call{Task: test.task})
+			err := e.Run(context.Background(), &task.Call{Task: test.task})
 			if test.expectedErr {
 				require.Error(t, err)
 			} else {
@@ -1636,19 +1169,19 @@ func TestIncludesFlatten(t *testing.T) {
 			t.Parallel()
 
 			var buff bytes.Buffer
-			e := task.Executor{
-				Dir:        dir,
-				Entrypoint: dir + "/" + test.taskfile,
-				Stdout:     &buff,
-				Stderr:     &buff,
-				Silent:     true,
-			}
+			e := task.NewExecutor(
+				task.WithDir(dir),
+				task.WithEntrypoint(dir+"/"+test.taskfile),
+				task.WithStdout(&buff),
+				task.WithStderr(&buff),
+				task.WithSilent(true),
+			)
 			err := e.Setup()
 			if test.expectedErr {
 				assert.EqualError(t, err, test.expectedOutput)
 			} else {
 				require.NoError(t, err)
-				_ = e.Run(context.Background(), &ast.Call{Task: test.task})
+				_ = e.Run(context.Background(), &task.Call{Task: test.task})
 				assert.Equal(t, test.expectedOutput, buff.String())
 			}
 		})
@@ -1672,15 +1205,15 @@ func TestIncludesInterpolation(t *testing.T) { // nolint:paralleltest // cannot 
 	for _, test := range tests { // nolint:paralleltest // cannot run in parallel
 		t.Run(test.name, func(t *testing.T) {
 			var buff bytes.Buffer
-			e := task.Executor{
-				Dir:    filepath.Join(dir, test.name),
-				Stdout: &buff,
-				Stderr: &buff,
-				Silent: true,
-			}
+			e := task.NewExecutor(
+				task.WithDir(filepath.Join(dir, test.name)),
+				task.WithStdout(&buff),
+				task.WithStderr(&buff),
+				task.WithSilent(true),
+			)
 			require.NoError(t, e.Setup())
 
-			err := e.Run(context.Background(), &ast.Call{Task: test.task})
+			err := e.Run(context.Background(), &task.Call{Task: test.task})
 			if test.expectedErr {
 				require.Error(t, err)
 			} else {
@@ -1695,28 +1228,28 @@ func TestIncludesWithExclude(t *testing.T) {
 	t.Parallel()
 
 	var buff bytes.Buffer
-	e := task.Executor{
-		Dir:    "testdata/includes_with_excludes",
-		Silent: true,
-		Stdout: &buff,
-		Stderr: &buff,
-	}
+	e := task.NewExecutor(
+		task.WithDir("testdata/includes_with_excludes"),
+		task.WithSilent(true),
+		task.WithStdout(&buff),
+		task.WithStderr(&buff),
+	)
 	require.NoError(t, e.Setup())
 
-	err := e.Run(context.Background(), &ast.Call{Task: "included:bar"})
+	err := e.Run(context.Background(), &task.Call{Task: "included:bar"})
 	require.NoError(t, err)
 	assert.Equal(t, "bar\n", buff.String())
 	buff.Reset()
 
-	err = e.Run(context.Background(), &ast.Call{Task: "included:foo"})
+	err = e.Run(context.Background(), &task.Call{Task: "included:foo"})
 	require.Error(t, err)
 	buff.Reset()
 
-	err = e.Run(context.Background(), &ast.Call{Task: "bar"})
+	err = e.Run(context.Background(), &task.Call{Task: "bar"})
 	require.Error(t, err)
 	buff.Reset()
 
-	err = e.Run(context.Background(), &ast.Call{Task: "foo"})
+	err = e.Run(context.Background(), &task.Call{Task: "foo"})
 	require.NoError(t, err)
 	assert.Equal(t, "foo\n", buff.String())
 }
@@ -1738,15 +1271,15 @@ func TestIncludedTaskfileVarMerging(t *testing.T) {
 			t.Parallel()
 
 			var buff bytes.Buffer
-			e := task.Executor{
-				Dir:    dir,
-				Stdout: &buff,
-				Stderr: &buff,
-				Silent: true,
-			}
+			e := task.NewExecutor(
+				task.WithDir(dir),
+				task.WithStdout(&buff),
+				task.WithStderr(&buff),
+				task.WithSilent(true),
+			)
 			require.NoError(t, e.Setup())
 
-			err := e.Run(context.Background(), &ast.Call{Task: test.task})
+			err := e.Run(context.Background(), &task.Call{Task: test.task})
 			require.NoError(t, err)
 			assert.Contains(t, buff.String(), test.expectedOutput)
 		})
@@ -1773,15 +1306,15 @@ func TestInternalTask(t *testing.T) {
 			t.Parallel()
 
 			var buff bytes.Buffer
-			e := task.Executor{
-				Dir:    dir,
-				Stdout: &buff,
-				Stderr: &buff,
-				Silent: true,
-			}
+			e := task.NewExecutor(
+				task.WithDir(dir),
+				task.WithStdout(&buff),
+				task.WithStderr(&buff),
+				task.WithSilent(true),
+			)
 			require.NoError(t, e.Setup())
 
-			err := e.Run(context.Background(), &ast.Call{Task: test.task})
+			err := e.Run(context.Background(), &task.Call{Task: test.task})
 			if test.expectedErr {
 				require.Error(t, err)
 			} else {
@@ -1858,15 +1391,15 @@ func TestSummary(t *testing.T) {
 	const dir = "testdata/summary"
 
 	var buff bytes.Buffer
-	e := task.Executor{
-		Dir:     dir,
-		Stdout:  &buff,
-		Stderr:  &buff,
-		Summary: true,
-		Silent:  true,
-	}
+	e := task.NewExecutor(
+		task.WithDir(dir),
+		task.WithStdout(&buff),
+		task.WithStderr(&buff),
+		task.WithSummary(true),
+		task.WithSilent(true),
+	)
 	require.NoError(t, e.Setup())
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "task-with-summary"}, &ast.Call{Task: "other-task-with-summary"}))
+	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "task-with-summary"}, &task.Call{Task: "other-task-with-summary"}))
 
 	data, err := os.ReadFile(filepathext.SmartJoin(dir, "task-with-summary.txt"))
 	require.NoError(t, err)
@@ -1885,14 +1418,14 @@ func TestWhenNoDirAttributeItRunsInSameDirAsTaskfile(t *testing.T) {
 	const expected = "dir"
 	const dir = "testdata/" + expected
 	var out bytes.Buffer
-	e := &task.Executor{
-		Dir:    dir,
-		Stdout: &out,
-		Stderr: &out,
-	}
+	e := task.NewExecutor(
+		task.WithDir(dir),
+		task.WithStdout(&out),
+		task.WithStderr(&out),
+	)
 
 	require.NoError(t, e.Setup())
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "whereami"}))
+	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "whereami"}))
 
 	// got should be the "dir" part of "testdata/dir"
 	got := strings.TrimSuffix(filepath.Base(out.String()), "\n")
@@ -1905,14 +1438,14 @@ func TestWhenDirAttributeAndDirExistsItRunsInThatDir(t *testing.T) {
 	const expected = "exists"
 	const dir = "testdata/dir/explicit_exists"
 	var out bytes.Buffer
-	e := &task.Executor{
-		Dir:    dir,
-		Stdout: &out,
-		Stderr: &out,
-	}
+	e := task.NewExecutor(
+		task.WithDir(dir),
+		task.WithStdout(&out),
+		task.WithStderr(&out),
+	)
 
 	require.NoError(t, e.Setup())
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "whereami"}))
+	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "whereami"}))
 
 	got := strings.TrimSuffix(filepath.Base(out.String()), "\n")
 	assert.Equal(t, expected, got, "Mismatch in the working directory")
@@ -1926,11 +1459,11 @@ func TestWhenDirAttributeItCreatesMissingAndRunsInThatDir(t *testing.T) {
 	const toBeCreated = dir + expected
 	const target = "whereami"
 	var out bytes.Buffer
-	e := &task.Executor{
-		Dir:    dir,
-		Stdout: &out,
-		Stderr: &out,
-	}
+	e := task.NewExecutor(
+		task.WithDir(dir),
+		task.WithStdout(&out),
+		task.WithStderr(&out),
+	)
 
 	// Ensure that the directory to be created doesn't actually exist.
 	_ = os.RemoveAll(toBeCreated)
@@ -1938,7 +1471,7 @@ func TestWhenDirAttributeItCreatesMissingAndRunsInThatDir(t *testing.T) {
 		t.Errorf("Directory should not exist: %v", err)
 	}
 	require.NoError(t, e.Setup())
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: target}))
+	require.NoError(t, e.Run(context.Background(), &task.Call{Task: target}))
 
 	got := strings.TrimSuffix(filepath.Base(out.String()), "\n")
 	assert.Equal(t, expected, got, "Mismatch in the working directory")
@@ -1955,11 +1488,11 @@ func TestDynamicVariablesRunOnTheNewCreatedDir(t *testing.T) {
 	const toBeCreated = dir + expected
 	const target = "default"
 	var out bytes.Buffer
-	e := &task.Executor{
-		Dir:    dir,
-		Stdout: &out,
-		Stderr: &out,
-	}
+	e := task.NewExecutor(
+		task.WithDir(dir),
+		task.WithStdout(&out),
+		task.WithStderr(&out),
+	)
 
 	// Ensure that the directory to be created doesn't actually exist.
 	_ = os.RemoveAll(toBeCreated)
@@ -1967,7 +1500,7 @@ func TestDynamicVariablesRunOnTheNewCreatedDir(t *testing.T) {
 		t.Errorf("Directory should not exist: %v", err)
 	}
 	require.NoError(t, e.Setup())
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: target}))
+	require.NoError(t, e.Run(context.Background(), &task.Call{Task: target}))
 
 	got := strings.TrimSuffix(filepath.Base(out.String()), "\n")
 	assert.Equal(t, expected, got, "Mismatch in the working directory")
@@ -1999,12 +1532,12 @@ func TestDynamicVariablesShouldRunOnTheTaskDir(t *testing.T) {
 func TestDisplaysErrorOnVersion1Schema(t *testing.T) {
 	t.Parallel()
 
-	e := task.Executor{
-		Dir:                "testdata/version/v1",
-		Stdout:             io.Discard,
-		Stderr:             io.Discard,
-		EnableVersionCheck: true,
-	}
+	e := task.NewExecutor(
+		task.WithDir("testdata/version/v1"),
+		task.WithStdout(io.Discard),
+		task.WithStderr(io.Discard),
+		task.WithVersionCheck(true),
+	)
 	err := e.Setup()
 	require.Error(t, err)
 	assert.Regexp(t, regexp.MustCompile(`task: Invalid schema version in Taskfile \".*testdata\/version\/v1\/Taskfile\.yml\":\nSchema version \(1\.0\.0\) no longer supported\. Please use v3 or above`), err.Error())
@@ -2014,12 +1547,12 @@ func TestDisplaysErrorOnVersion2Schema(t *testing.T) {
 	t.Parallel()
 
 	var buff bytes.Buffer
-	e := task.Executor{
-		Dir:                "testdata/version/v2",
-		Stdout:             io.Discard,
-		Stderr:             &buff,
-		EnableVersionCheck: true,
-	}
+	e := task.NewExecutor(
+		task.WithDir("testdata/version/v2"),
+		task.WithStdout(io.Discard),
+		task.WithStderr(&buff),
+		task.WithVersionCheck(true),
+	)
 	err := e.Setup()
 	require.Error(t, err)
 	assert.Regexp(t, regexp.MustCompile(`task: Invalid schema version in Taskfile \".*testdata\/version\/v2\/Taskfile\.yml\":\nSchema version \(2\.0\.0\) no longer supported\. Please use v3 or above`), err.Error())
@@ -2031,14 +1564,14 @@ func TestShortTaskNotation(t *testing.T) {
 	const dir = "testdata/short_task_notation"
 
 	var buff bytes.Buffer
-	e := task.Executor{
-		Dir:    dir,
-		Stdout: &buff,
-		Stderr: &buff,
-		Silent: true,
-	}
+	e := task.NewExecutor(
+		task.WithDir(dir),
+		task.WithStdout(&buff),
+		task.WithStderr(&buff),
+		task.WithSilent(true),
+	)
 	require.NoError(t, e.Setup())
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "default"}))
+	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "default"}))
 	assert.Equal(t, "string-slice-1\nstring-slice-2\nstring\n", buff.String())
 }
 
@@ -2063,12 +1596,12 @@ func TestDotenvShouldErrorWhenIncludingDependantDotenvs(t *testing.T) {
 	t.Parallel()
 
 	var buff bytes.Buffer
-	e := task.Executor{
-		Dir:     "testdata/dotenv/error_included_envs",
-		Summary: true,
-		Stdout:  &buff,
-		Stderr:  &buff,
-	}
+	e := task.NewExecutor(
+		task.WithDir("testdata/dotenv/error_included_envs"),
+		task.WithSummary(true),
+		task.WithStdout(&buff),
+		task.WithStderr(&buff),
+	)
 
 	err := e.Setup()
 	require.Error(t, err)
@@ -2143,9 +1676,9 @@ func TestDotenvHasEnvVarInPath(t *testing.T) { // nolint:paralleltest // cannot 
 func TestTaskDotenvParseErrorMessage(t *testing.T) {
 	t.Parallel()
 
-	e := task.Executor{
-		Dir: "testdata/dotenv/parse_error",
-	}
+	e := task.NewExecutor(
+		task.WithDir("testdata/dotenv/parse_error"),
+	)
 
 	path, _ := filepath.Abs(filepath.Join(e.Dir, ".env-with-error"))
 	expected := fmt.Sprintf("error reading env file %s:", path)
@@ -2228,15 +1761,15 @@ func TestExitImmediately(t *testing.T) {
 	const dir = "testdata/exit_immediately"
 
 	var buff bytes.Buffer
-	e := task.Executor{
-		Dir:    dir,
-		Stdout: &buff,
-		Stderr: &buff,
-		Silent: true,
-	}
+	e := task.NewExecutor(
+		task.WithDir(dir),
+		task.WithStdout(&buff),
+		task.WithStderr(&buff),
+		task.WithSilent(true),
+	)
 	require.NoError(t, e.Setup())
 
-	require.Error(t, e.Run(context.Background(), &ast.Call{Task: "default"}))
+	require.Error(t, e.Run(context.Background(), &task.Call{Task: "default"}))
 	assert.Contains(t, buff.String(), `"this_should_fail": executable file not found in $PATH`)
 }
 
@@ -2262,14 +1795,14 @@ func TestRunOnceSharedDeps(t *testing.T) {
 	const dir = "testdata/run_once_shared_deps"
 
 	var buff bytes.Buffer
-	e := task.Executor{
-		Dir:      dir,
-		Stdout:   &buff,
-		Stderr:   &buff,
-		ForceAll: true,
-	}
+	e := task.NewExecutor(
+		task.WithDir(dir),
+		task.WithStdout(&buff),
+		task.WithStderr(&buff),
+		task.WithForceAll(true),
+	)
 	require.NoError(t, e.Setup())
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "build"}))
+	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "build"}))
 
 	rx := regexp.MustCompile(`task: \[service-[a,b]:library:build\] echo "build library"`)
 	matches := rx.FindAllStringSubmatch(buff.String(), -1)
@@ -2283,11 +1816,11 @@ func TestDeferredCmds(t *testing.T) {
 
 	const dir = "testdata/deferred"
 	var buff bytes.Buffer
-	e := task.Executor{
-		Dir:    dir,
-		Stdout: &buff,
-		Stderr: &buff,
-	}
+	e := task.NewExecutor(
+		task.WithDir(dir),
+		task.WithStdout(&buff),
+		task.WithStderr(&buff),
+	)
 	require.NoError(t, e.Setup())
 
 	expectedOutputOrder := strings.TrimSpace(`
@@ -2301,8 +1834,11 @@ task-1 ran successfully
 task: [task-1] echo 'task-1 ran successfully'
 task-1 ran successfully
 `)
-	require.Error(t, e.Run(context.Background(), &ast.Call{Task: "task-2"}))
+	require.Error(t, e.Run(context.Background(), &task.Call{Task: "task-2"}))
 	assert.Contains(t, buff.String(), expectedOutputOrder)
+	buff.Reset()
+	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "parent"}))
+	assert.Contains(t, buff.String(), "child task deferred value-from-parent")
 }
 
 func TestExitCodeZero(t *testing.T) {
@@ -2310,14 +1846,14 @@ func TestExitCodeZero(t *testing.T) {
 
 	const dir = "testdata/exit_code"
 	var buff bytes.Buffer
-	e := task.Executor{
-		Dir:    dir,
-		Stdout: &buff,
-		Stderr: &buff,
-	}
+	e := task.NewExecutor(
+		task.WithDir(dir),
+		task.WithStdout(&buff),
+		task.WithStderr(&buff),
+	)
 	require.NoError(t, e.Setup())
 
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "exit-zero"}))
+	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "exit-zero"}))
 	assert.Equal(t, "FOO=bar - DYNAMIC_FOO=bar - EXIT_CODE=", strings.TrimSpace(buff.String()))
 }
 
@@ -2326,14 +1862,14 @@ func TestExitCodeOne(t *testing.T) {
 
 	const dir = "testdata/exit_code"
 	var buff bytes.Buffer
-	e := task.Executor{
-		Dir:    dir,
-		Stdout: &buff,
-		Stderr: &buff,
-	}
+	e := task.NewExecutor(
+		task.WithDir(dir),
+		task.WithStdout(&buff),
+		task.WithStderr(&buff),
+	)
 	require.NoError(t, e.Setup())
 
-	require.Error(t, e.Run(context.Background(), &ast.Call{Task: "exit-one"}))
+	require.Error(t, e.Run(context.Background(), &task.Call{Task: "exit-one"}))
 	assert.Equal(t, "FOO=bar - DYNAMIC_FOO=bar - EXIT_CODE=1", strings.TrimSpace(buff.String()))
 }
 
@@ -2355,14 +1891,14 @@ func TestIgnoreNilElements(t *testing.T) {
 			t.Parallel()
 
 			var buff bytes.Buffer
-			e := task.Executor{
-				Dir:    test.dir,
-				Stdout: &buff,
-				Stderr: &buff,
-				Silent: true,
-			}
+			e := task.NewExecutor(
+				task.WithDir(test.dir),
+				task.WithStdout(&buff),
+				task.WithStderr(&buff),
+				task.WithSilent(true),
+			)
 			require.NoError(t, e.Setup())
-			require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "default"}))
+			require.NoError(t, e.Run(context.Background(), &task.Call{Task: "default"}))
 			assert.Equal(t, "string-slice-1\n", buff.String())
 		})
 	}
@@ -2373,11 +1909,11 @@ func TestOutputGroup(t *testing.T) {
 
 	const dir = "testdata/output_group"
 	var buff bytes.Buffer
-	e := task.Executor{
-		Dir:    dir,
-		Stdout: &buff,
-		Stderr: &buff,
-	}
+	e := task.NewExecutor(
+		task.WithDir(dir),
+		task.WithStdout(&buff),
+		task.WithStderr(&buff),
+	)
 	require.NoError(t, e.Setup())
 
 	expectedOutputOrder := strings.TrimSpace(`
@@ -2390,7 +1926,7 @@ task: [bye] echo 'Bye!'
 Bye!
 ::endgroup::
 `)
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "bye"}))
+	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "bye"}))
 	t.Log(buff.String())
 	assert.Equal(t, strings.TrimSpace(buff.String()), expectedOutputOrder)
 }
@@ -2400,14 +1936,14 @@ func TestOutputGroupErrorOnlySwallowsOutputOnSuccess(t *testing.T) {
 
 	const dir = "testdata/output_group_error_only"
 	var buff bytes.Buffer
-	e := task.Executor{
-		Dir:    dir,
-		Stdout: &buff,
-		Stderr: &buff,
-	}
+	e := task.NewExecutor(
+		task.WithDir(dir),
+		task.WithStdout(&buff),
+		task.WithStderr(&buff),
+	)
 	require.NoError(t, e.Setup())
 
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "passing"}))
+	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "passing"}))
 	t.Log(buff.String())
 	assert.Empty(t, buff.String())
 }
@@ -2417,14 +1953,14 @@ func TestOutputGroupErrorOnlyShowsOutputOnFailure(t *testing.T) {
 
 	const dir = "testdata/output_group_error_only"
 	var buff bytes.Buffer
-	e := task.Executor{
-		Dir:    dir,
-		Stdout: &buff,
-		Stderr: &buff,
-	}
+	e := task.NewExecutor(
+		task.WithDir(dir),
+		task.WithStdout(&buff),
+		task.WithStderr(&buff),
+	)
 	require.NoError(t, e.Setup())
 
-	require.Error(t, e.Run(context.Background(), &ast.Call{Task: "failing"}))
+	require.Error(t, e.Run(context.Background(), &task.Call{Task: "failing"}))
 	t.Log(buff.String())
 	assert.Contains(t, "failing-output", strings.TrimSpace(buff.String()))
 	assert.NotContains(t, "passing", strings.TrimSpace(buff.String()))
@@ -2435,11 +1971,11 @@ func TestIncludedVars(t *testing.T) {
 
 	const dir = "testdata/include_with_vars"
 	var buff bytes.Buffer
-	e := task.Executor{
-		Dir:    dir,
-		Stdout: &buff,
-		Stderr: &buff,
-	}
+	e := task.NewExecutor(
+		task.WithDir(dir),
+		task.WithStdout(&buff),
+		task.WithStderr(&buff),
+	)
 	require.NoError(t, e.Setup())
 
 	expectedOutputOrder := strings.TrimSpace(`
@@ -2456,9 +1992,22 @@ VAR_1 is included-default-var1
 task: [included3:task1] echo "VAR_2 is included-default-var2"
 VAR_2 is included-default-var2
 `)
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "task1"}))
+	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "task1"}))
 	t.Log(buff.String())
 	assert.Equal(t, strings.TrimSpace(buff.String()), expectedOutputOrder)
+}
+
+func TestIncludeWithVarsInInclude(t *testing.T) {
+	t.Parallel()
+
+	const dir = "testdata/include_with_vars_inside_include"
+	var buff bytes.Buffer
+	e := task.Executor{
+		Dir:    dir,
+		Stdout: &buff,
+		Stderr: &buff,
+	}
+	require.NoError(t, e.Setup())
 }
 
 func TestIncludedVarsMultiLevel(t *testing.T) {
@@ -2466,11 +2015,11 @@ func TestIncludedVarsMultiLevel(t *testing.T) {
 
 	const dir = "testdata/include_with_vars_multi_level"
 	var buff bytes.Buffer
-	e := task.Executor{
-		Dir:    dir,
-		Stdout: &buff,
-		Stderr: &buff,
-	}
+	e := task.NewExecutor(
+		task.WithDir(dir),
+		task.WithStdout(&buff),
+		task.WithStderr(&buff),
+	)
 	require.NoError(t, e.Setup())
 
 	expectedOutputOrder := strings.TrimSpace(`
@@ -2481,7 +2030,7 @@ Hello foo
 task: [bar:lib:greet] echo 'Hello bar'
 Hello bar
 `)
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "default"}))
+	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "default"}))
 	t.Log(buff.String())
 	assert.Equal(t, expectedOutputOrder, strings.TrimSpace(buff.String()))
 }
@@ -2511,15 +2060,15 @@ func TestErrorCode(t *testing.T) {
 			t.Parallel()
 
 			var buff bytes.Buffer
-			e := &task.Executor{
-				Dir:    dir,
-				Stdout: &buff,
-				Stderr: &buff,
-				Silent: true,
-			}
+			e := task.NewExecutor(
+				task.WithDir(dir),
+				task.WithStdout(&buff),
+				task.WithStderr(&buff),
+				task.WithSilent(true),
+			)
 			require.NoError(t, e.Setup())
 
-			err := e.Run(context.Background(), &ast.Call{Task: test.task})
+			err := e.Run(context.Background(), &task.Call{Task: test.task})
 			require.Error(t, err)
 			taskRunErr, ok := err.(*errors.TaskRunError)
 			assert.True(t, ok, "cannot cast returned error to *task.TaskRunError")
@@ -2531,12 +2080,12 @@ func TestErrorCode(t *testing.T) {
 func TestEvaluateSymlinksInPaths(t *testing.T) { // nolint:paralleltest // cannot run in parallel
 	const dir = "testdata/evaluate_symlinks_in_paths"
 	var buff bytes.Buffer
-	e := &task.Executor{
-		Dir:    dir,
-		Stdout: &buff,
-		Stderr: &buff,
-		Silent: false,
-	}
+	e := task.NewExecutor(
+		task.WithDir(dir),
+		task.WithStdout(&buff),
+		task.WithStderr(&buff),
+		task.WithSilent(false),
+	)
 	tests := []struct {
 		name     string
 		task     string
@@ -2571,7 +2120,7 @@ func TestEvaluateSymlinksInPaths(t *testing.T) { // nolint:paralleltest // canno
 	for _, test := range tests { // nolint:paralleltest // cannot run in parallel
 		t.Run(test.name, func(t *testing.T) {
 			require.NoError(t, e.Setup())
-			err := e.Run(context.Background(), &ast.Call{Task: test.task})
+			err := e.Run(context.Background(), &task.Call{Task: test.task})
 			require.NoError(t, err)
 			assert.Equal(t, test.expected, strings.TrimSpace(buff.String()))
 			buff.Reset()
@@ -2608,13 +2157,13 @@ func TestTaskfileWalk(t *testing.T) {
 			t.Parallel()
 
 			var buff bytes.Buffer
-			e := task.Executor{
-				Dir:    test.dir,
-				Stdout: &buff,
-				Stderr: &buff,
-			}
+			e := task.NewExecutor(
+				task.WithDir(test.dir),
+				task.WithStdout(&buff),
+				task.WithStderr(&buff),
+			)
 			require.NoError(t, e.Setup())
-			require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "default"}))
+			require.NoError(t, e.Run(context.Background(), &task.Call{Task: "default"}))
 			assert.Equal(t, test.expected, buff.String())
 		})
 	}
@@ -2624,15 +2173,15 @@ func TestUserWorkingDirectory(t *testing.T) {
 	t.Parallel()
 
 	var buff bytes.Buffer
-	e := task.Executor{
-		Dir:    "testdata/user_working_dir",
-		Stdout: &buff,
-		Stderr: &buff,
-	}
+	e := task.NewExecutor(
+		task.WithDir("testdata/user_working_dir"),
+		task.WithStdout(&buff),
+		task.WithStderr(&buff),
+	)
 	wd, err := os.Getwd()
 	require.NoError(t, err)
 	require.NoError(t, e.Setup())
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "default"}))
+	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "default"}))
 	assert.Equal(t, fmt.Sprintf("%s\n", wd), buff.String())
 }
 
@@ -2645,16 +2194,16 @@ func TestUserWorkingDirectoryWithIncluded(t *testing.T) {
 	wd = filepathext.SmartJoin(wd, "testdata/user_working_dir_with_includes/somedir")
 
 	var buff bytes.Buffer
-	e := task.Executor{
-		UserWorkingDir: wd,
-		Dir:            "testdata/user_working_dir_with_includes",
-		Stdout:         &buff,
-		Stderr:         &buff,
-	}
+	e := task.NewExecutor(
+		task.WithDir("testdata/user_working_dir_with_includes"),
+		task.WithStdout(&buff),
+		task.WithStderr(&buff),
+	)
+	e.UserWorkingDir = wd
 
 	require.NoError(t, err)
 	require.NoError(t, e.Setup())
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "included:echo"}))
+	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "included:echo"}))
 	assert.Equal(t, fmt.Sprintf("%s\n", wd), buff.String())
 }
 
@@ -2662,13 +2211,13 @@ func TestPlatforms(t *testing.T) {
 	t.Parallel()
 
 	var buff bytes.Buffer
-	e := task.Executor{
-		Dir:    "testdata/platforms",
-		Stdout: &buff,
-		Stderr: &buff,
-	}
+	e := task.NewExecutor(
+		task.WithDir("testdata/platforms"),
+		task.WithStdout(&buff),
+		task.WithStderr(&buff),
+	)
 	require.NoError(t, e.Setup())
-	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "build-" + runtime.GOOS}))
+	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "build-" + runtime.GOOS}))
 	assert.Equal(t, fmt.Sprintf("task: [build-%s] echo 'Running task on %s'\nRunning task on %s\n", runtime.GOOS, runtime.GOOS, runtime.GOOS), buff.String())
 }
 
@@ -2676,14 +2225,14 @@ func TestPOSIXShellOptsGlobalLevel(t *testing.T) {
 	t.Parallel()
 
 	var buff bytes.Buffer
-	e := task.Executor{
-		Dir:    "testdata/shopts/global_level",
-		Stdout: &buff,
-		Stderr: &buff,
-	}
+	e := task.NewExecutor(
+		task.WithDir("testdata/shopts/global_level"),
+		task.WithStdout(&buff),
+		task.WithStderr(&buff),
+	)
 	require.NoError(t, e.Setup())
 
-	err := e.Run(context.Background(), &ast.Call{Task: "pipefail"})
+	err := e.Run(context.Background(), &task.Call{Task: "pipefail"})
 	require.NoError(t, err)
 	assert.Equal(t, "pipefail\ton\n", buff.String())
 }
@@ -2692,14 +2241,14 @@ func TestPOSIXShellOptsTaskLevel(t *testing.T) {
 	t.Parallel()
 
 	var buff bytes.Buffer
-	e := task.Executor{
-		Dir:    "testdata/shopts/task_level",
-		Stdout: &buff,
-		Stderr: &buff,
-	}
+	e := task.NewExecutor(
+		task.WithDir("testdata/shopts/task_level"),
+		task.WithStdout(&buff),
+		task.WithStderr(&buff),
+	)
 	require.NoError(t, e.Setup())
 
-	err := e.Run(context.Background(), &ast.Call{Task: "pipefail"})
+	err := e.Run(context.Background(), &task.Call{Task: "pipefail"})
 	require.NoError(t, err)
 	assert.Equal(t, "pipefail\ton\n", buff.String())
 }
@@ -2708,14 +2257,14 @@ func TestPOSIXShellOptsCommandLevel(t *testing.T) {
 	t.Parallel()
 
 	var buff bytes.Buffer
-	e := task.Executor{
-		Dir:    "testdata/shopts/command_level",
-		Stdout: &buff,
-		Stderr: &buff,
-	}
+	e := task.NewExecutor(
+		task.WithDir("testdata/shopts/command_level"),
+		task.WithStdout(&buff),
+		task.WithStderr(&buff),
+	)
 	require.NoError(t, e.Setup())
 
-	err := e.Run(context.Background(), &ast.Call{Task: "pipefail"})
+	err := e.Run(context.Background(), &task.Call{Task: "pipefail"})
 	require.NoError(t, err)
 	assert.Equal(t, "pipefail\ton\n", buff.String())
 }
@@ -2724,14 +2273,14 @@ func TestBashShellOptsGlobalLevel(t *testing.T) {
 	t.Parallel()
 
 	var buff bytes.Buffer
-	e := task.Executor{
-		Dir:    "testdata/shopts/global_level",
-		Stdout: &buff,
-		Stderr: &buff,
-	}
+	e := task.NewExecutor(
+		task.WithDir("testdata/shopts/global_level"),
+		task.WithStdout(&buff),
+		task.WithStderr(&buff),
+	)
 	require.NoError(t, e.Setup())
 
-	err := e.Run(context.Background(), &ast.Call{Task: "globstar"})
+	err := e.Run(context.Background(), &task.Call{Task: "globstar"})
 	require.NoError(t, err)
 	assert.Equal(t, "globstar\ton\n", buff.String())
 }
@@ -2740,14 +2289,14 @@ func TestBashShellOptsTaskLevel(t *testing.T) {
 	t.Parallel()
 
 	var buff bytes.Buffer
-	e := task.Executor{
-		Dir:    "testdata/shopts/task_level",
-		Stdout: &buff,
-		Stderr: &buff,
-	}
+	e := task.NewExecutor(
+		task.WithDir("testdata/shopts/task_level"),
+		task.WithStdout(&buff),
+		task.WithStderr(&buff),
+	)
 	require.NoError(t, e.Setup())
 
-	err := e.Run(context.Background(), &ast.Call{Task: "globstar"})
+	err := e.Run(context.Background(), &task.Call{Task: "globstar"})
 	require.NoError(t, err)
 	assert.Equal(t, "globstar\ton\n", buff.String())
 }
@@ -2756,14 +2305,14 @@ func TestBashShellOptsCommandLevel(t *testing.T) {
 	t.Parallel()
 
 	var buff bytes.Buffer
-	e := task.Executor{
-		Dir:    "testdata/shopts/command_level",
-		Stdout: &buff,
-		Stderr: &buff,
-	}
+	e := task.NewExecutor(
+		task.WithDir("testdata/shopts/command_level"),
+		task.WithStdout(&buff),
+		task.WithStderr(&buff),
+	)
 	require.NoError(t, e.Setup())
 
-	err := e.Run(context.Background(), &ast.Call{Task: "globstar"})
+	err := e.Run(context.Background(), &task.Call{Task: "globstar"})
 	require.NoError(t, err)
 	assert.Equal(t, "globstar\ton\n", buff.String())
 }
@@ -2772,18 +2321,18 @@ func TestSplitArgs(t *testing.T) {
 	t.Parallel()
 
 	var buff bytes.Buffer
-	e := task.Executor{
-		Dir:    "testdata/split_args",
-		Stdout: &buff,
-		Stderr: &buff,
-		Silent: true,
-	}
+	e := task.NewExecutor(
+		task.WithDir("testdata/split_args"),
+		task.WithStdout(&buff),
+		task.WithStderr(&buff),
+		task.WithSilent(true),
+	)
 	require.NoError(t, e.Setup())
 
 	vars := ast.NewVars()
 	vars.Set("CLI_ARGS", ast.Var{Value: "foo bar 'foo bar baz'"})
 
-	err := e.Run(context.Background(), &ast.Call{Task: "default", Vars: vars})
+	err := e.Run(context.Background(), &task.Call{Task: "default", Vars: vars})
 	require.NoError(t, err)
 	assert.Equal(t, "3\n", buff.String())
 }
@@ -2809,29 +2358,29 @@ func TestSilence(t *testing.T) {
 	t.Parallel()
 
 	var buff bytes.Buffer
-	e := task.Executor{
-		Dir:    "testdata/silent",
-		Stdout: &buff,
-		Stderr: &buff,
-		Silent: false,
-	}
+	e := task.NewExecutor(
+		task.WithDir("testdata/silent"),
+		task.WithStdout(&buff),
+		task.WithStderr(&buff),
+		task.WithSilent(false),
+	)
 	require.NoError(t, e.Setup())
 
 	// First verify that the silent flag is in place.
-	task, err := e.GetTask(&ast.Call{Task: "task-test-silent-calls-chatty-silenced"})
+	fetchedTask, err := e.GetTask(&task.Call{Task: "task-test-silent-calls-chatty-silenced"})
 	require.NoError(t, err, "Unable to look up task task-test-silent-calls-chatty-silenced")
-	require.True(t, task.Cmds[0].Silent, "The task task-test-silent-calls-chatty-silenced should have a silent call to chatty")
+	require.True(t, fetchedTask.Cmds[0].Silent, "The task task-test-silent-calls-chatty-silenced should have a silent call to chatty")
 
 	// Then test the two basic cases where the task is silent or not.
 	// A silenced task.
-	err = e.Run(context.Background(), &ast.Call{Task: "silent"})
+	err = e.Run(context.Background(), &task.Call{Task: "silent"})
 	require.NoError(t, err)
 	require.Empty(t, buff.String(), "siWhile running lent: Expected not see output, because the task is silent")
 
 	buff.Reset()
 
 	// A chatty (not silent) task.
-	err = e.Run(context.Background(), &ast.Call{Task: "chatty"})
+	err = e.Run(context.Background(), &task.Call{Task: "chatty"})
 	require.NoError(t, err)
 	require.NotEmpty(t, buff.String(), "chWhile running atty: Expected to see output, because the task is not silent")
 
@@ -2839,42 +2388,42 @@ func TestSilence(t *testing.T) {
 
 	// Then test invoking the two task from other tasks.
 	// A silenced task that calls a chatty task.
-	err = e.Run(context.Background(), &ast.Call{Task: "task-test-silent-calls-chatty-non-silenced"})
+	err = e.Run(context.Background(), &task.Call{Task: "task-test-silent-calls-chatty-non-silenced"})
 	require.NoError(t, err)
 	require.NotEmpty(t, buff.String(), "While running task-test-silent-calls-chatty-non-silenced: Expected to see output. The task is silenced, but the called task is not. Silence does not propagate to called tasks.")
 
 	buff.Reset()
 
 	// A silent task that does a silent call to a chatty task.
-	err = e.Run(context.Background(), &ast.Call{Task: "task-test-silent-calls-chatty-silenced"})
+	err = e.Run(context.Background(), &task.Call{Task: "task-test-silent-calls-chatty-silenced"})
 	require.NoError(t, err)
 	require.Empty(t, buff.String(), "While running task-test-silent-calls-chatty-silenced: Expected not to see output. The task calls chatty task, but the call is silenced.")
 
 	buff.Reset()
 
 	// A chatty task that does a call to a chatty task.
-	err = e.Run(context.Background(), &ast.Call{Task: "task-test-chatty-calls-chatty-non-silenced"})
+	err = e.Run(context.Background(), &task.Call{Task: "task-test-chatty-calls-chatty-non-silenced"})
 	require.NoError(t, err)
 	require.NotEmpty(t, buff.String(), "While running task-test-chatty-calls-chatty-non-silenced: Expected to see output. Both caller and callee are chatty and not silenced.")
 
 	buff.Reset()
 
 	// A chatty task that does a silenced call to a chatty task.
-	err = e.Run(context.Background(), &ast.Call{Task: "task-test-chatty-calls-chatty-silenced"})
+	err = e.Run(context.Background(), &task.Call{Task: "task-test-chatty-calls-chatty-silenced"})
 	require.NoError(t, err)
 	require.NotEmpty(t, buff.String(), "While running task-test-chatty-calls-chatty-silenced: Expected to see output. Call to a chatty task is silenced, but the parent task is not.")
 
 	buff.Reset()
 
 	// A chatty task with no cmd's of its own that does a silenced call to a chatty task.
-	err = e.Run(context.Background(), &ast.Call{Task: "task-test-no-cmds-calls-chatty-silenced"})
+	err = e.Run(context.Background(), &task.Call{Task: "task-test-no-cmds-calls-chatty-silenced"})
 	require.NoError(t, err)
 	require.Empty(t, buff.String(), "While running task-test-no-cmds-calls-chatty-silenced: Expected not to see output. While the task itself is not silenced, it does not have any cmds and only does an invocation of a silenced task.")
 
 	buff.Reset()
 
 	// A chatty task that does a silenced invocation of a task.
-	err = e.Run(context.Background(), &ast.Call{Task: "task-test-chatty-calls-silenced-cmd"})
+	err = e.Run(context.Background(), &task.Call{Task: "task-test-chatty-calls-silenced-cmd"})
 	require.NoError(t, err)
 	require.Empty(t, buff.String(), "While running task-test-chatty-calls-silenced-cmd: Expected not to see output. While the task itself is not silenced, its call to the chatty task is silent.")
 
@@ -2882,21 +2431,21 @@ func TestSilence(t *testing.T) {
 
 	// Then test calls via dependencies.
 	// A silent task that depends on a chatty task.
-	err = e.Run(context.Background(), &ast.Call{Task: "task-test-is-silent-depends-on-chatty-non-silenced"})
+	err = e.Run(context.Background(), &task.Call{Task: "task-test-is-silent-depends-on-chatty-non-silenced"})
 	require.NoError(t, err)
 	require.NotEmpty(t, buff.String(), "While running task-test-is-silent-depends-on-chatty-non-silenced: Expected to see output. The task is silent and depends on a chatty task. Dependencies does not inherit silence.")
 
 	buff.Reset()
 
 	// A silent task that depends on a silenced chatty task.
-	err = e.Run(context.Background(), &ast.Call{Task: "task-test-is-silent-depends-on-chatty-silenced"})
+	err = e.Run(context.Background(), &task.Call{Task: "task-test-is-silent-depends-on-chatty-silenced"})
 	require.NoError(t, err)
 	require.Empty(t, buff.String(), "While running task-test-is-silent-depends-on-chatty-silenced: Expected not to see output. The task is silent and has a silenced dependency on a chatty task.")
 
 	buff.Reset()
 
 	// A chatty task that, depends on a silenced chatty task.
-	err = e.Run(context.Background(), &ast.Call{Task: "task-test-is-chatty-depends-on-chatty-silenced"})
+	err = e.Run(context.Background(), &task.Call{Task: "task-test-is-chatty-depends-on-chatty-silenced"})
 	require.NoError(t, err)
 	require.Empty(t, buff.String(), "While running task-test-is-chatty-depends-on-chatty-silenced: Expected not to see output. The task is chatty but does not have commands and has a silenced dependency on a chatty task.")
 
@@ -2940,156 +2489,15 @@ func TestForce(t *testing.T) {
 			t.Parallel()
 
 			var buff bytes.Buffer
-			e := task.Executor{
-				Dir:      "testdata/force",
-				Stdout:   &buff,
-				Stderr:   &buff,
-				Force:    tt.force,
-				ForceAll: tt.forceAll,
-			}
+			e := task.NewExecutor(
+				task.WithDir("testdata/force"),
+				task.WithStdout(&buff),
+				task.WithStderr(&buff),
+				task.WithForce(tt.force),
+				task.WithForceAll(tt.forceAll),
+			)
 			require.NoError(t, e.Setup())
-			require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "task-with-dep"}))
-		})
-	}
-}
-
-func TestForCmds(t *testing.T) {
-	t.Parallel()
-
-	tests := []struct {
-		name           string
-		expectedOutput string
-	}{
-		{
-			name:           "loop-explicit",
-			expectedOutput: "a\nb\nc\n",
-		},
-		{
-			name:           "loop-matrix",
-			expectedOutput: "windows/amd64\nwindows/arm64\nlinux/amd64\nlinux/arm64\ndarwin/amd64\ndarwin/arm64\n",
-		},
-		{
-			name:           "loop-sources",
-			expectedOutput: "bar\nfoo\n",
-		},
-		{
-			name:           "loop-sources-glob",
-			expectedOutput: "bar\nfoo\n",
-		},
-		{
-			name:           "loop-vars",
-			expectedOutput: "foo\nbar\n",
-		},
-		{
-			name:           "loop-vars-sh",
-			expectedOutput: "bar\nfoo\n",
-		},
-		{
-			name:           "loop-task",
-			expectedOutput: "foo\nbar\n",
-		},
-		{
-			name:           "loop-task-as",
-			expectedOutput: "foo\nbar\n",
-		},
-		{
-			name:           "loop-different-tasks",
-			expectedOutput: "1\n2\n3\n",
-		},
-	}
-
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			t.Parallel()
-
-			var stdOut bytes.Buffer
-			var stdErr bytes.Buffer
-			e := task.Executor{
-				Dir:    "testdata/for/cmds",
-				Stdout: &stdOut,
-				Stderr: &stdErr,
-				Silent: true,
-				Force:  true,
-			}
-			require.NoError(t, e.Setup())
-			require.NoError(t, e.Run(context.Background(), &ast.Call{Task: test.name}))
-			assert.Equal(t, test.expectedOutput, stdOut.String())
-		})
-	}
-}
-
-func TestForDeps(t *testing.T) {
-	t.Parallel()
-
-	tests := []struct {
-		name                   string
-		expectedOutputContains []string
-	}{
-		{
-			name:                   "loop-explicit",
-			expectedOutputContains: []string{"a\n", "b\n", "c\n"},
-		},
-		{
-			name: "loop-matrix",
-			expectedOutputContains: []string{
-				"windows/amd64\n",
-				"windows/arm64\n",
-				"linux/amd64\n",
-				"linux/arm64\n",
-				"darwin/amd64\n",
-				"darwin/arm64\n",
-			},
-		},
-		{
-			name:                   "loop-sources",
-			expectedOutputContains: []string{"bar\n", "foo\n"},
-		},
-		{
-			name:                   "loop-sources-glob",
-			expectedOutputContains: []string{"bar\n", "foo\n"},
-		},
-		{
-			name:                   "loop-vars",
-			expectedOutputContains: []string{"foo\n", "bar\n"},
-		},
-		{
-			name:                   "loop-vars-sh",
-			expectedOutputContains: []string{"bar\n", "foo\n"},
-		},
-		{
-			name:                   "loop-task",
-			expectedOutputContains: []string{"foo\n", "bar\n"},
-		},
-		{
-			name:                   "loop-task-as",
-			expectedOutputContains: []string{"foo\n", "bar\n"},
-		},
-		{
-			name:                   "loop-different-tasks",
-			expectedOutputContains: []string{"1\n", "2\n", "3\n"},
-		},
-	}
-
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			t.Parallel()
-
-			// We need to use a sync buffer here as deps are run concurrently
-			var buff SyncBuffer
-			e := task.Executor{
-				Dir:    "testdata/for/deps",
-				Stdout: &buff,
-				Stderr: &buff,
-				Silent: true,
-				Force:  true,
-				// Force output of each dep to be grouped together to prevent interleaving
-				OutputStyle: ast.Output{Name: "group"},
-			}
-			require.NoError(t, e.Setup())
-			require.NoError(t, e.Run(context.Background(), &ast.Call{Task: test.name}))
-			for _, expectedOutputContains := range test.expectedOutputContains {
-				assert.Contains(t, buff.buf.String(), expectedOutputContains)
-			}
+			require.NoError(t, e.Run(context.Background(), &task.Call{Task: "task-with-dep"}))
 		})
 	}
 }
@@ -3129,9 +2537,9 @@ func TestWildcard(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name:    "multiple matches",
-			call:    "wildcard-foo-bar",
-			wantErr: true,
+			name:           "multiple matches",
+			call:           "wildcard-foo-bar",
+			expectedOutput: "Hello foo-bar\n",
 		},
 	}
 
@@ -3140,68 +2548,19 @@ func TestWildcard(t *testing.T) {
 			t.Parallel()
 
 			var buff bytes.Buffer
-			e := task.Executor{
-				Dir:    "testdata/wildcards",
-				Stdout: &buff,
-				Stderr: &buff,
-				Silent: true,
-				Force:  true,
-			}
+			e := task.NewExecutor(
+				task.WithDir("testdata/wildcards"),
+				task.WithStdout(&buff),
+				task.WithStderr(&buff),
+				task.WithSilent(true),
+				task.WithForce(true),
+			)
 			require.NoError(t, e.Setup())
 			if test.wantErr {
-				require.Error(t, e.Run(context.Background(), &ast.Call{Task: test.call}))
+				require.Error(t, e.Run(context.Background(), &task.Call{Task: test.call}))
 				return
 			}
-			require.NoError(t, e.Run(context.Background(), &ast.Call{Task: test.call}))
-			assert.Equal(t, test.expectedOutput, buff.String())
-		})
-	}
-}
-
-func TestReference(t *testing.T) {
-	t.Parallel()
-
-	tests := []struct {
-		name           string
-		call           string
-		expectedOutput string
-	}{
-		{
-			name:           "reference in command",
-			call:           "ref-cmd",
-			expectedOutput: "1\n",
-		},
-		{
-			name:           "reference in dependency",
-			call:           "ref-dep",
-			expectedOutput: "1\n",
-		},
-		{
-			name:           "reference using templating resolver",
-			call:           "ref-resolver",
-			expectedOutput: "1\n",
-		},
-		{
-			name:           "reference using templating resolver and dynamic var",
-			call:           "ref-resolver-sh",
-			expectedOutput: "Alice has 3 children called Bob, Charlie, and Diane\n",
-		},
-	}
-
-	for _, test := range tests {
-		t.Run(test.call, func(t *testing.T) {
-			t.Parallel()
-
-			var buff bytes.Buffer
-			e := task.Executor{
-				Dir:    "testdata/var_references",
-				Stdout: &buff,
-				Stderr: &buff,
-				Silent: true,
-				Force:  true,
-			}
-			require.NoError(t, e.Setup())
-			require.NoError(t, e.Run(context.Background(), &ast.Call{Task: test.call}))
+			require.NoError(t, e.Run(context.Background(), &task.Call{Task: test.call}))
 			assert.Equal(t, test.expectedOutput, buff.String())
 		})
 	}
@@ -3212,14 +2571,13 @@ func TestReference(t *testing.T) {
 //
 // Typically experiments are controlled via TASK_X_ env vars, but we cannot use those in tests
 // because the experiment settings are parsed during experiments.init(), before any tests run.
-func enableExperimentForTest(t *testing.T, e *experiments.Experiment, val string) {
+func enableExperimentForTest(t *testing.T, e *experiments.Experiment, val int) {
 	t.Helper()
-
 	prev := *e
 	*e = experiments.Experiment{
-		Name:    prev.Name,
-		Enabled: true,
-		Value:   val,
+		Name:          prev.Name,
+		AllowedValues: []int{val},
+		Value:         val,
 	}
 	t.Cleanup(func() { *e = prev })
 }
