@@ -177,7 +177,7 @@ func run() error {
 		return e.Status(ctx, calls...)
 	}
 
-	getRunCalls := func(run string) ([]*task.Call) {
+	getRunCalls := func(run string) []*task.Call {
 		var calls = []*task.Call{}
 		for t := range e.Taskfile.Tasks.Values(nil) {
 			if t.Run == run {

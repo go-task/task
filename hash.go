@@ -19,9 +19,9 @@ func (e *Executor) GetHash(t *ast.Task) (string, error) {
 	case "when_changed":
 		h = hash.Hash
 	case "init":
-		h = hash.Name  // Run init tasks _once_ only.
+		h = hash.Name // Run init tasks _once_ only.
 	case "exit":
-		h = hash.Empty  // Run exit tasks _always_.
+		h = hash.Empty // Run exit tasks _always_.
 	default:
 		return "", fmt.Errorf(`task: invalid run "%s"`, r)
 	}
