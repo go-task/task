@@ -177,5 +177,20 @@ func run() error {
 		return e.Status(ctx, calls...)
 	}
 
-	return e.Run(ctx, calls...)
+	getRunCalls := func(run string) ([]*task.Call) {
+		var calls = []*task.Call{}
+		for t := range e.Taskfile.Tasks.Values(nil) {
+			if t.Run == run {
+				calls = append(calls, &task.Call{Task: t.Name()})
+			}
+		}
+		return calls
+	}
+
+	calls = append(getRunCalls("init"), calls...)
+	if err := e.Run(ctx, calls...); err != nil {
+		e.Run(ctx, getRunCalls("exit")...)
+		return err
+	}
+	return e.Run(ctx, getRunCalls("exit")...)
 }
