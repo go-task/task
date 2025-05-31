@@ -127,6 +127,11 @@ func (includes *Includes) UnmarshalYAML(node *yaml.Node) error {
 			keyNode := node.Content[i]
 			valueNode := node.Content[i+1]
 
+			// Ensure the include value is not null, as it must be either a string or an include object.
+			if valueNode.Kind == yaml.ScalarNode && valueNode.Tag == "!!null" {
+				return errors.NewTaskfileDecodeError(nil, valueNode).WithMessage("inline taskfile value in includes cannot be null")
+			}
+
 			// Decode the value node into an Include struct
 			var v Include
 			if err := valueNode.Decode(&v); err != nil {
@@ -147,18 +152,20 @@ func (includes *Includes) UnmarshalYAML(node *yaml.Node) error {
 
 func (include *Include) UnmarshalYAML(node *yaml.Node) error {
 	switch node.Kind {
-
 	case yaml.ScalarNode:
 		var str string
 		if err := node.Decode(&str); err != nil {
 			return errors.NewTaskfileDecodeError(err, node)
+		}
+		if str == "" {
+			return errors.NewTaskfileDecodeError(nil, node).WithMessage("inline taskfile value in includes cannot be empty")
 		}
 		include.Taskfile = str
 		return nil
 
 	case yaml.MappingNode:
 		var includedTaskfile struct {
-			Taskfile string
+			Taskfile *string
 			Dir      string
 			Optional bool
 			Internal bool
@@ -171,7 +178,13 @@ func (include *Include) UnmarshalYAML(node *yaml.Node) error {
 		if err := node.Decode(&includedTaskfile); err != nil {
 			return errors.NewTaskfileDecodeError(err, node)
 		}
-		include.Taskfile = includedTaskfile.Taskfile
+		if includedTaskfile.Taskfile == nil {
+			return errors.NewTaskfileDecodeError(nil, node).WithMessage("taskfile field in includes cannot be null")
+		}
+		if *includedTaskfile.Taskfile == "" {
+			return errors.NewTaskfileDecodeError(nil, node).WithMessage("taskfile field in includes cannot be empty")
+		}
+		include.Taskfile = *includedTaskfile.Taskfile
 		include.Dir = includedTaskfile.Dir
 		include.Optional = includedTaskfile.Optional
 		include.Internal = includedTaskfile.Internal
