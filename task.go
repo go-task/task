@@ -400,19 +400,40 @@ func (e *Executor) startExecution(ctx context.Context, t *ast.Task, execute func
 }
 
 // FindMatchingTasks returns a list of tasks that match the given call. A task
-// matches a call if its name is equal to the call's task name or if it matches
+// matches a call if its name is equal to the call's task name, or one of aliases, or if it matches
 // a wildcard pattern. The function returns a list of MatchingTask structs, each
 // containing a task and a list of wildcards that were matched.
-func (e *Executor) FindMatchingTasks(call *Call) []*MatchingTask {
+// If multiple tasks match due to aliases, a TaskNameConflictError is returned.
+func (e *Executor) FindMatchingTasks(call *Call) ([]*MatchingTask, error) {
 	if call == nil {
-		return nil
+		return nil, nil
 	}
 	var matchingTasks []*MatchingTask
 	// If there is a direct match, return it
 	if task, ok := e.Taskfile.Tasks.Get(call.Task); ok {
 		matchingTasks = append(matchingTasks, &MatchingTask{Task: task, Wildcards: nil})
-		return matchingTasks
+		return matchingTasks, nil
 	}
+	var aliasedTasks []string
+	for task := range e.Taskfile.Tasks.Values(nil) {
+		if slices.Contains(task.Aliases, call.Task) {
+			aliasedTasks = append(aliasedTasks, task.Task)
+			matchingTasks = append(matchingTasks, &MatchingTask{Task: task, Wildcards: nil})
+		}
+	}
+
+	if len(aliasedTasks) == 1 {
+		return matchingTasks, nil
+	}
+
+	// If we found multiple tasks
+	if len(aliasedTasks) > 1 {
+		return nil, &errors.TaskNameConflictError{
+			Call:      call.Task,
+			TaskNames: aliasedTasks,
+		}
+	}
+
 	// Attempt a wildcard match
 	for _, value := range e.Taskfile.Tasks.All(nil) {
 		if match, wildcards := value.WildcardMatch(call.Task); match {
@@ -422,7 +443,7 @@ func (e *Executor) FindMatchingTasks(call *Call) []*MatchingTask {
 			})
 		}
 	}
-	return matchingTasks
+	return matchingTasks, nil
 }
 
 // GetTask will return the task with the name matching the given call from the taskfile.
@@ -430,7 +451,11 @@ func (e *Executor) FindMatchingTasks(call *Call) []*MatchingTask {
 // If multiple tasks contain the same alias or no matches are found an error is returned.
 func (e *Executor) GetTask(call *Call) (*ast.Task, error) {
 	// Search for a matching task
-	matchingTasks := e.FindMatchingTasks(call)
+	matchingTasks, err := e.FindMatchingTasks(call)
+	if err != nil {
+		return nil, err
+	}
+
 	if len(matchingTasks) > 0 {
 		if call.Vars == nil {
 			call.Vars = ast.NewVars()
@@ -439,35 +464,15 @@ func (e *Executor) GetTask(call *Call) (*ast.Task, error) {
 		return matchingTasks[0].Task, nil
 	}
 
-	// If didn't find one, search for a task with a matching alias
-	var matchingTask *ast.Task
-	var aliasedTasks []string
-	for task := range e.Taskfile.Tasks.Values(nil) {
-		if slices.Contains(task.Aliases, call.Task) {
-			aliasedTasks = append(aliasedTasks, task.Task)
-			matchingTask = task
-		}
-	}
-	// If we found multiple tasks
-	if len(aliasedTasks) > 1 {
-		return nil, &errors.TaskNameConflictError{
-			Call:      call.Task,
-			TaskNames: aliasedTasks,
-		}
-	}
 	// If we found no tasks
-	if len(aliasedTasks) == 0 {
-		didYouMean := ""
-		if e.fuzzyModel != nil {
-			didYouMean = e.fuzzyModel.SpellCheck(call.Task)
-		}
-		return nil, &errors.TaskNotFoundError{
-			TaskName:   call.Task,
-			DidYouMean: didYouMean,
-		}
+	didYouMean := ""
+	if e.fuzzyModel != nil {
+		didYouMean = e.fuzzyModel.SpellCheck(call.Task)
 	}
-
-	return matchingTask, nil
+	return nil, &errors.TaskNotFoundError{
+		TaskName:   call.Task,
+		DidYouMean: didYouMean,
+	}
 }
 
 type FilterFunc func(task *ast.Task) bool
