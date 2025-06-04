@@ -7,6 +7,15 @@ import (
 	"github.com/go-task/task/v3/taskfile/ast"
 )
 
+func isNilValue(value any) bool {
+	v, ok := value.(string)
+	if ok && len(v) == 0 {
+		return true
+	} else {
+		return false
+	}
+}
+
 func (e *Executor) areTaskRequiredVarsSet(t *ast.Task) error {
 	if t.Requires == nil || len(t.Requires.Vars) == 0 {
 		return nil
@@ -14,8 +23,8 @@ func (e *Executor) areTaskRequiredVarsSet(t *ast.Task) error {
 
 	var missingVars []errors.MissingVar
 	for _, requiredVar := range t.Requires.Vars {
-		_, ok := t.Vars.Get(requiredVar.Name)
-		if !ok {
+		varValue, ok := t.Vars.Get(requiredVar.Name)
+		if !ok || isNilValue(varValue.Value) {
 			missingVars = append(missingVars, errors.MissingVar{
 				Name:          requiredVar.Name,
 				AllowedValues: requiredVar.Enum,
