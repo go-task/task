@@ -41,3 +41,36 @@ tasks:
       {{range .MY_VAR | splitList " " }}
         echo {{.}}
       {{end}}
+
+  require-null:
+    vars:
+      FOO: null
+    cmds:
+      - echo "{{.FOO}}"
+    requires:
+      vars: [FOO]
+
+  require-empty-string:
+    vars:
+      FOO: ''
+    cmds:
+      - echo "{{.FOO}}"
+    requires:
+      vars: [FOO]
+
+  require-empty-template:
+    vars:
+      FOO: '{{.C}}'
+    cmds:
+      - echo "{{.FOO}}"
+    requires:
+      vars: [FOO]
+
+  require-empty-dynamic-var:
+    vars:
+      FOO:
+        sh: echo ""
+    cmds:
+      - echo "{{.FOO}}"
+    requires:
+      vars: [FOO]

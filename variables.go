@@ -21,22 +21,28 @@ import (
 // CompiledTask returns a copy of a task, but replacing variables in almost all
 // properties using the Go template package.
 func (e *Executor) CompiledTask(call *Call) (*ast.Task, error) {
-	return e.compiledTask(call, true)
+	return e.compiledTask(call, true, true)
 }
 
-// FastCompiledTask is like CompiledTask, but it skippes dynamic variables.
+// FastCompiledTask is like CompiledTask, but it skips dynamic variables.
 func (e *Executor) FastCompiledTask(call *Call) (*ast.Task, error) {
-	return e.compiledTask(call, false)
+	return e.compiledTask(call, false, false)
 }
 
-func (e *Executor) compiledTask(call *Call, evaluateShVars bool) (*ast.Task, error) {
+// FastCompiledTaskWithVars is like FastCompiledTask, but dynamic variables
+// of the task are processed.
+func (e *Executor) FastCompiledTaskWithVars(call *Call) (*ast.Task, error) {
+	return e.compiledTask(call, false, true)
+}
+
+func (e *Executor) compiledTask(call *Call, evaluateShVars bool, evaluateTaskVarsOnly bool) (*ast.Task, error) {
 	origTask, err := e.GetTask(call)
 	if err != nil {
 		return nil, err
 	}
 
 	var vars *ast.Vars
-	if evaluateShVars {
+	if evaluateShVars || evaluateTaskVarsOnly {
 		vars, err = e.Compiler.GetVariables(origTask, call)
 	} else {
 		vars, err = e.Compiler.FastGetVariables(origTask, call)
