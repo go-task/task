@@ -10,9 +10,9 @@
       "location": {
         "line": 4,
         "column": 3,
-        "taskfile": "/home/rut6abt/git/oss/task/testdata/json_list_format/Taskfile.yml"
+        "taskfile": "/Users/runner/work/task/testdata/json_list_format/Taskfile.yml"
       }
     }
   ],
-  "location": "/home/rut6abt/git/oss/task/testdata/json_list_format/Taskfile.yml"
+  "location": "/Users/runner/work/task/testdata/json_list_format/Taskfile.yml"
 }
