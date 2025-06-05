@@ -8,12 +8,15 @@ import (
 )
 
 func isNilValue(value any) bool {
-	v, ok := value.(string)
-	if ok && len(v) == 0 {
+	if value == nil {
 		return true
 	} else {
-		return false
+		v, ok := value.(string)
+		if ok && len(v) == 0 {
+			return true
+		}
 	}
+	return false
 }
 
 func (e *Executor) areTaskRequiredVarsSet(t *ast.Task) error {
