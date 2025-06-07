@@ -1,2 +1,3 @@
 task: "gen-silent-baz" started
+ExecutionGraph:vertex: 1903337095753931261 : gen-silent-baz
 task: Task "gen-silent-baz" is up to date
