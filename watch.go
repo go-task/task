@@ -19,6 +19,8 @@ import (
 	"github.com/go-task/task/v3/internal/fingerprint"
 	"github.com/go-task/task/v3/internal/fsnotifyext"
 	"github.com/go-task/task/v3/internal/logger"
+	"github.com/go-task/task/v3/internal/slicesext"
+	"github.com/go-task/task/v3/taskfile/ast"
 )
 
 const defaultWaitTime = 100 * time.Millisecond
@@ -85,17 +87,22 @@ func (e *Executor) watchTasks(calls ...*Call) error {
 				for _, c := range calls {
 					c := c
 					go func() {
+						if ShouldIgnore(event.Name) {
+							e.Logger.VerboseErrf(logger.Magenta, "task: event skipped for being an ignored dir: %s\n", event.Name)
+							return
+						}
 						t, err := e.GetTask(c)
 						if err != nil {
 							e.Logger.Errf(logger.Red, "%v\n", err)
 							return
 						}
 						baseDir := filepathext.SmartJoin(e.Dir, t.Dir)
-						files, err := fingerprint.Globs(baseDir, t.Sources)
+						files, err := e.collectSources(calls)
 						if err != nil {
 							e.Logger.Errf(logger.Red, "%v\n", err)
 							return
 						}
+
 						if !event.Has(fsnotify.Remove) && !slices.Contains(files, event.Name) {
 							relPath, _ := filepath.Rel(baseDir, event.Name)
 							e.Logger.VerboseErrf(logger.Magenta, "task: skipped for file not in sources: %s\n", relPath)
@@ -158,69 +165,84 @@ func closeOnInterrupt(w *fsnotify.Watcher) {
 }
 
 func (e *Executor) registerWatchedDirs(w *fsnotify.Watcher, calls ...*Call) error {
-	var registerTaskDirs func(*Call) error
-	registerTaskDirs = func(c *Call) error {
-		task, err := e.CompiledTask(c)
-		if err != nil {
-			return err
-		}
-
-		for _, d := range task.Deps {
-			if err := registerTaskDirs(&Call{Task: d.Task, Vars: d.Vars}); err != nil {
-				return err
-			}
-		}
-		for _, c := range task.Cmds {
-			if c.Task != "" {
-				if err := registerTaskDirs(&Call{Task: c.Task, Vars: c.Vars}); err != nil {
-					return err
-				}
-			}
-		}
-
-		files, err := fingerprint.Globs(task.Dir, task.Sources)
-		if err != nil {
-			return err
-		}
-
-		for _, f := range files {
-			d := filepath.Dir(f)
-			if isSet, ok := e.watchedDirs.Load(d); ok && isSet {
-				continue
-			}
-			if ShouldIgnoreFile(d) {
-				continue
-			}
-			if err := w.Add(d); err != nil {
-				return err
-			}
-			e.watchedDirs.Store(d, true)
-			relPath, _ := filepath.Rel(e.Dir, d)
-			w.Events <- fsnotify.Event{Name: f, Op: fsnotify.Create}
-			e.Logger.VerboseOutf(logger.Green, "task: watching new dir: %v\n", relPath)
-		}
-		return nil
+	files, err := e.collectSources(calls)
+	if err != nil {
+		return err
 	}
-
-	for _, c := range calls {
-		if err := registerTaskDirs(c); err != nil {
+	for _, f := range files {
+		d := filepath.Dir(f)
+		if isSet, ok := e.watchedDirs.Load(d); ok && isSet {
+			continue
+		}
+		if ShouldIgnore(d) {
+			continue
+		}
+		if err := w.Add(d); err != nil {
 			return err
 		}
+		e.watchedDirs.Store(d, true)
+		relPath, _ := filepath.Rel(e.Dir, d)
+		e.Logger.VerboseOutf(logger.Green, "task: watching new dir: %v\n", relPath)
 	}
 	return nil
 }
 
-func ShouldIgnoreFile(path string) bool {
-	ignorePaths := []string{
-		"/.task",
-		"/.git",
-		"/.hg",
-		"/node_modules",
-	}
+var ignorePaths = []string{
+	"/.task",
+	"/.git",
+	"/.hg",
+	"/node_modules",
+}
+
+func ShouldIgnore(path string) bool {
 	for _, p := range ignorePaths {
 		if strings.Contains(path, fmt.Sprintf("%s/", p)) || strings.HasSuffix(path, p) {
 			return true
 		}
 	}
 	return false
+}
+
+func (e *Executor) collectSources(calls []*Call) ([]string, error) {
+	var sources []string
+
+	err := e.traverse(calls, func(task *ast.Task) error {
+		files, err := fingerprint.Globs(task.Dir, task.Sources)
+		if err != nil {
+			return err
+		}
+		sources = append(sources, files...)
+		return nil
+	})
+
+	return slicesext.UniqueJoin(sources), err
+}
+
+type traverseFunc func(*ast.Task) error
+
+func (e *Executor) traverse(calls []*Call, yield traverseFunc) error {
+	for _, c := range calls {
+		task, err := e.CompiledTask(c)
+		if err != nil {
+			return err
+		}
+		for _, dep := range task.Deps {
+			if dep.Task != "" {
+				if err := e.traverse([]*Call{{Task: dep.Task, Vars: dep.Vars}}, yield); err != nil {
+					return err
+				}
+			}
+		}
+		for _, cmd := range task.Cmds {
+			if cmd.Task != "" {
+				if err := e.traverse([]*Call{{Task: cmd.Task, Vars: cmd.Vars}}, yield); err != nil {
+					return err
+				}
+			}
+		}
+		if err := yield(task); err != nil {
+			return err
+		}
+	}
+	return nil
 }
