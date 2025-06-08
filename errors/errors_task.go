@@ -99,23 +99,30 @@ func (err *TaskNameFlattenConflictError) Code() int {
 	return CodeTaskNameConflict
 }
 
-// TaskCalledTooManyTimesError is returned when the maximum task call limit is
-// exceeded. This is to prevent infinite loops and cyclic dependencies.
-type TaskCalledTooManyTimesError struct {
+// TaskCyclicExecutionDetectedError is returned when the Execution Graph detects
+// a cyclic execution condition.
+type TaskCyclicExecutionDetectedError struct {
 	TaskName        string
-	MaximumTaskCall int
+	CallingTaskName string
 }
 
-func (err *TaskCalledTooManyTimesError) Error() string {
-	return fmt.Sprintf(
-		`task: Maximum task call exceeded (%d) for task %q: probably an cyclic dep or infinite loop`,
-		err.MaximumTaskCall,
-		err.TaskName,
-	)
+func (err *TaskCyclicExecutionDetectedError) Error() string {
+	if len(err.CallingTaskName) > 0 {
+		return fmt.Sprintf(
+			`task: Cyclic task call execution detected for task %q (calling task %q)`,
+			err.TaskName,
+			err.CallingTaskName,
+		)
+	} else {
+		return fmt.Sprintf(
+			`task: Cyclic task call execution detected for task %q`,
+			err.TaskName,
+		)
+	}
 }
 
-func (err *TaskCalledTooManyTimesError) Code() int {
-	return CodeTaskCalledTooManyTimes
+func (err *TaskCyclicExecutionDetectedError) Code() int {
+	return CodeTaskCyclicExecutionDetected
 }
 
 // TaskCancelledByUserError is returned when the user does not accept an optional prompt to continue.
