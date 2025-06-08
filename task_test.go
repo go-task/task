@@ -547,7 +547,9 @@ func TestCyclicDep(t *testing.T) {
 		task.WithStderr(io.Discard),
 	)
 	require.NoError(t, e.Setup())
-	assert.IsType(t, &errors.TaskCalledTooManyTimesError{}, e.Run(context.Background(), &task.Call{Task: "task-1"}))
+	err := e.Run(context.Background(), &task.Call{Task: "task-1"})
+	var taskCalledTooManyTimesError *errors.TaskCalledTooManyTimesError
+	assert.ErrorAs(t, err, &taskCalledTooManyTimesError)
 }
 
 func TestTaskVersion(t *testing.T) {

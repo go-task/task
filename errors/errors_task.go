@@ -52,6 +52,10 @@ func (err *TaskRunError) TaskExitCode() int {
 	return err.Code()
 }
 
+func (err *TaskRunError) Unwrap() error {
+	return err.Err
+}
+
 // TaskInternalError when the user attempts to invoke a task that is internal.
 type TaskInternalError struct {
 	TaskName string
