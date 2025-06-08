@@ -665,6 +665,15 @@ func TestLabel(t *testing.T) {
 		),
 		WithTask("foo"),
 	)
+
+	NewExecutorTest(t,
+		WithName("label in error"),
+		WithExecutorOptions(
+			task.WithDir("testdata/label_error"),
+		),
+		WithTask("foo"),
+		WithRunError(),
+	)
 }
 
 func TestPromptInSummary(t *testing.T) {
