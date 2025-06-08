@@ -6,8 +6,8 @@ import (
 	"os"
 	"runtime"
 	"slices"
-	"sync/atomic"
 
+	"github.com/dominikbraun/graph"
 	"golang.org/x/sync/errgroup"
 	"mvdan.cc/sh/v3/interp"
 
@@ -22,12 +22,6 @@ import (
 	"github.com/go-task/task/v3/internal/summary"
 	"github.com/go-task/task/v3/internal/templater"
 	"github.com/go-task/task/v3/taskfile/ast"
-)
-
-const (
-	// MaximumTaskCall is the max number of times a task can be called.
-	// This exists to prevent infinite loops on cyclic dependencies
-	MaximumTaskCall = 1000
 )
 
 // MatchingTask represents a task that matches a given call. It includes the
@@ -116,6 +110,61 @@ func (e *Executor) splitRegularAndWatchCalls(calls ...*Call) (regularCalls []*Ca
 	return
 }
 
+func (e *Executor) updateExecutionGraph(t *ast.Task, call *Call) error {
+	e.graph.Lock()
+	defer e.graph.Unlock()
+	if call.Vertex == nil {
+		call.Vertex = &ast.TaskExecutionVertex{}
+	}
+	call.Vertex.Task = t
+	// Calculate the call token.
+	var callToken string
+	if v, ok := t.Vars.Get("CHECKSUM"); ok {
+		callToken = fmt.Sprintf("%v", v.Live)
+	} else if v, ok := t.Vars.Get("TIMESTAMP"); ok {
+		callToken = fmt.Sprintf("%v", v.Live)
+	}
+	if len(callToken) > 0 {
+		call.Vertex.CallToken = callToken
+	} else {
+		// Propagate the parent call token.
+		if call.Vertex.Parent != nil {
+			call.Vertex.CallToken = call.Vertex.Parent.CallToken
+		}
+	}
+	// Add vertex and edge.
+	if err := e.graph.AddVertex(call.Vertex); err != nil {
+		switch {
+		case errors.Is(err, graph.ErrVertexAlreadyExists):
+			// consume this error
+		default:
+			return err
+		}
+	}
+	if call.Vertex.Parent != nil {
+		if err := e.graph.AddEdge(call.Vertex.Parent.Hash, call.Vertex.Hash); err != nil {
+			switch {
+			case errors.Is(err, graph.ErrEdgeAlreadyExists):
+				// consume this error
+			case errors.Is(err, graph.ErrEdgeCreatesCycle):
+				if call.Vertex.Parent == nil {
+					return &errors.TaskCyclicExecutionDetectedError{
+						TaskName: call.Task,
+					}
+				} else {
+					return &errors.TaskCyclicExecutionDetectedError{
+						TaskName:        call.Task,
+						CallingTaskName: call.Vertex.Parent.Task.Task,
+					}
+				}
+			default:
+				return err
+			}
+		}
+	}
+	return nil
+}
+
 // RunTask runs a task by its name
 func (e *Executor) RunTask(ctx context.Context, call *Call) error {
 	t, err := e.FastCompiledTask(call)
@@ -140,19 +189,17 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) error {
 		return err
 	}
 
-	if !e.Watch && atomic.AddInt32(e.taskCallCount[t.Task], 1) >= MaximumTaskCall {
-		return &errors.TaskCalledTooManyTimesError{
-			TaskName:        t.Task,
-			MaximumTaskCall: MaximumTaskCall,
-		}
-	}
-
 	release := e.acquireConcurrencyLimit()
 	defer release()
 
 	return e.startExecution(ctx, t, func(ctx context.Context) error {
 		e.Logger.VerboseErrf(logger.Magenta, "task: %q started\n", call.Task)
-		if err := e.runDeps(ctx, t); err != nil {
+
+		if err := e.updateExecutionGraph(t, call); err != nil {
+			return err
+		}
+
+		if err := e.runDeps(ctx, t, call.Vertex); err != nil {
 			return err
 		}
 
@@ -233,6 +280,11 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) error {
 					return err
 				}
 
+				taskCyclicExecutionDetectedErr := &errors.TaskCyclicExecutionDetectedError{}
+				if errors.As(err, &taskCyclicExecutionDetectedErr) {
+					return err
+				}
+
 				return &errors.TaskRunError{TaskName: t.Task, Err: err}
 			}
 		}
@@ -258,16 +310,17 @@ func (e *Executor) mkdir(t *ast.Task) error {
 	return nil
 }
 
-func (e *Executor) runDeps(ctx context.Context, t *ast.Task) error {
+func (e *Executor) runDeps(ctx context.Context, t *ast.Task, v *ast.TaskExecutionVertex) error {
 	g, ctx := errgroup.WithContext(ctx)
 
 	reacquire := e.releaseConcurrencyLimit()
 	defer reacquire()
 
-	for _, d := range t.Deps {
+	for i, d := range t.Deps {
 		d := d
 		g.Go(func() error {
-			err := e.RunTask(ctx, &Call{Task: d.Task, Vars: d.Vars, Silent: d.Silent, Indirect: true})
+			vDep := &ast.TaskExecutionVertex{CallIndex: i, Parent: v}
+			err := e.RunTask(ctx, &Call{Task: d.Task, Vars: d.Vars, Silent: d.Silent, Indirect: true, Vertex: vDep})
 			if err != nil {
 				return err
 			}
@@ -313,7 +366,8 @@ func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call *Call, i in
 		reacquire := e.releaseConcurrencyLimit()
 		defer reacquire()
 
-		err := e.RunTask(ctx, &Call{Task: cmd.Task, Vars: cmd.Vars, Silent: cmd.Silent, Indirect: true})
+		vCmd := &ast.TaskExecutionVertex{CallIndex: i, Parent: call.Vertex}
+		err := e.RunTask(ctx, &Call{Task: cmd.Task, Vars: cmd.Vars, Silent: cmd.Silent, Indirect: true, Vertex: vCmd})
 		if err != nil {
 			return err
 		}
