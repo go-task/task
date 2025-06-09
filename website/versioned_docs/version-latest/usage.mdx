@@ -781,7 +781,10 @@ tasks:
 
 If you prefer these check to be made by the modification timestamp of the files,
 instead of its checksum (content), just set the `method` property to
-`timestamp`.
+`timestamp`. This can be done at two levels:
+
+At the task level for a specific task:
+
 
 ```yaml
 version: '3'
@@ -796,6 +799,24 @@ tasks:
       - app{{exeExt}}
     method: timestamp
 ```
+
+At the root level of the Taskfile to apply it globally to all tasks:
+
+```yaml
+version: '3'
+
+method: timestamp  # Will be the default for all tasks
+
+tasks:
+  build:
+    cmds:
+      - go build .
+    sources:
+      - ./*.go
+    generates:
+      - app{{exeExt}}
+```
+
 
 In situations where you need more flexibility the `status` keyword can be used.
 You can even combine the two. See the documentation for
@@ -2357,6 +2378,21 @@ tasks:
 Note that when setting `watch: true` to a task, it'll only run in watch mode
 when running from the CLI via `task my-watch-task`, but won't run in watch mode
 if called by another task, either directly or as a dependency.
+
+:::
+
+:::caution
+
+The watcher can misbehave in certain scenarios, in particular for long-running
+servers.
+There is a known bug where child processes of the running might not be killed
+appropriately. It's adviced to avoid running commands as `go run` and prefer
+`go build [...] && ./binary` instead.
+
+If you are having issues, you might want to try tools specifically designed for
+live-reloading, like [Air](https://github.com/air-verse/air/). Also, be sure to
+[report any issues](https://github.com/go-task/task/issues/new?template=bug_report.yml)
+to us.
 
 :::
 

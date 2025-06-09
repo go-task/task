@@ -102,7 +102,8 @@ special variable will be overridden.
 
 | Var                | Description                                                                                                                                              |
 |--------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `CLI_ARGS`         | Contain all extra arguments passed after `--` when calling Task through the CLI.                                                                         |
+| `CLI_ARGS`         | Contain all extra arguments passed after `--` when calling Task through the CLI as a string.                                                             |
+| `CLI_ARGS_LIST`    | Contain all extra arguments passed after `--` when calling Task through the CLI as a shell parsed list.                                                  |
 | `CLI_FORCE`        | A boolean containing whether the `--force` or `--force-all` flags were set.                                                                              |
 | `CLI_SILENT`       | A boolean containing whether the `--silent`  flag was set.                                                                                               |
 | `CLI_VERBOSE`      | A boolean containing whether the `--verbose`  flag was set.                                                                                              |
@@ -269,6 +270,10 @@ description here for completeness. For detailed usage, please refer to the
 | `b32enc`         | Encodes a string into base 32.                                     |
 | `b32dec`         | Decodes a string from base 32.                                     |
 
+:::note
+YAML encoding functions are [provided directly by Task](#task-functions).
+:::
+
 #### [List Functions][list-functions]
 
 | Function    | Description                                                      |
@@ -336,6 +341,10 @@ description here for completeness. For detailed usage, please refer to the
 | `osExt`   | Returns the file extension of a filepath. |
 | `osIsAbs` | Checks if a filepath is absolute.         |
 
+:::note
+More filepath encoding functions are [provided directly by Task](#task-functions).
+:::
+
 #### [Flow Control Functions][flow-control-functions]
 
 | Function | Description                                                                   |
@@ -375,7 +384,7 @@ Lastly, Task itself provides a few functions:
 | Function     | Description                                                                                                                                                                                            |
 | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `OS`         | Returns the operating system. Possible values are `windows`, `linux`, `darwin` (macOS) and `freebsd`.                                                                                                  |
-| `ARCH`       | Returns the architecture Task was compiled to: `386`, `amd64`, `arm` or `s390x`.                                                                                                                        |
+| `ARCH`       | Returns the architecture Task was compiled to: `386`, `amd64`, `arm` or `s390x`.                                                                                                                       |
 | `numCPU`     | Returns the number of logical CPU's usable by the current process.                                                                                                                                     |
 | `splitLines` | Splits Unix (`\n`) and Windows (`\r\n`) styled newlines.                                                                                                                                               |
 | `catLines`   | Replaces Unix (`\n`) and Windows (`\r\n`) styled newlines with a space.                                                                                                                                |
@@ -388,6 +397,11 @@ Lastly, Task itself provides a few functions:
 | `relPath`    | Converts an absolute path (second argument) into a relative path, based on a base path (first argument). The same as Go's [filepath.Rel](https://pkg.go.dev/path/filepath#Rel).                        |
 | `merge`      | Creates a new map that is a copy of the first map with the keys of each subsequent map merged into it. If there is a duplicate key, the value of the last map with that key is used.                   |
 | `spew`       | Returns the Go representation of a specific variable. Useful for debugging. Uses the [davecgh/go-spew](https://github.com/davecgh/go-spew) package.                                                    |
+| `fromYaml`\* | Decodes a YAML string into an object.                                                                                                                                                                  |
+| `toYaml`\*   | Encodes an object as a YAML string.                                                                                                                                                                    |
+| `uuid`       | Generates a new pseudo-random UUIDv4 string.                                                                                                                                                           |
+| `randInt`    | Generates a new pseudo-random, non-negative, 32bit integer. Generated numbers are not suitable for security-sensitive work.                                                                            |
+| `randIntN`   | Generates a new pseudo-random, non-negative, 32bit integer in the half-open interval `[0,n)`. Generated numbers are not suitable for security-sensitive work.                                          |
 
 {/* prettier-ignore-start */}
 [text/template]: https://pkg.go.dev/text/template

@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v3.44.0 - 2025-06-08
 
 - Added `uuid`, `randInt` and `randIntN` template functions (#1346, #2225 by
   @pd93).
