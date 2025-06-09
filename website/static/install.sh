@@ -64,21 +64,15 @@ get_binaries() {
   case "$PLATFORM" in
     darwin/amd64) BINARIES="task" ;;
     darwin/arm64) BINARIES="task" ;;
-    darwin/armv5) BINARIES="task" ;;
-    darwin/armv6) BINARIES="task" ;;
-    darwin/armv7) BINARIES="task" ;;
+    darwin/arm) BINARIES="task" ;;
     linux/386) BINARIES="task" ;;
     linux/amd64) BINARIES="task" ;;
     linux/arm64) BINARIES="task" ;;
-    linux/armv5) BINARIES="task" ;;
-    linux/armv6) BINARIES="task" ;;
-    linux/armv7) BINARIES="task" ;;
+    linux/arm) BINARIES="task" ;;
     windows/386) BINARIES="task" ;;
     windows/amd64) BINARIES="task" ;;
     windows/arm64) BINARIES="task" ;;
-    windows/armv5) BINARIES="task" ;;
-    windows/armv6) BINARIES="task" ;;
-    windows/armv7) BINARIES="task" ;;
+    windows/arm) BINARIES="task" ;;
     *)
       log_crit "platform $PLATFORM is not supported.  Make sure this script is up-to-date and file request at https://github.com/${PREFIX}/issues/new"
       exit 1
