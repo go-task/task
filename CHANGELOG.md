@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Fixed install script for some ARM platforms (#1516, #2291 by @trulede).
+
 ## v3.44.0 - 2025-06-08
 
 - Added `uuid`, `randInt` and `randIntN` template functions (#1346, #2225 by
