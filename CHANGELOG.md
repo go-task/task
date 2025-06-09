@@ -26,6 +26,8 @@
   (#2211 by @vmaerten).
 - Improved fingerprint documentation by specifying that the method can be set at
   the root level to apply to all tasks (#2233 by @vmaerten).
+- Fixed some watcher regressions after #2048 (#2199, #2202, #2241, #2196 by
+  @wazazaby, #2271 by @andreynering).
 
 ## v3.43.3 - 2025-04-27
 
