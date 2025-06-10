@@ -51,6 +51,8 @@ func (e *Executor) Setup() error {
 	}
 	e.setupDefaults()
 	e.setupConcurrencyState()
+	e.readTaskignore()
+
 	return nil
 }
 
@@ -61,6 +63,28 @@ func (e *Executor) getRootNode() (taskfile.Node, error) {
 	}
 	e.Dir = node.Dir()
 	return node, err
+}
+
+func (e *Executor) readTaskignore() {
+	// get only the tasks that have the sources defined
+	tasksWithSources := taskfile.GetTasksWithSources(e.Taskfile)
+
+	if tasksWithSources == nil {
+		return
+	}
+
+	ignoreGlobs := taskfile.ReadTaskignore(e.Logger, e.Dir, e.Timeout)
+
+	if ignoreGlobs == nil {
+		return
+	}
+
+	// apply .taskignore globs to each task
+	for _, t := range tasksWithSources {
+		for _, g := range ignoreGlobs {
+			t.Sources = append(t.Sources, &ast.Glob{Glob: g, Negate: true})
+		}
+	}
 }
 
 func (e *Executor) readTaskfile(node taskfile.Node) error {
