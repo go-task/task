@@ -64,26 +64,29 @@ func (t *Task) LocalName() string {
 
 // WildcardMatch will check if the given string matches the name of the Task and returns any wildcard values.
 func (t *Task) WildcardMatch(name string) (bool, []string) {
-	// Convert the name into a regex string
-	regexStr := fmt.Sprintf("^%s$", strings.ReplaceAll(t.Task, "*", "(.*)"))
-	regex := regexp.MustCompile(regexStr)
-	wildcards := regex.FindStringSubmatch(name)
-	wildcardCount := strings.Count(t.Task, "*")
+	names := append([]string{t.Task}, t.Aliases...)
 
-	// If there are no wildcards, return false
-	if len(wildcards) == 0 {
-		return false, nil
+	for _, taskName := range names {
+		regexStr := fmt.Sprintf("^%s$", strings.ReplaceAll(taskName, "*", "(.*)"))
+		regex := regexp.MustCompile(regexStr)
+		wildcards := regex.FindStringSubmatch(name)
+
+		if len(wildcards) == 0 {
+			continue
+		}
+
+		// Remove the first match, which is the full string
+		wildcards = wildcards[1:]
+		wildcardCount := strings.Count(taskName, "*")
+
+		if len(wildcards) != wildcardCount {
+			continue
+		}
+
+		return true, wildcards
 	}
 
-	// Remove the first match, which is the full string
-	wildcards = wildcards[1:]
-
-	// If there are more/less wildcards than matches, return false
-	if len(wildcards) != wildcardCount {
-		return false, wildcards
-	}
-
-	return true, wildcards
+	return false, nil
 }
 
 func (t *Task) UnmarshalYAML(node *yaml.Node) error {
