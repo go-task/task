@@ -69,6 +69,7 @@ var (
 	Color               bool
 	Interval            time.Duration
 	Global              bool
+	Template            string
 	Experiments         bool
 	Download            bool
 	Offline             bool
@@ -137,6 +138,7 @@ func init() {
 	pflag.IntVarP(&Concurrency, "concurrency", "C", 0, "Limit number of tasks to run concurrently.")
 	pflag.DurationVarP(&Interval, "interval", "I", 0, "Interval to watch for changes.")
 	pflag.BoolVarP(&Global, "global", "g", false, "Runs global Taskfile, from $HOME/{T,t}askfile.{yml,yaml}.")
+	pflag.StringVar(&Template, "template", "", "Format output using a template. Select commands [list|list-all].")
 	pflag.BoolVar(&Experiments, "experiments", false, "Lists all the available experiments and whether or not they are enabled.")
 
 	// Gentle force experiment will override the force flag and add a new force-all flag
