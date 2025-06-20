@@ -1,10 +1,200 @@
 version: '3'
 
-tasks:
-  task-1:
-    deps:
-      - task: task-2
+silent: true
 
-  task-2:
+tasks:
+
+  foo:
+    cmds:
+      - echo "foo"
+      - task: bar
+  bar:
+    cmds:
+      - echo "bar"
+
+  loop-cycle:
+    cmds:
+      - echo "foo"
+      - task: loop-cycle
+
+  long-loop-cycle-A:
+    aliases: [long-loop-cycle]
+    cmds:
+      - echo "foo"
+      - task: long-loop-cycle-B
+  long-loop-cycle-B:
+    cmds:
+      - echo "bar"
+      - task: long-loop-cycle-C
+  long-loop-cycle-C:
+    cmds:
+      - echo "fubar"
+      - task: long-loop-cycle-D
+  long-loop-cycle-D:
+    cmds:
+      - echo "foobar"
+      - task: long-loop-cycle-A
+
+  # Convergent call path, optional cyclic callback.
+  A:
+    cmds:
+      - echo "A"
+      - task: B
+        vars:
+          CYCLEBACK: '{{.CYCLEBACK}}'
+  B:
+    cmds:
+      - echo "B"
+      - task: C
+        vars:
+          CYCLEBACK: '{{.CYCLEBACK}}'
+  C:
+    cmds:
+      - echo "C"
+      - task: '{{if .CYCLEBACK}}{{.CYCLEBACK}}{{else}}D{{end}}'
+  D:
+    cmds:
+      - echo "D"
+
+  call-foo:
+    cmds:
+      - task: foo
+      - task: foo
+      - task: foo
+
+  call-bar:
+    cmds:
+      - task: bar
+      - task: bar
+      - task: bar
+
+  call-converge:
+    cmds:
+      - task: A
+      - task: A
+      - task: A
+
+  call-converge-cyclic:
+    cmds:
+      - task: A
+        vars:
+          CYCLEBACK: call-converge-cyclic
+      - task: A
+        vars:
+          CYCLEBACK: call-converge-cyclic
+      - task: A
+        vars:
+          CYCLEBACK: call-converge-cyclic
+
+  deps-foo:
     deps:
-      - task: task-1
+      - task: foo
+
+  deps-bar:
+    deps:
+      - task: bar
+
+  deps-converge:
+    deps:
+      - task: A
+
+  deps-converge-cyclic:
+    deps:
+      - task: A
+        vars:
+          CYCLEBACK: deps-converge-cyclic
+
+  dep-call:
+    deps:
+      - task: A
+        vars:
+          CYCLEBACK: '{{.CYCLEBACK}}'
+
+  call-deps:
+    cmds:
+      - task: dep-call
+
+  call-deps-cyclic:
+    cmds:
+      - task: dep-call
+        vars:
+          CYCLEBACK: deps-call-cyclic
+
+  for-staggered:
+    cmds:
+      - for: ['A','B','C']
+        task: '{{.ITEM}}'
+
+  for-staggered-cyclic:
+    cmds:
+      - for: ['A','B','C']
+        task: '{{.ITEM}}'
+        vars:
+          CYCLEBACK: for-staggered-cyclic
+
+  for-staggered-cyclic-A:
+    cmds:
+      - for: ['A','B','C']
+        task: '{{.ITEM}}'
+        vars:
+          CYCLEBACK: A
+
+  for-duplicate:
+    cmds:
+      - for: ['A','A','A']
+        task: '{{.ITEM}}'
+
+  for-duplicate-cyclic:
+    cmds:
+      - for: ['A','A','A']
+        task: '{{.ITEM}}'
+        vars:
+          CYCLEBACK: for-duplicate-cyclic
+
+  cat-file:
+    cmds:
+      - echo {{.ITEM}}
+      - cat {{.ITEM}}
+      - task: '{{if .CYCLEBACK}}{{.CYCLEBACK}}{{else}}nop{{end}}'
+
+  nop: {}
+
+  sources:
+    method: none
+    sources:
+      - foo.txt
+    cmds:
+      - for: sources
+        task: cat-file
+        vars:
+          ITEM: '{{.ITEM}}'
+
+  sources-cyclic:
+    method: none
+    sources:
+      - foo.txt
+    cmds:
+      - for: sources
+        task: cat-file
+        vars:
+          ITEM: '{{.ITEM}}'
+          CYCLEBACK: sources-cyclic
+
+  modify-file:
+    status:
+      # Break the cycle.
+      - if [[ $(wc -l <foo.txt) -gt 3 ]]; then exit 0; else exit 1; fi
+    cmds:
+      - echo {{.ITEM}} >> {{.ITEM}}
+      - cat {{.ITEM}}
+      - task: '{{if .CYCLEBACK}}{{.CYCLEBACK}}{{else}}nop{{end}}'
+
+  sources-modify-cyclic:
+    sources:
+      - foo.txt
+    cmds:
+      - for: sources
+        task: modify-file
+        vars:
+          ITEM: '{{.ITEM}}'
+          CYCLEBACK: sources-modify-cyclic
