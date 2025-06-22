@@ -5,6 +5,35 @@ sidebar_position: 14
 
 # Changelog
 
+## v3.44.0 - 2025-06-08
+
+- Added `uuid`, `randInt` and `randIntN` template functions (#1346, #2225 by
+  @pd93).
+- Added new `CLI_ARGS_LIST` array variable which contains the arguments passed
+  to Task after the `--` (the same as `CLI_ARGS`, but an array instead of a
+  string). (#2138, #2139, #2140 by @pd93).
+- Added `toYaml` and `fromYaml` templating functions (#2217, #2219 by @pd93).
+- Added `task` field the `--list --json` output (#2256 by @aleksandersh).
+- Added the ability to
+  [pin included taskfiles](https://taskfile.dev/next/experiments/remote-taskfiles/#manual-checksum-pinning)
+  by specifying a checksum. This works with both local and remote Taskfiles
+  (#2222, #2223 by @pd93).
+- When using the
+  [Remote Taskfiles experiment](https://github.com/go-task/task/issues/1317),
+  any credentials used in the URL will now be redacted in Task's output (#2100,
+  #2220 by @pd93).
+- Fixed fuzzy suggestions not working when misspelling a task name (#2192, #2200
+  by @vmaerten).
+- Fixed a bug where taskfiles in directories containing spaces created
+  directories in the wrong location (#2208, #2216 by @pd93).
+- Added support for dual JSON schema files, allowing changes without affecting
+  the current schema. The current schemas will only be updated during releases.
+  (#2211 by @vmaerten).
+- Improved fingerprint documentation by specifying that the method can be set at
+  the root level to apply to all tasks (#2233 by @vmaerten).
+- Fixed some watcher regressions after #2048 (#2199, #2202, #2241, #2196 by
+  @wazazaby, #2271 by @andreynering).
+
 ## v3.43.3 - 2025-04-27
 
 Reverted the changes made in #2113 and #2186 that affected the
