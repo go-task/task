@@ -75,6 +75,7 @@ var (
 	ClearCache          bool
 	Timeout             time.Duration
 	CacheExpiryDuration time.Duration
+	FailFast            bool
 )
 
 func init() {
@@ -155,6 +156,8 @@ func init() {
 		pflag.BoolVar(&ClearCache, "clear-cache", false, "Clear the remote cache.")
 		pflag.DurationVar(&CacheExpiryDuration, "expiry", 0, "Expiry duration for cached remote Taskfiles.")
 	}
+
+	pflag.BoolVar(&FailFast, "failfast", false, "Run parallel deps to completion but still exit non-zero if any failed.")
 
 	pflag.Parse()
 }

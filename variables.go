@@ -76,6 +76,7 @@ func (e *Executor) compiledTask(call *Call, evaluateShVars bool) (*ast.Task, err
 		Requires:             origTask.Requires,
 		Watch:                origTask.Watch,
 		Namespace:            origTask.Namespace,
+		FailFast:             origTask.FailFast,
 	}
 	new.Dir, err = execext.ExpandLiteral(new.Dir)
 	if err != nil {

@@ -118,6 +118,13 @@ func run() error {
 		return err
 	}
 
+	tf := e.Taskfile
+	if flags.FailFast && tf != nil && tf.Tasks != nil {
+		for t := range tf.Tasks.Values(nil) {
+			t.FailFast = true
+		}
+	}
+
 	if flags.ClearCache {
 		cachePath := filepath.Join(e.TempDir.Remote, "remote")
 		return os.RemoveAll(cachePath)
