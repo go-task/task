@@ -6,6 +6,7 @@ import (
 	"os"
 	"runtime"
 	"slices"
+	"sync"
 	"sync/atomic"
 
 	"golang.org/x/sync/errgroup"
@@ -259,23 +260,51 @@ func (e *Executor) mkdir(t *ast.Task) error {
 }
 
 func (e *Executor) runDeps(ctx context.Context, t *ast.Task) error {
-	g, ctx := errgroup.WithContext(ctx)
-
 	reacquire := e.releaseConcurrencyLimit()
 	defer reacquire()
 
-	for _, d := range t.Deps {
-		d := d
-		g.Go(func() error {
-			err := e.RunTask(ctx, &Call{Task: d.Task, Vars: d.Vars, Silent: d.Silent, Indirect: true})
-			if err != nil {
-				return err
-			}
-			return nil
-		})
+	if !t.FailFast {
+		g, ctx := errgroup.WithContext(ctx)
+		for _, d := range t.Deps {
+			d := d
+			g.Go(func() error {
+				return e.RunTask(ctx, &Call{Task: d.Task, Vars: d.Vars, Silent: d.Silent, Indirect: true})
+			})
+		}
+		return g.Wait()
 	}
 
-	return g.Wait()
+	type depResult struct {
+		idx int
+		err error
+	}
+
+	results := make(chan depResult, len(t.Deps))
+	var wg sync.WaitGroup
+	wg.Add(len(t.Deps))
+
+	for i, d := range t.Deps {
+		i, d := i, d
+		go func() {
+			defer wg.Done()
+			err := e.RunTask(ctx, &Call{Task: d.Task, Vars: d.Vars, Silent: d.Silent, Indirect: true})
+			results <- depResult{idx: i, err: err}
+		}()
+	}
+
+	wg.Wait()
+	close(results)
+
+	var firstErr error
+	for res := range results {
+		if res.err != nil && firstErr == nil {
+			firstErr = res.err
+		}
+	}
+	if firstErr != nil {
+		return fmt.Errorf("one or more dependencies failed: %w", firstErr)
+	}
+	return nil
 }
 
 func (e *Executor) runDeferred(t *ast.Task, call *Call, i int, deferredExitCode *uint8) {
