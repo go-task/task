@@ -36,6 +36,14 @@ repository [[package](https://formulae.brew.sh/formula/go-task)]
 brew install go-task
 ```
 
+### [Macports][macports] ![][macos] ![][community] \{#macports}
+
+Task repository is tracked by Macports [[package](https://ports.macports.org/port/go-task/details/)] [[source](https://github.com/macports/macports-ports/blob/master/devel/go-task/Portfile)]:
+
+```shell
+port install go-task
+```
+
 ### [Snap][snapcraft] ![][macos] ![][linux] \{#snap}
 
 Task is available on [Snapcraft][snapcraft] [[source](https://github.com/go-task/snap/blob/main/snap/snapcraft.yaml)], but keep in mind that your Linux
@@ -102,6 +110,14 @@ pacman -S go-task
 
 ```shell
 dnf install go-task
+```
+
+### FreeBSD ([Ports][freebsdports]) ![][freebsd] ![][community] \{#freebsd}
+
+[[package](https://cgit.freebsd.org/ports/tree/devel/task)] [[source](https://cgit.freebsd.org/ports/tree/devel/task/Makefile)]
+
+```shell
+pkg install task
 ```
 
 ### NixOS ([nix][nix]) ![][nixos] ![][linux] ![][community] \{#nix}
@@ -304,6 +320,7 @@ task --completion fish > ~/.config/fish/completions/task.fish
 
 {/* prettier-ignore-start */}
 [homebrew]: https://brew.sh
+[macports]: https://macports.org
 [snapcraft]: https://snapcraft.io/task
 [winget]: https://github.com/microsoft/winget-cli
 [choco]: https://chocolatey.org
@@ -317,6 +334,7 @@ task --completion fish > ~/.config/fish/completions/task.fish
 [aqua]: https://aquaproj.github.io
 [pacstall]: https://github.com/pacstall/pacstall
 [pkgx]: https://pkgx.sh
+[freebsdports]: https://ports.freebsd.org/cgi/ports.cgi
 
 [go]: https://golang.org
 [godownloader]: https://github.com/goreleaser/godownloader
@@ -332,4 +350,5 @@ task --completion fish > ~/.config/fish/completions/task.fish
 [nixos]: https://img.shields.io/badge/NixOS-5277C3?logo=nixos&logoColor=fff
 [debian]: https://img.shields.io/badge/Debian-A81D33?logo=debian&logoColor=fff
 [ubuntu]: https://img.shields.io/badge/Ubuntu-E95420?logo=ubuntu&logoColor=fff
+[freebsd]: https://img.shields.io/badge/FreeBSD-990000?logo=freebsd&logoColor=fff
 {/* prettier-ignore-end */}
