@@ -679,18 +679,20 @@ As an alternative to platform-specific tasks, Task provides built-in cross-platf
 
 Task includes the following cross-platform commands:
 
-- `cpx` - Copy files and directories (supports `-r` for recursive, `-p` for preserving attributes)
-- `mvx` - Move/rename files and directories
-- `rmx` - Remove files and directories (supports `-r` for recursive, `-f` for force)
-- `mkdirx` - Create directories (supports `-p` for creating parent directories)
-- `pwdx` - Print working directory
-- `sleepx` - Sleep/delay execution
-- `echox` - Echo text (supports `-n` to suppress newline)
-- `catx` - Display file contents or concatenate files
-- `exitx` - Exit with specified code
-- `headx` - Display first lines of files (supports `-n` for line count)
-- `unsetx` - Unset environment variables
-- `xargsx` - Build arguments from input and execute commands
+| Command | Flags | Description |
+|---------|--------|-------------|
+| `cpx` | `-r` (recursive)<br/>`-p` (preserve attributes) | Copy files and directories. Use `-r` to copy directories recursively, `-p` to preserve file permissions and timestamps |
+| `mvx` | None | Move or rename files and directories. Handles cross-filesystem moves automatically |
+| `rmx` | `-r` (recursive)<br/>`-f` (force) | Remove files and directories. Use `-r` to remove directories and their contents, `-f` to ignore nonexistent files |
+| `mkdirx` | `-p` (parents) | Create directories. Use `-p` to create parent directories as needed |
+| `pwdx` | None | Print the current working directory path |
+| `sleepx` | None | Sleep for specified duration. Accepts seconds (e.g., `5`) or Go duration format (e.g., `1m30s`) |
+| `echox` | `-n` (no newline) | Echo text to output. Use `-n` to suppress the trailing newline |
+| `catx` | None | Display file contents or concatenate multiple files. Reads from stdin if no files specified |
+| `exitx` | None | Exit with specified exit code (0-255) |
+| `headx` | `-n` (lines) | Display first lines of files. Use `-n` to specify number of lines (default: 10) |
+| `unsetx` | None | Remove environment variables from the current process |
+| `xargsx` | None | Read arguments from stdin and execute command with those arguments |
 
 ### Using x-commands
 
