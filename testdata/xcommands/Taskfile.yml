@@ -1,0 +1,7 @@
+version: '3'
+
+tasks:
+  test:
+    cmds:
+      - cpx sample.txt sample_copy.txt
+      - catx sample_copy.txt

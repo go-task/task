@@ -671,6 +671,79 @@ tasks:
       - cmd: echo 'Running on all platforms'
 ```
 
+## Cross-platform commands (x-commands)
+
+As an alternative to platform-specific tasks, Task provides built-in cross-platform commands (x-commands) that work consistently across all operating systems. These commands eliminate the need for platform-specific conditionals by providing pure Go implementations of common Unix-style utilities.
+
+### Available x-commands
+
+Task includes the following cross-platform commands:
+
+- `cpx` - Copy files and directories (supports `-r` for recursive, `-p` for preserving attributes)
+- `mvx` - Move/rename files and directories
+- `rmx` - Remove files and directories (supports `-r` for recursive, `-f` for force)
+- `mkdirx` - Create directories (supports `-p` for creating parent directories)
+- `pwdx` - Print working directory
+- `sleepx` - Sleep/delay execution
+- `echox` - Echo text (supports `-n` to suppress newline)
+- `catx` - Display file contents or concatenate files
+- `exitx` - Exit with specified code
+- `headx` - Display first lines of files (supports `-n` for line count)
+- `unsetx` - Unset environment variables
+- `xargsx` - Build arguments from input and execute commands
+
+### Using x-commands
+
+X-commands use the same syntax as regular shell commands:
+
+```yaml
+version: '3'
+
+tasks:
+  copy-files:
+    cmds:
+      - cpx ./source.txt ./destination.txt
+      - cpx -r ./src-dir ./dest-dir
+
+  setup-dirs:
+    cmds:
+      - mkdirx -p ./build/output
+      - cpx -r ./assets ./build/assets
+      - echox "Build setup complete"
+```
+
+### Benefits over platform-specific tasks
+
+Compare the platform-specific approach:
+
+```yaml
+# Platform-specific approach
+tasks:
+  copy-config:
+    cmds:
+      - cmd: copy config.txt dist\config.txt
+        platforms: [windows]
+      - cmd: cp config.txt dist/config.txt
+        platforms: [linux, darwin]
+```
+
+With the x-commands approach:
+
+```yaml
+# Cross-platform approach
+tasks:
+  copy-config:
+    cmds:
+      - cpx config.txt dist/config.txt
+```
+
+Benefits of x-commands:
+- **Consistent behavior** across all platforms
+- **Simplified Taskfiles** without platform conditionals
+- **Better error messages** with descriptive Go error handling
+- **No external dependencies** - works without shell utilities
+- **Improved performance** - no shell spawning overhead
+
 ## Calling another task
 
 When a task has many dependencies, they are executed concurrently. This will

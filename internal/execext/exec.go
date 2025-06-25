@@ -14,6 +14,7 @@ import (
 	"mvdan.cc/sh/v3/syntax"
 
 	"github.com/go-task/task/v3/errors"
+	"github.com/go-task/task/v3/internal/xcommands"
 )
 
 // ErrNilOptions is returned when a nil options is given
@@ -134,7 +135,7 @@ func ExpandFields(s string) ([]string, error) {
 }
 
 func execHandler(next interp.ExecHandlerFunc) interp.ExecHandlerFunc {
-	return interp.DefaultExecHandler(15 * time.Second)
+	return xcommands.ExecHandler(interp.DefaultExecHandler(15 * time.Second))
 }
 
 func openHandler(ctx context.Context, path string, flag int, perm os.FileMode) (io.ReadWriteCloser, error) {
