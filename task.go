@@ -263,7 +263,7 @@ func (e *Executor) runDeps(ctx context.Context, t *ast.Task) error {
 	reacquire := e.releaseConcurrencyLimit()
 	defer reacquire()
 
-	if !t.FailFast {
+	if t.FailFast {
 		g, ctx := errgroup.WithContext(ctx)
 		for _, d := range t.Deps {
 			d := d
