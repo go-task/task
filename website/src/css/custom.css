@@ -121,3 +121,7 @@
 .icon-bluesky::before {
   mask-image: url('/img/icon-bluesky.svg');
 }
+
+h3:has(+ .available-since-badge) {
+  margin-bottom: 0.5rem;
+}
