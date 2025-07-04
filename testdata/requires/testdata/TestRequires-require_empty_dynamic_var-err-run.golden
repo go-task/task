@@ -1,0 +1,1 @@
+task: Task "require-empty-dynamic-var" cancelled because it is missing required variables: FOO

@@ -334,6 +334,38 @@ func TestRequires(t *testing.T) {
 		),
 		WithTask("var-defined-in-task"),
 	)
+	NewExecutorTest(t,
+		WithName("require null"),
+		WithExecutorOptions(
+			task.WithDir("testdata/requires"),
+		),
+		WithTask("require-null"),
+		WithRunError(),
+	)
+	NewExecutorTest(t,
+		WithName("require empty string"),
+		WithExecutorOptions(
+			task.WithDir("testdata/requires"),
+		),
+		WithTask("require-empty-string"),
+		WithRunError(),
+	)
+	NewExecutorTest(t,
+		WithName("require empty template"),
+		WithExecutorOptions(
+			task.WithDir("testdata/requires"),
+		),
+		WithTask("require-empty-template"),
+		WithRunError(),
+	)
+	NewExecutorTest(t,
+		WithName("require empty dynamic var"),
+		WithExecutorOptions(
+			task.WithDir("testdata/requires"),
+		),
+		WithTask("require-empty-dynamic-var"),
+		WithRunError(),
+	)
 }
 
 // TODO: mock fs
