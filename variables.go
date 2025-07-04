@@ -46,7 +46,6 @@ func (e *Executor) compiledTask(call *Call, evaluateShVars bool) (*ast.Task, err
 	}
 
 	cache := &templater.Cache{Vars: vars}
-
 	new := ast.Task{
 		Task:                 origTask.Task,
 		Label:                templater.Replace(origTask.Label, cache),
@@ -76,6 +75,7 @@ func (e *Executor) compiledTask(call *Call, evaluateShVars bool) (*ast.Task, err
 		Requires:             origTask.Requires,
 		Watch:                origTask.Watch,
 		Namespace:            origTask.Namespace,
+		FullName:             origTask.FullName,
 	}
 	new.Dir, err = execext.ExpandLiteral(new.Dir)
 	if err != nil {
