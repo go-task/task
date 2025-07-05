@@ -32,8 +32,21 @@ func (checker *TimestampChecker) IsUpToDate(t *ast.Task) (bool, error) {
 	if err != nil {
 		return false, nil
 	}
-	generates, err := Globs(t.Dir, t.Generates)
-	if err != nil {
+	generates := []string{}
+	for _, g := range t.Generates {
+		if g.Negate {
+			continue // 'excludes' not considered for generates.
+		}
+		files, err := glob(t.Dir, g.Glob)
+		if os.IsNotExist(err) || len(files) == 0 {
+			return false, nil
+		}
+		if err != nil {
+			return false, err
+		}
+		generates = append(generates, files...)
+	}
+	if len(generates) == 0 {
 		return false, nil
 	}
 
