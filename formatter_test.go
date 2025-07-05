@@ -44,7 +44,8 @@ func NewFormatterTest(t *testing.T, opts ...FormatterTestOption) {
 		task: "default",
 		vars: map[string]any{},
 		TaskTest: TaskTest{
-			experiments: map[*experiments.Experiment]int{},
+			experiments:         map[*experiments.Experiment]int{},
+			fixtureTemplateData: map[string]any{},
 		},
 	}
 	// Apply the functional options
@@ -222,8 +223,6 @@ func TestListDescInterpolation(t *testing.T) {
 func TestJsonListFormat(t *testing.T) {
 	t.Parallel()
 
-	fp, err := filepath.Abs("testdata/json_list_format/Taskfile.yml")
-	require.NoError(t, err)
 	NewFormatterTest(t,
 		WithExecutorOptions(
 			task.WithDir("testdata/json_list_format"),
@@ -231,10 +230,6 @@ func TestJsonListFormat(t *testing.T) {
 		WithListOptions(task.ListOptions{
 			FormatTaskListAsJSON: true,
 		}),
-		WithFixtureTemplateData(struct {
-			TaskfileLocation string
-		}{
-			TaskfileLocation: fp,
-		}),
+		WithFixtureTemplating(),
 	)
 }
