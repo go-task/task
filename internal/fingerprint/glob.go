@@ -26,7 +26,7 @@ func Globs(dir string, globs []*ast.Glob) ([]string, error) {
 
 func glob(dir string, g string) ([]string, error) {
 	g = filepathext.SmartJoin(dir, g)
-	g = strings.Replace(g, " ", `\ `, -1)
+	g = strings.ReplaceAll(g, " ", `\ `)
 
 	fs, err := execext.ExpandFields(g)
 	if err != nil {
