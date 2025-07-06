@@ -411,12 +411,14 @@ func TestGenerates(t *testing.T) {
 func TestStatusChecksum(t *testing.T) { // nolint:paralleltest // cannot run in parallel
 	const dir = "testdata/checksum"
 
+	pwd, _ := os.Getwd()
+
 	tests := []struct {
 		files []string
 		task  string
 	}{
-		{[]string{"generated.txt", ".task/checksum/build"}, "build"},
-		{[]string{"generated.txt", ".task/checksum/build-with-status"}, "build-with-status"},
+		{[]string{"generated.txt", filepath.Join(".task", pwd, "testdata/checksum/checksum/build")}, "build"},
+		{[]string{"generated.txt", filepath.Join(".task", pwd, "testdata/checksum/checksum/build-with-status")}, "build-with-status"},
 	}
 
 	for _, test := range tests { // nolint:paralleltest // cannot run in parallel
@@ -449,7 +451,7 @@ func TestStatusChecksum(t *testing.T) { // nolint:paralleltest // cannot run in 
 
 			// Capture the modification time, so we can ensure the checksum file
 			// is not regenerated when the hash hasn't changed.
-			s, err := os.Stat(filepathext.SmartJoin(tempDir.Fingerprint, "checksum/"+test.task))
+			s, err := os.Stat(filepath.Join(tempDir.Fingerprint, pwd, dir, "checksum/"+test.task))
 			require.NoError(t, err)
 			time := s.ModTime()
 
@@ -457,7 +459,7 @@ func TestStatusChecksum(t *testing.T) { // nolint:paralleltest // cannot run in 
 			require.NoError(t, e.Run(context.Background(), &task.Call{Task: test.task}))
 			assert.Equal(t, `task: Task "`+test.task+`" is up to date`+"\n", buff.String())
 
-			s, err = os.Stat(filepathext.SmartJoin(tempDir.Fingerprint, "checksum/"+test.task))
+			s, err = os.Stat(filepath.Join(tempDir.Fingerprint, pwd, dir, "checksum/"+test.task))
 			require.NoError(t, err)
 			assert.Equal(t, time, s.ModTime())
 		})
@@ -655,8 +657,8 @@ func TestDryChecksum(t *testing.T) {
 	t.Parallel()
 
 	const dir = "testdata/dry_checksum"
-
-	checksumFile := filepathext.SmartJoin(dir, ".task/checksum/default")
+	pwd, _ := os.Getwd()
+	checksumFile := filepath.Join(dir, filepath.Join(".task", pwd, dir, "/checksum/default"))
 	_ = os.Remove(checksumFile)
 
 	e := task.NewExecutor(
