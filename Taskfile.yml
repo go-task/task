@@ -87,6 +87,7 @@ tasks:
     sources:
       - './**/*.go'
       - .golangci.yml
+      - go.mod
     cmds:
       - golangci-lint run
 
@@ -95,6 +96,7 @@ tasks:
     sources:
       - './**/*.go'
       - .golangci.yml
+      - go.mod
     cmds:
       - golangci-lint run --fix
 
