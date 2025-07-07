@@ -220,13 +220,13 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) error {
 					e.Logger.VerboseErrf(logger.Yellow, "task: error cleaning status on error: %v\n", err2)
 				}
 
-				exitCode, isExitError := interp.IsExitStatus(err)
-				if isExitError {
+				var exitCode interp.ExitStatus
+				if errors.As(err, &exitCode) {
 					if t.IgnoreError {
 						e.Logger.VerboseErrf(logger.Yellow, "task: task error ignored: %v\n", err)
 						continue
 					}
-					deferredExitCode = exitCode
+					deferredExitCode = uint8(exitCode)
 				}
 
 				if call.Indirect {
@@ -356,7 +356,8 @@ func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call *Call, i in
 		if closeErr := closer(err); closeErr != nil {
 			e.Logger.Errf(logger.Red, "task: unable to close writer: %v\n", closeErr)
 		}
-		if _, isExitError := interp.IsExitStatus(err); isExitError && cmd.IgnoreError {
+		var exitCode interp.ExitStatus
+		if errors.As(err, &exitCode) && cmd.IgnoreError {
 			e.Logger.VerboseErrf(logger.Yellow, "task: [%s] command error ignored: %v\n", t.Name(), err)
 			return nil
 		}
