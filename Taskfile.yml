@@ -53,9 +53,12 @@ tasks:
   generate:fixtures:
     desc: Runs tests and generates golden fixture files
     aliases: [gen:fixtures, g:fixtures]
+    env:
+      GOLDIE_UPDATE: 'true'
+      GOLDIE_TEMPLATE: 'true'
     cmds:
       - find ./testdata -name '*.golden' -delete
-      - go test -update ./...
+      - go test ./...
 
   install:mockery:
     desc: Installs mockgen; a tool to generate mock files
