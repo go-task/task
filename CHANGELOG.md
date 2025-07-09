@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Internal tasks will no longer be shown as suggestions since they cannot be
+  called (#2309, #2323 by @maxmzkrcensys)
 - Fixed install script for some ARM platforms (#1516, #2291 by @trulede).
 - Fixed a regression where fingerprinting was not working correctly if the path
   to you Taskfile contained a space (#2321, #2322 by @pd93).
