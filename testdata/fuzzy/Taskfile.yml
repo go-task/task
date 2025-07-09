@@ -2,3 +2,8 @@ version: 3
 
 tasks:
   install: echo 'install'
+
+  internal:
+    internal: true
+    cmds:
+      - echo "internal"
