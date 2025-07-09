@@ -976,6 +976,6 @@ func TestIncludeChecksum(t *testing.T) {
 			task.WithDir("testdata/includes_checksum/incorrect"),
 		),
 		WithSetupError(),
-		WithPostProcessFn(PPRemoveAbsolutePaths),
+		WithFixtureTemplating(),
 	)
 }
