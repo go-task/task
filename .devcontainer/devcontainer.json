@@ -1,0 +1,25 @@
+{
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".."
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "editorconfig.editorconfig",
+        "golang.go",
+        "redhat.vscode-yaml",
+        "streetsidesoftware.code-spell-checker",
+        "task.vscode-task"
+      ]
+    }
+  },
+  "features": {},
+  "runArgs": [
+    "--env-file", ".devcontainer/devcontainer.env"
+  ],
+  "onCreateCommand": [],
+  "postCreateCommand": [],
+  "forwardPorts": [],
+  "portsAttributes": {}
+}
