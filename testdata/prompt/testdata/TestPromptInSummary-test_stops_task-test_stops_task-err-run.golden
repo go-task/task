@@ -1,1 +1,1 @@
-task: Task "foo" cancelled by user
+task: Failed to run task "foo": task: Task "foo" cancelled by user
