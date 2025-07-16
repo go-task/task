@@ -133,6 +133,20 @@ func (vars *Vars) Merge(other *Vars, include *Include) {
 	}
 }
 
+// Reverse the merge order; first `other` then merge in the existing `vars`.
+func (vars *Vars) ReverseMerge(other *Vars) {
+	if vars == nil || vars.om == nil || other == nil {
+		return
+	}
+	defer other.mutex.RUnlock()
+	other.mutex.RLock()
+	new := other.DeepCopy().om
+	for pair := vars.om.Front(); pair != nil; pair = pair.Next() {
+		new.Set(pair.Key, pair.Value)
+	}
+	vars.om = new
+}
+
 func (vs *Vars) DeepCopy() *Vars {
 	if vs == nil {
 		return nil

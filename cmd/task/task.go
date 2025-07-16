@@ -149,7 +149,6 @@ func run() error {
 		return err
 	}
 	calls, globals := args.Parse(cliArgsPreDash...)
-
 	// If there are no calls, run the default task instead
 	if len(calls) == 0 {
 		calls = append(calls, &task.Call{Task: "default"})
@@ -165,6 +164,10 @@ func run() error {
 	globals.Set("CLI_SILENT", ast.Var{Value: flags.Silent})
 	globals.Set("CLI_VERBOSE", ast.Var{Value: flags.Verbose})
 	globals.Set("CLI_OFFLINE", ast.Var{Value: flags.Offline})
+	// Merge the CLI globals before the Taskfile globals.
+	e.Taskfile.Vars.ReverseMerge(globals)
+	// Do a normal merge to ensure that CLI provided global values have priority (as the
+	// reverse merge will give priority to the Taskfile globals - last value wins).
 	e.Taskfile.Vars.Merge(globals, nil)
 
 	if !flags.Watch {
