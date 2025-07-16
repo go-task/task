@@ -10,9 +10,9 @@
       "location": {
         "line": 4,
         "column": 3,
-        "taskfile": "{{ .TaskfileLocation }}"
+        "taskfile": "/Users/runner/work/task/testdata/json_list_format/Taskfile.yml"
       }
     }
   ],
-  "location": "{{ .TaskfileLocation }}"
+  "location": "/Users/runner/work/task/testdata/json_list_format/Taskfile.yml"
 }

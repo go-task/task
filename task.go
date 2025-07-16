@@ -127,6 +127,10 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) error {
 		return nil
 	}
 
+	t, err = e.FastCompiledTaskWithVars(call)
+	if err != nil {
+		return err
+	}
 	if err := e.areTaskRequiredVarsSet(t); err != nil {
 		return err
 	}
