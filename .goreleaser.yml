@@ -59,6 +59,7 @@ nfpms:
     homepage: https://taskfile.dev
     maintainer: The Task authors <task@taskfile.dev>
     description: Simple task runner written in Go
+    section: golang
     license: MIT
     conflicts:
       - taskwarrior
