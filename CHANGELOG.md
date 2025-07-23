@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v3.44.1 - 2025-07-23
 
 - Internal tasks will no longer be shown as suggestions since they cannot be
   called (#2309, #2323 by @maxmzkrcensys)
