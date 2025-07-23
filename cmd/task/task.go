@@ -120,7 +120,6 @@ func run() error {
 		flags.Entrypoint,
 		flags.Dir,
 		flags.Insecure,
-		flags.Timeout,
 	)
 	if err != nil {
 		return err

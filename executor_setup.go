@@ -105,7 +105,7 @@ func (e *Executor) setupCompiler() error {
 
 	e.Compiler = &Compiler{
 		Dir:            e.Dir,
-		Entrypoint:     e.Entrypoint,
+		Entrypoint:     e.Taskfile.Location,
 		UserWorkingDir: e.UserWorkingDir,
 		TaskfileEnv:    e.Taskfile.Env,
 		TaskfileVars:   e.Taskfile.Vars,

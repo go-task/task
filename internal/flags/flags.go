@@ -229,7 +229,6 @@ func (o *flagsOption) ApplyToExecutor(e *task.Executor) {
 
 	e.Options(
 		task.WithDir(dir),
-		task.WithEntrypoint(Entrypoint),
 		task.WithForce(Force),
 		task.WithForceAll(ForceAll),
 		task.WithWatch(Watch),

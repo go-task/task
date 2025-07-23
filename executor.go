@@ -27,7 +27,6 @@ type (
 	Executor struct {
 		// Flags
 		Dir         string
-		Entrypoint  string
 		TempDir     *TempDir
 		Force       bool
 		ForceAll    bool
@@ -121,21 +120,6 @@ type dirOption struct {
 
 func (o *dirOption) ApplyToExecutor(e *Executor) {
 	e.Dir = o.dir
-}
-
-// WithEntrypoint sets the entrypoint (main Taskfile) of the [Executor]. By
-// default, Task will search for one of the default Taskfiles in the given
-// directory.
-func WithEntrypoint(entrypoint string) ExecutorOption {
-	return &entrypointOption{entrypoint}
-}
-
-type entrypointOption struct {
-	entrypoint string
-}
-
-func (o *entrypointOption) ApplyToExecutor(e *Executor) {
-	e.Entrypoint = o.entrypoint
 }
 
 // WithTempDir sets the temporary directory that will be used by [Executor] for
