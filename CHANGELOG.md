@@ -8,6 +8,8 @@
 - Fixed a regression where fingerprinting was not working correctly if the path
   to you Taskfile contained a space (#2321, #2322 by @pd93).
 - Reverted a breaking change to `randInt` (#2312, #2316 by @pd93).
+- Made new variables `TEST_NAME` and `TEST_DIR` available in fixture tests
+  (#2265 by @pd93).
 
 ## v3.44.0 - 2025-06-08
 
