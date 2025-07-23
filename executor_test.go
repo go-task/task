@@ -958,6 +958,15 @@ func TestFuzzyModel(t *testing.T) {
 		),
 		WithTask("install"),
 	)
+
+	NewExecutorTest(t,
+		WithName("intern"),
+		WithExecutorOptions(
+			task.WithDir("testdata/fuzzy"),
+		),
+		WithTask("intern"),
+		WithRunError(),
+	)
 }
 
 func TestIncludeChecksum(t *testing.T) {
