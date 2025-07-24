@@ -5,6 +5,10 @@ includes:
     aliases: [w, docs, d]
     taskfile: ./website
     dir: ./website
+  website_vitepress:
+    aliases: [ wp ]
+    taskfile: ./website_vitepress
+    dir: ./website_vitepress
 
 vars:
   BIN: "{{.ROOT_DIR}}/bin"
