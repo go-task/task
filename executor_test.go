@@ -967,3 +967,55 @@ func TestIncludeChecksum(t *testing.T) {
 		WithFixtureTemplating(),
 	)
 }
+
+func TestWildcard(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name    string
+		call    string
+		wantErr bool
+	}{
+		{
+			name: "basic wildcard",
+			call: "wildcard-foo",
+		},
+		{
+			name: "double wildcard",
+			call: "foo-wildcard-bar",
+		},
+		{
+			name: "store wildcard",
+			call: "start-foo",
+		},
+		{
+			name: "matches exactly",
+			call: "matches-exactly-*",
+		},
+		{
+			name:    "no matches",
+			call:    "no-match",
+			wantErr: true,
+		},
+		{
+			name: "multiple matches",
+			call: "wildcard-foo-bar",
+		},
+	}
+
+	for _, test := range tests {
+		opts := []ExecutorTestOption{
+			WithName(test.name),
+			WithNodeDir("testdata/wildcards"),
+			WithExecutorOptions(
+				task.WithSilent(true),
+				task.WithForce(true),
+			),
+			WithTask(test.call),
+		}
+		if test.wantErr {
+			opts = append(opts, WithRunError())
+		}
+		NewExecutorTest(t, opts...)
+	}
+}
