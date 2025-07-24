@@ -3,6 +3,8 @@ slug: /taskfile-versions/
 sidebar_position: 6
 ---
 
+import AvailableSinceBadge from '~/components/AvailableSince';
+
 # Taskfile Versions
 
 The Taskfile schema slowly changes as new features are added and old ones are
@@ -55,6 +57,8 @@ Instead, we should start the file like this:
 ```yaml
 version: '3.17'
 ```
+
+<AvailableSinceBadge version="v3.34.0" />
 
 Now when someone tries to run the Taskfile with an older version of Task, they
 will receive an error prompting them to upgrade their version of Task to
