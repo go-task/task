@@ -139,7 +139,7 @@ func (t *Task) UnmarshalYAML(node *yaml.Node) error {
 			Platforms     []*Platform
 			Requires      *Requires
 			Watch         bool
-			FailFast      bool `yaml:"failfast"`
+			FailFast      *bool `yaml:"failfast"`
 		}
 		if err := node.Decode(&task); err != nil {
 			return errors.NewTaskfileDecodeError(err, node)
@@ -178,7 +178,7 @@ func (t *Task) UnmarshalYAML(node *yaml.Node) error {
 		t.Platforms = task.Platforms
 		t.Requires = task.Requires
 		t.Watch = task.Watch
-		t.FailFast = task.FailFast
+		t.FailFast = task.FailFast == nil || *task.FailFast
 		return nil
 	}
 
