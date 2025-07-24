@@ -16,6 +16,7 @@ import (
 	"github.com/go-task/task/v3/internal/env"
 	"github.com/go-task/task/v3/internal/sort"
 	"github.com/go-task/task/v3/taskfile/ast"
+	"github.com/go-task/task/v3/taskrc"
 )
 
 const usage = `Usage: task [flags...] [task...]
@@ -95,7 +96,14 @@ func init() {
 
 	// Parse the experiments
 	dir = cmp.Or(dir, filepath.Dir(entrypoint))
-	experiments.Parse(dir)
+
+	node, _ := taskrc.NewNode("", dir)
+
+	reader := taskrc.NewReader()
+	config, _ := reader.Read(node)
+
+	expiry := getDurationValue(config.Remote.CacheExpiry, "REMOTE_CACHE_EXPIRY", 0)
+	experiments.ParseWithConfig(dir, config)
 
 	// Parse the rest of the flags
 	log.SetFlags(0)
@@ -153,7 +161,7 @@ func init() {
 		pflag.BoolVar(&Offline, "offline", offline, "Forces Task to only use local or cached Taskfiles.")
 		pflag.DurationVar(&Timeout, "timeout", time.Second*10, "Timeout for downloading remote Taskfiles.")
 		pflag.BoolVar(&ClearCache, "clear-cache", false, "Clear the remote cache.")
-		pflag.DurationVar(&CacheExpiryDuration, "expiry", 0, "Expiry duration for cached remote Taskfiles.")
+		pflag.DurationVar(&CacheExpiryDuration, "expiry", expiry, "Expiry duration for cached remote Taskfiles.")
 	}
 
 	pflag.Parse()
@@ -250,4 +258,18 @@ func (o *flagsOption) ApplyToExecutor(e *task.Executor) {
 		task.WithTaskSorter(sorter),
 		task.WithVersionCheck(true),
 	)
+}
+
+func getDurationValue(configValue *time.Duration, envVarName string, defaultValue time.Duration) time.Duration {
+	if configValue != nil {
+		return *configValue
+	}
+
+	if envVal := env.GetTaskEnv(envVarName); envVal != "" {
+		if intVal, err := time.ParseDuration(envVal); err == nil {
+			return intVal
+		}
+	}
+
+	return defaultValue
 }
