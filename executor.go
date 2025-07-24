@@ -4,6 +4,7 @@ import (
 	"context"
 	"io"
 	"os"
+	"path/filepath"
 	"sync"
 	"time"
 
@@ -119,7 +120,12 @@ type dirOption struct {
 }
 
 func (o *dirOption) ApplyToExecutor(e *Executor) {
-	e.Dir = o.dir
+	absDir, err := filepath.Abs(o.dir)
+	if err != nil {
+		e.Dir = o.dir
+		return
+	}
+	e.Dir = absDir
 }
 
 // WithTempDir sets the temporary directory that will be used by [Executor] for

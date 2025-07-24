@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 	"testing"
 
 	"github.com/sebdah/goldie/v2"
@@ -15,6 +16,7 @@ import (
 	"github.com/go-task/task/v3"
 	"github.com/go-task/task/v3/experiments"
 	"github.com/go-task/task/v3/internal/filepathext"
+	"github.com/go-task/task/v3/taskfile"
 	"github.com/go-task/task/v3/taskfile/ast"
 )
 
@@ -34,7 +36,12 @@ type (
 		task            string
 		vars            map[string]any
 		input           string
+		nodeDir         string
+		nodeEntrypoint  string
+		nodeInsecure    bool
+		readerOpts      []taskfile.ReaderOption
 		executorOpts    []task.ExecutorOption
+		wantReaderError bool
 		wantSetupError  bool
 		wantRunError    bool
 		wantStatusError bool
@@ -47,8 +54,9 @@ type (
 func NewExecutorTest(t *testing.T, opts ...ExecutorTestOption) {
 	t.Helper()
 	tt := &ExecutorTest{
-		task: "default",
-		vars: map[string]any{},
+		task:    "default",
+		vars:    map[string]any{},
+		nodeDir: ".",
 		TaskTest: TaskTest{
 			experiments:         map[*experiments.Experiment]int{},
 			fixtureTemplateData: map[string]any{},
@@ -145,11 +153,52 @@ func (tt *ExecutorTest) run(t *testing.T) {
 	f := func(t *testing.T) {
 		t.Helper()
 		var buf bytes.Buffer
+		ctx := context.Background()
 
-		opts := append(
+		// Create a new root node for the given entrypoint
+		node, err := taskfile.NewRootNode(
+			tt.nodeEntrypoint,
+			tt.nodeDir,
+			tt.nodeInsecure,
+		)
+		require.NoError(t, err)
+
+		// Create a golden fixture file for the output
+		g := goldie.New(t,
+			goldie.WithFixtureDir(filepath.Join(node.Dir(), "testdata")),
+		)
+
+		// Set up a temporary directory for the taskfile reader and task executor
+		tempDir, err := task.NewTempDir(node.Dir())
+		require.NoError(t, err)
+		tt.readerOpts = append(tt.readerOpts, taskfile.WithTempDir(tempDir.Remote))
+
+		// Set up the taskfile reader
+		reader := taskfile.NewReader(tt.readerOpts...)
+		graph, err := reader.Read(ctx, node)
+		if tt.wantReaderError {
+			require.Error(t, err)
+			tt.writeFixtureErrReader(t, g, err)
+			tt.writeFixtureBuffer(t, g, buf)
+			return
+		} else {
+			require.NoError(t, err)
+		}
+
+		executorOpts := slices.Concat(
+			// Apply the node directory and temp directory to the executor options
+			// by default, but allow them to by overridden by the test options
+			[]task.ExecutorOption{
+				task.WithDir(node.Dir()),
+				task.WithTempDir(tempDir),
+			},
+			// Apply the executor options from the test
 			tt.executorOpts,
-			task.WithStdout(&buf),
-			task.WithStderr(&buf),
+			// Force the input/output streams to be set to the test buffer
+			[]task.ExecutorOption{
+				task.WithStdout(&buf),
+				task.WithStderr(&buf),
+			},
 		)
 
 		// If the test has input, create a reader for it and add it to the
@@ -157,19 +206,12 @@ func (tt *ExecutorTest) run(t *testing.T) {
 		if tt.input != "" {
 			var reader bytes.Buffer
 			reader.WriteString(tt.input)
-			opts = append(opts, task.WithStdin(&reader))
+			executorOpts = append(executorOpts, task.WithStdin(&reader))
 		}
 
 		// Set up the task executor
-		e := task.NewExecutor(opts...)
-
-		// Create a golden fixture file for the output
-		g := goldie.New(t,
-			goldie.WithFixtureDir(filepath.Join(e.Dir, "testdata")),
-		)
-
-		// Call setup and check for errors
-		if err := e.Setup(); tt.wantSetupError {
+		executor, err := task.NewExecutor(graph, executorOpts...)
+		if tt.wantSetupError {
 			require.Error(t, err)
 			tt.writeFixtureErrSetup(t, g, err)
 			tt.writeFixtureBuffer(t, g, buf)
@@ -189,8 +231,7 @@ func (tt *ExecutorTest) run(t *testing.T) {
 		}
 
 		// Run the task and check for errors
-		ctx := context.Background()
-		if err := e.Run(ctx, call); tt.wantRunError {
+		if err := executor.Run(ctx, call); tt.wantRunError {
 			require.Error(t, err)
 			tt.writeFixtureErrRun(t, g, err)
 			tt.writeFixtureBuffer(t, g, buf)
@@ -201,7 +242,7 @@ func (tt *ExecutorTest) run(t *testing.T) {
 
 		// If the status flag is set, run the status check
 		if tt.wantStatusError {
-			if err := e.Status(ctx, call); err != nil {
+			if err := executor.Status(ctx, call); err != nil {
 				tt.writeFixtureStatus(t, g, err.Error())
 			}
 		}
@@ -220,19 +261,16 @@ func (tt *ExecutorTest) run(t *testing.T) {
 func TestEmptyTask(t *testing.T) {
 	t.Parallel()
 	NewExecutorTest(t,
-		WithExecutorOptions(
-			task.WithDir("testdata/empty_task"),
-		),
+		WithNodeDir("testdata/empty_task"),
+		WithExecutorOptions(),
 	)
 }
 
 func TestEmptyTaskfile(t *testing.T) {
 	t.Parallel()
 	NewExecutorTest(t,
-		WithExecutorOptions(
-			task.WithDir("testdata/empty_taskfile"),
-		),
-		WithSetupError(),
+		WithNodeDir("testdata/empty_taskfile"),
+		WithReaderError(),
 		WithFixtureTemplating(),
 	)
 }
@@ -241,15 +279,15 @@ func TestEnv(t *testing.T) {
 	t.Setenv("QUX", "from_os")
 	NewExecutorTest(t,
 		WithName("env precedence disabled"),
+		WithNodeDir("testdata/env"),
 		WithExecutorOptions(
-			task.WithDir("testdata/env"),
 			task.WithSilent(true),
 		),
 	)
 	NewExecutorTest(t,
 		WithName("env precedence enabled"),
+		WithNodeDir("testdata/env"),
 		WithExecutorOptions(
-			task.WithDir("testdata/env"),
 			task.WithSilent(true),
 		),
 		WithExperiment(&experiments.EnvPrecedence, 1),
@@ -259,8 +297,8 @@ func TestEnv(t *testing.T) {
 func TestVars(t *testing.T) {
 	t.Parallel()
 	NewExecutorTest(t,
+		WithNodeDir("testdata/vars"),
 		WithExecutorOptions(
-			task.WithDir("testdata/vars"),
 			task.WithSilent(true),
 		),
 	)
@@ -270,25 +308,19 @@ func TestRequires(t *testing.T) {
 	t.Parallel()
 	NewExecutorTest(t,
 		WithName("required var missing"),
-		WithExecutorOptions(
-			task.WithDir("testdata/requires"),
-		),
+		WithNodeDir("testdata/requires"),
 		WithTask("missing-var"),
 		WithRunError(),
 	)
 	NewExecutorTest(t,
 		WithName("required var ok"),
-		WithExecutorOptions(
-			task.WithDir("testdata/requires"),
-		),
+		WithNodeDir("testdata/requires"),
 		WithTask("missing-var"),
 		WithVar("FOO", "bar"),
 	)
 	NewExecutorTest(t,
 		WithName("fails validation"),
-		WithExecutorOptions(
-			task.WithDir("testdata/requires"),
-		),
+		WithNodeDir("testdata/requires"),
 		WithTask("validation-var"),
 		WithVar("ENV", "dev"),
 		WithVar("FOO", "bar"),
@@ -296,48 +328,37 @@ func TestRequires(t *testing.T) {
 	)
 	NewExecutorTest(t,
 		WithName("passes validation"),
-		WithExecutorOptions(
-			task.WithDir("testdata/requires"),
-		),
+		WithNodeDir("testdata/requires"),
 		WithTask("validation-var"),
 		WithVar("FOO", "one"),
 		WithVar("ENV", "dev"),
 	)
 	NewExecutorTest(t,
 		WithName("required var missing + fails validation"),
-		WithExecutorOptions(
-			task.WithDir("testdata/requires"),
-		),
+		WithNodeDir("testdata/requires"),
 		WithTask("validation-var"),
 		WithRunError(),
 	)
 	NewExecutorTest(t,
 		WithName("required var missing + fails validation"),
-		WithExecutorOptions(
-			task.WithDir("testdata/requires"),
-		),
+		WithNodeDir("testdata/requires"),
 		WithTask("validation-var-dynamic"),
 		WithVar("FOO", "one"),
 		WithVar("ENV", "dev"),
 	)
 	NewExecutorTest(t,
 		WithName("require before compile"),
-		WithExecutorOptions(
-			task.WithDir("testdata/requires"),
-		),
+		WithNodeDir("testdata/requires"),
 		WithTask("require-before-compile"),
 		WithRunError(),
 	)
 	NewExecutorTest(t,
 		WithName("var defined in task"),
-		WithExecutorOptions(
-			task.WithDir("testdata/requires"),
-		),
+		WithNodeDir("testdata/requires"),
 		WithTask("var-defined-in-task"),
 	)
 }
 
-// TODO: mock fs
 func TestSpecialVars(t *testing.T) {
 	t.Parallel()
 
@@ -358,12 +379,13 @@ func TestSpecialVars(t *testing.T) {
 		"included:print-taskfile-dir",
 	}
 
-	for _, dir := range []string{dir, subdir} {
+	for _, executorDir := range []string{dir, subdir} {
 		for _, test := range tests {
+			name := fmt.Sprintf("%s-%s", executorDir, test)
 			NewExecutorTest(t,
-				WithName(fmt.Sprintf("%s-%s", dir, test)),
+				WithName(name),
+				WithNodeDir(executorDir),
 				WithExecutorOptions(
-					task.WithDir(dir),
 					task.WithSilent(true),
 					task.WithVersionCheck(true),
 				),
@@ -377,8 +399,8 @@ func TestSpecialVars(t *testing.T) {
 func TestConcurrency(t *testing.T) {
 	t.Parallel()
 	NewExecutorTest(t,
+		WithNodeDir("testdata/concurrency"),
 		WithExecutorOptions(
-			task.WithDir("testdata/concurrency"),
 			task.WithConcurrency(1),
 		),
 		WithPostProcessFn(PPSortedLines),
@@ -388,8 +410,8 @@ func TestConcurrency(t *testing.T) {
 func TestParams(t *testing.T) {
 	t.Parallel()
 	NewExecutorTest(t,
+		WithNodeDir("testdata/params"),
 		WithExecutorOptions(
-			task.WithDir("testdata/params"),
 			task.WithSilent(true),
 		),
 		WithPostProcessFn(PPSortedLines),
@@ -399,15 +421,14 @@ func TestParams(t *testing.T) {
 func TestDeps(t *testing.T) {
 	t.Parallel()
 	NewExecutorTest(t,
+		WithNodeDir("testdata/deps"),
 		WithExecutorOptions(
-			task.WithDir("testdata/deps"),
 			task.WithSilent(true),
 		),
 		WithPostProcessFn(PPSortedLines),
 	)
 }
 
-// TODO: mock fs
 func TestStatus(t *testing.T) {
 	t.Parallel()
 
@@ -430,8 +451,8 @@ func TestStatus(t *testing.T) {
 	// gen-foo creates foo.txt, and will always fail it's status check.
 	NewExecutorTest(t,
 		WithName("run gen-foo 1 silent"),
+		WithNodeDir(dir),
 		WithExecutorOptions(
-			task.WithDir(dir),
 			task.WithSilent(true),
 		),
 		WithTask("gen-foo"),
@@ -442,8 +463,8 @@ func TestStatus(t *testing.T) {
 	// only exists after the first run.
 	NewExecutorTest(t,
 		WithName("run gen-bar 1 silent"),
+		WithNodeDir(dir),
 		WithExecutorOptions(
-			task.WithDir(dir),
 			task.WithSilent(true),
 		),
 		WithTask("gen-bar"),
@@ -452,8 +473,8 @@ func TestStatus(t *testing.T) {
 	// if e.Verbose is set to true.
 	NewExecutorTest(t,
 		WithName("run gen-baz silent"),
+		WithNodeDir(dir),
 		WithExecutorOptions(
-			task.WithDir(dir),
 			task.WithSilent(true),
 		),
 		WithTask("gen-silent-baz"),
@@ -468,8 +489,8 @@ func TestStatus(t *testing.T) {
 	// Run gen-bar a second time to produce a checksum file that matches bar.txt
 	NewExecutorTest(t,
 		WithName("run gen-bar 2 silent"),
+		WithNodeDir(dir),
 		WithExecutorOptions(
-			task.WithDir(dir),
 			task.WithSilent(true),
 		),
 		WithTask("gen-bar"),
@@ -477,8 +498,8 @@ func TestStatus(t *testing.T) {
 	// Run gen-bar a third time, to make sure we've triggered the status check.
 	NewExecutorTest(t,
 		WithName("run gen-bar 3 silent"),
+		WithNodeDir(dir),
 		WithExecutorOptions(
-			task.WithDir(dir),
 			task.WithSilent(true),
 		),
 		WithTask("gen-bar"),
@@ -490,8 +511,8 @@ func TestStatus(t *testing.T) {
 	require.NoError(t, err)
 	NewExecutorTest(t,
 		WithName("run gen-bar 4 silent"),
+		WithNodeDir(dir),
 		WithExecutorOptions(
-			task.WithDir(dir),
 			task.WithSilent(true),
 		),
 		WithTask("gen-bar"),
@@ -499,56 +520,44 @@ func TestStatus(t *testing.T) {
 	// all: not up-to-date
 	NewExecutorTest(t,
 		WithName("run gen-foo 2"),
-		WithExecutorOptions(
-			task.WithDir(dir),
-		),
+		WithNodeDir(dir),
 		WithTask("gen-foo"),
 	)
 	// status: not up-to-date
 	NewExecutorTest(t,
 		WithName("run gen-foo 3"),
-		WithExecutorOptions(
-			task.WithDir(dir),
-		),
+		WithNodeDir(dir),
 		WithTask("gen-foo"),
 	)
 	// sources: not up-to-date
 	NewExecutorTest(t,
 		WithName("run gen-bar 5"),
-		WithExecutorOptions(
-			task.WithDir(dir),
-		),
+		WithNodeDir(dir),
 		WithTask("gen-bar"),
 	)
 	// all: up-to-date
 	NewExecutorTest(t,
 		WithName("run gen-bar 6"),
-		WithExecutorOptions(
-			task.WithDir(dir),
-		),
+		WithNodeDir(dir),
 		WithTask("gen-bar"),
 	)
 	// sources: not up-to-date, no output produced.
 	NewExecutorTest(t,
 		WithName("run gen-baz 2"),
-		WithExecutorOptions(
-			task.WithDir(dir),
-		),
+		WithNodeDir(dir),
 		WithTask("gen-silent-baz"),
 	)
 	// up-to-date, no output produced
 	NewExecutorTest(t,
 		WithName("run gen-baz 3"),
-		WithExecutorOptions(
-			task.WithDir(dir),
-		),
+		WithNodeDir(dir),
 		WithTask("gen-silent-baz"),
 	)
 	// up-to-date, output produced due to Verbose mode.
 	NewExecutorTest(t,
 		WithName("run gen-baz 4 verbose"),
+		WithNodeDir(dir),
 		WithExecutorOptions(
-			task.WithDir(dir),
 			task.WithVerbose(true),
 		),
 		WithTask("gen-silent-baz"),
@@ -561,32 +570,24 @@ func TestPrecondition(t *testing.T) {
 	const dir = "testdata/precondition"
 	NewExecutorTest(t,
 		WithName("a precondition has been met"),
-		WithExecutorOptions(
-			task.WithDir(dir),
-		),
+		WithNodeDir(dir),
 		WithTask("foo"),
 	)
 	NewExecutorTest(t,
 		WithName("a precondition was not met"),
-		WithExecutorOptions(
-			task.WithDir(dir),
-		),
+		WithNodeDir(dir),
 		WithTask("impossible"),
 		WithRunError(),
 	)
 	NewExecutorTest(t,
 		WithName("precondition in dependency fails the task"),
-		WithExecutorOptions(
-			task.WithDir(dir),
-		),
+		WithNodeDir(dir),
 		WithTask("depends_on_impossible"),
 		WithRunError(),
 	)
 	NewExecutorTest(t,
 		WithName("precondition in cmd fails the task"),
-		WithExecutorOptions(
-			task.WithDir(dir),
-		),
+		WithNodeDir(dir),
 		WithTask("executes_failing_task_as_cmd"),
 		WithRunError(),
 	)
@@ -597,25 +598,21 @@ func TestAlias(t *testing.T) {
 
 	NewExecutorTest(t,
 		WithName("alias"),
-		WithExecutorOptions(
-			task.WithDir("testdata/alias"),
-		),
+		WithNodeDir("testdata/alias"),
 		WithTask("f"),
 	)
 
 	NewExecutorTest(t,
 		WithName("duplicate alias"),
-		WithExecutorOptions(
-			task.WithDir("testdata/alias"),
-		),
+		WithNodeDir("testdata/alias"),
 		WithTask("x"),
 		WithRunError(),
 	)
 
 	NewExecutorTest(t,
 		WithName("alias summary"),
+		WithNodeDir("testdata/alias"),
 		WithExecutorOptions(
-			task.WithDir("testdata/alias"),
 			task.WithSummary(true),
 		),
 		WithTask("f"),
@@ -627,16 +624,14 @@ func TestLabel(t *testing.T) {
 
 	NewExecutorTest(t,
 		WithName("up to date"),
-		WithExecutorOptions(
-			task.WithDir("testdata/label_uptodate"),
-		),
+		WithNodeDir("testdata/label_uptodate"),
 		WithTask("foo"),
 	)
 
 	NewExecutorTest(t,
 		WithName("summary"),
+		WithNodeDir("testdata/label_summary"),
 		WithExecutorOptions(
-			task.WithDir("testdata/label_summary"),
 			task.WithSummary(true),
 		),
 		WithTask("foo"),
@@ -644,26 +639,20 @@ func TestLabel(t *testing.T) {
 
 	NewExecutorTest(t,
 		WithName("status"),
-		WithExecutorOptions(
-			task.WithDir("testdata/label_status"),
-		),
+		WithNodeDir("testdata/label_status"),
 		WithTask("foo"),
 		WithStatusError(),
 	)
 
 	NewExecutorTest(t,
 		WithName("var"),
-		WithExecutorOptions(
-			task.WithDir("testdata/label_var"),
-		),
+		WithNodeDir("testdata/label_var"),
 		WithTask("foo"),
 	)
 
 	NewExecutorTest(t,
 		WithName("label in summary"),
-		WithExecutorOptions(
-			task.WithDir("testdata/label_summary"),
-		),
+		WithNodeDir("testdata/label_summary"),
 		WithTask("foo"),
 	)
 }
@@ -690,8 +679,8 @@ func TestPromptInSummary(t *testing.T) {
 
 			opts := []ExecutorTestOption{
 				WithName(test.name),
+				WithNodeDir("testdata/prompt"),
 				WithExecutorOptions(
-					task.WithDir("testdata/prompt"),
 					task.WithAssumeTerm(true),
 				),
 				WithTask("foo"),
@@ -709,8 +698,8 @@ func TestPromptWithIndirectTask(t *testing.T) {
 	t.Parallel()
 
 	NewExecutorTest(t,
+		WithNodeDir("testdata/prompt"),
 		WithExecutorOptions(
-			task.WithDir("testdata/prompt"),
 			task.WithAssumeTerm(true),
 		),
 		WithTask("bar"),
@@ -723,8 +712,8 @@ func TestPromptAssumeYes(t *testing.T) {
 
 	NewExecutorTest(t,
 		WithName("--yes flag should skip prompt"),
+		WithNodeDir("testdata/prompt"),
 		WithExecutorOptions(
-			task.WithDir("testdata/prompt"),
 			task.WithAssumeTerm(true),
 			task.WithAssumeYes(true),
 		),
@@ -734,8 +723,8 @@ func TestPromptAssumeYes(t *testing.T) {
 
 	NewExecutorTest(t,
 		WithName("task should raise errors.TaskCancelledError"),
+		WithNodeDir("testdata/prompt"),
 		WithExecutorOptions(
-			task.WithDir("testdata/prompt"),
 			task.WithAssumeTerm(true),
 		),
 		WithTask("foo"),
@@ -772,8 +761,8 @@ func TestForCmds(t *testing.T) {
 	for _, test := range tests {
 		opts := []ExecutorTestOption{
 			WithName(test.name),
+			WithNodeDir("testdata/for/cmds"),
 			WithExecutorOptions(
-				task.WithDir("testdata/for/cmds"),
 				task.WithSilent(true),
 				task.WithForce(true),
 			),
@@ -815,8 +804,8 @@ func TestForDeps(t *testing.T) {
 	for _, test := range tests {
 		opts := []ExecutorTestOption{
 			WithName(test.name),
+			WithNodeDir("testdata/for/deps"),
 			WithExecutorOptions(
-				task.WithDir("testdata/for/deps"),
 				task.WithSilent(true),
 				task.WithForce(true),
 				// Force output of each dep to be grouped together to prevent interleaving
@@ -861,8 +850,8 @@ func TestReference(t *testing.T) {
 	for _, test := range tests {
 		NewExecutorTest(t,
 			WithName(test.name),
+			WithNodeDir("testdata/var_references"),
 			WithExecutorOptions(
-				task.WithDir("testdata/var_references"),
 				task.WithSilent(true),
 				task.WithForce(true),
 			),
@@ -929,8 +918,8 @@ func TestVarInheritance(t *testing.T) {
 	for _, test := range tests {
 		NewExecutorTest(t,
 			WithName(test.name),
+			WithNodeDir(fmt.Sprintf("testdata/var_inheritance/v3/%s", test.name)),
 			WithExecutorOptions(
-				task.WithDir(fmt.Sprintf("testdata/var_inheritance/v3/%s", test.name)),
 				task.WithSilent(true),
 				task.WithForce(true),
 			),
@@ -944,26 +933,20 @@ func TestFuzzyModel(t *testing.T) {
 
 	NewExecutorTest(t,
 		WithName("fuzzy"),
-		WithExecutorOptions(
-			task.WithDir("testdata/fuzzy"),
-		),
+		WithNodeDir("testdata/fuzzy"),
 		WithTask("instal"),
 		WithRunError(),
 	)
 
 	NewExecutorTest(t,
 		WithName("not-fuzzy"),
-		WithExecutorOptions(
-			task.WithDir("testdata/fuzzy"),
-		),
+		WithNodeDir("testdata/fuzzy"),
 		WithTask("install"),
 	)
 
 	NewExecutorTest(t,
 		WithName("intern"),
-		WithExecutorOptions(
-			task.WithDir("testdata/fuzzy"),
-		),
+		WithNodeDir("testdata/fuzzy"),
 		WithTask("intern"),
 		WithRunError(),
 	)
@@ -974,17 +957,13 @@ func TestIncludeChecksum(t *testing.T) {
 
 	NewExecutorTest(t,
 		WithName("correct"),
-		WithExecutorOptions(
-			task.WithDir("testdata/includes_checksum/correct"),
-		),
+		WithNodeDir("testdata/includes_checksum/correct"),
 	)
 
 	NewExecutorTest(t,
 		WithName("incorrect"),
-		WithExecutorOptions(
-			task.WithDir("testdata/includes_checksum/incorrect"),
-		),
-		WithSetupError(),
+		WithNodeDir("testdata/includes_checksum/incorrect"),
+		WithReaderError(),
 		WithFixtureTemplating(),
 	)
 }

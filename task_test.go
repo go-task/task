@@ -113,6 +113,17 @@ func (tt *TaskTest) writeFixtureBuffer(
 
 // writeFixtureErrSetup is a wrapper for writing the output of an error during
 // the setup phase of the task to a fixture file.
+func (tt *TaskTest) writeFixtureErrReader(
+	t *testing.T,
+	g *goldie.Goldie,
+	err error,
+) {
+	t.Helper()
+	tt.writeFixture(t, g, "err-reader", []byte(err.Error()))
+}
+
+// writeFixtureErrSetup is a wrapper for writing the output of an error during
+// the setup phase of the task to a fixture file.
 func (tt *TaskTest) writeFixtureErrSetup(
 	t *testing.T,
 	g *goldie.Goldie,
@@ -140,6 +151,57 @@ func (opt *nameTestOption) applyToExecutorTest(t *ExecutorTest) {
 
 func (opt *nameTestOption) applyToFormatterTest(t *FormatterTest) {
 	t.name = opt.name
+}
+
+// WithNodeDir sets the directory to be used for the test node.
+func WithNodeDir(dir string) TestOption {
+	return &nodeDirTestOption{dir: dir}
+}
+
+type nodeDirTestOption struct {
+	dir string
+}
+
+func (opt *nodeDirTestOption) applyToExecutorTest(t *ExecutorTest) {
+	t.nodeDir = opt.dir
+}
+
+func (opt *nodeDirTestOption) applyToFormatterTest(t *FormatterTest) {
+	t.nodeDir = opt.dir
+}
+
+// WithNodeEntrypoint sets the entrypoint to be used for the test node.
+func WithNodeEntrypoint(entrypoint string) TestOption {
+	return &nodeEntrypointTestOption{entrypoint: entrypoint}
+}
+
+type nodeEntrypointTestOption struct {
+	entrypoint string
+}
+
+func (opt *nodeEntrypointTestOption) applyToExecutorTest(t *ExecutorTest) {
+	t.nodeEntrypoint = opt.entrypoint
+}
+
+func (opt *nodeEntrypointTestOption) applyToFormatterTest(t *FormatterTest) {
+	t.nodeEntrypoint = opt.entrypoint
+}
+
+// WithNodeInsecure sets the insecure flag to be used for the test node.
+func WithNodeInsecure(insecure bool) TestOption {
+	return &nodeInsecureTestOption{insecure: insecure}
+}
+
+type nodeInsecureTestOption struct {
+	insecure bool
+}
+
+func (opt *nodeInsecureTestOption) applyToExecutorTest(t *ExecutorTest) {
+	t.nodeInsecure = opt.insecure
+}
+
+func (opt *nodeInsecureTestOption) applyToFormatterTest(t *FormatterTest) {
+	t.nodeInsecure = opt.insecure
 }
 
 // WithTask sets the name of the task to run. This should be used when the task
@@ -234,6 +296,22 @@ func (opt *postProcessFnTestOption) applyToExecutorTest(t *ExecutorTest) {
 
 func (opt *postProcessFnTestOption) applyToFormatterTest(t *FormatterTest) {
 	t.postProcessFns = append(t.postProcessFns, opt.fn)
+}
+
+// WithReaderError sets the test to expect an error during the reader phase of the
+// task execution. A fixture will be created with the output of any errors.
+func WithReaderError() TestOption {
+	return &readerErrorTestOption{}
+}
+
+type readerErrorTestOption struct{}
+
+func (opt *readerErrorTestOption) applyToExecutorTest(t *ExecutorTest) {
+	t.wantReaderError = true
+}
+
+func (opt *readerErrorTestOption) applyToFormatterTest(t *FormatterTest) {
+	t.wantReaderError = true
 }
 
 // WithSetupError sets the test to expect an error during the setup phase of the
