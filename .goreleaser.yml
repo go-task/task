@@ -132,3 +132,54 @@ winget:
           owner: go-task
           name: winget-pkgs
           branch: "bump-task-to-{{.Tag}}"
+
+dockers:
+  - image_templates:
+      - "ghcr.io/go-task/task:v{{.Version}}-amd64"
+    use: buildx
+    dockerfile: Dockerfile
+    build_flag_templates:
+      - "--platform=linux/amd64"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.title={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--label=org.opencontainers.image.url=https://taskfile.dev"
+      - "--label=org.opencontainers.image.source=https://github.com/go-task/task"
+      - "--label=org.opencontainers.image.licenses=MIT"
+      - "--label=org.opencontainers.image.authors=The Task authors <task@taskfile.dev>"
+      - "--label=org.opencontainers.image.description=Task is a task runner / build tool that aims to be simpler and easier to use than, for example, GNU Make."
+  - image_templates:
+      - "ghcr.io/go-task/task:v{{.Version}}-arm64"
+    use: buildx
+    goarch: arm64
+    dockerfile: Dockerfile
+    build_flag_templates:
+      - "--platform=linux/arm64/v8"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.title={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--label=org.opencontainers.image.url=https://taskfile.dev"
+      - "--label=org.opencontainers.image.source=https://github.com/go-task/task"
+      - "--label=org.opencontainers.image.licenses=MIT"
+      - "--label=org.opencontainers.image.authors=The Task authors <task@taskfile.dev>"
+      - "--label=org.opencontainers.image.description=Task is a task runner / build tool that aims to be simpler and easier to use than, for example, GNU Make."
+
+docker_manifests:
+  - name_template: "ghcr.io/go-task/task:v{{.Major}}.{{.Minor}}.{{.Patch}}"
+    image_templates:
+      - "ghcr.io/go-task/task:v{{.Version}}-amd64"
+      - "ghcr.io/go-task/task:v{{.Version}}-arm64"
+  - name_template: "ghcr.io/go-task/task:v{{.Major}}.{{.Minor}}"
+    image_templates:
+      - "ghcr.io/go-task/task:v{{.Version}}-amd64"
+      - "ghcr.io/go-task/task:v{{.Version}}-arm64"
+  - name_template: "ghcr.io/go-task/task:v{{.Major}}"
+    image_templates:
+      - "ghcr.io/go-task/task:v{{.Version}}-amd64"
+      - "ghcr.io/go-task/task:v{{.Version}}-arm64"
+  - name_template: "ghcr.io/go-task/task:latest"
+    image_templates:
+      - "ghcr.io/go-task/task:v{{.Version}}-amd64"
+      - "ghcr.io/go-task/task:v{{.Version}}-arm64"
