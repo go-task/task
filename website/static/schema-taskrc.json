@@ -6,8 +6,19 @@
   "properties": {
     "experiments": {
       "type": "object",
-      "additionalProperties": {
-        "type": "integer"
+      "properties": {
+        "ENV_PRECEDENCE": {
+          "type": "number",
+          "enum": [0, 1]
+        },
+        "REMOTE_TASKFILES": {
+          "type": "number",
+          "enum": [0, 1]
+        },
+        "GENTLE_FORCE": {
+          "type": "number",
+          "enum": [0, 1]
+        }
       }
     }
   },
