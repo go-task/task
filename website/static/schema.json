@@ -642,14 +642,16 @@
             "^.*$": {
               "anyOf": [
                 {
-                  "type": "string"
+                  "type": "string",
+                  "minLength": 1
                 },
                 {
                   "type": "object",
                   "properties": {
                     "taskfile": {
                       "description": "The path for the Taskfile or directory to be included. If a directory, Task will look for files named `Taskfile.yml` or `Taskfile.yaml` inside that directory. If a relative path, resolved relative to the directory containing the including Taskfile.",
-                      "type": "string"
+                      "type": "string",
+                      "minLength": 1
                     },
                     "dir": {
                       "description": "The working directory of the included tasks when run.",
@@ -689,7 +691,8 @@
                       "description": "The checksum of the file you expect to include. If the checksum does not match, the file will not be included.",
                       "type": "string"
                     }
-                  }
+                  },
+                  "required": ["taskfile"]
                 }
               ]
             }
