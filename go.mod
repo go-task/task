@@ -26,6 +26,7 @@ require (
 	github.com/spf13/pflag v1.0.7
 	github.com/stretchr/testify v1.10.0
 	github.com/zeebo/xxh3 v1.0.2
+	go.starlark.net v0.0.0-20250717191651-336a4b3a6d1d
 	golang.org/x/sync v0.16.0
 	golang.org/x/term v0.33.0
 	gopkg.in/yaml.v3 v3.0.1

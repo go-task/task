@@ -17,10 +17,14 @@ var (
 		"taskfile.yml",
 		"Taskfile.yaml",
 		"taskfile.yaml",
+		"Taskfile.star",
+		"taskfile.star",
 		"Taskfile.dist.yml",
 		"taskfile.dist.yml",
 		"Taskfile.dist.yaml",
 		"taskfile.dist.yaml",
+		"Taskfile.dist.star",
+		"taskfile.dist.star",
 	}
 	allowedContentTypes = []string{
 		"text/plain",

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 	"sync"
 	"time"
 
@@ -325,7 +326,11 @@ func (r *Reader) readNode(ctx context.Context, node Node) (*ast.Taskfile, error)
 	}
 
 	var tf ast.Taskfile
-	if err := yaml.Unmarshal(b, &tf); err != nil {
+	if strings.HasSuffix(node.Location(), ".star") {
+		if err := readStarlarkTaskfile(node.Location(), b, &tf); err != nil {
+			return nil, err
+		}
+	} else if err := yaml.Unmarshal(b, &tf); err != nil {
 		// Decode the taskfile and add the file info the any errors
 		taskfileDecodeErr := &errors.TaskfileDecodeError{}
 		if errors.As(err, &taskfileDecodeErr) {
