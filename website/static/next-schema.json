@@ -317,6 +317,10 @@
         "silent": {
           "description": "Hides task name and command from output. The command's output will still be redirected to `STDOUT` and `STDERR`.",
           "type": "boolean"
+        },
+        "when": {
+          "description": "Defer the task or command to a later named point (e.g. `exit`).",
+          "type": "string"
         }
       },
       "additionalProperties": false,
@@ -384,6 +388,10 @@
         "silent": {
           "description": "Hides task name and command from output. The command's output will still be redirected to `STDOUT` and `STDERR`.",
           "type": "boolean"
+        },
+        "when": {
+          "description": "Defer the task or command to a later named point (e.g. `exit`).",
+          "type": "string"
         }
       },
       "additionalProperties": false,
