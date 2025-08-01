@@ -11,6 +11,7 @@ type Defer struct {
 	Task   string
 	Vars   *Vars
 	Silent bool
+	When   string
 }
 
 func (d *Defer) UnmarshalYAML(node *yaml.Node) error {
@@ -30,6 +31,7 @@ func (d *Defer) UnmarshalYAML(node *yaml.Node) error {
 			Task   string
 			Vars   *Vars
 			Silent bool
+			When   string
 		}
 		if err := node.Decode(&deferStruct); err != nil {
 			return errors.NewTaskfileDecodeError(err, node)
@@ -38,6 +40,7 @@ func (d *Defer) UnmarshalYAML(node *yaml.Node) error {
 		d.Task = deferStruct.Task
 		d.Vars = deferStruct.Vars
 		d.Silent = deferStruct.Silent
+		d.When = deferStruct.When
 		return nil
 	}
 

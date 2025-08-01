@@ -1804,6 +1804,21 @@ tasks:
   cleanup: rm -rf tmpdir/
 ```
 
+Additionally the cleanup task can be deferred until task exits:
+
+```yaml
+version: '3'
+
+tasks:
+  default:
+    cmds:
+      - mkdir -p tmpdir/
+      - defer: { task: cleanup, when: exit }
+      - echo 'Do work on tmpdir/'
+
+  cleanup: rm -rf tmpdir/
+```
+
 :::info
 
 Due to the nature of how the
