@@ -105,7 +105,6 @@ func (e *Executor) Run(ctx context.Context, calls ...*Call) error {
 		}
 		delete(e.whenTasks, "exit")
 	}
-
 	return nil
 }
 
