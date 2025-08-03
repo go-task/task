@@ -231,8 +231,6 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) error {
 				continue
 			}
 
-			// TODO push to exit defer list
-
 			if err := e.runCommand(ctx, t, call, i); err != nil {
 				if err2 := e.statusOnError(t); err2 != nil {
 					e.Logger.VerboseErrf(logger.Yellow, "task: error cleaning status on error: %v\n", err2)
