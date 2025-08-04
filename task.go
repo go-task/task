@@ -343,7 +343,7 @@ func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call *Call, i in
 			return fmt.Errorf("task: failed to get variables: %w", err)
 		}
 		// Capture stdout to a buffer because when run from a go routine (i.e. deps)
-		// then concurrant writes may occur on the shared e.Stdout.
+		// then concurrent writes may occur on the shared e.Stdout.
 		_stdout := bytes.NewBuffer([]byte{})
 		stdOut, stdErr, closer := outputWrapper.WrapWriter(_stdout, e.Stderr, t.Prefix, outputTemplater)
 
@@ -363,7 +363,9 @@ func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call *Call, i in
 		if closeErr := closer(err); closeErr != nil {
 			e.Logger.Errf(logger.Red, "task: unable to close writer: %v\n", closeErr)
 		}
-		e.Stdout.Write(_stdout.Bytes())
+		if _, writeErr := e.Stdout.Write(_stdout.Bytes()); writeErr != nil {
+			e.Logger.Errf(logger.Red, "task: unable to write to e.Stdout: %v\n", writeErr)
+		}
 		e.stdoutMutex.Unlock()
 
 		var exitCode interp.ExitStatus
