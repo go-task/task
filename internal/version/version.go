@@ -4,6 +4,8 @@ import (
 	_ "embed"
 	"runtime/debug"
 	"strings"
+
+	"github.com/Masterminds/semver/v3"
 )
 
 var (
@@ -46,6 +48,10 @@ func getCommit(info *debug.BuildInfo) string {
 // However, it can also be overridden at build time using:
 // -ldflags="-X 'github.com/go-task/task/v3/internal/version.version=vX.X.X'".
 func GetVersion() string {
+	// If its a development version, we bump the minor version.
+	if commit != "" || dirty {
+		return semver.MustParse(version).IncMinor().String()
+	}
 	return version
 }
 
@@ -61,7 +67,7 @@ func GetVersionWithBuildInfo() string {
 		buildMetadata = append(buildMetadata, "dirty")
 	}
 	if len(buildMetadata) > 0 {
-		return version + "+" + strings.Join(buildMetadata, ".")
+		return GetVersion() + "+" + strings.Join(buildMetadata, ".")
 	}
-	return version
+	return GetVersion()
 }
