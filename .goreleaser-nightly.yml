@@ -2,22 +2,13 @@
 version: 2
 pro: true
 
-before:
-  hooks:
-    - cmd: 'pwd'
-      output: true
-    - cmd: 'ls'
-      output: true
-    - cmd: 'ls internal/version'
-      output: true
-    - cmd: 'cat internal/version/version.txt'
-      output: true
-    - cmd: 'echo "v{{.Version}}" > internal/version/version.txt'
-    - cmd: 'cat internal/version/version.txt'
-      output: true
-
 release:
   name_template: 'v{{.Version}}'
+
+builds:
+  - binary: task
+    ldflags:
+      - -s -w -X 'github.com/go-task/task/v3/internal/version.version=vX.X.X'={{.Version}}'
 
 nightly:
   publish_release: true
