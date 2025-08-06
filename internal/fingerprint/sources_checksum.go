@@ -15,7 +15,7 @@ import (
 )
 
 // ChecksumChecker validates if a task is up to date by calculating its source
-// files checksum
+// and destination (generates) files checksum
 type ChecksumChecker struct {
 	tempDir string
 	dry     bool
@@ -92,10 +92,15 @@ func (c *ChecksumChecker) checksum(t *ast.Task) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	generates, err := Globs(t.Dir, t.Generates)
+	if err != nil {
+		return "", err
+	}
+	files := append(sources, generates...)
 
 	h := xxh3.New()
 	buf := make([]byte, 128*1024)
-	for _, f := range sources {
+	for _, f := range files {
 		// also sum the filename, so checksum changes for renaming a file
 		if _, err := io.CopyBuffer(h, strings.NewReader(filepath.Base(f)), buf); err != nil {
 			return "", err
