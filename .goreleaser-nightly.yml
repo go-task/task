@@ -4,7 +4,7 @@ pro: true
 
 release:
   draft: false
-  name_template: 'v{{.Version}}-nightly'
+  name_template: 'v{{.Version}}'
 
 nightly:
   publish_release: true
