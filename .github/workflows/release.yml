@@ -24,7 +24,7 @@ jobs:
         with:
           distribution: goreleaser-pro
           version: latest
-          args: release --clean --draft
+          args: release --clean
         env:
           GITHUB_TOKEN: ${{secrets.GH_PAT}}
           GORELEASER_KEY: ${{secrets.GORELEASER_KEY}}
