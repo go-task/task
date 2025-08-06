@@ -45,8 +45,6 @@ archives:
       - goos: windows
         formats: [zip]
 
-release:
-  draft: '{{ not .IsNightly }}'
 
 
 git:
