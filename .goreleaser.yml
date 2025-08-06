@@ -45,9 +45,6 @@ archives:
       - goos: windows
         formats: [zip]
 
-release:
-  draft: true
-
 
 git:
   ignore_tags:
