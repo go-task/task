@@ -45,6 +45,8 @@ archives:
       - goos: windows
         formats: [zip]
 
+release:
+  name_template: 'v{{incminor .Version}}-nightly'
 
 
 git:
@@ -55,7 +57,6 @@ nightly:
   publish_release: true
   keep_single_release: true
   version_template: "{{incminor .Version}}-nightly"
-  name_template: "{{incminor .Version}}-nightly"
 
 snapshot:
   version_template: '{{.Version}}'
