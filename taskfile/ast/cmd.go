@@ -19,6 +19,7 @@ type Cmd struct {
 	IgnoreError bool
 	Defer       bool
 	Platforms   []*Platform
+	When        string
 }
 
 func (c *Cmd) DeepCopy() *Cmd {
@@ -73,6 +74,7 @@ func (c *Cmd) UnmarshalYAML(node *yaml.Node) error {
 				c.Defer = true
 				c.Cmd = cmdStruct.Defer.Cmd
 				c.Silent = cmdStruct.Silent
+				c.When = cmdStruct.Defer.When
 				return nil
 			}
 
