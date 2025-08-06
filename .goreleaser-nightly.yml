@@ -3,7 +3,6 @@ version: 2
 pro: true
 
 release:
-  draft: false
   name_template: 'v{{.Version}}'
 
 nightly:
