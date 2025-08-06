@@ -5,10 +5,6 @@ pro: true
 release:
   name_template: 'v{{.Version}}'
 
-builds:
-  - binary: task
-    ldflags:
-      - -s -w -X 'github.com/go-task/task/v3/internal/version.version=vX.X.X'={{.Version}}'
 
 nightly:
   publish_release: true

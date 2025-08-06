@@ -30,7 +30,7 @@ builds:
     flags:
       - -trimpath
     ldflags:
-      - -s -w # Don't set main.version.
+      - -s -w {{if .IsNightly}}-X 'github.com/go-task/task/v3/internal/version.version=vX.X.X'={{.Version}}'{{end}} # Don't set main.version.
 
 gomod:
   proxy: true
