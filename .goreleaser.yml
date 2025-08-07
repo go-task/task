@@ -46,7 +46,6 @@ archives:
       - goos: windows
         formats: [zip]
 
-
 git:
   ignore_tags:
     - "{{if not .IsNightly}}nightly{{end}}"

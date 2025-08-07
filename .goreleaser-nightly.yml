@@ -5,7 +5,6 @@ pro: true
 release:
   name_template: 'v{{.Version}}'
 
-
 nightly:
   publish_release: true
   keep_single_release: true
