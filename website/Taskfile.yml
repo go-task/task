@@ -1,29 +1,29 @@
 version: "3"
 
 tasks:
-  yarn:install:
+  install:
     desc: Setup Docusaurus locally
     cmds:
-      - yarn install
+      - pnpm install
     sources:
       - package.json
-      - yarn.lock
+      - pnpm-lock.yaml
 
   default:
     desc: Start website
-    deps: [yarn:install]
+    deps: [install]
     aliases: [s, start]
     vars:
       HOST: '{{default "0.0.0.0" .HOST}}'
       PORT: '{{default "3001" .PORT}}'
     cmds:
-      - npx docusaurus start --no-open --host={{.HOST}} --port={{.PORT}}
+      - pnpm dev --host={{.HOST}} --port={{.PORT}}
 
   build:
     desc: Build website
-    deps: [yarn:install]
+    deps: [install]
     cmds:
-      - npx docusaurus build
+      - pnpm build
 
   preview:
     desc: Preview Website
@@ -33,20 +33,16 @@ tasks:
       HOST: '{{default "localhost" .HOST}}'
       PORT: '{{default "3001" .PORT}}'
     cmds:
-      - npx docusaurus serve --no-open --host={{.HOST}} --port={{.PORT}}
+      - pnpm preview  --host={{.HOST}} --port={{.PORT}}
 
   clean:
     desc: Clean temp directories
     cmds:
-      - rm -rf ./build
+      - rm -rf ./vitepress/dist
 
   deploy:
-    desc: Build and deploy Docusaurus
-    summary: Requires GIT_USER and GIT_PASS envs to be previous set
+    deps: [install]
+    desc: Build and deploy Website to Netlify
     cmds:
-      - npx docusaurus deploy
+      - pnpm netlify deploy --prod --site=054cd897-66d2-46fa-9b57-4831a8d61b37
 
-  upgrade:
-    desc: Upgrade Docusaurus
-    cmds:
-      - yarn upgrade @docusaurus/core@latest @docusaurus/preset-classic@latest @docusaurus/module-type-aliases@latest @docusaurus/tsconfig@latest @docusaurus/types@latest
