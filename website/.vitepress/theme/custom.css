@@ -1,0 +1,47 @@
+:root {
+  --ifm-color-primary: #43ABA2 ;
+  --vp-home-hero-name-color: var(--ifm-color-primary);
+  --vp-c-brand-1:  var(--ifm-color-primary);
+  --vp-c-brand-2:  var(--ifm-color-primary);
+  --vp-c-brand-3: var(--ifm-color-primary);
+}
+
+img[src*="shields.io"] {
+  display: inline;
+  vertical-align: text-bottom;
+}
+img[src*="custom-icon-badges.demolab.com"] {
+   display: inline;
+   height: 1em;
+   vertical-align: text-bottom;
+ }
+
+.github-user-mention {
+
+  font-weight: 700 !important;
+}
+
+
+.vp-doc .blog-post:first-of-type {
+  margin-top: 2rem;
+}
+
+
+.blog-post {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.blog-post:nth-of-type(1) { animation-delay: 0.1s; }
+.blog-post:nth-of-type(2) { animation-delay: 0.2s; }
+.blog-post:nth-of-type(3) { animation-delay: 0.3s; }

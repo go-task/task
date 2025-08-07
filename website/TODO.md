@@ -1,0 +1,8 @@
+- Carbon ads DONE
+- Algolia search DONE
+- Deploy (GH)
+- Others pages DONE
+- Blog DONE
+- Multiple versions
+- Sitemap
+- Add vitepress-plugin-group-icons
