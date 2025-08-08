@@ -97,7 +97,7 @@ tasks:
 
 Task provides special variables that are always available in templates. These override any user-defined variables with the same name.
 
-### CLI Context
+### CLI
 
 #### `CLI_ARGS`
 - **Type**: `string`
@@ -153,7 +153,7 @@ tasks:
 - **Type**: `bool`
 - **Description**: Whether `--offline` flag was set
 
-### Task Context
+### Task
 
 #### `TASK`
 - **Type**: `string`
@@ -216,7 +216,7 @@ tasks:
       - echo "Working: {{.USER_WORKING_DIR}}"
 ```
 
-### Status Context
+### Status
 
 #### `CHECKSUM`
 - **Type**: `string`
@@ -238,7 +238,7 @@ tasks:
       - echo "{{.CHECKSUM}}" > .last-checksum
 ```
 
-### Loop Context
+### Loop
 
 #### `ITEM`
 - **Type**: `any`
@@ -264,7 +264,7 @@ tasks:
         cmd: echo "Hello {{.NAME}}"
 ```
 
-### Defer Context
+### Defer
 
 #### `EXIT_CODE`
 - **Type**: `int`
@@ -282,7 +282,7 @@ tasks:
           {{end}}
 ```
 
-### System Context
+### System
 
 #### `TASK_VERSION`
 - **Type**: `string`
