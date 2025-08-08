@@ -4,14 +4,14 @@ layout: doc
 outline: false
 ---
 
-# 🙏 Support Taskfile
+# :pray: Support Taskfile
 
 If you find this project useful, consider supporting its ongoing development.
 
 > This is just a way to say **“thank you”** — donations won’t provide priority
 > support or special privileges.
 
-## 🏆 Gold Sponsorship
+## :trophy: Gold Sponsorship
 
 Companies donating **$50/month or more** can become a **Gold Sponsor**, featured
 on:
@@ -22,7 +22,7 @@ on:
 > 💬 To be featured, contact [@andreynering] with your logo. ⚠️ Suspicious or
 > inappropriate businesses (e.g. gambling, casinos) will be rejected.
 
-## ❤️ GitHub Sponsors _(recommended)_
+## :heart: GitHub Sponsors _(recommended)_
 
 The preferred way to donate is through **GitHub Sponsors**. We suggest splitting
 your donation equally between maintainers:
@@ -39,7 +39,7 @@ your donation equally between maintainers:
   </a>
 </div>
 
-## 🌐 Open Collective
+## :globe_with_meridians: Open Collective
 
 Prefer **Open Collective**? Choose a tier:
 
@@ -49,13 +49,13 @@ Prefer **Open Collective**? Choose a tier:
 - [$50/month](https://opencollective.com/task/contribute/sponsor-28775/checkout)
 - [🎯 Custom / One-time](https://opencollective.com/task/donate)
 
-## 💳 PayPal
+## :credit_card: PayPal
 
 You can also make a **one-time donation** to @andreynering via PayPal:
 
 [Donate via PayPal](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=GSVDU63RKG45A&currency_code=USD&source=url)
 
-## 🇧🇷 PIX (Brazil only)
+## :brazil: PIX (Brazil only)
 
 If you're in Brazil, you can also support @andreynering via PIX:
 
