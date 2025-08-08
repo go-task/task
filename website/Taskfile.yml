@@ -41,7 +41,7 @@ tasks:
       - rm -rf ./vitepress/dist
 
   deploy:
-    deps: [install]
+    deps: [build]
     desc: Build and deploy Website to Netlify
     cmds:
       - pnpm netlify deploy --prod --site=054cd897-66d2-46fa-9b57-4831a8d61b37
