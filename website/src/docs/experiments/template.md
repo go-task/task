@@ -33,5 +33,5 @@ information.
 
 \{Short explanation of how users should migrate to the new behavior\}
 
-[enabling-experiments]: /experiments#enabling-experiments
+[enabling-experiments]: /experiments/#enabling-experiments
 
