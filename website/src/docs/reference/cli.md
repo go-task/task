@@ -14,7 +14,9 @@ task [options] [tasks...] [-- CLI_ARGS...]
 ```
 
 ::: tip
+
 If `--` is given, all remaining arguments will be assigned to a special `CLI_ARGS` variable
+
 :::
 
 ## Commands
@@ -297,11 +299,15 @@ Task uses specific exit codes to indicate different types of errors:
 - **207** - Variable has incorrect value
 
 ::: info
+
 When using `-x/--exit-code`, failed command exit codes are passed through instead of the above codes.
+
 :::
 
 ::: tip
+
 The complete list of exit codes is available in the repository at [`errors/errors.go`](https://github.com/go-task/task/blob/main/errors/errors.go).
+
 :::
 
 ## JSON Output Format

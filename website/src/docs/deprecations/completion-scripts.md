@@ -7,10 +7,12 @@ outline: deep
 # Completion Scripts
 
 ::: danger
+
 This deprecation breaks the following functionality:
 
 - Any direct references to the completion scripts in the Task git repository
-  :::
+
+:::
 
 Direct use of the completion scripts in the `completion/*` directory of the
 [github.com/go-task/task][task] Git repository is deprecated. Any shell

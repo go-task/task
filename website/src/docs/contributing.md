@@ -10,8 +10,10 @@ Contributions to Task are very welcome, but we ask that you read this document
 before submitting a PR.
 
 ::: info
+
 This document applies to the core [Task][task] repository _and_ [Task for Visual
 Studio Code][vscode-task].
+
 :::
 
 ## Before you start

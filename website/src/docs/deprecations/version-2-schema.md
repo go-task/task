@@ -7,11 +7,13 @@ outline: deep
 # Version 2 Schema (#1197)
 
 ::: danger
+
 This deprecation breaks the following functionality:
 
 - Any Taskfiles that use the version 2 schema
 - `Taskvar.yml` files
-  :::
+
+:::
 
 The Taskfile version 2 schema was introduced in March 2018 and replaced by
 version 3 in August 2019. In May 2023 [we published a deprecation

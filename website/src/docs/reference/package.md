@@ -40,8 +40,9 @@ the this package's functionality is exposed via the [`task.Executor`] which
 allows the user to fetch and execute tasks from a Taskfile.
 
 ::: info
-This is the package which is most likely to be the subject of breaking changes
-as we refine the API.
+
+This is the package which is most likely to be the subject of breaking changes as we refine the API.
+
 :::
 
 ### [`github.com/go-task/task/v3/taskfile`]
@@ -137,8 +138,9 @@ This compiles the DAG into a single [`ast.Taskfile`] containing all the
 namespaces and tasks from all the Taskfiles we read.
 
 ::: info
-We plan to remove AST merging in the future as it is unnecessarily complex and
-causes lots of issues with scoping.
+
+We plan to remove AST merging in the future as it is unnecessarily complex and causes lots of issues with scoping.
+
 :::
 
 

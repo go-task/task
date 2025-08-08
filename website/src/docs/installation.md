@@ -9,8 +9,10 @@ outline: deep
 Task offers many installation methods. Check out the available methods below.
 
 ::: info
+
 Some of the methods below are marked as ![Community](https://img.shields.io/badge/Community%20Owned-orange). This means they
 are not maintained by the Task team and may not be up-to-date.
+
 :::
 
 ## Package Managers
@@ -178,8 +180,10 @@ sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d -b ~/.local/bin
 ```
 
 ::: warning
+
 On macOS and Windows, `~/.local/bin` and `~/bin` are not added to `$PATH` by
 default.
+
 :::
 
 By default, it installs the latest version available.
@@ -231,9 +235,11 @@ env GOBIN=/bin go install github.com/go-task/task/v3/cmd/task@latest
 ```
 
 ::: tip
+
 For CI environments we recommend using the [install script](#install-script)
 instead, which is faster and more stable, since it'll just download the latest
 released binary.
+
 :::
 
 ## Setup completions

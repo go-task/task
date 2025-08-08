@@ -7,9 +7,11 @@ outline: deep
 # Experiments
 
 ::: warning
+
 All experimental features are subject to breaking changes and/or removal _at any
 time_. We strongly recommend that you do not use these features in a production
 environment. They are intended for testing and feedback only.
+
 :::
 
 In order to allow Task to evolve quickly, we sometimes roll out breaking changes
@@ -108,9 +110,11 @@ implementation is now available for use in a release and the experiment is open
 for feedback.
 
 ::: info
+
 During the draft period, major changes to the implementation may be made based
 on the feedback received from users. There are _no stability guarantees_ and
 experimental features may be abandoned _at any time_.
+
 :::
 
 ### 3. Candidate

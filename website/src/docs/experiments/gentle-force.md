@@ -7,20 +7,26 @@ outline: deep
 # Gentle Force (#1200)
 
 ::: warning
+
 All experimental features are subject to breaking changes and/or removal _at any
 time_. We strongly recommend that you do not use these features in a production
 environment. They are intended for testing and feedback only.
+
 :::
 
 ::: danger
+
 This experiment breaks the following functionality:
 
 - The `--force` flag
-  :::
+
+:::
 
 ::: info
+
 To enable this experiment, set the environment variable:
 `TASK_X_GENTLE_FORCE=1`. Check out [our guide to enabling experiments](/experiments/#enabling-experiments) for more information.
+
 :::
 
 The `--force` flag currently forces _all_ tasks to run regardless of the status

@@ -10,11 +10,13 @@ outline: deep
 # {Name of Deprecated Feature} (#{Issue})
 
 ::: danger
+
 This deprecation breaks the following functionality:
 
 - {list any existing functionality that will be broken by this deprecation}
 - {if there are no breaking changes, remove this admonition}
-  :::
+
+:::
 
 {Short description of the feature/behavior and why it is being deprecated}
 

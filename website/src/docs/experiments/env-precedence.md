@@ -8,21 +8,26 @@ outline: deep
 # Env Precedence (#1038)
 
 ::: warning
-All experimental features are subject to breaking changes and/or removal _at any
-time_. We strongly recommend that you do not use these features in a production
+
+All experimental features are subject to breaking changes and/or removal _at any time_. We strongly recommend that you do not use these features in a production
 environment. They are intended for testing and feedback only.
+
 :::
 
 ::: danger
+
 This experiment breaks the following functionality:
 
 - environment variable will take precedence over OS environment variables
-  :::
+
+:::
 
 ::: info
+
 To enable this experiment, set the environment variable:
 `TASK_X_ENV_PRECEDENCE=1`. Check out [our guide to enabling
 experiments](/experiments/#enabling-experiments) for more information.
+
 :::
 
 Before this experiment, the OS variable took precedence over the task
