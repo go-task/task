@@ -7,7 +7,7 @@
     "dev": "vitepress dev",
     "build": "vitepress build",
     "preview": "vitepress preview",
-    "lint": "prettier --check ."
+    "lint": "prettier --write ."
   },
   "keywords": [],
   "author": "",
