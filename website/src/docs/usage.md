@@ -62,7 +62,7 @@ will be brought up.
 
 If you call Task with the `--global` (alias `-g`) flag, it will look for your
 home directory instead of your working directory. In short, Task will look for a
-Taskfile that matches `$HOME/`<code>{T,t}askfile.{yml,yaml}</code> .
+Taskfile that matches `$HOME/{T,t}askfile.{yml,yaml}` .
 
 This is useful to have automation that you can run from anywhere in your system!
 
