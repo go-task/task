@@ -253,7 +253,7 @@ export default defineConfig({
           link: '/styleguide'
         },
         {
-          text: 'Contribution',
+          text: 'Contributing',
           link: '/contributing'
         },
         {
