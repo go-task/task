@@ -12,7 +12,6 @@
   --vp-icon-details: #6b7280;
 }
 
-
 .dark {
   --vp-icon-info: #93c5fd;
   --vp-icon-tip: #34d399;
@@ -20,7 +19,6 @@
   --vp-icon-danger: #f87171;
   --vp-icon-details: #9ca3af;
 }
-
 
 img[src*='shields.io'] {
   display: inline;
@@ -64,7 +62,6 @@ img[src*='custom-icon-badges.demolab.com'] {
 .blog-post:nth-of-type(3) {
   animation-delay: 0.3s;
 }
-
 
 .custom-block .custom-block-title::before {
   content: '';
@@ -111,12 +108,10 @@ img[src*='custom-icon-badges.demolab.com'] {
   transform: rotate(90deg);
 }
 
-
 .custom-block .custom-block-title {
   display: flex;
   align-items: center;
 }
-
 
 @supports not (mask-image: none) {
   .custom-block .custom-block-title::before,
@@ -144,5 +139,4 @@ img[src*='custom-icon-badges.demolab.com'] {
   .custom-block.danger .custom-block-title::before {
     content: '🔥';
   }
-
 }

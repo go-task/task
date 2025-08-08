@@ -8,8 +8,7 @@ outline: deep
 
 The following guide will help introduce you to the basics of Task. We'll cover
 how to create a Taskfile, how to write a basic task and how to call it. If you
-haven't installed Task yet, head over to our
-[installation guide](installation).
+haven't installed Task yet, head over to our [installation guide](installation).
 
 ## Creating your first Taskfile
 
@@ -130,5 +129,5 @@ task build
 That's about it for the basics, but there's _so much_ more that you can do with
 Task. Check out the rest of the documentation to learn more about all the
 features Task has to offer! We recommend taking a look at the
-[usage guide](usage) next. Alternatively, you can check out our reference
-docs for the [Taskfile schema](reference/schema) and [CLI](reference/cli).
+[usage guide](usage) next. Alternatively, you can check out our reference docs
+for the [Taskfile schema](reference/schema) and [CLI](reference/cli).

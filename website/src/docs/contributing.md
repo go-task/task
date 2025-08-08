@@ -79,17 +79,16 @@ install the extension.
 
 ### Updating documentation
 
-Task uses [Docusaurus][docusaurus] to host a documentation server. The code for
+Task uses [Vitepress][vitepress] to host a documentation server. The code for
 this is located in the core Task repository. This can be setup and run locally
-by using `task website` (requires `nodejs` & `yarn`). All content is written in
-[MDX][mdx] (an extension of Markdown) and is located in the `website/docs`
-directory. All Markdown documents should have an 80 character line wrap limit
-(enforced by Prettier).
+by using `task website` (requires `nodejs` & `pnpm`). All content is written in
+Markdown and is located in the `website/src` directory. All Markdown documents
+should have an 80 character line wrap limit (enforced by Prettier).
 
-When making a change, consider whether a change to the [Usage Guide](/usage)
-is necessary. This document contains descriptions and examples of how to use
-Task features. If you're adding a new feature, try to find an appropriate place
-to add a new section. If you're updating an existing feature, ensure that the
+When making a change, consider whether a change to the [Usage Guide](/usage) is
+necessary. This document contains descriptions and examples of how to use Task
+features. If you're adding a new feature, try to find an appropriate place to
+add a new section. If you're updating an existing feature, ensure that the
 documentation and any examples are up-to-date. Ensure that any examples follow
 the [Taskfile Styleguide](/styleguide).
 
@@ -167,7 +166,7 @@ If you have questions, feel free to ask them in the `#help` forum channel on our
 [prettier]: https://prettier.io
 [nodejs]: https://nodejs.org/en/
 [pnpm]: https://pnpm.io/
-[docusaurus]: https://docusaurus.io
+[vitepress]: https://vitepress.dev
 [json-schema]:
   https://github.com/go-task/task/blob/main/website/static/schema.json
 [task-open-issues]: https://github.com/go-task/task/issues

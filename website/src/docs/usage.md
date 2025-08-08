@@ -902,8 +902,7 @@ You can use `--force` or `-f` if you want to force a task to run even when
 up-to-date.
 
 Also, `task --status [tasks]...` will exit with a non-zero
-[exit code](/reference/cli#exit-codes) if any of the tasks are not
-up-to-date.
+[exit code](/reference/cli#exit-codes) if any of the tasks are not up-to-date.
 
 `status` can be combined with the
 [fingerprinting](#by-fingerprinting-locally-generated-files-and-their-sources)
