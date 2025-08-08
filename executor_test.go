@@ -989,8 +989,8 @@ func TestIncludeChecksum(t *testing.T) {
 	)
 }
 
+//nolint:paralleltest // These tests use signals and cannot run in parallel.
 func TestOutput(t *testing.T) {
-	// These tests use signals and cannot run in parallel.
 	const dir = "testdata/output"
 	NewExecutorTest(t,
 		WithName("interleaved"),
