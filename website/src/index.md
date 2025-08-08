@@ -10,13 +10,13 @@ hero:
   actions:
     - theme: brand
       text: Get Started
-      link: /docs/getting-started
+      link: /getting-started
     - theme: alt
       text: Schema
-      link: /docs/reference/schema
+      link: /reference/schema
     - theme: alt
       text: CLI
-      link: /docs/reference/cli
+      link: /reference/cli
 
 
 features:
