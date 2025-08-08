@@ -330,51 +330,60 @@ tasks:
       - echo "Using Task {{.TASK_VERSION}}"
 ```
 
-## Built-in Functions
+## Available Functions
 
-These functions are provided by Go's
-[text/template](https://pkg.go.dev/text/template#hdr-Functions) package.
+Task provides a comprehensive set of functions for templating. Functions can be chained using pipes (`|`) and combined for powerful templating capabilities.
 
-### Logic Functions
+### Logic and Control Flow
 
-#### `and`
+#### `and`, `or`, `not`
 
-Boolean AND operation
-
-```yaml
-cmds:
-  - echo "{{if and .DEBUG .VERBOSE}}Debug mode{{end}}"
-```
-
-#### `or`
-
-Boolean OR operation
+Boolean operations for conditional logic
 
 ```yaml
-cmds:
-  - echo "{{if or .DEV .STAGING}}Non-production{{end}}"
+tasks:
+  conditional:
+    vars:
+      DEBUG: true
+      VERBOSE: false
+      PRODUCTION: false
+    cmds:
+      - echo "{{if and .DEBUG .VERBOSE}}Debug mode with verbose{{end}}"
+      - echo "{{if or .DEBUG .VERBOSE}}Some kind of debug{{end}}"
+      - echo "{{if not .PRODUCTION}}Development build{{end}}"
 ```
 
-#### `not`
+#### `eq`, `ne`, `lt`, `le`, `gt`, `ge`
 
-Boolean negation
+Comparison operations
 
 ```yaml
-cmds:
-  - echo "{{if not .PRODUCTION}}Development build{{end}}"
+tasks:
+  compare:
+    vars:
+      VERSION: 3
+    cmds:
+      - echo "{{if gt .VERSION 2}}Version 3 or higher{{end}}"
+      - echo "{{if eq .VERSION 3}}Exactly version 3{{end}}"
 ```
 
-### Data Access
+### Data Access and Manipulation
 
 #### `index`
 
-Access array/map elements
+Access array/map elements by index or key
 
 ```yaml
-vars:
-  SERVICES: [api, web, worker]
-cmds:
-  - echo "First service: {{index .SERVICES 0}}"
+tasks:
+  access:
+    vars:
+      SERVICES: [api, web, worker]
+      CONFIG:
+        database: postgres
+        port: 5432
+    cmds:
+      - echo "First service: {{index .SERVICES 0}}"
+      - echo "Database: {{index .CONFIG "database"}}"
 ```
 
 #### `len`
@@ -382,38 +391,30 @@ cmds:
 Get length of arrays, maps, or strings
 
 ```yaml
-vars:
-  ITEMS: [a, b, c, d]
-cmds:
-  - echo "Found {{len .ITEMS}} items"
+tasks:
+  length:
+    vars:
+      ITEMS: [a, b, c, d]
+      TEXT: "Hello World"
+    cmds:
+      - echo "Found {{len .ITEMS}} items"
+      - echo "Text has {{len .TEXT}} characters"
 ```
 
 #### `slice`
 
-Get slice of array/string
+Extract a portion of an array or string
 
 ```yaml
-vars:
-  ITEMS: [a, b, c, d, e]
-cmds:
-  - echo "{{slice .ITEMS 1 3}}" # [b c]
+tasks:
+  slice-demo:
+    vars:
+      ITEMS: [a, b, c, d, e]
+      TEXT: "Hello World"
+    cmds:
+      - echo "{{slice .ITEMS 1 3}}"     # [b c]
+      - echo "{{slice .TEXT 0 5}}"      # "Hello"
 ```
-
-### Output Functions
-
-#### `print`, `printf`, `println`
-
-Formatted output functions
-
-```yaml
-cmds:
-  - echo "{{printf "Version: %s.%d" .VERSION .BUILD}}"
-```
-
-## Slim-Sprig Functions
-
-Task includes functions from [slim-sprig](https://go-task.github.io/slim-sprig/)
-for enhanced templating capabilities.
 
 ### String Functions
 
@@ -421,93 +422,94 @@ for enhanced templating capabilities.
 
 ```yaml
 tasks:
-  string-demo:
+  string-basic:
     vars:
       MESSAGE: '  Hello World  '
       NAME: 'john doe'
     cmds:
-      - echo "{{.MESSAGE | trim}}" # "Hello World"
-      - echo "{{.NAME | title}}" # "John Doe"
-      - echo "{{.NAME | upper}}" # "JOHN DOE"
-      - echo "{{.MESSAGE | lower}}" # "hello world"
+      - echo "{{.MESSAGE | trim}}"          # "Hello World"
+      - echo "{{.NAME | title}}"            # "John Doe"
+      - echo "{{.NAME | upper}}"            # "JOHN DOE"
+      - echo "{{.MESSAGE | lower}}"         # "hello world"
+      - echo "{{.NAME | trunc 4}}"          # "john"
+      - echo "{{"test" | repeat 3}}"        # "testtesttest"
 ```
 
-#### String Testing
+#### String Testing and Searching
 
 ```yaml
 tasks:
-  check:
+  string-test:
     vars:
       FILENAME: 'app.tar.gz'
+      EMAIL: 'user@example.com'
     cmds:
-      - |
-        {{if .FILENAME | hasPrefix "app"}}
-        echo "Application file detected"
-        {{end}}
-      - |
-        {{if .FILENAME | hasSuffix ".gz"}}
-        echo "Compressed file detected"
-        {{end}}
+      - echo "{{.FILENAME | hasPrefix "app"}}"    # true
+      - echo "{{.FILENAME | hasSuffix ".gz"}}"    # true
+      - echo "{{.EMAIL | contains "@"}}"          # true
 ```
 
-#### String Manipulation
+#### String Replacement and Formatting
 
 ```yaml
 tasks:
-  process:
+  string-format:
     vars:
       TEXT: 'Hello, World!'
+      UNSAFE: 'file with spaces.txt'
     cmds:
-      - echo "{{.TEXT | replace "," ""}}" # "Hello World!"
-      - echo "{{.TEXT | quote}}" # "\"Hello, World!\""
-      - echo "{{"test" | repeat 3}}" # "testtesttest"
-      - echo "{{.TEXT | trunc 5}}" # "Hello"
+      - echo "{{.TEXT | replace "," ""}}"         # "Hello World!"
+      - echo "{{.TEXT | quote}}"                  # "\"Hello, World!\""
+      - echo "{{.UNSAFE | shellQuote}}"           # Shell-safe quoting
+      - echo "{{.UNSAFE | q}}"                    # Short alias for shellQuote
 ```
 
 #### Regular Expressions
 
 ```yaml
 tasks:
-  regex-demo:
+  regex:
     vars:
       EMAIL: 'user@example.com'
       TEXT: 'abc123def456'
     cmds:
-      - echo "{{regexMatch "@" .EMAIL}}" # true
-      - echo "{{regexFind "[0-9]+" .TEXT}}" # "123"
-      - echo "{{regexFindAll "[0-9]+" .TEXT -1}}" # ["123", "456"]
-      - echo "{{regexReplaceAll "[0-9]+" .TEXT "X"}}" # "abcXdefX"
+      - echo "{{regexMatch "@" .EMAIL}}"                    # true
+      - echo "{{regexFind "[0-9]+" .TEXT}}"                # "123"
+      - echo "{{regexFindAll "[0-9]+" .TEXT -1}}"          # ["123", "456"]
+      - echo "{{regexReplaceAll "[0-9]+" .TEXT "X"}}"      # "abcXdefX"
 ```
 
 ### List Functions
 
-#### List Creation and Access
+#### List Access and Basic Operations
 
 ```yaml
 tasks:
-  list-demo:
+  list-basic:
     vars:
       ITEMS: ["apple", "banana", "cherry", "date"]
     cmds:
-      - echo "First: {{.ITEMS | first}}"     # "apple"
-      - echo "Last: {{.ITEMS | last}}"       # "date"
-      - echo "Rest: {{.ITEMS | rest}}"       # ["banana", "cherry", "date"]
-      - echo "Initial: {{.ITEMS | initial}}" # ["apple", "banana", "cherry"]
+      - echo "First: {{.ITEMS | first}}"          # "apple"
+      - echo "Last: {{.ITEMS | last}}"            # "date"
+      - echo "Rest: {{.ITEMS | rest}}"            # ["banana", "cherry", "date"]
+      - echo "Initial: {{.ITEMS | initial}}"      # ["apple", "banana", "cherry"]
+      - echo "Length: {{.ITEMS | len}}"           # 4
 ```
 
 #### List Manipulation
 
 ```yaml
 tasks:
-  manipulate:
+  list-manipulate:
     vars:
       NUMBERS: [3, 1, 4, 1, 5, 9, 1]
       FRUITS: ['apple', 'banana']
     cmds:
-      - echo "{{.NUMBERS | uniq}}" # [3, 1, 4, 5, 9]
-      - echo "{{.NUMBERS | sortAlpha}}" # [1, 1, 1, 3, 4, 5, 9]
-      - echo "{{.FRUITS | append "cherry"}}" # ["apple", "banana", "cherry"]
-      - echo "{{.NUMBERS | without 1}}" # [3, 4, 5, 9]
+      - echo "{{.NUMBERS | uniq}}"                        # [3, 1, 4, 5, 9]
+      - echo "{{.NUMBERS | sortAlpha}}"                   # [1, 1, 1, 3, 4, 5, 9]
+      - echo "{{.FRUITS | append "cherry"}}"              # ["apple", "banana", "cherry"]
+      - echo "{{.NUMBERS | without 1}}"                   # [3, 4, 5, 9]
+      - echo "{{.NUMBERS | has 5}}"                       # true
 ```
 
 #### String Lists
@@ -518,64 +520,133 @@ tasks:
     vars:
       CSV: 'apple,banana,cherry'
       WORDS: ['hello', 'world', 'from', 'task']
+      MULTILINE: |
+        line1
+        line2
+        line3
     cmds:
-      - echo "{{.CSV | splitList ","}}" # ["apple", "banana", "cherry"]
-      - echo "{{.WORDS | join " "}}" # "hello world from task"
-      - echo "{{.WORDS | sortAlpha}}" # ["from", "hello", "task", "world"]
+      - echo "{{.CSV | splitList ","}}"           # ["apple", "banana", "cherry"]
+      - echo "{{.WORDS | join " "}}"              # "hello world from task"
+      - echo "{{.WORDS | sortAlpha}}"             # ["from", "hello", "task", "world"]
+      - echo "{{.MULTILINE | splitLines}}"        # Split on newlines (Unix/Windows)
+      - echo "{{.MULTILINE | catLines}}"          # Replace newlines with spaces
+```
+
+#### Shell Argument Parsing
+
+```yaml
+tasks:
+  shell-args:
+    vars:
+      ARGS: 'file1.txt -v --output="result file.txt"'
+    cmds:
+      - |
+        {{range .ARGS | splitArgs}}
+        echo "Arg: {{.}}"
+        {{end}}
 ```
 
 ### Math Functions
 
 ```yaml
 tasks:
-  math-demo:
+  math:
     vars:
       A: 10
       B: 3
       NUMBERS: [1, 5, 3, 9, 2]
     cmds:
-      - echo "{{add .A .B}}" # 13
-      - echo "{{sub .A .B}}" # 7
-      - echo "{{mul .A .B}}" # 30
-      - echo "{{div .A .B}}" # 3
-      - echo "{{mod .A .B}}" # 1
-      - echo "{{.NUMBERS | max}}" # 9
-      - echo "{{.NUMBERS | min}}" # 1
-      - echo "{{randInt 1 100}}" # Random number 1-99
+      - echo "Addition: {{add .A .B}}"            # 13
+      - echo "Subtraction: {{sub .A .B}}"         # 7
+      - echo "Multiplication: {{mul .A .B}}"      # 30
+      - echo "Division: {{div .A .B}}"            # 3
+      - echo "Modulo: {{mod .A .B}}"              # 1
+      - echo "Maximum: {{.NUMBERS | max}}"        # 9
+      - echo "Minimum: {{.NUMBERS | min}}"        # 1
+      - echo "Random 1-99: {{randInt 1 100}}"     # Random number
+      - echo "Random 0-999: {{randIntN 1000}}"    # Random number 0-999
 ```
 
-### Date Functions
+### Date and Time Functions
 
 ```yaml
 tasks:
-  date-demo:
+  date-time:
     vars:
       BUILD_DATE: "2023-12-25T10:30:00Z"
     cmds:
       - echo "Now: {{now | date "2006-01-02 15:04:05"}}"
       - echo "Build: {{.BUILD_DATE | toDate | date "Jan 2, 2006"}}"
-      - echo "Unix: {{now | unixEpoch}}"
-      - echo "Duration: {{now | ago}}"
+      - echo "Unix timestamp: {{now | unixEpoch}}"
+      - echo "Duration ago: {{now | ago}}"
 ```
 
-### Dictionary Functions
+### System Functions
+
+#### Platform Information
 
 ```yaml
 tasks:
-  dict-demo:
+  platform:
+    cmds:
+      - echo "OS: {{OS}}"                         # linux, darwin, windows, etc.
+      - echo "Architecture: {{ARCH}}"             # amd64, arm64, etc.
+      - echo "CPU cores: {{numCPU}}"              # Number of CPU cores
+      - echo "Building for {{OS}}/{{ARCH}}"
+```
+
+#### Path Functions
+
+```yaml
+tasks:
+  paths:
+    vars:
+      WIN_PATH: 'C:\Users\name\file.txt'
+      OUTPUT_DIR: 'dist'
+      BINARY_NAME: 'myapp'
+    cmds:
+      - echo "{{.WIN_PATH | toSlash}}"                          # Convert to forward slashes
+      - echo "{{.WIN_PATH | fromSlash}}"                        # Convert to OS-specific slashes
+      - echo "{{joinPath .OUTPUT_DIR .BINARY_NAME}}"            # Join path elements
+      - echo "Relative: {{relPath .ROOT_DIR .TASKFILE_DIR}}"    # Get relative path
+```
+
+### Data Structure Functions
+
+#### Dictionary Operations
+
+```yaml
+tasks:
+  dict:
     vars:
       CONFIG:
         database: postgres
         port: 5432
         ssl: true
     cmds:
-      - echo "DB: {{.CONFIG | get "database"}}"
+      - echo "Database: {{.CONFIG | get "database"}}"
       - echo "Keys: {{.CONFIG | keys}}"
       - echo "Has SSL: {{.CONFIG | hasKey "ssl"}}"
       - echo "{{dict "env" "prod" "debug" false}}"
 ```
 
-### Default Functions
+#### Merging and Combining
+
+```yaml
+tasks:
+  merge:
+    vars:
+      BASE_CONFIG:
+        timeout: 30
+        retries: 3
+      USER_CONFIG:
+        timeout: 60
+        debug: true
+    cmds:
+      - echo "{{merge .BASE_CONFIG .USER_CONFIG | toJson}}"
+```
+
+### Default Values and Coalescing
 
 ```yaml
 tasks:
@@ -589,23 +660,57 @@ tasks:
       - echo "{{.DEBUG | default true}}"
       - echo "{{.MISSING_VAR | default "fallback"}}"
       - echo "{{coalesce .API_URL .FALLBACK_URL "default"}}"
-      - echo "Empty: {{empty .ITEMS}}"  # true
+      - echo "Is empty: {{empty .ITEMS}}"                     # true
 ```
 
-### Encoding Functions
+### Encoding and Serialization
+
+#### JSON
 
 ```yaml
 tasks:
-  encoding:
+  json:
     vars:
       DATA:
         name: 'Task'
         version: '3.0'
+      JSON_STRING: '{"key": "value", "number": 42}'
     cmds:
       - echo "{{.DATA | toJson}}"
       - echo "{{.DATA | toPrettyJson}}"
-      - echo "{{"hello" | b64enc}}" # aGVsbG8=
-      - echo "{{"aGVsbG8=" | b64dec}}" # hello
+      - echo "{{.JSON_STRING | fromJson | get "key"}}"
+```
+
+#### YAML
+
+```yaml
+tasks:
+  yaml:
+    vars:
+      CONFIG:
+        database:
+          host: localhost
+          port: 5432
+      YAML_STRING: |
+        key: value
+        items:
+          - one
+          - two
+    cmds:
+      - echo "{{.CONFIG | toYaml}}"
+      - echo "{{.YAML_STRING | fromYaml | get "key"}}"
+```
+
+#### Base64
+
+```yaml
+tasks:
+  base64:
+    vars:
+      SECRET: 'my-secret-key'
+    cmds:
+      - echo "{{.SECRET | b64enc}}"               # Encode to base64
+      - echo "{{"bXktc2VjcmV0LWtleQ==" | b64dec}}"   # Decode from base64
 ```
 
 ### Type Conversion
@@ -616,186 +721,29 @@ tasks:
     vars:
       NUM_STR: '42'
       FLOAT_STR: '3.14'
+      BOOL_STR: 'true'
       ITEMS: [1, 2, 3]
     cmds:
-      - echo "{{.NUM_STR | atoi | add 8}}" # 50
-      - echo "{{.FLOAT_STR | float64}}" # 3.14
-      - echo "{{.ITEMS | toStrings}}" # ["1", "2", "3"]
+      - echo "{{.NUM_STR | atoi | add 8}}"        # String to int: 50
+      - echo "{{.FLOAT_STR | float64}}"           # String to float: 3.14
+      - echo "{{.BOOL_STR | bool}}"               # String to bool: true
+      - echo "{{.ITEMS | toStrings}}"             # Convert to strings: ["1", "2", "3"]
 ```
 
-## Task-Specific Functions
+### Utility Functions
 
-Task provides additional functions for common operations.
-
-### System Functions
-
-#### `OS`
-
-Get the operating system
+#### UUID Generation
 
 ```yaml
 tasks:
-  build:
-    cmds:
-      - |
-        {{if eq OS "windows"}}
-        go build -o app.exe
-        {{else}}
-        go build -o app
-        {{end}}
-```
-
-#### `ARCH`
-
-Get the system architecture
-
-```yaml
-tasks:
-  info:
-    cmds:
-      - echo "Building for {{OS}}/{{ARCH}}"
-```
-
-#### `numCPU`
-
-Get number of CPU cores
-
-```yaml
-tasks:
-  test:
-    cmds:
-      - go test -parallel {{numCPU}} ./...
-```
-
-### Path Functions
-
-#### `toSlash` / `fromSlash`
-
-Convert path separators
-
-```yaml
-tasks:
-  paths:
+  generate:
     vars:
-      WIN_PATH: 'C:\Users\name\file.txt'
+      DEPLOYMENT_ID: "{{uuid}}"
     cmds:
-      - echo "{{.WIN_PATH | toSlash}}" # C:/Users/name/file.txt (on Windows)
+      - echo "Deployment ID: {{.DEPLOYMENT_ID}}"
 ```
 
-#### `joinPath`
-
-Join path elements
-
-```yaml
-tasks:
-  build:
-    vars:
-      OUTPUT_DIR: dist
-      BINARY_NAME: myapp
-    cmds:
-      - go build -o {{joinPath .OUTPUT_DIR .BINARY_NAME}}
-```
-
-#### `relPath`
-
-Get relative path
-
-```yaml
-tasks:
-  info:
-    cmds:
-      - echo "Relative: {{relPath .ROOT_DIR .TASKFILE_DIR}}"
-```
-
-### String Processing
-
-#### `splitLines`
-
-Split on newlines (Unix and Windows)
-
-```yaml
-tasks:
-  process:
-    vars:
-      MULTILINE: |
-        line1
-        line2
-        line3
-    cmds:
-      - |
-        {{range .MULTILINE | splitLines}}
-        echo "Line: {{.}}"
-        {{end}}
-```
-
-#### `catLines`
-
-Replace newlines with spaces
-
-```yaml
-tasks:
-  flatten:
-    vars:
-      MULTILINE: |
-        hello
-        world
-    cmds:
-      - echo "{{.MULTILINE | catLines}}" # "hello world"
-```
-
-#### `shellQuote` (alias: `q`)
-
-Quote for shell safety
-
-```yaml
-tasks:
-  safe:
-    vars:
-      FILENAME: 'file with spaces.txt'
-    cmds:
-      - ls -la {{.FILENAME | shellQuote}}
-      - cat {{.FILENAME | q}} # Short alias
-```
-
-#### `splitArgs`
-
-Parse shell arguments
-
-```yaml
-tasks:
-  parse:
-    vars:
-      ARGS: 'file1.txt -v --output="result file.txt"'
-    cmds:
-      - |
-        {{range .ARGS | splitArgs}}
-        echo "Arg: {{.}}"
-        {{end}}
-```
-
-### Data Functions
-
-#### `merge`
-
-Merge maps
-
-```yaml
-tasks:
-  config:
-    vars:
-      BASE_CONFIG:
-        timeout: 30
-        retries: 3
-      USER_CONFIG:
-        timeout: 60
-        debug: true
-    cmds:
-      - echo "{{merge .BASE_CONFIG .USER_CONFIG | toJson}}"
-```
-
-#### `spew`
-
-Debug variable contents
+#### Debugging
 
 ```yaml
 tasks:
@@ -806,188 +754,21 @@ tasks:
         nested:
           key: value
     cmds:
-      - echo "{{spew .COMPLEX_VAR}}"
+      - echo "{{spew .COMPLEX_VAR}}"              # Pretty-print for debugging
 ```
 
-### YAML Functions
+### Output Functions
 
-#### `fromYaml` / `toYaml`
-
-YAML encoding/decoding
+#### Formatted Output
 
 ```yaml
 tasks:
-  yaml-demo:
+  output:
     vars:
-      CONFIG:
-        database:
-          host: localhost
-          port: 5432
+      VERSION: "1.2.3"
+      BUILD: 42
     cmds:
-      - echo "{{.CONFIG | toYaml}}"
-      - echo "{{.YAML_STRING | fromYaml | get "key"}}"
-```
-
-### Utility Functions
-
-#### `uuid`
-
-Generate UUID
-
-```yaml
-tasks:
-  deploy:
-    vars:
-      DEPLOYMENT_ID: "{{uuid}}"
-    cmds:
-      - echo "Deployment ID: {{.DEPLOYMENT_ID}}"
-```
-
-#### `randIntN`
-
-Generate random integer
-
-```yaml
-tasks:
-  test:
-    vars:
-      RANDOM_PORT: "{{randIntN 9000 | add 1000}}"  # 1000-9999
-    cmds:
-      - echo "Using port: {{.RANDOM_PORT}}"
-```
-
-## Advanced Examples
-
-### Dynamic Task Generation
-
-```yaml
-version: '3'
-
-vars:
-  SERVICES: [api, web, worker, scheduler]
-  ENVIRONMENTS: [dev, staging, prod]
-
-tasks:
-  deploy-all:
-    desc: Deploy all services to all environments
-    deps:
-      - for: '{{.SERVICES}}'
-        task: deploy-service
-        vars:
-          SERVICE: '{{.ITEM}}'
-
-  deploy-service:
-    desc: Deploy a service to all environments
-    requires:
-      vars: [SERVICE]
-    deps:
-      - for: '{{.ENVIRONMENTS}}'
-        task: deploy
-        vars:
-          SERVICE: '{{.SERVICE}}'
-          ENV: '{{.ITEM}}'
-
-  deploy:
-    desc: Deploy service to specific environment
-    requires:
-      vars: [SERVICE, ENV]
-    cmds:
-      - echo "Deploying {{.SERVICE}} to {{.ENV}}"
-      - |
-        {{if eq .ENV "prod"}}
-        echo "Production deployment - extra validation"
-        ./validate-prod.sh {{.SERVICE}}
-        {{end}}
-      - ./deploy.sh {{.SERVICE}} {{.ENV}}
-```
-
-### Configuration Management
-
-```yaml
-version: '3'
-
-vars:
-  BASE_CONFIG:
-    timeout: 30
-    retries: 3
-    logging: true
-
-  DEV_CONFIG:
-    debug: true
-    timeout: 10
-
-  PROD_CONFIG:
-    debug: false
-    timeout: 60
-    ssl: true
-
-tasks:
-  start:
-    vars:
-      ENVIRONMENT: '{{.ENVIRONMENT | default "dev"}}'
-      CONFIG: |
-        {{if eq .ENVIRONMENT "prod"}}
-        {{merge .BASE_CONFIG .PROD_CONFIG | toYaml}}
-        {{else}}
-        {{merge .BASE_CONFIG .DEV_CONFIG | toYaml}}
-        {{end}}
-    cmds:
-      - echo "Starting in {{.ENVIRONMENT}} mode"
-      - echo "{{.CONFIG}}" > config.yaml
-      - ./app --config config.yaml
-```
-
-### Matrix Build with Conditional Logic
-
-```yaml
-version: '3'
-
-vars:
-  PLATFORMS:
-    - os: linux
-      arch: amd64
-      cgo: '1'
-    - os: linux
-      arch: arm64
-      cgo: '0'
-    - os: windows
-      arch: amd64
-      cgo: '1'
-    - os: darwin
-      arch: amd64
-      cgo: '1'
-    - os: darwin
-      arch: arm64
-      cgo: '0'
-
-tasks:
-  build-all:
-    desc: Build for all platforms
-    cmds:
-      - |
-        {{range .PLATFORMS}}
-        echo "Building for {{.os}}/{{.arch}} (CGO={{.cgo}})"
-        GOOS={{.os}} GOARCH={{.arch}} CGO_ENABLED={{.cgo}} go build \
-          -o dist/myapp-{{.os}}-{{.arch}}{{if eq .os "windows"}}.exe{{end}} \
-          ./cmd/myapp
-        {{end}}
-
-  package:
-    desc: Create platform-specific packages
-    deps: [build-all]
-    cmds:
-      - |
-        {{range .PLATFORMS}}
-        {{$ext := ""}}
-        {{if eq .os "windows"}}{{$ext = ".exe"}}{{end}}
-        {{$archive := printf "myapp-%s-%s" .os .arch}}
-
-        {{if eq .os "windows"}}
-        echo "Creating Windows package: {{$archive}}.zip"
-        zip -j dist/{{$archive}}.zip dist/myapp-{{.os}}-{{.arch}}{{$ext}}
-        {{else}}
-        echo "Creating Unix package: {{$archive}}.tar.gz"
-        tar -czf dist/{{$archive}}.tar.gz -C dist myapp-{{.os}}-{{.arch}}{{$ext}}
-        {{end}}
-        {{end}}
+      - echo "{{print "Simple output"}}"
+      - echo "{{printf "Version: %s.%d" .VERSION .BUILD}}"
+      - echo "{{println "With newline"}}"
 ```
