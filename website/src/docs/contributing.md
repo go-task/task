@@ -86,16 +86,16 @@ by using `task website` (requires `nodejs` & `yarn`). All content is written in
 directory. All Markdown documents should have an 80 character line wrap limit
 (enforced by Prettier).
 
-When making a change, consider whether a change to the [Usage Guide](/usage.md)
+When making a change, consider whether a change to the [Usage Guide](/usage)
 is necessary. This document contains descriptions and examples of how to use
 Task features. If you're adding a new feature, try to find an appropriate place
 to add a new section. If you're updating an existing feature, ensure that the
 documentation and any examples are up-to-date. Ensure that any examples follow
-the [Taskfile Styleguide](/styleguide.md).
+the [Taskfile Styleguide](/styleguide).
 
 If you added a new command or flag, ensure that you add it to the
-[CLI Reference](/reference/cli.md). New fields also need to be added to the
-[Schema Reference](/reference/schema.md) and [JSON Schema][json-schema]. The
+[CLI Reference](/reference/cli). New fields also need to be added to the
+[Schema Reference](/reference/schema) and [JSON Schema][json-schema]. The
 descriptions for fields in the docs and the schema should match.
 
 ### Writing tests
@@ -148,7 +148,7 @@ contributions.
 
 All kinds of contributions are welcome, whether its a typo fix or a shiny new
 feature. You can also contribute by upvoting/commenting on issues, helping to
-answer questions or contributing to other [community projects](/community.md).
+answer questions or contributing to other [community projects](/community).
 
 > I'm stuck, where can I get help?
 
