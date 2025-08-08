@@ -1,6 +1,8 @@
 ---
 title: Style Guide
-description: Official style guide for Taskfile.yml files with best practices and recommended conventions
+description:
+  Official style guide for Taskfile.yml files with best practices and
+  recommended conventions
 outline: deep
 ---
 

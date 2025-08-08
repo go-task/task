@@ -41,7 +41,8 @@ allows the user to fetch and execute tasks from a Taskfile.
 
 ::: info
 
-This is the package which is most likely to be the subject of breaking changes as we refine the API.
+This is the package which is most likely to be the subject of breaking changes
+as we refine the API.
 
 :::
 
@@ -139,30 +140,42 @@ namespaces and tasks from all the Taskfiles we read.
 
 ::: info
 
-We plan to remove AST merging in the future as it is unnecessarily complex and causes lots of issues with scoping.
+We plan to remove AST merging in the future as it is unnecessarily complex and
+causes lots of issues with scoping.
 
 :::
 
-
 [`github.com/go-task/task/v3`]: https://pkg.go.dev/github.com/go-task/task/v3
-[`github.com/go-task/task/v3/taskfile`]: https://pkg.go.dev/github.com/go-task/task/v3/taskfile
-[`github.com/go-task/task/v3/taskfile/ast`]: https://pkg.go.dev/github.com/go-task/task/v3/taskfile/ast
-[`github.com/go-task/task/v3/errors`]: https://pkg.go.dev/github.com/go-task/task/v3/errors
-
-[`ast.TaskfileGraph`]: https://pkg.go.dev/github.com/go-task/task/v3/taskfile/ast#TaskfileGraph
-[`ast.Taskfile`]: https://pkg.go.dev/github.com/go-task/task/v3/taskfile/ast#Taskfile
+[`github.com/go-task/task/v3/taskfile`]:
+  https://pkg.go.dev/github.com/go-task/task/v3/taskfile
+[`github.com/go-task/task/v3/taskfile/ast`]:
+  https://pkg.go.dev/github.com/go-task/task/v3/taskfile/ast
+[`github.com/go-task/task/v3/errors`]:
+  https://pkg.go.dev/github.com/go-task/task/v3/errors
+[`ast.TaskfileGraph`]:
+  https://pkg.go.dev/github.com/go-task/task/v3/taskfile/ast#TaskfileGraph
+[`ast.Taskfile`]:
+  https://pkg.go.dev/github.com/go-task/task/v3/taskfile/ast#Taskfile
 [`taskfile.Node`]: https://pkg.go.dev/github.com/go-task/task/v3/taskfile#Node
-[`taskfile.FileNode`]: https://pkg.go.dev/github.com/go-task/task/v3/taskfile#FileNode
-[`taskfile.HTTPNode`]: https://pkg.go.dev/github.com/go-task/task/v3/taskfile#HTTPNode
-[`taskfile.GitNode`]: https://pkg.go.dev/github.com/go-task/task/v3/taskfile#GitNode
-[`taskfile.StdinNode`]: https://pkg.go.dev/github.com/go-task/task/v3/taskfile#StdinNode
-[`taskfile.NewFileNode`]: https://pkg.go.dev/github.com/go-task/task/v3/taskfile#NewFileNode
-[`taskfile.Reader`]: https://pkg.go.dev/github.com/go-task/task/v3/taskfile#Reader
-[`taskfile.NewReader`]: https://pkg.go.dev/github.com/go-task/task/v3/taskfile#NewReader
-[`taskfile.Snippet`]: https://pkg.go.dev/github.com/go-task/task/v3/taskfile#Snippet
+[`taskfile.FileNode`]:
+  https://pkg.go.dev/github.com/go-task/task/v3/taskfile#FileNode
+[`taskfile.HTTPNode`]:
+  https://pkg.go.dev/github.com/go-task/task/v3/taskfile#HTTPNode
+[`taskfile.GitNode`]:
+  https://pkg.go.dev/github.com/go-task/task/v3/taskfile#GitNode
+[`taskfile.StdinNode`]:
+  https://pkg.go.dev/github.com/go-task/task/v3/taskfile#StdinNode
+[`taskfile.NewFileNode`]:
+  https://pkg.go.dev/github.com/go-task/task/v3/taskfile#NewFileNode
+[`taskfile.Reader`]:
+  https://pkg.go.dev/github.com/go-task/task/v3/taskfile#Reader
+[`taskfile.NewReader`]:
+  https://pkg.go.dev/github.com/go-task/task/v3/taskfile#NewReader
+[`taskfile.Snippet`]:
+  https://pkg.go.dev/github.com/go-task/task/v3/taskfile#Snippet
 [`task.Executor`]: https://pkg.go.dev/github.com/go-task/task/v3#Executor
 [`task.Formatter`]: https://pkg.go.dev/github.com/go-task/task/v3#Formatter
-[`errors.TaskError`]: https://pkg.go.dev/github.com/go-task/task/v3/errors#TaskError
+[`errors.TaskError`]:
+  https://pkg.go.dev/github.com/go-task/task/v3/errors#TaskError
 [`error`]: https://pkg.go.dev/builtin#error
-
 [ast]: https://en.wikipedia.org/wiki/Abstract_syntax_tree

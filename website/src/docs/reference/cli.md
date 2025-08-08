@@ -15,7 +15,8 @@ task [options] [tasks...] [-- CLI_ARGS...]
 
 ::: tip
 
-If `--` is given, all remaining arguments will be assigned to a special `CLI_ARGS` variable
+If `--` is given, all remaining arguments will be assigned to a special
+`CLI_ARGS` variable
 
 :::
 
@@ -252,7 +253,8 @@ task build --watch
 
 #### `-I, --interval <duration>`
 
-Set watch interval (default: `5s`). Must be a valid [Go duration](https://pkg.go.dev/time#ParseDuration).
+Set watch interval (default: `5s`). Must be a valid
+[Go duration](https://pkg.go.dev/time#ParseDuration).
 
 ```bash
 task build --watch --interval 1s
@@ -273,12 +275,15 @@ task deploy --yes
 Task uses specific exit codes to indicate different types of errors:
 
 ### Success
+
 - **0** - Success
 
 ### General Errors (1-99)
+
 - **1** - Unknown error occurred
 
 ### Taskfile Errors (100-199)
+
 - **100** - No Taskfile found
 - **101** - Taskfile already exists (when using `--init`)
 - **102** - Invalid or unparseable Taskfile
@@ -289,6 +294,7 @@ Task uses specific exit codes to indicate different types of errors:
 - **107** - No schema version defined in Taskfile
 
 ### Task Errors (200-255)
+
 - **200** - Task not found
 - **201** - Command execution error
 - **202** - Attempted to run internal task
@@ -300,13 +306,15 @@ Task uses specific exit codes to indicate different types of errors:
 
 ::: info
 
-When using `-x/--exit-code`, failed command exit codes are passed through instead of the above codes.
+When using `-x/--exit-code`, failed command exit codes are passed through
+instead of the above codes.
 
 :::
 
 ::: tip
 
-The complete list of exit codes is available in the repository at [`errors/errors.go`](https://github.com/go-task/task/blob/main/errors/errors.go).
+The complete list of exit codes is available in the repository at
+[`errors/errors.go`](https://github.com/go-task/task/blob/main/errors/errors.go).
 
 :::
 

@@ -9,15 +9,23 @@ outline: deep
 
 <AuthorCard :author="$frontmatter.author" />
 
-Task has always had variables, but even though you were able to define them using different YAML types, they would always be converted to strings by Task. This limited users to string manipulation and encouraged messy workarounds for simple problems. Starting from [v3.37.0][v3.37.0], this is no longer the case! Task now supports most variable types, including **booleans**, **integers**, **floats** and **arrays**!
+Task has always had variables, but even though you were able to define them
+using different YAML types, they would always be converted to strings by Task.
+This limited users to string manipulation and encouraged messy workarounds for
+simple problems. Starting from [v3.37.0][v3.37.0], this is no longer the case!
+Task now supports most variable types, including **booleans**, **integers**,
+**floats** and **arrays**!
 
 ## What's the big deal?
 
-These changes allow you to use variables in a much more natural way and opens up a wide variety of sprig functions that were previously useless. Take a look at some of the examples below for some inspiration.
+These changes allow you to use variables in a much more natural way and opens up
+a wide variety of sprig functions that were previously useless. Take a look at
+some of the examples below for some inspiration.
 
 ### Evaluating booleans
 
-No more comparing strings to "true" or "false". Now you can use actual boolean values in your templates:
+No more comparing strings to "true" or "false". Now you can use actual boolean
+values in your templates:
 
 ::: code-group
 
@@ -61,7 +69,9 @@ tasks:
       - 'echo {{add .INT .FLOAT}}'
 ```
 
-You can use any of the following arithmetic functions: `add`, `sub`, `mul`, `div`, `mod`, `max`, `min`, `floor`, `ceil`, `round` and `randInt`. Check out the [slim-sprig math documentation][slim-sprig-math] for more information.
+You can use any of the following arithmetic functions: `add`, `sub`, `mul`,
+`div`, `mod`, `max`, `min`, `floor`, `ceil`, `round` and `randInt`. Check out
+the [slim-sprig math documentation][slim-sprig-math] for more information.
 
 ### Arrays
 
@@ -78,11 +88,18 @@ tasks:
       - 'echo {{range .ARRAY}}{{.}}{{end}}'
 ```
 
-You can use any of the following list-based functions: `first`, `rest`, `last`, `initial`, `append`, `prepend`, `concat`, `reverse`, `uniq`, `without`, `has`, `compact`, `slice` and `chunk`. Check out the [slim-sprig lists documentation][slim-sprig-list] for more information.
+You can use any of the following list-based functions: `first`, `rest`, `last`,
+`initial`, `append`, `prepend`, `concat`, `reverse`, `uniq`, `without`, `has`,
+`compact`, `slice` and `chunk`. Check out the [slim-sprig lists
+documentation][slim-sprig-list] for more information.
 
 ### Looping over variables using `for`
 
-Previously, you would have to use a delimiter separated string to loop over an arbitrary list of items in a variable and split them by using the `split` subkey to specify the delimiter. However, we have now added support for looping over "collection-type" variables using the `for` keyword, so now you are able to loop over list variables directly:
+Previously, you would have to use a delimiter separated string to loop over an
+arbitrary list of items in a variable and split them by using the `split` subkey
+to specify the delimiter. However, we have now added support for looping over
+"collection-type" variables using the `for` keyword, so now you are able to loop
+over list variables directly:
 
 ::: code-group
 
@@ -117,10 +134,14 @@ tasks:
 
 ## What about maps?
 
-Maps were originally included in the Any Variables experiment. However, they weren't quite ready yet. Instead of making you wait for everything to be ready at once, we have released support for all other variable types and we will continue working on map support in the new "[Map Variables][map-variables]" experiment.
+Maps were originally included in the Any Variables experiment. However, they
+weren't quite ready yet. Instead of making you wait for everything to be ready
+at once, we have released support for all other variable types and we will
+continue working on map support in the new "[Map Variables][map-variables]"
+experiment.
 
-
-We're looking for feedback on a couple of different proposals, so please give them a go and let us know what you think. :pray:
+We're looking for feedback on a couple of different proposals, so please give
+them a go and let us know what you think. :pray:
 
 [v3.37.0]: https://github.com/go-task/task/releases/tag/v3.37.0
 [slim-sprig-math]: https://go-task.github.io/slim-sprig/math.html

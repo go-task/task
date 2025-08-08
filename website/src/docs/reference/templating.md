@@ -1,16 +1,23 @@
 ---
 title: Templating Reference
-description: Comprehensive guide to Task's templating system with Go text/template, special variables, and available functions
+description:
+  Comprehensive guide to Task's templating system with Go text/template, special
+  variables, and available functions
 outline: deep
 ---
 
 # Templating Reference
 
-Task's templating engine uses Go's [text/template](https://pkg.go.dev/text/template) package to interpolate values. This reference covers the main features and all available functions for creating dynamic Taskfiles.
+Task's templating engine uses Go's
+[text/template](https://pkg.go.dev/text/template) package to interpolate values.
+This reference covers the main features and all available functions for creating
+dynamic Taskfiles.
 
 ## Basic Usage
 
-Most string values in Task can be templated using double curly braces <span v-pre>`{{` and `}}`</span>. Anything inside the braces is executed as a Go template.
+Most string values in Task can be templated using double curly braces
+<span v-pre>`{{` and `}}`</span>. Anything inside the braces is executed as a Go
+template.
 
 ### Simple Variable Interpolation
 
@@ -26,6 +33,7 @@ tasks:
 ```
 
 **Output:**
+
 ```
 Hello, World!
 ```
@@ -46,6 +54,7 @@ tasks:
 ```
 
 **Output:**
+
 ```
 :)
 ```
@@ -64,6 +73,7 @@ tasks:
 ```
 
 **Output:**
+
 ```
 0, 1, 2, 3
 ```
@@ -86,6 +96,7 @@ tasks:
 ```
 
 **Output:**
+
 ```
 0: 0
 1: 1
@@ -95,11 +106,13 @@ tasks:
 
 ## Special Variables
 
-Task provides special variables that are always available in templates. These override any user-defined variables with the same name.
+Task provides special variables that are always available in templates. These
+override any user-defined variables with the same name.
 
 ### CLI
 
 #### `CLI_ARGS`
+
 - **Type**: `string`
 - **Description**: All extra arguments passed after `--` as a string
 
@@ -116,6 +129,7 @@ task test -- -v -race
 ```
 
 #### `CLI_ARGS_LIST`
+
 - **Type**: `[]string`
 - **Description**: All extra arguments passed after `--` as a shell parsed list
 
@@ -127,6 +141,7 @@ tasks:
 ```
 
 #### `CLI_FORCE`
+
 - **Type**: `bool`
 - **Description**: Whether `--force` or `--force-all` flags were set
 
@@ -142,20 +157,24 @@ tasks:
 ```
 
 #### `CLI_SILENT`
+
 - **Type**: `bool`
 - **Description**: Whether `--silent` flag was set
 
 #### `CLI_VERBOSE`
+
 - **Type**: `bool`
 - **Description**: Whether `--verbose` flag was set
 
 #### `CLI_OFFLINE`
+
 - **Type**: `bool`
 - **Description**: Whether `--offline` flag was set
 
 ### Task
 
 #### `TASK`
+
 - **Type**: `string`
 - **Description**: Name of the current task
 
@@ -167,10 +186,12 @@ tasks:
 ```
 
 #### `ALIAS`
+
 - **Type**: `string`
 - **Description**: Alias used for the current task, otherwise matches `TASK`
 
 #### `TASK_EXE`
+
 - **Type**: `string`
 - **Description**: Task executable name or path
 
@@ -184,26 +205,32 @@ tasks:
 ### File Paths
 
 #### `ROOT_TASKFILE`
+
 - **Type**: `string`
 - **Description**: Absolute path of the root Taskfile
 
 #### `ROOT_DIR`
+
 - **Type**: `string`
 - **Description**: Absolute path of the root Taskfile directory
 
 #### `TASKFILE`
+
 - **Type**: `string`
 - **Description**: Absolute path of the current (included) Taskfile
 
 #### `TASKFILE_DIR`
+
 - **Type**: `string`
 - **Description**: Absolute path of the current Taskfile directory
 
 #### `TASK_DIR`
+
 - **Type**: `string`
 - **Description**: Absolute path where the task is executed
 
 #### `USER_WORKING_DIR`
+
 - **Type**: `string`
 - **Description**: Absolute path where `task` was called from
 
@@ -219,18 +246,22 @@ tasks:
 ### Status
 
 #### `CHECKSUM`
+
 - **Type**: `string`
-- **Description**: Checksum of files in `sources` (only in `status` with `checksum` method)
+- **Description**: Checksum of files in `sources` (only in `status` with
+  `checksum` method)
 
 #### `TIMESTAMP`
+
 - **Type**: `time.Time`
-- **Description**: Greatest timestamp of files in `sources` (only in `status` with `timestamp` method)
+- **Description**: Greatest timestamp of files in `sources` (only in `status`
+  with `timestamp` method)
 
 ```yaml
 tasks:
   build:
     method: checksum
-    sources: ["**/*.go"]
+    sources: ['**/*.go']
     status:
       - test "{{.CHECKSUM}}" = "$(cat .last-checksum)"
     cmds:
@@ -241,6 +272,7 @@ tasks:
 ### Loop
 
 #### `ITEM`
+
 - **Type**: `any`
 - **Description**: Current iteration value when using `for` property
 
@@ -267,8 +299,10 @@ tasks:
 ### Defer
 
 #### `EXIT_CODE`
+
 - **Type**: `int`
-- **Description**: Failed command exit code (only in `defer`, only when non-zero)
+- **Description**: Failed command exit code (only in `defer`, only when
+  non-zero)
 
 ```yaml
 tasks:
@@ -285,6 +319,7 @@ tasks:
 ### System
 
 #### `TASK_VERSION`
+
 - **Type**: `string`
 - **Description**: Current version of Task
 
@@ -297,26 +332,33 @@ tasks:
 
 ## Built-in Functions
 
-These functions are provided by Go's [text/template](https://pkg.go.dev/text/template#hdr-Functions) package.
+These functions are provided by Go's
+[text/template](https://pkg.go.dev/text/template#hdr-Functions) package.
 
 ### Logic Functions
 
 #### `and`
+
 Boolean AND operation
+
 ```yaml
 cmds:
   - echo "{{if and .DEBUG .VERBOSE}}Debug mode{{end}}"
 ```
 
 #### `or`
+
 Boolean OR operation
+
 ```yaml
 cmds:
   - echo "{{if or .DEV .STAGING}}Non-production{{end}}"
 ```
 
 #### `not`
+
 Boolean negation
+
 ```yaml
 cmds:
   - echo "{{if not .PRODUCTION}}Development build{{end}}"
@@ -325,7 +367,9 @@ cmds:
 ### Data Access
 
 #### `index`
+
 Access array/map elements
+
 ```yaml
 vars:
   SERVICES: [api, web, worker]
@@ -334,7 +378,9 @@ cmds:
 ```
 
 #### `len`
+
 Get length of arrays, maps, or strings
+
 ```yaml
 vars:
   ITEMS: [a, b, c, d]
@@ -343,7 +389,9 @@ cmds:
 ```
 
 #### `slice`
+
 Get slice of array/string
+
 ```yaml
 vars:
   ITEMS: [a, b, c, d, e]
@@ -354,7 +402,9 @@ cmds:
 ### Output Functions
 
 #### `print`, `printf`, `println`
+
 Formatted output functions
+
 ```yaml
 cmds:
   - echo "{{printf "Version: %s.%d" .VERSION .BUILD}}"
@@ -362,7 +412,8 @@ cmds:
 
 ## Slim-Sprig Functions
 
-Task includes functions from [slim-sprig](https://go-task.github.io/slim-sprig/) for enhanced templating capabilities.
+Task includes functions from [slim-sprig](https://go-task.github.io/slim-sprig/)
+for enhanced templating capabilities.
 
 ### String Functions
 
@@ -372,13 +423,13 @@ Task includes functions from [slim-sprig](https://go-task.github.io/slim-sprig/)
 tasks:
   string-demo:
     vars:
-      MESSAGE: "  Hello World  "
-      NAME: "john doe"
+      MESSAGE: '  Hello World  '
+      NAME: 'john doe'
     cmds:
-      - echo "{{.MESSAGE | trim}}"           # "Hello World"
-      - echo "{{.NAME | title}}"             # "John Doe"
-      - echo "{{.NAME | upper}}"             # "JOHN DOE"
-      - echo "{{.MESSAGE | lower}}"          # "hello world"
+      - echo "{{.MESSAGE | trim}}" # "Hello World"
+      - echo "{{.NAME | title}}" # "John Doe"
+      - echo "{{.NAME | upper}}" # "JOHN DOE"
+      - echo "{{.MESSAGE | lower}}" # "hello world"
 ```
 
 #### String Testing
@@ -387,7 +438,7 @@ tasks:
 tasks:
   check:
     vars:
-      FILENAME: "app.tar.gz"
+      FILENAME: 'app.tar.gz'
     cmds:
       - |
         {{if .FILENAME | hasPrefix "app"}}
@@ -405,12 +456,12 @@ tasks:
 tasks:
   process:
     vars:
-      TEXT: "Hello, World!"
+      TEXT: 'Hello, World!'
     cmds:
-      - echo "{{.TEXT | replace "," ""}}"     # "Hello World!"
-      - echo "{{.TEXT | quote}}"             # "\"Hello, World!\""
-      - echo "{{"test" | repeat 3}}"         # "testtesttest"
-      - echo "{{.TEXT | trunc 5}}"           # "Hello"
+      - echo "{{.TEXT | replace "," ""}}" # "Hello World!"
+      - echo "{{.TEXT | quote}}" # "\"Hello, World!\""
+      - echo "{{"test" | repeat 3}}" # "testtesttest"
+      - echo "{{.TEXT | trunc 5}}" # "Hello"
 ```
 
 #### Regular Expressions
@@ -419,13 +470,13 @@ tasks:
 tasks:
   regex-demo:
     vars:
-      EMAIL: "user@example.com"
-      TEXT: "abc123def456"
+      EMAIL: 'user@example.com'
+      TEXT: 'abc123def456'
     cmds:
-      - echo "{{regexMatch "@" .EMAIL}}"                    # true
-      - echo "{{regexFind "[0-9]+" .TEXT}}"                 # "123"
-      - echo "{{regexFindAll "[0-9]+" .TEXT -1}}"           # ["123", "456"]
-      - echo "{{regexReplaceAll "[0-9]+" .TEXT "X"}}"       # "abcXdefX"
+      - echo "{{regexMatch "@" .EMAIL}}" # true
+      - echo "{{regexFind "[0-9]+" .TEXT}}" # "123"
+      - echo "{{regexFindAll "[0-9]+" .TEXT -1}}" # ["123", "456"]
+      - echo "{{regexReplaceAll "[0-9]+" .TEXT "X"}}" # "abcXdefX"
 ```
 
 ### List Functions
@@ -451,12 +502,12 @@ tasks:
   manipulate:
     vars:
       NUMBERS: [3, 1, 4, 1, 5, 9, 1]
-      FRUITS: ["apple", "banana"]
+      FRUITS: ['apple', 'banana']
     cmds:
-      - echo "{{.NUMBERS | uniq}}"                    # [3, 1, 4, 5, 9]
-      - echo "{{.NUMBERS | sortAlpha}}"               # [1, 1, 1, 3, 4, 5, 9]
-      - echo "{{.FRUITS | append "cherry"}}"          # ["apple", "banana", "cherry"]
-      - echo "{{.NUMBERS | without 1}}"               # [3, 4, 5, 9]
+      - echo "{{.NUMBERS | uniq}}" # [3, 1, 4, 5, 9]
+      - echo "{{.NUMBERS | sortAlpha}}" # [1, 1, 1, 3, 4, 5, 9]
+      - echo "{{.FRUITS | append "cherry"}}" # ["apple", "banana", "cherry"]
+      - echo "{{.NUMBERS | without 1}}" # [3, 4, 5, 9]
 ```
 
 #### String Lists
@@ -465,12 +516,12 @@ tasks:
 tasks:
   string-lists:
     vars:
-      CSV: "apple,banana,cherry"
-      WORDS: ["hello", "world", "from", "task"]
+      CSV: 'apple,banana,cherry'
+      WORDS: ['hello', 'world', 'from', 'task']
     cmds:
-      - echo "{{.CSV | splitList ","}}"          # ["apple", "banana", "cherry"]
-      - echo "{{.WORDS | join " "}}"             # "hello world from task"
-      - echo "{{.WORDS | sortAlpha}}"            # ["from", "hello", "task", "world"]
+      - echo "{{.CSV | splitList ","}}" # ["apple", "banana", "cherry"]
+      - echo "{{.WORDS | join " "}}" # "hello world from task"
+      - echo "{{.WORDS | sortAlpha}}" # ["from", "hello", "task", "world"]
 ```
 
 ### Math Functions
@@ -483,14 +534,14 @@ tasks:
       B: 3
       NUMBERS: [1, 5, 3, 9, 2]
     cmds:
-      - echo "{{add .A .B}}"           # 13
-      - echo "{{sub .A .B}}"           # 7
-      - echo "{{mul .A .B}}"           # 30
-      - echo "{{div .A .B}}"           # 3
-      - echo "{{mod .A .B}}"           # 1
-      - echo "{{.NUMBERS | max}}"      # 9
-      - echo "{{.NUMBERS | min}}"      # 1
-      - echo "{{randInt 1 100}}"       # Random number 1-99
+      - echo "{{add .A .B}}" # 13
+      - echo "{{sub .A .B}}" # 7
+      - echo "{{mul .A .B}}" # 30
+      - echo "{{div .A .B}}" # 3
+      - echo "{{mod .A .B}}" # 1
+      - echo "{{.NUMBERS | max}}" # 9
+      - echo "{{.NUMBERS | min}}" # 1
+      - echo "{{randInt 1 100}}" # Random number 1-99
 ```
 
 ### Date Functions
@@ -548,13 +599,13 @@ tasks:
   encoding:
     vars:
       DATA:
-        name: "Task"
-        version: "3.0"
+        name: 'Task'
+        version: '3.0'
     cmds:
       - echo "{{.DATA | toJson}}"
       - echo "{{.DATA | toPrettyJson}}"
-      - echo "{{"hello" | b64enc}}"     # aGVsbG8=
-      - echo "{{"aGVsbG8=" | b64dec}}"  # hello
+      - echo "{{"hello" | b64enc}}" # aGVsbG8=
+      - echo "{{"aGVsbG8=" | b64dec}}" # hello
 ```
 
 ### Type Conversion
@@ -563,13 +614,13 @@ tasks:
 tasks:
   convert:
     vars:
-      NUM_STR: "42"
-      FLOAT_STR: "3.14"
+      NUM_STR: '42'
+      FLOAT_STR: '3.14'
       ITEMS: [1, 2, 3]
     cmds:
-      - echo "{{.NUM_STR | atoi | add 8}}"      # 50
-      - echo "{{.FLOAT_STR | float64}}"         # 3.14
-      - echo "{{.ITEMS | toStrings}}"           # ["1", "2", "3"]
+      - echo "{{.NUM_STR | atoi | add 8}}" # 50
+      - echo "{{.FLOAT_STR | float64}}" # 3.14
+      - echo "{{.ITEMS | toStrings}}" # ["1", "2", "3"]
 ```
 
 ## Task-Specific Functions
@@ -579,7 +630,9 @@ Task provides additional functions for common operations.
 ### System Functions
 
 #### `OS`
+
 Get the operating system
+
 ```yaml
 tasks:
   build:
@@ -593,7 +646,9 @@ tasks:
 ```
 
 #### `ARCH`
+
 Get the system architecture
+
 ```yaml
 tasks:
   info:
@@ -602,7 +657,9 @@ tasks:
 ```
 
 #### `numCPU`
+
 Get number of CPU cores
+
 ```yaml
 tasks:
   test:
@@ -613,18 +670,22 @@ tasks:
 ### Path Functions
 
 #### `toSlash` / `fromSlash`
+
 Convert path separators
+
 ```yaml
 tasks:
   paths:
     vars:
       WIN_PATH: 'C:\Users\name\file.txt'
     cmds:
-      - echo "{{.WIN_PATH | toSlash}}"    # C:/Users/name/file.txt (on Windows)
+      - echo "{{.WIN_PATH | toSlash}}" # C:/Users/name/file.txt (on Windows)
 ```
 
 #### `joinPath`
+
 Join path elements
+
 ```yaml
 tasks:
   build:
@@ -636,7 +697,9 @@ tasks:
 ```
 
 #### `relPath`
+
 Get relative path
+
 ```yaml
 tasks:
   info:
@@ -647,7 +710,9 @@ tasks:
 ### String Processing
 
 #### `splitLines`
+
 Split on newlines (Unix and Windows)
+
 ```yaml
 tasks:
   process:
@@ -664,7 +729,9 @@ tasks:
 ```
 
 #### `catLines`
+
 Replace newlines with spaces
+
 ```yaml
 tasks:
   flatten:
@@ -673,23 +740,27 @@ tasks:
         hello
         world
     cmds:
-      - echo "{{.MULTILINE | catLines}}"  # "hello world"
+      - echo "{{.MULTILINE | catLines}}" # "hello world"
 ```
 
 #### `shellQuote` (alias: `q`)
+
 Quote for shell safety
+
 ```yaml
 tasks:
   safe:
     vars:
-      FILENAME: "file with spaces.txt"
+      FILENAME: 'file with spaces.txt'
     cmds:
       - ls -la {{.FILENAME | shellQuote}}
-      - cat {{.FILENAME | q}}  # Short alias
+      - cat {{.FILENAME | q}} # Short alias
 ```
 
 #### `splitArgs`
+
 Parse shell arguments
+
 ```yaml
 tasks:
   parse:
@@ -705,7 +776,9 @@ tasks:
 ### Data Functions
 
 #### `merge`
+
 Merge maps
+
 ```yaml
 tasks:
   config:
@@ -721,7 +794,9 @@ tasks:
 ```
 
 #### `spew`
+
 Debug variable contents
+
 ```yaml
 tasks:
   debug:
@@ -737,7 +812,9 @@ tasks:
 ### YAML Functions
 
 #### `fromYaml` / `toYaml`
+
 YAML encoding/decoding
+
 ```yaml
 tasks:
   yaml-demo:
@@ -754,7 +831,9 @@ tasks:
 ### Utility Functions
 
 #### `uuid`
+
 Generate UUID
+
 ```yaml
 tasks:
   deploy:
@@ -765,7 +844,9 @@ tasks:
 ```
 
 #### `randIntN`
+
 Generate random integer
+
 ```yaml
 tasks:
   test:
@@ -865,19 +946,19 @@ vars:
   PLATFORMS:
     - os: linux
       arch: amd64
-      cgo: "1"
+      cgo: '1'
     - os: linux
       arch: arm64
-      cgo: "0"
+      cgo: '0'
     - os: windows
       arch: amd64
-      cgo: "1"
+      cgo: '1'
     - os: darwin
       arch: amd64
-      cgo: "1"
+      cgo: '1'
     - os: darwin
       arch: arm64
-      cgo: "0"
+      cgo: '0'
 
 tasks:
   build-all:

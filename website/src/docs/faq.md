@@ -1,6 +1,8 @@
 ---
 title: FAQ
-description: Frequently asked questions about Task, including ETAs, shell limitations, and Windows compatibility
+description:
+  Frequently asked questions about Task, including ETAs, shell limitations, and
+  Windows compatibility
 outline: deep
 ---
 
@@ -103,7 +105,8 @@ If you want to make your Taskfile fully cross-platform, you'll need to work
 around this limitation using one of the following methods:
 
 - Use the <span v-pre>`{{OS}}`</span> function to run an OS-specific script.
-- Use something like <span v-pre>`{{if eq OS "windows"}}powershell {{end}}<my_cmd>`</span> to
+- Use something like
+  <span v-pre>`{{if eq OS "windows"}}powershell {{end}}<my_cmd>`</span> to
   detect windows and run the command in Powershell directly.
 - Use a shell on Windows that supports these commands as builtins, such as [Git
   Bash][git-bash] or [WSL][wsl].

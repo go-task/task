@@ -10,8 +10,9 @@ Task offers many installation methods. Check out the available methods below.
 
 ::: info
 
-Some of the methods below are marked as ![Community](https://img.shields.io/badge/Community%20Owned-orange). This means they
-are not maintained by the Task team and may not be up-to-date.
+Some of the methods below are marked as
+![Community](https://img.shields.io/badge/Community%20Owned-orange). This means
+they are not maintained by the Task team and may not be up-to-date.
 
 :::
 
@@ -19,15 +20,17 @@ are not maintained by the Task team and may not be up-to-date.
 
 ### [Homebrew](https://brew.sh) ![macOS](https://img.shields.io/badge/MacOS-000000?logo=apple&logoColor=F0F0F0) ![Linux](https://img.shields.io/badge/Linux-FCC624?logo=linux&logoColor=black) {#homebrew}
 
-Task is available via our official Homebrew tap [[source](https://github.com/go-task/homebrew-tap/blob/main/Formula/go-task.rb)]:
+Task is available via our official Homebrew tap
+[[source](https://github.com/go-task/homebrew-tap/blob/main/Formula/go-task.rb)]:
 
 ```shell
 brew install go-task/tap/go-task
 ```
 
-Alternatively it can be installed from the official Homebrew
-repository [[package](https://formulae.brew.sh/formula/go-task)]
-[[source](https://github.com/Homebrew/homebrew-core/blob/master/Formula/g/go-task.rb)] by running:
+Alternatively it can be installed from the official Homebrew repository
+[[package](https://formulae.brew.sh/formula/go-task)]
+[[source](https://github.com/Homebrew/homebrew-core/blob/master/Formula/g/go-task.rb)]
+by running:
 
 ```shell
 brew install go-task
@@ -35,7 +38,9 @@ brew install go-task
 
 ### [Macports](https://macports.org) ![macOS](https://img.shields.io/badge/MacOS-000000?logo=apple&logoColor=F0F0F0) ![Community](https://img.shields.io/badge/Community%20Owned-orange) {#macports}
 
-Task repository is tracked by Macports [[package](https://ports.macports.org/port/go-task/details/)] [[source](https://github.com/macports/macports-ports/blob/master/devel/go-task/Portfile)]:
+Task repository is tracked by Macports
+[[package](https://ports.macports.org/port/go-task/details/)]
+[[source](https://github.com/macports/macports-ports/blob/master/devel/go-task/Portfile)]:
 
 ```shell
 port install go-task
@@ -43,8 +48,10 @@ port install go-task
 
 ### [Snap](https://snapcraft.io/task) ![macOS](https://img.shields.io/badge/MacOS-000000?logo=apple&logoColor=F0F0F0) ![Linux](https://img.shields.io/badge/Linux-FCC624?logo=linux&logoColor=black) {#snap}
 
-Task is available on [Snapcraft](https://snapcraft.io/task) [[source](https://github.com/go-task/snap/blob/main/snap/snapcraft.yaml)], but keep in mind that your Linux
-distribution should allow classic confinement for Snaps to Task work correctly:
+Task is available on [Snapcraft](https://snapcraft.io/task)
+[[source](https://github.com/go-task/snap/blob/main/snap/snapcraft.yaml)], but
+keep in mind that your Linux distribution should allow classic confinement for
+Snaps to Task work correctly:
 
 ```shell
 sudo snap install task --classic
@@ -54,7 +61,8 @@ sudo snap install task --classic
 
 Npm can be used as cross-platform way to install Task globally or as a
 dependency of your project
-[[package](https://www.npmjs.com/package/@go-task/cli)] [[source](https://github.com/go-task/task/blob/main/package.json)]:
+[[package](https://www.npmjs.com/package/@go-task/cli)]
+[[source](https://github.com/go-task/task/blob/main/package.json)]:
 
 ```shell
 npm install -g @go-task/cli
@@ -63,7 +71,8 @@ npm install -g @go-task/cli
 ### [pip](https://pip.pypa.io) ![macOS](https://img.shields.io/badge/MacOS-000000?logo=apple&logoColor=F0F0F0) ![Linux](https://img.shields.io/badge/Linux-FCC624?logo=linux&logoColor=black) ![Windows](https://custom-icon-badges.demolab.com/badge/Windows-0078D6?logo=windows11&logoColor=white) ![Community](https://img.shields.io/badge/Community%20Owned-orange) {#pip}
 
 Like npm, pip can be used as a cross-platform way to install Task
-[[package](https://pypi.org/project/go-task-bin)] [[source](https://github.com/Bing-su/pip-binary-factory/tree/main/task)]:
+[[package](https://pypi.org/project/go-task-bin)]
+[[source](https://github.com/Bing-su/pip-binary-factory/tree/main/task)]:
 
 ```shell
 pip install go-task-bin
@@ -71,7 +80,9 @@ pip install go-task-bin
 
 ### [WinGet](https://github.com/microsoft/winget-cli) ![Windows](https://custom-icon-badges.demolab.com/badge/Windows-0078D6?logo=windows11&logoColor=white) {#winget}
 
-Task is available via the [community repository](https://github.com/microsoft/winget-pkgs) [[source](https://github.com/microsoft/winget-pkgs/tree/master/manifests/t/Task/Task)]:
+Task is available via the
+[community repository](https://github.com/microsoft/winget-pkgs)
+[[source](https://github.com/microsoft/winget-pkgs/tree/master/manifests/t/Task/Task)]:
 
 ```shell
 winget install Task.Task
@@ -79,7 +90,8 @@ winget install Task.Task
 
 ### [Chocolatey](https://chocolatey.org) ![Windows](https://custom-icon-badges.demolab.com/badge/Windows-0078D6?logo=windows11&logoColor=white) ![Community](https://img.shields.io/badge/Community%20Owned-orange) {#chocolatey}
 
-[[package](https://community.chocolatey.org/packages/go-task)] [[source](https://github.com/Starz0r/ChocolateyPackagingScripts/blob/master/src/go-task_gh_build.py)]
+[[package](https://community.chocolatey.org/packages/go-task)]
+[[source](https://github.com/Starz0r/ChocolateyPackagingScripts/blob/master/src/go-task_gh_build.py)]
 
 ```shell
 choco install go-task
@@ -95,7 +107,8 @@ scoop install task
 
 ### Arch ([pacman](https://wiki.archlinux.org/title/Pacman)) ![Arch Linux](https://img.shields.io/badge/Arch%20Linux-1793D1?logo=arch-linux&logoColor=fff) ![Community](https://img.shields.io/badge/Community%20Owned-orange) {#arch}
 
-[[package](https://archlinux.org/packages/extra/x86_64/go-task/)] [[source](https://gitlab.archlinux.org/archlinux/packaging/packages/go-task)]
+[[package](https://archlinux.org/packages/extra/x86_64/go-task/)]
+[[source](https://gitlab.archlinux.org/archlinux/packaging/packages/go-task)]
 
 ```shell
 pacman -S go-task
@@ -103,7 +116,8 @@ pacman -S go-task
 
 ### Fedora ([dnf](https://docs.fedoraproject.org/en-US/quick-docs/dnf)) ![Fedora](https://img.shields.io/badge/Fedora-51A2DA?logo=fedora&logoColor=fff) ![Community](https://img.shields.io/badge/Community%20Owned-orange) {#fedora}
 
-[[package](https://packages.fedoraproject.org/pkgs/golang-github-task/go-task/)] [[source](https://src.fedoraproject.org/rpms/golang-github-task)]
+[[package](https://packages.fedoraproject.org/pkgs/golang-github-task/go-task/)]
+[[source](https://src.fedoraproject.org/rpms/golang-github-task)]
 
 ```shell
 dnf install go-task
@@ -111,7 +125,8 @@ dnf install go-task
 
 ### FreeBSD ([Ports](https://ports.freebsd.org/cgi/ports.cgi)) ![FreeBSD](https://img.shields.io/badge/FreeBSD-990000?logo=freebsd&logoColor=fff) ![Community](https://img.shields.io/badge/Community%20Owned-orange) {#freebsd}
 
-[[package](https://cgit.freebsd.org/ports/tree/devel/task)] [[source](https://cgit.freebsd.org/ports/tree/devel/task/Makefile)]
+[[package](https://cgit.freebsd.org/ports/tree/devel/task)]
+[[source](https://cgit.freebsd.org/ports/tree/devel/task/Makefile)]
 
 ```shell
 pkg install task
@@ -127,7 +142,8 @@ nix-env -iA nixpkgs.go-task
 
 ### [pacstall](https://github.com/pacstall/pacstall) ![Debian](https://img.shields.io/badge/Debian-A81D33?logo=debian&logoColor=fff) ![Ubuntu](https://img.shields.io/badge/Ubuntu-E95420?logo=ubuntu&logoColor=fff) ![Community](https://img.shields.io/badge/Community%20Owned-orange) {#pacstall}
 
-[[package](https://pacstall.dev/packages/go-task-deb)] [[source](https://github.com/pacstall/pacstall-programs/blob/master/packages/go-task-deb/go-task-deb.pacscript)]
+[[package](https://pacstall.dev/packages/go-task-deb)]
+[[source](https://github.com/pacstall/pacstall-programs/blob/master/packages/go-task-deb/go-task-deb.pacscript)]
 
 ```shell
 pacstall -I go-task-deb
@@ -135,7 +151,8 @@ pacstall -I go-task-deb
 
 ### [pkgx](https://pkgx.sh) ![macOS](https://img.shields.io/badge/MacOS-000000?logo=apple&logoColor=F0F0F0) ![Linux](https://img.shields.io/badge/Linux-FCC624?logo=linux&logoColor=black) ![Community](https://img.shields.io/badge/Community%20Owned-orange) {#pkgx}
 
-[[package](https://pkgx.dev/pkgs/taskfile.dev)] [[source](https://github.com/pkgxdev/pantry/blob/main/projects/taskfile.dev/package.yml)]
+[[package](https://pkgx.dev/pkgs/taskfile.dev)]
+[[source](https://github.com/pkgxdev/pantry/blob/main/projects/taskfile.dev/package.yml)]
 
 ```shell
 pkgx task
@@ -151,8 +168,9 @@ task
 
 ### Binary
 
-You can download the binary from the [releases page on GitHub](https://github.com/go-task/task/releases) and add
-to your `$PATH`.
+You can download the binary from the
+[releases page on GitHub](https://github.com/go-task/task/releases) and add to
+your `$PATH`.
 
 DEB and RPM packages are also available.
 
@@ -160,9 +178,11 @@ The `task_checksums.txt` file contains the SHA-256 checksum for each file.
 
 ### Install Script
 
-We also have an [install script](https://github.com/go-task/task/blob/main/install-task.sh) which is very useful in
-scenarios like CI. Many thanks to [GoDownloader](https://github.com/goreleaser/godownloader) for enabling the
-easy generation of this script.
+We also have an
+[install script](https://github.com/go-task/task/blob/main/install-task.sh)
+which is very useful in scenarios like CI. Many thanks to
+[GoDownloader](https://github.com/goreleaser/godownloader) for enabling the easy
+generation of this script.
 
 By default, it installs on the `./bin` directory relative to the working
 directory:
@@ -186,15 +206,16 @@ default.
 
 :::
 
-By default, it installs the latest version available.
-You can also specify a tag (available in [releases](https://github.com/go-task/task/releases))
-to install a specific version:
+By default, it installs the latest version available. You can also specify a tag
+(available in [releases](https://github.com/go-task/task/releases)) to install a
+specific version:
 
 ```shell
 sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d v3.36.0
 ```
 
 Parameters are order specific, to set both installation directory and version:
+
 ```shell
 sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d -b ~/.local/bin v3.42.1
 ```
@@ -218,8 +239,8 @@ This installation method is community owned.
 
 ### Go Modules
 
-Ensure that you have a supported version of [Go](https://golang.org) properly installed and
-setup. You can find the minimum required version of Go in the
+Ensure that you have a supported version of [Go](https://golang.org) properly
+installed and setup. You can find the minimum required version of Go in the
 [go.mod](https://github.com/go-task/task/blob/main/go.mod#L3) file.
 
 You can then install the latest release globally by running:

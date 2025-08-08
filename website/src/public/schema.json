@@ -276,7 +276,14 @@
         "^.*$": {
           "anyOf": [
             {
-              "type": ["boolean", "integer", "null", "number", "string", "array"]
+              "type": [
+                "boolean",
+                "integer",
+                "null",
+                "number",
+                "string",
+                "array"
+              ]
             },
             {
               "$ref": "#/definitions/var_subkey"
@@ -416,10 +423,7 @@
           "$ref": "#/definitions/platforms"
         }
       },
-      "oneOf": [
-        {"required": ["cmd"]},
-        {"required": ["task"]}
-      ],
+      "oneOf": [{ "required": ["cmd"] }, { "required": ["task"] }],
       "additionalProperties": false,
       "required": ["for"]
     },
@@ -442,10 +446,7 @@
           "$ref": "#/definitions/vars"
         }
       },
-      "oneOf": [
-        {"required": ["cmd"]},
-        {"required": ["task"]}
-      ],
+      "oneOf": [{ "required": ["cmd"] }, { "required": ["task"] }],
       "additionalProperties": false,
       "required": ["for"]
     },
@@ -592,8 +593,7 @@
                 "type": "object",
                 "properties": {
                   "name": { "type": "string" },
-                  "enum": { "type": "array",
-                    "items": { "type": "string" } }
+                  "enum": { "type": "array", "items": { "type": "string" } }
                 },
                 "required": ["name", "enum"],
                 "additionalProperties": false

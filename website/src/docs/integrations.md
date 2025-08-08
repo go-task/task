@@ -1,6 +1,8 @@
 ---
 title: Integrations
-description: Official and community integrations for Task, including VS Code, JSON schemas, and other tools
+description:
+  Official and community integrations for Task, including VS Code, JSON schemas,
+  and other tools
 outline: deep
 ---
 

@@ -35,11 +35,12 @@ the file tree until it finds one (similar to how `git` works). When running Task
 from a subdirectory like this, it will behave as if you ran it from the
 directory containing the Taskfile.
 
-You can use this functionality along with the special <span v-pre>`{{.USER_WORKING_DIR}}`</span>
-variable to create some very useful reusable tasks. For example, if you have a
-monorepo with directories for each microservice, you can `cd` into a
-microservice directory and run a task command to bring it up without having to
-create multiple tasks or Taskfiles with identical content. For example:
+You can use this functionality along with the special
+<span v-pre>`{{.USER_WORKING_DIR}}`</span> variable to create some very useful
+reusable tasks. For example, if you have a monorepo with directories for each
+microservice, you can `cd` into a microservice directory and run a task command
+to bring it up without having to create multiple tasks or Taskfiles with
+identical content. For example:
 
 ```yaml
 version: '3'
@@ -70,9 +71,9 @@ This is useful to have automation that you can run from anywhere in your system!
 When running your global Taskfile with `-g`, tasks will run on `$HOME` by
 default, and not on your working directory!
 
-As mentioned in the previous section, the <span v-pre>`{{.USER_WORKING_DIR}}`</span> special
-variable can be very handy here to run stuff on the directory you're calling
-`task -g` from.
+As mentioned in the previous section, the
+<span v-pre>`{{.USER_WORKING_DIR}}`</span> special variable can be very handy
+here to run stuff on the directory you're calling `task -g` from.
 
 ```yaml
 version: '3'
@@ -158,7 +159,6 @@ ENDPOINT=testing.com
 ```
 
 :::
-
 
 ```yaml
 version: '3'
@@ -306,8 +306,9 @@ includes:
 
 ### Flatten includes
 
-You can flatten the included Taskfile tasks into the main Taskfile by using the `flatten` option.
-It means that the included Taskfile tasks will be available without the namespace.
+You can flatten the included Taskfile tasks into the main Taskfile by using the
+`flatten` option. It means that the included Taskfile tasks will be available
+without the namespace.
 
 ::: code-group
 
@@ -347,7 +348,8 @@ task: Available tasks for this project:
 
 You can run `task foo` directly without the namespace.
 
-You can also reference the task in other tasks without the namespace. So if you run `task greet` it will run `greet` and `foo` tasks and the output will be :
+You can also reference the task in other tasks without the namespace. So if you
+run `task greet` it will run `greet` and `foo` tasks and the output will be :
 
 ```text
 Greet
@@ -384,18 +386,21 @@ tasks:
 :::
 
 If you run `task -a` it will print:
+
 ```text
 task: Found multiple tasks (greet) included by "lib"
 ```
 
-If the included Taskfile has a task with the same name as a task in the main Taskfile,
-you may want to exclude it from the flattened tasks.
+If the included Taskfile has a task with the same name as a task in the main
+Taskfile, you may want to exclude it from the flattened tasks.
 
-You can do this by using the [`excludes` option](#exclude-tasks-from-being-included).
+You can do this by using the
+[`excludes` option](#exclude-tasks-from-being-included).
 
 ### Exclude tasks from being included
 
-You can exclude tasks from being included by using the `excludes` option. This option takes the list of tasks to be excluded from this include.
+You can exclude tasks from being included by using the `excludes` option. This
+option takes the list of tasks to be excluded from this include.
 
 ::: code-group
 
@@ -417,7 +422,8 @@ tasks:
 
 :::
 
-`task included:foo` will throw an error because the `foo` task is excluded but `task included:bar` will work and display `Bar`.
+`task included:foo` will throw an error because the `foo` task is excluded but
+`task included:bar` will work and display `Bar`.
 
 It's compatible with the `flatten` option.
 
@@ -790,7 +796,7 @@ At the root level of the Taskfile to apply it globally to all tasks:
 ```yaml
 version: '3'
 
-method: timestamp  # Will be the default for all tasks
+method: timestamp # Will be the default for all tasks
 
 tasks:
   build:
@@ -880,12 +886,14 @@ tasks that generate remote artifacts (Docker images, deploys, CD releases) the
 checksum source and timestamps require either access to the artifact or for an
 out-of-band refresh of the `.checksum` fingerprint file.
 
-Two special variables <span v-pre>`{{.CHECKSUM}}`</span> and <span v-pre>`{{.TIMESTAMP}}`</span> are available for
-interpolation within `cmds` and `status` commands, depending on the method assigned to
-fingerprint the sources. Only `source` globs are fingerprinted.
+Two special variables <span v-pre>`{{.CHECKSUM}}`</span> and
+<span v-pre>`{{.TIMESTAMP}}`</span> are available for interpolation within
+`cmds` and `status` commands, depending on the method assigned to fingerprint
+the sources. Only `source` globs are fingerprinted.
 
-Note that the <span v-pre>`{{.TIMESTAMP}}`</span> variable is a "live" Go `time.Time` struct, and
-can be formatted using any of the methods that `time.Time` responds to.
+Note that the <span v-pre>`{{.TIMESTAMP}}`</span> variable is a "live" Go
+`time.Time` struct, and can be formatted using any of the methods that
+`time.Time` responds to.
 
 See [the Go Time documentation](https://golang.org/pkg/time/) for more
 information.
@@ -893,8 +901,9 @@ information.
 You can use `--force` or `-f` if you want to force a task to run even when
 up-to-date.
 
-Also, `task --status [tasks]...` will exit with a non-zero [exit
-code](/reference/cli.md#exit-codes) if any of the tasks are not up-to-date.
+Also, `task --status [tasks]...` will exit with a non-zero
+[exit code](/reference/cli.md#exit-codes) if any of the tasks are not
+up-to-date.
 
 `status` can be combined with the
 [fingerprinting](#by-fingerprinting-locally-generated-files-and-their-sources)
@@ -1057,11 +1066,16 @@ tasks:
 
 ### Ensuring required variables have allowed values
 
-If you want to ensure that a variable is set to one of a predefined set of valid values before executing a task, you can use requires.
-This is particularly useful when there are strict requirements for what values a variable can take, and you want to provide clear feedback to the user when an invalid value is detected.
+If you want to ensure that a variable is set to one of a predefined set of valid
+values before executing a task, you can use requires. This is particularly
+useful when there are strict requirements for what values a variable can take,
+and you want to provide clear feedback to the user when an invalid value is
+detected.
 
-To use `requires`, you specify an array of allowed values in the vars sub-section under requires. Task will check if the variable is set to one of the allowed values.
-If the variable does not match any of these values, the task will raise an error and stop execution.
+To use `requires`, you specify an array of allowed values in the vars
+sub-section under requires. Task will check if the variable is set to one of the
+allowed values. If the variable does not match any of these values, the task
+will raise an error and stop execution.
 
 This check applies both to user-defined variables and environment variables.
 
@@ -1119,16 +1133,16 @@ tasks:
       FLOAT: 3.14
       ARRAY: [1, 2, 3]
       MAP:
-        map: {A: 1, B: 2, C: 3}
+        map: { A: 1, B: 2, C: 3 }
     cmds:
-      - 'echo {{.STRING}}'        # Hello, World!
-      - 'echo {{.BOOL}}'          # true
-      - 'echo {{.INT}}'           # 42
-      - 'echo {{.FLOAT}}'         # 3.14
-      - 'echo {{.ARRAY}}'         # [1 2 3]
+      - 'echo {{.STRING}}' # Hello, World!
+      - 'echo {{.BOOL}}' # true
+      - 'echo {{.INT}}' # 42
+      - 'echo {{.FLOAT}}' # 3.14
+      - 'echo {{.ARRAY}}' # [1 2 3]
       - 'echo {{index .ARRAY 0}}' # 1
-      - 'echo {{.MAP}}'           # map[A:1 B:2 C:3]
-      - 'echo {{.MAP.A}}'         # 1
+      - 'echo {{.MAP}}' # map[A:1 B:2 C:3]
+      - 'echo {{.MAP.A}}' # 1
 ```
 
 Variables can be set in many places in a Taskfile. When executing
@@ -1199,7 +1213,7 @@ version: '3'
 
 tasks:
   greet_user:
-    desc: "Greet the user with a name."
+    desc: 'Greet the user with a name.'
     vars:
       USER_NAME: '{{.USER_NAME| default "DefaultUser"}}'
     cmds:
@@ -1237,10 +1251,10 @@ This works for all types of variables.
 
 ### Referencing other variables
 
-Templating is great for referencing string values if you want to pass
-a value from one task to another. However, the templating engine is only able to
-output strings. If you want to pass something other than a string to another
-task then you will need to use a reference (`ref`) instead.
+Templating is great for referencing string values if you want to pass a value
+from one task to another. However, the templating engine is only able to output
+strings. If you want to pass something other than a string to another task then
+you will need to use a reference (`ref`) instead.
 
 ::: code-group
 
@@ -1279,8 +1293,8 @@ tasks:
 
 :::
 
-This also works the same way when calling `deps` and when defining
-a variable and can be used in any combination:
+This also works the same way when calling `deps` and when defining a variable
+and can be used in any combination:
 
 ```yaml
 version: 3
@@ -1337,7 +1351,7 @@ tasks:
     vars:
       JSON: '{"a": 1, "b": 2, "c": 3}'
       FOO:
-        ref: "fromJson .JSON"
+        ref: 'fromJson .JSON'
     cmds:
       - echo {{.FOO}}
 ```
@@ -1382,9 +1396,11 @@ tasks:
     cmds:
       - for:
           matrix:
-            OS: ["windows", "linux", "darwin"]
-            ARCH: ["amd64", "arm64"]
-        cmd: echo "<span v-pre>{{.ITEM.OS}}</span>/<span v-pre>{{.ITEM.ARCH}}</span>"
+            OS: ['windows', 'linux', 'darwin']
+            ARCH: ['amd64', 'arm64']
+        cmd:
+          echo "<span v-pre>{{.ITEM.OS}}</span>/<span
+          v-pre>{{.ITEM.ARCH}}</span>"
 ```
 
 This will output:
@@ -1401,11 +1417,11 @@ darwin/arm64
 You can also use references to other variables as long as they are also lists:
 
 ```yaml
-version: "3"
+version: '3'
 
 vars:
-  OS_VAR: ["windows", "linux", "darwin"]
-  ARCH_VAR: ["amd64", "arm64"]
+  OS_VAR: ['windows', 'linux', 'darwin']
+  ARCH_VAR: ['amd64', 'arm64']
 
 tasks:
   default:
@@ -1416,7 +1432,9 @@ tasks:
               ref: .OS_VAR
             ARCH:
               ref: .ARCH_VAR
-        cmd: echo "<span v-pre>{{.ITEM.OS}}</span>/<span v-pre>{{.ITEM.ARCH}}</span>"
+        cmd:
+          echo "<span v-pre>{{.ITEM.OS}}</span>/<span
+          v-pre>{{.ITEM.ARCH}}</span>"
 ```
 
 ### Looping over your task's sources or generated files
@@ -1460,9 +1478,9 @@ files that match that glob.
 
 Paths will always be returned as paths relative to the task directory. If you
 need to convert this to an absolute path, you can use the built-in `joinPath`
-function. There are some [special
-variables](/reference/templating#special-variables) that you may find useful
-for this.
+function. There are some
+[special variables](/reference/templating#special-variables) that you may find
+useful for this.
 
 ::: code-group
 
@@ -1548,9 +1566,9 @@ tasks:
         cmd: echo <span v-pre>{{.ITEM}}</span>
 ```
 
-When looping over a map we also make an additional <span v-pre>`{{.KEY}}`</span> variable available
-that holds the string value of the map key. Remember that maps are unordered, so
-the order in which the items are looped over is random.
+When looping over a map we also make an additional <span v-pre>`{{.KEY}}`</span>
+variable available that holds the string value of the map key. Remember that
+maps are unordered, so the order in which the items are looped over is random.
 
 All of this also works with dynamic variables!
 
@@ -1701,14 +1719,15 @@ version: '3'
 tasks:
   start:*:*:
     vars:
-      SERVICE: "<span v-pre>{{index .MATCH 0}}</span>"
-      REPLICAS: "<span v-pre>{{index .MATCH 1}}</span>"
+      SERVICE: '<span v-pre>{{index .MATCH 0}}</span>'
+      REPLICAS: '<span v-pre>{{index .MATCH 1}}</span>'
     cmds:
-      - echo "Starting <span v-pre>{{.SERVICE}}</span> with <span v-pre>{{.REPLICAS}}</span> replicas"
+      - echo "Starting <span v-pre>{{.SERVICE}}</span> with <span
+        v-pre>{{.REPLICAS}}</span> replicas"
 
   start:*:
     vars:
-      SERVICE: "<span v-pre>{{index .MATCH 0}}</span>"
+      SERVICE: '<span v-pre>{{index .MATCH 0}}</span>'
     cmds:
       - echo "Starting <span v-pre>{{.SERVICE}}</span>"
 ```
@@ -1792,7 +1811,10 @@ version: '3'
 tasks:
   default:
     cmds:
-      - defer: echo '<span v-pre>{{if .EXIT_CODE}}</span>Failed with <span v-pre>{{.EXIT_CODE}}</span>!<span v-pre>{{else}}</span>Success!<span v-pre>{{end}}</span>'
+      - defer:
+          echo '<span v-pre>{{if .EXIT_CODE}}</span>Failed with <span
+          v-pre>{{.EXIT_CODE}}</span>!<span v-pre>{{else}}</span>Success!<span
+          v-pre>{{end}}</span>'
       - exit 1
 ```
 
@@ -1977,8 +1999,8 @@ tasks:
 
   dangerous:
     prompt:
-     - This is a dangerous command... Do you want to continue?
-     - Are you sure?
+      - This is a dangerous command... Do you want to continue?
+      - Are you sure?
     cmds:
       - echo 'dangerous command'
 ```
@@ -2322,9 +2344,9 @@ which files to watch.
 
 The default watch interval is 100 milliseconds, but it's possible to change it
 by either setting `interval: '500ms'` in the root of the Taskfile or by passing
-it as an argument like `--interval=500ms`.
-This interval is the time Task will wait for duplicated events. It will only run
-the task again once, even if multiple changes happen within the interval.
+it as an argument like `--interval=500ms`. This interval is the time Task will
+wait for duplicated events. It will only run the task again once, even if
+multiple changes happen within the interval.
 
 Also, it's possible to set `watch: true` in a given task and it'll automatically
 run in watch mode:
@@ -2355,10 +2377,9 @@ if called by another task, either directly or as a dependency.
 ::: warning
 
 The watcher can misbehave in certain scenarios, in particular for long-running
-servers.
-There is a known bug where child processes of the running might not be killed
-appropriately. It's advised to avoid running commands as `go run` and prefer
-`go build [...] && ./binary` instead.
+servers. There is a known bug where child processes of the running might not be
+killed appropriately. It's advised to avoid running commands as `go run` and
+prefer `go build [...] && ./binary` instead.
 
 If you are having issues, you might want to try tools specifically designed for
 live-reloading, like [Air](https://github.com/air-verse/air/). Also, be sure to

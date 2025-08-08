@@ -1,6 +1,8 @@
 ---
 title: Community
-description: Task community contributions, installation methods, and integrations maintained by third parties
+description:
+  Task community contributions, installation methods, and integrations
+  maintained by third parties
 outline: deep
 ---
 

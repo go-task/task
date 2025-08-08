@@ -1,6 +1,8 @@
 ---
 title: Taskfile Versions
-description: How to use the Taskfile schema version to ensure users are using the correct versions of Task
+description:
+  How to use the Taskfile schema version to ensure users are using the correct
+  versions of Task
 outline: deep
 ---
 

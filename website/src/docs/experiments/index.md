@@ -49,18 +49,18 @@ Which method you use depends on how you intend to use the experiment:
    export TASK_X_FEATURE=1
    ```
 
-3. Creating a `.env` or a `.taskrc.yml` file in the same directory as
-   your root Taskfile.\
-   The `.env` file should contain the relevant environment
-   variable(s), while the `.taskrc.yml` file should use a YAML format
-   where each experiment is defined as a key with a corresponding value.
+3. Creating a `.env` or a `.taskrc.yml` file in the same directory as your root
+   Taskfile.\
+   The `.env` file should contain the relevant environment variable(s), while
+   the `.taskrc.yml` file should use a YAML format where each experiment is
+   defined as a key with a corresponding value.
 
    This allows you to enable an experimental feature at a project level. If you
    commit this file to source control, then other users of your project will
    also have these experiments enabled.
 
-   If both files are present, the values in the `.taskrc.yml` file
-   will take precedence.
+   If both files are present, the values in the `.taskrc.yml` file will take
+   precedence.
 
 ::: code-group
 
@@ -136,13 +136,13 @@ version.
 
 ### 5. Released
 
-When making a new major release of Task, all experiments marked as `status:
-stable` will move to `status: released` and their behaviors will become the new
-default in Task. Experiments in an earlier stage (i.e. not stable) cannot be
-released and so will continue to be experiments in the new version.
+When making a new major release of Task, all experiments marked as
+`status: stable` will move to `status: released` and their behaviors will become
+the new default in Task. Experiments in an earlier stage (i.e. not stable)
+cannot be released and so will continue to be experiments in the new version.
 
 ### Abandoned / Superseded
 
-If an experiment is unsuccessful at any point then it will be given the `status:
-abandoned` or `status: superseded` labels depending on which is more suitable.
-These experiments will be removed from Task.
+If an experiment is unsuccessful at any point then it will be given the
+`status: abandoned` or `status: superseded` labels depending on which is more
+suitable. These experiments will be removed from Task.

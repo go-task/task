@@ -1,6 +1,8 @@
 ---
 title: Contributing
-description: Comprehensive guide for contributing to the Task project, including setup, development, testing, and submitting PRs
+description:
+  Comprehensive guide for contributing to the Task project, including setup,
+  development, testing, and submitting PRs
 outline: deep
 ---
 
@@ -28,9 +30,10 @@ Studio Code][vscode-task].
   you invest your time into a PR.
 - **Experiments** - If there is no way to make your change backward compatible
   then there is a procedure to introduce breaking changes into minor versions.
-  We call these "[experiments](/experiments/)". If you're intending to work on an
-  experiment, then please read the [experiments workflow](/experiments/#workflow)
-  document carefully and submit a proposal first.
+  We call these "[experiments](/experiments/)". If you're intending to work on
+  an experiment, then please read the
+  [experiments workflow](/experiments/#workflow) document carefully and submit a
+  proposal first.
 
 ## 1. Setup
 
@@ -50,10 +53,11 @@ Studio Code][vscode-task].
   docs][golangci-lint-docs] for a guide on how to setup your editor to
   auto-format your code. Any Markdown or TypeScript files should be formatted
   and linted by [Prettier][prettier]. This style is enforced by our CI to ensure
-  that we have a consistent style across the project. You can use the `task
-  lint` command to lint the code locally and the `task lint:fix` command to try
-  to automatically fix any issues that are found. You can also use the `task
-  fmt` command to auto-format the files if your editor doesn't do it for you.
+  that we have a consistent style across the project. You can use the
+  `task lint` command to lint the code locally and the `task lint:fix` command
+  to try to automatically fix any issues that are found. You can also use the
+  `task fmt` command to auto-format the files if your editor doesn't do it for
+  you.
 - **Documentation** - Ensure that you add/update any relevant documentation. See
   the [updating documentation](#updating-documentation) section below.
 - **Tests** - Ensure that you add/update any relevant tests and that all tests
@@ -82,17 +86,17 @@ by using `task website` (requires `nodejs` & `yarn`). All content is written in
 directory. All Markdown documents should have an 80 character line wrap limit
 (enforced by Prettier).
 
-When making a change, consider whether a change to the [Usage Guide](/usage.md) is
-necessary. This document contains descriptions and examples of how to use Task
-features. If you're adding a new feature, try to find an appropriate place to
-add a new section. If you're updating an existing feature, ensure that the
+When making a change, consider whether a change to the [Usage Guide](/usage.md)
+is necessary. This document contains descriptions and examples of how to use
+Task features. If you're adding a new feature, try to find an appropriate place
+to add a new section. If you're updating an existing feature, ensure that the
 documentation and any examples are up-to-date. Ensure that any examples follow
 the [Taskfile Styleguide](/styleguide.md).
 
-If you added a new command or flag, ensure that you add it to the [CLI
-Reference](/reference/cli.md). New fields also need to be added to the [Schema
-Reference](/reference/schema.md) and [JSON Schema][json-schema]. The descriptions
-for fields in the docs and the schema should match.
+If you added a new command or flag, ensure that you add it to the
+[CLI Reference](/reference/cli.md). New fields also need to be added to the
+[Schema Reference](/reference/schema.md) and [JSON Schema][json-schema]. The
+descriptions for fields in the docs and the schema should match.
 
 ### Writing tests
 
@@ -164,10 +168,12 @@ If you have questions, feel free to ask them in the `#help` forum channel on our
 [nodejs]: https://nodejs.org/en/
 [yarn]: https://yarnpkg.com/
 [docusaurus]: https://docusaurus.io
-[json-schema]: https://github.com/go-task/task/blob/main/website/static/schema.json
+[json-schema]:
+  https://github.com/go-task/task/blob/main/website/static/schema.json
 [task-open-issues]: https://github.com/go-task/task/issues
 [vscode-task-open-issues]: https://github.com/go-task/vscode-task/issues
-[good-first-issue]: https://github.com/go-task/task/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22
+[good-first-issue]:
+  https://github.com/go-task/task/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22
 [discord-server]: https://discord.gg/6TY36E39UK
 [discussion]: https://github.com/go-task/task/discussions
 [conventional-commits]: https://www.conventionalcommits.org

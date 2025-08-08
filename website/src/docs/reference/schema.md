@@ -1,12 +1,15 @@
 ---
 title: Schema Reference
-description: Complete reference for the Taskfile schema based on the official JSON schema
+description:
+  Complete reference for the Taskfile schema based on the official JSON schema
 outline: deep
 ---
 
 # Schema Reference
 
-This page documents all available properties and types for the Taskfile schema version 3, based on the [official JSON schema](https://taskfile.dev/schema.json).
+This page documents all available properties and types for the Taskfile schema
+version 3, based on the
+[official JSON schema](https://taskfile.dev/schema.json).
 
 ## Root Schema
 
@@ -186,7 +189,8 @@ interval: 1s
 ### `set`
 
 - **Type**: `[]string`
-- **Options**: `allexport`, `a`, `errexit`, `e`, `noexec`, `n`, `noglob`, `f`, `nounset`, `u`, `xtrace`, `x`, `pipefail`
+- **Options**: `allexport`, `a`, `errexit`, `e`, `noexec`, `n`, `noglob`, `f`,
+  `nounset`, `u`, `xtrace`, `x`, `pipefail`
 - **Description**: POSIX shell options for all commands
 
 ```yaml
@@ -322,7 +326,8 @@ includes:
 
 ## Variable
 
-Variables support multiple types and can be static values, dynamic commands, references, or maps.
+Variables support multiple types and can be static values, dynamic commands,
+references, or maps.
 
 ### Static Variables
 
@@ -381,7 +386,7 @@ Variables can reference previously defined variables:
 vars:
   GREETING: Hello
   TARGET: World
-  MESSAGE: "{{.GREETING}} {{.TARGET}}!"
+  MESSAGE: '{{.GREETING}} {{.TARGET}}!'
 ```
 
 ## Task
@@ -470,7 +475,7 @@ tasks:
       - for: [unit, integration, e2e]
         task: test
         vars:
-          TEST_TYPE: "{{.ITEM}}"
+          TEST_TYPE: '{{.ITEM}}'
     cmds:
       - echo "All tests completed"
 ```
@@ -539,10 +544,10 @@ tasks:
 tasks:
   build:
     sources:
-      - "**/*.go"
+      - '**/*.go'
       - go.mod
       # With exclusions
-      - exclude: "**/*_test.go"
+      - exclude: '**/*_test.go'
     cmds:
       - go build ./...
 ```
@@ -555,10 +560,10 @@ tasks:
 ```yaml
 tasks:
   build:
-    sources: ["**/*.go"]
+    sources: ['**/*.go']
     generates:
-      - "./app"
-      - exclude: "*.debug"
+      - './app'
+      - exclude: '*.debug'
     cmds:
       - go build -o app ./cmd
 ```
@@ -596,7 +601,7 @@ tasks:
   deploy:
     preconditions:
       - sh: test -n "$API_KEY"
-        msg: "API_KEY environment variable is required"
+        msg: 'API_KEY environment variable is required'
       - sh: test -f ./app
         msg: "Application binary not found. Run 'task build' first."
     cmds:
@@ -736,7 +741,7 @@ tasks:
 ```yaml
 tasks:
   process-files:
-    sources: ["*.txt"]
+    sources: ['*.txt']
     cmds:
       - for: sources
         cmd: wc -l {{.ITEM}}
@@ -750,11 +755,11 @@ tasks:
 tasks:
   process-items:
     vars:
-      ITEMS: "item1,item2,item3"
+      ITEMS: 'item1,item2,item3'
     cmds:
       - for:
           var: ITEMS
-          split: ","
+          split: ','
           as: CURRENT
         cmd: echo "Processing {{.CURRENT}}"
 ```
@@ -781,9 +786,8 @@ tasks:
       - for: [frontend, backend, worker]
         task: build
         vars:
-          SERVICE: "{{.ITEM}}"
+          SERVICE: '{{.ITEM}}'
 ```
-
 
 ## Shell Options
 

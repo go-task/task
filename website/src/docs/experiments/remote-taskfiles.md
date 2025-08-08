@@ -17,7 +17,9 @@ environment. They are intended for testing and feedback only.
 ::: info
 
 To enable this experiment, set the environment variable:
-`TASK_X_REMOTE_TASKFILES=1`. Check out [our guide to enabling experiments](/experiments/#enabling-experiments) for more information.
+`TASK_X_REMOTE_TASKFILES=1`. Check out
+[our guide to enabling experiments](/experiments/#enabling-experiments) for more
+information.
 
 :::
 
@@ -59,8 +61,8 @@ git@github.com/go-task/task.git//website/static/Taskfile.yml?ref=main
 This is the most basic type of remote node and works by downloading the file
 from the specified URL. The file must be a valid Taskfile and can be of any
 name. If a file is not found at the specified URL, Task will append each of the
-supported file names in turn until it finds a valid
-file. If it still does not find a valid Taskfile, an error is returned.
+supported file names in turn until it finds a valid file. If it still does not
+find a valid Taskfile, an error is returned.
 
 ### Git over HTTP
 
@@ -73,8 +75,8 @@ This is the same URL that you would use to clone the repo over HTTP.
 - You can optionally add the path to the Taskfile in the repository by appending
   `//<path>` to the URL.
 - You can also optionally specify a branch or tag to use by appending
-  `?ref=<ref>` to the end of the URL. If you omit a reference, the default branch
-  will be used.
+  `?ref=<ref>` to the end of the URL. If you omit a reference, the default
+  branch will be used.
 
 ### Git over SSH
 
@@ -90,11 +92,11 @@ SSH keys added so that they can be used during authentication.
 - You can optionally add the path to the Taskfile in the repository by appending
   `//<path>` to the URL.
 - You can also optionally specify a branch or tag to use by appending
-  `?ref=<ref>` to the end of the URL. If you omit a reference, the default branch
-  will be used.
+  `?ref=<ref>` to the end of the URL. If you omit a reference, the default
+  branch will be used.
 
-Task has an example remote Taskfile in our repository
-that you can use for testing and that we will use throughout this document:
+Task has an example remote Taskfile in our repository that you can use for
+testing and that we will use throughout this document:
 
 ```yaml
 version: '3'
@@ -111,10 +113,10 @@ tasks:
 
 ## Specifying a remote entrypoint
 
-By default, Task will look for one of the supported file
-names on your local filesystem. If you want to use a
-remote file instead, you can pass its URI into the `--taskfile`/`-t` flag just
-like you would to specify a different local file. For example:
+By default, Task will look for one of the supported file names on your local
+filesystem. If you want to use a remote file instead, you can pass its URI into
+the `--taskfile`/`-t` flag just like you would to specify a different local
+file. For example:
 
 ::: code-group
 
@@ -255,9 +257,8 @@ Task currently supports both `http` and `https` URLs. However, the `http`
 requests will not execute by default unless you run the task with the
 `--insecure` flag. This is to protect you from accidentally running a remote
 Taskfile that is downloaded via an unencrypted connection. Sources that are not
-protected by TLS are vulnerable to man-in-the-middle
-attacks and should be avoided unless you know what
-you are doing.
+protected by TLS are vulnerable to man-in-the-middle attacks and should be
+avoided unless you know what you are doing.
 
 ## Caching & Running Offline
 
@@ -281,11 +282,11 @@ the `--timeout` flag and specifying a duration. For example, `--timeout 5s` will
 set the timeout to 5 seconds.
 
 By default, the cache is stored in the Task temp directory, represented by the
-`TASK_TEMP_DIR` environment variable. You can
-override the location of the cache by setting the `TASK_REMOTE_DIR` environment
-variable. This way, you can share the cache between different projects.
+`TASK_TEMP_DIR` environment variable. You can override the location of the cache
+by setting the `TASK_REMOTE_DIR` environment variable. This way, you can share
+the cache between different projects.
 
-You can force Task to ignore the cache and download the latest version
-by using the `--download` flag.
+You can force Task to ignore the cache and download the latest version by using
+the `--download` flag.
 
 You can use the `--clear-cache` flag to clear all cached remote files.

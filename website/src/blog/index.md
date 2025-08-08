@@ -20,6 +20,3 @@ author="pd93"
 description="A look at where Task is, where it's going and how we're going to get there. Lately, Task has been growing extremely quickly and I've found myself thinking a lot about the future of the project and how we continue to evolve and grow. I'm not much of a writer, but I think one of the things we could do better is to communicate these kinds of thoughts to the community."
 :tags="['roadmap', 'experiments', 'community']"
 />
-
-
-

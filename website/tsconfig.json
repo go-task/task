@@ -16,11 +16,6 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": [
-    ".vitepress/**/*",
-    "**/*.vue",
-    "**/*.ts",
-    "**/*.tsx"
-  ],
+  "include": [".vitepress/**/*", "**/*.vue", "**/*.ts", "**/*.tsx"],
   "exclude": ["node_modules"]
 }

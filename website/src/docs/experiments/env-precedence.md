@@ -9,7 +9,8 @@ outline: deep
 
 ::: warning
 
-All experimental features are subject to breaking changes and/or removal _at any time_. We strongly recommend that you do not use these features in a production
+All experimental features are subject to breaking changes and/or removal _at any
+time_. We strongly recommend that you do not use these features in a production
 environment. They are intended for testing and feedback only.
 
 :::
@@ -25,8 +26,9 @@ This experiment breaks the following functionality:
 ::: info
 
 To enable this experiment, set the environment variable:
-`TASK_X_ENV_PRECEDENCE=1`. Check out [our guide to enabling
-experiments](/experiments/#enabling-experiments) for more information.
+`TASK_X_ENV_PRECEDENCE=1`. Check out
+[our guide to enabling experiments](/experiments/#enabling-experiments) for more
+information.
 
 :::
 

@@ -1,6 +1,8 @@
 ---
 title: Releasing
-description: Task release process including GoReleaser, Homebrew, npm, Snapcraft, winget, and other package managers
+description:
+  Task release process including GoReleaser, Homebrew, npm, Snapcraft, winget,
+  and other package managers
 outline: deep
 ---
 
@@ -67,5 +69,6 @@ If you think its Task version is outdated, open an issue to let us know.
 [gotaskrb]: https://github.com/go-task/homebrew-tap/blob/main/Formula/go-task.rb
 [packagejson]: https://github.com/go-task/task/blob/main/package.json#L3
 [snappackage]: https://github.com/go-task/snap
-[snapcraftyaml]: https://github.com/go-task/snap/blob/main/snap/snapcraft.yaml#L2
+[snapcraftyaml]:
+  https://github.com/go-task/snap/blob/main/snap/snapcraft.yaml#L2
 [snapcraftdashboard]: https://snapcraft.io/task/releases
