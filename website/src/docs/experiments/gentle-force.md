@@ -26,7 +26,7 @@ This experiment breaks the following functionality:
 
 To enable this experiment, set the environment variable:
 `TASK_X_GENTLE_FORCE=1`. Check out
-[our guide to enabling experiments](/experiments/#enabling-experiments) for more
+[our guide to enabling experiments](./index.md#enabling-experiments) for more
 information.
 
 :::

@@ -27,7 +27,7 @@ be patient and avoid asking for ETAs.
 
 The best way to speed things up is to contribute to the project yourself. We
 always appreciate new contributors. If you are interested in contributing, check
-out the [contributing guide](/contributing).
+out the [contributing guide](./contributing.md).
 
 ## Why won't my task update my shell environment?
 

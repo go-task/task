@@ -18,7 +18,7 @@ environment. They are intended for testing and feedback only.
 
 To enable this experiment, set the environment variable:
 `TASK_X_REMOTE_TASKFILES=1`. Check out
-[our guide to enabling experiments](/experiments/#enabling-experiments) for more
+[our guide to enabling experiments](./index.md#enabling-experiments) for more
 information.
 
 :::

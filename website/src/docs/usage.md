@@ -902,7 +902,7 @@ You can use `--force` or `-f` if you want to force a task to run even when
 up-to-date.
 
 Also, `task --status [tasks]...` will exit with a non-zero
-[exit code](/reference/cli#exit-codes) if any of the tasks are not up-to-date.
+[exit code](./reference/cli.md#exit-codes) if any of the tasks are not up-to-date.
 
 `status` can be combined with the
 [fingerprinting](#by-fingerprinting-locally-generated-files-and-their-sources)
@@ -1478,7 +1478,7 @@ files that match that glob.
 Paths will always be returned as paths relative to the task directory. If you
 need to convert this to an absolute path, you can use the built-in `joinPath`
 function. There are some
-[special variables](/reference/templating#special-variables) that you may find
+[special variables](./reference/templating.md#special-variables) that you may find
 useful for this.
 
 ::: code-group
@@ -1801,7 +1801,7 @@ commands are executed in the reverse order if you schedule multiple of them.
 :::
 
 A special variable `.EXIT_CODE` is exposed when a command exited with a non-zero
-[exit code](/reference/cli#exit-codes). You can check its presence to know if
+[exit code](./reference/cli.md#exit-codes). You can check its presence to know if
 the task completed successfully or not:
 
 ```yaml
@@ -2005,7 +2005,7 @@ tasks:
 ```
 
 Warning prompts are called before executing a task. If a prompt is denied Task
-will exit with [exit code](/reference/cli#exit-codes) 205. If approved, Task
+will exit with [exit code](./reference/cli.md#exit-codes) 205. If approved, Task
 will continue as normal.
 
 ```shell

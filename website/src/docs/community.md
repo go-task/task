@@ -16,7 +16,7 @@ thankful for everyone that helps me to improve the overall experience.
 
 Many of our integrations are contributed and maintained by the community. You
 can view the full list of community integrations
-[here](/integrations#community-integrations).
+[here](./integrations.md#community-integrations).
 
 ## Installation methods
 
