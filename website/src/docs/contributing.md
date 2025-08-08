@@ -84,7 +84,7 @@ When making a change, consider whether a change to the [Usage Guide](/usage.md) 
 necessary. This document contains descriptions and examples of how to use Task
 features. If you're adding a new feature, try to find an appropriate place to
 add a new section. If you're updating an existing feature, ensure that the
-documentation and any examples are up-to-date. Ensure that any examples follow[contributing.md](/contributing.md)
+documentation and any examples are up-to-date. Ensure that any examples follow
 the [Taskfile Styleguide](/styleguide.md).
 
 If you added a new command or flag, ensure that you add it to the [CLI

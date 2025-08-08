@@ -26,7 +26,7 @@ const members = [
     sponsor: 'https://github.com/sponsors/pd93',
     links: [
       { icon: 'github', link: 'https://github.com/pd93' },
-      { icon: 'x', link: 'https://x.com/youyuxi' }
+      { icon: 'bluesky', link: 'https://bsky.app/profile/pd93.uk' }
     ]
   },
   {

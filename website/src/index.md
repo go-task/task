@@ -21,7 +21,7 @@ hero:
 
 features:
   - title: 30-Second Setup
-    details: Single binary download, zero dependencies. Works with Homebrew, Snapcraft, Scoop.
+    details: Single binary download, zero dependencies. Works with Homebrew, Snapcraft, Scoop and more.
     icon: 🚀
 
   - title: Truly cross-platform
