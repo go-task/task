@@ -257,7 +257,7 @@ version: '3'
 
 includes:
   docs:
-    taskfile: ./Taskfile.yml
+    taskfile: ./docs/Taskfile.yml
     dir: ./docs
 ```
 
