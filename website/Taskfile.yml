@@ -19,6 +19,12 @@ tasks:
     cmds:
       - pnpm dev --host={{.HOST}} --port={{.PORT}}
 
+  lint:
+    desc: Lint website
+    deps: [install]
+    cmds:
+      - pnpm lint
+
   build:
     desc: Build website
     deps: [install]

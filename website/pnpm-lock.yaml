@@ -17,6 +17,9 @@ importers:
       netlify-cli:
         specifier: ^23.1.1
         version: 23.1.1(@types/node@24.1.0)(picomatch@4.0.3)(rollup@4.45.1)
+      prettier:
+        specifier: ^3.6.2
+        version: 3.6.2
       vitepress:
         specifier: ^1.6.3
         version: 1.6.3(@algolia/client-search@5.34.1)(@types/node@24.1.0)(jwt-decode@4.0.0)(postcss@8.5.6)(search-insights@2.17.3)(typescript@5.9.2)
@@ -3554,6 +3557,11 @@ packages:
   precond@0.2.3:
     resolution: {integrity: sha512-QCYG84SgGyGzqJ/vlMsxeXd/pgL/I94ixdNFyh1PusWmTCyVfPJjZ1K1jvHtsbfnXQs2TSkEP2fR7QiMZAnKFQ==}
     engines: {node: '>= 0.6'}
+
+  prettier@3.6.2:
+    resolution: {integrity: sha512-I7AIg5boAr5R0FFtJ6rCfD+LFsWHp81dolrFD8S79U9tb8Az2nGrJncnMSnys+bpQJfRUzqs9hnA81OAA3hCuQ==}
+    engines: {node: '>=14'}
+    hasBin: true
 
   pretty-ms@9.2.0:
     resolution: {integrity: sha512-4yf0QO/sllf/1zbZWYnvWw3NxCQwLXKzIj0G849LSufP15BXKM0rbD2Z3wVnkMfjdn/CB0Dpp444gYAACdsplg==}
@@ -8304,6 +8312,8 @@ snapshots:
       - supports-color
 
   precond@0.2.3: {}
+
+  prettier@3.6.2: {}
 
   pretty-ms@9.2.0:
     dependencies:

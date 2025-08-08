@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vitepress dev",
     "build": "vitepress build",
-    "preview": "vitepress preview"
+    "preview": "vitepress preview",
+    "lint": "prettier --check ."
   },
   "keywords": [],
   "author": "",
@@ -15,6 +16,7 @@
     "@types/markdown-it": "^14.1.2",
     "@types/node": "^24.1.0",
     "netlify-cli": "^23.1.1",
+    "prettier": "^3.6.2",
     "vitepress": "^1.6.3",
     "vitepress-plugin-group-icons": "^1.6.1",
     "vitepress-plugin-tabs": "^0.7.1",
