@@ -1,6 +1,7 @@
 ---
-title: "Remote Taskfiles (#1317)"
-description: Expérimentation pour utiliser des Taskfiles stockés dans des emplacements distants
+title: 'Remote Taskfiles (#1317)'
+description:
+  Experimentation for using Taskfiles stored in remote locations
 outline: deep
 ---
 

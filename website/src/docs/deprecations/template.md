@@ -2,7 +2,7 @@
 # This is a template for deprecation documentation
 # Copy this page and fill in the details as necessary
 title: '--- Template ---'
-description: Template pour documenter les fonctionnalités dépréciées dans Task
+description: Template for documenting deprecated features in Task
 draft: true # Hide in production
 outline: deep
 ---

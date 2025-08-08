@@ -1,6 +1,7 @@
 ---
 title: Experiments
-description: Guide des fonctionnalités expérimentales de Task et comment les utiliser
+description:
+  Guide to Task’s experimental features and how to use them
 outline: deep
 ---
 

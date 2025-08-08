@@ -1,6 +1,7 @@
 ---
-title: "Completion Scripts"
-description: Dépréciation des scripts de completion directs dans le répertoire Git de Task
+title: 'Completion Scripts'
+description:
+  Deprecation of direct completion scripts in Task’s Git directory
 outline: deep
 ---
 

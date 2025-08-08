@@ -1,6 +1,7 @@
 ---
-title: "Env Precedence (#1038)"
-description: Expérimentation pour changer la précédence des variables d'environnement dans Task
+title: 'Env Precedence (#1038)'
+description:
+  Experiment to change the precedence of environment variables in Task
 outline: deep
 ---
 

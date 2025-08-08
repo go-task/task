@@ -1,6 +1,7 @@
 ---
-title: "Gentle Force (#1200)"
-description: Expérimentation pour modifier le comportement du flag --force dans Task
+title: 'Gentle Force (#1200)'
+description:
+  Experiment to modify the behavior of the --force flag in Task
 outline: deep
 ---
 
