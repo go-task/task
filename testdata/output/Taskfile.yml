@@ -1,0 +1,15 @@
+version: '3'
+
+silent: true
+
+tasks:
+  default:
+    deps:
+      - foo 
+      - bar
+  foo:
+    cmds:
+      - bash ping.sh
+  bar:
+    cmds:
+      - bash pong.sh

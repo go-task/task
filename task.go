@@ -1,7 +1,6 @@
 package task
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"os"
@@ -342,10 +341,7 @@ func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call *Call, i in
 		if err != nil {
 			return fmt.Errorf("task: failed to get variables: %w", err)
 		}
-		// Capture stdout to a buffer because when run from a go routine (i.e. deps)
-		// then concurrent writes may occur on the shared e.Stdout.
-		_stdout := bytes.NewBuffer([]byte{})
-		stdOut, stdErr, closer := outputWrapper.WrapWriter(_stdout, e.Stderr, t.Prefix, outputTemplater)
+		stdOut, stdErr, closer := outputWrapper.WrapWriter(e.Stdout, e.Stderr, t.Prefix, outputTemplater)
 
 		err = execext.RunCommand(ctx, &execext.RunCommandOptions{
 			Command:   cmd.Cmd,
@@ -357,16 +353,10 @@ func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call *Call, i in
 			Stdout:    stdOut,
 			Stderr:    stdErr,
 		})
-		// Calling closer will copy remaining buffered stdOut to _stdout. Then
-		// use a mutex to prevents concurant writes to e.Stdout.
-		e.stdoutMutex.Lock()
+
 		if closeErr := closer(err); closeErr != nil {
 			e.Logger.Errf(logger.Red, "task: unable to close writer: %v\n", closeErr)
 		}
-		if _, writeErr := e.Stdout.Write(_stdout.Bytes()); writeErr != nil {
-			e.Logger.Errf(logger.Red, "task: unable to write to e.Stdout: %v\n", writeErr)
-		}
-		e.stdoutMutex.Unlock()
 
 		var exitCode interp.ExitStatus
 		if errors.As(err, &exitCode) && cmd.IgnoreError {
