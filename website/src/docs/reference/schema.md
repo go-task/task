@@ -53,7 +53,7 @@ output:
 method: timestamp
 ```
 
-### `includes`
+### [`includes`](#include)
 
 - **Type**: `map[string]Include`
 - **Description**: Include other Taskfiles
@@ -77,7 +77,7 @@ includes:
     checksum: abc123...
 ```
 
-### `vars`
+### [`vars`](#variable)
 
 - **Type**: `map[string]Variable`
 - **Description**: Global variables available to all tasks
@@ -118,7 +118,7 @@ env:
     sh: echo $DATABASE_URL
 ```
 
-### `tasks`
+### [`tasks`](#task)
 
 - **Type**: `map[string]Task`
 - **Description**: Task definitions
