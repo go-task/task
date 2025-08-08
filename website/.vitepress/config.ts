@@ -79,7 +79,7 @@ export default defineConfig({
     ['meta', { property: 'twitter:description', content: taskDescription }]
   ],
   srcDir: 'src',
-
+  cleanUrls: true,
   rewrites(id) {
     return id.replace(/^docs\//, '');
   },
