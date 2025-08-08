@@ -120,7 +120,7 @@ tasks:
 Maps were originally included in the Any Variables experiment. However, they weren't quite ready yet. Instead of making you wait for everything to be ready at once, we have released support for all other variable types and we will continue working on map support in the new "[Map Variables][map-variables]" experiment.
 
 
-We're looking for feedback on a couple of different proposals, so please give them a go and let us know what you think. 🙏
+We're looking for feedback on a couple of different proposals, so please give them a go and let us know what you think. :pray:
 
 [v3.37.0]: https://github.com/go-task/task/releases/tag/v3.37.0
 [slim-sprig-math]: https://go-task.github.io/slim-sprig/math.html
