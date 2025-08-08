@@ -42,7 +42,7 @@ Studio Code][vscode-task].
 - **Node.js** - [Node.js][nodejs] is used to host Task's documentation server
   and is required if you want to run this server locally. It is also required if
   you want to contribute to the Visual Studio Code extension.
-- **Yarn** - [Yarn][yarn] is the Node.js package manager used by Task.
+- **Pnpm** - [Pnpm][pnpm] is the Node.js package manager used by Task.
 
 ## 2. Making changes
 
@@ -166,7 +166,7 @@ If you have questions, feel free to ask them in the `#help` forum channel on our
 [golangci-lint-docs]: https://golangci-lint.run/welcome/integrations/
 [prettier]: https://prettier.io
 [nodejs]: https://nodejs.org/en/
-[yarn]: https://yarnpkg.com/
+[pnpm]: https://pnpm.io/
 [docusaurus]: https://docusaurus.io
 [json-schema]:
   https://github.com/go-task/task/blob/main/website/static/schema.json
