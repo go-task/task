@@ -1,7 +1,8 @@
 ---
 title: 'Template Functions'
 description:
-  Deprecation of some templating functions in Task, with guidance on their replacements.
+  Deprecation of some templating functions in Task, with guidance on their
+  replacements.
 outline: deep
 ---
 

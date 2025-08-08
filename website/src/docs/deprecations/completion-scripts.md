@@ -1,7 +1,6 @@
 ---
 title: 'Completion Scripts'
-description:
-  Deprecation of direct completion scripts in Task’s Git directory
+description: Deprecation of direct completion scripts in Task’s Git directory
 outline: deep
 ---
 

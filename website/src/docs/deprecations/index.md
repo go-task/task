@@ -1,7 +1,8 @@
 ---
 title: Deprecations
 description:
-  Guide to deprecated features in Task and how to migrate to the new alternatives
+  Guide to deprecated features in Task and how to migrate to the new
+  alternatives
 outline: deep
 ---
 

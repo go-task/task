@@ -1,7 +1,6 @@
 ---
 title: 'Version 2 Schema (#1197)'
-description:
-  Deprecation of Taskfile schema version 2 and migration to version 3
+description: Deprecation of Taskfile schema version 2 and migration to version 3
 outline: deep
 ---
 
