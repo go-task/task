@@ -40,7 +40,7 @@ const members = [
     sponsor: 'https://github.com/sponsors/vmaerten',
     links: [
       { icon: 'github', link: 'https://github.com/vmaerten' },
-      { icon: 'x', link: 'https://x.com/vmaerten' },
+      { icon: 'x', link: 'https://x.com/v_maerten' },
       { icon: 'bluesky', link: 'https://bsky.app/profile/vmaerten.bsky.social' }
     ]
   }
