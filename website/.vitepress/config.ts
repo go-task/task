@@ -115,7 +115,7 @@ export default defineConfig({
       { text: 'Home', link: '/' },
       {
         text: 'Docs',
-        link: '/getting-started',
+        link: '/usage',
         activeMatch: '^/(?!donate|team|blog).'
       },
       { text: 'Blog', link: '/blog', activeMatch: '^/blog' },
