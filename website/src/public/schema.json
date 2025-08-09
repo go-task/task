@@ -754,22 +754,10 @@
           "required": ["includes"]
         },
         {
-          "required": ["overrides"]
-        },
-        {
           "required": ["tasks"]
         },
         {
           "required": ["includes", "tasks"]
-        },
-        {
-          "required": ["overrides", "tasks"]
-        },
-        {
-          "required": ["includes", "overrides"]
-        },
-        {
-          "required": ["includes", "overrides", "tasks"]
         }
       ]
     }
