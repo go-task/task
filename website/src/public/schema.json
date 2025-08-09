@@ -700,67 +700,6 @@
             }
           }
         },
-        "overrides": {
-          "description": "Imports tasks from the specified taskfiles with override semantics. Tasks are automatically flattened and duplicate names replace existing tasks instead of causing errors.",
-          "type": "object",
-          "patternProperties": {
-            "^.*$": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "object",
-                  "properties": {
-                    "taskfile": {
-                      "description": "The path for the Taskfile or directory to be overridden. If a directory, Task will look for files named `Taskfile.yml` or `Taskfile.yaml` inside that directory. If a relative path, resolved relative to the directory containing the overriding Taskfile.",
-                      "type": "string"
-                    },
-                    "dir": {
-                      "description": "The working directory of the overridden tasks when run.",
-                      "type": "string"
-                    },
-                    "optional": {
-                      "description": "If `true`, no errors will be thrown if the specified file does not exist.",
-                      "type": "boolean"
-                    },
-                    "flatten": {
-                      "description": "Always `true` for overrides. Tasks from the overridden Taskfile are automatically flattened into the overriding Taskfile.",
-                      "type": "boolean",
-                      "default": true
-                    },
-                    "internal": {
-                      "description": "Stops any task in the overridden Taskfile from being callable on the command line. These commands will also be omitted from the output when used with `--list`.",
-                      "type": "boolean"
-                    },
-                    "aliases": {
-                      "description": "Alternative names for the namespace of the overridden Taskfile (mainly for organizational purposes since overrides are flattened).",
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      }
-                    },
-                    "excludes": {
-                      "description": "A list of task names to exclude from being overridden.",
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      }
-                    },
-                    "vars": {
-                      "description": "A set of variables to apply to the overridden Taskfile.",
-                      "$ref": "#/definitions/vars"
-                    },
-                    "checksum": {
-                      "description": "The checksum of the file you expect to override. If the checksum does not match, the file will not be overridden.",
-                      "type": "string"
-                    }
-                  }
-                }
-              ]
-            }
-          }
-        },
         "vars": {
           "description": "A set of global variables.",
           "$ref": "#/definitions/vars"
