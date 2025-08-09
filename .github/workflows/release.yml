@@ -44,5 +44,4 @@ jobs:
       - name: Deploy Website
         shell: bash
         run: |
-          task website:deploy
-
+          task website:deploy:prod
