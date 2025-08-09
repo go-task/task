@@ -98,7 +98,7 @@ export default defineConfig({
   },
 
   themeConfig: {
-    logo: '/logo.svg',
+    logo: '/img/logo.svg',
     carbonAds: {
       code: 'CESI65QJ',
       placement: 'taskfiledev'
