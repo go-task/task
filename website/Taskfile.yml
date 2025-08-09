@@ -2,7 +2,7 @@ version: '3'
 
 tasks:
   install:
-    desc: Setup Docusaurus locally
+    desc: Setup VitePress locally
     cmds:
       - pnpm install
     sources:
