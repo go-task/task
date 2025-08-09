@@ -7,21 +7,22 @@ toc_max_heading_level: 5
 
 # Schema Reference
 
-| Attribute  | Type                               | Default       | Description                                                                                                                                                            |
-|------------|------------------------------------|---------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `version`  | `string`                           |               | Version of the Taskfile. The current version is `3`.                                                                                                                   |
-| `output`   | `string`                           | `interleaved` | Output mode. Available options: `interleaved`, `group` and `prefixed`.                                                                                                 |
-| `method`   | `string`                           | `checksum`    | Default method in this Taskfile. Can be overridden in a task by task basis. Available options: `checksum`, `timestamp` and `none`.                                     |
-| `includes` | [`map[string]Include`](#include)   |               | Additional Taskfiles to be included.                                                                                                                                   |
-| `vars`     | [`map[string]Variable`](#variable) |               | A set of global variables.                                                                                                                                             |
-| `env`      | [`map[string]Variable`](#variable) |               | A set of global environment variables.                                                                                                                                 |
-| `tasks`    | [`map[string]Task`](#task)         |               | A set of task definitions.                                                                                                                                             |
-| `silent`   | `bool`                             | `false`       | Default 'silent' options for this Taskfile. If `false`, can be overridden with `true` in a task by task basis.                                                         |
-| `dotenv`   | `[]string`                         |               | A list of `.env` file paths to be parsed.                                                                                                                              |
-| `run`      | `string`                           | `always`      | Default 'run' option for this Taskfile. Available options: `always`, `once` and `when_changed`.                                                                        |
-| `interval` | `string`                           | `5s`          | Sets a different watch interval when using `--watch`, the default being 5 seconds. This string should be a valid [Go Duration](https://pkg.go.dev/time#ParseDuration). |
-| `set`      | `[]string`                         |               | Specify options for the [`set` builtin](https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html).                                                      |
-| `shopt`    | `[]string`                         |               | Specify option for the [`shopt` builtin](https://www.gnu.org/software/bash/manual/html_node/The-Shopt-Builtin.html).                                                   |
+| Attribute   | Type                               | Default       | Description                                                                                                                                                            |
+|-------------|------------------------------------|---------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `version`   | `string`                           |               | Version of the Taskfile. The current version is `3`.                                                                                                                   |
+| `output`    | `string`                           | `interleaved` | Output mode. Available options: `interleaved`, `group` and `prefixed`.                                                                                                 |
+| `method`    | `string`                           | `checksum`    | Default method in this Taskfile. Can be overridden in a task by task basis. Available options: `checksum`, `timestamp` and `none`.                                     |
+| `includes`  | [`map[string]Include`](#include)   |               | Additional Taskfiles to be included.                                                                                                                                   |
+| `overrides` | [`map[string]Override`](#override) |               | Additional Taskfiles to be included with override semantics (automatic flattening and task replacement).                                                               |
+| `vars`      | [`map[string]Variable`](#variable) |               | A set of global variables.                                                                                                                                             |
+| `env`       | [`map[string]Variable`](#variable) |               | A set of global environment variables.                                                                                                                                 |
+| `tasks`     | [`map[string]Task`](#task)         |               | A set of task definitions.                                                                                                                                             |
+| `silent`    | `bool`                             | `false`       | Default 'silent' options for this Taskfile. If `false`, can be overridden with `true` in a task by task basis.                                                         |
+| `dotenv`    | `[]string`                         |               | A list of `.env` file paths to be parsed.                                                                                                                              |
+| `run`       | `string`                           | `always`      | Default 'run' option for this Taskfile. Available options: `always`, `once` and `when_changed`.                                                                        |
+| `interval`  | `string`                           | `5s`          | Sets a different watch interval when using `--watch`, the default being 5 seconds. This string should be a valid [Go Duration](https://pkg.go.dev/time#ParseDuration). |
+| `set`       | `[]string`                         |               | Specify options for the [`set` builtin](https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html).                                                      |
+| `shopt`     | `[]string`                         |               | Specify option for the [`shopt` builtin](https://www.gnu.org/software/bash/manual/html_node/The-Shopt-Builtin.html).                                                   |
 
 ## Include
 
@@ -38,8 +39,7 @@ toc_max_heading_level: 5
 
 :::info
 
-Informing only a string like below is equivalent to setting that value to the
-`taskfile` attribute.
+Informing only a string like below is equivalent to setting that value to the `taskfile` attribute.
 
 ```yaml
 includes:
@@ -48,10 +48,40 @@ includes:
 
 :::
 
+## Override
+
+| Attribute  | Type                  | Default                       | Description                                                                                                                                                                                                                                                 |
+|------------|-----------------------|-------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `taskfile` | `string`              |                               | The path for the Taskfile or directory to be overridden. If a directory, Task will look for files named `Taskfile.yml` or `Taskfile.yaml` inside that directory. If a relative path, resolved relative to the directory containing the overriding Taskfile. |
+| `dir`      | `string`              | The parent Taskfile directory | The working directory of the overridden tasks when run.                                                                                                                                                                                                     |
+| `optional` | `bool`                | `false`                       | If `true`, no errors will be thrown if the specified file does not exist.                                                                                                                                                                                   |
+| `flatten`  | `bool`                | `true`                        | Always `true` for overrides. Tasks from the overridden Taskfile are automatically flattened into the overriding Taskfile. If a task with the same name exists, the overridden version replaces the original.                                                |
+| `internal` | `bool`                | `false`                       | Stops any task in the overridden Taskfile from being callable on the command line. These commands will also be omitted from the output when used with `--list`.                                                                                             |
+| `aliases`  | `[]string`            |                               | Alternative names for the namespace of the overridden Taskfile (mainly for organizational purposes since overrides are flattened).                                                                                                                          |
+| `vars`     | `map[string]Variable` |                               | A set of variables to apply to the overridden Taskfile.                                                                                                                                                                                                     |
+| `excludes` | `[]string`            |                               | A list of task names to exclude from being overridden.                                                                                                                                                                                                      |
+| `checksum` | `string`              |                               | The checksum of the file you expect to override. If the checksum does not match, the file will not be overridden.                                                                                                                                           |
+
+:::info
+
+Overrides work similarly to includes but with automatic flattening and task replacement behavior:
+- Tasks are always flattened into the local namespace (no namespace prefix needed)
+- Duplicate task names replace existing tasks instead of causing errors
+- Later overrides take precedence over earlier ones
+
+Informing only a string like below is equivalent to setting that value to the `taskfile` attribute.
+
+```yaml
+overrides:
+  lib: ./path
+```
+
+:::
+
 ## Variable
 
 | Attribute | Type     | Default | Description                                                              |
-| --------- | -------- | ------- | ------------------------------------------------------------------------ |
+|-----------|----------|---------|--------------------------------------------------------------------------|
 | _itself_  | `string` |         | A static value that will be set to the variable.                         |
 | `sh`      | `string` |         | A shell command. The output (`STDOUT`) will be assigned to the variable. |
 
@@ -84,7 +114,7 @@ vars:
 ## Task
 
 | Attribute       | Type                               | Default                                               | Description                                                                                                                                                                                                                                                                                              |
-| --------------- | ---------------------------------- | ----------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+|-----------------|------------------------------------|-------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `cmds`          | [`[]Command`](#command)            |                                                       | A list of shell commands to be executed.                                                                                                                                                                                                                                                                 |
 | `deps`          | [`[]Dependency`](#dependency)      |                                                       | A list of dependencies of this task. Tasks defined here will run in parallel before this task.                                                                                                                                                                                                           |
 | `label`         | `string`                           |                                                       | Overrides the name of the task in the output when a task is run. Supports variables.                                                                                                                                                                                                                     |
@@ -108,7 +138,7 @@ vars:
 | `prefix`        | `string`                           |                                                       | Defines a string to prefix the output of tasks running in parallel. Only used when the output mode is `prefixed`.                                                                                                                                                                                        |
 | `ignore_error`  | `bool`                             | `false`                                               | Continue execution if errors happen while executing commands.                                                                                                                                                                                                                                            |
 | `run`           | `string`                           | The one declared globally in the Taskfile or `always` | Specifies whether the task should run again or not if called more than once. Available options: `always`, `once` and `when_changed`.                                                                                                                                                                     |
-| `platforms`     | `[]string`                         | All platforms                                         | Specifies which platforms the task should be run on. [Valid GOOS and GOARCH values allowed](https://github.com/golang/go/blob/master/src/internal/syslist/syslist.go). Task will be skipped otherwise.                                                                                                             |
+| `platforms`     | `[]string`                         | All platforms                                         | Specifies which platforms the task should be run on. [Valid GOOS and GOARCH values allowed](https://github.com/golang/go/blob/master/src/internal/syslist/syslist.go). Task will be skipped otherwise.                                                                                                   |
 | `set`           | `[]string`                         |                                                       | Specify options for the [`set` builtin](https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html).                                                                                                                                                                                        |
 | `shopt`         | `[]string`                         |                                                       | Specify option for the [`shopt` builtin](https://www.gnu.org/software/bash/manual/html_node/The-Shopt-Builtin.html).                                                                                                                                                                                     |
 
@@ -133,18 +163,18 @@ tasks:
 
 ### Command
 
-| Attribute      | Type                               | Default       | Description                                                                                                                                                                                        |
-| -------------- | ---------------------------------- | ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `cmd`          | `string`                           |               | The shell command to be executed.                                                                                                                                                                  |
-| `task`         | `string`                           |               | Set this to trigger execution of another task instead of running a command. This cannot be set together with `cmd`.                                                                                |
-| `for`          | [`For`](#for)                      |               | Runs the command once for each given value.                                                                                                                                                        |
-| `silent`       | `bool`                             | `false`       | Skips some output for this command. Note that STDOUT and STDERR of the commands will still be redirected.                                                                                          |
-| `vars`         | [`map[string]Variable`](#variable) |               | Optional additional variables to be passed to the referenced task. Only relevant when setting `task` instead of `cmd`.                                                                             |
-| `ignore_error` | `bool`                             | `false`       | Continue execution if errors happen while executing the command.                                                                                                                                   |
-| `defer`        | [`Defer`](#defer)                  |               | Alternative to `cmd`, but schedules the command or a task to be executed at the end of this task instead of immediately. This cannot be used together with `cmd`.                                  |
+| Attribute      | Type                               | Default       | Description                                                                                                                                                                                                  |
+|----------------|------------------------------------|---------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `cmd`          | `string`                           |               | The shell command to be executed.                                                                                                                                                                            |
+| `task`         | `string`                           |               | Set this to trigger execution of another task instead of running a command. This cannot be set together with `cmd`.                                                                                          |
+| `for`          | [`For`](#for)                      |               | Runs the command once for each given value.                                                                                                                                                                  |
+| `silent`       | `bool`                             | `false`       | Skips some output for this command. Note that STDOUT and STDERR of the commands will still be redirected.                                                                                                    |
+| `vars`         | [`map[string]Variable`](#variable) |               | Optional additional variables to be passed to the referenced task. Only relevant when setting `task` instead of `cmd`.                                                                                       |
+| `ignore_error` | `bool`                             | `false`       | Continue execution if errors happen while executing the command.                                                                                                                                             |
+| `defer`        | [`Defer`](#defer)                  |               | Alternative to `cmd`, but schedules the command or a task to be executed at the end of this task instead of immediately. This cannot be used together with `cmd`.                                            |
 | `platforms`    | `[]string`                         | All platforms | Specifies which platforms the command should be run on. [Valid GOOS and GOARCH values allowed](https://github.com/golang/go/blob/master/src/internal/syslist/syslist.go). Command will be skipped otherwise. |
-| `set`          | `[]string`                         |               | Specify options for the [`set` builtin](https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html).                                                                                  |
-| `shopt`        | `[]string`                         |               | Specify option for the [`shopt` builtin](https://www.gnu.org/software/bash/manual/html_node/The-Shopt-Builtin.html).                                                                               |
+| `set`          | `[]string`                         |               | Specify options for the [`set` builtin](https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html).                                                                                            |
+| `shopt`        | `[]string`                         |               | Specify option for the [`shopt` builtin](https://www.gnu.org/software/bash/manual/html_node/The-Shopt-Builtin.html).                                                                                         |
 
 :::info
 
@@ -163,7 +193,7 @@ tasks:
 ### Dependency
 
 | Attribute | Type                               | Default | Description                                                                                                      |
-| --------- | ---------------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------- |
+|-----------|------------------------------------|---------|------------------------------------------------------------------------------------------------------------------|
 | `task`    | `string`                           |         | The task to be execute as a dependency.                                                                          |
 | `vars`    | [`map[string]Variable`](#variable) |         | Optional additional variables to be passed to this task.                                                         |
 | `silent`  | `bool`                             | `false` | Hides task name and command from output. The command's output will still be redirected to `STDOUT` and `STDERR`. |
@@ -186,10 +216,10 @@ tasks:
 The `defer` parameter defines a shell command to run, or a task to trigger, at the end of the current task instead of immediately.
 If defined as a string this is a shell command, otherwise it is a map defining a task to call:
 
-| Attribute | Type                               | Default | Description                                                       |
-| --------- | ---------------------------------- | ------- | ----------------------------------------------------------------- |
-| `task`    | `string`                           |         | The deferred task to trigger.                                     |
-| `vars`    | [`map[string]Variable`](#variable) |         | Optional additional variables to be passed to the deferred task.  |
+| Attribute | Type                               | Default | Description                                                                                                      |
+|-----------|------------------------------------|---------|------------------------------------------------------------------------------------------------------------------|
+| `task`    | `string`                           |         | The deferred task to trigger.                                                                                    |
+| `vars`    | [`map[string]Variable`](#variable) |         | Optional additional variables to be passed to the deferred task.                                                 |
 | `silent`  | `bool`                             | `false` | Hides task name and command from output. The command's output will still be redirected to `STDOUT` and `STDERR`. |
 
 ### For
@@ -210,7 +240,7 @@ Finally, the `for` parameter can be defined as a map when you want to use a
 variable to define the values to loop over:
 
 | Attribute | Type     | Default          | Description                                  |
-| --------- | -------- | ---------------- | -------------------------------------------- |
+|-----------|----------|------------------|----------------------------------------------|
 | `var`     | `string` |                  | The name of the variable to use as an input. |
 | `split`   | `string` | (any whitespace) | What string the variable should be split on. |
 | `as`      | `string` | `ITEM`           | The name of the iterator variable.           |
@@ -218,7 +248,7 @@ variable to define the values to loop over:
 ### Precondition
 
 | Attribute | Type     | Default | Description                                                                                                  |
-| --------- | -------- | ------- | ------------------------------------------------------------------------------------------------------------ |
+|-----------|----------|---------|--------------------------------------------------------------------------------------------------------------|
 | `sh`      | `string` |         | Command to be executed. If a non-zero exit code is returned, the task errors without executing its commands. |
 | `msg`     | `string` |         | Optional message to print if the precondition isn't met.                                                     |
 
@@ -238,5 +268,5 @@ tasks:
 ### Requires
 
 | Attribute | Type       | Default | Description                                                                                        |
-| --------- | ---------- | ------- | -------------------------------------------------------------------------------------------------- |
+|-----------|------------|---------|----------------------------------------------------------------------------------------------------|
 | `vars`    | `[]string` |         | List of variable or environment variable names that must be set if this task is to execute and run |

@@ -1,0 +1,10 @@
+version: '3'
+
+overrides:
+  lib:
+    taskfile: ./overrides.yml
+
+tasks:
+  greet:
+    cmds:
+      - echo "Greet"
