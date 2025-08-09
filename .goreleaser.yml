@@ -30,7 +30,8 @@ builds:
     flags:
       - -trimpath
     ldflags:
-      - -s -w # Don't set main.version.
+      - "-s -w"
+      - "{{if .IsNightly}}-X github.com/go-task/task/v3/internal/version.version={{.Version}}{{end}}"
 
 gomod:
   proxy: true
@@ -45,18 +46,9 @@ archives:
       - goos: windows
         formats: [zip]
 
-release:
-  draft: true
-
-
 git:
   ignore_tags:
     - "{{if not .IsNightly}}nightly{{end}}"
-
-nightly:
-  publish_release: true
-  keep_single_release: true
-  version_template: "{{incminor .Version}}-nightly"
 
 snapshot:
   version_template: '{{.Version}}'
