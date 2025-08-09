@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 
 	"github.com/sebdah/goldie/v2"
@@ -991,6 +992,9 @@ func TestIncludeChecksum(t *testing.T) {
 
 //nolint:paralleltest // These tests use signals and cannot run in parallel.
 func TestOutput(t *testing.T) {
+	if runtime.GOOS == "darwin" {
+		t.Skip() // Scripts used in this test do not operate correctly on MacOS.
+	}
 	const dir = "testdata/output"
 	NewExecutorTest(t,
 		WithName("interleaved"),
