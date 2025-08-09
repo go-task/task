@@ -1,0 +1,14 @@
+version: '3'
+
+overrides:
+  existing:
+    taskfile: ./existing.yml
+    optional: true
+  missing:
+    taskfile: ./missing.yml
+    optional: true
+
+tasks:
+  default:
+    cmds:
+      - echo "called_dep"

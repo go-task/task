@@ -1,0 +1,12 @@
+version: '3'
+
+vars:
+  FILE: "override"
+
+overrides:
+  lib: ./{{.FILE}}.yml
+
+tasks:
+  test:
+    cmds:
+      - echo "base"

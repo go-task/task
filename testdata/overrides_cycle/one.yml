@@ -1,0 +1,9 @@
+version: '3'
+
+overrides:
+  two: ./two.yml
+
+tasks:
+  one:
+    cmds:
+      - echo "one"

@@ -1,0 +1,9 @@
+version: '3'
+
+tasks:
+  default:
+    cmds:
+      - echo "default from with_default"
+  from_with_default:
+    cmds:
+      - echo "from with_default"
