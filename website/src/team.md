@@ -17,7 +17,10 @@ const members = [
     sponsor: 'https://github.com/sponsors/andreynering',
     links: [
       { icon: 'github', link: 'https://github.com/andreynering' },
-      { icon: 'x', link: 'https://x.com/andreynering' }
+      { icon: 'discord', link: 'https://discord.com/users/310141681926275082' },
+      { icon: 'x', link: 'https://x.com/andreynering' },
+      { icon: 'bluesky', link: 'https://bsky.app/profile/andreynering.bsky.social' },
+      { icon: 'mastodon', link: 'https://mastodon.social/@andreynering' }
     ]
   },
   {
