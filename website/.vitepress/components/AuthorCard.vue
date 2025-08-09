@@ -7,7 +7,7 @@
 
 				<div class="author-socials">
 					<a
-						v-for="{ link, icon } in team[0].links"
+						v-for="{ link, icon } in author.links"
 						:key="link"
 						:href="link"
 						target="_blank"
