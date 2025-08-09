@@ -2657,7 +2657,7 @@ func TestOverrides(t *testing.T) {
 
 	t.Run("basic_override", func(t *testing.T) {
 		t.Parallel()
-		
+
 		var buff bytes.Buffer
 		e := task.NewExecutor(
 			task.WithDir("testdata/overrides"),
