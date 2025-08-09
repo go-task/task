@@ -3,8 +3,8 @@ count=0
 trap sigusr1_handler SIGUSR1
 
 function sigusr1_handler() {
-    echo "PONG $((++count))"
-    kill -SIGUSR1 $pids 2>/dev/null
+    stdbuf -o0 echo "PONG $((++count))"
+    stdbuf -o0 kill -SIGUSR1 $pids 2>/dev/null
 }
 
 while [[ -z $pids ]]
