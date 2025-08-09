@@ -19,8 +19,10 @@ on:
 - The website homepage
 - The GitHub repository README
 
-> 💬 To be featured, contact [@andreynering] with your logo. ⚠️ Suspicious or
-> inappropriate businesses (e.g. gambling, casinos) will be rejected.
+> 💬 To be featured, contact @andreynering with your logo.
+>
+> ⚠️ Suspicious or inappropriate businesses (e.g. gambling, casinos) will be
+> rejected.
 
 ## :heart: GitHub Sponsors _(recommended)_
 
