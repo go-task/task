@@ -11,14 +11,14 @@ hero:
     alt: Task logo
   actions:
     - theme: brand
+      text: Install
+      link: /installation
+    - theme: alt
       text: Get Started
       link: /getting-started
     - theme: alt
-      text: Schema
-      link: /reference/schema
-    - theme: alt
-      text: CLI
-      link: /reference/cli
+      text: Guide
+      link: /usage
 
 features:
   - title: 30-Second Setup
