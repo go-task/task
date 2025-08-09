@@ -280,6 +280,11 @@ export default defineConfig({
       { icon: 'x', link: 'https://twitter.com/taskfiledev' },
       { icon: 'bluesky', link: 'https://bsky.app/profile/taskfile.dev' },
       { icon: 'mastodon', link: 'https://fosstodon.org/@task' }
-    ]
+    ],
+
+    footer: {
+      message:
+        '<div style="display: flex; justify-content: center; width: 100%;"><a target="_blank" href="https://www.netlify.com"><img src="https://www.netlify.com/v3/img/components/netlify-color-accent.svg" alt="Deploys by Netlify" /></a></div>'
+    }
   }
 });
