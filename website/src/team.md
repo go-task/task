@@ -12,7 +12,7 @@ import {
 const members = [
   {
     avatar: 'https://www.github.com/andreynering.png',
-    name: 'Andrey Nering',
+    name: '🇧🇷 Andrey Nering',
     title: 'Creator & Maintainer',
     sponsor: 'https://github.com/sponsors/andreynering',
     links: [
@@ -22,7 +22,7 @@ const members = [
   },
   {
     avatar: 'https://www.github.com/pd93.png',
-    name: 'Pete Davison',
+    name: '🇬🇧 Pete Davison',
     title: 'Maintainer',
     sponsor: 'https://github.com/sponsors/pd93',
     links: [
@@ -32,7 +32,7 @@ const members = [
   },
   {
     avatar: 'https://www.github.com/vmaerten.png',
-    name: 'Valentin Maerten',
+    name: '🇫🇷 Valentin Maerten',
     title: 'Maintainer',
     sponsor: 'https://github.com/sponsors/vmaerten',
     links: [
