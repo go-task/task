@@ -353,11 +353,9 @@ func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call *Call, i in
 			Stdout:    stdOut,
 			Stderr:    stdErr,
 		})
-
 		if closeErr := closer(err); closeErr != nil {
 			e.Logger.Errf(logger.Red, "task: unable to close writer: %v\n", closeErr)
 		}
-
 		var exitCode interp.ExitStatus
 		if errors.As(err, &exitCode) && cmd.IgnoreError {
 			e.Logger.VerboseErrf(logger.Yellow, "task: [%s] command error ignored: %v\n", t.Name(), err)
