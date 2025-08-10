@@ -135,3 +135,19 @@ winget:
           owner: microsoft
           name: winget-pkgs
           branch: master
+
+cloudsmiths:
+  - organization: "task"
+    repository: "task"
+    formats:
+      - deb
+      - rpm
+    distributions:
+      deb:
+        - "ubuntu/any-version"
+        - "debian/any-version"
+      rpm:
+        - "el/any-version"
+        - "fedora/any-version"
+    component: main
+    republish: true
