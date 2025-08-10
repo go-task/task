@@ -182,7 +182,7 @@ tasks:
 tasks:
   build:
     cmds:
-      - echo "Running task: {{.TASK}}"
+      - echo "Running task {{.TASK}}"
 ```
 
 #### `ALIAS`
@@ -238,9 +238,9 @@ tasks:
 tasks:
   info:
     cmds:
-      - echo "Root: {{.ROOT_DIR}}"
-      - echo "Current: {{.TASKFILE_DIR}}"
-      - echo "Working: {{.USER_WORKING_DIR}}"
+      - echo "Root {{.ROOT_DIR}}"
+      - echo "Current {{.TASKFILE_DIR}}"
+      - echo "Working {{.USER_WORKING_DIR}}"
 ```
 
 ### Status
@@ -379,11 +379,12 @@ tasks:
     vars:
       SERVICES: [api, web, worker]
       CONFIG:
-        database: postgres
-        port: 5432
+        map:
+          database: postgres
+          port: 5432
     cmds:
-      - echo "First service: {{index .SERVICES 0}}"
-      - echo "Database: {{index .CONFIG "database"}}"
+      - echo "First service {{index .SERVICES 0}}"
+      - echo "Database {{index .CONFIG "database"}}"
 ```
 
 #### `len`
@@ -410,10 +411,8 @@ tasks:
   slice-demo:
     vars:
       ITEMS: [a, b, c, d, e]
-      TEXT: "Hello World"
     cmds:
       - echo "{{slice .ITEMS 1 3}}"     # [b c]
-      - echo "{{slice .TEXT 0 5}}"      # "Hello"
 ```
 
 ### String Functions
@@ -426,6 +425,7 @@ tasks:
     vars:
       MESSAGE: '  Hello World  '
       NAME: 'john doe'
+      TEXT: "Hello World"
     cmds:
       - echo "{{.MESSAGE | trim}}"          # "Hello World"
       - echo "{{.NAME | title}}"            # "John Doe"
@@ -433,6 +433,7 @@ tasks:
       - echo "{{.MESSAGE | lower}}"         # "hello world"
       - echo "{{.NAME | trunc 4}}"          # "john"
       - echo "{{"test" | repeat 3}}"        # "testtesttest"
+      - echo "{{substr .TEXT 0 5}}"      # "Hello"
 ```
 
 #### String Testing and Searching
@@ -489,11 +490,11 @@ tasks:
     vars:
       ITEMS: ["apple", "banana", "cherry", "date"]
     cmds:
-      - echo "First: {{.ITEMS | first}}"          # "apple"
-      - echo "Last: {{.ITEMS | last}}"            # "date"
-      - echo "Rest: {{.ITEMS | rest}}"            # ["banana", "cherry", "date"]
-      - echo "Initial: {{.ITEMS | initial}}"      # ["apple", "banana", "cherry"]
-      - echo "Length: {{.ITEMS | len}}"           # 4
+      - echo "First {{.ITEMS | first}}"          # "apple"
+      - echo "Last {{.ITEMS | last}}"            # "date"
+      - echo "Rest {{.ITEMS | rest}}"            # ["banana", "cherry", "date"]
+      - echo "Initial {{.ITEMS | initial}}"      # ["apple", "banana", "cherry"]
+      - echo "Length {{.ITEMS | len}}"           # 4
 ```
 
 #### List Manipulation
@@ -503,13 +504,13 @@ tasks:
   list-manipulate:
     vars:
       NUMBERS: [3, 1, 4, 1, 5, 9, 1]
-      FRUITS: ['apple', 'banana']
+      FRUITS: ["apple", "banana"]
     cmds:
-      - echo "{{.NUMBERS | uniq}}"                        # [3, 1, 4, 5, 9]
-      - echo "{{.NUMBERS | sortAlpha}}"                   # [1, 1, 1, 3, 4, 5, 9]
-      - echo "{{.FRUITS | append "cherry"}}"              # ["apple", "banana", "cherry"]
-      - echo "{{.NUMBERS | without 1}}"                   # [3, 4, 5, 9]
-      - echo "{{.NUMBERS | has 5}}"                       # true
+      - echo "{{.NUMBERS | uniq}}"                       # [3, 1, 4, 5, 9]
+      - echo "{{.NUMBERS | sortAlpha}}"                  # [1, 1, 1, 3, 4, 5, 9]
+      - echo"'{{append .FRUITS "cherry"}}""              # ["apple", "banana", "cherry"]
+      - echo "{{ without .NUMBERS 1}}"                   # [3, 4, 5, 9]
+      - echo "{{.NUMBERS | has 5}}"                      # true
 ```
 
 #### String Lists
@@ -556,15 +557,15 @@ tasks:
       B: 3
       NUMBERS: [1, 5, 3, 9, 2]
     cmds:
-      - echo "Addition: {{add .A .B}}"            # 13
-      - echo "Subtraction: {{sub .A .B}}"         # 7
-      - echo "Multiplication: {{mul .A .B}}"      # 30
-      - echo "Division: {{div .A .B}}"            # 3
-      - echo "Modulo: {{mod .A .B}}"              # 1
-      - echo "Maximum: {{.NUMBERS | max}}"        # 9
-      - echo "Minimum: {{.NUMBERS | min}}"        # 1
-      - echo "Random 1-99: {{randInt 1 100}}"     # Random number
-      - echo "Random 0-999: {{randIntN 1000}}"    # Random number 0-999
+      - echo "Addition {{add .A .B}}"            # 13
+      - echo "Subtraction {{sub .A .B}}"         # 7
+      - echo "Multiplication {{mul .A .B}}"      # 30
+      - echo "Division {{div .A .B}}"            # 3
+      - echo "Modulo {{mod .A .B}}"              # 1
+      - echo "Maximum {{.NUMBERS | max}}"        # 9
+      - echo "Minimum {{.NUMBERS | min}}"        # 1
+      - echo "Random 1-99 {{randInt 1 100}}"     # Random number
+      - echo "Random 0-999 {{randIntN 1000}}"    # Random number 0-999
 ```
 
 ### Date and Time Functions
@@ -573,12 +574,13 @@ tasks:
 tasks:
   date-time:
     vars:
-      BUILD_DATE: "2023-12-25T10:30:00Z"
+      BUILD_DATE: "2023-12-25"
     cmds:
-      - echo "Now: {{now | date "2006-01-02 15:04:05"}}"
-      - echo "Build: {{.BUILD_DATE | toDate | date "Jan 2, 2006"}}"
-      - echo "Unix timestamp: {{now | unixEpoch}}"
-      - echo "Duration ago: {{now | ago}}"
+      - echo "Now {{now | date "2006-01-02 15:04:05"}}"
+      - echo {{ toDate "2006-01-02" .BUILD_DATE }}
+      - echo "Build {{.BUILD_DATE | toDate "2006-01-02" | date "Jan 2, 2006"}}"
+      - echo "Unix timestamp {{now | unixEpoch}}"
+      - echo "Duration ago {{now | ago}}"
 ```
 
 ### System Functions
@@ -589,9 +591,9 @@ tasks:
 tasks:
   platform:
     cmds:
-      - echo "OS: {{OS}}"                         # linux, darwin, windows, etc.
-      - echo "Architecture: {{ARCH}}"             # amd64, arm64, etc.
-      - echo "CPU cores: {{numCPU}}"              # Number of CPU cores
+      - echo "OS {{OS}}"                         # linux, darwin, windows, etc.
+      - echo "Architecture {{ARCH}}"             # amd64, arm64, etc.
+      - echo "CPU cores {{numCPU}}"              # Number of CPU cores
       - echo "Building for {{OS}}/{{ARCH}}"
 ```
 
@@ -608,7 +610,7 @@ tasks:
       - echo "{{.WIN_PATH | toSlash}}"                          # Convert to forward slashes
       - echo "{{.WIN_PATH | fromSlash}}"                        # Convert to OS-specific slashes
       - echo "{{joinPath .OUTPUT_DIR .BINARY_NAME}}"            # Join path elements
-      - echo "Relative: {{relPath .ROOT_DIR .TASKFILE_DIR}}"    # Get relative path
+      - echo "Relative {{relPath .ROOT_DIR .TASKFILE_DIR}}"    # Get relative path
 ```
 
 ### Data Structure Functions
@@ -620,13 +622,14 @@ tasks:
   dict:
     vars:
       CONFIG:
-        database: postgres
-        port: 5432
-        ssl: true
+        map:
+          database: postgres
+          port: 5432
+          ssl: true
     cmds:
-      - echo "Database: {{.CONFIG | get "database"}}"
-      - echo "Keys: {{.CONFIG | keys}}"
-      - echo "Has SSL: {{.CONFIG | hasKey "ssl"}}"
+      - echo "Database {{.CONFIG | get "database"}}"
+      - echo "Keys {{.CONFIG | keys}}"
+      - echo "Has SSL {{.CONFIG | hasKey "ssl"}}"
       - echo "{{dict "env" "prod" "debug" false}}"
 ```
 
@@ -637,11 +640,13 @@ tasks:
   merge:
     vars:
       BASE_CONFIG:
-        timeout: 30
-        retries: 3
+        map:
+          timeout: 30
+          retries: 3
       USER_CONFIG:
-        timeout: 60
-        debug: true
+        map:
+          timeout: 60
+          debug: true
     cmds:
       - echo "{{merge .BASE_CONFIG .USER_CONFIG | toJson}}"
 ```
@@ -660,7 +665,7 @@ tasks:
       - echo "{{.DEBUG | default true}}"
       - echo "{{.MISSING_VAR | default "fallback"}}"
       - echo "{{coalesce .API_URL .FALLBACK_URL "default"}}"
-      - echo "Is empty: {{empty .ITEMS}}"                     # true
+      - echo "Is empty {{empty .ITEMS}}"                     # true
 ```
 
 ### Encoding and Serialization
@@ -672,13 +677,14 @@ tasks:
   json:
     vars:
       DATA:
-        name: 'Task'
-        version: '3.0'
+        map:
+          name: 'Task'
+          version: '3.0'
       JSON_STRING: '{"key": "value", "number": 42}'
     cmds:
       - echo "{{.DATA | toJson}}"
       - echo "{{.DATA | toPrettyJson}}"
-      - echo "{{.JSON_STRING | fromJson | get "key"}}"
+      - echo "{{.JSON_STRING | fromJson }}"
 ```
 
 #### YAML
@@ -688,9 +694,10 @@ tasks:
   yaml:
     vars:
       CONFIG:
-        database:
-          host: localhost
-          port: 5432
+        map:
+          database:
+            host: localhost
+            port: 5432
       YAML_STRING: |
         key: value
         items:
@@ -698,7 +705,7 @@ tasks:
           - two
     cmds:
       - echo "{{.CONFIG | toYaml}}"
-      - echo "{{.YAML_STRING | fromYaml | get "key"}}"
+      - echo "{{.YAML_STRING | fromYaml}}"
 ```
 
 #### Base64
@@ -726,7 +733,6 @@ tasks:
     cmds:
       - echo "{{.NUM_STR | atoi | add 8}}"        # String to int: 50
       - echo "{{.FLOAT_STR | float64}}"           # String to float: 3.14
-      - echo "{{.BOOL_STR | bool}}"               # String to bool: true
       - echo "{{.ITEMS | toStrings}}"             # Convert to strings: ["1", "2", "3"]
 ```
 
@@ -740,7 +746,7 @@ tasks:
     vars:
       DEPLOYMENT_ID: "{{uuid}}"
     cmds:
-      - echo "Deployment ID: {{.DEPLOYMENT_ID}}"
+      - echo "Deployment ID {{.DEPLOYMENT_ID}}"
 ```
 
 #### Debugging
@@ -750,9 +756,10 @@ tasks:
   debug:
     vars:
       COMPLEX_VAR:
-        items: [1, 2, 3]
-        nested:
-          key: value
+        map:
+          items: [1, 2, 3]
+          nested:
+            key: value
     cmds:
       - echo "{{spew .COMPLEX_VAR}}"              # Pretty-print for debugging
 ```
@@ -768,7 +775,7 @@ tasks:
       VERSION: "1.2.3"
       BUILD: 42
     cmds:
-      - echo "{{print "Simple output"}}"
-      - echo "{{printf "Version: %s.%d" .VERSION .BUILD}}"
-      - echo "{{println "With newline"}}"
+      - echo '{{print "Simple output"}}'
+      - echo '{{printf "Version %s.%d" .VERSION .BUILD}}'
+      - echo '{{println "With newline"}}'
 ```
