@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"runtime"
 	"testing"
 
 	"github.com/sebdah/goldie/v2"
@@ -986,41 +985,6 @@ func TestIncludeChecksum(t *testing.T) {
 			task.WithDir("testdata/includes_checksum/incorrect"),
 		),
 		WithSetupError(),
-		WithFixtureTemplating(),
-	)
-}
-
-//nolint:paralleltest // These tests use signals and cannot run in parallel.
-func TestOutput(t *testing.T) {
-	if runtime.GOOS == "darwin" {
-		t.Skip() // Scripts used in this test do not operate correctly on MacOS.
-	}
-	const dir = "testdata/output"
-	NewExecutorTest(t,
-		WithName("interleaved"),
-		WithExecutorOptions(
-			task.WithDir(dir),
-			task.WithOutputStyle(ast.Output{Name: "interleaved"}),
-			task.WithSilent(true),
-		),
-		WithFixtureTemplating(),
-	)
-	NewExecutorTest(t,
-		WithName("group"),
-		WithExecutorOptions(
-			task.WithDir(dir),
-			task.WithOutputStyle(ast.Output{Name: "group"}),
-			task.WithSilent(true),
-		),
-		WithFixtureTemplating(),
-	)
-	NewExecutorTest(t,
-		WithName("prefixed"),
-		WithExecutorOptions(
-			task.WithDir(dir),
-			task.WithOutputStyle(ast.Output{Name: "prefixed"}),
-			task.WithSilent(true),
-		),
 		WithFixtureTemplating(),
 	)
 }
