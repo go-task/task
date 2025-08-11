@@ -40,4 +40,4 @@ jobs:
         run: python -m pip install 'check-jsonschema==0.27.3'
 
       - name: check-jsonschema (metaschema)
-        run: check-jsonschema --check-metaschema website/static/schema.json
+        run: check-jsonschema --check-metaschema website/src/public/schema.json
