@@ -12,13 +12,13 @@ hero:
   actions:
     - theme: brand
       text: Install
-      link: /installation
+      link: /docs/installation
     - theme: alt
       text: Get Started
-      link: /getting-started
+      link: /docs/getting-started
     - theme: alt
       text: Guide
-      link: /usage
+      link: /docs/guide
 
 features:
   - title: 30-Second Setup

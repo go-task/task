@@ -2,7 +2,7 @@
 outline: deep
 ---
 
-# Usage
+# Guide
 
 ## Running Taskfiles
 

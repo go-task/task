@@ -123,8 +123,8 @@ export default defineConfig({
       { text: 'Home', link: '/' },
       {
         text: 'Docs',
-        link: '/usage',
-        activeMatch: '^/(?!donate|team|blog).'
+        link: '/docs/guide',
+        activeMatch: '^/docs'
       },
       { text: 'Blog', link: '/blog', activeMatch: '^/blog' },
       { text: 'Donate', link: '/donate' },
@@ -174,15 +174,15 @@ export default defineConfig({
       '/': [
         {
           text: 'Installation',
-          link: '/installation'
+          link: '/docs/installation'
         },
         {
           text: 'Getting Started',
-          link: '/getting-started'
+          link: '/docs/getting-started'
         },
         {
-          text: 'Usage',
-          link: '/usage'
+          text: 'Guide',
+          link: '/docs/guide'
         },
         {
           text: 'Reference',
@@ -190,91 +190,91 @@ export default defineConfig({
           items: [
             {
               text: 'CLI',
-              link: '/reference/cli'
+              link: '/docs/reference/cli'
             },
             {
               text: 'Schema',
-              link: '/reference/schema'
+              link: '/docs/reference/schema'
             },
             {
               text: 'Templating',
-              link: '/reference/templating'
+              link: '/docs/reference/templating'
             },
             {
               text: 'Package API',
-              link: '/reference/package'
+              link: '/docs/reference/package'
             }
           ]
         },
         {
           text: 'Experiments',
           collapsed: true,
-          link: '/experiments/',
+          link: '/docs/experiments/',
           items: [
             {
               text: 'Env Precedence (#1038)',
-              link: '/experiments/env-precedence'
+              link: '/docs/experiments/env-precedence'
             },
             {
               text: 'Gentle Force (#1200)',
-              link: '/experiments/gentle-force'
+              link: '/docs/experiments/gentle-force'
             },
             {
               text: 'Remote Taskfiles (#1317)',
-              link: '/experiments/remote-taskfiles'
+              link: '/docs/experiments/remote-taskfiles'
             }
           ]
         },
         {
           text: 'Deprecations',
           collapsed: true,
-          link: '/deprecations/',
+          link: '/docs/deprecations/',
           items: [
             {
               text: 'Completion Scripts',
-              link: '/deprecations/completion-scripts'
+              link: '/docs/deprecations/completion-scripts'
             },
             {
               text: 'Template Functions',
-              link: '/deprecations/template-functions'
+              link: '/docs/deprecations/template-functions'
             },
             {
               text: 'Version 2 Schema (#1197)',
-              link: '/deprecations/version-2-schema'
+              link: '/docs/deprecations/version-2-schema'
             }
           ]
         },
         {
           text: 'Taskfile Versions',
-          link: '/taskfile-versions'
+          link: '/docs/taskfile-versions'
         },
         {
           text: 'Integrations',
-          link: '/integrations'
+          link: '/docs/integrations'
         },
         {
           text: 'Community',
-          link: '/community'
+          link: '/docs/community'
         },
         {
           text: 'Style Guide',
-          link: '/styleguide'
+          link: '/docs/styleguide'
         },
         {
           text: 'Contributing',
-          link: '/contributing'
+          link: '/docs/contributing'
         },
         {
           text: 'Releasing',
-          link: '/releasing'
+          link: '/docs/releasing'
         },
         {
           text: 'Changelog',
-          link: '/changelog'
+          link: '/docs/changelog'
         },
         {
           text: 'FAQ',
-          link: '/faq'
+          link: '/docs/faq'
         }
       ],
       // Hacky to disable sidebar for these pages
