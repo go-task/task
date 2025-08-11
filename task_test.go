@@ -1246,6 +1246,39 @@ func TestIncludesInterpolation(t *testing.T) { // nolint:paralleltest // cannot 
 	}
 }
 
+func TestIncludesInvalidTaskfile(t *testing.T) {
+	t.Parallel()
+
+	const dir = "testdata/includes_invalid_taskfile"
+
+	tests := []struct {
+		name        string
+		expectedErr string
+	}{
+		{"include_empty_taskfile", "taskfile field in includes cannot be empty"},
+		{"include_empty_value", "inline taskfile value in includes cannot be empty"},
+		{"include_missing_taskfile", "taskfile field in includes cannot be null"},
+		{"include_null_taskfile", "taskfile field in includes cannot be null"},
+		{"include_null_value", "inline taskfile value in includes cannot be null"},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			var buff bytes.Buffer
+			e := task.Executor{
+				Dir:    filepath.Join(dir, test.name),
+				Stdout: &buff,
+				Stderr: &buff,
+				Silent: true,
+			}
+			err := e.Setup()
+			assert.ErrorContains(t, err, test.expectedErr)
+		})
+	}
+}
+
 func TestIncludesWithExclude(t *testing.T) {
 	t.Parallel()
 
