@@ -12,7 +12,8 @@ import {
 const members = [
   {
     avatar: 'https://www.github.com/andreynering.png',
-    name: '🇧🇷 Andrey Nering',
+    name: 'Andrey Nering',
+    icon: '/img/flag-brazil.svg',
     title: 'Creator & Maintainer',
     sponsor: 'https://github.com/sponsors/andreynering',
     links: [
@@ -25,7 +26,8 @@ const members = [
   },
   {
     avatar: 'https://www.github.com/pd93.png',
-    name: '🇬🇧 Pete Davison',
+    name: 'Pete Davison',
+    icon: '/img/flag-wales.svg',
     title: 'Maintainer',
     sponsor: 'https://github.com/sponsors/pd93',
     links: [
@@ -35,7 +37,8 @@ const members = [
   },
   {
     avatar: 'https://www.github.com/vmaerten.png',
-    name: '🇫🇷 Valentin Maerten',
+    name: 'Valentin Maerten',
+    icon: '/img/flag-france.svg',
     title: 'Maintainer',
     sponsor: 'https://github.com/sponsors/vmaerten',
     links: [

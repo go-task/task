@@ -1,11 +1,15 @@
 <script setup lang="ts">
 import type { DefaultTheme } from 'vitepress/theme';
-import VPLink from './VPLink.vue';
-import VPSocialLinks from './VPSocialLinks.vue';
+import VPLink from 'vitepress/dist/client/theme-default/components/VPLink.vue';
+import VPSocialLinks from 'vitepress/dist/client/theme-default/components/VPSocialLinks.vue';
 
 interface Props {
 	size?: 'small' | 'medium';
-	member: DefaultTheme.TeamMember;
+	member: TeamMember;
+}
+
+interface TeamMember extends DefaultTheme.TeamMember {
+	icon?: string;
 }
 
 withDefaults(defineProps<Props>(), {
@@ -21,6 +25,7 @@ withDefaults(defineProps<Props>(), {
 			</figure>
 			<div class="data">
 				<h1 class="name">
+					<img :src="member.icon" alt="profile-icon" />
 					{{ member.name }}
 				</h1>
 				<p v-if="member.title || member.org" class="affiliation">
@@ -132,6 +137,19 @@ withDefaults(defineProps<Props>(), {
 .VPTeamMembersItem.medium .links {
 	margin: 0 -16px -12px;
 	padding: 16px 12px 0;
+}
+
+.VPTeamMembersItem .profile .name {
+	display: flex;
+	gap: 10px;
+	align-items: center;
+	justify-content: center;
+}
+
+.VPTeamMembersItem .profile .name img {
+	display: inline-block;
+	height: 22px;
+	background-repeat: no-repeat;
 }
 
 .profile {
