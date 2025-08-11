@@ -141,7 +141,7 @@ withDefaults(defineProps<Props>(), {
 
 .VPTeamMembersItem .profile .name {
 	display: flex;
-	gap: 10px;
+	gap: 8px;
 	align-items: center;
 	justify-content: center;
 }
