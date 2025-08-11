@@ -9,7 +9,7 @@ import {
 } from 'vitepress-plugin-group-icons';
 import { team } from './team.ts';
 import { ogUrl, taskDescription, taskName } from './meta.ts';
-import { fileURLToPath, URL } from 'node:url'
+import { fileURLToPath, URL } from 'node:url';
 
 const version = readFileSync(
   resolve(__dirname, '../../internal/version/version.txt'),
@@ -81,9 +81,6 @@ export default defineConfig({
   ],
   srcDir: 'src',
   cleanUrls: true,
-  rewrites(id) {
-    return id.replace(/^docs\//, '');
-  },
   markdown: {
     config: (md) => {
       md.use(githubLinksPlugin, {
