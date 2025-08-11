@@ -9,6 +9,7 @@ import {
 } from 'vitepress-plugin-group-icons';
 import { team } from './team.ts';
 import { ogUrl, taskDescription, taskName } from './meta.ts';
+import { fileURLToPath, URL } from 'node:url'
 
 const version = readFileSync(
   resolve(__dirname, '../../internal/version/version.txt'),
@@ -94,7 +95,17 @@ export default defineConfig({
     }
   },
   vite: {
-    plugins: [groupIconVitePlugin()]
+    plugins: [groupIconVitePlugin()],
+    resolve: {
+      alias: [
+        {
+          find: /^.*\/VPTeamMembersItem\.vue$/,
+          replacement: fileURLToPath(
+            new URL('./components/VPTeamMembersItem.vue', import.meta.url)
+          )
+        }
+      ]
+    }
   },
 
   themeConfig: {
