@@ -71,10 +71,16 @@ type (
 		executionHashes      map[string]context.Context
 		executionHashesMutex sync.Mutex
 		watchedDirs          *xsync.MapOf[string, bool]
+		whenTasks            map[string][]WhenTaskCall
 	}
 	TempDir struct {
 		Remote      string
 		Fingerprint string
+	}
+	WhenTaskCall struct {
+		Task  *ast.Task
+		Call  *Call
+		Index int
 	}
 )
 
@@ -98,6 +104,7 @@ func NewExecutor(opts ...ExecutorOption) *Executor {
 		mkdirMutexMap:        map[string]*sync.Mutex{},
 		executionHashes:      map[string]context.Context{},
 		executionHashesMutex: sync.Mutex{},
+		whenTasks:            map[string][]WhenTaskCall{},
 	}
 	e.Options(opts...)
 	return e

@@ -97,6 +97,14 @@ func (e *Executor) Run(ctx context.Context, calls ...*Call) error {
 		return e.watchTasks(watchCalls...)
 	}
 
+	if whenList, ok := e.whenTasks["exit"]; ok {
+		for _, w := range whenList {
+			if err := e.runCommand(ctx, w.Task, w.Call, w.Index); err != nil {
+				e.Logger.Errf(logger.Red, "task: error running when[%v] task call", "exit", err)
+			}
+		}
+		delete(e.whenTasks, "exit")
+	}
 	return nil
 }
 
@@ -211,7 +219,14 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) error {
 
 		for i := range t.Cmds {
 			if t.Cmds[i].Defer {
-				defer e.runDeferred(t, call, i, &deferredExitCode)
+				if len(call.When) > 0 {
+					if _, ok := e.whenTasks[call.When]; !ok {
+						e.whenTasks[call.When] = []WhenTaskCall{}
+					}
+					e.whenTasks[call.When] = append(e.whenTasks[call.When], WhenTaskCall{Task: t, Call: call, Index: i})
+				} else {
+					defer e.runDeferred(t, call, i, &deferredExitCode)
+				}
 				continue
 			}
 
@@ -313,7 +328,7 @@ func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call *Call, i in
 		reacquire := e.releaseConcurrencyLimit()
 		defer reacquire()
 
-		err := e.RunTask(ctx, &Call{Task: cmd.Task, Vars: cmd.Vars, Silent: cmd.Silent, Indirect: true})
+		err := e.RunTask(ctx, &Call{Task: cmd.Task, Vars: cmd.Vars, Silent: cmd.Silent, Indirect: true, When: cmd.When})
 		if err != nil {
 			return err
 		}
