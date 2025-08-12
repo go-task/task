@@ -8,6 +8,6 @@ charset = utf-8
 trim_trailing_whitespace = true
 indent_style = tab
 
-[*.{md,mdx,yml,yaml,json,toml,htm,html,js,ts,css,svg,sh,bash,fish}]
+[*.{md,mdx,yml,yaml,json,toml,htm,html,js,ts,vue,css,svg,sh,bash,fish}]
 indent_style = space
 indent_size = 2
