@@ -13,7 +13,7 @@
 
 # Redirect some group docs pages
 /deprecations/*    /docs/deprecations/:splat
-/experiments/*     /docs/experiments:splat
+/experiments/*     /docs/experiments/:splat
 /reference/*       /docs/reference/:splat
 
 # Redirect root /docs to something useful

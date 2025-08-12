@@ -294,5 +294,8 @@ export default defineConfig({
       message:
         'Built with <a target="_blank" href="https://www.netlify.com">Netlify</a>'
     }
+  },
+  sitemap: {
+    hostname: 'https://taskfile.dev'
   }
 });

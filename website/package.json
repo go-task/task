@@ -21,5 +21,6 @@
     "vitepress-plugin-group-icons": "^1.6.1",
     "vitepress-plugin-tabs": "^0.7.1",
     "vue": "^3.5.18"
-  }
+  },
+  "packageManager": "pnpm@9.15.6+sha512.139cab068fdf0b751268179ac5f909b5be72afb4a75c513d1905d151befc8977b593d3cf8671ed83d4d6637c5c94b98ffbce108125de4a5a27a31233601a99de"
 }
