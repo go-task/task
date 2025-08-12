@@ -136,6 +136,23 @@ winget:
           name: winget-pkgs
           branch: master
 
+
+npms:
+  - name: "@go-task/cli"
+    repository: "git+https://github.com/go-task/task.git"
+    bugs: https://github.com/go-task/task/issues
+    description: A task runner / simpler Make alternative written in Go
+    homepage: https://taskfile.dev
+    license: MIT
+    author: "The Task authors"
+    access: public
+    keywords:
+      - "task",
+      - "taskfile",
+      - "build-tool",
+      - "task-runner"
+
+
 cloudsmiths:
   - organization: "task"
     repository: "task"
