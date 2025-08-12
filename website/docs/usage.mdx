@@ -779,6 +779,37 @@ tasks:
       - public/bundle.css
 ```
 
+It is also possible to exclude files from fingerprinting globally by creating `.taskignore`
+file in the same directory where the `Taskfile` is located.
+
+<Tabs defaultValue="2"
+      values={[
+        { label: 'Taskfile', value: '1' },
+        { label: '.taskignore', value: '2' }
+      ]}>
+
+<TabItem value="1">
+
+```yaml
+version: '3'
+
+tasks:
+  css:
+    sources:
+      - mysources/**/*.css
+    generates:
+      - public/bundle.css
+```
+
+</TabItem>
+<TabItem value="2">
+
+```yaml
+mysources/ignoreme.css
+```
+
+</TabItem></Tabs>
+
 If you prefer these check to be made by the modification timestamp of the files,
 instead of its checksum (content), just set the `method` property to
 `timestamp`. This can be done at two levels:
