@@ -112,12 +112,12 @@ export default defineConfig({
       placement: 'taskfiledev'
     },
     search: {
-      provider: 'local'
-      // options: {
-      // 	appId: '...',
-      // 	apiKey: '...',
-      // 	indexName: '...'
-      // }
+      provider: 'algolia',
+      options: {
+        appId: '7IZIJ13AI7',
+        apiKey: '34b64ae4fc8d9da43d9a13d9710aaddc',
+        indexName: 'taskfile'
+      }
     },
     nav: [
       { text: 'Home', link: '/' },
