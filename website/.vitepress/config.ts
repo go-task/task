@@ -77,7 +77,22 @@ export default defineConfig({
     ['meta', { property: 'og:url', content: ogUrl }],
     ['meta', { property: 'twitter:card', content: 'summary_large_image' }],
     ['meta', { property: 'twitter:title', content: taskName }],
-    ['meta', { property: 'twitter:description', content: taskDescription }]
+    ['meta', { property: 'twitter:description', content: taskDescription }],
+    [
+      'script',
+      {
+        async: '',
+        src: 'https://www.googletagmanager.com/gtag/js?id=G-4RT25NXQ7N'
+      }
+    ],
+    [
+      'script',
+      {},
+      `window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag("js", new Date());
+      gtag("config", "G-4RT25NXQ7N");`
+    ]
   ],
   srcDir: 'src',
   cleanUrls: true,
