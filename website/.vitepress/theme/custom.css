@@ -140,3 +140,8 @@ img[src*='custom-icon-badges.demolab.com'] {
     content: '🔥';
   }
 }
+
+
+.VPTeamPage > .VPTeamPageTitle {
+  padding-top: 0
+}
