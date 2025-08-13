@@ -162,9 +162,9 @@ cloudsmiths:
       - rpm
       - apk
     distributions:
-#      deb:
+      deb:
 #        - "ubuntu/any-version"
-#        - "debian/any-version"
+        - "debian/any-version"
       rpm:
         - "el/any-version"
         - "fedora/any-version"
