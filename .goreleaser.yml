@@ -163,7 +163,7 @@ cloudsmiths:
       - apk
     distributions:
       deb:
-#        - "ubuntu/any-version"
+        - "ubuntu/any-version"
         - "debian/any-version"
       rpm:
         - "el/any-version"

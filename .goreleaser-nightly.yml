@@ -11,26 +11,6 @@ nightly:
   version_template: "{{incminor .Version}}-nightly"
 
 
-#cloudsmiths:
-#  - organization: "task"
-#    repository: "task"
-#    formats:
-#      - deb
-#      - rpm
-#      - apk
-#    distributions:
-#      deb:
-#        - "ubuntu/any-version"
-#        - "debian/any-version"
-#      rpm:
-#        - "el/any-version"
-#        - "fedora/any-version"
-#      alpine:
-#        - "alpine/any-version"
-#    component: main
-#    republish: true
-
-
 includes:
   - from_file:
       path: ./.goreleaser.yml
