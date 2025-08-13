@@ -1,4 +1,4 @@
-name: Realease nightly
+name: Release nightly
 
 on:
   workflow_dispatch:
@@ -27,3 +27,4 @@ jobs:
         env:
           GITHUB_TOKEN: ${{secrets.GH_PAT}}
           GORELEASER_KEY: ${{secrets.GORELEASER_KEY}}
+          CLOUDSMITH_TOKEN: ${{secrets.CLOUDSMITH_TOKEN}}

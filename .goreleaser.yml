@@ -68,6 +68,7 @@ nfpms:
     formats:
       - deb
       - rpm
+      - apk
     file_name_template: '{{.ProjectName}}_{{.Os}}_{{.Arch}}'
     contents:
       - src: completion/bash/task.bash
@@ -147,9 +148,9 @@ npms:
     author: "The Task authors"
     access: public
     keywords:
-      - "task",
-      - "taskfile",
-      - "build-tool",
+      - "task"
+      - "taskfile"
+      - "build-tool"
       - "task-runner"
 
 
@@ -161,13 +162,13 @@ cloudsmiths:
       - rpm
       - apk
     distributions:
-      deb:
-        - "ubuntu/any-version"
-        - "debian/any-version"
+#      deb:
+#        - "ubuntu/any-version"
+#        - "debian/any-version"
       rpm:
         - "el/any-version"
         - "fedora/any-version"
       alpine:
         - "alpine/any-version"
-    component: main
+    component: "{{if .IsNightly}}unstable{{else}}main{{end}}"
     republish: true
