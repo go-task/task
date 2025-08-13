@@ -68,6 +68,7 @@ nfpms:
     formats:
       - deb
       - rpm
+      - apk
     file_name_template: '{{.ProjectName}}_{{.Os}}_{{.Arch}}'
     contents:
       - src: completion/bash/task.bash
