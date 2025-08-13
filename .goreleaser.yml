@@ -158,13 +158,13 @@ cloudsmiths:
   - organization: "task"
     repository: "task"
     formats:
-      - deb
+#      - deb
       - rpm
       - apk
     distributions:
-      deb:
-        - "ubuntu/any-version"
-        - "debian/any-version"
+#      deb:
+#        - "ubuntu/any-version"
+#        - "debian/any-version"
       rpm:
         - "el/any-version"
         - "fedora/any-version"
