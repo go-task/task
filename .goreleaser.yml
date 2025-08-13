@@ -68,7 +68,6 @@ nfpms:
     formats:
       - deb
       - rpm
-
     file_name_template: '{{.ProjectName}}_{{.Os}}_{{.Arch}}'
     contents:
       - src: completion/bash/task.bash
@@ -160,6 +159,7 @@ cloudsmiths:
     formats:
       - deb
       - rpm
+      - apk
     distributions:
       deb:
         - "ubuntu/any-version"
@@ -167,6 +167,8 @@ cloudsmiths:
       rpm:
         - "el/any-version"
         - "fedora/any-version"
+      alpine:
+        - "alpine/any-version"
     component: main
     republish: true
     ids:
