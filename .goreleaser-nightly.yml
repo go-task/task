@@ -27,7 +27,7 @@ cloudsmiths:
         - "fedora/any-version"
       alpine:
         - "alpine/any-version"
-    component: unstable
+    component: main
     republish: true
     ids:
       - "!*arm64*"
