@@ -29,8 +29,6 @@ cloudsmiths:
         - "alpine/any-version"
     component: main
     republish: true
-    ids:
-      - "!*arm64*"
 
 
 includes:
