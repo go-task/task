@@ -69,12 +69,10 @@ nfpms:
       - deb
       - rpm
 
-    overrides:
-      deb:
-        replacements:
-          386: i386
-          arm: armhf
-          
+    replacements:
+      386: i386
+      arm: armhf
+      
     file_name_template: '{{.ProjectName}}_{{.Os}}_{{.Arch}}'
     contents:
       - src: completion/bash/task.bash
