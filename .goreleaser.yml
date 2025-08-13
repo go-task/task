@@ -147,9 +147,9 @@ npms:
     author: "The Task authors"
     access: public
     keywords:
-      - "task",
-      - "taskfile",
-      - "build-tool",
+      - "task"
+      - "taskfile"
+      - "build-tool"
       - "task-runner"
 
 
