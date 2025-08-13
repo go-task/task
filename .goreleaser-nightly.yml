@@ -10,7 +10,6 @@ nightly:
   keep_single_release: true
   version_template: "{{incminor .Version}}-nightly"
 
-
 includes:
   - from_file:
       path: ./.goreleaser.yml

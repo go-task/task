@@ -158,7 +158,7 @@ cloudsmiths:
   - organization: "task"
     repository: "task"
     formats:
-#      - deb
+      - deb
       - rpm
       - apk
     distributions:
