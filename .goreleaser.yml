@@ -159,7 +159,6 @@ cloudsmiths:
     formats:
       - deb
       - rpm
-      - apk
     distributions:
       deb:
         - "ubuntu/any-version"
@@ -167,7 +166,5 @@ cloudsmiths:
       rpm:
         - "el/any-version"
         - "fedora/any-version"
-      alpine:
-        - "alpine/any-version"
     component: main
     republish: true
