@@ -10,6 +10,10 @@ nightly:
   keep_single_release: true
   version_template: "{{incminor .Version}}-nightly"
 
+cloudsmiths:
+  component: unstable
+
+
 includes:
   - from_file:
       path: ./.goreleaser.yml
