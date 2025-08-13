@@ -1,4 +1,4 @@
-name: Realease nightly
+name: Release nightly
 
 on:
   workflow_dispatch:
