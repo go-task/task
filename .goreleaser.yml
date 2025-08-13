@@ -170,7 +170,7 @@ cloudsmiths:
         - "fedora/any-version"
       alpine:
         - "alpine/any-version"
-    component: "{{if .IsNightly}}unstable{{else}}main{{end}}"
+    component: main
     republish: true
     ids:
       - "!*arm64*"
