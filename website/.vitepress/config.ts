@@ -222,6 +222,10 @@ export default defineConfig({
             {
               text: 'Package API',
               link: '/docs/reference/package'
+            },
+            {
+              text: 'Environment',
+              link: '/docs/reference/environment'
             }
           ]
         },
