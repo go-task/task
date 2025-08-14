@@ -1,54 +1,26 @@
 {
-  "name": "taskfile-dev",
-  "version": "0.0.0",
-  "private": true,
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/go-task/task"
-  },
+  "name": "website2",
+  "version": "1.0.0",
+  "description": "",
+  "type": "module",
   "scripts": {
-    "docusaurus": "docusaurus",
-    "start": "docusaurus start",
-    "build": "docusaurus build",
-    "swizzle": "docusaurus swizzle",
-    "deploy": "docusaurus deploy",
-    "clear": "docusaurus clear",
-    "serve": "docusaurus serve",
-    "write-translations": "docusaurus write-translations",
-    "write-heading-ids": "docusaurus write-heading-ids"
+    "dev": "vitepress dev",
+    "build": "vitepress build",
+    "preview": "vitepress preview",
+    "lint": "prettier --write ."
   },
-  "dependencies": {
-    "@docusaurus/core": "^3.5.2",
-    "@docusaurus/preset-classic": "^3.5.2",
-    "@mdx-js/react": "^3.0.0",
-    "clsx": "^2.0.0",
-    "prism-react-renderer": "^2.1.0",
-    "raw-loader": "^4.0.2",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "remark-gfm": "^4.0.0",
-    "remark-github": "^12.0.0"
-  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
   "devDependencies": {
-    "@docusaurus/module-type-aliases": "^3.5.2",
-    "@docusaurus/tsconfig": "^3.5.2",
-    "@docusaurus/types": "^3.5.2",
-    "@types/react": "^19.0.0",
-    "typescript": "^5.3.3"
+    "@types/markdown-it": "^14.1.2",
+    "@types/node": "^24.1.0",
+    "netlify-cli": "^23.1.1",
+    "prettier": "^3.6.2",
+    "vitepress": "^1.6.3",
+    "vitepress-plugin-group-icons": "^1.6.1",
+    "vitepress-plugin-tabs": "^0.7.1",
+    "vue": "^3.5.18"
   },
-  "engines": {
-    "node": ">=18.0"
-  },
-  "browserslist": {
-    "production": [
-      ">0.5%",
-      "not dead",
-      "not op_mini all"
-    ],
-    "development": [
-      "last 1 chrome version",
-      "last 1 firefox version",
-      "last 1 safari version"
-    ]
-  }
+  "packageManager": "pnpm@9.15.6+sha512.139cab068fdf0b751268179ac5f909b5be72afb4a75c513d1905d151befc8977b593d3cf8671ed83d4d6637c5c94b98ffbce108125de4a5a27a31233601a99de"
 }

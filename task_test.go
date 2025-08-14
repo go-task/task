@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
+	"maps"
 	rand "math/rand/v2"
 	"net/http"
 	"net/http/httptest"
@@ -42,9 +43,11 @@ type (
 		FormatterTestOption
 	}
 	TaskTest struct {
-		name           string
-		experiments    map[*experiments.Experiment]int
-		postProcessFns []PostProcessFn
+		name                     string
+		experiments              map[*experiments.Experiment]int
+		postProcessFns           []PostProcessFn
+		fixtureTemplateData      map[string]any
+		fixtureTemplatingEnabled bool
 	}
 )
 
@@ -79,7 +82,22 @@ func (tt *TaskTest) writeFixture(
 	if goldenFileSuffix != "" {
 		goldenFileName += "-" + goldenFileSuffix
 	}
-	g.Assert(t, goldenFileName, b)
+	// Create a set of data to be made available to every test fixture
+	wd, err := os.Getwd()
+	require.NoError(t, err)
+	if tt.fixtureTemplatingEnabled {
+		fixtureTemplateData := map[string]any{
+			"TEST_NAME": t.Name(),
+			"TEST_DIR":  wd,
+		}
+		// If the test has additional template data, copy it into the map
+		if tt.fixtureTemplateData != nil {
+			maps.Copy(fixtureTemplateData, tt.fixtureTemplateData)
+		}
+		g.AssertWithTemplate(t, goldenFileName, fixtureTemplateData, b)
+	} else {
+		g.Assert(t, goldenFileName, b)
+	}
 }
 
 // writeFixtureBuffer is a wrapper for writing the main output of the task to a
@@ -234,22 +252,51 @@ func (opt *setupErrorTestOption) applyToFormatterTest(t *FormatterTest) {
 	t.wantSetupError = true
 }
 
+// WithFixtureTemplating enables templating for the golden fixture files with
+// the default set of data. This is useful if the golden file is dynamic in some
+// way (e.g. contains user-specific directories). To add more data, see
+// WithFixtureTemplateData.
+func WithFixtureTemplating() TestOption {
+	return &fixtureTemplatingTestOption{}
+}
+
+type fixtureTemplatingTestOption struct{}
+
+func (opt *fixtureTemplatingTestOption) applyToExecutorTest(t *ExecutorTest) {
+	t.fixtureTemplatingEnabled = true
+}
+
+func (opt *fixtureTemplatingTestOption) applyToFormatterTest(t *FormatterTest) {
+	t.fixtureTemplatingEnabled = true
+}
+
+// WithFixtureTemplateData adds data to the golden fixture file templates. Keys
+// given here will override any existing values. This option will also enable
+// global templating, so you do not need to call WithFixtureTemplating as well.
+func WithFixtureTemplateData(key string, value any) TestOption {
+	return &fixtureTemplateDataTestOption{key, value}
+}
+
+type fixtureTemplateDataTestOption struct {
+	k string
+	v any
+}
+
+func (opt *fixtureTemplateDataTestOption) applyToExecutorTest(t *ExecutorTest) {
+	t.fixtureTemplatingEnabled = true
+	t.fixtureTemplateData[opt.k] = opt.v
+}
+
+func (opt *fixtureTemplateDataTestOption) applyToFormatterTest(t *FormatterTest) {
+	t.fixtureTemplatingEnabled = true
+	t.fixtureTemplateData[opt.k] = opt.v
+}
+
 // Post-processing
 
 // A PostProcessFn is a function that can be applied to the output of a test
 // fixture before the file is written.
 type PostProcessFn func(*testing.T, []byte) []byte
-
-// PPRemoveAbsolutePaths removes any absolute paths from the output of the task.
-// This is useful when the task output contains paths that are can be different
-// in different environments such as home directories. The function looks for
-// any paths that contain the current working directory and truncates them.
-func PPRemoveAbsolutePaths(t *testing.T, b []byte) []byte {
-	t.Helper()
-	wd, err := os.Getwd()
-	require.NoError(t, err)
-	return bytes.ReplaceAll(b, []byte(wd), nil)
-}
 
 // PPSortedLines sorts the lines of the output of the task. This is useful when
 // the order of the output is not important, but the output is expected to be
@@ -702,6 +749,7 @@ func TestIncludesRemote(t *testing.T) {
 	enableExperimentForTest(t, &experiments.RemoteTaskfiles, 1)
 
 	dir := "testdata/includes_remote"
+	os.RemoveAll(filepath.Join(dir, ".task", "remote"))
 
 	srv := httptest.NewServer(http.FileServer(http.Dir(dir)))
 	defer srv.Close()
@@ -777,8 +825,8 @@ func TestIncludesRemote(t *testing.T) {
 				},
 			}
 
-			for j, e := range executors {
-				t.Run(fmt.Sprint(j), func(t *testing.T) {
+			for _, e := range executors {
+				t.Run(e.name, func(t *testing.T) {
 					require.NoError(t, e.executor.Setup())
 
 					for k, taskCall := range taskCalls {

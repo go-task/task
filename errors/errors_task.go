@@ -1,6 +1,7 @@
 package errors
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -46,8 +47,9 @@ func (err *TaskRunError) Code() int {
 }
 
 func (err *TaskRunError) TaskExitCode() int {
-	if c, ok := interp.IsExitStatus(err.Err); ok {
-		return int(c)
+	var exit interp.ExitStatus
+	if errors.As(err.Err, &exit) {
+		return int(exit)
 	}
 	return err.Code()
 }

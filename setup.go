@@ -104,6 +104,9 @@ func (e *Executor) setupFuzzyModel() {
 
 	var words []string
 	for name, task := range e.Taskfile.Tasks.All(nil) {
+		if task.Internal {
+			continue
+		}
 		words = append(words, name)
 		words = slices.Concat(words, task.Aliases)
 	}

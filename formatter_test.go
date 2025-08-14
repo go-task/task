@@ -44,7 +44,8 @@ func NewFormatterTest(t *testing.T, opts ...FormatterTestOption) {
 		task: "default",
 		vars: map[string]any{},
 		TaskTest: TaskTest{
-			experiments: map[*experiments.Experiment]int{},
+			experiments:         map[*experiments.Experiment]int{},
+			fixtureTemplateData: map[string]any{},
 		},
 	}
 	// Apply the functional options
@@ -216,5 +217,19 @@ func TestListDescInterpolation(t *testing.T) {
 		WithListOptions(task.ListOptions{
 			ListOnlyTasksWithDescriptions: true,
 		}),
+	)
+}
+
+func TestJsonListFormat(t *testing.T) {
+	t.Parallel()
+
+	NewFormatterTest(t,
+		WithExecutorOptions(
+			task.WithDir("testdata/json_list_format"),
+		),
+		WithListOptions(task.ListOptions{
+			FormatTaskListAsJSON: true,
+		}),
+		WithFixtureTemplating(),
 	)
 }

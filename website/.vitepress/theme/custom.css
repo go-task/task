@@ -1,0 +1,147 @@
+:root {
+  --ifm-color-primary: #43aba2;
+  --vp-home-hero-name-color: var(--ifm-color-primary);
+  --vp-c-brand-1: var(--ifm-color-primary);
+  --vp-c-brand-2: var(--ifm-color-primary);
+  --vp-c-brand-3: var(--ifm-color-primary);
+
+  --vp-icon-info: #3b82f6;
+  --vp-icon-tip: #10b981;
+  --vp-icon-warning: #f59e0b;
+  --vp-icon-danger: #ef4444;
+  --vp-icon-details: #6b7280;
+}
+
+.dark {
+  --vp-icon-info: #93c5fd;
+  --vp-icon-tip: #34d399;
+  --vp-icon-warning: #fbbf24;
+  --vp-icon-danger: #f87171;
+  --vp-icon-details: #9ca3af;
+}
+
+img[src*='shields.io'] {
+  display: inline;
+  vertical-align: text-bottom;
+}
+img[src*='custom-icon-badges.demolab.com'] {
+  display: inline;
+  height: 1em;
+  vertical-align: text-bottom;
+}
+
+.github-user-mention {
+  font-weight: 700 !important;
+}
+
+.vp-doc .blog-post:first-of-type {
+  margin-top: 2rem;
+}
+
+.blog-post {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.blog-post:nth-of-type(1) {
+  animation-delay: 0.1s;
+}
+.blog-post:nth-of-type(2) {
+  animation-delay: 0.2s;
+}
+.blog-post:nth-of-type(3) {
+  animation-delay: 0.3s;
+}
+
+.custom-block .custom-block-title::before {
+  content: '';
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  margin-right: 8px;
+  vertical-align: middle;
+  flex-shrink: 0;
+
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  -webkit-mask-size: contain;
+  mask-repeat: no-repeat;
+  mask-position: center;
+  mask-size: contain;
+}
+
+.custom-block.info .custom-block-title::before {
+  background-color: var(--vp-icon-info);
+  -webkit-mask-image: url('./icons/info.svg');
+  mask-image: url('./icons/info.svg');
+}
+
+.custom-block.tip .custom-block-title::before {
+  background-color: var(--vp-icon-tip);
+  -webkit-mask-image: url('./icons/tip.svg');
+  mask-image: url('./icons/tip.svg');
+}
+
+.custom-block.warning .custom-block-title::before {
+  background-color: var(--vp-icon-warning);
+  -webkit-mask-image: url('./icons/warning.svg');
+  mask-image: url('./icons/warning.svg');
+}
+
+.custom-block.danger .custom-block-title::before {
+  background-color: var(--vp-icon-danger);
+  -webkit-mask-image: url('./icons/danger.svg');
+  mask-image: url('./icons/danger.svg');
+}
+
+.custom-block.details[open] summary::before {
+  transform: rotate(90deg);
+}
+
+.custom-block .custom-block-title {
+  display: flex;
+  align-items: center;
+}
+
+@supports not (mask-image: none) {
+  .custom-block .custom-block-title::before,
+  .custom-block.details summary::before {
+    font-size: 18px;
+    width: auto;
+    height: auto;
+    background: none !important;
+    -webkit-mask: none !important;
+    mask: none !important;
+  }
+
+  .custom-block.info .custom-block-title::before {
+    content: 'ℹ️';
+  }
+
+  .custom-block.tip .custom-block-title::before {
+    content: '💡';
+  }
+
+  .custom-block.warning .custom-block-title::before {
+    content: '⚠️';
+  }
+
+  .custom-block.danger .custom-block-title::before {
+    content: '🔥';
+  }
+}
+
+
+.VPTeamPage > .VPTeamPageTitle {
+  padding-top: 0
+}

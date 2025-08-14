@@ -1,19 +1,20 @@
 package taskfile
 
 type (
-	NodeOption func(*BaseNode)
-	// BaseNode is a generic node that implements the Parent() methods of the
+	NodeOption func(*baseNode)
+	// baseNode is a generic node that implements the Parent() methods of the
 	// NodeReader interface. It does not implement the Read() method and it
 	// designed to be embedded in other node types so that this boilerplate code
 	// does not need to be repeated.
-	BaseNode struct {
-		parent Node
-		dir    string
+	baseNode struct {
+		parent   Node
+		dir      string
+		checksum string
 	}
 )
 
-func NewBaseNode(dir string, opts ...NodeOption) *BaseNode {
-	node := &BaseNode{
+func NewBaseNode(dir string, opts ...NodeOption) *baseNode {
+	node := &baseNode{
 		parent: nil,
 		dir:    dir,
 	}
@@ -27,15 +28,29 @@ func NewBaseNode(dir string, opts ...NodeOption) *BaseNode {
 }
 
 func WithParent(parent Node) NodeOption {
-	return func(node *BaseNode) {
+	return func(node *baseNode) {
 		node.parent = parent
 	}
 }
 
-func (node *BaseNode) Parent() Node {
+func WithChecksum(checksum string) NodeOption {
+	return func(node *baseNode) {
+		node.checksum = checksum
+	}
+}
+
+func (node *baseNode) Parent() Node {
 	return node.parent
 }
 
-func (node *BaseNode) Dir() string {
+func (node *baseNode) Dir() string {
 	return node.dir
+}
+
+func (node *baseNode) Checksum() string {
+	return node.checksum
+}
+
+func (node *baseNode) Verify(checksum string) bool {
+	return node.checksum == "" || node.checksum == checksum
 }

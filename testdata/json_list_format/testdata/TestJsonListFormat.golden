@@ -1,0 +1,18 @@
+{
+  "tasks": [
+    {
+      "name": "foobar",
+      "task": "foo",
+      "desc": "task description",
+      "summary": "",
+      "aliases": [],
+      "up_to_date": false,
+      "location": {
+        "line": 4,
+        "column": 3,
+        "taskfile": "{{.TEST_DIR}}/testdata/json_list_format/Taskfile.yml"
+      }
+    }
+  ],
+  "location": "{{.TEST_DIR}}/testdata/json_list_format/Taskfile.yml"
+}

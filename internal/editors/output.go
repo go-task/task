@@ -9,6 +9,7 @@ type (
 	// Task describes a single task
 	Task struct {
 		Name     string    `json:"name"`
+		Task     string    `json:"task"`
 		Desc     string    `json:"desc"`
 		Summary  string    `json:"summary"`
 		Aliases  []string  `json:"aliases"`

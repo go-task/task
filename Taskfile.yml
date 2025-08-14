@@ -53,9 +53,12 @@ tasks:
   generate:fixtures:
     desc: Runs tests and generates golden fixture files
     aliases: [gen:fixtures, g:fixtures]
+    env:
+      GOLDIE_UPDATE: 'true'
+      GOLDIE_TEMPLATE: 'true'
     cmds:
       - find ./testdata -name '*.golden' -delete
-      - go test -update ./...
+      - go test ./...
 
   install:mockery:
     desc: Installs mockgen; a tool to generate mock files
@@ -87,6 +90,7 @@ tasks:
     sources:
       - './**/*.go'
       - .golangci.yml
+      - go.mod
     cmds:
       - golangci-lint run
 
@@ -95,6 +99,7 @@ tasks:
     sources:
       - './**/*.go'
       - .golangci.yml
+      - go.mod
     cmds:
       - golangci-lint run --fix
 
@@ -198,7 +203,6 @@ tasks:
         Please wait for the CI to finish and then do the following:
 
         - Copy the changelog for v{{.VERSION}} to the GitHub release
-        - Publish the package to NPM with `task npm:publish`
         - Update and push the snapcraft manifest in https://github.com/go-task/snap/blob/main/snap/snapcraft.yaml
     preconditions:
       - sh: test $(git rev-parse --abbrev-ref HEAD) = "main"
@@ -217,8 +221,3 @@ tasks:
       - "git push origin tag v{{.VERSION}}"
       - cmd: printf "%s" '{{.COMPLETE_MESSAGE}}'
         silent: true
-
-  npm:publish:
-    desc: Publish release to npm
-    cmds:
-      - npm publish --access=public
