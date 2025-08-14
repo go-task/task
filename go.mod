@@ -1,6 +1,6 @@
 module github.com/go-task/task/v3
 
-go 1.23.0
+go 1.24.0
 
 require (
 	github.com/Ladicle/tabwriter v1.0.0
@@ -19,7 +19,6 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/joho/godotenv v1.5.1
 	github.com/mitchellh/hashstructure/v2 v2.0.2
-	github.com/otiai10/copy v1.14.1
 	github.com/puzpuzpuz/xsync/v3 v3.5.1
 	github.com/sajari/fuzzy v1.0.0
 	github.com/sebdah/goldie/v2 v2.7.1
