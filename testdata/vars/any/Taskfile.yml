@@ -112,3 +112,44 @@ tasks:
           {{- else}} and {{$child.name -}}
           {{- end -}}
         {{- end -}}"
+
+  interactive-simple:
+    vars:
+      MY_VAR:
+        interactive:
+          enabled: true
+          default: "Default value"
+    cmds:
+      - echo "Var is {{.MY_VAR}}"
+
+
+  interactive-no-default:
+    vars:
+      MY_VAR:
+        interactive:
+          enabled: true
+    cmds:
+      - echo "Var is {{.MY_VAR}}"
+
+  interactive-with-sh:
+    vars:
+      MY_VAR:
+        sh: printf "choice1\nchoice2\nchoice3"
+        interactive:
+          enabled: true
+    cmds:
+      - echo "Var is {{.MY_VAR}}"
+
+  interactive-multiple:
+    vars:
+      MY_VAR:
+        sh: printf "choice1\nchoice2\nchoice3"
+        interactive:
+          enabled: true
+          default: "A1"
+      MY_VAR2:
+        interactive:
+          enabled: true
+          default: "A2"
+    cmds:
+      - echo "Var1 is {{.MY_VAR}}, var2 is {{.MY_VAR2}}"
