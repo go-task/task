@@ -19,7 +19,7 @@
     <tr>
       <td align="center" valign="middle">
         <a target="_blank" href="https://devowl.io">
-          <img src="/website/src/public/img/devowl.io.svg" height="100px" title="devowl.io" />
+          <img src="https://devowl.io/wp-content/uploads/meta/favicon.webp" height="100px" title="devowl.io" />
         </a>
       </td>
     </tr>
