@@ -2,7 +2,9 @@ package task_test
 
 import (
 	"bytes"
+	"context"
 	"path/filepath"
+	"slices"
 	"testing"
 
 	"github.com/sebdah/goldie/v2"
@@ -10,6 +12,7 @@ import (
 
 	"github.com/go-task/task/v3"
 	"github.com/go-task/task/v3/experiments"
+	"github.com/go-task/task/v3/taskfile"
 	"github.com/go-task/task/v3/taskfile/ast"
 )
 
@@ -26,12 +29,17 @@ type (
 	// running `task gen:fixtures`.
 	FormatterTest struct {
 		TaskTest
-		task           string
-		vars           map[string]any
-		executorOpts   []task.ExecutorOption
-		listOptions    task.ListOptions
-		wantSetupError bool
-		wantListError  bool
+		task            string
+		vars            map[string]any
+		nodeDir         string
+		nodeEntrypoint  string
+		nodeInsecure    bool
+		readerOpts      []taskfile.ReaderOption
+		executorOpts    []task.ExecutorOption
+		listOptions     task.ListOptions
+		wantReaderError bool
+		wantSetupError  bool
+		wantListError   bool
 	}
 )
 
@@ -41,8 +49,9 @@ type (
 func NewFormatterTest(t *testing.T, opts ...FormatterTestOption) {
 	t.Helper()
 	tt := &FormatterTest{
-		task: "default",
-		vars: map[string]any{},
+		task:    "default",
+		vars:    map[string]any{},
+		nodeDir: ".",
 		TaskTest: TaskTest{
 			experiments:         map[*experiments.Experiment]int{},
 			fixtureTemplateData: map[string]any{},
@@ -114,23 +123,57 @@ func (tt *FormatterTest) run(t *testing.T) {
 	f := func(t *testing.T) {
 		t.Helper()
 		var buf bytes.Buffer
+		ctx := context.Background()
 
-		opts := append(
-			tt.executorOpts,
-			task.WithStdout(&buf),
-			task.WithStderr(&buf),
+		// Create a new root node for the given entrypoint
+		node, err := taskfile.NewRootNode(
+			tt.nodeEntrypoint,
+			tt.nodeDir,
+			tt.nodeInsecure,
 		)
-
-		// Set up the task executor
-		e := task.NewExecutor(opts...)
+		require.NoError(t, err)
 
 		// Create a golden fixture file for the output
 		g := goldie.New(t,
-			goldie.WithFixtureDir(filepath.Join(e.Dir, "testdata")),
+			goldie.WithFixtureDir(filepath.Join(node.Dir(), "testdata")),
 		)
 
-		// Call setup and check for errors
-		if err := e.Setup(); tt.wantSetupError {
+		// Set up a temporary directory for the taskfile reader and task executor
+		tempDir, err := task.NewTempDir(node.Dir())
+		require.NoError(t, err)
+		tt.readerOpts = append(tt.readerOpts, taskfile.WithTempDir(tempDir.Remote))
+
+		// Set up the taskfile reader
+		reader := taskfile.NewReader(tt.readerOpts...)
+		graph, err := reader.Read(ctx, node)
+		if tt.wantReaderError {
+			require.Error(t, err)
+			tt.writeFixtureErrReader(t, g, err)
+			tt.writeFixtureBuffer(t, g, buf)
+			return
+		} else {
+			require.NoError(t, err)
+		}
+
+		executorOpts := slices.Concat(
+			// Apply the node directory and temp directory to the executor options
+			// by default, but allow them to by overridden by the test options
+			[]task.ExecutorOption{
+				task.WithDir(node.Dir()),
+				task.WithTempDir(tempDir),
+			},
+			// Apply the executor options from the test
+			tt.executorOpts,
+			// Force the input/output streams to be set to the test buffer
+			[]task.ExecutorOption{
+				task.WithStdout(&buf),
+				task.WithStderr(&buf),
+			},
+		)
+
+		// Set up the task executor
+		executor, err := task.NewExecutor(graph, executorOpts...)
+		if tt.wantSetupError {
 			require.Error(t, err)
 			tt.writeFixtureErrSetup(t, g, err)
 			tt.writeFixtureBuffer(t, g, buf)
@@ -146,7 +189,7 @@ func (tt *FormatterTest) run(t *testing.T) {
 		}
 
 		// Run the formatter and check for errors
-		if _, err := e.ListTasks(tt.listOptions); tt.wantListError {
+		if _, err := executor.ListTasks(tt.listOptions); tt.wantListError {
 			require.Error(t, err)
 			tt.writeFixtureErrList(t, g, err)
 			tt.writeFixtureBuffer(t, g, buf)
@@ -170,9 +213,7 @@ func TestNoLabelInList(t *testing.T) {
 	t.Parallel()
 
 	NewFormatterTest(t,
-		WithExecutorOptions(
-			task.WithDir("testdata/label_list"),
-		),
+		WithNodeDir("testdata/label_list"),
 		WithListOptions(task.ListOptions{
 			ListOnlyTasksWithDescriptions: true,
 		}),
@@ -184,9 +225,7 @@ func TestListAllShowsNoDesc(t *testing.T) {
 	t.Parallel()
 
 	NewFormatterTest(t,
-		WithExecutorOptions(
-			task.WithDir("testdata/list_mixed_desc"),
-		),
+		WithNodeDir("testdata/list_mixed_desc"),
 		WithListOptions(task.ListOptions{
 			ListAllTasks: true,
 		}),
@@ -198,9 +237,7 @@ func TestListCanListDescOnly(t *testing.T) {
 	t.Parallel()
 
 	NewFormatterTest(t,
-		WithExecutorOptions(
-			task.WithDir("testdata/list_mixed_desc"),
-		),
+		WithNodeDir("testdata/list_mixed_desc"),
 		WithListOptions(task.ListOptions{
 			ListOnlyTasksWithDescriptions: true,
 		}),
@@ -211,9 +248,7 @@ func TestListDescInterpolation(t *testing.T) {
 	t.Parallel()
 
 	NewFormatterTest(t,
-		WithExecutorOptions(
-			task.WithDir("testdata/list_desc_interpolation"),
-		),
+		WithNodeDir("testdata/list_desc_interpolation"),
 		WithListOptions(task.ListOptions{
 			ListOnlyTasksWithDescriptions: true,
 		}),
@@ -224,9 +259,7 @@ func TestJsonListFormat(t *testing.T) {
 	t.Parallel()
 
 	NewFormatterTest(t,
-		WithExecutorOptions(
-			task.WithDir("testdata/json_list_format"),
-		),
+		WithNodeDir("testdata/json_list_format"),
 		WithListOptions(task.ListOptions{
 			FormatTaskListAsJSON: true,
 		}),

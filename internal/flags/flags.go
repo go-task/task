@@ -15,6 +15,7 @@ import (
 	"github.com/go-task/task/v3/experiments"
 	"github.com/go-task/task/v3/internal/env"
 	"github.com/go-task/task/v3/internal/sort"
+	"github.com/go-task/task/v3/taskfile"
 	"github.com/go-task/task/v3/taskfile/ast"
 )
 
@@ -201,7 +202,7 @@ func Validate() error {
 
 // WithFlags is a special internal functional option that is used to pass flags
 // from the CLI into any constructor that accepts functional options.
-func WithFlags() task.ExecutorOption {
+func WithFlags() *flagsOption {
 	return &flagsOption{}
 }
 
@@ -228,14 +229,8 @@ func (o *flagsOption) ApplyToExecutor(e *task.Executor) {
 
 	e.Options(
 		task.WithDir(dir),
-		task.WithEntrypoint(Entrypoint),
 		task.WithForce(Force),
 		task.WithForceAll(ForceAll),
-		task.WithInsecure(Insecure),
-		task.WithDownload(Download),
-		task.WithOffline(Offline),
-		task.WithTimeout(Timeout),
-		task.WithCacheExpiryDuration(CacheExpiryDuration),
 		task.WithWatch(Watch),
 		task.WithVerbose(Verbose),
 		task.WithSilent(Silent),
@@ -249,5 +244,14 @@ func (o *flagsOption) ApplyToExecutor(e *task.Executor) {
 		task.WithOutputStyle(Output),
 		task.WithTaskSorter(sorter),
 		task.WithVersionCheck(true),
+	)
+}
+
+func (o *flagsOption) ApplyToReader(r *taskfile.Reader) {
+	r.Options(
+		taskfile.WithInsecure(Insecure),
+		taskfile.WithDownload(Download),
+		taskfile.WithOffline(Offline),
+		taskfile.WithCacheExpiryDuration(CacheExpiryDuration),
 	)
 }

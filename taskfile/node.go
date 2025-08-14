@@ -3,7 +3,6 @@ package taskfile
 import (
 	"context"
 	"strings"
-	"time"
 
 	giturls "github.com/chainguard-dev/git-urls"
 
@@ -33,7 +32,6 @@ func NewRootNode(
 	entrypoint string,
 	dir string,
 	insecure bool,
-	timeout time.Duration,
 ) (Node, error) {
 	dir = fsext.DefaultDir(entrypoint, dir)
 	// If the entrypoint is "-", we read from stdin
