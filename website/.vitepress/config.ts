@@ -204,16 +204,20 @@ export default defineConfig({
           collapsed: true,
           items: [
             {
-              text: 'CLI',
-              link: '/docs/reference/cli'
-            },
-            {
-              text: 'Schema',
+              text: 'Taskfile Schema',
               link: '/docs/reference/schema'
             },
             {
-              text: 'Schema taskrc',
-              link: '/docs/reference/schema-taskrc'
+              text: 'Configuration',
+              link: '/docs/reference/config'
+            },
+            {
+              text: 'Environment',
+              link: '/docs/reference/environment'
+            },
+            {
+              text: 'CLI',
+              link: '/docs/reference/cli'
             },
             {
               text: 'Templating',
@@ -222,10 +226,6 @@ export default defineConfig({
             {
               text: 'Package API',
               link: '/docs/reference/package'
-            },
-            {
-              text: 'Environment',
-              link: '/docs/reference/environment'
             }
           ]
         },
