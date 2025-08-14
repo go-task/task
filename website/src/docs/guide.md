@@ -1398,8 +1398,7 @@ tasks:
             OS: ['windows', 'linux', 'darwin']
             ARCH: ['amd64', 'arm64']
         cmd:
-          echo "<span v-pre>{{.ITEM.OS}}</span>/<span
-          v-pre>{{.ITEM.ARCH}}</span>"
+          echo "{{.ITEM.OS}}/{{.ITEM.ARCH}}"
 ```
 
 This will output:
@@ -1432,8 +1431,7 @@ tasks:
             ARCH:
               ref: .ARCH_VAR
         cmd:
-          echo "<span v-pre>{{.ITEM.OS}}</span>/<span
-          v-pre>{{.ITEM.ARCH}}</span>"
+          echo "{{.ITEM.OS}}/{{.ITEM.ARCH}}"
 ```
 
 ### Looping over your task's sources or generated files
@@ -1490,13 +1488,13 @@ tasks:
   default:
     vars:
       MY_DIR: /path/to/dir
-    dir: '<span v-pre>{{.MY_DIR}}</span>'
+    dir: '{{.MY_DIR}}'
     sources:
       - foo.txt
       - bar.txt
     cmds:
       - for: sources
-        cmd: cat <span v-pre>{{joinPath .MY_DIR .ITEM}}</span>
+        cmd: cat {{joinPath .MY_DIR .ITEM}}
 ```
 
 ```yaml [Generates]
@@ -1506,13 +1504,13 @@ tasks:
   default:
     vars:
       MY_DIR: /path/to/dir
-    dir: '<span v-pre>{{.MY_DIR}}</span>'
+    dir: '{{.MY_DIR}}'
     generates:
       - foo.txt
       - bar.txt
     cmds:
       - for: generates
-        cmd: cat <span v-pre>{{joinPath .MY_DIR .ITEM}}</span>
+        cmd: cat {{joinPath .MY_DIR .ITEM}}
 ```
 
 :::
@@ -1532,7 +1530,7 @@ tasks:
       MY_VAR: foo.txt bar.txt
     cmds:
       - for: { var: MY_VAR }
-        cmd: cat <span v-pre>{{.ITEM}}</span>
+        cmd: cat {{.ITEM}}
 ```
 
 If you need to split a string on a different character, you can do this by
@@ -1547,7 +1545,7 @@ tasks:
       MY_VAR: foo.txt,bar.txt
     cmds:
       - for: { var: MY_VAR, split: ',' }
-        cmd: cat <span v-pre>{{.ITEM}}</span>
+        cmd: cat {{.ITEM}}
 ```
 
 You can also loop over arrays and maps directly:
@@ -1562,7 +1560,7 @@ tasks:
     cmds:
       - for:
           var: LIST
-        cmd: echo <span v-pre>{{.ITEM}}</span>
+        cmd: echo {{.ITEM}}
 ```
 
 When looping over a map we also make an additional <span v-pre>`{{.KEY}}`</span>
@@ -1581,7 +1579,7 @@ tasks:
         sh: find -type f -name '*.txt'
     cmds:
       - for: { var: MY_VAR }
-        cmd: cat <span v-pre>{{.ITEM}}</span>
+        cmd: cat {{.ITEM}}
 ```
 
 ### Renaming variables
@@ -1598,7 +1596,7 @@ tasks:
       MY_VAR: foo.txt bar.txt
     cmds:
       - for: { var: MY_VAR, as: FILE }
-        cmd: cat <span v-pre>{{.FILE}}</span>
+        cmd: cat {{.FILE}}
 ```
 
 ### Looping over tasks
@@ -1616,11 +1614,11 @@ tasks:
       - for: [foo, bar]
         task: my-task
         vars:
-          FILE: '<span v-pre>{{.ITEM}}</span>'
+          FILE: '{{.ITEM}}'
 
   my-task:
     cmds:
-      - echo '<span v-pre>{{.FILE}}</span>'
+      - echo '{{.FILE}}'
 ```
 
 Or if you want to run different tasks depending on the value of the loop:
@@ -1632,7 +1630,7 @@ tasks:
   default:
     cmds:
       - for: [foo, bar]
-        task: task-<span v-pre>{{.ITEM}}</span>
+        task: task-{{.ITEM}}
 
   task-foo:
     cmds:
@@ -1657,11 +1655,11 @@ tasks:
       - for: [foo, bar]
         task: my-task
         vars:
-          FILE: '<span v-pre>{{.ITEM}}</span>'
+          FILE: '{{.ITEM}}'
 
   my-task:
     cmds:
-      - echo '<span v-pre>{{.FILE}}</span>'
+      - echo '{{.FILE}}'
 ```
 
 It is important to note that as `deps` are run in parallel, the order in which
@@ -1697,7 +1695,7 @@ version: '3'
 tasks:
   yarn:
     cmds:
-      - yarn <span v-pre>{{.CLI_ARGS}}</span>
+      - yarn {{.CLI_ARGS}}
 ```
 
 ## Wildcard arguments
@@ -1718,17 +1716,16 @@ version: '3'
 tasks:
   start:*:*:
     vars:
-      SERVICE: '<span v-pre>{{index .MATCH 0}}</span>'
-      REPLICAS: '<span v-pre>{{index .MATCH 1}}</span>'
+      SERVICE: '{{index .MATCH 0}}'
+      REPLICAS: '{{index .MATCH 1}}'
     cmds:
-      - echo "Starting <span v-pre>{{.SERVICE}}</span> with <span
-        v-pre>{{.REPLICAS}}</span> replicas"
+      - echo "Starting {{.SERVICE}} with {{.REPLICAS}} replicas"
 
   start:*:
     vars:
-      SERVICE: '<span v-pre>{{index .MATCH 0}}</span>'
+      SERVICE: '{{index .MATCH 0}}'
     cmds:
-      - echo "Starting <span v-pre>{{.SERVICE}}</span>"
+      - echo "Starting {{.SERVICE}}"
 ```
 
 This call matches the `start:*` task and the string "foo" is captured by the
@@ -1811,9 +1808,7 @@ tasks:
   default:
     cmds:
       - defer:
-          echo '<span v-pre>{{if .EXIT_CODE}}</span>Failed with <span
-          v-pre>{{.EXIT_CODE}}</span>!<span v-pre>{{else}}</span>Success!<span
-          v-pre>{{end}}</span>'
+          echo '{{if .EXIT_CODE}}Failed with {{.EXIT_CODE}}!{{else}}Success!{{end}}'
       - exit 1
 ```
 
@@ -1944,9 +1939,9 @@ tasks:
           MESSAGE: world
 
   print:
-    label: 'print-<span v-pre>{{.MESSAGE}}</span>'
+    label: 'print-{{.MESSAGE}}'
     cmds:
-      - echo "<span v-pre>{{.MESSAGE}}</span>"
+      - echo "{{.MESSAGE}}"
 ```
 
 ## Warning Prompts
@@ -2189,7 +2184,7 @@ version: '3'
 
 output:
   group:
-    begin: '::group::<span v-pre>{{.TASK}}</span>'
+    begin: '::group::{{.TASK}}'
     end: '::endgroup::'
 
 tasks:
@@ -2252,8 +2247,8 @@ tasks:
 
   print:
     cmds:
-      - echo "<span v-pre>{{.TEXT}}</span>"
-    prefix: 'print-<span v-pre>{{.TEXT}}</span>'
+      - echo "{{.TEXT}}"
+    prefix: 'print-{{.TEXT}}'
     silent: true
 ```
 
@@ -2302,11 +2297,11 @@ the default settings (e.g. no custom `env:`, `vars:`, `desc:`, `silent:` , etc):
 version: '3'
 
 tasks:
-  build: go build -v -o ./app<span v-pre>{{exeExt}}</span> .
+  build: go build -v -o ./app{{exeExt}} .
 
   run:
     - task: build
-    - ./app<span v-pre>{{exeExt}}</span> -h localhost -p 8080
+    - ./app{{exeExt}} -h localhost -p 8080
 ```
 
 ## `set` and `shopt`
