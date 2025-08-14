@@ -1273,6 +1273,34 @@ tasks:
 
 This works for all types of variables.
 
+### Interactive variables
+
+It is possible to make task variables interactive and prompt the user to enter a value
+on runtime by specifying the `prompt` property.
+It is recommended to specify a default value so that your Taskfile can also work in non-interactive
+shells.
+
+The interactive variable can also present a list of choices to the user by using the `sh` property
+and returning a new-line delimited list of values.
+
+This feature uses the Bubbletea TUI framework (https://github.com/charmbracelet/bubbletea)[https://github.com/charmbracelet/bubbletea]
+
+```yaml
+version: '3'
+
+tasks:
+  task_with_interactive_vars:
+    vars:
+      DEPLOY_ENV:
+        sh: printf "dev\nstaging\nprod"
+        prompt: "Deploy to:"
+      DEPLOY_TAG:
+        prompt: "Enter tag:"
+    cmds:
+      - echo "Deploying to {{.DEPLOY_ENV | default "dev"}}, with tag {{.DEPLOY_TAG}}"
+```
+
+
 ### Referencing other variables
 
 Templating is great for referencing string values if you want to pass a value

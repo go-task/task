@@ -314,6 +314,27 @@
         "map": {
           "type": "object",
           "description": "The value will be treated as a literal map type and stored in the variable"
+        },
+        "interactive": {
+          "type": "object",
+          "description": "The user will be prompted to input the value. Works only in TTY shells.",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "description": "Enable or disable the interactive mode for this variable."
+            },
+            "default": {
+              "description": "The default value to use if shell is not TTY",
+              "type": [
+                "boolean",
+                "integer",
+                "null",
+                "number",
+                "string",
+                "array"
+              ]
+            }
+          }
         }
       },
       "additionalProperties": false

@@ -1,0 +1,35 @@
+version: '3'
+
+tasks:
+  interactive-simple:
+    vars:
+      MY_VAR:
+        prompt: "Enter value for MY VAR"
+    cmds:
+      - echo "Var is {{.MY_VAR}}"
+
+  interactive-with-default:
+    vars:
+      MY_VAR_NO_DEFAULT:
+        prompt: "Enter value for MY VAR"
+    cmds:
+      - echo "Var is {{.MY_VAR_NO_DEFAULT | default "TOTO" }}"
+
+  interactive-with-sh:
+    vars:
+      MY_VAR:
+        prompt: "Select possible value"
+        sh: printf "choice1\nchoice2\nchoice3"
+    cmds:
+      - echo "Var is {{.MY_VAR}}"
+
+  interactive-multiple:
+    vars:
+      MY_VAR:
+        sh: printf "choice1\nchoice2\nchoice3"
+        prompt: "Select val"
+      MY_VAR2:
+        prompt: "Enter val"
+
+    cmds:
+      - echo "Var1 is {{.MY_VAR}}, var2 is {{.MY_VAR2}}"

@@ -7,7 +7,10 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/charmbracelet/bubbles/list"
+	"github.com/go-task/task/v3/internal/logger"
 	"github.com/joho/godotenv"
+	"golang.org/x/term"
 
 	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/env"
@@ -94,6 +97,34 @@ func (e *Executor) compiledTask(call *Call, evaluateShVars bool) (*ast.Task, err
 	if matches, exists := vars.Get("MATCH"); exists {
 		for _, match := range matches.Value.([]string) {
 			fullName = strings.Replace(fullName, "*", match, 1)
+		}
+	}
+
+	for k, v := range vars.All() {
+		if v.Prompt != nil {
+			if term.IsTerminal(int(os.Stdout.Fd())) {
+				var result = ""
+				var items []list.Item
+
+				if valueStr, ok := v.Value.(string); ok {
+					for _, itemStr := range strings.Split(valueStr, "\n") {
+						items = append(items, item(itemStr))
+					}
+					result = showListPrompt(k, items, *v.Prompt).View()
+				} else {
+					e.Logger.Outf(logger.Green, fmt.Sprint(*v.Prompt, "\n"))
+
+					b := make([]byte, 8)
+					_, err := e.Stdin.Read(b)
+					if err != nil {
+						return nil, err
+					}
+
+					result = string(b)
+				}
+
+				vars.Set(k, ast.Var{Value: result})
+			}
 		}
 	}
 

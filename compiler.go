@@ -77,7 +77,7 @@ func (c *Compiler) getVariables(t *ast.Task, call *Call, evaluateShVars bool) (*
 			}
 			// If the variable is already set, we can set it and return
 			if newVar.Value != nil || newVar.Sh == nil {
-				result.Set(k, ast.Var{Value: newVar.Value})
+				result.Set(k, ast.Var{Value: newVar.Value, Sh: newVar.Sh, Prompt: newVar.Prompt})
 				return nil
 			}
 			// If the variable is dynamic, we need to resolve it first
@@ -85,7 +85,7 @@ func (c *Compiler) getVariables(t *ast.Task, call *Call, evaluateShVars bool) (*
 			if err != nil {
 				return err
 			}
-			result.Set(k, ast.Var{Value: static})
+			result.Set(k, ast.Var{Value: static, Sh: newVar.Sh, Prompt: newVar.Prompt})
 			return nil
 		}
 	}
