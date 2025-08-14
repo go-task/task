@@ -2,7 +2,9 @@ package taskrc
 
 import (
 	"os"
+	"slices"
 
+	"github.com/go-task/task/v3/internal/fsext"
 	"github.com/go-task/task/v3/taskrc/ast"
 )
 
@@ -13,29 +15,48 @@ var defaultTaskRCs = []string{
 
 // GetConfig loads and merges local and global Task configuration files
 func GetConfig(dir string) (*ast.TaskRC, error) {
+	var config *ast.TaskRC
 	reader := NewReader()
 
-	// LocalNode is the node for the local Task configuration file
-	localNode, _ := NewNode("", dir)
+	// Read the XDG config file
+	if xdgConfigHome := os.Getenv("XDG_CONFIG_HOME"); xdgConfigHome != "" {
+		xdgConfigNode, err := NewNode("", xdgConfigHome)
+		if err == nil && xdgConfigNode != nil {
+			config, err = reader.Read(xdgConfigNode)
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
 
-	home, err := os.UserHomeDir()
+	// Find all the nodes from the given directory up to the users home directory
+	entrypoints, err := fsext.SearchAll("", dir, defaultTaskRCs)
 	if err != nil {
 		return nil, err
 	}
 
-	// GlobalNode is the node for the global Task configuration file (~/.taskrc.yml)
-	globalNode, _ := NewNode("", home)
+	// Reverse the entrypoints since we want the child files to override parent ones
+	slices.Reverse(entrypoints)
 
-	localConfig, _ := reader.Read(localNode)
-
-	globalConfig, _ := reader.Read(globalNode)
-
-	if globalConfig == nil {
-		return localConfig, nil
+	// Loop over the nodes, and merge them into the main config
+	for _, entrypoint := range entrypoints {
+		node, err := NewNode("", entrypoint)
+		if err != nil {
+			return nil, err
+		}
+		localConfig, err := reader.Read(node)
+		if err != nil {
+			return nil, err
+		}
+		if localConfig == nil {
+			continue
+		}
+		if config == nil {
+			config = localConfig
+			continue
+		}
+		config.Merge(localConfig)
 	}
 
-	// Merge the global configuration into the local configuration
-	globalConfig.Merge(localConfig)
-
-	return globalConfig, nil
+	return config, nil
 }

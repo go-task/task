@@ -1,6 +1,10 @@
 package ast
 
-import "github.com/Masterminds/semver/v3"
+import (
+	"maps"
+
+	"github.com/Masterminds/semver/v3"
+)
 
 type TaskRC struct {
 	Version     *semver.Version `yaml:"version"`
@@ -18,8 +22,6 @@ func (t *TaskRC) Merge(other *TaskRC) {
 	if t.Experiments == nil && other.Experiments != nil {
 		t.Experiments = other.Experiments
 	} else if t.Experiments != nil && other.Experiments != nil {
-		for k, v := range other.Experiments {
-			t.Experiments[k] = v
-		}
+		maps.Copy(t.Experiments, other.Experiments)
 	}
 }

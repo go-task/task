@@ -7,34 +7,43 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/go-task/task/v3/taskrc/ast"
 )
 
 const (
-	localConfigYAML = `
+	xdgConfigYAML = `
 experiments:
-  GENTLE_FORCE: 1
-  ENV_PRECEDENCE: 0
+  FOO: 1
+  BAR: 1
+  BAZ: 1
 `
 
-	globalConfigYAML = `
+	homeConfigYAML = `
 experiments:
-  GENTLE_FORCE: 0
-  REMOTE_TASKFILES: 1
-  ENV_PRECEDENCE: 1
+  FOO: 2
+  BAR: 2
+`
 
+	localConfigYAML = `
+experiments:
+  FOO: 3
 `
 )
 
-func setupDirs(t *testing.T) (localDir, globalDir string) {
+func setupDirs(t *testing.T) (string, string, string) {
 	t.Helper()
-	localDir = t.TempDir()
-	globalDir = t.TempDir()
+	xdgConfigDir := t.TempDir()
+	homeDir := t.TempDir()
+	localDir := filepath.Join(homeDir, "local")
+	err := os.Mkdir(localDir, 0o755)
+	require.NoError(t, err)
 
-	t.Setenv("HOME", globalDir)
+	t.Setenv("XDG_CONFIG_HOME", xdgConfigDir)
+	t.Setenv("HOME", homeDir)
 
-	return localDir, globalDir
+	return xdgConfigDir, homeDir, localDir
 }
 
 func writeFile(t *testing.T, dir, filename, content string) {
@@ -43,24 +52,8 @@ func writeFile(t *testing.T, dir, filename, content string) {
 	assert.NoError(t, err)
 }
 
-func TestGetConfig_MergesGlobalAndLocal(t *testing.T) { //nolint:paralleltest // cannot run in parallel
-	localDir, globalDir := setupDirs(t)
-
-	// Write local config
-	writeFile(t, localDir, ".taskrc.yml", localConfigYAML)
-
-	// Write global config
-	writeFile(t, globalDir, ".taskrc.yml", globalConfigYAML)
-
-	cfg, err := GetConfig(localDir)
-	assert.NoError(t, err)
-	assert.NotNil(t, cfg)
-	fmt.Printf("cfg : %#v\n", cfg)
-	assert.Equal(t, &ast.TaskRC{Version: nil, Experiments: map[string]int{"GENTLE_FORCE": 1, "ENV_PRECEDENCE": 0, "REMOTE_TASKFILES": 1}}, cfg)
-}
-
 func TestGetConfig_NoConfigFiles(t *testing.T) { //nolint:paralleltest // cannot run in parallel
-	localDir, _ := setupDirs(t)
+	_, _, localDir := setupDirs(t)
 
 	cfg, err := GetConfig(localDir)
 	fmt.Printf("cfg : %#v\n", cfg)
@@ -68,22 +61,76 @@ func TestGetConfig_NoConfigFiles(t *testing.T) { //nolint:paralleltest // cannot
 	assert.Nil(t, cfg)
 }
 
-func TestGetConfig_OnlyGlobal(t *testing.T) { //nolint:paralleltest // cannot run in parallel
-	localDir, globalDir := setupDirs(t)
+func TestGetConfig_OnlyXDG(t *testing.T) { //nolint:paralleltest // cannot run in parallel
+	xdgDir, _, localDir := setupDirs(t)
 
-	writeFile(t, globalDir, ".taskrc.yml", globalConfigYAML)
+	writeFile(t, xdgDir, ".taskrc.yml", xdgConfigYAML)
 
 	cfg, err := GetConfig(localDir)
 	assert.NoError(t, err)
-	assert.Equal(t, &ast.TaskRC{Version: nil, Experiments: map[string]int{"GENTLE_FORCE": 0, "ENV_PRECEDENCE": 1, "REMOTE_TASKFILES": 1}}, cfg)
+	assert.Equal(t, &ast.TaskRC{
+		Version: nil,
+		Experiments: map[string]int{
+			"FOO": 1,
+			"BAR": 1,
+			"BAZ": 1,
+		},
+	}, cfg)
+}
+
+func TestGetConfig_OnlyHome(t *testing.T) { //nolint:paralleltest // cannot run in parallel
+	_, homeDir, localDir := setupDirs(t)
+
+	writeFile(t, homeDir, ".taskrc.yml", homeConfigYAML)
+
+	cfg, err := GetConfig(localDir)
+	assert.NoError(t, err)
+	assert.Equal(t, &ast.TaskRC{
+		Version: nil,
+		Experiments: map[string]int{
+			"FOO": 2,
+			"BAR": 2,
+		},
+	}, cfg)
 }
 
 func TestGetConfig_OnlyLocal(t *testing.T) { //nolint:paralleltest // cannot run in parallel
-	localDir, _ := setupDirs(t)
+	_, _, localDir := setupDirs(t)
 
 	writeFile(t, localDir, ".taskrc.yml", localConfigYAML)
 
 	cfg, err := GetConfig(localDir)
 	assert.NoError(t, err)
-	assert.Equal(t, &ast.TaskRC{Version: nil, Experiments: map[string]int{"GENTLE_FORCE": 1, "ENV_PRECEDENCE": 0}}, cfg)
+	assert.Equal(t, &ast.TaskRC{
+		Version: nil,
+		Experiments: map[string]int{
+			"FOO": 3,
+		},
+	}, cfg)
+}
+
+func TestGetConfig_All(t *testing.T) { //nolint:paralleltest // cannot run in parallel
+	xdgConfigDir, homeDir, localDir := setupDirs(t)
+
+	// Write local config
+	writeFile(t, localDir, ".taskrc.yml", localConfigYAML)
+
+	// Write home config
+	writeFile(t, homeDir, ".taskrc.yml", homeConfigYAML)
+
+	// Write XDG config
+	writeFile(t, xdgConfigDir, ".taskrc.yml", xdgConfigYAML)
+
+	cfg, err := GetConfig(localDir)
+	assert.NoError(t, err)
+	assert.NotNil(t, cfg)
+	fmt.Printf("cfg : %#v\n", cfg)
+	assert.Equal(t, &ast.TaskRC{
+		Version: nil,
+		Experiments: map[string]int{
+			"FOO": 3,
+			"BAR": 2,
+			"BAZ": 1,
+		},
+	}, cfg)
 }
