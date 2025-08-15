@@ -2,6 +2,7 @@ package taskrc
 
 import (
 	"os"
+	"path/filepath"
 	"slices"
 
 	"github.com/go-task/task/v3/internal/fsext"
@@ -20,7 +21,7 @@ func GetConfig(dir string) (*ast.TaskRC, error) {
 
 	// Read the XDG config file
 	if xdgConfigHome := os.Getenv("XDG_CONFIG_HOME"); xdgConfigHome != "" {
-		xdgConfigNode, err := NewNode("", xdgConfigHome)
+		xdgConfigNode, err := NewNode("", filepath.Join(xdgConfigHome, "task"))
 		if err == nil && xdgConfigNode != nil {
 			config, err = reader.Read(xdgConfigNode)
 			if err != nil {

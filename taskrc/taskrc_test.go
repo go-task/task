@@ -34,16 +34,20 @@ experiments:
 
 func setupDirs(t *testing.T) (string, string, string) {
 	t.Helper()
+
 	xdgConfigDir := t.TempDir()
+	xdgTaskConfigDir := filepath.Join(xdgConfigDir, "task")
+	require.NoError(t, os.Mkdir(xdgTaskConfigDir, 0o755))
+
 	homeDir := t.TempDir()
+
 	localDir := filepath.Join(homeDir, "local")
-	err := os.Mkdir(localDir, 0o755)
-	require.NoError(t, err)
+	require.NoError(t, os.Mkdir(localDir, 0o755))
 
 	t.Setenv("XDG_CONFIG_HOME", xdgConfigDir)
 	t.Setenv("HOME", homeDir)
 
-	return xdgConfigDir, homeDir, localDir
+	return xdgTaskConfigDir, homeDir, localDir
 }
 
 func writeFile(t *testing.T, dir, filename, content string) {
