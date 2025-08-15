@@ -9,6 +9,11 @@ import (
 type TaskRC struct {
 	Version     *semver.Version `yaml:"version"`
 	Experiments map[string]int  `yaml:"experiments"`
+	Remote      Remote          `yaml:"remote"`
+}
+
+type Remote struct {
+	Insecure *bool `yaml:"insecure"`
 }
 
 // Merge combines the current TaskRC with another TaskRC, prioritizing non-nil fields from the other TaskRC.
@@ -23,5 +28,10 @@ func (t *TaskRC) Merge(other *TaskRC) {
 		t.Experiments = other.Experiments
 	} else if t.Experiments != nil && other.Experiments != nil {
 		maps.Copy(t.Experiments, other.Experiments)
+	}
+
+	// Merge Remote fields
+	if other.Remote.Insecure != nil {
+		t.Remote.Insecure = other.Remote.Insecure
 	}
 }

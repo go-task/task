@@ -2,6 +2,7 @@ package flags
 
 import (
 	"cmp"
+	"fmt"
 	"log"
 	"os"
 	"path/filepath"
@@ -16,6 +17,8 @@ import (
 	"github.com/go-task/task/v3/internal/env"
 	"github.com/go-task/task/v3/internal/sort"
 	"github.com/go-task/task/v3/taskfile/ast"
+	"github.com/go-task/task/v3/taskrc"
+	taskrcAST "github.com/go-task/task/v3/taskrc/ast"
 )
 
 const usage = `Usage: task [flags...] [task...]
@@ -95,7 +98,9 @@ func init() {
 
 	// Parse the experiments
 	dir = cmp.Or(dir, filepath.Dir(entrypoint))
-	experiments.Parse(dir)
+
+	config, _ := taskrc.GetConfig(dir)
+	experiments.ParseWithConfig(dir, config)
 
 	// Parse the rest of the flags
 	log.SetFlags(0)
@@ -108,6 +113,7 @@ func init() {
 	if err != nil {
 		offline = false
 	}
+
 	pflag.BoolVar(&Version, "version", false, "Show Task version.")
 	pflag.BoolVarP(&Help, "help", "h", false, "Shows Task usage.")
 	pflag.BoolVarP(&Init, "init", "i", false, "Creates a new Taskfile.yml in the current folder.")
@@ -118,7 +124,7 @@ func init() {
 	pflag.StringVar(&TaskSort, "sort", "", "Changes the order of the tasks when listed. [default|alphanumeric|none].")
 	pflag.BoolVar(&Status, "status", false, "Exits with non-zero exit code if any of the given tasks is not up-to-date.")
 	pflag.BoolVar(&NoStatus, "no-status", false, "Ignore status when listing tasks as JSON")
-	pflag.BoolVar(&Insecure, "insecure", false, "Forces Task to download Taskfiles over insecure connections.")
+	pflag.BoolVar(&Insecure, "insecure", getConfig(config, config.Remote.Insecure, false), "Forces Task to download Taskfiles over insecure connections.")
 	pflag.BoolVarP(&Watch, "watch", "w", false, "Enables watch of the given task.")
 	pflag.BoolVarP(&Verbose, "verbose", "v", false, "Enables verbose mode.")
 	pflag.BoolVarP(&Silent, "silent", "s", false, "Disables echoing.")
@@ -250,4 +256,16 @@ func (o *flagsOption) ApplyToExecutor(e *task.Executor) {
 		task.WithTaskSorter(sorter),
 		task.WithVersionCheck(true),
 	)
+}
+
+// getConfig extracts a config value directly from a pointer field with a fallback default
+func getConfig[T any](config *taskrcAST.TaskRC, field *T, fallback T) T {
+	if config == nil {
+		return fallback
+	}
+
+	if field != nil {
+		return *field
+	}
+	return fallback
 }

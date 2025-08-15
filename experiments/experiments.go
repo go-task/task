@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/go-task/task/v3/taskrc/ast"
 	"github.com/joho/godotenv"
 
 	"github.com/go-task/task/v3/taskrc"
@@ -31,10 +32,14 @@ var (
 var xList []Experiment
 
 func Parse(dir string) {
+	config, _ := taskrc.GetConfig(dir)
+
+	ParseWithConfig(dir, config)
+}
+
+func ParseWithConfig(dir string, config *ast.TaskRC) {
 	// Read any .env files
 	readDotEnv(dir)
-
-	config, _ := taskrc.GetConfig(dir)
 
 	// Initialize the experiments
 	GentleForce = New("GENTLE_FORCE", config, 1)
