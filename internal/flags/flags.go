@@ -2,7 +2,6 @@ package flags
 
 import (
 	"cmp"
-	"fmt"
 	"log"
 	"os"
 	"path/filepath"
