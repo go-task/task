@@ -1,5 +1,19 @@
 # Changelog
 
+## Unreleased
+
+- :sparkles: Built and deployed a [brand new website](https://taskfile.dev)
+  using [VitePress](https://vitepress.dev) (#2359, #2369, #2371, #2375, #2378 by
+  @vmaerten, @andreynering, @pd93).
+- Began releasing
+  [nightly builds](https://github.com/go-task/task/releases/tag/nightly). This
+  will allow people to test our changes before they are fully released and
+  without having to install Go to build them (#2358 by @vmaerten).
+
+#### Package API
+
+- Bumped the minimum version of Go to 1.24 (#2358 by @vmaerten).
+
 ## v3.44.1 - 2025-07-23
 
 - Internal tasks will no longer be shown as suggestions since they cannot be
