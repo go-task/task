@@ -437,6 +437,7 @@ func TestStatusChecksum(t *testing.T) { // nolint:paralleltest // cannot run in 
 		task  string
 	}{
 		{[]string{"generated.txt", ".task/checksum/build"}, "build"},
+		{[]string{"generated-wildcard.txt", ".task/checksum/build-wildcard"}, "build-wildcard"},
 		{[]string{"generated.txt", ".task/checksum/build-with-status"}, "build-with-status"},
 	}
 
