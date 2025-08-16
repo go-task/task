@@ -8,6 +8,7 @@ includes:
 
 vars:
   BIN: "{{.ROOT_DIR}}/bin"
+  GOTESTSUM_FORMAT: '{{if .CI}}github-actions{{else}}pkgname{{end}}'
 
 env:
   CGO_ENABLED: '0'
@@ -131,28 +132,36 @@ tasks:
   test:
     desc: Runs test suite
     aliases: [t]
+    deps: [gotestsum:install]
     sources:
       - "**/*.go"
       - "testdata/**/*"
     cmds:
-      - go test ./...
+      - gotestsum -f '{{.GOTESTSUM_FORMAT}}' ./...
 
   test:watch:
     desc: Runs test suite with watch tests included
-    deps: [sleepit:build]
+    deps: [sleepit:build, gotestsum:install]
     cmds:
-      - go test ./... -tags 'watch'
+      - gotestsum -f '{{.GOTESTSUM_FORMAT}}' ./... -tags 'watch'
 
   test:all:
     desc: Runs test suite with signals and watch tests included
-    deps: [sleepit:build]
+    deps: [sleepit:build, gotestsum:install]
     cmds:
-      - go test -tags 'signals watch' ./...
+      - gotestsum -f '{{.GOTESTSUM_FORMAT}}' -tags 'signals watch' ./...
 
   goreleaser:test:
     desc: Tests release process without publishing
     cmds:
       - goreleaser --snapshot --clean
+
+  gotestsum:install:
+    desc: Installs gotestsum
+    status:
+      - command -v gotestsum
+    cmds:
+      - go install gotest.tools/gotestsum@latest
 
   goreleaser:install:
     desc: Installs goreleaser
