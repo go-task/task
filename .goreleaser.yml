@@ -156,8 +156,7 @@ npms:
 
 cloudsmiths:
   - organization: "task"
-#    repository: "{{if not .IsNightly}}task{{end}}"
-    repository: "task"
+    repository: "{{if not .IsNightly}}task{{end}}"
     formats:
       - deb
       - rpm

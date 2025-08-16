@@ -22,7 +22,7 @@ jobs:
         uses: goreleaser/goreleaser-action@v6
         with:
           distribution: goreleaser-pro
-          version: nightly
+          version: latest
           args: release --clean --nightly -f .goreleaser-nightly.yml
         env:
           GITHUB_TOKEN: ${{secrets.GH_PAT}}

@@ -8,15 +8,56 @@ outline: deep
 
 Task offers many installation methods. Check out the available methods below.
 
-::: info
+## Official Package Managers
 
-Some of the methods below are marked as
-![Community](https://img.shields.io/badge/Community%20Owned-orange). This means
-they are not maintained by the Task team and may not be up-to-date.
+These installation methods are maintained by the Task team and are always up-to-date.
 
-:::
+### Fedora ([dnf](https://docs.fedoraproject.org/en-US/quick-docs/dnf)) ![Fedora](https://img.shields.io/badge/Fedora-51A2DA?logo=fedora&logoColor=fff) ![Linux](https://img.shields.io/badge/Linux-FCC624?logo=linux&logoColor=black) {#fedora}
+[[package](https://cloudsmith.io/~task/repos/task/packages/?sort=-format&q=format%3Arpm)]
 
-## Package Managers
+If you Set up the repository by running :
+
+```shell
+curl -1sLf \
+  'https://dl.cloudsmith.io/public/task/task/setup.rpm.sh' \
+  | sudo -E bash
+```
+Then you can install Task with:
+```shell
+dnf install task
+```
+
+### RedHat / CentOs ([yum](https://docs.fedoraproject.org/en-US/quick-docs/dnf)) ![Fedora](https://img.shields.io/badge/Red_Hat-EE0000?logo=redhat&logoColor=white) ![Linux](https://img.shields.io/badge/Linux-FCC624?logo=linux&logoColor=black) {#redhat}
+
+[[package](https://cloudsmith.io/~task/repos/task/packages/?sort=-format&q=format%3Arpm)]
+
+If you Set up the repository by running :
+
+```shell
+curl -1sLf \
+  'https://dl.cloudsmith.io/public/task/task/setup.rpm.sh' \
+  | sudo -E bash
+```
+Then you can install Task with:
+```shell
+yum install task
+```
+
+### Debian / Ubuntu / LinuxMint ([apt](https://doc.ubuntu-fr.org/apt)) ![Ubuntu](https://img.shields.io/badge/Ubuntu-E95420?logo=Ubuntu&logoColor=white) ![Debian](https://img.shields.io/badge/debian-red?logo=debian&logoColor=orange&color=darkred) ![Linux](https://img.shields.io/badge/Linux-FCC624?logo=linux&logoColor=black) {#debian}
+
+[[package](https://cloudsmith.io/~task/repos/task/packages/?sort=-format&q=format%3Adeb)]}
+
+If you Set up the repository by running :
+
+```shell
+curl -1sLf \
+  'https://dl.cloudsmith.io/public/task/task/setup.rpm.sh' \
+  | sudo -E bash
+```
+Then you can install Task with:
+```shell
+apt install task
+```
 
 ### [Homebrew](https://brew.sh) ![macOS](https://img.shields.io/badge/MacOS-000000?logo=apple&logoColor=F0F0F0) ![Linux](https://img.shields.io/badge/Linux-FCC624?logo=linux&logoColor=black) {#homebrew}
 
@@ -34,16 +75,6 @@ by running:
 
 ```shell
 brew install go-task
-```
-
-### [Macports](https://macports.org) ![macOS](https://img.shields.io/badge/MacOS-000000?logo=apple&logoColor=F0F0F0) ![Community](https://img.shields.io/badge/Community%20Owned-orange) {#macports}
-
-Task repository is tracked by Macports
-[[package](https://ports.macports.org/port/go-task/details/)]
-[[source](https://github.com/macports/macports-ports/blob/master/devel/go-task/Portfile)]:
-
-```shell
-port install go-task
 ```
 
 ### [Snap](https://snapcraft.io/task) ![macOS](https://img.shields.io/badge/MacOS-000000?logo=apple&logoColor=F0F0F0) ![Linux](https://img.shields.io/badge/Linux-FCC624?logo=linux&logoColor=black) {#snap}
@@ -68,16 +99,6 @@ dependency of your project
 npm install -g @go-task/cli
 ```
 
-### [pip](https://pip.pypa.io) ![macOS](https://img.shields.io/badge/MacOS-000000?logo=apple&logoColor=F0F0F0) ![Linux](https://img.shields.io/badge/Linux-FCC624?logo=linux&logoColor=black) ![Windows](https://custom-icon-badges.demolab.com/badge/Windows-0078D6?logo=windows11&logoColor=white) ![Community](https://img.shields.io/badge/Community%20Owned-orange) {#pip}
-
-Like npm, pip can be used as a cross-platform way to install Task
-[[package](https://pypi.org/project/go-task-bin)]
-[[source](https://github.com/Bing-su/pip-binary-factory/tree/main/task)]:
-
-```shell
-pip install go-task-bin
-```
-
 ### [WinGet](https://github.com/microsoft/winget-cli) ![Windows](https://custom-icon-badges.demolab.com/badge/Windows-0078D6?logo=windows11&logoColor=white) {#winget}
 
 Task is available via the
@@ -86,6 +107,34 @@ Task is available via the
 
 ```shell
 winget install Task.Task
+```
+
+## Community-Maintained Package Managers
+
+::: warning Community Maintained
+
+These installation methods are maintained by the community and may not always be up-to-date with the latest Task version. The Task team does not directly control these packages.
+
+:::
+
+### [Macports](https://macports.org) ![macOS](https://img.shields.io/badge/MacOS-000000?logo=apple&logoColor=F0F0F0) ![Community](https://img.shields.io/badge/Community%20Owned-orange) {#macports}
+
+Task repository is tracked by Macports
+[[package](https://ports.macports.org/port/go-task/details/)]
+[[source](https://github.com/macports/macports-ports/blob/master/devel/go-task/Portfile)]:
+
+```shell
+port install go-task
+```
+
+### [pip](https://pip.pypa.io) ![macOS](https://img.shields.io/badge/MacOS-000000?logo=apple&logoColor=F0F0F0) ![Linux](https://img.shields.io/badge/Linux-FCC624?logo=linux&logoColor=black) ![Windows](https://custom-icon-badges.demolab.com/badge/Windows-0078D6?logo=windows11&logoColor=white) ![Community](https://img.shields.io/badge/Community%20Owned-orange) {#pip}
+
+Like npm, pip can be used as a cross-platform way to install Task
+[[package](https://pypi.org/project/go-task-bin)]
+[[source](https://github.com/Bing-su/pip-binary-factory/tree/main/task)]:
+
+```shell
+pip install go-task-bin
 ```
 
 ### [Chocolatey](https://chocolatey.org) ![Windows](https://custom-icon-badges.demolab.com/badge/Windows-0078D6?logo=windows11&logoColor=white) ![Community](https://img.shields.io/badge/Community%20Owned-orange) {#chocolatey}
@@ -114,7 +163,7 @@ scoop install task
 pacman -S go-task
 ```
 
-### Fedora ([dnf](https://docs.fedoraproject.org/en-US/quick-docs/dnf)) ![Fedora](https://img.shields.io/badge/Fedora-51A2DA?logo=fedora&logoColor=fff) ![Community](https://img.shields.io/badge/Community%20Owned-orange) {#fedora}
+### Fedora ([dnf](https://docs.fedoraproject.org/en-US/quick-docs/dnf)) ![Fedora](https://img.shields.io/badge/Fedora-51A2DA?logo=fedora&logoColor=fff) ![Community](https://img.shields.io/badge/Community%20Owned-orange) {#fedora-community}
 
 [[package](https://packages.fedoraproject.org/pkgs/golang-github-task/go-task/)]
 [[source](https://src.fedoraproject.org/rpms/golang-github-task)]
@@ -233,7 +282,11 @@ If you want to install Task in GitHub Actions you can try using
     repo-token: ${{ secrets.GITHUB_TOKEN }}
 ```
 
-This installation method is community owned.
+::: info Community Maintained
+
+This installation method is maintained by the community.
+
+:::
 
 ## Build From Source
 
