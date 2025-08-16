@@ -44,7 +44,9 @@ func (checker *ChecksumChecker) IsUpToDate(t *ast.Task) (bool, error) {
 	}
 
 	if !checker.dry && oldHash != newHash {
-		_ = os.MkdirAll(filepathext.SmartJoin(checker.tempDir, "checksum"), 0o755)
+
+		// if Task is executed in directory different from the task directory,
+		_ = os.MkdirAll(filepathext.SmartJoin(filepath.Join(checker.tempDir, t.Dir), "checksum"), 0o755)
 		if err = os.WriteFile(checksumFile, []byte(newHash+"\n"), 0o644); err != nil {
 			return false, err
 		}
@@ -115,7 +117,7 @@ func (c *ChecksumChecker) checksum(t *ast.Task) (string, error) {
 }
 
 func (checker *ChecksumChecker) checksumFilePath(t *ast.Task) string {
-	return filepath.Join(checker.tempDir, "checksum", normalizeFilename(t.Name()))
+	return filepath.Join(checker.tempDir, t.Dir, "checksum", normalizeFilename(t.Name()))
 }
 
 var checksumFilenameRegexp = regexp.MustCompile("[^A-z0-9]")
