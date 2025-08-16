@@ -9,6 +9,9 @@
   [nightly builds](https://github.com/go-task/task/releases/tag/nightly). This
   will allow people to test our changes before they are fully released and
   without having to install Go to build them (#2358 by @vmaerten).
+- Added experiments to the taskrc schema to clarify the expected keys and
+  values (#2235 by @vmaerten).
+
 
 #### Package API
 
