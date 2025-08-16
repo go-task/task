@@ -10,24 +10,6 @@ nightly:
   keep_single_release: true
   version_template: "{{incminor .Version}}-nightly"
 
-cloudsmiths:
-  - organization: "task"
-    repository: "task"
-    formats:
-      - deb
-      - rpm
-      - apk
-    distributions:
-      #      deb:
-      #        - "ubuntu/any-version"
-      #        - "debian/any-version"
-      rpm:
-        - "fedora/any-version"
-      alpine:
-        - "alpine/any-version"
-    component: unstable
-    republish: true
-
 includes:
   - from_file:
       path: ./.goreleaser.yml
