@@ -156,7 +156,8 @@ npms:
 
 cloudsmiths:
   - organization: "task"
-    repository: "{{if not .IsNightly}}task{{end}}"
+#    repository: "{{if not .IsNightly}}task{{end}}"
+    repository: "task"
     formats:
       - deb
       - rpm
@@ -165,9 +166,12 @@ cloudsmiths:
       deb:
         - "ubuntu/any-version"
         - "debian/any-version"
+        - "linuxmint/any-version"
       rpm:
         - "el/any-version"
         - "fedora/any-version"
+        - "Centos/any-version"
+        - "opensuse/any-version"
       alpine:
         - "alpine/any-version"
     component: main
