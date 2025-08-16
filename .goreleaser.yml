@@ -164,14 +164,9 @@ cloudsmiths:
       - apk
     distributions:
       deb:
-        - "ubuntu/any-version"
-        - "debian/any-version"
-        - "linuxmint/any-version"
+        - "any-distro/any-version"
       rpm:
-        - "el/any-version"
-        - "fedora/any-version"
-        - "Centos/any-version"
-        - "opensuse/any-version"
+        - "any-distro/any-version"
       alpine:
         - "alpine/any-version"
     component: main
