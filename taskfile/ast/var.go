@@ -8,11 +8,17 @@ import (
 
 // Var represents either a static or dynamic variable.
 type Var struct {
-	Value any
-	Live  any
-	Sh    *string
-	Ref   string
-	Dir   string
+	Value       any
+	Live        any
+	Sh          *string
+	Interactive Interactive
+	Ref         string
+	Dir         string
+}
+
+type Interactive struct {
+	Enabled bool
+	Default any
 }
 
 func (v *Var) UnmarshalYAML(node *yaml.Node) error {
@@ -20,21 +26,23 @@ func (v *Var) UnmarshalYAML(node *yaml.Node) error {
 	case yaml.MappingNode:
 		key := node.Content[0].Value
 		switch key {
-		case "sh", "ref", "map":
+		case "sh", "ref", "map", "interactive":
 			var m struct {
-				Sh  *string
-				Ref string
-				Map any
+				Sh          *string
+				Interactive Interactive
+				Ref         string
+				Map         any
 			}
 			if err := node.Decode(&m); err != nil {
 				return errors.NewTaskfileDecodeError(err, node)
 			}
 			v.Sh = m.Sh
+			v.Interactive = m.Interactive
 			v.Ref = m.Ref
 			v.Value = m.Map
 			return nil
 		default:
-			return errors.NewTaskfileDecodeError(nil, node).WithMessage(`%q is not a valid variable type. Try "sh", "ref", "map" or using a scalar value`, key)
+			return errors.NewTaskfileDecodeError(nil, node).WithMessage(`%q is not a valid variable type. Try "sh", "ref", "map", "interactive" or using a scalar value`, key)
 		}
 	default:
 		var value any

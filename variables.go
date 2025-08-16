@@ -7,7 +7,10 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/charmbracelet/bubbles/list"
+	"github.com/go-task/task/v3/internal/logger"
 	"github.com/joho/godotenv"
+	"golang.org/x/term"
 
 	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/env"
@@ -43,6 +46,38 @@ func (e *Executor) compiledTask(call *Call, evaluateShVars bool) (*ast.Task, err
 	}
 	if err != nil {
 		return nil, err
+	}
+
+	for k, v := range vars.All() {
+		if v.Interactive.Enabled {
+			if term.IsTerminal(int(os.Stdout.Fd())) {
+				var result = ""
+				var items []list.Item
+
+				if valueStr, ok := v.Value.(string); ok {
+					for _, itemStr := range strings.Split(valueStr, "\n") {
+						items = append(items, item(itemStr))
+					}
+					result = showItems(k, items).View()
+				} else {
+					e.Logger.Outf(logger.Green, fmt.Sprintf("Enter value for variable \"%s\":\n", k))
+
+					b := make([]byte, 8)
+					_, err := e.Stdin.Read(b)
+					if err != nil {
+						return nil, err
+					}
+
+					result = string(b)
+				}
+
+				vars.Set(k, ast.Var{Value: result})
+			} else if v.Interactive.Default != nil {
+				vars.Set(k, ast.Var{Value: v.Interactive.Default})
+			} else {
+				e.Logger.Warnf("Your Taskfile contains interactive variables without default values, but the current shell is not a TTY !\n")
+			}
+		}
 	}
 
 	cache := &templater.Cache{Vars: vars}
