@@ -6,33 +6,43 @@ outline: deep
 
 # Environment Reference
 
-Task allows you to configure some behavior using environment variables. This
-page lists all the environment variables that Task supports.
+Task has multiple ways of being configured. These methods are parsed, in
+sequence, in the following order with the highest priority last:
 
-| ENV               | Default         | Description                                                                                                                                        |
-| ----------------- | --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `TASK_TEMP_DIR`   | `.task`         | Location of the temp dir. Can relative to the project like `tmp/task` or absolute like `/tmp/.task` or `~/.task`.                                  |
-| `TASK_REMOTE_DIR` | `TASK_TEMP_DIR` | Location of the remote temp dir (used for caching). Can relative to the project like `tmp/task` or absolute like `/tmp/.task` or `~/.task`.        |
-| `TASK_OFFLINE`    | `false`         | Set the `--offline` flag through the environment variable. Only for remote experiment. CLI flag `--offline` takes precedence over the env variable |
-| `FORCE_COLOR`     |                 | Force color output usage.                                                                                                                          |
+- [Configuration files](./config.md)
+- _Environment variables_
+- [Command-line flags](./cli.md)
 
-## Custom Colors
+In this document, we will look at the second of the three options, environment
+variables. All Task-specific variables are prefixed with `TASK_` and override
+their configuration file equivalents.
 
-| ENV                         | Default | Description             |
-| --------------------------- | ------- | ----------------------- |
-| `TASK_COLOR_RESET`          | `0`     | Color used for white.   |
-| `TASK_COLOR_RED`            | `31`    | Color used for red.     |
-| `TASK_COLOR_GREEN`          | `32`    | Color used for green.   |
-| `TASK_COLOR_YELLOW`         | `33`    | Color used for yellow.  |
-| `TASK_COLOR_BLUE`           | `34`    | Color used for blue.    |
-| `TASK_COLOR_MAGENTA`        | `35`    | Color used for magenta. |
-| `TASK_COLOR_CYAN`           | `36`    | Color used for cyan.    |
-| `TASK_COLOR_BRIGHT_RED`     | `91`    | Color used for red.     |
-| `TASK_COLOR_BRIGHT_GREEN`   | `92`    | Color used for green.   |
-| `TASK_COLOR_BRIGHT_YELLOW`  | `93`    | Color used for yellow.  |
-| `TASK_COLOR_BRIGHT_BLUE`    | `94`    | Color used for blue.    |
-| `TASK_COLOR_BRIGHT_MAGENTA` | `95`    | Color used for magenta. |
-| `TASK_COLOR_BRIGHT_CYAN`    | `96`    | Color used for cyan.    |
+## Variables
+
+### `TASK_TEMP_DIR`
+
+Defines the location of Task's temporary directory which is used for storing
+checksums and temporary metadata. Can be relative like `tmp/task` or absolute
+like `/tmp/.task` or `~/.task`. Relative paths are relative to the root
+Taskfile, not the working directory. Defaults to: `./.task`.
+
+### `TASK_REMOTE_DIR`
+
+Defines the location of Task's remote temporary directory which is used for
+caching remote files. Can be relative like `tmp/task` or absolute like
+`/tmp/.task` or `~/.task`. Relative paths are relative to the root Taskfile, not
+the working directory. Defaults to: `./.task`.
+
+### `TASK_OFFLINE`
+
+Set the `--offline` flag through the environment variable. Only for remote
+experiment. CLI flag `--offline` takes precedence over the env variable.
+
+### `FORCE_COLOR`
+
+Force color output usage.
+
+### Custom Colors
 
 All color variables are [ANSI color codes][ansi]. You can specify multiple codes
 separated by a semicolon. For example: `31;1` will make the text bold and red.
@@ -44,5 +54,23 @@ background colors where `R`, `G` and `B` should be replaced with values between
 For convenience, we allow foreground colors to be specified using shorthand,
 comma-separated syntax: `R,G,B`. For example, `255,0,0` is equivalent to
 `38;2;255:0:0`.
+
+A table of variables and their defaults can be found below:
+
+| ENV                         | Default |
+| --------------------------- | ------- |
+| `TASK_COLOR_RESET`          | `0`     |
+| `TASK_COLOR_RED`            | `31`    |
+| `TASK_COLOR_GREEN`          | `32`    |
+| `TASK_COLOR_YELLOW`         | `33`    |
+| `TASK_COLOR_BLUE`           | `34`    |
+| `TASK_COLOR_MAGENTA`        | `35`    |
+| `TASK_COLOR_CYAN`           | `36`    |
+| `TASK_COLOR_BRIGHT_RED`     | `91`    |
+| `TASK_COLOR_BRIGHT_GREEN`   | `92`    |
+| `TASK_COLOR_BRIGHT_YELLOW`  | `93`    |
+| `TASK_COLOR_BRIGHT_BLUE`    | `94`    |
+| `TASK_COLOR_BRIGHT_MAGENTA` | `95`    |
+| `TASK_COLOR_BRIGHT_CYAN`    | `96`    |
 
 [ansi]: https://en.wikipedia.org/wiki/ANSI_escape_code

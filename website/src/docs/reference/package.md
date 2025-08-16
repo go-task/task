@@ -1,9 +1,9 @@
 ---
-title: CLI Reference
-description: Complete reference for Task CLI commands, flags, and exit codes
+title: Package API Reference
+description: A reference for Task's Golang package API
 ---
 
-# Package API
+# Package API Reference
 
 ::: warning
 

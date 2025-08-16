@@ -1,11 +1,10 @@
 ---
-title: Schema Reference
-description:
-  Complete reference for the Taskfile schema based on the official JSON schema
+title: Taskfile Schema Reference
+description: A reference for the Taskfile schema
 outline: deep
 ---
 
-# Schema Reference
+# Taskfile Schema Reference
 
 This page documents all available properties and types for the Taskfile schema
 version 3, based on the
