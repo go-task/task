@@ -1,7 +1,6 @@
 package taskrc
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -60,7 +59,6 @@ func TestGetConfig_NoConfigFiles(t *testing.T) { //nolint:paralleltest // cannot
 	_, _, localDir := setupDirs(t)
 
 	cfg, err := GetConfig(localDir)
-	fmt.Printf("cfg : %#v\n", cfg)
 	assert.NoError(t, err)
 	assert.Nil(t, cfg)
 }
@@ -128,7 +126,6 @@ func TestGetConfig_All(t *testing.T) { //nolint:paralleltest // cannot run in pa
 	cfg, err := GetConfig(localDir)
 	assert.NoError(t, err)
 	assert.NotNil(t, cfg)
-	fmt.Printf("cfg : %#v\n", cfg)
 	assert.Equal(t, &ast.TaskRC{
 		Version: nil,
 		Experiments: map[string]int{
