@@ -1821,7 +1821,10 @@ func TestRunOnlyRunsJobsHashOnceWithWildcard(t *testing.T) {
 			"wildcard.txt": "Deploy infra\nDeploy js\nDeploy go\n",
 		},
 	}
-	tt.Run(t)
+	t.Run("", func(t *testing.T) {
+		t.Parallel()
+		tt.Run(t)
+	})
 }
 
 func TestRunOnceSharedDeps(t *testing.T) {
