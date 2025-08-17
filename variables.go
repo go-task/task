@@ -44,6 +44,12 @@ func (e *Executor) compiledTask(call *Call, evaluateShVars bool) (*ast.Task, err
 	if err != nil {
 		return nil, err
 	}
+	fullName := origTask.Task
+	if matches, exists := vars.Get("MATCH"); exists {
+		for _, match := range matches.Value.([]string) {
+			fullName = strings.Replace(fullName, "*", match, 1)
+		}
+	}
 
 	cache := &templater.Cache{Vars: vars}
 	new := ast.Task{
@@ -75,7 +81,7 @@ func (e *Executor) compiledTask(call *Call, evaluateShVars bool) (*ast.Task, err
 		Requires:             origTask.Requires,
 		Watch:                origTask.Watch,
 		Namespace:            origTask.Namespace,
-		FullName:             call.Task,
+		FullName:             fullName,
 	}
 	new.Dir, err = execext.ExpandLiteral(new.Dir)
 	if err != nil {

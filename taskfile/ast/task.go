@@ -3,7 +3,6 @@ package ast
 import (
 	"fmt"
 	"regexp"
-	"slices"
 	"strings"
 
 	"gopkg.in/yaml.v3"
@@ -55,7 +54,7 @@ func (t *Task) Name() string {
 	if t.Label != "" {
 		return t.Label
 	}
-	if t.FullName != "" && !slices.Contains(t.Aliases, t.FullName) {
+	if t.FullName != "" {
 		return t.FullName
 	}
 	return t.Task
