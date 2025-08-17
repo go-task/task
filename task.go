@@ -436,7 +436,6 @@ func (e *Executor) GetTask(call *Call) (*ast.Task, error) {
 			call.Vars = ast.NewVars()
 		}
 		call.Vars.Set("MATCH", ast.Var{Value: matchingTasks[0].Wildcards})
-		matchingTasks[0].Task.FullName = call.Task
 		return matchingTasks[0].Task, nil
 	}
 
@@ -467,7 +466,6 @@ func (e *Executor) GetTask(call *Call) (*ast.Task, error) {
 			DidYouMean: didYouMean,
 		}
 	}
-	matchingTask.FullName = matchingTask.Task
 	return matchingTask, nil
 }
 

@@ -61,7 +61,7 @@ func (t *Task) Name() string {
 }
 
 func (t *Task) LocalName() string {
-	name := t.Task
+	name := t.FullName
 	name = strings.TrimPrefix(name, t.Namespace)
 	name = strings.TrimPrefix(name, ":")
 	return name

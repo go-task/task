@@ -1811,6 +1811,17 @@ func TestRunOnlyRunsJobsHashOnce(t *testing.T) {
 	})
 }
 
+func TestRunOnlyRunsJobsHashOnceWithWildcard(t *testing.T) {
+	tt := fileContentTest{
+		Dir:    "testdata/run",
+		Target: "deploy",
+		Files: map[string]string{
+			"wildcard.txt": "Deploy infra\nDeploy js\nDeploy go\n",
+		},
+	}
+	tt.Run(t)
+}
+
 func TestRunOnceSharedDeps(t *testing.T) {
 	t.Parallel()
 
