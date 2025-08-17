@@ -1812,6 +1812,8 @@ func TestRunOnlyRunsJobsHashOnce(t *testing.T) {
 }
 
 func TestRunOnlyRunsJobsHashOnceWithWildcard(t *testing.T) {
+	t.Parallel()
+
 	tt := fileContentTest{
 		Dir:    "testdata/run",
 		Target: "deploy",
