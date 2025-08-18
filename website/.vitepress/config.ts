@@ -208,12 +208,12 @@ export default defineConfig({
               link: '/docs/reference/schema'
             },
             {
-              text: 'Configuration',
-              link: '/docs/reference/config'
-            },
-            {
               text: 'Environment',
               link: '/docs/reference/environment'
+            },
+            {
+              text: 'Configuration',
+              link: '/docs/reference/config'
             },
             {
               text: 'CLI',

@@ -10,11 +10,11 @@ outline: deep
 Task has multiple ways of being configured. These methods are parsed, in
 sequence, in the following order with the highest priority last:
 
-- _Configuration files_
 - [Environment variables](./environment.md)
+- _Configuration files_
 - [Command-line flags](./cli.md)
 
-In this document, we will look at the first of the three options, configuration
+In this document, we will look at the second of the three options, configuration
 files.
 
 ## File Precedence

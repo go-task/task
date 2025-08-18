@@ -9,11 +9,11 @@ outline: deep
 Task has multiple ways of being configured. These methods are parsed, in
 sequence, in the following order with the highest priority last:
 
-- [Configuration files](./config.md)
 - _Environment variables_
+- [Configuration files](./config.md)
 - [Command-line flags](./cli.md)
 
-In this document, we will look at the second of the three options, environment
+In this document, we will look at the first of the three options, environment
 variables. All Task-specific variables are prefixed with `TASK_` and override
 their configuration file equivalents.
 
