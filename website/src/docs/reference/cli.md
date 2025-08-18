@@ -1,13 +1,26 @@
 ---
-title: CLI Reference
+title: Command Line Interface Reference
 description: Complete reference for Task CLI commands, flags, and exit codes
 permalink: /reference/cli/
 outline: deep
 ---
 
-# Command Line Interface
+# Command Line Interface Reference
 
-Task CLI commands have the following syntax:
+Task has multiple ways of being configured. These methods are parsed, in
+sequence, in the following order with the highest priority last:
+
+- [Environment variables](./environment.md)
+- [Configuration files](./config.md)
+- _Command-line flags_
+
+In this document, we will look at the last of the three options, command-line
+flags. All CLI commands override their configuration file and environment
+variable equivalents.
+
+## Format
+
+Task commands have the following syntax:
 
 ```bash
 task [options] [tasks...] [-- CLI_ARGS...]
@@ -16,7 +29,7 @@ task [options] [tasks...] [-- CLI_ARGS...]
 ::: tip
 
 If `--` is given, all remaining arguments will be assigned to a special
-`CLI_ARGS` variable
+`CLI_ARGS` variable.
 
 :::
 
