@@ -163,7 +163,7 @@ Here's a complete example of a `.taskrc.yml` file with all available options:
 ```yaml
 # Enable experimental features
 experiments:
-  remote_taskfiles: 1
+  REMOTE_TASKFILES: 1
 
 # Remote configuration
 remote:
