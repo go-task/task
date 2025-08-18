@@ -20,6 +20,40 @@
           "enum": [0, 1]
         }
       }
+    },
+    "remote": {
+      "type": "object",
+      "description": "Remote configuration settings",
+      "properties": {
+        "insecure": {
+          "type": "boolean",
+          "description": "Allow insecure connections"
+        },
+        "offline": {
+          "type": "boolean",
+          "description": "Work in offline mode"
+        },
+        "timeout": {
+          "type": "string",
+          "description": "Timeout duration (e.g., '30s', '5m')",
+          "pattern": "^[0-9]+(ns|us|µs|ms|s|m|h)$"
+        },
+        "cache-expiry": {
+          "type": "string",
+          "description": "Cache expiry duration (e.g., '1h', '24h')",
+          "pattern": "^[0-9]+(ns|us|µs|ms|s|m|h)$"
+        }
+      },
+      "additionalProperties": false
+    },
+    "verbose": {
+      "type": "boolean",
+      "description": "Enable verbose output"
+    },
+    "concurrency": {
+      "type": "integer",
+      "description": "Number of concurrent tasks to run",
+      "minimum": 1
     }
   },
   "additionalProperties": false
