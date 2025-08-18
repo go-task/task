@@ -1,0 +1,9 @@
+version: '3'
+
+vars:
+  MYVAR: foo
+
+tasks:
+  default:
+    cmds:
+      - echo "{{.MYVAR}}"

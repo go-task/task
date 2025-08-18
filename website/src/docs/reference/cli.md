@@ -95,6 +95,14 @@ Disable command echoing.
 task deploy --silent
 ```
 
+#### `-V, --var <key>=<value>`
+
+Provide variable overrides to override variables defined in the Taskfile.
+
+```bash
+task build --var FOO=bar
+```
+
 ### Execution Control
 
 #### `-f, --force`

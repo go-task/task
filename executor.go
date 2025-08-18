@@ -38,6 +38,7 @@ type (
 		CacheExpiryDuration time.Duration
 		Watch               bool
 		Verbose             bool
+		Vars                map[string]string
 		Silent              bool
 		AssumeYes           bool
 		AssumeTerm          bool // Used for testing
@@ -274,12 +275,24 @@ func WithVerbose(verbose bool) ExecutorOption {
 	return &verboseOption{verbose}
 }
 
+func WithVars(vars map[string]string) ExecutorOption {
+	return &varsOption{vars}
+}
+
 type verboseOption struct {
 	verbose bool
 }
 
+type varsOption struct {
+	vars map[string]string
+}
+
 func (o *verboseOption) ApplyToExecutor(e *Executor) {
 	e.Verbose = o.verbose
+}
+
+func (o *varsOption) ApplyToExecutor(e *Executor) {
+	e.Vars = o.vars
 }
 
 // WithSilent tells the [Executor] to suppress all output except for the output

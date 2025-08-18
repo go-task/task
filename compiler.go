@@ -33,18 +33,18 @@ type Compiler struct {
 }
 
 func (c *Compiler) GetTaskfileVariables() (*ast.Vars, error) {
-	return c.getVariables(nil, nil, true)
+	return c.getVariables(nil, nil, true, map[string]string{})
 }
 
 func (c *Compiler) GetVariables(t *ast.Task, call *Call) (*ast.Vars, error) {
-	return c.getVariables(t, call, true)
+	return c.getVariables(t, call, true, map[string]string{})
 }
 
-func (c *Compiler) FastGetVariables(t *ast.Task, call *Call) (*ast.Vars, error) {
-	return c.getVariables(t, call, false)
+func (c *Compiler) FastGetVariables(t *ast.Task, call *Call, overrideVars map[string]string) (*ast.Vars, error) {
+	return c.getVariables(t, call, false, overrideVars)
 }
 
-func (c *Compiler) getVariables(t *ast.Task, call *Call, evaluateShVars bool) (*ast.Vars, error) {
+func (c *Compiler) getVariables(t *ast.Task, call *Call, evaluateShVars bool, overrideVars map[string]string) (*ast.Vars, error) {
 	result := env.GetEnviron()
 	specialVars, err := c.getSpecialVars(t, call)
 	if err != nil {
@@ -56,6 +56,12 @@ func (c *Compiler) getVariables(t *ast.Task, call *Call, evaluateShVars bool) (*
 
 	getRangeFunc := func(dir string) func(k string, v ast.Var) error {
 		return func(k string, v ast.Var) error {
+			val, ok := overrideVars[k]
+
+			if ok {
+				v = ast.Var{Value: val}
+			}
+
 			cache := &templater.Cache{Vars: result}
 			// Replace values
 			newVar := templater.ReplaceVar(v, cache)

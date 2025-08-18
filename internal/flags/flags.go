@@ -56,6 +56,7 @@ var (
 	ForceAll            bool
 	Watch               bool
 	Verbose             bool
+	Vars                map[string]string
 	Silent              bool
 	AssumeYes           bool
 	Dry                 bool
@@ -121,6 +122,7 @@ func init() {
 	pflag.BoolVar(&Insecure, "insecure", false, "Forces Task to download Taskfiles over insecure connections.")
 	pflag.BoolVarP(&Watch, "watch", "w", false, "Enables watch of the given task.")
 	pflag.BoolVarP(&Verbose, "verbose", "v", false, "Enables verbose mode.")
+	pflag.StringToStringVarP(&Vars, "var", "V", map[string]string{}, "Provide variable overrides")
 	pflag.BoolVarP(&Silent, "silent", "s", false, "Disables echoing.")
 	pflag.BoolVarP(&AssumeYes, "yes", "y", false, "Assume \"yes\" as answer to all prompts.")
 	pflag.BoolVarP(&Parallel, "parallel", "p", false, "Executes tasks provided on command line in parallel.")
@@ -238,6 +240,7 @@ func (o *flagsOption) ApplyToExecutor(e *task.Executor) {
 		task.WithCacheExpiryDuration(CacheExpiryDuration),
 		task.WithWatch(Watch),
 		task.WithVerbose(Verbose),
+		task.WithVars(Vars),
 		task.WithSilent(Silent),
 		task.WithAssumeYes(AssumeYes),
 		task.WithDry(Dry || Status),

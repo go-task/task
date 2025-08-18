@@ -37,9 +37,9 @@ func (e *Executor) compiledTask(call *Call, evaluateShVars bool) (*ast.Task, err
 
 	var vars *ast.Vars
 	if evaluateShVars {
-		vars, err = e.Compiler.GetVariables(origTask, call)
+		vars, err = e.Compiler.getVariables(origTask, call, true, e.Vars)
 	} else {
-		vars, err = e.Compiler.FastGetVariables(origTask, call)
+		vars, err = e.Compiler.FastGetVariables(origTask, call, e.Vars)
 	}
 	if err != nil {
 		return nil, err

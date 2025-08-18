@@ -265,6 +265,17 @@ func TestVars(t *testing.T) {
 	)
 }
 
+func TestVarOverride(t *testing.T) {
+	t.Parallel()
+	NewExecutorTest(t,
+		WithExecutorOptions(
+			task.WithDir("testdata/var_override"),
+			task.WithSilent(true),
+			task.WithVars(map[string]string{"MYVAR": "bar"}),
+		),
+	)
+}
+
 func TestRequires(t *testing.T) {
 	t.Parallel()
 	NewExecutorTest(t,
