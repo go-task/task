@@ -273,6 +273,39 @@ Set watch interval (default: `5s`). Must be a valid
 task build --watch --interval 1s
 ```
 
+### Gentle Force <Badge type="warning" text="Gentle Force experiment" />
+
+::: info
+
+These flags are only available when the
+[Gentle Force experiment](../experiments/gentle-force.md) is enabled.
+
+:::
+
+When the Gentle Force experiment is enabled, the behavior of the `--force` flag changes and a new `--force-all` flag becomes available:
+
+#### `--force-all`
+
+Force execution of the called task and all its dependent tasks.
+
+```bash
+task deploy --force-all
+```
+
+#### `-f, --force` (Modified behavior)
+
+When Gentle Force is enabled, this flag only forces execution of the directly called task (not its dependencies).
+
+```bash
+task deploy --force
+```
+
+::: tip
+
+Without the Gentle Force experiment, `--force` behaves like `--force-all` does when the experiment is enabled.
+
+:::
+
 ### Remote Taskfiles <Badge type="warning" text="Remote experimentation" />
 
 ::: info
