@@ -19,16 +19,21 @@ files.
 
 ## File Precedence
 
-Task's configuration files are named `.taskrc.yml` or `.taskrc.yaml`. Task will
-automatically look for directories containing files with these names in the
-following order with the highest priority first:
+Task will automatically look for directories containing configuration files in
+the following order with the highest priority first:
 
 - Current directory (or the one specified by the `--taskfile`/`--entrypoint`
   flags).
 - Each directory walking up the file tree from the current directory (or the one
   specified by the `--taskfile`/`--entrypoint` flags) until we reach the user's
   home directory or the root directory of that drive.
-- `$XDG_CONFIG_HOME/task`.
+- The users `$HOME` directory.
+- The `$XDG_CONFIG_HOME/task` directory.
+
+Config files in the current directory, its parent folders or home directory
+should be called `.taskrc.yml` or `.taskrc.yaml`. Config files in the
+`$XDG_CONFIG_HOME/task` directory are named the same way, but should not contain
+the `.` prefix.
 
 All config files will be merged together into a unified config, starting with
 the lowest priority file in `$XDG_CONFIG_HOME/task` with each subsequent file
@@ -36,7 +41,7 @@ overwriting the previous one if values are set.
 
 For example, given the following files:
 
-```yaml [$XDG_CONFIG_HOME/task/.taskrc.yml]
+```yaml [$XDG_CONFIG_HOME/task/taskrc.yml]
 # lowest priority global config
 option_1: foo
 option_2: foo

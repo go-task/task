@@ -11,9 +11,10 @@ type Node struct {
 func NewNode(
 	entrypoint string,
 	dir string,
+	possibleFileNames []string,
 ) (*Node, error) {
 	dir = fsext.DefaultDir(entrypoint, dir)
-	resolvedEntrypoint, err := fsext.SearchPath(dir, defaultTaskRCs)
+	resolvedEntrypoint, err := fsext.SearchPath(dir, possibleFileNames)
 	if err != nil {
 		return nil, err
 	}
