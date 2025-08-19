@@ -27,20 +27,20 @@
       "properties": {
         "insecure": {
           "type": "boolean",
-          "description": "Allow insecure connections"
+          "description": "Forces Task to download Taskfiles over insecure connections."
         },
         "offline": {
           "type": "boolean",
-          "description": "Work in offline mode"
+          "description": "Forces Task to only use local or cached Taskfiles."
         },
         "timeout": {
           "type": "string",
-          "description": "Timeout duration (e.g., '30s', '5m')",
+          "description": "Timeout for downloading remote Taskfiles (e.g., '30s', '5m')",
           "pattern": "^[0-9]+(ns|us|µs|ms|s|m|h)$"
         },
         "cache-expiry": {
           "type": "string",
-          "description": "Cache expiry duration (e.g., '1h', '24h')",
+          "description": "Expiry duration for cached remote Taskfiles (e.g., '1h', '24h')",
           "pattern": "^[0-9]+(ns|us|µs|ms|s|m|h)$"
         }
       },

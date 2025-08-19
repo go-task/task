@@ -273,6 +273,63 @@ Set watch interval (default: `5s`). Must be a valid
 task build --watch --interval 1s
 ```
 
+### Remote Taskfiles <Badge type="warning" text="Remote experimentation" />
+
+::: info
+
+These flags are only available when the
+[Remote Taskfiles experiment](../experiments/remote-taskfiles.md) is enabled.
+
+:::
+
+#### `--insecure`
+
+Allow insecure connections when fetching remote Taskfiles.
+
+```bash
+task --taskfile https://example.com/Taskfile.yml --insecure
+```
+
+#### `--download`
+
+Downloads a cached version of a remote Taskfile.
+
+```bash
+task --download --taskfile https://example.com/Taskfile.yml
+```
+
+#### `--offline`
+
+Force Task to only use local or cached Taskfiles.
+
+```bash
+task build --offline
+```
+
+#### `--timeout <duration>`
+
+Set timeout for downloading remote Taskfiles.
+
+```bash
+task --taskfile https://example.com/Taskfile.yml --timeout 30s
+```
+
+#### `--clear-cache`
+
+Clear the remote cache.
+
+```bash
+task --clear-cache
+```
+
+#### `--expiry <duration>`
+
+Set expiry duration for cached remote Taskfiles.
+
+```bash
+task --taskfile https://example.com/Taskfile.yml --expiry 1h
+```
+
 ### Interactive
 
 #### `-y, --yes`
