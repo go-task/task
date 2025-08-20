@@ -9,10 +9,12 @@
   [nightly builds](https://github.com/go-task/task/releases/tag/nightly). This
   will allow people to test our changes before they are fully released and
   without having to install Go to build them (#2358 by @vmaerten).
+- Added support for global config files in `$XDG_CONFIG_HOME/task/taskrc.yml` or
+  `$HOME/.taskrc.yml`. Check out our new
+  [configuration guide](https://taskfile.dev/docs/reference/config) for more
+  details (#2247, #2380, #2390, #2391 by @vmaerten, @pd93).
 - Added experiments to the taskrc schema to clarify the expected keys and values
   (#2235 by @vmaerten).
-- Added support for a global config file at `$XDG_CONFIG_HOME/task/.taskrc.yml` or
-  `$HOME/.taskrc.yml` (#2380 by @vmaerten, @pd93).
 
 #### Package API
 
