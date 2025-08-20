@@ -66,7 +66,7 @@ func TestGetConfig_NoConfigFiles(t *testing.T) { //nolint:paralleltest // cannot
 func TestGetConfig_OnlyXDG(t *testing.T) { //nolint:paralleltest // cannot run in parallel
 	xdgDir, _, localDir := setupDirs(t)
 
-	writeFile(t, xdgDir, ".taskrc.yml", xdgConfigYAML)
+	writeFile(t, xdgDir, "taskrc.yml", xdgConfigYAML)
 
 	cfg, err := GetConfig(localDir)
 	assert.NoError(t, err)
@@ -121,7 +121,7 @@ func TestGetConfig_All(t *testing.T) { //nolint:paralleltest // cannot run in pa
 	writeFile(t, homeDir, ".taskrc.yml", homeConfigYAML)
 
 	// Write XDG config
-	writeFile(t, xdgConfigDir, ".taskrc.yml", xdgConfigYAML)
+	writeFile(t, xdgConfigDir, "taskrc.yml", xdgConfigYAML)
 
 	cfg, err := GetConfig(localDir)
 	assert.NoError(t, err)

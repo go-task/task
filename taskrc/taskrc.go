@@ -4,15 +4,22 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
+	"strings"
 
 	"github.com/go-task/task/v3/internal/fsext"
 	"github.com/go-task/task/v3/taskrc/ast"
 )
 
-var defaultTaskRCs = []string{
-	".taskrc.yml",
-	".taskrc.yaml",
-}
+var (
+	defaultXDGTaskRCs = []string{
+		"taskrc.yml",
+		"taskrc.yaml",
+	}
+	defaultTaskRCs = []string{
+		".taskrc.yml",
+		".taskrc.yaml",
+	}
+)
 
 // GetConfig loads and merges local and global Task configuration files
 func GetConfig(dir string) (*ast.TaskRC, error) {
@@ -21,11 +28,30 @@ func GetConfig(dir string) (*ast.TaskRC, error) {
 
 	// Read the XDG config file
 	if xdgConfigHome := os.Getenv("XDG_CONFIG_HOME"); xdgConfigHome != "" {
-		xdgConfigNode, err := NewNode("", filepath.Join(xdgConfigHome, "task"))
+		xdgConfigNode, err := NewNode("", filepath.Join(xdgConfigHome, "task"), defaultXDGTaskRCs)
 		if err == nil && xdgConfigNode != nil {
-			config, err = reader.Read(xdgConfigNode)
+			xdgConfig, err := reader.Read(xdgConfigNode)
 			if err != nil {
 				return nil, err
+			}
+			config = xdgConfig
+		}
+	}
+
+	// If the current path does not contain $HOME
+	// If it does contain $HOME, then we will find this config later anyway
+	home, err := os.UserHomeDir()
+	if err == nil && !strings.Contains(home, dir) {
+		homeNode, err := NewNode("", home, defaultTaskRCs)
+		if err == nil && homeNode != nil {
+			homeConfig, err := reader.Read(homeNode)
+			if err != nil {
+				return nil, err
+			}
+			if config == nil {
+				config = homeConfig
+			} else {
+				config.Merge(homeConfig)
 			}
 		}
 	}
@@ -41,7 +67,7 @@ func GetConfig(dir string) (*ast.TaskRC, error) {
 
 	// Loop over the nodes, and merge them into the main config
 	for _, entrypoint := range entrypoints {
-		node, err := NewNode("", entrypoint)
+		node, err := NewNode("", entrypoint, defaultTaskRCs)
 		if err != nil {
 			return nil, err
 		}
