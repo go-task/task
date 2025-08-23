@@ -18,15 +18,21 @@ type FileNode struct {
 }
 
 func NewFileNode(entrypoint, dir string, opts ...NodeOption) (*FileNode, error) {
-	var err error
-	base := NewBaseNode(dir, opts...)
-	entrypoint, base.dir, err = fsext.Search(entrypoint, base.dir, defaultTaskfiles)
+	// Find the entrypoint file
+	resolvedEntrypoint, err := fsext.Search(entrypoint, dir, defaultTaskfiles)
 	if err != nil {
 		return nil, err
 	}
+
+	// Resolve the directory
+	resolvedDir, err := fsext.ResolveDir(entrypoint, resolvedEntrypoint, dir)
+	if err != nil {
+		return nil, err
+	}
+
 	return &FileNode{
-		baseNode:   base,
-		entrypoint: entrypoint,
+		baseNode:   NewBaseNode(resolvedDir, opts...),
+		entrypoint: resolvedEntrypoint,
 	}, nil
 }
 

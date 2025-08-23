@@ -34,12 +34,7 @@ func Parse(dir string) {
 	// Read any .env files
 	readDotEnv(dir)
 
-	// Create a node for the Task config reader
-	node, _ := taskrc.NewNode("", dir)
-
-	// Read the Task config file
-	reader := taskrc.NewReader()
-	config, _ := reader.Read(node)
+	config, _ := taskrc.GetConfig(dir)
 
 	// Initialize the experiments
 	GentleForce = New("GENTLE_FORCE", config, 1)

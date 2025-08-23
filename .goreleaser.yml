@@ -30,7 +30,8 @@ builds:
     flags:
       - -trimpath
     ldflags:
-      - -s -w # Don't set main.version.
+      - "-s -w"
+      - "{{if .IsNightly}}-X github.com/go-task/task/v3/internal/version.version={{.Version}}{{end}}"
 
 gomod:
   proxy: true
@@ -45,8 +46,9 @@ archives:
       - goos: windows
         formats: [zip]
 
-release:
-  draft: true
+git:
+  ignore_tags:
+    - "{{if not .IsNightly}}nightly{{end}}"
 
 snapshot:
   version_template: '{{.Version}}'
@@ -66,6 +68,7 @@ nfpms:
     formats:
       - deb
       - rpm
+      - apk
     file_name_template: '{{.ProjectName}}_{{.Os}}_{{.Arch}}'
     contents:
       - src: completion/bash/task.bash
@@ -133,3 +136,39 @@ winget:
           owner: microsoft
           name: winget-pkgs
           branch: master
+
+
+npms:
+  - name: "@go-task/cli"
+    repository: "git+https://github.com/go-task/task.git"
+    bugs: https://github.com/go-task/task/issues
+    description: A task runner / simpler Make alternative written in Go
+    homepage: https://taskfile.dev
+    license: MIT
+    author: "The Task authors"
+    access: public
+    keywords:
+      - "task"
+      - "taskfile"
+      - "build-tool"
+      - "task-runner"
+
+
+cloudsmiths:
+  - organization: "task"
+    repository: "task"
+    formats:
+      - deb
+      - rpm
+      - apk
+    distributions:
+#      deb:
+#        - "ubuntu/any-version"
+#        - "debian/any-version"
+      rpm:
+        - "el/any-version"
+        - "fedora/any-version"
+      alpine:
+        - "alpine/any-version"
+    component: "{{if .IsNightly}}unstable{{else}}main{{end}}"
+    republish: true

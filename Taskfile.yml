@@ -203,7 +203,6 @@ tasks:
         Please wait for the CI to finish and then do the following:
 
         - Copy the changelog for v{{.VERSION}} to the GitHub release
-        - Publish the package to NPM with `task npm:publish`
         - Update and push the snapcraft manifest in https://github.com/go-task/snap/blob/main/snap/snapcraft.yaml
     preconditions:
       - sh: test $(git rev-parse --abbrev-ref HEAD) = "main"
@@ -222,8 +221,3 @@ tasks:
       - "git push origin tag v{{.VERSION}}"
       - cmd: printf "%s" '{{.COMPLETE_MESSAGE}}'
         silent: true
-
-  npm:publish:
-    desc: Publish release to npm
-    cmds:
-      - npm publish --access=public

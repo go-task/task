@@ -10,21 +10,42 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: 1.24.x
+          go-version: 1.25.x
+
+      - name: npm-login
+        run: |
+          npm config set '//registry.npmjs.org/:_authToken'=${{ secrets.NPM_TOKEN }}
+      - name: Install Task
+        uses: arduino/setup-task@v2
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+          cache: 'pnpm'
 
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v6
         with:
           distribution: goreleaser-pro
           version: latest
-          args: release --clean
+          args: release --clean --draft
         env:
           GITHUB_TOKEN: ${{secrets.GH_PAT}}
           GORELEASER_KEY: ${{secrets.GORELEASER_KEY}}
+          CLOUDSMITH_TOKEN: ${{secrets.CLOUDSMITH_TOKEN}}
+
+      - name: Deploy Website
+        shell: bash
+        run: |
+          task website:deploy:prod

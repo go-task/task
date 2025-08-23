@@ -1,0 +1,20 @@
+# Redirect specific docs pages
+/changelog         /docs/changelog
+/community         /docs/community
+/contributing      /docs/contributing
+/faq               /docs/faq
+/getting-started   /docs/getting-started
+/installation      /docs/installation
+/integrations      /docs/integrations
+/releasing         /docs/releasing
+/styleguide        /docs/styleguide
+/taskfile-versions /docs/taskfile-versions
+/usage             /docs/guide
+
+# Redirect some group docs pages
+/deprecations/*    /docs/deprecations/:splat
+/experiments/*     /docs/experiments/:splat
+/reference/*       /docs/reference/:splat
+
+# Redirect root /docs to something useful
+/docs              /docs/guide
