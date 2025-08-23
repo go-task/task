@@ -39,7 +39,7 @@ tasks:
       HOST: '{{default "localhost" .HOST}}'
       PORT: '{{default "3001" .PORT}}'
     cmds:
-      - pnpm preview  --host={{.HOST}} --port={{.PORT}}
+      - pnpm preview --host={{.HOST}} --port={{.PORT}}
 
   clean:
     desc: Clean temp directories
