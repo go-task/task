@@ -23,6 +23,7 @@ curl -1sLf \
   | sudo -E bash
 ```
 Then you can install Task with:
+
 ```shell
 dnf install task
 ```
@@ -39,6 +40,7 @@ curl -1sLf \
   | sudo -E bash
 ```
 Then you can install Task with:
+
 ```shell
 apt install task
 ```
