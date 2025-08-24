@@ -94,7 +94,6 @@ remote:
 - **Type**: `boolean`
 - **Default**: `false`
 - **Description**: Allow insecure connections when fetching remote Taskfiles
-- **CLI equivalent**: [`--insecure`](./cli.md#--insecure)
 
 ```yaml
 remote:
@@ -106,7 +105,6 @@ remote:
 - **Type**: `boolean`
 - **Default**: `false`
 - **Description**: Work in offline mode, preventing remote Taskfile fetching
-- **CLI equivalent**: [`--offline`](./cli.md#--offline)
 
 ```yaml
 remote:
@@ -119,7 +117,6 @@ remote:
 - **Default**: Not specified
 - **Pattern**: `^[0-9]+(ns|us|µs|ms|s|m|h)$`
 - **Description**: Timeout duration for remote operations (e.g., '30s', '5m')
-- **CLI equivalent**: [`--timeout`](./cli.md#--timeout-duration)
 
 ```yaml
 remote:
@@ -132,7 +129,6 @@ remote:
 - **Default**: Not specified
 - **Pattern**: `^[0-9]+(ns|us|µs|ms|s|m|h)$`
 - **Description**: Cache expiry duration for remote Taskfiles (e.g., '1h', '24h')
-- **CLI equivalent**: [`--expiry`](./cli.md#--expiry-duration)
 
 ```yaml
 remote:
