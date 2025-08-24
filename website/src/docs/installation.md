@@ -282,9 +282,9 @@ If you want to install Task in GitHub Actions you can try using
     repo-token: ${{ secrets.GITHUB_TOKEN }}
 ```
 
-::: info Community Maintained
+::: warning Community Maintained
 
-This installation method is maintained by the community.
+These installation methods are maintained by the community and may not always be up-to-date with the latest Task version. The Task team does not directly control these packages.
 
 :::
 
