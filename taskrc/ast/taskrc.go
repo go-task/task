@@ -37,26 +37,11 @@ func (t *TaskRC) Merge(other *TaskRC) {
 	}
 
 	// Merge Remote fields
-	if other.Remote.Insecure != nil {
-		t.Remote.Insecure = other.Remote.Insecure
-	}
-	if other.Remote.Offline != nil {
-		t.Remote.Offline = other.Remote.Offline
-	}
+	t.Remote.Insecure = cmp.Or(other.Remote.Insecure, t.Remote.Insecure)
+	t.Remote.Offline = cmp.Or(other.Remote.Offline, t.Remote.Offline)
+	t.Remote.Timeout = cmp.Or(other.Remote.Timeout, t.Remote.Timeout)
+	t.Remote.CacheExpiry = cmp.Or(other.Remote.CacheExpiry, t.Remote.CacheExpiry)
 
-	if other.Remote.Timeout != nil {
-		t.Remote.Timeout = other.Remote.Timeout
-	}
-
-	if other.Remote.CacheExpiry != nil {
-		t.Remote.CacheExpiry = other.Remote.CacheExpiry
-	}
-
-	if other.Verbose != nil {
-		t.Verbose = other.Verbose
-	}
-
-	if other.Concurrency != nil {
-		t.Concurrency = other.Concurrency
-	}
+	t.Verbose = cmp.Or(other.Verbose, t.Verbose)
+	t.Concurrency = cmp.Or(other.Concurrency, t.Concurrency)
 }
