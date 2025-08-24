@@ -290,3 +290,65 @@ You can force Task to ignore the cache and download the latest version by using
 the `--download` flag.
 
 You can use the `--clear-cache` flag to clear all cached remote files.
+
+## Configuration
+This experiment adds a new `remote` section to the [configuration file](../reference/config.md).
+
+- **Type**: `object`
+- **Description**: Remote configuration settings for handling remote Taskfiles
+- **Requires**: [Remote Taskfiles experiment](../experiments/remote-taskfiles.md) to be enabled
+
+```yaml
+remote:
+  insecure: false
+  offline: false
+  timeout: "30s"
+  cache-expiry: "24h"
+```
+
+#### `insecure`
+
+- **Type**: `boolean`
+- **Default**: `false`
+- **Description**: Allow insecure connections when fetching remote Taskfiles
+
+```yaml
+remote:
+  insecure: true
+```
+
+#### `offline`
+
+- **Type**: `boolean`
+- **Default**: `false`
+- **Description**: Work in offline mode, preventing remote Taskfile fetching
+
+```yaml
+remote:
+  offline: true
+```
+
+#### `timeout`
+
+- **Type**: `string`
+- **Default**: Not specified
+- **Pattern**: `^[0-9]+(ns|us|µs|ms|s|m|h)$`
+- **Description**: Timeout duration for remote operations (e.g., '30s', '5m')
+
+```yaml
+remote:
+  timeout: "1m"
+```
+
+#### `cache-expiry`
+
+- **Type**: `string`
+- **Default**: Not specified
+- **Pattern**: `^[0-9]+(ns|us|µs|ms|s|m|h)$`
+- **Description**: Cache expiry duration for remote Taskfiles (e.g., '1h', '24h')
+
+```yaml
+remote:
+  cache-expiry: "6h"
+```
+
