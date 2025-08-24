@@ -117,7 +117,7 @@ These installation methods are maintained by the community and may not always be
 
 :::
 
-### [Macports](https://macports.org) ![macOS](https://img.shields.io/badge/MacOS-000000?logo=apple&logoColor=F0F0F0) ![Community](https://img.shields.io/badge/Community%20Owned-orange) {#macports}
+### [Macports](https://macports.org) ![macOS](https://img.shields.io/badge/MacOS-000000?logo=apple&logoColor=F0F0F0) {#macports}
 
 Task repository is tracked by Macports
 [[package](https://ports.macports.org/port/go-task/details/)]
@@ -127,7 +127,7 @@ Task repository is tracked by Macports
 port install go-task
 ```
 
-### [pip](https://pip.pypa.io) ![macOS](https://img.shields.io/badge/MacOS-000000?logo=apple&logoColor=F0F0F0) ![Linux](https://img.shields.io/badge/Linux-FCC624?logo=linux&logoColor=black) ![Windows](https://custom-icon-badges.demolab.com/badge/Windows-0078D6?logo=windows11&logoColor=white) ![Community](https://img.shields.io/badge/Community%20Owned-orange) {#pip}
+### [pip](https://pip.pypa.io) ![macOS](https://img.shields.io/badge/MacOS-000000?logo=apple&logoColor=F0F0F0) ![Linux](https://img.shields.io/badge/Linux-FCC624?logo=linux&logoColor=black) ![Windows](https://custom-icon-badges.demolab.com/badge/Windows-0078D6?logo=windows11&logoColor=white) {#pip}
 
 Like npm, pip can be used as a cross-platform way to install Task
 [[package](https://pypi.org/project/go-task-bin)]
@@ -137,7 +137,7 @@ Like npm, pip can be used as a cross-platform way to install Task
 pip install go-task-bin
 ```
 
-### [Chocolatey](https://chocolatey.org) ![Windows](https://custom-icon-badges.demolab.com/badge/Windows-0078D6?logo=windows11&logoColor=white) ![Community](https://img.shields.io/badge/Community%20Owned-orange) {#chocolatey}
+### [Chocolatey](https://chocolatey.org) ![Windows](https://custom-icon-badges.demolab.com/badge/Windows-0078D6?logo=windows11&logoColor=white) {#chocolatey}
 
 [[package](https://community.chocolatey.org/packages/go-task)]
 [[source](https://github.com/Starz0r/ChocolateyPackagingScripts/blob/master/src/go-task_gh_build.py)]
@@ -146,7 +146,7 @@ pip install go-task-bin
 choco install go-task
 ```
 
-### [Scoop](https://scoop.sh) ![Windows](https://custom-icon-badges.demolab.com/badge/Windows-0078D6?logo=windows11&logoColor=white) ![Community](https://img.shields.io/badge/Community%20Owned-orange) {#scoop}
+### [Scoop](https://scoop.sh) ![Windows](https://custom-icon-badges.demolab.com/badge/Windows-0078D6?logo=windows11&logoColor=white) {#scoop}
 
 [[source](https://github.com/ScoopInstaller/Main/blob/master/bucket/task.json)]
 
@@ -154,7 +154,7 @@ choco install go-task
 scoop install task
 ```
 
-### Arch ([pacman](https://wiki.archlinux.org/title/Pacman)) ![Arch Linux](https://img.shields.io/badge/Arch%20Linux-1793D1?logo=arch-linux&logoColor=fff) ![Community](https://img.shields.io/badge/Community%20Owned-orange) {#arch}
+### Arch ([pacman](https://wiki.archlinux.org/title/Pacman)) ![Arch Linux](https://img.shields.io/badge/Arch%20Linux-1793D1?logo=arch-linux&logoColor=fff) {#arch}
 
 [[package](https://archlinux.org/packages/extra/x86_64/go-task/)]
 [[source](https://gitlab.archlinux.org/archlinux/packaging/packages/go-task)]
@@ -163,7 +163,7 @@ scoop install task
 pacman -S go-task
 ```
 
-### Fedora ([dnf](https://docs.fedoraproject.org/en-US/quick-docs/dnf)) ![Fedora](https://img.shields.io/badge/Fedora-51A2DA?logo=fedora&logoColor=fff) ![Community](https://img.shields.io/badge/Community%20Owned-orange) {#fedora-community}
+### Fedora ([dnf](https://docs.fedoraproject.org/en-US/quick-docs/dnf)) ![Fedora](https://img.shields.io/badge/Fedora-51A2DA?logo=fedora&logoColor=fff) {#fedora-community}
 
 [[package](https://packages.fedoraproject.org/pkgs/golang-github-task/go-task/)]
 [[source](https://src.fedoraproject.org/rpms/golang-github-task)]
@@ -172,7 +172,7 @@ pacman -S go-task
 dnf install go-task
 ```
 
-### FreeBSD ([Ports](https://ports.freebsd.org/cgi/ports.cgi)) ![FreeBSD](https://img.shields.io/badge/FreeBSD-990000?logo=freebsd&logoColor=fff) ![Community](https://img.shields.io/badge/Community%20Owned-orange) {#freebsd}
+### FreeBSD ([Ports](https://ports.freebsd.org/cgi/ports.cgi)) ![FreeBSD](https://img.shields.io/badge/FreeBSD-990000?logo=freebsd&logoColor=fff) {#freebsd}
 
 [[package](https://cgit.freebsd.org/ports/tree/devel/task)]
 [[source](https://cgit.freebsd.org/ports/tree/devel/task/Makefile)]
@@ -181,7 +181,7 @@ dnf install go-task
 pkg install task
 ```
 
-### NixOS ([nix](https://nixos.org)) ![NixOS](https://img.shields.io/badge/NixOS-5277C3?logo=nixos&logoColor=fff) ![Linux](https://img.shields.io/badge/Linux-FCC624?logo=linux&logoColor=black) ![Community](https://img.shields.io/badge/Community%20Owned-orange) {#nix}
+### NixOS ([nix](https://nixos.org)) ![NixOS](https://img.shields.io/badge/NixOS-5277C3?logo=nixos&logoColor=fff) ![Linux](https://img.shields.io/badge/Linux-FCC624?logo=linux&logoColor=black) {#nix}
 
 [[source](https://github.com/NixOS/nixpkgs/blob/master/pkgs/by-name/go/go-task/package.nix)]
 
@@ -189,7 +189,7 @@ pkg install task
 nix-env -iA nixpkgs.go-task
 ```
 
-### [pacstall](https://github.com/pacstall/pacstall) ![Debian](https://img.shields.io/badge/Debian-A81D33?logo=debian&logoColor=fff) ![Ubuntu](https://img.shields.io/badge/Ubuntu-E95420?logo=ubuntu&logoColor=fff) ![Community](https://img.shields.io/badge/Community%20Owned-orange) {#pacstall}
+### [pacstall](https://github.com/pacstall/pacstall) ![Debian](https://img.shields.io/badge/Debian-A81D33?logo=debian&logoColor=fff) ![Ubuntu](https://img.shields.io/badge/Ubuntu-E95420?logo=ubuntu&logoColor=fff) {#pacstall}
 
 [[package](https://pacstall.dev/packages/go-task-deb)]
 [[source](https://github.com/pacstall/pacstall-programs/blob/master/packages/go-task-deb/go-task-deb.pacscript)]
@@ -198,7 +198,7 @@ nix-env -iA nixpkgs.go-task
 pacstall -I go-task-deb
 ```
 
-### [pkgx](https://pkgx.sh) ![macOS](https://img.shields.io/badge/MacOS-000000?logo=apple&logoColor=F0F0F0) ![Linux](https://img.shields.io/badge/Linux-FCC624?logo=linux&logoColor=black) ![Community](https://img.shields.io/badge/Community%20Owned-orange) {#pkgx}
+### [pkgx](https://pkgx.sh) ![macOS](https://img.shields.io/badge/MacOS-000000?logo=apple&logoColor=F0F0F0) ![Linux](https://img.shields.io/badge/Linux-FCC624?logo=linux&logoColor=black) {#pkgx}
 
 [[package](https://pkgx.dev/pkgs/taskfile.dev)]
 [[source](https://github.com/pkgxdev/pantry/blob/main/projects/taskfile.dev/package.yml)]
