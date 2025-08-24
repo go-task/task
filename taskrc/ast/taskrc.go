@@ -8,11 +8,11 @@ import (
 )
 
 type TaskRC struct {
-	Version     *semver.Version `yaml:"version"`
-	Experiments map[string]int  `yaml:"experiments"`
-	Remote      Remote          `yaml:"remote"`
+    Version     *semver.Version `yaml:"version"`
 	Verbose     *bool           `yaml:"verbose"`
 	Concurrency *int            `yaml:"concurrency"`
+	Remote      Remote          `yaml:"remote"`
+    Experiments map[string]int  `yaml:"experiments"`
 }
 
 type Remote struct {
