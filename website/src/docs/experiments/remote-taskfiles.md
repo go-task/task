@@ -296,7 +296,6 @@ This experiment adds a new `remote` section to the [configuration file](../refer
 
 - **Type**: `object`
 - **Description**: Remote configuration settings for handling remote Taskfiles
-- **Requires**: [Remote Taskfiles experiment](../experiments/remote-taskfiles.md) to be enabled
 
 ```yaml
 remote:
