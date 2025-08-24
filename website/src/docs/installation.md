@@ -12,7 +12,7 @@ Task offers many installation methods. Check out the available methods below.
 
 These installation methods are maintained by the Task team and are always up-to-date.
 
-### Fedora ([dnf](https://docs.fedoraproject.org/en-US/quick-docs/dnf)) ![Fedora](https://img.shields.io/badge/Fedora-51A2DA?logo=fedora&logoColor=fff) ![Linux](https://img.shields.io/badge/Linux-FCC624?logo=linux&logoColor=black) {#fedora}
+### [dnf](https://docs.fedoraproject.org/en-US/quick-docs/dnf) ![Fedora](https://img.shields.io/badge/Fedora-51A2DA?logo=fedora&logoColor=fff) ![CentOS](https://img.shields.io/badge/CentOS-002260?logo=centos&logoColor=F0F0F0) ![Fedora](https://img.shields.io/badge/Red_Hat-EE0000?logo=redhat&logoColor=white) {#dnf}
 [[package](https://cloudsmith.io/~task/repos/task/packages/?sort=-format&q=format%3Arpm)]
 
 If you Set up the repository by running :
@@ -27,23 +27,7 @@ Then you can install Task with:
 dnf install task
 ```
 
-### RedHat / CentOs ([yum](https://docs.fedoraproject.org/en-US/quick-docs/dnf)) ![Fedora](https://img.shields.io/badge/Red_Hat-EE0000?logo=redhat&logoColor=white) {#redhat}
-
-[[package](https://cloudsmith.io/~task/repos/task/packages/?sort=-format&q=format%3Arpm)]
-
-If you Set up the repository by running :
-
-```shell
-curl -1sLf \
-  'https://dl.cloudsmith.io/public/task/task/setup.rpm.sh' \
-  | sudo -E bash
-```
-Then you can install Task with:
-```shell
-yum install task
-```
-
-### Debian / Ubuntu / LinuxMint ([apt](https://doc.ubuntu-fr.org/apt)) ![Ubuntu](https://img.shields.io/badge/Ubuntu-E95420?logo=Ubuntu&logoColor=white) ![Debian](https://img.shields.io/badge/debian-red?logo=debian&logoColor=orange&color=darkred) {#debian}
+### [apt](https://doc.ubuntu-fr.org/apt) ![Ubuntu](https://img.shields.io/badge/Ubuntu-E95420?logo=Ubuntu&logoColor=white) ![Debian](https://img.shields.io/badge/debian-red?logo=debian&logoColor=orange&color=darkred) ![Linux Mint](https://img.shields.io/badge/Linux%20Mint-87CF3E?logo=linuxmint&logoColor=fff) {#apt}
 
 [[package](https://cloudsmith.io/~task/repos/task/packages/?sort=-format&q=format%3Adeb)]
 
