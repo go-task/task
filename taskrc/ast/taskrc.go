@@ -1,6 +1,7 @@
 package ast
 
 import (
+	"cmp"
 	"maps"
 	"time"
 
@@ -8,11 +9,11 @@ import (
 )
 
 type TaskRC struct {
-    Version     *semver.Version `yaml:"version"`
+	Version     *semver.Version `yaml:"version"`
 	Verbose     *bool           `yaml:"verbose"`
 	Concurrency *int            `yaml:"concurrency"`
 	Remote      Remote          `yaml:"remote"`
-    Experiments map[string]int  `yaml:"experiments"`
+	Experiments map[string]int  `yaml:"experiments"`
 }
 
 type Remote struct {
@@ -27,9 +28,9 @@ func (t *TaskRC) Merge(other *TaskRC) {
 	if other == nil {
 		return
 	}
-	if t.Version == nil && other.Version != nil {
-		t.Version = other.Version
-	}
+
+	t.Version = cmp.Or(other.Version, t.Version)
+
 	if t.Experiments == nil && other.Experiments != nil {
 		t.Experiments = other.Experiments
 	} else if t.Experiments != nil && other.Experiments != nil {

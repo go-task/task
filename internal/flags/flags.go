@@ -15,7 +15,7 @@ import (
 	"github.com/go-task/task/v3/internal/sort"
 	"github.com/go-task/task/v3/taskfile/ast"
 	"github.com/go-task/task/v3/taskrc"
-	taskrcAST "github.com/go-task/task/v3/taskrc/ast"
+	taskrcast "github.com/go-task/task/v3/taskrc/ast"
 )
 
 const usage = `Usage: task [flags...] [task...]
@@ -154,7 +154,6 @@ func init() {
 		pflag.BoolVar(&ClearCache, "clear-cache", false, "Clear the remote cache.")
 		pflag.DurationVar(&CacheExpiryDuration, "expiry", getConfig(config, config.Remote.Timeout, 0), "Expiry duration for cached remote Taskfiles.")
 	}
-
 	pflag.Parse()
 }
 
@@ -252,7 +251,7 @@ func (o *flagsOption) ApplyToExecutor(e *task.Executor) {
 }
 
 // getConfig extracts a config value directly from a pointer field with a fallback default
-func getConfig[T any](config *taskrcAST.TaskRC, field *T, fallback T) T {
+func getConfig[T any](config *taskrcast.TaskRC, field *T, fallback T) T {
 	if config == nil {
 		return fallback
 	}
