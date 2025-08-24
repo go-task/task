@@ -182,4 +182,18 @@ remote:
 # Global settings
 verbose: true
 concurrency: 2
-```
+```yaml
+# Global settings
+verbose: true
+concurrency: 2
+
+# Remote configuration
+remote:
+  insecure: false
+  offline: false
+  timeout: "30s"
+  cache-expiry: "1h"
+
+# Enable experimental features
+experiments:
+  REMOTE_TASKFILES: 1
