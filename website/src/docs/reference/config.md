@@ -168,21 +168,6 @@ concurrency: 4
 Here's a complete example of a `.taskrc.yml` file with all available options:
 
 ```yaml
-# Enable experimental features
-experiments:
-  REMOTE_TASKFILES: 1
-
-# Remote configuration
-remote:
-  insecure: false
-  offline: false
-  timeout: "30s"
-  cache-expiry: "1h"
-
-# Global settings
-verbose: true
-concurrency: 2
-```yaml
 # Global settings
 verbose: true
 concurrency: 2
