@@ -27,7 +27,7 @@ Then you can install Task with:
 dnf install task
 ```
 
-### RedHat / CentOs ([yum](https://docs.fedoraproject.org/en-US/quick-docs/dnf)) ![Fedora](https://img.shields.io/badge/Red_Hat-EE0000?logo=redhat&logoColor=white) ![Linux](https://img.shields.io/badge/Linux-FCC624?logo=linux&logoColor=black) {#redhat}
+### RedHat / CentOs ([yum](https://docs.fedoraproject.org/en-US/quick-docs/dnf)) ![Fedora](https://img.shields.io/badge/Red_Hat-EE0000?logo=redhat&logoColor=white) {#redhat}
 
 [[package](https://cloudsmith.io/~task/repos/task/packages/?sort=-format&q=format%3Arpm)]
 
@@ -43,9 +43,9 @@ Then you can install Task with:
 yum install task
 ```
 
-### Debian / Ubuntu / LinuxMint ([apt](https://doc.ubuntu-fr.org/apt)) ![Ubuntu](https://img.shields.io/badge/Ubuntu-E95420?logo=Ubuntu&logoColor=white) ![Debian](https://img.shields.io/badge/debian-red?logo=debian&logoColor=orange&color=darkred) ![Linux](https://img.shields.io/badge/Linux-FCC624?logo=linux&logoColor=black) {#debian}
+### Debian / Ubuntu / LinuxMint ([apt](https://doc.ubuntu-fr.org/apt)) ![Ubuntu](https://img.shields.io/badge/Ubuntu-E95420?logo=Ubuntu&logoColor=white) ![Debian](https://img.shields.io/badge/debian-red?logo=debian&logoColor=orange&color=darkred) {#debian}
 
-[[package](https://cloudsmith.io/~task/repos/task/packages/?sort=-format&q=format%3Adeb)]}
+[[package](https://cloudsmith.io/~task/repos/task/packages/?sort=-format&q=format%3Adeb)]
 
 If you Set up the repository by running :
 
