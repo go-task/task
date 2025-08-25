@@ -23,7 +23,7 @@ require (
 	github.com/sajari/fuzzy v1.0.0
 	github.com/sebdah/goldie/v2 v2.7.1
 	github.com/spf13/pflag v1.0.7
-	github.com/stretchr/testify v1.10.0
+	github.com/stretchr/testify v1.11.0
 	github.com/zeebo/xxh3 v1.0.2
 	golang.org/x/sync v0.16.0
 	golang.org/x/term v0.34.0
