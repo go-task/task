@@ -18,9 +18,7 @@ These installation methods are maintained by the Task team and are always up-to-
 If you Set up the repository by running :
 
 ```shell
-curl -1sLf \
-  'https://dl.cloudsmith.io/public/task/task/setup.rpm.sh' \
-  | sudo -E bash
+curl -1sLf 'https://dl.cloudsmith.io/public/task/task/setup.rpm.sh' | sudo -E bash
 ```
 Then you can install Task with:
 
@@ -35,9 +33,8 @@ dnf install task
 If you Set up the repository by running :
 
 ```shell
-curl -1sLf \
-  'https://dl.cloudsmith.io/public/task/task/setup.deb.sh' \
-  | sudo -E bash
+curl -1sLf 'https://dl.cloudsmith.io/public/task/task/setup.deb.sh' | sudo -E bash
+
 ```
 Then you can install Task with:
 
