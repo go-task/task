@@ -22,3 +22,14 @@ tasks:
     run: once
     cmds:
       - echo starting {{.CONTENT}} >> hash.txt
+
+  deploy:
+    cmds:
+      - rm -rf wildcard.txt
+      - task: deploy:infra
+      - task: deploy:js
+      - task: deploy:go
+
+  deploy:*:
+    run: once
+    cmd: echo "Deploy {{index .MATCH 0}}" >> wildcard.txt
