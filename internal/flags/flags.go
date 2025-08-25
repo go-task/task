@@ -5,7 +5,6 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"strconv"
 	"time"
 
 	"github.com/spf13/pflag"
@@ -13,9 +12,10 @@ import (
 	"github.com/go-task/task/v3"
 	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/experiments"
-	"github.com/go-task/task/v3/internal/env"
 	"github.com/go-task/task/v3/internal/sort"
 	"github.com/go-task/task/v3/taskfile/ast"
+	"github.com/go-task/task/v3/taskrc"
+	taskrcast "github.com/go-task/task/v3/taskrc/ast"
 )
 
 const usage = `Usage: task [flags...] [task...]
@@ -95,7 +95,9 @@ func init() {
 
 	// Parse the experiments
 	dir = cmp.Or(dir, filepath.Dir(entrypoint))
-	experiments.Parse(dir)
+
+	config, _ := taskrc.GetConfig(dir)
+	experiments.ParseWithConfig(dir, config)
 
 	// Parse the rest of the flags
 	log.SetFlags(0)
@@ -104,10 +106,7 @@ func init() {
 		log.Print(usage)
 		pflag.PrintDefaults()
 	}
-	offline, err := strconv.ParseBool(cmp.Or(env.GetTaskEnv("OFFLINE"), "false"))
-	if err != nil {
-		offline = false
-	}
+
 	pflag.BoolVar(&Version, "version", false, "Show Task version.")
 	pflag.BoolVarP(&Help, "help", "h", false, "Shows Task usage.")
 	pflag.BoolVarP(&Init, "init", "i", false, "Creates a new Taskfile.yml in the current folder.")
@@ -118,9 +117,9 @@ func init() {
 	pflag.StringVar(&TaskSort, "sort", "", "Changes the order of the tasks when listed. [default|alphanumeric|none].")
 	pflag.BoolVar(&Status, "status", false, "Exits with non-zero exit code if any of the given tasks is not up-to-date.")
 	pflag.BoolVar(&NoStatus, "no-status", false, "Ignore status when listing tasks as JSON")
-	pflag.BoolVar(&Insecure, "insecure", false, "Forces Task to download Taskfiles over insecure connections.")
+	pflag.BoolVar(&Insecure, "insecure", getConfig(config, config.Remote.Insecure, false), "Forces Task to download Taskfiles over insecure connections.")
 	pflag.BoolVarP(&Watch, "watch", "w", false, "Enables watch of the given task.")
-	pflag.BoolVarP(&Verbose, "verbose", "v", false, "Enables verbose mode.")
+	pflag.BoolVarP(&Verbose, "verbose", "v", getConfig(config, config.Verbose, false), "Enables verbose mode.")
 	pflag.BoolVarP(&Silent, "silent", "s", false, "Disables echoing.")
 	pflag.BoolVarP(&AssumeYes, "yes", "y", false, "Assume \"yes\" as answer to all prompts.")
 	pflag.BoolVarP(&Parallel, "parallel", "p", false, "Executes tasks provided on command line in parallel.")
@@ -134,7 +133,7 @@ func init() {
 	pflag.StringVar(&Output.Group.End, "output-group-end", "", "Message template to print after a task's grouped output.")
 	pflag.BoolVar(&Output.Group.ErrorOnly, "output-group-error-only", false, "Swallow output from successful tasks.")
 	pflag.BoolVarP(&Color, "color", "c", true, "Colored output. Enabled by default. Set flag to false or use NO_COLOR=1 to disable.")
-	pflag.IntVarP(&Concurrency, "concurrency", "C", 0, "Limit number of tasks to run concurrently.")
+	pflag.IntVarP(&Concurrency, "concurrency", "C", getConfig(config, config.Concurrency, 0), "Limit number of tasks to run concurrently.")
 	pflag.DurationVarP(&Interval, "interval", "I", 0, "Interval to watch for changes.")
 	pflag.BoolVarP(&Global, "global", "g", false, "Runs global Taskfile, from $HOME/{T,t}askfile.{yml,yaml}.")
 	pflag.BoolVar(&Experiments, "experiments", false, "Lists all the available experiments and whether or not they are enabled.")
@@ -150,12 +149,11 @@ func init() {
 	// Remote Taskfiles experiment will adds the "download" and "offline" flags
 	if experiments.RemoteTaskfiles.Enabled() {
 		pflag.BoolVar(&Download, "download", false, "Downloads a cached version of a remote Taskfile.")
-		pflag.BoolVar(&Offline, "offline", offline, "Forces Task to only use local or cached Taskfiles.")
-		pflag.DurationVar(&Timeout, "timeout", time.Second*10, "Timeout for downloading remote Taskfiles.")
+		pflag.BoolVar(&Offline, "offline", getConfig(config, config.Remote.Offline, false), "Forces Task to only use local or cached Taskfiles.")
+		pflag.DurationVar(&Timeout, "timeout", getConfig(config, config.Remote.Timeout, time.Second*10), "Timeout for downloading remote Taskfiles.")
 		pflag.BoolVar(&ClearCache, "clear-cache", false, "Clear the remote cache.")
-		pflag.DurationVar(&CacheExpiryDuration, "expiry", 0, "Expiry duration for cached remote Taskfiles.")
+		pflag.DurationVar(&CacheExpiryDuration, "expiry", getConfig(config, config.Remote.Timeout, 0), "Expiry duration for cached remote Taskfiles.")
 	}
-
 	pflag.Parse()
 }
 
@@ -250,4 +248,16 @@ func (o *flagsOption) ApplyToExecutor(e *task.Executor) {
 		task.WithTaskSorter(sorter),
 		task.WithVersionCheck(true),
 	)
+}
+
+// getConfig extracts a config value directly from a pointer field with a fallback default
+func getConfig[T any](config *taskrcast.TaskRC, field *T, fallback T) T {
+	if config == nil {
+		return fallback
+	}
+
+	if field != nil {
+		return *field
+	}
+	return fallback
 }
