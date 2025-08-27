@@ -158,6 +158,16 @@ export default defineConfig({
     sidebar: {
       '/blog/': [
         {
+          text: '2025',
+          collapsed: false,
+          items: [
+            {
+              text: 'Built-in Core Utilities',
+              link: '/blog/windows-core-utils'
+            }
+          ]
+        },
+        {
           text: '2024',
           collapsed: false,
           items: [
