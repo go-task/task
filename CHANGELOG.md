@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Task now includes built-in core utilities to greatly improve compatibility on
+  Windows. This means that your commands the uses `cp`, `mv`, `mkdir`, or any
+  other common core utility will now work by default on Windows, without extra
+  setup.
+  This is something we wanted to address for many many years, and it's
+  finally being shipped!
+  [Read our blog post this the topic](https://taskfile.dev/blog/windows-core-utils).
+  (#197, #2360 by @andreynering).
 - :sparkles: Built and deployed a [brand new website](https://taskfile.dev)
   using [VitePress](https://vitepress.dev) (#2359, #2369, #2371, #2375, #2378 by
   @vmaerten, @andreynering, @pd93).
