@@ -8,7 +8,7 @@ import {
   groupIconVitePlugin
 } from 'vitepress-plugin-group-icons';
 import { team } from './team.ts';
-import { ogUrl, taskDescription, taskName } from './meta.ts';
+import { taskDescription, taskName } from './meta.ts';
 import { fileURLToPath, URL } from 'node:url';
 
 const version = readFileSync(
@@ -70,14 +70,6 @@ export default defineConfig({
           'task runner, build tool, taskfile, yaml build tool, go task runner, make alternative, cross-platform build tool, makefile alternative, automation tool, ci cd pipeline, developer productivity, build automation, command line tool, go binary, yaml configuration'
       }
     ],
-    ['meta', { property: 'og:title', content: taskName }],
-    ['meta', { property: 'og:description', content: taskDescription }],
-    ['meta', { property: 'og:type', content: 'website' }],
-    ['meta', { property: 'og:site_name', content: taskName }],
-    ['meta', { property: 'og:url', content: ogUrl }],
-    ['meta', { property: 'twitter:card', content: 'summary_large_image' }],
-    ['meta', { property: 'twitter:title', content: taskName }],
-    ['meta', { property: 'twitter:description', content: taskDescription }],
     [
       'script',
       {
