@@ -97,26 +97,39 @@ a=foo
 echo $a
 ```
 
-## 'x' builtin command doesn't work on Windows
+## Are shell core utilities available on Windows?
 
-The default shell on Windows (`cmd` and `powershell`) do not have commands like
-`rm` and `cp` available as builtins. This means that these commands won't work.
-If you want to make your Taskfile fully cross-platform, you'll need to work
-around this limitation using one of the following methods:
+The most common ones, yes. And we might add more in the future.
+This is possible because Task compiles a small set of core utilities in Go and
+enables them by default on Windows for greater compatibility.
 
-- Use the <span v-pre>`{{OS}}`</span> function to run an OS-specific script.
-- Use something like
-  <span v-pre>`{{if eq OS "windows"}}powershell {{end}}<my_cmd>`</span> to
-  detect windows and run the command in Powershell directly.
-- Use a shell on Windows that supports these commands as builtins, such as [Git
-  Bash][git-bash] or [WSL][wsl].
+It's possible to control whether these builtin core utilities are used or not
+with the [`TASK_CORE_UTILS`](/docs/reference/environment#task-core-utils)
+environment variable:
 
-We want to make improvements to this part of Task and the issues below track
-this work. Constructive comments and contributions are very welcome!
+```bash
+# Enable, even on non-Windows platforms
+env TASK_CORE_UTILS=1 task ...
 
-- #197
-- [mvdan/sh#93](https://github.com/mvdan/sh/issues/93)
-- [mvdan/sh#97](https://github.com/mvdan/sh/issues/97)
+# Disable, even on Windows
+env TASK_CORE_UTILS=0 task ...
+```
 
-[git-bash]: https://gitforwindows.org/
-[wsl]: https://learn.microsoft.com/en-us/windows/wsl/install
+This is the list of core utils that are currently available:
+
+* `base64`
+* `cat`
+* `chmod`
+* `cp`
+* `find`
+* `gzip`
+* `ls`
+* `mkdir`
+* `mktemp`
+* `mv`
+* `rm`
+* `shasum`
+* `tar`
+* `touch`
+* `xargs`
+* (more might be added in the future)
