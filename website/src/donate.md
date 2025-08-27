@@ -4,7 +4,7 @@ layout: doc
 outline: false
 ---
 
-# :pray: Support Taskfile
+# :raised_hands: Support Task
 
 If you find this project useful, consider supporting its ongoing development.
 
