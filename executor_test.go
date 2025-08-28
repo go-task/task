@@ -987,3 +987,12 @@ func TestIncludeChecksum(t *testing.T) {
 		WithFixtureTemplating(),
 	)
 }
+
+func TestColonSeparatedSources(t *testing.T) {
+	t.Parallel()
+	NewExecutorTest(t,
+		WithExecutorOptions(
+			task.WithDir("testdata/colon_sources"),
+		),
+	)
+}

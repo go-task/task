@@ -105,11 +105,26 @@ func ReplaceGlobs(globs []*ast.Glob, cache *Cache) []*ast.Glob {
 		return nil
 	}
 
-	new := make([]*ast.Glob, len(globs))
-	for i, g := range globs {
-		new[i] = &ast.Glob{
-			Glob:   Replace(g.Glob, cache),
-			Negate: g.Negate,
+	var new []*ast.Glob
+	for _, g := range globs {
+		replacedGlob := Replace(g.Glob, cache)
+
+		if strings.Contains(replacedGlob, ":") {
+			paths := strings.Split(replacedGlob, ":")
+			for _, path := range paths {
+				path = strings.TrimSpace(path)
+				if path != "" {
+					new = append(new, &ast.Glob{
+						Glob:   path,
+						Negate: g.Negate,
+					})
+				}
+			}
+		} else {
+			new = append(new, &ast.Glob{
+				Glob:   replacedGlob,
+				Negate: g.Negate,
+			})
 		}
 	}
 	return new

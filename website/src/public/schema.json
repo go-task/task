@@ -96,7 +96,7 @@
           }
         },
         "sources": {
-          "description": "A list of sources to check before running this task. Relevant for `checksum` and `timestamp` methods. Can be file paths or star globs.",
+          "description": "A list of sources to check before running this task. Relevant for `checksum` and `timestamp` methods. Can be file paths or star globs. Multiple glob patterns can be specified in a single string separated by colons.",
           "type": "array",
           "items": {
             "$ref": "#/definitions/glob"
