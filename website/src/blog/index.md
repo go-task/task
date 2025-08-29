@@ -4,7 +4,7 @@ description: Latest news and updates from the Task team
 ---
 
 <BlogPost
-title="The Saga of Improving Windows Compatiblity: Announcing Built-in Core Utilities"
+title="Announcing Built-in Core Utilities for Windows"
 url="/blog/windows-core-utils"
 date="2025-08-26"
 author="andreynering"

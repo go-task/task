@@ -1,12 +1,12 @@
 ---
-title: "The Saga of Improving Windows Compatibility: Announcing Built-in Core Utilities"
+title: "Announcing Built-in Core Utilities for Windows"
 description: The journey of enhancing Windows support in Task.
 author: andreynering
 date: 2025-08-26
 outline: deep
 ---
 
-# The Saga of Improving Windows Compatibility: Announcing Built-in Core Utilities
+# Announcing Built-in Core Utilities for Windows
 
 <AuthorCard :author="$frontmatter.author" />
 
