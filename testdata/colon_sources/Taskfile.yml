@@ -1,0 +1,14 @@
+version: '3'
+
+vars:
+  MULTI_SOURCES: "*.txt:subdir/*.md"
+
+tasks:
+  default:
+    desc: Test colon-separated sources
+    sources:
+      - "{{.MULTI_SOURCES}}"
+    generates:
+      - output.txt
+    cmds:
+      - echo "Processing colon-separated sources" > output.txt

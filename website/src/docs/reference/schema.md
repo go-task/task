@@ -537,7 +537,7 @@ tasks:
 #### `sources`
 
 - **Type**: `[]string` or `[]Glob`
-- **Description**: Source files to monitor for changes
+- **Description**: Source files to monitor for changes. Multiple glob patterns can be specified in a single string separated by colons.
 
 ```yaml
 tasks:
@@ -545,6 +545,8 @@ tasks:
     sources:
       - '**/*.go'
       - go.mod
+      # Multiple patterns in one line (colon-separated)
+      - '*.js:*.ts:assets/**/*'
       # With exclusions
       - exclude: '**/*_test.go'
     cmds:
