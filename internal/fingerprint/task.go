@@ -130,3 +130,49 @@ func IsTaskUpToDate(
 	// i.e. it is never considered "up-to-date"
 	return false, nil
 }
+
+func FinalizeTask(
+	ctx context.Context,
+	t *ast.Task,
+	opts ...CheckerOption,
+) error {
+	var err error
+
+	// Default config
+	config := &CheckerConfig{
+		method:         "none",
+		tempDir:        "",
+		dry:            false,
+		logger:         nil,
+		statusChecker:  nil,
+		sourcesChecker: nil,
+	}
+
+	// Apply functional options
+	for _, opt := range opts {
+		opt(config)
+	}
+
+	// If no status checker was given, set up the default one
+	if config.statusChecker == nil {
+		config.statusChecker = NewStatusChecker(config.logger)
+	}
+
+	// If no sources checker was given, set up the default one
+	if config.sourcesChecker == nil {
+		config.sourcesChecker, err = NewSourcesChecker(config.method, config.tempDir, config.dry)
+		if err != nil {
+			return err
+		}
+	}
+
+	// If sources and generates are set, regenerate the checksum / timestamp file
+	if len(t.Sources) != 0 && len(t.Generates) != 0 {
+		_, err = config.sourcesChecker.IsUpToDate(t)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
