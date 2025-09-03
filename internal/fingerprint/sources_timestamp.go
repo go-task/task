@@ -147,5 +147,5 @@ func (*TimestampChecker) OnError(t *ast.Task) error {
 }
 
 func (checker *TimestampChecker) timestampFilePath(t *ast.Task) string {
-	return filepath.Join(checker.tempDir, "timestamp", normalizeFilename(t.Task))
+	return filepath.Join(checker.tempDir, t.Dir, "timestamp", normalizeFilename(t.Task))
 }
