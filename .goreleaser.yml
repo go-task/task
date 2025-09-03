@@ -156,19 +156,17 @@ npms:
 
 cloudsmiths:
   - organization: "task"
-    repository: "task"
+    repository: "{{if not .IsNightly}}task{{end}}"
     formats:
       - deb
       - rpm
       - apk
     distributions:
-#      deb:
-#        - "ubuntu/any-version"
-#        - "debian/any-version"
+      deb:
+        - "any-distro/any-version"
       rpm:
-        - "el/any-version"
-        - "fedora/any-version"
+        - "any-distro/any-version"
       alpine:
         - "alpine/any-version"
-    component: "{{if .IsNightly}}unstable{{else}}main{{end}}"
+    component: main
     republish: true
