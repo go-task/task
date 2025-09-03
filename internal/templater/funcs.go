@@ -3,6 +3,8 @@ package templater
 import (
 	"maps"
 	"math/rand/v2"
+	"os"
+	"path"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -21,27 +23,31 @@ var templateFuncs template.FuncMap
 
 func init() {
 	taskFuncs := template.FuncMap{
-		"OS":           os,
-		"ARCH":         arch,
-		"numCPU":       runtime.NumCPU,
-		"catLines":     catLines,
-		"splitLines":   splitLines,
-		"fromSlash":    filepath.FromSlash,
-		"toSlash":      filepath.ToSlash,
-		"exeExt":       exeExt,
-		"shellQuote":   shellQuote,
-		"splitArgs":    splitArgs,
-		"IsSH":         IsSH, // Deprecated
-		"joinPath":     filepath.Join,
-		"relPath":      filepath.Rel,
-		"merge":        merge,
-		"spew":         spew.Sdump,
-		"fromYaml":     fromYaml,
-		"mustFromYaml": mustFromYaml,
-		"toYaml":       toYaml,
-		"mustToYaml":   mustToYaml,
-		"uuid":         uuid.New,
-		"randIntN":     rand.IntN,
+		"OS":                  goos,
+		"ARCH":                goarch,
+		"numCPU":              runtime.NumCPU,
+		"catLines":            catLines,
+		"splitLines":          splitLines,
+		"fromSlash":           filepath.FromSlash,
+		"toSlash":             filepath.ToSlash,
+		"exeExt":              exeExt,
+		"shellQuote":          shellQuote,
+		"splitArgs":           splitArgs,
+		"IsSH":                IsSH, // Deprecated
+		"joinPath":            filepath.Join,
+		"joinEnv":             joinEnv,
+		"joinUrl":             joinUrl,
+		"relPath":             filepath.Rel,
+		"merge":               merge,
+		"spew":                spew.Sdump,
+		"fromYaml":            fromYaml,
+		"mustFromYaml":        mustFromYaml,
+		"toYaml":              toYaml,
+		"mustToYaml":          mustToYaml,
+		"uuid":                uuid.New,
+		"randIntN":            rand.IntN,
+		"PATH_LIST_SEPARATOR": pathListSeparator,
+		"FILE_PATH_SEPARATOR": filePathSeparator,
 	}
 
 	// aliases
@@ -56,11 +62,11 @@ func init() {
 	maps.Copy(templateFuncs, taskFuncs)
 }
 
-func os() string {
+func goos() string {
 	return runtime.GOOS
 }
 
-func arch() string {
+func goarch() string {
 	return runtime.GOARCH
 }
 
@@ -92,6 +98,14 @@ func splitArgs(s string) ([]string, error) {
 // Deprecated: now always returns true
 func IsSH() bool {
 	return true
+}
+
+func joinEnv(elem ...string) string {
+	return strings.Join(elem, string(os.PathListSeparator))
+}
+
+func joinUrl(elem ...string) string {
+	return path.Join(elem...)
 }
 
 func merge(base map[string]any, v ...map[string]any) map[string]any {
@@ -129,4 +143,12 @@ func mustToYaml(v any) (string, error) {
 		return "", err
 	}
 	return string(output), nil
+}
+
+func pathListSeparator() string {
+	return string(os.PathListSeparator)
+}
+
+func filePathSeparator() string {
+	return string(os.PathSeparator)
 }
