@@ -4,12 +4,16 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"html/template"
 	"io"
 	"os"
+	"path"
 	"strings"
 
 	"github.com/Ladicle/tabwriter"
 	"golang.org/x/sync/errgroup"
+
+	sprig "github.com/go-task/slim-sprig/v3"
 
 	"github.com/go-task/task/v3/internal/editors"
 	"github.com/go-task/task/v3/internal/fingerprint"
@@ -18,21 +22,27 @@ import (
 	"github.com/go-task/task/v3/taskfile/ast"
 )
 
+var listDefaultTemplate = `task: Available tasks for this project:{{ range . }}
+{{color "Yellow"}}* {{color "Green"}}{{ .Task }}{{color "Reset"}}:{{"\t"}} {{ .Desc | replace "\n" " " }}{{if len .Aliases}}{{color "Cyan"}}{{"\t"}}(aliases: {{.Aliases | join ", "}}){{color "Reset"}}{{end}}{{end}}
+`
+
 // ListOptions collects list-related options
 type ListOptions struct {
 	ListOnlyTasksWithDescriptions bool
 	ListAllTasks                  bool
 	FormatTaskListAsJSON          bool
 	NoStatus                      bool
+	ListTemplate                  string
 }
 
 // NewListOptions creates a new ListOptions instance
-func NewListOptions(list, listAll, listAsJson, noStatus bool) ListOptions {
+func NewListOptions(list, listAll, listAsJson, noStatus bool, template string) ListOptions {
 	return ListOptions{
 		ListOnlyTasksWithDescriptions: list,
 		ListAllTasks:                  listAll,
 		FormatTaskListAsJSON:          listAsJson,
 		NoStatus:                      noStatus,
+		ListTemplate:                  template,
 	}
 }
 
@@ -62,20 +72,20 @@ func (e *Executor) ListTasks(o ListOptions) (bool, error) {
 	if err != nil {
 		return false, err
 	}
+
 	if o.FormatTaskListAsJSON {
 		output, err := e.ToEditorOutput(tasks, o.NoStatus)
 		if err != nil {
 			return false, err
 		}
-
 		encoder := json.NewEncoder(e.Stdout)
 		encoder.SetIndent("", "  ")
 		if err := encoder.Encode(output); err != nil {
 			return false, err
 		}
-
 		return len(tasks) > 0, nil
 	}
+
 	if len(tasks) == 0 {
 		if o.ListOnlyTasksWithDescriptions {
 			e.Logger.Outf(logger.Yellow, "task: No tasks with description available. Try --list-all to list all tasks\n")
@@ -84,19 +94,51 @@ func (e *Executor) ListTasks(o ListOptions) (bool, error) {
 		}
 		return false, nil
 	}
-	e.Logger.Outf(logger.Default, "task: Available tasks for this project:\n")
 
+	// List tasks using a template (optionally load from a file(s)).
+	setupTemplate := func(listTemplate string, fallback string) (tmpl *template.Template, err error) {
+		funcMap := template.FuncMap(sprig.TxtFuncMap())
+		color := func(color string) string {
+			if e.Logger.Color {
+				switch color {
+				case "Blue":
+					return "\033[34m"
+				case "Green":
+					return "\033[32m"
+				case "Cyan":
+					return "\033[36m"
+				case "Yellow":
+					return "\033[33m"
+				case "Magenta":
+					return "\033[35m"
+				case "Red":
+					return "\033[31m"
+				case "Reset":
+					return "\033[0m"
+				default:
+					return "\033[0m"
+				}
+			} else {
+				return ""
+			}
+		}
+		funcMap["color"] = color
+		if len(listTemplate) > 0 {
+			files := strings.Split(listTemplate, ",")
+			tmpl, err = template.New(path.Base(files[0])).Funcs(funcMap).ParseFiles(files...)
+		} else {
+			tmpl, err = template.New("list").Funcs(funcMap).Parse(fallback)
+		}
+		return
+	}
+	tmpl, err := setupTemplate(o.ListTemplate, listDefaultTemplate)
+	if err != nil {
+		return false, err
+	}
 	// Format in tab-separated columns with a tab stop of 8.
 	w := tabwriter.NewWriter(e.Stdout, 0, 8, 6, ' ', 0)
-	for _, task := range tasks {
-		e.Logger.FOutf(w, logger.Yellow, "* ")
-		e.Logger.FOutf(w, logger.Green, task.Task)
-		desc := strings.ReplaceAll(task.Desc, "\n", " ")
-		e.Logger.FOutf(w, logger.Default, ": \t%s", desc)
-		if len(task.Aliases) > 0 {
-			e.Logger.FOutf(w, logger.Cyan, "\t(aliases: %s)", strings.Join(task.Aliases, ", "))
-		}
-		_, _ = fmt.Fprint(w, "\n")
+	if err := tmpl.Execute(w, tasks); err != nil {
+		return false, err
 	}
 	if err := w.Flush(); err != nil {
 		return false, err
