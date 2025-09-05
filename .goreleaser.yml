@@ -30,13 +30,14 @@ builds:
     flags:
       - -trimpath
     ldflags:
-      - -s -w # Don't set main.version.
+      - "-s -w"
+      - "{{if .IsNightly}}-X github.com/go-task/task/v3/internal/version.version={{.Version}}{{end}}"
 
 gomod:
   proxy: true
 
 archives:
-  - name_template: "{{.Binary}}_{{.Os}}_{{.Arch}}"
+  - name_template: '{{.Binary}}_{{.Os}}_{{.Arch}}'
     files:
       - README.md
       - LICENSE
@@ -45,14 +46,15 @@ archives:
       - goos: windows
         formats: [zip]
 
-release:
-  draft: true
+git:
+  ignore_tags:
+    - "{{if not .IsNightly}}nightly{{end}}"
 
 snapshot:
-  version_template: "{{.Version}}"
+  version_template: '{{.Version}}'
 
 checksum:
-  name_template: "task_checksums.txt"
+  name_template: 'task_checksums.txt'
 
 nfpms:
   - vendor: Task
@@ -66,7 +68,8 @@ nfpms:
     formats:
       - deb
       - rpm
-    file_name_template: "{{.ProjectName}}_{{.Os}}_{{.Arch}}"
+      - apk
+    file_name_template: '{{.ProjectName}}_{{.Os}}_{{.Arch}}'
     contents:
       - src: completion/bash/task.bash
         dst: /etc/bash_completion.d/task
@@ -84,8 +87,7 @@ brews:
     repository:
       owner: go-task
       name: homebrew-tap
-    test:
-      system "#{bin}/task", "--help"
+    test: system "#{bin}/task", "--help"
     install: |-
       bin.install "task"
       bash_completion.install "completion/bash/task.bash" => "task"
@@ -108,7 +110,7 @@ winget:
     commit_author:
       name: task-bot
       email: 106601941+task-bot@users.noreply.github.com
-    commit_msg_template: "chore: bump {{.PackageIdentifier}} to {{.Tag}}"
+    commit_msg_template: 'chore: release {{.PackageIdentifier}} {{.Tag}}'
     release_notes_url: https://github.com/go-task/task/releases/tag/{{.Tag}}
     tags:
       - build
@@ -122,13 +124,49 @@ winget:
       - task-runner
       - taskfile
       - tool
-    skip_upload: true
     repository:
-      owner: microsoft
+      owner: go-task
       name: winget-pkgs
+      branch: 'chore/task-{{.Version}}'
       pull_request:
         enabled: true
+        draft: false
+        check_boxes: true
         base:
-          owner: go-task
+          owner: microsoft
           name: winget-pkgs
-          branch: "bump-task-to-{{.Tag}}"
+          branch: master
+
+
+npms:
+  - name: "@go-task/cli"
+    repository: "git+https://github.com/go-task/task.git"
+    bugs: https://github.com/go-task/task/issues
+    description: A task runner / simpler Make alternative written in Go
+    homepage: https://taskfile.dev
+    license: MIT
+    author: "The Task authors"
+    access: public
+    keywords:
+      - "task"
+      - "taskfile"
+      - "build-tool"
+      - "task-runner"
+
+
+cloudsmiths:
+  - organization: "task"
+    repository: "{{if not .IsNightly}}task{{end}}"
+    formats:
+      - deb
+      - rpm
+      - apk
+    distributions:
+      deb:
+        - "any-distro/any-version"
+      rpm:
+        - "any-distro/any-version"
+      alpine:
+        - "alpine/any-version"
+    component: main
+    republish: true

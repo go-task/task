@@ -1,7 +1,6 @@
 package fingerprint
 
 import (
-	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -164,7 +163,7 @@ func TestIsTaskUpToDate(t *testing.T) {
 			}
 
 			result, err := IsTaskUpToDate(
-				context.Background(),
+				t.Context(),
 				tt.task,
 				WithStatusChecker(mockStatusChecker),
 				WithSourcesChecker(mockSourcesChecker),

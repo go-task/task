@@ -162,7 +162,7 @@ func (v MissingVar) String() string {
 }
 
 func (err *TaskMissingRequiredVarsError) Error() string {
-	var vars []string
+	vars := make([]string, 0, len(err.MissingVars))
 	for _, v := range err.MissingVars {
 		vars = append(vars, v.String())
 	}

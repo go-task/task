@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "title": "Taskrc YAML Schema",
+  "description": "Schema for .taskrc files.",
+  "type": "object",
+  "properties": {
+    "experiments": {
+      "type": "object",
+      "properties": {
+        "ENV_PRECEDENCE": {
+          "type": "number",
+          "enum": [0, 1]
+        },
+        "REMOTE_TASKFILES": {
+          "type": "number",
+          "enum": [0, 1]
+        },
+        "GENTLE_FORCE": {
+          "type": "number",
+          "enum": [0, 1]
+        }
+      }
+    }
+  },
+  "additionalProperties": false
+}

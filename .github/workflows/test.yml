@@ -13,7 +13,7 @@ jobs:
     name: Test
     strategy:
       matrix:
-        go-version: [1.23.x, 1.24.x]
+        go-version: [1.24.x, 1.25.x]
         platform: [ubuntu-latest, macos-latest, windows-latest]
     runs-on: ${{matrix.platform}}
     steps:
@@ -24,7 +24,7 @@ jobs:
         id: go
 
       - name: Check out code into the Go module directory
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Download Go modules
         run: go mod download

@@ -1,5 +1,33 @@
 # Changelog
 
+## Unreleased
+
+- Task now includes built-in core utilities to greatly improve compatibility on
+  Windows. This means that your commands that uses `cp`, `mv`, `mkdir` or any
+  other common core utility will now work by default on Windows, without extra
+  setup.
+  This is something we wanted to address for many many years, and it's
+  finally being shipped!
+  [Read our blog post this the topic](https://taskfile.dev/blog/windows-core-utils).
+  (#197, #2360 by @andreynering).
+- :sparkles: Built and deployed a [brand new website](https://taskfile.dev)
+  using [VitePress](https://vitepress.dev) (#2359, #2369, #2371, #2375, #2378 by
+  @vmaerten, @andreynering, @pd93).
+- Began releasing
+  [nightly builds](https://github.com/go-task/task/releases/tag/nightly). This
+  will allow people to test our changes before they are fully released and
+  without having to install Go to build them (#2358 by @vmaerten).
+- Added support for global config files in `$XDG_CONFIG_HOME/task/taskrc.yml` or
+  `$HOME/.taskrc.yml`. Check out our new
+  [configuration guide](https://taskfile.dev/docs/reference/config) for more
+  details (#2247, #2380, #2390, #2391 by @vmaerten, @pd93).
+- Added experiments to the taskrc schema to clarify the expected keys and values
+  (#2235 by @vmaerten).
+
+#### Package API
+
+- Bumped the minimum version of Go to 1.24 (#2358 by @vmaerten).
+
 ## v3.44.1 - 2025-07-23
 
 - Internal tasks will no longer be shown as suggestions since they cannot be

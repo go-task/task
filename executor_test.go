@@ -3,7 +3,6 @@ package task_test
 import (
 	"bytes"
 	"cmp"
-	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -189,7 +188,7 @@ func (tt *ExecutorTest) run(t *testing.T) {
 		}
 
 		// Run the task and check for errors
-		ctx := context.Background()
+		ctx := t.Context()
 		if err := e.Run(ctx, call); tt.wantRunError {
 			require.Error(t, err)
 			tt.writeFixtureErrRun(t, g, err)
