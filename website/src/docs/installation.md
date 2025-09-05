@@ -195,6 +195,16 @@ or, if you have pkgx integration enabled:
 task
 ```
 
+### [install-release][install-release] ![][macos] ![linux] ![community] \{#install-release}
+
+`install-release` is package manager to install any single binary tools from their github release
+
+[[source](https://github.com/Rishang/install-release)]
+
+```shell
+ir get https://github.com/go-task/task
+```
+
 ## Get The Binary
 
 ### Binary
