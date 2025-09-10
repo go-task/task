@@ -23,6 +23,10 @@
   details (#2247, #2380, #2390, #2391 by @vmaerten, @pd93).
 - Added experiments to the taskrc schema to clarify the expected keys and values
   (#2235 by @vmaerten).
+- Added support for new properties in `.taskrc.yml`: insecure, verbose,
+  concurrency, remote offline, remote timeout, and remote expiry. :warning: Note:
+  setting offline via environment variable is no longer supported. (#2389 by
+  @vmaerten)
 
 #### Package API
 
