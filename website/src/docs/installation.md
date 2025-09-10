@@ -281,13 +281,14 @@ sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d -b ~/.local/bin
 
 ### GitHub Actions
 
-We have an official GitHub Action to install Task in your workflows. For more
-examples and configuration, check out the
-[go-task/action repository](https://github.com/go-task/action).
+We have an [official GitHub Action](https://github.com/go-task/setup-task) to
+install Task in your GitHub workflows. This repository is forked from the
+fantastic project by the Arduino team. Check out the repository for more
+examples and configuration.
 
 ```yaml
 - name: Install Task
-  uses: go-task/action@v1
+  uses: go-task/setup-task@v1
 ```
 
 ::: warning Community Maintained
