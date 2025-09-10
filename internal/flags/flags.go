@@ -196,6 +196,10 @@ func Validate() error {
 		return errors.New("task: --no-status only applies to --json with --list or --list-all")
 	}
 
+	if Nested && !ListJson {
+		return errors.New("task: --nested only applies to --json with --list or --list-all")
+	}
+
 	return nil
 }
 
