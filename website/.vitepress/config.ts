@@ -5,7 +5,8 @@ import { resolve } from 'path';
 import { tabsMarkdownPlugin } from 'vitepress-plugin-tabs';
 import {
   groupIconMdPlugin,
-  groupIconVitePlugin
+  groupIconVitePlugin,
+  localIconLoader
 } from 'vitepress-plugin-group-icons';
 import { team } from './team.ts';
 import { taskDescription, taskName } from './meta.ts';
@@ -99,7 +100,20 @@ export default defineConfig({
     }
   },
   vite: {
-    plugins: [groupIconVitePlugin()],
+    plugins: [
+      groupIconVitePlugin({
+        customIcon: {
+          '.taskrc.yml': localIconLoader(
+            import.meta.url,
+            './theme/icons/task.svg'
+          ),
+          'Taskfile.yml': localIconLoader(
+            import.meta.url,
+            './theme/icons/task.svg'
+          )
+        }
+      })
+    ],
     resolve: {
       alias: [
         {

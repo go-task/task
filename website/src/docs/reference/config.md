@@ -73,3 +73,44 @@ option_3: foo # Taken from $XDG_CONFIG_HOME/task/.taskrc.yml
 The experiments section allows you to enable Task's experimental features. These
 options are not enumerated here. Instead, please refer to our
 [experiments documentation](../experiments/index.md) for more information.
+
+```yaml
+experiments:
+  feature_name: 1
+  another_feature: 2
+```
+
+### `verbose`
+
+- **Type**: `boolean`
+- **Default**: `false`
+- **Description**: Enable verbose output for all tasks
+- **CLI equivalent**: [`-v, --verbose`](./cli.md#-v---verbose)
+
+```yaml
+verbose: true
+```
+
+### `concurrency`
+
+- **Type**: `integer`
+- **Minimum**: `1`
+- **Description**: Number of concurrent tasks to run
+- **CLI equivalent**: [`-C, --concurrency`](./cli.md#-c---concurrency-number)
+
+```yaml
+concurrency: 4
+```
+
+## Example Configuration
+
+Here's a complete example of a `.taskrc.yml` file with all available options:
+
+```yaml
+# Global settings
+verbose: true
+concurrency: 2
+
+# Enable experimental features
+experiments:
+  REMOTE_TASKFILES: 1
