@@ -166,7 +166,7 @@ func (e *Executor) ToEditorOutput(tasks []*ast.Task, noStatus bool, nested bool)
 				return err
 			}
 
-			editorTask.UpToDate = upToDate
+			editorTask.UpToDate = &upToDate
 			editorTasks[i] = editorTask
 			return nil
 		})

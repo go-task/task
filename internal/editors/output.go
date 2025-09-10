@@ -18,7 +18,7 @@ type (
 		Desc     string    `json:"desc"`
 		Summary  string    `json:"summary"`
 		Aliases  []string  `json:"aliases"`
-		UpToDate bool      `json:"up_to_date"`
+		UpToDate *bool     `json:"up_to_date,omitempty"`
 		Location *Location `json:"location"`
 	}
 	// Location describes a task's location in a taskfile
@@ -35,12 +35,11 @@ func NewTask(task *ast.Task) Task {
 		aliases = task.Aliases
 	}
 	return Task{
-		Name:     task.Name(),
-		Task:     task.Task,
-		Desc:     task.Desc,
-		Summary:  task.Summary,
-		Aliases:  aliases,
-		UpToDate: false,
+		Name:    task.Name(),
+		Task:    task.Task,
+		Desc:    task.Desc,
+		Summary: task.Summary,
+		Aliases: aliases,
 		Location: &Location{
 			Line:     task.Location.Line,
 			Column:   task.Location.Column,
