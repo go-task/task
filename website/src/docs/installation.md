@@ -10,9 +10,11 @@ Task offers many installation methods. Check out the available methods below.
 
 ## Official Package Managers
 
-These installation methods are maintained by the Task team and are always up-to-date.
+These installation methods are maintained by the Task team and are always
+up-to-date.
 
 ### [dnf](https://docs.fedoraproject.org/en-US/quick-docs/dnf) ![Fedora](https://img.shields.io/badge/Fedora-51A2DA?logo=fedora&logoColor=fff) ![CentOS](https://img.shields.io/badge/CentOS-002260?logo=centos&logoColor=F0F0F0) ![Fedora](https://img.shields.io/badge/Red_Hat-EE0000?logo=redhat&logoColor=white) {#dnf}
+
 [[package](https://cloudsmith.io/~task/repos/task/packages/?sort=-format&q=format%3Arpm)]
 
 If you Set up the repository by running :
@@ -20,6 +22,7 @@ If you Set up the repository by running :
 ```shell
 curl -1sLf 'https://dl.cloudsmith.io/public/task/task/setup.rpm.sh' | sudo -E bash
 ```
+
 Then you can install Task with:
 
 ```shell
@@ -30,11 +33,12 @@ dnf install task
 
 [[package](https://cloudsmith.io/~task/repos/task/packages/?sort=-format&q=format%3Adeb)]
 
-If you Set up the repository by running :
+If you Set up the repository by running:
 
 ```shell
 curl -1sLf 'https://dl.cloudsmith.io/public/task/task/setup.deb.sh' | sudo -E bash
 ```
+
 Then you can install Task with:
 
 ```shell
@@ -95,7 +99,31 @@ winget install Task.Task
 
 ::: warning Community Maintained
 
-These installation methods are maintained by the community and may not always be up-to-date with the latest Task version. The Task team does not directly control these packages.
+These installation methods are maintained by the community and may not always be
+up-to-date with the latest Task version. The Task team does not directly control
+these packages.
+
+:::
+
+### [Mise](https://mise.jdx.dev/) ![macOS](https://img.shields.io/badge/MacOS-000000?logo=apple&logoColor=F0F0F0) ![Linux](https://img.shields.io/badge/Linux-FCC624?logo=linux&logoColor=black) ![Windows](https://custom-icon-badges.demolab.com/badge/Windows-0078D6?logo=windows11&logoColor=white) {#mise}
+
+Mise is a cross-platform package manager that acts as a "frontend" to a variety
+of other package managers "backends" such as `asdf`, `aqua` and `ubi`.
+
+If using Mise, we recommend using the `aqua` or `ubi` backends to install Task
+as these install directly from our GitHub releases.
+
+::: code-group
+
+```shell [aqua]
+mise use -g aqua:go-task/task@latest
+mise install
+```
+
+```shell [ubi]
+mise use -g ubi:go-task/task
+mise install
+```
 
 :::
 
@@ -253,20 +281,21 @@ sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d -b ~/.local/bin
 
 ### GitHub Actions
 
-If you want to install Task in GitHub Actions you can try using
-[this action](https://github.com/arduino/setup-task) by the Arduino team:
+We have an [official GitHub Action](https://github.com/go-task/setup-task) to
+install Task in your GitHub workflows. This repository is forked from the
+fantastic project by the Arduino team. Check out the repository for more
+examples and configuration.
 
 ```yaml
 - name: Install Task
-  uses: arduino/setup-task@v2
-  with:
-    version: 3.x
-    repo-token: ${{ secrets.GITHUB_TOKEN }}
+  uses: go-task/setup-task@v1
 ```
 
 ::: warning Community Maintained
 
-These installation methods are maintained by the community and may not always be up-to-date with the latest Task version. The Task team does not directly control these packages.
+These installation methods are maintained by the community and may not always be
+up-to-date with the latest Task version. The Task team does not directly control
+these packages.
 
 :::
 
