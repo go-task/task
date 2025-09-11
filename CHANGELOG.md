@@ -28,6 +28,9 @@
   by @vmaerten)
 - Added a `--nested` flag when outputting tasks using `--list --json`. This will
   output tasks in a nested structure when tasks are namespaced (#2415 by @pd93).
+- Enhanced support for tasks with wildcards: they are now logged correctly, and
+  wildcard parameters are fully considered during fingerprinting (#1808, #1795
+  by @vmaerten).
 
 #### Package API
 
