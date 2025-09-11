@@ -5,8 +5,7 @@
 - Task now includes built-in core utilities to greatly improve compatibility on
   Windows. This means that your commands that uses `cp`, `mv`, `mkdir` or any
   other common core utility will now work by default on Windows, without extra
-  setup.
-  This is something we wanted to address for many many years, and it's
+  setup. This is something we wanted to address for many many years, and it's
   finally being shipped!
   [Read our blog post this the topic](https://taskfile.dev/blog/windows-core-utils).
   (#197, #2360 by @andreynering).
@@ -24,9 +23,11 @@
 - Added experiments to the taskrc schema to clarify the expected keys and values
   (#2235 by @vmaerten).
 - Added support for new properties in `.taskrc.yml`: insecure, verbose,
-  concurrency, remote offline, remote timeout, and remote expiry. :warning: Note:
-  setting offline via environment variable is no longer supported. (#2389 by
-  @vmaerten)
+  concurrency, remote offline, remote timeout, and remote expiry. :warning:
+  Note: setting offline via environment variable is no longer supported. (#2389
+  by @vmaerten)
+- Added a `--nested` flag when outputting tasks using `--list --json`. This will
+  output tasks in a nested structure when tasks are namespaced (#2415 by @pd93).
 
 #### Package API
 
