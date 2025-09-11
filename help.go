@@ -24,15 +24,17 @@ type ListOptions struct {
 	ListAllTasks                  bool
 	FormatTaskListAsJSON          bool
 	NoStatus                      bool
+	Nested                        bool
 }
 
 // NewListOptions creates a new ListOptions instance
-func NewListOptions(list, listAll, listAsJson, noStatus bool) ListOptions {
+func NewListOptions(list, listAll, listAsJson, noStatus, nested bool) ListOptions {
 	return ListOptions{
 		ListOnlyTasksWithDescriptions: list,
 		ListAllTasks:                  listAll,
 		FormatTaskListAsJSON:          listAsJson,
 		NoStatus:                      noStatus,
+		Nested:                        nested,
 	}
 }
 
@@ -63,7 +65,7 @@ func (e *Executor) ListTasks(o ListOptions) (bool, error) {
 		return false, err
 	}
 	if o.FormatTaskListAsJSON {
-		output, err := e.ToEditorOutput(tasks, o.NoStatus)
+		output, err := e.ToEditorOutput(tasks, o.NoStatus, o.Nested)
 		if err != nil {
 			return false, err
 		}
@@ -135,33 +137,17 @@ func (e *Executor) ListTaskNames(allTasks bool) error {
 	return nil
 }
 
-func (e *Executor) ToEditorOutput(tasks []*ast.Task, noStatus bool) (*editors.Taskfile, error) {
-	o := &editors.Taskfile{
-		Tasks:    make([]editors.Task, len(tasks)),
-		Location: e.Taskfile.Location,
-	}
+func (e *Executor) ToEditorOutput(tasks []*ast.Task, noStatus bool, nested bool) (*editors.Namespace, error) {
 	var g errgroup.Group
+	editorTasks := make([]editors.Task, len(tasks))
+
+	// Look over each task in parallel and turn it into an editor task
 	for i := range tasks {
-		aliases := []string{}
-		if len(tasks[i].Aliases) > 0 {
-			aliases = tasks[i].Aliases
-		}
 		g.Go(func() error {
-			o.Tasks[i] = editors.Task{
-				Name:     tasks[i].Name(),
-				Task:     tasks[i].Task,
-				Desc:     tasks[i].Desc,
-				Summary:  tasks[i].Summary,
-				Aliases:  aliases,
-				UpToDate: false,
-				Location: &editors.Location{
-					Line:     tasks[i].Location.Line,
-					Column:   tasks[i].Location.Column,
-					Taskfile: tasks[i].Location.Taskfile,
-				},
-			}
+			editorTask := editors.NewTask(tasks[i])
 
 			if noStatus {
+				editorTasks[i] = editorTask
 				return nil
 			}
 
@@ -180,10 +166,35 @@ func (e *Executor) ToEditorOutput(tasks []*ast.Task, noStatus bool) (*editors.Ta
 				return err
 			}
 
-			o.Tasks[i].UpToDate = upToDate
-
+			editorTask.UpToDate = &upToDate
+			editorTasks[i] = editorTask
 			return nil
 		})
 	}
-	return o, g.Wait()
+	if err := g.Wait(); err != nil {
+		return nil, err
+	}
+
+	// Create the root namespace
+	var tasksLen int
+	if !nested {
+		tasksLen = len(editorTasks)
+	}
+	rootNamespace := &editors.Namespace{
+		Tasks:    make([]editors.Task, tasksLen),
+		Location: e.Taskfile.Location,
+	}
+
+	// Recursively add namespaces to the root namespace or if nesting is
+	// disabled add them all to the root namespace
+	for i, task := range editorTasks {
+		taskNamespacePath := strings.Split(task.Task, ast.NamespaceSeparator)
+		if nested {
+			rootNamespace.AddNamespace(taskNamespacePath, task)
+		} else {
+			rootNamespace.Tasks[i] = task
+		}
+	}
+
+	return rootNamespace, g.Wait()
 }

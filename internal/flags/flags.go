@@ -51,6 +51,7 @@ var (
 	TaskSort            string
 	Status              bool
 	NoStatus            bool
+	Nested              bool
 	Insecure            bool
 	Force               bool
 	ForceAll            bool
@@ -117,6 +118,7 @@ func init() {
 	pflag.StringVar(&TaskSort, "sort", "", "Changes the order of the tasks when listed. [default|alphanumeric|none].")
 	pflag.BoolVar(&Status, "status", false, "Exits with non-zero exit code if any of the given tasks is not up-to-date.")
 	pflag.BoolVar(&NoStatus, "no-status", false, "Ignore status when listing tasks as JSON")
+	pflag.BoolVar(&Nested, "nested", false, "Nest namespaces when listing tasks as JSON")
 	pflag.BoolVar(&Insecure, "insecure", getConfig(config, config.Remote.Insecure, false), "Forces Task to download Taskfiles over insecure connections.")
 	pflag.BoolVarP(&Watch, "watch", "w", false, "Enables watch of the given task.")
 	pflag.BoolVarP(&Verbose, "verbose", "v", getConfig(config, config.Verbose, false), "Enables verbose mode.")
@@ -192,6 +194,10 @@ func Validate() error {
 
 	if NoStatus && !ListJson {
 		return errors.New("task: --no-status only applies to --json with --list or --list-all")
+	}
+
+	if Nested && !ListJson {
+		return errors.New("task: --nested only applies to --json with --list or --list-all")
 	}
 
 	return nil
