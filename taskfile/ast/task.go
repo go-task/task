@@ -46,17 +46,22 @@ type Task struct {
 	Namespace            string
 	IncludeVars          *Vars
 	IncludedTaskfileVars *Vars
+
+	FullName string
 }
 
 func (t *Task) Name() string {
 	if t.Label != "" {
 		return t.Label
 	}
+	if t.FullName != "" {
+		return t.FullName
+	}
 	return t.Task
 }
 
 func (t *Task) LocalName() string {
-	name := t.Task
+	name := t.FullName
 	name = strings.TrimPrefix(name, t.Namespace)
 	name = strings.TrimPrefix(name, ":")
 	return name
@@ -220,6 +225,7 @@ func (t *Task) DeepCopy() *Task {
 		Location:             t.Location.DeepCopy(),
 		Requires:             t.Requires.DeepCopy(),
 		Namespace:            t.Namespace,
+		FullName:             t.FullName,
 	}
 	return c
 }

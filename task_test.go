@@ -437,6 +437,7 @@ func TestStatusChecksum(t *testing.T) { // nolint:paralleltest // cannot run in 
 		task  string
 	}{
 		{[]string{"generated.txt", ".task/checksum/build"}, "build"},
+		{[]string{"generated-wildcard.txt", ".task/checksum/build-wildcard"}, "build-wildcard"},
 		{[]string{"generated.txt", ".task/checksum/build-with-status"}, "build-with-status"},
 	}
 
@@ -1802,6 +1803,22 @@ func TestRunOnlyRunsJobsHashOnce(t *testing.T) {
 		Target: "generate-hash",
 		Files: map[string]string{
 			"hash.txt": "starting 1\n1\n2\n",
+		},
+	}
+	t.Run("", func(t *testing.T) {
+		t.Parallel()
+		tt.Run(t)
+	})
+}
+
+func TestRunOnlyRunsJobsHashOnceWithWildcard(t *testing.T) {
+	t.Parallel()
+
+	tt := fileContentTest{
+		Dir:    "testdata/run",
+		Target: "deploy",
+		Files: map[string]string{
+			"wildcard.txt": "Deploy infra\nDeploy js\nDeploy go\n",
 		},
 	}
 	t.Run("", func(t *testing.T) {
