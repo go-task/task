@@ -31,6 +31,8 @@
 - Enhanced support for tasks with wildcards: they are now logged correctly, and
   wildcard parameters are fully considered during fingerprinting (#1808, #1795
   by @vmaerten).
+- Fixed panic when a variable was declared as an empty hash (`{}`) (#2416,
+  #2417 by @trulede).
 
 #### Package API
 
