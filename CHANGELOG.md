@@ -36,6 +36,17 @@
 
 - Bumped the minimum version of Go to 1.24 (#2358 by @vmaerten).
 
+#### Other news
+
+We recently released our
+[official GitHub Action](https://github.com/go-task/setup-task). This is based
+on the fantastic work by the Arduino team who created and maintained the
+community version. Now that this is officially adopted, fixes/updates should be
+more timely. We have already merged a couple of longstanding PRs in our
+[first release](https://github.com/go-task/setup-task/releases/tag/v1.0.0) (by
+@pd93, @shrink, @trim21 and all the previous contributors to
+[arduino/setup-task](https://github.com/arduino/setup-task/)).
+
 ## v3.44.1 - 2025-07-23
 
 - Internal tasks will no longer be shown as suggestions since they cannot be
