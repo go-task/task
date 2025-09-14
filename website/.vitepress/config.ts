@@ -85,6 +85,14 @@ export default defineConfig({
       function gtag(){dataLayer.push(arguments);}
       gtag("js", new Date());
       gtag("config", "G-4RT25NXQ7N");`
+    ],
+    [
+      "script",
+      {
+        defer: "",
+        src: "https://umami.taskfile.dev/script.js",
+        "data-website-id": "084030b0-0e3f-4891-8d2a-0c12c40f5933"
+      }
     ]
   ],
   srcDir: 'src',
