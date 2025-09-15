@@ -1,6 +1,6 @@
 # Changelog
 
-## v3.45.2 - 2025-09-15
+## Unreleased
 
 - Task now includes built-in core utilities to greatly improve compatibility on
   Windows. This means that your commands that uses `cp`, `mv`, `mkdir` or any
@@ -49,7 +49,7 @@ more timely. We have already merged a couple of longstanding PRs in our
 @pd93, @shrink, @trim21 and all the previous contributors to
 [arduino/setup-task](https://github.com/arduino/setup-task/)).
 
-## v3.45.0-v3.45.1 - 2025-09-15
+## v3.45.0-v3.45.2 - 2025-09-15
 
 Failed due to an issue with our release process.
 
