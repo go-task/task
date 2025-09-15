@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"os"
-	"os/exec"
 	"regexp"
 	"strings"
 	"time"
@@ -16,13 +15,11 @@ import (
 
 const (
 	changelogSource = "CHANGELOG.md"
-	changelogTarget = "website/docs/changelog.md"
+	changelogTarget = "website/src/docs/changelog.md"
+	versionFile     = "internal/version/version.txt"
 )
 
-var (
-	changelogReleaseRegex = regexp.MustCompile(`## Unreleased`)
-	versionRegex          = regexp.MustCompile(`(?m)^  "version": "\d+\.\d+\.\d+",$`)
-)
+var changelogReleaseRegex = regexp.MustCompile(`## Unreleased`)
 
 // Flags
 var (
@@ -46,7 +43,7 @@ func release() error {
 		return errors.New("error: expected version number")
 	}
 
-	version, err := getVersion()
+	version, err := getVersion(versionFile)
 	if err != nil {
 		return err
 	}
@@ -64,28 +61,18 @@ func release() error {
 		return err
 	}
 
-	if err := setVersionFile("internal/version/version.txt", version); err != nil {
-		return err
-	}
-
-	if err := setJSONVersion("package.json", version); err != nil {
-		return err
-	}
-
-	if err := setJSONVersion("package-lock.json", version); err != nil {
+	if err := setVersionFile(versionFile, version); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func getVersion() (*semver.Version, error) {
-	cmd := exec.Command("git", "describe", "--tags", "--abbrev=0")
-	b, err := cmd.Output()
+func getVersion(filename string) (*semver.Version, error) {
+	b, err := os.ReadFile(filename)
 	if err != nil {
 		return nil, err
 	}
-
 	return semver.NewVersion(strings.TrimSpace(string(b)))
 }
 
@@ -143,18 +130,4 @@ func changelog(version *semver.Version) error {
 
 func setVersionFile(fileName string, version *semver.Version) error {
 	return os.WriteFile(fileName, []byte(version.String()+"\n"), 0o644)
-}
-
-func setJSONVersion(fileName string, version *semver.Version) error {
-	// Read the JSON file
-	b, err := os.ReadFile(fileName)
-	if err != nil {
-		return err
-	}
-
-	// Replace the version
-	new := versionRegex.ReplaceAllString(string(b), fmt.Sprintf(`  "version": "%s",`, version.String()))
-
-	// Write the JSON file
-	return os.WriteFile(fileName, []byte(new), 0o644)
 }
