@@ -28,13 +28,8 @@ jobs:
       - name: Install pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: latest
-
-      - name: Install Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22.x'
-          cache: 'pnpm'
+          package_json_file: 'website/package.json'
+          run_install: 'true'
 
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v6
