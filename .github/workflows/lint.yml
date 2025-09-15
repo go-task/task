@@ -9,6 +9,18 @@ on:
       - main
 
 jobs:
+
+  vmn:
+    name: Test pnpm
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          package_json_file: 'website/package.json'
+          run_install: 'true'
   lint:
     name: Lint
     strategy:
