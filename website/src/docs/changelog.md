@@ -5,7 +5,7 @@ outline: deep
 
 # Changelog
 
-## v3.45.0 - 2025-09-15
+## Unreleased
 
 - Task now includes built-in core utilities to greatly improve compatibility on
   Windows. This means that your commands that uses `cp`, `mv`, `mkdir` or any
@@ -36,8 +36,8 @@ outline: deep
 - Enhanced support for tasks with wildcards: they are now logged correctly, and
   wildcard parameters are fully considered during fingerprinting (#1808, #1795
   by @vmaerten).
-- Fixed panic when a variable was declared as an empty hash (`{}`) (#2416,
-  #2417 by @trulede).
+- Fixed panic when a variable was declared as an empty hash (`{}`) (#2416, #2417
+  by @trulede).
 
 #### Package API
 
@@ -53,6 +53,10 @@ more timely. We have already merged a couple of longstanding PRs in our
 [first release](https://github.com/go-task/setup-task/releases/tag/v1.0.0) (by
 @pd93, @shrink, @trim21 and all the previous contributors to
 [arduino/setup-task](https://github.com/arduino/setup-task/)).
+
+## v3.45.0 - 2025-09-15
+
+Failed due to an issue with our release process.
 
 ## v3.44.1 - 2025-07-23
 
