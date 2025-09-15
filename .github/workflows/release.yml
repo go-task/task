@@ -23,7 +23,7 @@ jobs:
         run: |
           npm config set '//registry.npmjs.org/:_authToken'=${{ secrets.NPM_TOKEN }}
       - name: Install Task
-        uses: arduino/setup-task@v2
+        uses: go-task/setup-task@v1
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
