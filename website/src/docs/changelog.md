@@ -5,7 +5,7 @@ outline: deep
 
 # Changelog
 
-## Unreleased
+## v3.45.3 - 2025-09-15
 
 - Task now includes built-in core utilities to greatly improve compatibility on
   Windows. This means that your commands that uses `cp`, `mv`, `mkdir` or any
