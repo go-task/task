@@ -5,6 +5,55 @@ outline: deep
 
 # Changelog
 
+## v3.45.0 - 2025-09-15
+
+- Task now includes built-in core utilities to greatly improve compatibility on
+  Windows. This means that your commands that uses `cp`, `mv`, `mkdir` or any
+  other common core utility will now work by default on Windows, without extra
+  setup. This is something we wanted to address for many many years, and it's
+  finally being shipped!
+  [Read our blog post this the topic](https://taskfile.dev/blog/windows-core-utils).
+  (#197, #2360 by @andreynering).
+- :sparkles: Built and deployed a [brand new website](https://taskfile.dev)
+  using [VitePress](https://vitepress.dev) (#2359, #2369, #2371, #2375, #2378 by
+  @vmaerten, @andreynering, @pd93).
+- Began releasing
+  [nightly builds](https://github.com/go-task/task/releases/tag/nightly). This
+  will allow people to test our changes before they are fully released and
+  without having to install Go to build them (#2358 by @vmaerten).
+- Added support for global config files in `$XDG_CONFIG_HOME/task/taskrc.yml` or
+  `$HOME/.taskrc.yml`. Check out our new
+  [configuration guide](https://taskfile.dev/docs/reference/config) for more
+  details (#2247, #2380, #2390, #2391 by @vmaerten, @pd93).
+- Added experiments to the taskrc schema to clarify the expected keys and values
+  (#2235 by @vmaerten).
+- Added support for new properties in `.taskrc.yml`: insecure, verbose,
+  concurrency, remote offline, remote timeout, and remote expiry. :warning:
+  Note: setting offline via environment variable is no longer supported. (#2389
+  by @vmaerten)
+- Added a `--nested` flag when outputting tasks using `--list --json`. This will
+  output tasks in a nested structure when tasks are namespaced (#2415 by @pd93).
+- Enhanced support for tasks with wildcards: they are now logged correctly, and
+  wildcard parameters are fully considered during fingerprinting (#1808, #1795
+  by @vmaerten).
+- Fixed panic when a variable was declared as an empty hash (`{}`) (#2416,
+  #2417 by @trulede).
+
+#### Package API
+
+- Bumped the minimum version of Go to 1.24 (#2358 by @vmaerten).
+
+#### Other news
+
+We recently released our
+[official GitHub Action](https://github.com/go-task/setup-task). This is based
+on the fantastic work by the Arduino team who created and maintained the
+community version. Now that this is officially adopted, fixes/updates should be
+more timely. We have already merged a couple of longstanding PRs in our
+[first release](https://github.com/go-task/setup-task/releases/tag/v1.0.0) (by
+@pd93, @shrink, @trim21 and all the previous contributors to
+[arduino/setup-task](https://github.com/arduino/setup-task/)).
+
 ## v3.44.1 - 2025-07-23
 
 - Internal tasks will no longer be shown as suggestions since they cannot be
@@ -92,8 +141,8 @@ Reverted the changes made in #2113 and #2186 that affected the
 - The default taskfile (output when using the `--init` flag) is now an embedded
   file in the binary instead of being stored in the code (#2112 by @pd93).
 - Improved the way we report the Task version when using the `--version` flag or
-  <span v-pre>`{{.TASK_VERSION}}`</span> variable. This should now be more
-  consistent and easier for package maintainers to use (#2131 by @pd93).
+  `{{.TASK_VERSION}}` variable. This should now be more consistent and easier
+  for package maintainers to use (#2131 by @pd93).
 - Fixed a bug where globstar (`**`) matching in `sources` only resolved the
   first result (#2073, #2075 by @pd93).
 - Fixed a bug where sorting tasks by "none" would use the default sorting
@@ -107,7 +156,7 @@ Reverted the changes made in #2113 and #2186 that affected the
 - Fix Fish completions when `--global` (`-g`) is given (#2134 by @atusy).
 - Fixed variables not available when using `defer:` (#1909, #2173 by @vmaerten).
 
-### Package API
+#### Package API
 
 - The [`Executor`](https://pkg.go.dev/github.com/go-task/task/v3#Executor) now
   uses the functional options pattern (#2085, #2147, #2148 by @pd93).
@@ -164,7 +213,7 @@ Reverted the changes made in #2113 and #2186 that affected the
   used, all other variables become unavailable in the templating system within
   the include (#2092 by @vmaerten).
 
-### Package API
+#### Package API
 
 Unlike our CLI tool,
 [Task's package API is not currently stable](https://taskfile.dev/reference/package).
@@ -500,7 +549,360 @@ stabilize the API in the future. #121 now tracks this piece of work.
 - The
   [Remote Taskfiles experiment](https://taskfile.dev/experiments/remote-taskfiles)
   now prefers remote files over cached ones by default (#1317, #1345 by @pd93).
-  variable prefix and `^` command prefix (#642, #644, #645).
+- Added `--timeout` flag to the
+  [Remote Taskfiles experiment](https://taskfile.dev/experiments/remote-taskfiles)
+  (#1317, #1345 by @pd93).
+- Fix bug where dynamic `vars:` and `env:` were being executed when they should
+  actually be skipped by `platforms:` (#1273, #1377 by @andreynering).
+- Fix `schema.json` to make `silent` valid in `cmds` that use `for` (#1385,
+  #1386 by @iainvm).
+- Add new `--no-status` flag to skip expensive status checks when running
+  `task --list --json` (#1348, #1368 by @amancevice).
+
+## v3.31.0 - 2023-10-07
+
+- Enabled the `--yes` flag for the
+  [Remote Taskfiles experiment](https://taskfile.dev/experiments/remote-taskfiles)
+  (#1317, #1344 by @pd93).
+- Add ability to set `watch: true` in a task to automatically run it in watch
+  mode (#231, #1361 by @andreynering).
+- Fixed a bug on the watch mode where paths that contained `.git` (like
+  `.github`), for example, were also being ignored (#1356 by @butuzov).
+- Fixed a nil pointer error when running a Taskfile with no contents (#1341,
+  #1342 by @pd93).
+- Added a new [exit code](https://taskfile.dev/api/#exit-codes) (107) for when a
+  Taskfile does not contain a schema version (#1342 by @pd93).
+- Increased limit of maximum task calls from 100 to 1000 for now, as some people
+  have been reaching this limit organically now that we have loops. This check
+  exists to detect recursive calls, but will be removed in favor of a better
+  algorithm soon (#1321, #1332).
+- Fixed templating on descriptions on `task --list` (#1343 by @blackjid).
+- Fixed a bug where precondition errors were incorrectly being printed when task
+  execution was aborted (#1337, #1338 by @sylv-io).
+
+## v3.30.1 - 2023-09-14
+
+- Fixed a regression where some special variables weren't being set correctly
+  (#1331, #1334 by @pd93).
+
+## v3.30.0 - 2023-09-13
+
+- Prep work for Remote Taskfiles (#1316 by @pd93).
+- Added the
+  [Remote Taskfiles experiment](https://taskfile.dev/experiments/remote-taskfiles)
+  as a draft (#1152, #1317 by @pd93).
+- Improve performance of content checksumming on `sources:` by replacing md5
+  with [XXH3](https://xxhash.com/) which is much faster. This is a soft breaking
+  change because checksums will be invalidated when upgrading to this release
+  (#1325 by @ReillyBrogan).
+
+## v3.29.1 - 2023-08-26
+
+- Update to Go 1.21 (bump minimum version to 1.20) (#1302 by @pd93)
+- Fix a missing a line break on log when using `--watch` mode (#1285, #1297 by
+  @FilipSolich).
+- Fix `defer` on JSON Schema (#1288 by @calvinmclean and @andreynering).
+- Fix bug in usage of special variables like `{{.USER_WORKING_DIR}}` in
+  combination with `includes` (#1046, #1205, #1250, #1293, #1312, #1274 by
+  @andarto, #1309 by @andreynering).
+- Fix bug on `--status` flag. Running this flag should not have side-effects: it
+  should not update the checksum on `.task`, only report its status (#1305,
+  #1307 by @visciang, #1313 by @andreynering).
+
+## v3.28.0 - 2023-07-24
+
+- Added the ability to
+  [loop over commands and tasks](https://taskfile.dev/usage/#looping-over-values)
+  using `for` (#82, #1220 by @pd93).
+- Fixed variable propagation in multi-level includes (#778, #996, #1256 by
+  @hudclark).
+- Fixed a bug where the `--exit-code` code flag was not returning the correct
+  exit code when calling commands indirectly (#1266, #1270 by @pd93).
+- Fixed a `nil` panic when a dependency was commented out or left empty (#1263
+  by @neomantra).
+
+## v3.27.1 - 2023-06-30
+
+- Fix panic when a `.env` directory (not file) is present on current directory
+  (#1244, #1245 by @pd93).
+
+## v3.27.0 - 2023-06-29
+
+- Allow Taskfiles starting with lowercase characters (#947, #1221 by @pd93).
+  - e.g. `taskfile.yml`, `taskfile.yaml`, `taskfile.dist.yml` &
+    `taskfile.dist.yaml`
+- Bug fixes were made to the
+  [npm installation method](https://taskfile.dev/installation/#npm). (#1190, by
+  @sounisi5011).
+- Added the
+  [gentle force experiment](https://taskfile.dev/experiments/gentle-force) as a
+  draft (#1200, #1216 by @pd93).
+- Added an `--experiments` flag to allow you to see which experiments are
+  enabled (#1242 by @pd93).
+- Added ability to specify which variables are required in a task (#1203, #1204
+  by @benc-uk).
+
+## v3.26.0 - 2023-06-10
+
+- Only rewrite checksum files in `.task` if the checksum has changed (#1185,
+  #1194 by @deviantintegral).
+- Added [experiments documentation](https://taskfile.dev/experiments) to the
+  website (#1198 by @pd93).
+- Deprecated `version: 2` schema. This will be removed in the next major release
+  (#1197, #1198, #1199 by @pd93).
+- Added a new `prompt:` prop to set a warning prompt to be shown before running
+  a potential dangerous task (#100, #1163 by @MaxCheetham,
+  [Documentation](https://taskfile.dev/usage/#warning-prompts)).
+- Added support for single command task syntax. With this change, it's now
+  possible to declare just `cmd:` in a task, avoiding the more complex
+  `cmds: []` when you have only a single command for that task (#1130, #1131 by
+  @timdp).
+
+## v3.25.0 - 2023-05-22
+
+- Support `silent:` when calling another tasks (#680, #1142 by @danquah).
+- Improve PowerShell completion script (#1168 by @trim21).
+- Add more languages to the website menu and show translation progress
+  percentage (#1173 by @misitebao).
+- Starting on this release, official binaries for FreeBSD will be available to
+  download (#1068 by @andreynering).
+- Fix some errors being unintendedly suppressed (#1134 by @clintmod).
+- Fix a nil pointer error when `version` is omitted from a Taskfile (#1148,
+  #1149 by @pd93).
+- Fix duplicate error message when a task does not exists (#1141, #1144 by
+  @pd93).
+
+## v3.24.0 - 2023-04-15
+
+- Fix Fish shell completion for tasks with aliases (#1113 by @patricksjackson).
+- The default branch was renamed from `master` to `main` (#1049, #1048 by
+  @pd93).
+- Fix bug where "up-to-date" logs were not being omitted for silent tasks (#546,
+  #1107 by @danquah).
+- Add `.hg` (Mercurial) to the list of ignored directories when using `--watch`
+  (#1098 by @misery).
+- More improvements to the release tool (#1096 by @pd93).
+- Enforce [gofumpt](https://github.com/mvdan/gofumpt) linter (#1099 by @pd93)
+- Add `--sort` flag for use with `--list` and `--list-all` (#946, #1105 by
+  @pd93).
+- Task now has [custom exit codes](https://taskfile.dev/api/#exit-codes)
+  depending on the error (#1114 by @pd93).
+
+## v3.23.0 - 2023-03-26
+
+Task now has an
+[official extension for Visual Studio Code](https://marketplace.visualstudio.com/items?itemName=task.vscode-task)
+contributed by @pd93! :tada: The extension is maintained in a
+[new repository](https://github.com/go-task/vscode-task) under the `go-task`
+organization. We're looking to gather feedback from the community so please give
+it a go and let us know what you think via a
+[discussion](https://github.com/go-task/vscode-task/discussions),
+[issue](https://github.com/go-task/vscode-task/issues) or on our
+[Discord](https://discord.gg/6TY36E39UK)!
+
+> **NOTE:** The extension _requires_ v3.23.0 to be installed in order to work.
+
+- The website was integrated with
+  [Crowdin](https://crowdin.com/project/taskfile) to allow the community to
+  contribute with translations! [Chinese](https://taskfile.dev/zh-Hans/) is the
+  first language available (#1057, #1058 by @misitebao).
+- Added task location data to the `--json` flag output (#1056 by @pd93)
+- Change the name of the file generated by `task --init` from `Taskfile.yaml` to
+  `Taskfile.yml` (#1062 by @misitebao).
+- Added new `splitArgs` template function
+  (`{{splitArgs "foo bar 'foo bar baz'"}}`) to ensure string is split as
+  arguments (#1040, #1059 by @dhanusaputra).
+- Fix the value of `{{.CHECKSUM}}` variable in status (#1076, #1080 by @pd93).
+- Fixed deep copy implementation (#1072 by @pd93)
+- Created a tool to assist with releases (#1086 by @pd93).
+
+## v3.22.0 - 2023-03-10
+
+- Add a brand new `--global` (`-g`) flag that will run a Taskfile from your
+  `$HOME` directory. This is useful to have automation that you can run from
+  anywhere in your system!
+  ([Documentation](https://taskfile.dev/usage/#running-a-global-taskfile), #1029
+  by @andreynering).
+- Add ability to set `error_only: true` on the `group` output mode. This will
+  instruct Task to only print a command output if it returned with a non-zero
+  exit code (#664, #1022 by @jaedle).
+- Fixed bug where `.task/checksum` file was sometimes not being created when
+  task also declares a `status:` (#840, #1035 by @harelwa, #1037 by @pd93).
+- Refactored and decoupled fingerprinting from the main Task executor (#1039 by
+  @pd93).
+- Fixed deadlock issue when using `run: once` (#715, #1025 by
+  @theunrepentantgeek).
+
+## v3.21.0 - 2023-02-22
+
+- Added new `TASK_VERSION` special variable (#990, #1014 by @ja1code).
+- Fixed a bug where tasks were sometimes incorrectly marked as internal (#1007
+  by @pd93).
+- Update to Go 1.20 (bump minimum version to 1.19) (#1010 by @pd93)
+- Added environment variable `FORCE_COLOR` support to force color output. Useful
+  for environments without TTY (#1003 by @automation-stack)
+
+## v3.20.0 - 2023-01-14
+
+- Improve behavior and performance of status checking when using the `timestamp`
+  mode (#976, #977 by @aminya).
+- Performance optimizations were made for large Taskfiles (#982 by @pd93).
+- Add ability to configure options for the
+  [`set`](https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html)
+  and
+  [`shopt`](https://www.gnu.org/software/bash/manual/html_node/The-Shopt-Builtin.html)
+  builtins (#908, #929 by @pd93,
+  [Documentation](http://taskfile.dev/usage/#set-and-shopt)).
+- Add new `platforms:` attribute to `task` and `cmd`, so it's now possible to
+  choose in which platforms that given task or command will be run on. Possible
+  values are operating system (GOOS), architecture (GOARCH) or a combination of
+  the two. Example: `platforms: [linux]`, `platforms: [amd64]` or
+  `platforms: [linux/amd64]`. Other platforms will be skipped (#978, #980 by
+  @leaanthony).
+
+## v3.19.1 - 2022-12-31
+
+- Small bug fix: closing `Taskfile.yml` once we're done reading it (#963, #964
+  by @HeCorr).
+- Fixes a bug in v2 that caused a panic when using a `Taskfile_{{OS}}.yml` file
+  (#961, #971 by @pd93).
+- Fixed a bug where watch intervals set in the Taskfile were not being respected
+  (#969, #970 by @pd93)
+- Add `--json` flag (alias `-j`) with the intent to improve support for code
+  editors and add room to other possible integrations. This is basic for now,
+  but we plan to add more info in the near future (#936 by @davidalpert, #764).
+
+## v3.19.0 - 2022-12-05
+
+- Installation via npm now supports [pnpm](https://pnpm.io/) as well
+  ([go-task/go-npm#2](https://github.com/go-task/go-npm/issues/2),
+  [go-task/go-npm#3](https://github.com/go-task/go-npm/pull/3)).
+- It's now possible to run Taskfiles from subdirectories! A new
+  `USER_WORKING_DIR` special variable was added to add even more flexibility for
+  monorepos (#289, #920).
+- Add task-level `dotenv` support (#389, #904).
+- It's now possible to use global level variables on `includes` (#942, #943).
+- The website got a brand new
+  [translation to Chinese](https://task-zh.readthedocs.io/zh_CN/latest/) by
+  [@DeronW](https://github.com/DeronW). Thanks!
+
+## v3.18.0 - 2022-11-12
+
+- Show aliases on `task --list --silent` (`task --ls`). This means that aliases
+  will be completed by the completion scripts (#919).
+- Tasks in the root Taskfile will now be displayed first in
+  `--list`/`--list-all` output (#806, #890).
+- It's now possible to call a `default` task in an included Taskfile by using
+  just the namespace. For example: `docs:default` is now automatically aliased
+  to `docs` (#661, #815).
+
+## v3.17.0 - 2022-10-14
+
+- Add a "Did you mean ...?" suggestion when a task does not exits another one
+  with a similar name is found (#867, #880).
+- Now YAML parse errors will print which Taskfile failed to parse (#885, #887).
+- Add ability to set `aliases` for tasks and namespaces (#268, #340, #879).
+- Improvements to Fish shell completion (#897).
+- Added ability to set a different watch interval by setting `interval: '500ms'`
+  or using the `--interval=500ms` flag (#813, #865).
+- Add colored output to `--list`, `--list-all` and `--summary` flags (#845,
+  #874).
+- Fix unexpected behavior where `label:` was being shown instead of the task
+  name on `--list` (#603, #877).
+
+## v3.16.0 - 2022-09-29
+
+- Add `npm` as new installation method: `npm i -g @go-task/cli` (#870, #871,
+  [npm package](https://www.npmjs.com/package/@go-task/cli)).
+- Add support to marking tasks and includes as internal, which will hide them
+  from `--list` and `--list-all` (#818).
+
+## v3.15.2 - 2022-09-08
+
+- Fix error when using variable in `env:` introduced in the previous release
+  (#858, #866).
+- Fix handling of `CLI_ARGS` (`--`) in Bash completion (#863).
+- On zsh completion, add ability to replace `--list-all` with `--list` as
+  already possible on the Bash completion (#861).
+
+## v3.15.0 - 2022-09-03
+
+- Add new special variables `ROOT_DIR` and `TASKFILE_DIR`. This was a highly
+  requested feature (#215, #857,
+  [Documentation](https://taskfile.dev/api/#special-variables)).
+- Follow symlinks on `sources` (#826, #831).
+- Improvements and fixes to Bash completion (#835, #844).
+
+## v3.14.1 - 2022-08-03
+
+- Always resolve relative include paths relative to the including Taskfile
+  (#822, #823).
+- Fix ZSH and PowerShell completions to consider all tasks instead of just the
+  public ones (those with descriptions) (#803).
+
+## v3.14.0 - 2022-07-08
+
+- Add ability to override the `.task` directory location with the
+  `TASK_TEMP_DIR` environment variable.
+- Allow to override Task colors using environment variables: `TASK_COLOR_RESET`,
+  `TASK_COLOR_BLUE`, `TASK_COLOR_GREEN`, `TASK_COLOR_CYAN`, `TASK_COLOR_YELLOW`,
+  `TASK_COLOR_MAGENTA` and `TASK_COLOR_RED` (#568, #792).
+- Fixed bug when using the `output: group` mode where STDOUT and STDERR were
+  being print in separated blocks instead of in the right order (#779).
+- Starting on this release, ARM architecture binaries are been released to Snap
+  as well (#795).
+- i386 binaries won't be available anymore on Snap because Ubuntu removed the
+  support for this architecture.
+- Upgrade mvdan.cc/sh, which fixes a bug with associative arrays (#785,
+  [mvdan/sh#884](https://github.com/mvdan/sh/issues/884),
+  [mvdan/sh#893](https://github.com/mvdan/sh/pull/893)).
+
+## v3.13.0 - 2022-06-13
+
+- Added `-n` as an alias to `--dry` (#776, #777).
+- Fix behavior of interrupt (SIGINT, SIGTERM) signals. Task will now give time
+  for the processes running to do cleanup work (#458, #479, #728, #769).
+- Add new `--exit-code` (`-x`) flag that will pass-through the exit form the
+  command being ran (#755).
+
+## v3.12.1 - 2022-05-10
+
+- Fixed bug where, on Windows, variables were ending with `\r` because we were
+  only removing the final `\n` but not `\r\n` (#717).
+
+## v3.12.0 - 2022-03-31
+
+- The `--list` and `--list-all` flags can now be combined with the `--silent`
+  flag to print the task names only, without their description (#691).
+- Added support for multi-level inclusion of Taskfiles. This means that included
+  Taskfiles can also include other Taskfiles. Before this was limited to one
+  level (#390, #623, #656).
+- Add ability to specify vars when including a Taskfile.
+  [Check out the documentation](https://taskfile.dev/#/usage?id=vars-of-included-taskfiles)
+  for more information (#677).
+
+## v3.11.0 - 2022-02-19
+
+- Task now supports printing begin and end messages when using the `group`
+  output mode, useful for grouping tasks in CI systems.
+  [Check out the documentation](http://taskfile.dev/#/usage?id=output-syntax)
+  for more information (#647, #651).
+- Add `Taskfile.dist.yml` and `Taskfile.dist.yaml` to the supported file name
+  list.
+  [Check out the documentation](https://taskfile.dev/#/usage?id=supported-file-names)
+  for more information (#498, #666).
+
+## v3.10.0 - 2022-01-04
+
+- A new `--list-all` (alias `-a`) flag is now available. It's similar to the
+  exiting `--list` (`-l`) but prints all tasks, even those without a description
+  (#383, #401).
+- It's now possible to schedule cleanup commands to run once a task finishes
+  with the `defer:` keyword
+  ([Documentation](https://taskfile.dev/#/usage?id=doing-task-cleanup-with-defer),
+  #475, #626).
+- Remove long deprecated and undocumented `$` variable prefix and `^` command
+  prefix (#642, #644, #645).
 - Add support for `.yaml` extension (as an alternative to `.yml`). This was
   requested multiple times throughout the years. Enjoy! (#183, #184, #369, #584,
   #621).
@@ -518,8 +920,8 @@ stabilize the API in the future. #121 now tracks this piece of work.
 
 - Add logging in verbose mode for when a task starts and finishes (#533, #588).
 - Fix an issue with preconditions and context errors (#597, #598).
-- Quote each <span v-pre>`{{.CLI_ARGS}}`</span> argument to prevent one with
-  spaces to become many (#613).
+- Quote each `{{.CLI_ARGS}}` argument to prevent one with spaces to become many
+  (#613).
 - Fix nil pointer when `cmd:` was left empty (#612, #614).
 - Upgrade [mvdan/sh](https://github.com/mvdan/sh) which contains two relevant
   fixes:
@@ -535,8 +937,8 @@ stabilize the API in the future. #121 now tracks this piece of work.
 ## v3.9.0 - 2021-10-02
 
 - A new `shellQuote` function was added to the template system
-  (<span v-pre>`{{shellQuote "a string"}}`</span>) to ensure a string is safe
-  for use in shell ([mvdan/sh#727](https://github.com/mvdan/sh/pull/727),
+  (`{{shellQuote "a string"}}`) to ensure a string is safe for use in shell
+  ([mvdan/sh#727](https://github.com/mvdan/sh/pull/727),
   [mvdan/sh#737](https://github.com/mvdan/sh/pull/737),
   [Documentation](https://pkg.go.dev/mvdan.cc/sh/v3@v3.4.0/syntax#Quote))
 - In this version [mvdan.cc/sh](https://github.com/mvdan/sh) was upgraded with
