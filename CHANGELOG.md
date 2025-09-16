@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+- Fixed a bug where `cache-expiry` could not be defined in `.taskrc.yml` (#2423
+  by @vmaerten).
+- Fixed a bug where `.taskrc.yml` files in parent folders were not read
+  correctly (#2424 by @vmaerten).
+- Fixed a bug where autocomplete in subfolders did not work with zsh (#2425 by
+  @vmaerten).
+
 ## v3.45.3 - 2025-09-15
 
 - Task now includes built-in core utilities to greatly improve compatibility on
