@@ -291,14 +291,6 @@ examples and configuration.
   uses: go-task/setup-task@v1
 ```
 
-::: warning Community Maintained
-
-These installation methods are maintained by the community and may not always be
-up-to-date with the latest Task version. The Task team does not directly control
-these packages.
-
-:::
-
 ## Build From Source
 
 ### Go Modules
