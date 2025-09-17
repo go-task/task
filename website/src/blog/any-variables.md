@@ -144,5 +144,5 @@ We're looking for feedback on a couple of different proposals, so please give
 them a go and let us know what you think. :pray:
 
 [v3.37.0]: https://github.com/go-task/task/releases/tag/v3.37.0
-[slim-sprig-math]: https://go-task.github.io/slim-sprig/math.html
-[slim-sprig-list]: https://go-task.github.io/slim-sprig/lists.html
+[slim-sprig-math]: https://sprig.taskfile.dev/math.html
+[slim-sprig-list]: https://sprig.taskfile.dev/lists.html
