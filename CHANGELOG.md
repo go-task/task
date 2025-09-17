@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v3.45.4 - 2025-09-17
 
 - Fixed a bug where `cache-expiry` could not be defined in `.taskrc.yml` (#2423
   by @vmaerten).
