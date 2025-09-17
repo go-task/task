@@ -72,21 +72,6 @@ export default defineConfig({
       }
     ],
     [
-      'script',
-      {
-        async: '',
-        src: 'https://www.googletagmanager.com/gtag/js?id=G-4RT25NXQ7N'
-      }
-    ],
-    [
-      'script',
-      {},
-      `window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag("js", new Date());
-      gtag("config", "G-4RT25NXQ7N");`
-    ],
-    [
       "script",
       {
         defer: "",
