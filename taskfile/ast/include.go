@@ -5,7 +5,7 @@ import (
 	"sync"
 
 	"github.com/elliotchance/orderedmap/v3"
-	"gopkg.in/yaml.v3"
+	"go.yaml.in/yaml/v4"
 
 	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/deepcopy"

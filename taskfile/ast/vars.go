@@ -5,7 +5,7 @@ import (
 	"sync"
 
 	"github.com/elliotchance/orderedmap/v3"
-	"gopkg.in/yaml.v3"
+	"go.yaml.in/yaml/v4"
 
 	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/deepcopy"
@@ -113,7 +113,7 @@ func (vars *Vars) ToCacheMap() (m map[string]any) {
 			m[k] = v.Value
 		}
 	}
-	return
+	return m
 }
 
 // Merge loops over other and merges it values with the variables in vars. If
