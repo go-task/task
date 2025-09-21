@@ -16,6 +16,7 @@ import (
 	"github.com/go-task/task/v3/internal/env"
 	"github.com/go-task/task/v3/internal/execext"
 	"github.com/go-task/task/v3/internal/filepathext"
+	"github.com/go-task/task/v3/internal/fsext"
 	"github.com/go-task/task/v3/internal/logger"
 	"github.com/go-task/task/v3/internal/output"
 	"github.com/go-task/task/v3/internal/version"
@@ -56,6 +57,13 @@ func (e *Executor) Setup() error {
 
 func (e *Executor) getRootNode() (taskfile.Node, error) {
 	node, err := taskfile.NewRootNode(e.Entrypoint, e.Dir, e.Insecure, e.Timeout)
+	if os.IsNotExist(err) {
+		return nil, errors.TaskfileNotFoundError{
+			URI:     fsext.DefaultDir(e.Entrypoint, e.Dir),
+			Walk:    true,
+			AskInit: true,
+		}
+	}
 	if err != nil {
 		return nil, err
 	}
