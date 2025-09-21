@@ -5,14 +5,11 @@ import (
 	"cmp"
 	"errors"
 	"fmt"
-	"regexp"
 	"strings"
 
 	"github.com/fatih/color"
-	"gopkg.in/yaml.v3"
+	"go.yaml.in/yaml/v4"
 )
-
-var typeErrorRegex = regexp.MustCompile(`line \d+: (.*)`)
 
 type (
 	TaskfileDecodeError struct {
@@ -53,10 +50,10 @@ func (err *TaskfileDecodeError) Error() string {
 			if len(te.Errors) > 1 {
 				fmt.Fprintln(buf, color.RedString("errs:"))
 				for _, message := range te.Errors {
-					fmt.Fprintln(buf, color.RedString("- %s", extractTypeErrorMessage(message)))
+					fmt.Fprintln(buf, color.RedString("- %s", message.Err.Error()))
 				}
 			} else {
-				fmt.Fprintln(buf, color.RedString("err:  %s", extractTypeErrorMessage(te.Errors[0])))
+				fmt.Fprintln(buf, color.RedString("err:  %s", te.Errors[0].Err.Error()))
 			}
 		} else {
 			// Otherwise print the error message normally
@@ -127,12 +124,4 @@ func (err *TaskfileDecodeError) WithFileInfo(location string, snippet string) *T
 	err.Location = location
 	err.Snippet = snippet
 	return err
-}
-
-func extractTypeErrorMessage(message string) string {
-	matches := typeErrorRegex.FindStringSubmatch(message)
-	if len(matches) == 2 {
-		return matches[1]
-	}
-	return message
 }
