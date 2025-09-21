@@ -12,7 +12,8 @@ import (
 )
 
 var (
-	defaultTaskfiles = []string{
+	// DefaultTaskfiles is the list of Taskfile file names supported by default.
+	DefaultTaskfiles = []string{
 		"Taskfile.yml",
 		"taskfile.yml",
 		"Taskfile.yaml",
@@ -67,7 +68,7 @@ func RemoteExists(ctx context.Context, u url.URL) (*url.URL, error) {
 
 	// If the request was not successful, append the default Taskfile names to
 	// the URL and return the URL of the first successful request
-	for _, taskfile := range defaultTaskfiles {
+	for _, taskfile := range DefaultTaskfiles {
 		// Fixes a bug with JoinPath where a leading slash is not added to the
 		// path if it is empty
 		if u.Path == "" {
