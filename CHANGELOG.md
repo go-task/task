@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Fixed bug that made a generic message, instead of an useful one, appear when
+  a Taskfile could not be found (#2431 by @andreynering).
+
 ## v3.45.4 - 2025-09-17
 
 - Fixed a bug where `cache-expiry` could not be defined in `.taskrc.yml` (#2423
