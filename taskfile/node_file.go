@@ -4,7 +4,6 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/go-task/task/v3/internal/execext"
 	"github.com/go-task/task/v3/internal/filepathext"
@@ -51,10 +50,7 @@ func (node *FileNode) Read() ([]byte, error) {
 
 func (node *FileNode) ResolveEntrypoint(entrypoint string) (string, error) {
 	// If the file is remote, we don't need to resolve the path
-	if strings.Contains(entrypoint, "://") {
-		return entrypoint, nil
-	}
-	if strings.HasPrefix(entrypoint, "git") {
+	if isRemoteEntrypoint(entrypoint) {
 		return entrypoint, nil
 	}
 

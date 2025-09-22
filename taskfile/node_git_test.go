@@ -21,6 +21,17 @@ func TestGitNode_ssh(t *testing.T) {
 	assert.Equal(t, "ssh://git@github.com/foo/bar.git//common.yml?ref=main", entrypoint)
 }
 
+func TestGitNode_sshWithAltRepo(t *testing.T) {
+	t.Parallel()
+
+	node, err := NewGitNode("git@github.com:foo/bar.git//Taskfile.yml?ref=main", "", false)
+	assert.NoError(t, err)
+
+	entrypoint, err := node.ResolveEntrypoint("git@github.com:foo/other.git//Taskfile.yml?ref=dev")
+	assert.NoError(t, err)
+	assert.Equal(t, "git@github.com:foo/other.git//Taskfile.yml?ref=dev", entrypoint)
+}
+
 func TestGitNode_sshWithDir(t *testing.T) {
 	t.Parallel()
 
