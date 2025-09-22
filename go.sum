@@ -193,5 +193,7 @@ mvdan.cc/sh/moreinterp v0.0.0-20250807215248-5a1a658912aa h1:sRmA9AmA5+9CbK6a7N5
 mvdan.cc/sh/moreinterp v0.0.0-20250807215248-5a1a658912aa/go.mod h1:Of9PCedbLDYT8b3EyiYG64rNnx5nOp27OLCVdDrjJyo=
 mvdan.cc/sh/moreinterp v0.0.0-20250915182820-b717ad599e17 h1:2FU24GcRtL5Idt1KOtmzxU3RiXwirUQQUTV0voIHI2g=
 mvdan.cc/sh/moreinterp v0.0.0-20250915182820-b717ad599e17/go.mod h1:Of9PCedbLDYT8b3EyiYG64rNnx5nOp27OLCVdDrjJyo=
+mvdan.cc/sh/moreinterp v0.0.0-20250921194925-171492585d48 h1:j0QO6IrQsn7rpqs9HxwwP7ae3uZDbzRZfu0gi8IDFiE=
+mvdan.cc/sh/moreinterp v0.0.0-20250921194925-171492585d48/go.mod h1:Of9PCedbLDYT8b3EyiYG64rNnx5nOp27OLCVdDrjJyo=
 mvdan.cc/sh/v3 v3.12.0 h1:ejKUR7ONP5bb+UGHGEG/k9V5+pRVIyD+LsZz7o8KHrI=
 mvdan.cc/sh/v3 v3.12.0/go.mod h1:Se6Cj17eYSn+sNooLZiEUnNNmNxg0imoYlTu4CyaGyg=
