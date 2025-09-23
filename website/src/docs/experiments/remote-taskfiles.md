@@ -342,7 +342,7 @@ remote:
 #### `cache-expiry`
 
 - **Type**: `string`
-- **Default**: 24h
+- **Default**: 0s (no cache)
 - **Pattern**: `^[0-9]+(ns|us|µs|ms|s|m|h)$`
 - **Description**: Cache expiry duration for remote Taskfiles (e.g., '1h', '24h')
 
