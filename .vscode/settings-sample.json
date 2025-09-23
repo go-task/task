@@ -1,14 +1,11 @@
 {
   "yaml.schemas": {
-    "./website/static/schema.json": [
-      "Taskfile.yml",
-      "tmp/**/*.yml"
+    "./website/src/public/schema.json": [
+        "Taskfile.yml",
+        "Taskfile.yaml",
+        "taskfile.yml",
+        "taskfile.yaml"
     ]
-  },
-  "search.exclude": {
-    "**/versioned_docs": true,
-    "**/versioned_sidesbars": true,
-    "**/i18n": true
   },
   "gopls": {
       "formatting.local": "github.com/go-task"

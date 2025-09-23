@@ -39,15 +39,15 @@ of node which you can use:
 ::: code-group
 
 ```text [HTTP/HTTPS]
-https://raw.githubusercontent.com/go-task/task/main/website/static/Taskfile.yml
+https://raw.githubusercontent.com/go-task/task/main/website/src/public/Taskfile.yml
 ```
 
 ```text [Git over HTTP]
-https://github.com/go-task/task.git//website/static/Taskfile.yml?ref=main
+https://github.com/go-task/task.git//website/src/public/Taskfile.yml?ref=main
 ```
 
 ```text [Git over SSH]
-git@github.com/go-task/task.git//website/static/Taskfile.yml?ref=main
+git@github.com/go-task/task.git//website/src/public/Taskfile.yml?ref=main
 ```
 
 :::
@@ -56,7 +56,7 @@ git@github.com/go-task/task.git//website/static/Taskfile.yml?ref=main
 
 ### HTTP/HTTPS
 
-`https://raw.githubusercontent.com/go-task/task/main/website/static/Taskfile.yml`
+`https://raw.githubusercontent.com/go-task/task/main/website/src/public/Taskfile.yml`
 
 This is the most basic type of remote node and works by downloading the file
 from the specified URL. The file must be a valid Taskfile and can be of any
@@ -66,7 +66,7 @@ find a valid Taskfile, an error is returned.
 
 ### Git over HTTP
 
-`https://github.com/go-task/task.git//website/static/Taskfile.yml?ref=main`
+`https://github.com/go-task/task.git//website/src/public/Taskfile.yml?ref=main`
 
 This type of node works by downloading the file from a Git repository over
 HTTP/HTTPS. The first part of the URL is the base URL of the Git repository.
@@ -80,7 +80,7 @@ This is the same URL that you would use to clone the repo over HTTP.
 
 ### Git over SSH
 
-`git@github.com/go-task/task.git//website/static/Taskfile.yml?ref=main`
+`git@github.com/go-task/task.git//website/src/public/Taskfile.yml?ref=main`
 
 This type of node works by downloading the file from a Git repository over SSH.
 The first part of the URL is the user and base URL of the Git repository. This
@@ -121,19 +121,19 @@ file. For example:
 ::: code-group
 
 ```shell [HTTP/HTTPS]
-$ task --taskfile https://raw.githubusercontent.com/go-task/task/main/website/static/Taskfile.yml
+$ task --taskfile https://raw.githubusercontent.com/go-task/task/main/website/src/public/Taskfile.yml
 task: [hello] echo "Hello Task!"
 Hello Task!
 ```
 
 ```shell [Git over HTTP]
-$ task --taskfile https://github.com/go-task/task.git//website/static/Taskfile.yml?ref=main
+$ task --taskfile https://github.com/go-task/task.git//website/src/public/Taskfile.yml?ref=main
 task: [hello] echo "Hello Task!"
 Hello Task!
 ```
 
 ```shell [Git over SSH]
-$ task --taskfile git@github.com/go-task/task.git//website/static/Taskfile.yml?ref=main
+$ task --taskfile git@github.com/go-task/task.git//website/src/public/Taskfile.yml?ref=main
 task: [hello] echo "Hello Task!"
 Hello Task!
 ```
@@ -152,21 +152,21 @@ the remote Taskfile will be available to run from your main Taskfile.
 version: '3'
 
 includes:
-  my-remote-namespace: https://raw.githubusercontent.com/go-task/task/main/website/static/Taskfile.yml
+  my-remote-namespace: https://raw.githubusercontent.com/go-task/task/main/website/src/public/Taskfile.yml
 ```
 
 ```yaml [Git over HTTP]
 version: '3'
 
 includes:
-  my-remote-namespace: https://github.com/go-task/task.git//website/static/Taskfile.yml?ref=main
+  my-remote-namespace: https://github.com/go-task/task.git//website/src/public/Taskfile.yml?ref=main
 ```
 
 ```yaml [Git over SSH]
 version: '3'
 
 includes:
-  my-remote-namespace: git@github.com/go-task/task.git//website/static/Taskfile.yml?ref=main
+  my-remote-namespace: git@github.com/go-task/task.git//website/src/public/Taskfile.yml?ref=main
 ```
 
 :::
@@ -292,7 +292,9 @@ the `--download` flag.
 You can use the `--clear-cache` flag to clear all cached remote files.
 
 ## Configuration
-This experiment adds a new `remote` section to the [configuration file](../reference/config.md).
+
+This experiment adds a new `remote` section to the
+[configuration file](../reference/config.md).
 
 - **Type**: `object`
 - **Description**: Remote configuration settings for handling remote Taskfiles
@@ -344,10 +346,10 @@ remote:
 - **Type**: `string`
 - **Default**: 0s (no cache)
 - **Pattern**: `^[0-9]+(ns|us|µs|ms|s|m|h)$`
-- **Description**: Cache expiry duration for remote Taskfiles (e.g., '1h', '24h')
+- **Description**: Cache expiry duration for remote Taskfiles (e.g., '1h',
+  '24h')
 
 ```yaml
 remote:
   cache-expiry: "6h"
 ```
-
