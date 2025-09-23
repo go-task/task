@@ -240,7 +240,7 @@ func (o *timeoutOption) ApplyToExecutor(e *Executor) {
 }
 
 // WithCacheExpiryDuration sets the duration after which the cache is considered
-// expired. By default, the cache is considered expired after 24 hours.
+// expired. By default, the cache is 0 (disabled).
 func WithCacheExpiryDuration(duration time.Duration) ExecutorOption {
 	return &cacheExpiryDurationOption{duration: duration}
 }
