@@ -330,7 +330,7 @@ remote:
 #### `timeout`
 
 - **Type**: `string`
-- **Default**: Not specified
+- **Default**: 10s
 - **Pattern**: `^[0-9]+(ns|us|µs|ms|s|m|h)$`
 - **Description**: Timeout duration for remote operations (e.g., '30s', '5m')
 
@@ -342,7 +342,7 @@ remote:
 #### `cache-expiry`
 
 - **Type**: `string`
-- **Default**: Not specified
+- **Default**: 0s (no cache)
 - **Pattern**: `^[0-9]+(ns|us|µs|ms|s|m|h)$`
 - **Description**: Cache expiry duration for remote Taskfiles (e.g., '1h', '24h')
 
