@@ -72,6 +72,16 @@ func NewNode(
 	return node, err
 }
 
+func isRemoteEntrypoint(entrypoint string) bool {
+	scheme, _ := getScheme(entrypoint)
+	switch scheme {
+	case "git", "http", "https":
+		return true
+	default:
+		return false
+	}
+}
+
 func getScheme(uri string) (string, error) {
 	u, err := giturls.Parse(uri)
 	if u == nil {
