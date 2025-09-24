@@ -118,7 +118,7 @@ func (vars *Vars) ToCacheMap() (m map[string]any) {
 
 // Merge loops over other and merges it values with the variables in vars. If
 // the include parameter is not nil and its it is an advanced import, the
-// directory is set set to the value of the include parameter.
+// directory is set to the value of the include parameter.
 func (vars *Vars) Merge(other *Vars, include *Include) {
 	if vars == nil || vars.om == nil || other == nil {
 		return
@@ -131,6 +131,35 @@ func (vars *Vars) Merge(other *Vars, include *Include) {
 		}
 		vars.om.Set(pair.Key, pair.Value)
 	}
+}
+
+// ReverseMerge merges other variables with the existing variables in vars, but
+// keeps the other variables first in order. If the include parameter is not
+// nil and it is an advanced import, the directory is set to the value of the
+// include parameter.
+func (vars *Vars) ReverseMerge(other *Vars, include *Include) {
+	if vars == nil || vars.om == nil || other == nil || other.om == nil {
+		return
+	}
+
+	newOM := orderedmap.NewOrderedMap[string, Var]()
+
+	other.mutex.RLock()
+	for pair := other.om.Front(); pair != nil; pair = pair.Next() {
+		val := pair.Value
+		if include != nil && include.AdvancedImport {
+			val.Dir = include.Dir
+		}
+		newOM.Set(pair.Key, val)
+	}
+	other.mutex.RUnlock()
+
+	vars.mutex.Lock()
+	for pair := vars.om.Front(); pair != nil; pair = pair.Next() {
+		newOM.Set(pair.Key, pair.Value)
+	}
+	vars.om = newOM
+	vars.mutex.Unlock()
 }
 
 func (vs *Vars) DeepCopy() *Vars {
