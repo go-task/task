@@ -987,3 +987,15 @@ func TestIncludeChecksum(t *testing.T) {
 		WithPostProcessFn(PPRemoveAbsolutePaths),
 	)
 }
+
+func TestIncludesEmptyDirectory(t *testing.T) {
+	t.Parallel()
+
+	NewExecutorTest(t,
+		WithName("empty directory"),
+		WithExecutorOptions(
+			task.WithDir("testdata/includes_empty_directory"),
+		),
+		WithSetupError(),
+	)
+}

@@ -1,0 +1,9 @@
+version: '3'
+
+includes:
+  empty: ./empty_dir
+
+tasks:
+  default:
+    cmds:
+      - echo "This task should not run due to empty directory"

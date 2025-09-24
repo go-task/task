@@ -1030,8 +1030,7 @@ func TestIncludesOptionalImplicitFalse(t *testing.T) {
 	const dir = "testdata/includes_optional_implicit_false"
 	wd, _ := os.Getwd()
 
-	message := "stat %s/%s/TaskfileOptional.yml: no such file or directory"
-	expected := fmt.Sprintf(message, wd, dir)
+	expected := fmt.Sprintf("task: No Taskfile found at %q", filepath.Join(wd, dir))
 
 	e := task.NewExecutor(
 		task.WithDir(dir),
@@ -1050,8 +1049,7 @@ func TestIncludesOptionalExplicitFalse(t *testing.T) {
 	const dir = "testdata/includes_optional_explicit_false"
 	wd, _ := os.Getwd()
 
-	message := "stat %s/%s/TaskfileOptional.yml: no such file or directory"
-	expected := fmt.Sprintf(message, wd, dir)
+	expected := fmt.Sprintf("task: No Taskfile found at %q", filepath.Join(wd, dir))
 
 	e := task.NewExecutor(
 		task.WithDir(dir),

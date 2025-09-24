@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/execext"
 	"github.com/go-task/task/v3/internal/filepathext"
 	"github.com/go-task/task/v3/internal/fsext"
@@ -20,8 +21,23 @@ type FileNode struct {
 func NewFileNode(entrypoint, dir string, opts ...NodeOption) (*FileNode, error) {
 	var err error
 	base := NewBaseNode(dir, opts...)
+	originalDir := base.dir
 	entrypoint, base.dir, err = fsext.Search(entrypoint, base.dir, defaultTaskfiles)
 	if err != nil {
+		// Check if this is a directory that exists but has no taskfile
+		if os.IsNotExist(err) {
+			searchPath := entrypoint
+			if searchPath == "" {
+				searchPath = originalDir
+			}
+			if searchPath == "" {
+				wd, wdErr := os.Getwd()
+				if wdErr == nil {
+					searchPath = wd
+				}
+			}
+			return nil, &errors.TaskfileNotFoundError{URI: searchPath, Walk: false}
+		}
 		return nil, err
 	}
 	return &FileNode{
