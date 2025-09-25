@@ -210,7 +210,7 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) error {
 
 		for i := range t.Cmds {
 			if t.Cmds[i].Defer {
-				defer e.runDeferred(t, call, i, &deferredExitCode)
+				defer e.runDeferred(t, call, i, t.Vars, &deferredExitCode)
 				continue
 			}
 
@@ -277,17 +277,11 @@ func (e *Executor) runDeps(ctx context.Context, t *ast.Task) error {
 	return g.Wait()
 }
 
-func (e *Executor) runDeferred(t *ast.Task, call *Call, i int, deferredExitCode *uint8) {
+func (e *Executor) runDeferred(t *ast.Task, call *Call, i int, vars *ast.Vars, deferredExitCode *uint8) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	origTask, err := e.GetTask(call)
-	if err != nil {
-		return
-	}
-
 	cmd := t.Cmds[i]
-	vars, _ := e.Compiler.GetVariables(origTask, call)
 	cache := &templater.Cache{Vars: vars}
 	extra := map[string]any{}
 
