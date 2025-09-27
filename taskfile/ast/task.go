@@ -44,6 +44,7 @@ type Task struct {
 	Location      *Location
 	// Populated during merging
 	Namespace            string
+	IncludeDir           string
 	IncludeVars          *Vars
 	IncludedTaskfileVars *Vars
 }

@@ -91,17 +91,6 @@ func (c *Compiler) getVariables(t *ast.Task, call *Call, evaluateShVars bool) (*
 	rangeFunc := getRangeFunc(c.Dir)
 
 	var taskRangeFunc func(k string, v ast.Var) error
-	if t != nil {
-		// NOTE(@andreynering): We're manually joining these paths here because
-		// this is the raw task, not the compiled one.
-		cache := &templater.Cache{Vars: result}
-		dir := templater.Replace(t.Dir, cache)
-		if err := cache.Err(); err != nil {
-			return nil, err
-		}
-		dir = filepathext.SmartJoin(c.Dir, dir)
-		taskRangeFunc = getRangeFunc(dir)
-	}
 
 	for k, v := range c.TaskfileEnv.All() {
 		if err := rangeFunc(k, v); err != nil {
@@ -119,6 +108,22 @@ func (c *Compiler) getVariables(t *ast.Task, call *Call, evaluateShVars bool) (*
 				return nil, err
 			}
 		}
+
+		// NOTE: Calculate the task.Dir and taskRangeFunc here, after
+		// IncludeVars have been added to the templater. The call to SmartJoin()
+		// will then work as expected (i.e. when `dir` becomes an absolute path
+		// after the templater.Replace() call).
+		// NOTE: taskRangeFunc() will be available to subsequent calls
+		// in this function despite the convoluted code structure here.
+		cache := &templater.Cache{Vars: result}
+		dir := templater.Replace(t.Dir, cache)
+		t.Dir = filepathext.SmartJoin(t.IncludeDir, dir)
+		if err := cache.Err(); err != nil {
+			return nil, err
+		}
+		dir = filepathext.SmartJoin(c.Dir, dir)
+		taskRangeFunc = getRangeFunc(dir)
+
 		for k, v := range t.IncludedTaskfileVars.All() {
 			if err := taskRangeFunc(k, v); err != nil {
 				return nil, err
