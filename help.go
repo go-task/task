@@ -60,6 +60,7 @@ func (o ListOptions) Filters() []FilterFunc {
 // The function returns a boolean indicating whether tasks were found
 // and an error if one was encountered while preparing the output.
 func (e *Executor) ListTasks(o ListOptions) (bool, error) {
+	e.Dry = true
 	tasks, err := e.GetTaskList(o.Filters()...)
 	if err != nil {
 		return false, err
