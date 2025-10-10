@@ -98,7 +98,6 @@ func init() {
 
 	// Parse the experiments
 	dir = cmp.Or(dir, filepath.Dir(entrypoint))
-	spew.Dump(dir)
 	config, _ := taskrc.GetConfig(dir)
 	experiments.ParseWithConfig(dir, config)
 
