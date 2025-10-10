@@ -98,10 +98,8 @@ func init() {
 
 	// Parse the experiments
 	dir = cmp.Or(dir, filepath.Dir(entrypoint))
-	fmt.Printf("dir : %#v\n", dir)
 	spew.Dump(dir)
 	config, _ := taskrc.GetConfig(dir)
-	fmt.Printf("config : %#v\n", config)
 	experiments.ParseWithConfig(dir, config)
 
 	// Parse the rest of the flags
