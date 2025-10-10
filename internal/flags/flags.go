@@ -2,13 +2,11 @@ package flags
 
 import (
 	"cmp"
-	"fmt"
 	"log"
 	"os"
 	"path/filepath"
 	"time"
 
-	"github.com/davecgh/go-spew/spew"
 	"github.com/spf13/pflag"
 
 	"github.com/go-task/task/v3"
@@ -99,6 +97,7 @@ func init() {
 	// Parse the experiments
 	dir = cmp.Or(dir, filepath.Dir(entrypoint))
 	config, _ := taskrc.GetConfig(dir)
+	
 	experiments.ParseWithConfig(dir, config)
 
 	// Parse the rest of the flags
