@@ -22,10 +22,11 @@ can view the full list of community integrations
 
 Some installation methods are maintained by third party:
 
-- [AUR](https://aur.archlinux.org/packages/go-task-bin) by @carlsmedstad
+- [Arch Linux](https://archlinux.org/packages/extra/x86_64/go-task/)
+- [AUR](https://aur.archlinux.org/packages/go-task-git) by @C0rn3j
 - [Scoop](https://github.com/ScoopInstaller/Main/blob/master/bucket/task.json)
 - [Fedora](https://packages.fedoraproject.org/pkgs/golang-github-task/go-task/)
-- [NixOS](https://github.com/NixOS/nixpkgs/blob/master/pkgs/development/tools/go-task/default.nix)
+- [Nix](https://github.com/NixOS/nixpkgs/blob/master/pkgs/by-name/go/go-task/package.nix)
 - [Conda](https://github.com/conda-forge/go-task-feedstock/)
 
 ## More

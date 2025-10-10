@@ -191,7 +191,7 @@ dnf install go-task
 pkg install task
 ```
 
-### NixOS ([nix](https://nixos.org)) ![NixOS](https://img.shields.io/badge/NixOS-5277C3?logo=nixos&logoColor=fff) ![Linux](https://img.shields.io/badge/Linux-FCC624?logo=linux&logoColor=black) {#nix}
+### [Nix](https://nixos.org) ![Nix](https://img.shields.io/badge/Nix-5277C3?logo=nixos&logoColor=fff) ![NixOS](https://img.shields.io/badge/NixOS-5277C3?logo=nixos&logoColor=fff) ![Linux](https://img.shields.io/badge/Linux-FCC624?logo=linux&logoColor=black) ![macOS](https://img.shields.io/badge/MacOS-000000?logo=apple&logoColor=F0F0F0) {#nix}
 
 [[source](https://github.com/NixOS/nixpkgs/blob/master/pkgs/by-name/go/go-task/package.nix)]
 
