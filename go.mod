@@ -13,7 +13,7 @@ require (
 	github.com/fatih/color v1.18.0
 	github.com/fsnotify/fsnotify v1.9.0
 	github.com/go-git/go-billy/v5 v5.6.2
-	github.com/go-git/go-git/v5 v5.16.2
+	github.com/go-git/go-git/v5 v5.16.3
 	github.com/go-task/slim-sprig/v3 v3.0.0
 	github.com/go-task/template v0.2.0
 	github.com/google/uuid v1.6.0
@@ -26,7 +26,7 @@ require (
 	github.com/stretchr/testify v1.11.1
 	github.com/zeebo/xxh3 v1.0.2
 	golang.org/x/sync v0.17.0
-	golang.org/x/term v0.35.0
+	golang.org/x/term v0.36.0
 	gopkg.in/yaml.v3 v3.0.1
 	mvdan.cc/sh/moreinterp v0.0.0-20250921194925-171492585d48
 	mvdan.cc/sh/v3 v3.12.0
@@ -61,6 +61,6 @@ require (
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
 	golang.org/x/crypto v0.37.0 // indirect
 	golang.org/x/net v0.39.0 // indirect
-	golang.org/x/sys v0.36.0 // indirect
+	golang.org/x/sys v0.37.0 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 )
