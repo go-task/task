@@ -96,8 +96,8 @@ func init() {
 
 	// Parse the experiments
 	dir = cmp.Or(dir, filepath.Dir(entrypoint))
+
 	config, _ := taskrc.GetConfig(dir)
-	
 	experiments.ParseWithConfig(dir, config)
 
 	// Parse the rest of the flags
