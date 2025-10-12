@@ -98,6 +98,11 @@ func (node *GitNode) ReadContext(_ context.Context) ([]byte, error) {
 }
 
 func (node *GitNode) ResolveEntrypoint(entrypoint string) (string, error) {
+	// If the file is remote, we don't need to resolve the path
+	if isRemoteEntrypoint(entrypoint) {
+		return entrypoint, nil
+	}
+
 	dir, _ := filepath.Split(node.path)
 	resolvedEntrypoint := fmt.Sprintf("%s//%s", node.url, filepath.Join(dir, entrypoint))
 	if node.ref != "" {
