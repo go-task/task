@@ -1,0 +1,60 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "title": "Taskrc YAML Schema",
+  "description": "Schema for .taskrc files.",
+  "type": "object",
+  "properties": {
+    "experiments": {
+      "type": "object",
+      "properties": {
+        "ENV_PRECEDENCE": {
+          "type": "number",
+          "enum": [0, 1]
+        },
+        "REMOTE_TASKFILES": {
+          "type": "number",
+          "enum": [0, 1]
+        },
+        "GENTLE_FORCE": {
+          "type": "number",
+          "enum": [0, 1]
+        }
+      }
+    },
+    "remote": {
+      "type": "object",
+      "description": "Remote configuration settings",
+      "properties": {
+        "insecure": {
+          "type": "boolean",
+          "description": "Forces Task to download Taskfiles over insecure connections."
+        },
+        "offline": {
+          "type": "boolean",
+          "description": "Forces Task to only use local or cached Taskfiles."
+        },
+        "timeout": {
+          "type": "string",
+          "description": "Timeout for downloading remote Taskfiles (e.g., '30s', '5m')",
+          "pattern": "^[0-9]+(ns|us|µs|ms|s|m|h)$"
+        },
+        "cache-expiry": {
+          "type": "string",
+          "description": "Expiry duration for cached remote Taskfiles (e.g., '1h', '24h')",
+          "pattern": "^[0-9]+(ns|us|µs|ms|s|m|h)$"
+        }
+      },
+      "additionalProperties": false
+    },
+    "verbose": {
+      "type": "boolean",
+      "description": "Enable verbose output"
+    },
+    "concurrency": {
+      "type": "integer",
+      "description": "Number of concurrent tasks to run",
+      "minimum": 1
+    }
+  },
+  "additionalProperties": false
+}

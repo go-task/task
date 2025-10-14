@@ -53,7 +53,7 @@ func (node *HTTPNode) ReadContext(ctx context.Context) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	req, err := http.NewRequest("GET", url.String(), nil)
+	req, err := http.NewRequestWithContext(ctx, "GET", url.String(), nil)
 	if err != nil {
 		return nil, errors.TaskfileFetchFailedError{URI: node.Location()}
 	}

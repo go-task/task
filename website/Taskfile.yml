@@ -1,29 +1,35 @@
-version: "3"
+version: '3'
 
 tasks:
-  yarn:install:
-    desc: Setup Docusaurus locally
+  install:
+    desc: Setup VitePress locally
     cmds:
-      - yarn install
+      - pnpm install
     sources:
       - package.json
-      - yarn.lock
+      - pnpm-lock.yaml
 
   default:
     desc: Start website
-    deps: [yarn:install]
+    deps: [install]
     aliases: [s, start]
     vars:
       HOST: '{{default "0.0.0.0" .HOST}}'
       PORT: '{{default "3001" .PORT}}'
     cmds:
-      - npx docusaurus start --no-open --host={{.HOST}} --port={{.PORT}}
+      - pnpm dev --host={{.HOST}} --port={{.PORT}}
+
+  lint:
+    desc: Lint website
+    deps: [install]
+    cmds:
+      - pnpm lint
 
   build:
     desc: Build website
-    deps: [yarn:install]
+    deps: [install]
     cmds:
-      - npx docusaurus build
+      - pnpm build
 
   preview:
     desc: Preview Website
@@ -33,20 +39,19 @@ tasks:
       HOST: '{{default "localhost" .HOST}}'
       PORT: '{{default "3001" .PORT}}'
     cmds:
-      - npx docusaurus serve --no-open --host={{.HOST}} --port={{.PORT}}
+      - pnpm preview --host={{.HOST}} --port={{.PORT}}
 
   clean:
     desc: Clean temp directories
     cmds:
-      - rm -rf ./build
+      - rm -rf ./vitepress/dist
 
-  deploy:
-    desc: Build and deploy Docusaurus
-    summary: Requires GIT_USER and GIT_PASS envs to be previous set
+  deploy:next:
+    desc: Build and deploy next.taskfile.dev
     cmds:
-      - npx docusaurus deploy
+      - pnpm netlify deploy --prod --site=4e13dfcf-fc0d-4bec-ad60-b918a8dc3942
 
-  upgrade:
-    desc: Upgrade Docusaurus
+  deploy:prod:
+    desc: Build and deploy taskfile.dev
     cmds:
-      - yarn upgrade @docusaurus/core@latest @docusaurus/preset-classic@latest @docusaurus/module-type-aliases@latest @docusaurus/tsconfig@latest @docusaurus/types@latest
+      - pnpm netlify deploy --prod --site=e625bc6a-1cd3-465d-ad30-7bbddaeb4f31

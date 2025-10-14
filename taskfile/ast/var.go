@@ -18,7 +18,10 @@ type Var struct {
 func (v *Var) UnmarshalYAML(node *yaml.Node) error {
 	switch node.Kind {
 	case yaml.MappingNode:
-		key := node.Content[0].Value
+		key := "<none>"
+		if len(node.Content) > 0 {
+			key = node.Content[0].Value
+		}
 		switch key {
 		case "sh", "ref", "map":
 			var m struct {

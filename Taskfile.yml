@@ -8,6 +8,7 @@ includes:
 
 vars:
   BIN: "{{.ROOT_DIR}}/bin"
+  GOTESTSUM_FORMAT: '{{if .CI}}github-actions{{else}}pkgname{{end}}'
 
 env:
   CGO_ENABLED: '0'
@@ -53,9 +54,12 @@ tasks:
   generate:fixtures:
     desc: Runs tests and generates golden fixture files
     aliases: [gen:fixtures, g:fixtures]
+    env:
+      GOLDIE_UPDATE: 'true'
+      GOLDIE_TEMPLATE: 'true'
     cmds:
       - find ./testdata -name '*.golden' -delete
-      - go test -update ./...
+      - go test ./...
 
   install:mockery:
     desc: Installs mockgen; a tool to generate mock files
@@ -87,6 +91,7 @@ tasks:
     sources:
       - './**/*.go'
       - .golangci.yml
+      - go.mod
     cmds:
       - golangci-lint run
 
@@ -95,6 +100,7 @@ tasks:
     sources:
       - './**/*.go'
       - .golangci.yml
+      - go.mod
     cmds:
       - golangci-lint run --fix
 
@@ -126,28 +132,36 @@ tasks:
   test:
     desc: Runs test suite
     aliases: [t]
+    deps: [gotestsum:install]
     sources:
       - "**/*.go"
       - "testdata/**/*"
     cmds:
-      - go test ./...
+      - gotestsum -f '{{.GOTESTSUM_FORMAT}}' ./...
 
   test:watch:
     desc: Runs test suite with watch tests included
-    deps: [sleepit:build]
+    deps: [sleepit:build, gotestsum:install]
     cmds:
-      - go test ./... -tags 'watch'
+      - gotestsum -f '{{.GOTESTSUM_FORMAT}}' ./... -tags 'watch'
 
   test:all:
     desc: Runs test suite with signals and watch tests included
-    deps: [sleepit:build]
+    deps: [sleepit:build, gotestsum:install]
     cmds:
-      - go test -tags 'signals watch' ./...
+      - gotestsum -f '{{.GOTESTSUM_FORMAT}}' -tags 'signals watch' ./...
 
   goreleaser:test:
     desc: Tests release process without publishing
     cmds:
       - goreleaser --snapshot --clean
+
+  gotestsum:install:
+    desc: Installs gotestsum
+    status:
+      - command -v gotestsum
+    cmds:
+      - go install gotest.tools/gotestsum@latest
 
   goreleaser:install:
     desc: Installs goreleaser
@@ -198,7 +212,6 @@ tasks:
         Please wait for the CI to finish and then do the following:
 
         - Copy the changelog for v{{.VERSION}} to the GitHub release
-        - Publish the package to NPM with `task npm:publish`
         - Update and push the snapcraft manifest in https://github.com/go-task/snap/blob/main/snap/snapcraft.yaml
     preconditions:
       - sh: test $(git rev-parse --abbrev-ref HEAD) = "main"
@@ -217,8 +230,3 @@ tasks:
       - "git push origin tag v{{.VERSION}}"
       - cmd: printf "%s" '{{.COMPLETE_MESSAGE}}'
         silent: true
-
-  npm:publish:
-    desc: Publish release to npm
-    cmds:
-      - npm publish --access=public

@@ -16,21 +16,18 @@ function __task_list() {
 
 
     if [[ -n "$taskfile" && -f "$taskfile" ]]; then
-        enabled=1
         cmd+=(--taskfile "$taskfile")
-    else
-        for taskfile in {T,t}askfile{,.dist}.{yaml,yml}; do
-            if [[ -f "$taskfile" ]]; then
-                enabled=1
-                break
-            fi
-        done
+    fi
+
+
+    if output=$("${cmd[@]}" $_GO_TASK_COMPLETION_LIST_OPTION 2>/dev/null); then
+        enabled=1
     fi
 
     (( enabled )) || return 0
 
     scripts=()
-    for item in "${(@)${(f)$("${cmd[@]}" $_GO_TASK_COMPLETION_LIST_OPTION)}[2,-1]#\* }"; do
+    for item in "${(@)${(f)output}[2,-1]#\* }"; do
         task="${item%%:[[:space:]]*}"
         desc="${item##[^[:space:]]##[[:space:]]##}"
         scripts+=( "${task//:/\\:}:$desc" )

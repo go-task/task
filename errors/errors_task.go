@@ -1,6 +1,7 @@
 package errors
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -46,8 +47,9 @@ func (err *TaskRunError) Code() int {
 }
 
 func (err *TaskRunError) TaskExitCode() int {
-	if c, ok := interp.IsExitStatus(err.Err); ok {
-		return int(c)
+	var exit interp.ExitStatus
+	if errors.As(err.Err, &exit) {
+		return int(exit)
 	}
 	return err.Code()
 }
@@ -160,7 +162,7 @@ func (v MissingVar) String() string {
 }
 
 func (err *TaskMissingRequiredVarsError) Error() string {
-	var vars []string
+	vars := make([]string, 0, len(err.MissingVars))
 	for _, v := range err.MissingVars {
 		vars = append(vars, v.String())
 	}

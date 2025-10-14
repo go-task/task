@@ -9,7 +9,7 @@ jobs:
     if: github.event.label.name == format('status{0} proposed', ':')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/github-script@v7
+      - uses: actions/github-script@v8
         with:
           github-token: ${{secrets.GH_PAT}}
           script: |
@@ -23,7 +23,7 @@ jobs:
     if: github.event.label.name == format('status{0} draft', ':')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/github-script@v7
+      - uses: actions/github-script@v8
         with:
           github-token: ${{secrets.GH_PAT}}
           script: |
@@ -37,7 +37,7 @@ jobs:
     if: github.event.label.name == format('status{0} candidate', ':')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/github-script@v7
+      - uses: actions/github-script@v8
         with:
           github-token: ${{secrets.GH_PAT}}
           script: |
@@ -51,7 +51,7 @@ jobs:
     if: github.event.label.name == format('status{0} stable', ':')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/github-script@v7
+      - uses: actions/github-script@v8
         with:
           github-token: ${{secrets.GH_PAT}}
           script: |
@@ -65,7 +65,7 @@ jobs:
     if: github.event.label.name == format('status{0} released', ':')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/github-script@v7
+      - uses: actions/github-script@v8
         with:
           github-token: ${{secrets.GH_PAT}}
           script: |
@@ -85,7 +85,7 @@ jobs:
     if: github.event.label.name == format('status{0} abandoned', ':')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/github-script@v7
+      - uses: actions/github-script@v8
         with:
           github-token: ${{secrets.GH_PAT}}
           script: |
@@ -105,7 +105,7 @@ jobs:
     if: github.event.label.name == format('status{0} superseded', ':')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/github-script@v7
+      - uses: actions/github-script@v8
         with:
           github-token: ${{secrets.GH_PAT}}
           script: |

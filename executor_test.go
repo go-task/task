@@ -3,7 +3,6 @@ package task_test
 import (
 	"bytes"
 	"cmp"
-	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -50,7 +49,8 @@ func NewExecutorTest(t *testing.T, opts ...ExecutorTestOption) {
 		task: "default",
 		vars: map[string]any{},
 		TaskTest: TaskTest{
-			experiments: map[*experiments.Experiment]int{},
+			experiments:         map[*experiments.Experiment]int{},
+			fixtureTemplateData: map[string]any{},
 		},
 	}
 	// Apply the functional options
@@ -188,7 +188,7 @@ func (tt *ExecutorTest) run(t *testing.T) {
 		}
 
 		// Run the task and check for errors
-		ctx := context.Background()
+		ctx := t.Context()
 		if err := e.Run(ctx, call); tt.wantRunError {
 			require.Error(t, err)
 			tt.writeFixtureErrRun(t, g, err)
@@ -232,7 +232,7 @@ func TestEmptyTaskfile(t *testing.T) {
 			task.WithDir("testdata/empty_taskfile"),
 		),
 		WithSetupError(),
-		WithPostProcessFn(PPRemoveAbsolutePaths),
+		WithFixtureTemplating(),
 	)
 }
 
@@ -367,7 +367,7 @@ func TestSpecialVars(t *testing.T) {
 					task.WithVersionCheck(true),
 				),
 				WithTask(test),
-				WithPostProcessFn(PPRemoveAbsolutePaths),
+				WithFixtureTemplating(),
 			)
 		}
 	}
@@ -551,7 +551,7 @@ func TestStatus(t *testing.T) {
 			task.WithVerbose(true),
 		),
 		WithTask("gen-silent-baz"),
-		WithPostProcessFn(PPRemoveAbsolutePaths),
+		WithFixtureTemplating(),
 	)
 }
 
@@ -777,7 +777,7 @@ func TestForCmds(t *testing.T) {
 				task.WithForce(true),
 			),
 			WithTask(test.name),
-			WithPostProcessFn(PPRemoveAbsolutePaths),
+			WithFixtureTemplating(),
 		}
 		if test.wantErr {
 			opts = append(opts, WithRunError())
@@ -822,7 +822,7 @@ func TestForDeps(t *testing.T) {
 				task.WithOutputStyle(ast.Output{Name: "group"}),
 			),
 			WithTask(test.name),
-			WithPostProcessFn(PPRemoveAbsolutePaths),
+			WithFixtureTemplating(),
 			WithPostProcessFn(PPSortedLines),
 		}
 		if test.wantErr {
@@ -957,6 +957,15 @@ func TestFuzzyModel(t *testing.T) {
 		),
 		WithTask("install"),
 	)
+
+	NewExecutorTest(t,
+		WithName("intern"),
+		WithExecutorOptions(
+			task.WithDir("testdata/fuzzy"),
+		),
+		WithTask("intern"),
+		WithRunError(),
+	)
 }
 
 func TestIncludeChecksum(t *testing.T) {
@@ -975,6 +984,6 @@ func TestIncludeChecksum(t *testing.T) {
 			task.WithDir("testdata/includes_checksum/incorrect"),
 		),
 		WithSetupError(),
-		WithPostProcessFn(PPRemoveAbsolutePaths),
+		WithFixtureTemplating(),
 	)
 }

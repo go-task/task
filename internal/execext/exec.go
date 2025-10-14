@@ -7,8 +7,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"time"
 
+	"mvdan.cc/sh/moreinterp/coreutils"
 	"mvdan.cc/sh/v3/expand"
 	"mvdan.cc/sh/v3/interp"
 	"mvdan.cc/sh/v3/syntax"
@@ -59,7 +59,7 @@ func RunCommand(ctx context.Context, opts *RunCommandOptions) error {
 	r, err := interp.New(
 		interp.Params(params...),
 		interp.Env(expand.ListEnviron(environ...)),
-		interp.ExecHandlers(execHandler),
+		interp.ExecHandlers(execHandlers()...),
 		interp.OpenHandler(openHandler),
 		interp.StdIO(opts.Stdin, opts.Stdout, opts.Stderr),
 		dirOption(opts.Dir),
@@ -90,6 +90,15 @@ func RunCommand(ctx context.Context, opts *RunCommandOptions) error {
 	return r.Run(ctx, p)
 }
 
+func escape(s string) string {
+	s = filepath.ToSlash(s)
+	s = strings.ReplaceAll(s, " ", `\ `)
+	s = strings.ReplaceAll(s, "&", `\&`)
+	s = strings.ReplaceAll(s, "(", `\(`)
+	s = strings.ReplaceAll(s, ")", `\)`)
+	return s
+}
+
 // ExpandLiteral is a wrapper around [expand.Literal]. It will escape the input
 // string, expand any shell symbols (such as '~') and resolve any environment
 // variables.
@@ -115,6 +124,7 @@ func ExpandLiteral(s string) (string, error) {
 // variables. It also expands brace expressions ({a.b}) and globs (*/**) and
 // returns the results as a list of strings.
 func ExpandFields(s string) ([]string, error) {
+	s = escape(s)
 	p := syntax.NewParser()
 	var words []*syntax.Word
 	err := p.Words(strings.NewReader(s), func(w *syntax.Word) bool {
@@ -133,8 +143,11 @@ func ExpandFields(s string) ([]string, error) {
 	return expand.Fields(cfg, words...)
 }
 
-func execHandler(next interp.ExecHandlerFunc) interp.ExecHandlerFunc {
-	return interp.DefaultExecHandler(15 * time.Second)
+func execHandlers() (handlers []func(next interp.ExecHandlerFunc) interp.ExecHandlerFunc) {
+	if useGoCoreUtils {
+		handlers = append(handlers, coreutils.ExecHandler)
+	}
+	return
 }
 
 func openHandler(ctx context.Context, path string, flag int, perm os.FileMode) (io.ReadWriteCloser, error) {
