@@ -667,6 +667,26 @@ tasks:
       - go build -o app ./cmd
 ```
 
+#### `failfast`
+
+- **Type**: `bool`
+- **Default**: `true`
+- **Description**: Run deps and stop on first failure.
+
+```yaml
+tasks:
+  task-a:
+    cmds: [ "bash -c 'echo A; sleep 1; exit 1'" ]
+  task-b:
+    cmds: [ "bash -c 'echo B; sleep 2; exit 0'" ]
+  task-c:
+    cmds: [ "bash -c 'echo C; sleep 3; exit 1'" ]
+
+  parent:
+    deps: [task-a, task-b, task-c]
+    failfast: false
+```
+
 ## Command
 
 Individual command configuration within a task.
