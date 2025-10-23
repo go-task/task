@@ -2115,6 +2115,63 @@ func TestErrorCode(t *testing.T) {
 	}
 }
 
+func TestCommandTimeout(t *testing.T) {
+	t.Parallel()
+
+	const dir = "testdata/timeout"
+	tests := []struct {
+		name          string
+		task          string
+		expectError   bool
+		errorContains string
+	}{
+		{
+			name:          "timeout exceeded",
+			task:          "timeout-exceeded",
+			expectError:   true,
+			errorContains: "timeout exceeded",
+		},
+		{
+			name:        "timeout not exceeded",
+			task:        "timeout-not-exceeded",
+			expectError: false,
+		},
+		{
+			name:        "no timeout",
+			task:        "no-timeout",
+			expectError: false,
+		},
+		{
+			name:          "multiple commands with timeout",
+			task:          "multiple-cmds-timeout",
+			expectError:   true,
+			errorContains: "timeout exceeded",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			var buff bytes.Buffer
+			e := task.NewExecutor(
+				task.WithDir(dir),
+				task.WithStdout(&buff),
+				task.WithStderr(&buff),
+			)
+			require.NoError(t, e.Setup())
+
+			err := e.Run(t.Context(), &task.Call{Task: test.task})
+			if test.expectError {
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), test.errorContains)
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
+
 func TestEvaluateSymlinksInPaths(t *testing.T) { // nolint:paralleltest // cannot run in parallel
 	const dir = "testdata/evaluate_symlinks_in_paths"
 	var buff bytes.Buffer
