@@ -22,10 +22,8 @@ jobs:
 
       - uses: actions/checkout@v5
 
-      - name: golangci-lint
-        uses: golangci/golangci-lint-action@v8
-        with:
-          version: v2.1.0
+      - name: Run golangci-lint
+        run: ./bin/golangci-lint run ./...
 
   lint-jsonschema:
     runs-on: ubuntu-latest
