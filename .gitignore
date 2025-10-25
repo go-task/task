@@ -32,6 +32,15 @@ tags
 
 /bin/*
 !/bin/.keep
+!/bin/activate-hermit
+!/bin/activate-hermit.fish
+!/bin/hermit
+!/bin/hermit.hcl
+!/bin/README.hermit.md
+!/bin/*.pkg
+!/bin/go
+!/bin/gofmt
+!/bin/golangci-lint
 /testdata/vars/v1
 /tmp
 node_modules
