@@ -1,0 +1,28 @@
+{
+  "name": "Task Devcontainer",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".."
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "editorconfig.editorconfig",
+        "golang.go",
+        "streetsidesoftware.code-spell-checker",
+        "task.vscode-task"
+      ]
+    }
+  },
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {
+      "moby": false
+    },
+    "ghcr.io/devcontainers/features/git:1": {},
+    "ghcr.io/devcontainers/features/github-cli:1": {},
+    "ghcr.io/devcontainers/features/node:1": {}
+  },
+  "runArgs": [
+    "--env-file", ".devcontainer/devcontainer.env"
+  ]
+}
