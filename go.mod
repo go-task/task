@@ -22,7 +22,7 @@ require (
 	github.com/puzpuzpuz/xsync/v3 v3.5.1
 	github.com/puzpuzpuz/xsync/v4 v4.2.0
 	github.com/sajari/fuzzy v1.0.0
-	github.com/sebdah/goldie/v2 v2.7.1
+	github.com/sebdah/goldie/v2 v2.8.0
 	github.com/spf13/pflag v1.0.10
 	github.com/stretchr/testify v1.11.1
 	github.com/zeebo/xxh3 v1.0.2
