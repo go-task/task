@@ -132,6 +132,15 @@ tasks:
     cmds:
       - go test ./...
 
+  test:e2e:
+    desc: Runs E2E test suite
+    aliases: [t]
+    sources:
+      - "**/*.go"
+      - "./cmd/task/testdata/**/*"
+    cmds:
+      - go test ./cmd/task/... -tags test_e2e
+
   test:watch:
     desc: Runs test suite with watch tests included
     deps: [sleepit:build]

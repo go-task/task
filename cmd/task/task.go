@@ -20,6 +20,10 @@ import (
 )
 
 func main() {
+	os.Exit(main_())
+}
+
+func main_() (rc int) {
 	if err := run(); err != nil {
 		l := &logger.Logger{
 			Stdout:  os.Stdout,
@@ -39,6 +43,7 @@ func main() {
 		os.Exit(errors.CodeUnknown)
 	}
 	os.Exit(errors.CodeOk)
+	return
 }
 
 func run() error {

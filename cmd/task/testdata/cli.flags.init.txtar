@@ -1,0 +1,28 @@
+# Test: task init
+task --init
+exists Taskfile.yml
+stdout 'Taskfile created: Taskfile.yml'
+cmp Taskfile.yml expect
+
+# Test: taskfile exists, content not modified
+exec sh -c 'echo "foo" > Taskfile.yml'
+! task --init
+exists Taskfile.yml
+stderr 'task: A Taskfile already exists'
+exec cat Taskfile.yml
+stdout 'foo'
+
+
+-- expect --
+# https://taskfile.dev
+
+version: '3'
+
+vars:
+  GREETING: Hello, World!
+
+tasks:
+  default:
+    cmds:
+      - echo "{{.GREETING}}"
+    silent: true
