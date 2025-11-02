@@ -6,6 +6,8 @@
   Taskfile could not be found (#2431 by @andreynering).
 - Fixed a bug that caused an error when including a Remote Git Taskfile (#2438
   by @twelvelabs).
+- Fixed issue where `.taskrc.yml` was not returned if reading it failed, and corrected
+  handling of remote entrypoint Taskfiles (#2460, #2461 by @vmaerten).
 
 ## v3.45.4 - 2025-09-17
 
