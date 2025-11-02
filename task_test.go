@@ -9,6 +9,7 @@ import (
 	rand "math/rand/v2"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -784,6 +785,11 @@ func TestIncludesRemote(t *testing.T) {
 
 			var buff SyncBuffer
 
+			// Extract host from server URL for trust testing
+			parsedURL, err := url.Parse(srv.URL)
+			require.NoError(t, err)
+			trustedHost := parsedURL.Host
+
 			executors := []struct {
 				name     string
 				executor *task.Executor
@@ -821,6 +827,23 @@ func TestIncludesRemote(t *testing.T) {
 						task.WithAssumeYes(false),
 						task.WithDownload(false),
 						task.WithOffline(true),
+					),
+				},
+				{
+					name: "with trust, no prompts",
+					executor: task.NewExecutor(
+						task.WithDir(dir),
+						task.WithStdout(&buff),
+						task.WithStderr(&buff),
+						task.WithTimeout(time.Minute),
+						task.WithInsecure(true),
+						task.WithStdout(&buff),
+						task.WithStderr(&buff),
+						task.WithVerbose(true),
+
+						// With trust
+						task.WithTrust([]string{trustedHost}),
+						task.WithDownload(true),
 					),
 				},
 			}

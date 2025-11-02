@@ -214,7 +214,10 @@ remote Taskfiles:
 Sometimes you need to run Task in an environment that does not have an
 interactive terminal, so you are not able to accept a prompt. In these cases you
 are able to tell task to accept these prompts automatically by using the `--yes`
-flag. Before enabling this flag, you should:
+flag or the `--trust` flag. The `--trust` flag allows you to specify trusted
+hosts for remote Taskfiles, while `--yes` applies to all prompts in Task. You
+can also configure trusted hosts in your [taskrc configuration](#trust) using
+`remote.trust`. Before enabling automatic trust, you should:
 
 1. Be sure that you trust the source and contents of the remote Taskfile.
 2. Consider using a pinned version of the remote Taskfile (e.g. A link
@@ -305,6 +308,9 @@ remote:
   offline: false
   timeout: "30s"
   cache-expiry: "24h"
+  trust:
+    - github.com
+    - gitlab.com
 ```
 
 #### `insecure`
@@ -352,4 +358,39 @@ remote:
 ```yaml
 remote:
   cache-expiry: "6h"
+```
+
+#### `trust`
+
+- **Type**: `array of strings`
+- **Default**: `[]` (empty list)
+- **Description**: List of trusted hosts for remote Taskfiles. Hosts in this
+  list will not prompt for confirmation when downloading Taskfiles
+- **CLI equivalent**: `--trust`
+
+```yaml
+remote:
+  trust:
+    - github.com
+    - gitlab.com
+    - raw.githubusercontent.com
+    - example.com:8080
+```
+
+Hosts in the trust list will automatically be trusted without prompting for
+confirmation when they are first downloaded or when their checksums change. The
+host matching includes the port if specified in the URL. Use with caution and
+only add hosts you fully trust.
+
+You can also specify trusted hosts via the command line:
+
+```shell
+# Trust specific host for this execution
+task --trust github.com -t https://github.com/user/repo.git//Taskfile.yml
+
+# Trust multiple hosts
+task --trust github.com --trust gitlab.com -t https://github.com/user/repo.git//Taskfile.yml
+
+# Trust a host with a specific port
+task --trust example.com:8080 -t https://example.com:8080/Taskfile.yml
 ```
