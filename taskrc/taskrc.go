@@ -59,11 +59,11 @@ func GetConfig(dir string) (*ast.TaskRC, error) {
 	// Find all the nodes from the given directory up to the users home directory
 	absDir, err := filepath.Abs(dir)
 	if err != nil {
-		return nil, err
+		return config, err
 	}
 	entrypoints, err := fsext.SearchAll("", absDir, defaultTaskRCs)
 	if err != nil {
-		return nil, err
+		return config, err
 	}
 
 	// Reverse the entrypoints since we want the child files to override parent ones

@@ -33,14 +33,12 @@ var xList []Experiment
 
 func Parse(dir string) {
 	config, _ := taskrc.GetConfig(dir)
-
 	ParseWithConfig(dir, config)
 }
 
 func ParseWithConfig(dir string, config *ast.TaskRC) {
 	// Read any .env files
 	readDotEnv(dir)
-
 	// Initialize the experiments
 	GentleForce = New("GENTLE_FORCE", config, 1)
 	RemoteTaskfiles = New("REMOTE_TASKFILES", config, 1)
