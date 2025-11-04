@@ -82,6 +82,8 @@ developers who have created their own integrations for Task:
   [[source](https://github.com/lechuckroh/task-intellij-plugin)] by @lechuckroh
 - [mk](https://github.com/pycontribs/mk) command line tool recognizes Taskfiles
   natively.
+- [fzf-make](https://github.com/kyu08/fzf-make) fuzzy finder with preview window
+  for make, pnpm, yarn, just & task.
 
 If you have made something that integrates with Task, please feel free to open a
 PR to add it to this list.
