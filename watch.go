@@ -78,41 +78,46 @@ func (e *Executor) watchTasks(calls ...*Call) error {
 				}
 				e.Logger.VerboseErrf(logger.Magenta, "task: received watch event: %v\n", event)
 
-				cancel()
-				ctx, cancel = context.WithCancel(context.Background())
-
-				e.Compiler.ResetCache()
-
+				// Count the tasks that would be restarted by the watch (_before_ cancelling them).
+				watchCount := 0
 				for _, c := range calls {
-					go func() {
-						if ShouldIgnore(event.Name) {
-							e.Logger.VerboseErrf(logger.Magenta, "task: event skipped for being an ignored dir: %s\n", event.Name)
-							return
-						}
-						t, err := e.GetTask(c)
-						if err != nil {
-							e.Logger.Errf(logger.Red, "%v\n", err)
-							return
-						}
-						baseDir := filepathext.SmartJoin(e.Dir, t.Dir)
-						files, err := e.collectSources(calls)
-						if err != nil {
-							e.Logger.Errf(logger.Red, "%v\n", err)
-							return
-						}
-
-						if !event.Has(fsnotify.Remove) && !slices.Contains(files, event.Name) {
-							relPath, _ := filepath.Rel(baseDir, event.Name)
-							e.Logger.VerboseErrf(logger.Magenta, "task: skipped for file not in sources: %s\n", relPath)
-							return
-						}
-						err = e.RunTask(ctx, c)
-						if err == nil {
-							e.Logger.Errf(logger.Green, "task: task \"%s\" finished running\n", c.Task)
-						} else if !isContextError(err) {
-							e.Logger.Errf(logger.Red, "%v\n", err)
-						}
-					}()
+					if ShouldIgnore(event.Name) {
+						e.Logger.VerboseErrf(logger.Magenta, "task: event skipped for being an ignored dir: %s\n", event.Name)
+						continue
+					}
+					t, err := e.GetTask(c)
+					if err != nil {
+						e.Logger.Errf(logger.Red, "%v\n", err)
+						continue
+					}
+					baseDir := filepathext.SmartJoin(e.Dir, t.Dir)
+					files, err := e.collectSources(calls)
+					if err != nil {
+						e.Logger.Errf(logger.Red, "%v\n", err)
+						continue
+					}
+					if !event.Has(fsnotify.Remove) && !slices.Contains(files, event.Name) {
+						relPath, _ := filepath.Rel(baseDir, event.Name)
+						e.Logger.VerboseErrf(logger.Magenta, "task: skipped for file not in sources: %s\n", relPath)
+						continue
+					}
+					watchCount++
+				}
+				// Cancel _all_ watched tasks, get new context, then restart the tasks.
+				if watchCount > 0 {
+					cancel()
+					ctx, cancel = context.WithCancel(context.Background())
+					for _, c := range calls {
+						c := c
+						go func() {
+							err = e.RunTask(ctx, c)
+							if err == nil {
+								e.Logger.Errf(logger.Green, "task: task \"%s\" finished running\n", c.Task)
+							} else if !isContextError(err) {
+								e.Logger.Errf(logger.Red, "%v\n", err)
+							}
+						}()
+					}
 				}
 			case err, ok := <-w.Errors:
 				switch {
