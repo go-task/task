@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/execext"
 	"github.com/go-task/task/v3/internal/filepathext"
 	"github.com/go-task/task/v3/internal/fsext"
@@ -20,6 +21,9 @@ func NewFileNode(entrypoint, dir string, opts ...NodeOption) (*FileNode, error) 
 	// Find the entrypoint file
 	resolvedEntrypoint, err := fsext.Search(entrypoint, dir, defaultTaskfiles)
 	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return nil, errors.TaskfileNotFoundError{URI: entrypoint, Walk: false}
+		}
 		return nil, err
 	}
 
