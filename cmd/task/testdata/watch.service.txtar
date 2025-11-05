@@ -1,0 +1,79 @@
+# Build the service.
+mkdir $WORK/.cache/go-build
+env GOCACHE=$WORK/.cache/go-build
+task build
+
+# Test that the service is restarted when watched file changed.
+task run &
+sleep 0.5s
+touch watch.file
+sleep 0.5s
+kill -INT
+wait
+stdout 'Service received signal: interrupt'
+stdout 'Starting Service'
+stdout 'Wait for signal'
+grep -count=1 'Service received signal: interrupt'
+grep -count=2 'Starting Service'
+grep -count=2 'Wait for signal'
+
+# Test that the service is _not_ restarted when an excluded file is changed.
+task -s run &
+sleep 0.5s
+touch watch.exclude
+sleep 0.5s
+kill -INT
+wait
+! stdout 'Service received signal: interrupt'
+stdout 'Starting Service'
+stdout 'Wait for signal'
+! grep 'Service received signal: interrupt'
+grep -count=1 'Starting Service'
+grep -count=1 'Wait for signal'
+
+
+-- Taskfile.yml --
+
+version: '3'
+tasks:
+  provision:
+    cmds:
+      - touch watch.exclude
+  build:
+    sources:
+      - 'service.go'
+    generates:
+      - './out/service'
+    cmds:
+      - rm -rf ./out
+      - task: provision
+      - go build -o ./out/ service.go
+  run:
+    deps: [run:service]
+    watch: true
+    sources:
+      - 'watch.file'
+      - exclude: 'watch.exclude'
+    method: none
+  run:service:
+    cmds:
+      - './out/service'
+
+
+-- service.go --
+package main
+
+import (
+    "fmt"
+    "os"
+    "os/signal"
+)
+
+func main() {
+    fmt.Println("Starting Service ...")
+    c := make (chan os.Signal, 1)
+    signal.Notify(c)
+    fmt.Println("Wait for signal ...")
+    s := <-c
+    fmt.Println("Service received signal:", s)
+}

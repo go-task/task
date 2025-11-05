@@ -1,0 +1,32 @@
+mkdir src
+
+# Test with extended interval, change should not be detected.
+task &
+sleep 500ms
+touch src/a
+sleep 500ms
+kill -INT
+wait
+cmp stdout expect_stdout
+cmp stderr expect_stderr
+
+
+-- Taskfile.yml --
+version: '3'
+interval: 1200ms
+tasks:
+  default:
+    watch: true
+    sources:
+      - "src/*"
+    cmds:
+      - echo "Task running!"
+      - sleep 2
+
+-- expect_stdout --
+Task running!
+task: Signal received: "interrupt"
+-- expect_stderr --
+task: Started watching for tasks: default
+task: [default] echo "Task running!"
+task: [default] sleep 2

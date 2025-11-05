@@ -1,0 +1,30 @@
+mkdir src
+task &
+sleep 500ms
+touch src/foo
+sleep 500ms
+kill -INT
+wait
+cmp stdout expect_stdout
+cmp stderr expect_stderr
+
+
+-- Taskfile.yml --
+version: '3'
+tasks:
+  default:
+    watch: true
+    sources:
+      - "src/*"
+      - exclude: 'src/foo'
+    cmds:
+      - echo "Task running!"
+      - sleep 2
+
+-- expect_stdout --
+Task running!
+task: Signal received: "interrupt"
+-- expect_stderr --
+task: Started watching for tasks: default
+task: [default] echo "Task running!"
+task: [default] sleep 2

@@ -1,0 +1,47 @@
+mkdir src
+
+# Test with default conditions, change should be detected.
+task &
+sleep 500ms
+touch src/a
+sleep 500ms
+kill -INT
+wait
+cmp stdout expect_stdout
+cmp stderr expect_stderr
+
+# Test with duplicate events, task should be restated only once.
+task &
+sleep 500ms
+touch src/a
+touch src/b
+touch src/c
+touch src/d
+sleep 500ms
+kill -INT
+wait
+cmp stdout expect_stdout
+cmp stderr expect_stderr
+
+
+-- Taskfile.yml --
+version: '3'
+tasks:
+  default:
+    watch: true
+    sources:
+      - 'src/*'
+    cmds:
+      - echo "Task running!"
+      - sleep 2
+
+-- expect_stdout --
+Task running!
+Task running!
+task: Signal received: "interrupt"
+-- expect_stderr --
+task: Started watching for tasks: default
+task: [default] echo "Task running!"
+task: [default] sleep 2
+task: [default] echo "Task running!"
+task: [default] sleep 2
