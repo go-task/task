@@ -23,31 +23,29 @@ var templateFuncs template.FuncMap
 
 func init() {
 	taskFuncs := template.FuncMap{
-		"OS":                  goos,
-		"ARCH":                goarch,
-		"numCPU":              runtime.NumCPU,
-		"catLines":            catLines,
-		"splitLines":          splitLines,
-		"fromSlash":           filepath.FromSlash,
-		"toSlash":             filepath.ToSlash,
-		"exeExt":              exeExt,
-		"shellQuote":          shellQuote,
-		"splitArgs":           splitArgs,
-		"IsSH":                IsSH, // Deprecated
-		"joinPath":            filepath.Join,
-		"joinEnv":             joinEnv,
-		"joinUrl":             joinUrl,
-		"relPath":             filepath.Rel,
-		"merge":               merge,
-		"spew":                spew.Sdump,
-		"fromYaml":            fromYaml,
-		"mustFromYaml":        mustFromYaml,
-		"toYaml":              toYaml,
-		"mustToYaml":          mustToYaml,
-		"uuid":                uuid.New,
-		"randIntN":            rand.IntN,
-		"PATH_LIST_SEPARATOR": pathListSeparator,
-		"FILE_PATH_SEPARATOR": filePathSeparator,
+		"OS":           goos,
+		"ARCH":         goarch,
+		"numCPU":       runtime.NumCPU,
+		"catLines":     catLines,
+		"splitLines":   splitLines,
+		"fromSlash":    filepath.FromSlash,
+		"toSlash":      filepath.ToSlash,
+		"exeExt":       exeExt,
+		"shellQuote":   shellQuote,
+		"splitArgs":    splitArgs,
+		"IsSH":         IsSH, // Deprecated
+		"joinPath":     filepath.Join,
+		"joinEnv":      joinEnv,
+		"joinUrl":      joinUrl,
+		"relPath":      filepath.Rel,
+		"merge":        merge,
+		"spew":         spew.Sdump,
+		"fromYaml":     fromYaml,
+		"mustFromYaml": mustFromYaml,
+		"toYaml":       toYaml,
+		"mustToYaml":   mustToYaml,
+		"uuid":         uuid.New,
+		"randIntN":     rand.IntN,
 	}
 
 	// aliases
@@ -143,12 +141,4 @@ func mustToYaml(v any) (string, error) {
 		return "", err
 	}
 	return string(output), nil
-}
-
-func pathListSeparator() string {
-	return string(os.PathListSeparator)
-}
-
-func filePathSeparator() string {
-	return string(os.PathSeparator)
 }
