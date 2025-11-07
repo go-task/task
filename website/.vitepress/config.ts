@@ -75,7 +75,7 @@ export default defineConfig({
       "script",
       {
         defer: "",
-        src: "https://umami.taskfile.dev/script.js",
+        src: "https://u.taskfile.dev/script.js",
         "data-website-id": "084030b0-0e3f-4891-8d2a-0c12c40f5933"
       }
     ]
