@@ -406,10 +406,11 @@ option takes the list of tasks to be excluded from this include.
 
 ```yaml [Taskfile.yml]
 version: '3'
-  includes:
-    included:
-      taskfile: ./Included.yml
-      excludes: [foo]
+
+includes:
+  included:
+    taskfile: ./Included.yml
+    excludes: [foo]
 ```
 
 ```yaml [Included.yml]
@@ -913,7 +914,7 @@ programmatic check fails:
 version: '3'
 
 tasks:
-  build:prod:
+  build-prod:
     desc: Build for production usage.
     cmds:
       - composer install
