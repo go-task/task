@@ -1,8 +1,6 @@
 using namespace System.Management.Automation
 
-$TaskCmd = if ($env:TASK_EXE) { $env:TASK_EXE } else { "task" }
-
-Register-ArgumentCompleter -CommandName $TaskCmd -ScriptBlock {
+Register-ArgumentCompleter -CommandName task -ScriptBlock {
 	param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
 
 	if ($commandName.StartsWith('-')) {
@@ -26,5 +24,5 @@ Register-ArgumentCompleter -CommandName $TaskCmd -ScriptBlock {
 		return $completions.Where{ $_.CompletionText.StartsWith($commandName) }
 	}
 
-	return 	$(& $commandName --list-all --silent) | Where-Object { $_.StartsWith($commandName) } | ForEach-Object { return $_ + " " }
+	return 	$(task --list-all --silent) | Where-Object { $_.StartsWith($commandName) } | ForEach-Object { return $_ + " " }
 }
