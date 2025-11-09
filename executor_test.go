@@ -144,12 +144,12 @@ func (tt *ExecutorTest) run(t *testing.T) {
 	t.Helper()
 	f := func(t *testing.T) {
 		t.Helper()
-		var buf bytes.Buffer
+		var buffer SyncBuffer
 
 		opts := append(
 			tt.executorOpts,
-			task.WithStdout(&buf),
-			task.WithStderr(&buf),
+			task.WithStdout(&buffer),
+			task.WithStderr(&buffer),
 		)
 
 		// If the test has input, create a reader for it and add it to the
@@ -172,7 +172,7 @@ func (tt *ExecutorTest) run(t *testing.T) {
 		if err := e.Setup(); tt.wantSetupError {
 			require.Error(t, err)
 			tt.writeFixtureErrSetup(t, g, err)
-			tt.writeFixtureBuffer(t, g, buf)
+			tt.writeFixtureBuffer(t, g, buffer.buf)
 			return
 		} else {
 			require.NoError(t, err)
@@ -193,7 +193,7 @@ func (tt *ExecutorTest) run(t *testing.T) {
 		if err := e.Run(ctx, call); tt.wantRunError {
 			require.Error(t, err)
 			tt.writeFixtureErrRun(t, g, err)
-			tt.writeFixtureBuffer(t, g, buf)
+			tt.writeFixtureBuffer(t, g, buffer.buf)
 			return
 		} else {
 			require.NoError(t, err)
@@ -206,7 +206,7 @@ func (tt *ExecutorTest) run(t *testing.T) {
 			}
 		}
 
-		tt.writeFixtureBuffer(t, g, buf)
+		tt.writeFixtureBuffer(t, g, buffer.buf)
 	}
 
 	// Run the test (with a name if it has one)
