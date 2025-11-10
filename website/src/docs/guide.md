@@ -914,7 +914,7 @@ programmatic check fails:
 version: '3'
 
 tasks:
-  build-prod:
+  build:prod:
     desc: Build for production usage.
     cmds:
       - composer install
@@ -927,7 +927,7 @@ tasks:
       - ./vendor/autoload.php
     # But also run the task if the last build was not a production build.
     status:
-      - grep -q '"dev": false' ./vendor/composer/installed.json
+      - grep -q '"dev"{{:}} false' ./vendor/composer/installed.json
 ```
 
 ### Using programmatic checks to cancel the execution of a task and its dependencies
