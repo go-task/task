@@ -406,10 +406,11 @@ option takes the list of tasks to be excluded from this include.
 
 ```yaml [Taskfile.yml]
 version: '3'
-  includes:
-    included:
-      taskfile: ./Included.yml
-      excludes: [foo]
+
+includes:
+  included:
+    taskfile: ./Included.yml
+    excludes: [foo]
 ```
 
 ```yaml [Included.yml]
@@ -926,7 +927,7 @@ tasks:
       - ./vendor/autoload.php
     # But also run the task if the last build was not a production build.
     status:
-      - grep -q '"dev": false' ./vendor/composer/installed.json
+      - grep -q '"dev"{{:}} false' ./vendor/composer/installed.json
 ```
 
 ### Using programmatic checks to cancel the execution of a task and its dependencies
