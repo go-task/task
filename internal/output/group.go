@@ -24,7 +24,6 @@ func (g Group) WrapWriter(stdOut, _ io.Writer, _ string, cache *templater.Cache)
 		if g.ErrorOnly && err == nil {
 			return nil
 		}
-
 		return gw.close()
 	}
 }
@@ -40,19 +39,22 @@ func (gw *groupWriter) Write(p []byte) (int, error) {
 }
 
 func (gw *groupWriter) close() error {
-	if gw.buff.Len() == 0 {
-		// don't print begin/end messages if there's no buffered entries
+	switch {
+	case gw.buff.Len() == 0:
 		return nil
+	case gw.begin == "" && gw.end == "":
+		_, err := io.Copy(gw.writer, &gw.buff)
+		return err
+	default:
+		_, err := io.Copy(gw.writer, gw.combinedBuff())
+		return err
 	}
-	if len(gw.begin) > 0 {
-		// Rewrite the gw.buff with the beginning text.
-		s := gw.buff.String()
-		gw.buff.Reset()
-		gw.buff.WriteString(gw.begin)
-		gw.buff.WriteString(s)
-	}
-	gw.buff.WriteString(gw.end)
-	// Return the entire gw.buff to ensure the group is written atomically to stdout.
-	_, err := io.Copy(gw.writer, &gw.buff)
-	return err
+}
+
+func (gw *groupWriter) combinedBuff() io.Reader {
+	var b bytes.Buffer
+	_, _ = b.WriteString(gw.begin)
+	_, _ = io.Copy(&b, &gw.buff)
+	_, _ = b.WriteString(gw.end)
+	return &b
 }
