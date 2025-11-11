@@ -150,7 +150,7 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) error {
 	release := e.acquireConcurrencyLimit()
 	defer release()
 
-	return e.startExecution(ctx, t, func(ctx context.Context) error {
+	if err = e.startExecution(ctx, t, func(ctx context.Context) error {
 		e.Logger.VerboseErrf(logger.Magenta, "task: %q started\n", call.Task)
 		if err := e.runDeps(ctx, t); err != nil {
 			return err
@@ -228,16 +228,16 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) error {
 					deferredExitCode = uint8(exitCode)
 				}
 
-				if call.Indirect {
-					return err
-				}
-
-				return &errors.TaskRunError{TaskName: t.Task, Err: err}
+				return err
 			}
 		}
 		e.Logger.VerboseErrf(logger.Magenta, "task: %q finished\n", call.Task)
 		return nil
-	})
+	}); err != nil {
+		return &errors.TaskRunError{TaskName: t.Name(), Err: err}
+	}
+
+	return nil
 }
 
 func (e *Executor) mkdir(t *ast.Task) error {

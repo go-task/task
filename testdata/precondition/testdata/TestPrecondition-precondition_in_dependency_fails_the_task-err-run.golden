@@ -1,1 +1,1 @@
-task: precondition not met
+task: Failed to run task "depends_on_impossible": task: Failed to run task "impossible": task: precondition not met
