@@ -28,7 +28,7 @@ require (
 	go.yaml.in/yaml/v4 v4.0.0-rc.3
 	golang.org/x/sync v0.17.0
 	golang.org/x/term v0.36.0
-	mvdan.cc/sh/moreinterp v0.0.0-20250921194925-171492585d48
+	mvdan.cc/sh/moreinterp v0.0.0-20251109230715-65adef8e2c5b
 	mvdan.cc/sh/v3 v3.12.0
 )
 
@@ -45,7 +45,7 @@ require (
 	github.com/golang/groupcache v0.0.0-20241129210726-2c02b8208cf8 // indirect
 	github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 // indirect
 	github.com/kevinburke/ssh_config v1.2.0 // indirect
-	github.com/klauspost/compress v1.17.4 // indirect
+	github.com/klauspost/compress v1.18.0 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.7 // indirect
 	github.com/klauspost/pgzip v1.2.6 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
@@ -56,11 +56,11 @@ require (
 	github.com/sergi/go-diff v1.3.2-0.20230802210424-5b0b94c5c0d3 // indirect
 	github.com/skeema/knownhosts v1.3.1 // indirect
 	github.com/stretchr/objx v0.5.2 // indirect
-	github.com/u-root/u-root v0.14.1-0.20250807200646-5e7721023dc7 // indirect
+	github.com/u-root/u-root v0.15.1-0.20251014130006-62f7144b33da // indirect
 	github.com/u-root/uio v0.0.0-20240224005618-d2acac8f3701 // indirect
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
-	golang.org/x/crypto v0.37.0 // indirect
-	golang.org/x/net v0.39.0 // indirect
+	golang.org/x/crypto v0.39.0 // indirect
+	golang.org/x/net v0.41.0 // indirect
 	golang.org/x/sys v0.37.0 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
