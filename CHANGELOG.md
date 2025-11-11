@@ -18,6 +18,8 @@
 - Improve error message when a Taskfile is not found (#2441, #2494 by @vmaerten).
 - Fixed generic error message `exit status 1` when a dependency task failed
   (#2286 by @GrahamDennis).
+- Fixed YAML library from the unmaintained `gopkg.in/yaml.v3` to the new fork
+  maintained by the official YAML org (#2171, #2434 by @andreynering).
 
 ## v3.45.4 - 2025-09-17
 
