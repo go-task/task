@@ -172,7 +172,6 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) error {
 			if t.Method != "" {
 				method = t.Method
 			}
-
 			upToDate, err := fingerprint.IsTaskUpToDate(ctx, t,
 				fingerprint.WithMethod(method),
 				fingerprint.WithTempDir(e.TempDir.Fingerprint),
@@ -220,13 +219,13 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) error {
 					e.Logger.VerboseErrf(logger.Yellow, "task: error cleaning status on error: %v\n", err2)
 				}
 
-				exitCode, isExitError := interp.IsExitStatus(err)
-				if isExitError {
+				var exitCode interp.ExitStatus
+				if errors.As(err, &exitCode) {
 					if t.IgnoreError {
 						e.Logger.VerboseErrf(logger.Yellow, "task: task error ignored: %v\n", err)
 						continue
 					}
-					deferredExitCode = exitCode
+					deferredExitCode = uint8(exitCode)
 				}
 
 				return err
@@ -356,7 +355,8 @@ func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call *Call, i in
 		if closeErr := closer(err); closeErr != nil {
 			e.Logger.Errf(logger.Red, "task: unable to close writer: %v\n", closeErr)
 		}
-		if _, isExitError := interp.IsExitStatus(err); isExitError && cmd.IgnoreError {
+		var exitCode interp.ExitStatus
+		if errors.As(err, &exitCode) && cmd.IgnoreError {
 			e.Logger.VerboseErrf(logger.Yellow, "task: [%s] command error ignored: %v\n", t.Name(), err)
 			return nil
 		}
@@ -466,7 +466,6 @@ func (e *Executor) GetTask(call *Call) (*ast.Task, error) {
 			DidYouMean: didYouMean,
 		}
 	}
-
 	return matchingTask, nil
 }
 
@@ -499,7 +498,7 @@ func (e *Executor) GetTaskList(filters ...FilterFunc) ([]*ast.Task, error) {
 	// Compile the list of tasks
 	for i := range tasks {
 		g.Go(func() error {
-			compiledTask, err := e.FastCompiledTask(&Call{Task: tasks[i].Task})
+			compiledTask, err := e.CompiledTaskForTaskList(&Call{Task: tasks[i].Task})
 			if err != nil {
 				return err
 			}

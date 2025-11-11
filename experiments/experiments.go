@@ -9,6 +9,7 @@ import (
 	"github.com/joho/godotenv"
 
 	"github.com/go-task/task/v3/taskrc"
+	"github.com/go-task/task/v3/taskrc/ast"
 )
 
 const envPrefix = "TASK_X_"
@@ -31,16 +32,13 @@ var (
 var xList []Experiment
 
 func Parse(dir string) {
+	config, _ := taskrc.GetConfig(dir)
+	ParseWithConfig(dir, config)
+}
+
+func ParseWithConfig(dir string, config *ast.TaskRC) {
 	// Read any .env files
 	readDotEnv(dir)
-
-	// Create a node for the Task config reader
-	node, _ := taskrc.NewNode("", dir)
-
-	// Read the Task config file
-	reader := taskrc.NewReader()
-	config, _ := reader.Read(node)
-
 	// Initialize the experiments
 	GentleForce = New("GENTLE_FORCE", config, 1)
 	RemoteTaskfiles = New("REMOTE_TASKFILES", config, 1)

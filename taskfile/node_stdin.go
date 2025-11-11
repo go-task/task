@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"os"
-	"strings"
 
 	"github.com/go-task/task/v3/internal/execext"
 	"github.com/go-task/task/v3/internal/filepathext"
@@ -43,7 +42,7 @@ func (node *StdinNode) Read() ([]byte, error) {
 
 func (node *StdinNode) ResolveEntrypoint(entrypoint string) (string, error) {
 	// If the file is remote, we don't need to resolve the path
-	if strings.Contains(entrypoint, "://") {
+	if isRemoteEntrypoint(entrypoint) {
 		return entrypoint, nil
 	}
 

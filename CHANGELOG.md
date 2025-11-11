@@ -2,6 +2,94 @@
 
 ## Unreleased
 
+- Fixed bug that made a generic message, instead of an useful one, appear when a
+  Taskfile could not be found (#2431 by @andreynering).
+- Fixed a bug that caused an error when including a Remote Git Taskfile (#2438
+  by @twelvelabs).
+- Fixed issue where `.taskrc.yml` was not returned if reading it failed, and
+  corrected handling of remote entrypoint Taskfiles (#2460, #2461 by @vmaerten).
+- Improved performance of `--list` and `--list-all` by introducing a faster
+  compilation method that skips source globbing and checksum updates (#1322,
+  #2053 by @vmaerten).
+- Fixed a concurrency bug with `output: group`. This ensures that begin/end
+  parts won't be mixed up from different tasks (#1208, #2349, #2350 by
+  @trulede).
+
+## v3.45.4 - 2025-09-17
+
+- Fixed a bug where `cache-expiry` could not be defined in `.taskrc.yml` (#2423
+  by @vmaerten).
+- Fixed a bug where `.taskrc.yml` files in parent folders were not read
+  correctly (#2424 by @vmaerten).
+- Fixed a bug where autocomplete in subfolders did not work with zsh (#2425 by
+  @vmaerten).
+
+## v3.45.3 - 2025-09-15
+
+- Task now includes built-in core utilities to greatly improve compatibility on
+  Windows. This means that your commands that uses `cp`, `mv`, `mkdir` or any
+  other common core utility will now work by default on Windows, without extra
+  setup. This is something we wanted to address for many many years, and it's
+  finally being shipped!
+  [Read our blog post this the topic](https://taskfile.dev/blog/windows-core-utils).
+  (#197, #2360 by @andreynering).
+- :sparkles: Built and deployed a [brand new website](https://taskfile.dev)
+  using [VitePress](https://vitepress.dev) (#2359, #2369, #2371, #2375, #2378 by
+  @vmaerten, @andreynering, @pd93).
+- Began releasing
+  [nightly builds](https://github.com/go-task/task/releases/tag/nightly). This
+  will allow people to test our changes before they are fully released and
+  without having to install Go to build them (#2358 by @vmaerten).
+- Added support for global config files in `$XDG_CONFIG_HOME/task/taskrc.yml` or
+  `$HOME/.taskrc.yml`. Check out our new
+  [configuration guide](https://taskfile.dev/docs/reference/config) for more
+  details (#2247, #2380, #2390, #2391 by @vmaerten, @pd93).
+- Added experiments to the taskrc schema to clarify the expected keys and values
+  (#2235 by @vmaerten).
+- Added support for new properties in `.taskrc.yml`: insecure, verbose,
+  concurrency, remote offline, remote timeout, and remote expiry. :warning:
+  Note: setting offline via environment variable is no longer supported. (#2389
+  by @vmaerten)
+- Added a `--nested` flag when outputting tasks using `--list --json`. This will
+  output tasks in a nested structure when tasks are namespaced (#2415 by @pd93).
+- Enhanced support for tasks with wildcards: they are now logged correctly, and
+  wildcard parameters are fully considered during fingerprinting (#1808, #1795
+  by @vmaerten).
+- Fixed panic when a variable was declared as an empty hash (`{}`) (#2416, #2417
+  by @trulede).
+
+#### Package API
+
+- Bumped the minimum version of Go to 1.24 (#2358 by @vmaerten).
+
+#### Other news
+
+We recently released our
+[official GitHub Action](https://github.com/go-task/setup-task). This is based
+on the fantastic work by the Arduino team who created and maintained the
+community version. Now that this is officially adopted, fixes/updates should be
+more timely. We have already merged a couple of longstanding PRs in our
+[first release](https://github.com/go-task/setup-task/releases/tag/v1.0.0) (by
+@pd93, @shrink, @trim21 and all the previous contributors to
+[arduino/setup-task](https://github.com/arduino/setup-task/)).
+
+## v3.45.0-v3.45.2 - 2025-09-15
+
+Failed due to an issue with our release process.
+
+## v3.44.1 - 2025-07-23
+
+- Internal tasks will no longer be shown as suggestions since they cannot be
+  called (#2309, #2323 by @maxmzkrcensys)
+- Fixed install script for some ARM platforms (#1516, #2291 by @trulede).
+- Fixed a regression where fingerprinting was not working correctly if the path
+  to you Taskfile contained a space (#2321, #2322 by @pd93).
+- Reverted a breaking change to `randInt` (#2312, #2316 by @pd93).
+- Made new variables `TEST_NAME` and `TEST_DIR` available in fixture tests
+  (#2265 by @pd93).
+
+## v3.44.0 - 2025-06-08
+
 - Added `uuid`, `randInt` and `randIntN` template functions (#1346, #2225 by
   @pd93).
 - Added new `CLI_ARGS_LIST` array variable which contains the arguments passed
@@ -26,6 +114,8 @@
   (#2211 by @vmaerten).
 - Improved fingerprint documentation by specifying that the method can be set at
   the root level to apply to all tasks (#2233 by @vmaerten).
+- Fixed some watcher regressions after #2048 (#2199, #2202, #2241, #2196 by
+  @wazazaby, #2271 by @andreynering).
 
 ## v3.43.3 - 2025-04-27
 

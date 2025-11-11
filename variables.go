@@ -29,6 +29,51 @@ func (e *Executor) FastCompiledTask(call *Call) (*ast.Task, error) {
 	return e.compiledTask(call, false)
 }
 
+func (e *Executor) CompiledTaskForTaskList(call *Call) (*ast.Task, error) {
+	origTask, err := e.GetTask(call)
+	if err != nil {
+		return nil, err
+	}
+
+	vars, err := e.Compiler.FastGetVariables(origTask, call)
+	if err != nil {
+		return nil, err
+	}
+
+	cache := &templater.Cache{Vars: vars}
+
+	return &ast.Task{
+		Task:                 origTask.Task,
+		Label:                templater.Replace(origTask.Label, cache),
+		Desc:                 templater.Replace(origTask.Desc, cache),
+		Prompt:               templater.Replace(origTask.Prompt, cache),
+		Summary:              templater.Replace(origTask.Summary, cache),
+		Aliases:              origTask.Aliases,
+		Sources:              origTask.Sources,
+		Generates:            origTask.Generates,
+		Dir:                  origTask.Dir,
+		Set:                  origTask.Set,
+		Shopt:                origTask.Shopt,
+		Vars:                 vars,
+		Env:                  nil,
+		Dotenv:               origTask.Dotenv,
+		Silent:               origTask.Silent,
+		Interactive:          origTask.Interactive,
+		Internal:             origTask.Internal,
+		Method:               origTask.Method,
+		Prefix:               origTask.Prefix,
+		IgnoreError:          origTask.IgnoreError,
+		Run:                  origTask.Run,
+		IncludeVars:          origTask.IncludeVars,
+		IncludedTaskfileVars: origTask.IncludedTaskfileVars,
+		Platforms:            origTask.Platforms,
+		Location:             origTask.Location,
+		Requires:             origTask.Requires,
+		Watch:                origTask.Watch,
+		Namespace:            origTask.Namespace,
+	}, nil
+}
+
 func (e *Executor) compiledTask(call *Call, evaluateShVars bool) (*ast.Task, error) {
 	origTask, err := e.GetTask(call)
 	if err != nil {
@@ -44,9 +89,14 @@ func (e *Executor) compiledTask(call *Call, evaluateShVars bool) (*ast.Task, err
 	if err != nil {
 		return nil, err
 	}
+	fullName := origTask.Task
+	if matches, exists := vars.Get("MATCH"); exists {
+		for _, match := range matches.Value.([]string) {
+			fullName = strings.Replace(fullName, "*", match, 1)
+		}
+	}
 
 	cache := &templater.Cache{Vars: vars}
-
 	new := ast.Task{
 		Task:                 origTask.Task,
 		Label:                templater.Replace(origTask.Label, cache),
@@ -76,6 +126,7 @@ func (e *Executor) compiledTask(call *Call, evaluateShVars bool) (*ast.Task, err
 		Requires:             origTask.Requires,
 		Watch:                origTask.Watch,
 		Namespace:            origTask.Namespace,
+		FullName:             fullName,
 	}
 	new.Dir, err = execext.ExpandLiteral(new.Dir)
 	if err != nil {

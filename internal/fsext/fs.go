@@ -37,51 +37,87 @@ func DefaultDir(entrypoint, dir string) string {
 	return ""
 }
 
-// Search will look for files with the given possible filenames using the given
-// entrypoint and directory. If the entrypoint is set, it will check if the
+// ResolveDir returns an absolute path to the directory that the task should be
+// run in. If the entrypoint and dir are BOTH set, then the Taskfile will not
+// sit inside the directory specified by dir and we should ensure that the dir
+// is absolute. Otherwise, the dir will always be the parent directory of the
+// resolved entrypoint, so we should return that parent directory.
+func ResolveDir(entrypoint, resolvedEntrypoint, dir string) (string, error) {
+	if entrypoint != "" && dir != "" {
+		return filepath.Abs(dir)
+	}
+	return filepath.Dir(resolvedEntrypoint), nil
+}
+
+// Search looks for files with the given possible filenames using the given
+// entrypoint and directory. If the entrypoint is set, it checks if the
 // entrypoint matches a file or if it matches a directory containing one of the
-// possible filenames. Otherwise, it will walk up the file tree starting at the
-// given directory and perform a search in each directory for the possible
+// possible filenames. Otherwise, it walks up the file tree starting at the
+// given directory and performs a search in each directory for the possible
 // filenames until it finds a match or reaches the root directory. If the
-// entrypoint and directory are both empty, it will default the directory to the
-// current working directory and perform a recursive search starting there. If a
-// match is found, the absolute path to the file will be returned with its
-// directory. If no match is found, an error will be returned.
-func Search(entrypoint, dir string, possibleFilenames []string) (string, string, error) {
+// entrypoint and directory are both empty, it defaults the directory to the
+// current working directory and performs a recursive search starting there. If
+// a match is found, the absolute path to the file is returned with its
+// directory. If no match is found, an error is returned.
+func Search(entrypoint, dir string, possibleFilenames []string) (string, error) {
 	var err error
 	if entrypoint != "" {
 		entrypoint, err = SearchPath(entrypoint, possibleFilenames)
 		if err != nil {
-			return "", "", err
+			return "", err
 		}
-		if dir == "" {
-			dir = filepath.Dir(entrypoint)
-		} else {
-			dir, err = filepath.Abs(dir)
-			if err != nil {
-				return "", "", err
-			}
-		}
-		return entrypoint, dir, nil
+		return entrypoint, nil
 	}
 	if dir == "" {
 		dir, err = os.Getwd()
 		if err != nil {
-			return "", "", err
+			return "", err
 		}
 	}
 	entrypoint, err = SearchPathRecursively(dir, possibleFilenames)
 	if err != nil {
-		return "", "", err
+		return "", err
 	}
-	dir = filepath.Dir(entrypoint)
-	return entrypoint, dir, nil
+	return entrypoint, nil
 }
 
-// Search will check if a file at the given path exists or not. If it does, it
-// will return the path to it. If it does not, it will search for any files at
-// the given path with any of the given possible names. If any of these match a
-// file, the first matching path will be returned. If no files are found, an
+// SearchAll looks for files with the given possible filenames using the given
+// entrypoint and directory. If the entrypoint is set, it checks if the
+// entrypoint matches a file or if it matches a directory containing one of the
+// possible filenames and add it to a list of matches. It then walks up the file
+// tree starting at the given directory and performs a search in each directory
+// for the possible filenames until it finds a match or reaches the root
+// directory. If the entrypoint and directory are both empty, it defaults the
+// directory to the current working directory and performs a recursive search
+// starting there. If matches are found, the absolute path to each file is added
+// to the list and returned.
+func SearchAll(entrypoint, dir string, possibleFilenames []string) ([]string, error) {
+	var err error
+	var entrypoints []string
+	if entrypoint != "" {
+		entrypoint, err = SearchPath(entrypoint, possibleFilenames)
+		if err != nil {
+			return nil, err
+		}
+		entrypoints = append(entrypoints, entrypoint)
+	}
+	if dir == "" {
+		dir, err = os.Getwd()
+		if err != nil {
+			return nil, err
+		}
+	}
+	paths, err := SearchNPathRecursively(dir, possibleFilenames, -1)
+	if err != nil {
+		return nil, err
+	}
+	return append(entrypoints, paths...), nil
+}
+
+// SearchPath will check if a file at the given path exists or not. If it does,
+// it will return the path to it. If it does not, it will search for any files
+// at the given path with any of the given possible names. If any of these match
+// a file, the first matching path will be returned. If no files are found, an
 // error will be returned.
 func SearchPath(path string, possibleFilenames []string) (string, error) {
 	// Get file info about the path
@@ -111,36 +147,56 @@ func SearchPath(path string, possibleFilenames []string) (string, error) {
 	return "", os.ErrNotExist
 }
 
-// SearchRecursively will check if a file at the given path exists by calling
-// the exists function. If a file is not found, it will walk up the directory
-// tree calling the Search function until it finds a file or reaches the root
-// directory. On supported operating systems, it will also check if the user ID
-// of the directory changes and abort if it does.
+// SearchPathRecursively walks up the directory tree starting at the given
+// path, calling the Search function in each directory until it finds a matching
+// file or reaches the root directory. On supported operating systems, it will
+// also check if the user ID of the directory changes and abort if it does.
 func SearchPathRecursively(path string, possibleFilenames []string) (string, error) {
-	owner, err := sysinfo.Owner(path)
+	paths, err := SearchNPathRecursively(path, possibleFilenames, 1)
 	if err != nil {
 		return "", err
 	}
-	for {
+	if len(paths) == 0 {
+		return "", os.ErrNotExist
+	}
+	return paths[0], nil
+}
+
+// SearchNPathRecursively walks up the directory tree starting at the given
+// path, calling the Search function in each directory and adding each matching
+// file that it finds to a list until it reaches the root directory or the
+// length of the list exceeds n. On supported operating systems, it will also
+// check if the user ID of the directory changes and abort if it does.
+func SearchNPathRecursively(path string, possibleFilenames []string, n int) ([]string, error) {
+	var paths []string
+
+	owner, err := sysinfo.Owner(path)
+	if err != nil {
+		return nil, err
+	}
+
+	for n == -1 || len(paths) < n {
 		fpath, err := SearchPath(path, possibleFilenames)
 		if err == nil {
-			return fpath, nil
+			paths = append(paths, fpath)
 		}
 
 		// Get the parent path/user id
 		parentPath := filepath.Dir(path)
 		parentOwner, err := sysinfo.Owner(parentPath)
 		if err != nil {
-			return "", err
+			return nil, err
 		}
 
 		// Error if we reached the root directory and still haven't found a file
 		// OR if the user id of the directory changes
 		if path == parentPath || (parentOwner != owner) {
-			return "", os.ErrNotExist
+			return paths, nil
 		}
 
 		owner = parentOwner
 		path = parentPath
 	}
+
+	return paths, nil
 }

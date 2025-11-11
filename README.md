@@ -1,6 +1,6 @@
 <div align="center">
   <a href="https://taskfile.dev">
-    <img src="website/static/img/logo.svg" width="200px" height="200px" />
+    <img src="website/src/public/img/logo.svg" width="200px" height="200px" />
   </a>
 
   <h1>Task</h1>
@@ -19,7 +19,12 @@
     <tr>
       <td align="center" valign="middle">
         <a target="_blank" href="https://devowl.io">
-          <img src="/website/static/img/devowl.io.svg" height="100px" title="devowl.io" />
+          <img src="website/src/public/img/devowl.io.svg" height="100px" width="200px" title="devowl.io" />
+        </a>
+      </td>
+      <td align="center" valign="middle">
+        <a target="_blank" href="https://magic.dev/">
+          <img src="website/src/public/img/magic.png" height="100px" width="200px" title="Magic" />
         </a>
       </td>
     </tr>
