@@ -44,10 +44,15 @@ func (gw *groupWriter) close() error {
 		// don't print begin/end messages if there's no buffered entries
 		return nil
 	}
-	if _, err := io.WriteString(gw.writer, gw.begin); err != nil {
-		return err
+	if len(gw.begin) > 0 {
+		// Rewrite the gw.buff with the beginning text.
+		s := gw.buff.String()
+		gw.buff.Reset()
+		gw.buff.WriteString(gw.begin)
+		gw.buff.WriteString(s)
 	}
 	gw.buff.WriteString(gw.end)
+	// Return the entire gw.buff to ensure the group is written atomically to stdout.
 	_, err := io.Copy(gw.writer, &gw.buff)
 	return err
 }
