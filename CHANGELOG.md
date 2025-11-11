@@ -20,6 +20,11 @@
   (#2286 by @GrahamDennis).
 - Fixed YAML library from the unmaintained `gopkg.in/yaml.v3` to the new fork
   maintained by the official YAML org (#2171, #2434 by @andreynering).
+- On Windows, the built-in version of the `rm` core utils contains a fix related
+  to the `-f` flag (#2426,
+  [u-root/u-root#3464](https://github.com/u-root/u-root/pull/3464),
+  [mvdan/sh#1199](https://github.com/mvdan/sh/pull/1199),
+  #2506 by @andreynering).
 
 ## v3.45.4 - 2025-09-17
 
