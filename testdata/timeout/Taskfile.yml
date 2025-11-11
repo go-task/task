@@ -1,0 +1,29 @@
+version: '3'
+
+tasks:
+  timeout-exceeded:
+    desc: Command that should timeout
+    cmds:
+      - cmd: sleep 10
+        timeout: 1s
+
+  timeout-not-exceeded:
+    desc: Command that completes within timeout
+    cmds:
+      - cmd: echo "quick command"
+        timeout: 5s
+
+  no-timeout:
+    desc: Command with no timeout specified
+    cmds:
+      - echo "no timeout"
+
+  multiple-cmds-timeout:
+    desc: Multiple commands with different timeouts
+    cmds:
+      - cmd: echo "first"
+        timeout: 1s
+      - cmd: sleep 10
+        timeout: 1s
+      - cmd: echo "third"
+        timeout: 1s

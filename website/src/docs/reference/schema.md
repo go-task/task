@@ -700,6 +700,7 @@ tasks:
         platforms: [linux, darwin]
         set: [errexit]
         shopt: [globstar]
+        timeout: 5m
 ```
 
 ### Task References
@@ -794,6 +795,35 @@ tasks:
         vars:
           SERVICE: '{{.ITEM}}'
 ```
+
+## Command Properties
+
+### `timeout`
+
+- **Type**: `string`
+- **Description**: Maximum duration a command can run before being
+  terminated. Uses Go duration syntax.
+- **Examples**: `"30s"`, `"5m"`, `"1h30m"`
+
+```yaml
+tasks:
+  deploy:
+    cmds:
+      # Build step with 5 minute timeout
+      - cmd: npm run build
+        timeout: 5m
+
+      # Deploy with 30 minute timeout
+      - cmd: ./deploy.sh
+        timeout: 30m
+
+      # Quick health check with 10 second timeout
+      - cmd: curl -f https://api.example.com/health
+        timeout: 10s
+```
+
+Commands that exceed their timeout will be terminated and return an error,
+preventing indefinite hangs in task pipelines.
 
 ## Shell Options
 

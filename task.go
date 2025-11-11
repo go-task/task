@@ -301,6 +301,13 @@ func (e *Executor) runDeferred(t *ast.Task, call *Call, i int, vars *ast.Vars, d
 func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call *Call, i int) error {
 	cmd := t.Cmds[i]
 
+	// Apply command timeout if specified
+	if cmd.Timeout > 0 {
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(ctx, cmd.Timeout)
+		defer cancel()
+	}
+
 	switch {
 	case cmd.Task != "":
 		reacquire := e.releaseConcurrencyLimit()
@@ -348,6 +355,9 @@ func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call *Call, i in
 		})
 		if closeErr := closer(err); closeErr != nil {
 			e.Logger.Errf(logger.Red, "task: unable to close writer: %v\n", closeErr)
+		}
+		if err != nil && ctx.Err() == context.DeadlineExceeded {
+			return fmt.Errorf("task: [%s] command timeout exceeded (%s): %w", t.Name(), cmd.Timeout, err)
 		}
 		var exitCode interp.ExitStatus
 		if errors.As(err, &exitCode) && cmd.IgnoreError {

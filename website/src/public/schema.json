@@ -361,6 +361,10 @@
         "platforms": {
           "description": "Specifies which platforms the command should be run on.",
           "$ref": "#/definitions/platforms"
+        },
+        "timeout": {
+          "description": "Maximum duration the command is allowed to run before being terminated. Supports Go duration syntax (e.g., '5m', '30s', '1h').",
+          "type": "string"
         }
       },
       "additionalProperties": false,
@@ -421,6 +425,10 @@
         "platforms": {
           "description": "Specifies which platforms the command should be run on.",
           "$ref": "#/definitions/platforms"
+        },
+        "timeout": {
+          "description": "Maximum duration the command is allowed to run before being terminated. Supports Go duration syntax (e.g., '5m', '30s', '1h').",
+          "type": "string"
         }
       },
       "oneOf": [{ "required": ["cmd"] }, { "required": ["task"] }],
