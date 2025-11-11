@@ -11,6 +11,9 @@
 - Improved performance of `--list` and `--list-all` by introducing a faster
   compilation method that skips source globbing and checksum updates (#1322,
   #2053 by @vmaerten).
+- Fixed a concurrency bug with `output: group`. This ensures that begin/end
+  parts won't be mixed up from different tasks (#1208, #2349, #2350 by
+  @trulede).
 
 ## v3.45.4 - 2025-09-17
 
