@@ -26,8 +26,8 @@ require (
 	github.com/stretchr/testify v1.11.1
 	github.com/zeebo/xxh3 v1.0.2
 	go.yaml.in/yaml/v4 v4.0.0-rc.3
-	golang.org/x/sync v0.17.0
-	golang.org/x/term v0.36.0
+	golang.org/x/sync v0.18.0
+	golang.org/x/term v0.37.0
 	mvdan.cc/sh/moreinterp v0.0.0-20251109230715-65adef8e2c5b
 	mvdan.cc/sh/v3 v3.12.0
 )
@@ -61,7 +61,7 @@ require (
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
 	golang.org/x/crypto v0.39.0 // indirect
 	golang.org/x/net v0.41.0 // indirect
-	golang.org/x/sys v0.37.0 // indirect
+	golang.org/x/sys v0.38.0 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
