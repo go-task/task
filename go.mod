@@ -20,15 +20,14 @@ require (
 	github.com/joho/godotenv v1.5.1
 	github.com/mitchellh/hashstructure/v2 v2.0.2
 	github.com/puzpuzpuz/xsync/v3 v3.5.1
-	github.com/puzpuzpuz/xsync/v4 v4.2.0
 	github.com/sajari/fuzzy v1.0.0
 	github.com/sebdah/goldie/v2 v2.8.0
 	github.com/spf13/pflag v1.0.10
 	github.com/stretchr/testify v1.11.1
 	github.com/zeebo/xxh3 v1.0.2
+	go.yaml.in/yaml/v4 v4.0.0-rc.3
 	golang.org/x/sync v0.17.0
 	golang.org/x/term v0.36.0
-	gopkg.in/yaml.v3 v3.0.1
 	mvdan.cc/sh/moreinterp v0.0.0-20250921194925-171492585d48
 	mvdan.cc/sh/v3 v3.12.0
 )
@@ -64,4 +63,5 @@ require (
 	golang.org/x/net v0.39.0 // indirect
 	golang.org/x/sys v0.37.0 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

@@ -9,7 +9,7 @@ import (
 
 	"github.com/davecgh/go-spew/spew"
 	"github.com/google/uuid"
-	"gopkg.in/yaml.v3"
+	"go.yaml.in/yaml/v4"
 	"mvdan.cc/sh/v3/shell"
 	"mvdan.cc/sh/v3/syntax"
 
