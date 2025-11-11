@@ -16,6 +16,8 @@
   @trulede).
 - Do not re-evaluate variables for `defer:` (#2244, #2418 by @trulede).
 - Improve error message when a Taskfile is not found (#2441, #2494 by @vmaerten).
+- Fixed generic error message `exit status 1` when a dependency task failed
+  (#2286 by @GrahamDennis).
 
 ## v3.45.4 - 2025-09-17
 
