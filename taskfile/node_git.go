@@ -3,16 +3,13 @@ package taskfile
 import (
 	"context"
 	"fmt"
-	"io"
 	"net/url"
+	"os"
 	"path/filepath"
 	"strings"
 
 	giturls "github.com/chainguard-dev/git-urls"
-	"github.com/go-git/go-billy/v5/memfs"
-	"github.com/go-git/go-git/v5"
-	"github.com/go-git/go-git/v5/plumbing"
-	"github.com/go-git/go-git/v5/storage/memory"
+	"github.com/hashicorp/go-getter"
 
 	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/execext"
@@ -72,24 +69,53 @@ func (node *GitNode) Read() ([]byte, error) {
 	return node.ReadContext(context.Background())
 }
 
-func (node *GitNode) ReadContext(_ context.Context) ([]byte, error) {
-	fs := memfs.New()
-	storer := memory.NewStorage()
-	_, err := git.Clone(storer, fs, &git.CloneOptions{
-		URL:           node.url.String(),
-		ReferenceName: plumbing.ReferenceName(node.ref),
-		SingleBranch:  true,
-		Depth:         1,
-	})
+func (node *GitNode) buildURL() string {
+	// Get the base URL
+	baseURL := node.url.String()
+
+	ref := node.ref
+	if ref == "" {
+		ref = "HEAD"
+	}
+	// Always use git:: prefix for git URLs (following Terraform's pattern)
+	// This forces go-getter to use git protocol
+	return fmt.Sprintf("git::%s?ref=%s&depth=1", baseURL, ref)
+}
+
+func (node *GitNode) ReadContext(ctx context.Context) ([]byte, error) {
+	// Create temporary directory for git clone
+	tmpDir, err := os.MkdirTemp("", "task-git-*")
 	if err != nil {
+		return nil, fmt.Errorf("failed to create temp dir: %w", err)
+	}
+	defer func() {
+		_ = os.RemoveAll(tmpDir)
+	}()
+
+	getterURL := node.buildURL()
+
+	client := &getter.Client{
+		Ctx:  ctx,
+		Src:  getterURL,
+		Dst:  tmpDir,
+		Mode: getter.ClientModeDir,
+	}
+
+	// Clone repository into tmpdir
+	if err := client.Get(); err != nil {
 		return nil, err
 	}
-	file, err := fs.Open(node.path)
-	if err != nil {
-		return nil, err
+
+	// Build path to Taskfile in tmpdir
+	// If no path specified, use default Taskfile.yml
+	taskfilePath := node.path
+	if taskfilePath == "" {
+		taskfilePath = "Taskfile.yml"
 	}
-	// Read the entire response body
-	b, err := io.ReadAll(file)
+	filePath := filepath.Join(tmpDir, taskfilePath)
+
+	// Read file
+	b, err := os.ReadFile(filePath)
 	if err != nil {
 		return nil, err
 	}

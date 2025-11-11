@@ -102,3 +102,50 @@ func TestGitNode_CacheKey(t *testing.T) {
 		assert.Equal(t, tt.expectedKey, key)
 	}
 }
+
+func TestGitNode_buildURL(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name        string
+		entrypoint  string
+		expectedURL string
+	}{
+		{
+			name:        "HTTPS with ref",
+			entrypoint:  "https://github.com/foo/bar.git//Taskfile.yml?ref=main",
+			expectedURL: "git::https://github.com/foo/bar.git?ref=main&depth=1",
+		},
+		{
+			name:        "SSH with ref",
+			entrypoint:  "git@github.com:foo/bar.git//Taskfile.yml?ref=main",
+			expectedURL: "git::ssh://git@github.com/foo/bar.git?ref=main&depth=1",
+		},
+		{
+			name:        "HTTPS with tag ref",
+			entrypoint:  "https://github.com/foo/bar.git//Taskfile.yml?ref=v1.0.0",
+			expectedURL: "git::https://github.com/foo/bar.git?ref=v1.0.0&depth=1",
+		},
+		{
+			name:        "HTTPS without ref (uses remote HEAD)",
+			entrypoint:  "https://github.com/foo/bar.git//Taskfile.yml",
+			expectedURL: "git::https://github.com/foo/bar.git?ref=HEAD&depth=1",
+		},
+		{
+			name:        "SSH with directory path",
+			entrypoint:  "git@github.com:foo/bar.git//directory/Taskfile.yml?ref=dev",
+			expectedURL: "git::ssh://git@github.com/foo/bar.git?ref=dev&depth=1",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			node, err := NewGitNode(tt.entrypoint, "", false)
+			require.NoError(t, err)
+			gotURL := node.buildURL()
+			assert.Equal(t, tt.expectedURL, gotURL)
+		})
+	}
+}
