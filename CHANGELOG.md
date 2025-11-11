@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v3.45.5 - 2025-11-11
 
 - Fixed bug that made a generic message, instead of an useful one, appear when a
   Taskfile could not be found (#2431 by @andreynering).
