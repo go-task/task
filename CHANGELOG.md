@@ -14,6 +14,7 @@
 - Fixed a concurrency bug with `output: group`. This ensures that begin/end
   parts won't be mixed up from different tasks (#1208, #2349, #2350 by
   @trulede).
+- Do not re-evaluate variables for `defer:` (#2244, #2418 by @trulede).
 
 ## v3.45.4 - 2025-09-17
 
