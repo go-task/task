@@ -136,6 +136,8 @@ winget:
           owner: microsoft
           name: winget-pkgs
           branch: master
+        body: |
+          /cc @andreynering @pd93 @vmaerten
 
 
 npms:
