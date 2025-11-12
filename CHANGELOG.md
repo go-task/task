@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Fix RPM upload to Cloudsmith by including the version in the filename to
+  ensure unique filenames (#2507 by @vmaerten).
+
 ## v3.45.5 - 2025-11-11
 
 - Fixed bug that made a generic message, instead of an useful one, appear when a
@@ -15,7 +20,8 @@
   parts won't be mixed up from different tasks (#1208, #2349, #2350 by
   @trulede).
 - Do not re-evaluate variables for `defer:` (#2244, #2418 by @trulede).
-- Improve error message when a Taskfile is not found (#2441, #2494 by @vmaerten).
+- Improve error message when a Taskfile is not found (#2441, #2494 by
+  @vmaerten).
 - Fixed generic error message `exit status 1` when a dependency task failed
   (#2286 by @GrahamDennis).
 - Fixed YAML library from the unmaintained `gopkg.in/yaml.v3` to the new fork
@@ -23,8 +29,8 @@
 - On Windows, the built-in version of the `rm` core utils contains a fix related
   to the `-f` flag (#2426,
   [u-root/u-root#3464](https://github.com/u-root/u-root/pull/3464),
-  [mvdan/sh#1199](https://github.com/mvdan/sh/pull/1199),
-  #2506 by @andreynering).
+  [mvdan/sh#1199](https://github.com/mvdan/sh/pull/1199), #2506 by
+  @andreynering).
 
 ## v3.45.4 - 2025-09-17
 
