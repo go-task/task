@@ -127,7 +127,7 @@ winget:
     repository:
       owner: go-task
       name: winget-pkgs
-      branch: 'chore/task-{{.Version}}'
+      branch: 'task-{{.Version}}'
       pull_request:
         enabled: true
         draft: false
