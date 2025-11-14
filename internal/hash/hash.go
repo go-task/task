@@ -20,5 +20,5 @@ func Name(t *ast.Task) (string, error) {
 
 func Hash(t *ast.Task) (string, error) {
 	h, err := hashstructure.Hash(t, hashstructure.FormatV2, nil)
-	return fmt.Sprintf("%s:%d", t.Task, h), err
+	return fmt.Sprintf("%s:%s:%d", t.Location.Taskfile, t.LocalName(), h), err
 }
