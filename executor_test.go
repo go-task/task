@@ -265,6 +265,38 @@ func TestVars(t *testing.T) {
 	)
 }
 
+func TestSecretVars(t *testing.T) {
+	t.Parallel()
+	NewExecutorTest(t,
+		WithName("secret vars are masked in logs"),
+		WithExecutorOptions(
+			task.WithDir("testdata/secrets"),
+		),
+		WithTask("test-secret-masking"),
+	)
+	NewExecutorTest(t,
+		WithName("multiple secrets masked"),
+		WithExecutorOptions(
+			task.WithDir("testdata/secrets"),
+		),
+		WithTask("test-multiple-secrets"),
+	)
+	NewExecutorTest(t,
+		WithName("mixed secret and public vars"),
+		WithExecutorOptions(
+			task.WithDir("testdata/secrets"),
+		),
+		WithTask("test-mixed"),
+	)
+	NewExecutorTest(t,
+		WithName("deferred command with secrets"),
+		WithExecutorOptions(
+			task.WithDir("testdata/secrets"),
+		),
+		WithTask("test-deferred-secret"),
+	)
+}
+
 func TestRequires(t *testing.T) {
 	t.Parallel()
 	NewExecutorTest(t,
