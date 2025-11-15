@@ -1,7 +1,6 @@
 package taskfile
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -240,7 +239,6 @@ func TestRepoCacheKey_Consistency(t *testing.T) {
 	require.NoError(t, err)
 
 	key1 := node.repoCacheKey()
-	fmt.Printf("key1 : %#v\n", key1)
 	key2 := node.repoCacheKey()
 	key3 := node.repoCacheKey()
 
