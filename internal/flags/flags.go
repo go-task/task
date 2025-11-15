@@ -73,6 +73,7 @@ var (
 	Experiments         bool
 	Download            bool
 	Offline             bool
+	Trust               []string
 	ClearCache          bool
 	Timeout             time.Duration
 	CacheExpiryDuration time.Duration
@@ -152,6 +153,7 @@ func init() {
 	if experiments.RemoteTaskfiles.Enabled() {
 		pflag.BoolVar(&Download, "download", false, "Downloads a cached version of a remote Taskfile.")
 		pflag.BoolVar(&Offline, "offline", getConfig(config, func() *bool { return config.Remote.Offline }, false), "Forces Task to only use local or cached Taskfiles.")
+		pflag.StringSliceVar(&Trust, "trust", config.Remote.Trust, "List of trusted hosts for remote Taskfiles (can be specified multiple times).")
 		pflag.DurationVar(&Timeout, "timeout", getConfig(config, func() *time.Duration { return config.Remote.Timeout }, time.Second*10), "Timeout for downloading remote Taskfiles.")
 		pflag.BoolVar(&ClearCache, "clear-cache", false, "Clear the remote cache.")
 		pflag.DurationVar(&CacheExpiryDuration, "expiry", getConfig(config, func() *time.Duration { return config.Remote.CacheExpiry }, 0), "Expiry duration for cached remote Taskfiles.")
@@ -238,6 +240,7 @@ func (o *flagsOption) ApplyToExecutor(e *task.Executor) {
 		task.WithInsecure(Insecure),
 		task.WithDownload(Download),
 		task.WithOffline(Offline),
+		task.WithTrust(Trust),
 		task.WithTimeout(Timeout),
 		task.WithCacheExpiryDuration(CacheExpiryDuration),
 		task.WithWatch(Watch),
