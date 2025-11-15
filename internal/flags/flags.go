@@ -152,7 +152,7 @@ func init() {
 	if experiments.RemoteTaskfiles.Enabled() {
 		pflag.BoolVar(&Download, "download", false, "Downloads a cached version of a remote Taskfile.")
 		pflag.BoolVar(&Offline, "offline", getConfig(config, func() *bool { return config.Remote.Offline }, false), "Forces Task to only use local or cached Taskfiles.")
-		pflag.DurationVar(&Timeout, "timeout", getConfig(config, func() *time.Duration { return config.Remote.Timeout }, time.Minute*10), "Timeout for downloading remote Taskfiles.")
+		pflag.DurationVar(&Timeout, "timeout", getConfig(config, func() *time.Duration { return config.Remote.Timeout }, time.Second*10), "Timeout for downloading remote Taskfiles.")
 		pflag.BoolVar(&ClearCache, "clear-cache", false, "Clear the remote cache.")
 		pflag.DurationVar(&CacheExpiryDuration, "expiry", getConfig(config, func() *time.Duration { return config.Remote.CacheExpiry }, 0), "Expiry duration for cached remote Taskfiles.")
 	}
