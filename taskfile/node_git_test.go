@@ -1,6 +1,7 @@
 package taskfile
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -148,4 +149,101 @@ func TestGitNode_buildURL(t *testing.T) {
 			assert.Equal(t, tt.expectedURL, gotURL)
 		})
 	}
+}
+
+func TestRepoCacheKey_SameRepoSameRef(t *testing.T) {
+	t.Parallel()
+
+	// Same repo, same ref, different files should have SAME cache key
+	node1, err := NewGitNode("https://github.com/foo/bar.git//file1.yml?ref=main", "", false)
+	require.NoError(t, err)
+
+	node2, err := NewGitNode("https://github.com/foo/bar.git//dir/file2.yml?ref=main", "", false)
+	require.NoError(t, err)
+
+	key1 := node1.repoCacheKey()
+	key2 := node2.repoCacheKey()
+
+	assert.Equal(t, key1, key2, "Same repo+ref should generate same cache key regardless of file path")
+}
+
+func TestRepoCacheKey_SameRepoDifferentRef(t *testing.T) {
+	t.Parallel()
+
+	// Same repo, different ref should have DIFFERENT cache keys
+	node1, err := NewGitNode("https://github.com/foo/bar.git//file.yml?ref=main", "", false)
+	require.NoError(t, err)
+
+	node2, err := NewGitNode("https://github.com/foo/bar.git//file.yml?ref=dev", "", false)
+	require.NoError(t, err)
+
+	key1 := node1.repoCacheKey()
+	key2 := node2.repoCacheKey()
+
+	assert.NotEqual(t, key1, key2, "Different refs should generate different cache keys")
+}
+
+func TestRepoCacheKey_DifferentRepos(t *testing.T) {
+	t.Parallel()
+
+	// Different repos should have DIFFERENT cache keys
+	node1, err := NewGitNode("https://github.com/foo/bar.git//file.yml?ref=main", "", false)
+	require.NoError(t, err)
+
+	node2, err := NewGitNode("https://github.com/foo/other.git//file.yml?ref=main", "", false)
+	require.NoError(t, err)
+
+	key1 := node1.repoCacheKey()
+	key2 := node2.repoCacheKey()
+
+	assert.NotEqual(t, key1, key2, "Different repos should generate different cache keys")
+}
+
+func TestRepoCacheKey_NoRefVsHead(t *testing.T) {
+	t.Parallel()
+
+	// No ref (defaults to HEAD) vs explicit HEAD should have SAME cache key
+	node1, err := NewGitNode("https://github.com/foo/bar.git//file.yml", "", false)
+	require.NoError(t, err)
+
+	node2, err := NewGitNode("https://github.com/foo/bar.git//file.yml?ref=HEAD", "", false)
+	require.NoError(t, err)
+
+	key1 := node1.repoCacheKey()
+	key2 := node2.repoCacheKey()
+
+	assert.Equal(t, key1, key2, "No ref and explicit HEAD should generate same cache key")
+}
+
+func TestRepoCacheKey_SSHvsHTTPS(t *testing.T) {
+	t.Parallel()
+
+	// SSH vs HTTPS pointing to same repo should have SAME cache key
+	// They clone the same repo, so we want to share the cache
+	node1, err := NewGitNode("git@github.com:foo/bar.git//file.yml?ref=main", "", false)
+	require.NoError(t, err)
+
+	node2, err := NewGitNode("https://github.com/foo/bar.git//file.yml?ref=main", "", false)
+	require.NoError(t, err)
+
+	key1 := node1.repoCacheKey()
+	key2 := node2.repoCacheKey()
+
+	assert.Equal(t, key1, key2, "SSH and HTTPS for same repo should share cache")
+}
+
+func TestRepoCacheKey_Consistency(t *testing.T) {
+	t.Parallel()
+
+	// Calling repoCacheKey multiple times on same node should return same key
+	node, err := NewGitNode("https://github.com/foo/bar.git//file.yml?ref=main", "", false)
+	require.NoError(t, err)
+
+	key1 := node.repoCacheKey()
+	fmt.Printf("key1 : %#v\n", key1)
+	key2 := node.repoCacheKey()
+	key3 := node.repoCacheKey()
+
+	assert.Equal(t, key1, key2)
+	assert.Equal(t, key2, key3)
 }
