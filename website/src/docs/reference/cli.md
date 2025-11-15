@@ -220,6 +220,14 @@ task build --color=false
 NO_COLOR=1 task build
 ```
 
+#### `--failfast`
+
+Run deps and stop on first failure. Enabled by default.
+
+```bash
+task build --failfast=false
+```
+
 ### Task Information
 
 #### `--status`
