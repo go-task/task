@@ -379,6 +379,33 @@ vars:
         ttl: 3600
 ```
 
+### Secret Variables (`secret`)
+
+Mark variables as secret to mask their values in command logs.
+
+```yaml
+vars:
+  API_KEY:
+    value: 'sk-1234567890abcdef'
+    secret: true  # This variable will be masked in logs
+
+  DB_PASSWORD:
+    sh: vault read -field=password secret/db
+    secret: true  # Works with dynamic variables too
+```
+
+When a variable is marked as `secret: true`, Task will replace its value with
+`*****` in command logs. The actual command execution still receives the real
+value.
+
+::: info
+
+For complete documentation on secret variables, including security
+considerations and best practices, see the
+[Secret variables](/docs/guide#secret-variables) section in the Guide.
+
+:::
+
 ### Variable Ordering
 
 Variables can reference previously defined variables:
