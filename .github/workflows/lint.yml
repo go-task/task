@@ -22,10 +22,13 @@ jobs:
 
       - uses: actions/checkout@v5
 
-      - name: golangci-lint
-        uses: golangci/golangci-lint-action@v8
+      - name: Activate Hermit
+        uses: cashapp/activate-hermit@v1
         with:
-          version: v2.1.0
+          cache: "true"
+
+      - name: Run golangci-lint
+        run: ./bin/golangci-lint run ./...
 
   lint-jsonschema:
     runs-on: ubuntu-latest

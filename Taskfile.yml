@@ -93,7 +93,7 @@ tasks:
       - .golangci.yml
       - go.mod
     cmds:
-      - golangci-lint run
+      - "{{.BIN}}/golangci-lint run"
 
   lint:fix:
     desc: Runs golangci-lint and fixes any issues
@@ -102,7 +102,7 @@ tasks:
       - .golangci.yml
       - go.mod
     cmds:
-      - golangci-lint run --fix
+      - "{{.BIN}}/golangci-lint run --fix"
 
   format:
     desc: Runs golangci-lint and formats any Go files
@@ -111,7 +111,7 @@ tasks:
       - './**/*.go'
       - .golangci.yml
     cmds:
-      - golangci-lint fmt
+      - "{{.BIN}}/golangci-lint fmt"
 
   sleepit:build:
     desc: Builds the sleepit test helper
