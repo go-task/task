@@ -58,7 +58,6 @@ var (
 	Watch               bool
 	Verbose             bool
 	Silent              bool
-	DisableFuzzy        bool
 	AssumeYes           bool
 	Dry                 bool
 	Summary             bool
@@ -70,12 +69,10 @@ var (
 	Output              ast.Output
 	Color               bool
 	Interval            time.Duration
-	Failfast            bool
 	Global              bool
 	Experiments         bool
 	Download            bool
 	Offline             bool
-	TrustedHosts        []string
 	ClearCache          bool
 	Timeout             time.Duration
 	CacheExpiryDuration time.Duration
@@ -126,7 +123,6 @@ func init() {
 	pflag.BoolVarP(&Watch, "watch", "w", false, "Enables watch of the given task.")
 	pflag.BoolVarP(&Verbose, "verbose", "v", getConfig(config, func() *bool { return config.Verbose }, false), "Enables verbose mode.")
 	pflag.BoolVarP(&Silent, "silent", "s", false, "Disables echoing.")
-	pflag.BoolVar(&DisableFuzzy, "disable-fuzzy", getConfig(config, func() *bool { return config.DisableFuzzy }, false), "Disables fuzzy matching for task names.")
 	pflag.BoolVarP(&AssumeYes, "yes", "y", false, "Assume \"yes\" as answer to all prompts.")
 	pflag.BoolVarP(&Parallel, "parallel", "p", false, "Executes tasks provided on command line in parallel.")
 	pflag.BoolVarP(&Dry, "dry", "n", false, "Compiles and prints tasks in the order that they would be run, without executing them.")
@@ -141,7 +137,6 @@ func init() {
 	pflag.BoolVarP(&Color, "color", "c", true, "Colored output. Enabled by default. Set flag to false or use NO_COLOR=1 to disable.")
 	pflag.IntVarP(&Concurrency, "concurrency", "C", getConfig(config, func() *int { return config.Concurrency }, 0), "Limit number of tasks to run concurrently.")
 	pflag.DurationVarP(&Interval, "interval", "I", 0, "Interval to watch for changes.")
-	pflag.BoolVarP(&Failfast, "failfast", "F", getConfig(config, func() *bool { return &config.Failfast }, false), "When running tasks in parallel, stop all tasks if one fails.")
 	pflag.BoolVarP(&Global, "global", "g", false, "Runs global Taskfile, from $HOME/{T,t}askfile.{yml,yaml}.")
 	pflag.BoolVar(&Experiments, "experiments", false, "Lists all the available experiments and whether or not they are enabled.")
 
@@ -157,8 +152,7 @@ func init() {
 	if experiments.RemoteTaskfiles.Enabled() {
 		pflag.BoolVar(&Download, "download", false, "Downloads a cached version of a remote Taskfile.")
 		pflag.BoolVar(&Offline, "offline", getConfig(config, func() *bool { return config.Remote.Offline }, false), "Forces Task to only use local or cached Taskfiles.")
-		pflag.StringSliceVar(&TrustedHosts, "trusted-hosts", config.Remote.TrustedHosts, "List of trusted hosts for remote Taskfiles (comma-separated).")
-		pflag.DurationVar(&Timeout, "timeout", getConfig(config, func() *time.Duration { return config.Remote.Timeout }, time.Second*10), "Timeout for downloading remote Taskfiles.")
+		pflag.DurationVar(&Timeout, "timeout", getConfig(config, func() *time.Duration { return config.Remote.Timeout }, time.Minute*10), "Timeout for downloading remote Taskfiles.")
 		pflag.BoolVar(&ClearCache, "clear-cache", false, "Clear the remote cache.")
 		pflag.DurationVar(&CacheExpiryDuration, "expiry", getConfig(config, func() *time.Duration { return config.Remote.CacheExpiry }, 0), "Expiry duration for cached remote Taskfiles.")
 	}
@@ -244,13 +238,11 @@ func (o *flagsOption) ApplyToExecutor(e *task.Executor) {
 		task.WithInsecure(Insecure),
 		task.WithDownload(Download),
 		task.WithOffline(Offline),
-		task.WithTrustedHosts(TrustedHosts),
 		task.WithTimeout(Timeout),
 		task.WithCacheExpiryDuration(CacheExpiryDuration),
 		task.WithWatch(Watch),
 		task.WithVerbose(Verbose),
 		task.WithSilent(Silent),
-		task.WithDisableFuzzy(DisableFuzzy),
 		task.WithAssumeYes(AssumeYes),
 		task.WithDry(Dry || Status),
 		task.WithSummary(Summary),
@@ -261,7 +253,6 @@ func (o *flagsOption) ApplyToExecutor(e *task.Executor) {
 		task.WithOutputStyle(Output),
 		task.WithTaskSorter(sorter),
 		task.WithVersionCheck(true),
-		task.WithFailfast(Failfast),
 	)
 }
 

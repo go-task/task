@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	giturls "github.com/chainguard-dev/git-urls"
 	"github.com/hashicorp/go-getter"
@@ -83,11 +84,15 @@ func (node *GitNode) buildURL() string {
 }
 
 func (node *GitNode) ReadContext(ctx context.Context) ([]byte, error) {
-	// Create temporary directory for git clone
-	tmpDir, err := os.MkdirTemp("", "task-git-*")
-	if err != nil {
-		return nil, fmt.Errorf("failed to create temp dir: %w", err)
-	}
+	return node.readWithGoGetter(ctx)
+}
+
+func (node *GitNode) readWithGoGetter(ctx context.Context) ([]byte, error) {
+	// IMPORTANT: Do NOT create tmpDir in advance!
+	// If the directory exists, go-getter will use update() instead of clone()
+	// which is 3x slower (git init + fetch --tags + pull instead of a simple clone)
+	tmpDir := filepath.Join(os.TempDir(), fmt.Sprintf("task-git-getter-%d", time.Now().UnixNano()))
+
 	defer func() {
 		_ = os.RemoveAll(tmpDir)
 	}()
@@ -107,7 +112,6 @@ func (node *GitNode) ReadContext(ctx context.Context) ([]byte, error) {
 	}
 
 	// Build path to Taskfile in tmpdir
-	// If no path specified, use default Taskfile.yml
 	taskfilePath := node.path
 	if taskfilePath == "" {
 		taskfilePath = "Taskfile.yml"

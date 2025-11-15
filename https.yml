@@ -1,0 +1,15 @@
+# https://taskfile.dev
+
+version: '3'
+includes:
+  app:
+    taskfile: https://github.com/pbstck/taskfiles.git//taskfile/rust.yml?ref=main
+
+vars:
+  GREETING: Hello, World!
+
+tasks:
+  default:
+    cmds:
+      - echo "{{.GREETING}}"
+    silent: true
