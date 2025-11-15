@@ -614,6 +614,21 @@ tasks:
       - ./deploy.sh
 ```
 
+### `dir`
+
+- **Type**: `string`
+- **Description**: The directory in which this task should run
+- **Default**: If the task is in the root Taskfile, the default `dir` is
+  `ROOT_DIR`. For included Taskfiles, the default `dir` is the value specified in
+  their respective `includes.*.dir` field (if any).
+
+```yaml
+tasks:
+  current-dir:
+    dir: '{{.USER_WORKING_DIR}}'
+    cmd: pwd
+```
+
 #### `requires`
 
 - **Type**: `Requires`
