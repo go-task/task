@@ -11,7 +11,6 @@ import (
 	"go.yaml.in/yaml/v4"
 
 	"github.com/go-task/task/v3/errors"
-	"github.com/go-task/task/v3/internal/filepathext"
 	"github.com/go-task/task/v3/internal/sort"
 )
 
@@ -171,7 +170,14 @@ func (t1 *Tasks) Merge(t2 *Tasks, include *Include, includedTaskfileVars *Vars) 
 		}
 
 		if include.AdvancedImport {
-			task.Dir = filepathext.SmartJoin(include.Dir, task.Dir)
+			// Save the include.Dir and task.Dir so that the final task.dir can
+			// be calculated when the task is compiled (and templating is available).
+			task.IncludeDir = include.Dir
+			task.IncludeTaskDir = task.Dir
+			// If task.dir is not set then use the include.dir.
+			if len(task.Dir) == 0 {
+				task.Dir = include.Dir
+			}
 			if task.IncludeVars == nil {
 				task.IncludeVars = NewVars()
 			}

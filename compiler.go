@@ -90,19 +90,6 @@ func (c *Compiler) getVariables(t *ast.Task, call *Call, evaluateShVars bool) (*
 	}
 	rangeFunc := getRangeFunc(c.Dir)
 
-	var taskRangeFunc func(k string, v ast.Var) error
-	if t != nil {
-		// NOTE(@andreynering): We're manually joining these paths here because
-		// this is the raw task, not the compiled one.
-		cache := &templater.Cache{Vars: result}
-		dir := templater.Replace(t.Dir, cache)
-		if err := cache.Err(); err != nil {
-			return nil, err
-		}
-		dir = filepathext.SmartJoin(c.Dir, dir)
-		taskRangeFunc = getRangeFunc(dir)
-	}
-
 	for k, v := range c.TaskfileEnv.All() {
 		if err := rangeFunc(k, v); err != nil {
 			return nil, err
@@ -113,31 +100,48 @@ func (c *Compiler) getVariables(t *ast.Task, call *Call, evaluateShVars bool) (*
 			return nil, err
 		}
 	}
+
 	if t != nil {
 		for k, v := range t.IncludeVars.All() {
 			if err := rangeFunc(k, v); err != nil {
 				return nil, err
 			}
 		}
+
+		// Calculate the t.Dir now based on values saved during AST parsing
+		// and then get a Task RangeFunc.
+		dir := c.Dir
+		if len(t.Dir) == 0 {
+			// Use the saved include task.Dir.
+			t.Dir = t.IncludeTaskDir
+		} else {
+			cache := &templater.Cache{Vars: result}
+			taskDir := templater.Replace(t.Dir, cache)
+			if err := cache.Err(); err != nil {
+				return nil, err
+			}
+			t.Dir = filepathext.SmartJoin(t.IncludeDir, taskDir)
+			// Update dir (esp. if taskDir is a relative path).
+			dir = filepathext.SmartJoin(c.Dir, taskDir)
+		}
+		taskRangeFunc := getRangeFunc(dir)
+
 		for k, v := range t.IncludedTaskfileVars.All() {
 			if err := taskRangeFunc(k, v); err != nil {
 				return nil, err
 			}
 		}
-	}
-
-	if t == nil || call == nil {
-		return result, nil
-	}
-
-	for k, v := range call.Vars.All() {
-		if err := rangeFunc(k, v); err != nil {
-			return nil, err
+		if call != nil {
+			for k, v := range call.Vars.All() {
+				if err := rangeFunc(k, v); err != nil {
+					return nil, err
+				}
+			}
 		}
-	}
-	for k, v := range t.Vars.All() {
-		if err := taskRangeFunc(k, v); err != nil {
-			return nil, err
+		for k, v := range t.Vars.All() {
+			if err := taskRangeFunc(k, v); err != nil {
+				return nil, err
+			}
 		}
 	}
 
