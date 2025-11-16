@@ -621,6 +621,30 @@ func TestAlias(t *testing.T) {
 	)
 }
 
+func TestSummaryWithVarsAndRequires(t *testing.T) {
+	t.Parallel()
+
+	// Test basic case from prompt.md - vars and requires
+	NewExecutorTest(t,
+		WithName("vars-and-requires"),
+		WithExecutorOptions(
+			task.WithDir("testdata/summary-vars-requires"),
+			task.WithSummary(true),
+		),
+		WithTask("mytask"),
+	)
+
+	// Test with shell variables
+	NewExecutorTest(t,
+		WithName("shell-vars"),
+		WithExecutorOptions(
+			task.WithDir("testdata/summary-vars-requires"),
+			task.WithSummary(true),
+		),
+		WithTask("with-sh-var"),
+	)
+}
+
 func TestLabel(t *testing.T) {
 	t.Parallel()
 

@@ -1,0 +1,36 @@
+version: 3
+
+tasks:
+  mytask:
+    desc: It does things
+    summary: |
+      It does things and has optional and required variables.
+    vars:
+      OPTIONAL_VAR: "hello"
+    requires:
+      vars:
+        - REQUIRED_VAR
+    cmds:
+      - cmd: echo {{ .OPTIONAL_VAR }} {{ .REQUIRED_VAR }}
+
+  with-sh-var:
+    desc: Task with shell variable
+    vars:
+      DYNAMIC_VAR:
+        sh: echo "world"
+      STATIC_VAR: "hello"
+    cmds:
+      - echo {{ .DYNAMIC_VAR }}
+
+  no-vars:
+    desc: Task without variables
+    cmds:
+      - echo "no vars here"
+
+  only-requires:
+    desc: Task with only requires
+    requires:
+      vars:
+        - NEEDED_VAR
+    cmds:
+      - echo {{ .NEEDED_VAR }}
