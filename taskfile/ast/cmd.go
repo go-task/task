@@ -9,8 +9,8 @@ import (
 
 // Cmd is a task command
 type Cmd struct {
-	Cmd         string  // Resolved command (used for execution and fingerprinting)
-	CmdTemplate string  // Original template before variable resolution (used for secret masking)
+	Cmd         string // Resolved command (used for execution and fingerprinting)
+	CmdTemplate string // Original template before variable resolution (used for secret masking)
 	Task        string
 	For         *For
 	Silent      bool
