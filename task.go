@@ -420,7 +420,7 @@ func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call *Call, i in
 			return fmt.Errorf("task: failed to get variables: %w", err)
 		}
 		stdOut, stdErr, closer := outputWrapper.WrapWriter(e.Stdout, e.Stderr, t.Prefix, outputTemplater)
-		
+
 		err = execext.RunCommand(ctx, &execext.RunCommandOptions{
 			Command:   cmd.Cmd,
 			Dir:       t.Dir,
