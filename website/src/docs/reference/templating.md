@@ -434,7 +434,7 @@ tasks:
       - echo "{{.MESSAGE | lower}}"         # "hello world"
       - echo "{{.NAME | trunc 4}}"          # "john"
       - echo "{{"test" | repeat 3}}"        # "testtesttest"
-      - echo "{{substr .TEXT 0 5}}"      # "Hello"
+      - echo "{{.TEXT | substr 0 5}}"       # "Hello"
 ```
 
 #### String Testing and Searching
