@@ -1,6 +1,7 @@
 # vim: set tabstop=2 shiftwidth=2 expandtab:
 
 _GO_TASK_COMPLETION_LIST_OPTION='--list-all'
+TASK_CMD="${TASK_EXE:-task}"
 
 function _task()
 {
@@ -52,4 +53,4 @@ function _task()
   __ltrim_colon_completions "$cur"
 }
 
-complete -F _task task
+complete -F _task "$TASK_CMD"
