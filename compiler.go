@@ -51,7 +51,7 @@ func (c *Compiler) getVariables(t *ast.Task, call *Call, evaluateShVars bool) (*
 		return nil, err
 	}
 	for k, v := range specialVars {
-		result.Set(k, ast.Var{Value: v})
+		result.Set(k, ast.Var{Value: v, Secret: false})
 	}
 
 	getRangeFunc := func(dir string) func(k string, v ast.Var) error {
@@ -62,12 +62,12 @@ func (c *Compiler) getVariables(t *ast.Task, call *Call, evaluateShVars bool) (*
 			// If the variable should not be evaluated, but is nil, set it to an empty string
 			// This stops empty interface errors when using the templater to replace values later
 			if !evaluateShVars && newVar.Value == nil {
-				result.Set(k, ast.Var{Value: ""})
+				result.Set(k, ast.Var{Value: "", Secret: v.Secret})
 				return nil
 			}
 			// If the variable should not be evaluated and it is set, we can set it and return
 			if !evaluateShVars {
-				result.Set(k, ast.Var{Value: newVar.Value})
+				result.Set(k, ast.Var{Value: newVar.Value, Secret: v.Secret})
 				return nil
 			}
 			// Now we can check for errors since we've handled all the cases when we don't want to evaluate
@@ -76,7 +76,7 @@ func (c *Compiler) getVariables(t *ast.Task, call *Call, evaluateShVars bool) (*
 			}
 			// If the variable is already set, we can set it and return
 			if newVar.Value != nil || newVar.Sh == nil {
-				result.Set(k, ast.Var{Value: newVar.Value})
+				result.Set(k, ast.Var{Value: newVar.Value, Secret: v.Secret})
 				return nil
 			}
 			// If the variable is dynamic, we need to resolve it first
@@ -84,7 +84,7 @@ func (c *Compiler) getVariables(t *ast.Task, call *Call, evaluateShVars bool) (*
 			if err != nil {
 				return err
 			}
-			result.Set(k, ast.Var{Value: static})
+			result.Set(k, ast.Var{Value: static, Secret: v.Secret})
 			return nil
 		}
 	}
