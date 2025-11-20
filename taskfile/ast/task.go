@@ -48,6 +48,7 @@ type Task struct {
 	IncludedTaskfileVars *Vars
 
 	FullName string
+	FailFast             bool
 }
 
 func (t *Task) Name() string {
@@ -143,6 +144,7 @@ func (t *Task) UnmarshalYAML(node *yaml.Node) error {
 			Platforms     []*Platform
 			Requires      *Requires
 			Watch         bool
+			FailFast      *bool `yaml:"failfast"`
 		}
 		if err := node.Decode(&task); err != nil {
 			return errors.NewTaskfileDecodeError(err, node)
@@ -181,6 +183,7 @@ func (t *Task) UnmarshalYAML(node *yaml.Node) error {
 		t.Platforms = task.Platforms
 		t.Requires = task.Requires
 		t.Watch = task.Watch
+		t.FailFast = task.FailFast == nil || *task.FailFast
 		return nil
 	}
 
@@ -226,6 +229,7 @@ func (t *Task) DeepCopy() *Task {
 		Requires:             t.Requires.DeepCopy(),
 		Namespace:            t.Namespace,
 		FullName:             t.FullName,
+		FailFast:             t.FailFast,
 	}
 	return c
 }
