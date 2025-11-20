@@ -302,7 +302,6 @@ func TestSecretVars(t *testing.T) {
 		),
 		WithTask("test-env-secret-limitation"),
 	)
-
 }
 
 func TestRequires(t *testing.T) {
