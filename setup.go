@@ -103,24 +103,25 @@ func (e *Executor) readTaskfile(node taskfile.Node) error {
 }
 
 func (e *Executor) setupFuzzyModel() {
+
 	if e.Taskfile == nil {
 		return
 	}
-
-	model := fuzzy.NewModel()
-	model.SetThreshold(1) // because we want to build grammar based on every task name
-
-	var words []string
-	for name, task := range e.Taskfile.Tasks.All(nil) {
-		if task.Internal {
-			continue
-		}
-		words = append(words, name)
-		words = slices.Concat(words, task.Aliases)
-	}
-
-	model.Train(words)
-	e.fuzzyModel = model
+	//
+	//model := fuzzy.NewModel()
+	//model.SetThreshold(1) // because we want to build grammar based on every task name
+	//
+	//var words []string
+	//for name, task := range e.Taskfile.Tasks.All(nil) {
+	//	if task.Internal {
+	//		continue
+	//	}
+	//	words = append(words, name)
+	//	words = slices.Concat(words, task.Aliases)
+	//}
+	//
+	//model.Train(words)
+	//e.fuzzyModel = model
 }
 
 func (e *Executor) setupTempDir() error {
