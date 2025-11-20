@@ -312,6 +312,14 @@ func TestSecretVars(t *testing.T) {
 		),
 		WithTask("test-deferred-secret"),
 	)
+	NewExecutorTest(t,
+		WithName("env secret limitation"),
+		WithExecutorOptions(
+			task.WithDir("testdata/secrets"),
+		),
+		WithTask("test-env-secret-limitation"),
+	)
+
 }
 
 func TestRequires(t *testing.T) {
