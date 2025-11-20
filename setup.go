@@ -5,12 +5,10 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"slices"
 	"strings"
 	"sync"
 
 	"github.com/Masterminds/semver/v3"
-	"github.com/sajari/fuzzy"
 
 	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/env"
