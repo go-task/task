@@ -1,0 +1,10 @@
+task: with-sh-var
+
+Task with shell variable
+
+vars:
+  DYNAMIC_VAR: sh: echo "world"
+  STATIC_VAR: "hello"
+
+commands:
+ - echo 
