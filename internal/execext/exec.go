@@ -147,7 +147,7 @@ func execHandlers() (handlers []func(next interp.ExecHandlerFunc) interp.ExecHan
 	if useGoCoreUtils {
 		handlers = append(handlers, coreutils.ExecHandler)
 	}
-	return
+	return handlers
 }
 
 func openHandler(ctx context.Context, path string, flag int, perm os.FileMode) (io.ReadWriteCloser, error) {

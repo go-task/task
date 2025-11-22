@@ -112,7 +112,7 @@ func (e *Executor) splitRegularAndWatchCalls(calls ...*Call) (regularCalls []*Ca
 			regularCalls = append(regularCalls, c)
 		}
 	}
-	return
+	return regularCalls, watchCalls, err
 }
 
 // RunTask runs a task by its name
