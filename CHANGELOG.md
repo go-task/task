@@ -4,6 +4,8 @@
 
 - Fix RPM upload to Cloudsmith by including the version in the filename to
   ensure unique filenames (#2507 by @vmaerten).
+- Fix `run: when_changed` to work properly for Taskfiles included multiple times
+  (#2508, #2511 by @trulede).
 
 ## v3.45.5 - 2025-11-11
 
