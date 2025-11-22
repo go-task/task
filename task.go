@@ -80,7 +80,6 @@ func (e *Executor) Run(ctx context.Context, calls ...*Call) error {
 
 	g, ctx := errgroup.WithContext(ctx)
 	for _, c := range regularCalls {
-		c := c
 		if e.Parallel {
 			g.Go(func() error { return e.RunTask(ctx, c) })
 		} else {
@@ -264,7 +263,6 @@ func (e *Executor) runDeps(ctx context.Context, t *ast.Task) error {
 	defer reacquire()
 
 	for _, d := range t.Deps {
-		d := d
 		g.Go(func() error {
 			err := e.RunTask(ctx, &Call{Task: d.Task, Vars: d.Vars, Silent: d.Silent, Indirect: true})
 			if err != nil {
