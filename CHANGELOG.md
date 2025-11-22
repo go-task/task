@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- A small behavior change was made to dependencies. Task will now wait for all
+  dependencies to finish running before continuing, even if any of them fail.
+  To opt for the previous behavior, set `failfast: true` either on your
+  `.taskrc.yml` or per task, or use the `--failfast` flag, which will also work
+  for `--parallel` (#1246, #2525 by @andreynering).
 - Fix RPM upload to Cloudsmith by including the version in the filename to
   ensure unique filenames (#2507 by @vmaerten).
 - Fix `run: when_changed` to work properly for Taskfiles included multiple times

@@ -71,6 +71,7 @@ func (e *Executor) CompiledTaskForTaskList(call *Call) (*ast.Task, error) {
 		Requires:             origTask.Requires,
 		Watch:                origTask.Watch,
 		Namespace:            origTask.Namespace,
+		Failfast:             origTask.Failfast,
 	}, nil
 }
 
@@ -125,6 +126,7 @@ func (e *Executor) compiledTask(call *Call, evaluateShVars bool) (*ast.Task, err
 		Location:             origTask.Location,
 		Requires:             origTask.Requires,
 		Watch:                origTask.Watch,
+		Failfast:             origTask.Failfast,
 		Namespace:            origTask.Namespace,
 		FullName:             fullName,
 	}
