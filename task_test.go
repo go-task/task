@@ -1851,6 +1851,29 @@ func TestRunOnceSharedDeps(t *testing.T) {
 	assert.Contains(t, buff.String(), `task: [service-b:build] echo "build b"`)
 }
 
+func TestRunWhenChanged(t *testing.T) {
+	t.Parallel()
+
+	const dir = "testdata/run_when_changed"
+
+	var buff bytes.Buffer
+	e := task.NewExecutor(
+		task.WithDir(dir),
+		task.WithStdout(&buff),
+		task.WithStderr(&buff),
+		task.WithForceAll(true),
+		task.WithSilent(true),
+	)
+	require.NoError(t, e.Setup())
+	require.NoError(t, e.Run(t.Context(), &task.Call{Task: "start"}))
+	expectedOutputOrder := strings.TrimSpace(`
+login server=fubar user=fubar
+login server=foo user=foo
+login server=bar user=bar
+`)
+	assert.Contains(t, buff.String(), expectedOutputOrder)
+}
+
 func TestDeferredCmds(t *testing.T) {
 	t.Parallel()
 
