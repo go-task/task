@@ -55,6 +55,7 @@ _task() {
     standard_args=(
         '(-C --concurrency)'{-C,--concurrency}'[limit number of concurrent tasks]: '
         '(-p --parallel)'{-p,--parallel}'[run command-line tasks in parallel]'
+        '(-F --failfast)'{-F,--failfast}'[when running tasks in parallel, stop all tasks if one fails]'
         '(-f --force)'{-f,--force}'[run even if task is up-to-date]'
         '(-c --color)'{-c,--color}'[colored output]'
         '(--completion)--completion[generate shell completion script]:shell:(bash zsh fish powershell)'

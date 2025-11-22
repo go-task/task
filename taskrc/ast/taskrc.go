@@ -15,6 +15,7 @@ type TaskRC struct {
 	Concurrency *int            `yaml:"concurrency"`
 	Remote      Remote          `yaml:"remote"`
 	Experiments map[string]int  `yaml:"experiments"`
+	Failfast    bool            `yaml:"failfast"`
 }
 
 type Remote struct {
@@ -53,4 +54,5 @@ func (t *TaskRC) Merge(other *TaskRC) {
 
 	t.Verbose = cmp.Or(other.Verbose, t.Verbose)
 	t.Concurrency = cmp.Or(other.Concurrency, t.Concurrency)
+	t.Failfast = cmp.Or(other.Failfast, t.Failfast)
 }

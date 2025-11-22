@@ -201,6 +201,11 @@
           "description": "Configures a task to run in watch mode automatically.",
           "type": "boolean",
           "default": false
+        },
+        "failfast": {
+          "description": "When running tasks in parallel, stop all tasks if one fails.",
+          "type": "boolean",
+          "default": false
         }
       }
     },

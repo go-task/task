@@ -48,6 +48,7 @@ type (
 		Color               bool
 		Concurrency         int
 		Interval            time.Duration
+		Failfast            bool
 
 		// I/O
 		Stdin  io.Reader
@@ -516,4 +517,17 @@ type versionCheckOption struct {
 
 func (o *versionCheckOption) ApplyToExecutor(e *Executor) {
 	e.EnableVersionCheck = o.enableVersionCheck
+}
+
+// WithFailfast tells the [Executor] whether or not to check the version of
+func WithFailfast(failfast bool) ExecutorOption {
+	return &failfastOption{failfast}
+}
+
+type failfastOption struct {
+	failfast bool
+}
+
+func (o *failfastOption) ApplyToExecutor(e *Executor) {
+	e.Failfast = o.failfast
 }

@@ -69,6 +69,7 @@ var (
 	Output              ast.Output
 	Color               bool
 	Interval            time.Duration
+	Failfast            bool
 	Global              bool
 	Experiments         bool
 	Download            bool
@@ -138,6 +139,7 @@ func init() {
 	pflag.BoolVarP(&Color, "color", "c", true, "Colored output. Enabled by default. Set flag to false or use NO_COLOR=1 to disable.")
 	pflag.IntVarP(&Concurrency, "concurrency", "C", getConfig(config, func() *int { return config.Concurrency }, 0), "Limit number of tasks to run concurrently.")
 	pflag.DurationVarP(&Interval, "interval", "I", 0, "Interval to watch for changes.")
+	pflag.BoolVarP(&Failfast, "failfast", "F", getConfig(config, func() *bool { return &config.Failfast }, false), "When running tasks in parallel, stop all tasks if one fails.")
 	pflag.BoolVarP(&Global, "global", "g", false, "Runs global Taskfile, from $HOME/{T,t}askfile.{yml,yaml}.")
 	pflag.BoolVar(&Experiments, "experiments", false, "Lists all the available experiments and whether or not they are enabled.")
 
@@ -256,6 +258,7 @@ func (o *flagsOption) ApplyToExecutor(e *task.Executor) {
 		task.WithOutputStyle(Output),
 		task.WithTaskSorter(sorter),
 		task.WithVersionCheck(true),
+		task.WithFailfast(Failfast),
 	)
 }
 

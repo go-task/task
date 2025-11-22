@@ -61,6 +61,11 @@
       "type": "integer",
       "description": "Number of concurrent tasks to run",
       "minimum": 1
+    },
+    "failfast": {
+      "description": "When running tasks in parallel, stop all tasks if one fails.",
+      "type": "boolean",
+      "default": false
     }
   },
   "additionalProperties": false

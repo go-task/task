@@ -78,7 +78,10 @@ func (e *Executor) Run(ctx context.Context, calls ...*Call) error {
 		return err
 	}
 
-	g, ctx := errgroup.WithContext(ctx)
+	g := &errgroup.Group{}
+	if e.Failfast {
+		g, ctx = errgroup.WithContext(ctx)
+	}
 	for _, c := range regularCalls {
 		if e.Parallel {
 			g.Go(func() error { return e.RunTask(ctx, c) })
@@ -257,7 +260,10 @@ func (e *Executor) mkdir(t *ast.Task) error {
 }
 
 func (e *Executor) runDeps(ctx context.Context, t *ast.Task) error {
-	g, ctx := errgroup.WithContext(ctx)
+	g := &errgroup.Group{}
+	if e.Failfast || t.Failfast {
+		g, ctx = errgroup.WithContext(ctx)
+	}
 
 	reacquire := e.releaseConcurrencyLimit()
 	defer reacquire()
