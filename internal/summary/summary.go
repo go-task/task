@@ -124,19 +124,13 @@ func printTaskCommands(l *logger.Logger, t *ast.Task) {
 	}
 }
 
-// printTaskVars prints the variables defined in a task in YAML format.
-// It displays the vars section with proper indentation and formatting.
-// Filters out OS environment variables, auto-generated Task variables, and Taskfile env vars.
-// Returns early if the task has no variables defined.
 func printTaskVars(l *logger.Logger, t *ast.Task) {
 	if t.Vars == nil || t.Vars.Len() == 0 {
 		return
 	}
 
-	// Create a set of OS environment variable names to filter them out
 	osEnvVars := getEnvVarNames()
 
-	// Create a set of Taskfile env variable names to avoid duplication
 	taskfileEnvVars := make(map[string]bool)
 	if t.Env != nil {
 		for key := range t.Env.All() {
@@ -144,7 +138,6 @@ func printTaskVars(l *logger.Logger, t *ast.Task) {
 		}
 	}
 
-	// Check if there are any non-environment variables to display
 	hasNonEnvVars := false
 	for key := range t.Vars.All() {
 		if !isEnvVar(key, osEnvVars) && !taskfileEnvVars[key] {
@@ -169,19 +162,13 @@ func printTaskVars(l *logger.Logger, t *ast.Task) {
 	}
 }
 
-// printTaskEnv prints the environment variables defined in a task in YAML format.
-// It displays the env section with proper indentation and formatting.
-// Filters out OS environment variables and auto-generated Task variables.
-// Returns early if the task has no environment variables defined.
 func printTaskEnv(l *logger.Logger, t *ast.Task) {
 	if t.Env == nil || t.Env.Len() == 0 {
 		return
 	}
 
-	// Create a set of OS environment variable names to filter them out
 	envVars := getEnvVarNames()
 
-	// Check if there are any non-environment variables to display
 	hasNonEnvVars := false
 	for key := range t.Env.All() {
 		if !isEnvVar(key, envVars) {
@@ -250,9 +237,6 @@ func formatMap(m map[string]any, indent int) string {
 	return result.String()
 }
 
-// printTaskRequires prints the required variables for a task in YAML format.
-// It displays the requires section with proper indentation and formatting.
-// Returns early if the task has no required variables.
 func printTaskRequires(l *logger.Logger, t *ast.Task) {
 	if t.Requires == nil || len(t.Requires.Vars) == 0 {
 		return
@@ -277,7 +261,6 @@ func printTaskRequires(l *logger.Logger, t *ast.Task) {
 	}
 }
 
-// getEnvVarNames returns a set of all OS environment variable names.
 func getEnvVarNames() map[string]bool {
 	envMap := make(map[string]bool)
 	for _, e := range os.Environ() {
@@ -303,6 +286,5 @@ func isEnvVar(key string, envVars map[string]bool) bool {
 		key == "MATCH" {
 		return true
 	}
-	// Filter out OS environment variables
 	return envVars[key]
 }
