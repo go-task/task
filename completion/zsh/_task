@@ -41,17 +41,30 @@ _task() {
         '(-p --parallel)'{-p,--parallel}'[run command-line tasks in parallel]' \
         '(-f --force)'{-f,--force}'[run even if task is up-to-date]' \
         '(-c --color)'{-c,--color}'[colored output]' \
+        '(--completion)--completion[generate shell completion script]:shell:(bash zsh fish powershell)' \
         '(-d --dir)'{-d,--dir}'[dir to run in]:execution dir:_dirs' \
+        '(-n --dry)'{-n,--dry}'[compiles and prints tasks without executing]' \
         '(--dry)--dry[dry-run mode, compile and print tasks only]' \
+        '(-x --exit-code)'{-x,--exit-code}'[pass-through exit code of task command]' \
+        '(--experiments)--experiments[list available experiments]' \
+        '(-g --global)'{-g,--global}'[run global Taskfile from home directory]' \
+        '(--insecure)--insecure[allow insecure Taskfile downloads]' \
+        '(-I --interval)'{-I,--interval}'[interval to watch for changes]:duration: ' \
+        '(-j --json)'{-j,--json}'[format task list as JSON]' \
+        '(--nested)--nested[nest namespaces when listing as JSON]' \
+        '(--no-status)--no-status[ignore status when listing as JSON]' \
         '(-o --output)'{-o,--output}'[set output style]:style:(interleaved group prefixed)' \
         '(--output-group-begin)--output-group-begin[message template before grouped output]:template text: ' \
         '(--output-group-end)--output-group-end[message template after grouped output]:template text: ' \
+        '(--output-group-error-only)--output-group-error-only[hide output from successful tasks]' \
         '(-s --silent)'{-s,--silent}'[disable echoing]' \
+        '(--sort)--sort[set task sorting order]:order:(default alphanumeric none)' \
         '(--status)--status[exit non-zero if supplied tasks not up-to-date]' \
         '(--summary)--summary[show summary\: field from tasks instead of running them]' \
         '(-t --taskfile)'{-t,--taskfile}'[specify a different taskfile]:taskfile:_files' \
         '(-v --verbose)'{-v,--verbose}'[verbose mode]' \
         '(-w --watch)'{-w,--watch}'[watch-mode for given tasks, re-run when inputs change]' \
+        '(-y --yes)'{-y,--yes}'[assume yes to all prompts]' \
         + '(operation)' \
             {-l,--list}'[list describable tasks]' \
             {-a,--list-all}'[list all tasks]' \
@@ -59,6 +72,15 @@ _task() {
             '(-*)'{-h,--help}'[show help]' \
             '(-*)--version[show version and exit]' \
             '*: :__task_list'
+    # Experimental flags (require experiments to be enabled)
+    # Uncomment when using GentleForce experiment:
+    # '(--force-all)--force-all[force execution of task and all dependencies]'
+    # Uncomment when using RemoteTaskfiles experiment:
+    # '(--download)--download[download remote Taskfile]'
+    # '(--offline)--offline[use only local or cached Taskfiles]'
+    # '(--timeout)--timeout[timeout for remote Taskfile downloads]:duration: '
+    # '(--clear-cache)--clear-cache[clear remote Taskfile cache]'
+    # '(--expiry)--expiry[cache expiry duration]:duration: '
 }
 
 # don't run the completion function when being source-ed or eval-ed
