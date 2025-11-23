@@ -12,6 +12,9 @@
   @vmaerten).
 - Improved shell completion scripts (Zsh, Fish, PowerShell) by adding missing
   flags and dynamic experimental feature detection (#2532 by @vmaerten).
+- Improved performance of fuzzy task name matching by implementing lazy
+  initialization. Added `--disable-fuzzy` flag and `disable-fuzzy` taskrc option
+  to allow disabling fuzzy matching entirely (#2521, #2523 by @vmaerten).
 
 ## v3.45.5 - 2025-11-11
 
