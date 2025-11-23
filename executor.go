@@ -39,6 +39,7 @@ type (
 		Watch               bool
 		Verbose             bool
 		Silent              bool
+		DisableFuzzy        bool
 		AssumeYes           bool
 		AssumeTerm          bool // Used for testing
 		Dry                 bool
@@ -294,6 +295,19 @@ type silentOption struct {
 
 func (o *silentOption) ApplyToExecutor(e *Executor) {
 	e.Silent = o.silent
+}
+
+// WithDisableFuzzy tells the [Executor] to disable fuzzy matching for task names.
+func WithDisableFuzzy(disableFuzzy bool) ExecutorOption {
+	return &disableFuzzyOption{disableFuzzy}
+}
+
+type disableFuzzyOption struct {
+	disableFuzzy bool
+}
+
+func (o *disableFuzzyOption) ApplyToExecutor(e *Executor) {
+	e.DisableFuzzy = o.disableFuzzy
 }
 
 // WithAssumeYes tells the [Executor] to assume "yes" for all prompts.

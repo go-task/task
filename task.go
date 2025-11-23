@@ -450,8 +450,14 @@ func (e *Executor) GetTask(call *Call) (*ast.Task, error) {
 	// If we found no tasks
 	if len(aliasedTasks) == 0 {
 		didYouMean := ""
-		if e.fuzzyModel != nil {
-			didYouMean = e.fuzzyModel.SpellCheck(call.Task)
+		if !e.DisableFuzzy {
+			// Lazy initialization of fuzzy model
+			if e.fuzzyModel == nil {
+				e.setupFuzzyModel()
+			}
+			if e.fuzzyModel != nil {
+				didYouMean = e.fuzzyModel.SpellCheck(call.Task)
+			}
 		}
 		return nil, &errors.TaskNotFoundError{
 			TaskName:   call.Task,

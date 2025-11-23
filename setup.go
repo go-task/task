@@ -5,10 +5,12 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"sync"
 
 	"github.com/Masterminds/semver/v3"
+	"github.com/sajari/fuzzy"
 
 	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/env"
@@ -34,7 +36,6 @@ func (e *Executor) Setup() error {
 	if err := e.readTaskfile(node); err != nil {
 		return err
 	}
-	e.setupFuzzyModel()
 	e.setupStdFiles()
 	if err := e.setupOutput(); err != nil {
 		return err
@@ -105,21 +106,21 @@ func (e *Executor) setupFuzzyModel() {
 	if e.Taskfile == nil {
 		return
 	}
-	//
-	//model := fuzzy.NewModel()
-	//model.SetThreshold(1) // because we want to build grammar based on every task name
-	//
-	//var words []string
-	//for name, task := range e.Taskfile.Tasks.All(nil) {
-	//	if task.Internal {
-	//		continue
-	//	}
-	//	words = append(words, name)
-	//	words = slices.Concat(words, task.Aliases)
-	//}
-	//
-	//model.Train(words)
-	//e.fuzzyModel = model
+
+	model := fuzzy.NewModel()
+	model.SetThreshold(1) // because we want to build grammar based on every task name
+
+	var words []string
+	for name, task := range e.Taskfile.Tasks.All(nil) {
+		if task.Internal {
+			continue
+		}
+		words = append(words, name)
+		words = slices.Concat(words, task.Aliases)
+	}
+
+	model.Train(words)
+	e.fuzzyModel = model
 }
 
 func (e *Executor) setupTempDir() error {

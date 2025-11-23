@@ -9,11 +9,12 @@ import (
 )
 
 type TaskRC struct {
-	Version     *semver.Version `yaml:"version"`
-	Verbose     *bool           `yaml:"verbose"`
-	Concurrency *int            `yaml:"concurrency"`
-	Remote      Remote          `yaml:"remote"`
-	Experiments map[string]int  `yaml:"experiments"`
+	Version      *semver.Version `yaml:"version"`
+	Verbose      *bool           `yaml:"verbose"`
+	DisableFuzzy *bool           `yaml:"disable-fuzzy"`
+	Concurrency  *int            `yaml:"concurrency"`
+	Remote       Remote          `yaml:"remote"`
+	Experiments  map[string]int  `yaml:"experiments"`
 }
 
 type Remote struct {
@@ -44,5 +45,6 @@ func (t *TaskRC) Merge(other *TaskRC) {
 	t.Remote.CacheExpiry = cmp.Or(other.Remote.CacheExpiry, t.Remote.CacheExpiry)
 
 	t.Verbose = cmp.Or(other.Verbose, t.Verbose)
+	t.DisableFuzzy = cmp.Or(other.DisableFuzzy, t.DisableFuzzy)
 	t.Concurrency = cmp.Or(other.Concurrency, t.Concurrency)
 }
