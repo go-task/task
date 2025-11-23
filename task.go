@@ -118,6 +118,11 @@ func (e *Executor) splitRegularAndWatchCalls(calls ...*Call) (regularCalls []*Ca
 // RunTask runs a task by its name
 func (e *Executor) RunTask(ctx context.Context, call *Call) error {
 	t, err := e.FastCompiledTask(call)
+
+	if err := e.mkdir(t); err != nil {
+		e.Logger.Errf(logger.Red, "task: cannot make directory %q: %v\n", t.Dir, err)
+	}
+
 	if err != nil {
 		return err
 	}
@@ -199,10 +204,6 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) error {
 					return err
 				}
 			}
-		}
-
-		if err := e.mkdir(t); err != nil {
-			e.Logger.Errf(logger.Red, "task: cannot make directory %q: %v\n", t.Dir, err)
 		}
 
 		var deferredExitCode uint8
