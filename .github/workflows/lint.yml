@@ -20,7 +20,7 @@ jobs:
         with:
           go-version: ${{matrix.go-version}}
 
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v9
@@ -34,7 +34,7 @@ jobs:
         with:
           python-version: 3.14
 
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: install check-jsonschema
         run: python -m pip install 'check-jsonschema==0.27.3'
