@@ -42,8 +42,9 @@ function __task_list() {
 }
 
 _task() {
-    local -a args
-    args=(
+    local -a standard_args operation_args
+
+    standard_args=(
         '(-C --concurrency)'{-C,--concurrency}'[limit number of concurrent tasks]: '
         '(-p --parallel)'{-p,--parallel}'[run command-line tasks in parallel]'
         '(-f --force)'{-f,--force}'[run even if task is up-to-date]'
@@ -72,31 +73,43 @@ _task() {
         '(-v --verbose)'{-v,--verbose}'[verbose mode]'
         '(-w --watch)'{-w,--watch}'[watch-mode for given tasks, re-run when inputs change]'
         '(-y --yes)'{-y,--yes}'[assume yes to all prompts]'
+    )
+
+    # Experimental flags (dynamically added based on enabled experiments)
+    # Options (modify behavior)
+    if __task_is_experiment_enabled "GENTLE_FORCE"; then
+        standard_args+=('(--force-all)--force-all[force execution of task and all dependencies]')
+    fi
+
+    if __task_is_experiment_enabled "REMOTE_TASKFILES"; then
+        standard_args+=(
+            '(--offline)--offline[use only local or cached Taskfiles]'
+            '(--timeout)--timeout[timeout for remote Taskfile downloads]:duration: '
+            '(--expiry)--expiry[cache expiry duration]:duration: '
+        )
+    fi
+
+    operation_args=(
         + '(operation)'
             {-l,--list}'[list describable tasks]'
             {-a,--list-all}'[list all tasks]'
             {-i,--init}'[create new Taskfile.yml]'
             '(-*)'{-h,--help}'[show help]'
             '(-*)--version[show version and exit]'
-            '*: :__task_list'
     )
 
-    # Experimental flags (dynamically added based on enabled experiments)
-    if __task_is_experiment_enabled "GENTLE_FORCE"; then
-        args+=('(--force-all)--force-all[force execution of task and all dependencies]')
-    fi
-
+    # Experimental operations (dynamically added based on enabled experiments)
     if __task_is_experiment_enabled "REMOTE_TASKFILES"; then
-        args+=(
-            '(--download)--download[download remote Taskfile]'
-            '(--offline)--offline[use only local or cached Taskfiles]'
-            '(--timeout)--timeout[timeout for remote Taskfile downloads]:duration: '
-            '(--clear-cache)--clear-cache[clear remote Taskfile cache]'
-            '(--expiry)--expiry[cache expiry duration]:duration: '
+        operation_args+=(
+            '--download[download remote Taskfile]'
+            '--clear-cache[clear remote Taskfile cache]'
         )
     fi
 
-    _arguments $args
+    # Task names completion (must be last)
+    operation_args+=('*: :__task_list')
+
+    _arguments $standard_args $operation_args
 }
 
 # don't run the completion function when being source-ed or eval-ed

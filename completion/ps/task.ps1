@@ -68,11 +68,13 @@ Register-ArgumentCompleter -CommandName task -ScriptBlock {
 		}
 
 		if ($experiments -match '\* REMOTE_TASKFILES:.*on') {
-			$completions += [CompletionResult]::new('--download', '--download', [CompletionResultType]::ParameterName, 'download remote Taskfile')
+			# Options
 			$completions += [CompletionResult]::new('--offline', '--offline', [CompletionResultType]::ParameterName, 'use cached Taskfiles')
 			$completions += [CompletionResult]::new('--timeout', '--timeout', [CompletionResultType]::ParameterName, 'download timeout')
-			$completions += [CompletionResult]::new('--clear-cache', '--clear-cache', [CompletionResultType]::ParameterName, 'clear cache')
 			$completions += [CompletionResult]::new('--expiry', '--expiry', [CompletionResultType]::ParameterName, 'cache expiry')
+			# Operations
+			$completions += [CompletionResult]::new('--download', '--download', [CompletionResultType]::ParameterName, 'download remote Taskfile')
+			$completions += [CompletionResult]::new('--clear-cache', '--clear-cache', [CompletionResultType]::ParameterName, 'clear cache')
 		}
 
 		return $completions.Where{ $_.CompletionText.StartsWith($commandName) }

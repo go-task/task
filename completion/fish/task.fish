@@ -82,9 +82,11 @@ if __task_is_experiment_enabled GENTLE_FORCE
 end
 
 if __task_is_experiment_enabled REMOTE_TASKFILES
-    complete -c $GO_TASK_PROGNAME -l download                    -d 'download remote Taskfile'
+    # Options
     complete -c $GO_TASK_PROGNAME -l offline                     -d 'use only local or cached Taskfiles'
     complete -c $GO_TASK_PROGNAME -l timeout                     -d 'timeout for remote Taskfile downloads'
-    complete -c $GO_TASK_PROGNAME -l clear-cache                 -d 'clear remote Taskfile cache'
     complete -c $GO_TASK_PROGNAME -l expiry                      -d 'cache expiry duration'
+    # Operations
+    complete -c $GO_TASK_PROGNAME -l download                    -d 'download remote Taskfile'
+    complete -c $GO_TASK_PROGNAME -l clear-cache                 -d 'clear remote Taskfile cache'
 end
