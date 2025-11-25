@@ -2,6 +2,22 @@
 
 _GO_TASK_COMPLETION_LIST_OPTION='--list-all'
 
+function _task_experiment_flags()
+{
+  local flags=""
+  local experiments=$(task --experiments 2>/dev/null)
+
+  if echo "$experiments" | grep -q "^\* GENTLE_FORCE:.*on"; then
+    flags="$flags --force-all"
+  fi
+
+  if echo "$experiments" | grep -q "^\* REMOTE_TASKFILES:.*on"; then
+    flags="$flags --download --offline --timeout --clear-cache --expiry"
+  fi
+
+  echo "$flags"
+}
+
 function _task()
 {
   local cur prev words cword
@@ -39,7 +55,7 @@ function _task()
   # Handle normal options.
   case "$cur" in
     -*)
-      COMPREPLY=( $( compgen -W "$(_parse_help $1)" -- $cur ) )
+      COMPREPLY=( $( compgen -W "$(_parse_help $1) $(_task_experiment_flags)" -- $cur ) )
       return 0
     ;;
   esac

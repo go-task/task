@@ -58,17 +58,22 @@ Register-ArgumentCompleter -CommandName task -ScriptBlock {
 			[CompletionResult]::new('--watch', '--watch', [CompletionResultType]::ParameterName, 'watch mode'),
 			[CompletionResult]::new('-y', '-y', [CompletionResultType]::ParameterName, 'assume yes'),
 			[CompletionResult]::new('--yes', '--yes', [CompletionResultType]::ParameterName, 'assume yes')
-
-			# Experimental flags (uncomment when using experiments)
-			# GentleForce experiment:
-			# [CompletionResult]::new('--force-all', '--force-all', [CompletionResultType]::ParameterName, 'force all dependencies'),
-			# RemoteTaskfiles experiment:
-			# [CompletionResult]::new('--download', '--download', [CompletionResultType]::ParameterName, 'download remote Taskfile'),
-			# [CompletionResult]::new('--offline', '--offline', [CompletionResultType]::ParameterName, 'use cached Taskfiles'),
-			# [CompletionResult]::new('--timeout', '--timeout', [CompletionResultType]::ParameterName, 'download timeout'),
-			# [CompletionResult]::new('--clear-cache', '--clear-cache', [CompletionResultType]::ParameterName, 'clear cache'),
-			# [CompletionResult]::new('--expiry', '--expiry', [CompletionResultType]::ParameterName, 'cache expiry')
 		)
+
+		# Experimental flags (dynamically added based on enabled experiments)
+		$experiments = & task --experiments 2>$null | Out-String
+
+		if ($experiments -match '\* GENTLE_FORCE:.*on') {
+			$completions += [CompletionResult]::new('--force-all', '--force-all', [CompletionResultType]::ParameterName, 'force all dependencies')
+		}
+
+		if ($experiments -match '\* REMOTE_TASKFILES:.*on') {
+			$completions += [CompletionResult]::new('--download', '--download', [CompletionResultType]::ParameterName, 'download remote Taskfile')
+			$completions += [CompletionResult]::new('--offline', '--offline', [CompletionResultType]::ParameterName, 'use cached Taskfiles')
+			$completions += [CompletionResult]::new('--timeout', '--timeout', [CompletionResultType]::ParameterName, 'download timeout')
+			$completions += [CompletionResult]::new('--clear-cache', '--clear-cache', [CompletionResultType]::ParameterName, 'clear cache')
+			$completions += [CompletionResult]::new('--expiry', '--expiry', [CompletionResultType]::ParameterName, 'cache expiry')
+		}
 
 		return $completions.Where{ $_.CompletionText.StartsWith($commandName) }
 	}

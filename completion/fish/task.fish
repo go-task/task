@@ -1,5 +1,11 @@
 set -l GO_TASK_PROGNAME task
 
+# Helper function to check if an experiment is enabled
+function __task_is_experiment_enabled
+    set -l experiment $argv[1]
+    task --experiments 2>/dev/null | string match -qr "^\* $experiment:.*on"
+end
+
 function __task_get_tasks --description "Prints all available tasks with their description" --inherit-variable GO_TASK_PROGNAME
   # Check if the global task is requested
   set -l global_task false
@@ -70,12 +76,15 @@ complete -c $GO_TASK_PROGNAME      -l version                   -d 'show version
 complete -c $GO_TASK_PROGNAME -s w -l watch                     -d 'watch mode, re-run on changes'
 complete -c $GO_TASK_PROGNAME -s y -l yes                       -d 'assume yes to all prompts'
 
-# Experimental flags (require experiments to be enabled)
-# GentleForce experiment:
-# complete -c $GO_TASK_PROGNAME      -l force-all                 -d 'force execution of task and all dependencies'
-# RemoteTaskfiles experiment:
-# complete -c $GO_TASK_PROGNAME      -l download                  -d 'download remote Taskfile'
-# complete -c $GO_TASK_PROGNAME      -l offline                   -d 'use only local or cached Taskfiles'
-# complete -c $GO_TASK_PROGNAME      -l timeout                   -d 'timeout for remote Taskfile downloads'
-# complete -c $GO_TASK_PROGNAME      -l clear-cache               -d 'clear remote Taskfile cache'
-# complete -c $GO_TASK_PROGNAME      -l expiry                    -d 'cache expiry duration'
+# Experimental flags (dynamically added based on enabled experiments)
+if __task_is_experiment_enabled GENTLE_FORCE
+    complete -c $GO_TASK_PROGNAME -l force-all                   -d 'force execution of task and all dependencies'
+end
+
+if __task_is_experiment_enabled REMOTE_TASKFILES
+    complete -c $GO_TASK_PROGNAME -l download                    -d 'download remote Taskfile'
+    complete -c $GO_TASK_PROGNAME -l offline                     -d 'use only local or cached Taskfiles'
+    complete -c $GO_TASK_PROGNAME -l timeout                     -d 'timeout for remote Taskfile downloads'
+    complete -c $GO_TASK_PROGNAME -l clear-cache                 -d 'clear remote Taskfile cache'
+    complete -c $GO_TASK_PROGNAME -l expiry                      -d 'cache expiry duration'
+end
