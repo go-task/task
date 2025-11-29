@@ -26,15 +26,17 @@ import (
 
 func (e *Executor) Setup() error {
 	e.setupLogger()
-	node, err := e.getRootNode()
-	if err != nil {
-		return err
-	}
 	if err := e.setupTempDir(); err != nil {
 		return err
 	}
-	if err := e.readTaskfile(node); err != nil {
-		return err
+	if e.Taskfile == nil {
+		node, err := e.getRootNode()
+		if err != nil {
+			return err
+		}
+		if err := e.readTaskfile(node); err != nil {
+			return err
+		}
 	}
 	e.setupStdFiles()
 	if err := e.setupOutput(); err != nil {
