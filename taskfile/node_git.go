@@ -11,6 +11,7 @@ import (
 	giturls "github.com/chainguard-dev/git-urls"
 	"github.com/go-git/go-billy/v5/memfs"
 	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/config"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/storage/memory"
 
@@ -72,11 +73,28 @@ func (node *GitNode) Read() ([]byte, error) {
 	return node.ReadContext(context.Background())
 }
 
-func (node *GitNode) ReadContext(_ context.Context) ([]byte, error) {
+func (node *GitNode) ReadContext(ctx context.Context) ([]byte, error) {
+	cfg, err := config.LoadConfig(config.GlobalScope)
+	if err != nil {
+		return nil, err
+	}
+
+	// Workaround for git.Clone not considering git-config
+	var longestInsteadOfMatch *config.URL
+	for _, u := range cfg.URLs {
+		if strings.HasPrefix(node.url.String(), u.InsteadOf) &&
+			(longestInsteadOfMatch == nil || len(longestInsteadOfMatch.InsteadOf) < len(u.InsteadOf)) {
+			longestInsteadOfMatch = u
+		}
+	}
+	// According to spec apply only the longest match
+	url := longestInsteadOfMatch.ApplyInsteadOf(node.url.String())
+
 	fs := memfs.New()
 	storer := memory.NewStorage()
-	_, err := git.Clone(storer, fs, &git.CloneOptions{
-		URL:           node.url.String(),
+
+	_, err = git.CloneContext(ctx, storer, fs, &git.CloneOptions{
+		URL:           url,
 		ReferenceName: plumbing.ReferenceName(node.ref),
 		SingleBranch:  true,
 		Depth:         1,
