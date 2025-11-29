@@ -86,6 +86,10 @@ _task() {
             '(--offline)--offline[use only local or cached Taskfiles]'
             '(--timeout)--timeout[timeout for remote Taskfile downloads]:duration: '
             '(--expiry)--expiry[cache expiry duration]:duration: '
+            '(--cacert)--cacert[custom CA certificate for TLS]:file:_files'
+            '(--cert)--cert[client certificate for mTLS]:file:_files'
+            '(--cert-key)--cert-key[client certificate private key]:file:_files'
+            '(--cert-key-pass)--cert-key-pass[passphrase for private key]: '
         )
     fi
 
