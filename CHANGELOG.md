@@ -10,6 +10,8 @@
   `env:`, and `requires:` sections. Dynamic variables show their shell command
   (e.g., `sh: echo "hello"`) instead of the evaluated value (#2486 ,#2524 by
   @vmaerten).
+- Improved shell completion scripts (Zsh, Fish, PowerShell) by adding missing
+  flags and dynamic experimental feature detection (#2532 by @vmaerten).
 
 ## v3.45.5 - 2025-11-11
 
