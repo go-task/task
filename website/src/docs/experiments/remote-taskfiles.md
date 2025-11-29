@@ -279,15 +279,16 @@ task --taskfile https://secure.example.com/Taskfile.yml \
   --cert-key /path/to/client.key
 ```
 
-If your private key is encrypted with a passphrase, you can provide it using
-the `--cert-key-pass` flag:
+::: warning
+
+Encrypted private keys are not currently supported. If your key is encrypted,
+you must decrypt it first:
 
 ```shell
-task --taskfile https://secure.example.com/Taskfile.yml \
-  --cert /path/to/client.crt \
-  --cert-key /path/to/client.key \
-  --cert-key-pass "your-passphrase"
+openssl rsa -in encrypted.key -out decrypted.key
 ```
+
+:::
 
 These options can also be configured in the [configuration file](#configuration).
 
@@ -339,7 +340,6 @@ remote:
   cacert: ""
   cert: ""
   cert-key: ""
-  cert-key-pass: ""
 ```
 
 #### `insecure`
@@ -420,16 +420,4 @@ remote:
 ```yaml
 remote:
   cert-key: "/path/to/client.key"
-```
-
-#### `cert-key-pass`
-
-- **Type**: `string`
-- **Default**: `""`
-- **Description**: Passphrase for the client certificate private key (if
-  encrypted)
-
-```yaml
-remote:
-  cert-key-pass: "your-passphrase"
 ```

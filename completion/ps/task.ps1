@@ -75,7 +75,6 @@ Register-ArgumentCompleter -CommandName task -ScriptBlock {
 			$completions += [CompletionResult]::new('--cacert', '--cacert', [CompletionResultType]::ParameterName, 'custom CA certificate')
 			$completions += [CompletionResult]::new('--cert', '--cert', [CompletionResultType]::ParameterName, 'client certificate')
 			$completions += [CompletionResult]::new('--cert-key', '--cert-key', [CompletionResultType]::ParameterName, 'client private key')
-			$completions += [CompletionResult]::new('--cert-key-pass', '--cert-key-pass', [CompletionResultType]::ParameterName, 'private key passphrase')
 			# Operations
 			$completions += [CompletionResult]::new('--download', '--download', [CompletionResultType]::ParameterName, 'download remote Taskfile')
 			$completions += [CompletionResult]::new('--clear-cache', '--clear-cache', [CompletionResultType]::ParameterName, 'clear cache')

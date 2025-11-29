@@ -39,7 +39,6 @@ type (
 		CACert              string
 		Cert                string
 		CertKey             string
-		CertKeyPass         string
 		Watch               bool
 		Verbose             bool
 		Silent              bool
@@ -294,19 +293,6 @@ type certKeyOption struct {
 
 func (o *certKeyOption) ApplyToExecutor(e *Executor) {
 	e.CertKey = o.certKey
-}
-
-// WithCertKeyPass sets the passphrase for the client certificate key.
-func WithCertKeyPass(certKeyPass string) ExecutorOption {
-	return &certKeyPassOption{certKeyPass: certKeyPass}
-}
-
-type certKeyPassOption struct {
-	certKeyPass string
-}
-
-func (o *certKeyPassOption) ApplyToExecutor(e *Executor) {
-	e.CertKeyPass = o.certKeyPass
 }
 
 // WithWatch tells the [Executor] to keep running in the background and watch

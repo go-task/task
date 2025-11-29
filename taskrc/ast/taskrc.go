@@ -24,7 +24,6 @@ type Remote struct {
 	CACert      *string        `yaml:"cacert"`
 	Cert        *string        `yaml:"cert"`
 	CertKey     *string        `yaml:"cert-key"`
-	CertKeyPass *string        `yaml:"cert-key-pass"`
 }
 
 // Merge combines the current TaskRC with another TaskRC, prioritizing non-nil fields from the other TaskRC.
@@ -49,7 +48,6 @@ func (t *TaskRC) Merge(other *TaskRC) {
 	t.Remote.CACert = cmp.Or(other.Remote.CACert, t.Remote.CACert)
 	t.Remote.Cert = cmp.Or(other.Remote.Cert, t.Remote.Cert)
 	t.Remote.CertKey = cmp.Or(other.Remote.CertKey, t.Remote.CertKey)
-	t.Remote.CertKeyPass = cmp.Or(other.Remote.CertKeyPass, t.Remote.CertKeyPass)
 
 	t.Verbose = cmp.Or(other.Verbose, t.Verbose)
 	t.Concurrency = cmp.Or(other.Concurrency, t.Concurrency)

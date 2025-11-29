@@ -79,7 +79,6 @@ var (
 	CACert              string
 	Cert                string
 	CertKey             string
-	CertKeyPass         string
 )
 
 func init() {
@@ -162,7 +161,6 @@ func init() {
 		pflag.StringVar(&CACert, "cacert", getConfig(config, func() *string { return config.Remote.CACert }, ""), "Path to a custom CA certificate for HTTPS connections.")
 		pflag.StringVar(&Cert, "cert", getConfig(config, func() *string { return config.Remote.Cert }, ""), "Path to a client certificate for HTTPS connections.")
 		pflag.StringVar(&CertKey, "cert-key", getConfig(config, func() *string { return config.Remote.CertKey }, ""), "Path to a client certificate key for HTTPS connections.")
-		pflag.StringVar(&CertKeyPass, "cert-key-pass", getConfig(config, func() *string { return config.Remote.CertKeyPass }, ""), "Passphrase for the client certificate key.")
 	}
 	pflag.Parse()
 }
@@ -213,10 +211,6 @@ func Validate() error {
 		return errors.New("task: --cert and --cert-key must be provided together")
 	}
 
-	if CertKeyPass != "" && Cert == "" {
-		return errors.New("task: --cert-key-pass requires --cert and --cert-key")
-	}
-
 	return nil
 }
 
@@ -260,7 +254,6 @@ func (o *flagsOption) ApplyToExecutor(e *task.Executor) {
 		task.WithCACert(CACert),
 		task.WithCert(Cert),
 		task.WithCertKey(CertKey),
-		task.WithCertKeyPass(CertKeyPass),
 		task.WithWatch(Watch),
 		task.WithVerbose(Verbose),
 		task.WithSilent(Silent),
