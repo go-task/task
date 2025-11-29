@@ -2,6 +2,7 @@ package taskfile
 
 import (
 	"io"
+	"io/fs"
 	"os"
 	"path/filepath"
 
@@ -30,6 +31,16 @@ func NewFileNode(entrypoint, dir string, opts ...NodeOption) (*FileNode, error) 
 	// Resolve the directory
 	resolvedDir, err := fsext.ResolveDir(entrypoint, resolvedEntrypoint, dir)
 	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			// We include the path in the error if one exists
+			var pathErr *fs.PathError
+			if errors.As(err, &pathErr) {
+				return nil, &errors.TaskfileNotFoundError{
+					URI: pathErr.Path,
+				}
+			}
+			return nil, &errors.TaskfileNotFoundError{}
+		}
 		return nil, err
 	}
 
