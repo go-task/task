@@ -84,7 +84,7 @@ func NewHTTPNode(
 	if url.Scheme == "http" && !insecure {
 		return nil, &errors.TaskfileNotSecureError{URI: url.Redacted()}
 	}
-	
+
 	client, err := buildHTTPClient(insecure, base.caCert, base.cert, base.certKey)
 	if err != nil {
 		return nil, err

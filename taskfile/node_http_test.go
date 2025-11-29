@@ -221,7 +221,7 @@ func generateTestCertAndKey(t *testing.T) (certPEM, keyPEM []byte) {
 	template := x509.Certificate{
 		SerialNumber: big.NewInt(1),
 		Subject: pkix.Name{
-			Organization: []string{"Test Org"},
+			Organization: []string{"Task Org"},
 		},
 		NotBefore:             time.Now(),
 		NotAfter:              time.Now().Add(time.Hour),
