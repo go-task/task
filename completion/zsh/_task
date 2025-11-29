@@ -51,6 +51,7 @@ _task() {
         '(-c --color)'{-c,--color}'[colored output]'
         '(--completion)--completion[generate shell completion script]:shell:(bash zsh fish powershell)'
         '(-d --dir)'{-d,--dir}'[dir to run in]:execution dir:_dirs'
+        '(--disable-fuzzy)--disable-fuzzy[disable fuzzy matching for task names]'
         '(-n --dry)'{-n,--dry}'[compiles and prints tasks without executing]'
         '(--dry)--dry[dry-run mode, compile and print tasks only]'
         '(-x --exit-code)'{-x,--exit-code}'[pass-through exit code of task command]'
