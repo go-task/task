@@ -1,0 +1,13 @@
+task: mytask
+
+It does things and has optional and required variables.
+
+vars:
+  OPTIONAL_VAR: "hello"
+
+requires:
+  vars:
+    - REQUIRED_VAR
+
+commands:
+ - echo hello 

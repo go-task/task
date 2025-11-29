@@ -6,6 +6,10 @@
   ensure unique filenames (#2507 by @vmaerten).
 - Fix `run: when_changed` to work properly for Taskfiles included multiple times
   (#2508, #2511 by @trulede).
+- The `--summary` flag now displays `vars:` (both global and task-level),
+  `env:`, and `requires:` sections. Dynamic variables show their shell command
+  (e.g., `sh: echo "hello"`) instead of the evaluated value (#2486 ,#2524 by
+  @vmaerten).
 
 ## v3.45.5 - 2025-11-11
 
