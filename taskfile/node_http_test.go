@@ -63,7 +63,7 @@ func TestBuildHTTPClient_Default(t *testing.T) {
 	t.Parallel()
 
 	// When no TLS customization is needed, should return http.DefaultClient
-	client, err := buildHTTPClient(false, "", "", "", "")
+	client, err := buildHTTPClient(false, "", "", "")
 	require.NoError(t, err)
 	assert.Equal(t, http.DefaultClient, client)
 }
@@ -71,7 +71,7 @@ func TestBuildHTTPClient_Default(t *testing.T) {
 func TestBuildHTTPClient_Insecure(t *testing.T) {
 	t.Parallel()
 
-	client, err := buildHTTPClient(true, "", "", "", "")
+	client, err := buildHTTPClient(true, "", "", "")
 	require.NoError(t, err)
 	require.NotNil(t, client)
 	assert.NotEqual(t, http.DefaultClient, client)
@@ -92,10 +92,10 @@ func TestBuildHTTPClient_CACert(t *testing.T) {
 
 	// Generate a valid CA certificate
 	caCertPEM := generateTestCACert(t)
-	err := os.WriteFile(caCertPath, caCertPEM, 0600)
+	err := os.WriteFile(caCertPath, caCertPEM, 0o600)
 	require.NoError(t, err)
 
-	client, err := buildHTTPClient(false, caCertPath, "", "", "")
+	client, err := buildHTTPClient(false, caCertPath, "", "")
 	require.NoError(t, err)
 	require.NotNil(t, client)
 	assert.NotEqual(t, http.DefaultClient, client)
@@ -110,7 +110,7 @@ func TestBuildHTTPClient_CACert(t *testing.T) {
 func TestBuildHTTPClient_CACertNotFound(t *testing.T) {
 	t.Parallel()
 
-	client, err := buildHTTPClient(false, "/nonexistent/ca.crt", "", "", "")
+	client, err := buildHTTPClient(false, "/nonexistent/ca.crt", "", "")
 	assert.Error(t, err)
 	assert.Nil(t, client)
 	assert.Contains(t, err.Error(), "failed to read CA certificate")
@@ -122,10 +122,10 @@ func TestBuildHTTPClient_CACertInvalid(t *testing.T) {
 	// Create a temporary file with invalid content
 	tempDir := t.TempDir()
 	caCertPath := filepath.Join(tempDir, "invalid.crt")
-	err := os.WriteFile(caCertPath, []byte("not a valid certificate"), 0600)
+	err := os.WriteFile(caCertPath, []byte("not a valid certificate"), 0o600)
 	require.NoError(t, err)
 
-	client, err := buildHTTPClient(false, caCertPath, "", "", "")
+	client, err := buildHTTPClient(false, caCertPath, "", "")
 	assert.Error(t, err)
 	assert.Nil(t, client)
 	assert.Contains(t, err.Error(), "failed to parse CA certificate")
@@ -134,7 +134,7 @@ func TestBuildHTTPClient_CACertInvalid(t *testing.T) {
 func TestBuildHTTPClient_CertWithoutKey(t *testing.T) {
 	t.Parallel()
 
-	client, err := buildHTTPClient(false, "", "/path/to/cert.crt", "", "")
+	client, err := buildHTTPClient(false, "", "/path/to/cert.crt", "")
 	assert.Error(t, err)
 	assert.Nil(t, client)
 	assert.Contains(t, err.Error(), "both --cert and --cert-key must be provided together")
@@ -143,7 +143,7 @@ func TestBuildHTTPClient_CertWithoutKey(t *testing.T) {
 func TestBuildHTTPClient_KeyWithoutCert(t *testing.T) {
 	t.Parallel()
 
-	client, err := buildHTTPClient(false, "", "", "/path/to/key.pem", "")
+	client, err := buildHTTPClient(false, "", "", "/path/to/key.pem")
 	assert.Error(t, err)
 	assert.Nil(t, client)
 	assert.Contains(t, err.Error(), "both --cert and --cert-key must be provided together")
@@ -159,12 +159,12 @@ func TestBuildHTTPClient_CertAndKey(t *testing.T) {
 
 	// Generate a self-signed certificate and key for testing
 	cert, key := generateTestCertAndKey(t)
-	err := os.WriteFile(certPath, cert, 0600)
+	err := os.WriteFile(certPath, cert, 0o600)
 	require.NoError(t, err)
-	err = os.WriteFile(keyPath, key, 0600)
+	err = os.WriteFile(keyPath, key, 0o600)
 	require.NoError(t, err)
 
-	client, err := buildHTTPClient(false, "", certPath, keyPath, "")
+	client, err := buildHTTPClient(false, "", certPath, keyPath)
 	require.NoError(t, err)
 	require.NotNil(t, client)
 	assert.NotEqual(t, http.DefaultClient, client)
@@ -179,7 +179,7 @@ func TestBuildHTTPClient_CertAndKey(t *testing.T) {
 func TestBuildHTTPClient_CertNotFound(t *testing.T) {
 	t.Parallel()
 
-	client, err := buildHTTPClient(false, "", "/nonexistent/cert.crt", "/nonexistent/key.pem", "")
+	client, err := buildHTTPClient(false, "", "/nonexistent/cert.crt", "/nonexistent/key.pem")
 	assert.Error(t, err)
 	assert.Nil(t, client)
 	assert.Contains(t, err.Error(), "failed to load client certificate")
@@ -194,11 +194,11 @@ func TestBuildHTTPClient_InsecureWithCACert(t *testing.T) {
 
 	// Generate a valid CA certificate
 	caCertPEM := generateTestCACert(t)
-	err := os.WriteFile(caCertPath, caCertPEM, 0600)
+	err := os.WriteFile(caCertPath, caCertPEM, 0o600)
 	require.NoError(t, err)
 
 	// Both insecure and CA cert can be set together
-	client, err := buildHTTPClient(true, caCertPath, "", "", "")
+	client, err := buildHTTPClient(true, caCertPath, "", "")
 	require.NoError(t, err)
 	require.NotNil(t, client)
 

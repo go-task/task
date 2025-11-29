@@ -26,7 +26,7 @@ type HTTPNode struct {
 
 // buildHTTPClient creates an HTTP client with optional TLS configuration.
 // If no certificate options are provided, it returns http.DefaultClient.
-func buildHTTPClient(insecure bool, caCert, cert, certKey, certKeyPass string) (*http.Client, error) {
+func buildHTTPClient(insecure bool, caCert, cert, certKey string) (*http.Client, error) {
 	// Validate that cert and certKey are provided together
 	if (cert != "" && certKey == "") || (cert == "" && certKey != "") {
 		return nil, fmt.Errorf("both --cert and --cert-key must be provided together")
@@ -56,15 +56,7 @@ func buildHTTPClient(insecure bool, caCert, cert, certKey, certKeyPass string) (
 
 	// Load client certificate and key if provided
 	if cert != "" && certKey != "" {
-		var clientCert tls.Certificate
-		var err error
-
-		if certKeyPass != "" {
-			// Load encrypted private key
-			clientCert, err = loadCertWithEncryptedKey(cert, certKey, certKeyPass)
-		} else {
-			clientCert, err = tls.LoadX509KeyPair(cert, certKey)
-		}
+		clientCert, err := tls.LoadX509KeyPair(cert, certKey)
 		if err != nil {
 			return nil, fmt.Errorf("failed to load client certificate: %w", err)
 		}
@@ -76,46 +68,6 @@ func buildHTTPClient(insecure bool, caCert, cert, certKey, certKeyPass string) (
 			TLSClientConfig: tlsConfig,
 		},
 	}, nil
-}
-
-// loadCertWithEncryptedKey loads a certificate with an encrypted private key.
-func loadCertWithEncryptedKey(certFile, keyFile, passphrase string) (tls.Certificate, error) {
-	certPEM, err := os.ReadFile(certFile)
-	if err != nil {
-		return tls.Certificate{}, fmt.Errorf("failed to read certificate file: %w", err)
-	}
-
-	keyPEM, err := os.ReadFile(keyFile)
-	if err != nil {
-		return tls.Certificate{}, fmt.Errorf("failed to read key file: %w", err)
-	}
-
-	// Try to decrypt the private key
-	decryptedKey, err := decryptPEMKey(keyPEM, passphrase)
-	if err != nil {
-		return tls.Certificate{}, fmt.Errorf("failed to decrypt private key: %w", err)
-	}
-
-	return tls.X509KeyPair(certPEM, decryptedKey)
-}
-
-// decryptPEMKey attempts to decrypt a PEM-encoded private key.
-func decryptPEMKey(keyPEM []byte, passphrase string) ([]byte, error) {
-	// For PKCS#8 encrypted keys, we need to parse and decrypt them
-	// The standard library doesn't directly support encrypted PKCS#8,
-	// so we try to parse it as-is first (in case it's not actually encrypted)
-	// For now, we support unencrypted keys and return an error for encrypted ones
-	// that require external libraries to decrypt.
-
-	// Try to parse as unencrypted first
-	_, err := tls.X509KeyPair([]byte("-----BEGIN CERTIFICATE-----\ntest\n-----END CERTIFICATE-----"), keyPEM)
-	if err == nil {
-		return keyPEM, nil
-	}
-
-	// TODO: Add support for encrypted PKCS#8 keys using x/crypto/pkcs8
-	// This would require adding a dependency on golang.org/x/crypto
-	return nil, fmt.Errorf("encrypted private keys require the key to be decrypted externally, or use an unencrypted key")
 }
 
 func NewHTTPNode(
@@ -134,7 +86,7 @@ func NewHTTPNode(
 	}
 
 	// Build HTTP client with TLS configuration from node options
-	client, err := buildHTTPClient(insecure, base.caCert, base.cert, base.certKey, base.certKeyPass)
+	client, err := buildHTTPClient(insecure, base.caCert, base.cert, base.certKey)
 	if err != nil {
 		return nil, err
 	}

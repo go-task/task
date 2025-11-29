@@ -50,7 +50,6 @@ type (
 		caCert              string
 		cert                string
 		certKey             string
-		certKeyPass         string
 		debugFunc           DebugFunc
 		promptFunc          PromptFunc
 		promptMutex         sync.Mutex
@@ -242,19 +241,6 @@ func (o *readerCertKeyOption) ApplyToReader(r *Reader) {
 	r.certKey = o.certKey
 }
 
-// WithReaderCertKeyPass sets the passphrase for the client certificate key.
-func WithReaderCertKeyPass(certKeyPass string) ReaderOption {
-	return &readerCertKeyPassOption{certKeyPass: certKeyPass}
-}
-
-type readerCertKeyPassOption struct {
-	certKeyPass string
-}
-
-func (o *readerCertKeyPassOption) ApplyToReader(r *Reader) {
-	r.certKeyPass = o.certKeyPass
-}
-
 // Read will read the Taskfile defined by the [Reader]'s [Node] and recurse
 // through any [ast.Includes] it finds, reading each included Taskfile and
 // building an [ast.TaskfileGraph] as it goes. If any errors occur, they will be
@@ -373,7 +359,6 @@ func (r *Reader) include(ctx context.Context, node Node) error {
 				WithCACert(r.caCert),
 				WithCert(r.cert),
 				WithCertKey(r.certKey),
-				WithCertKeyPass(r.certKeyPass),
 			)
 			if err != nil {
 				if include.Optional {
