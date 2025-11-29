@@ -260,6 +260,37 @@ Taskfile that is downloaded via an unencrypted connection. Sources that are not
 protected by TLS are vulnerable to man-in-the-middle attacks and should be
 avoided unless you know what you are doing.
 
+#### Custom Certificates
+
+If your remote Taskfiles are hosted on a server that uses a custom CA
+certificate (e.g., a corporate internal server), you can specify the CA
+certificate using the `--cacert` flag:
+
+```shell
+task --taskfile https://internal.example.com/Taskfile.yml --cacert /path/to/ca.crt
+```
+
+For servers that require client certificate authentication (mTLS), you can
+provide a client certificate and key:
+
+```shell
+task --taskfile https://secure.example.com/Taskfile.yml \
+  --cert /path/to/client.crt \
+  --cert-key /path/to/client.key
+```
+
+If your private key is encrypted with a passphrase, you can provide it using
+the `--cert-key-pass` flag:
+
+```shell
+task --taskfile https://secure.example.com/Taskfile.yml \
+  --cert /path/to/client.crt \
+  --cert-key /path/to/client.key \
+  --cert-key-pass "your-passphrase"
+```
+
+These options can also be configured in the [configuration file](#configuration).
+
 ## Caching & Running Offline
 
 Whenever you run a remote Taskfile, the latest copy will be downloaded from the
@@ -305,6 +336,10 @@ remote:
   offline: false
   timeout: "30s"
   cache-expiry: "24h"
+  cacert: ""
+  cert: ""
+  cert-key: ""
+  cert-key-pass: ""
 ```
 
 #### `insecure`
@@ -352,4 +387,49 @@ remote:
 ```yaml
 remote:
   cache-expiry: "6h"
+```
+
+#### `cacert`
+
+- **Type**: `string`
+- **Default**: `""`
+- **Description**: Path to a custom CA certificate file for TLS verification
+
+```yaml
+remote:
+  cacert: "/path/to/ca.crt"
+```
+
+#### `cert`
+
+- **Type**: `string`
+- **Default**: `""`
+- **Description**: Path to a client certificate file for mTLS authentication
+
+```yaml
+remote:
+  cert: "/path/to/client.crt"
+```
+
+#### `cert-key`
+
+- **Type**: `string`
+- **Default**: `""`
+- **Description**: Path to the client certificate private key file
+
+```yaml
+remote:
+  cert-key: "/path/to/client.key"
+```
+
+#### `cert-key-pass`
+
+- **Type**: `string`
+- **Default**: `""`
+- **Description**: Passphrase for the client certificate private key (if
+  encrypted)
+
+```yaml
+remote:
+  cert-key-pass: "your-passphrase"
 ```

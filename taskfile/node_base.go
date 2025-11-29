@@ -7,9 +7,13 @@ type (
 	// designed to be embedded in other node types so that this boilerplate code
 	// does not need to be repeated.
 	baseNode struct {
-		parent   Node
-		dir      string
-		checksum string
+		parent      Node
+		dir         string
+		checksum    string
+		caCert      string
+		cert        string
+		certKey     string
+		certKeyPass string
 	}
 )
 
@@ -53,4 +57,28 @@ func (node *baseNode) Checksum() string {
 
 func (node *baseNode) Verify(checksum string) bool {
 	return node.checksum == "" || node.checksum == checksum
+}
+
+func WithCACert(caCert string) NodeOption {
+	return func(node *baseNode) {
+		node.caCert = caCert
+	}
+}
+
+func WithCert(cert string) NodeOption {
+	return func(node *baseNode) {
+		node.cert = cert
+	}
+}
+
+func WithCertKey(certKey string) NodeOption {
+	return func(node *baseNode) {
+		node.certKey = certKey
+	}
+}
+
+func WithCertKeyPass(certKeyPass string) NodeOption {
+	return func(node *baseNode) {
+		node.certKeyPass = certKeyPass
+	}
 }
