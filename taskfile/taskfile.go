@@ -36,7 +36,7 @@ var (
 // at the given URL with any of the default Taskfile files names. If any of
 // these match a file, the first matching path will be returned. If no files are
 // found, an error will be returned.
-func RemoteExists(ctx context.Context, u url.URL) (*url.URL, error) {
+func RemoteExists(ctx context.Context, u url.URL, client *http.Client) (*url.URL, error) {
 	// Create a new HEAD request for the given URL to check if the resource exists
 	req, err := http.NewRequestWithContext(ctx, "HEAD", u.String(), nil)
 	if err != nil {
@@ -44,7 +44,7 @@ func RemoteExists(ctx context.Context, u url.URL) (*url.URL, error) {
 	}
 
 	// Request the given URL
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := client.Do(req)
 	if err != nil {
 		if ctx.Err() != nil {
 			return nil, fmt.Errorf("checking remote file: %w", ctx.Err())
@@ -76,7 +76,7 @@ func RemoteExists(ctx context.Context, u url.URL) (*url.URL, error) {
 		req.URL = alt
 
 		// Try the alternative URL
-		resp, err = http.DefaultClient.Do(req)
+		resp, err = client.Do(req)
 		if err != nil {
 			return nil, errors.TaskfileFetchFailedError{URI: u.Redacted()}
 		}
