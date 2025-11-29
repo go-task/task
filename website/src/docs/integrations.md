@@ -75,19 +75,19 @@ You can find more information on this in the
 
 Task documentation is optimized for AI assistants like Claude Code, Cursor, and
 other LLM-powered development tools through the
-[VitePress LLMs plugin](https://github.com/danielroe/vitepress-plugin-llms).
+[VitePress LLMs plugin](https://github.com/okineadev/vitepress-plugin-llms).
 
 This integration provides:
 
 - Structured documentation in LLM-friendly formats
 - Context-optimized content for AI assistants
-- Automatic generation of llms.txt and llms-full.txt files
+- Automatic generation of `llms.txt` and `llms-full.txt` files
 - Enhanced discoverability of Task features for AI tools
 
 AI assistants can access Task documentation through:
 
-- **llms.txt**: Lightweight overview of Task documentation
-- **llms-full.txt**: Complete documentation with all content
+- **[llms.txt](https://taskfile.dev/llms.txt)**: Lightweight overview of Task documentation
+- **[llms-full.txt](https://taskfile.dev/llms-full.txt)**: Complete documentation with all content
 
 These files are automatically generated and kept in sync with the documentation,
 ensuring AI assistants always have access to the latest Task features and usage
