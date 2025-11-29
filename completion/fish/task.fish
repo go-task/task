@@ -1,9 +1,30 @@
 set -l GO_TASK_PROGNAME task
 
+# Cache variables for experiments (global)
+set -g __task_experiments_cache ""
+set -g __task_experiments_cache_time 0
+
+# Helper function to get experiments with 1-second cache
+function __task_get_experiments
+    set -l now (date +%s)
+    set -l ttl 1  # Cache for 1 second only
+
+    # Return cached value if still valid
+    if test (math "$now - $__task_experiments_cache_time") -lt $ttl
+        printf '%s\n' $__task_experiments_cache
+        return
+    end
+
+    # Refresh cache
+    set -g __task_experiments_cache (task --experiments 2>/dev/null)
+    set -g __task_experiments_cache_time $now
+    printf '%s\n' $__task_experiments_cache
+end
+
 # Helper function to check if an experiment is enabled
 function __task_is_experiment_enabled
     set -l experiment $argv[1]
-    task --experiments 2>/dev/null | string match -qr "^\* $experiment:.*on"
+    __task_get_experiments | string match -qr "^\* $experiment:.*on"
 end
 
 function __task_get_tasks --description "Prints all available tasks with their description" --inherit-variable GO_TASK_PROGNAME
@@ -76,17 +97,15 @@ complete -c $GO_TASK_PROGNAME      -l version                   -d 'show version
 complete -c $GO_TASK_PROGNAME -s w -l watch                     -d 'watch mode, re-run on changes'
 complete -c $GO_TASK_PROGNAME -s y -l yes                       -d 'assume yes to all prompts'
 
-# Experimental flags (dynamically added based on enabled experiments)
-if __task_is_experiment_enabled GENTLE_FORCE
-    complete -c $GO_TASK_PROGNAME -l force-all                   -d 'force execution of task and all dependencies'
-end
+# Experimental flags (dynamically checked at completion time via -n condition)
+# GentleForce experiment
+complete -c $GO_TASK_PROGNAME -n "__task_is_experiment_enabled GENTLE_FORCE" -l force-all -d 'force execution of task and all dependencies'
 
-if __task_is_experiment_enabled REMOTE_TASKFILES
-    # Options
-    complete -c $GO_TASK_PROGNAME -l offline                     -d 'use only local or cached Taskfiles'
-    complete -c $GO_TASK_PROGNAME -l timeout                     -d 'timeout for remote Taskfile downloads'
-    complete -c $GO_TASK_PROGNAME -l expiry                      -d 'cache expiry duration'
-    # Operations
-    complete -c $GO_TASK_PROGNAME -l download                    -d 'download remote Taskfile'
-    complete -c $GO_TASK_PROGNAME -l clear-cache                 -d 'clear remote Taskfile cache'
-end
+# RemoteTaskfiles experiment - Options
+complete -c $GO_TASK_PROGNAME -n "__task_is_experiment_enabled REMOTE_TASKFILES" -l offline     -d 'use only local or cached Taskfiles'
+complete -c $GO_TASK_PROGNAME -n "__task_is_experiment_enabled REMOTE_TASKFILES" -l timeout     -d 'timeout for remote Taskfile downloads'
+complete -c $GO_TASK_PROGNAME -n "__task_is_experiment_enabled REMOTE_TASKFILES" -l expiry      -d 'cache expiry duration'
+
+# RemoteTaskfiles experiment - Operations
+complete -c $GO_TASK_PROGNAME -n "__task_is_experiment_enabled REMOTE_TASKFILES" -l download    -d 'download remote Taskfile'
+complete -c $GO_TASK_PROGNAME -n "__task_is_experiment_enabled REMOTE_TASKFILES" -l clear-cache -d 'clear remote Taskfile cache'
