@@ -8,6 +8,8 @@ import Version from '../components/Version.vue';
 import { enhanceAppWithTabs } from 'vitepress-plugin-tabs/client';
 import { h } from 'vue';
 import 'virtual:group-icons.css';
+import CopyOrDownloadAsMarkdownButtons from 'vitepress-plugin-llms/vitepress-components/CopyOrDownloadAsMarkdownButtons.vue';
+
 export default {
   extends: DefaultTheme,
   Layout() {
@@ -19,6 +21,7 @@ export default {
     app.component('AuthorCard', AuthorCard);
     app.component('BlogPost', BlogPost);
     app.component('Version', Version);
+    app.component('CopyOrDownloadAsMarkdownButtons', CopyOrDownloadAsMarkdownButtons);
     enhanceAppWithTabs(app);
   }
 } satisfies Theme;

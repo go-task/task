@@ -15,6 +15,8 @@
 - Improved performance of fuzzy task name matching by implementing lazy
   initialization. Added `--disable-fuzzy` flag and `disable-fuzzy` taskrc option
   to allow disabling fuzzy matching entirely (#2521, #2523 by @vmaerten).
+- Added LLM-optimized documentation via VitePress plugin, generating `llms.txt`
+  and `llms-full.txt` for AI-powered development tools (#2513 by @vmaerten).
 
 ## v3.45.5 - 2025-11-11
 
