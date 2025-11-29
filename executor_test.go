@@ -1020,3 +1020,50 @@ func TestIncludeChecksum(t *testing.T) {
 		WithFixtureTemplating(),
 	)
 }
+
+func TestFailfast(t *testing.T) {
+	t.Parallel()
+
+	t.Run("Default", func(t *testing.T) {
+		t.Parallel()
+
+		NewExecutorTest(t,
+			WithName("default"),
+			WithExecutorOptions(
+				task.WithDir("testdata/failfast/default"),
+				task.WithSilent(true),
+			),
+			WithPostProcessFn(PPSortedLines),
+			WithRunError(),
+		)
+	})
+
+	t.Run("Option", func(t *testing.T) {
+		t.Parallel()
+
+		NewExecutorTest(t,
+			WithName("default"),
+			WithExecutorOptions(
+				task.WithDir("testdata/failfast/default"),
+				task.WithSilent(true),
+				task.WithFailfast(true),
+			),
+			WithPostProcessFn(PPSortedLines),
+			WithRunError(),
+		)
+	})
+
+	t.Run("Task", func(t *testing.T) {
+		t.Parallel()
+
+		NewExecutorTest(t,
+			WithName("task"),
+			WithExecutorOptions(
+				task.WithDir("testdata/failfast/task"),
+				task.WithSilent(true),
+			),
+			WithPostProcessFn(PPSortedLines),
+			WithRunError(),
+		)
+	})
+}
