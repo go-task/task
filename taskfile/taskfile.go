@@ -28,6 +28,7 @@ var (
 		"text/x-yaml",
 		"application/yaml",
 		"application/x-yaml",
+		"application/octet-stream",
 	}
 )
 
