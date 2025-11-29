@@ -451,10 +451,7 @@ func (e *Executor) GetTask(call *Call) (*ast.Task, error) {
 	if len(aliasedTasks) == 0 {
 		didYouMean := ""
 		if !e.DisableFuzzy {
-			// Lazy initialization of fuzzy model
-			if e.fuzzyModel == nil {
-				e.setupFuzzyModel()
-			}
+			e.fuzzyModelOnce.Do(e.setupFuzzyModel)
 			if e.fuzzyModel != nil {
 				didYouMean = e.fuzzyModel.SpellCheck(call.Task)
 			}

@@ -64,7 +64,8 @@ type (
 		UserWorkingDir     string
 		EnableVersionCheck bool
 
-		fuzzyModel *fuzzy.Model
+		fuzzyModel     *fuzzy.Model
+		fuzzyModelOnce sync.Once
 
 		concurrencySemaphore chan struct{}
 		taskCallCount        map[string]*int32
