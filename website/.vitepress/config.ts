@@ -11,6 +11,7 @@ import {
 import { team } from './team.ts';
 import { taskDescription, taskName } from './meta.ts';
 import { fileURLToPath, URL } from 'node:url';
+import llmstxt, { copyOrDownloadAsMarkdownButtons } from 'vitepress-plugin-llms';
 
 const version = readFileSync(
   resolve(__dirname, '../../internal/version/version.txt'),
@@ -90,10 +91,23 @@ export default defineConfig({
       });
       md.use(tabsMarkdownPlugin);
       md.use(groupIconMdPlugin);
+      md.use(copyOrDownloadAsMarkdownButtons);
     }
   },
   vite: {
     plugins: [
+      llmstxt({
+        ignoreFiles: [
+          'index.md',
+          'team.md',
+          'donate.md',
+          'docs/styleguide.md',
+          'docs/contributing.md',
+          'docs/releasing.md',
+          'docs/changelog.md',
+          'blog/*'
+        ]
+      }),
       groupIconVitePlugin({
         customIcon: {
           '.taskrc.yml': localIconLoader(
