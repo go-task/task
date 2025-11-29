@@ -69,6 +69,7 @@ complete -c $GO_TASK_PROGNAME -s c -l color                     -d 'colored outp
 complete -c $GO_TASK_PROGNAME -s C -l concurrency               -d 'limit number of concurrent tasks'
 complete -c $GO_TASK_PROGNAME      -l completion                -d 'generate shell completion script' -xa "bash zsh fish powershell"
 complete -c $GO_TASK_PROGNAME -s d -l dir                       -d 'set directory of execution'
+complete -c $GO_TASK_PROGNAME      -l disable-fuzzy             -d 'disable fuzzy matching for task names'
 complete -c $GO_TASK_PROGNAME -s n -l dry                       -d 'compile and print tasks without executing'
 complete -c $GO_TASK_PROGNAME -s x -l exit-code                 -d 'pass-through exit code of task command'
 complete -c $GO_TASK_PROGNAME      -l experiments               -d 'list available experiments'
