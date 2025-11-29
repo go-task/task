@@ -47,6 +47,10 @@ type (
 		trustedHosts        []string
 		tempDir             string
 		cacheExpiryDuration time.Duration
+		caCert              string
+		cert                string
+		certKey             string
+		certKeyPass         string
 		debugFunc           DebugFunc
 		promptFunc          PromptFunc
 		promptMutex         sync.Mutex
@@ -199,6 +203,58 @@ func (o *promptFuncOption) ApplyToReader(r *Reader) {
 	r.promptFunc = o.promptFunc
 }
 
+// WithReaderCACert sets the path to a custom CA certificate for TLS connections.
+func WithReaderCACert(caCert string) ReaderOption {
+	return &readerCACertOption{caCert: caCert}
+}
+
+type readerCACertOption struct {
+	caCert string
+}
+
+func (o *readerCACertOption) ApplyToReader(r *Reader) {
+	r.caCert = o.caCert
+}
+
+// WithReaderCert sets the path to a client certificate for TLS connections.
+func WithReaderCert(cert string) ReaderOption {
+	return &readerCertOption{cert: cert}
+}
+
+type readerCertOption struct {
+	cert string
+}
+
+func (o *readerCertOption) ApplyToReader(r *Reader) {
+	r.cert = o.cert
+}
+
+// WithReaderCertKey sets the path to a client certificate key for TLS connections.
+func WithReaderCertKey(certKey string) ReaderOption {
+	return &readerCertKeyOption{certKey: certKey}
+}
+
+type readerCertKeyOption struct {
+	certKey string
+}
+
+func (o *readerCertKeyOption) ApplyToReader(r *Reader) {
+	r.certKey = o.certKey
+}
+
+// WithReaderCertKeyPass sets the passphrase for the client certificate key.
+func WithReaderCertKeyPass(certKeyPass string) ReaderOption {
+	return &readerCertKeyPassOption{certKeyPass: certKeyPass}
+}
+
+type readerCertKeyPassOption struct {
+	certKeyPass string
+}
+
+func (o *readerCertKeyPassOption) ApplyToReader(r *Reader) {
+	r.certKeyPass = o.certKeyPass
+}
+
 // Read will read the Taskfile defined by the [Reader]'s [Node] and recurse
 // through any [ast.Includes] it finds, reading each included Taskfile and
 // building an [ast.TaskfileGraph] as it goes. If any errors occur, they will be
@@ -314,6 +370,10 @@ func (r *Reader) include(ctx context.Context, node Node) error {
 			includeNode, err := NewNode(entrypoint, include.Dir, r.insecure,
 				WithParent(node),
 				WithChecksum(include.Checksum),
+				WithCACert(r.caCert),
+				WithCert(r.cert),
+				WithCertKey(r.certKey),
+				WithCertKeyPass(r.certKeyPass),
 			)
 			if err != nil {
 				if include.Optional {
