@@ -38,7 +38,7 @@ func buildHTTPClient(insecure bool, caCert, cert, certKey string) (*http.Client,
 	}
 
 	tlsConfig := &tls.Config{
-		InsecureSkipVerify: insecure, //nolint:gosec
+		InsecureSkipVerify: insecure,
 	}
 
 	// Load custom CA certificate if provided
@@ -84,8 +84,7 @@ func NewHTTPNode(
 	if url.Scheme == "http" && !insecure {
 		return nil, &errors.TaskfileNotSecureError{URI: url.Redacted()}
 	}
-
-	// Build HTTP client with TLS configuration from node options
+	
 	client, err := buildHTTPClient(insecure, base.caCert, base.cert, base.certKey)
 	if err != nil {
 		return nil, err
