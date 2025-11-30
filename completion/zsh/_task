@@ -90,7 +90,7 @@ _task() {
 
     if __task_is_experiment_enabled "REMOTE_TASKFILES"; then
         standard_args+=(
-            '(--offline)--offline[use only local or cached Taskfiles]'
+            '(--offline --download)--offline[use only local or cached Taskfiles]'
             '(--timeout)--timeout[timeout for remote Taskfile downloads]:duration: '
             '(--expiry)--expiry[cache expiry duration]:duration: '
         )
@@ -110,9 +110,11 @@ _task() {
 
     # Experimental operations (dynamically added based on enabled experiments)
     if __task_is_experiment_enabled "REMOTE_TASKFILES"; then
+        standard_args+=(
+            '(--offline --clear-cache)--download[download remote Taskfile]'
+        )
         operation_args+=(
-            '--download[download remote Taskfile]'
-            '(*)--clear-cache[clear remote Taskfile cache]'
+            '(* --download)--clear-cache[clear remote Taskfile cache]'
         )
     fi
 
