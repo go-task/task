@@ -14,6 +14,8 @@
   flags and dynamic experimental feature detection (#2532 by @vmaerten).
 - Added LLM-optimized documentation via VitePress plugin, generating `llms.txt`
   and `llms-full.txt` for AI-powered development tools (#2513 by @vmaerten).
+- Fixed Zsh and Fish completions to stop suggesting task names after `--`
+  separator, allowing proper CLI_ARGS completion (#1843, #1844 by @boiledfroginthewell).
 
 ## v3.45.5 - 2025-11-11
 
