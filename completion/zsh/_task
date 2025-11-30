@@ -20,6 +20,13 @@ function __task_list() {
     taskfile=${(Qv)opt_args[(i)-t|--taskfile]}
     taskfile=${taskfile//\~/$HOME}
 
+    for arg in "${words[@]:0:$CURRENT}"; do
+        if [[ "$arg" = "--" ]]; then
+            # Use default completion for words after `--` as they are CLI_ARGS.
+            _default
+            return 0
+        fi
+    done
 
     if [[ -n "$taskfile" && -f "$taskfile" ]]; then
         cmd+=(--taskfile "$taskfile")
@@ -83,33 +90,35 @@ _task() {
 
     if __task_is_experiment_enabled "REMOTE_TASKFILES"; then
         standard_args+=(
-            '(--offline)--offline[use only local or cached Taskfiles]'
+            '(--offline --download)--offline[use only local or cached Taskfiles]'
             '(--timeout)--timeout[timeout for remote Taskfile downloads]:duration: '
             '(--expiry)--expiry[cache expiry duration]:duration: '
         )
     fi
 
     operation_args=(
+        # Task names completion (can be specified multiple times)
+        '(operation)*: :__task_list'
+        # Operational args completion (mutually exclusive)
         + '(operation)'
-            {-l,--list}'[list describable tasks]'
-            {-a,--list-all}'[list all tasks]'
-            {-i,--init}'[create new Taskfile.yml]'
-            '(-*)'{-h,--help}'[show help]'
-            '(-*)--version[show version and exit]'
+            '(*)'{-l,--list}'[list describable tasks]'
+            '(*)'{-a,--list-all}'[list all tasks]'
+            '(*)'{-i,--init}'[create new Taskfile.yml]'
+            '(- *)'{-h,--help}'[show help]'
+            '(- *)--version[show version and exit]'
     )
 
     # Experimental operations (dynamically added based on enabled experiments)
     if __task_is_experiment_enabled "REMOTE_TASKFILES"; then
+        standard_args+=(
+            '(--offline --clear-cache)--download[download remote Taskfile]'
+        )
         operation_args+=(
-            '--download[download remote Taskfile]'
-            '--clear-cache[clear remote Taskfile cache]'
+            '(* --download)--clear-cache[clear remote Taskfile cache]'
         )
     fi
 
-    # Task names completion (must be last)
-    operation_args+=('*: :__task_list')
-
-    _arguments $standard_args $operation_args
+    _arguments -S $standard_args $operation_args
 }
 
 # don't run the completion function when being source-ed or eval-ed
