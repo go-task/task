@@ -3,6 +3,7 @@ package ast
 import (
 	"cmp"
 	"maps"
+	"slices"
 	"time"
 
 	"github.com/Masterminds/semver/v3"
@@ -44,29 +45,10 @@ func (t *TaskRC) Merge(other *TaskRC) {
 	t.Remote.Timeout = cmp.Or(other.Remote.Timeout, t.Remote.Timeout)
 	t.Remote.CacheExpiry = cmp.Or(other.Remote.CacheExpiry, t.Remote.CacheExpiry)
 
-	// Merge TrustedHosts lists - combine both lists with other's entries taking precedence
-	// Remove duplicates by using a map
 	if len(other.Remote.TrustedHosts) > 0 {
-		seen := make(map[string]bool)
-		merged := []string{}
-
-		// Add other's hosts first
-		for _, host := range other.Remote.TrustedHosts {
-			if !seen[host] {
-				seen[host] = true
-				merged = append(merged, host)
-			}
-		}
-
-		// Then add base's hosts that aren't duplicates
-		for _, host := range t.Remote.TrustedHosts {
-			if !seen[host] {
-				seen[host] = true
-				merged = append(merged, host)
-			}
-		}
-
-		t.Remote.TrustedHosts = merged
+		merged := slices.Concat(other.Remote.TrustedHosts, t.Remote.TrustedHosts)
+		slices.Sort(merged)
+		t.Remote.TrustedHosts = slices.Compact(merged)
 	}
 
 	t.Verbose = cmp.Or(other.Verbose, t.Verbose)

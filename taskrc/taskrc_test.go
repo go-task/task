@@ -209,7 +209,7 @@ remote:
 		assert.NoError(t, err)
 		assert.NotNil(t, cfg)
 		// Local config entries come first
-		assert.Equal(t, []string{"local.dev", "example.com", "github.com", "gitlab.com"}, cfg.Remote.TrustedHosts)
+		assert.Equal(t, []string{"example.com", "github.com", "gitlab.com", "local.dev"}, cfg.Remote.TrustedHosts)
 	})
 
 	t.Run("merge edge cases", func(t *testing.T) { //nolint:paralleltest // parent test cannot run in parallel
@@ -241,7 +241,7 @@ remote:
 						TrustedHosts: []string{"other.com"},
 					},
 				},
-				expected: []string{"other.com", "base.com"},
+				expected: []string{"base.com", "other.com"},
 			},
 			{
 				name: "merge empty list does not override",
