@@ -3,6 +3,7 @@ package ast
 import (
 	"cmp"
 	"maps"
+	"slices"
 	"time"
 
 	"github.com/Masterminds/semver/v3"
@@ -17,10 +18,11 @@ type TaskRC struct {
 }
 
 type Remote struct {
-	Insecure    *bool          `yaml:"insecure"`
-	Offline     *bool          `yaml:"offline"`
-	Timeout     *time.Duration `yaml:"timeout"`
-	CacheExpiry *time.Duration `yaml:"cache-expiry"`
+	Insecure     *bool          `yaml:"insecure"`
+	Offline      *bool          `yaml:"offline"`
+	Timeout      *time.Duration `yaml:"timeout"`
+	CacheExpiry  *time.Duration `yaml:"cache-expiry"`
+	TrustedHosts []string       `yaml:"trusted-hosts"`
 }
 
 // Merge combines the current TaskRC with another TaskRC, prioritizing non-nil fields from the other TaskRC.
@@ -42,6 +44,12 @@ func (t *TaskRC) Merge(other *TaskRC) {
 	t.Remote.Offline = cmp.Or(other.Remote.Offline, t.Remote.Offline)
 	t.Remote.Timeout = cmp.Or(other.Remote.Timeout, t.Remote.Timeout)
 	t.Remote.CacheExpiry = cmp.Or(other.Remote.CacheExpiry, t.Remote.CacheExpiry)
+
+	if len(other.Remote.TrustedHosts) > 0 {
+		merged := slices.Concat(other.Remote.TrustedHosts, t.Remote.TrustedHosts)
+		slices.Sort(merged)
+		t.Remote.TrustedHosts = slices.Compact(merged)
+	}
 
 	t.Verbose = cmp.Or(other.Verbose, t.Verbose)
 	t.Concurrency = cmp.Or(other.Concurrency, t.Concurrency)

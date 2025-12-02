@@ -34,6 +34,7 @@ type (
 		Insecure            bool
 		Download            bool
 		Offline             bool
+		TrustedHosts        []string
 		Timeout             time.Duration
 		CacheExpiryDuration time.Duration
 		Watch               bool
@@ -223,6 +224,20 @@ type offlineOption struct {
 
 func (o *offlineOption) ApplyToExecutor(e *Executor) {
 	e.Offline = o.offline
+}
+
+// WithTrustedHosts configures the [Executor] with a list of trusted hosts for remote
+// Taskfiles. Hosts in this list will not prompt for user confirmation.
+func WithTrustedHosts(trustedHosts []string) ExecutorOption {
+	return &trustedHostsOption{trustedHosts}
+}
+
+type trustedHostsOption struct {
+	trustedHosts []string
+}
+
+func (o *trustedHostsOption) ApplyToExecutor(e *Executor) {
+	e.TrustedHosts = o.trustedHosts
 }
 
 // WithTimeout sets the [Executor]'s timeout for fetching remote taskfiles. By
