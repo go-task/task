@@ -50,6 +50,10 @@
       "type": "boolean",
       "description": "Enable verbose output"
     },
+    "disable-fuzzy": {
+      "type": "boolean",
+      "description": "Disable fuzzy matching for task names"
+    },
     "concurrency": {
       "type": "integer",
       "description": "Number of concurrent tasks to run",

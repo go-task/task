@@ -15,6 +15,7 @@ Register-ArgumentCompleter -CommandName task -ScriptBlock {
 			[CompletionResult]::new('--completion', '--completion', [CompletionResultType]::ParameterName, 'generate shell completion'),
 			[CompletionResult]::new('-d', '-d', [CompletionResultType]::ParameterName, 'set directory'),
 			[CompletionResult]::new('--dir', '--dir', [CompletionResultType]::ParameterName, 'set directory'),
+			[CompletionResult]::new('--disable-fuzzy', '--disable-fuzzy', [CompletionResultType]::ParameterName, 'disable fuzzy matching'),
 			[CompletionResult]::new('-n', '-n', [CompletionResultType]::ParameterName, 'dry run'),
 			[CompletionResult]::new('--dry', '--dry', [CompletionResultType]::ParameterName, 'dry run'),
 			[CompletionResult]::new('-x', '-x', [CompletionResultType]::ParameterName, 'pass-through exit code'),

@@ -58,6 +58,7 @@ var (
 	Watch               bool
 	Verbose             bool
 	Silent              bool
+	DisableFuzzy        bool
 	AssumeYes           bool
 	Dry                 bool
 	Summary             bool
@@ -123,6 +124,7 @@ func init() {
 	pflag.BoolVarP(&Watch, "watch", "w", false, "Enables watch of the given task.")
 	pflag.BoolVarP(&Verbose, "verbose", "v", getConfig(config, func() *bool { return config.Verbose }, false), "Enables verbose mode.")
 	pflag.BoolVarP(&Silent, "silent", "s", false, "Disables echoing.")
+	pflag.BoolVar(&DisableFuzzy, "disable-fuzzy", getConfig(config, func() *bool { return config.DisableFuzzy }, false), "Disables fuzzy matching for task names.")
 	pflag.BoolVarP(&AssumeYes, "yes", "y", false, "Assume \"yes\" as answer to all prompts.")
 	pflag.BoolVarP(&Parallel, "parallel", "p", false, "Executes tasks provided on command line in parallel.")
 	pflag.BoolVarP(&Dry, "dry", "n", false, "Compiles and prints tasks in the order that they would be run, without executing them.")
@@ -243,6 +245,7 @@ func (o *flagsOption) ApplyToExecutor(e *task.Executor) {
 		task.WithWatch(Watch),
 		task.WithVerbose(Verbose),
 		task.WithSilent(Silent),
+		task.WithDisableFuzzy(DisableFuzzy),
 		task.WithAssumeYes(AssumeYes),
 		task.WithDry(Dry || Status),
 		task.WithSummary(Summary),
