@@ -5,7 +5,7 @@ import (
 	"regexp"
 	"strings"
 
-	"gopkg.in/yaml.v3"
+	"go.yaml.in/yaml/v4"
 
 	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/deepcopy"
@@ -13,7 +13,7 @@ import (
 
 // Task represents a task
 type Task struct {
-	Task          string
+	Task          string `hash:"ignore"`
 	Cmds          []*Cmd
 	Deps          []*Dep
 	Label         string
@@ -36,18 +36,18 @@ type Task struct {
 	Interactive   bool
 	Internal      bool
 	Method        string
-	Prefix        string
+	Prefix        string `hash:"ignore"`
 	IgnoreError   bool
 	Run           string
 	Platforms     []*Platform
 	Watch         bool
 	Location      *Location
 	// Populated during merging
-	Namespace            string
+	Namespace            string `hash:"ignore"`
 	IncludeVars          *Vars
 	IncludedTaskfileVars *Vars
 
-	FullName string
+	FullName string `hash:"ignore"`
 }
 
 func (t *Task) Name() string {

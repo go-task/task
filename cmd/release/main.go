@@ -121,11 +121,15 @@ func changelog(version *semver.Version) error {
 		return err
 	}
 
+	// Wrap the changelog content with v-pre directive for VitePress to prevent
+	// Vue from interpreting template syntax like {{.TASK_VERSION}}
+	changelogWithVPre := strings.Replace(changelog, "# Changelog\n\n", "# Changelog\n\n::: v-pre\n\n", 1) + "\n:::"
+
 	// Add the frontmatter to the changelog
-	changelog = fmt.Sprintf("---\n%s\n---\n\n%s", frontmatter, changelog)
+	changelogWithFrontmatter := fmt.Sprintf("---\n%s\n---\n\n%s", frontmatter, changelogWithVPre)
 
 	// Write the changelog to the target file
-	return os.WriteFile(changelogTarget, []byte(changelog), 0o644)
+	return os.WriteFile(changelogTarget, []byte(changelogWithFrontmatter), 0o644)
 }
 
 func setVersionFile(fileName string, version *semver.Version) error {

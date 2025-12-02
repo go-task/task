@@ -9,8 +9,8 @@ import (
 	"time"
 
 	"github.com/dominikbraun/graph"
+	"go.yaml.in/yaml/v4"
 	"golang.org/x/sync/errgroup"
-	"gopkg.in/yaml.v3"
 
 	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/env"

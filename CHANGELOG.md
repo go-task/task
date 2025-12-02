@@ -2,6 +2,23 @@
 
 ## Unreleased
 
+- Fix RPM upload to Cloudsmith by including the version in the filename to
+  ensure unique filenames (#2507 by @vmaerten).
+- Fix `run: when_changed` to work properly for Taskfiles included multiple times
+  (#2508, #2511 by @trulede).
+- The `--summary` flag now displays `vars:` (both global and task-level),
+  `env:`, and `requires:` sections. Dynamic variables show their shell command
+  (e.g., `sh: echo "hello"`) instead of the evaluated value (#2486 ,#2524 by
+  @vmaerten).
+- Improved shell completion scripts (Zsh, Fish, PowerShell) by adding missing
+  flags and dynamic experimental feature detection (#2532 by @vmaerten).
+- Added LLM-optimized documentation via VitePress plugin, generating `llms.txt`
+  and `llms-full.txt` for AI-powered development tools (#2513 by @vmaerten).
+- Fixed Zsh and Fish completions to stop suggesting task names after `--`
+  separator, allowing proper CLI_ARGS completion (#1843, #1844 by @boiledfroginthewell).
+
+## v3.45.5 - 2025-11-11
+
 - Fixed bug that made a generic message, instead of an useful one, appear when a
   Taskfile could not be found (#2431 by @andreynering).
 - Fixed a bug that caused an error when including a Remote Git Taskfile (#2438
@@ -11,6 +28,21 @@
 - Improved performance of `--list` and `--list-all` by introducing a faster
   compilation method that skips source globbing and checksum updates (#1322,
   #2053 by @vmaerten).
+- Fixed a concurrency bug with `output: group`. This ensures that begin/end
+  parts won't be mixed up from different tasks (#1208, #2349, #2350 by
+  @trulede).
+- Do not re-evaluate variables for `defer:` (#2244, #2418 by @trulede).
+- Improve error message when a Taskfile is not found (#2441, #2494 by
+  @vmaerten).
+- Fixed generic error message `exit status 1` when a dependency task failed
+  (#2286 by @GrahamDennis).
+- Fixed YAML library from the unmaintained `gopkg.in/yaml.v3` to the new fork
+  maintained by the official YAML org (#2171, #2434 by @andreynering).
+- On Windows, the built-in version of the `rm` core utils contains a fix related
+  to the `-f` flag (#2426,
+  [u-root/u-root#3464](https://github.com/u-root/u-root/pull/3464),
+  [mvdan/sh#1199](https://github.com/mvdan/sh/pull/1199), #2506 by
+  @andreynering).
 
 ## v3.45.4 - 2025-09-17
 

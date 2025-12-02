@@ -69,7 +69,7 @@ nfpms:
       - deb
       - rpm
       - apk
-    file_name_template: '{{.ProjectName}}_{{.Os}}_{{.Arch}}'
+    file_name_template: '{{.ProjectName}}_{{.Version}}_{{.Os}}_{{.Arch}}'
     contents:
       - src: completion/bash/task.bash
         dst: /etc/bash_completion.d/task
@@ -127,7 +127,7 @@ winget:
     repository:
       owner: go-task
       name: winget-pkgs
-      branch: 'chore/task-{{.Version}}'
+      branch: 'task-{{.Version}}'
       pull_request:
         enabled: true
         draft: false
@@ -136,6 +136,8 @@ winget:
           owner: microsoft
           name: winget-pkgs
           branch: master
+        body: |
+          /cc @andreynering @pd93 @vmaerten
 
 
 npms:
@@ -167,6 +169,6 @@ cloudsmiths:
       rpm:
         - "any-distro/any-version"
       alpine:
-        - "alpine/any-version"
+        - "any-distro/any-version"
     component: main
     republish: true

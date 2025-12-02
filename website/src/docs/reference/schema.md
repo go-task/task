@@ -99,7 +99,7 @@ vars:
 
   # Variable references
   BUILD_VERSION:
-    ref: VERSION
+    ref: .VERSION
 
   # Map variables
   CONFIG:
@@ -360,7 +360,7 @@ vars:
 vars:
   BASE_VERSION: 1.0.0
   FULL_VERSION:
-    ref: BASE_VERSION
+    ref: .BASE_VERSION
 ```
 
 ### Map Variables (`map`)
@@ -513,12 +513,19 @@ tasks:
 
 ```yaml
 tasks:
+  # Single prompt
   deploy:
     prompt: "Deploy to production?"
-    # or multiple prompts
+    cmds:
+      - ./deploy.sh
+
+  # Multiple prompts
+  deploy-multi:
     prompt:
       - "Are you sure?"
       - "This will affect live users!"
+    cmds:
+      - ./deploy.sh
 ```
 
 #### `aliases`
@@ -592,7 +599,7 @@ tasks:
   # Simple precondition (shorthand)
   build:
     preconditions:
-      - test -f ./src
+      - test -d ./src
     cmds:
       - go build ./...
 
@@ -605,6 +612,21 @@ tasks:
         msg: "Application binary not found. Run 'task build' first."
     cmds:
       - ./deploy.sh
+```
+
+### `dir`
+
+- **Type**: `string`
+- **Description**: The directory in which this task should run
+- **Default**: If the task is in the root Taskfile, the default `dir` is
+  `ROOT_DIR`. For included Taskfiles, the default `dir` is the value specified in
+  their respective `includes.*.dir` field (if any).
+
+```yaml
+tasks:
+  current-dir:
+    dir: '{{.USER_WORKING_DIR}}'
+    cmd: pwd
 ```
 
 #### `requires`
@@ -773,7 +795,7 @@ tasks:
           matrix:
             OS: [linux, windows, darwin]
             ARCH: [amd64, arm64]
-        cmd: echo "Testing {{.OS}}/{{.ARCH}}"
+        cmd: echo "Testing {{.ITEM.OS}}/{{.ITEM.ARCH}}"
 ```
 
 #### Loop in Dependencies

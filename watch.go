@@ -36,7 +36,6 @@ func (e *Executor) watchTasks(calls ...*Call) error {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	for _, c := range calls {
-		c := c
 		go func() {
 			err := e.RunTask(ctx, c)
 			if err == nil {
@@ -85,7 +84,6 @@ func (e *Executor) watchTasks(calls ...*Call) error {
 				e.Compiler.ResetCache()
 
 				for _, c := range calls {
-					c := c
 					go func() {
 						if ShouldIgnore(event.Name) {
 							e.Logger.VerboseErrf(logger.Magenta, "task: event skipped for being an ignored dir: %s\n", event.Name)

@@ -570,7 +570,9 @@ func TestCyclicDep(t *testing.T) {
 		task.WithStderr(io.Discard),
 	)
 	require.NoError(t, e.Setup())
-	assert.IsType(t, &errors.TaskCalledTooManyTimesError{}, e.Run(t.Context(), &task.Call{Task: "task-1"}))
+	err := e.Run(t.Context(), &task.Call{Task: "task-1"})
+	var taskCalledTooManyTimesError *errors.TaskCalledTooManyTimesError
+	assert.ErrorAs(t, err, &taskCalledTooManyTimesError)
 }
 
 func TestTaskVersion(t *testing.T) {
@@ -1075,7 +1077,7 @@ func TestIncludesOptionalImplicitFalse(t *testing.T) {
 	const dir = "testdata/includes_optional_implicit_false"
 	wd, _ := os.Getwd()
 
-	message := "stat %s/%s/TaskfileOptional.yml: no such file or directory"
+	message := "task: No Taskfile found at \"%s/%s/TaskfileOptional.yml\""
 	expected := fmt.Sprintf(message, wd, dir)
 
 	e := task.NewExecutor(
@@ -1095,7 +1097,7 @@ func TestIncludesOptionalExplicitFalse(t *testing.T) {
 	const dir = "testdata/includes_optional_explicit_false"
 	wd, _ := os.Getwd()
 
-	message := "stat %s/%s/TaskfileOptional.yml: no such file or directory"
+	message := "task: No Taskfile found at \"%s/%s/TaskfileOptional.yml\""
 	expected := fmt.Sprintf(message, wd, dir)
 
 	e := task.NewExecutor(
@@ -1870,6 +1872,29 @@ func TestRunOnceSharedDeps(t *testing.T) {
 	assert.Len(t, matches, 1)
 	assert.Contains(t, buff.String(), `task: [service-a:build] echo "build a"`)
 	assert.Contains(t, buff.String(), `task: [service-b:build] echo "build b"`)
+}
+
+func TestRunWhenChanged(t *testing.T) {
+	t.Parallel()
+
+	const dir = "testdata/run_when_changed"
+
+	var buff bytes.Buffer
+	e := task.NewExecutor(
+		task.WithDir(dir),
+		task.WithStdout(&buff),
+		task.WithStderr(&buff),
+		task.WithForceAll(true),
+		task.WithSilent(true),
+	)
+	require.NoError(t, e.Setup())
+	require.NoError(t, e.Run(t.Context(), &task.Call{Task: "start"}))
+	expectedOutputOrder := strings.TrimSpace(`
+login server=fubar user=fubar
+login server=foo user=foo
+login server=bar user=bar
+`)
+	assert.Contains(t, buff.String(), expectedOutputOrder)
 }
 
 func TestDeferredCmds(t *testing.T) {
