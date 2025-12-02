@@ -388,8 +388,8 @@ You can also specify trusted hosts via the command line:
 # Trust specific host for this execution
 task --trusted-hosts github.com -t https://github.com/user/repo.git//Taskfile.yml
 
-# Trust multiple hosts
-task --trusted-hosts github.com --trusted-hosts gitlab.com -t https://github.com/user/repo.git//Taskfile.yml
+# Trust multiple hosts (comma-separated)
+task --trusted-hosts github.com,gitlab.com -t https://github.com/user/repo.git//Taskfile.yml
 
 # Trust a host with a specific port
 task --trusted-hosts example.com:8080 -t https://example.com:8080/Taskfile.yml
