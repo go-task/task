@@ -832,7 +832,7 @@ func TestIncludesRemote(t *testing.T) {
 					),
 				},
 				{
-					name: "with trust, no prompts",
+					name: "with trusted hosts, no prompts",
 					executor: task.NewExecutor(
 						task.WithDir(dir),
 						task.WithStdout(&buff),
@@ -843,8 +843,8 @@ func TestIncludesRemote(t *testing.T) {
 						task.WithStderr(&buff),
 						task.WithVerbose(true),
 
-						// With trust
-						task.WithTrust([]string{trustedHost}),
+						// With trusted hosts
+						task.WithTrustedHosts([]string{trustedHost}),
 						task.WithDownload(true),
 					),
 				},

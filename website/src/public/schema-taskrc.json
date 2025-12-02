@@ -43,7 +43,7 @@
           "description": "Expiry duration for cached remote Taskfiles (e.g., '1h', '24h')",
           "pattern": "^[0-9]+(ns|us|µs|ms|s|m|h)$"
         },
-        "trust": {
+        "trusted-hosts": {
           "type": "array",
           "description": "List of trusted hosts for remote Taskfiles (e.g., 'github.com', 'gitlab.com', 'example.com:8080').",
           "items": {

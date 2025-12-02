@@ -308,7 +308,7 @@ remote:
   offline: false
   timeout: "30s"
   cache-expiry: "24h"
-  trust:
+  trusted-hosts:
     - github.com
     - gitlab.com
 ```
@@ -360,24 +360,24 @@ remote:
   cache-expiry: "6h"
 ```
 
-#### `trust`
+#### `trusted-hosts`
 
 - **Type**: `array of strings`
 - **Default**: `[]` (empty list)
 - **Description**: List of trusted hosts for remote Taskfiles. Hosts in this
   list will not prompt for confirmation when downloading Taskfiles
-- **CLI equivalent**: `--trust`
+- **CLI equivalent**: `--trusted-hosts`
 
 ```yaml
 remote:
-  trust:
+  trusted-hosts:
     - github.com
     - gitlab.com
     - raw.githubusercontent.com
     - example.com:8080
 ```
 
-Hosts in the trust list will automatically be trusted without prompting for
+Hosts in the trusted hosts list will automatically be trusted without prompting for
 confirmation when they are first downloaded or when their checksums change. The
 host matching includes the port if specified in the URL. Use with caution and
 only add hosts you fully trust.
@@ -386,11 +386,11 @@ You can also specify trusted hosts via the command line:
 
 ```shell
 # Trust specific host for this execution
-task --trust github.com -t https://github.com/user/repo.git//Taskfile.yml
+task --trusted-hosts github.com -t https://github.com/user/repo.git//Taskfile.yml
 
 # Trust multiple hosts
-task --trust github.com --trust gitlab.com -t https://github.com/user/repo.git//Taskfile.yml
+task --trusted-hosts github.com --trusted-hosts gitlab.com -t https://github.com/user/repo.git//Taskfile.yml
 
 # Trust a host with a specific port
-task --trust example.com:8080 -t https://example.com:8080/Taskfile.yml
+task --trusted-hosts example.com:8080 -t https://example.com:8080/Taskfile.yml
 ```

@@ -44,7 +44,7 @@ type (
 		insecure            bool
 		download            bool
 		offline             bool
-		trust               []string
+		trustedHosts        []string
 		tempDir             string
 		cacheExpiryDuration time.Duration
 		debugFunc           DebugFunc
@@ -61,7 +61,7 @@ func NewReader(opts ...ReaderOption) *Reader {
 		insecure:            false,
 		download:            false,
 		offline:             false,
-		trust:               nil,
+		trustedHosts:        nil,
 		tempDir:             os.TempDir(),
 		cacheExpiryDuration: 0,
 		debugFunc:           nil,
@@ -122,18 +122,18 @@ func (o *offlineOption) ApplyToReader(r *Reader) {
 	r.offline = o.offline
 }
 
-// WithTrust configures the [Reader] with a list of trusted hosts for remote
+// WithTrustedHosts configures the [Reader] with a list of trusted hosts for remote
 // Taskfiles. Hosts in this list will not prompt for user confirmation.
-func WithTrust(trust []string) ReaderOption {
-	return &trustOption{trust: trust}
+func WithTrustedHosts(trustedHosts []string) ReaderOption {
+	return &trustedHostsOption{trustedHosts: trustedHosts}
 }
 
-type trustOption struct {
-	trust []string
+type trustedHostsOption struct {
+	trustedHosts []string
 }
 
-func (o *trustOption) ApplyToReader(r *Reader) {
-	r.trust = o.trust
+func (o *trustedHostsOption) ApplyToReader(r *Reader) {
+	r.trustedHosts = o.trustedHosts
 }
 
 // WithTempDir sets the temporary directory that will be used by the [Reader].
@@ -225,7 +225,7 @@ func (r *Reader) promptf(format string, a ...any) error {
 
 // isTrusted checks if a URI's host matches any of the trusted hosts patterns.
 func (r *Reader) isTrusted(uri string) bool {
-	if len(r.trust) == 0 {
+	if len(r.trustedHosts) == 0 {
 		return false
 	}
 
@@ -237,7 +237,7 @@ func (r *Reader) isTrusted(uri string) bool {
 	host := parsedURL.Host
 
 	// Check against each trusted pattern (exact match including port if provided)
-	for _, pattern := range r.trust {
+	for _, pattern := range r.trustedHosts {
 		if host == pattern {
 			return true
 		}

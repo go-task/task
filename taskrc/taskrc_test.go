@@ -137,13 +137,13 @@ func TestGetConfig_All(t *testing.T) { //nolint:paralleltest // cannot run in pa
 	}, cfg)
 }
 
-func TestGetConfig_RemoteTrust(t *testing.T) { //nolint:paralleltest // cannot run in parallel
+func TestGetConfig_RemoteTrustedHosts(t *testing.T) { //nolint:paralleltest // cannot run in parallel
 	_, _, localDir := setupDirs(t)
 
 	// Test with single host
 	configYAML := `
 remote:
-  trust:
+  trusted-hosts:
     - github.com
 `
 	writeFile(t, localDir, ".taskrc.yml", configYAML)
@@ -151,12 +151,12 @@ remote:
 	cfg, err := GetConfig(localDir)
 	assert.NoError(t, err)
 	assert.NotNil(t, cfg)
-	assert.Equal(t, []string{"github.com"}, cfg.Remote.Trust)
+	assert.Equal(t, []string{"github.com"}, cfg.Remote.TrustedHosts)
 
 	// Test with multiple hosts
 	configYAML = `
 remote:
-  trust:
+  trusted-hosts:
     - github.com
     - gitlab.com
     - example.com:8080
@@ -166,17 +166,17 @@ remote:
 	cfg, err = GetConfig(localDir)
 	assert.NoError(t, err)
 	assert.NotNil(t, cfg)
-	assert.Equal(t, []string{"github.com", "gitlab.com", "example.com:8080"}, cfg.Remote.Trust)
+	assert.Equal(t, []string{"github.com", "gitlab.com", "example.com:8080"}, cfg.Remote.TrustedHosts)
 }
 
-func TestGetConfig_RemoteTrustMerge(t *testing.T) { //nolint:paralleltest // cannot run in parallel
+func TestGetConfig_RemoteTrustedHostsMerge(t *testing.T) { //nolint:paralleltest // cannot run in parallel
 	t.Run("file-based merge precedence", func(t *testing.T) { //nolint:paralleltest // parent test cannot run in parallel
 		xdgConfigDir, homeDir, localDir := setupDirs(t)
 
 		// XDG config has github.com and gitlab.com
 		xdgConfig := `
 remote:
-  trust:
+  trusted-hosts:
     - github.com
     - gitlab.com
   timeout: "30s"
@@ -186,7 +186,7 @@ remote:
 		// Home config has example.com (should be combined with XDG)
 		homeConfig := `
 remote:
-  trust:
+  trusted-hosts:
     - example.com
 `
 		writeFile(t, homeDir, ".taskrc.yml", homeConfig)
@@ -195,12 +195,12 @@ remote:
 		assert.NoError(t, err)
 		assert.NotNil(t, cfg)
 		// Home config entries come first, then XDG
-		assert.Equal(t, []string{"example.com", "github.com", "gitlab.com"}, cfg.Remote.Trust)
+		assert.Equal(t, []string{"example.com", "github.com", "gitlab.com"}, cfg.Remote.TrustedHosts)
 
 		// Test with local config too
 		localConfig := `
 remote:
-  trust:
+  trusted-hosts:
     - local.dev
 `
 		writeFile(t, localDir, ".taskrc.yml", localConfig)
@@ -209,7 +209,7 @@ remote:
 		assert.NoError(t, err)
 		assert.NotNil(t, cfg)
 		// Local config entries come first
-		assert.Equal(t, []string{"local.dev", "example.com", "github.com", "gitlab.com"}, cfg.Remote.Trust)
+		assert.Equal(t, []string{"local.dev", "example.com", "github.com", "gitlab.com"}, cfg.Remote.TrustedHosts)
 	})
 
 	t.Run("merge edge cases", func(t *testing.T) { //nolint:paralleltest // parent test cannot run in parallel
@@ -224,7 +224,7 @@ remote:
 				base: &ast.TaskRC{},
 				other: &ast.TaskRC{
 					Remote: ast.Remote{
-						Trust: []string{"github.com"},
+						TrustedHosts: []string{"github.com"},
 					},
 				},
 				expected: []string{"github.com"},
@@ -233,12 +233,12 @@ remote:
 				name: "merge combines lists",
 				base: &ast.TaskRC{
 					Remote: ast.Remote{
-						Trust: []string{"base.com"},
+						TrustedHosts: []string{"base.com"},
 					},
 				},
 				other: &ast.TaskRC{
 					Remote: ast.Remote{
-						Trust: []string{"other.com"},
+						TrustedHosts: []string{"other.com"},
 					},
 				},
 				expected: []string{"other.com", "base.com"},
@@ -247,12 +247,12 @@ remote:
 				name: "merge empty list does not override",
 				base: &ast.TaskRC{
 					Remote: ast.Remote{
-						Trust: []string{"base.com"},
+						TrustedHosts: []string{"base.com"},
 					},
 				},
 				other: &ast.TaskRC{
 					Remote: ast.Remote{
-						Trust: []string{},
+						TrustedHosts: []string{},
 					},
 				},
 				expected: []string{"base.com"},
@@ -261,12 +261,12 @@ remote:
 				name: "merge nil does not override",
 				base: &ast.TaskRC{
 					Remote: ast.Remote{
-						Trust: []string{"base.com"},
+						TrustedHosts: []string{"base.com"},
 					},
 				},
 				other: &ast.TaskRC{
 					Remote: ast.Remote{
-						Trust: nil,
+						TrustedHosts: nil,
 					},
 				},
 				expected: []string{"base.com"},
@@ -276,7 +276,7 @@ remote:
 		for _, tt := range tests {
 			t.Run(tt.name, func(t *testing.T) { //nolint:paralleltest // parent test cannot run in parallel
 				tt.base.Merge(tt.other)
-				assert.Equal(t, tt.expected, tt.base.Remote.Trust)
+				assert.Equal(t, tt.expected, tt.base.Remote.TrustedHosts)
 			})
 		}
 	})
@@ -290,11 +290,11 @@ remote:
 		base := &ast.TaskRC{}
 		other := &ast.TaskRC{
 			Remote: ast.Remote{
-				Insecure:    &insecureTrue,
-				Offline:     &offlineTrue,
-				Timeout:     &timeout,
-				CacheExpiry: &cacheExpiry,
-				Trust:       []string{"github.com", "gitlab.com"},
+				Insecure:     &insecureTrue,
+				Offline:      &offlineTrue,
+				Timeout:      &timeout,
+				CacheExpiry:  &cacheExpiry,
+				TrustedHosts: []string{"github.com", "gitlab.com"},
 			},
 		}
 
@@ -304,6 +304,6 @@ remote:
 		assert.Equal(t, &offlineTrue, base.Remote.Offline)
 		assert.Equal(t, &timeout, base.Remote.Timeout)
 		assert.Equal(t, &cacheExpiry, base.Remote.CacheExpiry)
-		assert.Equal(t, []string{"github.com", "gitlab.com"}, base.Remote.Trust)
+		assert.Equal(t, []string{"github.com", "gitlab.com"}, base.Remote.TrustedHosts)
 	})
 }
