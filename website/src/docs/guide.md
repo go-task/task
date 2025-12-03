@@ -591,6 +591,30 @@ tasks:
       - echo {{.TEXT}}
 ```
 
+### Fail-fast dependencies
+
+By default, Task waits for all dependencies to finish running before continuing.
+If you want Task to stop executing further dependencies as soon as one fails,
+you can set `failfast: true` on your [`.taskrc.yml`][config] or for a specific
+task:
+
+```yaml
+# .taskrc.yml
+failfast: true # applies to all tasks
+```
+
+```yaml
+# Taskfile.yml
+version: '3'
+
+tasks:
+  default:
+    deps: [task1, task2, task3]
+    failfast: true # applies only to this task
+```
+
+Alternatively, you can use `--failfast`, which also work for `--parallel`.
+
 ## Platform specific tasks and commands
 
 If you want to restrict the running of tasks to explicit platforms, this can be
@@ -2384,5 +2408,6 @@ to us.
 
 :::
 
+[config]: /docs/reference/config
 [gotemplate]: https://golang.org/pkg/text/template/
 [templating-reference]: /docs/reference/templating
