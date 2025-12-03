@@ -1,6 +1,7 @@
 #compdef task
-compdef _task task
 typeset -A opt_args
+TASK_CMD="${TASK_EXE:-task}"
+compdef _task "$TASK_CMD"
 
 _GO_TASK_COMPLETION_LIST_OPTION="${GO_TASK_COMPLETION_LIST_OPTION:---list-all}"
 
@@ -16,7 +17,7 @@ function __task_list() {
     local -i enabled=0
     local taskfile item task desc
 
-    cmd=(task)
+    cmd=($TASK_CMD)
     taskfile=${(Qv)opt_args[(i)-t|--taskfile]}
     taskfile=${taskfile//\~/$HOME}
 
