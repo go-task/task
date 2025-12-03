@@ -28,7 +28,7 @@ require (
 	go.yaml.in/yaml/v4 v4.0.0-rc.3
 	golang.org/x/sync v0.18.0
 	golang.org/x/term v0.37.0
-	mvdan.cc/sh/moreinterp v0.0.0-20251109230715-65adef8e2c5b
+	mvdan.cc/sh/moreinterp v0.0.0-20251201082854-7ad4e4310897
 	mvdan.cc/sh/v3 v3.12.0
 )
 
