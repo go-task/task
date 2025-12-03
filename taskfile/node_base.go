@@ -10,6 +10,9 @@ type (
 		parent   Node
 		dir      string
 		checksum string
+		caCert   string
+		cert     string
+		certKey  string
 	}
 )
 
@@ -53,4 +56,22 @@ func (node *baseNode) Checksum() string {
 
 func (node *baseNode) Verify(checksum string) bool {
 	return node.checksum == "" || node.checksum == checksum
+}
+
+func WithCACert(caCert string) NodeOption {
+	return func(node *baseNode) {
+		node.caCert = caCert
+	}
+}
+
+func WithCert(cert string) NodeOption {
+	return func(node *baseNode) {
+		node.cert = cert
+	}
+}
+
+func WithCertKey(certKey string) NodeOption {
+	return func(node *baseNode) {
+		node.certKey = certKey
+	}
 }

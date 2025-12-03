@@ -36,6 +36,9 @@ type (
 		Offline             bool
 		Timeout             time.Duration
 		CacheExpiryDuration time.Duration
+		CACert              string
+		Cert                string
+		CertKey             string
 		Watch               bool
 		Verbose             bool
 		Silent              bool
@@ -251,6 +254,45 @@ type cacheExpiryDurationOption struct {
 
 func (o *cacheExpiryDurationOption) ApplyToExecutor(r *Executor) {
 	r.CacheExpiryDuration = o.duration
+}
+
+// WithCACert sets the path to a custom CA certificate for TLS connections.
+func WithCACert(caCert string) ExecutorOption {
+	return &caCertOption{caCert: caCert}
+}
+
+type caCertOption struct {
+	caCert string
+}
+
+func (o *caCertOption) ApplyToExecutor(e *Executor) {
+	e.CACert = o.caCert
+}
+
+// WithCert sets the path to a client certificate for TLS connections.
+func WithCert(cert string) ExecutorOption {
+	return &certOption{cert: cert}
+}
+
+type certOption struct {
+	cert string
+}
+
+func (o *certOption) ApplyToExecutor(e *Executor) {
+	e.Cert = o.cert
+}
+
+// WithCertKey sets the path to a client certificate key for TLS connections.
+func WithCertKey(certKey string) ExecutorOption {
+	return &certKeyOption{certKey: certKey}
+}
+
+type certKeyOption struct {
+	certKey string
+}
+
+func (o *certKeyOption) ApplyToExecutor(e *Executor) {
+	e.CertKey = o.certKey
 }
 
 // WithWatch tells the [Executor] to keep running in the background and watch

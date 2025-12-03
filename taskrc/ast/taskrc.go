@@ -21,6 +21,9 @@ type Remote struct {
 	Offline     *bool          `yaml:"offline"`
 	Timeout     *time.Duration `yaml:"timeout"`
 	CacheExpiry *time.Duration `yaml:"cache-expiry"`
+	CACert      *string        `yaml:"cacert"`
+	Cert        *string        `yaml:"cert"`
+	CertKey     *string        `yaml:"cert-key"`
 }
 
 // Merge combines the current TaskRC with another TaskRC, prioritizing non-nil fields from the other TaskRC.
@@ -42,6 +45,9 @@ func (t *TaskRC) Merge(other *TaskRC) {
 	t.Remote.Offline = cmp.Or(other.Remote.Offline, t.Remote.Offline)
 	t.Remote.Timeout = cmp.Or(other.Remote.Timeout, t.Remote.Timeout)
 	t.Remote.CacheExpiry = cmp.Or(other.Remote.CacheExpiry, t.Remote.CacheExpiry)
+	t.Remote.CACert = cmp.Or(other.Remote.CACert, t.Remote.CACert)
+	t.Remote.Cert = cmp.Or(other.Remote.Cert, t.Remote.Cert)
+	t.Remote.CertKey = cmp.Or(other.Remote.CertKey, t.Remote.CertKey)
 
 	t.Verbose = cmp.Or(other.Verbose, t.Verbose)
 	t.Concurrency = cmp.Or(other.Concurrency, t.Concurrency)
