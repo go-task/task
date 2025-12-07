@@ -22,6 +22,8 @@
 - Added `--trusted-hosts` CLI flag and `remote.trusted-hosts` config option to
   skip confirmation prompts for specified hosts when using Remote Taskfiles
   (#2491, #2473 by @maciejlech).
+- Shell completion now works when Task is installed or aliased under a different
+  binary name via TASK_EXE environment variable (#2495, #2468 by @vmaerten).
 
 ## v3.45.5 - 2025-11-11
 
