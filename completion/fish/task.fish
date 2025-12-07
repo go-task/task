@@ -1,4 +1,4 @@
-set -l GO_TASK_PROGNAME task
+set -l GO_TASK_PROGNAME (if set -q GO_TASK_PROGNAME; echo $GO_TASK_PROGNAME; else if set -q TASK_EXE; echo $TASK_EXE; else; echo task; end)
 
 # Cache variables for experiments (global)
 set -g __task_experiments_cache ""
