@@ -8,6 +8,17 @@
   ],
   "mode": "full",
   "addLabels":["area: dependencies"],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "fileMatch": ["^\\.github/workflows/.*\\.ya?ml$"],
+      "matchStrings": [
+        "uses:\\s*golangci/golangci-lint-action@\\S+\\s+with:\\s+version:\\s*(?<currentValue>v[\\d.]+)"
+      ],
+      "datasourceTemplate": "github-releases",
+      "depNameTemplate": "golangci/golangci-lint"
+    }
+  ],
   "packageRules": [
     {
       "matchManagers": ["github-actions"],
