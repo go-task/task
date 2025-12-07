@@ -216,8 +216,8 @@ interactive terminal, so you are not able to accept a prompt. In these cases you
 are able to tell task to accept these prompts automatically by using the `--yes`
 flag or the `--trust` flag. The `--trust` flag allows you to specify trusted
 hosts for remote Taskfiles, while `--yes` applies to all prompts in Task. You
-can also configure trusted hosts in your [taskrc configuration](#trust) using
-`remote.trust`. Before enabling automatic trust, you should:
+can also configure trusted hosts in your [taskrc configuration](#trusted-hosts) using
+`remote.trusted-hosts`. Before enabling automatic trust, you should:
 
 1. Be sure that you trust the source and contents of the remote Taskfile.
 2. Consider using a pinned version of the remote Taskfile (e.g. A link
