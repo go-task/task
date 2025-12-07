@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/puzpuzpuz/xsync/v3"
+	"github.com/puzpuzpuz/xsync/v4"
 	"github.com/sajari/fuzzy"
 
 	"github.com/go-task/task/v3/internal/logger"
@@ -71,7 +71,7 @@ type (
 		mkdirMutexMap        map[string]*sync.Mutex
 		executionHashes      map[string]context.Context
 		executionHashesMutex sync.Mutex
-		watchedDirs          *xsync.MapOf[string, bool]
+		watchedDirs          *xsync.Map[string, bool]
 	}
 	TempDir struct {
 		Remote      string
