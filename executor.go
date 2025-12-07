@@ -54,8 +54,10 @@ type (
 		Stdout io.Writer
 		Stderr io.Writer
 
+		// Taskfile
+		Taskfile *ast.Taskfile
+
 		// Internal
-		Taskfile           *ast.Taskfile
 		Logger             *logger.Logger
 		Compiler           *Compiler
 		Output             output.Output
@@ -87,6 +89,7 @@ func NewExecutor(opts ...ExecutorOption) *Executor {
 		Stdin:                os.Stdin,
 		Stdout:               os.Stdout,
 		Stderr:               os.Stderr,
+		Taskfile:             nil,
 		Logger:               nil,
 		Compiler:             nil,
 		Output:               nil,
@@ -516,4 +519,17 @@ type versionCheckOption struct {
 
 func (o *versionCheckOption) ApplyToExecutor(e *Executor) {
 	e.EnableVersionCheck = o.enableVersionCheck
+}
+
+// WithTaskfile set the [Executor]'s Taskfile to the provided [ast.Taskfile].
+func WithTaskfile(taskfile *ast.Taskfile) ExecutorOption {
+	return &taskfileOption{taskfile}
+}
+
+type taskfileOption struct {
+	taskfile *ast.Taskfile
+}
+
+func (o *taskfileOption) ApplyToExecutor(e *Executor) {
+	e.Taskfile = o.taskfile
 }
