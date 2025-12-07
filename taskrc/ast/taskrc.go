@@ -15,7 +15,7 @@ type TaskRC struct {
 	DisableFuzzy *bool           `yaml:"disable-fuzzy"`
 	Concurrency  *int            `yaml:"concurrency"`
 	Remote       Remote          `yaml:"remote"`
-  Failfast    bool            `yaml:"failfast"`
+	Failfast     bool            `yaml:"failfast"`
 	Experiments  map[string]int  `yaml:"experiments"`
 }
 
