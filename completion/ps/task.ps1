@@ -20,6 +20,8 @@ Register-ArgumentCompleter -CommandName task -ScriptBlock {
 			[CompletionResult]::new('-x', '-x', [CompletionResultType]::ParameterName, 'pass-through exit code'),
 			[CompletionResult]::new('--exit-code', '--exit-code', [CompletionResultType]::ParameterName, 'pass-through exit code'),
 			[CompletionResult]::new('--experiments', '--experiments', [CompletionResultType]::ParameterName, 'list experiments'),
+			[CompletionResult]::new('-F', '-F', [CompletionResultType]::ParameterName, 'fail fast on pallalel tasks'),
+			[CompletionResult]::new('--failfast', '--failfast', [CompletionResultType]::ParameterName, 'force execution'),
 			[CompletionResult]::new('-f', '-f', [CompletionResultType]::ParameterName, 'force execution'),
 			[CompletionResult]::new('--force', '--force', [CompletionResultType]::ParameterName, 'force execution'),
 			[CompletionResult]::new('-g', '-g', [CompletionResultType]::ParameterName, 'run global Taskfile'),

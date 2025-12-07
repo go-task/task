@@ -74,6 +74,7 @@ complete -c $GO_TASK_PROGNAME -s d -l dir                       -d 'set director
 complete -c $GO_TASK_PROGNAME -s n -l dry                       -d 'compile and print tasks without executing'
 complete -c $GO_TASK_PROGNAME -s x -l exit-code                 -d 'pass-through exit code of task command'
 complete -c $GO_TASK_PROGNAME      -l experiments               -d 'list available experiments'
+complete -c $GO_TASK_PROGNAME -s F -l failfast                  -d 'when running tasks in parallel, stop all tasks if one fails'
 complete -c $GO_TASK_PROGNAME -s f -l force                     -d 'force execution even when up-to-date'
 complete -c $GO_TASK_PROGNAME -s g -l global                    -d 'run global Taskfile from home directory'
 complete -c $GO_TASK_PROGNAME -s h -l help                      -d 'show help'
