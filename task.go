@@ -233,6 +233,26 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) error {
 				return err
 			}
 		}
+
+		if !skipFingerprinting {
+			// Get the fingerprinting method to use
+			method := e.Taskfile.Method
+			if t.Method != "" {
+				method = t.Method
+			}
+
+			// Finalize the task fingerprinting
+			err := fingerprint.FinalizeTask(ctx, t,
+				fingerprint.WithMethod(method),
+				fingerprint.WithTempDir(e.TempDir.Fingerprint),
+				fingerprint.WithDry(e.Dry),
+				fingerprint.WithLogger(e.Logger),
+			)
+			if err != nil {
+				return err
+			}
+		}
+
 		e.Logger.VerboseErrf(logger.Magenta, "task: %q finished\n", call.Task)
 		return nil
 	}); err != nil {
