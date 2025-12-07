@@ -43,6 +43,7 @@ vars:
 
 tasks:
   default:
+    desc: Print a greeting message
     cmds:
       - echo "{{.GREETING}}"
     silent: true
@@ -111,6 +112,7 @@ vars:
 
 tasks:
   default:
+    desc: Print a greeting message
     cmds:
       - echo "{{.GREETING}}"
     silent: true
