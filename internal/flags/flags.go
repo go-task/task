@@ -76,6 +76,9 @@ var (
 	ClearCache          bool
 	Timeout             time.Duration
 	CacheExpiryDuration time.Duration
+	CACert              string
+	Cert                string
+	CertKey             string
 )
 
 func init() {
@@ -155,6 +158,9 @@ func init() {
 		pflag.DurationVar(&Timeout, "timeout", getConfig(config, func() *time.Duration { return config.Remote.Timeout }, time.Second*10), "Timeout for downloading remote Taskfiles.")
 		pflag.BoolVar(&ClearCache, "clear-cache", false, "Clear the remote cache.")
 		pflag.DurationVar(&CacheExpiryDuration, "expiry", getConfig(config, func() *time.Duration { return config.Remote.CacheExpiry }, 0), "Expiry duration for cached remote Taskfiles.")
+		pflag.StringVar(&CACert, "cacert", getConfig(config, func() *string { return config.Remote.CACert }, ""), "Path to a custom CA certificate for HTTPS connections.")
+		pflag.StringVar(&Cert, "cert", getConfig(config, func() *string { return config.Remote.Cert }, ""), "Path to a client certificate for HTTPS connections.")
+		pflag.StringVar(&CertKey, "cert-key", getConfig(config, func() *string { return config.Remote.CertKey }, ""), "Path to a client certificate key for HTTPS connections.")
 	}
 	pflag.Parse()
 }
@@ -200,6 +206,11 @@ func Validate() error {
 		return errors.New("task: --nested only applies to --json with --list or --list-all")
 	}
 
+	// Validate certificate flags
+	if (Cert != "" && CertKey == "") || (Cert == "" && CertKey != "") {
+		return errors.New("task: --cert and --cert-key must be provided together")
+	}
+
 	return nil
 }
 
@@ -240,6 +251,9 @@ func (o *flagsOption) ApplyToExecutor(e *task.Executor) {
 		task.WithOffline(Offline),
 		task.WithTimeout(Timeout),
 		task.WithCacheExpiryDuration(CacheExpiryDuration),
+		task.WithCACert(CACert),
+		task.WithCert(Cert),
+		task.WithCertKey(CertKey),
 		task.WithWatch(Watch),
 		task.WithVerbose(Verbose),
 		task.WithSilent(Silent),

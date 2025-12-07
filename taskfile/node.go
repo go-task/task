@@ -34,13 +34,14 @@ func NewRootNode(
 	dir string,
 	insecure bool,
 	timeout time.Duration,
+	opts ...NodeOption,
 ) (Node, error) {
 	dir = fsext.DefaultDir(entrypoint, dir)
 	// If the entrypoint is "-", we read from stdin
 	if entrypoint == "-" {
 		return NewStdinNode(dir)
 	}
-	return NewNode(entrypoint, dir, insecure)
+	return NewNode(entrypoint, dir, insecure, opts...)
 }
 
 func NewNode(
