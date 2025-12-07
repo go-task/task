@@ -91,6 +91,17 @@ experiments:
 verbose: true
 ```
 
+### `disable-fuzzy`
+
+- **Type**: `boolean`
+- **Default**: `false`
+- **Description**: Disable fuzzy matching for task names. When enabled, Task will not suggest similar task names when you mistype a task name.
+- **CLI equivalent**: [`--disable-fuzzy`](./cli.md#--disable-fuzzy)
+
+```yaml
+disable-fuzzy: true
+```
+
 ### `concurrency`
 
 - **Type**: `integer`
@@ -120,6 +131,7 @@ Here's a complete example of a `.taskrc.yml` file with all available options:
 ```yaml
 # Global settings
 verbose: true
+disable-fuzzy: false
 concurrency: 2
 
 # Enable experimental features

@@ -36,7 +36,6 @@ func (e *Executor) Setup() error {
 	if err := e.readTaskfile(node); err != nil {
 		return err
 	}
-	e.setupFuzzyModel()
 	e.setupStdFiles()
 	if err := e.setupOutput(); err != nil {
 		return err

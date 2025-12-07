@@ -108,6 +108,16 @@ Disable command echoing.
 task deploy --silent
 ```
 
+#### `--disable-fuzzy`
+
+Disable fuzzy matching for task names. When enabled, Task will not suggest similar task names when you mistype a task name.
+
+```bash
+task buidl --disable-fuzzy
+# Output: Task "buidl" does not exist
+# (without "Did you mean 'build'?" suggestion)
+```
+
 ### Execution Control
 
 #### `-F, --failfast`
