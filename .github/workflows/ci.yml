@@ -1,0 +1,91 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    tags:
+      - v*
+    branches:
+      - main
+
+concurrency:
+  group: ci-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Test (${{ matrix.go-version }}, ${{ matrix.platform }})
+    strategy:
+      fail-fast: false
+      matrix:
+        go-version: [1.24.x, 1.25.x]
+        platform: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - uses: actions/setup-go@v6
+        with:
+          go-version: ${{ matrix.go-version }}
+
+      - uses: actions/checkout@v6
+
+      - name: Download Go modules
+        run: go mod download
+        env:
+          GOPROXY: https://proxy.golang.org
+
+      - name: Build
+        run: go build -o ./bin/task -v ./cmd/task
+
+      - name: Test
+        run: ./bin/task test --output=group --output-group-begin='::group::{{.TASK}}' --output-group-end='::endgroup::'
+
+  lint:
+    name: Lint (${{ matrix.go-version }})
+    strategy:
+      fail-fast: false
+      matrix:
+        go-version: [1.24.x, 1.25.x]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-go@v6
+        with:
+          go-version: ${{ matrix.go-version }}
+
+      - uses: actions/checkout@v6
+
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v9
+        with:
+          version: v2.7.1
+
+  lint-jsonschema:
+    name: Lint JSON Schema
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-python@v6
+        with:
+          python-version: 3.14
+
+      - uses: actions/checkout@v6
+
+      - name: install check-jsonschema
+        run: python -m pip install 'check-jsonschema==0.27.3'
+
+      - name: check-jsonschema (metaschema)
+        run: check-jsonschema --check-metaschema website/src/public/schema.json
+
+  ci-status:
+    name: CI
+    runs-on: ubuntu-latest
+    needs: [test, lint, lint-jsonschema]
+    if: always()
+    steps:
+      - name: Check CI status
+        run: |
+          if [[ "${{ needs.test.result }}" != "success" ]] || \
+             [[ "${{ needs.lint.result }}" != "success" ]] || \
+             [[ "${{ needs.lint-jsonschema.result }}" != "success" ]]; then
+            echo "CI failed"
+            exit 1
+          fi
+          echo "CI passed"
