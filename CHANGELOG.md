@@ -29,6 +29,8 @@
   (#2491, #2473 by @maciejlech).
 - Shell completion now works when Task is installed or aliased under a different
   binary name via TASK_EXE environment variable (#2495, #2468 by @vmaerten).
+- Some small fixes and iomprovements were made to `task --init` and to the
+  default Taskfile it generates (#2433 by @andreynering).
 
 ## v3.45.5 - 2025-11-11
 
