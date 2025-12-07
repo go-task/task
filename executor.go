@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/puzpuzpuz/xsync/v3"
+	"github.com/puzpuzpuz/xsync/v4"
 	"github.com/sajari/fuzzy"
 
 	"github.com/go-task/task/v3/internal/logger"
@@ -34,6 +34,7 @@ type (
 		Insecure            bool
 		Download            bool
 		Offline             bool
+		TrustedHosts        []string
 		Timeout             time.Duration
 		CacheExpiryDuration time.Duration
 		Watch               bool
@@ -48,6 +49,7 @@ type (
 		Color               bool
 		Concurrency         int
 		Interval            time.Duration
+		Failfast            bool
 
 		// I/O
 		Stdin  io.Reader
@@ -72,7 +74,7 @@ type (
 		mkdirMutexMap        map[string]*sync.Mutex
 		executionHashes      map[string]context.Context
 		executionHashesMutex sync.Mutex
-		watchedDirs          *xsync.MapOf[string, bool]
+		watchedDirs          *xsync.Map[string, bool]
 	}
 	TempDir struct {
 		Remote      string
@@ -225,6 +227,20 @@ type offlineOption struct {
 
 func (o *offlineOption) ApplyToExecutor(e *Executor) {
 	e.Offline = o.offline
+}
+
+// WithTrustedHosts configures the [Executor] with a list of trusted hosts for remote
+// Taskfiles. Hosts in this list will not prompt for user confirmation.
+func WithTrustedHosts(trustedHosts []string) ExecutorOption {
+	return &trustedHostsOption{trustedHosts}
+}
+
+type trustedHostsOption struct {
+	trustedHosts []string
+}
+
+func (o *trustedHostsOption) ApplyToExecutor(e *Executor) {
+	e.TrustedHosts = o.trustedHosts
 }
 
 // WithTimeout sets the [Executor]'s timeout for fetching remote taskfiles. By
@@ -516,4 +532,17 @@ type versionCheckOption struct {
 
 func (o *versionCheckOption) ApplyToExecutor(e *Executor) {
 	e.EnableVersionCheck = o.enableVersionCheck
+}
+
+// WithFailfast tells the [Executor] whether or not to check the version of
+func WithFailfast(failfast bool) ExecutorOption {
+	return &failfastOption{failfast}
+}
+
+type failfastOption struct {
+	failfast bool
+}
+
+func (o *failfastOption) ApplyToExecutor(e *Executor) {
+	e.Failfast = o.failfast
 }

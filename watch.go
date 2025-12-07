@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/fsnotify/fsnotify"
-	"github.com/puzpuzpuz/xsync/v3"
+	"github.com/puzpuzpuz/xsync/v4"
 
 	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/filepathext"
@@ -126,7 +126,7 @@ func (e *Executor) watchTasks(calls ...*Call) error {
 		}
 	}()
 
-	e.watchedDirs = xsync.NewMapOf[string, bool]()
+	e.watchedDirs = xsync.NewMap[string, bool]()
 
 	go func() {
 		// NOTE(@andreynering): New files can be created in directories

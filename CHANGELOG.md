@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- A small behavior change was made to dependencies. Task will now wait for all
+  dependencies to finish running before continuing, even if any of them fail.
+  To opt for the previous behavior, set `failfast: true` either on your
+  `.taskrc.yml` or per task, or use the `--failfast` flag, which will also work
+  for `--parallel` (#1246, #2525 by @andreynering).
 - Fix RPM upload to Cloudsmith by including the version in the filename to
   ensure unique filenames (#2507 by @vmaerten).
 - Fix `run: when_changed` to work properly for Taskfiles included multiple times
@@ -17,6 +22,18 @@
   to allow disabling fuzzy matching entirely (#2521, #2523 by @vmaerten).
 - Added LLM-optimized documentation via VitePress plugin, generating `llms.txt`
   and `llms-full.txt` for AI-powered development tools (#2513 by @vmaerten).
+- Fixed Zsh and Fish completions to stop suggesting task names after `--`
+  separator, allowing proper CLI_ARGS completion (#1843, #1844 by
+  @boiledfroginthewell).
+- Remote Taskfiles now accept `application/octet-stream` Content-Type (#2536,
+  #1944 by @vmaerten).
+- Added `--trusted-hosts` CLI flag and `remote.trusted-hosts` config option to
+  skip confirmation prompts for specified hosts when using Remote Taskfiles
+  (#2491, #2473 by @maciejlech).
+- Shell completion now works when Task is installed or aliased under a different
+  binary name via TASK_EXE environment variable (#2495, #2468 by @vmaerten).
+- Some small fixes and improvements were made to `task --init` and to the
+  default Taskfile it generates (#2433 by @andreynering).
 
 ## v3.45.5 - 2025-11-11
 

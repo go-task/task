@@ -120,6 +120,14 @@ task buidl --disable-fuzzy
 
 ### Execution Control
 
+#### `-F, --failfast`
+
+Stop executing dependencies as soon as one of them fails.
+
+```bash
+task build --failfast
+```
+
 #### `-f, --force`
 
 Force execution even when the task is up-to-date.

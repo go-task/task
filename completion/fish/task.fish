@@ -1,4 +1,4 @@
-set -l GO_TASK_PROGNAME task
+set -l GO_TASK_PROGNAME (if set -q GO_TASK_PROGNAME; echo $GO_TASK_PROGNAME; else if set -q TASK_EXE; echo $TASK_EXE; else; echo task; end)
 
 # Cache variables for experiments (global)
 set -g __task_experiments_cache ""
@@ -60,8 +60,10 @@ function __task_get_tasks --description "Prints all available tasks with their d
   end
 end
 
-complete -c $GO_TASK_PROGNAME -d 'Runs the specified task(s). Falls back to the "default" task if no task name was specified, or lists all tasks if an unknown task name was
-specified.' -xa "(__task_get_tasks)"
+complete -c $GO_TASK_PROGNAME \
+  -d 'Runs the specified task(s). Falls back to the "default" task if no task name was specified, or lists all tasks if an unknown task name was specified.' \
+  -xa "(__task_get_tasks)" \
+  -n "not __fish_seen_subcommand_from --"
 
 # Standard flags
 complete -c $GO_TASK_PROGNAME -s a -l list-all                  -d 'list all tasks'
@@ -73,6 +75,7 @@ complete -c $GO_TASK_PROGNAME      -l disable-fuzzy             -d 'disable fuzz
 complete -c $GO_TASK_PROGNAME -s n -l dry                       -d 'compile and print tasks without executing'
 complete -c $GO_TASK_PROGNAME -s x -l exit-code                 -d 'pass-through exit code of task command'
 complete -c $GO_TASK_PROGNAME      -l experiments               -d 'list available experiments'
+complete -c $GO_TASK_PROGNAME -s F -l failfast                  -d 'when running tasks in parallel, stop all tasks if one fails'
 complete -c $GO_TASK_PROGNAME -s f -l force                     -d 'force execution even when up-to-date'
 complete -c $GO_TASK_PROGNAME -s g -l global                    -d 'run global Taskfile from home directory'
 complete -c $GO_TASK_PROGNAME -s h -l help                      -d 'show help'

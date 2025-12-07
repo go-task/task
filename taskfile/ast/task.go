@@ -42,6 +42,7 @@ type Task struct {
 	Platforms     []*Platform
 	Watch         bool
 	Location      *Location
+	Failfast      bool
 	// Populated during merging
 	Namespace            string `hash:"ignore"`
 	IncludeVars          *Vars
@@ -143,6 +144,7 @@ func (t *Task) UnmarshalYAML(node *yaml.Node) error {
 			Platforms     []*Platform
 			Requires      *Requires
 			Watch         bool
+			Failfast      bool
 		}
 		if err := node.Decode(&task); err != nil {
 			return errors.NewTaskfileDecodeError(err, node)
@@ -181,6 +183,7 @@ func (t *Task) UnmarshalYAML(node *yaml.Node) error {
 		t.Platforms = task.Platforms
 		t.Requires = task.Requires
 		t.Watch = task.Watch
+		t.Failfast = task.Failfast
 		return nil
 	}
 
@@ -226,6 +229,7 @@ func (t *Task) DeepCopy() *Task {
 		Requires:             t.Requires.DeepCopy(),
 		Namespace:            t.Namespace,
 		FullName:             t.FullName,
+		Failfast:             t.Failfast,
 	}
 	return c
 }

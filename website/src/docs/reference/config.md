@@ -113,6 +113,17 @@ disable-fuzzy: true
 concurrency: 4
 ```
 
+### `failfast`
+
+- **Type**: `boolean`
+- **Default**: `false`
+- **Description**: Stop executing dependencies as soon as one of them fail
+- **CLI equivalent**: [`-F, --failfast`](./cli.md#f-failfast)
+
+```yaml
+failfast: true
+```
+
 ## Example Configuration
 
 Here's a complete example of a `.taskrc.yml` file with all available options:

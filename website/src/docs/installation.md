@@ -332,21 +332,28 @@ config:
 This method loads the completion script from the currently installed version of
 task every time you create a new shell. This ensures that your completions are
 always up-to-date.
+If your executable isn’t named task, set the `TASK_EXE` environment variable before running eval.
 
 ::: code-group
 
 ```shell [bash]
 # ~/.bashrc
+
+# export TASK_EXE='go-task' if needed
 eval "$(task --completion bash)"
 ```
 
 ```shell [zsh]
 # ~/.zshrc
+
+# export TASK_EXE='go-task' if needed
 eval "$(task --completion zsh)"
 ```
 
 ```shell [fish]
 # ~/.config/fish/config.fish
+
+# export TASK_EXE='go-task' if needed
 task --completion fish | source
 ```
 

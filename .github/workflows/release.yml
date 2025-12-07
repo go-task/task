@@ -5,6 +5,10 @@ on:
     tags:
       - 'v*'
 
+permissions:
+  id-token: write  # Required for OIDC
+  contents: read
+
 jobs:
   goreleaser:
     runs-on: ubuntu-latest
@@ -19,9 +23,14 @@ jobs:
         with:
           go-version: 1.25.x
 
-      - name: npm-login
-        run: |
-          npm config set '//registry.npmjs.org/:_authToken'=${{ secrets.NPM_TOKEN }}
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Update npm
+        run: npm install -g npm@latest
+
       - name: Install Task
         uses: go-task/setup-task@v1
 
