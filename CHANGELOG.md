@@ -19,6 +19,9 @@
   @boiledfroginthewell).
 - Remote Taskfiles now accept `application/octet-stream` Content-Type (#2536,
   #1944 by @vmaerten).
+- Added `--trusted-hosts` CLI flag and `remote.trusted-hosts` config option to
+  skip confirmation prompts for specified hosts when using Remote Taskfiles
+  (#2491, #2473 by @maciejlech).
 
 ## v3.45.5 - 2025-11-11
 
