@@ -1,0 +1,68 @@
+version: '3'
+
+vars:
+  SHOULD_RUN: "yes"
+
+tasks:
+  # Basic command-level if (condition met)
+  cmd-if-true:
+    cmds:
+      - cmd: echo "executed"
+        if: "true"
+
+  # Basic command-level if (condition not met)
+  cmd-if-false:
+    cmds:
+      - cmd: echo "should not appear"
+        if: "false"
+      - echo "this runs"
+
+  # Task-level if (condition met)
+  task-if-true:
+    if: "true"
+    cmds:
+      - echo "task executed"
+
+  # Task-level if (condition not met)
+  task-if-false:
+    if: "false"
+    cmds:
+      - echo "should not appear"
+
+  # With template variables
+  if-with-template:
+    cmds:
+      - cmd: echo "Running because SHOULD_RUN={{.SHOULD_RUN}}"
+        if: '[ "{{.SHOULD_RUN}}" = "yes" ]'
+
+  # If inside for loop
+  if-in-for-loop:
+    cmds:
+      - for: ["a", "b", "c"]
+        cmd: echo "processing {{.ITEM}}"
+        if: '[ "{{.ITEM}}" != "b" ]'
+
+  # If on task call
+  if-on-task-call:
+    cmds:
+      - task: subtask
+        if: "true"
+
+  subtask:
+    internal: true
+    cmds:
+      - echo "subtask ran"
+
+  # If combined with platforms (both must pass)
+  if-with-platforms:
+    cmds:
+      - cmd: echo "condition and platform met"
+        platforms: [linux, darwin, windows]
+        if: "true"
+
+  # Skip task call
+  skip-task-call:
+    cmds:
+      - task: subtask
+        if: "false"
+      - echo "after skipped task call"

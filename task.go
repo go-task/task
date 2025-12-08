@@ -129,6 +129,17 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) error {
 		return nil
 	}
 
+	if t.If != "" {
+		if err := execext.RunCommand(ctx, &execext.RunCommandOptions{
+			Command: t.If,
+			Dir:     t.Dir,
+			Env:     env.Get(t),
+		}); err != nil {
+			e.Logger.VerboseOutf(logger.Yellow, "task: %q if condition not met - skipped\n", call.Task)
+			return nil
+		}
+	}
+
 	if err := e.areTaskRequiredVarsSet(t); err != nil {
 		return err
 	}
@@ -295,6 +306,7 @@ func (e *Executor) runDeferred(t *ast.Task, call *Call, i int, vars *ast.Vars, d
 
 	cmd.Cmd = templater.ReplaceWithExtra(cmd.Cmd, cache, extra)
 	cmd.Task = templater.ReplaceWithExtra(cmd.Task, cache, extra)
+	cmd.If = templater.ReplaceWithExtra(cmd.If, cache, extra)
 	cmd.Vars = templater.ReplaceVarsWithExtra(cmd.Vars, cache, extra)
 
 	if err := e.runCommand(ctx, t, call, i); err != nil {
@@ -304,6 +316,18 @@ func (e *Executor) runDeferred(t *ast.Task, call *Call, i int, vars *ast.Vars, d
 
 func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call *Call, i int) error {
 	cmd := t.Cmds[i]
+
+	// Check if condition for any command type
+	if cmd.If != "" {
+		if err := execext.RunCommand(ctx, &execext.RunCommandOptions{
+			Command: cmd.If,
+			Dir:     t.Dir,
+			Env:     env.Get(t),
+		}); err != nil {
+			e.Logger.VerboseOutf(logger.Yellow, "task: [%s] if condition not met - skipped\n", t.Name())
+			return nil
+		}
+	}
 
 	switch {
 	case cmd.Task != "":
