@@ -28,7 +28,7 @@ require (
 	go.yaml.in/yaml/v4 v4.0.0-rc.3
 	golang.org/x/sync v0.18.0
 	golang.org/x/term v0.37.0
-	mvdan.cc/sh/moreinterp v0.0.0-20251109230715-65adef8e2c5b
+	mvdan.cc/sh/moreinterp v0.0.0-20251208190329-32c5db00fe6b
 	mvdan.cc/sh/v3 v3.12.0
 )
 
@@ -56,7 +56,7 @@ require (
 	github.com/sergi/go-diff v1.3.2-0.20230802210424-5b0b94c5c0d3 // indirect
 	github.com/skeema/knownhosts v1.3.1 // indirect
 	github.com/stretchr/objx v0.5.2 // indirect
-	github.com/u-root/u-root v0.15.1-0.20251014130006-62f7144b33da // indirect
+	github.com/u-root/u-root v0.15.1-0.20251208185023-2f8c7e763cf8 // indirect
 	github.com/u-root/uio v0.0.0-20240224005618-d2acac8f3701 // indirect
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
 	golang.org/x/crypto v0.45.0 // indirect
