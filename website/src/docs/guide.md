@@ -1062,7 +1062,7 @@ tasks:
 #### Using templates in `if` conditions
 
 You can use Go template expressions in `if` conditions. Template expressions like
-`{{eq .VAR "value"}}` evaluate to `true` or `false`, which are valid shell
+<span v-pre>`{{eq .VAR "value"}}`</span> evaluate to `true` or `false`, which are valid shell
 commands (`true` exits with 0, `false` exits with 1):
 
 ```yaml
