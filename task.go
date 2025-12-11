@@ -366,7 +366,7 @@ func (e *Executor) startExecution(ctx context.Context, t *ast.Task, execute func
 		return err
 	}
 
-	if h == "" {
+	if h == "" || t.Watch {
 		return execute(ctx)
 	}
 
