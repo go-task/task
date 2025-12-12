@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/fatih/color"
 	"github.com/spf13/pflag"
 
 	"github.com/go-task/task/v3"
@@ -140,7 +141,7 @@ func init() {
 	pflag.StringVar(&Output.Group.Begin, "output-group-begin", "", "Message template to print before a task's grouped output.")
 	pflag.StringVar(&Output.Group.End, "output-group-end", "", "Message template to print after a task's grouped output.")
 	pflag.BoolVar(&Output.Group.ErrorOnly, "output-group-error-only", false, "Swallow output from successful tasks.")
-	pflag.BoolVarP(&Color, "color", "c", true, "Colored output. Enabled by default. Set flag to false or use NO_COLOR=1 to disable.")
+	pflag.BoolVarP(&Color, "color", "c", getConfig(config, func() *bool { return config.Color }, true), "Colored output. Enabled by default. Set flag to false or use NO_COLOR=1 to disable.")
 	pflag.IntVarP(&Concurrency, "concurrency", "C", getConfig(config, func() *int { return config.Concurrency }, 0), "Limit number of tasks to run concurrently.")
 	pflag.DurationVarP(&Interval, "interval", "I", 0, "Interval to watch for changes.")
 	pflag.BoolVarP(&Failfast, "failfast", "F", getConfig(config, func() *bool { return &config.Failfast }, false), "When running tasks in parallel, stop all tasks if one fails.")
@@ -166,6 +167,28 @@ func init() {
 		pflag.StringVar(&RemoteCacheDir, "remote-cache-dir", getConfig(config, func() *string { return config.Remote.CacheDir }, env.GetTaskEnv("REMOTE_DIR")), "Directory to cache remote Taskfiles.")
 	}
 	pflag.Parse()
+
+	// Auto-detect color based on environment when not explicitly configured
+	// Priority: CLI flag > taskrc config > NO_COLOR > FORCE_COLOR/CI > default
+	colorExplicitlySet := pflag.Lookup("color").Changed || (config != nil && config.Color != nil)
+	if !colorExplicitlySet {
+		if os.Getenv("NO_COLOR") != "" {
+			Color = false
+			color.NoColor = true
+		} else if os.Getenv("FORCE_COLOR") != "" || isCI() {
+			Color = true
+			color.NoColor = false // Force colors even without TTY
+		}
+		// Otherwise, let fatih/color auto-detect TTY
+	} else {
+		// Explicit config: sync with fatih/color
+		color.NoColor = !Color
+	}
+}
+
+// isCI returns true if running in a CI environment
+func isCI() bool {
+	return os.Getenv("CI") == "true" || os.Getenv("GITHUB_ACTIONS") == "true"
 }
 
 func Validate() error {

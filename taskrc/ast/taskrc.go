@@ -12,6 +12,7 @@ import (
 type TaskRC struct {
 	Version      *semver.Version `yaml:"version"`
 	Verbose      *bool           `yaml:"verbose"`
+	Color        *bool           `yaml:"color"`
 	DisableFuzzy *bool           `yaml:"disable-fuzzy"`
 	Concurrency  *int            `yaml:"concurrency"`
 	Remote       Remote          `yaml:"remote"`
@@ -55,6 +56,7 @@ func (t *TaskRC) Merge(other *TaskRC) {
 	}
 
 	t.Verbose = cmp.Or(other.Verbose, t.Verbose)
+	t.Color = cmp.Or(other.Color, t.Color)
 	t.DisableFuzzy = cmp.Or(other.DisableFuzzy, t.DisableFuzzy)
 	t.Concurrency = cmp.Or(other.Concurrency, t.Concurrency)
 	t.Failfast = cmp.Or(other.Failfast, t.Failfast)
