@@ -3,7 +3,6 @@ package logger
 import (
 	"bufio"
 	"io"
-	"os"
 	"slices"
 	"strconv"
 	"strings"
@@ -96,10 +95,6 @@ func BrightRed() PrintFunc {
 }
 
 func envColor(name string, defaultColor color.Attribute) []color.Attribute {
-	if os.Getenv("FORCE_COLOR") != "" {
-		color.NoColor = false
-	}
-
 	// Fetch the environment variable
 	override := env.GetTaskEnv(name)
 

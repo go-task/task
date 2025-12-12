@@ -91,6 +91,17 @@ experiments:
 verbose: true
 ```
 
+### `color`
+
+- **Type**: `boolean`
+- **Default**: `true`
+- **Description**: Enable colored output. Colors are automatically enabled in CI environments (`CI=true`).
+- **CLI equivalent**: [`-c, --color`](./cli.md#-c---color)
+
+```yaml
+color: false
+```
+
 ### `disable-fuzzy`
 
 - **Type**: `boolean`
@@ -131,6 +142,7 @@ Here's a complete example of a `.taskrc.yml` file with all available options:
 ```yaml
 # Global settings
 verbose: true
+color: true
 disable-fuzzy: false
 concurrency: 2
 
