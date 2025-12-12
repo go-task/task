@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
 
 	"github.com/spf13/pflag"
 
@@ -46,7 +47,7 @@ func main() {
 
 // emitCIErrorAnnotation emits an error annotation for supported CI providers.
 func emitCIErrorAnnotation(err error) {
-	if isGA, _ := strconv.ParsePool(os.Getenv("GITHUB_ACTIONS")); !isGA {
+	if isGA, _ := strconv.ParseBool(os.Getenv("GITHUB_ACTIONS")); !isGA {
 		return
 	}
 	if e, ok := err.(*errors.TaskRunError); ok {
