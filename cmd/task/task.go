@@ -46,7 +46,7 @@ func main() {
 
 // emitCIErrorAnnotation emits an error annotation for supported CI providers.
 func emitCIErrorAnnotation(err error) {
-	if os.Getenv("GITHUB_ACTIONS") != "true" {
+	if isGA, _ := strconv.ParsePool(os.Getenv("GITHUB_ACTIONS")); !isGA {
 		return
 	}
 	if e, ok := err.(*errors.TaskRunError); ok {
