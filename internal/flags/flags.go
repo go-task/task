@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strconv"
 	"time"
 
 	"github.com/fatih/color"
@@ -188,7 +189,8 @@ func init() {
 
 // isCI returns true if running in a CI environment
 func isCI() bool {
-	return os.Getenv("CI") == "true"
+	ci, _ := strconv.ParseBool(os.Getenv("CI"))
+	return ci
 }
 
 func Validate() error {
