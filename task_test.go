@@ -2666,7 +2666,7 @@ func TestOverrides(t *testing.T) {
 			task.WithSilent(true),
 		)
 		require.NoError(t, e.Setup())
-		require.NoError(t, e.Run(context.Background(), &task.Call{Task: "greet"}))
+		require.NoError(t, e.Run(t.Context(), &task.Call{Task: "greet"}))
 		assert.Equal(t, "Overridden!\n", buff.String())
 	})
 }
@@ -2697,7 +2697,7 @@ func TestOverridesFlatten(t *testing.T) {
 				task.WithSilent(true),
 			)
 			require.NoError(t, e.Setup())
-			require.NoError(t, e.Run(context.Background(), &task.Call{Task: test.task}))
+			require.NoError(t, e.Run(t.Context(), &task.Call{Task: test.task}))
 			assert.Equal(t, test.expectedOutput, buff.String())
 		})
 	}
@@ -2729,7 +2729,7 @@ func TestOverridesNested(t *testing.T) {
 				task.WithSilent(true),
 			)
 			require.NoError(t, e.Setup())
-			require.NoError(t, e.Run(context.Background(), &task.Call{Task: test.task}))
+			require.NoError(t, e.Run(t.Context(), &task.Call{Task: test.task}))
 			assert.Equal(t, test.expectedOutput, buff.String())
 		})
 	}
@@ -2761,7 +2761,7 @@ func TestOverridesWithIncludes(t *testing.T) {
 				task.WithSilent(true),
 			)
 			require.NoError(t, e.Setup())
-			require.NoError(t, e.Run(context.Background(), &task.Call{Task: test.task}))
+			require.NoError(t, e.Run(t.Context(), &task.Call{Task: test.task}))
 			assert.Equal(t, test.expectedOutput, buff.String())
 		})
 	}
@@ -2796,7 +2796,7 @@ func TestOverridesOptional(t *testing.T) {
 		task.WithSilent(true),
 	)
 	require.NoError(t, e.Setup())
-	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "default"}))
+	require.NoError(t, e.Run(t.Context(), &task.Call{Task: "default"}))
 	assert.Equal(t, "overridden_from_existing\n", buff.String())
 }
 
@@ -2811,7 +2811,7 @@ func TestOverridesWithVars(t *testing.T) {
 		task.WithSilent(true),
 	)
 	require.NoError(t, e.Setup())
-	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "test"}))
+	require.NoError(t, e.Run(t.Context(), &task.Call{Task: "test"}))
 	assert.Equal(t, "override_value-global\n", buff.String())
 }
 
@@ -2826,7 +2826,7 @@ func TestOverridesInterpolation(t *testing.T) {
 		task.WithSilent(true),
 	)
 	require.NoError(t, e.Setup())
-	require.NoError(t, e.Run(context.Background(), &task.Call{Task: "test"}))
+	require.NoError(t, e.Run(t.Context(), &task.Call{Task: "test"}))
 	assert.Equal(t, "interpolated override\n", buff.String())
 }
 
