@@ -204,9 +204,15 @@ func (o *promptFuncOption) ApplyToReader(r *Reader) {
 // building an [ast.TaskfileGraph] as it goes. If any errors occur, they will be
 // returned immediately.
 func (r *Reader) Read(ctx context.Context, node Node) (*ast.TaskfileGraph, error) {
+	// Clean up git cache after reading all taskfiles
+	defer func() {
+		_ = CleanGitCache()
+	}()
+
 	if err := r.include(ctx, node); err != nil {
 		return nil, err
 	}
+
 	return r.graph, nil
 }
 
