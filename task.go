@@ -179,6 +179,8 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) error {
 				fingerprint.WithTempDir(e.TempDir.Fingerprint),
 				fingerprint.WithDry(e.Dry),
 				fingerprint.WithLogger(e.Logger),
+				fingerprint.WithPosixOpts(e.Taskfile.Set),
+				fingerprint.WithBashOpts(e.Taskfile.Shopt),
 			)
 			if err != nil {
 				return err
