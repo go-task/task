@@ -284,10 +284,11 @@ and look for a cached copy instead. This timeout can be configured by setting
 the `--timeout` flag and specifying a duration. For example, `--timeout 5s` will
 set the timeout to 5 seconds.
 
-By default, the cache is stored in the Task temp directory, represented by the
-`TASK_TEMP_DIR` environment variable. You can override the location of the cache
-by setting the `TASK_REMOTE_DIR` environment variable. This way, you can share
-the cache between different projects.
+By default, the cache is stored in the Task temp directory (`.task`). You can
+override the location of the cache by using the `--remote-cache-dir` flag, the
+`remote.cache-dir` option in your [configuration file](#cache-dir), or the
+`TASK_REMOTE_DIR` environment variable. This way, you can share the cache
+between different projects.
 
 You can force Task to ignore the cache and download the latest version by using
 the `--download` flag.
@@ -367,7 +368,8 @@ remote:
 - **Default**: `.task`
 - **Description**: Directory where remote Taskfiles are cached. Can be an
   absolute path (e.g., `/var/cache/task`) or relative to the Taskfile directory.
-- **Environment variable**: `TASK_REMOTE_DIR` (lower priority than config file)
+- **CLI equivalent**: `--remote-cache-dir`
+- **Environment variable**: `TASK_REMOTE_DIR` (lowest priority)
 
 ```yaml
 remote:

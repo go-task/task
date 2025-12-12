@@ -163,7 +163,7 @@ func init() {
 		pflag.DurationVar(&Timeout, "timeout", getConfig(config, func() *time.Duration { return config.Remote.Timeout }, time.Second*10), "Timeout for downloading remote Taskfiles.")
 		pflag.BoolVar(&ClearCache, "clear-cache", false, "Clear the remote cache.")
 		pflag.DurationVar(&CacheExpiryDuration, "expiry", getConfig(config, func() *time.Duration { return config.Remote.CacheExpiry }, 0), "Expiry duration for cached remote Taskfiles.")
-		RemoteCacheDir = getConfig(config, func() *string { return config.Remote.CacheDir }, env.GetTaskEnv("REMOTE_DIR"))
+		pflag.StringVar(&RemoteCacheDir, "remote-cache-dir", getConfig(config, func() *string { return config.Remote.CacheDir }, env.GetTaskEnv("REMOTE_DIR")), "Directory to cache remote Taskfiles.")
 	}
 	pflag.Parse()
 }
