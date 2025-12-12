@@ -40,6 +40,8 @@
   root-level vars section (#2403, #2397 by @trulede, @vmaerten).
 - When running in GitHub Actions, Task now automatically emits error annotations
   on failure, improving visibility in workflow summaries (#2568 by @vmaerten).
+- Fixed a bug where `ignore_error` was ignored when using `task:` to call
+  another task (#2552, #363 by @trulede).
 
 ## v3.45.5 - 2025-11-11
 
