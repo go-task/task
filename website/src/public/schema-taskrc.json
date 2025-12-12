@@ -57,6 +57,10 @@
       "type": "boolean",
       "description": "Enable verbose output"
     },
+    "color": {
+      "type": "boolean",
+      "description": "Enable colored output"
+    },
     "disable-fuzzy": {
       "type": "boolean",
       "description": "Disable fuzzy matching for task names"

@@ -188,7 +188,7 @@ func init() {
 
 // isCI returns true if running in a CI environment
 func isCI() bool {
-	return os.Getenv("CI") == "true" || os.Getenv("GITHUB_ACTIONS") == "true"
+	return os.Getenv("CI") == "true"
 }
 
 func Validate() error {
