@@ -38,6 +38,8 @@
   `run: when_changed` settings (#2566, #1388 by @trulede).
 - Fixed global variables (CLI_ARGS, CLI_FORCE, etc.) not being accessible in
   root-level vars section (#2403, #2397 by @trulede, @vmaerten).
+- When running in GitHub Actions, Task now automatically emits error annotations
+  on failure, improving visibility in workflow summaries (#2568 by @vmaerten).
 
 ## v3.45.5 - 2025-11-11
 
