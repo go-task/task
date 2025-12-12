@@ -37,6 +37,7 @@ type (
 		TrustedHosts        []string
 		Timeout             time.Duration
 		CacheExpiryDuration time.Duration
+		RemoteCacheDir      string
 		Watch               bool
 		Verbose             bool
 		Silent              bool
@@ -269,6 +270,19 @@ type cacheExpiryDurationOption struct {
 
 func (o *cacheExpiryDurationOption) ApplyToExecutor(r *Executor) {
 	r.CacheExpiryDuration = o.duration
+}
+
+// WithRemoteCacheDir sets the directory where remote taskfiles are cached.
+func WithRemoteCacheDir(dir string) ExecutorOption {
+	return &remoteCacheDirOption{dir: dir}
+}
+
+type remoteCacheDirOption struct {
+	dir string
+}
+
+func (o *remoteCacheDirOption) ApplyToExecutor(e *Executor) {
+	e.RemoteCacheDir = o.dir
 }
 
 // WithWatch tells the [Executor] to keep running in the background and watch

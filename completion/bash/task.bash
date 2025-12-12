@@ -22,7 +22,7 @@ function _task()
 
   # Handle special arguments of options.
   case "$prev" in
-    -d|--dir)
+    -d|--dir|--remote-cache-dir)
       _filedir -d
       return $?
     ;;

@@ -75,6 +75,7 @@ Register-ArgumentCompleter -CommandName task -ScriptBlock {
 			$completions += [CompletionResult]::new('--offline', '--offline', [CompletionResultType]::ParameterName, 'use cached Taskfiles')
 			$completions += [CompletionResult]::new('--timeout', '--timeout', [CompletionResultType]::ParameterName, 'download timeout')
 			$completions += [CompletionResult]::new('--expiry', '--expiry', [CompletionResultType]::ParameterName, 'cache expiry')
+			$completions += [CompletionResult]::new('--remote-cache-dir', '--remote-cache-dir', [CompletionResultType]::ParameterName, 'cache directory')
 			# Operations
 			$completions += [CompletionResult]::new('--download', '--download', [CompletionResultType]::ParameterName, 'download remote Taskfile')
 			$completions += [CompletionResult]::new('--clear-cache', '--clear-cache', [CompletionResultType]::ParameterName, 'clear cache')
