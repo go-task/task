@@ -45,12 +45,27 @@ function __task_list() {
     (( enabled )) || return 0
 
     scripts=()
+
+    # Read zstyle verbose option (default = true via -T)
+    local show_desc
+    zstyle -T ":completion:${curcontext}:" verbose && show_desc=true || show_desc=false
+
     for item in "${(@)${(f)output}[2,-1]#\* }"; do
         task="${item%%:[[:space:]]*}"
-        desc="${item##[^[:space:]]##[[:space:]]##}"
-        scripts+=( "${task//:/\\:}:$desc" )
+
+        if [[ "$show_desc" == "true" ]]; then
+            local desc="${item##[^[:space:]]##[[:space:]]##}"
+            scripts+=( "${task//:/\\:}:$desc" )
+        else
+            scripts+=( "$task" )
+        fi
     done
-    _describe 'Task to run' scripts
+
+    if [[ "$show_desc" == "true" ]]; then
+        _describe 'Task to run' scripts
+    else
+        compadd -Q -a scripts
+    fi
 }
 
 _task() {
