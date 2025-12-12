@@ -93,6 +93,7 @@ func (c *Cmd) UnmarshalYAML(node *yaml.Node) error {
 			c.Vars = cmdStruct.Vars
 			c.For = cmdStruct.For
 			c.Silent = cmdStruct.Silent
+			c.IgnoreError = cmdStruct.IgnoreError
 			return nil
 		}
 

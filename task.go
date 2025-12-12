@@ -311,10 +311,12 @@ func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call *Call, i in
 		defer reacquire()
 
 		err := e.RunTask(ctx, &Call{Task: cmd.Task, Vars: cmd.Vars, Silent: cmd.Silent, Indirect: true})
-		if err != nil {
-			return err
+		var exitCode interp.ExitStatus
+		if errors.As(err, &exitCode) && cmd.IgnoreError {
+			e.Logger.VerboseErrf(logger.Yellow, "task: [%s] task error ignored: %v\n", t.Name(), err)
+			return nil
 		}
-		return nil
+		return err
 	case cmd.Cmd != "":
 		if !shouldRunOnCurrentPlatform(cmd.Platforms) {
 			e.Logger.VerboseOutf(logger.Yellow, "task: [%s] %s not for current platform - ignored\n", t.Name(), cmd.Cmd)
