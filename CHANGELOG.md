@@ -36,6 +36,8 @@
   default Taskfile it generates (#2433 by @andreynering).
 - Watch mode (`--watch`) now always runs the task, regardless of `run: once` or
   `run: when_changed` settings (#2566, #1388 by @trulede).
+- Fixed global variables (CLI_ARGS, CLI_FORCE, etc.) not being accessible in
+  root-level vars section (#2403, #2397 by @trulede, @vmaerten).
 
 ## v3.45.5 - 2025-11-11
 
