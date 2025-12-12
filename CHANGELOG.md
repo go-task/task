@@ -3,8 +3,8 @@
 ## Unreleased
 
 - A small behavior change was made to dependencies. Task will now wait for all
-  dependencies to finish running before continuing, even if any of them fail.
-  To opt for the previous behavior, set `failfast: true` either on your
+  dependencies to finish running before continuing, even if any of them fail. To
+  opt for the previous behavior, set `failfast: true` either on your
   `.taskrc.yml` or per task, or use the `--failfast` flag, which will also work
   for `--parallel` (#1246, #2525 by @andreynering).
 - Fix RPM upload to Cloudsmith by including the version in the filename to
@@ -34,6 +34,8 @@
   binary name via TASK_EXE environment variable (#2495, #2468 by @vmaerten).
 - Some small fixes and improvements were made to `task --init` and to the
   default Taskfile it generates (#2433 by @andreynering).
+- Watch mode (`--watch`) now always runs the task, regardless of `run: once` or
+  `run: when_changed` settings (#2566, #1388 by @trulede).
 
 ## v3.45.5 - 2025-11-11
 
