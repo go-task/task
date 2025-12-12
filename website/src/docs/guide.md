@@ -2290,6 +2290,28 @@ The `output` option can also be specified by the `--output` or `-o` flags.
 
 :::
 
+## CI Integration
+
+### Colored output
+
+Task automatically enables colored output when running in CI environments
+(`CI=true`). Most CI providers set this variable automatically.
+
+You can also force colored output with `FORCE_COLOR=1` or disable it with
+`NO_COLOR=1`.
+
+### Error annotations
+
+When running in GitHub Actions (`GITHUB_ACTIONS=true`), Task automatically emits
+error annotations when a task fails. These annotations appear in the workflow
+summary, making it easier to spot failures without scrolling through logs.
+
+```shell
+::error title=Task 'build' failed::exit status 1
+```
+
+This feature requires no configuration and works automatically.
+
 ## Interactive CLI application
 
 When running interactive CLI applications inside Task they can sometimes behave
