@@ -12,6 +12,7 @@ import (
 	"github.com/go-task/task/v3"
 	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/experiments"
+	"github.com/go-task/task/v3/internal/env"
 	"github.com/go-task/task/v3/internal/sort"
 	"github.com/go-task/task/v3/taskfile/ast"
 	"github.com/go-task/task/v3/taskrc"
@@ -79,6 +80,7 @@ var (
 	ClearCache          bool
 	Timeout             time.Duration
 	CacheExpiryDuration time.Duration
+	RemoteCacheDir      string
 )
 
 func init() {
@@ -161,6 +163,7 @@ func init() {
 		pflag.DurationVar(&Timeout, "timeout", getConfig(config, func() *time.Duration { return config.Remote.Timeout }, time.Second*10), "Timeout for downloading remote Taskfiles.")
 		pflag.BoolVar(&ClearCache, "clear-cache", false, "Clear the remote cache.")
 		pflag.DurationVar(&CacheExpiryDuration, "expiry", getConfig(config, func() *time.Duration { return config.Remote.CacheExpiry }, 0), "Expiry duration for cached remote Taskfiles.")
+		RemoteCacheDir = getConfig(config, func() *string { return config.Remote.CacheDir }, env.GetTaskEnv("REMOTE_DIR"))
 	}
 	pflag.Parse()
 }
@@ -247,6 +250,7 @@ func (o *flagsOption) ApplyToExecutor(e *task.Executor) {
 		task.WithTrustedHosts(TrustedHosts),
 		task.WithTimeout(Timeout),
 		task.WithCacheExpiryDuration(CacheExpiryDuration),
+		task.WithRemoteCacheDir(RemoteCacheDir),
 		task.WithWatch(Watch),
 		task.WithVerbose(Verbose),
 		task.WithSilent(Silent),

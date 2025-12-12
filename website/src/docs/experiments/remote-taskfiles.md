@@ -308,6 +308,7 @@ remote:
   offline: false
   timeout: "30s"
   cache-expiry: "24h"
+  cache-dir: ~/.task
   trusted-hosts:
     - github.com
     - gitlab.com
@@ -358,6 +359,19 @@ remote:
 ```yaml
 remote:
   cache-expiry: "6h"
+```
+
+#### `cache-dir`
+
+- **Type**: `string`
+- **Default**: `.task`
+- **Description**: Directory where remote Taskfiles are cached. Can be an
+  absolute path (e.g., `/var/cache/task`) or relative to the Taskfile directory.
+- **Environment variable**: `TASK_REMOTE_DIR` (lower priority than config file)
+
+```yaml
+remote:
+  cache-dir: ~/.task
 ```
 
 #### `trusted-hosts`
