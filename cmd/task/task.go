@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
 
 	"github.com/spf13/pflag"
 
@@ -28,17 +29,32 @@ func main() {
 			Color:   flags.Color,
 		}
 		if err, ok := err.(*errors.TaskRunError); ok && flags.ExitCode {
+			emitCIErrorAnnotation(err)
 			l.Errf(logger.Red, "%v\n", err)
 			os.Exit(err.TaskExitCode())
 		}
 		if err, ok := err.(errors.TaskError); ok {
+			emitCIErrorAnnotation(err)
 			l.Errf(logger.Red, "%v\n", err)
 			os.Exit(err.Code())
 		}
+		emitCIErrorAnnotation(err)
 		l.Errf(logger.Red, "%v\n", err)
 		os.Exit(errors.CodeUnknown)
 	}
 	os.Exit(errors.CodeOk)
+}
+
+// emitCIErrorAnnotation emits an error annotation for supported CI providers.
+func emitCIErrorAnnotation(err error) {
+	if isGA, _ := strconv.ParseBool(os.Getenv("GITHUB_ACTIONS")); !isGA {
+		return
+	}
+	if e, ok := err.(*errors.TaskRunError); ok {
+		fmt.Fprintf(os.Stdout, "::error title=Task '%s' failed::%v\n", e.TaskName, e.Err)
+		return
+	}
+	fmt.Fprintf(os.Stdout, "::error title=Task failed::%v\n", err)
 }
 
 func run() error {
