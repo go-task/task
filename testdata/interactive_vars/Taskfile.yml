@@ -4,8 +4,7 @@ tasks:
   simple:
     requires:
       vars:
-        - name: MY_VAR
-          interactive: true
+        - MY_VAR
     cmds:
       - echo "{{.MY_VAR}}"
 
@@ -13,23 +12,14 @@ tasks:
     requires:
       vars:
         - name: ENV
-          interactive: true
           enum: [dev, staging, prod]
     cmds:
       - echo "{{.ENV}}"
 
-  non-interactive:
+  multiple:
     requires:
       vars:
-        - NON_INTERACTIVE_VAR
+        - VAR1
+        - VAR2
     cmds:
-      - echo "{{.NON_INTERACTIVE_VAR}}"
-
-  mixed:
-    requires:
-      vars:
-        - name: INTERACTIVE_VAR
-          interactive: true
-        - NON_INTERACTIVE_VAR
-    cmds:
-      - echo "{{.INTERACTIVE_VAR}} {{.NON_INTERACTIVE_VAR}}"
+      - echo "{{.VAR1}} {{.VAR2}}"

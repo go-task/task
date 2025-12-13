@@ -305,7 +305,11 @@ task deploy --yes
 
 Disable interactive prompts for missing variables. When a variable is marked
 with `interactive: true` in the Taskfile and is not provided, Task will error
-instead of prompting for input. Useful in CI environments.
+instead of prompting for input.
+
+Note: Task automatically detects non-TTY environments (like CI pipelines) and
+disables prompts. This flag is useful when you want to explicitly disable
+prompts even when a TTY is available.
 
 ```bash
 task deploy --no-tty
