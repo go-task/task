@@ -73,6 +73,18 @@ func (e *Executor) Run(ctx context.Context, calls ...*Call) error {
 		return nil
 	}
 
+	// Collect all required vars upfront and prompt for them all at once
+	requiredVars, err := e.collectAllRequiredVars(calls)
+	if err != nil {
+		return err
+	}
+
+	// Prompt for all missing vars and store on executor
+	e.promptedVars, err = e.promptForAllVars(requiredVars)
+	if err != nil {
+		return err
+	}
+
 	regularCalls, watchCalls, err := e.splitRegularAndWatchCalls(calls...)
 	if err != nil {
 		return err
@@ -120,6 +132,19 @@ func (e *Executor) splitRegularAndWatchCalls(calls ...*Call) (regularCalls []*Ca
 
 // RunTask runs a task by its name
 func (e *Executor) RunTask(ctx context.Context, call *Call) error {
+	// Inject prompted vars into call if available
+	if e.promptedVars != nil {
+		if call.Vars == nil {
+			call.Vars = ast.NewVars()
+		}
+		for name, v := range e.promptedVars.All() {
+			// Only inject if not already set in call
+			if _, ok := call.Vars.Get(name); !ok {
+				call.Vars.Set(name, v)
+			}
+		}
+	}
+
 	t, err := e.FastCompiledTask(call)
 	if err != nil {
 		return err
@@ -127,20 +152,6 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) error {
 	if !shouldRunOnCurrentPlatform(t.Platforms) {
 		e.Logger.VerboseOutf(logger.Yellow, `task: %q not for current platform - ignored\n`, call.Task)
 		return nil
-	}
-
-	// Prompt for any interactive variables that are missing
-	prompted, err := e.promptForInteractiveVars(t, call)
-	if err != nil {
-		return err
-	}
-
-	// Recompile if we prompted for variables
-	if prompted {
-		t, err = e.FastCompiledTask(call)
-		if err != nil {
-			return err
-		}
 	}
 
 	if err := e.areTaskRequiredVarsSet(t); err != nil {

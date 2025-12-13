@@ -75,6 +75,7 @@ type (
 		fuzzyModelOnce sync.Once
 
 		promptMutex          sync.Mutex
+		promptedVars         *ast.Vars // vars collected via interactive prompts
 		concurrencySemaphore chan struct{}
 		taskCallCount        map[string]*int32
 		mkdirMutexMap        map[string]*sync.Mutex
