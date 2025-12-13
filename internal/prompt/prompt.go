@@ -8,7 +8,7 @@ import (
 
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/fatih/color"
+	"github.com/charmbracelet/lipgloss"
 
 	"github.com/go-task/task/v3/errors"
 )
@@ -18,9 +18,9 @@ var (
 )
 
 var (
-	cyan  = color.New(color.FgCyan).SprintFunc()
-	green = color.New(color.FgGreen).SprintFunc()
-	gray  = color.New(color.FgHiBlack).SprintFunc()
+	promptStyle   = lipgloss.NewStyle().Foreground(lipgloss.Color("6"))  // cyan
+	selectedStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("2"))  // green
+	dimStyle      = lipgloss.NewStyle().Foreground(lipgloss.Color("8"))  // gray
 )
 
 // Prompter handles interactive variable prompting
@@ -138,7 +138,7 @@ func (m textModel) View() string {
 		return ""
 	}
 
-	prompt := cyan(fmt.Sprintf("? Enter value for %s: ", m.varName))
+	prompt := promptStyle.Render(fmt.Sprintf("? Enter value for %s: ", m.varName))
 	return prompt + m.textInput.View() + "\n"
 }
 
@@ -207,17 +207,19 @@ func (m selectModel) View() string {
 
 	var b strings.Builder
 
-	b.WriteString(cyan(fmt.Sprintf("? Select value for %s:\n", m.varName)))
+	b.WriteString(promptStyle.Render(fmt.Sprintf("? Select value for %s:", m.varName)))
+	b.WriteString("\n")
 
 	for i, opt := range m.options {
 		if i == m.cursor {
-			b.WriteString(green(fmt.Sprintf("> %s\n", opt)))
+			b.WriteString(selectedStyle.Render("> " + opt))
 		} else {
-			b.WriteString(fmt.Sprintf("  %s\n", opt))
+			b.WriteString("  " + opt)
 		}
+		b.WriteString("\n")
 	}
 
-	b.WriteString(gray("  (↑/↓ to move, enter to select, esc to cancel)"))
+	b.WriteString(dimStyle.Render("  (↑/↓ to move, enter to select, esc to cancel)"))
 
 	return b.String()
 }
