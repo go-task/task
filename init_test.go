@@ -30,6 +30,39 @@ func TestInitDir(t *testing.T) {
 	_ = os.Remove(file)
 }
 
+func TestInitDirWithCustomDefaultName(t *testing.T) {
+	const dir = "testdata/init"
+
+	// Set environment variable before running the test
+	originalName := os.Getenv("TASKFILE_DEFAULT_NAME")
+	os.Setenv("TASKFILE_DEFAULT_NAME", "Taskfile.yaml")
+	defer os.Setenv("TASKFILE_DEFAULT_NAME", originalName)
+
+	file := filepathext.SmartJoin(dir, "Taskfile.yaml")
+	defaultFile := filepathext.SmartJoin(dir, "Taskfile.yml")
+
+	// Clean up any existing files
+	_ = os.Remove(file)
+	_ = os.Remove(defaultFile)
+	if _, err := os.Stat(file); err == nil {
+		t.Errorf("Taskfile.yaml should not exist")
+	}
+
+	// Manually call init logic
+	task.SetDefaultFilename("Taskfile.yaml")
+	defer task.SetDefaultFilename("Taskfile.yml")
+
+	if _, err := task.InitTaskfile(dir); err != nil {
+		t.Error(err)
+	}
+
+	if _, err := os.Stat(file); err != nil {
+		t.Errorf("Taskfile.yaml should exist")
+	}
+
+	_ = os.Remove(file)
+}
+
 func TestInitFile(t *testing.T) {
 	t.Parallel()
 
