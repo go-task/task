@@ -9,25 +9,88 @@ import (
 	"github.com/go-task/task/v3/taskfile/ast"
 )
 
-// promptForInteractiveVars prompts the user for any missing required variables
-// and injects them into the call's Vars. It returns true if any variables were
-// prompted for (meaning the task needs to be recompiled).
-func (e *Executor) promptForInteractiveVars(t *ast.Task, call *Call) (bool, error) {
-	if t.Requires == nil || len(t.Requires.Vars) == 0 {
-		return false, nil
+// collectAllRequiredVars traverses the dependency tree of all calls and collects
+// all required variables that are missing. Returns a deduplicated list.
+func (e *Executor) collectAllRequiredVars(calls []*Call) ([]*ast.VarsWithValidation, error) {
+	visited := make(map[string]bool)
+	varsMap := make(map[string]*ast.VarsWithValidation)
+
+	var collect func(call *Call) error
+	collect = func(call *Call) error {
+		// Avoid infinite loops
+		if visited[call.Task] {
+			return nil
+		}
+		visited[call.Task] = true
+
+		// Compile to resolve variables (also fetches the task)
+		compiledTask, err := e.FastCompiledTask(call)
+		if err != nil {
+			return err
+		}
+
+		// Collect required vars from this task
+		if compiledTask.Requires != nil {
+			for _, v := range compiledTask.Requires.Vars {
+				// Check if var is already set
+				if _, ok := compiledTask.Vars.Get(v.Name); !ok {
+					// Add to map if not already there
+					if _, exists := varsMap[v.Name]; !exists {
+						varsMap[v.Name] = v
+					}
+				}
+			}
+		}
+
+		// Recurse into deps
+		for _, dep := range compiledTask.Deps {
+			depCall := &Call{
+				Task:   dep.Task,
+				Vars:   dep.Vars,
+				Silent: dep.Silent,
+			}
+			if err := collect(depCall); err != nil {
+				return err
+			}
+		}
+
+		return nil
+	}
+
+	// Collect from all initial calls
+	for _, call := range calls {
+		if err := collect(call); err != nil {
+			return nil, err
+		}
+	}
+
+	// Convert map to slice
+	result := make([]*ast.VarsWithValidation, 0, len(varsMap))
+	for _, v := range varsMap {
+		result = append(result, v)
+	}
+
+	return result, nil
+}
+
+// promptForAllVars prompts for all the given variables at once and returns
+// a Vars object with all the values.
+func (e *Executor) promptForAllVars(vars []*ast.VarsWithValidation) (*ast.Vars, error) {
+	if len(vars) == 0 {
+		return nil, nil
 	}
 
 	// Don't prompt if interactive mode is disabled
 	if !e.Interactive {
-		return false, nil
+		return nil, nil
 	}
 
 	// Don't prompt if NoTTY is set or we're not in a terminal
 	if e.NoTTY || (!e.AssumeTerm && !term.IsTerminal()) {
-		return false, nil
+		return nil, nil
 	}
 
-	// Lock to prevent multiple parallel prompts from interleaving
+	// Lock to prevent any output during prompting
 	e.promptMutex.Lock()
 	defer e.promptMutex.Unlock()
 
@@ -37,39 +100,30 @@ func (e *Executor) promptForInteractiveVars(t *ast.Task, call *Call) (bool, erro
 		Stdout: e.rawStdout,
 		Stderr: e.rawStderr,
 	}
-	var prompted bool
 
-	for _, requiredVar := range t.Requires.Vars {
-		// Skip if already set
-		if _, ok := t.Vars.Get(requiredVar.Name); ok {
-			continue
-		}
+	result := ast.NewVars()
 
+	for _, v := range vars {
 		var value string
 		var err error
 
-		if len(requiredVar.Enum) > 0 {
-			value, err = prompter.Select(requiredVar.Name, requiredVar.Enum)
+		if len(v.Enum) > 0 {
+			value, err = prompter.Select(v.Name, v.Enum)
 		} else {
-			value, err = prompter.Text(requiredVar.Name)
+			value, err = prompter.Text(v.Name)
 		}
 
 		if err != nil {
 			if errors.Is(err, prompt.ErrCancelled) {
-				return false, &errors.TaskCancelledByUserError{TaskName: call.Task}
+				return nil, &errors.TaskCancelledByUserError{TaskName: "interactive prompt"}
 			}
-			return false, err
+			return nil, err
 		}
 
-		// Inject into call.Vars
-		if call.Vars == nil {
-			call.Vars = ast.NewVars()
-		}
-		call.Vars.Set(requiredVar.Name, ast.Var{Value: value})
-		prompted = true
+		result.Set(v.Name, ast.Var{Value: value})
 	}
 
-	return prompted, nil
+	return result, nil
 }
 
 func (e *Executor) areTaskRequiredVarsSet(t *ast.Task) error {
