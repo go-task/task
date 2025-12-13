@@ -617,9 +617,14 @@
                 "type": "object",
                 "properties": {
                   "name": { "type": "string" },
-                  "enum": { "type": "array", "items": { "type": "string" } }
+                  "enum": { "type": "array", "items": { "type": "string" } },
+                  "interactive": {
+                    "type": "boolean",
+                    "description": "If true, prompt the user for this variable if it is not set",
+                    "default": false
+                  }
                 },
-                "required": ["name", "enum"],
+                "required": ["name"],
                 "additionalProperties": false
               }
             ]

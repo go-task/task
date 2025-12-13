@@ -1140,6 +1140,55 @@ This is supported only for string variables.
 
 :::
 
+### Prompting for missing variables interactively
+
+If you want Task to prompt users for missing variables instead of failing, you
+can mark a variable as `interactive: true`. When a variable is missing and has
+this flag, Task will display an interactive prompt to collect the value.
+
+For variables with an `enum`, a selection menu is shown. For variables without
+an enum, a text input is displayed.
+
+```yaml
+version: '3'
+
+tasks:
+  deploy:
+    requires:
+      vars:
+        - name: ENVIRONMENT
+          interactive: true
+          enum: [dev, staging, prod]
+        - name: VERSION
+          interactive: true
+    cmds:
+      - echo "Deploying {{.VERSION}} to {{.ENVIRONMENT}}"
+```
+
+```shell
+$ task deploy
+? Select value for ENVIRONMENT:
+❯ dev
+  staging
+  prod
+```
+
+If the variable is already set (via CLI, environment, or Taskfile), no prompt
+is shown:
+
+```shell
+$ task deploy ENVIRONMENT=prod VERSION=1.0.0
+Deploying 1.0.0 to prod
+```
+
+::: warning
+
+Interactive prompts require a TTY. In non-interactive environments like CI
+pipelines, use `--no-tty` to disable prompts (missing variables will cause an
+error as usual), or provide all required variables explicitly.
+
+:::
+
 ## Variables
 
 Task allows you to set variables using the `vars` keyword. The following
