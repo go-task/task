@@ -1,25 +1,66 @@
 version: "3"
 
 tasks:
-  simple:
-    requires:
-      vars:
-        - MY_VAR
+  main:
+    desc: Main task with nested deps
+    deps:
+      - dep-a
+      - dep-b
     cmds:
-      - echo "{{.MY_VAR}}"
+      - echo "Main task done!"
 
-  with-enum:
-    requires:
-      vars:
-        - name: ENV
-          enum: [dev, staging, prod]
+  dep-a:
+    desc: Dependency A
+    deps:
+      - leaf-a1
+      - leaf-a2
     cmds:
-      - echo "{{.ENV}}"
+      - echo "Dep A done"
 
-  multiple:
+  dep-b:
+    desc: Dependency B
+    deps:
+      - leaf-b1
+      - leaf-b2
+    cmds:
+      - echo "Dep B done"
+
+  leaf-a1:
+    desc: Leaf A1 with enum
     requires:
       vars:
-        - VAR1
-        - VAR2
+        - name: VAR_A1
+          enum:
+            - alpha
+            - beta
+            - gamma
     cmds:
-      - echo "{{.VAR1}} {{.VAR2}}"
+      - echo "Leaf A1 {{.VAR_A1}}"
+
+  leaf-a2:
+    desc: Leaf A2 with text
+    requires:
+      vars:
+        - VAR_A2
+    cmds:
+      - echo "Leaf A2 {{.VAR_A2}}"
+
+  leaf-b1:
+    desc: Leaf B1 with enum
+    requires:
+      vars:
+        - name: VAR_B1
+          enum:
+            - one
+            - two
+            - three
+    cmds:
+      - echo "Leaf B1 {{.VAR_B1}}"
+
+  leaf-b2:
+    desc: Leaf B2 with text
+    requires:
+      vars:
+        - VAR_B2
+    cmds:
+      - echo "Leaf B2 {{.VAR_B2}}"

@@ -179,6 +179,17 @@ func (e *Executor) setupStdFiles() {
 	if e.Stderr == nil {
 		e.Stderr = os.Stderr
 	}
+
+	// Keep raw references for interactive prompts
+	e.rawStdout = e.Stdout
+	e.rawStderr = e.Stderr
+
+	// Wrap with synchronized writers when interactive mode is enabled
+	// to prevent output from interleaving with prompts
+	if e.Interactive {
+		e.Stdout = output.NewSyncWriter(e.Stdout, &e.promptMutex)
+		e.Stderr = output.NewSyncWriter(e.Stderr, &e.promptMutex)
+	}
 }
 
 func (e *Executor) setupLogger() {

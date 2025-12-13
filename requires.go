@@ -27,7 +27,16 @@ func (e *Executor) promptForInteractiveVars(t *ast.Task, call *Call) (bool, erro
 		return false, nil
 	}
 
-	prompter := prompt.New()
+	// Lock to prevent multiple parallel prompts from interleaving
+	e.promptMutex.Lock()
+	defer e.promptMutex.Unlock()
+
+	// Use raw stderr for prompts to avoid deadlock with SyncWriter
+	prompter := &prompt.Prompter{
+		Stdin:  e.Stdin,
+		Stdout: e.rawStdout,
+		Stderr: e.rawStderr,
+	}
 	var prompted bool
 
 	for _, requiredVar := range t.Requires.Vars {
