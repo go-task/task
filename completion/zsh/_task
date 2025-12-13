@@ -33,6 +33,10 @@ function __task_list() {
         cmd+=(--taskfile "$taskfile")
     fi
 
+    # Check if global flag is set
+    if (( ${+opt_args[(i)-g|--global]} )); then
+        cmd+=(--global)
+    fi
 
     if output=$("${cmd[@]}" $_GO_TASK_COMPLETION_LIST_OPTION 2>/dev/null); then
         enabled=1
