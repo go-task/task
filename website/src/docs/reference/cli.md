@@ -301,6 +301,16 @@ Automatically answer "yes" to all prompts.
 task deploy --yes
 ```
 
+#### `--no-tty`
+
+Disable interactive prompts for missing variables. When a variable is marked
+with `interactive: true` in the Taskfile and is not provided, Task will error
+instead of prompting for input. Useful in CI environments.
+
+```bash
+task deploy --no-tty
+```
+
 ## Exit Codes
 
 Task uses specific exit codes to indicate different types of errors:
