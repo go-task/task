@@ -129,6 +129,20 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) error {
 		return nil
 	}
 
+	// Prompt for any interactive variables that are missing
+	prompted, err := e.promptForInteractiveVars(t, call)
+	if err != nil {
+		return err
+	}
+
+	// Recompile if we prompted for variables
+	if prompted {
+		t, err = e.FastCompiledTask(call)
+		if err != nil {
+			return err
+		}
+	}
+
 	if err := e.areTaskRequiredVarsSet(t); err != nil {
 		return err
 	}
