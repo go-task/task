@@ -31,8 +31,6 @@ func TestInitDir(t *testing.T) {
 }
 
 func TestInitDirWithCustomDefaultName(t *testing.T) {
-	t.Parallel()
-
 	const dir = "testdata/init"
 
 	// Set environment variable before running the test
