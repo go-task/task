@@ -1142,14 +1142,20 @@ This is supported only for string variables.
 
 ### Prompting for missing variables interactively
 
-If you want Task to prompt users for missing variables instead of failing, you
-can mark a variable as `interactive: true`. When a variable is missing and has
-this flag, Task will display an interactive prompt to collect the value.
-
-For variables with an `enum`, a selection menu is shown. For variables without
-an enum, a text input is displayed.
+If you want Task to prompt users for missing required variables instead of
+failing, you can enable interactive mode in your `.taskrc.yml`:
 
 ```yaml
+# ~/.taskrc.yml
+interactive: true
+```
+
+When enabled, Task will display an interactive prompt for any missing required
+variable. For variables with an `enum`, a selection menu is shown. For variables
+without an enum, a text input is displayed.
+
+```yaml
+# Taskfile.yml
 version: '3'
 
 tasks:
@@ -1157,10 +1163,8 @@ tasks:
     requires:
       vars:
         - name: ENVIRONMENT
-          interactive: true
           enum: [dev, staging, prod]
-        - name: VERSION
-          interactive: true
+        - VERSION
     cmds:
       - echo "Deploying {{.VERSION}} to {{.ENVIRONMENT}}"
 ```
@@ -1171,6 +1175,8 @@ $ task deploy
 ❯ dev
   staging
   prod
+? Enter value for VERSION: 1.0.0
+Deploying 1.0.0 to prod
 ```
 
 If the variable is already set (via CLI, environment, or Taskfile), no prompt
@@ -1181,11 +1187,14 @@ $ task deploy ENVIRONMENT=prod VERSION=1.0.0
 Deploying 1.0.0 to prod
 ```
 
-::: warning
+::: info
 
-Interactive prompts require a TTY. In non-interactive environments like CI
-pipelines, use `--no-tty` to disable prompts (missing variables will cause an
-error as usual), or provide all required variables explicitly.
+Interactive prompts require a TTY (terminal). Task automatically detects
+non-interactive environments like GitHub Actions, GitLab CI, and other CI
+pipelines where stdin/stdout are not connected to a terminal. In these cases,
+prompts are skipped and missing variables will cause an error as usual.
+
+You can also explicitly disable prompts with `--no-tty` if needed.
 
 :::
 

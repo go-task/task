@@ -634,7 +634,7 @@ tasks:
 #### `requires`
 
 - **Type**: `Requires`
-- **Description**: Required variables with optional enums and interactive prompting
+- **Description**: Required variables with optional enum validation
 
 ```yaml
 tasks:
@@ -657,23 +657,10 @@ tasks:
     cmds:
       - echo "Deploying to {{.ENVIRONMENT}} with log level {{.LOG_LEVEL}}"
       - ./deploy.sh
-
-  # Interactive prompts for missing variables
-  interactive-deploy:
-    requires:
-      vars:
-        - name: ENVIRONMENT
-          interactive: true
-          enum: [development, staging, production]
-        - name: API_KEY
-          interactive: true
-    cmds:
-      - ./deploy.sh
 ```
 
-When `interactive: true` is set, Task will prompt the user for the variable value
-if it is not already defined. For variables with `enum`, a selection menu is shown.
-Use `--no-tty` to disable interactive prompts (useful for CI environments).
+See [Prompting for missing variables interactively](/docs/guide#prompting-for-missing-variables-interactively)
+for information on enabling interactive prompts for missing required variables.
 
 #### `watch`
 

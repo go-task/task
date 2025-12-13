@@ -9,11 +9,16 @@ import (
 	"github.com/go-task/task/v3/taskfile/ast"
 )
 
-// promptForInteractiveVars prompts the user for any missing interactive variables
+// promptForInteractiveVars prompts the user for any missing required variables
 // and injects them into the call's Vars. It returns true if any variables were
 // prompted for (meaning the task needs to be recompiled).
 func (e *Executor) promptForInteractiveVars(t *ast.Task, call *Call) (bool, error) {
 	if t.Requires == nil || len(t.Requires.Vars) == 0 {
+		return false, nil
+	}
+
+	// Don't prompt if interactive mode is disabled
+	if !e.Interactive {
 		return false, nil
 	}
 
@@ -26,11 +31,6 @@ func (e *Executor) promptForInteractiveVars(t *ast.Task, call *Call) (bool, erro
 	var prompted bool
 
 	for _, requiredVar := range t.Requires.Vars {
-		// Skip non-interactive vars
-		if !requiredVar.Interactive {
-			continue
-		}
-
 		// Skip if already set
 		if _, ok := t.Vars.Get(requiredVar.Name); ok {
 			continue

@@ -78,6 +78,11 @@
       "description": "When running tasks in parallel, stop all tasks if one fails.",
       "type": "boolean",
       "default": false
+    },
+    "interactive": {
+      "description": "Prompt for missing required variables instead of failing. Requires a TTY.",
+      "type": "boolean",
+      "default": false
     }
   },
   "additionalProperties": false

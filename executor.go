@@ -45,6 +45,7 @@ type (
 		AssumeYes           bool
 		AssumeTerm          bool // Used for testing
 		NoTTY               bool
+		Interactive         bool
 		Dry                 bool
 		Summary             bool
 		Parallel            bool
@@ -379,6 +380,19 @@ type noTTYOption struct {
 
 func (o *noTTYOption) ApplyToExecutor(e *Executor) {
 	e.NoTTY = o.noTTY
+}
+
+// WithInteractive tells the [Executor] to prompt for missing required variables.
+func WithInteractive(interactive bool) ExecutorOption {
+	return &interactiveOption{interactive}
+}
+
+type interactiveOption struct {
+	interactive bool
+}
+
+func (o *interactiveOption) ApplyToExecutor(e *Executor) {
+	e.Interactive = o.interactive
 }
 
 // WithDry tells the [Executor] to output the commands that would be run without
