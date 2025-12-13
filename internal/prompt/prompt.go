@@ -18,9 +18,10 @@ var (
 )
 
 var (
-	promptStyle   = lipgloss.NewStyle().Foreground(lipgloss.Color("6"))  // cyan
-	selectedStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("2"))  // green
-	dimStyle      = lipgloss.NewStyle().Foreground(lipgloss.Color("8"))  // gray
+	promptStyle   = lipgloss.NewStyle().Foreground(lipgloss.Color("6")).Bold(true) // cyan bold
+	cursorStyle   = lipgloss.NewStyle().Foreground(lipgloss.Color("6")).Bold(true) // cyan bold
+	selectedStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("2")).Bold(true) // green bold
+	dimStyle      = lipgloss.NewStyle().Foreground(lipgloss.Color("8"))            // gray
 )
 
 // Prompter handles interactive variable prompting
@@ -212,7 +213,8 @@ func (m selectModel) View() string {
 
 	for i, opt := range m.options {
 		if i == m.cursor {
-			b.WriteString(selectedStyle.Render("> " + opt))
+			b.WriteString(cursorStyle.Render("❯ "))
+			b.WriteString(selectedStyle.Render(opt))
 		} else {
 			b.WriteString("  " + opt)
 		}
