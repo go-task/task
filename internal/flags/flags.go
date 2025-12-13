@@ -83,6 +83,7 @@ var (
 	Timeout             time.Duration
 	CacheExpiryDuration time.Duration
 	RemoteCacheDir      string
+	NoTTY               bool
 )
 
 func init() {
@@ -132,6 +133,7 @@ func init() {
 	pflag.BoolVarP(&Silent, "silent", "s", false, "Disables echoing.")
 	pflag.BoolVar(&DisableFuzzy, "disable-fuzzy", getConfig(config, func() *bool { return config.DisableFuzzy }, false), "Disables fuzzy matching for task names.")
 	pflag.BoolVarP(&AssumeYes, "yes", "y", false, "Assume \"yes\" as answer to all prompts.")
+	pflag.BoolVar(&NoTTY, "no-tty", false, "Disable interactive prompts for variables.")
 	pflag.BoolVarP(&Parallel, "parallel", "p", false, "Executes tasks provided on command line in parallel.")
 	pflag.BoolVarP(&Dry, "dry", "n", false, "Compiles and prints tasks in the order that they would be run, without executing them.")
 	pflag.BoolVar(&Summary, "summary", false, "Show summary about a task.")
@@ -281,6 +283,7 @@ func (o *flagsOption) ApplyToExecutor(e *task.Executor) {
 		task.WithSilent(Silent),
 		task.WithDisableFuzzy(DisableFuzzy),
 		task.WithAssumeYes(AssumeYes),
+		task.WithNoTTY(NoTTY),
 		task.WithDry(Dry || Status),
 		task.WithSummary(Summary),
 		task.WithParallel(Parallel),

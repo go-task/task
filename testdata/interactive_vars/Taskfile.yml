@@ -1,0 +1,35 @@
+version: "3"
+
+tasks:
+  simple:
+    requires:
+      vars:
+        - name: MY_VAR
+          interactive: true
+    cmds:
+      - echo "{{.MY_VAR}}"
+
+  with-enum:
+    requires:
+      vars:
+        - name: ENV
+          interactive: true
+          enum: [dev, staging, prod]
+    cmds:
+      - echo "{{.ENV}}"
+
+  non-interactive:
+    requires:
+      vars:
+        - NON_INTERACTIVE_VAR
+    cmds:
+      - echo "{{.NON_INTERACTIVE_VAR}}"
+
+  mixed:
+    requires:
+      vars:
+        - name: INTERACTIVE_VAR
+          interactive: true
+        - NON_INTERACTIVE_VAR
+    cmds:
+      - echo "{{.INTERACTIVE_VAR}} {{.NON_INTERACTIVE_VAR}}"
