@@ -31,12 +31,12 @@ func TestInitDir(t *testing.T) {
 }
 
 func TestInitDirWithCustomDefaultName(t *testing.T) {
+	t.Parallel()
+
 	const dir = "testdata/init"
 
 	// Set environment variable before running the test
-	originalName := os.Getenv("TASKFILE_DEFAULT_NAME")
-	os.Setenv("TASKFILE_DEFAULT_NAME", "Taskfile.yaml")
-	defer os.Setenv("TASKFILE_DEFAULT_NAME", originalName)
+	t.Setenv("TASKFILE_DEFAULT_NAME", "Taskfile.yaml")
 
 	file := filepathext.SmartJoin(dir, "Taskfile.yaml")
 	defaultFile := filepathext.SmartJoin(dir, "Taskfile.yml")
