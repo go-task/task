@@ -17,19 +17,13 @@ func (e *Executor) collectAllRequiredVars(calls []*Call) ([]*ast.VarsWithValidat
 
 	var collect func(call *Call) error
 	collect = func(call *Call) error {
-		// Avoid infinite loops
-		if visited[call.Task] {
-			return nil
-		}
-		visited[call.Task] = true
-
-		// Compile to resolve variables (also fetches the task)
+		// Always compile to resolve variables (also fetches the task)
 		compiledTask, err := e.FastCompiledTask(call)
 		if err != nil {
 			return err
 		}
 
-		// Collect required vars from this task
+		// Always collect required vars from this task
 		if compiledTask.Requires != nil {
 			for _, v := range compiledTask.Requires.Vars {
 				// Check if var is already set
@@ -41,6 +35,13 @@ func (e *Executor) collectAllRequiredVars(calls []*Call) ([]*ast.VarsWithValidat
 				}
 			}
 		}
+
+		// Only skip recursion if already visited (to avoid infinite loops)
+		// We already collected the vars above, so we're good
+		if visited[call.Task] {
+			return nil
+		}
+		visited[call.Task] = true
 
 		// Recurse into deps
 		for _, dep := range compiledTask.Deps {
