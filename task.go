@@ -154,6 +154,19 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) error {
 		return nil
 	}
 
+	// Prompt for missing required vars (just-in-time for sequential task calls)
+	prompted, err := e.promptForMissingVars(t, call)
+	if err != nil {
+		return err
+	}
+	if prompted {
+		// Recompile with the new vars
+		t, err = e.FastCompiledTask(call)
+		if err != nil {
+			return err
+		}
+	}
+
 	if err := e.areTaskRequiredVarsSet(t); err != nil {
 		return err
 	}
