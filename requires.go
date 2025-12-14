@@ -91,15 +91,10 @@ func (e *Executor) promptForAllVars(vars []*ast.VarsWithValidation) (*ast.Vars, 
 		return nil, nil
 	}
 
-	// Lock to prevent any output during prompting
-	e.promptMutex.Lock()
-	defer e.promptMutex.Unlock()
-
-	// Use raw stderr for prompts to avoid deadlock with SyncWriter
 	prompter := &prompt.Prompter{
 		Stdin:  e.Stdin,
-		Stdout: e.rawStdout,
-		Stderr: e.rawStderr,
+		Stdout: e.Stdout,
+		Stderr: e.Stderr,
 	}
 
 	result := ast.NewVars()
