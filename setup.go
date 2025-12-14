@@ -19,7 +19,6 @@ import (
 	"github.com/go-task/task/v3/internal/fsext"
 	"github.com/go-task/task/v3/internal/logger"
 	"github.com/go-task/task/v3/internal/output"
-	"github.com/go-task/task/v3/internal/term"
 	"github.com/go-task/task/v3/internal/version"
 	"github.com/go-task/task/v3/taskfile"
 	"github.com/go-task/task/v3/taskfile/ast"
@@ -179,17 +178,6 @@ func (e *Executor) setupStdFiles() {
 	}
 	if e.Stderr == nil {
 		e.Stderr = os.Stderr
-	}
-
-	// Keep raw references for interactive prompts
-	e.rawStdout = e.Stdout
-	e.rawStderr = e.Stderr
-
-	// Wrap with synchronized writers when interactive mode is enabled AND we have a TTY
-	// to prevent output from interleaving with prompts
-	if e.Interactive && !e.NoTTY && (e.AssumeTerm || term.IsTerminal()) {
-		e.Stdout = output.NewSyncWriter(e.Stdout, &e.promptMutex)
-		e.Stderr = output.NewSyncWriter(e.Stderr, &e.promptMutex)
 	}
 }
 

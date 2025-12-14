@@ -55,11 +55,9 @@ type (
 		Failfast            bool
 
 		// I/O
-		Stdin     io.Reader
-		Stdout    io.Writer
-		Stderr    io.Writer
-		rawStdout io.Writer // unwrapped stdout for prompts
-		rawStderr io.Writer // unwrapped stderr for prompts
+		Stdin  io.Reader
+		Stdout io.Writer
+		Stderr io.Writer
 
 		// Internal
 		Taskfile           *ast.Taskfile
@@ -74,7 +72,6 @@ type (
 		fuzzyModel     *fuzzy.Model
 		fuzzyModelOnce sync.Once
 
-		promptMutex          sync.Mutex
 		promptedVars         *ast.Vars // vars collected via interactive prompts
 		concurrencySemaphore chan struct{}
 		taskCallCount        map[string]*int32

@@ -3,7 +3,6 @@ package prompt
 import (
 	"fmt"
 	"io"
-	"os"
 	"strings"
 
 	"github.com/charmbracelet/bubbles/textinput"
@@ -29,15 +28,6 @@ type Prompter struct {
 	Stdin  io.Reader
 	Stdout io.Writer
 	Stderr io.Writer
-}
-
-// New creates a new Prompter with default stdin/stdout/stderr
-func New() *Prompter {
-	return &Prompter{
-		Stdin:  os.Stdin,
-		Stdout: os.Stdout,
-		Stderr: os.Stderr,
-	}
 }
 
 // Text prompts the user for a text value
