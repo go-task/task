@@ -9,7 +9,20 @@ import (
 	"github.com/go-task/task/v3/taskfile/ast"
 )
 
-func (e *Executor) collectAllRequiredVars(calls []*Call) ([]*ast.VarsWithValidation, error) {
+// promptDepsVars traverses the dependency tree, collects all missing required
+// variables, and prompts for them upfront. This is used for deps which execute
+// in parallel, so all prompts must happen before execution to avoid interleaving.
+// Prompted values are stored in e.promptedVars for injection into task calls.
+func (e *Executor) promptDepsVars(calls []*Call) error {
+	if !e.Interactive {
+		return nil
+	}
+
+	if !e.AssumeTerm && !term.IsTerminal() {
+		return nil
+	}
+
+	// Collect all missing vars from the dependency tree
 	visited := make(map[string]bool)
 	varsMap := make(map[string]*ast.VarsWithValidation)
 
@@ -52,36 +65,24 @@ func (e *Executor) collectAllRequiredVars(calls []*Call) ([]*ast.VarsWithValidat
 
 	for _, call := range calls {
 		if err := collect(call); err != nil {
-			return nil, err
+			return err
 		}
 	}
 
-	result := make([]*ast.VarsWithValidation, 0, len(varsMap))
-	for _, v := range varsMap {
-		result = append(result, v)
+	if len(varsMap) == 0 {
+		return nil
 	}
 
-	return result, nil
-}
-
-func (e *Executor) promptForAllVars(vars []*ast.VarsWithValidation) (*ast.Vars, error) {
-	if len(vars) == 0 || !e.Interactive {
-		return nil, nil
-	}
-
-	if !e.AssumeTerm && !term.IsTerminal() {
-		return nil, nil
-	}
-
+	// Prompt for all collected vars
 	prompter := &prompt.Prompter{
 		Stdin:  e.Stdin,
 		Stdout: e.Stdout,
 		Stderr: e.Stderr,
 	}
 
-	result := ast.NewVars()
+	e.promptedVars = ast.NewVars()
 
-	for _, v := range vars {
+	for _, v := range varsMap {
 		var value string
 		var err error
 
@@ -93,21 +94,21 @@ func (e *Executor) promptForAllVars(vars []*ast.VarsWithValidation) (*ast.Vars, 
 
 		if err != nil {
 			if errors.Is(err, prompt.ErrCancelled) {
-				return nil, &errors.TaskCancelledByUserError{TaskName: "interactive prompt"}
+				return &errors.TaskCancelledByUserError{TaskName: "interactive prompt"}
 			}
-			return nil, err
+			return err
 		}
 
-		result.Set(v.Name, ast.Var{Value: value})
+		e.promptedVars.Set(v.Name, ast.Var{Value: value})
 	}
 
-	return result, nil
+	return nil
 }
 
-// promptForMissingVars prompts for any required vars that are missing from the task.
-// It updates call.Vars with the prompted values and stores them in e.promptedVars for reuse.
+// promptTaskVars prompts for any missing required vars from a single task.
+// Used for sequential task calls (cmds) where we can prompt just-in-time.
 // Returns true if any vars were prompted (caller should recompile the task).
-func (e *Executor) promptForMissingVars(t *ast.Task, call *Call) (bool, error) {
+func (e *Executor) promptTaskVars(t *ast.Task, call *Call) (bool, error) {
 	if !e.Interactive || t.Requires == nil || len(t.Requires.Vars) == 0 {
 		return false, nil
 	}
@@ -120,7 +121,7 @@ func (e *Executor) promptForMissingVars(t *ast.Task, call *Call) (bool, error) {
 	var missing []*ast.VarsWithValidation
 	for _, v := range t.Requires.Vars {
 		if _, ok := t.Vars.Get(v.Name); !ok {
-			// Also check if we already prompted for this var
+			// Skip if already prompted
 			if e.promptedVars != nil {
 				if _, ok := e.promptedVars.Get(v.Name); ok {
 					continue
@@ -157,13 +158,13 @@ func (e *Executor) promptForMissingVars(t *ast.Task, call *Call) (bool, error) {
 			return false, err
 		}
 
-		// Add to call.Vars so it's available for recompilation
+		// Add to call.Vars for recompilation
 		if call.Vars == nil {
 			call.Vars = ast.NewVars()
 		}
 		call.Vars.Set(v.Name, ast.Var{Value: value})
 
-		// Store in promptedVars for reuse by other tasks
+		// Cache for reuse by other tasks
 		if e.promptedVars == nil {
 			e.promptedVars = ast.NewVars()
 		}

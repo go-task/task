@@ -73,15 +73,8 @@ func (e *Executor) Run(ctx context.Context, calls ...*Call) error {
 		return nil
 	}
 
-	// Collect all required vars upfront and prompt for them all at once
-	requiredVars, err := e.collectAllRequiredVars(calls)
-	if err != nil {
-		return err
-	}
-
-	// Prompt for all missing vars and store on executor
-	e.promptedVars, err = e.promptForAllVars(requiredVars)
-	if err != nil {
+	// Prompt for all required vars from deps upfront (parallel execution)
+	if err := e.promptDepsVars(calls); err != nil {
 		return err
 	}
 
@@ -155,7 +148,7 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) error {
 	}
 
 	// Prompt for missing required vars (just-in-time for sequential task calls)
-	prompted, err := e.promptForMissingVars(t, call)
+	prompted, err := e.promptTaskVars(t, call)
 	if err != nil {
 		return err
 	}
