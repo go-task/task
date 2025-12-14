@@ -79,7 +79,6 @@ var (
 	ClearCache          bool
 	Timeout             time.Duration
 	CacheExpiryDuration time.Duration
-	NoTTY               bool
 	Interactive         bool
 )
 
@@ -130,7 +129,7 @@ func init() {
 	pflag.BoolVarP(&Silent, "silent", "s", false, "Disables echoing.")
 	pflag.BoolVar(&DisableFuzzy, "disable-fuzzy", getConfig(config, func() *bool { return config.DisableFuzzy }, false), "Disables fuzzy matching for task names.")
 	pflag.BoolVarP(&AssumeYes, "yes", "y", false, "Assume \"yes\" as answer to all prompts.")
-	pflag.BoolVar(&NoTTY, "no-tty", false, "Disable interactive prompts for variables.")
+	pflag.BoolVar(&Interactive, "interactive", getConfig(config, func() *bool { return config.Interactive }, false), "Prompt for missing required variables.")
 	pflag.BoolVarP(&Parallel, "parallel", "p", false, "Executes tasks provided on command line in parallel.")
 	pflag.BoolVarP(&Dry, "dry", "n", false, "Compiles and prints tasks in the order that they would be run, without executing them.")
 	pflag.BoolVar(&Summary, "summary", false, "Show summary about a task.")
@@ -146,7 +145,6 @@ func init() {
 	pflag.DurationVarP(&Interval, "interval", "I", 0, "Interval to watch for changes.")
 	pflag.BoolVarP(&Failfast, "failfast", "F", getConfig(config, func() *bool { return &config.Failfast }, false), "When running tasks in parallel, stop all tasks if one fails.")
 	pflag.BoolVarP(&Global, "global", "g", false, "Runs global Taskfile, from $HOME/{T,t}askfile.{yml,yaml}.")
-	Interactive = getConfig(config, func() *bool { return config.Interactive }, false)
 	pflag.BoolVar(&Experiments, "experiments", false, "Lists all the available experiments and whether or not they are enabled.")
 
 	// Gentle force experiment will override the force flag and add a new force-all flag
@@ -256,7 +254,6 @@ func (o *flagsOption) ApplyToExecutor(e *task.Executor) {
 		task.WithSilent(Silent),
 		task.WithDisableFuzzy(DisableFuzzy),
 		task.WithAssumeYes(AssumeYes),
-		task.WithNoTTY(NoTTY),
 		task.WithInteractive(Interactive),
 		task.WithDry(Dry || Status),
 		task.WithSummary(Summary),
