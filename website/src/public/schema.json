@@ -494,7 +494,7 @@
       "description": "A list of values to iterate over",
       "type": "array",
       "items": {
-        "type": "string"
+        "type": ["string", "number"]
       }
     },
     "for_attribute": {
