@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strconv"
 	"time"
 
 	"github.com/spf13/pflag"
@@ -12,6 +13,7 @@ import (
 	"github.com/go-task/task/v3"
 	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/experiments"
+	"github.com/go-task/task/v3/internal/env"
 	"github.com/go-task/task/v3/internal/sort"
 	"github.com/go-task/task/v3/taskfile/ast"
 	"github.com/go-task/task/v3/taskrc"
@@ -163,6 +165,13 @@ func init() {
 		pflag.DurationVar(&CacheExpiryDuration, "expiry", getConfig(config, func() *time.Duration { return config.Remote.CacheExpiry }, 0), "Expiry duration for cached remote Taskfiles.")
 	}
 	pflag.Parse()
+
+	// If the "--yes" flag was not explicitly set in the CLI arguments, check the "TASK_ASSUME_YES" environment variable to override the option.
+	if !pflag.Lookup("yes").Changed {
+		if v, err := strconv.ParseBool(env.GetTaskEnv("ASSUME_YES")); err == nil {
+			AssumeYes = v
+		}
+	}
 }
 
 func Validate() error {
