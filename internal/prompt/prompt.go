@@ -12,9 +12,7 @@ import (
 	"github.com/go-task/task/v3/errors"
 )
 
-var (
-	ErrCancelled = errors.New("prompt cancelled")
-)
+var ErrCancelled = errors.New("prompt cancelled")
 
 var (
 	promptStyle   = lipgloss.NewStyle().Foreground(lipgloss.Color("6")).Bold(true) // cyan bold
