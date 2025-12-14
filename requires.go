@@ -9,16 +9,24 @@ import (
 	"github.com/go-task/task/v3/taskfile/ast"
 )
 
+func (e *Executor) canPrompt() bool {
+	return e.Interactive && (e.AssumeTerm || term.IsTerminal())
+}
+
+func (e *Executor) newPrompter() *input.Prompter {
+	return &input.Prompter{
+		Stdin:  e.Stdin,
+		Stdout: e.Stdout,
+		Stderr: e.Stderr,
+	}
+}
+
 // promptDepsVars traverses the dependency tree, collects all missing required
 // variables, and prompts for them upfront. This is used for deps which execute
 // in parallel, so all prompts must happen before execution to avoid interleaving.
 // Prompted values are stored in e.promptedVars for injection into task calls.
 func (e *Executor) promptDepsVars(calls []*Call) error {
-	if !e.Interactive {
-		return nil
-	}
-
-	if !e.AssumeTerm && !term.IsTerminal() {
+	if !e.canPrompt() {
 		return nil
 	}
 
@@ -73,32 +81,17 @@ func (e *Executor) promptDepsVars(calls []*Call) error {
 		return nil
 	}
 
-	// Prompt for all collected vars
-	prompter := &input.Prompter{
-		Stdin:  e.Stdin,
-		Stdout: e.Stdout,
-		Stderr: e.Stderr,
-	}
-
+	prompter := e.newPrompter()
 	e.promptedVars = ast.NewVars()
 
 	for _, v := range varsMap {
-		var value string
-		var err error
-
-		if len(v.Enum) > 0 {
-			value, err = prompter.Select(v.Name, v.Enum)
-		} else {
-			value, err = prompter.Text(v.Name)
-		}
-
+		value, err := prompter.Prompt(v.Name, v.Enum)
 		if err != nil {
 			if errors.Is(err, input.ErrCancelled) {
 				return &errors.TaskCancelledByUserError{TaskName: "interactive prompt"}
 			}
 			return err
 		}
-
 		e.promptedVars.Set(v.Name, ast.Var{Value: value})
 	}
 
@@ -109,11 +102,7 @@ func (e *Executor) promptDepsVars(calls []*Call) error {
 // Used for sequential task calls (cmds) where we can prompt just-in-time.
 // Returns true if any vars were prompted (caller should recompile the task).
 func (e *Executor) promptTaskVars(t *ast.Task, call *Call) (bool, error) {
-	if !e.Interactive || t.Requires == nil || len(t.Requires.Vars) == 0 {
-		return false, nil
-	}
-
-	if !e.AssumeTerm && !term.IsTerminal() {
+	if !e.canPrompt() || t.Requires == nil || len(t.Requires.Vars) == 0 {
 		return false, nil
 	}
 
@@ -135,22 +124,10 @@ func (e *Executor) promptTaskVars(t *ast.Task, call *Call) (bool, error) {
 		return false, nil
 	}
 
-	prompter := &input.Prompter{
-		Stdin:  e.Stdin,
-		Stdout: e.Stdout,
-		Stderr: e.Stderr,
-	}
+	prompter := e.newPrompter()
 
 	for _, v := range missing {
-		var value string
-		var err error
-
-		if len(v.Enum) > 0 {
-			value, err = prompter.Select(v.Name, v.Enum)
-		} else {
-			value, err = prompter.Text(v.Name)
-		}
-
+		value, err := prompter.Prompt(v.Name, v.Enum)
 		if err != nil {
 			if errors.Is(err, input.ErrCancelled) {
 				return false, &errors.TaskCancelledByUserError{TaskName: t.Name()}

@@ -76,6 +76,14 @@ func (p *Prompter) Select(varName string, options []string) (string, error) {
 	return model.options[model.cursor], nil
 }
 
+// Prompt prompts for a variable value, using Select if enum is provided, Text otherwise
+func (p *Prompter) Prompt(varName string, enum []string) (string, error) {
+	if len(enum) > 0 {
+		return p.Select(varName, enum)
+	}
+	return p.Text(varName)
+}
+
 // textModel is the Bubble Tea model for text input
 type textModel struct {
 	varName   string
