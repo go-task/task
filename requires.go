@@ -4,7 +4,7 @@ import (
 	"slices"
 
 	"github.com/go-task/task/v3/errors"
-	"github.com/go-task/task/v3/internal/prompt"
+	"github.com/go-task/task/v3/internal/input"
 	"github.com/go-task/task/v3/internal/term"
 	"github.com/go-task/task/v3/taskfile/ast"
 )
@@ -74,7 +74,7 @@ func (e *Executor) promptDepsVars(calls []*Call) error {
 	}
 
 	// Prompt for all collected vars
-	prompter := &prompt.Prompter{
+	prompter := &input.Prompter{
 		Stdin:  e.Stdin,
 		Stdout: e.Stdout,
 		Stderr: e.Stderr,
@@ -93,7 +93,7 @@ func (e *Executor) promptDepsVars(calls []*Call) error {
 		}
 
 		if err != nil {
-			if errors.Is(err, prompt.ErrCancelled) {
+			if errors.Is(err, input.ErrCancelled) {
 				return &errors.TaskCancelledByUserError{TaskName: "interactive prompt"}
 			}
 			return err
@@ -135,7 +135,7 @@ func (e *Executor) promptTaskVars(t *ast.Task, call *Call) (bool, error) {
 		return false, nil
 	}
 
-	prompter := &prompt.Prompter{
+	prompter := &input.Prompter{
 		Stdin:  e.Stdin,
 		Stdout: e.Stdout,
 		Stderr: e.Stderr,
@@ -152,7 +152,7 @@ func (e *Executor) promptTaskVars(t *ast.Task, call *Call) (bool, error) {
 		}
 
 		if err != nil {
-			if errors.Is(err, prompt.ErrCancelled) {
+			if errors.Is(err, input.ErrCancelled) {
 				return false, &errors.TaskCancelledByUserError{TaskName: t.Name()}
 			}
 			return false, err
