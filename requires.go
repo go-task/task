@@ -41,13 +41,9 @@ func (e *Executor) promptDepsVars(calls []*Call) error {
 			return err
 		}
 
-		if compiledTask.Requires != nil {
-			for _, v := range compiledTask.Requires.Vars {
-				if _, ok := compiledTask.Vars.Get(v.Name); !ok {
-					if _, exists := varsMap[v.Name]; !exists {
-						varsMap[v.Name] = v
-					}
-				}
+		for _, v := range getMissingRequiredVars(compiledTask) {
+			if _, exists := varsMap[v.Name]; !exists {
+				varsMap[v.Name] = v
 			}
 		}
 
@@ -106,18 +102,15 @@ func (e *Executor) promptTaskVars(t *ast.Task, call *Call) (bool, error) {
 		return false, nil
 	}
 
-	// Find missing vars
+	// Find missing vars, excluding already prompted ones
 	var missing []*ast.VarsWithValidation
-	for _, v := range t.Requires.Vars {
-		if _, ok := t.Vars.Get(v.Name); !ok {
-			// Skip if already prompted
-			if e.promptedVars != nil {
-				if _, ok := e.promptedVars.Get(v.Name); ok {
-					continue
-				}
+	for _, v := range getMissingRequiredVars(t) {
+		if e.promptedVars != nil {
+			if _, ok := e.promptedVars.Get(v.Name); ok {
+				continue
 			}
-			missing = append(missing, v)
 		}
+		missing = append(missing, v)
 	}
 
 	if len(missing) == 0 {
@@ -151,29 +144,38 @@ func (e *Executor) promptTaskVars(t *ast.Task, call *Call) (bool, error) {
 	return true, nil
 }
 
+// getMissingRequiredVars returns required vars that are not set in the task's vars.
+func getMissingRequiredVars(t *ast.Task) []*ast.VarsWithValidation {
+	if t.Requires == nil {
+		return nil
+	}
+	var missing []*ast.VarsWithValidation
+	for _, v := range t.Requires.Vars {
+		if _, ok := t.Vars.Get(v.Name); !ok {
+			missing = append(missing, v)
+		}
+	}
+	return missing
+}
+
 func (e *Executor) areTaskRequiredVarsSet(t *ast.Task) error {
-	if t.Requires == nil || len(t.Requires.Vars) == 0 {
+	missing := getMissingRequiredVars(t)
+	if len(missing) == 0 {
 		return nil
 	}
 
-	var missingVars []errors.MissingVar
-	for _, requiredVar := range t.Requires.Vars {
-		if _, ok := t.Vars.Get(requiredVar.Name); !ok {
-			missingVars = append(missingVars, errors.MissingVar{
-				Name:          requiredVar.Name,
-				AllowedValues: requiredVar.Enum,
-			})
+	missingVars := make([]errors.MissingVar, len(missing))
+	for i, v := range missing {
+		missingVars[i] = errors.MissingVar{
+			Name:          v.Name,
+			AllowedValues: v.Enum,
 		}
 	}
 
-	if len(missingVars) > 0 {
-		return &errors.TaskMissingRequiredVarsError{
-			TaskName:    t.Name(),
-			MissingVars: missingVars,
-		}
+	return &errors.TaskMissingRequiredVarsError{
+		TaskName:    t.Name(),
+		MissingVars: missingVars,
 	}
-
-	return nil
 }
 
 func (e *Executor) areTaskRequiredVarsAllowedValuesSet(t *ast.Task) error {
