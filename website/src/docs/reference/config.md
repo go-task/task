@@ -143,7 +143,7 @@ failfast: true
   When enabled, Task will display an interactive prompt for any missing required
   variable. Requires a TTY. Task automatically detects non-TTY environments
   (CI pipelines, etc.) and skips prompts.
-- **CLI override**: [`--no-tty`](./cli.md#--no-tty) to disable prompts
+- **CLI equivalent**: [`--interactive`](./cli.md#--interactive)
 
 ```yaml
 interactive: true

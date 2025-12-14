@@ -1194,7 +1194,8 @@ non-interactive environments like GitHub Actions, GitLab CI, and other CI
 pipelines where stdin/stdout are not connected to a terminal. In these cases,
 prompts are skipped and missing variables will cause an error as usual.
 
-You can also explicitly disable prompts with `--no-tty` if needed.
+You can enable prompts from the command line with `--interactive` or by setting
+`interactive: true` in your `.taskrc.yml`.
 
 :::
 

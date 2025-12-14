@@ -90,7 +90,7 @@ _task() {
         '(-j --json)'{-j,--json}'[format task list as JSON]'
         '(--nested)--nested[nest namespaces when listing as JSON]'
         '(--no-status)--no-status[ignore status when listing as JSON]'
-        '(--no-tty)--no-tty[disable interactive prompts]'
+        '(--interactive)--interactive[prompt for missing required variables]'
         '(-o --output)'{-o,--output}'[set output style]:style:(interleaved group prefixed)'
         '(--output-group-begin)--output-group-begin[message template before grouped output]:template text: '
         '(--output-group-end)--output-group-end[message template after grouped output]:template text: '

@@ -9,26 +9,20 @@ import (
 	"github.com/go-task/task/v3/taskfile/ast"
 )
 
-// collectAllRequiredVars traverses the dependency tree of all calls and collects
-// all required variables that are missing. Returns a deduplicated list.
 func (e *Executor) collectAllRequiredVars(calls []*Call) ([]*ast.VarsWithValidation, error) {
 	visited := make(map[string]bool)
 	varsMap := make(map[string]*ast.VarsWithValidation)
 
 	var collect func(call *Call) error
 	collect = func(call *Call) error {
-		// Always compile to resolve variables (also fetches the task)
 		compiledTask, err := e.FastCompiledTask(call)
 		if err != nil {
 			return err
 		}
 
-		// Always collect required vars from this task
 		if compiledTask.Requires != nil {
 			for _, v := range compiledTask.Requires.Vars {
-				// Check if var is already set
 				if _, ok := compiledTask.Vars.Get(v.Name); !ok {
-					// Add to map if not already there
 					if _, exists := varsMap[v.Name]; !exists {
 						varsMap[v.Name] = v
 					}
@@ -36,14 +30,12 @@ func (e *Executor) collectAllRequiredVars(calls []*Call) ([]*ast.VarsWithValidat
 			}
 		}
 
-		// Only skip recursion if already visited (to avoid infinite loops)
-		// We already collected the vars above, so we're good
+		// Check visited AFTER collecting vars to handle duplicate task calls with different vars
 		if visited[call.Task] {
 			return nil
 		}
 		visited[call.Task] = true
 
-		// Recurse into deps
 		for _, dep := range compiledTask.Deps {
 			depCall := &Call{
 				Task:   dep.Task,
@@ -58,14 +50,12 @@ func (e *Executor) collectAllRequiredVars(calls []*Call) ([]*ast.VarsWithValidat
 		return nil
 	}
 
-	// Collect from all initial calls
 	for _, call := range calls {
 		if err := collect(call); err != nil {
 			return nil, err
 		}
 	}
 
-	// Convert map to slice
 	result := make([]*ast.VarsWithValidation, 0, len(varsMap))
 	for _, v := range varsMap {
 		result = append(result, v)
@@ -74,20 +64,12 @@ func (e *Executor) collectAllRequiredVars(calls []*Call) ([]*ast.VarsWithValidat
 	return result, nil
 }
 
-// promptForAllVars prompts for all the given variables at once and returns
-// a Vars object with all the values.
 func (e *Executor) promptForAllVars(vars []*ast.VarsWithValidation) (*ast.Vars, error) {
-	if len(vars) == 0 {
+	if len(vars) == 0 || !e.Interactive {
 		return nil, nil
 	}
 
-	// Don't prompt if interactive mode is disabled
-	if !e.Interactive {
-		return nil, nil
-	}
-
-	// Don't prompt if NoTTY is set or we're not in a terminal
-	if e.NoTTY || (!e.AssumeTerm && !term.IsTerminal()) {
+	if !e.AssumeTerm && !term.IsTerminal() {
 		return nil, nil
 	}
 
@@ -129,8 +111,7 @@ func (e *Executor) areTaskRequiredVarsSet(t *ast.Task) error {
 
 	var missingVars []errors.MissingVar
 	for _, requiredVar := range t.Requires.Vars {
-		_, ok := t.Vars.Get(requiredVar.Name)
-		if !ok {
+		if _, ok := t.Vars.Get(requiredVar.Name); !ok {
 			missingVars = append(missingVars, errors.MissingVar{
 				Name:          requiredVar.Name,
 				AllowedValues: requiredVar.Enum,
@@ -165,7 +146,6 @@ func (e *Executor) areTaskRequiredVarsAllowedValuesSet(t *ast.Task) error {
 				Name:  requiredVar.Name,
 			})
 		}
-
 	}
 
 	if len(notAllowedValuesVars) > 0 {

@@ -44,7 +44,6 @@ type (
 		DisableFuzzy        bool
 		AssumeYes           bool
 		AssumeTerm          bool // Used for testing
-		NoTTY               bool
 		Interactive         bool
 		Dry                 bool
 		Summary             bool
@@ -368,19 +367,6 @@ type assumeTermOption struct {
 
 func (o *assumeTermOption) ApplyToExecutor(e *Executor) {
 	e.AssumeTerm = o.assumeTerm
-}
-
-// WithNoTTY tells the [Executor] to disable interactive prompts for variables.
-func WithNoTTY(noTTY bool) ExecutorOption {
-	return &noTTYOption{noTTY}
-}
-
-type noTTYOption struct {
-	noTTY bool
-}
-
-func (o *noTTYOption) ApplyToExecutor(e *Executor) {
-	e.NoTTY = o.noTTY
 }
 
 // WithInteractive tells the [Executor] to prompt for missing required variables.
