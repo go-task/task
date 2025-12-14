@@ -86,6 +86,7 @@ complete -c $GO_TASK_PROGNAME -s j -l json                      -d 'format task 
 complete -c $GO_TASK_PROGNAME -s l -l list                      -d 'list tasks with descriptions'
 complete -c $GO_TASK_PROGNAME      -l nested                    -d 'nest namespaces when listing as JSON'
 complete -c $GO_TASK_PROGNAME      -l no-status                 -d 'ignore status when listing as JSON'
+complete -c $GO_TASK_PROGNAME      -l interactive               -d 'prompt for missing required variables'
 complete -c $GO_TASK_PROGNAME -s o -l output                    -d 'set output style' -xa "interleaved group prefixed"
 complete -c $GO_TASK_PROGNAME      -l output-group-begin        -d 'message template before grouped output'
 complete -c $GO_TASK_PROGNAME      -l output-group-end          -d 'message template after grouped output'
