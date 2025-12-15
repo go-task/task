@@ -42,6 +42,8 @@
   on failure, improving visibility in workflow summaries (#2568 by @vmaerten).
 - Fixed a bug where `ignore_error` was ignored when using `task:` to call
   another task (#2552, #363 by @trulede).
+- Added `--remote-cache-dir` flag and `remote.cache-dir` taskrc option to
+  customize the cache directory for Remote Taskfiles (#2572 by @vmaerten).
 
 ## v3.45.5 - 2025-11-11
 
