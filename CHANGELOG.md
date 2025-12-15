@@ -48,6 +48,8 @@
   (e.g., URLs or namespaced functions) (#2101, #2573 by @vmaerten).
 - The `--yes` flag is now accessible in templates via the new `CLI_ASSUME_YES`
   variable (#2577, #2479 by @semihbkgr).
+- Fixed false positive "property 'for' is not allowed" warnings in IntelliJ when
+  using `for` loops in Taskfiles (#2576 by @vmaerten).
 
 ## v3.45.5 - 2025-11-11
 
