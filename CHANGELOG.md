@@ -42,6 +42,12 @@
   on failure, improving visibility in workflow summaries (#2568 by @vmaerten).
 - Fixed a bug where `ignore_error` was ignored when using `task:` to call
   another task (#2552, #363 by @trulede).
+- Fixed Zsh completion not suggesting global tasks when using `-g`/`--global`
+  flag (#1574, #2574 by @vmaerten).
+- Fixed Fish completion failing to parse task descriptions containing colons
+  (e.g., URLs or namespaced functions) (#2101, #2573 by @vmaerten).
+- The `--yes` flag is now accessible in templates via the new `CLI_ASSUME_YES`
+  variable (#2577, #2479 by @semihbkgr).
 
 ## v3.45.5 - 2025-11-11
 
