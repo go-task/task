@@ -42,6 +42,14 @@
   on failure, improving visibility in workflow summaries (#2568 by @vmaerten).
 - Fixed a bug where `ignore_error` was ignored when using `task:` to call
   another task (#2552, #363 by @trulede).
+- Fixed Zsh completion not suggesting global tasks when using `-g`/`--global`
+  flag (#1574, #2574 by @vmaerten).
+- Fixed Fish completion failing to parse task descriptions containing colons
+  (e.g., URLs or namespaced functions) (#2101, #2573 by @vmaerten).
+- The `--yes` flag is now accessible in templates via the new `CLI_ASSUME_YES`
+  variable (#2577, #2479 by @semihbkgr).
+- Fixed false positive "property 'for' is not allowed" warnings in IntelliJ when
+  using `for` loops in Taskfiles (#2576 by @vmaerten).
 - Added `--remote-cache-dir` flag and `remote.cache-dir` taskrc option to
   customize the cache directory for Remote Taskfiles (#2572 by @vmaerten).
 

@@ -233,7 +233,10 @@
           "$ref": "#/definitions/defer_cmd_call"
         },
         {
-          "$ref": "#/definitions/for_cmds_call"
+          "$ref": "#/definitions/for_cmd_call"
+        },
+        {
+          "$ref": "#/definitions/for_task_call"
         }
       ]
     },
@@ -401,7 +404,7 @@
       "additionalProperties": false,
       "required": ["defer"]
     },
-    "for_cmds_call": {
+    "for_cmd_call": {
       "type": "object",
       "properties": {
         "for": {
@@ -415,6 +418,20 @@
           "description": "Silent mode disables echoing of command before Task runs it",
           "type": "boolean"
         },
+        "platforms": {
+          "description": "Specifies which platforms the command should be run on.",
+          "$ref": "#/definitions/platforms"
+        }
+      },
+      "additionalProperties": false,
+      "required": ["for", "cmd"]
+    },
+    "for_task_call": {
+      "type": "object",
+      "properties": {
+        "for": {
+          "$ref": "#/definitions/for"
+        },
         "task": {
           "description": "Task to run",
           "type": "string"
@@ -423,14 +440,17 @@
           "description": "Values passed to the task called",
           "$ref": "#/definitions/vars"
         },
+        "silent": {
+          "description": "Silent mode disables echoing of command before Task runs it",
+          "type": "boolean"
+        },
         "platforms": {
           "description": "Specifies which platforms the command should be run on.",
           "$ref": "#/definitions/platforms"
         }
       },
-      "oneOf": [{ "required": ["cmd"] }, { "required": ["task"] }],
       "additionalProperties": false,
-      "required": ["for"]
+      "required": ["for", "task"]
     },
     "for_deps_call": {
       "type": "object",
@@ -451,9 +471,8 @@
           "$ref": "#/definitions/vars"
         }
       },
-      "oneOf": [{ "required": ["cmd"] }, { "required": ["task"] }],
       "additionalProperties": false,
-      "required": ["for"]
+      "required": ["for", "task"]
     },
     "for": {
       "anyOf": [
@@ -475,7 +494,7 @@
       "description": "A list of values to iterate over",
       "type": "array",
       "items": {
-        "type": "string"
+        "type": ["string", "number"]
       }
     },
     "for_attribute": {

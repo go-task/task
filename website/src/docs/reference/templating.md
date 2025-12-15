@@ -172,6 +172,11 @@ tasks:
 - **Type**: `bool`
 - **Description**: Whether `--offline` flag was set
 
+#### `CLI_ASSUME_YES`
+
+- **Type**: `bool`
+- **Description**: Whether `--yes` flag was set
+
 ### Task
 
 #### `TASK`
