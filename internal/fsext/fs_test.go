@@ -59,6 +59,78 @@ func TestDefaultDir(t *testing.T) {
 	}
 }
 
+func TestGetSearchPath(t *testing.T) {
+	t.Parallel()
+
+	wd, err := os.Getwd()
+	require.NoError(t, err)
+
+	tests := []struct {
+		name         string
+		entrypoint   string
+		dir          string
+		expectedPath string
+	}{
+		{
+			name:         "return absolute entrypoint if only absolute entrypoint is set",
+			entrypoint:   "/dir/to/Taskfile.yml",
+			dir:          "",
+			expectedPath: "/dir/to/Taskfile.yml",
+		},
+		{
+			name:         "return absolute path of entrypoint if only relative entrypoint is set",
+			entrypoint:   "./dir/to/Taskfile.yml",
+			dir:          "",
+			expectedPath: filepath.Join(wd, "dir", "to", "Taskfile.yml"),
+		},
+		{
+			name:         "return absolute dir if only absolute dir is set",
+			entrypoint:   "",
+			dir:          "/dir/to",
+			expectedPath: "/dir/to",
+		},
+		{
+			name:         "return absolute path of dir if only relative dir is set",
+			entrypoint:   "",
+			dir:          "./dir/to",
+			expectedPath: filepath.Join(wd, "dir", "to"),
+		},
+		{
+			name:         "return absolute entrypoint if both absolute entrypoint and dir are set",
+			entrypoint:   "/dir/to/another/Taskfile.yml",
+			dir:          "/dir/to",
+			expectedPath: "/dir/to/another/Taskfile.yml",
+		},
+		{
+			name:         "return absolute path of entrypoint if both relative entrypoint and dir are set",
+			entrypoint:   "./dir/to/another/Taskfile.yml",
+			dir:          "./dir/to",
+			expectedPath: filepath.Join(wd, "dir", "to", "another", "Taskfile.yml"),
+		},
+		{
+			name:         "return absolute path of entrypoint if relative entrypoint and absolute dir are set",
+			entrypoint:   "./dir/to/another/Taskfile.yml",
+			dir:          "/dir/to",
+			expectedPath: filepath.Join(wd, "dir", "to", "another", "Taskfile.yml"),
+		},
+		{
+			name:         "return working directory if both are empty",
+			entrypoint:   "",
+			dir:          "",
+			expectedPath: wd,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			path, err := GetSearchPath(tt.entrypoint, tt.dir)
+			require.NoError(t, err)
+			require.Equal(t, tt.expectedPath, path)
+		})
+	}
+}
+
 func TestSearch(t *testing.T) {
 	t.Parallel()
 
