@@ -43,6 +43,12 @@ type (
 	PrintFunc func(io.Writer, string, ...any)
 )
 
+func None() PrintFunc {
+	c := color.New()
+	c.DisableColor()
+	return c.FprintfFunc()
+}
+
 func Default() PrintFunc {
 	return color.New(attrsReset...).FprintfFunc()
 }
@@ -149,7 +155,7 @@ func (l *Logger) FOutf(w io.Writer, color Color, s string, args ...any) {
 		s, args = "%s", []any{s}
 	}
 	if !l.Color {
-		color = Default
+		color = None
 	}
 	print := color()
 	print(w, s, args...)
@@ -168,7 +174,7 @@ func (l *Logger) Errf(color Color, s string, args ...any) {
 		s, args = "%s", []any{s}
 	}
 	if !l.Color {
-		color = Default
+		color = None
 	}
 	print := color()
 	print(l.Stderr, s, args...)
