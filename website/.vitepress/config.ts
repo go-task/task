@@ -1,4 +1,4 @@
-import { defineConfig } from 'vitepress';
+import { defineConfig, HeadConfig } from 'vitepress';
 import githubLinksPlugin from './plugins/github-links';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
@@ -9,7 +9,7 @@ import {
   localIconLoader
 } from 'vitepress-plugin-group-icons';
 import { team } from './team.ts';
-import { taskDescription, taskName } from './meta.ts';
+import { taskDescription, taskName, ogUrl, ogImage } from './meta.ts';
 import { fileURLToPath, URL } from 'node:url';
 import llmstxt, { copyOrDownloadAsMarkdownButtons } from 'vitepress-plugin-llms';
 
@@ -40,7 +40,7 @@ export default defineConfig({
       {
         rel: 'icon',
         type: 'image/x-icon',
-        href: '/img/favicon.icon',
+        href: '/img/favicon.ico',
         sizes: '48x48'
       }
     ],
@@ -54,16 +54,22 @@ export default defineConfig({
       }
     ],
     [
-      'link',
-      {
-        rel: 'canonical',
-        href: 'https://taskfile.dev/'
-      }
-    ],
-    [
       'meta',
       { name: 'author', content: `${team.map((c) => c.name).join(', ')}` }
     ],
+    // Open Graph
+    ['meta', { property: 'og:type', content: 'website' }],
+    ['meta', { property: 'og:site_name', content: taskName }],
+    ['meta', { property: 'og:title', content: taskName }],
+    ['meta', { property: 'og:description', content: taskDescription }],
+    ['meta', { property: 'og:image', content: ogImage }],
+    ['meta', { property: 'og:url', content: ogUrl }],
+    // Twitter Card
+    ['meta', { name: 'twitter:card', content: 'summary_large_image' }],
+    ['meta', { name: 'twitter:site', content: '@taskfiledev' }],
+    ['meta', { name: 'twitter:title', content: taskName }],
+    ['meta', { name: 'twitter:description', content: taskDescription }],
+    ['meta', { name: 'twitter:image', content: ogImage }],
     [
       'meta',
       {
@@ -81,6 +87,22 @@ export default defineConfig({
       }
     ]
   ],
+  transformHead({ pageData }) {
+    const head: HeadConfig[] = []
+
+    // Canonical URL dynamique
+    const canonicalUrl = `https://taskfile.dev/${pageData.relativePath
+      .replace(/\.md$/, '')
+      .replace(/index$/, '')}`
+    head.push(['link', { rel: 'canonical', href: canonicalUrl }])
+
+    // Noindex pour 404
+    if (pageData.relativePath === '404.md') {
+      head.push(['meta', { name: 'robots', content: 'noindex, nofollow' }])
+    }
+
+    return head
+  },
   srcDir: 'src',
   cleanUrls: true,
   markdown: {
@@ -342,6 +364,12 @@ export default defineConfig({
     }
   },
   sitemap: {
-    hostname: 'https://taskfile.dev'
+    hostname: 'https://taskfile.dev',
+    transformItems: (items) => {
+      return items.map((item) => ({
+        ...item,
+        lastmod: new Date().toISOString()
+      }));
+    }
   }
 });
