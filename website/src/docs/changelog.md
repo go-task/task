@@ -7,6 +7,74 @@ outline: deep
 
 ::: v-pre
 
+## v3.46.0 - 2025-12-18
+
+### ✨ Features
+
+- A small behavior change was made to dependencies. Task will now wait for all
+  dependencies to finish running before continuing, even if any of them fail. To
+  opt for the previous behavior, set `failfast: true` either on your
+  `.taskrc.yml` or per task, or use the `--failfast` flag, which will also work
+  for `--parallel` (#1246, #2525 by @andreynering).
+- The `--summary` flag now displays `vars:` (both global and task-level),
+  `env:`, and `requires:` sections. Dynamic variables show their shell command
+  (e.g., `sh: echo "hello"`) instead of the evaluated value (#2486 ,#2524 by
+  @vmaerten).
+- Improved performance of fuzzy task name matching by implementing lazy
+  initialization. Added `--disable-fuzzy` flag and `disable-fuzzy` taskrc option
+  to allow disabling fuzzy matching entirely (#2521, #2523 by @vmaerten).
+- Added LLM-optimized documentation via VitePress plugin, generating `llms.txt`
+  and `llms-full.txt` for AI-powered development tools (#2513 by @vmaerten).
+- Added `--trusted-hosts` CLI flag and `remote.trusted-hosts` config option to
+  skip confirmation prompts for specified hosts when using Remote Taskfiles
+  (#2491, #2473 by @maciejlech).
+- When running in GitHub Actions, Task now automatically emits error annotations
+  on failure, improving visibility in workflow summaries (#2568 by @vmaerten).
+- The `--yes` flag is now accessible in templates via the new `CLI_ASSUME_YES`
+  variable (#2577, #2479 by @semihbkgr).
+- Improved shell completion scripts (Zsh, Fish, PowerShell) by adding missing
+  flags and dynamic experimental feature detection (#2532 by @vmaerten).
+- Remote Taskfiles now accept `application/octet-stream` Content-Type (#2536,
+  #1944 by @vmaerten).
+- Shell completion now works when Task is installed or aliased under a different
+  binary name via TASK_EXE environment variable (#2495, #2468 by @vmaerten).
+- Some small fixes and improvements were made to `task --init` and to the
+  default Taskfile it generates (#2433 by @andreynering).
+- Added `--remote-cache-dir` flag and `remote.cache-dir` taskrc option to
+  customize the cache directory for Remote Taskfiles (#2572 by @vmaerten).
+- Zsh completion now supports zstyle verbose option to show or hide task
+  descriptions (#2571 by @vmaerten).
+- Task now automatically enables colored output in CI environments (GitHub
+  Actions, GitLab CI, etc.) without requiring FORCE_COLOR=1 (#2569 by
+  @vmaerten).
+- Added color taskrc option to explicitly enable or disable colored output
+  globally (#2569 by @vmaerten).
+- Improved Git Remote Taskfiles by switching to go-getter: SSH authentication
+  now works out of the box and `applyOf` is properly supported (#2512 by
+  @vmaerten).
+
+### 🐛 Fixes
+
+- Fix RPM upload to Cloudsmith by including the version in the filename to
+  ensure unique filenames (#2507 by @vmaerten).
+- Fix `run: when_changed` to work properly for Taskfiles included multiple times
+  (#2508, #2511 by @trulede).
+- Fixed Zsh and Fish completions to stop suggesting task names after `--`
+  separator, allowing proper CLI_ARGS completion (#1843, #1844 by
+  @boiledfroginthewell).
+- Watch mode (`--watch`) now always runs the task, regardless of `run: once` or
+  `run: when_changed` settings (#2566, #1388 by @trulede).
+- Fixed global variables (CLI_ARGS, CLI_FORCE, etc.) not being accessible in
+  root-level vars section (#2403, #2397 by @trulede, @vmaerten).
+- Fixed a bug where `ignore_error` was ignored when using `task:` to call
+  another task (#2552, #363 by @trulede).
+- Fixed Zsh completion not suggesting global tasks when using `-g`/`--global`
+  flag (#1574, #2574 by @vmaerten).
+- Fixed Fish completion failing to parse task descriptions containing colons
+  (e.g., URLs or namespaced functions) (#2101, #2573 by @vmaerten).
+- Fixed false positive "property 'for' is not allowed" warnings in IntelliJ when
+  using `for` loops in Taskfiles (#2576 by @vmaerten).
+
 ## v3.45.5 - 2025-11-11
 
 - Fixed bug that made a generic message, instead of an useful one, appear when a
@@ -22,7 +90,8 @@ outline: deep
   parts won't be mixed up from different tasks (#1208, #2349, #2350 by
   @trulede).
 - Do not re-evaluate variables for `defer:` (#2244, #2418 by @trulede).
-- Improve error message when a Taskfile is not found (#2441, #2494 by @vmaerten).
+- Improve error message when a Taskfile is not found (#2441, #2494 by
+  @vmaerten).
 - Fixed generic error message `exit status 1` when a dependency task failed
   (#2286 by @GrahamDennis).
 - Fixed YAML library from the unmaintained `gopkg.in/yaml.v3` to the new fork
@@ -30,9 +99,8 @@ outline: deep
 - On Windows, the built-in version of the `rm` core utils contains a fix related
   to the `-f` flag (#2426,
   [u-root/u-root#3464](https://github.com/u-root/u-root/pull/3464),
-  [mvdan/sh#1199](https://github.com/mvdan/sh/pull/1199),
-  #2506 by @andreynering).
-
+  [mvdan/sh#1199](https://github.com/mvdan/sh/pull/1199), #2506 by
+  @andreynering).
 
 ## v3.45.4 - 2025-09-17
 
@@ -183,8 +251,8 @@ Reverted the changes made in #2113 and #2186 that affected the
 - The default taskfile (output when using the `--init` flag) is now an embedded
   file in the binary instead of being stored in the code (#2112 by @pd93).
 - Improved the way we report the Task version when using the `--version` flag or
-  `{{.TASK_VERSION}}` variable. This should now be more
-  consistent and easier for package maintainers to use (#2131 by @pd93).
+  `{{.TASK_VERSION}}` variable. This should now be more consistent and easier
+  for package maintainers to use (#2131 by @pd93).
 - Fixed a bug where globstar (`**`) matching in `sources` only resolved the
   first result (#2073, #2075 by @pd93).
 - Fixed a bug where sorting tasks by "none" would use the default sorting
@@ -198,7 +266,7 @@ Reverted the changes made in #2113 and #2186 that affected the
 - Fix Fish completions when `--global` (`-g`) is given (#2134 by @atusy).
 - Fixed variables not available when using `defer:` (#1909, #2173 by @vmaerten).
 
-### Package API
+#### Package API
 
 - The [`Executor`](https://pkg.go.dev/github.com/go-task/task/v3#Executor) now
   uses the functional options pattern (#2085, #2147, #2148 by @pd93).
@@ -255,7 +323,7 @@ Reverted the changes made in #2113 and #2186 that affected the
   used, all other variables become unavailable in the templating system within
   the include (#2092 by @vmaerten).
 
-### Package API
+#### Package API
 
 Unlike our CLI tool,
 [Task's package API is not currently stable](https://taskfile.dev/reference/package).
@@ -645,9 +713,8 @@ stabilize the API in the future. #121 now tracks this piece of work.
   @FilipSolich).
 - Fix `defer` on JSON Schema (#1288 by @calvinmclean and @andreynering).
 - Fix bug in usage of special variables like `{{.USER_WORKING_DIR}}` in
-  combination with `includes`
-  (#1046, #1205, #1250, #1293, #1312, #1274 by @andarto, #1309 by
-  @andreynering).
+  combination with `includes` (#1046, #1205, #1250, #1293, #1312, #1274 by
+  @andarto, #1309 by @andreynering).
 - Fix bug on `--status` flag. Running this flag should not have side-effects: it
   should not update the checksum on `.task`, only report its status (#1305,
   #1307 by @visciang, #1313 by @andreynering).
@@ -752,9 +819,9 @@ it a go and let us know what you think via a
 - Added task location data to the `--json` flag output (#1056 by @pd93)
 - Change the name of the file generated by `task --init` from `Taskfile.yaml` to
   `Taskfile.yml` (#1062 by @misitebao).
-- Added new `splitArgs` template function (`{{splitArgs "foo bar 'foo bar
-  baz'"}}`) to ensure string is split as arguments (#1040, #1059 by
-  @dhanusaputra).
+- Added new `splitArgs` template function
+  (`{{splitArgs "foo bar 'foo bar baz'"}}`) to ensure string is split as
+  arguments (#1040, #1059 by @dhanusaputra).
 - Fix the value of `{{.CHECKSUM}}` variable in status (#1076, #1080 by @pd93).
 - Fixed deep copy implementation (#1072 by @pd93)
 - Created a tool to assist with releases (#1086 by @pd93).
@@ -979,8 +1046,8 @@ it a go and let us know what you think via a
 
 ## v3.9.0 - 2021-10-02
 
-- A new `shellQuote` function was added to the template system (`{{shellQuote
-  "a string"}}`) to ensure a string is safe for use in shell
+- A new `shellQuote` function was added to the template system
+  (`{{shellQuote "a string"}}`) to ensure a string is safe for use in shell
   ([mvdan/sh#727](https://github.com/mvdan/sh/pull/727),
   [mvdan/sh#737](https://github.com/mvdan/sh/pull/737),
   [Documentation](https://pkg.go.dev/mvdan.cc/sh/v3@v3.4.0/syntax#Quote))
