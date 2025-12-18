@@ -54,6 +54,11 @@
   customize the cache directory for Remote Taskfiles (#2572 by @vmaerten).
 - Zsh completion now supports zstyle verbose option to show or hide task
   descriptions (#2571 by @vmaerten).
+- Task now automatically enables colored output in CI environments (GitHub
+  Actions, GitLab CI, etc.) without requiring FORCE_COLOR=1 (#2569 by
+  @vmaerten).
+- Added color taskrc option to explicitly enable or disable colored output
+  globally (#2569 by @vmaerten).
 
 ## v3.45.5 - 2025-11-11
 
