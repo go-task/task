@@ -384,3 +384,13 @@ task --completion fish > ~/.config/fish/completions/task.fish
 ```
 
 :::
+
+### Zsh customization
+
+The Zsh completion supports the standard `verbose` zstyle to control whether task
+descriptions are shown. By default, descriptions are displayed. To show only task
+names without descriptions, add this to your `~/.zshrc` (after the completion is loaded):
+
+```shell
+zstyle ':completion:*:*:task:*' verbose false
+```

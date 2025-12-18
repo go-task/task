@@ -52,6 +52,8 @@
   using `for` loops in Taskfiles (#2576 by @vmaerten).
 - Added `--remote-cache-dir` flag and `remote.cache-dir` taskrc option to
   customize the cache directory for Remote Taskfiles (#2572 by @vmaerten).
+- Zsh completion now supports zstyle verbose option to show or hide task
+  descriptions (#2571 by @vmaerten).
 
 ## v3.45.5 - 2025-11-11
 
