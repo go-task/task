@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v3.46.2 - 2025-12-18
 
 - Fixed a regression on previous release that affected variables passed via
   command line (#2588, #2589 by @vmaerten).

@@ -7,7 +7,12 @@ outline: deep
 
 ::: v-pre
 
-## v3.46.0 - 2025-12-18
+## v3.46.2 - 2025-12-18
+
+- Fixed a regression on previous release that affected variables passed via
+  command line (#2588, #2589 by @vmaerten).
+
+## v3.46.1 - 2025-12-18
 
 ### ✨ Features
 
