@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-### Features
+### ✨ Features
 
 - A small behavior change was made to dependencies. Task will now wait for all
   dependencies to finish running before continuing, even if any of them fail. To
@@ -33,8 +33,20 @@
   binary name via TASK_EXE environment variable (#2495, #2468 by @vmaerten).
 - Some small fixes and improvements were made to `task --init` and to the
   default Taskfile it generates (#2433 by @andreynering).
+- Added `--remote-cache-dir` flag and `remote.cache-dir` taskrc option to
+  customize the cache directory for Remote Taskfiles (#2572 by @vmaerten).
+- Zsh completion now supports zstyle verbose option to show or hide task
+  descriptions (#2571 by @vmaerten).
+- Task now automatically enables colored output in CI environments (GitHub
+  Actions, GitLab CI, etc.) without requiring FORCE_COLOR=1 (#2569 by
+  @vmaerten).
+- Added color taskrc option to explicitly enable or disable colored output
+  globally (#2569 by @vmaerten).
+- Improved Git Remote Taskfiles by switching to go-getter: SSH authentication
+  now works out of the box and `applyOf` is properly supported (#2512 by
+  @vmaerten).
 
-### Fixes
+### 🐛 Fixes
 
 - Fix RPM upload to Cloudsmith by including the version in the filename to
   ensure unique filenames (#2507 by @vmaerten).
@@ -55,18 +67,6 @@
   (e.g., URLs or namespaced functions) (#2101, #2573 by @vmaerten).
 - Fixed false positive "property 'for' is not allowed" warnings in IntelliJ when
   using `for` loops in Taskfiles (#2576 by @vmaerten).
-- Added `--remote-cache-dir` flag and `remote.cache-dir` taskrc option to
-  customize the cache directory for Remote Taskfiles (#2572 by @vmaerten).
-- Zsh completion now supports zstyle verbose option to show or hide task
-  descriptions (#2571 by @vmaerten).
-- Task now automatically enables colored output in CI environments (GitHub
-  Actions, GitLab CI, etc.) without requiring FORCE_COLOR=1 (#2569 by
-  @vmaerten).
-- Added color taskrc option to explicitly enable or disable colored output
-  globally (#2569 by @vmaerten).
-- Improved Git Remote Taskfiles by switching to go-getter: SSH authentication
-  now works out of the box and `applyOf` is properly supported (#2512 by
-  @vmaerten).
 
 ## v3.45.5 - 2025-11-11
 
