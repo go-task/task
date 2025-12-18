@@ -48,7 +48,6 @@ func (t *TaskRC) Merge(other *TaskRC) {
 	t.Remote.Timeout = cmp.Or(other.Remote.Timeout, t.Remote.Timeout)
 	t.Remote.CacheExpiry = cmp.Or(other.Remote.CacheExpiry, t.Remote.CacheExpiry)
 	t.Remote.CacheDir = cmp.Or(other.Remote.CacheDir, t.Remote.CacheDir)
-
 	if len(other.Remote.TrustedHosts) > 0 {
 		merged := slices.Concat(other.Remote.TrustedHosts, t.Remote.TrustedHosts)
 		slices.Sort(merged)
