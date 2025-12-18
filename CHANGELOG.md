@@ -2,54 +2,37 @@
 
 ## Unreleased
 
+### ✨ Features
+
 - A small behavior change was made to dependencies. Task will now wait for all
   dependencies to finish running before continuing, even if any of them fail. To
   opt for the previous behavior, set `failfast: true` either on your
   `.taskrc.yml` or per task, or use the `--failfast` flag, which will also work
   for `--parallel` (#1246, #2525 by @andreynering).
-- Fix RPM upload to Cloudsmith by including the version in the filename to
-  ensure unique filenames (#2507 by @vmaerten).
-- Fix `run: when_changed` to work properly for Taskfiles included multiple times
-  (#2508, #2511 by @trulede).
 - The `--summary` flag now displays `vars:` (both global and task-level),
   `env:`, and `requires:` sections. Dynamic variables show their shell command
   (e.g., `sh: echo "hello"`) instead of the evaluated value (#2486 ,#2524 by
   @vmaerten).
-- Improved shell completion scripts (Zsh, Fish, PowerShell) by adding missing
-  flags and dynamic experimental feature detection (#2532 by @vmaerten).
 - Improved performance of fuzzy task name matching by implementing lazy
   initialization. Added `--disable-fuzzy` flag and `disable-fuzzy` taskrc option
   to allow disabling fuzzy matching entirely (#2521, #2523 by @vmaerten).
 - Added LLM-optimized documentation via VitePress plugin, generating `llms.txt`
   and `llms-full.txt` for AI-powered development tools (#2513 by @vmaerten).
-- Fixed Zsh and Fish completions to stop suggesting task names after `--`
-  separator, allowing proper CLI_ARGS completion (#1843, #1844 by
-  @boiledfroginthewell).
-- Remote Taskfiles now accept `application/octet-stream` Content-Type (#2536,
-  #1944 by @vmaerten).
 - Added `--trusted-hosts` CLI flag and `remote.trusted-hosts` config option to
   skip confirmation prompts for specified hosts when using Remote Taskfiles
   (#2491, #2473 by @maciejlech).
+- When running in GitHub Actions, Task now automatically emits error annotations
+  on failure, improving visibility in workflow summaries (#2568 by @vmaerten).
+- The `--yes` flag is now accessible in templates via the new `CLI_ASSUME_YES`
+  variable (#2577, #2479 by @semihbkgr).
+- Improved shell completion scripts (Zsh, Fish, PowerShell) by adding missing
+  flags and dynamic experimental feature detection (#2532 by @vmaerten).
+- Remote Taskfiles now accept `application/octet-stream` Content-Type (#2536,
+  #1944 by @vmaerten).
 - Shell completion now works when Task is installed or aliased under a different
   binary name via TASK_EXE environment variable (#2495, #2468 by @vmaerten).
 - Some small fixes and improvements were made to `task --init` and to the
   default Taskfile it generates (#2433 by @andreynering).
-- Watch mode (`--watch`) now always runs the task, regardless of `run: once` or
-  `run: when_changed` settings (#2566, #1388 by @trulede).
-- Fixed global variables (CLI_ARGS, CLI_FORCE, etc.) not being accessible in
-  root-level vars section (#2403, #2397 by @trulede, @vmaerten).
-- When running in GitHub Actions, Task now automatically emits error annotations
-  on failure, improving visibility in workflow summaries (#2568 by @vmaerten).
-- Fixed a bug where `ignore_error` was ignored when using `task:` to call
-  another task (#2552, #363 by @trulede).
-- Fixed Zsh completion not suggesting global tasks when using `-g`/`--global`
-  flag (#1574, #2574 by @vmaerten).
-- Fixed Fish completion failing to parse task descriptions containing colons
-  (e.g., URLs or namespaced functions) (#2101, #2573 by @vmaerten).
-- The `--yes` flag is now accessible in templates via the new `CLI_ASSUME_YES`
-  variable (#2577, #2479 by @semihbkgr).
-- Fixed false positive "property 'for' is not allowed" warnings in IntelliJ when
-  using `for` loops in Taskfiles (#2576 by @vmaerten).
 - Added `--remote-cache-dir` flag and `remote.cache-dir` taskrc option to
   customize the cache directory for Remote Taskfiles (#2572 by @vmaerten).
 - Zsh completion now supports zstyle verbose option to show or hide task
@@ -62,6 +45,28 @@
 - Improved Git Remote Taskfiles by switching to go-getter: SSH authentication
   now works out of the box and `applyOf` is properly supported (#2512 by
   @vmaerten).
+
+### 🐛 Fixes
+
+- Fix RPM upload to Cloudsmith by including the version in the filename to
+  ensure unique filenames (#2507 by @vmaerten).
+- Fix `run: when_changed` to work properly for Taskfiles included multiple times
+  (#2508, #2511 by @trulede).
+- Fixed Zsh and Fish completions to stop suggesting task names after `--`
+  separator, allowing proper CLI_ARGS completion (#1843, #1844 by
+  @boiledfroginthewell).
+- Watch mode (`--watch`) now always runs the task, regardless of `run: once` or
+  `run: when_changed` settings (#2566, #1388 by @trulede).
+- Fixed global variables (CLI_ARGS, CLI_FORCE, etc.) not being accessible in
+  root-level vars section (#2403, #2397 by @trulede, @vmaerten).
+- Fixed a bug where `ignore_error` was ignored when using `task:` to call
+  another task (#2552, #363 by @trulede).
+- Fixed Zsh completion not suggesting global tasks when using `-g`/`--global`
+  flag (#1574, #2574 by @vmaerten).
+- Fixed Fish completion failing to parse task descriptions containing colons
+  (e.g., URLs or namespaced functions) (#2101, #2573 by @vmaerten).
+- Fixed false positive "property 'for' is not allowed" warnings in IntelliJ when
+  using `for` loops in Taskfiles (#2576 by @vmaerten).
 
 ## v3.45.5 - 2025-11-11
 
