@@ -184,11 +184,13 @@ func run() error {
 	globals.Set("CLI_OFFLINE", ast.Var{Value: flags.Offline})
 	globals.Set("CLI_ASSUME_YES", ast.Var{Value: flags.AssumeYes})
 	e.Taskfile.Vars.ReverseMerge(globals, nil)
-	if !flags.Watch {
-		e.InterceptInterruptSignals()
-	}
 
-	ctx := context.Background()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	if !flags.Watch {
+		e.InterceptInterruptSignals(cancel)
+	}
 
 	if flags.Status {
 		return e.Status(ctx, calls...)
