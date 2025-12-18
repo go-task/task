@@ -59,6 +59,9 @@
   @vmaerten).
 - Added color taskrc option to explicitly enable or disable colored output
   globally (#2569 by @vmaerten).
+- Improved Git Remote Taskfiles by switching to go-getter: SSH authentication
+  now works out of the box and `applyOf` is properly supported (#2512 by
+  @vmaerten).
 
 ## v3.45.5 - 2025-11-11
 
