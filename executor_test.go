@@ -263,6 +263,23 @@ func TestVars(t *testing.T) {
 			task.WithSilent(true),
 		),
 	)
+	NewExecutorTest(t,
+		WithName("cli-var-priority-default"),
+		WithExecutorOptions(
+			task.WithDir("testdata/vars"),
+			task.WithSilent(true),
+		),
+		WithTask("cli-var-priority"),
+	)
+	NewExecutorTest(t,
+		WithName("cli-var-priority-override"),
+		WithExecutorOptions(
+			task.WithDir("testdata/vars"),
+			task.WithSilent(true),
+		),
+		WithTask("cli-var-priority"),
+		WithVar("CLI_VAR", "from_cli"),
+	)
 }
 
 func TestRequires(t *testing.T) {

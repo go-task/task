@@ -172,18 +172,23 @@ func run() error {
 		calls = append(calls, &task.Call{Task: "default"})
 	}
 
+	// Merge CLI variables first (e.g. FOO=bar) so they take priority over Taskfile defaults
+	e.Taskfile.Vars.Merge(globals, nil)
+
+	// Then ReverseMerge special variables so they're available for templating
 	cliArgsPostDashQuoted, err := args.ToQuotedString(cliArgsPostDash)
 	if err != nil {
 		return err
 	}
-	globals.Set("CLI_ARGS", ast.Var{Value: cliArgsPostDashQuoted})
-	globals.Set("CLI_ARGS_LIST", ast.Var{Value: cliArgsPostDash})
-	globals.Set("CLI_FORCE", ast.Var{Value: flags.Force || flags.ForceAll})
-	globals.Set("CLI_SILENT", ast.Var{Value: flags.Silent})
-	globals.Set("CLI_VERBOSE", ast.Var{Value: flags.Verbose})
-	globals.Set("CLI_OFFLINE", ast.Var{Value: flags.Offline})
-	globals.Set("CLI_ASSUME_YES", ast.Var{Value: flags.AssumeYes})
-	e.Taskfile.Vars.ReverseMerge(globals, nil)
+	specialVars := ast.NewVars()
+	specialVars.Set("CLI_ARGS", ast.Var{Value: cliArgsPostDashQuoted})
+	specialVars.Set("CLI_ARGS_LIST", ast.Var{Value: cliArgsPostDash})
+	specialVars.Set("CLI_FORCE", ast.Var{Value: flags.Force || flags.ForceAll})
+	specialVars.Set("CLI_SILENT", ast.Var{Value: flags.Silent})
+	specialVars.Set("CLI_VERBOSE", ast.Var{Value: flags.Verbose})
+	specialVars.Set("CLI_OFFLINE", ast.Var{Value: flags.Offline})
+	specialVars.Set("CLI_ASSUME_YES", ast.Var{Value: flags.AssumeYes})
+	e.Taskfile.Vars.ReverseMerge(specialVars, nil)
 	if !flags.Watch {
 		e.InterceptInterruptSignals()
 	}
