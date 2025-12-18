@@ -153,16 +153,16 @@ func (e *Executor) setupTempDir() error {
 		}
 	}
 
-	remoteDir := env.GetTaskEnv("REMOTE_DIR")
-	if remoteDir != "" {
-		if filepath.IsAbs(remoteDir) || strings.HasPrefix(remoteDir, "~") {
-			remoteTempDir, err := execext.ExpandLiteral(remoteDir)
+	// RemoteCacheDir from taskrc/env can override the remote cache directory
+	if e.RemoteCacheDir != "" {
+		if filepath.IsAbs(e.RemoteCacheDir) || strings.HasPrefix(e.RemoteCacheDir, "~") {
+			remoteCacheDir, err := execext.ExpandLiteral(e.RemoteCacheDir)
 			if err != nil {
 				return err
 			}
-			e.TempDir.Remote = remoteTempDir
+			e.TempDir.Remote = remoteCacheDir
 		} else {
-			e.TempDir.Remote = filepathext.SmartJoin(e.Dir, ".task")
+			e.TempDir.Remote = filepathext.SmartJoin(e.Dir, e.RemoteCacheDir)
 		}
 	}
 

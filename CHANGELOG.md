@@ -50,6 +50,8 @@
   variable (#2577, #2479 by @semihbkgr).
 - Fixed false positive "property 'for' is not allowed" warnings in IntelliJ when
   using `for` loops in Taskfiles (#2576 by @vmaerten).
+- Added `--remote-cache-dir` flag and `remote.cache-dir` taskrc option to
+  customize the cache directory for Remote Taskfiles (#2572 by @vmaerten).
 
 ## v3.45.5 - 2025-11-11
 

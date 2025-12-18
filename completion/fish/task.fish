@@ -106,9 +106,10 @@ complete -c $GO_TASK_PROGNAME -s y -l yes                       -d 'assume yes t
 complete -c $GO_TASK_PROGNAME -n "__task_is_experiment_enabled GENTLE_FORCE" -l force-all -d 'force execution of task and all dependencies'
 
 # RemoteTaskfiles experiment - Options
-complete -c $GO_TASK_PROGNAME -n "__task_is_experiment_enabled REMOTE_TASKFILES" -l offline     -d 'use only local or cached Taskfiles'
-complete -c $GO_TASK_PROGNAME -n "__task_is_experiment_enabled REMOTE_TASKFILES" -l timeout     -d 'timeout for remote Taskfile downloads'
-complete -c $GO_TASK_PROGNAME -n "__task_is_experiment_enabled REMOTE_TASKFILES" -l expiry      -d 'cache expiry duration'
+complete -c $GO_TASK_PROGNAME -n "__task_is_experiment_enabled REMOTE_TASKFILES" -l offline          -d 'use only local or cached Taskfiles'
+complete -c $GO_TASK_PROGNAME -n "__task_is_experiment_enabled REMOTE_TASKFILES" -l timeout          -d 'timeout for remote Taskfile downloads'
+complete -c $GO_TASK_PROGNAME -n "__task_is_experiment_enabled REMOTE_TASKFILES" -l expiry           -d 'cache expiry duration'
+complete -c $GO_TASK_PROGNAME -n "__task_is_experiment_enabled REMOTE_TASKFILES" -l remote-cache-dir -d 'directory to cache remote Taskfiles' -xa "(__fish_complete_directories)"
 
 # RemoteTaskfiles experiment - Operations
 complete -c $GO_TASK_PROGNAME -n "__task_is_experiment_enabled REMOTE_TASKFILES" -l download    -d 'download remote Taskfile'
