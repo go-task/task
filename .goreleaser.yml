@@ -169,6 +169,6 @@ cloudsmiths:
       rpm:
         - "any-distro/any-version"
       alpine:
-        - "any-distro/any-version"
+        - "alpine/any-version"
     component: main
     republish: true
