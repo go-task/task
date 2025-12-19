@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v3.46.3 - 2025-12-19
 
 - Fixed regression in completion script for zsh (#2593, #2594 by @vmaerten).
 
