@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Fixed regression in completion script for zsh (#2593, #2594 by @vmaerten).
+
 ## v3.46.2 - 2025-12-18
 
 - Fixed a regression on previous release that affected variables passed via
