@@ -34,7 +34,7 @@ function __task_list() {
     fi
 
     # Check if global flag is set
-    if (( ${+opt_args[(i)-g|--global]} )); then
+    if (( ${+opt_args[-g]} || ${+opt_args[--global]} )); then
         cmd+=(--global)
     fi
 
