@@ -104,13 +104,13 @@ func (node *GitNode) buildURL() string {
 	// Get the base URL
 	baseURL := node.url.String()
 
-	ref := node.ref
-	if ref == "" {
-		ref = "HEAD"
-	}
 	// Always use git:: prefix for git URLs (following Terraform's pattern)
 	// This forces go-getter to use git protocol
-	return fmt.Sprintf("git::%s?ref=%s&depth=1", baseURL, ref)
+	if node.ref != "" {
+		return fmt.Sprintf("git::%s?ref=%s&depth=1", baseURL, node.ref)
+	}
+	// When no ref is specified, omit it entirely to let git clone the default branch
+	return fmt.Sprintf("git::%s?depth=1", baseURL)
 }
 
 // getOrCloneRepo returns the path to a cached git repository.
@@ -230,7 +230,7 @@ func (node *GitNode) repoCacheKey() string {
 
 	ref := node.ref
 	if ref == "" {
-		ref = "HEAD"
+		ref = "_default_" // Placeholder for the remote's default branch
 	}
 
 	return filepath.Join(node.url.Host, repoPath, ref)
