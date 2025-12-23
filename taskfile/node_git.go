@@ -15,6 +15,7 @@ import (
 	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/execext"
 	"github.com/go-task/task/v3/internal/filepathext"
+	"github.com/go-task/task/v3/internal/fsext"
 )
 
 // An GitNode is a node that reads a Taskfile from a remote location via Git.
@@ -164,11 +165,16 @@ func (node *GitNode) ReadContext(ctx context.Context) ([]byte, error) {
 	}
 
 	// Build path to Taskfile in the cached repo
-	taskfilePath := node.path
-	if taskfilePath == "" {
-		taskfilePath = "Taskfile.yml"
+	// If node.path is empty, search in repo root; otherwise search in the specified path
+	// fsext.SearchPath handles both files and directories (searching for DefaultTaskfiles)
+	searchPath := repoDir
+	if node.path != "" {
+		searchPath = filepath.Join(repoDir, node.path)
 	}
-	filePath := filepath.Join(repoDir, taskfilePath)
+	filePath, err := fsext.SearchPath(searchPath, DefaultTaskfiles)
+	if err != nil {
+		return nil, err
+	}
 
 	// Read file from cached repo
 	b, err := os.ReadFile(filePath)
