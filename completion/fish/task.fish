@@ -54,7 +54,7 @@ function __task_get_tasks --description "Prints all available tasks with their d
   end
 
   # Grab names and descriptions (if any) of the tasks
-  set -l output (echo $rawOutput | sed -e '1d; s/\* \(.*\):\s\{2,\}\(.*\)\s\{2,\}(\(aliases.*\))/\1\t\2\t\3/' -e 's/\* \(.*\):\s\{2,\}\(.*\)/\1\t\2/'| string split0)
+  set -l output (echo $rawOutput | sed -e '1d; s/\* \(.*\):[[:space:]]\{2,\}\(.*\)[[:space:]]\{2,\}(\(aliases.*\))/\1\t\2\t\3/' -e 's/\* \(.*\):[[:space:]]\{2,\}\(.*\)/\1\t\2/'| string split0)
   if test $output
     echo $output
   end
