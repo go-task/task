@@ -226,7 +226,7 @@ tasks:
       - "git add --all"
       - "git commit -m v{{.VERSION}}"
       - "git push"
-      - "git tag v{{.VERSION}}"
+      - "git tag -a v{{.VERSION}} -m v{{.VERSION}}"
       - "git push origin tag v{{.VERSION}}"
       - cmd: printf "%s" '{{.COMPLETE_MESSAGE}}'
         silent: true
