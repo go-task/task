@@ -7,6 +7,11 @@ outline: deep
 
 ::: v-pre
 
+## v3.46.4 - 2025-12-24
+
+- Fixed regressions in completion script for Fish (#2591, #2604, #2592 by
+  @WinkelCode).
+
 ## v3.46.3 - 2025-12-19
 
 - Fixed regression in completion script for zsh (#2593, #2594 by @vmaerten).

@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v3.46.4 - 2025-12-24
 
 - Fixed regressions in completion script for Fish (#2591, #2604, #2592 by
   @WinkelCode).
