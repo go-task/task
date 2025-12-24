@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Fixed regressions in completion script for Fish (#2591, #2604, #2592 by
+  @WinkelCode).
+
 ## v3.46.3 - 2025-12-19
 
 - Fixed regression in completion script for zsh (#2593, #2594 by @vmaerten).
