@@ -54,12 +54,20 @@ export default defineConfig({
       }
     ],
     [
+      'link',
+      {
+        rel: 'shortcut icon',
+        href: '/img/logo.svg',
+        type: 'image/svg+xml'
+      }
+    ],
+    [
       'meta',
       { name: 'author', content: `${team.map((c) => c.name).join(', ')}` }
     ],
     // Open Graph
     ['meta', { property: 'og:type', content: 'website' }],
-    ['meta', { property: 'og:site_name', content: taskName }],
+['meta', { property: 'og:site_name', content: 'Task' }],
     ['meta', { property: 'og:image', content: ogImage }],
     // Twitter Card
     ['meta', { name: 'twitter:card', content: 'summary_large_image' }],
@@ -80,6 +88,16 @@ export default defineConfig({
         src: "https://u.taskfile.dev/script.js",
         "data-website-id": "084030b0-0e3f-4891-8d2a-0c12c40f5933"
       }
+    ],
+    [
+      "script",
+      { type: "application/ld+json" },
+      JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "Task",
+        "url": "https://taskfile.dev/"
+      })
     ]
   ],
   transformHead({ pageData }) {
