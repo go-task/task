@@ -1,4 +1,4 @@
-export const taskName = 'Task';
+export const taskName = 'Task - The Modern Task Runner';
 export const taskDescription =
   'A fast, cross-platform build tool inspired by Make, designed for modern workflows.';
 
