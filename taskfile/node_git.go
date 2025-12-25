@@ -15,6 +15,7 @@ import (
 	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/execext"
 	"github.com/go-task/task/v3/internal/filepathext"
+	"github.com/go-task/task/v3/internal/fsext"
 )
 
 // An GitNode is a node that reads a Taskfile from a remote location via Git.
@@ -104,13 +105,13 @@ func (node *GitNode) buildURL() string {
 	// Get the base URL
 	baseURL := node.url.String()
 
-	ref := node.ref
-	if ref == "" {
-		ref = "HEAD"
-	}
 	// Always use git:: prefix for git URLs (following Terraform's pattern)
 	// This forces go-getter to use git protocol
-	return fmt.Sprintf("git::%s?ref=%s&depth=1", baseURL, ref)
+	if node.ref != "" {
+		return fmt.Sprintf("git::%s?ref=%s&depth=1", baseURL, node.ref)
+	}
+	// When no ref is specified, omit it entirely to let git clone the default branch
+	return fmt.Sprintf("git::%s?depth=1", baseURL)
 }
 
 // getOrCloneRepo returns the path to a cached git repository.
@@ -164,11 +165,16 @@ func (node *GitNode) ReadContext(ctx context.Context) ([]byte, error) {
 	}
 
 	// Build path to Taskfile in the cached repo
-	taskfilePath := node.path
-	if taskfilePath == "" {
-		taskfilePath = "Taskfile.yml"
+	// If node.path is empty, search in repo root; otherwise search in the specified path
+	// fsext.SearchPath handles both files and directories (searching for DefaultTaskfiles)
+	searchPath := repoDir
+	if node.path != "" {
+		searchPath = filepath.Join(repoDir, node.path)
 	}
-	filePath := filepath.Join(repoDir, taskfilePath)
+	filePath, err := fsext.SearchPath(searchPath, DefaultTaskfiles)
+	if err != nil {
+		return nil, err
+	}
 
 	// Read file from cached repo
 	b, err := os.ReadFile(filePath)
@@ -230,7 +236,7 @@ func (node *GitNode) repoCacheKey() string {
 
 	ref := node.ref
 	if ref == "" {
-		ref = "HEAD"
+		ref = "_default_" // Placeholder for the remote's default branch
 	}
 
 	return filepath.Join(node.url.Host, repoPath, ref)

@@ -127,9 +127,9 @@ func TestGitNode_buildURL(t *testing.T) {
 			expectedURL: "git::https://github.com/foo/bar.git?ref=v1.0.0&depth=1",
 		},
 		{
-			name:        "HTTPS without ref (uses remote HEAD)",
+			name:        "HTTPS without ref (uses remote default branch)",
 			entrypoint:  "https://github.com/foo/bar.git//Taskfile.yml",
-			expectedURL: "git::https://github.com/foo/bar.git?ref=HEAD&depth=1",
+			expectedURL: "git::https://github.com/foo/bar.git?depth=1",
 		},
 		{
 			name:        "SSH with directory path",
@@ -198,20 +198,20 @@ func TestRepoCacheKey_DifferentRepos(t *testing.T) {
 	assert.NotEqual(t, key1, key2, "Different repos should generate different cache keys")
 }
 
-func TestRepoCacheKey_NoRefVsHead(t *testing.T) {
+func TestRepoCacheKey_NoRefVsExplicitRef(t *testing.T) {
 	t.Parallel()
 
-	// No ref (defaults to HEAD) vs explicit HEAD should have SAME cache key
+	// No ref (uses default branch) vs explicit ref should have DIFFERENT cache keys
 	node1, err := NewGitNode("https://github.com/foo/bar.git//file.yml", "", false)
 	require.NoError(t, err)
 
-	node2, err := NewGitNode("https://github.com/foo/bar.git//file.yml?ref=HEAD", "", false)
+	node2, err := NewGitNode("https://github.com/foo/bar.git//file.yml?ref=main", "", false)
 	require.NoError(t, err)
 
 	key1 := node1.repoCacheKey()
 	key2 := node2.repoCacheKey()
 
-	assert.Equal(t, key1, key2, "No ref and explicit HEAD should generate same cache key")
+	assert.NotEqual(t, key1, key2, "No ref and explicit ref should generate different cache keys")
 }
 
 func TestRepoCacheKey_SSHvsHTTPS(t *testing.T) {
