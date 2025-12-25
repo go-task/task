@@ -1,0 +1,31 @@
+# yaml-language-server: $schema=https://goreleaser.com/static/schema.json
+version: 2
+
+builds:
+  - binary: task
+    main: ./cmd/task
+    goos: [windows, darwin, linux]
+    goarch: [amd64, arm64]
+    env:
+      - CGO_ENABLED=0
+    mod_timestamp: '{{ .CommitTimestamp }}'
+    flags:
+      - -trimpath
+    ldflags:
+      - "-s -w"
+
+archives:
+  - name_template: '{{.Binary}}_{{.Os}}_{{.Arch}}'
+    files:
+      - README.md
+      - LICENSE
+      - completion/**/*
+    format_overrides:
+      - goos: windows
+        formats: [zip]
+
+snapshot:
+  version_template: 'pr-{{ .ShortCommit }}'
+
+checksum:
+  name_template: 'task_checksums.txt'
