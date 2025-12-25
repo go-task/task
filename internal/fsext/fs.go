@@ -49,6 +49,24 @@ func ResolveDir(entrypoint, resolvedEntrypoint, dir string) (string, error) {
 	return filepath.Dir(resolvedEntrypoint), nil
 }
 
+// GetSearchPath returns the absolute path to search for the entrypoint. If the
+// entrypoint is set, it returns the absolute path to the entrypoint. If the dir
+// is set, it returns the absolute path to the dir. If both are empty, it returns
+// the current working directory.
+func GetSearchPath(entrypoint, dir string) (string, error) {
+	if entrypoint != "" {
+		return filepath.Abs(entrypoint)
+	}
+	if dir != "" {
+		return filepath.Abs(dir)
+	}
+	wd, err := os.Getwd()
+	if err != nil {
+		return "", err
+	}
+	return wd, nil
+}
+
 // Search looks for files with the given possible filenames using the given
 // entrypoint and directory. If the entrypoint is set, it checks if the
 // entrypoint matches a file or if it matches a directory containing one of the

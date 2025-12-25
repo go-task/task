@@ -11,18 +11,14 @@ import (
 // TaskfileNotFoundError is returned when no appropriate Taskfile is found when
 // searching the filesystem.
 type TaskfileNotFoundError struct {
-	URI     string
-	Walk    bool
-	AskInit bool
+	URI  string
+	Walk bool
 }
 
 func (err TaskfileNotFoundError) Error() string {
 	var walkText string
 	if err.Walk {
 		walkText = " (or any of the parent directories)."
-	}
-	if err.AskInit {
-		walkText += " Run `task --init` to create a new Taskfile."
 	}
 	return fmt.Sprintf(`task: No Taskfile found at %q%s`, err.URI, walkText)
 }
