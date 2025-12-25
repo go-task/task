@@ -45,6 +45,8 @@ type Task struct {
 	Failfast      bool
 	// Populated during merging
 	Namespace            string `hash:"ignore"`
+	IncludeDir           string
+	IncludeTaskDir       string
 	IncludeVars          *Vars
 	IncludedTaskfileVars *Vars
 
