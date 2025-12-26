@@ -36,8 +36,9 @@ type Taskfile struct {
 	Interval time.Duration
 }
 
-// Merge merges the second Taskfile into the first
-func (t1 *Taskfile) Merge(t2 *Taskfile, include *Include) error {
+// Merge merges the second Taskfile into the first.
+// If skipVarsMerge is true, variables are not merged (used for scoped includes).
+func (t1 *Taskfile) Merge(t2 *Taskfile, include *Include, skipVarsMerge bool) error {
 	if !t1.Version.Equal(t2.Version) {
 		return fmt.Errorf(`task: Taskfiles versions should match. First is "%s" but second is "%s"`, t1.Version, t2.Version)
 	}
@@ -67,8 +68,11 @@ func (t1 *Taskfile) Merge(t2 *Taskfile, include *Include) error {
 			}
 		}
 	}
-	t1.Vars.Merge(t2.Vars, include)
-	t1.Env.Merge(t2.Env, include)
+	// Only merge vars if not using scoped includes, or if flattening
+	if !skipVarsMerge || include.Flatten {
+		t1.Vars.Merge(t2.Vars, include)
+		t1.Env.Merge(t2.Env, include)
+	}
 	return t1.Tasks.Merge(t2.Tasks, include, t1.Vars)
 }
 

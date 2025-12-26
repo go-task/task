@@ -57,7 +57,9 @@ func (tfg *TaskfileGraph) Root() (*TaskfileVertex, error) {
 	return tfg.Vertex(hashes[0])
 }
 
-func (tfg *TaskfileGraph) Merge() (*Taskfile, error) {
+// Merge merges all included Taskfiles into the root Taskfile.
+// If skipVarsMerge is true, variables are not merged (used for scoped includes).
+func (tfg *TaskfileGraph) Merge(skipVarsMerge bool) (*Taskfile, error) {
 	hashes, err := graph.TopologicalSort(tfg.Graph)
 	if err != nil {
 		return nil, err
@@ -104,6 +106,7 @@ func (tfg *TaskfileGraph) Merge() (*Taskfile, error) {
 					if err := vertex.Taskfile.Merge(
 						includedVertex.Taskfile,
 						include,
+						skipVarsMerge,
 					); err != nil {
 						return err
 					}

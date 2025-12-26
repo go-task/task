@@ -20,6 +20,7 @@ import (
 	"github.com/go-task/task/v3/internal/logger"
 	"github.com/go-task/task/v3/internal/output"
 	"github.com/go-task/task/v3/internal/version"
+	"github.com/go-task/task/v3/experiments"
 	"github.com/go-task/task/v3/taskfile"
 	"github.com/go-task/task/v3/taskfile/ast"
 )
@@ -105,7 +106,7 @@ func (e *Executor) readTaskfile(node taskfile.Node) error {
 		return err
 	}
 	e.Graph = graph
-	if e.Taskfile, err = graph.Merge(); err != nil {
+	if e.Taskfile, err = graph.Merge(experiments.ScopedIncludes.Enabled()); err != nil {
 		return err
 	}
 	return nil
