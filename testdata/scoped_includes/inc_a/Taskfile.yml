@@ -1,0 +1,18 @@
+version: "3"
+
+vars:
+  VAR: value_from_a
+  UNIQUE_A: only_in_a
+
+tasks:
+  print:
+    desc: Print vars from include A
+    cmds:
+      - echo "A:VAR={{.VAR}}"
+      - echo "A:UNIQUE_A={{.UNIQUE_A}}"
+      - echo "A:ROOT_VAR={{.ROOT_VAR}}"
+
+  try-access-b:
+    desc: Try to access B's unique var (should fail in scoped mode)
+    cmds:
+      - echo "A:UNIQUE_B={{.UNIQUE_B}}"

@@ -1,0 +1,20 @@
+version: "3"
+
+vars:
+  ROOT_VAR: from_root
+
+includes:
+  a: ./inc_a
+  b: ./inc_b
+
+tasks:
+  default:
+    desc: Test scoped includes - vars should be isolated
+    cmds:
+      - task: a:print
+      - task: b:print
+
+  print-root-var:
+    desc: Print ROOT_VAR from root
+    cmds:
+      - echo "ROOT_VAR={{.ROOT_VAR}}"

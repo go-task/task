@@ -1180,3 +1180,69 @@ func TestIf(t *testing.T) {
 		NewExecutorTest(t, opts...)
 	}
 }
+
+func TestScopedIncludes(t *testing.T) {
+	t.Parallel()
+
+	// Legacy tests (without experiment) - vars should be merged globally
+	t.Run("legacy", func(t *testing.T) {
+		// Test with scoped includes disabled (legacy) - vars should be merged globally
+		NewExecutorTest(t,
+			WithName("default"),
+			WithExecutorOptions(
+				task.WithDir("testdata/scoped_includes"),
+				task.WithSilent(true),
+			),
+		)
+		// In legacy mode, UNIQUE_B should be accessible (merged globally)
+		NewExecutorTest(t,
+			WithName("cross-include"),
+			WithExecutorOptions(
+				task.WithDir("testdata/scoped_includes"),
+				task.WithSilent(true),
+			),
+			WithTask("a:try-access-b"),
+		)
+	})
+
+	// Scoped tests (with experiment enabled) - vars should be isolated
+	t.Run("scoped", func(t *testing.T) {
+		enableExperimentForTest(t, &experiments.ScopedIncludes, 1)
+
+		// Test with scoped includes enabled - vars should be isolated
+		NewExecutorTest(t,
+			WithName("default"),
+			WithExecutorOptions(
+				task.WithDir("testdata/scoped_includes"),
+				task.WithSilent(true),
+			),
+		)
+		// Test inheritance: include can access root vars
+		NewExecutorTest(t,
+			WithName("inheritance-a"),
+			WithExecutorOptions(
+				task.WithDir("testdata/scoped_includes"),
+				task.WithSilent(true),
+			),
+			WithTask("a:print"),
+		)
+		// Test isolation: each include sees its own vars
+		NewExecutorTest(t,
+			WithName("isolation-b"),
+			WithExecutorOptions(
+				task.WithDir("testdata/scoped_includes"),
+				task.WithSilent(true),
+			),
+			WithTask("b:print"),
+		)
+		// In scoped mode, UNIQUE_B should be empty (isolated)
+		NewExecutorTest(t,
+			WithName("cross-include"),
+			WithExecutorOptions(
+				task.WithDir("testdata/scoped_includes"),
+				task.WithSilent(true),
+			),
+			WithTask("a:try-access-b"),
+		)
+	})
+}

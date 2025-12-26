@@ -1,0 +1,6 @@
+A:VAR=value_from_b
+A:UNIQUE_A=only_in_a
+A:ROOT_VAR=from_root
+B:VAR=value_from_b
+B:UNIQUE_B=only_in_b
+B:ROOT_VAR=from_root
