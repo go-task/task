@@ -10,8 +10,8 @@ outline: deep
 Task has multiple ways of being configured. These methods are parsed, in
 sequence, in the following order with the highest priority last:
 
-- [Environment variables](./environment.md)
 - [Configuration files](./config.md)
+- [Environment variables](./environment.md)
 - _Command-line flags_
 
 In this document, we will look at the last of the three options, command-line
@@ -96,6 +96,9 @@ task --version
 
 Enable verbose mode for detailed output.
 
+- **Config equivalent**: [`verbose`](./config.md#verbose)
+- **Environment variable**: [`TASK_VERBOSE`](./environment.md#task-verbose)
+
 ```bash
 task build --verbose
 ```
@@ -112,6 +115,9 @@ task deploy --silent
 
 Disable fuzzy matching for task names. When enabled, Task will not suggest similar task names when you mistype a task name.
 
+- **Config equivalent**: [`disable-fuzzy`](./config.md#disable-fuzzy)
+- **Environment variable**: [`TASK_DISABLE_FUZZY`](./environment.md#task-disable-fuzzy)
+
 ```bash
 task buidl --disable-fuzzy
 # Output: Task "buidl" does not exist
@@ -123,6 +129,9 @@ task buidl --disable-fuzzy
 #### `-F, --failfast`
 
 Stop executing dependencies as soon as one of them fails.
+
+- **Config equivalent**: [`failfast`](./config.md#failfast)
+- **Environment variable**: [`TASK_FAILFAST`](./environment.md#task-failfast)
 
 ```bash
 task build --failfast
@@ -155,6 +164,9 @@ task test lint --parallel
 #### `-C, --concurrency <number>`
 
 Limit the number of concurrent tasks. Zero means unlimited.
+
+- **Config equivalent**: [`concurrency`](./config.md#concurrency)
+- **Environment variable**: [`TASK_CONCURRENCY`](./environment.md#task-concurrency)
 
 ```bash
 task test --concurrency 4
@@ -231,6 +243,9 @@ task test --output group --output-group-error-only
 #### `-c, --color`
 
 Control colored output. Enabled by default.
+
+- **Config equivalent**: [`color`](./config.md#color)
+- **Environment variable**: [`TASK_COLOR`](./environment.md#task-color)
 
 ```bash
 task build --color=false
