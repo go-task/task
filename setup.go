@@ -228,6 +228,7 @@ func (e *Executor) setupCompiler() error {
 		UserWorkingDir: e.UserWorkingDir,
 		TaskfileEnv:    e.Taskfile.Env,
 		TaskfileVars:   e.Taskfile.Vars,
+		Graph:          e.Graph,
 		Logger:         e.Logger,
 	}
 	return nil

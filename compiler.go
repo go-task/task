@@ -9,6 +9,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/go-task/task/v3/experiments"
 	"github.com/go-task/task/v3/internal/env"
 	"github.com/go-task/task/v3/internal/execext"
 	"github.com/go-task/task/v3/internal/filepathext"
@@ -25,6 +26,7 @@ type Compiler struct {
 
 	TaskfileEnv  *ast.Vars
 	TaskfileVars *ast.Vars
+	Graph        *ast.TaskfileGraph
 
 	Logger *logger.Logger
 
@@ -104,25 +106,78 @@ func (c *Compiler) getVariables(t *ast.Task, call *Call, evaluateShVars bool) (*
 		taskRangeFunc = getRangeFunc(dir)
 	}
 
-	for k, v := range c.TaskfileEnv.All() {
-		if err := rangeFunc(k, v); err != nil {
+	// When scoped includes is enabled, resolve vars from DAG instead of merged vars
+	if experiments.ScopedIncludes.Enabled() && t != nil && t.Location != nil && c.Graph != nil {
+		// Get root Taskfile for inheritance (parent vars are always accessible)
+		rootVertex, err := c.Graph.Root()
+		if err != nil {
 			return nil, err
 		}
-	}
-	for k, v := range c.TaskfileVars.All() {
-		if err := rangeFunc(k, v); err != nil {
-			return nil, err
-		}
-	}
-	if t != nil {
-		for k, v := range t.IncludeVars.All() {
+
+		// Apply root env
+		for k, v := range rootVertex.Taskfile.Env.All() {
 			if err := rangeFunc(k, v); err != nil {
 				return nil, err
 			}
 		}
-		for k, v := range t.IncludedTaskfileVars.All() {
-			if err := taskRangeFunc(k, v); err != nil {
+
+		// Apply root vars
+		for k, v := range rootVertex.Taskfile.Vars.All() {
+			if err := rangeFunc(k, v); err != nil {
 				return nil, err
+			}
+		}
+
+		// If task is from an included Taskfile (not the root), get its vars from the DAG
+		if t.Location.Taskfile != rootVertex.URI {
+			includeVertex, err := c.Graph.Vertex(t.Location.Taskfile)
+			if err != nil {
+				return nil, err
+			}
+			// Apply include's env (overrides root's env)
+			for k, v := range includeVertex.Taskfile.Env.All() {
+				if err := taskRangeFunc(k, v); err != nil {
+					return nil, err
+				}
+			}
+			// Apply include's vars (overrides root's vars)
+			for k, v := range includeVertex.Taskfile.Vars.All() {
+				if err := taskRangeFunc(k, v); err != nil {
+					return nil, err
+				}
+			}
+		}
+
+		// Apply IncludeVars (vars passed via includes: section)
+		if t.IncludeVars != nil {
+			for k, v := range t.IncludeVars.All() {
+				if err := rangeFunc(k, v); err != nil {
+					return nil, err
+				}
+			}
+		}
+	} else {
+		// Legacy behavior: use merged vars
+		for k, v := range c.TaskfileEnv.All() {
+			if err := rangeFunc(k, v); err != nil {
+				return nil, err
+			}
+		}
+		for k, v := range c.TaskfileVars.All() {
+			if err := rangeFunc(k, v); err != nil {
+				return nil, err
+			}
+		}
+		if t != nil {
+			for k, v := range t.IncludeVars.All() {
+				if err := rangeFunc(k, v); err != nil {
+					return nil, err
+				}
+			}
+			for k, v := range t.IncludedTaskfileVars.All() {
+				if err := taskRangeFunc(k, v); err != nil {
+					return nil, err
+				}
 			}
 		}
 	}
