@@ -192,6 +192,8 @@ github.com/stretchr/testify v1.11.1 h1:7s2iGBzp5EwR7/aIZr8ao5+dra3wiQyKjjFuvgVKu
 github.com/stretchr/testify v1.11.1/go.mod h1:wZwfW3scLgRK+23gO65QZefKpKQRnfz6sD981Nm4B6U=
 github.com/u-root/u-root v0.15.1-0.20251014130006-62f7144b33da h1:Vst9Tvq3G6f6pYBvxy7coi2arDsnOZ3Mkj8MkNarSK8=
 github.com/u-root/u-root v0.15.1-0.20251014130006-62f7144b33da/go.mod h1:R49zft13memK20EgFAvmTbXBS0t29UvglnM0BCA1ldQ=
+github.com/u-root/u-root v0.15.1-0.20251208185023-2f8c7e763cf8 h1:cq+DjLAjz3ZPwh0+G571O/jMH0c0DzReDPLjQGL2/BA=
+github.com/u-root/u-root v0.15.1-0.20251208185023-2f8c7e763cf8/go.mod h1:JNauIV2zopCBv/6o+umxcT3bKe8YUqYJaTZQYSYpKss=
 github.com/u-root/uio v0.0.0-20240224005618-d2acac8f3701 h1:pyC9PaHYZFgEKFdlp3G8RaCKgVpHZnecvArXvPXcFkM=
 github.com/u-root/uio v0.0.0-20240224005618-d2acac8f3701/go.mod h1:P3a5rG4X7tI17Nn3aOIAYr5HbIMukwXG0urG0WuL8OA=
 github.com/ulikunitz/xz v0.5.15 h1:9DNdB5s+SgV3bQ2ApL10xRc35ck0DuIX/isZvIk+ubY=
@@ -291,5 +293,7 @@ honnef.co/go/tools v0.0.0-20190102054323-c2f93a96b099/go.mod h1:rf3lG4BRIbNafJWh
 honnef.co/go/tools v0.0.0-20190523083050-ea95bdfd59fc/go.mod h1:rf3lG4BRIbNafJWhAfAdb/ePZxsR/4RtNHQocxwk9r4=
 mvdan.cc/sh/moreinterp v0.0.0-20251109230715-65adef8e2c5b h1:vTpx76nZDTP/BAGnnhEXYjM+8nPKe9+I86qCErBvjCw=
 mvdan.cc/sh/moreinterp v0.0.0-20251109230715-65adef8e2c5b/go.mod h1:bDyKbUYKqkFunWmxxuSPrkYpln9QZcUsqu7W128qYW4=
+mvdan.cc/sh/moreinterp v0.0.0-20251226130044-773eb7b92782 h1:iaIC5j+KzXzmU0qEDGPv+TVieGJjGTZOvj4VBVJlqn4=
+mvdan.cc/sh/moreinterp v0.0.0-20251226130044-773eb7b92782/go.mod h1:Qy/zdaMDxq9sT72Gi43K3gsV+TtTohyDO3f1cyBVwuo=
 mvdan.cc/sh/v3 v3.12.0 h1:ejKUR7ONP5bb+UGHGEG/k9V5+pRVIyD+LsZz7o8KHrI=
 mvdan.cc/sh/v3 v3.12.0/go.mod h1:Se6Cj17eYSn+sNooLZiEUnNNmNxg0imoYlTu4CyaGyg=
