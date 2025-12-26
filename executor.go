@@ -63,6 +63,7 @@ type (
 
 		// Internal
 		Taskfile           *ast.Taskfile
+		Graph              *ast.TaskfileGraph
 		Logger             *logger.Logger
 		Compiler           *Compiler
 		Output             output.Output

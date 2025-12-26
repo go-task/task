@@ -104,6 +104,7 @@ func (e *Executor) readTaskfile(node taskfile.Node) error {
 		}
 		return err
 	}
+	e.Graph = graph
 	if e.Taskfile, err = graph.Merge(); err != nil {
 		return err
 	}
