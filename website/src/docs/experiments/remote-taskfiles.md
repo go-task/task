@@ -320,6 +320,8 @@ remote:
 - **Type**: `boolean`
 - **Default**: `false`
 - **Description**: Allow insecure connections when fetching remote Taskfiles
+- **CLI equivalent**: `--insecure`
+- **Environment variable**: `TASK_REMOTE_INSECURE`
 
 ```yaml
 remote:
@@ -331,6 +333,8 @@ remote:
 - **Type**: `boolean`
 - **Default**: `false`
 - **Description**: Work in offline mode, preventing remote Taskfile fetching
+- **CLI equivalent**: `--offline`
+- **Environment variable**: `TASK_REMOTE_OFFLINE`
 
 ```yaml
 remote:
@@ -343,6 +347,8 @@ remote:
 - **Default**: 10s
 - **Pattern**: `^[0-9]+(ns|us|µs|ms|s|m|h)$`
 - **Description**: Timeout duration for remote operations (e.g., '30s', '5m')
+- **CLI equivalent**: `--timeout`
+- **Environment variable**: `TASK_REMOTE_TIMEOUT`
 
 ```yaml
 remote:
@@ -356,6 +362,8 @@ remote:
 - **Pattern**: `^[0-9]+(ns|us|µs|ms|s|m|h)$`
 - **Description**: Cache expiry duration for remote Taskfiles (e.g., '1h',
   '24h')
+- **CLI equivalent**: `--expiry`
+- **Environment variable**: `TASK_REMOTE_CACHE_EXPIRY`
 
 ```yaml
 remote:
@@ -369,7 +377,7 @@ remote:
 - **Description**: Directory where remote Taskfiles are cached. Can be an
   absolute path (e.g., `/var/cache/task`) or relative to the Taskfile directory.
 - **CLI equivalent**: `--remote-cache-dir`
-- **Environment variable**: `TASK_REMOTE_DIR` (lowest priority)
+- **Environment variable**: `TASK_REMOTE_CACHE_DIR`
 
 ```yaml
 remote:
@@ -383,6 +391,7 @@ remote:
 - **Description**: List of trusted hosts for remote Taskfiles. Hosts in this
   list will not prompt for confirmation when downloading Taskfiles
 - **CLI equivalent**: `--trusted-hosts`
+- **Environment variable**: `TASK_REMOTE_TRUSTED_HOSTS` (comma-separated)
 
 ```yaml
 remote:
