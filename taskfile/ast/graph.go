@@ -45,6 +45,18 @@ func (tfg *TaskfileGraph) Visualize(filename string) error {
 	return draw.DOT(tfg.Graph, f)
 }
 
+// Root returns the root vertex of the graph (the entrypoint Taskfile).
+func (tfg *TaskfileGraph) Root() (*TaskfileVertex, error) {
+	hashes, err := graph.TopologicalSort(tfg.Graph)
+	if err != nil {
+		return nil, err
+	}
+	if len(hashes) == 0 {
+		return nil, fmt.Errorf("task: graph has no vertices")
+	}
+	return tfg.Vertex(hashes[0])
+}
+
 func (tfg *TaskfileGraph) Merge() (*Taskfile, error) {
 	hashes, err := graph.TopologicalSort(tfg.Graph)
 	if err != nil {
