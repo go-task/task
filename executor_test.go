@@ -1181,16 +1181,17 @@ func TestIf(t *testing.T) {
 	}
 }
 
-func TestScopedIncludes(t *testing.T) {
-	t.Parallel()
+func TestScopedTaskfiles(t *testing.T) {
+	// NOTE: Don't use t.Parallel() here because enableExperimentForTest modifies
+	// global state that can affect other tests running in parallel.
 
 	// Legacy tests (without experiment) - vars should be merged globally
 	t.Run("legacy", func(t *testing.T) {
-		// Test with scoped includes disabled (legacy) - vars should be merged globally
+		// Test with scoped taskfiles disabled (legacy) - vars should be merged globally
 		NewExecutorTest(t,
 			WithName("default"),
 			WithExecutorOptions(
-				task.WithDir("testdata/scoped_includes"),
+				task.WithDir("testdata/scoped_taskfiles"),
 				task.WithSilent(true),
 			),
 		)
@@ -1198,7 +1199,7 @@ func TestScopedIncludes(t *testing.T) {
 		NewExecutorTest(t,
 			WithName("cross-include"),
 			WithExecutorOptions(
-				task.WithDir("testdata/scoped_includes"),
+				task.WithDir("testdata/scoped_taskfiles"),
 				task.WithSilent(true),
 			),
 			WithTask("a:try-access-b"),
@@ -1207,13 +1208,13 @@ func TestScopedIncludes(t *testing.T) {
 
 	// Scoped tests (with experiment enabled) - vars should be isolated
 	t.Run("scoped", func(t *testing.T) {
-		enableExperimentForTest(t, &experiments.ScopedIncludes, 1)
+		enableExperimentForTest(t, &experiments.ScopedTaskfiles, 1)
 
-		// Test with scoped includes enabled - vars should be isolated
+		// Test with scoped taskfiles enabled - vars should be isolated
 		NewExecutorTest(t,
 			WithName("default"),
 			WithExecutorOptions(
-				task.WithDir("testdata/scoped_includes"),
+				task.WithDir("testdata/scoped_taskfiles"),
 				task.WithSilent(true),
 			),
 		)
@@ -1221,7 +1222,7 @@ func TestScopedIncludes(t *testing.T) {
 		NewExecutorTest(t,
 			WithName("inheritance-a"),
 			WithExecutorOptions(
-				task.WithDir("testdata/scoped_includes"),
+				task.WithDir("testdata/scoped_taskfiles"),
 				task.WithSilent(true),
 			),
 			WithTask("a:print"),
@@ -1230,7 +1231,7 @@ func TestScopedIncludes(t *testing.T) {
 		NewExecutorTest(t,
 			WithName("isolation-b"),
 			WithExecutorOptions(
-				task.WithDir("testdata/scoped_includes"),
+				task.WithDir("testdata/scoped_taskfiles"),
 				task.WithSilent(true),
 			),
 			WithTask("b:print"),
@@ -1239,10 +1240,37 @@ func TestScopedIncludes(t *testing.T) {
 		NewExecutorTest(t,
 			WithName("cross-include"),
 			WithExecutorOptions(
-				task.WithDir("testdata/scoped_includes"),
+				task.WithDir("testdata/scoped_taskfiles"),
 				task.WithSilent(true),
 			),
 			WithTask("a:try-access-b"),
+		)
+		// Test env namespace: {{.env.XXX}} should access env vars
+		NewExecutorTest(t,
+			WithName("env-namespace"),
+			WithExecutorOptions(
+				task.WithDir("testdata/scoped_taskfiles"),
+				task.WithSilent(true),
+			),
+			WithTask("print-env"),
+		)
+		// Test env separation: {{.ROOT_ENV}} at root should be empty (env not at root level)
+		NewExecutorTest(t,
+			WithName("env-separation"),
+			WithExecutorOptions(
+				task.WithDir("testdata/scoped_taskfiles"),
+				task.WithSilent(true),
+			),
+			WithTask("test-env-separation"),
+		)
+		// Test include env: include's env is accessible via {{.env.XXX}}
+		NewExecutorTest(t,
+			WithName("include-env"),
+			WithExecutorOptions(
+				task.WithDir("testdata/scoped_taskfiles"),
+				task.WithSilent(true),
+			),
+			WithTask("a:print-env"),
 		)
 	})
 }

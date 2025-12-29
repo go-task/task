@@ -1,0 +1,3 @@
+ROOT_ENV=env_from_root
+SHARED_ENV=shared_from_root
+PATH_EXISTS=yes

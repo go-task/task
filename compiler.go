@@ -47,7 +47,16 @@ func (c *Compiler) FastGetVariables(t *ast.Task, call *Call) (*ast.Vars, error) 
 }
 
 func (c *Compiler) getVariables(t *ast.Task, call *Call, evaluateShVars bool) (*ast.Vars, error) {
-	result := env.GetEnviron()
+	// In scoped mode, OS env vars are in {{.env.XXX}} namespace, not at root
+	// In legacy mode, they are at root level
+	scopedMode := experiments.ScopedTaskfiles.Enabled() && t != nil && t.Location != nil && c.Graph != nil
+	var result *ast.Vars
+	if scopedMode {
+		result = ast.NewVars()
+	} else {
+		result = env.GetEnviron()
+	}
+
 	specialVars, err := c.getSpecialVars(t, call)
 	if err != nil {
 		return nil, err
@@ -107,20 +116,64 @@ func (c *Compiler) getVariables(t *ast.Task, call *Call, evaluateShVars bool) (*
 	}
 
 	// When scoped includes is enabled, resolve vars from DAG instead of merged vars
-	if experiments.ScopedIncludes.Enabled() && t != nil && t.Location != nil && c.Graph != nil {
+	if scopedMode {
 		// Get root Taskfile for inheritance (parent vars are always accessible)
 		rootVertex, err := c.Graph.Root()
 		if err != nil {
 			return nil, err
 		}
 
-		// Apply root env
+		// === ENV NAMESPACE ===
+		// Create a separate map for environment variables
+		// Accessible via {{.env.VAR}} in templates
+		envMap := make(map[string]any)
+
+		// 1. OS environment variables
+		for _, e := range os.Environ() {
+			k, v, _ := strings.Cut(e, "=")
+			envMap[k] = v
+		}
+
+		// Helper to resolve env vars and add to envMap
+		resolveEnvToMap := func(k string, v ast.Var, dir string) error {
+			cache := &templater.Cache{Vars: result}
+			newVar := templater.ReplaceVar(v, cache)
+			if err := cache.Err(); err != nil {
+				return err
+			}
+			// Static value
+			if newVar.Value != nil || newVar.Sh == nil {
+				if newVar.Value != nil {
+					envMap[k] = newVar.Value
+				}
+				return nil
+			}
+			// Dynamic value (sh:)
+			if evaluateShVars {
+				// Build env slice for sh execution (includes envMap values)
+				envSlice := os.Environ()
+				for ek, ev := range envMap {
+					if s, ok := ev.(string); ok {
+						envSlice = append(envSlice, fmt.Sprintf("%s=%s", ek, s))
+					}
+				}
+				static, err := c.HandleDynamicVar(newVar, dir, envSlice)
+				if err != nil {
+					return err
+				}
+				envMap[k] = static
+			}
+			return nil
+		}
+
+		// 2. Root taskfile env
 		for k, v := range rootVertex.Taskfile.Env.All() {
-			if err := rangeFunc(k, v); err != nil {
+			if err := resolveEnvToMap(k, v, c.Dir); err != nil {
 				return nil, err
 			}
 		}
 
+		// === VARS (at root level) ===
 		// Apply root vars
 		for k, v := range rootVertex.Taskfile.Vars.All() {
 			if err := rangeFunc(k, v); err != nil {
@@ -134,9 +187,9 @@ func (c *Compiler) getVariables(t *ast.Task, call *Call, evaluateShVars bool) (*
 			if err != nil {
 				return nil, err
 			}
-			// Apply include's env (overrides root's env)
+			// Apply include's env to envMap (overrides root's env)
 			for k, v := range includeVertex.Taskfile.Env.All() {
-				if err := taskRangeFunc(k, v); err != nil {
+				if err := resolveEnvToMap(k, v, filepathext.SmartJoin(c.Dir, t.Dir)); err != nil {
 					return nil, err
 				}
 			}
@@ -156,6 +209,9 @@ func (c *Compiler) getVariables(t *ast.Task, call *Call, evaluateShVars bool) (*
 				}
 			}
 		}
+
+		// Inject env namespace into result
+		result.Set("env", ast.Var{Value: envMap})
 	} else {
 		// Legacy behavior: use merged vars
 		for k, v := range c.TaskfileEnv.All() {

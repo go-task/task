@@ -16,10 +16,10 @@ const envPrefix = "TASK_X_"
 
 // Active experiments.
 var (
-	GentleForce     Experiment
-	RemoteTaskfiles Experiment
-	EnvPrecedence   Experiment
-	ScopedIncludes  Experiment
+	GentleForce      Experiment
+	RemoteTaskfiles  Experiment
+	EnvPrecedence    Experiment
+	ScopedTaskfiles  Experiment
 )
 
 // Inactive experiments. These are experiments that cannot be enabled, but are
@@ -44,7 +44,7 @@ func ParseWithConfig(dir string, config *ast.TaskRC) {
 	GentleForce = New("GENTLE_FORCE", config, 1)
 	RemoteTaskfiles = New("REMOTE_TASKFILES", config, 1)
 	EnvPrecedence = New("ENV_PRECEDENCE", config, 1)
-	ScopedIncludes = New("SCOPED_INCLUDES", config, 1)
+	ScopedTaskfiles = New("SCOPED_TASKFILES", config, 1)
 	AnyVariables = New("ANY_VARIABLES", config)
 	MapVariables = New("MAP_VARIABLES", config)
 }

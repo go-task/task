@@ -1,0 +1,3 @@
+A:INC_A_ENV=env_from_a
+A:ROOT_ENV=env_from_root
+A:SHARED_ENV=shared_from_a

@@ -106,7 +106,7 @@ func (e *Executor) readTaskfile(node taskfile.Node) error {
 		return err
 	}
 	e.Graph = graph
-	if e.Taskfile, err = graph.Merge(experiments.ScopedIncludes.Enabled()); err != nil {
+	if e.Taskfile, err = graph.Merge(experiments.ScopedTaskfiles.Enabled()); err != nil {
 		return err
 	}
 	return nil
