@@ -26,6 +26,7 @@ type Compiler struct {
 
 	TaskfileEnv  *ast.Vars
 	TaskfileVars *ast.Vars
+	CLIVars      *ast.Vars // CLI vars passed via command line (e.g., task foo VAR=value)
 	Graph        *ast.TaskfileGraph
 
 	Logger *logger.Logger
@@ -210,30 +211,49 @@ func (c *Compiler) getVariables(t *ast.Task, call *Call, evaluateShVars bool) (*
 			}
 		}
 
-		// Inject env namespace into result
-		result.Set("env", ast.Var{Value: envMap})
-	} else {
-		// Legacy behavior: use merged vars
-		for k, v := range c.TaskfileEnv.All() {
-			if err := rangeFunc(k, v); err != nil {
-				return nil, err
-			}
-		}
-		for k, v := range c.TaskfileVars.All() {
-			if err := rangeFunc(k, v); err != nil {
-				return nil, err
-			}
-		}
-		if t != nil {
-			for k, v := range t.IncludeVars.All() {
-				if err := rangeFunc(k, v); err != nil {
-					return nil, err
-				}
-			}
-			for k, v := range t.IncludedTaskfileVars.All() {
+		// Apply task-level vars
+		if call != nil {
+			for k, v := range t.Vars.All() {
 				if err := taskRangeFunc(k, v); err != nil {
 					return nil, err
 				}
+			}
+		}
+
+		// CLI vars have highest priority - applied last to override everything
+		for k, v := range c.CLIVars.All() {
+			if err := rangeFunc(k, v); err != nil {
+				return nil, err
+			}
+		}
+
+		// Inject env namespace into result
+		result.Set("env", ast.Var{Value: envMap})
+
+		return result, nil
+	}
+
+	// === LEGACY MODE ===
+	// Legacy behavior: use merged vars
+	for k, v := range c.TaskfileEnv.All() {
+		if err := rangeFunc(k, v); err != nil {
+			return nil, err
+		}
+	}
+	for k, v := range c.TaskfileVars.All() {
+		if err := rangeFunc(k, v); err != nil {
+			return nil, err
+		}
+	}
+	if t != nil {
+		for k, v := range t.IncludeVars.All() {
+			if err := rangeFunc(k, v); err != nil {
+				return nil, err
+			}
+		}
+		for k, v := range t.IncludedTaskfileVars.All() {
+			if err := taskRangeFunc(k, v); err != nil {
+				return nil, err
 			}
 		}
 	}
@@ -242,6 +262,7 @@ func (c *Compiler) getVariables(t *ast.Task, call *Call, evaluateShVars bool) (*
 		return result, nil
 	}
 
+	// Legacy order: CLI vars, then task vars (task vars override CLI)
 	for k, v := range call.Vars.All() {
 		if err := rangeFunc(k, v); err != nil {
 			return nil, err

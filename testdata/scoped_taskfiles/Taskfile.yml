@@ -36,3 +36,9 @@ tasks:
       # In scoped mode, {{.ROOT_ENV}} should be empty (env not at root)
       # In legacy mode, {{.ROOT_ENV}} would have the value
       - echo "ROOT_ENV_AT_ROOT={{.ROOT_ENV}}"
+
+  prout:
+    vars:
+      LOL: prout_from_root
+    cmds:
+      - echo "{{.LOL}}"
