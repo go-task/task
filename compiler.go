@@ -218,6 +218,12 @@ func (c *Compiler) getVariables(t *ast.Task, call *Call, evaluateShVars bool) (*
 					return nil, err
 				}
 			}
+			// Apply call vars (vars passed when calling a task)
+			for k, v := range call.Vars.All() {
+				if err := taskRangeFunc(k, v); err != nil {
+					return nil, err
+				}
+			}
 		}
 
 		// CLI vars have highest priority - applied last to override everything

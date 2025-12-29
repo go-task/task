@@ -1272,5 +1272,14 @@ func TestScopedTaskfiles(t *testing.T) {
 			),
 			WithTask("a:print-env"),
 		)
+		// Test call vars: vars passed when calling a task override task vars
+		NewExecutorTest(t,
+			WithName("call-vars"),
+			WithExecutorOptions(
+				task.WithDir("testdata/scoped_taskfiles"),
+				task.WithSilent(true),
+			),
+			WithTask("call-with-vars"),
+		)
 	})
 }

@@ -98,8 +98,9 @@ still inherit variables from their parent.
 
 ### Example
 
-```yaml
-# Taskfile.yml
+::: code-group
+
+```yaml [Taskfile.yml]
 version: '3'
 
 vars:
@@ -110,8 +111,7 @@ includes:
   web: ./web
 ```
 
-```yaml
-# api/Taskfile.yml
+```yaml [api/Taskfile.yml]
 version: '3'
 
 vars:
@@ -130,8 +130,7 @@ tasks:
       - echo "WEB_VAR={{.WEB_VAR}}"
 ```
 
-```yaml
-# web/Taskfile.yml
+```yaml [web/Taskfile.yml]
 version: '3'
 
 vars:
@@ -150,10 +149,23 @@ tasks:
       - echo "API_VAR={{.API_VAR}}"
 ```
 
-## CLI Variables Priority
+:::
 
-With this experiment, CLI variables (passed as `task foo VAR=value`) have the
-highest priority and will override task-level variables.
+## Variable Priority
+
+With this experiment, variables follow a clear priority order (lowest to
+highest):
+
+| Priority | Source                   | Description                              |
+| -------- | ------------------------ | ---------------------------------------- |
+| 1        | Root Taskfile vars       | `vars:` in the root Taskfile             |
+| 2        | Include Taskfile vars    | `vars:` in the included Taskfile         |
+| 3        | Include passthrough vars | `includes: name: vars:` from parent      |
+| 4        | Task vars                | `tasks: name: vars:` in the task         |
+| 5        | Call vars                | `task: name` with `vars:` when calling   |
+| 6        | CLI vars                 | `task foo VAR=value` on command line     |
+
+### Example: Call vars override task vars
 
 ```yaml
 version: '3'
@@ -161,14 +173,28 @@ version: '3'
 tasks:
   greet:
     vars:
-      NAME: from_task
+      NAME: default
     cmds:
       - echo "Hello {{.NAME}}"
+
+  caller:
+    cmds:
+      - task: greet
+        vars:
+          NAME: from_caller
 ```
 
 ```bash
-# CLI vars now override task vars
-TASK_X_SCOPED_TASKFILES=1 task greet NAME=cli
+# Direct call uses task default
+task greet
+# Output: Hello default
+
+# Call vars override task vars
+task caller
+# Output: Hello from_caller
+
+# CLI vars override everything
+task greet NAME=cli
 # Output: Hello cli
 ```
 

@@ -42,3 +42,16 @@ tasks:
       LOL: prout_from_root
     cmds:
       - echo "{{.LOL}}"
+
+  call-with-vars:
+    desc: Test calling a task with vars override
+    cmds:
+      - task: print-name
+        vars:
+          NAME: from_caller
+
+  print-name:
+    vars:
+      NAME: default_name
+    cmds:
+      - echo "NAME={{.NAME}}"
