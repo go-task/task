@@ -120,72 +120,6 @@ func taskToMap(t *ast.Task) map[string]any {
 	return result
 }
 
-// getTaskMapForTASKS returns a cached map representation of a task for use in TASKS variable.
-// This does a lightweight compilation (just expands basic properties) and caches the result.
-func (e *Executor) getTaskMapForTASKS(taskName string, origTask *ast.Task) (map[string]any, error) {
-	// Check cache first
-	e.taskMapCacheMutex.RLock()
-	if cached, ok := e.taskMapCache[taskName]; ok {
-		e.taskMapCacheMutex.RUnlock()
-		return cached, nil
-	}
-	e.taskMapCacheMutex.RUnlock()
-
-	// Get variables for this task (fast, no shell evaluation)
-	vars, err := e.Compiler.FastGetVariables(origTask, &Call{Task: taskName})
-	if err != nil {
-		return nil, err
-	}
-
-	cache := &templater.Cache{Vars: vars}
-
-	// Lightweight compilation - just expand basic properties
-	expanded := ast.Task{
-		Task:        origTask.Task,
-		Sources:     templater.ReplaceGlobs(origTask.Sources, cache),
-		Generates:   templater.ReplaceGlobs(origTask.Generates, cache),
-		Dir:         templater.Replace(origTask.Dir, cache),
-		Label:       templater.Replace(origTask.Label, cache),
-		Desc:        templater.Replace(origTask.Desc, cache),
-		Method:      templater.Replace(origTask.Method, cache),
-		Prefix:      templater.Replace(origTask.Prefix, cache),
-		Run:         templater.Replace(origTask.Run, cache),
-		Silent:      origTask.Silent,
-		Interactive: origTask.Interactive,
-		Internal:    origTask.Internal,
-		IgnoreError: origTask.IgnoreError,
-		Watch:       origTask.Watch,
-		Failfast:    origTask.Failfast,
-		Aliases:     origTask.Aliases,
-		Dotenv:      templater.Replace(origTask.Dotenv, cache),
-	}
-
-	// Expand Dir
-	expanded.Dir, err = execext.ExpandLiteral(expanded.Dir)
-	if err != nil {
-		return nil, err
-	}
-	if e.Dir != "" {
-		expanded.Dir = filepathext.SmartJoin(e.Dir, expanded.Dir)
-	}
-	if expanded.Prefix == "" {
-		expanded.Prefix = expanded.Task
-	}
-
-	// Convert to map
-	taskMap := taskToMap(&expanded)
-
-	// Cache it
-	e.taskMapCacheMutex.Lock()
-	if e.taskMapCache == nil {
-		e.taskMapCache = make(map[string]map[string]any)
-	}
-	e.taskMapCache[taskName] = taskMap
-	e.taskMapCacheMutex.Unlock()
-
-	return taskMap, nil
-}
-
 func (e *Executor) compiledTask(call *Call, evaluateShVars bool) (*ast.Task, error) {
 	origTask, err := e.GetTask(call)
 	if err != nil {
@@ -252,30 +186,9 @@ func (e *Executor) compiledTask(call *Call, evaluateShVars bool) (*ast.Task, err
 		new.Prefix = new.Task
 	}
 
-	// Initialize TASKS map with all tasks
+	// Add TASKS.self variable after basic properties are expanded
 	tasksMap := make(map[string]any)
-
-	// Add self (current task) - we already have it partially compiled
 	tasksMap["self"] = taskToMap(&new)
-
-	// Add all other tasks from the Taskfile
-	for taskName, origTask := range e.Taskfile.Tasks.All(nil) {
-		// Skip if it's the current task (already added as "self")
-		if taskName == call.Task {
-			continue
-		}
-
-		// Get or compute task map (cached)
-		taskMap, err := e.getTaskMapForTASKS(taskName, origTask)
-		if err != nil {
-			// If we can't compile a task, skip it rather than failing
-			// This allows TASKS.self to work even if other tasks have issues
-			continue
-		}
-		tasksMap[taskName] = taskMap
-	}
-
-	// Set TASKS variable
 	vars.Set("TASKS", ast.Var{Value: tasksMap})
 	cache.ResetCache()
 
