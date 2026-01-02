@@ -1,5 +1,7 @@
 version: '3'
 
+method: none
+
 tasks:
 
   _ref:
