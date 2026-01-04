@@ -22,24 +22,24 @@ import (
 
 func main() {
 	if err := run(); err != nil {
-		l := &logger.Logger{
+		l := logger.NewLogger(logger.LoggerOptions{
 			Stdout:  os.Stdout,
 			Stderr:  os.Stderr,
 			Verbose: flags.Verbose,
 			Color:   flags.Color,
-		}
+		})
 		if err, ok := err.(*errors.TaskRunError); ok && flags.ExitCode {
 			emitCIErrorAnnotation(err)
-			l.Errf(logger.Red, "%v\n", err)
+			l.Errorf("%v\n", err)
 			os.Exit(err.TaskExitCode())
 		}
 		if err, ok := err.(errors.TaskError); ok {
 			emitCIErrorAnnotation(err)
-			l.Errf(logger.Red, "%v\n", err)
+			l.Errorf("%v\n", err)
 			os.Exit(err.Code())
 		}
 		emitCIErrorAnnotation(err)
-		l.Errf(logger.Red, "%v\n", err)
+		l.Errorf("%v\n", err)
 		os.Exit(errors.CodeUnknown)
 	}
 	os.Exit(errors.CodeOk)
@@ -58,12 +58,13 @@ func emitCIErrorAnnotation(err error) {
 }
 
 func run() error {
-	log := &logger.Logger{
-		Stdout:  os.Stdout,
-		Stderr:  os.Stderr,
-		Verbose: flags.Verbose,
-		Color:   flags.Color,
-	}
+	log := logger.NewLogger(logger.LoggerOptions{
+		Stdout:    os.Stdout,
+		Stderr:    os.Stderr,
+		Verbose:   flags.Verbose,
+		Color:     flags.Color,
+		LogFormat: flags.LogFormat,
+	})
 
 	if err := flags.Validate(); err != nil {
 		return err
@@ -109,10 +110,8 @@ func run() error {
 			return err
 		}
 		if !flags.Silent {
-			if flags.Verbose {
-				log.Outf(logger.Default, "%s\n", task.DefaultTaskfile)
-			}
-			log.Outf(logger.Green, "Taskfile created: %s\n", filepathext.TryAbsToRel(finalPath))
+			log.VerboseOutf(logger.Default, "%s\n", task.DefaultTaskfile)
+			log.OutfDirect(logger.Green, "Taskfile created: %s\n", filepathext.TryAbsToRel(finalPath))
 		}
 		return nil
 	}

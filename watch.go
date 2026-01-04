@@ -41,7 +41,7 @@ func (e *Executor) watchTasks(calls ...*Call) error {
 			if err == nil {
 				e.Logger.Errf(logger.Green, "task: task \"%s\" finished running\n", c.Task)
 			} else if !isContextError(err) {
-				e.Logger.Errf(logger.Red, "%v\n", err)
+				e.Logger.Errorf("%v\n", err)
 			}
 		}()
 	}
@@ -91,13 +91,13 @@ func (e *Executor) watchTasks(calls ...*Call) error {
 						}
 						t, err := e.GetTask(c)
 						if err != nil {
-							e.Logger.Errf(logger.Red, "%v\n", err)
+							e.Logger.Errorf("%v\n", err)
 							return
 						}
 						baseDir := filepathext.SmartJoin(e.Dir, t.Dir)
 						files, err := e.collectSources(calls)
 						if err != nil {
-							e.Logger.Errf(logger.Red, "%v\n", err)
+							e.Logger.Errorf("%v\n", err)
 							return
 						}
 
@@ -110,7 +110,7 @@ func (e *Executor) watchTasks(calls ...*Call) error {
 						if err == nil {
 							e.Logger.Errf(logger.Green, "task: task \"%s\" finished running\n", c.Task)
 						} else if !isContextError(err) {
-							e.Logger.Errf(logger.Red, "%v\n", err)
+							e.Logger.Errorf("%v\n", err)
 						}
 					}()
 				}
@@ -120,7 +120,7 @@ func (e *Executor) watchTasks(calls ...*Call) error {
 					cancel()
 					return
 				default:
-					e.Logger.Errf(logger.Red, "%v\n", err)
+					e.Logger.Errorf("%v\n", err)
 				}
 			}
 		}
@@ -134,7 +134,7 @@ func (e *Executor) watchTasks(calls ...*Call) error {
 		// from time to time.
 		for {
 			if err := e.registerWatchedDirs(w, calls...); err != nil {
-				e.Logger.Errf(logger.Red, "%v\n", err)
+				e.Logger.Errorf("%v\n", err)
 			}
 			time.Sleep(5 * time.Second)
 		}

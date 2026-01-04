@@ -51,6 +51,7 @@ type (
 		Concurrency         int
 		Interval            time.Duration
 		Failfast            bool
+		LogFormat           string
 
 		// I/O
 		Stdin  io.Reader
@@ -559,4 +560,17 @@ type failfastOption struct {
 
 func (o *failfastOption) ApplyToExecutor(e *Executor) {
 	e.Failfast = o.failfast
+}
+
+// WithLogFormat sets the log format.
+func WithLogFormat(logFormat string) ExecutorOption {
+	return &logFormatOption{logFormat: logFormat}
+}
+
+type logFormatOption struct {
+	logFormat string
+}
+
+func (o *logFormatOption) ApplyToExecutor(e *Executor) {
+	e.LogFormat = o.logFormat
 }

@@ -1,12 +1,15 @@
 package task
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"os"
 	"runtime"
 	"slices"
+	"strings"
 	"sync/atomic"
+	"time"
 
 	"golang.org/x/sync/errgroup"
 	"mvdan.cc/sh/v3/interp"
@@ -15,6 +18,7 @@ import (
 	"github.com/go-task/task/v3/internal/env"
 	"github.com/go-task/task/v3/internal/execext"
 	"github.com/go-task/task/v3/internal/fingerprint"
+	"github.com/go-task/task/v3/internal/hash"
 	"github.com/go-task/task/v3/internal/logger"
 	"github.com/go-task/task/v3/internal/output"
 	"github.com/go-task/task/v3/internal/slicesext"
@@ -152,8 +156,22 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) error {
 	release := e.acquireConcurrencyLimit()
 	defer release()
 
-	if err = e.startExecution(ctx, t, func(ctx context.Context) error {
+	if err = e.startExecution(ctx, t, func(ctx context.Context) (err error) {
 		e.Logger.VerboseErrf(logger.Magenta, "task: %q started\n", call.Task)
+
+		// Advanced logging.
+		hash := func() string {
+			h, _ := hash.Hash(t)
+			hp := strings.Split(h, ":")
+			return hp[len(hp)-1]
+		}()
+		start := time.Now()
+		e.Logger.Taskf("Task started", "task", call.Task, "action", "start", "hash", hash)
+		defer func() {
+			elapsed := time.Since(start).String()
+			e.Logger.Taskf("Task finished", "task", call.Task, "action", "finish", "hash", hash, "duration", elapsed, "error", err)
+		}()
+
 		if err := e.runDeps(ctx, t); err != nil {
 			return err
 		}
@@ -205,7 +223,7 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) error {
 		}
 
 		if err := e.mkdir(t); err != nil {
-			e.Logger.Errf(logger.Red, "task: cannot make directory %q: %v\n", t.Dir, err)
+			e.Logger.Errorf("task: cannot make directory %q: %v\n", t.Dir, err)
 		}
 
 		var deferredExitCode uint8
@@ -302,7 +320,7 @@ func (e *Executor) runDeferred(t *ast.Task, call *Call, i int, vars *ast.Vars, d
 	}
 }
 
-func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call *Call, i int) error {
+func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call *Call, i int) (err error) {
 	cmd := t.Cmds[i]
 
 	switch {
@@ -342,6 +360,27 @@ func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call *Call, i in
 		}
 		stdOut, stdErr, closer := outputWrapper.WrapWriter(e.Stdout, e.Stderr, t.Prefix, outputTemplater)
 
+		// Advanced logging.
+		hash := func() string {
+			h, _ := hash.Hash(t)
+			hp := strings.Split(h, ":")
+			return hp[len(hp)-1]
+		}()
+		start := time.Now()
+		e.Logger.Taskf("Command started", "task", t.Name(), "command", cmd.Cmd, "action", "start", "hash", hash)
+		defer func() {
+			var stdout bytes.Buffer
+			var stderr bytes.Buffer
+			elapsed := time.Since(start).String()
+			if s, ok := stdOut.(*output.LoggerWriter); ok {
+				stdout = s.Buffer
+			}
+			if s, ok := stdErr.(*output.LoggerWriter); ok {
+				stderr = s.Buffer
+			}
+			e.Logger.Taskf("Command finished", "task", t.Name(), "command", cmd.Cmd, "action", "finish", "hash", hash, "duration", elapsed, "error", err, "stdout", stdout.String(), "stderr", stderr.String())
+		}()
+
 		err = execext.RunCommand(ctx, &execext.RunCommandOptions{
 			Command:   cmd.Cmd,
 			Dir:       t.Dir,
@@ -353,7 +392,7 @@ func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call *Call, i in
 			Stderr:    stdErr,
 		})
 		if closeErr := closer(err); closeErr != nil {
-			e.Logger.Errf(logger.Red, "task: unable to close writer: %v\n", closeErr)
+			e.Logger.Errorf("task: unable to close writer: %v\n", closeErr)
 		}
 		var exitCode interp.ExitStatus
 		if errors.As(err, &exitCode) && cmd.IgnoreError {

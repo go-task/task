@@ -83,6 +83,7 @@ var (
 	Timeout             time.Duration
 	CacheExpiryDuration time.Duration
 	RemoteCacheDir      string
+	LogFormat           string
 )
 
 func init() {
@@ -148,6 +149,7 @@ func init() {
 	pflag.BoolVarP(&Failfast, "failfast", "F", getConfig(config, func() *bool { return &config.Failfast }, false), "When running tasks in parallel, stop all tasks if one fails.")
 	pflag.BoolVarP(&Global, "global", "g", false, "Runs global Taskfile, from $HOME/{T,t}askfile.{yml,yaml}.")
 	pflag.BoolVar(&Experiments, "experiments", false, "Lists all the available experiments and whether or not they are enabled.")
+	pflag.StringVar(&LogFormat, "log", "", `Log format ("json" or "text").`)
 
 	// Gentle force experiment will override the force flag and add a new force-all flag
 	if experiments.GentleForce.Enabled() {
@@ -291,6 +293,7 @@ func (o *flagsOption) ApplyToExecutor(e *task.Executor) {
 		task.WithTaskSorter(sorter),
 		task.WithVersionCheck(true),
 		task.WithFailfast(Failfast),
+		task.WithLogFormat(LogFormat),
 	)
 }
 
