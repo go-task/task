@@ -359,7 +359,7 @@ func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call *Call, i in
 			var exitCode interp.ExitStatus
 			if !errors.As(err, &exitCode) {
 				// Convert the err to an interp.ExitStatus.
-				e.Logger.VerboseErrf(logger.Yellow, "task: [%s] command error: %v\n", t.Name(), err)
+				e.Logger.Errf(logger.Default, "%v\n", err)
 				err = interp.ExitStatus(1)
 			}
 			if cmd.IgnoreError {
