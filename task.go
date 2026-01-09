@@ -358,8 +358,10 @@ func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call *Call, i in
 		if err != nil {
 			var exitCode interp.ExitStatus
 			if !errors.As(err, &exitCode) {
-				// Convert the err to an interp.ExitStatus.
-				e.Logger.Errf(logger.Default, "%v\n", err)
+				if execext.UseGoCoreUtils {
+					// Convert the err from CoreUtil to an interp.ExitStatus.
+					e.Logger.Errf(logger.Default, "%v\n", err)
+				}
 				err = interp.ExitStatus(1)
 			}
 			if cmd.IgnoreError {
