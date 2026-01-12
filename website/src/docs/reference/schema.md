@@ -155,12 +155,14 @@ silent: true
 ### `dotenv`
 
 - **Type**: `[]string`
-- **Description**: Load environment variables from .env files
+- **Description**: Load environment variables from .env files. When the same
+  variable is defined in multiple files, the first file in the list takes
+  precedence.
 
 ```yaml
 dotenv:
-  - .env
-  - .env.local
+  - .env.local # Highest priority
+  - .env # Lowest priority
 ```
 
 ### `run`
