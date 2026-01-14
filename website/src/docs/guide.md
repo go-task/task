@@ -174,6 +174,19 @@ tasks:
       - echo "Using $KEYNAME and endpoint $ENDPOINT"
 ```
 
+When the same variable is defined in multiple dotenv files, the **first file in
+the list takes precedence**. This allows you to set up override patterns by
+placing higher-priority files first:
+
+```yaml
+version: '3'
+
+dotenv:
+  - .env.local # Highest priority - local developer overrides
+  - .env.{{.ENV}} # Environment-specific settings
+  - .env # Base defaults (lowest priority)
+```
+
 Dotenv files can also be specified at the task level:
 
 ```yaml
