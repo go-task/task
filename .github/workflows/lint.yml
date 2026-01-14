@@ -25,7 +25,7 @@ jobs:
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v9
         with:
-          version: v2.7.2
+          version: v2.8.0
 
   lint-jsonschema:
     runs-on: ubuntu-latest
