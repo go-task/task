@@ -225,3 +225,57 @@ To migrate your Taskfiles to use this experiment:
    - If your included Taskfiles rely on variables from sibling includes, you'll
      need to either move those variables to the root Taskfile or pass them
      explicitly via the `vars:` attribute in the `includes:` section.
+
+5. **Use `flatten: true` for gradual migration**:
+   - If an include needs the legacy behavior (access to sibling variables), you
+     can use `flatten: true` on that include as an escape hatch.
+
+## Using `flatten: true`
+
+The `flatten: true` option on includes bypasses scoping for that specific
+include. When an include has `flatten: true`:
+
+- Its variables are merged globally (legacy behavior)
+- It can access variables from sibling includes
+- Sibling includes can access its variables
+
+This is useful for gradual migration or when you have includes that genuinely
+need to share variables.
+
+### Example
+
+```yaml
+version: '3'
+
+vars:
+  ROOT_VAR: from_root
+
+includes:
+  # Scoped include - isolated from siblings
+  api:
+    taskfile: ./api
+
+  # Flattened include - uses legacy merge behavior
+  shared:
+    taskfile: ./shared
+    flatten: true
+
+  # Another scoped include
+  web:
+    taskfile: ./web
+```
+
+In this example:
+
+- `api` and `web` are isolated from each other (cannot see each other's vars)
+- `shared` uses legacy behavior: its vars are merged globally
+- Both `api` and `web` can access variables from `shared`
+- `shared` can access variables from `api` and `web`
+
+::: tip
+
+Use `flatten: true` sparingly. The goal of scoped taskfiles is to improve
+isolation and predictability. Flattening should be a temporary measure during
+migration or for utility includes that genuinely need global scope.
+
+:::

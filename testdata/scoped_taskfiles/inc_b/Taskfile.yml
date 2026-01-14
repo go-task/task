@@ -12,7 +12,6 @@ tasks:
   print:
     desc: Print vars from include B
     cmds:
-      - echo "B:VAR={{.VAR}}"
       - echo "B:UNIQUE_B={{.UNIQUE_B}}"
       - echo "B:ROOT_VAR={{.ROOT_VAR}}"
 

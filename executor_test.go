@@ -1281,5 +1281,15 @@ func TestScopedTaskfiles(t *testing.T) {
 			),
 			WithTask("call-with-vars"),
 		)
+		// Test nested includes (3 levels: root → a → nested)
+		// Verifies that nested includes inherit vars from their parent chain
+		NewExecutorTest(t,
+			WithName("nested"),
+			WithExecutorOptions(
+				task.WithDir("testdata/scoped_taskfiles"),
+				task.WithSilent(true),
+			),
+			WithTask("a:nested:print"),
+		)
 	})
 }

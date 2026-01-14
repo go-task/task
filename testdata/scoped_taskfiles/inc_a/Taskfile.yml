@@ -8,11 +8,13 @@ vars:
   VAR: value_from_a
   UNIQUE_A: only_in_a
 
+includes:
+  nested: ./nested
+
 tasks:
   print:
     desc: Print vars from include A
     cmds:
-      - echo "A:VAR={{.VAR}}"
       - echo "A:UNIQUE_A={{.UNIQUE_A}}"
       - echo "A:ROOT_VAR={{.ROOT_VAR}}"
 
