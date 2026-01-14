@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Fixed remote git Taskfiles: cloning now works without explicit ref, and
+  directory includes are properly resolved (#2602 by @vmaerten).
+
 ## v3.46.4 - 2025-12-24
 
 - Fixed regressions in completion script for Fish (#2591, #2604, #2592 by
