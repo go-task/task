@@ -22,7 +22,7 @@ func (e *Executor) InterceptInterruptSignals() {
 			sig := <-ch
 
 			if i+1 >= maxInterruptSignals {
-				e.Logger.Errf(logger.Red, "task: Signal received for the third time: %q. Forcing shutdown\n", sig)
+				e.Logger.Errorf("task: Signal received for the third time: %q. Forcing shutdown\n", sig)
 				os.Exit(1)
 			}
 

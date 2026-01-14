@@ -123,9 +123,9 @@ func TestGroupErrorOnlyShowsOutputOnError(t *testing.T) {
 
 func TestPrefixed(t *testing.T) { //nolint:paralleltest // cannot run in parallel
 	var b bytes.Buffer
-	l := &logger.Logger{
+	l := logger.NewLogger(logger.LoggerOptions{
 		Color: false,
-	}
+	})
 
 	var o output.Output = output.NewPrefixed(l)
 	w, _, cleanup := o.WrapWriter(&b, io.Discard, "prefix", nil)
@@ -159,9 +159,9 @@ func TestPrefixedWithColor(t *testing.T) {
 	color.NoColor = false
 
 	var b bytes.Buffer
-	l := &logger.Logger{
+	l := logger.NewLogger(logger.LoggerOptions{
 		Color: true,
-	}
+	})
 
 	var o output.Output = output.NewPrefixed(l)
 

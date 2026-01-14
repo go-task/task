@@ -24,8 +24,8 @@ func PrintSpaceBetweenSummaries(l *logger.Logger, i int) {
 		return
 	}
 
-	l.Outf(logger.Default, "\n")
-	l.Outf(logger.Default, "\n")
+	l.OutfDirect(logger.Default, "\n")
+	l.OutfDirect(logger.Default, "\n")
 }
 
 func PrintTask(l *logger.Logger, t *ast.Task) {
@@ -58,26 +58,26 @@ func printTaskSummary(l *logger.Logger, t *ast.Task) {
 	for i, line := range lines {
 		notLastLine := i+1 < len(lines)
 		if notLastLine || line != "" {
-			l.Outf(logger.Default, "%s\n", line)
+			l.OutfDirect(logger.Default, "%s\n", line)
 		}
 	}
 }
 
 func printTaskName(l *logger.Logger, t *ast.Task) {
-	l.Outf(logger.Default, "task: ")
-	l.Outf(logger.Green, "%s\n", t.Name())
-	l.Outf(logger.Default, "\n")
+	l.OutfDirect(logger.Default, "task: ")
+	l.OutfDirect(logger.Green, "%s\n", t.Name())
+	l.OutfDirect(logger.Default, "\n")
 }
 
 func printTaskAliases(l *logger.Logger, t *ast.Task) {
 	if len(t.Aliases) == 0 {
 		return
 	}
-	l.Outf(logger.Default, "\n")
-	l.Outf(logger.Default, "aliases:\n")
+	l.OutfDirect(logger.Default, "\n")
+	l.OutfDirect(logger.Default, "aliases:\n")
 	for _, alias := range t.Aliases {
-		l.Outf(logger.Default, " - ")
-		l.Outf(logger.Cyan, "%s\n", alias)
+		l.OutfDirect(logger.Default, " - ")
+		l.OutfDirect(logger.Cyan, "%s\n", alias)
 	}
 }
 
@@ -86,11 +86,11 @@ func hasDescription(t *ast.Task) bool {
 }
 
 func printTaskDescription(l *logger.Logger, t *ast.Task) {
-	l.Outf(logger.Default, "%s\n", t.Desc)
+	l.OutfDirect(logger.Default, "%s\n", t.Desc)
 }
 
 func printNoDescriptionOrSummary(l *logger.Logger) {
-	l.Outf(logger.Default, "(task does not have description or summary)\n")
+	l.OutfDirect(logger.Default, "(task does not have description or summary)\n")
 }
 
 func printTaskDependencies(l *logger.Logger, t *ast.Task) {
@@ -98,11 +98,11 @@ func printTaskDependencies(l *logger.Logger, t *ast.Task) {
 		return
 	}
 
-	l.Outf(logger.Default, "\n")
-	l.Outf(logger.Default, "dependencies:\n")
+	l.OutfDirect(logger.Default, "\n")
+	l.OutfDirect(logger.Default, "dependencies:\n")
 
 	for _, d := range t.Deps {
-		l.Outf(logger.Default, " - %s\n", d.Task)
+		l.OutfDirect(logger.Default, " - %s\n", d.Task)
 	}
 }
 
@@ -111,15 +111,15 @@ func printTaskCommands(l *logger.Logger, t *ast.Task) {
 		return
 	}
 
-	l.Outf(logger.Default, "\n")
-	l.Outf(logger.Default, "commands:\n")
+	l.OutfDirect(logger.Default, "\n")
+	l.OutfDirect(logger.Default, "commands:\n")
 	for _, c := range t.Cmds {
 		isCommand := c.Cmd != ""
-		l.Outf(logger.Default, " - ")
+		l.OutfDirect(logger.Default, " - ")
 		if isCommand {
-			l.Outf(logger.Yellow, "%s\n", c.Cmd)
+			l.OutfDirect(logger.Yellow, "%s\n", c.Cmd)
 		} else {
-			l.Outf(logger.Green, "Task: %s\n", c.Task)
+			l.OutfDirect(logger.Green, "Task: %s\n", c.Task)
 		}
 	}
 }
@@ -150,14 +150,14 @@ func printTaskVars(l *logger.Logger, t *ast.Task) {
 		return
 	}
 
-	l.Outf(logger.Default, "\n")
-	l.Outf(logger.Default, "vars:\n")
+	l.OutfDirect(logger.Default, "\n")
+	l.OutfDirect(logger.Default, "vars:\n")
 
 	for key, value := range t.Vars.All() {
 		// Only display variables that are not from OS environment or Taskfile env
 		if !isEnvVar(key, osEnvVars) && !taskfileEnvVars[key] {
 			formattedValue := formatVarValue(value)
-			l.Outf(logger.Yellow, "  %s: %s\n", key, formattedValue)
+			l.OutfDirect(logger.Yellow, "  %s: %s\n", key, formattedValue)
 		}
 	}
 }
@@ -181,14 +181,14 @@ func printTaskEnv(l *logger.Logger, t *ast.Task) {
 		return
 	}
 
-	l.Outf(logger.Default, "\n")
-	l.Outf(logger.Default, "env:\n")
+	l.OutfDirect(logger.Default, "\n")
+	l.OutfDirect(logger.Default, "env:\n")
 
 	for key, value := range t.Env.All() {
 		// Only display variables that are not from OS environment
 		if !isEnvVar(key, envVars) {
 			formattedValue := formatVarValue(value)
-			l.Outf(logger.Yellow, "  %s: %s\n", key, formattedValue)
+			l.OutfDirect(logger.Yellow, "  %s: %s\n", key, formattedValue)
 		}
 	}
 }
@@ -242,21 +242,21 @@ func printTaskRequires(l *logger.Logger, t *ast.Task) {
 		return
 	}
 
-	l.Outf(logger.Default, "\n")
-	l.Outf(logger.Default, "requires:\n")
-	l.Outf(logger.Default, "  vars:\n")
+	l.OutfDirect(logger.Default, "\n")
+	l.OutfDirect(logger.Default, "requires:\n")
+	l.OutfDirect(logger.Default, "  vars:\n")
 
 	for _, v := range t.Requires.Vars {
 		// If the variable has enum constraints, format accordingly
 		if len(v.Enum) > 0 {
-			l.Outf(logger.Yellow, "    - %s:\n", v.Name)
-			l.Outf(logger.Yellow, "        enum:\n")
+			l.OutfDirect(logger.Yellow, "    - %s:\n", v.Name)
+			l.OutfDirect(logger.Yellow, "        enum:\n")
 			for _, enumValue := range v.Enum {
-				l.Outf(logger.Yellow, "          - %s\n", enumValue)
+				l.OutfDirect(logger.Yellow, "          - %s\n", enumValue)
 			}
 		} else {
 			// Simple required variable
-			l.Outf(logger.Yellow, "    - %s\n", v.Name)
+			l.OutfDirect(logger.Yellow, "    - %s\n", v.Name)
 		}
 	}
 }

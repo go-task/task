@@ -17,6 +17,10 @@ type CloseFunc func(err error) error
 
 // Build the Output for the requested ast.Output.
 func BuildFor(o *ast.Output, logger *logger.Logger) (Output, error) {
+	if logger.IsStructured() {
+		// Capture stdout/stderr for structured logging.
+		return Logger{}, nil
+	}
 	switch o.Name {
 	case "interleaved", "":
 		if err := checkOutputGroupUnset(o); err != nil {

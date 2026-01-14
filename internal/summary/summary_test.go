@@ -31,12 +31,12 @@ func TestPrintsDependenciesIfPresent(t *testing.T) {
 
 func createDummyLogger() (*bytes.Buffer, logger.Logger) {
 	buffer := &bytes.Buffer{}
-	l := logger.Logger{
-		Stderr:  buffer,
+	l := logger.NewLogger(logger.LoggerOptions{
 		Stdout:  buffer,
+		Stderr:  buffer,
 		Verbose: false,
-	}
-	return buffer, l
+	})
+	return buffer, *l
 }
 
 func TestDoesNotPrintDependenciesIfMissing(t *testing.T) {

@@ -182,7 +182,7 @@ func (e *Executor) setupStdFiles() {
 }
 
 func (e *Executor) setupLogger() {
-	e.Logger = &logger.Logger{
+	e.Logger = logger.NewLogger(logger.LoggerOptions{
 		Stdin:      e.Stdin,
 		Stdout:     e.Stdout,
 		Stderr:     e.Stderr,
@@ -190,7 +190,8 @@ func (e *Executor) setupLogger() {
 		Color:      e.Color,
 		AssumeYes:  e.AssumeYes,
 		AssumeTerm: e.AssumeTerm,
-	}
+		LogFormat:  e.LogFormat,
+	})
 }
 
 func (e *Executor) setupOutput() error {
