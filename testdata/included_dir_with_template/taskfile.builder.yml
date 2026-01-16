@@ -1,0 +1,8 @@
+version: '3'
+
+tasks:
+  build:
+    dir: '{{.WORKING_DIR}}'
+    cmds:
+      - |
+        echo "Build WORKING_DIR: $(pwd)"

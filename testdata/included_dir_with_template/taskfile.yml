@@ -1,0 +1,12 @@
+version: '3'
+
+vars:
+  WORKING_DIR: '/tmp'
+
+includes:
+  builder: ./taskfile.builder.yml 
+
+tasks:
+  default:
+    cmds:
+      - task: builder:build

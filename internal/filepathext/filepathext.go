@@ -6,8 +6,8 @@ import (
 	"strings"
 )
 
-// SmartJoin joins two paths, but only if the second is not already an
-// absolute path.
+// SmartJoin joins two paths when the second path is not absolute, otherwise
+// it returns the second (absolute) path.
 func SmartJoin(a, b string) string {
 	if IsAbs(b) {
 		return b
@@ -28,6 +28,7 @@ func IsAbs(path string) bool {
 var knownAbsDirs = []string{
 	".ROOT_DIR",
 	".TASKFILE_DIR",
+	".TASK_DIR",
 	".USER_WORKING_DIR",
 }
 

@@ -171,7 +171,15 @@ func (t1 *Tasks) Merge(t2 *Tasks, include *Include, includedTaskfileVars *Vars) 
 		}
 
 		if include.AdvancedImport {
-			task.Dir = filepathext.SmartJoin(include.Dir, task.Dir)
+			if filepathext.IsAbs(task.Dir) {
+				// TaskDir with (obvious) absolute path has priority.
+			} else {
+				// TaskDir will be either <IncludeDir> or <IncludeDir>/<TaskDir>, however
+				// task.Dir may still compile to an absolute path. Set/save now and resolve
+				// later in Compiler.getVariables.
+				task.IncludeTaskDir = task.Dir
+				task.Dir = include.Dir
+			}
 			if task.IncludeVars == nil {
 				task.IncludeVars = NewVars()
 			}
