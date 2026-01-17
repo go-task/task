@@ -114,6 +114,9 @@ func (c *Compiler) getVariables(t *ast.Task, call *Call, evaluateShVars bool) (*
 			return nil, err
 		}
 	}
+	// Resolve any outstanding 'Ref' values in global vars (esp. globals from imported Taskfiles).
+	c.TaskfileVars = templater.ReplaceVars(c.TaskfileVars, &templater.Cache{Vars: result})
+
 	if t != nil {
 		for k, v := range t.IncludeVars.All() {
 			if err := rangeFunc(k, v); err != nil {
