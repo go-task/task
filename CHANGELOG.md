@@ -8,6 +8,8 @@
   #2633 by @trulede).
 - Ensure no ANSI sequences are printed for `--color=false` (#2560, #2584 by
   @trulede).
+- Task aliases can now contain wildcards and will match accordingly (e.g., `s-*`
+  as alias for `start-*`) (#1900, #2234 by @vmaerten).
 
 ## v3.46.4 - 2025-12-24
 
