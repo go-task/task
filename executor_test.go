@@ -717,6 +717,27 @@ func TestLabel(t *testing.T) {
 	)
 }
 
+func TestPrefix(t *testing.T) {
+	t.Parallel()
+
+	NewExecutorTest(t,
+		WithName("up to date"),
+		WithExecutorOptions(
+			task.WithDir("testdata/prefix_uptodate"),
+			task.WithOutputStyle(ast.Output{Name: "prefixed"}),
+		),
+		WithTask("foo"),
+	)
+
+	NewExecutorTest(t,
+		WithName("up to dat with no output style"),
+		WithExecutorOptions(
+			task.WithDir("testdata/prefix_uptodate"),
+		),
+		WithTask("foo"),
+	)
+}
+
 func TestPromptInSummary(t *testing.T) {
 	t.Parallel()
 
