@@ -186,7 +186,11 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) error {
 
 			if upToDate && preCondMet {
 				if e.Verbose || (!call.Silent && !t.Silent && !e.Taskfile.Silent && !e.Silent) {
-					e.Logger.Errf(logger.Magenta, "task: Task %q is up to date\n", t.Name())
+					name := t.Name()
+					if e.OutputStyle.Name == "prefixed" {
+						name = t.Prefix
+					}
+					e.Logger.Errf(logger.Magenta, "task: Task %q is up to date\n", name)
 				}
 				return nil
 			}
