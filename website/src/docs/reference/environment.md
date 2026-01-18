@@ -29,6 +29,13 @@ variables. The priority order is: CLI flags > environment variables > config fil
 - **Description**: Enable verbose output for all tasks
 - **Config equivalent**: [`verbose`](./config.md#verbose)
 
+### `TASK_SILENT`
+
+- **Type**: `boolean` (`true`, `false`, `1`, `0`)
+- **Default**: `false`
+- **Description**: Disables echoing of commands
+- **Config equivalent**: [`silent`](./config.md#silent)
+
 ### `TASK_COLOR`
 
 - **Type**: `boolean` (`true`, `false`, `1`, `0`)
@@ -55,6 +62,18 @@ variables. The priority order is: CLI flags > environment variables > config fil
 - **Default**: `false`
 - **Description**: When running tasks in parallel, stop all tasks if one fails
 - **Config equivalent**: [`failfast`](./config.md#failfast)
+
+### `TASK_DRY`
+
+- **Type**: `boolean` (`true`, `false`, `1`, `0`)
+- **Default**: `false`
+- **Description**: Compiles and prints tasks in the order that they would be run, without executing them
+
+### `TASK_ASSUME_YES`
+
+- **Type**: `boolean` (`true`, `false`, `1`, `0`)
+- **Default**: `false`
+- **Description**: Assume "yes" as answer to all prompts
 
 ### `TASK_TEMP_DIR`
 

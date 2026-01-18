@@ -92,6 +92,18 @@ experiments:
 verbose: true
 ```
 
+### `silent`
+
+- **Type**: `boolean`
+- **Default**: `false`
+- **Description**: Disables echoing of commands
+- **CLI equivalent**: [`-s, --silent`](./cli.md#-s---silent)
+- **Environment variable**: [`TASK_SILENT`](./environment.md#task-silent)
+
+```yaml
+silent: true
+```
+
 ### `color`
 
 - **Type**: `boolean`
@@ -161,6 +173,7 @@ Here's a complete example of a `.taskrc.yml` file with all available options:
 ```yaml
 # Global settings
 verbose: true
+silent: false
 color: true
 disable-fuzzy: false
 concurrency: 2

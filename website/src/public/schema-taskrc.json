@@ -61,6 +61,11 @@
       "type": "boolean",
       "description": "Enable verbose output"
     },
+    "silent": {
+      "type": "boolean",
+      "description": "Disables echoing",
+      "default": false
+    },
     "color": {
       "type": "boolean",
       "description": "Enable colored output"

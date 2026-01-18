@@ -107,6 +107,9 @@ task build --verbose
 
 Disable command echoing.
 
+- **Config equivalent**: [`silent`](./config.md#silent)
+- **Environment variable**: [`TASK_SILENT`](./environment.md#task-silent)
+
 ```bash
 task deploy --silent
 ```
@@ -148,6 +151,8 @@ task build --force
 #### `-n, --dry`
 
 Compile and print tasks without executing them.
+
+- **Environment variable**: [`TASK_DRY`](./environment.md#task-dry)
 
 ```bash
 task deploy --dry
@@ -311,6 +316,8 @@ task build --watch --interval 1s
 #### `-y, --yes`
 
 Automatically answer "yes" to all prompts.
+
+- **Environment variable**: [`TASK_ASSUME_YES`](./environment.md#task-assume-yes)
 
 ```bash
 task deploy --yes
