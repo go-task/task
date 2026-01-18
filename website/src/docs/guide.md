@@ -1792,6 +1792,27 @@ $ task start:foo:3
 Starting foo with 3 replicas
 ```
 
+Using wildcards with aliases
+Wildcards also work with aliases. If a task has an alias, you can use the alias name with wildcards to capture arguments. For example:
+
+```yaml
+version: '3'
+
+tasks:
+  start:*:
+    aliases: [run:*]
+    vars:
+      SERVICE: "{{index .MATCH 0}}"
+    cmds:
+      - echo "Running {{.SERVICE}}"
+```
+In this example, you can call the task using the alias run:*:
+
+```shell
+$ task run:foo
+Running foo
+```
+
 ## Doing task cleanup with `defer`
 
 With the `defer` keyword, it's possible to schedule cleanup to be run once the
