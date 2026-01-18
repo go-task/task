@@ -67,6 +67,7 @@ func (e *Executor) getRootNode() (taskfile.Node, error) {
 		return nil, err
 	}
 	e.Dir = node.Dir()
+	e.Entrypoint = node.Location()
 	return node, err
 }
 
