@@ -4,6 +4,8 @@
 
 - Fixed remote git Taskfiles: cloning now works without explicit ref, and
   directory includes are properly resolved (#2602 by @vmaerten).
+- For `output: prefixed`, print `prefix:` if set instead of task name (#1566,
+  #2633 by @trulede).
 
 ## v3.46.4 - 2025-12-24
 
