@@ -1,0 +1,4 @@
+task: [default] echo "Hello from root Taskfile"
+Hello from root Taskfile
+Hello from include
+Hello from include silent task

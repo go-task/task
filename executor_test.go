@@ -1060,6 +1060,18 @@ func TestIncludeChecksum(t *testing.T) {
 	)
 }
 
+func TestIncludeSilent(t *testing.T) {
+	t.Parallel()
+
+	NewExecutorTest(t,
+		WithName("include-taskfile-silent"),
+		WithExecutorOptions(
+			task.WithDir("testdata/includes_silent"),
+		),
+		WithTask("default"),
+	)
+}
+
 func TestFailfast(t *testing.T) {
 	t.Parallel()
 

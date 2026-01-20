@@ -1,0 +1,13 @@
+version: '3'
+
+silent: true 
+
+tasks:
+  hello:
+    cmds:
+      - echo "Hello from include"
+
+  hello-silent:
+    silent: true
+    cmds:
+      - echo "Hello from include silent task"

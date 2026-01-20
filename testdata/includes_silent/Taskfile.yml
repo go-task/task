@@ -1,0 +1,11 @@
+version: '3'
+
+includes:
+  inc: Taskfile-inc.yml
+
+tasks:
+  default:
+    cmds:
+      - echo "Hello from root Taskfile"
+      - task: inc:hello
+      - task: inc:hello-silent
