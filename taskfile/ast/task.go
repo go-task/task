@@ -32,7 +32,7 @@ type Task struct {
 	Vars          *Vars
 	Env           *Vars
 	Dotenv        []string
-	Silent        bool
+	Silent        *bool
 	Interactive   bool
 	Internal      bool
 	Method        string
@@ -138,7 +138,7 @@ func (t *Task) UnmarshalYAML(node *yaml.Node) error {
 			Vars          *Vars
 			Env           *Vars
 			Dotenv        []string
-			Silent        bool
+			Silent        *bool `yaml:"silent,omitempty"`
 			Interactive   bool
 			Internal      bool
 			Method        string
@@ -178,7 +178,7 @@ func (t *Task) UnmarshalYAML(node *yaml.Node) error {
 		t.Vars = task.Vars
 		t.Env = task.Env
 		t.Dotenv = task.Dotenv
-		t.Silent = task.Silent
+		t.Silent = deepcopy.Scalar(task.Silent)
 		t.Interactive = task.Interactive
 		t.Internal = task.Internal
 		t.Method = task.Method
@@ -221,7 +221,7 @@ func (t *Task) DeepCopy() *Task {
 		Vars:                 t.Vars.DeepCopy(),
 		Env:                  t.Env.DeepCopy(),
 		Dotenv:               deepcopy.Slice(t.Dotenv),
-		Silent:               t.Silent,
+		Silent:               deepcopy.Scalar(t.Silent),
 		Interactive:          t.Interactive,
 		Internal:             t.Internal,
 		Method:               t.Method,

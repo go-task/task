@@ -61,7 +61,10 @@ func (t1 *Taskfile) Merge(t2 *Taskfile, include *Include) error {
 	}
 	if t2.Silent {
 		for _, t := range t2.Tasks.All(nil) {
-			t.Silent = true
+			if t.Silent == nil {
+				v := true
+				t.Silent = &v
+			}
 		}
 	}
 	t1.Vars.Merge(t2.Vars, include)

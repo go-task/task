@@ -11,3 +11,12 @@ tasks:
     silent: true
     cmds:
       - echo "Hello from include silent task"
+
+  hello-silent-not-set:
+    cmds:
+      - echo "Hello from include silent not set task"
+
+  hello-silent-set-false:
+    silent: false
+    cmds:
+      - echo "Hello from include silent false task"
