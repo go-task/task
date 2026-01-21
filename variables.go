@@ -123,6 +123,7 @@ func (e *Executor) compiledTask(call *Call, evaluateShVars bool) (*ast.Task, err
 		IncludeVars:          origTask.IncludeVars,
 		IncludedTaskfileVars: origTask.IncludedTaskfileVars,
 		Platforms:            origTask.Platforms,
+		If:                   templater.Replace(origTask.If, cache),
 		Location:             origTask.Location,
 		Requires:             origTask.Requires,
 		Watch:                origTask.Watch,
@@ -228,6 +229,7 @@ func (e *Executor) compiledTask(call *Call, evaluateShVars bool) (*ast.Task, err
 					newCmd := cmd.DeepCopy()
 					newCmd.Cmd = templater.ReplaceWithExtra(cmd.Cmd, cache, extra)
 					newCmd.Task = templater.ReplaceWithExtra(cmd.Task, cache, extra)
+					newCmd.If = templater.ReplaceWithExtra(cmd.If, cache, extra)
 					newCmd.Vars = templater.ReplaceVarsWithExtra(cmd.Vars, cache, extra)
 					new.Cmds = append(new.Cmds, newCmd)
 				}
@@ -242,6 +244,7 @@ func (e *Executor) compiledTask(call *Call, evaluateShVars bool) (*ast.Task, err
 			newCmd := cmd.DeepCopy()
 			newCmd.Cmd = templater.Replace(cmd.Cmd, cache)
 			newCmd.Task = templater.Replace(cmd.Task, cache)
+			newCmd.If = templater.Replace(cmd.If, cache)
 			newCmd.Vars = templater.ReplaceVars(cmd.Vars, cache)
 			new.Cmds = append(new.Cmds, newCmd)
 		}

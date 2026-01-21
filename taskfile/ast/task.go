@@ -40,6 +40,7 @@ type Task struct {
 	IgnoreError   bool
 	Run           string
 	Platforms     []*Platform
+	If            string
 	Watch         bool
 	Location      *Location
 	Failfast      bool
@@ -145,6 +146,7 @@ func (t *Task) UnmarshalYAML(node *yaml.Node) error {
 			IgnoreError   bool `yaml:"ignore_error"`
 			Run           string
 			Platforms     []*Platform
+			If            string
 			Requires      *Requires
 			Watch         bool
 			Failfast      bool
@@ -184,6 +186,7 @@ func (t *Task) UnmarshalYAML(node *yaml.Node) error {
 		t.IgnoreError = task.IgnoreError
 		t.Run = task.Run
 		t.Platforms = task.Platforms
+		t.If = task.If
 		t.Requires = task.Requires
 		t.Watch = task.Watch
 		t.Failfast = task.Failfast
@@ -228,6 +231,7 @@ func (t *Task) DeepCopy() *Task {
 		IncludeVars:          t.IncludeVars.DeepCopy(),
 		IncludedTaskfileVars: t.IncludedTaskfileVars.DeepCopy(),
 		Platforms:            deepcopy.Slice(t.Platforms),
+		If:                   t.If,
 		Location:             t.Location.DeepCopy(),
 		Requires:             t.Requires.DeepCopy(),
 		Namespace:            t.Namespace,
