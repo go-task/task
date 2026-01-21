@@ -10,6 +10,9 @@
   @trulede).
 - Task aliases can now contain wildcards and will match accordingly (e.g., `s-*`
   as alias for `start-*`) (#1900, #2234 by @vmaerten).
+- Added conditional execution with the `if` field: skip tasks, commands, or task
+  calls based on shell exit codes or template expressions like
+  `{{ eq .ENV "prod" }}` (#2564, #608 by @vmaerten).
 
 ## v3.46.4 - 2025-12-24
 
