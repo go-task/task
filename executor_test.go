@@ -37,6 +37,7 @@ type (
 		wantSetupError  bool
 		wantRunError    bool
 		wantStatusError bool
+		callbackFunc    func(e *task.Executor)
 	}
 )
 
@@ -113,6 +114,21 @@ func (opt *statusErrorTestOption) applyToExecutorTest(t *ExecutorTest) {
 	t.wantStatusError = true
 }
 
+// WithCallback calls the provided function after the the test execution.
+func WithCallback(f func(e *task.Executor)) ExecutorTestOption {
+	return &callbackTestOption{
+		callback: f,
+	}
+}
+
+type callbackTestOption struct {
+	callback func(e *task.Executor)
+}
+
+func (opt *callbackTestOption) applyToExecutorTest(t *ExecutorTest) {
+	t.callbackFunc = opt.callback
+}
+
 // Helpers
 
 // writeFixtureErrRun is a wrapper for writing the output of an error during the
@@ -161,6 +177,11 @@ func (tt *ExecutorTest) run(t *testing.T) {
 
 		// Set up the task executor
 		e := task.NewExecutor(opts...)
+		if tt.callbackFunc != nil {
+			defer func() {
+				tt.callbackFunc(e)
+			}()
+		}
 
 		// Create a golden fixture file for the output
 		g := goldie.New(t,
@@ -1104,4 +1125,31 @@ func TestFailfast(t *testing.T) {
 			WithRunError(),
 		)
 	})
+}
+
+func TestWithTaskfile(t *testing.T) {
+	t.Parallel()
+
+	// Build an ast.Taskfile (using an executor).
+	var executor *task.Executor
+	NewExecutorTest(t,
+		WithName("WithTaskfile build"),
+		WithExecutorOptions(
+			task.WithDir("testdata/with_taskfile/build"),
+			task.WithDry(true),
+		),
+		WithCallback(func(e *task.Executor) {
+			executor = e
+		}),
+	)
+	require.NotNil(t, executor)
+
+	// Run executor using the pre-built ast.Taskfile.
+	NewExecutorTest(t,
+		WithName("WithTaskfile run"),
+		WithExecutorOptions(
+			task.WithDir("testdata/with_taskfile/run"),
+			task.WithTaskfile(executor.Taskfile),
+		),
+	)
 }
