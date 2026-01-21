@@ -98,6 +98,7 @@ func newTextModel(varName string) textModel {
 	ti.Placeholder = ""
 	ti.CharLimit = 256
 	ti.SetWidth(40)
+	ti.Focus()
 
 	return textModel{
 		varName:   varName,
