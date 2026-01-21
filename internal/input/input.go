@@ -5,9 +5,9 @@ import (
 	"io"
 	"strings"
 
-	"github.com/charmbracelet/bubbles/textinput"
-	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
+	"charm.land/bubbles/v2/textinput"
+	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
 
 	"github.com/go-task/task/v3/errors"
 )
@@ -96,9 +96,8 @@ type textModel struct {
 func newTextModel(varName string) textModel {
 	ti := textinput.New()
 	ti.Placeholder = ""
-	ti.Focus()
 	ti.CharLimit = 256
-	ti.Width = 40
+	ti.SetWidth(40)
 
 	return textModel{
 		varName:   varName,
@@ -107,18 +106,18 @@ func newTextModel(varName string) textModel {
 }
 
 func (m textModel) Init() tea.Cmd {
-	return textinput.Blink
+	return tea.Batch(m.textInput.Focus(), textinput.Blink)
 }
 
 func (m textModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
-	case tea.KeyMsg:
-		switch msg.Type {
-		case tea.KeyCtrlC, tea.KeyEsc:
+	case tea.KeyPressMsg:
+		switch msg.Keystroke() {
+		case "ctrl+c", "escape":
 			m.cancelled = true
 			m.done = true
 			return m, tea.Quit
-		case tea.KeyEnter:
+		case "enter":
 			m.value = m.textInput.Value()
 			m.done = true
 			return m, tea.Quit
@@ -130,13 +129,13 @@ func (m textModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, cmd
 }
 
-func (m textModel) View() string {
+func (m textModel) View() tea.View {
 	if m.done {
-		return ""
+		return tea.NewView("")
 	}
 
 	prompt := promptStyle.Render(fmt.Sprintf("? Enter value for %s: ", m.varName))
-	return prompt + m.textInput.View() + "\n"
+	return tea.NewView(prompt + m.textInput.View() + "\n")
 }
 
 // selectModel is the Bubble Tea model for selection
@@ -162,44 +161,32 @@ func (m selectModel) Init() tea.Cmd {
 
 func (m selectModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
-	case tea.KeyMsg:
-		switch msg.Type {
-		case tea.KeyCtrlC, tea.KeyEsc:
+	case tea.KeyPressMsg:
+		switch msg.Keystroke() {
+		case "ctrl+c", "escape":
 			m.cancelled = true
 			m.done = true
 			return m, tea.Quit
-		case tea.KeyUp, tea.KeyShiftTab:
+		case "up", "shift+tab", "k":
 			if m.cursor > 0 {
 				m.cursor--
 			}
-		case tea.KeyDown, tea.KeyTab:
+		case "down", "tab", "j":
 			if m.cursor < len(m.options)-1 {
 				m.cursor++
 			}
-		case tea.KeyEnter:
+		case "enter":
 			m.done = true
 			return m, tea.Quit
-		}
-
-		// Also handle j/k for vim users
-		switch msg.String() {
-		case "k":
-			if m.cursor > 0 {
-				m.cursor--
-			}
-		case "j":
-			if m.cursor < len(m.options)-1 {
-				m.cursor++
-			}
 		}
 	}
 
 	return m, nil
 }
 
-func (m selectModel) View() string {
+func (m selectModel) View() tea.View {
 	if m.done {
-		return ""
+		return tea.NewView("")
 	}
 
 	var b strings.Builder
@@ -219,5 +206,5 @@ func (m selectModel) View() string {
 
 	b.WriteString(dimStyle.Render("  (↑/↓ to move, enter to select, esc to cancel)"))
 
-	return b.String()
+	return tea.NewView(b.String())
 }
