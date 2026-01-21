@@ -127,12 +127,8 @@ func ExpandFields(s string) ([]string, error) {
 	s = escape(s)
 	p := syntax.NewParser()
 	var words []*syntax.Word
-	err := p.Words(strings.NewReader(s), func(w *syntax.Word) bool {
+	for w := range p.WordsSeq(strings.NewReader(s)) {
 		words = append(words, w)
-		return true
-	})
-	if err != nil {
-		return nil, err
 	}
 	cfg := &expand.Config{
 		Env:      expand.FuncEnviron(os.Getenv),
