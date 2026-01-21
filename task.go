@@ -129,13 +129,13 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) error {
 		return nil
 	}
 
-	if t.If != "" {
+	if strings.TrimSpace(t.If) != "" {
 		if err := execext.RunCommand(ctx, &execext.RunCommandOptions{
 			Command: t.If,
 			Dir:     t.Dir,
 			Env:     env.Get(t),
 		}); err != nil {
-			e.Logger.VerboseOutf(logger.Yellow, "task: %q if condition not met - skipped\n", call.Task)
+			e.Logger.VerboseOutf(logger.Yellow, "task: if condition not met - skipped: %q\n", call.Task)
 			return nil
 		}
 	}
@@ -318,7 +318,7 @@ func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call *Call, i in
 	cmd := t.Cmds[i]
 
 	// Check if condition for any command type
-	if cmd.If != "" {
+	if strings.TrimSpace(cmd.If) != "" {
 		if err := execext.RunCommand(ctx, &execext.RunCommandOptions{
 			Command: cmd.If,
 			Dir:     t.Dir,
