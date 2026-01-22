@@ -20,10 +20,17 @@ type FileNode struct {
 func NewFileNode(entrypoint, dir string, opts ...NodeOption) (*FileNode, error) {
 	// Find the entrypoint file
 	resolvedEntrypoint, err := fsext.Search(entrypoint, dir, DefaultTaskfiles)
-	if err != nil {
-		if errors.Is(err, os.ErrNotExist) {
-			return nil, errors.TaskfileNotFoundError{URI: entrypoint, Walk: false}
+	if errors.Is(err, os.ErrNotExist) {
+		path, err := fsext.GetSearchPath(entrypoint, dir)
+		if err != nil {
+			return nil, err
 		}
+		return nil, errors.TaskfileNotFoundError{
+			URI:  path,
+			Walk: entrypoint == "",
+		}
+	}
+	if err != nil {
 		return nil, err
 	}
 

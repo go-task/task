@@ -16,7 +16,6 @@ import (
 	"github.com/go-task/task/v3/internal/env"
 	"github.com/go-task/task/v3/internal/execext"
 	"github.com/go-task/task/v3/internal/filepathext"
-	"github.com/go-task/task/v3/internal/fsext"
 	"github.com/go-task/task/v3/internal/logger"
 	"github.com/go-task/task/v3/internal/output"
 	"github.com/go-task/task/v3/internal/version"
@@ -56,18 +55,15 @@ func (e *Executor) Setup() error {
 
 func (e *Executor) getRootNode() (taskfile.Node, error) {
 	node, err := taskfile.NewRootNode(e.Entrypoint, e.Dir, e.Insecure, e.Timeout)
-	if os.IsNotExist(err) {
-		return nil, errors.TaskfileNotFoundError{
-			URI:     fsext.DefaultDir(e.Entrypoint, e.Dir),
-			Walk:    true,
-			AskInit: true,
-		}
-	}
 	if err != nil {
+		// if the error is a TaskfileNotFoundError and no entrypoint or dir is set, we can suggest to run `task --init`
+		if errors.As(err, &errors.TaskfileNotFoundError{}) && e.Entrypoint == "" && e.Dir == "" {
+			return nil, fmt.Errorf("%w. Run `task --init` to create a new Taskfile", err)
+		}
 		return nil, err
 	}
 	e.Dir = node.Dir()
-	return node, err
+	return node, nil
 }
 
 func (e *Executor) readTaskfile(node taskfile.Node) error {
