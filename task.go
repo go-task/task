@@ -74,6 +74,11 @@ func (e *Executor) Run(ctx context.Context, calls ...*Call) error {
 		return nil
 	}
 
+	// Prompt for all required vars from deps upfront (parallel execution)
+	if err := e.promptDepsVars(calls); err != nil {
+		return err
+	}
+
 	regularCalls, watchCalls, err := e.splitRegularAndWatchCalls(calls...)
 	if err != nil {
 		return err
@@ -121,6 +126,19 @@ func (e *Executor) splitRegularAndWatchCalls(calls ...*Call) (regularCalls []*Ca
 
 // RunTask runs a task by its name
 func (e *Executor) RunTask(ctx context.Context, call *Call) error {
+	// Inject prompted vars into call if available
+	if e.promptedVars != nil {
+		if call.Vars == nil {
+			call.Vars = ast.NewVars()
+		}
+		for name, v := range e.promptedVars.All() {
+			// Only inject if not already set in call
+			if _, ok := call.Vars.Get(name); !ok {
+				call.Vars.Set(name, v)
+			}
+		}
+	}
+
 	t, err := e.FastCompiledTask(call)
 	if err != nil {
 		return err
@@ -138,6 +156,19 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) error {
 		}); err != nil {
 			e.Logger.VerboseOutf(logger.Yellow, "task: if condition not met - skipped: %q\n", call.Task)
 			return nil
+		}
+	}
+
+	// Prompt for missing required vars (just-in-time for sequential task calls)
+	prompted, err := e.promptTaskVars(t, call)
+	if err != nil {
+		return err
+	}
+	if prompted {
+		// Recompile with the new vars
+		t, err = e.FastCompiledTask(call)
+		if err != nil {
+			return err
 		}
 	}
 

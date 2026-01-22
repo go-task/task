@@ -301,6 +301,19 @@ Automatically answer "yes" to all prompts.
 task deploy --yes
 ```
 
+#### `--interactive`
+
+Enable interactive prompts for missing required variables. When a required
+variable is not provided, Task will prompt for input instead of failing.
+
+Task automatically detects non-TTY environments (like CI pipelines) and
+skips prompts. This flag can also be set in `.taskrc.yml` to enable prompts
+by default.
+
+```bash
+task deploy --interactive
+```
+
 ## Exit Codes
 
 Task uses specific exit codes to indicate different types of errors:

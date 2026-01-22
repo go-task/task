@@ -1233,6 +1233,65 @@ This is supported only for string variables.
 
 :::
 
+### Prompting for missing variables interactively
+
+If you want Task to prompt users for missing required variables instead of
+failing, you can enable interactive mode in your `.taskrc.yml`:
+
+```yaml
+# ~/.taskrc.yml
+interactive: true
+```
+
+When enabled, Task will display an interactive prompt for any missing required
+variable. For variables with an `enum`, a selection menu is shown. For variables
+without an enum, a text input is displayed.
+
+```yaml
+# Taskfile.yml
+version: '3'
+
+tasks:
+  deploy:
+    requires:
+      vars:
+        - name: ENVIRONMENT
+          enum: [dev, staging, prod]
+        - VERSION
+    cmds:
+      - echo "Deploying {{.VERSION}} to {{.ENVIRONMENT}}"
+```
+
+```shell
+$ task deploy
+? Select value for ENVIRONMENT:
+❯ dev
+  staging
+  prod
+? Enter value for VERSION: 1.0.0
+Deploying 1.0.0 to prod
+```
+
+If the variable is already set (via CLI, environment, or Taskfile), no prompt
+is shown:
+
+```shell
+$ task deploy ENVIRONMENT=prod VERSION=1.0.0
+Deploying 1.0.0 to prod
+```
+
+::: info
+
+Interactive prompts require a TTY (terminal). Task automatically detects
+non-interactive environments like GitHub Actions, GitLab CI, and other CI
+pipelines where stdin/stdout are not connected to a terminal. In these cases,
+prompts are skipped and missing variables will cause an error as usual.
+
+You can enable prompts from the command line with `--interactive` or by setting
+`interactive: true` in your `.taskrc.yml`.
+
+:::
+
 ## Variables
 
 Task allows you to set variables using the `vars` keyword. The following

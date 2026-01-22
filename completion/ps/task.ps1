@@ -40,6 +40,7 @@ Register-ArgumentCompleter -CommandName task -ScriptBlock {
 			[CompletionResult]::new('--list', '--list', [CompletionResultType]::ParameterName, 'list tasks'),
 			[CompletionResult]::new('--nested', '--nested', [CompletionResultType]::ParameterName, 'nest namespaces in JSON'),
 			[CompletionResult]::new('--no-status', '--no-status', [CompletionResultType]::ParameterName, 'ignore status in JSON'),
+			[CompletionResult]::new('--interactive', '--interactive', [CompletionResultType]::ParameterName, 'prompt for missing required variables'),
 			[CompletionResult]::new('-o', '-o', [CompletionResultType]::ParameterName, 'set output style'),
 			[CompletionResult]::new('--output', '--output', [CompletionResultType]::ParameterName, 'set output style'),
 			[CompletionResult]::new('--output-group-begin', '--output-group-begin', [CompletionResultType]::ParameterName, 'template before group'),

@@ -655,7 +655,7 @@ tasks:
 #### `requires`
 
 - **Type**: `Requires`
-- **Description**: Required variables with optional enums
+- **Description**: Required variables with optional enum validation
 
 ```yaml
 tasks:
@@ -679,6 +679,9 @@ tasks:
       - echo "Deploying to {{.ENVIRONMENT}} with log level {{.LOG_LEVEL}}"
       - ./deploy.sh
 ```
+
+See [Prompting for missing variables interactively](/docs/guide#prompting-for-missing-variables-interactively)
+for information on enabling interactive prompts for missing required variables.
 
 #### `watch`
 
