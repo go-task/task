@@ -13,6 +13,9 @@
 - Added conditional execution with the `if` field: skip tasks, commands, or task
   calls based on shell exit codes or template expressions like
   `{{ eq .ENV "prod" }}` (#2564, #608 by @vmaerten).
+- Task can now interactively prompt for missing required variables when running
+  in a TTY, with support for enum selection menus. Enable with `--interactive`
+  flag or `interactive: true` in `.taskrc.yml` (#2579, #2079 by @vmaerten).
 
 ## v3.46.4 - 2025-12-24
 
