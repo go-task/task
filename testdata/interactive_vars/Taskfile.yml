@@ -20,6 +20,15 @@ tasks:
     cmds:
       - echo "Deploying to {{.ENVIRONMENT}}..."
 
+  choose_file:
+    desc: Choose a file
+    requires:
+      vars:
+        - name: SELECTED_FILE
+          sh: printf "val1\nval2\nval3\n"
+    cmds:
+      - echo "You have selected {{.SELECTED_FILE}}"
+
   # Multiple variables at once
   release:
     desc: Create a release with version and environment
