@@ -7,6 +7,23 @@ outline: deep
 
 ::: v-pre
 
+## v3.47.0 - 2026-01-24
+
+- Fixed remote git Taskfiles: cloning now works without explicit ref, and
+  directory includes are properly resolved (#2602 by @vmaerten).
+- For `output: prefixed`, print `prefix:` if set instead of task name (#1566,
+  #2633 by @trulede).
+- Ensure no ANSI sequences are printed for `--color=false` (#2560, #2584 by
+  @trulede).
+- Task aliases can now contain wildcards and will match accordingly (e.g., `s-*`
+  as alias for `start-*`) (#1900, #2234 by @vmaerten).
+- Added conditional execution with the `if` field: skip tasks, commands, or task
+  calls based on shell exit codes or template expressions like
+  `{{ eq .ENV "prod" }}` (#2564, #608 by @vmaerten).
+- Task can now interactively prompt for missing required variables when running
+  in a TTY, with support for enum selection menus. Enable with `--interactive`
+  flag or `interactive: true` in `.taskrc.yml` (#2579, #2079 by @vmaerten).
+
 ## v3.46.4 - 2025-12-24
 
 - Fixed regressions in completion script for Fish (#2591, #2604, #2592 by

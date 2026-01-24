@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v3.47.0 - 2026-01-24
 
 - Fixed remote git Taskfiles: cloning now works without explicit ref, and
   directory includes are properly resolved (#2602 by @vmaerten).
