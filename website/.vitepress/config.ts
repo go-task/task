@@ -60,15 +60,10 @@ export default defineConfig({
     // Open Graph
     ['meta', { property: 'og:type', content: 'website' }],
     ['meta', { property: 'og:site_name', content: taskName }],
-    ['meta', { property: 'og:title', content: taskName }],
-    ['meta', { property: 'og:description', content: taskDescription }],
     ['meta', { property: 'og:image', content: ogImage }],
-    ['meta', { property: 'og:url', content: ogUrl }],
     // Twitter Card
     ['meta', { name: 'twitter:card', content: 'summary_large_image' }],
     ['meta', { name: 'twitter:site', content: '@taskfiledev' }],
-    ['meta', { name: 'twitter:title', content: taskName }],
-    ['meta', { name: 'twitter:description', content: taskDescription }],
     ['meta', { name: 'twitter:image', content: ogImage }],
     [
       'meta',
@@ -95,6 +90,15 @@ export default defineConfig({
       .replace(/\.md$/, '')
       .replace(/index$/, '')}`
     head.push(['link', { rel: 'canonical', href: canonicalUrl }])
+
+    // Dynamic Open Graph and Twitter meta tags
+    const pageTitle = pageData.frontmatter.title || pageData.title || taskName
+    const pageDescription = pageData.frontmatter.description || pageData.description || taskDescription
+    head.push(['meta', { property: 'og:title', content: `${pageTitle} | Task` }])
+    head.push(['meta', { property: 'og:description', content: pageDescription }])
+    head.push(['meta', { property: 'og:url', content: canonicalUrl }])
+    head.push(['meta', { name: 'twitter:title', content: `${pageTitle} | Task` }])
+    head.push(['meta', { name: 'twitter:description', content: pageDescription }])
 
     // Noindex pour 404
     if (pageData.relativePath === '404.md') {
