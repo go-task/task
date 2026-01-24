@@ -29,6 +29,7 @@ tasks:
     aliases: [i]
     sources:
       - './**/*.go'
+      - go.mod
     cmds:
       - go install -v ./cmd/task
 
