@@ -4,6 +4,15 @@ description: Latest news and updates from the Task team
 ---
 
 <BlogPost
+title="New `if:` Control and Variable Prompt"
+url="/blog/if-and-variable-prompt"
+date="2026-01-24"
+author="vmaerten"
+description="The v3.47.0 release is here, and it brings two exciting new features to Task. Let's take a closer look at them!"
+:tags="['new-features', 'variables']"
+/>
+
+<BlogPost
 title="Announcing Built-in Core Utilities for Windows"
 url="/blog/windows-core-utils"
 date="2025-09-15"

@@ -201,6 +201,16 @@ export default defineConfig({
     sidebar: {
       '/blog/': [
         {
+          text: '2026',
+          collapsed: false,
+          items: [
+            {
+              text: 'New `if:` Control and Variable Prompt',
+              link: '/blog/if-and-variable-prompt'
+            }
+          ]
+        },
+        {
           text: '2025',
           collapsed: false,
           items: [
