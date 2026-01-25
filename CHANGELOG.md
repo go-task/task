@@ -5,6 +5,9 @@
 - Fixed `ROOT_TASKFILE` variable pointing to directory instead of the actual
   Taskfile path when no explicit `-t` flag is provided (#2635, #1706 by
   @trulede).
+- Included Taskfiles with `silent: true` now properly propagate silence to their
+  tasks, while still allowing individual tasks to override with `silent: false`
+  (#2640, #1319 by @trulede).
 
 ## v3.47.0 - 2026-01-24
 

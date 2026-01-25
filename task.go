@@ -228,7 +228,7 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) error {
 			}
 
 			if upToDate && preCondMet {
-				if e.Verbose || (!call.Silent && !t.Silent && !e.Taskfile.Silent && !e.Silent) {
+				if e.Verbose || (!call.Silent && !t.IsSilent() && !e.Taskfile.Silent && !e.Silent) {
 					name := t.Name()
 					if e.OutputStyle.Name == "prefixed" {
 						name = t.Prefix
@@ -383,7 +383,7 @@ func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call *Call, i in
 			return nil
 		}
 
-		if e.Verbose || (!call.Silent && !cmd.Silent && !t.Silent && !e.Taskfile.Silent && !e.Silent) {
+		if e.Verbose || (!call.Silent && !cmd.Silent && !t.IsSilent() && !e.Taskfile.Silent && !e.Silent) {
 			e.Logger.Errf(logger.Green, "task: [%s] %s\n", t.Name(), cmd.Cmd)
 		}
 

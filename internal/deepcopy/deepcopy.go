@@ -10,6 +10,15 @@ type Copier[T any] interface {
 	DeepCopy() T
 }
 
+func Scalar[T any](orig *T) *T {
+	if orig == nil {
+		return nil
+	} else {
+		v := *orig
+		return &v
+	}
+}
+
 func Slice[T any](orig []T) []T {
 	if orig == nil {
 		return nil
