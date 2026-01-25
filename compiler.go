@@ -78,7 +78,6 @@ func (c *Compiler) getVariables(t *ast.Task, call *Call, evaluateShVars bool) (*
 func (c *Compiler) getScopedVariables(t *ast.Task, call *Call, evaluateShVars bool) (*ast.Vars, error) {
 	result := ast.NewVars()
 
-	// Add special variables (TASK, ROOT_DIR, etc.)
 	specialVars, err := c.getSpecialVars(t, call)
 	if err != nil {
 		return nil, err
@@ -87,35 +86,26 @@ func (c *Compiler) getScopedVariables(t *ast.Task, call *Call, evaluateShVars bo
 		result.Set(k, ast.Var{Value: v})
 	}
 
-	// Create range function for resolving vars in a given directory
 	// NOTE: This closure captures result directly - do not refactor to method call
 	getRangeFunc := func(dir string) func(k string, v ast.Var) error {
 		return func(k string, v ast.Var) error {
 			cache := &templater.Cache{Vars: result}
-			// Replace values
 			newVar := templater.ReplaceVar(v, cache)
-			// If the variable should not be evaluated, but is nil, set it to an empty string
-			// This stops empty interface errors when using the templater to replace values later
-			// Preserve the Sh field so it can be displayed in summary
 			if !evaluateShVars && newVar.Value == nil {
 				result.Set(k, ast.Var{Value: "", Sh: newVar.Sh})
 				return nil
 			}
-			// If the variable should not be evaluated and it is set, we can set it and return
 			if !evaluateShVars {
 				result.Set(k, ast.Var{Value: newVar.Value, Sh: newVar.Sh})
 				return nil
 			}
-			// Now we can check for errors since we've handled all the cases when we don't want to evaluate
 			if err := cache.Err(); err != nil {
 				return err
 			}
-			// If the variable is already set, we can set it and return
 			if newVar.Value != nil || newVar.Sh == nil {
 				result.Set(k, ast.Var{Value: newVar.Value})
 				return nil
 			}
-			// If the variable is dynamic, we need to resolve it first
 			static, err := c.HandleDynamicVar(newVar, dir, env.GetFromVars(result))
 			if err != nil {
 				return err
@@ -126,7 +116,6 @@ func (c *Compiler) getScopedVariables(t *ast.Task, call *Call, evaluateShVars bo
 	}
 	rangeFunc := getRangeFunc(c.Dir)
 
-	// Create task-specific range function if we have a task
 	var taskRangeFunc func(k string, v ast.Var) error
 	if t != nil {
 		cache := &templater.Cache{Vars: result}
@@ -138,40 +127,30 @@ func (c *Compiler) getScopedVariables(t *ast.Task, call *Call, evaluateShVars bo
 		taskRangeFunc = getRangeFunc(dir)
 	}
 
-	// Get root Taskfile for inheritance (parent vars are always accessible)
 	rootVertex, err := c.Graph.Root()
 	if err != nil {
 		return nil, err
 	}
 
-	// === ENV NAMESPACE ===
-	// Create a separate map for environment variables
-	// Accessible via {{.env.VAR}} in templates
 	envMap := make(map[string]any)
-
-	// 1. OS environment variables
 	for _, e := range os.Environ() {
 		k, v, _ := strings.Cut(e, "=")
 		envMap[k] = v
 	}
 
-	// Helper to resolve env vars and add to envMap
 	resolveEnvToMap := func(k string, v ast.Var, dir string) error {
 		cache := &templater.Cache{Vars: result}
 		newVar := templater.ReplaceVar(v, cache)
 		if err := cache.Err(); err != nil {
 			return err
 		}
-		// Static value
 		if newVar.Value != nil || newVar.Sh == nil {
 			if newVar.Value != nil {
 				envMap[k] = newVar.Value
 			}
 			return nil
 		}
-		// Dynamic value (sh:)
 		if evaluateShVars {
-			// Build env slice for sh execution (includes envMap values)
 			envSlice := os.Environ()
 			for ek, ev := range envMap {
 				if s, ok := ev.(string); ok {
@@ -187,29 +166,24 @@ func (c *Compiler) getScopedVariables(t *ast.Task, call *Call, evaluateShVars bo
 		return nil
 	}
 
-	// 2. Root taskfile env
 	for k, v := range rootVertex.Taskfile.Env.All() {
 		if err := resolveEnvToMap(k, v, c.Dir); err != nil {
 			return nil, err
 		}
 	}
 
-	// === VARS (at root level) ===
-	// Apply root vars
 	for k, v := range rootVertex.Taskfile.Vars.All() {
 		if err := rangeFunc(k, v); err != nil {
 			return nil, err
 		}
 	}
 
-	// If task is from an included Taskfile, traverse the parent chain to collect vars
 	if t.Location.Taskfile != rootVertex.URI {
 		predecessorMap, err := c.Graph.PredecessorMap()
 		if err != nil {
 			return nil, err
 		}
 
-		// Build parent chain (excluding root, already applied)
 		var parentChain []*ast.TaskfileVertex
 		currentURI := t.Location.Taskfile
 		for {
@@ -233,9 +207,7 @@ func (c *Compiler) getScopedVariables(t *ast.Task, call *Call, evaluateShVars bo
 			currentURI = parentURI
 		}
 
-		// Apply parent chain env and vars
 		for _, parent := range parentChain {
-			// Use the parent's directory for resolving dynamic env vars
 			parentDir := filepath.Dir(parent.URI)
 			for k, v := range parent.Taskfile.Env.All() {
 				if err := resolveEnvToMap(k, v, parentDir); err != nil {
@@ -251,12 +223,10 @@ func (c *Compiler) getScopedVariables(t *ast.Task, call *Call, evaluateShVars bo
 			}
 		}
 
-		// Apply direct include's env and vars
 		includeVertex, err := c.Graph.Vertex(t.Location.Taskfile)
 		if err != nil {
 			return nil, err
 		}
-		// Use the include's directory for resolving dynamic env/vars
 		includeDir := filepath.Dir(includeVertex.URI)
 		for k, v := range includeVertex.Taskfile.Env.All() {
 			if err := resolveEnvToMap(k, v, includeDir); err != nil {
@@ -271,7 +241,6 @@ func (c *Compiler) getScopedVariables(t *ast.Task, call *Call, evaluateShVars bo
 		}
 	}
 
-	// Apply IncludeVars (vars passed via includes: section)
 	if t.IncludeVars != nil {
 		for k, v := range t.IncludeVars.All() {
 			if err := rangeFunc(k, v); err != nil {
@@ -280,14 +249,12 @@ func (c *Compiler) getScopedVariables(t *ast.Task, call *Call, evaluateShVars bo
 		}
 	}
 
-	// Apply task-level vars
 	if call != nil {
 		for k, v := range t.Vars.All() {
 			if err := taskRangeFunc(k, v); err != nil {
 				return nil, err
 			}
 		}
-		// Apply call vars (vars passed when calling a task)
 		for k, v := range call.Vars.All() {
 			if err := taskRangeFunc(k, v); err != nil {
 				return nil, err
@@ -295,14 +262,12 @@ func (c *Compiler) getScopedVariables(t *ast.Task, call *Call, evaluateShVars bo
 		}
 	}
 
-	// CLI vars have highest priority - applied last to override everything
 	for k, v := range c.CLIVars.All() {
 		if err := rangeFunc(k, v); err != nil {
 			return nil, err
 		}
 	}
 
-	// Inject env namespace into result
 	result.Set("env", ast.Var{Value: envMap})
 
 	return result, nil
@@ -313,7 +278,6 @@ func (c *Compiler) getScopedVariables(t *ast.Task, call *Call, evaluateShVars bo
 func (c *Compiler) getLegacyVariables(t *ast.Task, call *Call, evaluateShVars bool) (*ast.Vars, error) {
 	result := env.GetEnviron()
 
-	// Add special variables (TASK, ROOT_DIR, etc.)
 	specialVars, err := c.getSpecialVars(t, call)
 	if err != nil {
 		return nil, err
@@ -322,35 +286,26 @@ func (c *Compiler) getLegacyVariables(t *ast.Task, call *Call, evaluateShVars bo
 		result.Set(k, ast.Var{Value: v})
 	}
 
-	// Create range function for resolving vars in a given directory
 	// NOTE: This closure captures result directly - do not refactor to method call
 	getRangeFunc := func(dir string) func(k string, v ast.Var) error {
 		return func(k string, v ast.Var) error {
 			cache := &templater.Cache{Vars: result}
-			// Replace values
 			newVar := templater.ReplaceVar(v, cache)
-			// If the variable should not be evaluated, but is nil, set it to an empty string
-			// This stops empty interface errors when using the templater to replace values later
-			// Preserve the Sh field so it can be displayed in summary
 			if !evaluateShVars && newVar.Value == nil {
 				result.Set(k, ast.Var{Value: "", Sh: newVar.Sh})
 				return nil
 			}
-			// If the variable should not be evaluated and it is set, we can set it and return
 			if !evaluateShVars {
 				result.Set(k, ast.Var{Value: newVar.Value, Sh: newVar.Sh})
 				return nil
 			}
-			// Now we can check for errors since we've handled all the cases when we don't want to evaluate
 			if err := cache.Err(); err != nil {
 				return err
 			}
-			// If the variable is already set, we can set it and return
 			if newVar.Value != nil || newVar.Sh == nil {
 				result.Set(k, ast.Var{Value: newVar.Value})
 				return nil
 			}
-			// If the variable is dynamic, we need to resolve it first
 			static, err := c.HandleDynamicVar(newVar, dir, env.GetFromVars(result))
 			if err != nil {
 				return err
@@ -361,7 +316,6 @@ func (c *Compiler) getLegacyVariables(t *ast.Task, call *Call, evaluateShVars bo
 	}
 	rangeFunc := getRangeFunc(c.Dir)
 
-	// Create task-specific range function if we have a task
 	var taskRangeFunc func(k string, v ast.Var) error
 	if t != nil {
 		cache := &templater.Cache{Vars: result}
@@ -373,7 +327,6 @@ func (c *Compiler) getLegacyVariables(t *ast.Task, call *Call, evaluateShVars bo
 		taskRangeFunc = getRangeFunc(dir)
 	}
 
-	// Apply merged env and vars from all taskfiles
 	for k, v := range c.TaskfileEnv.All() {
 		if err := rangeFunc(k, v); err != nil {
 			return nil, err
@@ -402,7 +355,6 @@ func (c *Compiler) getLegacyVariables(t *ast.Task, call *Call, evaluateShVars bo
 		return result, nil
 	}
 
-	// Legacy order: CLI vars, then task vars (task vars override CLI)
 	for k, v := range call.Vars.All() {
 		if err := rangeFunc(k, v); err != nil {
 			return nil, err
@@ -421,7 +373,6 @@ func (c *Compiler) HandleDynamicVar(v ast.Var, dir string, e []string) (string, 
 	c.muDynamicCache.Lock()
 	defer c.muDynamicCache.Unlock()
 
-	// If the variable is not dynamic or it is empty, return an empty string
 	if v.Sh == nil || *v.Sh == "" {
 		return "", nil
 	}
