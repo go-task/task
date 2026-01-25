@@ -86,7 +86,6 @@ func (c *Compiler) getScopedVariables(t *ast.Task, call *Call, evaluateShVars bo
 		result.Set(k, ast.Var{Value: v})
 	}
 
-	// NOTE: This closure captures result directly - do not refactor to method call
 	getRangeFunc := func(dir string) func(k string, v ast.Var) error {
 		return func(k string, v ast.Var) error {
 			cache := &templater.Cache{Vars: result}
@@ -286,7 +285,6 @@ func (c *Compiler) getLegacyVariables(t *ast.Task, call *Call, evaluateShVars bo
 		result.Set(k, ast.Var{Value: v})
 	}
 
-	// NOTE: This closure captures result directly - do not refactor to method call
 	getRangeFunc := func(dir string) func(k string, v ast.Var) error {
 		return func(k string, v ast.Var) error {
 			cache := &templater.Cache{Vars: result}
