@@ -111,6 +111,9 @@ complete -c $GO_TASK_PROGNAME -n "__task_is_experiment_enabled REMOTE_TASKFILES"
 complete -c $GO_TASK_PROGNAME -n "__task_is_experiment_enabled REMOTE_TASKFILES" -l timeout          -d 'timeout for remote Taskfile downloads'
 complete -c $GO_TASK_PROGNAME -n "__task_is_experiment_enabled REMOTE_TASKFILES" -l expiry           -d 'cache expiry duration'
 complete -c $GO_TASK_PROGNAME -n "__task_is_experiment_enabled REMOTE_TASKFILES" -l remote-cache-dir -d 'directory to cache remote Taskfiles' -xa "(__fish_complete_directories)"
+complete -c $GO_TASK_PROGNAME -n "__task_is_experiment_enabled REMOTE_TASKFILES" -l cacert           -d 'custom CA certificate for TLS' -r
+complete -c $GO_TASK_PROGNAME -n "__task_is_experiment_enabled REMOTE_TASKFILES" -l cert             -d 'client certificate for mTLS' -r
+complete -c $GO_TASK_PROGNAME -n "__task_is_experiment_enabled REMOTE_TASKFILES" -l cert-key         -d 'client certificate private key' -r
 
 # RemoteTaskfiles experiment - Operations
 complete -c $GO_TASK_PROGNAME -n "__task_is_experiment_enabled REMOTE_TASKFILES" -l download    -d 'download remote Taskfile'

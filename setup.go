@@ -55,7 +55,11 @@ func (e *Executor) Setup() error {
 }
 
 func (e *Executor) getRootNode() (taskfile.Node, error) {
-	node, err := taskfile.NewRootNode(e.Entrypoint, e.Dir, e.Insecure, e.Timeout)
+	node, err := taskfile.NewRootNode(e.Entrypoint, e.Dir, e.Insecure, e.Timeout,
+		taskfile.WithCACert(e.CACert),
+		taskfile.WithCert(e.Cert),
+		taskfile.WithCertKey(e.CertKey),
+	)
 	if os.IsNotExist(err) {
 		return nil, errors.TaskfileNotFoundError{
 			URI:     fsext.DefaultDir(e.Entrypoint, e.Dir),
@@ -87,6 +91,9 @@ func (e *Executor) readTaskfile(node taskfile.Node) error {
 		taskfile.WithTrustedHosts(e.TrustedHosts),
 		taskfile.WithTempDir(e.TempDir.Remote),
 		taskfile.WithCacheExpiryDuration(e.CacheExpiryDuration),
+		taskfile.WithReaderCACert(e.CACert),
+		taskfile.WithReaderCert(e.Cert),
+		taskfile.WithReaderCertKey(e.CertKey),
 		taskfile.WithDebugFunc(debugFunc),
 		taskfile.WithPromptFunc(promptFunc),
 	)
