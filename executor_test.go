@@ -364,6 +364,7 @@ func TestSpecialVars(t *testing.T) {
 		// Root
 		"print-task",
 		"print-root-dir",
+		"print-root-taskfile",
 		"print-taskfile",
 		"print-taskfile-dir",
 		"print-task-dir",
