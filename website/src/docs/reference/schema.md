@@ -678,6 +678,16 @@ tasks:
     cmds:
       - echo "Deploying to {{.ENVIRONMENT}} with log level {{.LOG_LEVEL}}"
       - ./deploy.sh
+
+  # Requirements with enum from variable reference
+  reusable-deploy:
+    requires:
+      vars:
+        - name: ENVIRONMENT
+          enum:
+            ref: .ALLOWED_ENVS
+    cmds:
+      - ./deploy.sh
 ```
 
 See [Prompting for missing variables interactively](/docs/guide#prompting-for-missing-variables-interactively)
