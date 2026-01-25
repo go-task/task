@@ -383,11 +383,7 @@ func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call *Call, i in
 			return nil
 		}
 
-		taskSilent := false
-		if t.Silent != nil {
-			taskSilent = *t.Silent
-		}
-		if e.Verbose || (!call.Silent && !cmd.Silent && !taskSilent && !e.Taskfile.Silent && !e.Silent) {
+		if e.Verbose || (!call.Silent && !cmd.Silent && !t.IsSilent() && !e.Taskfile.Silent && !e.Silent) {
 			e.Logger.Errf(logger.Green, "task: [%s] %s\n", t.Name(), cmd.Cmd)
 		}
 

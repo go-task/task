@@ -69,6 +69,12 @@ func (t *Task) LocalName() string {
 	return name
 }
 
+// IsSilent returns true if the task has silent mode explicitly enabled.
+// Returns false if Silent is nil (not set) or explicitly set to false.
+func (t *Task) IsSilent() bool {
+	return t.Silent != nil && *t.Silent
+}
+
 // WildcardMatch will check if the given string matches the name of the Task and returns any wildcard values.
 func (t *Task) WildcardMatch(name string) (bool, []string) {
 	names := append([]string{t.Task}, t.Aliases...)
