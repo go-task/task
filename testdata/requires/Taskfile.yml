@@ -1,5 +1,9 @@
 version: '3'
 
+vars:
+  ALLOWED_ENVS: ["dev", "staging", "prod"]
+  NOT_A_LIST: "this is a string"
+
 tasks:
   default:
     - task: missing-var
@@ -41,3 +45,19 @@ tasks:
       {{range .MY_VAR | splitList " " }}
         echo {{.}}
       {{end}}
+
+  validation-var-ref:
+    requires:
+      vars:
+        - name: ENV
+          enum:
+            ref: .ALLOWED_ENVS
+    cmd: echo "{{.ENV}}"
+
+  validation-var-ref-invalid:
+    requires:
+      vars:
+        - name: VALUE
+          enum:
+            ref: .NOT_A_LIST
+    cmd: echo "{{.VALUE}}"

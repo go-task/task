@@ -1,0 +1,2 @@
+task: Task "validation-var-ref" cancelled because it is missing required variables:
+  - ENV has an invalid value : 'invalid' (allowed values : [dev staging prod])

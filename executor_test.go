@@ -351,6 +351,32 @@ func TestRequires(t *testing.T) {
 		),
 		WithTask("var-defined-in-task"),
 	)
+	NewExecutorTest(t,
+		WithName("enum ref - passes validation"),
+		WithExecutorOptions(
+			task.WithDir("testdata/requires"),
+		),
+		WithTask("validation-var-ref"),
+		WithVar("ENV", "dev"),
+	)
+	NewExecutorTest(t,
+		WithName("enum ref - fails validation"),
+		WithExecutorOptions(
+			task.WithDir("testdata/requires"),
+		),
+		WithTask("validation-var-ref"),
+		WithVar("ENV", "invalid"),
+		WithRunError(),
+	)
+	NewExecutorTest(t,
+		WithName("enum ref - ref to non-list"),
+		WithExecutorOptions(
+			task.WithDir("testdata/requires"),
+		),
+		WithTask("validation-var-ref-invalid"),
+		WithVar("VALUE", "test"),
+		WithRunError(),
+	)
 }
 
 // TODO: mock fs
