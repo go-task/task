@@ -659,14 +659,12 @@ tasks:
 
 ```yaml
 tasks:
-  # Simple requirements
   deploy:
     requires:
       vars: [API_KEY, ENVIRONMENT]
     cmds:
       - ./deploy.sh
 
-  # Requirements with enum validation
   advanced-deploy:
     requires:
       vars:
@@ -678,6 +676,7 @@ tasks:
     cmds:
       - echo "Deploying to {{.ENVIRONMENT}} with log level {{.LOG_LEVEL}}"
       - ./deploy.sh
+
 
   # Requirements with enum from variable reference
   reusable-deploy:
