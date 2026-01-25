@@ -1527,6 +1527,22 @@ func TestWhenDirAttributeItCreatesMissingAndRunsInThatDir(t *testing.T) {
 	_ = os.RemoveAll(toBeCreated)
 }
 
+func TestCommandDirRunsInCommandDir(t *testing.T) {
+	const dir = "testdata/command_dir"
+	var out bytes.Buffer
+	e := &task.Executor{
+		Dir:    dir,
+		Stdout: &out,
+		Stderr: &out,
+	}
+
+	require.NoError(t, e.Setup())
+	require.NoError(t, e.Run(context.Background(), &ast.Call{Task: "default"}))
+
+	got := filepath.Base(strings.TrimSpace(out.String()))
+	assert.Equal(t, "subdir", got, "Mismatch in the command working directory")
+}
+
 func TestDynamicVariablesRunOnTheNewCreatedDir(t *testing.T) {
 	t.Parallel()
 
