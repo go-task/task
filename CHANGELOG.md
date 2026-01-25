@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Fixed `ROOT_TASKFILE` variable pointing to directory instead of the actual
+  Taskfile path when no explicit `-t` flag is provided (#2635, #1706 by
+  @trulede).
+
 ## v3.47.0 - 2026-01-24
 
 - Fixed remote git Taskfiles: cloning now works without explicit ref, and
