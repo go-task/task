@@ -75,6 +75,12 @@ variables. The priority order is: CLI flags > environment variables > config fil
 - **Default**: `false`
 - **Description**: Assume "yes" as answer to all prompts
 
+### `TASK_INTERACTIVE`
+
+- **Type**: `boolean` (`true`, `false`, `1`, `0`)
+- **Default**: `false`
+- **Description**: Prompt for missing required variables
+
 ### `TASK_TEMP_DIR`
 
 Defines the location of Task's temporary directory which is used for storing

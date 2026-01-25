@@ -332,6 +332,8 @@ Task automatically detects non-TTY environments (like CI pipelines) and
 skips prompts. This flag can also be set in `.taskrc.yml` to enable prompts
 by default.
 
+- **Environment variable**: [`TASK_INTERACTIVE`](./environment.md#task-interactive)
+
 ```bash
 task deploy --interactive
 ```
