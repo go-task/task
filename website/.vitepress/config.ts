@@ -35,8 +35,10 @@ export default defineConfig({
   description: taskDescription,
   lang: 'en-US',
   head: [
-    // Favicon - Google requires a single favicon declaration per site
+    // Favicon ICO for legacy browsers (auto-discovery)
     ['link', { rel: 'icon', href: '/favicon.ico', sizes: '48x48' }],
+    // Favicon SVG for modern browsers (scalable)
+    ['link', { rel: 'icon', href: '/img/logo.svg', type: 'image/svg+xml' }],
     // Apple Touch Icon for iOS devices
     ['link', { rel: 'apple-touch-icon', href: '/img/logo.png' }],
     [
