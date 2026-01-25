@@ -148,7 +148,32 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) error {
 		return nil
 	}
 
-	// Prompt for missing required vars (just-in-time for sequential task calls)
+	// Check required vars early (before template compilation) if we can't prompt.
+	// This gives a clear "missing required variables" error instead of a template error.
+	if !e.canPrompt() {
+		if err := e.areTaskRequiredVarsSet(t); err != nil {
+			return err
+		}
+	}
+
+	t, err = e.CompiledTask(call)
+	if err != nil {
+		return err
+	}
+
+	// Check if condition after CompiledTask so dynamic variables are resolved
+	if strings.TrimSpace(t.If) != "" {
+		if err := execext.RunCommand(ctx, &execext.RunCommandOptions{
+			Command: t.If,
+			Dir:     t.Dir,
+			Env:     env.Get(t),
+		}); err != nil {
+			e.Logger.VerboseOutf(logger.Yellow, "task: if condition not met - skipped: %q\n", call.Task)
+			return nil
+		}
+	}
+
+	// Prompt for missing required vars after if check (avoid prompting if task won't run)
 	prompted, err := e.promptTaskVars(t, call)
 	if err != nil {
 		return err
@@ -165,25 +190,8 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) error {
 		return err
 	}
 
-	t, err = e.CompiledTask(call)
-	if err != nil {
-		return err
-	}
-
 	if err := e.areTaskRequiredVarsAllowedValuesSet(t); err != nil {
 		return err
-	}
-
-	// Check if condition after CompiledTask so dynamic variables are resolved
-	if strings.TrimSpace(t.If) != "" {
-		if err := execext.RunCommand(ctx, &execext.RunCommandOptions{
-			Command: t.If,
-			Dir:     t.Dir,
-			Env:     env.Get(t),
-		}); err != nil {
-			e.Logger.VerboseOutf(logger.Yellow, "task: if condition not met - skipped: %q\n", call.Task)
-			return nil
-		}
 	}
 
 	if !e.Watch && atomic.AddInt32(e.taskCallCount[t.Task], 1) >= MaximumTaskCall {
