@@ -741,6 +741,8 @@ tasks:
         platforms: [linux, darwin]
         set: [errexit]
         shopt: [globstar]
+        if: '[ "$CI" = "true" ]'
+        ask: "Run this command?"
 ```
 
 ### Task References
@@ -856,6 +858,36 @@ tasks:
         cmd: echo "processing {{.ITEM}}"
         if: '[ "{{.ITEM}}" != "b" ]'
 ```
+
+### Command Confirmations
+
+Use `ask` to request user confirmation before executing a command. If the
+user declines (answers "n" or "no"), the command is skipped but the task
+continues.
+
+```yaml
+tasks:
+  deploy:
+    cmds:
+      - cmd: echo "Deploying to production..."
+        ask: "Deploy to production?"
+      - cmd: echo "Updating database..."
+        ask: "Run database migrations?"
+      - echo "Done!"  # No ask, always runs
+```
+
+| Flag | Behavior |
+|------|----------|
+| (none) | Asks user for y/n confirmation |
+| `--yes` | Auto-confirms all asks |
+| `--dry` | Shows commands without asking |
+
+:::note
+
+This is different from the task-level `prompt:` which cancels the entire task
+if declined. Command-level `ask:` only skips the individual command.
+
+:::
 
 ## Shell Options
 
