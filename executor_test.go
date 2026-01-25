@@ -1181,10 +1181,8 @@ func TestIf(t *testing.T) {
 	}
 }
 
+//nolint:paralleltest // enableExperimentForTest modifies global state
 func TestScopedTaskfiles(t *testing.T) {
-	// NOTE: Don't use t.Parallel() here because enableExperimentForTest modifies
-	// global state that can affect other tests running in parallel.
-
 	// Legacy tests (without experiment) - vars should be merged globally
 	t.Run("legacy", func(t *testing.T) {
 		// Test with scoped taskfiles disabled (legacy) - vars should be merged globally

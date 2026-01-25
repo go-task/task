@@ -16,10 +16,10 @@ const envPrefix = "TASK_X_"
 
 // Active experiments.
 var (
-	GentleForce      Experiment
-	RemoteTaskfiles  Experiment
-	EnvPrecedence    Experiment
-	ScopedTaskfiles  Experiment
+	GentleForce     Experiment
+	RemoteTaskfiles Experiment
+	EnvPrecedence   Experiment
+	ScopedTaskfiles Experiment
 )
 
 // Inactive experiments. These are experiments that cannot be enabled, but are
