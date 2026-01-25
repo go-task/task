@@ -1549,6 +1549,163 @@ tasks:
 map[a:1 b:2 c:3]
 ```
 
+### Secret variables
+
+Task supports marking variables as `secret` to prevent their values from being
+displayed in command logs. When a variable is marked as secret, its value will
+be replaced with `*****` in the task output logs.
+
+::: warning
+
+**Security Notice**: This feature helps prevent accidental exposure of secrets
+in logs, but is **not a substitute** for proper secret management practices.
+
+**What this protects:**
+
+- ✅ Secret values in console/terminal logs
+- ✅ Secret values in CI/CD logs
+- ✅ Accidental copy-paste of logs containing secrets
+
+**What this does NOT protect:**
+
+- ❌ Secrets visible in process inspection (e.g., `ps aux`)
+- ❌ Secrets in shell history
+- ❌ Secrets in command output (stdout/stderr)
+
+Always use proper secret management tools (HashiCorp Vault, AWS Secrets
+Manager, etc.) for production environments.
+
+:::
+
+To mark a variable as secret, add `secret: true` to the variable definition:
+
+```yaml
+version: '3'
+
+vars:
+  API_KEY:
+    value: 'sk-1234567890abcdef'
+    secret: true
+
+tasks:
+  deploy:
+    cmds:
+      - curl -H "Authorization: {{.API_KEY}}" api.example.com
+      # Logged as: task: [deploy] curl -H "Authorization: *****" api.example.com
+```
+
+Secret variables work with all variable types:
+
+::: code-group
+
+```yaml [Simple Value]
+version: '3'
+
+vars:
+  PASSWORD:
+    value: 'my-secret-password'
+    secret: true
+
+tasks:
+  connect:
+    cmds:
+      - psql -U user -p {{.PASSWORD}} mydb
+      # Logged as: psql -U user -p ***** mydb
+```
+
+```yaml [Shell Command]
+version: '3'
+
+vars:
+  DB_PASSWORD:
+    sh: vault read -field=password secret/db
+    secret: true
+
+tasks:
+  migrate:
+    cmds:
+      - psql -U admin -p {{.DB_PASSWORD}} mydb
+      # Password from vault is masked in logs
+```
+
+```yaml [Task-Level Secret]
+version: '3'
+
+vars:
+  PUBLIC_URL: https://example.com
+
+tasks:
+  deploy:
+    vars:
+      DEPLOY_TOKEN:
+        value: 'secret-token-123'
+        secret: true
+    cmds:
+      - echo "Deploying to {{.PUBLIC_URL}} with token {{.DEPLOY_TOKEN}}"
+      # Logged as: echo "Deploying to https://example.com with token *****"
+```
+
+:::
+
+Multiple secrets in the same command are all masked:
+
+```yaml
+version: '3'
+
+vars:
+  API_KEY:
+    value: 'api-key-123'
+    secret: true
+  PASSWORD:
+    value: 'password-456'
+    secret: true
+
+tasks:
+  setup:
+    cmds:
+      - ./setup.sh --api {{.API_KEY}} --pwd {{.PASSWORD}}
+      # Logged as: ./setup.sh --api ***** --pwd *****
+```
+
+::: tip
+
+**Best practices for secret variables:**
+
+1. **Use shell commands to load secrets**, not hardcoded values:
+
+   ```yaml
+   # ❌ BAD - Secret visible in Taskfile
+   vars:
+     API_KEY:
+       value: 'hardcoded-secret'
+       secret: true
+
+   # ✅ GOOD - Secret loaded from external source
+   vars:
+     API_KEY:
+       sh: vault kv get -field=api_key secret/myapp
+       secret: true
+   ```
+
+2. **Combine with environment variables:**
+
+   ```yaml
+   vars:
+     API_KEY:
+       sh: echo $MY_API_KEY
+       secret: true
+   ```
+
+3. **Use .gitignore for secret files:**
+
+   If you use dotenv files, add them to `.gitignore`:
+
+   ```yaml
+   dotenv: ['.env.local']  # Load from .env.local (in .gitignore)
+   ```
+
+:::
+
 ## Looping over values
 
 Task allows you to loop over certain values and execute a command for each.
