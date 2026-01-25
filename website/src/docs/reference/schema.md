@@ -736,12 +736,18 @@ tasks:
   example:
     cmds:
       - cmd: echo "Hello World"
+        dir: subdir
         silent: true
         ignore_error: false
         platforms: [linux, darwin]
         set: [errexit]
         shopt: [globstar]
 ```
+
+
+#### `dir`
+
+Working directory for the command. Relative paths resolve from the task directory and are created if missing.
 
 ### Task References
 

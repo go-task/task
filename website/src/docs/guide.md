@@ -528,6 +528,22 @@ tasks:
 
 If the directory does not exist, `task` creates it.
 
+You can also change the working directory for a specific command without
+affecting the rest of the task by setting `dir` on the command itself. Relative
+paths are resolved from the task directory and are created if missing:
+
+```yaml
+version: '3'
+
+tasks:
+  test:
+    dir: backend
+    cmds:
+      - cmd: npm test
+        dir: frontend
+      - cmd: go test ./...
+```
+
 ## Task dependencies
 
 > Dependencies run in parallel, so dependencies of a task should not depend one
