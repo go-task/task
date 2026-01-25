@@ -1160,6 +1160,10 @@ func TestIf(t *testing.T) {
 
 		// For loop with if
 		{name: "if-in-for-loop", task: "if-in-for-loop", verbose: true},
+
+		// Task-level if with dynamic variable
+		{name: "task-if-dynamic-true", task: "task-if-dynamic-true"},
+		{name: "task-if-dynamic-false", task: "task-if-dynamic-false", verbose: true},
 	}
 
 	for _, test := range tests {
