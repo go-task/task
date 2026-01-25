@@ -35,31 +35,19 @@ export default defineConfig({
   description: taskDescription,
   lang: 'en-US',
   head: [
-    [
-      'link',
-      {
-        rel: 'icon',
-        type: 'image/x-icon',
-        href: '/img/favicon.ico',
-        sizes: '48x48'
-      }
-    ],
-    [
-      'link',
-      {
-        rel: 'icon',
-        sizes: 'any',
-        type: 'image/svg+xml',
-        href: '/img/logo.svg'
-      }
-    ],
+    // Favicon ICO for legacy browsers (auto-discovery)
+    ['link', { rel: 'icon', href: '/favicon.ico', sizes: '48x48' }],
+    // Favicon SVG for modern browsers (scalable)
+    ['link', { rel: 'icon', href: '/img/logo.svg', type: 'image/svg+xml' }],
+    // Apple Touch Icon for iOS devices
+    ['link', { rel: 'apple-touch-icon', href: '/img/logo.png' }],
     [
       'meta',
       { name: 'author', content: `${team.map((c) => c.name).join(', ')}` }
     ],
     // Open Graph
     ['meta', { property: 'og:type', content: 'website' }],
-    ['meta', { property: 'og:site_name', content: taskName }],
+    ['meta', { property: 'og:site_name', content: 'Task' }],
     ['meta', { property: 'og:image', content: ogImage }],
     // Twitter Card
     ['meta', { name: 'twitter:card', content: 'summary_large_image' }],
@@ -80,6 +68,16 @@ export default defineConfig({
         src: "https://u.taskfile.dev/script.js",
         "data-website-id": "084030b0-0e3f-4891-8d2a-0c12c40f5933"
       }
+    ],
+    [
+      "script",
+      { type: "application/ld+json" },
+      JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "Task",
+        "url": "https://taskfile.dev/"
+      })
     ]
   ],
   transformHead({ pageData }) {
