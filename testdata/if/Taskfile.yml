@@ -158,3 +158,21 @@ tasks:
     if: '{{ eq .ENV "dev" }}'
     cmds:
       - echo "should not appear"
+
+  # Task-level if with dynamic variable (condition met)
+  task-if-dynamic-true:
+    vars:
+      ENABLE_FEATURE:
+        sh: 'echo "true"'
+    if: '{{ eq .ENABLE_FEATURE "true" }}'
+    cmds:
+      - echo "dynamic feature enabled"
+
+  # Task-level if with dynamic variable (condition not met)
+  task-if-dynamic-false:
+    vars:
+      ENABLE_FEATURE:
+        sh: 'echo "false"'
+    if: '{{ eq .ENABLE_FEATURE "true" }}'
+    cmds:
+      - echo "should not appear"

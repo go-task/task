@@ -148,17 +148,6 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) error {
 		return nil
 	}
 
-	if strings.TrimSpace(t.If) != "" {
-		if err := execext.RunCommand(ctx, &execext.RunCommandOptions{
-			Command: t.If,
-			Dir:     t.Dir,
-			Env:     env.Get(t),
-		}); err != nil {
-			e.Logger.VerboseOutf(logger.Yellow, "task: if condition not met - skipped: %q\n", call.Task)
-			return nil
-		}
-	}
-
 	// Prompt for missing required vars (just-in-time for sequential task calls)
 	prompted, err := e.promptTaskVars(t, call)
 	if err != nil {
@@ -183,6 +172,18 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) error {
 
 	if err := e.areTaskRequiredVarsAllowedValuesSet(t); err != nil {
 		return err
+	}
+
+	// Check if condition after CompiledTask so dynamic variables are resolved
+	if strings.TrimSpace(t.If) != "" {
+		if err := execext.RunCommand(ctx, &execext.RunCommandOptions{
+			Command: t.If,
+			Dir:     t.Dir,
+			Env:     env.Get(t),
+		}); err != nil {
+			e.Logger.VerboseOutf(logger.Yellow, "task: if condition not met - skipped: %q\n", call.Task)
+			return nil
+		}
 	}
 
 	if !e.Watch && atomic.AddInt32(e.taskCallCount[t.Task], 1) >= MaximumTaskCall {
