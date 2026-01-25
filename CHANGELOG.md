@@ -10,7 +10,7 @@
   (#2640, #1319 by @trulede).
 - Added TLS certificate options for Remote Taskfiles: use `--cacert` for
   self-signed certificates and `--cert`/`--cert-key` for mTLS authentication
-  (#2537 by @vmaerten).
+  (#2537, #2242 by @vmaerten).
 
 ## v3.47.0 - 2026-01-24
 
