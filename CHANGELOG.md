@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Fixed `if:` conditions when using to check dynamic variables. Also, skip
+  variable prompt if task would be skipped by `if:` (#2658, #2660 by @vmaerten).
 - Fixed `ROOT_TASKFILE` variable pointing to directory instead of the actual
   Taskfile path when no explicit `-t` flag is provided (#2635, #1706 by
   @trulede).
