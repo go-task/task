@@ -23,6 +23,11 @@
         </a>
       </td>
       <td align="center" valign="middle">
+        <a target="_blank" href="https://goodx.international/">
+          <img src="website/src/public/img/goodx.svg" height="80px" width="200px" title="GoodX" />
+        </a>
+      </td>
+      <td align="center" valign="middle">
         <a target="_blank" href="https://magic.dev/">
           <img src="website/src/public/img/magic.png" height="100px" width="200px" title="Magic" />
         </a>
