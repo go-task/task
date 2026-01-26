@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v3.48.0 - 2026-01-26
 
 - Fixed `if:` conditions when using to check dynamic variables. Also, skip
   variable prompt if task would be skipped by `if:` (#2658, #2660 by @vmaerten).
