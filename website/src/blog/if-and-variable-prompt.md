@@ -6,7 +6,7 @@ date: 2026-01-24
 outline: deep
 ---
 
-# New `if:` control and interactivity support
+# New `if:` Control and Variable Prompt
 
 <AuthorCard :author="$frontmatter.author" />
 
