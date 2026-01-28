@@ -47,6 +47,19 @@ func (c *Compiler) FastGetVariables(t *ast.Task, call *Call) (*ast.Vars, error) 
 func (c *Compiler) getVariables(t *ast.Task, call *Call, evaluateShVars bool) (*ast.Vars, error) {
 	result := env.GetEnviron()
 	specialVars, err := c.getSpecialVars(t, call)
+
+	if t != nil && t.Requires != nil {
+		for _, requiredVar := range t.Requires.Vars {
+			if requiredVar.Sh != "" {
+				newVar := ast.Var{
+					Sh: &requiredVar.Sh,
+				}
+				static, _ := c.HandleDynamicVar(newVar, c.Dir, env.GetFromVars(result))
+				requiredVar.Enum = strings.Split(static, "\n")
+			}
+		}
+	}
+
 	if err != nil {
 		return nil, err
 	}
