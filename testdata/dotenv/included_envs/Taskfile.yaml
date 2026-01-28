@@ -1,0 +1,15 @@
+version: '3'
+
+silent: true
+
+dotenv:
+  - dotenv.txt
+
+includes:
+  foo: ./inc/Taskfile.yaml
+
+tasks:
+  default:
+    cmds:
+      - echo "var FOO = {{.FOO}}"
+      - echo "env FOO = $FOO"
