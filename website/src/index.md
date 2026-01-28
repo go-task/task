@@ -1,4 +1,5 @@
 ---
+title: "Task: The Modern Task Runner"
 layout: home
 hero:
   name: Task
