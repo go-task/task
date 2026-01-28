@@ -306,6 +306,10 @@ export default defineConfig({
             {
               text: 'Remote Taskfiles (#1317)',
               link: '/docs/experiments/remote-taskfiles'
+            },
+            {
+              text: 'Scoped Taskfiles',
+              link: '/docs/experiments/scoped-taskfiles'
             }
           ]
         },

@@ -45,7 +45,21 @@ func (tfg *TaskfileGraph) Visualize(filename string) error {
 	return draw.DOT(tfg.Graph, f)
 }
 
-func (tfg *TaskfileGraph) Merge() (*Taskfile, error) {
+// Root returns the root vertex of the graph (the entrypoint Taskfile).
+func (tfg *TaskfileGraph) Root() (*TaskfileVertex, error) {
+	hashes, err := graph.TopologicalSort(tfg.Graph)
+	if err != nil {
+		return nil, err
+	}
+	if len(hashes) == 0 {
+		return nil, fmt.Errorf("task: graph has no vertices")
+	}
+	return tfg.Vertex(hashes[0])
+}
+
+// Merge merges all included Taskfiles into the root Taskfile.
+// If skipVarsMerge is true, variables are not merged (used for scoped includes).
+func (tfg *TaskfileGraph) Merge(skipVarsMerge bool) (*Taskfile, error) {
 	hashes, err := graph.TopologicalSort(tfg.Graph)
 	if err != nil {
 		return nil, err
@@ -92,6 +106,7 @@ func (tfg *TaskfileGraph) Merge() (*Taskfile, error) {
 					if err := vertex.Taskfile.Merge(
 						includedVertex.Taskfile,
 						include,
+						skipVarsMerge,
 					); err != nil {
 						return err
 					}
