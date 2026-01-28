@@ -32,7 +32,7 @@ require (
 	go.yaml.in/yaml/v4 v4.0.0-rc.3
 	golang.org/x/sync v0.19.0
 	golang.org/x/term v0.39.0
-	mvdan.cc/sh/moreinterp v0.0.0-20260120230322-19def062a997
+	mvdan.cc/sh/moreinterp v0.0.0-20260124232039-e74afc18e65b
 	mvdan.cc/sh/v3 v3.12.1-0.20260124232039-e74afc18e65b
 )
 
