@@ -2657,6 +2657,184 @@ func TestWildcard(t *testing.T) {
 	}
 }
 
+func TestOverrides(t *testing.T) {
+	t.Parallel()
+
+	t.Run("basic_override", func(t *testing.T) {
+		t.Parallel()
+
+		var buff bytes.Buffer
+		e := task.NewExecutor(
+			task.WithDir("testdata/overrides"),
+			task.WithStdout(&buff),
+			task.WithStderr(&buff),
+			task.WithSilent(true),
+		)
+		require.NoError(t, e.Setup())
+		require.NoError(t, e.Run(t.Context(), &task.Call{Task: "greet"}))
+		assert.Equal(t, "Overridden!\n", buff.String())
+	})
+}
+
+func TestOverridesFlatten(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name           string
+		task           string
+		expectedOutput string
+	}{
+		{"overridden_task", "from_entrypoint", "overridden from included\n"},
+		{"new_task_from_override", "from_included", "from included\n"},
+		{"default_task_from_override", "default", "default from with_default\n"},
+		{"new_task_from_with_default", "from_with_default", "from with_default\n"},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			var buff bytes.Buffer
+			e := task.NewExecutor(
+				task.WithDir("testdata/overrides_flatten"),
+				task.WithStdout(&buff),
+				task.WithStderr(&buff),
+				task.WithSilent(true),
+			)
+			require.NoError(t, e.Setup())
+			require.NoError(t, e.Run(t.Context(), &task.Call{Task: test.task}))
+			assert.Equal(t, test.expectedOutput, buff.String())
+		})
+	}
+}
+
+func TestOverridesNested(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name           string
+		task           string
+		expectedOutput string
+	}{
+		{"base_task", "base", "base\n"},
+		{"level1_task", "level1", "level1\n"},
+		{"level2_task", "level2", "level2\n"},
+		{"shared_task_final_override", "shared", "shared from level2 - final override\n"},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			var buff bytes.Buffer
+			e := task.NewExecutor(
+				task.WithDir("testdata/overrides_nested"),
+				task.WithStdout(&buff),
+				task.WithStderr(&buff),
+				task.WithSilent(true),
+			)
+			require.NoError(t, e.Setup())
+			require.NoError(t, e.Run(t.Context(), &task.Call{Task: test.task}))
+			assert.Equal(t, test.expectedOutput, buff.String())
+		})
+	}
+}
+
+func TestOverridesWithIncludes(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name           string
+		task           string
+		expectedOutput string
+	}{
+		{"main_task", "main", "main task\n"},
+		{"included_task", "lib:lib_task", "lib task\n"},
+		{"overridden_shared_task", "shared", "shared from override - this should win\n"},
+		{"new_task_from_override", "new_task", "new task from override\n"},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			var buff bytes.Buffer
+			e := task.NewExecutor(
+				task.WithDir("testdata/overrides_with_includes"),
+				task.WithStdout(&buff),
+				task.WithStderr(&buff),
+				task.WithSilent(true),
+			)
+			require.NoError(t, e.Setup())
+			require.NoError(t, e.Run(t.Context(), &task.Call{Task: test.task}))
+			assert.Equal(t, test.expectedOutput, buff.String())
+		})
+	}
+}
+
+func TestOverridesCycle(t *testing.T) {
+	t.Parallel()
+
+	const dir = "testdata/overrides_cycle"
+
+	var buff bytes.Buffer
+	e := task.NewExecutor(
+		task.WithDir(dir),
+		task.WithStdout(&buff),
+		task.WithStderr(&buff),
+		task.WithSilent(true),
+	)
+
+	err := e.Setup()
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "task: include cycle detected between")
+}
+
+func TestOverridesOptional(t *testing.T) {
+	t.Parallel()
+
+	var buff bytes.Buffer
+	e := task.NewExecutor(
+		task.WithDir("testdata/overrides_optional"),
+		task.WithStdout(&buff),
+		task.WithStderr(&buff),
+		task.WithSilent(true),
+	)
+	require.NoError(t, e.Setup())
+	require.NoError(t, e.Run(t.Context(), &task.Call{Task: "default"}))
+	assert.Equal(t, "overridden_from_existing\n", buff.String())
+}
+
+func TestOverridesWithVars(t *testing.T) {
+	t.Parallel()
+
+	var buff bytes.Buffer
+	e := task.NewExecutor(
+		task.WithDir("testdata/overrides_with_vars"),
+		task.WithStdout(&buff),
+		task.WithStderr(&buff),
+		task.WithSilent(true),
+	)
+	require.NoError(t, e.Setup())
+	require.NoError(t, e.Run(t.Context(), &task.Call{Task: "test"}))
+	assert.Equal(t, "override_value-global\n", buff.String())
+}
+
+func TestOverridesInterpolation(t *testing.T) {
+	t.Parallel()
+
+	var buff bytes.Buffer
+	e := task.NewExecutor(
+		task.WithDir("testdata/overrides_interpolation"),
+		task.WithStdout(&buff),
+		task.WithStderr(&buff),
+		task.WithSilent(true),
+	)
+	require.NoError(t, e.Setup())
+	require.NoError(t, e.Run(t.Context(), &task.Call{Task: "test"}))
+	assert.Equal(t, "interpolated override\n", buff.String())
+}
+
 // enableExperimentForTest enables the experiment behind pointer e for the duration of test t and sub-tests,
 // with the experiment being restored to its previous state when tests complete.
 //
