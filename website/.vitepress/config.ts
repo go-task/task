@@ -370,6 +370,11 @@ export default defineConfig({
       { icon: 'mastodon', link: 'https://fosstodon.org/@task' }
     ],
 
+    editLink: {
+      text: 'Edit this page on GitHub',
+      pattern: 'https://github.com/go-task/task/edit/main/website/src/:path'
+    },
+
     footer: {
       message:
         'Built with <a target="_blank" href="https://www.netlify.com">Netlify</a>'

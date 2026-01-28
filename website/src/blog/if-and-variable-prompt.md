@@ -4,6 +4,7 @@ description: Introduction of the `if:` control and required variable prompts.
 author: vmaerten
 date: 2026-01-24
 outline: deep
+editLink: false
 ---
 
 # New `if:` Control and Variable Prompt

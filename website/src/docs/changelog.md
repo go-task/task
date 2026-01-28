@@ -1,6 +1,7 @@
 ---
 title: Changelog
 outline: deep
+editLink: false
 ---
 
 # Changelog
