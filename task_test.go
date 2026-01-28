@@ -1333,6 +1333,23 @@ func TestIncludedTaskfileVarMerging(t *testing.T) {
 	}
 }
 
+func TestIncludedDirWithTemplate(t *testing.T) {
+	t.Parallel()
+
+	const dir = "testdata/included_dir_with_template"
+	var buff bytes.Buffer
+	e := task.NewExecutor(
+		task.WithDir(dir),
+		task.WithStdout(&buff),
+		task.WithStderr(&buff),
+		task.WithSilent(true),
+	)
+	require.NoError(t, e.Setup())
+	err := e.Run(t.Context(), &task.Call{Task: "default"})
+	require.NoError(t, err)
+	assert.Contains(t, buff.String(), "Build WORKING_DIR: /tmp")
+}
+
 func TestInternalTask(t *testing.T) {
 	t.Parallel()
 

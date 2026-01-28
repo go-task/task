@@ -91,19 +91,6 @@ func (c *Compiler) getVariables(t *ast.Task, call *Call, evaluateShVars bool) (*
 	}
 	rangeFunc := getRangeFunc(c.Dir)
 
-	var taskRangeFunc func(k string, v ast.Var) error
-	if t != nil {
-		// NOTE(@andreynering): We're manually joining these paths here because
-		// this is the raw task, not the compiled one.
-		cache := &templater.Cache{Vars: result}
-		dir := templater.Replace(t.Dir, cache)
-		if err := cache.Err(); err != nil {
-			return nil, err
-		}
-		dir = filepathext.SmartJoin(c.Dir, dir)
-		taskRangeFunc = getRangeFunc(dir)
-	}
-
 	for k, v := range c.TaskfileEnv.All() {
 		if err := rangeFunc(k, v); err != nil {
 			return nil, err
@@ -114,31 +101,54 @@ func (c *Compiler) getVariables(t *ast.Task, call *Call, evaluateShVars bool) (*
 			return nil, err
 		}
 	}
+
 	if t != nil {
 		for k, v := range t.IncludeVars.All() {
 			if err := rangeFunc(k, v); err != nil {
 				return nil, err
 			}
 		}
+
+		if !evaluateShVars {
+			// Add includedTaskfile.Vars, and replace/overwrite taskfile.Vars,
+			// _before_ calculating the t.Dir using the templater. Because
+			// evaluateShVars is not set, the dir used when creating rangeFunc
+			// will not be used (sh vars are evaluated on subsequent calls).
+			for k, v := range t.IncludedTaskfileVars.All() {
+				if err := rangeFunc(k, v); err != nil {
+					return nil, err
+				}
+			}
+		}
+
+		// Calculate the taskDir for evaluation of IncludeVars. If the original TaskDir
+		// was saved to t.IncludeTaskDir then that path needs to be used.
+		cache := &templater.Cache{Vars: result}
+		t.Dir = templater.Replace(t.Dir, cache)
+		if len(t.IncludeTaskDir) > 0 {
+			// If the included TaskDir is absolute, then it will become
+			// the TaskDir, otherwise join with the existing TaskDir.
+			taskDir := templater.Replace(t.IncludeTaskDir, cache)
+			t.Dir = filepathext.SmartJoin(t.Dir, taskDir)
+		}
+		taskRangeFunc := getRangeFunc(t.Dir)
+
 		for k, v := range t.IncludedTaskfileVars.All() {
 			if err := taskRangeFunc(k, v); err != nil {
 				return nil, err
 			}
 		}
-	}
-
-	if t == nil || call == nil {
-		return result, nil
-	}
-
-	for k, v := range call.Vars.All() {
-		if err := rangeFunc(k, v); err != nil {
-			return nil, err
+		if call != nil {
+			for k, v := range call.Vars.All() {
+				if err := rangeFunc(k, v); err != nil {
+					return nil, err
+				}
+			}
 		}
-	}
-	for k, v := range t.Vars.All() {
-		if err := taskRangeFunc(k, v); err != nil {
-			return nil, err
+		for k, v := range t.Vars.All() {
+			if err := taskRangeFunc(k, v); err != nil {
+				return nil, err
+			}
 		}
 	}
 
