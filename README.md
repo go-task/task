@@ -3,10 +3,10 @@
     <img src="website/src/public/img/logo.svg" width="200px" height="200px" />
   </a>
 
-  <h1>Task</h1>
+  <h1>Task: The Modern Task Runner</h1>
 
   <p>
-    Task is a task runner / build tool that aims to be simpler and easier to use than, for example, <a href="https://www.gnu.org/software/make/">GNU Make<a>.
+    A fast, cross-platform build tool inspired by Make, designed for modern workflows.
   </p>
 
   <p>
