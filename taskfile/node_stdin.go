@@ -41,32 +41,28 @@ func (node *StdinNode) Read() ([]byte, error) {
 }
 
 func (node *StdinNode) ResolveEntrypoint(entrypoint string) (string, error) {
-	// If the file is remote, we don't need to resolve the path
+	// Resolve to entrypoint without adjustment.
 	if isRemoteEntrypoint(entrypoint) {
 		return entrypoint, nil
 	}
-
-	path, err := execext.ExpandLiteral(entrypoint)
+	// Resolve relative to this node.Dir() (i.e. the root node), or absolute.
+	entrypoint, err := execext.ExpandLiteral(entrypoint)
 	if err != nil {
 		return "", err
 	}
-
-	if filepathext.IsAbs(path) {
-		return path, nil
-	}
-
-	return filepathext.SmartJoin(node.Dir(), path), nil
+	return filepathext.SmartJoin(node.Dir(), entrypoint), nil
 }
 
 func (node *StdinNode) ResolveDir(dir string) (string, error) {
-	path, err := execext.ExpandLiteral(dir)
-	if err != nil {
-		return "", err
+	if len(dir) == 0 {
+		// Resolve to the current node.Dir().
+		return node.Dir(), nil
+	} else {
+		// Resolve include.Dir, relative to this node.Dir(), or absolute.
+		dir, err := execext.ExpandLiteral(dir)
+		if err != nil {
+			return "", err
+		}
+		return filepathext.SmartJoin(node.Dir(), dir), nil
 	}
-
-	if filepathext.IsAbs(path) {
-		return path, nil
-	}
-
-	return filepathext.SmartJoin(node.Dir(), path), nil
 }
