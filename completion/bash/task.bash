@@ -26,6 +26,10 @@ function _task()
       _filedir -d
       return $?
     ;;
+    --cacert|--cert|--cert-key)
+      _filedir
+      return $?
+    ;;
     -t|--taskfile)
       _filedir yaml || return $?
       _filedir yml

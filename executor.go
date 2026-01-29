@@ -38,12 +38,16 @@ type (
 		Timeout               time.Duration
 		CacheExpiryDuration   time.Duration
 		RemoteCacheDir        string
+		CACert                string
+		Cert                  string
+		CertKey               string
 		Watch                 bool
 		Verbose               bool
 		Silent                bool
 		DisableFuzzy          bool
 		AssumeYes             bool
 		AssumeTerm            bool // Used for testing
+		Interactive           bool
 		Dry                   bool
 		Summary               bool
 		Parallel              bool
@@ -71,6 +75,7 @@ type (
 		fuzzyModel     *fuzzy.Model
 		fuzzyModelOnce sync.Once
 
+		promptedVars         *ast.Vars // vars collected via interactive prompts
 		concurrencySemaphore chan struct{}
 		taskCallCount        map[string]*int32
 		mkdirMutexMap        map[string]*sync.Mutex
@@ -286,6 +291,45 @@ func (o *remoteCacheDirOption) ApplyToExecutor(e *Executor) {
 	e.RemoteCacheDir = o.dir
 }
 
+// WithCACert sets the path to a custom CA certificate for TLS connections.
+func WithCACert(caCert string) ExecutorOption {
+	return &caCertOption{caCert: caCert}
+}
+
+type caCertOption struct {
+	caCert string
+}
+
+func (o *caCertOption) ApplyToExecutor(e *Executor) {
+	e.CACert = o.caCert
+}
+
+// WithCert sets the path to a client certificate for TLS connections.
+func WithCert(cert string) ExecutorOption {
+	return &certOption{cert: cert}
+}
+
+type certOption struct {
+	cert string
+}
+
+func (o *certOption) ApplyToExecutor(e *Executor) {
+	e.Cert = o.cert
+}
+
+// WithCertKey sets the path to a client certificate key for TLS connections.
+func WithCertKey(certKey string) ExecutorOption {
+	return &certKeyOption{certKey: certKey}
+}
+
+type certKeyOption struct {
+	certKey string
+}
+
+func (o *certKeyOption) ApplyToExecutor(e *Executor) {
+	e.CertKey = o.certKey
+}
+
 // WithWatch tells the [Executor] to keep running in the background and watch
 // for changes to the fingerprint of the tasks that are run. When changes are
 // detected, a new task run is triggered.
@@ -366,6 +410,19 @@ type assumeTermOption struct {
 
 func (o *assumeTermOption) ApplyToExecutor(e *Executor) {
 	e.AssumeTerm = o.assumeTerm
+}
+
+// WithInteractive tells the [Executor] to prompt for missing required variables.
+func WithInteractive(interactive bool) ExecutorOption {
+	return &interactiveOption{interactive}
+}
+
+type interactiveOption struct {
+	interactive bool
+}
+
+func (o *interactiveOption) ApplyToExecutor(e *Executor) {
+	e.Interactive = o.interactive
 }
 
 // WithDry tells the [Executor] to output the commands that would be run without

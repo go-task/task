@@ -155,12 +155,14 @@ silent: true
 ### `dotenv`
 
 - **Type**: `[]string`
-- **Description**: Load environment variables from .env files
+- **Description**: Load environment variables from .env files. When the same
+  variable is defined in multiple files, the first file in the list takes
+  precedence.
 
 ```yaml
 dotenv:
-  - .env
-  - .env.local
+  - .env.local # Highest priority
+  - .env # Lowest priority
 ```
 
 ### `run`
@@ -614,7 +616,28 @@ tasks:
       - ./deploy.sh
 ```
 
-### `dir`
+#### `if`
+
+- **Type**: `string`
+- **Description**: Shell command to conditionally execute the task. If the
+  command exits with a non-zero code, the task is skipped (not failed).
+
+```yaml
+tasks:
+  # Task only runs in CI environment
+  deploy:
+    if: '[ "$CI" = "true" ]'
+    cmds:
+      - ./deploy.sh
+
+  # Using Go template expressions
+  build-prod:
+    if: '{{eq .ENV "production"}}'
+    cmds:
+      - go build -ldflags="-s -w" ./...
+```
+
+#### `dir`
 
 - **Type**: `string`
 - **Description**: The directory in which this task should run
@@ -632,7 +655,7 @@ tasks:
 #### `requires`
 
 - **Type**: `Requires`
-- **Description**: Required variables with optional enums
+- **Description**: Required variables with optional enum validation
 
 ```yaml
 tasks:
@@ -656,6 +679,9 @@ tasks:
       - echo "Deploying to {{.ENVIRONMENT}} with log level {{.LOG_LEVEL}}"
       - ./deploy.sh
 ```
+
+See [Prompting for missing variables interactively](/docs/guide#prompting-for-missing-variables-interactively)
+for information on enabling interactive prompts for missing required variables.
 
 #### `watch`
 
@@ -808,6 +834,27 @@ tasks:
         task: build
         vars:
           SERVICE: '{{.ITEM}}'
+```
+
+### Conditional Commands
+
+Use `if` to conditionally execute a command. If the shell command exits with a
+non-zero code, the command is skipped.
+
+```yaml
+tasks:
+  build:
+    cmds:
+      # Only run in production
+      - cmd: echo "Optimizing for production"
+        if: '[ "$ENV" = "production" ]'
+      # Using Go templates
+      - cmd: echo "Feature enabled"
+        if: '{{eq .ENABLE_FEATURE "true"}}'
+      # Inside for loops (evaluated per iteration)
+      - for: [a, b, c]
+        cmd: echo "processing {{.ITEM}}"
+        if: '[ "{{.ITEM}}" != "b" ]'
 ```
 
 ## Shell Options

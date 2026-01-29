@@ -1,5 +1,36 @@
 # Changelog
 
+## v3.48.0 - 2026-01-26
+
+- Fixed `if:` conditions when using to check dynamic variables. Also, skip
+  variable prompt if task would be skipped by `if:` (#2658, #2660 by @vmaerten).
+- Fixed `ROOT_TASKFILE` variable pointing to directory instead of the actual
+  Taskfile path when no explicit `-t` flag is provided (#2635, #1706 by
+  @trulede).
+- Included Taskfiles with `silent: true` now properly propagate silence to their
+  tasks, while still allowing individual tasks to override with `silent: false`
+  (#2640, #1319 by @trulede).
+- Added TLS certificate options for Remote Taskfiles: use `--cacert` for
+  self-signed certificates and `--cert`/`--cert-key` for mTLS authentication
+  (#2537, #2242 by @vmaerten).
+
+## v3.47.0 - 2026-01-24
+
+- Fixed remote git Taskfiles: cloning now works without explicit ref, and
+  directory includes are properly resolved (#2602 by @vmaerten).
+- For `output: prefixed`, print `prefix:` if set instead of task name (#1566,
+  #2633 by @trulede).
+- Ensure no ANSI sequences are printed for `--color=false` (#2560, #2584 by
+  @trulede).
+- Task aliases can now contain wildcards and will match accordingly (e.g., `s-*`
+  as alias for `start-*`) (#1900, #2234 by @vmaerten).
+- Added conditional execution with the `if` field: skip tasks, commands, or task
+  calls based on shell exit codes or template expressions like
+  `{{ eq .ENV "prod" }}` (#2564, #608 by @vmaerten).
+- Task can now interactively prompt for missing required variables when running
+  in a TTY, with support for enum selection menus. Enable with `--interactive`
+  flag or `interactive: true` in `.taskrc.yml` (#2579, #2079 by @vmaerten).
+
 ## v3.46.4 - 2025-12-24
 
 - Fixed regressions in completion script for Fish (#2591, #2604, #2592 by

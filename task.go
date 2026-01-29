@@ -6,6 +6,7 @@ import (
 	"os"
 	"runtime"
 	"slices"
+	"strings"
 	"sync/atomic"
 
 	"golang.org/x/sync/errgroup"
@@ -73,6 +74,11 @@ func (e *Executor) Run(ctx context.Context, calls ...*Call) error {
 		return nil
 	}
 
+	// Prompt for all required vars from deps upfront (parallel execution)
+	if err := e.promptDepsVars(calls); err != nil {
+		return err
+	}
+
 	regularCalls, watchCalls, err := e.splitRegularAndWatchCalls(calls...)
 	if err != nil {
 		return err
@@ -120,6 +126,19 @@ func (e *Executor) splitRegularAndWatchCalls(calls ...*Call) (regularCalls []*Ca
 
 // RunTask runs a task by its name
 func (e *Executor) RunTask(ctx context.Context, call *Call) error {
+	// Inject prompted vars into call if available
+	if e.promptedVars != nil {
+		if call.Vars == nil {
+			call.Vars = ast.NewVars()
+		}
+		for name, v := range e.promptedVars.All() {
+			// Only inject if not already set in call
+			if _, ok := call.Vars.Get(name); !ok {
+				call.Vars.Set(name, v)
+			}
+		}
+	}
+
 	t, err := e.FastCompiledTask(call)
 	if err != nil {
 		return err
@@ -129,12 +148,45 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) error {
 		return nil
 	}
 
-	if err := e.areTaskRequiredVarsSet(t); err != nil {
-		return err
+	// Check required vars early (before template compilation) if we can't prompt.
+	// This gives a clear "missing required variables" error instead of a template error.
+	if !e.canPrompt() {
+		if err := e.areTaskRequiredVarsSet(t); err != nil {
+			return err
+		}
 	}
 
 	t, err = e.CompiledTask(call)
 	if err != nil {
+		return err
+	}
+
+	// Check if condition after CompiledTask so dynamic variables are resolved
+	if strings.TrimSpace(t.If) != "" {
+		if err := execext.RunCommand(ctx, &execext.RunCommandOptions{
+			Command: t.If,
+			Dir:     t.Dir,
+			Env:     env.Get(t),
+		}); err != nil {
+			e.Logger.VerboseOutf(logger.Yellow, "task: if condition not met - skipped: %q\n", call.Task)
+			return nil
+		}
+	}
+
+	// Prompt for missing required vars after if check (avoid prompting if task won't run)
+	prompted, err := e.promptTaskVars(t, call)
+	if err != nil {
+		return err
+	}
+	if prompted {
+		// Recompile with the new vars
+		t, err = e.FastCompiledTask(call)
+		if err != nil {
+			return err
+		}
+	}
+
+	if err := e.areTaskRequiredVarsSet(t); err != nil {
 		return err
 	}
 
@@ -185,8 +237,12 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) error {
 			}
 
 			if upToDate && preCondMet {
-				if e.Verbose || (!call.Silent && !t.Silent && !e.Taskfile.Silent && !e.Silent) {
-					e.Logger.Errf(logger.Magenta, "task: Task %q is up to date\n", t.Name())
+				if e.Verbose || (!call.Silent && !t.IsSilent() && !e.Taskfile.Silent && !e.Silent) {
+					name := t.Name()
+					if e.OutputStyle.Name == "prefixed" {
+						name = t.Prefix
+					}
+					e.Logger.Errf(logger.Magenta, "task: Task %q is up to date\n", name)
 				}
 				return nil
 			}
@@ -295,6 +351,7 @@ func (e *Executor) runDeferred(t *ast.Task, call *Call, i int, vars *ast.Vars, d
 
 	cmd.Cmd = templater.ReplaceWithExtra(cmd.Cmd, cache, extra)
 	cmd.Task = templater.ReplaceWithExtra(cmd.Task, cache, extra)
+	cmd.If = templater.ReplaceWithExtra(cmd.If, cache, extra)
 	cmd.Vars = templater.ReplaceVarsWithExtra(cmd.Vars, cache, extra)
 
 	if err := e.runCommand(ctx, t, call, i); err != nil {
@@ -304,6 +361,18 @@ func (e *Executor) runDeferred(t *ast.Task, call *Call, i int, vars *ast.Vars, d
 
 func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call *Call, i int) error {
 	cmd := t.Cmds[i]
+
+	// Check if condition for any command type
+	if strings.TrimSpace(cmd.If) != "" {
+		if err := execext.RunCommand(ctx, &execext.RunCommandOptions{
+			Command: cmd.If,
+			Dir:     t.Dir,
+			Env:     env.Get(t),
+		}); err != nil {
+			e.Logger.VerboseOutf(logger.Yellow, "task: [%s] if condition not met - skipped\n", t.Name())
+			return nil
+		}
+	}
 
 	switch {
 	case cmd.Task != "":
@@ -323,7 +392,7 @@ func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call *Call, i in
 			return nil
 		}
 
-		if e.Verbose || (!call.Silent && !cmd.Silent && !t.Silent && !e.Taskfile.Silent && !e.Silent) {
+		if e.Verbose || (!call.Silent && !cmd.Silent && !t.IsSilent() && !e.Taskfile.Silent && !e.Silent) {
 			e.Logger.Errf(logger.Green, "task: [%s] %s\n", t.Name(), cmd.Cmd)
 		}
 
@@ -407,19 +476,40 @@ func (e *Executor) startExecution(ctx context.Context, t *ast.Task, execute func
 }
 
 // FindMatchingTasks returns a list of tasks that match the given call. A task
-// matches a call if its name is equal to the call's task name or if it matches
+// matches a call if its name is equal to the call's task name, or one of aliases, or if it matches
 // a wildcard pattern. The function returns a list of MatchingTask structs, each
 // containing a task and a list of wildcards that were matched.
-func (e *Executor) FindMatchingTasks(call *Call) []*MatchingTask {
+// If multiple tasks match due to aliases, a TaskNameConflictError is returned.
+func (e *Executor) FindMatchingTasks(call *Call) ([]*MatchingTask, error) {
 	if call == nil {
-		return nil
+		return nil, nil
 	}
 	var matchingTasks []*MatchingTask
 	// If there is a direct match, return it
 	if task, ok := e.Taskfile.Tasks.Get(call.Task); ok {
 		matchingTasks = append(matchingTasks, &MatchingTask{Task: task, Wildcards: nil})
-		return matchingTasks
+		return matchingTasks, nil
 	}
+	var aliasedTasks []string
+	for task := range e.Taskfile.Tasks.Values(nil) {
+		if slices.Contains(task.Aliases, call.Task) {
+			aliasedTasks = append(aliasedTasks, task.Task)
+			matchingTasks = append(matchingTasks, &MatchingTask{Task: task, Wildcards: nil})
+		}
+	}
+
+	if len(aliasedTasks) == 1 {
+		return matchingTasks, nil
+	}
+
+	// If we found multiple tasks
+	if len(aliasedTasks) > 1 {
+		return nil, &errors.TaskNameConflictError{
+			Call:      call.Task,
+			TaskNames: aliasedTasks,
+		}
+	}
+
 	// Attempt a wildcard match
 	for _, value := range e.Taskfile.Tasks.All(nil) {
 		if match, wildcards := value.WildcardMatch(call.Task); match {
@@ -429,7 +519,7 @@ func (e *Executor) FindMatchingTasks(call *Call) []*MatchingTask {
 			})
 		}
 	}
-	return matchingTasks
+	return matchingTasks, nil
 }
 
 // GetTask will return the task with the name matching the given call from the taskfile.
@@ -437,7 +527,11 @@ func (e *Executor) FindMatchingTasks(call *Call) []*MatchingTask {
 // If multiple tasks contain the same alias or no matches are found an error is returned.
 func (e *Executor) GetTask(call *Call) (*ast.Task, error) {
 	// Search for a matching task
-	matchingTasks := e.FindMatchingTasks(call)
+	matchingTasks, err := e.FindMatchingTasks(call)
+	if err != nil {
+		return nil, err
+	}
+
 	if len(matchingTasks) > 0 {
 		if call.Vars == nil {
 			call.Vars = ast.NewVars()
@@ -446,37 +540,18 @@ func (e *Executor) GetTask(call *Call) (*ast.Task, error) {
 		return matchingTasks[0].Task, nil
 	}
 
-	// If didn't find one, search for a task with a matching alias
-	var matchingTask *ast.Task
-	var aliasedTasks []string
-	for task := range e.Taskfile.Tasks.Values(nil) {
-		if slices.Contains(task.Aliases, call.Task) {
-			aliasedTasks = append(aliasedTasks, task.Task)
-			matchingTask = task
-		}
-	}
-	// If we found multiple tasks
-	if len(aliasedTasks) > 1 {
-		return nil, &errors.TaskNameConflictError{
-			Call:      call.Task,
-			TaskNames: aliasedTasks,
-		}
-	}
 	// If we found no tasks
-	if len(aliasedTasks) == 0 {
-		didYouMean := ""
-		if !e.DisableFuzzy {
-			e.fuzzyModelOnce.Do(e.setupFuzzyModel)
-			if e.fuzzyModel != nil {
-				didYouMean = e.fuzzyModel.SpellCheck(call.Task)
-			}
-		}
-		return nil, &errors.TaskNotFoundError{
-			TaskName:   call.Task,
-			DidYouMean: didYouMean,
+	didYouMean := ""
+	if !e.DisableFuzzy {
+		e.fuzzyModelOnce.Do(e.setupFuzzyModel)
+		if e.fuzzyModel != nil {
+			didYouMean = e.fuzzyModel.SpellCheck(call.Task)
 		}
 	}
-	return matchingTask, nil
+	return nil, &errors.TaskNotFoundError{
+		TaskName:   call.Task,
+		DidYouMean: didYouMean,
+	}
 }
 
 type FilterFunc func(task *ast.Task) bool

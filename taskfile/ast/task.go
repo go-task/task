@@ -32,7 +32,7 @@ type Task struct {
 	Vars          *Vars
 	Env           *Vars
 	Dotenv        []string
-	Silent        bool
+	Silent        *bool
 	Interactive   bool
 	Internal      bool
 	Method        string
@@ -40,6 +40,7 @@ type Task struct {
 	IgnoreError   bool
 	Run           string
 	Platforms     []*Platform
+	If            string
 	Watch         bool
 	Location      *Location
 	Failfast      bool
@@ -68,28 +69,37 @@ func (t *Task) LocalName() string {
 	return name
 }
 
+// IsSilent returns true if the task has silent mode explicitly enabled.
+// Returns false if Silent is nil (not set) or explicitly set to false.
+func (t *Task) IsSilent() bool {
+	return t.Silent != nil && *t.Silent
+}
+
 // WildcardMatch will check if the given string matches the name of the Task and returns any wildcard values.
 func (t *Task) WildcardMatch(name string) (bool, []string) {
-	// Convert the name into a regex string
-	regexStr := fmt.Sprintf("^%s$", strings.ReplaceAll(t.Task, "*", "(.*)"))
-	regex := regexp.MustCompile(regexStr)
-	wildcards := regex.FindStringSubmatch(name)
-	wildcardCount := strings.Count(t.Task, "*")
+	names := append([]string{t.Task}, t.Aliases...)
 
-	// If there are no wildcards, return false
-	if len(wildcards) == 0 {
-		return false, nil
+	for _, taskName := range names {
+		regexStr := fmt.Sprintf("^%s$", strings.ReplaceAll(taskName, "*", "(.*)"))
+		regex := regexp.MustCompile(regexStr)
+		wildcards := regex.FindStringSubmatch(name)
+
+		if len(wildcards) == 0 {
+			continue
+		}
+
+		// Remove the first match, which is the full string
+		wildcards = wildcards[1:]
+		wildcardCount := strings.Count(taskName, "*")
+
+		if len(wildcards) != wildcardCount {
+			continue
+		}
+
+		return true, wildcards
 	}
 
-	// Remove the first match, which is the full string
-	wildcards = wildcards[1:]
-
-	// If there are more/less wildcards than matches, return false
-	if len(wildcards) != wildcardCount {
-		return false, wildcards
-	}
-
-	return true, wildcards
+	return false, nil
 }
 
 func (t *Task) UnmarshalYAML(node *yaml.Node) error {
@@ -134,7 +144,7 @@ func (t *Task) UnmarshalYAML(node *yaml.Node) error {
 			Vars          *Vars
 			Env           *Vars
 			Dotenv        []string
-			Silent        bool
+			Silent        *bool `yaml:"silent,omitempty"`
 			Interactive   bool
 			Internal      bool
 			Method        string
@@ -142,6 +152,7 @@ func (t *Task) UnmarshalYAML(node *yaml.Node) error {
 			IgnoreError   bool `yaml:"ignore_error"`
 			Run           string
 			Platforms     []*Platform
+			If            string
 			Requires      *Requires
 			Watch         bool
 			Failfast      bool
@@ -173,7 +184,7 @@ func (t *Task) UnmarshalYAML(node *yaml.Node) error {
 		t.Vars = task.Vars
 		t.Env = task.Env
 		t.Dotenv = task.Dotenv
-		t.Silent = task.Silent
+		t.Silent = deepcopy.Scalar(task.Silent)
 		t.Interactive = task.Interactive
 		t.Internal = task.Internal
 		t.Method = task.Method
@@ -181,6 +192,7 @@ func (t *Task) UnmarshalYAML(node *yaml.Node) error {
 		t.IgnoreError = task.IgnoreError
 		t.Run = task.Run
 		t.Platforms = task.Platforms
+		t.If = task.If
 		t.Requires = task.Requires
 		t.Watch = task.Watch
 		t.Failfast = task.Failfast
@@ -215,7 +227,7 @@ func (t *Task) DeepCopy() *Task {
 		Vars:                 t.Vars.DeepCopy(),
 		Env:                  t.Env.DeepCopy(),
 		Dotenv:               deepcopy.Slice(t.Dotenv),
-		Silent:               t.Silent,
+		Silent:               deepcopy.Scalar(t.Silent),
 		Interactive:          t.Interactive,
 		Internal:             t.Internal,
 		Method:               t.Method,
@@ -225,6 +237,7 @@ func (t *Task) DeepCopy() *Task {
 		IncludeVars:          t.IncludeVars.DeepCopy(),
 		IncludedTaskfileVars: t.IncludedTaskfileVars.DeepCopy(),
 		Platforms:            deepcopy.Slice(t.Platforms),
+		If:                   t.If,
 		Location:             t.Location.DeepCopy(),
 		Requires:             t.Requires.DeepCopy(),
 		Namespace:            t.Namespace,

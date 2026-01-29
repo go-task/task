@@ -135,6 +135,20 @@ concurrency: 4
 failfast: true
 ```
 
+### `interactive`
+
+- **Type**: `boolean`
+- **Default**: `false`
+- **Description**: Prompt for missing required variables instead of failing.
+  When enabled, Task will display an interactive prompt for any missing required
+  variable. Requires a TTY. Task automatically detects non-TTY environments
+  (CI pipelines, etc.) and skips prompts.
+- **CLI equivalent**: [`--interactive`](./cli.md#--interactive)
+
+```yaml
+interactive: true
+```
+
 ## Example Configuration
 
 Here's a complete example of a `.taskrc.yml` file with all available options:

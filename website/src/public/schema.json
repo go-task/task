@@ -193,6 +193,10 @@
           "description": "Specifies which platforms the task should be run on.",
           "$ref": "#/definitions/platforms"
         },
+        "if": {
+          "description": "A shell command to evaluate. If the exit code is non-zero, the task is skipped.",
+          "type": "string"
+        },
         "requires": {
           "description": "A list of variables which should be set if this task is to run, if any of these variables are unset the task will error and not run",
           "$ref": "#/definitions/requires_obj"
@@ -332,6 +336,10 @@
         "silent": {
           "description": "Hides task name and command from output. The command's output will still be redirected to `STDOUT` and `STDERR`.",
           "type": "boolean"
+        },
+        "if": {
+          "description": "A shell command to evaluate. If the exit code is non-zero, the command is skipped.",
+          "type": "string"
         }
       },
       "additionalProperties": false,
@@ -369,6 +377,10 @@
         "platforms": {
           "description": "Specifies which platforms the command should be run on.",
           "$ref": "#/definitions/platforms"
+        },
+        "if": {
+          "description": "A shell command to evaluate. If the exit code is non-zero, the command is skipped.",
+          "type": "string"
         }
       },
       "additionalProperties": false,
@@ -447,6 +459,10 @@
         "platforms": {
           "description": "Specifies which platforms the command should be run on.",
           "$ref": "#/definitions/platforms"
+        },
+        "if": {
+          "description": "A shell command to evaluate. If the exit code is non-zero, the command is skipped.",
+          "type": "string"
         }
       },
       "additionalProperties": false,
@@ -619,7 +635,7 @@
                   "name": { "type": "string" },
                   "enum": { "type": "array", "items": { "type": "string" } }
                 },
-                "required": ["name", "enum"],
+                "required": ["name"],
                 "additionalProperties": false
               }
             ]

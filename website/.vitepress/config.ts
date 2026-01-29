@@ -35,40 +35,23 @@ export default defineConfig({
   description: taskDescription,
   lang: 'en-US',
   head: [
-    [
-      'link',
-      {
-        rel: 'icon',
-        type: 'image/x-icon',
-        href: '/img/favicon.ico',
-        sizes: '48x48'
-      }
-    ],
-    [
-      'link',
-      {
-        rel: 'icon',
-        sizes: 'any',
-        type: 'image/svg+xml',
-        href: '/img/logo.svg'
-      }
-    ],
+    // Favicon ICO for legacy browsers (auto-discovery)
+    ['link', { rel: 'icon', href: '/favicon.ico', sizes: '48x48' }],
+    // Favicon SVG for modern browsers (scalable)
+    ['link', { rel: 'icon', href: '/img/logo.svg', type: 'image/svg+xml' }],
+    // Apple Touch Icon for iOS devices
+    ['link', { rel: 'apple-touch-icon', href: '/img/logo.png' }],
     [
       'meta',
       { name: 'author', content: `${team.map((c) => c.name).join(', ')}` }
     ],
     // Open Graph
     ['meta', { property: 'og:type', content: 'website' }],
-    ['meta', { property: 'og:site_name', content: taskName }],
-    ['meta', { property: 'og:title', content: taskName }],
-    ['meta', { property: 'og:description', content: taskDescription }],
+    ['meta', { property: 'og:site_name', content: 'Task' }],
     ['meta', { property: 'og:image', content: ogImage }],
-    ['meta', { property: 'og:url', content: ogUrl }],
     // Twitter Card
     ['meta', { name: 'twitter:card', content: 'summary_large_image' }],
     ['meta', { name: 'twitter:site', content: '@taskfiledev' }],
-    ['meta', { name: 'twitter:title', content: taskName }],
-    ['meta', { name: 'twitter:description', content: taskDescription }],
     ['meta', { name: 'twitter:image', content: ogImage }],
     [
       'meta',
@@ -85,6 +68,16 @@ export default defineConfig({
         src: "https://u.taskfile.dev/script.js",
         "data-website-id": "084030b0-0e3f-4891-8d2a-0c12c40f5933"
       }
+    ],
+    [
+      "script",
+      { type: "application/ld+json" },
+      JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "Task",
+        "url": "https://taskfile.dev/"
+      })
     ]
   ],
   transformHead({ pageData }) {
@@ -95,6 +88,19 @@ export default defineConfig({
       .replace(/\.md$/, '')
       .replace(/index$/, '')}`
     head.push(['link', { rel: 'canonical', href: canonicalUrl }])
+
+    // Dynamic Open Graph and Twitter meta tags
+    const isHome = pageData.relativePath === 'index.md';
+    var pageTitle = pageData.frontmatter.title || pageData.title || taskName;
+    if (!isHome) {
+      pageTitle = `${pageTitle} | ${taskName}`;
+    }
+    const pageDescription = pageData.frontmatter.description || pageData.description || taskDescription
+    head.push(['meta', { property: 'og:title', content: pageTitle }])
+    head.push(['meta', { property: 'og:description', content: pageDescription }])
+    head.push(['meta', { property: 'og:url', content: canonicalUrl }])
+    head.push(['meta', { name: 'twitter:title', content: pageTitle }])
+    head.push(['meta', { name: 'twitter:description', content: pageDescription }])
 
     // Noindex pour 404
     if (pageData.relativePath === '404.md') {
@@ -200,6 +206,16 @@ export default defineConfig({
 
     sidebar: {
       '/blog/': [
+        {
+          text: '2026',
+          collapsed: false,
+          items: [
+            {
+              text: 'New `if:` Control and Variable Prompt',
+              link: '/blog/if-and-variable-prompt'
+            }
+          ]
+        },
         {
           text: '2025',
           collapsed: false,
@@ -357,6 +373,11 @@ export default defineConfig({
       { icon: 'bluesky', link: 'https://bsky.app/profile/taskfile.dev' },
       { icon: 'mastodon', link: 'https://fosstodon.org/@task' }
     ],
+
+    editLink: {
+      text: 'Edit this page on GitHub',
+      pattern: 'https://github.com/go-task/task/edit/main/website/src/:path'
+    },
 
     footer: {
       message:

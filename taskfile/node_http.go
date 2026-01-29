@@ -2,10 +2,13 @@ package taskfile
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"fmt"
 	"io"
 	"net/http"
 	"net/url"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -17,7 +20,54 @@ import (
 // An HTTPNode is a node that reads a Taskfile from a remote location via HTTP.
 type HTTPNode struct {
 	*baseNode
-	url *url.URL // stores url pointing actual remote file. (e.g. with Taskfile.yml)
+	url    *url.URL     // stores url pointing actual remote file. (e.g. with Taskfile.yml)
+	client *http.Client // HTTP client with optional TLS configuration
+}
+
+// buildHTTPClient creates an HTTP client with optional TLS configuration.
+// If no certificate options are provided, it returns http.DefaultClient.
+func buildHTTPClient(insecure bool, caCert, cert, certKey string) (*http.Client, error) {
+	// Validate that cert and certKey are provided together
+	if (cert != "" && certKey == "") || (cert == "" && certKey != "") {
+		return nil, fmt.Errorf("both --cert and --cert-key must be provided together")
+	}
+
+	// If no TLS customization is needed, return the default client
+	if !insecure && caCert == "" && cert == "" {
+		return http.DefaultClient, nil
+	}
+
+	tlsConfig := &tls.Config{
+		InsecureSkipVerify: insecure,
+	}
+
+	// Load custom CA certificate if provided
+	if caCert != "" {
+		caCertData, err := os.ReadFile(caCert)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read CA certificate: %w", err)
+		}
+		caCertPool := x509.NewCertPool()
+		if !caCertPool.AppendCertsFromPEM(caCertData) {
+			return nil, fmt.Errorf("failed to parse CA certificate")
+		}
+		tlsConfig.RootCAs = caCertPool
+	}
+
+	// Load client certificate and key if provided
+	if cert != "" && certKey != "" {
+		clientCert, err := tls.LoadX509KeyPair(cert, certKey)
+		if err != nil {
+			return nil, fmt.Errorf("failed to load client certificate: %w", err)
+		}
+		tlsConfig.Certificates = []tls.Certificate{clientCert}
+	}
+
+	return &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: tlsConfig,
+		},
+	}, nil
 }
 
 func NewHTTPNode(
@@ -34,9 +84,16 @@ func NewHTTPNode(
 	if url.Scheme == "http" && !insecure {
 		return nil, &errors.TaskfileNotSecureError{URI: url.Redacted()}
 	}
+
+	client, err := buildHTTPClient(insecure, base.caCert, base.cert, base.certKey)
+	if err != nil {
+		return nil, err
+	}
+
 	return &HTTPNode{
 		baseNode: base,
 		url:      url,
+		client:   client,
 	}, nil
 }
 
@@ -49,7 +106,7 @@ func (node *HTTPNode) Read() ([]byte, error) {
 }
 
 func (node *HTTPNode) ReadContext(ctx context.Context) ([]byte, error) {
-	url, err := RemoteExists(ctx, *node.url)
+	url, err := RemoteExists(ctx, *node.url, node.client)
 	if err != nil {
 		return nil, err
 	}
@@ -58,7 +115,7 @@ func (node *HTTPNode) ReadContext(ctx context.Context) ([]byte, error) {
 		return nil, errors.TaskfileFetchFailedError{URI: node.Location()}
 	}
 
-	resp, err := http.DefaultClient.Do(req.WithContext(ctx))
+	resp, err := node.client.Do(req.WithContext(ctx))
 	if err != nil {
 		if ctx.Err() != nil {
 			return nil, err

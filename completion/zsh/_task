@@ -90,6 +90,7 @@ _task() {
         '(-j --json)'{-j,--json}'[format task list as JSON]'
         '(--nested)--nested[nest namespaces when listing as JSON]'
         '(--no-status)--no-status[ignore status when listing as JSON]'
+        '(--interactive)--interactive[prompt for missing required variables]'
         '(-o --output)'{-o,--output}'[set output style]:style:(interleaved group prefixed)'
         '(--output-group-begin)--output-group-begin[message template before grouped output]:template text: '
         '(--output-group-end)--output-group-end[message template after grouped output]:template text: '
@@ -116,6 +117,9 @@ _task() {
             '(--timeout)--timeout[timeout for remote Taskfile downloads]:duration: '
             '(--expiry)--expiry[cache expiry duration]:duration: '
             '(--remote-cache-dir)--remote-cache-dir[directory to cache remote Taskfiles]:cache dir:_dirs'
+            '(--cacert)--cacert[custom CA certificate for TLS]:file:_files'
+            '(--cert)--cert[client certificate for mTLS]:file:_files'
+            '(--cert-key)--cert-key[client certificate private key]:file:_files'
         )
     fi
 
