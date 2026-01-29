@@ -10,7 +10,7 @@ require (
 	charm.land/lipgloss/v2 v2.0.0-beta.3.0.20251106192539-4b304240aab7
 	github.com/Ladicle/tabwriter v1.0.0
 	github.com/Masterminds/semver/v3 v3.4.0
-	github.com/alecthomas/chroma/v2 v2.23.0
+	github.com/alecthomas/chroma/v2 v2.23.1
 	github.com/chainguard-dev/git-urls v1.0.2
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
 	github.com/dominikbraun/graph v0.23.0
@@ -23,13 +23,13 @@ require (
 	github.com/hashicorp/go-getter v1.8.4
 	github.com/joho/godotenv v1.5.1
 	github.com/mitchellh/hashstructure/v2 v2.0.2
-	github.com/puzpuzpuz/xsync/v4 v4.3.0
+	github.com/puzpuzpuz/xsync/v4 v4.4.0
 	github.com/sajari/fuzzy v1.0.0
 	github.com/sebdah/goldie/v2 v2.8.0
 	github.com/spf13/pflag v1.0.10
 	github.com/stretchr/testify v1.11.1
-	github.com/zeebo/xxh3 v1.0.2
-	go.yaml.in/yaml/v4 v4.0.0-rc.3
+	github.com/zeebo/xxh3 v1.1.0
+	go.yaml.in/yaml/v4 v4.0.0-rc.4
 	golang.org/x/sync v0.19.0
 	golang.org/x/term v0.39.0
 	mvdan.cc/sh/moreinterp v0.0.0-20260120230322-19def062a997
@@ -95,7 +95,7 @@ require (
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/hashicorp/go-version v1.8.0 // indirect
 	github.com/klauspost/compress v1.18.2 // indirect
-	github.com/klauspost/cpuid/v2 v2.2.7 // indirect
+	github.com/klauspost/cpuid/v2 v2.2.10 // indirect
 	github.com/klauspost/pgzip v1.2.6 // indirect
 	github.com/lucasb-eyer/go-colorful v1.3.0 // indirect
 	github.com/mattn/go-colorable v0.1.14 // indirect
