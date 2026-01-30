@@ -364,6 +364,7 @@ func TestSpecialVars(t *testing.T) {
 		// Root
 		"print-task",
 		"print-root-dir",
+		"print-root-taskfile",
 		"print-taskfile",
 		"print-taskfile-dir",
 		"print-task-dir",
@@ -1059,6 +1060,18 @@ func TestIncludeChecksum(t *testing.T) {
 	)
 }
 
+func TestIncludeSilent(t *testing.T) {
+	t.Parallel()
+
+	NewExecutorTest(t,
+		WithName("include-taskfile-silent"),
+		WithExecutorOptions(
+			task.WithDir("testdata/includes_silent"),
+		),
+		WithTask("default"),
+	)
+}
+
 func TestFailfast(t *testing.T) {
 	t.Parallel()
 
@@ -1147,6 +1160,10 @@ func TestIf(t *testing.T) {
 
 		// For loop with if
 		{name: "if-in-for-loop", task: "if-in-for-loop", verbose: true},
+
+		// Task-level if with dynamic variable
+		{name: "task-if-dynamic-true", task: "task-if-dynamic-true"},
+		{name: "task-if-dynamic-false", task: "task-if-dynamic-false", verbose: true},
 	}
 
 	for _, test := range tests {

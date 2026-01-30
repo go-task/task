@@ -1,11 +1,26 @@
 ---
 title: Changelog
 outline: deep
+editLink: false
 ---
 
 # Changelog
 
 ::: v-pre
+
+## v3.48.0 - 2026-01-26
+
+- Fixed `if:` conditions when using to check dynamic variables. Also, skip
+  variable prompt if task would be skipped by `if:` (#2658, #2660 by @vmaerten).
+- Fixed `ROOT_TASKFILE` variable pointing to directory instead of the actual
+  Taskfile path when no explicit `-t` flag is provided (#2635, #1706 by
+  @trulede).
+- Included Taskfiles with `silent: true` now properly propagate silence to their
+  tasks, while still allowing individual tasks to override with `silent: false`
+  (#2640, #1319 by @trulede).
+- Added TLS certificate options for Remote Taskfiles: use `--cacert` for
+  self-signed certificates and `--cert`/`--cert-key` for mTLS authentication
+  (#2537, #2242 by @vmaerten).
 
 ## v3.47.0 - 2026-01-24
 

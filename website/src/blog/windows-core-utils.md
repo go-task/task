@@ -4,6 +4,7 @@ description: The journey of enhancing Windows support in Task.
 author: andreynering
 date: 2025-09-15
 outline: deep
+editLink: false
 ---
 
 # Announcing Built-in Core Utilities for Windows

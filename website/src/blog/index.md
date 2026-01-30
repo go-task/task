@@ -1,6 +1,7 @@
 ---
 title: Blog
 description: Latest news and updates from the Task team
+editLink: false
 ---
 
 <BlogPost
