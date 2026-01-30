@@ -72,6 +72,14 @@ task --init
 task -i
 ```
 
+::: tip
+
+Combine `--list` or `--list-all` with `--silent` (`-ls` or `-as` for shortants)
+to list only the task names in each line. Useful for scripting with `grep` or
+similar.
+
+:::
+
 ## Options
 
 ### General

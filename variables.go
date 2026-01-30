@@ -10,6 +10,7 @@ import (
 	"github.com/joho/godotenv"
 
 	"github.com/go-task/task/v3/errors"
+	"github.com/go-task/task/v3/internal/deepcopy"
 	"github.com/go-task/task/v3/internal/env"
 	"github.com/go-task/task/v3/internal/execext"
 	"github.com/go-task/task/v3/internal/filepathext"
@@ -57,7 +58,7 @@ func (e *Executor) CompiledTaskForTaskList(call *Call) (*ast.Task, error) {
 		Vars:                 vars,
 		Env:                  nil,
 		Dotenv:               origTask.Dotenv,
-		Silent:               origTask.Silent,
+		Silent:               deepcopy.Scalar(origTask.Silent),
 		Interactive:          origTask.Interactive,
 		Internal:             origTask.Internal,
 		Method:               origTask.Method,
@@ -113,7 +114,7 @@ func (e *Executor) compiledTask(call *Call, evaluateShVars bool) (*ast.Task, err
 		Vars:                 vars,
 		Env:                  nil,
 		Dotenv:               templater.Replace(origTask.Dotenv, cache),
-		Silent:               origTask.Silent,
+		Silent:               deepcopy.Scalar(origTask.Silent),
 		Interactive:          origTask.Interactive,
 		Internal:             origTask.Internal,
 		Method:               templater.Replace(origTask.Method, cache),

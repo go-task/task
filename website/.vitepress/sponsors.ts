@@ -9,6 +9,11 @@ export const sponsors = [
         img: '/img/devowl.io.svg'
       },
       {
+        name: 'GoodX',
+        url: 'https://goodx.international/',
+        img: '/img/goodx.svg'
+      },
+      {
         name: 'Magic',
         url: 'https://magic.dev/',
         img: '/img/magic.png'

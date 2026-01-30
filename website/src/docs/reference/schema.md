@@ -637,7 +637,7 @@ tasks:
       - go build -ldflags="-s -w" ./...
 ```
 
-### `dir`
+#### `dir`
 
 - **Type**: `string`
 - **Description**: The directory in which this task should run

@@ -148,6 +148,20 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) error {
 		return nil
 	}
 
+	// Check required vars early (before template compilation) if we can't prompt.
+	// This gives a clear "missing required variables" error instead of a template error.
+	if !e.canPrompt() {
+		if err := e.areTaskRequiredVarsSet(t); err != nil {
+			return err
+		}
+	}
+
+	t, err = e.CompiledTask(call)
+	if err != nil {
+		return err
+	}
+
+	// Check if condition after CompiledTask so dynamic variables are resolved
 	if strings.TrimSpace(t.If) != "" {
 		if err := execext.RunCommand(ctx, &execext.RunCommandOptions{
 			Command: t.If,
@@ -159,7 +173,7 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) error {
 		}
 	}
 
-	// Prompt for missing required vars (just-in-time for sequential task calls)
+	// Prompt for missing required vars after if check (avoid prompting if task won't run)
 	prompted, err := e.promptTaskVars(t, call)
 	if err != nil {
 		return err
@@ -173,11 +187,6 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) error {
 	}
 
 	if err := e.areTaskRequiredVarsSet(t); err != nil {
-		return err
-	}
-
-	t, err = e.CompiledTask(call)
-	if err != nil {
 		return err
 	}
 
@@ -228,7 +237,7 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) error {
 			}
 
 			if upToDate && preCondMet {
-				if e.Verbose || (!call.Silent && !t.Silent && !e.Taskfile.Silent && !e.Silent) {
+				if e.Verbose || (!call.Silent && !t.IsSilent() && !e.Taskfile.Silent && !e.Silent) {
 					name := t.Name()
 					if e.OutputStyle.Name == "prefixed" {
 						name = t.Prefix
@@ -391,7 +400,7 @@ func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call *Call, i in
 			}
 		}
 
-		if e.Verbose || (!call.Silent && !cmd.Silent && !t.Silent && !e.Taskfile.Silent && !e.Silent) {
+		if e.Verbose || (!call.Silent && !cmd.Silent && !t.IsSilent() && !e.Taskfile.Silent && !e.Silent) {
 			e.Logger.Errf(logger.Green, "task: [%s] %s\n", t.Name(), cmd.Cmd)
 		}
 
