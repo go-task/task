@@ -95,11 +95,7 @@ func (tt *TaskTest) writeFixture(
 			maps.Copy(fixtureTemplateData, tt.fixtureTemplateData)
 		}
 		// Normalize output before comparison (CRLF→LF, backslash→forward slash)
-		normalized := normalizeLineEndings(b)
-		t.Logf("DEBUG before normalize: %q", string(b))
-		t.Logf("DEBUG after normalize: %q", string(normalized))
-		t.Logf("DEBUG TEST_DIR: %q", fixtureTemplateData["TEST_DIR"])
-		g.AssertWithTemplate(t, goldenFileName, fixtureTemplateData, normalized)
+		g.AssertWithTemplate(t, goldenFileName, fixtureTemplateData, normalizeLineEndings(b))
 	} else {
 		g.Assert(t, goldenFileName, b)
 	}
@@ -316,9 +312,12 @@ func PPSortedLines(t *testing.T, b []byte) []byte {
 // normalizeLineEndings normalizes cross-platform differences for comparison:
 // - Converts CRLF and CR to LF
 // - Converts backslashes to forward slashes (Windows paths)
+// - Handles escaped backslashes in JSON (\\) by converting to single forward slash
 func normalizeLineEndings(b []byte) []byte {
 	b = bytes.ReplaceAll(b, []byte("\r\n"), []byte("\n"))
 	b = bytes.ReplaceAll(b, []byte("\r"), []byte("\n"))
+	// First replace escaped backslashes (common in JSON), then single backslashes
+	b = bytes.ReplaceAll(b, []byte("\\\\"), []byte("/"))
 	b = bytes.ReplaceAll(b, []byte("\\"), []byte("/"))
 	return b
 }
