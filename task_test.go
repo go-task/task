@@ -1091,7 +1091,7 @@ func TestIncludesOptionalImplicitFalse(t *testing.T) {
 	wd, _ := os.Getwd()
 
 	message := "task: No Taskfile found at \"%s/%s/TaskfileOptional.yml\""
-	expected := fmt.Sprintf(message, wd, dir)
+	expected := fmt.Sprintf(message, filepath.ToSlash(wd), dir)
 
 	e := task.NewExecutor(
 		task.WithDir(dir),
@@ -1111,7 +1111,7 @@ func TestIncludesOptionalExplicitFalse(t *testing.T) {
 	wd, _ := os.Getwd()
 
 	message := "task: No Taskfile found at \"%s/%s/TaskfileOptional.yml\""
-	expected := fmt.Sprintf(message, wd, dir)
+	expected := fmt.Sprintf(message, filepath.ToSlash(wd), dir)
 
 	e := task.NewExecutor(
 		task.WithDir(dir),
@@ -1159,11 +1159,11 @@ func TestIncludesRelativePath(t *testing.T) {
 	require.NoError(t, e.Setup())
 
 	require.NoError(t, e.Run(t.Context(), &task.Call{Task: "common:pwd"}))
-	assert.Contains(t, buff.String(), "testdata/includes_rel_path/common")
+	assert.Contains(t, filepath.ToSlash(buff.String()), "testdata/includes_rel_path/common")
 
 	buff.Reset()
 	require.NoError(t, e.Run(t.Context(), &task.Call{Task: "included:common:pwd"}))
-	assert.Contains(t, buff.String(), "testdata/includes_rel_path/common")
+	assert.Contains(t, filepath.ToSlash(buff.String()), "testdata/includes_rel_path/common")
 }
 
 func TestIncludesInternal(t *testing.T) {
