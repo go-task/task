@@ -1576,8 +1576,10 @@ func TestDynamicVariablesRunOnTheNewCreatedDir(t *testing.T) {
 	require.NoError(t, e.Run(t.Context(), &task.Call{Task: target}))
 
 	// Normalize path separators for cross-platform compatibility (Windows uses backslashes)
+	// Take only the first line as Windows may output additional debug info
 	normalized := strings.ReplaceAll(out.String(), "\\", "/")
-	got := strings.TrimSuffix(filepath.Base(normalized), "\n")
+	firstLine := strings.Split(normalized, "\n")[0]
+	got := filepath.Base(firstLine)
 	assert.Equal(t, expected, got, "Mismatch in the working directory")
 
 	// Clean-up after ourselves only if no error.
@@ -2319,7 +2321,8 @@ func TestUserWorkingDirectoryWithIncluded(t *testing.T) {
 	require.NoError(t, err)
 	require.NoError(t, e.Setup())
 	require.NoError(t, e.Run(t.Context(), &task.Call{Task: "included:echo"}))
-	assert.Equal(t, fmt.Sprintf("%s\n", wd), buff.String())
+	// Normalize path separators for cross-platform compatibility (Windows uses backslashes)
+	assert.Equal(t, fmt.Sprintf("%s\n", wd), strings.ReplaceAll(buff.String(), "\\", "/"))
 }
 
 func TestPlatforms(t *testing.T) {
