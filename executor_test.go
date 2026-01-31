@@ -163,9 +163,8 @@ func (tt *ExecutorTest) run(t *testing.T) {
 		e := task.NewExecutor(opts...)
 
 		// Create a golden fixture file for the output
-		tt.fixtureDir = filepath.Join(e.Dir, "testdata")
 		g := goldie.New(t,
-			goldie.WithFixtureDir(tt.fixtureDir),
+			goldie.WithFixtureDir(filepath.Join(e.Dir, "testdata")),
 			goldie.WithEqualFn(NormalizedEqual),
 		)
 

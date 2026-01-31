@@ -19,7 +19,6 @@ import (
 	"strings"
 	"sync"
 	"testing"
-	"text/template"
 	"time"
 
 	"github.com/Masterminds/semver/v3"
@@ -49,7 +48,6 @@ type (
 		postProcessFns           []PostProcessFn
 		fixtureTemplateData      map[string]any
 		fixtureTemplatingEnabled bool
-		fixtureDir               string
 	}
 )
 
@@ -96,20 +94,8 @@ func (tt *TaskTest) writeFixture(
 		if tt.fixtureTemplateData != nil {
 			maps.Copy(fixtureTemplateData, tt.fixtureTemplateData)
 		}
-		// Note: We manually handle template substitution and comparison
-		// because AssertWithTemplate doesn't respect the EqualFn option.
-		goldenFile := filepath.Join(tt.fixtureDir, goldenFileName+".golden")
-		goldenContent, err := os.ReadFile(goldenFile)
-		require.NoError(t, err)
-		tmpl, err := template.New("golden").Parse(string(goldenContent))
-		require.NoError(t, err)
-		var expected bytes.Buffer
-		require.NoError(t, tmpl.Execute(&expected, fixtureTemplateData))
-		if !NormalizedEqual(b, expected.Bytes()) {
-			t.Errorf("Result did not match the golden fixture.\nExpected:\n%s\nActual:\n%s",
-				string(normalizeLineEndings(expected.Bytes())),
-				string(normalizeLineEndings(b)))
-		}
+		// Normalize output before comparison (CRLF→LF, backslash→forward slash)
+		g.AssertWithTemplate(t, goldenFileName, fixtureTemplateData, normalizeLineEndings(b))
 	} else {
 		g.Assert(t, goldenFileName, b)
 	}
