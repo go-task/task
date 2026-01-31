@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -191,8 +192,8 @@ func (node *GitNode) ResolveEntrypoint(entrypoint string) (string, error) {
 		return entrypoint, nil
 	}
 
-	dir, _ := filepath.Split(node.path)
-	resolvedEntrypoint := fmt.Sprintf("%s//%s", node.url, filepath.Join(dir, entrypoint))
+	dir, _ := path.Split(node.path)
+	resolvedEntrypoint := fmt.Sprintf("%s//%s", node.url, path.Join(dir, entrypoint))
 	if node.ref != "" {
 		return fmt.Sprintf("%s?ref=%s", resolvedEntrypoint, node.ref), nil
 	}
