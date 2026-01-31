@@ -18,14 +18,13 @@ jobs:
         platform: [ubuntu-latest, macos-latest, windows-latest]
     runs-on: ${{matrix.platform}}
     steps:
+      - name: Check out code
+        uses: actions/checkout@v6
+
       - name: Set up Go ${{matrix.go-version}}
         uses: actions/setup-go@v6
         with:
           go-version: ${{matrix.go-version}}
-        id: go
-
-      - name: Check out code into the Go module directory
-        uses: actions/checkout@v6
 
       - name: Test
         run: go run ./cmd/task test
