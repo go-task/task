@@ -95,7 +95,11 @@ func (tt *TaskTest) writeFixture(
 			maps.Copy(fixtureTemplateData, tt.fixtureTemplateData)
 		}
 		// Normalize output before comparison (CRLF→LF, backslash→forward slash)
-		g.AssertWithTemplate(t, goldenFileName, fixtureTemplateData, normalizeLineEndings(b))
+		normalized := normalizeLineEndings(b)
+		t.Logf("DEBUG before normalize: %q", string(b))
+		t.Logf("DEBUG after normalize: %q", string(normalized))
+		t.Logf("DEBUG TEST_DIR: %q", fixtureTemplateData["TEST_DIR"])
+		g.AssertWithTemplate(t, goldenFileName, fixtureTemplateData, normalized)
 	} else {
 		g.Assert(t, goldenFileName, b)
 	}
