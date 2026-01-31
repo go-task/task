@@ -349,6 +349,7 @@ func TestNormalizeOutput(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			got := normalizeOutput(tt.input)
 			assert.Equal(t, tt.expected, got)
 		})
@@ -368,6 +369,7 @@ func TestNormalizePathSeparators(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			got := normalizePathSeparators(tt.input)
 			assert.Equal(t, tt.expected, got)
 		})
