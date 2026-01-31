@@ -95,7 +95,7 @@ func (tt *TaskTest) writeFixture(
 			maps.Copy(fixtureTemplateData, tt.fixtureTemplateData)
 		}
 		// Normalize output before comparison (CRLF→LF, backslash→forward slash)
-		g.AssertWithTemplate(t, goldenFileName, fixtureTemplateData, normalizeLineEndings(b))
+		g.AssertWithTemplate(t, goldenFileName, fixtureTemplateData, normalizeOutput(b))
 	} else {
 		g.Assert(t, goldenFileName, b)
 	}
@@ -309,11 +309,11 @@ func PPSortedLines(t *testing.T, b []byte) []byte {
 	return []byte(strings.Join(lines, "\n") + "\n")
 }
 
-// normalizeLineEndings normalizes cross-platform differences for comparison:
-// - Converts CRLF and CR to LF
+// normalizeOutput normalizes cross-platform differences for byte slice comparison:
+// - Converts CRLF and CR to LF (line endings)
 // - Converts backslashes to forward slashes (Windows paths)
 // - Handles escaped backslashes in JSON (\\) by converting to single forward slash
-func normalizeLineEndings(b []byte) []byte {
+func normalizeOutput(b []byte) []byte {
 	b = bytes.ReplaceAll(b, []byte("\r\n"), []byte("\n"))
 	b = bytes.ReplaceAll(b, []byte("\r"), []byte("\n"))
 	// First replace escaped backslashes (common in JSON), then single backslashes
@@ -322,10 +322,56 @@ func normalizeLineEndings(b []byte) []byte {
 	return b
 }
 
-// NormalizedEqual compares two byte slices after normalizing line endings.
+// normalizePathSeparators converts backslashes to forward slashes for cross-platform path comparison.
+func normalizePathSeparators(s string) string {
+	return strings.ReplaceAll(s, "\\", "/")
+}
+
+// NormalizedEqual compares two byte slices after normalizing output.
 // This is used as a custom goldie.EqualFn for cross-platform golden file tests.
 func NormalizedEqual(actual, expected []byte) bool {
-	return bytes.Equal(normalizeLineEndings(actual), normalizeLineEndings(expected))
+	return bytes.Equal(normalizeOutput(actual), normalizeOutput(expected))
+}
+
+func TestNormalizeOutput(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name     string
+		input    []byte
+		expected []byte
+	}{
+		{"CRLF to LF", []byte("line1\r\nline2\r\n"), []byte("line1\nline2\n")},
+		{"CR to LF", []byte("line1\rline2\r"), []byte("line1\nline2\n")},
+		{"Windows path", []byte(`D:\a\task\task`), []byte(`D:/a/task/task`)},
+		{"JSON escaped backslash", []byte(`{"path":"D:\\a\\task"}`), []byte(`{"path":"D:/a/task"}`)},
+		{"Mixed", []byte("D:\\a\\task\r\n"), []byte("D:/a/task\n")},
+		{"Unix path unchanged", []byte("/home/user/task\n"), []byte("/home/user/task\n")},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := normalizeOutput(tt.input)
+			assert.Equal(t, tt.expected, got)
+		})
+	}
+}
+
+func TestNormalizePathSeparators(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{"Windows path", `D:\a\task\task`, `D:/a/task/task`},
+		{"Unix path unchanged", `/home/user/task`, `/home/user/task`},
+		{"Mixed separators", `C:\Users/name\file`, `C:/Users/name/file`},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := normalizePathSeparators(tt.input)
+			assert.Equal(t, tt.expected, got)
+		})
+	}
 }
 
 // SyncBuffer is a threadsafe buffer for testing.
@@ -1496,7 +1542,7 @@ func TestWhenNoDirAttributeItRunsInSameDirAsTaskfile(t *testing.T) {
 
 	// got should be the "dir" part of "testdata/dir"
 	// Normalize path separators for cross-platform compatibility (Windows uses backslashes)
-	normalized := strings.ReplaceAll(out.String(), "\\", "/")
+	normalized := normalizePathSeparators(out.String())
 	got := strings.TrimSuffix(filepath.Base(normalized), "\n")
 	assert.Equal(t, expected, got, "Mismatch in the working directory")
 }
@@ -1517,7 +1563,7 @@ func TestWhenDirAttributeAndDirExistsItRunsInThatDir(t *testing.T) {
 	require.NoError(t, e.Run(t.Context(), &task.Call{Task: "whereami"}))
 
 	// Normalize path separators for cross-platform compatibility (Windows uses backslashes)
-	normalized := strings.ReplaceAll(out.String(), "\\", "/")
+	normalized := normalizePathSeparators(out.String())
 	got := strings.TrimSuffix(filepath.Base(normalized), "\n")
 	assert.Equal(t, expected, got, "Mismatch in the working directory")
 }
@@ -1545,7 +1591,7 @@ func TestWhenDirAttributeItCreatesMissingAndRunsInThatDir(t *testing.T) {
 	require.NoError(t, e.Run(t.Context(), &task.Call{Task: target}))
 
 	// Normalize path separators for cross-platform compatibility (Windows uses backslashes)
-	normalized := strings.ReplaceAll(out.String(), "\\", "/")
+	normalized := normalizePathSeparators(out.String())
 	got := strings.TrimSuffix(filepath.Base(normalized), "\n")
 	assert.Equal(t, expected, got, "Mismatch in the working directory")
 
@@ -1577,7 +1623,7 @@ func TestDynamicVariablesRunOnTheNewCreatedDir(t *testing.T) {
 
 	// Normalize path separators for cross-platform compatibility (Windows uses backslashes)
 	// Take only the first line as Windows may output additional debug info
-	normalized := strings.ReplaceAll(out.String(), "\\", "/")
+	normalized := normalizePathSeparators(out.String())
 	firstLine := strings.Split(normalized, "\n")[0]
 	got := filepath.Base(firstLine)
 	assert.Equal(t, expected, got, "Mismatch in the working directory")
@@ -2322,7 +2368,7 @@ func TestUserWorkingDirectoryWithIncluded(t *testing.T) {
 	require.NoError(t, e.Setup())
 	require.NoError(t, e.Run(t.Context(), &task.Call{Task: "included:echo"}))
 	// Normalize path separators for cross-platform compatibility (Windows uses backslashes)
-	assert.Equal(t, fmt.Sprintf("%s\n", wd), strings.ReplaceAll(buff.String(), "\\", "/"))
+	assert.Equal(t, fmt.Sprintf("%s\n", wd), normalizePathSeparators(buff.String()))
 }
 
 func TestPlatforms(t *testing.T) {
