@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Fixed Remote Git Taskfiles failing on Windows due to backslashes in URL paths
+  (#2656 by @Trim21).
+
 ## v3.48.0 - 2026-01-26
 
 - Fixed `if:` conditions when using to check dynamic variables. Also, skip
