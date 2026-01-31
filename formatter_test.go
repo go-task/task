@@ -127,6 +127,7 @@ func (tt *FormatterTest) run(t *testing.T) {
 		// Create a golden fixture file for the output
 		g := goldie.New(t,
 			goldie.WithFixtureDir(filepath.Join(e.Dir, "testdata")),
+			goldie.WithEqualFn(NormalizedEqual),
 		)
 
 		// Call setup and check for errors
