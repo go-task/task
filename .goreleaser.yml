@@ -60,7 +60,7 @@ nfpms:
   - vendor: Task
     homepage: https://taskfile.dev
     maintainer: The Task authors <task@taskfile.dev>
-    description: Simple task runner written in Go
+    description: A fast, cross-platform build tool inspired by Make, designed for modern workflows.
     section: golang
     license: MIT
     conflicts:
@@ -80,7 +80,7 @@ nfpms:
 
 brews:
   - name: go-task
-    description: Task runner / simpler Make alternative written in Go
+    description: A fast, cross-platform build tool inspired by Make, designed for modern workflows.
     license: MIT
     homepage: https://taskfile.dev
     directory: Formula
@@ -100,8 +100,8 @@ brews:
 winget:
   - name: Task
     publisher: Task
-    short_description: A task runner / simpler Make alternative written in Go
-    description: Task is a task runner / build tool that aims to be simpler and easier to use than, for example, GNU Make.
+    short_description: The modern task runner.
+    description: A fast, cross-platform build tool inspired by Make, designed for modern workflows.
     license: MIT
     homepage: https://taskfile.dev/
     publisher_url: https://taskfile.dev/
@@ -144,7 +144,7 @@ npms:
   - name: "@go-task/cli"
     repository: "git+https://github.com/go-task/task.git"
     bugs: https://github.com/go-task/task/issues
-    description: A task runner / simpler Make alternative written in Go
+    description: A fast, cross-platform build tool inspired by Make, designed for modern workflows.
     homepage: https://taskfile.dev
     license: MIT
     author: "The Task authors"
@@ -154,7 +154,6 @@ npms:
       - "taskfile"
       - "build-tool"
       - "task-runner"
-
 
 cloudsmiths:
   - organization: "task"
