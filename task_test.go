@@ -308,6 +308,19 @@ func PPSortedLines(t *testing.T, b []byte) []byte {
 	return []byte(strings.Join(lines, "\n") + "\n")
 }
 
+// normalizeLineEndings converts CRLF and CR to LF for cross-platform comparison
+func normalizeLineEndings(b []byte) []byte {
+	b = bytes.ReplaceAll(b, []byte("\r\n"), []byte("\n"))
+	b = bytes.ReplaceAll(b, []byte("\r"), []byte("\n"))
+	return b
+}
+
+// NormalizedEqual compares two byte slices after normalizing line endings.
+// This is used as a custom goldie.EqualFn for cross-platform golden file tests.
+func NormalizedEqual(actual, expected []byte) bool {
+	return bytes.Equal(normalizeLineEndings(actual), normalizeLineEndings(expected))
+}
+
 // SyncBuffer is a threadsafe buffer for testing.
 // Some times replace stdout/stderr with a buffer to capture output.
 // stdout and stderr are threadsafe, but a regular bytes.Buffer is not.
