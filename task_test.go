@@ -88,7 +88,7 @@ func (tt *TaskTest) writeFixture(
 	if tt.fixtureTemplatingEnabled {
 		fixtureTemplateData := map[string]any{
 			"TEST_NAME": t.Name(),
-			"TEST_DIR":  wd,
+			"TEST_DIR":  filepath.ToSlash(wd),
 		}
 		// If the test has additional template data, copy it into the map
 		if tt.fixtureTemplateData != nil {
@@ -308,10 +308,13 @@ func PPSortedLines(t *testing.T, b []byte) []byte {
 	return []byte(strings.Join(lines, "\n") + "\n")
 }
 
-// normalizeLineEndings converts CRLF and CR to LF for cross-platform comparison
+// normalizeLineEndings normalizes cross-platform differences for comparison:
+// - Converts CRLF and CR to LF
+// - Converts backslashes to forward slashes (Windows paths)
 func normalizeLineEndings(b []byte) []byte {
 	b = bytes.ReplaceAll(b, []byte("\r\n"), []byte("\n"))
 	b = bytes.ReplaceAll(b, []byte("\r"), []byte("\n"))
+	b = bytes.ReplaceAll(b, []byte("\\"), []byte("/"))
 	return b
 }
 
@@ -1341,7 +1344,7 @@ func TestIncludedTaskfileVarMerging(t *testing.T) {
 
 			err := e.Run(t.Context(), &task.Call{Task: test.task})
 			require.NoError(t, err)
-			assert.Contains(t, buff.String(), test.expectedOutput)
+			assert.Contains(t, filepath.ToSlash(buff.String()), test.expectedOutput)
 		})
 	}
 }
