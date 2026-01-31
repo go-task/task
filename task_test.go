@@ -1495,7 +1495,9 @@ func TestWhenNoDirAttributeItRunsInSameDirAsTaskfile(t *testing.T) {
 	require.NoError(t, e.Run(t.Context(), &task.Call{Task: "whereami"}))
 
 	// got should be the "dir" part of "testdata/dir"
-	got := strings.TrimSuffix(filepath.Base(out.String()), "\n")
+	// Normalize path separators for cross-platform compatibility (Windows uses backslashes)
+	normalized := strings.ReplaceAll(out.String(), "\\", "/")
+	got := strings.TrimSuffix(filepath.Base(normalized), "\n")
 	assert.Equal(t, expected, got, "Mismatch in the working directory")
 }
 
@@ -1514,7 +1516,9 @@ func TestWhenDirAttributeAndDirExistsItRunsInThatDir(t *testing.T) {
 	require.NoError(t, e.Setup())
 	require.NoError(t, e.Run(t.Context(), &task.Call{Task: "whereami"}))
 
-	got := strings.TrimSuffix(filepath.Base(out.String()), "\n")
+	// Normalize path separators for cross-platform compatibility (Windows uses backslashes)
+	normalized := strings.ReplaceAll(out.String(), "\\", "/")
+	got := strings.TrimSuffix(filepath.Base(normalized), "\n")
 	assert.Equal(t, expected, got, "Mismatch in the working directory")
 }
 
@@ -1540,7 +1544,9 @@ func TestWhenDirAttributeItCreatesMissingAndRunsInThatDir(t *testing.T) {
 	require.NoError(t, e.Setup())
 	require.NoError(t, e.Run(t.Context(), &task.Call{Task: target}))
 
-	got := strings.TrimSuffix(filepath.Base(out.String()), "\n")
+	// Normalize path separators for cross-platform compatibility (Windows uses backslashes)
+	normalized := strings.ReplaceAll(out.String(), "\\", "/")
+	got := strings.TrimSuffix(filepath.Base(normalized), "\n")
 	assert.Equal(t, expected, got, "Mismatch in the working directory")
 
 	// Clean-up after ourselves only if no error.
@@ -1569,7 +1575,9 @@ func TestDynamicVariablesRunOnTheNewCreatedDir(t *testing.T) {
 	require.NoError(t, e.Setup())
 	require.NoError(t, e.Run(t.Context(), &task.Call{Task: target}))
 
-	got := strings.TrimSuffix(filepath.Base(out.String()), "\n")
+	// Normalize path separators for cross-platform compatibility (Windows uses backslashes)
+	normalized := strings.ReplaceAll(out.String(), "\\", "/")
+	got := strings.TrimSuffix(filepath.Base(normalized), "\n")
 	assert.Equal(t, expected, got, "Mismatch in the working directory")
 
 	// Clean-up after ourselves only if no error.
@@ -2288,7 +2296,8 @@ func TestUserWorkingDirectory(t *testing.T) {
 	require.NoError(t, err)
 	require.NoError(t, e.Setup())
 	require.NoError(t, e.Run(t.Context(), &task.Call{Task: "default"}))
-	assert.Equal(t, fmt.Sprintf("%s\n", wd), buff.String())
+	// Use filepath.ToSlash because USER_WORKING_DIR uses forward slashes on all platforms
+	assert.Equal(t, fmt.Sprintf("%s\n", filepath.ToSlash(wd)), buff.String())
 }
 
 func TestUserWorkingDirectoryWithIncluded(t *testing.T) {
@@ -2297,7 +2306,7 @@ func TestUserWorkingDirectoryWithIncluded(t *testing.T) {
 	wd, err := os.Getwd()
 	require.NoError(t, err)
 
-	wd = filepathext.SmartJoin(wd, "testdata/user_working_dir_with_includes/somedir")
+	wd = filepath.ToSlash(filepathext.SmartJoin(wd, "testdata/user_working_dir_with_includes/somedir"))
 
 	var buff bytes.Buffer
 	e := task.NewExecutor(
