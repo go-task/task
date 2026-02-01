@@ -2,8 +2,10 @@ package templater
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"maps"
+	"regexp"
 	"strings"
 
 	"github.com/go-task/template"
@@ -46,6 +48,38 @@ func ResolveRef(ref string, cache *Cache) any {
 		return cache.cacheMap
 	}
 	t, err := template.New("resolver").Funcs(templateFuncs).Parse(fmt.Sprintf("{{%s}}", ref))
+	if err != nil {
+		cache.err = err
+		return nil
+	}
+	val, err := t.Resolve(cache.cacheMap)
+	if err != nil {
+		cache.err = err
+		return nil
+	}
+	return val
+}
+
+func resolveDirectLookup(text string, cache *Cache) any {
+	// If there is already an error, do nothing
+	if cache.err != nil {
+		return nil
+	}
+
+	// Initialize the cache map if it's not already initialized
+	if cache.cacheMap == nil {
+		cache.cacheMap = cache.Vars.ToCacheMap()
+	}
+
+	// Lookup should be in the form '{{.LOOKUP}}'.
+	re := regexp.MustCompile(`^\{\{(\..+)\}\}$`)
+	match := re.FindStringSubmatch(text)
+	if len(match) != 2 {
+		return text
+	}
+
+	// Resolve the lookup.
+	t, err := template.New("resolver").Funcs(templateFuncs).Parse(text)
 	if err != nil {
 		cache.err = err
 		return nil
@@ -105,11 +139,48 @@ func ReplaceGlobs(globs []*ast.Glob, cache *Cache) []*ast.Glob {
 		return nil
 	}
 
-	new := make([]*ast.Glob, len(globs))
-	for i, g := range globs {
-		new[i] = &ast.Glob{
-			Glob:   Replace(g.Glob, cache),
-			Negate: g.Negate,
+	new := []*ast.Glob{}
+	for _, g := range globs {
+		_glob := resolveDirectLookup(g.Glob, cache)
+		switch glob := _glob.(type) {
+		case []any:
+			for _, v := range glob {
+				new = append(new, &ast.Glob{
+					Glob:   Replace(v.(string), cache),
+					Negate: g.Negate,
+				})
+			}
+		case string:
+			glob = Replace(glob, cache)
+			var jv any
+			if err := json.Unmarshal([]byte(glob), &jv); err == nil {
+				// JSON data (highly probable).
+				switch val := jv.(type) {
+				case []any:
+					for _, v := range val {
+						new = append(new, &ast.Glob{
+							Glob:   v.(string),
+							Negate: g.Negate,
+						})
+					}
+				case string:
+					new = append(new, &ast.Glob{
+						Glob:   val,
+						Negate: g.Negate,
+					})
+				}
+			} else {
+				// Otherwise take the glob as provided.
+				new = append(new, &ast.Glob{
+					Glob:   glob,
+					Negate: g.Negate,
+				})
+			}
+		default:
+			new = append(new, &ast.Glob{
+				Glob:   Replace(glob.(string), cache),
+				Negate: g.Negate,
+			})
 		}
 	}
 	return new
