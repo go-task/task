@@ -10,7 +10,7 @@ import (
 // Cmd is a task command
 type Cmd struct {
 	Cmd         string // Resolved command (used for execution and fingerprinting)
-	CmdTemplate string // Original template before variable resolution (used for secret masking)
+	LogCmd string // Command with secrets masked (used for logging)
 	Task        string
 	For         *For
 	If          string
@@ -29,7 +29,7 @@ func (c *Cmd) DeepCopy() *Cmd {
 	}
 	return &Cmd{
 		Cmd:         c.Cmd,
-		CmdTemplate: c.CmdTemplate,
+		LogCmd: c.LogCmd,
 		Task:        c.Task,
 		For:         c.For.DeepCopy(),
 		If:          c.If,

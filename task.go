@@ -349,8 +349,8 @@ func (e *Executor) runDeferred(t *ast.Task, call *Call, i int, vars *ast.Vars, d
 		extra["EXIT_CODE"] = fmt.Sprintf("%d", *deferredExitCode)
 	}
 
-	// Save template before resolving for secret masking in logs
-	cmd.CmdTemplate = cmd.Cmd
+	// Resolve template with secrets masked for logging
+	cmd.LogCmd = templater.MaskSecretsWithExtra(cmd.Cmd, vars, extra)
 	cmd.Cmd = templater.ReplaceWithExtra(cmd.Cmd, cache, extra)
 	cmd.Task = templater.ReplaceWithExtra(cmd.Task, cache, extra)
 	cmd.If = templater.ReplaceWithExtra(cmd.If, cache, extra)
@@ -395,15 +395,7 @@ func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call *Call, i in
 		}
 
 		if e.Verbose || (!call.Silent && !cmd.Silent && !t.IsSilent() && !e.Taskfile.Silent && !e.Silent) {
-			// Get runtime vars for masking
-			varsForMasking, err := e.Compiler.FastGetVariables(t, call)
-			if err != nil {
-				return fmt.Errorf("task: failed to get variables: %w", err)
-			}
-
-			// Mask secret variables in the command template before logging
-			cmdToLog := templater.MaskSecrets(cmd.CmdTemplate, varsForMasking)
-			e.Logger.Errf(logger.Green, "task: [%s] %s\n", t.Name(), cmdToLog)
+			e.Logger.Errf(logger.Green, "task: [%s] %s\n", t.Name(), cmd.LogCmd)
 		}
 
 		if e.Dry {
