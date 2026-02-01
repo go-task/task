@@ -35,3 +35,36 @@ func MaskSecrets(cmdTemplate string, vars *ast.Vars) string {
 
 	return result
 }
+
+// MaskSecretsWithExtra is like MaskSecrets but also resolves extra variables (e.g., loop vars).
+func MaskSecretsWithExtra(cmdTemplate string, vars *ast.Vars, extra map[string]any) string {
+	if vars == nil || vars.Len() == 0 {
+		// Still need to resolve extra vars even if no vars
+		cache := &Cache{Vars: ast.NewVars()}
+		result := ReplaceWithExtra(cmdTemplate, cache, extra)
+		if cache.Err() != nil {
+			return cmdTemplate
+		}
+		return result
+	}
+
+	// Create a cache map with secrets masked
+	maskedVars := vars.DeepCopy()
+	for name, v := range maskedVars.All() {
+		if v.Secret {
+			maskedVars.Set(name, ast.Var{
+				Value:  "*****",
+				Secret: true,
+			})
+		}
+	}
+
+	cache := &Cache{Vars: maskedVars}
+	result := ReplaceWithExtra(cmdTemplate, cache, extra)
+
+	if cache.Err() != nil {
+		return cmdTemplate
+	}
+
+	return result
+}
