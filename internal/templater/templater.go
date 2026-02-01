@@ -105,11 +105,23 @@ func ReplaceGlobs(globs []*ast.Glob, cache *Cache) []*ast.Glob {
 		return nil
 	}
 
-	new := make([]*ast.Glob, len(globs))
-	for i, g := range globs {
-		new[i] = &ast.Glob{
-			Glob:   Replace(g.Glob, cache),
-			Negate: g.Negate,
+	new := []*ast.Glob{}
+	for _, g := range globs {
+		v := Replace(g.Glob, cache)
+		if strings.HasPrefix(v, "[") && strings.HasSuffix(v, "]") {
+			// A templated var of an array will have form: [a b c], extract that.
+			for _, glob := range strings.Fields(v[1 : len(v)-1]) {
+				new = append(new, &ast.Glob{
+					Glob:   glob,
+					Negate: g.Negate,
+				})
+			}
+		} else {
+			// Otherwise take the glob as provided.
+			new = append(new, &ast.Glob{
+				Glob:   v,
+				Negate: g.Negate,
+			})
 		}
 	}
 	return new

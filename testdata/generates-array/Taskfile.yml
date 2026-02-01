@@ -1,0 +1,62 @@
+version: '3'
+
+method: none
+
+vars:
+  GLOB_SINGLE: 'foo.*'
+  GLOB_ARRAY: ['*.txt', '*.yml'] 
+  GLOB_STRING: '*.txt:*.yml' 
+  GLOB_SPLIT: '{{splitList ":" .GLOB_STRING}}'
+
+tasks:
+  default:
+    cmds:
+      - cmd: touch foo.txt
+      - cmd: touch bar.txt
+      - cmd: touch foo.yml
+      - cmd: touch bar.yml
+      - task: direct
+      - task: single
+      - task: array
+      - task: string
+      - task: split
+
+  direct:
+    sources:
+      - '*.txt'
+    cmds:
+      - echo "== {{.TASK}} =="
+      - for: sources 
+        cmd: echo {{.ITEM}}
+  single:
+    sources:
+      - '{{.GLOB_SINGLE}}'
+    cmds:
+      - echo "== {{.TASK}} =="
+      - for: sources 
+        cmd: echo {{.ITEM}}
+  array:
+    sources:
+      - '{{.GLOB_ARRAY}}'
+      - exclude: Taskfile.yml
+    cmds:
+      - echo "== {{.TASK}} =="
+      - for: sources 
+        cmd: echo {{.ITEM}}
+  string:
+    sources:
+      - '{{splitList ":" .GLOB_STRING}}'
+      - exclude: Taskfile.yml
+    cmds:
+      - echo "== {{.TASK}} =="
+      - for: sources 
+        cmd: echo {{.ITEM}}
+  split:
+    sources:
+      - '{{.GLOB_SPLIT}}'
+      - exclude: Taskfile.yml
+    cmds:
+      - echo "== {{.TASK}} =="
+      - for: sources 
+        cmd: echo {{.ITEM}}
+ 
