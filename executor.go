@@ -26,35 +26,36 @@ type (
 	// within them.
 	Executor struct {
 		// Flags
-		Dir                 string
-		Entrypoint          string
-		TempDir             TempDir
-		Force               bool
-		ForceAll            bool
-		Insecure            bool
-		Download            bool
-		Offline             bool
-		TrustedHosts        []string
-		Timeout             time.Duration
-		CacheExpiryDuration time.Duration
-		RemoteCacheDir      string
-		CACert              string
-		Cert                string
-		CertKey             string
-		Watch               bool
-		Verbose             bool
-		Silent              bool
-		DisableFuzzy        bool
-		AssumeYes           bool
-		AssumeTerm          bool // Used for testing
-		Interactive         bool
-		Dry                 bool
-		Summary             bool
-		Parallel            bool
-		Color               bool
-		Concurrency         int
-		Interval            time.Duration
-		Failfast            bool
+		Dir                   string
+		Entrypoint            string
+		TempDir               TempDir
+		Force                 bool
+		ForceAll              bool
+		Insecure              bool
+		Download              bool
+		Offline               bool
+		TrustedHosts          []string
+		Timeout               time.Duration
+		CacheExpiryDuration   time.Duration
+		RemoteCacheDir        string
+		CACert                string
+		Cert                  string
+		CertKey               string
+		Watch                 bool
+		Verbose               bool
+		Silent                bool
+		DisableFuzzy          bool
+		AssumeYes             bool
+		AssumeTerm            bool // Used for testing
+		Interactive           bool
+		Dry                   bool
+		Summary               bool
+		Parallel              bool
+		PropagateSharedErrors bool
+		Color                 bool
+		Concurrency           int
+		Interval              time.Duration
+		Failfast              bool
 
 		// I/O
 		Stdin  io.Reader
@@ -464,6 +465,22 @@ type parallelOption struct {
 
 func (o *parallelOption) ApplyToExecutor(e *Executor) {
 	e.Parallel = o.parallel
+}
+
+// WithPropagateSharedErrors tells the [Executor] to propagate errors from shared
+// task executions (e.g. tasks with `run: once`) to all concurrent waiters.
+// When disabled, Task will still wait for the shared execution to complete, but
+// other waiters will not fail if the shared execution fails (legacy behavior).
+func WithPropagateSharedErrors(propagate bool) ExecutorOption {
+	return &propagateSharedErrorsOption{propagate}
+}
+
+type propagateSharedErrorsOption struct {
+	propagate bool
+}
+
+func (o *propagateSharedErrorsOption) ApplyToExecutor(e *Executor) {
+	e.PropagateSharedErrors = o.propagate
 }
 
 // WithColor tells the [Executor] whether or not to output using colorized
