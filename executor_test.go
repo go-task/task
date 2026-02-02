@@ -927,6 +927,10 @@ func TestReference(t *testing.T) {
 			name: "reference using templating resolver and dynamic var",
 			call: "ref-resolver-sh",
 		},
+		{
+			name: "reference using templating resolver and global var",
+			call: "ref-global",
+		},
 	}
 
 	for _, test := range tests {
