@@ -7,7 +7,10 @@ vars:
   GLOB_ARRAY: ['*.txt', '*.yml'] 
   GLOB_STRING: '*.txt:*.yml' 
   GLOB_SPLIT: '{{splitList ":" .GLOB_STRING}}'
-
+  GLOB_DYNAMIC:
+    sh: 'echo "[*.txt]"'
+  GLOB_DYNAMIC_DIR:
+    sh: 'echo "./"'
 tasks:
   default:
     cmds:
@@ -20,6 +23,8 @@ tasks:
       - task: array
       - task: string
       - task: split
+      - task: dynamic
+      - task: dynamic-dir
 
   direct:
     sources:
@@ -54,6 +59,22 @@ tasks:
   split:
     sources:
       - '{{.GLOB_SPLIT}}'
+      - exclude: Taskfile.yml
+    cmds:
+      - echo "== {{.TASK}} =="
+      - for: sources 
+        cmd: echo {{.ITEM}}
+  dynamic:
+    sources:
+      - '{{.GLOB_DYNAMIC}}'
+      - exclude: Taskfile.yml
+    cmds:
+      - echo "== {{.TASK}} =="
+      - for: sources 
+        cmd: echo {{.ITEM}}
+  dynamic-dir:
+    sources:
+      - "{{.GLOB_DYNAMIC_DIR}}/foo*"
       - exclude: Taskfile.yml
     cmds:
       - echo "== {{.TASK}} =="

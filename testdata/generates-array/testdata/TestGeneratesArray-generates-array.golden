@@ -19,3 +19,9 @@ bar.txt
 bar.yml
 foo.txt
 foo.yml
+== dynamic ==
+bar.txt
+foo.txt
+== dynamic-dir ==
+foo.txt
+foo.yml
