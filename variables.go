@@ -228,6 +228,8 @@ func (e *Executor) compiledTask(call *Call, evaluateShVars bool) (*ast.Task, err
 						extra["KEY"] = keys[i]
 					}
 					newCmd := cmd.DeepCopy()
+					// Resolve template with secrets masked + loop vars for logging
+					newCmd.LogCmd = templater.MaskSecretsWithExtra(cmd.Cmd, cache.Vars, extra)
 					newCmd.Cmd = templater.ReplaceWithExtra(cmd.Cmd, cache, extra)
 					newCmd.Task = templater.ReplaceWithExtra(cmd.Task, cache, extra)
 					newCmd.If = templater.ReplaceWithExtra(cmd.If, cache, extra)
@@ -243,6 +245,8 @@ func (e *Executor) compiledTask(call *Call, evaluateShVars bool) (*ast.Task, err
 				continue
 			}
 			newCmd := cmd.DeepCopy()
+			// Resolve template with secrets masked for logging
+			newCmd.LogCmd = templater.MaskSecrets(cmd.Cmd, cache.Vars)
 			newCmd.Cmd = templater.Replace(cmd.Cmd, cache)
 			newCmd.Task = templater.Replace(cmd.Task, cache)
 			newCmd.If = templater.Replace(cmd.If, cache)
