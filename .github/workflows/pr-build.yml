@@ -25,27 +25,27 @@ jobs:
         with:
           version: '~> v2'
           args: release --snapshot --clean --config .goreleaser-pr.yml
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
           name: task_linux_amd64
           path: dist/task_linux_amd64.tar.gz
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
           name: task_linux_arm64
           path: dist/task_linux_arm64.tar.gz
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
           name: task_darwin_amd64
           path: dist/task_darwin_amd64.tar.gz
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
           name: task_darwin_arm64
           path: dist/task_darwin_arm64.tar.gz
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
           name: task_windows_amd64
           path: dist/task_windows_amd64.zip
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
           name: checksums
           path: dist/task_checksums.txt
