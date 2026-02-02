@@ -10,11 +10,11 @@ outline: deep
 Task has multiple ways of being configured. These methods are parsed, in
 sequence, in the following order with the highest priority last:
 
-- [Environment variables](./environment.md)
 - _Configuration files_
+- [Environment variables](./environment.md)
 - [Command-line flags](./cli.md)
 
-In this document, we will look at the second of the three options, configuration
+In this document, we will look at the first of the three options, configuration
 files.
 
 ## File Precedence
@@ -86,9 +86,22 @@ experiments:
 - **Default**: `false`
 - **Description**: Enable verbose output for all tasks
 - **CLI equivalent**: [`-v, --verbose`](./cli.md#-v---verbose)
+- **Environment variable**: [`TASK_VERBOSE`](./environment.md#task-verbose)
 
 ```yaml
 verbose: true
+```
+
+### `silent`
+
+- **Type**: `boolean`
+- **Default**: `false`
+- **Description**: Disables echoing of commands
+- **CLI equivalent**: [`-s, --silent`](./cli.md#-s---silent)
+- **Environment variable**: [`TASK_SILENT`](./environment.md#task-silent)
+
+```yaml
+silent: true
 ```
 
 ### `color`
@@ -97,6 +110,7 @@ verbose: true
 - **Default**: `true`
 - **Description**: Enable colored output. Colors are automatically enabled in CI environments (`CI=true`).
 - **CLI equivalent**: [`-c, --color`](./cli.md#-c---color)
+- **Environment variable**: [`TASK_COLOR`](./environment.md#task-color)
 
 ```yaml
 color: false
@@ -108,6 +122,7 @@ color: false
 - **Default**: `false`
 - **Description**: Disable fuzzy matching for task names. When enabled, Task will not suggest similar task names when you mistype a task name.
 - **CLI equivalent**: [`--disable-fuzzy`](./cli.md#--disable-fuzzy)
+- **Environment variable**: [`TASK_DISABLE_FUZZY`](./environment.md#task-disable-fuzzy)
 
 ```yaml
 disable-fuzzy: true
@@ -119,6 +134,7 @@ disable-fuzzy: true
 - **Minimum**: `1`
 - **Description**: Number of concurrent tasks to run
 - **CLI equivalent**: [`-C, --concurrency`](./cli.md#-c---concurrency-number)
+- **Environment variable**: [`TASK_CONCURRENCY`](./environment.md#task-concurrency)
 
 ```yaml
 concurrency: 4
@@ -129,7 +145,8 @@ concurrency: 4
 - **Type**: `boolean`
 - **Default**: `false`
 - **Description**: Stop executing dependencies as soon as one of them fail
-- **CLI equivalent**: [`-F, --failfast`](./cli.md#f-failfast)
+- **CLI equivalent**: [`-F, --failfast`](./cli.md#-f---failfast)
+- **Environment variable**: [`TASK_FAILFAST`](./environment.md#task-failfast)
 
 ```yaml
 failfast: true
@@ -156,6 +173,7 @@ Here's a complete example of a `.taskrc.yml` file with all available options:
 ```yaml
 # Global settings
 verbose: true
+silent: false
 color: true
 disable-fuzzy: false
 concurrency: 2
