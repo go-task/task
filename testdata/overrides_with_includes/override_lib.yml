@@ -1,0 +1,9 @@
+version: '3'
+
+tasks:
+  shared:
+    cmds:
+      - echo "shared from override - this should win"
+  new_task:
+    cmds:
+      - echo "new task from override"

@@ -404,6 +404,88 @@ func (r *Reader) include(ctx context.Context, node Node) error {
 		})
 	}
 
+	// Loop over each overridden taskfile
+	for _, override := range vertex.Taskfile.Overrides.All() {
+		vars := env.GetEnviron()
+		vars.Merge(vertex.Taskfile.Vars, nil)
+		// Start a goroutine to process each overridden Taskfile
+		g.Go(func() error {
+			cache := &templater.Cache{Vars: vars}
+			override = &ast.Override{
+				Namespace:      override.Namespace,
+				Taskfile:       templater.Replace(override.Taskfile, cache),
+				Dir:            templater.Replace(override.Dir, cache),
+				Optional:       override.Optional,
+				Internal:       override.Internal,
+				Flatten:        override.Flatten,
+				Aliases:        override.Aliases,
+				AdvancedImport: override.AdvancedImport,
+				Excludes:       override.Excludes,
+				Vars:           override.Vars,
+				Checksum:       override.Checksum,
+			}
+			if err := cache.Err(); err != nil {
+				return err
+			}
+
+			entrypoint, err := node.ResolveEntrypoint(override.Taskfile)
+			if err != nil {
+				return err
+			}
+
+			override.Dir, err = node.ResolveDir(override.Dir)
+			if err != nil {
+				return err
+			}
+
+			overrideNode, err := NewNode(entrypoint, override.Dir, r.insecure,
+				WithParent(node),
+				WithChecksum(override.Checksum),
+			)
+			if err != nil {
+				if override.Optional {
+					return nil
+				}
+				return err
+			}
+
+			// Recurse into the overridden Taskfile
+			if err := r.include(ctx, overrideNode); err != nil {
+				return err
+			}
+
+			// Create an edge between the Taskfiles
+			r.graph.Lock()
+			defer r.graph.Unlock()
+			edge, err := r.graph.Edge(node.Location(), overrideNode.Location())
+			if err == graph.ErrEdgeNotFound {
+				// If the edge doesn't exist, create it
+				err = r.graph.AddEdge(
+					node.Location(),
+					overrideNode.Location(),
+					graph.EdgeData([]*ast.Override{override}),
+					graph.EdgeWeight(1),
+				)
+			} else {
+				// If the edge already exists
+				edgeData := append(edge.Properties.Data.([]*ast.Override), override)
+				err = r.graph.UpdateEdge(
+					node.Location(),
+					overrideNode.Location(),
+					graph.EdgeData(edgeData),
+					graph.EdgeWeight(len(edgeData)),
+				)
+			}
+			if errors.Is(err, graph.ErrEdgeCreatesCycle) {
+				return errors.TaskfileCycleError{
+					Source:      node.Location(),
+					Destination: overrideNode.Location(),
+				}
+			}
+			return err
+		})
+	}
+
 	// Wait for all the go routines to finish
 	return g.Wait()
 }
