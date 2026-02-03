@@ -69,6 +69,16 @@ func (t1 *Taskfile) Merge(t2 *Taskfile, include *Include) error {
 	}
 	t1.Vars.Merge(t2.Vars, include)
 	t1.Env.Merge(t2.Env, include)
+	if t2.Run != "" {
+		// Apply t2.Run to all t2.Tasks (if not explicitly set). This
+		// ensures the global `Run` of the imported/merged taskfile is
+		// retained for those tasks.
+		for _, v := range t2.Tasks.All(nil) {
+			if v.Run == "" {
+				v.Run = t2.Run
+			}
+		}
+	}
 	return t1.Tasks.Merge(t2.Tasks, include, t1.Vars)
 }
 
