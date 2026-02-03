@@ -573,6 +573,93 @@ func TestStatus(t *testing.T) {
 	)
 }
 
+func TestInheritOutdated(t *testing.T) {
+	t.Parallel()
+
+	const dir = "testdata/inherit_outdated"
+
+	var buf bytes.Buffer
+
+	// Test 1: Task without inherit_outdated should pass even if dep is outdated
+	e1 := task.NewExecutor(
+		task.WithDir(dir),
+		task.WithStdout(&buf),
+		task.WithStderr(&buf),
+	)
+	require.NoError(t, e1.Setup())
+	ctx := t.Context()
+	err := e1.Status(ctx, &task.Call{Task: "task-without-inherit-outdated"})
+	require.NoError(t, err, "task-without-inherit-outdated itself is up-to-date, so without inherit_outdated it should pass")
+
+	// Test 2: Task with inherit_outdated on bad dep should fail
+	buf.Reset()
+	e2 := task.NewExecutor(
+		task.WithDir(dir),
+		task.WithStdout(&buf),
+		task.WithStderr(&buf),
+	)
+	require.NoError(t, e2.Setup())
+	err = e2.Status(ctx, &task.Call{Task: "task-with-inherit-outdated-bad"})
+	require.Error(t, err, "task-with-inherit-outdated-bad has a dependency with inherit_outdated that is not up-to-date")
+	require.Contains(t, err.Error(), "not-up-to-date-leaf", "error should mention the dependency that failed")
+
+	// Test 3: Task with inherit_outdated on good deps should pass
+	buf.Reset()
+	e3 := task.NewExecutor(
+		task.WithDir(dir),
+		task.WithStdout(&buf),
+		task.WithStderr(&buf),
+	)
+	require.NoError(t, e3.Setup())
+	err = e3.Status(ctx, &task.Call{Task: "task-with-inherit-outdated-good"})
+	require.NoError(t, err, "task-with-inherit-outdated-good and all its inherit_outdated dependencies are up-to-date")
+
+	// Test 4: Nested inherit_outdated should propagate
+	buf.Reset()
+	e4 := task.NewExecutor(
+		task.WithDir(dir),
+		task.WithStdout(&buf),
+		task.WithStderr(&buf),
+	)
+	require.NoError(t, e4.Setup())
+	err = e4.Status(ctx, &task.Call{Task: "nested-inherit-outdated"})
+	require.Error(t, err, "nested-inherit-outdated has a transitive dependency with inherit_outdated that is not up-to-date")
+	require.Contains(t, err.Error(), "not-up-to-date", "error should mention something is not up-to-date")
+
+	// Test 5: Mixed deps (some with inherit_outdated, some without) - only checks those with inherit_outdated
+	buf.Reset()
+	e5 := task.NewExecutor(
+		task.WithDir(dir),
+		task.WithStdout(&buf),
+		task.WithStderr(&buf),
+	)
+	require.NoError(t, e5.Setup())
+	err = e5.Status(ctx, &task.Call{Task: "mixed-inherit-outdated"})
+	require.NoError(t, err, "mixed-inherit-outdated should pass because only up-to-date-leaf has inherit_outdated")
+
+	// Test 6: Leaf task that is up-to-date should pass
+	buf.Reset()
+	e6 := task.NewExecutor(
+		task.WithDir(dir),
+		task.WithStdout(&buf),
+		task.WithStderr(&buf),
+	)
+	require.NoError(t, e6.Setup())
+	err = e6.Status(ctx, &task.Call{Task: "up-to-date-leaf"})
+	require.NoError(t, err, "up-to-date-leaf is up-to-date")
+
+	// Test 7: Leaf task that is not up-to-date should fail
+	buf.Reset()
+	e7 := task.NewExecutor(
+		task.WithDir(dir),
+		task.WithStdout(&buf),
+		task.WithStderr(&buf),
+	)
+	require.NoError(t, e7.Setup())
+	err = e7.Status(ctx, &task.Call{Task: "not-up-to-date-leaf"})
+	require.Error(t, err, "not-up-to-date-leaf is not up-to-date")
+}
+
 func TestPrecondition(t *testing.T) {
 	t.Parallel()
 	const dir = "testdata/precondition"
