@@ -10,6 +10,7 @@ import (
 	"github.com/joho/godotenv"
 
 	"github.com/go-task/task/v3/errors"
+	"github.com/go-task/task/v3/internal/deepcopy"
 	"github.com/go-task/task/v3/internal/env"
 	"github.com/go-task/task/v3/internal/execext"
 	"github.com/go-task/task/v3/internal/filepathext"
@@ -29,6 +30,52 @@ func (e *Executor) FastCompiledTask(call *Call) (*ast.Task, error) {
 	return e.compiledTask(call, false)
 }
 
+func (e *Executor) CompiledTaskForTaskList(call *Call) (*ast.Task, error) {
+	origTask, err := e.GetTask(call)
+	if err != nil {
+		return nil, err
+	}
+
+	vars, err := e.Compiler.FastGetVariables(origTask, call)
+	if err != nil {
+		return nil, err
+	}
+
+	cache := &templater.Cache{Vars: vars}
+
+	return &ast.Task{
+		Task:                 origTask.Task,
+		Label:                templater.Replace(origTask.Label, cache),
+		Desc:                 templater.Replace(origTask.Desc, cache),
+		Prompt:               templater.Replace(origTask.Prompt, cache),
+		Summary:              templater.Replace(origTask.Summary, cache),
+		Aliases:              origTask.Aliases,
+		Sources:              origTask.Sources,
+		Generates:            origTask.Generates,
+		Dir:                  origTask.Dir,
+		Set:                  origTask.Set,
+		Shopt:                origTask.Shopt,
+		Vars:                 vars,
+		Env:                  nil,
+		Dotenv:               origTask.Dotenv,
+		Silent:               deepcopy.Scalar(origTask.Silent),
+		Interactive:          origTask.Interactive,
+		Internal:             origTask.Internal,
+		Method:               origTask.Method,
+		Prefix:               origTask.Prefix,
+		IgnoreError:          origTask.IgnoreError,
+		Run:                  origTask.Run,
+		IncludeVars:          origTask.IncludeVars,
+		IncludedTaskfileVars: origTask.IncludedTaskfileVars,
+		Platforms:            origTask.Platforms,
+		Location:             origTask.Location,
+		Requires:             origTask.Requires,
+		Watch:                origTask.Watch,
+		Namespace:            origTask.Namespace,
+		Failfast:             origTask.Failfast,
+	}, nil
+}
+
 func (e *Executor) compiledTask(call *Call, evaluateShVars bool) (*ast.Task, error) {
 	origTask, err := e.GetTask(call)
 	if err != nil {
@@ -44,9 +91,14 @@ func (e *Executor) compiledTask(call *Call, evaluateShVars bool) (*ast.Task, err
 	if err != nil {
 		return nil, err
 	}
+	fullName := origTask.Task
+	if matches, exists := vars.Get("MATCH"); exists {
+		for _, match := range matches.Value.([]string) {
+			fullName = strings.Replace(fullName, "*", match, 1)
+		}
+	}
 
 	cache := &templater.Cache{Vars: vars}
-
 	new := ast.Task{
 		Task:                 origTask.Task,
 		Label:                templater.Replace(origTask.Label, cache),
@@ -62,7 +114,7 @@ func (e *Executor) compiledTask(call *Call, evaluateShVars bool) (*ast.Task, err
 		Vars:                 vars,
 		Env:                  nil,
 		Dotenv:               templater.Replace(origTask.Dotenv, cache),
-		Silent:               origTask.Silent,
+		Silent:               deepcopy.Scalar(origTask.Silent),
 		Interactive:          origTask.Interactive,
 		Internal:             origTask.Internal,
 		Method:               templater.Replace(origTask.Method, cache),
@@ -72,10 +124,13 @@ func (e *Executor) compiledTask(call *Call, evaluateShVars bool) (*ast.Task, err
 		IncludeVars:          origTask.IncludeVars,
 		IncludedTaskfileVars: origTask.IncludedTaskfileVars,
 		Platforms:            origTask.Platforms,
+		If:                   templater.Replace(origTask.If, cache),
 		Location:             origTask.Location,
 		Requires:             origTask.Requires,
 		Watch:                origTask.Watch,
+		Failfast:             origTask.Failfast,
 		Namespace:            origTask.Namespace,
+		FullName:             fullName,
 	}
 	new.Dir, err = execext.ExpandLiteral(new.Dir)
 	if err != nil {
@@ -175,6 +230,7 @@ func (e *Executor) compiledTask(call *Call, evaluateShVars bool) (*ast.Task, err
 					newCmd := cmd.DeepCopy()
 					newCmd.Cmd = templater.ReplaceWithExtra(cmd.Cmd, cache, extra)
 					newCmd.Task = templater.ReplaceWithExtra(cmd.Task, cache, extra)
+					newCmd.If = templater.ReplaceWithExtra(cmd.If, cache, extra)
 					newCmd.Vars = templater.ReplaceVarsWithExtra(cmd.Vars, cache, extra)
 					new.Cmds = append(new.Cmds, newCmd)
 				}
@@ -189,6 +245,7 @@ func (e *Executor) compiledTask(call *Call, evaluateShVars bool) (*ast.Task, err
 			newCmd := cmd.DeepCopy()
 			newCmd.Cmd = templater.Replace(cmd.Cmd, cache)
 			newCmd.Task = templater.Replace(cmd.Task, cache)
+			newCmd.If = templater.Replace(cmd.If, cache)
 			newCmd.Vars = templater.ReplaceVars(cmd.Vars, cache)
 			new.Cmds = append(new.Cmds, newCmd)
 		}

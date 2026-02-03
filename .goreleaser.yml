@@ -60,7 +60,7 @@ nfpms:
   - vendor: Task
     homepage: https://taskfile.dev
     maintainer: The Task authors <task@taskfile.dev>
-    description: Simple task runner written in Go
+    description: A fast, cross-platform build tool inspired by Make, designed for modern workflows.
     section: golang
     license: MIT
     conflicts:
@@ -69,7 +69,7 @@ nfpms:
       - deb
       - rpm
       - apk
-    file_name_template: '{{.ProjectName}}_{{.Os}}_{{.Arch}}'
+    file_name_template: '{{.ProjectName}}_{{.Version}}_{{.Os}}_{{.Arch}}'
     contents:
       - src: completion/bash/task.bash
         dst: /etc/bash_completion.d/task
@@ -80,7 +80,7 @@ nfpms:
 
 brews:
   - name: go-task
-    description: Task runner / simpler Make alternative written in Go
+    description: A fast, cross-platform build tool inspired by Make, designed for modern workflows.
     license: MIT
     homepage: https://taskfile.dev
     directory: Formula
@@ -100,8 +100,8 @@ brews:
 winget:
   - name: Task
     publisher: Task
-    short_description: A task runner / simpler Make alternative written in Go
-    description: Task is a task runner / build tool that aims to be simpler and easier to use than, for example, GNU Make.
+    short_description: The modern task runner.
+    description: A fast, cross-platform build tool inspired by Make, designed for modern workflows.
     license: MIT
     homepage: https://taskfile.dev/
     publisher_url: https://taskfile.dev/
@@ -127,7 +127,7 @@ winget:
     repository:
       owner: go-task
       name: winget-pkgs
-      branch: 'chore/task-{{.Version}}'
+      branch: 'task-{{.Version}}'
       pull_request:
         enabled: true
         draft: false
@@ -136,13 +136,15 @@ winget:
           owner: microsoft
           name: winget-pkgs
           branch: master
+        body: |
+          /cc @andreynering @pd93 @vmaerten
 
 
 npms:
   - name: "@go-task/cli"
     repository: "git+https://github.com/go-task/task.git"
     bugs: https://github.com/go-task/task/issues
-    description: A task runner / simpler Make alternative written in Go
+    description: A fast, cross-platform build tool inspired by Make, designed for modern workflows.
     homepage: https://taskfile.dev
     license: MIT
     author: "The Task authors"
@@ -153,22 +155,19 @@ npms:
       - "build-tool"
       - "task-runner"
 
-
 cloudsmiths:
   - organization: "task"
-    repository: "task"
+    repository: "{{if not .IsNightly}}task{{end}}"
     formats:
       - deb
       - rpm
       - apk
     distributions:
-#      deb:
-#        - "ubuntu/any-version"
-#        - "debian/any-version"
+      deb:
+        - "any-distro/any-version"
       rpm:
-        - "el/any-version"
-        - "fedora/any-version"
+        - "any-distro/any-version"
       alpine:
         - "alpine/any-version"
-    component: "{{if .IsNightly}}unstable{{else}}main{{end}}"
+    component: main
     republish: true

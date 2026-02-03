@@ -1,7 +1,7 @@
 package ast
 
 import (
-	"gopkg.in/yaml.v3"
+	"go.yaml.in/yaml/v4"
 
 	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/deepcopy"
@@ -12,6 +12,7 @@ type Cmd struct {
 	Cmd         string
 	Task        string
 	For         *For
+	If          string
 	Silent      bool
 	Set         []string
 	Shopt       []string
@@ -29,6 +30,7 @@ func (c *Cmd) DeepCopy() *Cmd {
 		Cmd:         c.Cmd,
 		Task:        c.Task,
 		For:         c.For.DeepCopy(),
+		If:          c.If,
 		Silent:      c.Silent,
 		Set:         deepcopy.Slice(c.Set),
 		Shopt:       deepcopy.Slice(c.Shopt),
@@ -55,6 +57,7 @@ func (c *Cmd) UnmarshalYAML(node *yaml.Node) error {
 			Cmd         string
 			Task        string
 			For         *For
+			If          string
 			Silent      bool
 			Set         []string
 			Shopt       []string
@@ -92,7 +95,9 @@ func (c *Cmd) UnmarshalYAML(node *yaml.Node) error {
 			c.Task = cmdStruct.Task
 			c.Vars = cmdStruct.Vars
 			c.For = cmdStruct.For
+			c.If = cmdStruct.If
 			c.Silent = cmdStruct.Silent
+			c.IgnoreError = cmdStruct.IgnoreError
 			return nil
 		}
 
@@ -100,6 +105,7 @@ func (c *Cmd) UnmarshalYAML(node *yaml.Node) error {
 		if cmdStruct.Cmd != "" {
 			c.Cmd = cmdStruct.Cmd
 			c.For = cmdStruct.For
+			c.If = cmdStruct.If
 			c.Silent = cmdStruct.Silent
 			c.Set = cmdStruct.Set
 			c.Shopt = cmdStruct.Shopt

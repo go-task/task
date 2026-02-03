@@ -72,6 +72,14 @@ task --init
 task -i
 ```
 
+::: tip
+
+Combine `--list` or `--list-all` with `--silent` (`-ls` or `-as` for shortants)
+to list only the task names in each line. Useful for scripting with `grep` or
+similar.
+
+:::
+
 ## Options
 
 ### General
@@ -108,7 +116,25 @@ Disable command echoing.
 task deploy --silent
 ```
 
+#### `--disable-fuzzy`
+
+Disable fuzzy matching for task names. When enabled, Task will not suggest similar task names when you mistype a task name.
+
+```bash
+task buidl --disable-fuzzy
+# Output: Task "buidl" does not exist
+# (without "Did you mean 'build'?" suggestion)
+```
+
 ### Execution Control
+
+#### `-F, --failfast`
+
+Stop executing dependencies as soon as one of them fails.
+
+```bash
+task build --failfast
+```
 
 #### `-f, --force`
 
@@ -281,6 +307,19 @@ Automatically answer "yes" to all prompts.
 
 ```bash
 task deploy --yes
+```
+
+#### `--interactive`
+
+Enable interactive prompts for missing required variables. When a required
+variable is not provided, Task will prompt for input instead of failing.
+
+Task automatically detects non-TTY environments (like CI pipelines) and
+skips prompts. This flag can also be set in `.taskrc.yml` to enable prompts
+by default.
+
+```bash
+task deploy --interactive
 ```
 
 ## Exit Codes

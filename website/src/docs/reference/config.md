@@ -73,3 +73,93 @@ option_3: foo # Taken from $XDG_CONFIG_HOME/task/.taskrc.yml
 The experiments section allows you to enable Task's experimental features. These
 options are not enumerated here. Instead, please refer to our
 [experiments documentation](../experiments/index.md) for more information.
+
+```yaml
+experiments:
+  feature_name: 1
+  another_feature: 2
+```
+
+### `verbose`
+
+- **Type**: `boolean`
+- **Default**: `false`
+- **Description**: Enable verbose output for all tasks
+- **CLI equivalent**: [`-v, --verbose`](./cli.md#-v---verbose)
+
+```yaml
+verbose: true
+```
+
+### `color`
+
+- **Type**: `boolean`
+- **Default**: `true`
+- **Description**: Enable colored output. Colors are automatically enabled in CI environments (`CI=true`).
+- **CLI equivalent**: [`-c, --color`](./cli.md#-c---color)
+
+```yaml
+color: false
+```
+
+### `disable-fuzzy`
+
+- **Type**: `boolean`
+- **Default**: `false`
+- **Description**: Disable fuzzy matching for task names. When enabled, Task will not suggest similar task names when you mistype a task name.
+- **CLI equivalent**: [`--disable-fuzzy`](./cli.md#--disable-fuzzy)
+
+```yaml
+disable-fuzzy: true
+```
+
+### `concurrency`
+
+- **Type**: `integer`
+- **Minimum**: `1`
+- **Description**: Number of concurrent tasks to run
+- **CLI equivalent**: [`-C, --concurrency`](./cli.md#-c---concurrency-number)
+
+```yaml
+concurrency: 4
+```
+
+### `failfast`
+
+- **Type**: `boolean`
+- **Default**: `false`
+- **Description**: Stop executing dependencies as soon as one of them fail
+- **CLI equivalent**: [`-F, --failfast`](./cli.md#f-failfast)
+
+```yaml
+failfast: true
+```
+
+### `interactive`
+
+- **Type**: `boolean`
+- **Default**: `false`
+- **Description**: Prompt for missing required variables instead of failing.
+  When enabled, Task will display an interactive prompt for any missing required
+  variable. Requires a TTY. Task automatically detects non-TTY environments
+  (CI pipelines, etc.) and skips prompts.
+- **CLI equivalent**: [`--interactive`](./cli.md#--interactive)
+
+```yaml
+interactive: true
+```
+
+## Example Configuration
+
+Here's a complete example of a `.taskrc.yml` file with all available options:
+
+```yaml
+# Global settings
+verbose: true
+color: true
+disable-fuzzy: false
+concurrency: 2
+
+# Enable experimental features
+experiments:
+  REMOTE_TASKFILES: 1

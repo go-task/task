@@ -2,6 +2,7 @@
 title: Donate
 layout: doc
 outline: false
+editLink: false
 ---
 
 # :raised_hands: Support Task

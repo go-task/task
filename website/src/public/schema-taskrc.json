@@ -20,6 +20,69 @@
           "enum": [0, 1]
         }
       }
+    },
+    "remote": {
+      "type": "object",
+      "description": "Remote configuration settings",
+      "properties": {
+        "insecure": {
+          "type": "boolean",
+          "description": "Forces Task to download Taskfiles over insecure connections."
+        },
+        "offline": {
+          "type": "boolean",
+          "description": "Forces Task to only use local or cached Taskfiles."
+        },
+        "timeout": {
+          "type": "string",
+          "description": "Timeout for downloading remote Taskfiles (e.g., '30s', '5m')",
+          "pattern": "^[0-9]+(ns|us|µs|ms|s|m|h)$"
+        },
+        "cache-expiry": {
+          "type": "string",
+          "description": "Expiry duration for cached remote Taskfiles (e.g., '1h', '24h')",
+          "pattern": "^[0-9]+(ns|us|µs|ms|s|m|h)$"
+        },
+        "cache-dir": {
+          "type": "string",
+          "description": "Directory to cache remote Taskfiles"
+        },
+        "trusted-hosts": {
+          "type": "array",
+          "description": "List of trusted hosts for remote Taskfiles (e.g., 'github.com', 'gitlab.com', 'example.com:8080').",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "verbose": {
+      "type": "boolean",
+      "description": "Enable verbose output"
+    },
+    "color": {
+      "type": "boolean",
+      "description": "Enable colored output"
+    },
+    "disable-fuzzy": {
+      "type": "boolean",
+      "description": "Disable fuzzy matching for task names"
+    },
+    "concurrency": {
+      "type": "integer",
+      "description": "Number of concurrent tasks to run",
+      "minimum": 1
+    },
+    "failfast": {
+      "description": "When running tasks in parallel, stop all tasks if one fails.",
+      "type": "boolean",
+      "default": false
+    },
+    "interactive": {
+      "description": "Prompt for missing required variables instead of failing. Requires a TTY.",
+      "type": "boolean",
+      "default": false
     }
   },
   "additionalProperties": false

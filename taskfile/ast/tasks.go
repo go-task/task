@@ -8,7 +8,7 @@ import (
 	"sync"
 
 	"github.com/elliotchance/orderedmap/v3"
-	"gopkg.in/yaml.v3"
+	"go.yaml.in/yaml/v4"
 
 	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/filepathext"
@@ -244,8 +244,8 @@ func (t *Tasks) UnmarshalYAML(node *yaml.Node) error {
 }
 
 func taskNameWithNamespace(taskName string, namespace string) string {
-	if strings.HasPrefix(taskName, NamespaceSeparator) {
-		return strings.TrimPrefix(taskName, NamespaceSeparator)
+	if after, ok := strings.CutPrefix(taskName, NamespaceSeparator); ok {
+		return after
 	}
 	return fmt.Sprintf("%s%s%s", namespace, NamespaceSeparator, taskName)
 }

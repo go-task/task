@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/fsnotify/fsnotify"
-	"github.com/puzpuzpuz/xsync/v3"
+	"github.com/puzpuzpuz/xsync/v4"
 
 	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/filepathext"
@@ -36,7 +36,6 @@ func (e *Executor) watchTasks(calls ...*Call) error {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	for _, c := range calls {
-		c := c
 		go func() {
 			err := e.RunTask(ctx, c)
 			if err == nil {
@@ -85,7 +84,6 @@ func (e *Executor) watchTasks(calls ...*Call) error {
 				e.Compiler.ResetCache()
 
 				for _, c := range calls {
-					c := c
 					go func() {
 						if ShouldIgnore(event.Name) {
 							e.Logger.VerboseErrf(logger.Magenta, "task: event skipped for being an ignored dir: %s\n", event.Name)
@@ -128,7 +126,7 @@ func (e *Executor) watchTasks(calls ...*Call) error {
 		}
 	}()
 
-	e.watchedDirs = xsync.NewMapOf[string, bool]()
+	e.watchedDirs = xsync.NewMap[string, bool]()
 
 	go func() {
 		// NOTE(@andreynering): New files can be created in directories

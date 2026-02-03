@@ -1,12 +1,22 @@
 ---
 title: Blog
 description: Latest news and updates from the Task team
+editLink: false
 ---
+
+<BlogPost
+title="New `if:` Control and Variable Prompt"
+url="/blog/if-and-variable-prompt"
+date="2026-01-24"
+author="vmaerten"
+description="The v3.47.0 release is here, and it brings two exciting new features to Task. Let's take a closer look at them!"
+:tags="['new-features', 'variables']"
+/>
 
 <BlogPost
 title="Announcing Built-in Core Utilities for Windows"
 url="/blog/windows-core-utils"
-date="2025-08-26"
+date="2025-09-15"
 author="andreynering"
 description="When I started Task back in 2017, one of my biggest goals was to build a task runner that would work well on all major platforms, including Windows. At the time, I was using Windows as my main platform, and it caught my attention how much of a pain it was to get a working version of Make on Windows, for example."
 :tags="['windows', 'core-utils']"

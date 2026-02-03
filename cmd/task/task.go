@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
 
 	"github.com/spf13/pflag"
 
@@ -28,17 +29,32 @@ func main() {
 			Color:   flags.Color,
 		}
 		if err, ok := err.(*errors.TaskRunError); ok && flags.ExitCode {
+			emitCIErrorAnnotation(err)
 			l.Errf(logger.Red, "%v\n", err)
 			os.Exit(err.TaskExitCode())
 		}
 		if err, ok := err.(errors.TaskError); ok {
+			emitCIErrorAnnotation(err)
 			l.Errf(logger.Red, "%v\n", err)
 			os.Exit(err.Code())
 		}
+		emitCIErrorAnnotation(err)
 		l.Errf(logger.Red, "%v\n", err)
 		os.Exit(errors.CodeUnknown)
 	}
 	os.Exit(errors.CodeOk)
+}
+
+// emitCIErrorAnnotation emits an error annotation for supported CI providers.
+func emitCIErrorAnnotation(err error) {
+	if isGA, _ := strconv.ParseBool(os.Getenv("GITHUB_ACTIONS")); !isGA {
+		return
+	}
+	if e, ok := err.(*errors.TaskRunError); ok {
+		fmt.Fprintf(os.Stdout, "::error title=Task '%s' failed::%v\n", e.TaskName, e.Err)
+		return
+	}
+	fmt.Fprintf(os.Stdout, "::error title=Task failed::%v\n", err)
 }
 
 func run() error {
@@ -128,6 +144,7 @@ func run() error {
 		flags.ListAll,
 		flags.ListJson,
 		flags.NoStatus,
+		flags.Nested,
 	)
 	if listOptions.ShouldListTasks() {
 		if flags.Silent {
@@ -155,18 +172,23 @@ func run() error {
 		calls = append(calls, &task.Call{Task: "default"})
 	}
 
+	// Merge CLI variables first (e.g. FOO=bar) so they take priority over Taskfile defaults
+	e.Taskfile.Vars.Merge(globals, nil)
+
+	// Then ReverseMerge special variables so they're available for templating
 	cliArgsPostDashQuoted, err := args.ToQuotedString(cliArgsPostDash)
 	if err != nil {
 		return err
 	}
-	globals.Set("CLI_ARGS", ast.Var{Value: cliArgsPostDashQuoted})
-	globals.Set("CLI_ARGS_LIST", ast.Var{Value: cliArgsPostDash})
-	globals.Set("CLI_FORCE", ast.Var{Value: flags.Force || flags.ForceAll})
-	globals.Set("CLI_SILENT", ast.Var{Value: flags.Silent})
-	globals.Set("CLI_VERBOSE", ast.Var{Value: flags.Verbose})
-	globals.Set("CLI_OFFLINE", ast.Var{Value: flags.Offline})
-	e.Taskfile.Vars.Merge(globals, nil)
-
+	specialVars := ast.NewVars()
+	specialVars.Set("CLI_ARGS", ast.Var{Value: cliArgsPostDashQuoted})
+	specialVars.Set("CLI_ARGS_LIST", ast.Var{Value: cliArgsPostDash})
+	specialVars.Set("CLI_FORCE", ast.Var{Value: flags.Force || flags.ForceAll})
+	specialVars.Set("CLI_SILENT", ast.Var{Value: flags.Silent})
+	specialVars.Set("CLI_VERBOSE", ast.Var{Value: flags.Verbose})
+	specialVars.Set("CLI_OFFLINE", ast.Var{Value: flags.Offline})
+	specialVars.Set("CLI_ASSUME_YES", ast.Var{Value: flags.AssumeYes})
+	e.Taskfile.Vars.ReverseMerge(specialVars, nil)
 	if !flags.Watch {
 		e.InterceptInterruptSignals()
 	}

@@ -11,7 +11,8 @@ outline: deep
 Task's templating engine uses Go's
 [text/template](https://pkg.go.dev/text/template) package to interpolate values.
 This reference covers the main features and all available functions for creating
-dynamic Taskfiles.
+dynamic Taskfiles. Most of the provided functions come from the
+[slim-sprig](https://sprig.taskfile.dev/) library.
 
 ## Basic Usage
 
@@ -170,6 +171,11 @@ tasks:
 
 - **Type**: `bool`
 - **Description**: Whether `--offline` flag was set
+
+#### `CLI_ASSUME_YES`
+
+- **Type**: `bool`
+- **Description**: Whether `--yes` flag was set
 
 ### Task
 
@@ -433,7 +439,7 @@ tasks:
       - echo "{{.MESSAGE | lower}}"         # "hello world"
       - echo "{{.NAME | trunc 4}}"          # "john"
       - echo "{{"test" | repeat 3}}"        # "testtesttest"
-      - echo "{{substr .TEXT 0 5}}"      # "Hello"
+      - echo "{{.TEXT | substr 0 5}}"       # "Hello"
 ```
 
 #### String Testing and Searching
@@ -627,9 +633,11 @@ tasks:
           port: 5432
           ssl: true
     cmds:
-      - echo "Database {{.CONFIG | get "database"}}"
+      - echo "Database {{get .CONFIG "database"}}"
+      - echo "Database {{"database" | get .CONFIG}}"
       - echo "Keys {{.CONFIG | keys}}"
-      - echo "Has SSL {{.CONFIG | hasKey "ssl"}}"
+      - echo "Keys {{keys .CONFIG }}"
+      - echo "Has SSL {{hasKey .CONFIG "ssl"}}"
       - echo "{{dict "env" "prod" "debug" false}}"
 ```
 

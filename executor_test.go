@@ -143,12 +143,12 @@ func (tt *ExecutorTest) run(t *testing.T) {
 	t.Helper()
 	f := func(t *testing.T) {
 		t.Helper()
-		var buf bytes.Buffer
+		var buffer SyncBuffer
 
 		opts := append(
 			tt.executorOpts,
-			task.WithStdout(&buf),
-			task.WithStderr(&buf),
+			task.WithStdout(&buffer),
+			task.WithStderr(&buffer),
 		)
 
 		// If the test has input, create a reader for it and add it to the
@@ -171,7 +171,7 @@ func (tt *ExecutorTest) run(t *testing.T) {
 		if err := e.Setup(); tt.wantSetupError {
 			require.Error(t, err)
 			tt.writeFixtureErrSetup(t, g, err)
-			tt.writeFixtureBuffer(t, g, buf)
+			tt.writeFixtureBuffer(t, g, buffer.buf)
 			return
 		} else {
 			require.NoError(t, err)
@@ -192,7 +192,7 @@ func (tt *ExecutorTest) run(t *testing.T) {
 		if err := e.Run(ctx, call); tt.wantRunError {
 			require.Error(t, err)
 			tt.writeFixtureErrRun(t, g, err)
-			tt.writeFixtureBuffer(t, g, buf)
+			tt.writeFixtureBuffer(t, g, buffer.buf)
 			return
 		} else {
 			require.NoError(t, err)
@@ -205,7 +205,7 @@ func (tt *ExecutorTest) run(t *testing.T) {
 			}
 		}
 
-		tt.writeFixtureBuffer(t, g, buf)
+		tt.writeFixtureBuffer(t, g, buffer.buf)
 	}
 
 	// Run the test (with a name if it has one)
@@ -262,6 +262,23 @@ func TestVars(t *testing.T) {
 			task.WithDir("testdata/vars"),
 			task.WithSilent(true),
 		),
+	)
+	NewExecutorTest(t,
+		WithName("cli-var-priority-default"),
+		WithExecutorOptions(
+			task.WithDir("testdata/vars"),
+			task.WithSilent(true),
+		),
+		WithTask("cli-var-priority"),
+	)
+	NewExecutorTest(t,
+		WithName("cli-var-priority-override"),
+		WithExecutorOptions(
+			task.WithDir("testdata/vars"),
+			task.WithSilent(true),
+		),
+		WithTask("cli-var-priority"),
+		WithVar("CLI_VAR", "from_cli"),
 	)
 }
 
@@ -347,6 +364,7 @@ func TestSpecialVars(t *testing.T) {
 		// Root
 		"print-task",
 		"print-root-dir",
+		"print-root-taskfile",
 		"print-taskfile",
 		"print-taskfile-dir",
 		"print-task-dir",
@@ -715,6 +733,30 @@ func TestAlias(t *testing.T) {
 	)
 }
 
+func TestSummaryWithVarsAndRequires(t *testing.T) {
+	t.Parallel()
+
+	// Test basic case from prompt.md - vars and requires
+	NewExecutorTest(t,
+		WithName("vars-and-requires"),
+		WithExecutorOptions(
+			task.WithDir("testdata/summary-vars-requires"),
+			task.WithSummary(true),
+		),
+		WithTask("mytask"),
+	)
+
+	// Test with shell variables
+	NewExecutorTest(t,
+		WithName("shell-vars"),
+		WithExecutorOptions(
+			task.WithDir("testdata/summary-vars-requires"),
+			task.WithSummary(true),
+		),
+		WithTask("with-sh-var"),
+	)
+}
+
 func TestLabel(t *testing.T) {
 	t.Parallel()
 
@@ -756,6 +798,36 @@ func TestLabel(t *testing.T) {
 		WithName("label in summary"),
 		WithExecutorOptions(
 			task.WithDir("testdata/label_summary"),
+		),
+		WithTask("foo"),
+	)
+
+	NewExecutorTest(t,
+		WithName("label in error"),
+		WithExecutorOptions(
+			task.WithDir("testdata/label_error"),
+		),
+		WithTask("foo"),
+		WithRunError(),
+	)
+}
+
+func TestPrefix(t *testing.T) {
+	t.Parallel()
+
+	NewExecutorTest(t,
+		WithName("up to date"),
+		WithExecutorOptions(
+			task.WithDir("testdata/prefix_uptodate"),
+			task.WithOutputStyle(ast.Output{Name: "prefixed"}),
+		),
+		WithTask("foo"),
+	)
+
+	NewExecutorTest(t,
+		WithName("up to dat with no output style"),
+		WithExecutorOptions(
+			task.WithDir("testdata/prefix_uptodate"),
 		),
 		WithTask("foo"),
 	)
@@ -1080,4 +1152,129 @@ func TestIncludeChecksum(t *testing.T) {
 		WithSetupError(),
 		WithFixtureTemplating(),
 	)
+}
+
+func TestIncludeSilent(t *testing.T) {
+	t.Parallel()
+
+	NewExecutorTest(t,
+		WithName("include-taskfile-silent"),
+		WithExecutorOptions(
+			task.WithDir("testdata/includes_silent"),
+		),
+		WithTask("default"),
+	)
+}
+
+func TestFailfast(t *testing.T) {
+	t.Parallel()
+
+	t.Run("Default", func(t *testing.T) {
+		t.Parallel()
+
+		NewExecutorTest(t,
+			WithName("default"),
+			WithExecutorOptions(
+				task.WithDir("testdata/failfast/default"),
+				task.WithSilent(true),
+			),
+			WithPostProcessFn(PPSortedLines),
+			WithRunError(),
+		)
+	})
+
+	t.Run("Option", func(t *testing.T) {
+		t.Parallel()
+
+		NewExecutorTest(t,
+			WithName("default"),
+			WithExecutorOptions(
+				task.WithDir("testdata/failfast/default"),
+				task.WithSilent(true),
+				task.WithFailfast(true),
+			),
+			WithPostProcessFn(PPSortedLines),
+			WithRunError(),
+		)
+	})
+
+	t.Run("Task", func(t *testing.T) {
+		t.Parallel()
+
+		NewExecutorTest(t,
+			WithName("task"),
+			WithExecutorOptions(
+				task.WithDir("testdata/failfast/task"),
+				task.WithSilent(true),
+			),
+			WithPostProcessFn(PPSortedLines),
+			WithRunError(),
+		)
+	})
+}
+
+func TestIf(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name    string
+		task    string
+		vars    map[string]any
+		verbose bool
+	}{
+		// Basic command-level if
+		{name: "cmd-if-true", task: "cmd-if-true"},
+		{name: "cmd-if-false", task: "cmd-if-false"},
+
+		// Task-level if
+		{name: "task-if-true", task: "task-if-true"},
+		{name: "task-if-false", task: "task-if-false", verbose: true},
+
+		// Task call with if
+		{name: "task-call-if-true", task: "task-call-if-true"},
+		{name: "task-call-if-false", task: "task-call-if-false", verbose: true},
+
+		// Go template conditions
+		{name: "template-eq-true", task: "template-eq-true"},
+		{name: "template-eq-false", task: "template-eq-false", verbose: true},
+		{name: "template-ne", task: "template-ne"},
+		{name: "template-bool-true", task: "template-bool-true"},
+		{name: "template-bool-false", task: "template-bool-false"},
+		{name: "template-direct-true", task: "template-direct-true"},
+		{name: "template-direct-false", task: "template-direct-false"},
+		{name: "template-and", task: "template-and"},
+		{name: "template-or", task: "template-or"},
+
+		// CLI variable override
+		{name: "template-cli-var", task: "template-cli-var", vars: map[string]any{"MY_VAR": "yes"}},
+
+		// Task-level if with template
+		{name: "task-level-template", task: "task-level-template"},
+		{name: "task-level-template-false", task: "task-level-template-false", verbose: true},
+
+		// For loop with if
+		{name: "if-in-for-loop", task: "if-in-for-loop", verbose: true},
+
+		// Task-level if with dynamic variable
+		{name: "task-if-dynamic-true", task: "task-if-dynamic-true"},
+		{name: "task-if-dynamic-false", task: "task-if-dynamic-false", verbose: true},
+	}
+
+	for _, test := range tests {
+		opts := []ExecutorTestOption{
+			WithName(test.name),
+			WithExecutorOptions(
+				task.WithDir("testdata/if"),
+				task.WithSilent(true),
+				task.WithVerbose(test.verbose),
+			),
+			WithTask(test.task),
+		}
+		if test.vars != nil {
+			for k, v := range test.vars {
+				opts = append(opts, WithVar(k, v))
+			}
+		}
+		NewExecutorTest(t, opts...)
+	}
 }

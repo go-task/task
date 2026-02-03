@@ -61,13 +61,14 @@ func (c *Compiler) getVariables(t *ast.Task, call *Call, evaluateShVars bool) (*
 			newVar := templater.ReplaceVar(v, cache)
 			// If the variable should not be evaluated, but is nil, set it to an empty string
 			// This stops empty interface errors when using the templater to replace values later
+			// Preserve the Sh field so it can be displayed in summary
 			if !evaluateShVars && newVar.Value == nil {
-				result.Set(k, ast.Var{Value: ""})
+				result.Set(k, ast.Var{Value: "", Sh: newVar.Sh})
 				return nil
 			}
 			// If the variable should not be evaluated and it is set, we can set it and return
 			if !evaluateShVars {
-				result.Set(k, ast.Var{Value: newVar.Value})
+				result.Set(k, ast.Var{Value: newVar.Value, Sh: newVar.Sh})
 				return nil
 			}
 			// Now we can check for errors since we've handled all the cases when we don't want to evaluate

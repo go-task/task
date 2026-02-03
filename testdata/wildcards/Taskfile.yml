@@ -19,6 +19,8 @@ tasks:
       - "echo \"I don't consume matches: {{.MATCH}}\""
 
   start-*:
+    aliases:
+      - s-*
     vars:
       SERVICE: "{{index .MATCH 0}}"
     cmds:

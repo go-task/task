@@ -39,15 +39,15 @@ of node which you can use:
 ::: code-group
 
 ```text [HTTP/HTTPS]
-https://raw.githubusercontent.com/go-task/task/main/website/static/Taskfile.yml
+https://raw.githubusercontent.com/go-task/task/main/website/src/public/Taskfile.yml
 ```
 
 ```text [Git over HTTP]
-https://github.com/go-task/task.git//website/static/Taskfile.yml?ref=main
+https://github.com/go-task/task.git//website/src/public/Taskfile.yml?ref=main
 ```
 
 ```text [Git over SSH]
-git@github.com/go-task/task.git//website/static/Taskfile.yml?ref=main
+git@github.com/go-task/task.git//website/src/public/Taskfile.yml?ref=main
 ```
 
 :::
@@ -56,7 +56,7 @@ git@github.com/go-task/task.git//website/static/Taskfile.yml?ref=main
 
 ### HTTP/HTTPS
 
-`https://raw.githubusercontent.com/go-task/task/main/website/static/Taskfile.yml`
+`https://raw.githubusercontent.com/go-task/task/main/website/src/public/Taskfile.yml`
 
 This is the most basic type of remote node and works by downloading the file
 from the specified URL. The file must be a valid Taskfile and can be of any
@@ -66,7 +66,7 @@ find a valid Taskfile, an error is returned.
 
 ### Git over HTTP
 
-`https://github.com/go-task/task.git//website/static/Taskfile.yml?ref=main`
+`https://github.com/go-task/task.git//website/src/public/Taskfile.yml?ref=main`
 
 This type of node works by downloading the file from a Git repository over
 HTTP/HTTPS. The first part of the URL is the base URL of the Git repository.
@@ -80,7 +80,7 @@ This is the same URL that you would use to clone the repo over HTTP.
 
 ### Git over SSH
 
-`git@github.com/go-task/task.git//website/static/Taskfile.yml?ref=main`
+`git@github.com/go-task/task.git//website/src/public/Taskfile.yml?ref=main`
 
 This type of node works by downloading the file from a Git repository over SSH.
 The first part of the URL is the user and base URL of the Git repository. This
@@ -121,19 +121,19 @@ file. For example:
 ::: code-group
 
 ```shell [HTTP/HTTPS]
-$ task --taskfile https://raw.githubusercontent.com/go-task/task/main/website/static/Taskfile.yml
+$ task --taskfile https://raw.githubusercontent.com/go-task/task/main/website/src/public/Taskfile.yml
 task: [hello] echo "Hello Task!"
 Hello Task!
 ```
 
 ```shell [Git over HTTP]
-$ task --taskfile https://github.com/go-task/task.git//website/static/Taskfile.yml?ref=main
+$ task --taskfile https://github.com/go-task/task.git//website/src/public/Taskfile.yml?ref=main
 task: [hello] echo "Hello Task!"
 Hello Task!
 ```
 
 ```shell [Git over SSH]
-$ task --taskfile git@github.com/go-task/task.git//website/static/Taskfile.yml?ref=main
+$ task --taskfile git@github.com/go-task/task.git//website/src/public/Taskfile.yml?ref=main
 task: [hello] echo "Hello Task!"
 Hello Task!
 ```
@@ -152,21 +152,21 @@ the remote Taskfile will be available to run from your main Taskfile.
 version: '3'
 
 includes:
-  my-remote-namespace: https://raw.githubusercontent.com/go-task/task/main/website/static/Taskfile.yml
+  my-remote-namespace: https://raw.githubusercontent.com/go-task/task/main/website/src/public/Taskfile.yml
 ```
 
 ```yaml [Git over HTTP]
 version: '3'
 
 includes:
-  my-remote-namespace: https://github.com/go-task/task.git//website/static/Taskfile.yml?ref=main
+  my-remote-namespace: https://github.com/go-task/task.git//website/src/public/Taskfile.yml?ref=main
 ```
 
 ```yaml [Git over SSH]
 version: '3'
 
 includes:
-  my-remote-namespace: git@github.com/go-task/task.git//website/static/Taskfile.yml?ref=main
+  my-remote-namespace: git@github.com/go-task/task.git//website/src/public/Taskfile.yml?ref=main
 ```
 
 :::
@@ -214,7 +214,10 @@ remote Taskfiles:
 Sometimes you need to run Task in an environment that does not have an
 interactive terminal, so you are not able to accept a prompt. In these cases you
 are able to tell task to accept these prompts automatically by using the `--yes`
-flag. Before enabling this flag, you should:
+flag or the `--trust` flag. The `--trust` flag allows you to specify trusted
+hosts for remote Taskfiles, while `--yes` applies to all prompts in Task. You
+can also configure trusted hosts in your [taskrc configuration](#trusted-hosts) using
+`remote.trusted-hosts`. Before enabling automatic trust, you should:
 
 1. Be sure that you trust the source and contents of the remote Taskfile.
 2. Consider using a pinned version of the remote Taskfile (e.g. A link
@@ -260,6 +263,38 @@ Taskfile that is downloaded via an unencrypted connection. Sources that are not
 protected by TLS are vulnerable to man-in-the-middle attacks and should be
 avoided unless you know what you are doing.
 
+#### Custom Certificates
+
+If your remote Taskfiles are hosted on a server that uses a custom CA
+certificate (e.g., a corporate internal server), you can specify the CA
+certificate using the `--cacert` flag:
+
+```shell
+task --taskfile https://internal.example.com/Taskfile.yml --cacert /path/to/ca.crt
+```
+
+For servers that require client certificate authentication (mTLS), you can
+provide a client certificate and key:
+
+```shell
+task --taskfile https://secure.example.com/Taskfile.yml \
+  --cert /path/to/client.crt \
+  --cert-key /path/to/client.key
+```
+
+::: warning
+
+Encrypted private keys are not currently supported. If your key is encrypted,
+you must decrypt it first:
+
+```shell
+openssl rsa -in encrypted.key -out decrypted.key
+```
+
+:::
+
+These options can also be configured in the [configuration file](#configuration).
+
 ## Caching & Running Offline
 
 Whenever you run a remote Taskfile, the latest copy will be downloaded from the
@@ -281,12 +316,165 @@ and look for a cached copy instead. This timeout can be configured by setting
 the `--timeout` flag and specifying a duration. For example, `--timeout 5s` will
 set the timeout to 5 seconds.
 
-By default, the cache is stored in the Task temp directory, represented by the
-`TASK_TEMP_DIR` environment variable. You can override the location of the cache
-by setting the `TASK_REMOTE_DIR` environment variable. This way, you can share
-the cache between different projects.
+By default, the cache is stored in the Task temp directory (`.task`). You can
+override the location of the cache by using the `--remote-cache-dir` flag, the
+`remote.cache-dir` option in your [configuration file](#cache-dir), or the
+`TASK_REMOTE_DIR` environment variable. This way, you can share the cache
+between different projects.
 
 You can force Task to ignore the cache and download the latest version by using
 the `--download` flag.
 
 You can use the `--clear-cache` flag to clear all cached remote files.
+
+## Configuration
+
+This experiment adds a new `remote` section to the
+[configuration file](../reference/config.md).
+
+- **Type**: `object`
+- **Description**: Remote configuration settings for handling remote Taskfiles
+
+```yaml
+remote:
+  insecure: false
+  offline: false
+  timeout: "30s"
+  cache-expiry: "24h"
+  cache-dir: ~/.task
+  trusted-hosts:
+    - github.com
+    - gitlab.com
+  cacert: ""
+  cert: ""
+  cert-key: ""
+```
+
+#### `insecure`
+
+- **Type**: `boolean`
+- **Default**: `false`
+- **Description**: Allow insecure connections when fetching remote Taskfiles
+
+```yaml
+remote:
+  insecure: true
+```
+
+#### `offline`
+
+- **Type**: `boolean`
+- **Default**: `false`
+- **Description**: Work in offline mode, preventing remote Taskfile fetching
+
+```yaml
+remote:
+  offline: true
+```
+
+#### `timeout`
+
+- **Type**: `string`
+- **Default**: 10s
+- **Pattern**: `^[0-9]+(ns|us|µs|ms|s|m|h)$`
+- **Description**: Timeout duration for remote operations (e.g., '30s', '5m')
+
+```yaml
+remote:
+  timeout: "1m"
+```
+
+#### `cache-expiry`
+
+- **Type**: `string`
+- **Default**: 0s (no cache)
+- **Pattern**: `^[0-9]+(ns|us|µs|ms|s|m|h)$`
+- **Description**: Cache expiry duration for remote Taskfiles (e.g., '1h',
+  '24h')
+
+```yaml
+remote:
+  cache-expiry: "6h"
+```
+
+#### `cache-dir`
+
+- **Type**: `string`
+- **Default**: `.task`
+- **Description**: Directory where remote Taskfiles are cached. Can be an
+  absolute path (e.g., `/var/cache/task`) or relative to the Taskfile directory.
+- **CLI equivalent**: `--remote-cache-dir`
+- **Environment variable**: `TASK_REMOTE_DIR` (lowest priority)
+
+```yaml
+remote:
+  cache-dir: ~/.task
+```
+
+#### `trusted-hosts`
+
+- **Type**: `array of strings`
+- **Default**: `[]` (empty list)
+- **Description**: List of trusted hosts for remote Taskfiles. Hosts in this
+  list will not prompt for confirmation when downloading Taskfiles
+- **CLI equivalent**: `--trusted-hosts`
+
+```yaml
+remote:
+  trusted-hosts:
+    - github.com
+    - gitlab.com
+    - raw.githubusercontent.com
+    - example.com:8080
+```
+
+Hosts in the trusted hosts list will automatically be trusted without prompting for
+confirmation when they are first downloaded or when their checksums change. The
+host matching includes the port if specified in the URL. Use with caution and
+only add hosts you fully trust.
+
+You can also specify trusted hosts via the command line:
+
+```shell
+# Trust specific host for this execution
+task --trusted-hosts github.com -t https://github.com/user/repo.git//Taskfile.yml
+
+# Trust multiple hosts (comma-separated)
+task --trusted-hosts github.com,gitlab.com -t https://github.com/user/repo.git//Taskfile.yml
+
+# Trust a host with a specific port
+task --trusted-hosts example.com:8080 -t https://example.com:8080/Taskfile.yml
+```
+
+#### `cacert`
+
+- **Type**: `string`
+- **Default**: `""`
+- **Description**: Path to a custom CA certificate file for TLS verification
+
+```yaml
+remote:
+  cacert: "/path/to/ca.crt"
+```
+
+#### `cert`
+
+- **Type**: `string`
+- **Default**: `""`
+- **Description**: Path to a client certificate file for mTLS authentication
+
+```yaml
+remote:
+  cert: "/path/to/client.crt"
+```
+
+#### `cert-key`
+
+- **Type**: `string`
+- **Default**: `""`
+- **Description**: Path to the client certificate private key file
+
+```yaml
+remote:
+  cert-key: "/path/to/client.key"
+```

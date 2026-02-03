@@ -1,7 +1,7 @@
 package ast
 
 import (
-	"gopkg.in/yaml.v3"
+	"go.yaml.in/yaml/v4"
 
 	"github.com/go-task/task/v3/errors"
 )
@@ -18,7 +18,10 @@ type Var struct {
 func (v *Var) UnmarshalYAML(node *yaml.Node) error {
 	switch node.Kind {
 	case yaml.MappingNode:
-		key := node.Content[0].Value
+		key := "<none>"
+		if len(node.Content) > 0 {
+			key = node.Content[0].Value
+		}
 		switch key {
 		case "sh", "ref", "map":
 			var m struct {

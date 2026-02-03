@@ -4,8 +4,8 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"strings"
 
+	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/execext"
 	"github.com/go-task/task/v3/internal/filepathext"
 	"github.com/go-task/task/v3/internal/fsext"
@@ -19,8 +19,11 @@ type FileNode struct {
 
 func NewFileNode(entrypoint, dir string, opts ...NodeOption) (*FileNode, error) {
 	// Find the entrypoint file
-	resolvedEntrypoint, err := fsext.Search(entrypoint, dir, defaultTaskfiles)
+	resolvedEntrypoint, err := fsext.Search(entrypoint, dir, DefaultTaskfiles)
 	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return nil, errors.TaskfileNotFoundError{URI: entrypoint, Walk: false}
+		}
 		return nil, err
 	}
 
@@ -51,10 +54,7 @@ func (node *FileNode) Read() ([]byte, error) {
 
 func (node *FileNode) ResolveEntrypoint(entrypoint string) (string, error) {
 	// If the file is remote, we don't need to resolve the path
-	if strings.Contains(entrypoint, "://") {
-		return entrypoint, nil
-	}
-	if strings.HasPrefix(entrypoint, "git") {
+	if isRemoteEntrypoint(entrypoint) {
 		return entrypoint, nil
 	}
 

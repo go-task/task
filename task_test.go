@@ -9,6 +9,7 @@ import (
 	rand "math/rand/v2"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -437,6 +438,7 @@ func TestStatusChecksum(t *testing.T) { // nolint:paralleltest // cannot run in 
 		task  string
 	}{
 		{[]string{"generated.txt", ".task/checksum/build"}, "build"},
+		{[]string{"generated-wildcard.txt", ".task/checksum/build-wildcard"}, "build-wildcard"},
 		{[]string{"generated.txt", ".task/checksum/build-with-status"}, "build-with-status"},
 	}
 
@@ -568,7 +570,9 @@ func TestCyclicDep(t *testing.T) {
 		task.WithStderr(io.Discard),
 	)
 	require.NoError(t, e.Setup())
-	assert.IsType(t, &errors.TaskCalledTooManyTimesError{}, e.Run(t.Context(), &task.Call{Task: "task-1"}))
+	err := e.Run(t.Context(), &task.Call{Task: "task-1"})
+	var taskCalledTooManyTimesError *errors.TaskCalledTooManyTimesError
+	assert.ErrorAs(t, err, &taskCalledTooManyTimesError)
 }
 
 func TestTaskVersion(t *testing.T) {
@@ -783,6 +787,11 @@ func TestIncludesRemote(t *testing.T) {
 
 			var buff SyncBuffer
 
+			// Extract host from server URL for trust testing
+			parsedURL, err := url.Parse(srv.URL)
+			require.NoError(t, err)
+			trustedHost := parsedURL.Host
+
 			executors := []struct {
 				name     string
 				executor *task.Executor
@@ -820,6 +829,23 @@ func TestIncludesRemote(t *testing.T) {
 						task.WithAssumeYes(false),
 						task.WithDownload(false),
 						task.WithOffline(true),
+					),
+				},
+				{
+					name: "with trusted hosts, no prompts",
+					executor: task.NewExecutor(
+						task.WithDir(dir),
+						task.WithStdout(&buff),
+						task.WithStderr(&buff),
+						task.WithTimeout(time.Minute),
+						task.WithInsecure(true),
+						task.WithStdout(&buff),
+						task.WithStderr(&buff),
+						task.WithVerbose(true),
+
+						// With trusted hosts
+						task.WithTrustedHosts([]string{trustedHost}),
+						task.WithDownload(true),
 					),
 				},
 			}
@@ -1051,7 +1077,7 @@ func TestIncludesOptionalImplicitFalse(t *testing.T) {
 	const dir = "testdata/includes_optional_implicit_false"
 	wd, _ := os.Getwd()
 
-	message := "stat %s/%s/TaskfileOptional.yml: no such file or directory"
+	message := "task: No Taskfile found at \"%s/%s/TaskfileOptional.yml\""
 	expected := fmt.Sprintf(message, wd, dir)
 
 	e := task.NewExecutor(
@@ -1071,7 +1097,7 @@ func TestIncludesOptionalExplicitFalse(t *testing.T) {
 	const dir = "testdata/includes_optional_explicit_false"
 	wd, _ := os.Getwd()
 
-	message := "stat %s/%s/TaskfileOptional.yml: no such file or directory"
+	message := "task: No Taskfile found at \"%s/%s/TaskfileOptional.yml\""
 	expected := fmt.Sprintf(message, wd, dir)
 
 	e := task.NewExecutor(
@@ -1810,6 +1836,22 @@ func TestRunOnlyRunsJobsHashOnce(t *testing.T) {
 	})
 }
 
+func TestRunOnlyRunsJobsHashOnceWithWildcard(t *testing.T) {
+	t.Parallel()
+
+	tt := fileContentTest{
+		Dir:    "testdata/run",
+		Target: "deploy",
+		Files: map[string]string{
+			"wildcard.txt": "Deploy infra\nDeploy js\nDeploy go\n",
+		},
+	}
+	t.Run("", func(t *testing.T) {
+		t.Parallel()
+		tt.Run(t)
+	})
+}
+
 func TestRunOnceSharedDeps(t *testing.T) {
 	t.Parallel()
 
@@ -1830,6 +1872,29 @@ func TestRunOnceSharedDeps(t *testing.T) {
 	assert.Len(t, matches, 1)
 	assert.Contains(t, buff.String(), `task: [service-a:build] echo "build a"`)
 	assert.Contains(t, buff.String(), `task: [service-b:build] echo "build b"`)
+}
+
+func TestRunWhenChanged(t *testing.T) {
+	t.Parallel()
+
+	const dir = "testdata/run_when_changed"
+
+	var buff bytes.Buffer
+	e := task.NewExecutor(
+		task.WithDir(dir),
+		task.WithStdout(&buff),
+		task.WithStderr(&buff),
+		task.WithForceAll(true),
+		task.WithSilent(true),
+	)
+	require.NoError(t, e.Setup())
+	require.NoError(t, e.Run(t.Context(), &task.Call{Task: "start"}))
+	expectedOutputOrder := strings.TrimSpace(`
+login server=fubar user=fubar
+login server=foo user=foo
+login server=bar user=bar
+`)
+	assert.Contains(t, buff.String(), expectedOutputOrder)
 }
 
 func TestDeferredCmds(t *testing.T) {
@@ -2545,6 +2610,11 @@ func TestWildcard(t *testing.T) {
 		{
 			name:           "store wildcard",
 			call:           "start-foo",
+			expectedOutput: "Starting foo\n",
+		},
+		{
+			name:           "alias",
+			call:           "s-foo",
 			expectedOutput: "Starting foo\n",
 		},
 		{

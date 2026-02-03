@@ -174,6 +174,19 @@ tasks:
       - echo "Using $KEYNAME and endpoint $ENDPOINT"
 ```
 
+When the same variable is defined in multiple dotenv files, the **first file in
+the list takes precedence**. This allows you to set up override patterns by
+placing higher-priority files first:
+
+```yaml
+version: '3'
+
+dotenv:
+  - .env.local # Highest priority - local developer overrides
+  - .env.{{.ENV}} # Environment-specific settings
+  - .env # Base defaults (lowest priority)
+```
+
 Dotenv files can also be specified at the task level:
 
 ```yaml
@@ -406,10 +419,11 @@ option takes the list of tasks to be excluded from this include.
 
 ```yaml [Taskfile.yml]
 version: '3'
-  includes:
-    included:
-      taskfile: ./Included.yml
-      excludes: [foo]
+
+includes:
+  included:
+    taskfile: ./Included.yml
+    excludes: [foo]
 ```
 
 ```yaml [Included.yml]
@@ -467,7 +481,7 @@ includes:
 Vars declared in the included Taskfile have preference over the variables in the
 including Taskfile! If you want a variable in an included Taskfile to be
 overridable, use the
-[default function](https://go-task.github.io/slim-sprig/defaults.html):
+[default function](https://sprig.taskfile.dev/defaults.html):
 <span v-pre>`MY_VAR: '{{.MY_VAR | default "my-default-value"}}'`</span>.
 
 :::
@@ -589,6 +603,30 @@ tasks:
     cmds:
       - echo {{.TEXT}}
 ```
+
+### Fail-fast dependencies
+
+By default, Task waits for all dependencies to finish running before continuing.
+If you want Task to stop executing further dependencies as soon as one fails,
+you can set `failfast: true` on your [`.taskrc.yml`][config] or for a specific
+task:
+
+```yaml
+# .taskrc.yml
+failfast: true # applies to all tasks
+```
+
+```yaml
+# Taskfile.yml
+version: '3'
+
+tasks:
+  default:
+    deps: [task1, task2, task3]
+    failfast: true # applies only to this task
+```
+
+Alternatively, you can use `--failfast`, which also work for `--parallel`.
 
 ## Platform specific tasks and commands
 
@@ -926,7 +964,7 @@ tasks:
       - ./vendor/autoload.php
     # But also run the task if the last build was not a production build.
     status:
-      - grep -q '"dev": false' ./vendor/composer/installed.json
+      - grep -q '"dev"{{:}} false' ./vendor/composer/installed.json
 ```
 
 ### Using programmatic checks to cancel the execution of a task and its dependencies
@@ -981,6 +1019,99 @@ tasks:
       - task: task-will-fail
       - echo "I will not run"
 ```
+
+### Conditional execution with `if`
+
+The `if` attribute allows you to conditionally skip tasks or commands based on a
+shell command's exit code. Unlike `preconditions` which fail and stop execution,
+`if` simply skips the task or command when the condition is not met and continues
+with the rest of the Taskfile.
+
+#### Task-level `if`
+
+When `if` is set on a task, the entire task is skipped if the condition fails:
+
+```yaml
+version: '3'
+
+tasks:
+  deploy:
+    if: '[ "$CI" = "true" ]'
+    cmds:
+      - echo "Deploying..."
+      - ./deploy.sh
+```
+
+#### Command-level `if`
+
+When `if` is set on a command, only that specific command is skipped:
+
+```yaml
+version: '3'
+
+tasks:
+  build:
+    cmds:
+      - cmd: echo "Building for production"
+        if: '[ "$ENV" = "production" ]'
+      - cmd: echo "Building for development"
+        if: '[ "$ENV" = "development" ]'
+      - go build ./...
+```
+
+#### Using templates in `if` conditions
+
+You can use Go template expressions in `if` conditions. Template expressions like
+<span v-pre>`{{eq .VAR "value"}}`</span> evaluate to `true` or `false`, which are valid shell
+commands (`true` exits with 0, `false` exits with 1):
+
+```yaml
+version: '3'
+
+tasks:
+  conditional:
+    vars:
+      ENABLE_FEATURE: "true"
+    cmds:
+      - cmd: echo "Feature is enabled"
+        if: '{{eq .ENABLE_FEATURE "true"}}'
+      - cmd: echo "Feature is disabled"
+        if: '{{ne .ENABLE_FEATURE "true"}}'
+```
+
+#### Using `if` with `for` loops
+
+When used inside a `for` loop, the `if` condition is evaluated for each iteration:
+
+```yaml
+version: '3'
+
+tasks:
+  process-items:
+    cmds:
+      - for: ['a', 'b', 'c']
+        cmd: echo "processing {{.ITEM}}"
+        if: '[ "{{.ITEM}}" != "b" ]'
+```
+
+This will output:
+
+```
+processing a
+processing c
+```
+
+#### `if` vs `preconditions`
+
+| Aspect | `if` | `preconditions` |
+|--------|------|-----------------|
+| On failure | Skips (continues) | Fails (stops) |
+| Message | Only in verbose mode | Always shown |
+| Use case | "Run if possible" | "Must be true" |
+
+Use `if` when you want optional conditional execution that shouldn't stop the
+workflow. Use `preconditions` when the condition must be met for the task to
+make sense.
 
 ### Limiting when tasks run
 
@@ -1099,6 +1230,65 @@ If `ENV` is not one of 'dev', 'beta' or 'prod' an error will be raised.
 ::: info
 
 This is supported only for string variables.
+
+:::
+
+### Prompting for missing variables interactively
+
+If you want Task to prompt users for missing required variables instead of
+failing, you can enable interactive mode in your `.taskrc.yml`:
+
+```yaml
+# ~/.taskrc.yml
+interactive: true
+```
+
+When enabled, Task will display an interactive prompt for any missing required
+variable. For variables with an `enum`, a selection menu is shown. For variables
+without an enum, a text input is displayed.
+
+```yaml
+# Taskfile.yml
+version: '3'
+
+tasks:
+  deploy:
+    requires:
+      vars:
+        - name: ENVIRONMENT
+          enum: [dev, staging, prod]
+        - VERSION
+    cmds:
+      - echo "Deploying {{.VERSION}} to {{.ENVIRONMENT}}"
+```
+
+```shell
+$ task deploy
+? Select value for ENVIRONMENT:
+❯ dev
+  staging
+  prod
+? Enter value for VERSION: 1.0.0
+Deploying 1.0.0 to prod
+```
+
+If the variable is already set (via CLI, environment, or Taskfile), no prompt
+is shown:
+
+```shell
+$ task deploy ENVIRONMENT=prod VERSION=1.0.0
+Deploying 1.0.0 to prod
+```
+
+::: info
+
+Interactive prompts require a TTY (terminal). Task automatically detects
+non-interactive environments like GitHub Actions, GitLab CI, and other CI
+pipelines where stdin/stdout are not connected to a terminal. In these cases,
+prompts are skipped and missing variables will cause an error as usual.
+
+You can enable prompts from the command line with `--interactive` or by setting
+`interactive: true` in your `.taskrc.yml`.
 
 :::
 
@@ -1754,6 +1944,27 @@ $ task start:foo:3
 Starting foo with 3 replicas
 ```
 
+Using wildcards with aliases
+Wildcards also work with aliases. If a task has an alias, you can use the alias name with wildcards to capture arguments. For example:
+
+```yaml
+version: '3'
+
+tasks:
+  start:*:
+    aliases: [run:*]
+    vars:
+      SERVICE: "{{index .MATCH 0}}"
+    cmds:
+      - echo "Running {{.SERVICE}}"
+```
+In this example, you can call the task using the alias run:*:
+
+```shell
+$ task run:foo
+Running foo
+```
+
 ## Doing task cleanup with `defer`
 
 With the `defer` keyword, it's possible to schedule cleanup to be run once the
@@ -2265,6 +2476,28 @@ The `output` option can also be specified by the `--output` or `-o` flags.
 
 :::
 
+## CI Integration
+
+### Colored output
+
+Task automatically enables colored output when running in CI environments
+(`CI=true`). Most CI providers set this variable automatically.
+
+You can also force colored output with `FORCE_COLOR=1` or disable it with
+`NO_COLOR=1`.
+
+### Error annotations
+
+When running in GitHub Actions (`GITHUB_ACTIONS=true`), Task automatically emits
+error annotations when a task fails. These annotations appear in the workflow
+summary, making it easier to spot failures without scrolling through logs.
+
+```shell
+::error title=Task 'build' failed::exit status 1
+```
+
+This feature requires no configuration and works automatically.
+
 ## Interactive CLI application
 
 When running interactive CLI applications inside Task they can sometimes behave
@@ -2371,9 +2604,10 @@ if called by another task, either directly or as a dependency.
 ::: warning
 
 The watcher can misbehave in certain scenarios, in particular for long-running
-servers. There is a known bug where child processes of the running might not be
-killed appropriately. It's advised to avoid running commands as `go run` and
-prefer `go build [...] && ./binary` instead.
+servers. There is a [known bug](https://github.com/go-task/task/issues/160)
+where child processes of the running might not be killed appropriately. It's
+advised to avoid running commands as `go run` and prefer `go build [...] &&
+./binary` instead.
 
 If you are having issues, you might want to try tools specifically designed for
 live-reloading, like [Air](https://github.com/air-verse/air/). Also, be sure to
@@ -2382,5 +2616,6 @@ to us.
 
 :::
 
+[config]: /docs/reference/config
 [gotemplate]: https://golang.org/pkg/text/template/
 [templating-reference]: /docs/reference/templating

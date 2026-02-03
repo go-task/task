@@ -16,6 +16,7 @@ import (
 	"github.com/go-task/task/v3/internal/env"
 	"github.com/go-task/task/v3/internal/execext"
 	"github.com/go-task/task/v3/internal/filepathext"
+	"github.com/go-task/task/v3/internal/fsext"
 	"github.com/go-task/task/v3/internal/logger"
 	"github.com/go-task/task/v3/internal/output"
 	"github.com/go-task/task/v3/internal/version"
@@ -35,7 +36,6 @@ func (e *Executor) Setup() error {
 	if err := e.readTaskfile(node); err != nil {
 		return err
 	}
-	e.setupFuzzyModel()
 	e.setupStdFiles()
 	if err := e.setupOutput(); err != nil {
 		return err
@@ -55,11 +55,23 @@ func (e *Executor) Setup() error {
 }
 
 func (e *Executor) getRootNode() (taskfile.Node, error) {
-	node, err := taskfile.NewRootNode(e.Entrypoint, e.Dir, e.Insecure, e.Timeout)
+	node, err := taskfile.NewRootNode(e.Entrypoint, e.Dir, e.Insecure, e.Timeout,
+		taskfile.WithCACert(e.CACert),
+		taskfile.WithCert(e.Cert),
+		taskfile.WithCertKey(e.CertKey),
+	)
+	if os.IsNotExist(err) {
+		return nil, errors.TaskfileNotFoundError{
+			URI:     fsext.DefaultDir(e.Entrypoint, e.Dir),
+			Walk:    true,
+			AskInit: true,
+		}
+	}
 	if err != nil {
 		return nil, err
 	}
 	e.Dir = node.Dir()
+	e.Entrypoint = node.Location()
 	return node, err
 }
 
@@ -76,8 +88,12 @@ func (e *Executor) readTaskfile(node taskfile.Node) error {
 		taskfile.WithInsecure(e.Insecure),
 		taskfile.WithDownload(e.Download),
 		taskfile.WithOffline(e.Offline),
+		taskfile.WithTrustedHosts(e.TrustedHosts),
 		taskfile.WithTempDir(e.TempDir.Remote),
 		taskfile.WithCacheExpiryDuration(e.CacheExpiryDuration),
+		taskfile.WithReaderCACert(e.CACert),
+		taskfile.WithReaderCert(e.Cert),
+		taskfile.WithReaderCertKey(e.CertKey),
 		taskfile.WithDebugFunc(debugFunc),
 		taskfile.WithPromptFunc(promptFunc),
 	)
@@ -145,16 +161,16 @@ func (e *Executor) setupTempDir() error {
 		}
 	}
 
-	remoteDir := env.GetTaskEnv("REMOTE_DIR")
-	if remoteDir != "" {
-		if filepath.IsAbs(remoteDir) || strings.HasPrefix(remoteDir, "~") {
-			remoteTempDir, err := execext.ExpandLiteral(remoteDir)
+	// RemoteCacheDir from taskrc/env can override the remote cache directory
+	if e.RemoteCacheDir != "" {
+		if filepath.IsAbs(e.RemoteCacheDir) || strings.HasPrefix(e.RemoteCacheDir, "~") {
+			remoteCacheDir, err := execext.ExpandLiteral(e.RemoteCacheDir)
 			if err != nil {
 				return err
 			}
-			e.TempDir.Remote = remoteTempDir
+			e.TempDir.Remote = remoteCacheDir
 		} else {
-			e.TempDir.Remote = filepathext.SmartJoin(e.Dir, ".task")
+			e.TempDir.Remote = filepathext.SmartJoin(e.Dir, e.RemoteCacheDir)
 		}
 	}
 

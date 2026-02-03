@@ -3,7 +3,6 @@ package logger
 import (
 	"bufio"
 	"io"
-	"os"
 	"slices"
 	"strconv"
 	"strings"
@@ -42,6 +41,12 @@ type (
 	Color     func() PrintFunc
 	PrintFunc func(io.Writer, string, ...any)
 )
+
+func None() PrintFunc {
+	c := color.New()
+	c.DisableColor()
+	return c.FprintfFunc()
+}
 
 func Default() PrintFunc {
 	return color.New(attrsReset...).FprintfFunc()
@@ -96,10 +101,6 @@ func BrightRed() PrintFunc {
 }
 
 func envColor(name string, defaultColor color.Attribute) []color.Attribute {
-	if os.Getenv("FORCE_COLOR") != "" {
-		color.NoColor = false
-	}
-
 	// Fetch the environment variable
 	override := env.GetTaskEnv(name)
 
@@ -149,7 +150,7 @@ func (l *Logger) FOutf(w io.Writer, color Color, s string, args ...any) {
 		s, args = "%s", []any{s}
 	}
 	if !l.Color {
-		color = Default
+		color = None
 	}
 	print := color()
 	print(w, s, args...)
@@ -168,7 +169,7 @@ func (l *Logger) Errf(color Color, s string, args ...any) {
 		s, args = "%s", []any{s}
 	}
 	if !l.Color {
-		color = Default
+		color = None
 	}
 	print := color()
 	print(l.Stderr, s, args...)

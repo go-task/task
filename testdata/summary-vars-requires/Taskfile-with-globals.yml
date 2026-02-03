@@ -1,0 +1,16 @@
+version: 3
+
+vars:
+  GLOBAL_VAR: "I am global"
+  ANOTHER_GLOBAL: "Also global"
+
+tasks:
+  test-globals:
+    desc: Task with global and local vars
+    vars:
+      LOCAL_VAR: "I am local"
+    requires:
+      vars:
+        - REQUIRED_VAR
+    cmds:
+      - echo {{ .GLOBAL_VAR }} {{ .LOCAL_VAR }}

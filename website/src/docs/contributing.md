@@ -30,10 +30,10 @@ Studio Code][vscode-task].
   you invest your time into a PR.
 - **Experiments** - If there is no way to make your change backward compatible
   then there is a procedure to introduce breaking changes into minor versions.
-  We call these "[experiments](./experiments/index.md)". If you're intending to work on
-  an experiment, then please read the
-  [experiments workflow](./experiments/index.md#workflow) document carefully and submit a
-  proposal first.
+  We call these "[experiments](./experiments/index.md)". If you're intending to
+  work on an experiment, then please read the
+  [experiments workflow](./experiments/index.md#workflow) document carefully and
+  submit a proposal first.
 
 ## 1. Setup
 
@@ -85,12 +85,12 @@ by using `task website` (requires `nodejs` & `pnpm`). All content is written in
 Markdown and is located in the `website/src` directory. All Markdown documents
 should have an 80 character line wrap limit (enforced by Prettier).
 
-When making a change, consider whether a change to the [Usage Guide](/docs/guide) is
-necessary. This document contains descriptions and examples of how to use Task
-features. If you're adding a new feature, try to find an appropriate place to
-add a new section. If you're updating an existing feature, ensure that the
-documentation and any examples are up-to-date. Ensure that any examples follow
-the [Taskfile Styleguide](./styleguide.md).
+When making a change, consider whether a change to the
+[Usage Guide](/docs/guide) is necessary. This document contains descriptions and
+examples of how to use Task features. If you're adding a new feature, try to
+find an appropriate place to add a new section. If you're updating an existing
+feature, ensure that the documentation and any examples are up-to-date. Ensure
+that any examples follow the [Taskfile Styleguide](./styleguide.md).
 
 If you added a new command or flag, ensure that you add it to the
 [CLI Reference](./reference/cli.md). New fields also need to be added to the
@@ -168,7 +168,7 @@ If you have questions, feel free to ask them in the `#help` forum channel on our
 [pnpm]: https://pnpm.io/
 [vitepress]: https://vitepress.dev
 [json-schema]:
-  https://github.com/go-task/task/blob/main/website/static/schema.json
+  https://github.com/go-task/task/blob/main/website/src/public/schema.json
 [task-open-issues]: https://github.com/go-task/task/issues
 [vscode-task-open-issues]: https://github.com/go-task/vscode-task/issues
 [good-first-issue]:

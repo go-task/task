@@ -3,14 +3,14 @@
     <img src="website/src/public/img/logo.svg" width="200px" height="200px" />
   </a>
 
-  <h1>Task</h1>
+  <h1>Task: The Modern Task Runner</h1>
 
   <p>
-    Task is a task runner / build tool that aims to be simpler and easier to use than, for example, <a href="https://www.gnu.org/software/make/">GNU Make<a>.
+    A fast, cross-platform build tool inspired by Make, designed for modern workflows.
   </p>
 
   <p>
-    <a href="https://taskfile.dev/installation/">Installation</a> | <a href="https://taskfile.dev/usage/">Documentation</a> | <a href="https://twitter.com/taskfiledev">Twitter</a> | <a href="https://bsky.app/profile/taskfile.dev">Bluesky</a> | <a href="https://fosstodon.org/@task">Mastodon</a> | <a href="https://discord.gg/6TY36E39UK">Discord</a>
+    <a href="https://taskfile.dev/docs/installation">Installation</a> | <a href="https://taskfile.dev/docs/getting-started">Getting Started</a> | <a href="https://taskfile.dev/docs/guide">Docs</a> | <a href="https://twitter.com/taskfiledev">Twitter</a> | <a href="https://bsky.app/profile/taskfile.dev">Bluesky</a> | <a href="https://fosstodon.org/@task">Mastodon</a> | <a href="https://discord.gg/6TY36E39UK">Discord</a>
   </p>
 
   <h1>Gold Sponsors</h1>
@@ -19,7 +19,17 @@
     <tr>
       <td align="center" valign="middle">
         <a target="_blank" href="https://devowl.io">
-          <img src="https://devowl.io/wp-content/uploads/meta/favicon.webp" height="100px" title="devowl.io" />
+          <img src="website/src/public/img/devowl.io.svg" height="100px" width="200px" title="devowl.io" />
+        </a>
+      </td>
+      <td align="center" valign="middle">
+        <a target="_blank" href="https://goodx.international/">
+          <img src="website/src/public/img/goodx.svg" height="80px" width="200px" title="GoodX" />
+        </a>
+      </td>
+      <td align="center" valign="middle">
+        <a target="_blank" href="https://magic.dev/">
+          <img src="website/src/public/img/magic.png" height="100px" width="200px" title="Magic" />
         </a>
       </td>
     </tr>

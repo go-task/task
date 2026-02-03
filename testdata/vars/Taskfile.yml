@@ -49,3 +49,10 @@ tasks:
       - echo "{{.MESSAGE}}"
 
   from-dot-env: echo '{{.DOT_ENV_VAR}}'
+
+  # Test that CLI variables take priority over Taskfile defaults
+  cli-var-priority:
+    vars:
+      CLI_VAR: '{{.CLI_VAR | default "default_value"}}'
+    cmds:
+      - echo '{{.CLI_VAR}}'

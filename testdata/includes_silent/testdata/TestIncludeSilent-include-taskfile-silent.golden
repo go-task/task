@@ -1,0 +1,7 @@
+task: [default] echo "Hello from root Taskfile"
+Hello from root Taskfile
+Hello from include
+Hello from include silent task
+Hello from include silent not set task
+task: [inc:hello-silent-set-false] echo "Hello from include silent false task"
+Hello from include silent false task
