@@ -1,0 +1,49 @@
+version: '3'
+
+tasks:
+  # Leaf task that is always up-to-date
+  up-to-date-leaf:
+    cmds:
+      - echo "up-to-date-leaf"
+    status:
+      - test 1 = 1  # Always passes
+
+  # Leaf task that is never up-to-date
+  not-up-to-date-leaf:
+    cmds:
+      - echo "not-up-to-date-leaf"
+    status:
+      - test 1 = 0  # Always fails
+
+  # Parent task with a dependency that is not up-to-date
+  # The task itself is up-to-date, but its dependency is not
+  task-with-bad-dep:
+    deps: [up-to-date-leaf, not-up-to-date-leaf]
+    cmds:
+      - echo "task-with-bad-dep"
+    status:
+      - test 1 = 1  # Itself is up-to-date
+
+  # Parent task with only up-to-date dependencies
+  task-with-good-deps:
+    deps: [up-to-date-leaf]
+    cmds:
+      - echo "task-with-good-deps"
+    status:
+      - test 1 = 1  # Itself and all deps are up-to-date
+
+  # Parent task with nested dependencies (multi-level)
+  nested-parent:
+    deps: [task-with-good-deps]
+    cmds:
+      - echo "nested-parent"
+    status:
+      - test 1 = 1
+
+  # Parent task with nested bad dependencies
+  nested-bad-parent:
+    deps: [task-with-bad-dep]
+    cmds:
+      - echo "nested-bad-parent"
+    status:
+      - test 1 = 1

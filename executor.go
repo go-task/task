@@ -40,10 +40,11 @@ type (
 		Verbose             bool
 		Silent              bool
 		AssumeYes           bool
-		AssumeTerm          bool // Used for testing
-		Dry                 bool
-		Summary             bool
-		Parallel            bool
+		AssumeTerm  bool // Used for testing
+		Dry         bool
+		Summary     bool
+		IncludeDeps bool
+		Parallel    bool
 		Color               bool
 		Concurrency         int
 		Interval            time.Duration
@@ -348,6 +349,20 @@ type summaryOption struct {
 
 func (o *summaryOption) ApplyToExecutor(e *Executor) {
 	e.Summary = o.summary
+}
+
+// WithIncludeDeps tells the [Executor] to recursively check dependencies
+// when checking status.
+func WithIncludeDeps(includeDeps bool) ExecutorOption {
+	return &includeDepsOption{includeDeps}
+}
+
+type includeDepsOption struct {
+	includeDeps bool
+}
+
+func (o *includeDepsOption) ApplyToExecutor(e *Executor) {
+	e.IncludeDeps = o.includeDeps
 }
 
 // WithParallel tells the [Executor] to run tasks given in the same call in

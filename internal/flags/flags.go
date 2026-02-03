@@ -48,9 +48,10 @@ var (
 	List                bool
 	ListAll             bool
 	ListJson            bool
-	TaskSort            string
-	Status              bool
-	NoStatus            bool
+	TaskSort      string
+	Status        bool
+	IncludeDeps   bool
+	NoStatus      bool
 	Insecure            bool
 	Force               bool
 	ForceAll            bool
@@ -117,6 +118,7 @@ func init() {
 	pflag.BoolVarP(&ListJson, "json", "j", false, "Formats task list as JSON.")
 	pflag.StringVar(&TaskSort, "sort", "", "Changes the order of the tasks when listed. [default|alphanumeric|none].")
 	pflag.BoolVar(&Status, "status", false, "Exits with non-zero exit code if any of the given tasks is not up-to-date.")
+	pflag.BoolVar(&IncludeDeps, "include-deps", false, "When used with --status, recursively checks dependencies.")
 	pflag.BoolVar(&NoStatus, "no-status", false, "Ignore status when listing tasks as JSON")
 	pflag.BoolVar(&Insecure, "insecure", false, "Forces Task to download Taskfiles over insecure connections.")
 	pflag.BoolVarP(&Watch, "watch", "w", false, "Enables watch of the given task.")
@@ -196,6 +198,10 @@ func Validate() error {
 		return errors.New("task: --no-status only applies to --json with --list or --list-all")
 	}
 
+	if IncludeDeps && !Status {
+		return errors.New("task: --include-deps only applies to --status")
+	}
+
 	return nil
 }
 
@@ -242,6 +248,7 @@ func (o *flagsOption) ApplyToExecutor(e *task.Executor) {
 		task.WithAssumeYes(AssumeYes),
 		task.WithDry(Dry || Status),
 		task.WithSummary(Summary),
+		task.WithIncludeDeps(IncludeDeps),
 		task.WithParallel(Parallel),
 		task.WithColor(Color),
 		task.WithConcurrency(Concurrency),
