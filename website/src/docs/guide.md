@@ -1278,6 +1278,26 @@ tasks:
       - echo "Deploying to {{.ENV}}"
 ```
 
+Or generate values dynamically from a shell command:
+
+```yaml
+version: '3'
+
+vars:
+  AVAILABLE_SERVICES:
+    sh: ls services/
+
+tasks:
+  deploy:
+    requires:
+      vars:
+        - name: SERVICE
+          enum:
+            ref: .AVAILABLE_SERVICES | splitLines | compact
+    cmds:
+      - echo "Deploying {{.SERVICE}}"
+```
+
 ### Prompting for missing variables interactively
 
 If you want Task to prompt users for missing required variables instead of
