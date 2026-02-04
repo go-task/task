@@ -25,8 +25,8 @@ func (r *Requires) DeepCopy() *Requires {
 // Enum represents an enum constraint for a required variable.
 // It can either be a static list of values or a reference to another variable.
 type Enum struct {
-	Ref   string   // Reference to a variable containing the allowed values
-	Value []string // Static list of allowed values
+	Ref   string
+	Value []string
 }
 
 func (e *Enum) DeepCopy() *Enum {

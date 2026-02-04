@@ -208,7 +208,6 @@ func (e *Executor) areTaskRequiredVarsAllowedValuesSet(t *ast.Task) error {
 	return nil
 }
 
-// getEnumValues returns the enum values from an Enum struct, or nil if the enum is nil.
 func getEnumValues(e *ast.Enum) []string {
 	if e == nil {
 		return nil
