@@ -60,14 +60,25 @@ func (e *Executor) getRootNode() (taskfile.Node, error) {
 		taskfile.WithCert(e.Cert),
 		taskfile.WithCertKey(e.CertKey),
 	)
-	if os.IsNotExist(err) {
-		return nil, errors.TaskfileNotFoundError{
-			URI:     fsext.DefaultDir(e.Entrypoint, e.Dir),
-			Walk:    true,
-			AskInit: true,
-		}
-	}
 	if err != nil {
+		// Check if it's already a TaskfileNotFoundError (from NewFileNode)
+		// and update it with proper Walk and AskInit flags
+		var notFoundErr errors.TaskfileNotFoundError
+		if errors.As(err, &notFoundErr) {
+			return nil, errors.TaskfileNotFoundError{
+				URI:     fsext.DefaultDir(e.Entrypoint, e.Dir),
+				Walk:    true,
+				AskInit: true,
+			}
+		}
+		// Also handle raw os.ErrNotExist for other code paths
+		if os.IsNotExist(err) {
+			return nil, errors.TaskfileNotFoundError{
+				URI:     fsext.DefaultDir(e.Entrypoint, e.Dir),
+				Walk:    true,
+				AskInit: true,
+			}
+		}
 		return nil, err
 	}
 	e.Dir = node.Dir()
