@@ -6,6 +6,7 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/fsext"
 	"github.com/go-task/task/v3/taskrc/ast"
 )
@@ -62,6 +63,9 @@ func GetConfig(dir string) (*ast.TaskRC, error) {
 		return config, err
 	}
 	entrypoints, err := fsext.SearchAll("", absDir, defaultTaskRCs)
+	if errors.Is(err, os.ErrPermission) {
+		err = nil
+	}
 	if err != nil {
 		return config, err
 	}

@@ -11,14 +11,17 @@ import (
 // TaskfileNotFoundError is returned when no appropriate Taskfile is found when
 // searching the filesystem.
 type TaskfileNotFoundError struct {
-	URI     string
-	Walk    bool
-	AskInit bool
+	URI         string
+	Walk        bool
+	AskInit     bool
+	OwnerChange bool
 }
 
 func (err TaskfileNotFoundError) Error() string {
 	var walkText string
-	if err.Walk {
+	if err.OwnerChange {
+		walkText = " (or any of the parent directories until ownership changed)."
+	} else if err.Walk {
 		walkText = " (or any of the parent directories)."
 	}
 	if err.AskInit {
