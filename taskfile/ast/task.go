@@ -242,6 +242,7 @@ func (t *Task) DeepCopy() *Task {
 		Requires:             t.Requires.DeepCopy(),
 		Namespace:            t.Namespace,
 		FullName:             t.FullName,
+		Watch:                t.Watch,
 		Failfast:             t.Failfast,
 	}
 	return c
