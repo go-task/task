@@ -60,7 +60,8 @@ func (e *Executor) getRootNode() (taskfile.Node, error) {
 		taskfile.WithCert(e.Cert),
 		taskfile.WithCertKey(e.CertKey),
 	)
-	if os.IsNotExist(err) {
+	var taskfileNotFoundErr errors.TaskfileNotFoundError
+	if errors.As(err, &taskfileNotFoundErr) {
 		return nil, errors.TaskfileNotFoundError{
 			URI:     fsext.DefaultDir(e.Entrypoint, e.Dir),
 			Walk:    true,
