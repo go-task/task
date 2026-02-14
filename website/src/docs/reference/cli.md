@@ -118,7 +118,8 @@ task deploy --silent
 
 #### `--disable-fuzzy`
 
-Disable fuzzy matching for task names. When enabled, Task will not suggest similar task names when you mistype a task name.
+Disable fuzzy matching for task names. When enabled, Task will not suggest
+similar task names when you mistype a task name.
 
 ```bash
 task buidl --disable-fuzzy
@@ -274,7 +275,12 @@ task --list --json
 
 #### `--sort <mode>`
 
-Change task listing order. Available modes: `default`, `alphanumeric`, `none`.
+Change task listing order. Available modes:
+
+- `default` - Sorts tasks alphabetically by name, but ensures that root tasks
+  (tasks without a namespace) are listed before namespaced tasks.
+- `alphanumeric` - Sort tasks alphabetically by name.
+- `none` - No sorting. Uses the order as defined in the Taskfile.
 
 ```bash
 task --list --sort alphanumeric
@@ -314,9 +320,9 @@ task deploy --yes
 Enable interactive prompts for missing required variables. When a required
 variable is not provided, Task will prompt for input instead of failing.
 
-Task automatically detects non-TTY environments (like CI pipelines) and
-skips prompts. This flag can also be set in `.taskrc.yml` to enable prompts
-by default.
+Task automatically detects non-TTY environments (like CI pipelines) and skips
+prompts. This flag can also be set in `.taskrc.yml` to enable prompts by
+default.
 
 ```bash
 task deploy --interactive
