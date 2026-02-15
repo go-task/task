@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Fixed included Taskfiles with `watch: true` not triggering watch mode when
+  called from the root Taskfile (#2686, #1763 by @trulede).
 - Fixed Remote Git Taskfiles failing on Windows due to backslashes in URL paths
   (#2656 by @Trim21).
 
