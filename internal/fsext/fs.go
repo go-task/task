@@ -108,10 +108,10 @@ func SearchAll(entrypoint, dir string, possibleFilenames []string) ([]string, er
 		}
 	}
 	paths, err := SearchNPathRecursively(dir, possibleFilenames, -1)
-	if err != nil {
-		return nil, err
-	}
-	return append(entrypoints, paths...), nil
+	// The call to SearchNPathRecursively is ambiguous and may return
+	// os.ErrPermission if its search ends, however it may have still
+	// returned valid paths. Caller may choose to ignore that error.
+	return append(entrypoints, paths...), err
 }
 
 // SearchPath will check if a file at the given path exists or not. If it does,
@@ -188,9 +188,12 @@ func SearchNPathRecursively(path string, possibleFilenames []string, n int) ([]s
 			return nil, err
 		}
 
-		// Error if we reached the root directory and still haven't found a file
-		// OR if the user id of the directory changes
-		if path == parentPath || (parentOwner != owner) {
+		// If the user id of the directory changes indicate a permission error, otherwise
+		// the calling code will infer an error condition based on the accumulated
+		// contents of paths.
+		if parentOwner != owner {
+			return paths, os.ErrPermission
+		} else if path == parentPath {
 			return paths, nil
 		}
 

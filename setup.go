@@ -16,7 +16,6 @@ import (
 	"github.com/go-task/task/v3/internal/env"
 	"github.com/go-task/task/v3/internal/execext"
 	"github.com/go-task/task/v3/internal/filepathext"
-	"github.com/go-task/task/v3/internal/fsext"
 	"github.com/go-task/task/v3/internal/logger"
 	"github.com/go-task/task/v3/internal/output"
 	"github.com/go-task/task/v3/internal/version"
@@ -60,12 +59,10 @@ func (e *Executor) getRootNode() (taskfile.Node, error) {
 		taskfile.WithCert(e.Cert),
 		taskfile.WithCertKey(e.CertKey),
 	)
-	if os.IsNotExist(err) {
-		return nil, errors.TaskfileNotFoundError{
-			URI:     fsext.DefaultDir(e.Entrypoint, e.Dir),
-			Walk:    true,
-			AskInit: true,
-		}
+	var taskNotFoundError errors.TaskfileNotFoundError
+	if errors.As(err, &taskNotFoundError) {
+		taskNotFoundError.AskInit = true
+		return nil, taskNotFoundError
 	}
 	if err != nil {
 		return nil, err
