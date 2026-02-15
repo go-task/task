@@ -6,6 +6,8 @@
   called from the root Taskfile (#2686, #1763 by @trulede).
 - Fixed Remote Git Taskfiles failing on Windows due to backslashes in URL paths
   (#2656 by @Trim21).
+- Fixed remote git Taskfiles timing out when resolving includes after accepting
+  the trust prompt (#2669, #2668 by @vmaerten).
 
 ## v3.48.0 - 2026-01-26
 
