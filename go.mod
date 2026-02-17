@@ -2,7 +2,7 @@ module github.com/go-task/task/v3
 
 go 1.24.6
 
-toolchain go1.25.6
+toolchain go1.26.0
 
 require (
 	charm.land/bubbles/v2 v2.0.0-rc.1
@@ -10,7 +10,7 @@ require (
 	charm.land/lipgloss/v2 v2.0.0-beta.3.0.20251106192539-4b304240aab7
 	github.com/Ladicle/tabwriter v1.0.0
 	github.com/Masterminds/semver/v3 v3.4.0
-	github.com/alecthomas/chroma/v2 v2.23.0
+	github.com/alecthomas/chroma/v2 v2.23.1
 	github.com/chainguard-dev/git-urls v1.0.2
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
 	github.com/dominikbraun/graph v0.23.0
@@ -23,15 +23,15 @@ require (
 	github.com/hashicorp/go-getter v1.8.4
 	github.com/joho/godotenv v1.5.1
 	github.com/mitchellh/hashstructure/v2 v2.0.2
-	github.com/puzpuzpuz/xsync/v4 v4.3.0
+	github.com/puzpuzpuz/xsync/v4 v4.4.0
 	github.com/sajari/fuzzy v1.0.0
 	github.com/sebdah/goldie/v2 v2.8.0
 	github.com/spf13/pflag v1.0.10
 	github.com/stretchr/testify v1.11.1
-	github.com/zeebo/xxh3 v1.0.2
+	github.com/zeebo/xxh3 v1.1.0
 	go.yaml.in/yaml/v3 v3.0.4
 	golang.org/x/sync v0.19.0
-	golang.org/x/term v0.39.0
+	golang.org/x/term v0.40.0
 	mvdan.cc/sh/moreinterp v0.0.0-20260120230322-19def062a997
 	mvdan.cc/sh/v3 v3.12.1-0.20260124232039-e74afc18e65b
 )
@@ -95,7 +95,7 @@ require (
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/hashicorp/go-version v1.8.0 // indirect
 	github.com/klauspost/compress v1.18.2 // indirect
-	github.com/klauspost/cpuid/v2 v2.2.7 // indirect
+	github.com/klauspost/cpuid/v2 v2.2.10 // indirect
 	github.com/klauspost/pgzip v1.2.6 // indirect
 	github.com/lucasb-eyer/go-colorful v1.3.0 // indirect
 	github.com/mattn/go-colorable v0.1.14 // indirect
@@ -127,7 +127,7 @@ require (
 	golang.org/x/crypto v0.46.0 // indirect
 	golang.org/x/net v0.48.0 // indirect
 	golang.org/x/oauth2 v0.33.0 // indirect
-	golang.org/x/sys v0.40.0 // indirect
+	golang.org/x/sys v0.41.0 // indirect
 	golang.org/x/text v0.32.0 // indirect
 	golang.org/x/time v0.14.0 // indirect
 	google.golang.org/api v0.256.0 // indirect
