@@ -1,0 +1,5 @@
+NESTED:ROOT_VAR=from_root
+NESTED:UNIQUE_A=only_in_a
+NESTED:NESTED_VAR=from_nested
+NESTED:NESTED_ENV=env_from_nested
+NESTED:ROOT_ENV=env_from_root

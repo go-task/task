@@ -1184,3 +1184,114 @@ func TestIf(t *testing.T) {
 		NewExecutorTest(t, opts...)
 	}
 }
+
+//nolint:paralleltest // enableExperimentForTest modifies global state
+func TestScopedTaskfiles(t *testing.T) {
+	// Legacy tests (without experiment) - vars should be merged globally
+	t.Run("legacy", func(t *testing.T) {
+		// Test with scoped taskfiles disabled (legacy) - vars should be merged globally
+		NewExecutorTest(t,
+			WithName("default"),
+			WithExecutorOptions(
+				task.WithDir("testdata/scoped_taskfiles"),
+				task.WithSilent(true),
+			),
+		)
+		// In legacy mode, UNIQUE_B should be accessible (merged globally)
+		NewExecutorTest(t,
+			WithName("cross-include"),
+			WithExecutorOptions(
+				task.WithDir("testdata/scoped_taskfiles"),
+				task.WithSilent(true),
+			),
+			WithTask("a:try-access-b"),
+		)
+	})
+
+	// Scoped tests (with experiment enabled) - vars should be isolated
+	t.Run("scoped", func(t *testing.T) {
+		enableExperimentForTest(t, &experiments.ScopedTaskfiles, 1)
+
+		// Test with scoped taskfiles enabled - vars should be isolated
+		NewExecutorTest(t,
+			WithName("default"),
+			WithExecutorOptions(
+				task.WithDir("testdata/scoped_taskfiles"),
+				task.WithSilent(true),
+			),
+		)
+		// Test inheritance: include can access root vars
+		NewExecutorTest(t,
+			WithName("inheritance-a"),
+			WithExecutorOptions(
+				task.WithDir("testdata/scoped_taskfiles"),
+				task.WithSilent(true),
+			),
+			WithTask("a:print"),
+		)
+		// Test isolation: each include sees its own vars
+		NewExecutorTest(t,
+			WithName("isolation-b"),
+			WithExecutorOptions(
+				task.WithDir("testdata/scoped_taskfiles"),
+				task.WithSilent(true),
+			),
+			WithTask("b:print"),
+		)
+		// In scoped mode, UNIQUE_B should be empty (isolated)
+		NewExecutorTest(t,
+			WithName("cross-include"),
+			WithExecutorOptions(
+				task.WithDir("testdata/scoped_taskfiles"),
+				task.WithSilent(true),
+			),
+			WithTask("a:try-access-b"),
+		)
+		// Test env namespace: {{.env.XXX}} should access env vars
+		NewExecutorTest(t,
+			WithName("env-namespace"),
+			WithExecutorOptions(
+				task.WithDir("testdata/scoped_taskfiles"),
+				task.WithSilent(true),
+			),
+			WithTask("print-env"),
+		)
+		// Test env separation: {{.ROOT_ENV}} at root should be empty (env not at root level)
+		NewExecutorTest(t,
+			WithName("env-separation"),
+			WithExecutorOptions(
+				task.WithDir("testdata/scoped_taskfiles"),
+				task.WithSilent(true),
+			),
+			WithTask("test-env-separation"),
+		)
+		// Test include env: include's env is accessible via {{.env.XXX}}
+		NewExecutorTest(t,
+			WithName("include-env"),
+			WithExecutorOptions(
+				task.WithDir("testdata/scoped_taskfiles"),
+				task.WithSilent(true),
+			),
+			WithTask("a:print-env"),
+		)
+		// Test call vars: vars passed when calling a task override task vars
+		NewExecutorTest(t,
+			WithName("call-vars"),
+			WithExecutorOptions(
+				task.WithDir("testdata/scoped_taskfiles"),
+				task.WithSilent(true),
+			),
+			WithTask("call-with-vars"),
+		)
+		// Test nested includes (3 levels: root → a → nested)
+		// Verifies that nested includes inherit vars from their parent chain
+		NewExecutorTest(t,
+			WithName("nested"),
+			WithExecutorOptions(
+				task.WithDir("testdata/scoped_taskfiles"),
+				task.WithSilent(true),
+			),
+			WithTask("a:nested:print"),
+		)
+	})
+}
