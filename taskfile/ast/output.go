@@ -1,7 +1,7 @@
 package ast
 
 import (
-	"go.yaml.in/yaml/v4"
+	"go.yaml.in/yaml/v3"
 
 	"github.com/go-task/task/v3/errors"
 )
