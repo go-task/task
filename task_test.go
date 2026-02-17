@@ -1874,6 +1874,32 @@ func TestRunOnceSharedDeps(t *testing.T) {
 	assert.Contains(t, buff.String(), `task: [service-b:build] echo "build b"`)
 }
 
+func TestRunOnceSharedDepsFail(t *testing.T) {
+	t.Parallel()
+
+	const dir = "testdata/run_once_shared_deps_fail"
+
+	var buff bytes.Buffer
+	e := task.NewExecutor(
+		task.WithDir(dir),
+		task.WithStdout(&buff),
+		task.WithStderr(&buff),
+		task.WithForceAll(true),
+		task.WithPropagateSharedErrors(true),
+	)
+	require.NoError(t, e.Setup())
+	require.Error(t, e.Run(t.Context(), &task.Call{Task: "build"}))
+
+	// The shared dependency should still only be attempted once.
+	rx := regexp.MustCompile(`task: \[service-[a,b]:library:build\] echo "build library" && exit 1`)
+	matches := rx.FindAllStringSubmatch(buff.String(), -1)
+	assert.Len(t, matches, 1)
+
+	// If the shared dependency fails, both branches must be blocked from running their own commands.
+	assert.NotContains(t, buff.String(), `task: [service-a:build] echo "build a"`)
+	assert.NotContains(t, buff.String(), `task: [service-b:build] echo "build b"`)
+}
+
 func TestRunWhenChanged(t *testing.T) {
 	t.Parallel()
 

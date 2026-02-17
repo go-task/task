@@ -161,6 +161,14 @@ Execute multiple tasks in parallel.
 task test lint --parallel
 ```
 
+#### `--propagate-shared-errors`
+
+When tasks share execution (e.g. tasks with `run: once`), propagate errors from the shared task to all dependents.
+
+```bash
+task build --propagate-shared-errors
+```
+
 #### `-C, --concurrency <number>`
 
 Limit the number of concurrent tasks. Zero means unlimited.

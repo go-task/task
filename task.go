@@ -456,16 +456,23 @@ func (e *Executor) startExecution(ctx context.Context, t *ast.Task, execute func
 		defer reacquire()
 
 		<-otherExecutionCtx.Done()
-		return nil
+
+		// Legacy behavior: shared executions are waited on, but their errors are not propagated.
+		if !e.PropagateSharedErrors {
+			return nil
+		}
+		return context.Cause(otherExecutionCtx)
 	}
 
-	ctx, cancel := context.WithCancel(ctx)
-	defer cancel()
+	ctx, cancel := context.WithCancelCause(ctx)
+	defer func() { cancel(err) }()
 
 	e.executionHashes[h] = ctx
 	e.executionHashesMutex.Unlock()
 
-	return execute(ctx)
+	// Save err in variable so it also applied to the cancel defer
+	err = execute(ctx)
+	return err
 }
 
 // FindMatchingTasks returns a list of tasks that match the given call. A task
