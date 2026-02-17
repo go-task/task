@@ -1,6 +1,6 @@
 module github.com/go-task/task/v3
 
-go 1.24.6
+go 1.25.0
 
 toolchain go1.25.6
 
@@ -31,9 +31,9 @@ require (
 	github.com/zeebo/xxh3 v1.0.2
 	go.yaml.in/yaml/v4 v4.0.0-rc.3
 	golang.org/x/sync v0.19.0
-	golang.org/x/term v0.39.0
+	golang.org/x/term v0.40.0
 	mvdan.cc/sh/moreinterp v0.0.0-20260120230322-19def062a997
-	mvdan.cc/sh/v3 v3.12.1-0.20260124232039-e74afc18e65b
+	mvdan.cc/sh/v3 v3.12.1-0.20260216232852-ca4ab3437d10
 )
 
 require (
@@ -127,7 +127,7 @@ require (
 	golang.org/x/crypto v0.46.0 // indirect
 	golang.org/x/net v0.48.0 // indirect
 	golang.org/x/oauth2 v0.33.0 // indirect
-	golang.org/x/sys v0.40.0 // indirect
+	golang.org/x/sys v0.41.0 // indirect
 	golang.org/x/text v0.32.0 // indirect
 	golang.org/x/time v0.14.0 // indirect
 	google.golang.org/api v0.256.0 // indirect
