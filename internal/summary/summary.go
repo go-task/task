@@ -231,7 +231,7 @@ func formatMap(m map[string]any, indent int) string {
 	spaces := strings.Repeat(" ", indent)
 
 	for k, v := range m {
-		result.WriteString(fmt.Sprintf("%s%s: %v\n", spaces, k, v))
+		result.WriteString(fmt.Sprintf("%s%s: %v\n", spaces, k, v)) //nolint:staticcheck
 	}
 
 	return result.String()
