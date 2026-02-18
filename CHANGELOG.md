@@ -8,8 +8,10 @@
   (#2656 by @Trim21).
 - Fixed remote git Taskfiles timing out when resolving includes after accepting
   the trust prompt (#2669, #2668 by @vmaerten).
-- Fixed unclear error message when Taskfile search stops at a directory ownership
-  boundary (#2682, #1683 by @trulede).
+- Fixed unclear error message when Taskfile search stops at a directory
+  ownership boundary (#2682, #1683 by @trulede).
+- Fixed global variables from imported Taskfiles not resolving `ref:` values
+  correctly (#2632 by @trulede).
 
 ## v3.48.0 - 2026-01-26
 
