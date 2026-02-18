@@ -81,6 +81,8 @@ type (
 		executionHashes      map[string]context.Context
 		executionHashesMutex sync.Mutex
 		watchedDirs          *xsync.Map[string, bool]
+		taskMapCache         map[string]map[string]any
+		taskMapCacheMutex    sync.RWMutex
 	}
 	TempDir struct {
 		Remote      string
