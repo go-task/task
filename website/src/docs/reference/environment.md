@@ -9,15 +9,77 @@ outline: deep
 Task has multiple ways of being configured. These methods are parsed, in
 sequence, in the following order with the highest priority last:
 
-- _Environment variables_
 - [Configuration files](./config.md)
+- _Environment variables_
 - [Command-line flags](./cli.md)
 
-In this document, we will look at the first of the three options, environment
+In this document, we will look at the second of the three options, environment
 variables. All Task-specific variables are prefixed with `TASK_` and override
 their configuration file equivalents.
 
 ## Variables
+
+All [configuration file options](./config.md) can also be set via environment
+variables. The priority order is: CLI flags > environment variables > config files > defaults.
+
+### `TASK_VERBOSE`
+
+- **Type**: `boolean` (`true`, `false`, `1`, `0`)
+- **Default**: `false`
+- **Description**: Enable verbose output for all tasks
+- **Config equivalent**: [`verbose`](./config.md#verbose)
+
+### `TASK_SILENT`
+
+- **Type**: `boolean` (`true`, `false`, `1`, `0`)
+- **Default**: `false`
+- **Description**: Disables echoing of commands
+- **Config equivalent**: [`silent`](./config.md#silent)
+
+### `TASK_COLOR`
+
+- **Type**: `boolean` (`true`, `false`, `1`, `0`)
+- **Default**: `true`
+- **Description**: Enable colored output
+- **Config equivalent**: [`color`](./config.md#color)
+
+### `TASK_DISABLE_FUZZY`
+
+- **Type**: `boolean` (`true`, `false`, `1`, `0`)
+- **Default**: `false`
+- **Description**: Disable fuzzy matching for task names
+- **Config equivalent**: [`disable-fuzzy`](./config.md#disable-fuzzy)
+
+### `TASK_CONCURRENCY`
+
+- **Type**: `integer`
+- **Description**: Limit number of tasks to run concurrently
+- **Config equivalent**: [`concurrency`](./config.md#concurrency)
+
+### `TASK_FAILFAST`
+
+- **Type**: `boolean` (`true`, `false`, `1`, `0`)
+- **Default**: `false`
+- **Description**: When running tasks in parallel, stop all tasks if one fails
+- **Config equivalent**: [`failfast`](./config.md#failfast)
+
+### `TASK_DRY`
+
+- **Type**: `boolean` (`true`, `false`, `1`, `0`)
+- **Default**: `false`
+- **Description**: Compiles and prints tasks in the order that they would be run, without executing them
+
+### `TASK_ASSUME_YES`
+
+- **Type**: `boolean` (`true`, `false`, `1`, `0`)
+- **Default**: `false`
+- **Description**: Assume "yes" as answer to all prompts
+
+### `TASK_INTERACTIVE`
+
+- **Type**: `boolean` (`true`, `false`, `1`, `0`)
+- **Default**: `false`
+- **Description**: Prompt for missing required variables
 
 ### `TASK_TEMP_DIR`
 
@@ -33,18 +95,6 @@ core utilities implemented in Go, or the ones available in the system.
 Valid values are `true` (`1`) or `false` (`0`). By default, this is `true` on
 Windows and `false` on other operating systems. We might consider making this
 enabled by default on all platforms in the future.
-
-### `TASK_REMOTE_DIR`
-
-Defines the location of Task's remote temporary directory which is used for
-caching remote files. Can be relative like `tmp/task` or absolute like
-`/tmp/.task` or `~/.task`. Relative paths are relative to the root Taskfile, not
-the working directory. Defaults to: `./.task`.
-
-### `TASK_OFFLINE`
-
-Set the `--offline` flag through the environment variable. Only for remote
-experiment. CLI flag `--offline` takes precedence over the env variable.
 
 ### `FORCE_COLOR`
 

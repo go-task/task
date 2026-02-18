@@ -130,15 +130,15 @@ func init() {
 	pflag.BoolVar(&Status, "status", false, "Exits with non-zero exit code if any of the given tasks is not up-to-date.")
 	pflag.BoolVar(&NoStatus, "no-status", false, "Ignore status when listing tasks as JSON")
 	pflag.BoolVar(&Nested, "nested", false, "Nest namespaces when listing tasks as JSON")
-	pflag.BoolVar(&Insecure, "insecure", getConfig(config, func() *bool { return config.Remote.Insecure }, false), "Forces Task to download Taskfiles over insecure connections.")
+	pflag.BoolVar(&Insecure, "insecure", getConfig(config, "REMOTE_INSECURE", func() *bool { return config.Remote.Insecure }, false), "Forces Task to download Taskfiles over insecure connections.")
 	pflag.BoolVarP(&Watch, "watch", "w", false, "Enables watch of the given task.")
-	pflag.BoolVarP(&Verbose, "verbose", "v", getConfig(config, func() *bool { return config.Verbose }, false), "Enables verbose mode.")
-	pflag.BoolVarP(&Silent, "silent", "s", false, "Disables echoing.")
-	pflag.BoolVar(&DisableFuzzy, "disable-fuzzy", getConfig(config, func() *bool { return config.DisableFuzzy }, false), "Disables fuzzy matching for task names.")
-	pflag.BoolVarP(&AssumeYes, "yes", "y", false, "Assume \"yes\" as answer to all prompts.")
-	pflag.BoolVar(&Interactive, "interactive", getConfig(config, func() *bool { return config.Interactive }, false), "Prompt for missing required variables.")
+	pflag.BoolVarP(&Verbose, "verbose", "v", getConfig(config, "VERBOSE", func() *bool { return config.Verbose }, false), "Enables verbose mode.")
+	pflag.BoolVarP(&Silent, "silent", "s", getConfig(config, "SILENT", func() *bool { return config.Silent }, false), "Disables echoing.")
+	pflag.BoolVar(&DisableFuzzy, "disable-fuzzy", getConfig(config, "DISABLE_FUZZY", func() *bool { return config.DisableFuzzy }, false), "Disables fuzzy matching for task names.")
+	pflag.BoolVarP(&AssumeYes, "yes", "y", getConfig(config, "ASSUME_YES", func() *bool { return nil }, false), "Assume \"yes\" as answer to all prompts.")
+	pflag.BoolVar(&Interactive, "interactive", getConfig(config, "INTERACTIVE", func() *bool { return config.Interactive }, false), "Prompt for missing required variables.")
 	pflag.BoolVarP(&Parallel, "parallel", "p", false, "Executes tasks provided on command line in parallel.")
-	pflag.BoolVarP(&Dry, "dry", "n", false, "Compiles and prints tasks in the order that they would be run, without executing them.")
+	pflag.BoolVarP(&Dry, "dry", "n", getConfig(config, "DRY", func() *bool { return nil }, false), "Compiles and prints tasks in the order that they would be run, without executing them.")
 	pflag.BoolVar(&Summary, "summary", false, "Show summary about a task.")
 	pflag.BoolVarP(&ExitCode, "exit-code", "x", false, "Pass-through the exit code of the task command.")
 	pflag.StringVarP(&Dir, "dir", "d", "", "Sets the directory in which Task will execute and look for a Taskfile.")
@@ -147,10 +147,10 @@ func init() {
 	pflag.StringVar(&Output.Group.Begin, "output-group-begin", "", "Message template to print before a task's grouped output.")
 	pflag.StringVar(&Output.Group.End, "output-group-end", "", "Message template to print after a task's grouped output.")
 	pflag.BoolVar(&Output.Group.ErrorOnly, "output-group-error-only", false, "Swallow output from successful tasks.")
-	pflag.BoolVarP(&Color, "color", "c", getConfig(config, func() *bool { return config.Color }, true), "Colored output. Enabled by default. Set flag to false or use NO_COLOR=1 to disable.")
-	pflag.IntVarP(&Concurrency, "concurrency", "C", getConfig(config, func() *int { return config.Concurrency }, 0), "Limit number of tasks to run concurrently.")
+	pflag.BoolVarP(&Color, "color", "c", getConfig(config, "COLOR", func() *bool { return config.Color }, true), "Colored output. Enabled by default. Set flag to false or use NO_COLOR=1 to disable.")
+	pflag.IntVarP(&Concurrency, "concurrency", "C", getConfig(config, "CONCURRENCY", func() *int { return config.Concurrency }, 0), "Limit number of tasks to run concurrently.")
 	pflag.DurationVarP(&Interval, "interval", "I", 0, "Interval to watch for changes.")
-	pflag.BoolVarP(&Failfast, "failfast", "F", getConfig(config, func() *bool { return &config.Failfast }, false), "When running tasks in parallel, stop all tasks if one fails.")
+	pflag.BoolVarP(&Failfast, "failfast", "F", getConfig(config, "FAILFAST", func() *bool { return &config.Failfast }, false), "When running tasks in parallel, stop all tasks if one fails.")
 	pflag.BoolVarP(&Global, "global", "g", false, "Runs global Taskfile, from $HOME/{T,t}askfile.{yml,yaml}.")
 	pflag.BoolVar(&Experiments, "experiments", false, "Lists all the available experiments and whether or not they are enabled.")
 
@@ -165,21 +165,21 @@ func init() {
 	// Remote Taskfiles experiment will adds the "download" and "offline" flags
 	if experiments.RemoteTaskfiles.Enabled() {
 		pflag.BoolVar(&Download, "download", false, "Downloads a cached version of a remote Taskfile.")
-		pflag.BoolVar(&Offline, "offline", getConfig(config, func() *bool { return config.Remote.Offline }, false), "Forces Task to only use local or cached Taskfiles.")
-		pflag.StringSliceVar(&TrustedHosts, "trusted-hosts", getConfig(config, func() *[]string { return &config.Remote.TrustedHosts }, nil), "List of trusted hosts for remote Taskfiles (comma-separated).")
-		pflag.DurationVar(&Timeout, "timeout", getConfig(config, func() *time.Duration { return config.Remote.Timeout }, time.Second*10), "Timeout for downloading remote Taskfiles.")
+		pflag.BoolVar(&Offline, "offline", getConfig(config, "REMOTE_OFFLINE", func() *bool { return config.Remote.Offline }, false), "Forces Task to only use local or cached Taskfiles.")
+		pflag.StringSliceVar(&TrustedHosts, "trusted-hosts", getConfig(config, "REMOTE_TRUSTED_HOSTS", func() *[]string { return &config.Remote.TrustedHosts }, nil), "List of trusted hosts for remote Taskfiles (comma-separated).")
+		pflag.DurationVar(&Timeout, "timeout", getConfig(config, "REMOTE_TIMEOUT", func() *time.Duration { return config.Remote.Timeout }, time.Second*10), "Timeout for downloading remote Taskfiles.")
 		pflag.BoolVar(&ClearCache, "clear-cache", false, "Clear the remote cache.")
-		pflag.DurationVar(&CacheExpiryDuration, "expiry", getConfig(config, func() *time.Duration { return config.Remote.CacheExpiry }, 0), "Expiry duration for cached remote Taskfiles.")
-		pflag.StringVar(&RemoteCacheDir, "remote-cache-dir", getConfig(config, func() *string { return config.Remote.CacheDir }, env.GetTaskEnv("REMOTE_DIR")), "Directory to cache remote Taskfiles.")
-		pflag.StringVar(&CACert, "cacert", getConfig(config, func() *string { return config.Remote.CACert }, ""), "Path to a custom CA certificate for HTTPS connections.")
-		pflag.StringVar(&Cert, "cert", getConfig(config, func() *string { return config.Remote.Cert }, ""), "Path to a client certificate for HTTPS connections.")
-		pflag.StringVar(&CertKey, "cert-key", getConfig(config, func() *string { return config.Remote.CertKey }, ""), "Path to a client certificate key for HTTPS connections.")
+		pflag.DurationVar(&CacheExpiryDuration, "expiry", getConfig(config, "REMOTE_CACHE_EXPIRY", func() *time.Duration { return config.Remote.CacheExpiry }, 0), "Expiry duration for cached remote Taskfiles.")
+		pflag.StringVar(&RemoteCacheDir, "remote-cache-dir", getConfig(config, "REMOTE_CACHE_DIR", func() *string { return config.Remote.CacheDir }, env.GetTaskEnv("REMOTE_DIR")), "Directory to cache remote Taskfiles.")
+		pflag.StringVar(&CACert, "cacert", getConfig(config, "REMOTE_CACERT", func() *string { return config.Remote.CACert }, ""), "Path to a custom CA certificate for HTTPS connections.")
+		pflag.StringVar(&Cert, "cert", getConfig(config, "REMOTE_CERT", func() *string { return config.Remote.Cert }, ""), "Path to a client certificate for HTTPS connections.")
+		pflag.StringVar(&CertKey, "cert-key", getConfig(config, "REMOTE_CERT_KEY", func() *string { return config.Remote.CertKey }, ""), "Path to a client certificate key for HTTPS connections.")
 	}
 	pflag.Parse()
 
 	// Auto-detect color based on environment when not explicitly configured
-	// Priority: CLI flag > taskrc config > NO_COLOR > FORCE_COLOR/CI > default
-	colorExplicitlySet := pflag.Lookup("color").Changed || (config != nil && config.Color != nil)
+	// Priority: CLI flag > TASK_COLOR env > taskrc config > NO_COLOR > FORCE_COLOR/CI > default
+	colorExplicitlySet := pflag.Lookup("color").Changed || env.GetTaskEnv("COLOR") != "" || (config != nil && config.Color != nil)
 	if !colorExplicitlySet {
 		if os.Getenv("NO_COLOR") != "" {
 			Color = false
@@ -311,15 +311,45 @@ func (o *flagsOption) ApplyToExecutor(e *task.Executor) {
 	)
 }
 
-// getConfig extracts a config value directly from a pointer field with a fallback default
-func getConfig[T any](config *taskrcast.TaskRC, fieldFunc func() *T, fallback T) T {
-	if config == nil {
-		return fallback
+// getConfig extracts a config value with priority: env var > taskrc config > fallback
+func getConfig[T any](config *taskrcast.TaskRC, envKey string, fieldFunc func() *T, fallback T) T {
+	if envKey != "" {
+		if val, ok := getEnvAs[T](envKey); ok {
+			return val
+		}
 	}
-
-	field := fieldFunc()
-	if field != nil {
-		return *field
+	if config != nil {
+		if field := fieldFunc(); field != nil {
+			return *field
+		}
 	}
 	return fallback
+}
+
+// getEnvAs parses a TASK_ prefixed env var as type T
+func getEnvAs[T any](envKey string) (T, bool) {
+	var zero T
+	switch any(zero).(type) {
+	case bool:
+		if val, ok := env.GetTaskEnvBool(envKey); ok {
+			return any(val).(T), true
+		}
+	case int:
+		if val, ok := env.GetTaskEnvInt(envKey); ok {
+			return any(val).(T), true
+		}
+	case time.Duration:
+		if val, ok := env.GetTaskEnvDuration(envKey); ok {
+			return any(val).(T), true
+		}
+	case string:
+		if val, ok := env.GetTaskEnvString(envKey); ok {
+			return any(val).(T), true
+		}
+	case []string:
+		if val, ok := env.GetTaskEnvStringSlice(envKey); ok {
+			return any(val).(T), true
+		}
+	}
+	return zero, false
 }
