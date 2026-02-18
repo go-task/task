@@ -12,6 +12,9 @@
   ownership boundary (#2682, #1683 by @trulede).
 - Fixed global variables from imported Taskfiles not resolving `ref:` values
   correctly (#2632 by @trulede).
+- Every `.taskrc.yml` option can now be overridden with a `TASK_`-prefixed
+  environment variable, making CI and container configuration easier (#2607,
+  #1066 by @vmaerten).
 
 ## v3.48.0 - 2026-01-26
 
