@@ -13,6 +13,7 @@ type (
 		caCert   string
 		cert     string
 		certKey  string
+		headers  map[string]map[string]string
 	}
 )
 
@@ -73,5 +74,11 @@ func WithCert(cert string) NodeOption {
 func WithCertKey(certKey string) NodeOption {
 	return func(node *baseNode) {
 		node.certKey = certKey
+	}
+}
+
+func WithNodeHeaders(headers map[string]map[string]string) NodeOption {
+	return func(node *baseNode) {
+		node.headers = headers
 	}
 }

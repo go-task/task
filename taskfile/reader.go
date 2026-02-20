@@ -50,6 +50,7 @@ type (
 		caCert              string
 		cert                string
 		certKey             string
+		headers             map[string]map[string]string
 		debugFunc           DebugFunc
 		promptFunc          PromptFunc
 		promptMutex         sync.Mutex
@@ -67,6 +68,7 @@ func NewReader(opts ...ReaderOption) *Reader {
 		trustedHosts:        nil,
 		tempDir:             os.TempDir(),
 		cacheExpiryDuration: 0,
+		headers:             nil,
 		debugFunc:           nil,
 		promptFunc:          nil,
 		promptMutex:         sync.Mutex{},
@@ -241,6 +243,19 @@ func (o *readerCertKeyOption) ApplyToReader(r *Reader) {
 	r.certKey = o.certKey
 }
 
+// WithHeaders sets the headers to be used for remote requests, keyed by host.
+func WithHeaders(headers map[string]map[string]string) ReaderOption {
+	return &headersOption{headers: headers}
+}
+
+type headersOption struct {
+	headers map[string]map[string]string
+}
+
+func (o *headersOption) ApplyToReader(r *Reader) {
+	r.headers = o.headers
+}
+
 // Read will read the Taskfile defined by the [Reader]'s [Node] and recurse
 // through any [ast.Includes] it finds, reading each included Taskfile and
 // building an [ast.TaskfileGraph] as it goes. If any errors occur, they will be
@@ -359,6 +374,7 @@ func (r *Reader) include(ctx context.Context, node Node) error {
 				WithCACert(r.caCert),
 				WithCert(r.cert),
 				WithCertKey(r.certKey),
+				WithNodeHeaders(r.headers),
 			)
 			if err != nil {
 				if include.Optional {
