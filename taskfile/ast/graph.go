@@ -2,11 +2,13 @@ package ast
 
 import (
 	"fmt"
+	"hash/fnv"
 	"os"
 	"sync"
 
 	"github.com/dominikbraun/graph"
 	"github.com/dominikbraun/graph/draw"
+	"github.com/mitchellh/hashstructure/v2"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -117,4 +119,41 @@ func (tfg *TaskfileGraph) Merge() (*Taskfile, error) {
 	}
 
 	return rootVertex.Taskfile, nil
+}
+
+type TaskExecutionGraph struct {
+	sync.Mutex
+	graph.Graph[string, *TaskExecutionVertex]
+}
+
+type TaskExecutionVertex struct {
+	Task      *Task
+	CallIndex int
+	CallToken string
+	Parent    *TaskExecutionVertex
+	Hash      string
+}
+
+func taskExecutionHash(v *TaskExecutionVertex) string {
+	if len(v.Hash) == 0 {
+		h := fnv.New64a()
+		if v.Task != nil {
+			taskHash, _ := hashstructure.Hash(v.Task, hashstructure.FormatV2, nil)
+			hashString := fmt.Sprintf("%s:%d:%v:%v", v.Task.Task, taskHash, v.CallIndex, v.CallToken)
+			h.Write([]byte(hashString))
+		}
+		v.Hash = fmt.Sprintf("%v", h.Sum64())
+	}
+	return v.Hash
+}
+
+func NewTaskExecutionGraph() *TaskExecutionGraph {
+	return &TaskExecutionGraph{
+		sync.Mutex{},
+		graph.New(taskExecutionHash,
+			graph.Directed(),
+			graph.PreventCycles(),
+			graph.Rooted(),
+		),
+	}
 }

@@ -1188,3 +1188,199 @@ func TestIf(t *testing.T) {
 		NewExecutorTest(t, opts...)
 	}
 }
+
+func TestExecutionGraph(t *testing.T) {
+	t.Parallel()
+
+	NewExecutorTest(t,
+		WithName("loop-cycle"),
+		WithExecutorOptions(
+			task.WithDir("testdata/cyclic"),
+		),
+		WithTask("loop-cycle"),
+		WithRunError(),
+	)
+
+	NewExecutorTest(t,
+		WithName("long-loop-cycle"),
+		WithExecutorOptions(
+			task.WithDir("testdata/cyclic"),
+		),
+		WithTask("long-loop-cycle"),
+		WithRunError(),
+	)
+
+	NewExecutorTest(t,
+		WithName("A"),
+		WithExecutorOptions(
+			task.WithDir("testdata/cyclic"),
+		),
+		WithTask("A"),
+	)
+
+	NewExecutorTest(t,
+		WithName("A"),
+		WithExecutorOptions(
+			task.WithDir("testdata/cyclic"),
+		),
+		WithTask("A"),
+		WithVar("CYCLEBACK", "A"),
+		WithRunError(),
+	)
+
+	NewExecutorTest(t,
+		WithName("call-foo"),
+		WithExecutorOptions(
+			task.WithDir("testdata/cyclic"),
+		),
+		WithTask("call-foo"),
+	)
+	NewExecutorTest(t,
+		WithName("call-bar"),
+		WithExecutorOptions(
+			task.WithDir("testdata/cyclic"),
+		),
+		WithTask("call-bar"),
+	)
+
+	NewExecutorTest(t,
+		WithName("call-converge"),
+		WithExecutorOptions(
+			task.WithDir("testdata/cyclic"),
+		),
+		WithTask("call-converge"),
+	)
+
+	NewExecutorTest(t,
+		WithName("call-converge-cyclic"),
+		WithExecutorOptions(
+			task.WithDir("testdata/cyclic"),
+		),
+		WithTask("call-converge-cyclic"),
+		WithRunError(),
+	)
+
+	NewExecutorTest(t,
+		WithName("deps-foo"),
+		WithExecutorOptions(
+			task.WithDir("testdata/cyclic"),
+		),
+		WithTask("deps-foo"),
+	)
+	NewExecutorTest(t,
+		WithName("deps-bar"),
+		WithExecutorOptions(
+			task.WithDir("testdata/cyclic"),
+		),
+		WithTask("deps-bar"),
+	)
+
+	NewExecutorTest(t,
+		WithName("deps-converge"),
+		WithExecutorOptions(
+			task.WithDir("testdata/cyclic"),
+		),
+		WithTask("deps-converge"),
+	)
+
+	NewExecutorTest(t,
+		WithName("deps-converge-cyclic"),
+		WithExecutorOptions(
+			task.WithDir("testdata/cyclic"),
+		),
+		WithTask("deps-converge-cyclic"),
+		WithRunError(),
+	)
+
+	NewExecutorTest(t,
+		WithName("call-deps"),
+		WithExecutorOptions(
+			task.WithDir("testdata/cyclic"),
+		),
+		WithTask("call-deps"),
+	)
+
+	NewExecutorTest(t,
+		WithName("call-deps-cyclic"),
+		WithExecutorOptions(
+			task.WithDir("testdata/cyclic"),
+		),
+		WithTask("call-deps-cyclic"),
+		WithRunError(),
+	)
+
+	NewExecutorTest(t,
+		WithName("for-staggered"),
+		WithExecutorOptions(
+			task.WithDir("testdata/cyclic"),
+		),
+		WithTask("for-staggered"),
+	)
+
+	NewExecutorTest(t,
+		WithName("for-staggered-cyclic"),
+		WithExecutorOptions(
+			task.WithDir("testdata/cyclic"),
+		),
+		WithTask("for-staggered-cyclic"),
+		WithRunError(),
+	)
+
+	NewExecutorTest(t,
+		WithName("for-staggered-cyclic-A"),
+		WithExecutorOptions(
+			task.WithDir("testdata/cyclic"),
+		),
+		WithTask("for-staggered-cyclic-A"),
+		WithRunError(),
+	)
+
+	NewExecutorTest(t,
+		WithName("for-duplicate"),
+		WithExecutorOptions(
+			task.WithDir("testdata/cyclic"),
+		),
+		WithTask("for-duplicate"),
+	)
+
+	NewExecutorTest(t,
+		WithName("for-duplicate-cyclic"),
+		WithExecutorOptions(
+			task.WithDir("testdata/cyclic"),
+		),
+		WithTask("for-duplicate-cyclic"),
+		WithRunError(),
+	)
+
+	newFoo := func() {
+		err := os.WriteFile(filepathext.SmartJoin("testdata/cyclic", "foo.txt"), []byte("foo"), 0o666)
+		require.NoError(t, err)
+	}
+	newFoo()
+	NewExecutorTest(t,
+		WithName("sources"),
+		WithExecutorOptions(
+			task.WithDir("testdata/cyclic"),
+		),
+		WithTask("sources"),
+	)
+
+	newFoo()
+	NewExecutorTest(t,
+		WithName("sources-cyclic"),
+		WithExecutorOptions(
+			task.WithDir("testdata/cyclic"),
+		),
+		WithTask("sources-cyclic"),
+		WithRunError(),
+	)
+
+	newFoo()
+	NewExecutorTest(t,
+		WithName("sources-modify-cyclic"),
+		WithExecutorOptions(
+			task.WithDir("testdata/cyclic"),
+		),
+		WithTask("sources-modify-cyclic"),
+	)
+}
