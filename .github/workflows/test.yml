@@ -12,27 +12,19 @@ jobs:
   test:
     name: Test
     strategy:
+      fail-fast: false
       matrix:
         go-version: [1.24.x, 1.25.x]
         platform: [ubuntu-latest, macos-latest, windows-latest]
     runs-on: ${{matrix.platform}}
     steps:
+      - name: Check out code
+        uses: actions/checkout@v6
+
       - name: Set up Go ${{matrix.go-version}}
         uses: actions/setup-go@v6
         with:
           go-version: ${{matrix.go-version}}
-        id: go
-
-      - name: Check out code into the Go module directory
-        uses: actions/checkout@v6
-
-      - name: Download Go modules
-        run: go mod download
-        env:
-          GOPROXY: https://proxy.golang.org
-
-      - name: Build
-        run: go build -o ./bin/task -v ./cmd/task
 
       - name: Test
-        run: ./bin/task test --output=group --output-group-begin='::group::{{.TASK}}' --output-group-end='::endgroup::'
+        run: go run ./cmd/task test
