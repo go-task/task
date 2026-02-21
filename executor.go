@@ -4,6 +4,7 @@ import (
 	"context"
 	"io"
 	"os"
+	"path/filepath"
 	"sync"
 	"time"
 
@@ -69,6 +70,7 @@ type (
 		OutputStyle        ast.Output
 		TaskSorter         sort.Sorter
 		UserWorkingDir     string
+		RootDir            string
 		EnableVersionCheck bool
 
 		fuzzyModel     *fuzzy.Model
@@ -102,6 +104,7 @@ func NewExecutor(opts ...ExecutorOption) *Executor {
 		OutputStyle:          ast.Output{},
 		TaskSorter:           sort.AlphaNumericWithRootTasksFirst,
 		UserWorkingDir:       "",
+		RootDir:              "",
 		fuzzyModel:           nil,
 		concurrencySemaphore: nil,
 		taskCallCount:        map[string]*int32{},
@@ -132,7 +135,15 @@ type dirOption struct {
 }
 
 func (o *dirOption) ApplyToExecutor(e *Executor) {
-	e.Dir = o.dir
+	if len(o.dir) > 0 {
+		if filepath.IsAbs(o.dir) {
+			e.Dir = o.dir
+		} else {
+			if d, err := filepath.Abs(o.dir); err == nil {
+				e.Dir = d
+			}
+		}
+	}
 }
 
 // WithEntrypoint sets the entrypoint (main Taskfile) of the [Executor]. By
