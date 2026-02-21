@@ -81,7 +81,9 @@ func (c *Compiler) getVariables(t *ast.Task, call *Call, evaluateShVars bool) (*
 				return nil
 			}
 			// If the variable is dynamic, we need to resolve it first
-			static, err := c.HandleDynamicVar(newVar, dir, env.GetFromVars(result))
+
+			static, err := c.HandleDynamicVar(newVar, dir, env.GetFromVars(result),
+				[]string{}, []string{})
 			if err != nil {
 				return err
 			}
@@ -145,7 +147,7 @@ func (c *Compiler) getVariables(t *ast.Task, call *Call, evaluateShVars bool) (*
 	return result, nil
 }
 
-func (c *Compiler) HandleDynamicVar(v ast.Var, dir string, e []string) (string, error) {
+func (c *Compiler) HandleDynamicVar(v ast.Var, dir string, e []string, posixOpts []string, bashOpts []string) (string, error) {
 	c.muDynamicCache.Lock()
 	defer c.muDynamicCache.Unlock()
 
@@ -168,11 +170,13 @@ func (c *Compiler) HandleDynamicVar(v ast.Var, dir string, e []string) (string, 
 
 	var stdout bytes.Buffer
 	opts := &execext.RunCommandOptions{
-		Command: *v.Sh,
-		Dir:     dir,
-		Stdout:  &stdout,
-		Stderr:  c.Logger.Stderr,
-		Env:     e,
+		Command:   *v.Sh,
+		Dir:       dir,
+		Stdout:    &stdout,
+		Stderr:    c.Logger.Stderr,
+		Env:       e,
+		PosixOpts: posixOpts,
+		BashOpts:  bashOpts,
 	}
 	if err := execext.RunCommand(context.Background(), opts); err != nil {
 		return "", fmt.Errorf(`task: Command "%s" failed: %s`, opts.Command, err)

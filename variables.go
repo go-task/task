@@ -15,6 +15,7 @@ import (
 	"github.com/go-task/task/v3/internal/execext"
 	"github.com/go-task/task/v3/internal/filepathext"
 	"github.com/go-task/task/v3/internal/fingerprint"
+	"github.com/go-task/task/v3/internal/slicesext"
 	"github.com/go-task/task/v3/internal/templater"
 	"github.com/go-task/task/v3/taskfile/ast"
 )
@@ -109,8 +110,8 @@ func (e *Executor) compiledTask(call *Call, evaluateShVars bool) (*ast.Task, err
 		Sources:              templater.ReplaceGlobs(origTask.Sources, cache),
 		Generates:            templater.ReplaceGlobs(origTask.Generates, cache),
 		Dir:                  templater.Replace(origTask.Dir, cache),
-		Set:                  origTask.Set,
-		Shopt:                origTask.Shopt,
+		Set:                  slicesext.UniqueJoin(e.Taskfile.Set, origTask.Set),
+		Shopt:                slicesext.UniqueJoin(e.Taskfile.Shopt, origTask.Shopt),
 		Vars:                 vars,
 		Env:                  nil,
 		Dotenv:               templater.Replace(origTask.Dotenv, cache),
@@ -173,7 +174,8 @@ func (e *Executor) compiledTask(call *Call, evaluateShVars bool) (*ast.Task, err
 				new.Env.Set(k, ast.Var{Value: v.Value})
 				continue
 			}
-			static, err := e.Compiler.HandleDynamicVar(v, new.Dir, env.GetFromVars(new.Env))
+			static, err := e.Compiler.HandleDynamicVar(v, new.Dir, env.GetFromVars(new.Env),
+				new.Set, new.Shopt)
 			if err != nil {
 				return nil, err
 			}
