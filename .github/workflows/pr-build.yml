@@ -21,7 +21,7 @@ jobs:
         with:
           go-version: '1.26.x'
           cache: true
-      - uses: goreleaser/goreleaser-action@v6
+      - uses: goreleaser/goreleaser-action@v7
         with:
           version: '~> v2'
           args: release --snapshot --clean --config .goreleaser-pr.yml
