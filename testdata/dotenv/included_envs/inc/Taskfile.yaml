@@ -1,0 +1,10 @@
+version: '3'
+
+dotenv:
+  - dotenv.txt
+
+tasks:
+  default:
+    cmds:
+      - echo "FOO = {{.FOO}}"
+      - echo "FOO = $FOO"

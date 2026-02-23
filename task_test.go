@@ -2,6 +2,7 @@ package task_test
 
 import (
 	"bytes"
+	"cmp"
 	"fmt"
 	"io"
 	"io/fs"
@@ -1639,20 +1640,30 @@ func TestDotenvShouldIncludeAllEnvFiles(t *testing.T) {
 	})
 }
 
-func TestDotenvShouldErrorWhenIncludingDependantDotenvs(t *testing.T) {
+func TestDotenvIncludeDotenvs(t *testing.T) {
 	t.Parallel()
 
-	var buff bytes.Buffer
-	e := task.NewExecutor(
-		task.WithDir("testdata/dotenv/error_included_envs"),
-		task.WithSummary(true),
-		task.WithStdout(&buff),
-		task.WithStderr(&buff),
-	)
-
-	err := e.Setup()
-	require.Error(t, err)
-	assert.Contains(t, err.Error(), "move the dotenv")
+	tests := []struct {
+		name string
+		dir  string
+		call string
+	}{
+		{
+			name: "included dotenv has priority",
+			dir:  "testdata/dotenv/included_envs",
+		},
+	}
+	for _, test := range tests {
+		NewExecutorTest(t,
+			WithName(test.name),
+			WithExecutorOptions(
+				task.WithDir(test.dir),
+				task.WithSilent(true),
+				task.WithForce(true),
+			),
+			WithTask(cmp.Or(test.call, "default")),
+		)
+	}
 }
 
 func TestDotenvShouldAllowMissingEnv(t *testing.T) {

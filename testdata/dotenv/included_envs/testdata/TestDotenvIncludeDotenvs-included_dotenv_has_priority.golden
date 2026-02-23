@@ -1,0 +1,2 @@
+var FOO = bar
+env FOO = bar
