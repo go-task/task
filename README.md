@@ -10,7 +10,7 @@
   </p>
 
   <p>
-    <a href="https://taskfile.dev/docs/installation">Installation</a> | <a href="https://taskfile.dev/docs/getting-started">Getting Started</a> | <a href="https://taskfile.dev/docs/guide">Docs</a> | <a href="https://twitter.com/taskfiledev">Twitter</a> | <a href="https://bsky.app/profile/taskfile.dev">Bluesky</a> | <a href="https://fosstodon.org/@task">Mastodon</a> | <a href="https://discord.gg/6TY36E39UK">Discord</a>
+    <a href="https://taskfile.dev/docs/installation">Installation</a> &bullet; <a href="https://taskfile.dev/docs/getting-started">Getting Started</a> &bullet; <a href="https://taskfile.dev/docs/guide">Docs</a> &bullet; <a href="https://twitter.com/taskfiledev">Twitter</a> &bullet; <a href="https://bsky.app/profile/taskfile.dev">Bluesky</a> &bullet; <a href="https://fosstodon.org/@task">Mastodon</a> &bullet; <a href="https://discord.gg/6TY36E39UK">Discord</a>
   </p>
 
   <h1>Gold Sponsors</h1>
