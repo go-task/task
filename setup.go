@@ -67,7 +67,11 @@ func (e *Executor) getRootNode() (taskfile.Node, error) {
 	if err != nil {
 		return nil, err
 	}
-	e.Dir = node.Dir()
+	e.RootDir = node.Dir()
+	if len(e.Dir) == 0 {
+		// Only set the executor dir if it was not already set.
+		e.Dir = node.Dir()
+	}
 	e.Entrypoint = node.Location()
 	return node, err
 }
@@ -216,11 +220,11 @@ func (e *Executor) setupCompiler() error {
 			return err
 		}
 	}
-
 	e.Compiler = &Compiler{
 		Dir:            e.Dir,
 		Entrypoint:     e.Entrypoint,
 		UserWorkingDir: e.UserWorkingDir,
+		RootDir:        e.RootDir,
 		TaskfileEnv:    e.Taskfile.Env,
 		TaskfileVars:   e.Taskfile.Vars,
 		Logger:         e.Logger,

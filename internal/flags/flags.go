@@ -275,6 +275,13 @@ func (o *flagsOption) ApplyToExecutor(e *task.Executor) {
 		if err == nil {
 			dir = home
 		}
+	} else {
+		if len(dir) > 0 {
+			// Use the cli provided directory.
+			if d, err := filepath.Abs(dir); err == nil {
+				dir = d
+			}
+		}
 	}
 
 	e.Options(
