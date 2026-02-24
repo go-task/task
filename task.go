@@ -392,6 +392,14 @@ func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call *Call, i in
 			return nil
 		}
 
+		dir := t.Dir
+		if cmd.Dir != "" {
+			dir = cmd.Dir
+			if err := os.MkdirAll(dir, 0o755); err != nil {
+				e.Logger.Errf(logger.Red, "task: cannot make command directory %q: %v\n", dir, err)
+			}
+		}
+
 		if e.Verbose || (!call.Silent && !cmd.Silent && !t.IsSilent() && !e.Taskfile.Silent && !e.Silent) {
 			e.Logger.Errf(logger.Green, "task: [%s] %s\n", t.Name(), cmd.Cmd)
 		}
@@ -413,7 +421,7 @@ func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call *Call, i in
 
 		err = execext.RunCommand(ctx, &execext.RunCommandOptions{
 			Command:   cmd.Cmd,
-			Dir:       t.Dir,
+			Dir:       dir,
 			Env:       env.Get(t),
 			PosixOpts: slicesext.UniqueJoin(e.Taskfile.Set, t.Set, cmd.Set),
 			BashOpts:  slicesext.UniqueJoin(e.Taskfile.Shopt, t.Shopt, cmd.Shopt),

@@ -352,6 +352,10 @@
           "description": "Command to run",
           "type": "string"
         },
+        "dir": {
+          "description": "Working directory for the command. Relative paths resolve from the task directory and are created if missing.",
+          "type": "string"
+        },
         "silent": {
           "description": "Silent mode disables echoing of command before Task runs it",
           "type": "boolean"

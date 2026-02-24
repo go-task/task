@@ -142,6 +142,18 @@ func (e *Executor) compiledTask(call *Call, evaluateShVars bool) (*ast.Task, err
 	if new.Prefix == "" {
 		new.Prefix = new.Task
 	}
+	resolveCmdDir := func(dir string) (string, error) {
+		if dir == "" {
+			return "", nil
+		}
+
+		dir, err := execext.ExpandLiteral(dir)
+		if err != nil {
+			return "", err
+		}
+
+		return filepathext.SmartJoin(new.Dir, dir), nil
+	}
 
 	dotenvEnvs := ast.NewVars()
 	if len(new.Dotenv) > 0 {
@@ -231,7 +243,14 @@ func (e *Executor) compiledTask(call *Call, evaluateShVars bool) (*ast.Task, err
 					newCmd.Cmd = templater.ReplaceWithExtra(cmd.Cmd, cache, extra)
 					newCmd.Task = templater.ReplaceWithExtra(cmd.Task, cache, extra)
 					newCmd.If = templater.ReplaceWithExtra(cmd.If, cache, extra)
+					newCmd.Dir = templater.ReplaceWithExtra(cmd.Dir, cache, extra)
 					newCmd.Vars = templater.ReplaceVarsWithExtra(cmd.Vars, cache, extra)
+					if newCmd.Dir != "" {
+						newCmd.Dir, err = resolveCmdDir(newCmd.Dir)
+						if err != nil {
+							return nil, err
+						}
+					}
 					new.Cmds = append(new.Cmds, newCmd)
 				}
 				continue
@@ -246,7 +265,14 @@ func (e *Executor) compiledTask(call *Call, evaluateShVars bool) (*ast.Task, err
 			newCmd.Cmd = templater.Replace(cmd.Cmd, cache)
 			newCmd.Task = templater.Replace(cmd.Task, cache)
 			newCmd.If = templater.Replace(cmd.If, cache)
+			newCmd.Dir = templater.Replace(cmd.Dir, cache)
 			newCmd.Vars = templater.ReplaceVars(cmd.Vars, cache)
+			if newCmd.Dir != "" {
+				newCmd.Dir, err = resolveCmdDir(newCmd.Dir)
+				if err != nil {
+					return nil, err
+				}
+			}
 			new.Cmds = append(new.Cmds, newCmd)
 		}
 	}
