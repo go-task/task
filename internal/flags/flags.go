@@ -53,6 +53,7 @@ var (
 	ListJson            bool
 	TaskSort            string
 	Status              bool
+	IncludeDeps         bool
 	NoStatus            bool
 	Nested              bool
 	Insecure            bool
@@ -128,6 +129,7 @@ func init() {
 	pflag.BoolVarP(&ListJson, "json", "j", false, "Formats task list as JSON.")
 	pflag.StringVar(&TaskSort, "sort", "", "Changes the order of the tasks when listed. [default|alphanumeric|none].")
 	pflag.BoolVar(&Status, "status", false, "Exits with non-zero exit code if any of the given tasks is not up-to-date.")
+	pflag.BoolVar(&IncludeDeps, "include-deps", false, "When used with --status, recursively checks dependencies.")
 	pflag.BoolVar(&NoStatus, "no-status", false, "Ignore status when listing tasks as JSON")
 	pflag.BoolVar(&Nested, "nested", false, "Nest namespaces when listing tasks as JSON")
 	pflag.BoolVar(&Insecure, "insecure", getConfig(config, "REMOTE_INSECURE", func() *bool { return config.Remote.Insecure }, false), "Forces Task to download Taskfiles over insecure connections.")
@@ -238,6 +240,10 @@ func Validate() error {
 		return errors.New("task: --no-status only applies to --json with --list or --list-all")
 	}
 
+	if IncludeDeps && !Status {
+		return errors.New("task: --include-deps only applies to --status")
+	}
+
 	if Nested && !ListJson {
 		return errors.New("task: --nested only applies to --json with --list or --list-all")
 	}
@@ -300,6 +306,7 @@ func (o *flagsOption) ApplyToExecutor(e *task.Executor) {
 		task.WithInteractive(Interactive),
 		task.WithDry(Dry || Status),
 		task.WithSummary(Summary),
+		task.WithIncludeDeps(IncludeDeps),
 		task.WithParallel(Parallel),
 		task.WithColor(Color),
 		task.WithConcurrency(Concurrency),

@@ -573,6 +573,100 @@ func TestStatus(t *testing.T) {
 	)
 }
 
+func TestStatusWithDeps(t *testing.T) {
+	t.Parallel()
+
+	const dir = "testdata/status_with_deps"
+
+	var buf bytes.Buffer
+
+	// Test 1: Without --include-deps, parent task with bad dep should pass
+	// (only checks the parent task itself, not dependencies)
+	e1 := task.NewExecutor(
+		task.WithDir(dir),
+		task.WithStdout(&buf),
+		task.WithStderr(&buf),
+	)
+	require.NoError(t, e1.Setup())
+	ctx := t.Context()
+	err := e1.Status(ctx, &task.Call{Task: "task-with-bad-dep"})
+	require.NoError(t, err, "task-with-bad-dep itself is up-to-date, so without --include-deps it should pass")
+
+	// Test 2: With --include-deps, parent task with bad dep should fail
+	// (checks the parent task and all its dependencies)
+	buf.Reset()
+	e2 := task.NewExecutor(
+		task.WithDir(dir),
+		task.WithIncludeDeps(true),
+		task.WithStdout(&buf),
+		task.WithStderr(&buf),
+	)
+	require.NoError(t, e2.Setup())
+	err = e2.Status(ctx, &task.Call{Task: "task-with-bad-dep"})
+	require.Error(t, err, "task-with-bad-dep has a dependency that is not up-to-date, so with --include-deps it should fail")
+	require.Contains(t, err.Error(), "not-up-to-date-leaf", "error should mention the dependency that failed")
+
+	// Test 3: With --include-deps, parent task with good deps should pass
+	buf.Reset()
+	e3 := task.NewExecutor(
+		task.WithDir(dir),
+		task.WithIncludeDeps(true),
+		task.WithStdout(&buf),
+		task.WithStderr(&buf),
+	)
+	require.NoError(t, e3.Setup())
+	err = e3.Status(ctx, &task.Call{Task: "task-with-good-deps"})
+	require.NoError(t, err, "task-with-good-deps and all its dependencies are up-to-date")
+
+	// Test 4: With --include-deps, nested task with bad deps should fail
+	buf.Reset()
+	e4 := task.NewExecutor(
+		task.WithDir(dir),
+		task.WithIncludeDeps(true),
+		task.WithStdout(&buf),
+		task.WithStderr(&buf),
+	)
+	require.NoError(t, e4.Setup())
+	err = e4.Status(ctx, &task.Call{Task: "nested-bad-parent"})
+	require.Error(t, err, "nested-bad-parent has a transitive dependency that is not up-to-date")
+	require.Contains(t, err.Error(), "not-up-to-date-leaf", "error should mention the transitive dependency that failed")
+
+	// Test 5: With --include-deps, nested task with good deps should pass
+	buf.Reset()
+	e5 := task.NewExecutor(
+		task.WithDir(dir),
+		task.WithIncludeDeps(true),
+		task.WithStdout(&buf),
+		task.WithStderr(&buf),
+	)
+	require.NoError(t, e5.Setup())
+	err = e5.Status(ctx, &task.Call{Task: "nested-parent"})
+	require.NoError(t, err, "nested-parent and all its transitive dependencies are up-to-date")
+
+	// Test 6: Without --include-deps, leaf task that is not up-to-date should fail
+	buf.Reset()
+	e6 := task.NewExecutor(
+		task.WithDir(dir),
+		task.WithStdout(&buf),
+		task.WithStderr(&buf),
+	)
+	require.NoError(t, e6.Setup())
+	err = e6.Status(ctx, &task.Call{Task: "not-up-to-date-leaf"})
+	require.Error(t, err, "not-up-to-date-leaf is not up-to-date")
+
+	// Test 7: With --include-deps, leaf task that is up-to-date should pass
+	buf.Reset()
+	e7 := task.NewExecutor(
+		task.WithDir(dir),
+		task.WithIncludeDeps(true),
+		task.WithStdout(&buf),
+		task.WithStderr(&buf),
+	)
+	require.NoError(t, e7.Setup())
+	err = e7.Status(ctx, &task.Call{Task: "up-to-date-leaf"})
+	require.NoError(t, err, "up-to-date-leaf is up-to-date and has no dependencies")
+}
+
 func TestPrecondition(t *testing.T) {
 	t.Parallel()
 	const dir = "testdata/precondition"
