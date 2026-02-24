@@ -1,0 +1,3 @@
+{{.TEST_DIR}}/testdata/special_vars/sources-as-var/file.txt
+{{.TEST_DIR}}/testdata/special_vars/sources-as-var/subdir1/file.txt
+{{.TEST_DIR}}/testdata/special_vars/sources-as-var/subdir2/file.txt

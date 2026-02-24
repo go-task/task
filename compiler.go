@@ -12,6 +12,7 @@ import (
 	"github.com/go-task/task/v3/internal/env"
 	"github.com/go-task/task/v3/internal/execext"
 	"github.com/go-task/task/v3/internal/filepathext"
+	"github.com/go-task/task/v3/internal/fingerprint"
 	"github.com/go-task/task/v3/internal/logger"
 	"github.com/go-task/task/v3/internal/templater"
 	"github.com/go-task/task/v3/internal/version"
@@ -200,8 +201,8 @@ func (c *Compiler) ResetCache() {
 	c.dynamicCache = nil
 }
 
-func (c *Compiler) getSpecialVars(t *ast.Task, call *Call) (map[string]string, error) {
-	allVars := map[string]string{
+func (c *Compiler) getSpecialVars(t *ast.Task, call *Call) (map[string]any, error) {
+	allVars := map[string]any{
 		"TASK_EXE":         filepath.ToSlash(os.Args[0]),
 		"ROOT_TASKFILE":    filepathext.SmartJoin(c.Dir, c.Entrypoint),
 		"ROOT_DIR":         c.Dir,
@@ -209,10 +210,18 @@ func (c *Compiler) getSpecialVars(t *ast.Task, call *Call) (map[string]string, e
 		"TASK_VERSION":     version.GetVersion(),
 	}
 	if t != nil {
+		taskDir := filepathext.SmartJoin(c.Dir, t.Dir)
+
 		allVars["TASK"] = t.Task
-		allVars["TASK_DIR"] = filepathext.SmartJoin(c.Dir, t.Dir)
+		allVars["TASK_DIR"] = taskDir
 		allVars["TASKFILE"] = t.Location.Taskfile
 		allVars["TASKFILE_DIR"] = filepath.Dir(t.Location.Taskfile)
+
+		taskSources, err := fingerprint.Globs(taskDir, t.Sources)
+		if err != nil {
+			return allVars, fmt.Errorf("expand globs: %v", err)
+		}
+		allVars["TASK_SOURCES"] = taskSources
 	} else {
 		allVars["TASK"] = ""
 		allVars["TASK_DIR"] = ""

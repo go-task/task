@@ -23,3 +23,14 @@ tasks:
   print-task-dir:
     dir: 'foo'
     cmd: echo {{.TASK_DIR}}
+
+  print-task-sources:
+    sources:
+      - sources-as-var/**/*.txt
+    cmds:
+      - printf "{{.TASK_SOURCES | sortAlpha | join "\n"}}\n"
+
+  print-task-sources-empty:
+    # No sources defined, yet we try to use TASK_SOURCES.
+    cmds:
+      - echo "{{.TASK_SOURCES}}"
