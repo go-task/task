@@ -1,0 +1,9 @@
+version: '3'
+
+tasks:
+  from_entrypoint:
+    cmds:
+      - echo "overridden from included"
+  from_included:
+    cmds:
+      - echo "from included"

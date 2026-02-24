@@ -1,0 +1,10 @@
+version: '3'
+
+overrides:
+  included:
+    taskfile: ./included/Taskfile.yml
+    dir: ./included
+  with_default: ./Taskfile.with_default.yml
+
+tasks:
+  from_entrypoint: echo "from entrypoint"
