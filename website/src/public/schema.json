@@ -318,6 +318,10 @@
         "map": {
           "type": "object",
           "description": "The value will be treated as a literal map type and stored in the variable"
+        },
+        "secret": {
+          "type": "boolean",
+          "description": "Marks the variable as secret. Secret values will be masked as ***** in command logs to prevent accidental exposure of sensitive information."
         }
       },
       "additionalProperties": false
