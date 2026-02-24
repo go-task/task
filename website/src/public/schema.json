@@ -633,6 +633,18 @@
                 "type": "object",
                 "properties": {
                   "name": { "type": "string" },
+                  "sh": {
+                    "type": "string",
+                    "description": "The value will be treated as a command and the output assigned to the variable"
+                  }
+                },
+                "required": ["name"],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string" },
                   "enum": { "type": "array", "items": { "type": "string" } }
                 },
                 "required": ["name"],

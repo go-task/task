@@ -655,7 +655,7 @@ tasks:
 #### `requires`
 
 - **Type**: `Requires`
-- **Description**: Required variables with optional enum validation
+- **Description**: Required variables with optional enum validation, or options read from `sh` script evaluation
 
 ```yaml
 tasks:
@@ -678,6 +678,19 @@ tasks:
     cmds:
       - echo "Deploying to {{.ENVIRONMENT}} with log level {{.LOG_LEVEL}}"
       - ./deploy.sh
+
+
+  # Requirements with options coming from a sh script
+  select-file:
+    requires:
+      vars:
+        - name: SELECTED_FILE
+          sh: ls
+        - name: DEPLOY_ENV
+          sh: get_envs.sh # Script should return \n separated vals
+    cmds:
+      - echo "You have selected file: {{.SELECTED_FILE}}"
+      - echo "You have selected env: {{.DEPLOY_ENV}}"
 ```
 
 See [Prompting for missing variables interactively](/docs/guide#prompting-for-missing-variables-interactively)
