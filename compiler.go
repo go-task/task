@@ -201,18 +201,21 @@ func (c *Compiler) ResetCache() {
 }
 
 func (c *Compiler) getSpecialVars(t *ast.Task, call *Call) (map[string]string, error) {
+	// Use filepath.ToSlash for all paths to ensure consistent forward slashes
+	// across platforms. This prevents issues with backslashes being interpreted
+	// as escape sequences when paths are used in shell commands on Windows.
 	allVars := map[string]string{
 		"TASK_EXE":         filepath.ToSlash(os.Args[0]),
-		"ROOT_TASKFILE":    filepathext.SmartJoin(c.Dir, c.Entrypoint),
-		"ROOT_DIR":         c.Dir,
-		"USER_WORKING_DIR": c.UserWorkingDir,
+		"ROOT_TASKFILE":    filepath.ToSlash(filepathext.SmartJoin(c.Dir, c.Entrypoint)),
+		"ROOT_DIR":         filepath.ToSlash(c.Dir),
+		"USER_WORKING_DIR": filepath.ToSlash(c.UserWorkingDir),
 		"TASK_VERSION":     version.GetVersion(),
 	}
 	if t != nil {
 		allVars["TASK"] = t.Task
-		allVars["TASK_DIR"] = filepathext.SmartJoin(c.Dir, t.Dir)
-		allVars["TASKFILE"] = t.Location.Taskfile
-		allVars["TASKFILE_DIR"] = filepath.Dir(t.Location.Taskfile)
+		allVars["TASK_DIR"] = filepath.ToSlash(filepathext.SmartJoin(c.Dir, t.Dir))
+		allVars["TASKFILE"] = filepath.ToSlash(t.Location.Taskfile)
+		allVars["TASKFILE_DIR"] = filepath.ToSlash(filepath.Dir(t.Location.Taskfile))
 	} else {
 		allVars["TASK"] = ""
 		allVars["TASK_DIR"] = ""

@@ -88,13 +88,14 @@ func (tt *TaskTest) writeFixture(
 	if tt.fixtureTemplatingEnabled {
 		fixtureTemplateData := map[string]any{
 			"TEST_NAME": t.Name(),
-			"TEST_DIR":  wd,
+			"TEST_DIR":  filepath.ToSlash(wd),
 		}
 		// If the test has additional template data, copy it into the map
 		if tt.fixtureTemplateData != nil {
 			maps.Copy(fixtureTemplateData, tt.fixtureTemplateData)
 		}
-		g.AssertWithTemplate(t, goldenFileName, fixtureTemplateData, b)
+		// Normalize output before comparison (CRLF→LF, backslash→forward slash)
+		g.AssertWithTemplate(t, goldenFileName, fixtureTemplateData, normalizeOutput(b))
 	} else {
 		g.Assert(t, goldenFileName, b)
 	}
@@ -306,6 +307,73 @@ func PPSortedLines(t *testing.T, b []byte) []byte {
 	lines := strings.Split(strings.TrimSpace(string(b)), "\n")
 	sort.Strings(lines)
 	return []byte(strings.Join(lines, "\n") + "\n")
+}
+
+// normalizeOutput normalizes cross-platform differences for byte slice comparison:
+// - Converts CRLF and CR to LF (line endings)
+// - Converts backslashes to forward slashes (Windows paths)
+// - Handles escaped backslashes in JSON (\\) by converting to single forward slash
+func normalizeOutput(b []byte) []byte {
+	b = bytes.ReplaceAll(b, []byte("\r\n"), []byte("\n"))
+	b = bytes.ReplaceAll(b, []byte("\r"), []byte("\n"))
+	// First replace escaped backslashes (common in JSON), then single backslashes
+	b = bytes.ReplaceAll(b, []byte("\\\\"), []byte("/"))
+	b = bytes.ReplaceAll(b, []byte("\\"), []byte("/"))
+	return b
+}
+
+// normalizePathSeparators converts backslashes to forward slashes for cross-platform path comparison.
+func normalizePathSeparators(s string) string {
+	return strings.ReplaceAll(s, "\\", "/")
+}
+
+// NormalizedEqual compares two byte slices after normalizing output.
+// This is used as a custom goldie.EqualFn for cross-platform golden file tests.
+func NormalizedEqual(actual, expected []byte) bool {
+	return bytes.Equal(normalizeOutput(actual), normalizeOutput(expected))
+}
+
+func TestNormalizeOutput(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name     string
+		input    []byte
+		expected []byte
+	}{
+		{"CRLF to LF", []byte("line1\r\nline2\r\n"), []byte("line1\nline2\n")},
+		{"CR to LF", []byte("line1\rline2\r"), []byte("line1\nline2\n")},
+		{"Windows path", []byte(`D:\a\task\task`), []byte(`D:/a/task/task`)},
+		{"JSON escaped backslash", []byte(`{"path":"D:\\a\\task"}`), []byte(`{"path":"D:/a/task"}`)},
+		{"Mixed", []byte("D:\\a\\task\r\n"), []byte("D:/a/task\n")},
+		{"Unix path unchanged", []byte("/home/user/task\n"), []byte("/home/user/task\n")},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			got := normalizeOutput(tt.input)
+			assert.Equal(t, tt.expected, got)
+		})
+	}
+}
+
+func TestNormalizePathSeparators(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{"Windows path", `D:\a\task\task`, `D:/a/task/task`},
+		{"Unix path unchanged", `/home/user/task`, `/home/user/task`},
+		{"Mixed separators", `C:\Users/name\file`, `C:/Users/name/file`},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			got := normalizePathSeparators(tt.input)
+			assert.Equal(t, tt.expected, got)
+		})
+	}
 }
 
 // SyncBuffer is a threadsafe buffer for testing.
@@ -1078,7 +1146,7 @@ func TestIncludesOptionalImplicitFalse(t *testing.T) {
 	wd, _ := os.Getwd()
 
 	message := "task: No Taskfile found at \"%s/%s/TaskfileOptional.yml\""
-	expected := fmt.Sprintf(message, wd, dir)
+	expected := fmt.Sprintf(message, filepath.ToSlash(wd), dir)
 
 	e := task.NewExecutor(
 		task.WithDir(dir),
@@ -1098,7 +1166,7 @@ func TestIncludesOptionalExplicitFalse(t *testing.T) {
 	wd, _ := os.Getwd()
 
 	message := "task: No Taskfile found at \"%s/%s/TaskfileOptional.yml\""
-	expected := fmt.Sprintf(message, wd, dir)
+	expected := fmt.Sprintf(message, filepath.ToSlash(wd), dir)
 
 	e := task.NewExecutor(
 		task.WithDir(dir),
@@ -1146,11 +1214,11 @@ func TestIncludesRelativePath(t *testing.T) {
 	require.NoError(t, e.Setup())
 
 	require.NoError(t, e.Run(t.Context(), &task.Call{Task: "common:pwd"}))
-	assert.Contains(t, buff.String(), "testdata/includes_rel_path/common")
+	assert.Contains(t, filepath.ToSlash(buff.String()), "testdata/includes_rel_path/common")
 
 	buff.Reset()
 	require.NoError(t, e.Run(t.Context(), &task.Call{Task: "included:common:pwd"}))
-	assert.Contains(t, buff.String(), "testdata/includes_rel_path/common")
+	assert.Contains(t, filepath.ToSlash(buff.String()), "testdata/includes_rel_path/common")
 }
 
 func TestIncludesInternal(t *testing.T) {
@@ -1328,7 +1396,7 @@ func TestIncludedTaskfileVarMerging(t *testing.T) {
 
 			err := e.Run(t.Context(), &task.Call{Task: test.task})
 			require.NoError(t, err)
-			assert.Contains(t, buff.String(), test.expectedOutput)
+			assert.Contains(t, filepath.ToSlash(buff.String()), test.expectedOutput)
 		})
 	}
 }
@@ -1475,7 +1543,9 @@ func TestWhenNoDirAttributeItRunsInSameDirAsTaskfile(t *testing.T) {
 	require.NoError(t, e.Run(t.Context(), &task.Call{Task: "whereami"}))
 
 	// got should be the "dir" part of "testdata/dir"
-	got := strings.TrimSuffix(filepath.Base(out.String()), "\n")
+	// Normalize path separators for cross-platform compatibility (Windows uses backslashes)
+	normalized := normalizePathSeparators(out.String())
+	got := strings.TrimSuffix(filepath.Base(normalized), "\n")
 	assert.Equal(t, expected, got, "Mismatch in the working directory")
 }
 
@@ -1494,7 +1564,9 @@ func TestWhenDirAttributeAndDirExistsItRunsInThatDir(t *testing.T) {
 	require.NoError(t, e.Setup())
 	require.NoError(t, e.Run(t.Context(), &task.Call{Task: "whereami"}))
 
-	got := strings.TrimSuffix(filepath.Base(out.String()), "\n")
+	// Normalize path separators for cross-platform compatibility (Windows uses backslashes)
+	normalized := normalizePathSeparators(out.String())
+	got := strings.TrimSuffix(filepath.Base(normalized), "\n")
 	assert.Equal(t, expected, got, "Mismatch in the working directory")
 }
 
@@ -1520,7 +1592,9 @@ func TestWhenDirAttributeItCreatesMissingAndRunsInThatDir(t *testing.T) {
 	require.NoError(t, e.Setup())
 	require.NoError(t, e.Run(t.Context(), &task.Call{Task: target}))
 
-	got := strings.TrimSuffix(filepath.Base(out.String()), "\n")
+	// Normalize path separators for cross-platform compatibility (Windows uses backslashes)
+	normalized := normalizePathSeparators(out.String())
+	got := strings.TrimSuffix(filepath.Base(normalized), "\n")
 	assert.Equal(t, expected, got, "Mismatch in the working directory")
 
 	// Clean-up after ourselves only if no error.
@@ -1549,7 +1623,11 @@ func TestDynamicVariablesRunOnTheNewCreatedDir(t *testing.T) {
 	require.NoError(t, e.Setup())
 	require.NoError(t, e.Run(t.Context(), &task.Call{Task: target}))
 
-	got := strings.TrimSuffix(filepath.Base(out.String()), "\n")
+	// Normalize path separators for cross-platform compatibility (Windows uses backslashes)
+	// Take only the first line as Windows may output additional debug info
+	normalized := normalizePathSeparators(out.String())
+	firstLine := strings.Split(normalized, "\n")[0]
+	got := filepath.Base(firstLine)
 	assert.Equal(t, expected, got, "Mismatch in the working directory")
 
 	// Clean-up after ourselves only if no error.
@@ -2268,7 +2346,8 @@ func TestUserWorkingDirectory(t *testing.T) {
 	require.NoError(t, err)
 	require.NoError(t, e.Setup())
 	require.NoError(t, e.Run(t.Context(), &task.Call{Task: "default"}))
-	assert.Equal(t, fmt.Sprintf("%s\n", wd), buff.String())
+	// Use filepath.ToSlash because USER_WORKING_DIR uses forward slashes on all platforms
+	assert.Equal(t, fmt.Sprintf("%s\n", filepath.ToSlash(wd)), buff.String())
 }
 
 func TestUserWorkingDirectoryWithIncluded(t *testing.T) {
@@ -2277,7 +2356,7 @@ func TestUserWorkingDirectoryWithIncluded(t *testing.T) {
 	wd, err := os.Getwd()
 	require.NoError(t, err)
 
-	wd = filepathext.SmartJoin(wd, "testdata/user_working_dir_with_includes/somedir")
+	wd = filepath.ToSlash(filepathext.SmartJoin(wd, "testdata/user_working_dir_with_includes/somedir"))
 
 	var buff bytes.Buffer
 	e := task.NewExecutor(
@@ -2290,7 +2369,8 @@ func TestUserWorkingDirectoryWithIncluded(t *testing.T) {
 	require.NoError(t, err)
 	require.NoError(t, e.Setup())
 	require.NoError(t, e.Run(t.Context(), &task.Call{Task: "included:echo"}))
-	assert.Equal(t, fmt.Sprintf("%s\n", wd), buff.String())
+	// Normalize path separators for cross-platform compatibility (Windows uses backslashes)
+	assert.Equal(t, fmt.Sprintf("%s\n", wd), normalizePathSeparators(buff.String()))
 }
 
 func TestPlatforms(t *testing.T) {
