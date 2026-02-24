@@ -8,10 +8,11 @@ import (
 
 // Dep is a task dependency
 type Dep struct {
-	Task   string
-	For    *For
-	Vars   *Vars
-	Silent bool
+	Task            string
+	For             *For
+	Vars            *Vars
+	Silent          bool
+	InheritOutdated bool
 }
 
 func (d *Dep) DeepCopy() *Dep {
@@ -19,10 +20,11 @@ func (d *Dep) DeepCopy() *Dep {
 		return nil
 	}
 	return &Dep{
-		Task:   d.Task,
-		For:    d.For.DeepCopy(),
-		Vars:   d.Vars.DeepCopy(),
-		Silent: d.Silent,
+		Task:            d.Task,
+		For:             d.For.DeepCopy(),
+		Vars:            d.Vars.DeepCopy(),
+		Silent:          d.Silent,
+		InheritOutdated: d.InheritOutdated,
 	}
 }
 
@@ -39,10 +41,11 @@ func (d *Dep) UnmarshalYAML(node *yaml.Node) error {
 
 	case yaml.MappingNode:
 		var taskCall struct {
-			Task   string
-			For    *For
-			Vars   *Vars
-			Silent bool
+			Task            string `yaml:"task"`
+			For             *For
+			Vars            *Vars
+			Silent          bool
+			InheritOutdated bool `yaml:"inherit_outdated"`
 		}
 		if err := node.Decode(&taskCall); err != nil {
 			return errors.NewTaskfileDecodeError(err, node)
@@ -51,6 +54,7 @@ func (d *Dep) UnmarshalYAML(node *yaml.Node) error {
 		d.For = taskCall.For
 		d.Vars = taskCall.Vars
 		d.Silent = taskCall.Silent
+		d.InheritOutdated = taskCall.InheritOutdated
 		return nil
 	}
 
