@@ -835,6 +835,8 @@ func TestForCmds(t *testing.T) {
 		{name: "loop-generates-glob"},
 		{name: "loop-vars"},
 		{name: "loop-vars-sh"},
+		{name: "loop-vars-ref"},
+		{name: "loop-vars-ref-as"},
 		{name: "loop-task"},
 		{name: "loop-task-as"},
 		{name: "loop-different-tasks"},

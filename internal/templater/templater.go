@@ -32,6 +32,12 @@ func (r *Cache) Err() error {
 }
 
 func ResolveRef(ref string, cache *Cache) any {
+	return ResolveRefWithExtra(ref, cache, nil)
+}
+
+// ResolveRefWithExtra resolves a ref string using the cache plus any
+// additional data (e.g. loop variables) provided in extra.
+func ResolveRefWithExtra(ref string, cache *Cache, extra map[string]any) any {
 	// If there is already an error, do nothing
 	if cache.err != nil {
 		return nil
@@ -42,15 +48,21 @@ func ResolveRef(ref string, cache *Cache) any {
 		cache.cacheMap = cache.Vars.ToCacheMap()
 	}
 
+	data := cache.cacheMap
+	if len(extra) > 0 {
+		data = maps.Clone(cache.cacheMap)
+		maps.Copy(data, extra)
+	}
+
 	if ref == "." {
-		return cache.cacheMap
+		return data
 	}
 	t, err := template.New("resolver").Funcs(templateFuncs).Parse(fmt.Sprintf("{{%s}}", ref))
 	if err != nil {
 		cache.err = err
 		return nil
 	}
-	val, err := t.Resolve(cache.cacheMap)
+	val, err := t.Resolve(data)
 	if err != nil {
 		cache.err = err
 		return nil
@@ -121,7 +133,7 @@ func ReplaceVar(v ast.Var, cache *Cache) ast.Var {
 
 func ReplaceVarWithExtra(v ast.Var, cache *Cache, extra map[string]any) ast.Var {
 	if v.Ref != "" {
-		return ast.Var{Value: ResolveRef(v.Ref, cache)}
+		return ast.Var{Value: ResolveRefWithExtra(v.Ref, cache, extra)}
 	}
 	return ast.Var{
 		Value: ReplaceWithExtra(v.Value, cache, extra),
