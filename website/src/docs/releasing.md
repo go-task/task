@@ -23,7 +23,7 @@ defined in the above GitHub Actions.
 ## Homebrew
 
 Goreleaser will automatically push a new commit to the
-[Formula/go-task.rb][gotaskrb] file in the [Homebrew tap][homebrewtap]
+[Casks/go-task.rb][gotaskrb] file in the [Homebrew tap][homebrewtap]
 repository to release the new version.
 
 ## npm
@@ -66,7 +66,7 @@ If you think its Task version is outdated, open an issue to let us know.
 
 [goreleaser]: https://goreleaser.com/
 [homebrewtap]: https://github.com/go-task/homebrew-tap
-[gotaskrb]: https://github.com/go-task/homebrew-tap/blob/main/Formula/go-task.rb
+[gotaskrb]: https://github.com/go-task/homebrew-tap/blob/main/Casks/go-task.rb
 [packagejson]: https://github.com/go-task/task/blob/main/package.json#L3
 [snappackage]: https://github.com/go-task/snap
 [snapcraftyaml]:

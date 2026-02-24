@@ -59,7 +59,7 @@ confidence.
 ### [Homebrew](https://brew.sh) ![macOS](https://img.shields.io/badge/MacOS-000000?logo=apple&logoColor=F0F0F0) ![Linux](https://img.shields.io/badge/Linux-FCC624?logo=linux&logoColor=black) {#homebrew}
 
 Task is available via our official Homebrew tap
-[[source](https://github.com/go-task/homebrew-tap/blob/main/Formula/go-task.rb)]:
+[[source](https://github.com/go-task/homebrew-tap/blob/main/Casks/go-task.rb)]:
 
 ```shell
 brew install go-task/tap/go-task
