@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/fatih/color"
@@ -86,7 +87,11 @@ var (
 	CACert              string
 	Cert                string
 	CertKey             string
+	RemoteHeaders       []string
 	Interactive         bool
+
+	// Store the config for access in WithFlags()
+	taskrcConfig *taskrcast.TaskRC
 )
 
 func init() {
@@ -109,6 +114,7 @@ func init() {
 	dir = cmp.Or(dir, filepath.Dir(entrypoint))
 
 	config, _ := taskrc.GetConfig(dir)
+	taskrcConfig = config
 	experiments.ParseWithConfig(dir, config)
 
 	// Parse the rest of the flags
@@ -174,6 +180,7 @@ func init() {
 		pflag.StringVar(&CACert, "cacert", getConfig(config, "REMOTE_CACERT", func() *string { return config.Remote.CACert }, ""), "Path to a custom CA certificate for HTTPS connections.")
 		pflag.StringVar(&Cert, "cert", getConfig(config, "REMOTE_CERT", func() *string { return config.Remote.Cert }, ""), "Path to a client certificate for HTTPS connections.")
 		pflag.StringVar(&CertKey, "cert-key", getConfig(config, "REMOTE_CERT_KEY", func() *string { return config.Remote.CertKey }, ""), "Path to a client certificate key for HTTPS connections.")
+		pflag.StringSliceVar(&RemoteHeaders, "header", nil, "HTTP header for remote requests in format 'host:Header-Name=value' (can be repeated).")
 	}
 	pflag.Parse()
 
@@ -247,6 +254,13 @@ func Validate() error {
 		return errors.New("task: --cert and --cert-key must be provided together")
 	}
 
+	// Validate header flags format
+	if len(RemoteHeaders) > 0 {
+		if _, err := parseHeaderFlags(RemoteHeaders); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -277,6 +291,37 @@ func (o *flagsOption) ApplyToExecutor(e *task.Executor) {
 		}
 	}
 
+	// Merge headers from config and CLI (CLI takes precedence)
+	headers := make(map[string]map[string]string)
+
+	// Start with config headers
+	if taskrcConfig != nil && taskrcConfig.Remote.Headers != nil {
+		for host, hostHeaders := range taskrcConfig.Remote.Headers {
+			headers[host] = make(map[string]string)
+			for key, value := range hostHeaders {
+				headers[host][key] = value
+			}
+		}
+	}
+
+	// Parse and merge CLI headers (these override config)
+	if len(RemoteHeaders) > 0 {
+		cliHeaders, err := parseHeaderFlags(RemoteHeaders)
+		if err != nil {
+			// This should have been caught in Validate(), but handle it anyway
+			log.Printf("Warning: failed to parse --header flags: %v\n", err)
+		} else {
+			for host, hostHeaders := range cliHeaders {
+				if headers[host] == nil {
+					headers[host] = make(map[string]string)
+				}
+				for key, value := range hostHeaders {
+					headers[host][key] = value
+				}
+			}
+		}
+	}
+
 	e.Options(
 		task.WithDir(dir),
 		task.WithEntrypoint(Entrypoint),
@@ -292,6 +337,7 @@ func (o *flagsOption) ApplyToExecutor(e *task.Executor) {
 		task.WithCACert(CACert),
 		task.WithCert(Cert),
 		task.WithCertKey(CertKey),
+		task.WithHeaders(headers),
 		task.WithWatch(Watch),
 		task.WithVerbose(Verbose),
 		task.WithSilent(Silent),
@@ -352,4 +398,50 @@ func getEnvAs[T any](envKey string) (T, bool) {
 		}
 	}
 	return zero, false
+}
+
+// parseHeaderFlags parses header flags in format "host:Header-Name=value" into a map structure.
+// Returns an error if any header is malformed.
+func parseHeaderFlags(headerFlags []string) (map[string]map[string]string, error) {
+	if len(headerFlags) == 0 {
+		return nil, nil
+	}
+
+	headers := make(map[string]map[string]string)
+	for _, header := range headerFlags {
+		// Split on first colon to get host and rest
+		colonIdx := strings.Index(header, ":")
+		if colonIdx == -1 {
+			return nil, errors.New("task: invalid --header format, expected 'host:Header-Name=value', got: " + header)
+		}
+
+		host := strings.TrimSpace(header[:colonIdx])
+		if host == "" {
+			return nil, errors.New("task: invalid --header format, host cannot be empty: " + header)
+		}
+
+		// Split on first equals to get header name and value
+		rest := header[colonIdx+1:]
+		equalIdx := strings.Index(rest, "=")
+		if equalIdx == -1 {
+			return nil, errors.New("task: invalid --header format, expected 'host:Header-Name=value', got: " + header)
+		}
+
+		headerName := strings.TrimSpace(rest[:equalIdx])
+		headerValue := rest[equalIdx+1:] // Don't trim value, might have intentional whitespace
+
+		if headerName == "" {
+			return nil, errors.New("task: invalid --header format, header name cannot be empty: " + header)
+		}
+
+		// Initialize map for this host if needed
+		if headers[host] == nil {
+			headers[host] = make(map[string]string)
+		}
+
+		// Add header to map
+		headers[host][headerName] = headerValue
+	}
+
+	return headers, nil
 }
