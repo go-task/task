@@ -201,19 +201,17 @@ func (node *GitNode) ResolveEntrypoint(entrypoint string) (string, error) {
 }
 
 func (node *GitNode) ResolveDir(dir string) (string, error) {
-	path, err := execext.ExpandLiteral(dir)
-	if err != nil {
-		return "", err
+	if len(dir) == 0 {
+		// Resolve to the current node.Dir().
+		return node.Dir(), nil
+	} else {
+		// Resolve include.Dir, relative to this node.Dir(), or absolute.
+		dir, err := execext.ExpandLiteral(dir)
+		if err != nil {
+			return "", err
+		}
+		return filepathext.SmartJoin(node.Dir(), dir), nil
 	}
-
-	if filepathext.IsAbs(path) {
-		return path, nil
-	}
-
-	// NOTE: Uses the directory of the entrypoint (Taskfile), not the current working directory
-	// This means that files are included relative to one another
-	entrypointDir := filepath.Dir(node.Dir())
-	return filepathext.SmartJoin(entrypointDir, path), nil
 }
 
 func (node *GitNode) CacheKey() string {

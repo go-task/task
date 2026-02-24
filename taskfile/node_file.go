@@ -18,7 +18,7 @@ type FileNode struct {
 }
 
 func NewFileNode(entrypoint, dir string, opts ...NodeOption) (*FileNode, error) {
-	// Find the entrypoint file
+	// Find the entrypoint file.
 	resolvedEntrypoint, err := fsext.Search(entrypoint, dir, DefaultTaskfiles)
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
@@ -33,7 +33,7 @@ func NewFileNode(entrypoint, dir string, opts ...NodeOption) (*FileNode, error) 
 		return nil, err
 	}
 
-	// Resolve the directory
+	// Resolve the directory.
 	resolvedDir, err := fsext.ResolveDir(entrypoint, resolvedEntrypoint, dir)
 	if err != nil {
 		return nil, err
@@ -59,38 +59,29 @@ func (node *FileNode) Read() ([]byte, error) {
 }
 
 func (node *FileNode) ResolveEntrypoint(entrypoint string) (string, error) {
-	// If the file is remote, we don't need to resolve the path
+	// Resolve to entrypoint without adjustment.
 	if isRemoteEntrypoint(entrypoint) {
 		return entrypoint, nil
 	}
-
-	path, err := execext.ExpandLiteral(entrypoint)
+	// Resolve relative to this nodes Taskfile location, or absolute.
+	entrypoint, err := execext.ExpandLiteral(entrypoint)
 	if err != nil {
 		return "", err
 	}
-
-	if filepathext.IsAbs(path) {
-		return path, nil
-	}
-
-	// NOTE: Uses the directory of the entrypoint (Taskfile), not the current working directory
-	// This means that files are included relative to one another
-	entrypointDir := filepath.Dir(node.entrypoint)
-	return filepathext.SmartJoin(entrypointDir, path), nil
+	dir := filepath.Dir(node.Location())
+	return filepathext.SmartJoin(dir, entrypoint), nil
 }
 
 func (node *FileNode) ResolveDir(dir string) (string, error) {
-	path, err := execext.ExpandLiteral(dir)
-	if err != nil {
-		return "", err
+	if len(dir) == 0 {
+		// Resolve to the current node.Dir().
+		return node.Dir(), nil
+	} else {
+		// Resolve include.Dir, relative to this node.Dir(), or absolute.
+		dir, err := execext.ExpandLiteral(dir)
+		if err != nil {
+			return "", err
+		}
+		return filepathext.SmartJoin(node.Dir(), dir), nil
 	}
-
-	if filepathext.IsAbs(path) {
-		return path, nil
-	}
-
-	// NOTE: Uses the directory of the entrypoint (Taskfile), not the current working directory
-	// This means that files are included relative to one another
-	entrypointDir := filepath.Dir(node.entrypoint)
-	return filepathext.SmartJoin(entrypointDir, path), nil
 }
