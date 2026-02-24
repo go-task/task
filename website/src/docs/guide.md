@@ -1233,6 +1233,71 @@ This is supported only for string variables.
 
 :::
 
+### Using variable references for enum values
+
+Instead of hardcoding enum values, you can reference a variable containing the
+allowed values. This is useful when you want to define allowed values once and
+reuse them, or when the values are computed dynamically.
+
+Use the `ref` key to reference a variable:
+
+```yaml
+version: '3'
+
+vars:
+  ALLOWED_ENVS: [dev, staging, prod]
+
+tasks:
+  deploy:
+    requires:
+      vars:
+        - name: ENV
+          enum:
+            ref: .ALLOWED_ENVS
+    cmds:
+      - echo "Deploying to {{.ENV}}"
+```
+
+You can also use template expressions to transform the value:
+
+```yaml
+version: '3'
+
+vars:
+  CONFIG:
+    sh: cat config.json
+
+tasks:
+  deploy:
+    requires:
+      vars:
+        - name: ENV
+          enum:
+            ref: .CONFIG | fromJson | .allowed_environments
+    cmds:
+      - echo "Deploying to {{.ENV}}"
+```
+
+Or generate values dynamically from a shell command:
+
+```yaml
+version: '3'
+
+vars:
+  AVAILABLE_SERVICES:
+    sh: ls services/
+
+tasks:
+  deploy:
+    requires:
+      vars:
+        - name: SERVICE
+          enum:
+            ref: .AVAILABLE_SERVICES | splitLines | compact
+    cmds:
+      - echo "Deploying {{.SERVICE}}"
+```
+
 ### Prompting for missing variables interactively
 
 If you want Task to prompt users for missing required variables instead of

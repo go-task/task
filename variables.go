@@ -99,6 +99,17 @@ func (e *Executor) compiledTask(call *Call, evaluateShVars bool) (*ast.Task, err
 	}
 
 	cache := &templater.Cache{Vars: vars}
+
+	// Resolve enum refs in requires only when evaluateShVars is true,
+	// since enum refs may depend on shell variables
+	requires := origTask.Requires
+	if evaluateShVars {
+		requires = origTask.Requires.DeepCopy()
+		if err := resolveEnumRefs(requires, cache); err != nil {
+			return nil, err
+		}
+	}
+
 	new := ast.Task{
 		Task:                 origTask.Task,
 		Label:                templater.Replace(origTask.Label, cache),
@@ -126,7 +137,7 @@ func (e *Executor) compiledTask(call *Call, evaluateShVars bool) (*ast.Task, err
 		Platforms:            origTask.Platforms,
 		If:                   templater.Replace(origTask.If, cache),
 		Location:             origTask.Location,
-		Requires:             origTask.Requires,
+		Requires:             requires,
 		Watch:                origTask.Watch,
 		Failfast:             origTask.Failfast,
 		Namespace:            origTask.Namespace,
@@ -428,6 +439,32 @@ func resolveMatrixRefs(matrix *ast.Matrix, cache *templater.Cache) error {
 				return fmt.Errorf("matrix reference %q must resolve to a list", row.Ref)
 			}
 		}
+	}
+	return nil
+}
+
+func resolveEnumRefs(requires *ast.Requires, cache *templater.Cache) error {
+	if requires == nil || len(requires.Vars) == 0 {
+		return nil
+	}
+	for _, v := range requires.Vars {
+		if v.Enum == nil || v.Enum.Ref == "" {
+			continue
+		}
+		resolved := templater.ResolveRef(v.Enum.Ref, cache)
+		arr, ok := resolved.([]any)
+		if !ok {
+			return fmt.Errorf("enum reference %q must resolve to a list", v.Enum.Ref)
+		}
+		strValues := make([]string, 0, len(arr))
+		for _, item := range arr {
+			s, ok := item.(string)
+			if !ok {
+				return fmt.Errorf("enum reference %q must contain only strings", v.Enum.Ref)
+			}
+			strValues = append(strValues, s)
+		}
+		v.Enum.Value = strValues
 	}
 	return nil
 }

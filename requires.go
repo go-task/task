@@ -81,7 +81,7 @@ func (e *Executor) promptDepsVars(calls []*Call) error {
 	e.promptedVars = ast.NewVars()
 
 	for _, v := range varsMap {
-		value, err := prompter.Prompt(v.Name, v.Enum)
+		value, err := prompter.Prompt(v.Name, getEnumValues(v.Enum))
 		if err != nil {
 			if errors.Is(err, input.ErrCancelled) {
 				return &errors.TaskCancelledByUserError{TaskName: "interactive prompt"}
@@ -120,7 +120,7 @@ func (e *Executor) promptTaskVars(t *ast.Task, call *Call) (bool, error) {
 	prompter := e.newPrompter()
 
 	for _, v := range missing {
-		value, err := prompter.Prompt(v.Name, v.Enum)
+		value, err := prompter.Prompt(v.Name, getEnumValues(v.Enum))
 		if err != nil {
 			if errors.Is(err, input.ErrCancelled) {
 				return false, &errors.TaskCancelledByUserError{TaskName: t.Name()}
@@ -168,7 +168,7 @@ func (e *Executor) areTaskRequiredVarsSet(t *ast.Task) error {
 	for i, v := range missing {
 		missingVars[i] = errors.MissingVar{
 			Name:          v.Name,
-			AllowedValues: v.Enum,
+			AllowedValues: getEnumValues(v.Enum),
 		}
 	}
 
@@ -187,11 +187,12 @@ func (e *Executor) areTaskRequiredVarsAllowedValuesSet(t *ast.Task) error {
 	for _, requiredVar := range t.Requires.Vars {
 		varValue, _ := t.Vars.Get(requiredVar.Name)
 
+		enumValues := getEnumValues(requiredVar.Enum)
 		value, isString := varValue.Value.(string)
-		if isString && requiredVar.Enum != nil && !slices.Contains(requiredVar.Enum, value) {
+		if isString && len(enumValues) > 0 && !slices.Contains(enumValues, value) {
 			notAllowedValuesVars = append(notAllowedValuesVars, errors.NotAllowedVar{
 				Value: value,
-				Enum:  requiredVar.Enum,
+				Enum:  enumValues,
 				Name:  requiredVar.Name,
 			})
 		}
@@ -205,4 +206,11 @@ func (e *Executor) areTaskRequiredVarsAllowedValuesSet(t *ast.Task) error {
 	}
 
 	return nil
+}
+
+func getEnumValues(e *ast.Enum) []string {
+	if e == nil {
+		return nil
+	}
+	return e.Value
 }
