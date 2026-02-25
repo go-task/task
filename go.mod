@@ -1,6 +1,6 @@
 module github.com/go-task/task/v3
 
-go 1.24.6
+go 1.25.0
 
 toolchain go1.26.0
 
@@ -33,7 +33,7 @@ require (
 	golang.org/x/sync v0.19.0
 	golang.org/x/term v0.40.0
 	mvdan.cc/sh/moreinterp v0.0.0-20260120230322-19def062a997
-	mvdan.cc/sh/v3 v3.12.1-0.20260124232039-e74afc18e65b
+	mvdan.cc/sh/v3 v3.12.1-0.20260225013636-df3056bf55a4
 )
 
 require (
