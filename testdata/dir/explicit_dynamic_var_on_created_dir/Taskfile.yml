@@ -1,0 +1,11 @@
+version: '3'
+
+tasks:
+  default:
+    dir: created
+    vars:
+      TEST_VAR:
+        sh: echo test > created && echo created
+    cmds:
+      - |
+        echo "/{{.TEST_VAR}}"
