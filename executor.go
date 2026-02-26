@@ -71,12 +71,13 @@ type (
 		UserWorkingDir     string
 		EnableVersionCheck bool
 
+		graph *ast.TaskExecutionGraph
+
 		fuzzyModel     *fuzzy.Model
 		fuzzyModelOnce sync.Once
 
 		promptedVars         *ast.Vars // vars collected via interactive prompts
 		concurrencySemaphore chan struct{}
-		taskCallCount        map[string]*int32
 		mkdirMutexMap        map[string]*sync.Mutex
 		executionHashes      map[string]context.Context
 		executionHashesMutex sync.Mutex
@@ -102,9 +103,9 @@ func NewExecutor(opts ...ExecutorOption) *Executor {
 		OutputStyle:          ast.Output{},
 		TaskSorter:           sort.AlphaNumericWithRootTasksFirst,
 		UserWorkingDir:       "",
+		graph:                ast.NewTaskExecutionGraph(),
 		fuzzyModel:           nil,
 		concurrencySemaphore: nil,
-		taskCallCount:        map[string]*int32{},
 		mkdirMutexMap:        map[string]*sync.Mutex{},
 		executionHashes:      map[string]context.Context{},
 		executionHashesMutex: sync.Mutex{},

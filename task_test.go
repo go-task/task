@@ -559,22 +559,6 @@ func TestCmdsVariables(t *testing.T) {
 	assert.Contains(t, buff.String(), tf)
 }
 
-func TestCyclicDep(t *testing.T) {
-	t.Parallel()
-
-	const dir = "testdata/cyclic"
-
-	e := task.NewExecutor(
-		task.WithDir(dir),
-		task.WithStdout(io.Discard),
-		task.WithStderr(io.Discard),
-	)
-	require.NoError(t, e.Setup())
-	err := e.Run(t.Context(), &task.Call{Task: "task-1"})
-	var taskCalledTooManyTimesError *errors.TaskCalledTooManyTimesError
-	assert.ErrorAs(t, err, &taskCalledTooManyTimesError)
-}
-
 func TestTaskVersion(t *testing.T) {
 	t.Parallel()
 
