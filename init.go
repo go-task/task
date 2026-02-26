@@ -9,10 +9,21 @@ import (
 	"github.com/go-task/task/v3/taskfile"
 )
 
-const defaultFilename = "Taskfile.yml"
+var defaultFilename = "Taskfile.yml"
+
+// SetDefaultFilename sets the default filename for testing purposes.
+func SetDefaultFilename(name string) {
+	defaultFilename = name
+}
 
 //go:embed taskfile/templates/default.yml
 var DefaultTaskfile string
+
+func init() {
+	if name := os.Getenv("TASKFILE_DEFAULT_NAME"); name != "" {
+		defaultFilename = name
+	}
+}
 
 // InitTaskfile creates a new Taskfile at path.
 //
