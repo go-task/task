@@ -76,6 +76,51 @@ func (e *Executor) CompiledTaskForTaskList(call *Call) (*ast.Task, error) {
 	}, nil
 }
 
+func taskToMap(t *ast.Task) map[string]any {
+	result := make(map[string]any)
+
+	// Convert sources to a slice of strings
+	if len(t.Sources) > 0 {
+		sources := make([]string, 0, len(t.Sources))
+		for _, glob := range t.Sources {
+			sources = append(sources, glob.Glob)
+		}
+		result["sources"] = sources
+	} else {
+		result["sources"] = []string{}
+	}
+
+	// Convert generates to a slice of strings
+	if len(t.Generates) > 0 {
+		generates := make([]string, 0, len(t.Generates))
+		for _, glob := range t.Generates {
+			generates = append(generates, glob.Glob)
+		}
+		result["generates"] = generates
+	} else {
+		result["generates"] = []string{}
+	}
+
+	// Add other commonly used properties
+	result["task"] = t.Task
+	result["dir"] = t.Dir
+	result["label"] = t.Label
+	result["desc"] = t.Desc
+	result["method"] = t.Method
+	result["prefix"] = t.Prefix
+	result["run"] = t.Run
+	result["silent"] = t.Silent
+	result["interactive"] = t.Interactive
+	result["internal"] = t.Internal
+	result["ignore_error"] = t.IgnoreError
+	result["watch"] = t.Watch
+	result["failfast"] = t.Failfast
+	result["aliases"] = t.Aliases
+	result["dotenv"] = t.Dotenv
+
+	return result
+}
+
 func (e *Executor) compiledTask(call *Call, evaluateShVars bool) (*ast.Task, error) {
 	origTask, err := e.GetTask(call)
 	if err != nil {
@@ -142,6 +187,12 @@ func (e *Executor) compiledTask(call *Call, evaluateShVars bool) (*ast.Task, err
 	if new.Prefix == "" {
 		new.Prefix = new.Task
 	}
+
+	// Add TASKS.self variable after basic properties are expanded
+	tasksMap := make(map[string]any)
+	tasksMap["self"] = taskToMap(&new)
+	vars.Set("TASKS", ast.Var{Value: tasksMap})
+	cache.ResetCache()
 
 	dotenvEnvs := ast.NewVars()
 	if len(new.Dotenv) > 0 {

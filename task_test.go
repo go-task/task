@@ -2657,6 +2657,29 @@ func TestWildcard(t *testing.T) {
 	}
 }
 
+func TestReferenceSelf(t *testing.T) {
+	t.Parallel()
+
+	const dir = "testdata/reference_self"
+
+	var buff bytes.Buffer
+	e := task.NewExecutor(
+		task.WithDir(dir),
+		task.WithStdout(&buff),
+		task.WithStderr(&buff),
+		task.WithForceAll(true),
+	)
+	require.NoError(t, e.Setup())
+	require.NoError(t, e.Run(t.Context(), &task.Call{Task: "default"}))
+
+	assert.Contains(t, buff.String(), `task: [check-sources-empty] echo []`)
+	assert.Contains(t, buff.String(), `[]`)
+	assert.Contains(t, buff.String(), `task: [check-generates] echo [a b *.txt]`)
+	assert.Contains(t, buff.String(), `[a b *.txt]`)
+	assert.Contains(t, buff.String(), `task: [check-generates-empty] echo []`)
+	assert.Contains(t, buff.String(), `[]`)
+}
+
 // enableExperimentForTest enables the experiment behind pointer e for the duration of test t and sub-tests,
 // with the experiment being restored to its previous state when tests complete.
 //
