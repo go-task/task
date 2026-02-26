@@ -153,13 +153,16 @@ func SearchPath(path string, possibleFilenames []string) (string, error) {
 // also check if the user ID of the directory changes and abort if it does.
 func SearchPathRecursively(path string, possibleFilenames []string) (string, error) {
 	paths, err := SearchNPathRecursively(path, possibleFilenames, 1)
-	if err != nil {
-		return "", err
+	if len(paths) > 0 {
+		// Regardless of the error, return the first possible filename.
+		return paths[0], nil
+	} else {
+		if err != nil {
+			return "", err
+		} else {
+			return "", os.ErrNotExist
+		}
 	}
-	if len(paths) == 0 {
-		return "", os.ErrNotExist
-	}
-	return paths[0], nil
 }
 
 // SearchNPathRecursively walks up the directory tree starting at the given
@@ -191,10 +194,10 @@ func SearchNPathRecursively(path string, possibleFilenames []string, n int) ([]s
 		// If the user id of the directory changes indicate a permission error, otherwise
 		// the calling code will infer an error condition based on the accumulated
 		// contents of paths.
-		if parentOwner != owner {
-			return paths, os.ErrPermission
-		} else if path == parentPath {
+		if path == parentPath {
 			return paths, nil
+		} else if parentOwner != owner {
+			return paths, os.ErrPermission
 		}
 
 		owner = parentOwner
