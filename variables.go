@@ -99,6 +99,14 @@ func (e *Executor) compiledTask(call *Call, evaluateShVars bool) (*ast.Task, err
 	}
 
 	cache := &templater.Cache{Vars: vars}
+	globber := func(globs []*ast.Glob) []*ast.Glob {
+		// Delays globbing until dynamic variables are available.
+		if evaluateShVars {
+			return templater.ReplaceGlobs(globs, cache)
+		} else {
+			return origTask.Sources
+		}
+	}
 	new := ast.Task{
 		Task:                 origTask.Task,
 		Label:                templater.Replace(origTask.Label, cache),
@@ -106,8 +114,8 @@ func (e *Executor) compiledTask(call *Call, evaluateShVars bool) (*ast.Task, err
 		Prompt:               templater.Replace(origTask.Prompt, cache),
 		Summary:              templater.Replace(origTask.Summary, cache),
 		Aliases:              origTask.Aliases,
-		Sources:              templater.ReplaceGlobs(origTask.Sources, cache),
-		Generates:            templater.ReplaceGlobs(origTask.Generates, cache),
+		Sources:              globber(origTask.Sources),
+		Generates:            globber(origTask.Generates),
 		Dir:                  templater.Replace(origTask.Dir, cache),
 		Set:                  origTask.Set,
 		Shopt:                origTask.Shopt,

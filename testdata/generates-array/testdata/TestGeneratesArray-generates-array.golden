@@ -1,0 +1,27 @@
+== direct ==
+bar.txt
+foo.txt
+== single ==
+foo.txt
+foo.yml
+== array ==
+bar.txt
+bar.yml
+foo.txt
+foo.yml
+== string ==
+bar.txt
+bar.yml
+foo.txt
+foo.yml
+== split ==
+bar.txt
+bar.yml
+foo.txt
+foo.yml
+== dynamic ==
+bar.txt
+foo.txt
+== dynamic-dir ==
+foo.txt
+foo.yml

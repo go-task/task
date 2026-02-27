@@ -1,0 +1,83 @@
+version: '3'
+
+method: none
+
+vars:
+  GLOB_SINGLE: 'foo.*'
+  GLOB_ARRAY: ['*.txt', '*.yml'] 
+  GLOB_STRING: '*.txt:*.yml' 
+  GLOB_SPLIT: '{{splitList ":" .GLOB_STRING}}'
+  GLOB_DYNAMIC:
+    sh: 'echo "[*.txt]"'
+  GLOB_DYNAMIC_DIR:
+    sh: 'echo "./"'
+tasks:
+  default:
+    cmds:
+      - cmd: touch foo.txt
+      - cmd: touch bar.txt
+      - cmd: touch foo.yml
+      - cmd: touch bar.yml
+      - task: direct
+      - task: single
+      - task: array
+      - task: string
+      - task: split
+      - task: dynamic
+      - task: dynamic-dir
+
+  direct:
+    sources:
+      - '*.txt'
+    cmds:
+      - echo "== {{.TASK}} =="
+      - for: sources 
+        cmd: echo {{.ITEM}}
+  single:
+    sources:
+      - '{{.GLOB_SINGLE}}'
+    cmds:
+      - echo "== {{.TASK}} =="
+      - for: sources 
+        cmd: echo {{.ITEM}}
+  array:
+    sources:
+      - '{{.GLOB_ARRAY}}'
+      - exclude: Taskfile.yml
+    cmds:
+      - echo "== {{.TASK}} =="
+      - for: sources 
+        cmd: echo {{.ITEM}}
+  string:
+    sources:
+      - '{{splitList ":" .GLOB_STRING}}'
+      - exclude: Taskfile.yml
+    cmds:
+      - echo "== {{.TASK}} =="
+      - for: sources 
+        cmd: echo {{.ITEM}}
+  split:
+    sources:
+      - '{{.GLOB_SPLIT}}'
+      - exclude: Taskfile.yml
+    cmds:
+      - echo "== {{.TASK}} =="
+      - for: sources 
+        cmd: echo {{.ITEM}}
+  dynamic:
+    sources:
+      - '{{.GLOB_DYNAMIC}}'
+      - exclude: Taskfile.yml
+    cmds:
+      - echo "== {{.TASK}} =="
+      - for: sources 
+        cmd: echo {{.ITEM}}
+  dynamic-dir:
+    sources:
+      - "{{.GLOB_DYNAMIC_DIR}}/foo*"
+      - exclude: Taskfile.yml
+    cmds:
+      - echo "== {{.TASK}} =="
+      - for: sources 
+        cmd: echo {{.ITEM}}
+ 
