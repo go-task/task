@@ -209,6 +209,13 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) error {
 		if err := e.runDeps(ctx, t); err != nil {
 			return err
 		}
+		if len(t.Deps) > 0 {
+			// Recompile the task after running dependencies to reload environment variables from dotenv files which may have been set up during the dependency execution
+			t, err = e.CompiledTask(call)
+			if err != nil {
+				return err
+			}
+		}
 
 		skipFingerprinting := e.ForceAll || (!call.Indirect && e.Force)
 		if !skipFingerprinting {
