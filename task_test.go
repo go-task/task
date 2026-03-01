@@ -1802,6 +1802,43 @@ func TestTaskDotenvWithVarName(t *testing.T) {
 	})
 }
 
+func TestTaskDotenvGenerated(t *testing.T) {
+	t.Parallel()
+
+	tt := []fileContentTest{
+		{
+			Dir:       "testdata/dotenv_task/generated",
+			Target:    "dotenv-dep-gen-default",
+			TrimSpace: true,
+			Files: map[string]string{
+				"dotenv-dep-gen-default.txt": "gen-bar",
+			},
+		},
+		{
+			Dir:       "testdata/dotenv_task/generated",
+			Target:    "dotenv-dep-gen-var",
+			TrimSpace: true,
+			Files: map[string]string{
+				"dotenv-dep-gen-var.txt": "var-bar",
+			},
+		},
+		{
+			Dir:       "testdata/dotenv_task/generated",
+			Target:    "dotenv-gen-seq",
+			TrimSpace: true,
+			Files: map[string]string{
+				"dotenv-gen-seq.txt": "seq-bar",
+			},
+		},
+	}
+	for _, test := range tt {
+		t.Run("", func(t *testing.T) {
+			t.Parallel()
+			test.Run(t)
+		})
+	}
+}
+
 func TestExitImmediately(t *testing.T) {
 	t.Parallel()
 
