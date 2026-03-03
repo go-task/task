@@ -1,0 +1,32 @@
+version: '3'
+
+method: none
+
+tasks:
+
+  _ref:
+    sources: ["a", "b", "*.txt"]
+    generates: ["a", "b", "*.txt"]
+    cmd: ":"
+
+  _ref-empty:
+    cmd: ":"
+
+  check-sources:
+    cmd: echo {{ .TASKS._ref.sources }}
+
+  check-sources-empty:
+    cmd: echo {{ (index .TASKS "_ref-empty").sources }}
+
+  check-generates:
+    cmd: echo {{ .TASKS._ref.generates }}
+
+  check-generates-empty:
+    cmd: echo {{ (index .TASKS "_ref-empty").generates }}
+
+  default:
+    cmds:
+      - task: check-sources
+      - task: check-sources-empty
+      - task: check-generates
+      - task: check-generates-empty
