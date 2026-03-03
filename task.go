@@ -349,6 +349,8 @@ func (e *Executor) runDeferred(t *ast.Task, call *Call, i int, vars *ast.Vars, d
 		extra["EXIT_CODE"] = fmt.Sprintf("%d", *deferredExitCode)
 	}
 
+	// Resolve template with secrets masked for logging
+	cmd.LogCmd = templater.MaskSecretsWithExtra(cmd.Cmd, vars, extra)
 	cmd.Cmd = templater.ReplaceWithExtra(cmd.Cmd, cache, extra)
 	cmd.Task = templater.ReplaceWithExtra(cmd.Task, cache, extra)
 	cmd.If = templater.ReplaceWithExtra(cmd.If, cache, extra)
@@ -393,7 +395,7 @@ func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call *Call, i in
 		}
 
 		if e.Verbose || (!call.Silent && !cmd.Silent && !t.IsSilent() && !e.Taskfile.Silent && !e.Silent) {
-			e.Logger.Errf(logger.Green, "task: [%s] %s\n", t.Name(), cmd.Cmd)
+			e.Logger.Errf(logger.Green, "task: [%s] %s\n", t.Name(), cmd.LogCmd)
 		}
 
 		if e.Dry {
