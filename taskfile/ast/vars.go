@@ -187,6 +187,19 @@ func (vs *Vars) UnmarshalYAML(node *yaml.Node) error {
 			keyNode := node.Content[i]
 			valueNode := node.Content[i+1]
 
+			if valueNode.Kind == yaml.AliasNode &&
+				valueNode.Alias.Kind == yaml.MappingNode {
+				// Recursively decode the alias to a map of vars.
+				var vars Vars
+				if err := valueNode.Decode(&vars); err != nil {
+					return errors.NewTaskfileDecodeError(err, node)
+				}
+				for k, v := range vars.All() {
+					vs.Set(k, v)
+				}
+				continue
+			}
+
 			// Decode the value node into a Task struct
 			var v Var
 			if err := valueNode.Decode(&v); err != nil {
