@@ -247,15 +247,13 @@ func printTaskRequires(l *logger.Logger, t *ast.Task) {
 	l.Outf(logger.Default, "  vars:\n")
 
 	for _, v := range t.Requires.Vars {
-		// If the variable has enum constraints, format accordingly
-		if len(v.Enum) > 0 {
+		if v.Enum != nil && len(v.Enum.Value) > 0 {
 			l.Outf(logger.Yellow, "    - %s:\n", v.Name)
 			l.Outf(logger.Yellow, "        enum:\n")
-			for _, enumValue := range v.Enum {
+			for _, enumValue := range v.Enum.Value {
 				l.Outf(logger.Yellow, "          - %s\n", enumValue)
 			}
 		} else {
-			// Simple required variable
 			l.Outf(logger.Yellow, "    - %s\n", v.Name)
 		}
 	}
