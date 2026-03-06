@@ -80,21 +80,20 @@ nfpms:
       - src: completion/zsh/_task
         dst: /usr/local/share/zsh/site-functions/_task
 
-brews:
+homebrew_casks:
   - name: go-task
     description: A fast, cross-platform build tool inspired by Make, designed for modern workflows.
-    license: MIT
     homepage: https://taskfile.dev
-    directory: Formula
+    binaries:
+      - task
+    completions:
+      bash: completion/bash/task.bash
+      zsh: completion/zsh/_task
+      fish: completion/fish/task.fish
+    directory: Casks
     repository:
       owner: go-task
       name: homebrew-tap
-    test: system "#{bin}/task", "--help"
-    install: |-
-      bin.install "task"
-      bash_completion.install "completion/bash/task.bash" => "task"
-      zsh_completion.install "completion/zsh/_task" => "_task"
-      fish_completion.install "completion/fish/task.fish"
     commit_author:
       name: task-bot
       email: 106601941+task-bot@users.noreply.github.com
