@@ -2672,3 +2672,241 @@ func enableExperimentForTest(t *testing.T, e *experiments.Experiment, val int) {
 	}
 	t.Cleanup(func() { *e = prev })
 }
+
+func TestRemoteTaskfilesWithHeaders(t *testing.T) {
+	enableExperimentForTest(t, &experiments.RemoteTaskfiles, 1)
+
+	dir := t.TempDir()
+
+	// Create a test server that checks for headers
+	receivedHeaders := make(map[string]string)
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Store received headers (including potentially forbidden ones)
+		receivedHeaders["Authorization"] = r.Header.Get("Authorization")
+		receivedHeaders["X-Custom-Header"] = r.Header.Get("X-Custom-Header")
+		receivedHeaders["Host"] = r.Header.Get("Host")
+		receivedHeaders["Content-Length"] = r.Header.Get("Content-Length")
+		receivedHeaders["Transfer-Encoding"] = r.Header.Get("Transfer-Encoding")
+		receivedHeaders["Connection"] = r.Header.Get("Connection")
+
+		// Serve a simple Taskfile
+		taskfileContent := `version: '3'
+
+tasks:
+  test:
+    cmds:
+      - echo "Headers received successfully"
+`
+		w.Header().Set("Content-Type", "text/yaml")
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(taskfileContent))
+	}))
+	defer srv.Close()
+
+	parsedURL, err := url.Parse(srv.URL)
+	require.NoError(t, err)
+	testHost := parsedURL.Host
+
+	t.Run("headers from config", func(t *testing.T) {
+		// Clear received headers
+		receivedHeaders = make(map[string]string)
+
+		// Pass headers directly since taskrc is loaded during init, not during setup
+		configHeaders := map[string]map[string]string{
+			testHost: {
+				"Authorization":   "Bearer test-token-123",
+				"X-Custom-Header": "custom-value",
+			},
+		}
+
+		var buff SyncBuffer
+		e := task.NewExecutor(
+			task.WithDir(dir),
+			task.WithEntrypoint(srv.URL+"/Taskfile.yml"),
+			task.WithStdout(&buff),
+			task.WithStderr(&buff),
+			task.WithInsecure(true),
+			task.WithAssumeYes(true),
+			task.WithDownload(true),
+			task.WithHeaders(configHeaders),
+		)
+
+		require.NoError(t, e.Setup())
+		require.NoError(t, e.Run(t.Context(), &task.Call{Task: "test"}))
+
+		// Verify headers were sent
+		assert.Equal(t, "Bearer test-token-123", receivedHeaders["Authorization"])
+		assert.Equal(t, "custom-value", receivedHeaders["X-Custom-Header"])
+	})
+
+	t.Run("headers with environment variable expansion", func(t *testing.T) {
+		// Clear received headers
+		receivedHeaders = make(map[string]string)
+
+		// Set environment variables
+		t.Setenv("TEST_TOKEN", "env-token-456")
+		t.Setenv("CUSTOM_VALUE", "env-custom")
+
+		// Pass headers with env var templates - they'll be expanded during HTTP request
+		configHeaders := map[string]map[string]string{
+			testHost: {
+				"Authorization":   "Bearer {{.TEST_TOKEN}}",
+				"X-Custom-Header": "{{.CUSTOM_VALUE}}",
+			},
+		}
+
+		var buff SyncBuffer
+		e := task.NewExecutor(
+			task.WithDir(dir),
+			task.WithEntrypoint(srv.URL+"/Taskfile.yml"),
+			task.WithStdout(&buff),
+			task.WithStderr(&buff),
+			task.WithInsecure(true),
+			task.WithAssumeYes(true),
+			task.WithDownload(true),
+			task.WithHeaders(configHeaders),
+		)
+
+		require.NoError(t, e.Setup())
+		require.NoError(t, e.Run(t.Context(), &task.Call{Task: "test"}))
+
+		// Verify expanded env vars were sent
+		assert.Equal(t, "Bearer env-token-456", receivedHeaders["Authorization"])
+		assert.Equal(t, "env-custom", receivedHeaders["X-Custom-Header"])
+	})
+
+	t.Run("headers passed via executor options", func(t *testing.T) {
+		// Clear received headers
+		receivedHeaders = make(map[string]string)
+
+		// Pass headers directly via WithHeaders
+		customHeaders := map[string]map[string]string{
+			testHost: {
+				"Authorization":   "Bearer cli-token-override",
+				"X-Custom-Header": "cli-custom",
+			},
+		}
+
+		var buff SyncBuffer
+		e := task.NewExecutor(
+			task.WithDir(dir),
+			task.WithEntrypoint(srv.URL+"/Taskfile.yml"),
+			task.WithStdout(&buff),
+			task.WithStderr(&buff),
+			task.WithInsecure(true),
+			task.WithAssumeYes(true),
+			task.WithDownload(true),
+			task.WithHeaders(customHeaders),
+		)
+
+		require.NoError(t, e.Setup())
+		require.NoError(t, e.Run(t.Context(), &task.Call{Task: "test"}))
+
+		// Verify headers were sent
+		assert.Equal(t, "Bearer cli-token-override", receivedHeaders["Authorization"])
+		assert.Equal(t, "cli-custom", receivedHeaders["X-Custom-Header"])
+	})
+
+	t.Run("headers only sent to matching host", func(t *testing.T) {
+		// Clear received headers
+		receivedHeaders = make(map[string]string)
+
+		// Pass headers for a different host
+		mismatchedHeaders := map[string]map[string]string{
+			"different-host.com": {
+				"Authorization": "Bearer should-not-be-sent",
+			},
+		}
+
+		var buff SyncBuffer
+		e := task.NewExecutor(
+			task.WithDir(dir),
+			task.WithEntrypoint(srv.URL+"/Taskfile.yml"),
+			task.WithStdout(&buff),
+			task.WithStderr(&buff),
+			task.WithInsecure(true),
+			task.WithAssumeYes(true),
+			task.WithDownload(true),
+			task.WithHeaders(mismatchedHeaders),
+		)
+
+		require.NoError(t, e.Setup())
+		require.NoError(t, e.Run(t.Context(), &task.Call{Task: "test"}))
+
+		// Verify headers were NOT sent (host mismatch)
+		assert.Empty(t, receivedHeaders["Authorization"])
+	})
+
+	t.Run("forbidden headers are blocked", func(t *testing.T) {
+		// Clear received headers
+		receivedHeaders = make(map[string]string)
+
+		// Try to set forbidden headers along with a valid one
+		forbiddenHeaders := map[string]map[string]string{
+			testHost: {
+				"Host":              "evil.com",
+				"Content-Length":    "999",
+				"Transfer-Encoding": "chunked",
+				"Connection":        "close",
+				"Authorization":     "Bearer should-be-sent",
+			},
+		}
+
+		var buff SyncBuffer
+		e := task.NewExecutor(
+			task.WithDir(dir),
+			task.WithEntrypoint(srv.URL+"/Taskfile.yml"),
+			task.WithStdout(&buff),
+			task.WithStderr(&buff),
+			task.WithInsecure(true),
+			task.WithAssumeYes(true),
+			task.WithDownload(true),
+			task.WithHeaders(forbiddenHeaders),
+		)
+
+		require.NoError(t, e.Setup())
+		require.NoError(t, e.Run(t.Context(), &task.Call{Task: "test"}))
+
+		// Verify the valid header was sent
+		assert.Equal(t, "Bearer should-be-sent", receivedHeaders["Authorization"])
+
+		// Verify forbidden headers were NOT set to our malicious values
+		assert.NotEqual(t, "evil.com", receivedHeaders["Host"], "Host header should not be overridable")
+		assert.NotEqual(t, "999", receivedHeaders["Content-Length"], "Content-Length header should not be overridable")
+		assert.NotEqual(t, "chunked", receivedHeaders["Transfer-Encoding"], "Transfer-Encoding header should not be overridable")
+	})
+
+	t.Run("headers with control characters are blocked", func(t *testing.T) {
+		// Clear received headers
+		receivedHeaders = make(map[string]string)
+
+		// Try to inject additional headers via control characters (header injection attack)
+		maliciousHeaders := map[string]map[string]string{
+			testHost: {
+				"Authorization":   "Bearer token\r\nX-Injected: malicious",
+				"X-Custom-Header": "this-should-work",
+			},
+		}
+
+		var buff SyncBuffer
+		e := task.NewExecutor(
+			task.WithDir(dir),
+			task.WithEntrypoint(srv.URL+"/Taskfile.yml"),
+			task.WithStdout(&buff),
+			task.WithStderr(&buff),
+			task.WithInsecure(true),
+			task.WithAssumeYes(true),
+			task.WithDownload(true),
+			task.WithHeaders(maliciousHeaders),
+		)
+
+		require.NoError(t, e.Setup())
+		require.NoError(t, e.Run(t.Context(), &task.Call{Task: "test"}))
+
+		// Verify the valid header was sent
+		assert.Equal(t, "this-should-work", receivedHeaders["X-Custom-Header"])
+
+		// Verify the header with control characters was NOT sent
+		assert.Empty(t, receivedHeaders["Authorization"], "Header with control characters should be blocked")
+	})
+}
