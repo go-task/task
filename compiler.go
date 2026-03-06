@@ -22,6 +22,7 @@ type Compiler struct {
 	Dir            string
 	Entrypoint     string
 	UserWorkingDir string
+	RootDir        string
 
 	TaskfileEnv  *ast.Vars
 	TaskfileVars *ast.Vars
@@ -203,8 +204,8 @@ func (c *Compiler) ResetCache() {
 func (c *Compiler) getSpecialVars(t *ast.Task, call *Call) (map[string]string, error) {
 	allVars := map[string]string{
 		"TASK_EXE":         filepath.ToSlash(os.Args[0]),
-		"ROOT_TASKFILE":    filepathext.SmartJoin(c.Dir, c.Entrypoint),
-		"ROOT_DIR":         c.Dir,
+		"ROOT_TASKFILE":    filepathext.SmartJoin(c.RootDir, c.Entrypoint),
+		"ROOT_DIR":         c.RootDir,
 		"USER_WORKING_DIR": c.UserWorkingDir,
 		"TASK_VERSION":     version.GetVersion(),
 	}
