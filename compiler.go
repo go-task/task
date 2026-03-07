@@ -202,11 +202,13 @@ func (c *Compiler) ResetCache() {
 
 func (c *Compiler) getSpecialVars(t *ast.Task, call *Call) (map[string]string, error) {
 	allVars := map[string]string{
-		"TASK_EXE":         filepath.ToSlash(os.Args[0]),
-		"ROOT_TASKFILE":    filepathext.SmartJoin(c.Dir, c.Entrypoint),
-		"ROOT_DIR":         c.Dir,
-		"USER_WORKING_DIR": c.UserWorkingDir,
-		"TASK_VERSION":     version.GetVersion(),
+		"TASK_EXE":            filepath.ToSlash(os.Args[0]),
+		"ROOT_TASKFILE":       filepathext.SmartJoin(c.Dir, c.Entrypoint),
+		"ROOT_DIR":            c.Dir,
+		"USER_WORKING_DIR":    c.UserWorkingDir,
+		"TASK_VERSION":        version.GetVersion(),
+		"PATH_LIST_SEPARATOR": os.PathListSeparator,
+		"FILE_PATH_SEPARATOR": os.PathSeparator,
 	}
 	if t != nil {
 		allVars["TASK"] = t.Task
