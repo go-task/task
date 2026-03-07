@@ -487,6 +487,104 @@ func TestStatusChecksum(t *testing.T) { // nolint:paralleltest // cannot run in 
 	}
 }
 
+// TestStatusTimestamp is a regression test for https://github.com/go-task/task/issues/1230.
+// When using method: timestamp, deleting a generated file should cause the task to re-run,
+// not be skipped because the timestamp file is still present.
+func TestStatusTimestamp(t *testing.T) { // nolint:paralleltest // cannot run in parallel
+	const dir = "testdata/timestamp"
+
+	generatedFile := filepathext.SmartJoin(dir, "generated.txt")
+	tempDir := task.TempDir{
+		Remote:      filepathext.SmartJoin(dir, ".task"),
+		Fingerprint: filepathext.SmartJoin(dir, ".task"),
+	}
+
+	// Clean up any state from previous runs.
+	_ = os.Remove(generatedFile)
+	_ = os.RemoveAll(filepathext.SmartJoin(dir, ".task"))
+
+	var buff bytes.Buffer
+	e := task.NewExecutor(
+		task.WithDir(dir),
+		task.WithStdout(&buff),
+		task.WithStderr(&buff),
+		task.WithTempDir(tempDir),
+	)
+	require.NoError(t, e.Setup())
+
+	// First run: task should execute and create generated.txt.
+	require.NoError(t, e.Run(t.Context(), &task.Call{Task: "build"}))
+	_, err := os.Stat(generatedFile)
+	require.NoError(t, err, "generated.txt should exist after first run")
+	buff.Reset()
+
+	// Second run: task should be up to date.
+	require.NoError(t, e.Run(t.Context(), &task.Call{Task: "build"}))
+	assert.Equal(t, `task: Task "build" is up to date`+"\n", buff.String())
+	buff.Reset()
+
+	// Delete the generated file (simulate a clean), but leave the timestamp file.
+	require.NoError(t, os.Remove(generatedFile))
+	_, err = os.Stat(generatedFile)
+	require.Error(t, err, "generated.txt should be gone")
+
+	// Third run: task MUST re-run because generated.txt is missing.
+	// This is the regression: previously the task was incorrectly skipped.
+	require.NoError(t, e.Run(t.Context(), &task.Call{Task: "build"}))
+	assert.NotContains(t, buff.String(), "is up to date", "task should re-run when generated file is missing")
+	_, err = os.Stat(generatedFile)
+	require.NoError(t, err, "generated.txt should be recreated after third run")
+}
+
+// TestStatusChecksumMissingGenerated is a regression test for https://github.com/go-task/task/issues/1230.
+// When using method: checksum, deleting a generated file should cause the task to re-run,
+// not be skipped because the checksum file still matches.
+func TestStatusChecksumMissingGenerated(t *testing.T) { // nolint:paralleltest // cannot run in parallel
+	const dir = "testdata/checksum"
+
+	generatedFile := filepathext.SmartJoin(dir, "generated.txt")
+	tempDir := task.TempDir{
+		Remote:      filepathext.SmartJoin(dir, ".task"),
+		Fingerprint: filepathext.SmartJoin(dir, ".task"),
+	}
+
+	// Clean up any state from previous runs.
+	_ = os.Remove(generatedFile)
+	_ = os.RemoveAll(filepathext.SmartJoin(dir, ".task"))
+
+	var buff bytes.Buffer
+	e := task.NewExecutor(
+		task.WithDir(dir),
+		task.WithStdout(&buff),
+		task.WithStderr(&buff),
+		task.WithTempDir(tempDir),
+	)
+	require.NoError(t, e.Setup())
+
+	// First run: task should execute and create generated.txt.
+	require.NoError(t, e.Run(t.Context(), &task.Call{Task: "build"}))
+	_, err := os.Stat(generatedFile)
+	require.NoError(t, err, "generated.txt should exist after first run")
+	buff.Reset()
+
+	// Second run: task should be up to date.
+	require.NoError(t, e.Run(t.Context(), &task.Call{Task: "build"}))
+	assert.Equal(t, `task: Task "build" is up to date`+"\n", buff.String())
+	buff.Reset()
+
+	// Delete the generated file (simulate a clean), but leave the checksum file.
+	require.NoError(t, os.Remove(generatedFile))
+	_, err = os.Stat(generatedFile)
+	require.Error(t, err, "generated.txt should be gone")
+
+	// Third run: task MUST re-run because generated.txt is missing.
+	// This is the regression: previously the task was incorrectly skipped.
+	require.NoError(t, e.Run(t.Context(), &task.Call{Task: "build"}))
+	assert.NotContains(t, buff.String(), "is up to date", "task should re-run when generated file is missing")
+	_, err = os.Stat(generatedFile)
+	require.NoError(t, err, "generated.txt should be recreated after third run")
+}
+
 func TestStatusVariables(t *testing.T) {
 	t.Parallel()
 
