@@ -115,7 +115,13 @@ func (c *Compiler) getVariables(t *ast.Task, call *Call, evaluateShVars bool) (*
 		}
 	}
 	// Resolve any outstanding 'Ref' values in global vars (esp. globals from imported Taskfiles).
-	c.TaskfileVars = templater.ReplaceVars(c.TaskfileVars, &templater.Cache{Vars: result})
+	// Only process variables with Ref set to avoid clobbering already-resolved sh: variables.
+	cache := &templater.Cache{Vars: result}
+	for k, v := range c.TaskfileVars.All() {
+		if v.Ref != "" {
+			c.TaskfileVars.Set(k, ast.Var{Value: templater.ResolveRef(v.Ref, cache)})
+		}
+	}
 
 	if t != nil {
 		for k, v := range t.IncludeVars.All() {

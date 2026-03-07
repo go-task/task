@@ -946,6 +946,32 @@ func TestReference(t *testing.T) {
 	}
 }
 
+func TestShVarWithIncludes(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name string
+		call string
+	}{
+		{
+			name: "sh var not clobbered by includes",
+			call: "default",
+		},
+	}
+
+	for _, test := range tests {
+		NewExecutorTest(t,
+			WithName(test.name),
+			WithExecutorOptions(
+				task.WithDir("testdata/var_sh_with_includes"),
+				task.WithSilent(true),
+				task.WithForce(true),
+			),
+			WithTask(cmp.Or(test.call, "default")),
+		)
+	}
+}
+
 func TestVarInheritance(t *testing.T) {
 	enableExperimentForTest(t, &experiments.EnvPrecedence, 1)
 	tests := []struct {
