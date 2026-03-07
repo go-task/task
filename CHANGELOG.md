@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v3.49.0 - 2026-03-07
 
 - Fixed included Taskfiles with `watch: true` not triggering watch mode when
   called from the root Taskfile (#2686, #1763 by @trulede).
