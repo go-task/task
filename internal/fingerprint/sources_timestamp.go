@@ -37,6 +37,7 @@ func (checker *TimestampChecker) IsUpToDate(t *ast.Task) (bool, error) {
 	// file means the task must run regardless of timestamps.
 	if len(t.Generates) > 0 {
 		for _, g := range t.Generates {
+			// Exclusion patterns don't represent output files; skip them.
 			if g.Negate {
 				continue
 			}
