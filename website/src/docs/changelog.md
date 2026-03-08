@@ -8,6 +8,11 @@ editLink: false
 
 ::: v-pre
 
+## v3.49.1 - 2026-03-08
+
+* Reverted #2632 for now, which caused some regressions. That change will be
+  reworked (#2720, #2722, #2723).
+
 ## v3.49.0 - 2026-03-07
 
 - Fixed included Taskfiles with `watch: true` not triggering watch mode when
