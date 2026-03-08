@@ -543,6 +543,21 @@ tasks:
       - go build ./...
 ```
 
+#### `method`
+
+- **Type**: `string`
+- **Default**: `checksum`
+- **Options**: `checksum`, `timestamp`, `none`
+- **Description**: Method for checking if the task is up-to-date. Refer to the `method` root property for details.
+
+```yaml
+tasks:
+  build:
+    sources:
+      - go.mod
+    method: timestamp
+```
+
 #### `sources`
 
 - **Type**: `[]string` or `[]Glob`
