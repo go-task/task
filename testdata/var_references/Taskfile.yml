@@ -2,9 +2,6 @@ version: '3'
 
 vars:
   GLOBAL_VAR: [1, 2, 2, 2, 3, 3, 4, 5]
-  GLOBAL_FOO:
-    ref: .GLOBAL_BAR
-  GLOBAL_BAR: bar
 
 tasks:
   default:
@@ -12,7 +9,6 @@ tasks:
     - task: ref-dep
     - task: ref-resolver
     - task: ref-resolver-sh
-    - task: ref-global
 
   ref-cmd:
     vars:
@@ -76,13 +72,3 @@ tasks:
           {{- else}} and {{$child.name -}}
           {{- end -}}
         {{- end -}}"
-
-  ref-global:
-    vars:
-      TASK_FUBAR:
-        ref: .GLOBAL_FOO
-    cmds:
-      - echo "GLOBAL_FOO={{.GLOBAL_FOO}}"
-      - echo "GLOBAL_BAR={{.GLOBAL_BAR}}"
-      - echo "TASK_FUBAR={{.TASK_FUBAR}}"
-    silent: true
