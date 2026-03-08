@@ -161,10 +161,11 @@ func (e *Executor) compiledTask(call *Call, evaluateShVars bool) (*ast.Task, err
 			}
 		}
 	}
+	dotenvEnvs = resolveDotenvVars(dotenvEnvs, cache)
 
 	new.Env = ast.NewVars()
 	new.Env.Merge(templater.ReplaceVars(e.Taskfile.Env, cache), nil)
-	new.Env.Merge(templater.ReplaceVars(dotenvEnvs, cache), nil)
+	new.Env.Merge(dotenvEnvs, nil)
 	new.Env.Merge(templater.ReplaceVars(origTask.Env, cache), nil)
 	if evaluateShVars {
 		for k, v := range new.Env.All() {
@@ -463,4 +464,24 @@ func product(matrix *ast.Matrix) []map[string]any {
 	}
 
 	return result
+}
+
+func resolveDotenvVars(dotenvEnvs *ast.Vars, cache *templater.Cache) *ast.Vars {
+	if dotenvEnvs == nil || dotenvEnvs.Len() == 0 {
+		return dotenvEnvs
+	}
+
+	resolved := dotenvEnvs
+	for range dotenvEnvs.Len() {
+		next := templater.ReplaceVarsWithExtra(resolved, cache, resolved.ToCacheMap())
+		if next == nil {
+			return resolved
+		}
+		if fmt.Sprint(next.All()) == fmt.Sprint(resolved.All()) {
+			return next
+		}
+		resolved = next
+	}
+
+	return resolved
 }
