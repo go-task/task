@@ -33,7 +33,7 @@ A single package manager still require manual steps:
 
 * Snapcraft:
   * Update the `version:` field on [snapcraft.yaml][snapcraftyaml]
-  <!-- * Trigger a new build on [Snapcraft -> Builds][snapcraftbuilds] -->
+  * Trigger a new build on [Snapcraft -> Builds][snapcraftbuilds]
   * Once finished, move the new build to "stable" on [Snapcraft -> Releases][snapcraftreleases]
 
 These package managers are updated automatically by the community:
