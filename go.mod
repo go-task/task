@@ -1,8 +1,6 @@
 module github.com/go-task/task/v3
 
-go 1.24.6
-
-toolchain go1.26.1
+go 1.25
 
 require (
 	charm.land/bubbles/v2 v2.0.0
@@ -77,7 +75,6 @@ require (
 	github.com/charmbracelet/x/termios v0.1.1 // indirect
 	github.com/charmbracelet/x/windows v0.2.2 // indirect
 	github.com/clipperhouse/displaywidth v0.11.0 // indirect
-	github.com/clipperhouse/stringish v0.1.1 // indirect
 	github.com/clipperhouse/uax29/v2 v2.7.0 // indirect
 	github.com/cncf/xds/go v0.0.0-20250501225837-2ac532fd4443 // indirect
 	github.com/dlclark/regexp2 v1.11.5 // indirect
