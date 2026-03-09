@@ -1,6 +1,7 @@
 package templater
 
 import (
+	stdos "os"
 	"maps"
 	"math/rand/v2"
 	"path/filepath"
@@ -33,6 +34,7 @@ func init() {
 		"splitArgs":    splitArgs,
 		"IsSH":         IsSH, // Deprecated
 		"joinPath":     filepath.Join,
+		"joinEnv":      joinEnv,
 		"relPath":      filepath.Rel,
 		"merge":        merge,
 		"spew":         spew.Sdump,
@@ -87,6 +89,10 @@ func shellQuote(str string) (string, error) {
 
 func splitArgs(s string) ([]string, error) {
 	return shell.Fields(s, nil)
+}
+
+func joinEnv(elems ...string) string {
+	return strings.Join(elems, string(stdos.PathListSeparator))
 }
 
 // Deprecated: now always returns true
