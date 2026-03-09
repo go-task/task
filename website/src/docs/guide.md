@@ -1020,6 +1020,34 @@ tasks:
       - echo "I will not run"
 ```
 
+### Global preconditions
+
+You can define preconditions at the Taskfile level that apply to every task,
+including tasks from included Taskfiles. This is useful for enforcing
+environment-wide requirements — such as ensuring a repository has been
+initialized — without repeating the check on every task.
+
+```yaml
+version: '3'
+
+preconditions:
+  - sh: test -f .env
+    msg: "Missing .env file. Run 'task init' to set up the project."
+
+tasks:
+  build:
+    cmds:
+      - go build ./...
+
+  test:
+    cmds:
+      - go test ./...
+```
+
+Global preconditions are checked before the task's own preconditions. They are
+also inherited by tasks in included Taskfiles — preconditions from a parent
+Taskfile propagate downward through the include hierarchy.
+
 ### Conditional execution with `if`
 
 The `if` attribute allows you to conditionally skip tasks or commands based on a

@@ -118,13 +118,15 @@ func (t *Tasks) Values(sorter sort.Sorter) iter.Seq[*Task] {
 	}
 }
 
-func (t1 *Tasks) Merge(t2 *Tasks, include *Include, includedTaskfileVars *Vars) error {
+func (t1 *Tasks) Merge(t2 *Tasks, include *Include, includedTaskfileVars *Vars, globalPreconditions []*Precondition) error {
 	defer t2.mutex.RUnlock()
 	t2.mutex.RLock()
 	for name, v := range t2.All(nil) {
 		// We do a deep copy of the task struct here to ensure that no data can
 		// be changed elsewhere once the taskfile is merged.
 		task := v.DeepCopy()
+		// Prepend the included taskfile's global preconditions to the task's own preconditions.
+		task.Preconditions = slices.Concat(globalPreconditions, task.Preconditions)
 		// Set the task to internal if EITHER the included task or the included
 		// taskfile are marked as internal
 		task.Internal = task.Internal || (include != nil && include.Internal)

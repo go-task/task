@@ -780,6 +780,13 @@
           "description": "Sets a different watch interval when using `--watch`, the default being 100 milliseconds. This string should be a valid Go duration: https://pkg.go.dev/time#ParseDuration.",
           "type": "string",
           "pattern": "^[0-9]+(?:m|s|ms)$"
+        },
+        "preconditions": {
+          "description": "Global preconditions that must be met before running any task. Prepended to each task's own preconditions and inherited by tasks in included Taskfiles.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/precondition"
+          }
         }
       },
       "additionalProperties": false,

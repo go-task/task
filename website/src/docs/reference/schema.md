@@ -187,6 +187,19 @@ run: once
 interval: 1s
 ```
 
+### [`preconditions`](#precondition)
+
+- **Type**: `[]Precondition`
+- **Description**: Global preconditions that must be met before running any
+  task. These are prepended to each task's own preconditions and are inherited
+  by tasks in included Taskfiles.
+
+```yaml
+preconditions:
+  - sh: '[ "$CI" = "true" ]'
+    msg: "This Taskfile must be run in CI"
+```
+
 ### `set`
 
 - **Type**: `[]string`

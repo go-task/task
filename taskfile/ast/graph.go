@@ -3,6 +3,7 @@ package ast
 import (
 	"fmt"
 	"os"
+	"slices"
 	"sync"
 
 	"github.com/dominikbraun/graph"
@@ -114,6 +115,13 @@ func (tfg *TaskfileGraph) Merge() (*Taskfile, error) {
 	rootVertex, err := tfg.Vertex(hashes[0])
 	if err != nil {
 		return nil, err
+	}
+
+	// Apply the root taskfile's global preconditions to all tasks.
+	if len(rootVertex.Taskfile.Preconditions) > 0 {
+		for task := range rootVertex.Taskfile.Tasks.Values(nil) {
+			task.Preconditions = slices.Concat(rootVertex.Taskfile.Preconditions, task.Preconditions)
+		}
 	}
 
 	return rootVertex.Taskfile, nil

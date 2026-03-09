@@ -609,6 +609,48 @@ func TestPrecondition(t *testing.T) {
 	)
 }
 
+func TestGlobalPrecondition(t *testing.T) {
+	t.Parallel()
+	NewExecutorTest(t,
+		WithName("global precondition met"),
+		WithExecutorOptions(
+			task.WithDir("testdata/global_precondition"),
+		),
+		WithTask("passing"),
+	)
+	NewExecutorTest(t,
+		WithName("global precondition met - included task"),
+		WithExecutorOptions(
+			task.WithDir("testdata/global_precondition"),
+		),
+		WithTask("inc:task"),
+	)
+	NewExecutorTest(t,
+		WithName("global precondition not met"),
+		WithExecutorOptions(
+			task.WithDir("testdata/global_precondition_failing"),
+		),
+		WithTask("task"),
+		WithRunError(),
+	)
+	NewExecutorTest(t,
+		WithName("global precondition not met - included task"),
+		WithExecutorOptions(
+			task.WithDir("testdata/global_precondition_failing"),
+		),
+		WithTask("inc:task"),
+		WithRunError(),
+	)
+	NewExecutorTest(t,
+		WithName("global precondition not met - task with own precondition"),
+		WithExecutorOptions(
+			task.WithDir("testdata/global_precondition_failing"),
+		),
+		WithTask("task-with-own-precondition"),
+		WithRunError(),
+	)
+}
+
 func TestAlias(t *testing.T) {
 	t.Parallel()
 
