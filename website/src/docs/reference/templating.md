@@ -617,6 +617,7 @@ tasks:
       - echo "{{.WIN_PATH | fromSlash}}"                        # Convert to OS-specific slashes
       - echo "{{joinPath .OUTPUT_DIR .BINARY_NAME}}"            # Join path elements
       - echo "Relative {{relPath .ROOT_DIR .TASKFILE_DIR}}"    # Get relative path
+      - echo "{{resolvePath "../dist/../build"}}"              # Resolve to an absolute path (follows symlinks when available)
 ```
 
 ### Data Structure Functions
