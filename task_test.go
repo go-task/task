@@ -2096,6 +2096,21 @@ func TestIncludeWithVarsInInclude(t *testing.T) {
 	require.NoError(t, e.Setup())
 }
 
+func TestWildcardIncludeVarsCanUseMatch(t *testing.T) {
+	t.Parallel()
+
+	const dir = "testdata/includes_wildcard_include_vars"
+	var buff bytes.Buffer
+	e := task.NewExecutor(
+		task.WithDir(dir),
+		task.WithStdout(&buff),
+		task.WithStderr(&buff),
+	)
+	require.NoError(t, e.Setup())
+	require.NoError(t, e.Run(t.Context(), &task.Call{Task: "default"}))
+	assert.Contains(t, buff.String(), "ENV=prod")
+}
+
 func TestIncludedVarsMultiLevel(t *testing.T) {
 	t.Parallel()
 

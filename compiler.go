@@ -115,6 +115,13 @@ func (c *Compiler) getVariables(t *ast.Task, call *Call, evaluateShVars bool) (*
 		}
 	}
 	if t != nil {
+		if call != nil {
+			for k, v := range call.Vars.All() {
+				if err := rangeFunc(k, v); err != nil {
+					return nil, err
+				}
+			}
+		}
 		for k, v := range t.IncludeVars.All() {
 			if err := rangeFunc(k, v); err != nil {
 				return nil, err

@@ -1,0 +1,12 @@
+version: '3'
+
+includes:
+  'stack:*':
+    taskfile: ./Taskfile.stack.yml
+    vars:
+      ENV: '{{index .MATCH 0}}'
+
+tasks:
+  default:
+    cmds:
+      - task stack:prod:show
