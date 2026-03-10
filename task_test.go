@@ -1271,6 +1271,23 @@ func TestIncludesInterpolation(t *testing.T) { // nolint:paralleltest // cannot 
 	}
 }
 
+func TestIncludeWildcardVarsExposeMatch(t *testing.T) {
+	t.Parallel()
+
+	var buff bytes.Buffer
+	e := task.NewExecutor(
+		task.WithDir("testdata/includes_wildcard_vars"),
+		task.WithSilent(true),
+		task.WithStdout(&buff),
+		task.WithStderr(&buff),
+	)
+	require.NoError(t, e.Setup())
+
+	err := e.Run(t.Context(), &task.Call{Task: "stack:prod:show"})
+	require.NoError(t, err)
+	assert.Equal(t, "prod\n", buff.String())
+}
+
 func TestIncludesWithExclude(t *testing.T) {
 	t.Parallel()
 
