@@ -99,10 +99,8 @@ This integration provides:
 
 AI assistants can access Task documentation through:
 
-- **[llms.txt](https://taskfile.dev/llms.txt)**: Lightweight overview of Task
-  documentation
-- **[llms-full.txt](https://taskfile.dev/llms-full.txt)**: Complete
-  documentation with all content
+- **[llms.txt](https://taskfile.dev/llms.txt)**: Lightweight overview of Task documentation
+- **[llms-full.txt](https://taskfile.dev/llms-full.txt)**: Complete documentation with all content
 
 These files are automatically generated and kept in sync with the documentation,
 ensuring AI assistants always have access to the latest Task features and usage
@@ -138,11 +136,12 @@ The `task` hook supports the following pre-commit options:
 | ---------------- | ------- | ----------------------------------------------------------- |
 | `args`           | `[]`    | Arguments passed to `task` (e.g. task name, `--dir`, flags) |
 | `files`          | `''`    | Only run the hook when these files change                   |
-| `pass_filenames` | `false` | Task manages its own file resolution                        |
+| `pass_filenames` | `false` | Cannot be overridden — task does not accept filenames as arguments |
 
 ### Examples
 
-Run a task unconditionally on every commit:
+<details>
+<summary>Run a task unconditionally on every commit</summary>
 
 ```yaml
 repos:
@@ -152,6 +151,8 @@ repos:
       - id: task
         args: ['lint']
 ```
+
+</details>
 
 <details>
 <summary>Run a task only when certain files change</summary>
