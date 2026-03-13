@@ -134,9 +134,8 @@ The `task` hook supports the following pre-commit options:
 
 | Option           | Default | Description                                                 |
 | ---------------- | ------- | ----------------------------------------------------------- |
-| `args`           | `[]`    | Arguments passed to `task` (e.g. task name, `--dir`, flags) |
-| `files`          | `''`    | Only run the hook when these files change                   |
-| `pass_filenames` | `false` | Cannot be overridden — task does not accept filenames as arguments |
+| `args`  | `[]` | Arguments passed to `task` (e.g. task name, `--dir`, flags) |
+| `files` | `''` | Only run the hook when these files change                   |
 
 ### Examples
 
