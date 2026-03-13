@@ -2,7 +2,7 @@
 title: Integrations
 description:
   Official and community integrations for Task, including VS Code, JSON schemas,
-  and other tools
+  pre-commit, and other tools
 outline: deep
 ---
 
@@ -99,12 +99,128 @@ This integration provides:
 
 AI assistants can access Task documentation through:
 
-- **[llms.txt](https://taskfile.dev/llms.txt)**: Lightweight overview of Task documentation
-- **[llms-full.txt](https://taskfile.dev/llms-full.txt)**: Complete documentation with all content
+- **[llms.txt](https://taskfile.dev/llms.txt)**: Lightweight overview of Task
+  documentation
+- **[llms-full.txt](https://taskfile.dev/llms-full.txt)**: Complete
+  documentation with all content
 
 These files are automatically generated and kept in sync with the documentation,
 ensuring AI assistants always have access to the latest Task features and usage
 patterns.
+
+## pre-commit
+
+Task has official support for [pre-commit](https://pre-commit.com/), a framework
+for managing and maintaining multi-language pre-commit hooks. This allows you to
+automatically run Task tasks as part of your Git workflow.
+
+### Setup
+
+Add the following to your `.pre-commit-config.yaml`:
+
+```yaml
+repos:
+  - repo: https://github.com/go-task/task
+    rev: v3.x.x # Replace with the desired Task version
+    hooks:
+      - id: task
+        args: ['my-task']
+```
+
+The hook will install Task via `go install` and run the specified task. You can
+use any `task` CLI arguments in the `args` field.
+
+### Configuration
+
+The `task` hook supports the following pre-commit options:
+
+| Option           | Default | Description                                                 |
+| ---------------- | ------- | ----------------------------------------------------------- |
+| `args`           | `[]`    | Arguments passed to `task` (e.g. task name, `--dir`, flags) |
+| `files`          | `''`    | Only run the hook when these files change                   |
+| `pass_filenames` | `false` | Task manages its own file resolution                        |
+
+### Examples
+
+Run a task unconditionally on every commit:
+
+```yaml
+repos:
+  - repo: https://github.com/go-task/task
+    rev: v3.x.x
+    hooks:
+      - id: task
+        args: ['lint']
+```
+
+<details>
+<summary>Run a task only when certain files change</summary>
+
+```yaml
+repos:
+  - repo: https://github.com/go-task/task
+    rev: v3.x.x
+    hooks:
+      - id: task
+        files: ^docs/
+        args: ['generate-docs']
+```
+
+</details>
+
+<details>
+<summary>Run a task in a subdirectory</summary>
+
+```yaml
+repos:
+  - repo: https://github.com/go-task/task
+    rev: v3.x.x
+    hooks:
+      - id: task
+        args: ['--dir', 'frontend', 'build']
+```
+
+</details>
+
+<details>
+<summary>Run multiple tasks with different file triggers</summary>
+
+```yaml
+repos:
+  - repo: https://github.com/go-task/task
+    rev: v3.x.x
+    hooks:
+      - id: task
+        name: lint
+        files: \.go$
+        args: ['lint']
+      - id: task
+        name: generate
+        files: \.proto$
+        args: ['generate']
+```
+
+</details>
+
+<details>
+<summary>Run a lightweight task on commit and a heavier task on push</summary>
+
+```yaml
+repos:
+  - repo: https://github.com/go-task/task
+    rev: v3.x.x
+    hooks:
+      - id: task
+        name: lint
+        args: ['lint']
+        stages: [pre-commit]
+      - id: task
+        name: test
+        args: ['test']
+        stages: [pre-push]
+```
+
+</details>
 
 ## Community Integrations
 

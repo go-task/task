@@ -8,9 +8,14 @@ editLink: false
 
 ::: v-pre
 
+## next
+
+- Added official [pre-commit](https://pre-commit.com/) support via a
+  `.pre-commit-hooks.yaml` at the repository root (#2562).
+
 ## v3.49.1 - 2026-03-08
 
-* Reverted #2632 for now, which caused some regressions. That change will be
+- Reverted #2632 for now, which caused some regressions. That change will be
   reworked (#2720, #2722, #2723).
 
 ## v3.49.0 - 2026-03-07
