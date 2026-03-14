@@ -125,8 +125,22 @@ func (t1 *Tasks) Merge(t2 *Tasks, include *Include, includedTaskfileVars *Vars, 
 		// We do a deep copy of the task struct here to ensure that no data can
 		// be changed elsewhere once the taskfile is merged.
 		task := v.DeepCopy()
-		// Prepend the included taskfile's global preconditions to the task's own preconditions.
-		task.Preconditions = slices.Concat(globalPreconditions, task.Preconditions)
+		// Inject global preconditions from the included taskfile.
+		// Tasks native to t2 (Namespace == "") always receive all of t2's global
+		// preconditions. Tasks from t2's own transitive includes (Namespace != "")
+		// only receive preconditions marked inherit:true, and only when the task
+		// has not opted out via skip_preconditions.
+		if task.Namespace == "" {
+			task.Preconditions = slices.Concat(globalPreconditions, task.Preconditions)
+		} else if !task.SkipPreconditions {
+			var inherited []*Precondition
+			for _, p := range globalPreconditions {
+				if p.Inherit {
+					inherited = append(inherited, p)
+				}
+			}
+			task.Preconditions = slices.Concat(inherited, task.Preconditions)
+		}
 		// Set the task to internal if EITHER the included task or the included
 		// taskfile are marked as internal
 		task.Internal = task.Internal || (include != nil && include.Internal)

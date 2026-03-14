@@ -190,14 +190,17 @@ interval: 1s
 ### [`preconditions`](#precondition)
 
 - **Type**: `[]Precondition`
-- **Description**: Global preconditions that must be met before running any
-  task. These are prepended to each task's own preconditions and are inherited
-  by tasks in included Taskfiles.
+- **Description**: Global preconditions that must be met before running any task
+  in this file. Prepended to each task's own preconditions. Preconditions with
+  `inherit: true` also apply to tasks in included Taskfiles.
 
 ```yaml
 preconditions:
-  - sh: '[ "$CI" = "true" ]'
-    msg: "This Taskfile must be run in CI"
+  - sh: '[ "$USER" != "root" ]'
+    msg: "Don't run as root"
+    inherit: true
+  - sh: test -f .env
+    msg: "Run 'task init' first"
 ```
 
 ### `set`
@@ -711,6 +714,22 @@ tasks:
 See [Prompting for missing variables interactively](/docs/guide#prompting-for-missing-variables-interactively)
 for information on enabling interactive prompts for missing required variables.
 
+#### `skip_preconditions`
+
+- **Type**: `bool`
+- **Default**: `false`
+- **Description**: When `true`, the task will not receive preconditions inherited
+  from parent Taskfiles (via `inherit: true`). Global preconditions defined in
+  the same file as the task still apply.
+
+```yaml
+tasks:
+  init:
+    skip_preconditions: true  # skips parent's inherited preconditions
+    cmds:
+      - cp .env.template .env
+```
+
 #### `watch`
 
 - **Type**: `bool`
@@ -933,4 +952,38 @@ tasks:
       - cmd: ls **/*.go
         # Command level
         shopt: [globstar]
+```
+
+## Precondition
+
+A precondition is a shell command that must exit 0 before a task (or any task,
+when used at the taskfile level) is allowed to run.
+
+### `sh`
+
+- **Type**: `string`
+- **Description**: Shell command to run as the precondition check
+
+### `msg`
+
+- **Type**: `string`
+- **Description**: Message to display when the precondition is not met
+
+### `inherit`
+
+- **Type**: `bool`
+- **Default**: `false`
+- **Description**: When `true` and the precondition is defined at the taskfile
+  level, it propagates to tasks in included Taskfiles. Has no effect on
+  task-level preconditions.
+
+```yaml
+preconditions:
+  # Shorthand (no msg or inherit)
+  - test -f .env
+
+  # Full form
+  - sh: '[ "$USER" != "root" ]'
+    msg: "Don't run as root"
+    inherit: true
 ```

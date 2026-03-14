@@ -634,12 +634,11 @@ func TestGlobalPrecondition(t *testing.T) {
 		WithRunError(),
 	)
 	NewExecutorTest(t,
-		WithName("global precondition not met - included task"),
+		WithName("global precondition not met - included task unaffected without inherit"),
 		WithExecutorOptions(
 			task.WithDir("testdata/global_precondition_failing"),
 		),
 		WithTask("inc:task"),
-		WithRunError(),
 	)
 	NewExecutorTest(t,
 		WithName("global precondition not met - task with own precondition"),
@@ -647,6 +646,89 @@ func TestGlobalPrecondition(t *testing.T) {
 			task.WithDir("testdata/global_precondition_failing"),
 		),
 		WithTask("task-with-own-precondition"),
+		WithRunError(),
+	)
+	// inherit: true
+	NewExecutorTest(t,
+		WithName("inherited precondition not met - root task fails"),
+		WithExecutorOptions(
+			task.WithDir("testdata/global_precondition_inherit"),
+		),
+		WithTask("task"),
+		WithRunError(),
+	)
+	NewExecutorTest(t,
+		WithName("inherited precondition not met - included task fails"),
+		WithExecutorOptions(
+			task.WithDir("testdata/global_precondition_inherit"),
+		),
+		WithTask("inc:task"),
+		WithRunError(),
+	)
+	NewExecutorTest(t,
+		WithName("skip_preconditions skips inherited precondition"),
+		WithExecutorOptions(
+			task.WithDir("testdata/global_precondition_inherit"),
+		),
+		WithTask("inc:skip-task"),
+	)
+	NewExecutorTest(t,
+		WithName("skip_preconditions does not skip own file precondition"),
+		WithExecutorOptions(
+			task.WithDir("testdata/global_precondition_inherit"),
+		),
+		WithTask("own:skip-task"),
+		WithRunError(),
+	)
+	// transitive inherit: root inherit:true reaches two levels deep
+	NewExecutorTest(t,
+		WithName("transitive inherit blocks direct include"),
+		WithExecutorOptions(
+			task.WithDir("testdata/global_precondition_transitive"),
+		),
+		WithTask("mid:task"),
+		WithRunError(),
+	)
+	NewExecutorTest(t,
+		WithName("transitive inherit blocks two levels deep"),
+		WithExecutorOptions(
+			task.WithDir("testdata/global_precondition_transitive"),
+		),
+		WithTask("mid:deep:task"),
+		WithRunError(),
+	)
+	// skip_preconditions on a root task: own-file preconditions still apply
+	NewExecutorTest(t,
+		WithName("skip_preconditions is a no-op on root tasks"),
+		WithExecutorOptions(
+			task.WithDir("testdata/global_precondition_transitive"),
+		),
+		WithTask("skip-task"),
+		WithRunError(),
+	)
+	// mid-level inherit: an included file's inherit:true reaches its sub-includes
+	// but does NOT affect root tasks
+	NewExecutorTest(t,
+		WithName("mid-level inherit does not affect root tasks"),
+		WithExecutorOptions(
+			task.WithDir("testdata/global_precondition_mid_inherit"),
+		),
+		WithTask("task"),
+	)
+	NewExecutorTest(t,
+		WithName("mid-level inherit blocks own tasks"),
+		WithExecutorOptions(
+			task.WithDir("testdata/global_precondition_mid_inherit"),
+		),
+		WithTask("mid:task"),
+		WithRunError(),
+	)
+	NewExecutorTest(t,
+		WithName("mid-level inherit blocks sub-includes"),
+		WithExecutorOptions(
+			task.WithDir("testdata/global_precondition_mid_inherit"),
+		),
+		WithTask("mid:deep:task"),
 		WithRunError(),
 	)
 }
