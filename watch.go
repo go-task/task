@@ -83,7 +83,7 @@ func (e *Executor) watchTasks(calls ...*Call) error {
 				e.Logger.VerboseErrf(logger.Magenta, "task: received watch event: %v\n", event)
 
 				var wg sync.WaitGroup
-				var okCalls = make([]*Call, 0, len(calls))
+				okCalls := make([]*Call, 0, len(calls))
 				for _, c := range calls {
 					wg.Add(1)
 					wg.Go(func() {
