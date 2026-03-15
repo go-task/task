@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"slices"
 	"strings"
+	"sync"
 	"syscall"
 	"time"
 
@@ -69,6 +70,8 @@ func (e *Executor) watchTasks(calls ...*Call) error {
 	closeOnInterrupt(w)
 
 	go func() {
+		var mu sync.Mutex
+
 		for {
 			select {
 			case event, ok := <-eventsChan:
@@ -76,24 +79,27 @@ func (e *Executor) watchTasks(calls ...*Call) error {
 					cancel()
 					return
 				}
+
 				e.Logger.VerboseErrf(logger.Magenta, "task: received watch event: %v\n", event)
 
-				cancel()
-				ctx, cancel = context.WithCancel(context.Background())
-
-				e.Compiler.ResetCache()
-
+				var wg sync.WaitGroup
+				var okCalls = make([]*Call, 0, len(calls))
 				for _, c := range calls {
-					go func() {
+					wg.Add(1)
+					wg.Go(func() {
+						defer wg.Done()
+
 						if ShouldIgnore(event.Name) {
 							e.Logger.VerboseErrf(logger.Magenta, "task: event skipped for being an ignored dir: %s\n", event.Name)
 							return
 						}
+
 						t, err := e.GetTask(c)
 						if err != nil {
 							e.Logger.Errf(logger.Red, "%v\n", err)
 							return
 						}
+
 						baseDir := filepathext.SmartJoin(e.Dir, t.Dir)
 						files, err := e.collectSources(calls)
 						if err != nil {
@@ -106,14 +112,37 @@ func (e *Executor) watchTasks(calls ...*Call) error {
 							e.Logger.VerboseErrf(logger.Magenta, "task: skipped for file not in sources: %s\n", relPath)
 							return
 						}
+
+						mu.Lock()
+						okCalls = append(okCalls, c)
+						mu.Unlock()
+					})
+				}
+				wg.Wait()
+
+				if len(okCalls) == 0 {
+					e.Logger.VerboseErrf(logger.Magenta, "task: no valid calls, skipping execution\n")
+					continue
+				}
+
+				cancel()
+				ctx, cancel = context.WithCancel(context.Background())
+				e.Compiler.ResetCache()
+
+				for _, c := range okCalls {
+					go func() {
 						err = e.RunTask(ctx, c)
 						if err == nil {
 							e.Logger.Errf(logger.Green, "task: task \"%s\" finished running\n", c.Task)
-						} else if !isContextError(err) {
+							return
+						}
+
+						if !isContextError(err) {
 							e.Logger.Errf(logger.Red, "%v\n", err)
 						}
 					}()
 				}
+
 			case err, ok := <-w.Errors:
 				switch {
 				case !ok:
