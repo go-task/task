@@ -1706,6 +1706,26 @@ func TestDotenvHasLocalVarInPath(t *testing.T) {
 	})
 }
 
+func TestDotenvNestedVarsExpandDeterministically(t *testing.T) {
+	t.Parallel()
+
+	// Nested $VAR references in a dotenv file must always resolve to the same
+	// value. Previously, the use of an unordered map in godotenv caused
+	// non-deterministic expansion of chained variables.
+	tt := fileContentTest{
+		Dir:       "testdata/dotenv/nested_vars",
+		Target:    "default",
+		TrimSpace: true,
+		Files: map[string]string{
+			"output.txt": "/home/user/nested/deeper/file.txt",
+		},
+	}
+	t.Run("", func(t *testing.T) {
+		t.Parallel()
+		tt.Run(t)
+	})
+}
+
 func TestDotenvHasEnvVarInPath(t *testing.T) { // nolint:paralleltest // cannot run in parallel
 	t.Setenv("ENV_VAR", "testing")
 
