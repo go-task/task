@@ -181,7 +181,7 @@ func (e *Executor) compiledTask(call *Call, evaluateShVars bool) (*ast.Task, err
 		}
 	}
 
-	if len(origTask.Sources) > 0 && origTask.Method != "none" {
+	if evaluateShVars && len(origTask.Sources) > 0 && origTask.Method != "none" {
 		var checker fingerprint.SourcesCheckable
 
 		if origTask.Method == "timestamp" {
