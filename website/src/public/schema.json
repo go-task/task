@@ -340,6 +340,10 @@
         "if": {
           "description": "A shell command to evaluate. If the exit code is non-zero, the command is skipped.",
           "type": "string"
+        },
+        "ask": {
+          "description": "A y/n confirmation shown before executing this task call. If declined, the task call is skipped.",
+          "type": "string"
         }
       },
       "additionalProperties": false,
@@ -380,6 +384,10 @@
         },
         "if": {
           "description": "A shell command to evaluate. If the exit code is non-zero, the command is skipped.",
+          "type": "string"
+        },
+        "ask": {
+          "description": "A y/n confirmation shown before executing this command. If declined, the command is skipped.",
           "type": "string"
         }
       },
