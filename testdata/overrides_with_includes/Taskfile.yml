@@ -1,0 +1,15 @@
+version: '3'
+
+includes:
+  lib: ./lib.yml
+
+overrides:
+  override_lib: ./override_lib.yml
+
+tasks:
+  main:
+    cmds:
+      - echo "main task"
+  shared:
+    cmds:
+      - echo "shared from main"
