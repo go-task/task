@@ -1,0 +1,22 @@
+version: "3"
+
+env:
+  NESTED_ENV: env_from_nested
+
+vars:
+  NESTED_VAR: from_nested
+
+tasks:
+  print:
+    desc: Print vars from nested include (3 levels deep)
+    cmds:
+      - echo "NESTED:ROOT_VAR={{.ROOT_VAR}}"
+      - echo "NESTED:UNIQUE_A={{.UNIQUE_A}}"
+      - echo "NESTED:NESTED_VAR={{.NESTED_VAR}}"
+      - echo "NESTED:NESTED_ENV={{.env.NESTED_ENV}}"
+      - echo "NESTED:ROOT_ENV={{.env.ROOT_ENV}}"
+
+  try-access-b:
+    desc: Try to access B's unique var (should fail - sibling isolation)
+    cmds:
+      - echo "NESTED:UNIQUE_B={{.UNIQUE_B}}"
