@@ -1243,9 +1243,11 @@ failing, you can enable interactive mode in your `.taskrc.yml`:
 interactive: true
 ```
 
-When enabled, Task will display an interactive prompt for any missing required
-variable. For variables with an `enum`, a selection menu is shown. For variables
-without an enum, a text input is displayed.
+When enabled, Task will display an interactive prompt for any missing required variable.
+Interactive variables can either be a simple text input or a select menu.
+
+The select menu presents a list of possible values to select from when a list of values is defined in an `enum` array, or dynamically with an `sh` script.
+When using an `sh` script the values need to be new line delimited.
 
 ```yaml
 # Taskfile.yml
@@ -1260,6 +1262,16 @@ tasks:
         - VERSION
     cmds:
       - echo "Deploying {{.VERSION}} to {{.ENVIRONMENT}}"
+  copy-file:
+    requires:
+      vars:
+        - name: SELECTED_FILE
+          sh: ls # will prompt to select from a list of files in your workdir
+        - name: ENVIRONMENT
+          sh: get_envs.sh # a script that returns a new line delimited list of available envs
+    cmds:
+      - echo "Deploying {{.SELECTED_FILE}} to {{.ENVIRONMENT}}"
+
 ```
 
 ```shell
