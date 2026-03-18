@@ -99,7 +99,7 @@ from stdin, you must specify the `-t/--taskfile` flag with the special `-`
 value. You may then pipe into Task as you would any other program:
 
 ```shell
-task -t - <(cat ./Taskfile.yml)
+task -t - < ./Taskfile.yml
 # OR
 cat ./Taskfile.yml | task -t -
 ```
