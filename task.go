@@ -537,7 +537,7 @@ func (e *Executor) GetTask(call *Call) (*ast.Task, error) {
 			includeMatch, hasMatchVar = call.Vars.Get("MATCH")
 		}
 
-		if len(match) > 0 {
+		if len(match) > 0 || !hasMatchVar {
 			if call.Vars == nil {
 				call.Vars = ast.NewVars()
 			}
