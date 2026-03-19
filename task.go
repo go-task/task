@@ -526,18 +526,32 @@ func (e *Executor) GetTask(call *Call) (*ast.Task, error) {
 	}
 
 	if len(matchingTasks) > 0 {
-		if call.Vars == nil {
-			call.Vars = ast.NewVars()
-		}
 		match := matchingTasks[0].Wildcards
-		call.Vars.Set("MATCH", ast.Var{Value: match})
+
+		var (
+			includeMatch ast.Var
+			hasMatchVar  bool
+		)
+
+		if call.Vars != nil {
+			includeMatch, hasMatchVar = call.Vars.Get("MATCH")
+		}
 
 		if len(match) > 0 {
+			if call.Vars == nil {
+				call.Vars = ast.NewVars()
+			}
+			includeMatch = ast.Var{Value: match}
+			hasMatchVar = true
+			call.Vars.Set("MATCH", includeMatch)
+		}
+
+		if hasMatchVar {
 			taskCopy := matchingTasks[0].Task.DeepCopy()
 			if taskCopy.IncludeVars == nil {
 				taskCopy.IncludeVars = ast.NewVars()
 			}
-			taskCopy.IncludeVars.Set("MATCH", ast.Var{Value: match})
+			taskCopy.IncludeVars.Set("MATCH", includeMatch)
 			return taskCopy, nil
 		}
 
