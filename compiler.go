@@ -115,13 +115,6 @@ func (c *Compiler) getVariables(t *ast.Task, call *Call, evaluateShVars bool) (*
 		}
 	}
 	if t != nil {
-		if call != nil {
-			if match, ok := call.Vars.Get("MATCH"); ok {
-				if err := rangeFunc("MATCH", match); err != nil {
-					return nil, err
-				}
-			}
-		}
 		for k, v := range t.IncludeVars.All() {
 			if err := rangeFunc(k, v); err != nil {
 				return nil, err
