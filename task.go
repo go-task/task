@@ -548,10 +548,13 @@ func (e *Executor) GetTask(call *Call) (*ast.Task, error) {
 
 		if hasMatchVar {
 			taskCopy := matchingTasks[0].Task.DeepCopy()
-			if taskCopy.IncludeVars == nil {
-				taskCopy.IncludeVars = ast.NewVars()
+			matchFirstIncludeVars := ast.NewVars()
+			matchFirstIncludeVars.Set("MATCH", includeMatch)
+			if taskCopy.IncludeVars != nil {
+				matchFirstIncludeVars.Merge(taskCopy.IncludeVars, nil)
 			}
-			taskCopy.IncludeVars.Set("MATCH", includeMatch)
+			matchFirstIncludeVars.Set("MATCH", includeMatch)
+			taskCopy.IncludeVars = matchFirstIncludeVars
 			return taskCopy, nil
 		}
 
