@@ -157,6 +157,7 @@ func closeOnInterrupt(w *fsnotify.Watcher) {
 	signal.Notify(ch, os.Interrupt, syscall.SIGTERM, syscall.SIGHUP)
 	go func() {
 		<-ch
+		signal.Stop(ch)
 		w.Close()
 		os.Exit(0)
 	}()
