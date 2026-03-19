@@ -160,13 +160,14 @@ func dirOption(path string) interp.RunnerOption {
 			return nil
 		}
 
-		// If the specified directory doesn't exist, it will be created later.
-		// Therefore, even if `interp.Dir` method returns an error, the
-		// directory path should be set only when the directory cannot be found.
+		// If the specified directory doesn't exist, create it.
 		if absPath, _ := filepath.Abs(path); absPath != "" {
 			if _, err := os.Stat(absPath); os.IsNotExist(err) {
-				r.Dir = absPath
-				return nil
+				if mkdirErr := os.MkdirAll(absPath, 0o755); mkdirErr != nil {
+					return fmt.Errorf("failed to create directory %s: %w", absPath, mkdirErr)
+				}
+				// Re-apply the directory option now that the directory exists
+				return interp.Dir(path)(r)
 			}
 		}
 
