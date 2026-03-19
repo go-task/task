@@ -527,6 +527,9 @@ func (e *Executor) GetTask(call *Call) (*ast.Task, error) {
 
 	if len(matchingTasks) > 0 {
 		match := matchingTasks[0].Wildcards
+		if match == nil {
+			match = []string{}
+		}
 
 		var (
 			includeMatch ast.Var
@@ -535,6 +538,12 @@ func (e *Executor) GetTask(call *Call) (*ast.Task, error) {
 
 		if call.Vars != nil {
 			includeMatch, hasMatchVar = call.Vars.Get("MATCH")
+			if hasMatchVar {
+				if existingMatch, ok := includeMatch.Value.([]string); ok && existingMatch == nil {
+					includeMatch = ast.Var{Value: []string{}}
+					call.Vars.Set("MATCH", includeMatch)
+				}
+			}
 		}
 
 		if len(match) > 0 || !hasMatchVar {
