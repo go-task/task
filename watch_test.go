@@ -103,10 +103,6 @@ func TestShouldIgnore(t *testing.T) {
 	}
 }
 
-// Create, Remove, Rename, Write
-// In sources, not in sources
-// sources is a ./**/*.txt
-
 func TestWatchSources(t *testing.T) {
 	t.Parallel()
 
