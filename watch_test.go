@@ -8,7 +8,9 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"runtime"
 	"slices"
 	"strings"
 	"testing"
@@ -103,10 +105,6 @@ func TestShouldIgnore(t *testing.T) {
 	}
 }
 
-// Create, Remove, Rename, Write
-// In sources, not in sources
-// sources is a ./**/*.txt
-
 func TestWatchSources(t *testing.T) {
 	t.Parallel()
 
@@ -145,11 +143,11 @@ func TestWatchSources(t *testing.T) {
 			tc.path = filepath.Join(tmpDir, tc.path)
 
 			// Start the Task.
-			var buf bytes.Buffer
+			var buffer SyncBuffer
 			e := task.NewExecutor(
 				task.WithDir(tmpDir),
-				task.WithStdout(&buf),
-				task.WithStderr(&buf),
+				task.WithStdout(&buffer),
+				task.WithStderr(&buffer),
 				task.WithWatch(true),
 				task.WithVerbose(true),
 			)
@@ -221,7 +219,7 @@ func TestWatchSources(t *testing.T) {
 				checks = append(checks, `skipped for file not in sources:`)
 			}
 
-			output := buf.String()
+			output := buffer.buf.String()
 			t.Log(output)
 			for _, check := range checks {
 				if idx := strings.Index(output, check); idx == -1 {
@@ -233,5 +231,154 @@ func TestWatchSources(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+func TestWatchDefer(t *testing.T) {
+	t.Parallel()
+
+	// Setup the watch dir.
+	tmpDir := t.TempDir()
+	data, _ := os.ReadFile("testdata/watch/defer/Taskfile.yml")
+	os.WriteFile(filepath.Join(tmpDir, "Taskfile.yml"), data, 0644)
+	testFile := filepath.Join(tmpDir, "foo.txt")
+	os.MkdirAll(filepath.Dir(testFile), 0755)
+	os.WriteFile(testFile, []byte("hello world"), 0644)
+
+	// Start the Task.
+	var buffer SyncBuffer
+	e := task.NewExecutor(
+		task.WithDir(tmpDir),
+		task.WithStdout(&buffer),
+		task.WithStderr(&buffer),
+		task.WithWatch(true),
+		task.WithVerbose(true),
+	)
+	require.NoError(t, e.Setup())
+	ctx, cancel := context.WithCancel(context.Background())
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			default:
+				err := e.Run(ctx, &task.Call{Task: "default"})
+				if err != nil {
+					panic(err)
+				}
+			}
+		}
+	}()
+
+	// Trigger the watch.
+	time.Sleep(1000 * time.Millisecond)
+	f, _ := os.OpenFile(testFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	defer f.Close()
+	f.WriteString("watch test")
+
+	// Observe the expected conditions.
+	time.Sleep(1000 * time.Millisecond)
+
+	// End the test.
+	cancel()
+
+	checks := []string{
+		`server start`,
+		`client start`,
+		// Watch triggers.
+		`received watch event: WRITE`,
+		`server end`,
+		`client end`,
+		// Defer complete, tasks restarted.
+		`server start`,
+		`client start`,
+	}
+	output := buffer.buf.String()
+	t.Log(output)
+	t.Log(checks)
+	for i, check := range checks {
+		if idx := strings.Index(output, check); idx == -1 {
+			t.Fatalf("Expected output not observed in sequence: [%d] %s", i, check)
+		} else {
+			output = output[idx+len(check):]
+		}
+	}
+}
+
+func TestWatchPort(t *testing.T) {
+	if runtime.GOOS != "linux" && runtime.GOOS != "darwin" {
+		t.Skip("Skipping test: only supported on Linux")
+	}
+	_, err := exec.LookPath("socat")
+	if err != nil {
+		t.Skip("socat not found in PATH, skipping test")
+	}
+
+	t.Parallel()
+
+	// Setup the watch dir.
+	tmpDir := t.TempDir()
+	data, _ := os.ReadFile("testdata/watch/port/Taskfile.yml")
+	os.WriteFile(filepath.Join(tmpDir, "Taskfile.yml"), data, 0644)
+	testFile := filepath.Join(tmpDir, "foo.txt")
+	os.MkdirAll(filepath.Dir(testFile), 0755)
+	os.WriteFile(testFile, []byte("hello world"), 0644)
+
+	// Start the Task.
+	var buffer SyncBuffer
+	e := task.NewExecutor(
+		task.WithDir(tmpDir),
+		task.WithStdout(&buffer),
+		task.WithStderr(&buffer),
+		task.WithWatch(true),
+		task.WithVerbose(true),
+	)
+	require.NoError(t, e.Setup())
+	ctx, cancel := context.WithCancel(context.Background())
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			default:
+				err := e.Run(ctx, &task.Call{Task: "default"})
+				if err != nil {
+					panic(err)
+				}
+			}
+		}
+	}()
+
+	// Trigger the watch.
+	time.Sleep(1000 * time.Millisecond)
+	f, _ := os.OpenFile(testFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	defer f.Close()
+	f.WriteString("watch test")
+
+	// Observe the expected conditions.
+	time.Sleep(1000 * time.Millisecond)
+
+	// End the test.
+	cancel()
+
+	checks := []string{
+		`server start`,
+		`sending message`,
+		`Hello world`,
+		// Watch triggers.
+		`received watch event: WRITE`,
+		`server start`,
+		`sending message`,
+		`Hello world`,
+	}
+	output := buffer.buf.String()
+	t.Log(output)
+	t.Log(checks)
+	for i, check := range checks {
+		if idx := strings.Index(output, check); idx == -1 {
+			t.Fatalf("Expected output not observed in sequence: [%d] %s", i, check)
+		} else {
+			output = output[idx+len(check):]
+		}
 	}
 }

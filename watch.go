@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"slices"
 	"strings"
+	"sync"
 	"syscall"
 	"time"
 
@@ -28,6 +29,8 @@ var refreshChan = make(chan string)
 
 // watchTasks start watching the given tasks
 func (e *Executor) watchTasks(calls ...*Call) error {
+	var wg sync.WaitGroup
+
 	tasks := make([]string, len(calls))
 	for i, c := range calls {
 		tasks[i] = c.Task
@@ -36,15 +39,19 @@ func (e *Executor) watchTasks(calls ...*Call) error {
 	e.Logger.Errf(logger.Green, "task: Started watching for tasks: %s\n", strings.Join(tasks, ", "))
 
 	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 	for _, c := range calls {
-		go func() {
+		wg.Add(1)
+		go func(c *Call) {
+			defer wg.Done()
+
 			err := e.RunTask(ctx, c)
 			if err == nil {
 				e.Logger.Errf(logger.Green, "task: task \"%s\" finished running\n", c.Task)
 			} else if !isContextError(err) {
 				e.Logger.Errf(logger.Red, "%v\n", err)
 			}
-		}()
+		}(c)
 	}
 
 	var waitTime time.Duration
@@ -141,17 +148,23 @@ func (e *Executor) watchTasks(calls ...*Call) error {
 
 				// The watch event is good, restart the task calls.
 				cancel()
-				ctx, cancel = context.WithCancel(context.Background())
+				wg.Wait() // This is the single wait point, for the entry loop and the following loop.
+
 				e.Compiler.ResetCache()
+				ctx, cancel = context.WithCancel(context.Background())
+				defer cancel()
 				for _, c := range calls {
-					go func() {
+					wg.Add(1)
+					go func(c *Call) {
+						defer wg.Done()
+
 						err = e.RunTask(ctx, c)
 						if err == nil {
 							e.Logger.Errf(logger.Green, "task: task \"%s\" finished running\n", c.Task)
 						} else if !isContextError(err) {
 							e.Logger.Errf(logger.Red, "%v\n", err)
 						}
-					}()
+					}(c)
 				}
 			case err, ok := <-w.Errors:
 				switch {
