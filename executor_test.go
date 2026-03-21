@@ -377,6 +377,15 @@ func TestRequires(t *testing.T) {
 		WithVar("VALUE", "test"),
 		WithRunError(),
 	)
+	NewExecutorTest(t,
+		WithName("enum ref - ref to nonexistent var"),
+		WithExecutorOptions(
+			task.WithDir("testdata/requires"),
+		),
+		WithTask("validation-var-ref-nonexistent"),
+		WithVar("ENV", "dev"),
+		WithRunError(),
+	)
 }
 
 // TODO: mock fs

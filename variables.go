@@ -99,14 +99,9 @@ func (e *Executor) compiledTask(call *Call, evaluateShVars bool) (*ast.Task, err
 
 	cache := &templater.Cache{Vars: vars}
 
-	// Resolve enum refs in requires only when evaluateShVars is true,
-	// since enum refs may depend on shell variables
-	requires := origTask.Requires
-	if evaluateShVars {
-		requires = origTask.Requires.DeepCopy()
-		if err := resolveEnumRefs(requires, cache); err != nil {
-			return nil, err
-		}
+	requires := origTask.Requires.DeepCopy()
+	if err := resolveEnumRefs(requires, cache); err != nil {
+		return nil, err
 	}
 
 	new := ast.Task{
@@ -451,6 +446,9 @@ func resolveEnumRefs(requires *ast.Requires, cache *templater.Cache) error {
 			continue
 		}
 		resolved := templater.ResolveRef(v.Enum.Ref, cache)
+		if cache.Err() != nil {
+			return cache.Err()
+		}
 		arr, ok := resolved.([]any)
 		if !ok {
 			return fmt.Errorf("enum reference %q must resolve to a list", v.Enum.Ref)

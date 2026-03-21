@@ -1273,7 +1273,7 @@ tasks:
       vars:
         - name: ENV
           enum:
-            ref: .CONFIG | fromJson | .allowed_environments
+            ref: ( .CONFIG | fromJson ).allowed_environments
     cmds:
       - echo "Deploying to {{.ENV}}"
 ```

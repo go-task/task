@@ -253,6 +253,10 @@ func printTaskRequires(l *logger.Logger, t *ast.Task) {
 			for _, enumValue := range v.Enum.Value {
 				l.Outf(logger.Yellow, "          - %s\n", enumValue)
 			}
+		} else if v.Enum != nil && v.Enum.Ref != "" {
+			l.Outf(logger.Yellow, "    - %s:\n", v.Name)
+			l.Outf(logger.Yellow, "        enum:\n")
+			l.Outf(logger.Yellow, "          ref: %s\n", v.Enum.Ref)
 		} else {
 			l.Outf(logger.Yellow, "    - %s\n", v.Name)
 		}

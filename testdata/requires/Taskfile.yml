@@ -61,3 +61,11 @@ tasks:
           enum:
             ref: .NOT_A_LIST
     cmd: echo "{{.VALUE}}"
+
+  validation-var-ref-nonexistent:
+    requires:
+      vars:
+        - name: ENV
+          enum:
+            ref: .NONEXISTENT_VAR
+    cmd: echo "{{.ENV}}"

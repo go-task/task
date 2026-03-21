@@ -59,6 +59,9 @@ func (e *Enum) UnmarshalYAML(node *yaml.Node) error {
 		if err := node.Decode(&refStruct); err != nil {
 			return errors.NewTaskfileDecodeError(err, node)
 		}
+		if refStruct.Ref == "" {
+			return errors.NewTaskfileDecodeError(nil, node).WithTypeMessage("enum")
+		}
 		e.Ref = refStruct.Ref
 		return nil
 	}
