@@ -633,7 +633,19 @@
                 "type": "object",
                 "properties": {
                   "name": { "type": "string" },
-                  "enum": { "type": "array", "items": { "type": "string" } }
+                  "enum": {
+                    "oneOf": [
+                      { "type": "array", "items": { "type": "string" } },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "ref": { "type": "string" }
+                        },
+                        "required": ["ref"],
+                        "additionalProperties": false
+                      }
+                    ]
+                  }
                 },
                 "required": ["name"],
                 "additionalProperties": false
