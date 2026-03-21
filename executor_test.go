@@ -403,6 +403,8 @@ func TestSpecialVars(t *testing.T) {
 		"print-taskfile",
 		"print-taskfile-dir",
 		"print-task-dir",
+		"print-task-sources",
+		"print-task-sources-empty",
 		// Included
 		"included:print-task",
 		"included:print-root-dir",
@@ -418,6 +420,7 @@ func TestSpecialVars(t *testing.T) {
 					task.WithDir(dir),
 					task.WithSilent(true),
 					task.WithVersionCheck(true),
+					task.WithForce(true),
 				),
 				WithTask(test),
 				WithFixtureTemplating(),
