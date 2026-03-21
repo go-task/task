@@ -8,13 +8,6 @@ editLink: false
 
 ::: v-pre
 
-## Unreleased
-
-- Added `enum.ref` support in `requires`: enum constraints can now reference
-  variables or template pipelines (e.g., `ref: .ALLOWED_ENVS`) instead of
-  duplicating static lists. Combined with `sh:` variables, this enables fully
-  dynamic enum validation (#2678 by @vmaerten).
-
 ## v3.49.1 - 2026-03-08
 
 * Reverted #2632 for now, which caused some regressions. That change will be
