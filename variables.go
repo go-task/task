@@ -99,9 +99,14 @@ func (e *Executor) compiledTask(call *Call, evaluateShVars bool) (*ast.Task, err
 
 	cache := &templater.Cache{Vars: vars}
 
-	requires := origTask.Requires.DeepCopy()
-	if err := resolveEnumRefs(requires, cache); err != nil {
-		return nil, err
+	// Resolve enum refs only when dynamic variables have been evaluated,
+	// since enum refs may depend on shell-derived variables (e.g. fromJson)
+	requires := origTask.Requires
+	if evaluateShVars {
+		requires = origTask.Requires.DeepCopy()
+		if err := resolveEnumRefs(requires, cache); err != nil {
+			return nil, err
+		}
 	}
 
 	new := ast.Task{
