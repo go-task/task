@@ -34,6 +34,7 @@ func init() {
 		"IsSH":         IsSH, // Deprecated
 		"joinPath":     filepath.Join,
 		"relPath":      filepath.Rel,
+		"resolvePath":  resolvePath,
 		"merge":        merge,
 		"spew":         spew.Sdump,
 		"fromYaml":     fromYaml,
@@ -87,6 +88,20 @@ func shellQuote(str string) (string, error) {
 
 func splitArgs(s string) ([]string, error) {
 	return shell.Fields(s, nil)
+}
+
+func resolvePath(path string) (string, error) {
+	absPath, err := filepath.Abs(path)
+	if err != nil {
+		return "", err
+	}
+
+	resolvedPath, err := filepath.EvalSymlinks(absPath)
+	if err != nil {
+		return absPath, nil
+	}
+
+	return resolvedPath, nil
 }
 
 // Deprecated: now always returns true
