@@ -18,6 +18,20 @@ Studio Code][vscode-task].
 
 :::
 
+## AI Usage Policy
+
+When using AI tools (including LLMs like ChatGPT, Claude, Copilot, etc.) to
+contribute to Task:
+
+- **Please disclose AI usage** to reduce maintainer fatigue
+- **You are responsible** for all AI-generated issues or PRs you submit
+- **Low-quality or unreviewed AI content will be closed immediately**
+
+We encourage the use of AI tools to assist with development, but all
+contributions must be thoroughly reviewed and tested by the contributor before
+submission. AI-generated code should be understood, validated, and adapted to
+meet Task's standards.
+
 ## Before you start
 
 - **Check existing work** - Is there an existing PR? Are there issues discussing
