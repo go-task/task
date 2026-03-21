@@ -526,10 +526,47 @@ func (e *Executor) GetTask(call *Call) (*ast.Task, error) {
 	}
 
 	if len(matchingTasks) > 0 {
-		if call.Vars == nil {
-			call.Vars = ast.NewVars()
+		match := matchingTasks[0].Wildcards
+		if match == nil {
+			match = []string{}
 		}
-		call.Vars.Set("MATCH", ast.Var{Value: matchingTasks[0].Wildcards})
+
+		var (
+			includeMatch ast.Var
+			hasMatchVar  bool
+		)
+
+		if call.Vars != nil {
+			includeMatch, hasMatchVar = call.Vars.Get("MATCH")
+			if hasMatchVar {
+				if existingMatch, ok := includeMatch.Value.([]string); ok && existingMatch == nil {
+					includeMatch = ast.Var{Value: []string{}}
+					call.Vars.Set("MATCH", includeMatch)
+				}
+			}
+		}
+
+		if len(match) > 0 || !hasMatchVar {
+			if call.Vars == nil {
+				call.Vars = ast.NewVars()
+			}
+			includeMatch = ast.Var{Value: match}
+			hasMatchVar = true
+			call.Vars.Set("MATCH", includeMatch)
+		}
+
+		if hasMatchVar {
+			taskCopy := matchingTasks[0].Task.DeepCopy()
+			matchFirstIncludeVars := ast.NewVars()
+			matchFirstIncludeVars.Set("MATCH", includeMatch)
+			if taskCopy.IncludeVars != nil {
+				matchFirstIncludeVars.Merge(taskCopy.IncludeVars, nil)
+			}
+			matchFirstIncludeVars.Set("MATCH", includeMatch)
+			taskCopy.IncludeVars = matchFirstIncludeVars
+			return taskCopy, nil
+		}
+
 		return matchingTasks[0].Task, nil
 	}
 
