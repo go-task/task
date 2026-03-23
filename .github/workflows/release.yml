@@ -32,7 +32,7 @@ jobs:
         run: npm install -g npm@latest
 
       - name: Install Task
-        uses: go-task/setup-task@0ab1b2a65bc55236a3bc64cde78f80e20e8885c2 # v1
+        uses: go-task/setup-task@70f2430ad412f838533de8c0515c749ffb2b8bd3 # v1
 
       - name: Install pnpm
         uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4
