@@ -5,8 +5,8 @@ on:
     types: [field_added]
 
 jobs:
-  issue-experiment-proposed:
-    if: github.event.issue_field.id == '6591' && github.event.issue_field_value.option.name == 'proposed'
+  issue-experiment-proposal:
+    if: github.event.issue_field.id == '6591' && github.event.issue_field_value.option.name == 'proposal'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
