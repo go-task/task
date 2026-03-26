@@ -1,0 +1,26 @@
+version: '3'
+
+method: none
+
+tasks:
+
+  check-sources:
+    sources: ["a", "b", "*.txt"]
+    cmd: echo {{ .TASKS.self.sources }}
+  
+  check-sources-empty:
+    cmd: echo {{ .TASKS.self.sources }}
+
+  check-generates:
+    generates: ["a", "b", "*.txt"]
+    cmd: echo {{ .TASKS.self.generates }}
+  
+  check-generates-empty:
+    cmd: echo {{ .TASKS.self.generates }}
+  
+  default:
+    cmds:
+      - task: check-sources
+      - task: check-sources-empty
+      - task: check-generates
+      - task: check-generates-empty
