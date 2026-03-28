@@ -2,6 +2,7 @@ package fingerprint
 
 import (
 	"os"
+	"path/filepath"
 	"sort"
 
 	"github.com/go-task/task/v3/internal/execext"
@@ -50,7 +51,8 @@ func collectKeys(m map[string]bool) []string {
 	keys := make([]string, 0, len(m))
 	for k, v := range m {
 		if v {
-			keys = append(keys, k)
+			// Normalize path separators for consistent sorting across platforms
+			keys = append(keys, filepath.ToSlash(k))
 		}
 	}
 	sort.Strings(keys)
