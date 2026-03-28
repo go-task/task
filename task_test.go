@@ -1802,6 +1802,27 @@ func TestTaskDotenvWithVarName(t *testing.T) {
 	})
 }
 
+func TestDotenvWithCLIArgs(t *testing.T) {
+	t.Parallel()
+
+	var buff bytes.Buffer
+	e := task.NewExecutor(
+		task.WithDir("testdata/dotenv/cli_args"),
+		task.WithStdout(&buff),
+		task.WithStderr(&buff),
+		task.WithSilent(true),
+	)
+	require.NoError(t, e.Setup())
+
+	specialVars := ast.NewVars()
+	specialVars.Set("CLI_ARGS", ast.Var{Value: "hello world"})
+	e.Taskfile.Vars.ReverseMerge(specialVars, nil)
+
+	err := e.Run(t.Context(), &task.Call{Task: "default"})
+	require.NoError(t, err)
+	assert.Equal(t, "args=hello world\n", buff.String())
+}
+
 func TestExitImmediately(t *testing.T) {
 	t.Parallel()
 
