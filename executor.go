@@ -41,6 +41,7 @@ type (
 		CACert              string
 		Cert                string
 		CertKey             string
+		Headers             map[string]map[string]string
 		Watch               bool
 		Verbose             bool
 		Silent              bool
@@ -327,6 +328,19 @@ type certKeyOption struct {
 
 func (o *certKeyOption) ApplyToExecutor(e *Executor) {
 	e.CertKey = o.certKey
+}
+
+// WithHeaders sets the HTTP headers to use for remote requests, keyed by host.
+func WithHeaders(headers map[string]map[string]string) ExecutorOption {
+	return &headersOption{headers: headers}
+}
+
+type headersOption struct {
+	headers map[string]map[string]string
+}
+
+func (o *headersOption) ApplyToExecutor(e *Executor) {
+	e.Headers = o.headers
 }
 
 // WithWatch tells the [Executor] to keep running in the background and watch
