@@ -100,6 +100,10 @@ func BrightRed() PrintFunc {
 	return color.New(attrsFgHiRed...).FprintfFunc()
 }
 
+func Grey() PrintFunc {
+	return color.RGB(128, 128, 128).FprintfFunc()
+}
+
 func envColor(name string, defaultColor color.Attribute) []color.Attribute {
 	// Fetch the environment variable
 	override := env.GetTaskEnv(name)

@@ -1,0 +1,46 @@
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+
+version: '3'
+
+silent: true
+env:
+  TASKFILE_ENV: taskfile_env 
+vars:
+  TASKFILE_VAR: taskfile_var
+
+tasks:
+  default:
+    deps:
+      - task: dep
+        vars: 
+          DEP_VAR: dep_var
+    env:
+      TASK_ENV: task_env 
+    vars:
+      TASK_VAR: task_var
+    cmds:
+      - echo "{{.TASK}} > TASKFILE_ENV={{.TASKFILE_ENV}}"
+      - echo "{{.TASK}} > TASKFILE_VAR={{.TASKFILE_VAR}}"
+      - echo "{{.TASK}} > TASK_ENV=$TASK_ENV"
+      - echo "{{.TASK}} > TASK_VAR={{.TASK_VAR}}"
+      - echo "{{.TASK}} > CALL_VAR={{.CALL_VAR}}"
+      - echo "{{.TASK}} > DEP_VAR={{.DEP_VAR}}"
+      - task: call
+        vars: 
+          CALL_VAR: call_var
+  call:
+    cmds:
+      - echo "{{.TASK}} > TASKFILE_ENV={{.TASKFILE_ENV}}"
+      - echo "{{.TASK}} > TASKFILE_VAR={{.TASKFILE_VAR}}"
+      - echo "{{.TASK}} > TASK_ENV=$TASK_ENV"
+      - echo "{{.TASK}} > TASK_VAR={{.TASK_VAR}}"
+      - echo "{{.TASK}} > CALL_VAR={{.CALL_VAR}}"
+      - echo "{{.TASK}} > DEP_VAR={{.DEP_VAR}}"
+  dep:
+    cmds:
+      - echo "{{.TASK}} > TASKFILE_ENV={{.TASKFILE_ENV}}"
+      - echo "{{.TASK}} > TASKFILE_VAR={{.TASKFILE_VAR}}"
+      - echo "{{.TASK}} > TASK_ENV=$TASK_ENV"
+      - echo "{{.TASK}} > TASK_VAR={{.TASK_VAR}}"
+      - echo "{{.TASK}} > CALL_VAR={{.CALL_VAR}}"
+      - echo "{{.TASK}} > DEP_VAR={{.DEP_VAR}}"
