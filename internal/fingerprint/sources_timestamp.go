@@ -32,6 +32,28 @@ func (checker *TimestampChecker) IsUpToDate(t *ast.Task) (bool, error) {
 	if err != nil {
 		return false, nil
 	}
+
+	// If generates are declared, ensure they all exist. A missing generated
+	// file means the task must run regardless of timestamps.
+	if len(t.Generates) > 0 {
+		for _, g := range t.Generates {
+			// Exclusion patterns don't represent output files; skip them.
+			if g.Negate {
+				continue
+			}
+			files, err := glob(t.Dir, g.Glob)
+			if os.IsNotExist(err) {
+				return false, nil
+			}
+			if err != nil {
+				return false, err
+			}
+			if len(files) == 0 {
+				return false, nil
+			}
+		}
+	}
+
 	generates, err := Globs(t.Dir, t.Generates)
 	if err != nil {
 		return false, nil
