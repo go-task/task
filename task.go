@@ -374,6 +374,22 @@ func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call *Call, i in
 		}
 	}
 
+	// Handle ask attached to command (y/n confirmation)
+	if cmd.Ask != "" && !e.Dry {
+		if e.AssumeYes {
+			e.Logger.VerboseOutf(logger.Yellow, "task: [%s] %s [assuming yes]\n", t.Name(), cmd.Ask)
+		} else {
+			if err := e.Logger.Prompt(logger.Yellow, cmd.Ask, "n", "y", "yes"); errors.Is(err, logger.ErrNoTerminal) {
+				return &errors.TaskCancelledNoTerminalError{TaskName: call.Task}
+			} else if errors.Is(err, logger.ErrPromptCancelled) {
+				e.Logger.VerboseOutf(logger.Yellow, "task: [%s] ask declined - skipped\n", t.Name())
+				return nil
+			} else if err != nil {
+				return err
+			}
+		}
+	}
+
 	switch {
 	case cmd.Task != "":
 		reacquire := e.releaseConcurrencyLimit()
