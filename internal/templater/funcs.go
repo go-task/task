@@ -3,6 +3,8 @@ package templater
 import (
 	"maps"
 	"math/rand/v2"
+	"os"
+	"path"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -21,8 +23,8 @@ var templateFuncs template.FuncMap
 
 func init() {
 	taskFuncs := template.FuncMap{
-		"OS":           os,
-		"ARCH":         arch,
+		"OS":           goos,
+		"ARCH":         goarch,
 		"numCPU":       runtime.NumCPU,
 		"catLines":     catLines,
 		"splitLines":   splitLines,
@@ -33,6 +35,8 @@ func init() {
 		"splitArgs":    splitArgs,
 		"IsSH":         IsSH, // Deprecated
 		"joinPath":     filepath.Join,
+		"joinEnv":      joinEnv,
+		"joinUrl":      joinUrl,
 		"relPath":      filepath.Rel,
 		"merge":        merge,
 		"spew":         spew.Sdump,
@@ -56,11 +60,11 @@ func init() {
 	maps.Copy(templateFuncs, taskFuncs)
 }
 
-func os() string {
+func goos() string {
 	return runtime.GOOS
 }
 
-func arch() string {
+func goarch() string {
 	return runtime.GOARCH
 }
 
@@ -92,6 +96,14 @@ func splitArgs(s string) ([]string, error) {
 // Deprecated: now always returns true
 func IsSH() bool {
 	return true
+}
+
+func joinEnv(elem ...string) string {
+	return strings.Join(elem, string(os.PathListSeparator))
+}
+
+func joinUrl(elem ...string) string {
+	return path.Join(elem...)
 }
 
 func merge(base map[string]any, v ...map[string]any) map[string]any {
