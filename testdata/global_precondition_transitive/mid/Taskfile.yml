@@ -1,0 +1,9 @@
+version: '3'
+
+includes:
+  deep: ./deep
+
+tasks:
+  task:
+    cmds:
+      - echo "should not run"

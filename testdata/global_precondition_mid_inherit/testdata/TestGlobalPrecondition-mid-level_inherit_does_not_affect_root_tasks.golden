@@ -1,0 +1,2 @@
+task: [task] echo "ran root task"
+ran root task

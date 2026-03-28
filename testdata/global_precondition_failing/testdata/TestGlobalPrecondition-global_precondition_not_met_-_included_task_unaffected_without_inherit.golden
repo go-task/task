@@ -1,0 +1,2 @@
+task: [inc:task] echo "should not run"
+should not run
