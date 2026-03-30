@@ -2,6 +2,7 @@ package task
 
 import (
 	"context"
+	stderrors "errors"
 	"fmt"
 	"os"
 	"runtime"
@@ -24,6 +25,8 @@ import (
 	"github.com/go-task/task/v3/internal/templater"
 	"github.com/go-task/task/v3/taskfile/ast"
 )
+
+var errSharedExecutionSuccess = stderrors.New("shared execution succeeded")
 
 const (
 	// MaximumTaskCall is the max number of times a task can be called.
@@ -457,15 +460,20 @@ func (e *Executor) startExecution(ctx context.Context, t *ast.Task, execute func
 
 		<-otherExecutionCtx.Done()
 
-		// Legacy behavior: shared executions are waited on, but their errors are not propagated.
-		if !e.PropagateSharedErrors {
-			return nil
+		if cause := context.Cause(otherExecutionCtx); cause != nil && cause != errSharedExecutionSuccess {
+			return cause
 		}
-		return context.Cause(otherExecutionCtx)
+		return nil
 	}
 
 	ctx, cancel := context.WithCancelCause(ctx)
-	defer func() { cancel(err) }()
+	defer func() {
+		if err != nil {
+			cancel(err)
+		} else {
+			cancel(errSharedExecutionSuccess)
+		}
+	}()
 
 	e.executionHashes[h] = ctx
 	e.executionHashesMutex.Unlock()

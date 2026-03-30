@@ -67,7 +67,6 @@ var (
 	Summary               bool
 	ExitCode              bool
 	Parallel              bool
-	PropagateSharedErrors bool
 	Concurrency           int
 	Dir                   string
 	Entrypoint            string
@@ -139,7 +138,6 @@ func init() {
 	pflag.BoolVarP(&AssumeYes, "yes", "y", false, "Assume \"yes\" as answer to all prompts.")
 	pflag.BoolVar(&Interactive, "interactive", getConfig(config, func() *bool { return config.Interactive }, false), "Prompt for missing required variables.")
 	pflag.BoolVarP(&Parallel, "parallel", "p", false, "Executes tasks provided on command line in parallel.")
-	pflag.BoolVar(&PropagateSharedErrors, "propagate-shared-errors", false, "When tasks share execution (e.g. run: once), propagate errors from the shared task to all dependents.")
 	pflag.BoolVarP(&Dry, "dry", "n", false, "Compiles and prints tasks in the order that they would be run, without executing them.")
 	pflag.BoolVar(&Summary, "summary", false, "Show summary about a task.")
 	pflag.BoolVarP(&ExitCode, "exit-code", "x", false, "Pass-through the exit code of the task command.")
@@ -303,7 +301,6 @@ func (o *flagsOption) ApplyToExecutor(e *task.Executor) {
 		task.WithDry(Dry || Status),
 		task.WithSummary(Summary),
 		task.WithParallel(Parallel),
-		task.WithPropagateSharedErrors(PropagateSharedErrors),
 		task.WithColor(Color),
 		task.WithConcurrency(Concurrency),
 		task.WithInterval(Interval),

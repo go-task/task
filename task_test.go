@@ -1885,7 +1885,6 @@ func TestRunOnceSharedDepsFail(t *testing.T) {
 		task.WithStdout(&buff),
 		task.WithStderr(&buff),
 		task.WithForceAll(true),
-		task.WithPropagateSharedErrors(true),
 	)
 	require.NoError(t, e.Setup())
 	require.Error(t, e.Run(t.Context(), &task.Call{Task: "build"}))
