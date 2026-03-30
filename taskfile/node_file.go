@@ -22,7 +22,13 @@ func NewFileNode(entrypoint, dir string, opts ...NodeOption) (*FileNode, error) 
 	resolvedEntrypoint, err := fsext.Search(entrypoint, dir, DefaultTaskfiles)
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
-			return nil, errors.TaskfileNotFoundError{URI: entrypoint, Walk: false}
+			if entrypoint == "" {
+				return nil, errors.TaskfileNotFoundError{URI: entrypoint, Walk: true}
+			} else {
+				return nil, errors.TaskfileNotFoundError{URI: entrypoint, Walk: false}
+			}
+		} else if errors.Is(err, os.ErrPermission) {
+			return nil, errors.TaskfileNotFoundError{URI: entrypoint, Walk: true, OwnerChange: true}
 		}
 		return nil, err
 	}

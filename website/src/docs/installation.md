@@ -13,6 +13,17 @@ Task offers many installation methods. Check out the available methods below.
 These installation methods are maintained by the Task team and are always
 up-to-date.
 
+:::info Package Repository Hosting
+
+[![Hosted By: Cloudsmith](https://img.shields.io/badge/OSS%20hosting%20by-cloudsmith-blue?logo=cloudsmith&style=for-the-badge)](https://cloudsmith.com)
+
+Package repository hosting for deb/rpm/apk is graciously provided by [Cloudsmith](https://cloudsmith.com).
+Cloudsmith is the only fully hosted, cloud-native, universal package management solution, that
+enables your organization to create, store and share packages in any format, to any place, with total
+confidence.
+
+:::
+
 ### [dnf](https://docs.fedoraproject.org/en-US/quick-docs/dnf) ![Fedora](https://img.shields.io/badge/Fedora-51A2DA?logo=fedora&logoColor=fff) ![CentOS](https://img.shields.io/badge/CentOS-002260?logo=centos&logoColor=F0F0F0) ![Fedora](https://img.shields.io/badge/Red_Hat-EE0000?logo=redhat&logoColor=white) {#dnf}
 
 [[package](https://cloudsmith.io/~task/repos/task/packages/?sort=-format&q=format%3Arpm)]
@@ -43,6 +54,22 @@ Then you can install Task with:
 
 ```shell
 apt install task
+```
+
+### [apk](https://wiki.alpinelinux.org/wiki/Alpine_Package_Keeper) ![Alpine Linux](https://img.shields.io/badge/Alpine_Linux-0D597F?logo=alpinelinux&logoColor=fff) {#apk}
+
+[[package](https://cloudsmith.io/~task/repos/task/packages/?sort=-format&q=format%3Aalpine)]
+
+Set up the repository by running:
+
+```shell
+curl -1sLf 'https://dl.cloudsmith.io/public/task/task/setup.alpine.sh' | sudo -E bash
+```
+
+Then you can install Task with:
+
+```shell
+apk add task
 ```
 
 ### [Homebrew](https://brew.sh) ![macOS](https://img.shields.io/badge/MacOS-000000?logo=apple&logoColor=F0F0F0) ![Linux](https://img.shields.io/badge/Linux-FCC624?logo=linux&logoColor=black) {#homebrew}
@@ -231,7 +258,7 @@ You can download the binary from the
 [releases page on GitHub](https://github.com/go-task/task/releases) and add to
 your `$PATH`.
 
-DEB and RPM packages are also available.
+DEB, RPM and APK packages are also available.
 
 The `task_checksums.txt` file contains the SHA-256 checksum for each file.
 

@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/fatih/color"
-	"go.yaml.in/yaml/v4"
+	"go.yaml.in/yaml/v3"
 )
 
 type (
@@ -50,10 +50,10 @@ func (err *TaskfileDecodeError) Error() string {
 			if len(te.Errors) > 1 {
 				fmt.Fprintln(buf, color.RedString("errs:"))
 				for _, message := range te.Errors {
-					fmt.Fprintln(buf, color.RedString("- %s", message.Err.Error()))
+					fmt.Fprintln(buf, color.RedString("- %s", message))
 				}
 			} else {
-				fmt.Fprintln(buf, color.RedString("err:  %s", te.Errors[0].Err.Error()))
+				fmt.Fprintln(buf, color.RedString("err:  %s", te.Errors[0]))
 			}
 		} else {
 			// Otherwise print the error message normally

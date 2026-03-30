@@ -543,6 +543,21 @@ tasks:
       - go build ./...
 ```
 
+#### `method`
+
+- **Type**: `string`
+- **Default**: `checksum`
+- **Options**: `checksum`, `timestamp`, `none`
+- **Description**: Method for checking if the task is up-to-date. Refer to the `method` root property for details.
+
+```yaml
+tasks:
+  build:
+    sources:
+      - go.mod
+    method: timestamp
+```
+
 #### `sources`
 
 - **Type**: `[]string` or `[]Glob`
@@ -659,14 +674,12 @@ tasks:
 
 ```yaml
 tasks:
-  # Simple requirements
   deploy:
     requires:
       vars: [API_KEY, ENVIRONMENT]
     cmds:
       - ./deploy.sh
 
-  # Requirements with enum validation
   advanced-deploy:
     requires:
       vars:
@@ -677,6 +690,17 @@ tasks:
           enum: [debug, info, warn, error]
     cmds:
       - echo "Deploying to {{.ENVIRONMENT}} with log level {{.LOG_LEVEL}}"
+      - ./deploy.sh
+
+
+  # Requirements with enum from variable reference
+  reusable-deploy:
+    requires:
+      vars:
+        - name: ENVIRONMENT
+          enum:
+            ref: .ALLOWED_ENVS
+    cmds:
       - ./deploy.sh
 ```
 

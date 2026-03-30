@@ -195,9 +195,9 @@ type TaskNotAllowedVarsError struct {
 func (err *TaskNotAllowedVarsError) Error() string {
 	var builder strings.Builder
 
-	builder.WriteString(fmt.Sprintf("task: Task %q cancelled because it is missing required variables:\n", err.TaskName))
+	builder.WriteString(fmt.Sprintf("task: Task %q cancelled because it is missing required variables:\n", err.TaskName)) //nolint:staticcheck
 	for _, s := range err.NotAllowedVars {
-		builder.WriteString(fmt.Sprintf("  - %s has an invalid value : '%s' (allowed values : %v)\n", s.Name, s.Value, s.Enum))
+		builder.WriteString(fmt.Sprintf("  - %s has an invalid value : '%s' (allowed values : %v)\n", s.Name, s.Value, s.Enum)) //nolint:staticcheck
 	}
 
 	return builder.String()

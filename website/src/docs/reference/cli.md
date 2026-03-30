@@ -10,8 +10,8 @@ outline: deep
 Task has multiple ways of being configured. These methods are parsed, in
 sequence, in the following order with the highest priority last:
 
-- [Environment variables](./environment.md)
 - [Configuration files](./config.md)
+- [Environment variables](./environment.md)
 - _Command-line flags_
 
 In this document, we will look at the last of the three options, command-line
@@ -104,6 +104,9 @@ task --version
 
 Enable verbose mode for detailed output.
 
+- **Config equivalent**: [`verbose`](./config.md#verbose)
+- **Environment variable**: [`TASK_VERBOSE`](./environment.md#task-verbose)
+
 ```bash
 task build --verbose
 ```
@@ -112,13 +115,20 @@ task build --verbose
 
 Disable command echoing.
 
+- **Config equivalent**: [`silent`](./config.md#silent)
+- **Environment variable**: [`TASK_SILENT`](./environment.md#task-silent)
+
 ```bash
 task deploy --silent
 ```
 
 #### `--disable-fuzzy`
 
-Disable fuzzy matching for task names. When enabled, Task will not suggest similar task names when you mistype a task name.
+Disable fuzzy matching for task names. When enabled, Task will not suggest
+similar task names when you mistype a task name.
+
+- **Config equivalent**: [`disable-fuzzy`](./config.md#disable-fuzzy)
+- **Environment variable**: [`TASK_DISABLE_FUZZY`](./environment.md#task-disable-fuzzy)
 
 ```bash
 task buidl --disable-fuzzy
@@ -131,6 +141,9 @@ task buidl --disable-fuzzy
 #### `-F, --failfast`
 
 Stop executing dependencies as soon as one of them fails.
+
+- **Config equivalent**: [`failfast`](./config.md#failfast)
+- **Environment variable**: [`TASK_FAILFAST`](./environment.md#task-failfast)
 
 ```bash
 task build --failfast
@@ -148,6 +161,8 @@ task build --force
 
 Compile and print tasks without executing them.
 
+- **Environment variable**: [`TASK_DRY`](./environment.md#task-dry)
+
 ```bash
 task deploy --dry
 ```
@@ -163,6 +178,9 @@ task test lint --parallel
 #### `-C, --concurrency <number>`
 
 Limit the number of concurrent tasks. Zero means unlimited.
+
+- **Config equivalent**: [`concurrency`](./config.md#concurrency)
+- **Environment variable**: [`TASK_CONCURRENCY`](./environment.md#task-concurrency)
 
 ```bash
 task test --concurrency 4
@@ -240,6 +258,9 @@ task test --output group --output-group-error-only
 
 Control colored output. Enabled by default.
 
+- **Config equivalent**: [`color`](./config.md#color)
+- **Environment variable**: [`TASK_COLOR`](./environment.md#task-color)
+
 ```bash
 task build --color=false
 # or use environment variable
@@ -274,7 +295,12 @@ task --list --json
 
 #### `--sort <mode>`
 
-Change task listing order. Available modes: `default`, `alphanumeric`, `none`.
+Change task listing order. Available modes:
+
+- `default` - Sorts tasks alphabetically by name, but ensures that root tasks
+  (tasks without a namespace) are listed before namespaced tasks.
+- `alphanumeric` - Sort tasks alphabetically by name.
+- `none` - No sorting. Uses the order as defined in the Taskfile.
 
 ```bash
 task --list --sort alphanumeric
@@ -305,6 +331,8 @@ task build --watch --interval 1s
 
 Automatically answer "yes" to all prompts.
 
+- **Environment variable**: [`TASK_ASSUME_YES`](./environment.md#task-assume-yes)
+
 ```bash
 task deploy --yes
 ```
@@ -314,9 +342,11 @@ task deploy --yes
 Enable interactive prompts for missing required variables. When a required
 variable is not provided, Task will prompt for input instead of failing.
 
-Task automatically detects non-TTY environments (like CI pipelines) and
-skips prompts. This flag can also be set in `.taskrc.yml` to enable prompts
-by default.
+Task automatically detects non-TTY environments (like CI pipelines) and skips
+prompts. This flag can also be set in `.taskrc.yml` to enable prompts by
+default.
+
+- **Environment variable**: [`TASK_INTERACTIVE`](./environment.md#task-interactive)
 
 ```bash
 task deploy --interactive

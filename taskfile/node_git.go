@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -127,17 +128,17 @@ func (node *GitNode) getOrCloneRepo(ctx context.Context) (string, error) {
 	repoMutex.Lock()
 	defer repoMutex.Unlock()
 
-	// Check if context was cancelled while waiting for lock
-	if err := ctx.Err(); err != nil {
-		return "", fmt.Errorf("context cancelled while waiting for repository lock: %w", err)
-	}
-
 	cacheDir := filepath.Join(os.TempDir(), "task-git-repos", cacheKey)
 
-	// check if repo is already cached (under the lock)
+	// Check cache FIRST - if already cloned, no network needed, timeout irrelevant
 	gitDir := filepath.Join(cacheDir, ".git")
 	if _, err := os.Stat(gitDir); err == nil {
 		return cacheDir, nil
+	}
+
+	// Only check context if we need to clone (requires network)
+	if err := ctx.Err(); err != nil {
+		return "", fmt.Errorf("context cancelled while waiting for repository lock: %w", err)
 	}
 
 	getterURL := node.buildURL()
@@ -191,8 +192,8 @@ func (node *GitNode) ResolveEntrypoint(entrypoint string) (string, error) {
 		return entrypoint, nil
 	}
 
-	dir, _ := filepath.Split(node.path)
-	resolvedEntrypoint := fmt.Sprintf("%s//%s", node.url, filepath.Join(dir, entrypoint))
+	dir, _ := path.Split(node.path)
+	resolvedEntrypoint := fmt.Sprintf("%s//%s", node.url, path.Join(dir, entrypoint))
 	if node.ref != "" {
 		return fmt.Sprintf("%s?ref=%s", resolvedEntrypoint, node.ref), nil
 	}

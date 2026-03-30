@@ -1,5 +1,35 @@
 # Changelog
 
+## Unreleased
+
+- Added `enum.ref` support in `requires`: enum constraints can now reference
+  variables or template pipelines (e.g., `ref: .ALLOWED_ENVS`) instead of
+  duplicating static lists. Combined with `sh:` variables, this enables fully
+  dynamic enum validation (#2678 by @vmaerten).
+- Fixed Fish completion using hardcoded `task` binary name instead of
+  `$GO_TASK_PROGNAME` for experiments cache (#2730, #2727 by @SergioChan).
+
+## v3.49.1 - 2026-03-08
+
+* Reverted #2632 for now, which caused some regressions. That change will be
+  reworked (#2720, #2722, #2723).
+
+## v3.49.0 - 2026-03-07
+
+- Fixed included Taskfiles with `watch: true` not triggering watch mode when
+  called from the root Taskfile (#2686, #1763 by @trulede).
+- Fixed Remote Git Taskfiles failing on Windows due to backslashes in URL paths
+  (#2656 by @Trim21).
+- Fixed remote Git Taskfiles timing out when resolving includes after accepting
+  the trust prompt (#2669, #2668 by @vmaerten).
+- Fixed unclear error message when Taskfile search stops at a directory
+  ownership boundary (#2682, #1683 by @trulede).
+- Fixed global variables from imported Taskfiles not resolving `ref:` values
+  correctly (#2632 by @trulede).
+- Every `.taskrc.yml` option can now be overridden with a `TASK_`-prefixed
+  environment variable, making CI and container configuration easier (#2607,
+  #1066 by @vmaerten).
+
 ## v3.48.0 - 2026-01-26
 
 - Fixed `if:` conditions when using to check dynamic variables. Also, skip

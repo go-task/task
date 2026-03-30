@@ -5,7 +5,7 @@ import (
 	"regexp"
 	"strings"
 
-	"go.yaml.in/yaml/v4"
+	"go.yaml.in/yaml/v3"
 
 	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/deepcopy"
@@ -242,6 +242,7 @@ func (t *Task) DeepCopy() *Task {
 		Requires:             t.Requires.DeepCopy(),
 		Namespace:            t.Namespace,
 		FullName:             t.FullName,
+		Watch:                t.Watch,
 		Failfast:             t.Failfast,
 	}
 	return c
