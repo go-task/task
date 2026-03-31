@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 
 	"github.com/go-task/task/v3/internal/execext"
 	"github.com/go-task/task/v3/internal/filepathext"
@@ -26,6 +27,7 @@ func Globs(dir string, globs []*ast.Glob) ([]string, error) {
 
 func glob(dir string, g string) ([]string, error) {
 	g = filepathext.SmartJoin(dir, g)
+	g = strings.ReplaceAll(g, " ", `\ `)
 
 	fs, err := execext.ExpandFields(g)
 	if err != nil {
