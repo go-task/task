@@ -92,9 +92,7 @@ brews:
     test: system "#{bin}/task", "--help"
     install: |-
       bin.install "task"
-      bash_completion.install "completion/bash/task.bash" => "task"
-      zsh_completion.install "completion/zsh/_task" => "_task"
-      fish_completion.install "completion/fish/task.fish"
+      generate_completions_from_executable(bin/"task", "--completion")
     commit_author:
       name: task-bot
       email: 106601941+task-bot@users.noreply.github.com
