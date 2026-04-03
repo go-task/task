@@ -176,7 +176,9 @@ func (t1 *Tasks) Merge(t2 *Tasks, include *Include, includedTaskfileVars *Vars) 
 				task.IncludeVars = NewVars()
 			}
 			task.IncludeVars.Merge(include.Vars, nil)
-			task.IncludedTaskfileVars = includedTaskfileVars.DeepCopy()
+			if task.IncludedTaskfileVars == nil || task.IncludedTaskfileVars.Len() == 0 {
+				task.IncludedTaskfileVars = includedTaskfileVars.DeepCopy()
+			}
 		}
 
 		if _, ok := t1.Get(taskName); ok {

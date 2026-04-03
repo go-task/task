@@ -95,13 +95,17 @@ func (c *Compiler) getVariables(t *ast.Task, call *Call, evaluateShVars bool) (*
 	if t != nil {
 		// NOTE(@andreynering): We're manually joining these paths here because
 		// this is the raw task, not the compiled one.
-		cache := &templater.Cache{Vars: result}
-		dir := templater.Replace(t.Dir, cache)
-		if err := cache.Err(); err != nil {
-			return nil, err
+		// Resolve t.Dir lazily so that template variables (e.g. dir: '{{.VAR}}')
+		// can reference taskfile-level vars that are processed before task vars.
+		taskRangeFunc = func(k string, v ast.Var) error {
+			cache := &templater.Cache{Vars: result}
+			dir := templater.Replace(t.Dir, cache)
+			if err := cache.Err(); err != nil {
+				return err
+			}
+			dir = filepathext.SmartJoin(c.Dir, dir)
+			return getRangeFunc(dir)(k, v)
 		}
-		dir = filepathext.SmartJoin(c.Dir, dir)
-		taskRangeFunc = getRangeFunc(dir)
 	}
 
 	for k, v := range c.TaskfileEnv.All() {
@@ -157,13 +161,14 @@ func (c *Compiler) HandleDynamicVar(v ast.Var, dir string, e []string) (string, 
 	if c.dynamicCache == nil {
 		c.dynamicCache = make(map[string]string, 30)
 	}
-	if result, ok := c.dynamicCache[*v.Sh]; ok {
-		return result, nil
-	}
-
 	// NOTE(@andreynering): If a var have a specific dir, use this instead
 	if v.Dir != "" {
 		dir = v.Dir
+	}
+
+	cacheKey := dir + "|" + *v.Sh
+	if result, ok := c.dynamicCache[cacheKey]; ok {
+		return result, nil
 	}
 
 	var stdout bytes.Buffer
@@ -183,7 +188,7 @@ func (c *Compiler) HandleDynamicVar(v ast.Var, dir string, e []string) (string, 
 	result := strings.TrimSuffix(stdout.String(), "\r\n")
 	result = strings.TrimSuffix(result, "\n")
 
-	c.dynamicCache[*v.Sh] = result
+	c.dynamicCache[cacheKey] = result
 	c.Logger.VerboseErrf(logger.Magenta, "task: dynamic variable: %q result: %q\n", *v.Sh, result)
 
 	return result, nil
