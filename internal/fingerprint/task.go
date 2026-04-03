@@ -13,6 +13,7 @@ type (
 		method         string
 		dry            bool
 		tempDir        string
+		rootDir        string
 		logger         *logger.Logger
 		statusChecker  StatusCheckable
 		sourcesChecker SourcesCheckable
@@ -34,6 +35,12 @@ func WithDry(dry bool) CheckerOption {
 func WithTempDir(tempDir string) CheckerOption {
 	return func(config *CheckerConfig) {
 		config.tempDir = tempDir
+	}
+}
+
+func WithRootDir(rootDir string) CheckerOption {
+	return func(config *CheckerConfig) {
+		config.rootDir = rootDir
 	}
 }
 
@@ -86,7 +93,7 @@ func IsTaskUpToDate(
 
 	// If no sources checker was given, set up the default one
 	if config.sourcesChecker == nil {
-		config.sourcesChecker, err = NewSourcesChecker(config.method, config.tempDir, config.dry)
+		config.sourcesChecker, err = NewSourcesChecker(config.method, config.tempDir, config.dry, config.rootDir)
 		if err != nil {
 			return false, err
 		}

@@ -5,7 +5,6 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/go-git/go-git/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -14,8 +13,7 @@ import (
 
 func initGitRepo(t *testing.T, dir string) {
 	t.Helper()
-	_, err := git.PlainInit(dir, false)
-	require.NoError(t, err)
+	require.NoError(t, os.MkdirAll(filepath.Join(dir, ".git"), 0o755))
 }
 
 func TestGlobsWithGitignore(t *testing.T) {
@@ -27,27 +25,21 @@ func TestGlobsWithGitignore(t *testing.T) {
 
 	initGitRepo(t, dir)
 
-	// Create test files
 	require.NoError(t, os.WriteFile(filepath.Join(dir, "included.txt"), []byte("included"), 0o644))
 	require.NoError(t, os.WriteFile(filepath.Join(dir, "ignored.log"), []byte("ignored"), 0o644))
 	require.NoError(t, os.WriteFile(filepath.Join(dir, "also-included.txt"), []byte("also included"), 0o644))
-
-	// Create .gitignore
 	require.NoError(t, os.WriteFile(filepath.Join(dir, ".gitignore"), []byte("*.log\n"), 0o644))
 
 	globs := []*ast.Glob{
 		{Glob: "./*"},
 	}
 
-	// Without gitignore - should include all files
-	filesWithout, err := Globs(dir, globs, false)
+	filesWithout, err := Globs(dir, globs, false, dir)
 	require.NoError(t, err)
 
-	// With gitignore - should exclude .log files
-	filesWith, err := Globs(dir, globs, true)
+	filesWith, err := Globs(dir, globs, true, dir)
 	require.NoError(t, err)
 
-	// The .log file should be in the unfiltered list
 	hasLog := false
 	for _, f := range filesWithout {
 		if filepath.Base(f) == "ignored.log" {
@@ -57,7 +49,6 @@ func TestGlobsWithGitignore(t *testing.T) {
 	}
 	assert.True(t, hasLog, "ignored.log should be present without gitignore filter")
 
-	// The .log file should NOT be in the filtered list
 	hasLog = false
 	for _, f := range filesWith {
 		if filepath.Base(f) == "ignored.log" {
@@ -67,7 +58,6 @@ func TestGlobsWithGitignore(t *testing.T) {
 	}
 	assert.False(t, hasLog, "ignored.log should be excluded with gitignore filter")
 
-	// .txt files should still be present
 	txtCount := 0
 	for _, f := range filesWith {
 		if filepath.Ext(f) == ".txt" {
@@ -77,34 +67,36 @@ func TestGlobsWithGitignore(t *testing.T) {
 	assert.Equal(t, 2, txtCount, "both .txt files should remain")
 }
 
-func TestGlobsWithGitignoreDisabled(t *testing.T) {
+func TestGlobsWithGitignoreNested(t *testing.T) {
 	t.Parallel()
 
-	dir, err := os.MkdirTemp("", "task-gitignore-disabled-*")
+	dir, err := os.MkdirTemp("", "task-gitignore-nested-*")
 	require.NoError(t, err)
 	t.Cleanup(func() { os.RemoveAll(dir) })
 
 	initGitRepo(t, dir)
-	require.NoError(t, os.WriteFile(filepath.Join(dir, "file.txt"), []byte("content"), 0o644))
-	require.NoError(t, os.WriteFile(filepath.Join(dir, "file.log"), []byte("content"), 0o644))
+
+	subDir := filepath.Join(dir, "sub")
+	require.NoError(t, os.MkdirAll(subDir, 0o755))
+
+	require.NoError(t, os.WriteFile(filepath.Join(subDir, "keep.txt"), []byte("keep"), 0o644))
+	require.NoError(t, os.WriteFile(filepath.Join(subDir, "build.out"), []byte("build"), 0o644))
+
+	// Root .gitignore ignores *.log
 	require.NoError(t, os.WriteFile(filepath.Join(dir, ".gitignore"), []byte("*.log\n"), 0o644))
+	// Nested .gitignore ignores *.out
+	require.NoError(t, os.WriteFile(filepath.Join(subDir, ".gitignore"), []byte("*.out\n"), 0o644))
 
 	globs := []*ast.Glob{
 		{Glob: "./*"},
 	}
 
-	// WithGitignore(false, ...) should not filter
-	files, err := Globs(dir, globs, false)
+	files, err := Globs(subDir, globs, true, dir)
 	require.NoError(t, err)
 
-	hasLog := false
 	for _, f := range files {
-		if filepath.Base(f) == "file.log" {
-			hasLog = true
-			break
-		}
+		assert.NotEqual(t, "build.out", filepath.Base(f), "build.out should be excluded by nested .gitignore")
 	}
-	assert.True(t, hasLog, "file.log should be present when gitignore is disabled")
 }
 
 func TestGlobsWithGitignoreNoRepo(t *testing.T) {
@@ -120,8 +112,7 @@ func TestGlobsWithGitignoreNoRepo(t *testing.T) {
 		{Glob: "./*"},
 	}
 
-	// Should not error and should return all files
-	files, err := Globs(dir, globs, true)
+	files, err := Globs(dir, globs, true, dir)
 	require.NoError(t, err)
 	assert.Len(t, files, 1)
 }

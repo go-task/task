@@ -203,9 +203,9 @@ func (e *Executor) compiledTask(call *Call, evaluateShVars bool) (*ast.Task, err
 		var checker fingerprint.SourcesCheckable
 
 		if origTask.Method == "timestamp" {
-			checker = fingerprint.NewTimestampChecker(e.TempDir.Fingerprint, e.Dry)
+			checker = fingerprint.NewTimestampChecker(e.TempDir.Fingerprint, e.Dry, e.Dir)
 		} else {
-			checker = fingerprint.NewChecksumChecker(e.TempDir.Fingerprint, e.Dry)
+			checker = fingerprint.NewChecksumChecker(e.TempDir.Fingerprint, e.Dry, e.Dir)
 		}
 
 		value, err := checker.Value(&new)
@@ -226,7 +226,7 @@ func (e *Executor) compiledTask(call *Call, evaluateShVars bool) (*ast.Task, err
 				continue
 			}
 			if cmd.For != nil {
-				list, keys, err := itemsFromFor(cmd.For, new.Dir, new.Sources, new.Generates, gitignore, vars, origTask.Location, cache)
+				list, keys, err := itemsFromFor(cmd.For, new.Dir, new.Sources, new.Generates, gitignore, e.Dir, vars, origTask.Location, cache)
 				if err != nil {
 					return nil, err
 				}
@@ -275,7 +275,7 @@ func (e *Executor) compiledTask(call *Call, evaluateShVars bool) (*ast.Task, err
 				continue
 			}
 			if dep.For != nil {
-				list, keys, err := itemsFromFor(dep.For, new.Dir, new.Sources, new.Generates, gitignore, vars, origTask.Location, cache)
+				list, keys, err := itemsFromFor(dep.For, new.Dir, new.Sources, new.Generates, gitignore, e.Dir, vars, origTask.Location, cache)
 				if err != nil {
 					return nil, err
 				}
@@ -347,6 +347,7 @@ func itemsFromFor(
 	sources []*ast.Glob,
 	generates []*ast.Glob,
 	gitignore bool,
+	rootDir string,
 	vars *ast.Vars,
 	location *ast.Location,
 	cache *templater.Cache,
@@ -369,7 +370,7 @@ func itemsFromFor(
 	}
 	// Get the list from the task sources
 	if f.From == "sources" {
-		glist, err := fingerprint.Globs(dir, sources, gitignore)
+		glist, err := fingerprint.Globs(dir, sources, gitignore, rootDir)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -383,7 +384,7 @@ func itemsFromFor(
 	}
 	// Get the list from the task generates
 	if f.From == "generates" {
-		glist, err := fingerprint.Globs(dir, generates, gitignore)
+		glist, err := fingerprint.Globs(dir, generates, gitignore, rootDir)
 		if err != nil {
 			return nil, nil, err
 		}
