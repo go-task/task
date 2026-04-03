@@ -115,7 +115,7 @@ func (c *ChecksumChecker) checksum(t *ast.Task) (string, error) {
 }
 
 func (checker *ChecksumChecker) checksumFilePath(t *ast.Task) string {
-	return filepath.Join(checker.tempDir, "checksum", normalizeFilename(t.Name()))
+	return filepath.Join(checker.tempDir, "checksum", taskFingerprintKey(t))
 }
 
 var checksumFilenameRegexp = regexp.MustCompile("[^A-z0-9]")
