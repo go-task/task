@@ -88,7 +88,7 @@ func (*ChecksumChecker) Kind() string {
 }
 
 func (c *ChecksumChecker) checksum(t *ast.Task) (string, error) {
-	sources, err := Globs(t.Dir, t.Sources)
+	sources, err := Globs(t.Dir, t.Sources, t.IsGitignore())
 	if err != nil {
 		return "", err
 	}
