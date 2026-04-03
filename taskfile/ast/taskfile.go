@@ -30,10 +30,11 @@ type Taskfile struct {
 	Vars     *Vars
 	Env      *Vars
 	Tasks    *Tasks
-	Silent   bool
-	Dotenv   []string
-	Run      string
-	Interval time.Duration
+	Silent    bool
+	Dotenv    []string
+	Run       string
+	Interval  time.Duration
+	Gitignore bool
 }
 
 // Merge merges the second Taskfile into the first
@@ -88,7 +89,8 @@ func (tf *Taskfile) UnmarshalYAML(node *yaml.Node) error {
 			Silent   bool
 			Dotenv   []string
 			Run      string
-			Interval time.Duration
+			Interval  time.Duration
+			Gitignore bool
 		}
 		if err := node.Decode(&taskfile); err != nil {
 			return errors.NewTaskfileDecodeError(err, node)
@@ -106,6 +108,7 @@ func (tf *Taskfile) UnmarshalYAML(node *yaml.Node) error {
 		tf.Dotenv = taskfile.Dotenv
 		tf.Run = taskfile.Run
 		tf.Interval = taskfile.Interval
+		tf.Gitignore = taskfile.Gitignore
 		if tf.Includes == nil {
 			tf.Includes = NewIncludes()
 		}

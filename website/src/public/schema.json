@@ -177,6 +177,11 @@
           "enum": ["none", "checksum", "timestamp"],
           "default": "none"
         },
+        "gitignore": {
+          "description": "When set to true, files matching .gitignore rules will be excluded from sources and generates glob resolution. Overrides the global gitignore setting.",
+          "type": "boolean",
+          "default": false
+        },
         "prefix": {
           "description": "Defines a string to prefix the output of tasks running in parallel. Only used when the output mode is `prefixed`.",
           "type": "string"
@@ -686,6 +691,11 @@
           "type": "string",
           "enum": ["none", "checksum", "timestamp"],
           "default": "checksum"
+        },
+        "gitignore": {
+          "description": "When set to true, files matching .gitignore rules will be excluded from sources and generates glob resolution for all tasks. Can be overridden per task.",
+          "type": "boolean",
+          "default": false
         },
         "includes": {
           "description": "Imports tasks from the specified taskfiles. The tasks described in the given Taskfiles will be available with the informed namespace.",
