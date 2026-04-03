@@ -1,0 +1,8 @@
+version: '3'
+
+tasks:
+  default:
+    sources:
+      - "./**/*.txt"
+    cmds:
+      - echo "Task running!"
