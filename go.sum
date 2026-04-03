@@ -315,5 +315,7 @@ gopkg.in/yaml.v3 v3.0.1 h1:fxVm/GzAzEWqLHuvctI91KS9hhNmmWOoWu0XTYJS7CA=
 gopkg.in/yaml.v3 v3.0.1/go.mod h1:K4uyk7z7BCEPqu6E+C64Yfv1cQ7kz7rIZviUmN+EgEM=
 mvdan.cc/sh/moreinterp v0.0.0-20260120230322-19def062a997 h1:3bbJwtPFh98dJ6lxRdR3eLHTH1CmR3BcU6TriIMiXjE=
 mvdan.cc/sh/moreinterp v0.0.0-20260120230322-19def062a997/go.mod h1:Qy/zdaMDxq9sT72Gi43K3gsV+TtTohyDO3f1cyBVwuo=
+mvdan.cc/sh/moreinterp v0.0.0-20260403132118-4fe0cc293024 h1:EJyItivEAkK0dvKMk0N6SahX+4nRHb1KS4SJgvK93Gg=
+mvdan.cc/sh/moreinterp v0.0.0-20260403132118-4fe0cc293024/go.mod h1:SR7UOjTQQhhrUu6d6lNtjAmdqmlMqr0lR/UWTxY8wJM=
 mvdan.cc/sh/v3 v3.13.0 h1:dSfq/MVsY4w0Vsi6Lbs0IcQquMVqLdKLESAOZjuHdLg=
 mvdan.cc/sh/v3 v3.13.0/go.mod h1:KV1GByGPc/Ho0X1E6Uz9euhsIQEj4hwyKnodLlFLoDM=
