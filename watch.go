@@ -205,7 +205,7 @@ func (e *Executor) collectSources(calls []*Call) ([]string, error) {
 	var sources []string
 
 	err := e.traverse(calls, func(task *ast.Task) error {
-		files, err := fingerprint.Globs(task.Dir, task.Sources)
+		files, err := fingerprint.Globs(task.Dir, task.Sources, task.IsGitignore())
 		if err != nil {
 			return err
 		}
