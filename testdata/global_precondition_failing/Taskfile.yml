@@ -1,0 +1,20 @@
+version: '3'
+
+preconditions:
+  - sh: "[ 1 = 0 ]"
+    msg: "global precondition failed"
+
+includes:
+  inc: ./included
+
+tasks:
+  task:
+    cmds:
+      - echo "should not run"
+
+  task-with-own-precondition:
+    preconditions:
+      - sh: "[ 1 = 1 ]"
+        msg: "own precondition"
+    cmds:
+      - echo "should not run either"

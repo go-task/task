@@ -210,6 +210,11 @@
           "description": "When running tasks in parallel, stop all tasks if one fails.",
           "type": "boolean",
           "default": false
+        },
+        "skip_preconditions": {
+          "description": "When true, the task will not receive preconditions inherited from parent Taskfiles. Global preconditions defined in the same file as the task still apply.",
+          "type": "boolean",
+          "default": false
         }
       }
     },
@@ -565,6 +570,11 @@
         "msg": {
           "description": "Failure message to display when the condition fails",
           "type": "string"
+        },
+        "inherit": {
+          "description": "When true and defined at the taskfile level, this precondition also applies to tasks in included Taskfiles.",
+          "type": "boolean",
+          "default": false
         }
       },
       "additionalProperties": false
@@ -792,6 +802,13 @@
           "description": "Sets a different watch interval when using `--watch`, the default being 100 milliseconds. This string should be a valid Go duration: https://pkg.go.dev/time#ParseDuration.",
           "type": "string",
           "pattern": "^[0-9]+(?:m|s|ms)$"
+        },
+        "preconditions": {
+          "description": "Global preconditions that must be met before running any task. Prepended to each task's own preconditions and inherited by tasks in included Taskfiles.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/precondition"
+          }
         }
       },
       "additionalProperties": false,

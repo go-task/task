@@ -1,0 +1,2 @@
+task: [passing] echo "ran passing"
+ran passing

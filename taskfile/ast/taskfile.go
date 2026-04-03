@@ -20,20 +20,21 @@ var ErrIncludedTaskfilesCantHaveDotenvs = errors.New("task: Included Taskfiles c
 
 // Taskfile is the abstract syntax tree for a Taskfile
 type Taskfile struct {
-	Location string
-	Version  *semver.Version
-	Output   Output
-	Method   string
-	Includes *Includes
-	Set      []string
-	Shopt    []string
-	Vars     *Vars
-	Env      *Vars
-	Tasks    *Tasks
-	Silent   bool
-	Dotenv   []string
-	Run      string
-	Interval time.Duration
+	Location      string
+	Version       *semver.Version
+	Output        Output
+	Method        string
+	Includes      *Includes
+	Set           []string
+	Shopt         []string
+	Vars          *Vars
+	Env           *Vars
+	Tasks         *Tasks
+	Silent        bool
+	Dotenv        []string
+	Run           string
+	Interval      time.Duration
+	Preconditions []*Precondition
 }
 
 // Merge merges the second Taskfile into the first
@@ -69,26 +70,27 @@ func (t1 *Taskfile) Merge(t2 *Taskfile, include *Include) error {
 	}
 	t1.Vars.Merge(t2.Vars, include)
 	t1.Env.Merge(t2.Env, include)
-	return t1.Tasks.Merge(t2.Tasks, include, t1.Vars)
+	return t1.Tasks.Merge(t2.Tasks, include, t1.Vars, t2.Preconditions)
 }
 
 func (tf *Taskfile) UnmarshalYAML(node *yaml.Node) error {
 	switch node.Kind {
 	case yaml.MappingNode:
 		var taskfile struct {
-			Version  *semver.Version
-			Output   Output
-			Method   string
-			Includes *Includes
-			Set      []string
-			Shopt    []string
-			Vars     *Vars
-			Env      *Vars
-			Tasks    *Tasks
-			Silent   bool
-			Dotenv   []string
-			Run      string
-			Interval time.Duration
+			Version       *semver.Version
+			Output        Output
+			Method        string
+			Includes      *Includes
+			Set           []string
+			Shopt         []string
+			Vars          *Vars
+			Env           *Vars
+			Tasks         *Tasks
+			Silent        bool
+			Dotenv        []string
+			Run           string
+			Interval      time.Duration
+			Preconditions []*Precondition
 		}
 		if err := node.Decode(&taskfile); err != nil {
 			return errors.NewTaskfileDecodeError(err, node)
@@ -106,6 +108,7 @@ func (tf *Taskfile) UnmarshalYAML(node *yaml.Node) error {
 		tf.Dotenv = taskfile.Dotenv
 		tf.Run = taskfile.Run
 		tf.Interval = taskfile.Interval
+		tf.Preconditions = taskfile.Preconditions
 		if tf.Includes == nil {
 			tf.Includes = NewIncludes()
 		}
