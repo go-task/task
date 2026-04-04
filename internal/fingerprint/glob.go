@@ -10,7 +10,7 @@ import (
 	"github.com/go-task/task/v3/taskfile/ast"
 )
 
-func Globs(dir string, globs []*ast.Glob, gitignore bool, rootDir string) ([]string, error) {
+func Globs(dir string, globs []*ast.Glob, gitignore bool) ([]string, error) {
 	resultMap := make(map[string]bool)
 	for _, g := range globs {
 		matches, err := glob(dir, g.Glob)
@@ -23,7 +23,7 @@ func Globs(dir string, globs []*ast.Glob, gitignore bool, rootDir string) ([]str
 	}
 
 	if gitignore {
-		resultMap = filterGitignored(resultMap, rootDir, dir)
+		resultMap = filterGitignored(resultMap, dir)
 	}
 
 	return collectKeys(resultMap), nil
