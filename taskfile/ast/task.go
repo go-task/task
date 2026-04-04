@@ -38,6 +38,7 @@ type Task struct {
 	Method        string
 	Prefix        string `hash:"ignore"`
 	IgnoreError   bool
+	UseGitignore  *bool
 	Run           string
 	Platforms     []*Platform
 	If            string
@@ -73,6 +74,12 @@ func (t *Task) LocalName() string {
 // Returns false if Silent is nil (not set) or explicitly set to false.
 func (t *Task) IsSilent() bool {
 	return t.Silent != nil && *t.Silent
+}
+
+// ShouldUseGitignore returns true if the task has gitignore filtering explicitly enabled.
+// Returns false if UseGitignore is nil (not set) or explicitly set to false.
+func (t *Task) ShouldUseGitignore() bool {
+	return t.UseGitignore != nil && *t.UseGitignore
 }
 
 // WildcardMatch will check if the given string matches the name of the Task and returns any wildcard values.
@@ -149,7 +156,8 @@ func (t *Task) UnmarshalYAML(node *yaml.Node) error {
 			Internal      bool
 			Method        string
 			Prefix        string
-			IgnoreError   bool `yaml:"ignore_error"`
+			IgnoreError   bool  `yaml:"ignore_error"`
+			UseGitignore  *bool `yaml:"use_gitignore,omitempty"`
 			Run           string
 			Platforms     []*Platform
 			If            string
@@ -190,6 +198,7 @@ func (t *Task) UnmarshalYAML(node *yaml.Node) error {
 		t.Method = task.Method
 		t.Prefix = task.Prefix
 		t.IgnoreError = task.IgnoreError
+		t.UseGitignore = deepcopy.Scalar(task.UseGitignore)
 		t.Run = task.Run
 		t.Platforms = task.Platforms
 		t.If = task.If
@@ -233,6 +242,7 @@ func (t *Task) DeepCopy() *Task {
 		Method:               t.Method,
 		Prefix:               t.Prefix,
 		IgnoreError:          t.IgnoreError,
+		UseGitignore:         deepcopy.Scalar(t.UseGitignore),
 		Run:                  t.Run,
 		IncludeVars:          t.IncludeVars.DeepCopy(),
 		IncludedTaskfileVars: t.IncludedTaskfileVars.DeepCopy(),

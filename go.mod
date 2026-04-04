@@ -22,6 +22,7 @@ require (
 	github.com/joho/godotenv v1.5.1
 	github.com/mitchellh/hashstructure/v2 v2.0.2
 	github.com/puzpuzpuz/xsync/v4 v4.4.0
+	github.com/sabhiram/go-gitignore v0.0.0-20210923224102-525f6e181f06
 	github.com/sajari/fuzzy v1.0.0
 	github.com/sebdah/goldie/v2 v2.8.0
 	github.com/spf13/pflag v1.0.10
