@@ -20,20 +20,20 @@ var ErrIncludedTaskfilesCantHaveDotenvs = errors.New("task: Included Taskfiles c
 
 // Taskfile is the abstract syntax tree for a Taskfile
 type Taskfile struct {
-	Location  string
-	Version   *semver.Version
-	Output    Output
-	Method    string
-	Includes  *Includes
-	Set       []string
-	Shopt     []string
-	Vars      *Vars
-	Env       *Vars
-	Tasks     *Tasks
-	Silent    bool
-	Dotenv    []string
-	Run       string
-	Interval  time.Duration
+	Location     string
+	Version      *semver.Version
+	Output       Output
+	Method       string
+	Includes     *Includes
+	Set          []string
+	Shopt        []string
+	Vars         *Vars
+	Env          *Vars
+	Tasks        *Tasks
+	Silent       bool
+	Dotenv       []string
+	Run          string
+	Interval     time.Duration
 	UseGitignore bool `yaml:"use_gitignore"`
 }
 
@@ -77,19 +77,19 @@ func (tf *Taskfile) UnmarshalYAML(node *yaml.Node) error {
 	switch node.Kind {
 	case yaml.MappingNode:
 		var taskfile struct {
-			Version   *semver.Version
-			Output    Output
-			Method    string
-			Includes  *Includes
-			Set       []string
-			Shopt     []string
-			Vars      *Vars
-			Env       *Vars
-			Tasks     *Tasks
-			Silent    bool
-			Dotenv    []string
-			Run       string
-			Interval  time.Duration
+			Version      *semver.Version
+			Output       Output
+			Method       string
+			Includes     *Includes
+			Set          []string
+			Shopt        []string
+			Vars         *Vars
+			Env          *Vars
+			Tasks        *Tasks
+			Silent       bool
+			Dotenv       []string
+			Run          string
+			Interval     time.Duration
 			UseGitignore bool `yaml:"use_gitignore"`
 		}
 		if err := node.Decode(&taskfile); err != nil {
