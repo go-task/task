@@ -156,7 +156,7 @@ func (t *Task) UnmarshalYAML(node *yaml.Node) error {
 			Internal      bool
 			Method        string
 			Prefix        string
-			IgnoreError   bool `yaml:"ignore_error"`
+			IgnoreError   bool  `yaml:"ignore_error"`
 			Gitignore     *bool `yaml:"gitignore,omitempty"`
 			Run           string
 			Platforms     []*Platform
