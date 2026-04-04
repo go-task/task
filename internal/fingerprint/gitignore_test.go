@@ -19,10 +19,7 @@ func initGitRepo(t *testing.T, dir string) {
 func TestGlobsWithGitignore(t *testing.T) {
 	t.Parallel()
 
-	dir, err := os.MkdirTemp("", "task-gitignore-test-*")
-	require.NoError(t, err)
-	t.Cleanup(func() { os.RemoveAll(dir) })
-
+	dir := t.TempDir()
 	initGitRepo(t, dir)
 
 	require.NoError(t, os.WriteFile(filepath.Join(dir, "included.txt"), []byte("included"), 0o644))
@@ -70,10 +67,7 @@ func TestGlobsWithGitignore(t *testing.T) {
 func TestGlobsWithGitignoreNested(t *testing.T) {
 	t.Parallel()
 
-	dir, err := os.MkdirTemp("", "task-gitignore-nested-*")
-	require.NoError(t, err)
-	t.Cleanup(func() { os.RemoveAll(dir) })
-
+	dir := t.TempDir()
 	initGitRepo(t, dir)
 
 	subDir := filepath.Join(dir, "sub")
@@ -82,9 +76,7 @@ func TestGlobsWithGitignoreNested(t *testing.T) {
 	require.NoError(t, os.WriteFile(filepath.Join(subDir, "keep.txt"), []byte("keep"), 0o644))
 	require.NoError(t, os.WriteFile(filepath.Join(subDir, "build.out"), []byte("build"), 0o644))
 
-	// Root .gitignore ignores *.log
 	require.NoError(t, os.WriteFile(filepath.Join(dir, ".gitignore"), []byte("*.log\n"), 0o644))
-	// Nested .gitignore ignores *.out
 	require.NoError(t, os.WriteFile(filepath.Join(subDir, ".gitignore"), []byte("*.out\n"), 0o644))
 
 	globs := []*ast.Glob{
@@ -102,7 +94,9 @@ func TestGlobsWithGitignoreNested(t *testing.T) {
 func TestGlobsWithGitignoreNoRepo(t *testing.T) {
 	t.Parallel()
 
-	dir, err := os.MkdirTemp("", "task-gitignore-norepo-*")
+	// Cannot use t.TempDir() here because it creates a dir inside the
+	// go-task repo which has a .git parent, defeating the "no repo" test.
+	dir, err := os.MkdirTemp("", "task-gitignore-norepo-*") //nolint:usetesting
 	require.NoError(t, err)
 	t.Cleanup(func() { os.RemoveAll(dir) })
 
