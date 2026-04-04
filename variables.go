@@ -59,7 +59,7 @@ func (e *Executor) CompiledTaskForTaskList(call *Call) (*ast.Task, error) {
 		Env:                  nil,
 		Dotenv:               origTask.Dotenv,
 		Silent:               deepcopy.Scalar(origTask.Silent),
-		Gitignore:            deepcopy.Scalar(origTask.Gitignore),
+		UseGitignore:            deepcopy.Scalar(origTask.UseGitignore),
 		Interactive:          origTask.Interactive,
 		Internal:             origTask.Internal,
 		Method:               origTask.Method,
@@ -111,9 +111,9 @@ func (e *Executor) compiledTask(call *Call, evaluateShVars bool) (*ast.Task, err
 		}
 	}
 
-	gitignore := origTask.IsGitignore()
-	if origTask.Gitignore == nil {
-		gitignore = e.Taskfile.Gitignore
+	gitignore := origTask.ShouldUseGitignore()
+	if origTask.UseGitignore == nil {
+		gitignore = e.Taskfile.UseGitignore
 	}
 
 	new := ast.Task{
@@ -132,7 +132,7 @@ func (e *Executor) compiledTask(call *Call, evaluateShVars bool) (*ast.Task, err
 		Env:                  nil,
 		Dotenv:               templater.Replace(origTask.Dotenv, cache),
 		Silent:               deepcopy.Scalar(origTask.Silent),
-		Gitignore:            &gitignore,
+		UseGitignore:            &gitignore,
 		Interactive:          origTask.Interactive,
 		Internal:             origTask.Internal,
 		Method:               templater.Replace(origTask.Method, cache),

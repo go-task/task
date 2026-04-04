@@ -1,6 +1,6 @@
 version: '3'
 
-gitignore: true
+use_gitignore: true
 
 tasks:
   build:
@@ -13,8 +13,8 @@ tasks:
       - ./generated.txt
     method: checksum
 
-  build-no-gitignore:
-    gitignore: false
+  build-no-use_gitignore:
+    use_gitignore: false
     cmds:
       - cp ./source.txt ./generated.txt
     sources:

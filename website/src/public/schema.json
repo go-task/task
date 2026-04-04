@@ -177,7 +177,7 @@
           "enum": ["none", "checksum", "timestamp"],
           "default": "none"
         },
-        "gitignore": {
+        "use_gitignore": {
           "description": "When set to true, files matching .gitignore rules will be excluded from sources and generates glob resolution. Overrides the global gitignore setting.",
           "type": "boolean",
           "default": false
@@ -692,7 +692,7 @@
           "enum": ["none", "checksum", "timestamp"],
           "default": "checksum"
         },
-        "gitignore": {
+        "use_gitignore": {
           "description": "When set to true, files matching .gitignore rules will be excluded from sources and generates glob resolution for all tasks. Can be overridden per task.",
           "type": "boolean",
           "default": false

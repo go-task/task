@@ -28,7 +28,7 @@ func (checker *TimestampChecker) IsUpToDate(t *ast.Task) (bool, error) {
 		return false, nil
 	}
 
-	sources, err := Globs(t.Dir, t.Sources, t.IsGitignore())
+	sources, err := Globs(t.Dir, t.Sources, t.ShouldUseGitignore())
 	if err != nil {
 		return false, nil
 	}
@@ -54,7 +54,7 @@ func (checker *TimestampChecker) IsUpToDate(t *ast.Task) (bool, error) {
 		}
 	}
 
-	generates, err := Globs(t.Dir, t.Generates, t.IsGitignore())
+	generates, err := Globs(t.Dir, t.Generates, t.ShouldUseGitignore())
 	if err != nil {
 		return false, nil
 	}
@@ -112,7 +112,7 @@ func (checker *TimestampChecker) Kind() string {
 
 // Value implements the Checker Interface
 func (checker *TimestampChecker) Value(t *ast.Task) (any, error) {
-	sources, err := Globs(t.Dir, t.Sources, t.IsGitignore())
+	sources, err := Globs(t.Dir, t.Sources, t.ShouldUseGitignore())
 	if err != nil {
 		return time.Now(), err
 	}
