@@ -34,10 +34,10 @@ func TestGlobsWithGitignore(t *testing.T) {
 		{Glob: "./*"},
 	}
 
-	filesWithout, err := Globs(dir, globs, false, dir)
+	filesWithout, err := Globs(dir, globs, false)
 	require.NoError(t, err)
 
-	filesWith, err := Globs(dir, globs, true, dir)
+	filesWith, err := Globs(dir, globs, true)
 	require.NoError(t, err)
 
 	hasLog := false
@@ -91,7 +91,7 @@ func TestGlobsWithGitignoreNested(t *testing.T) {
 		{Glob: "./*"},
 	}
 
-	files, err := Globs(subDir, globs, true, dir)
+	files, err := Globs(subDir, globs, true)
 	require.NoError(t, err)
 
 	for _, f := range files {
@@ -112,7 +112,7 @@ func TestGlobsWithGitignoreNoRepo(t *testing.T) {
 		{Glob: "./*"},
 	}
 
-	files, err := Globs(dir, globs, true, dir)
+	files, err := Globs(dir, globs, true)
 	require.NoError(t, err)
 	assert.Len(t, files, 1)
 }

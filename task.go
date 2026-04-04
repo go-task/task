@@ -231,7 +231,6 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) error {
 				fingerprint.WithTempDir(e.TempDir.Fingerprint),
 				fingerprint.WithDry(e.Dry),
 				fingerprint.WithLogger(e.Logger),
-				fingerprint.WithRootDir(e.Dir),
 			)
 			if err != nil {
 				return err

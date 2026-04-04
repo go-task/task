@@ -19,14 +19,12 @@ import (
 type ChecksumChecker struct {
 	tempDir string
 	dry     bool
-	rootDir string
 }
 
-func NewChecksumChecker(tempDir string, dry bool, rootDir string) *ChecksumChecker {
+func NewChecksumChecker(tempDir string, dry bool) *ChecksumChecker {
 	return &ChecksumChecker{
 		tempDir: tempDir,
 		dry:     dry,
-		rootDir: rootDir,
 	}
 }
 
@@ -91,7 +89,7 @@ func (*ChecksumChecker) Kind() string {
 }
 
 func (c *ChecksumChecker) checksum(t *ast.Task) (string, error) {
-	sources, err := Globs(t.Dir, t.Sources, t.IsGitignore(), c.rootDir)
+	sources, err := Globs(t.Dir, t.Sources, t.IsGitignore())
 	if err != nil {
 		return "", err
 	}

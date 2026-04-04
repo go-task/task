@@ -13,14 +13,12 @@ import (
 type TimestampChecker struct {
 	tempDir string
 	dry     bool
-	rootDir string
 }
 
-func NewTimestampChecker(tempDir string, dry bool, rootDir string) *TimestampChecker {
+func NewTimestampChecker(tempDir string, dry bool) *TimestampChecker {
 	return &TimestampChecker{
 		tempDir: tempDir,
 		dry:     dry,
-		rootDir: rootDir,
 	}
 }
 
@@ -30,7 +28,7 @@ func (checker *TimestampChecker) IsUpToDate(t *ast.Task) (bool, error) {
 		return false, nil
 	}
 
-	sources, err := Globs(t.Dir, t.Sources, t.IsGitignore(), checker.rootDir)
+	sources, err := Globs(t.Dir, t.Sources, t.IsGitignore())
 	if err != nil {
 		return false, nil
 	}
@@ -56,7 +54,7 @@ func (checker *TimestampChecker) IsUpToDate(t *ast.Task) (bool, error) {
 		}
 	}
 
-	generates, err := Globs(t.Dir, t.Generates, t.IsGitignore(), checker.rootDir)
+	generates, err := Globs(t.Dir, t.Generates, t.IsGitignore())
 	if err != nil {
 		return false, nil
 	}
@@ -114,7 +112,7 @@ func (checker *TimestampChecker) Kind() string {
 
 // Value implements the Checker Interface
 func (checker *TimestampChecker) Value(t *ast.Task) (any, error) {
-	sources, err := Globs(t.Dir, t.Sources, t.IsGitignore(), checker.rootDir)
+	sources, err := Globs(t.Dir, t.Sources, t.IsGitignore())
 	if err != nil {
 		return time.Now(), err
 	}
