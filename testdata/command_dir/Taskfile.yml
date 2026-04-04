@@ -1,0 +1,8 @@
+version: '3'
+
+tasks:
+  default:
+    cmds:
+      - cmd: pwd
+        dir: subdir
+    silent: true
