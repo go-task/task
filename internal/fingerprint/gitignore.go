@@ -14,13 +14,16 @@ type gitignoreRule struct {
 	matcher *ignore.GitIgnore
 }
 
-// loadGitignoreRules reads .gitignore files walking up from dir to rootDir.
-func loadGitignoreRules(rootDir, dir string) []gitignoreRule {
-	rootDir, _ = filepath.Abs(rootDir)
+// loadGitignoreRules walks up from dir collecting .gitignore files.
+// Stops at the first .git (file or directory) found.
+// Returns nil if no .git is found (not in a git repo).
+func loadGitignoreRules(dir string) []gitignoreRule {
 	dir, _ = filepath.Abs(dir)
 
 	var rules []gitignoreRule
+	foundGit := false
 	current := dir
+
 	for {
 		lines := readGitignoreLines(filepath.Join(current, ".gitignore"))
 		if len(lines) > 0 {
@@ -29,7 +32,8 @@ func loadGitignoreRules(rootDir, dir string) []gitignoreRule {
 				matcher: ignore.CompileIgnoreLines(lines...),
 			})
 		}
-		if current == rootDir {
+		if _, err := os.Stat(filepath.Join(current, ".git")); err == nil {
+			foundGit = true
 			break
 		}
 		parent := filepath.Dir(current)
@@ -37,6 +41,10 @@ func loadGitignoreRules(rootDir, dir string) []gitignoreRule {
 			break
 		}
 		current = parent
+	}
+
+	if !foundGit {
+		return nil
 	}
 
 	return rules
@@ -61,8 +69,8 @@ func readGitignoreLines(path string) []string {
 }
 
 // filterGitignored removes entries from the file map that match gitignore rules.
-func filterGitignored(files map[string]bool, rootDir, dir string) map[string]bool {
-	rules := loadGitignoreRules(rootDir, dir)
+func filterGitignored(files map[string]bool, dir string) map[string]bool {
+	rules := loadGitignoreRules(dir)
 	if len(rules) == 0 {
 		return files
 	}

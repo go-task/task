@@ -2,12 +2,12 @@ package fingerprint
 
 import "fmt"
 
-func NewSourcesChecker(method, tempDir string, dry bool, rootDir string) (SourcesCheckable, error) {
+func NewSourcesChecker(method, tempDir string, dry bool) (SourcesCheckable, error) {
 	switch method {
 	case "timestamp":
-		return NewTimestampChecker(tempDir, dry, rootDir), nil
+		return NewTimestampChecker(tempDir, dry), nil
 	case "checksum":
-		return NewChecksumChecker(tempDir, dry, rootDir), nil
+		return NewChecksumChecker(tempDir, dry), nil
 	case "none":
 		return NoneChecker{}, nil
 	default:

@@ -46,7 +46,7 @@ func (e *Executor) statusOnError(t *ast.Task) error {
 	if method == "" {
 		method = e.Taskfile.Method
 	}
-	checker, err := fingerprint.NewSourcesChecker(method, e.TempDir.Fingerprint, e.Dry, e.Dir)
+	checker, err := fingerprint.NewSourcesChecker(method, e.TempDir.Fingerprint, e.Dry)
 	if err != nil {
 		return err
 	}
