@@ -8,6 +8,8 @@
   dynamic enum validation (#2678 by @vmaerten).
 - Fixed Fish completion using hardcoded `task` binary name instead of
   `$GO_TASK_PROGNAME` for experiments cache (#2730, #2727 by @SergioChan).
+- Fixed watch mode ignoring SIGHUP signal, causing the watcher to exit instead
+  of restarting (#2764, #2642).
 
 ## v3.49.1 - 2026-03-08
 
