@@ -3,6 +3,7 @@ package ast
 import (
 	"fmt"
 	"os"
+	"slices"
 	"sync"
 
 	"github.com/dominikbraun/graph"
@@ -114,6 +115,26 @@ func (tfg *TaskfileGraph) Merge() (*Taskfile, error) {
 	rootVertex, err := tfg.Vertex(hashes[0])
 	if err != nil {
 		return nil, err
+	}
+
+	// Apply the root taskfile's global preconditions to all tasks.
+	// Root's own tasks (Namespace == "") always receive all root preconditions.
+	// Tasks from included files only receive preconditions marked inherit:true,
+	// and only when the task has not opted out via skip_preconditions.
+	if len(rootVertex.Taskfile.Preconditions) > 0 {
+		var inherited []*Precondition
+		for _, p := range rootVertex.Taskfile.Preconditions {
+			if p.Inherit {
+				inherited = append(inherited, p)
+			}
+		}
+		for task := range rootVertex.Taskfile.Tasks.Values(nil) {
+			if task.Namespace == "" {
+				task.Preconditions = slices.Concat(rootVertex.Taskfile.Preconditions, task.Preconditions)
+			} else if !task.SkipPreconditions && len(inherited) > 0 {
+				task.Preconditions = slices.Concat(inherited, task.Preconditions)
+			}
+		}
 	}
 
 	return rootVertex.Taskfile, nil

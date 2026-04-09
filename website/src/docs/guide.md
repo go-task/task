@@ -1020,6 +1020,70 @@ tasks:
       - echo "I will not run"
 ```
 
+### Global preconditions
+
+You can define preconditions at the Taskfile level that apply to every task in
+that file. This is useful for enforcing file-wide requirements without repeating
+the check on every task.
+
+```yaml
+version: '3'
+
+preconditions:
+  - sh: test -f .env
+    msg: "Missing .env file. Run 'task init' to set up the project."
+
+tasks:
+  build:
+    cmds:
+      - go build ./...
+
+  test:
+    cmds:
+      - go test ./...
+```
+
+Global preconditions are checked before the task's own preconditions.
+
+#### Inheriting preconditions into included Taskfiles
+
+By default, global preconditions are scoped to the file they are defined in and
+do not affect tasks in included Taskfiles. To propagate a precondition into
+included files, set `inherit: true`:
+
+```yaml
+version: '3'
+
+preconditions:
+  - sh: test -f .env
+    msg: "Missing .env file. Run 'task init' to set up the project."
+    inherit: true   # also applies to tasks in included Taskfiles
+
+includes:
+  tools: ./tools
+```
+
+Inherited preconditions propagate transitively through the include hierarchy.
+
+#### Skipping inherited preconditions
+
+A task can opt out of inherited preconditions with `skip_preconditions: true`.
+This only skips preconditions inherited from parent Taskfiles — global
+preconditions defined in the same file as the task still apply.
+
+```yaml
+# tools/Taskfile.yml
+preconditions:
+  - sh: test -f tools.lock
+    msg: "Run 'task tools:init' first"
+
+tasks:
+  init:
+    skip_preconditions: true  # skips parent's inherited preconditions
+    cmds:                     # but tools.lock check still applies
+      - touch tools.lock
+```
+
 ### Conditional execution with `if`
 
 The `if` attribute allows you to conditionally skip tasks or commands based on a
