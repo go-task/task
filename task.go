@@ -2,6 +2,7 @@ package task
 
 import (
 	"context"
+	stderrors "errors"
 	"fmt"
 	"os"
 	"runtime"
@@ -24,6 +25,8 @@ import (
 	"github.com/go-task/task/v3/internal/templater"
 	"github.com/go-task/task/v3/taskfile/ast"
 )
+
+var errSharedExecutionSuccess = stderrors.New("shared execution succeeded")
 
 const (
 	// MaximumTaskCall is the max number of times a task can be called.
@@ -456,16 +459,28 @@ func (e *Executor) startExecution(ctx context.Context, t *ast.Task, execute func
 		defer reacquire()
 
 		<-otherExecutionCtx.Done()
+
+		if cause := context.Cause(otherExecutionCtx); cause != nil && cause != errSharedExecutionSuccess {
+			return cause
+		}
 		return nil
 	}
 
-	ctx, cancel := context.WithCancel(ctx)
-	defer cancel()
+	ctx, cancel := context.WithCancelCause(ctx)
+	defer func() {
+		if err != nil {
+			cancel(err)
+		} else {
+			cancel(errSharedExecutionSuccess)
+		}
+	}()
 
 	e.executionHashes[h] = ctx
 	e.executionHashesMutex.Unlock()
 
-	return execute(ctx)
+	// Save err in variable so it also applied to the cancel defer
+	err = execute(ctx)
+	return err
 }
 
 // FindMatchingTasks returns a list of tasks that match the given call. A task
