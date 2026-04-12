@@ -45,7 +45,7 @@ func (checker *ChecksumChecker) IsUpToDate(t *ast.Task) (bool, error) {
 
 	if !checker.dry && oldHash != newHash {
 		_ = os.MkdirAll(filepathext.SmartJoin(checker.tempDir, "checksum"), 0o755)
-		if err = os.WriteFile(checksumFile, []byte(newHash+"\n"), 0o644); err != nil {
+		if err = os.WriteFile(checksumFile, []byte(newHash+"\n"), 0o600); err != nil {
 			return false, err
 		}
 	}

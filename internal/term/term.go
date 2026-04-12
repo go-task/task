@@ -7,5 +7,6 @@ import (
 )
 
 func IsTerminal() bool {
-	return term.IsTerminal(int(os.Stdin.Fd())) && term.IsTerminal(int(os.Stdout.Fd()))
+	fd := os.Stdin.Fd()
+	return term.IsTerminal(int(fd)) && term.IsTerminal(int(os.Stdout.Fd())) //nolint:gosec
 }

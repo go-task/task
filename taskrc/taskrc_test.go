@@ -52,7 +52,7 @@ func setupDirs(t *testing.T) (string, string, string) {
 
 func writeFile(t *testing.T, dir, filename, content string) {
 	t.Helper()
-	err := os.WriteFile(filepath.Join(dir, filename), []byte(content), 0o644)
+	err := os.WriteFile(filepath.Join(dir, filename), []byte(content), 0o600)
 	assert.NoError(t, err)
 }
 

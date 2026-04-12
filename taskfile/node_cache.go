@@ -32,7 +32,7 @@ func (node *CacheNode) Write(data []byte) error {
 	if err := node.CreateCacheDir(); err != nil {
 		return err
 	}
-	return os.WriteFile(node.Location(), data, 0o644)
+	return os.WriteFile(node.Location(), data, 0o600)
 }
 
 func (node *CacheNode) ReadTimestamp() time.Time {
@@ -51,7 +51,7 @@ func (node *CacheNode) WriteTimestamp(t time.Time) error {
 	if err := node.CreateCacheDir(); err != nil {
 		return err
 	}
-	return os.WriteFile(node.timestampPath(), []byte(t.Format(time.RFC3339)), 0o644)
+	return os.WriteFile(node.timestampPath(), []byte(t.Format(time.RFC3339)), 0o600)
 }
 
 func (node *CacheNode) ReadChecksum() string {
@@ -63,7 +63,7 @@ func (node *CacheNode) WriteChecksum(checksum string) error {
 	if err := node.CreateCacheDir(); err != nil {
 		return err
 	}
-	return os.WriteFile(node.checksumPath(), []byte(checksum), 0o644)
+	return os.WriteFile(node.checksumPath(), []byte(checksum), 0o600)
 }
 
 func (node *CacheNode) CreateCacheDir() error {
