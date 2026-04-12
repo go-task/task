@@ -10,6 +10,10 @@
   `$GO_TASK_PROGNAME` for experiments cache (#2730, #2727 by @SergioChan).
 - Fixed watch mode ignoring SIGHUP signal, causing the watcher to exit instead
   of restarting (#2764, #2642).
+- Fixed a long time bug where the task wouldn't re-run as it should when using
+  `method: timestamp` and the files listed on `generates:` were deleted.
+  This makes `method: timestamp` behaves the same as `method: checksum`
+  (#1230, #2716 by @drichardson).
 
 ## v3.49.1 - 2026-03-08
 
