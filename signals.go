@@ -15,7 +15,7 @@ const maxInterruptSignals = 3
 // time to do cleanup work.
 func (e *Executor) InterceptInterruptSignals() {
 	ch := make(chan os.Signal, maxInterruptSignals)
-	signal.Notify(ch, os.Interrupt, syscall.SIGTERM)
+	signal.Notify(ch, os.Interrupt, syscall.SIGTERM, syscall.SIGHUP)
 
 	go func() {
 		for i := range maxInterruptSignals {

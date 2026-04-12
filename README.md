@@ -34,4 +34,16 @@
       </td>
     </tr>
   </table>
+
+  <h2>Community Sponsors</h2>
+
+  <table>
+    <tr>
+      <td align="center" valign="middle">
+        <a target="_blank" href="https://cloudsmith.com/">
+          <img src="website/src/public/img/cloudsmith.svg" height="100px" width="200px" title="Cloudsmith" />
+        </a>
+      </td>
+    </tr>
+  </table>
 </div>

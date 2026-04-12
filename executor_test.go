@@ -165,6 +165,7 @@ func (tt *ExecutorTest) run(t *testing.T) {
 		// Create a golden fixture file for the output
 		g := goldie.New(t,
 			goldie.WithFixtureDir(filepath.Join(e.Dir, "testdata")),
+			goldie.WithEqualFn(NormalizedEqual),
 		)
 
 		// Call setup and check for errors
@@ -350,6 +351,41 @@ func TestRequires(t *testing.T) {
 			task.WithDir("testdata/requires"),
 		),
 		WithTask("var-defined-in-task"),
+	)
+	NewExecutorTest(t,
+		WithName("enum ref - passes validation"),
+		WithExecutorOptions(
+			task.WithDir("testdata/requires"),
+		),
+		WithTask("validation-var-ref"),
+		WithVar("ENV", "dev"),
+	)
+	NewExecutorTest(t,
+		WithName("enum ref - fails validation"),
+		WithExecutorOptions(
+			task.WithDir("testdata/requires"),
+		),
+		WithTask("validation-var-ref"),
+		WithVar("ENV", "invalid"),
+		WithRunError(),
+	)
+	NewExecutorTest(t,
+		WithName("enum ref - ref to non-list"),
+		WithExecutorOptions(
+			task.WithDir("testdata/requires"),
+		),
+		WithTask("validation-var-ref-invalid"),
+		WithVar("VALUE", "test"),
+		WithRunError(),
+	)
+	NewExecutorTest(t,
+		WithName("enum ref - ref to nonexistent var"),
+		WithExecutorOptions(
+			task.WithDir("testdata/requires"),
+		),
+		WithTask("validation-var-ref-nonexistent"),
+		WithVar("ENV", "dev"),
+		WithRunError(),
 	)
 }
 

@@ -19,5 +19,16 @@ export const sponsors = [
         img: '/img/magic.png'
       }
     ]
+  },
+  {
+    tier: 'Community Sponsors',
+    size: 'big',
+    items: [
+      {
+        name: 'Cloudsmith',
+        url: 'https://cloudsmith.com/',
+        img: '/img/cloudsmith.svg'
+      }
+    ]
   }
 ];

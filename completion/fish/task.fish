@@ -5,7 +5,7 @@ set -g __task_experiments_cache ""
 set -g __task_experiments_cache_time 0
 
 # Helper function to get experiments with 1-second cache
-function __task_get_experiments
+function __task_get_experiments --inherit-variable GO_TASK_PROGNAME
     set -l now (date +%s)
     set -l ttl 1  # Cache for 1 second only
 
@@ -16,7 +16,7 @@ function __task_get_experiments
     end
 
     # Refresh cache
-    set -g __task_experiments_cache (task --experiments 2>/dev/null)
+    set -g __task_experiments_cache ($GO_TASK_PROGNAME --experiments 2>/dev/null)
     set -g __task_experiments_cache_time $now
     printf '%s\n' $__task_experiments_cache
 end
