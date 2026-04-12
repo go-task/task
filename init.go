@@ -34,7 +34,7 @@ func InitTaskfile(path string) (string, error) {
 		path = filepathext.SmartJoin(path, defaultFilename)
 	}
 
-	if err := os.WriteFile(path, []byte(DefaultTaskfile), 0o644); err != nil {
+	if err := os.WriteFile(path, []byte(DefaultTaskfile), 0o600); err != nil {
 		return path, err
 	}
 	return path, nil
