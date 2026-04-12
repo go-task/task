@@ -33,6 +33,7 @@ formatters:
 linters:
   enable:
     - depguard
+    - gosec
     - mirror
     - misspell
     - noctx
