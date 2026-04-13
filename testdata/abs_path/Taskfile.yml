@@ -3,4 +3,4 @@ version: '3'
 tasks:
   default:
     cmds:
-      - cmd: echo '{{absPath "foo/../bar" | base}}'
+      - cmd: echo '{{absPath "foo/../bar" | osBase}}'
