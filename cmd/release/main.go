@@ -117,7 +117,7 @@ func changelog(version *semver.Version) error {
 	changelog = changelogReleaseRegex.ReplaceAllString(changelog, fmt.Sprintf("## v%s - %s", version, date))
 
 	// Write the changelog to the source file
-	if err := os.WriteFile(changelogSource, []byte(changelog), 0o644); err != nil {
+	if err := os.WriteFile(changelogSource, []byte(changelog), 0o644); err != nil { //nolint:gosec
 		return err
 	}
 
@@ -129,7 +129,7 @@ func changelog(version *semver.Version) error {
 	changelogWithFrontmatter := fmt.Sprintf("---\n%s\n---\n\n%s", frontmatter, changelogWithVPre)
 
 	// Write the changelog to the target file
-	return os.WriteFile(changelogTarget, []byte(changelogWithFrontmatter), 0o644)
+	return os.WriteFile(changelogTarget, []byte(changelogWithFrontmatter), 0o644) //nolint:gosec
 }
 
 func setVersionFile(fileName string, version *semver.Version) error {
