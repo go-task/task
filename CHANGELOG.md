@@ -10,6 +10,8 @@
   `$GO_TASK_PROGNAME` for experiments cache (#2730, #2727 by @SergioChan).
 - Fixed watch mode ignoring SIGHUP signal, causing the watcher to exit instead
   of restarting (#2764, #2642).
+- Added `absPath` template function that resolves a path to absolute form
+  (wraps `filepath.Abs`), cleaning `..` and `.` components (#2681).
 - Fixed a long time bug where the task wouldn't re-run as it should when using
   `method: timestamp` and the files listed on `generates:` were deleted.
   This makes `method: timestamp` behaves the same as `method: checksum`

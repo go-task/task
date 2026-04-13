@@ -2601,6 +2601,23 @@ func TestSplitArgs(t *testing.T) {
 	assert.Equal(t, "3\n", buff.String())
 }
 
+func TestAbsPath(t *testing.T) {
+	t.Parallel()
+
+	var buff bytes.Buffer
+	e := task.NewExecutor(
+		task.WithDir("testdata/abs_path"),
+		task.WithStdout(&buff),
+		task.WithStderr(&buff),
+		task.WithSilent(true),
+	)
+	require.NoError(t, e.Setup())
+
+	err := e.Run(t.Context(), &task.Call{Task: "default"})
+	require.NoError(t, err)
+	assert.Equal(t, "bar\n", buff.String())
+}
+
 func TestSingleCmdDep(t *testing.T) {
 	t.Parallel()
 

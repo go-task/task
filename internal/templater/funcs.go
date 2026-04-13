@@ -34,6 +34,7 @@ func init() {
 		"IsSH":         IsSH, // Deprecated
 		"joinPath":     filepath.Join,
 		"relPath":      filepath.Rel,
+		"absPath":      filepath.Abs,
 		"merge":        merge,
 		"spew":         spew.Sdump,
 		"fromYaml":     fromYaml,
