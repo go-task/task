@@ -2615,7 +2615,11 @@ func TestAbsPath(t *testing.T) {
 
 	err := e.Run(t.Context(), &task.Call{Task: "default"})
 	require.NoError(t, err)
-	assert.Equal(t, "bar\n", buff.String())
+
+	cwd, err := os.Getwd()
+	require.NoError(t, err)
+	expected := filepath.Join(cwd, "bar") + "\n"
+	assert.Equal(t, expected, buff.String())
 }
 
 func TestSingleCmdDep(t *testing.T) {
