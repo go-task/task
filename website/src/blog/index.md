@@ -5,7 +5,16 @@ editLink: false
 ---
 
 <BlogPost
-title="New `if:` Control and Variable Prompt"
+title="go tool task"
+url="/blog/go-tool-task"
+date="2026-04-14"
+author="andreynering"
+description='How to use Task using "go tool".'
+:tags="['installation']"
+/>
+
+<BlogPost
+title='New "if:" Control and Variable Prompt'
 url="/blog/if-and-variable-prompt"
 date="2026-01-24"
 author="vmaerten"

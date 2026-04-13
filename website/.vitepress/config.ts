@@ -211,7 +211,11 @@ export default defineConfig({
           collapsed: false,
           items: [
             {
-              text: 'New `if:` Control and Variable Prompt',
+              text: 'go tool task',
+              link: '/blog/go-tool-task'
+              },
+            {
+              text: 'New "if:" Control and Variable Prompt',
               link: '/blog/if-and-variable-prompt'
             }
           ]

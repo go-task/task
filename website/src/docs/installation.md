@@ -320,8 +320,6 @@ examples and configuration.
 
 ## Build From Source
 
-### Go Modules
-
 Ensure that you have a supported version of [Go](https://golang.org) properly
 installed and setup. You can find the minimum required version of Go in the
 [go.mod](https://github.com/go-task/task/blob/main/go.mod#L3) file.
@@ -345,6 +343,26 @@ instead, which is faster and more stable, since it'll just download the latest
 released binary.
 
 :::
+
+## Go Tool
+
+If you're working in a Go project, a nice possibility is using `go tool`.
+`go tool` makes it easy to run Task without needing to install the binary
+manually. This works well on CI.
+
+To do that, just run the following to add Task as a tool in your Go project.
+Task will be added to your `go.mod`.
+
+```bash
+go get -tool github.com/go-task/task/v3/cmd/task@latest
+```
+
+Then, prefix `go tool` when calling Task like below. Go will compile Task on
+demand before calling it.
+
+```bash
+go tool task {arguments...}
+```
 
 ## Setup completions
 
