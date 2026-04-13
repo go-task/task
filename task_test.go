@@ -1022,7 +1022,7 @@ func TestIncludesRemote(t *testing.T) {
 
 					for k, taskCall := range taskCalls {
 						t.Run(taskCall.Task, func(t *testing.T) {
-							expectedContent := fmt.Sprint(rand.Int64())
+							expectedContent := fmt.Sprint(rand.Int64()) //nolint:gosec
 							t.Setenv("CONTENT", expectedContent)
 
 							outputFile := fmt.Sprintf("%d.%d.txt", i, k)
