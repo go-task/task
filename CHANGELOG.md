@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v3.50.0 - 2026-04-13
 
 - Added `enum.ref` support in `requires`: enum constraints can now reference
   variables or template pipelines (e.g., `ref: .ALLOWED_ENVS`) instead of
