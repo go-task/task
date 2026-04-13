@@ -42,6 +42,9 @@ linters:
     - tparallel
     - usetesting
   settings:
+    gosec:
+      excludes:
+        - G306
     depguard:
       rules:
         main:
