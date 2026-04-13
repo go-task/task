@@ -16,10 +16,10 @@ importers:
         version: 24.12.2
       netlify-cli:
         specifier: ^24.0.0
-        version: 24.10.0(@types/node@24.12.2)(picomatch@4.0.4)(rollup@4.46.2)
+        version: 24.11.1(@types/node@24.12.2)(picomatch@4.0.4)(rollup@4.46.2)
       prettier:
         specifier: ^3.6.2
-        version: 3.8.1
+        version: 3.8.2
       vitepress:
         specifier: ^1.6.3
         version: 1.6.4(@algolia/client-search@5.35.0)(@types/node@24.12.2)(jwt-decode@4.0.0)(postcss@8.5.9)(search-insights@2.17.3)(typescript@5.9.3)
@@ -761,13 +761,13 @@ packages:
     resolution: {integrity: sha512-03lXstB4xxDKeYs2RTTZrUGRC0ea2nVZvkdGlw2A42AdK7KA6N0ocVmkIn9x91oqFsqK3dWJTAv2bzaLjsehXg==}
     engines: {node: ^14.16.0 || >=16.0.0}
 
-  '@netlify/build-info@10.4.0':
-    resolution: {integrity: sha512-PZ5PurdaZgZdmg969QBiPb56JKQu6EBu2d/2h5ppq7riYOCL2PfgoZQPqTu6g1JCF5my/SRY0+AJIX1YSEzqHg==}
+  '@netlify/build-info@10.5.0':
+    resolution: {integrity: sha512-2h4aXB6tNiT7M3IbPW94Kbx7ujVaXoBnhoJ/S53FCbTg44F1Y4Wr0gnpkSlZCihePlwTaC5vlz1qKp4bw4sAqQ==}
     engines: {node: '>=18.14.0'}
     hasBin: true
 
-  '@netlify/build@35.11.2':
-    resolution: {integrity: sha512-y+Dl2HqNs/5r3z8GBCGRDgjEVaKxJCSIjwQBG9QP/BMOIe18stjhDqECCtFvRvZDqVRF4YjgHZ8Q5VWQ5pFvfA==}
+  '@netlify/build@35.12.0':
+    resolution: {integrity: sha512-3rOq5cbD+QSB9H5YUW5vMSeYRFG6fyHw3MUwrhpc5pHgprSvIU+ravMEdXvHZTHRyUfqvM4rVjyW11qef3Lwcw==}
     engines: {node: '>=18.14.0'}
     hasBin: true
     peerDependencies:
@@ -1807,8 +1807,8 @@ packages:
       bare-abort-controller:
         optional: true
 
-  bare-fs@4.6.0:
-    resolution: {integrity: sha512-2YkS7NuiJceSEbyEOdSNLE9tsGd+f4+f7C+Nik/MCk27SYdwIMPT/yRKvg++FZhQXgk0KWJKJyXX9RhVV0RGqA==}
+  bare-fs@4.7.0:
+    resolution: {integrity: sha512-xzqKsCFxAek9aezYhjJuJRXBIaYlg/0OGDTZp+T8eYmYMlm66cs6cYko02drIyjN2CBbi+I6L7YfXyqpqtKRXA==}
     engines: {bare: '>=1.16.0'}
     peerDependencies:
       bare-buffer: '*'
@@ -1823,8 +1823,8 @@ packages:
   bare-path@3.0.0:
     resolution: {integrity: sha512-tyfW2cQcB5NN8Saijrhqn0Zh7AnFNsnczRcuWODH0eYAXBsJ5gVxAUuNr7tsHSC6IZ77cA0SitzT+s47kot8Mw==}
 
-  bare-stream@2.12.0:
-    resolution: {integrity: sha512-w28i8lkBgREV3rPXGbgK+BO66q+ZpKqRWrZLiCdmmUlLPrQ45CzkvRhN+7lnv00Gpi2zy5naRxnUFAxCECDm9g==}
+  bare-stream@2.13.0:
+    resolution: {integrity: sha512-3zAJRZMDFGjdn+RVnNpF9kuELw+0Fl3lpndM4NcEOhb9zwtSo/deETfuIwMSE5BXanA0FrN1qVjffGwAg2Y7EA==}
     peerDependencies:
       bare-abort-controller: '*'
       bare-buffer: '*'
@@ -1872,8 +1872,8 @@ packages:
     resolution: {integrity: sha512-F3PH5k5juxom4xktynS7MoFY+NUWH5LC4CnH11YB8NPew+HLpmBLCybSAEyb2F+4pRXhuhWqFesoQd6DAyc2hw==}
     engines: {node: '>=18'}
 
-  brace-expansion@2.0.3:
-    resolution: {integrity: sha512-MCV/fYJEbqx68aE58kv2cA/kiky1G8vux3OR6/jbS+jIMe/6fJWa0DTzJU7dqijOWYwHi1t29FlfYI9uytqlpA==}
+  brace-expansion@2.1.0:
+    resolution: {integrity: sha512-TN1kCZAgdgweJhWWpgKYrQaMNHcDULHkWwQIspdtjV4Y5aurRdZpjAqn6yX3FPqTA9ngHCc4hJxMAMgGfve85w==}
 
   brace-expansion@5.0.5:
     resolution: {integrity: sha512-VZznLgtwhn+Mact9tfiwx64fA9erHH/MCXEUfB/0bX/6Fz6ny5EGTXYltMocqg4xFAQZtnO3DHWWXi8RiuN7cQ==}
@@ -1918,8 +1918,8 @@ packages:
     resolution: {integrity: sha512-Sp1ablJ0ivDkSzjcaJdxEunN5/XvksFJ2sMBFfq6x0ryhQV/2b/KwFe21cMpmHtPOSij8K99/wSfoEuTObmuMQ==}
     engines: {node: '>= 0.4'}
 
-  call-bind@1.0.8:
-    resolution: {integrity: sha512-oKlSFMcMwpUg2ednkhQ454wfWiU/ul3CkJe/PEHcTKuiX6RpbehUiFMXu13HalGZxfUwCQzZG747YXBn1im9ww==}
+  call-bind@1.0.9:
+    resolution: {integrity: sha512-a/hy+pNsFUTR+Iz8TCJvXudKVLAnz/DyeSUo10I5yvFDQJBFU2s9uqQpoSrJlroHUKoKqzg+epxyP9lqFdzfBQ==}
     engines: {node: '>= 0.4'}
 
   call-bound@1.0.4:
@@ -2148,10 +2148,10 @@ packages:
   crossws@0.3.5:
     resolution: {integrity: sha512-ojKiDvcmByhwa8YYqbQI/hg7MEU0NC03+pSdEq4ZUnZR9xXpwk7E43SMNGkn+JxJGPFtNvQ48+vV2p+P1ml5PA==}
 
-  crossws@0.4.4:
-    resolution: {integrity: sha512-w6c4OdpRNnudVmcgr7brb/+/HmYjMQvYToO/oTrprTwxRUiom3LYWU1PMWuD006okbUWpII1Ea9/+kwpUfmyRg==}
+  crossws@0.4.5:
+    resolution: {integrity: sha512-wUR89x/Rw7/8t+vn0CmGDYM9TD6VtARGb0LD5jq2wjtMy1vCP4M+sm6N6TigWeTYvnA8MoW29NqqXD0ep0rfBA==}
     peerDependencies:
-      srvx: '>=0.7.1'
+      srvx: '>=0.11.5'
     peerDependenciesMeta:
       srvx:
         optional: true
@@ -3667,8 +3667,8 @@ packages:
     resolution: {integrity: sha512-8Ofs/AUQh8MaEcrlq5xOX0CQ9ypTF5dl78mjlMNfOK08fzpgTHQRQPBxcPlEtIw0yRpws+Zo/3r+5WRby7u3Gg==}
     engines: {node: '>= 0.6'}
 
-  netlify-cli@24.10.0:
-    resolution: {integrity: sha512-bW04BXG9P77NrSmdCa6TeundyLTG+vERfwqbWuRmslf6dM5rmPvWt9hoiueHjFAxroKmQEzYEAfjo3QDTy2R9w==}
+  netlify-cli@24.11.1:
+    resolution: {integrity: sha512-UuoA10MAWP4hl/Y5vRWRmhZpcTUlUHq0wPaXGFsXMtfoLInq+blWoTWYSCV5CS4B66TlMGoKpJhskjyn/ujLhw==}
     engines: {node: '>=20.12.2'}
     hasBin: true
 
@@ -4070,8 +4070,8 @@ packages:
     resolution: {integrity: sha512-QCYG84SgGyGzqJ/vlMsxeXd/pgL/I94ixdNFyh1PusWmTCyVfPJjZ1K1jvHtsbfnXQs2TSkEP2fR7QiMZAnKFQ==}
     engines: {node: '>= 0.6'}
 
-  prettier@3.8.1:
-    resolution: {integrity: sha512-UOnG6LftzbdaHZcKoPFtOcCKztrQ57WkHDeRD9t/PTQtmT0NHSeWWepj6pS0z/N7+08BHFDQVUrfmfMRcZwbMg==}
+  prettier@3.8.2:
+    resolution: {integrity: sha512-8c3mgTe0ASwWAJK+78dpviD+A8EqhndQPUBpNUIPt6+xWlIigCwfN01lWr9MAede4uqXGTEKeQWTvzb3vjia0Q==}
     engines: {node: '>=14'}
     hasBin: true
 
@@ -4264,8 +4264,8 @@ packages:
     resolution: {integrity: sha512-qYg9KP24dD5qka9J47d0aVky0N+b4fTU89LN9iDnjB5waksiC49rvMB0PrUJQGoTmH50XPiqOvAjDfaijGxYZw==}
     engines: {node: '>=8'}
 
-  resolve@1.22.11:
-    resolution: {integrity: sha512-RfqAvLnMl313r7c9oclB1HhUEAezcpLjz95wFH4LVuhk9JF/r22qmVP9AMmOU4vMX7Q8pN8jwNg/CSpdFnMjTQ==}
+  resolve@1.22.12:
+    resolution: {integrity: sha512-TyeJ1zif53BPfHootBGwPRYT1RUt6oGWsaQr8UyZW/eAm9bKoijtvruSDEmZHm92CwS9nj7/fWttqPCgzep8CA==}
     engines: {node: '>= 0.4'}
     hasBin: true
 
@@ -5815,7 +5815,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@netlify/build-info@10.4.0':
+  '@netlify/build-info@10.5.0':
     dependencies:
       '@bugsnag/js': 8.9.0
       '@iarna/toml': 2.2.5
@@ -5827,7 +5827,7 @@ snapshots:
       yaml: 2.8.3
       yargs: 17.7.2
 
-  '@netlify/build@35.11.2(@opentelemetry/api@1.8.0)(@types/node@24.12.2)(picomatch@4.0.4)(rollup@4.46.2)':
+  '@netlify/build@35.12.0(@opentelemetry/api@1.8.0)(@types/node@24.12.2)(picomatch@4.0.4)(rollup@4.46.2)':
     dependencies:
       '@bugsnag/js': 8.9.0
       '@netlify/blobs': 10.7.0(supports-color@10.2.2)
@@ -5850,6 +5850,7 @@ snapshots:
       figures: 6.1.0
       filter-obj: 6.1.0
       hot-shots: 11.4.0
+      ignore: 7.0.5
       indent-string: 5.0.0
       is-plain-obj: 4.1.0
       keep-func-props: 6.0.0
@@ -7066,7 +7067,7 @@ snapshots:
 
   array.prototype.flatmap@1.3.3:
     dependencies:
-      call-bind: 1.0.8
+      call-bind: 1.0.9
       define-properties: 1.2.1
       es-abstract: 1.24.2
       es-shim-unscopables: 1.1.0
@@ -7074,7 +7075,7 @@ snapshots:
   arraybuffer.prototype.slice@1.0.4:
     dependencies:
       array-buffer-byte-length: 1.0.2
-      call-bind: 1.0.8
+      call-bind: 1.0.9
       define-properties: 1.2.1
       es-abstract: 1.24.2
       es-errors: 1.3.0
@@ -7121,11 +7122,11 @@ snapshots:
 
   bare-events@2.8.2: {}
 
-  bare-fs@4.6.0:
+  bare-fs@4.7.0:
     dependencies:
       bare-events: 2.8.2
       bare-path: 3.0.0
-      bare-stream: 2.12.0(bare-events@2.8.2)
+      bare-stream: 2.13.0(bare-events@2.8.2)
       bare-url: 2.4.0
       fast-fifo: 1.3.2
     transitivePeerDependencies:
@@ -7138,7 +7139,7 @@ snapshots:
     dependencies:
       bare-os: 3.8.7
 
-  bare-stream@2.12.0(bare-events@2.8.2):
+  bare-stream@2.13.0(bare-events@2.8.2):
     dependencies:
       streamx: 2.25.0
       teex: 1.0.1
@@ -7203,7 +7204,7 @@ snapshots:
       widest-line: 5.0.0
       wrap-ansi: 9.0.2
 
-  brace-expansion@2.0.3:
+  brace-expansion@2.1.0:
     dependencies:
       balanced-match: 1.0.2
 
@@ -7246,7 +7247,7 @@ snapshots:
       es-errors: 1.3.0
       function-bind: 1.1.2
 
-  call-bind@1.0.8:
+  call-bind@1.0.9:
     dependencies:
       call-bind-apply-helpers: 1.0.2
       es-define-property: 1.0.1
@@ -7450,7 +7451,7 @@ snapshots:
     dependencies:
       uncrypto: 0.1.3
 
-  crossws@0.4.4: {}
+  crossws@0.4.5: {}
 
   css-select@5.2.2:
     dependencies:
@@ -7713,7 +7714,7 @@ snapshots:
       array-buffer-byte-length: 1.0.2
       arraybuffer.prototype.slice: 1.0.4
       available-typed-arrays: 1.0.7
-      call-bind: 1.0.8
+      call-bind: 1.0.9
       call-bound: 1.0.4
       data-view-buffer: 1.0.2
       data-view-byte-length: 1.0.2
@@ -8139,7 +8140,7 @@ snapshots:
 
   function.prototype.name@1.1.8:
     dependencies:
-      call-bind: 1.0.8
+      call-bind: 1.0.9
       call-bound: 1.0.4
       define-properties: 1.2.1
       functions-have-names: 1.2.3
@@ -8559,7 +8560,7 @@ snapshots:
 
   is-array-buffer@3.0.5:
     dependencies:
-      call-bind: 1.0.8
+      call-bind: 1.0.9
       call-bound: 1.0.4
       get-intrinsic: 1.3.0
 
@@ -8841,7 +8842,7 @@ snapshots:
       '@parcel/watcher-wasm': 2.5.6
       citty: 0.2.2
       consola: 3.4.2
-      crossws: 0.4.4
+      crossws: 0.4.5
       defu: 6.1.7
       get-port-please: 3.2.0
       h3: 1.15.11
@@ -9216,11 +9217,11 @@ snapshots:
 
   minimatch@5.1.9:
     dependencies:
-      brace-expansion: 2.0.3
+      brace-expansion: 2.1.0
 
   minimatch@9.0.9:
     dependencies:
-      brace-expansion: 2.0.3
+      brace-expansion: 2.1.0
 
   minimist@1.2.8: {}
 
@@ -9275,14 +9276,14 @@ snapshots:
 
   negotiator@1.0.0: {}
 
-  netlify-cli@24.10.0(@types/node@24.12.2)(picomatch@4.0.4)(rollup@4.46.2):
+  netlify-cli@24.11.1(@types/node@24.12.2)(picomatch@4.0.4)(rollup@4.46.2):
     dependencies:
       '@fastify/static': 9.0.0
       '@netlify/ai': 0.4.1
       '@netlify/api': 14.0.18
       '@netlify/blobs': 10.7.0(supports-color@10.2.2)
-      '@netlify/build': 35.11.2(@opentelemetry/api@1.8.0)(@types/node@24.12.2)(picomatch@4.0.4)(rollup@4.46.2)
-      '@netlify/build-info': 10.4.0
+      '@netlify/build': 35.12.0(@opentelemetry/api@1.8.0)(@types/node@24.12.2)(picomatch@4.0.4)(rollup@4.46.2)
+      '@netlify/build-info': 10.5.0
       '@netlify/config': 24.4.4
       '@netlify/dev': 4.16.4(rollup@4.46.2)
       '@netlify/dev-utils': 4.4.3
@@ -9497,7 +9498,7 @@ snapshots:
 
   object.assign@4.1.7:
     dependencies:
-      call-bind: 1.0.8
+      call-bind: 1.0.9
       call-bound: 1.0.4
       define-properties: 1.2.1
       es-object-atoms: 1.1.1
@@ -9506,7 +9507,7 @@ snapshots:
 
   object.entries@1.1.9:
     dependencies:
-      call-bind: 1.0.8
+      call-bind: 1.0.9
       call-bound: 1.0.4
       define-properties: 1.2.1
       es-object-atoms: 1.1.1
@@ -9813,7 +9814,7 @@ snapshots:
 
   precond@0.2.3: {}
 
-  prettier@3.8.1: {}
+  prettier@3.8.2: {}
 
   pretty-bytes@7.1.0: {}
 
@@ -9955,7 +9956,7 @@ snapshots:
 
   reflect.getprototypeof@1.0.10:
     dependencies:
-      call-bind: 1.0.8
+      call-bind: 1.0.9
       define-properties: 1.2.1
       es-abstract: 1.24.2
       es-errors: 1.3.0
@@ -9976,7 +9977,7 @@ snapshots:
 
   regexp.prototype.flags@1.5.4:
     dependencies:
-      call-bind: 1.0.8
+      call-bind: 1.0.9
       define-properties: 1.2.1
       es-errors: 1.3.0
       get-proto: 1.0.1
@@ -10034,7 +10035,7 @@ snapshots:
     dependencies:
       debug: 4.4.3(supports-color@10.2.2)
       module-details-from-path: 1.0.4
-      resolve: 1.22.11
+      resolve: 1.22.12
     transitivePeerDependencies:
       - supports-color
 
@@ -10044,8 +10045,9 @@ snapshots:
 
   resolve-from@5.0.0: {}
 
-  resolve@1.22.11:
+  resolve@1.22.12:
     dependencies:
+      es-errors: 1.3.0
       is-core-module: 2.16.1
       path-parse: 1.0.7
       supports-preserve-symlinks-flag: 1.0.0
@@ -10131,7 +10133,7 @@ snapshots:
 
   safe-array-concat@1.1.3:
     dependencies:
-      call-bind: 1.0.8
+      call-bind: 1.0.9
       call-bound: 1.0.4
       get-intrinsic: 1.3.0
       has-symbols: 1.1.0
@@ -10417,7 +10419,7 @@ snapshots:
 
   string.prototype.trim@1.2.10:
     dependencies:
-      call-bind: 1.0.8
+      call-bind: 1.0.9
       call-bound: 1.0.4
       define-data-property: 1.1.4
       define-properties: 1.2.1
@@ -10427,14 +10429,14 @@ snapshots:
 
   string.prototype.trimend@1.0.9:
     dependencies:
-      call-bind: 1.0.8
+      call-bind: 1.0.9
       call-bound: 1.0.4
       define-properties: 1.2.1
       es-object-atoms: 1.1.1
 
   string.prototype.trimstart@1.0.8:
     dependencies:
-      call-bind: 1.0.8
+      call-bind: 1.0.9
       define-properties: 1.2.1
       es-object-atoms: 1.1.1
 
@@ -10512,7 +10514,7 @@ snapshots:
   tar-stream@3.1.8:
     dependencies:
       b4a: 1.8.0
-      bare-fs: 4.6.0
+      bare-fs: 4.7.0
       fast-fifo: 1.3.2
       streamx: 2.25.0
     transitivePeerDependencies:
@@ -10649,7 +10651,7 @@ snapshots:
 
   typed-array-byte-length@1.0.3:
     dependencies:
-      call-bind: 1.0.8
+      call-bind: 1.0.9
       for-each: 0.3.5
       gopd: 1.2.0
       has-proto: 1.2.0
@@ -10658,7 +10660,7 @@ snapshots:
   typed-array-byte-offset@1.0.4:
     dependencies:
       available-typed-arrays: 1.0.7
-      call-bind: 1.0.8
+      call-bind: 1.0.9
       for-each: 0.3.5
       gopd: 1.2.0
       has-proto: 1.2.0
@@ -10667,7 +10669,7 @@ snapshots:
 
   typed-array-length@1.0.7:
     dependencies:
-      call-bind: 1.0.8
+      call-bind: 1.0.9
       for-each: 0.3.5
       gopd: 1.2.0
       is-typed-array: 1.1.15
@@ -11000,7 +11002,7 @@ snapshots:
   which-typed-array@1.1.20:
     dependencies:
       available-typed-arrays: 1.0.7
-      call-bind: 1.0.8
+      call-bind: 1.0.9
       call-bound: 1.0.4
       for-each: 0.3.5
       get-proto: 1.0.1
