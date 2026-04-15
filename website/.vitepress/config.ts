@@ -357,6 +357,17 @@ export default defineConfig({
           link: '/docs/releasing'
         },
         {
+          text: 'Security',
+          collapsed: true,
+          link: '/docs/security/',
+          items: [
+            {
+              text: 'Incident Response Plan',
+              link: '/docs/security/incident-response-plan'
+            }
+          ]
+        },
+        {
           text: 'Changelog',
           link: '/docs/changelog'
         },
