@@ -4,13 +4,16 @@ on:
   issues:
     types: [closed]
 
+permissions:
+  issues: write
+
 jobs:
   issue-closed:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
-          github-token: ${{secrets.GH_PAT}}
+          github-token: ${{secrets.GITHUB_TOKEN}}
           script: |
             const labels = await github.paginate(
               github.rest.issues.listLabelsOnIssue, {

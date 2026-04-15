@@ -4,6 +4,10 @@ on:
   workflow_dispatch:
   schedule:
     - cron: 0 0 * * *
+
+permissions:
+  contents: write
+
 jobs:
   goreleaser:
     runs-on: ubuntu-latest
@@ -25,6 +29,6 @@ jobs:
           version: latest
           args: release --clean --nightly -f .goreleaser-nightly.yml
         env:
-          GITHUB_TOKEN: ${{secrets.GH_PAT}}
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
           GORELEASER_KEY: ${{secrets.GORELEASER_KEY}}
           CLOUDSMITH_TOKEN: ${{secrets.CLOUDSMITH_TOKEN}}

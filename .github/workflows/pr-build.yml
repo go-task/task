@@ -19,11 +19,11 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
         with:
-          go-version: '1.26.x'
+          go-version: "1.26.x"
           cache: true
       - uses: goreleaser/goreleaser-action@ec59f474b9834571250b370d4735c50f8e2d1e29 # v7
         with:
-          version: '~> v2'
+          version: "~> v2"
           args: release --snapshot --clean --config .goreleaser-pr.yml
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
@@ -52,12 +52,12 @@ jobs:
       - uses: peter-evans/find-comment@b30e6a3c0ed37e7c023ccd3f1db5c6c0b0c23aad # v4.0.0
         id: find-comment
         with:
-          token: ${{ secrets.GH_PAT || github.token }}
+          token: ${{secrets.GITHUB_TOKEN}}
           issue-number: ${{ github.event.pull_request.number }}
-          body-includes: '📦 Build artifacts ready!'
+          body-includes: "📦 Build artifacts ready!"
       - uses: peter-evans/create-or-update-comment@e8674b075228eee787fea43ef493e45ece1004c9 # v5.0.0
         with:
-          token: ${{ secrets.GH_PAT || github.token }}
+          token: ${{secrets.GITHUB_TOKEN}}
           comment-id: ${{ steps.find-comment.outputs.comment-id }}
           issue-number: ${{ github.event.pull_request.number }}
           body: |
