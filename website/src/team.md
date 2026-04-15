@@ -20,7 +20,7 @@ const members = [
       { icon: 'github', link: 'https://github.com/andreynering' },
       { icon: 'discord', link: 'https://discord.com/users/310141681926275082' },
       { icon: 'x', link: 'https://x.com/andreynering' },
-      { icon: 'bluesky', link: 'https://bsky.app/profile/andreynering.bsky.social' },
+      { icon: 'bluesky', link: 'https://bsky.app/profile/andrey.nering.dev' },
       { icon: 'mastodon', link: 'https://mastodon.social/@andreynering' }
     ]
   },
