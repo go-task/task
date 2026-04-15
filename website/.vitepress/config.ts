@@ -11,7 +11,7 @@ import {
 import { team } from './team.ts';
 import { taskDescription, taskName, ogUrl, ogImage } from './meta.ts';
 import { fileURLToPath, URL } from 'node:url';
-import llmstxt, { copyOrDownloadAsMarkdownButtons } from 'vitepress-plugin-llms';
+import llmstxt from 'vitepress-plugin-llms';
 
 const version = readFileSync(
   resolve(__dirname, '../../internal/version/version.txt'),
@@ -119,7 +119,6 @@ export default defineConfig({
       });
       md.use(tabsMarkdownPlugin);
       md.use(groupIconMdPlugin);
-      md.use(copyOrDownloadAsMarkdownButtons);
     }
   },
   vite: {
