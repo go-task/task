@@ -204,8 +204,8 @@ If you have questions, feel free to ask them in the `#help` forum channel on our
 [discord-server]: https://discord.gg/6TY36E39UK
 [discussion]: https://github.com/go-task/task/discussions
 [conventional-commits]: https://www.conventionalcommits.org
-[experiments]: ./experiments
-[experiments-workflow]: ./experiments#workflow
+[experiments]: ./experiments/
+[experiments-workflow]: ./experiments/#workflow
 [styleguide]: ./styleguide
 [cli-reference]: ./reference/cli
 [schema-reference]: ./reference/schema

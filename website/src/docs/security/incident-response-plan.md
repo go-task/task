@@ -88,4 +88,4 @@ a "best-effort" attempt to help resolve the issue.
 - Make and document any changes that can be made to prevent similar issues from
   arising in the future.
 
-[security-docs]: ../security
+[security-docs]: ../security/
