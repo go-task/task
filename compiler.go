@@ -166,6 +166,22 @@ func (c *Compiler) HandleDynamicVar(v ast.Var, dir string, e []string) (string, 
 		dir = v.Dir
 	}
 
+	// The task's `dir:` is documented as "Directory which this task should
+	// run. Defaults to the current working directory. If the directory does
+	// not exist, Task creates it." Dynamic variables (`sh:`) compile before
+	// the task's `mkdir` runs, so without this guard the shell executes
+	// with Dir pointing at a non-existent path and aborts with a cryptic
+	// chdir error. Create the directory here with the same 0o755 perms the
+	// main task mkdir uses, so `sh:` variables behave like task commands.
+	// See https://github.com/go-task/task/issues/1001.
+	if dir != "" {
+		if _, err := os.Stat(dir); os.IsNotExist(err) {
+			if err := os.MkdirAll(dir, 0o755); err != nil {
+				return "", fmt.Errorf(`task: cannot make directory %q for dynamic variable: %w`, dir, err)
+			}
+		}
+	}
+
 	var stdout bytes.Buffer
 	opts := &execext.RunCommandOptions{
 		Command: *v.Sh,
