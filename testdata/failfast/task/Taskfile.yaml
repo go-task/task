@@ -1,7 +1,15 @@
 version: '3'
 
+vars:
+  PUSH: 5 # Push the deps1-3 out beyond the failfast event.
+
 tasks:
   default:
+    cmds:
+      - rm -f *.txt
+      - task: test
+
+  test:
     deps:
       - dep1
       - dep2
@@ -9,7 +17,13 @@ tasks:
       - dep4
     failfast: true
 
-  dep1: sleep 0.1 && echo 'dep1'
-  dep2: sleep 0.2 && echo 'dep2'
-  dep3: sleep 0.3 && echo 'dep3'
-  dep4: exit 1
+  # Deps1-3 wait for Dep4 before starting.
+  dep1: touch dep1.txt; until [ -f dep4.txt ]; do sleep 0.1; done; sleep {{.PUSH}}; echo 'dep1'
+  dep2: touch dep2.txt; until [ -f dep4.txt ]; do sleep 0.1; done; sleep {{.PUSH}}; echo 'dep2'
+  dep3: touch dep3.txt; until [ -f dep4.txt ]; do sleep 0.1; done; sleep {{.PUSH}}; echo 'dep3'
+  # Dep4 waits from Dep1-3 and then indicates that it has started.
+  dep4: 
+    cmds:
+      - until [ -f dep1.txt ] && [ -f dep2.txt ] && [ -f dep3.txt ]; do sleep 0.1; done
+      - touch dep4.txt
+      - exit 1
