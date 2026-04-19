@@ -6,7 +6,7 @@ export interface Adopter {
 }
 
 export const adopters: Adopter[] = [
-  // Big brand names — first three double as the "featured" showcase
+  // Big brand names (first three double as the "featured" showcase)
   {
     name: 'Docker',
     url: 'https://github.com/docker/mcp-registry',
@@ -34,7 +34,7 @@ export const adopters: Adopter[] = [
     url: 'https://github.com/Azure/Azure-Sentinel',
     img: 'https://github.com/microsoft.png',
     description:
-      'Azure Sentinel — Microsoft’s cloud-native SIEM used by enterprises worldwide — relies on Task to orchestrate its repository automation.'
+      'Azure Sentinel, Microsoft’s cloud-native SIEM used by enterprises worldwide, relies on Task to orchestrate its repository automation.'
   },
   {
     name: 'Google Cloud',
@@ -63,7 +63,7 @@ export const adopters: Adopter[] = [
     url: 'https://github.com/flet-dev/flet',
     img: 'https://github.com/flet-dev.png',
     description:
-      'Build realtime web, mobile and desktop apps in Python — with no frontend experience required.'
+      'Build realtime web, mobile and desktop apps in Python, with no frontend experience required.'
   },
   {
     name: 'GoReleaser',
@@ -91,7 +91,7 @@ export const adopters: Adopter[] = [
     url: 'https://github.com/TykTechnologies/tyk',
     img: 'https://github.com/TykTechnologies.png',
     description:
-      'Open source API gateway supporting REST, GraphQL, TCP and gRPC — automated end-to-end with Task.'
+      'Open source API gateway supporting REST, GraphQL, TCP and gRPC, automated end-to-end with Task.'
   },
   {
     name: 'Charmbracelet',
@@ -105,6 +105,6 @@ export const adopters: Adopter[] = [
     url: 'https://github.com/OutlineFoundation/outline-server',
     img: 'https://github.com/OutlineFoundation.png',
     description:
-      'Outline — the open-source proxy server originally built by Jigsaw (Google) — uses Task for its build pipeline.'
+      'Outline, the open-source proxy server originally built by Jigsaw (Google), uses Task for its build pipeline.'
   }
 ];

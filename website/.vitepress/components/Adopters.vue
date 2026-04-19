@@ -22,7 +22,7 @@ const githubPath = (url: string) =>
       </h1>
       <p class="lead">
         Thousands of open source projects use Task as their build and release
-        orchestrator — from hyperscaler platforms and enterprise security tools
+        orchestrator, from hyperscaler platforms and enterprise security tools
         to CLI utilities downloaded millions of times. Below are a few
         organizations whose public repositories ship a
         <code>Taskfile.yml</code>. Every entry links to real, production code
