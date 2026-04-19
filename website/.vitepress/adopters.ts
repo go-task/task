@@ -12,14 +12,14 @@ export const adopters: Adopter[] = [
     img: 'https://github.com/docker.png'
   },
   {
+    name: 'Microsoft',
+    url: 'https://github.com/Azure/Azure-Sentinel',
+    img: 'https://github.com/microsoft.png'
+  },
+  {
     name: 'HashiCorp',
     url: 'https://github.com/hashicorp/terraform-aws-terraform-enterprise-hvd',
     img: 'https://github.com/hashicorp.png'
-  },
-  {
-    name: 'Microsoft',
-    url: 'https://github.com/microsoft/terraform-provider-fabric',
-    img: 'https://github.com/microsoft.png'
   },
   {
     name: 'Vercel',
@@ -36,11 +36,16 @@ export const adopters: Adopter[] = [
     url: 'https://github.com/aws-samples/appmod-blueprints',
     img: 'https://github.com/aws-samples.png'
   },
+  {
+    name: 'Anthropic',
+    url: 'https://github.com/anthropics/buffa',
+    img: 'https://github.com/anthropics.png'
+  },
   // Notable open source projects
   {
-    name: 'Arduino CLI',
-    url: 'https://github.com/arduino/arduino-cli',
-    img: 'https://github.com/arduino.png'
+    name: 'Flet',
+    url: 'https://github.com/flet-dev/flet',
+    img: 'https://github.com/flet-dev.png'
   },
   {
     name: 'GoReleaser',
@@ -48,19 +53,24 @@ export const adopters: Adopter[] = [
     img: 'https://github.com/goreleaser.png'
   },
   {
+    name: 'Arduino CLI',
+    url: 'https://github.com/arduino/arduino-cli',
+    img: 'https://github.com/arduino.png'
+  },
+  {
     name: 'FerretDB',
     url: 'https://github.com/FerretDB/FerretDB',
     img: 'https://github.com/FerretDB.png'
   },
   {
-    name: 'Gogs',
-    url: 'https://github.com/gogs/gogs',
-    img: 'https://github.com/gogs.png'
-  },
-  {
     name: 'Tyk',
     url: 'https://github.com/TykTechnologies/tyk',
     img: 'https://github.com/TykTechnologies.png'
+  },
+  {
+    name: 'Charmbracelet',
+    url: 'https://github.com/charmbracelet/glamour',
+    img: 'https://github.com/charmbracelet.png'
   },
   {
     name: 'Outline',

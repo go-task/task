@@ -83,7 +83,7 @@ func newClient(token string, verbose bool) *client {
 		http:      &http.Client{Timeout: 60 * time.Second},
 		token:     token,
 		verbose:   verbose,
-		searchGap: 2500 * time.Millisecond, // ~24 req/min, under the 30/min cap
+		searchGap: 7 * time.Second, // ~8.5 req/min, under the 10/min cap
 	}
 }
 
@@ -187,16 +187,30 @@ func urlEscape(s string) string {
 	return b.String()
 }
 
-// paginateQuery pages through up to 1000 results for a single query. It
-// returns early if the reported total_count > 1000 (so the caller can narrow).
-func (c *client) paginateQuery(q string) (repos []string, total int, err error) {
-	for page := 1; page <= 10; page++ {
+// paginateQuery pages through up to 1000 results. If total_count is above the
+// cap reachable by pageLimit pages, it still paginates — callers that want to
+// avoid wasted calls and subdivide instead should check total beforehand by
+// passing pageLimit=1.
+func (c *client) paginateQuery(q string, pageLimit int) (repos []string, total int, err error) {
+	first, err := c.searchCode(q, 1)
+	if err != nil {
+		return nil, 0, err
+	}
+	total = first.TotalCount
+	if total == 0 {
+		return nil, 0, nil
+	}
+	for _, it := range first.Items {
+		repos = append(repos, it.Repository.FullName)
+	}
+	pages := (total + 99) / 100
+	if pages > pageLimit {
+		pages = pageLimit
+	}
+	for page := 2; page <= pages; page++ {
 		sr, err := c.searchCode(q, page)
 		if err != nil {
-			return nil, 0, err
-		}
-		if page == 1 {
-			total = sr.TotalCount
+			return repos, total, err
 		}
 		for _, it := range sr.Items {
 			repos = append(repos, it.Repository.FullName)
@@ -208,63 +222,99 @@ func (c *client) paginateQuery(q string) (repos []string, total int, err error) 
 	return repos, total, nil
 }
 
-// discover partitions the search space by star bucket (and pushed-year for the
-// stars:0 bucket) so every sub-query stays below the 1000-result cap.
+// GitHub Code Search caps at 1000 results per query and is unreliable with
+// the `size:` qualifier (total_count is non-monotone as ranges shrink), so
+// partitioning tricks don't work cleanly. We instead combine two strategies:
+//
+//  1. Paginate each Taskfile variant directly — gets ~900 top-ranked hits per
+//     variant (the "best match" slice GitHub surfaces).
+//  2. Iterate a curated list of well-known organizations with an explicit
+//     `org:` qualifier — gets full coverage inside big brands even when their
+//     repos don't rank in the global top 900.
+//
+// The union is deduplicated and enriched via GraphQL.
+
+// knownOrgs is a snapshot of organizations worth scanning explicitly. Adding
+// here captures every Taskfile inside the org regardless of its global rank.
+// Loosely ordered from most likely to least.
+var knownOrgs = []string{
+	// Hyperscalers / clouds
+	"docker", "microsoft", "google", "GoogleCloudPlatform", "aws", "awslabs",
+	"aws-samples", "amazon-science", "Azure", "Azure-Samples",
+	// Infra / DevOps vendors
+	"hashicorp", "hashicorp-forge", "vercel", "cloudflare", "digitalocean",
+	"heroku", "JetBrains", "pulumi", "buildkite", "circleci", "dagger",
+	"temporalio", "encoredev", "argoproj", "fluxcd", "flux-framework",
+	// Dev tools / platforms
+	"netflix", "shopify", "airbnb", "uber", "lyft", "stripe", "github",
+	"gitlabhq", "atlassian", "RedHat", "RedHatOfficial", "openshift",
+	// Communication / consumer
+	"spotify", "slackapi", "discord", "figma", "linear", "twilio", "segmentio",
+	// Data / ML
+	"prisma", "supabase", "railwayapp", "superfly", "fly-apps", "planetscale",
+	"tailscale", "coder", "anthropics", "openai", "huggingface",
+	"pytorch", "tensorflow",
+	// Observability / CNCF
+	"grafana", "prometheus", "envoyproxy", "getsentry", "sentry", "cncf",
+	"helm", "istio", "linkerd", "traefik", "caddyserver",
+	// Frontend frameworks
+	"vitejs", "biomejs", "sveltejs", "vuejs", "reactjs", "astro", "nuxt",
+	// Databases
+	"mongodb-labs", "redis", "neo4j", "elastic", "influxdata", "timescale",
+	"clickhouse", "FerretDB",
+	// Go ecosystem / popular OSS
+	"goreleaser", "spf13", "urfave", "charmbracelet", "nodejs", "golang",
+	"rust-lang", "python", "apache", "etcd-io", "grpc", "arduino",
+	// Data eng
+	"dbt-labs", "astronomer", "prefecthq",
+}
+
+// discover walks every Taskfile variant with global pagination plus per-org
+// scans, and returns unique owner/name pairs.
 func (c *client) discover() (map[string]struct{}, error) {
 	uniq := make(map[string]struct{})
 
-	// Star buckets cover the whole range.
-	buckets := []string{
-		"stars:>=1000",
-		"stars:100..999",
-		"stars:10..99",
-		"stars:1..9",
-		"stars:0",
+	variants := []string{
+		"Taskfile.yml",
+		"Taskfile.yaml",
+		"Taskfile.dist.yml",
+		"Taskfile.dist.yaml",
 	}
 
-	extensions := []string{"Taskfile.yml", "Taskfile.yaml"}
-
-	for _, ext := range extensions {
-		for _, bucket := range buckets {
-			q := fmt.Sprintf("filename:%s %s", ext, bucket)
-			c.logf("query: %s", q)
-			repos, total, err := c.paginateQuery(q)
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "warn: %v\n", err)
-				continue
-			}
-			c.logf("  total=%d collected=%d", total, len(repos))
-			for _, r := range repos {
-				uniq[r] = struct{}{}
-			}
-			if total > 1000 {
-				// Partition the bucket further by pushed-year.
-				c.logf("  bucket exceeds 1000, subdividing by pushed-year")
-				if err := c.discoverByPushedYear(ext, bucket, uniq); err != nil {
-					fmt.Fprintf(os.Stderr, "warn: pushed partition: %v\n", err)
-				}
-			}
-		}
-	}
-	return uniq, nil
-}
-
-func (c *client) discoverByPushedYear(ext, bucket string, uniq map[string]struct{}) error {
-	now := time.Now().Year()
-	// GitHub Search was introduced in 2008 — years before that won't have hits.
-	for year := 2015; year <= now; year++ {
-		q := fmt.Sprintf("filename:%s %s pushed:%d-01-01..%d-12-31", ext, bucket, year, year)
-		c.logf("  sub-query: %s", q)
-		repos, total, err := c.paginateQuery(q)
+	c.logf("phase: global pagination (best-match top ~900 per variant)")
+	for _, v := range variants {
+		q := fmt.Sprintf("filename:%s", v)
+		c.logf("  query: %s", q)
+		repos, total, err := c.paginateQuery(q, 10)
 		if err != nil {
-			return err
+			fmt.Fprintf(os.Stderr, "warn: variant %s: %v\n", v, err)
+			continue
 		}
 		c.logf("    total=%d collected=%d", total, len(repos))
 		for _, r := range repos {
 			uniq[r] = struct{}{}
 		}
 	}
-	return nil
+
+	c.logf("phase: per-org scan (%d orgs)", len(knownOrgs))
+	for _, org := range knownOrgs {
+		q := fmt.Sprintf("filename:Taskfile.yml org:%s", org)
+		repos, total, err := c.paginateQuery(q, 10)
+		if err != nil {
+			// Orgs that don't exist return 404 — log once and move on.
+			c.logf("  skip %s: %v", org, err)
+			continue
+		}
+		if total == 0 {
+			continue
+		}
+		c.logf("  org:%s total=%d collected=%d", org, total, len(repos))
+		for _, r := range repos {
+			uniq[r] = struct{}{}
+		}
+	}
+
+	return uniq, nil
 }
 
 // ----- Enrichment (GraphQL) -----

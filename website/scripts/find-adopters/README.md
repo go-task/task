@@ -6,14 +6,33 @@ candidates for the [taskfile.dev](https://taskfile.dev) "Used by" section.
 
 ## How it works
 
-GitHub Code Search caps results at 1000 per query. `find-adopters` partitions
-queries by **star bucket** (and, for the 0-star bucket, by pushed-year) so
-every sub-query stays under the cap. Each unique repo is then enriched via a
-single batched GraphQL call (stars, description, owner type, language, topics)
-and sorted by popularity.
+GitHub Code Search caps at 1000 results per query and only accepts a narrow
+set of qualifiers alongside `filename:` — notably `stars:`, `language:`, and
+`pushed:` don't combine, and `size:` does but its `total_count` isn't monotone
+as ranges shrink, which makes partitioning unreliable. So the tool takes a
+pragmatic two-pronged approach:
 
-The full scan typically takes 15-30 minutes, mostly spent respecting the
-Code Search rate limit (30 req/min).
+1. **Global best-match pagination** — paginate `filename:Taskfile.yml`,
+   `Taskfile.yaml`, `Taskfile.dist.yml`, and `Taskfile.dist.yaml` directly up
+   to the 1000-result cap. Captures the top ~900 best-ranked hits per variant.
+2. **Per-org scan** — iterate a built-in list of ~100 well-known organizations
+   (hyperscalers, OSS vendors, DevOps platforms, etc.) with
+   `filename:Taskfile.yml org:<name>`. Captures every Taskfile inside those
+   orgs even when their repos don't rank in the global top.
+
+The union is deduplicated and enriched via batched GraphQL calls (stars,
+description, owner type, language, topics), then sorted by stars.
+
+A full scan typically takes 15-25 minutes — about 120 Code Search calls at the
+10 req/min authenticated rate limit, plus a handful of GraphQL batches.
+
+### Coverage caveat
+
+GitHub's hard 1000-result cap on the Code Search API means this tool cannot
+enumerate every Taskfile on GitHub — only the best-ranked slice plus the
+curated orgs. For truly exhaustive coverage, consider
+[GH Archive](https://www.gharchive.org/) or the BigQuery public GitHub
+dataset, which are out of scope here.
 
 ## Usage
 
