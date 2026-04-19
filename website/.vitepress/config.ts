@@ -289,7 +289,6 @@ export default defineConfig({
         activeMatch: '^/docs'
       },
       { text: 'Blog', link: '/blog', activeMatch: '^/blog' },
-      { text: 'Adopters', link: '/adopters' },
       { text: 'Donate', link: '/donate' },
       { text: 'Team', link: '/team' },
       {
