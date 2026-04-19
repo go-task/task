@@ -11,8 +11,8 @@ const loop = [...adopters, ...adopters];
       Trusted by open source projects
     </h2>
     <p class="subline">
-      Adopted by <strong>Docker</strong>, <strong>Microsoft</strong>,
-      <strong>HashiCorp</strong>, <strong>Vercel</strong>,
+      Adopted by <strong>Docker</strong>, <strong>Vercel</strong>,
+      <strong>HashiCorp</strong>, <strong>Microsoft</strong>,
       <strong>Google Cloud</strong>, <strong>AWS</strong>,
       <strong>Anthropic</strong> and more.
       <a class="see-all" href="/adopters">

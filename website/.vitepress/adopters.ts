@@ -15,11 +15,11 @@ export const adopters: Adopter[] = [
       'The industry-standard container platform uses Task in mcp-registry, the official registry for Docker Model Context Protocol servers.'
   },
   {
-    name: 'Microsoft',
-    url: 'https://github.com/Azure/Azure-Sentinel',
-    img: 'https://github.com/microsoft.png',
+    name: 'Vercel',
+    url: 'https://github.com/vercel/terraform-provider-vercel',
+    img: 'https://github.com/vercel.png',
     description:
-      'Azure Sentinel — Microsoft’s cloud-native SIEM used by enterprises worldwide — relies on Task to orchestrate its repository automation.'
+      'The team behind Next.js and the leading frontend cloud platform uses Task to run and release the official Vercel Terraform provider.'
   },
   {
     name: 'HashiCorp',
@@ -30,11 +30,11 @@ export const adopters: Adopter[] = [
   },
   // Other big brands
   {
-    name: 'Vercel',
-    url: 'https://github.com/vercel/terraform-provider-vercel',
-    img: 'https://github.com/vercel.png',
+    name: 'Microsoft',
+    url: 'https://github.com/Azure/Azure-Sentinel',
+    img: 'https://github.com/microsoft.png',
     description:
-      'Vercel’s official Terraform provider uses Task as its development and release runner.'
+      'Azure Sentinel — Microsoft’s cloud-native SIEM used by enterprises worldwide — relies on Task to orchestrate its repository automation.'
   },
   {
     name: 'Google Cloud',

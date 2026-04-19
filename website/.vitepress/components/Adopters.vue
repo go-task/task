@@ -108,10 +108,10 @@ const githubPath = (url: string) =>
       </div>
     </section>
 
-    <section class="faq" aria-labelledby="faq-heading">
-      <h2 id="faq-heading" class="section-title">
+    <section class="faq" aria-labelledby="why-heading">
+      <h2 id="why-heading" class="section-title">
         <span class="slashes">//</span>
-        Frequently asked questions
+        Why Task?
       </h2>
       <dl class="faq-list">
         <div class="faq-item">
@@ -126,7 +126,7 @@ const githubPath = (url: string) =>
         <div class="faq-item">
           <dt>Who uses Task in enterprise?</dt>
           <dd>
-            Docker, Microsoft (Azure Sentinel), HashiCorp, Vercel, Google Cloud,
+            Docker, Vercel, HashiCorp, Microsoft (Azure Sentinel), Google Cloud,
             AWS, and Anthropic are among the organizations that ship code with a
             <code>Taskfile.yml</code>. Task is also embedded end-to-end in
             Arduino’s developer tooling stack across more than 70 repositories.

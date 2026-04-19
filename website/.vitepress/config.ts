@@ -190,7 +190,7 @@ export default defineConfig({
               name: 'Who uses Task in enterprise?',
               acceptedAnswer: {
                 '@type': 'Answer',
-                text: 'Docker, Microsoft (Azure Sentinel), HashiCorp, Vercel, Google Cloud, AWS, and Anthropic are among the organizations that ship code with a Taskfile.yml. Task is also embedded end-to-end in Arduino’s developer tooling stack across more than 70 repositories.'
+                text: 'Docker, Vercel, HashiCorp, Microsoft (Azure Sentinel), Google Cloud, AWS, and Anthropic are among the organizations that ship code with a Taskfile.yml. Task is also embedded end-to-end in Arduino’s developer tooling stack across more than 70 repositories.'
               }
             },
             {
