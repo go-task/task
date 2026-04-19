@@ -209,6 +209,18 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) error {
 		if err := e.runDeps(ctx, t); err != nil {
 			return err
 		}
+		if len(t.Deps) > 0 {
+			// Dependencies can materialize files that `for: sources` / `for: generates`
+			// loops expand over, so refresh the compiled command list after deps run.
+			origTask, err := e.GetTask(call)
+			if err != nil {
+				return err
+			}
+			cache := &templater.Cache{Vars: t.Vars}
+			if err := compileCmds(origTask, t, t.Vars, cache); err != nil {
+				return err
+			}
+		}
 
 		skipFingerprinting := e.ForceAll || (!call.Indirect && e.Force)
 		if !skipFingerprinting {

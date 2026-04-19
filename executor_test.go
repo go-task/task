@@ -894,6 +894,47 @@ func TestForCmds(t *testing.T) {
 	}
 }
 
+func TestForCmdsRecompileAfterDeps(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	require.NoError(t, os.WriteFile(filepath.Join(dir, "Taskfile.yml"), []byte(`
+version: '3'
+
+tasks:
+  create-deps:
+    cmds:
+      - mkdir -p generated
+      - printf 'a\n' > generated/a.dep
+      - printf 'b\n' > generated/b.dep
+      - printf 'c\n' > generated/c.dep
+
+  use-deps:
+    deps:
+      - create-deps
+    sources:
+      - generated/*.dep
+    cmds:
+      - for: sources
+        cmd: cat "{{.ITEM}}"
+`), 0o644))
+
+	var buffer SyncBuffer
+	e := task.NewExecutor(
+		task.WithDir(dir),
+		task.WithSilent(true),
+		task.WithStdout(&buffer),
+		task.WithStderr(&buffer),
+	)
+	require.NoError(t, e.Setup())
+	require.NoError(t, e.Run(t.Context(), &task.Call{
+		Task: "use-deps",
+		Vars: ast.NewVars(),
+	}))
+
+	require.Equal(t, "a\nb\nc\n", string(PPSortedLines(t, buffer.buf.Bytes())))
+}
+
 func TestForDeps(t *testing.T) {
 	t.Parallel()
 

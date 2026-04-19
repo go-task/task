@@ -212,54 +212,8 @@ func (e *Executor) compiledTask(call *Call, evaluateShVars bool) (*ast.Task, err
 		cache.ResetCache()
 	}
 
-	if len(origTask.Cmds) > 0 {
-		new.Cmds = make([]*ast.Cmd, 0, len(origTask.Cmds))
-		for _, cmd := range origTask.Cmds {
-			if cmd == nil {
-				continue
-			}
-			if cmd.For != nil {
-				list, keys, err := itemsFromFor(cmd.For, new.Dir, new.Sources, new.Generates, vars, origTask.Location, cache)
-				if err != nil {
-					return nil, err
-				}
-				// Name the iterator variable
-				var as string
-				if cmd.For.As != "" {
-					as = cmd.For.As
-				} else {
-					as = "ITEM"
-				}
-				// Create a new command for each item in the list
-				for i, loopValue := range list {
-					extra := map[string]any{
-						as: loopValue,
-					}
-					if len(keys) > 0 {
-						extra["KEY"] = keys[i]
-					}
-					newCmd := cmd.DeepCopy()
-					newCmd.Cmd = templater.ReplaceWithExtra(cmd.Cmd, cache, extra)
-					newCmd.Task = templater.ReplaceWithExtra(cmd.Task, cache, extra)
-					newCmd.If = templater.ReplaceWithExtra(cmd.If, cache, extra)
-					newCmd.Vars = templater.ReplaceVarsWithExtra(cmd.Vars, cache, extra)
-					new.Cmds = append(new.Cmds, newCmd)
-				}
-				continue
-			}
-			// Defer commands are replaced in a lazy manner because
-			// we need to include EXIT_CODE.
-			if cmd.Defer {
-				new.Cmds = append(new.Cmds, cmd.DeepCopy())
-				continue
-			}
-			newCmd := cmd.DeepCopy()
-			newCmd.Cmd = templater.Replace(cmd.Cmd, cache)
-			newCmd.Task = templater.Replace(cmd.Task, cache)
-			newCmd.If = templater.Replace(cmd.If, cache)
-			newCmd.Vars = templater.ReplaceVars(cmd.Vars, cache)
-			new.Cmds = append(new.Cmds, newCmd)
-		}
+	if err := compileCmds(origTask, &new, vars, cache); err != nil {
+		return nil, err
 	}
 	if len(origTask.Deps) > 0 {
 		new.Deps = make([]*ast.Dep, 0, len(origTask.Deps))
@@ -332,6 +286,63 @@ func asAnySlice[T any](slice []T) []any {
 		ret[i] = v
 	}
 	return ret
+}
+
+func compileCmds(origTask *ast.Task, new *ast.Task, vars *ast.Vars, cache *templater.Cache) error {
+	if len(origTask.Cmds) == 0 {
+		new.Cmds = nil
+		return nil
+	}
+
+	new.Cmds = make([]*ast.Cmd, 0, len(origTask.Cmds))
+	for _, cmd := range origTask.Cmds {
+		if cmd == nil {
+			continue
+		}
+		if cmd.For != nil {
+			list, keys, err := itemsFromFor(cmd.For, new.Dir, new.Sources, new.Generates, vars, origTask.Location, cache)
+			if err != nil {
+				return err
+			}
+			// Name the iterator variable
+			var as string
+			if cmd.For.As != "" {
+				as = cmd.For.As
+			} else {
+				as = "ITEM"
+			}
+			// Create a new command for each item in the list
+			for i, loopValue := range list {
+				extra := map[string]any{
+					as: loopValue,
+				}
+				if len(keys) > 0 {
+					extra["KEY"] = keys[i]
+				}
+				newCmd := cmd.DeepCopy()
+				newCmd.Cmd = templater.ReplaceWithExtra(cmd.Cmd, cache, extra)
+				newCmd.Task = templater.ReplaceWithExtra(cmd.Task, cache, extra)
+				newCmd.If = templater.ReplaceWithExtra(cmd.If, cache, extra)
+				newCmd.Vars = templater.ReplaceVarsWithExtra(cmd.Vars, cache, extra)
+				new.Cmds = append(new.Cmds, newCmd)
+			}
+			continue
+		}
+		// Defer commands are replaced in a lazy manner because
+		// we need to include EXIT_CODE.
+		if cmd.Defer {
+			new.Cmds = append(new.Cmds, cmd.DeepCopy())
+			continue
+		}
+		newCmd := cmd.DeepCopy()
+		newCmd.Cmd = templater.Replace(cmd.Cmd, cache)
+		newCmd.Task = templater.Replace(cmd.Task, cache)
+		newCmd.If = templater.Replace(cmd.If, cache)
+		newCmd.Vars = templater.ReplaceVars(cmd.Vars, cache)
+		new.Cmds = append(new.Cmds, newCmd)
+	}
+
+	return nil
 }
 
 func itemsFromFor(
