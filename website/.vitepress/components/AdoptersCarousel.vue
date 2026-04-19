@@ -5,10 +5,16 @@ const loop = [...adopters, ...adopters];
 </script>
 
 <template>
-  <section class="adopters-carousel">
-    <p class="label">
+  <section class="adopters-carousel" aria-labelledby="adopters-heading">
+    <h2 id="adopters-heading" class="label">
       <span class="slashes">//</span>
       Trusted by open source projects
+    </h2>
+    <p class="subline">
+      Adopted by <strong>Docker</strong>, <strong>Microsoft</strong>,
+      <strong>HashiCorp</strong>, <strong>Vercel</strong>,
+      <strong>Google Cloud</strong>, <strong>AWS</strong>,
+      <strong>Anthropic</strong> and more.
     </p>
 
     <div class="viewport">
@@ -20,10 +26,19 @@ const loop = [...adopters, ...adopters];
           target="_blank"
           rel="noopener"
           class="chip"
+          :aria-label="`${item.name} on GitHub`"
         >
-          <img :src="item.img" :alt="`${item.name} logo`" class="logo" />
+          <img
+            :src="item.img"
+            :alt="`${item.name} logo`"
+            class="logo"
+            loading="lazy"
+            decoding="async"
+            width="28"
+            height="28"
+          />
           <span class="name">{{ item.name }}</span>
-          <span class="chevron">&rarr;</span>
+          <span class="chevron" aria-hidden="true">&rarr;</span>
         </a>
       </div>
     </div>
@@ -45,12 +60,26 @@ const loop = [...adopters, ...adopters];
   color: var(--vp-c-text-2);
   text-transform: uppercase;
   text-align: center;
-  margin: 0 0 2rem;
+  margin: 0 0 0.75rem;
 }
 
 .slashes {
   color: var(--vp-c-brand-1);
   margin-right: 0.4em;
+}
+
+.subline {
+  text-align: center;
+  font-size: 0.95rem;
+  color: var(--vp-c-text-2);
+  max-width: 640px;
+  margin: 0 auto 2rem;
+  line-height: 1.5;
+}
+
+.subline strong {
+  color: var(--vp-c-text-1);
+  font-weight: 600;
 }
 
 .viewport {

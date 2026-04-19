@@ -9,6 +9,7 @@ import {
   localIconLoader
 } from 'vitepress-plugin-group-icons';
 import { team } from './team.ts';
+import { adopters } from './adopters.ts';
 import { taskDescription, taskName, ogUrl, ogImage } from './meta.ts';
 import { fileURLToPath, URL } from 'node:url';
 import llmstxt from 'vitepress-plugin-llms';
@@ -105,6 +106,34 @@ export default defineConfig({
     // Noindex pour 404
     if (pageData.relativePath === '404.md') {
       head.push(['meta', { name: 'robots', content: 'noindex, nofollow' }])
+    }
+
+    // Structured data for the adopters carousel on the homepage: an ItemList
+    // of Organization entities so search engines can surface Task's adopters
+    // directly in rich results.
+    if (isHome) {
+      head.push([
+        'script',
+        { type: 'application/ld+json' },
+        JSON.stringify({
+          '@context': 'https://schema.org',
+          '@type': 'ItemList',
+          name: 'Organizations and projects using Task',
+          itemListOrder: 'https://schema.org/ItemListUnordered',
+          numberOfItems: adopters.length,
+          itemListElement: adopters.map((a, i) => ({
+            '@type': 'ListItem',
+            position: i + 1,
+            item: {
+              '@type': 'Organization',
+              name: a.name,
+              url: a.url,
+              logo: a.img,
+              sameAs: [a.url]
+            }
+          }))
+        })
+      ])
     }
 
     return head
