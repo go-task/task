@@ -6,15 +6,10 @@ const loop = [...adopters, ...adopters];
 
 <template>
   <section class="adopters-carousel">
-    <div class="header">
-      <span class="label">
-        <span class="slashes">//</span>
-        Trusted by open source projects
-      </span>
-      <a class="see-all" href="/adopters">
-        See all <span class="arrow">&rarr;</span>
-      </a>
-    </div>
+    <p class="label">
+      <span class="slashes">//</span>
+      Trusted by open source projects
+    </p>
 
     <div class="viewport">
       <div class="track">
@@ -42,16 +37,6 @@ const loop = [...adopters, ...adopters];
   padding: 0 24px;
 }
 
-.header {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 1rem;
-  max-width: 1152px;
-  margin: 0 auto 2rem;
-  padding: 0 8px;
-}
-
 .label {
   font-family: var(--vp-font-family-mono);
   font-size: 0.8rem;
@@ -59,33 +44,13 @@ const loop = [...adopters, ...adopters];
   letter-spacing: 0.04em;
   color: var(--vp-c-text-2);
   text-transform: uppercase;
+  text-align: center;
+  margin: 0 0 2rem;
 }
 
 .slashes {
   color: var(--vp-c-brand-1);
   margin-right: 0.4em;
-}
-
-.see-all {
-  font-family: var(--vp-font-family-mono);
-  font-size: 0.8rem;
-  color: var(--vp-c-text-2);
-  text-decoration: none !important;
-  transition: color 0.2s ease;
-  white-space: nowrap;
-}
-
-.see-all:hover {
-  color: var(--vp-c-brand-1);
-}
-
-.see-all .arrow {
-  display: inline-block;
-  transition: transform 0.25s ease;
-}
-
-.see-all:hover .arrow {
-  transform: translateX(3px);
 }
 
 .viewport {
@@ -188,11 +153,6 @@ const loop = [...adopters, ...adopters];
 }
 
 @media (max-width: 640px) {
-  .header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.5rem;
-  }
   .adopters-carousel {
     margin-top: 3.5rem;
   }

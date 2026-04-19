@@ -128,7 +128,6 @@ export default defineConfig({
           'index.md',
           'team.md',
           'donate.md',
-          'adopters.md',
           'docs/styleguide.md',
           'docs/contributing.md',
           'docs/releasing.md',
@@ -183,7 +182,6 @@ export default defineConfig({
         activeMatch: '^/docs'
       },
       { text: 'Blog', link: '/blog', activeMatch: '^/blog' },
-      { text: 'Adopters', link: '/adopters' },
       { text: 'Donate', link: '/donate' },
       { text: 'Team', link: '/team' },
       {
@@ -379,8 +377,7 @@ export default defineConfig({
       ],
       // Hacky to disable sidebar for these pages
       '/donate': [],
-      '/team': [],
-      '/adopters': []
+      '/team': []
     },
 
     socialLinks: [
