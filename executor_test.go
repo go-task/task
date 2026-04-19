@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/sebdah/goldie/v2"
 	"github.com/stretchr/testify/require"
@@ -30,13 +31,15 @@ type (
 	// gen:fixtures`.
 	ExecutorTest struct {
 		TaskTest
-		task            string
-		vars            map[string]any
-		input           string
-		executorOpts    []task.ExecutorOption
-		wantSetupError  bool
-		wantRunError    bool
-		wantStatusError bool
+		task              string
+		vars              map[string]any
+		input             string
+		executorOpts      []task.ExecutorOption
+		wantSetupError    bool
+		wantRunError      bool
+		wantStatusError   bool
+		skipOutputFixture bool
+		maxDuration       time.Duration
 	}
 )
 
@@ -113,6 +116,32 @@ func (opt *statusErrorTestOption) applyToExecutorTest(t *ExecutorTest) {
 	t.wantStatusError = true
 }
 
+// WithoutOutputFixture disables the stdout/stderr golden fixture comparison.
+// Use for tasks with non-deterministic output by design (e.g. parallel deps
+// cancelled mid-execution) where only the run error or timing matters.
+func WithoutOutputFixture() ExecutorTestOption {
+	return &withoutOutputFixtureTestOption{}
+}
+
+type withoutOutputFixtureTestOption struct{}
+
+func (opt *withoutOutputFixtureTestOption) applyToExecutorTest(t *ExecutorTest) {
+	t.skipOutputFixture = true
+}
+
+// WithMaxDuration asserts the run phase completes within d. Use to verify
+// that failfast/cancellation kicks in promptly instead of waiting for deps
+// to finish naturally.
+func WithMaxDuration(d time.Duration) ExecutorTestOption {
+	return &maxDurationTestOption{d: d}
+}
+
+type maxDurationTestOption struct{ d time.Duration }
+
+func (opt *maxDurationTestOption) applyToExecutorTest(t *ExecutorTest) {
+	t.maxDuration = opt.d
+}
+
 // Helpers
 
 // writeFixtureErrRun is a wrapper for writing the output of an error during the
@@ -172,7 +201,9 @@ func (tt *ExecutorTest) run(t *testing.T) {
 		if err := e.Setup(); tt.wantSetupError {
 			require.Error(t, err)
 			tt.writeFixtureErrSetup(t, g, err)
-			tt.writeFixtureBuffer(t, g, buffer.buf)
+			if !tt.skipOutputFixture {
+				tt.writeFixtureBuffer(t, g, buffer.buf)
+			}
 			return
 		} else {
 			require.NoError(t, err)
@@ -190,10 +221,18 @@ func (tt *ExecutorTest) run(t *testing.T) {
 
 		// Run the task and check for errors
 		ctx := t.Context()
-		if err := e.Run(ctx, call); tt.wantRunError {
+		start := time.Now()
+		err := e.Run(ctx, call)
+		if tt.maxDuration > 0 {
+			require.Less(t, time.Since(start), tt.maxDuration,
+				"task took too long — failfast/cancellation likely did not trigger")
+		}
+		if tt.wantRunError {
 			require.Error(t, err)
 			tt.writeFixtureErrRun(t, g, err)
-			tt.writeFixtureBuffer(t, g, buffer.buf)
+			if !tt.skipOutputFixture {
+				tt.writeFixtureBuffer(t, g, buffer.buf)
+			}
 			return
 		} else {
 			require.NoError(t, err)
@@ -206,7 +245,9 @@ func (tt *ExecutorTest) run(t *testing.T) {
 			}
 		}
 
-		tt.writeFixtureBuffer(t, g, buffer.buf)
+		if !tt.skipOutputFixture {
+			tt.writeFixtureBuffer(t, g, buffer.buf)
+		}
 	}
 
 	// Run the test (with a name if it has one)
@@ -1130,12 +1171,14 @@ func TestFailfast(t *testing.T) {
 
 		NewExecutorTest(t,
 			WithName("default"),
+			WithVar("SLEEP", "sleep 5 && "),
 			WithExecutorOptions(
 				task.WithDir("testdata/failfast/default"),
 				task.WithSilent(true),
 				task.WithFailfast(true),
 			),
-			WithPostProcessFn(PPSortedLines),
+			WithoutOutputFixture(),
+			WithMaxDuration(4*time.Second),
 			WithRunError(),
 		)
 	})
@@ -1149,7 +1192,8 @@ func TestFailfast(t *testing.T) {
 				task.WithDir("testdata/failfast/task"),
 				task.WithSilent(true),
 			),
-			WithPostProcessFn(PPSortedLines),
+			WithoutOutputFixture(),
+			WithMaxDuration(4*time.Second),
 			WithRunError(),
 		)
 	})

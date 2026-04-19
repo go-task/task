@@ -1,14 +1,20 @@
 version: '3'
 
+vars:
+  SLEEP: ''
+
 tasks:
   default:
     deps:
-      - dep1
-      - dep2
-      - dep3
+      - task: dep1
+        vars: { SLEEP: '{{.SLEEP}}' }
+      - task: dep2
+        vars: { SLEEP: '{{.SLEEP}}' }
+      - task: dep3
+        vars: { SLEEP: '{{.SLEEP}}' }
       - dep4
 
-  dep1: sleep 0.1 && echo 'dep1'
-  dep2: sleep 0.2 && echo 'dep2'
-  dep3: sleep 0.3 && echo 'dep3'
+  dep1: '{{.SLEEP}}echo ''dep1'''
+  dep2: '{{.SLEEP}}echo ''dep2'''
+  dep3: '{{.SLEEP}}echo ''dep3'''
   dep4: exit 1
