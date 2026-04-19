@@ -125,6 +125,20 @@ Reference][cli-reference]. New fields also need to be added to the [Schema
 Reference][schema-reference] and [JSON Schema][json-schema]. The descriptions
 for fields in the docs and the schema should match.
 
+### Adding your project to the Adopters list
+
+If your open source project uses Task as its task runner, feel free to add it to
+the [Adopters page](/adopters). Open a pull request updating
+`website/.vitepress/adopters.ts` with a new entry following the existing format
+(`name`, `url`, `img`). GitHub organization avatars
+(`https://github.com/<org>.png`) work well as logos. For better control, you can
+also drop an SVG in `website/src/public/img/adopters/` and reference it via
+`/img/adopters/<file>.svg`.
+
+Inclusion criteria: the project must be a public open source repository where
+Task is used as the task runner (presence of a `Taskfile.yml` at the root, or
+clearly documented usage).
+
 ### Writing tests
 
 A lot of Task's tests are held in the `task_test.go` file in the project root
