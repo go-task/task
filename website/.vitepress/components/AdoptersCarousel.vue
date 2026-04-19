@@ -15,6 +15,10 @@ const loop = [...adopters, ...adopters];
       <strong>HashiCorp</strong>, <strong>Vercel</strong>,
       <strong>Google Cloud</strong>, <strong>AWS</strong>,
       <strong>Anthropic</strong> and more.
+      <a class="see-all" href="/adopters">
+        See all adopters
+        <span class="see-all-arrow" aria-hidden="true">&rarr;</span>
+      </a>
     </p>
 
     <div class="viewport">
@@ -80,6 +84,28 @@ const loop = [...adopters, ...adopters];
 .subline strong {
   color: var(--vp-c-text-1);
   font-weight: 600;
+}
+
+.see-all {
+  display: inline-block;
+  margin-left: 0.4em;
+  color: var(--vp-c-brand-1);
+  font-weight: 500;
+  white-space: nowrap;
+  text-decoration: none !important;
+}
+
+.see-all:hover {
+  text-decoration: underline !important;
+}
+
+.see-all-arrow {
+  display: inline-block;
+  transition: transform 0.25s ease;
+}
+
+.see-all:hover .see-all-arrow {
+  transform: translateX(3px);
 }
 
 .viewport {
