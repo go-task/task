@@ -64,6 +64,13 @@ export const adopters: Adopter[] = [
     description:
       'The official Go driver for MongoDB uses Task to orchestrate its build, lint, formatting, and full test suite across every commit.'
   },
+  {
+    name: 'Redpanda',
+    url: 'https://github.com/redpanda-data/connect',
+    img: 'https://github.com/redpanda-data.png',
+    description:
+      'Redpanda Connect, the stream processor formerly known as Benthos, uses Task to orchestrate builds, Docker images, test suites, and its GitHub release pipeline.'
+  },
   // Notable open source projects
   {
     name: 'Flet',
@@ -113,5 +120,19 @@ export const adopters: Adopter[] = [
     img: 'https://github.com/OutlineFoundation.png',
     description:
       'Outline, the open-source proxy server originally built by Jigsaw (Google), uses Task for its build pipeline.'
+  },
+  {
+    name: 'werf',
+    url: 'https://github.com/werf/werf',
+    img: 'https://github.com/werf.png',
+    description:
+      'werf, the CNCF-hosted CI/CD tool for shipping software to Kubernetes, uses Task as its build and development entry point.'
+  },
+  {
+    name: 'Gobuster',
+    url: 'https://github.com/OJ/gobuster',
+    img: 'https://github.com/OJ.png',
+    description:
+      'The ubiquitous directory, DNS and virtual-host brute-forcing tool trusted by pen testers worldwide runs its entire build through Task.'
   }
 ];
