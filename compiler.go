@@ -207,8 +207,8 @@ func (c *Compiler) getSpecialVars(t *ast.Task, call *Call) (map[string]string, e
 		"ROOT_DIR":            filepath.ToSlash(c.Dir),
 		"USER_WORKING_DIR":    filepath.ToSlash(c.UserWorkingDir),
 		"TASK_VERSION":        version.GetVersion(),
-		"PATH_LIST_SEPARATOR": os.PathListSeparator,
-		"FILE_PATH_SEPARATOR": os.PathSeparator,
+		"PATH_LIST_SEPARATOR": string(os.PathListSeparator),
+		"FILE_PATH_SEPARATOR": string(os.PathSeparator),
 	}
 	if t != nil {
 		allVars["TASK"] = t.Task

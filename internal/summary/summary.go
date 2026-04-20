@@ -285,7 +285,9 @@ func isEnvVar(key string, envVars map[string]bool) bool {
 		key == "TASKFILE_DIR" ||
 		key == "USER_WORKING_DIR" ||
 		key == "ALIAS" ||
-		key == "MATCH" {
+		key == "MATCH" ||
+		key == "PATH_LIST_SEPARATOR" ||
+		key == "FILE_PATH_SEPARATOR" {
 		return true
 	}
 	return envVars[key]
