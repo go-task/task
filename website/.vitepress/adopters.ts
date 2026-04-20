@@ -57,6 +57,13 @@ export const adopters: Adopter[] = [
     description:
       'Anthropic’s Rust protobuf implementation, buffa, uses Task for its build and release tooling.'
   },
+  {
+    name: 'MongoDB',
+    url: 'https://github.com/mongodb/mongo-go-driver',
+    img: 'https://github.com/mongodb.png',
+    description:
+      'The official Go driver for MongoDB uses Task to orchestrate its build, lint, formatting, and full test suite across every commit.'
+  },
   // Notable open source projects
   {
     name: 'Flet',
