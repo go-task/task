@@ -279,7 +279,7 @@ tasks:
   example:
     desc: using an internal task
     cmds:
-      - task: interal:default   # << note the `:` (colon) after task a `task internal:default` will generate a 202 error because it tries to access the internal taks via the command line
+      - task: internal:default
 ```
 
 ### `aliases`
