@@ -18,9 +18,9 @@ tasks:
     failfast: true
 
   # Deps1-3 wait for Dep4 before starting.
-  dep1: touch dep1.txt; until [ -f dep4.txt ]; do sleep 0.1; done; sleep {{.PUSH}}; echo 'dep1'
-  dep2: touch dep2.txt; until [ -f dep4.txt ]; do sleep 0.1; done; sleep {{.PUSH}}; echo 'dep2'
-  dep3: touch dep3.txt; until [ -f dep4.txt ]; do sleep 0.1; done; sleep {{.PUSH}}; echo 'dep3'
+  dep1: touch dep1.txt; until [ -f dep4.txt ]; do sleep 0.1; done; sleep {{.PUSH}}; printf "dep1\n"
+  dep2: touch dep2.txt; until [ -f dep4.txt ]; do sleep 0.1; done; sleep {{.PUSH}}; printf "dep2\n"
+  dep3: touch dep3.txt; until [ -f dep4.txt ]; do sleep 0.1; done; sleep {{.PUSH}}; printf "dep3\n"
   # Dep4 waits from Dep1-3 and then indicates that it has started.
   dep4: 
     cmds:
