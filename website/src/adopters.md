@@ -5,6 +5,7 @@ description:
   release runner, including Docker, Microsoft, HashiCorp, Vercel, Google Cloud,
   AWS, Anthropic, Arduino, GoReleaser, and more.
 layout: page
+sidebar: false
 ---
 
 <Adopters />
