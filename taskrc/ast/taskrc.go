@@ -17,6 +17,7 @@ type TaskRC struct {
 	DisableFuzzy *bool           `yaml:"disable-fuzzy"`
 	Concurrency  *int            `yaml:"concurrency"`
 	Interactive  *bool           `yaml:"interactive"`
+	OutputCIAuto *bool           `yaml:"output-ci-auto"`
 	Remote       Remote          `yaml:"remote"`
 	Failfast     bool            `yaml:"failfast"`
 	Experiments  map[string]int  `yaml:"experiments"`
@@ -69,5 +70,6 @@ func (t *TaskRC) Merge(other *TaskRC) {
 	t.DisableFuzzy = cmp.Or(other.DisableFuzzy, t.DisableFuzzy)
 	t.Concurrency = cmp.Or(other.Concurrency, t.Concurrency)
 	t.Interactive = cmp.Or(other.Interactive, t.Interactive)
+	t.OutputCIAuto = cmp.Or(other.OutputCIAuto, t.OutputCIAuto)
 	t.Failfast = cmp.Or(other.Failfast, t.Failfast)
 }

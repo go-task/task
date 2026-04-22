@@ -595,7 +595,7 @@
     },
     "outputString": {
       "type": "string",
-      "enum": ["interleaved", "prefixed", "group"],
+      "enum": ["interleaved", "prefixed", "group", "gitlab"],
       "default": "interleaved"
     },
     "outputObject": {
@@ -612,6 +612,22 @@
             },
             "error_only": {
               "description": "Swallows command output on zero exit code",
+              "type": "boolean",
+              "default": false
+            }
+          }
+        },
+        "gitlab": {
+          "type": "object",
+          "description": "Wraps each task's output in GitLab CI collapsible section markers",
+          "properties": {
+            "collapsed": {
+              "description": "Passes the native GitLab [collapsed=true] option so sections are folded by default in the GitLab CI UI",
+              "type": "boolean",
+              "default": false
+            },
+            "error_only": {
+              "description": "Swallows command output on zero exit code (Task-level behavior, identical to group.error_only)",
               "type": "boolean",
               "default": false
             }

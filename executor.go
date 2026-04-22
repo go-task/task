@@ -67,6 +67,7 @@ type (
 		Compiler           *Compiler
 		Output             output.Output
 		OutputStyle        ast.Output
+		OutputCIAuto       bool
 		TaskSorter         sort.Sorter
 		UserWorkingDir     string
 		EnableVersionCheck bool
@@ -520,6 +521,21 @@ type outputStyleOption struct {
 
 func (o *outputStyleOption) ApplyToExecutor(e *Executor) {
 	e.OutputStyle = o.outputStyle
+}
+
+// WithOutputCIAuto enables automatic selection of a CI-aware output style
+// (e.g. "gitlab") when a supported CI environment is detected and no explicit
+// output style is configured in the Taskfile or via CLI.
+func WithOutputCIAuto(enabled bool) ExecutorOption {
+	return &outputCIAutoOption{enabled}
+}
+
+type outputCIAutoOption struct {
+	enabled bool
+}
+
+func (o *outputCIAutoOption) ApplyToExecutor(e *Executor) {
+	e.OutputCIAuto = o.enabled
 }
 
 // WithTaskSorter sets the sorter that the [Executor] will use to sort tasks. By

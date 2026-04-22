@@ -2426,12 +2426,13 @@ the shell in real-time. This is good for having live feedback for logging
 printed by commands, but the output can become messy if you have multiple
 commands running simultaneously and printing lots of stuff.
 
-To make this more customizable, there are currently three different output
+To make this more customizable, there are currently four different output
 options you can choose:
 
 - `interleaved` (default)
 - `group`
 - `prefixed`
+- `gitlab`
 
 To choose another one, just set it to root in the Taskfile:
 
@@ -2535,6 +2536,44 @@ $ task default
 [print-baz] baz
 ```
 
+The `gitlab` output wraps each task's output in
+[GitLab CI collapsible section markers](https://docs.gitlab.com/ci/jobs/job_logs/#create-custom-collapsible-sections).
+Section names are generated automatically so that start and end markers always
+match and stay unique per invocation — even when the same task runs multiple
+times in the same job.
+
+```yaml
+version: '3'
+
+output: gitlab
+```
+
+Two options are available:
+
+- `collapsed`: maps to GitLab's native
+  [`[collapsed=true]`](https://docs.gitlab.com/ci/jobs/job_logs/#create-custom-collapsible-sections)
+  option, which tells GitLab to fold the section by default in the UI.
+- `error_only`: a Task-level option (same as in the [`group`](#output-syntax)
+  style) that swallows the command output — markers included — for tasks that
+  exit with a zero status code.
+
+```yaml
+version: '3'
+
+output:
+  gitlab:
+    collapsed: true
+    error_only: true
+```
+
+::: tip
+
+Rather than hard-coding `output: gitlab` in your Taskfile (which also affects
+local development), consider using [`output-ci-auto`](#automatic-ci-output) so
+the mode is only activated in CI.
+
+:::
+
 ::: tip
 
 The `output` option can also be specified by the `--output` or `-o` flags.
@@ -2562,6 +2601,28 @@ summary, making it easier to spot failures without scrolling through logs.
 ```
 
 This feature requires no configuration and works automatically.
+
+### Automatic CI output
+
+When `output-ci-auto: true` is set in a [`.taskrc.yml`](./taskrc.md) file, Task
+will automatically select a CI-aware [output style](#output-syntax) based on
+the environment it is running in, but only when no output style is configured
+explicitly (via the Taskfile, `--output`, or `TASK_X_OUTPUT`).
+
+Currently supported:
+
+| Environment variable | Output style selected |
+| -------------------- | --------------------- |
+| `GITLAB_CI=true`     | `gitlab`              |
+
+This lets you keep your Taskfile neutral — local developers get the default
+`interleaved` output, while CI runs get their matching CI-flavored output
+without any per-job configuration.
+
+```yaml
+# .taskrc.yml
+output-ci-auto: true
+```
 
 ## Interactive CLI application
 

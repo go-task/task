@@ -29,7 +29,7 @@ version: '3'
 
 - **Type**: `string` or `object`
 - **Default**: `interleaved`
-- **Options**: `interleaved`, `group`, `prefixed`
+- **Options**: `interleaved`, `group`, `prefixed`, `gitlab`
 - **Description**: Controls how task output is displayed
 
 ```yaml

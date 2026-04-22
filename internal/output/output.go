@@ -34,6 +34,14 @@ func BuildFor(o *ast.Output, logger *logger.Logger) (Output, error) {
 			return nil, err
 		}
 		return NewPrefixed(logger), nil
+	case "gitlab":
+		if err := checkOutputGroupUnset(o); err != nil {
+			return nil, err
+		}
+		return GitLab{
+			Collapsed: o.GitLab.Collapsed,
+			ErrorOnly: o.GitLab.ErrorOnly,
+		}, nil
 	default:
 		return nil, fmt.Errorf(`task: output style %q not recognized`, o.Name)
 	}

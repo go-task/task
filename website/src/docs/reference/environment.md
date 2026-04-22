@@ -81,6 +81,16 @@ variables. The priority order is: CLI flags > environment variables > config fil
 - **Default**: `false`
 - **Description**: Prompt for missing required variables
 
+### `TASK_OUTPUT_CI_AUTO`
+
+- **Type**: `boolean` (`true`, `false`, `1`, `0`)
+- **Default**: `false`
+- **Description**: Automatically select a CI-aware output style when a
+  supported CI environment is detected and no output style is explicitly
+  configured. See [output syntax](../guide.md#output-syntax) and
+  [automatic CI output](../guide.md#automatic-ci-output).
+- **Config equivalent**: [`output-ci-auto`](./config.md#output-ci-auto)
+
 ### `TASK_TEMP_DIR`
 
 Defines the location of Task's temporary directory which is used for storing

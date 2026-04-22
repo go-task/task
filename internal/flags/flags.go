@@ -71,6 +71,7 @@ var (
 	Dir                 string
 	Entrypoint          string
 	Output              ast.Output
+	OutputCIAuto        bool
 	Color               bool
 	Interval            time.Duration
 	Failfast            bool
@@ -143,10 +144,11 @@ func init() {
 	pflag.BoolVarP(&ExitCode, "exit-code", "x", false, "Pass-through the exit code of the task command.")
 	pflag.StringVarP(&Dir, "dir", "d", "", "Sets the directory in which Task will execute and look for a Taskfile.")
 	pflag.StringVarP(&Entrypoint, "taskfile", "t", "", `Choose which Taskfile to run. Defaults to "Taskfile.yml".`)
-	pflag.StringVarP(&Output.Name, "output", "o", "", "Sets output style: [interleaved|group|prefixed].")
+	pflag.StringVarP(&Output.Name, "output", "o", "", "Sets output style: [interleaved|group|prefixed|gitlab].")
 	pflag.StringVar(&Output.Group.Begin, "output-group-begin", "", "Message template to print before a task's grouped output.")
 	pflag.StringVar(&Output.Group.End, "output-group-end", "", "Message template to print after a task's grouped output.")
 	pflag.BoolVar(&Output.Group.ErrorOnly, "output-group-error-only", false, "Swallow output from successful tasks.")
+	OutputCIAuto = getConfig(config, "OUTPUT_CI_AUTO", func() *bool { return config.OutputCIAuto }, false)
 	pflag.BoolVarP(&Color, "color", "c", getConfig(config, "COLOR", func() *bool { return config.Color }, true), "Colored output. Enabled by default. Set flag to false or use NO_COLOR=1 to disable.")
 	pflag.IntVarP(&Concurrency, "concurrency", "C", getConfig(config, "CONCURRENCY", func() *int { return config.Concurrency }, 0), "Limit number of tasks to run concurrently.")
 	pflag.DurationVarP(&Interval, "interval", "I", 0, "Interval to watch for changes.")
@@ -305,6 +307,7 @@ func (o *flagsOption) ApplyToExecutor(e *task.Executor) {
 		task.WithConcurrency(Concurrency),
 		task.WithInterval(Interval),
 		task.WithOutputStyle(Output),
+		task.WithOutputCIAuto(OutputCIAuto),
 		task.WithTaskSorter(sorter),
 		task.WithVersionCheck(true),
 		task.WithFailfast(Failfast),

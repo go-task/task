@@ -306,4 +306,27 @@ remote:
 		assert.Equal(t, &cacheExpiry, base.Remote.CacheExpiry)
 		assert.Equal(t, []string{"github.com", "gitlab.com"}, base.Remote.TrustedHosts)
 	})
+
+	t.Run("output-ci-auto merge", func(t *testing.T) { //nolint:paralleltest // parent test cannot run in parallel
+		trueVal := true
+		falseVal := false
+
+		t.Run("other overrides nil base", func(t *testing.T) { //nolint:paralleltest
+			base := &ast.TaskRC{}
+			base.Merge(&ast.TaskRC{OutputCIAuto: &trueVal})
+			assert.Equal(t, &trueVal, base.OutputCIAuto)
+		})
+
+		t.Run("other overrides base", func(t *testing.T) { //nolint:paralleltest
+			base := &ast.TaskRC{OutputCIAuto: &falseVal}
+			base.Merge(&ast.TaskRC{OutputCIAuto: &trueVal})
+			assert.Equal(t, &trueVal, base.OutputCIAuto)
+		})
+
+		t.Run("nil other does not override base", func(t *testing.T) { //nolint:paralleltest
+			base := &ast.TaskRC{OutputCIAuto: &trueVal}
+			base.Merge(&ast.TaskRC{})
+			assert.Equal(t, &trueVal, base.OutputCIAuto)
+		})
+	})
 }

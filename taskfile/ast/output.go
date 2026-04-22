@@ -12,6 +12,8 @@ type Output struct {
 	Name string `yaml:"-"`
 	// Group specific style
 	Group OutputGroup
+	// GitLab specific style
+	GitLab OutputGitLab
 }
 
 // IsSet returns true if and only if a custom output style is set.
@@ -32,19 +34,30 @@ func (s *Output) UnmarshalYAML(node *yaml.Node) error {
 
 	case yaml.MappingNode:
 		var tmp struct {
-			Group *OutputGroup
+			Group  *OutputGroup
+			GitLab *OutputGitLab `yaml:"gitlab"`
 		}
 		if err := node.Decode(&tmp); err != nil {
 			return errors.NewTaskfileDecodeError(err, node)
 		}
-		if tmp.Group == nil {
-			return errors.NewTaskfileDecodeError(nil, node).WithMessage(`output style must have the "group" key when in mapping form`)
+		switch {
+		case tmp.Group != nil && tmp.GitLab != nil:
+			return errors.NewTaskfileDecodeError(nil, node).WithMessage(`output style cannot set both "group" and "gitlab"`)
+		case tmp.Group != nil:
+			*s = Output{
+				Name:  "group",
+				Group: *tmp.Group,
+			}
+			return nil
+		case tmp.GitLab != nil:
+			*s = Output{
+				Name:   "gitlab",
+				GitLab: *tmp.GitLab,
+			}
+			return nil
+		default:
+			return errors.NewTaskfileDecodeError(nil, node).WithMessage(`output style must have the "group" or "gitlab" key when in mapping form`)
 		}
-		*s = Output{
-			Name:  "group",
-			Group: *tmp.Group,
-		}
-		return nil
 	}
 
 	return errors.NewTaskfileDecodeError(nil, node).WithTypeMessage("output")
@@ -62,4 +75,10 @@ func (g *OutputGroup) IsSet() bool {
 		return false
 	}
 	return g.Begin != "" || g.End != ""
+}
+
+// OutputGitLab is the style options specific to the GitLab style.
+type OutputGitLab struct {
+	Collapsed bool
+	ErrorOnly bool `yaml:"error_only"`
 }

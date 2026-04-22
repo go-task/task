@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
+	"strconv"
 	"strings"
 	"sync"
 
@@ -202,10 +203,25 @@ func (e *Executor) setupOutput() error {
 	if !e.OutputStyle.IsSet() {
 		e.OutputStyle = e.Taskfile.Output
 	}
+	if !e.OutputStyle.IsSet() && e.OutputCIAuto {
+		if name := detectCIOutput(); name != "" {
+			e.OutputStyle.Name = name
+		}
+	}
 
 	var err error
 	e.Output, err = output.BuildFor(&e.OutputStyle, e.Logger)
 	return err
+}
+
+// detectCIOutput returns the name of a CI-aware output style to use based
+// on environment variables set by common CI runners. Returns an empty string
+// when no supported CI environment is detected.
+func detectCIOutput() string {
+	if isGitLab, _ := strconv.ParseBool(os.Getenv("GITLAB_CI")); isGitLab {
+		return "gitlab"
+	}
+	return ""
 }
 
 func (e *Executor) setupCompiler() error {

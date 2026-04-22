@@ -224,7 +224,8 @@ task backup --global
 
 #### `-o, --output <mode>`
 
-Set output style. Available modes: `interleaved`, `group`, `prefixed`.
+Set output style. Available modes: `interleaved`, `group`, `prefixed`,
+`gitlab`.
 
 ```bash
 task test --output group

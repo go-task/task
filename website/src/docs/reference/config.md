@@ -166,6 +166,21 @@ failfast: true
 interactive: true
 ```
 
+### `output-ci-auto`
+
+- **Type**: `boolean`
+- **Default**: `false`
+- **Description**: Automatically select a CI-aware
+  [output style](../guide.md#output-syntax) when a supported CI environment
+  is detected and no output style is explicitly configured (via the Taskfile
+  or `--output`). Currently maps `GITLAB_CI=true` to the `gitlab` output
+  style.
+- **Environment variable**: [`TASK_OUTPUT_CI_AUTO`](./environment.md#task-output-ci-auto)
+
+```yaml
+output-ci-auto: true
+```
+
 ## Example Configuration
 
 Here's a complete example of a `.taskrc.yml` file with all available options:

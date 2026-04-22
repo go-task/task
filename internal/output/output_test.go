@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"regexp"
 	"testing"
 
 	"github.com/fatih/color"
@@ -119,6 +120,117 @@ func TestGroupErrorOnlyShowsOutputOnError(t *testing.T) {
 
 	require.NoError(t, cleanup(errors.New("any-error")))
 	assert.Equal(t, "std-out\nstd-err\n", b.String())
+}
+
+func gitlabTaskCache(taskName string) *templater.Cache {
+	return &templater.Cache{
+		Vars: ast.NewVars(
+			&ast.VarElement{
+				Key:   "TASK",
+				Value: ast.Var{Value: taskName},
+			},
+		),
+	}
+}
+
+var gitlabMarkerPattern = regexp.MustCompile(
+	`\x1b\[0Ksection_start:(\d+):(\S+?)(\[[^\]]+\])?\r\x1b\[0K(.*)\n` +
+		`(?s)(.*)` +
+		`\x1b\[0Ksection_end:(\d+):(\S+)\r\x1b\[0K\n$`,
+)
+
+func TestGitLab(t *testing.T) {
+	t.Parallel()
+
+	var b bytes.Buffer
+	o := output.GitLab{}
+	w, _, cleanup := o.WrapWriter(&b, io.Discard, "", gitlabTaskCache("build"))
+
+	fmt.Fprintln(w, "hello")
+	assert.Equal(t, "", b.String(), "output must be buffered until close")
+	require.NoError(t, cleanup(nil))
+
+	m := gitlabMarkerPattern.FindStringSubmatch(b.String())
+	require.NotNil(t, m, "output should match GitLab section markers, got: %q", b.String())
+	assert.Equal(t, m[2], m[7], "start and end section IDs must match")
+	assert.Empty(t, m[3], "collapsed option should not be present by default")
+	assert.Equal(t, "build", m[4], "section header should be the task name")
+	assert.Equal(t, "hello\n", m[5], "wrapped content must be preserved")
+	assert.Contains(t, m[2], "build_", "section ID should be prefixed with slugged task name")
+}
+
+func TestGitLabUniqueSectionIDs(t *testing.T) {
+	t.Parallel()
+
+	o := output.GitLab{}
+
+	ids := make([]string, 3)
+	for i := range ids {
+		var b bytes.Buffer
+		w, _, cleanup := o.WrapWriter(&b, io.Discard, "", gitlabTaskCache("build"))
+		fmt.Fprintln(w, "x")
+		require.NoError(t, cleanup(nil))
+		m := gitlabMarkerPattern.FindStringSubmatch(b.String())
+		require.NotNil(t, m)
+		ids[i] = m[2]
+	}
+
+	assert.NotEqual(t, ids[0], ids[1])
+	assert.NotEqual(t, ids[1], ids[2])
+	assert.NotEqual(t, ids[0], ids[2])
+}
+
+func TestGitLabCollapsed(t *testing.T) {
+	t.Parallel()
+
+	var b bytes.Buffer
+	o := output.GitLab{Collapsed: true}
+	w, _, cleanup := o.WrapWriter(&b, io.Discard, "", gitlabTaskCache("build"))
+	fmt.Fprintln(w, "x")
+	require.NoError(t, cleanup(nil))
+
+	m := gitlabMarkerPattern.FindStringSubmatch(b.String())
+	require.NotNil(t, m)
+	assert.Equal(t, "[collapsed=true]", m[3])
+}
+
+func TestGitLabErrorOnlySwallowsOutputOnNoError(t *testing.T) {
+	t.Parallel()
+
+	var b bytes.Buffer
+	o := output.GitLab{ErrorOnly: true}
+	w, _, cleanup := o.WrapWriter(&b, io.Discard, "", gitlabTaskCache("build"))
+	fmt.Fprintln(w, "hello")
+	require.NoError(t, cleanup(nil))
+	assert.Empty(t, b.String())
+}
+
+func TestGitLabErrorOnlyShowsOutputOnError(t *testing.T) {
+	t.Parallel()
+
+	var b bytes.Buffer
+	o := output.GitLab{ErrorOnly: true}
+	w, _, cleanup := o.WrapWriter(&b, io.Discard, "", gitlabTaskCache("build"))
+	fmt.Fprintln(w, "hello")
+	require.NoError(t, cleanup(errors.New("boom")))
+
+	m := gitlabMarkerPattern.FindStringSubmatch(b.String())
+	require.NotNil(t, m)
+	assert.Equal(t, "hello\n", m[5])
+}
+
+func TestGitLabSlugSanitizesTaskName(t *testing.T) {
+	t.Parallel()
+
+	var b bytes.Buffer
+	o := output.GitLab{}
+	w, _, cleanup := o.WrapWriter(&b, io.Discard, "", gitlabTaskCache("my task:with spaces"))
+	fmt.Fprintln(w, "x")
+	require.NoError(t, cleanup(nil))
+
+	m := gitlabMarkerPattern.FindStringSubmatch(b.String())
+	require.NotNil(t, m)
+	assert.Regexp(t, `^[a-zA-Z0-9_.-]+$`, m[2], "section ID must only contain GitLab-allowed chars")
 }
 
 func TestPrefixed(t *testing.T) { //nolint:paralleltest // cannot run in parallel
