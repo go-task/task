@@ -13,6 +13,14 @@ type Output interface {
 	WrapWriter(stdOut, stdErr io.Writer, prefix string, cache *templater.Cache) (io.Writer, io.Writer, CloseFunc)
 }
 
+// TaskWrapper is an optional interface that Output implementations can satisfy
+// to wrap an entire task's execution in a single enclosing block — including
+// the task's command announcements and all its commands' output — instead of
+// wrapping each command individually via WrapWriter.
+type TaskWrapper interface {
+	WrapTask(stdOut, stdErr io.Writer, cache *templater.Cache) (io.Writer, io.Writer, CloseFunc)
+}
+
 type CloseFunc func(err error) error
 
 // Build the Output for the requested ast.Output.

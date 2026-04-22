@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"regexp"
+	"sync"
 	"time"
 
 	"github.com/google/uuid"
@@ -16,13 +17,25 @@ import (
 // section markers]. Section IDs are generated automatically so that
 // start and end markers always match and stay unique per invocation.
 //
+// GitLab wraps output at the task level via the [TaskWrapper] interface,
+// so each task (including its command announcements and all its cmds)
+// appears inside a single collapsible section. Nested task invocations
+// produce nested sections.
+//
 // [GitLab CI collapsible section markers]: https://docs.gitlab.com/ci/jobs/job_logs/#create-custom-collapsible-sections
 type GitLab struct {
 	Collapsed bool
 	ErrorOnly bool
 }
 
-func (g GitLab) WrapWriter(stdOut, _ io.Writer, _ string, cache *templater.Cache) (io.Writer, io.Writer, CloseFunc) {
+// WrapWriter is a passthrough for GitLab: wrapping happens at the task
+// level via WrapTask, not per command.
+func (g GitLab) WrapWriter(stdOut, stdErr io.Writer, _ string, _ *templater.Cache) (io.Writer, io.Writer, CloseFunc) {
+	return stdOut, stdErr, func(error) error { return nil }
+}
+
+// WrapTask wraps an entire task's output in a single collapsible section.
+func (g GitLab) WrapTask(stdOut, _ io.Writer, cache *templater.Cache) (io.Writer, io.Writer, CloseFunc) {
 	header := ""
 	if cache != nil {
 		header = templater.Replace("{{.TASK}}", cache)
@@ -50,6 +63,7 @@ func (g GitLab) WrapWriter(stdOut, _ io.Writer, _ string, cache *templater.Cache
 }
 
 type gitlabWriter struct {
+	mu        sync.Mutex
 	writer    io.Writer
 	buff      bytes.Buffer
 	id        string
@@ -59,10 +73,15 @@ type gitlabWriter struct {
 }
 
 func (gw *gitlabWriter) Write(p []byte) (int, error) {
+	gw.mu.Lock()
+	defer gw.mu.Unlock()
 	return gw.buff.Write(p)
 }
 
 func (gw *gitlabWriter) close() error {
+	gw.mu.Lock()
+	defer gw.mu.Unlock()
+
 	if gw.buff.Len() == 0 {
 		return nil
 	}

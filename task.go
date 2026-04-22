@@ -204,9 +204,9 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) error {
 	release := e.acquireConcurrencyLimit()
 	defer release()
 
-	if err = e.startExecution(ctx, t, func(ctx context.Context) error {
+	if err = e.startExecution(ctx, t, func(ctx context.Context) (err error) {
 		e.Logger.VerboseErrf(logger.Magenta, "task: %q started\n", call.Task)
-		if err := e.runDeps(ctx, t); err != nil {
+		if err = e.runDeps(ctx, t); err != nil {
 			return err
 		}
 
@@ -265,6 +265,9 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) error {
 		}
 
 		var deferredExitCode uint8
+
+		ctx, taskOutCloser := e.wrapTaskOutput(ctx, t, call)
+		defer func() { taskOutCloser(err) }()
 
 		for i := range t.Cmds {
 			if t.Cmds[i].Defer {
@@ -393,7 +396,7 @@ func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call *Call, i in
 		}
 
 		if e.Verbose || (!call.Silent && !cmd.Silent && !t.IsSilent() && !e.Taskfile.Silent && !e.Silent) {
-			e.Logger.Errf(logger.Green, "task: [%s] %s\n", t.Name(), cmd.Cmd)
+			e.printCmdAnnouncement(ctx, t, cmd.Cmd)
 		}
 
 		if e.Dry {
@@ -409,7 +412,8 @@ func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call *Call, i in
 		if err != nil {
 			return fmt.Errorf("task: failed to get variables: %w", err)
 		}
-		stdOut, stdErr, closer := outputWrapper.WrapWriter(e.Stdout, e.Stderr, t.Prefix, outputTemplater)
+		taskStdOut, taskStdErr := e.writersFromCtx(ctx)
+		stdOut, stdErr, closer := outputWrapper.WrapWriter(taskStdOut, taskStdErr, t.Prefix, outputTemplater)
 
 		err = execext.RunCommand(ctx, &execext.RunCommandOptions{
 			Command:   cmd.Cmd,

@@ -6,7 +6,11 @@ import (
 	"fmt"
 	"io"
 	"regexp"
+	"strconv"
+	"strings"
+	"sync"
 	"testing"
+	"time"
 
 	"github.com/fatih/color"
 	"github.com/stretchr/testify/assert"
@@ -144,7 +148,7 @@ func TestGitLab(t *testing.T) {
 
 	var b bytes.Buffer
 	o := output.GitLab{}
-	w, _, cleanup := o.WrapWriter(&b, io.Discard, "", gitlabTaskCache("build"))
+	w, _, cleanup := o.WrapTask(&b, io.Discard, gitlabTaskCache("build"))
 
 	fmt.Fprintln(w, "hello")
 	assert.Equal(t, "", b.String(), "output must be buffered until close")
@@ -167,7 +171,7 @@ func TestGitLabUniqueSectionIDs(t *testing.T) {
 	ids := make([]string, 3)
 	for i := range ids {
 		var b bytes.Buffer
-		w, _, cleanup := o.WrapWriter(&b, io.Discard, "", gitlabTaskCache("build"))
+		w, _, cleanup := o.WrapTask(&b, io.Discard, gitlabTaskCache("build"))
 		fmt.Fprintln(w, "x")
 		require.NoError(t, cleanup(nil))
 		m := gitlabMarkerPattern.FindStringSubmatch(b.String())
@@ -185,7 +189,7 @@ func TestGitLabCollapsed(t *testing.T) {
 
 	var b bytes.Buffer
 	o := output.GitLab{Collapsed: true}
-	w, _, cleanup := o.WrapWriter(&b, io.Discard, "", gitlabTaskCache("build"))
+	w, _, cleanup := o.WrapTask(&b, io.Discard, gitlabTaskCache("build"))
 	fmt.Fprintln(w, "x")
 	require.NoError(t, cleanup(nil))
 
@@ -199,7 +203,7 @@ func TestGitLabErrorOnlySwallowsOutputOnNoError(t *testing.T) {
 
 	var b bytes.Buffer
 	o := output.GitLab{ErrorOnly: true}
-	w, _, cleanup := o.WrapWriter(&b, io.Discard, "", gitlabTaskCache("build"))
+	w, _, cleanup := o.WrapTask(&b, io.Discard, gitlabTaskCache("build"))
 	fmt.Fprintln(w, "hello")
 	require.NoError(t, cleanup(nil))
 	assert.Empty(t, b.String())
@@ -210,7 +214,7 @@ func TestGitLabErrorOnlyShowsOutputOnError(t *testing.T) {
 
 	var b bytes.Buffer
 	o := output.GitLab{ErrorOnly: true}
-	w, _, cleanup := o.WrapWriter(&b, io.Discard, "", gitlabTaskCache("build"))
+	w, _, cleanup := o.WrapTask(&b, io.Discard, gitlabTaskCache("build"))
 	fmt.Fprintln(w, "hello")
 	require.NoError(t, cleanup(errors.New("boom")))
 
@@ -224,13 +228,134 @@ func TestGitLabSlugSanitizesTaskName(t *testing.T) {
 
 	var b bytes.Buffer
 	o := output.GitLab{}
-	w, _, cleanup := o.WrapWriter(&b, io.Discard, "", gitlabTaskCache("my task:with spaces"))
+	w, _, cleanup := o.WrapTask(&b, io.Discard, gitlabTaskCache("my task:with spaces"))
 	fmt.Fprintln(w, "x")
 	require.NoError(t, cleanup(nil))
 
 	m := gitlabMarkerPattern.FindStringSubmatch(b.String())
 	require.NotNil(t, m)
 	assert.Regexp(t, `^[a-zA-Z0-9_.-]+$`, m[2], "section ID must only contain GitLab-allowed chars")
+}
+
+func TestGitLabWrapWriterIsPassthrough(t *testing.T) {
+	t.Parallel()
+
+	var b bytes.Buffer
+	o := output.GitLab{}
+	w, _, cleanup := o.WrapWriter(&b, io.Discard, "", nil)
+
+	fmt.Fprintln(w, "hello")
+	assert.Equal(t, "hello\n", b.String(), "WrapWriter must be a passthrough for GitLab")
+	assert.NoError(t, cleanup(nil))
+	assert.Equal(t, "hello\n", b.String(), "closer must be a no-op")
+}
+
+func TestGitLabWrapTaskSingleSection(t *testing.T) {
+	t.Parallel()
+
+	var b bytes.Buffer
+	o := output.GitLab{}
+	w, _, cleanup := o.WrapTask(&b, io.Discard, gitlabTaskCache("build"))
+
+	// Simulate multiple cmd outputs being written during a task's execution.
+	fmt.Fprintln(w, "cmd 1 output")
+	fmt.Fprintln(w, "cmd 2 output")
+	fmt.Fprintln(w, "cmd 3 output")
+	require.NoError(t, cleanup(nil))
+
+	// There must be exactly one section_start and one section_end.
+	assert.Equal(t, 1, strings.Count(b.String(), "section_start:"))
+	assert.Equal(t, 1, strings.Count(b.String(), "section_end:"))
+
+	m := gitlabMarkerPattern.FindStringSubmatch(b.String())
+	require.NotNil(t, m)
+	assert.Equal(t, "cmd 1 output\ncmd 2 output\ncmd 3 output\n", m[5])
+}
+
+func TestGitLabWrapTaskDurationElapsed(t *testing.T) {
+	t.Parallel()
+
+	var b bytes.Buffer
+	o := output.GitLab{}
+	w, _, cleanup := o.WrapTask(&b, io.Discard, gitlabTaskCache("slow"))
+
+	fmt.Fprintln(w, "started")
+	time.Sleep(1100 * time.Millisecond)
+	fmt.Fprintln(w, "done")
+	require.NoError(t, cleanup(nil))
+
+	m := gitlabMarkerPattern.FindStringSubmatch(b.String())
+	require.NotNil(t, m)
+	startTS, err := strconv.ParseInt(m[1], 10, 64)
+	require.NoError(t, err)
+	endTS, err := strconv.ParseInt(m[6], 10, 64)
+	require.NoError(t, err)
+	assert.GreaterOrEqual(t, endTS-startTS, int64(1),
+		"end TS must be at least 1 second after start TS when task takes >1s")
+}
+
+func TestGitLabWrapTaskNested(t *testing.T) {
+	t.Parallel()
+
+	var root bytes.Buffer
+	parent := output.GitLab{}
+	parentW, _, parentClose := parent.WrapTask(&root, io.Discard, gitlabTaskCache("parent"))
+
+	fmt.Fprintln(parentW, "before child")
+
+	child := output.GitLab{}
+	childW, _, childClose := child.WrapTask(parentW, io.Discard, gitlabTaskCache("child"))
+	fmt.Fprintln(childW, "inside child")
+	require.NoError(t, childClose(nil))
+
+	fmt.Fprintln(parentW, "after child")
+	require.NoError(t, parentClose(nil))
+
+	out := root.String()
+	// Two section_start and two section_end
+	assert.Equal(t, 2, strings.Count(out, "section_start:"))
+	assert.Equal(t, 2, strings.Count(out, "section_end:"))
+
+	// Order: parent start → child start → child end → parent end
+	parentStart := strings.Index(out, "section_start:") // first
+	childStart := strings.Index(out[parentStart+1:], "section_start:") + parentStart + 1
+	childEnd := strings.Index(out, "section_end:")
+	parentEnd := strings.LastIndex(out, "section_end:")
+	assert.Less(t, parentStart, childStart, "child_start must come after parent_start")
+	assert.Less(t, childStart, childEnd, "child_end must come after child_start")
+	assert.Less(t, childEnd, parentEnd, "parent_end must come after child_end")
+}
+
+func TestGitLabWrapTaskConcurrentWrites(t *testing.T) {
+	t.Parallel()
+
+	var root bytes.Buffer
+	parent := output.GitLab{}
+	parentW, _, parentClose := parent.WrapTask(&root, io.Discard, gitlabTaskCache("parent"))
+
+	const numChildren = 10
+	var wg sync.WaitGroup
+	for i := 0; i < numChildren; i++ {
+		wg.Add(1)
+		go func(i int) {
+			defer wg.Done()
+			child := output.GitLab{}
+			childW, _, childClose := child.WrapTask(parentW, io.Discard, gitlabTaskCache(fmt.Sprintf("child%d", i)))
+			fmt.Fprintf(childW, "child %d output\n", i)
+			_ = childClose(nil)
+		}(i)
+	}
+	wg.Wait()
+	require.NoError(t, parentClose(nil))
+
+	out := root.String()
+	// 1 parent + 10 children = 11 section_start and 11 section_end
+	assert.Equal(t, 11, strings.Count(out, "section_start:"))
+	assert.Equal(t, 11, strings.Count(out, "section_end:"))
+	// All 10 child outputs present
+	for i := 0; i < numChildren; i++ {
+		assert.Contains(t, out, fmt.Sprintf("child %d output", i))
+	}
 }
 
 func TestPrefixed(t *testing.T) { //nolint:paralleltest // cannot run in parallel
