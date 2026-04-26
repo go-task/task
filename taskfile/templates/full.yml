@@ -1,0 +1,171 @@
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+# Docs guide: https://taskfile.dev/docs/guide
+version: '3'
+
+# include other Taskfiles
+includes:
+  docs:
+    taskfile: ./documentation
+    optional: true
+
+# Global variables available to all tasks
+vars:
+  GREETING: Hello, world!
+  # Environment variables can be referenced or dynamically generated
+  BUILD_DIR: build
+  # Dynamic variables execute shell commands
+  GIT_COMMIT:
+    sh: git rev-parse --short HEAD 2>/dev/null || echo "unknown"
+
+# Global task output configuration
+output: group
+
+tasks:
+  # Default task - runs when no specific task is provided
+  default:
+    desc: Display greeting and show build information
+    deps:
+      - show-info
+    cmds:
+      - echo "{{.GREETING}}"
+    silent: true
+
+  # Task that runs from current user dir
+  up:
+    dir: '{{.USER_WORKING_DIR}}'
+    preconditions:
+      - test -f docker-compose.yml
+    cmds:
+      - docker-compose up -d
+
+---
+
+  # Task with dependencies that run in parallel
+  build:
+    desc: Build the project with versioning
+    aliases: ['b']
+    deps:
+      - prepare
+      - compile
+    sources:
+      - src/**/*.go
+      - main.go
+    generates:
+      - '{{.BUILD_DIR}}/app'
+    vars:
+      VERSION: '{{.GIT_COMMIT}}'
+    env:
+      TOOL_ENV: 'value'
+    cmds:
+      - echo "Building version {{.VERSION}}..."
+      - mkdir -p {{.BUILD_DIR}}
+    status:
+      - test -f {{.BUILD_DIR}}/app
+
+  # Task that validates required variables
+  deploy:
+    desc: Deploy the application
+    requires:
+      vars:
+        - name: ENVIRONMENT
+          enum: [dev, staging, prod]
+        - DEPLOYMENT_KEY
+    prompt: Deploying to {{.ENVIRONMENT}}. Continue?
+    cmds:
+      - echo "Deploying to {{.ENVIRONMENT}} with key {{.DEPLOYMENT_KEY}}"
+
+  # Subtask for build process
+  prepare:
+    internal: true
+    desc: Prepare build environment
+    cmds:
+      - echo "Preparing environment..."
+
+  # Another subtask
+  compile:
+    internal: true
+    desc: Compile source code
+    cmds:
+      - echo "Compiling source code..."
+
+  # Task with looping
+  show-info:
+    desc: Display system information
+    vars:
+      INFO_ITEMS: [OS, Shell, Task]
+    cmds:
+      - for:
+          var: INFO_ITEMS
+        cmd: echo "{{.ITEM}} info"
+    silent: true
+
+  # Task with conditional execution
+  test:
+    desc: Run tests based on environment
+    aliases: ['t']
+    cmds:
+      - cmd: echo "Running tests in development mode"
+        if: '[ "{{.ENVIRONMENT}}" = "dev" ]'
+      - cmd: echo "Running full test suite"
+        if: '[ "{{.ENVIRONMENT}}" != "dev" ]'
+
+  # Task showing using if with for loops
+  process-items:
+    cmds:
+      - for: ['a', 'b', 'c']
+        cmd: echo "processing {{.ITEM}}"
+        if: '[ "{{.ITEM}}" != "b" ]'
+
+  # Task demonstrating different ways to call other tasks
+  workflow:
+    desc: Run a complete workflow
+    aliases: ['w']
+    cmds:
+      - task: default
+      - task: build
+        vars:
+          VERSION: 1.0.0
+      - defer: echo "Workflow complete!"
+
+  # Task that can skip if status check passes
+  install-deps:
+    desc: Install dependencies
+    cmds:
+      - echo "Installing dependencies..."
+    status:
+      - test -d node_modules
+    run: once
+
+  # Task demonstrating error handling and recovery
+  validate:
+    desc: Validate configuration with error recovery
+    aliases: ['val','v']
+    cmds:
+      - cmd: test -f config.json
+        ignore_error: true
+      - echo "Validation check completed"
+
+  variable-datatypes:
+    desc: Illustrates Taskfile datatypes
+    vars:
+      STRING: 'Hello, World!'
+      BOOL: true
+      INT: 42
+      FLOAT: 3.14
+      ARRAY: [1, 2, 3]
+      MAP:
+        map: { A: 1, B: 2, C: 3 }
+      JSON: '{"a": 1, "b": 2, "c": 3}' # or set via sh
+      JSONFOO: # json string into map
+        ref: 'fromJson .JSON'
+    cmds:
+      - 'echo {{.STRING}}' # Hello, World!
+      - 'echo {{.BOOL}}' # true
+      - 'echo {{.INT}}' # 42
+      - 'echo {{.FLOAT}}' # 3.14
+      - 'echo {{.ARRAY}}' # [1 2 3]
+      - 'echo {{index .ARRAY 0}}' # 1
+      - 'echo {{.MAP}}' # map[A:1 B:2 C:3]
+      - 'echo {{.MAP.A}}' # 1
+      - 'echo {{.JSON}}' # {"a": 1, "b": 2, "c": 3}
+      - 'echo {{.JSONFOO}}' # map[A:1 B:2 C:3]
