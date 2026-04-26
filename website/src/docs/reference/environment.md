@@ -81,6 +81,31 @@ variables. The priority order is: CLI flags > environment variables > config fil
 - **Default**: `false`
 - **Description**: Prompt for missing required variables
 
+### `TASK_INIT_DIR`
+
+- **Type**: `string` (file or directory path)
+- **Default**: (none - uses built-in template)
+- **Description**: Specifies a custom template location for `task --init`. When
+  set, Task will copy the Taskfile from this location instead of using the
+  default embedded template.
+
+The value can be:
+
+- A **file path**: Task will use the file directly as the template
+- A **directory path**: Task will search the directory for a Taskfile using the
+  same search logic as running `task` (looks for `Taskfile.yml`, `taskfile.yml`,
+  `Taskfile.yaml`, etc.)
+
+Shell expansion is supported (e.g., `~` for home directory).
+
+```bash
+# Use a specific template file
+TASK_INIT_DIR=~/templates/Taskfile.yml task --init
+
+# Use a directory (Task will search for Taskfile.yml, etc.)
+TASK_INIT_DIR=~/templates/my-project task --init
+```
+
 ### `TASK_TEMP_DIR`
 
 Defines the location of Task's temporary directory which is used for storing
