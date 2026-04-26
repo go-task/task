@@ -87,6 +87,44 @@ func run() error {
 		return log.PrintExperiments()
 	}
 
+	// Handle --init-template flag (list or create with specified template)
+	if pflag.Lookup("init-template").Changed {
+		if flags.InitTemplate == "" {
+			// List available templates
+			log.Outf(logger.Default, "Available templates:\n")
+			for _, name := range task.ListTemplates() {
+				log.Outf(logger.Default, "  * %s\n", name)
+			}
+			return nil
+		}
+
+		// Create Taskfile with specified built-in template
+		wd, err := os.Getwd()
+		if err != nil {
+			return err
+		}
+		args, _, err := args.Get()
+		if err != nil {
+			return err
+		}
+		path := wd
+		if len(args) > 0 {
+			name := args[0]
+			if filepathext.IsExtOnly(name) {
+				name = filepathext.SmartJoin(filepath.Dir(name), "Taskfile"+filepath.Ext(name))
+			}
+			path = filepathext.SmartJoin(wd, name)
+		}
+		finalPath, err := task.InitTaskfileWithTemplate(path, flags.InitTemplate)
+		if err != nil {
+			return err
+		}
+		if !flags.Silent {
+			log.Outf(logger.Green, "Taskfile created: %s\n", filepathext.TryAbsToRel(finalPath))
+		}
+		return nil
+	}
+
 	if flags.Init {
 		wd, err := os.Getwd()
 		if err != nil {
