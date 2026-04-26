@@ -123,7 +123,7 @@ func init() {
 	pflag.BoolVar(&Version, "version", false, "Show Task version.")
 	pflag.BoolVarP(&Help, "help", "h", false, "Shows Task usage.")
 	pflag.BoolVarP(&Init, "init", "i", false, "Creates a new Taskfile.yml in the current folder.")
-	pflag.StringVar(&InitTemplate, "init-template", "", "Initializes a Taskfile using a template. Accepts template name. List available templates by not passing a name.")
+	pflag.StringVar(&InitTemplate, "init-template", "", "Create a new Taskfile using a template. Use 'list' to show available templates.")
 	pflag.StringVar(&Completion, "completion", "", "Generates shell completion script.")
 	pflag.BoolVarP(&List, "list", "l", false, "Lists tasks with description of current Taskfile.")
 	pflag.BoolVarP(&ListAll, "list-all", "a", false, "Lists tasks with or without a description.")

@@ -89,7 +89,7 @@ func run() error {
 
 	// Handle --init-template flag (list or create with specified template)
 	if pflag.Lookup("init-template").Changed {
-		if flags.InitTemplate == "" {
+		if flags.InitTemplate == "list" {
 			// List available templates
 			log.Outf(logger.Default, "Available templates:\n")
 			for _, name := range task.ListTemplates() {
