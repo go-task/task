@@ -31,6 +31,38 @@ func (r *Cache) Err() error {
 	return r.err
 }
 
+// ResetErr clears the sticky error flag so a single Cache can be reused for
+// a sequence of independent template operations. Without this, the first
+// failed Replace would short-circuit every subsequent call on the same
+// Cache.
+func (r *Cache) ResetErr() {
+	r.err = nil
+}
+
+// SyncVarSet updates the internal cacheMap after the caller mutates Vars via
+// [ast.Vars.Set]. This lets a single Cache be reused across many Replace
+// calls (each interleaved with a Vars.Set) without rebuilding the entire
+// cacheMap from scratch via [ast.Vars.ToCacheMap]. The mirroring rules match
+// [ast.Vars.ToCacheMap]: dynamic-only entries are excluded, Live takes
+// precedence over Value.
+//
+// No-op if cacheMap has not yet been initialized — the lazy init in Replace
+// will pick up the value on first use.
+func (r *Cache) SyncVarSet(key string, v ast.Var) {
+	if r.cacheMap == nil {
+		return
+	}
+	if v.Sh != nil && *v.Sh != "" {
+		delete(r.cacheMap, key)
+		return
+	}
+	if v.Live != nil {
+		r.cacheMap[key] = v.Live
+	} else {
+		r.cacheMap[key] = v.Value
+	}
+}
+
 func ResolveRef(ref string, cache *Cache) any {
 	// If there is already an error, do nothing
 	if cache.err != nil {
