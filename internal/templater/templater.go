@@ -82,6 +82,13 @@ func ReplaceWithExtra[T any](v T, cache *Cache, extra map[string]any) T {
 
 	// Traverse the value and parse any template variables
 	copy, err := deepcopy.TraverseStringsFunc(v, func(v string) (string, error) {
+		// Skip the template engine entirely if the string has no actions.
+		// Go templates only fire on `{{`; pure literals can short-circuit.
+		// This is a large win when iterating many merged taskfile env vars
+		// whose values are static strings.
+		if !strings.Contains(v, "{{") {
+			return v, nil
+		}
 		tpl, err := template.New("").Funcs(templateFuncs).Parse(v)
 		if err != nil {
 			return v, err
