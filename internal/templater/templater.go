@@ -50,6 +50,39 @@ func templateMayMutateDot(s string) bool {
 	return strings.Contains(s, "set")
 }
 
+// parsedTemplateCache memoizes parsed [template.Template] objects keyed by
+// their source string. Each call to template.New("").Funcs(templateFuncs)
+// copies the ~170-entry FuncMap into a fresh Template (sprig + go-task
+// builtins) — that copy is the single largest allocator on the hot path of
+// listing tasks in a project with many includes, because the same merged
+// TaskfileEnv values are processed once per task.
+//
+// Caching the parsed Template is safe: once parsed, a Template may be
+// executed concurrently from multiple goroutines (Go docs guarantee this),
+// and Execute reads from but does not mutate the Template. The cache key is
+// the unparsed source — sufficient because templateFuncs is a package-level
+// singleton.
+//
+// We cache errors as well so that a malformed template surfaces the same
+// error on every call instead of being re-parsed each time.
+var parsedTemplateCache sync.Map // map[string]parsedTemplateEntry
+
+type parsedTemplateEntry struct {
+	tpl *template.Template
+	err error
+}
+
+func cachedParse(text string) (*template.Template, error) {
+	if v, ok := parsedTemplateCache.Load(text); ok {
+		entry := v.(parsedTemplateEntry)
+		return entry.tpl, entry.err
+	}
+	tpl, err := template.New("").Funcs(templateFuncs).Parse(text)
+	actual, _ := parsedTemplateCache.LoadOrStore(text, parsedTemplateEntry{tpl: tpl, err: err})
+	entry := actual.(parsedTemplateEntry)
+	return entry.tpl, entry.err
+}
+
 // Cache is a help struct that allow us to call "replaceX" funcs multiple
 // times, without having to check for error each time. The first error that
 // happen will be assigned to r.err, and consecutive calls to funcs will just
@@ -115,7 +148,7 @@ func ResolveRef(ref string, cache *Cache) any {
 	if ref == "." {
 		return cache.cacheMap
 	}
-	t, err := template.New("resolver").Funcs(templateFuncs).Parse(fmt.Sprintf("{{%s}}", ref))
+	t, err := cachedParse(fmt.Sprintf("{{%s}}", ref))
 	if err != nil {
 		cache.err = err
 		return nil
@@ -194,7 +227,7 @@ func ReplaceWithExtra[T any](v T, cache *Cache, extra map[string]any) T {
 		if !strings.Contains(v, "{{") {
 			return v, nil
 		}
-		tpl, err := template.New("").Funcs(templateFuncs).Parse(v)
+		tpl, err := cachedParse(v)
 		if err != nil {
 			return v, err
 		}
