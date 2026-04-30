@@ -54,30 +54,45 @@ func (c *Compiler) getVariables(t *ast.Task, call *Call, evaluateShVars bool) (*
 		result.Set(k, ast.Var{Value: v})
 	}
 
+	// Share a single Cache across every rangeFunc invocation below. The
+	// previous implementation allocated a fresh Cache per variable, which
+	// caused Replace -> ToCacheMap to rebuild the full cacheMap on every
+	// call. SyncVarSet keeps the cacheMap in sync after each result.Set so
+	// subsequent Replace calls on the same cache can reuse it.
+	sharedCache := &templater.Cache{Vars: result}
+
 	getRangeFunc := func(dir string) func(k string, v ast.Var) error {
 		return func(k string, v ast.Var) error {
-			cache := &templater.Cache{Vars: result}
+			// Each variable is processed independently, so clear any sticky
+			// error from a previous template before evaluating this one.
+			sharedCache.ResetErr()
 			// Replace values
-			newVar := templater.ReplaceVar(v, cache)
+			newVar := templater.ReplaceVar(v, sharedCache)
 			// If the variable should not be evaluated, but is nil, set it to an empty string
 			// This stops empty interface errors when using the templater to replace values later
 			// Preserve the Sh field so it can be displayed in summary
 			if !evaluateShVars && newVar.Value == nil {
-				result.Set(k, ast.Var{Value: "", Sh: newVar.Sh})
+				out := ast.Var{Value: "", Sh: newVar.Sh}
+				result.Set(k, out)
+				sharedCache.SyncVarSet(k, out)
 				return nil
 			}
 			// If the variable should not be evaluated and it is set, we can set it and return
 			if !evaluateShVars {
-				result.Set(k, ast.Var{Value: newVar.Value, Sh: newVar.Sh})
+				out := ast.Var{Value: newVar.Value, Sh: newVar.Sh}
+				result.Set(k, out)
+				sharedCache.SyncVarSet(k, out)
 				return nil
 			}
 			// Now we can check for errors since we've handled all the cases when we don't want to evaluate
-			if err := cache.Err(); err != nil {
+			if err := sharedCache.Err(); err != nil {
 				return err
 			}
 			// If the variable is already set, we can set it and return
 			if newVar.Value != nil || newVar.Sh == nil {
-				result.Set(k, ast.Var{Value: newVar.Value})
+				out := ast.Var{Value: newVar.Value}
+				result.Set(k, out)
+				sharedCache.SyncVarSet(k, out)
 				return nil
 			}
 			// If the variable is dynamic, we need to resolve it first
@@ -85,7 +100,9 @@ func (c *Compiler) getVariables(t *ast.Task, call *Call, evaluateShVars bool) (*
 			if err != nil {
 				return err
 			}
-			result.Set(k, ast.Var{Value: static})
+			out := ast.Var{Value: static}
+			result.Set(k, out)
+			sharedCache.SyncVarSet(k, out)
 			return nil
 		}
 	}
@@ -95,11 +112,11 @@ func (c *Compiler) getVariables(t *ast.Task, call *Call, evaluateShVars bool) (*
 	if t != nil {
 		// NOTE(@andreynering): We're manually joining these paths here because
 		// this is the raw task, not the compiled one.
-		cache := &templater.Cache{Vars: result}
-		dir := templater.Replace(t.Dir, cache)
-		if err := cache.Err(); err != nil {
+		dir := templater.Replace(t.Dir, sharedCache)
+		if err := sharedCache.Err(); err != nil {
 			return nil, err
 		}
+		sharedCache.ResetErr()
 		dir = filepathext.SmartJoin(c.Dir, dir)
 		taskRangeFunc = getRangeFunc(dir)
 	}
