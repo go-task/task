@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- A significant performance boost was achieved for large Taskfiles (monorepos)
+  by skipping templating altogether when the string is static (#2820 by @romnn).
 - Added `absPath` template function that resolves a path to its absolute form,
   cleaning `..` and `.` components (#2681, #2788 by @mateenanjum).
 
