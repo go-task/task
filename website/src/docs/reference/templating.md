@@ -616,7 +616,8 @@ tasks:
       - echo "{{.WIN_PATH | toSlash}}"                          # Convert to forward slashes
       - echo "{{.WIN_PATH | fromSlash}}"                        # Convert to OS-specific slashes
       - echo "{{joinPath .OUTPUT_DIR .BINARY_NAME}}"            # Join path elements
-      - echo "Relative {{relPath .ROOT_DIR .TASKFILE_DIR}}"    # Get relative path
+      - echo "{{joinPathList .PATH_1 .PATH_2 .PATH_3}}"         # Join a list of path elements using the OS List Separator
+      - echo "Relative {{relPath .ROOT_DIR .TASKFILE_DIR}}"     # Get relative path
       - echo '{{absPath "../sibling"}}'                         # Resolve to an absolute path
 ```
 

@@ -33,6 +33,7 @@ func init() {
 		"splitArgs":    splitArgs,
 		"IsSH":         IsSH, // Deprecated
 		"joinPath":     filepath.Join,
+		"joinPathList": joinPathList,
 		"relPath":      filepath.Rel,
 		"absPath":      filepath.Abs,
 		"merge":        merge,
@@ -130,4 +131,8 @@ func mustToYaml(v any) (string, error) {
 		return "", err
 	}
 	return string(output), nil
+}
+
+func joinPathList(paths ...string) string {
+	return strings.Join(paths, string(filepath.ListSeparator))
 }
