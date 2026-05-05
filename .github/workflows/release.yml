@@ -35,7 +35,7 @@ jobs:
         uses: go-task/setup-task@3be4020d41929789a01026e0e427a4321ce0ad44 # v2
 
       - name: Install pnpm
-        uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v5
+        uses: pnpm/action-setup@8912a9102ac27614460f54aedde9e1e7f9aec20d # v6
         with:
           package_json_file: "website/package.json"
           run_install: "true"
