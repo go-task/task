@@ -253,9 +253,13 @@ tasks:
 
 - **Type**: `string`
 - **Description**: OS-specific path separator: Windows = `\`, others = `/`
--
-> **Note**: See `joinPath` in [Path Functions](#path-functions) for joining filesystem paths for use with
+
+::: info
+
+> See `joinPath` in [Path Functions](#path-functions) for joining filesystem paths for use with
 > file system operations.
+
+:::
 
 ### Environment Variables
 
@@ -264,8 +268,12 @@ tasks:
 - **Type**: `string`
 - **Description**: OS-specific path separator for environment variables: Windows = `;`, others = `:`
 
-> **Note**: See `joinEnv` in [Environment Variable Functions](#environment-variable-functions) for joining
+::: info
+
+> See `joinEnv` in [Environment Variable Functions](#environment-variable-functions) for joining
 > paths for use in environment variables.
+
+:::
 
 ### Status
 
@@ -615,9 +623,9 @@ tasks:
 tasks:
   platform:
     cmds:
-      - echo "OS {{OS}}"                         # linux, darwin, windows, etc.
-      - echo "Architecture {{ARCH}}"             # amd64, arm64, etc.
-      - echo "CPU cores {{numCPU}}"              # Number of CPU cores
+      - echo "OS {{OS}}"                    # linux, darwin, windows, etc.
+      - echo "Architecture {{ARCH}}"        # amd64, arm64, etc.
+      - echo "CPU cores {{numCPU}}"         # Number of CPU cores
       - echo "Building for {{OS}}/{{ARCH}}"
 ```
 
@@ -631,10 +639,10 @@ tasks:
       OUTPUT_DIR: 'dist'
       BINARY_NAME: 'myapp'
     cmds:
-      - echo "{{.WIN_PATH | toSlash}}"                          # Convert to forward slashes
-      - echo "{{.WIN_PATH | fromSlash}}"                        # Convert to OS-specific slashes
-      - echo "{{joinPath .OUTPUT_DIR .BINARY_NAME}}"            # Join path elements
-      - echo "Relative {{relPath .ROOT_DIR .TASKFILE_DIR}}"    # Get relative path
+      - echo "{{.WIN_PATH | toSlash}}"                      # Convert to forward slashes
+      - echo "{{.WIN_PATH | fromSlash}}"                    # Convert to OS-specific slashes
+      - echo "{{joinPath .OUTPUT_DIR .BINARY_NAME}}"        # Join path elements
+      - echo "Relative {{relPath .ROOT_DIR .TASKFILE_DIR}}" # Get relative path
 ```
 
 #### Environment Variable Functions
@@ -646,7 +654,9 @@ tasks:
       WIN_PATH1: 'C:\Users\Person\bin'
       WIN_PATH2: 'C:\Shared\bin'
     cmds:
-      - echo "{{joinEnv .WIN_PATH1 .WIN_PATH2}}"    # Join paths for windows env vars -> C:\Users\Person\bin;C:\Shared\bin
+      # Join paths for Windows ENV vars:
+      # C:\Users\Person\bin;C:\Shared\bin
+      - echo "{{joinEnv .WIN_PATH1 .WIN_PATH2}}"
 ```
 
 ```yaml
@@ -656,7 +666,9 @@ tasks:
       POSIX_PATH1: '/users/person/.local/bin'
       POSIX_PATH2: '/usr/bin'
     cmds:
-      - echo "{{joinEnv .POSIX_PATH1 .POSIX_PATH2}}"  # Join paths for posix env vars -> /users/person/.local/bin:/usr/bin
+      # Join paths for POSIX ENV vars:
+      # /users/person/.local/bin:/usr/bin
+      - echo "{{joinEnv .POSIX_PATH1 .POSIX_PATH2}}"
 ```
 
 #### URLs
@@ -669,17 +681,9 @@ tasks:
       PATH1: 'path1'
       PATH2: 'path2'
     cmds:
-      - echo "{{joinUrl .SERVER .PATH1 .PATH2}}"    # Join paths for URL -> http://localhost/path1/path2
-```
-
-```yaml
-tasks:
-  paths:
-    vars:
-      POSIX_PATH1: '/users/person/.local/bin'
-      POSIX_PATH2: '/usr/bin'
-    cmds:
-      - echo "{{joinEnv .POSIX_PATH1 .POSIX_PATH2}}"  # Join paths for posix env vars -> /users/person/.local/bin:/usr/bin
+      # Join paths for URL:
+      # http://localhost/path1/path2
+      - echo "{{joinUrl .SERVER .PATH1 .PATH2}}"
 ```
 
 ### Data Structure Functions
