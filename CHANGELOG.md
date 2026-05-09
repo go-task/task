@@ -6,11 +6,13 @@
   by skipping templating altogether when the string is static (#2820 by @romnn).
 - Added `absPath` template function that resolves a path to its absolute form,
   cleaning `..` and `.` components (#2681, #2788 by @mateenanjum).
-* Added `joinEnv` function to join paths based on your oprating system: `;` for
+- Added `joinEnv` function to join paths based on your oprating system: `;` for
   Windows and `:` elsewhere, and `joinUrl` to join URL paths. Also, added two
   new special variables: `FILE_PATH_SEPARATOR` which returns `\` on Windows
   and `/` elsewhere, and `PATH_LIST_SEPARATOR` which returns `;` on Windows and
   `:` elsewhere (#2406, #2408 by @solvingj).
+- Update the shell interpreter with a regression fix (#2812, #2832 by
+  @andreynering).
 
 ## v3.50.0 - 2026-04-13
 
