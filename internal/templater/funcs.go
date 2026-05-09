@@ -38,6 +38,7 @@ func init() {
 		"joinEnv":      joinEnv,
 		"joinUrl":      joinUrl,
 		"relPath":      filepath.Rel,
+		"absPath":      filepath.Abs,
 		"merge":        merge,
 		"spew":         spew.Sdump,
 		"fromYaml":     fromYaml,

@@ -9,6 +9,7 @@ import {
   localIconLoader
 } from 'vitepress-plugin-group-icons';
 import { team } from './team.ts';
+import { adopters } from './adopters.ts';
 import { taskDescription, taskName, ogUrl, ogImage } from './meta.ts';
 import { fileURLToPath, URL } from 'node:url';
 import llmstxt from 'vitepress-plugin-llms';
@@ -105,6 +106,112 @@ export default defineConfig({
     // Noindex pour 404
     if (pageData.relativePath === '404.md') {
       head.push(['meta', { name: 'robots', content: 'noindex, nofollow' }])
+    }
+
+    // Structured data for the adopters carousel on the homepage: an ItemList
+    // of Organization entities so search engines can surface Task's adopters
+    // directly in rich results.
+    if (isHome) {
+      head.push([
+        'script',
+        { type: 'application/ld+json' },
+        JSON.stringify({
+          '@context': 'https://schema.org',
+          '@type': 'ItemList',
+          name: 'Organizations and projects using Task',
+          itemListOrder: 'https://schema.org/ItemListUnordered',
+          numberOfItems: adopters.length,
+          itemListElement: adopters.map((a, i) => ({
+            '@type': 'ListItem',
+            position: i + 1,
+            item: {
+              '@type': 'Organization',
+              name: a.name,
+              url: a.url,
+              logo: a.img,
+              sameAs: [a.url]
+            }
+          }))
+        })
+      ])
+    }
+
+    // On the /adopters page, emit CollectionPage + ItemList (richer than the
+    // homepage snippet because it targets this specific URL) and FAQPage for
+    // the question block at the bottom of the page. Kept in sync by hand with
+    // components/Adopters.vue.
+    if (pageData.relativePath === 'adopters.md') {
+      head.push([
+        'script',
+        { type: 'application/ld+json' },
+        JSON.stringify({
+          '@context': 'https://schema.org',
+          '@type': 'CollectionPage',
+          name: 'Who uses Task',
+          url: 'https://taskfile.dev/adopters',
+          description:
+            'Organizations and open source projects that use Task as their build and release runner.',
+          mainEntity: {
+            '@type': 'ItemList',
+            numberOfItems: adopters.length,
+            itemListElement: adopters.map((a, i) => ({
+              '@type': 'ListItem',
+              position: i + 1,
+              item: {
+                '@type': 'Organization',
+                name: a.name,
+                url: a.url,
+                logo: a.img,
+                description: a.description,
+                sameAs: [a.url]
+              }
+            }))
+          }
+        })
+      ])
+
+      head.push([
+        'script',
+        { type: 'application/ld+json' },
+        JSON.stringify({
+          '@context': 'https://schema.org',
+          '@type': 'FAQPage',
+          mainEntity: [
+            {
+              '@type': 'Question',
+              name: 'Is Task production-ready?',
+              acceptedAnswer: {
+                '@type': 'Answer',
+                text: 'Yes. Task ships as a single static binary, has been in wide production use since 2018, and powers the release workflows of projects with millions of downloads including Arduino CLI, GoReleaser, FerretDB, and Gogs.'
+              }
+            },
+            {
+              '@type': 'Question',
+              name: 'Who uses Task in enterprise?',
+              acceptedAnswer: {
+                '@type': 'Answer',
+                text: 'Docker, Vercel, HashiCorp, Microsoft (Azure Sentinel), Google Cloud, AWS, and Anthropic are among the organizations that ship code with a Taskfile.yml. Task is also embedded end-to-end in Arduino’s developer tooling stack across more than 70 repositories.'
+              }
+            },
+            {
+              '@type': 'Question',
+              name: 'How is Task different from Make?',
+              acceptedAnswer: {
+                '@type': 'Answer',
+                text: 'Task uses plain YAML instead of Make’s tab-sensitive syntax, runs identically on Linux, macOS, and Windows, and provides built-in caching based on file fingerprints. It also comes with an ecosystem of editor and CI integrations that Make lacks by default.'
+              }
+            },
+            {
+              '@type': 'Question',
+              name: 'Where can I find real-world Taskfile examples?',
+              acceptedAnswer: {
+                '@type': 'Answer',
+                text: 'Every adopter listed above links directly to a public repository containing a production Taskfile.yml. Browsing those is the fastest way to see Task used in real codebases at different scales.'
+              }
+            }
+          ]
+        })
+      ])
     }
 
     return head
@@ -363,6 +470,10 @@ export default defineConfig({
             {
               text: 'Incident Response Plan',
               link: '/docs/security/incident-response-plan'
+            },
+            {
+              text: 'Threat Model',
+              link: '/docs/security/threat-model'
             }
           ]
         },
@@ -377,7 +488,8 @@ export default defineConfig({
       ],
       // Hacky to disable sidebar for these pages
       '/donate': [],
-      '/team': []
+      '/team': [],
+      '/adopters': []
     },
 
     socialLinks: [

@@ -274,6 +274,12 @@ includes:
   internal:
     taskfile: ./internal.yml
     internal: true
+[...]
+tasks:
+  example:
+    desc: using an internal task
+    cmds:
+      - task: internal:default
 ```
 
 ### `aliases`
