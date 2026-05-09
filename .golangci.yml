@@ -2,33 +2,16 @@ version: "2"
 
 formatters:
   enable:
-    - gofmt
     - gofumpt
     - goimports
     - gci
   settings:
-    gofmt:
-      simplify: true
-      rewrite-rules:
-        - pattern: interface{}
-          replacement: any
-    gofumpt:
-      module-path: github.com/go-task/task/v3
-    goimports:
-      local-prefixes:
-        - github.com/go-task
     gci:
       sections:
         - standard
         - default
         - prefix(github.com/go-task)
         - localmodule
-  exclusions:
-    generated: lax
-    paths:
-      - third_party$
-      - builtin$
-      - examples$
 
 linters:
   enable:
@@ -36,6 +19,7 @@ linters:
     - gosec
     - mirror
     - misspell
+    - modernize
     - noctx
     - paralleltest
     - thelper
@@ -56,13 +40,8 @@ linters:
             - pkg: errors
               desc: Use github.com/go-task/task/v3/errors instead
   exclusions:
-    generated: lax
     presets:
       - comments
       - common-false-positives
       - legacy
       - std-error-handling
-    paths:
-      - third_party$
-      - builtin$
-      - examples$
