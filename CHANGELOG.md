@@ -13,6 +13,7 @@
   `:` elsewhere (#2406, #2408 by @solvingj).
 - Update the shell interpreter with a regression fix (#2812, #2832 by
   @andreynering).
+- Fix potential panic with the shell interpreter (#2810 by @trulede).
 
 ## v3.50.0 - 2026-04-13
 
