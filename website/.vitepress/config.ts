@@ -470,6 +470,10 @@ export default defineConfig({
             {
               text: 'Incident Response Plan',
               link: '/docs/security/incident-response-plan'
+            },
+            {
+              text: 'Threat Model',
+              link: '/docs/security/threat-model'
             }
           ]
         },
