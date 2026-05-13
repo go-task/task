@@ -1194,6 +1194,39 @@ tasks:
       vars: [IMAGE_NAME, IMAGE_TAG]
 ```
 
+### Adding descriptions to required variables
+
+You can add a `desc` field to any required variable. The description is shown in
+the error message when the variable is missing and in the interactive prompt
+when using [interactive mode](#prompting-for-missing-variables-interactively).
+
+```yaml
+version: '3'
+
+tasks:
+  release:
+    cmds:
+      - ./scripts/release.sh
+
+    requires:
+      vars:
+        - name: VERSION
+          desc: Semantic version to release, e.g. 1.4.2
+```
+
+If `VERSION` is not set, the error will include the description:
+
+```
+task: Task "release" cancelled because it is missing required variables:
+VERSION (Semantic version to release, e.g. 1.4.2)
+```
+
+And in interactive mode, the description appears in the prompt:
+
+```
+? Enter value for VERSION (Semantic version to release, e.g. 1.4.2):
+```
+
 ### Ensuring required variables have allowed values
 
 If you want to ensure that a variable is set to one of a predefined set of valid

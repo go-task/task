@@ -72,6 +72,7 @@ func (e *Enum) UnmarshalYAML(node *yaml.Node) error {
 type VarsWithValidation struct {
 	Name string
 	Enum *Enum
+	Desc string
 }
 
 func (v *VarsWithValidation) DeepCopy() *VarsWithValidation {
@@ -81,6 +82,7 @@ func (v *VarsWithValidation) DeepCopy() *VarsWithValidation {
 	return &VarsWithValidation{
 		Name: v.Name,
 		Enum: v.Enum.DeepCopy(),
+		Desc: v.Desc,
 	}
 }
 
@@ -101,12 +103,14 @@ func (v *VarsWithValidation) UnmarshalYAML(node *yaml.Node) error {
 		var vv struct {
 			Name string
 			Enum *Enum
+			Desc string
 		}
 		if err := node.Decode(&vv); err != nil {
 			return errors.NewTaskfileDecodeError(err, node)
 		}
 		v.Name = vv.Name
 		v.Enum = vv.Enum
+		v.Desc = vv.Desc
 		return nil
 	}
 
