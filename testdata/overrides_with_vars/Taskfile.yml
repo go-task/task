@@ -1,0 +1,16 @@
+version: '3'
+
+vars:
+  GLOBAL_VAR: "global"
+
+overrides:
+  lib:
+    taskfile: ./lib.yml
+    vars:
+      OVERRIDE_VAR: "override_value"
+      GLOBAL_VAR: "overridden_global"
+
+tasks:
+  test:
+    cmds:
+      - echo "{{.GLOBAL_VAR}}"
