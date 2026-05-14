@@ -1,0 +1,17 @@
+version: '3'
+
+preconditions:
+  - sh: "[ 1 = 1 ]"
+    msg: "global precondition met"
+
+includes:
+  inc: ./included
+
+tasks:
+  passing:
+    cmds:
+      - echo "ran passing"
+
+  failing:
+    cmds:
+      - echo "ran failing"

@@ -1,0 +1,2 @@
+task: [inc:skip-task] echo "ran skip-task"
+ran skip-task

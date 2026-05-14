@@ -1,0 +1,15 @@
+version: '3'
+
+preconditions:
+  - sh: "[ 1 = 0 ]"
+    msg: "inherited precondition failed"
+    inherit: true
+
+includes:
+  inc: ./included
+  own: ./included_with_own
+
+tasks:
+  task:
+    cmds:
+      - echo "should not run"

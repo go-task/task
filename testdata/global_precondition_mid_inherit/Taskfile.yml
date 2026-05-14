@@ -1,0 +1,9 @@
+version: '3'
+
+includes:
+  mid: ./mid
+
+tasks:
+  task:
+    cmds:
+      - echo "ran root task"

@@ -13,37 +13,38 @@ import (
 
 // Task represents a task
 type Task struct {
-	Task          string `hash:"ignore"`
-	Cmds          []*Cmd
-	Deps          []*Dep
-	Label         string
-	Desc          string
-	Prompt        Prompt
-	Summary       string
-	Requires      *Requires
-	Aliases       []string
-	Sources       []*Glob
-	Generates     []*Glob
-	Status        []string
-	Preconditions []*Precondition
-	Dir           string
-	Set           []string
-	Shopt         []string
-	Vars          *Vars
-	Env           *Vars
-	Dotenv        []string
-	Silent        *bool
-	Interactive   bool
-	Internal      bool
-	Method        string
-	Prefix        string `hash:"ignore"`
-	IgnoreError   bool
-	Run           string
-	Platforms     []*Platform
-	If            string
-	Watch         bool
-	Location      *Location
-	Failfast      bool
+	Task              string `hash:"ignore"`
+	Cmds              []*Cmd
+	Deps              []*Dep
+	Label             string
+	Desc              string
+	Prompt            Prompt
+	Summary           string
+	Requires          *Requires
+	Aliases           []string
+	Sources           []*Glob
+	Generates         []*Glob
+	Status            []string
+	Preconditions     []*Precondition
+	Dir               string
+	Set               []string
+	Shopt             []string
+	Vars              *Vars
+	Env               *Vars
+	Dotenv            []string
+	Silent            *bool
+	Interactive       bool
+	Internal          bool
+	Method            string
+	Prefix            string `hash:"ignore"`
+	IgnoreError       bool
+	SkipPreconditions bool `yaml:"skip_preconditions"`
+	Run               string
+	Platforms         []*Platform
+	If                string
+	Watch             bool
+	Location          *Location
+	Failfast          bool
 	// Populated during merging
 	Namespace            string `hash:"ignore"`
 	IncludeVars          *Vars
@@ -126,36 +127,37 @@ func (t *Task) UnmarshalYAML(node *yaml.Node) error {
 	// Full task object
 	case yaml.MappingNode:
 		var task struct {
-			Cmds          []*Cmd
-			Cmd           *Cmd
-			Deps          []*Dep
-			Label         string
-			Desc          string
-			Prompt        Prompt
-			Summary       string
-			Aliases       []string
-			Sources       []*Glob
-			Generates     []*Glob
-			Status        []string
-			Preconditions []*Precondition
-			Dir           string
-			Set           []string
-			Shopt         []string
-			Vars          *Vars
-			Env           *Vars
-			Dotenv        []string
-			Silent        *bool `yaml:"silent,omitempty"`
-			Interactive   bool
-			Internal      bool
-			Method        string
-			Prefix        string
-			IgnoreError   bool `yaml:"ignore_error"`
-			Run           string
-			Platforms     []*Platform
-			If            string
-			Requires      *Requires
-			Watch         bool
-			Failfast      bool
+			Cmds              []*Cmd
+			Cmd               *Cmd
+			Deps              []*Dep
+			Label             string
+			Desc              string
+			Prompt            Prompt
+			Summary           string
+			Aliases           []string
+			Sources           []*Glob
+			Generates         []*Glob
+			Status            []string
+			Preconditions     []*Precondition
+			Dir               string
+			Set               []string
+			Shopt             []string
+			Vars              *Vars
+			Env               *Vars
+			Dotenv            []string
+			Silent            *bool `yaml:"silent,omitempty"`
+			Interactive       bool
+			Internal          bool
+			Method            string
+			Prefix            string
+			IgnoreError       bool `yaml:"ignore_error"`
+			SkipPreconditions bool `yaml:"skip_preconditions"`
+			Run               string
+			Platforms         []*Platform
+			If                string
+			Requires          *Requires
+			Watch             bool
+			Failfast          bool
 		}
 		if err := node.Decode(&task); err != nil {
 			return errors.NewTaskfileDecodeError(err, node)
@@ -190,6 +192,7 @@ func (t *Task) UnmarshalYAML(node *yaml.Node) error {
 		t.Method = task.Method
 		t.Prefix = task.Prefix
 		t.IgnoreError = task.IgnoreError
+		t.SkipPreconditions = task.SkipPreconditions
 		t.Run = task.Run
 		t.Platforms = task.Platforms
 		t.If = task.If
@@ -233,6 +236,7 @@ func (t *Task) DeepCopy() *Task {
 		Method:               t.Method,
 		Prefix:               t.Prefix,
 		IgnoreError:          t.IgnoreError,
+		SkipPreconditions:    t.SkipPreconditions,
 		Run:                  t.Run,
 		IncludeVars:          t.IncludeVars.DeepCopy(),
 		IncludedTaskfileVars: t.IncludedTaskfileVars.DeepCopy(),

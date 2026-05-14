@@ -1,0 +1,19 @@
+version: '3'
+
+preconditions:
+  - sh: "[ 1 = 0 ]"
+    msg: "root precondition failed"
+    inherit: true
+
+includes:
+  mid: ./mid
+
+tasks:
+  task:
+    cmds:
+      - echo "should not run"
+
+  skip-task:
+    skip_preconditions: true
+    cmds:
+      - echo "should not run - skip_preconditions has no effect on root tasks"

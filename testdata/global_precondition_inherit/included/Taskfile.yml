@@ -1,0 +1,11 @@
+version: '3'
+
+tasks:
+  task:
+    cmds:
+      - echo "should not run - blocked by inherited precondition"
+
+  skip-task:
+    skip_preconditions: true
+    cmds:
+      - echo "ran skip-task"
