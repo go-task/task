@@ -332,6 +332,7 @@ func (r *Reader) include(ctx context.Context, node Node) error {
 				Aliases:        include.Aliases,
 				AdvancedImport: include.AdvancedImport,
 				Excludes:       include.Excludes,
+				Only:           include.Only,
 				Vars:           include.Vars,
 				Checksum:       include.Checksum,
 			}
