@@ -13,6 +13,7 @@ import (
 
 	"github.com/go-task/task/v3/internal/editors"
 	"github.com/go-task/task/v3/internal/fingerprint"
+	"github.com/go-task/task/v3/internal/listing"
 	"github.com/go-task/task/v3/internal/logger"
 	"github.com/go-task/task/v3/internal/sort"
 	"github.com/go-task/task/v3/taskfile/ast"
@@ -25,16 +26,18 @@ type ListOptions struct {
 	FormatTaskListAsJSON          bool
 	NoStatus                      bool
 	Nested                        bool
+	Long                          bool
 }
 
 // NewListOptions creates a new ListOptions instance
-func NewListOptions(list, listAll, listAsJson, noStatus, nested bool) ListOptions {
+func NewListOptions(list, listAll, listAsJson, noStatus, nested, long bool) ListOptions {
 	return ListOptions{
 		ListOnlyTasksWithDescriptions: list,
 		ListAllTasks:                  listAll,
 		FormatTaskListAsJSON:          listAsJson,
 		NoStatus:                      noStatus,
 		Nested:                        nested,
+		Long:                          long,
 	}
 }
 
@@ -65,7 +68,7 @@ func (e *Executor) ListTasks(o ListOptions) (bool, error) {
 		return false, err
 	}
 	if o.FormatTaskListAsJSON {
-		output, err := e.ToEditorOutput(tasks, o.NoStatus, o.Nested)
+		output, err := e.ToEditorOutput(tasks, o.NoStatus, o.Nested, o.Long)
 		if err != nil {
 			return false, err
 		}
@@ -99,11 +102,33 @@ func (e *Executor) ListTasks(o ListOptions) (bool, error) {
 			e.Logger.FOutf(w, logger.Cyan, "\t(aliases: %s)", strings.Join(task.Aliases, ", "))
 		}
 		_, _ = fmt.Fprint(w, "\n")
+		e.writeTaskDetails(w, task, "  \t", o.Long)
 	}
 	if err := w.Flush(); err != nil {
 		return false, err
 	}
 	return true, nil
+}
+
+func (e *Executor) writeTaskDetails(w io.Writer, task *ast.Task, indent string, long bool) {
+	if listing.HasRequires(task) {
+		e.Logger.FOutf(w, logger.Default, indent)
+		e.Logger.FOutf(w, logger.Yellow, "requires:")
+		e.Logger.FOutf(w, logger.Default, " %s\n", listing.FormatRequires(task.Requires))
+	}
+	if long {
+		if deps := listing.FormatDeps(task.Deps); deps != "" {
+			e.Logger.FOutf(w, logger.Default, indent)
+			e.Logger.FOutf(w, logger.Yellow, "deps:")
+			e.Logger.FOutf(w, logger.Default, " %s\n", deps)
+		}
+		if task.Summary != "" {
+			summary := strings.TrimSpace(strings.ReplaceAll(task.Summary, "\n", " "))
+			e.Logger.FOutf(w, logger.Default, indent)
+			e.Logger.FOutf(w, logger.Yellow, "summary:")
+			e.Logger.FOutf(w, logger.Default, " %s\n", summary)
+		}
+	}
 }
 
 // ListTaskNames prints only the task names in a Taskfile.
@@ -137,14 +162,19 @@ func (e *Executor) ListTaskNames(allTasks bool) error {
 	return nil
 }
 
-func (e *Executor) ToEditorOutput(tasks []*ast.Task, noStatus bool, nested bool) (*editors.Namespace, error) {
+func (e *Executor) ToEditorOutput(tasks []*ast.Task, noStatus bool, nested bool, long bool) (*editors.Namespace, error) {
 	var g errgroup.Group
 	editorTasks := make([]editors.Task, len(tasks))
 
 	// Look over each task in parallel and turn it into an editor task
 	for i := range tasks {
 		g.Go(func() error {
-			editorTask := editors.NewTask(tasks[i])
+			var editorTask editors.Task
+			if long {
+				editorTask = editors.NewTaskLong(tasks[i])
+			} else {
+				editorTask = editors.NewTask(tasks[i])
+			}
 
 			if noStatus {
 				editorTasks[i] = editorTask

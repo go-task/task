@@ -234,3 +234,45 @@ func TestJsonListFormat(t *testing.T) {
 		WithFixtureTemplating(),
 	)
 }
+
+func TestListRequires(t *testing.T) {
+	t.Parallel()
+
+	NewFormatterTest(t,
+		WithExecutorOptions(
+			task.WithDir("testdata/list_requires"),
+		),
+		WithListOptions(task.ListOptions{
+			ListOnlyTasksWithDescriptions: true,
+		}),
+	)
+}
+
+func TestListLong(t *testing.T) {
+	t.Parallel()
+
+	NewFormatterTest(t,
+		WithExecutorOptions(
+			task.WithDir("testdata/list_long"),
+		),
+		WithListOptions(task.ListOptions{
+			ListOnlyTasksWithDescriptions: true,
+			Long:                          true,
+		}),
+	)
+}
+
+func TestJsonListLong(t *testing.T) {
+	t.Parallel()
+
+	NewFormatterTest(t,
+		WithExecutorOptions(
+			task.WithDir("testdata/json_list_long"),
+		),
+		WithListOptions(task.ListOptions{
+			FormatTaskListAsJSON: true,
+			Long:                 true,
+		}),
+		WithFixtureTemplating(),
+	)
+}
