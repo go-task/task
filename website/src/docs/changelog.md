@@ -8,6 +8,21 @@ editLink: false
 
 ::: v-pre
 
+## v3.51.0 - 2026-05-16
+
+- A significant performance boost was achieved for large Taskfiles (monorepos)
+  by skipping templating altogether when the string is static (#2820 by @romnn).
+- Added `absPath` template function that resolves a path to its absolute form,
+  cleaning `..` and `.` components (#2681, #2788 by @mateenanjum).
+- Added `joinEnv` function to join paths based on your oprating system: `;` for
+  Windows and `:` elsewhere, and `joinUrl` to join URL paths. Also, added two
+  new special variables: `FILE_PATH_SEPARATOR` which returns `\` on Windows
+  and `/` elsewhere, and `PATH_LIST_SEPARATOR` which returns `;` on Windows and
+  `:` elsewhere (#2406, #2408 by @solvingj).
+- Update the shell interpreter with a regression fix (#2812, #2832 by
+  @andreynering).
+- Fix potential panic with the shell interpreter (#2810 by @trulede).
+
 ## v3.50.0 - 2026-04-13
 
 - Added `enum.ref` support in `requires`: enum constraints can now reference

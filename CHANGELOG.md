@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v3.51.0 - 2026-05-16
 
 - A significant performance boost was achieved for large Taskfiles (monorepos)
   by skipping templating altogether when the string is static (#2820 by @romnn).
