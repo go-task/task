@@ -306,6 +306,40 @@ Change task listing order. Available modes:
 task --list --sort alphanumeric
 ```
 
+#### `-T, --tree`
+
+Display tasks grouped by namespace in a tree layout. Namespaced tasks are
+indented beneath their namespace header. Use with `--list` or `--list-all`.
+
+```bash
+task --list --tree
+task -lT
+```
+
+#### `-L, --long`
+
+Show additional task details (dependencies, summary) beneath each task entry.
+Use with `--list` or `--list-all`. Combines with `--tree`.
+
+```bash
+task --list --long
+task -lTL
+```
+
+#### Filter pattern
+
+An optional positional argument after `--list` or `--list-all` narrows output
+to tasks whose name or description matches the given pattern. Matching is
+case-insensitive. A namespace prefix (e.g. `docker`) includes all tasks under
+that namespace. Glob metacharacters (`*`, `?`, `[`) trigger `path.Match`
+semantics. Matched portions of task names are bolded in the output.
+
+```bash
+task --list docker           # substring match
+task --list-all 'docker:*'   # glob match
+task -lT test                # tree view, filtered
+```
+
 ### Watch Mode
 
 #### `-w, --watch`

@@ -1,0 +1,3 @@
+task: Available tasks for this project:
+* docker:build:       Build the Docker image
+* docker:push:        Push the Docker image
