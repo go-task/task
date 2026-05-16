@@ -139,6 +139,13 @@ func run() error {
 		return os.RemoveAll(cachePath)
 	}
 
+	// Extract an optional filter pattern from positional args when listing
+	var filterPattern string
+	if flags.List || flags.ListAll {
+		if positionalArgs := pflag.Args(); len(positionalArgs) > 0 {
+			filterPattern = positionalArgs[0]
+		}
+	}
 	listOptions := task.NewListOptions(
 		flags.List,
 		flags.ListAll,
@@ -147,6 +154,8 @@ func run() error {
 		flags.Nested,
 		flags.Long,
 		flags.Tree,
+		filterPattern,
+		flags.TaskSort,
 	)
 	if listOptions.ShouldListTasks() {
 		if flags.Silent {

@@ -1,0 +1,22 @@
+version: '3'
+
+tasks:
+  docker:build:
+    desc: Build the Docker image
+    cmds:
+      - docker build .
+
+  docker:push:
+    desc: Push the Docker image
+    cmds:
+      - docker push
+
+  test:unit:
+    desc: Run unit tests
+    cmds:
+      - go test ./...
+
+  lint:
+    desc: Run linters
+    cmds:
+      - golangci-lint run
