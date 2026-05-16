@@ -146,6 +146,7 @@ func run() error {
 		flags.NoStatus,
 		flags.Nested,
 		flags.Long,
+		flags.Tree,
 	)
 	if listOptions.ShouldListTasks() {
 		if flags.Silent {

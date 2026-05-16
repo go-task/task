@@ -27,10 +27,11 @@ type ListOptions struct {
 	NoStatus                      bool
 	Nested                        bool
 	Long                          bool
+	Tree                          bool
 }
 
 // NewListOptions creates a new ListOptions instance
-func NewListOptions(list, listAll, listAsJson, noStatus, nested, long bool) ListOptions {
+func NewListOptions(list, listAll, listAsJson, noStatus, nested, long, tree bool) ListOptions {
 	return ListOptions{
 		ListOnlyTasksWithDescriptions: list,
 		ListAllTasks:                  listAll,
@@ -38,6 +39,7 @@ func NewListOptions(list, listAll, listAsJson, noStatus, nested, long bool) List
 		NoStatus:                      noStatus,
 		Nested:                        nested,
 		Long:                          long,
+		Tree:                          tree,
 	}
 }
 
@@ -88,6 +90,9 @@ func (e *Executor) ListTasks(o ListOptions) (bool, error) {
 			e.Logger.Outf(logger.Yellow, "task: No tasks available\n")
 		}
 		return false, nil
+	}
+	if o.Tree {
+		return e.listTasksTree(tasks, o)
 	}
 	e.Logger.Outf(logger.Default, "task: Available tasks for this project:\n")
 
@@ -160,6 +165,63 @@ func (e *Executor) ListTaskNames(allTasks bool) error {
 		fmt.Fprintln(w, t)
 	}
 	return nil
+}
+
+func (e *Executor) listTasksTree(tasks []*ast.Task, o ListOptions) (bool, error) {
+	e.Logger.Outf(logger.Default, "task: Available tasks for this project:\n")
+
+	groups := listing.GroupByNamespace(tasks)
+	hasNamespaced := listing.HasNamespacedGroups(groups)
+	hasRoot := listing.HasRootGroup(groups)
+	showSeparator := hasNamespaced && hasRoot
+
+	// Move root group to end so namespaced groups appear first
+	if showSeparator {
+		for i, g := range groups {
+			if g.Namespace == "" && i < len(groups)-1 {
+				rootGroup := groups[i]
+				groups = append(groups[:i], groups[i+1:]...)
+				groups = append(groups, rootGroup)
+				break
+			}
+		}
+	}
+
+	w := tabwriter.NewWriter(e.Stdout, 0, 8, 6, ' ', 0)
+	firstGroup := true
+	for _, group := range groups {
+		isRoot := group.Namespace == ""
+		if !firstGroup {
+			_, _ = fmt.Fprint(w, "\n")
+		}
+		firstGroup = false
+		if isRoot && showSeparator {
+			e.Logger.FOutf(w, logger.Dim, "  ─────\n\n")
+		}
+		if !isRoot {
+			e.Logger.FOutf(w, logger.Dim, "  %s\n", group.Namespace)
+		}
+		for _, task := range group.Tasks {
+			name := group.LocalName(task)
+			desc := strings.ReplaceAll(task.Desc, "\n", " ")
+			indent := "  "
+			if !isRoot {
+				indent = "    "
+			}
+			nameColor := logger.Green
+			if task.Internal {
+				nameColor = logger.Dim
+			}
+			e.Logger.FOutf(w, nameColor, "%s%s", indent, name)
+			e.Logger.FOutf(w, logger.Default, ":\t%s", desc)
+			if len(task.Aliases) > 0 {
+				e.Logger.FOutf(w, logger.Cyan, "\t(aliases: %s)", strings.Join(task.Aliases, ", "))
+			}
+			_, _ = fmt.Fprint(w, "\n")
+			e.writeTaskDetails(w, task, indent+"  \t", o.Long)
+		}
+	}
+	return true, w.Flush()
 }
 
 func (e *Executor) ToEditorOutput(tasks []*ast.Task, noStatus bool, nested bool, long bool) (*editors.Namespace, error) {
