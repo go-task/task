@@ -1,0 +1,39 @@
+{
+  "tasks": [
+    {
+      "name": "build",
+      "task": "build",
+      "desc": "Build the project",
+      "summary": "",
+      "aliases": [],
+      "up_to_date": false,
+      "location": {
+        "line": 4,
+        "column": 3,
+        "taskfile": "{{.TEST_DIR}}/testdata/json_list_long/Taskfile.yml"
+      },
+      "deps": [
+        "lint"
+      ],
+      "requires": [
+        {
+          "name": "VERSION"
+        }
+      ]
+    },
+    {
+      "name": "lint",
+      "task": "lint",
+      "desc": "Run linters",
+      "summary": "",
+      "aliases": [],
+      "up_to_date": false,
+      "location": {
+        "line": 14,
+        "column": 3,
+        "taskfile": "{{.TEST_DIR}}/testdata/json_list_long/Taskfile.yml"
+      }
+    }
+  ],
+  "location": "{{.TEST_DIR}}/testdata/json_list_long/Taskfile.yml"
+}
