@@ -89,6 +89,7 @@ var (
 	CertKey             string
 	Interactive         bool
 	TempDir             string
+	Tree                bool
 )
 
 func init() {
@@ -130,6 +131,7 @@ func init() {
 	pflag.BoolVarP(&ListJson, "json", "j", false, "Formats task list as JSON.")
 	pflag.StringVar(&TaskSort, "sort", "", "Changes the order of the tasks when listed. [default|alphanumeric|none].")
 	pflag.BoolVarP(&Long, "long", "L", false, "Show detailed task information when listing.")
+	pflag.BoolVarP(&Tree, "tree", "T", false, "Display tasks grouped by namespace.")
 	pflag.BoolVar(&Status, "status", false, "Exits with non-zero exit code if any of the given tasks is not up-to-date.")
 	pflag.BoolVar(&NoStatus, "no-status", false, "Ignore status when listing tasks as JSON")
 	pflag.BoolVar(&Nested, "nested", false, "Nest namespaces when listing tasks as JSON")
@@ -248,6 +250,14 @@ func Validate() error {
 
 	if Nested && !ListJson {
 		return errors.New("task: --nested only applies to --json with --list or --list-all")
+	}
+
+	if Tree && !List && !ListAll {
+		return errors.New("task: --tree only applies to --list or --list-all")
+	}
+
+	if Tree && ListJson {
+		return errors.New("task: --tree and --json are mutually exclusive")
 	}
 
 	// Validate certificate flags

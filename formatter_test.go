@@ -262,6 +262,35 @@ func TestListLong(t *testing.T) {
 	)
 }
 
+func TestListTree(t *testing.T) {
+	t.Parallel()
+
+	NewFormatterTest(t,
+		WithExecutorOptions(
+			task.WithDir("testdata/list_tree"),
+		),
+		WithListOptions(task.ListOptions{
+			ListOnlyTasksWithDescriptions: true,
+			Tree:                          true,
+		}),
+	)
+}
+
+func TestListTreeLong(t *testing.T) {
+	t.Parallel()
+
+	NewFormatterTest(t,
+		WithExecutorOptions(
+			task.WithDir("testdata/list_tree_long"),
+		),
+		WithListOptions(task.ListOptions{
+			ListOnlyTasksWithDescriptions: true,
+			Tree:                          true,
+			Long:                          true,
+		}),
+	)
+}
+
 func TestJsonListLong(t *testing.T) {
 	t.Parallel()
 
