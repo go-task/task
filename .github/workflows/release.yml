@@ -48,6 +48,7 @@ jobs:
           args: release --clean --draft
         env:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+          GH_GORELEASER_TOKEN: ${{secrets.GH_GORELEASER_TOKEN}}
           GORELEASER_KEY: ${{secrets.GORELEASER_KEY}}
           CLOUDSMITH_TOKEN: ${{secrets.CLOUDSMITH_TOKEN}}
 
