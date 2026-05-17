@@ -81,7 +81,7 @@ func (e *Executor) promptDepsVars(calls []*Call) error {
 	e.promptedVars = ast.NewVars()
 
 	for _, v := range varsMap {
-		value, err := prompter.Prompt(v.Name, getEnumValues(v.Enum))
+		value, err := prompter.Prompt(v.Name, getEnumValues(v.Enum), v.Desc)
 		if err != nil {
 			if errors.Is(err, input.ErrCancelled) {
 				return &errors.TaskCancelledByUserError{TaskName: "interactive prompt"}
@@ -120,7 +120,7 @@ func (e *Executor) promptTaskVars(t *ast.Task, call *Call) (bool, error) {
 	prompter := e.newPrompter()
 
 	for _, v := range missing {
-		value, err := prompter.Prompt(v.Name, getEnumValues(v.Enum))
+		value, err := prompter.Prompt(v.Name, getEnumValues(v.Enum), v.Desc)
 		if err != nil {
 			if errors.Is(err, input.ErrCancelled) {
 				return false, &errors.TaskCancelledByUserError{TaskName: t.Name()}
@@ -168,6 +168,7 @@ func (e *Executor) areTaskRequiredVarsSet(t *ast.Task) error {
 	for i, v := range missing {
 		missingVars[i] = errors.MissingVar{
 			Name:          v.Name,
+			Desc:          v.Desc,
 			AllowedValues: getEnumValues(v.Enum),
 		}
 	}

@@ -1,0 +1,2 @@
+task: [missing-var-with-desc] echo "bar"
+bar
