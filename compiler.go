@@ -15,6 +15,7 @@ import (
 	"github.com/go-task/task/v3/internal/logger"
 	"github.com/go-task/task/v3/internal/templater"
 	"github.com/go-task/task/v3/internal/version"
+	"github.com/go-task/task/v3/taskfile"
 	"github.com/go-task/task/v3/taskfile/ast"
 )
 
@@ -201,10 +202,24 @@ func (c *Compiler) getSpecialVars(t *ast.Task, call *Call) (map[string]string, e
 	// Use filepath.ToSlash for all paths to ensure consistent forward slashes
 	// across platforms. This prevents issues with backslashes being interpreted
 	// as escape sequences when paths are used in shell commands on Windows.
+	//
+	// For remote Taskfiles (HTTP/HTTPS/Git), the *_DIR variables are
+	// intentionally empty because no local directory corresponds to the file;
+	// TASKFILE/ROOT_TASKFILE hold the raw URL, and TASK_DIR is resolved
+	// relative to USER_WORKING_DIR. See issue #2267.
+	var rootTaskfile, rootDir string
+	if taskfile.IsRemoteEntrypoint(c.Entrypoint) {
+		rootTaskfile = c.Entrypoint
+		rootDir = ""
+	} else {
+		rootTaskfile = filepath.ToSlash(filepathext.SmartJoin(c.Dir, c.Entrypoint))
+		rootDir = filepath.ToSlash(c.Dir)
+	}
+
 	allVars := map[string]string{
 		"TASK_EXE":            filepath.ToSlash(os.Args[0]),
-		"ROOT_TASKFILE":       filepath.ToSlash(filepathext.SmartJoin(c.Dir, c.Entrypoint)),
-		"ROOT_DIR":            filepath.ToSlash(c.Dir),
+		"ROOT_TASKFILE":       rootTaskfile,
+		"ROOT_DIR":            rootDir,
 		"USER_WORKING_DIR":    filepath.ToSlash(c.UserWorkingDir),
 		"TASK_VERSION":        version.GetVersion(),
 		"PATH_LIST_SEPARATOR": string(os.PathListSeparator),
@@ -212,9 +227,22 @@ func (c *Compiler) getSpecialVars(t *ast.Task, call *Call) (map[string]string, e
 	}
 	if t != nil {
 		allVars["TASK"] = t.Task
-		allVars["TASK_DIR"] = filepath.ToSlash(filepathext.SmartJoin(c.Dir, t.Dir))
-		allVars["TASKFILE"] = filepath.ToSlash(t.Location.Taskfile)
-		allVars["TASKFILE_DIR"] = filepath.ToSlash(filepath.Dir(t.Location.Taskfile))
+		if taskfile.IsRemoteEntrypoint(t.Location.Taskfile) {
+			allVars["TASKFILE"] = t.Location.Taskfile
+			allVars["TASKFILE_DIR"] = ""
+			switch {
+			case t.Dir == "":
+				allVars["TASK_DIR"] = filepath.ToSlash(c.UserWorkingDir)
+			case filepath.IsAbs(t.Dir):
+				allVars["TASK_DIR"] = filepath.ToSlash(t.Dir)
+			default:
+				allVars["TASK_DIR"] = filepath.ToSlash(filepathext.SmartJoin(c.UserWorkingDir, t.Dir))
+			}
+		} else {
+			allVars["TASK_DIR"] = filepath.ToSlash(filepathext.SmartJoin(c.Dir, t.Dir))
+			allVars["TASKFILE"] = filepath.ToSlash(t.Location.Taskfile)
+			allVars["TASKFILE_DIR"] = filepath.ToSlash(filepath.Dir(t.Location.Taskfile))
+		}
 	} else {
 		allVars["TASK"] = ""
 		allVars["TASK_DIR"] = ""

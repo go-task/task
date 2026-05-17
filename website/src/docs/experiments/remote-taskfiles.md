@@ -190,6 +190,21 @@ includes:
   my-remote-namespace: https://{{.TOKEN}}@raw.githubusercontent.com/my-org/my-repo/main/Taskfile.yml
 ```
 
+## Special Variables
+
+The file-path [special variables](../reference/templating.md#file-paths) behave
+differently when a Taskfile is loaded from a remote source, because there is no
+local file or directory that corresponds 1:1 to the Taskfile:
+
+| Variable                     | Value when loaded remotely                                                                                                                             |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `TASKFILE` / `ROOT_TASKFILE` | The original URL, unchanged                                                                                                                            |
+| `TASKFILE_DIR` / `ROOT_DIR`  | Empty string — a directory variable cannot point to a URL                                                                                              |
+| `TASK_DIR`                   | Resolved against `USER_WORKING_DIR` (relative `dir:` → joined with `USER_WORKING_DIR`, empty `dir:` → `USER_WORKING_DIR`, absolute `dir:` → kept as-is) |
+
+If a remote Taskfile includes a local Taskfile (or vice-versa), each variable
+reflects the source of the Taskfile it refers to.
+
 ## Security
 
 ### Automatic checksums

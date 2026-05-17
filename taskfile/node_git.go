@@ -188,7 +188,7 @@ func (node *GitNode) ReadContext(ctx context.Context) ([]byte, error) {
 
 func (node *GitNode) ResolveEntrypoint(entrypoint string) (string, error) {
 	// If the file is remote, we don't need to resolve the path
-	if isRemoteEntrypoint(entrypoint) {
+	if IsRemoteEntrypoint(entrypoint) {
 		return entrypoint, nil
 	}
 
