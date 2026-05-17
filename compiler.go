@@ -202,11 +202,6 @@ func (c *Compiler) getSpecialVars(t *ast.Task, call *Call) (map[string]string, e
 	// Use filepath.ToSlash for all paths to ensure consistent forward slashes
 	// across platforms. This prevents issues with backslashes being interpreted
 	// as escape sequences when paths are used in shell commands on Windows.
-	//
-	// For remote Taskfiles (HTTP/HTTPS/Git), the *_DIR variables are
-	// intentionally empty because no local directory corresponds to the file;
-	// TASKFILE/ROOT_TASKFILE hold the raw URL, and TASK_DIR is resolved
-	// relative to USER_WORKING_DIR. See issue #2267.
 	var rootTaskfile, rootDir string
 	if taskfile.IsRemoteEntrypoint(c.Entrypoint) {
 		rootTaskfile = c.Entrypoint
