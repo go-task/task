@@ -1,0 +1,18 @@
+task: Available tasks for this project:
+  test
+    integration:      Run integration tests
+                      deps: build
+                      summary: Runs the full integration test suite against a live environment.
+    unit:             Run unit tests
+                      requires: COVERAGE
+
+  ─────
+
+  build:       Build the project
+               deps: lint, test:unit
+               summary: Compiles the Go binary for the current platform.
+  deploy:      Deploy the application
+               requires: VERSION, ENV (enum: staging, production)
+               deps: build
+               summary: Deploys the built artifact to the target environment.
+  lint:        Run linters

@@ -1,0 +1,39 @@
+version: '3'
+
+tasks:
+  build:
+    desc: Build the project
+    summary: |
+      Compiles the Go binary for the current platform.
+    deps:
+      - lint
+      - test:unit
+    cmds:
+      - go build ./...
+
+  lint:
+    desc: Run linters
+    cmds:
+      - golangci-lint run
+
+  test:unit:
+    desc: Run unit tests
+    requires:
+      vars:
+        - COVERAGE
+    cmds:
+      - go test ./...
+
+  deploy:
+    desc: Deploy the application
+    deps:
+      - build
+    requires:
+      vars:
+        - VERSION
+        - name: ENV
+          enum: [staging, production]
+    summary: |
+      Deploys the built artifact to the target environment.
+    cmds:
+      - echo "deploying"

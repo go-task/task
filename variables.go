@@ -49,6 +49,7 @@ func (e *Executor) CompiledTaskForTaskList(call *Call) (*ast.Task, error) {
 		Desc:                 templater.Replace(origTask.Desc, cache),
 		Prompt:               templater.Replace(origTask.Prompt, cache),
 		Summary:              templater.Replace(origTask.Summary, cache),
+		Deps:                 origTask.Deps,
 		Aliases:              origTask.Aliases,
 		Sources:              origTask.Sources,
 		Generates:            origTask.Generates,
