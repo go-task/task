@@ -6,13 +6,21 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/go-task/task/v3/internal/filepathext"
 	"github.com/go-task/task/v3/taskfile/ast"
 )
 
 func TestGetSpecialVarsRemote(t *testing.T) {
 	t.Parallel()
 
-	const uwd = "/home/user/project"
+	uwd := t.TempDir()
+	uwdSlash := filepath.ToSlash(uwd)
+	localProj := filepath.Join(uwd, "proj")
+	localProjSlash := filepath.ToSlash(localProj)
+	localTaskfile := filepath.Join(localProj, "Taskfile.yml")
+	localTaskfileSlash := filepath.ToSlash(localTaskfile)
+	absTaskDir := filepath.Join(uwd, "opt", "work")
+	absTaskDirSlash := filepath.ToSlash(absTaskDir)
 
 	tests := []struct {
 		name             string
@@ -28,15 +36,15 @@ func TestGetSpecialVarsRemote(t *testing.T) {
 	}{
 		{
 			name:             "local entrypoint, local task",
-			entrypoint:       "/abs/proj/Taskfile.yml",
-			compilerDir:      "/abs/proj",
+			entrypoint:       localTaskfile,
+			compilerDir:      localProj,
 			taskDir:          "",
-			taskfileLocation: "/abs/proj/Taskfile.yml",
-			wantRootTaskfile: "/abs/proj/Taskfile.yml",
-			wantRootDir:      "/abs/proj",
-			wantTaskfile:     "/abs/proj/Taskfile.yml",
-			wantTaskfileDir:  "/abs/proj",
-			wantTaskDir:      "/abs/proj",
+			taskfileLocation: localTaskfile,
+			wantRootTaskfile: localTaskfileSlash,
+			wantRootDir:      localProjSlash,
+			wantTaskfile:     localTaskfileSlash,
+			wantTaskfileDir:  localProjSlash,
+			wantTaskDir:      localProjSlash,
 		},
 		{
 			name:             "https entrypoint, empty task.dir",
@@ -48,7 +56,7 @@ func TestGetSpecialVarsRemote(t *testing.T) {
 			wantRootDir:      "",
 			wantTaskfile:     "https://taskfile.dev/Taskfile.yml",
 			wantTaskfileDir:  "",
-			wantTaskDir:      uwd,
+			wantTaskDir:      uwdSlash,
 		},
 		{
 			name:             "https entrypoint, relative task.dir",
@@ -60,43 +68,43 @@ func TestGetSpecialVarsRemote(t *testing.T) {
 			wantRootDir:      "",
 			wantTaskfile:     "https://taskfile.dev/Taskfile.yml",
 			wantTaskfileDir:  "",
-			wantTaskDir:      filepath.ToSlash(filepath.Join(uwd, "subdir")),
+			wantTaskDir:      filepath.ToSlash(filepathext.SmartJoin(uwd, "subdir")),
 		},
 		{
 			name:             "https entrypoint, absolute task.dir",
 			entrypoint:       "https://taskfile.dev/Taskfile.yml",
 			compilerDir:      "",
-			taskDir:          "/opt/work",
+			taskDir:          absTaskDir,
 			taskfileLocation: "https://taskfile.dev/Taskfile.yml",
 			wantRootTaskfile: "https://taskfile.dev/Taskfile.yml",
 			wantRootDir:      "",
 			wantTaskfile:     "https://taskfile.dev/Taskfile.yml",
 			wantTaskfileDir:  "",
-			wantTaskDir:      "/opt/work",
+			wantTaskDir:      absTaskDirSlash,
 		},
 		{
 			name:             "git entrypoint",
-			entrypoint:       "git://github.com/foo/bar.git//Taskfile.yml",
+			entrypoint:       "https://github.com/foo/bar.git//Taskfile.yml?ref=main",
 			compilerDir:      "",
 			taskDir:          "",
-			taskfileLocation: "git://github.com/foo/bar.git//Taskfile.yml",
-			wantRootTaskfile: "git://github.com/foo/bar.git//Taskfile.yml",
+			taskfileLocation: "https://github.com/foo/bar.git//Taskfile.yml?ref=main",
+			wantRootTaskfile: "https://github.com/foo/bar.git//Taskfile.yml?ref=main",
 			wantRootDir:      "",
-			wantTaskfile:     "git://github.com/foo/bar.git//Taskfile.yml",
+			wantTaskfile:     "https://github.com/foo/bar.git//Taskfile.yml?ref=main",
 			wantTaskfileDir:  "",
-			wantTaskDir:      uwd,
+			wantTaskDir:      uwdSlash,
 		},
 		{
 			name:             "local root, remote included task",
-			entrypoint:       "/abs/proj/Taskfile.yml",
-			compilerDir:      "/abs/proj",
+			entrypoint:       localTaskfile,
+			compilerDir:      localProj,
 			taskDir:          "",
 			taskfileLocation: "https://taskfile.dev/included.yml",
-			wantRootTaskfile: "/abs/proj/Taskfile.yml",
-			wantRootDir:      "/abs/proj",
+			wantRootTaskfile: localTaskfileSlash,
+			wantRootDir:      localProjSlash,
 			wantTaskfile:     "https://taskfile.dev/included.yml",
 			wantTaskfileDir:  "",
-			wantTaskDir:      uwd,
+			wantTaskDir:      uwdSlash,
 		},
 	}
 
