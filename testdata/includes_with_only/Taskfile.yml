@@ -1,0 +1,17 @@
+version: '3'
+
+includes:
+  included:
+    taskfile: ./included/Taskfile.yml
+    only:
+      - foo
+  included_flatten:
+    taskfile: ./included/Taskfile.yml
+    flatten: true
+    only:
+      - bar
+
+tasks:
+  default:
+    cmds:
+      - echo "default"
