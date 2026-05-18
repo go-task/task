@@ -86,6 +86,10 @@ func (e *Executor) taskEnv(t *ast.Task, origTaskEnv *ast.Vars, cache *templater.
 	dotenvEnvs := ast.NewVars()
 	if len(t.Dotenv) > 0 {
 		for _, dotEnvPath := range t.Dotenv {
+			dotEnvPath = templater.Replace(dotEnvPath, cache)
+			if dotEnvPath == "" {
+				continue
+			}
 			dotEnvPath = filepathext.SmartJoin(t.Dir, dotEnvPath)
 			if _, err := os.Stat(dotEnvPath); os.IsNotExist(err) {
 				continue
