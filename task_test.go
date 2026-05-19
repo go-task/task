@@ -1832,7 +1832,7 @@ func TestTaskDotenvGenerated(t *testing.T) {
 		},
 	}
 	if runtime.GOOS != "windows" {
-		testCases = append(testCases, YourTestCaseStructType{
+		tt = append(tt, fileContentTest{
 			Dir:       "testdata/dotenv_task/var_sh",
 			Target:    "dotenv-var-sh",
 			TrimSpace: true,
