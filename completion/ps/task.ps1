@@ -1,6 +1,8 @@
 using namespace System.Management.Automation
 
-Register-ArgumentCompleter -CommandName task -ScriptBlock {
+$cmdNames = @('task') + (Get-Alias -Definition task,task.exe,*\task,*\task.exe -ErrorAction SilentlyContinue).Name | Select-Object -Unique
+
+Register-ArgumentCompleter -CommandName $cmdNames -ScriptBlock {
 	param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
 
 	if ($commandName.StartsWith('-')) {
