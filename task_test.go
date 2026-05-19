@@ -1830,14 +1830,16 @@ func TestTaskDotenvGenerated(t *testing.T) {
 				"dotenv-gen-seq.txt": "seq-bar",
 			},
 		},
-		{
+	}
+	if runtime.GOOS != "windows" {
+		testCases = append(testCases, YourTestCaseStructType{
 			Dir:       "testdata/dotenv_task/var_sh",
 			Target:    "dotenv-var-sh",
 			TrimSpace: true,
 			Files: map[string]string{
 				"dotenv-var-sh.txt": "var-sh-bar",
 			},
-		},
+		})
 	}
 	for _, test := range tt {
 		t.Run("", func(t *testing.T) {
