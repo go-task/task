@@ -1,0 +1,9 @@
+version: '3'
+
+includes:
+  common: ./TaskfileCommon.yml
+
+tasks:
+  test:
+    cmds:
+      - task: common:test
