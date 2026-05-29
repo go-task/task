@@ -105,6 +105,18 @@ tasks:
         vars:
           FILE: "{{.ITEM}}"
 
+  # Loop over another task using ref to the default loop variable
+  loop-task-ref:
+    vars:
+      FOO: foo.txt bar.txt
+    cmds:
+      - for:
+          var: FOO
+        task: looped-task
+        vars:
+          FILE:
+            ref: .ITEM
+
   # Loop over another task with the variable named differently
   loop-task-as:
     vars:
@@ -116,6 +128,19 @@ tasks:
         task: looped-task
         vars:
           FILE: "{{.FILE}}"
+
+  # Loop over another task using ref to a named loop variable
+  loop-task-ref-as:
+    vars:
+      FOO: foo.txt bar.txt
+    cmds:
+      - for:
+          var: FOO
+          as: FILE
+        task: looped-task
+        vars:
+          FILE:
+            ref: .FILE
 
   # Loop over different tasks using the variable
   loop-different-tasks:

@@ -872,7 +872,9 @@ func TestForCmds(t *testing.T) {
 		{name: "loop-vars"},
 		{name: "loop-vars-sh"},
 		{name: "loop-task"},
+		{name: "loop-task-ref"},
 		{name: "loop-task-as"},
+		{name: "loop-task-ref-as"},
 		{name: "loop-different-tasks"},
 	}
 
@@ -915,7 +917,9 @@ func TestForDeps(t *testing.T) {
 		{name: "loop-vars"},
 		{name: "loop-vars-sh"},
 		{name: "loop-task"},
+		{name: "loop-task-ref"},
 		{name: "loop-task-as"},
+		{name: "loop-task-ref-as"},
 		{name: "loop-different-tasks"},
 	}
 
