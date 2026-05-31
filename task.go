@@ -164,9 +164,11 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) error {
 	// Check if condition after CompiledTask so dynamic variables are resolved
 	if strings.TrimSpace(t.If) != "" {
 		if err := execext.RunCommand(ctx, &execext.RunCommandOptions{
-			Command: t.If,
-			Dir:     t.Dir,
-			Env:     env.Get(t),
+			Command:   t.If,
+			Dir:       t.Dir,
+			Env:       env.Get(t),
+			PosixOpts: t.Set,
+			BashOpts:  t.Shopt,
 		}); err != nil {
 			e.Logger.VerboseOutf(logger.Yellow, "task: if condition not met - skipped: %q\n", call.Task)
 			return nil
@@ -231,6 +233,8 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) error {
 				fingerprint.WithTempDir(e.TempDir.Fingerprint),
 				fingerprint.WithDry(e.Dry),
 				fingerprint.WithLogger(e.Logger),
+				fingerprint.WithPosixOpts(t.Set),
+				fingerprint.WithBashOpts(t.Shopt),
 			)
 			if err != nil {
 				return err
@@ -365,9 +369,11 @@ func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call *Call, i in
 	// Check if condition for any command type
 	if strings.TrimSpace(cmd.If) != "" {
 		if err := execext.RunCommand(ctx, &execext.RunCommandOptions{
-			Command: cmd.If,
-			Dir:     t.Dir,
-			Env:     env.Get(t),
+			Command:   cmd.If,
+			Dir:       t.Dir,
+			Env:       env.Get(t),
+			PosixOpts: slicesext.UniqueJoin(t.Set, cmd.Set),
+			BashOpts:  slicesext.UniqueJoin(t.Shopt, cmd.Shopt),
 		}); err != nil {
 			e.Logger.VerboseOutf(logger.Yellow, "task: [%s] if condition not met - skipped\n", t.Name())
 			return nil
