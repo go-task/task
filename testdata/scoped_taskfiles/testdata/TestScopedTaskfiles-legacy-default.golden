@@ -1,0 +1,4 @@
+A:UNIQUE_A=only_in_a
+A:ROOT_VAR=from_root
+B:UNIQUE_B=only_in_b
+B:ROOT_VAR=from_root
