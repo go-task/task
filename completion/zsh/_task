@@ -59,6 +59,28 @@ function __task_list() {
         else
             scripts+=( "$task" )
         fi
+
+        # Add aliases as separate completion entries
+        if [[ "$item" =~ '\(aliases: ([^)]+)\)' ]]; then
+            local aliases_str="${match[1]}"
+            local -a alias_names
+
+            # Split aliases by ", " and handle edge cases
+            alias_names=("${(@s:, :)aliases_str}")
+
+            for alias_name in "${alias_names[@]}"; do
+                # Trim whitespace and skip empty entries
+                alias_name="${alias_name## }"
+                alias_name="${alias_name%% }"
+                [[ -z "$alias_name" ]] && continue
+
+                if [[ "$show_desc" == "true" ]]; then
+                    scripts+=( "${alias_name//:/\\:}:alias for ${task}" )
+                else
+                    scripts+=( "$alias_name" )
+                fi
+            done
+        fi
     done
 
     if [[ "$show_desc" == "true" ]]; then
