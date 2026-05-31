@@ -190,6 +190,118 @@ includes:
   my-remote-namespace: https://{{.TOKEN}}@raw.githubusercontent.com/my-org/my-repo/main/Taskfile.yml
 ```
 
+### Authenticating using HTTP headers
+
+For a more secure approach that keeps credentials out of URLs, you can configure
+HTTP headers in your [taskrc configuration file](#headers). This is particularly useful for
+services like GitLab that use custom authentication headers.
+
+<div v-pre>
+
+::: code-group
+
+```yaml [GitHub with Bearer token]
+remote:
+  headers:
+    raw.githubusercontent.com:
+      Authorization: "Bearer {{.GITHUB_TOKEN}}"
+```
+
+```yaml [GitLab with private token]
+remote:
+  headers:
+    gitlab.com:
+      PRIVATE-TOKEN: "{{.GITLAB_TOKEN}}"
+```
+
+```yaml [Multiple hosts]
+remote:
+  headers:
+    raw.githubusercontent.com:
+      Authorization: "Bearer {{.GITHUB_TOKEN}}"
+    gitlab.com:
+      PRIVATE-TOKEN: "{{.GITLAB_TOKEN}}"
+    internal.company.com:
+      X-API-Key: "{{.INTERNAL_API_KEY}}"
+```
+
+:::
+
+</div>
+
+The header values support environment variable expansion using the templating
+system. Simply set the corresponding environment variables before running Task:
+
+```shell
+export GITHUB_TOKEN="ghp_..."
+export GITLAB_TOKEN="glpat-..."
+task my-remote-namespace:hello
+```
+
+#### Using the `--header` flag
+
+You can also specify headers directly via the `--header` flag for ad-hoc use or
+testing, without modifying your `.taskrc.yml` file. The format is:
+
+```shell
+--header "host:Header-Name=value"
+```
+
+Examples:
+
+```shell
+# Single header
+task --header "raw.githubusercontent.com:Authorization=Bearer $GITHUB_TOKEN" \
+     -t https://raw.githubusercontent.com/...
+
+# Multiple headers
+task --header "gitlab.com:PRIVATE-TOKEN=$GITLAB_TOKEN" \
+     --header "gitlab.com:X-Custom-Header=value" \
+     my-remote-task
+
+# Override config file headers
+task --header "github.com:Authorization=Bearer $DIFFERENT_TOKEN" \
+     my-remote-task
+```
+
+The `--header` flag can be repeated multiple times. When both CLI flags and
+config file headers are present, **CLI flags take precedence** for the specific
+host and header name combination.
+
+#### How headers work
+
+Headers are matched by hostname (including port if specified in the URL), and
+are automatically applied to all requests to that host. This approach is more
+secure than embedding credentials in URLs because:
+
+- Credentials are never visible in process listings or logs
+- Headers are not part of the cached URL/file path
+- Different headers can be configured per host
+- CLI flags allow for ad-hoc authentication without modifying config files
+
+::: warning Security Considerations
+
+When using HTTP headers for authentication:
+
+1. **Always use environment variables**: Never commit actual credentials to your
+   `.taskrc.yml` file. Always use template syntax like <span v-pre>`{{.TOKEN}}`</span> and set the
+   value via environment variables.
+
+2. **Use HTTPS only**: Authentication headers should only be sent over HTTPS
+   connections. Avoid using the `--insecure` flag with authenticated requests,
+   as this sends credentials in plaintext over HTTP.
+
+3. **Protected headers**: For security, Task prevents you from overriding
+   critical HTTP headers like `Host`, `Content-Length`, `Transfer-Encoding`,
+   `Connection`, and `Upgrade`. These are managed automatically by the HTTP
+   library.
+
+4. **Host matching is exact**: Headers for `github.com` will not be sent to
+   `api.github.com` or `evil.github.com`. You must configure headers for each
+   specific hostname you use.
+
+:::
+
 ## Security
 
 ### Automatic checksums
@@ -335,6 +447,8 @@ This experiment adds a new `remote` section to the
 - **Type**: `object`
 - **Description**: Remote configuration settings for handling remote Taskfiles
 
+<div v-pre>
+
 ```yaml
 remote:
   insecure: false
@@ -348,7 +462,14 @@ remote:
   cacert: ""
   cert: ""
   cert-key: ""
+  headers:
+    raw.githubusercontent.com:
+      Authorization: "Bearer {{.GITHUB_TOKEN}}"
+    gitlab.com:
+      PRIVATE-TOKEN: "{{.GITLAB_TOKEN}}"
 ```
+
+</div>
 
 #### `insecure`
 
@@ -487,3 +608,49 @@ remote:
 remote:
   cert-key: "/path/to/client.key"
 ```
+
+#### `headers`
+
+- **Type**: `map[string]map[string]string`
+- **Default**: `{}` (empty map)
+- **Description**: HTTP headers to send when fetching remote Taskfiles, organized
+  by hostname. Header values support environment variable expansion using the
+  templating system (e.g., <span v-pre>`{{.TOKEN}}`</span>). Headers are matched by exact hostname
+  (including port if specified).
+- **CLI equivalent**: `--header "host:Header-Name=value"` (can be repeated)
+
+<div v-pre>
+
+```yaml
+remote:
+  headers:
+    raw.githubusercontent.com:
+      Authorization: "Bearer {{.GITHUB_TOKEN}}"
+    gitlab.com:
+      PRIVATE-TOKEN: "{{.GITLAB_TOKEN}}"
+    internal.company.com:8080:
+      X-API-Key: "{{.API_KEY}}"
+      X-Custom-Header: "custom-value"
+```
+
+</div>
+
+This is particularly useful for authentication with services that use custom
+header names (like GitLab's `PRIVATE-TOKEN`) or when you want to keep
+credentials out of URLs. The headers are automatically applied to all HTTP
+requests to the matching hostname.
+
+Headers can also be specified via the `--header` flag for ad-hoc use. When both
+CLI flags and config file headers are present, CLI flags take precedence for the
+specific host and header name combination.
+
+**Security notes:**
+
+- Always use environment variable templates (e.g., <span v-pre>`{{.TOKEN}}`</span>) instead of
+  hardcoding credentials in your config file
+- Headers are only sent to exactly matching hostnames - headers for `github.com`
+  will not be sent to `api.github.com` or subdomains
+- Critical HTTP headers like `Host`, `Content-Length`, `Transfer-Encoding`, and
+  `Connection` cannot be overridden for security reasons
+- Always use HTTPS (not HTTP with `--insecure`) when sending authentication
+  headers to prevent credentials from being transmitted in plaintext

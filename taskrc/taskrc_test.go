@@ -307,3 +307,186 @@ remote:
 		assert.Equal(t, []string{"github.com", "gitlab.com"}, base.Remote.TrustedHosts)
 	})
 }
+
+func TestGetConfig_RemoteHeaders(t *testing.T) { //nolint:paralleltest // cannot run in parallel
+	_, _, localDir := setupDirs(t)
+
+	// Test with single host and single header
+	configYAML := `
+remote:
+  headers:
+    github.com:
+      Authorization: "Bearer {{.GITHUB_TOKEN}}"
+`
+	writeFile(t, localDir, ".taskrc.yml", configYAML)
+
+	cfg, err := GetConfig(localDir)
+	assert.NoError(t, err)
+	assert.NotNil(t, cfg)
+	assert.NotNil(t, cfg.Remote.Headers)
+	assert.Equal(t, "Bearer {{.GITHUB_TOKEN}}", cfg.Remote.Headers["github.com"]["Authorization"])
+
+	// Test with multiple hosts and multiple headers
+	configYAML = `
+remote:
+  headers:
+    raw.githubusercontent.com:
+      Authorization: "Bearer {{.GITHUB_TOKEN}}"
+    gitlab.com:
+      PRIVATE-TOKEN: "{{.GITLAB_TOKEN}}"
+      X-Custom-Header: "value"
+    example.com:8080:
+      X-API-Key: "{{.API_KEY}}"
+`
+	writeFile(t, localDir, ".taskrc.yml", configYAML)
+
+	cfg, err = GetConfig(localDir)
+	assert.NoError(t, err)
+	assert.NotNil(t, cfg)
+	assert.NotNil(t, cfg.Remote.Headers)
+	assert.Equal(t, "Bearer {{.GITHUB_TOKEN}}", cfg.Remote.Headers["raw.githubusercontent.com"]["Authorization"])
+	assert.Equal(t, "{{.GITLAB_TOKEN}}", cfg.Remote.Headers["gitlab.com"]["PRIVATE-TOKEN"])
+	assert.Equal(t, "value", cfg.Remote.Headers["gitlab.com"]["X-Custom-Header"])
+	assert.Equal(t, "{{.API_KEY}}", cfg.Remote.Headers["example.com:8080"]["X-API-Key"])
+}
+
+func TestGetConfig_RemoteHeadersMerge(t *testing.T) { //nolint:paralleltest // cannot run in parallel
+	t.Run("merge edge cases", func(t *testing.T) { //nolint:paralleltest // parent test cannot run in parallel
+		tests := []struct {
+			name     string
+			base     *ast.TaskRC
+			other    *ast.TaskRC
+			expected map[string]map[string]string
+		}{
+			{
+				name: "merge headers into empty",
+				base: &ast.TaskRC{},
+				other: &ast.TaskRC{
+					Remote: ast.Remote{
+						Headers: map[string]map[string]string{
+							"github.com": {
+								"Authorization": "Bearer token",
+							},
+						},
+					},
+				},
+				expected: map[string]map[string]string{
+					"github.com": {
+						"Authorization": "Bearer token",
+					},
+				},
+			},
+			{
+				name: "merge different hosts",
+				base: &ast.TaskRC{
+					Remote: ast.Remote{
+						Headers: map[string]map[string]string{
+							"github.com": {
+								"Authorization": "Bearer token1",
+							},
+						},
+					},
+				},
+				other: &ast.TaskRC{
+					Remote: ast.Remote{
+						Headers: map[string]map[string]string{
+							"gitlab.com": {
+								"PRIVATE-TOKEN": "token2",
+							},
+						},
+					},
+				},
+				expected: map[string]map[string]string{
+					"github.com": {
+						"Authorization": "Bearer token1",
+					},
+					"gitlab.com": {
+						"PRIVATE-TOKEN": "token2",
+					},
+				},
+			},
+			{
+				name: "merge same host different headers",
+				base: &ast.TaskRC{
+					Remote: ast.Remote{
+						Headers: map[string]map[string]string{
+							"github.com": {
+								"Authorization": "Bearer token",
+							},
+						},
+					},
+				},
+				other: &ast.TaskRC{
+					Remote: ast.Remote{
+						Headers: map[string]map[string]string{
+							"github.com": {
+								"X-Custom": "value",
+							},
+						},
+					},
+				},
+				expected: map[string]map[string]string{
+					"github.com": {
+						"Authorization": "Bearer token",
+						"X-Custom":      "value",
+					},
+				},
+			},
+			{
+				name: "merge same host same header - other takes precedence",
+				base: &ast.TaskRC{
+					Remote: ast.Remote{
+						Headers: map[string]map[string]string{
+							"github.com": {
+								"Authorization": "Bearer old",
+							},
+						},
+					},
+				},
+				other: &ast.TaskRC{
+					Remote: ast.Remote{
+						Headers: map[string]map[string]string{
+							"github.com": {
+								"Authorization": "Bearer new",
+							},
+						},
+					},
+				},
+				expected: map[string]map[string]string{
+					"github.com": {
+						"Authorization": "Bearer new",
+					},
+				},
+			},
+			{
+				name: "merge nil does not override",
+				base: &ast.TaskRC{
+					Remote: ast.Remote{
+						Headers: map[string]map[string]string{
+							"github.com": {
+								"Authorization": "Bearer token",
+							},
+						},
+					},
+				},
+				other: &ast.TaskRC{
+					Remote: ast.Remote{
+						Headers: nil,
+					},
+				},
+				expected: map[string]map[string]string{
+					"github.com": {
+						"Authorization": "Bearer token",
+					},
+				},
+			},
+		}
+
+		for _, tt := range tests {
+			t.Run(tt.name, func(t *testing.T) { //nolint:paralleltest // parent test cannot run in parallel
+				tt.base.Merge(tt.other)
+				assert.Equal(t, tt.expected, tt.base.Remote.Headers)
+			})
+		}
+	})
+}

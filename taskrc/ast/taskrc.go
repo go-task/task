@@ -23,15 +23,16 @@ type TaskRC struct {
 }
 
 type Remote struct {
-	Insecure     *bool          `yaml:"insecure"`
-	Offline      *bool          `yaml:"offline"`
-	Timeout      *time.Duration `yaml:"timeout"`
-	CacheExpiry  *time.Duration `yaml:"cache-expiry"`
-	CacheDir     *string        `yaml:"cache-dir"`
-	TrustedHosts []string       `yaml:"trusted-hosts"`
-	CACert       *string        `yaml:"cacert"`
-	Cert         *string        `yaml:"cert"`
-	CertKey      *string        `yaml:"cert-key"`
+	Insecure     *bool                       `yaml:"insecure"`
+	Offline      *bool                       `yaml:"offline"`
+	Timeout      *time.Duration              `yaml:"timeout"`
+	CacheExpiry  *time.Duration              `yaml:"cache-expiry"`
+	CacheDir     *string                     `yaml:"cache-dir"`
+	TrustedHosts []string                    `yaml:"trusted-hosts"`
+	CACert       *string                     `yaml:"cacert"`
+	Cert         *string                     `yaml:"cert"`
+	CertKey      *string                     `yaml:"cert-key"`
+	Headers      map[string]map[string]string `yaml:"headers"`
 }
 
 // Merge combines the current TaskRC with another TaskRC, prioritizing non-nil fields from the other TaskRC.
@@ -62,6 +63,21 @@ func (t *TaskRC) Merge(other *TaskRC) {
 	t.Remote.CACert = cmp.Or(other.Remote.CACert, t.Remote.CACert)
 	t.Remote.Cert = cmp.Or(other.Remote.Cert, t.Remote.Cert)
 	t.Remote.CertKey = cmp.Or(other.Remote.CertKey, t.Remote.CertKey)
+	if t.Remote.Headers == nil && other.Remote.Headers != nil {
+		t.Remote.Headers = other.Remote.Headers
+	} else if t.Remote.Headers != nil && other.Remote.Headers != nil {
+		// Deep merge headers: other's values take precedence
+		for host, headers := range other.Remote.Headers {
+			if t.Remote.Headers[host] == nil {
+				t.Remote.Headers[host] = headers
+			} else {
+				// Merge headers for this host
+				for key, value := range headers {
+					t.Remote.Headers[host][key] = value
+				}
+			}
+		}
+	}
 
 	t.Verbose = cmp.Or(other.Verbose, t.Verbose)
 	t.Silent = cmp.Or(other.Silent, t.Silent)

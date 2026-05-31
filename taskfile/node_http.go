@@ -6,6 +6,7 @@ import (
 	"crypto/x509"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"net/url"
 	"os"
@@ -13,8 +14,10 @@ import (
 	"strings"
 
 	"github.com/go-task/task/v3/errors"
+	"github.com/go-task/task/v3/internal/env"
 	"github.com/go-task/task/v3/internal/execext"
 	"github.com/go-task/task/v3/internal/filepathext"
+	"github.com/go-task/task/v3/internal/templater"
 )
 
 // An HTTPNode is a node that reads a Taskfile from a remote location via HTTP.
@@ -113,6 +116,40 @@ func (node *HTTPNode) ReadContext(ctx context.Context) ([]byte, error) {
 	req, err := http.NewRequestWithContext(ctx, "GET", url.String(), nil)
 	if err != nil {
 		return nil, errors.TaskfileFetchFailedError{URI: node.Location()}
+	}
+
+	// Apply headers if configured for this host
+	// Security: Headers are matched by exact hostname (including port) from node.url.Host
+	// to prevent credentials from being sent to unintended hosts.
+	if node.headers != nil {
+		host := node.url.Host
+		if hostHeaders, ok := node.headers[host]; ok {
+			cache := &templater.Cache{Vars: env.GetEnviron()}
+			for key, value := range hostHeaders {
+				// Security: Prevent overriding critical headers that could cause protocol
+				// violations or security issues (e.g., request smuggling via Transfer-Encoding,
+				// routing issues via Host header manipulation, response header spoofing).
+				canonicalKey := strings.ToLower(strings.TrimSpace(key))
+				switch canonicalKey {
+				case "host", "content-length", "transfer-encoding", "trailer", "connection", "upgrade", "location", "set-cookie":
+					// Warn and skip critical headers that should be managed by the HTTP library
+					log.Printf("Warning: skipping forbidden header %q for host %q\n", key, host)
+					continue
+				}
+
+				// Expand environment variables in the header value
+				expandedValue := templater.Replace(value, cache)
+
+				// Security: Prevent HTTP header injection by rejecting values with control
+				// characters. Go's net/http also validates these, but we check explicitly.
+				if strings.ContainsAny(expandedValue, "\r\n\x00") {
+					log.Printf("Warning: skipping header %q for host %q due to invalid characters in value\n", key, host)
+					continue
+				}
+
+				req.Header.Set(key, expandedValue)
+			}
+		}
 	}
 
 	resp, err := node.client.Do(req.WithContext(ctx))
