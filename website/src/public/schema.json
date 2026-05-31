@@ -727,7 +727,7 @@
                       }
                     },
                     "excludes": {
-                      "description": "A list of tasks to be excluded from inclusion.",
+                      "description": "A list of tasks or namespaces to be excluded from inclusion.",
                       "type": "array",
                       "items": {
                         "type": "string"

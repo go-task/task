@@ -1465,6 +1465,28 @@ func TestIncludesWithExclude(t *testing.T) {
 	err = e.Run(t.Context(), &task.Call{Task: "foo"})
 	require.NoError(t, err)
 	assert.Equal(t, "foo\n", buff.String())
+	buff.Reset()
+
+	err = e.Run(t.Context(), &task.Call{Task: "included_namespace:flight-recorder:start"})
+	require.Error(t, err)
+	buff.Reset()
+
+	err = e.Run(t.Context(), &task.Call{Task: "included_namespace:flight-recorder:dump"})
+	require.Error(t, err)
+	buff.Reset()
+
+	err = e.Run(t.Context(), &task.Call{Task: "included_namespace:flight-recorder-extra:start"})
+	require.NoError(t, err)
+	assert.Equal(t, "flight-recorder-extra start\n", buff.String())
+	buff.Reset()
+
+	err = e.Run(t.Context(), &task.Call{Task: "included_namespace_glob:flight-recorder:start"})
+	require.Error(t, err)
+	buff.Reset()
+
+	err = e.Run(t.Context(), &task.Call{Task: "included_namespace_glob:flight-recorder-extra:start"})
+	require.NoError(t, err)
+	assert.Equal(t, "flight-recorder-extra start\n", buff.String())
 }
 
 func TestIncludedTaskfileVarMerging(t *testing.T) {

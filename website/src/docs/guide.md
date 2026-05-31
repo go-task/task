@@ -413,7 +413,7 @@ You can do this by using the
 ### Exclude tasks from being included
 
 You can exclude tasks from being included by using the `excludes` option. This
-option takes the list of tasks to be excluded from this include.
+option takes the list of tasks or namespaces to be excluded from this include.
 
 ::: code-group
 
@@ -423,7 +423,7 @@ version: '3'
 includes:
   included:
     taskfile: ./Included.yml
-    excludes: [foo]
+    excludes: [foo, flight-recorder]
 ```
 
 ```yaml [Included.yml]
@@ -432,12 +432,17 @@ version: '3'
 tasks:
   foo: echo "Foo"
   bar: echo "Bar"
+  flight-recorder:start: echo "Start flight recorder"
+  flight-recorder:dump: echo "Dump flight recorder"
 ```
 
 :::
 
-`task included:foo` will throw an error because the `foo` task is excluded but
-`task included:bar` will work and display `Bar`.
+`task included:foo` will throw an error because the `foo` task is excluded,
+but `task included:bar` will work and display `Bar`.
+`task included:flight-recorder:start` will throw an error because the
+`flight-recorder` namespace is excluded. You can also use
+`flight-recorder:*` to exclude the namespace explicitly.
 
 It's compatible with the `flatten` option.
 

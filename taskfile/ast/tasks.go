@@ -131,7 +131,7 @@ func (t1 *Tasks) Merge(t2 *Tasks, include *Include, includedTaskfileVars *Vars) 
 		taskName := name
 
 		// if the task is in the exclude list, don't add it to the merged taskfile
-		if slices.Contains(include.Excludes, name) {
+		if isTaskExcluded(name, include.Excludes) {
 			continue
 		}
 
@@ -248,4 +248,21 @@ func taskNameWithNamespace(taskName string, namespace string) string {
 		return after
 	}
 	return fmt.Sprintf("%s%s%s", namespace, NamespaceSeparator, taskName)
+}
+
+func isTaskExcluded(taskName string, excludes []string) bool {
+	for _, exclude := range excludes {
+		if taskName == exclude {
+			return true
+		}
+
+		namespace, ok := strings.CutSuffix(exclude, NamespaceSeparator+"*")
+		if !ok {
+			namespace = exclude
+		}
+		if strings.HasPrefix(taskName, namespace+NamespaceSeparator) {
+			return true
+		}
+	}
+	return false
 }

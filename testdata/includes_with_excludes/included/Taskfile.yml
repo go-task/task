@@ -3,3 +3,6 @@ version: '3'
 tasks:
   foo: echo foo
   bar: echo bar
+  "flight-recorder:start": echo flight-recorder start
+  "flight-recorder:dump": echo flight-recorder dump
+  "flight-recorder-extra:start": echo flight-recorder-extra start

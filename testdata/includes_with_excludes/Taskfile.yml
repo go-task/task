@@ -10,6 +10,14 @@ includes:
     flatten: true
     excludes:
       - bar
+  included_namespace:
+    taskfile: ./included/Taskfile.yml
+    excludes:
+      - flight-recorder
+  included_namespace_glob:
+    taskfile: ./included/Taskfile.yml
+    excludes:
+      - flight-recorder:*
 
 tasks:
   default:
