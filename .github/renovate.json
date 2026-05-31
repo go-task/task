@@ -21,6 +21,11 @@
   ],
   "packageRules": [
     {
+      "matchManagers": ["gomod"],
+      "matchDepTypes": ["indirect"],
+      "enabled": true
+    },
+    {
       "matchManagers": ["github-actions"],
       "addLabels": ["area: github actions"]
     },
