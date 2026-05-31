@@ -13,9 +13,9 @@ function __task_is_experiment_enabled() {
 
 # Listing commands from Taskfile.yml
 function __task_list() {
-    local -a scripts cmd
+    local -a scripts cmd task_aliases match mbegin mend
     local -i enabled=0
-    local taskfile item task desc
+    local taskfile item task desc task_alias
 
     cmd=($TASK_CMD)
     taskfile=${(Qv)opt_args[(i)-t|--taskfile]}
@@ -50,14 +50,31 @@ function __task_list() {
     local show_desc
     zstyle -T ":completion:${curcontext}:" verbose && show_desc=true || show_desc=false
 
+    # Read zstyle show-aliases option (default = true via -T)
+    local show_aliases
+    zstyle -T ":completion:${curcontext}:" show-aliases && show_aliases=true || show_aliases=false
+
     for item in "${(@)${(f)output}[2,-1]#\* }"; do
         task="${item%%:[[:space:]]*}"
+
+        # Extract the aliases listed in the trailing "(aliases: a, b)" column.
+        # NB: `aliases` is a reserved zsh parameter, so use a different name.
+        task_aliases=()
+        if [[ "$show_aliases" == "true" && "$item" == (#b)*'(aliases: '(*)')' ]]; then
+            task_aliases=( "${(@s:, :)match[1]}" )
+        fi
 
         if [[ "$show_desc" == "true" ]]; then
             local desc="${item##[^[:space:]]##[[:space:]]##}"
             scripts+=( "${task//:/\\:}:$desc" )
+            for task_alias in $task_aliases; do
+                scripts+=( "${task_alias//:/\\:}:$desc" )
+            done
         else
             scripts+=( "$task" )
+            for task_alias in $task_aliases; do
+                scripts+=( "$task_alias" )
+            done
         fi
     done
 
