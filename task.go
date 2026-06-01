@@ -85,8 +85,10 @@ func (e *Executor) Run(ctx context.Context, calls ...*Call) error {
 	}
 
 	g := &errgroup.Group{}
+	var failfastCtx bool
 	if e.Failfast {
 		g, ctx = errgroup.WithContext(ctx)
+		failfastCtx = true
 	}
 	for _, c := range regularCalls {
 		if e.Parallel {
@@ -98,7 +100,7 @@ func (e *Executor) Run(ctx context.Context, calls ...*Call) error {
 		}
 	}
 	if err := g.Wait(); err != nil {
-		return err
+		return enrichCancellationError(err, ctx, failfastCtx)
 	}
 
 	if len(watchCalls) > 0 {
@@ -317,8 +319,10 @@ func (e *Executor) mkdir(t *ast.Task) error {
 
 func (e *Executor) runDeps(ctx context.Context, t *ast.Task) error {
 	g := &errgroup.Group{}
+	var failfastCtx bool
 	if e.Failfast || t.Failfast {
 		g, ctx = errgroup.WithContext(ctx)
+		failfastCtx = true
 	}
 
 	reacquire := e.releaseConcurrencyLimit()
@@ -334,7 +338,7 @@ func (e *Executor) runDeps(ctx context.Context, t *ast.Task) error {
 		})
 	}
 
-	return g.Wait()
+	return enrichCancellationError(g.Wait(), ctx, failfastCtx)
 }
 
 func (e *Executor) runDeferred(t *ast.Task, call *Call, i int, vars *ast.Vars, deferredExitCode *uint8) {
@@ -613,4 +617,20 @@ func shouldRunOnCurrentPlatform(platforms []*ast.Platform) bool {
 		}
 	}
 	return false
+}
+
+// enrichCancellationError wraps a context.Canceled error with the underlying
+// cause when available. This provides a clearer message when a parallel task
+// is cancelled because another task failed (failfast mode).
+func enrichCancellationError(err error, ctx context.Context, failfastCtx bool) error {
+	if err == nil || !failfastCtx {
+		return err
+	}
+	if !errors.Is(err, context.Canceled) {
+		return err
+	}
+	if cause := context.Cause(ctx); cause != nil && !errors.Is(cause, context.Canceled) {
+		return fmt.Errorf("task: cancelled due to: %w", cause)
+	}
+	return err
 }
