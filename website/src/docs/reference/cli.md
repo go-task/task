@@ -226,6 +226,8 @@ task backup --global
 
 Set output style. Available modes: `interleaved`, `group`, `prefixed`.
 
+- **Environment variable**: [`TASK_OUTPUT`](./environment.md#task-output)
+
 ```bash
 task test --output group
 ```
@@ -233,6 +235,8 @@ task test --output group
 #### `--output-group-begin <template>`
 
 Message template to print before grouped output.
+
+- **Environment variable**: [`TASK_OUTPUT_GROUP_BEGIN`](./environment.md#task-output-group-begin)
 
 ```bash
 task test --output group --output-group-begin "::group::{{.TASK}}"
@@ -242,6 +246,8 @@ task test --output group --output-group-begin "::group::{{.TASK}}"
 
 Message template to print after grouped output.
 
+- **Environment variable**: [`TASK_OUTPUT_GROUP_END`](./environment.md#task-output-group-end)
+
 ```bash
 task test --output group --output-group-end "::endgroup::"
 ```
@@ -249,6 +255,8 @@ task test --output group --output-group-end "::endgroup::"
 #### `--output-group-error-only`
 
 Only show command output on non-zero exit codes.
+
+- **Environment variable**: [`TASK_OUTPUT_GROUP_ERROR_ONLY`](./environment.md#task-output-group-error-only)
 
 ```bash
 task test --output group --output-group-error-only
