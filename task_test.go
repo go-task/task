@@ -1752,6 +1752,37 @@ func TestDynamicVariablesShouldRunOnTheTaskDir(t *testing.T) {
 	})
 }
 
+func TestDynamicVariablesRunOnParentDir(t *testing.T) {
+	t.Parallel()
+
+	const expected = "fubar"
+	const dir = "testdata/dir/dynamic_var_on_parent_dir/"
+	const toBeCreated = dir + "somefolder"
+	const target = "default"
+	var out bytes.Buffer
+	e := task.NewExecutor(
+		task.WithDir(dir),
+		task.WithStdout(&out),
+		task.WithStderr(&out),
+		task.WithSilent(true),
+	)
+
+	// Ensure that the directory to be created doesn't actually exist.
+	_ = os.RemoveAll(toBeCreated)
+	if _, err := os.Stat(toBeCreated); err == nil {
+		t.Errorf("Directory should not exist: %v", err)
+	}
+	require.NoError(t, e.Setup())
+	require.NoError(t, e.Run(t.Context(), &task.Call{Task: target}))
+
+	normalized := normalizePathSeparators(out.String())
+	got := strings.TrimSuffix(filepath.Base(normalized), "\n")
+	assert.Equal(t, expected, got, "Mismatch message from parent dir")
+
+	// Clean-up after ourselves only if no error.
+	_ = os.RemoveAll(toBeCreated)
+}
+
 func TestDisplaysErrorOnVersion1Schema(t *testing.T) {
 	t.Parallel()
 
