@@ -6,12 +6,12 @@ import (
 	"path/filepath"
 	"strings"
 
-	ignore "github.com/sabhiram/go-gitignore"
+	"github.com/go-task/task/v3/internal/gitignore"
 )
 
 type gitignoreRule struct {
 	dir     string
-	matcher *ignore.GitIgnore
+	matcher gitignore.Matcher
 }
 
 // loadGitignoreRules walks up from dir collecting .gitignore files.
@@ -27,9 +27,13 @@ func loadGitignoreRules(dir string) []gitignoreRule {
 	for {
 		lines := readGitignoreLines(filepath.Join(current, ".gitignore"))
 		if len(lines) > 0 {
+			patterns := make([]gitignore.Pattern, 0, len(lines))
+			for _, line := range lines {
+				patterns = append(patterns, gitignore.ParsePattern(line, nil))
+			}
 			rules = append(rules, gitignoreRule{
 				dir:     current,
-				matcher: ignore.CompileIgnoreLines(lines...),
+				matcher: gitignore.NewMatcher(patterns),
 			})
 		}
 		if _, err := os.Stat(filepath.Join(current, ".git")); err == nil {
@@ -81,7 +85,10 @@ func filterGitignored(files map[string]bool, dir string) map[string]bool {
 			if err != nil || strings.HasPrefix(relPath, "..") {
 				continue
 			}
-			if rule.matcher.MatchesPath(filepath.ToSlash(relPath)) {
+			// Sources are files, not directories; pass isDir=false. Per the
+			// gitignore spec this still matches files under an ignored dir
+			// (e.g. "build/" matches build/out.txt).
+			if rule.matcher.Match(strings.Split(filepath.ToSlash(relPath), "/"), false) {
 				files[path] = false
 				break
 			}
