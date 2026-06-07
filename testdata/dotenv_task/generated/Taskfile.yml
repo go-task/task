@@ -1,0 +1,47 @@
+version: '3'
+
+env:
+  FOO: global
+
+tasks:
+  dotenv-gen:
+    vars:
+      DOTENV: '{{.DOTENV | default "gen-env.txt" }}'
+      DOTVAL: '{{.DOTVAL | default "gen-bar" }}'
+    cmds:
+      - echo "BAR={{.DOTVAL}}" > {{.DOTENV}}
+  
+  dotenv-dep-gen-default:
+    dotenv:
+      - gen-env.txt
+    deps:
+      - task: dotenv-gen
+    cmds:
+      - echo "$BAR" > dotenv-dep-gen-default.txt
+  
+  dotenv-dep-gen-var:
+    dotenv:
+      - gen-var-env.txt
+    deps:
+      - task: dotenv-gen
+        vars:
+          DOTENV: gen-var-env.txt 
+          DOTVAL: var-bar
+    cmds:
+      - echo "$BAR" > dotenv-dep-gen-var.txt
+
+  dotenv-gen-echo:
+    dotenv:
+      - gen-env.txt
+    cmds:
+      - echo $BAR
+      - echo "$BAR" > {{.ECHOFILE}}
+
+  dotenv-gen-seq:
+    cmds:
+      - task: dotenv-gen
+        vars:
+          DOTVAL: seq-bar
+      - task: dotenv-gen-echo
+        vars:
+          ECHOFILE: dotenv-gen-seq.txt
