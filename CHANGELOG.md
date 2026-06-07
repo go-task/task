@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- Fixed Fish completions not being picked up correctly by installing them to
+  Fish's `vendor_completions.d` directory instead of `completions` (#2850, #2859
+  by @Legimity).
+- PowerShell completions now work with aliases of the `task` command, not just
+  the `task` binary itself (#2852 by @kojiishi).
+
 ## v3.51.1 - 2026-05-16
 
 - A significant performance boost was achieved for large Taskfiles (monorepos)
