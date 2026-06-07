@@ -13,6 +13,7 @@ import (
 
 	"github.com/go-task/task/v3/internal/editors"
 	"github.com/go-task/task/v3/internal/fingerprint"
+	"github.com/go-task/task/v3/internal/listing"
 	"github.com/go-task/task/v3/internal/logger"
 	"github.com/go-task/task/v3/internal/sort"
 	"github.com/go-task/task/v3/taskfile/ast"
@@ -25,16 +26,24 @@ type ListOptions struct {
 	FormatTaskListAsJSON          bool
 	NoStatus                      bool
 	Nested                        bool
+	Long                          bool
+	Tree                          bool
+	Filter                        string
+	SortMode                      string
 }
 
 // NewListOptions creates a new ListOptions instance
-func NewListOptions(list, listAll, listAsJson, noStatus, nested bool) ListOptions {
+func NewListOptions(list, listAll, listAsJson, noStatus, nested, long, tree bool, filter, sortMode string) ListOptions {
 	return ListOptions{
 		ListOnlyTasksWithDescriptions: list,
 		ListAllTasks:                  listAll,
 		FormatTaskListAsJSON:          listAsJson,
 		NoStatus:                      noStatus,
 		Nested:                        nested,
+		Long:                          long,
+		Tree:                          tree,
+		Filter:                        filter,
+		SortMode:                      sortMode,
 	}
 }
 
@@ -64,8 +73,11 @@ func (e *Executor) ListTasks(o ListOptions) (bool, error) {
 	if err != nil {
 		return false, err
 	}
+	if o.Filter != "" {
+		tasks = listing.FilterTasks(tasks, o.Filter)
+	}
 	if o.FormatTaskListAsJSON {
-		output, err := e.ToEditorOutput(tasks, o.NoStatus, o.Nested)
+		output, err := e.ToEditorOutput(tasks, o.NoStatus, o.Nested, o.Long)
 		if err != nil {
 			return false, err
 		}
@@ -79,12 +91,17 @@ func (e *Executor) ListTasks(o ListOptions) (bool, error) {
 		return len(tasks) > 0, nil
 	}
 	if len(tasks) == 0 {
-		if o.ListOnlyTasksWithDescriptions {
+		if o.Filter != "" {
+			e.Logger.Outf(logger.Yellow, "task: No tasks matching %q\n", o.Filter)
+		} else if o.ListOnlyTasksWithDescriptions {
 			e.Logger.Outf(logger.Yellow, "task: No tasks with description available. Try --list-all to list all tasks\n")
 		} else if o.ListAllTasks {
 			e.Logger.Outf(logger.Yellow, "task: No tasks available\n")
 		}
 		return false, nil
+	}
+	if o.Tree {
+		return e.listTasksTree(tasks, o)
 	}
 	e.Logger.Outf(logger.Default, "task: Available tasks for this project:\n")
 
@@ -92,18 +109,55 @@ func (e *Executor) ListTasks(o ListOptions) (bool, error) {
 	w := tabwriter.NewWriter(e.Stdout, 0, 8, 6, ' ', 0)
 	for _, task := range tasks {
 		e.Logger.FOutf(w, logger.Yellow, "* ")
-		e.Logger.FOutf(w, logger.Green, task.Task)
+		e.writeHighlighted(w, logger.Green, task.Task, o.Filter)
 		desc := strings.ReplaceAll(task.Desc, "\n", " ")
 		e.Logger.FOutf(w, logger.Default, ": \t%s", desc)
 		if len(task.Aliases) > 0 {
 			e.Logger.FOutf(w, logger.Cyan, "\t(aliases: %s)", strings.Join(task.Aliases, ", "))
 		}
 		_, _ = fmt.Fprint(w, "\n")
+		e.writeTaskDetails(w, task, "  \t", o.Long)
 	}
 	if err := w.Flush(); err != nil {
 		return false, err
 	}
 	return true, nil
+}
+
+func (e *Executor) writeHighlighted(w io.Writer, baseColor logger.Color, text, filter string) {
+	if filter == "" || listing.IsGlobPattern(filter) {
+		e.Logger.FOutf(w, baseColor, "%s", text)
+		return
+	}
+	idx := strings.Index(strings.ToLower(text), strings.ToLower(filter))
+	if idx == -1 {
+		e.Logger.FOutf(w, baseColor, "%s", text)
+		return
+	}
+	e.Logger.FOutf(w, baseColor, "%s", text[:idx])
+	e.Logger.FOutf(w, logger.Bold, "%s", text[idx:idx+len(filter)])
+	e.Logger.FOutf(w, baseColor, "%s", text[idx+len(filter):])
+}
+
+func (e *Executor) writeTaskDetails(w io.Writer, task *ast.Task, indent string, long bool) {
+	if listing.HasRequires(task) {
+		e.Logger.FOutf(w, logger.Default, indent)
+		e.Logger.FOutf(w, logger.Yellow, "requires:")
+		e.Logger.FOutf(w, logger.Default, " %s\n", listing.FormatRequires(task.Requires))
+	}
+	if long {
+		if deps := listing.FormatDeps(task.Deps); deps != "" {
+			e.Logger.FOutf(w, logger.Default, indent)
+			e.Logger.FOutf(w, logger.Yellow, "deps:")
+			e.Logger.FOutf(w, logger.Default, " %s\n", deps)
+		}
+		if task.Summary != "" {
+			summary := strings.TrimSpace(strings.ReplaceAll(task.Summary, "\n", " "))
+			e.Logger.FOutf(w, logger.Default, indent)
+			e.Logger.FOutf(w, logger.Yellow, "summary:")
+			e.Logger.FOutf(w, logger.Default, " %s\n", summary)
+		}
+	}
 }
 
 // ListTaskNames prints only the task names in a Taskfile.
@@ -137,14 +191,77 @@ func (e *Executor) ListTaskNames(allTasks bool) error {
 	return nil
 }
 
-func (e *Executor) ToEditorOutput(tasks []*ast.Task, noStatus bool, nested bool) (*editors.Namespace, error) {
+func (e *Executor) listTasksTree(tasks []*ast.Task, o ListOptions) (bool, error) {
+	e.Logger.Outf(logger.Default, "task: Available tasks for this project:\n")
+
+	groups := listing.GroupByNamespace(tasks)
+	hasNamespaced := listing.HasNamespacedGroups(groups)
+	hasRoot := listing.HasRootGroup(groups)
+	showSeparator := hasNamespaced && hasRoot && (o.SortMode == "" || o.SortMode == "default")
+
+	// Move root group to end so namespaced groups appear first
+	if showSeparator {
+		for i, g := range groups {
+			if g.Namespace == "" && i < len(groups)-1 {
+				rootGroup := groups[i]
+				groups = append(groups[:i], groups[i+1:]...)
+				groups = append(groups, rootGroup)
+				break
+			}
+		}
+	}
+
+	w := tabwriter.NewWriter(e.Stdout, 0, 8, 6, ' ', 0)
+	firstGroup := true
+	for _, group := range groups {
+		isRoot := group.Namespace == ""
+		if !firstGroup {
+			_, _ = fmt.Fprint(w, "\n")
+		}
+		firstGroup = false
+		if isRoot && showSeparator {
+			e.Logger.FOutf(w, logger.Dim, "  ─────\n\n")
+		}
+		if !isRoot {
+			e.Logger.FOutf(w, logger.Dim, "  %s\n", group.Namespace)
+		}
+		for _, task := range group.Tasks {
+			name := group.LocalName(task)
+			desc := strings.ReplaceAll(task.Desc, "\n", " ")
+			indent := "  "
+			if !isRoot {
+				indent = "    "
+			}
+			nameColor := logger.Green
+			if task.Internal {
+				nameColor = logger.Dim
+			}
+			e.Logger.FOutf(w, nameColor, "%s", indent)
+			e.writeHighlighted(w, nameColor, name, o.Filter)
+			e.Logger.FOutf(w, logger.Default, ":\t%s", desc)
+			if len(task.Aliases) > 0 {
+				e.Logger.FOutf(w, logger.Cyan, "\t(aliases: %s)", strings.Join(task.Aliases, ", "))
+			}
+			_, _ = fmt.Fprint(w, "\n")
+			e.writeTaskDetails(w, task, indent+"  \t", o.Long)
+		}
+	}
+	return true, w.Flush()
+}
+
+func (e *Executor) ToEditorOutput(tasks []*ast.Task, noStatus bool, nested bool, long bool) (*editors.Namespace, error) {
 	var g errgroup.Group
 	editorTasks := make([]editors.Task, len(tasks))
 
 	// Look over each task in parallel and turn it into an editor task
 	for i := range tasks {
 		g.Go(func() error {
-			editorTask := editors.NewTask(tasks[i])
+			var editorTask editors.Task
+			if long {
+				editorTask = editors.NewTaskLong(tasks[i])
+			} else {
+				editorTask = editors.NewTask(tasks[i])
+			}
 
 			if noStatus {
 				editorTasks[i] = editorTask
