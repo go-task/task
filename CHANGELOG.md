@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Fixed --interactive prompts for required vars sometimes appearing in a random
+  order. Prompts now follow the order the vars are declared in the Taskfile.
+  (#2871 by @caproven)
 - Fixed Fish completions not being picked up correctly by installing them to
   Fish's `vendor_completions.d` directory instead of `completions` (#2850, #2859
   by @Legimity).
@@ -16,9 +19,9 @@
   cleaning `..` and `.` components (#2681, #2788 by @mateenanjum).
 - Added `joinEnv` function to join paths based on your oprating system: `;` for
   Windows and `:` elsewhere, and `joinUrl` to join URL paths. Also, added two
-  new special variables: `FILE_PATH_SEPARATOR` which returns `\` on Windows
-  and `/` elsewhere, and `PATH_LIST_SEPARATOR` which returns `;` on Windows and
-  `:` elsewhere (#2406, #2408 by @solvingj).
+  new special variables: `FILE_PATH_SEPARATOR` which returns `\` on Windows and
+  `/` elsewhere, and `PATH_LIST_SEPARATOR` which returns `;` on Windows and `:`
+  elsewhere (#2406, #2408 by @solvingj).
 - Update the shell interpreter with a regression fix (#2812, #2832 by
   @andreynering).
 - Fix potential panic with the shell interpreter (#2810 by @trulede).
@@ -34,13 +37,13 @@
 - Fixed watch mode ignoring SIGHUP signal, causing the watcher to exit instead
   of restarting (#2764, #2642).
 - Fixed a long time bug where the task wouldn't re-run as it should when using
-  `method: timestamp` and the files listed on `generates:` were deleted.
-  This makes `method: timestamp` behaves the same as `method: checksum`
-  (#1230, #2716 by @drichardson).
+  `method: timestamp` and the files listed on `generates:` were deleted. This
+  makes `method: timestamp` behaves the same as `method: checksum` (#1230, #2716
+  by @drichardson).
 
 ## v3.49.1 - 2026-03-08
 
-* Reverted #2632 for now, which caused some regressions. That change will be
+- Reverted #2632 for now, which caused some regressions. That change will be
   reworked (#2720, #2722, #2723).
 
 ## v3.49.0 - 2026-03-07
