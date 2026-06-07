@@ -1,0 +1,10 @@
+version: '3'
+
+includes:
+  GOBIN:
+    sh: echo $(go env GOPATH)/bin
+
+tasks:
+  test:
+    cmds:
+      - "{{.GOBIN}}/richgo test ./..."

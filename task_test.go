@@ -1064,6 +1064,25 @@ func TestIncludeCycle(t *testing.T) {
 	assert.Contains(t, err.Error(), "task: include cycle detected between")
 }
 
+func TestIncludesMissingTaskfile(t *testing.T) {
+	t.Parallel()
+
+	const dir = "testdata/includes_missing_taskfile"
+
+	var buff bytes.Buffer
+	e := task.NewExecutor(
+		task.WithDir(dir),
+		task.WithStdout(&buff),
+		task.WithStderr(&buff),
+		task.WithSilent(true),
+	)
+
+	err := e.Setup()
+	require.Error(t, err)
+	assert.NotContains(t, err.Error(), "include cycle detected", "should not report a cycle error for a missing taskfile field")
+	assert.Contains(t, err.Error(), "missing the required \"taskfile\" field")
+}
+
 func TestIncludesIncorrect(t *testing.T) {
 	t.Parallel()
 

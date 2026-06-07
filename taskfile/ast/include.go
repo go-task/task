@@ -1,6 +1,7 @@
 package ast
 
 import (
+	"fmt"
 	"iter"
 	"sync"
 
@@ -131,6 +132,26 @@ func (includes *Includes) UnmarshalYAML(node *yaml.Node) error {
 			var v Include
 			if err := valueNode.Decode(&v); err != nil {
 				return errors.NewTaskfileDecodeError(err, node)
+			}
+
+			// Validate that the include has a Taskfile path specified.
+			// If it doesn't, suggest the user may have meant to use 'vars:' instead
+			// of 'includes:' — a common copy-paste mistake that otherwise produces
+			// a misleading "include cycle detected" error downstream.
+			if v.Taskfile == "" {
+				rawKeys := []string{}
+				for j := 0; j < len(valueNode.Content); j += 2 {
+					rawKeys = append(rawKeys, valueNode.Content[j].Value)
+				}
+				keysStr := ""
+				if len(rawKeys) > 0 {
+					keysStr = fmt.Sprintf(" (unexpected keys: %v)", rawKeys)
+				}
+				err := fmt.Errorf(
+					"include \"%s\" is missing the required \"taskfile\" field%s; did you mean to use \"vars:\" instead?",
+					keyNode.Value, keysStr,
+				)
+				return errors.NewTaskfileDecodeError(err, valueNode)
 			}
 
 			// Set the include namespace
