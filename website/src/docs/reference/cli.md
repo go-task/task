@@ -63,15 +63,6 @@ task --list-all
 task -a
 ```
 
-### `task --init`
-
-Create a new Taskfile.yml in the current directory.
-
-```bash
-task --init
-task -i
-```
-
 ::: tip
 
 Combine `--list` or `--list-all` with `--silent` (`-ls` or `-as` for shortants)
@@ -79,6 +70,22 @@ to list only the task names in each line. Useful for scripting with `grep` or
 similar.
 
 :::
+
+### `task --init`
+
+Create a new Taskfile.yml in the current directory. By default, Task uses a
+built-in template, but you can specify a custom template location using the
+`TASK_INIT_DIR` environment variable.
+
+- **Environment variable**: [`TASK_INIT_DIR`](./environment.md#task-init-dir)
+
+```bash
+task --init
+task -i
+
+# Use a custom template directory or file
+TASK_INIT_DIR=~/.config/task task --init
+```
 
 ## Options
 
