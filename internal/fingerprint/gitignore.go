@@ -64,10 +64,13 @@ func readGitignoreLines(path string) []string {
 	var lines []string
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
-		line := scanner.Text()
+		line := strings.TrimRight(scanner.Text(), "\r")
 		if line != "" && !strings.HasPrefix(line, "#") {
 			lines = append(lines, line)
 		}
+	}
+	if err := scanner.Err(); err != nil {
+		return nil
 	}
 	return lines
 }

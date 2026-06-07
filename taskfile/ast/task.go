@@ -76,8 +76,8 @@ func (t *Task) IsSilent() bool {
 	return t.Silent != nil && *t.Silent
 }
 
-// ShouldUseGitignore returns true if the task has gitignore filtering explicitly enabled.
-// Returns false if UseGitignore is nil (not set) or explicitly set to false.
+// ShouldUseGitignore returns true if gitignore filtering is enabled for the task.
+// Returns false if UseGitignore is nil or set to false.
 func (t *Task) ShouldUseGitignore() bool {
 	return t.UseGitignore != nil && *t.UseGitignore
 }
