@@ -633,6 +633,10 @@
                 "type": "object",
                 "properties": {
                   "name": { "type": "string" },
+                  "desc": {
+                    "type": "string",
+                    "description": "A description of the variable, shown in error messages and interactive prompts when the variable is required but missing"
+                  },
                   "enum": {
                     "oneOf": [
                       { "type": "array", "items": { "type": "string" } },

@@ -69,3 +69,10 @@ tasks:
           enum:
             ref: .NONEXISTENT_VAR
     cmd: echo "{{.ENV}}"
+
+  missing-var-with-desc:
+    requires:
+      vars:
+        - name: FOO
+          desc: The baa required for fuzz
+    cmd: echo "{{.FOO}}"

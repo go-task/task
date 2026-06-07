@@ -691,6 +691,7 @@ tasks:
       vars:
         - API_KEY
         - name: ENVIRONMENT
+          desc: The target deployment environment
           enum: [development, staging, production]
         - name: LOG_LEVEL
           enum: [debug, info, warn, error]

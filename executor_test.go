@@ -387,6 +387,22 @@ func TestRequires(t *testing.T) {
 		WithVar("ENV", "dev"),
 		WithRunError(),
 	)
+	NewExecutorTest(t,
+		WithName("missing var with desc"),
+		WithExecutorOptions(
+			task.WithDir("testdata/requires"),
+		),
+		WithTask("missing-var-with-desc"),
+		WithRunError(),
+	)
+	NewExecutorTest(t,
+		WithName("missing var with desc - provided"),
+		WithExecutorOptions(
+			task.WithDir("testdata/requires"),
+		),
+		WithTask("missing-var-with-desc"),
+		WithVar("FOO", "bar"),
+	)
 }
 
 // TODO: mock fs

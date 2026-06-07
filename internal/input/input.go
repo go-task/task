@@ -29,8 +29,8 @@ type Prompter struct {
 }
 
 // Text prompts the user for a text value
-func (p *Prompter) Text(varName string) (string, error) {
-	m := newTextModel(varName)
+func (p *Prompter) Text(varName string, desc string) (string, error) {
+	m := newTextModel(varName, desc)
 
 	prog := tea.NewProgram(m,
 		tea.WithInput(p.Stdin),
@@ -51,12 +51,12 @@ func (p *Prompter) Text(varName string) (string, error) {
 }
 
 // Select prompts the user to select from a list of options
-func (p *Prompter) Select(varName string, options []string) (string, error) {
+func (p *Prompter) Select(varName string, options []string, desc string) (string, error) {
 	if len(options) == 0 {
 		return "", errors.New("no options provided")
 	}
 
-	m := newSelectModel(varName, options)
+	m := newSelectModel(varName, options, desc)
 
 	prog := tea.NewProgram(m,
 		tea.WithInput(p.Stdin),
@@ -77,23 +77,24 @@ func (p *Prompter) Select(varName string, options []string) (string, error) {
 }
 
 // Prompt prompts for a variable value, using Select if enum is provided, Text otherwise
-func (p *Prompter) Prompt(varName string, enum []string) (string, error) {
+func (p *Prompter) Prompt(varName string, enum []string, desc string) (string, error) {
 	if len(enum) > 0 {
-		return p.Select(varName, enum)
+		return p.Select(varName, enum, desc)
 	}
-	return p.Text(varName)
+	return p.Text(varName, desc)
 }
 
 // textModel is the Bubble Tea model for text input
 type textModel struct {
 	varName   string
+	desc      string
 	textInput textinput.Model
 	value     string
 	cancelled bool
 	done      bool
 }
 
-func newTextModel(varName string) textModel {
+func newTextModel(varName string, desc string) textModel {
 	ti := textinput.New()
 	ti.Placeholder = ""
 	ti.CharLimit = 256
@@ -102,6 +103,7 @@ func newTextModel(varName string) textModel {
 
 	return textModel{
 		varName:   varName,
+		desc:      desc,
 		textInput: ti,
 	}
 }
@@ -135,22 +137,28 @@ func (m textModel) View() tea.View {
 		return tea.NewView("")
 	}
 
-	prompt := promptStyle.Render(fmt.Sprintf("? Enter value for %s: ", m.varName))
+	label := m.varName
+	if m.desc != "" {
+		label = fmt.Sprintf("%s (%s)", m.varName, m.desc)
+	}
+	prompt := promptStyle.Render(fmt.Sprintf("? Enter value for %s: ", label))
 	return tea.NewView(prompt + m.textInput.View() + "\n")
 }
 
 // selectModel is the Bubble Tea model for selection
 type selectModel struct {
 	varName   string
+	desc      string
 	options   []string
 	cursor    int
 	cancelled bool
 	done      bool
 }
 
-func newSelectModel(varName string, options []string) selectModel {
+func newSelectModel(varName string, options []string, desc string) selectModel {
 	return selectModel{
 		varName: varName,
+		desc:    desc,
 		options: options,
 		cursor:  0,
 	}
@@ -192,7 +200,11 @@ func (m selectModel) View() tea.View {
 
 	var b strings.Builder
 
-	b.WriteString(promptStyle.Render(fmt.Sprintf("? Select value for %s:", m.varName)))
+	label := m.varName
+	if m.desc != "" {
+		label = fmt.Sprintf("%s (%s)", m.varName, m.desc)
+	}
+	b.WriteString(promptStyle.Render(fmt.Sprintf("? Select value for %s:", label)))
 	b.WriteString("\n")
 
 	for i, opt := range m.options {

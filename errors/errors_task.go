@@ -151,6 +151,7 @@ func (err *TaskCancelledNoTerminalError) Code() int {
 
 type MissingVar struct {
 	Name          string
+	Desc          string
 	AllowedValues []string
 }
 type TaskMissingRequiredVarsError struct {
@@ -159,10 +160,14 @@ type TaskMissingRequiredVarsError struct {
 }
 
 func (v MissingVar) String() string {
-	if len(v.AllowedValues) == 0 {
-		return v.Name
+	s := v.Name
+	if v.Desc != "" {
+		s += fmt.Sprintf(" (%s)", v.Desc)
 	}
-	return fmt.Sprintf("%s (allowed values: %v)", v.Name, v.AllowedValues)
+	if len(v.AllowedValues) > 0 {
+		s += fmt.Sprintf(" (allowed values: %v)", v.AllowedValues)
+	}
+	return s
 }
 
 func (err *TaskMissingRequiredVarsError) Error() string {
