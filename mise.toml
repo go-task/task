@@ -2,7 +2,7 @@
 # Runtimes
 go = "1.25.10"
 node = "24"
-"npm:pnpm" = "11.5.0"
+pnpm = "11.5.0"
 
 # Dev tools
 golangci-lint = "2.12.2"
