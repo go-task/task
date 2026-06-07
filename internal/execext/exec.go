@@ -93,6 +93,7 @@ func RunCommand(ctx context.Context, opts *RunCommandOptions) error {
 func escape(s string) string {
 	s = filepath.ToSlash(s)
 	s = strings.ReplaceAll(s, " ", `\ `)
+	s = strings.ReplaceAll(s, "'", `\'`)
 	s = strings.ReplaceAll(s, "&", `\&`)
 	s = strings.ReplaceAll(s, "(", `\(`)
 	s = strings.ReplaceAll(s, ")", `\)`)
