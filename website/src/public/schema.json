@@ -733,6 +733,13 @@
                         "type": "string"
                       }
                     },
+                    "only": {
+                      "description": "A list of tasks to include. If set, only these tasks will be included and all others will be ignored.",
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
                     "vars": {
                       "description": "A set of variables to apply to the included Taskfile.",
                       "$ref": "#/definitions/vars"

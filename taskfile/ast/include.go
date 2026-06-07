@@ -21,6 +21,7 @@ type (
 		Internal       bool
 		Aliases        []string
 		Excludes       []string
+		Only           []string
 		AdvancedImport bool
 		Vars           *Vars
 		Flatten        bool
@@ -165,6 +166,7 @@ func (include *Include) UnmarshalYAML(node *yaml.Node) error {
 			Flatten  bool
 			Aliases  []string
 			Excludes []string
+			Only     []string
 			Vars     *Vars
 			Checksum string
 		}
@@ -177,6 +179,7 @@ func (include *Include) UnmarshalYAML(node *yaml.Node) error {
 		include.Internal = includedTaskfile.Internal
 		include.Aliases = includedTaskfile.Aliases
 		include.Excludes = includedTaskfile.Excludes
+		include.Only = includedTaskfile.Only
 		include.AdvancedImport = true
 		include.Vars = includedTaskfile.Vars
 		include.Flatten = includedTaskfile.Flatten
@@ -200,6 +203,7 @@ func (include *Include) DeepCopy() *Include {
 		Optional:       include.Optional,
 		Internal:       include.Internal,
 		Excludes:       deepcopy.Slice(include.Excludes),
+		Only:           deepcopy.Slice(include.Only),
 		AdvancedImport: include.AdvancedImport,
 		Vars:           include.Vars.DeepCopy(),
 		Flatten:        include.Flatten,

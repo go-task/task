@@ -74,6 +74,7 @@ includes:
     internal: false
     aliases: [api]
     excludes: [internal-task]
+    only: [public-task]
     vars:
       SERVICE_NAME: backend
     checksum: abc123...
@@ -304,6 +305,20 @@ includes:
   shared:
     taskfile: ./shared.yml
     excludes: [internal-setup, debug-only]
+```
+
+### `only`
+
+- **Type**: `[]string`
+- **Description**: Tasks to include. If set, only these tasks will be included
+  and all others will be ignored. Opposite of `excludes`. When `only` is set,
+  `excludes` is redundant.
+
+```yaml
+includes:
+  shared:
+    taskfile: ./shared.yml
+    only: [build, test]
 ```
 
 ### `vars`

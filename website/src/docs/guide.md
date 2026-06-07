@@ -441,6 +441,45 @@ tasks:
 
 It's compatible with the `flatten` option.
 
+### Include only specific tasks
+
+You can include only specific tasks by using the `only` option. This is the
+opposite of `excludes` — only the listed tasks will be included and all others
+will be ignored.
+
+::: code-group
+
+```yaml [Taskfile.yml]
+version: '3'
+
+includes:
+  included:
+    taskfile: ./Included.yml
+    only: [foo]
+```
+
+```yaml [Included.yml]
+version: '3'
+
+tasks:
+  foo: echo "Foo"
+  bar: echo "Bar"
+```
+
+:::
+
+`task included:bar` will throw an error because only `foo` is included but
+`task included:foo` will work and display `Foo`.
+
+::: info
+
+When `only` is set, `excludes` is redundant — any task not in the `only` list
+is already excluded.
+
+:::
+
+It's compatible with the `flatten` option.
+
 ### Vars of included Taskfiles
 
 You can also specify variables when including a Taskfile. This may be useful for

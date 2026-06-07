@@ -1467,6 +1467,36 @@ func TestIncludesWithExclude(t *testing.T) {
 	assert.Equal(t, "foo\n", buff.String())
 }
 
+func TestIncludesWithOnly(t *testing.T) {
+	t.Parallel()
+
+	var buff bytes.Buffer
+	e := task.NewExecutor(
+		task.WithDir("testdata/includes_with_only"),
+		task.WithSilent(true),
+		task.WithStdout(&buff),
+		task.WithStderr(&buff),
+	)
+	require.NoError(t, e.Setup())
+
+	err := e.Run(t.Context(), &task.Call{Task: "included:foo"})
+	require.NoError(t, err)
+	assert.Equal(t, "foo\n", buff.String())
+	buff.Reset()
+
+	err = e.Run(t.Context(), &task.Call{Task: "included:bar"})
+	require.Error(t, err)
+	buff.Reset()
+
+	err = e.Run(t.Context(), &task.Call{Task: "bar"})
+	require.NoError(t, err)
+	assert.Equal(t, "bar\n", buff.String())
+	buff.Reset()
+
+	err = e.Run(t.Context(), &task.Call{Task: "foo"})
+	require.Error(t, err)
+}
+
 func TestIncludedTaskfileVarMerging(t *testing.T) {
 	t.Parallel()
 

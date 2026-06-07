@@ -135,6 +135,11 @@ func (t1 *Tasks) Merge(t2 *Tasks, include *Include, includedTaskfileVars *Vars) 
 			continue
 		}
 
+		// if an only list is set and the task is not in it, skip it
+		if len(include.Only) > 0 && !slices.Contains(include.Only, name) {
+			continue
+		}
+
 		if !include.Flatten {
 			// Add namespaces to task dependencies
 			for _, dep := range task.Deps {
