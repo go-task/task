@@ -72,7 +72,7 @@ The easiest way to install everything you need to work on Task is
 mise install
 ```
 
-This installs the pinned versions of Go, Node.js, Pnpm and the dev tools
+This installs the pinned versions of Go, Node.js, pnpm and the dev tools
 (`golangci-lint`, `mockery`, `gotestsum`, `goreleaser` and `gorelease`)
 declared in the `mise.toml` file.
 
