@@ -20,20 +20,21 @@ var ErrIncludedTaskfilesCantHaveDotenvs = errors.New("task: Included Taskfiles c
 
 // Taskfile is the abstract syntax tree for a Taskfile
 type Taskfile struct {
-	Location string
-	Version  *semver.Version
-	Output   Output
-	Method   string
-	Includes *Includes
-	Set      []string
-	Shopt    []string
-	Vars     *Vars
-	Env      *Vars
-	Tasks    *Tasks
-	Silent   bool
-	Dotenv   []string
-	Run      string
-	Interval time.Duration
+	Location  string
+	Version   *semver.Version
+	Output    Output
+	Method    string
+	Includes  *Includes
+	Overrides *Overrides
+	Set       []string
+	Shopt     []string
+	Vars      *Vars
+	Env       *Vars
+	Tasks     *Tasks
+	Silent    bool
+	Dotenv    []string
+	Run       string
+	Interval  time.Duration
 }
 
 // Merge merges the second Taskfile into the first
@@ -49,6 +50,9 @@ func (t1 *Taskfile) Merge(t2 *Taskfile, include *Include) error {
 	}
 	if t1.Includes == nil {
 		t1.Includes = NewIncludes()
+	}
+	if t1.Overrides == nil {
+		t1.Overrides = NewOverrides()
 	}
 	if t1.Vars == nil {
 		t1.Vars = NewVars()
@@ -72,23 +76,55 @@ func (t1 *Taskfile) Merge(t2 *Taskfile, include *Include) error {
 	return t1.Tasks.Merge(t2.Tasks, include, t1.Vars)
 }
 
+// MergeOverride merges the second Taskfile into the first using override semantics
+func (t1 *Taskfile) MergeOverride(t2 *Taskfile, override *Override) error {
+	if !t1.Version.Equal(t2.Version) {
+		return fmt.Errorf(`task: Taskfiles versions should match. First is "%s" but second is "%s"`, t1.Version, t2.Version)
+	}
+	if len(t2.Dotenv) > 0 {
+		return ErrIncludedTaskfilesCantHaveDotenvs
+	}
+	if t2.Output.IsSet() {
+		t1.Output = t2.Output
+	}
+	if t1.Includes == nil {
+		t1.Includes = NewIncludes()
+	}
+	if t1.Overrides == nil {
+		t1.Overrides = NewOverrides()
+	}
+	if t1.Vars == nil {
+		t1.Vars = NewVars()
+	}
+	if t1.Env == nil {
+		t1.Env = NewVars()
+	}
+	if t1.Tasks == nil {
+		t1.Tasks = NewTasks()
+	}
+	t1.Vars.Merge(t2.Vars, nil)
+	t1.Env.Merge(t2.Env, nil)
+	return t1.Tasks.MergeOverride(t2.Tasks, override, t1.Vars)
+}
+
 func (tf *Taskfile) UnmarshalYAML(node *yaml.Node) error {
 	switch node.Kind {
 	case yaml.MappingNode:
 		var taskfile struct {
-			Version  *semver.Version
-			Output   Output
-			Method   string
-			Includes *Includes
-			Set      []string
-			Shopt    []string
-			Vars     *Vars
-			Env      *Vars
-			Tasks    *Tasks
-			Silent   bool
-			Dotenv   []string
-			Run      string
-			Interval time.Duration
+			Version   *semver.Version
+			Output    Output
+			Method    string
+			Includes  *Includes
+			Overrides *Overrides
+			Set       []string
+			Shopt     []string
+			Vars      *Vars
+			Env       *Vars
+			Tasks     *Tasks
+			Silent    bool
+			Dotenv    []string
+			Run       string
+			Interval  time.Duration
 		}
 		if err := node.Decode(&taskfile); err != nil {
 			return errors.NewTaskfileDecodeError(err, node)
@@ -97,6 +133,7 @@ func (tf *Taskfile) UnmarshalYAML(node *yaml.Node) error {
 		tf.Output = taskfile.Output
 		tf.Method = taskfile.Method
 		tf.Includes = taskfile.Includes
+		tf.Overrides = taskfile.Overrides
 		tf.Set = taskfile.Set
 		tf.Shopt = taskfile.Shopt
 		tf.Vars = taskfile.Vars
@@ -108,6 +145,9 @@ func (tf *Taskfile) UnmarshalYAML(node *yaml.Node) error {
 		tf.Interval = taskfile.Interval
 		if tf.Includes == nil {
 			tf.Includes = NewIncludes()
+		}
+		if tf.Overrides == nil {
+			tf.Overrides = NewOverrides()
 		}
 		if tf.Vars == nil {
 			tf.Vars = NewVars()

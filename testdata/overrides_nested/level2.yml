@@ -1,0 +1,9 @@
+version: '3'
+
+tasks:
+  level2:
+    cmds:
+      - echo "level2"
+  shared:
+    cmds:
+      - echo "shared from level2 - final override"

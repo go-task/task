@@ -1,0 +1,6 @@
+version: '3'
+
+tasks:
+  lib_task:
+    cmds:
+      - echo "lib task"

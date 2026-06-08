@@ -486,6 +486,239 @@ overridable, use the
 
 :::
 
+## Overriding tasks from other Taskfiles
+
+Task supports overriding tasks from other Taskfiles using the `overrides` keyword.
+This is similar to includes, but with a key difference: instead of erroring when
+duplicate task names are found, overrides will replace existing tasks with the
+overridden version. Overrides are automatically flattened into the local namespace.
+
+```yaml
+version: '3'
+
+overrides:
+  lib:
+    taskfile: ./overrides.yml
+
+tasks:
+  greet:
+    cmds:
+      - echo "Original"
+```
+
+If `./overrides.yml` contains a task named `greet`, it will replace the original
+`greet` task in the main Taskfile.
+
+<Tabs defaultValue="1">
+<TabItem value="1" label="Taskfile.yml">
+
+```yaml
+version: '3'
+
+overrides:
+  lib:
+    taskfile: ./overrides.yml
+
+tasks:
+  greet:
+    cmds:
+      - echo "Original"
+```
+
+</TabItem>
+<TabItem value="2" label="overrides.yml">
+
+```yaml
+version: '3'
+
+tasks:
+  greet:
+    cmds:
+      - echo "Overridden!"
+  new_task:
+    cmds:
+      - echo "New task from override"
+```
+
+</TabItem>
+</Tabs>
+
+Running `task greet` will output "Overridden!" instead of "Original". The
+`new_task` will also be available directly without any namespace prefix.
+
+### Key differences from includes
+
+- **Automatic flattening**: Overrides are always flattened into the local namespace
+- **Task replacement**: Duplicate task names replace existing tasks instead of causing errors
+- **Order matters**: Later overrides take precedence over earlier ones
+
+### Nested overrides
+
+Overrides can be nested multiple levels deep, with the final override taking precedence:
+
+<Tabs defaultValue="1">
+<TabItem value="1" label="Taskfile.yml">
+
+```yaml
+version: '3'
+
+overrides:
+  level1: ./level1.yml
+
+tasks:
+  shared:
+    cmds:
+      - echo "base"
+```
+
+</TabItem>
+<TabItem value="2" label="level1.yml">
+
+```yaml
+version: '3'
+
+overrides:
+  level2: ./level2.yml
+
+tasks:
+  shared:
+    cmds:
+      - echo "level1"
+```
+
+</TabItem>
+<TabItem value="3" label="level2.yml">
+
+```yaml
+version: '3'
+
+tasks:
+  shared:
+    cmds:
+      - echo "level2 - final"
+```
+
+</TabItem>
+</Tabs>
+
+Running `task shared` will output "level2 - final" as it's the final override in the chain.
+
+### Optional overrides
+
+Like includes, overrides can be marked as optional:
+
+```yaml
+version: '3'
+
+overrides:
+  optional_lib:
+    taskfile: ./optional_overrides.yml
+    optional: true
+
+tasks:
+  greet:
+    cmds:
+      - echo "This will work even if ./optional_overrides.yml doesn't exist"
+```
+
+### Internal overrides
+
+Overrides marked as internal will set all overridden tasks to be internal as well:
+
+```yaml
+version: '3'
+
+overrides:
+  utils:
+    taskfile: ./utils.yml
+    internal: true
+```
+
+### Variables in overrides
+
+You can specify variables when overriding, just like with includes:
+
+```yaml
+version: '3'
+
+overrides:
+  customized:
+    taskfile: ./base.yml
+    vars:
+      ENVIRONMENT: "production"
+      VERSION: "2.1.0"
+```
+
+### Directory for overridden tasks
+
+By default, overridden tasks run in the current directory, but you can specify
+a different directory:
+
+```yaml
+version: '3'
+
+overrides:
+  backend:
+    taskfile: ./backend/tasks.yml
+    dir: ./backend
+```
+
+### Excluding tasks from overrides
+
+You can exclude specific tasks from being overridden:
+
+```yaml
+version: '3'
+
+overrides:
+  lib:
+    taskfile: ./lib.yml
+    excludes: [internal_task, helper]
+```
+
+### Namespace aliases for overrides
+
+Even though overrides are automatically flattened, you can still use aliases
+for organizational purposes:
+
+```yaml
+version: '3'
+
+overrides:
+  library:
+    taskfile: ./library.yml
+    aliases: [lib]
+```
+
+### Combining overrides with includes
+
+Overrides work seamlessly with includes. Includes preserve namespaces while
+overrides flatten and replace:
+
+```yaml
+version: '3'
+
+includes:
+  utils: ./utils.yml  # Available as utils:task-name
+
+overrides:
+  customizations: ./custom.yml  # Available directly as task-name
+
+tasks:
+  main:
+    cmds:
+      - task: utils:helper  # Included task with namespace
+      - task: custom_task   # Overridden task without namespace
+```
+
+:::info
+
+Like includes, overridden Taskfiles must use the same schema version as the main
+Taskfile. Variables declared in overridden Taskfiles take preference over
+variables in the overriding Taskfile.
+
+:::
+
 ## Internal tasks
 
 Internal tasks are tasks that cannot be called directly by the user. They will
