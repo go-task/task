@@ -1,0 +1,69 @@
+version: '3'
+
+tasks:
+  # Leaf task that is always up-to-date
+  up-to-date-leaf:
+    cmds:
+      - echo "up-to-date-leaf"
+    status:
+      - test 1 = 1  # Always passes
+
+  # Leaf task that is never up-to-date
+  not-up-to-date-leaf:
+    cmds:
+      - echo "not-up-to-date-leaf"
+    status:
+      - test 1 = 0  # Always fails
+
+  # Parent task with inherit_outdated on a bad dependency
+  # The task itself is up-to-date, but should be marked outdated due to dep
+  task-with-inherit-outdated-bad:
+    deps:
+      - task: up-to-date-leaf
+      - task: not-up-to-date-leaf
+        inherit_outdated: true
+    cmds:
+      - echo "task-with-inherit-outdated-bad"
+    status:
+      - test 1 = 1  # Itself is up-to-date
+
+  # Parent task with inherit_outdated on good dependencies
+  task-with-inherit-outdated-good:
+    deps:
+      - task: up-to-date-leaf
+        inherit_outdated: true
+    cmds:
+      - echo "task-with-inherit-outdated-good"
+    status:
+      - test 1 = 1  # Itself and all deps are up-to-date
+
+  # Parent task WITHOUT inherit_outdated, even though dep is bad
+  # Should pass status check (only checks itself)
+  task-without-inherit-outdated:
+    deps:
+      - task: not-up-to-date-leaf
+    cmds:
+      - echo "task-without-inherit-outdated"
+    status:
+      - test 1 = 1  # Itself is up-to-date
+
+  # Nested: parent depends on a task that has inherit_outdated on a bad dep
+  nested-inherit-outdated:
+    deps:
+      - task: task-with-inherit-outdated-bad
+        inherit_outdated: true
+    cmds:
+      - echo "nested-inherit-outdated"
+    status:
+      - test 1 = 1  # Itself is up-to-date
+
+  # Multiple deps with mixed inherit_outdated
+  mixed-inherit-outdated:
+    deps:
+      - task: up-to-date-leaf
+        inherit_outdated: true
+      - task: not-up-to-date-leaf  # No inherit_outdated, so ignored
+    cmds:
+      - echo "mixed-inherit-outdated"
+    status:
+      - test 1 = 1
