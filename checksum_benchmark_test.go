@@ -7,9 +7,11 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 
@@ -44,12 +46,18 @@ func benchmarkIssue2853Modes(b *testing.B, dir string, fileCount int, fileSize i
 		name        string
 		task        string
 		expectCache bool
+		nativeMTime bool
 	}{
 		{name: "checksum", task: "checksum-yaml", expectCache: true},
 		{name: "timestamp", task: "timestamp-yaml", expectCache: true},
+		{name: "native-mtime", nativeMTime: true},
 		{name: "none", task: "uncached-yaml"},
 	} {
 		b.Run(mode.name, func(b *testing.B) {
+			if mode.nativeMTime {
+				benchmarkIssue2853NativeMTime(b, dir, fileCount, fileSize)
+				return
+			}
 			benchmarkIssue2853Task(b, dir, mode.task, mode.expectCache, fileCount, fileSize)
 		})
 	}
@@ -105,6 +113,54 @@ func benchmarkIssue2853Task(
 		b.ReportMetric(float64(fileCount), "source_files/op")
 		b.ReportMetric(float64(sourceBytes)/(1024*1024), "source_MiB/op")
 	}
+}
+
+func benchmarkIssue2853NativeMTime(b *testing.B, dir string, fileCount int, fileSize int64) {
+	b.Helper()
+
+	output := filepath.Join(dir, "out", "native-mtime.txt")
+	require.NoError(b, os.WriteFile(output, []byte("ok"), 0o644))
+	outputTime := time.Now().Add(time.Second)
+	require.NoError(b, os.Chtimes(output, outputTime, outputTime))
+
+	sourceRoot := filepath.Join(dir, "path", "to", "folder")
+	sourceBytes := int64(fileCount) * fileSize
+
+	b.ReportAllocs()
+	b.SetBytes(sourceBytes)
+	b.ResetTimer()
+	for range b.N {
+		outputInfo, err := os.Stat(output)
+		require.NoError(b, err)
+
+		upToDate, err := nativeMTimeUpToDate(sourceRoot, outputInfo.ModTime())
+		require.NoError(b, err)
+		require.True(b, upToDate)
+	}
+	b.ReportMetric(float64(fileCount), "source_files/op")
+	b.ReportMetric(float64(sourceBytes)/(1024*1024), "source_MiB/op")
+}
+
+func nativeMTimeUpToDate(sourceRoot string, outputTime time.Time) (bool, error) {
+	upToDate := true
+	err := filepath.WalkDir(sourceRoot, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if d.IsDir() || filepath.Ext(path) != ".yaml" {
+			return nil
+		}
+		info, err := d.Info()
+		if err != nil {
+			return err
+		}
+		if info.ModTime().After(outputTime) {
+			upToDate = false
+			return fs.SkipAll
+		}
+		return nil
+	})
+	return upToDate, err
 }
 
 func createIssue2853Fixture(tb testing.TB, dir string, fileCount int, fileSize int64) {
