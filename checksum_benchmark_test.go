@@ -1,3 +1,6 @@
+//go:build fsbench
+// +build fsbench
+
 package task_test
 
 import (
