@@ -19,27 +19,27 @@ import (
 )
 
 const (
-	issue2853ManySmallYAMLFileCount = 20_000
-	issue2853SmallYAMLFileSize      = 5
-	issue2853FewLargeYAMLFileCount  = 4
-	issue2853LargeYAMLFileSize      = 128 * 1024 * 1024
+	manySmallFileCount = 20_000
+	smallFileSize      = 5
+	fewLargeFileCount  = 4
+	largeFileSize      = 128 * 1024 * 1024
 )
 
-func BenchmarkIssue2853ManySmallSparseYAMLFiles(b *testing.B) {
+func BenchmarkManySmallFiles(b *testing.B) {
 	dir := b.TempDir()
-	createIssue2853Fixture(b, dir, issue2853ManySmallYAMLFileCount, issue2853SmallYAMLFileSize)
+	createBenchmarkFixture(b, dir, manySmallFileCount, smallFileSize)
 
-	benchmarkIssue2853Modes(b, dir, issue2853ManySmallYAMLFileCount, issue2853SmallYAMLFileSize)
+	benchmarkModes(b, dir, manySmallFileCount, smallFileSize)
 }
 
-func BenchmarkIssue2853FewLargeSparseYAMLFiles(b *testing.B) {
+func BenchmarkFewLargeFiles(b *testing.B) {
 	dir := b.TempDir()
-	createIssue2853Fixture(b, dir, issue2853FewLargeYAMLFileCount, issue2853LargeYAMLFileSize)
+	createBenchmarkFixture(b, dir, fewLargeFileCount, largeFileSize)
 
-	benchmarkIssue2853Modes(b, dir, issue2853FewLargeYAMLFileCount, issue2853LargeYAMLFileSize)
+	benchmarkModes(b, dir, fewLargeFileCount, largeFileSize)
 }
 
-func benchmarkIssue2853Modes(b *testing.B, dir string, fileCount int, fileSize int64) {
+func benchmarkModes(b *testing.B, dir string, fileCount int, fileSize int64) {
 	b.Helper()
 
 	for _, mode := range []struct {
@@ -55,15 +55,15 @@ func benchmarkIssue2853Modes(b *testing.B, dir string, fileCount int, fileSize i
 	} {
 		b.Run(mode.name, func(b *testing.B) {
 			if mode.nativeMTime {
-				benchmarkIssue2853NativeMTime(b, dir, fileCount, fileSize)
+				benchmarkNativeMTime(b, dir, fileCount, fileSize)
 				return
 			}
-			benchmarkIssue2853Task(b, dir, mode.task, mode.expectCache, fileCount, fileSize)
+			benchmarkTask(b, dir, mode.task, mode.expectCache, fileCount, fileSize)
 		})
 	}
 }
 
-func benchmarkIssue2853Task(
+func benchmarkTask(
 	b *testing.B,
 	dir string,
 	taskName string,
@@ -115,7 +115,7 @@ func benchmarkIssue2853Task(
 	}
 }
 
-func benchmarkIssue2853NativeMTime(b *testing.B, dir string, fileCount int, fileSize int64) {
+func benchmarkNativeMTime(b *testing.B, dir string, fileCount int, fileSize int64) {
 	b.Helper()
 
 	output := filepath.Join(dir, "out", "native-mtime.txt")
@@ -163,7 +163,7 @@ func nativeMTimeUpToDate(sourceRoot string, outputTime time.Time) (bool, error) 
 	return upToDate, err
 }
 
-func createIssue2853Fixture(tb testing.TB, dir string, fileCount int, fileSize int64) {
+func createBenchmarkFixture(tb testing.TB, dir string, fileCount int, fileSize int64) {
 	tb.Helper()
 
 	taskfile := `version: '3'
