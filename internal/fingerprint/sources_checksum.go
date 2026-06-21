@@ -119,7 +119,7 @@ func (checker *ChecksumChecker) checksumFilePath(t *ast.Task) string {
 	return filepath.Join(checker.tempDir, "checksum", normalizeFilename(t.Name()))
 }
 
-var checksumFilenameRegexp = regexp.MustCompile("[^A-z0-9]")
+var checksumFilenameRegexp = regexp.MustCompile("[^[:alnum:]]")
 
 // replaces invalid characters on filenames with "-"
 func normalizeFilename(f string) string {
