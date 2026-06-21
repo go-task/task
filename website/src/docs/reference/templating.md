@@ -565,6 +565,9 @@ tasks:
       - echo "{{.MULTILINE | catLines}}"          # Replace newlines with spaces
 ```
 
+In pipeline form, `join` receives the list from the left-hand side. The
+equivalent non-pipeline form is `{{join " " .WORDS}}`.
+
 #### Shell Argument Parsing
 
 ```yaml
