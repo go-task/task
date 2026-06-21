@@ -653,6 +653,55 @@ func TestStatusChecksumMissingGenerated(t *testing.T) { // nolint:paralleltest /
 	require.NoError(t, err, "generated.txt should be recreated after third run")
 }
 
+func TestGitignoreChecksum(t *testing.T) { //nolint:paralleltest // cannot run in parallel
+	const dir = "testdata/gitignore"
+
+	// Clean up
+	_ = os.RemoveAll(filepathext.SmartJoin(dir, ".task"))
+	_ = os.Remove(filepathext.SmartJoin(dir, "generated.txt"))
+
+	var buff bytes.Buffer
+	tempDir := task.TempDir{
+		Remote:      filepathext.SmartJoin(dir, ".task"),
+		Fingerprint: filepathext.SmartJoin(dir, ".task"),
+	}
+	e := task.NewExecutor(
+		task.WithDir(dir),
+		task.WithStdout(&buff),
+		task.WithStderr(&buff),
+		task.WithTempDir(tempDir),
+	)
+	require.NoError(t, e.Setup())
+
+	// First run - should execute
+	require.NoError(t, e.Run(t.Context(), &task.Call{Task: "build"}))
+
+	// Second run - should be up to date
+	buff.Reset()
+	require.NoError(t, e.Run(t.Context(), &task.Call{Task: "build"}))
+	assert.Equal(t, "task: Task \"build\" is up to date\n", buff.String())
+
+	// Modify the ignored file - should still be up to date
+	require.NoError(t, os.WriteFile(filepathext.SmartJoin(dir, "ignored.txt"), []byte("modified\n"), 0o644))
+	buff.Reset()
+	require.NoError(t, e.Run(t.Context(), &task.Call{Task: "build"}))
+	assert.Equal(t, "task: Task \"build\" is up to date\n", buff.String())
+
+	// Modify the source file - should re-execute
+	require.NoError(t, os.WriteFile(filepathext.SmartJoin(dir, "source.txt"), []byte("modified source\n"), 0o644))
+	buff.Reset()
+	require.NoError(t, e.Run(t.Context(), &task.Call{Task: "build"}))
+	assert.NotEqual(t, "task: Task \"build\" is up to date\n", buff.String())
+
+	// Restore source file
+	require.NoError(t, os.WriteFile(filepathext.SmartJoin(dir, "source.txt"), []byte("source content\n"), 0o644))
+	require.NoError(t, os.WriteFile(filepathext.SmartJoin(dir, "ignored.txt"), []byte("ignored content\n"), 0o644))
+
+	// Clean up
+	_ = os.RemoveAll(filepathext.SmartJoin(dir, ".task"))
+	_ = os.Remove(filepathext.SmartJoin(dir, "generated.txt"))
+}
+
 func TestStatusVariables(t *testing.T) {
 	t.Parallel()
 
