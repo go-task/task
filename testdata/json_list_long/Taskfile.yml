@@ -1,0 +1,17 @@
+version: '3'
+
+tasks:
+  build:
+    desc: Build the project
+    deps:
+      - lint
+    requires:
+      vars:
+        - VERSION
+    cmds:
+      - go build ./...
+
+  lint:
+    desc: Run linters
+    cmds:
+      - golangci-lint run

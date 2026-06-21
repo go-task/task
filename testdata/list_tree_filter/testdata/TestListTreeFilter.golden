@@ -1,0 +1,5 @@
+task: Available tasks for this project:
+  docker
+    build:      Build the Docker image      (aliases: db)
+    push:       Push the Docker image
+                requires: REGISTRY
