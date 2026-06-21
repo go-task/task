@@ -653,6 +653,45 @@ func TestStatusChecksumMissingGenerated(t *testing.T) { // nolint:paralleltest /
 	require.NoError(t, err, "generated.txt should be recreated after third run")
 }
 
+func TestStatusChecksumAllowsApostropheInWorkingDirectory(t *testing.T) {
+	t.Parallel()
+
+	dir := filepath.Join(t.TempDir(), "test'd")
+	require.NoError(t, os.Mkdir(dir, 0o755))
+	require.NoError(t, os.WriteFile(filepath.Join(dir, "Taskfile.yml"), []byte(`version: '3'
+
+tasks:
+  default:
+    generates:
+      - test.out
+    sources:
+      - test.in
+    cmds:
+      - cp test.in test.out
+`), 0o644))
+	require.NoError(t, os.WriteFile(filepath.Join(dir, "test.in"), []byte("hello\n"), 0o644))
+
+	var buff bytes.Buffer
+	tempDir := task.TempDir{
+		Remote:      filepath.Join(dir, ".task"),
+		Fingerprint: filepath.Join(dir, ".task"),
+	}
+	e := task.NewExecutor(
+		task.WithDir(dir),
+		task.WithStdout(&buff),
+		task.WithStderr(&buff),
+		task.WithTempDir(tempDir),
+	)
+	require.NoError(t, e.Setup())
+
+	require.NoError(t, e.Run(t.Context(), &task.Call{Task: "default"}))
+	assert.FileExists(t, filepath.Join(dir, "test.out"))
+	buff.Reset()
+
+	require.NoError(t, e.Run(t.Context(), &task.Call{Task: "default"}))
+	assert.Equal(t, `task: Task "default" is up to date`+"\n", buff.String())
+}
+
 func TestStatusVariables(t *testing.T) {
 	t.Parallel()
 
