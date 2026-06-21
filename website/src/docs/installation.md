@@ -439,3 +439,10 @@ names without descriptions, add this to your `~/.zshrc` (after the completion is
 ```shell
 zstyle ':completion:*:*:task:*' verbose false
 ```
+
+By default, task aliases are also offered as completions. To complete only the
+canonical task names, add the `show-aliases` zstyle:
+
+```shell
+zstyle ':completion:*:*:task:*' show-aliases false
+```
