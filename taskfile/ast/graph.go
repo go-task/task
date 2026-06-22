@@ -81,20 +81,29 @@ func (tfg *TaskfileGraph) Merge() (*Taskfile, error) {
 					return err
 				}
 
-				// Get the merge options
-				includes, ok := edge.Properties.Data.([]*Include)
-				if !ok {
-					return fmt.Errorf("task: Failed to get merge options")
-				}
-
-				// Merge the included Taskfiles into the parent Taskfile
-				for _, include := range includes {
-					if err := vertex.Taskfile.Merge(
-						includedVertex.Taskfile,
-						include,
-					); err != nil {
-						return err
+				// Get the merge options - could be includes or overrides
+				if includes, ok := edge.Properties.Data.([]*Include); ok {
+					// Merge the included Taskfiles into the parent Taskfile
+					for _, include := range includes {
+						if err := vertex.Taskfile.Merge(
+							includedVertex.Taskfile,
+							include,
+						); err != nil {
+							return err
+						}
 					}
+				} else if overrides, ok := edge.Properties.Data.([]*Override); ok {
+					// Merge the overridden Taskfiles into the parent Taskfile
+					for _, override := range overrides {
+						if err := vertex.Taskfile.MergeOverride(
+							includedVertex.Taskfile,
+							override,
+						); err != nil {
+							return err
+						}
+					}
+				} else {
+					return fmt.Errorf("task: Failed to get merge options")
 				}
 
 				return nil
