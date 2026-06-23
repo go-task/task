@@ -13,6 +13,7 @@ import (
 	"github.com/sajari/fuzzy"
 
 	"github.com/go-task/task/v3/errors"
+	"github.com/go-task/task/v3/experiments"
 	"github.com/go-task/task/v3/internal/env"
 	"github.com/go-task/task/v3/internal/execext"
 	"github.com/go-task/task/v3/internal/filepathext"
@@ -101,7 +102,8 @@ func (e *Executor) readTaskfile(node taskfile.Node) error {
 		}
 		return err
 	}
-	if e.Taskfile, err = graph.Merge(); err != nil {
+	e.Graph = graph
+	if e.Taskfile, err = graph.Merge(experiments.ScopedTaskfiles.Enabled()); err != nil {
 		return err
 	}
 	return nil
@@ -223,6 +225,7 @@ func (e *Executor) setupCompiler() error {
 		UserWorkingDir: e.UserWorkingDir,
 		TaskfileEnv:    e.Taskfile.Env,
 		TaskfileVars:   e.Taskfile.Vars,
+		Graph:          e.Graph,
 		Logger:         e.Logger,
 	}
 	return nil

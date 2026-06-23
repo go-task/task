@@ -1,0 +1,23 @@
+version: "3"
+
+env:
+  INC_B_ENV: env_from_b
+  SHARED_ENV: shared_from_b
+
+vars:
+  VAR: value_from_b
+  UNIQUE_B: only_in_b
+
+tasks:
+  print:
+    desc: Print vars from include B
+    cmds:
+      - echo "B:UNIQUE_B={{.UNIQUE_B}}"
+      - echo "B:ROOT_VAR={{.ROOT_VAR}}"
+
+  print-env:
+    desc: Print env vars from include B
+    cmds:
+      - echo "B:INC_B_ENV={{.env.INC_B_ENV}}"
+      - echo "B:ROOT_ENV={{.env.ROOT_ENV}}"
+      - echo "B:SHARED_ENV={{.env.SHARED_ENV}}"
