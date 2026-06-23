@@ -94,6 +94,35 @@ tasks:
           var: FOO
         cmd: cat "{{.ITEM}}"
 
+  # Loop variable passed by ref should work (currently broken)
+  loop-vars-ref:
+    vars:
+      FOO: "a b"
+    cmds:
+      - for:
+          var: FOO
+        task: process
+        vars:
+          THING:
+            ref: .ITEM
+
+  # Loop variable with alias passed by ref
+  loop-vars-ref-as:
+    vars:
+      FOO: "x y"
+    cmds:
+      - for:
+          var: FOO
+          as: VAL
+        task: process
+        vars:
+          THING:
+            ref: .VAL
+
+  process:
+    internal: true
+    cmd: echo "{{.THING}}"
+
   # Loop over another task
   loop-task:
     vars:
