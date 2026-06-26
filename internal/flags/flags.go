@@ -120,7 +120,7 @@ func init() {
 		pflag.PrintDefaults()
 	}
 
-	// Read temp-dir from env or taskrc config but not support flag
+	// Read temp-dir from TASK_TEMP_DIR or taskrc config (no CLI flag).
 	TempDir = getConfig(config, "TEMP_DIR", func() *string { return config.TempDir }, "")
 
 	pflag.BoolVar(&Version, "version", false, "Show Task version.")
