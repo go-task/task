@@ -87,6 +87,7 @@ var (
 	Cert                string
 	CertKey             string
 	Interactive         bool
+	TempDir             string
 )
 
 func init() {
@@ -118,6 +119,9 @@ func init() {
 		log.Print(usage)
 		pflag.PrintDefaults()
 	}
+
+	// Read temp-dir from env or taskrc config but not support flag
+	TempDir = getConfig(config, "TEMP_DIR", func() *string { return config.TempDir }, "")
 
 	pflag.BoolVar(&Version, "version", false, "Show Task version.")
 	pflag.BoolVarP(&Help, "help", "h", false, "Shows Task usage.")
@@ -308,6 +312,7 @@ func (o *flagsOption) ApplyToExecutor(e *task.Executor) {
 		task.WithTaskSorter(sorter),
 		task.WithVersionCheck(true),
 		task.WithFailfast(Failfast),
+		task.WithTempDirPath(TempDir),
 	)
 }
 

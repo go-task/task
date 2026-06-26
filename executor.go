@@ -29,6 +29,7 @@ type (
 		Dir                 string
 		Entrypoint          string
 		TempDir             TempDir
+		TempDirPath         string
 		Force               bool
 		ForceAll            bool
 		Insecure            bool
@@ -163,6 +164,22 @@ type tempDirOption struct {
 
 func (o *tempDirOption) ApplyToExecutor(e *Executor) {
 	e.TempDir = o.tempDir
+}
+
+// WithTempDirPath sets an unresolved path used to build [Executor.TempDir]
+// during [Executor.Setup]. Relative paths are resolved from the root Taskfile
+// directory. Use [WithTempDir] when the remote and fingerprint directories have
+// already been resolved.
+func WithTempDirPath(path string) ExecutorOption {
+	return &tempDirPathOption{path: path}
+}
+
+type tempDirPathOption struct {
+	path string
+}
+
+func (o *tempDirPathOption) ApplyToExecutor(e *Executor) {
+	e.TempDirPath = o.path
 }
 
 // WithForce ensures that the [Executor] always runs a task, even when

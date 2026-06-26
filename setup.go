@@ -128,18 +128,24 @@ func (e *Executor) setupFuzzyModel() {
 	e.fuzzyModel = model
 }
 
+func (e *Executor) configuredTempDirPath() string {
+	// Priority: OS env > taskrc/env >  default
+	if tempDir := env.GetTaskEnv("TEMP_DIR"); tempDir != "" {
+		return tempDir
+	}
+	if e.TempDirPath != "" {
+		return e.TempDirPath
+	}
+	return ".task"
+}
+
 func (e *Executor) setupTempDir() error {
 	if e.TempDir != (TempDir{}) {
 		return nil
 	}
 
-	tempDir := env.GetTaskEnv("TEMP_DIR")
-	if tempDir == "" {
-		e.TempDir = TempDir{
-			Remote:      filepathext.SmartJoin(e.Dir, ".task"),
-			Fingerprint: filepathext.SmartJoin(e.Dir, ".task"),
-		}
-	} else if filepath.IsAbs(tempDir) || strings.HasPrefix(tempDir, "~") {
+	tempDir := e.configuredTempDirPath()
+	if filepath.IsAbs(tempDir) || strings.HasPrefix(tempDir, "~") {
 		tempDir, err := execext.ExpandLiteral(tempDir)
 		if err != nil {
 			return err
