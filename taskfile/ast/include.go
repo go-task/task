@@ -2,6 +2,7 @@ package ast
 
 import (
 	"iter"
+	"strings"
 	"sync"
 
 	"github.com/elliotchance/orderedmap/v3"
@@ -170,6 +171,9 @@ func (include *Include) UnmarshalYAML(node *yaml.Node) error {
 		}
 		if err := node.Decode(&includedTaskfile); err != nil {
 			return errors.NewTaskfileDecodeError(err, node)
+		}
+		if strings.TrimSpace(includedTaskfile.Taskfile) == "" && strings.TrimSpace(includedTaskfile.Dir) == "" {
+			return errors.NewTaskfileDecodeError(nil, node).WithMessage("include must specify taskfile or dir")
 		}
 		include.Taskfile = includedTaskfile.Taskfile
 		include.Dir = includedTaskfile.Dir
