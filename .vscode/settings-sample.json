@@ -5,6 +5,12 @@
         "Taskfile.yaml",
         "taskfile.yml",
         "taskfile.yaml"
+    ],
+    "./website/src/public/schema-taskrc.json": [
+        ".taskrc.yml",
+        ".taskrc.yaml",
+        "taskrc.yml",
+        "taskrc.yaml"
     ]
   },
   "gopls": {
