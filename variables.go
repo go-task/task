@@ -437,10 +437,23 @@ func resolveMatrixRefs(matrix *ast.Matrix, cache *templater.Cache) (*ast.Matrix,
 	if matrix.Len() == 0 {
 		return matrix, nil
 	}
+	hasRef := false
+	for _, row := range matrix.All() {
+		if row.Ref != "" {
+			hasRef = true
+			break
+		}
+	}
+	if !hasRef {
+		return matrix, nil
+	}
 	resolved := matrix.DeepCopy()
 	for _, row := range resolved.All() {
 		if row.Ref != "" {
 			v := templater.ResolveRef(row.Ref, cache)
+			if cache.Err() != nil {
+				return nil, cache.Err()
+			}
 			switch value := v.(type) {
 			case []any:
 				row.Value = value

@@ -1,6 +1,7 @@
 package task
 
 import (
+	"fmt"
 	"sync"
 	"testing"
 
@@ -50,7 +51,12 @@ func TestResolveMatrixRefsDoesNotMutateSharedMatrix(t *testing.T) {
 				return
 			}
 			row, ok := resolved.Get("ARCH")
-			if !ok || len(row.Value) != 1 {
+			if !ok {
+				errs[i] = fmt.Errorf("call %d: ARCH row missing from resolved matrix", i)
+				return
+			}
+			if len(row.Value) != 1 {
+				errs[i] = fmt.Errorf("call %d: ARCH.Value = %v, want a single-element slice", i, row.Value)
 				return
 			}
 			got, _ := row.Value[0].(string)
