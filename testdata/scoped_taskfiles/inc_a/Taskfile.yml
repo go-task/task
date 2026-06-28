@@ -1,0 +1,38 @@
+version: "3"
+
+env:
+  INC_A_ENV: env_from_a
+  SHARED_ENV: shared_from_a
+
+vars:
+  VAR: value_from_a
+  UNIQUE_A: only_in_a
+
+includes:
+  nested: ./nested
+
+tasks:
+  print:
+    desc: Print vars from include A
+    cmds:
+      - echo "A:UNIQUE_A={{.UNIQUE_A}}"
+      - echo "A:ROOT_VAR={{.ROOT_VAR}}"
+
+  try-access-b:
+    desc: Try to access B's unique var (should fail in scoped mode)
+    cmds:
+      - echo "A:UNIQUE_B={{.UNIQUE_B}}"
+
+  print-env:
+    desc: Print env vars from include A
+    cmds:
+      - echo "A:INC_A_ENV={{.env.INC_A_ENV}}"
+      - echo "A:ROOT_ENV={{.env.ROOT_ENV}}"
+      - echo "A:SHARED_ENV={{.env.SHARED_ENV}}"
+
+  test-env-in-var:
+    desc: Test using env in a var template
+    vars:
+      COMPOSED: "env={{.env.ROOT_ENV}}"
+    cmds:
+      - echo "{{.COMPOSED}}"

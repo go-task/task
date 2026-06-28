@@ -174,6 +174,8 @@ func run() error {
 
 	// Merge CLI variables first (e.g. FOO=bar) so they take priority over Taskfile defaults
 	e.Taskfile.Vars.Merge(globals, nil)
+	// Store CLI vars for scoped mode where they need highest priority
+	e.Compiler.CLIVars = globals
 
 	// Then ReverseMerge special variables so they're available for templating
 	cliArgsPostDashQuoted, err := args.ToQuotedString(cliArgsPostDash)

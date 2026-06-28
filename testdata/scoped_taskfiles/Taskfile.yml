@@ -1,0 +1,57 @@
+version: "3"
+
+env:
+  ROOT_ENV: env_from_root
+  SHARED_ENV: shared_from_root
+
+vars:
+  ROOT_VAR: from_root
+
+includes:
+  a: ./inc_a
+  b: ./inc_b
+
+tasks:
+  default:
+    desc: Test scoped includes - vars should be isolated
+    cmds:
+      - task: a:print
+      - task: b:print
+
+  print-root-var:
+    desc: Print ROOT_VAR from root
+    cmds:
+      - echo "ROOT_VAR={{.ROOT_VAR}}"
+
+  print-env:
+    desc: Print env vars using {{.env.XXX}} syntax
+    cmds:
+      - echo "ROOT_ENV={{.env.ROOT_ENV}}"
+      - echo "SHARED_ENV={{.env.SHARED_ENV}}"
+      - echo "PATH_EXISTS={{if .env.PATH}}yes{{else}}no{{end}}"
+
+  test-env-separation:
+    desc: Test that env is NOT at root level in scoped mode
+    cmds:
+      # In scoped mode, {{.ROOT_ENV}} should be empty (env not at root)
+      # In legacy mode, {{.ROOT_ENV}} would have the value
+      - echo "ROOT_ENV_AT_ROOT={{.ROOT_ENV}}"
+
+  prout:
+    vars:
+      LOL: prout_from_root
+    cmds:
+      - echo "{{.LOL}}"
+
+  call-with-vars:
+    desc: Test calling a task with vars override
+    cmds:
+      - task: print-name
+        vars:
+          NAME: from_caller
+
+  print-name:
+    vars:
+      NAME: default_name
+    cmds:
+      - echo "NAME={{.NAME}}"
