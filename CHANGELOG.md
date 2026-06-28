@@ -13,6 +13,9 @@
 - Fixed task names containing certain characters (e.g. `\`, `_`, `^`) leaking
   into checksum/timestamp filenames, breaking `sources:`/`generates:`
   up-to-date detection (#2886 by @s3onghyun).
+- Fixed `for: matrix:` loops using `ref:` rows producing wrong values when the
+  same task was run concurrently (e.g. by parallel `deps`) with different vars
+  (#2890, #2894 by @amitmishra11).
 
 ## v3.51.1 - 2026-05-16
 
