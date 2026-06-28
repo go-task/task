@@ -351,13 +351,14 @@ func itemsFromFor(
 	var values []any  // The list of values to loop over
 	// Get the list from a matrix
 	if f.Matrix.Len() != 0 {
-		if err := resolveMatrixRefs(f.Matrix, cache); err != nil {
+		resolvedMatrix, err := resolveMatrixRefs(f.Matrix, cache)
+		if err != nil {
 			return nil, nil, errors.TaskfileInvalidError{
 				URI: location.Taskfile,
 				Err: err,
 			}
 		}
-		return asAnySlice(product(f.Matrix)), nil, nil
+		return asAnySlice(product(resolvedMatrix)), nil, nil
 	}
 	// Get the list from the explicit for list
 	if len(f.List) > 0 {
@@ -429,22 +430,43 @@ func itemsFromFor(
 	return values, keys, nil
 }
 
-func resolveMatrixRefs(matrix *ast.Matrix, cache *templater.Cache) error {
+// resolveMatrixRefs resolves any `ref:` rows in matrix and returns a new
+// Matrix with those rows populated. It must not mutate the matrix passed in:
+// that matrix is part of the shared, cached Task AST, and concurrent
+// invocations of the same task (e.g. via parallel deps) call this with the
+// same *ast.Matrix and would otherwise race on the row.Value assignment
+// below, intermittently leaking a value resolved for one caller into another
+// caller's expansion. See #2890.
+func resolveMatrixRefs(matrix *ast.Matrix, cache *templater.Cache) (*ast.Matrix, error) {
 	if matrix.Len() == 0 {
-		return nil
+		return matrix, nil
 	}
+	hasRef := false
 	for _, row := range matrix.All() {
 		if row.Ref != "" {
+			hasRef = true
+			break
+		}
+	}
+	if !hasRef {
+		return matrix, nil
+	}
+	resolved := matrix.DeepCopy()
+	for _, row := range resolved.All() {
+		if row.Ref != "" {
 			v := templater.ResolveRef(row.Ref, cache)
+			if cache.Err() != nil {
+				return nil, cache.Err()
+			}
 			switch value := v.(type) {
 			case []any:
 				row.Value = value
 			default:
-				return fmt.Errorf("matrix reference %q must resolve to a list", row.Ref)
+				return nil, fmt.Errorf("matrix reference %q must resolve to a list", row.Ref)
 			}
 		}
 	}
-	return nil
+	return resolved, nil
 }
 
 func resolveEnumRefs(requires *ast.Requires, cache *templater.Cache) error {

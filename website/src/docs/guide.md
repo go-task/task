@@ -944,7 +944,7 @@ Also, `task --status [tasks]...` will exit with a non-zero
 
 `status` can be combined with the
 [fingerprinting](#by-fingerprinting-locally-generated-files-and-their-sources)
-to have a task run if either the the source/generated artifacts changes, or the
+to have a task run if either the source/generated artifacts changes, or the
 programmatic check fails:
 
 ```yaml

@@ -65,6 +65,19 @@ a human. Always remind contributors to disclose AI usage in their submissions.
 
 ## 1. Setup
 
+The easiest way to install everything you need to work on Task is
+[mise][mise]. From the repository root, run:
+
+```shell
+mise install
+```
+
+This installs the pinned versions of Go, Node.js, pnpm and the dev tools
+(`golangci-lint`, `mockery`, `gotestsum`, `goreleaser` and `gorelease`)
+declared in the `mise.toml` file.
+
+If you'd rather install things manually, you'll need:
+
 - **Go** - Task is written in [Go][go]. We always support the latest two major
   Go versions, so make sure your version is recent enough.
 - **Node.js** - [Node.js][nodejs] is used to host Task's documentation server
@@ -194,6 +207,7 @@ If you have questions, feel free to ask them in the `#help` forum channel on our
 [prettier]: https://prettier.io
 [nodejs]: https://nodejs.org/en/
 [pnpm]: https://pnpm.io/
+[mise]: https://mise.jdx.dev
 [vitepress]: https://vitepress.dev
 [json-schema]:
   https://github.com/go-task/task/blob/main/website/src/public/schema.json

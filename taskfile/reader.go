@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"slices"
 	"sync"
 	"time"
 
@@ -285,12 +286,7 @@ func (r *Reader) isTrusted(uri string) bool {
 	host := parsedURL.Host
 
 	// Check against each trusted pattern (exact match including port if provided)
-	for _, pattern := range r.trustedHosts {
-		if host == pattern {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(r.trustedHosts, host)
 }
 
 func (r *Reader) include(ctx context.Context, node Node) error {

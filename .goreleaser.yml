@@ -76,7 +76,7 @@ nfpms:
       - src: completion/bash/task.bash
         dst: /etc/bash_completion.d/task
       - src: completion/fish/task.fish
-        dst: /usr/share/fish/completions/task.fish
+        dst: /usr/share/fish/vendor_completions.d/task.fish
       - src: completion/zsh/_task
         dst: /usr/local/share/zsh/site-functions/_task
 
@@ -89,7 +89,7 @@ brews:
     repository:
       owner: go-task
       name: homebrew-tap
-      token: "{{secrets.GH_GORELEASER_TOKEN}}" # So that it runs as the task-bot user
+      token: "{{.Env.GH_GORELEASER_TOKEN}}" # So that it runs as the task-bot user
     test: system "#{bin}/task", "--help"
     install: |-
       bin.install "task"
@@ -131,7 +131,7 @@ winget:
       owner: go-task
       name: winget-pkgs
       branch: 'task-{{.Version}}'
-      token: "{{secrets.GH_GORELEASER_TOKEN}}" # So that it runs as the task-bot user
+      token: "{{.Env.GH_GORELEASER_TOKEN}}" # So that it runs as the task-bot user
       pull_request:
         enabled: true
         draft: false

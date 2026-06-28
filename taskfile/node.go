@@ -93,8 +93,8 @@ func getScheme(uri string) (string, error) {
 		return "git", nil
 	}
 
-	if i := strings.Index(uri, "://"); i != -1 {
-		return uri[:i], nil
+	if before, _, ok := strings.Cut(uri, "://"); ok {
+		return before, nil
 	}
 
 	return "", nil

@@ -3,6 +3,8 @@ package task
 import (
 	"slices"
 
+	"github.com/elliotchance/orderedmap/v3"
+
 	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/input"
 	"github.com/go-task/task/v3/internal/term"
@@ -32,7 +34,7 @@ func (e *Executor) promptDepsVars(calls []*Call) error {
 
 	// Collect all missing vars from the dependency tree
 	visited := make(map[string]bool)
-	varsMap := make(map[string]*ast.VarsWithValidation)
+	varsMap := orderedmap.NewOrderedMap[string, *ast.VarsWithValidation]()
 
 	var collect func(call *Call) error
 	collect = func(call *Call) error {
@@ -42,8 +44,8 @@ func (e *Executor) promptDepsVars(calls []*Call) error {
 		}
 
 		for _, v := range getMissingRequiredVars(compiledTask) {
-			if _, exists := varsMap[v.Name]; !exists {
-				varsMap[v.Name] = v
+			if !varsMap.Has(v.Name) {
+				varsMap.Set(v.Name, v)
 			}
 		}
 
@@ -73,14 +75,14 @@ func (e *Executor) promptDepsVars(calls []*Call) error {
 		}
 	}
 
-	if len(varsMap) == 0 {
+	if varsMap.Len() == 0 {
 		return nil
 	}
 
 	prompter := e.newPrompter()
 	e.promptedVars = ast.NewVars()
 
-	for _, v := range varsMap {
+	for v := range varsMap.Values() {
 		value, err := prompter.Prompt(v.Name, getEnumValues(v.Enum))
 		if err != nil {
 			if errors.Is(err, input.ErrCancelled) {

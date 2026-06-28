@@ -13,7 +13,7 @@ jobs:
     if: contains(github.event.pull_request.labels.*.name, 'needs-build')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
@@ -21,7 +21,7 @@ jobs:
         with:
           go-version: "1.26.x"
           cache: true
-      - uses: goreleaser/goreleaser-action@ec59f474b9834571250b370d4735c50f8e2d1e29 # v7
+      - uses: goreleaser/goreleaser-action@5daf1e915a5f0af01ddbcd89a43b8061ff4f1a89 # v7
         with:
           version: "~> v2"
           args: release --snapshot --clean --config .goreleaser-pr.yml
