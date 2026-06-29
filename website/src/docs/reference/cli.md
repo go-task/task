@@ -220,6 +220,18 @@ Run the global Taskfile from `$HOME/Taskfile.{yml,yaml}`.
 task backup --global
 ```
 
+#### `--temp-dir <path>`
+
+Set the directory used to store Task temporary files, such as checksums.
+Relative paths are relative to the root Taskfile.
+
+- **Config equivalent**: [`temp-dir`](./config.md#temp-dir)
+- **Environment variable**: [`TASK_TEMP_DIR`](./environment.md#task-temp-dir)
+
+```bash
+task build --temp-dir .task-cache
+```
+
 ### Output Control
 
 #### `-o, --output <mode>`
