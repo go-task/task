@@ -1,0 +1,12 @@
+version: '3'
+
+overrides:
+  level2: ./level2.yml
+
+tasks:
+  level1:
+    cmds:
+      - echo "level1"
+  shared:
+    cmds:
+      - echo "shared from level1"

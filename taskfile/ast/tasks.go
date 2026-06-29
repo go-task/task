@@ -208,6 +208,43 @@ func (t1 *Tasks) Merge(t2 *Tasks, include *Include, includedTaskfileVars *Vars) 
 	return nil
 }
 
+func (t1 *Tasks) MergeOverride(t2 *Tasks, override *Override, includedTaskfileVars *Vars) error {
+	defer t2.mutex.RUnlock()
+	t2.mutex.RLock()
+	for name, v := range t2.All(nil) {
+		// We do a deep copy of the task struct here to ensure that no data can
+		// be changed elsewhere once the taskfile is merged.
+		task := v.DeepCopy()
+		// Set the task to internal if EITHER the overridden task or the overridden
+		// taskfile are marked as internal
+		task.Internal = task.Internal || (override != nil && override.Internal)
+		taskName := name
+
+		// if the task is in the exclude list, don't add it to the merged taskfile
+		if slices.Contains(override.Excludes, name) {
+			continue
+		}
+
+		// Overrides always flatten, so we don't need the namespace logic
+		// but we still need to handle variables and directory resolution
+
+		if override.AdvancedImport {
+			task.Dir = filepathext.SmartJoin(override.Dir, task.Dir)
+			if task.IncludeVars == nil {
+				task.IncludeVars = NewVars()
+			}
+			task.IncludeVars.Merge(override.Vars, nil)
+			task.IncludedTaskfileVars = includedTaskfileVars.DeepCopy()
+		}
+
+		// For overrides, we simply replace any existing task instead of erroring
+		// This is the key difference from includes
+		t1.Set(taskName, task)
+	}
+
+	return nil
+}
+
 func (t *Tasks) UnmarshalYAML(node *yaml.Node) error {
 	if t == nil || t.om == nil {
 		*t = *NewTasks()

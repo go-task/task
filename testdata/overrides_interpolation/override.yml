@@ -1,0 +1,6 @@
+version: '3'
+
+tasks:
+  test:
+    cmds:
+      - echo "interpolated override"
