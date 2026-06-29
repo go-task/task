@@ -73,7 +73,7 @@ func NewNode(
 	return node, err
 }
 
-func isRemoteEntrypoint(entrypoint string) bool {
+func IsRemoteEntrypoint(entrypoint string) bool {
 	scheme, _ := getScheme(entrypoint)
 	switch scheme {
 	case "git", "http", "https":
