@@ -319,6 +319,9 @@
           "type": "object",
           "description": "The value will be treated as a literal map type and stored in the variable"
         },
+        "value": {
+          "description": "A literal value assigned to the variable. Useful together with other keys such as 'secret'"
+        },
         "secret": {
           "type": "boolean",
           "description": "Marks the variable as secret. Secret values will be masked as ***** in command logs to prevent accidental exposure of sensitive information."

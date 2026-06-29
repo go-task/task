@@ -184,7 +184,12 @@ func (c *Compiler) HandleDynamicVar(v ast.Var, dir string, e []string) (string, 
 	result = strings.TrimSuffix(result, "\n")
 
 	c.dynamicCache[*v.Sh] = result
-	c.Logger.VerboseErrf(logger.Magenta, "task: dynamic variable: %q result: %q\n", *v.Sh, result)
+	// Never print the resolved value of a secret variable, even in verbose mode
+	logResult := result
+	if v.Secret {
+		logResult = "*****"
+	}
+	c.Logger.VerboseErrf(logger.Magenta, "task: dynamic variable: %q result: %q\n", *v.Sh, logResult)
 
 	return result, nil
 }

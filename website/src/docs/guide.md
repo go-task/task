@@ -1636,6 +1636,7 @@ in logs, but is **not a substitute** for proper secret management practices.
 - ❌ Secrets visible in process inspection (e.g., `ps aux`)
 - ❌ Secrets in shell history
 - ❌ Secrets in command output (stdout/stderr)
+- ❌ Secret values copied into derived (non-secret) variables
 
 Always use proper secret management tools (HashiCorp Vault, AWS Secrets
 Manager, etc.) for production environments.
@@ -1768,6 +1769,40 @@ tasks:
    ```yaml
    dotenv: ['.env.local']  # Load from .env.local (in .gitignore)
    ```
+
+:::
+
+::: warning
+
+**Secrets are not propagated to derived variables.** The `secret` flag only
+masks the variable it is set on. A non-secret variable that references a secret
+will expose the resolved value in logs:
+
+```yaml
+version: '3'
+
+vars:
+  API_KEY:
+    value: 'secret-api-key-123'
+    secret: true
+  HEADER:
+    value: 'Bearer {{.API_KEY}}' # ❌ not marked as secret
+
+tasks:
+  call:
+    cmds:
+      - curl -H "{{.HEADER}}" api.example.com
+      # Logged as: curl -H "Bearer secret-api-key-123" api.example.com (LEAK)
+```
+
+Mark every variable that carries a secret value as `secret: true`:
+
+```yaml
+vars:
+  HEADER:
+    value: 'Bearer {{.API_KEY}}'
+    secret: true # ✅ masked
+```
 
 :::
 

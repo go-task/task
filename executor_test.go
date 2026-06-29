@@ -320,6 +320,29 @@ func TestSecretVars(t *testing.T) {
 		),
 		WithTask("test-env-secret-limitation"),
 	)
+	NewExecutorTest(t,
+		WithName("secret vars are masked in summary"),
+		WithExecutorOptions(
+			task.WithDir("testdata/secrets"),
+			task.WithSummary(true),
+		),
+		WithTask("test-secret-masking"),
+	)
+	NewExecutorTest(t,
+		WithName("dynamic secret masked in verbose"),
+		WithExecutorOptions(
+			task.WithDir("testdata/secrets"),
+			task.WithVerbose(true),
+		),
+		WithTask("test-dynamic-secret-verbose"),
+	)
+	NewExecutorTest(t,
+		WithName("secret key order independent"),
+		WithExecutorOptions(
+			task.WithDir("testdata/secrets"),
+		),
+		WithTask("test-secret-key-order"),
+	)
 }
 
 func TestRequires(t *testing.T) {
