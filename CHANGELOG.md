@@ -10,6 +10,8 @@
   by @Legimity).
 - PowerShell completions now work with aliases of the `task` command, not just
   the `task` binary itself (#2852 by @kojiishi).
+- Fixed task and namespace aliases not being completed by the Zsh completion.
+  A `show-aliases` zstyle can turn this off (#2865, #2864 by @vmaerten).
 - Fixed task names containing certain characters (e.g. `\`, `_`, `^`) leaking
   into checksum/timestamp filenames, breaking `sources:`/`generates:`
   up-to-date detection (#2886 by @s3onghyun).
