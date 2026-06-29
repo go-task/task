@@ -14,6 +14,7 @@ import (
 	"github.com/go-task/task/v3"
 	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/experiments"
+	"github.com/go-task/task/v3/internal/complete"
 	"github.com/go-task/task/v3/internal/env"
 	"github.com/go-task/task/v3/internal/sort"
 	"github.com/go-task/task/v3/taskfile/ast"
@@ -177,6 +178,13 @@ func init() {
 		pflag.StringVar(&Cert, "cert", getConfig(config, "REMOTE_CERT", func() *string { return config.Remote.Cert }, ""), "Path to a client certificate for HTTPS connections.")
 		pflag.StringVar(&CertKey, "cert-key", getConfig(config, "REMOTE_CERT_KEY", func() *string { return config.Remote.CertKey }, ""), "Path to a client certificate key for HTTPS connections.")
 	}
+	// In completion mode the user's `--flag` words must reach the engine
+	// untouched. The BoolVar/StringVar calls above already populated
+	// pflag.CommandLine, which is all the engine needs.
+	if complete.IsActive() {
+		return
+	}
+
 	pflag.Parse()
 
 	// Auto-detect color based on environment when not explicitly configured

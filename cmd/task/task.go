@@ -13,6 +13,7 @@ import (
 	"github.com/go-task/task/v3/args"
 	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/experiments"
+	"github.com/go-task/task/v3/internal/complete"
 	"github.com/go-task/task/v3/internal/filepathext"
 	"github.com/go-task/task/v3/internal/flags"
 	"github.com/go-task/task/v3/internal/logger"
@@ -58,6 +59,12 @@ func emitCIErrorAnnotation(err error) {
 }
 
 func run() error {
+	// Dispatched before flag validation: the args after __complete are the
+	// user's command line, not Task's own flags.
+	if complete.IsActive() {
+		return runComplete(os.Args[2:])
+	}
+
 	log := &logger.Logger{
 		Stdout:  os.Stdout,
 		Stderr:  os.Stderr,
