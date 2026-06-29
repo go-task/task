@@ -21,6 +21,9 @@
 - Added the `use_gitignore` setting (global or per-task) to skip files matched
   by your `.gitignore` when fingerprinting `sources`/`generates` and when
   watching (#2773 by @vmaerten).
+- Added support for configuring output flags (`--output`, `--output-group-begin`,
+  `--output-group-end`, `--output-group-error-only`) via the `TASK_OUTPUT*`
+  environment variables (#2873 by @liiight).
 
 ## v3.51.1 - 2026-05-16
 
