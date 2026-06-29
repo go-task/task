@@ -18,6 +18,9 @@
   (#2890, #2894 by @amitmishra11).
 - Added a `secret: true` flag for variables that masks their value in logs,
   `task --summary`, and command output (#2514 by @vmaerten).
+- Added the `use_gitignore` setting (global or per-task) to skip files matched
+  by your `.gitignore` when fingerprinting `sources`/`generates` and when
+  watching (#2773 by @vmaerten).
 
 ## v3.51.1 - 2026-05-16
 
