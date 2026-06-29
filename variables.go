@@ -19,6 +19,16 @@ import (
 	"github.com/go-task/task/v3/taskfile/ast"
 )
 
+// shouldTaskUseGitignore resolves whether gitignore filtering applies to a
+// task: the task-level value takes precedence, falling back to the Taskfile's
+// global use_gitignore when the task does not set it.
+func (e *Executor) shouldTaskUseGitignore(t *ast.Task) bool {
+	if t.UseGitignore != nil {
+		return *t.UseGitignore
+	}
+	return e.Taskfile.UseGitignore != nil && *e.Taskfile.UseGitignore
+}
+
 // CompiledTask returns a copy of a task, but replacing variables in almost all
 // properties using the Go template package.
 func (e *Executor) CompiledTask(call *Call) (*ast.Task, error) {
@@ -43,6 +53,8 @@ func (e *Executor) CompiledTaskForTaskList(call *Call) (*ast.Task, error) {
 
 	cache := &templater.Cache{Vars: vars}
 
+	gitignore := e.shouldTaskUseGitignore(origTask)
+
 	return &ast.Task{
 		Task:                 origTask.Task,
 		Label:                templater.Replace(origTask.Label, cache),
@@ -59,7 +71,7 @@ func (e *Executor) CompiledTaskForTaskList(call *Call) (*ast.Task, error) {
 		Env:                  nil,
 		Dotenv:               origTask.Dotenv,
 		Silent:               deepcopy.Scalar(origTask.Silent),
-		UseGitignore:         deepcopy.Scalar(origTask.UseGitignore),
+		UseGitignore:         &gitignore,
 		Interactive:          origTask.Interactive,
 		Internal:             origTask.Internal,
 		Method:               origTask.Method,
@@ -111,10 +123,7 @@ func (e *Executor) compiledTask(call *Call, evaluateShVars bool) (*ast.Task, err
 		}
 	}
 
-	gitignore := origTask.ShouldUseGitignore()
-	if origTask.UseGitignore == nil {
-		gitignore = e.Taskfile.UseGitignore
-	}
+	gitignore := e.shouldTaskUseGitignore(origTask)
 
 	new := ast.Task{
 		Task:                 origTask.Task,

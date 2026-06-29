@@ -653,53 +653,151 @@ func TestStatusChecksumMissingGenerated(t *testing.T) { // nolint:paralleltest /
 	require.NoError(t, err, "generated.txt should be recreated after third run")
 }
 
-func TestGitignoreChecksum(t *testing.T) { //nolint:paralleltest // cannot run in parallel
+func writeFile(t *testing.T, dir, name, content string) {
+	t.Helper()
+	require.NoError(t, os.WriteFile(filepathext.SmartJoin(dir, name), []byte(content), 0o644))
+}
+
+func gitignoreTestOpts(dir, taskName string) func(string) []ExecutorTestOption {
+	return func(name string) []ExecutorTestOption {
+		return []ExecutorTestOption{
+			WithName(name),
+			WithExecutorOptions(task.WithDir(dir)),
+			WithTask(taskName),
+		}
+	}
+}
+
+func TestGitignoreChecksum(t *testing.T) { //nolint:paralleltest // shares testdata/gitignore and mutates fixture files
 	const dir = "testdata/gitignore"
 
-	// Clean up
-	_ = os.RemoveAll(filepathext.SmartJoin(dir, ".task"))
-	_ = os.Remove(filepathext.SmartJoin(dir, "generated.txt"))
+	cleanup := func() {
+		_ = os.RemoveAll(filepathext.SmartJoin(dir, ".task"))
+		_ = os.Remove(filepathext.SmartJoin(dir, "generated.txt"))
+		_ = os.Remove(filepathext.SmartJoin(dir, "ignored.txt"))
+		writeFile(t, dir, "source.txt", "source content\n")
+	}
+	cleanup()
+	t.Cleanup(cleanup)
+	writeFile(t, dir, "ignored.txt", "ignored\n")
+
+	opts := gitignoreTestOpts(dir, "build")
+	NewExecutorTest(t, opts("first run")...)
+	NewExecutorTest(t, opts("up to date")...)
+	writeFile(t, dir, "ignored.txt", "ignored modified\n")
+	NewExecutorTest(t, opts("ignored file modified")...)
+	writeFile(t, dir, "source.txt", "source modified\n")
+	NewExecutorTest(t, opts("source file modified")...)
+}
+
+// TestGitignoreNegation checks that a `!pattern` in a nested .gitignore
+// re-includes a file excluded by a parent .gitignore.
+func TestGitignoreNegation(t *testing.T) { //nolint:paralleltest // mutates fixture files
+	const dir = "testdata/gitignore_negation"
+
+	cleanup := func() {
+		_ = os.RemoveAll(filepathext.SmartJoin(dir, ".task"))
+		_ = os.Remove(filepathext.SmartJoin(dir, "sub/debug.log"))
+		_ = os.Remove(filepathext.SmartJoin(dir, "sub/other.log"))
+	}
+	cleanup()
+	t.Cleanup(cleanup)
+	writeFile(t, dir, "sub/debug.log", "debug\n")
+	writeFile(t, dir, "sub/other.log", "other\n")
+
+	opts := gitignoreTestOpts(dir, "build")
+	NewExecutorTest(t, opts("first run")...)
+	NewExecutorTest(t, opts("up to date")...)
+	writeFile(t, dir, "sub/other.log", "other modified\n")
+	NewExecutorTest(t, opts("ignored file modified")...)
+	writeFile(t, dir, "sub/debug.log", "debug modified\n")
+	NewExecutorTest(t, opts("reincluded file modified")...)
+}
+
+// TestGitignoreNested checks that a .gitignore in a subdirectory below the task
+// dir is honored when its files are reached by a deep glob.
+func TestGitignoreNested(t *testing.T) { //nolint:paralleltest // mutates fixture files
+	const dir = "testdata/gitignore_nested"
+
+	cleanup := func() {
+		_ = os.RemoveAll(filepathext.SmartJoin(dir, ".task"))
+		_ = os.Remove(filepathext.SmartJoin(dir, "sub/secret.dat"))
+		writeFile(t, dir, "sub/keep.txt", "keep\n")
+	}
+	cleanup()
+	t.Cleanup(cleanup)
+	writeFile(t, dir, "sub/secret.dat", "secret\n")
+
+	opts := gitignoreTestOpts(dir, "build")
+	NewExecutorTest(t, opts("first run")...)
+	NewExecutorTest(t, opts("up to date")...)
+	writeFile(t, dir, "sub/secret.dat", "secret modified\n")
+	NewExecutorTest(t, opts("ignored file modified")...)
+	writeFile(t, dir, "sub/keep.txt", "keep modified\n")
+	NewExecutorTest(t, opts("source file modified")...)
+}
+
+// TestGitignoreIncluded checks that a top-level use_gitignore in an included
+// Taskfile is propagated onto its tasks during merge.
+func TestGitignoreIncluded(t *testing.T) { //nolint:paralleltest // mutates fixture files
+	const dir = "testdata/gitignore_included"
+
+	cleanup := func() {
+		_ = os.RemoveAll(filepathext.SmartJoin(dir, ".task"))
+		_ = os.Remove(filepathext.SmartJoin(dir, "ignored.txt"))
+	}
+	cleanup()
+	t.Cleanup(cleanup)
+	writeFile(t, dir, "ignored.txt", "ignored\n")
+
+	opts := gitignoreTestOpts(dir, "included:build")
+	NewExecutorTest(t, opts("first run")...)
+	NewExecutorTest(t, opts("up to date")...)
+	writeFile(t, dir, "ignored.txt", "ignored modified\n")
+	NewExecutorTest(t, opts("ignored file modified")...)
+}
+
+// TestGitignoreIncludedOverride checks that an explicit use_gitignore: false in
+// an included Taskfile is preserved even when the root Taskfile sets it to true.
+func TestGitignoreIncludedOverride(t *testing.T) { //nolint:paralleltest // mutates fixture files
+	const dir = "testdata/gitignore_included_override"
+
+	cleanup := func() {
+		_ = os.RemoveAll(filepathext.SmartJoin(dir, ".task"))
+		_ = os.Remove(filepathext.SmartJoin(dir, "ignored.txt"))
+	}
+	cleanup()
+	t.Cleanup(cleanup)
+	writeFile(t, dir, "ignored.txt", "ignored\n")
+
+	opts := gitignoreTestOpts(dir, "included:build")
+	NewExecutorTest(t, opts("first run")...)
+	NewExecutorTest(t, opts("up to date")...)
+	writeFile(t, dir, "ignored.txt", "ignored modified\n")
+	NewExecutorTest(t, opts("ignored file modified")...)
+}
+
+func TestGitignoreTaskListFallback(t *testing.T) { //nolint:paralleltest // shares testdata/gitignore with TestGitignoreChecksum
+	const dir = "testdata/gitignore"
 
 	var buff bytes.Buffer
-	tempDir := task.TempDir{
-		Remote:      filepathext.SmartJoin(dir, ".task"),
-		Fingerprint: filepathext.SmartJoin(dir, ".task"),
-	}
 	e := task.NewExecutor(
 		task.WithDir(dir),
 		task.WithStdout(&buff),
 		task.WithStderr(&buff),
-		task.WithTempDir(tempDir),
 	)
 	require.NoError(t, e.Setup())
 
-	// First run - should execute
-	require.NoError(t, e.Run(t.Context(), &task.Call{Task: "build"}))
+	listed, err := e.CompiledTaskForTaskList(&task.Call{Task: "build"})
+	require.NoError(t, err)
+	assert.True(t, listed.ShouldUseGitignore(),
+		"task list should reflect the global use_gitignore fallback")
 
-	// Second run - should be up to date
-	buff.Reset()
-	require.NoError(t, e.Run(t.Context(), &task.Call{Task: "build"}))
-	assert.Equal(t, "task: Task \"build\" is up to date\n", buff.String())
-
-	// Modify the ignored file - should still be up to date
-	require.NoError(t, os.WriteFile(filepathext.SmartJoin(dir, "ignored.txt"), []byte("modified\n"), 0o644))
-	buff.Reset()
-	require.NoError(t, e.Run(t.Context(), &task.Call{Task: "build"}))
-	assert.Equal(t, "task: Task \"build\" is up to date\n", buff.String())
-
-	// Modify the source file - should re-execute
-	require.NoError(t, os.WriteFile(filepathext.SmartJoin(dir, "source.txt"), []byte("modified source\n"), 0o644))
-	buff.Reset()
-	require.NoError(t, e.Run(t.Context(), &task.Call{Task: "build"}))
-	assert.NotEqual(t, "task: Task \"build\" is up to date\n", buff.String())
-
-	// Restore source file
-	require.NoError(t, os.WriteFile(filepathext.SmartJoin(dir, "source.txt"), []byte("source content\n"), 0o644))
-	require.NoError(t, os.WriteFile(filepathext.SmartJoin(dir, "ignored.txt"), []byte("ignored content\n"), 0o644))
-
-	// Clean up
-	_ = os.RemoveAll(filepathext.SmartJoin(dir, ".task"))
-	_ = os.Remove(filepathext.SmartJoin(dir, "generated.txt"))
+	// "build-no-use_gitignore" explicitly disables it.
+	listedOff, err := e.CompiledTaskForTaskList(&task.Call{Task: "build-no-use_gitignore"})
+	require.NoError(t, err)
+	assert.False(t, listedOff.ShouldUseGitignore(),
+		"explicit use_gitignore: false must be preserved in the list path")
 }
 
 func TestStatusVariables(t *testing.T) {

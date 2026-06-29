@@ -34,7 +34,7 @@ type Taskfile struct {
 	Dotenv       []string
 	Run          string
 	Interval     time.Duration
-	UseGitignore bool `yaml:"use_gitignore"`
+	UseGitignore *bool `yaml:"use_gitignore"`
 }
 
 // Merge merges the second Taskfile into the first
@@ -68,6 +68,14 @@ func (t1 *Taskfile) Merge(t2 *Taskfile, include *Include) error {
 			}
 		}
 	}
+	if t2.UseGitignore != nil {
+		for _, t := range t2.Tasks.All(nil) {
+			if t.UseGitignore == nil {
+				v := *t2.UseGitignore
+				t.UseGitignore = &v
+			}
+		}
+	}
 	t1.Vars.Merge(t2.Vars, include)
 	t1.Env.Merge(t2.Env, include)
 	return t1.Tasks.Merge(t2.Tasks, include, t1.Vars)
@@ -90,7 +98,7 @@ func (tf *Taskfile) UnmarshalYAML(node *yaml.Node) error {
 			Dotenv       []string
 			Run          string
 			Interval     time.Duration
-			UseGitignore bool `yaml:"use_gitignore"`
+			UseGitignore *bool `yaml:"use_gitignore"`
 		}
 		if err := node.Decode(&taskfile); err != nil {
 			return errors.NewTaskfileDecodeError(err, node)

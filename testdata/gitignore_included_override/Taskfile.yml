@@ -1,0 +1,11 @@
+version: '3'
+
+use_gitignore: true
+
+includes:
+  included: ./included/Taskfile.yml
+
+tasks:
+  default:
+    cmds:
+      - echo "root"
