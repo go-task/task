@@ -13,13 +13,18 @@ type (
 	}
 	// Task describes a single task
 	Task struct {
-		Name     string    `json:"name"`
-		Task     string    `json:"task"`
-		Desc     string    `json:"desc"`
-		Summary  string    `json:"summary"`
-		Aliases  []string  `json:"aliases"`
-		UpToDate *bool     `json:"up_to_date,omitempty"`
-		Location *Location `json:"location"`
+		Name     string        `json:"name"`
+		Task     string        `json:"task"`
+		Desc     string        `json:"desc"`
+		Summary  string        `json:"summary"`
+		Aliases  []string      `json:"aliases"`
+		UpToDate *bool         `json:"up_to_date,omitempty"`
+		Location *Location     `json:"location"`
+		Requires []RequiredVar `json:"requires,omitempty"`
+	}
+	RequiredVar struct {
+		Name string   `json:"name"`
+		Enum []string `json:"enum,omitempty"`
 	}
 	// Location describes a task's location in a taskfile
 	Location struct {
@@ -45,7 +50,26 @@ func NewTask(task *ast.Task) Task {
 			Column:   task.Location.Column,
 			Taskfile: task.Location.Taskfile,
 		},
+		Requires: newRequiredVars(task.Requires),
 	}
+}
+
+func newRequiredVars(requires *ast.Requires) []RequiredVar {
+	if requires == nil || len(requires.Vars) == 0 {
+		return nil
+	}
+	out := make([]RequiredVar, 0, len(requires.Vars))
+	for _, v := range requires.Vars {
+		if v == nil {
+			continue
+		}
+		rv := RequiredVar{Name: v.Name}
+		if v.Enum != nil && len(v.Enum.Value) > 0 {
+			rv.Enum = append([]string{}, v.Enum.Value...)
+		}
+		out = append(out, rv)
+	}
+	return out
 }
 
 func (parent *Namespace) AddNamespace(namespacePath []string, task Task) {
