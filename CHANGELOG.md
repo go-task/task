@@ -16,6 +16,8 @@
 - Fixed `for: matrix:` loops using `ref:` rows producing wrong values when the
   same task was run concurrently (e.g. by parallel `deps`) with different vars
   (#2890, #2894 by @amitmishra11).
+- Added a `secret: true` flag for variables that masks their value in logs,
+  `task --summary`, and command output (#2514 by @vmaerten).
 
 ## v3.51.1 - 2026-05-16
 
