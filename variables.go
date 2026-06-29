@@ -19,6 +19,16 @@ import (
 	"github.com/go-task/task/v3/taskfile/ast"
 )
 
+// shouldTaskUseGitignore resolves whether gitignore filtering applies to a
+// task: the task-level value takes precedence, falling back to the Taskfile's
+// global use_gitignore when the task does not set it.
+func (e *Executor) shouldTaskUseGitignore(t *ast.Task) bool {
+	if t.UseGitignore != nil {
+		return *t.UseGitignore
+	}
+	return e.Taskfile.UseGitignore != nil && *e.Taskfile.UseGitignore
+}
+
 // CompiledTask returns a copy of a task, but replacing variables in almost all
 // properties using the Go template package.
 func (e *Executor) CompiledTask(call *Call) (*ast.Task, error) {
@@ -43,6 +53,8 @@ func (e *Executor) CompiledTaskForTaskList(call *Call) (*ast.Task, error) {
 
 	cache := &templater.Cache{Vars: vars}
 
+	gitignore := e.shouldTaskUseGitignore(origTask)
+
 	return &ast.Task{
 		Task:                 origTask.Task,
 		Label:                templater.Replace(origTask.Label, cache),
@@ -59,6 +71,7 @@ func (e *Executor) CompiledTaskForTaskList(call *Call) (*ast.Task, error) {
 		Env:                  nil,
 		Dotenv:               origTask.Dotenv,
 		Silent:               deepcopy.Scalar(origTask.Silent),
+		UseGitignore:         &gitignore,
 		Interactive:          origTask.Interactive,
 		Internal:             origTask.Internal,
 		Method:               origTask.Method,
@@ -110,6 +123,8 @@ func (e *Executor) compiledTask(call *Call, evaluateShVars bool) (*ast.Task, err
 		}
 	}
 
+	gitignore := e.shouldTaskUseGitignore(origTask)
+
 	new := ast.Task{
 		Task:                 origTask.Task,
 		Label:                templater.Replace(origTask.Label, cache),
@@ -126,6 +141,7 @@ func (e *Executor) compiledTask(call *Call, evaluateShVars bool) (*ast.Task, err
 		Env:                  nil,
 		Dotenv:               templater.Replace(origTask.Dotenv, cache),
 		Silent:               deepcopy.Scalar(origTask.Silent),
+		UseGitignore:         &gitignore,
 		Interactive:          origTask.Interactive,
 		Internal:             origTask.Internal,
 		Method:               templater.Replace(origTask.Method, cache),
@@ -219,7 +235,7 @@ func (e *Executor) compiledTask(call *Call, evaluateShVars bool) (*ast.Task, err
 				continue
 			}
 			if cmd.For != nil {
-				list, keys, err := itemsFromFor(cmd.For, new.Dir, new.Sources, new.Generates, vars, origTask.Location, cache)
+				list, keys, err := itemsFromFor(cmd.For, new.Dir, new.Sources, new.Generates, gitignore, vars, origTask.Location, cache)
 				if err != nil {
 					return nil, err
 				}
@@ -272,7 +288,7 @@ func (e *Executor) compiledTask(call *Call, evaluateShVars bool) (*ast.Task, err
 				continue
 			}
 			if dep.For != nil {
-				list, keys, err := itemsFromFor(dep.For, new.Dir, new.Sources, new.Generates, vars, origTask.Location, cache)
+				list, keys, err := itemsFromFor(dep.For, new.Dir, new.Sources, new.Generates, gitignore, vars, origTask.Location, cache)
 				if err != nil {
 					return nil, err
 				}
@@ -343,6 +359,7 @@ func itemsFromFor(
 	dir string,
 	sources []*ast.Glob,
 	generates []*ast.Glob,
+	gitignore bool,
 	vars *ast.Vars,
 	location *ast.Location,
 	cache *templater.Cache,
@@ -366,7 +383,7 @@ func itemsFromFor(
 	}
 	// Get the list from the task sources
 	if f.From == "sources" {
-		glist, err := fingerprint.Globs(dir, sources)
+		glist, err := fingerprint.Globs(dir, sources, gitignore)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -380,7 +397,7 @@ func itemsFromFor(
 	}
 	// Get the list from the task generates
 	if f.From == "generates" {
-		glist, err := fingerprint.Globs(dir, generates)
+		glist, err := fingerprint.Globs(dir, generates, gitignore)
 		if err != nil {
 			return nil, nil, err
 		}
