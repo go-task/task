@@ -10,11 +10,11 @@
   by @Legimity).
 - PowerShell completions now work with aliases of the `task` command, not just
   the `task` binary itself (#2852 by @kojiishi).
-- Fixed task and namespace aliases not being completed by the Zsh completion.
-  A `show-aliases` zstyle can turn this off (#2865, #2864 by @vmaerten).
+- Fixed task and namespace aliases not being completed by the Zsh completion. A
+  `show-aliases` zstyle can turn this off (#2865, #2864 by @vmaerten).
 - Fixed task names containing certain characters (e.g. `\`, `_`, `^`) leaking
-  into checksum/timestamp filenames, breaking `sources:`/`generates:`
-  up-to-date detection (#2886 by @s3onghyun).
+  into checksum/timestamp filenames, breaking `sources:`/`generates:` up-to-date
+  detection (#2886 by @s3onghyun).
 - Fixed `for: matrix:` loops using `ref:` rows producing wrong values when the
   same task was run concurrently (e.g. by parallel `deps`) with different vars
   (#2890, #2894 by @amitmishra11).
@@ -23,13 +23,15 @@
 - Added the `use_gitignore` setting (global or per-task) to skip files matched
   by your `.gitignore` when fingerprinting `sources`/`generates` and when
   watching (#2773 by @vmaerten).
-- Added support for configuring output flags (`--output`, `--output-group-begin`,
-  `--output-group-end`, `--output-group-error-only`) via the `TASK_OUTPUT*`
-  environment variables (#2873 by @liiight).
+- Added support for configuring output flags (`--output`,
+  `--output-group-begin`, `--output-group-end`, `--output-group-error-only`) via
+  the `TASK_OUTPUT*` environment variables (#2873 by @liiight).
 - Added a `--temp-dir` flag (with `TASK_TEMP_DIR` env var and `temp-dir` taskrc
   config) to customise the directory where Task stores temporary files such as
   checksums. Relative paths are resolved against the root Taskfile (#2891 by
   @kjasn).
+- Defined environment variable behavior for remote taskfiles (#2267, #2847 by
+  @vmaerten).
 
 ## v3.51.1 - 2026-05-16
 
