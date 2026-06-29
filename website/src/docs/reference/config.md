@@ -166,6 +166,18 @@ failfast: true
 interactive: true
 ```
 
+### `temp-dir`
+
+- **Type**: `string`
+- **Default**: `./.task`
+- **Description**: Directory to store Task temporary files, such as checksums
+  and temporary metadata. Relative paths are relative to the root Taskfile.
+- **Environment variable**: [`TASK_TEMP_DIR`](./environment.md#task-temp-dir)
+
+```yaml
+temp-dir: .task
+```
+
 ## Example Configuration
 
 Here's a complete example of a `.taskrc.yml` file with all available options:
@@ -177,6 +189,7 @@ silent: false
 color: true
 disable-fuzzy: false
 concurrency: 2
+temp-dir: .task
 
 # Enable experimental features
 experiments:

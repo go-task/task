@@ -653,6 +653,164 @@ func TestStatusChecksumMissingGenerated(t *testing.T) { // nolint:paralleltest /
 	require.NoError(t, err, "generated.txt should be recreated after third run")
 }
 
+func writeFile(t *testing.T, dir, name, content string) {
+	t.Helper()
+	require.NoError(t, os.WriteFile(filepathext.SmartJoin(dir, name), []byte(content), 0o644))
+}
+
+// gitignoreStep writes a set of files then runs the task once, capturing its
+// output as a golden fixture named run.
+type gitignoreStep struct {
+	write map[string]string
+	run   string
+}
+
+// gitignoreSeq drives a checksum task through a sequence of runs against a
+// fixture dir. create seeds runtime files (removed on cleanup); restore resets
+// tracked files to their committed content on cleanup; artifacts are
+// task-produced files to delete on cleanup.
+type gitignoreSeq struct {
+	dir       string
+	task      string
+	create    map[string]string
+	restore   map[string]string
+	artifacts []string
+	steps     []gitignoreStep
+}
+
+func (s gitignoreSeq) run(t *testing.T) {
+	t.Helper()
+	cleanup := func() {
+		_ = os.RemoveAll(filepathext.SmartJoin(s.dir, ".task"))
+		for name := range s.create {
+			_ = os.Remove(filepathext.SmartJoin(s.dir, name))
+		}
+		for _, name := range s.artifacts {
+			_ = os.Remove(filepathext.SmartJoin(s.dir, name))
+		}
+		for name, content := range s.restore {
+			writeFile(t, s.dir, name, content)
+		}
+	}
+	cleanup()
+	t.Cleanup(cleanup)
+	for name, content := range s.create {
+		writeFile(t, s.dir, name, content)
+	}
+	for _, step := range s.steps {
+		for name, content := range step.write {
+			writeFile(t, s.dir, name, content)
+		}
+		NewExecutorTest(t,
+			WithName(step.run),
+			WithExecutorOptions(task.WithDir(s.dir)),
+			WithTask(s.task),
+		)
+	}
+}
+
+func TestGitignoreChecksum(t *testing.T) { //nolint:paralleltest // shares testdata/gitignore and mutates fixture files
+	gitignoreSeq{
+		dir:       "testdata/gitignore",
+		task:      "build",
+		create:    map[string]string{"ignored.txt": "ignored\n"},
+		restore:   map[string]string{"source.txt": "source content\n"},
+		artifacts: []string{"generated.txt"},
+		steps: []gitignoreStep{
+			{run: "first run"},
+			{run: "up to date"},
+			{run: "ignored file modified", write: map[string]string{"ignored.txt": "ignored modified\n"}},
+			{run: "source file modified", write: map[string]string{"source.txt": "source modified\n"}},
+		},
+	}.run(t)
+}
+
+// TestGitignoreNegation checks that a `!pattern` in a nested .gitignore
+// re-includes a file excluded by a parent .gitignore.
+func TestGitignoreNegation(t *testing.T) { //nolint:paralleltest // mutates fixture files
+	gitignoreSeq{
+		dir:    "testdata/gitignore_negation",
+		task:   "build",
+		create: map[string]string{"sub/debug.log": "debug\n", "sub/other.log": "other\n"},
+		steps: []gitignoreStep{
+			{run: "first run"},
+			{run: "up to date"},
+			{run: "ignored file modified", write: map[string]string{"sub/other.log": "other modified\n"}},
+			{run: "reincluded file modified", write: map[string]string{"sub/debug.log": "debug modified\n"}},
+		},
+	}.run(t)
+}
+
+// TestGitignoreNested checks that a .gitignore in a subdirectory below the task
+// dir is honored when its files are reached by a deep glob.
+func TestGitignoreNested(t *testing.T) { //nolint:paralleltest // mutates fixture files
+	gitignoreSeq{
+		dir:     "testdata/gitignore_nested",
+		task:    "build",
+		create:  map[string]string{"sub/secret.dat": "secret\n"},
+		restore: map[string]string{"sub/keep.txt": "keep\n"},
+		steps: []gitignoreStep{
+			{run: "first run"},
+			{run: "up to date"},
+			{run: "ignored file modified", write: map[string]string{"sub/secret.dat": "secret modified\n"}},
+			{run: "source file modified", write: map[string]string{"sub/keep.txt": "keep modified\n"}},
+		},
+	}.run(t)
+}
+
+// TestGitignoreIncluded checks that a top-level use_gitignore in an included
+// Taskfile is propagated onto its tasks during merge.
+func TestGitignoreIncluded(t *testing.T) { //nolint:paralleltest // mutates fixture files
+	gitignoreSeq{
+		dir:    "testdata/gitignore_included",
+		task:   "included:build",
+		create: map[string]string{"ignored.txt": "ignored\n"},
+		steps: []gitignoreStep{
+			{run: "first run"},
+			{run: "up to date"},
+			{run: "ignored file modified", write: map[string]string{"ignored.txt": "ignored modified\n"}},
+		},
+	}.run(t)
+}
+
+// TestGitignoreIncludedOverride checks that an explicit use_gitignore: false in
+// an included Taskfile is preserved even when the root Taskfile sets it to true.
+func TestGitignoreIncludedOverride(t *testing.T) { //nolint:paralleltest // mutates fixture files
+	gitignoreSeq{
+		dir:    "testdata/gitignore_included_override",
+		task:   "included:build",
+		create: map[string]string{"ignored.txt": "ignored\n"},
+		steps: []gitignoreStep{
+			{run: "first run"},
+			{run: "up to date"},
+			{run: "ignored file modified", write: map[string]string{"ignored.txt": "ignored modified\n"}},
+		},
+	}.run(t)
+}
+
+func TestGitignoreTaskListFallback(t *testing.T) { //nolint:paralleltest // shares testdata/gitignore with TestGitignoreChecksum
+	const dir = "testdata/gitignore"
+
+	var buff bytes.Buffer
+	e := task.NewExecutor(
+		task.WithDir(dir),
+		task.WithStdout(&buff),
+		task.WithStderr(&buff),
+	)
+	require.NoError(t, e.Setup())
+
+	listed, err := e.CompiledTaskForTaskList(&task.Call{Task: "build"})
+	require.NoError(t, err)
+	assert.True(t, listed.ShouldUseGitignore(),
+		"task list should reflect the global use_gitignore fallback")
+
+	// "build-no-use_gitignore" explicitly disables it.
+	listedOff, err := e.CompiledTaskForTaskList(&task.Call{Task: "build-no-use_gitignore"})
+	require.NoError(t, err)
+	assert.False(t, listedOff.ShouldUseGitignore(),
+		"explicit use_gitignore: false must be preserved in the list path")
+}
+
 func TestStatusVariables(t *testing.T) {
 	t.Parallel()
 
