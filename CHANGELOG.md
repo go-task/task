@@ -52,6 +52,9 @@
 - Fixed malformed `includes:` entries (missing `taskfile`/`dir`) reporting a
   misleading "include cycle detected" error instead of a clear configuration
   error (#1881, #2892 by @Lewin671).
+- Unified Bash, Fish, Zsh and PowerShell completions behind a single `task
+  __complete` engine, so every shell offers the same suggestions: task names,
+  aliases, flags, flag values and per-task CLI variables (#2897 by @vmaerten).
 
 ## v3.51.1 - 2026-05-16
 
