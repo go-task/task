@@ -34,7 +34,7 @@ type Taskfile struct {
 	Dotenv       []string
 	Run          string
 	Interval     time.Duration
-	UseGitignore *bool `yaml:"use_gitignore"`
+	UseGitignore *bool
 }
 
 // Merge merges the second Taskfile into the first
