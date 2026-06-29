@@ -68,7 +68,7 @@ function __task_list() {
             local desc="${item##[^[:space:]]##[[:space:]]##}"
             scripts+=( "${task//:/\\:}:$desc" )
             for task_alias in $task_aliases; do
-                scripts+=( "${task_alias//:/\\:}:$desc" )
+                scripts+=( "${task_alias//:/\\:}:$desc (alias of $task)" )
             done
         else
             scripts+=( "$task" )
