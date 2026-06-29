@@ -1,60 +1,69 @@
 # vim: set tabstop=2 shiftwidth=2 expandtab:
+#
+# Thin wrapper around `task __complete`. All suggestion logic lives in the
+# Go engine — do not add completion logic here.
 
-_GO_TASK_COMPLETION_LIST_OPTION='--list-all'
 TASK_CMD="${TASK_EXE:-task}"
 
-function _task()
-{
+_task() {
   local cur prev words cword
   _init_completion -n : || return
 
-  # Check for `--` within command-line and quit or strip suffix.
-  local i
-  for i in "${!words[@]}"; do
-    if [ "${words[$i]}" == "--" ]; then
-      # Do not complete words following `--` passed to CLI_ARGS.
-      [ $cword -gt $i ] && return
-      # Remove the words following `--` to not put --list in CLI_ARGS.
-      words=( "${words[@]:0:$i}" )
-      break
-    fi
+  local -a args=()
+  if (( cword > 0 )); then
+    args=( "${words[@]:1:cword}" )
+  fi
+  if (( ${#args[@]} == 0 )); then
+    args=( "" )
+  fi
+
+  local output
+  output=$("$TASK_CMD" __complete "${args[@]}" 2>/dev/null)
+  if [[ -z "$output" ]]; then
+    _filedir
+    return
+  fi
+
+  local -a lines=()
+  local line
+  while IFS= read -r line; do
+    lines+=( "$line" )
+  done <<< "$output"
+
+  local last_idx=$(( ${#lines[@]} - 1 ))
+  local directive="${lines[$last_idx]#:}"
+  unset 'lines[$last_idx]'
+
+  if (( directive & 8 )); then
+    local exts=""
+    for line in "${lines[@]}"; do
+      exts+="${exts:+|}$line"
+    done
+    _filedir "@($exts)"
+    return
+  fi
+
+  if (( directive & 16 )); then
+    _filedir -d
+    return
+  fi
+
+  local -a values=()
+  for line in "${lines[@]}"; do
+    values+=( "${line%%$'\t'*}" )
   done
 
-  # Handle special arguments of options.
-  case "$prev" in
-    -d|--dir|--remote-cache-dir)
-      _filedir -d
-      return $?
-    ;;
-    --cacert|--cert|--cert-key)
-      _filedir
-      return $?
-    ;;
-    -t|--taskfile)
-      _filedir yaml || return $?
-      _filedir yml
-      return $?
-    ;;
-    -o|--output)
-      COMPREPLY=( $( compgen -W "interleaved group prefixed" -- $cur ) )
-      return 0
-    ;;
-  esac
+  COMPREPLY=( $( compgen -W "${values[*]}" -- "$cur" ) )
 
-  # Handle normal options.
-  case "$cur" in
-    -*)
-      COMPREPLY=( $( compgen -W "$(_parse_help $1)" -- $cur ) )
-      return 0
-    ;;
-  esac
+  if (( directive & 2 )); then
+    compopt -o nospace 2>/dev/null
+  fi
 
-  # Prepare task name completions.
-  local tasks=( $( "${words[@]}" --silent $_GO_TASK_COMPLETION_LIST_OPTION 2> /dev/null ) )
-  COMPREPLY=( $( compgen -W "${tasks[*]}" -- "$cur" ) )
-
-  # Post-process because task names might contain colons.
   __ltrim_colon_completions "$cur"
+
+  if (( ${#COMPREPLY[@]} == 0 )) && ! (( directive & 4 )); then
+    _filedir
+  fi
 }
 
 complete -F _task "$TASK_CMD"

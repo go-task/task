@@ -30,6 +30,9 @@
   config) to customise the directory where Task stores temporary files such as
   checksums. Relative paths are resolved against the root Taskfile (#2891 by
   @kjasn).
+- Unified Bash, Fish, Zsh and PowerShell completions behind a single `task
+  __complete` engine, so every shell offers the same suggestions: task names,
+  aliases, flags, flag values and per-task CLI variables (#2897 by @vmaerten).
 
 ## v3.51.1 - 2026-05-16
 
