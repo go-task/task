@@ -24,6 +24,10 @@
 - Added support for configuring output flags (`--output`, `--output-group-begin`,
   `--output-group-end`, `--output-group-error-only`) via the `TASK_OUTPUT*`
   environment variables (#2873 by @liiight).
+- Added a `--temp-dir` flag (with `TASK_TEMP_DIR` env var and `temp-dir` taskrc
+  config) to customise the directory where Task stores temporary files such as
+  checksums. Relative paths are resolved against the root Taskfile (#2891 by
+  @kjasn).
 
 ## v3.51.1 - 2026-05-16
 
