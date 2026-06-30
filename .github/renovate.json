@@ -6,14 +6,15 @@
     "schedule:weekly",
     ":semanticCommitTypeAll(chore)"
   ],
-  "mode": "full",
   "addLabels":["area: dependencies"],
+  "osvVulnerabilityAlerts": true,
+  "postUpdateOptions": ["gomodTidy"],
   "customManagers": [
     {
       "customType": "regex",
-      "fileMatch": ["^\\.github/workflows/.*\\.ya?ml$"],
+      "managerFilePatterns": ["/^\\.github/workflows/.*\\.ya?ml$/"],
       "matchStrings": [
-        "uses:\\s*golangci/golangci-lint-action@\\S+\\s+with:\\s+version:\\s*(?<currentValue>v[\\d.]+)"
+        "uses:\\s*golangci/golangci-lint-action@\\S+(?:\\s*#[^\\n]*)?\\s+with:\\s+version:\\s*(?<currentValue>v[\\d.]+)"
       ],
       "datasourceTemplate": "github-releases",
       "depNameTemplate": "golangci/golangci-lint"
