@@ -566,7 +566,7 @@ tasks:
 ```
 
 In pipeline form, `join` receives the list from the left-hand side. The
-equivalent non-pipeline form is `{{join " " .WORDS}}`.
+equivalent non-pipeline form is <span v-pre>`{{join " " .WORDS}}`</span>.
 
 #### Shell Argument Parsing
 
