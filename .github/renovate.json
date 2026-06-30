@@ -22,6 +22,11 @@
   ],
   "packageRules": [
     {
+      "matchManagers": ["gomod"],
+      "matchDepTypes": ["indirect"],
+      "enabled": true
+    },
+    {
       "matchUpdateTypes": ["digest", "pinDigest"],
       "groupName": "all non-major dependencies",
       "groupSlug": "all-minor-patch"
