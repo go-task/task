@@ -31,7 +31,7 @@ require (
 	golang.org/x/sync v0.21.0
 	golang.org/x/term v0.44.0
 	mvdan.cc/sh/moreinterp v0.0.0-20260120230322-19def062a997
-	mvdan.cc/sh/v3 v3.13.2-0.20260510185049-f5c6e2779117
+	mvdan.cc/sh/v3 v3.13.2-0.20260613075524-2255122b577b
 )
 
 require (
