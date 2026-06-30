@@ -22,6 +22,16 @@
   ],
   "packageRules": [
     {
+      "matchManagers": ["gomod"],
+      "matchDepTypes": ["indirect"],
+      "enabled": true
+    },
+    {
+      "matchUpdateTypes": ["digest", "pinDigest"],
+      "groupName": "all non-major dependencies",
+      "groupSlug": "all-minor-patch"
+    },
+    {
       "matchManagers": ["github-actions"],
       "addLabels": ["area: github actions"]
     },
