@@ -8,8 +8,6 @@ import (
 
 	giturls "github.com/chainguard-dev/git-urls"
 
-	"github.com/go-task/task/v3/errors"
-	"github.com/go-task/task/v3/experiments"
 	"github.com/go-task/task/v3/internal/fsext"
 )
 
@@ -66,9 +64,6 @@ func NewNode(
 		node, err = NewHTTPNode(entrypoint, dir, insecure, opts...)
 	default:
 		node, err = NewFileNode(entrypoint, dir, opts...)
-	}
-	if _, isRemote := node.(RemoteNode); isRemote && !experiments.RemoteTaskfiles.Enabled() {
-		return nil, errors.New("task: Remote taskfiles are not enabled. You can read more about this experiment and how to enable it at https://taskfile.dev/experiments/remote-taskfiles")
 	}
 
 	return node, err
