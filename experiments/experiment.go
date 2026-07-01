@@ -38,13 +38,13 @@ func New(xName string, config *ast.TaskRC, allowedValues ...int) Experiment {
 	return x
 }
 
-// NewStable creates a new experiment that is stable and no longer needs to be
-// enabled. It will always be inactive and cannot be enabled.
-func NewStable(xName string, config *ast.TaskRC) Experiment {
+// NewReleased creates a new experiment that is released and no longer needs to
+// be enabled. It will always be inactive and cannot be enabled.
+func NewReleased(xName string, config *ast.TaskRC) Experiment {
 	x := Experiment{
 		Name:           xName,
 		Value:          getValue(xName, config),
-		InactiveReason: "is stable and no longer needs to be enabled",
+		InactiveReason: "is released and no longer needs to be enabled",
 	}
 	xList = append(xList, x)
 	return x
