@@ -1,0 +1,18 @@
+version: '3'
+
+vars:
+  DOTENV:
+    sh: mktemp
+
+tasks:
+  write-env:
+    cmds:
+      - echo "BAR=var-sh-bar" > {{.DOTENV}}
+
+  dotenv-var-sh:
+    dotenv:
+      - '{{.DOTENV}}'
+    deps:
+      - task: write-env
+    cmds:
+      - echo "$BAR" > dotenv-var-sh.txt
