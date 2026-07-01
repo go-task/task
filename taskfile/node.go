@@ -2,6 +2,7 @@ package taskfile
 
 import (
 	"context"
+	"slices"
 	"strings"
 	"time"
 
@@ -89,7 +90,10 @@ func getScheme(uri string) (string, error) {
 		return "", err
 	}
 
-	if strings.HasSuffix(strings.Split(u.Path, "//")[0], ".git") && (u.Scheme == "git" || u.Scheme == "ssh" || u.Scheme == "https" || u.Scheme == "http") {
+	isDotGit := strings.HasSuffix(strings.Split(u.Path, "//")[0], ".git")
+	isUnderscoreGit := strings.Contains(strings.Split(u.Path, "//")[0], "/_git/")
+	schemeIsGitCompatible := slices.Contains([]string{"git", "ssh", "https", "http"}, u.Scheme)
+	if (isDotGit || isUnderscoreGit) && schemeIsGitCompatible {
 		return "git", nil
 	}
 
