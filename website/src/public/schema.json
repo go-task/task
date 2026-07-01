@@ -352,6 +352,10 @@
         "if": {
           "description": "A shell command to evaluate. If the exit code is non-zero, the command is skipped.",
           "type": "string"
+        },
+        "timeout": {
+          "description": "Maximum duration the command is allowed to run before being terminated. Supports Go duration syntax (e.g., '5m', '30s', '1h').",
+          "type": "string"
         }
       },
       "additionalProperties": false,
@@ -392,6 +396,10 @@
         },
         "if": {
           "description": "A shell command to evaluate. If the exit code is non-zero, the command is skipped.",
+          "type": "string"
+        },
+        "timeout": {
+          "description": "Maximum duration the command is allowed to run before being terminated. Supports Go duration syntax (e.g., '5m', '30s', '1h').",
           "type": "string"
         }
       },
@@ -445,6 +453,10 @@
         "platforms": {
           "description": "Specifies which platforms the command should be run on.",
           "$ref": "#/definitions/platforms"
+        },
+        "timeout": {
+          "description": "Maximum duration the command is allowed to run before being terminated. Supports Go duration syntax (e.g., '5m', '30s', '1h').",
+          "type": "string"
         }
       },
       "additionalProperties": false,
@@ -474,6 +486,10 @@
         },
         "if": {
           "description": "A shell command to evaluate. If the exit code is non-zero, the command is skipped.",
+          "type": "string"
+        },
+        "timeout": {
+          "description": "Maximum duration the command is allowed to run before being terminated. Supports Go duration syntax (e.g., '5m', '30s', '1h').",
           "type": "string"
         }
       },
