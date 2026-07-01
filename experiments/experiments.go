@@ -43,9 +43,9 @@ func ParseWithConfig(dir string, config *ast.TaskRC) {
 	GentleForce = New("GENTLE_FORCE", config, 1)
 	EnvPrecedence = New("ENV_PRECEDENCE", config, 1)
 	// Inactive experiments
-	AnyVariables = NewStable("ANY_VARIABLES", config)
-	MapVariables = NewStable("MAP_VARIABLES", config)
-	RemoteTaskfiles = NewStable("REMOTE_TASKFILES", config)
+	AnyVariables = NewReleased("ANY_VARIABLES", config)
+	MapVariables = NewReleased("MAP_VARIABLES", config)
+	RemoteTaskfiles = NewReleased("REMOTE_TASKFILES", config)
 }
 
 // Validate checks if any experiments have been enabled while being inactive.
