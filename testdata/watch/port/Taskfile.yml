@@ -1,0 +1,25 @@
+version: '3'
+
+vars:
+  PORT: 8042
+
+tasks:
+  server:
+    run: always
+    sources: 
+      - 'foo.txt'
+    cmds:
+      - echo "server started"
+      - socat TCP-LISTEN:{{.PORT}},fork,reuseaddr - || [ $? -eq 130 ]
+      - defer: kill $(lsof -t -i:{{.PORT}}) && while lsof -i :{{.PORT}} > /dev/null; do sleep 1; done
+
+  client:
+    cmds:
+      - until lsof -Pi :{{.PORT}} -sTCP:LISTEN | tail -n +2; do sleep 0.5; done
+      - echo "sending message"
+      - echo "Hello world" | socat - TCP:localhost:{{.PORT}}
+      
+  default:
+    deps:
+      - server
+      - client 
