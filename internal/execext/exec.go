@@ -143,7 +143,7 @@ func ExpandFields(s string) ([]string, error) {
 }
 
 func execHandlers() (handlers []func(next interp.ExecHandlerFunc) interp.ExecHandlerFunc) {
-	if useGoCoreUtils {
+	if UseGoCoreUtils {
 		handlers = append(handlers, coreutils.ExecHandler)
 	}
 	return handlers
