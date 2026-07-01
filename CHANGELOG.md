@@ -37,6 +37,9 @@
 - Re-added the example remote taskfile at
   [taskfile.dev/Taskfile.yml](https://taskfile.dev/Taskfile.yml) (#2905 by
   @pd93).
+- Fixed malformed `includes:` entries (missing `taskfile`/`dir`) reporting a
+  misleading "include cycle detected" error instead of a clear configuration
+  error (#1881, #2892 by @Lewin671).
 
 ## v3.51.1 - 2026-05-16
 
