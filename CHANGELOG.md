@@ -32,6 +32,8 @@
   @kjasn).
 - Defined environment variable behavior for remote taskfiles (#2267, #2847 by
   @vmaerten).
+- Added support for remote Taskfiles hosted on Azure DevOps, whose git URLs use
+  a `/_git/` path segment rather than a `.git` suffix (#2904 by @pd93).
 
 ## v3.51.1 - 2026-05-16
 
