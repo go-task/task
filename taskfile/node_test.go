@@ -21,4 +21,7 @@ func TestScheme(t *testing.T) {
 	scheme, err = getScheme("https://github.com/foo/common.yml")
 	assert.NoError(t, err)
 	assert.Equal(t, "https", scheme)
+	scheme, err = getScheme("https://some-azure-host.com/org/project/_git/repo")
+	assert.NoError(t, err)
+	assert.Equal(t, "git", scheme)
 }
