@@ -955,7 +955,8 @@ You can use `--force` or `-f` if you want to force a task to run even when
 up-to-date.
 
 Also, `task --status [tasks]...` will exit with a non-zero
-[exit code](/docs/reference/cli#exit-codes) if any of the tasks are not up-to-date.
+[exit code](/docs/reference/cli#exit-codes) if any of the tasks are not
+up-to-date.
 
 `status` can be combined with the
 [fingerprinting](#by-fingerprinting-locally-generated-files-and-their-sources)
@@ -1039,8 +1040,8 @@ tasks:
 
 The `if` attribute allows you to conditionally skip tasks or commands based on a
 shell command's exit code. Unlike `preconditions` which fail and stop execution,
-`if` simply skips the task or command when the condition is not met and continues
-with the rest of the Taskfile.
+`if` simply skips the task or command when the condition is not met and
+continues with the rest of the Taskfile.
 
 #### Task-level `if`
 
@@ -1076,9 +1077,9 @@ tasks:
 
 #### Using templates in `if` conditions
 
-You can use Go template expressions in `if` conditions. Template expressions like
-<span v-pre>`{{eq .VAR "value"}}`</span> evaluate to `true` or `false`, which are valid shell
-commands (`true` exits with 0, `false` exits with 1):
+You can use Go template expressions in `if` conditions. Template expressions
+like <span v-pre>`{{eq .VAR "value"}}`</span> evaluate to `true` or `false`,
+which are valid shell commands (`true` exits with 0, `false` exits with 1):
 
 ```yaml
 version: '3'
@@ -1086,7 +1087,7 @@ version: '3'
 tasks:
   conditional:
     vars:
-      ENABLE_FEATURE: "true"
+      ENABLE_FEATURE: 'true'
     cmds:
       - cmd: echo "Feature is enabled"
         if: '{{eq .ENABLE_FEATURE "true"}}'
@@ -1096,7 +1097,8 @@ tasks:
 
 #### Using `if` with `for` loops
 
-When used inside a `for` loop, the `if` condition is evaluated for each iteration:
+When used inside a `for` loop, the `if` condition is evaluated for each
+iteration:
 
 ```yaml
 version: '3'
@@ -1118,11 +1120,11 @@ processing c
 
 #### `if` vs `preconditions`
 
-| Aspect | `if` | `preconditions` |
-|--------|------|-----------------|
-| On failure | Skips (continues) | Fails (stops) |
-| Message | Only in verbose mode | Always shown |
-| Use case | "Run if possible" | "Must be true" |
+| Aspect     | `if`                 | `preconditions` |
+| ---------- | -------------------- | --------------- |
+| On failure | Skips (continues)    | Fails (stops)   |
+| Message    | Only in verbose mode | Always shown    |
+| Use case   | "Run if possible"    | "Must be true"  |
 
 Use `if` when you want optional conditional execution that shouldn't stop the
 workflow. Use `preconditions` when the condition must be met for the task to
@@ -1352,8 +1354,8 @@ $ task deploy
 Deploying 1.0.0 to prod
 ```
 
-If the variable is already set (via CLI, environment, or Taskfile), no prompt
-is shown:
+If the variable is already set (via CLI, environment, or Taskfile), no prompt is
+shown:
 
 ```shell
 $ task deploy ENVIRONMENT=prod VERSION=1.0.0
@@ -1653,8 +1655,8 @@ in logs, but is **not a substitute** for proper secret management practices.
 - ❌ Secrets in command output (stdout/stderr)
 - ❌ Secret values copied into derived (non-secret) variables
 
-Always use proper secret management tools (HashiCorp Vault, AWS Secrets
-Manager, etc.) for production environments.
+Always use proper secret management tools (HashiCorp Vault, AWS Secrets Manager,
+etc.) for production environments.
 
 :::
 
@@ -1782,7 +1784,7 @@ tasks:
    If you use dotenv files, add them to `.gitignore`:
 
    ```yaml
-   dotenv: ['.env.local']  # Load from .env.local (in .gitignore)
+   dotenv: ['.env.local'] # Load from .env.local (in .gitignore)
    ```
 
 :::
@@ -1859,8 +1861,7 @@ tasks:
           matrix:
             OS: ['windows', 'linux', 'darwin']
             ARCH: ['amd64', 'arm64']
-        cmd:
-          echo "{{.ITEM.OS}}/{{.ITEM.ARCH}}"
+        cmd: echo "{{.ITEM.OS}}/{{.ITEM.ARCH}}"
 ```
 
 This will output:
@@ -1892,8 +1893,7 @@ tasks:
               ref: .OS_VAR
             ARCH:
               ref: .ARCH_VAR
-        cmd:
-          echo "{{.ITEM.OS}}/{{.ITEM.ARCH}}"
+        cmd: echo "{{.ITEM.OS}}/{{.ITEM.ARCH}}"
 ```
 
 ### Looping over your task's sources or generated files
@@ -1938,8 +1938,8 @@ files that match that glob.
 Paths will always be returned as paths relative to the task directory. If you
 need to convert this to an absolute path, you can use the built-in `joinPath`
 function. There are some
-[special variables](/docs/reference/templating#special-variables) that you may find
-useful for this.
+[special variables](/docs/reference/templating#special-variables) that you may
+find useful for this.
 
 ::: code-group
 
@@ -2216,8 +2216,9 @@ $ task start:foo:3
 Starting foo with 3 replicas
 ```
 
-Using wildcards with aliases
-Wildcards also work with aliases. If a task has an alias, you can use the alias name with wildcards to capture arguments. For example:
+Using wildcards with aliases Wildcards also work with aliases. If a task has an
+alias, you can use the alias name with wildcards to capture arguments. For
+example:
 
 ```yaml
 version: '3'
@@ -2226,11 +2227,12 @@ tasks:
   start:*:
     aliases: [run:*]
     vars:
-      SERVICE: "{{index .MATCH 0}}"
+      SERVICE: '{{index .MATCH 0}}'
     cmds:
       - echo "Running {{.SERVICE}}"
 ```
-In this example, you can call the task using the alias run:*:
+
+In this example, you can call the task using the alias run:\*:
 
 ```shell
 $ task run:foo
@@ -2281,8 +2283,8 @@ commands are executed in the reverse order if you schedule multiple of them.
 :::
 
 A special variable `.EXIT_CODE` is exposed when a command exited with a non-zero
-[exit code](/docs/reference/cli#exit-codes). You can check its presence to know if
-the task completed successfully or not:
+[exit code](/docs/reference/cli#exit-codes). You can check its presence to know
+if the task completed successfully or not:
 
 ```yaml
 version: '3'
@@ -2291,7 +2293,8 @@ tasks:
   default:
     cmds:
       - defer:
-          echo '{{if .EXIT_CODE}}Failed with {{.EXIT_CODE}}!{{else}}Success!{{end}}'
+          echo '{{if .EXIT_CODE}}Failed with
+          {{.EXIT_CODE}}!{{else}}Success!{{end}}'
       - exit 1
 ```
 
@@ -2483,8 +2486,8 @@ tasks:
 ```
 
 Warning prompts are called before executing a task. If a prompt is denied Task
-will exit with [exit code](/docs/reference/cli#exit-codes) 205. If approved, Task
-will continue as normal.
+will exit with [exit code](/docs/reference/cli#exit-codes) 205. If approved,
+Task will continue as normal.
 
 ```shell
 ❯ task example
@@ -2878,8 +2881,8 @@ if called by another task, either directly or as a dependency.
 The watcher can misbehave in certain scenarios, in particular for long-running
 servers. There is a [known bug](https://github.com/go-task/task/issues/160)
 where child processes of the running might not be killed appropriately. It's
-advised to avoid running commands as `go run` and prefer `go build [...] &&
-./binary` instead.
+advised to avoid running commands as `go run` and prefer
+`go build [...] && ./binary` instead.
 
 If you are having issues, you might want to try tools specifically designed for
 live-reloading, like [Air](https://github.com/air-verse/air/). Also, be sure to
