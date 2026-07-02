@@ -11,10 +11,6 @@
           "type": "number",
           "enum": [0, 1]
         },
-        "REMOTE_TASKFILES": {
-          "type": "number",
-          "enum": [0, 1]
-        },
         "GENTLE_FORCE": {
           "type": "number",
           "enum": [0, 1]
