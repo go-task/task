@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v3.52.0 - 2026-07-02
 
 - Fixed --interactive prompts for required vars sometimes appearing in a random
   order. Prompts now follow the order the vars are declared in the Taskfile.
