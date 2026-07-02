@@ -91,7 +91,7 @@ tasks:
 
 :::
 
-### Reading a Taskfile from stdin
+### Running a Taskfile from stdin
 
 Taskfile also supports reading from stdin. This is useful if you are generating
 Taskfiles dynamically and don't want write them to disk. To tell task to read
@@ -103,6 +103,41 @@ task -t - < ./Taskfile.yml
 # OR
 cat ./Taskfile.yml | task -t -
 ```
+
+### Running a remote Taskfile
+
+::: danger
+
+Never run remote Taskfiles from sources that you do not trust.
+
+:::
+
+It is possible to directly run a Taskfile from a remote source via HTTP(S) or
+Git by using the `--taskfile`/`-t` flag. This is useful if you want to reuse a
+set of tasks in multiple projects. For more information, take a look at our
+[remote Taskfiles documentation](./remote-taskfiles.md).
+
+::: code-group
+
+```shell [HTTP/HTTPS]
+$ task --taskfile https://raw.githubusercontent.com/go-task/task/main/website/src/public/Taskfile.yml
+task: [hello] echo "Hello Task!"
+Hello Task!
+```
+
+```shell [Git over HTTP]
+$ task --taskfile https://github.com/go-task/task.git//website/src/public/Taskfile.yml?ref=main
+task: [hello] echo "Hello Task!"
+Hello Task!
+```
+
+```shell [Git over SSH]
+$ task --taskfile git@github.com/go-task/task.git//website/src/public/Taskfile.yml?ref=main
+task: [hello] echo "Hello Task!"
+Hello Task!
+```
+
+:::
 
 ## Environment variables
 
@@ -247,6 +282,26 @@ the `DockerTasks.yml` file.
 
 Relative paths are resolved relative to the directory containing the including
 Taskfile.
+
+### Remote Taskfiles
+
+::: danger
+
+Never run remote Taskfiles from sources that you do not trust.
+
+:::
+
+It is possible to include a Taskfile from a remote source via HTTP(S) or Git.
+This is useful if you want to reuse a set of tasks in multiple projects. For
+more information, take a look at our
+[remote Taskfiles documentation](./remote-taskfiles.md).
+
+```yaml
+version: '3'
+
+includes:
+  my-remote-namespace: https://raw.githubusercontent.com/go-task/task/main/website/src/public/Taskfile.yml
+```
 
 ### OS-specific Taskfiles
 
