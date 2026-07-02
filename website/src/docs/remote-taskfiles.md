@@ -173,9 +173,9 @@ includes:
 
 ## Special Variables
 
-The file-path [special variables](../reference/templating.md#file-paths) behave
-differently when a Taskfile is loaded from a remote source, because there is no
-local file or directory that corresponds 1:1 to the Taskfile:
+The file-path [special variables](../docs/reference/templating.md#file-paths)
+behave differently when a Taskfile is loaded from a remote source, because there
+is no local file or directory that corresponds 1:1 to the Taskfile:
 
 | Variable                     | Value when loaded remotely                                                                                                                              |
 | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
