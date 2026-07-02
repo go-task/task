@@ -128,7 +128,8 @@ Disable fuzzy matching for task names. When enabled, Task will not suggest
 similar task names when you mistype a task name.
 
 - **Config equivalent**: [`disable-fuzzy`](./config.md#disable-fuzzy)
-- **Environment variable**: [`TASK_DISABLE_FUZZY`](./environment.md#task-disable-fuzzy)
+- **Environment variable**:
+  [`TASK_DISABLE_FUZZY`](./environment.md#task-disable-fuzzy)
 
 ```bash
 task buidl --disable-fuzzy
@@ -180,7 +181,8 @@ task test lint --parallel
 Limit the number of concurrent tasks. Zero means unlimited.
 
 - **Config equivalent**: [`concurrency`](./config.md#concurrency)
-- **Environment variable**: [`TASK_CONCURRENCY`](./environment.md#task-concurrency)
+- **Environment variable**:
+  [`TASK_CONCURRENCY`](./environment.md#task-concurrency)
 
 ```bash
 task test --concurrency 4
@@ -248,7 +250,8 @@ task test --output group
 
 Message template to print before grouped output.
 
-- **Environment variable**: [`TASK_OUTPUT_GROUP_BEGIN`](./environment.md#task-output-group-begin)
+- **Environment variable**:
+  [`TASK_OUTPUT_GROUP_BEGIN`](./environment.md#task-output-group-begin)
 
 ```bash
 task test --output group --output-group-begin "::group::{{.TASK}}"
@@ -258,7 +261,8 @@ task test --output group --output-group-begin "::group::{{.TASK}}"
 
 Message template to print after grouped output.
 
-- **Environment variable**: [`TASK_OUTPUT_GROUP_END`](./environment.md#task-output-group-end)
+- **Environment variable**:
+  [`TASK_OUTPUT_GROUP_END`](./environment.md#task-output-group-end)
 
 ```bash
 task test --output group --output-group-end "::endgroup::"
@@ -268,7 +272,8 @@ task test --output group --output-group-end "::endgroup::"
 
 Only show command output on non-zero exit codes.
 
-- **Environment variable**: [`TASK_OUTPUT_GROUP_ERROR_ONLY`](./environment.md#task-output-group-error-only)
+- **Environment variable**:
+  [`TASK_OUTPUT_GROUP_ERROR_ONLY`](./environment.md#task-output-group-error-only)
 
 ```bash
 task test --output group --output-group-error-only
@@ -351,7 +356,8 @@ task build --watch --interval 1s
 
 Automatically answer "yes" to all prompts.
 
-- **Environment variable**: [`TASK_ASSUME_YES`](./environment.md#task-assume-yes)
+- **Environment variable**:
+  [`TASK_ASSUME_YES`](./environment.md#task-assume-yes)
 
 ```bash
 task deploy --yes
@@ -366,11 +372,68 @@ Task automatically detects non-TTY environments (like CI pipelines) and skips
 prompts. This flag can also be set in `.taskrc.yml` to enable prompts by
 default.
 
-- **Environment variable**: [`TASK_INTERACTIVE`](./environment.md#task-interactive)
+- **Environment variable**:
+  [`TASK_INTERACTIVE`](./environment.md#task-interactive)
 
 ```bash
 task deploy --interactive
 ```
+
+### Remote
+
+The following flags are used to control the behavior of
+[remote Taskfiles](../remote-taskfiles.md).
+
+#### `--insecure`
+
+Allow insecure connections when fetching remote Taskfiles.
+
+#### `--offline`
+
+Work in offline mode, preventing remote Taskfile fetching.
+
+#### `--download`
+
+Forces task to download remote Taskfiles and ignore any cached versions.
+
+#### `--timeout`
+
+Timeout duration for remote operations (e.g., '30s', '5m').
+
+#### `--clear-cache`
+
+Wipe the cache of remote Taskfiles and checksums.
+
+#### `--expiry`
+
+Cache expiry duration for remote Taskfiles (e.g., '1h', '24h').
+
+#### `--remote-cache-dir`
+
+Directory where remote Taskfiles are cached. Can be an absolute path (e.g.,
+`/var/cache/task`) or relative to the Taskfile directory.
+
+#### `--trusted-hosts`
+
+List of (comma-separated) trusted hosts for remote Taskfiles. Hosts in this list
+will not prompt for confirmation when downloading Taskfiles.
+
+Hosts in the trusted hosts list will automatically be trusted without prompting
+for confirmation when they are first downloaded or when their checksums change.
+The host matching includes the port if specified in the URL. Use with caution
+and only add hosts you fully trust.
+
+#### `--cacert`
+
+Path to a custom CA certificate file for TLS verification.
+
+#### `--cert`
+
+Path to a client certificate file for mTLS authentication.
+
+#### `--cert-key`
+
+Path to the client certificate private key file.
 
 ## Exit Codes
 

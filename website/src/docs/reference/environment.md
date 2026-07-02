@@ -20,7 +20,8 @@ their configuration file equivalents.
 ## Variables
 
 All [configuration file options](./config.md) can also be set via environment
-variables. The priority order is: CLI flags > environment variables > config files > defaults.
+variables. The priority order is: CLI flags > environment variables > config
+files > defaults.
 
 ### `TASK_VERBOSE`
 
@@ -67,7 +68,8 @@ variables. The priority order is: CLI flags > environment variables > config fil
 
 - **Type**: `boolean` (`true`, `false`, `1`, `0`)
 - **Default**: `false`
-- **Description**: Compiles and prints tasks in the order that they would be run, without executing them
+- **Description**: Compiles and prints tasks in the order that they would be
+  run, without executing them
 
 ### `TASK_ASSUME_YES`
 
@@ -92,14 +94,16 @@ variables. The priority order is: CLI flags > environment variables > config fil
 - **Type**: `string`
 - **Description**: Message template to print before a task's grouped output.
   Only applies when the output style is `group`.
-- **CLI equivalent**: [`--output-group-begin`](./cli.md#--output-group-begin-template)
+- **CLI equivalent**:
+  [`--output-group-begin`](./cli.md#--output-group-begin-template)
 
 ### `TASK_OUTPUT_GROUP_END`
 
 - **Type**: `string`
-- **Description**: Message template to print after a task's grouped output.
-  Only applies when the output style is `group`.
-- **CLI equivalent**: [`--output-group-end`](./cli.md#--output-group-end-template)
+- **Description**: Message template to print after a task's grouped output. Only
+  applies when the output style is `group`.
+- **CLI equivalent**:
+  [`--output-group-end`](./cli.md#--output-group-end-template)
 
 ### `TASK_OUTPUT_GROUP_ERROR_ONLY`
 
@@ -107,7 +111,8 @@ variables. The priority order is: CLI flags > environment variables > config fil
 - **Default**: `false`
 - **Description**: Swallow output from successful tasks. Only applies when the
   output style is `group`.
-- **CLI equivalent**: [`--output-group-error-only`](./cli.md#--output-group-error-only)
+- **CLI equivalent**:
+  [`--output-group-error-only`](./cli.md#--output-group-error-only)
 
 ### `TASK_TEMP_DIR`
 
@@ -118,15 +123,63 @@ Taskfile, not the working directory. Defaults to: `./.task`.
 
 ### `TASK_CORE_UTILS`
 
-This env controls whether the Bash interpreter will use its own
-core utilities implemented in Go, or the ones available in the system.
-Valid values are `true` (`1`) or `false` (`0`). By default, this is `true` on
-Windows and `false` on other operating systems. We might consider making this
-enabled by default on all platforms in the future.
+This env controls whether the Bash interpreter will use its own core utilities
+implemented in Go, or the ones available in the system. Valid values are `true`
+(`1`) or `false` (`0`). By default, this is `true` on Windows and `false` on
+other operating systems. We might consider making this enabled by default on all
+platforms in the future.
 
 ### `FORCE_COLOR`
 
 Force color output usage.
+
+## Remote Taskfile Variables
+
+The following variables are used to control the behavior of
+[remote Taskfiles](../remote-taskfiles.md).
+
+### `TASK_REMOTE_INSECURE`
+
+Allow insecure connections when fetching remote Taskfiles.
+
+### `TASK_REMOTE_OFFLINE`
+
+Work in offline mode, preventing remote Taskfile fetching.
+
+### `TASK_REMOTE_TIMEOUT`
+
+Timeout duration for remote operations (e.g., '30s', '5m').
+
+### `TASK_REMOTE_CACHE_EXPIRY`
+
+Cache expiry duration for remote Taskfiles (e.g., '1h', '24h').
+
+### `TASK_REMOTE_CACHE_DIR`
+
+Directory where remote Taskfiles are cached. Can be an absolute path (e.g.,
+`/var/cache/task`) or relative to the Taskfile directory.
+
+### `TASK_REMOTE_TRUSTED_HOSTS`
+
+List of (comma-separated) trusted hosts for remote Taskfiles. Hosts in this list
+will not prompt for confirmation when downloading Taskfiles.
+
+Hosts in the trusted hosts list will automatically be trusted without prompting
+for confirmation when they are first downloaded or when their checksums change.
+The host matching includes the port if specified in the URL. Use with caution
+and only add hosts you fully trust.
+
+### `TASK_REMOTE_CACERT`
+
+Path to a custom CA certificate file for TLS verification.
+
+### `TASK_REMOTE_CERT`
+
+Path to a client certificate file for mTLS authentication.
+
+### `TASK_REMOTE_CERT_KEY`
+
+Path to the client certificate private key file.
 
 ### Custom Colors
 
