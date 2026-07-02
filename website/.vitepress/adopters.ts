@@ -108,11 +108,11 @@ export const adopters: Adopter[] = [
       'Open source API gateway supporting REST, GraphQL, TCP and gRPC, automated end-to-end with Task.'
   },
   {
-    name: 'Charmbracelet',
-    url: 'https://github.com/charmbracelet/glamour',
+    name: 'Charm',
+    url: 'https://github.com/charmbracelet/crush',
     img: 'https://github.com/charmbracelet.png',
     description:
-      'The team behind Bubble Tea uses Task to build Glamour, the stylesheet-based markdown renderer for CLI apps.'
+      'The team behind Bubble Tea, a TUI framework for Go, uses Task to build Crush, the glamorous coding agent for all.'
   },
   {
     name: 'Outline',
