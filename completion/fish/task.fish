@@ -3,6 +3,19 @@
 
 set -l GO_TASK_PROGNAME (if set -q GO_TASK_PROGNAME; echo $GO_TASK_PROGNAME; else if set -q TASK_EXE; echo $TASK_EXE; else; echo task; end)
 
+# Completion directives, mirroring internal/complete/complete.go. fish's `math`
+# has no bitwise operators, so bits are stored as their power-of-two value and
+# tested with integer division + modulo via __task_test_bit.
+set -g __task_directive_no_space 2
+set -g __task_directive_no_file_comp 4
+set -g __task_directive_filter_file_ext 8
+set -g __task_directive_filter_dirs 16
+set -g __task_directive_keep_order 32
+
+function __task_test_bit --argument-names value bit
+  test (math "floor($value / $bit) % 2") -eq 1
+end
+
 function __task_complete --inherit-variable GO_TASK_PROGNAME
   set -l tokens (commandline -opc)
   set -l current (commandline -ct)
@@ -36,15 +49,27 @@ function __task_complete --inherit-variable GO_TASK_PROGNAME
   # served here, otherwise nothing is offered (e.g. `--cacert`, after `--`).
 
   # FilterFileExt: the engine emits the allowed extensions as the data lines.
-  if test (math "$directive & 8") -ne 0
-    for ext in $data
-      __fish_complete_suffix ".$ext"
+  # __fish_complete_suffix only *prioritizes* the extension, so filter the file
+  # list ourselves — keeping directories so the user can still descend into them.
+  if __task_test_bit $directive $__task_directive_filter_file_ext
+    for entry in (__fish_complete_path $current)
+      set -l name (string split -f1 \t -- $entry)
+      if string match -qr '/$' -- $name
+        printf '%s\n' $entry
+        continue
+      end
+      for ext in $data
+        if string match -qr "\.$ext\$" -- $name
+          printf '%s\n' $entry
+          break
+        end
+      end
     end
     return
   end
 
   # FilterDirs: complete directories only.
-  if test (math "$directive & 16") -ne 0
+  if __task_test_bit $directive $__task_directive_filter_dirs
     __fish_complete_directories $current
     return
   end
@@ -55,9 +80,9 @@ function __task_complete --inherit-variable GO_TASK_PROGNAME
     printf '%s\n' $line
   end
 
-  # NoFileComp (bit 4) unset → also offer files, since `--no-files` suppressed
-  # the native fallback. Covers DirectiveDefault (e.g. `--cacert`, after `--`).
-  if test (math "$directive & 4") -eq 0
+  # NoFileComp unset → also offer files, since `--no-files` suppressed the
+  # native fallback. Covers DirectiveDefault (e.g. `--cacert`, after `--`).
+  if not __task_test_bit $directive $__task_directive_no_file_comp
     __fish_complete_path $current
   end
 end

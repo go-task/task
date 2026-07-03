@@ -7,6 +7,10 @@ TASK_CMD="${TASK_EXE:-task}"
 
 _task() {
   local cur prev words cword
+
+  # Completion directives, mirroring internal/complete/complete.go.
+  local -ri NO_SPACE=2 NO_FILE_COMP=4 FILTER_FILE_EXT=8 FILTER_DIRS=16
+
   # Exclude both `=` and `:` from the word breaks so `--output=` and
   # `docs:serve` reach the engine as single tokens.
   _init_completion -n =: || return
@@ -36,16 +40,18 @@ _task() {
   local directive="${lines[$last_idx]#:}"
   unset 'lines[$last_idx]'
 
-  if (( directive & 8 )); then
+  if (( directive & FILTER_FILE_EXT )); then
     local exts=""
-    for line in "${lines[@]}"; do
+    # ${arr[@]+…} guards against "unbound variable" on an empty array under
+    # `set -u` in bash 3.2 (macOS).
+    for line in ${lines[@]+"${lines[@]}"}; do
       exts+="${exts:+|}$line"
     done
     _filedir "@($exts)"
     return
   fi
 
-  if (( directive & 16 )); then
+  if (( directive & FILTER_DIRS )); then
     _filedir -d
     return
   fi
@@ -54,20 +60,20 @@ _task() {
   # word list on IFS, which mangles any suggestion value containing a space.
   local value
   COMPREPLY=()
-  for line in "${lines[@]}"; do
+  for line in ${lines[@]+"${lines[@]}"}; do
     value="${line%%$'\t'*}"
     if [[ -z "$cur" || "$value" == "$cur"* ]]; then
       COMPREPLY+=( "$value" )
     fi
   done
 
-  if (( directive & 2 )); then
+  if (( directive & NO_SPACE )); then
     compopt -o nospace 2>/dev/null
   fi
 
   __ltrim_colon_completions "$cur"
 
-  if (( ${#COMPREPLY[@]} == 0 )) && ! (( directive & 4 )); then
+  if (( ${#COMPREPLY[@]} == 0 )) && ! (( directive & NO_FILE_COMP )); then
     _filedir
   fi
 }
