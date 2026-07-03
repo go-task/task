@@ -48,9 +48,8 @@ function __task_complete --inherit-variable GO_TASK_PROGNAME
   # native file fallback. Every file-completion directive must therefore be
   # served here, otherwise nothing is offered (e.g. `--cacert`, after `--`).
 
-  # FilterFileExt: the engine emits the allowed extensions as the data lines.
-  # __fish_complete_suffix only *prioritizes* the extension, so filter the file
-  # list ourselves — keeping directories so the user can still descend into them.
+  # __fish_complete_suffix only *prioritizes* the extension rather than
+  # filtering, so filter the file list ourselves (keeping dirs to descend into).
   if __task_test_bit $directive $__task_directive_filter_file_ext
     for entry in (__fish_complete_path $current)
       set -l name (string split -f1 \t -- $entry)
@@ -68,14 +67,13 @@ function __task_complete --inherit-variable GO_TASK_PROGNAME
     return
   end
 
-  # FilterDirs: complete directories only.
   if __task_test_bit $directive $__task_directive_filter_dirs
     __fish_complete_directories $current
     return
   end
 
-  # Emit the `value\tdescription` candidates (fish reads the tab as the
-  # separator between the completion and its description).
+  # Emit the candidates verbatim; fish reads the tab as the value/description
+  # separator.
   for line in $data
     printf '%s\n' $line
   end

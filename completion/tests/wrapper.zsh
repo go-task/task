@@ -1,11 +1,7 @@
 #!/usr/bin/env zsh
-# Smoke-tests how the zsh wrapper INTERPRETS each directive by stubbing the
-# completion-system functions it calls (_describe / _files / _path_files) and
-# asserting the routing. The suggestion logic (which tasks/aliases/vars) is
-# covered by the Go tests; here we only check that each directive triggers the
-# right shell behavior. Deterministic, no TTY.
-#
-# Requires: TASK_BIN (task binary), TASK_FIXTURE (dir with a Taskfile.yml).
+# Smoke-tests how the zsh wrapper routes each directive by stubbing the
+# completion functions (_describe / _files / _path_files) and asserting what it
+# calls. Suggestion logic lives in the Go tests. Requires TASK_BIN, TASK_FIXTURE.
 
 export TASK_EXE=$TASK_BIN
 cd $TASK_FIXTURE

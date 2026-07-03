@@ -1,9 +1,7 @@
-// Package completion_test black-box tests the `task __complete` wire protocol —
-// the candidates and directive the engine emits for a given command line. This
-// replaces the old completion/tests/engine.sh with readable, table-driven Go:
-// the shell wrappers only need to be smoke-tested for how they *interpret* the
-// directive (see completion/tests/wrapper.*), never for the suggestion logic,
-// which is fully covered here and in internal/complete.
+// Package completion_test black-box tests the `task __complete` wire protocol:
+// the candidates and directive the real binary emits for a command line. The
+// shell wrappers only need to be smoke-tested for how they interpret the
+// directive (see completion/tests/wrapper.*).
 package completion_test
 
 import (
@@ -21,7 +19,6 @@ import (
 	"github.com/go-task/task/v3/internal/complete"
 )
 
-// taskBin is the path to the task binary built once for the whole package.
 var taskBin string
 
 func TestMain(m *testing.M) {
