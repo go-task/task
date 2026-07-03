@@ -66,7 +66,9 @@ skip() { # LABEL
   echo
 }
 
-run "engine"        bash "$here/engine.sh"
+# The engine/protocol itself is covered by the Go tests (completion/protocol_test.go
+# and internal/complete); these smokes only check how each shell wrapper
+# interprets the directive.
 run "bash wrapper"  bash "$here/wrapper.bash"
 
 if command -v zsh >/dev/null 2>&1; then

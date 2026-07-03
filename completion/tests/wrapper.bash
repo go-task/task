@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
-# Tests the bash wrapper by stubbing the bash-completion helpers it calls
-# (_init_completion / _filedir / compopt / __ltrim_colon_completions) and
-# asserting the resulting COMPREPLY and file routing. Deterministic, no TTY,
-# and works without the bash-completion package installed.
+# Smoke-tests how the bash wrapper INTERPRETS each directive by stubbing the
+# bash-completion helpers it calls (_filedir / compopt / __ltrim_colon_completions)
+# and asserting the routing. The suggestion logic (which tasks/aliases/vars) is
+# covered by the Go tests; here we only check that each directive triggers the
+# right shell behavior. Deterministic, no TTY, works without bash-completion.
 #
 # Requires: TASK_BIN (task binary), TASK_FIXTURE (dir with a Taskfile.yml).
 set -u
@@ -52,32 +53,26 @@ cap_hasnot() { # LABEL PATTERN
     echo "  ok   $1"; fi
 }
 
-echo "bash: task names (no file fallback)"
+echo "bash: :4 (NoFileComp) forwards candidates, no file fallback"
 run task ''
-reply_has  "lists tasks"       build
-reply_has  "lists aliases"     dep
-cap_hasnot "no file fallback"  "filedir:"
+reply_has  "candidate forwarded" build
+cap_hasnot "no file fallback"     "filedir:"
 
-echo "bash: task variables"
+echo "bash: :2 (NoSpace) disables the trailing space"
 run task deploy ''
-reply_has  "required vars"     "ENV=dev"
-cap_has    "NoSpace nospace"   "compopt:-o nospace"
+cap_has    "nospace applied"      "compopt:-o nospace"
 
-echo "bash: inline --output= is full form"
-run task '--output='
-reply_has  "full-form value"   "--output=interleaved"
-
-echo "bash: --dir routes to directory completion"
-run task --dir ''
-cap_has    "filedir -d"        "filedir:-d"
-
-echo "bash: --taskfile routes to extension-filtered files"
+echo "bash: :8 (FilterFileExt) routes to extension-filtered files"
 run task --taskfile ''
-cap_has    "filedir ext glob"  "filedir:@(yml|yaml)"
+cap_has    "filedir ext glob"     "filedir:@(yml|yaml)"
 
-echo "bash: after -- falls back to files"
+echo "bash: :16 (FilterDirs) routes to directory completion"
+run task --dir ''
+cap_has    "filedir -d"           "filedir:-d"
+
+echo "bash: :0 (Default) falls back to files"
 run task build -- ''
-cap_has    "filedir after --"  "filedir:"
+cap_has    "filedir default"      "filedir:"
 
 if ((fails)); then
   echo "bash: $fails failure(s)"
