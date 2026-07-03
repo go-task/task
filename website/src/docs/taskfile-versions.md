@@ -65,8 +65,9 @@ will receive an error prompting them to upgrade their version of Task to
 
 :::info
 
-Note that this functionality was introduced in [v3.34.0](https://github.com/go-task/task/releases/tag/v3.34.0),
-so older versions are not able to give you this warning.
+Note that this functionality was introduced in
+[v3.34.0](https://github.com/go-task/task/releases/tag/v3.34.0), so older
+versions are not able to give you this warning.
 
 :::
 
