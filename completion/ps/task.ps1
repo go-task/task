@@ -38,20 +38,31 @@ Register-ArgumentCompleter -Native -CommandName $cmdNames -ScriptBlock {
 	$directive = [int]($last.Substring(1))
 	$data = if ($lines.Count -gt 1) { $lines[0..($lines.Count - 2)] } else { @() }
 
+	# Completion directives, mirroring internal/complete/complete.go.
+	$NoFileComp    = 4
+	$FilterFileExt = 8
+	$FilterDirs    = 16
+
 	# Note: DirectiveNoSpace (bit 2) cannot be honored here — PowerShell's
 	# CompletionResult API has no per-item "no trailing space" option, so a
 	# suggestion like `VAR=` gets a trailing space. This is a PowerShell limit.
 
-	# FilterFileExt
-	if ($directive -band 8) {
-		$patterns = $data | ForEach-Object { "*.$_" }
-		return Get-ChildItem -Path . -Include $patterns -File -ErrorAction SilentlyContinue |
-			ForEach-Object { [CompletionResult]::new($_.Name, $_.Name, [CompletionResultType]::ProviderItem, $_.Name) }
+	# FilterFileExt: keep files whose extension matches, plus directories so the
+	# user can still descend into them. `-Include` is unreliable without
+	# `-Recurse`, so filter with Where-Object instead.
+	if ($directive -band $FilterFileExt) {
+		$exts = $data | ForEach-Object { ".$_" }
+		return Get-ChildItem -Path "$wordToComplete*" -ErrorAction SilentlyContinue |
+			Where-Object { $_.PSIsContainer -or $exts -contains $_.Extension } |
+			ForEach-Object {
+				$type = if ($_.PSIsContainer) { [CompletionResultType]::ProviderContainer } else { [CompletionResultType]::ProviderItem }
+				[CompletionResult]::new($_.Name, $_.Name, $type, $_.Name)
+			}
 	}
 
 	# FilterDirs
-	if ($directive -band 16) {
-		return Get-ChildItem -Path . -Directory -ErrorAction SilentlyContinue |
+	if ($directive -band $FilterDirs) {
+		return Get-ChildItem -Path "$wordToComplete*" -Directory -ErrorAction SilentlyContinue |
 			ForEach-Object { [CompletionResult]::new($_.Name, $_.Name, [CompletionResultType]::ProviderContainer, $_.Name) }
 	}
 
@@ -68,7 +79,7 @@ Register-ArgumentCompleter -Native -CommandName $cmdNames -ScriptBlock {
 
 	# NoFileComp (bit 4) unset and nothing matched → fall back to file completion,
 	# since the engine returned DirectiveDefault (e.g. --cacert, after `--`).
-	if ($results.Count -eq 0 -and -not ($directive -band 4)) {
+	if ($results.Count -eq 0 -and -not ($directive -band $NoFileComp)) {
 		return Get-ChildItem -Path . -ErrorAction SilentlyContinue |
 			ForEach-Object { [CompletionResult]::new($_.Name, $_.Name, [CompletionResultType]::ProviderItem, $_.Name) }
 	}

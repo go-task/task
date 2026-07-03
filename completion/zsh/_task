@@ -9,6 +9,9 @@ _task() {
 	local -a args lines completions opts ctl
 	local output directive line
 
+	# Completion directives, mirroring internal/complete/complete.go.
+	local -ri NO_SPACE=2 NO_FILE_COMP=4 FILTER_FILE_EXT=8 FILTER_DIRS=16 KEEP_ORDER=32
+
 	# Map the zsh completion zstyles to engine flags. `-T` is true when the
 	# style is unset (its default) or explicitly true, so a flag is only passed
 	# when the user turned the style off.
@@ -30,7 +33,7 @@ _task() {
 	directive="${lines[-1]#:}"
 	lines=("${(@)lines[1,-2]}")
 
-	if (( directive & 8 )); then
+	if (( directive & FILTER_FILE_EXT )); then
 		local -a globs
 		for line in "${lines[@]}"; do
 			globs+=("*.${line}")
@@ -39,7 +42,7 @@ _task() {
 		return
 	fi
 
-	if (( directive & 16 )); then
+	if (( directive & FILTER_DIRS )); then
 		_path_files -/
 		return
 	fi
@@ -57,14 +60,14 @@ _task() {
 		fi
 	done
 
-	(( directive & 2 ))  && opts+=(-S '')
-	(( directive & 32 )) && opts+=(-V)
+	(( directive & NO_SPACE ))  && opts+=(-S '')
+	(( directive & KEEP_ORDER )) && opts+=(-V)
 
 	if (( ${#completions} > 0 )); then
 		_describe -t tasks 'task' completions "${opts[@]}"
 	fi
 
-	(( directive & 4 )) && return
+	(( directive & NO_FILE_COMP )) && return
 	_files
 }
 
