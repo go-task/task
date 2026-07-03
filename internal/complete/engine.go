@@ -12,9 +12,8 @@ import (
 
 // Complete is the single entry point used by `task __complete`. e may be nil
 // when the Taskfile failed to load; flag completion still works in that case.
-func Complete(e *task.Executor, fs *pflag.FlagSet, args []string) ([]Suggestion, Directive) {
-	knownTasks := taskNames(e)
-	ctx := parseContext(args, knownTasks, fs)
+func Complete(e *task.Executor, fs *pflag.FlagSet, args []string, opts Options) ([]Suggestion, Directive) {
+	ctx := parseContext(args)
 
 	if ctx.afterDash {
 		return nil, DirectiveDefault
@@ -22,26 +21,46 @@ func Complete(e *task.Executor, fs *pflag.FlagSet, args []string) ([]Suggestion,
 
 	if ctx.prev != "" {
 		if flag := matchFlagName(fs, ctx.prev); flag != nil && flagTakesValue(flag) {
-			return completeFlagValue(flag.Name, ctx.toComplete)
+			return completeFlagValue(flag.Name, "")
 		}
 	}
 
 	if strings.HasPrefix(ctx.toComplete, "-") {
 		if eqIdx := strings.Index(ctx.toComplete, "="); eqIdx != -1 {
 			flagWord := ctx.toComplete[:eqIdx]
-			partial := ctx.toComplete[eqIdx+1:]
 			if f := matchFlagName(fs, flagWord); f != nil && flagTakesValue(f) {
-				return completeFlagValue(f.Name, partial)
+				// Return full `--flag=value` candidates: shells match/insert
+				// against the whole current token, so bare values never match.
+				return completeFlagValue(f.Name, flagWord+"=")
 			}
 		}
 		return listFlags(fs), DirectiveNoFileComp
 	}
 
-	if ctx.taskName != "" && e != nil && e.Taskfile != nil {
-		return completeTaskVars(e, ctx.taskName, ctx.toComplete)
+	// Only a task context needs the task list, so it is loaded lazily here.
+	if e != nil && e.Taskfile != nil {
+		if taskName := detectTaskName(args, taskNames(e), fs); taskName != "" {
+			return completeTaskVars(e, taskName)
+		}
 	}
 
-	return completeTaskNames(e), DirectiveNoFileComp
+	return completeTaskNames(e, opts), DirectiveNoFileComp
+}
+
+// NeedsTaskfile reports whether completing args requires a loaded Taskfile.
+// Flag-name and flag-value completion (and words after `--`) do not, so the
+// caller can skip the potentially expensive Taskfile parse for those keystrokes.
+func NeedsTaskfile(args []string, fs *pflag.FlagSet) bool {
+	ctx := parseContext(args)
+	if ctx.afterDash {
+		return false
+	}
+	if ctx.prev != "" {
+		if flag := matchFlagName(fs, ctx.prev); flag != nil && flagTakesValue(flag) {
+			return false
+		}
+	}
+	return !strings.HasPrefix(ctx.toComplete, "-")
 }
 
 func taskNames(e *task.Executor) []string {
@@ -61,7 +80,7 @@ func taskNames(e *task.Executor) []string {
 	return out
 }
 
-func completeTaskNames(e *task.Executor) []Suggestion {
+func completeTaskNames(e *task.Executor, opts Options) []Suggestion {
 	if e == nil || e.Taskfile == nil {
 		return nil
 	}
@@ -69,51 +88,61 @@ func completeTaskNames(e *task.Executor) []Suggestion {
 	if err != nil {
 		return nil
 	}
+	desc := func(t *ast.Task) string {
+		if !opts.ShowDescriptions {
+			return ""
+		}
+		return t.Desc
+	}
 	out := make([]Suggestion, 0, len(tasks))
 	for _, t := range tasks {
 		out = append(out, Suggestion{
 			Value:       strings.TrimSuffix(t.Task, ":"),
-			Description: t.Desc,
+			Description: desc(t),
 		})
+		if !opts.ShowAliases {
+			continue
+		}
 		for _, alias := range t.Aliases {
 			out = append(out, Suggestion{
 				Value:       strings.TrimSuffix(alias, ":"),
-				Description: t.Desc,
+				Description: desc(t),
 			})
 		}
 	}
 	return out
 }
 
-func completeFlagValue(flagName, toComplete string) ([]Suggestion, Directive) {
-	if dir, ok := flagDirective[flagName]; ok {
-		switch dir {
-		case DirectiveFilterFileExt:
-			suggs := make([]Suggestion, 0, len(taskfileExtensions))
-			for _, ext := range taskfileExtensions {
-				suggs = append(suggs, Suggestion{Value: ext})
-			}
-			return suggs, DirectiveFilterFileExt
-		case DirectiveFilterDirs:
-			return nil, DirectiveFilterDirs
-		default:
-			return nil, DirectiveDefault
+// completeFlagValue completes the value of a value-taking flag. prefix is empty
+// for the separate-argument form (`--output <TAB>`) and `<flag>=` for the inline
+// form (`--output=<TAB>`), so enum candidates come back as full `--output=value`
+// tokens the shell can match against the current word.
+func completeFlagValue(flagName, prefix string) ([]Suggestion, Directive) {
+	// Absent keys yield the zero value (DirectiveDefault), which falls through
+	// to the enum lookup below.
+	switch flagDirective[flagName] {
+	case DirectiveFilterFileExt:
+		suggs := make([]Suggestion, 0, len(taskfileExtensions))
+		for _, ext := range taskfileExtensions {
+			suggs = append(suggs, Suggestion{Value: ext})
 		}
+		return suggs, DirectiveFilterFileExt
+	case DirectiveFilterDirs:
+		return nil, DirectiveFilterDirs
 	}
 
 	if values, ok := flagEnums[flagName]; ok {
 		out := make([]Suggestion, 0, len(values))
 		for _, v := range values {
-			out = append(out, Suggestion{Value: v})
+			out = append(out, Suggestion{Value: prefix + v})
 		}
-		_ = toComplete
 		return out, DirectiveNoFileComp
 	}
 
 	return nil, DirectiveDefault
 }
 
-func completeTaskVars(e *task.Executor, taskName, toComplete string) ([]Suggestion, Directive) {
+func completeTaskVars(e *task.Executor, taskName string) ([]Suggestion, Directive) {
 	compiled, err := e.FastCompiledTask(&task.Call{Task: taskName})
 	if err != nil || compiled == nil || compiled.Requires == nil {
 		return nil, DirectiveNoFileComp
@@ -134,11 +163,12 @@ func completeTaskVars(e *task.Executor, taskName, toComplete string) ([]Suggesti
 			out = append(out, Suggestion{Value: v.Name + "=" + val})
 		}
 	}
-	_ = toComplete
 	if len(out) == 0 {
 		return nil, DirectiveNoFileComp
 	}
-	return out, DirectiveNoSpace | DirectiveNoFileComp
+	// KeepOrder preserves the declaration order of the `requires` block instead
+	// of letting the shell sort the variables alphabetically.
+	return out, DirectiveNoSpace | DirectiveNoFileComp | DirectiveKeepOrder
 }
 
 func enumValues(enum *ast.Enum, cache *templater.Cache) []string {

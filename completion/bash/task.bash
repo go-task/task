@@ -7,7 +7,9 @@ TASK_CMD="${TASK_EXE:-task}"
 
 _task() {
   local cur prev words cword
-  _init_completion -n : || return
+  # Exclude both `=` and `:` from the word breaks so `--output=` and
+  # `docs:serve` reach the engine as single tokens.
+  _init_completion -n =: || return
 
   local -a args=()
   if (( cword > 0 )); then
@@ -48,12 +50,16 @@ _task() {
     return
   fi
 
-  local -a values=()
+  # Prefix-filter by hand instead of `compgen -W`: the latter joins/splits the
+  # word list on IFS, which mangles any suggestion value containing a space.
+  local value
+  COMPREPLY=()
   for line in "${lines[@]}"; do
-    values+=( "${line%%$'\t'*}" )
+    value="${line%%$'\t'*}"
+    if [[ -z "$cur" || "$value" == "$cur"* ]]; then
+      COMPREPLY+=( "$value" )
+    fi
   done
-
-  COMPREPLY=( $( compgen -W "${values[*]}" -- "$cur" ) )
 
   if (( directive & 2 )); then
     compopt -o nospace 2>/dev/null

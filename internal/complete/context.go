@@ -9,14 +9,13 @@ import (
 type completionContext struct {
 	toComplete string
 	prev       string
-	taskName   string
 	afterDash  bool
 }
 
-// parseContext infers the cursor position from args. fs is needed to skip the
-// word following a value-taking flag, otherwise `task --dir deploy` would
-// mistake "deploy" (the directory) for a task name.
-func parseContext(args []string, knownTasks []string, fs *pflag.FlagSet) completionContext {
+// parseContext infers the cursor position from args alone. It deliberately
+// avoids the task list so flag completion never pays to load it; the task word
+// is resolved separately by detectTaskName only once a task context is reached.
+func parseContext(args []string) completionContext {
 	ctx := completionContext{}
 	if len(args) == 0 {
 		return ctx
@@ -27,11 +26,31 @@ func parseContext(args []string, knownTasks []string, fs *pflag.FlagSet) complet
 		ctx.prev = args[len(args)-2]
 	}
 
+	for _, w := range args[:len(args)-1] {
+		if w == "--" {
+			ctx.afterDash = true
+			return ctx
+		}
+	}
+
+	return ctx
+}
+
+// detectTaskName scans args for the task word the cursor is completing under
+// (e.g. "deploy" in `task deploy ENV=<tab>`). fs is needed to skip the word
+// following a value-taking flag, otherwise `task --dir deploy` would mistake
+// "deploy" (the directory) for a task name.
+func detectTaskName(args []string, knownTasks []string, fs *pflag.FlagSet) string {
+	if len(args) <= 1 {
+		return ""
+	}
+
 	known := make(map[string]struct{}, len(knownTasks))
 	for _, t := range knownTasks {
 		known[t] = struct{}{}
 	}
 
+	taskName := ""
 	skipNext := false
 	for _, w := range args[:len(args)-1] {
 		if skipNext {
@@ -39,11 +58,7 @@ func parseContext(args []string, knownTasks []string, fs *pflag.FlagSet) complet
 			continue
 		}
 		if w == "--" {
-			ctx.afterDash = true
-			continue
-		}
-		if ctx.afterDash {
-			continue
+			return taskName
 		}
 		if strings.HasPrefix(w, "-") {
 			if !strings.Contains(w, "=") {
@@ -57,9 +72,9 @@ func parseContext(args []string, knownTasks []string, fs *pflag.FlagSet) complet
 			continue
 		}
 		if _, ok := known[w]; ok {
-			ctx.taskName = w
+			taskName = w
 		}
 	}
 
-	return ctx
+	return taskName
 }

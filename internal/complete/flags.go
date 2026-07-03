@@ -15,6 +15,9 @@ var flagEnums = map[string][]string{
 	"completion": {"bash", "zsh", "fish", "powershell"},
 }
 
+// flagDirective maps value-taking flags to a file-completion directive.
+// DirectiveDefault entries (and any flag absent here) fall back to the shell's
+// default file completion.
 var flagDirective = map[string]Directive{
 	"taskfile":         DirectiveFilterFileExt,
 	"dir":              DirectiveFilterDirs,
