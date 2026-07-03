@@ -1,11 +1,7 @@
 #!/usr/bin/env fish
-# Smoke-tests how the fish wrapper INTERPRETS each directive (files vs dirs vs
-# no files) via `complete -C`, which asks fish for the real completions without
-# a TTY. The suggestion logic (which tasks/aliases/vars) is covered by the Go
-# tests; here we only check routing. `task` must resolve to the binary under
-# test (run.sh puts a symlink on PATH).
-#
-# Requires: TASK_FIXTURE (dir with a Taskfile.yml and sample files/dirs).
+# Smoke-tests how the fish wrapper routes each directive, via `complete -C`
+# (real completions, no TTY). Suggestion logic lives in the Go tests.
+# Set up by run.sh: TASK_FIXTURE, and `task` on PATH = the binary under test.
 
 cd $TASK_FIXTURE
 source (dirname (status -f))/../fish/task.fish

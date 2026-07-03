@@ -1,10 +1,7 @@
-# Smoke-tests how the PowerShell wrapper INTERPRETS each directive (files vs
-# dirs vs no files) plus its own prefix filtering, via the completion API which
-# returns real completions without a TTY. The suggestion logic (which
-# tasks/aliases/vars) is covered by the Go tests; here we only check routing.
-# `task` must resolve to the binary under test (run.sh puts a symlink on PATH).
-#
-# Requires: $env:TASK_FIXTURE (dir with a Taskfile.yml and sample files/dirs).
+# Smoke-tests how the PowerShell wrapper routes each directive (plus its own
+# prefix filtering), via the completion API (real completions, no TTY).
+# Suggestion logic lives in the Go tests. Set up by run.sh: $env:TASK_FIXTURE,
+# and `task` on PATH = the binary under test.
 
 Set-Location $env:TASK_FIXTURE
 . "$PSScriptRoot/../ps/task.ps1"

@@ -1,11 +1,7 @@
 #!/usr/bin/env bash
-# Smoke-tests how the bash wrapper INTERPRETS each directive by stubbing the
-# bash-completion helpers it calls (_filedir / compopt / __ltrim_colon_completions)
-# and asserting the routing. The suggestion logic (which tasks/aliases/vars) is
-# covered by the Go tests; here we only check that each directive triggers the
-# right shell behavior. Deterministic, no TTY, works without bash-completion.
-#
-# Requires: TASK_BIN (task binary), TASK_FIXTURE (dir with a Taskfile.yml).
+# Smoke-tests how the bash wrapper routes each directive by stubbing the
+# bash-completion helpers (_filedir / compopt / …) and asserting what it calls.
+# Suggestion logic lives in the Go tests. Requires TASK_BIN and TASK_FIXTURE.
 set -u
 
 : "${TASK_BIN:?}"; : "${TASK_FIXTURE:?}"
