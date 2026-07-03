@@ -1,7 +1,9 @@
 #!/usr/bin/env zsh
-# Tests the zsh wrapper by stubbing the completion-system functions it calls
-# (_describe / _files / _path_files) and asserting how it routes each directive.
-# This is deterministic and needs no TTY.
+# Smoke-tests how the zsh wrapper INTERPRETS each directive by stubbing the
+# completion-system functions it calls (_describe / _files / _path_files) and
+# asserting the routing. The suggestion logic (which tasks/aliases/vars) is
+# covered by the Go tests; here we only check that each directive triggers the
+# right shell behavior. Deterministic, no TTY.
 #
 # Requires: TASK_BIN (task binary), TASK_FIXTURE (dir with a Taskfile.yml).
 
@@ -49,30 +51,28 @@ hasnot() { # LABEL PATTERN
     fi
 }
 
-echo "zsh: task names (no file fallback)"
+echo "zsh: :4 (NoFileComp) forwards candidates, no file fallback"
 run task ''
-has    "lists tasks"        "cand:build"
-has    "lists aliases"      "cand:dep"
-hasnot "no file fallback"   "files:"
+has    "candidate forwarded"  "cand:build"
+hasnot "no file fallback"     "files:"
 
-echo "zsh: task variables"
+echo "zsh: :2|:32 (NoSpace|KeepOrder) map to -S and -V"
 run task deploy ''
-has    "required vars"      "cand:ENV=dev"
-has    "NoSpace -> -S"      "describe_opts:-S"
-has    "KeepOrder -> -V"    "-V"
+has    "NoSpace -> -S"         "describe_opts:-S"
+has    "KeepOrder -> -V"       "-V"
 
-echo "zsh: --dir routes to directory completion"
-run task --dir ''
-has    "path_files -/"      "path_files:-/"
-
-echo "zsh: --taskfile routes to extension-filtered files"
+echo "zsh: :8 (FilterFileExt) routes to extension-filtered files"
 run task --taskfile ''
-has    "files glob"         "files:"
-has    "yml in glob"        "yml"
+has    "files glob"            "files:"
+has    "yml in glob"           "yml"
 
-echo "zsh: after -- falls back to files"
+echo "zsh: :16 (FilterDirs) routes to directory completion"
+run task --dir ''
+has    "path_files -/"         "path_files:-/"
+
+echo "zsh: :0 (Default) falls back to files"
 run task build -- ''
-has    "files after --"     "files:"
+has    "files default"         "files:"
 
 if (( fails )); then
     echo "zsh: $fails failure(s)"

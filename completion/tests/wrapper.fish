@@ -1,7 +1,9 @@
 #!/usr/bin/env fish
-# Tests the fish wrapper end-to-end via `complete -C`, which asks fish for the
-# real completions of a command line without a TTY. The `task` command must
-# resolve to the binary under test (run.sh puts a symlink on PATH).
+# Smoke-tests how the fish wrapper INTERPRETS each directive (files vs dirs vs
+# no files) via `complete -C`, which asks fish for the real completions without
+# a TTY. The suggestion logic (which tasks/aliases/vars) is covered by the Go
+# tests; here we only check routing. `task` must resolve to the binary under
+# test (run.sh puts a symlink on PATH).
 #
 # Requires: TASK_FIXTURE (dir with a Taskfile.yml and sample files/dirs).
 
@@ -32,27 +34,20 @@ function hasnot # LABEL LINE VALUE
     end
 end
 
-echo "fish: task names (no files)"
-has    "lists tasks"        'task ' build
-has    "lists aliases"      'task ' dep
-hasnot "no files for tasks" 'task ' notes.txt
+echo "fish: :4 (NoFileComp) forwards candidates, offers no files"
+has    "candidate forwarded"  'task ' build
+hasnot "no file fallback"     'task ' notes.txt
 
-echo "fish: task variables"
-has    "required vars"      'task deploy ' ENV=dev
+echo "fish: :16 (FilterDirs) offers directories only"
+has    "dir offered"          'task --dir ' sub/
+hasnot "no plain file"        'task --dir ' notes.txt
 
-echo "fish: flag values"
-has    "enum values"        'task --output ' interleaved
+echo "fish: :8 (FilterFileExt) filters by extension"
+has    "matching file"        'task --taskfile ' Taskfile.yml
+hasnot "non-matching file"    'task --taskfile ' notes.txt
 
-echo "fish: --dir completes directories only"
-has    "dirs offered"       'task --dir ' sub/
-hasnot "no plain files"     'task --dir ' notes.txt
-
-echo "fish: --taskfile filters by extension"
-has    "yaml offered"       'task --taskfile ' Taskfile.yml
-hasnot "txt filtered out"   'task --taskfile ' notes.txt
-
-echo "fish: after -- completes files"
-has    "files after --"     'task build -- ' notes.txt
+echo "fish: :0 (Default) falls back to files"
+has    "file offered"         'task build -- ' notes.txt
 
 if test $fails -ne 0
     echo "fish: $fails failure(s)"

@@ -1,6 +1,8 @@
-# Tests the PowerShell wrapper end-to-end via the completion API, which returns
-# the real completions of a command line without a TTY. The `task` command must
-# resolve to the binary under test (run.sh puts a symlink on PATH).
+# Smoke-tests how the PowerShell wrapper INTERPRETS each directive (files vs
+# dirs vs no files) plus its own prefix filtering, via the completion API which
+# returns real completions without a TTY. The suggestion logic (which
+# tasks/aliases/vars) is covered by the Go tests; here we only check routing.
+# `task` must resolve to the binary under test (run.sh puts a symlink on PATH).
 #
 # Requires: $env:TASK_FIXTURE (dir with a Taskfile.yml and sample files/dirs).
 
@@ -32,28 +34,21 @@ function HasNot($label, $line, $value) {
 	}
 }
 
-Write-Output "powershell: task names (no files)"
-Has    "lists tasks"        'task ' 'build'
-Has    "lists aliases"      'task ' 'dep'
-HasNot "no files for tasks" 'task ' 'notes.txt'
+Write-Output "powershell: :4 (NoFileComp) forwards candidates, offers no files"
+Has    "candidate forwarded" 'task ' 'build'
+HasNot "no file fallback"    'task ' 'notes.txt'
 
-Write-Output "powershell: prefix filtering"
-Has    "filters by prefix"  'task b' 'build'
-HasNot "prefix excludes"    'task b' 'deploy'
+Write-Output "powershell: filters candidates by the current word"
+Has    "prefix keeps match"  'task b' 'build'
+HasNot "prefix drops others" 'task b' 'deploy'
 
-Write-Output "powershell: task variables"
-Has    "required vars"      'task deploy ' 'ENV=dev'
+Write-Output "powershell: :16 (FilterDirs) offers directories only"
+Has    "dir offered"         'task --dir ' 'sub'
+HasNot "no plain file"       'task --dir ' 'notes.txt'
 
-Write-Output "powershell: flag values"
-Has    "enum values"        'task --output ' 'interleaved'
-
-Write-Output "powershell: --dir completes directories only"
-Has    "dirs offered"       'task --dir ' 'sub'
-HasNot "no plain files"     'task --dir ' 'notes.txt'
-
-Write-Output "powershell: --taskfile filters by extension"
-Has    "yaml offered"       'task --taskfile ' 'Taskfile.yml'
-HasNot "txt filtered out"   'task --taskfile ' 'notes.txt'
+Write-Output "powershell: :8 (FilterFileExt) filters by extension"
+Has    "matching file"       'task --taskfile ' 'Taskfile.yml'
+HasNot "non-matching file"   'task --taskfile ' 'notes.txt'
 
 if ($fails -ne 0) {
 	Write-Output "powershell: $fails failure(s)"
