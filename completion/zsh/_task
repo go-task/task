@@ -120,24 +120,20 @@ _task() {
         '(-v --verbose)'{-v,--verbose}'[verbose mode]'
         '(-w --watch)'{-w,--watch}'[watch-mode for given tasks, re-run when inputs change]'
         '(-y --yes)'{-y,--yes}'[assume yes to all prompts]'
+		'(--offline --clear-cache)--download[download remote Taskfile]'
+		'(--offline --download)--offline[use only local or cached Taskfiles]'
+		'(--timeout)--timeout[timeout for remote Taskfile downloads]:duration: '
+		'(--expiry)--expiry[cache expiry duration]:duration: '
+		'(--remote-cache-dir)--remote-cache-dir[directory to cache remote Taskfiles]:cache dir:_dirs'
+		'(--cacert)--cacert[custom CA certificate for TLS]:file:_files'
+		'(--cert)--cert[client certificate for mTLS]:file:_files'
+		'(--cert-key)--cert-key[client certificate private key]:file:_files'
     )
 
     # Experimental flags (dynamically added based on enabled experiments)
     # Options (modify behavior)
     if __task_is_experiment_enabled "GENTLE_FORCE"; then
         standard_args+=('(--force-all)--force-all[force execution of task and all dependencies]')
-    fi
-
-    if __task_is_experiment_enabled "REMOTE_TASKFILES"; then
-        standard_args+=(
-            '(--offline --download)--offline[use only local or cached Taskfiles]'
-            '(--timeout)--timeout[timeout for remote Taskfile downloads]:duration: '
-            '(--expiry)--expiry[cache expiry duration]:duration: '
-            '(--remote-cache-dir)--remote-cache-dir[directory to cache remote Taskfiles]:cache dir:_dirs'
-            '(--cacert)--cacert[custom CA certificate for TLS]:file:_files'
-            '(--cert)--cert[client certificate for mTLS]:file:_files'
-            '(--cert-key)--cert-key[client certificate private key]:file:_files'
-        )
     fi
 
     operation_args=(
@@ -150,17 +146,8 @@ _task() {
             '(*)'{-i,--init}'[create new Taskfile.yml]'
             '(- *)'{-h,--help}'[show help]'
             '(- *)--version[show version and exit]'
-    )
-
-    # Experimental operations (dynamically added based on enabled experiments)
-    if __task_is_experiment_enabled "REMOTE_TASKFILES"; then
-        standard_args+=(
-            '(--offline --clear-cache)--download[download remote Taskfile]'
-        )
-        operation_args+=(
             '(* --download)--clear-cache[clear remote Taskfile cache]'
-        )
-    fi
+    )
 
     _arguments -S $standard_args $operation_args
 }
