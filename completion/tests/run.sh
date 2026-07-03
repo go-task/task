@@ -7,8 +7,13 @@ set -u
 here=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 root=$(cd "$here/../.." && pwd)
 
-# Build the binary under test.
+# Temp dirs for the binary and the fixture; removed on exit (including on early
+# failure via the trap).
 bindir=$(mktemp -d)
+fixture=$(mktemp -d)
+trap 'rm -rf "$bindir" "$fixture"' EXIT
+
+# Build the binary under test.
 if ! go build -o "$bindir/task" "$root/cmd/task"; then
   echo "failed to build task binary" >&2
   exit 1
@@ -19,7 +24,6 @@ export TASK_BIN="$bindir/task"
 export PATH="$bindir:$PATH"
 
 # Fixture: a Taskfile plus files/dirs so file/dir completion has real entries.
-fixture=$(mktemp -d)
 cat > "$fixture/Taskfile.yml" <<'YML'
 version: '3'
 
