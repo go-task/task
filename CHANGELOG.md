@@ -54,7 +54,9 @@
   error (#1881, #2892 by @Lewin671).
 - Unified Bash, Fish, Zsh and PowerShell completions behind a single `task
   __complete` engine, so every shell offers the same suggestions: task names,
-  aliases, flags, flag values and per-task CLI variables (#2897 by @vmaerten).
+  aliases, flags, flag values and per-task CLI variables. The Zsh `show-aliases`
+  and `verbose` zstyles are preserved, now backed by the `--no-aliases` and
+  `--no-descriptions` completion flags (#2897 by @vmaerten).
 
 ## v3.51.1 - 2026-05-16
 

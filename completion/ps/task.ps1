@@ -21,10 +21,9 @@ Register-ArgumentCompleter -Native -CommandName $cmdNames -ScriptBlock {
 		}
 	}
 	# The trailing word (possibly empty) must reach the engine so it knows
-	# the cursor sits on a fresh word.
-	if ($argsToPass.Count -gt 0 -and $argsToPass[-1] -eq $wordToComplete) {
-		$argsToPass[-1] = $wordToComplete
-	} else {
+	# the cursor sits on a fresh word. It is already present when it coincides
+	# with the last command element captured above.
+	if ($argsToPass.Count -eq 0 -or $argsToPass[-1] -ne $wordToComplete) {
 		$argsToPass += $wordToComplete
 	}
 
@@ -39,6 +38,10 @@ Register-ArgumentCompleter -Native -CommandName $cmdNames -ScriptBlock {
 	$directive = [int]($last.Substring(1))
 	$data = if ($lines.Count -gt 1) { $lines[0..($lines.Count - 2)] } else { @() }
 
+	# Note: DirectiveNoSpace (bit 2) cannot be honored here — PowerShell's
+	# CompletionResult API has no per-item "no trailing space" option, so a
+	# suggestion like `VAR=` gets a trailing space. This is a PowerShell limit.
+
 	# FilterFileExt
 	if ($directive -band 8) {
 		$patterns = $data | ForEach-Object { "*.$_" }
@@ -52,10 +55,23 @@ Register-ArgumentCompleter -Native -CommandName $cmdNames -ScriptBlock {
 			ForEach-Object { [CompletionResult]::new($_.Name, $_.Name, [CompletionResultType]::ProviderContainer, $_.Name) }
 	}
 
-	return $data | ForEach-Object {
+	# Build candidates, filtering by the current word. PowerShell does not filter
+	# native argument-completer results itself, so without this every suggestion
+	# would be offered regardless of what the user typed.
+	$results = @($data | ForEach-Object {
 		$parts = $_ -split "`t", 2
 		$value = $parts[0]
+		if ($wordToComplete -and -not $value.StartsWith($wordToComplete)) { return }
 		$desc = if ($parts.Count -gt 1 -and $parts[1]) { $parts[1] } else { $value }
 		[CompletionResult]::new($value, $value, [CompletionResultType]::ParameterValue, $desc)
+	})
+
+	# NoFileComp (bit 4) unset and nothing matched → fall back to file completion,
+	# since the engine returned DirectiveDefault (e.g. --cacert, after `--`).
+	if ($results.Count -eq 0 -and -not ($directive -band 4)) {
+		return Get-ChildItem -Path . -ErrorAction SilentlyContinue |
+			ForEach-Object { [CompletionResult]::new($_.Name, $_.Name, [CompletionResultType]::ProviderItem, $_.Name) }
 	}
+
+	return $results
 }

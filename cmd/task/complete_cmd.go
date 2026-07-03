@@ -11,6 +11,10 @@ import (
 )
 
 func runComplete(args []string) error {
+	// Strip the completion-control flags the wrapper prepends; the rest is the
+	// user's command line to complete.
+	opts, args := complete.ParseOptions(args)
+
 	dir, entrypoint, global := extractTaskfileFlags(args)
 
 	e := task.NewExecutor(
@@ -26,10 +30,14 @@ func runComplete(args []string) error {
 		}
 	}
 
+	// Loading the Taskfile parses YAML (and may hit the network for remote
+	// Taskfiles), so skip it entirely when completing flags or their values.
 	// Best-effort: a missing or broken Taskfile must not break completion.
-	_ = e.Setup()
+	if complete.NeedsTaskfile(args, pflag.CommandLine) {
+		_ = e.Setup()
+	}
 
-	suggs, dirv := complete.Complete(e, pflag.CommandLine, args)
+	suggs, dirv := complete.Complete(e, pflag.CommandLine, args, opts)
 	complete.Write(os.Stdout, suggs, dirv)
 	return nil
 }

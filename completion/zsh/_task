@@ -6,60 +6,66 @@
 TASK_CMD="${TASK_EXE:-task}"
 
 _task() {
-    local -a args lines completions opts
-    local output directive line
+	local -a args lines completions opts ctl
+	local output directive line
 
-    # (@) preserves a trailing empty string, which the engine relies on to
-    # know the cursor is on a fresh word.
-    args=("${(@)words[2,CURRENT]}")
-    (( ${#args} == 0 )) && args=("")
+	# Map the zsh completion zstyles to engine flags. `-T` is true when the
+	# style is unset (its default) or explicitly true, so a flag is only passed
+	# when the user turned the style off.
+	zstyle -T ":completion:${curcontext}:" show-aliases || ctl+=(--no-aliases)
+	zstyle -T ":completion:${curcontext}:" verbose      || ctl+=(--no-descriptions)
 
-    output=$("$TASK_CMD" __complete "${args[@]}" 2>/dev/null)
-    if [[ -z "$output" ]]; then
-        _files
-        return
-    fi
+	# (@) preserves a trailing empty string, which the engine relies on to
+	# know the cursor is on a fresh word.
+	args=("${(@)words[2,CURRENT]}")
+	(( ${#args} == 0 )) && args=("")
 
-    lines=("${(f)output}")
-    directive="${lines[-1]#:}"
-    lines=("${(@)lines[1,-2]}")
+	output=$("$TASK_CMD" __complete "${ctl[@]}" "${args[@]}" 2>/dev/null)
+	if [[ -z "$output" ]]; then
+		_files
+		return
+	fi
 
-    if (( directive & 8 )); then
-        local -a globs
-        for line in "${lines[@]}"; do
-            globs+=("*.${line}")
-        done
-        _files -g "(${(j:|:)globs})"
-        return
-    fi
+	lines=("${(f)output}")
+	directive="${lines[-1]#:}"
+	lines=("${(@)lines[1,-2]}")
 
-    if (( directive & 16 )); then
-        _path_files -/
-        return
-    fi
+	if (( directive & 8 )); then
+		local -a globs
+		for line in "${lines[@]}"; do
+			globs+=("*.${line}")
+		done
+		_files -g "(${(j:|:)globs})"
+		return
+	fi
 
-    # `:` inside the value must be escaped: _describe splits on the first
-    # unescaped colon (e.g. "docs:serve" would otherwise become value "docs").
-    local value desc
-    for line in "${lines[@]}"; do
-        if [[ "$line" == *$'\t'* ]]; then
-            value="${line%%$'\t'*}"
-            desc="${line#*$'\t'}"
-            completions+=("${value//:/\\:}:$desc")
-        else
-            completions+=("${line//:/\\:}")
-        fi
-    done
+	if (( directive & 16 )); then
+		_path_files -/
+		return
+	fi
 
-    (( directive & 2 ))  && opts+=(-S '')
-    (( directive & 32 )) && opts+=(-V)
+	# `:` inside the value must be escaped: _describe splits on the first
+	# unescaped colon (e.g. "docs:serve" would otherwise become value "docs").
+	local value desc
+	for line in "${lines[@]}"; do
+		if [[ "$line" == *$'\t'* ]]; then
+			value="${line%%$'\t'*}"
+			desc="${line#*$'\t'}"
+			completions+=("${value//:/\\:}:$desc")
+		else
+			completions+=("${line//:/\\:}")
+		fi
+	done
 
-    if (( ${#completions} > 0 )); then
-        _describe -t tasks 'task' completions "${opts[@]}"
-    fi
+	(( directive & 2 ))  && opts+=(-S '')
+	(( directive & 32 )) && opts+=(-V)
 
-    (( directive & 4 )) && return
-    _files
+	if (( ${#completions} > 0 )); then
+		_describe -t tasks 'task' completions "${opts[@]}"
+	fi
+
+	(( directive & 4 )) && return
+	_files
 }
 
 compdef _task "$TASK_CMD"
