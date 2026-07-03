@@ -10,6 +10,15 @@ type Copier[T any] interface {
 	DeepCopy() T
 }
 
+func Scalar[T any](orig *T) *T {
+	if orig == nil {
+		return nil
+	} else {
+		v := *orig
+		return &v
+	}
+}
+
 func Slice[T any](orig []T) []T {
 	if orig == nil {
 		return nil
@@ -72,7 +81,7 @@ func TraverseStringsFunc[T any](v T, fn func(v string) (string, error)) (T, erro
 	traverseFunc = func(copy, v reflect.Value) error {
 		switch v.Kind() {
 
-		case reflect.Ptr:
+		case reflect.Pointer:
 			// Unwrap the pointer
 			originalValue := v.Elem()
 			// If the pointer is nil, do nothing

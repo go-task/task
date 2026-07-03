@@ -12,6 +12,14 @@ tasks:
     generates:
       - ./generated.txt
     method: checksum
+  build-*:
+    cmds:
+      - cp ./source.txt ./generated-{{index .MATCH 0}}.txt
+    sources:
+      - ./source.txt
+    generates:
+      - ./generated-{{index .MATCH 0}}.txt
+  method: checksum
 
   build-with-status:
     cmds:

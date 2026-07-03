@@ -1,2 +1,2 @@
 matrix reference ".NOT_A_LIST" must resolve to a list
-task: Failed to parse /testdata/for/deps/Taskfile.yml:
+task: Failed to parse {{.TEST_DIR}}/testdata/for/deps/Taskfile.yml:

@@ -3,7 +3,6 @@ package task_test
 import (
 	"bytes"
 	"cmp"
-	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -13,7 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/go-task/task/v3"
-	"github.com/go-task/task/v3/internal/experiments"
+	"github.com/go-task/task/v3/experiments"
 	"github.com/go-task/task/v3/internal/filepathext"
 	"github.com/go-task/task/v3/taskfile/ast"
 )
@@ -50,7 +49,8 @@ func NewExecutorTest(t *testing.T, opts ...ExecutorTestOption) {
 		task: "default",
 		vars: map[string]any{},
 		TaskTest: TaskTest{
-			experiments: map[*experiments.Experiment]int{},
+			experiments:         map[*experiments.Experiment]int{},
+			fixtureTemplateData: map[string]any{},
 		},
 	}
 	// Apply the functional options
@@ -143,12 +143,12 @@ func (tt *ExecutorTest) run(t *testing.T) {
 	t.Helper()
 	f := func(t *testing.T) {
 		t.Helper()
-		var buf bytes.Buffer
+		var buffer SyncBuffer
 
 		opts := append(
 			tt.executorOpts,
-			task.WithStdout(&buf),
-			task.WithStderr(&buf),
+			task.WithStdout(&buffer),
+			task.WithStderr(&buffer),
 		)
 
 		// If the test has input, create a reader for it and add it to the
@@ -165,13 +165,14 @@ func (tt *ExecutorTest) run(t *testing.T) {
 		// Create a golden fixture file for the output
 		g := goldie.New(t,
 			goldie.WithFixtureDir(filepath.Join(e.Dir, "testdata")),
+			goldie.WithEqualFn(NormalizedEqual),
 		)
 
 		// Call setup and check for errors
 		if err := e.Setup(); tt.wantSetupError {
 			require.Error(t, err)
 			tt.writeFixtureErrSetup(t, g, err)
-			tt.writeFixtureBuffer(t, g, buf)
+			tt.writeFixtureBuffer(t, g, buffer.buf)
 			return
 		} else {
 			require.NoError(t, err)
@@ -188,11 +189,11 @@ func (tt *ExecutorTest) run(t *testing.T) {
 		}
 
 		// Run the task and check for errors
-		ctx := context.Background()
+		ctx := t.Context()
 		if err := e.Run(ctx, call); tt.wantRunError {
 			require.Error(t, err)
 			tt.writeFixtureErrRun(t, g, err)
-			tt.writeFixtureBuffer(t, g, buf)
+			tt.writeFixtureBuffer(t, g, buffer.buf)
 			return
 		} else {
 			require.NoError(t, err)
@@ -205,7 +206,7 @@ func (tt *ExecutorTest) run(t *testing.T) {
 			}
 		}
 
-		tt.writeFixtureBuffer(t, g, buf)
+		tt.writeFixtureBuffer(t, g, buffer.buf)
 	}
 
 	// Run the test (with a name if it has one)
@@ -232,7 +233,7 @@ func TestEmptyTaskfile(t *testing.T) {
 			task.WithDir("testdata/empty_taskfile"),
 		),
 		WithSetupError(),
-		WithPostProcessFn(PPRemoveAbsolutePaths),
+		WithFixtureTemplating(),
 	)
 }
 
@@ -262,6 +263,85 @@ func TestVars(t *testing.T) {
 			task.WithDir("testdata/vars"),
 			task.WithSilent(true),
 		),
+	)
+	NewExecutorTest(t,
+		WithName("cli-var-priority-default"),
+		WithExecutorOptions(
+			task.WithDir("testdata/vars"),
+			task.WithSilent(true),
+		),
+		WithTask("cli-var-priority"),
+	)
+	NewExecutorTest(t,
+		WithName("cli-var-priority-override"),
+		WithExecutorOptions(
+			task.WithDir("testdata/vars"),
+			task.WithSilent(true),
+		),
+		WithTask("cli-var-priority"),
+		WithVar("CLI_VAR", "from_cli"),
+	)
+}
+
+func TestSecretVars(t *testing.T) {
+	t.Parallel()
+	NewExecutorTest(t,
+		WithName("secret vars are masked in logs"),
+		WithExecutorOptions(
+			task.WithDir("testdata/secrets"),
+		),
+		WithTask("test-secret-masking"),
+	)
+	NewExecutorTest(t,
+		WithName("multiple secrets masked"),
+		WithExecutorOptions(
+			task.WithDir("testdata/secrets"),
+		),
+		WithTask("test-multiple-secrets"),
+	)
+	NewExecutorTest(t,
+		WithName("mixed secret and public vars"),
+		WithExecutorOptions(
+			task.WithDir("testdata/secrets"),
+		),
+		WithTask("test-mixed"),
+	)
+	NewExecutorTest(t,
+		WithName("deferred command with secrets"),
+		WithExecutorOptions(
+			task.WithDir("testdata/secrets"),
+		),
+		WithTask("test-deferred-secret"),
+	)
+	NewExecutorTest(t,
+		WithName("env secret limitation"),
+		WithExecutorOptions(
+			task.WithDir("testdata/secrets"),
+		),
+		WithTask("test-env-secret-limitation"),
+	)
+	NewExecutorTest(t,
+		WithName("secret vars are masked in summary"),
+		WithExecutorOptions(
+			task.WithDir("testdata/secrets"),
+			task.WithSummary(true),
+		),
+		WithTask("test-secret-masking"),
+	)
+	NewExecutorTest(t,
+		WithName("dynamic secret masked in verbose"),
+		WithExecutorOptions(
+			task.WithDir("testdata/secrets"),
+			task.WithVerbose(true),
+		),
+		WithTask("test-dynamic-secret-verbose"),
+	)
+	NewExecutorTest(t,
+		WithName("secret key order independent"),
+		WithExecutorOptions(
+			task.WithDir("testdata/secrets"),
+		),
+		WithTask("test-secret-key-order"),
 	)
 }
 
@@ -334,6 +414,41 @@ func TestRequires(t *testing.T) {
 		),
 		WithTask("var-defined-in-task"),
 	)
+	NewExecutorTest(t,
+		WithName("enum ref - passes validation"),
+		WithExecutorOptions(
+			task.WithDir("testdata/requires"),
+		),
+		WithTask("validation-var-ref"),
+		WithVar("ENV", "dev"),
+	)
+	NewExecutorTest(t,
+		WithName("enum ref - fails validation"),
+		WithExecutorOptions(
+			task.WithDir("testdata/requires"),
+		),
+		WithTask("validation-var-ref"),
+		WithVar("ENV", "invalid"),
+		WithRunError(),
+	)
+	NewExecutorTest(t,
+		WithName("enum ref - ref to non-list"),
+		WithExecutorOptions(
+			task.WithDir("testdata/requires"),
+		),
+		WithTask("validation-var-ref-invalid"),
+		WithVar("VALUE", "test"),
+		WithRunError(),
+	)
+	NewExecutorTest(t,
+		WithName("enum ref - ref to nonexistent var"),
+		WithExecutorOptions(
+			task.WithDir("testdata/requires"),
+		),
+		WithTask("validation-var-ref-nonexistent"),
+		WithVar("ENV", "dev"),
+		WithRunError(),
+	)
 }
 
 // TODO: mock fs
@@ -347,6 +462,7 @@ func TestSpecialVars(t *testing.T) {
 		// Root
 		"print-task",
 		"print-root-dir",
+		"print-root-taskfile",
 		"print-taskfile",
 		"print-taskfile-dir",
 		"print-task-dir",
@@ -367,7 +483,7 @@ func TestSpecialVars(t *testing.T) {
 					task.WithVersionCheck(true),
 				),
 				WithTask(test),
-				WithPostProcessFn(PPRemoveAbsolutePaths),
+				WithFixtureTemplating(),
 			)
 		}
 	}
@@ -551,7 +667,7 @@ func TestStatus(t *testing.T) {
 			task.WithVerbose(true),
 		),
 		WithTask("gen-silent-baz"),
-		WithPostProcessFn(PPRemoveAbsolutePaths),
+		WithFixtureTemplating(),
 	)
 }
 
@@ -621,6 +737,30 @@ func TestAlias(t *testing.T) {
 	)
 }
 
+func TestSummaryWithVarsAndRequires(t *testing.T) {
+	t.Parallel()
+
+	// Test basic case from prompt.md - vars and requires
+	NewExecutorTest(t,
+		WithName("vars-and-requires"),
+		WithExecutorOptions(
+			task.WithDir("testdata/summary-vars-requires"),
+			task.WithSummary(true),
+		),
+		WithTask("mytask"),
+	)
+
+	// Test with shell variables
+	NewExecutorTest(t,
+		WithName("shell-vars"),
+		WithExecutorOptions(
+			task.WithDir("testdata/summary-vars-requires"),
+			task.WithSummary(true),
+		),
+		WithTask("with-sh-var"),
+	)
+}
+
 func TestLabel(t *testing.T) {
 	t.Parallel()
 
@@ -662,6 +802,36 @@ func TestLabel(t *testing.T) {
 		WithName("label in summary"),
 		WithExecutorOptions(
 			task.WithDir("testdata/label_summary"),
+		),
+		WithTask("foo"),
+	)
+
+	NewExecutorTest(t,
+		WithName("label in error"),
+		WithExecutorOptions(
+			task.WithDir("testdata/label_error"),
+		),
+		WithTask("foo"),
+		WithRunError(),
+	)
+}
+
+func TestPrefix(t *testing.T) {
+	t.Parallel()
+
+	NewExecutorTest(t,
+		WithName("up to date"),
+		WithExecutorOptions(
+			task.WithDir("testdata/prefix_uptodate"),
+			task.WithOutputStyle(ast.Output{Name: "prefixed"}),
+		),
+		WithTask("foo"),
+	)
+
+	NewExecutorTest(t,
+		WithName("up to dat with no output style"),
+		WithExecutorOptions(
+			task.WithDir("testdata/prefix_uptodate"),
 		),
 		WithTask("foo"),
 	)
@@ -777,7 +947,7 @@ func TestForCmds(t *testing.T) {
 				task.WithForce(true),
 			),
 			WithTask(test.name),
-			WithPostProcessFn(PPRemoveAbsolutePaths),
+			WithFixtureTemplating(),
 		}
 		if test.wantErr {
 			opts = append(opts, WithRunError())
@@ -822,7 +992,7 @@ func TestForDeps(t *testing.T) {
 				task.WithOutputStyle(ast.Output{Name: "group"}),
 			),
 			WithTask(test.name),
-			WithPostProcessFn(PPRemoveAbsolutePaths),
+			WithFixtureTemplating(),
 			WithPostProcessFn(PPSortedLines),
 		}
 		if test.wantErr {
@@ -935,5 +1105,180 @@ func TestVarInheritance(t *testing.T) {
 			),
 			WithTask(cmp.Or(test.call, "default")),
 		)
+	}
+}
+
+func TestFuzzyModel(t *testing.T) {
+	t.Parallel()
+
+	NewExecutorTest(t,
+		WithName("fuzzy"),
+		WithExecutorOptions(
+			task.WithDir("testdata/fuzzy"),
+		),
+		WithTask("instal"),
+		WithRunError(),
+	)
+
+	NewExecutorTest(t,
+		WithName("not-fuzzy"),
+		WithExecutorOptions(
+			task.WithDir("testdata/fuzzy"),
+		),
+		WithTask("install"),
+	)
+
+	NewExecutorTest(t,
+		WithName("intern"),
+		WithExecutorOptions(
+			task.WithDir("testdata/fuzzy"),
+		),
+		WithTask("intern"),
+		WithRunError(),
+	)
+}
+
+func TestIncludeChecksum(t *testing.T) {
+	t.Parallel()
+
+	NewExecutorTest(t,
+		WithName("correct"),
+		WithExecutorOptions(
+			task.WithDir("testdata/includes_checksum/correct"),
+		),
+	)
+
+	NewExecutorTest(t,
+		WithName("incorrect"),
+		WithExecutorOptions(
+			task.WithDir("testdata/includes_checksum/incorrect"),
+		),
+		WithSetupError(),
+		WithFixtureTemplating(),
+	)
+}
+
+func TestIncludeSilent(t *testing.T) {
+	t.Parallel()
+
+	NewExecutorTest(t,
+		WithName("include-taskfile-silent"),
+		WithExecutorOptions(
+			task.WithDir("testdata/includes_silent"),
+		),
+		WithTask("default"),
+	)
+}
+
+func TestFailfast(t *testing.T) {
+	t.Parallel()
+
+	t.Run("Default", func(t *testing.T) {
+		t.Parallel()
+
+		NewExecutorTest(t,
+			WithName("default"),
+			WithExecutorOptions(
+				task.WithDir("testdata/failfast/default"),
+				task.WithSilent(true),
+			),
+			WithPostProcessFn(PPSortedLines),
+			WithRunError(),
+		)
+	})
+
+	t.Run("Option", func(t *testing.T) {
+		t.Parallel()
+
+		NewExecutorTest(t,
+			WithName("default"),
+			WithExecutorOptions(
+				task.WithDir("testdata/failfast/default"),
+				task.WithSilent(true),
+				task.WithFailfast(true),
+			),
+			WithPostProcessFn(PPSortedLines),
+			WithRunError(),
+		)
+	})
+
+	t.Run("Task", func(t *testing.T) {
+		t.Parallel()
+
+		NewExecutorTest(t,
+			WithName("task"),
+			WithExecutorOptions(
+				task.WithDir("testdata/failfast/task"),
+				task.WithSilent(true),
+			),
+			WithPostProcessFn(PPSortedLines),
+			WithRunError(),
+		)
+	})
+}
+
+func TestIf(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name    string
+		task    string
+		vars    map[string]any
+		verbose bool
+	}{
+		// Basic command-level if
+		{name: "cmd-if-true", task: "cmd-if-true"},
+		{name: "cmd-if-false", task: "cmd-if-false"},
+
+		// Task-level if
+		{name: "task-if-true", task: "task-if-true"},
+		{name: "task-if-false", task: "task-if-false", verbose: true},
+
+		// Task call with if
+		{name: "task-call-if-true", task: "task-call-if-true"},
+		{name: "task-call-if-false", task: "task-call-if-false", verbose: true},
+
+		// Go template conditions
+		{name: "template-eq-true", task: "template-eq-true"},
+		{name: "template-eq-false", task: "template-eq-false", verbose: true},
+		{name: "template-ne", task: "template-ne"},
+		{name: "template-bool-true", task: "template-bool-true"},
+		{name: "template-bool-false", task: "template-bool-false"},
+		{name: "template-direct-true", task: "template-direct-true"},
+		{name: "template-direct-false", task: "template-direct-false"},
+		{name: "template-and", task: "template-and"},
+		{name: "template-or", task: "template-or"},
+
+		// CLI variable override
+		{name: "template-cli-var", task: "template-cli-var", vars: map[string]any{"MY_VAR": "yes"}},
+
+		// Task-level if with template
+		{name: "task-level-template", task: "task-level-template"},
+		{name: "task-level-template-false", task: "task-level-template-false", verbose: true},
+
+		// For loop with if
+		{name: "if-in-for-loop", task: "if-in-for-loop", verbose: true},
+
+		// Task-level if with dynamic variable
+		{name: "task-if-dynamic-true", task: "task-if-dynamic-true"},
+		{name: "task-if-dynamic-false", task: "task-if-dynamic-false", verbose: true},
+	}
+
+	for _, test := range tests {
+		opts := []ExecutorTestOption{
+			WithName(test.name),
+			WithExecutorOptions(
+				task.WithDir("testdata/if"),
+				task.WithSilent(true),
+				task.WithVerbose(test.verbose),
+			),
+			WithTask(test.task),
+		}
+		if test.vars != nil {
+			for k, v := range test.vars {
+				opts = append(opts, WithVar(k, v))
+			}
+		}
+		NewExecutorTest(t, opts...)
 	}
 }

@@ -1,0 +1,12 @@
+[tools]
+# Runtimes
+go = "1.26.4"
+node = "24"
+pnpm = "11.9.0"
+
+# Dev tools
+golangci-lint = "2.12.2"
+mockery = "3.7.1"
+gotestsum = "latest"
+goreleaser = "2"
+"go:golang.org/x/exp/cmd/gorelease" = "latest"

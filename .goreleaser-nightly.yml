@@ -1,0 +1,15 @@
+# yaml-language-server: $schema=https://goreleaser.com/static/schema.json
+version: 2
+pro: true
+
+release:
+  name_template: 'v{{.Version}}'
+
+nightly:
+  publish_release: true
+  keep_single_release: true
+  version_template: "{{incminor .Version}}-nightly"
+
+includes:
+  - from_file:
+      path: ./.goreleaser.yml

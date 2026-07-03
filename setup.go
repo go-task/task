@@ -1,6 +1,7 @@
 package task
 
 import (
+	"cmp"
 	"context"
 	"fmt"
 	"os"
@@ -13,7 +14,6 @@ import (
 	"github.com/sajari/fuzzy"
 
 	"github.com/go-task/task/v3/errors"
-	"github.com/go-task/task/v3/internal/env"
 	"github.com/go-task/task/v3/internal/execext"
 	"github.com/go-task/task/v3/internal/filepathext"
 	"github.com/go-task/task/v3/internal/logger"
@@ -35,7 +35,6 @@ func (e *Executor) Setup() error {
 	if err := e.readTaskfile(node); err != nil {
 		return err
 	}
-	e.setupFuzzyModel()
 	e.setupStdFiles()
 	if err := e.setupOutput(); err != nil {
 		return err
@@ -55,15 +54,27 @@ func (e *Executor) Setup() error {
 }
 
 func (e *Executor) getRootNode() (taskfile.Node, error) {
-	node, err := taskfile.NewRootNode(e.Entrypoint, e.Dir, e.Insecure, e.Timeout)
+	node, err := taskfile.NewRootNode(e.Entrypoint, e.Dir, e.Insecure, e.Timeout,
+		taskfile.WithCACert(e.CACert),
+		taskfile.WithCert(e.Cert),
+		taskfile.WithCertKey(e.CertKey),
+	)
+	var taskNotFoundError errors.TaskfileNotFoundError
+	if errors.As(err, &taskNotFoundError) {
+		taskNotFoundError.AskInit = true
+		return nil, taskNotFoundError
+	}
 	if err != nil {
 		return nil, err
 	}
 	e.Dir = node.Dir()
+	e.Entrypoint = node.Location()
 	return node, err
 }
 
 func (e *Executor) readTaskfile(node taskfile.Node) error {
+	ctx, cf := context.WithTimeout(context.Background(), e.Timeout)
+	defer cf()
 	debugFunc := func(s string) {
 		e.Logger.VerboseOutf(logger.Magenta, s)
 	}
@@ -71,17 +82,23 @@ func (e *Executor) readTaskfile(node taskfile.Node) error {
 		return e.Logger.Prompt(logger.Yellow, s, "n", "y", "yes")
 	}
 	reader := taskfile.NewReader(
-		node,
 		taskfile.WithInsecure(e.Insecure),
 		taskfile.WithDownload(e.Download),
 		taskfile.WithOffline(e.Offline),
-		taskfile.WithTimeout(e.Timeout),
+		taskfile.WithTrustedHosts(e.TrustedHosts),
 		taskfile.WithTempDir(e.TempDir.Remote),
+		taskfile.WithCacheExpiryDuration(e.CacheExpiryDuration),
+		taskfile.WithReaderCACert(e.CACert),
+		taskfile.WithReaderCert(e.Cert),
+		taskfile.WithReaderCertKey(e.CertKey),
 		taskfile.WithDebugFunc(debugFunc),
 		taskfile.WithPromptFunc(promptFunc),
 	)
-	graph, err := reader.Read()
+	graph, err := reader.Read(ctx, node)
 	if err != nil {
+		if errors.Is(err, context.DeadlineExceeded) {
+			return &errors.TaskfileNetworkTimeoutError{URI: node.Location(), Timeout: e.Timeout}
+		}
 		return err
 	}
 	if e.Taskfile, err = graph.Merge(); err != nil {
@@ -91,7 +108,7 @@ func (e *Executor) readTaskfile(node taskfile.Node) error {
 }
 
 func (e *Executor) setupFuzzyModel() {
-	if e.Taskfile != nil {
+	if e.Taskfile == nil {
 		return
 	}
 
@@ -100,6 +117,9 @@ func (e *Executor) setupFuzzyModel() {
 
 	var words []string
 	for name, task := range e.Taskfile.Tasks.All(nil) {
+		if task.Internal {
+			continue
+		}
 		words = append(words, name)
 		words = slices.Concat(words, task.Aliases)
 	}
@@ -113,14 +133,10 @@ func (e *Executor) setupTempDir() error {
 		return nil
 	}
 
-	tempDir := env.GetTaskEnv("TEMP_DIR")
-	if tempDir == "" {
-		e.TempDir = TempDir{
-			Remote:      filepathext.SmartJoin(e.Dir, ".task"),
-			Fingerprint: filepathext.SmartJoin(e.Dir, ".task"),
-		}
-	} else if filepath.IsAbs(tempDir) || strings.HasPrefix(tempDir, "~") {
-		tempDir, err := execext.Expand(tempDir)
+	// e.TempDirPath carries the resolved CLI precedence (flag > TASK_TEMP_DIR > taskrc).
+	tempDir := cmp.Or(e.TempDirPath, ".task")
+	if filepath.IsAbs(tempDir) || strings.HasPrefix(tempDir, "~") {
+		tempDir, err := execext.ExpandLiteral(tempDir)
 		if err != nil {
 			return err
 		}
@@ -138,16 +154,16 @@ func (e *Executor) setupTempDir() error {
 		}
 	}
 
-	remoteDir := env.GetTaskEnv("REMOTE_DIR")
-	if remoteDir != "" {
-		if filepath.IsAbs(remoteDir) || strings.HasPrefix(remoteDir, "~") {
-			remoteTempDir, err := execext.Expand(remoteDir)
+	// RemoteCacheDir from taskrc/env can override the remote cache directory
+	if e.RemoteCacheDir != "" {
+		if filepath.IsAbs(e.RemoteCacheDir) || strings.HasPrefix(e.RemoteCacheDir, "~") {
+			remoteCacheDir, err := execext.ExpandLiteral(e.RemoteCacheDir)
 			if err != nil {
 				return err
 			}
-			e.TempDir.Remote = remoteTempDir
+			e.TempDir.Remote = remoteCacheDir
 		} else {
-			e.TempDir.Remote = filepathext.SmartJoin(e.Dir, ".task")
+			e.TempDir.Remote = filepathext.SmartJoin(e.Dir, e.RemoteCacheDir)
 		}
 	}
 

@@ -3,13 +3,11 @@ package main
 import (
 	"fmt"
 	"os"
-	"os/exec"
 	"regexp"
 	"strings"
 	"time"
 
 	"github.com/Masterminds/semver/v3"
-	"github.com/otiai10/copy"
 	"github.com/spf13/pflag"
 
 	"github.com/go-task/task/v3/errors"
@@ -17,15 +15,11 @@ import (
 
 const (
 	changelogSource = "CHANGELOG.md"
-	changelogTarget = "website/docs/changelog.mdx"
-	docsSource      = "website/docs"
-	docsTarget      = "website/versioned_docs/version-latest"
+	changelogTarget = "website/src/docs/changelog.md"
+	versionFile     = "internal/version/version.txt"
 )
 
-var (
-	changelogReleaseRegex = regexp.MustCompile(`## Unreleased`)
-	versionRegex          = regexp.MustCompile(`(?m)^  "version": "\d+\.\d+\.\d+",$`)
-)
+var changelogReleaseRegex = regexp.MustCompile(`## Unreleased`)
 
 // Flags
 var (
@@ -49,7 +43,7 @@ func release() error {
 		return errors.New("error: expected version number")
 	}
 
-	version, err := getVersion()
+	version, err := getVersion(versionFile)
 	if err != nil {
 		return err
 	}
@@ -67,32 +61,18 @@ func release() error {
 		return err
 	}
 
-	if err := setVersionFile("internal/version/version.txt", version); err != nil {
-		return err
-	}
-
-	if err := setJSONVersion("package.json", version); err != nil {
-		return err
-	}
-
-	if err := setJSONVersion("package-lock.json", version); err != nil {
-		return err
-	}
-
-	if err := docs(); err != nil {
+	if err := setVersionFile(versionFile, version); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func getVersion() (*semver.Version, error) {
-	cmd := exec.Command("git", "describe", "--tags", "--abbrev=0")
-	b, err := cmd.Output()
+func getVersion(filename string) (*semver.Version, error) {
+	b, err := os.ReadFile(filename)
 	if err != nil {
 		return nil, err
 	}
-
 	return semver.NewVersion(strings.TrimSpace(string(b)))
 }
 
@@ -137,41 +117,21 @@ func changelog(version *semver.Version) error {
 	changelog = changelogReleaseRegex.ReplaceAllString(changelog, fmt.Sprintf("## v%s - %s", version, date))
 
 	// Write the changelog to the source file
-	if err := os.WriteFile(changelogSource, []byte(changelog), 0o644); err != nil {
+	if err := os.WriteFile(changelogSource, []byte(changelog), 0o644); err != nil { //nolint:gosec
 		return err
 	}
 
+	// Wrap the changelog content with v-pre directive for VitePress to prevent
+	// Vue from interpreting template syntax like {{.TASK_VERSION}}
+	changelogWithVPre := strings.Replace(changelog, "# Changelog\n\n", "# Changelog\n\n::: v-pre\n\n", 1) + "\n:::"
+
 	// Add the frontmatter to the changelog
-	changelog = fmt.Sprintf("---\n%s\n---\n\n%s", frontmatter, changelog)
+	changelogWithFrontmatter := fmt.Sprintf("---\n%s\n---\n\n%s", frontmatter, changelogWithVPre)
 
 	// Write the changelog to the target file
-	return os.WriteFile(changelogTarget, []byte(changelog), 0o644)
+	return os.WriteFile(changelogTarget, []byte(changelogWithFrontmatter), 0o644) //nolint:gosec
 }
 
 func setVersionFile(fileName string, version *semver.Version) error {
 	return os.WriteFile(fileName, []byte(version.String()+"\n"), 0o644)
-}
-
-func setJSONVersion(fileName string, version *semver.Version) error {
-	// Read the JSON file
-	b, err := os.ReadFile(fileName)
-	if err != nil {
-		return err
-	}
-
-	// Replace the version
-	new := versionRegex.ReplaceAllString(string(b), fmt.Sprintf(`  "version": "%s",`, version.String()))
-
-	// Write the JSON file
-	return os.WriteFile(fileName, []byte(new), 0o644)
-}
-
-func docs() error {
-	if err := os.RemoveAll(docsTarget); err != nil {
-		return err
-	}
-	if err := copy.Copy(docsSource, docsTarget); err != nil {
-		return err
-	}
-	return nil
 }

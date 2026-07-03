@@ -53,6 +53,7 @@ func (checker *ChecksumChecker) IsUpToDate(t *ast.Task) (bool, error) {
 	if len(t.Generates) > 0 {
 		// For each specified 'generates' field, check whether the files actually exist
 		for _, g := range t.Generates {
+			// Exclusion patterns don't represent output files; skip them.
 			if g.Negate {
 				continue
 			}
@@ -88,7 +89,7 @@ func (*ChecksumChecker) Kind() string {
 }
 
 func (c *ChecksumChecker) checksum(t *ast.Task) (string, error) {
-	sources, err := Globs(t.Dir, t.Sources)
+	sources, err := Globs(t.Dir, t.Sources, t.ShouldUseGitignore())
 	if err != nil {
 		return "", err
 	}
@@ -118,7 +119,7 @@ func (checker *ChecksumChecker) checksumFilePath(t *ast.Task) string {
 	return filepath.Join(checker.tempDir, "checksum", normalizeFilename(t.Name()))
 }
 
-var checksumFilenameRegexp = regexp.MustCompile("[^A-z0-9]")
+var checksumFilenameRegexp = regexp.MustCompile("[^[:alnum:]]")
 
 // replaces invalid characters on filenames with "-"
 func normalizeFilename(f string) string {

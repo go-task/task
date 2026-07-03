@@ -1,1 +1,1 @@
-/testdata/special_vars/included
+{{.TEST_DIR}}/testdata/special_vars/included

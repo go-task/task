@@ -5,20 +5,18 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
+	"strconv"
 
 	"github.com/spf13/pflag"
-	"mvdan.cc/sh/v3/syntax"
 
 	"github.com/go-task/task/v3"
 	"github.com/go-task/task/v3/args"
 	"github.com/go-task/task/v3/errors"
-	"github.com/go-task/task/v3/internal/experiments"
+	"github.com/go-task/task/v3/experiments"
 	"github.com/go-task/task/v3/internal/filepathext"
 	"github.com/go-task/task/v3/internal/flags"
 	"github.com/go-task/task/v3/internal/logger"
 	"github.com/go-task/task/v3/internal/version"
-	"github.com/go-task/task/v3/taskfile"
 	"github.com/go-task/task/v3/taskfile/ast"
 )
 
@@ -31,17 +29,32 @@ func main() {
 			Color:   flags.Color,
 		}
 		if err, ok := err.(*errors.TaskRunError); ok && flags.ExitCode {
+			emitCIErrorAnnotation(err)
 			l.Errf(logger.Red, "%v\n", err)
 			os.Exit(err.TaskExitCode())
 		}
 		if err, ok := err.(errors.TaskError); ok {
+			emitCIErrorAnnotation(err)
 			l.Errf(logger.Red, "%v\n", err)
 			os.Exit(err.Code())
 		}
+		emitCIErrorAnnotation(err)
 		l.Errf(logger.Red, "%v\n", err)
 		os.Exit(errors.CodeUnknown)
 	}
 	os.Exit(errors.CodeOk)
+}
+
+// emitCIErrorAnnotation emits an error annotation for supported CI providers.
+func emitCIErrorAnnotation(err error) {
+	if isGA, _ := strconv.ParseBool(os.Getenv("GITHUB_ACTIONS")); !isGA {
+		return
+	}
+	if e, ok := err.(*errors.TaskRunError); ok {
+		fmt.Fprintf(os.Stdout, "::error title=Task '%s' failed::%v\n", e.TaskName, e.Err)
+		return
+	}
+	fmt.Fprintf(os.Stdout, "::error title=Task failed::%v\n", err)
 }
 
 func run() error {
@@ -79,7 +92,7 @@ func run() error {
 		if err != nil {
 			return err
 		}
-		args, _, err := getArgs()
+		args, _, err := args.Get()
 		if err != nil {
 			return err
 		}
@@ -121,18 +134,9 @@ func run() error {
 		return err
 	}
 
-	// If the download flag is specified, we should stop execution as soon as
-	// taskfile is downloaded
-	if flags.Download {
-		return nil
-	}
-
 	if flags.ClearCache {
-		cache, err := taskfile.NewCache(e.TempDir.Remote)
-		if err != nil {
-			return err
-		}
-		return cache.Clear()
+		cachePath := filepath.Join(e.TempDir.Remote, "remote")
+		return os.RemoveAll(cachePath)
 	}
 
 	listOptions := task.NewListOptions(
@@ -140,6 +144,7 @@ func run() error {
 		flags.ListAll,
 		flags.ListJson,
 		flags.NoStatus,
+		flags.Nested,
 	)
 	if listOptions.ShouldListTasks() {
 		if flags.Silent {
@@ -155,30 +160,35 @@ func run() error {
 		return nil
 	}
 
-	var (
-		calls   []*task.Call
-		globals *ast.Vars
-	)
-
-	tasksAndVars, cliArgs, err := getArgs()
+	// Parse the remaining arguments
+	cliArgsPreDash, cliArgsPostDash, err := args.Get()
 	if err != nil {
 		return err
 	}
-
-	calls, globals = args.Parse(tasksAndVars...)
+	calls, globals := args.Parse(cliArgsPreDash...)
 
 	// If there are no calls, run the default task instead
 	if len(calls) == 0 {
 		calls = append(calls, &task.Call{Task: "default"})
 	}
 
-	globals.Set("CLI_ARGS", ast.Var{Value: cliArgs})
-	globals.Set("CLI_FORCE", ast.Var{Value: flags.Force || flags.ForceAll})
-	globals.Set("CLI_SILENT", ast.Var{Value: flags.Silent})
-	globals.Set("CLI_VERBOSE", ast.Var{Value: flags.Verbose})
-	globals.Set("CLI_OFFLINE", ast.Var{Value: flags.Offline})
+	// Merge CLI variables first (e.g. FOO=bar) so they take priority over Taskfile defaults
 	e.Taskfile.Vars.Merge(globals, nil)
 
+	// Then ReverseMerge special variables so they're available for templating
+	cliArgsPostDashQuoted, err := args.ToQuotedString(cliArgsPostDash)
+	if err != nil {
+		return err
+	}
+	specialVars := ast.NewVars()
+	specialVars.Set("CLI_ARGS", ast.Var{Value: cliArgsPostDashQuoted})
+	specialVars.Set("CLI_ARGS_LIST", ast.Var{Value: cliArgsPostDash})
+	specialVars.Set("CLI_FORCE", ast.Var{Value: flags.Force || flags.ForceAll})
+	specialVars.Set("CLI_SILENT", ast.Var{Value: flags.Silent})
+	specialVars.Set("CLI_VERBOSE", ast.Var{Value: flags.Verbose})
+	specialVars.Set("CLI_OFFLINE", ast.Var{Value: flags.Offline})
+	specialVars.Set("CLI_ASSUME_YES", ast.Var{Value: flags.AssumeYes})
+	e.Taskfile.Vars.ReverseMerge(specialVars, nil)
 	if !flags.Watch {
 		e.InterceptInterruptSignals()
 	}
@@ -190,25 +200,4 @@ func run() error {
 	}
 
 	return e.Run(ctx, calls...)
-}
-
-func getArgs() ([]string, string, error) {
-	var (
-		args          = pflag.Args()
-		doubleDashPos = pflag.CommandLine.ArgsLenAtDash()
-	)
-
-	if doubleDashPos == -1 {
-		return args, "", nil
-	}
-
-	var quotedCliArgs []string
-	for _, arg := range args[doubleDashPos:] {
-		quotedCliArg, err := syntax.Quote(arg, syntax.LangBash)
-		if err != nil {
-			return nil, "", err
-		}
-		quotedCliArgs = append(quotedCliArgs, quotedCliArg)
-	}
-	return args[:doubleDashPos], strings.Join(quotedCliArgs, " "), nil
 }

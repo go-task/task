@@ -2,10 +2,11 @@ package ast
 
 import (
 	"iter"
+	"strings"
 	"sync"
 
 	"github.com/elliotchance/orderedmap/v3"
-	"gopkg.in/yaml.v3"
+	"go.yaml.in/yaml/v3"
 
 	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/deepcopy"
@@ -24,6 +25,7 @@ type (
 		AdvancedImport bool
 		Vars           *Vars
 		Flatten        bool
+		Checksum       string
 	}
 	// Includes is an ordered map of namespaces to includes.
 	Includes struct {
@@ -165,9 +167,13 @@ func (include *Include) UnmarshalYAML(node *yaml.Node) error {
 			Aliases  []string
 			Excludes []string
 			Vars     *Vars
+			Checksum string
 		}
 		if err := node.Decode(&includedTaskfile); err != nil {
 			return errors.NewTaskfileDecodeError(err, node)
+		}
+		if strings.TrimSpace(includedTaskfile.Taskfile) == "" && strings.TrimSpace(includedTaskfile.Dir) == "" {
+			return errors.NewTaskfileDecodeError(nil, node).WithMessage("include must specify taskfile or dir")
 		}
 		include.Taskfile = includedTaskfile.Taskfile
 		include.Dir = includedTaskfile.Dir
@@ -178,6 +184,7 @@ func (include *Include) UnmarshalYAML(node *yaml.Node) error {
 		include.AdvancedImport = true
 		include.Vars = includedTaskfile.Vars
 		include.Flatten = includedTaskfile.Flatten
+		include.Checksum = includedTaskfile.Checksum
 		return nil
 	}
 
@@ -200,5 +207,7 @@ func (include *Include) DeepCopy() *Include {
 		AdvancedImport: include.AdvancedImport,
 		Vars:           include.Vars.DeepCopy(),
 		Flatten:        include.Flatten,
+		Aliases:        deepcopy.Slice(include.Aliases),
+		Checksum:       include.Checksum,
 	}
 }

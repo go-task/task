@@ -1,0 +1,7 @@
+version: '3'
+
+tasks:
+  login:
+    run: when_changed
+    cmds:
+      - echo "login server={{.SERVER}} user={{.USER}}"

@@ -1,0 +1,108 @@
+version: '3'
+
+tasks:
+  # Simple text input prompt
+  greet:
+    desc: Greet someone by name
+    requires:
+      vars:
+        - NAME
+    cmds:
+      - echo "Hello, {{.NAME}}!"
+
+  # Enum selection (dropdown menu)
+  deploy:
+    desc: Deploy to an environment
+    requires:
+      vars:
+        - name: ENVIRONMENT
+          enum: [dev, staging, prod]
+    cmds:
+      - echo "Deploying to {{.ENVIRONMENT}}..."
+
+  # Multiple variables at once
+  release:
+    desc: Create a release with version and environment
+    requires:
+      vars:
+        - VERSION
+        - name: ENVIRONMENT
+          enum: [dev, staging, prod]
+    cmds:
+      - echo "Releasing {{.VERSION}} to {{.ENVIRONMENT}}"
+
+  # Nested dependencies - all prompts happen upfront
+  full-deploy:
+    desc: Full deployment pipeline with nested deps
+    deps:
+      - task: build
+      - task: test
+    cmds:
+      - task: deploy
+
+  build:
+    requires:
+      vars:
+        - name: BUILD_MODE
+          enum: [debug, release]
+    cmds:
+      - echo "Building in {{.BUILD_MODE}} mode..."
+
+  test:
+    requires:
+      vars:
+        - name: TEST_SUITE
+          enum: [unit, integration, e2e, all]
+    cmds:
+      - echo "Running {{.TEST_SUITE}} tests..."
+
+  # Variable already set - no prompt shown
+  greet-world:
+    desc: Greet the world (no prompt needed)
+    vars:
+      NAME: World
+    requires:
+      vars:
+        - NAME
+    cmds:
+      - echo "Hello, {{.NAME}}!"
+
+  # Complex scenario with multiple levels
+  pipeline:
+    desc: Run the full CI/CD pipeline
+    cmds:
+      - task: setup
+      - task: build
+      - task: test
+      - task: deploy
+
+  setup:
+    requires:
+      vars:
+        - PROJECT_NAME
+    cmds:
+      - echo "Setting up project {{.PROJECT_NAME}}..."
+
+  # Docker example with multiple selections
+  docker-build:
+    desc: Build a Docker image
+    requires:
+      vars:
+        - IMAGE_NAME
+        - IMAGE_TAG
+        - name: PLATFORM
+          enum: [linux/amd64, linux/arm64, linux/arm/v7]
+    cmds:
+      - echo "Building {{.IMAGE_NAME}}:{{.IMAGE_TAG}} for {{.PLATFORM}}"
+
+  # Database migration example
+  db-migrate:
+    desc: Run database migrations
+    requires:
+      vars:
+        - name: DIRECTION
+          enum: [up, down]
+        - name: DATABASE
+          enum: [postgres, mysql, sqlite]
+    cmds:
+      - echo "Running {{.DIRECTION}} migrations on {{.DATABASE}}"

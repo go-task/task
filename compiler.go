@@ -15,6 +15,7 @@ import (
 	"github.com/go-task/task/v3/internal/logger"
 	"github.com/go-task/task/v3/internal/templater"
 	"github.com/go-task/task/v3/internal/version"
+	"github.com/go-task/task/v3/taskfile"
 	"github.com/go-task/task/v3/taskfile/ast"
 )
 
@@ -51,7 +52,7 @@ func (c *Compiler) getVariables(t *ast.Task, call *Call, evaluateShVars bool) (*
 		return nil, err
 	}
 	for k, v := range specialVars {
-		result.Set(k, ast.Var{Value: v})
+		result.Set(k, ast.Var{Value: v, Secret: false})
 	}
 
 	getRangeFunc := func(dir string) func(k string, v ast.Var) error {
@@ -61,13 +62,14 @@ func (c *Compiler) getVariables(t *ast.Task, call *Call, evaluateShVars bool) (*
 			newVar := templater.ReplaceVar(v, cache)
 			// If the variable should not be evaluated, but is nil, set it to an empty string
 			// This stops empty interface errors when using the templater to replace values later
+			// Preserve the Sh field so it can be displayed in summary
 			if !evaluateShVars && newVar.Value == nil {
-				result.Set(k, ast.Var{Value: ""})
+				result.Set(k, ast.Var{Value: "", Sh: newVar.Sh, Secret: v.Secret})
 				return nil
 			}
 			// If the variable should not be evaluated and it is set, we can set it and return
 			if !evaluateShVars {
-				result.Set(k, ast.Var{Value: newVar.Value})
+				result.Set(k, ast.Var{Value: newVar.Value, Sh: newVar.Sh, Secret: v.Secret})
 				return nil
 			}
 			// Now we can check for errors since we've handled all the cases when we don't want to evaluate
@@ -76,7 +78,7 @@ func (c *Compiler) getVariables(t *ast.Task, call *Call, evaluateShVars bool) (*
 			}
 			// If the variable is already set, we can set it and return
 			if newVar.Value != nil || newVar.Sh == nil {
-				result.Set(k, ast.Var{Value: newVar.Value})
+				result.Set(k, ast.Var{Value: newVar.Value, Secret: v.Secret})
 				return nil
 			}
 			// If the variable is dynamic, we need to resolve it first
@@ -84,7 +86,7 @@ func (c *Compiler) getVariables(t *ast.Task, call *Call, evaluateShVars bool) (*
 			if err != nil {
 				return err
 			}
-			result.Set(k, ast.Var{Value: static})
+			result.Set(k, ast.Var{Value: static, Secret: v.Secret})
 			return nil
 		}
 	}
@@ -183,7 +185,12 @@ func (c *Compiler) HandleDynamicVar(v ast.Var, dir string, e []string) (string, 
 	result = strings.TrimSuffix(result, "\n")
 
 	c.dynamicCache[*v.Sh] = result
-	c.Logger.VerboseErrf(logger.Magenta, "task: dynamic variable: %q result: %q\n", *v.Sh, result)
+	// Never print the resolved value of a secret variable, even in verbose mode
+	logResult := result
+	if v.Secret {
+		logResult = "*****"
+	}
+	c.Logger.VerboseErrf(logger.Magenta, "task: dynamic variable: %q result: %q\n", *v.Sh, logResult)
 
 	return result, nil
 }
@@ -197,18 +204,45 @@ func (c *Compiler) ResetCache() {
 }
 
 func (c *Compiler) getSpecialVars(t *ast.Task, call *Call) (map[string]string, error) {
+	// Use filepath.ToSlash for all paths to ensure consistent forward slashes
+	// across platforms. This prevents issues with backslashes being interpreted
+	// as escape sequences when paths are used in shell commands on Windows.
+	var rootTaskfile, rootDir string
+	if taskfile.IsRemoteEntrypoint(c.Entrypoint) {
+		rootTaskfile = c.Entrypoint
+		rootDir = ""
+	} else {
+		rootTaskfile = filepath.ToSlash(filepathext.SmartJoin(c.Dir, c.Entrypoint))
+		rootDir = filepath.ToSlash(c.Dir)
+	}
+
 	allVars := map[string]string{
-		"TASK_EXE":         filepath.ToSlash(os.Args[0]),
-		"ROOT_TASKFILE":    filepathext.SmartJoin(c.Dir, c.Entrypoint),
-		"ROOT_DIR":         c.Dir,
-		"USER_WORKING_DIR": c.UserWorkingDir,
-		"TASK_VERSION":     version.GetVersion(),
+		"TASK_EXE":            filepath.ToSlash(os.Args[0]),
+		"ROOT_TASKFILE":       rootTaskfile,
+		"ROOT_DIR":            rootDir,
+		"USER_WORKING_DIR":    filepath.ToSlash(c.UserWorkingDir),
+		"TASK_VERSION":        version.GetVersion(),
+		"PATH_LIST_SEPARATOR": string(os.PathListSeparator),
+		"FILE_PATH_SEPARATOR": string(os.PathSeparator),
 	}
 	if t != nil {
 		allVars["TASK"] = t.Task
-		allVars["TASK_DIR"] = filepathext.SmartJoin(c.Dir, t.Dir)
-		allVars["TASKFILE"] = t.Location.Taskfile
-		allVars["TASKFILE_DIR"] = filepath.Dir(t.Location.Taskfile)
+		if taskfile.IsRemoteEntrypoint(t.Location.Taskfile) {
+			allVars["TASKFILE"] = t.Location.Taskfile
+			allVars["TASKFILE_DIR"] = ""
+			switch {
+			case t.Dir == "":
+				allVars["TASK_DIR"] = filepath.ToSlash(c.UserWorkingDir)
+			case filepath.IsAbs(t.Dir):
+				allVars["TASK_DIR"] = filepath.ToSlash(t.Dir)
+			default:
+				allVars["TASK_DIR"] = filepath.ToSlash(filepathext.SmartJoin(c.UserWorkingDir, t.Dir))
+			}
+		} else {
+			allVars["TASK_DIR"] = filepath.ToSlash(filepathext.SmartJoin(c.Dir, t.Dir))
+			allVars["TASKFILE"] = filepath.ToSlash(t.Location.Taskfile)
+			allVars["TASKFILE_DIR"] = filepath.ToSlash(filepath.Dir(t.Location.Taskfile))
+		}
 	} else {
 		allVars["TASK"] = ""
 		allVars["TASK_DIR"] = ""

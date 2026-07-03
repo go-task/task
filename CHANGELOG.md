@@ -1,6 +1,351 @@
 # Changelog
 
-## Unreleased
+## v3.52.0 - 2026-07-02
+
+- Fixed --interactive prompts for required vars sometimes appearing in a random
+  order. Prompts now follow the order the vars are declared in the Taskfile.
+  (#2871 by @caproven)
+- Fixed Fish completions not being picked up correctly by installing them to
+  Fish's `vendor_completions.d` directory instead of `completions` (#2850, #2859
+  by @Legimity).
+- PowerShell completions now work with aliases of the `task` command, not just
+  the `task` binary itself (#2852 by @kojiishi).
+- Fixed task and namespace aliases not being completed by the Zsh completion. A
+  `show-aliases` zstyle can turn this off (#2865, #2864 by @vmaerten).
+- Fixed task names containing certain characters (e.g. `\`, `_`, `^`) leaking
+  into checksum/timestamp filenames, breaking `sources:`/`generates:` up-to-date
+  detection (#2886 by @s3onghyun).
+- Fixed `for: matrix:` loops using `ref:` rows producing wrong values when the
+  same task was run concurrently (e.g. by parallel `deps`) with different vars
+  (#2890, #2894 by @amitmishra11).
+- Added a `secret: true` flag for variables that masks their value in logs,
+  `task --summary`, and command output (#2514 by @vmaerten).
+- Added the `use_gitignore` setting (global or per-task) to skip files matched
+  by your `.gitignore` when fingerprinting `sources`/`generates` and when
+  watching (#2773 by @vmaerten).
+- Added support for configuring output flags (`--output`,
+  `--output-group-begin`, `--output-group-end`, `--output-group-error-only`) via
+  the `TASK_OUTPUT*` environment variables (#2873 by @liiight).
+- Added a `--temp-dir` flag (with `TASK_TEMP_DIR` env var and `temp-dir` taskrc
+  config) to customise the directory where Task stores temporary files such as
+  checksums. Relative paths are resolved against the root Taskfile (#2891 by
+  @kjasn).
+- Defined environment variable behavior for remote taskfiles (#2267, #2847 by
+  @vmaerten).
+- Added support for remote Taskfiles hosted on Azure DevOps, whose git URLs use
+  a `/_git/` path segment rather than a `.git` suffix (#2904 by @pd93).
+- Re-added the example remote taskfile at
+  [taskfile.dev/Taskfile.yml](https://taskfile.dev/Taskfile.yml) (#2905 by
+  @pd93).
+- Fixed malformed `includes:` entries (missing `taskfile`/`dir`) reporting a
+  misleading "include cycle detected" error instead of a clear configuration
+  error (#1881, #2892 by @Lewin671).
+
+## v3.51.1 - 2026-05-16
+
+- A significant performance boost was achieved for large Taskfiles (monorepos)
+  by skipping templating altogether when the string is static (#2820 by @romnn).
+- Added `absPath` template function that resolves a path to its absolute form,
+  cleaning `..` and `.` components (#2681, #2788 by @mateenanjum).
+- Added `joinEnv` function to join paths based on your oprating system: `;` for
+  Windows and `:` elsewhere, and `joinUrl` to join URL paths. Also, added two
+  new special variables: `FILE_PATH_SEPARATOR` which returns `\` on Windows and
+  `/` elsewhere, and `PATH_LIST_SEPARATOR` which returns `;` on Windows and `:`
+  elsewhere (#2406, #2408 by @solvingj).
+- Update the shell interpreter with a regression fix (#2812, #2832 by
+  @andreynering).
+- Fix potential panic with the shell interpreter (#2810 by @trulede).
+
+## v3.50.0 - 2026-04-13
+
+- Added `enum.ref` support in `requires`: enum constraints can now reference
+  variables or template pipelines (e.g., `ref: .ALLOWED_ENVS`) instead of
+  duplicating static lists. Combined with `sh:` variables, this enables fully
+  dynamic enum validation (#2678 by @vmaerten).
+- Fixed Fish completion using hardcoded `task` binary name instead of
+  `$GO_TASK_PROGNAME` for experiments cache (#2730, #2727 by @SergioChan).
+- Fixed watch mode ignoring SIGHUP signal, causing the watcher to exit instead
+  of restarting (#2764, #2642).
+- Fixed a long time bug where the task wouldn't re-run as it should when using
+  `method: timestamp` and the files listed on `generates:` were deleted. This
+  makes `method: timestamp` behaves the same as `method: checksum` (#1230, #2716
+  by @drichardson).
+
+## v3.49.1 - 2026-03-08
+
+- Reverted #2632 for now, which caused some regressions. That change will be
+  reworked (#2720, #2722, #2723).
+
+## v3.49.0 - 2026-03-07
+
+- Fixed included Taskfiles with `watch: true` not triggering watch mode when
+  called from the root Taskfile (#2686, #1763 by @trulede).
+- Fixed Remote Git Taskfiles failing on Windows due to backslashes in URL paths
+  (#2656 by @Trim21).
+- Fixed remote Git Taskfiles timing out when resolving includes after accepting
+  the trust prompt (#2669, #2668 by @vmaerten).
+- Fixed unclear error message when Taskfile search stops at a directory
+  ownership boundary (#2682, #1683 by @trulede).
+- Fixed global variables from imported Taskfiles not resolving `ref:` values
+  correctly (#2632 by @trulede).
+- Every `.taskrc.yml` option can now be overridden with a `TASK_`-prefixed
+  environment variable, making CI and container configuration easier (#2607,
+  #1066 by @vmaerten).
+
+## v3.48.0 - 2026-01-26
+
+- Fixed `if:` conditions when using to check dynamic variables. Also, skip
+  variable prompt if task would be skipped by `if:` (#2658, #2660 by @vmaerten).
+- Fixed `ROOT_TASKFILE` variable pointing to directory instead of the actual
+  Taskfile path when no explicit `-t` flag is provided (#2635, #1706 by
+  @trulede).
+- Included Taskfiles with `silent: true` now properly propagate silence to their
+  tasks, while still allowing individual tasks to override with `silent: false`
+  (#2640, #1319 by @trulede).
+- Added TLS certificate options for Remote Taskfiles: use `--cacert` for
+  self-signed certificates and `--cert`/`--cert-key` for mTLS authentication
+  (#2537, #2242 by @vmaerten).
+
+## v3.47.0 - 2026-01-24
+
+- Fixed remote git Taskfiles: cloning now works without explicit ref, and
+  directory includes are properly resolved (#2602 by @vmaerten).
+- For `output: prefixed`, print `prefix:` if set instead of task name (#1566,
+  #2633 by @trulede).
+- Ensure no ANSI sequences are printed for `--color=false` (#2560, #2584 by
+  @trulede).
+- Task aliases can now contain wildcards and will match accordingly (e.g., `s-*`
+  as alias for `start-*`) (#1900, #2234 by @vmaerten).
+- Added conditional execution with the `if` field: skip tasks, commands, or task
+  calls based on shell exit codes or template expressions like
+  `{{ eq .ENV "prod" }}` (#2564, #608 by @vmaerten).
+- Task can now interactively prompt for missing required variables when running
+  in a TTY, with support for enum selection menus. Enable with `--interactive`
+  flag or `interactive: true` in `.taskrc.yml` (#2579, #2079 by @vmaerten).
+
+## v3.46.4 - 2025-12-24
+
+- Fixed regressions in completion script for Fish (#2591, #2604, #2592 by
+  @WinkelCode).
+
+## v3.46.3 - 2025-12-19
+
+- Fixed regression in completion script for zsh (#2593, #2594 by @vmaerten).
+
+## v3.46.2 - 2025-12-18
+
+- Fixed a regression on previous release that affected variables passed via
+  command line (#2588, #2589 by @vmaerten).
+
+## v3.46.1 - 2025-12-18
+
+### ✨ Features
+
+- A small behavior change was made to dependencies. Task will now wait for all
+  dependencies to finish running before continuing, even if any of them fail. To
+  opt for the previous behavior, set `failfast: true` either on your
+  `.taskrc.yml` or per task, or use the `--failfast` flag, which will also work
+  for `--parallel` (#1246, #2525 by @andreynering).
+- The `--summary` flag now displays `vars:` (both global and task-level),
+  `env:`, and `requires:` sections. Dynamic variables show their shell command
+  (e.g., `sh: echo "hello"`) instead of the evaluated value (#2486 ,#2524 by
+  @vmaerten).
+- Improved performance of fuzzy task name matching by implementing lazy
+  initialization. Added `--disable-fuzzy` flag and `disable-fuzzy` taskrc option
+  to allow disabling fuzzy matching entirely (#2521, #2523 by @vmaerten).
+- Added LLM-optimized documentation via VitePress plugin, generating `llms.txt`
+  and `llms-full.txt` for AI-powered development tools (#2513 by @vmaerten).
+- Added `--trusted-hosts` CLI flag and `remote.trusted-hosts` config option to
+  skip confirmation prompts for specified hosts when using Remote Taskfiles
+  (#2491, #2473 by @maciejlech).
+- When running in GitHub Actions, Task now automatically emits error annotations
+  on failure, improving visibility in workflow summaries (#2568 by @vmaerten).
+- The `--yes` flag is now accessible in templates via the new `CLI_ASSUME_YES`
+  variable (#2577, #2479 by @semihbkgr).
+- Improved shell completion scripts (Zsh, Fish, PowerShell) by adding missing
+  flags and dynamic experimental feature detection (#2532 by @vmaerten).
+- Remote Taskfiles now accept `application/octet-stream` Content-Type (#2536,
+  #1944 by @vmaerten).
+- Shell completion now works when Task is installed or aliased under a different
+  binary name via TASK_EXE environment variable (#2495, #2468 by @vmaerten).
+- Some small fixes and improvements were made to `task --init` and to the
+  default Taskfile it generates (#2433 by @andreynering).
+- Added `--remote-cache-dir` flag and `remote.cache-dir` taskrc option to
+  customize the cache directory for Remote Taskfiles (#2572 by @vmaerten).
+- Zsh completion now supports zstyle verbose option to show or hide task
+  descriptions (#2571 by @vmaerten).
+- Task now automatically enables colored output in CI environments (GitHub
+  Actions, GitLab CI, etc.) without requiring FORCE_COLOR=1 (#2569 by
+  @vmaerten).
+- Added color taskrc option to explicitly enable or disable colored output
+  globally (#2569 by @vmaerten).
+- Improved Git Remote Taskfiles by switching to go-getter: SSH authentication
+  now works out of the box and `applyOf` is properly supported (#2512 by
+  @vmaerten).
+
+### 🐛 Fixes
+
+- Fix RPM upload to Cloudsmith by including the version in the filename to
+  ensure unique filenames (#2507 by @vmaerten).
+- Fix `run: when_changed` to work properly for Taskfiles included multiple times
+  (#2508, #2511 by @trulede).
+- Fixed Zsh and Fish completions to stop suggesting task names after `--`
+  separator, allowing proper CLI_ARGS completion (#1843, #1844 by
+  @boiledfroginthewell).
+- Watch mode (`--watch`) now always runs the task, regardless of `run: once` or
+  `run: when_changed` settings (#2566, #1388 by @trulede).
+- Fixed global variables (CLI_ARGS, CLI_FORCE, etc.) not being accessible in
+  root-level vars section (#2403, #2397 by @trulede, @vmaerten).
+- Fixed a bug where `ignore_error` was ignored when using `task:` to call
+  another task (#2552, #363 by @trulede).
+- Fixed Zsh completion not suggesting global tasks when using `-g`/`--global`
+  flag (#1574, #2574 by @vmaerten).
+- Fixed Fish completion failing to parse task descriptions containing colons
+  (e.g., URLs or namespaced functions) (#2101, #2573 by @vmaerten).
+- Fixed false positive "property 'for' is not allowed" warnings in IntelliJ when
+  using `for` loops in Taskfiles (#2576 by @vmaerten).
+
+## v3.45.5 - 2025-11-11
+
+- Fixed bug that made a generic message, instead of an useful one, appear when a
+  Taskfile could not be found (#2431 by @andreynering).
+- Fixed a bug that caused an error when including a Remote Git Taskfile (#2438
+  by @twelvelabs).
+- Fixed issue where `.taskrc.yml` was not returned if reading it failed, and
+  corrected handling of remote entrypoint Taskfiles (#2460, #2461 by @vmaerten).
+- Improved performance of `--list` and `--list-all` by introducing a faster
+  compilation method that skips source globbing and checksum updates (#1322,
+  #2053 by @vmaerten).
+- Fixed a concurrency bug with `output: group`. This ensures that begin/end
+  parts won't be mixed up from different tasks (#1208, #2349, #2350 by
+  @trulede).
+- Do not re-evaluate variables for `defer:` (#2244, #2418 by @trulede).
+- Improve error message when a Taskfile is not found (#2441, #2494 by
+  @vmaerten).
+- Fixed generic error message `exit status 1` when a dependency task failed
+  (#2286 by @GrahamDennis).
+- Fixed YAML library from the unmaintained `gopkg.in/yaml.v3` to the new fork
+  maintained by the official YAML org (#2171, #2434 by @andreynering).
+- On Windows, the built-in version of the `rm` core utils contains a fix related
+  to the `-f` flag (#2426,
+  [u-root/u-root#3464](https://github.com/u-root/u-root/pull/3464),
+  [mvdan/sh#1199](https://github.com/mvdan/sh/pull/1199), #2506 by
+  @andreynering).
+
+## v3.45.4 - 2025-09-17
+
+- Fixed a bug where `cache-expiry` could not be defined in `.taskrc.yml` (#2423
+  by @vmaerten).
+- Fixed a bug where `.taskrc.yml` files in parent folders were not read
+  correctly (#2424 by @vmaerten).
+- Fixed a bug where autocomplete in subfolders did not work with zsh (#2425 by
+  @vmaerten).
+
+## v3.45.3 - 2025-09-15
+
+- Task now includes built-in core utilities to greatly improve compatibility on
+  Windows. This means that your commands that uses `cp`, `mv`, `mkdir` or any
+  other common core utility will now work by default on Windows, without extra
+  setup. This is something we wanted to address for many many years, and it's
+  finally being shipped!
+  [Read our blog post this the topic](https://taskfile.dev/blog/windows-core-utils).
+  (#197, #2360 by @andreynering).
+- :sparkles: Built and deployed a [brand new website](https://taskfile.dev)
+  using [VitePress](https://vitepress.dev) (#2359, #2369, #2371, #2375, #2378 by
+  @vmaerten, @andreynering, @pd93).
+- Began releasing
+  [nightly builds](https://github.com/go-task/task/releases/tag/nightly). This
+  will allow people to test our changes before they are fully released and
+  without having to install Go to build them (#2358 by @vmaerten).
+- Added support for global config files in `$XDG_CONFIG_HOME/task/taskrc.yml` or
+  `$HOME/.taskrc.yml`. Check out our new
+  [configuration guide](https://taskfile.dev/docs/reference/config) for more
+  details (#2247, #2380, #2390, #2391 by @vmaerten, @pd93).
+- Added experiments to the taskrc schema to clarify the expected keys and values
+  (#2235 by @vmaerten).
+- Added support for new properties in `.taskrc.yml`: insecure, verbose,
+  concurrency, remote offline, remote timeout, and remote expiry. :warning:
+  Note: setting offline via environment variable is no longer supported. (#2389
+  by @vmaerten)
+- Added a `--nested` flag when outputting tasks using `--list --json`. This will
+  output tasks in a nested structure when tasks are namespaced (#2415 by @pd93).
+- Enhanced support for tasks with wildcards: they are now logged correctly, and
+  wildcard parameters are fully considered during fingerprinting (#1808, #1795
+  by @vmaerten).
+- Fixed panic when a variable was declared as an empty hash (`{}`) (#2416, #2417
+  by @trulede).
+
+#### Package API
+
+- Bumped the minimum version of Go to 1.24 (#2358 by @vmaerten).
+
+#### Other news
+
+We recently released our
+[official GitHub Action](https://github.com/go-task/setup-task). This is based
+on the fantastic work by the Arduino team who created and maintained the
+community version. Now that this is officially adopted, fixes/updates should be
+more timely. We have already merged a couple of longstanding PRs in our
+[first release](https://github.com/go-task/setup-task/releases/tag/v1.0.0) (by
+@pd93, @shrink, @trim21 and all the previous contributors to
+[arduino/setup-task](https://github.com/arduino/setup-task/)).
+
+## v3.45.0-v3.45.2 - 2025-09-15
+
+Failed due to an issue with our release process.
+
+## v3.44.1 - 2025-07-23
+
+- Internal tasks will no longer be shown as suggestions since they cannot be
+  called (#2309, #2323 by @maxmzkrcensys)
+- Fixed install script for some ARM platforms (#1516, #2291 by @trulede).
+- Fixed a regression where fingerprinting was not working correctly if the path
+  to you Taskfile contained a space (#2321, #2322 by @pd93).
+- Reverted a breaking change to `randInt` (#2312, #2316 by @pd93).
+- Made new variables `TEST_NAME` and `TEST_DIR` available in fixture tests
+  (#2265 by @pd93).
+
+## v3.44.0 - 2025-06-08
+
+- Added `uuid`, `randInt` and `randIntN` template functions (#1346, #2225 by
+  @pd93).
+- Added new `CLI_ARGS_LIST` array variable which contains the arguments passed
+  to Task after the `--` (the same as `CLI_ARGS`, but an array instead of a
+  string). (#2138, #2139, #2140 by @pd93).
+- Added `toYaml` and `fromYaml` templating functions (#2217, #2219 by @pd93).
+- Added `task` field the `--list --json` output (#2256 by @aleksandersh).
+- Added the ability to
+  [pin included taskfiles](https://taskfile.dev/next/experiments/remote-taskfiles/#manual-checksum-pinning)
+  by specifying a checksum. This works with both local and remote Taskfiles
+  (#2222, #2223 by @pd93).
+- When using the
+  [Remote Taskfiles experiment](https://github.com/go-task/task/issues/1317),
+  any credentials used in the URL will now be redacted in Task's output (#2100,
+  #2220 by @pd93).
+- Fixed fuzzy suggestions not working when misspelling a task name (#2192, #2200
+  by @vmaerten).
+- Fixed a bug where taskfiles in directories containing spaces created
+  directories in the wrong location (#2208, #2216 by @pd93).
+- Added support for dual JSON schema files, allowing changes without affecting
+  the current schema. The current schemas will only be updated during releases.
+  (#2211 by @vmaerten).
+- Improved fingerprint documentation by specifying that the method can be set at
+  the root level to apply to all tasks (#2233 by @vmaerten).
+- Fixed some watcher regressions after #2048 (#2199, #2202, #2241, #2196 by
+  @wazazaby, #2271 by @andreynering).
+
+## v3.43.3 - 2025-04-27
+
+Reverted the changes made in #2113 and #2186 that affected the
+`USER_WORKING_DIR` and built-in variables. This fixes #2206, #2195, #2207 and
+#2208.
+
+## v3.43.2 - 2025-04-21
+
+- Fixed regresion of `CLI_ARGS` being exposed as the wrong type (#2190, #2191 by
+  @vmaerten).
+
+## v3.43.1 - 2025-04-21
 
 - Significant improvements were made to the watcher. We migrated from
   [watcher](https://github.com/radovskyb/watcher) to
@@ -11,8 +356,8 @@
   seconds to 100 milliseconds, because now it configures the wait time for
   duplicated events, instead of the polling time (#2048 by @andreynering, #1508,
   #985, #1179).
-- The [Map Variables experiment](#1585) was made generally available so you can
-  now
+- The [Map Variables experiment](https://github.com/go-task/task/issues/1585)
+  was made generally available so you can now
   [define map variables in your Taskfiles!](https://taskfile.dev/usage/#variables)
   (#1585, #1547, #2081 by @pd93).
 - Wildcards can now
@@ -22,18 +367,34 @@
   [loop over the files specified by the `generates` keyword](https://taskfile.dev/usage/#looping-over-your-tasks-sources-or-generated-files).
   This works the same way as looping over sources (#2151 by @sedyh).
 - Added the ability to resolve variables when defining an include variable
-  (#2108, #2113 @pd93).
+  (#2108, #2113 by @pd93).
+- A few changes have been made to the
+  [Remote Taskfiles experiment](https://github.com/go-task/task/issues/1317)
+  (#1402, #2176 by @pd93):
+  - Cached files are now prioritized over remote ones.
+  - Added an `--expiry` flag which sets the TTL for a remote file cache. By
+    default the value will be 0 (caching disabled). If Task is running in
+    offline mode or fails to make a connection, it will fallback on the cache.
+- `.taskrc` files can now be used from subdirectories and will be searched for
+  recursively up the file tree in the same way that Taskfiles are (#2159, #2166
+  by @pd93).
 - The default taskfile (output when using the `--init` flag) is now an embedded
   file in the binary instead of being stored in the code (#2112 by @pd93).
 - Improved the way we report the Task version when using the `--version` flag or
   `{{.TASK_VERSION}}` variable. This should now be more consistent and easier
   for package maintainers to use (#2131 by @pd93).
+- Fixed a bug where globstar (`**`) matching in `sources` only resolved the
+  first result (#2073, #2075 by @pd93).
 - Fixed a bug where sorting tasks by "none" would use the default sorting
   instead of leaving tasks in the order they were defined (#2124, #2125 by
   @trulede).
 - Fixed Fish completion on newer Fish versions (#2130 by @atusy).
 - Fixed a bug where undefined/null variables resolved to an empty string instead
   of `nil` (#1911, #2144 by @pd93).
+- The `USER_WORKING_DIR` special now will now properly account for the `--dir`
+  (`-d`) flag, if given (#2102, #2103 by @jaynis, #2186 by @andreynering).
+- Fix Fish completions when `--global` (`-g`) is given (#2134 by @atusy).
+- Fixed variables not available when using `defer:` (#1909, #2173 by @vmaerten).
 
 #### Package API
 
@@ -45,6 +406,15 @@
   [`taskfile.Snippet`](https://pkg.go.dev/github.com/go-task/task/v3/taskfile#Snippet)
   types no longer have the `Reader`/`Snippet` respective prefixes (#2148 by
   @pd93).
+- [`taskfile.Reader`](https://pkg.go.dev/github.com/go-task/task/v3/taskfile#Reader)
+  no longer accepts a
+  [`taskfile.Node`](https://pkg.go.dev/github.com/go-task/task/v3/taskfile#Node).
+  Instead nodes are passed directly into the
+  [`Reader.Read`](https://pkg.go.dev/github.com/go-task/task/v3/taskfile#Reader.Read)
+  method (#2169 by @pd93).
+- [`Reader.Read`](https://pkg.go.dev/github.com/go-task/task/v3/taskfile#Reader.Read)
+  also now accepts a [`context.Context`](https://pkg.go.dev/context#Context)
+  (#2176 by @pd93).
 
 ## v3.42.1 - 2025-03-10
 

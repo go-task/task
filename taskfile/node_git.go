@@ -3,29 +3,59 @@ package taskfile
 import (
 	"context"
 	"fmt"
-	"io"
 	"net/url"
+	"os"
+	"path"
 	"path/filepath"
 	"strings"
+	"sync"
 
 	giturls "github.com/chainguard-dev/git-urls"
-	"github.com/go-git/go-billy/v5/memfs"
-	"github.com/go-git/go-git/v5"
-	"github.com/go-git/go-git/v5/plumbing"
-	"github.com/go-git/go-git/v5/storage/memory"
+	"github.com/hashicorp/go-getter"
 
 	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/execext"
 	"github.com/go-task/task/v3/internal/filepathext"
+	"github.com/go-task/task/v3/internal/fsext"
 )
 
 // An GitNode is a node that reads a Taskfile from a remote location via Git.
 type GitNode struct {
-	*BaseNode
-	URL    *url.URL
+	*baseNode
+	url    *url.URL
 	rawUrl string
 	ref    string
 	path   string
+}
+
+type gitRepoCache struct {
+	mu    sync.Mutex             // Protects the locks map
+	locks map[string]*sync.Mutex // One mutex per repo cache key
+}
+
+func (c *gitRepoCache) getLockForRepo(cacheKey string) *sync.Mutex {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	if _, exists := c.locks[cacheKey]; !exists {
+		c.locks[cacheKey] = &sync.Mutex{}
+	}
+
+	return c.locks[cacheKey]
+}
+
+var globalGitRepoCache = &gitRepoCache{
+	locks: make(map[string]*sync.Mutex),
+}
+
+func CleanGitCache() error {
+	// Clear the in-memory locks map to prevent memory leak
+	globalGitRepoCache.mu.Lock()
+	globalGitRepoCache.locks = make(map[string]*sync.Mutex)
+	globalGitRepoCache.mu.Unlock()
+
+	cacheDir := filepath.Join(os.TempDir(), "task-git-repos")
+	return os.RemoveAll(cacheDir)
 }
 
 func NewGitNode(
@@ -40,23 +70,20 @@ func NewGitNode(
 		return nil, err
 	}
 
-	basePath, path := func() (string, string) {
-		x := strings.Split(u.Path, "//")
-		return x[0], x[1]
-	}()
+	basePath, path := splitURLOnDoubleSlash(u)
 	ref := u.Query().Get("ref")
 
-	rawUrl := u.String()
+	rawUrl := u.Redacted()
 
 	u.RawQuery = ""
 	u.Path = basePath
 
 	if u.Scheme == "http" && !insecure {
-		return nil, &errors.TaskfileNotSecureError{URI: entrypoint}
+		return nil, &errors.TaskfileNotSecureError{URI: u.Redacted()}
 	}
 	return &GitNode{
-		BaseNode: base,
-		URL:      u,
+		baseNode: base,
+		url:      u,
 		rawUrl:   rawUrl,
 		ref:      ref,
 		path:     path,
@@ -71,24 +98,87 @@ func (node *GitNode) Remote() bool {
 	return true
 }
 
-func (node *GitNode) Read(_ context.Context) ([]byte, error) {
-	fs := memfs.New()
-	storer := memory.NewStorage()
-	_, err := git.Clone(storer, fs, &git.CloneOptions{
-		URL:           node.URL.String(),
-		ReferenceName: plumbing.ReferenceName(node.ref),
-		SingleBranch:  true,
-		Depth:         1,
-	})
+func (node *GitNode) Read() ([]byte, error) {
+	return node.ReadContext(context.Background())
+}
+
+func (node *GitNode) buildURL() string {
+	// Get the base URL
+	baseURL := node.url.String()
+
+	// Always use git:: prefix for git URLs (following Terraform's pattern)
+	// This forces go-getter to use git protocol
+	if node.ref != "" {
+		return fmt.Sprintf("git::%s?ref=%s&depth=1", baseURL, node.ref)
+	}
+	// When no ref is specified, omit it entirely to let git clone the default branch
+	return fmt.Sprintf("git::%s?depth=1", baseURL)
+}
+
+// getOrCloneRepo returns the path to a cached git repository.
+// If the repository is not cached, it clones it first.
+// This function is thread-safe: multiple goroutines cloning the same repo+ref
+// will synchronize, and only one clone operation will occur.
+//
+// The cache directory is /tmp/task-git-repos/{cache_key}/
+func (node *GitNode) getOrCloneRepo(ctx context.Context) (string, error) {
+	cacheKey := node.repoCacheKey()
+
+	repoMutex := globalGitRepoCache.getLockForRepo(cacheKey)
+	repoMutex.Lock()
+	defer repoMutex.Unlock()
+
+	cacheDir := filepath.Join(os.TempDir(), "task-git-repos", cacheKey)
+
+	// Check cache FIRST - if already cloned, no network needed, timeout irrelevant
+	gitDir := filepath.Join(cacheDir, ".git")
+	if _, err := os.Stat(gitDir); err == nil {
+		return cacheDir, nil
+	}
+
+	// Only check context if we need to clone (requires network)
+	if err := ctx.Err(); err != nil {
+		return "", fmt.Errorf("context cancelled while waiting for repository lock: %w", err)
+	}
+
+	getterURL := node.buildURL()
+
+	client := &getter.Client{
+		Ctx:  ctx,
+		Src:  getterURL,
+		Dst:  cacheDir,
+		Mode: getter.ClientModeDir,
+	}
+
+	if err := client.Get(); err != nil {
+		_ = os.RemoveAll(cacheDir)
+		return "", fmt.Errorf("failed to clone repository: %w", err)
+	}
+
+	return cacheDir, nil
+}
+
+func (node *GitNode) ReadContext(ctx context.Context) ([]byte, error) {
+	// Get or clone the repository into cache
+	repoDir, err := node.getOrCloneRepo(ctx)
 	if err != nil {
 		return nil, err
 	}
-	file, err := fs.Open(node.path)
+
+	// Build path to Taskfile in the cached repo
+	// If node.path is empty, search in repo root; otherwise search in the specified path
+	// fsext.SearchPath handles both files and directories (searching for DefaultTaskfiles)
+	searchPath := repoDir
+	if node.path != "" {
+		searchPath = filepath.Join(repoDir, node.path)
+	}
+	filePath, err := fsext.SearchPath(searchPath, DefaultTaskfiles)
 	if err != nil {
 		return nil, err
 	}
-	// Read the entire response body
-	b, err := io.ReadAll(file)
+
+	// Read file from cached repo
+	b, err := os.ReadFile(filePath)
 	if err != nil {
 		return nil, err
 	}
@@ -97,8 +187,13 @@ func (node *GitNode) Read(_ context.Context) ([]byte, error) {
 }
 
 func (node *GitNode) ResolveEntrypoint(entrypoint string) (string, error) {
-	dir, _ := filepath.Split(node.path)
-	resolvedEntrypoint := fmt.Sprintf("%s//%s", node.URL, filepath.Join(dir, entrypoint))
+	// If the file is remote, we don't need to resolve the path
+	if IsRemoteEntrypoint(entrypoint) {
+		return entrypoint, nil
+	}
+
+	dir, _ := path.Split(node.path)
+	resolvedEntrypoint := fmt.Sprintf("%s//%s", node.url, path.Join(dir, entrypoint))
 	if node.ref != "" {
 		return fmt.Sprintf("%s?ref=%s", resolvedEntrypoint, node.ref), nil
 	}
@@ -106,7 +201,7 @@ func (node *GitNode) ResolveEntrypoint(entrypoint string) (string, error) {
 }
 
 func (node *GitNode) ResolveDir(dir string) (string, error) {
-	path, err := execext.Expand(dir)
+	path, err := execext.ExpandLiteral(dir)
 	if err != nil {
 		return "", err
 	}
@@ -121,6 +216,41 @@ func (node *GitNode) ResolveDir(dir string) (string, error) {
 	return filepathext.SmartJoin(entrypointDir, path), nil
 }
 
-func (node *GitNode) FilenameAndLastDir() (string, string) {
-	return filepath.Base(node.path), filepath.Base(filepath.Dir(node.path))
+func (node *GitNode) CacheKey() string {
+	checksum := strings.TrimRight(checksum([]byte(node.Location())), "=")
+	lastDir := filepath.Base(filepath.Dir(node.path))
+	prefix := filepath.Base(node.path)
+	// Means it's not "", nor "." nor "/", so it's a valid directory
+	if len(lastDir) > 1 {
+		prefix = fmt.Sprintf("%s.%s", lastDir, prefix)
+	}
+	return fmt.Sprintf("git.%s.%s.%s", node.url.Host, prefix, checksum)
+}
+
+// repoCacheKey generates a unique cache key for the repository+ref combination.
+// Unlike CacheKey() which includes the file path, this identifies the repository itself.
+// Two GitNodes with the same repo+ref but different file paths will share the same cache.
+//
+// Returns a path like: github.com/user/repo.git/main
+func (node *GitNode) repoCacheKey() string {
+	repoPath := strings.Trim(node.url.Path, "/")
+
+	ref := node.ref
+	if ref == "" {
+		ref = "_default_" // Placeholder for the remote's default branch
+	}
+
+	return filepath.Join(node.url.Host, repoPath, ref)
+}
+
+func splitURLOnDoubleSlash(u *url.URL) (string, string) {
+	x := strings.Split(u.Path, "//")
+	switch len(x) {
+	case 0:
+		return "", ""
+	case 1:
+		return x[0], ""
+	default:
+		return x[0], x[1]
+	}
 }

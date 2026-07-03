@@ -1,0 +1,7 @@
+task: "if-in-for-loop" started
+task: [if-in-for-loop] echo "processing a"
+processing a
+task: [if-in-for-loop] if condition not met - skipped
+task: [if-in-for-loop] echo "processing c"
+processing c
+task: "if-in-for-loop" finished

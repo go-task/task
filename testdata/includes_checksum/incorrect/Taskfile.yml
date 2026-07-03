@@ -1,0 +1,12 @@
+version: '3'
+
+includes:
+  included:
+    taskfile: ../included.yml
+    internal: true
+    checksum: foo
+
+tasks:
+  default:
+    cmds:
+      - task: included:default

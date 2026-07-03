@@ -1,2 +1,5 @@
 * text=auto
 *.mdx -linguist-detectable
+
+# Keep LF line endings in testdata for consistent checksums across platforms
+testdata/** text eol=lf

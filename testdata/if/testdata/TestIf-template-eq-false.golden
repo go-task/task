@@ -1,0 +1,5 @@
+task: "template-eq-false" started
+task: [template-eq-false] if condition not met - skipped
+task: [template-eq-false] echo "this runs"
+this runs
+task: "template-eq-false" finished

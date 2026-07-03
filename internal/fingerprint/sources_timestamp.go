@@ -28,11 +28,33 @@ func (checker *TimestampChecker) IsUpToDate(t *ast.Task) (bool, error) {
 		return false, nil
 	}
 
-	sources, err := Globs(t.Dir, t.Sources)
+	sources, err := Globs(t.Dir, t.Sources, t.ShouldUseGitignore())
 	if err != nil {
 		return false, nil
 	}
-	generates, err := Globs(t.Dir, t.Generates)
+
+	// If generates are declared, ensure they all exist. A missing generated
+	// file means the task must run regardless of timestamps.
+	if len(t.Generates) > 0 {
+		for _, g := range t.Generates {
+			// Exclusion patterns don't represent output files; skip them.
+			if g.Negate {
+				continue
+			}
+			files, err := glob(t.Dir, g.Glob)
+			if os.IsNotExist(err) {
+				return false, nil
+			}
+			if err != nil {
+				return false, err
+			}
+			if len(files) == 0 {
+				return false, nil
+			}
+		}
+	}
+
+	generates, err := Globs(t.Dir, t.Generates, t.ShouldUseGitignore())
 	if err != nil {
 		return false, nil
 	}
@@ -90,7 +112,7 @@ func (checker *TimestampChecker) Kind() string {
 
 // Value implements the Checker Interface
 func (checker *TimestampChecker) Value(t *ast.Task) (any, error) {
-	sources, err := Globs(t.Dir, t.Sources)
+	sources, err := Globs(t.Dir, t.Sources, t.ShouldUseGitignore())
 	if err != nil {
 		return time.Now(), err
 	}

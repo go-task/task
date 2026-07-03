@@ -1,0 +1,5 @@
+task: "task-call-if-false" started
+task: [task-call-if-false] if condition not met - skipped
+task: [task-call-if-false] echo "continues after skipped task"
+continues after skipped task
+task: "task-call-if-false" finished

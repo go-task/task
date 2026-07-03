@@ -1,0 +1,11 @@
+version: '3'
+
+includes:
+  service-a: ./service-a
+  service-b: ./service-b
+
+tasks:
+  start:
+    cmds:
+      - task: service-a:start
+      - task: service-b:start

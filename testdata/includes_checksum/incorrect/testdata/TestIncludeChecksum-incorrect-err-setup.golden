@@ -1,0 +1,3 @@
+task: The checksum of the Taskfile at "{{.TEST_DIR}}/testdata/includes_checksum/included.yml" does not match!
+got: "c97f39eb96fe3fa5fe2a610d244b8449897b06f0c93821484af02e0999781bf5"
+want: "foo"

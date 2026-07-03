@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/go-task/task/v3"
-	"github.com/go-task/task/v3/internal/experiments"
+	"github.com/go-task/task/v3/experiments"
 	"github.com/go-task/task/v3/taskfile/ast"
 )
 
@@ -44,7 +44,8 @@ func NewFormatterTest(t *testing.T, opts ...FormatterTestOption) {
 		task: "default",
 		vars: map[string]any{},
 		TaskTest: TaskTest{
-			experiments: map[*experiments.Experiment]int{},
+			experiments:         map[*experiments.Experiment]int{},
+			fixtureTemplateData: map[string]any{},
 		},
 	}
 	// Apply the functional options
@@ -126,6 +127,7 @@ func (tt *FormatterTest) run(t *testing.T) {
 		// Create a golden fixture file for the output
 		g := goldie.New(t,
 			goldie.WithFixtureDir(filepath.Join(e.Dir, "testdata")),
+			goldie.WithEqualFn(NormalizedEqual),
 		)
 
 		// Call setup and check for errors
@@ -216,5 +218,19 @@ func TestListDescInterpolation(t *testing.T) {
 		WithListOptions(task.ListOptions{
 			ListOnlyTasksWithDescriptions: true,
 		}),
+	)
+}
+
+func TestJsonListFormat(t *testing.T) {
+	t.Parallel()
+
+	NewFormatterTest(t,
+		WithExecutorOptions(
+			task.WithDir("testdata/json_list_format"),
+		),
+		WithListOptions(task.ListOptions{
+			FormatTaskListAsJSON: true,
+		}),
+		WithFixtureTemplating(),
 	)
 }

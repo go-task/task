@@ -1,0 +1,15 @@
+version: '3'
+
+tasks:
+  default:
+    deps:
+      - dep1
+      - dep2
+      - dep3
+      - dep4
+    failfast: true
+
+  dep1: sleep 0.1 && echo 'dep1'
+  dep2: sleep 0.2 && echo 'dep2'
+  dep3: sleep 0.3 && echo 'dep3'
+  dep4: exit 1

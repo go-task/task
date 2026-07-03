@@ -1,0 +1,21 @@
+version: 3
+
+vars:
+  GLOBAL_VAR: "I am a global var"
+
+env:
+  GLOBAL_ENV: "I am a global env"
+
+tasks:
+  test-env:
+    desc: Task with vars and env
+    vars:
+      LOCAL_VAR: "I am a local var"
+    env:
+      LOCAL_ENV: "I am a local env"
+      DATABASE_URL: "postgres://localhost/mydb"
+    requires:
+      vars:
+        - API_KEY
+    cmds:
+      - echo "Testing env vars"

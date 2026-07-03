@@ -2,16 +2,15 @@ package fingerprint
 
 import (
 	"os"
+	"path/filepath"
 	"sort"
-
-	"github.com/mattn/go-zglob"
 
 	"github.com/go-task/task/v3/internal/execext"
 	"github.com/go-task/task/v3/internal/filepathext"
 	"github.com/go-task/task/v3/taskfile/ast"
 )
 
-func Globs(dir string, globs []*ast.Glob) ([]string, error) {
+func Globs(dir string, globs []*ast.Glob, useGitignore bool) ([]string, error) {
 	resultMap := make(map[string]bool)
 	for _, g := range globs {
 		matches, err := glob(dir, g.Glob)
@@ -22,18 +21,18 @@ func Globs(dir string, globs []*ast.Glob) ([]string, error) {
 			resultMap[match] = !g.Negate
 		}
 	}
+
+	if useGitignore {
+		resultMap = filterGitignored(resultMap, dir)
+	}
+
 	return collectKeys(resultMap), nil
 }
 
 func glob(dir string, g string) ([]string, error) {
 	g = filepathext.SmartJoin(dir, g)
 
-	g, err := execext.Expand(g)
-	if err != nil {
-		return nil, err
-	}
-
-	fs, err := zglob.GlobFollowSymlinks(g)
+	fs, err := execext.ExpandFields(g)
 	if err != nil {
 		return nil, err
 	}
@@ -57,7 +56,8 @@ func collectKeys(m map[string]bool) []string {
 	keys := make([]string, 0, len(m))
 	for k, v := range m {
 		if v {
-			keys = append(keys, k)
+			// Normalize path separators for consistent sorting across platforms
+			keys = append(keys, filepath.ToSlash(k))
 		}
 	}
 	sort.Strings(keys)

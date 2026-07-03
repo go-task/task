@@ -2,107 +2,113 @@ version: '3'
 
 tasks:
   default:
-    - task: dynamic
-    - task: string
-    - task: bool
-    - task: int
-    - task: string-array
     - task: map
-    - task: for-string
-    - task: for-int
-    - task: for-map
-    - task: for-multi-layer-map
-
-  dynamic:
-    vars:
-      STRING_A: '$echo "A"'
-      STRING_B: '$echo {{.STRING_A}}B'
-      STRING_C: '$echo {{.STRING_B}}C'
-    cmds:
-      - echo '{{.STRING_C}}'
-
-  string:
-    vars:
-      STRING_A: 'A'
-      STRING_B: '{{.STRING_A}}B'
-      STRING_C: '{{.STRING_B}}C'
-    cmds:
-      - echo '{{.STRING_C}}'
-
-  bool:
-    vars:
-      BOOL_TRUE: true
-      BOOL_FALSE: false
-      BOOL_A: '{{and .BOOL_TRUE .BOOL_FALSE}}'
-      BOOL_B: '{{or .BOOL_TRUE .BOOL_FALSE}}'
-      BOOL_C: '{{not .BOOL_TRUE}}'
-    cmds:
-      - echo '{{if .BOOL_TRUE}}A:{{.BOOL_A}} B:{{.BOOL_B}} C:{{.BOOL_C}}{{end}}'
-
-  int:
-    vars:
-      INT_100: 100
-      INT_10: 10
-    cmds:
-      - echo '100 + 10 = {{add .INT_100 .INT_10}}'
-      - echo '100 - 10 = {{sub .INT_100 .INT_10}}'
-      - echo '100 * 10 = {{mul .INT_100 .INT_10}}'
-      - echo '100 / 10 = {{div .INT_100 .INT_10}}'
-
-  string-array:
-    vars:
-      ARRAY_1: ['A', 'B', 'C']
-      ARRAY_2: ['D', 'E', 'F']
-    cmds:
-      - echo '{{append .ARRAY_1 "D"}}'
-      - echo '{{concat .ARRAY_1 .ARRAY_2}}'
-      - echo '{{join " " .ARRAY_1}}'
+    - task: nested-map
+    - task: slice
+    - task: ref
+    - task: ref-sh
+    - task: ref-dep
+    - task: ref-resolver
+    - task: json
 
   map:
     vars:
-      MAP_1: {A: 1, B: 2, C: 3}
-      MAP_2: {B: 4, C: 5, D: 6}
-      MAP_3: {C: 7, D: 8, E: 9}
+      MAP:
+        map: {"name":"Alice","age":30,"children":[{"name":"Bob","age":5},{"name":"Charlie","age":3},{"name":"Diane","age":1}]}
     cmds:
-      - echo '{{merge .MAP_1 .MAP_2 .MAP_3}}'
+      - task: print-story
+        vars:
+          VAR:
+            ref: .MAP
 
-  for-string:
+  nested-map:
     vars:
-      LIST: [foo, bar, baz]
+      FOO: "foo"
+      nested:
+        map:
+          variables:
+            work: "{{.FOO}}"
     cmds:
-      - for:
-          var: LIST
-        cmd: echo {{.ITEM}}
+      - echo {{.nested.variables.work}}
 
-  for-int:
+  slice:
     vars:
-      LIST: [1, 2, 3]
+      FOO: "foo"
+      BAR: "bar"
+      slice_variables_work: ["{{.FOO}}","{{.BAR}}"]
     cmds:
-      - for:
-          var: LIST
-        cmd: echo {{add .ITEM 100}}
+      - echo {{index .slice_variables_work 0}} {{index .slice_variables_work 1}}
 
-  for-map:
+  ref:
     vars:
       MAP:
-        KEY_1: value_1
-        KEY_2: value_2
-        KEY_3: value_3
+        map: {"name":"Alice","age":30,"children":[{"name":"Bob","age":5},{"name":"Charlie","age":3},{"name":"Diane","age":1}]}
+      MAP_REF:
+        ref: .MAP
     cmds:
-      - for:
-          var: MAP
-        cmd: echo {{.KEY}} {{.ITEM}}
+      - task: print-story
+        vars:
+          VAR:
+            ref: .MAP_REF
 
-  for-multi-layer-map:
+  ref-sh:
+    vars:
+      JSON_STRING:
+        sh: echo '{"name":"Alice","age":30,"children":[{"name":"Bob","age":5},{"name":"Charlie","age":3},{"name":"Diane","age":1}]}'
+      JSON: "fromJson {{.JSON_STRING}}"
+      MAP_REF:
+        ref: .JSON
+    cmds:
+      - task: print-story
+        vars:
+          VAR:
+            ref: .MAP_REF
+
+  ref-dep:
     vars:
       MAP:
-        KEY_1:
-          SUBKEY: sub_value_1
-        KEY_2:
-          SUBKEY: sub_value_2
-        KEY_3:
-          SUBKEY: sub_value_3
+        map: {"name":"Alice","age":30,"children":[{"name":"Bob","age":5},{"name":"Charlie","age":3},{"name":"Diane","age":1}]}
+    deps:
+      - task: print-story
+        vars:
+          VAR:
+            ref: .MAP
+
+  ref-resolver:
+    vars:
+      MAP:
+        map: {"name":"Alice","age":30,"children":[{"name":"Bob","age":5},{"name":"Charlie","age":3},{"name":"Diane","age":1}]}
+      MAP_REF:
+        ref: .MAP
     cmds:
-      - for:
-          var: MAP
-        cmd: echo {{.KEY}} {{.ITEM.SUBKEY}}
+      - task: print-var
+        vars:
+          VAR:
+            ref: (index .MAP_REF.children 0).name
+
+  json:
+    vars:
+      JSON_STRING:
+        sh: cat example.json
+      JSON:
+        ref: "fromJson .JSON_STRING"
+    cmds:
+      - task: print-story
+        vars:
+          VAR:
+            ref: .JSON
+
+  print-var:
+    cmds:
+      - echo "{{.VAR}}"
+
+  print-story:
+    cmds:
+      - >-
+        echo "{{.VAR.name}} has {{len .VAR.children}} children called
+        {{- $children := .VAR.children -}}
+        {{- range $i, $child := $children -}}
+          {{- if lt $i (sub (len $children) 1)}} {{$child.name -}},
+          {{- else}} and {{$child.name -}}
+          {{- end -}}
+        {{- end -}}"

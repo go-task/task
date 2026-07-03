@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/puzpuzpuz/xsync/v3"
+	"github.com/puzpuzpuz/xsync/v4"
 	"github.com/sajari/fuzzy"
 
 	"github.com/go-task/task/v3/internal/logger"
@@ -26,26 +26,36 @@ type (
 	// within them.
 	Executor struct {
 		// Flags
-		Dir         string
-		Entrypoint  string
-		TempDir     TempDir
-		Force       bool
-		ForceAll    bool
-		Insecure    bool
-		Download    bool
-		Offline     bool
-		Timeout     time.Duration
-		Watch       bool
-		Verbose     bool
-		Silent      bool
-		AssumeYes   bool
-		AssumeTerm  bool // Used for testing
-		Dry         bool
-		Summary     bool
-		Parallel    bool
-		Color       bool
-		Concurrency int
-		Interval    time.Duration
+		Dir                 string
+		Entrypoint          string
+		TempDir             TempDir
+		TempDirPath         string
+		Force               bool
+		ForceAll            bool
+		Insecure            bool
+		Download            bool
+		Offline             bool
+		TrustedHosts        []string
+		Timeout             time.Duration
+		CacheExpiryDuration time.Duration
+		RemoteCacheDir      string
+		CACert              string
+		Cert                string
+		CertKey             string
+		Watch               bool
+		Verbose             bool
+		Silent              bool
+		DisableFuzzy        bool
+		AssumeYes           bool
+		AssumeTerm          bool // Used for testing
+		Interactive         bool
+		Dry                 bool
+		Summary             bool
+		Parallel            bool
+		Color               bool
+		Concurrency         int
+		Interval            time.Duration
+		Failfast            bool
 
 		// I/O
 		Stdin  io.Reader
@@ -62,14 +72,16 @@ type (
 		UserWorkingDir     string
 		EnableVersionCheck bool
 
-		fuzzyModel *fuzzy.Model
+		fuzzyModel     *fuzzy.Model
+		fuzzyModelOnce sync.Once
 
+		promptedVars         *ast.Vars // vars collected via interactive prompts
 		concurrencySemaphore chan struct{}
 		taskCallCount        map[string]*int32
 		mkdirMutexMap        map[string]*sync.Mutex
 		executionHashes      map[string]context.Context
 		executionHashesMutex sync.Mutex
-		watchedDirs          *xsync.MapOf[string, bool]
+		watchedDirs          *xsync.Map[string, bool]
 	}
 	TempDir struct {
 		Remote      string
@@ -154,6 +166,22 @@ func (o *tempDirOption) ApplyToExecutor(e *Executor) {
 	e.TempDir = o.tempDir
 }
 
+// WithTempDirPath sets an unresolved path used to build [Executor.TempDir]
+// during [Executor.Setup]. Relative paths are resolved from the root Taskfile
+// directory. Use [WithTempDir] when the remote and fingerprint directories have
+// already been resolved.
+func WithTempDirPath(path string) ExecutorOption {
+	return &tempDirPathOption{path: path}
+}
+
+type tempDirPathOption struct {
+	path string
+}
+
+func (o *tempDirPathOption) ApplyToExecutor(e *Executor) {
+	e.TempDirPath = o.path
+}
+
 // WithForce ensures that the [Executor] always runs a task, even when
 // fingerprinting or prompts would normally stop it.
 func WithForce(force bool) ExecutorOption {
@@ -224,6 +252,20 @@ func (o *offlineOption) ApplyToExecutor(e *Executor) {
 	e.Offline = o.offline
 }
 
+// WithTrustedHosts configures the [Executor] with a list of trusted hosts for remote
+// Taskfiles. Hosts in this list will not prompt for user confirmation.
+func WithTrustedHosts(trustedHosts []string) ExecutorOption {
+	return &trustedHostsOption{trustedHosts}
+}
+
+type trustedHostsOption struct {
+	trustedHosts []string
+}
+
+func (o *trustedHostsOption) ApplyToExecutor(e *Executor) {
+	e.TrustedHosts = o.trustedHosts
+}
+
 // WithTimeout sets the [Executor]'s timeout for fetching remote taskfiles. By
 // default, the timeout is set to 10 seconds.
 func WithTimeout(timeout time.Duration) ExecutorOption {
@@ -236,6 +278,72 @@ type timeoutOption struct {
 
 func (o *timeoutOption) ApplyToExecutor(e *Executor) {
 	e.Timeout = o.timeout
+}
+
+// WithCacheExpiryDuration sets the duration after which the cache is considered
+// expired. By default, the cache is 0 (disabled).
+func WithCacheExpiryDuration(duration time.Duration) ExecutorOption {
+	return &cacheExpiryDurationOption{duration: duration}
+}
+
+type cacheExpiryDurationOption struct {
+	duration time.Duration
+}
+
+func (o *cacheExpiryDurationOption) ApplyToExecutor(r *Executor) {
+	r.CacheExpiryDuration = o.duration
+}
+
+// WithRemoteCacheDir sets the directory where remote taskfiles are cached.
+func WithRemoteCacheDir(dir string) ExecutorOption {
+	return &remoteCacheDirOption{dir: dir}
+}
+
+type remoteCacheDirOption struct {
+	dir string
+}
+
+func (o *remoteCacheDirOption) ApplyToExecutor(e *Executor) {
+	e.RemoteCacheDir = o.dir
+}
+
+// WithCACert sets the path to a custom CA certificate for TLS connections.
+func WithCACert(caCert string) ExecutorOption {
+	return &caCertOption{caCert: caCert}
+}
+
+type caCertOption struct {
+	caCert string
+}
+
+func (o *caCertOption) ApplyToExecutor(e *Executor) {
+	e.CACert = o.caCert
+}
+
+// WithCert sets the path to a client certificate for TLS connections.
+func WithCert(cert string) ExecutorOption {
+	return &certOption{cert: cert}
+}
+
+type certOption struct {
+	cert string
+}
+
+func (o *certOption) ApplyToExecutor(e *Executor) {
+	e.Cert = o.cert
+}
+
+// WithCertKey sets the path to a client certificate key for TLS connections.
+func WithCertKey(certKey string) ExecutorOption {
+	return &certKeyOption{certKey: certKey}
+}
+
+type certKeyOption struct {
+	certKey string
+}
+
+func (o *certKeyOption) ApplyToExecutor(e *Executor) {
+	e.CertKey = o.certKey
 }
 
 // WithWatch tells the [Executor] to keep running in the background and watch
@@ -281,6 +389,19 @@ func (o *silentOption) ApplyToExecutor(e *Executor) {
 	e.Silent = o.silent
 }
 
+// WithDisableFuzzy tells the [Executor] to disable fuzzy matching for task names.
+func WithDisableFuzzy(disableFuzzy bool) ExecutorOption {
+	return &disableFuzzyOption{disableFuzzy}
+}
+
+type disableFuzzyOption struct {
+	disableFuzzy bool
+}
+
+func (o *disableFuzzyOption) ApplyToExecutor(e *Executor) {
+	e.DisableFuzzy = o.disableFuzzy
+}
+
 // WithAssumeYes tells the [Executor] to assume "yes" for all prompts.
 func WithAssumeYes(assumeYes bool) ExecutorOption {
 	return &assumeYesOption{assumeYes}
@@ -305,6 +426,19 @@ type assumeTermOption struct {
 
 func (o *assumeTermOption) ApplyToExecutor(e *Executor) {
 	e.AssumeTerm = o.assumeTerm
+}
+
+// WithInteractive tells the [Executor] to prompt for missing required variables.
+func WithInteractive(interactive bool) ExecutorOption {
+	return &interactiveOption{interactive}
+}
+
+type interactiveOption struct {
+	interactive bool
+}
+
+func (o *interactiveOption) ApplyToExecutor(e *Executor) {
+	e.Interactive = o.interactive
 }
 
 // WithDry tells the [Executor] to output the commands that would be run without
@@ -486,4 +620,17 @@ type versionCheckOption struct {
 
 func (o *versionCheckOption) ApplyToExecutor(e *Executor) {
 	e.EnableVersionCheck = o.enableVersionCheck
+}
+
+// WithFailfast tells the [Executor] whether or not to check the version of
+func WithFailfast(failfast bool) ExecutorOption {
+	return &failfastOption{failfast}
+}
+
+type failfastOption struct {
+	failfast bool
+}
+
+func (o *failfastOption) ApplyToExecutor(e *Executor) {
+	e.Failfast = o.failfast
 }

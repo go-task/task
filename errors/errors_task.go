@@ -1,6 +1,7 @@
 package errors
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -46,10 +47,15 @@ func (err *TaskRunError) Code() int {
 }
 
 func (err *TaskRunError) TaskExitCode() int {
-	if c, ok := interp.IsExitStatus(err.Err); ok {
-		return int(c)
+	var exit interp.ExitStatus
+	if errors.As(err.Err, &exit) {
+		return int(exit)
 	}
 	return err.Code()
+}
+
+func (err *TaskRunError) Unwrap() error {
+	return err.Err
 }
 
 // TaskInternalError when the user attempts to invoke a task that is internal.
@@ -160,7 +166,7 @@ func (v MissingVar) String() string {
 }
 
 func (err *TaskMissingRequiredVarsError) Error() string {
-	var vars []string
+	vars := make([]string, 0, len(err.MissingVars))
 	for _, v := range err.MissingVars {
 		vars = append(vars, v.String())
 	}
@@ -189,9 +195,9 @@ type TaskNotAllowedVarsError struct {
 func (err *TaskNotAllowedVarsError) Error() string {
 	var builder strings.Builder
 
-	builder.WriteString(fmt.Sprintf("task: Task %q cancelled because it is missing required variables:\n", err.TaskName))
+	builder.WriteString(fmt.Sprintf("task: Task %q cancelled because it is missing required variables:\n", err.TaskName)) //nolint:staticcheck
 	for _, s := range err.NotAllowedVars {
-		builder.WriteString(fmt.Sprintf("  - %s has an invalid value : '%s' (allowed values : %v)\n", s.Name, s.Value, s.Enum))
+		builder.WriteString(fmt.Sprintf("  - %s has an invalid value : '%s' (allowed values : %v)\n", s.Name, s.Value, s.Enum)) //nolint:staticcheck
 	}
 
 	return builder.String()

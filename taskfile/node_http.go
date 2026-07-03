@@ -2,11 +2,15 @@ package taskfile
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
+	"fmt"
 	"io"
 	"net/http"
 	"net/url"
+	"os"
 	"path/filepath"
-	"time"
+	"strings"
 
 	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/execext"
@@ -15,17 +19,61 @@ import (
 
 // An HTTPNode is a node that reads a Taskfile from a remote location via HTTP.
 type HTTPNode struct {
-	*BaseNode
-	URL        *url.URL // stores url pointing actual remote file. (e.g. with Taskfile.yml)
-	entrypoint string   // stores entrypoint url. used for building graph vertices.
-	timeout    time.Duration
+	*baseNode
+	url    *url.URL     // stores url pointing actual remote file. (e.g. with Taskfile.yml)
+	client *http.Client // HTTP client with optional TLS configuration
+}
+
+// buildHTTPClient creates an HTTP client with optional TLS configuration.
+// If no certificate options are provided, it returns http.DefaultClient.
+func buildHTTPClient(insecure bool, caCert, cert, certKey string) (*http.Client, error) {
+	// Validate that cert and certKey are provided together
+	if (cert != "" && certKey == "") || (cert == "" && certKey != "") {
+		return nil, fmt.Errorf("both --cert and --cert-key must be provided together")
+	}
+
+	// If no TLS customization is needed, return the default client
+	if !insecure && caCert == "" && cert == "" {
+		return http.DefaultClient, nil
+	}
+
+	tlsConfig := &tls.Config{
+		InsecureSkipVerify: insecure, //nolint:gosec
+	}
+
+	// Load custom CA certificate if provided
+	if caCert != "" {
+		caCertData, err := os.ReadFile(caCert)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read CA certificate: %w", err)
+		}
+		caCertPool := x509.NewCertPool()
+		if !caCertPool.AppendCertsFromPEM(caCertData) {
+			return nil, fmt.Errorf("failed to parse CA certificate")
+		}
+		tlsConfig.RootCAs = caCertPool
+	}
+
+	// Load client certificate and key if provided
+	if cert != "" && certKey != "" {
+		clientCert, err := tls.LoadX509KeyPair(cert, certKey)
+		if err != nil {
+			return nil, fmt.Errorf("failed to load client certificate: %w", err)
+		}
+		tlsConfig.Certificates = []tls.Certificate{clientCert}
+	}
+
+	return &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: tlsConfig,
+		},
+	}, nil
 }
 
 func NewHTTPNode(
 	entrypoint string,
 	dir string,
 	insecure bool,
-	timeout time.Duration,
 	opts ...NodeOption,
 ) (*HTTPNode, error) {
 	base := NewBaseNode(dir, opts...)
@@ -34,47 +82,50 @@ func NewHTTPNode(
 		return nil, err
 	}
 	if url.Scheme == "http" && !insecure {
-		return nil, &errors.TaskfileNotSecureError{URI: entrypoint}
+		return nil, &errors.TaskfileNotSecureError{URI: url.Redacted()}
+	}
+
+	client, err := buildHTTPClient(insecure, base.caCert, base.cert, base.certKey)
+	if err != nil {
+		return nil, err
 	}
 
 	return &HTTPNode{
-		BaseNode:   base,
-		URL:        url,
-		entrypoint: entrypoint,
-		timeout:    timeout,
+		baseNode: base,
+		url:      url,
+		client:   client,
 	}, nil
 }
 
 func (node *HTTPNode) Location() string {
-	return node.entrypoint
+	return node.url.Redacted()
 }
 
-func (node *HTTPNode) Remote() bool {
-	return true
+func (node *HTTPNode) Read() ([]byte, error) {
+	return node.ReadContext(context.Background())
 }
 
-func (node *HTTPNode) Read(ctx context.Context) ([]byte, error) {
-	url, err := RemoteExists(ctx, node.URL, node.timeout)
+func (node *HTTPNode) ReadContext(ctx context.Context) ([]byte, error) {
+	url, err := RemoteExists(ctx, *node.url, node.client)
 	if err != nil {
 		return nil, err
 	}
-	node.URL = url
-	req, err := http.NewRequest("GET", node.URL.String(), nil)
+	req, err := http.NewRequestWithContext(ctx, "GET", url.String(), nil)
 	if err != nil {
-		return nil, errors.TaskfileFetchFailedError{URI: node.URL.String()}
+		return nil, errors.TaskfileFetchFailedError{URI: node.Location()}
 	}
 
-	resp, err := http.DefaultClient.Do(req.WithContext(ctx))
+	resp, err := node.client.Do(req.WithContext(ctx))
 	if err != nil {
-		if errors.Is(err, context.DeadlineExceeded) {
-			return nil, &errors.TaskfileNetworkTimeoutError{URI: node.URL.String(), Timeout: node.timeout}
+		if ctx.Err() != nil {
+			return nil, err
 		}
-		return nil, errors.TaskfileFetchFailedError{URI: node.URL.String()}
+		return nil, errors.TaskfileFetchFailedError{URI: node.Location()}
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
 		return nil, errors.TaskfileFetchFailedError{
-			URI:            node.URL.String(),
+			URI:            node.Location(),
 			HTTPStatusCode: resp.StatusCode,
 		}
 	}
@@ -93,11 +144,11 @@ func (node *HTTPNode) ResolveEntrypoint(entrypoint string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return node.URL.ResolveReference(ref).String(), nil
+	return node.url.ResolveReference(ref).String(), nil
 }
 
 func (node *HTTPNode) ResolveDir(dir string) (string, error) {
-	path, err := execext.Expand(dir)
+	path, err := execext.ExpandLiteral(dir)
 	if err != nil {
 		return "", err
 	}
@@ -116,7 +167,14 @@ func (node *HTTPNode) ResolveDir(dir string) (string, error) {
 	return filepathext.SmartJoin(parent, path), nil
 }
 
-func (node *HTTPNode) FilenameAndLastDir() (string, string) {
-	dir, filename := filepath.Split(node.entrypoint)
-	return filepath.Base(dir), filename
+func (node *HTTPNode) CacheKey() string {
+	checksum := strings.TrimRight(checksum([]byte(node.Location())), "=")
+	dir, filename := filepath.Split(node.url.Path)
+	lastDir := filepath.Base(dir)
+	prefix := filename
+	// Means it's not "", nor "." nor "/", so it's a valid directory
+	if len(lastDir) > 1 {
+		prefix = fmt.Sprintf("%s.%s", lastDir, filename)
+	}
+	return fmt.Sprintf("http.%s.%s.%s", node.url.Host, prefix, checksum)
 }

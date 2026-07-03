@@ -1,0 +1,178 @@
+version: '3'
+
+vars:
+  SHOULD_RUN: "yes"
+  ENV: "prod"
+  FEATURE_ENABLED: "true"
+  FEATURE_DISABLED: "false"
+
+tasks:
+  # Basic command-level if (condition met)
+  cmd-if-true:
+    cmds:
+      - cmd: echo "executed"
+        if: "true"
+
+  # Basic command-level if (condition not met)
+  cmd-if-false:
+    cmds:
+      - cmd: echo "should not appear"
+        if: "false"
+      - echo "this runs"
+
+  # Task-level if (condition met)
+  task-if-true:
+    if: "true"
+    cmds:
+      - echo "task executed"
+
+  # Task-level if (condition not met)
+  task-if-false:
+    if: "false"
+    cmds:
+      - echo "should not appear"
+
+  # With template variables
+  if-with-template:
+    cmds:
+      - cmd: echo "Running because SHOULD_RUN={{.SHOULD_RUN}}"
+        if: '[ "{{.SHOULD_RUN}}" = "yes" ]'
+
+  # If inside for loop
+  if-in-for-loop:
+    cmds:
+      - for: ["a", "b", "c"]
+        cmd: echo "processing {{.ITEM}}"
+        if: '[ "{{.ITEM}}" != "b" ]'
+
+  # If on task call
+  if-on-task-call:
+    cmds:
+      - task: subtask
+        if: "true"
+
+  subtask:
+    internal: true
+    cmds:
+      - echo "subtask ran"
+
+  # If combined with platforms (both must pass)
+  if-with-platforms:
+    cmds:
+      - cmd: echo "condition and platform met"
+        platforms: [linux, darwin, windows]
+        if: "true"
+
+  # Skip task call
+  skip-task-call:
+    cmds:
+      - task: subtask
+        if: "false"
+      - echo "after skipped task call"
+
+  # Task call in cmds with if condition met
+  task-call-if-true:
+    cmds:
+      - task: subtask
+        if: "true"
+      - echo "after task call"
+
+  # Task call in cmds with if condition not met
+  task-call-if-false:
+    cmds:
+      - task: subtask
+        if: "false"
+      - echo "continues after skipped task"
+
+  # Template eq - condition met
+  template-eq-true:
+    cmds:
+      - cmd: echo "env is prod"
+        if: '{{ eq .ENV "prod" }}'
+
+  # Template eq - condition not met
+  template-eq-false:
+    cmds:
+      - cmd: echo "should not appear"
+        if: '{{ eq .ENV "dev" }}'
+      - echo "this runs"
+
+  # Template ne (not equal)
+  template-ne:
+    cmds:
+      - cmd: echo "env is not dev"
+        if: '{{ ne .ENV "dev" }}'
+
+  # Template with boolean-like variable
+  template-bool-true:
+    cmds:
+      - cmd: echo "feature enabled"
+        if: '{{ eq .FEATURE_ENABLED "true" }}'
+
+  # Template with boolean-like variable (false)
+  template-bool-false:
+    cmds:
+      - cmd: echo "should not appear"
+        if: '{{ eq .FEATURE_DISABLED "true" }}'
+      - echo "feature was disabled"
+
+  # Direct true/false from template
+  template-direct-true:
+    cmds:
+      - cmd: echo "direct true works"
+        if: '{{ .FEATURE_ENABLED }}'
+
+  # Direct true/false from template (false case)
+  template-direct-false:
+    cmds:
+      - cmd: echo "should not appear"
+        if: '{{ .FEATURE_DISABLED }}'
+      - echo "direct false skipped correctly"
+
+  # Template with CLI variable override
+  template-cli-var:
+    cmds:
+      - cmd: echo "MY_VAR is yes"
+        if: '{{ eq .MY_VAR "yes" }}'
+
+  # Combined template conditions with and
+  template-and:
+    cmds:
+      - cmd: echo "both conditions met"
+        if: '{{ and (eq .ENV "prod") (eq .FEATURE_ENABLED "true") }}'
+
+  # Combined template conditions with or
+  template-or:
+    cmds:
+      - cmd: echo "at least one condition met"
+        if: '{{ or (eq .ENV "dev") (eq .ENV "prod") }}'
+
+  # Task-level if with template
+  task-level-template:
+    if: '{{ eq .ENV "prod" }}'
+    cmds:
+      - echo "task runs in prod"
+
+  # Task-level if with template (not met)
+  task-level-template-false:
+    if: '{{ eq .ENV "dev" }}'
+    cmds:
+      - echo "should not appear"
+
+  # Task-level if with dynamic variable (condition met)
+  task-if-dynamic-true:
+    vars:
+      ENABLE_FEATURE:
+        sh: 'echo "true"'
+    if: '{{ eq .ENABLE_FEATURE "true" }}'
+    cmds:
+      - echo "dynamic feature enabled"
+
+  # Task-level if with dynamic variable (condition not met)
+  task-if-dynamic-false:
+    vars:
+      ENABLE_FEATURE:
+        sh: 'echo "false"'
+    if: '{{ eq .ENABLE_FEATURE "true" }}'
+    cmds:
+      - echo "should not appear"

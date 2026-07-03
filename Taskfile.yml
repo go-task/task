@@ -8,6 +8,7 @@ includes:
 
 vars:
   BIN: "{{.ROOT_DIR}}/bin"
+  GOTESTSUM_FORMAT: '{{if .CI}}github-actions{{else}}pkgname{{end}}'
 
 env:
   CGO_ENABLED: '0'
@@ -28,38 +29,49 @@ tasks:
     aliases: [i]
     sources:
       - './**/*.go'
+      - go.mod
     cmds:
       - go install -v ./cmd/task
 
   generate:
-    desc: Runs Mockery to create mocks
     aliases: [gen, g]
+    desc: Runs all generate tasks
+    cmds:
+      - task: generate:mocks
+      - task: generate:fixtures
+
+  generate:mocks:
+    desc: Runs Mockery to create mocks
+    aliases: [gen:mocks, g:mocks]
     deps: [install:mockery]
     sources:
       - "internal/fingerprint/checker.go"
     generates:
       - "internal/mocks/*.go"
     cmds:
-      - "{{.BIN}}/mockery --dir ./internal/fingerprint --name SourcesCheckable"
-      - "{{.BIN}}/mockery --dir ./internal/fingerprint --name StatusCheckable"
+      - find . -type f -name *_mock.go -delete
+      - "{{.BIN}}/mockery"
 
   generate:fixtures:
     desc: Runs tests and generates golden fixture files
     aliases: [gen:fixtures, g:fixtures]
+    env:
+      GOLDIE_UPDATE: 'true'
+      GOLDIE_TEMPLATE: 'true'
     cmds:
       - find ./testdata -name '*.golden' -delete
-      - go test -update ./...
+      - go test ./...
 
   install:mockery:
     desc: Installs mockgen; a tool to generate mock files
     vars:
-      MOCKERY_VERSION: v2.24.0
+      MOCKERY_VERSION: v3.2.2
     env:
       GOBIN: "{{.BIN}}"
     status:
       - go version -m {{.BIN}}/mockery | grep github.com/vektra/mockery | grep {{.MOCKERY_VERSION}}
     cmds:
-      - go install github.com/vektra/mockery/v2@{{.MOCKERY_VERSION}}
+      - GOBIN="{{.BIN}}" go install github.com/vektra/mockery/v3@{{.MOCKERY_VERSION}}
 
   mod:
     desc: Downloads and tidy Go modules
@@ -80,6 +92,7 @@ tasks:
     sources:
       - './**/*.go'
       - .golangci.yml
+      - go.mod
     cmds:
       - golangci-lint run
 
@@ -88,8 +101,18 @@ tasks:
     sources:
       - './**/*.go'
       - .golangci.yml
+      - go.mod
     cmds:
       - golangci-lint run --fix
+
+  format:
+    desc: Runs golangci-lint and formats any Go files
+    aliases: [fmt, f]
+    sources:
+      - './**/*.go'
+      - .golangci.yml
+    cmds:
+      - golangci-lint fmt
 
   sleepit:build:
     desc: Builds the sleepit test helper
@@ -110,28 +133,36 @@ tasks:
   test:
     desc: Runs test suite
     aliases: [t]
+    deps: [gotestsum:install]
     sources:
       - "**/*.go"
       - "testdata/**/*"
     cmds:
-      - go test ./...
+      - gotestsum -f '{{.GOTESTSUM_FORMAT}}' ./...
 
   test:watch:
     desc: Runs test suite with watch tests included
-    deps: [sleepit:build]
+    deps: [sleepit:build, gotestsum:install]
     cmds:
-      - go test ./... -tags 'watch'
+      - gotestsum -f '{{.GOTESTSUM_FORMAT}}' ./... -tags 'watch'
 
   test:all:
     desc: Runs test suite with signals and watch tests included
-    deps: [sleepit:build]
+    deps: [sleepit:build, gotestsum:install]
     cmds:
-      - go test -tags 'signals watch' ./...
+      - gotestsum -f '{{.GOTESTSUM_FORMAT}}' -tags 'signals watch' ./...
 
   goreleaser:test:
     desc: Tests release process without publishing
     cmds:
       - goreleaser --snapshot --clean
+
+  gotestsum:install:
+    desc: Installs gotestsum
+    status:
+      - command -v gotestsum
+    cmds:
+      - go install gotest.tools/gotestsum@latest
 
   goreleaser:install:
     desc: Installs goreleaser
@@ -167,7 +198,7 @@ tasks:
       - Push the commit/tag to the repository
       - Create a GitHub release
 
-      To use the task, simply run "task release:<version>" where "<version>" is is one of:
+      To use the task, run "task release:<version>" where "<version>" is is one of:
 
       - "major" - Bumps the major number
       - "minor" - Bumps the minor number
@@ -182,7 +213,6 @@ tasks:
         Please wait for the CI to finish and then do the following:
 
         - Copy the changelog for v{{.VERSION}} to the GitHub release
-        - Publish the package to NPM with `task npm:publish`
         - Update and push the snapcraft manifest in https://github.com/go-task/snap/blob/main/snap/snapcraft.yaml
     preconditions:
       - sh: test $(git rev-parse --abbrev-ref HEAD) = "main"
@@ -197,12 +227,7 @@ tasks:
       - "git add --all"
       - "git commit -m v{{.VERSION}}"
       - "git push"
-      - "git tag v{{.VERSION}}"
+      - "git tag -a v{{.VERSION}} -m v{{.VERSION}}"
       - "git push origin tag v{{.VERSION}}"
       - cmd: printf "%s" '{{.COMPLETE_MESSAGE}}'
         silent: true
-
-  npm:publish:
-    desc: Publish release to npm
-    cmds:
-      - npm publish --access=public

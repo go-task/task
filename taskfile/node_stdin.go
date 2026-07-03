@@ -2,10 +2,8 @@ package taskfile
 
 import (
 	"bufio"
-	"context"
 	"fmt"
 	"os"
-	"strings"
 
 	"github.com/go-task/task/v3/internal/execext"
 	"github.com/go-task/task/v3/internal/filepathext"
@@ -13,12 +11,12 @@ import (
 
 // A StdinNode is a node that reads a taskfile from the standard input stream.
 type StdinNode struct {
-	*BaseNode
+	*baseNode
 }
 
 func NewStdinNode(dir string) (*StdinNode, error) {
 	return &StdinNode{
-		BaseNode: NewBaseNode(dir),
+		baseNode: NewBaseNode(dir),
 	}, nil
 }
 
@@ -30,7 +28,7 @@ func (node *StdinNode) Remote() bool {
 	return false
 }
 
-func (node *StdinNode) Read(ctx context.Context) ([]byte, error) {
+func (node *StdinNode) Read() ([]byte, error) {
 	var stdin []byte
 	scanner := bufio.NewScanner(os.Stdin)
 	for scanner.Scan() {
@@ -44,11 +42,11 @@ func (node *StdinNode) Read(ctx context.Context) ([]byte, error) {
 
 func (node *StdinNode) ResolveEntrypoint(entrypoint string) (string, error) {
 	// If the file is remote, we don't need to resolve the path
-	if strings.Contains(entrypoint, "://") {
+	if IsRemoteEntrypoint(entrypoint) {
 		return entrypoint, nil
 	}
 
-	path, err := execext.Expand(entrypoint)
+	path, err := execext.ExpandLiteral(entrypoint)
 	if err != nil {
 		return "", err
 	}
@@ -61,7 +59,7 @@ func (node *StdinNode) ResolveEntrypoint(entrypoint string) (string, error) {
 }
 
 func (node *StdinNode) ResolveDir(dir string) (string, error) {
-	path, err := execext.Expand(dir)
+	path, err := execext.ExpandLiteral(dir)
 	if err != nil {
 		return "", err
 	}
@@ -71,8 +69,4 @@ func (node *StdinNode) ResolveDir(dir string) (string, error) {
 	}
 
 	return filepathext.SmartJoin(node.Dir(), path), nil
-}
-
-func (node *StdinNode) FilenameAndLastDir() (string, string) {
-	return "", "__stdin__"
 }

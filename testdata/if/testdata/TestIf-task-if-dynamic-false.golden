@@ -1,0 +1,2 @@
+task: dynamic variable: "echo \"false\"" result: "false"
+task: if condition not met - skipped: "task-if-dynamic-false"

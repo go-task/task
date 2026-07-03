@@ -11,6 +11,7 @@ tasks:
     cmds:
       - echo {{.TASK}}
   print-root-dir: echo {{.ROOT_DIR}}
+  print-root-taskfile: echo {{.ROOT_TASKFILE}}
   print-taskfile: echo {{.TASKFILE}}
   print-taskfile-dir: echo {{.TASKFILE_DIR}}
   print-task-version: echo {{.TASK_VERSION}}

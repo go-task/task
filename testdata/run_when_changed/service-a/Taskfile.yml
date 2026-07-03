@@ -1,0 +1,18 @@
+version: '3'
+
+includes:
+  library:
+    taskfile: ../library/Taskfile.yml
+    dir: ../library
+
+tasks:
+  start:
+    cmds:
+      - task: library:login
+        vars:
+          SERVER: fubar
+          USER: fubar
+      - task: library:login
+        vars:
+          SERVER: foo
+          USER: foo
