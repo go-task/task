@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Updated taskfile versions doc to mention when version checks were introduced
+  (#2184 by @jubr).
+
 ## v3.52.0 - 2026-07-02
 
 - Fixed --interactive prompts for required vars sometimes appearing in a random
