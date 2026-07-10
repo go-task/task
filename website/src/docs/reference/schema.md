@@ -201,12 +201,16 @@ set: [errexit, nounset, pipefail]
 ### `shopt`
 
 - **Type**: `[]string`
-- **Options**: `expand_aliases`, `globstar`, `nullglob`
+- **Options**: `dotglob`, `expand_aliases`, `extglob`, `globstar`,
+  `nocaseglob`, `nullglob`
 - **Description**: Bash shell options for all commands
 
 ```yaml
 shopt: [globstar]
 ```
+
+Options given to `set` and `shopt` are validated when the Taskfile is parsed
+and an error is returned if an option is not in the lists above.
 
 ## Include
 
@@ -946,9 +950,14 @@ tasks:
 
 Available `shopt` options for Bash features:
 
+- `dotglob` - Include hidden files in glob expansion
 - `expand_aliases` - Enable alias expansion
+- `extglob` - Enable extended pattern matching
 - `globstar` - Enable `**` recursive globbing
+- `nocaseglob` - Case-insensitive glob expansion
 - `nullglob` - Null glob expansion
+
+Any other option is rejected with an error when the Taskfile is parsed.
 
 ```yaml
 # Global level
