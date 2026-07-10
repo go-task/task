@@ -735,6 +735,24 @@ tasks:
             ref: .ALLOWED_ENVS
     cmds:
       - ./deploy.sh
+
+#### [`vars`](#variable)
+
+- **Type**: `map[string]Variable`
+- **Description**: Task level variables available to individual task
+
+```yaml
+tasks:
+  default:
+    vars:
+      # Simple values
+      APP_NAME: myapp
+      VERSION: 1.0.0
+      DEBUG: true
+      PORT: 8080
+      FEATURES: [auth, logging]
+  cmds:
+    # …
 ```
 
 See [Prompting for missing variables interactively](/docs/guide#prompting-for-missing-variables-interactively)
