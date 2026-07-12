@@ -1635,6 +1635,19 @@ func TestIncludesWithExclude(t *testing.T) {
 	require.Error(t, err)
 	buff.Reset()
 
+	err = e.Run(t.Context(), &task.Call{Task: "included:tools:lint"})
+	require.Error(t, err)
+	buff.Reset()
+
+	err = e.Run(t.Context(), &task.Call{Task: "included:tools:test"})
+	require.Error(t, err)
+	buff.Reset()
+
+	err = e.Run(t.Context(), &task.Call{Task: "included:toolshed"})
+	require.NoError(t, err)
+	assert.Equal(t, "toolshed\n", buff.String())
+	buff.Reset()
+
 	err = e.Run(t.Context(), &task.Call{Task: "bar"})
 	require.Error(t, err)
 	buff.Reset()

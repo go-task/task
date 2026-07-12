@@ -413,7 +413,8 @@ You can do this by using the
 ### Exclude tasks from being included
 
 You can exclude tasks from being included by using the `excludes` option. This
-option takes the list of tasks to be excluded from this include.
+option takes a list of task names or namespaces to be excluded from this
+include. Excluding a namespace also excludes all tasks below it.
 
 ::: code-group
 
@@ -423,7 +424,7 @@ version: '3'
 includes:
   included:
     taskfile: ./Included.yml
-    excludes: [foo]
+    excludes: [foo, tools]
 ```
 
 ```yaml [Included.yml]
@@ -432,6 +433,8 @@ version: '3'
 tasks:
   foo: echo "Foo"
   bar: echo "Bar"
+  tools:lint: echo "Lint"
+  tools:test: echo "Test"
 ```
 
 :::

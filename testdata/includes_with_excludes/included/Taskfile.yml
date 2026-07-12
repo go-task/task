@@ -3,3 +3,6 @@ version: '3'
 tasks:
   foo: echo foo
   bar: echo bar
+  tools:lint: echo lint
+  tools:test: echo test
+  toolshed: echo toolshed
