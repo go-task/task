@@ -37,7 +37,7 @@ func FastRecursiveGlob(pattern string) ([]string, bool, error) {
 		return nil, false, nil
 	}
 
-	results := make(map[string]bool)
+	var results []string
 	err := filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
@@ -59,12 +59,12 @@ func FastRecursiveGlob(pattern string) ([]string, bool, error) {
 			}
 		}
 
-		matched, err := filepath.Match(namePattern, filepath.Base(path))
+		matched, err := filepath.Match(namePattern, d.Name())
 		if err != nil {
 			return err
 		}
 		if matched {
-			results[path] = true
+			results = append(results, filepath.ToSlash(path))
 		}
 		return nil
 	})
@@ -74,14 +74,6 @@ func FastRecursiveGlob(pattern string) ([]string, bool, error) {
 	if err != nil {
 		return nil, true, err
 	}
-	return collectGlobKeys(results), true, nil
-}
-
-func collectGlobKeys(matches map[string]bool) []string {
-	results := make([]string, 0, len(matches))
-	for path := range matches {
-		results = append(results, filepath.ToSlash(path))
-	}
 	sort.Strings(results)
-	return results
+	return results, true, nil
 }
