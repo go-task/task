@@ -6,6 +6,7 @@ includes:
     excludes:
       - foo
       - tools
+      - deploy:*
   included_flatten:
     taskfile: ./included/Taskfile.yml
     flatten: true

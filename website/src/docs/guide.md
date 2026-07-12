@@ -414,7 +414,8 @@ You can do this by using the
 
 You can exclude tasks from being included by using the `excludes` option. This
 option takes a list of task names or namespaces to be excluded from this
-include. Excluding a namespace also excludes all tasks below it.
+include. Excluding a namespace also excludes all tasks below it. Entries are
+matched literally and are not treated as glob patterns.
 
 ::: code-group
 

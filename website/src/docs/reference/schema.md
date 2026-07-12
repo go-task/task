@@ -297,7 +297,7 @@ includes:
 ### `excludes`
 
 - **Type**: `[]string`
-- **Description**: Tasks or namespaces to exclude from inclusion
+- **Description**: Literal task names or namespaces to exclude from inclusion
 
 ```yaml
 includes:
