@@ -7,6 +7,7 @@ import (
 
 	"github.com/go-task/task/v3/internal/execext"
 	"github.com/go-task/task/v3/internal/filepathext"
+	"github.com/go-task/task/v3/internal/fsext"
 	"github.com/go-task/task/v3/taskfile/ast"
 )
 
@@ -31,6 +32,10 @@ func Globs(dir string, globs []*ast.Glob, useGitignore bool) ([]string, error) {
 
 func glob(dir string, g string) ([]string, error) {
 	g = filepathext.SmartJoin(dir, g)
+
+	if results, ok, err := fsext.FastRecursiveGlob(g); ok {
+		return results, err
+	}
 
 	fs, err := execext.ExpandFields(g)
 	if err != nil {
