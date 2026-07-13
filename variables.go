@@ -217,15 +217,17 @@ func (e *Executor) compiledTask(call *Call, evaluateShVars bool) (*ast.Task, err
 			checker = fingerprint.NewChecksumChecker(e.TempDir.Fingerprint, e.Dry)
 		}
 
-		value, err := checker.Value(&new)
-		if err != nil {
-			return nil, err
-		}
-		vars.Set(strings.ToUpper(checker.Kind()), ast.Var{Live: value})
+		if origTask.ReferencesFingerprintVar(checker.Kind()) {
+			value, err := checker.Value(&new)
+			if err != nil {
+				return nil, err
+			}
+			vars.Set(strings.ToUpper(checker.Kind()), ast.Var{Live: value})
 
-		// Adding new variables, requires us to refresh the templaters
-		// cache of the the values manually
-		cache.ResetCache()
+			// Adding new variables, requires us to refresh the templaters
+			// cache of the the values manually
+			cache.ResetCache()
+		}
 	}
 
 	if len(origTask.Cmds) > 0 {
