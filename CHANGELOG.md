@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Considerably improve performance of fingerprinting on large repositories
+  (monorepos). Fingerprinting is up to 86% faster and make up to 70% fewer
+  memory allocations on the more advanced scenarios. Benchmarks were added as
+  well. We're basically skipping work when not needed. (#2853, #2883 by
+  @Napolitain, #2884 by @Napolitain).
 - Updated taskfile versions doc to mention when version checks were introduced
   (#2184 by @jubr).
 
