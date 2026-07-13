@@ -681,6 +681,12 @@ type gitignoreSeq struct {
 func (s gitignoreSeq) run(t *testing.T) {
 	t.Helper()
 	cleanup := func() {
+		// The fixture manages its own .git marker so that gitignore filtering
+		// resolves a repo root regardless of the build source: an in-tree
+		// checkout would otherwise inherit the go-task .git, but a GitHub
+		// source tarball has none, which would silently disable filtering and
+		// break the golden fixtures.
+		_ = os.RemoveAll(filepathext.SmartJoin(s.dir, ".git"))
 		_ = os.RemoveAll(filepathext.SmartJoin(s.dir, ".task"))
 		for name := range s.create {
 			_ = os.Remove(filepathext.SmartJoin(s.dir, name))
@@ -694,6 +700,7 @@ func (s gitignoreSeq) run(t *testing.T) {
 	}
 	cleanup()
 	t.Cleanup(cleanup)
+	require.NoError(t, os.MkdirAll(filepathext.SmartJoin(s.dir, ".git"), 0o755))
 	for name, content := range s.create {
 		writeFile(t, s.dir, name, content)
 	}
