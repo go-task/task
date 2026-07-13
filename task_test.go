@@ -3417,6 +3417,16 @@ func TestWildcard(t *testing.T) {
 			call:           "wildcard-foo-bar",
 			expectedOutput: "Hello foo-bar\n",
 		},
+		{
+			name:           "regex metacharacters are matched literally",
+			call:           "c++",
+			expectedOutput: "Building c++\n",
+		},
+		{
+			name:    "a dot is not a wildcard",
+			call:    "deploy-prod",
+			wantErr: true,
+		},
 	}
 
 	for _, test := range tests {

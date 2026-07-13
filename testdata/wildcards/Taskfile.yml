@@ -25,3 +25,12 @@ tasks:
       SERVICE: "{{index .MATCH 0}}"
     cmds:
       - echo "Starting {{.SERVICE}}"
+
+  # Regex metacharacters in a task name must be matched literally
+  c++:
+    cmds:
+      - echo "Building c++"
+
+  deploy.prod:
+    cmds:
+      - echo "Deploying prod"
