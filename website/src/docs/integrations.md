@@ -115,7 +115,7 @@ developers who have created their own integrations for Task:
   [[source](https://github.com/biozz/sublime-taskfile)] by @biozz
 - [IntelliJ Plugin](https://plugins.jetbrains.com/plugin/17058-taskfile)
   [[source](https://github.com/lechuckroh/task-intellij-plugin)] by @lechuckroh
-- [Zed Extension](https://zed.dev/extensions?query=taskfile)
+- [Zed Extension](https://zed.dev/extensions/taskfile)
   [[source](https://github.com/nickalie/zed-taskfile)] by @nickalie
 - [mk](https://github.com/pycontribs/mk) command line tool recognizes Taskfiles
   natively.
