@@ -3,8 +3,8 @@ package templater
 import (
 	"maps"
 	"math/rand/v2"
+	"net/url"
 	"os"
-	"path"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -103,8 +103,13 @@ func joinEnv(elem ...string) string {
 	return strings.Join(elem, string(os.PathListSeparator))
 }
 
-func joinUrl(elem ...string) string {
-	return path.Join(elem...)
+func joinUrl(elem ...string) (string, error) {
+	if len(elem) == 0 {
+		return "", nil
+	}
+	// Use net/url.JoinPath rather than path.Join: the latter runs path.Clean,
+	// which collapses the "//" in a URL scheme (e.g. "http://" -> "http:/").
+	return url.JoinPath(elem[0], elem[1:]...)
 }
 
 func merge(base map[string]any, v ...map[string]any) map[string]any {
