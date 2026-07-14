@@ -1,8 +1,8 @@
 [tools]
 # Runtimes
-go = "1.26.4"
+go = "1.26.5"
 node = "24"
-pnpm = "11.9.0"
+pnpm = "11.13.0"
 
 # Dev tools
 golangci-lint = "2.12.2"
