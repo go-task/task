@@ -3,6 +3,8 @@ package templater
 import "testing"
 
 func TestJoinUrl(t *testing.T) {
+	t.Parallel()
+
 	for _, tt := range []struct {
 		name string
 		elem []string
@@ -15,6 +17,8 @@ func TestJoinUrl(t *testing.T) {
 		{"single element", []string{"http://localhost"}, "http://localhost/"},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			got, err := joinUrl(tt.elem...)
 			if err != nil {
 				t.Fatalf("joinUrl(%q) unexpected error: %v", tt.elem, err)
