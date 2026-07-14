@@ -1,6 +1,6 @@
 module github.com/go-task/task/v3
 
-go 1.26.4
+go 1.25.10
 
 require (
 	charm.land/bubbles/v2 v2.1.1

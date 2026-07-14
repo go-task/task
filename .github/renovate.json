@@ -42,6 +42,11 @@
     {
       "matchCategories": ["golang"],
       "addLabels": ["lang: go"]
+    },
+    {
+      "matchManagers": ["gomod"],
+      "matchDepTypes": ["golang"],
+      "enabled": false
     }
   ]
 }
