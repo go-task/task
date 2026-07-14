@@ -1,5 +1,4 @@
 //go:build signals
-// +build signals
 
 // This file contains tests for signal handling on Unix.
 // Based on code from https://github.com/marco-m/timeit
@@ -154,9 +153,8 @@ func TestSignalSentToProcessGroup(t *testing.T) {
 
 			err := sut.Wait()
 
-			var wantErr *exec.ExitError
 			const wantExitStatus = 201
-			if errors.As(err, &wantErr) {
+			if wantErr, ok := errors.AsType[*exec.ExitError](err); ok {
 				if wantErr.ExitCode() != wantExitStatus {
 					t.Errorf(
 						"waiting for child process: got exit status %v; want %d\n"+
@@ -166,7 +164,7 @@ func TestSignalSentToProcessGroup(t *testing.T) {
 				}
 			} else {
 				t.Errorf("waiting for child process: got unexpected error type %v (%T); want (%T)",
-					err, err, wantErr)
+					err, err, (*exec.ExitError)(nil))
 			}
 
 			gotLines := strings.SplitAfter(out.String(), "\n")

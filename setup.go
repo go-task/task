@@ -59,8 +59,7 @@ func (e *Executor) getRootNode() (taskfile.Node, error) {
 		taskfile.WithCert(e.Cert),
 		taskfile.WithCertKey(e.CertKey),
 	)
-	var taskNotFoundError errors.TaskfileNotFoundError
-	if errors.As(err, &taskNotFoundError) {
+	if taskNotFoundError, ok := errors.AsType[errors.TaskfileNotFoundError](err); ok {
 		taskNotFoundError.AskInit = true
 		return nil, taskNotFoundError
 	}

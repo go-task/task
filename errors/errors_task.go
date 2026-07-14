@@ -47,8 +47,7 @@ func (err *TaskRunError) Code() int {
 }
 
 func (err *TaskRunError) TaskExitCode() int {
-	var exit interp.ExitStatus
-	if errors.As(err.Err, &exit) {
+	if exit, ok := errors.AsType[interp.ExitStatus](err.Err); ok {
 		return int(exit)
 	}
 	return err.Code()
