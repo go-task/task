@@ -231,7 +231,11 @@ func (node *GitNode) CacheKey() string {
 // Unlike CacheKey() which includes the file path, this identifies the repository itself.
 // Two GitNodes with the same repo+ref but different file paths will share the same cache.
 //
-// Returns a path like: github.com/user/repo.git/main
+// The identity is hashed into a single, filesystem-safe path segment. This prevents an
+// attacker-controlled ref (e.g. "../../victim") from being used as a raw path component,
+// which would otherwise let the cache directory escape the task-git-repos root (CWE-22).
+//
+// Returns a path like: git/<sha256-hex>
 func (node *GitNode) repoCacheKey() string {
 	repoPath := strings.Trim(node.url.Path, "/")
 
@@ -240,7 +244,8 @@ func (node *GitNode) repoCacheKey() string {
 		ref = "_default_" // Placeholder for the remote's default branch
 	}
 
-	return filepath.Join(node.url.Host, repoPath, ref)
+	identity := strings.Join([]string{node.url.Host, repoPath, ref}, "/")
+	return filepath.Join("git", checksum([]byte(identity)))
 }
 
 func splitURLOnDoubleSlash(u *url.URL) (string, string) {
