@@ -4,7 +4,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
-	"sort"
+	"slices"
 	"strings"
 
 	"github.com/go-task/task/v3/errors"
@@ -74,6 +74,6 @@ func FastRecursiveGlob(pattern string) ([]string, bool, error) {
 	if err != nil {
 		return nil, true, err
 	}
-	sort.Strings(results)
+	slices.Sort(results)
 	return results, true, nil
 }

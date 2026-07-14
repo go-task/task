@@ -3,7 +3,7 @@ package fingerprint
 import (
 	"os"
 	"path/filepath"
-	"sort"
+	"slices"
 
 	"github.com/go-task/task/v3/internal/execext"
 	"github.com/go-task/task/v3/internal/filepathext"
@@ -65,6 +65,6 @@ func collectKeys(m map[string]bool) []string {
 			keys = append(keys, filepath.ToSlash(k))
 		}
 	}
-	sort.Strings(keys)
+	slices.Sort(keys)
 	return keys
 }

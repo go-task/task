@@ -273,12 +273,9 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) error {
 
 				e.Logger.VerboseErrf(logger.Red, "task: %q failed: %v\n", call.Task, err)
 
-				var exitCode interp.ExitStatus
-				var timeout *errors.TaskTimeoutError
-				switch {
-				case errors.As(err, &exitCode):
+				if exitCode, ok := errors.AsType[interp.ExitStatus](err); ok {
 					deferredExitCode = uint8(exitCode)
-				case errors.As(err, &timeout):
+				} else if _, ok := errors.AsType[*errors.TaskTimeoutError](err); ok {
 					deferredExitCode = errors.TimeoutExitCode
 				}
 
@@ -461,9 +458,11 @@ func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call *Call, i in
 // isCommandFailure reports whether the command failed on its own terms - a
 // non-zero exit status or its timeout - rather than Task failing to run it.
 func isCommandFailure(err error) bool {
-	var exitCode interp.ExitStatus
-	var timeout *errors.TaskTimeoutError
-	return errors.As(err, &exitCode) || errors.As(err, &timeout)
+	if _, ok := errors.AsType[interp.ExitStatus](err); ok {
+		return true
+	}
+	_, ok := errors.AsType[*errors.TaskTimeoutError](err)
+	return ok
 }
 
 // timedOut reports whether ctx was cancelled by the given timeout rather than by
