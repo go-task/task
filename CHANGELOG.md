@@ -9,6 +9,8 @@
   @Napolitain, #2884 by @Napolitain).
 - Updated taskfile versions doc to mention when version checks were introduced
   (#2184 by @jubr).
+- Fixed `joinUrl` collapsing the `//` in a URL scheme (e.g. producing
+  `http:/localhost` instead of `http://localhost`) (#2915 by @vsaraikin).
 
 ## v3.52.0 - 2026-07-02
 
