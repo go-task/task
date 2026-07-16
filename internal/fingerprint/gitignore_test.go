@@ -65,6 +65,16 @@ func TestGlobsWithGitignore(t *testing.T) {
 	assert.Equal(t, 2, txtCount, "both .txt files should remain")
 }
 
+func TestGlobsWithSingleQuoteInDirectory(t *testing.T) {
+	dir := filepath.Join(t.TempDir(), "task's directory")
+	require.NoError(t, os.Mkdir(dir, 0o755))
+	require.NoError(t, os.WriteFile(filepath.Join(dir, "input.txt"), []byte("input"), 0o644))
+
+	files, err := Globs(dir, []*ast.Glob{{Glob: "input.txt"}}, false)
+	require.NoError(t, err)
+	assert.Equal(t, []string{filepath.ToSlash(filepath.Join(dir, "input.txt"))}, files)
+}
+
 func TestGlobsWithGitignoreParentDirIgnored(t *testing.T) {
 	t.Parallel()
 
