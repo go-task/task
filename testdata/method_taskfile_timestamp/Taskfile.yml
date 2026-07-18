@@ -1,0 +1,10 @@
+version: '3'
+
+method: timestamp
+
+tasks:
+  build:
+    cmds:
+      - echo "ts={{.TIMESTAMP}}"
+    sources:
+      - ./source.txt

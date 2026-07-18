@@ -653,6 +653,57 @@ func TestStatusChecksumMissingGenerated(t *testing.T) { // nolint:paralleltest /
 	require.NoError(t, err, "generated.txt should be recreated after third run")
 }
 
+// TestFingerprintVarMethodInheritedFromTaskfile asserts that the fingerprint
+// variable injected into a task follows the Taskfile-level method when the
+// task doesn't declare one, like the up-to-date check does.
+func TestFingerprintVarMethodInheritedFromTaskfile(t *testing.T) {
+	t.Parallel()
+
+	const dir = "testdata/method_taskfile_timestamp"
+	_ = os.RemoveAll(filepathext.SmartJoin(dir, ".task"))
+
+	var buff bytes.Buffer
+	e := task.NewExecutor(
+		task.WithDir(dir),
+		task.WithStdout(&buff),
+		task.WithStderr(&buff),
+		task.WithTempDir(task.TempDir{
+			Remote:      filepathext.SmartJoin(dir, ".task"),
+			Fingerprint: filepathext.SmartJoin(dir, ".task"),
+		}),
+	)
+	require.NoError(t, e.Setup())
+
+	require.NoError(t, e.Run(t.Context(), &task.Call{Task: "build"}))
+	assert.Contains(t, buff.String(), "ts=")
+	assert.NotContains(t, buff.String(), "<no value>", "TIMESTAMP should be injected when method is inherited from the Taskfile")
+}
+
+// TestFingerprintVarMethodNone asserts that no fingerprint variable is
+// injected when the effective method is "none", including when it is
+// inherited from the Taskfile level.
+func TestFingerprintVarMethodNone(t *testing.T) {
+	t.Parallel()
+
+	const dir = "testdata/method_taskfile_none"
+	_ = os.RemoveAll(filepathext.SmartJoin(dir, ".task"))
+
+	var buff bytes.Buffer
+	e := task.NewExecutor(
+		task.WithDir(dir),
+		task.WithStdout(&buff),
+		task.WithStderr(&buff),
+		task.WithTempDir(task.TempDir{
+			Remote:      filepathext.SmartJoin(dir, ".task"),
+			Fingerprint: filepathext.SmartJoin(dir, ".task"),
+		}),
+	)
+	require.NoError(t, e.Setup())
+
+	require.NoError(t, e.Run(t.Context(), &task.Call{Task: "build"}))
+	assert.Contains(t, buff.String(), "cs=\n", "CHECKSUM should not be injected when the effective method is none")
+}
+
 func writeFile(t *testing.T, dir, name, content string) {
 	t.Helper()
 	require.NoError(t, os.WriteFile(filepathext.SmartJoin(dir, name), []byte(content), 0o644))
