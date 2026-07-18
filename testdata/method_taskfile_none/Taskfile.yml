@@ -1,0 +1,10 @@
+version: '3'
+
+method: none
+
+tasks:
+  build:
+    cmds:
+      - echo "cs={{.CHECKSUM}}"
+    sources:
+      - ./source.txt
