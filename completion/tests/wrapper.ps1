@@ -47,6 +47,9 @@ Write-Output "powershell: :8 (FilterFileExt) filters by extension"
 Has    "matching file"       'task --taskfile ' 'Taskfile.yml'
 HasNot "non-matching file"   'task --taskfile ' 'notes.txt'
 
+Write-Output "powershell: nested path completion keeps the directory prefix"
+Has    "prefix kept"         'task --taskfile sub/' 'sub/nested.yml'
+
 if ($fails -ne 0) {
 	Write-Output "powershell: $fails failure(s)"
 	exit 1
