@@ -446,3 +446,41 @@ canonical task names, add the `show-aliases` zstyle:
 ```shell
 zstyle ':completion:*:*:task:*' show-aliases false
 ```
+
+### Trying the new completion engine (experimental)
+
+Task is migrating to a new completion engine, where every shell shares a single
+source of truth: the `task __complete` command. This gives Bash, Zsh, Fish and
+PowerShell the exact same suggestions (task names, aliases, flags, flag values
+and `requires` vars, including their enums). It is currently **opt-in** and will
+become the default of `--completion` in a future release.
+
+To try it, swap `--completion` for `--new-completion` in any of the snippets
+above, for example:
+
+::: code-group
+
+```shell [bash]
+# ~/.bashrc
+eval "$(task --new-completion bash)"
+```
+
+```shell [zsh]
+# ~/.zshrc
+eval "$(task --new-completion zsh)"
+```
+
+```shell [fish]
+# ~/.config/fish/config.fish
+task --new-completion fish | source
+```
+
+```powershell [powershell]
+# $PROFILE\Microsoft.PowerShell_profile.ps1
+Invoke-Expression  (&task --new-completion powershell | Out-String)
+```
+
+:::
+
+The `verbose` and `show-aliases` zstyles documented above work with the new Zsh
+completion too.
