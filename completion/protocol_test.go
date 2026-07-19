@@ -5,6 +5,7 @@
 package completion_test
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"os/exec"
@@ -31,7 +32,7 @@ func TestMain(m *testing.M) {
 	if runtime.GOOS == "windows" {
 		taskBin += ".exe"
 	}
-	if out, err := exec.Command("go", "build", "-o", taskBin, "github.com/go-task/task/v3/cmd/task").CombinedOutput(); err != nil {
+	if out, err := exec.CommandContext(context.Background(), "go", "build", "-o", taskBin, "github.com/go-task/task/v3/cmd/task").CombinedOutput(); err != nil {
 		fmt.Fprintf(os.Stderr, "failed to build task binary: %v\n%s", err, out)
 		os.RemoveAll(dir)
 		os.Exit(1)
@@ -66,7 +67,8 @@ func completeArgs(t *testing.T, args ...string) ([]string, complete.Directive) {
 	dir := t.TempDir()
 	require.NoError(t, os.WriteFile(filepath.Join(dir, "Taskfile.yml"), []byte(fixtureTaskfile), 0o644))
 
-	cmd := exec.Command(taskBin, append([]string{complete.CommandName}, args...)...)
+	// taskBin is the test-built binary and args are test-controlled literals.
+	cmd := exec.CommandContext(t.Context(), taskBin, append([]string{complete.CommandName}, args...)...) //nolint:gosec
 	cmd.Dir = dir
 	out, err := cmd.Output()
 	require.NoError(t, err)
