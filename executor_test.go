@@ -517,6 +517,12 @@ func TestDeps(t *testing.T) {
 		WithExecutorOptions(
 			task.WithDir("testdata/deps"),
 			task.WithSilent(true),
+			// Deps run in parallel and, with the default interleaved output,
+			// their sub-line writes (echo writes the content and the newline
+			// separately) can interleave into a garbled buffer. Group output
+			// flushes each command atomically, keeping every line intact. The
+			// set of lines asserted (via PPSortedLines) is unchanged.
+			task.WithOutputStyle(ast.Output{Name: "group"}),
 		),
 		WithPostProcessFn(PPSortedLines),
 	)
