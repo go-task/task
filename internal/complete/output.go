@@ -22,7 +22,10 @@ func Write(w io.Writer, suggs []Suggestion, dir Directive) {
 	fmt.Fprintf(w, ":%d\n", dir)
 }
 
+// completionSanitizer collapses the bytes that would corrupt the line-based
+// protocol (a value's tab/newline would be read as a field/record separator).
+var completionSanitizer = strings.NewReplacer("\n", " ", "\r", " ", "\t", " ")
+
 func sanitize(s string) string {
-	r := strings.NewReplacer("\n", " ", "\r", " ", "\t", " ")
-	return r.Replace(s)
+	return completionSanitizer.Replace(s)
 }
