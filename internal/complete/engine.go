@@ -37,8 +37,10 @@ func Complete(e *task.Executor, fs *pflag.FlagSet, args []string, opts Options) 
 		return listFlags(fs), DirectiveNoFileComp
 	}
 
-	// Only a task context needs the task list, so it is loaded lazily here.
-	if e != nil && e.Taskfile != nil {
+	// A task-var context needs the task list to spot the task word under the
+	// cursor, but that only exists once a prior word is present. Guard on
+	// len(args) > 1 so `task <tab>` / `task buil<tab>` never pay to build it.
+	if e != nil && e.Taskfile != nil && len(args) > 1 {
 		if taskName := detectTaskName(args, taskNames(e), fs); taskName != "" {
 			return completeTaskVars(e, taskName)
 		}
