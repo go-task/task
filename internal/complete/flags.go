@@ -10,9 +10,10 @@ import (
 // flagEnums lists allowed values for enum-style flags. Keep in sync with the
 // help strings in internal/flags/flags.go.
 var flagEnums = map[string][]string{
-	"output":     {"interleaved", "group", "prefixed"},
-	"sort":       {"default", "alphanumeric", "none"},
-	"completion": {"bash", "zsh", "fish", "powershell"},
+	"output":         {"interleaved", "group", "prefixed"},
+	"sort":           {"default", "alphanumeric", "none"},
+	"completion":     {"bash", "zsh", "fish", "powershell"},
+	"new-completion": {"bash", "zsh", "fish", "powershell"},
 }
 
 // flagDirective maps value-taking flags to a file-completion directive.
