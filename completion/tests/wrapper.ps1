@@ -50,6 +50,10 @@ HasNot "non-matching file"   'task --taskfile ' 'notes.txt'
 Write-Output "powershell: nested path completion keeps the directory prefix"
 Has    "prefix kept"         'task --taskfile sub/' 'sub/nested.yml'
 
+Write-Output "powershell: inline --flag=path keeps the --flag= prefix"
+Has    "inline nested"       'task --taskfile=sub/' '--taskfile=sub/nested.yml'
+HasNot "inline non-matching" 'task --taskfile=' '--taskfile=notes.txt'
+
 if ($fails -ne 0) {
 	Write-Output "powershell: $fails failure(s)"
 	exit 1

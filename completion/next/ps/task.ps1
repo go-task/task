@@ -43,10 +43,17 @@ Register-ArgumentCompleter -Native -CommandName $cmdNames -ScriptBlock {
 	$FilterFileExt = 8
 	$FilterDirs    = 16
 
-	# PowerShell replaces the whole token with the completion text, so any
-	# directory the user already typed (e.g. `sub/`) must be prepended to the
-	# basename returned by Get-ChildItem, otherwise the prefix is dropped.
-	$pathPrefix = $wordToComplete -replace '[^\\/]*$', ''
+	# PowerShell replaces the whole token with the completion text, so both an
+	# inline `--flag=` and any directory the user already typed (e.g. `sub/`)
+	# must be preserved. Query the filesystem with the path portion only
+	# ($pathArg), but prepend the flag + directory prefix to every candidate.
+	$flagPrefix = ''
+	$pathArg = $wordToComplete
+	if ($wordToComplete -match '^(--?[^=]+=)(.*)$') {
+		$flagPrefix = $Matches[1]
+		$pathArg = $Matches[2]
+	}
+	$pathPrefix = $flagPrefix + ($pathArg -replace '[^\\/]*$', '')
 
 	# Note: DirectiveNoSpace (bit 2) cannot be honored here — PowerShell's
 	# CompletionResult API has no per-item "no trailing space" option, so a
@@ -57,7 +64,7 @@ Register-ArgumentCompleter -Native -CommandName $cmdNames -ScriptBlock {
 	# `-Recurse`, so filter with Where-Object instead.
 	if ($directive -band $FilterFileExt) {
 		$exts = $data | ForEach-Object { ".$_" }
-		return Get-ChildItem -Path "$wordToComplete*" -ErrorAction SilentlyContinue |
+		return Get-ChildItem -Path "$pathArg*" -ErrorAction SilentlyContinue |
 			Where-Object { $_.PSIsContainer -or $exts -contains $_.Extension } |
 			ForEach-Object {
 				$type = if ($_.PSIsContainer) { [CompletionResultType]::ProviderContainer } else { [CompletionResultType]::ProviderItem }
@@ -67,7 +74,7 @@ Register-ArgumentCompleter -Native -CommandName $cmdNames -ScriptBlock {
 
 	# FilterDirs
 	if ($directive -band $FilterDirs) {
-		return Get-ChildItem -Path "$wordToComplete*" -Directory -ErrorAction SilentlyContinue |
+		return Get-ChildItem -Path "$pathArg*" -Directory -ErrorAction SilentlyContinue |
 			ForEach-Object { [CompletionResult]::new("$pathPrefix$($_.Name)", $_.Name, [CompletionResultType]::ProviderContainer, $_.Name) }
 	}
 
@@ -77,7 +84,7 @@ Register-ArgumentCompleter -Native -CommandName $cmdNames -ScriptBlock {
 	$results = @($data | ForEach-Object {
 		$parts = $_ -split "`t", 2
 		$value = $parts[0]
-		if ($wordToComplete -and -not $value.StartsWith($wordToComplete)) { return }
+		if ($wordToComplete -and -not $value.StartsWith($wordToComplete, [System.StringComparison]::OrdinalIgnoreCase)) { return }
 		$desc = if ($parts.Count -gt 1 -and $parts[1]) { $parts[1] } else { $value }
 		[CompletionResult]::new($value, $value, [CompletionResultType]::ParameterValue, $desc)
 	})
@@ -85,7 +92,7 @@ Register-ArgumentCompleter -Native -CommandName $cmdNames -ScriptBlock {
 	# NoFileComp (bit 4) unset and nothing matched → fall back to file completion,
 	# since the engine returned DirectiveDefault (e.g. --cacert, after `--`).
 	if ($results.Count -eq 0 -and -not ($directive -band $NoFileComp)) {
-		return Get-ChildItem -Path "$wordToComplete*" -ErrorAction SilentlyContinue |
+		return Get-ChildItem -Path "$pathArg*" -ErrorAction SilentlyContinue |
 			ForEach-Object {
 				$type = if ($_.PSIsContainer) { [CompletionResultType]::ProviderContainer } else { [CompletionResultType]::ProviderItem }
 				[CompletionResult]::new("$pathPrefix$($_.Name)", $_.Name, $type, $_.Name)
