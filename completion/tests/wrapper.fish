@@ -45,6 +45,10 @@ hasnot "non-matching file"    'task --taskfile ' notes.txt
 echo "fish: :0 (Default) falls back to files"
 has    "file offered"         'task build -- ' notes.txt
 
+echo "fish: inline --flag=path keeps the --flag= prefix"
+has    "inline nested"        'task --taskfile=sub/' --taskfile=sub/nested.yml
+hasnot "inline non-matching"  'task --taskfile=' --taskfile=notes.txt
+
 if test $fails -ne 0
     echo "fish: $fails failure(s)"
     exit 1

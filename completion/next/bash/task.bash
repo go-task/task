@@ -5,6 +5,23 @@
 
 TASK_CMD="${TASK_EXE:-task}"
 
+# Wraps _filedir so an inline `--flag=` prefix is stripped before completion and
+# re-applied to the results. `=` is kept inside the current word (see the
+# `_init_completion -n =:` below), so the whole `--flag=value` token would
+# otherwise be treated as the path and never match.
+_task_filedir() {
+  local fpfx="" savecur="$cur"
+  if [[ "$cur" == -*=* ]]; then
+    fpfx="${cur%%=*}="
+    cur="${cur#*=}"
+  fi
+  _filedir ${1:+"$1"}
+  cur="$savecur"
+  if [[ -n "$fpfx" ]]; then
+    COMPREPLY=( ${COMPREPLY[@]+"${COMPREPLY[@]/#/$fpfx}"} )
+  fi
+}
+
 _task() {
   local cur prev words cword
 
@@ -26,7 +43,7 @@ _task() {
   local output
   output=$("$TASK_CMD" __complete "${args[@]}" 2>/dev/null)
   if [[ -z "$output" ]]; then
-    _filedir
+    _task_filedir
     return
   fi
 
@@ -47,12 +64,12 @@ _task() {
     for line in ${lines[@]+"${lines[@]}"}; do
       exts+="${exts:+|}$line"
     done
-    _filedir "@($exts)"
+    _task_filedir "@($exts)"
     return
   fi
 
   if (( directive & FILTER_DIRS )); then
-    _filedir -d
+    _task_filedir -d
     return
   fi
 
@@ -74,7 +91,7 @@ _task() {
   __ltrim_colon_completions "$cur"
 
   if (( ${#COMPREPLY[@]} == 0 )) && ! (( directive & NO_FILE_COMP )); then
-    _filedir
+    _task_filedir
   fi
 }
 

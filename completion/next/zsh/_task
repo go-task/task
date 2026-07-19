@@ -38,11 +38,16 @@ _task() {
 		for line in "${lines[@]}"; do
 			globs+=("*.${line}")
 		done
+		# Strip an inline `--flag=` into IPREFIX so file completion runs on the
+		# value; zsh re-inserts the prefix. Only in the file branches — doing it
+		# globally would break `_describe` matching for inline enums.
+		compset -P '*='
 		_files -g "(${(j:|:)globs})"
 		return
 	fi
 
 	if (( directive & FILTER_DIRS )); then
+		compset -P '*='
 		_path_files -/
 		return
 	fi
@@ -68,6 +73,7 @@ _task() {
 	fi
 
 	(( directive & NO_FILE_COMP )) && return
+	compset -P '*='
 	_files
 }
 

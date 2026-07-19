@@ -19,7 +19,9 @@ _init_completion() {
   prev="${TEST_WORDS[$((TEST_CWORD - 1))]}"
   return 0
 }
-_filedir() { CAP+="filedir:$*"$'\n'; }
+# Records the extension arg and the value of $cur it was called with, so tests
+# can assert the inline `--flag=` prefix was stripped before file completion.
+_filedir() { CAP+="filedir:$* cur=$cur"$'\n'; }
 compopt() { CAP+="compopt:$*"$'\n'; }
 __ltrim_colon_completions() { :; }
 
@@ -69,6 +71,10 @@ cap_has    "filedir -d"           "filedir:-d"
 echo "bash: :0 (Default) falls back to files"
 run task build -- ''
 cap_has    "filedir default"      "filedir:"
+
+echo "bash: inline --flag= strips the prefix before file completion"
+run task --taskfile=sub/x
+cap_has    "inline cur stripped"  "cur=sub/x"
 
 if ((fails)); then
   echo "bash: $fails failure(s)"

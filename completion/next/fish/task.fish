@@ -48,18 +48,28 @@ function __task_complete --inherit-variable GO_TASK_PROGNAME
   # native file fallback. Every file-completion directive must therefore be
   # served here, otherwise nothing is offered (e.g. `--cacert`, after `--`).
 
+  # For an inline `--flag=path`, complete against the path part but keep the
+  # `--flag=` prefix on every candidate (fish replaces the whole token). flagpfx
+  # is empty for the normal case, so the prefixing below is a no-op then.
+  set -l flagpfx ""
+  set -l pathcur $current
+  if string match -qr '^--?[^=]+=' -- $current
+    set flagpfx (string replace -r '=.*$' '=' -- $current)
+    set pathcur (string replace -r '^--?[^=]+=' '' -- $current)
+  end
+
   # __fish_complete_suffix only *prioritizes* the extension rather than
   # filtering, so filter the file list ourselves (keeping dirs to descend into).
   if __task_test_bit $directive $__task_directive_filter_file_ext
-    for entry in (__fish_complete_path $current)
+    for entry in (__fish_complete_path $pathcur)
       set -l name (string split -f1 \t -- $entry)
       if string match -qr '/$' -- $name
-        printf '%s\n' $entry
+        printf '%s%s\n' $flagpfx $entry
         continue
       end
       for ext in $data
         if string match -qr "\.$ext\$" -- $name
-          printf '%s\n' $entry
+          printf '%s%s\n' $flagpfx $entry
           break
         end
       end
@@ -68,7 +78,9 @@ function __task_complete --inherit-variable GO_TASK_PROGNAME
   end
 
   if __task_test_bit $directive $__task_directive_filter_dirs
-    __fish_complete_directories $current
+    for entry in (__fish_complete_directories $pathcur)
+      printf '%s%s\n' $flagpfx $entry
+    end
     return
   end
 
@@ -81,9 +93,16 @@ function __task_complete --inherit-variable GO_TASK_PROGNAME
   # NoFileComp unset → also offer files, since `--no-files` suppressed the
   # native fallback. Covers DirectiveDefault (e.g. `--cacert`, after `--`).
   if not __task_test_bit $directive $__task_directive_no_file_comp
-    __fish_complete_path $current
+    for entry in (__fish_complete_path $pathcur)
+      printf '%s%s\n' $flagpfx $entry
+    end
   end
 end
+
+# Erase any inherited rules first: fish accumulates `complete` entries (unlike
+# bash/zsh/PowerShell which replace), so a previously loaded completion would
+# otherwise keep contributing alongside the engine.
+complete -c $GO_TASK_PROGNAME -e
 
 # Single registration: all task names, flags, flag values and file completion
 # flow through the engine. `--no-files` prevents fish from mixing in files when
