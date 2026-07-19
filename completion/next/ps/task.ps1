@@ -72,7 +72,6 @@ Register-ArgumentCompleter -Native -CommandName $cmdNames -ScriptBlock {
 			}
 	}
 
-	# FilterDirs
 	if ($directive -band $FilterDirs) {
 		return Get-ChildItem -Path "$pathArg*" -Directory -ErrorAction SilentlyContinue |
 			ForEach-Object { [CompletionResult]::new("$pathPrefix$($_.Name)", $_.Name, [CompletionResultType]::ProviderContainer, $_.Name) }
