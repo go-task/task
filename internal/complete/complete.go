@@ -46,8 +46,9 @@ type Suggestion struct {
 	Description string
 }
 
-// Options tunes what the engine emits. The zero value shows everything; use
-// DefaultOptions for the default and flip fields off from the __complete flags.
+// Options tunes what the engine emits. Its zero value shows neither aliases nor
+// descriptions; DefaultOptions returns the standard set (both shown), which
+// ParseOptions then flips off per the __complete control flags.
 type Options struct {
 	ShowAliases      bool
 	ShowDescriptions bool
