@@ -102,21 +102,3 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: golang/govulncheck-action@032d45514ae346b1db93c04b0c90b841c370344f # v1.1.0
-
-  ci-status:
-    name: ✅ CI
-    runs-on: ubuntu-latest
-    needs: [build, test, lint, lint-jsonschema, govulncheck]
-    if: always()
-    steps:
-      - name: ✅ Check CI status
-        run: |
-          if [[ "${{ needs.build.result }}" != "success" ]] || \
-             [[ "${{ needs.test.result }}" != "success" ]] || \
-             [[ "${{ needs.lint.result }}" != "success" ]] || \
-             [[ "${{ needs.lint-jsonschema.result }}" != "success" ]] || \
-             [[ "${{ needs.govulncheck.result }}" != "success" ]]; then
-            echo "CI failed"
-            exit 1
-          fi
-          echo "CI passed"
