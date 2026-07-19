@@ -2,9 +2,11 @@ package fingerprint
 
 import (
 	"bufio"
+	"cmp"
+	"maps"
 	"os"
 	"path/filepath"
-	"sort"
+	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -95,17 +97,14 @@ func filterGitignored(files map[string]bool, dir string) map[string]bool {
 
 	// Shallow dirs first (lower priority): the matcher scans patterns last to
 	// first, so deeper rules win and can negate shallower ones.
-	dirs := make([]string, 0, len(dirSet))
-	for d := range dirSet {
-		dirs = append(dirs, d)
-	}
-	sort.Slice(dirs, func(i, j int) bool {
-		di := strings.Count(dirs[i], string(filepath.Separator))
-		dj := strings.Count(dirs[j], string(filepath.Separator))
-		if di != dj {
-			return di < dj
+	dirs := slices.Collect(maps.Keys(dirSet))
+	slices.SortFunc(dirs, func(a, b string) int {
+		da := strings.Count(a, string(filepath.Separator))
+		db := strings.Count(b, string(filepath.Separator))
+		if da != db {
+			return cmp.Compare(da, db)
 		}
-		return dirs[i] < dirs[j]
+		return cmp.Compare(a, b)
 	})
 
 	var patterns []gitignore.Pattern

@@ -277,8 +277,7 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) error {
 					e.Logger.VerboseErrf(logger.Yellow, "task: error cleaning status on error: %v\n", err2)
 				}
 
-				var exitCode interp.ExitStatus
-				if errors.As(err, &exitCode) {
+				if exitCode, ok := errors.AsType[interp.ExitStatus](err); ok {
 					if t.IgnoreError {
 						e.Logger.VerboseErrf(logger.Yellow, "task: task error ignored: %v\n", err)
 						continue
@@ -382,8 +381,7 @@ func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call *Call, i in
 		defer reacquire()
 
 		err := e.RunTask(ctx, &Call{Task: cmd.Task, Vars: cmd.Vars, Silent: cmd.Silent, Indirect: true})
-		var exitCode interp.ExitStatus
-		if errors.As(err, &exitCode) && cmd.IgnoreError {
+		if _, ok := errors.AsType[interp.ExitStatus](err); ok && cmd.IgnoreError {
 			e.Logger.VerboseErrf(logger.Yellow, "task: [%s] task error ignored: %v\n", t.Name(), err)
 			return nil
 		}
@@ -426,8 +424,7 @@ func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call *Call, i in
 		if closeErr := closer(err); closeErr != nil {
 			e.Logger.Errf(logger.Red, "task: unable to close writer: %v\n", closeErr)
 		}
-		var exitCode interp.ExitStatus
-		if errors.As(err, &exitCode) && cmd.IgnoreError {
+		if _, ok := errors.AsType[interp.ExitStatus](err); ok && cmd.IgnoreError {
 			e.Logger.VerboseErrf(logger.Yellow, "task: [%s] command error ignored: %v\n", t.Name(), err)
 			return nil
 		}
