@@ -1,6 +1,7 @@
 package complete
 
 import (
+	"slices"
 	"strings"
 
 	"github.com/spf13/pflag"
@@ -26,11 +27,8 @@ func parseContext(args []string) completionContext {
 		ctx.prev = args[len(args)-2]
 	}
 
-	for _, w := range args[:len(args)-1] {
-		if w == "--" {
-			ctx.afterDash = true
-			return ctx
-		}
+	if slices.Contains(args[:len(args)-1], "--") {
+		ctx.afterDash = true
 	}
 
 	return ctx
