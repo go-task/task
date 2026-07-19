@@ -20,7 +20,7 @@ _path_files() { CAP+="path_files:$*"$'\n' }
 
 # Sourcing (not autoloading) defines _task and avoids the autoload first-call
 # quirk; the trailing `compdef` call is stubbed above.
-source ${0:A:h}/../zsh/_task
+source ${0:A:h}/../next/zsh/_task
 
 run() {
     CAP=""

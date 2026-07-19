@@ -1,88 +1,94 @@
 using namespace System.Management.Automation
 
-# Thin wrapper around `task __complete`. All suggestion logic lives in the
-# Go engine — do not add completion logic here.
-
 $cmdNames = @('task') + (Get-Alias -Definition task,task.exe,*\task,*\task.exe -ErrorAction SilentlyContinue).Name | Select-Object -Unique
 
-Register-ArgumentCompleter -Native -CommandName $cmdNames -ScriptBlock {
-	param($wordToComplete, $commandAst, $cursorPosition)
+Register-ArgumentCompleter -CommandName $cmdNames -ScriptBlock {
+	param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
 
-	$TaskExe = if ($env:TASK_EXE) { $env:TASK_EXE } else { 'task' }
+	if ($commandName.StartsWith('-')) {
+		$completions = @(
+			# Standard flags (alphabetical order)
+			[CompletionResult]::new('-a', '-a', [CompletionResultType]::ParameterName, 'list all tasks'),
+			[CompletionResult]::new('--list-all', '--list-all', [CompletionResultType]::ParameterName, 'list all tasks'),
+			[CompletionResult]::new('-c', '-c', [CompletionResultType]::ParameterName, 'colored output'),
+			[CompletionResult]::new('--color', '--color', [CompletionResultType]::ParameterName, 'colored output'),
+			[CompletionResult]::new('-C', '-C', [CompletionResultType]::ParameterName, 'limit concurrent tasks'),
+			[CompletionResult]::new('--concurrency', '--concurrency', [CompletionResultType]::ParameterName, 'limit concurrent tasks'),
+			[CompletionResult]::new('--completion', '--completion', [CompletionResultType]::ParameterName, 'generate shell completion'),
+			[CompletionResult]::new('-d', '-d', [CompletionResultType]::ParameterName, 'set directory'),
+			[CompletionResult]::new('--dir', '--dir', [CompletionResultType]::ParameterName, 'set directory'),
+			[CompletionResult]::new('--disable-fuzzy', '--disable-fuzzy', [CompletionResultType]::ParameterName, 'disable fuzzy matching'),
+			[CompletionResult]::new('-n', '-n', [CompletionResultType]::ParameterName, 'dry run'),
+			[CompletionResult]::new('--dry', '--dry', [CompletionResultType]::ParameterName, 'dry run'),
+			[CompletionResult]::new('-x', '-x', [CompletionResultType]::ParameterName, 'pass-through exit code'),
+			[CompletionResult]::new('--exit-code', '--exit-code', [CompletionResultType]::ParameterName, 'pass-through exit code'),
+			[CompletionResult]::new('--experiments', '--experiments', [CompletionResultType]::ParameterName, 'list experiments'),
+			[CompletionResult]::new('-F', '-F', [CompletionResultType]::ParameterName, 'fail fast on pallalel tasks'),
+			[CompletionResult]::new('--failfast', '--failfast', [CompletionResultType]::ParameterName, 'force execution'),
+			[CompletionResult]::new('-f', '-f', [CompletionResultType]::ParameterName, 'force execution'),
+			[CompletionResult]::new('--force', '--force', [CompletionResultType]::ParameterName, 'force execution'),
+			[CompletionResult]::new('-g', '-g', [CompletionResultType]::ParameterName, 'run global Taskfile'),
+			[CompletionResult]::new('--global', '--global', [CompletionResultType]::ParameterName, 'run global Taskfile'),
+			[CompletionResult]::new('-h', '-h', [CompletionResultType]::ParameterName, 'show help'),
+			[CompletionResult]::new('--help', '--help', [CompletionResultType]::ParameterName, 'show help'),
+			[CompletionResult]::new('-i', '-i', [CompletionResultType]::ParameterName, 'create new Taskfile'),
+			[CompletionResult]::new('--init', '--init', [CompletionResultType]::ParameterName, 'create new Taskfile'),
+			[CompletionResult]::new('--insecure', '--insecure', [CompletionResultType]::ParameterName, 'allow insecure downloads'),
+			[CompletionResult]::new('-I', '-I', [CompletionResultType]::ParameterName, 'watch interval'),
+			[CompletionResult]::new('--interval', '--interval', [CompletionResultType]::ParameterName, 'watch interval'),
+			[CompletionResult]::new('-j', '-j', [CompletionResultType]::ParameterName, 'format as JSON'),
+			[CompletionResult]::new('--json', '--json', [CompletionResultType]::ParameterName, 'format as JSON'),
+			[CompletionResult]::new('-l', '-l', [CompletionResultType]::ParameterName, 'list tasks'),
+			[CompletionResult]::new('--list', '--list', [CompletionResultType]::ParameterName, 'list tasks'),
+			[CompletionResult]::new('--nested', '--nested', [CompletionResultType]::ParameterName, 'nest namespaces in JSON'),
+			[CompletionResult]::new('--no-status', '--no-status', [CompletionResultType]::ParameterName, 'ignore status in JSON'),
+			[CompletionResult]::new('--interactive', '--interactive', [CompletionResultType]::ParameterName, 'prompt for missing required variables'),
+			[CompletionResult]::new('-o', '-o', [CompletionResultType]::ParameterName, 'set output style'),
+			[CompletionResult]::new('--output', '--output', [CompletionResultType]::ParameterName, 'set output style'),
+			[CompletionResult]::new('--output-group-begin', '--output-group-begin', [CompletionResultType]::ParameterName, 'template before group'),
+			[CompletionResult]::new('--output-group-end', '--output-group-end', [CompletionResultType]::ParameterName, 'template after group'),
+			[CompletionResult]::new('--output-group-error-only', '--output-group-error-only', [CompletionResultType]::ParameterName, 'hide successful output'),
+			[CompletionResult]::new('-p', '-p', [CompletionResultType]::ParameterName, 'execute in parallel'),
+			[CompletionResult]::new('--parallel', '--parallel', [CompletionResultType]::ParameterName, 'execute in parallel'),
+			[CompletionResult]::new('-s', '-s', [CompletionResultType]::ParameterName, 'silent mode'),
+			[CompletionResult]::new('--silent', '--silent', [CompletionResultType]::ParameterName, 'silent mode'),
+			[CompletionResult]::new('--sort', '--sort', [CompletionResultType]::ParameterName, 'task sorting order'),
+			[CompletionResult]::new('--status', '--status', [CompletionResultType]::ParameterName, 'check task status'),
+			[CompletionResult]::new('--summary', '--summary', [CompletionResultType]::ParameterName, 'show task summary'),
+			[CompletionResult]::new('-t', '-t', [CompletionResultType]::ParameterName, 'choose Taskfile'),
+			[CompletionResult]::new('--taskfile', '--taskfile', [CompletionResultType]::ParameterName, 'choose Taskfile'),
+			[CompletionResult]::new('-v', '-v', [CompletionResultType]::ParameterName, 'verbose output'),
+			[CompletionResult]::new('--verbose', '--verbose', [CompletionResultType]::ParameterName, 'verbose output'),
+			[CompletionResult]::new('--version', '--version', [CompletionResultType]::ParameterName, 'show version'),
+			[CompletionResult]::new('-w', '-w', [CompletionResultType]::ParameterName, 'watch mode'),
+			[CompletionResult]::new('--watch', '--watch', [CompletionResultType]::ParameterName, 'watch mode'),
+			[CompletionResult]::new('-y', '-y', [CompletionResultType]::ParameterName, 'assume yes'),
+			[CompletionResult]::new('--yes', '--yes', [CompletionResultType]::ParameterName, 'assume yes')
+		)
 
-	# Words after the program name, truncated to the cursor.
-	$argsToPass = @()
-	$elements = $commandAst.CommandElements
-	if ($elements.Count -gt 1) {
-		for ($i = 1; $i -lt $elements.Count; $i++) {
-			$el = $elements[$i]
-			if ($el.Extent.StartOffset -ge $cursorPosition) { break }
-			$argsToPass += $el.ToString()
+		# Experimental flags (dynamically added based on enabled experiments)
+		$experiments = & task --experiments 2>$null | Out-String
+
+		if ($experiments -match '\* GENTLE_FORCE:.*on') {
+			$completions += [CompletionResult]::new('--force-all', '--force-all', [CompletionResultType]::ParameterName, 'force all dependencies')
 		}
-	}
-	# The trailing word (possibly empty) must reach the engine so it knows
-	# the cursor sits on a fresh word. It is already present when it coincides
-	# with the last command element captured above.
-	if ($argsToPass.Count -eq 0 -or $argsToPass[-1] -ne $wordToComplete) {
-		$argsToPass += $wordToComplete
-	}
 
-	$output = & $TaskExe __complete @argsToPass 2>$null
-	if (-not $output) { return }
+		if ($experiments -match '\* REMOTE_TASKFILES:.*on') {
+			# Options
+			$completions += [CompletionResult]::new('--offline', '--offline', [CompletionResultType]::ParameterName, 'use cached Taskfiles')
+			$completions += [CompletionResult]::new('--timeout', '--timeout', [CompletionResultType]::ParameterName, 'download timeout')
+			$completions += [CompletionResult]::new('--expiry', '--expiry', [CompletionResultType]::ParameterName, 'cache expiry')
+			$completions += [CompletionResult]::new('--remote-cache-dir', '--remote-cache-dir', [CompletionResultType]::ParameterName, 'cache directory')
+			$completions += [CompletionResult]::new('--cacert', '--cacert', [CompletionResultType]::ParameterName, 'custom CA certificate')
+			$completions += [CompletionResult]::new('--cert', '--cert', [CompletionResultType]::ParameterName, 'client certificate')
+			$completions += [CompletionResult]::new('--cert-key', '--cert-key', [CompletionResultType]::ParameterName, 'client private key')
+			# Operations
+			$completions += [CompletionResult]::new('--download', '--download', [CompletionResultType]::ParameterName, 'download remote Taskfile')
+			$completions += [CompletionResult]::new('--clear-cache', '--clear-cache', [CompletionResultType]::ParameterName, 'clear cache')
+		}
 
-	$lines = @($output)
-	if ($lines.Count -eq 0) { return }
-	$last = $lines[-1]
-	if (-not $last.StartsWith(':')) { return }
-
-	$directive = [int]($last.Substring(1))
-	$data = if ($lines.Count -gt 1) { $lines[0..($lines.Count - 2)] } else { @() }
-
-	# Completion directives, mirroring internal/complete/complete.go.
-	$NoFileComp    = 4
-	$FilterFileExt = 8
-	$FilterDirs    = 16
-
-	# Note: DirectiveNoSpace (bit 2) cannot be honored here — PowerShell's
-	# CompletionResult API has no per-item "no trailing space" option, so a
-	# suggestion like `VAR=` gets a trailing space. This is a PowerShell limit.
-
-	# FilterFileExt: keep files whose extension matches, plus directories so the
-	# user can still descend into them. `-Include` is unreliable without
-	# `-Recurse`, so filter with Where-Object instead.
-	if ($directive -band $FilterFileExt) {
-		$exts = $data | ForEach-Object { ".$_" }
-		return Get-ChildItem -Path "$wordToComplete*" -ErrorAction SilentlyContinue |
-			Where-Object { $_.PSIsContainer -or $exts -contains $_.Extension } |
-			ForEach-Object {
-				$type = if ($_.PSIsContainer) { [CompletionResultType]::ProviderContainer } else { [CompletionResultType]::ProviderItem }
-				[CompletionResult]::new($_.Name, $_.Name, $type, $_.Name)
-			}
+		return $completions.Where{ $_.CompletionText.StartsWith($commandName) }
 	}
 
-	# FilterDirs
-	if ($directive -band $FilterDirs) {
-		return Get-ChildItem -Path "$wordToComplete*" -Directory -ErrorAction SilentlyContinue |
-			ForEach-Object { [CompletionResult]::new($_.Name, $_.Name, [CompletionResultType]::ProviderContainer, $_.Name) }
-	}
-
-	# Build candidates, filtering by the current word. PowerShell does not filter
-	# native argument-completer results itself, so without this every suggestion
-	# would be offered regardless of what the user typed.
-	$results = @($data | ForEach-Object {
-		$parts = $_ -split "`t", 2
-		$value = $parts[0]
-		if ($wordToComplete -and -not $value.StartsWith($wordToComplete)) { return }
-		$desc = if ($parts.Count -gt 1 -and $parts[1]) { $parts[1] } else { $value }
-		[CompletionResult]::new($value, $value, [CompletionResultType]::ParameterValue, $desc)
-	})
-
-	# NoFileComp (bit 4) unset and nothing matched → fall back to file completion,
-	# since the engine returned DirectiveDefault (e.g. --cacert, after `--`).
-	if ($results.Count -eq 0 -and -not ($directive -band $NoFileComp)) {
-		return Get-ChildItem -Path . -ErrorAction SilentlyContinue |
-			ForEach-Object { [CompletionResult]::new($_.Name, $_.Name, [CompletionResultType]::ProviderItem, $_.Name) }
-	}
-
-	return $results
+	return 	$(task --list-all --silent) | Where-Object { $_.StartsWith($commandName) } | ForEach-Object { return $_ + " " }
 }
