@@ -14,6 +14,7 @@ import (
 	"github.com/go-task/task/v3"
 	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/experiments"
+	"github.com/go-task/task/v3/internal/complete"
 	"github.com/go-task/task/v3/internal/env"
 	"github.com/go-task/task/v3/internal/sort"
 	"github.com/go-task/task/v3/taskfile/ast"
@@ -48,6 +49,7 @@ var (
 	Help                bool
 	Init                bool
 	Completion          string
+	NewCompletion       string
 	List                bool
 	ListAll             bool
 	ListJson            bool
@@ -124,6 +126,7 @@ func init() {
 	pflag.BoolVarP(&Help, "help", "h", false, "Shows Task usage.")
 	pflag.BoolVarP(&Init, "init", "i", false, "Creates a new Taskfile.yml in the current folder.")
 	pflag.StringVar(&Completion, "completion", "", "Generates shell completion script.")
+	pflag.StringVar(&NewCompletion, "new-completion", "", "Generates the new (experimental) shell completion script, powered by the `task __complete` engine.")
 	pflag.BoolVarP(&List, "list", "l", false, "Lists tasks with description of current Taskfile.")
 	pflag.BoolVarP(&ListAll, "list-all", "a", false, "Lists tasks with or without a description.")
 	pflag.BoolVarP(&ListJson, "json", "j", false, "Formats task list as JSON.")
@@ -177,6 +180,13 @@ func init() {
 		pflag.StringVar(&Cert, "cert", getConfig(config, "REMOTE_CERT", func() *string { return config.Remote.Cert }, ""), "Path to a client certificate for HTTPS connections.")
 		pflag.StringVar(&CertKey, "cert-key", getConfig(config, "REMOTE_CERT_KEY", func() *string { return config.Remote.CertKey }, ""), "Path to a client certificate key for HTTPS connections.")
 	}
+	// In completion mode the user's `--flag` words must reach the engine
+	// untouched. The BoolVar/StringVar calls above already populated
+	// pflag.CommandLine, which is all the engine needs.
+	if complete.IsActive() {
+		return
+	}
+
 	pflag.Parse()
 
 	// Auto-detect color based on environment when not explicitly configured

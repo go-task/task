@@ -158,6 +158,15 @@ tasks:
     cmds:
       - go test -bench=. -benchmem -tags=fsbench -run=^$ ./...
 
+  test:completion:
+    desc: Tests the shell completion engine and wrappers (bash, zsh, fish, powershell)
+    sources:
+      - internal/complete/**/*.go
+      - cmd/task/**/*.go
+      - completion/**/*
+    cmds:
+      - bash completion/tests/run.sh
+
   goreleaser:test:
     desc: Tests release process without publishing
     cmds:

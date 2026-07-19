@@ -1,0 +1,80 @@
+#compdef task
+#
+# Thin wrapper around `task __complete`. All suggestion logic lives in the
+# Go engine — do not add completion logic here.
+
+TASK_CMD="${TASK_EXE:-task}"
+
+_task() {
+	local -a args lines completions opts ctl
+	local output directive line
+
+	# Completion directives, mirroring internal/complete/complete.go.
+	local -ri NO_SPACE=2 NO_FILE_COMP=4 FILTER_FILE_EXT=8 FILTER_DIRS=16 KEEP_ORDER=32
+
+	# Map the zsh completion zstyles to engine flags. `-T` is true when the
+	# style is unset (its default) or explicitly true, so a flag is only passed
+	# when the user turned the style off.
+	zstyle -T ":completion:${curcontext}:" show-aliases || ctl+=(--no-aliases)
+	zstyle -T ":completion:${curcontext}:" verbose      || ctl+=(--no-descriptions)
+
+	# (@) preserves a trailing empty string, which the engine relies on to
+	# know the cursor is on a fresh word.
+	args=("${(@)words[2,CURRENT]}")
+	(( ${#args} == 0 )) && args=("")
+
+	output=$("$TASK_CMD" __complete "${ctl[@]}" "${args[@]}" 2>/dev/null)
+	if [[ -z "$output" ]]; then
+		_files
+		return
+	fi
+
+	lines=("${(f)output}")
+	directive="${lines[-1]#:}"
+	lines=("${(@)lines[1,-2]}")
+
+	if (( directive & FILTER_FILE_EXT )); then
+		local -a globs
+		for line in "${lines[@]}"; do
+			globs+=("*.${line}")
+		done
+		# Strip an inline `--flag=` into IPREFIX so file completion runs on the
+		# value; zsh re-inserts the prefix. Only in the file branches — doing it
+		# globally would break `_describe` matching for inline enums.
+		compset -P '*='
+		_files -g "(${(j:|:)globs})"
+		return
+	fi
+
+	if (( directive & FILTER_DIRS )); then
+		compset -P '*='
+		_path_files -/
+		return
+	fi
+
+	# `:` inside the value must be escaped: _describe splits on the first
+	# unescaped colon (e.g. "docs:serve" would otherwise become value "docs").
+	local value desc
+	for line in "${lines[@]}"; do
+		if [[ "$line" == *$'\t'* ]]; then
+			value="${line%%$'\t'*}"
+			desc="${line#*$'\t'}"
+			completions+=("${value//:/\\:}:$desc")
+		else
+			completions+=("${line//:/\\:}")
+		fi
+	done
+
+	(( directive & NO_SPACE ))  && opts+=(-S '')
+	(( directive & KEEP_ORDER )) && opts+=(-V)
+
+	if (( ${#completions} > 0 )); then
+		_describe -t tasks 'task' completions "${opts[@]}"
+	fi
+
+	(( directive & NO_FILE_COMP )) && return
+	compset -P '*='
+	_files
+}
+
+compdef _task "$TASK_CMD"
