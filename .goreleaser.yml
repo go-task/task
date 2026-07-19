@@ -90,6 +90,15 @@ homebrew_casks:
       bash: completion/bash/task.bash
       zsh: completion/zsh/_task
       fish: completion/fish/task.fish
+    # Binaries are not signed/notarized, so remove the quarantine attribute
+    # set by Homebrew on downloaded cask artifacts to avoid Gatekeeper blocking
+    # them. See https://goreleaser.com/customization/homebrew_casks/
+    hooks:
+      post:
+        install: |
+          if system_command("/usr/bin/xattr", args: ["-h"]).exit_status == 0
+            system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "#{staged_path}/task"]
+          end
     directory: Casks
     repository:
       owner: go-task
