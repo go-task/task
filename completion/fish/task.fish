@@ -1,91 +1,120 @@
-# Thin wrapper around `task __complete`. All suggestion logic lives in the
-# Go engine — do not add completion logic here.
-
 set -l GO_TASK_PROGNAME (if set -q GO_TASK_PROGNAME; echo $GO_TASK_PROGNAME; else if set -q TASK_EXE; echo $TASK_EXE; else; echo task; end)
 
-# Completion directives, mirroring internal/complete/complete.go. fish's `math`
-# has no bitwise operators, so bits are stored as their power-of-two value and
-# tested with integer division + modulo via __task_test_bit.
-set -g __task_directive_no_space 2
-set -g __task_directive_no_file_comp 4
-set -g __task_directive_filter_file_ext 8
-set -g __task_directive_filter_dirs 16
-set -g __task_directive_keep_order 32
+# Cache variables for experiments (global)
+set -g __task_experiments_cache ""
+set -g __task_experiments_cache_time 0
 
-function __task_test_bit --argument-names value bit
-  test (math "floor($value / $bit) % 2") -eq 1
-end
+# Helper function to get experiments with 1-second cache
+function __task_get_experiments --inherit-variable GO_TASK_PROGNAME
+    set -l now (date +%s)
+    set -l ttl 1  # Cache for 1 second only
 
-function __task_complete --inherit-variable GO_TASK_PROGNAME
-  set -l tokens (commandline -opc)
-  set -l current (commandline -ct)
-  set -l args
-  if test (count $tokens) -gt 1
-    set args $tokens[2..-1]
-  end
-  set args $args $current
-
-  set -l output ($GO_TASK_PROGNAME __complete $args 2>/dev/null)
-  set -l count (count $output)
-  if test $count -eq 0
-    return
-  end
-
-  set -l last $output[$count]
-  if not string match -q ':*' -- $last
-    # Protocol violation: emit raw lines as a fallback.
-    printf '%s\n' $output
-    return
-  end
-
-  set -l directive (string replace -r '^:' '' -- $last)
-  set -l data
-  if test $count -gt 1
-    set data $output[1..(math $count - 1)]
-  end
-
-  # The main completion is registered with `--no-files`, which disables fish's
-  # native file fallback. Every file-completion directive must therefore be
-  # served here, otherwise nothing is offered (e.g. `--cacert`, after `--`).
-
-  # __fish_complete_suffix only *prioritizes* the extension rather than
-  # filtering, so filter the file list ourselves (keeping dirs to descend into).
-  if __task_test_bit $directive $__task_directive_filter_file_ext
-    for entry in (__fish_complete_path $current)
-      set -l name (string split -f1 \t -- $entry)
-      if string match -qr '/$' -- $name
-        printf '%s\n' $entry
-        continue
-      end
-      for ext in $data
-        if string match -qr "\.$ext\$" -- $name
-          printf '%s\n' $entry
-          break
-        end
-      end
+    # Return cached value if still valid
+    if test (math "$now - $__task_experiments_cache_time") -lt $ttl
+        printf '%s\n' $__task_experiments_cache
+        return
     end
+
+    # Refresh cache
+    set -g __task_experiments_cache ($GO_TASK_PROGNAME --experiments 2>/dev/null)
+    set -g __task_experiments_cache_time $now
+    printf '%s\n' $__task_experiments_cache
+end
+
+# Helper function to check if an experiment is enabled
+function __task_is_experiment_enabled
+    set -l experiment $argv[1]
+    __task_get_experiments | string match -qr "^\* $experiment:.*on"
+end
+
+function __task_get_tasks --description "Prints all available tasks with their description" --inherit-variable GO_TASK_PROGNAME
+  # Check if the global task is requested
+  set -l global_task false
+  commandline --current-process | read --tokenize --list --local cmd_args
+  for arg in $cmd_args
+    if test "_$arg" = "_--"
+      break # ignore arguments to be passed to the task
+    end
+    if test "_$arg" = "_--global" -o "_$arg" = "_-g"
+      set global_task true
+      break
+    end
+  end
+
+  # Read the list of tasks (and potential errors)
+  if $global_task
+    $GO_TASK_PROGNAME --global --list-all
+  else
+    $GO_TASK_PROGNAME --list-all
+  end 2>&1 | read -lz rawOutput
+
+  # Return on non-zero exit code (for cases when there is no Taskfile found or etc.)
+  if test $status -ne 0
     return
   end
 
-  if __task_test_bit $directive $__task_directive_filter_dirs
-    __fish_complete_directories $current
-    return
-  end
-
-  # Emit the candidates verbatim; fish reads the tab as the value/description
-  # separator.
-  for line in $data
-    printf '%s\n' $line
-  end
-
-  # NoFileComp unset → also offer files, since `--no-files` suppressed the
-  # native fallback. Covers DirectiveDefault (e.g. `--cacert`, after `--`).
-  if not __task_test_bit $directive $__task_directive_no_file_comp
-    __fish_complete_path $current
+  # Grab names and descriptions (if any) of the tasks
+  set -l output (echo $rawOutput | sed -e '1d; s/\* \(.*\):[[:space:]]\{2,\}\(.*\)[[:space:]]\{2,\}(\(aliases.*\))/\1\t\2\t\3/' -e 's/\* \(.*\):[[:space:]]\{2,\}\(.*\)/\1\t\2/'| string split0)
+  if test $output
+    echo $output
   end
 end
 
-# Single registration: all task names, flags, flag values and file completion
-# flow through the engine. `--no-files` prevents fish from mixing in files when
-# the engine says not to (NoFileComp); `__task_complete` re-adds them otherwise.
-complete -c $GO_TASK_PROGNAME --no-files -a "(__task_complete)"
+complete -c $GO_TASK_PROGNAME \
+  -d 'Runs the specified task(s). Falls back to the "default" task if no task name was specified, or lists all tasks if an unknown task name was specified.' \
+  -xa "(__task_get_tasks)" \
+  -n "not __fish_seen_subcommand_from --"
+
+# Standard flags
+complete -c $GO_TASK_PROGNAME -s a -l list-all                  -d 'list all tasks'
+complete -c $GO_TASK_PROGNAME -s c -l color                     -d 'colored output (default true)'
+complete -c $GO_TASK_PROGNAME -s C -l concurrency               -d 'limit number of concurrent tasks'
+complete -c $GO_TASK_PROGNAME      -l completion                -d 'generate shell completion script' -xa "bash zsh fish powershell"
+complete -c $GO_TASK_PROGNAME -s d -l dir                       -d 'set directory of execution'
+complete -c $GO_TASK_PROGNAME      -l disable-fuzzy             -d 'disable fuzzy matching for task names'
+complete -c $GO_TASK_PROGNAME -s n -l dry                       -d 'compile and print tasks without executing'
+complete -c $GO_TASK_PROGNAME -s x -l exit-code                 -d 'pass-through exit code of task command'
+complete -c $GO_TASK_PROGNAME      -l experiments               -d 'list available experiments'
+complete -c $GO_TASK_PROGNAME -s F -l failfast                  -d 'when running tasks in parallel, stop all tasks if one fails'
+complete -c $GO_TASK_PROGNAME -s f -l force                     -d 'force execution even when up-to-date'
+complete -c $GO_TASK_PROGNAME -s g -l global                    -d 'run global Taskfile from home directory'
+complete -c $GO_TASK_PROGNAME -s h -l help                      -d 'show help'
+complete -c $GO_TASK_PROGNAME -s i -l init                      -d 'create new Taskfile'
+complete -c $GO_TASK_PROGNAME      -l insecure                  -d 'allow insecure Taskfile downloads'
+complete -c $GO_TASK_PROGNAME -s I -l interval                  -d 'interval to watch for changes'
+complete -c $GO_TASK_PROGNAME -s j -l json                      -d 'format task list as JSON'
+complete -c $GO_TASK_PROGNAME -s l -l list                      -d 'list tasks with descriptions'
+complete -c $GO_TASK_PROGNAME      -l nested                    -d 'nest namespaces when listing as JSON'
+complete -c $GO_TASK_PROGNAME      -l no-status                 -d 'ignore status when listing as JSON'
+complete -c $GO_TASK_PROGNAME      -l interactive               -d 'prompt for missing required variables'
+complete -c $GO_TASK_PROGNAME -s o -l output                    -d 'set output style' -xa "interleaved group prefixed"
+complete -c $GO_TASK_PROGNAME      -l output-group-begin        -d 'message template before grouped output'
+complete -c $GO_TASK_PROGNAME      -l output-group-end          -d 'message template after grouped output'
+complete -c $GO_TASK_PROGNAME      -l output-group-error-only   -d 'hide output from successful tasks'
+complete -c $GO_TASK_PROGNAME -s p -l parallel                  -d 'execute tasks in parallel'
+complete -c $GO_TASK_PROGNAME -s s -l silent                    -d 'disable echoing'
+complete -c $GO_TASK_PROGNAME      -l sort                      -d 'set task sorting order' -xa "default alphanumeric none"
+complete -c $GO_TASK_PROGNAME      -l status                    -d 'exit non-zero if tasks not up-to-date'
+complete -c $GO_TASK_PROGNAME      -l summary                   -d 'show task summary'
+complete -c $GO_TASK_PROGNAME -s t -l taskfile                  -d 'choose Taskfile to run'
+complete -c $GO_TASK_PROGNAME -s v -l verbose                   -d 'verbose output'
+complete -c $GO_TASK_PROGNAME      -l version                   -d 'show version'
+complete -c $GO_TASK_PROGNAME -s w -l watch                     -d 'watch mode, re-run on changes'
+complete -c $GO_TASK_PROGNAME -s y -l yes                       -d 'assume yes to all prompts'
+
+# Experimental flags (dynamically checked at completion time via -n condition)
+# GentleForce experiment
+complete -c $GO_TASK_PROGNAME -n "__task_is_experiment_enabled GENTLE_FORCE" -l force-all -d 'force execution of task and all dependencies'
+
+# RemoteTaskfiles experiment - Options
+complete -c $GO_TASK_PROGNAME -n "__task_is_experiment_enabled REMOTE_TASKFILES" -l offline          -d 'use only local or cached Taskfiles'
+complete -c $GO_TASK_PROGNAME -n "__task_is_experiment_enabled REMOTE_TASKFILES" -l timeout          -d 'timeout for remote Taskfile downloads'
+complete -c $GO_TASK_PROGNAME -n "__task_is_experiment_enabled REMOTE_TASKFILES" -l expiry           -d 'cache expiry duration'
+complete -c $GO_TASK_PROGNAME -n "__task_is_experiment_enabled REMOTE_TASKFILES" -l remote-cache-dir -d 'directory to cache remote Taskfiles' -xa "(__fish_complete_directories)"
+complete -c $GO_TASK_PROGNAME -n "__task_is_experiment_enabled REMOTE_TASKFILES" -l cacert           -d 'custom CA certificate for TLS' -r
+complete -c $GO_TASK_PROGNAME -n "__task_is_experiment_enabled REMOTE_TASKFILES" -l cert             -d 'client certificate for mTLS' -r
+complete -c $GO_TASK_PROGNAME -n "__task_is_experiment_enabled REMOTE_TASKFILES" -l cert-key         -d 'client certificate private key' -r
+
+# RemoteTaskfiles experiment - Operations
+complete -c $GO_TASK_PROGNAME -n "__task_is_experiment_enabled REMOTE_TASKFILES" -l download    -d 'download remote Taskfile'
+complete -c $GO_TASK_PROGNAME -n "__task_is_experiment_enabled REMOTE_TASKFILES" -l clear-cache -d 'clear remote Taskfile cache'

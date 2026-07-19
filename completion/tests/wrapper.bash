@@ -23,7 +23,7 @@ _filedir() { CAP+="filedir:$*"$'\n'; }
 compopt() { CAP+="compopt:$*"$'\n'; }
 __ltrim_colon_completions() { :; }
 
-source "$(dirname "${BASH_SOURCE[0]}")/../bash/task.bash"
+source "$(dirname "${BASH_SOURCE[0]}")/../next/bash/task.bash"
 
 run() {
   CAP=""
