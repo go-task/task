@@ -43,6 +43,11 @@ Register-ArgumentCompleter -Native -CommandName $cmdNames -ScriptBlock {
 	$FilterFileExt = 8
 	$FilterDirs    = 16
 
+	# PowerShell replaces the whole token with the completion text, so any
+	# directory the user already typed (e.g. `sub/`) must be prepended to the
+	# basename returned by Get-ChildItem, otherwise the prefix is dropped.
+	$pathPrefix = $wordToComplete -replace '[^\\/]*$', ''
+
 	# Note: DirectiveNoSpace (bit 2) cannot be honored here — PowerShell's
 	# CompletionResult API has no per-item "no trailing space" option, so a
 	# suggestion like `VAR=` gets a trailing space. This is a PowerShell limit.
@@ -56,14 +61,14 @@ Register-ArgumentCompleter -Native -CommandName $cmdNames -ScriptBlock {
 			Where-Object { $_.PSIsContainer -or $exts -contains $_.Extension } |
 			ForEach-Object {
 				$type = if ($_.PSIsContainer) { [CompletionResultType]::ProviderContainer } else { [CompletionResultType]::ProviderItem }
-				[CompletionResult]::new($_.Name, $_.Name, $type, $_.Name)
+				[CompletionResult]::new("$pathPrefix$($_.Name)", $_.Name, $type, $_.Name)
 			}
 	}
 
 	# FilterDirs
 	if ($directive -band $FilterDirs) {
 		return Get-ChildItem -Path "$wordToComplete*" -Directory -ErrorAction SilentlyContinue |
-			ForEach-Object { [CompletionResult]::new($_.Name, $_.Name, [CompletionResultType]::ProviderContainer, $_.Name) }
+			ForEach-Object { [CompletionResult]::new("$pathPrefix$($_.Name)", $_.Name, [CompletionResultType]::ProviderContainer, $_.Name) }
 	}
 
 	# Build candidates, filtering by the current word. PowerShell does not filter
@@ -80,8 +85,11 @@ Register-ArgumentCompleter -Native -CommandName $cmdNames -ScriptBlock {
 	# NoFileComp (bit 4) unset and nothing matched → fall back to file completion,
 	# since the engine returned DirectiveDefault (e.g. --cacert, after `--`).
 	if ($results.Count -eq 0 -and -not ($directive -band $NoFileComp)) {
-		return Get-ChildItem -Path . -ErrorAction SilentlyContinue |
-			ForEach-Object { [CompletionResult]::new($_.Name, $_.Name, [CompletionResultType]::ProviderItem, $_.Name) }
+		return Get-ChildItem -Path "$wordToComplete*" -ErrorAction SilentlyContinue |
+			ForEach-Object {
+				$type = if ($_.PSIsContainer) { [CompletionResultType]::ProviderContainer } else { [CompletionResultType]::ProviderItem }
+				[CompletionResult]::new("$pathPrefix$($_.Name)", $_.Name, $type, $_.Name)
+			}
 	}
 
 	return $results

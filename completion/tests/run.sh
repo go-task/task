@@ -43,6 +43,8 @@ tasks:
 YML
 touch "$fixture/extra.yaml" "$fixture/notes.txt"
 mkdir -p "$fixture/sub" "$fixture/other"
+# A file inside sub/ so nested-path completion (keeping the dir prefix) is tested.
+touch "$fixture/sub/nested.yml"
 export TASK_FIXTURE="$fixture"
 
 # In strict mode (set TASK_COMPLETION_STRICT=1, used in CI) a missing shell is
