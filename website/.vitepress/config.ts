@@ -371,6 +371,10 @@ export default defineConfig({
           link: '/docs/guide'
         },
         {
+          text: 'Remote Taskfiles',
+          link: '/docs/remote-taskfiles'
+        },
+        {
           text: 'Reference',
           collapsed: true,
           items: [

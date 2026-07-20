@@ -1080,8 +1080,6 @@ func TestIncludesMultiLevel(t *testing.T) {
 }
 
 func TestIncludesRemote(t *testing.T) {
-	enableExperimentForTest(t, &experiments.RemoteTaskfiles, 1)
-
 	dir := "testdata/includes_remote"
 	os.RemoveAll(filepath.Join(dir, ".task", "remote"))
 
@@ -1284,8 +1282,6 @@ func TestIncludesEmptyMain(t *testing.T) {
 }
 
 func TestIncludesHttp(t *testing.T) {
-	enableExperimentForTest(t, &experiments.RemoteTaskfiles, 1)
-
 	dir, err := filepath.Abs("testdata/includes_http")
 	require.NoError(t, err)
 
