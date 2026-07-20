@@ -35,6 +35,8 @@ var (
 	attrsFgHiYellow  = envColor("COLOR_BRIGHT_YELLOW", color.FgHiYellow)
 	attrsFgHiMagenta = envColor("COLOR_BRIGHT_MAGENTA", color.FgHiMagenta)
 	attrsFgHiRed     = envColor("COLOR_BRIGHT_RED", color.FgHiRed)
+	attrsBold        = envColor("COLOR_BOLD", color.Bold)
+	attrsDim         = envColor("COLOR_DIM", color.Faint)
 )
 
 type (
@@ -98,6 +100,14 @@ func BrightMagenta() PrintFunc {
 
 func BrightRed() PrintFunc {
 	return color.New(attrsFgHiRed...).FprintfFunc()
+}
+
+func Bold() PrintFunc {
+	return color.New(attrsBold...).FprintfFunc()
+}
+
+func Dim() PrintFunc {
+	return color.New(attrsDim...).FprintfFunc()
 }
 
 func envColor(name string, defaultColor color.Attribute) []color.Attribute {
