@@ -2765,6 +2765,67 @@ func TestBashShellOptsCommandLevel(t *testing.T) {
 	assert.Equal(t, "globstar\ton\n", buff.String())
 }
 
+func TestShellOptsInvalidShoptGlobalLevel(t *testing.T) {
+	t.Parallel()
+
+	var buff bytes.Buffer
+	e := task.NewExecutor(
+		task.WithDir("testdata/shopts/invalid_global_shopt"),
+		task.WithStdout(&buff),
+		task.WithStderr(&buff),
+	)
+
+	err := e.Setup()
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), `invalid shopt option "pipefail" (did you mean to put it in "set"?)`)
+}
+
+func TestShellOptsInvalidSetTaskLevel(t *testing.T) {
+	t.Parallel()
+
+	var buff bytes.Buffer
+	e := task.NewExecutor(
+		task.WithDir("testdata/shopts/invalid_task_set"),
+		task.WithStdout(&buff),
+		task.WithStderr(&buff),
+	)
+
+	err := e.Setup()
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), `invalid set option "globstar" (did you mean to put it in "shopt"?)`)
+}
+
+func TestShellOptsInvalidShoptCommandLevel(t *testing.T) {
+	t.Parallel()
+
+	var buff bytes.Buffer
+	e := task.NewExecutor(
+		task.WithDir("testdata/shopts/invalid_command_shopt"),
+		task.WithStdout(&buff),
+		task.WithStderr(&buff),
+	)
+
+	err := e.Setup()
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), `invalid shopt option "not_a_real_option"`)
+}
+
+func TestShellOptsSetOptionsViaShopt(t *testing.T) {
+	t.Parallel()
+
+	var buff bytes.Buffer
+	e := task.NewExecutor(
+		task.WithDir("testdata/shopts/set_via_shopt"),
+		task.WithStdout(&buff),
+		task.WithStderr(&buff),
+	)
+	require.NoError(t, e.Setup())
+
+	err := e.Run(t.Context(), &task.Call{Task: "default"})
+	require.NoError(t, err)
+	assert.Equal(t, "hello\n", buff.String())
+}
+
 func TestSplitArgs(t *testing.T) {
 	t.Parallel()
 

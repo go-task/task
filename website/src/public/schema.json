@@ -285,7 +285,14 @@
     },
     "shopt": {
       "type": "string",
-      "enum": ["expand_aliases", "globstar", "nullglob"]
+      "enum": [
+        "dotglob",
+        "expand_aliases",
+        "extglob",
+        "globstar",
+        "nocaseglob",
+        "nullglob"
+      ]
     },
     "vars": {
       "type": "object",
