@@ -3040,6 +3040,55 @@ func TestWildcard(t *testing.T) {
 	}
 }
 
+func TestIncludesWildcardVars(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name           string
+		call           string
+		expectedOutput string
+		wantErr        bool
+	}{
+		{
+			name:           "match feeds include var",
+			call:           "stack:prod:deploy",
+			expectedOutput: "Deploying to prod\n",
+		},
+		{
+			name:           "different match",
+			call:           "stack:staging:deploy",
+			expectedOutput: "Deploying to staging\n",
+		},
+		{
+			name:    "no match",
+			call:    "stack:deploy",
+			wantErr: true,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.call, func(t *testing.T) {
+			t.Parallel()
+
+			var buff bytes.Buffer
+			e := task.NewExecutor(
+				task.WithDir("testdata/includes_wildcard_vars"),
+				task.WithStdout(&buff),
+				task.WithStderr(&buff),
+				task.WithSilent(true),
+				task.WithForce(true),
+			)
+			require.NoError(t, e.Setup())
+			if test.wantErr {
+				require.Error(t, e.Run(t.Context(), &task.Call{Task: test.call}))
+				return
+			}
+			require.NoError(t, e.Run(t.Context(), &task.Call{Task: test.call}))
+			assert.Equal(t, test.expectedOutput, buff.String())
+		})
+	}
+}
+
 // enableExperimentForTest enables the experiment behind pointer e for the duration of test t and sub-tests,
 // with the experiment being restored to its previous state when tests complete.
 //

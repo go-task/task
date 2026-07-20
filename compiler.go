@@ -115,6 +115,15 @@ func (c *Compiler) getVariables(t *ast.Task, call *Call, evaluateShVars bool) (*
 			return nil, err
 		}
 	}
+	// MATCH is populated by GetTask from the wildcard match. Expose it early so
+	// that include vars coming from a wildcard include namespace can reference
+	// the captured segments, e.g. `{{index .MATCH 0}}`. It is re-set identically
+	// when call.Vars is ranged below, which is harmless.
+	if call != nil && call.Vars != nil {
+		if match, ok := call.Vars.Get("MATCH"); ok {
+			result.Set("MATCH", match)
+		}
+	}
 	if t != nil {
 		for k, v := range t.IncludeVars.All() {
 			if err := rangeFunc(k, v); err != nil {

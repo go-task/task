@@ -11,6 +11,9 @@
   (#2184 by @jubr).
 - Fixed `joinUrl` collapsing the `//` in a URL scheme (e.g. producing
   `http:/localhost` instead of `http://localhost`) (#2915 by @vsaraikin).
+- Fixed `.MATCH` not being available in the `vars` of an include declared with a
+  wildcard namespace (e.g. `'stack:*'`), so `{{index .MATCH 0}}` can now be used
+  to feed captured segments into the included Taskfile (#2732 by @vmaerten).
 
 ## v3.52.0 - 2026-07-02
 

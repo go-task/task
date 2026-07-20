@@ -461,6 +461,31 @@ includes:
       DOCKER_IMAGE: frontend_image
 ```
 
+You can also use a [wildcard](#wildcard-arguments) in the include's namespace and
+reference the captured segments through the `.MATCH` variable when setting the
+include vars. This lets a single include be reused across many namespaces without
+the included Taskfile needing to know how the value is extracted:
+
+```yaml
+version: '3'
+
+includes:
+  'stack:*':
+    taskfile: ./taskfiles/Stack.yml
+    vars:
+      ENV: '{{index .MATCH 0}}'
+```
+
+Running `task stack:prod:deploy` sets `ENV` to `prod` for the included Taskfile.
+
+::: info
+
+`.MATCH` is only available in the include's `vars`. The `taskfile` and `dir`
+fields are resolved when Taskfiles are loaded and merged, before any task is
+called, so no wildcard has been matched yet at that point.
+
+:::
+
 ### Namespace aliases
 
 When including a Taskfile, you can give the namespace a list of `aliases`. This
