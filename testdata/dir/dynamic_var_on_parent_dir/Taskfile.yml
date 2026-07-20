@@ -1,0 +1,10 @@
+version: '3'
+
+tasks:
+  default:
+    dir: somefolder
+    cmds:
+      - echo {{.MSG}}
+    vars:
+      MSG:
+        sh: cat ../foo.txt
