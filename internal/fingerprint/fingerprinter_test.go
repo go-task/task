@@ -23,7 +23,7 @@ import (
 // | false             | not set            | false              |
 // | false             | true               | false              |
 // | false             | false              | false              |
-func TestIsTaskUpToDate(t *testing.T) {
+func TestFingerprinterUpToDate(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
@@ -162,12 +162,11 @@ func TestIsTaskUpToDate(t *testing.T) {
 				tt.setupMockSourcesChecker(mockSourcesChecker)
 			}
 
-			result, err := IsTaskUpToDate(
-				t.Context(),
-				tt.task,
+			f := NewFingerprinter("checksum", "", false, nil,
 				WithStatusChecker(mockStatusChecker),
 				WithSourcesChecker(mockSourcesChecker),
 			)
+			result, err := f.UpToDate(t.Context(), tt.task)
 			require.NoError(t, err)
 			assert.Equal(t, tt.expected, result)
 		})

@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Fixed the fingerprint variable (`{{.CHECKSUM}}`/`{{.TIMESTAMP}}`) ignoring a
+  `method:` set at the Taskfile level: the variable now follows the same method
+  resolution as the up-to-date check, and is no longer injected when the
+  effective method is `none` (#2924 by @vmaerten).
+
 - Considerably improve performance of fingerprinting on large repositories
   (monorepos). Fingerprinting is up to 86% faster and make up to 70% fewer
   memory allocations on the more advanced scenarios. Benchmarks were added as
