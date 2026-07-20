@@ -3,3 +3,8 @@ version: '3'
 tasks:
   foo: echo foo
   bar: echo bar
+  tools:lint: echo lint
+  tools:test: echo test
+  toolshed: echo toolshed
+  deploy:*: echo wildcard
+  deploy:one: echo deploy-one
