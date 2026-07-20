@@ -2080,6 +2080,23 @@ func TestDotenvHasEnvVarInPath(t *testing.T) { // nolint:paralleltest // cannot 
 	tt.Run(t)
 }
 
+func TestDotenvNestedTemplatesAreEvaluatedInFileOrder(t *testing.T) {
+	t.Parallel()
+
+	tt := fileContentTest{
+		Dir:       "testdata/dotenv/nested_templates",
+		Target:    "default",
+		TrimSpace: true,
+		Files: map[string]string{
+			"path.txt": "/home/user/l1/l2/l3/l4/l5/l6/file.txt",
+		},
+	}
+	t.Run("", func(t *testing.T) {
+		t.Parallel()
+		tt.Run(t)
+	})
+}
+
 func TestTaskDotenvParseErrorMessage(t *testing.T) {
 	t.Parallel()
 
