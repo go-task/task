@@ -29,8 +29,13 @@ type Compiler struct {
 
 	Logger *logger.Logger
 
-	dynamicCache   map[string]string
+	dynamicCache   map[dynamicCacheKey]string
 	muDynamicCache sync.Mutex
+}
+
+type dynamicCacheKey struct {
+	dir string
+	sh  string
 }
 
 func (c *Compiler) GetTaskfileVariables() (*ast.Vars, error) {
@@ -156,9 +161,12 @@ func (c *Compiler) HandleDynamicVar(v ast.Var, dir string, e []string) (string, 
 	}
 
 	if c.dynamicCache == nil {
-		c.dynamicCache = make(map[string]string, 30)
+		c.dynamicCache = make(map[dynamicCacheKey]string, 30)
 	}
-	if result, ok := c.dynamicCache[*v.Sh]; ok {
+
+	key := dynamicCacheKey{dir, *v.Sh}
+
+	if result, ok := c.dynamicCache[key]; ok {
 		return result, nil
 	}
 
@@ -184,7 +192,7 @@ func (c *Compiler) HandleDynamicVar(v ast.Var, dir string, e []string) (string, 
 	result := strings.TrimSuffix(stdout.String(), "\r\n")
 	result = strings.TrimSuffix(result, "\n")
 
-	c.dynamicCache[*v.Sh] = result
+	c.dynamicCache[key] = result
 	// Never print the resolved value of a secret variable, even in verbose mode
 	logResult := result
 	if v.Secret {
