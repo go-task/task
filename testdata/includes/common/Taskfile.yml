@@ -1,0 +1,10 @@
+version: '3'
+
+tasks:
+  show:
+    vars:
+      CURRENT_DIR:
+        sh: basename "$(pwd)"
+
+    cmds:
+      - 'echo "{{.CURRENT_DIR}}" > result.txt'
