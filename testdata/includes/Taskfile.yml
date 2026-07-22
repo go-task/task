@@ -16,10 +16,10 @@ includes:
   included_os: ./Taskfile_{{OS}}.yml
   include_common_task1:
     taskfile: ./common/Taskfile.yml
-    dir: ./output1
+    dir: .
   include_common_task2:
     taskfile: ./common/Taskfile.yml
-    dir: ./output2
+    dir: ./common
 
 tasks:
   default:

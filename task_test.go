@@ -1052,8 +1052,8 @@ func TestIncludes(t *testing.T) {
 			"./module2/included_directory_with_dir.txt": "included_directory_with_dir",
 			"./module2/included_taskfile_with_dir.txt":  "included_taskfile_with_dir",
 			"os_include.txt":                            "os",
-			"output1/result.txt":                        "output1",
-			"output2/result.txt":                        "output2",
+			"result.txt":                                "includes",
+			"common/result.txt":                         "common",
 		},
 	}
 	t.Run("", func(t *testing.T) {
