@@ -1,5 +1,5 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Taskfile YAML Schema",
   "description": "Schema for Taskfile files.",
   "definitions": {
@@ -177,6 +177,11 @@
           "enum": ["none", "checksum", "timestamp"],
           "default": "none"
         },
+        "use_gitignore": {
+          "description": "When set to true, files matching .gitignore rules will be excluded from sources and generates glob resolution. Overrides the global gitignore setting.",
+          "type": "boolean",
+          "default": false
+        },
         "prefix": {
           "description": "Defines a string to prefix the output of tasks running in parallel. Only used when the output mode is `prefixed`.",
           "type": "string"
@@ -318,6 +323,13 @@
         "map": {
           "type": "object",
           "description": "The value will be treated as a literal map type and stored in the variable"
+        },
+        "value": {
+          "description": "A literal value assigned to the variable. Useful together with other keys such as 'secret'"
+        },
+        "secret": {
+          "type": "boolean",
+          "description": "Marks the variable as secret. Secret values will be masked as ***** in command logs to prevent accidental exposure of sensitive information."
         }
       },
       "additionalProperties": false
@@ -687,6 +699,11 @@
           "enum": ["none", "checksum", "timestamp"],
           "default": "checksum"
         },
+        "use_gitignore": {
+          "description": "When set to true, files matching .gitignore rules will be excluded from sources and generates glob resolution for all tasks. Can be overridden per task.",
+          "type": "boolean",
+          "default": false
+        },
         "includes": {
           "description": "Imports tasks from the specified taskfiles. The tasks described in the given Taskfiles will be available with the informed namespace.",
           "type": "object",
@@ -701,11 +718,13 @@
                   "properties": {
                     "taskfile": {
                       "description": "The path for the Taskfile or directory to be included. If a directory, Task will look for files named `Taskfile.yml` or `Taskfile.yaml` inside that directory. If a relative path, resolved relative to the directory containing the including Taskfile.",
-                      "type": "string"
+                      "type": "string",
+                      "minLength": 1
                     },
                     "dir": {
                       "description": "The working directory of the included tasks when run.",
-                      "type": "string"
+                      "type": "string",
+                      "minLength": 1
                     },
                     "optional": {
                       "description": "If `true`, no errors will be thrown if the specified file does not exist.",
@@ -741,7 +760,15 @@
                       "description": "The checksum of the file you expect to include. If the checksum does not match, the file will not be included.",
                       "type": "string"
                     }
-                  }
+                  },
+                  "anyOf": [
+                    {
+                      "required": ["taskfile"]
+                    },
+                    {
+                      "required": ["dir"]
+                    }
+                  ]
                 }
               ]
             }

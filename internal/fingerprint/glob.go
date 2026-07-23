@@ -7,10 +7,11 @@ import (
 
 	"github.com/go-task/task/v3/internal/execext"
 	"github.com/go-task/task/v3/internal/filepathext"
+	"github.com/go-task/task/v3/internal/fsext"
 	"github.com/go-task/task/v3/taskfile/ast"
 )
 
-func Globs(dir string, globs []*ast.Glob) ([]string, error) {
+func Globs(dir string, globs []*ast.Glob, useGitignore bool) ([]string, error) {
 	resultMap := make(map[string]bool)
 	for _, g := range globs {
 		matches, err := glob(dir, g.Glob)
@@ -21,11 +22,20 @@ func Globs(dir string, globs []*ast.Glob) ([]string, error) {
 			resultMap[match] = !g.Negate
 		}
 	}
+
+	if useGitignore {
+		resultMap = filterGitignored(resultMap, dir)
+	}
+
 	return collectKeys(resultMap), nil
 }
 
 func glob(dir string, g string) ([]string, error) {
 	g = filepathext.SmartJoin(dir, g)
+
+	if results, ok, err := fsext.FastRecursiveGlob(g); ok {
+		return results, err
+	}
 
 	fs, err := execext.ExpandFields(g)
 	if err != nil {

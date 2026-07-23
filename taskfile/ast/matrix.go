@@ -93,6 +93,21 @@ func (matrix *Matrix) DeepCopy() *Matrix {
 	}
 }
 
+// DeepCopy returns a copy of the MatrixRow. Without this, deepcopy.OrderedMap
+// falls back to copying the *MatrixRow pointer as-is, so every "copy" of a
+// Matrix would still share the same underlying rows - see #2890, where
+// concurrent invocations of a task with a `ref:` matrix row raced on
+// resolveMatrixRefs mutating that shared row.
+func (row *MatrixRow) DeepCopy() *MatrixRow {
+	if row == nil {
+		return nil
+	}
+	return &MatrixRow{
+		Ref:   row.Ref,
+		Value: deepcopy.Slice(row.Value),
+	}
+}
+
 func (matrix *Matrix) UnmarshalYAML(node *yaml.Node) error {
 	switch node.Kind {
 	case yaml.MappingNode:

@@ -152,6 +152,12 @@ tasks:
     cmds:
       - gotestsum -f '{{.GOTESTSUM_FORMAT}}' -tags 'signals watch' ./...
 
+  bench:checksum:
+    desc: Runs checksum benchmarks
+    aliases: [bench]
+    cmds:
+      - go test -bench=. -benchmem -tags=fsbench -run=^$ ./...
+
   goreleaser:test:
     desc: Tests release process without publishing
     cmds:

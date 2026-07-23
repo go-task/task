@@ -117,7 +117,12 @@ func printTaskCommands(l *logger.Logger, t *ast.Task) {
 		isCommand := c.Cmd != ""
 		l.Outf(logger.Default, " - ")
 		if isCommand {
-			l.Outf(logger.Yellow, "%s\n", c.Cmd)
+			// Use the masked command so secret values are not leaked in summaries
+			logCmd := c.LogCmd
+			if logCmd == "" {
+				logCmd = c.Cmd
+			}
+			l.Outf(logger.Yellow, "%s\n", logCmd)
 		} else {
 			l.Outf(logger.Green, "Task: %s\n", c.Task)
 		}
@@ -196,6 +201,11 @@ func printTaskEnv(l *logger.Logger, t *ast.Task) {
 // formatVarValue formats a variable value based on its type.
 // Handles static values, shell commands (sh:), references (ref:), and maps.
 func formatVarValue(v ast.Var) string {
+	// Never expose secret variables in the summary, whatever their type
+	if v.Secret {
+		return "*****"
+	}
+
 	// Shell command - check this first before Value
 	// because dynamic vars may have both Sh and an empty Value
 	if v.Sh != nil {

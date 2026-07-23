@@ -88,6 +88,10 @@
       "description": "Prompt for missing required variables instead of failing. Requires a TTY.",
       "type": "boolean",
       "default": false
+    },
+    "temp-dir": {
+      "type": "string",
+      "description": "Directory to store Task temporary files, such as checksums and temporary metadata. Relative paths are relative to the root Taskfile."
     }
   },
   "additionalProperties": false

@@ -283,6 +283,68 @@ func TestVars(t *testing.T) {
 	)
 }
 
+func TestSecretVars(t *testing.T) {
+	t.Parallel()
+	NewExecutorTest(t,
+		WithName("secret vars are masked in logs"),
+		WithExecutorOptions(
+			task.WithDir("testdata/secrets"),
+		),
+		WithTask("test-secret-masking"),
+	)
+	NewExecutorTest(t,
+		WithName("multiple secrets masked"),
+		WithExecutorOptions(
+			task.WithDir("testdata/secrets"),
+		),
+		WithTask("test-multiple-secrets"),
+	)
+	NewExecutorTest(t,
+		WithName("mixed secret and public vars"),
+		WithExecutorOptions(
+			task.WithDir("testdata/secrets"),
+		),
+		WithTask("test-mixed"),
+	)
+	NewExecutorTest(t,
+		WithName("deferred command with secrets"),
+		WithExecutorOptions(
+			task.WithDir("testdata/secrets"),
+		),
+		WithTask("test-deferred-secret"),
+	)
+	NewExecutorTest(t,
+		WithName("env secret limitation"),
+		WithExecutorOptions(
+			task.WithDir("testdata/secrets"),
+		),
+		WithTask("test-env-secret-limitation"),
+	)
+	NewExecutorTest(t,
+		WithName("secret vars are masked in summary"),
+		WithExecutorOptions(
+			task.WithDir("testdata/secrets"),
+			task.WithSummary(true),
+		),
+		WithTask("test-secret-masking"),
+	)
+	NewExecutorTest(t,
+		WithName("dynamic secret masked in verbose"),
+		WithExecutorOptions(
+			task.WithDir("testdata/secrets"),
+			task.WithVerbose(true),
+		),
+		WithTask("test-dynamic-secret-verbose"),
+	)
+	NewExecutorTest(t,
+		WithName("secret key order independent"),
+		WithExecutorOptions(
+			task.WithDir("testdata/secrets"),
+		),
+		WithTask("test-secret-key-order"),
+	)
+}
+
 func TestRequires(t *testing.T) {
 	t.Parallel()
 	NewExecutorTest(t,

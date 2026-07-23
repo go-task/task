@@ -2,7 +2,7 @@ version: '3'
 
 vars:
   TASKFILE_DIR:
-    sh: basename $(pwd)
+    sh: basename "$(pwd)"
 
 tasks:
   from-included-taskfile:
@@ -16,4 +16,4 @@ tasks:
     silent: true
     vars:
       TASKFILE_TASK_DIR:
-        sh: basename $(pwd)
+        sh: basename "$(pwd)"

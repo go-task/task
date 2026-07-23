@@ -8,6 +8,62 @@ editLink: false
 
 ::: v-pre
 
+## v3.52.0 - 2026-07-02
+
+- Fixed --interactive prompts for required vars sometimes appearing in a random
+  order. Prompts now follow the order the vars are declared in the Taskfile.
+  (#2871 by @caproven)
+- Fixed Fish completions not being picked up correctly by installing them to
+  Fish's `vendor_completions.d` directory instead of `completions` (#2850, #2859
+  by @Legimity).
+- PowerShell completions now work with aliases of the `task` command, not just
+  the `task` binary itself (#2852 by @kojiishi).
+- Fixed task and namespace aliases not being completed by the Zsh completion. A
+  `show-aliases` zstyle can turn this off (#2865, #2864 by @vmaerten).
+- Fixed task names containing certain characters (e.g. `\`, `_`, `^`) leaking
+  into checksum/timestamp filenames, breaking `sources:`/`generates:` up-to-date
+  detection (#2886 by @s3onghyun).
+- Fixed `for: matrix:` loops using `ref:` rows producing wrong values when the
+  same task was run concurrently (e.g. by parallel `deps`) with different vars
+  (#2890, #2894 by @amitmishra11).
+- Added a `secret: true` flag for variables that masks their value in logs,
+  `task --summary`, and command output (#2514 by @vmaerten).
+- Added the `use_gitignore` setting (global or per-task) to skip files matched
+  by your `.gitignore` when fingerprinting `sources`/`generates` and when
+  watching (#2773 by @vmaerten).
+- Added support for configuring output flags (`--output`,
+  `--output-group-begin`, `--output-group-end`, `--output-group-error-only`) via
+  the `TASK_OUTPUT*` environment variables (#2873 by @liiight).
+- Added a `--temp-dir` flag (with `TASK_TEMP_DIR` env var and `temp-dir` taskrc
+  config) to customise the directory where Task stores temporary files such as
+  checksums. Relative paths are resolved against the root Taskfile (#2891 by
+  @kjasn).
+- Defined environment variable behavior for remote taskfiles (#2267, #2847 by
+  @vmaerten).
+- Added support for remote Taskfiles hosted on Azure DevOps, whose git URLs use
+  a `/_git/` path segment rather than a `.git` suffix (#2904 by @pd93).
+- Re-added the example remote taskfile at
+  [taskfile.dev/Taskfile.yml](https://taskfile.dev/Taskfile.yml) (#2905 by
+  @pd93).
+- Fixed malformed `includes:` entries (missing `taskfile`/`dir`) reporting a
+  misleading "include cycle detected" error instead of a clear configuration
+  error (#1881, #2892 by @Lewin671).
+
+## v3.51.1 - 2026-05-16
+
+- A significant performance boost was achieved for large Taskfiles (monorepos)
+  by skipping templating altogether when the string is static (#2820 by @romnn).
+- Added `absPath` template function that resolves a path to its absolute form,
+  cleaning `..` and `.` components (#2681, #2788 by @mateenanjum).
+- Added `joinEnv` function to join paths based on your oprating system: `;` for
+  Windows and `:` elsewhere, and `joinUrl` to join URL paths. Also, added two
+  new special variables: `FILE_PATH_SEPARATOR` which returns `\` on Windows and
+  `/` elsewhere, and `PATH_LIST_SEPARATOR` which returns `;` on Windows and `:`
+  elsewhere (#2406, #2408 by @solvingj).
+- Update the shell interpreter with a regression fix (#2812, #2832 by
+  @andreynering).
+- Fix potential panic with the shell interpreter (#2810 by @trulede).
+
 ## v3.50.0 - 2026-04-13
 
 - Added `enum.ref` support in `requires`: enum constraints can now reference
@@ -19,13 +75,13 @@ editLink: false
 - Fixed watch mode ignoring SIGHUP signal, causing the watcher to exit instead
   of restarting (#2764, #2642).
 - Fixed a long time bug where the task wouldn't re-run as it should when using
-  `method: timestamp` and the files listed on `generates:` were deleted.
-  This makes `method: timestamp` behaves the same as `method: checksum`
-  (#1230, #2716 by @drichardson).
+  `method: timestamp` and the files listed on `generates:` were deleted. This
+  makes `method: timestamp` behaves the same as `method: checksum` (#1230, #2716
+  by @drichardson).
 
 ## v3.49.1 - 2026-03-08
 
-* Reverted #2632 for now, which caused some regressions. That change will be
+- Reverted #2632 for now, which caused some regressions. That change will be
   reworked (#2720, #2722, #2723).
 
 ## v3.49.0 - 2026-03-07

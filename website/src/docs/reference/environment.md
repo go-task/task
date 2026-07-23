@@ -81,6 +81,34 @@ variables. The priority order is: CLI flags > environment variables > config fil
 - **Default**: `false`
 - **Description**: Prompt for missing required variables
 
+### `TASK_OUTPUT`
+
+- **Type**: `string` (`interleaved`, `group`, `prefixed`)
+- **Description**: Sets the output style
+- **CLI equivalent**: [`--output`](./cli.md#--output-string)
+
+### `TASK_OUTPUT_GROUP_BEGIN`
+
+- **Type**: `string`
+- **Description**: Message template to print before a task's grouped output.
+  Only applies when the output style is `group`.
+- **CLI equivalent**: [`--output-group-begin`](./cli.md#--output-group-begin-template)
+
+### `TASK_OUTPUT_GROUP_END`
+
+- **Type**: `string`
+- **Description**: Message template to print after a task's grouped output.
+  Only applies when the output style is `group`.
+- **CLI equivalent**: [`--output-group-end`](./cli.md#--output-group-end-template)
+
+### `TASK_OUTPUT_GROUP_ERROR_ONLY`
+
+- **Type**: `boolean` (`true`, `false`, `1`, `0`)
+- **Default**: `false`
+- **Description**: Swallow output from successful tasks. Only applies when the
+  output style is `group`.
+- **CLI equivalent**: [`--output-group-error-only`](./cli.md#--output-group-error-only)
+
 ### `TASK_TEMP_DIR`
 
 Defines the location of Task's temporary directory which is used for storing

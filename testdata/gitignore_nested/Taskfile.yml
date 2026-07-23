@@ -1,0 +1,11 @@
+version: '3'
+
+use_gitignore: true
+
+tasks:
+  build:
+    cmds:
+      - echo "build executed"
+    sources:
+      - ./sub/*
+    method: checksum
