@@ -1,0 +1,22 @@
+version: '3'
+
+tasks:
+  server:
+    sources: 
+      - 'foo.txt'
+    cmds:
+      - echo "server start"
+      - defer: sleep 0.2; echo "server end"
+      - sleep 10
+
+  client:
+    cmds:
+      - sleep 0.2
+      - echo "client start"
+      - defer: sleep 0.6; echo "client end"
+      - sleep 10
+
+  default:
+    deps:
+      - server
+      - client 
