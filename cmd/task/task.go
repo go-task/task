@@ -16,6 +16,7 @@ import (
 	"github.com/go-task/task/v3/internal/filepathext"
 	"github.com/go-task/task/v3/internal/flags"
 	"github.com/go-task/task/v3/internal/logger"
+	"github.com/go-task/task/v3/internal/telemetry"
 	"github.com/go-task/task/v3/internal/version"
 	"github.com/go-task/task/v3/taskfile/ast"
 )
@@ -130,6 +131,17 @@ func run() error {
 		flags.WithFlags(),
 		task.WithVersionCheck(true),
 	)
+	ctx := context.Background()
+	otel_shutdown, err := telemetry.Initialize(ctx)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err := otel_shutdown(ctx); err != nil {
+			log.Errf(logger.Red, "failed to shutdown OpenTelemetry: %v\n", err)
+		}
+	}()
+
 	if err := e.Setup(); err != nil {
 		return err
 	}
@@ -192,8 +204,6 @@ func run() error {
 	if !flags.Watch {
 		e.InterceptInterruptSignals()
 	}
-
-	ctx := context.Background()
 
 	if flags.Status {
 		return e.Status(ctx, calls...)
