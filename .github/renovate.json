@@ -9,6 +9,9 @@
   "addLabels":["area: dependencies"],
   "osvVulnerabilityAlerts": true,
   "postUpdateOptions": ["gomodTidy"],
+  "constraints": {
+    "go": "1.25"
+  },
   "customManagers": [
     {
       "customType": "regex",
