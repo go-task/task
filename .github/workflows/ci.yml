@@ -53,7 +53,7 @@ jobs:
           go-version: ${{ matrix.go-version }}
 
       - name: ⬇️ Setup Task
-        uses: go-task/setup-task@v1
+        uses: go-task/setup-task@v2
 
       - name: 🧪 Test
         run: task test --output group --output-group-begin '::group::{{.TASK}}' --output-group-end '::endgroup::'
