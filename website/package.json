@@ -15,7 +15,7 @@
   "devDependencies": {
     "@types/markdown-it": "^14.1.2",
     "@types/node": "^24.1.0",
-    "netlify-cli": "^26.0.0",
+    "netlify-cli": "^27.0.0",
     "prettier": "^3.6.2",
     "vitepress": "^1.6.3",
     "vitepress-plugin-group-icons": "^1.6.1",
@@ -23,5 +23,5 @@
     "vitepress-plugin-llms": "^1.9.1",
     "vue": "^3.5.18"
   },
-  "packageManager": "pnpm@11.13.0+sha512.88d94724d8f2e6c186744a5584c6e59ecac869ec7ba15e9cb4cd628e8dc7066820b2481d8ee3b51ea8da323a7378068aa58c556a3720d32b7c20a051d088363a"
+  "packageManager": "pnpm@11.17.0+sha512.cca3cea332ad254bb84145f966d19f4879615210346fc92c79a047f23a0d7b3cca3c3792f0076ba1f1831d277efbcf0a9119b31a9a60eca7fb3d6231f331ef72"
 }
