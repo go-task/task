@@ -1936,6 +1936,23 @@ func TestDynamicVariablesShouldRunOnTheTaskDir(t *testing.T) {
 	})
 }
 
+func TestDynamicVariablesShouldRunOnTheTemplatedTaskDir(t *testing.T) {
+	t.Parallel()
+
+	tt := fileContentTest{
+		Dir:       "testdata/dir/templated_dir",
+		Target:    "default",
+		TrimSpace: false,
+		Files: map[string]string{
+			"subdirectory/from_templated_dir.txt": "subdirectory\n",
+		},
+	}
+	t.Run("", func(t *testing.T) {
+		t.Parallel()
+		tt.Run(t)
+	})
+}
+
 func TestDisplaysErrorOnVersion1Schema(t *testing.T) {
 	t.Parallel()
 
