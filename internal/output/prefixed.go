@@ -38,9 +38,18 @@ type prefixWriter struct {
 	prefixed *Prefixed
 	prefix   string
 	buff     bytes.Buffer
+	mutex    sync.Mutex
 }
 
+// Write and close both run under pw.mutex because WrapWriter hands out the
+// same *prefixWriter for both stdout and stderr, and os/exec copies each of
+// them to its Write method from its own goroutine. bytes.Buffer isn't safe
+// for concurrent use, so without this lock, concurrent stdout/stderr output
+// races on pw.buff and can panic (e.g. "slice bounds out of range").
 func (pw *prefixWriter) Write(p []byte) (int, error) {
+	pw.mutex.Lock()
+	defer pw.mutex.Unlock()
+
 	n, err := pw.buff.Write(p)
 	if err != nil {
 		return n, err
@@ -50,6 +59,9 @@ func (pw *prefixWriter) Write(p []byte) (int, error) {
 }
 
 func (pw *prefixWriter) close() error {
+	pw.mutex.Lock()
+	defer pw.mutex.Unlock()
+
 	return pw.writeOutputLines(true)
 }
 
