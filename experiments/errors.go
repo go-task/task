@@ -16,7 +16,7 @@ type InvalidValueError struct {
 
 func (err InvalidValueError) Error() string {
 	return fmt.Sprintf(
-		"task: Experiment %q has an invalid value %q (allowed values: %s)",
+		"task: Experiment %q has an invalid value %d (allowed values: %s)",
 		err.Name,
 		err.Value,
 		strings.Join(slicesext.Convert(err.AllowedValues, strconv.Itoa), ", "),
