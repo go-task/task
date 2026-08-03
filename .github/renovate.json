@@ -50,6 +50,11 @@
       "matchManagers": ["gomod"],
       "matchDepTypes": ["golang"],
       "enabled": false
+    },
+    {
+      "description": "Skip releases whose own `go` directive exceeds ours. Without this, `gomodTidy` propagates their requirement into our go.mod and breaks the older Go versions in the CI matrix.",
+      "matchManagers": ["gomod"],
+      "constraintsFiltering": "strict"
     }
   ]
 }
