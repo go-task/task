@@ -11,6 +11,9 @@
   (#2184 by @jubr).
 - Fixed `joinUrl` collapsing the `//` in a URL scheme (e.g. producing
   `http:/localhost` instead of `http://localhost`) (#2915 by @vsaraikin).
+- Added support for `enum.ref` in `--interactive` prompts. Required vars using
+  `enum.ref` now show the selection list like static enums, instead of falling
+  back to free-form input (#2817 by @vmaerten).
 
 ## v3.52.0 - 2026-07-02
 
