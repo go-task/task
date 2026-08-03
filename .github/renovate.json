@@ -10,7 +10,7 @@
   "osvVulnerabilityAlerts": true,
   "postUpdateOptions": ["gomodTidy"],
   "constraints": {
-    "go": "1.25"
+    "go": "1.25.10"
   },
   "customManagers": [
     {
@@ -55,6 +55,13 @@
       "description": "Skip releases whose own `go` directive exceeds ours. Without this, `gomodTidy` propagates their requirement into our go.mod and breaks the older Go versions in the CI matrix.",
       "matchManagers": ["gomod"],
       "constraintsFiltering": "strict"
+    },
+    {
+      "description": "Digest updates carry no release metadata, so constraintsFiltering cannot inspect their `go` directive. Indirect deps pinned to a pseudo-version are the ones that slip through, so don't chase upstream HEAD for those; they move when the direct dep that pulls them in moves.",
+      "matchManagers": ["gomod"],
+      "matchDepTypes": ["indirect"],
+      "matchUpdateTypes": ["digest"],
+      "enabled": false
     }
   ]
 }
