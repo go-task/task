@@ -168,6 +168,12 @@ func (t *Task) UnmarshalYAML(node *yaml.Node) error {
 		if err := node.Decode(&task); err != nil {
 			return errors.NewTaskfileDecodeError(err, node)
 		}
+		if err := checkSetOptions(node, task.Set); err != nil {
+			return err
+		}
+		if err := checkShoptOptions(node, task.Shopt); err != nil {
+			return err
+		}
 		if task.Cmd != nil {
 			if task.Cmds != nil {
 				return errors.NewTaskfileDecodeError(nil, node).WithMessage("task cannot have both cmd and cmds")

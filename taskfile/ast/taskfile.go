@@ -103,6 +103,12 @@ func (tf *Taskfile) UnmarshalYAML(node *yaml.Node) error {
 		if err := node.Decode(&taskfile); err != nil {
 			return errors.NewTaskfileDecodeError(err, node)
 		}
+		if err := checkSetOptions(node, taskfile.Set); err != nil {
+			return err
+		}
+		if err := checkShoptOptions(node, taskfile.Shopt); err != nil {
+			return err
+		}
 		tf.Version = taskfile.Version
 		tf.Output = taskfile.Output
 		tf.Method = taskfile.Method

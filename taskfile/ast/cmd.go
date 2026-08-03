@@ -71,6 +71,12 @@ func (c *Cmd) UnmarshalYAML(node *yaml.Node) error {
 		if err := node.Decode(&cmdStruct); err != nil {
 			return errors.NewTaskfileDecodeError(err, node)
 		}
+		if err := checkSetOptions(node, cmdStruct.Set); err != nil {
+			return err
+		}
+		if err := checkShoptOptions(node, cmdStruct.Shopt); err != nil {
+			return err
+		}
 		if cmdStruct.Defer != nil {
 
 			// A deferred command
