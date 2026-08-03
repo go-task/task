@@ -14,6 +14,9 @@
 - Added support for `enum.ref` in `--interactive` prompts. Required vars using
   `enum.ref` now show the selection list like static enums, instead of falling
   back to free-form input (#2817 by @vmaerten).
+- Further improved fingerprinting performance on large repositories: hashing
+  source files now reuses a single buffer, reducing memory allocations by ~98%
+  and wall-clock time by ~7% (#2925 by @vmaerten).
 
 ## v3.52.0 - 2026-07-02
 
