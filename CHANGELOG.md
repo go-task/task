@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Report which parallel task caused cancellation when `failfast` stops sibling
+  tasks. Cancelled tasks now log a clear message instead of failing silently
+  (#1226 by @20ns).
 - Considerably improve performance of fingerprinting on large repositories
   (monorepos). Fingerprinting is up to 86% faster and make up to 70% fewer
   memory allocations on the more advanced scenarios. Benchmarks were added as

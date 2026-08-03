@@ -1,1 +1,3 @@
-
+task: Terminated "dep1" because parallel running task "dep4" failed.
+task: Terminated "dep2" because parallel running task "dep4" failed.
+task: Terminated "dep3" because parallel running task "dep4" failed.
