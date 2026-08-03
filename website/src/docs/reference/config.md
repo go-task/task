@@ -108,7 +108,8 @@ silent: true
 
 - **Type**: `boolean`
 - **Default**: `true`
-- **Description**: Enable colored output. Colors are automatically enabled in CI environments (`CI=true`).
+- **Description**: Enable colored output. Colors are automatically enabled in CI
+  environments (`CI=true`).
 - **CLI equivalent**: [`-c, --color`](./cli.md#-c---color)
 - **Environment variable**: [`TASK_COLOR`](./environment.md#task-color)
 
@@ -120,9 +121,11 @@ color: false
 
 - **Type**: `boolean`
 - **Default**: `false`
-- **Description**: Disable fuzzy matching for task names. When enabled, Task will not suggest similar task names when you mistype a task name.
+- **Description**: Disable fuzzy matching for task names. When enabled, Task
+  will not suggest similar task names when you mistype a task name.
 - **CLI equivalent**: [`--disable-fuzzy`](./cli.md#--disable-fuzzy)
-- **Environment variable**: [`TASK_DISABLE_FUZZY`](./environment.md#task-disable-fuzzy)
+- **Environment variable**:
+  [`TASK_DISABLE_FUZZY`](./environment.md#task-disable-fuzzy)
 
 ```yaml
 disable-fuzzy: true
@@ -134,7 +137,8 @@ disable-fuzzy: true
 - **Minimum**: `1`
 - **Description**: Number of concurrent tasks to run
 - **CLI equivalent**: [`-C, --concurrency`](./cli.md#-c---concurrency-number)
-- **Environment variable**: [`TASK_CONCURRENCY`](./environment.md#task-concurrency)
+- **Environment variable**:
+  [`TASK_CONCURRENCY`](./environment.md#task-concurrency)
 
 ```yaml
 concurrency: 4
@@ -158,8 +162,8 @@ failfast: true
 - **Default**: `false`
 - **Description**: Prompt for missing required variables instead of failing.
   When enabled, Task will display an interactive prompt for any missing required
-  variable. Requires a TTY. Task automatically detects non-TTY environments
-  (CI pipelines, etc.) and skips prompts.
+  variable. Requires a TTY. Task automatically detects non-TTY environments (CI
+  pipelines, etc.) and skips prompts.
 - **CLI equivalent**: [`--interactive`](./cli.md#--interactive)
 
 ```yaml
@@ -178,6 +182,157 @@ interactive: true
 temp-dir: .task
 ```
 
+### `remote`
+
+- **Type**: `object`
+- **Description**: Remote configuration settings for handling
+  [remote Taskfiles](../remote-taskfiles.md).
+
+#### `remote.insecure`
+
+- **Type**: `boolean`
+- **Default**: `false`
+- **Description**: Allow insecure connections when fetching remote Taskfiles
+- **CLI equivalent**: `--insecure`
+- **Environment variable**:
+  [`TASK_REMOTE_INSECURE`](./environment.md#task_remote_insecure)
+
+```yaml
+remote:
+  insecure: true
+```
+
+#### `remote.offline`
+
+- **Type**: `boolean`
+- **Default**: `false`
+- **Description**: Work in offline mode, preventing remote Taskfile fetching
+- **CLI equivalent**: `--offline`
+- **Environment variable**:
+  [`TASK_REMOTE_OFFLINE`](./environment.md#task_remote_offline)
+
+```yaml
+remote:
+  offline: true
+```
+
+#### `remote.timeout`
+
+- **Type**: `string`
+- **Default**: 10s
+- **Pattern**: `^[0-9]+(ns|us|µs|ms|s|m|h)$`
+- **Description**: Timeout duration for remote operations (e.g., '30s', '5m')
+- **CLI equivalent**: `--timeout`
+- **Environment variable**:
+  [`TASK_REMOTE_TIMEOUT`](./environment.md#task_remote_timeout)
+
+```yaml
+remote:
+  timeout: '1m'
+```
+
+#### `remote.cache-expiry`
+
+- **Type**: `string`
+- **Default**: 0s (no cache)
+- **Pattern**: `^[0-9]+(ns|us|µs|ms|s|m|h)$`
+- **Description**: Cache expiry duration for remote Taskfiles (e.g., '1h',
+  '24h')
+- **CLI equivalent**: `--expiry`
+- **Environment variable**:
+  [`TASK_REMOTE_CACHE_EXPIRY`](./environment.md#task_remote_cache_expiry)
+
+```yaml
+remote:
+  cache-expiry: '6h'
+```
+
+#### `remote.cache-dir`
+
+- **Type**: `string`
+- **Default**: `.task`
+- **Description**: Directory where remote Taskfiles are cached. Can be an
+  absolute path (e.g., `/var/cache/task`) or relative to the Taskfile directory.
+- **CLI equivalent**: `--remote-cache-dir`
+- **Environment variable**:
+  [`TASK_REMOTE_CACHE_DIR`](./environment.md#task_remote_cache_dir)
+
+```yaml
+remote:
+  cache-dir: ~/.task
+```
+
+#### `remote.trusted-hosts`
+
+- **Type**: `array of strings`
+- **Default**: `[]` (empty list)
+- **Description**: List of trusted hosts for remote Taskfiles. Hosts in this
+  list will not prompt for confirmation when downloading Taskfiles
+- **CLI equivalent**: `--trusted-hosts`
+- **Environment variable**:
+  [`TASK_REMOTE_TRUSTED_HOSTS`](./environment.md#task_remote_trusted_hosts)
+  (comma-separated)
+
+```yaml
+remote:
+  trusted-hosts:
+    - github.com
+    - gitlab.com
+    - raw.githubusercontent.com
+    - example.com:8080
+```
+
+Hosts in the trusted hosts list will automatically be trusted without prompting
+for confirmation when they are first downloaded or when their checksums change.
+The host matching includes the port if specified in the URL. Use with caution
+and only add hosts you fully trust.
+
+You can also specify trusted hosts via the command line:
+
+```shell
+# Trust specific host for this execution
+task --trusted-hosts github.com -t https://github.com/user/repo.git//Taskfile.yml
+
+# Trust multiple hosts (comma-separated)
+task --trusted-hosts github.com,gitlab.com -t https://github.com/user/repo.git//Taskfile.yml
+
+# Trust a host with a specific port
+task --trusted-hosts example.com:8080 -t https://example.com:8080/Taskfile.yml
+```
+
+#### `remote.cacert`
+
+- **Type**: `string`
+- **Default**: `""`
+- **Description**: Path to a custom CA certificate file for TLS verification
+
+```yaml
+remote:
+  cacert: '/path/to/ca.crt'
+```
+
+#### `remote.cert`
+
+- **Type**: `string`
+- **Default**: `""`
+- **Description**: Path to a client certificate file for mTLS authentication
+
+```yaml
+remote:
+  cert: '/path/to/client.crt'
+```
+
+#### `remote.cert-key`
+
+- **Type**: `string`
+- **Default**: `""`
+- **Description**: Path to the client certificate private key file
+
+```yaml
+remote:
+  cert-key: '/path/to/client.key'
+```
+
 ## Example Configuration
 
 Here's a complete example of a `.taskrc.yml` file with all available options:
@@ -190,7 +345,20 @@ color: true
 disable-fuzzy: false
 concurrency: 2
 temp-dir: .task
+remote:
+  insecure: false
+  offline: false
+  timeout: '30s'
+  cache-expiry: '24h'
+  cache-dir: ~/.task
+  trusted-hosts:
+    - github.com
+    - gitlab.com
+  cacert: ''
+  cert: ''
+  cert-key: ''
 
 # Enable experimental features
 experiments:
-  REMOTE_TASKFILES: 1
+  GENTLE_FORCE: 1
+```
