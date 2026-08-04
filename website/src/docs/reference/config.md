@@ -194,3 +194,4 @@ temp-dir: .task
 # Enable experimental features
 experiments:
   REMOTE_TASKFILES: 1
+```
