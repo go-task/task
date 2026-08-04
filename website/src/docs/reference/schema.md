@@ -735,6 +735,7 @@ tasks:
             ref: .ALLOWED_ENVS
     cmds:
       - ./deploy.sh
+```
 
 #### [`vars`](#variable)
 
