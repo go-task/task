@@ -929,6 +929,7 @@ func TestForCmds(t *testing.T) {
 		{name: "loop-explicit"},
 		{name: "loop-matrix"},
 		{name: "loop-matrix-ref"},
+		{name: "loop-matrix-ref-computed"},
 		{
 			name:    "loop-matrix-ref-error",
 			wantErr: true,
