@@ -208,6 +208,17 @@ set: [errexit, nounset, pipefail]
 shopt: [globstar]
 ```
 
+### `use_gitignore`
+
+- **Type**: `bool`
+- **Default**: `false`
+- **Description**: Exclude files matched by `.gitignore` rules when resolving
+  `sources` and `generates` globs for all tasks. Can be overridden per task.
+
+```yaml
+use_gitignore: true
+```
+
 ## Include
 
 Configuration for including external Taskfiles.
@@ -622,6 +633,24 @@ tasks:
       - exclude: '*.debug'
     cmds:
       - go build -o app ./cmd
+```
+
+#### `use_gitignore`
+
+- **Type**: `bool`
+- **Default**: `false`
+- **Description**: Exclude files matched by `.gitignore` rules when resolving
+  this task's `sources` and `generates` globs. Overrides the root-level
+  `use_gitignore` setting.
+
+```yaml
+tasks:
+  build:
+    use_gitignore: true
+    sources:
+      - '**/*.go'
+    cmds:
+      - go build ./...
 ```
 
 #### `status`
