@@ -114,7 +114,7 @@ func (m textModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyPressMsg:
 		switch msg.Keystroke() {
-		case "ctrl+c", "escape":
+		case "ctrl+c", "esc":
 			m.cancelled = true
 			m.done = true
 			return m, tea.Quit
@@ -164,7 +164,7 @@ func (m selectModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyPressMsg:
 		switch msg.Keystroke() {
-		case "ctrl+c", "escape":
+		case "ctrl+c", "esc":
 			m.cancelled = true
 			m.done = true
 			return m, tea.Quit
