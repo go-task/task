@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"sync"
 	"testing"
 
 	"github.com/fatih/color"
@@ -151,6 +152,43 @@ func TestPrefixed(t *testing.T) { //nolint:paralleltest // cannot run in paralle
 		require.NoError(t, cleanup(nil))
 		assert.Equal(t, "[prefix] Test!\n", b.String())
 	})
+}
+
+// TestPrefixedConcurrentStdoutStderr is a regression test for
+// https://github.com/go-task/task/issues/2945: WrapWriter returns the same
+// *prefixWriter for both stdout and stderr, and os/exec copies command
+// output to each of them from its own goroutine, so Write can legitimately
+// be called concurrently from two goroutines for a single task. Since
+// bytes.Buffer isn't safe for concurrent use, unsynchronized access to the
+// shared buffer could corrupt its internal state and panic (observed as
+// "slice bounds out of range"). Run with -race for a reliable signal; this
+// also reproduces the panic reliably on an unfixed prefixWriter even
+// without -race, given enough concurrent lines.
+func TestPrefixedConcurrentStdoutStderr(t *testing.T) {
+	t.Parallel()
+
+	l := &logger.Logger{Color: false}
+	var o output.Output = output.NewPrefixed(l)
+	stdOut, stdErr, cleanup := o.WrapWriter(io.Discard, io.Discard, "prefix", nil)
+
+	const lines = 5000
+	var wg sync.WaitGroup
+	wg.Add(2)
+	go func() {
+		defer wg.Done()
+		for i := range lines {
+			fmt.Fprintf(stdOut, "stdout line %d\n", i)
+		}
+	}()
+	go func() {
+		defer wg.Done()
+		for i := range lines {
+			fmt.Fprintf(stdErr, "stderr line %d\n", i)
+		}
+	}()
+	wg.Wait()
+
+	require.NoError(t, cleanup(nil))
 }
 
 func TestPrefixedWithColor(t *testing.T) {
