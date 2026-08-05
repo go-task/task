@@ -10,6 +10,7 @@ import (
 	"github.com/puzpuzpuz/xsync/v4"
 	"github.com/sajari/fuzzy"
 
+	"github.com/go-task/task/v3/internal/fingerprint"
 	"github.com/go-task/task/v3/internal/logger"
 	"github.com/go-task/task/v3/internal/output"
 	"github.com/go-task/task/v3/internal/sort"
@@ -120,6 +121,18 @@ func (e *Executor) Options(opts ...ExecutorOption) {
 	for _, opt := range opts {
 		opt.ApplyToExecutor(e)
 	}
+}
+
+// fingerprinter returns a [fingerprint.Fingerprinter] reflecting the
+// Executor's current state. It is built on the fly rather than once in Setup
+// because fields like Dry may be mutated between runs.
+func (e *Executor) fingerprinter() *fingerprint.Fingerprinter {
+	return fingerprint.NewFingerprinter(
+		e.Taskfile.Method,
+		e.TempDir.Fingerprint,
+		e.Dry,
+		e.Logger,
+	)
 }
 
 // WithDir sets the working directory of the [Executor]. By default, the
