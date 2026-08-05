@@ -1,6 +1,8 @@
 package ast
 
 import (
+	"time"
+
 	"go.yaml.in/yaml/v3"
 
 	"github.com/go-task/task/v3/errors"
@@ -21,6 +23,7 @@ type Cmd struct {
 	IgnoreError bool
 	Defer       bool
 	Platforms   []*Platform
+	Timeout     time.Duration
 }
 
 func (c *Cmd) DeepCopy() *Cmd {
@@ -40,6 +43,7 @@ func (c *Cmd) DeepCopy() *Cmd {
 		IgnoreError: c.IgnoreError,
 		Defer:       c.Defer,
 		Platforms:   deepcopy.Slice(c.Platforms),
+		Timeout:     c.Timeout,
 	}
 }
 
@@ -67,11 +71,28 @@ func (c *Cmd) UnmarshalYAML(node *yaml.Node) error {
 			IgnoreError bool `yaml:"ignore_error"`
 			Defer       *Defer
 			Platforms   []*Platform
+			Timeout     string
 		}
 		if err := node.Decode(&cmdStruct); err != nil {
 			return errors.NewTaskfileDecodeError(err, node)
 		}
+
+		if cmdStruct.Timeout != "" {
+			timeout, err := time.ParseDuration(cmdStruct.Timeout)
+			if err != nil {
+				return errors.NewTaskfileDecodeError(err, node).WithMessage("invalid timeout format")
+			}
+			c.Timeout = timeout
+		}
+
 		if cmdStruct.Defer != nil {
+			if cmdStruct.Defer.Timeout != "" {
+				timeout, err := time.ParseDuration(cmdStruct.Defer.Timeout)
+				if err != nil {
+					return errors.NewTaskfileDecodeError(err, node).WithMessage("invalid timeout format")
+				}
+				c.Timeout = timeout
+			}
 
 			// A deferred command
 			if cmdStruct.Defer.Cmd != "" {

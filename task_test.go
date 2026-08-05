@@ -2287,6 +2287,27 @@ task-1 ran successfully
 	assert.Contains(t, buff.String(), "child task deferred value-from-parent")
 }
 
+func TestDeferredTaskTimeout(t *testing.T) {
+	t.Parallel()
+
+	const dir = "testdata/deferred"
+	var buff bytes.Buffer
+	e := task.NewExecutor(
+		task.WithDir(dir),
+		task.WithStdout(&buff),
+		task.WithStderr(&buff),
+		task.WithVerbose(true),
+	)
+	require.NoError(t, e.Setup())
+
+	start := time.Now()
+	require.NoError(t, e.Run(t.Context(), &task.Call{Task: "parent-with-timeout"}))
+	assert.Less(t, time.Since(start), 500*time.Millisecond)
+	assert.Contains(t, buff.String(), "parent completed")
+	assert.NotContains(t, buff.String(), "\ncleanup completed\n")
+	assert.Contains(t, buff.String(), "ignored error in deferred cmd")
+}
+
 func TestExitCodeZero(t *testing.T) {
 	t.Parallel()
 
@@ -2519,6 +2540,63 @@ func TestErrorCode(t *testing.T) {
 			taskRunErr, ok := err.(*errors.TaskRunError)
 			assert.True(t, ok, "cannot cast returned error to *task.TaskRunError")
 			assert.Equal(t, test.expected, taskRunErr.TaskExitCode(), "unexpected exit code from task")
+		})
+	}
+}
+
+func TestCommandTimeout(t *testing.T) {
+	t.Parallel()
+
+	const dir = "testdata/timeout"
+	tests := []struct {
+		name          string
+		task          string
+		expectError   bool
+		errorContains string
+	}{
+		{
+			name:          "timeout exceeded",
+			task:          "timeout-exceeded",
+			expectError:   true,
+			errorContains: "timeout exceeded",
+		},
+		{
+			name:        "timeout not exceeded",
+			task:        "timeout-not-exceeded",
+			expectError: false,
+		},
+		{
+			name:        "no timeout",
+			task:        "no-timeout",
+			expectError: false,
+		},
+		{
+			name:          "multiple commands with timeout",
+			task:          "multiple-cmds-timeout",
+			expectError:   true,
+			errorContains: "timeout exceeded",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			var buff bytes.Buffer
+			e := task.NewExecutor(
+				task.WithDir(dir),
+				task.WithStdout(&buff),
+				task.WithStderr(&buff),
+			)
+			require.NoError(t, e.Setup())
+
+			err := e.Run(t.Context(), &task.Call{Task: test.task})
+			if test.expectError {
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), test.errorContains)
+			} else {
+				require.NoError(t, err)
+			}
 		})
 	}
 }

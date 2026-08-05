@@ -846,6 +846,7 @@ tasks:
         platforms: [linux, darwin]
         set: [errexit]
         shopt: [globstar]
+        timeout: 5m
 ```
 
 ### Task References
@@ -961,6 +962,41 @@ tasks:
         cmd: echo "processing {{.ITEM}}"
         if: '[ "{{.ITEM}}" != "b" ]'
 ```
+
+### Command Timeouts
+
+Use `timeout` to limit how long a command may run. The value uses Go duration
+syntax (e.g. `30s`, `5m`, `1h30m`).
+
+```yaml
+tasks:
+  deploy:
+    cmds:
+      - cmd: npm run build
+        timeout: 5m
+      - cmd: ./deploy.sh
+        timeout: 30m
+```
+
+When a command exceeds its timeout, it is terminated and the task fails with an
+error, preventing commands from hanging indefinitely in a pipeline.
+
+### Deferred Task Timeouts
+
+Use `timeout` to limit how long a deferred task call may run. The value uses Go
+duration syntax (for example, `30s`, `5m`, or `1h30m`).
+
+```yaml
+tasks:
+  deploy:
+    cmds:
+      - defer:
+          task: cleanup
+          timeout: 30s
+```
+
+A timed-out deferred task is logged and ignored, like other deferred-task
+errors.
 
 ## Shell Options
 

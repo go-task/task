@@ -342,6 +342,10 @@ func (e *Executor) runDeferred(t *ast.Task, call *Call, i int, vars *ast.Vars, d
 	defer cancel()
 
 	cmd := t.Cmds[i]
+	if cmd.Task != "" && cmd.Timeout > 0 {
+		ctx, cancel = context.WithTimeout(ctx, cmd.Timeout)
+		defer cancel()
+	}
 	cache := &templater.Cache{Vars: vars}
 	extra := map[string]any{}
 
@@ -376,12 +380,21 @@ func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call *Call, i in
 		}
 	}
 
+	if cmd.Timeout > 0 {
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(ctx, cmd.Timeout)
+		defer cancel()
+	}
+
 	switch {
 	case cmd.Task != "":
 		reacquire := e.releaseConcurrencyLimit()
 		defer reacquire()
 
 		err := e.RunTask(ctx, &Call{Task: cmd.Task, Vars: cmd.Vars, Silent: cmd.Silent, Indirect: true})
+		if err != nil && ctx.Err() == context.DeadlineExceeded {
+			return fmt.Errorf("task: [%s] command timeout exceeded (%s): %w", t.Name(), cmd.Timeout, err)
+		}
 		var exitCode interp.ExitStatus
 		if errors.As(err, &exitCode) && cmd.IgnoreError {
 			e.Logger.VerboseErrf(logger.Yellow, "task: [%s] task error ignored: %v\n", t.Name(), err)
@@ -425,6 +438,9 @@ func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call *Call, i in
 		})
 		if closeErr := closer(err); closeErr != nil {
 			e.Logger.Errf(logger.Red, "task: unable to close writer: %v\n", closeErr)
+		}
+		if err != nil && ctx.Err() == context.DeadlineExceeded {
+			return fmt.Errorf("task: [%s] command timeout exceeded (%s): %w", t.Name(), cmd.Timeout, err)
 		}
 		var exitCode interp.ExitStatus
 		if errors.As(err, &exitCode) && cmd.IgnoreError {

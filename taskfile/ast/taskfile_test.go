@@ -2,6 +2,7 @@ package ast_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -22,8 +23,9 @@ vars:
   PARAM1: VALUE1
   PARAM2: VALUE2
 `
-		yamlDeferredCall = `defer: { task: some_task, vars: { PARAM1: "var" } }`
-		yamlDeferredCmd  = `defer: echo 'test'`
+		yamlDeferredCall            = `defer: { task: some_task, vars: { PARAM1: "var" } }`
+		yamlDeferredCallWithTimeout = `defer: { task: some_task, timeout: 1s }`
+		yamlDeferredCmd             = `defer: echo 'test'`
 	)
 	tests := []struct {
 		content  string
@@ -78,6 +80,11 @@ vars:
 			},
 		},
 		{
+			yamlDeferredCallWithTimeout,
+			&ast.Cmd{},
+			&ast.Cmd{Task: "some_task", Defer: true, Timeout: time.Second},
+		},
+		{
 			yamlDep,
 			&ast.Dep{},
 			&ast.Dep{Task: "task-name"},
@@ -109,4 +116,13 @@ vars:
 		require.NoError(t, err)
 		assert.Equal(t, test.expected, test.v)
 	}
+}
+
+func TestDeferredTaskTimeoutParseError(t *testing.T) {
+	t.Parallel()
+
+	var cmd ast.Cmd
+	err := yaml.Unmarshal([]byte(`defer: { task: some_task, timeout: invalid }`), &cmd)
+	require.Error(t, err)
+	assert.ErrorContains(t, err, "invalid timeout format")
 }
