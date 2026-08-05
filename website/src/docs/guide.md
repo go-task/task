@@ -898,6 +898,16 @@ of the running the task is considered as a generate.
 
 :::
 
+::: tip
+
+If your globs match files that are ignored by Git (build artifacts, caches,
+etc.), you can set `use_gitignore: true` at the root of your Taskfile to
+exclude anything matched by `.gitignore` rules from `sources` and `generates`
+resolution. The setting can also be enabled or disabled per task, which takes
+precedence over the root value.
+
+:::
+
 ### Using programmatic checks to indicate a task is up to date
 
 Alternatively, you can inform a sequence of tests as `status`. If no error is
