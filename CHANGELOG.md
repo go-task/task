@@ -17,6 +17,14 @@
 - Further improved fingerprinting performance on large repositories: hashing
   source files now reuses a single buffer, reducing memory allocations by ~98%
   and wall-clock time by ~7% (#2925 by @vmaerten).
+- Added a new completion engine that unifies Bash, Fish, Zsh and PowerShell
+  behind a single `task __complete` command, so every shell offers the same
+  suggestions: task names, aliases, flags, flag values and per-task CLI
+  variables. The Zsh `show-aliases` and `verbose` zstyles keep working, now
+  backed by the `--no-aliases` and `--no-descriptions` completion flags. It is
+  opt-in for now via `task --new-completion <shell>`, leaving `--completion`
+  unchanged, and will become the default in a future release (#2897 by
+  @vmaerten).
 
 ## v3.52.0 - 2026-07-02
 
