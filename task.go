@@ -156,6 +156,14 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) error {
 		}
 	}
 
+	// Attempt to create the task dir before compiling the task so that ShVars can run/access
+	// the configured task dir. If the directory can't be created (e.g. contains unresolved
+	// template values), continue as if nothing happened (the directory is created again later).
+	if t.Dir != "" && !strings.Contains(t.Dir, "{") {
+		if err := e.mkdir(t); err != nil {
+			e.Logger.Warnf("task: cannot make directory %q: %v\n", t.Dir, err)
+		}
+	}
 	t, err = e.CompiledTask(call)
 	if err != nil {
 		return err
@@ -205,6 +213,10 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) error {
 	defer release()
 
 	if err = e.startExecution(ctx, t, func(ctx context.Context) error {
+		if err := e.mkdir(t); err != nil {
+			e.Logger.Errf(logger.Red, "task: cannot make directory %q: %v\n", t.Dir, err)
+		}
+
 		e.Logger.VerboseErrf(logger.Magenta, "task: %q started\n", call.Task)
 		if err := e.runDeps(ctx, t); err != nil {
 			return err
@@ -258,10 +270,6 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) error {
 					return err
 				}
 			}
-		}
-
-		if err := e.mkdir(t); err != nil {
-			e.Logger.Errf(logger.Red, "task: cannot make directory %q: %v\n", t.Dir, err)
 		}
 
 		var deferredExitCode uint8
