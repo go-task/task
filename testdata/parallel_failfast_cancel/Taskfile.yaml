@@ -1,0 +1,22 @@
+version: '3'
+
+tasks:
+  slow:
+    cmds:
+      - sleep 5
+  fail:
+    cmds:
+      - exit 1
+
+  default:
+    failfast: true
+    deps:
+      - slow-dep
+      - fail-dep
+
+  slow-dep:
+    cmds:
+      - sleep 5
+  fail-dep:
+    cmds:
+      - exit 1
