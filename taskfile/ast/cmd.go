@@ -12,6 +12,7 @@ type Cmd struct {
 	Cmd         string // Resolved command (used for execution and fingerprinting)
 	LogCmd      string // Command with secrets masked (used for logging)
 	Task        string
+	Dir         string
 	For         *For
 	If          string
 	Silent      bool
@@ -31,6 +32,7 @@ func (c *Cmd) DeepCopy() *Cmd {
 		Cmd:         c.Cmd,
 		LogCmd:      c.LogCmd,
 		Task:        c.Task,
+		Dir:         c.Dir,
 		For:         c.For.DeepCopy(),
 		If:          c.If,
 		Silent:      c.Silent,
@@ -58,6 +60,7 @@ func (c *Cmd) UnmarshalYAML(node *yaml.Node) error {
 		var cmdStruct struct {
 			Cmd         string
 			Task        string
+			Dir         string
 			For         *For
 			If          string
 			Silent      bool
@@ -106,6 +109,7 @@ func (c *Cmd) UnmarshalYAML(node *yaml.Node) error {
 		// A command with additional options
 		if cmdStruct.Cmd != "" {
 			c.Cmd = cmdStruct.Cmd
+			c.Dir = cmdStruct.Dir
 			c.For = cmdStruct.For
 			c.If = cmdStruct.If
 			c.Silent = cmdStruct.Silent
