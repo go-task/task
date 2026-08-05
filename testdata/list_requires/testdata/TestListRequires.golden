@@ -1,0 +1,4 @@
+task: Available tasks for this project:
+* build:        Build the project
+* deploy:       Deploy the application
+                requires: VERSION, REGISTRY (enum: ecr, gcr, dockerhub)
