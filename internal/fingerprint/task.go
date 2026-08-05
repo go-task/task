@@ -16,6 +16,8 @@ type (
 		logger         *logger.Logger
 		statusChecker  StatusCheckable
 		sourcesChecker SourcesCheckable
+		posixOpts      []string
+		bashOpts       []string
 	}
 )
 
@@ -55,6 +57,18 @@ func WithSourcesChecker(checker SourcesCheckable) CheckerOption {
 	}
 }
 
+func WithPosixOpts(posixOpts []string) CheckerOption {
+	return func(config *CheckerConfig) {
+		config.posixOpts = posixOpts
+	}
+}
+
+func WithBashOpts(bashOpts []string) CheckerOption {
+	return func(config *CheckerConfig) {
+		config.bashOpts = bashOpts
+	}
+}
+
 func IsTaskUpToDate(
 	ctx context.Context,
 	t *ast.Task,
@@ -72,6 +86,8 @@ func IsTaskUpToDate(
 		logger:         nil,
 		statusChecker:  nil,
 		sourcesChecker: nil,
+		posixOpts:      []string{},
+		bashOpts:       []string{},
 	}
 
 	// Apply functional options
@@ -81,7 +97,7 @@ func IsTaskUpToDate(
 
 	// If no status checker was given, set up the default one
 	if config.statusChecker == nil {
-		config.statusChecker = NewStatusChecker(config.logger)
+		config.statusChecker = NewStatusChecker(config.logger, config.posixOpts, config.bashOpts)
 	}
 
 	// If no sources checker was given, set up the default one
