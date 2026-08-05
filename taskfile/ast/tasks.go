@@ -130,8 +130,11 @@ func (t1 *Tasks) Merge(t2 *Tasks, include *Include, includedTaskfileVars *Vars) 
 		task.Internal = task.Internal || (include != nil && include.Internal)
 		taskName := name
 
-		// if the task is in the exclude list, don't add it to the merged taskfile
-		if slices.Contains(include.Excludes, name) {
+		// If the task or one of its namespaces is in the exclude list, don't add
+		// it to the merged taskfile.
+		if slices.ContainsFunc(include.Excludes, func(exclude string) bool {
+			return name == exclude || strings.HasPrefix(name, exclude+":")
+		}) {
 			continue
 		}
 
