@@ -356,6 +356,22 @@ func asAnySlice[T any](slice []T) []any {
 	return ret
 }
 
+// resolvedAsAnySlice converts a value resolved from a reference into a []any.
+// A reference does not always resolve to a []any: lists declared in a Taskfile
+// do, but template functions such as `keys` and `splitList` return a []string.
+// The accepted types mirror the list types itemsFromFor already supports.
+func resolvedAsAnySlice(v any) ([]any, bool) {
+	switch value := v.(type) {
+	case []any:
+		return value, true
+	case []string:
+		return asAnySlice(value), true
+	case []int:
+		return asAnySlice(value), true
+	}
+	return nil, false
+}
+
 func itemsFromFor(
 	f *ast.For,
 	dir string,
@@ -477,12 +493,11 @@ func resolveMatrixRefs(matrix *ast.Matrix, cache *templater.Cache) (*ast.Matrix,
 			if cache.Err() != nil {
 				return nil, cache.Err()
 			}
-			switch value := v.(type) {
-			case []any:
-				row.Value = value
-			default:
+			value, ok := resolvedAsAnySlice(v)
+			if !ok {
 				return nil, fmt.Errorf("matrix reference %q must resolve to a list", row.Ref)
 			}
+			row.Value = value
 		}
 	}
 	return resolved, nil
@@ -500,7 +515,7 @@ func resolveEnumRefs(requires *ast.Requires, cache *templater.Cache) error {
 		if cache.Err() != nil {
 			return cache.Err()
 		}
-		arr, ok := resolved.([]any)
+		arr, ok := resolvedAsAnySlice(resolved)
 		if !ok {
 			return fmt.Errorf("enum reference %q must resolve to a list", v.Enum.Ref)
 		}
