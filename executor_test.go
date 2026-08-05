@@ -1176,6 +1176,20 @@ func TestIncludeSilent(t *testing.T) {
 	)
 }
 
+func TestGeneratesArray(t *testing.T) {
+	t.Parallel()
+
+	NewExecutorTest(t,
+		WithName("generates-array"),
+		WithExecutorOptions(
+			task.WithDir("testdata/generates-array"),
+			task.WithSilent(true),
+			task.WithForce(true),
+		),
+		WithTask("default"),
+	)
+}
+
 func TestFailfast(t *testing.T) {
 	t.Parallel()
 
