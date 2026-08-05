@@ -1197,6 +1197,7 @@ func TestFailfast(t *testing.T) {
 		t.Parallel()
 
 		NewExecutorTest(t,
+			WithVar("PUSH", "5"),
 			WithName("default"),
 			WithExecutorOptions(
 				task.WithDir("testdata/failfast/default"),

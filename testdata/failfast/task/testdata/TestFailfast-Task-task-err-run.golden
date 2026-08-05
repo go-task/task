@@ -1,1 +1,1 @@
-task: Failed to run task "default": task: Failed to run task "dep4": exit status 1
+task: Failed to run task "default": task: Failed to run task "test": task: Failed to run task "dep4": exit status 1
