@@ -332,6 +332,10 @@ func (e *Executor) runDeferred(t *ast.Task, call *Call, i int, vars *ast.Vars, d
 	defer cancel()
 
 	cmd := t.Cmds[i]
+	if cmd.Task != "" && cmd.Timeout > 0 {
+		ctx, cancel = context.WithTimeout(ctx, cmd.Timeout)
+		defer cancel()
+	}
 	cache := &templater.Cache{Vars: vars}
 	extra := map[string]any{}
 

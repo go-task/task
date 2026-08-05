@@ -982,6 +982,23 @@ tasks:
 When a command exceeds its timeout, it is terminated and the task fails with an
 error, preventing commands from hanging indefinitely in a pipeline.
 
+### Deferred Task Timeouts
+
+Use `timeout` to limit how long a deferred task call may run. The value uses Go
+duration syntax (for example, `30s`, `5m`, or `1h30m`).
+
+```yaml
+tasks:
+  deploy:
+    cmds:
+      - defer:
+          task: cleanup
+          timeout: 30s
+```
+
+A timed-out deferred task is logged and ignored, like other deferred-task
+errors.
+
 ## Shell Options
 
 ### Set Options

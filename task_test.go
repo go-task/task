@@ -2395,6 +2395,27 @@ task-1 ran successfully
 	assert.Contains(t, buff.String(), "child task deferred value-from-parent")
 }
 
+func TestDeferredTaskTimeout(t *testing.T) {
+	t.Parallel()
+
+	const dir = "testdata/deferred"
+	var buff bytes.Buffer
+	e := task.NewExecutor(
+		task.WithDir(dir),
+		task.WithStdout(&buff),
+		task.WithStderr(&buff),
+		task.WithVerbose(true),
+	)
+	require.NoError(t, e.Setup())
+
+	start := time.Now()
+	require.NoError(t, e.Run(t.Context(), &task.Call{Task: "parent-with-timeout"}))
+	assert.Less(t, time.Since(start), 500*time.Millisecond)
+	assert.Contains(t, buff.String(), "parent completed")
+	assert.NotContains(t, buff.String(), "\ncleanup completed\n")
+	assert.Contains(t, buff.String(), "ignored error in deferred cmd")
+}
+
 func TestExitCodeZero(t *testing.T) {
 	t.Parallel()
 

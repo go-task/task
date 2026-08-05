@@ -86,6 +86,11 @@ func (c *Cmd) UnmarshalYAML(node *yaml.Node) error {
 		}
 
 		if cmdStruct.Defer != nil {
+			timeout, err := parseTimeout(cmdStruct.Defer.Timeout, node)
+			if err != nil {
+				return err
+			}
+			c.Timeout = timeout
 
 			// A deferred command
 			if cmdStruct.Defer.Cmd != "" {
@@ -134,4 +139,16 @@ func (c *Cmd) UnmarshalYAML(node *yaml.Node) error {
 	}
 
 	return errors.NewTaskfileDecodeError(nil, node).WithTypeMessage("command")
+}
+
+func parseTimeout(value string, node *yaml.Node) (time.Duration, error) {
+	if value == "" {
+		return 0, nil
+	}
+
+	timeout, err := time.ParseDuration(value)
+	if err != nil {
+		return 0, errors.NewTaskfileDecodeError(err, node).WithMessage("invalid timeout format")
+	}
+	return timeout, nil
 }
