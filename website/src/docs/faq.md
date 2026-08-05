@@ -133,3 +133,41 @@ This is the list of core utils that are currently available:
 * `touch`
 * `xargs`
 * (more might be added in the future)
+
+
+## Watcher unreliable restarts after watch-events
+
+Task uses Go contexts to manage the lifecycle of watched tasks. When a watch-event occurs, the current context of Task is cancelled which propagates to all watched tasks. Each watched task, upon cancellation, sends a signal to all running processes started by that task. Those processes then normally exit promptly.
+
+In most circumstances, this mechanism is reliable. However, if a task is running sophisticated application (e.g., a web server), some resources may not be immediately released by the application (or the operating system). As a result, restarting a watched task may fail if those resources are still in use.
+
+This can be resolved by using the task `defer` command to manage the shutdown of applications. Additionally, a task can include commands that block execution until its required resources have been fully released. The following example demonstrates both of these techniques:
+
+```yaml
+version: '3'
+
+vars:
+  PORT: 8080
+
+tasks:
+  server:
+    run: always
+    sources: 
+      - 'foo.txt'
+    cmds:
+      - echo "server started"
+      - socat TCP-LISTEN:{{.PORT}},fork,reuseaddr - || [ $? -eq 130 ]
+      - defer: kill $(lsof -t -i:{{.PORT}}) && while lsof -i :{{.PORT}} > /dev/null; do sleep 1; done
+
+  client:
+    cmds:
+      - until lsof -Pi :{{.PORT}} -sTCP:LISTEN | tail -n +2; do sleep 0.5; done
+      - echo "sending message"
+      - echo "Hello world" | socat - TCP:localhost:{{.PORT}}
+      
+  default:
+    deps:
+      - server
+      - client 
+
+```
