@@ -1,0 +1,9 @@
+version: '3'
+
+tasks:
+  build:
+    method: checksums # typo: not a valid method
+    cmds:
+      - echo "hello"
+    sources:
+      - ./source.txt

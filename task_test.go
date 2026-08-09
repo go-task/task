@@ -653,55 +653,68 @@ func TestStatusChecksumMissingGenerated(t *testing.T) { // nolint:paralleltest /
 	require.NoError(t, err, "generated.txt should be recreated after third run")
 }
 
-// TestFingerprintVarMethodInheritedFromTaskfile asserts that the fingerprint
-// variable injected into a task follows the Taskfile-level method when the
-// task doesn't declare one, like the up-to-date check does.
-func TestFingerprintVarMethodInheritedFromTaskfile(t *testing.T) {
+// The injected fingerprint variable follows the method the up-to-date check
+// uses, including when that method comes from the Taskfile level.
+func TestFingerprintVarMethod(t *testing.T) {
 	t.Parallel()
 
-	const dir = "testdata/method_taskfile_timestamp"
-	_ = os.RemoveAll(filepathext.SmartJoin(dir, ".task"))
+	tests := []struct {
+		name         string
+		dir          string
+		executorOpts []task.ExecutorOption
+		assertOutput func(t *testing.T, output string)
+	}{
+		{
+			name: "TIMESTAMP is injected when the method is inherited from the Taskfile",
+			dir:  "testdata/method_taskfile_timestamp",
+			assertOutput: func(t *testing.T, output string) {
+				t.Helper()
+				// An unresolved variable renders as an empty string, so this
+				// has to match an actual timestamp, not just the prefix.
+				assert.Regexp(t, `ts=\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}`, output)
+			},
+		},
+		{
+			name: "no variable is injected when the effective method is none",
+			dir:  "testdata/method_taskfile_none",
+			assertOutput: func(t *testing.T, output string) {
+				t.Helper()
+				assert.Contains(t, output, "cs=\n")
+			},
+		},
+		{
+			name:         "an invalid method doesn't fail a run that skips fingerprinting",
+			dir:          "testdata/method_invalid",
+			executorOpts: []task.ExecutorOption{task.WithForce(true)},
+			assertOutput: func(t *testing.T, output string) {
+				t.Helper()
+				assert.Contains(t, output, "hello\n")
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 
-	var buff bytes.Buffer
-	e := task.NewExecutor(
-		task.WithDir(dir),
-		task.WithStdout(&buff),
-		task.WithStderr(&buff),
-		task.WithTempDir(task.TempDir{
-			Remote:      filepathext.SmartJoin(dir, ".task"),
-			Fingerprint: filepathext.SmartJoin(dir, ".task"),
-		}),
-	)
-	require.NoError(t, e.Setup())
+			_ = os.RemoveAll(filepathext.SmartJoin(tt.dir, ".task"))
 
-	require.NoError(t, e.Run(t.Context(), &task.Call{Task: "build"}))
-	assert.Contains(t, buff.String(), "ts=")
-	assert.NotContains(t, buff.String(), "<no value>", "TIMESTAMP should be injected when method is inherited from the Taskfile")
-}
+			var buff bytes.Buffer
+			opts := append([]task.ExecutorOption{
+				task.WithDir(tt.dir),
+				task.WithStdout(&buff),
+				task.WithStderr(&buff),
+				task.WithTempDir(task.TempDir{
+					Remote:      filepathext.SmartJoin(tt.dir, ".task"),
+					Fingerprint: filepathext.SmartJoin(tt.dir, ".task"),
+				}),
+			}, tt.executorOpts...)
+			e := task.NewExecutor(opts...)
+			require.NoError(t, e.Setup())
 
-// TestFingerprintVarMethodNone asserts that no fingerprint variable is
-// injected when the effective method is "none", including when it is
-// inherited from the Taskfile level.
-func TestFingerprintVarMethodNone(t *testing.T) {
-	t.Parallel()
-
-	const dir = "testdata/method_taskfile_none"
-	_ = os.RemoveAll(filepathext.SmartJoin(dir, ".task"))
-
-	var buff bytes.Buffer
-	e := task.NewExecutor(
-		task.WithDir(dir),
-		task.WithStdout(&buff),
-		task.WithStderr(&buff),
-		task.WithTempDir(task.TempDir{
-			Remote:      filepathext.SmartJoin(dir, ".task"),
-			Fingerprint: filepathext.SmartJoin(dir, ".task"),
-		}),
-	)
-	require.NoError(t, e.Setup())
-
-	require.NoError(t, e.Run(t.Context(), &task.Call{Task: "build"}))
-	assert.Contains(t, buff.String(), "cs=\n", "CHECKSUM should not be injected when the effective method is none")
+			require.NoError(t, e.Run(t.Context(), &task.Call{Task: "build"}))
+			tt.assertOutput(t, buff.String())
+		})
+	}
 }
 
 func writeFile(t *testing.T, dir, name, content string) {
