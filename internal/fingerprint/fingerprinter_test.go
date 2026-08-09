@@ -13,7 +13,19 @@ import (
 	"github.com/go-task/task/v3/taskfile/ast"
 )
 
-// The cases below walk the truth table documented on [Fingerprinter.UpToDate].
+// TruthTable
+//
+// | Status up-to-date | Sources up-to-date | Task is up-to-date |
+// | ----------------- | ------------------ | ------------------ |
+// | not set           | not set            | false              |
+// | not set           | true               | true               |
+// | not set           | false              | false              |
+// | true              | not set            | true               |
+// | true              | true               | true               |
+// | true              | false              | false              |
+// | false             | not set            | false              |
+// | false             | true               | false              |
+// | false             | false              | false              |
 func TestFingerprinterUpToDate(t *testing.T) {
 	t.Parallel()
 

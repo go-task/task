@@ -93,19 +93,7 @@ func (f *Fingerprinter) SourceValue(t *ast.Task) (any, error) {
 }
 
 // UpToDate reports whether the given task is up-to-date, considering both its
-// status commands and its sources.
-//
-// | Status up-to-date | Sources up-to-date | Task is up-to-date |
-// | ----------------- | ------------------ | ------------------ |
-// | not set           | not set            | false              |
-// | not set           | true               | true               |
-// | not set           | false              | false              |
-// | true              | not set            | true               |
-// | true              | true               | true               |
-// | true              | false              | false              |
-// | false             | not set            | false              |
-// | false             | true               | false              |
-// | false             | false              | false              |
+// status commands and its sources. A task that declares neither never is.
 func (f *Fingerprinter) UpToDate(ctx context.Context, t *ast.Task) (bool, error) {
 	var statusUpToDate bool
 	var sourcesUpToDate bool
