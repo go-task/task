@@ -122,8 +122,12 @@ func (checker *TimestampChecker) Value(t *ast.Task) (any, error) {
 		return time.Now(), err
 	}
 
+	// No source matched, so there is no modification time to report. Returning
+	// the Unix epoch here would render as a real date in templates, e.g.
+	// "1970-01-01 01:00:00 +0100 CET", which reads as a genuine timestamp and
+	// carries a machine-dependent zone.
 	if sourcesMaxTime.IsZero() {
-		return time.Unix(0, 0), nil
+		return "", nil
 	}
 
 	return sourcesMaxTime, nil
