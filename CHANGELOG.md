@@ -2,11 +2,6 @@
 
 ## Unreleased
 
-- Fixed the fingerprint variable (`{{.CHECKSUM}}`/`{{.TIMESTAMP}}`) ignoring a
-  `method:` set at the Taskfile level: the variable now follows the same method
-  resolution as the up-to-date check, and is no longer injected when the
-  effective method is `none` (#2924 by @vmaerten).
-
 - Considerably improve performance of fingerprinting on large repositories
   (monorepos). Fingerprinting is up to 86% faster and make up to 70% fewer
   memory allocations on the more advanced scenarios. Benchmarks were added as
@@ -22,6 +17,13 @@
 - Further improved fingerprinting performance on large repositories: hashing
   source files now reuses a single buffer, reducing memory allocations by ~98%
   and wall-clock time by ~7% (#2925 by @vmaerten).
+- Fixed the fingerprint variable (`{{.CHECKSUM}}`/`{{.TIMESTAMP}}`) ignoring a
+  `method:` set at the Taskfile level: the variable now follows the same method
+  resolution as the up-to-date check. Only the variable matching the effective
+  method is injected, so a task inheriting a Taskfile-level `method: timestamp`
+  gets `{{.TIMESTAMP}}` and no longer a `{{.CHECKSUM}}` (which now renders as an
+  empty string), and neither variable is injected when the effective method is
+  `none` (#2924 by @vmaerten).
 
 ## v3.52.0 - 2026-07-02
 

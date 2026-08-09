@@ -208,9 +208,11 @@ func (e *Executor) compiledTask(call *Call, evaluateShVars bool) (*ast.Task, err
 		}
 	}
 
-	if kind := e.fingerprinter().Kind(&new); len(origTask.Sources) > 0 && kind != "none" {
-		if origTask.ReferencesFingerprintVar(kind) {
-			value, err := e.fingerprinter().SourceValue(&new)
+	if len(origTask.Sources) > 0 {
+		fingerprinter := e.fingerprinter()
+		kind := fingerprinter.Kind(&new)
+		if kind != "none" && origTask.ReferencesFingerprintVar(kind) {
+			value, err := fingerprinter.SourceValue(&new)
 			if err != nil {
 				return nil, err
 			}

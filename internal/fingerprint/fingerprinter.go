@@ -70,8 +70,11 @@ func (f *Fingerprinter) resolveMethod(t *ast.Task) string {
 }
 
 // Kind returns the kind of fingerprint variable ("checksum", "timestamp" or
-// "none") produced by the method resolved for the given task. Unknown methods
-// fall back to "checksum"; they are only rejected by [NewSourcesChecker].
+// "none") produced by the method resolved for the given task. It is the only
+// entry point that tolerates an invalid method — it reports it as "checksum"
+// so that merely naming a variable cannot fail; the method is validated by
+// [Fingerprinter.SourceValue] and [Fingerprinter.UpToDate], on the paths that
+// actually need a checker.
 func (f *Fingerprinter) Kind(t *ast.Task) string {
 	if f.sourcesChecker != nil {
 		return f.sourcesChecker.Kind()
@@ -85,10 +88,13 @@ func (f *Fingerprinter) Kind(t *ast.Task) string {
 }
 
 // SourceValue returns the value of the fingerprint variable (CHECKSUM or
-// TIMESTAMP) for the given task. It is potentially expensive, so callers
-// should only invoke it when the task actually references the variable.
+// TIMESTAMP) for the given task. It resolves the checker from the method
+// itself, not from [Fingerprinter.Kind], so an invalid method is rejected here
+// rather than silently fingerprinted as a checksum. It is potentially
+// expensive, so callers should only invoke it when the task actually
+// references the variable.
 func (f *Fingerprinter) SourceValue(t *ast.Task) (any, error) {
-	sourcesChecker, err := f.resolveSourcesChecker(f.Kind(t))
+	sourcesChecker, err := f.resolveSourcesChecker(t)
 	if err != nil {
 		return nil, err
 	}
@@ -117,7 +123,7 @@ func (f *Fingerprinter) UpToDate(ctx context.Context, t *ast.Task) (bool, error)
 	if statusChecker == nil {
 		statusChecker = NewStatusChecker(f.logger)
 	}
-	sourcesChecker, err := f.resolveSourcesChecker(f.resolveMethod(t))
+	sourcesChecker, err := f.resolveSourcesChecker(t)
 	if err != nil {
 		return false, err
 	}
@@ -164,16 +170,19 @@ func (f *Fingerprinter) UpToDate(ctx context.Context, t *ast.Task) (bool, error)
 // OnError gives the sources checker resolved for the given task a chance to
 // clean up after a failed run.
 func (f *Fingerprinter) OnError(t *ast.Task) error {
-	sourcesChecker, err := f.resolveSourcesChecker(f.resolveMethod(t))
+	sourcesChecker, err := f.resolveSourcesChecker(t)
 	if err != nil {
 		return err
 	}
 	return sourcesChecker.OnError(t)
 }
 
-func (f *Fingerprinter) resolveSourcesChecker(method string) (SourcesCheckable, error) {
+// resolveSourcesChecker is the single place where a task is mapped to a
+// [SourcesCheckable], so that every entry point of the [Fingerprinter] agrees
+// on the checker a given task gets.
+func (f *Fingerprinter) resolveSourcesChecker(t *ast.Task) (SourcesCheckable, error) {
 	if f.sourcesChecker != nil {
 		return f.sourcesChecker, nil
 	}
-	return NewSourcesChecker(method, f.tempDir, f.dry)
+	return NewSourcesChecker(f.resolveMethod(t), f.tempDir, f.dry)
 }
