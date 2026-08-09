@@ -1,8 +1,7 @@
 package taskfile
 
 import (
-	"bufio"
-	"fmt"
+	"io"
 	"os"
 
 	"github.com/go-task/task/v3/internal/execext"
@@ -29,15 +28,7 @@ func (node *StdinNode) Remote() bool {
 }
 
 func (node *StdinNode) Read() ([]byte, error) {
-	var stdin []byte
-	scanner := bufio.NewScanner(os.Stdin)
-	for scanner.Scan() {
-		stdin = fmt.Appendln(stdin, scanner.Text())
-	}
-	if err := scanner.Err(); err != nil {
-		return nil, err
-	}
-	return stdin, nil
+	return io.ReadAll(os.Stdin)
 }
 
 func (node *StdinNode) ResolveEntrypoint(entrypoint string) (string, error) {
