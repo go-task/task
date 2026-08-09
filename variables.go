@@ -212,15 +212,20 @@ func (e *Executor) compiledTask(call *Call, evaluateShVars bool) (*ast.Task, err
 		fingerprinter := e.fingerprinter()
 		kind := fingerprinter.Kind(&new)
 		if kind != "none" && origTask.ReferencesFingerprintVar(kind) {
+			// An invalid method must not fail compilation: --force skips
+			// fingerprinting altogether, and the up-to-date check reports it
+			// on every other path.
 			value, err := fingerprinter.SourceValue(&new)
-			if err != nil {
+			if err != nil && !errors.Is(err, fingerprint.ErrInvalidMethod) {
 				return nil, err
 			}
-			vars.Set(strings.ToUpper(kind), ast.Var{Live: value})
+			if err == nil {
+				vars.Set(strings.ToUpper(kind), ast.Var{Live: value})
 
-			// Adding new variables, requires us to refresh the templaters
-			// cache of the the values manually
-			cache.ResetCache()
+				// Adding new variables, requires us to refresh the templaters
+				// cache of the the values manually
+				cache.ResetCache()
+			}
 		}
 	}
 

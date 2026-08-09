@@ -4,6 +4,6 @@ tasks:
   build:
     method: checksums # typo: not a valid method
     cmds:
-      - echo "hello"
+      - echo "cs=[{{.CHECKSUM}}]"
     sources:
       - ./source.txt

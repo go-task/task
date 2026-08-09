@@ -662,6 +662,7 @@ func TestFingerprintVarMethod(t *testing.T) {
 		name         string
 		dir          string
 		executorOpts []task.ExecutorOption
+		wantErr      string
 		assertOutput func(t *testing.T, output string)
 	}{
 		{
@@ -688,8 +689,13 @@ func TestFingerprintVarMethod(t *testing.T) {
 			executorOpts: []task.ExecutorOption{task.WithForce(true)},
 			assertOutput: func(t *testing.T, output string) {
 				t.Helper()
-				assert.Contains(t, output, "hello\n")
+				assert.Contains(t, output, "cs=[]\n")
 			},
+		},
+		{
+			name:    "an invalid method is still reported by the up-to-date check",
+			dir:     "testdata/method_invalid",
+			wantErr: `task: invalid method "checksums"`,
 		},
 	}
 	for _, tt := range tests {
@@ -711,7 +717,12 @@ func TestFingerprintVarMethod(t *testing.T) {
 			e := task.NewExecutor(opts...)
 			require.NoError(t, e.Setup())
 
-			require.NoError(t, e.Run(t.Context(), &task.Call{Task: "build"}))
+			err := e.Run(t.Context(), &task.Call{Task: "build"})
+			if tt.wantErr != "" {
+				require.ErrorContains(t, err, tt.wantErr)
+				return
+			}
+			require.NoError(t, err)
 			tt.assertOutput(t, buff.String())
 		})
 	}
