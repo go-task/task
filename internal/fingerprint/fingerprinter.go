@@ -12,9 +12,7 @@ type (
 	FingerprinterOption func(*Fingerprinter)
 
 	// A Fingerprinter answers whether a task is up-to-date. It owns the
-	// resolution of the fingerprinting method (the task's method, falling back
-	// to the default) and the construction of the underlying checkers, so that
-	// every caller gets the same answer for the same task.
+	// resolution of the fingerprinting method and the checkers behind it.
 	Fingerprinter struct {
 		defaultMethod  string
 		tempDir        string
@@ -69,12 +67,9 @@ func (f *Fingerprinter) resolveMethod(t *ast.Task) string {
 	return f.defaultMethod
 }
 
-// Kind returns the kind of fingerprint variable ("checksum", "timestamp" or
-// "none") produced by the method resolved for the given task. It is the only
-// entry point that tolerates an invalid method — it reports it as "checksum"
-// so that merely naming a variable cannot fail; the method is validated by
-// [Fingerprinter.SourceValue] and [Fingerprinter.UpToDate], on the paths that
-// actually need a checker.
+// Kind names the fingerprint variable ("checksum", "timestamp" or "none") the
+// resolved method injects. An invalid method is reported as "checksum" here and
+// rejected by the entry points that build a checker.
 func (f *Fingerprinter) Kind(t *ast.Task) string {
 	if f.sourcesChecker != nil {
 		return f.sourcesChecker.Kind()
@@ -87,12 +82,8 @@ func (f *Fingerprinter) Kind(t *ast.Task) string {
 	}
 }
 
-// SourceValue returns the value of the fingerprint variable (CHECKSUM or
-// TIMESTAMP) for the given task. It resolves the checker from the method
-// itself, not from [Fingerprinter.Kind], so an invalid method is rejected here
-// rather than silently fingerprinted as a checksum. It is potentially
-// expensive, so callers should only invoke it when the task actually
-// references the variable.
+// SourceValue returns the value of the fingerprint variable for the given task.
+// It is potentially expensive, so only call it when the task references it.
 func (f *Fingerprinter) SourceValue(t *ast.Task) (any, error) {
 	sourcesChecker, err := f.resolveSourcesChecker(t)
 	if err != nil {
@@ -131,7 +122,6 @@ func (f *Fingerprinter) UpToDate(ctx context.Context, t *ast.Task) (bool, error)
 	statusIsSet := len(t.Status) != 0
 	sourcesIsSet := len(t.Sources) != 0
 
-	// If status is set, check if it is up-to-date
 	if statusIsSet {
 		statusUpToDate, err = statusChecker.IsUpToDate(ctx, t)
 		if err != nil {
@@ -139,7 +129,6 @@ func (f *Fingerprinter) UpToDate(ctx context.Context, t *ast.Task) (bool, error)
 		}
 	}
 
-	// If sources is set, check if they are up-to-date
 	if sourcesIsSet {
 		sourcesUpToDate, err = sourcesChecker.IsUpToDate(t)
 		if err != nil {
@@ -147,23 +136,15 @@ func (f *Fingerprinter) UpToDate(ctx context.Context, t *ast.Task) (bool, error)
 		}
 	}
 
-	// If both status and sources are set, the task is up-to-date if both are up-to-date
 	if statusIsSet && sourcesIsSet {
 		return statusUpToDate && sourcesUpToDate, nil
 	}
-
-	// If only status is set, the task is up-to-date if the status is up-to-date
 	if statusIsSet {
 		return statusUpToDate, nil
 	}
-
-	// If only sources is set, the task is up-to-date if the sources are up-to-date
 	if sourcesIsSet {
 		return sourcesUpToDate, nil
 	}
-
-	// If no status or sources are set, the task should always run
-	// i.e. it is never considered "up-to-date"
 	return false, nil
 }
 
@@ -177,9 +158,7 @@ func (f *Fingerprinter) OnError(t *ast.Task) error {
 	return sourcesChecker.OnError(t)
 }
 
-// resolveSourcesChecker is the single place where a task is mapped to a
-// [SourcesCheckable], so that every entry point of the [Fingerprinter] agrees
-// on the checker a given task gets.
+// resolveSourcesChecker is the single place where a task is mapped to a checker.
 func (f *Fingerprinter) resolveSourcesChecker(t *ast.Task) (SourcesCheckable, error) {
 	if f.sourcesChecker != nil {
 		return f.sourcesChecker, nil

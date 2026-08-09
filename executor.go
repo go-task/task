@@ -123,9 +123,8 @@ func (e *Executor) Options(opts ...ExecutorOption) {
 	}
 }
 
-// fingerprinter returns a [fingerprint.Fingerprinter] reflecting the
-// Executor's current state. It is built on the fly rather than once in Setup
-// because fields like Dry may be mutated between runs.
+// fingerprinter is built on the fly rather than once in Setup because fields
+// like Dry may be mutated between runs.
 func (e *Executor) fingerprinter() *fingerprint.Fingerprinter {
 	return fingerprint.NewFingerprinter(
 		e.Taskfile.Method,
