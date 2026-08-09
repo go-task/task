@@ -6,6 +6,7 @@ import (
 	"github.com/elliotchance/orderedmap/v3"
 
 	"github.com/go-task/task/v3/errors"
+	"github.com/go-task/task/v3/internal/env"
 	"github.com/go-task/task/v3/internal/input"
 	"github.com/go-task/task/v3/internal/templater"
 	"github.com/go-task/task/v3/internal/term"
@@ -46,7 +47,7 @@ func (e *Executor) promptDepsVars(calls []*Call) error {
 
 		for _, v := range getMissingRequiredVars(compiledTask) {
 			if !varsMap.Has(v.Name) {
-				varsMap.Set(v.Name, resolveEnumRefForPrompt(v, compiledTask.Vars))
+				varsMap.Set(v.Name, e.resolveEnumRefForPrompt(v, compiledTask.Vars, compiledTask.Dir))
 			}
 		}
 
@@ -220,13 +221,68 @@ func getEnumValues(e *ast.Enum) []string {
 
 // resolveEnumRefForPrompt returns a copy of v with its enum ref resolved into
 // concrete values, so the interactive prompter can show a Select. Refs that
-// depend on dynamic vars may not resolve here and fall back to free-form input.
-func resolveEnumRefForPrompt(v *ast.VarsWithValidation, vars *ast.Vars) *ast.VarsWithValidation {
+// point to dynamic (sh:) variables are resolved by evaluating those variables
+// first. Refs that still can't be resolved fall back to free-form input.
+func (e *Executor) resolveEnumRefForPrompt(v *ast.VarsWithValidation, vars *ast.Vars, dir string) *ast.VarsWithValidation {
 	if v.Enum == nil || v.Enum.Ref == "" || len(v.Enum.Value) > 0 {
 		return v
 	}
 	vCopy := v.DeepCopy()
 	cache := &templater.Cache{Vars: vars}
-	_ = resolveEnumRefs(&ast.Requires{Vars: []*ast.VarsWithValidation{vCopy}}, cache)
+	if err := resolveEnumRefs(&ast.Requires{Vars: []*ast.VarsWithValidation{vCopy}}, cache); err == nil && len(vCopy.Enum.Value) > 0 {
+		return vCopy
+	}
+	// The ref may depend on dynamic (sh:) variables that are not evaluated in
+	// the fast-compiled vars (they resolve to an empty value there). Evaluate
+	// the dynamic variables and retry, so the prompt can show a selection list
+	// instead of falling back to free-form input.
+	if !hasDynamicVars(vars) {
+		return vCopy
+	}
+	if evaluated := e.evaluateDynamicVarsForPrompt(vars, dir); evaluated != nil {
+		vCopy = v.DeepCopy()
+		_ = resolveEnumRefs(&ast.Requires{Vars: []*ast.VarsWithValidation{vCopy}}, &templater.Cache{Vars: evaluated})
+	}
 	return vCopy
+}
+
+// hasDynamicVars reports whether any variable in vars is backed by a shell
+// command (sh:) that has not been evaluated yet.
+func hasDynamicVars(vars *ast.Vars) bool {
+	if vars == nil {
+		return false
+	}
+	for v := range vars.Values() {
+		if v.Sh != nil && *v.Sh != "" {
+			return true
+		}
+	}
+	return false
+}
+
+// evaluateDynamicVarsForPrompt evaluates the dynamic (sh:) variables in vars,
+// returning a new Vars map with their resolved values. Individual commands that
+// fail are left unevaluated so the remaining variables can still be resolved.
+func (e *Executor) evaluateDynamicVarsForPrompt(vars *ast.Vars, dir string) *ast.Vars {
+	if e == nil || e.Compiler == nil || vars == nil {
+		return nil
+	}
+	result := ast.NewVars()
+	for k, v := range vars.All() {
+		cache := &templater.Cache{Vars: result}
+		newVar := templater.ReplaceVar(v, cache)
+		if newVar.Value != nil || newVar.Sh == nil {
+			result.Set(k, ast.Var{Value: newVar.Value, Secret: v.Secret})
+			continue
+		}
+		static, err := e.Compiler.HandleDynamicVar(newVar, dir, env.GetFromVars(result))
+		if err != nil {
+			// Leave the variable unevaluated if the command fails, so the rest
+			// of the variables can still be evaluated.
+			result.Set(k, ast.Var{Value: "", Secret: v.Secret})
+			continue
+		}
+		result.Set(k, ast.Var{Value: static, Secret: v.Secret})
+	}
+	return result
 }
