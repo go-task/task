@@ -8,7 +8,6 @@ import (
 )
 
 type (
-	// A FingerprinterOption is a functional option for a [Fingerprinter].
 	FingerprinterOption func(*Fingerprinter)
 
 	// A Fingerprinter answers whether a task is up-to-date. It owns the
@@ -23,24 +22,19 @@ type (
 	}
 )
 
-// WithStatusChecker allows a custom [StatusCheckable] to be used instead of
-// the default one.
 func WithStatusChecker(checker StatusCheckable) FingerprinterOption {
 	return func(f *Fingerprinter) {
 		f.statusChecker = checker
 	}
 }
 
-// WithSourcesChecker allows a custom [SourcesCheckable] to be used instead of
-// the one selected by the resolved fingerprinting method.
 func WithSourcesChecker(checker SourcesCheckable) FingerprinterOption {
 	return func(f *Fingerprinter) {
 		f.sourcesChecker = checker
 	}
 }
 
-// NewFingerprinter creates a new [Fingerprinter]. The defaultMethod is used
-// for tasks that don't declare a method of their own.
+// NewFingerprinter uses defaultMethod for tasks that don't declare one.
 func NewFingerprinter(
 	defaultMethod string,
 	tempDir string,
@@ -92,8 +86,8 @@ func (f *Fingerprinter) SourceValue(t *ast.Task) (any, error) {
 	return sourcesChecker.Value(t)
 }
 
-// UpToDate reports whether the given task is up-to-date, considering both its
-// status commands and its sources. A task that declares neither never is.
+// UpToDate considers both the status commands and the sources of a task; one
+// that declares neither never is.
 func (f *Fingerprinter) UpToDate(ctx context.Context, t *ast.Task) (bool, error) {
 	var statusUpToDate bool
 	var sourcesUpToDate bool
@@ -136,8 +130,7 @@ func (f *Fingerprinter) UpToDate(ctx context.Context, t *ast.Task) (bool, error)
 	return false, nil
 }
 
-// OnError gives the sources checker resolved for the given task a chance to
-// clean up after a failed run.
+// OnError lets the resolved sources checker clean up after a failed run.
 func (f *Fingerprinter) OnError(t *ast.Task) error {
 	sourcesChecker, err := f.resolveSourcesChecker(t)
 	if err != nil {

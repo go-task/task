@@ -239,9 +239,7 @@ func TestFingerprinterMethodResolution(t *testing.T) {
 }
 
 // Only the entry points that need a checker reject an invalid method; Kind
-// tolerates it, so that --force runs still compile. The error carries
-// [ErrInvalidMethod], which is how compiledTask tells it apart from a checker
-// failing on the sources themselves.
+// tolerates it, so that --force runs still compile.
 func TestFingerprinterInvalidMethod(t *testing.T) {
 	t.Parallel()
 

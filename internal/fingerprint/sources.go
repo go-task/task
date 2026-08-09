@@ -6,9 +6,8 @@ import (
 	"github.com/go-task/task/v3/errors"
 )
 
-// ErrInvalidMethod marks a method name that maps to no checker. Callers that
-// only need a fingerprint value can tell it apart from a checker failing on
-// the sources themselves.
+// ErrInvalidMethod lets callers that only need a fingerprint value tell a bad
+// method name apart from a checker failing on the sources themselves.
 var ErrInvalidMethod = errors.New("invalid method")
 
 func NewSourcesChecker(method, tempDir string, dry bool) (SourcesCheckable, error) {
