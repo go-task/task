@@ -1642,6 +1642,15 @@ func TestIncludesWithExclude(t *testing.T) {
 	require.Error(t, err)
 	buff.Reset()
 
+	err = e.Run(t.Context(), &task.Call{Task: "included:namespace:one"})
+	require.Error(t, err)
+	buff.Reset()
+
+	err = e.Run(t.Context(), &task.Call{Task: "included:namespace-other:one"})
+	require.NoError(t, err)
+	assert.Equal(t, "namespace-other:one\n", buff.String())
+	buff.Reset()
+
 	err = e.Run(t.Context(), &task.Call{Task: "bar"})
 	require.Error(t, err)
 	buff.Reset()
@@ -1649,6 +1658,15 @@ func TestIncludesWithExclude(t *testing.T) {
 	err = e.Run(t.Context(), &task.Call{Task: "foo"})
 	require.NoError(t, err)
 	assert.Equal(t, "foo\n", buff.String())
+	buff.Reset()
+
+	err = e.Run(t.Context(), &task.Call{Task: "namespace:two"})
+	require.Error(t, err)
+	buff.Reset()
+
+	err = e.Run(t.Context(), &task.Call{Task: "namespace-other:one"})
+	require.NoError(t, err)
+	assert.Equal(t, "namespace-other:one\n", buff.String())
 }
 
 func TestIncludedTaskfileVarMerging(t *testing.T) {

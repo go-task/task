@@ -4,12 +4,14 @@ includes:
   included:
     taskfile: ./included/Taskfile.yml
     excludes:
-        - foo
+      - foo
+      - namespace
   included_flatten:
     taskfile: ./included/Taskfile.yml
     flatten: true
     excludes:
       - bar
+      - namespace:*
 
 tasks:
   default:

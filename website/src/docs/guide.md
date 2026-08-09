@@ -412,8 +412,10 @@ You can do this by using the
 
 ### Exclude tasks from being included
 
-You can exclude tasks from being included by using the `excludes` option. This
-option takes the list of tasks to be excluded from this include.
+You can exclude tasks or entire namespaces from being included by using the
+`excludes` option. This option takes the list of tasks or namespaces to be
+excluded from this include. Append `:*` to a namespace if you want to make the
+namespace exclusion explicit.
 
 ::: code-group
 
@@ -423,7 +425,7 @@ version: '3'
 includes:
   included:
     taskfile: ./Included.yml
-    excludes: [foo]
+    excludes: [foo, internal, 'debug:*']
 ```
 
 ```yaml [Included.yml]
@@ -432,11 +434,14 @@ version: '3'
 tasks:
   foo: echo "Foo"
   bar: echo "Bar"
+  internal:setup: echo "Internal setup"
+  debug:status: echo "Debug status"
 ```
 
 :::
 
-`task included:foo` will throw an error because the `foo` task is excluded but
+`task included:foo`, `task included:internal:setup`, and
+`task included:debug:status` will throw errors because they are excluded, but
 `task included:bar` will work and display `Bar`.
 
 It's compatible with the `flatten` option.

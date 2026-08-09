@@ -3,3 +3,6 @@ version: '3'
 tasks:
   foo: echo foo
   bar: echo bar
+  namespace:one: echo namespace:one
+  namespace:two: echo namespace:two
+  namespace-other:one: echo namespace-other:one
