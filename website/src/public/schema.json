@@ -410,6 +410,29 @@
       "additionalProperties": false,
       "required": ["cmd"]
     },
+    "deferred_task_call": {
+      "type": "object",
+      "properties": {
+        "task": {
+          "description": "Name of the task to run",
+          "type": "string"
+        },
+        "vars": {
+          "description": "Values passed to the task called",
+          "$ref": "#/definitions/vars"
+        },
+        "silent": {
+          "description": "Hides task name and command from output. The command's output will still be redirected to `STDOUT` and `STDERR`.",
+          "type": "boolean"
+        },
+        "if": {
+          "description": "A shell command to evaluate. If the exit code is non-zero, the command is skipped.",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": ["task"]
+    },
     "defer_task_call": {
       "type": "object",
       "properties": {
@@ -417,9 +440,13 @@
           "description": "Run a command when the task completes. This command will run even when the task fails",
           "anyOf": [
             {
-              "$ref": "#/definitions/task_call"
+              "$ref": "#/definitions/deferred_task_call"
             }
           ]
+        },
+        "timeout": {
+          "description": "Maximum duration the command is allowed to run before being terminated. Supports Go duration syntax (e.g., '5m', '30s', '1h').",
+          "type": "string"
         }
       },
       "additionalProperties": false,
@@ -435,6 +462,10 @@
         "silent": {
           "description": "Hides task name and command from output. The command's output will still be redirected to `STDOUT` and `STDERR`.",
           "type": "boolean"
+        },
+        "timeout": {
+          "description": "Maximum duration the command is allowed to run before being terminated. Supports Go duration syntax (e.g., '5m', '30s', '1h').",
+          "type": "string"
         }
       },
       "additionalProperties": false,
