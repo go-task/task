@@ -414,8 +414,8 @@ You can do this by using the
 
 You can exclude tasks or entire namespaces from being included by using the
 `excludes` option. This option takes the list of tasks or namespaces to be
-excluded from this include. Append `:*` to a namespace if you want to make the
-namespace exclusion explicit.
+excluded from this include. Task names are matched exactly. To exclude a
+namespace, append `:*` to its name.
 
 ::: code-group
 
@@ -425,7 +425,7 @@ version: '3'
 includes:
   included:
     taskfile: ./Included.yml
-    excludes: [foo, internal, 'debug:*']
+    excludes: [foo, 'internal:*', 'debug:*']
 ```
 
 ```yaml [Included.yml]

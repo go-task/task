@@ -1642,6 +1642,16 @@ func TestIncludesWithExclude(t *testing.T) {
 	require.Error(t, err)
 	buff.Reset()
 
+	err = e.Run(t.Context(), &task.Call{Task: "included:foo:child"})
+	require.NoError(t, err)
+	assert.Equal(t, "foo:child\n", buff.String())
+	buff.Reset()
+
+	err = e.Run(t.Context(), &task.Call{Task: "included:namespace"})
+	require.NoError(t, err)
+	assert.Equal(t, "namespace\n", buff.String())
+	buff.Reset()
+
 	err = e.Run(t.Context(), &task.Call{Task: "included:namespace:one"})
 	require.Error(t, err)
 	buff.Reset()
@@ -1658,6 +1668,11 @@ func TestIncludesWithExclude(t *testing.T) {
 	err = e.Run(t.Context(), &task.Call{Task: "foo"})
 	require.NoError(t, err)
 	assert.Equal(t, "foo\n", buff.String())
+	buff.Reset()
+
+	err = e.Run(t.Context(), &task.Call{Task: "namespace"})
+	require.NoError(t, err)
+	assert.Equal(t, "namespace\n", buff.String())
 	buff.Reset()
 
 	err = e.Run(t.Context(), &task.Call{Task: "namespace:two"})

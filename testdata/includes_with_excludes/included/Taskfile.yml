@@ -2,7 +2,9 @@ version: '3'
 
 tasks:
   foo: echo foo
+  foo:child: echo foo:child
   bar: echo bar
+  namespace: echo namespace
   namespace:one: echo namespace:one
   namespace:two: echo namespace:two
   namespace-other:one: echo namespace-other:one

@@ -5,7 +5,7 @@ includes:
     taskfile: ./included/Taskfile.yml
     excludes:
       - foo
-      - namespace
+      - namespace:*
   included_flatten:
     taskfile: ./included/Taskfile.yml
     flatten: true
