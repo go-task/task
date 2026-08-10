@@ -63,7 +63,7 @@ var legacySprigAliases = sprout.FunctionAliasMap{
 
 func init() {
 	handler := sprout.New(
-		sprout.WithLogger(slog.New(slog.DiscardHandler)),
+		sprout.WithLogger(slog.New(noticeHandler{})),
 		sprout.WithRegistries(
 			taskfuncs.NewRegistry(),
 			backward.NewRegistry(),
