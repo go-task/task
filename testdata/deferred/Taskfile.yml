@@ -32,8 +32,8 @@ tasks:
     cmds:
       - defer:
           task: slow-cleanup
-          timeout: 100ms
           silent: true
+        timeout: 100ms
       - echo 'parent completed'
 
   slow-cleanup:

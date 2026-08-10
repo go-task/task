@@ -86,12 +86,11 @@ func (c *Cmd) UnmarshalYAML(node *yaml.Node) error {
 		}
 
 		if cmdStruct.Defer != nil {
+			// A deferred command declares its timeout where every other command
+			// does, beside the key rather than inside it. Rejecting the nested
+			// form is what keeps yaml from dropping it without a word.
 			if cmdStruct.Defer.Timeout != "" {
-				timeout, err := parseTimeout(cmdStruct.Defer.Timeout, node)
-				if err != nil {
-					return err
-				}
-				c.Timeout = timeout
+				return errors.NewTaskfileDecodeError(nil, node).WithMessage("timeout must be set next to defer, not inside it")
 			}
 
 			// A deferred command

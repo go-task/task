@@ -24,8 +24,9 @@ vars:
   PARAM2: VALUE2
 `
 		yamlDeferredCall            = `defer: { task: some_task, vars: { PARAM1: "var" } }`
-		yamlDeferredCallWithTimeout = `defer: { task: some_task, timeout: 1s }`
+		yamlDeferredCallWithTimeout = `{ defer: { task: some_task }, timeout: 1s }`
 		yamlDeferredCmd             = `defer: echo 'test'`
+		yamlDeferredCmdWithTimeout  = `{ defer: echo 'test', timeout: 1s }`
 	)
 	tests := []struct {
 		content  string
@@ -85,6 +86,11 @@ vars:
 			&ast.Cmd{Task: "some_task", Defer: true, Timeout: time.Second},
 		},
 		{
+			yamlDeferredCmdWithTimeout,
+			&ast.Cmd{},
+			&ast.Cmd{Cmd: `echo 'test'`, Defer: true, Timeout: time.Second},
+		},
+		{
 			yamlDep,
 			&ast.Dep{},
 			&ast.Dep{Task: "task-name"},
@@ -118,15 +124,6 @@ vars:
 	}
 }
 
-func TestDeferredTaskTimeoutParseError(t *testing.T) {
-	t.Parallel()
-
-	var cmd ast.Cmd
-	err := yaml.Unmarshal([]byte(`defer: { task: some_task, timeout: invalid }`), &cmd)
-	require.Error(t, err)
-	assert.ErrorContains(t, err, "invalid timeout format")
-}
-
 func TestTimeoutParseError(t *testing.T) {
 	t.Parallel()
 
@@ -152,8 +149,18 @@ func TestTimeoutParseError(t *testing.T) {
 		},
 		{
 			name:    "negative duration on a deferred task",
-			content: `{defer: {task: some_task, timeout: -5m}}`,
+			content: `{defer: {task: some_task}, timeout: -5m}`,
 			message: "timeout must be greater than zero",
+		},
+		{
+			name:    "unparsable duration on a deferred task",
+			content: `{defer: {task: some_task}, timeout: invalid}`,
+			message: "invalid timeout format",
+		},
+		{
+			name:    "timeout nested inside defer",
+			content: `{defer: {task: some_task, timeout: 1s}}`,
+			message: "timeout must be set next to defer, not inside it",
 		},
 	}
 
