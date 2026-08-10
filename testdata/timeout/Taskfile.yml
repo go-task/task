@@ -28,6 +28,13 @@ tasks:
       - cmd: echo "third"
         timeout: 1s
 
+  slow-if-condition:
+    desc: Condition that hangs must be bounded by the command timeout
+    cmds:
+      - cmd: echo "condition was met"
+        if: sleep 10
+        timeout: 500ms
+
   inherited-timeout:
     desc: Calls a task whose command declares no timeout of its own
     cmds:

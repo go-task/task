@@ -2710,6 +2710,28 @@ func TestCommandTimeout(t *testing.T) {
 	}
 }
 
+func TestCommandTimeoutBoundsIfCondition(t *testing.T) {
+	t.Parallel()
+
+	var buff bytes.Buffer
+	e := task.NewExecutor(
+		task.WithDir("testdata/timeout"),
+		task.WithStdout(&buff),
+		task.WithStderr(&buff),
+	)
+	require.NoError(t, e.Setup())
+
+	start := time.Now()
+	err := e.Run(t.Context(), &task.Call{Task: "slow-if-condition"})
+	require.Error(t, err)
+	assert.Less(t, time.Since(start), 5*time.Second)
+
+	var timeoutErr *errors.TaskTimeoutError
+	require.ErrorAs(t, err, &timeoutErr)
+	// A condition that times out fails the command, it does not skip it.
+	assert.NotContains(t, buff.String(), "condition was met")
+}
+
 func TestCommandTimeoutAttribution(t *testing.T) {
 	t.Parallel()
 

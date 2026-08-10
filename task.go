@@ -354,6 +354,16 @@ func (e *Executor) runDeferred(t *ast.Task, call *Call, i int, vars *ast.Vars, d
 func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call *Call, i int) error {
 	cmd := t.Cmds[i]
 
+	// The timeout bounds the whole step, so it must be in place before the if
+	// condition runs: a condition that hangs would otherwise hang the run.
+	var timeout *errors.TaskTimeoutError
+	if cmd.Timeout > 0 {
+		timeout = &errors.TaskTimeoutError{TaskName: t.Name(), Timeout: cmd.Timeout}
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeoutCause(ctx, cmd.Timeout, timeout)
+		defer cancel()
+	}
+
 	// Check if condition for any command type
 	if strings.TrimSpace(cmd.If) != "" {
 		if err := execext.RunCommand(ctx, &execext.RunCommandOptions{
@@ -361,17 +371,12 @@ func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call *Call, i in
 			Dir:     t.Dir,
 			Env:     env.Get(t),
 		}); err != nil {
+			if timedOut(ctx, timeout) {
+				return timeout
+			}
 			e.Logger.VerboseOutf(logger.Yellow, "task: [%s] if condition not met - skipped\n", t.Name())
 			return nil
 		}
-	}
-
-	var timeout *errors.TaskTimeoutError
-	if cmd.Timeout > 0 {
-		timeout = &errors.TaskTimeoutError{TaskName: t.Name(), Timeout: cmd.Timeout}
-		var cancel context.CancelFunc
-		ctx, cancel = context.WithTimeoutCause(ctx, cmd.Timeout, timeout)
-		defer cancel()
 	}
 
 	switch {
