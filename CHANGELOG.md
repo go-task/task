@@ -30,6 +30,9 @@
 - Fixed `ref:` in `for: matrix:` and `enum:` only accepting literal lists. Refs
   computed with template functions like `keys` or `splitList` no longer fail
   with "must resolve to a list" (#2544, #2956 by @no-hup).
+- Fixed the JSON schema rejecting `ignore_error` on a command inside a `for`
+  loop. Editors no longer flag a Taskfile that Task runs perfectly fine (#2044
+  by @gokeefe-atb).
 
 ## v3.52.0 - 2026-07-02
 
