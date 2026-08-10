@@ -1035,6 +1035,44 @@ func TestTaskIgnoreErrors(t *testing.T) {
 	require.Error(t, e.Run(t.Context(), &task.Call{Task: "cmd-should-fail"}))
 }
 
+func TestIgnoreErrorsOnTimeout(t *testing.T) {
+	t.Parallel()
+
+	const dir = "testdata/ignore_errors"
+	tests := []struct {
+		name        string
+		task        string
+		expectError bool
+	}{
+		{name: "ignored at task level", task: "task-timeout-should-pass"},
+		{name: "ignored at command level", task: "cmd-timeout-should-pass"},
+		{name: "not ignored", task: "cmd-timeout-should-fail", expectError: true},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			var buff bytes.Buffer
+			e := task.NewExecutor(
+				task.WithDir(dir),
+				task.WithStdout(&buff),
+				task.WithStderr(&buff),
+			)
+			require.NoError(t, e.Setup())
+
+			err := e.Run(t.Context(), &task.Call{Task: test.task})
+			if test.expectError {
+				require.Error(t, err)
+				assert.NotContains(t, buff.String(), "reached the end")
+				return
+			}
+			require.NoError(t, err)
+			assert.Contains(t, buff.String(), "reached the end")
+		})
+	}
+}
+
 func TestExpand(t *testing.T) {
 	t.Parallel()
 

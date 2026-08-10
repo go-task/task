@@ -266,12 +266,13 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) error {
 					e.Logger.VerboseErrf(logger.Yellow, "task: error cleaning status on error: %v\n", err2)
 				}
 
+				if t.IgnoreError && isCommandFailure(err) {
+					e.Logger.VerboseErrf(logger.Yellow, "task: task error ignored: %v\n", err)
+					continue
+				}
+
 				var exitCode interp.ExitStatus
 				if errors.As(err, &exitCode) {
-					if t.IgnoreError {
-						e.Logger.VerboseErrf(logger.Yellow, "task: task error ignored: %v\n", err)
-						continue
-					}
 					e.Logger.VerboseErrf(logger.Red, "task: %q failed: %v\n", call.Task, err)
 					deferredExitCode = uint8(exitCode)
 				}
@@ -386,10 +387,9 @@ func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call *Call, i in
 
 		err := e.RunTask(ctx, &Call{Task: cmd.Task, Vars: cmd.Vars, Silent: cmd.Silent, Indirect: true})
 		if err != nil && timedOut(ctx, timeout) {
-			return timeout
+			err = timeout
 		}
-		var exitCode interp.ExitStatus
-		if errors.As(err, &exitCode) && cmd.IgnoreError {
+		if cmd.IgnoreError && isCommandFailure(err) {
 			e.Logger.VerboseErrf(logger.Yellow, "task: [%s] task error ignored: %v\n", t.Name(), err)
 			return nil
 		}
@@ -433,10 +433,9 @@ func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call *Call, i in
 			e.Logger.Errf(logger.Red, "task: unable to close writer: %v\n", closeErr)
 		}
 		if err != nil && timedOut(ctx, timeout) {
-			return timeout
+			err = timeout
 		}
-		var exitCode interp.ExitStatus
-		if errors.As(err, &exitCode) && cmd.IgnoreError {
+		if cmd.IgnoreError && isCommandFailure(err) {
 			e.Logger.VerboseErrf(logger.Yellow, "task: [%s] command error ignored: %v\n", t.Name(), err)
 			return nil
 		}
@@ -444,6 +443,15 @@ func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call *Call, i in
 	default:
 		return nil
 	}
+}
+
+// isCommandFailure reports whether err is the command failing on its own terms
+// - a non-zero exit status or its own timeout - as opposed to Task failing to
+// run it at all. Only the former is what ignore_error offers to ignore.
+func isCommandFailure(err error) bool {
+	var exitCode interp.ExitStatus
+	var timeout *errors.TaskTimeoutError
+	return errors.As(err, &exitCode) || errors.As(err, &timeout)
 }
 
 // timedOut reports whether ctx was cancelled by the given timeout, as opposed
