@@ -126,3 +126,45 @@ func TestDeferredTaskTimeoutParseError(t *testing.T) {
 	require.Error(t, err)
 	assert.ErrorContains(t, err, "invalid timeout format")
 }
+
+func TestTimeoutParseError(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name    string
+		content string
+		message string
+	}{
+		{
+			name:    "unparsable duration",
+			content: `{cmd: echo, timeout: invalid}`,
+			message: "invalid timeout format",
+		},
+		{
+			name:    "zero duration",
+			content: `{cmd: echo, timeout: 0s}`,
+			message: "timeout must be greater than zero",
+		},
+		{
+			name:    "negative duration",
+			content: `{cmd: echo, timeout: -1s}`,
+			message: "timeout must be greater than zero",
+		},
+		{
+			name:    "negative duration on a deferred task",
+			content: `{defer: {task: some_task, timeout: -5m}}`,
+			message: "timeout must be greater than zero",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			var cmd ast.Cmd
+			err := yaml.Unmarshal([]byte(test.content), &cmd)
+			require.Error(t, err)
+			assert.ErrorContains(t, err, test.message)
+		})
+	}
+}

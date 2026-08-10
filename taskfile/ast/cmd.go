@@ -78,18 +78,18 @@ func (c *Cmd) UnmarshalYAML(node *yaml.Node) error {
 		}
 
 		if cmdStruct.Timeout != "" {
-			timeout, err := time.ParseDuration(cmdStruct.Timeout)
+			timeout, err := parseTimeout(cmdStruct.Timeout, node)
 			if err != nil {
-				return errors.NewTaskfileDecodeError(err, node).WithMessage("invalid timeout format")
+				return err
 			}
 			c.Timeout = timeout
 		}
 
 		if cmdStruct.Defer != nil {
 			if cmdStruct.Defer.Timeout != "" {
-				timeout, err := time.ParseDuration(cmdStruct.Defer.Timeout)
+				timeout, err := parseTimeout(cmdStruct.Defer.Timeout, node)
 				if err != nil {
-					return errors.NewTaskfileDecodeError(err, node).WithMessage("invalid timeout format")
+					return err
 				}
 				c.Timeout = timeout
 			}
@@ -141,4 +141,18 @@ func (c *Cmd) UnmarshalYAML(node *yaml.Node) error {
 	}
 
 	return errors.NewTaskfileDecodeError(nil, node).WithTypeMessage("command")
+}
+
+// parseTimeout rejects non-positive durations rather than letting them through
+// as "no timeout at all", which is exactly the unbounded run the key exists to
+// prevent.
+func parseTimeout(s string, node *yaml.Node) (time.Duration, error) {
+	timeout, err := time.ParseDuration(s)
+	if err != nil {
+		return 0, errors.NewTaskfileDecodeError(err, node).WithMessage("invalid timeout format")
+	}
+	if timeout <= 0 {
+		return 0, errors.NewTaskfileDecodeError(nil, node).WithMessage("timeout must be greater than zero")
+	}
+	return timeout, nil
 }
