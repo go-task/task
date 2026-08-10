@@ -308,13 +308,14 @@ includes:
 ### `excludes`
 
 - **Type**: `[]string`
-- **Description**: Tasks to exclude from inclusion
+- **Description**: Task names or namespace patterns ending in `:*` to exclude
+  from inclusion
 
 ```yaml
 includes:
   shared:
     taskfile: ./shared.yml
-    excludes: [internal-setup, debug-only]
+    excludes: [internal-setup, 'debug:*', 'experimental:*']
 ```
 
 ### `vars`
