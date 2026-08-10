@@ -52,12 +52,22 @@ func (err *TaskRunError) TaskExitCode() int {
 	if errors.As(err.Err, &exit) {
 		return int(exit)
 	}
+	var timeout *TaskTimeoutError
+	if errors.As(err.Err, &timeout) {
+		return TimeoutExitCode
+	}
 	return err.Code()
 }
 
 func (err *TaskRunError) Unwrap() error {
 	return err.Err
 }
+
+// TimeoutExitCode is the code a command killed by its timeout reports, both
+// through {{.EXIT_CODE}} and through --exit-code. It follows the convention of
+// timeout(1) from coreutils, which the shell has no exit status of its own to
+// offer for a killed command.
+const TimeoutExitCode = 124
 
 // TaskTimeoutError is returned when a command exceeds the timeout it declared.
 // It deliberately does not unwrap to context.DeadlineExceeded, which the watch

@@ -2487,6 +2487,27 @@ func TestExitCodeOne(t *testing.T) {
 	assert.Equal(t, "FOO=bar - DYNAMIC_FOO=bar - EXIT_CODE=1", strings.TrimSpace(buff.String()))
 }
 
+func TestExitCodeTimeout(t *testing.T) {
+	t.Parallel()
+
+	const dir = "testdata/exit_code"
+	var buff bytes.Buffer
+	e := task.NewExecutor(
+		task.WithDir(dir),
+		task.WithStdout(&buff),
+		task.WithStderr(&buff),
+	)
+	require.NoError(t, e.Setup())
+
+	err := e.Run(t.Context(), &task.Call{Task: "exit-timeout"})
+	require.Error(t, err)
+	assert.Equal(t, "EXIT_CODE=124", strings.TrimSpace(buff.String()))
+
+	var runErr *errors.TaskRunError
+	require.ErrorAs(t, err, &runErr)
+	assert.Equal(t, errors.TimeoutExitCode, runErr.TaskExitCode())
+}
+
 func TestIgnoreNilElements(t *testing.T) {
 	t.Parallel()
 

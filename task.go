@@ -272,9 +272,13 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) error {
 				}
 
 				var exitCode interp.ExitStatus
-				if errors.As(err, &exitCode) {
+				var timeout *errors.TaskTimeoutError
+				switch {
+				case errors.As(err, &exitCode):
 					e.Logger.VerboseErrf(logger.Red, "task: %q failed: %v\n", call.Task, err)
 					deferredExitCode = uint8(exitCode)
+				case errors.As(err, &timeout):
+					deferredExitCode = errors.TimeoutExitCode
 				}
 
 				return err

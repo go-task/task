@@ -23,3 +23,9 @@ tasks:
     cmds:
       - defer: echo FOO={{.FOO}} - DYNAMIC_FOO={{.DYNAMIC_FOO}} - {{.PREFIX}}{{.EXIT_CODE}}
       - exit 1
+
+  exit-timeout:
+    cmds:
+      - defer: echo {{.PREFIX}}{{.EXIT_CODE}}
+      - cmd: sleep 10
+        timeout: 200ms
