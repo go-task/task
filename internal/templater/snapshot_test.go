@@ -110,6 +110,10 @@ var funcBehaviourGroups = []struct {
 			`{{ dict "a" "b" | hasKey "a" }}`,
 			`{{ list 1 2 | append 3 | toJson }}`,
 			`{{ list 2 3 | prepend 1 | toJson }}`,
+			`{{ dict "a" "1" "b" "2" | pick "a" | toJson }}`,
+			`{{ dict "a" "1" "b" "2" | omit "a" | toJson }}`,
+			`{{ list 1 2 3 | without 2 | toJson }}`,
+			`{{ list 1 2 3 4 | slice 1 3 | toJson }}`,
 		},
 	},
 	{

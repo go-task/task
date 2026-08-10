@@ -1,4 +1,4 @@
-package templater
+package taskfuncs
 
 import "testing"
 
@@ -19,12 +19,12 @@ func TestJoinUrl(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			got, err := joinUrl(tt.elem...)
+			got, err := JoinURL(tt.elem...)
 			if err != nil {
-				t.Fatalf("joinUrl(%q) unexpected error: %v", tt.elem, err)
+				t.Fatalf("JoinURL(%q) unexpected error: %v", tt.elem, err)
 			}
 			if got != tt.want {
-				t.Errorf("joinUrl(%q) = %q; want %q", tt.elem, got, tt.want)
+				t.Errorf("JoinURL(%q) = %q; want %q", tt.elem, got, tt.want)
 			}
 		})
 	}
