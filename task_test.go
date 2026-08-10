@@ -653,6 +653,81 @@ func TestStatusChecksumMissingGenerated(t *testing.T) { // nolint:paralleltest /
 	require.NoError(t, err, "generated.txt should be recreated after third run")
 }
 
+// The injected fingerprint variable follows the method the up-to-date check
+// uses, including when that method comes from the Taskfile level.
+func TestFingerprintVarMethod(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name         string
+		dir          string
+		executorOpts []task.ExecutorOption
+		wantErr      string
+		assertOutput func(t *testing.T, output string)
+	}{
+		{
+			name: "TIMESTAMP is injected when the method is inherited from the Taskfile",
+			dir:  "testdata/method_taskfile_timestamp",
+			assertOutput: func(t *testing.T, output string) {
+				t.Helper()
+				// An unresolved variable renders as an empty string, so this
+				// has to match an actual timestamp, not just the prefix.
+				assert.Regexp(t, `ts=\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}`, output)
+			},
+		},
+		{
+			name: "no variable is injected when the effective method is none",
+			dir:  "testdata/method_taskfile_none",
+			assertOutput: func(t *testing.T, output string) {
+				t.Helper()
+				assert.Contains(t, output, "cs=\n")
+			},
+		},
+		{
+			name:         "an invalid method doesn't fail a run that skips fingerprinting",
+			dir:          "testdata/method_invalid",
+			executorOpts: []task.ExecutorOption{task.WithForce(true)},
+			assertOutput: func(t *testing.T, output string) {
+				t.Helper()
+				assert.Contains(t, output, "cs=[]\n")
+			},
+		},
+		{
+			name:    "an invalid method is still reported by the up-to-date check",
+			dir:     "testdata/method_invalid",
+			wantErr: `task: invalid method "checksums"`,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			_ = os.RemoveAll(filepathext.SmartJoin(tt.dir, ".task"))
+
+			var buff bytes.Buffer
+			opts := append([]task.ExecutorOption{
+				task.WithDir(tt.dir),
+				task.WithStdout(&buff),
+				task.WithStderr(&buff),
+				task.WithTempDir(task.TempDir{
+					Remote:      filepathext.SmartJoin(tt.dir, ".task"),
+					Fingerprint: filepathext.SmartJoin(tt.dir, ".task"),
+				}),
+			}, tt.executorOpts...)
+			e := task.NewExecutor(opts...)
+			require.NoError(t, e.Setup())
+
+			err := e.Run(t.Context(), &task.Call{Task: "build"})
+			if tt.wantErr != "" {
+				require.ErrorContains(t, err, tt.wantErr)
+				return
+			}
+			require.NoError(t, err)
+			tt.assertOutput(t, buff.String())
+		})
+	}
+}
+
 func writeFile(t *testing.T, dir, name, content string) {
 	t.Helper()
 	require.NoError(t, os.WriteFile(filepathext.SmartJoin(dir, name), []byte(content), 0o644))

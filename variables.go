@@ -208,25 +208,24 @@ func (e *Executor) compiledTask(call *Call, evaluateShVars bool) (*ast.Task, err
 		}
 	}
 
-	if len(origTask.Sources) > 0 && origTask.Method != "none" {
-		var checker fingerprint.SourcesCheckable
-
-		if origTask.Method == "timestamp" {
-			checker = fingerprint.NewTimestampChecker(e.TempDir.Fingerprint, e.Dry)
-		} else {
-			checker = fingerprint.NewChecksumChecker(e.TempDir.Fingerprint, e.Dry)
-		}
-
-		if origTask.ReferencesFingerprintVar(checker.Kind()) {
-			value, err := checker.Value(&new)
-			if err != nil {
+	if len(origTask.Sources) > 0 {
+		fingerprinter := e.fingerprinter()
+		kind := fingerprinter.Kind(&new)
+		if kind != "none" && origTask.ReferencesFingerprintVar(kind) {
+			// An invalid method must not fail compilation: --force skips
+			// fingerprinting altogether, and the up-to-date check reports it
+			// on every other path.
+			value, err := fingerprinter.SourceValue(&new)
+			if err != nil && !errors.Is(err, fingerprint.ErrInvalidMethod) {
 				return nil, err
 			}
-			vars.Set(strings.ToUpper(checker.Kind()), ast.Var{Live: value})
+			if err == nil {
+				vars.Set(strings.ToUpper(kind), ast.Var{Live: value})
 
-			// Adding new variables, requires us to refresh the templaters
-			// cache of the the values manually
-			cache.ResetCache()
+				// Adding new variables, requires us to refresh the templaters
+				// cache of the the values manually
+				cache.ResetCache()
+			}
 		}
 	}
 

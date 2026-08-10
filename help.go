@@ -12,7 +12,6 @@ import (
 	"golang.org/x/sync/errgroup"
 
 	"github.com/go-task/task/v3/internal/editors"
-	"github.com/go-task/task/v3/internal/fingerprint"
 	"github.com/go-task/task/v3/internal/logger"
 	"github.com/go-task/task/v3/internal/sort"
 	"github.com/go-task/task/v3/taskfile/ast"
@@ -151,17 +150,7 @@ func (e *Executor) ToEditorOutput(tasks []*ast.Task, noStatus bool, nested bool)
 				return nil
 			}
 
-			// Get the fingerprinting method to use
-			method := e.Taskfile.Method
-			if tasks[i].Method != "" {
-				method = tasks[i].Method
-			}
-			upToDate, err := fingerprint.IsTaskUpToDate(context.Background(), tasks[i],
-				fingerprint.WithMethod(method),
-				fingerprint.WithTempDir(e.TempDir.Fingerprint),
-				fingerprint.WithDry(e.Dry),
-				fingerprint.WithLogger(e.Logger),
-			)
+			upToDate, err := e.fingerprinter().UpToDate(context.Background(), tasks[i])
 			if err != nil {
 				return err
 			}
