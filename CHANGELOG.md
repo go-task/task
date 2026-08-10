@@ -36,6 +36,9 @@
 - Fixed the JSON schema rejecting more keys the Taskfile parser accepts:
   `ignore_error` on a `task:` call, and `if`, `set` and `shopt` on a command
   inside a `for` loop (#2967 by @vmaerten).
+- Added a verbose log line for failed tasks. In `--verbose` mode, a task whose
+  command exits non-zero now reports `task: "<name>" failed: <error>` instead of
+  stopping without a trace (#2240 by @Drino).
 
 ## v3.52.0 - 2026-07-02
 
