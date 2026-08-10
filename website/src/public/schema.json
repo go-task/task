@@ -350,7 +350,7 @@
           "type": "boolean"
         },
         "ignore_error": {
-          "description": "Prevent command from aborting the execution of task even after receiving a status code of 1",
+          "description": "Prevent the command from aborting the execution of the task when it exits with a non-zero status code",
           "type": "boolean"
         },
         "if": {
@@ -387,7 +387,7 @@
           }
         },
         "ignore_error": {
-          "description": "Prevent command from aborting the execution of task even after receiving a status code of 1",
+          "description": "Prevent the command from aborting the execution of the task when it exits with a non-zero status code",
           "type": "boolean"
         },
         "platforms": {
@@ -461,7 +461,7 @@
           }
         },
         "ignore_error": {
-          "description": "Prevent command from aborting the execution of task even after receiving a status code of 1",
+          "description": "Prevent the command from aborting the execution of the task when it exits with a non-zero status code",
           "type": "boolean"
         },
         "platforms": {
@@ -495,7 +495,7 @@
           "type": "boolean"
         },
         "ignore_error": {
-          "description": "Prevent command from aborting the execution of task even after receiving a status code of 1",
+          "description": "Prevent the command from aborting the execution of the task when it exits with a non-zero status code",
           "type": "boolean"
         },
         "platforms": {
