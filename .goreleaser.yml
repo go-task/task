@@ -79,6 +79,8 @@ nfpms:
         dst: /usr/share/fish/vendor_completions.d/task.fish
       - src: completion/zsh/_task
         dst: /usr/local/share/zsh/site-functions/_task
+      - src: completion/nu/task-completions.nu
+        dst: /usr/share/nushell/vendor/autoload/task-completions.nu
 
 brews:
   - name: go-task
@@ -96,6 +98,7 @@ brews:
       bash_completion.install "completion/bash/task.bash" => "task"
       zsh_completion.install "completion/zsh/_task" => "_task"
       fish_completion.install "completion/fish/task.fish"
+      (share/"nushell/vendor/autoload").install "completion/nu/task-completions.nu"
     commit_author:
       name: task-bot
       email: 106601941+task-bot@users.noreply.github.com

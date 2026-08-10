@@ -41,6 +41,9 @@
   stopping without a trace (#2240 by @Drino).
 - Fixed pressing `Esc` at an interactive variable prompt not cancelling the run
   (#2942 by @anilnatha).
+- Added Nushell completions, available via `task --completion nu`. They complete
+  task names and aliases, every flag with its description, and the values of
+  `--completion`, `--output` and `--sort` (#XXXX by @vmaerten).
 
 ## v3.52.0 - 2026-07-02
 

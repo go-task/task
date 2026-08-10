@@ -97,6 +97,23 @@ jobs:
       - name: 📋 Validate JSON Schema
         run: check-jsonschema --check-metaschema website/src/public/schema.json
 
+  lint-completion-nu:
+    name: 🐚 Lint Nushell completions
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: ⬇️ Setup Nushell
+        uses: hustcer/setup-nu@f3fd65374ffc4d60974c0dd2f7263c6c5c285f81 # v3.26
+        with:
+          version: "*"
+
+      # Nushell resolves `extern` signatures and custom completers at parse
+      # time, so sourcing the script is enough to catch a syntax error.
+      - name: 🐚 Parse the completion script
+        run: nu -c 'source completion/nu/task-completions.nu'
+
   govulncheck:
     name: 🛡️ Vulnerabilities
     runs-on: ubuntu-latest
