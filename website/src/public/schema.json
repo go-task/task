@@ -349,6 +349,10 @@
           "description": "Hides task name and command from output. The command's output will still be redirected to `STDOUT` and `STDERR`.",
           "type": "boolean"
         },
+        "ignore_error": {
+          "description": "Prevent command from aborting the execution of task even after receiving a status code of 1",
+          "type": "boolean"
+        },
         "if": {
           "description": "A shell command to evaluate. If the exit code is non-zero, the command is skipped.",
           "type": "string"
@@ -442,6 +446,20 @@
           "description": "Silent mode disables echoing of command before Task runs it",
           "type": "boolean"
         },
+        "set": {
+          "description": "Enables POSIX shell options for this command. See https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/set"
+          }
+        },
+        "shopt": {
+          "description": "Enables Bash shell options for this command. See https://www.gnu.org/software/bash/manual/html_node/The-Shopt-Builtin.html",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/shopt"
+          }
+        },
         "ignore_error": {
           "description": "Prevent command from aborting the execution of task even after receiving a status code of 1",
           "type": "boolean"
@@ -449,6 +467,10 @@
         "platforms": {
           "description": "Specifies which platforms the command should be run on.",
           "$ref": "#/definitions/platforms"
+        },
+        "if": {
+          "description": "A shell command to evaluate. If the exit code is non-zero, the command is skipped.",
+          "type": "string"
         }
       },
       "additionalProperties": false,
