@@ -43,7 +43,7 @@
   (#2942 by @anilnatha).
 - Added Nushell completions, available via `task --completion nu`. They complete
   task names and aliases, every flag with its description, and the values of
-  `--completion`, `--output` and `--sort` (#XXXX by @vmaerten).
+  `--completion`, `--output` and `--sort` (#2966 by @vmaerten).
 
 ## v3.52.0 - 2026-07-02
 
