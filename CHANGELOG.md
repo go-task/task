@@ -33,6 +33,9 @@
 - Fixed the JSON schema rejecting `ignore_error` on a command inside a `for`
   loop. Editors no longer flag a Taskfile that Task runs perfectly fine (#2044
   by @gokeefe-atb).
+- Fixed the JSON schema rejecting more keys the Taskfile parser accepts:
+  `ignore_error` on a `task:` call, and `if`, `set` and `shopt` on a command
+  inside a `for` loop (#2967 by @vmaerten).
 
 ## v3.52.0 - 2026-07-02
 
