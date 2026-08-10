@@ -1,0 +1,29 @@
+version: '3'
+
+silent: true
+
+tasks:
+  default:
+    # Without failfast the run would wait for `owner` to finish anyway, hiding
+    # the very thing under test: that `joiner` gives up on its own deadline.
+    failfast: true
+    deps: [owner, joiner]
+
+  # `owner` starts the shared task and holds it for far longer than `joiner` is
+  # willing to wait, so `joiner` reaches the deduplication path while the shared
+  # execution is still running.
+  owner:
+    cmds:
+      - task: shared
+
+  joiner:
+    cmds:
+      - sleep 0.2
+      - task: shared
+        timeout: 500ms
+      - echo "should not be reached"
+
+  shared:
+    run: once
+    cmds:
+      - sleep 10

@@ -261,7 +261,7 @@ func (e *Executor) setupDefaults() {
 }
 
 func (e *Executor) setupConcurrencyState() {
-	e.executionHashes = make(map[string]context.Context)
+	e.executionHashes = make(map[string]*executionState)
 
 	e.taskCallCount = make(map[string]*int32, e.Taskfile.Tasks.Len())
 	e.mkdirMutexMap = make(map[string]*sync.Mutex, e.Taskfile.Tasks.Len())

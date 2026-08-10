@@ -2381,6 +2381,54 @@ func TestRunOnceSharedDeps(t *testing.T) {
 	assert.Contains(t, buff.String(), `task: [service-b:build] echo "build b"`)
 }
 
+func TestRunOnceSharedFailurePropagates(t *testing.T) {
+	t.Parallel()
+
+	const dir = "testdata/run_once_failure"
+
+	var buff bytes.Buffer
+	e := task.NewExecutor(
+		task.WithDir(dir),
+		task.WithStdout(&buff),
+		task.WithStderr(&buff),
+	)
+	require.NoError(t, e.Setup())
+
+	err := e.Run(t.Context(), &task.Call{Task: "default"})
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), `Failed to run task "shared"`)
+	assert.NotContains(t, buff.String(), "should not be reached")
+	// The shared task still ran only once, which is the point of run: once.
+	assert.Equal(t, 1, strings.Count(buff.String(), "shared ran"))
+}
+
+func TestRunOnceJoinerHonorsItsOwnTimeout(t *testing.T) {
+	t.Parallel()
+
+	const dir = "testdata/run_once_timeout"
+
+	// The two deps run concurrently, so they need a buffer they can share.
+	var buff SyncBuffer
+	e := task.NewExecutor(
+		task.WithDir(dir),
+		task.WithStdout(&buff),
+		task.WithStderr(&buff),
+	)
+	require.NoError(t, e.Setup())
+
+	start := time.Now()
+	err := e.Run(t.Context(), &task.Call{Task: "default"})
+	require.Error(t, err)
+	// The joiner used to wait on the shared execution alone, outliving its own
+	// timeout by however long that execution took.
+	assert.Less(t, time.Since(start), 5*time.Second)
+
+	var timeoutErr *errors.TaskTimeoutError
+	require.ErrorAs(t, err, &timeoutErr)
+	assert.Equal(t, "joiner", timeoutErr.TaskName)
+	assert.NotContains(t, buff.buf.String(), "should not be reached")
+}
+
 func TestRunWhenChanged(t *testing.T) {
 	t.Parallel()
 

@@ -1,0 +1,20 @@
+version: '3'
+
+silent: true
+
+tasks:
+  default:
+    cmds:
+      # The first caller runs the shared task and swallows its failure...
+      - task: shared
+        ignore_error: true
+      # ...the second one joins the finished execution and must inherit its
+      # error rather than be told it succeeded.
+      - task: shared
+      - echo "should not be reached"
+
+  shared:
+    run: once
+    cmds:
+      - echo "shared ran"
+      - exit 1

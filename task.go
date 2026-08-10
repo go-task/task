@@ -465,6 +465,15 @@ func timedOut(ctx context.Context, timeout *errors.TaskTimeoutError) bool {
 	return timeout != nil && errors.Is(context.Cause(ctx), timeout)
 }
 
+// executionState is the outcome of a task execution, shared with the callers
+// that join it instead of running the task again under run: once or run:
+// when_changed. done is closed once execute returns; err is written before that
+// and must only be read after done is seen closed, which is what orders them.
+type executionState struct {
+	done chan struct{}
+	err  error
+}
+
 func (e *Executor) startExecution(ctx context.Context, t *ast.Task, execute func(ctx context.Context) error) error {
 	h, err := e.GetHash(t)
 	if err != nil {
@@ -477,7 +486,7 @@ func (e *Executor) startExecution(ctx context.Context, t *ast.Task, execute func
 
 	e.executionHashesMutex.Lock()
 
-	if otherExecutionCtx, ok := e.executionHashes[h]; ok {
+	if other, ok := e.executionHashes[h]; ok {
 		e.executionHashesMutex.Unlock()
 		e.Logger.VerboseErrf(logger.Magenta, "task: skipping execution of task: %s\n", h)
 
@@ -485,17 +494,36 @@ func (e *Executor) startExecution(ctx context.Context, t *ast.Task, execute func
 		reacquire := e.releaseConcurrencyLimit()
 		defer reacquire()
 
-		<-otherExecutionCtx.Done()
-		return nil
+		// Prefer an execution that is already over, even if our own context is
+		// done: there is nothing left to wait for, and select would otherwise
+		// pick between the two branches at random.
+		select {
+		case <-other.done:
+			return other.err
+		default:
+		}
+
+		select {
+		case <-other.done:
+			// Somebody else ran the task on our behalf, so its outcome is ours.
+			// Reporting success here would hide a shared execution that failed
+			// or that another caller's timeout killed halfway through.
+			return other.err
+		case <-ctx.Done():
+			// We did not start the task, so we cannot stop it, only stop waiting
+			// for it. Report the cause rather than ctx.Err() so that our own
+			// timeout surfaces as one instead of a bare context error.
+			return context.Cause(ctx)
+		}
 	}
 
-	ctx, cancel := context.WithCancel(ctx)
-	defer cancel()
-
-	e.executionHashes[h] = ctx
+	state := &executionState{done: make(chan struct{})}
+	e.executionHashes[h] = state
 	e.executionHashesMutex.Unlock()
 
-	return execute(ctx)
+	defer close(state.done)
+	state.err = execute(ctx)
+	return state.err
 }
 
 // FindMatchingTasks returns a list of tasks that match the given call. A task
