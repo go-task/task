@@ -1,150 +1,98 @@
 package templater
 
 import (
+	"log/slog"
 	"maps"
-	"math/rand/v2"
-	"net/url"
-	"os"
-	"path/filepath"
-	"runtime"
-	"strings"
 
-	"github.com/davecgh/go-spew/spew"
-	"github.com/google/uuid"
-	"go.yaml.in/yaml/v3"
-	"mvdan.cc/sh/v3/shell"
-	"mvdan.cc/sh/v3/syntax"
+	"github.com/go-sprout/sprout"
+	"github.com/go-sprout/sprout/registry/backward"
+	"github.com/go-sprout/sprout/registry/checksum"
+	"github.com/go-sprout/sprout/registry/conversion"
+	"github.com/go-sprout/sprout/registry/encoding"
+	"github.com/go-sprout/sprout/registry/env"
+	"github.com/go-sprout/sprout/registry/filesystem"
+	sproutmaps "github.com/go-sprout/sprout/registry/maps"
+	"github.com/go-sprout/sprout/registry/numeric"
+	"github.com/go-sprout/sprout/registry/random"
+	"github.com/go-sprout/sprout/registry/reflect"
+	"github.com/go-sprout/sprout/registry/regexp"
+	"github.com/go-sprout/sprout/registry/slices"
+	"github.com/go-sprout/sprout/registry/std"
+	sproutstrings "github.com/go-sprout/sprout/registry/strings"
+	sprouttime "github.com/go-sprout/sprout/registry/time"
+	"github.com/go-sprout/sprout/registry/uniqueid"
 
-	sprig "github.com/go-task/slim-sprig/v3"
 	"github.com/go-task/template"
+
+	"github.com/go-task/task/v3/internal/templater/taskfuncs"
 )
 
 var templateFuncs template.FuncMap
 
+// legacySprigAliases maps the function names Task exposed through slim-sprig
+// onto their sprout equivalents. Only names slim-sprig actually shipped are
+// listed — sprout carries a wider legacy set, but Task never exposed those and
+// should not start now.
+var legacySprigAliases = sprout.FunctionAliasMap{
+	"dateModify":   {"date_modify", "must_date_modify"},
+	"dateInZone":   {"date_in_zone"},
+	"dateAgo":      {"ago"},
+	"trimAll":      {"trimall"},
+	"append":       {"push", "mustPush"},
+	"list":         {"tuple"},
+	"max":          {"biggest"},
+	"toUpper":      {"upper"},
+	"toLower":      {"lower"},
+	"toTitleCase":  {"title"},
+	"base64Encode": {"b64enc"},
+	"base64Decode": {"b64dec"},
+	"base32Encode": {"b32enc"},
+	"base32Decode": {"b32dec"},
+	"pathBase":     {"base"},
+	"pathDir":      {"dir"},
+	"pathExt":      {"ext"},
+	"pathClean":    {"clean"},
+	"pathIsAbs":    {"isAbs"},
+	"expandEnv":    {"expandenv"},
+	"strSlice":     {"toStrings"},
+	"toInt":        {"int", "atoi"},
+	"toInt64":      {"int64"},
+	"toFloat64":    {"float64"},
+	"toOctal":      {"toDecimal"},
+}
+
 func init() {
-	taskFuncs := template.FuncMap{
-		"OS":           goos,
-		"ARCH":         goarch,
-		"numCPU":       runtime.NumCPU,
-		"catLines":     catLines,
-		"splitLines":   splitLines,
-		"fromSlash":    filepath.FromSlash,
-		"toSlash":      filepath.ToSlash,
-		"exeExt":       exeExt,
-		"shellQuote":   shellQuote,
-		"splitArgs":    splitArgs,
-		"IsSH":         IsSH, // Deprecated
-		"joinPath":     filepath.Join,
-		"joinEnv":      joinEnv,
-		"joinUrl":      joinUrl,
-		"relPath":      filepath.Rel,
-		"absPath":      filepath.Abs,
-		"merge":        merge,
-		"spew":         spew.Sdump,
-		"fromYaml":     fromYaml,
-		"mustFromYaml": mustFromYaml,
-		"toYaml":       toYaml,
-		"mustToYaml":   mustToYaml,
-		"uuid":         uuid.New,
-		"randIntN":     rand.IntN,
+	handler := sprout.New(
+		sprout.WithLogger(slog.New(noticeHandler{})),
+		sprout.WithRegistries(
+			taskfuncs.NewRegistry(),
+			backward.NewRegistry(),
+			checksum.NewRegistry(),
+			conversion.NewRegistry(),
+			encoding.NewRegistry(),
+			env.NewRegistry(),
+			filesystem.NewRegistry(),
+			sproutmaps.NewRegistry(),
+			numeric.NewRegistry(),
+			random.NewRegistry(),
+			reflect.NewRegistry(),
+			regexp.NewRegistry(),
+			slices.NewRegistry(),
+			std.NewRegistry(),
+			sproutstrings.NewRegistry(),
+			sprouttime.NewRegistry(),
+			uniqueid.NewRegistry(),
+		),
+	)
+
+	for original, aliases := range legacySprigAliases {
+		_ = sprout.WithAlias(original, aliases...)(handler)
+		for _, alias := range aliases {
+			_ = sprout.WithNotices(sprout.NewDeprecatedNotice(alias, "please use `"+original+"` instead"))(handler)
+		}
 	}
 
-	// aliases
-	taskFuncs["q"] = taskFuncs["shellQuote"]
-
-	// Deprecated aliases for renamed functions.
-	taskFuncs["FromSlash"] = taskFuncs["fromSlash"]
-	taskFuncs["ToSlash"] = taskFuncs["toSlash"]
-	taskFuncs["ExeExt"] = taskFuncs["exeExt"]
-
-	templateFuncs = template.FuncMap(sprig.TxtFuncMap())
-	maps.Copy(templateFuncs, taskFuncs)
-}
-
-func goos() string {
-	return runtime.GOOS
-}
-
-func goarch() string {
-	return runtime.GOARCH
-}
-
-func catLines(s string) string {
-	s = strings.ReplaceAll(s, "\r\n", " ")
-	return strings.ReplaceAll(s, "\n", " ")
-}
-
-func splitLines(s string) []string {
-	s = strings.ReplaceAll(s, "\r\n", "\n")
-	return strings.Split(s, "\n")
-}
-
-func exeExt() string {
-	if runtime.GOOS == "windows" {
-		return ".exe"
-	}
-	return ""
-}
-
-func shellQuote(str string) (string, error) {
-	return syntax.Quote(str, syntax.LangBash)
-}
-
-func splitArgs(s string) ([]string, error) {
-	return shell.Fields(s, nil)
-}
-
-// Deprecated: now always returns true
-func IsSH() bool {
-	return true
-}
-
-func joinEnv(elem ...string) string {
-	return strings.Join(elem, string(os.PathListSeparator))
-}
-
-func joinUrl(elem ...string) (string, error) {
-	if len(elem) == 0 {
-		return "", nil
-	}
-	// Use net/url.JoinPath rather than path.Join: the latter runs path.Clean,
-	// which collapses the "//" in a URL scheme (e.g. "http://" -> "http:/").
-	return url.JoinPath(elem[0], elem[1:]...)
-}
-
-func merge(base map[string]any, v ...map[string]any) map[string]any {
-	cap := len(v)
-	for _, m := range v {
-		cap += len(m)
-	}
-	result := make(map[string]any, cap)
-	maps.Copy(result, base)
-	for _, m := range v {
-		maps.Copy(result, m)
-	}
-	return result
-}
-
-func fromYaml(v string) any {
-	output, _ := mustFromYaml(v)
-	return output
-}
-
-func mustFromYaml(v string) (any, error) {
-	var output any
-	err := yaml.Unmarshal([]byte(v), &output)
-	return output, err
-}
-
-func toYaml(v any) string {
-	output, _ := yaml.Marshal(v)
-	return string(output)
-}
-
-func mustToYaml(v any) (string, error) {
-	output, err := yaml.Marshal(v)
-	if err != nil {
-		return "", err
-	}
-	return string(output), nil
+	templateFuncs = template.FuncMap(handler.Build())
+	maps.Copy(templateFuncs, taskfuncs.Overrides())
+	maps.Copy(templateFuncs, sprigSignatureShims(handler))
 }

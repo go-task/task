@@ -1,0 +1,375 @@
+## argument order — sprig order (target first)
+
+{{ get (dict "a" "b") "a" }}
+	= b
+{{ set (dict "a" "b") "c" "d" | toJson }}
+	= {"a":"b","c":"d"}
+{{ unset (dict "a" "b" "c" "d") "a" | toJson }}
+	= {"c":"d"}
+{{ hasKey (dict "a" "b") "a" }}
+	= true
+{{ pick (dict "a" "1" "b" "2") "a" | toJson }}
+	= {"a":"1"}
+{{ omit (dict "a" "1" "b" "2") "a" | toJson }}
+	= {"b":"2"}
+{{ append (list 1 2) 3 | toJson }}
+	= [1,2,3]
+{{ push (list 1 2) 3 | toJson }}
+	= [1,2,3]
+{{ prepend (list 2 3) 1 | toJson }}
+	= [1,2,3]
+{{ without (list 1 2 3) 2 | toJson }}
+	= [1,3]
+{{ slice (list 1 2 3 4) 1 3 | toJson }}
+	= [2,3]
+
+## argument order — sprout order (target last)
+
+{{ dict "a" "b" | get "a" }}
+	= b
+{{ dict "a" "b" | set "c" "d" | toJson }}
+	= {"a":"b","c":"d"}
+{{ dict "a" "b" "c" "d" | unset "a" | toJson }}
+	= {"c":"d"}
+{{ dict "a" "b" | hasKey "a" }}
+	= true
+{{ list 1 2 | append 3 | toJson }}
+	= [1,2,3]
+{{ list 2 3 | prepend 1 | toJson }}
+	= [1,2,3]
+{{ dict "a" "1" "b" "2" | pick "a" | toJson }}
+	= {"a":"1"}
+{{ dict "a" "1" "b" "2" | omit "a" | toJson }}
+	= {"b":"2"}
+{{ list 1 2 3 | without 2 | toJson }}
+	= [1,3]
+{{ list 1 2 3 4 | slice 1 3 | toJson }}
+	= [2,3]
+
+## maps — unchanged signatures
+
+{{ dict "a" 1 "b" 2 | toJson }}
+	= {"a":1,"b":2}
+{{ keys (dict "b" 1 "a" 2) | sortAlpha | toJson }}
+	= ["a","b"]
+{{ values (dict "a" 1) | toJson }}
+	= [1]
+{{ pluck "a" (dict "a" 1) (dict "a" 2) | toJson }}
+	= [1,2]
+{{ dig "a" "b" "fallback" (dict "a" (dict "b" "found")) }}
+	= found
+{{ dig "a" "missing" "fallback" (dict "a" (dict "b" "found")) }}
+	= fallback
+{{ dig "a.b" "fallback" (dict "a" (dict "b" "found")) }}
+	= found
+{{ merge (dict "a" 1) (dict "b" 2) | toJson }}
+	= {"a":1,"b":2}
+{{ merge (dict "a" 1) (dict "a" 0) | toJson }}
+	= {"a":0}
+
+## lists
+
+{{ list 1 2 3 | toJson }}
+	= [1,2,3]
+{{ tuple 1 2 3 | toJson }}
+	= [1,2,3]
+{{ first (list 1 2 3) }}
+	= 1
+{{ last (list 1 2 3) }}
+	= 3
+{{ rest (list 1 2 3) | toJson }}
+	= [2,3]
+{{ initial (list 1 2 3) | toJson }}
+	= [1,2]
+{{ reverse (list 1 2 3) | toJson }}
+	= [3,2,1]
+{{ uniq (list 1 1 2) | toJson }}
+	= [1,2]
+{{ compact (list 1 "" 2) | toJson }}
+	= [1,2]
+{{ concat (list 1) (list 2) | toJson }}
+	= [1,2]
+{{ chunk 2 (list 1 2 3) | toJson }}
+	= [[1,2],[3]]
+{{ has 2 (list 1 2 3) }}
+	= true
+{{ sortAlpha (list "b" "a") | toJson }}
+	= ["a","b"]
+{{ splitList "," "a,b,c" | toJson }}
+	= ["a","b","c"]
+{{ toStrings (list 1 2) | toJson }}
+	= ["1","2"]
+{{ until 3 | toJson }}
+	= [0,1,2]
+{{ untilStep 0 6 2 | toJson }}
+	= [0,2,4]
+{{ seq 1 3 }}
+	= 1 2 3
+{{ join "," (list "a" "b") }}
+	= a,b
+
+## strings
+
+{{ trim "  x  " }}
+	= x
+{{ trimAll "-" "-x-" }}
+	= x
+{{ trimall "-" "-x-" }}
+	= x
+{{ trimPrefix "a" "ab" }}
+	= b
+{{ trimSuffix "b" "ab" }}
+	= a
+{{ upper "abc" }}
+	= ABC
+{{ lower "ABC" }}
+	= abc
+{{ title "hello world" }}
+	= Hello World
+{{ title "hello wORLD" }}
+	= Hello World
+{{ trunc 3 "foobar" }}
+	= foo
+{{ trunc -3 "foobar" }}
+	= bar
+{{ substr 0 3 "foobar" }}
+	= foo
+{{ substr 0 -3 "foobar" }}
+	= foo
+{{ repeat 3 "x" }}
+	= xxx
+{{ contains "oo" "foobar" }}
+	= true
+{{ hasPrefix "foo" "foobar" }}
+	= true
+{{ hasSuffix "bar" "foobar" }}
+	= true
+{{ quote "x" }}
+	= "x"
+{{ squote "x" }}
+	= 'x'
+{{ cat "a" "b" }}
+	= a b
+{{ indent 2 "x" }}
+	=   x
+{{ nindent 2 "x" }}
+	= \n  x
+{{ replace "a" "b" "aa" }}
+	= bb
+{{ plural "one" "many" 2 }}
+	= many
+{{ split "," "a,b" | toJson }}
+	= {"_0":"a","_1":"b"}
+{{ splitn "," 2 "a,b,c" | toJson }}
+	= {"_0":"a","_1":"b,c"}
+{{ toString 42 }}
+	= 42
+
+## numbers
+
+{{ add 1 2 }}
+	= 3
+{{ add1 1 }}
+	= 2
+{{ sub 5 2 }}
+	= 3
+{{ mul 2 3 }}
+	= 6
+{{ div 6 2 }}
+	= 3
+{{ mod 5 3 }}
+	= 2
+{{ max 1 5 3 }}
+	= 5
+{{ min 1 5 3 }}
+	= 1
+{{ biggest 1 5 3 }}
+	= 5
+{{ maxf 1.5 2.5 }}
+	= 2.5
+{{ minf 1.5 2.5 }}
+	= 1.5
+{{ ceil 1.1 }}
+	= 2
+{{ floor 1.9 }}
+	= 1
+{{ round 1.55 1 }}
+	= 1.6
+{{ atoi "42" }}
+	= 42
+{{ atoi "abc" }}
+	! at <atoi "abc">: error calling atoi: unable to cast "abc" of type string to int: strconv.ParseInt: parsing "abc": invalid syntax
+{{ int "42" }}
+	= 42
+{{ int64 "42" }}
+	= 42
+{{ float64 "1.5" }}
+	= 1.5
+{{ toDecimal "0777" }}
+	= 511
+
+## defaults and flow
+
+{{ default "d" "" }}
+	= d
+{{ default "d" "x" }}
+	= x
+{{ empty "" }}
+	= true
+{{ empty 0 }}
+	= true
+{{ coalesce "" "x" }}
+	= x
+{{ all 1 1 }}
+	= true
+{{ any 0 1 }}
+	= true
+{{ ternary "y" "n" true }}
+	= y
+{{ fail "boom" }}
+	! at <fail "boom">: error calling fail: boom
+
+## encoding
+
+{{ toJson (dict "a" 1) }}
+	= {"a":1}
+{{ toPrettyJson (dict "a" 1) }}
+	= {\n  "a": 1\n}
+{{ toRawJson (dict "a" "<b>") }}
+	= {"a":"<b>"}
+{{ fromJson "{\"a\":1}" | toJson }}
+	= {"a":1}
+{{ fromJson "not json" | toJson }}
+	! at <fromJson "not json">: error calling fromJson: json decode error: invalid character 'o' in literal null (expecting 'u')
+{{ mustFromJson "not json" | toJson }}
+	! at <mustFromJson "not json">: error calling mustFromJson: json decode error: invalid character 'o' in literal null (expecting 'u')
+{{ toYaml (dict "a" 1) }}
+	= a: 1\n
+{{ fromYaml "a: 1" | toJson }}
+	= {"a":1}
+{{ mustFromYaml "a: :" | toJson }}
+	! at <mustFromYaml "a: :">: error calling mustFromYaml: yaml: mapping values are not allowed in this context
+{{ b64enc "hello" }}
+	= aGVsbG8=
+{{ b64dec "aGVsbG8=" }}
+	= hello
+{{ b32enc "hello" }}
+	= NBSWY3DP
+{{ b32dec "NBSWY3DP" }}
+	= hello
+
+## regex
+
+{{ regexMatch "^a" "abc" }}
+	= true
+{{ regexFind "[0-9]+" "abc123" }}
+	= 123
+{{ regexFindAll "[0-9]" "a1b2" -1 | toJson }}
+	= ["1","2"]
+{{ regexReplaceAll "[0-9]" "abc123" "#" }}
+	= abc###
+{{ regexReplaceAllLiteral "[0-9]" "abc123" "#" }}
+	= abc###
+{{ regexSplit "," "a,b" -1 | toJson }}
+	= ["a","b"]
+{{ regexQuoteMeta "a.b" }}
+	= a\.b
+{{ mustRegexFind "[" "abc" }}
+	! at <mustRegexFind "[" "abc">: error calling mustRegexFind: error parsing regexp: missing closing ]: `[`
+
+## reflection
+
+{{ typeOf 1 }}
+	= int
+{{ typeIs "int" 1 }}
+	= true
+{{ typeIsLike "int" 1 }}
+	= true
+{{ kindOf 1 }}
+	= int
+{{ kindOf (list 1) }}
+	= slice
+{{ kindIs "int" 1 }}
+	= true
+{{ deepEqual (list 1) (list 1) }}
+	= true
+
+## checksums
+
+{{ sha1sum "x" }}
+	= 11f6ad8ec52a2984abaafd7c3b516503785c2072
+{{ sha256sum "x" }}
+	= 2d711642b726b04401627ca9fbac32f5c8530fb1903cc4db02258717921a4881
+{{ adler32sum "x" }}
+	= 7929977
+
+## paths
+
+{{ base "/foo/bar.txt" }}
+	= bar.txt
+{{ dir "/foo/bar.txt" }}
+	= /foo
+{{ ext "/foo/bar.txt" }}
+	= .txt
+{{ clean "/foo//bar" }}
+	= /foo/bar
+{{ isAbs "/foo" }}
+	= true
+
+## dates — fixed epoch, explicit zone
+
+{{ dateInZone "2006-01-02T15:04:05" 0 "UTC" }}
+	= 1970-01-01T00:00:00
+{{ date "2006-01-02T15:04:05" 0 }}
+	= 1970-01-01T00:00:00
+{{ dateModify "1h" (toDate "2006-01-02T15:04:05Z07:00" "2020-01-01T00:00:00Z") }}
+	= 2020-01-01 01:00:00 +0000 UTC
+{{ date_modify "1h" (toDate "2006-01-02T15:04:05Z07:00" "2020-01-01T00:00:00Z") }}
+	= 2020-01-01 01:00:00 +0000 UTC
+{{ toDate "2006-01-02" "2020-01-01" }}
+	= 2020-01-01 00:00:00 +0000 UTC
+{{ unixEpoch (toDate "2006-01-02" "2020-01-01") }}
+	= 1577836800
+{{ duration 90 }}
+	= 1m30s
+{{ durationRound "1h35m30s" }}
+	= 1h
+{{ htmlDate 0 }}
+	= 1970-01-01
+
+## urls
+
+{{ urlParse "http://example.com/a?b=c" | toJson }}
+	= {"fragment":"","host":"example.com","hostname":"example.com","opaque":"","path":"/a","query":"b=c","scheme":"http","userinfo":""}
+{{ urlJoin (dict "scheme" "http" "host" "example.com" "path" "/a") }}
+	= http://example.com/a
+
+## task's own functions
+
+{{ numCPU | kindOf }}
+	= int
+{{ catLines "a\nb" }}
+	= a b
+{{ splitLines "a\nb" | toJson }}
+	= ["a","b"]
+{{ toSlash "a/b" }}
+	= a/b
+{{ fromSlash "a/b" | kindOf }}
+	= string
+{{ ToSlash "a/b" }}
+	= a/b
+{{ shellQuote "a b" }}
+	= 'a b'
+{{ q "a b" }}
+	= 'a b'
+{{ splitArgs "a b c" | toJson }}
+	= ["a","b","c"]
+{{ IsSH }}
+	= true
+{{ joinUrl "http://localhost" "a" "b" }}
+	= http://localhost/a/b
+{{ mustToYaml (dict "a" 1) }}
+	= a: 1\n
+{{ randIntN 1 }}
+	= 0
+

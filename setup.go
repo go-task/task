@@ -18,6 +18,7 @@ import (
 	"github.com/go-task/task/v3/internal/filepathext"
 	"github.com/go-task/task/v3/internal/logger"
 	"github.com/go-task/task/v3/internal/output"
+	"github.com/go-task/task/v3/internal/templater"
 	"github.com/go-task/task/v3/internal/version"
 	"github.com/go-task/task/v3/taskfile"
 	"github.com/go-task/task/v3/taskfile/ast"
@@ -192,6 +193,9 @@ func (e *Executor) setupLogger() {
 		AssumeYes:  e.AssumeYes,
 		AssumeTerm: e.AssumeTerm,
 	}
+	templater.SetNoticeSink(func(format string, args ...any) {
+		e.Logger.VerboseErrf(logger.Yellow, format, args...)
+	})
 }
 
 func (e *Executor) setupOutput() error {

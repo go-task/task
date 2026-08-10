@@ -12,7 +12,7 @@ Task's templating engine uses Go's
 [text/template](https://pkg.go.dev/text/template) package to interpolate values.
 This reference covers the main features and all available functions for creating
 dynamic Taskfiles. Most of the provided functions come from the
-[slim-sprig](https://sprig.taskfile.dev/) library.
+[sprout](https://docs.atom.codes/sprout) library.
 
 ## Basic Usage
 
@@ -444,7 +444,7 @@ tasks:
     vars:
       ITEMS: [a, b, c, d, e]
     cmds:
-      - echo "{{slice .ITEMS 1 3}}"     # [b c]
+      - echo "{{.ITEMS | slice 1 3}}"     # [b c]
 ```
 
 ### String Functions
@@ -540,8 +540,8 @@ tasks:
     cmds:
       - echo "{{.NUMBERS | uniq}}"                       # [3, 1, 4, 5, 9]
       - echo "{{.NUMBERS | sortAlpha}}"                  # [1, 1, 1, 3, 4, 5, 9]
-      - echo"'{{append .FRUITS "cherry"}}""              # ["apple", "banana", "cherry"]
-      - echo "{{ without .NUMBERS 1}}"                   # [3, 4, 5, 9]
+      - echo "{{.FRUITS | append "cherry"}}"             # ["apple", "banana", "cherry"]
+      - echo "{{.NUMBERS | without 1}}"                  # [3, 4, 5, 9]
       - echo "{{.NUMBERS | has 5}}"                      # true
 ```
 
@@ -704,11 +704,10 @@ tasks:
           port: 5432
           ssl: true
     cmds:
-      - echo "Database {{get .CONFIG "database"}}"
-      - echo "Database {{"database" | get .CONFIG}}"
+      - echo "Database {{.CONFIG | get "database"}}"
       - echo "Keys {{.CONFIG | keys}}"
       - echo "Keys {{keys .CONFIG }}"
-      - echo "Has SSL {{hasKey .CONFIG "ssl"}}"
+      - echo "Has SSL {{.CONFIG | hasKey "ssl"}}"
       - echo "{{dict "env" "prod" "debug" false}}"
 ```
 
@@ -858,3 +857,82 @@ tasks:
       - echo '{{printf "Version %s.%d" .VERSION .BUILD}}'
       - echo '{{println "With newline"}}'
 ```
+
+## Migrating from slim-sprig
+
+Task's template functions used to come from
+[slim-sprig](https://sprig.taskfile.dev/), a fork of the unmaintained
+[sprig](https://masterminds.github.io/sprig/) library. They now come from
+[sprout](https://docs.atom.codes/sprout), its maintained successor.
+
+Every function name that slim-sprig provided still resolves, so existing
+Taskfiles keep working. Run Task with `--verbose` to see which of your templates
+rely on a deprecated name or argument order.
+
+### Renamed functions
+
+The old names are kept as deprecated aliases. Prefer the new ones.
+
+| Old name                     | New name                        |
+| ---------------------------- | ------------------------------- |
+| `upper`                      | `toUpper`                       |
+| `lower`                      | `toLower`                       |
+| `title`                      | `toTitleCase`                   |
+| `atoi`, `int`                | `toInt`                         |
+| `int64`                      | `toInt64`                       |
+| `float64`                    | `toFloat64`                     |
+| `toDecimal`                  | `toOctal`                       |
+| `toStrings`                  | `strSlice`                      |
+| `b64enc`, `b64dec`           | `base64Encode`, `base64Decode`  |
+| `b32enc`, `b32dec`           | `base32Encode`, `base32Decode`  |
+| `base`, `dir`, `ext`         | `pathBase`, `pathDir`, `pathExt` |
+| `clean`, `isAbs`             | `pathClean`, `pathIsAbs`        |
+| `expandenv`                  | `expandEnv`                     |
+| `ago`                        | `dateAgo`                       |
+| `trimall`                    | `trimAll`                       |
+| `push`, `mustPush`           | `append`                        |
+| `tuple`                      | `list`                          |
+| `biggest`                    | `max`                           |
+| `date_in_zone`               | `dateInZone`                    |
+| `date_modify`, `must_date_modify` | `dateModify`               |
+
+### Changed argument order
+
+Ten functions now take the map or list they operate on as their **last**
+argument, so that they can be piped into. Task accepts both orders, warning
+about the old one under `--verbose`, but the old order will eventually be
+removed.
+
+| Function                       | Old                          | New                              |
+| ------------------------------ | ---------------------------- | -------------------------------- |
+| `get`, `hasKey`, `unset`       | `{{ get $dict "key" }}`      | `{{ $dict \| get "key" }}`       |
+| `set`                          | `{{ set $dict "k" "v" }}`    | `{{ $dict \| set "k" "v" }}`     |
+| `pick`, `omit`                 | `{{ pick $dict "key" }}`     | `{{ $dict \| pick "key" }}`      |
+| `append`, `prepend`            | `{{ append $list "v" }}`     | `{{ $list \| append "v" }}`      |
+| `without`                      | `{{ without $list "v" }}`    | `{{ $list \| without "v" }}`     |
+| `slice`                        | `{{ slice $list 1 3 }}`      | `{{ $list \| slice 1 3 }}`       |
+
+`dig`, `has`, `chunk` and `merge` kept their argument order.
+
+### Behaviour changes
+
+These are corrections of long-standing sprig bugs, and they are not opt-in.
+
+- Functions that used to swallow an error or panic now report it, failing the
+  task instead of rendering an empty string. `{{ atoi "abc" }}` and
+  `{{ fromJson "not json" }}` are the common cases; their `must` variants
+  behaved this way already.
+- `substr` handles negative indices correctly: `{{ substr 0 -3 "foobar" }}` now
+  yields `foo` rather than `foobar`.
+- `title` applies Unicode title casing: `{{ title "hello wORLD" }}` now yields
+  `Hello World` rather than `Hello WORLD`.
+- `duration` accepts a number of seconds: `{{ duration 90 }}` now yields `1m30s`
+  rather than `0s`.
+- `dig` splits its keys on dots, so `{{ dig "a.b" "fallback" $dict }}` walks
+  into `a` then `b` rather than looking for a literal `a.b` key.
+- `date` and `toDate` interpret a timestamp in UTC rather than in the machine's
+  local timezone. Use `dateInZone` to be explicit.
+
+`merge`, `fromYaml`, `toYaml`, `mustFromYaml` and `mustToYaml` are Task's own
+implementations and are unaffected, even though sprout ships functions of the
+same name.

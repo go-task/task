@@ -36,6 +36,14 @@
 - Fixed the JSON schema rejecting more keys the Taskfile parser accepts:
   `ignore_error` on a `task:` call, and `if`, `set` and `shopt` on a command
   inside a `for` loop (#2967 by @vmaerten).
+- Migrated the templating engine from `slim-sprig` to
+  [sprout](https://docs.atom.codes/sprout). Every function name Task exposed
+  still resolves, and the ten functions whose argument order changed accept both
+  the old and the new form, reporting the old one under `--verbose`. Some
+  long-standing sprig bugs are fixed as a result, and functions that used to
+  swallow errors now report them — see
+  [Migrating from slim-sprig](https://taskfile.dev/docs/reference/templating#migrating-from-slim-sprig)
+  (#1638, #2006 by @42atomys, by @vmaerten).
 
 ## v3.52.0 - 2026-07-02
 
