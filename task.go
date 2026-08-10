@@ -332,10 +332,6 @@ func (e *Executor) runDeferred(t *ast.Task, call *Call, i int, vars *ast.Vars, d
 	defer cancel()
 
 	cmd := t.Cmds[i]
-	if cmd.Task != "" && cmd.Timeout > 0 {
-		ctx, cancel = context.WithTimeout(ctx, cmd.Timeout)
-		defer cancel()
-	}
 	cache := &templater.Cache{Vars: vars}
 	extra := map[string]any{}
 
@@ -370,9 +366,11 @@ func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call *Call, i in
 		}
 	}
 
+	var timeout *errors.TaskTimeoutError
 	if cmd.Timeout > 0 {
+		timeout = &errors.TaskTimeoutError{TaskName: t.Name(), Timeout: cmd.Timeout}
 		var cancel context.CancelFunc
-		ctx, cancel = context.WithTimeout(ctx, cmd.Timeout)
+		ctx, cancel = context.WithTimeoutCause(ctx, cmd.Timeout, timeout)
 		defer cancel()
 	}
 
@@ -382,8 +380,8 @@ func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call *Call, i in
 		defer reacquire()
 
 		err := e.RunTask(ctx, &Call{Task: cmd.Task, Vars: cmd.Vars, Silent: cmd.Silent, Indirect: true})
-		if err != nil && ctx.Err() == context.DeadlineExceeded {
-			return fmt.Errorf("task: [%s] command timeout exceeded (%s): %w", t.Name(), cmd.Timeout, err)
+		if err != nil && timedOut(ctx, timeout) {
+			return timeout
 		}
 		var exitCode interp.ExitStatus
 		if errors.As(err, &exitCode) && cmd.IgnoreError {
@@ -429,8 +427,8 @@ func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call *Call, i in
 		if closeErr := closer(err); closeErr != nil {
 			e.Logger.Errf(logger.Red, "task: unable to close writer: %v\n", closeErr)
 		}
-		if err != nil && ctx.Err() == context.DeadlineExceeded {
-			return fmt.Errorf("task: [%s] command timeout exceeded (%s): %w", t.Name(), cmd.Timeout, err)
+		if err != nil && timedOut(ctx, timeout) {
+			return timeout
 		}
 		var exitCode interp.ExitStatus
 		if errors.As(err, &exitCode) && cmd.IgnoreError {
@@ -441,6 +439,13 @@ func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call *Call, i in
 	default:
 		return nil
 	}
+}
+
+// timedOut reports whether ctx was cancelled by the given timeout, as opposed
+// to a deadline inherited from an ancestor. ctx.Err() cannot tell them apart:
+// a derived context reports its parent's DeadlineExceeded as its own.
+func timedOut(ctx context.Context, timeout *errors.TaskTimeoutError) bool {
+	return timeout != nil && errors.Is(context.Cause(ctx), timeout)
 }
 
 func (e *Executor) startExecution(ctx context.Context, t *ast.Task, execute func(ctx context.Context) error) error {

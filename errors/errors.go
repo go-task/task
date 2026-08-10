@@ -39,6 +39,7 @@ const (
 	CodeTaskCancelled
 	CodeTaskMissingRequiredVars
 	CodeTaskNotAllowedVars
+	CodeTaskTimedOut
 )
 
 // TaskError extends the standard error interface with a Code method. This code will

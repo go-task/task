@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"mvdan.cc/sh/v3/interp"
 )
@@ -56,6 +57,22 @@ func (err *TaskRunError) TaskExitCode() int {
 
 func (err *TaskRunError) Unwrap() error {
 	return err.Err
+}
+
+// TaskTimeoutError is returned when a command exceeds the timeout it declared.
+// It deliberately does not unwrap to context.DeadlineExceeded, which the watch
+// loop treats as an expected cancellation and swallows.
+type TaskTimeoutError struct {
+	TaskName string
+	Timeout  time.Duration
+}
+
+func (err *TaskTimeoutError) Error() string {
+	return fmt.Sprintf(`task: [%s] command timeout exceeded (%s)`, err.TaskName, err.Timeout)
+}
+
+func (err *TaskTimeoutError) Code() int {
+	return CodeTaskTimedOut
 }
 
 // TaskInternalError when the user attempts to invoke a task that is internal.

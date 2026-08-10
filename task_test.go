@@ -2,6 +2,7 @@ package task_test
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io"
 	"io/fs"
@@ -2705,6 +2706,54 @@ func TestCommandTimeout(t *testing.T) {
 			} else {
 				require.NoError(t, err)
 			}
+		})
+	}
+}
+
+func TestCommandTimeoutAttribution(t *testing.T) {
+	t.Parallel()
+
+	const dir = "testdata/timeout"
+	tests := []struct {
+		name        string
+		task        string
+		notContains string
+	}{
+		{
+			name:        "a command declaring no timeout is not blamed for one",
+			task:        "inherited-timeout",
+			notContains: "(0s)",
+		},
+		{
+			name:        "a command is not blamed for a timeout it never reached",
+			task:        "larger-child-timeout",
+			notContains: "10m",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			e := task.NewExecutor(
+				task.WithDir(dir),
+				task.WithStdout(io.Discard),
+				task.WithStderr(io.Discard),
+			)
+			require.NoError(t, e.Setup())
+
+			err := e.Run(t.Context(), &task.Call{Task: test.task})
+			require.Error(t, err)
+			assert.Contains(t, err.Error(), "command timeout exceeded (500ms)")
+			assert.NotContains(t, err.Error(), test.notContains)
+
+			var timeoutErr *errors.TaskTimeoutError
+			require.ErrorAs(t, err, &timeoutErr)
+			assert.Equal(t, test.task, timeoutErr.TaskName)
+
+			// The watch loop stays silent on context errors, so a timeout must
+			// not look like one.
+			assert.False(t, errors.Is(err, context.DeadlineExceeded))
 		})
 	}
 }
