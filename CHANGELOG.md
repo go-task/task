@@ -24,6 +24,10 @@
   gets `{{.TIMESTAMP}}` and no longer a `{{.CHECKSUM}}` (which now renders as an
   empty string), and neither variable is injected when the effective method is
   `none` (#2924 by @vmaerten).
+- Fixed `{{.TIMESTAMP}}` rendering as the Unix epoch (e.g. `1970-01-01 01:00:00
+  +0100 CET`) when a task's `sources` matched no file. It now renders as an
+  empty string, instead of a date that looks genuine and carries the machine's
+  time zone (#2960 by @vmaerten).
 
 ## v3.52.0 - 2026-07-02
 
