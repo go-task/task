@@ -442,6 +442,10 @@
           "description": "Silent mode disables echoing of command before Task runs it",
           "type": "boolean"
         },
+        "ignore_error": {
+          "description": "Prevent command from aborting the execution of task even after receiving a status code of 1",
+          "type": "boolean"
+        },
         "platforms": {
           "description": "Specifies which platforms the command should be run on.",
           "$ref": "#/definitions/platforms"
@@ -466,6 +470,10 @@
         },
         "silent": {
           "description": "Silent mode disables echoing of command before Task runs it",
+          "type": "boolean"
+        },
+        "ignore_error": {
+          "description": "Prevent command from aborting the execution of task even after receiving a status code of 1",
           "type": "boolean"
         },
         "platforms": {
