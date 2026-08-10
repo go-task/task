@@ -1,0 +1,6 @@
+task: Available tasks for this project:
+* docker:build:       Build the Docker image      (aliases: db)
+                      deps: lint
+                      summary: Builds a production Docker image using the project Dockerfile.
+* docker:push:        Push the Docker image
+                      requires: REGISTRY

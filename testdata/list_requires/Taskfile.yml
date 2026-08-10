@@ -1,0 +1,17 @@
+version: '3'
+
+tasks:
+  deploy:
+    desc: Deploy the application
+    requires:
+      vars:
+        - VERSION
+        - name: REGISTRY
+          enum: [ecr, gcr, dockerhub]
+    cmds:
+      - echo "deploying {{.VERSION}} to {{.REGISTRY}}"
+
+  build:
+    desc: Build the project
+    cmds:
+      - echo "building"

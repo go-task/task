@@ -234,3 +234,148 @@ func TestJsonListFormat(t *testing.T) {
 		WithFixtureTemplating(),
 	)
 }
+
+func TestListRequires(t *testing.T) {
+	t.Parallel()
+
+	NewFormatterTest(t,
+		WithExecutorOptions(
+			task.WithDir("testdata/list_requires"),
+		),
+		WithListOptions(task.ListOptions{
+			ListOnlyTasksWithDescriptions: true,
+		}),
+	)
+}
+
+func TestListLong(t *testing.T) {
+	t.Parallel()
+
+	NewFormatterTest(t,
+		WithExecutorOptions(
+			task.WithDir("testdata/list_long"),
+		),
+		WithListOptions(task.ListOptions{
+			ListOnlyTasksWithDescriptions: true,
+			Long:                          true,
+		}),
+	)
+}
+
+func TestListTree(t *testing.T) {
+	t.Parallel()
+
+	NewFormatterTest(t,
+		WithExecutorOptions(
+			task.WithDir("testdata/list_tree"),
+		),
+		WithListOptions(task.ListOptions{
+			ListOnlyTasksWithDescriptions: true,
+			Tree:                          true,
+		}),
+	)
+}
+
+func TestListTreeLong(t *testing.T) {
+	t.Parallel()
+
+	NewFormatterTest(t,
+		WithExecutorOptions(
+			task.WithDir("testdata/list_tree_long"),
+		),
+		WithListOptions(task.ListOptions{
+			ListOnlyTasksWithDescriptions: true,
+			Tree:                          true,
+			Long:                          true,
+		}),
+	)
+}
+
+func TestListFilter(t *testing.T) {
+	t.Parallel()
+
+	NewFormatterTest(t,
+		WithExecutorOptions(
+			task.WithDir("testdata/list_filter"),
+		),
+		WithListOptions(task.ListOptions{
+			ListOnlyTasksWithDescriptions: true,
+			Filter:                        "docker",
+		}),
+	)
+}
+
+func TestListFilterNoMatch(t *testing.T) {
+	t.Parallel()
+
+	NewFormatterTest(t,
+		WithExecutorOptions(
+			task.WithDir("testdata/list_filter"),
+		),
+		WithListOptions(task.ListOptions{
+			ListOnlyTasksWithDescriptions: true,
+			Filter:                        "nonexistent",
+		}),
+	)
+}
+
+func TestListTreeFilter(t *testing.T) {
+	t.Parallel()
+
+	NewFormatterTest(t,
+		WithExecutorOptions(
+			task.WithDir("testdata/list_tree_filter"),
+		),
+		WithListOptions(task.ListOptions{
+			ListOnlyTasksWithDescriptions: true,
+			Tree:                          true,
+			Filter:                        "docker",
+		}),
+	)
+}
+
+func TestListTreeFilterLong(t *testing.T) {
+	t.Parallel()
+
+	NewFormatterTest(t,
+		WithExecutorOptions(
+			task.WithDir("testdata/list_tree_filter"),
+		),
+		WithListOptions(task.ListOptions{
+			ListOnlyTasksWithDescriptions: true,
+			Tree:                          true,
+			Long:                          true,
+			Filter:                        "docker",
+		}),
+	)
+}
+
+func TestListFlatFilterLong(t *testing.T) {
+	t.Parallel()
+
+	NewFormatterTest(t,
+		WithExecutorOptions(
+			task.WithDir("testdata/list_tree_filter"),
+		),
+		WithListOptions(task.ListOptions{
+			ListOnlyTasksWithDescriptions: true,
+			Long:                          true,
+			Filter:                        "docker",
+		}),
+	)
+}
+
+func TestJsonListLong(t *testing.T) {
+	t.Parallel()
+
+	NewFormatterTest(t,
+		WithExecutorOptions(
+			task.WithDir("testdata/json_list_long"),
+		),
+		WithListOptions(task.ListOptions{
+			FormatTaskListAsJSON: true,
+			Long:                 true,
+		}),
+		WithFixtureTemplating(),
+	)
+}

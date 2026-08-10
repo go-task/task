@@ -1,0 +1,14 @@
+task: Available tasks for this project:
+  docker
+    build:      Build the Docker image
+    push:       Push the Docker image
+
+  k8s
+    apply:        Apply Kubernetes manifests
+    rollout:      Watch rollout status
+
+  ─────
+
+  build:       Build the project      (aliases: b)
+  deploy:      Deploy the application
+               requires: ENV

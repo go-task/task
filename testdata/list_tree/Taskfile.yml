@@ -1,0 +1,36 @@
+version: '3'
+
+tasks:
+  build:
+    desc: Build the project
+    aliases: [b]
+    cmds:
+      - go build ./...
+
+  deploy:
+    desc: Deploy the application
+    requires:
+      vars:
+        - ENV
+    cmds:
+      - echo "deploying"
+
+  docker:build:
+    desc: Build the Docker image
+    cmds:
+      - docker build .
+
+  docker:push:
+    desc: Push the Docker image
+    cmds:
+      - docker push
+
+  k8s:apply:
+    desc: Apply Kubernetes manifests
+    cmds:
+      - kubectl apply -f .
+
+  k8s:rollout:
+    desc: Watch rollout status
+    cmds:
+      - kubectl rollout status

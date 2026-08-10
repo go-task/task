@@ -1,0 +1,44 @@
+version: '3'
+
+tasks:
+  docker:build:
+    desc: Build the Docker image
+    aliases: [db]
+    deps:
+      - lint
+    summary: |
+      Builds a production Docker image using the project Dockerfile.
+    cmds:
+      - docker build .
+
+  docker:push:
+    desc: Push the Docker image
+    requires:
+      vars:
+        - REGISTRY
+    cmds:
+      - docker push
+
+  test:unit:
+    desc: Run unit tests
+    cmds:
+      - go test ./...
+
+  test:integration:
+    desc: Run integration tests
+    deps:
+      - docker:build
+    cmds:
+      - go test -tags=integration ./...
+
+  build:
+    desc: Build the project
+    deps:
+      - lint
+    cmds:
+      - go build ./...
+
+  lint:
+    desc: Run linters
+    cmds:
+      - golangci-lint run
