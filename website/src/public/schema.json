@@ -574,6 +574,10 @@
         "vars": {
           "description": "Values passed to the task called",
           "$ref": "#/definitions/vars"
+        },
+        "timeout": {
+          "description": "Maximum duration the command is allowed to run before being terminated. Supports Go duration syntax (e.g., '5m', '30s', '1h').",
+          "type": "string"
         }
       },
       "additionalProperties": false,

@@ -986,6 +986,16 @@ too, and [`ignore_error`](#command) covers a timeout like any other failure. A
 timed-out command reports [`EXIT_CODE`](/reference/templating#exit_code) `124`,
 following the convention of `timeout(1)`.
 
+A dependency takes the same key:
+
+```yaml
+tasks:
+  build:
+    deps:
+      - task: fetch-assets
+        timeout: 2m
+```
+
 The key goes next to the command whatever form it takes, including a `defer`:
 
 ```yaml

@@ -321,11 +321,20 @@ func (e *Executor) runDeps(ctx context.Context, t *ast.Task) error {
 
 	for _, d := range t.Deps {
 		g.Go(func() error {
-			err := e.RunTask(ctx, &Call{Task: d.Task, Vars: d.Vars, Silent: d.Silent, Indirect: true})
-			if err != nil {
-				return err
+			depCtx := ctx
+			var timeout *errors.TaskTimeoutError
+			if d.Timeout > 0 {
+				timeout = &errors.TaskTimeoutError{TaskName: d.Task, Timeout: d.Timeout}
+				var cancel context.CancelFunc
+				depCtx, cancel = context.WithTimeoutCause(ctx, d.Timeout, timeout)
+				defer cancel()
 			}
-			return nil
+
+			err := e.RunTask(depCtx, &Call{Task: d.Task, Vars: d.Vars, Silent: d.Silent, Indirect: true})
+			if err != nil && timedOut(depCtx, timeout) {
+				return timeout
+			}
+			return err
 		})
 	}
 

@@ -2817,6 +2817,49 @@ func TestCommandTimeout(t *testing.T) {
 	}
 }
 
+func TestDepTimeout(t *testing.T) {
+	t.Parallel()
+
+	const dir = "testdata/dep_timeout"
+
+	t.Run("timeout exceeded", func(t *testing.T) {
+		t.Parallel()
+
+		var buff SyncBuffer
+		e := task.NewExecutor(
+			task.WithDir(dir),
+			task.WithStdout(&buff),
+			task.WithStderr(&buff),
+		)
+		require.NoError(t, e.Setup())
+
+		start := time.Now()
+		err := e.Run(t.Context(), &task.Call{Task: "timeout-exceeded"})
+		require.Error(t, err)
+		assert.Less(t, time.Since(start), 5*time.Second)
+
+		var timeoutErr *errors.TaskTimeoutError
+		require.ErrorAs(t, err, &timeoutErr)
+		assert.Equal(t, "slow", timeoutErr.TaskName)
+		assert.NotContains(t, buff.buf.String(), "should not be reached")
+	})
+
+	t.Run("timeout not exceeded", func(t *testing.T) {
+		t.Parallel()
+
+		var buff SyncBuffer
+		e := task.NewExecutor(
+			task.WithDir(dir),
+			task.WithStdout(&buff),
+			task.WithStderr(&buff),
+		)
+		require.NoError(t, e.Setup())
+
+		require.NoError(t, e.Run(t.Context(), &task.Call{Task: "timeout-not-exceeded"}))
+		assert.Contains(t, buff.buf.String(), "reached the end")
+	})
+}
+
 func TestCommandTimeoutBoundsIfCondition(t *testing.T) {
 	t.Parallel()
 

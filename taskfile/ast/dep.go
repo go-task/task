@@ -1,6 +1,8 @@
 package ast
 
 import (
+	"time"
+
 	"go.yaml.in/yaml/v3"
 
 	"github.com/go-task/task/v3/errors"
@@ -8,10 +10,11 @@ import (
 
 // Dep is a task dependency
 type Dep struct {
-	Task   string
-	For    *For
-	Vars   *Vars
-	Silent bool
+	Task    string
+	For     *For
+	Vars    *Vars
+	Silent  bool
+	Timeout time.Duration
 }
 
 func (d *Dep) DeepCopy() *Dep {
@@ -19,10 +22,11 @@ func (d *Dep) DeepCopy() *Dep {
 		return nil
 	}
 	return &Dep{
-		Task:   d.Task,
-		For:    d.For.DeepCopy(),
-		Vars:   d.Vars.DeepCopy(),
-		Silent: d.Silent,
+		Task:    d.Task,
+		For:     d.For.DeepCopy(),
+		Vars:    d.Vars.DeepCopy(),
+		Silent:  d.Silent,
+		Timeout: d.Timeout,
 	}
 }
 
@@ -39,13 +43,21 @@ func (d *Dep) UnmarshalYAML(node *yaml.Node) error {
 
 	case yaml.MappingNode:
 		var taskCall struct {
-			Task   string
-			For    *For
-			Vars   *Vars
-			Silent bool
+			Task    string
+			For     *For
+			Vars    *Vars
+			Silent  bool
+			Timeout string
 		}
 		if err := node.Decode(&taskCall); err != nil {
 			return errors.NewTaskfileDecodeError(err, node)
+		}
+		if taskCall.Timeout != "" {
+			timeout, err := parseTimeout(taskCall.Timeout, node)
+			if err != nil {
+				return err
+			}
+			d.Timeout = timeout
 		}
 		d.Task = taskCall.Task
 		d.For = taskCall.For
