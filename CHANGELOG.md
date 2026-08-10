@@ -27,6 +27,9 @@
 - `includes.excludes` can now exclude a whole namespace: append `:*` to the
   namespace name, e.g. `excludes: ['debug:*']`. Bare entries still match a
   single task name exactly (#2300, #2959 by @xmxxc).
+- Fixed `ref:` in `for: matrix:` and `enum:` only accepting literal lists. Refs
+  computed with template functions like `keys` or `splitList` no longer fail
+  with "must resolve to a list" (#2544, #2956 by @no-hup).
 
 ## v3.52.0 - 2026-07-02
 
