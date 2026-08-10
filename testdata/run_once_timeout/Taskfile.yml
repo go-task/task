@@ -4,14 +4,12 @@ silent: true
 
 tasks:
   default:
-    # Without failfast the run would wait for `owner` to finish anyway, hiding
-    # the very thing under test: that `joiner` gives up on its own deadline.
+    # Without failfast the run waits for `owner` anyway, hiding what is tested.
     failfast: true
     deps: [owner, joiner]
 
-  # `owner` starts the shared task and holds it for far longer than `joiner` is
-  # willing to wait, so `joiner` reaches the deduplication path while the shared
-  # execution is still running.
+  # Holds the shared task far longer than `joiner` waits, so `joiner` reaches
+  # the deduplication path while it is still running.
   owner:
     cmds:
       - task: shared

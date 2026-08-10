@@ -2419,8 +2419,8 @@ func TestRunOnceJoinerHonorsItsOwnTimeout(t *testing.T) {
 	start := time.Now()
 	err := e.Run(t.Context(), &task.Call{Task: "default"})
 	require.Error(t, err)
-	// The joiner used to wait on the shared execution alone, outliving its own
-	// timeout by however long that execution took.
+	// The joiner used to wait on the shared execution alone, ignoring its own
+	// timeout for as long as that execution took.
 	assert.Less(t, time.Since(start), 5*time.Second)
 
 	var timeoutErr *errors.TaskTimeoutError
@@ -2923,8 +2923,7 @@ func TestCommandTimeoutAttribution(t *testing.T) {
 			require.ErrorAs(t, err, &timeoutErr)
 			assert.Equal(t, test.task, timeoutErr.TaskName)
 
-			// The watch loop stays silent on context errors, so a timeout must
-			// not look like one.
+			// --watch swallows context errors; a timeout must not look like one.
 			assert.False(t, errors.Is(err, context.DeadlineExceeded))
 		})
 	}

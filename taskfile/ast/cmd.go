@@ -86,9 +86,8 @@ func (c *Cmd) UnmarshalYAML(node *yaml.Node) error {
 		}
 
 		if cmdStruct.Defer != nil {
-			// A deferred command declares its timeout where every other command
-			// does, beside the key rather than inside it. Rejecting the nested
-			// form is what keeps yaml from dropping it without a word.
+			// Rejected rather than dropped: without the field, yaml would
+			// swallow the key without a word.
 			if cmdStruct.Defer.Timeout != "" {
 				return errors.NewTaskfileDecodeError(nil, node).WithMessage("timeout must be set next to defer, not inside it")
 			}
@@ -142,9 +141,8 @@ func (c *Cmd) UnmarshalYAML(node *yaml.Node) error {
 	return errors.NewTaskfileDecodeError(nil, node).WithTypeMessage("command")
 }
 
-// parseTimeout rejects non-positive durations rather than letting them through
-// as "no timeout at all", which is exactly the unbounded run the key exists to
-// prevent.
+// parseTimeout rejects non-positive durations, which would otherwise read as no
+// timeout at all - the unbounded run the key exists to prevent.
 func parseTimeout(s string, node *yaml.Node) (time.Duration, error) {
 	timeout, err := time.ParseDuration(s)
 	if err != nil {

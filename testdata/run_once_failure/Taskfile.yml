@@ -5,11 +5,9 @@ silent: true
 tasks:
   default:
     cmds:
-      # The first caller runs the shared task and swallows its failure...
       - task: shared
         ignore_error: true
-      # ...the second one joins the finished execution and must inherit its
-      # error rather than be told it succeeded.
+      # Joins the finished execution, and must inherit its error.
       - task: shared
       - echo "should not be reached"
 

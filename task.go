@@ -368,8 +368,7 @@ func (e *Executor) runDeferred(t *ast.Task, call *Call, i int, vars *ast.Vars, d
 func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call *Call, i int) error {
 	cmd := t.Cmds[i]
 
-	// The timeout bounds the whole step, so it must be in place before the if
-	// condition runs: a condition that hangs would otherwise hang the run.
+	// In place before the if condition, which would otherwise run unbounded.
 	var timeout *errors.TaskTimeoutError
 	if cmd.Timeout > 0 {
 		timeout = &errors.TaskTimeoutError{TaskName: t.Name(), Timeout: cmd.Timeout}
@@ -458,26 +457,22 @@ func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call *Call, i in
 	}
 }
 
-// isCommandFailure reports whether err is the command failing on its own terms
-// - a non-zero exit status or its own timeout - as opposed to Task failing to
-// run it at all. Only the former is what ignore_error offers to ignore.
+// isCommandFailure reports whether the command failed on its own terms - a
+// non-zero exit status or its timeout - rather than Task failing to run it.
 func isCommandFailure(err error) bool {
 	var exitCode interp.ExitStatus
 	var timeout *errors.TaskTimeoutError
 	return errors.As(err, &exitCode) || errors.As(err, &timeout)
 }
 
-// timedOut reports whether ctx was cancelled by the given timeout, as opposed
-// to a deadline inherited from an ancestor. ctx.Err() cannot tell them apart:
-// a derived context reports its parent's DeadlineExceeded as its own.
+// timedOut reports whether ctx was cancelled by the given timeout rather than by
+// an inherited deadline, which a derived context reports as its own.
 func timedOut(ctx context.Context, timeout *errors.TaskTimeoutError) bool {
 	return timeout != nil && errors.Is(context.Cause(ctx), timeout)
 }
 
 // executionState is the outcome of a task execution, shared with the callers
-// that join it instead of running the task again under run: once or run:
-// when_changed. done is closed once execute returns; err is written before that
-// and must only be read after done is seen closed, which is what orders them.
+// that join it. err is written before done is closed; read it only once closed.
 type executionState struct {
 	done chan struct{}
 	err  error
@@ -503,9 +498,8 @@ func (e *Executor) startExecution(ctx context.Context, t *ast.Task, execute func
 		reacquire := e.releaseConcurrencyLimit()
 		defer reacquire()
 
-		// Prefer an execution that is already over, even if our own context is
-		// done: there is nothing left to wait for, and select would otherwise
-		// pick between the two branches at random.
+		// A finished execution wins even if our context is done: there is
+		// nothing left to wait for, and select would otherwise pick at random.
 		select {
 		case <-other.done:
 			return other.err
@@ -514,14 +508,12 @@ func (e *Executor) startExecution(ctx context.Context, t *ast.Task, execute func
 
 		select {
 		case <-other.done:
-			// Somebody else ran the task on our behalf, so its outcome is ours.
-			// Reporting success here would hide a shared execution that failed
-			// or that another caller's timeout killed halfway through.
+			// Its outcome is ours. Returning nil would hide an execution that
+			// failed, or that another caller's timeout killed.
 			return other.err
 		case <-ctx.Done():
-			// We did not start the task, so we cannot stop it, only stop waiting
-			// for it. Report the cause rather than ctx.Err() so that our own
-			// timeout surfaces as one instead of a bare context error.
+			// We did not start it, so we can only stop waiting. Report the cause
+			// so that our own timeout surfaces as one.
 			return context.Cause(ctx)
 		}
 	}
