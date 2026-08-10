@@ -609,7 +609,8 @@ func (o *ioOption) ApplyToExecutor(e *Executor) {
 	e.Stderr = o.rw
 }
 
-// WithVersionCheck tells the [Executor] whether or not to check the version of
+// WithVersionCheck tells the [Executor] whether or not to check the schema
+// version of the Taskfile before running.
 func WithVersionCheck(enableVersionCheck bool) ExecutorOption {
 	return &versionCheckOption{enableVersionCheck}
 }
@@ -622,7 +623,8 @@ func (o *versionCheckOption) ApplyToExecutor(e *Executor) {
 	e.EnableVersionCheck = o.enableVersionCheck
 }
 
-// WithFailfast tells the [Executor] whether or not to check the version of
+// WithFailfast tells the [Executor] to stop running tasks as soon as any task
+// returns an error.
 func WithFailfast(failfast bool) ExecutorOption {
 	return &failfastOption{failfast}
 }
