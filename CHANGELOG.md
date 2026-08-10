@@ -24,6 +24,9 @@
   gets `{{.TIMESTAMP}}` and no longer a `{{.CHECKSUM}}` (which now renders as an
   empty string), and neither variable is injected when the effective method is
   `none` (#2924 by @vmaerten).
+- `includes.excludes` can now exclude a whole namespace: append `:*` to the
+  namespace name, e.g. `excludes: ['debug:*']`. Bare entries still match a
+  single task name exactly (#2300, #2959 by @xmxxc).
 
 ## v3.52.0 - 2026-07-02
 
