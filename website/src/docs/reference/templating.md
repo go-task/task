@@ -334,8 +334,8 @@ tasks:
 
 - **Type**: `int`
 - **Description**: Failed command exit code (only in `defer`, only when
-  non-zero). A command killed by its [`timeout`](/reference/schema#command) is
-  reported as `124`, following the convention of `timeout(1)`.
+  non-zero). A command killed by its [`timeout`](/docs/reference/schema#command)
+  is reported as `124`, following the convention of `timeout(1)`.
 
 ```yaml
 tasks:
