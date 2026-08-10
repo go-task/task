@@ -9,6 +9,10 @@ import (
 	"strings"
 	"sync/atomic"
 
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/sync/errgroup"
 	"mvdan.cc/sh/v3/interp"
 
@@ -125,7 +129,7 @@ func (e *Executor) splitRegularAndWatchCalls(calls ...*Call) (regularCalls []*Ca
 }
 
 // RunTask runs a task by its name
-func (e *Executor) RunTask(ctx context.Context, call *Call) error {
+func (e *Executor) RunTask(ctx context.Context, call *Call) (err error) {
 	// Inject prompted vars into call if available
 	if e.promptedVars != nil {
 		if call.Vars == nil {
@@ -143,8 +147,25 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) error {
 	if err != nil {
 		return err
 	}
+	tracer := otel.Tracer("github.com/go-task/task/v3")
+	ctx, span := tracer.Start(ctx, t.Name(), trace.WithAttributes(
+		attribute.String("task.name", t.Name()),
+		attribute.String("task.call", call.Task),
+		attribute.Bool("task.indirect", call.Indirect),
+		attribute.Bool("task.silent", call.Silent),
+		attribute.Bool("task.watch", t.Watch),
+		attribute.String("task.dir", t.Dir),
+	))
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, err.Error())
+		}
+		span.End()
+	}()
 	if !shouldRunOnCurrentPlatform(t.Platforms) {
 		e.Logger.VerboseOutf(logger.Yellow, `task: %q not for current platform - ignored\n`, call.Task)
+		span.SetAttributes(attribute.String("task.outcome", "skipped"), attribute.String("task.skip_reason", "platform"))
 		return nil
 	}
 
@@ -169,6 +190,7 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) error {
 			Env:     env.Get(t),
 		}); err != nil {
 			e.Logger.VerboseOutf(logger.Yellow, "task: if condition not met - skipped: %q\n", call.Task)
+			span.SetAttributes(attribute.String("task.outcome", "skipped"), attribute.String("task.skip_reason", "if"))
 			return nil
 		}
 	}
@@ -195,10 +217,11 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) error {
 	}
 
 	if !e.Watch && atomic.AddInt32(e.taskCallCount[t.Task], 1) >= MaximumTaskCall {
-		return &errors.TaskCalledTooManyTimesError{
+		err = &errors.TaskCalledTooManyTimesError{
 			TaskName:        t.Task,
 			MaximumTaskCall: MaximumTaskCall,
 		}
+		return err
 	}
 
 	release := e.acquireConcurrencyLimit()
@@ -244,6 +267,7 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) error {
 					}
 					e.Logger.Errf(logger.Magenta, "task: Task %q is up to date\n", name)
 				}
+				span.SetAttributes(attribute.String("task.outcome", "skipped"), attribute.String("task.skip_reason", "up_to_date"))
 				return nil
 			}
 		}
@@ -290,9 +314,11 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) error {
 			}
 		}
 		e.Logger.VerboseErrf(logger.Magenta, "task: %q finished\n", call.Task)
+		span.SetAttributes(attribute.String("task.outcome", "executed"))
 		return nil
 	}); err != nil {
-		return &errors.TaskRunError{TaskName: t.Name(), Err: err}
+		err = &errors.TaskRunError{TaskName: t.Name(), Err: err}
+		return err
 	}
 
 	return nil
@@ -356,13 +382,42 @@ func (e *Executor) runDeferred(t *ast.Task, call *Call, i int, vars *ast.Vars, d
 	cmd.If = templater.ReplaceWithExtra(cmd.If, cache, extra)
 	cmd.Vars = templater.ReplaceVarsWithExtra(cmd.Vars, cache, extra)
 
+	tracer := otel.Tracer("github.com/go-task/task/v3")
+	ctx, span := tracer.Start(ctx, fmt.Sprintf("deferred[%d]", i), trace.WithAttributes(
+		attribute.String("command.index", fmt.Sprintf("%d", i)),
+		attribute.Bool("command.defer", true),
+	))
+	defer span.End()
+
 	if err := e.runCommand(ctx, t, call, i); err != nil {
 		e.Logger.VerboseErrf(logger.Yellow, "task: ignored error in deferred cmd: %s\n", err.Error())
+		span.RecordError(err)
 	}
 }
 
-func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call *Call, i int) error {
+func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call *Call, i int) (err error) {
 	cmd := t.Cmds[i]
+
+	// Determine command name for telemetry
+	cmdName := fmt.Sprintf("cmd[%d]", i)
+	if cmd.Task != "" {
+		cmdName = fmt.Sprintf("task:%s", cmd.Task)
+	} else if cmd.Cmd != "" {
+		cmdName = fmt.Sprintf("shell[%d]", i)
+	}
+
+	tracer := otel.Tracer("github.com/go-task/task/v3")
+	ctx, span := tracer.Start(ctx, cmdName, trace.WithAttributes(
+		attribute.String("command.index", fmt.Sprintf("%d", i)),
+		attribute.Bool("command.defer", cmd.Defer),
+	))
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, err.Error())
+		}
+		span.End()
+	}()
 
 	// Check if condition for any command type
 	if strings.TrimSpace(cmd.If) != "" {
@@ -372,12 +427,14 @@ func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call *Call, i in
 			Env:     env.Get(t),
 		}); err != nil {
 			e.Logger.VerboseOutf(logger.Yellow, "task: [%s] if condition not met - skipped\n", t.Name())
+			span.SetAttributes(attribute.String("command.outcome", "skipped"), attribute.String("command.skip_reason", "if"))
 			return nil
 		}
 	}
 
 	switch {
 	case cmd.Task != "":
+		span.SetAttributes(attribute.String("command.type", "task"), attribute.String("command.task", cmd.Task))
 		reacquire := e.releaseConcurrencyLimit()
 		defer reacquire()
 
@@ -385,12 +442,19 @@ func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call *Call, i in
 		var exitCode interp.ExitStatus
 		if errors.As(err, &exitCode) && cmd.IgnoreError {
 			e.Logger.VerboseErrf(logger.Yellow, "task: [%s] task error ignored: %v\n", t.Name(), err)
+			span.SetAttributes(attribute.String("command.outcome", "executed"), attribute.String("command.error_ignored", "true"))
 			return nil
+		}
+		if err == nil {
+			span.SetAttributes(attribute.String("command.outcome", "executed"))
 		}
 		return err
 	case cmd.Cmd != "":
+		span.SetAttributes(attribute.String("command.type", "shell"), attribute.String("command.shell", cmd.Cmd))
+
 		if !shouldRunOnCurrentPlatform(cmd.Platforms) {
 			e.Logger.VerboseOutf(logger.Yellow, "task: [%s] %s not for current platform - ignored\n", t.Name(), cmd.LogCmd)
+			span.SetAttributes(attribute.String("command.outcome", "skipped"), attribute.String("command.skip_reason", "platform"))
 			return nil
 		}
 
@@ -399,6 +463,7 @@ func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call *Call, i in
 		}
 
 		if e.Dry {
+			span.SetAttributes(attribute.String("command.outcome", "skipped"), attribute.String("command.skip_reason", "dry_run"))
 			return nil
 		}
 
@@ -429,7 +494,11 @@ func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call *Call, i in
 		var exitCode interp.ExitStatus
 		if errors.As(err, &exitCode) && cmd.IgnoreError {
 			e.Logger.VerboseErrf(logger.Yellow, "task: [%s] command error ignored: %v\n", t.Name(), err)
+			span.SetAttributes(attribute.String("command.outcome", "executed"), attribute.String("command.error_ignored", "true"))
 			return nil
+		}
+		if err == nil {
+			span.SetAttributes(attribute.String("command.outcome", "executed"))
 		}
 		return err
 	default:
