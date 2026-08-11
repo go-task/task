@@ -97,6 +97,22 @@ func TestResolveEnumRefForPrompt(t *testing.T) {
 
 		require.Equal(t, []string{"api", "web", "db"}, getEnumValues(resolved.Enum))
 	})
+
+	t.Run("resolves a ref to a dynamic var in fast-compiled shape", func(t *testing.T) {
+		t.Parallel()
+
+		// FastGetVariables stores un-evaluated dynamic vars as {Value: "", Sh: ...}.
+		// The ref must still be resolved by evaluating the sh command.
+		fastVars := ast.NewVars()
+		fastVars.Set("AVAILABLE_SERVICES", ast.Var{Value: "", Sh: strPtr("printf 'api\nweb\ndb\n'")})
+
+		v := &ast.VarsWithValidation{Name: "SERVICE", Enum: &ast.Enum{Ref: ".AVAILABLE_SERVICES | splitLines | compact"}}
+
+		resolved := e.resolveEnumRefForPrompt(v, fastVars, dir)
+
+		require.Equal(t, []string{"api", "web", "db"}, getEnumValues(resolved.Enum))
+		require.Empty(t, v.Enum.Value, "input var must not be mutated")
+	})
 }
 
 func strPtr(s string) *string {

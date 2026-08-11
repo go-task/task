@@ -271,7 +271,7 @@ func (e *Executor) evaluateDynamicVarsForPrompt(vars *ast.Vars, dir string) *ast
 	for k, v := range vars.All() {
 		cache := &templater.Cache{Vars: result}
 		newVar := templater.ReplaceVar(v, cache)
-		if newVar.Value != nil || newVar.Sh == nil {
+		if newVar.Value != nil && (newVar.Sh == nil || *newVar.Sh == "") {
 			result.Set(k, ast.Var{Value: newVar.Value, Secret: v.Secret})
 			continue
 		}
