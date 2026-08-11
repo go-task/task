@@ -1224,6 +1224,48 @@ func TestFailfast(t *testing.T) {
 	})
 }
 
+func TestParallelFailfastCancellationReason(t *testing.T) {
+	t.Parallel()
+
+	t.Run("CLIParallel", func(t *testing.T) {
+		t.Parallel()
+
+		var buffer SyncBuffer
+		e := task.NewExecutor(
+			task.WithDir("testdata/parallel_failfast_cancel"),
+			task.WithStdout(&buffer),
+			task.WithStderr(&buffer),
+			task.WithSilent(true),
+			task.WithParallel(true),
+			task.WithFailfast(true),
+		)
+		require.NoError(t, e.Setup())
+
+		err := e.Run(t.Context(),
+			&task.Call{Task: "slow"},
+			&task.Call{Task: "fail"},
+		)
+		require.Error(t, err)
+		require.Contains(t, err.Error(), `Failed to run task "fail"`)
+		require.Contains(t, buffer.buf.String(), `task: Terminated "slow" because parallel running task "fail" failed.`)
+		require.NotContains(t, buffer.buf.String(), `Terminated "fail"`)
+	})
+
+	t.Run("Deps", func(t *testing.T) {
+		t.Parallel()
+
+		NewExecutorTest(t,
+			WithName("default"),
+			WithExecutorOptions(
+				task.WithDir("testdata/parallel_failfast_cancel"),
+				task.WithSilent(true),
+			),
+			WithPostProcessFn(PPSortedLines),
+			WithRunError(),
+		)
+	})
+}
+
 func TestIf(t *testing.T) {
 	t.Parallel()
 

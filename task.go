@@ -89,7 +89,11 @@ func (e *Executor) Run(ctx context.Context, calls ...*Call) error {
 	}
 	for _, c := range regularCalls {
 		if e.Parallel {
-			g.Go(func() error { return e.RunTask(ctx, c) })
+			g.Go(func() error {
+				err := e.RunTask(ctx, c)
+				e.reportParallelCancellation(ctx, c.Task, err)
+				return err
+			})
 		} else {
 			if err := e.RunTask(ctx, c); err != nil {
 				return err
@@ -317,6 +321,7 @@ func (e *Executor) runDeps(ctx context.Context, t *ast.Task) error {
 	for _, d := range t.Deps {
 		g.Go(func() error {
 			err := e.RunTask(ctx, &Call{Task: d.Task, Vars: d.Vars, Silent: d.Silent, Indirect: true})
+			e.reportParallelCancellation(ctx, d.Task, err)
 			if err != nil {
 				return err
 			}
@@ -325,6 +330,35 @@ func (e *Executor) runDeps(ctx context.Context, t *ast.Task) error {
 	}
 
 	return g.Wait()
+}
+
+// reportParallelCancellation prints why a parallel task was stopped when
+// failfast cancelled it because another parallel task failed.
+func (e *Executor) reportParallelCancellation(ctx context.Context, taskName string, err error) {
+	if err == nil || !errors.Is(err, context.Canceled) {
+		return
+	}
+
+	cause := context.Cause(ctx)
+	if cause == nil || errors.Is(cause, context.Canceled) {
+		return
+	}
+
+	var causeRunErr *errors.TaskRunError
+	if !errors.As(cause, &causeRunErr) {
+		e.Logger.Errf(logger.Red, "task: Terminated %q because a parallel running task failed.\n", taskName)
+		return
+	}
+	if causeRunErr.TaskName == taskName {
+		return
+	}
+
+	e.Logger.Errf(
+		logger.Red,
+		"task: Terminated %q because parallel running task %q failed.\n",
+		taskName,
+		causeRunErr.TaskName,
+	)
 }
 
 func (e *Executor) runDeferred(t *ast.Task, call *Call, i int, vars *ast.Vars, deferredExitCode *uint8) {
