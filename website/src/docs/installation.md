@@ -407,6 +407,16 @@ task --completion fish | source
 Invoke-Expression  (&task --completion powershell | Out-String)
 ```
 
+```nu [nushell]
+# ~/.config/nushell/config.nu
+#
+# Nushell cannot source a script from stdin, so the script is saved where
+# Nushell auto-loads it at startup. Autoload directories are read after
+# config.nu, so the completions become available in the next shell.
+mkdir ($nu.data-dir | path join "vendor/autoload")
+task --completion nu | save --force ($nu.data-dir | path join "vendor/autoload/task-completions.nu")
+```
+
 :::
 
 ### Option 2. Copy the script to your shell's completions directory
@@ -428,6 +438,10 @@ task --completion zsh  > /usr/local/share/zsh/site-functions/_task
 task --completion fish > ~/.config/fish/completions/task.fish
 ```
 
+```nu [nushell]
+task --completion nu | save --force ($nu.data-dir | path join "vendor/autoload/task-completions.nu")
+```
+
 :::
 
 ### Zsh customization
@@ -445,4 +459,30 @@ canonical task names, add the `show-aliases` zstyle:
 
 ```shell
 zstyle ':completion:*:*:task:*' show-aliases false
+```
+
+### Nushell caveats
+
+Nushell cannot source a script from stdin, so both options above write the script
+to an autoload directory. Option 1 rewrites it at every startup, which keeps it
+in sync with the installed version of Task — the refreshed completions are picked
+up by the next shell. With option 2, re-run the command after upgrading Task.
+
+The completions are attached to an `extern "task"` declaration, which Nushell
+requires to be static. Three consequences are worth knowing:
+
+- The experimental flags (`--force-all`, `--download`, `--offline`, …) are always
+  offered, even when the corresponding experiment is disabled. Their description
+  is prefixed with the experiment name, and `task --experiments` lists the ones
+  that are enabled.
+- Passing a value to a boolean flag with `=` does not work: Nushell forwards
+  `--color=false` as two arguments, so Task reads `false` as a task name. Use
+  `NO_COLOR=1`, or bypass the declaration with `^task --color=false`.
+- `TASK_EXE` selects the executable that is run, but not the command name the
+  completions are attached to, which is always `task`. For a renamed executable,
+  alias it instead:
+
+```nu
+use ($nu.data-dir | path join "vendor/autoload/task-completions.nu") *
+alias go-task = task
 ```
