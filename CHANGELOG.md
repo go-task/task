@@ -39,6 +39,8 @@
 - Added a verbose log line for failed tasks. In `--verbose` mode, a task whose
   command exits non-zero now reports `task: "<name>" failed: <error>` instead of
   stopping without a trace (#2240 by @Drino).
+- Fixed pressing `Esc` at an interactive variable prompt not cancelling the run
+  (#2942 by @anilnatha).
 
 ## v3.52.0 - 2026-07-02
 
