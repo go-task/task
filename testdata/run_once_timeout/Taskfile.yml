@@ -1,0 +1,27 @@
+version: '3'
+
+silent: true
+
+tasks:
+  default:
+    # Without failfast the run waits for `owner` anyway, hiding what is tested.
+    failfast: true
+    deps: [owner, joiner]
+
+  # Holds the shared task far longer than `joiner` waits, so `joiner` reaches
+  # the deduplication path while it is still running.
+  owner:
+    cmds:
+      - task: shared
+
+  joiner:
+    cmds:
+      - sleep 0.2
+      - task: shared
+        timeout: 500ms
+      - echo "should not be reached"
+
+  shared:
+    run: once
+    cmds:
+      - sleep 10

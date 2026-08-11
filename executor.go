@@ -1,7 +1,6 @@
 package task
 
 import (
-	"context"
 	"io"
 	"os"
 	"sync"
@@ -80,7 +79,7 @@ type (
 		concurrencySemaphore chan struct{}
 		taskCallCount        map[string]*int32
 		mkdirMutexMap        map[string]*sync.Mutex
-		executionHashes      map[string]context.Context
+		executionHashes      map[string]*executionState
 		executionHashesMutex sync.Mutex
 		watchedDirs          *xsync.Map[string, bool]
 	}
@@ -108,7 +107,7 @@ func NewExecutor(opts ...ExecutorOption) *Executor {
 		concurrencySemaphore: nil,
 		taskCallCount:        map[string]*int32{},
 		mkdirMutexMap:        map[string]*sync.Mutex{},
-		executionHashes:      map[string]context.Context{},
+		executionHashes:      map[string]*executionState{},
 		executionHashesMutex: sync.Mutex{},
 	}
 	e.Options(opts...)

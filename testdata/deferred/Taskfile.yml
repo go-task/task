@@ -27,3 +27,15 @@ tasks:
   child:
     cmds:
     - cmd: echo "child {{.VAR1}}"
+
+  parent-with-timeout:
+    cmds:
+      - defer:
+          task: slow-cleanup
+          silent: true
+        timeout: 100ms
+      - echo 'parent completed'
+
+  slow-cleanup:
+    cmds:
+      - sleep 1 && echo 'cleanup completed'

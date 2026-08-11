@@ -18,3 +18,23 @@ tasks:
   cmd-should-fail:
     cmds:
       - cmd: exit 1
+
+  task-timeout-should-pass:
+    cmds:
+      - cmd: sleep 10
+        timeout: 200ms
+      - echo "reached the end"
+    ignore_error: true
+
+  cmd-timeout-should-pass:
+    cmds:
+      - cmd: sleep 10
+        timeout: 200ms
+        ignore_error: true
+      - echo "reached the end"
+
+  cmd-timeout-should-fail:
+    cmds:
+      - cmd: sleep 10
+        timeout: 200ms
+      - echo "reached the end"

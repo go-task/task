@@ -1,0 +1,57 @@
+version: '3'
+
+tasks:
+  timeout-exceeded:
+    desc: Command that should timeout
+    cmds:
+      - cmd: sleep 10
+        timeout: 1s
+
+  timeout-not-exceeded:
+    desc: Command that completes within timeout
+    cmds:
+      - cmd: echo "quick command"
+        timeout: 5s
+
+  no-timeout:
+    desc: Command with no timeout specified
+    cmds:
+      - echo "no timeout"
+
+  multiple-cmds-timeout:
+    desc: Multiple commands where one exceeds its timeout
+    cmds:
+      - cmd: echo "first"
+        timeout: 1s
+      - cmd: sleep 10
+        timeout: 1s
+      - cmd: echo "third"
+        timeout: 1s
+
+  slow-if-condition:
+    desc: Condition that hangs must be bounded by the command timeout
+    cmds:
+      - cmd: echo "condition was met"
+        if: sleep 10
+        timeout: 500ms
+
+  inherited-timeout:
+    desc: Calls a task whose command declares no timeout of its own
+    cmds:
+      - task: slow-without-timeout
+        timeout: 500ms
+
+  slow-without-timeout:
+    cmds:
+      - sleep 10
+
+  larger-child-timeout:
+    desc: Calls a task whose command declares a timeout it never reaches
+    cmds:
+      - task: slow-with-larger-timeout
+        timeout: 500ms
+
+  slow-with-larger-timeout:
+    cmds:
+      - cmd: sleep 10
+        timeout: 10m

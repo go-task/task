@@ -44,6 +44,13 @@
 - Added Nushell completions, available via `task --completion nu`. They complete
   task names and aliases, every flag with its description, and the values of
   `--completion`, `--output` and `--sort` (#2966 by @vmaerten).
+- :warning: Added a per-command `timeout` that terminates a command once it
+  exceeds the given duration (Go duration syntax). It covers shell commands,
+  task calls, deferred commands, `deps` and the `if` condition, obeys
+  `ignore_error`, and reports exit code `124`. Callers that join a `run: once`
+  or `when_changed` task already running now honor their own `timeout`, and
+  inherit that task's failure instead of being told it succeeded (#1569, #2898
+  by @vmaerten).
 
 ## v3.52.0 - 2026-07-02
 

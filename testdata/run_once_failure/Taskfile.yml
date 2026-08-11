@@ -1,0 +1,18 @@
+version: '3'
+
+silent: true
+
+tasks:
+  default:
+    cmds:
+      - task: shared
+        ignore_error: true
+      # Joins the finished execution, and must inherit its error.
+      - task: shared
+      - echo "should not be reached"
+
+  shared:
+    run: once
+    cmds:
+      - echo "shared ran"
+      - exit 1
