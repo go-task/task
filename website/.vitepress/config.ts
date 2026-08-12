@@ -317,11 +317,15 @@ export default defineConfig({
           collapsed: false,
           items: [
             {
-              text: 'go tool task',
-              link: '/blog/go-tool-task'
-              },
+              text: 'GitHub SOSF',
+              link: '/blog/github-secure-open-source-program'
+            },
             {
-              text: 'New "if:" Control and Variable Prompt',
+              text: 'Using `go tool task`',
+              link: '/blog/go-tool-task'
+            },
+            {
+              text: 'Conditionals Statements',
               link: '/blog/if-and-variable-prompt'
             }
           ]

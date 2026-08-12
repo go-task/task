@@ -5,7 +5,16 @@ editLink: false
 ---
 
 <BlogPost
-title="go tool task"
+title="GitHub Secure Open Source Fund"
+url="/blog/github-secure-open-source-program"
+date="2026-04-14"
+author="andreynering"
+description='Task participated in the fourth session of the GitHub Secure Open Source program.'
+:tags="['github', 'security']"
+/>
+
+<BlogPost
+title="Using `go tool task`"
 url="/blog/go-tool-task"
 date="2026-04-14"
 author="andreynering"
@@ -14,7 +23,7 @@ description='How to use Task using "go tool".'
 />
 
 <BlogPost
-title='New "if:" Control and Variable Prompt'
+title='Conditional Statements and Variable Prompts'
 url="/blog/if-and-variable-prompt"
 date="2026-01-24"
 author="vmaerten"
