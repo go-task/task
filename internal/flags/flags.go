@@ -166,8 +166,7 @@ func init() {
 	pflag.StringVar(&CACert, "cacert", getConfig(config, "REMOTE_CACERT", func() *string { return config.Remote.CACert }, ""), "Path to a custom CA certificate for HTTPS connections.")
 	pflag.StringVar(&Cert, "cert", getConfig(config, "REMOTE_CERT", func() *string { return config.Remote.Cert }, ""), "Path to a client certificate for HTTPS connections.")
 	pflag.StringVar(&CertKey, "cert-key", getConfig(config, "REMOTE_CERT_KEY", func() *string { return config.Remote.CertKey }, ""), "Path to a client certificate key for HTTPS connections.")
-	// Configurable through the configuration file only: a token given on the
-	// command line would be visible to any process listing it.
+	// No flag: a token on the command line is visible to any process listing it.
 	RemoteAuth = remoteAuth(config)
 
 	// Gentle force experiment will override the force flag and add a new force-all flag
@@ -316,9 +315,8 @@ func (o *flagsOption) ApplyToExecutor(e *task.Executor) {
 	)
 }
 
-// remoteAuth flattens the configured authentication entries into a lookup by
-// host. A host declared twice in the same file keeps its last entry, which is
-// the rule the configuration files themselves follow when they are merged.
+// remoteAuth flattens the configured entries into a lookup by host, the last
+// entry winning as it does when configuration files are merged.
 func remoteAuth(config *taskrcast.TaskRC) map[string]map[string]string {
 	if config == nil || len(config.Remote.Auth) == 0 {
 		return nil

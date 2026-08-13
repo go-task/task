@@ -11,11 +11,9 @@ import (
 )
 
 // HostHeaders maps a host to the HTTP headers to send when fetching a remote
-// Taskfile from it. Values may reference environment variables using the
-// `${VAR}` or `$VAR` syntax.
+// Taskfile from it. Values may reference environment variables.
 type HostHeaders map[string]map[string]string
 
-// authTransport adds the configured headers to every request made to host.
 type authTransport struct {
 	base    http.RoundTripper
 	host    string
@@ -23,15 +21,11 @@ type authTransport struct {
 }
 
 func (t *authTransport) RoundTrip(req *http.Request) (*http.Response, error) {
-	// The headers are scoped to a single host. Checking here rather than once
-	// at build time is what keeps a redirect from carrying the credentials
-	// somewhere else: the client sends the redirected request through this same
-	// transport, and Go only strips Authorization, WWW-Authenticate and Cookie
-	// on its own.
+	// Re-checked per request: a redirect goes through this same transport, and
+	// Go only strips Authorization, WWW-Authenticate and Cookie on its own.
 	if !hostMatches(t.host, req.URL.Host) {
 		return t.base.RoundTrip(req)
 	}
-	// A RoundTripper must not modify the request it is given.
 	req = req.Clone(req.Context())
 	for name, value := range t.headers {
 		req.Header.Set(name, value)
@@ -39,10 +33,8 @@ func (t *authTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	return t.base.RoundTrip(req)
 }
 
-// authenticatedClient returns the node's client, wrapped so that it sends the
-// configured headers. The environment variables the headers reference are read
-// here rather than when the node is built, so that a run served from the cache
-// does not require credentials it will never send.
+// authenticatedClient resolves the headers on each read, not when the node is
+// built, so that a run served from the cache needs no credentials.
 func (node *HTTPNode) authenticatedClient() (*http.Client, error) {
 	headers, err := resolveAuthHeaders(node.authHeaders, node.url.Host)
 	if err != nil {
@@ -54,8 +46,7 @@ func (node *HTTPNode) authenticatedClient() (*http.Client, error) {
 	return withAuthHeaders(node.client, node.url.Host, headers), nil
 }
 
-// withAuthHeaders returns a copy of client that sends headers to host. The
-// client is copied rather than mutated because buildHTTPClient returns the
+// withAuthHeaders copies rather than mutates: buildHTTPClient returns the
 // shared http.DefaultClient when no TLS option is set.
 func withAuthHeaders(client *http.Client, host string, headers map[string]string) *http.Client {
 	authenticated := *client
@@ -67,9 +58,8 @@ func withAuthHeaders(client *http.Client, host string, headers map[string]string
 	return &authenticated
 }
 
-// resolveAuthHeaders returns the headers configured for host, with their
-// environment variable references expanded. It returns nil when no entry
-// matches, leaving the request unauthenticated.
+// resolveAuthHeaders returns the expanded headers configured for host, or nil
+// when no entry matches.
 func resolveAuthHeaders(hostHeaders HostHeaders, host string) (map[string]string, error) {
 	var headers map[string]string
 	for pattern, patternHeaders := range hostHeaders {
@@ -96,10 +86,9 @@ func resolveAuthHeaders(hostHeaders HostHeaders, host string) (map[string]string
 	return resolved, nil
 }
 
-// expandEnv replaces ${VAR} and $VAR references with the value of the
-// environment variable. An undefined variable is an error rather than an empty
-// header, which would only surface later as an opaque 401. A literal dollar
-// sign is written `$$`.
+// expandEnv replaces ${VAR} and $VAR references; `$$` is a literal dollar
+// sign. An undefined variable is an error, not an empty header that would only
+// surface as an opaque 401.
 func expandEnv(value string) (string, error) {
 	var missing []string
 	expanded := os.Expand(value, func(name string) string {
@@ -119,9 +108,8 @@ func expandEnv(value string) (string, error) {
 	return expanded, nil
 }
 
-// validateHeaderName rejects names that http.Header.Set would silently accept
-// but the transport would later refuse, so that the error names the offending
-// header instead of the request.
+// validateHeaderName reports the offending header by name, where the transport
+// would only refuse the request.
 func validateHeaderName(name string) error {
 	if name == "" {
 		return fmt.Errorf("header name cannot be empty")
@@ -134,8 +122,7 @@ func validateHeaderName(name string) error {
 	return nil
 }
 
-// hostMatches reports whether a host matches a configured pattern. The
-// comparison is exact and includes the port, as it does for trusted hosts.
+// hostMatches compares exactly, port included, as trusted hosts do.
 func hostMatches(pattern, host string) bool {
 	return pattern == host
 }

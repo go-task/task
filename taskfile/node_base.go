@@ -77,8 +77,7 @@ func WithCertKey(certKey string) NodeOption {
 	}
 }
 
-// WithAuthHeaders sets the HTTP headers to send when the node's host matches
-// one of the configured ones.
+// WithAuthHeaders sets the HTTP headers to send, keyed by host.
 func WithAuthHeaders(authHeaders HostHeaders) NodeOption {
 	return func(node *baseNode) {
 		node.authHeaders = authHeaders

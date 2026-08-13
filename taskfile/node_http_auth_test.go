@@ -128,9 +128,8 @@ func TestWithAuthHeadersDoesNotMutateTheDefaultClient(t *testing.T) {
 	assert.IsType(t, &authTransport{}, client.Transport)
 }
 
-// TestHTTPNodeAuthHeaders covers the whole download: RemoteExists probes the
-// URL with a HEAD request before ReadContext issues the GET, and both must
-// carry the headers.
+// Both requests must carry the headers: RemoteExists probes with HEAD before
+// ReadContext issues the GET.
 func TestHTTPNodeAuthHeaders(t *testing.T) { //nolint:paralleltest // t.Setenv cannot be used in parallel tests
 	var methods []string
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -158,8 +157,7 @@ func TestHTTPNodeAuthHeaders(t *testing.T) { //nolint:paralleltest // t.Setenv c
 	assert.Equal(t, []string{"HEAD", "GET"}, methods)
 }
 
-// TestHTTPNodeAuthHeadersNotSentOnRedirect guards the credentials against a
-// server that bounces the request to a host they were never meant for.
+// A server bouncing the request must not get the credentials forwarded to it.
 func TestHTTPNodeAuthHeadersNotSentOnRedirect(t *testing.T) {
 	t.Parallel()
 
@@ -191,9 +189,8 @@ func TestHTTPNodeAuthHeadersNotSentOnRedirect(t *testing.T) {
 	}
 }
 
-// TestHTTPNodeAuthHeadersResolvedLazily makes sure a node can be built without
-// the credentials it would need to download: a run served from the cache, or an
-// offline one, never sends them.
+// A node must build without the credentials it would need to download, so that
+// cached and offline runs do not require them.
 func TestHTTPNodeAuthHeadersResolvedLazily(t *testing.T) { //nolint:paralleltest // t.Setenv cannot be used in parallel tests
 	node, err := NewHTTPNode("https://gitlab.com/Taskfile.yml", "", false,
 		WithAuthHeaders(HostHeaders{
