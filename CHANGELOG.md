@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+### 🚀 Features
+
+- Added a `remote.auth` config option to send HTTP headers when downloading a
+  remote Taskfile, configured per host. Header values may reference environment
+  variables with `${VAR}`. This keeps the credential out of the include URL,
+  where it would leak into error messages and the confirmation prompt (#2329 by
+  @vmaerten).
+
 ### 📦 Package API
 
 - Bumped the minimum Go version to 1.26. Task follows Go's two-latest support
