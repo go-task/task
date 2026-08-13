@@ -124,9 +124,9 @@ def "nu-complete task-sort" [] {
 # Runs the specified task(s). Falls back to the "default" task if no task name
 # was specified, or lists all tasks if an unknown task name was specified.
 #
-# An `extern` signature is static, so the experimental flags at the bottom are
-# always offered; Task rejects them when the experiment is off. Run
-# `task --experiments` to see which ones are enabled.
+# An `extern` signature is static, so the experimental flag at the bottom is
+# always offered; Task rejects it when the experiment is off. Run
+# `task --experiments` to see which experiments are enabled.
 export extern "task" [
   ...tasks: string@"nu-complete task"             # task(s) to run
   --list(-l)                                      # list tasks with a description
@@ -161,20 +161,20 @@ export extern "task" [
   --silent(-s)                                    # disable echoing
   --verbose(-v)                                   # enable verbose mode
   --disable-fuzzy                                 # disable fuzzy matching for task names
+  --download                                      # download a cached version of a remote Taskfile
+  --offline                                       # only use local or cached Taskfiles
+  --clear-cache                                   # clear the remote Taskfile cache
+  --trusted-hosts: string                         # trusted hosts for remote Taskfiles (comma-separated)
+  --timeout: string                               # timeout for downloading remote Taskfiles
+  --expiry: string                                # expiry duration for cached remote Taskfiles
+  --remote-cache-dir: directory                   # directory used to cache remote Taskfiles
+  --cacert: path                                  # custom CA certificate for HTTPS connections
+  --cert: path                                    # client certificate for HTTPS connections
+  --cert-key: path                                # client certificate key for HTTPS connections
   --insecure                                      # allow Taskfiles to be downloaded over insecure connections
   --experiments                                   # list the available experiments and whether they are enabled
   --version                                       # show the Task version
   --help(-h)                                      # show Task usage
 
   --force-all                                     # [GENTLE_FORCE] force the called task and all its dependencies
-  --download                                      # [REMOTE_TASKFILES] download a cached version of a remote Taskfile
-  --offline                                       # [REMOTE_TASKFILES] only use local or cached Taskfiles
-  --clear-cache                                   # [REMOTE_TASKFILES] clear the remote Taskfile cache
-  --trusted-hosts: string                         # [REMOTE_TASKFILES] trusted hosts for remote Taskfiles (comma-separated)
-  --timeout: string                               # [REMOTE_TASKFILES] timeout for downloading remote Taskfiles
-  --expiry: string                                # [REMOTE_TASKFILES] expiry duration for cached remote Taskfiles
-  --remote-cache-dir: directory                   # [REMOTE_TASKFILES] directory used to cache remote Taskfiles
-  --cacert: path                                  # [REMOTE_TASKFILES] custom CA certificate for HTTPS connections
-  --cert: path                                    # [REMOTE_TASKFILES] client certificate for HTTPS connections
-  --cert-key: path                                # [REMOTE_TASKFILES] client certificate key for HTTPS connections
 ]
