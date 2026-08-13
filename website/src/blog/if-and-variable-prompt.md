@@ -7,7 +7,7 @@ outline: deep
 editLink: false
 ---
 
-# New `if:` Control and Variable Prompt
+# Conditional Statements and Variable Prompts
 
 <AuthorCard :author="$frontmatter.author" />
 
@@ -46,7 +46,7 @@ version: '3'
 tasks:
   conditional:
     vars:
-      ENABLE_FEATURE: "true"
+      ENABLE_FEATURE: 'true'
     cmds:
       - cmd: echo "Feature is enabled"
         if: '{{eq .ENABLE_FEATURE "true"}}'
@@ -54,8 +54,8 @@ tasks:
         if: '{{ne .ENABLE_FEATURE "true"}}'
 ```
 
-For more details, please check out the [documentation][if-docs].
-The [examples][if-examples] from the test suite may be useful too.
+For more details, please check out the [documentation][if-docs]. The
+[examples][if-examples] from the test suite may be useful too.
 
 ::: info
 
@@ -68,9 +68,9 @@ but this would halt the execution of the task instead of skipping it.
 
 ## Prompt for Required Variables
 
-For backward-compatibility reasons, this feature is disabled by default.
-To enable it, either pass `--interactive` flag or add `interactive: true` to
-your `.taskrc.yml`.
+For backward-compatibility reasons, this feature is disabled by default. To
+enable it, either pass `--interactive` flag or add `interactive: true` to your
+`.taskrc.yml`.
 
 Once you do that, Task will basically starting prompting you in runtime for any
 required variables. In the example below, `NAME` will be prompted at runtime:
@@ -112,16 +112,22 @@ Once again, check out the [documentation][prompt-docs] for more details, and the
 
 ## Feedback
 
-Let's us know if you have any feedback! You can find us on our
-[Discord server][discord].
+Let's us know if you have any feedback! You can find us on our [Discord
+server][discord].
 
 [release]: https://github.com/go-task/task/releases/tag/v3.47.0
 [vmaerten]: https://github.com/vmaerten
-[sources]: https://taskfile.dev/docs/guide#by-fingerprinting-locally-generated-files-and-their-sources
-[status]: https://taskfile.dev/docs/guide#using-programmatic-checks-to-indicate-a-task-is-up-to-date
-[preconditions]: https://taskfile.dev/docs/guide#using-programmatic-checks-to-cancel-the-execution-of-a-task-and-its-dependencies
+[sources]:
+  https://taskfile.dev/docs/guide#by-fingerprinting-locally-generated-files-and-their-sources
+[status]:
+  https://taskfile.dev/docs/guide#using-programmatic-checks-to-indicate-a-task-is-up-to-date
+[preconditions]:
+  https://taskfile.dev/docs/guide#using-programmatic-checks-to-cancel-the-execution-of-a-task-and-its-dependencies
 [if-docs]: https://taskfile.dev/docs/guide#conditional-execution-with-if
-[if-examples]: https://github.com/go-task/task/blob/main/testdata/if/Taskfile.yml
-[prompt-docs]: https://taskfile.dev/docs/guide#prompting-for-missing-variables-interactively
-[prompt-examples]: https://github.com/go-task/task/blob/main/testdata/interactive_vars/Taskfile.yml
+[if-examples]:
+  https://github.com/go-task/task/blob/main/testdata/if/Taskfile.yml
+[prompt-docs]:
+  https://taskfile.dev/docs/guide#prompting-for-missing-variables-interactively
+[prompt-examples]:
+  https://github.com/go-task/task/blob/main/testdata/interactive_vars/Taskfile.yml
 [discord]: https://discord.com/invite/6TY36E39UK

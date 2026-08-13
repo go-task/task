@@ -7,14 +7,14 @@ outline: deep
 editLink: false
 ---
 
-# `go tool task`
+# Using `go tool task`
 
 <AuthorCard :author="$frontmatter.author" />
 
 Do you know that you can use Task without really needing to install it?
 
-If you work with Go, you probably depend on external binaries like linters,
-code generators and... Task.
+If you work with Go, you probably depend on external binaries like linters, code
+generators and... Task.
 
 But asking your coworkers or contributors to install dependencies can be messy.
 Everyone is on a different operating system, use a different package manager,
@@ -43,8 +43,8 @@ go tool task {arguments...}
 
 That's all!
 
-Go will compile the specified Task version on demand when calling `go tool task`.
-Don't worry, Go caches the tool, so subsequent calls are faster.
+Go will compile the specified Task version on demand when calling
+`go tool task`. Don't worry, Go caches the tool, so subsequent calls are faster.
 
 This is useful when running Task on CI, as you don't need to stress about having
 to install it. It also means it'll be pinned to a specific Task version (but
