@@ -79,6 +79,7 @@ var (
 	Download            bool
 	Offline             bool
 	TrustedHosts        []string
+	RemoteAuth          map[string]map[string]string
 	ClearCache          bool
 	Timeout             time.Duration
 	CacheExpiryDuration time.Duration
@@ -165,6 +166,8 @@ func init() {
 	pflag.StringVar(&CACert, "cacert", getConfig(config, "REMOTE_CACERT", func() *string { return config.Remote.CACert }, ""), "Path to a custom CA certificate for HTTPS connections.")
 	pflag.StringVar(&Cert, "cert", getConfig(config, "REMOTE_CERT", func() *string { return config.Remote.Cert }, ""), "Path to a client certificate for HTTPS connections.")
 	pflag.StringVar(&CertKey, "cert-key", getConfig(config, "REMOTE_CERT_KEY", func() *string { return config.Remote.CertKey }, ""), "Path to a client certificate key for HTTPS connections.")
+	// No flag: a token on the command line is visible to any process listing it.
+	RemoteAuth = remoteAuth(config)
 
 	// Gentle force experiment will override the force flag and add a new force-all flag
 	if experiments.GentleForce.Enabled() {
@@ -285,6 +288,7 @@ func (o *flagsOption) ApplyToExecutor(e *task.Executor) {
 		task.WithDownload(Download),
 		task.WithOffline(Offline),
 		task.WithTrustedHosts(TrustedHosts),
+		task.WithRemoteAuth(RemoteAuth),
 		task.WithTimeout(Timeout),
 		task.WithCacheExpiryDuration(CacheExpiryDuration),
 		task.WithRemoteCacheDir(RemoteCacheDir),
@@ -309,6 +313,19 @@ func (o *flagsOption) ApplyToExecutor(e *task.Executor) {
 		task.WithFailfast(Failfast),
 		task.WithTempDirPath(TempDir),
 	)
+}
+
+// remoteAuth flattens the configured entries into a lookup by host, the last
+// entry winning as it does when configuration files are merged.
+func remoteAuth(config *taskrcast.TaskRC) map[string]map[string]string {
+	if config == nil || len(config.Remote.Auth) == 0 {
+		return nil
+	}
+	byHost := make(map[string]map[string]string, len(config.Remote.Auth))
+	for _, auth := range config.Remote.Auth {
+		byHost[auth.Host] = auth.Headers
+	}
+	return byHost
 }
 
 // getConfig extracts a config value with priority: env var > taskrc config > fallback

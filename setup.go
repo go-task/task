@@ -58,6 +58,7 @@ func (e *Executor) getRootNode() (taskfile.Node, error) {
 		taskfile.WithCACert(e.CACert),
 		taskfile.WithCert(e.Cert),
 		taskfile.WithCertKey(e.CertKey),
+		taskfile.WithAuthHeaders(e.RemoteAuth),
 	)
 	var taskNotFoundError errors.TaskfileNotFoundError
 	if errors.As(err, &taskNotFoundError) {
@@ -91,6 +92,7 @@ func (e *Executor) readTaskfile(node taskfile.Node) error {
 		taskfile.WithReaderCACert(e.CACert),
 		taskfile.WithReaderCert(e.Cert),
 		taskfile.WithReaderCertKey(e.CertKey),
+		taskfile.WithReaderAuthHeaders(e.RemoteAuth),
 		taskfile.WithDebugFunc(debugFunc),
 		taskfile.WithPromptFunc(promptFunc),
 	)
