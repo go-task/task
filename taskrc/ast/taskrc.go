@@ -83,10 +83,9 @@ func (t *TaskRC) Merge(other *TaskRC) {
 	t.TempDir = cmp.Or(other.TempDir, t.TempDir)
 }
 
-// mergeAuth unions two lists of [RemoteAuth] by host. An entry from other
-// replaces the entry for the same host as a whole, so that a closer
-// configuration file can redefine the headers of a host without inheriting the
-// ones it chose to drop.
+// mergeAuth unions both lists by host. An entry from other replaces the one
+// for the same host as a whole, so a closer file can drop a header rather than
+// inherit it.
 func mergeAuth(base, other []RemoteAuth) []RemoteAuth {
 	if len(other) == 0 {
 		return base
