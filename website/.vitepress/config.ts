@@ -13,11 +13,23 @@ import { adopters } from './adopters.ts';
 import { taskDescription, taskName, ogUrl, ogImage } from './meta.ts';
 import { fileURLToPath, URL } from 'node:url';
 import llmstxt from 'vitepress-plugin-llms';
+import { sidebar as nextSidebar } from './sidebar/next.ts';
+import { sidebar as currentSidebar } from './sidebar/current.ts';
 
 const version = readFileSync(
   resolve(__dirname, '../../internal/version/version.txt'),
   'utf8'
 ).trim();
+
+// Which set of docs to build. `next` (the default) serves `src/docs`, the docs
+// being written for the upcoming release. `current` serves `src/versioned/docs`
+// under the very same `/docs/` URLs, so that taskfile.dev never documents
+// features that are not in the released binary.
+const isCurrent = process.env.DOCS_CHANNEL === 'current';
+
+// Where the docs of the active channel live, relative to `srcDir`. Plugins that
+// match on source paths need this; `rewrites` only affects the output URLs.
+const docsRoot = isCurrent ? 'versioned/docs' : 'docs';
 
 const urlVersion =
   process.env.NODE_ENV === 'development'
@@ -218,6 +230,8 @@ export default defineConfig({
   },
   srcDir: 'src',
   cleanUrls: true,
+  srcExclude: isCurrent ? ['docs/**'] : ['versioned/**'],
+  rewrites: isCurrent ? { 'versioned/docs/:path*': 'docs/:path*' } : {},
   markdown: {
     config: (md) => {
       md.use(githubLinksPlugin, {
@@ -235,10 +249,10 @@ export default defineConfig({
           'index.md',
           'team.md',
           'donate.md',
-          'docs/styleguide.md',
-          'docs/contributing.md',
-          'docs/releasing.md',
-          'docs/changelog.md',
+          `${docsRoot}/styleguide.md`,
+          `${docsRoot}/contributing.md`,
+          `${docsRoot}/releasing.md`,
+          `${docsRoot}/changelog.md`,
           'blog/*'
         ]
       }),
@@ -361,139 +375,7 @@ export default defineConfig({
           ]
         }
       ],
-      '/': [
-        {
-          text: 'Installation',
-          link: '/docs/installation'
-        },
-        {
-          text: 'Getting Started',
-          link: '/docs/getting-started'
-        },
-        {
-          text: 'Guide',
-          link: '/docs/guide'
-        },
-        {
-          text: 'Remote Taskfiles',
-          link: '/docs/remote-taskfiles'
-        },
-        {
-          text: 'Reference',
-          collapsed: true,
-          items: [
-            {
-              text: 'Taskfile Schema',
-              link: '/docs/reference/schema'
-            },
-            {
-              text: 'Environment',
-              link: '/docs/reference/environment'
-            },
-            {
-              text: 'Configuration',
-              link: '/docs/reference/config'
-            },
-            {
-              text: 'CLI',
-              link: '/docs/reference/cli'
-            },
-            {
-              text: 'Templating',
-              link: '/docs/reference/templating'
-            },
-            {
-              text: 'Package API',
-              link: '/docs/reference/package'
-            }
-          ]
-        },
-        {
-          text: 'Experiments',
-          collapsed: true,
-          link: '/docs/experiments/',
-          items: [
-            {
-              text: 'Env Precedence (#1038)',
-              link: '/docs/experiments/env-precedence'
-            },
-            {
-              text: 'Gentle Force (#1200)',
-              link: '/docs/experiments/gentle-force'
-            },
-            {
-              text: 'Remote Taskfiles (#1317)',
-              link: '/docs/experiments/remote-taskfiles'
-            }
-          ]
-        },
-        {
-          text: 'Deprecations',
-          collapsed: true,
-          link: '/docs/deprecations/',
-          items: [
-            {
-              text: 'Completion Scripts',
-              link: '/docs/deprecations/completion-scripts'
-            },
-            {
-              text: 'Template Functions',
-              link: '/docs/deprecations/template-functions'
-            },
-            {
-              text: 'Version 2 Schema (#1197)',
-              link: '/docs/deprecations/version-2-schema'
-            }
-          ]
-        },
-        {
-          text: 'Taskfile Versions',
-          link: '/docs/taskfile-versions'
-        },
-        {
-          text: 'Integrations',
-          link: '/docs/integrations'
-        },
-        {
-          text: 'Community',
-          link: '/docs/community'
-        },
-        {
-          text: 'Style Guide',
-          link: '/docs/styleguide'
-        },
-        {
-          text: 'Contributing',
-          link: '/docs/contributing'
-        },
-        {
-          text: 'Releasing',
-          link: '/docs/releasing'
-        },
-        {
-          text: 'Security',
-          collapsed: true,
-          link: '/docs/security/',
-          items: [
-            {
-              text: 'Incident Response Plan',
-              link: '/docs/security/incident-response-plan'
-            },
-            {
-              text: 'Threat Model',
-              link: '/docs/security/threat-model'
-            }
-          ]
-        },
-        {
-          text: 'Changelog',
-          link: '/docs/changelog'
-        },
-        {
-          text: 'FAQ',
-          link: '/docs/faq'
-        }
-      ],
+      '/': isCurrent ? currentSidebar : nextSidebar,
       // Hacky to disable sidebar for these pages
       '/donate': [],
       '/team': [],
@@ -510,7 +392,10 @@ export default defineConfig({
 
     editLink: {
       text: 'Edit this page on GitHub',
-      pattern: 'https://github.com/go-task/task/edit/main/website/src/:path'
+      // Docs are always edited in `src/docs`, even when the current channel
+      // serves them from `src/versioned/docs`.
+      pattern: ({ filePath }: { filePath: string }) =>
+        `https://github.com/go-task/task/edit/main/website/src/${filePath.replace(/^versioned\//, '')}`
     },
 
     footer: {

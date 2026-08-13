@@ -16,6 +16,9 @@ tasks:
     vars:
       HOST: '{{default "0.0.0.0" .HOST}}'
       PORT: '{{default "3001" .PORT}}'
+      CHANNEL: '{{default "next" .CHANNEL}}'
+    env:
+      DOCS_CHANNEL: '{{.CHANNEL}}'
     cmds:
       - pnpm dev --host={{.HOST}} --port={{.PORT}}
 
@@ -26,8 +29,19 @@ tasks:
       - pnpm lint
 
   build:
-    desc: Build website
+    desc: Build website with the docs of the upcoming release
+    aliases: [build:next]
     deps: [install]
+    env:
+      DOCS_CHANNEL: next
+    cmds:
+      - pnpm build
+
+  build:current:
+    desc: Build website with the docs of the released version
+    deps: [install]
+    env:
+      DOCS_CHANNEL: current
     cmds:
       - pnpm build
 
@@ -48,10 +62,12 @@ tasks:
 
   deploy:next:
     desc: Build and deploy next.taskfile.dev
+    deps: [build:next]
     cmds:
       - pnpm netlify deploy --prod --site=4e13dfcf-fc0d-4bec-ad60-b918a8dc3942
 
   deploy:prod:
     desc: Build and deploy taskfile.dev
+    deps: [build:current]
     cmds:
       - pnpm netlify deploy --prod --site=e625bc6a-1cd3-465d-ad30-7bbddaeb4f31
