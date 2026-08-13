@@ -36,12 +36,12 @@ In v1.0.0 of the extension, the configuration namespace was changed from `task`
 to `taskfile` in order to fix
 [an issue](https://github.com/go-task/vscode-task/issues/56).
 
-![Configuration namespace change warning](../public/img/config-namespace-change.png)
+![Configuration namespace change warning](/img/config-namespace-change.png)
 
 If you receive a warning like the one above, you will need to update your
 settings to use the new `taskfile` namespace instead:
 
-![Configuration namespace diff](../public/img/config-namespace-diff.png)
+![Configuration namespace diff](/img/config-namespace-diff.png)
 
 ## Schema
 
