@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- **Remote Taskfiles are now generally available!** This has been an
+  experimental feature for 3 years, but is now enabled by default. Massive
+  thanks to all those that contributed and gave feedback (too many to list
+  here). We've also given the
+  [Remote Taskfiles documentation](https://taskfile.dev/docs/remote-taskfiles) a
+  bit of a polish (#1317, #2906 by @pd93).
 - Considerably improve performance of fingerprinting on large repositories
   (monorepos). Fingerprinting is up to 86% faster and make up to 70% fewer
   memory allocations on the more advanced scenarios. Benchmarks were added as
