@@ -19,6 +19,16 @@ const (
 	versionFile     = "internal/version/version.txt"
 )
 
+// Promoted at release time: the website builds `next` from the sources on the
+// left and `current` from the targets on the right, so that taskfile.dev only
+// ever documents the version being released.
+var promotions = []struct{ source, target string }{
+	{"website/src/docs", "website/src/versioned/docs"},
+	{"website/.vitepress/sidebar/next.ts", "website/.vitepress/sidebar/current.ts"},
+	{"website/src/public/next-schema.json", "website/src/public/schema.json"},
+	{"website/src/public/next-schema-taskrc.json", "website/src/public/schema-taskrc.json"},
+}
+
 var changelogReleaseRegex = regexp.MustCompile(`## Unreleased`)
 
 // Flags
@@ -61,10 +71,44 @@ func release() error {
 		return err
 	}
 
+	// After the changelog so that the promoted docs carry it.
+	if err := promote(); err != nil {
+		return err
+	}
+
 	if err := setVersionFile(versionFile, version); err != nil {
 		return err
 	}
 
+	return nil
+}
+
+func promote() error {
+	for _, p := range promotions {
+		info, err := os.Stat(p.source)
+		if err != nil {
+			return err
+		}
+
+		if err := os.RemoveAll(p.target); err != nil {
+			return err
+		}
+
+		if info.IsDir() {
+			if err := os.CopyFS(p.target, os.DirFS(p.source)); err != nil {
+				return err
+			}
+			continue
+		}
+
+		b, err := os.ReadFile(p.source)
+		if err != nil {
+			return err
+		}
+		if err := os.WriteFile(p.target, b, 0o644); err != nil { //nolint:gosec
+			return err
+		}
+	}
 	return nil
 }
 
