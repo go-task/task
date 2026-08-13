@@ -1,6 +1,7 @@
 package experiments
 
 import (
+	"cmp"
 	"fmt"
 	"strconv"
 	"strings"
@@ -24,12 +25,15 @@ func (err InvalidValueError) Error() string {
 }
 
 type InactiveError struct {
-	Name string
+	Name   string
+	Reason string
 }
 
 func (err InactiveError) Error() string {
+	reason := cmp.Or(err.Reason, "is inactive and cannot be enabled")
 	return fmt.Sprintf(
-		"task: Experiment %q is inactive and cannot be enabled",
+		"task: Experiment %q %s",
 		err.Name,
+		reason,
 	)
 }

@@ -16,16 +16,16 @@ const envPrefix = "TASK_X_"
 
 // Active experiments.
 var (
-	GentleForce     Experiment
-	RemoteTaskfiles Experiment
-	EnvPrecedence   Experiment
+	GentleForce   Experiment
+	EnvPrecedence Experiment
 )
 
 // Inactive experiments. These are experiments that cannot be enabled, but are
 // preserved for error handling.
 var (
-	AnyVariables Experiment
-	MapVariables Experiment
+	AnyVariables    Experiment
+	MapVariables    Experiment
+	RemoteTaskfiles Experiment
 )
 
 // An internal list of all the initialized experiments used for iterating.
@@ -41,10 +41,11 @@ func ParseWithConfig(dir string, config *ast.TaskRC) {
 	readDotEnv(dir)
 	// Initialize the experiments
 	GentleForce = New("GENTLE_FORCE", config, 1)
-	RemoteTaskfiles = New("REMOTE_TASKFILES", config, 1)
 	EnvPrecedence = New("ENV_PRECEDENCE", config, 1)
-	AnyVariables = New("ANY_VARIABLES", config)
-	MapVariables = New("MAP_VARIABLES", config)
+	// Inactive experiments
+	AnyVariables = NewReleased("ANY_VARIABLES", config)
+	MapVariables = NewReleased("MAP_VARIABLES", config)
+	RemoteTaskfiles = NewReleased("REMOTE_TASKFILES", config)
 }
 
 // Validate checks if any experiments have been enabled while being inactive.

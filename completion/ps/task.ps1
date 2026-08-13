@@ -63,7 +63,16 @@ Register-ArgumentCompleter -CommandName $cmdNames -ScriptBlock {
 			[CompletionResult]::new('-w', '-w', [CompletionResultType]::ParameterName, 'watch mode'),
 			[CompletionResult]::new('--watch', '--watch', [CompletionResultType]::ParameterName, 'watch mode'),
 			[CompletionResult]::new('-y', '-y', [CompletionResultType]::ParameterName, 'assume yes'),
-			[CompletionResult]::new('--yes', '--yes', [CompletionResultType]::ParameterName, 'assume yes')
+			[CompletionResult]::new('--yes', '--yes', [CompletionResultType]::ParameterName, 'assume yes'),
+			[CompletionResult]::new('--offline', '--offline', [CompletionResultType]::ParameterName, 'use cached Taskfiles'),
+			[CompletionResult]::new('--timeout', '--timeout', [CompletionResultType]::ParameterName, 'download timeout'),
+			[CompletionResult]::new('--expiry', '--expiry', [CompletionResultType]::ParameterName, 'cache expiry'),
+			[CompletionResult]::new('--remote-cache-dir', '--remote-cache-dir', [CompletionResultType]::ParameterName, 'cache directory'),
+			[CompletionResult]::new('--cacert', '--cacert', [CompletionResultType]::ParameterName, 'custom CA certificate'),
+			[CompletionResult]::new('--cert', '--cert', [CompletionResultType]::ParameterName, 'client certificate'),
+			[CompletionResult]::new('--cert-key', '--cert-key', [CompletionResultType]::ParameterName, 'client private key'),
+			[CompletionResult]::new('--download', '--download', [CompletionResultType]::ParameterName, 'download remote Taskfile'),
+			[CompletionResult]::new('--clear-cache', '--clear-cache', [CompletionResultType]::ParameterName, 'clear cache')
 		)
 
 		# Experimental flags (dynamically added based on enabled experiments)
@@ -71,20 +80,6 @@ Register-ArgumentCompleter -CommandName $cmdNames -ScriptBlock {
 
 		if ($experiments -match '\* GENTLE_FORCE:.*on') {
 			$completions += [CompletionResult]::new('--force-all', '--force-all', [CompletionResultType]::ParameterName, 'force all dependencies')
-		}
-
-		if ($experiments -match '\* REMOTE_TASKFILES:.*on') {
-			# Options
-			$completions += [CompletionResult]::new('--offline', '--offline', [CompletionResultType]::ParameterName, 'use cached Taskfiles')
-			$completions += [CompletionResult]::new('--timeout', '--timeout', [CompletionResultType]::ParameterName, 'download timeout')
-			$completions += [CompletionResult]::new('--expiry', '--expiry', [CompletionResultType]::ParameterName, 'cache expiry')
-			$completions += [CompletionResult]::new('--remote-cache-dir', '--remote-cache-dir', [CompletionResultType]::ParameterName, 'cache directory')
-			$completions += [CompletionResult]::new('--cacert', '--cacert', [CompletionResultType]::ParameterName, 'custom CA certificate')
-			$completions += [CompletionResult]::new('--cert', '--cert', [CompletionResultType]::ParameterName, 'client certificate')
-			$completions += [CompletionResult]::new('--cert-key', '--cert-key', [CompletionResultType]::ParameterName, 'client private key')
-			# Operations
-			$completions += [CompletionResult]::new('--download', '--download', [CompletionResultType]::ParameterName, 'download remote Taskfile')
-			$completions += [CompletionResult]::new('--clear-cache', '--clear-cache', [CompletionResultType]::ParameterName, 'clear cache')
 		}
 
 		return $completions.Where{ $_.CompletionText.StartsWith($commandName) }
