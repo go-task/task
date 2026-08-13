@@ -106,7 +106,11 @@ func (node *HTTPNode) Read() ([]byte, error) {
 }
 
 func (node *HTTPNode) ReadContext(ctx context.Context) ([]byte, error) {
-	url, err := RemoteExists(ctx, *node.url, node.client)
+	client, err := node.authenticatedClient()
+	if err != nil {
+		return nil, err
+	}
+	url, err := RemoteExists(ctx, *node.url, client)
 	if err != nil {
 		return nil, err
 	}
@@ -115,7 +119,7 @@ func (node *HTTPNode) ReadContext(ctx context.Context) ([]byte, error) {
 		return nil, errors.TaskfileFetchFailedError{URI: node.Location()}
 	}
 
-	resp, err := node.client.Do(req.WithContext(ctx))
+	resp, err := client.Do(req.WithContext(ctx))
 	if err != nil {
 		if ctx.Err() != nil {
 			return nil, err
