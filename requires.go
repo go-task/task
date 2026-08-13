@@ -227,22 +227,17 @@ func (e *Executor) resolveEnumRefForPrompt(v *ast.VarsWithValidation, vars *ast.
 	if v.Enum == nil || v.Enum.Ref == "" || len(v.Enum.Value) > 0 {
 		return v
 	}
+	// Refs may depend on dynamic (sh:) variables that are not evaluated in the
+	// fast-compiled vars (they resolve to an empty value there). Evaluate them
+	// first so the prompt can show a selection list instead of falling back to
+	// free-form input.
+	if hasDynamicVars(vars) {
+		if evaluated := e.evaluateDynamicVarsForPrompt(vars, dir); evaluated != nil {
+			vars = evaluated
+		}
+	}
 	vCopy := v.DeepCopy()
-	cache := &templater.Cache{Vars: vars}
-	if err := resolveEnumRefs(&ast.Requires{Vars: []*ast.VarsWithValidation{vCopy}}, cache); err == nil && len(vCopy.Enum.Value) > 0 {
-		return vCopy
-	}
-	// The ref may depend on dynamic (sh:) variables that are not evaluated in
-	// the fast-compiled vars (they resolve to an empty value there). Evaluate
-	// the dynamic variables and retry, so the prompt can show a selection list
-	// instead of falling back to free-form input.
-	if !hasDynamicVars(vars) {
-		return vCopy
-	}
-	if evaluated := e.evaluateDynamicVarsForPrompt(vars, dir); evaluated != nil {
-		vCopy = v.DeepCopy()
-		_ = resolveEnumRefs(&ast.Requires{Vars: []*ast.VarsWithValidation{vCopy}}, &templater.Cache{Vars: evaluated})
-	}
+	_ = resolveEnumRefs(&ast.Requires{Vars: []*ast.VarsWithValidation{vCopy}}, &templater.Cache{Vars: vars})
 	return vCopy
 }
 

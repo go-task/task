@@ -1,0 +1,42 @@
+version: '3'
+
+vars:
+  AVAILABLE_SERVICES:
+    sh: printf 'api\nweb\ndb\n'
+  ALLOWED_ENVS:
+    - dev
+    - staging
+    - prod
+  NO_SERVICES:
+    sh: printf ''
+
+tasks:
+  deploy:
+    desc: Deploy a service chosen interactively from a dynamic sh variable
+    requires:
+      vars:
+        - name: SERVICE
+          enum:
+            ref: .AVAILABLE_SERVICES | splitLines | compact
+    cmds:
+      - echo "Deploying {{.SERVICE}}"
+
+  release:
+    desc: Release to an environment chosen from a static list var
+    requires:
+      vars:
+        - name: ENV
+          enum:
+            ref: .ALLOWED_ENVS
+    cmds:
+      - echo "Releasing to {{.ENV}}"
+
+  deploy-empty:
+    desc: Dynamic sh variable produces no values, falls back to free-form input
+    requires:
+      vars:
+        - name: SERVICE
+          enum:
+            ref: .NO_SERVICES | splitLines | compact
+    cmds:
+      - echo "Deploying {{.SERVICE}}"
