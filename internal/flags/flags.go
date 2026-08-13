@@ -155,7 +155,7 @@ func init() {
 	pflag.BoolVarP(&Failfast, "failfast", "F", getConfig(config, "FAILFAST", func() *bool { return &config.Failfast }, false), "When running tasks in parallel, stop all tasks if one fails.")
 	pflag.BoolVarP(&Global, "global", "g", false, "Runs global Taskfile, from $HOME/{T,t}askfile.{yml,yaml}.")
 	pflag.BoolVar(&Experiments, "experiments", false, "Lists all the available experiments and whether or not they are enabled.")
-	pflag.BoolVar(&Download, "download", false, "Downloads a cached version of a remote Taskfile.")
+	pflag.BoolVar(&Download, "download", false, "Forces task to download remote Taskfiles and ignore any cached versions.")
 	pflag.BoolVar(&Offline, "offline", getConfig(config, "REMOTE_OFFLINE", func() *bool { return config.Remote.Offline }, false), "Forces Task to only use local or cached Taskfiles.")
 	pflag.StringSliceVar(&TrustedHosts, "trusted-hosts", getConfig(config, "REMOTE_TRUSTED_HOSTS", func() *[]string { return &config.Remote.TrustedHosts }, nil), "List of trusted hosts for remote Taskfiles (comma-separated).")
 	pflag.DurationVar(&Timeout, "timeout", getConfig(config, "REMOTE_TIMEOUT", func() *time.Duration { return config.Remote.Timeout }, time.Second*10), "Timeout for downloading remote Taskfiles.")

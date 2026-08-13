@@ -195,7 +195,7 @@ temp-dir: .task
 - **Description**: Allow insecure connections when fetching remote Taskfiles
 - **CLI equivalent**: `--insecure`
 - **Environment variable**:
-  [`TASK_REMOTE_INSECURE`](./environment.md#task_remote_insecure)
+  [`TASK_REMOTE_INSECURE`](./environment.md#task-remote-insecure)
 
 ```yaml
 remote:
@@ -209,7 +209,7 @@ remote:
 - **Description**: Work in offline mode, preventing remote Taskfile fetching
 - **CLI equivalent**: `--offline`
 - **Environment variable**:
-  [`TASK_REMOTE_OFFLINE`](./environment.md#task_remote_offline)
+  [`TASK_REMOTE_OFFLINE`](./environment.md#task-remote-offline)
 
 ```yaml
 remote:
@@ -224,7 +224,7 @@ remote:
 - **Description**: Timeout duration for remote operations (e.g., '30s', '5m')
 - **CLI equivalent**: `--timeout`
 - **Environment variable**:
-  [`TASK_REMOTE_TIMEOUT`](./environment.md#task_remote_timeout)
+  [`TASK_REMOTE_TIMEOUT`](./environment.md#task-remote-timeout)
 
 ```yaml
 remote:
@@ -240,7 +240,7 @@ remote:
   '24h')
 - **CLI equivalent**: `--expiry`
 - **Environment variable**:
-  [`TASK_REMOTE_CACHE_EXPIRY`](./environment.md#task_remote_cache_expiry)
+  [`TASK_REMOTE_CACHE_EXPIRY`](./environment.md#task-remote-cache-expiry)
 
 ```yaml
 remote:
@@ -255,7 +255,7 @@ remote:
   absolute path (e.g., `/var/cache/task`) or relative to the Taskfile directory.
 - **CLI equivalent**: `--remote-cache-dir`
 - **Environment variable**:
-  [`TASK_REMOTE_CACHE_DIR`](./environment.md#task_remote_cache_dir)
+  [`TASK_REMOTE_CACHE_DIR`](./environment.md#task-remote-cache-dir)
 
 ```yaml
 remote:
@@ -270,7 +270,7 @@ remote:
   list will not prompt for confirmation when downloading Taskfiles
 - **CLI equivalent**: `--trusted-hosts`
 - **Environment variable**:
-  [`TASK_REMOTE_TRUSTED_HOSTS`](./environment.md#task_remote_trusted_hosts)
+  [`TASK_REMOTE_TRUSTED_HOSTS`](./environment.md#task-remote-trusted-hosts)
   (comma-separated)
 
 ```yaml

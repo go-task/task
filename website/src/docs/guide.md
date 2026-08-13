@@ -2348,8 +2348,7 @@ tasks:
   default:
     cmds:
       - defer:
-          echo '{{if .EXIT_CODE}}Failed with
-          {{.EXIT_CODE}}!{{else}}Success!{{end}}'
+          echo '{{if .EXIT_CODE}}Failed with {{.EXIT_CODE}}!{{else}}Success!{{end}}'
       - exit 1
 ```
 

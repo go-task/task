@@ -213,7 +213,7 @@ are able to tell task to accept these prompts automatically by using the `--yes`
 flag or the `--trusted-hosts` flag. The `--trusted-hosts` flag allows you to
 specify trusted hosts for remote Taskfiles, while `--yes` applies to all prompts
 in Task. You can also configure trusted hosts in your
-[taskrc configuration](./reference/config.md#remotetrusted-hosts) using
+[taskrc configuration](./reference/config.md#remote-trusted-hosts) using
 `remote.trusted-hosts`. Before enabling automatic trust, you should:
 
 1. Be sure that you trust the source and contents of the remote Taskfile.
@@ -304,10 +304,10 @@ version. However, the cache expiry duration can be modified by setting the
 `--expiry` flag.
 
 If for any reason you lose access to the internet or you are running Task in
-offline mode (via the `--offline` flag or `TASK_OFFLINE` environment variable),
-Task will run the any available cached files _even if they are expired_. This
-means that you should never be stuck without the ability to run your tasks as
-long as you have downloaded a remote Taskfile at least once.
+offline mode (via the `--offline` flag or `TASK_REMOTE_OFFLINE` environment
+variable), Task will run any available cached files _even if they are expired_.
+This means that you should never be stuck without the ability to run your tasks
+as long as you have downloaded a remote Taskfile at least once.
 
 By default, Task will timeout requests to download remote files after 10 seconds
 and look for a cached copy instead. This timeout can be configured by setting
@@ -317,8 +317,8 @@ set the timeout to 5 seconds.
 By default, the cache is stored in the Task temp directory (`.task`). You can
 override the location of the cache by using the `--remote-cache-dir` flag, the
 `remote.cache-dir` option in your
-[configuration file](./reference/config.md#remotecache-dir), or the
-`TASK_REMOTE_DIR` environment variable. This way, you can share the cache
+[configuration file](./reference/config.md#remote-cache-dir), or the
+`TASK_REMOTE_CACHE_DIR` environment variable. This way, you can share the cache
 between different projects.
 
 You can force Task to ignore the cache and download the latest version by using
@@ -328,8 +328,10 @@ You can use the `--clear-cache` flag to clear all cached remote files.
 
 ## Configuration
 
-It is also possible to adjust remote Taskfile functionality can be edited via a
-configuration file. Check out the
+It is possible to configure the default behavior of remote Taskfiles using
+configuration. Check out the following references for more information on how to
+set up this configuration using flags, environment variables or a configuration
+file:
 
 - [CLI flags](./reference/cli.md#remote)
 - [Environment Variables](./reference/environment.md#remote-taskfile-variables)
