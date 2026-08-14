@@ -457,20 +457,10 @@ func (r *Reader) readNodeContent(ctx context.Context, node Node) ([]byte, error)
 		return nil, err
 	}
 
-	// If the given checksum doesn't match the sum pinned in the Taskfile
-	checksum := checksum(b)
-	if !node.Verify(checksum) {
-		return nil, &errors.TaskfileDoesNotMatchChecksum{
-			URI:              node.Location(),
-			ExpectedChecksum: node.Checksum(),
-			ActualChecksum:   checksum,
-		}
-	}
-
-	return b, nil
+	return verifyPinnedChecksum(node, b)
 }
 
-func verifyPinnedChecksum(node RemoteNode, b []byte) ([]byte, error) {
+func verifyPinnedChecksum(node Node, b []byte) ([]byte, error) {
 	checksum := checksum(b)
 	if !node.Verify(checksum) {
 		return nil, &errors.TaskfileDoesNotMatchChecksum{
