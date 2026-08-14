@@ -65,16 +65,16 @@ a human. Always remind contributors to disclose AI usage in their submissions.
 
 ## 1. Setup
 
-The easiest way to install everything you need to work on Task is
-[mise][mise]. From the repository root, run:
+The easiest way to install everything you need to work on Task is [mise][mise].
+From the repository root, run:
 
 ```shell
 mise install
 ```
 
 This installs the pinned versions of Go, Node.js, pnpm and the dev tools
-(`golangci-lint`, `mockery`, `gotestsum`, `goreleaser` and `gorelease`)
-declared in the `mise.toml` file.
+(`golangci-lint`, `mockery`, `gotestsum`, `goreleaser` and `gorelease`) declared
+in the `mise.toml` file.
 
 If you'd rather install things manually, you'll need:
 
@@ -153,11 +153,11 @@ that is not in the released binary yet:
 split applies to the JSON schemas: edit `next-schema.json` and
 `next-schema-taskrc.json`, never `schema.json` or `schema-taskrc.json`.
 
-The one reason to touch `website/src/latest/docs` is to fix documentation of a
-feature that is _already released_ - a typo, a broken link, a missing
-description - so that the fix reaches taskfile.dev without waiting for the next
-release. Such a fix must be applied to **both** directories, otherwise it is
-overwritten at the next release; CI checks this for you.
+Never edit an existing file under `website/src/latest`: `cmd/release` overwrites
+that directory at every release, so the change would be silently lost. CI fails
+a pull request that modifies one. Adding a file there is fine - that is how a
+blog post gets published early - and so is editing the sidebars, which live
+outside that directory.
 
 To preview what taskfile.dev will look like, run `task website CHANNEL=latest`.
 

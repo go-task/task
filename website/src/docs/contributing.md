@@ -163,11 +163,11 @@ about an already released feature - can be added to `website/src/latest/blog` as
 well, and it goes live at the next deploy. Remember the sidebar entry in
 `.vitepress/sidebar/`, which is split the same way.
 
-The one reason to touch `website/src/latest/docs` is to fix documentation of a
-feature that is _already released_ - a typo, a broken link, a missing
-description - so that the fix reaches taskfile.dev without waiting for the next
-release. Such a fix must be applied to **both** directories, otherwise it is
-overwritten at the next release; CI checks this for you.
+Never edit an existing file under `website/src/latest`: `cmd/release` overwrites
+that directory at every release, so the change would be silently lost. CI fails
+a pull request that modifies one. Adding a file there is fine - that is how a
+blog post gets published early - and so is editing the sidebars, which live
+outside that directory.
 
 To preview what taskfile.dev will look like, run `task website CHANNEL=latest`.
 
