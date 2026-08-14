@@ -15,7 +15,7 @@ import (
 
 const (
 	changelogSource = "CHANGELOG.md"
-	changelogTarget = "website/src/docs/changelog.md"
+	changelogTarget = "website/src/next/docs/changelog.md"
 	versionFile     = "internal/version/version.txt"
 )
 
@@ -27,8 +27,8 @@ type promotion struct{ source, target string }
 // lives in website/.vitepress/config.ts, which picks a side at build time.
 var (
 	promotedDirs = []promotion{
-		{"website/src/docs", "website/src/latest/docs"},
-		{"website/src/blog", "website/src/latest/blog"},
+		{"website/src/next/docs", "website/src/latest/docs"},
+		{"website/src/next/blog", "website/src/latest/blog"},
 	}
 
 	promotedFiles = []promotion{

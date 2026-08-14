@@ -145,19 +145,19 @@ a feature that is not in the released binary yet:
 
 | Directory                        | Channel  | Published on      |
 | -------------------------------- | -------- | ----------------- |
-| `website/src/{docs,blog}`        | `next`   | next.taskfile.dev |
+| `website/src/next/{docs,blog}`   | `next`   | next.taskfile.dev |
 | `website/src/latest/{docs,blog}` | `latest` | taskfile.dev      |
 
 Everything else - the homepage, the team, adopters, images - is shared by both
 channels and goes live as soon as the site is deployed.
 
-**Write in `website/src`.** It holds the upcoming release, and `cmd/release`
-copies it over `website/src/latest` at every release. The same split applies to
-the JSON schemas: edit `next-schema.json` and `next-schema-taskrc.json`, never
-`schema.json` or `schema-taskrc.json`.
+**Write in `website/src/next`.** It holds the upcoming release, and
+`cmd/release` copies it over `website/src/latest` at every release. The same
+split applies to the JSON schemas: edit `next-schema.json` and
+`next-schema-taskrc.json`, never `schema.json` or `schema-taskrc.json`.
 
 Where you put a blog post decides when it goes out. A post that announces a
-feature belongs in `website/src/blog` alone: it ships with the release that
+feature belongs in `website/src/next/blog` alone: it ships with the release that
 carries the feature. A post that stands on its own - an announcement, a write-up
 about an already released feature - can be added to `website/src/latest/blog` as
 well, and it goes live at the next deploy. Remember the sidebar entry in

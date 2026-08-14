@@ -21,18 +21,14 @@ const version = readFileSync(
   'utf8'
 ).trim();
 
-// Which set of content to build. `next` (the default) serves `src/docs` and
-// `src/blog`, written for the upcoming release. `latest` serves their copies
-// under `src/latest`, at the very same URLs, so that taskfile.dev never
+// Which channel to build. `src/next` is written for the upcoming release and
+// serves next.taskfile.dev; `src/latest` is its copy at the released version
+// and serves taskfile.dev. Both mount at the same URLs, so taskfile.dev never
 // documents or announces a feature that is not in the released binary.
 // cmd/release owns the other half of this: it promotes one over the other.
 const isLatest = process.env.DOCS_CHANNEL === 'latest';
-
-// The sections that exist in both channels, and the prefix the inactive one
-// sits behind. Everything below derives from these two, so adding a section
-// cannot half-land.
-const versioned = ['docs', 'blog'];
-const prefix = isLatest ? 'latest/' : '';
+const channel = isLatest ? 'latest' : 'next';
+const other = isLatest ? 'next' : 'latest';
 
 const { sidebar: docsSidebar, blogSidebar } = isLatest
   ? latestChannel
@@ -234,12 +230,8 @@ export default defineConfig({
   },
   srcDir: 'src',
   cleanUrls: true,
-  srcExclude: isLatest ? versioned.map((s) => `${s}/**`) : ['latest/**'],
-  rewrites: isLatest
-    ? Object.fromEntries(
-        versioned.map((s) => [`${prefix}${s}/:path*`, `${s}/:path*`])
-      )
-    : {},
+  srcExclude: [`${other}/**`],
+  rewrites: { [`${channel}/:path*`]: ':path*' },
   markdown: {
     config: (md) => {
       md.use(githubLinksPlugin, {
@@ -258,11 +250,11 @@ export default defineConfig({
           'team.md',
           'donate.md',
           // Matched against source paths, which `rewrites` does not touch.
-          `${prefix}docs/styleguide.md`,
-          `${prefix}docs/contributing.md`,
-          `${prefix}docs/releasing.md`,
-          `${prefix}docs/changelog.md`,
-          `${prefix}blog/*`
+          `${channel}/docs/styleguide.md`,
+          `${channel}/docs/contributing.md`,
+          `${channel}/docs/releasing.md`,
+          `${channel}/docs/changelog.md`,
+          `${channel}/blog/*`
         ]
       }),
       groupIconVitePlugin({
@@ -354,8 +346,11 @@ export default defineConfig({
       text: 'Edit this page on GitHub',
       // Docs are always edited in `src/docs`, even when the latest channel
       // serves them from `src/latest/docs`.
+      // Serialized with toString() and evaluated in the browser, so it must not
+      // reference anything from this module. Both channels are edited in
+      // src/next, so strip whichever prefix the page was built from.
       pattern: ({ filePath }) =>
-        `https://github.com/go-task/task/edit/main/website/src/${filePath.slice(prefix.length)}`
+        `https://github.com/go-task/task/edit/main/website/src/next/${filePath.replace(/^(next|latest)\//, '')}`
     },
 
     footer: {

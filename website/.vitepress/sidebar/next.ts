@@ -2,7 +2,7 @@ import type { DefaultTheme } from 'vitepress';
 
 // Navigation for the `/docs` section. next.ts is the source of both sidebars;
 // cmd/release copies it over latest.ts alongside the content it describes. See
-// the "Documentation channels" section of website/src/docs/contributing.md.
+// the "Documentation channels" section of website/src/next/docs/contributing.md.
 export const sidebar: DefaultTheme.SidebarItem[] = [
   {
     text: 'Installation',

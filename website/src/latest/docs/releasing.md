@@ -23,7 +23,7 @@ defined in the above GitHub Actions.
 ## Website
 
 `task release:<version>` promotes the documentation before tagging: the docs in
-`website/src/docs`, their sidebar and the `next-*` JSON schemas are copied over
+`website/src/next/docs`, their sidebar and the `next-*` JSON schemas are copied over
 their published counterparts, so the released tag carries the docs of the
 version it ships. The release workflow then runs `task website:deploy:prod`.
 
