@@ -56,6 +56,8 @@
   reports exit code `124`. Callers that join a `run: once` or `when_changed`
   task already running now honor their own `timeout`, and inherit that task's
   failure instead of being told it succeeded (#1569, #2898 by @vmaerten).
+- Fixed a pinned `checksum:` not being verified when a remote Taskfile came from
+  the cache (#2980 by @vmaerten).
 
 ## v3.52.0 - 2026-07-02
 
