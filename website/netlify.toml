@@ -1,7 +1,3 @@
-# `command` only runs for builds Netlify starts itself -- the deploy previews
-# and next.taskfile.dev -- which want the `next` channel the config defaults to.
-# The deploy tasks pass --no-build and only take `publish` from here: they build
-# their own channel first, so taskfile.dev must not have git auto-publish on.
 [build]
   publish = ".vitepress/dist"
   command = "pnpm run build"
