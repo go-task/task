@@ -315,7 +315,7 @@ export default defineConfig({
       { text: 'Donate', link: '/donate' },
       { text: 'Team', link: '/team' },
       {
-        text: process.env.NODE_ENV === 'development' ? 'Next' : `v${version}`,
+        text: isLatest ? `v${version}` : 'Next',
         items: [
           {
             items: [
