@@ -99,8 +99,8 @@ jobs:
           check-jsonschema --check-metaschema website/src/public/next-schema.json
           check-jsonschema --check-metaschema website/src/public/schema.json
 
-  check-latest-docs:
-    name: 📚 Check latest docs
+  check-latest-content:
+    name: 📚 Check latest content
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
@@ -109,10 +109,10 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: 📚 Check latest docs
+      - name: 📚 Check latest content
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
-        run: ./.github/scripts/check-latest-docs.sh "$BASE_SHA"
+        run: ./.github/scripts/check-latest-content.sh "$BASE_SHA"
 
   govulncheck:
     name: 🛡️ Vulnerabilities

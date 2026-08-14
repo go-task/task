@@ -24,6 +24,7 @@ const (
 // ever documents the version being released.
 var promotions = []struct{ source, target string }{
 	{"website/src/docs", "website/src/latest/docs"},
+	{"website/src/blog", "website/src/latest/blog"},
 	{"website/.vitepress/sidebar/next.ts", "website/.vitepress/sidebar/latest.ts"},
 	{"website/src/public/next-schema.json", "website/src/public/schema.json"},
 	{"website/src/public/next-schema-taskrc.json", "website/src/public/schema-taskrc.json"},

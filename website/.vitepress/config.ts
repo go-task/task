@@ -13,8 +13,14 @@ import { adopters } from './adopters.ts';
 import { taskDescription, taskName, ogUrl, ogImage } from './meta.ts';
 import { fileURLToPath, URL } from 'node:url';
 import llmstxt from 'vitepress-plugin-llms';
-import { sidebar as nextSidebar } from './sidebar/next.ts';
-import { sidebar as latestSidebar } from './sidebar/latest.ts';
+import {
+  sidebar as nextSidebar,
+  blogSidebar as nextBlogSidebar
+} from './sidebar/next.ts';
+import {
+  sidebar as latestSidebar,
+  blogSidebar as latestBlogSidebar
+} from './sidebar/latest.ts';
 
 const version = readFileSync(
   resolve(__dirname, '../../internal/version/version.txt'),
@@ -30,6 +36,7 @@ const isLatest = process.env.DOCS_CHANNEL === 'latest';
 // Where the docs of the active channel live, relative to `srcDir`. Plugins that
 // match on source paths need this; `rewrites` only affects the output URLs.
 const docsRoot = isLatest ? 'latest/docs' : 'docs';
+const blogRoot = isLatest ? 'latest/blog' : 'blog';
 
 const urlVersion =
   process.env.NODE_ENV === 'development'
@@ -230,8 +237,13 @@ export default defineConfig({
   },
   srcDir: 'src',
   cleanUrls: true,
-  srcExclude: isLatest ? ['docs/**'] : ['latest/**'],
-  rewrites: isLatest ? { 'latest/docs/:path*': 'docs/:path*' } : {},
+  srcExclude: isLatest ? ['docs/**', 'blog/**'] : ['latest/**'],
+  rewrites: isLatest
+    ? {
+        'latest/docs/:path*': 'docs/:path*',
+        'latest/blog/:path*': 'blog/:path*'
+      }
+    : {},
   markdown: {
     config: (md) => {
       md.use(githubLinksPlugin, {
@@ -253,7 +265,7 @@ export default defineConfig({
           `${docsRoot}/contributing.md`,
           `${docsRoot}/releasing.md`,
           `${docsRoot}/changelog.md`,
-          'blog/*'
+          `${blogRoot}/*`
         ]
       }),
       groupIconVitePlugin({
@@ -325,56 +337,7 @@ export default defineConfig({
     ],
 
     sidebar: {
-      '/blog/': [
-        {
-          text: '2026',
-          collapsed: false,
-          items: [
-            {
-              text: 'GitHub SOSF',
-              link: '/blog/github-secure-open-source-program'
-            },
-            {
-              text: 'Using `go tool task`',
-              link: '/blog/go-tool-task'
-            },
-            {
-              text: 'Conditionals Statements',
-              link: '/blog/if-and-variable-prompt'
-            }
-          ]
-        },
-        {
-          text: '2025',
-          collapsed: false,
-          items: [
-            {
-              text: 'Built-in Core Utilities',
-              link: '/blog/windows-core-utils'
-            }
-          ]
-        },
-        {
-          text: '2024',
-          collapsed: false,
-          items: [
-            {
-              text: 'Any Variables',
-              link: '/blog/any-variables'
-            }
-          ]
-        },
-        {
-          text: '2023',
-          collapsed: false,
-          items: [
-            {
-              text: 'Introducing Experiments',
-              link: '/blog/task-in-2023'
-            }
-          ]
-        }
-      ],
+      '/blog/': isLatest ? latestBlogSidebar : nextBlogSidebar,
       '/': isLatest ? latestSidebar : nextSidebar,
       // Hacky to disable sidebar for these pages
       '/donate': [],

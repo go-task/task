@@ -136,3 +136,57 @@ export const sidebar: DefaultTheme.SidebarItem[] = [
     link: '/docs/faq'
   }
 ];
+
+// Sidebar for the `/blog` section, split the same way as the docs: an entry
+// added here only reaches taskfile.dev once cmd/release promotes this file,
+// so a post announcing a feature ships with the release that carries it.
+export const blogSidebar: DefaultTheme.SidebarItem[] = [
+  {
+    text: '2026',
+    collapsed: false,
+    items: [
+      {
+        text: 'GitHub SOSF',
+        link: '/blog/github-secure-open-source-program'
+      },
+      {
+        text: 'Using `go tool task`',
+        link: '/blog/go-tool-task'
+      },
+      {
+        text: 'Conditionals Statements',
+        link: '/blog/if-and-variable-prompt'
+      }
+    ]
+  },
+  {
+    text: '2025',
+    collapsed: false,
+    items: [
+      {
+        text: 'Built-in Core Utilities',
+        link: '/blog/windows-core-utils'
+      }
+    ]
+  },
+  {
+    text: '2024',
+    collapsed: false,
+    items: [
+      {
+        text: 'Any Variables',
+        link: '/blog/any-variables'
+      }
+    ]
+  },
+  {
+    text: '2023',
+    collapsed: false,
+    items: [
+      {
+        text: 'Introducing Experiments',
+        link: '/blog/task-in-2023'
+      }
+    ]
+  }
+];
