@@ -13,41 +13,38 @@ import { adopters } from './adopters.ts';
 import { taskDescription, taskName, ogUrl, ogImage } from './meta.ts';
 import { fileURLToPath, URL } from 'node:url';
 import llmstxt from 'vitepress-plugin-llms';
-import {
-  sidebar as nextSidebar,
-  blogSidebar as nextBlogSidebar
-} from './sidebar/next.ts';
-import {
-  sidebar as latestSidebar,
-  blogSidebar as latestBlogSidebar
-} from './sidebar/latest.ts';
+import * as nextChannel from './sidebar/next.ts';
+import * as latestChannel from './sidebar/latest.ts';
 
 const version = readFileSync(
   resolve(__dirname, '../../internal/version/version.txt'),
   'utf8'
 ).trim();
 
-// Which set of docs to build. `next` (the default) serves `src/docs`, the docs
-// being written for the upcoming release. `latest` serves `src/latest/docs`
-// under the very same `/docs/` URLs, so that taskfile.dev never documents
-// features that are not in the released binary.
+// Which set of content to build. `next` (the default) serves `src/docs` and
+// `src/blog`, written for the upcoming release. `latest` serves their copies
+// under `src/latest`, at the very same URLs, so that taskfile.dev never
+// documents or announces a feature that is not in the released binary.
+// cmd/release owns the other half of this: it promotes one over the other.
 const isLatest = process.env.DOCS_CHANNEL === 'latest';
 
-// Where the docs of the active channel live, relative to `srcDir`. Plugins that
-// match on source paths need this; `rewrites` only affects the output URLs.
-const docsRoot = isLatest ? 'latest/docs' : 'docs';
-const blogRoot = isLatest ? 'latest/blog' : 'blog';
+// The sections that exist in both channels, and the prefix the inactive one
+// sits behind. Everything below derives from these two, so adding a section
+// cannot half-land.
+const versioned = ['docs', 'blog'];
+const prefix = isLatest ? 'latest/' : '';
 
-const urlVersion =
-  process.env.NODE_ENV === 'development'
-    ? {
-        current: 'https://taskfile.dev/',
-        next: 'http://localhost:3002/'
-      }
-    : {
-        current: 'https://taskfile.dev/',
-        next: 'https://next.taskfile.dev/'
-      };
+const { sidebar: docsSidebar, blogSidebar } = isLatest
+  ? latestChannel
+  : nextChannel;
+
+const urlVersion = {
+  current: 'https://taskfile.dev/',
+  next:
+    process.env.NODE_ENV === 'development'
+      ? 'http://localhost:3002/'
+      : 'https://next.taskfile.dev/'
+};
 
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
@@ -237,12 +234,11 @@ export default defineConfig({
   },
   srcDir: 'src',
   cleanUrls: true,
-  srcExclude: isLatest ? ['docs/**', 'blog/**'] : ['latest/**'],
+  srcExclude: isLatest ? versioned.map((s) => `${s}/**`) : ['latest/**'],
   rewrites: isLatest
-    ? {
-        'latest/docs/:path*': 'docs/:path*',
-        'latest/blog/:path*': 'blog/:path*'
-      }
+    ? Object.fromEntries(
+        versioned.map((s) => [`${prefix}${s}/:path*`, `${s}/:path*`])
+      )
     : {},
   markdown: {
     config: (md) => {
@@ -261,11 +257,12 @@ export default defineConfig({
           'index.md',
           'team.md',
           'donate.md',
-          `${docsRoot}/styleguide.md`,
-          `${docsRoot}/contributing.md`,
-          `${docsRoot}/releasing.md`,
-          `${docsRoot}/changelog.md`,
-          `${blogRoot}/*`
+          // Matched against source paths, which `rewrites` does not touch.
+          `${prefix}docs/styleguide.md`,
+          `${prefix}docs/contributing.md`,
+          `${prefix}docs/releasing.md`,
+          `${prefix}docs/changelog.md`,
+          `${prefix}blog/*`
         ]
       }),
       groupIconVitePlugin({
@@ -337,8 +334,8 @@ export default defineConfig({
     ],
 
     sidebar: {
-      '/blog/': isLatest ? latestBlogSidebar : nextBlogSidebar,
-      '/': isLatest ? latestSidebar : nextSidebar,
+      '/blog/': blogSidebar,
+      '/': docsSidebar,
       // Hacky to disable sidebar for these pages
       '/donate': [],
       '/team': [],
@@ -357,8 +354,8 @@ export default defineConfig({
       text: 'Edit this page on GitHub',
       // Docs are always edited in `src/docs`, even when the latest channel
       // serves them from `src/latest/docs`.
-      pattern: ({ filePath }: { filePath: string }) =>
-        `https://github.com/go-task/task/edit/main/website/src/${filePath.replace(/^latest\//, '')}`
+      pattern: ({ filePath }) =>
+        `https://github.com/go-task/task/edit/main/website/src/${filePath.slice(prefix.length)}`
     },
 
     footer: {

@@ -16,9 +16,8 @@ tasks:
     vars:
       HOST: '{{default "0.0.0.0" .HOST}}'
       PORT: '{{default "3001" .PORT}}'
-      CHANNEL: '{{default "next" .CHANNEL}}'
     env:
-      DOCS_CHANNEL: '{{.CHANNEL}}'
+      DOCS_CHANNEL: '{{.CHANNEL | default "next"}}'
     cmds:
       - pnpm dev --host={{.HOST}} --port={{.PORT}}
 
@@ -29,21 +28,19 @@ tasks:
       - pnpm lint
 
   build:
-    desc: Build website with the docs of the upcoming release
+    desc: Build website
     aliases: [build:next]
     deps: [install]
     env:
-      DOCS_CHANNEL: next
+      DOCS_CHANNEL: '{{.CHANNEL | default "next"}}'
     cmds:
       - pnpm build
 
   build:latest:
-    desc: Build website with the docs of the released version
-    deps: [install]
-    env:
-      DOCS_CHANNEL: latest
+    desc: Build website with the content of the released version
     cmds:
-      - pnpm build
+      - task: build
+        vars: { CHANNEL: latest }
 
   preview:
     desc: Preview Website
@@ -60,14 +57,17 @@ tasks:
     cmds:
       - rm -rf ./vitepress/dist
 
+  # --no-build is what makes the channel stick: the CLI builds by default, and
+  # that build would come from netlify.toml, which knows nothing about the
+  # channel these tasks just built.
   deploy:next:
     desc: Build and deploy next.taskfile.dev
     deps: [build:next]
     cmds:
-      - pnpm netlify deploy --prod --site=4e13dfcf-fc0d-4bec-ad60-b918a8dc3942
+      - pnpm netlify deploy --prod --no-build --site=4e13dfcf-fc0d-4bec-ad60-b918a8dc3942
 
   deploy:prod:
     desc: Build and deploy taskfile.dev
     deps: [build:latest]
     cmds:
-      - pnpm netlify deploy --prod --site=e625bc6a-1cd3-465d-ad30-7bbddaeb4f31
+      - pnpm netlify deploy --prod --no-build --site=e625bc6a-1cd3-465d-ad30-7bbddaeb4f31

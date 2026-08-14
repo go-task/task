@@ -1,8 +1,8 @@
 import type { DefaultTheme } from 'vitepress';
 
-// Sidebar for the `/docs` section. `next.ts` navigates `src/docs`, and
-// cmd/release copies it to `latest.ts` alongside the docs it describes, so
-// that the published site keeps the navigation of the released version.
+// Navigation for the `/docs` section. next.ts is the source of both sidebars;
+// cmd/release copies it over latest.ts alongside the content it describes. See
+// the "Documentation channels" section of website/src/docs/contributing.md.
 export const sidebar: DefaultTheme.SidebarItem[] = [
   {
     text: 'Installation',
@@ -137,9 +137,7 @@ export const sidebar: DefaultTheme.SidebarItem[] = [
   }
 ];
 
-// Sidebar for the `/blog` section, split the same way as the docs: an entry
-// added here only reaches taskfile.dev once cmd/release promotes this file,
-// so a post announcing a feature ships with the release that carries it.
+// Navigation for the `/blog` section, split the same way as the docs.
 export const blogSidebar: DefaultTheme.SidebarItem[] = [
   {
     text: '2026',

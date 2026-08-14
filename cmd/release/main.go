@@ -19,16 +19,24 @@ const (
 	versionFile     = "internal/version/version.txt"
 )
 
+type promotion struct{ source, target string }
+
 // Promoted at release time: the website builds `next` from the sources on the
 // left and `latest` from the targets on the right, so that taskfile.dev only
-// ever documents the version being released.
-var promotions = []struct{ source, target string }{
-	{"website/src/docs", "website/src/latest/docs"},
-	{"website/src/blog", "website/src/latest/blog"},
-	{"website/.vitepress/sidebar/next.ts", "website/.vitepress/sidebar/latest.ts"},
-	{"website/src/public/next-schema.json", "website/src/public/schema.json"},
-	{"website/src/public/next-schema-taskrc.json", "website/src/public/schema-taskrc.json"},
-}
+// ever documents the version being released. The other half of the mechanism
+// lives in website/.vitepress/config.ts, which picks a side at build time.
+var (
+	promotedDirs = []promotion{
+		{"website/src/docs", "website/src/latest/docs"},
+		{"website/src/blog", "website/src/latest/blog"},
+	}
+
+	promotedFiles = []promotion{
+		{"website/.vitepress/sidebar/next.ts", "website/.vitepress/sidebar/latest.ts"},
+		{"website/src/public/next-schema.json", "website/src/public/schema.json"},
+		{"website/src/public/next-schema-taskrc.json", "website/src/public/schema-taskrc.json"},
+	}
+)
 
 var changelogReleaseRegex = regexp.MustCompile(`## Unreleased`)
 
@@ -85,23 +93,17 @@ func release() error {
 }
 
 func promote() error {
-	for _, p := range promotions {
-		info, err := os.Stat(p.source)
-		if err != nil {
-			return err
-		}
-
+	for _, p := range promotedDirs {
+		// CopyFS refuses to overwrite, so the previous release has to go first.
 		if err := os.RemoveAll(p.target); err != nil {
 			return err
 		}
-
-		if info.IsDir() {
-			if err := os.CopyFS(p.target, os.DirFS(p.source)); err != nil {
-				return err
-			}
-			continue
+		if err := os.CopyFS(p.target, os.DirFS(p.source)); err != nil {
+			return err
 		}
+	}
 
+	for _, p := range promotedFiles {
 		b, err := os.ReadFile(p.source)
 		if err != nil {
 			return err
@@ -110,6 +112,7 @@ func promote() error {
 			return err
 		}
 	}
+
 	return nil
 }
 
