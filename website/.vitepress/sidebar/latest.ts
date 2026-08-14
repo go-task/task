@@ -1,7 +1,7 @@
 import type { DefaultTheme } from 'vitepress';
 
 // Sidebar for the `/docs` section. `next.ts` navigates `src/docs`, and
-// cmd/release copies it to `current.ts` alongside the docs it describes, so
+// cmd/release copies it to `latest.ts` alongside the docs it describes, so
 // that the published site keeps the navigation of the released version.
 export const sidebar: DefaultTheme.SidebarItem[] = [
   {

@@ -143,23 +143,23 @@ for fields in the docs and the schema should match.
 The docs exist in two copies, so that taskfile.dev never documents a feature
 that is not in the released binary yet:
 
-| Directory                    | Channel   | Published on      |
-| ---------------------------- | --------- | ----------------- |
-| `website/src/docs`           | `next`    | next.taskfile.dev |
-| `website/src/versioned/docs` | `current` | taskfile.dev      |
+| Directory                 | Channel  | Published on      |
+| ------------------------- | -------- | ----------------- |
+| `website/src/docs`        | `next`   | next.taskfile.dev |
+| `website/src/latest/docs` | `latest` | taskfile.dev      |
 
 **Write in `website/src/docs`.** It documents the upcoming release, and
-`cmd/release` copies it over the versioned directory at every release. The same
+`cmd/release` copies it over the latest directory at every release. The same
 split applies to the JSON schemas: edit `next-schema.json` and
 `next-schema-taskrc.json`, never `schema.json` or `schema-taskrc.json`.
 
-The one reason to touch `website/src/versioned/docs` is to fix documentation of
-a feature that is _already released_ - a typo, a broken link, a missing
+The one reason to touch `website/src/latest/docs` is to fix documentation of a
+feature that is _already released_ - a typo, a broken link, a missing
 description - so that the fix reaches taskfile.dev without waiting for the next
 release. Such a fix must be applied to **both** directories, otherwise it is
 overwritten at the next release; CI checks this for you.
 
-To preview what taskfile.dev will look like, run `task website CHANNEL=current`.
+To preview what taskfile.dev will look like, run `task website CHANNEL=latest`.
 
 ### Writing tests
 

@@ -14,7 +14,7 @@ import { taskDescription, taskName, ogUrl, ogImage } from './meta.ts';
 import { fileURLToPath, URL } from 'node:url';
 import llmstxt from 'vitepress-plugin-llms';
 import { sidebar as nextSidebar } from './sidebar/next.ts';
-import { sidebar as currentSidebar } from './sidebar/current.ts';
+import { sidebar as latestSidebar } from './sidebar/latest.ts';
 
 const version = readFileSync(
   resolve(__dirname, '../../internal/version/version.txt'),
@@ -22,14 +22,14 @@ const version = readFileSync(
 ).trim();
 
 // Which set of docs to build. `next` (the default) serves `src/docs`, the docs
-// being written for the upcoming release. `current` serves `src/versioned/docs`
+// being written for the upcoming release. `latest` serves `src/latest/docs`
 // under the very same `/docs/` URLs, so that taskfile.dev never documents
 // features that are not in the released binary.
-const isCurrent = process.env.DOCS_CHANNEL === 'current';
+const isLatest = process.env.DOCS_CHANNEL === 'latest';
 
 // Where the docs of the active channel live, relative to `srcDir`. Plugins that
 // match on source paths need this; `rewrites` only affects the output URLs.
-const docsRoot = isCurrent ? 'versioned/docs' : 'docs';
+const docsRoot = isLatest ? 'latest/docs' : 'docs';
 
 const urlVersion =
   process.env.NODE_ENV === 'development'
@@ -230,8 +230,8 @@ export default defineConfig({
   },
   srcDir: 'src',
   cleanUrls: true,
-  srcExclude: isCurrent ? ['docs/**'] : ['versioned/**'],
-  rewrites: isCurrent ? { 'versioned/docs/:path*': 'docs/:path*' } : {},
+  srcExclude: isLatest ? ['docs/**'] : ['latest/**'],
+  rewrites: isLatest ? { 'latest/docs/:path*': 'docs/:path*' } : {},
   markdown: {
     config: (md) => {
       md.use(githubLinksPlugin, {
@@ -375,7 +375,7 @@ export default defineConfig({
           ]
         }
       ],
-      '/': isCurrent ? currentSidebar : nextSidebar,
+      '/': isLatest ? latestSidebar : nextSidebar,
       // Hacky to disable sidebar for these pages
       '/donate': [],
       '/team': [],
@@ -392,10 +392,10 @@ export default defineConfig({
 
     editLink: {
       text: 'Edit this page on GitHub',
-      // Docs are always edited in `src/docs`, even when the current channel
-      // serves them from `src/versioned/docs`.
+      // Docs are always edited in `src/docs`, even when the latest channel
+      // serves them from `src/latest/docs`.
       pattern: ({ filePath }: { filePath: string }) =>
-        `https://github.com/go-task/task/edit/main/website/src/${filePath.replace(/^versioned\//, '')}`
+        `https://github.com/go-task/task/edit/main/website/src/${filePath.replace(/^latest\//, '')}`
     },
 
     footer: {

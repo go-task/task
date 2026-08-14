@@ -27,8 +27,8 @@ defined in the above GitHub Actions.
 their published counterparts, so the released tag carries the docs of the
 version it ships. The release workflow then runs `task website:deploy:prod`.
 
-Because taskfile.dev is built from the versioned copy, it can be redeployed at
-any time between releases - to publish a blog post or a documentation fix -
+Because taskfile.dev is built from the latest copy, it can be redeployed at any
+time between releases - to publish a blog post or a documentation fix -
 without exposing the docs of unreleased features:
 
 ```shell

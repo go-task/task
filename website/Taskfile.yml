@@ -37,11 +37,11 @@ tasks:
     cmds:
       - pnpm build
 
-  build:current:
+  build:latest:
     desc: Build website with the docs of the released version
     deps: [install]
     env:
-      DOCS_CHANNEL: current
+      DOCS_CHANNEL: latest
     cmds:
       - pnpm build
 
@@ -68,6 +68,6 @@ tasks:
 
   deploy:prod:
     desc: Build and deploy taskfile.dev
-    deps: [build:current]
+    deps: [build:latest]
     cmds:
       - pnpm netlify deploy --prod --site=e625bc6a-1cd3-465d-ad30-7bbddaeb4f31
