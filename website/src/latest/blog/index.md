@@ -9,7 +9,7 @@ title="GitHub Secure Open Source Fund"
 url="/blog/github-secure-open-source-program"
 date="2026-04-14"
 author="andreynering"
-description='Task participated in the fourth session of the GitHub Secure Open Source program.'
+description='Task participated in the session 4 of the GitHub Secure Open Source program.'
 :tags="['github', 'security']"
 />
 
