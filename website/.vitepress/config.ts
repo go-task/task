@@ -318,13 +318,20 @@ export default defineConfig({
         items: [
           {
             items: [
+              // Absolute links, so VitePress would treat them as external and
+              // open them in a new tab. Switching channels is navigation, not a
+              // detour off the site.
               {
                 text: `v${version}`,
-                link: urlVersion.current
+                link: urlVersion.current,
+                target: '_self',
+                noIcon: true
               },
               {
                 text: 'Next',
-                link: urlVersion.next
+                link: urlVersion.next,
+                target: '_self',
+                noIcon: true
               }
             ]
           }
