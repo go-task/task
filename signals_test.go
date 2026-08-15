@@ -188,8 +188,8 @@ func TestSignalSentToProcessGroup(t *testing.T) {
 }
 
 func getTaskPath() (string, error) {
-	if info, err := os.Stat("./bin/task"); err == nil {
-		return info.Name(), nil
+	if _, err := os.Stat("./bin/task"); err == nil {
+		return filepath.Abs("./bin/task")
 	}
 
 	if path, err := exec.LookPath("task"); err == nil {
