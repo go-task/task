@@ -34,13 +34,20 @@ const { sidebar: docsSidebar, blogSidebar } = isLatest
   ? latestChannel
   : nextChannel;
 
-const urlVersion = {
-  current: 'https://taskfile.dev/',
-  next:
-    process.env.NODE_ENV === 'development'
-      ? 'http://localhost:3002/'
-      : 'https://next.taskfile.dev/'
-};
+// Ports are the ones the dev tasks bind to; keep them in sync with
+// website/Taskfile.yml. DOCS_LOCAL is set by those tasks alone, so a build can
+// never end up shipping localhost URLs.
+const localPorts = { latest: 3002, next: 3001 };
+const urlVersion =
+  process.env.DOCS_LOCAL === '1'
+    ? {
+        current: `http://localhost:${localPorts.latest}/`,
+        next: `http://localhost:${localPorts.next}/`
+      }
+    : {
+        current: 'https://taskfile.dev/',
+        next: 'https://next.taskfile.dev/'
+      };
 
 // https://vitepress.dev/reference/site-config
 export default defineConfig({

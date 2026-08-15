@@ -12,14 +12,29 @@ tasks:
   default:
     desc: Start website
     deps: [install]
-    aliases: [s, start]
+    aliases: [s, start, start:next]
     vars:
       HOST: '{{default "0.0.0.0" .HOST}}'
       PORT: '{{default "3001" .PORT}}'
     env:
       DOCS_CHANNEL: '{{.CHANNEL | default "next"}}'
+      # Only the dev server sets this: it is what keeps the localhost URLs of
+      # the version selector out of a build. See .vitepress/config.ts.
+      DOCS_LOCAL: '1'
     cmds:
       - pnpm dev --host={{.HOST}} --port={{.PORT}}
+
+  # The port is half of a pair: config.ts links the two channels to each other
+  # on 3001 and 3002, so both dev servers can run side by side.
+  start:latest:
+    desc: Start website with the content of the released version
+    cmds:
+      - task: default
+        vars: { CHANNEL: latest, PORT: '{{default "3002" .PORT}}' }
+
+  start:all:
+    desc: Start both channels side by side
+    deps: [default, start:latest]
 
   lint:
     desc: Lint website

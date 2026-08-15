@@ -169,7 +169,9 @@ a pull request that modifies one. Adding a file there is fine - that is how a
 blog post gets published early - and so is editing the sidebars, which live
 outside that directory.
 
-To preview what taskfile.dev will look like, run `task website CHANNEL=latest`.
+To preview what taskfile.dev will look like, run `task website:start:latest`. It
+serves the `latest` channel on port 3002, so it can run next to `task website`
+and the version selector switches between the two.
 
 ### Writing tests
 
