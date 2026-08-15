@@ -1,7 +1,8 @@
 import { defineConfig, HeadConfig } from 'vitepress';
 import githubLinksPlugin from './plugins/github-links';
-import { readFileSync } from 'fs';
+import { readdirSync, readFileSync } from 'fs';
 import { resolve } from 'path';
+import matter from 'gray-matter';
 import { tabsMarkdownPlugin } from 'vitepress-plugin-tabs';
 import {
   groupIconMdPlugin,
@@ -18,6 +19,39 @@ const version = readFileSync(
   resolve(__dirname, '../../internal/version/version.txt'),
   'utf8'
 ).trim();
+
+// Builds the "/blog/" sidebar from each blog post's frontmatter.
+function buildBlogSidebar() {
+  const blogDir = resolve(__dirname, '../src/blog');
+  const posts = readdirSync(blogDir)
+    .filter((file) => file.endsWith('.md') && file !== 'index.md')
+    .map((file) => {
+      const { data: frontmatter } = matter(
+        readFileSync(resolve(blogDir, file), 'utf8')
+      );
+      return {
+        slug: file.replace(/\.md$/, ''),
+        title: frontmatter.sidebarTitle ?? frontmatter.title,
+        date: new Date(frontmatter.date)
+      };
+    })
+    .sort((a, b) => b.date.getTime() - a.date.getTime());
+
+  const byYear = new Map<number, { text: string; link: string }[]>();
+  for (const post of posts) {
+    const year = post.date.getFullYear();
+    if (!byYear.has(year)) byYear.set(year, []);
+    byYear.get(year)!.push({ text: post.title, link: `/blog/${post.slug}` });
+  }
+
+  return [...byYear.entries()]
+    .sort((a, b) => b[0] - a[0])
+    .map(([year, items]) => ({
+      text: String(year),
+      collapsed: false,
+      items
+    }));
+}
 
 const urlVersion =
   process.env.NODE_ENV === 'development'
@@ -311,56 +345,7 @@ export default defineConfig({
     ],
 
     sidebar: {
-      '/blog/': [
-        {
-          text: '2026',
-          collapsed: false,
-          items: [
-            {
-              text: 'GitHub SOSF',
-              link: '/blog/github-secure-open-source-program'
-            },
-            {
-              text: 'Using `go tool task`',
-              link: '/blog/go-tool-task'
-            },
-            {
-              text: 'Conditionals Statements',
-              link: '/blog/if-and-variable-prompt'
-            }
-          ]
-        },
-        {
-          text: '2025',
-          collapsed: false,
-          items: [
-            {
-              text: 'Built-in Core Utilities',
-              link: '/blog/windows-core-utils'
-            }
-          ]
-        },
-        {
-          text: '2024',
-          collapsed: false,
-          items: [
-            {
-              text: 'Any Variables',
-              link: '/blog/any-variables'
-            }
-          ]
-        },
-        {
-          text: '2023',
-          collapsed: false,
-          items: [
-            {
-              text: 'Introducing Experiments',
-              link: '/blog/task-in-2023'
-            }
-          ]
-        }
-      ],
+      '/blog/': buildBlogSidebar(),
       '/': [
         {
           text: 'Installation',

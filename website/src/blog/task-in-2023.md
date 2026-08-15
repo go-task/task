@@ -3,7 +3,8 @@ title: Introducing Experiments
 description:
   A look at where task is, where it's going and how we're going to get there.
 author: pd93
-date: 2024-05-09
+date: 2023-09-02
+tags: ['roadmap', 'experiments', 'community']
 outline: deep
 editLink: false
 ---
@@ -18,6 +19,8 @@ not much of a writer, but I think one of the things we could do better is to
 communicate these kinds of thoughts to the community. So, with that in mind,
 this is the first (hopefully of many) blog posts talking about Task and what
 we're up to.
+
+<!-- more -->
 
 ## :calendar: So, what have we been up to?
 

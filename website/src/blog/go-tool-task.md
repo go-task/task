@@ -1,8 +1,9 @@
 ---
-title: go tool task
+title: Using `go tool task`
 description: How to use Task using go tool.
 author: andreynering
 date: 2026-04-14
+tags: ['installation']
 outline: deep
 editLink: false
 ---
@@ -15,6 +16,8 @@ Do you know that you can use Task without really needing to install it?
 
 If you work with Go, you probably depend on external binaries like linters, code
 generators and... Task.
+
+<!-- more -->
 
 But asking your coworkers or contributors to install dependencies can be messy.
 Everyone is on a different operating system, use a different package manager,
