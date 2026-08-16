@@ -58,6 +58,8 @@
   failure instead of being told it succeeded (#1569, #2898 by @vmaerten).
 - Fixed a pinned `checksum:` not being verified when a remote Taskfile came from
   the cache (#2980 by @vmaerten).
+- Load the sidebar data and titles/excerpts from the blog post markdown document
+  and its frontmatter on the website (#2981 by @pd93).
 
 ## v3.52.0 - 2026-07-02
 
