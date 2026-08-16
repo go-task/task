@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"strings"
+	"sync"
 	"testing"
 
 	"github.com/fatih/color"
@@ -189,4 +191,37 @@ func TestPrefixedWithColor(t *testing.T) {
 			)
 		}
 	})
+}
+
+func TestPrefixedConcurrentWrites(t *testing.T) {
+	t.Parallel()
+
+	var b bytes.Buffer
+	l := &logger.Logger{Color: false}
+	var o output.Output = output.NewPrefixed(l)
+	stdOut, stdErr, cleanup := o.WrapWriter(&b, &b, "prefix", nil)
+
+	const lines = 1000
+	var wg sync.WaitGroup
+	wg.Add(2)
+	go func() {
+		defer wg.Done()
+		for i := range lines {
+			fmt.Fprintf(stdOut, "stdout-%d\n", i)
+		}
+	}()
+	go func() {
+		defer wg.Done()
+		for i := range lines {
+			fmt.Fprintf(stdErr, "stderr-%d\n", i)
+		}
+	}()
+	wg.Wait()
+	require.NoError(t, cleanup(nil))
+
+	out := strings.Split(strings.TrimSuffix(b.String(), "\n"), "\n")
+	require.Len(t, out, lines*2)
+	for _, line := range out {
+		assert.True(t, strings.HasPrefix(line, "[prefix] "))
+	}
 }
