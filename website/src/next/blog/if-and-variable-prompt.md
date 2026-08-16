@@ -1,8 +1,10 @@
 ---
-title: New `if:` Control and Variable Prompt
+title: Conditional Statements and Variable Prompts
+sidebarTitle: Conditionals Statements
 description: Introduction of the `if:` control and required variable prompts.
 author: vmaerten
 date: 2026-01-24
+tags: ['new-features', 'variables']
 outline: deep
 editLink: false
 ---
@@ -13,6 +15,8 @@ editLink: false
 
 The [v3.47.0][release] release is here, and it brings two exciting new features
 to Task. Let's take a closer look at them!
+
+<!-- more -->
 
 ## The New `if:` Control
 

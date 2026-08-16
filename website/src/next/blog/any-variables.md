@@ -1,7 +1,11 @@
 ---
 title: Any Variables
+description:
+  Task now supports most variable types, including booleans, integers, floats
+  and arrays!
 author: pd93
 date: 2024-05-09
+tags: ['experiments', 'variables']
 outline: deep
 editLink: false
 ---
@@ -16,6 +20,8 @@ This limited users to string manipulation and encouraged messy workarounds for
 simple problems. Starting from [v3.37.0][v3.37.0], this is no longer the case!
 Task now supports most variable types, including **booleans**, **integers**,
 **floats** and **arrays**!
+
+<!-- more -->
 
 ## What's the big deal?
 

@@ -15,6 +15,7 @@
   "devDependencies": {
     "@types/markdown-it": "^14.1.2",
     "@types/node": "^24.1.0",
+    "gray-matter": "^4.0.3",
     "netlify-cli": "^27.0.0",
     "prettier": "^3.6.2",
     "vitepress": "^1.6.3",

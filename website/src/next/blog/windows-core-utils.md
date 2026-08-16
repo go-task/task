@@ -1,8 +1,10 @@
 ---
 title: 'Announcing Built-in Core Utilities for Windows'
+sidebarTitle: Built-in Core Utilities
 description: The journey of enhancing Windows support in Task.
 author: andreynering
 date: 2025-09-15
+tags: ['windows', 'core-utils']
 outline: deep
 editLink: false
 ---
@@ -15,6 +17,8 @@ When I started Task back in 2017, one of my biggest goals was to build a task
 runner that would work well on all major platforms, including Windows. At the
 time, I was using Windows as my main platform, and it caught my attention how
 much of a pain it was to get a working version of Make on Windows, for example.
+
+<!-- more -->
 
 ## The very beginning
 

@@ -1,7 +1,8 @@
 import { defineConfig, HeadConfig } from 'vitepress';
 import githubLinksPlugin from './plugins/github-links';
-import { readFileSync } from 'fs';
+import { readdirSync, readFileSync } from 'fs';
 import { resolve } from 'path';
+import matter from 'gray-matter';
 import { tabsMarkdownPlugin } from 'vitepress-plugin-tabs';
 import {
   groupIconMdPlugin,
@@ -13,8 +14,8 @@ import { adopters } from './adopters.ts';
 import { taskDescription, taskName, ogUrl, ogImage } from './meta.ts';
 import { fileURLToPath, URL } from 'node:url';
 import llmstxt from 'vitepress-plugin-llms';
-import * as nextChannel from './sidebar/next.ts';
-import * as latestChannel from './sidebar/latest.ts';
+import { sidebar as nextSidebar } from './sidebar/next.ts';
+import { sidebar as latestSidebar } from './sidebar/latest.ts';
 
 const version = readFileSync(
   resolve(__dirname, '../../internal/version/version.txt'),
@@ -30,9 +31,40 @@ const isLatest = process.env.DOCS_CHANNEL === 'latest';
 const channel = isLatest ? 'latest' : 'next';
 const other = isLatest ? 'next' : 'latest';
 
-const { sidebar: docsSidebar, blogSidebar } = isLatest
-  ? latestChannel
-  : nextChannel;
+const docsSidebar = isLatest ? latestSidebar : nextSidebar;
+
+// Builds the "/blog/" sidebar from each blog post's frontmatter.
+function buildBlogSidebar() {
+  const blogDir = resolve(__dirname, `../src/${channel}/blog`);
+  const posts = readdirSync(blogDir)
+    .filter((file) => file.endsWith('.md') && file !== 'index.md')
+    .map((file) => {
+      const { data: frontmatter } = matter(
+        readFileSync(resolve(blogDir, file), 'utf8')
+      );
+      return {
+        slug: file.replace(/\.md$/, ''),
+        title: frontmatter.sidebarTitle ?? frontmatter.title,
+        date: new Date(frontmatter.date)
+      };
+    })
+    .sort((a, b) => b.date.getTime() - a.date.getTime());
+
+  const byYear = new Map<number, { text: string; link: string }[]>();
+  for (const post of posts) {
+    const year = post.date.getFullYear();
+    if (!byYear.has(year)) byYear.set(year, []);
+    byYear.get(year)!.push({ text: post.title, link: `/blog/${post.slug}` });
+  }
+
+  return [...byYear.entries()]
+    .sort((a, b) => b[0] - a[0])
+    .map(([year, items]) => ({
+      text: String(year),
+      collapsed: false,
+      items
+    }));
+}
 
 // Ports are the ones the dev tasks bind to; keep them in sync with
 // website/Taskfile.yml. DOCS_LOCAL is set by those tasks alone, so a build can
@@ -340,7 +372,7 @@ export default defineConfig({
     ],
 
     sidebar: {
-      '/blog/': blogSidebar,
+      '/blog/': buildBlogSidebar(),
       '/': docsSidebar,
       // Hacky to disable sidebar for these pages
       '/donate': [],
