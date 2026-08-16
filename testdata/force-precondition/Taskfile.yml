@@ -1,0 +1,22 @@
+version: '3'
+
+tasks:
+  with-precondition:
+    preconditions:
+      - sh: "test -f nonexistent.txt"
+        msg: "file missing"
+    cmds:
+      - echo "ran with force"
+
+  dep-with-precondition:
+    preconditions:
+      - sh: "test -f nonexistent.txt"
+        msg: "dep file missing"
+    cmds:
+      - echo "dep ran with force-all"
+
+  calls-dep:
+    deps:
+      - dep-with-precondition
+    cmds:
+      - echo "parent ran"

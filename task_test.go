@@ -3373,6 +3373,64 @@ func TestForce(t *testing.T) {
 	}
 }
 
+func TestForceBypassesPreconditions(t *testing.T) {
+	t.Parallel()
+
+	const dir = "testdata/force-precondition"
+
+	tests := []struct {
+		name     string
+		task     string
+		force    bool
+		forceAll bool
+		wantErr  bool
+	}{
+		{
+			name:    "without force, failing precondition blocks the task",
+			task:    "with-precondition",
+			wantErr: true,
+		},
+		{
+			name:  "force bypasses preconditions",
+			task:  "with-precondition",
+			force: true,
+		},
+		{
+			name:    "force does not bypass dependency preconditions",
+			task:    "calls-dep",
+			force:   true,
+			wantErr: true,
+		},
+		{
+			name:     "force-all bypasses preconditions including dependencies",
+			task:     "calls-dep",
+			forceAll: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			var buff bytes.Buffer
+			e := task.NewExecutor(
+				task.WithDir(dir),
+				task.WithStdout(&buff),
+				task.WithStderr(&buff),
+				task.WithForce(tt.force),
+				task.WithForceAll(tt.forceAll),
+			)
+			require.NoError(t, e.Setup())
+			err := e.Run(t.Context(), &task.Call{Task: tt.task})
+			if tt.wantErr {
+				require.Error(t, err)
+				require.ErrorIs(t, err, task.ErrPreconditionFailed)
+				return
+			}
+			require.NoError(t, err)
+		})
+	}
+}
+
 func TestWildcard(t *testing.T) {
 	t.Parallel()
 
