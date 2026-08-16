@@ -1,9 +1,11 @@
 ---
 title: GitHub Secure Open Source Fund
+sidebarTitle: GitHub SOSF
 description:
-  Task participated in the session 4 of the GitHub Secure Open Source program.
+  Task participated in session 4 of the GitHub Secure Open Source program.
 author: andreynering
 date: 2026-08-15
+tags: ['github', 'security']
 outline: deep
 editLink: false
 ---
@@ -17,6 +19,8 @@ editLink: false
 Did you know that GitHub has a special program to fund security in open source?
 It's the [GitHub Secure Open Source Fund][fund]. We were selected to participate
 in session 4 that happened in May 2026 and it was really special for us.
+
+<!-- more -->
 
 71 maintainers from 50 different open source projects and across 22 countries
 were selected to participate in the program. It was amazing to meet so many
@@ -50,4 +54,5 @@ GitHub wrote a blog post about session 4 that [you can read here][ghblog].
 [incident-response-plan]:
   https://taskfile.dev/docs/security/incident-response-plan
 [threat-model]: https://taskfile.dev/docs/security/threat-model
-[ghblog]: https://github.blog/open-source/maintainers/what-50-open-source-projects-taught-us-about-security-in-the-ai-era/
+[ghblog]:
+  https://github.blog/open-source/maintainers/what-50-open-source-projects-taught-us-about-security-in-the-ai-era/

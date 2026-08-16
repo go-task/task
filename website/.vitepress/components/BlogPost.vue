@@ -20,7 +20,7 @@
       <div class="post-text">
         <AuthorCard :author="author" />
 
-        <p class="post-description">{{ description }}</p>
+        <div class="post-description" v-html="description"></div>
 
         <div class="post-footer">
           <div class="post-tags" v-if="tags?.length">
