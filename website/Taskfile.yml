@@ -3,6 +3,9 @@ version: '3'
 tasks:
   install:
     desc: Setup VitePress locally
+    # start:all reaches this task through two parallel branches, and pnpm does
+    # not expect two installs at once.
+    run: once
     cmds:
       - pnpm install
     sources:
