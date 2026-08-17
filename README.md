@@ -46,4 +46,17 @@
       </td>
     </tr>
   </table>
+
+  <h2>Powered by</h2>
+
+  <p>
+    <a target="_blank" href="https://jb.gg/OpenSource">
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="website/src/public/img/jetbrains-dark.svg" />
+        <img src="website/src/public/img/jetbrains.svg" height="60px" title="JetBrains" alt="JetBrains logo" />
+      </picture>
+    </a>
+  </p>
+
+  <p>Tooling provided by <a target="_blank" href="https://jb.gg/OpenSource">JetBrains</a>.</p>
 </div>

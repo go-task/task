@@ -40,6 +40,14 @@ export const sponsors: { tier: string; size: string; items: Sponsor[] }[] = [
         url: 'https://cloudsmith.com/',
         img: '/img/cloudsmith.svg',
         description: 'Hosts the deb and rpm package registries for free'
+      },
+      {
+        name: 'JetBrains',
+        url: 'https://jb.gg/OpenSource',
+        img: '/img/jetbrains.svg',
+        imgDark: '/img/jetbrains-mono.svg',
+        description:
+          'Provides free All Products Pack licenses to the maintainers'
       }
     ]
   }
