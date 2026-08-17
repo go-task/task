@@ -5,7 +5,7 @@ editLink: false
 ---
 
 <script setup>
-import { data as posts } from '../../.vitepress/blog.data';
+import { data as posts } from '../../../.vitepress/blog.data';
 </script>
 
 <BlogPost

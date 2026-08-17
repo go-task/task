@@ -15,8 +15,27 @@ import (
 
 const (
 	changelogSource = "CHANGELOG.md"
-	changelogTarget = "website/src/docs/changelog.md"
+	changelogTarget = "website/src/next/docs/changelog.md"
 	versionFile     = "internal/version/version.txt"
+)
+
+type promotion struct{ source, target string }
+
+// Promoted at release time: the website builds `next` from the sources on the
+// left and `latest` from the targets on the right, so that taskfile.dev only
+// ever documents the version being released. The other half of the mechanism
+// lives in website/.vitepress/config.ts, which picks a side at build time.
+var (
+	promotedDirs = []promotion{
+		{"website/src/next/docs", "website/src/latest/docs"},
+		{"website/src/next/blog", "website/src/latest/blog"},
+	}
+
+	promotedFiles = []promotion{
+		{"website/.vitepress/sidebar/next.ts", "website/.vitepress/sidebar/latest.ts"},
+		{"website/src/public/next-schema.json", "website/src/public/schema.json"},
+		{"website/src/public/next-schema-taskrc.json", "website/src/public/schema-taskrc.json"},
+	}
 )
 
 var changelogReleaseRegex = regexp.MustCompile(`## Unreleased`)
@@ -61,8 +80,37 @@ func release() error {
 		return err
 	}
 
+	// After the changelog so that the promoted docs carry it.
+	if err := promote(); err != nil {
+		return err
+	}
+
 	if err := setVersionFile(versionFile, version); err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func promote() error {
+	for _, p := range promotedDirs {
+		// CopyFS refuses to overwrite, so the previous release has to go first.
+		if err := os.RemoveAll(p.target); err != nil {
+			return err
+		}
+		if err := os.CopyFS(p.target, os.DirFS(p.source)); err != nil {
+			return err
+		}
+	}
+
+	for _, p := range promotedFiles {
+		b, err := os.ReadFile(p.source)
+		if err != nil {
+			return err
+		}
+		if err := os.WriteFile(p.target, b, 0o644); err != nil { //nolint:gosec
+			return err
+		}
 	}
 
 	return nil

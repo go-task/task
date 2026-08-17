@@ -29,10 +29,20 @@ function extractExcerpt(html: string): string | undefined {
     .trim();
 }
 
-export default createContentLoader('blog/*.md', {
+// Same channel as .vitepress/config.ts: the posts of the other one are not part
+// of this build.
+const channel = process.env.DOCS_CHANNEL === 'latest' ? 'latest' : 'next';
+
+export default createContentLoader(`${channel}/blog/*.md`, {
   render: true,
   transform(raw) {
     return raw
+      .map((page) => ({
+        ...page,
+        // Content loaders resolve URLs against `srcDir` and know nothing about
+        // `rewrites`, so the channel has to be stripped by hand.
+        url: page.url.replace(`/${channel}/`, '/')
+      }))
       .filter(({ url }) => url !== '/blog/')
       .map(({ frontmatter, html, url }) => {
         const date = new Date(frontmatter.date);

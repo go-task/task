@@ -65,16 +65,16 @@ a human. Always remind contributors to disclose AI usage in their submissions.
 
 ## 1. Setup
 
-The easiest way to install everything you need to work on Task is
-[mise][mise]. From the repository root, run:
+The easiest way to install everything you need to work on Task is [mise][mise].
+From the repository root, run:
 
 ```shell
 mise install
 ```
 
 This installs the pinned versions of Go, Node.js, pnpm and the dev tools
-(`golangci-lint`, `mockery`, `gotestsum`, `goreleaser` and `gorelease`)
-declared in the `mise.toml` file.
+(`golangci-lint`, `mockery`, `gotestsum`, `goreleaser` and `gorelease`) declared
+in the `mise.toml` file.
 
 If you'd rather install things manually, you'll need:
 
@@ -137,6 +137,39 @@ If you added a new command or flag, ensure that you add it to the [CLI
 Reference][cli-reference]. New fields also need to be added to the [Schema
 Reference][schema-reference] and [JSON Schema][json-schema]. The descriptions
 for fields in the docs and the schema should match.
+
+#### Documentation channels
+
+The docs and the blog exist in two copies, so that taskfile.dev never announces
+a feature that is not in the released binary yet:
+
+| Directory                        | Channel  | Published on      |
+| -------------------------------- | -------- | ----------------- |
+| `website/src/next/{docs,blog}`   | `next`   | next.taskfile.dev |
+| `website/src/latest/{docs,blog}` | `latest` | taskfile.dev      |
+
+Everything else - the homepage, the team, adopters, images - is shared by both
+channels and goes live as soon as the site is deployed.
+
+**Write in `website/src/next`.** It holds the upcoming release, and
+`cmd/release` copies it over `website/src/latest` at every release. The same
+split applies to the JSON schemas: edit `next-schema.json` and
+`next-schema-taskrc.json`, never `schema.json` or `schema-taskrc.json`.
+
+Where you put a blog post decides when it goes out. A post that announces a
+feature belongs in `website/src/next/blog` alone: it ships with the release that
+carries the feature. A post that stands on its own - an announcement, a write-up
+about an already released feature - can be added to `website/src/latest/blog` as
+well, and it goes live at the next deploy. Remember the sidebar entry in
+`.vitepress/sidebar/`, which is split the same way.
+
+Never edit an existing file under `website/src/latest`: `cmd/release` overwrites
+that directory at every release, so the change would be silently lost. CI fails
+a pull request that modifies one. Adding a file there is fine - that is how a
+blog post gets published early - and so is editing the sidebars, which live
+outside that directory.
+
+To preview what taskfile.dev will look like, run `task website CHANNEL=latest`.
 
 ### Writing tests
 
