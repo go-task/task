@@ -109,12 +109,11 @@ jobs:
       - uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
-            // Everything cmd/release overwrites. Adding a file is fine -- that
-            // is how a blog post gets published early -- editing one is not.
             const generated = (name) =>
               name.startsWith('website/src/latest/') ||
               name === 'website/src/public/schema.json' ||
-              name === 'website/src/public/schema-taskrc.json'
+              name === 'website/src/public/schema-taskrc.json' ||
+              name === 'website/.vitepress/sidebar/latest.ts'
 
             const files = await github.paginate(
               github.rest.pulls.listFiles, {
