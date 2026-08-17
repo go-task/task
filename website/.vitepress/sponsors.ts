@@ -1,4 +1,15 @@
-export const sponsors = [
+export interface Sponsor {
+  name: string;
+  url: string;
+  img: string;
+  // Logo variant for dark backgrounds. Sponsors that set one keep their own
+  // colours instead of being inverted by the sponsor grid.
+  imgDark?: string;
+  // Tooltip explaining what this sponsor gives the project.
+  description?: string;
+}
+
+export const sponsors: { tier: string; size: string; items: Sponsor[] }[] = [
   {
     tier: 'Gold Sponsors',
     size: 'big',
@@ -27,7 +38,8 @@ export const sponsors = [
       {
         name: 'Cloudsmith',
         url: 'https://cloudsmith.com/',
-        img: '/img/cloudsmith.svg'
+        img: '/img/cloudsmith.svg',
+        description: 'Hosts the deb and rpm package registries for free'
       }
     ]
   }
