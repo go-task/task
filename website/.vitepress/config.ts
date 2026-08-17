@@ -390,7 +390,7 @@ export default defineConfig({
 
     editLink: {
       text: 'Edit this page on GitHub',
-      // Docs are always edited in `src/docs`, even when the latest channel
+      // Docs are always edited in `src/next`, even when the latest channel
       // serves them from `src/latest/docs`.
       // Serialized with toString() and evaluated in the browser, so it must not
       // reference anything from this module. Both channels are edited in
