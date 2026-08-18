@@ -8,6 +8,67 @@ editLink: false
 
 ::: v-pre
 
+## v3.53.0 - 2026-08-18
+
+- **Remote Taskfiles are now generally available!** This has been an
+  experimental feature for 3 years, but is now enabled by default. Massive
+  thanks to all those that contributed and gave feedback (too many to list
+  here). We've also given the
+  [Remote Taskfiles documentation](https://taskfile.dev/docs/remote-taskfiles) a
+  bit of a polish (#1317, #2906 by @pd93).
+- Considerably improve performance of fingerprinting on large repositories
+  (monorepos). Fingerprinting is up to 86% faster and make up to 70% fewer
+  memory allocations on the more advanced scenarios. Benchmarks were added as
+  well. We're basically skipping work when not needed. (#2853, #2883 by
+  @Napolitain, #2884 by @Napolitain).
+- Updated taskfile versions doc to mention when version checks were introduced
+  (#2184 by @jubr).
+- Fixed `joinUrl` collapsing the `//` in a URL scheme (e.g. producing
+  `http:/localhost` instead of `http://localhost`) (#2915 by @vsaraikin).
+- Added support for `enum.ref` in `--interactive` prompts. Required vars using
+  `enum.ref` now show the selection list like static enums, instead of falling
+  back to free-form input (#2817 by @vmaerten).
+- Further improved fingerprinting performance on large repositories: hashing
+  source files now reuses a single buffer, reducing memory allocations by ~98%
+  and wall-clock time by ~7% (#2925 by @vmaerten).
+- Fixed the fingerprint variable (`{{.CHECKSUM}}`/`{{.TIMESTAMP}}`) ignoring a
+  `method:` set at the Taskfile level: the variable now follows the same method
+  resolution as the up-to-date check. Only the variable matching the effective
+  method is injected, so a task inheriting a Taskfile-level `method: timestamp`
+  gets `{{.TIMESTAMP}}` and no longer a `{{.CHECKSUM}}` (which now renders as an
+  empty string), and neither variable is injected when the effective method is
+  `none` (#2924 by @vmaerten).
+- `includes.excludes` can now exclude a whole namespace: append `:*` to the
+  namespace name, e.g. `excludes: ['debug:*']`. Bare entries still match a
+  single task name exactly (#2300, #2959 by @xmxxc).
+- Fixed `ref:` in `for: matrix:` and `enum:` only accepting literal lists. Refs
+  computed with template functions like `keys` or `splitList` no longer fail
+  with "must resolve to a list" (#2544, #2956 by @no-hup).
+- Fixed the JSON schema rejecting `ignore_error` on a command inside a `for`
+  loop. Editors no longer flag a Taskfile that Task runs perfectly fine (#2044
+  by @gokeefe-atb).
+- Fixed the JSON schema rejecting more keys the Taskfile parser accepts:
+  `ignore_error` on a `task:` call, and `if`, `set` and `shopt` on a command
+  inside a `for` loop (#2967 by @vmaerten).
+- Added a verbose log line for failed tasks. In `--verbose` mode, a task whose
+  command exits non-zero now reports `task: "<name>" failed: <error>` instead of
+  stopping without a trace (#2240 by @Drino).
+- Fixed pressing `Esc` at an interactive variable prompt not cancelling the run
+  (#2942 by @anilnatha).
+- Added Nushell completions, available via `task --completion nu`. They complete
+  task names and aliases, every flag with its description, and the values of
+  `--completion`, `--output` and `--sort` (#2966 by @vmaerten).
+- Added a per-command `timeout` that terminates a command once it exceeds the
+  given duration (Go duration syntax). It covers shell commands, task calls,
+  deferred commands, `deps` and the `if` condition, obeys `ignore_error`, and
+  reports exit code `124`. Callers that join a `run: once` or `when_changed`
+  task already running now honor their own `timeout`, and inherit that task's
+  failure instead of being told it succeeded (#1569, #2898 by @vmaerten).
+- Fixed a pinned `checksum:` not being verified when a remote Taskfile came from
+  the cache (#2980 by @vmaerten).
+- Load the sidebar data and titles/excerpts from the blog post markdown document
+  and its frontmatter on the website (#2981 by @pd93).
+
 ## v3.52.0 - 2026-07-02
 
 - Fixed --interactive prompts for required vars sometimes appearing in a random

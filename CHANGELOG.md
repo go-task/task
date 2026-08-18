@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v3.53.0 - 2026-08-18
 
 - **Remote Taskfiles are now generally available!** This has been an
   experimental feature for 3 years, but is now enabled by default. Massive

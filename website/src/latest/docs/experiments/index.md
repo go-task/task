@@ -93,11 +93,11 @@ Task.
 All experimental features start with a proposal in the form of a GitHub issue.
 If the maintainers decide that an issue has enough support and is a breaking
 change or is complex/controversial enough to require user feedback, then the
-issue will be marked with the `status: proposal` label. At this point, the issue
-becomes a proposal and a period of consultation begins. During this period, we
-request that users provide feedback on the proposal and how it might effect
-their use of Task. It is up to the discretion of the maintainers to decide how
-long this period lasts.
+issue's experiment status field will be set to `proposed`. At this point, the
+issue becomes a proposal and a period of consultation begins. During this
+period, we request that users provide feedback on the proposal and how it might
+effect their use of Task. It is up to the discretion of the maintainers to
+decide how long this period lasts.
 
 ### 2. Draft
 
@@ -105,7 +105,7 @@ Once a proposal's consultation ends, a contributor may pick up the work and
 begin the initial implementation. Once a PR is opened, the maintainers will
 ensure that it meets the requirements for an experimental feature (i.e. flags
 are in the right format etc) and merge the feature. Once this code is released,
-the status will be updated via the `status: draft` label. This indicates that an
+the experiment status field will be updated to `draft`. This indicates that an
 implementation is now available for use in a release and the experiment is open
 for feedback.
 
@@ -120,14 +120,14 @@ experimental features may be abandoned _at any time_.
 ### 3. Candidate
 
 Once an acceptable level of consensus has been reached by the community and
-feedback/changes are less frequent/significant, the status may be updated via
-the `status: candidate` label. This indicates that a proposal is _likely_ to
+feedback/changes are less frequent/significant, the experiment status field will
+be updated to `candidate`. This indicates that a proposal is _likely_ to
 accepted and will enter a period for final comments and minor changes.
 
 ### 4. Stable
 
-Once a suitable amount of time has passed with no changes or feedback, an
-experiment will be given the `status: stable` label. At this point, the
+Once a suitable amount of time has passed with no changes or feedback, the
+experiment status field will be updated to `stable`. At this point, the
 functionality will be treated like any other feature in Task and any changes
 _must_ be backward compatible. This allows users to migrate to the new
 functionality without having to worry about anything breaking in future
@@ -136,13 +136,13 @@ version.
 
 ### 5. Released
 
-When making a new major release of Task, all experiments marked as
-`status: stable` will move to `status: released` and their behaviors will become
-the new default in Task. Experiments in an earlier stage (i.e. not stable)
-cannot be released and so will continue to be experiments in the new version.
+When an experiment moves to a `released` status, it becomes the default behavior
+and flags or config are no longer required to enable the feature. For
+non-breaking changes, this will happen in a minor release. For breaking changes,
+this will happen in a major release.
 
 ### Abandoned / Superseded
 
-If an experiment is unsuccessful at any point then it will be given the
-`status: abandoned` or `status: superseded` labels depending on which is more
+If an experiment is unsuccessful at any point then the experiment status field
+will be updated to `abandoned` or `superseded` depending on which is more
 suitable. These experiments will be removed from Task.

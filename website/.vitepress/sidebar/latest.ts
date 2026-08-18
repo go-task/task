@@ -17,6 +17,10 @@ export const sidebar: DefaultTheme.SidebarItem[] = [
     link: '/docs/guide'
   },
   {
+    text: 'Remote Taskfiles',
+    link: '/docs/remote-taskfiles'
+  },
+  {
     text: 'Reference',
     collapsed: true,
     items: [

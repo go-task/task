@@ -349,8 +349,16 @@
           "description": "Hides task name and command from output. The command's output will still be redirected to `STDOUT` and `STDERR`.",
           "type": "boolean"
         },
+        "ignore_error": {
+          "description": "Prevent the command from aborting the execution of the task when it exits with a non-zero status code",
+          "type": "boolean"
+        },
         "if": {
           "description": "A shell command to evaluate. If the exit code is non-zero, the command is skipped.",
+          "type": "string"
+        },
+        "timeout": {
+          "description": "Maximum duration the command is allowed to run before being terminated. Supports Go duration syntax (e.g., '5m', '30s', '1h').",
           "type": "string"
         }
       },
@@ -383,7 +391,7 @@
           }
         },
         "ignore_error": {
-          "description": "Prevent command from aborting the execution of task even after receiving a status code of 1",
+          "description": "Prevent the command from aborting the execution of the task when it exits with a non-zero status code",
           "type": "boolean"
         },
         "platforms": {
@@ -393,10 +401,37 @@
         "if": {
           "description": "A shell command to evaluate. If the exit code is non-zero, the command is skipped.",
           "type": "string"
+        },
+        "timeout": {
+          "description": "Maximum duration the command is allowed to run before being terminated. Supports Go duration syntax (e.g., '5m', '30s', '1h').",
+          "type": "string"
         }
       },
       "additionalProperties": false,
       "required": ["cmd"]
+    },
+    "deferred_task_call": {
+      "type": "object",
+      "properties": {
+        "task": {
+          "description": "Name of the task to run",
+          "type": "string"
+        },
+        "vars": {
+          "description": "Values passed to the task called",
+          "$ref": "#/definitions/vars"
+        },
+        "silent": {
+          "description": "Hides task name and command from output. The command's output will still be redirected to `STDOUT` and `STDERR`.",
+          "type": "boolean"
+        },
+        "if": {
+          "description": "A shell command to evaluate. If the exit code is non-zero, the command is skipped.",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": ["task"]
     },
     "defer_task_call": {
       "type": "object",
@@ -405,9 +440,13 @@
           "description": "Run a command when the task completes. This command will run even when the task fails",
           "anyOf": [
             {
-              "$ref": "#/definitions/task_call"
+              "$ref": "#/definitions/deferred_task_call"
             }
           ]
+        },
+        "timeout": {
+          "description": "Maximum duration the command is allowed to run before being terminated. Supports Go duration syntax (e.g., '5m', '30s', '1h').",
+          "type": "string"
         }
       },
       "additionalProperties": false,
@@ -423,6 +462,10 @@
         "silent": {
           "description": "Hides task name and command from output. The command's output will still be redirected to `STDOUT` and `STDERR`.",
           "type": "boolean"
+        },
+        "timeout": {
+          "description": "Maximum duration the command is allowed to run before being terminated. Supports Go duration syntax (e.g., '5m', '30s', '1h').",
+          "type": "string"
         }
       },
       "additionalProperties": false,
@@ -442,9 +485,35 @@
           "description": "Silent mode disables echoing of command before Task runs it",
           "type": "boolean"
         },
+        "set": {
+          "description": "Enables POSIX shell options for this command. See https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/set"
+          }
+        },
+        "shopt": {
+          "description": "Enables Bash shell options for this command. See https://www.gnu.org/software/bash/manual/html_node/The-Shopt-Builtin.html",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/shopt"
+          }
+        },
+        "ignore_error": {
+          "description": "Prevent the command from aborting the execution of the task when it exits with a non-zero status code",
+          "type": "boolean"
+        },
         "platforms": {
           "description": "Specifies which platforms the command should be run on.",
           "$ref": "#/definitions/platforms"
+        },
+        "if": {
+          "description": "A shell command to evaluate. If the exit code is non-zero, the command is skipped.",
+          "type": "string"
+        },
+        "timeout": {
+          "description": "Maximum duration the command is allowed to run before being terminated. Supports Go duration syntax (e.g., '5m', '30s', '1h').",
+          "type": "string"
         }
       },
       "additionalProperties": false,
@@ -468,12 +537,20 @@
           "description": "Silent mode disables echoing of command before Task runs it",
           "type": "boolean"
         },
+        "ignore_error": {
+          "description": "Prevent the command from aborting the execution of the task when it exits with a non-zero status code",
+          "type": "boolean"
+        },
         "platforms": {
           "description": "Specifies which platforms the command should be run on.",
           "$ref": "#/definitions/platforms"
         },
         "if": {
           "description": "A shell command to evaluate. If the exit code is non-zero, the command is skipped.",
+          "type": "string"
+        },
+        "timeout": {
+          "description": "Maximum duration the command is allowed to run before being terminated. Supports Go duration syntax (e.g., '5m', '30s', '1h').",
           "type": "string"
         }
       },
@@ -497,6 +574,10 @@
         "vars": {
           "description": "Values passed to the task called",
           "$ref": "#/definitions/vars"
+        },
+        "timeout": {
+          "description": "Maximum duration the command is allowed to run before being terminated. Supports Go duration syntax (e.g., '5m', '30s', '1h').",
+          "type": "string"
         }
       },
       "additionalProperties": false,
@@ -746,7 +827,7 @@
                       }
                     },
                     "excludes": {
-                      "description": "A list of tasks to be excluded from inclusion.",
+                      "description": "A list of task names or namespace patterns ending in `:*` to be excluded from inclusion.",
                       "type": "array",
                       "items": {
                         "type": "string"

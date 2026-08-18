@@ -308,13 +308,14 @@ includes:
 ### `excludes`
 
 - **Type**: `[]string`
-- **Description**: Tasks to exclude from inclusion
+- **Description**: Task names or namespace patterns ending in `:*` to exclude
+  from inclusion
 
 ```yaml
 includes:
   shared:
     taskfile: ./shared.yml
-    excludes: [internal-setup, debug-only]
+    excludes: [internal-setup, 'debug:*', 'experimental:*']
 ```
 
 ### `vars`
@@ -846,6 +847,7 @@ tasks:
         platforms: [linux, darwin]
         set: [errexit]
         shopt: [globstar]
+        timeout: 5m
 ```
 
 ### Task References
@@ -961,6 +963,58 @@ tasks:
         cmd: echo "processing {{.ITEM}}"
         if: '[ "{{.ITEM}}" != "b" ]'
 ```
+
+### Command Timeouts
+
+Use `timeout` to limit how long a command may run. The value uses Go duration
+syntax (e.g. `30s`, `5m`, `1h30m`) and must be greater than zero.
+
+```yaml
+tasks:
+  deploy:
+    cmds:
+      - cmd: npm run build
+        timeout: 5m
+      - cmd: ./deploy.sh
+        timeout: 30m
+```
+
+When a command exceeds its timeout, it is terminated and the task fails with an
+error, preventing commands from hanging indefinitely in a pipeline. The timeout
+bounds the whole step, so an [`if`](#command) condition that hangs is cut short
+too, and [`ignore_error`](#command) covers a timeout like any other failure. A
+timed-out command reports [`EXIT_CODE`](/docs/reference/templating#exit_code)
+`124`, following the convention of `timeout(1)`.
+
+A dependency takes the same key:
+
+```yaml
+tasks:
+  build:
+    deps:
+      - task: fetch-assets
+        timeout: 2m
+```
+
+The key goes next to the command whatever form it takes, including a `defer`:
+
+```yaml
+tasks:
+  deploy:
+    cmds:
+      - defer:
+          task: cleanup
+        timeout: 30s
+      - defer: ./cleanup.sh
+        timeout: 30s
+```
+
+A timed-out deferred command is logged and ignored, like other deferred errors.
+
+Calling a task that is already running under [`run: once`](#task) or
+[`run: when_changed`](#task) joins that execution instead of starting a second
+one. A `timeout` on such a call bounds how long you wait for it, not the shared
+execution itself, which only the caller that started it can bound.
 
 ## Shell Options
 

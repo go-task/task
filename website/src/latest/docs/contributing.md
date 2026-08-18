@@ -160,16 +160,18 @@ Where you put a blog post decides when it goes out. A post that announces a
 feature belongs in `website/src/next/blog` alone: it ships with the release that
 carries the feature. A post that stands on its own - an announcement, a write-up
 about an already released feature - can be added to `website/src/latest/blog` as
-well, and it goes live at the next deploy. Remember the sidebar entry in
-`.vitepress/sidebar/`, which is split the same way.
+well, and it goes live at the next deploy. Its sidebar entry comes from the
+post's own frontmatter, so there is nothing else to update.
 
 Never edit an existing file under `website/src/latest`: `cmd/release` overwrites
-that directory at every release, so the change would be silently lost. CI fails
-a pull request that modifies one. Adding a file there is fine - that is how a
-blog post gets published early - and so is editing the sidebars, which live
-outside that directory.
+that directory at every release, so the change would be silently lost. The same
+goes for `.vitepress/sidebar/latest.ts`, which is promoted from `next.ts`. CI
+fails a pull request that modifies either. Adding a file under
+`website/src/latest` is fine - that is how a blog post gets published early.
 
-To preview what taskfile.dev will look like, run `task website CHANNEL=latest`.
+To preview what taskfile.dev will look like, run `task website:start:latest`. It
+serves the `latest` channel on port 3002, so it can run next to `task website`
+and the version selector switches between the two.
 
 ### Writing tests
 
