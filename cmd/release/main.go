@@ -43,18 +43,27 @@ var changelogReleaseRegex = regexp.MustCompile(`## Unreleased`)
 // Flags
 var (
 	versionFlag bool
+	notesFlag   bool
 )
 
 func init() {
 	pflag.BoolVarP(&versionFlag, "version", "v", false, "resolved version number")
+	pflag.BoolVar(&notesFlag, "notes", false, "changelog section of the current version, for the GitHub release body")
 	pflag.Parse()
 }
 
 func main() {
-	if err := release(); err != nil {
+	if err := run(); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
+}
+
+func run() error {
+	if notesFlag {
+		return notes(os.Stdout)
+	}
+	return release()
 }
 
 func release() error {
