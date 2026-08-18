@@ -316,6 +316,12 @@ export default defineConfig({
           replacement: fileURLToPath(
             new URL('./components/VPTeamMembersItem.vue', import.meta.url)
           )
+        },
+        {
+          find: /^.*\/VPSponsorsGrid\.vue$/,
+          replacement: fileURLToPath(
+            new URL('./components/VPSponsorsGrid.vue', import.meta.url)
+          )
         }
       ]
     }

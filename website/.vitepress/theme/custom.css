@@ -145,3 +145,27 @@ img[src*='custom-icon-badges.demolab.com'] {
 .VPTeamPage > .VPTeamPageTitle {
   padding-top: 0
 }
+
+/* VitePress greys out sponsor logos by default. Show them in their brand
+   colours in light mode; dark mode keeps the inversion so black wordmarks
+   stay readable. */
+html:not(.dark) .vp-sponsor-grid-image {
+  filter: none;
+}
+
+/* A sponsor shipping its own dark-background logo already reads correctly on
+   dark, so it opts out of the grid's invert treatment. On hover the grid turns
+   the tile white, so it falls back to the light logo like every other tile. */
+.vp-sponsor-grid-item.has-dark-logo .vp-sponsor-grid-image {
+  filter: none;
+}
+
+.dark .vp-sponsor-grid-item.has-dark-logo .logo-light,
+.dark .vp-sponsor-grid-item.has-dark-logo:hover .logo-dark,
+html:not(.dark) .vp-sponsor-grid-item .logo-dark {
+  display: none;
+}
+
+.dark .vp-sponsor-grid-item.has-dark-logo:hover .logo-light {
+  display: block;
+}
