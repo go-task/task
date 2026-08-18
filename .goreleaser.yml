@@ -184,3 +184,12 @@ cloudsmiths:
         - "alpine/any-version"
     component: main
     republish: true
+
+announce:
+  skip: '{{ .IsNightly }}'
+  discord:
+    author: Task
+    icon_url: https://taskfile.dev/img/logo.png
+    # #43aba2, the primary color of the website.
+    color: '4434850'
+    message_template: '[Task {{ .Tag }}]({{ .ReleaseURL }}) — A new release is available! Check the changelog for details.'

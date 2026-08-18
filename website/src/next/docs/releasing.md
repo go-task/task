@@ -56,6 +56,10 @@ A single package manager still require manual steps:
   * Trigger a new build on [Snapcraft -> Builds][snapcraftbuilds]
   * Once finished, move the new build to "stable" on [Snapcraft -> Releases][snapcraftreleases]
 
+Once the release is published, GoReleaser announces it on the
+[Discord server](https://discord.gg/6TY36E39UK). Nightly releases are not
+announced.
+
 These package managers are updated automatically by the community:
 
 * [Scoop](https://github.com/ScoopInstaller/Main/blob/master/bucket/task.json)
