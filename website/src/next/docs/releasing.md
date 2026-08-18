@@ -47,14 +47,8 @@ GoReleaser will automatically publish the release to most package managers:
 * Cloudsmith (DEB and RPM repositories)
 * Homebrew
 * npm
+* Snapcraft
 * winget
-
-A single package manager still require manual steps:
-
-* Snapcraft:
-  * Update the `version:` field on [snapcraft.yaml][snapcraftyaml]
-  * Trigger a new build on [Snapcraft -> Builds][snapcraftbuilds]
-  * Once finished, move the new build to "stable" on [Snapcraft -> Releases][snapcraftreleases]
 
 Once the release is published, GoReleaser announces it on the
 [Discord server](https://discord.gg/6TY36E39UK). Nightly releases are not
@@ -66,6 +60,3 @@ These package managers are updated automatically by the community:
 * [Nix](https://github.com/NixOS/nixpkgs/blob/master/pkgs/by-name/go/go-task/package.nix)
 
 [goreleaser]: https://goreleaser.com/
-[snapcraftyaml]: https://github.com/go-task/snap/blob/main/snap/snapcraft.yaml#L2
-[snapcraftbuilds]: https://snapcraft.io/task/builds
-[snapcraftreleases]: https://snapcraft.io/task/releases
