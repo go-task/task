@@ -452,12 +452,12 @@ func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call *Call, i in
 		if err != nil && timedOut(ctx, timeout) {
 			err = timeout
 		}
-		if taskOut != nil && err != nil {
-			taskOut.failed = true
-		}
 		if cmd.IgnoreError && isCommandFailure(err) {
 			e.Logger.VerboseErrf(logger.Yellow, "task: [%s] task error ignored: %v\n", t.Name(), err)
 			return nil
+		}
+		if taskOut != nil && err != nil {
+			taskOut.failed = true
 		}
 		return err
 	case cmd.Cmd != "":
@@ -506,8 +506,6 @@ func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call *Call, i in
 			if closeErr := closer(err); closeErr != nil {
 				e.Logger.Errf(logger.Red, "task: unable to close writer: %v\n", closeErr)
 			}
-		} else if err != nil {
-			taskOut.failed = true
 		}
 		if err != nil && timedOut(ctx, timeout) {
 			err = timeout
@@ -515,6 +513,9 @@ func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call *Call, i in
 		if cmd.IgnoreError && isCommandFailure(err) {
 			e.Logger.VerboseErrf(logger.Yellow, "task: [%s] command error ignored: %v\n", t.Name(), err)
 			return nil
+		}
+		if taskOut != nil && err != nil {
+			taskOut.failed = true
 		}
 		return err
 	default:

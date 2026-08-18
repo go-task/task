@@ -2718,6 +2718,14 @@ func TestOutputGroupByTaskErrorOnly(t *testing.T) {
 	buff.Reset()
 	require.Error(t, e.Run(t.Context(), &task.Call{Task: "failing"}))
 	assert.Equal(t, "failing-first\nfailing-second\n", buff.String())
+
+	buff.Reset()
+	require.NoError(t, e.Run(t.Context(), &task.Call{Task: "ignored-command"}))
+	assert.Empty(t, buff.String())
+
+	buff.Reset()
+	require.NoError(t, e.Run(t.Context(), &task.Call{Task: "ignored-task"}))
+	assert.Equal(t, "child-failing-first\nchild-failing-second\n", buff.String())
 }
 
 func TestOutputGroupErrorOnlySwallowsOutputOnSuccess(t *testing.T) {
