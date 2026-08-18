@@ -1,0 +1,44 @@
+version: '3'
+
+silent: true
+
+output:
+  group:
+    begin: '::group::{{ .TASK }}'
+    end: '::endgroup::'
+    by_task: true
+
+tasks:
+  multi:
+    cmds:
+      - echo 'first'
+      - echo 'second'
+
+  deferred:
+    cmds:
+      - defer: echo 'deferred'
+      - echo 'first'
+      - echo 'second'
+
+  child:
+    cmds:
+      - echo 'child'
+
+  parent:
+    cmds:
+      - echo 'parent-before'
+      - task: child
+      - echo 'parent-after'
+
+  parallel:
+    deps: [dep-one, dep-two]
+
+  dep-one:
+    cmds:
+      - echo 'dep-one-first'
+      - echo 'dep-one-second'
+
+  dep-two:
+    cmds:
+      - echo 'dep-two-first'
+      - echo 'dep-two-second'

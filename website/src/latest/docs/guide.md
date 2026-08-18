@@ -2710,7 +2710,27 @@ tasks:
 
 The `group` output will print the entire output of a command once after it
 finishes, so you will not have live feedback for commands that take a long time
-to run.
+to run. By default, each command in a task is placed in its own group.
+
+To place all of a task's commands in one group, set `by_task: true` under the
+`group` output options:
+
+```yaml
+version: '3'
+
+output:
+  group:
+    by_task: true
+
+tasks:
+  # ...
+```
+
+Task-level grouping combines the output of the task's shell commands, including
+deferred commands, and prints it as one block when the task finishes. Dependencies
+and tasks called from a command remain separate task groups. The option is
+intended for non-interactive commands; tasks with `interactive: true` continue
+to use real-time interleaved output.
 
 When using the `group` output, you can optionally provide a templated message to
 print at the start and end of the group. This can be useful for instructing CI
