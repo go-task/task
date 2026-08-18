@@ -1,0 +1,19 @@
+version: '3'
+
+silent: true
+
+output:
+  group:
+    error_only: true
+    by_task: true
+
+tasks:
+  passing:
+    cmds:
+      - echo 'passing-first'
+      - echo 'passing-second'
+
+  failing:
+    cmds:
+      - echo 'failing-first'
+      - echo 'failing-second' && exit 1

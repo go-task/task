@@ -42,6 +42,7 @@ output:
     begin: "::group::{{.TASK}}"
     end: "::endgroup::"
     error_only: false
+    by_task: true
 ```
 
 ### `method`

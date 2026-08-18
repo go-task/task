@@ -54,6 +54,7 @@ func (s *Output) UnmarshalYAML(node *yaml.Node) error {
 type OutputGroup struct {
 	Begin, End string
 	ErrorOnly  bool `yaml:"error_only"`
+	ByTask     bool `yaml:"by_task"`
 }
 
 // IsSet returns true if and only if a custom output style is set.
