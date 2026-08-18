@@ -268,6 +268,19 @@ Message template to print after grouped output.
 task test --output group --output-group-end "::endgroup::"
 ```
 
+#### `--output-group-by-task`
+
+Group all shell command output from each task into one block instead of creating
+one group per command. This option only applies to `--output group`; dependencies
+and tasks called from a command remain separate groups.
+
+- **Environment variable**:
+  [`TASK_OUTPUT_GROUP_BY_TASK`](./environment.md#task-output-group-by-task)
+
+```bash
+task test --output group --output-group-by-task
+```
+
 #### `--output-group-error-only`
 
 Only show command output on non-zero exit codes.

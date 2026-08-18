@@ -114,6 +114,15 @@ files > defaults.
 - **CLI equivalent**:
   [`--output-group-error-only`](./cli.md#--output-group-error-only)
 
+### `TASK_OUTPUT_GROUP_BY_TASK`
+
+- **Type**: `boolean` (`true`, `false`, `1`, `0`)
+- **Default**: `false`
+- **Description**: Group all shell command output from each task into one block
+  instead of one group per command. Only applies when the output style is
+  `group`.
+- **CLI equivalent**: [`--output-group-by-task`](./cli.md#--output-group-by-task)
+
 ### `TASK_TEMP_DIR`
 
 Defines the location of Task's temporary directory which is used for storing
