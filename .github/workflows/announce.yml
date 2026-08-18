@@ -1,0 +1,33 @@
+name: announce
+
+on:
+  release:
+    types: [published]
+
+permissions: {}
+
+jobs:
+  discord:
+    # The nightly release is published under the "nightly" tag, not a version tag.
+    if: startsWith(github.event.release.tag_name, 'v')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Announce on Discord
+        env:
+          WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          TAG: ${{ github.event.release.tag_name }}
+          RELEASE_URL: ${{ github.event.release.html_url }}
+        run: |
+          jq -n \
+            --arg title "Task $TAG" \
+            --arg url "$RELEASE_URL" \
+            '{embeds: [{
+              title: $title,
+              url: $url,
+              description: "A new release is available! Check the changelog for details.",
+              color: 4434850
+            }]}' \
+            | curl --silent --show-error --fail-with-body \
+                --header "Content-Type: application/json" \
+                --data @- \
+                "$WEBHOOK_URL"
