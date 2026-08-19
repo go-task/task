@@ -47,18 +47,14 @@ jobs:
         working-directory: website
 
       - name: Generate release notes
-        id: notes
-        run: |
-          path="${RUNNER_TEMP:-/tmp}/release-notes.md"
-          go run ./cmd/release --notes > "$path"
-          echo "path=$path" >> "$GITHUB_OUTPUT"
+        run: go run ./cmd/release --notes > "${RUNNER_TEMP}/release-notes.md"
 
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@f06c13b6b1a9625abc9e6e439d9c05a8f2190e94 # v7
         with:
           distribution: goreleaser-pro
           version: latest
-          args: release --clean --release-notes=${{ steps.notes.outputs.path }}
+          args: release --clean --release-notes=${{ runner.temp }}/release-notes.md
         env:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
           GH_GORELEASER_TOKEN: ${{secrets.GH_GORELEASER_TOKEN}}
