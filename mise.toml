@@ -5,7 +5,7 @@ node = "24"
 pnpm = "11.22.0"
 
 # Dev tools
-golangci-lint = "2.12.2"
+golangci-lint = "2.13.0"
 mockery = "3.7.3"
 gotestsum = "latest"
 goreleaser = "2"
