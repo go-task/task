@@ -10,6 +10,13 @@
   where it would leak into error messages and the confirmation prompt (#2329 by
   @vmaerten).
 
+### 🐛 Fixes
+
+- Fixed a remote Taskfile whose server refuses the credentials being reported as
+  a missing Taskfile. A `401` now stops the search and reports the status code,
+  instead of retrying every default Taskfile name and concluding that no
+  Taskfile exists (#2329 by @vmaerten).
+
 ### 📦 Package API
 
 - Bumped the minimum Go version to 1.26. Task follows Go's two-latest support
