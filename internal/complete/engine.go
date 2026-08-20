@@ -8,7 +8,6 @@ import (
 	"github.com/go-task/task/v3"
 	"github.com/go-task/task/v3/internal/refs"
 	"github.com/go-task/task/v3/internal/slicesext"
-	"github.com/go-task/task/v3/internal/sort"
 	"github.com/go-task/task/v3/taskfile/ast"
 )
 
@@ -123,22 +122,17 @@ func completeTaskNames(e *task.Executor, opts Options) ([]Suggestion, Directive)
 // GetTaskList compiles every task, on every keystroke, and a description is the
 // only compiled field read: worth its cost only when one holds a template.
 func listTasks(e *task.Executor, opts Options) []*ast.Task {
-	sorter := e.TaskSorter
-	if sorter == nil {
-		sorter = sort.AlphaNumericWithRootTasksFirst
-	}
-
 	out := make([]*ast.Task, 0, e.Taskfile.Tasks.Len())
 	templated := false
-	for t := range e.Taskfile.Tasks.Values(sorter) {
+	for t := range e.Taskfile.Tasks.Values(e.TaskSorter) {
 		if t.Internal {
 			continue
 		}
-		templated = templated || strings.Contains(t.Desc, "{{")
+		templated = templated || (!opts.NoDescriptions && strings.Contains(t.Desc, "{{"))
 		out = append(out, t)
 	}
 
-	if !opts.NoDescriptions && templated {
+	if templated {
 		// The uncompiled tasks keep one broken task from emptying the list.
 		if compiled, err := e.GetTaskList(task.FilterOutInternal); err == nil {
 			return compiled
@@ -160,22 +154,22 @@ func completeFlagValue(flagName, prefix string) ([]Suggestion, Directive) {
 	// An absent key yields DirectiveDefault, falling through to the enums.
 	switch flagDirective[flagName] {
 	case DirectiveFilterFileExt:
-		exts := slicesext.Convert(taskfileExtensions, func(ext string) Suggestion {
-			return Suggestion{Value: ext}
-		})
-		return exts, DirectiveFilterFileExt
+		return suggest("", taskfileExtensions), DirectiveFilterFileExt
 	case DirectiveFilterDirs:
 		return nil, DirectiveFilterDirs
 	}
 
 	if values, ok := flagEnums[flagName]; ok {
-		out := slicesext.Convert(values, func(v string) Suggestion {
-			return Suggestion{Value: prefix + v}
-		})
-		return out, DirectiveNoFileComp
+		return suggest(prefix, values), DirectiveNoFileComp
 	}
 
 	return nil, DirectiveDefault
+}
+
+func suggest(prefix string, values []string) []Suggestion {
+	return slicesext.Convert(values, func(v string) Suggestion {
+		return Suggestion{Value: prefix + v}
+	})
 }
 
 func completeTaskVars(e *task.Executor, taskName string) ([]Suggestion, Directive) {

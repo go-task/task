@@ -181,7 +181,7 @@ func init() {
 	// flags deciding which Taskfile is loaded must still reach the engine.
 	// ContinueOnError keeps what was parsed and prints nothing.
 	if complete.IsActive() {
-		_, words := complete.ParseOptions(os.Args[2:])
+		_, words := complete.ParseOptions(complete.Words())
 		pflag.CommandLine.Init(pflag.CommandLine.Name(), pflag.ContinueOnError)
 		pflag.CommandLine.ParseErrorsAllowlist.UnknownFlags = true
 		_ = pflag.CommandLine.Parse(words)

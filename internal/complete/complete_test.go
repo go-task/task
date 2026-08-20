@@ -12,6 +12,7 @@ import (
 
 	"github.com/go-task/task/v3"
 	"github.com/go-task/task/v3/internal/complete"
+	"github.com/go-task/task/v3/internal/slicesext"
 )
 
 func newTestFlagSet() *pflag.FlagSet {
@@ -23,6 +24,7 @@ func newTestFlagSet() *pflag.FlagSet {
 	fs.BoolVarP(&b, "verbose", "v", false, "Verbose mode")
 	fs.StringVarP(&s, "taskfile", "t", "", "Taskfile path")
 	fs.StringVarP(&s, "dir", "d", "", "Run dir")
+	fs.StringVar(&s, "temp-dir", "", "Temp dir")
 	fs.StringVarP(&s, "output", "o", "", "Output style")
 	fs.StringVar(&s, "sort", "", "Sort order")
 	fs.StringVar(&s, "cacert", "", "CA cert path")
@@ -282,6 +284,14 @@ func TestComplete_PathFlag_Dir(t *testing.T) {
 	require.Equal(t, complete.DirectiveFilterDirs, dir)
 }
 
+func TestComplete_PathFlag_TempDir(t *testing.T) {
+	t.Parallel()
+
+	suggs, dir := complete.Complete(setupExecutor(t), newTestFlagSet(), []string{"--temp-dir", ""}, complete.Options{})
+	require.Empty(t, suggs)
+	require.Equal(t, complete.DirectiveFilterDirs, dir)
+}
+
 func TestComplete_PathFlag_Cacert(t *testing.T) {
 	t.Parallel()
 
@@ -435,17 +445,9 @@ func TestWrite_EmptyWithDirective(t *testing.T) {
 }
 
 func values(suggs []complete.Suggestion) []string {
-	out := make([]string, 0, len(suggs))
-	for _, s := range suggs {
-		out = append(out, s.Value)
-	}
-	return out
+	return slicesext.Convert(suggs, func(s complete.Suggestion) string { return s.Value })
 }
 
 func descriptions(suggs []complete.Suggestion) []string {
-	out := make([]string, 0, len(suggs))
-	for _, s := range suggs {
-		out = append(out, s.Description)
-	}
-	return out
+	return slicesext.Convert(suggs, func(s complete.Suggestion) string { return s.Description })
 }
