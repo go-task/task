@@ -55,22 +55,28 @@ func TestResolveAuthHeaders(t *testing.T) { //nolint:paralleltest // t.Setenv ca
 			want:        map[string]string{"Authorization": "Bearer s3cret"},
 		},
 		{
-			name:        "escaped dollar sign",
-			hostHeaders: HostHeaders{"gitlab.com": {"PRIVATE-TOKEN": "lit$$eral"}},
-			host:        "gitlab.com",
-			want:        map[string]string{"PRIVATE-TOKEN": "lit$eral"},
-		},
-		{
-			name:        "undefined environment variable",
+			name:        "undefined environment variable expands to nothing",
 			hostHeaders: HostHeaders{"gitlab.com": {"PRIVATE-TOKEN": "${TASK_TEST_UNSET}"}}, //nolint:gosec // an env var reference, not a credential
 			host:        "gitlab.com",
-			wantErr:     `remote auth for host "gitlab.com": header "PRIVATE-TOKEN": environment variable $TASK_TEST_UNSET is not set`,
+			want:        map[string]string{"PRIVATE-TOKEN": ""},
 		},
 		{
-			name:        "invalid header name",
+			name:        "header name with a space",
 			hostHeaders: HostHeaders{"gitlab.com": {"PRIVATE TOKEN": "token"}},
 			host:        "gitlab.com",
-			wantErr:     `remote auth for host "gitlab.com": header name "PRIVATE TOKEN" contains invalid characters`,
+			wantErr:     `remote auth for host "gitlab.com": invalid header name "PRIVATE TOKEN"`,
+		},
+		{
+			name:        "header name outside the HTTP token grammar",
+			hostHeaders: HostHeaders{"gitlab.com": {"X-Foo(bar)": "token"}},
+			host:        "gitlab.com",
+			wantErr:     `remote auth for host "gitlab.com": invalid header name "X-Foo(bar)"`,
+		},
+		{
+			name:        "empty header name",
+			hostHeaders: HostHeaders{"gitlab.com": {"": "token"}},
+			host:        "gitlab.com",
+			wantErr:     `remote auth for host "gitlab.com": invalid header name ""`,
 		},
 	}
 
@@ -194,18 +200,17 @@ func TestHTTPNodeAuthHeadersNotSentOnRedirect(t *testing.T) {
 func TestHTTPNodeAuthHeadersResolvedLazily(t *testing.T) { //nolint:paralleltest // t.Setenv cannot be used in parallel tests
 	node, err := NewHTTPNode("https://gitlab.com/Taskfile.yml", "", false,
 		WithAuthHeaders(HostHeaders{
-			"gitlab.com": {"PRIVATE-TOKEN": "${TASK_TEST_UNSET}"}, //nolint:gosec // an env var reference, not a credential
+			"gitlab.com": {"PRIVATE-TOKEN": "${TASK_TEST_LAZY}"}, //nolint:gosec // an env var reference, not a credential
 		}),
 	)
 	require.NoError(t, err)
 
-	_, err = node.authenticatedClient()
-	require.EqualError(t, err, `remote auth for host "gitlab.com": header "PRIVATE-TOKEN": environment variable $TASK_TEST_UNSET is not set`)
+	// Defined only after the node was built: the value must still be picked up.
+	t.Setenv("TASK_TEST_LAZY", "s3cret")
 
-	t.Setenv("TASK_TEST_UNSET", "s3cret")
-	client, err := node.authenticatedClient()
+	headers, err := resolveAuthHeaders(node.authHeaders, node.url.Host)
 	require.NoError(t, err)
-	assert.IsType(t, &authTransport{}, client.Transport)
+	assert.Equal(t, map[string]string{"PRIVATE-TOKEN": "s3cret"}, headers)
 }
 
 type roundTripperFunc func(*http.Request) (*http.Response, error)

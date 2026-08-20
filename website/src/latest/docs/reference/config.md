@@ -326,9 +326,10 @@ commit.
 Each entry applies to a single host, matched exactly and including the port if
 the URL has one — the same rule as
 [`remote.trusted-hosts`](#remote-trusted-hosts). Header values may reference
-environment variables with `${VAR}` or `$VAR`; write `$$` for a literal dollar
-sign. A variable is only read when Task actually contacts the host, and an
-undefined one is reported as an error instead of being sent as an empty header.
+environment variables with `${VAR}` or `$VAR`, read when Task contacts the host.
+An undefined variable expands to nothing, so the header is sent empty and the
+server rejects it — prefer an environment variable over a literal value, which
+cannot contain a `$` followed by a name.
 
 The header your server expects depends on the service:
 
