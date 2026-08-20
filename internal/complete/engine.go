@@ -67,7 +67,6 @@ func completeTaskNames(e *task.Executor, opts Options) ([]Suggestion, Directive)
 
 	out := make([]Suggestion, 0, len(tasks))
 	seen := make(map[string]bool, len(tasks))
-	anyPartial := false
 	add := func(name, desc string) {
 		value, partial := suggestedName(name)
 		// `*-wildcard-*` has no prefix, and `wildcard-*` / `wildcard-*-*` share one.
@@ -75,11 +74,9 @@ func completeTaskNames(e *task.Executor, opts Options) ([]Suggestion, Directive)
 			return
 		}
 		seen[value] = true
-		if partial {
-			anyPartial = true
-			if desc == "" && !opts.NoDescriptions {
-				desc = name
-			}
+		// Without a desc, a truncated pattern says what its prefix stands for.
+		if partial && desc == "" && !opts.NoDescriptions {
+			desc = name
 		}
 		out = append(out, Suggestion{Value: value, Description: desc})
 	}
@@ -94,10 +91,8 @@ func completeTaskNames(e *task.Executor, opts Options) ([]Suggestion, Directive)
 		}
 	}
 
-	// A truncated pattern is half a name: the cursor must stay against it.
-	if anyPartial {
-		return out, DirectiveNoSpace | DirectiveNoFileComp
-	}
+	// A single truncated wildcard prefix would otherwise cost every complete
+	// name its trailing space: the directive covers the whole response.
 	return out, DirectiveNoFileComp
 }
 
