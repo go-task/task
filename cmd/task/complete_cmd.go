@@ -24,6 +24,7 @@ func runComplete(args []string) error {
 		task.WithStderr(io.Discard),
 		task.WithStdin(strings.NewReader("")),
 		task.WithVersionCheck(false),
+		task.WithDisableFuzzy(true),
 		task.WithOffline(true),
 		task.WithDownload(false),
 	)

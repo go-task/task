@@ -53,9 +53,10 @@ run task ''
 reply_has  "candidate forwarded" build
 cap_hasnot "no file fallback"     "filedir:"
 
-echo "bash: :2 (NoSpace) disables the trailing space"
+echo "bash: :2|:32 (NoSpace|KeepOrder) disable the trailing space and the sort"
 run task deploy ''
 cap_has    "nospace applied"      "compopt:-o nospace"
+cap_has    "keeporder applied"    "compopt:-o nosort"
 
 echo "bash: :8 (FilterFileExt) routes to extension-filtered files"
 run task --taskfile ''

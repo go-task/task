@@ -42,16 +42,15 @@ func (ctx completionContext) inTaskContext(fs *pflag.FlagSet) bool {
 	return !ctx.afterDash && ctx.flagValue(fs) == nil && !strings.HasPrefix(ctx.toComplete, "-")
 }
 
-// fs is needed to skip the word after a value-taking flag: `task --dir deploy`
-// must not read "deploy" as a task name.
-func detectTaskName(args []string, knownTasks []string, fs *pflag.FlagSet) string {
-	if len(args) <= 1 {
-		return ""
-	}
+// parsePriorWords splits the words before the cursor into task candidates and
+// the names of the variables already set. fs is needed to skip the word after a
+// value-taking flag: `task --dir deploy` must not read "deploy" as a task name.
+func parsePriorWords(prior []string, fs *pflag.FlagSet) ([]string, map[string]bool) {
+	var tasks []string
+	setVars := make(map[string]bool, len(prior))
 
-	taskName := ""
 	skipNext := false
-	for _, w := range args[:len(args)-1] {
+	for _, w := range prior {
 		if skipNext {
 			skipNext = false
 			continue
@@ -64,13 +63,12 @@ func detectTaskName(args []string, knownTasks []string, fs *pflag.FlagSet) strin
 			}
 			continue
 		}
-		if strings.Contains(w, "=") {
+		if name, _, ok := strings.Cut(w, "="); ok {
+			setVars[name] = true
 			continue
 		}
-		if slices.Contains(knownTasks, w) {
-			taskName = w
-		}
+		tasks = append(tasks, w)
 	}
 
-	return taskName
+	return tasks, setVars
 }

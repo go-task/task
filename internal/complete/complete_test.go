@@ -73,8 +73,12 @@ tasks:
 
   docs:serve:
     desc: Serve docs locally
+    requires:
+      vars:
+        - PORT
     cmds:
       - 'echo serving'
+
 `
 
 const wildcardTaskfile = `version: '3'
@@ -99,6 +103,17 @@ tasks:
   start-*:
     desc: Start a service
     aliases: [s-*]
+    cmds:
+      - 'echo {{index .MATCH 0}}'
+
+  release-*:
+    desc: Release a component
+    requires:
+      vars:
+        - name: CHANNEL
+          enum:
+            - beta
+            - stable
     cmds:
       - 'echo {{index .MATCH 0}}'
 
@@ -150,13 +165,13 @@ func TestComplete_WildcardTaskNames(t *testing.T) {
 
 	// Patterns are cut at their first `*`: `wildcard-*` and `wildcard-*-*`
 	// collapse into one candidate, and `*-wildcard-*` leaves nothing to insert.
-	require.Equal(t, []string{"build", "matches-exactly-", "start-", "s-", "wildcard-"}, values(suggs))
+	require.Equal(t, []string{"build", "matches-exactly-", "release-", "start-", "s-", "wildcard-"}, values(suggs))
 	require.Equal(t, complete.DirectiveNoSpace|complete.DirectiveNoFileComp, dir)
 	// Without a desc, the pattern says what the prefix stands for.
 	require.Contains(t, descriptions(suggs), "wildcard-*")
 
 	suggs, _ = complete.Complete(e, newTestFlagSet(), []string{""}, complete.Options{NoDescriptions: true})
-	require.Equal(t, []string{"", "", "", "", ""}, descriptions(suggs))
+	require.Equal(t, []string{"", "", "", "", "", ""}, descriptions(suggs))
 }
 
 func TestComplete_AliasResolvesToTaskVars(t *testing.T) {
@@ -186,15 +201,6 @@ func TestComplete_EnumRef(t *testing.T) {
 	require.Equal(t, []string{"ENV=dev", "ENV=staging", "ENV=prod"}, values(suggs))
 }
 
-func TestComplete_NoRequires(t *testing.T) {
-	t.Parallel()
-
-	e := setupExecutor(t)
-	suggs, dir := complete.Complete(e, newTestFlagSet(), []string{"build", ""}, complete.Options{})
-	require.Empty(t, suggs)
-	require.Equal(t, complete.DirectiveNoFileComp, dir)
-}
-
 func TestComplete_FlagValueNotConfusedWithTaskName(t *testing.T) {
 	t.Parallel()
 
@@ -212,8 +218,8 @@ func TestComplete_NamespacedTaskName(t *testing.T) {
 
 	e := setupExecutor(t)
 	suggs, dir := complete.Complete(e, newTestFlagSet(), []string{"docs:serve", ""}, complete.Options{})
-	require.Empty(t, suggs)
-	require.Equal(t, complete.DirectiveNoFileComp, dir)
+	require.Equal(t, []string{"PORT="}, values(suggs))
+	require.Equal(t, complete.DirectiveNoSpace|complete.DirectiveNoFileComp|complete.DirectiveKeepOrder, dir)
 }
 
 func TestComplete_FlagValueInlineEquals(t *testing.T) {
@@ -442,6 +448,68 @@ func TestWrite_EmptyWithDirective(t *testing.T) {
 	var buf bytes.Buffer
 	complete.Write(&buf, nil, complete.DirectiveFilterDirs)
 	require.Equal(t, ":16\n", buf.String())
+}
+
+// CLI variables are global to the invocation, so once every requirement on the
+// line is met the engine goes back to offering task names.
+func TestComplete_TaskNamesAfterTaskWithoutRequires(t *testing.T) {
+	t.Parallel()
+
+	suggs, dir := complete.Complete(setupExecutor(t), newTestFlagSet(), []string{"build", ""}, complete.Options{})
+
+	require.Subset(t, values(suggs), []string{"build", "deploy", "docs:serve"})
+	require.Equal(t, complete.DirectiveNoFileComp, dir)
+}
+
+func TestComplete_RequiredVarsThenTaskNames(t *testing.T) {
+	t.Parallel()
+
+	e := setupExecutor(t)
+	fs := newTestFlagSet()
+
+	suggs, dir := complete.Complete(e, fs, []string{"deploy", ""}, complete.Options{})
+	require.Equal(t, []string{"ENV=dev", "ENV=staging", "ENV=prod", "REGION="}, values(suggs))
+	require.Equal(t, complete.DirectiveNoSpace|complete.DirectiveNoFileComp|complete.DirectiveKeepOrder, dir)
+
+	suggs, dir = complete.Complete(e, fs, []string{"deploy", "ENV=dev", ""}, complete.Options{})
+	require.Equal(t, []string{"REGION="}, values(suggs))
+	require.Equal(t, complete.DirectiveNoSpace|complete.DirectiveNoFileComp|complete.DirectiveKeepOrder, dir)
+
+	suggs, dir = complete.Complete(e, fs, []string{"deploy", "ENV=dev", "REGION=eu", ""}, complete.Options{})
+	require.Subset(t, values(suggs), []string{"build", "deploy"})
+	require.Equal(t, complete.DirectiveNoFileComp, dir)
+}
+
+func TestComplete_RequiredVarsUnionAcrossTasks(t *testing.T) {
+	t.Parallel()
+
+	e := setupExecutor(t)
+	suggs, _ := complete.Complete(e, newTestFlagSet(), []string{"dynenum", "deploy", ""}, complete.Options{})
+
+	// ENV is required by both and appears once, in the order the line names them.
+	require.Equal(t, []string{"ENV=dev", "ENV=staging", "ENV=prod", "REGION="}, values(suggs))
+}
+
+func TestComplete_WildcardTaskRequiredVars(t *testing.T) {
+	t.Parallel()
+
+	e := setupExecutorWith(t, wildcardTaskfile)
+	suggs, dir := complete.Complete(e, newTestFlagSet(), []string{"release-cli", ""}, complete.Options{})
+
+	require.Equal(t, []string{"CHANNEL=beta", "CHANNEL=stable"}, values(suggs))
+	require.Equal(t, complete.DirectiveNoSpace|complete.DirectiveNoFileComp|complete.DirectiveKeepOrder, dir)
+}
+
+// flags.WithFlags() applies WithTaskSorter after NewExecutor set its default, so
+// the engine must not assume a sorter is present.
+func TestComplete_DefaultSorterFallback(t *testing.T) {
+	t.Parallel()
+
+	e := setupExecutorWith(t, testTaskfile)
+	e.Options(task.WithTaskSorter(nil))
+
+	suggs, _ := complete.Complete(e, newTestFlagSet(), []string{""}, complete.Options{})
+	require.Equal(t, []string{"build", "deploy", "dep", "ship", "dynenum", "docs:serve"}, values(suggs))
 }
 
 func values(suggs []complete.Suggestion) []string {

@@ -279,6 +279,9 @@ func (o *flagsOption) ApplyToExecutor(e *task.Executor) {
 		sorter = sort.NoSort
 	case "alphanumeric":
 		sorter = sort.AlphaNumeric
+	default:
+		// Not nil: this overwrites the sorter NewExecutor already set.
+		sorter = sort.AlphaNumericWithRootTasksFirst
 	}
 
 	// Change the directory to the user's home directory if the global flag is set
