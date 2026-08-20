@@ -10,6 +10,11 @@ func IsActive() bool {
 	return len(os.Args) >= 2 && os.Args[1] == CommandName
 }
 
+// Words returns the command line being completed: the args after __complete.
+func Words() []string {
+	return os.Args[2:]
+}
+
 // Directive mirrors cobra's ShellCompDirective bitfield, emitted as `:<n>`.
 type Directive int
 
