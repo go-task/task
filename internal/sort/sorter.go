@@ -1,8 +1,8 @@
 package sort
 
 import (
+	"cmp"
 	"slices"
-	"sort"
 	"strings"
 )
 
@@ -29,16 +29,16 @@ func AlphaNumericWithRootTasksFirst(items []string, namespaces []string) []strin
 	if len(namespaces) > 0 {
 		return AlphaNumeric(items, namespaces)
 	}
-	sort.Slice(items, func(i, j int) bool {
-		iContainsColon := strings.Contains(items[i], ":")
-		jContainsColon := strings.Contains(items[j], ":")
-		if iContainsColon == jContainsColon {
-			return items[i] < items[j]
+	slices.SortFunc(items, func(a, b string) int {
+		aContainsColon := strings.Contains(a, ":")
+		bContainsColon := strings.Contains(b, ":")
+		if aContainsColon == bContainsColon {
+			return cmp.Compare(a, b)
 		}
-		if !iContainsColon && jContainsColon {
-			return true
+		if !aContainsColon && bContainsColon {
+			return -1
 		}
-		return false
+		return 1
 	})
 	return items
 }

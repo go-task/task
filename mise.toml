@@ -1,6 +1,6 @@
 [tools]
 # Runtimes
-go = "1.26.6"
+go = "1.27.0"
 node = "24"
 pnpm = "11.22.0"
 

@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+### 📦 Package API
+
+- Bumped the minimum Go version to 1.26. Task follows Go's two-latest support
+  window, and is now tested against 1.26 and 1.27. This only affects projects
+  importing Task as a Go module (#2920 by @vmaerten).
+
 ## v3.53.1 - 2026-08-18
 
 ### 🚀 Features
