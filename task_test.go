@@ -2051,7 +2051,7 @@ func TestDynamicVariablesRunOnTheNewCreatedDir(t *testing.T) {
 	// Normalize path separators for cross-platform compatibility (Windows uses backslashes)
 	// Take only the first line as Windows may output additional debug info
 	normalized := normalizePathSeparators(out.String())
-	firstLine := strings.Split(normalized, "\n")[0]
+	firstLine, _, _ := strings.Cut(normalized, "\n")
 	got := filepath.Base(firstLine)
 	assert.Equal(t, expected, got, "Mismatch in the working directory")
 

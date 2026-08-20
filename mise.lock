@@ -37,49 +37,49 @@ version = "0.0.0-20260603202125-055de637280b"
 backend = "go:golang.org/x/exp/cmd/gorelease"
 
 [[tools.golangci-lint]]
-version = "2.12.2"
+version = "2.13.0"
 backend = "aqua:golangci/golangci-lint"
 
 [tools.golangci-lint."platforms.linux-arm64"]
-checksum = "sha256:44cd40a8c76c86755375adfeea52cfd3533cb43d7bd647771e0ae065e166df3a"
-url = "https://github.com/golangci/golangci-lint/releases/download/v2.12.2/golangci-lint-2.12.2-linux-arm64.tar.gz"
-url_api = "https://api.github.com/repos/golangci/golangci-lint/releases/assets/413470996"
+checksum = "sha256:3a91c7bb9c135099a97858bea431d6dd2f54e4bf68d479c776c2350428d60e41"
+url = "https://github.com/golangci/golangci-lint/releases/download/v2.13.0/golangci-lint-2.13.0-linux-arm64.tar.gz"
+url_api = "https://api.github.com/repos/golangci/golangci-lint/releases/assets/521471362"
 provenance = "github-attestations"
 
 [tools.golangci-lint."platforms.linux-arm64-musl"]
-checksum = "sha256:44cd40a8c76c86755375adfeea52cfd3533cb43d7bd647771e0ae065e166df3a"
-url = "https://github.com/golangci/golangci-lint/releases/download/v2.12.2/golangci-lint-2.12.2-linux-arm64.tar.gz"
-url_api = "https://api.github.com/repos/golangci/golangci-lint/releases/assets/413470996"
+checksum = "sha256:3a91c7bb9c135099a97858bea431d6dd2f54e4bf68d479c776c2350428d60e41"
+url = "https://github.com/golangci/golangci-lint/releases/download/v2.13.0/golangci-lint-2.13.0-linux-arm64.tar.gz"
+url_api = "https://api.github.com/repos/golangci/golangci-lint/releases/assets/521471362"
 provenance = "github-attestations"
 
 [tools.golangci-lint."platforms.linux-x64"]
-checksum = "sha256:8df580d2670fed8fa984aac0507099af8df275e665215f5c7a2ae3943893a553"
-url = "https://github.com/golangci/golangci-lint/releases/download/v2.12.2/golangci-lint-2.12.2-linux-amd64.tar.gz"
-url_api = "https://api.github.com/repos/golangci/golangci-lint/releases/assets/413471054"
+checksum = "sha256:a10e8d8359d76b9e2b41da60f9d98bb26fd53c7a453caa82e0a172d6f72fd2ca"
+url = "https://github.com/golangci/golangci-lint/releases/download/v2.13.0/golangci-lint-2.13.0-linux-amd64.tar.gz"
+url_api = "https://api.github.com/repos/golangci/golangci-lint/releases/assets/521471346"
 provenance = "github-attestations"
 
 [tools.golangci-lint."platforms.linux-x64-musl"]
-checksum = "sha256:8df580d2670fed8fa984aac0507099af8df275e665215f5c7a2ae3943893a553"
-url = "https://github.com/golangci/golangci-lint/releases/download/v2.12.2/golangci-lint-2.12.2-linux-amd64.tar.gz"
-url_api = "https://api.github.com/repos/golangci/golangci-lint/releases/assets/413471054"
+checksum = "sha256:a10e8d8359d76b9e2b41da60f9d98bb26fd53c7a453caa82e0a172d6f72fd2ca"
+url = "https://github.com/golangci/golangci-lint/releases/download/v2.13.0/golangci-lint-2.13.0-linux-amd64.tar.gz"
+url_api = "https://api.github.com/repos/golangci/golangci-lint/releases/assets/521471346"
 provenance = "github-attestations"
 
 [tools.golangci-lint."platforms.macos-arm64"]
-checksum = "sha256:a9c54498731b3128f79e090be6110f3e5fffccc617b08142ed244d4126c73f29"
-url = "https://github.com/golangci/golangci-lint/releases/download/v2.12.2/golangci-lint-2.12.2-darwin-arm64.tar.gz"
-url_api = "https://api.github.com/repos/golangci/golangci-lint/releases/assets/413470950"
+checksum = "sha256:72eae670097978e61b78a773a25c27439e35d54094fd986cee5eeeb25d7144fd"
+url = "https://github.com/golangci/golangci-lint/releases/download/v2.13.0/golangci-lint-2.13.0-darwin-arm64.tar.gz"
+url_api = "https://api.github.com/repos/golangci/golangci-lint/releases/assets/521471400"
 provenance = "github-attestations"
 
 [tools.golangci-lint."platforms.macos-x64"]
-checksum = "sha256:f6f06d94b6241521c53d15450c5209b028270bf966f842afb11c030c79f5bc16"
-url = "https://github.com/golangci/golangci-lint/releases/download/v2.12.2/golangci-lint-2.12.2-darwin-amd64.tar.gz"
-url_api = "https://api.github.com/repos/golangci/golangci-lint/releases/assets/413470980"
+checksum = "sha256:2c09329445036db5f80fa60c74be2bfe2fee5e3f92d9b2d596dfad787f4be05d"
+url = "https://github.com/golangci/golangci-lint/releases/download/v2.13.0/golangci-lint-2.13.0-darwin-amd64.tar.gz"
+url_api = "https://api.github.com/repos/golangci/golangci-lint/releases/assets/521471393"
 provenance = "github-attestations"
 
 [tools.golangci-lint."platforms.windows-x64"]
-checksum = "sha256:bd42e3ebc8cb4ececb86941983baaf1dc221bbb04d838e94ce63b49cc91e02bb"
-url = "https://github.com/golangci/golangci-lint/releases/download/v2.12.2/golangci-lint-2.12.2-windows-amd64.zip"
-url_api = "https://api.github.com/repos/golangci/golangci-lint/releases/assets/413471017"
+checksum = "sha256:472631b96f042a596d0f11bf0b7e162545b39178f9b13f72ef6d12808f831518"
+url = "https://github.com/golangci/golangci-lint/releases/download/v2.13.0/golangci-lint-2.13.0-windows-amd64.zip"
+url_api = "https://api.github.com/repos/golangci/golangci-lint/releases/assets/521471415"
 provenance = "github-attestations"
 
 [[tools.goreleaser]]
