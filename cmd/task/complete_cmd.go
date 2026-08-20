@@ -28,8 +28,8 @@ func runComplete(args []string) error {
 		task.WithDownload(false),
 	)
 
-	// Best-effort, and never from stdin: that would hang the shell.
-	if complete.NeedsTaskfile(args, pflag.CommandLine) && flags.Entrypoint != "-" {
+	// Best-effort: a missing or broken Taskfile must not break completion.
+	if complete.NeedsTaskfile(args, pflag.CommandLine) {
 		_ = e.Setup()
 	}
 
