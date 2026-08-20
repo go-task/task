@@ -14,6 +14,7 @@ import (
 	"github.com/go-task/task/v3"
 	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/experiments"
+	"github.com/go-task/task/v3/internal/complete"
 	"github.com/go-task/task/v3/internal/env"
 	"github.com/go-task/task/v3/internal/sort"
 	"github.com/go-task/task/v3/taskfile/ast"
@@ -48,6 +49,7 @@ var (
 	Help                bool
 	Init                bool
 	Completion          string
+	NewCompletion       string
 	List                bool
 	ListAll             bool
 	ListJson            bool
@@ -124,6 +126,7 @@ func init() {
 	pflag.BoolVarP(&Help, "help", "h", false, "Shows Task usage.")
 	pflag.BoolVarP(&Init, "init", "i", false, "Creates a new Taskfile.yml in the current folder.")
 	pflag.StringVar(&Completion, "completion", "", "Generates shell completion script.")
+	pflag.StringVar(&NewCompletion, "new-completion", "", "Generates the new (experimental) shell completion script, powered by the `task __complete` engine.")
 	pflag.BoolVarP(&List, "list", "l", false, "Lists tasks with description of current Taskfile.")
 	pflag.BoolVarP(&ListAll, "list-all", "a", false, "Lists tasks with or without a description.")
 	pflag.BoolVarP(&ListJson, "json", "j", false, "Formats task list as JSON.")
@@ -172,6 +175,17 @@ func init() {
 		pflag.BoolVar(&ForceAll, "force-all", false, "Forces execution of the called task and all its dependant tasks.")
 	} else {
 		pflag.BoolVarP(&ForceAll, "force", "f", false, "Forces execution even when the task is up-to-date.")
+	}
+
+	// The words being completed hold partially typed and unknown flags, yet the
+	// flags deciding which Taskfile is loaded must still reach the engine.
+	// ContinueOnError keeps what was parsed and prints nothing.
+	if complete.IsActive() {
+		_, words := complete.ParseOptions(os.Args[2:])
+		pflag.CommandLine.Init(pflag.CommandLine.Name(), pflag.ContinueOnError)
+		pflag.CommandLine.ParseErrorsAllowlist.UnknownFlags = true
+		_ = pflag.CommandLine.Parse(words)
+		return
 	}
 
 	pflag.Parse()
