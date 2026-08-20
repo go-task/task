@@ -166,7 +166,9 @@ func TestComplete_WildcardTaskNames(t *testing.T) {
 	// Patterns are cut at their first `*`: `wildcard-*` and `wildcard-*-*`
 	// collapse into one candidate, and `*-wildcard-*` leaves nothing to insert.
 	require.Equal(t, []string{"build", "matches-exactly-", "release-", "start-", "s-", "wildcard-"}, values(suggs))
-	require.Equal(t, complete.DirectiveNoSpace|complete.DirectiveNoFileComp, dir)
+	// A truncated prefix costs the whole response its trailing space, so task
+	// names keep theirs and the wildcard prefix gets one it does not want.
+	require.Equal(t, complete.DirectiveNoFileComp, dir)
 	// Without a desc, the pattern says what the prefix stands for.
 	require.Contains(t, descriptions(suggs), "wildcard-*")
 
