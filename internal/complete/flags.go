@@ -23,6 +23,7 @@ var flagDirective = map[string]Directive{
 	"taskfile":         DirectiveFilterFileExt,
 	"dir":              DirectiveFilterDirs,
 	"remote-cache-dir": DirectiveFilterDirs,
+	"temp-dir":         DirectiveFilterDirs,
 }
 
 var taskfileExtensions = []string{"yml", "yaml"}

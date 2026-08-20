@@ -56,9 +56,6 @@ func detectTaskName(args []string, knownTasks []string, fs *pflag.FlagSet) strin
 			skipNext = false
 			continue
 		}
-		if w == "--" {
-			return taskName
-		}
 		if strings.HasPrefix(w, "-") {
 			if !strings.Contains(w, "=") {
 				if f := matchFlagName(fs, w); f != nil && flagTakesValue(f) {

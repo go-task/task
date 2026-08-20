@@ -62,7 +62,7 @@ func run() error {
 	// Dispatched before flag validation: the args after __complete are the
 	// user's command line, not Task's own flags.
 	if complete.IsActive() {
-		return runComplete(os.Args[2:])
+		return runComplete(complete.Words())
 	}
 
 	log := &logger.Logger{
