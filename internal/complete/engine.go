@@ -45,7 +45,12 @@ func Complete(e *task.Executor, fs *pflag.FlagSet, args []string, opts Options) 
 }
 
 func NeedsTaskfile(args []string, fs *pflag.FlagSet) bool {
-	return parseContext(args).inTaskContext(fs)
+	if !parseContext(args).inTaskContext(fs) {
+		return false
+	}
+	// Reading the Taskfile from standard input would hang the shell on a keystroke.
+	f := fs.Lookup("taskfile")
+	return f == nil || f.Value.String() != "-"
 }
 
 func taskNames(e *task.Executor) []string {

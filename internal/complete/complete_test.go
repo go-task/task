@@ -26,6 +26,8 @@ func newTestFlagSet() *pflag.FlagSet {
 	fs.StringVarP(&s, "output", "o", "", "Output style")
 	fs.StringVar(&s, "sort", "", "Sort order")
 	fs.StringVar(&s, "cacert", "", "CA cert path")
+	fs.StringVar(&s, "completion", "", "Generate a completion script")
+	fs.StringVar(&s, "new-completion", "", "Generate a completion script")
 	return fs
 }
 
@@ -88,6 +90,10 @@ tasks:
     cmds:
       - 'echo {{index .MATCH 0}}'
 
+  matches-exactly-*:
+    cmds:
+      - 'echo {{.MATCH}}'
+
   start-*:
     desc: Start a service
     aliases: [s-*]
@@ -142,13 +148,13 @@ func TestComplete_WildcardTaskNames(t *testing.T) {
 
 	// Patterns are cut at their first `*`: `wildcard-*` and `wildcard-*-*`
 	// collapse into one candidate, and `*-wildcard-*` leaves nothing to insert.
-	require.Equal(t, []string{"build", "start-", "s-", "wildcard-"}, values(suggs))
+	require.Equal(t, []string{"build", "matches-exactly-", "start-", "s-", "wildcard-"}, values(suggs))
 	require.Equal(t, complete.DirectiveNoSpace|complete.DirectiveNoFileComp, dir)
 	// Without a desc, the pattern says what the prefix stands for.
 	require.Contains(t, descriptions(suggs), "wildcard-*")
 
 	suggs, _ = complete.Complete(e, newTestFlagSet(), []string{""}, complete.Options{NoDescriptions: true})
-	require.Equal(t, []string{"", "", "", ""}, descriptions(suggs))
+	require.Equal(t, []string{"", "", "", "", ""}, descriptions(suggs))
 }
 
 func TestComplete_AliasResolvesToTaskVars(t *testing.T) {
@@ -376,6 +382,36 @@ func TestNeedsTaskfile(t *testing.T) {
 			t.Parallel()
 			require.Equal(t, tt.want, complete.NeedsTaskfile(tt.args, newTestFlagSet()))
 		})
+	}
+}
+
+// Reading the Taskfile from standard input would block until EOF, freezing the
+// shell on a keystroke.
+func TestNeedsTaskfile_StdinEntrypoint(t *testing.T) {
+	t.Parallel()
+
+	fs := newTestFlagSet()
+	require.NoError(t, fs.Set("taskfile", "-"))
+	require.False(t, complete.NeedsTaskfile([]string{""}, fs))
+	require.False(t, complete.NeedsTaskfile([]string{"deploy", ""}, fs))
+}
+
+// Keeps the shells the engine offers in step with the scripts the root package
+// can actually serve.
+func TestCompletionShells(t *testing.T) {
+	t.Parallel()
+
+	for _, flag := range []string{"--completion", "--new-completion"} {
+		suggs, dir := complete.Complete(nil, newTestFlagSet(), []string{flag, ""}, complete.Options{})
+		require.Equal(t, complete.DirectiveNoFileComp, dir)
+		require.NotEmpty(t, suggs)
+
+		for _, shell := range values(suggs) {
+			_, err := task.Completion(shell)
+			require.NoErrorf(t, err, "%s offers %q", flag, shell)
+			_, err = task.CompletionNext(shell)
+			require.NoErrorf(t, err, "%s offers %q", flag, shell)
+		}
 	}
 }
 
