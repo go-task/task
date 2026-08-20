@@ -7,7 +7,8 @@ import (
 	"net/http"
 	"os"
 	"slices"
-	"strings"
+
+	"golang.org/x/net/http/httpguts"
 )
 
 // HostHeaders maps a host to the HTTP headers to send when fetching a remote
@@ -33,8 +34,8 @@ func (t *authTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	return t.base.RoundTrip(req)
 }
 
-// authenticatedClient resolves the headers on each read, not when the node is
-// built, so that a run served from the cache needs no credentials.
+// authenticatedClient resolves on each read, not at build time, so a cached
+// run needs no credentials.
 func (node *HTTPNode) authenticatedClient() (*http.Client, error) {
 	headers, err := resolveAuthHeaders(node.authHeaders, node.url.Host)
 	if err != nil {
@@ -58,8 +59,7 @@ func withAuthHeaders(client *http.Client, host string, headers map[string]string
 	return &authenticated
 }
 
-// resolveAuthHeaders returns the expanded headers configured for host, or nil
-// when no entry matches.
+// resolveAuthHeaders returns the expanded headers for host, or nil if none.
 func resolveAuthHeaders(hostHeaders HostHeaders, host string) (map[string]string, error) {
 	var headers map[string]string
 	for pattern, patternHeaders := range hostHeaders {
@@ -77,47 +77,16 @@ func resolveAuthHeaders(hostHeaders HostHeaders, host string) (map[string]string
 		if err := validateHeaderName(name); err != nil {
 			return nil, fmt.Errorf(`remote auth for host %q: %w`, host, err)
 		}
-		value, err := expandEnv(headers[name])
-		if err != nil {
-			return nil, fmt.Errorf(`remote auth for host %q: header %q: %w`, host, name, err)
-		}
-		resolved[name] = value
+		resolved[name] = os.ExpandEnv(headers[name])
 	}
 	return resolved, nil
 }
 
-// expandEnv replaces ${VAR} and $VAR references; `$$` is a literal dollar
-// sign. An undefined variable is an error, not an empty header that would only
-// surface as an opaque 401.
-func expandEnv(value string) (string, error) {
-	var missing []string
-	expanded := os.Expand(value, func(name string) string {
-		if name == "$" {
-			return "$"
-		}
-		v, ok := os.LookupEnv(name)
-		if !ok {
-			missing = append(missing, name)
-			return ""
-		}
-		return v
-	})
-	if len(missing) > 0 {
-		return "", fmt.Errorf("environment variable $%s is not set", strings.Join(missing, ", $"))
-	}
-	return expanded, nil
-}
-
-// validateHeaderName reports the offending header by name, where the transport
-// would only refuse the request.
+// validateHeaderName names the offending header; ReadContext discards the
+// transport's own error.
 func validateHeaderName(name string) error {
-	if name == "" {
-		return fmt.Errorf("header name cannot be empty")
-	}
-	if strings.ContainsFunc(name, func(r rune) bool {
-		return r <= ' ' || r == ':' || r == 0x7f
-	}) {
-		return fmt.Errorf("header name %q contains invalid characters", name)
+	if !httpguts.ValidHeaderFieldName(name) {
+		return fmt.Errorf("invalid header name %q", name)
 	}
 	return nil
 }
