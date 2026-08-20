@@ -3,10 +3,41 @@ package fsext
 import (
 	"os"
 	"path/filepath"
+	"sort"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 )
+
+func TestFastRecursiveGlobAllFilesIncludesHiddenEntries(t *testing.T) {
+	t.Parallel()
+
+	root := filepath.Join(t.TempDir(), "root with spaces")
+	files := []string{
+		".hidden-file-a.aaa",
+		"file-a.bbb",
+		"folder-a/.hidden-file-b.ccc",
+		"folder-a/file-b.ddd",
+		".hidden-folder-a/file-c.eee",
+		".hidden-folder-a/deep-folder-a/.hidden-file-c.fff",
+	}
+	for _, file := range files {
+		path := filepath.Join(root, filepath.FromSlash(file))
+		require.NoError(t, os.MkdirAll(filepath.Dir(path), 0o755))
+		require.NoError(t, os.WriteFile(path, nil, 0o600))
+	}
+
+	got, ok, err := FastRecursiveGlob(filepath.Join(root, "**", "*"))
+	require.NoError(t, err)
+	require.True(t, ok)
+
+	expected := make([]string, 0, len(files))
+	for _, file := range files {
+		expected = append(expected, filepath.ToSlash(filepath.Join(root, filepath.FromSlash(file))))
+	}
+	sort.Strings(expected)
+	require.Equal(t, expected, got)
+}
 
 func TestFastRecursiveGlob(t *testing.T) {
 	t.Parallel()
