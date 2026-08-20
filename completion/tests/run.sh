@@ -3,6 +3,10 @@
 # wrapper against them. The engine itself is covered by the Go tests.
 set -u
 
+# fish, Nushell and PowerShell resolve the binary through these; an ambient value
+# would silently test something other than the binary built below.
+unset TASK_EXE GO_TASK_PROGNAME
+
 here=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 root=$(cd "$here/../.." && pwd)
 

@@ -23,7 +23,7 @@ _task() {
   local cur prev words cword
 
   # Completion directives, mirroring internal/complete/complete.go.
-  local -ri NO_SPACE=2 NO_FILE_COMP=4 FILTER_FILE_EXT=8 FILTER_DIRS=16
+  local -ri NO_SPACE=2 NO_FILE_COMP=4 FILTER_FILE_EXT=8 FILTER_DIRS=16 KEEP_ORDER=32
 
   # `=` and `:` out of the word breaks: `--output=`, `docs:serve` stay one token.
   _init_completion -n =: || return
@@ -77,6 +77,11 @@ _task() {
 
   if (( directive & NO_SPACE )); then
     compopt -o nospace 2>/dev/null
+  fi
+
+  # nosort needs bash 4.4; the 3.2 shipped by macOS ignores it and stays sorted.
+  if (( directive & KEEP_ORDER )); then
+    compopt -o nosort 2>/dev/null
   fi
 
   __ltrim_colon_completions "$cur"
