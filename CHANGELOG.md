@@ -7,6 +7,15 @@
 - Added versioned Homebrew casks (`go-task@<major>.<minor>`) to install a specific
   minor version of Task (#3023 by @vmaerten).
 
+- Added a new completion engine that unifies Bash, Fish, Zsh, Nushell and
+  PowerShell behind a single `task __complete` command, so every shell offers
+  the same suggestions: task names, aliases, flags, flag values and per-task CLI
+  variables. The Zsh `show-aliases` and `verbose` zstyles keep working, now
+  backed by the `--no-aliases` and `--no-descriptions` completion flags. It is
+  opt-in for now via `task --new-completion <shell>`, leaving `--completion`
+  unchanged, and will become the default in a future release (#2897 by
+  @vmaerten).
+
 ### 📦 Package API
 
 - Bumped the minimum Go version to 1.26. Task follows Go's two-latest support
