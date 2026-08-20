@@ -4,16 +4,22 @@ includes:
   included: ./included
   included_taskfile: ./Taskfile2.yml
   included_without_dir:
-    taskfile:  ./module1
+    taskfile: ./module1
   included_taskfile_without_dir:
-    taskfile:  ./module1/Taskfile.yml
+    taskfile: ./module1/Taskfile.yml
   included_with_dir:
-    taskfile:  ./module2
-    dir:  ./module2
+    taskfile: ./module2
+    dir: ./module2
   included_taskfile_with_dir:
-    taskfile:  ./module2/Taskfile.yml
-    dir:  ./module2
+    taskfile: ./module2/Taskfile.yml
+    dir: ./module2
   included_os: ./Taskfile_{{OS}}.yml
+  include_common_task1:
+    taskfile: ./common/Taskfile.yml
+    dir: .
+  include_common_task2:
+    taskfile: ./common/Taskfile.yml
+    dir: ./common
 
 tasks:
   default:
@@ -26,6 +32,8 @@ tasks:
       - task: included_with_dir:gen_file
       - task: included_taskfile_with_dir:gen_dir
       - task: included_os:gen
+      - task: include_common_task1:show
+      - task: include_common_task2:show
 
   gen:
     cmds:
