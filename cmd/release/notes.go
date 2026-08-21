@@ -20,7 +20,11 @@ func notes(w io.Writer) error {
 		return err
 	}
 
-	_, err = fmt.Fprintln(w, changelogSection(string(b), version))
+	section := changelogSection(string(b), version)
+	if section == "" {
+		return nil
+	}
+	_, err = fmt.Fprintln(w, section)
 	return err
 }
 
