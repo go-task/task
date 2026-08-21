@@ -486,3 +486,66 @@ requires to be static. Three consequences are worth knowing:
 use ($nu.data-dir | path join "vendor/autoload/task-completions.nu") *
 alias go-task = task
 ```
+
+### Trying the new completion engine (experimental)
+
+Task is migrating to a new completion engine, where every shell shares a single
+source of truth: the `task __complete` command. This gives Bash, Zsh, Fish,
+Nushell and PowerShell the exact same suggestions (task names, aliases, flags,
+flag values and `requires` vars, including their enums). It is currently
+**opt-in** and will become the default of `--completion` in a future release.
+
+To try it, swap `--completion` for `--new-completion` in any of the snippets
+above, for example:
+
+::: code-group
+
+```shell [bash]
+# ~/.bashrc
+eval "$(task --new-completion bash)"
+```
+
+```shell [zsh]
+# ~/.zshrc
+eval "$(task --new-completion zsh)"
+```
+
+```shell [fish]
+# ~/.config/fish/config.fish
+task --new-completion fish | source
+```
+
+```powershell [powershell]
+# $PROFILE\Microsoft.PowerShell_profile.ps1
+Invoke-Expression  (&task --new-completion powershell | Out-String)
+```
+
+```nu [nushell]
+# ~/.config/nushell/config.nu
+mkdir ($nu.data-dir | path join "vendor/autoload")
+task --new-completion nu | save --force ($nu.data-dir | path join "vendor/autoload/task-completions.nu")
+```
+
+:::
+
+The `verbose` and `show-aliases` zstyles documented above work with the new Zsh
+completion too.
+
+Nushell shares a single external completer between every command, so the script
+chains to the one already configured — carapace and friends keep working. Load
+it from an autoload directory as shown above rather than from `config.nu`, so
+that your own completer is the one being chained to. If you would rather wire it
+yourself, the script also exposes a `task-external-completer` command:
+
+```nu
+$env.config.completions.external.completer = {|spans|
+    match ($spans | first) {
+        task => (task-external-completer $spans)
+        _ => (do $my_other_completer $spans)
+    }
+}
+```
+
+Two engine directives behave differently under Nushell by design: it never
+appends a space after an external completion (so `NoSpace` is a no-op) and never
+re-sorts the results (so `KeepOrder` is always honoured).
