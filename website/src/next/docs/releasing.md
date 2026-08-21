@@ -16,6 +16,10 @@ of the Taskfile.
 artifacts automatically when a new Git tag is pushed to `main` branch (raw
 executables and DEB and RPM packages).
 
+The body of the GitHub release is the section of the `CHANGELOG.md` matching the
+version being released, extracted by `go run ./cmd/release --notes`. A version
+without changelog entries is released with an empty body.
+
 Raw executables can also be reproduced and verified locally by
 checking out a specific tag and calling `goreleaser build`, using the Go version
 defined in the above GitHub Actions.

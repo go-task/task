@@ -217,7 +217,6 @@ tasks:
 
         Please wait for the CI to finish and then do the following:
 
-        - Copy the changelog for v{{.VERSION}} to the GitHub release
         - Update and push the snapcraft manifest in https://github.com/go-task/snap/blob/main/snap/snapcraft.yaml
     preconditions:
       - sh: test $(git rev-parse --abbrev-ref HEAD) = "main"
