@@ -46,6 +46,10 @@ jobs:
         run: pnpm install
         working-directory: website
 
+      # GoReleaser builds the snap packages but does not install snapcraft.
+      - name: Install snapcraft
+        run: sudo snap install snapcraft --classic
+
       - name: Generate release notes
         run: go run ./cmd/release --notes > "${RUNNER_TEMP}/release-notes.md"
 
@@ -62,6 +66,7 @@ jobs:
           CLOUDSMITH_TOKEN: ${{secrets.CLOUDSMITH_TOKEN}}
           DISCORD_WEBHOOK_ID: ${{secrets.DISCORD_WEBHOOK_ID}}
           DISCORD_WEBHOOK_TOKEN: ${{secrets.DISCORD_WEBHOOK_TOKEN}}
+          SNAPCRAFT_STORE_CREDENTIALS: ${{secrets.SNAPCRAFT_STORE_CREDENTIALS}}
 
       - name: Deploy Website
         shell: bash

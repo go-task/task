@@ -214,10 +214,6 @@ tasks:
         sh: "go run ./cmd/release --version {{index .MATCH 0}}"
       COMPLETE_MESSAGE: |
         Creating release with GoReleaser: https://github.com/go-task/task/actions/workflows/release.yml
-
-        Please wait for the CI to finish and then do the following:
-
-        - Update and push the snapcraft manifest in https://github.com/go-task/snap/blob/main/snap/snapcraft.yaml
     preconditions:
       - sh: test $(git rev-parse --abbrev-ref HEAD) = "main"
         msg: "You must be on the main branch to release"
