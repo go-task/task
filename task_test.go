@@ -2610,6 +2610,124 @@ Bye!
 	assert.Equal(t, strings.TrimSpace(buff.String()), expectedOutputOrder)
 }
 
+func TestOutputGroupRemainsPerCommandByDefault(t *testing.T) {
+	t.Parallel()
+
+	const dir = "testdata/output_group"
+	var buff bytes.Buffer
+	e := task.NewExecutor(
+		task.WithDir(dir),
+		task.WithStdout(&buff),
+		task.WithStderr(&buff),
+		task.WithSilent(true),
+	)
+	require.NoError(t, e.Setup())
+
+	require.NoError(t, e.Run(t.Context(), &task.Call{Task: "multi"}))
+	expectedOutput := strings.TrimSpace(`
+::group::multi
+first
+::endgroup::
+::group::multi
+second
+::endgroup::
+`)
+	assert.Equal(t, expectedOutput, strings.TrimSpace(buff.String()))
+}
+
+func TestOutputGroupByTask(t *testing.T) {
+	t.Parallel()
+
+	const dir = "testdata/output_group_by_task"
+	var buff bytes.Buffer
+	e := task.NewExecutor(
+		task.WithDir(dir),
+		task.WithStdout(&buff),
+		task.WithStderr(&buff),
+	)
+	require.NoError(t, e.Setup())
+
+	require.NoError(t, e.Run(t.Context(), &task.Call{Task: "multi"}))
+	expectedMulti := strings.TrimSpace(`
+::group::multi
+first
+second
+::endgroup::
+`)
+	assert.Equal(t, expectedMulti, strings.TrimSpace(buff.String()))
+
+	buff.Reset()
+	require.NoError(t, e.Run(t.Context(), &task.Call{Task: "deferred"}))
+	expectedDeferred := strings.TrimSpace(`
+::group::deferred
+first
+second
+deferred
+::endgroup::
+`)
+	assert.Equal(t, expectedDeferred, strings.TrimSpace(buff.String()))
+
+	buff.Reset()
+	require.NoError(t, e.Run(t.Context(), &task.Call{Task: "parent"}))
+	expectedParent := strings.TrimSpace(`
+::group::child
+child
+::endgroup::
+::group::parent
+parent-before
+parent-after
+::endgroup::
+`)
+	assert.Equal(t, expectedParent, strings.TrimSpace(buff.String()))
+
+	var parallelBuff SyncBuffer
+	parallelExecutor := task.NewExecutor(
+		task.WithDir(dir),
+		task.WithStdout(&parallelBuff),
+		task.WithStderr(&parallelBuff),
+	)
+	require.NoError(t, parallelExecutor.Setup())
+	require.NoError(t, parallelExecutor.Run(t.Context(), &task.Call{Task: "parallel"}))
+
+	parallelOutput := parallelBuff.buf.String()
+	blocks := strings.Split(strings.TrimSpace(parallelOutput), "::group::")
+	require.Len(t, blocks, 3)
+	for _, block := range blocks[1:] {
+		assert.Equal(t, 1, strings.Count(block, "::endgroup::"))
+		assert.False(t, strings.Contains(block, "dep-one-first") && strings.Contains(block, "dep-two-first"))
+	}
+	assert.Contains(t, parallelOutput, "dep-one-first\ndep-one-second")
+	assert.Contains(t, parallelOutput, "dep-two-first\ndep-two-second")
+}
+
+func TestOutputGroupByTaskErrorOnly(t *testing.T) {
+	t.Parallel()
+
+	const dir = "testdata/output_group_by_task_error_only"
+	var buff bytes.Buffer
+	e := task.NewExecutor(
+		task.WithDir(dir),
+		task.WithStdout(&buff),
+		task.WithStderr(&buff),
+	)
+	require.NoError(t, e.Setup())
+
+	require.NoError(t, e.Run(t.Context(), &task.Call{Task: "passing"}))
+	assert.Empty(t, buff.String())
+
+	buff.Reset()
+	require.Error(t, e.Run(t.Context(), &task.Call{Task: "failing"}))
+	assert.Equal(t, "failing-first\nfailing-second\n", buff.String())
+
+	buff.Reset()
+	require.NoError(t, e.Run(t.Context(), &task.Call{Task: "ignored-command"}))
+	assert.Empty(t, buff.String())
+
+	buff.Reset()
+	require.NoError(t, e.Run(t.Context(), &task.Call{Task: "ignored-task"}))
+	assert.Equal(t, "child-failing-first\nchild-failing-second\n", buff.String())
+}
+
 func TestOutputGroupErrorOnlySwallowsOutputOnSuccess(t *testing.T) {
 	t.Parallel()
 

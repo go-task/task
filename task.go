@@ -3,6 +3,7 @@ package task
 import (
 	"context"
 	"fmt"
+	"io"
 	"os"
 	"runtime"
 	"slices"
@@ -203,7 +204,8 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) error {
 	release := e.acquireConcurrencyLimit()
 	defer release()
 
-	if err = e.startExecution(ctx, t, func(ctx context.Context) error {
+	var taskOut *taskOutput
+	err = e.startExecution(ctx, t, func(ctx context.Context) error {
 		e.Logger.VerboseErrf(logger.Magenta, "task: %q started\n", call.Task)
 		if err := e.runDeps(ctx, t); err != nil {
 			return err
@@ -253,15 +255,22 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) error {
 			e.Logger.Errf(logger.Red, "task: cannot make directory %q: %v\n", t.Dir, err)
 		}
 
+		if e.OutputStyle.Name == "group" && e.OutputStyle.Group.ByTask && !t.Interactive && !e.Dry {
+			taskOut, err = e.newTaskOutput(t, call)
+			if err != nil {
+				return err
+			}
+		}
+
 		var deferredExitCode uint8
 
 		for i := range t.Cmds {
 			if t.Cmds[i].Defer {
-				defer e.runDeferred(t, call, i, t.Vars, &deferredExitCode)
+				defer e.runDeferred(t, call, i, t.Vars, &deferredExitCode, taskOut)
 				continue
 			}
 
-			if err := e.runCommand(ctx, t, call, i); err != nil {
+			if err := e.runCommand(ctx, t, call, i, taskOut); err != nil {
 				if err2 := e.statusOnError(t); err2 != nil {
 					e.Logger.VerboseErrf(logger.Yellow, "task: error cleaning status on error: %v\n", err2)
 				}
@@ -282,9 +291,21 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) error {
 				return err
 			}
 		}
+
 		e.Logger.VerboseErrf(logger.Magenta, "task: %q finished\n", call.Task)
 		return nil
-	}); err != nil {
+	})
+
+	if taskOut != nil {
+		if closeErr := taskOut.close(err); closeErr != nil {
+			e.Logger.Errf(logger.Red, "task: unable to close writer: %v\n", closeErr)
+			if err == nil {
+				err = closeErr
+			}
+		}
+	}
+
+	if err != nil {
 		return &errors.TaskRunError{TaskName: t.Name(), Err: err}
 	}
 
@@ -339,7 +360,39 @@ func (e *Executor) runDeps(ctx context.Context, t *ast.Task) error {
 	return g.Wait()
 }
 
-func (e *Executor) runDeferred(t *ast.Task, call *Call, i int, vars *ast.Vars, deferredExitCode *uint8) {
+type taskOutput struct {
+	stdOut, stdErr io.Writer
+	closer         output.CloseFunc
+	failed         bool
+}
+
+func (e *Executor) newTaskOutput(t *ast.Task, call *Call) (*taskOutput, error) {
+	vars, err := e.Compiler.FastGetVariables(t, call)
+	if err != nil {
+		return nil, fmt.Errorf("task: failed to get variables: %w", err)
+	}
+
+	stdOut, stdErr, closer := e.Output.WrapWriter(
+		e.Stdout,
+		e.Stderr,
+		t.Prefix,
+		&templater.Cache{Vars: vars},
+	)
+	return &taskOutput{
+		stdOut: stdOut,
+		stdErr: stdErr,
+		closer: closer,
+	}, nil
+}
+
+func (o *taskOutput) close(err error) error {
+	if err == nil && o.failed {
+		err = fmt.Errorf("one or more task commands failed")
+	}
+	return o.closer(err)
+}
+
+func (e *Executor) runDeferred(t *ast.Task, call *Call, i int, vars *ast.Vars, deferredExitCode *uint8, taskOut *taskOutput) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -358,12 +411,12 @@ func (e *Executor) runDeferred(t *ast.Task, call *Call, i int, vars *ast.Vars, d
 	cmd.If = templater.ReplaceWithExtra(cmd.If, cache, extra)
 	cmd.Vars = templater.ReplaceVarsWithExtra(cmd.Vars, cache, extra)
 
-	if err := e.runCommand(ctx, t, call, i); err != nil {
+	if err := e.runCommand(ctx, t, call, i, taskOut); err != nil {
 		e.Logger.VerboseErrf(logger.Yellow, "task: ignored error in deferred cmd: %s\n", err.Error())
 	}
 }
 
-func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call *Call, i int) error {
+func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call *Call, i int, taskOut *taskOutput) error {
 	cmd := t.Cmds[i]
 
 	// In place before the if condition, which would otherwise run unbounded.
@@ -403,6 +456,9 @@ func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call *Call, i in
 			e.Logger.VerboseErrf(logger.Yellow, "task: [%s] task error ignored: %v\n", t.Name(), err)
 			return nil
 		}
+		if taskOut != nil && err != nil {
+			taskOut.failed = true
+		}
 		return err
 	case cmd.Cmd != "":
 		if !shouldRunOnCurrentPlatform(cmd.Platforms) {
@@ -418,16 +474,23 @@ func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call *Call, i in
 			return nil
 		}
 
-		outputWrapper := e.Output
-		if t.Interactive {
-			outputWrapper = output.Interleaved{}
+		var stdOut, stdErr io.Writer
+		var closer output.CloseFunc
+		var err error
+		if taskOut != nil {
+			stdOut, stdErr = taskOut.stdOut, taskOut.stdErr
+		} else {
+			outputWrapper := e.Output
+			if t.Interactive {
+				outputWrapper = output.Interleaved{}
+			}
+			vars, err := e.Compiler.FastGetVariables(t, call)
+			outputTemplater := &templater.Cache{Vars: vars}
+			if err != nil {
+				return fmt.Errorf("task: failed to get variables: %w", err)
+			}
+			stdOut, stdErr, closer = outputWrapper.WrapWriter(e.Stdout, e.Stderr, t.Prefix, outputTemplater)
 		}
-		vars, err := e.Compiler.FastGetVariables(t, call)
-		outputTemplater := &templater.Cache{Vars: vars}
-		if err != nil {
-			return fmt.Errorf("task: failed to get variables: %w", err)
-		}
-		stdOut, stdErr, closer := outputWrapper.WrapWriter(e.Stdout, e.Stderr, t.Prefix, outputTemplater)
 
 		err = execext.RunCommand(ctx, &execext.RunCommandOptions{
 			Command:   cmd.Cmd,
@@ -439,8 +502,10 @@ func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call *Call, i in
 			Stdout:    stdOut,
 			Stderr:    stdErr,
 		})
-		if closeErr := closer(err); closeErr != nil {
-			e.Logger.Errf(logger.Red, "task: unable to close writer: %v\n", closeErr)
+		if taskOut == nil {
+			if closeErr := closer(err); closeErr != nil {
+				e.Logger.Errf(logger.Red, "task: unable to close writer: %v\n", closeErr)
+			}
 		}
 		if err != nil && timedOut(ctx, timeout) {
 			err = timeout
@@ -448,6 +513,9 @@ func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call *Call, i in
 		if cmd.IgnoreError && isCommandFailure(err) {
 			e.Logger.VerboseErrf(logger.Yellow, "task: [%s] command error ignored: %v\n", t.Name(), err)
 			return nil
+		}
+		if taskOut != nil && err != nil {
+			taskOut.failed = true
 		}
 		return err
 	default:

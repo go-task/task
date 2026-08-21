@@ -48,6 +48,7 @@ Register-ArgumentCompleter -CommandName $cmdNames -ScriptBlock {
 			[CompletionResult]::new('--output-group-begin', '--output-group-begin', [CompletionResultType]::ParameterName, 'template before group'),
 			[CompletionResult]::new('--output-group-end', '--output-group-end', [CompletionResultType]::ParameterName, 'template after group'),
 			[CompletionResult]::new('--output-group-error-only', '--output-group-error-only', [CompletionResultType]::ParameterName, 'hide successful output'),
+			[CompletionResult]::new('--output-group-by-task', '--output-group-by-task', [CompletionResultType]::ParameterName, 'group all task output together'),
 			[CompletionResult]::new('-p', '-p', [CompletionResultType]::ParameterName, 'execute in parallel'),
 			[CompletionResult]::new('--parallel', '--parallel', [CompletionResultType]::ParameterName, 'execute in parallel'),
 			[CompletionResult]::new('-s', '-s', [CompletionResultType]::ParameterName, 'silent mode'),

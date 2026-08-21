@@ -157,6 +157,7 @@ export extern "task" [
   --output-group-begin: string                    # message template printed before a task's grouped output
   --output-group-end: string                      # message template printed after a task's grouped output
   --output-group-error-only                       # swallow the output of successful tasks
+  --output-group-by-task                          # group all task output together
   --color(-c)                                     # colored output, enabled by default
   --silent(-s)                                    # disable echoing
   --verbose(-v)                                   # enable verbose mode
