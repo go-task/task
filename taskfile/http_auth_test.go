@@ -41,24 +41,51 @@ func TestResolveAuthHeaders(t *testing.T) { //nolint:paralleltest // t.Setenv ca
 			want:        map[string]string{"PRIVATE-TOKEN": "token"},
 		},
 		{
-			name:        "braced environment variable",
-			hostHeaders: HostHeaders{"gitlab.com": {"PRIVATE-TOKEN": "${TASK_TEST_TOKEN}"}}, //nolint:gosec // an env var reference, not a credential
+			name:        "environment variable",
+			hostHeaders: HostHeaders{"gitlab.com": {"PRIVATE-TOKEN": `{{env "TASK_TEST_TOKEN"}}`}}, //nolint:gosec // an env var reference, not a credential
 			host:        "gitlab.com",
 			env:         map[string]string{"TASK_TEST_TOKEN": "s3cret"},
 			want:        map[string]string{"PRIVATE-TOKEN": "s3cret"},
 		},
 		{
 			name:        "environment variable inside a longer value",
-			hostHeaders: HostHeaders{"gitlab.com": {"Authorization": "Bearer $TASK_TEST_TOKEN"}},
+			hostHeaders: HostHeaders{"gitlab.com": {"Authorization": `Bearer {{env "TASK_TEST_TOKEN"}}`}},
 			host:        "gitlab.com",
 			env:         map[string]string{"TASK_TEST_TOKEN": "s3cret"},
 			want:        map[string]string{"Authorization": "Bearer s3cret"},
 		},
 		{
 			name:        "undefined environment variable expands to nothing",
-			hostHeaders: HostHeaders{"gitlab.com": {"PRIVATE-TOKEN": "${TASK_TEST_UNSET}"}}, //nolint:gosec // an env var reference, not a credential
+			hostHeaders: HostHeaders{"gitlab.com": {"PRIVATE-TOKEN": `{{env "TASK_TEST_UNSET"}}`}}, //nolint:gosec // an env var reference, not a credential
 			host:        "gitlab.com",
 			want:        map[string]string{"PRIVATE-TOKEN": ""},
+		},
+		{
+			name:        "functions compose, so Basic auth needs no manual base64",
+			hostHeaders: HostHeaders{"gitlab.com": {"Authorization": `Basic {{ printf "%s:%s" (env "TASK_TEST_USER") (env "TASK_TEST_TOKEN") | b64enc }}`}},
+			host:        "gitlab.com",
+			env:         map[string]string{"TASK_TEST_USER": "alice", "TASK_TEST_TOKEN": "s3cret"},
+			want:        map[string]string{"Authorization": "Basic YWxpY2U6czNjcmV0"},
+		},
+		{
+			// The .taskrc is read before any Taskfile, so no variable exists.
+			name:        "a variable reference resolves to nothing",
+			hostHeaders: HostHeaders{"gitlab.com": {"PRIVATE-TOKEN": "{{.TASK_TEST_TOKEN}}"}}, //nolint:gosec // a template, not a credential
+			host:        "gitlab.com",
+			env:         map[string]string{"TASK_TEST_TOKEN": "s3cret"},
+			want:        map[string]string{"PRIVATE-TOKEN": ""},
+		},
+		{
+			name:        "a literal value is left untouched",
+			hostHeaders: HostHeaders{"gitlab.com": {"PRIVATE-TOKEN": "p$ssw0rd"}}, //nolint:gosec // a test fixture
+			host:        "gitlab.com",
+			want:        map[string]string{"PRIVATE-TOKEN": "p$ssw0rd"},
+		},
+		{
+			name:        "malformed template",
+			hostHeaders: HostHeaders{"gitlab.com": {"PRIVATE-TOKEN": `{{env "TASK_TEST_TOKEN"`}}, //nolint:gosec // a template, not a credential
+			host:        "gitlab.com",
+			wantErr:     `remote auth for host "gitlab.com": template: :1: unclosed action`,
 		},
 		{
 			name:        "header name with a space",
@@ -152,7 +179,7 @@ func TestHTTPNodeAuthHeaders(t *testing.T) { //nolint:paralleltest // t.Setenv c
 	t.Setenv("TASK_TEST_TOKEN", "s3cret")
 	node, err := NewHTTPNode(srv.URL+"/Taskfile.yml", "", true,
 		WithAuthHeaders(HostHeaders{
-			mustHost(t, srv.URL): {"PRIVATE-TOKEN": "${TASK_TEST_TOKEN}"}, //nolint:gosec // an env var reference, not a credential
+			mustHost(t, srv.URL): {"PRIVATE-TOKEN": `{{env "TASK_TEST_TOKEN"}}`}, //nolint:gosec // an env var reference, not a credential
 		}),
 	)
 	require.NoError(t, err)
@@ -200,7 +227,7 @@ func TestHTTPNodeAuthHeadersNotSentOnRedirect(t *testing.T) {
 func TestHTTPNodeAuthHeadersResolvedLazily(t *testing.T) { //nolint:paralleltest // t.Setenv cannot be used in parallel tests
 	node, err := NewHTTPNode("https://gitlab.com/Taskfile.yml", "", false,
 		WithAuthHeaders(HostHeaders{
-			"gitlab.com": {"PRIVATE-TOKEN": "${TASK_TEST_LAZY}"}, //nolint:gosec // an env var reference, not a credential
+			"gitlab.com": {"PRIVATE-TOKEN": `{{env "TASK_TEST_LAZY"}}`}, //nolint:gosec // an env var reference, not a credential
 		}),
 	)
 	require.NoError(t, err)
