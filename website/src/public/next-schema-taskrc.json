@@ -49,6 +49,28 @@
           "items": {
             "type": "string"
           }
+        },
+        "auth": {
+          "type": "array",
+          "description": "HTTP headers to send when downloading remote Taskfiles, per host.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "host": {
+                "type": "string",
+                "description": "Host the headers apply to, including the port if the URL has one (e.g., 'gitlab.com', 'example.com:8080')."
+              },
+              "headers": {
+                "type": "object",
+                "description": "Headers to send. Values may reference environment variables with ${VAR} or $VAR.",
+                "additionalProperties": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": ["host", "headers"],
+            "additionalProperties": false
+          }
         }
       },
       "additionalProperties": false
