@@ -7,10 +7,10 @@
 - Added versioned Homebrew casks (`go-task@<major>.<minor>`) to install a specific
   minor version of Task (#3023 by @vmaerten).
 - Added a `remote.auth` config option to send HTTP headers when downloading a
-  remote Taskfile, configured per host. Header values may reference environment
-  variables with `${VAR}`. This keeps the credential out of the include URL,
-  where it would leak into error messages and the confirmation prompt (#2329 by
-  @vmaerten).
+  remote Taskfile, configured per host. Header values support templating
+  functions, e.g. `{{env "GITLAB_TOKEN"}}`. This keeps the credential out of the
+  include URL, where it would leak into error messages and the confirmation
+  prompt (#2329 by @vmaerten).
 
 ### 🐛 Fixes
 

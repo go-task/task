@@ -312,10 +312,10 @@ remote:
   auth:
     - host: gitlab.com
       headers:
-        PRIVATE-TOKEN: ${GITLAB_TOKEN}
+        PRIVATE-TOKEN: '{{env "GITLAB_TOKEN"}}'
     - host: artifacts.example.com:8443
       headers:
-        Authorization: Bearer ${ARTIFACTS_TOKEN}
+        Authorization: 'Bearer {{env "ARTIFACTS_TOKEN"}}'
 ```
 
 This is the recommended way to authenticate a remote Taskfile. Unlike a
@@ -326,10 +326,28 @@ commit.
 Each entry applies to a single host, matched exactly and including the port if
 the URL has one — the same rule as
 [`remote.trusted-hosts`](#remote-trusted-hosts). Header values may reference
-environment variables with `${VAR}` or `$VAR`, read when Task contacts the host.
-An undefined variable expands to nothing, so the header is sent empty and the
-server rejects it — prefer an environment variable over a literal value, which
-cannot contain a `$` followed by a name.
+[templating functions](./templating.md), evaluated when Task contacts the host.
+Values starting with `{{` must be quoted, as YAML would otherwise read them as a
+mapping. An undefined environment variable expands to nothing, so the header is
+sent empty and the server rejects it with a `401`.
+
+Functions compose, so an `Authorization` header needs no manual encoding:
+
+```yaml
+remote:
+  auth:
+    - host: artifacts.example.com
+      headers:
+        Authorization: 'Basic {{ printf "%s:%s" (env "USER") (env "PASS") | b64enc }}'
+```
+
+::: warning
+
+Only functions are available here — `{{.GITLAB_TOKEN}}` and other variable
+references resolve to nothing. The configuration file is read before any
+Taskfile, so no variable exists yet. Use `{{env "GITLAB_TOKEN"}}` instead.
+
+:::
 
 The header your server expects depends on the service:
 
@@ -409,7 +427,7 @@ remote:
   auth:
     - host: gitlab.com
       headers:
-        PRIVATE-TOKEN: ${GITLAB_TOKEN}
+        PRIVATE-TOKEN: '{{env "GITLAB_TOKEN"}}'
   cacert: ''
   cert: ''
   cert-key: ''
