@@ -171,11 +171,6 @@ includes:
   my-remote-namespace: https://{{.TOKEN}}@raw.githubusercontent.com/my-org/my-repo/main/Taskfile.yml
 ```
 
-Prefer the [`remote.auth`](./reference/config.md#remote-auth) configuration
-option when the server accepts a header. A credential in the URL ends up in
-error messages and in the confirmation prompt, and the include can no longer be
-committed as-is.
-
 ## Special Variables
 
 The file-path [special variables](../docs/reference/templating.md#file-paths)
