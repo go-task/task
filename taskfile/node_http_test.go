@@ -9,6 +9,7 @@ import (
 	"encoding/pem"
 	"math/big"
 	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"testing"
@@ -16,6 +17,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/go-task/task/v3/errors"
 )
 
 func TestHTTPNode_CacheKey(t *testing.T) {
@@ -62,10 +65,14 @@ func TestHTTPNode_CacheKey(t *testing.T) {
 func TestBuildHTTPClient_Default(t *testing.T) {
 	t.Parallel()
 
-	// When no TLS customization is needed, should return http.DefaultClient
+	// When no TLS customization is needed, should copy http.DefaultClient
 	client, err := buildHTTPClient(false, "", "", "")
 	require.NoError(t, err)
-	assert.Equal(t, http.DefaultClient, client)
+	assert.NotSame(t, http.DefaultClient, client)
+	assert.Equal(t, http.DefaultClient.Transport, client.Transport)
+	assert.NotNil(t, client.CheckRedirect)
+	// The shared client must keep following redirects as before.
+	assert.Nil(t, http.DefaultClient.CheckRedirect)
 }
 
 func TestBuildHTTPClient_Insecure(t *testing.T) {
@@ -281,4 +288,81 @@ func generateTestCACert(t *testing.T) []byte {
 		Type:  "CERTIFICATE",
 		Bytes: certDER,
 	})
+}
+
+func TestCheckRedirect(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name    string
+		from    string
+		to      string
+		wantErr bool
+	}{
+		{name: "https to http is refused", from: "https://example.com", to: "http://example.com", wantErr: true},
+		{name: "https to http on another host is refused", from: "https://example.com", to: "http://evil.test", wantErr: true},
+		{name: "https to https is allowed", from: "https://example.com", to: "https://other.example.com"},
+		{name: "http to https is allowed", from: "http://example.com", to: "https://example.com"},
+		{name: "http to http is allowed, the entrypoint already opted in", from: "http://example.com", to: "http://other.example.com"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			via := []*http.Request{mustGet(t, tt.from)}
+			err := checkRedirect(mustGet(t, tt.to), via)
+			if !tt.wantErr {
+				require.NoError(t, err)
+				return
+			}
+			var notSecure *errors.TaskfileNotSecureError
+			require.ErrorAs(t, err, &notSecure)
+		})
+	}
+}
+
+func TestCheckRedirectFirstRequest(t *testing.T) {
+	t.Parallel()
+
+	require.NoError(t, checkRedirect(mustGet(t, "http://example.com"), nil))
+}
+
+func TestCheckRedirectStopsAfterTenHops(t *testing.T) {
+	t.Parallel()
+
+	via := make([]*http.Request, 10)
+	for i := range via {
+		via[i] = mustGet(t, "https://example.com")
+	}
+	require.Error(t, checkRedirect(mustGet(t, "https://example.com"), via))
+}
+
+// The downgrade is refused even with --insecure, which here also makes the
+// client accept the test server's self-signed certificate.
+func TestBuildHTTPClientRefusesDowngradeWithInsecure(t *testing.T) {
+	t.Parallel()
+
+	plain := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer plain.Close()
+
+	secure := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, plain.URL+"/Taskfile.yml", http.StatusFound)
+	}))
+	defer secure.Close()
+
+	client, err := buildHTTPClient(true, "", "", "")
+	require.NoError(t, err)
+
+	_, err = client.Do(mustGet(t, secure.URL+"/Taskfile.yml")) //nolint:bodyclose // the request never completes
+	var notSecure *errors.TaskfileNotSecureError
+	require.ErrorAs(t, err, &notSecure)
+}
+
+func mustGet(t *testing.T, rawURL string) *http.Request {
+	t.Helper()
+	req, err := http.NewRequestWithContext(t.Context(), http.MethodGet, rawURL, nil)
+	require.NoError(t, err)
+	return req
 }

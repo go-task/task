@@ -260,6 +260,10 @@ Taskfile that is downloaded via an unencrypted connection. Sources that are not
 protected by TLS are vulnerable to man-in-the-middle attacks and should be
 avoided unless you know what you are doing.
 
+A server answering an `https` URL with a redirect to `http` is refused, even
+with `--insecure`. Requesting an `http` entrypoint is your decision; being sent
+to one is the server's.
+
 #### Custom Certificates
 
 If your remote Taskfiles are hosted on a server that uses a custom CA
