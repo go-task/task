@@ -36,7 +36,7 @@ func buildHTTPClient(insecure bool, caCert, cert, certKey string) (*http.Client,
 	// hand it out: setting CheckRedirect on it would apply process-wide.
 	if !insecure && caCert == "" && cert == "" {
 		client := *http.DefaultClient
-		client.CheckRedirect = checkRedirect
+		client.CheckRedirect = checkRedirect(insecure)
 		return &client, nil
 	}
 
@@ -70,24 +70,29 @@ func buildHTTPClient(insecure bool, caCert, cert, certKey string) (*http.Client,
 		Transport: &http.Transport{
 			TLSClientConfig: tlsConfig,
 		},
-		CheckRedirect: checkRedirect,
+		CheckRedirect: checkRedirect(insecure),
 	}, nil
 }
 
-// checkRedirect refuses a redirect that would drop TLS. --insecure does not
-// loosen it: an http:// entrypoint is the user's choice, a redirect is not.
-func checkRedirect(req *http.Request, via []*http.Request) error {
-	// Setting CheckRedirect replaces the default cap, so it has to be kept.
-	if len(via) >= 10 {
-		return fmt.Errorf("stopped after 10 redirects")
-	}
-	if len(via) == 0 {
+// checkRedirect refuses a redirect that would drop TLS, unless --insecure was
+// given: that flag also disables certificate verification, so refusing the
+// plaintext hop would guard nothing an attacker could not walk around.
+func checkRedirect(insecure bool) func(*http.Request, []*http.Request) error {
+	return func(req *http.Request, via []*http.Request) error {
+		// Setting CheckRedirect replaces the default cap, so it has to be kept.
+		if len(via) >= 10 {
+			return fmt.Errorf("stopped after 10 redirects")
+		}
+		if len(via) == 0 {
+			return nil
+		}
+		if !insecure &&
+			via[len(via)-1].URL.Scheme == "https" &&
+			req.URL.Scheme == "http" {
+			return &errors.TaskfileNotSecureError{URI: req.URL.Redacted(), Redirect: true}
+		}
 		return nil
 	}
-	if via[len(via)-1].URL.Scheme == "https" && req.URL.Scheme == "http" {
-		return &errors.TaskfileNotSecureError{URI: req.URL.Redacted(), Redirect: true}
-	}
-	return nil
 }
 
 func NewHTTPNode(
