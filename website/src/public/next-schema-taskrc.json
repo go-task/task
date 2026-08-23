@@ -62,7 +62,7 @@
               },
               "headers": {
                 "type": "object",
-                "description": "Headers to send. Values may reference environment variables with ${VAR} or $VAR.",
+                "description": "Headers to send. Values support templating functions, e.g. {{env \"GITLAB_TOKEN\"}}.",
                 "additionalProperties": {
                   "type": "string"
                 }

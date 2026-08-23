@@ -5,14 +5,15 @@ import (
 	"fmt"
 	"maps"
 	"net/http"
-	"os"
 	"slices"
 
 	"golang.org/x/net/http/httpguts"
+
+	"github.com/go-task/task/v3/internal/templater"
 )
 
 // HostHeaders maps a host to the HTTP headers to send when fetching a remote
-// Taskfile from it. Values may reference environment variables.
+// Taskfile from it. Values are templated, but no variables are available.
 type HostHeaders map[string]map[string]string
 
 type authTransport struct {
@@ -72,12 +73,16 @@ func resolveAuthHeaders(hostHeaders HostHeaders, host string) (map[string]string
 		return nil, nil
 	}
 
+	cache := &templater.Cache{}
 	resolved := make(map[string]string, len(headers))
 	for _, name := range slices.Sorted(maps.Keys(headers)) {
 		if err := validateHeaderName(name); err != nil {
 			return nil, fmt.Errorf(`remote auth for host %q: %w`, host, err)
 		}
-		resolved[name] = os.ExpandEnv(headers[name])
+		resolved[name] = templater.Replace(headers[name], cache)
+	}
+	if err := cache.Err(); err != nil {
+		return nil, fmt.Errorf(`remote auth for host %q: %w`, host, err)
 	}
 	return resolved, nil
 }
