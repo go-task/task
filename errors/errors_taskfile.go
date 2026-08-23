@@ -102,9 +102,18 @@ func (err *TaskfileNotTrustedError) Code() int {
 // remote Taskfile over an insecure connection.
 type TaskfileNotSecureError struct {
 	URI string
+	// Redirect reports that the insecure URI was reached through a redirect
+	// rather than requested, in which case --insecure does not allow it.
+	Redirect bool
 }
 
 func (err *TaskfileNotSecureError) Error() string {
+	if err.Redirect {
+		return fmt.Sprintf(
+			`task: Taskfile %q was redirected to over an insecure connection. Point the URL at the final location instead`,
+			filepath.ToSlash(err.URI),
+		)
+	}
 	return fmt.Sprintf(
 		`task: Taskfile %q cannot be downloaded over an insecure connection. You can override this by using the --insecure flag`,
 		filepath.ToSlash(err.URI),

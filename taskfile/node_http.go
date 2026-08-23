@@ -32,9 +32,12 @@ func buildHTTPClient(insecure bool, caCert, cert, certKey string) (*http.Client,
 		return nil, fmt.Errorf("both --cert and --cert-key must be provided together")
 	}
 
-	// If no TLS customization is needed, return the default client
+	// If no TLS customization is needed, copy the default client rather than
+	// hand it out: setting CheckRedirect on it would apply process-wide.
 	if !insecure && caCert == "" && cert == "" {
-		return http.DefaultClient, nil
+		client := *http.DefaultClient
+		client.CheckRedirect = checkRedirect
+		return &client, nil
 	}
 
 	tlsConfig := &tls.Config{
@@ -67,7 +70,24 @@ func buildHTTPClient(insecure bool, caCert, cert, certKey string) (*http.Client,
 		Transport: &http.Transport{
 			TLSClientConfig: tlsConfig,
 		},
+		CheckRedirect: checkRedirect,
 	}, nil
+}
+
+// checkRedirect refuses a redirect that would drop TLS. --insecure does not
+// loosen it: an http:// entrypoint is the user's choice, a redirect is not.
+func checkRedirect(req *http.Request, via []*http.Request) error {
+	// Setting CheckRedirect replaces the default cap, so it has to be kept.
+	if len(via) >= 10 {
+		return fmt.Errorf("stopped after 10 redirects")
+	}
+	if len(via) == 0 {
+		return nil
+	}
+	if via[len(via)-1].URL.Scheme == "https" && req.URL.Scheme == "http" {
+		return &errors.TaskfileNotSecureError{URI: req.URL.Redacted(), Redirect: true}
+	}
+	return nil
 }
 
 func NewHTTPNode(
@@ -119,6 +139,9 @@ func (node *HTTPNode) ReadContext(ctx context.Context) ([]byte, error) {
 	if err != nil {
 		if ctx.Err() != nil {
 			return nil, err
+		}
+		if notSecure, ok := errors.AsType[*errors.TaskfileNotSecureError](err); ok {
+			return nil, notSecure
 		}
 		return nil, errors.TaskfileFetchFailedError{URI: node.Location()}
 	}

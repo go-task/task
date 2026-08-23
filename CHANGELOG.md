@@ -7,6 +7,14 @@
 - Added versioned Homebrew casks (`go-task@<major>.<minor>`) to install a specific
   minor version of Task (#3023 by @vmaerten).
 
+### 🐛 Fixes
+
+- Fixed a remote Taskfile served over `https` being downloaded in the clear when
+  the server redirects to `http`. The scheme was only checked on the URL you
+  wrote, not on the ones you were redirected to, so neither the detection
+  request nor the download was protected. Such a redirect is now refused, even
+  with `--insecure` (by @vmaerten).
+
 ### 📦 Package API
 
 - Bumped the minimum Go version to 1.26. Task follows Go's two-latest support
