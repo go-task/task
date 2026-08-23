@@ -4,11 +4,10 @@
 
 ### 🐛 Fixes
 
-- Fixed a remote Taskfile served over `https` being downloaded in the clear when
-  the server redirects to `http`. The scheme was only checked on the URL you
-  wrote, not on the ones you were redirected to, so neither the detection
-  request nor the download was protected. Such a redirect is now refused, even
-  with `--insecure` (by @vmaerten).
+- Fixed an `https` remote Taskfile being downloaded in the clear if the server
+  redirected to `http`, leaving the file that is about to be executed open to
+  tampering. Such a redirect now requires `--insecure`, like an `http`
+  entrypoint (by @vmaerten).
 
 ### 📦 Package API
 

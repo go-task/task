@@ -260,9 +260,9 @@ Taskfile that is downloaded via an unencrypted connection. Sources that are not
 protected by TLS are vulnerable to man-in-the-middle attacks and should be
 avoided unless you know what you are doing.
 
-A server answering an `https` URL with a redirect to `http` is refused, even
-with `--insecure`. Requesting an `http` entrypoint is your decision; being sent
-to one is the server's.
+A server answering an `https` URL with a redirect to `http` is refused too,
+unless you pass `--insecure` — the flag covers the whole download, not just the
+URL you wrote.
 
 #### Custom Certificates
 

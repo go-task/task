@@ -12,6 +12,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -294,13 +295,15 @@ func TestCheckRedirect(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		name    string
-		from    string
-		to      string
-		wantErr bool
+		name     string
+		from     string
+		to       string
+		insecure bool
+		wantErr  bool
 	}{
 		{name: "https to http is refused", from: "https://example.com", to: "http://example.com", wantErr: true},
 		{name: "https to http on another host is refused", from: "https://example.com", to: "http://evil.test", wantErr: true},
+		{name: "https to http is allowed with insecure", from: "https://example.com", to: "http://example.com", insecure: true},
 		{name: "https to https is allowed", from: "https://example.com", to: "https://other.example.com"},
 		{name: "http to https is allowed", from: "http://example.com", to: "https://example.com"},
 		{name: "http to http is allowed, the entrypoint already opted in", from: "http://example.com", to: "http://other.example.com"},
@@ -310,7 +313,7 @@ func TestCheckRedirect(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			via := []*http.Request{mustGet(t, tt.from)}
-			err := checkRedirect(mustGet(t, tt.to), via)
+			err := checkRedirect(tt.insecure)(mustGet(t, tt.to), via)
 			if !tt.wantErr {
 				require.NoError(t, err)
 				return
@@ -324,7 +327,7 @@ func TestCheckRedirect(t *testing.T) {
 func TestCheckRedirectFirstRequest(t *testing.T) {
 	t.Parallel()
 
-	require.NoError(t, checkRedirect(mustGet(t, "http://example.com"), nil))
+	require.NoError(t, checkRedirect(false)(mustGet(t, "http://example.com"), nil))
 }
 
 func TestCheckRedirectStopsAfterTenHops(t *testing.T) {
@@ -334,30 +337,63 @@ func TestCheckRedirectStopsAfterTenHops(t *testing.T) {
 	for i := range via {
 		via[i] = mustGet(t, "https://example.com")
 	}
-	require.Error(t, checkRedirect(mustGet(t, "https://example.com"), via))
+	require.Error(t, checkRedirect(false)(mustGet(t, "https://example.com"), via))
 }
 
-// The downgrade is refused even with --insecure, which here also makes the
-// client accept the test server's self-signed certificate.
-func TestBuildHTTPClientRefusesDowngradeWithInsecure(t *testing.T) {
-	t.Parallel()
+// downgradeServers returns a TLS server redirecting to a plaintext one, and a
+// flag reporting whether the plaintext one was ever reached.
+func downgradeServers(t *testing.T) (*httptest.Server, *atomic.Bool) {
+	t.Helper()
 
+	var plainReached atomic.Bool
 	plain := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		plainReached.Store(true)
 		w.WriteHeader(http.StatusOK)
 	}))
-	defer plain.Close()
+	t.Cleanup(plain.Close)
 
 	secure := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, plain.URL+"/Taskfile.yml", http.StatusFound)
 	}))
-	defer secure.Close()
+	t.Cleanup(secure.Close)
 
-	client, err := buildHTTPClient(true, "", "", "")
+	return secure, &plainReached
+}
+
+func TestBuildHTTPClientRefusesDowngrade(t *testing.T) {
+	t.Parallel()
+
+	secure, plainReached := downgradeServers(t)
+
+	// The test server's certificate has to be trusted explicitly, so that the
+	// refusal is the redirect and not the handshake.
+	caCert := filepath.Join(t.TempDir(), "ca.crt")
+	require.NoError(t, os.WriteFile(caCert, pem.EncodeToMemory(&pem.Block{
+		Type: "CERTIFICATE", Bytes: secure.Certificate().Raw,
+	}), 0o600))
+
+	client, err := buildHTTPClient(false, caCert, "", "")
 	require.NoError(t, err)
 
 	_, err = client.Do(mustGet(t, secure.URL+"/Taskfile.yml")) //nolint:bodyclose // the request never completes
 	var notSecure *errors.TaskfileNotSecureError
 	require.ErrorAs(t, err, &notSecure)
+	assert.False(t, plainReached.Load(), "the plaintext server must never be contacted")
+}
+
+func TestBuildHTTPClientFollowsDowngradeWithInsecure(t *testing.T) {
+	t.Parallel()
+
+	secure, plainReached := downgradeServers(t)
+
+	client, err := buildHTTPClient(true, "", "", "")
+	require.NoError(t, err)
+
+	resp, err := client.Do(mustGet(t, secure.URL+"/Taskfile.yml"))
+	require.NoError(t, err)
+	defer resp.Body.Close()
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+	assert.True(t, plainReached.Load())
 }
 
 func mustGet(t *testing.T, rawURL string) *http.Request {

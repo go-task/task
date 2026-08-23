@@ -110,7 +110,7 @@ type TaskfileNotSecureError struct {
 func (err *TaskfileNotSecureError) Error() string {
 	if err.Redirect {
 		return fmt.Sprintf(
-			`task: Taskfile %q was redirected to over an insecure connection. Point the URL at the final location instead`,
+			`task: Taskfile %q was redirected to over an insecure connection. You can override this by using the --insecure flag`,
 			filepath.ToSlash(err.URI),
 		)
 	}
