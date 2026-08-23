@@ -140,10 +140,7 @@ func (node *HTTPNode) ReadContext(ctx context.Context) ([]byte, error) {
 		if ctx.Err() != nil {
 			return nil, err
 		}
-		if notSecure, ok := errors.AsType[*errors.TaskfileNotSecureError](err); ok {
-			return nil, notSecure
-		}
-		return nil, errors.TaskfileFetchFailedError{URI: node.Location()}
+		return nil, taskfileFetchError(err, node.Location())
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
