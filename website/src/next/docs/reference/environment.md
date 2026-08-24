@@ -55,6 +55,7 @@ files > defaults.
 
 - **Type**: `integer`
 - **Description**: Limit number of tasks to run concurrently
+- **CLI equivalent**: [`-C, --concurrency`](./cli.md#-c---concurrency-number)
 - **Config equivalent**: [`concurrency`](./config.md#concurrency)
 
 ### `TASK_FAILFAST`
@@ -62,6 +63,7 @@ files > defaults.
 - **Type**: `boolean` (`true`, `false`, `1`, `0`)
 - **Default**: `false`
 - **Description**: When running tasks in parallel, stop all tasks if one fails
+- **CLI equivalent**: [`-F, --failfast`](./cli.md#-f---failfast)
 - **Config equivalent**: [`failfast`](./config.md#failfast)
 
 ### `TASK_DRY`
@@ -70,18 +72,22 @@ files > defaults.
 - **Default**: `false`
 - **Description**: Compiles and prints tasks in the order that they would be
   run, without executing them
+- **CLI equivalent**: [`-n, --dry`](./cli.md#-n---dry)
 
 ### `TASK_ASSUME_YES`
 
 - **Type**: `boolean` (`true`, `false`, `1`, `0`)
 - **Default**: `false`
 - **Description**: Assume "yes" as answer to all prompts
+- **CLI equivalent**: [`-y, --yes`](./cli.md#-y---yes)
 
 ### `TASK_INTERACTIVE`
 
 - **Type**: `boolean` (`true`, `false`, `1`, `0`)
 - **Default**: `false`
 - **Description**: Prompt for missing required variables
+- **CLI equivalent**: [`--interactive`](./cli.md#--interactive)
+- **Config equivalent**: [`interactive`](./config.md#interactive)
 
 ### `TASK_OUTPUT`
 
