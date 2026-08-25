@@ -4,10 +4,9 @@
 
 ### 🐛 Fixes
 
-- Fixed an `https` remote Taskfile being downloaded in the clear if the server
-  redirected to `http`, leaving the file that is about to be executed open to
-  tampering. Such a redirect now requires `--insecure`, like an `http`
-  entrypoint (by @vmaerten).
+- Fixed an `https` remote Taskfile being downloaded over an unencrypted
+  connection when the server redirects to `http`. Such a redirect now requires
+  `--insecure`, like an `http` entrypoint (by @vmaerten).
 
 ### 📦 Package API
 
