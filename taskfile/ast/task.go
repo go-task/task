@@ -109,6 +109,37 @@ func (t *Task) WildcardMatch(name string) (bool, []string) {
 	return false, nil
 }
 
+// MatchesPrefix will check if the given string matches the prefix of the Task's name or any of its aliases.
+func (t *Task) MatchesPrefix(name string) bool {
+	if MatchesPrefix(name, t.Task) {
+		return true
+	}
+	for _, alias := range t.Aliases {
+		if MatchesPrefix(name, alias) {
+			return true
+		}
+	}
+	return false
+}
+
+// MatchesPrefix checks if the input is a valid segment-wise prefix for the target task name.
+func MatchesPrefix(input, target string) bool {
+	if input == "" || target == "" {
+		return false
+	}
+	inputParts := strings.Split(input, NamespaceSeparator)
+	targetParts := strings.Split(target, NamespaceSeparator)
+	if len(inputParts) > len(targetParts) {
+		return false
+	}
+	for i, part := range inputParts {
+		if !strings.HasPrefix(targetParts[i], part) {
+			return false
+		}
+	}
+	return true
+}
+
 func (t *Task) UnmarshalYAML(node *yaml.Node) error {
 	switch node.Kind {
 
