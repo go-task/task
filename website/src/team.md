@@ -11,7 +11,7 @@ import {
 
 const members = [
   {
-    avatar: 'https://www.github.com/andreynering.png',
+    avatar: '/img/team/andreynering.jpg',
     name: 'Andrey Nering',
     icon: '/img/flag-brazil.svg',
     title: 'Creator & Maintainer',
@@ -25,7 +25,7 @@ const members = [
     ]
   },
   {
-    avatar: 'https://www.github.com/pd93.png',
+    avatar: '/img/team/pd93.jpg',
     name: 'Pete Davison',
     icon: '/img/flag-wales.svg',
     title: 'Maintainer',
@@ -36,7 +36,7 @@ const members = [
     ]
   },
   {
-    avatar: 'https://www.github.com/vmaerten.png',
+    avatar: '/img/team/vmaerten.png',
     name: 'Valentin Maerten',
     icon: '/img/flag-france.svg',
     title: 'Maintainer',
