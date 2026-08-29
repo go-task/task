@@ -30,10 +30,9 @@ const version = readFileSync(
 const isLatest = process.env.DOCS_CHANNEL === 'latest';
 const channel = isLatest ? 'latest' : 'next';
 const other = isLatest ? 'next' : 'latest';
-const isProduction =
-  isLatest &&
-  process.env.DOCS_SITE === 'production' &&
-  process.env.DOCS_LOCAL !== '1';
+const isPublicDeploy =
+  process.env.DOCS_SITE === 'production' && process.env.DOCS_LOCAL !== '1';
+const isProduction = isLatest && isPublicDeploy;
 
 const docsSidebar = isLatest ? latestSidebar : nextSidebar;
 
@@ -108,7 +107,7 @@ export default defineConfig({
     ['meta', { name: 'twitter:card', content: 'summary_large_image' }],
     ['meta', { name: 'twitter:site', content: '@taskfiledev' }],
     ['meta', { name: 'twitter:image', content: ogImage }],
-    ...(isProduction
+    ...(isPublicDeploy
       ? ([
           [
             'script',
@@ -179,7 +178,7 @@ export default defineConfig({
 
     // Preview builds keep production canonicals but must never be indexed.
     if (
-      !isProduction ||
+      !isPublicDeploy ||
       pageData.relativePath === '404.md' ||
       pageData.frontmatter.noindex === true
     ) {
@@ -455,7 +454,7 @@ export default defineConfig({
     hostname: 'https://taskfile.dev'
   },
   buildEnd({ outDir }) {
-    const robots = isProduction
+    const robots = isPublicDeploy
       ? [
           'User-agent: *',
           'Allow: /',

@@ -82,8 +82,9 @@ tasks:
   # channel these tasks just built.
   deploy:next:
     desc: Build and deploy next.taskfile.dev
-    deps: [build:next]
     cmds:
+      - task: build
+        vars: { CHANNEL: next, SITE: production }
       - pnpm netlify deploy --prod --no-build --site=4e13dfcf-fc0d-4bec-ad60-b918a8dc3942
 
   deploy:prod:
