@@ -85,7 +85,7 @@ experiments:
 - **Type**: `boolean`
 - **Default**: `false`
 - **Description**: Enable verbose output for all tasks
-- **CLI equivalent**: [`-v, --verbose`](./cli.md#-v---verbose)
+- **CLI equivalent**: [`-v, --verbose`](./cli.md#v-verbose)
 - **Environment variable**: [`TASK_VERBOSE`](./environment.md#task-verbose)
 
 ```yaml
@@ -97,7 +97,7 @@ verbose: true
 - **Type**: `boolean`
 - **Default**: `false`
 - **Description**: Disables echoing of commands
-- **CLI equivalent**: [`-s, --silent`](./cli.md#-s---silent)
+- **CLI equivalent**: [`-s, --silent`](./cli.md#s-silent)
 - **Environment variable**: [`TASK_SILENT`](./environment.md#task-silent)
 
 ```yaml
@@ -110,7 +110,7 @@ silent: true
 - **Default**: `true`
 - **Description**: Enable colored output. Colors are automatically enabled in CI
   environments (`CI=true`).
-- **CLI equivalent**: [`-c, --color`](./cli.md#-c---color)
+- **CLI equivalent**: [`-c, --color`](./cli.md#c-color)
 - **Environment variable**: [`TASK_COLOR`](./environment.md#task-color)
 
 ```yaml
@@ -123,7 +123,7 @@ color: false
 - **Default**: `false`
 - **Description**: Disable fuzzy matching for task names. When enabled, Task
   will not suggest similar task names when you mistype a task name.
-- **CLI equivalent**: [`--disable-fuzzy`](./cli.md#--disable-fuzzy)
+- **CLI equivalent**: [`--disable-fuzzy`](./cli.md#disable-fuzzy)
 - **Environment variable**:
   [`TASK_DISABLE_FUZZY`](./environment.md#task-disable-fuzzy)
 
@@ -136,7 +136,7 @@ disable-fuzzy: true
 - **Type**: `integer`
 - **Minimum**: `1`
 - **Description**: Number of concurrent tasks to run
-- **CLI equivalent**: [`-C, --concurrency`](./cli.md#-c---concurrency-number)
+- **CLI equivalent**: [`-C, --concurrency`](./cli.md#c-concurrency-number)
 - **Environment variable**:
   [`TASK_CONCURRENCY`](./environment.md#task-concurrency)
 
@@ -149,7 +149,7 @@ concurrency: 4
 - **Type**: `boolean`
 - **Default**: `false`
 - **Description**: Stop executing dependencies as soon as one of them fail
-- **CLI equivalent**: [`-F, --failfast`](./cli.md#-f---failfast)
+- **CLI equivalent**: [`-F, --failfast`](./cli.md#f-failfast)
 - **Environment variable**: [`TASK_FAILFAST`](./environment.md#task-failfast)
 
 ```yaml
@@ -164,7 +164,7 @@ failfast: true
   When enabled, Task will display an interactive prompt for any missing required
   variable. Requires a TTY. Task automatically detects non-TTY environments (CI
   pipelines, etc.) and skips prompts.
-- **CLI equivalent**: [`--interactive`](./cli.md#--interactive)
+- **CLI equivalent**: [`--interactive`](./cli.md#interactive)
 
 ```yaml
 interactive: true

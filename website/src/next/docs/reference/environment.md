@@ -87,7 +87,7 @@ files > defaults.
 
 - **Type**: `string` (`interleaved`, `group`, `prefixed`)
 - **Description**: Sets the output style
-- **CLI equivalent**: [`--output`](./cli.md#--output-string)
+- **CLI equivalent**: [`--output`](./cli.md#o-output-mode)
 
 ### `TASK_OUTPUT_GROUP_BEGIN`
 
@@ -95,7 +95,7 @@ files > defaults.
 - **Description**: Message template to print before a task's grouped output.
   Only applies when the output style is `group`.
 - **CLI equivalent**:
-  [`--output-group-begin`](./cli.md#--output-group-begin-template)
+  [`--output-group-begin`](./cli.md#output-group-begin-template)
 
 ### `TASK_OUTPUT_GROUP_END`
 
@@ -103,7 +103,7 @@ files > defaults.
 - **Description**: Message template to print after a task's grouped output. Only
   applies when the output style is `group`.
 - **CLI equivalent**:
-  [`--output-group-end`](./cli.md#--output-group-end-template)
+  [`--output-group-end`](./cli.md#output-group-end-template)
 
 ### `TASK_OUTPUT_GROUP_ERROR_ONLY`
 
@@ -112,7 +112,7 @@ files > defaults.
 - **Description**: Swallow output from successful tasks. Only applies when the
   output style is `group`.
 - **CLI equivalent**:
-  [`--output-group-error-only`](./cli.md#--output-group-error-only)
+  [`--output-group-error-only`](./cli.md#output-group-error-only)
 
 ### `TASK_TEMP_DIR`
 
