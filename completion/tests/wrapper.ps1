@@ -3,7 +3,7 @@
 # the binary under test.
 
 Set-Location $env:TASK_FIXTURE
-. "$PSScriptRoot/../next/ps/task.ps1"
+. "$PSScriptRoot/../ps/task.ps1"
 
 $fails = 0
 
