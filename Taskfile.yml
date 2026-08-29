@@ -164,8 +164,9 @@ tasks:
       - internal/complete/**/*.go
       - cmd/task/**/*.go
       - completion/**/*
+      - testdata/completion/*
     cmds:
-      - bash completion/tests/run.sh
+      - bash testdata/completion/run.sh
 
   goreleaser:test:
     desc: Tests release process without publishing
