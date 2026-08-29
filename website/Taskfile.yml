@@ -21,6 +21,7 @@ tasks:
       PORT: '{{default "3001" .PORT}}'
     env:
       DOCS_CHANNEL: '{{.CHANNEL | default "next"}}'
+      DOCS_SITE: '{{.SITE | default "preview"}}'
       # Only the dev server sets this: it is what keeps the localhost URLs of
       # the version selector out of a build. See .vitepress/config.ts.
       DOCS_LOCAL: '1'
@@ -51,6 +52,7 @@ tasks:
     deps: [install]
     env:
       DOCS_CHANNEL: '{{.CHANNEL | default "next"}}'
+      DOCS_SITE: '{{.SITE | default "preview"}}'
     cmds:
       - pnpm build
 
@@ -58,7 +60,7 @@ tasks:
     desc: Build website with the content of the released version
     cmds:
       - task: build
-        vars: { CHANNEL: latest }
+        vars: { CHANNEL: latest, SITE: production }
 
   preview:
     desc: Preview Website

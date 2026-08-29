@@ -1,3 +1,18 @@
 [build]
   publish = ".vitepress/dist"
   command = "pnpm run build"
+
+[build.environment]
+  NODE_VERSION = "24"
+
+[context.production.environment]
+  DOCS_CHANNEL = "latest"
+  DOCS_SITE = "production"
+
+[context.deploy-preview.environment]
+  DOCS_CHANNEL = "next"
+  DOCS_SITE = "preview"
+
+[context.branch-deploy.environment]
+  DOCS_CHANNEL = "next"
+  DOCS_SITE = "preview"

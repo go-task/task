@@ -1,6 +1,6 @@
 import { defineConfig, HeadConfig } from 'vitepress';
 import githubLinksPlugin from './plugins/github-links';
-import { readdirSync, readFileSync } from 'fs';
+import { readdirSync, readFileSync, writeFileSync } from 'fs';
 import { resolve } from 'path';
 import matter from 'gray-matter';
 import { tabsMarkdownPlugin } from 'vitepress-plugin-tabs';
@@ -11,7 +11,7 @@ import {
 } from 'vitepress-plugin-group-icons';
 import { team } from './team.ts';
 import { adopters } from './adopters.ts';
-import { taskDescription, taskName, ogUrl, ogImage } from './meta.ts';
+import { taskDescription, taskName, ogImage } from './meta.ts';
 import { fileURLToPath, URL } from 'node:url';
 import llmstxt from 'vitepress-plugin-llms';
 import { sidebar as nextSidebar } from './sidebar/next.ts';
@@ -30,6 +30,10 @@ const version = readFileSync(
 const isLatest = process.env.DOCS_CHANNEL === 'latest';
 const channel = isLatest ? 'latest' : 'next';
 const other = isLatest ? 'next' : 'latest';
+const isProduction =
+  isLatest &&
+  process.env.DOCS_SITE === 'production' &&
+  process.env.DOCS_LOCAL !== '1';
 
 const docsSidebar = isLatest ? latestSidebar : nextSidebar;
 
@@ -98,65 +102,88 @@ export default defineConfig({
       { name: 'author', content: `${team.map((c) => c.name).join(', ')}` }
     ],
     // Open Graph
-    ['meta', { property: 'og:type', content: 'website' }],
     ['meta', { property: 'og:site_name', content: 'Task' }],
     ['meta', { property: 'og:image', content: ogImage }],
     // Twitter Card
     ['meta', { name: 'twitter:card', content: 'summary_large_image' }],
     ['meta', { name: 'twitter:site', content: '@taskfiledev' }],
     ['meta', { name: 'twitter:image', content: ogImage }],
+    ...(isProduction
+      ? ([
+          [
+            'script',
+            {
+              defer: '',
+              src: 'https://u.taskfile.dev/script.js',
+              'data-website-id': '084030b0-0e3f-4891-8d2a-0c12c40f5933'
+            }
+          ]
+        ] satisfies HeadConfig[])
+      : []),
     [
-      'meta',
-      {
-        name: 'keywords',
-        content:
-          'task runner, build tool, taskfile, yaml build tool, go task runner, make alternative, cross-platform build tool, makefile alternative, automation tool, ci cd pipeline, developer productivity, build automation, command line tool, go binary, yaml configuration'
-      }
-    ],
-    [
-      "script",
-      {
-        defer: "",
-        src: "https://u.taskfile.dev/script.js",
-        "data-website-id": "084030b0-0e3f-4891-8d2a-0c12c40f5933"
-      }
-    ],
-    [
-      "script",
-      { type: "application/ld+json" },
+      'script',
+      { type: 'application/ld+json' },
       JSON.stringify({
-        "@context": "https://schema.org",
-        "@type": "WebSite",
-        "name": "Task",
-        "url": "https://taskfile.dev/"
+        '@context': 'https://schema.org',
+        '@type': 'WebSite',
+        name: 'Task',
+        url: 'https://taskfile.dev/'
       })
     ]
   ],
   transformHead({ pageData }) {
-    const head: HeadConfig[] = []
+    const head: HeadConfig[] = [];
 
-    // Canonical URL dynamique
-    const canonicalUrl = `https://taskfile.dev/${pageData.relativePath
+    const canonicalPath = pageData.relativePath
       .replace(/\.md$/, '')
-      .replace(/index$/, '')}`
-    head.push(['link', { rel: 'canonical', href: canonicalUrl }])
+      .replace(/index$/, '');
+    const canonicalUrl = new URL(
+      typeof pageData.frontmatter.canonical === 'string'
+        ? pageData.frontmatter.canonical
+        : canonicalPath,
+      'https://taskfile.dev/'
+    ).href;
+    head.push(['link', { rel: 'canonical', href: canonicalUrl }]);
 
     // Dynamic Open Graph and Twitter meta tags
-    const isHome = pageData.relativePath === 'index.md';
-    var pageTitle = pageData.frontmatter.title || pageData.title || taskName;
+    const isHome = new URL(canonicalUrl).pathname === '/';
+    let pageTitle = pageData.frontmatter.title || pageData.title || taskName;
     if (!isHome) {
       pageTitle = `${pageTitle} | ${taskName}`;
     }
-    const pageDescription = pageData.frontmatter.description || pageData.description || taskDescription
-    head.push(['meta', { property: 'og:title', content: pageTitle }])
-    head.push(['meta', { property: 'og:description', content: pageDescription }])
-    head.push(['meta', { property: 'og:url', content: canonicalUrl }])
-    head.push(['meta', { name: 'twitter:title', content: pageTitle }])
-    head.push(['meta', { name: 'twitter:description', content: pageDescription }])
+    const pageDescription =
+      pageData.frontmatter.description ||
+      pageData.description ||
+      taskDescription;
+    head.push([
+      'meta',
+      {
+        property: 'og:type',
+        content:
+          canonicalUrl.includes('/blog/') && !canonicalUrl.endsWith('/blog/')
+            ? 'article'
+            : 'website'
+      }
+    ]);
+    head.push(['meta', { property: 'og:title', content: pageTitle }]);
+    head.push([
+      'meta',
+      { property: 'og:description', content: pageDescription }
+    ]);
+    head.push(['meta', { property: 'og:url', content: canonicalUrl }]);
+    head.push(['meta', { name: 'twitter:title', content: pageTitle }]);
+    head.push([
+      'meta',
+      { name: 'twitter:description', content: pageDescription }
+    ]);
 
-    // Noindex pour 404
-    if (pageData.relativePath === '404.md') {
-      head.push(['meta', { name: 'robots', content: 'noindex, nofollow' }])
+    // Preview builds keep production canonicals but must never be indexed.
+    if (
+      !isProduction ||
+      pageData.relativePath === '404.md' ||
+      pageData.frontmatter.noindex === true
+    ) {
+      head.push(['meta', { name: 'robots', content: 'noindex, nofollow' }]);
     }
 
     // Structured data for the adopters carousel on the homepage: an ItemList
@@ -184,7 +211,7 @@ export default defineConfig({
             }
           }))
         })
-      ])
+      ]);
     }
 
     // On the /adopters page, emit CollectionPage + ItemList (richer than the
@@ -219,7 +246,7 @@ export default defineConfig({
             }))
           }
         })
-      ])
+      ]);
 
       head.push([
         'script',
@@ -262,14 +289,14 @@ export default defineConfig({
             }
           ]
         })
-      ])
+      ]);
     }
 
-    return head
+    return head;
   },
   srcDir: 'src',
   cleanUrls: true,
-  srcExclude: [`${other}/**`],
+  srcExclude: [`${other}/**`, `${channel}/docs/**/template.md`],
   rewrites: { [`${channel}/:path*`]: ':path*' },
   markdown: {
     config: (md) => {
@@ -333,14 +360,28 @@ export default defineConfig({
       code: 'CESI65QJ',
       placement: 'taskfiledev'
     },
-    search: {
-      provider: 'algolia',
-      options: {
-        appId: '7IZIJ13AI7',
-        apiKey: '34b64ae4fc8d9da43d9a13d9710aaddc',
-        indexName: 'taskfile'
-      }
-    },
+    search: isProduction
+      ? {
+          provider: 'algolia',
+          options: {
+            appId: '7IZIJ13AI7',
+            apiKey: '34b64ae4fc8d9da43d9a13d9710aaddc',
+            indexName: 'taskfile'
+          }
+        }
+      : {
+          provider: 'local',
+          options: {
+            detailedView: true,
+            miniSearch: {
+              searchOptions: {
+                fuzzy: 0.2,
+                prefix: true,
+                boost: { title: 4, titles: 2, text: 1 }
+              }
+            }
+          }
+        },
     nav: [
       { text: 'Home', link: '/' },
       {
@@ -411,12 +452,18 @@ export default defineConfig({
     }
   },
   sitemap: {
-    hostname: 'https://taskfile.dev',
-    transformItems: (items) => {
-      return items.map((item) => ({
-        ...item,
-        lastmod: new Date().toISOString()
-      }));
-    }
+    hostname: 'https://taskfile.dev'
+  },
+  buildEnd({ outDir }) {
+    const robots = isProduction
+      ? [
+          'User-agent: *',
+          'Allow: /',
+          '',
+          'Sitemap: https://taskfile.dev/sitemap.xml',
+          ''
+        ]
+      : ['User-agent: *', 'Disallow: /', ''];
+    writeFileSync(resolve(outDir, 'robots.txt'), robots.join('\n'));
   }
 });
