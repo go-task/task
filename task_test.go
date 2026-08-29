@@ -2377,6 +2377,28 @@ func TestRunOnceSharedDeps(t *testing.T) {
 	assert.Contains(t, buff.String(), `task: [service-b:build] echo "build b"`)
 }
 
+func TestRunOnceGlobalInIncludedTaskfile(t *testing.T) {
+	t.Parallel()
+
+	const dir = "testdata/run_once_included"
+
+	var buff bytes.Buffer
+	e := task.NewExecutor(
+		task.WithDir(dir),
+		task.WithStdout(&buff),
+		task.WithStderr(&buff),
+		task.WithForceAll(true),
+	)
+	require.NoError(t, e.Setup())
+	require.NoError(t, e.Run(t.Context(), &task.Call{Task: "build"}))
+
+	// The included Taskfile sets `run: once` globally, so its build task should
+	// execute once even though both service-a and service-b depend on it.
+	assert.Equal(t, 1, strings.Count(buff.String(), `echo "build library"`))
+	assert.Contains(t, buff.String(), `task: [service-a] echo "build a"`)
+	assert.Contains(t, buff.String(), `task: [service-b] echo "build b"`)
+}
+
 func TestRunOnceSharedFailurePropagates(t *testing.T) {
 	t.Parallel()
 
