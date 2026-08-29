@@ -12,9 +12,9 @@ import (
 	"github.com/go-task/task/v3/internal/templater"
 )
 
-// HostHeaders maps a host to the HTTP headers to send when fetching a remote
+// HeadersByHost maps a host to the HTTP headers to send when fetching a remote
 // Taskfile from it. Values are templated, but no variables are available.
-type HostHeaders map[string]map[string]string
+type HeadersByHost map[string]map[string]string
 
 type authTransport struct {
 	base    http.RoundTripper
@@ -38,7 +38,7 @@ func (t *authTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 // authenticatedClient resolves on each read, not at build time, so a cached
 // run needs no credentials.
 func (node *HTTPNode) authenticatedClient() (*http.Client, error) {
-	headers, err := resolveAuthHeaders(node.authHeaders, node.url.Host)
+	headers, err := resolveAuthHeaders(node.authHeadersByHost, node.url.Host)
 	if err != nil {
 		return nil, err
 	}
@@ -61,9 +61,9 @@ func withAuthHeaders(client *http.Client, host string, headers map[string]string
 }
 
 // resolveAuthHeaders returns the expanded headers for host, or nil if none.
-func resolveAuthHeaders(hostHeaders HostHeaders, host string) (map[string]string, error) {
+func resolveAuthHeaders(headersByHost HeadersByHost, host string) (map[string]string, error) {
 	var headers map[string]string
-	for pattern, patternHeaders := range hostHeaders {
+	for pattern, patternHeaders := range headersByHost {
 		if hostMatches(pattern, host) {
 			headers = patternHeaders
 			break

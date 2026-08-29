@@ -80,7 +80,7 @@ var (
 	Download            bool
 	Offline             bool
 	TrustedHosts        []string
-	RemoteAuth          taskfile.HostHeaders
+	RemoteAuth          taskfile.HeadersByHost
 	ClearCache          bool
 	Timeout             time.Duration
 	CacheExpiryDuration time.Duration
@@ -318,11 +318,11 @@ func (o *flagsOption) ApplyToExecutor(e *task.Executor) {
 
 // remoteAuth flattens the configured entries into a lookup by host, the last
 // entry winning as it does when configuration files are merged.
-func remoteAuth(config *taskrcast.TaskRC) taskfile.HostHeaders {
+func remoteAuth(config *taskrcast.TaskRC) taskfile.HeadersByHost {
 	if config == nil || len(config.Remote.Auth) == 0 {
 		return nil
 	}
-	byHost := make(taskfile.HostHeaders, len(config.Remote.Auth))
+	byHost := make(taskfile.HeadersByHost, len(config.Remote.Auth))
 	for _, auth := range config.Remote.Auth {
 		byHost[auth.Host] = auth.Headers
 	}
