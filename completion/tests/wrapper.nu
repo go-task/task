@@ -4,7 +4,7 @@
 # Set up by run.sh: $env.TASK_FIXTURE, and `task` on PATH = the binary under test.
 
 # `source` needs a parse-time constant path.
-const TASK_NU = (path self "../next/nu/task-completions.nu")
+const TASK_NU = (path self "../nu/task-completions.nu")
 
 # Installed before the wrapper is sourced, to assert the delegation path.
 $env.config.completions.external.completer = {|spans| [{ value: $"prev:($spans | first)" }] }

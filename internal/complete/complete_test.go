@@ -29,7 +29,7 @@ func newTestFlagSet() *pflag.FlagSet {
 	fs.StringVar(&s, "sort", "", "Sort order")
 	fs.StringVar(&s, "cacert", "", "CA cert path")
 	fs.StringVar(&s, "completion", "", "Generate a completion script")
-	fs.StringVar(&s, "new-completion", "", "Generate a completion script")
+	fs.StringVar(&s, "legacy-completion", "", "Generate a completion script")
 	return fs
 }
 
@@ -419,7 +419,7 @@ func TestNeedsTaskfile_StdinEntrypoint(t *testing.T) {
 func TestCompletionShells(t *testing.T) {
 	t.Parallel()
 
-	for _, flag := range []string{"--completion", "--new-completion"} {
+	for _, flag := range []string{"--completion", "--legacy-completion"} {
 		suggs, dir := complete.Complete(nil, newTestFlagSet(), []string{flag, ""}, complete.Options{})
 		require.Equal(t, complete.DirectiveNoFileComp, dir)
 		require.NotEmpty(t, suggs)
@@ -427,7 +427,7 @@ func TestCompletionShells(t *testing.T) {
 		for _, shell := range values(suggs) {
 			_, err := task.Completion(shell)
 			require.NoErrorf(t, err, "%s offers %q", flag, shell)
-			_, err = task.CompletionNext(shell)
+			_, err = task.LegacyCompletion(shell)
 			require.NoErrorf(t, err, "%s offers %q", flag, shell)
 		}
 	}
