@@ -369,8 +369,14 @@ go tool task {arguments...}
 Some installation methods will automatically install completions too, but if
 this isn't working for you or your chosen method doesn't include them, you can
 run `task --completion <shell>` to output a completion script for any supported
-shell. There are a couple of ways these completions can be added to your shell
-config:
+shell.
+
+Every shell shares a single source of truth: the script is a thin wrapper that
+asks the `task` binary itself what to suggest, so Bash, Zsh, Fish, Nushell and
+PowerShell all offer the same task names, aliases, flags, flag values and
+`requires` vars.
+
+There are a couple of ways these completions can be added to your shell config:
 
 ### Option 1. Load the completions in your shell's startup config (Recommended)
 
@@ -468,73 +474,10 @@ to an autoload directory. Option 1 rewrites it at every startup, which keeps it
 in sync with the installed version of Task — the refreshed completions are picked
 up by the next shell. With option 2, re-run the command after upgrading Task.
 
-The completions are attached to an `extern "task"` declaration, which Nushell
-requires to be static. Three consequences are worth knowing:
-
-- The experimental flags (`--force-all`, `--download`, `--offline`, …) are always
-  offered, even when the corresponding experiment is disabled. Their description
-  is prefixed with the experiment name, and `task --experiments` lists the ones
-  that are enabled.
-- Passing a value to a boolean flag with `=` does not work: Nushell forwards
-  `--color=false` as two arguments, so Task reads `false` as a task name. Use
-  `NO_COLOR=1`, or bypass the declaration with `^task --color=false`.
-- `TASK_EXE` selects the executable that is run, but not the command name the
-  completions are attached to, which is always `task`. For a renamed executable,
-  alias it instead:
-
-```nu
-use ($nu.data-dir | path join "vendor/autoload/task-completions.nu") *
-alias go-task = task
-```
-
-### Trying the new completion engine (experimental)
-
-Task is migrating to a new completion engine, where every shell shares a single
-source of truth: the `task __complete` command. This gives Bash, Zsh, Fish,
-Nushell and PowerShell the exact same suggestions (task names, aliases, flags,
-flag values and `requires` vars, including their enums). It is currently
-**opt-in** and will become the default of `--completion` in a future release.
-
-To try it, swap `--completion` for `--new-completion` in any of the snippets
-above, for example:
-
-::: code-group
-
-```shell [bash]
-# ~/.bashrc
-eval "$(task --new-completion bash)"
-```
-
-```shell [zsh]
-# ~/.zshrc
-eval "$(task --new-completion zsh)"
-```
-
-```shell [fish]
-# ~/.config/fish/config.fish
-task --new-completion fish | source
-```
-
-```powershell [powershell]
-# $PROFILE\Microsoft.PowerShell_profile.ps1
-Invoke-Expression  (&task --new-completion powershell | Out-String)
-```
-
-```nu [nushell]
-# ~/.config/nushell/config.nu
-mkdir ($nu.data-dir | path join "vendor/autoload")
-task --new-completion nu | save --force ($nu.data-dir | path join "vendor/autoload/task-completions.nu")
-```
-
-:::
-
-The `verbose` and `show-aliases` zstyles documented above work with the new Zsh
-completion too.
-
 Nushell shares a single external completer between every command, so the script
-chains to the one already configured — carapace and friends keep working. Load
-it from an autoload directory as shown above rather than from `config.nu`, so
-that your own completer is the one being chained to. If you would rather wire it
+chains to the one already configured — carapace and friends keep working. Load it
+from an autoload directory as shown above rather than from `config.nu`, so that
+your own completer is the one being chained to. If you would rather wire it
 yourself, the script also exposes a `task-external-completer` command:
 
 ```nu
@@ -549,3 +492,11 @@ $env.config.completions.external.completer = {|spans|
 Two engine directives behave differently under Nushell by design: it never
 appends a space after an external completion (so `NoSpace` is a no-op) and never
 re-sorts the results (so `KeepOrder` is always honoured).
+
+### Legacy completion scripts
+
+Before the engine, every shell carried its own hand-written completion script,
+each with its own idea of what to suggest. Those scripts are still shipped and
+available through `task --legacy-completion <shell>`, as an escape hatch should
+the engine misbehave in your setup. They are deprecated, will not receive further
+fixes, and will be removed in a future release.

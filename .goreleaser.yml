@@ -43,7 +43,12 @@ archives:
     files:
       - README.md
       - LICENSE
-      - completion/**/*
+      - completion/bash/*
+      - completion/fish/*
+      - completion/nu/*
+      - completion/ps/*
+      - completion/zsh/*
+      - completion/legacy/**/*
     format_overrides:
       - goos: windows
         formats: [zip]

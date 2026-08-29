@@ -133,8 +133,8 @@ func run() error {
 		return nil
 	}
 
-	if flags.NewCompletion != "" {
-		script, err := task.CompletionNext(flags.NewCompletion)
+	if flags.LegacyCompletion != "" {
+		script, err := task.LegacyCompletion(flags.LegacyCompletion)
 		if err != nil {
 			return err
 		}

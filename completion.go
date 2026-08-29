@@ -5,6 +5,8 @@ import (
 	"fmt"
 )
 
+// Thin wrappers around the `task __complete` engine, served by `--completion`.
+
 //go:embed completion/bash/task.bash
 var completionBash string
 
@@ -20,23 +22,23 @@ var completionPowershell string
 //go:embed completion/zsh/_task
 var completionZsh string
 
-// Thin wrappers around the `task __complete` engine, served via
-// `--new-completion` until the engine becomes the default.
+// The self-contained scripts that predate the engine, kept behind
+// `--legacy-completion` as an escape hatch for a couple of releases.
 
-//go:embed completion/next/bash/task.bash
-var completionBashNext string
+//go:embed completion/legacy/bash/task.bash
+var completionBashLegacy string
 
-//go:embed completion/next/fish/task.fish
-var completionFishNext string
+//go:embed completion/legacy/fish/task.fish
+var completionFishLegacy string
 
-//go:embed completion/next/nu/task-completions.nu
-var completionNuNext string
+//go:embed completion/legacy/nu/task-completions.nu
+var completionNuLegacy string
 
-//go:embed completion/next/ps/task.ps1
-var completionPowershellNext string
+//go:embed completion/legacy/ps/task.ps1
+var completionPowershellLegacy string
 
-//go:embed completion/next/zsh/_task
-var completionZshNext string
+//go:embed completion/legacy/zsh/_task
+var completionZshLegacy string
 
 // The maps accept `nushell` as an alias of `nu`.
 var completionScripts = map[string]string{
@@ -48,21 +50,21 @@ var completionScripts = map[string]string{
 	"zsh":        completionZsh,
 }
 
-var completionScriptsNext = map[string]string{
-	"bash":       completionBashNext,
-	"fish":       completionFishNext,
-	"nu":         completionNuNext,
-	"nushell":    completionNuNext,
-	"powershell": completionPowershellNext,
-	"zsh":        completionZshNext,
+var completionScriptsLegacy = map[string]string{
+	"bash":       completionBashLegacy,
+	"fish":       completionFishLegacy,
+	"nu":         completionNuLegacy,
+	"nushell":    completionNuLegacy,
+	"powershell": completionPowershellLegacy,
+	"zsh":        completionZshLegacy,
 }
 
 func Completion(shell string) (string, error) {
 	return completionScript(completionScripts, shell)
 }
 
-func CompletionNext(shell string) (string, error) {
-	return completionScript(completionScriptsNext, shell)
+func LegacyCompletion(shell string) (string, error) {
+	return completionScript(completionScriptsLegacy, shell)
 }
 
 func completionScript(scripts map[string]string, shell string) (string, error) {
