@@ -12,98 +12,98 @@ import (
 
 func TestResolveAuthHeaders(t *testing.T) { //nolint:paralleltest // t.Setenv cannot be used in parallel tests
 	tests := []struct {
-		name        string
-		hostHeaders HostHeaders
-		host        string
-		env         map[string]string
-		want        map[string]string
-		wantErr     string
+		name          string
+		headersByHost HeadersByHost
+		host          string
+		env           map[string]string
+		want          map[string]string
+		wantErr       string
 	}{
 		{
-			name:        "no configuration",
-			hostHeaders: nil,
-			host:        "gitlab.com",
+			name:          "no configuration",
+			headersByHost: nil,
+			host:          "gitlab.com",
 		},
 		{
-			name:        "host does not match",
-			hostHeaders: HostHeaders{"gitlab.com": {"PRIVATE-TOKEN": "token"}},
-			host:        "example.com",
+			name:          "host does not match",
+			headersByHost: HeadersByHost{"gitlab.com": {"PRIVATE-TOKEN": "token"}},
+			host:          "example.com",
 		},
 		{
-			name:        "port is part of the host",
-			hostHeaders: HostHeaders{"example.com": {"PRIVATE-TOKEN": "token"}},
-			host:        "example.com:8080",
+			name:          "port is part of the host",
+			headersByHost: HeadersByHost{"example.com": {"PRIVATE-TOKEN": "token"}},
+			host:          "example.com:8080",
 		},
 		{
-			name:        "literal value",
-			hostHeaders: HostHeaders{"gitlab.com": {"PRIVATE-TOKEN": "token"}},
-			host:        "gitlab.com",
-			want:        map[string]string{"PRIVATE-TOKEN": "token"},
+			name:          "literal value",
+			headersByHost: HeadersByHost{"gitlab.com": {"PRIVATE-TOKEN": "token"}},
+			host:          "gitlab.com",
+			want:          map[string]string{"PRIVATE-TOKEN": "token"},
 		},
 		{
-			name:        "environment variable",
-			hostHeaders: HostHeaders{"gitlab.com": {"PRIVATE-TOKEN": `{{env "TASK_TEST_TOKEN"}}`}}, //nolint:gosec // an env var reference, not a credential
-			host:        "gitlab.com",
-			env:         map[string]string{"TASK_TEST_TOKEN": "s3cret"},
-			want:        map[string]string{"PRIVATE-TOKEN": "s3cret"},
+			name:          "environment variable",
+			headersByHost: HeadersByHost{"gitlab.com": {"PRIVATE-TOKEN": `{{env "TASK_TEST_TOKEN"}}`}}, //nolint:gosec // an env var reference, not a credential
+			host:          "gitlab.com",
+			env:           map[string]string{"TASK_TEST_TOKEN": "s3cret"},
+			want:          map[string]string{"PRIVATE-TOKEN": "s3cret"},
 		},
 		{
-			name:        "environment variable inside a longer value",
-			hostHeaders: HostHeaders{"gitlab.com": {"Authorization": `Bearer {{env "TASK_TEST_TOKEN"}}`}},
-			host:        "gitlab.com",
-			env:         map[string]string{"TASK_TEST_TOKEN": "s3cret"},
-			want:        map[string]string{"Authorization": "Bearer s3cret"},
+			name:          "environment variable inside a longer value",
+			headersByHost: HeadersByHost{"gitlab.com": {"Authorization": `Bearer {{env "TASK_TEST_TOKEN"}}`}},
+			host:          "gitlab.com",
+			env:           map[string]string{"TASK_TEST_TOKEN": "s3cret"},
+			want:          map[string]string{"Authorization": "Bearer s3cret"},
 		},
 		{
-			name:        "undefined environment variable expands to nothing",
-			hostHeaders: HostHeaders{"gitlab.com": {"PRIVATE-TOKEN": `{{env "TASK_TEST_UNSET"}}`}}, //nolint:gosec // an env var reference, not a credential
-			host:        "gitlab.com",
-			want:        map[string]string{"PRIVATE-TOKEN": ""},
+			name:          "undefined environment variable expands to nothing",
+			headersByHost: HeadersByHost{"gitlab.com": {"PRIVATE-TOKEN": `{{env "TASK_TEST_UNSET"}}`}}, //nolint:gosec // an env var reference, not a credential
+			host:          "gitlab.com",
+			want:          map[string]string{"PRIVATE-TOKEN": ""},
 		},
 		{
-			name:        "functions compose, so Basic auth needs no manual base64",
-			hostHeaders: HostHeaders{"gitlab.com": {"Authorization": `Basic {{ printf "%s:%s" (env "TASK_TEST_USER") (env "TASK_TEST_TOKEN") | b64enc }}`}},
-			host:        "gitlab.com",
-			env:         map[string]string{"TASK_TEST_USER": "alice", "TASK_TEST_TOKEN": "s3cret"},
-			want:        map[string]string{"Authorization": "Basic YWxpY2U6czNjcmV0"},
+			name:          "functions compose, so Basic auth needs no manual base64",
+			headersByHost: HeadersByHost{"gitlab.com": {"Authorization": `Basic {{ printf "%s:%s" (env "TASK_TEST_USER") (env "TASK_TEST_TOKEN") | b64enc }}`}},
+			host:          "gitlab.com",
+			env:           map[string]string{"TASK_TEST_USER": "alice", "TASK_TEST_TOKEN": "s3cret"},
+			want:          map[string]string{"Authorization": "Basic YWxpY2U6czNjcmV0"},
 		},
 		{
 			// The .taskrc is read before any Taskfile, so no variable exists.
-			name:        "a variable reference resolves to nothing",
-			hostHeaders: HostHeaders{"gitlab.com": {"PRIVATE-TOKEN": "{{.TASK_TEST_TOKEN}}"}}, //nolint:gosec // a template, not a credential
-			host:        "gitlab.com",
-			env:         map[string]string{"TASK_TEST_TOKEN": "s3cret"},
-			want:        map[string]string{"PRIVATE-TOKEN": ""},
+			name:          "a variable reference resolves to nothing",
+			headersByHost: HeadersByHost{"gitlab.com": {"PRIVATE-TOKEN": "{{.TASK_TEST_TOKEN}}"}}, //nolint:gosec // a template, not a credential
+			host:          "gitlab.com",
+			env:           map[string]string{"TASK_TEST_TOKEN": "s3cret"},
+			want:          map[string]string{"PRIVATE-TOKEN": ""},
 		},
 		{
-			name:        "a literal value is left untouched",
-			hostHeaders: HostHeaders{"gitlab.com": {"PRIVATE-TOKEN": "p$ssw0rd"}}, //nolint:gosec // a test fixture
-			host:        "gitlab.com",
-			want:        map[string]string{"PRIVATE-TOKEN": "p$ssw0rd"},
+			name:          "a literal value is left untouched",
+			headersByHost: HeadersByHost{"gitlab.com": {"PRIVATE-TOKEN": "p$ssw0rd"}}, //nolint:gosec // a test fixture
+			host:          "gitlab.com",
+			want:          map[string]string{"PRIVATE-TOKEN": "p$ssw0rd"},
 		},
 		{
-			name:        "malformed template",
-			hostHeaders: HostHeaders{"gitlab.com": {"PRIVATE-TOKEN": `{{env "TASK_TEST_TOKEN"`}}, //nolint:gosec // a template, not a credential
-			host:        "gitlab.com",
-			wantErr:     `remote auth for host "gitlab.com": template: :1: unclosed action`,
+			name:          "malformed template",
+			headersByHost: HeadersByHost{"gitlab.com": {"PRIVATE-TOKEN": `{{env "TASK_TEST_TOKEN"`}}, //nolint:gosec // a template, not a credential
+			host:          "gitlab.com",
+			wantErr:       `remote auth for host "gitlab.com": template: :1: unclosed action`,
 		},
 		{
-			name:        "header name with a space",
-			hostHeaders: HostHeaders{"gitlab.com": {"PRIVATE TOKEN": "token"}},
-			host:        "gitlab.com",
-			wantErr:     `remote auth for host "gitlab.com": invalid header name "PRIVATE TOKEN"`,
+			name:          "header name with a space",
+			headersByHost: HeadersByHost{"gitlab.com": {"PRIVATE TOKEN": "token"}},
+			host:          "gitlab.com",
+			wantErr:       `remote auth for host "gitlab.com": invalid header name "PRIVATE TOKEN"`,
 		},
 		{
-			name:        "header name outside the HTTP token grammar",
-			hostHeaders: HostHeaders{"gitlab.com": {"X-Foo(bar)": "token"}},
-			host:        "gitlab.com",
-			wantErr:     `remote auth for host "gitlab.com": invalid header name "X-Foo(bar)"`,
+			name:          "header name outside the HTTP token grammar",
+			headersByHost: HeadersByHost{"gitlab.com": {"X-Foo(bar)": "token"}},
+			host:          "gitlab.com",
+			wantErr:       `remote auth for host "gitlab.com": invalid header name "X-Foo(bar)"`,
 		},
 		{
-			name:        "empty header name",
-			hostHeaders: HostHeaders{"gitlab.com": {"": "token"}},
-			host:        "gitlab.com",
-			wantErr:     `remote auth for host "gitlab.com": invalid header name ""`,
+			name:          "empty header name",
+			headersByHost: HeadersByHost{"gitlab.com": {"": "token"}},
+			host:          "gitlab.com",
+			wantErr:       `remote auth for host "gitlab.com": invalid header name ""`,
 		},
 	}
 
@@ -112,7 +112,7 @@ func TestResolveAuthHeaders(t *testing.T) { //nolint:paralleltest // t.Setenv ca
 			for name, value := range test.env {
 				t.Setenv(name, value)
 			}
-			headers, err := resolveAuthHeaders(test.hostHeaders, test.host)
+			headers, err := resolveAuthHeaders(test.headersByHost, test.host)
 			if test.wantErr != "" {
 				require.EqualError(t, err, test.wantErr)
 				return
@@ -178,7 +178,7 @@ func TestHTTPNodeAuthHeaders(t *testing.T) { //nolint:paralleltest // t.Setenv c
 
 	t.Setenv("TASK_TEST_TOKEN", "s3cret")
 	node, err := NewHTTPNode(srv.URL+"/Taskfile.yml", "", true,
-		WithAuthHeaders(HostHeaders{
+		WithAuthHeaders(HeadersByHost{
 			mustHost(t, srv.URL): {"PRIVATE-TOKEN": `{{env "TASK_TEST_TOKEN"}}`}, //nolint:gosec // an env var reference, not a credential
 		}),
 	)
@@ -208,7 +208,7 @@ func TestHTTPNodeAuthHeadersNotSentOnRedirect(t *testing.T) {
 	defer srv.Close()
 
 	node, err := NewHTTPNode(srv.URL+"/Taskfile.yml", "", true,
-		WithAuthHeaders(HostHeaders{
+		WithAuthHeaders(HeadersByHost{
 			mustHost(t, srv.URL): {"PRIVATE-TOKEN": "s3cret"},
 		}),
 	)
@@ -226,7 +226,7 @@ func TestHTTPNodeAuthHeadersNotSentOnRedirect(t *testing.T) {
 // cached and offline runs do not require them.
 func TestHTTPNodeAuthHeadersResolvedLazily(t *testing.T) { //nolint:paralleltest // t.Setenv cannot be used in parallel tests
 	node, err := NewHTTPNode("https://gitlab.com/Taskfile.yml", "", false,
-		WithAuthHeaders(HostHeaders{
+		WithAuthHeaders(HeadersByHost{
 			"gitlab.com": {"PRIVATE-TOKEN": `{{env "TASK_TEST_LAZY"}}`}, //nolint:gosec // an env var reference, not a credential
 		}),
 	)
@@ -235,7 +235,7 @@ func TestHTTPNodeAuthHeadersResolvedLazily(t *testing.T) { //nolint:paralleltest
 	// Defined only after the node was built: the value must still be picked up.
 	t.Setenv("TASK_TEST_LAZY", "s3cret")
 
-	headers, err := resolveAuthHeaders(node.authHeaders, node.url.Host)
+	headers, err := resolveAuthHeaders(node.authHeadersByHost, node.url.Host)
 	require.NoError(t, err)
 	assert.Equal(t, map[string]string{"PRIVATE-TOKEN": "s3cret"}, headers)
 }

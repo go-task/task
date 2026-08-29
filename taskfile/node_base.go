@@ -7,13 +7,13 @@ type (
 	// designed to be embedded in other node types so that this boilerplate code
 	// does not need to be repeated.
 	baseNode struct {
-		parent      Node
-		dir         string
-		checksum    string
-		caCert      string
-		cert        string
-		certKey     string
-		authHeaders HostHeaders
+		parent            Node
+		dir               string
+		checksum          string
+		caCert            string
+		cert              string
+		certKey           string
+		authHeadersByHost HeadersByHost
 	}
 )
 
@@ -78,8 +78,8 @@ func WithCertKey(certKey string) NodeOption {
 }
 
 // WithAuthHeaders sets the HTTP headers to send, keyed by host.
-func WithAuthHeaders(authHeaders HostHeaders) NodeOption {
+func WithAuthHeaders(authHeadersByHost HeadersByHost) NodeOption {
 	return func(node *baseNode) {
-		node.authHeaders = authHeaders
+		node.authHeadersByHost = authHeadersByHost
 	}
 }
