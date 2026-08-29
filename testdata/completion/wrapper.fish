@@ -3,7 +3,7 @@
 # Set up by run.sh: TASK_FIXTURE, and `task` on PATH = the binary under test.
 
 cd $TASK_FIXTURE
-source (dirname (status -f))/../fish/task.fish
+source (dirname (status -f))/../../completion/fish/task.fish
 
 set -g fails 0
 
