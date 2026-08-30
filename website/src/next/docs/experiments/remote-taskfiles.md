@@ -1,4 +1,5 @@
 ---
+title: Remote Taskfiles (#1317)
 description: Experimentation for using Taskfiles stored in remote locations
 outline: deep
 ---
