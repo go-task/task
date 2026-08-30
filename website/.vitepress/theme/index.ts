@@ -2,6 +2,7 @@ import DefaultTheme from 'vitepress/theme';
 import type { Theme } from 'vitepress';
 import './custom.css';
 import HomePage from '../components/HomePage.vue';
+import HeroActions from '../components/HeroActions.vue';
 import AuthorCard from '../components/AuthorCard.vue';
 import BlogPost from '../components/BlogPost.vue';
 import Version from '../components/Version.vue';
@@ -15,6 +16,7 @@ export default {
   extends: DefaultTheme,
   Layout() {
     return h(DefaultTheme.Layout, null, {
+      'home-hero-actions-after': () => h(HeroActions),
       'home-features-after': () => h(HomePage)
     });
   },
@@ -23,7 +25,10 @@ export default {
     app.component('BlogPost', BlogPost);
     app.component('Version', Version);
     app.component('Adopters', Adopters);
-    app.component('CopyOrDownloadAsMarkdownButtons', CopyOrDownloadAsMarkdownButtons);
+    app.component(
+      'CopyOrDownloadAsMarkdownButtons',
+      CopyOrDownloadAsMarkdownButtons
+    );
     enhanceAppWithTabs(app);
   }
 } satisfies Theme;

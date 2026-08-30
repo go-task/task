@@ -169,6 +169,36 @@ html:not(.dark) .vp-sponsor-grid-item .logo-dark {
   display: block;
 }
 
+/* Mirrors the .actions/.action rules of VitePress' VPHero.vue, which are scoped
+   to that component and so do not reach the row in HeroActions.vue. */
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  margin: -6px;
+  padding-top: 24px;
+}
+
+.hero-action {
+  flex-shrink: 0;
+  padding: 6px;
+}
+
+.VPHero.has-image .hero-actions {
+  justify-content: center;
+}
+
+@media (min-width: 640px) {
+  .hero-actions {
+    padding-top: 32px;
+  }
+}
+
+@media (min-width: 960px) {
+  .VPHero.has-image .hero-actions {
+    justify-content: flex-start;
+  }
+}
+
 @media (max-width: 639px) {
   .VPHomeHero {
     overflow: hidden;
@@ -189,13 +219,13 @@ html:not(.dark) .vp-sponsor-grid-item .logo-dark {
     line-height: 36px;
   }
 
-  .VPHomeHero .actions {
+  .VPHomeHero .hero-actions {
     align-items: stretch;
     margin-right: 0;
     margin-left: 0;
   }
 
-  .VPHomeHero .action {
+  .VPHomeHero .hero-action {
     min-width: min(100%, 15rem);
   }
 
