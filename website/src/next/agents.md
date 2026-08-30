@@ -30,9 +30,9 @@ URL. The curated index is at [/llms.txt](/llms.txt) and the full corpus at
 
 ## Semantics that are easy to get wrong
 
-1. `vars` are template values. `env` values are template values **and** are
-   exported to the commands Task runs. `$FOO` in a command does not see a `vars`
-   entry.
+1. `vars` are template values only: `$FOO` in a command never sees one. `env` is
+   exported, so `$FOO` works. A template also sees `env` declared at the root of
+   the Taskfile, but **not** `env` declared on a task, which renders empty.
 2. A task's own `vars:` cannot be overridden from the command line. Put the
    default in global `vars:` if the caller needs to supply a value.
 3. `vars:` given on an `includes:` entry are defaults, not overrides: the
@@ -60,7 +60,9 @@ URL. The curated index is at [/llms.txt](/llms.txt) and the full corpus at
 - Confirm the feature exists in the schema for the version in use.
 - Prefer plain, readable tasks over dense templating.
 - Use `deps` only where concurrent execution is actually correct.
-- Never embed credentials. Read them from `env:` or a secret manager, and mark
-  them `secret: true` so they are masked in logs.
+- Never embed credentials. Read them from the environment or a secret manager.
+  `secret: true` masks a value in Task's own logs, but it only works on `vars:`,
+  not on `env:`, and it never masks what a command itself prints. Treat it as
+  one less place a secret is echoed, not as protection.
 - Give tasks a `desc:` so they show up in `task --list`, and validate inputs
   with `requires:` or `preconditions:`.
