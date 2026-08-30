@@ -38,7 +38,7 @@ Never run remote Taskfiles from sources that you do not trust.
 It is possible to include a Taskfile from a remote source via HTTP(S) or Git.
 This is useful if you want to reuse a set of tasks in multiple projects. For
 more information, take a look at our
-[remote Taskfiles documentation](./remote-taskfiles.md).
+[remote Taskfiles documentation](../remote-taskfiles.md).
 
 ```yaml
 version: '3'

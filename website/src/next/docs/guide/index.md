@@ -46,7 +46,7 @@ Taskfile. Each page below is self-contained; start wherever your problem is.
 
 - [Including other Taskfiles](./includes.md) — namespaces, optional and internal
   includes, flattening, and per-include variables.
-- [Remote Taskfiles](./remote-taskfiles.md) — running and including Taskfiles
+- [Remote Taskfiles](../remote-taskfiles.md) — running and including Taskfiles
   served over HTTP or Git, and the checksum rules that guard them.
 
 ## Execution environment

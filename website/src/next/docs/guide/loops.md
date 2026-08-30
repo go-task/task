@@ -121,7 +121,7 @@ files that match that glob.
 Paths will always be returned as paths relative to the task directory. If you
 need to convert this to an absolute path, you can use the built-in `joinPath`
 function. There are some
-[special variables](./reference/templating.md#special-variables) that you may
+[special variables](../reference/templating.md#special-variables) that you may
 find useful for this.
 
 ::: code-group
