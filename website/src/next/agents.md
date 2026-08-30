@@ -17,16 +17,16 @@ URL. The curated index is at [/llms.txt](/llms.txt) and the full corpus at
 
 ## Where to look
 
-- [Getting Started](./docs/getting-started.md) — the shape of a Taskfile.
-- [Taskfile Schema](./docs/reference/schema.md) — the source of truth for keys,
+- [Getting Started](./docs/getting-started.md): the shape of a Taskfile.
+- [Taskfile Schema](./docs/reference/schema.md): the source of truth for keys,
   types and accepted values. Check here before assuming a field exists.
-- [CLI](./docs/reference/cli.md) — commands, flags and exit codes.
-- [Templating](./docs/reference/templating.md) — every template function and
+- [CLI](./docs/reference/cli.md): commands, flags and exit codes.
+- [Templating](./docs/reference/templating.md): every template function and
   special variable. Check here before inventing one.
-- [Guide](./docs/guide/) — one page per topic, for how to do a thing.
+- [Guide](./docs/guide/): one page per topic, for how to do a thing.
 - [Variable resolution](./docs/concepts/variable-resolution.md) and
-  [Dependencies and concurrency](./docs/concepts/dependencies-and-concurrency.md)
-  — for when the behaviour matters more than the procedure.
+  [Dependencies and concurrency](./docs/concepts/dependencies-and-concurrency.md):
+  for when the behaviour matters more than the procedure.
 
 ## Semantics that are easy to get wrong
 
@@ -35,13 +35,13 @@ URL. The curated index is at [/llms.txt](/llms.txt) and the full corpus at
    entry.
 2. A task's own `vars:` cannot be overridden from the command line. Put the
    default in global `vars:` if the caller needs to supply a value.
-3. `vars:` given on an `includes:` entry are defaults, not overrides — the
+3. `vars:` given on an `includes:` entry are defaults, not overrides: the
    included Taskfile's own `vars:` are applied after them and win.
 4. Everything in `deps` may run concurrently and in any order. A `task:`
    reference inside `cmds` runs at its position and blocks the next command. If
    order matters, use `cmds`.
-5. Each command runs in its own shell. Nothing carries over between them — not
-   `cd`, not an exported variable. Use Task's `dir:` and `env:` instead.
+5. Each command runs in its own shell. Nothing carries over between them, not
+   `cd` and not an exported variable. Use Task's `dir:` and `env:` instead.
 6. A template renders text. Use `ref:` to pass an array or a map without
    flattening it to a string.
 7. A passing `status:` means the task is already up to date and is skipped. A

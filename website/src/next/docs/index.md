@@ -18,9 +18,9 @@ a YAML file called a `Taskfile`, and Task runs them.
 
 Install the binary, then write your first Taskfile. It takes about five minutes.
 
-- [Installation](./installation.md) — package managers, prebuilt binaries,
+- [Installation](./installation.md): package managers, prebuilt binaries,
   building from source, and shell completions.
-- [Getting Started](./getting-started.md) — your first Taskfile, run end to end.
+- [Getting Started](./getting-started.md): your first Taskfile, run end to end.
 
 ## Using Task
 
@@ -30,22 +30,22 @@ conditional execution, loops, includes, output modes and watch mode.
 
 ## Looking something up
 
-- [Taskfile Schema](./reference/schema.md) — every key you can put in a
+- [Taskfile Schema](./reference/schema.md): every key you can put in a
   Taskfile.
-- [CLI](./reference/cli.md) — commands, flags and exit codes.
-- [Templating](./reference/templating.md) — template functions and special
+- [CLI](./reference/cli.md): commands, flags and exit codes.
+- [Templating](./reference/templating.md): template functions and special
   variables.
 - [Configuration](./reference/config.md) and
-  [Environment](./reference/environment.md) — settings outside the Taskfile.
+  [Environment](./reference/environment.md): settings outside the Taskfile.
 
 ## Keeping up
 
-- [Changelog](./changelog.md) — what shipped, and when.
+- [Changelog](./changelog.md): what shipped, and when.
 - [Experiments](./experiments/index.md) and
-  [Deprecations](./deprecations/index.md) — what is coming, and what is going
+  [Deprecations](./deprecations/index.md): what is coming, and what is going
   away.
-- [FAQ](./faq.md) — the questions that come up most often.
-- [Community](./community.md) — integrations and tools built by other people.
+- [FAQ](./faq.md): the questions that come up most often.
+- [Community](./community.md): integrations and tools built by other people.
 
 ## Using an AI coding assistant
 

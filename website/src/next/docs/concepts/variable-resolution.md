@@ -54,8 +54,8 @@ $ task greet NAME=from-cli
 from-task
 ```
 
-To let a caller supply a value, give the default somewhere earlier — global
-`vars:` — or use a template default:
+To let a caller supply a value, give the default somewhere earlier, in global
+`vars:`, or use a template default:
 
 ```yaml
 version: '3'
@@ -99,7 +99,7 @@ that sets it silently get the declared value instead.
 ### Global variable names are shared across every Taskfile in the run
 
 Global `vars:` are merged into one set before any task runs, so a name declared
-in both the entrypoint and an included Taskfile resolves to the included one —
+in both the entrypoint and an included Taskfile resolves to the included one,
 including for tasks defined in the entrypoint.
 
 Give globals that belong to an included Taskfile a distinctive name, or move
@@ -121,13 +121,13 @@ earlier step, never a later one.
 Results are cached for the run, keyed on the command string, so the same `sh:`
 command appearing twice runs once.
 
-To pass a variable without flattening it to text — an array, a map — use `ref:`
+To pass a variable without flattening it to text, an array or a map, use `ref:`
 instead of <span v-pre>`{{ }}`</span>. A template renders a string; `ref:`
 preserves the type.
 
 ## Related
 
-- [Variables](../guide/variables.md) — how to declare each kind.
-- [Environment variables](../guide/environment.md) — `env:` and `.env` files.
-- [Including other Taskfiles](../guide/includes.md) — namespaces and includes.
-- [Taskfile Schema](../reference/schema.md) — every key, with its type.
+- [Variables](../guide/variables.md): how to declare each kind.
+- [Environment variables](../guide/environment.md): `env:` and `.env` files.
+- [Including other Taskfiles](../guide/includes.md): namespaces and includes.
+- [Taskfile Schema](../reference/schema.md): every key, with its type.
