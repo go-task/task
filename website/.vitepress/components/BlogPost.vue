@@ -1,9 +1,9 @@
 <template>
   <article class="blog-post">
     <div class="post-header">
-      <h3 class="post-title">
+      <h2 class="post-title">
         <a :href="url">{{ title }}</a>
-      </h3>
+      </h2>
 
       <div class="post-meta">
         <time :datetime="date" class="post-date">
@@ -37,23 +37,27 @@
   </article>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import AuthorCard from './AuthorCard.vue';
-const props = defineProps({
-  title: String,
-  url: String,
-  date: String,
-  author: String,
-  description: String,
-  tags: Array,
-  image: String
-});
 
-function formatDate(date) {
+interface Props {
+  title: string;
+  url: string;
+  date: string;
+  author?: string;
+  description?: string;
+  tags?: string[];
+  image?: string;
+}
+
+defineProps<Props>();
+
+function formatDate(date: string) {
   return new Date(date).toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'long',
-    day: 'numeric'
+    day: 'numeric',
+    timeZone: 'UTC'
   });
 }
 </script>
@@ -156,7 +160,7 @@ function formatDate(date) {
 
 .read-more:hover {
   background: var(--vp-c-brand-1);
-  color: white;
+  color: var(--vp-c-bg);
 }
 
 /* Responsive */

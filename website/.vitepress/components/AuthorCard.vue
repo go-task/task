@@ -1,6 +1,14 @@
 <template>
   <div class="author-compact" v-if="author">
-    <img :src="author.avatar" :alt="author.name" class="author-avatar" />
+    <img
+      :src="author.avatar"
+      :alt="author.name"
+      class="author-avatar"
+      width="48"
+      height="48"
+      loading="lazy"
+      decoding="async"
+    />
     <div class="author-info">
       <div class="author-name-line">
         <span class="author-name">{{ author.name }}</span>
@@ -11,9 +19,11 @@
             :key="link"
             :href="link"
             target="_blank"
+            rel="noopener noreferrer"
             class="social-link"
+            :aria-label="`${author.name} on ${socialName(icon)}`"
           >
-            <span :class="`vpi-social-${icon}`"></span>
+            <span :class="`vpi-social-${icon}`" aria-hidden="true"></span>
           </a>
         </div>
       </div>
@@ -22,12 +32,21 @@
   </div>
 </template>
 
-<script setup>
-import { team } from '../team.ts';
+<script setup lang="ts">
+import { team } from '../team';
 import { computed } from 'vue';
-const props = defineProps({
-  author: String
-});
+
+const props = defineProps<{ author?: string }>();
+
+const socialNames: Record<string, string> = {
+  bluesky: 'Bluesky',
+  discord: 'Discord',
+  github: 'GitHub',
+  mastodon: 'Mastodon',
+  x: 'X'
+};
+
+const socialName = (icon: string) => socialNames[icon] ?? icon;
 
 const author = computed(() => {
   return team.find((m) => m.slug === props.author) || null;
