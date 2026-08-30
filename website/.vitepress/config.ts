@@ -297,7 +297,8 @@ export default defineConfig({
   srcDir: 'src',
   cleanUrls: true,
   srcExclude: [`${other}/**`, `${channel}/docs/**/template.md`],
-  rewrites: { [`${channel}/:path*`]: ':path*' },
+  rewrites: (id) =>
+    id.startsWith(`${channel}/`) ? id.slice(channel.length + 1) : id,
   markdown: {
     config: (md) => {
       md.use(githubLinksPlugin, {
