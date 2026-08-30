@@ -128,6 +128,12 @@ by using `task website` (requires `nodejs` & `pnpm`). All content is written in
 Markdown and is located in the `website/src` directory. All Markdown documents
 should have an 80 character line wrap limit (enforced by Prettier).
 
+Search is provided by Algolia DocSearch. The crawler runs on Algolia's side and
+is configured through their dashboard, but `website/docsearch.config.js` holds
+the same configuration in the repository so it can be read and reviewed. If you
+change one, change the other. A page's `section:` frontmatter is what the
+crawler shows as the breadcrumb on a search result, so a new page needs one.
+
 When making a change, consider whether a change to the [Usage
 Guide][usage-guide] is necessary. This document contains descriptions and
 examples of how to use Task features. If you're adding a new feature, try to
