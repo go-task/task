@@ -5,8 +5,17 @@ import { sponsors } from '../sponsors';
 import AdoptersCarousel from './AdoptersCarousel.vue';
 import { data as example } from './homeExample.data';
 
-const installCommand =
-  'sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d -b ~/.local/bin';
+const installCommands = {
+  unix: 'sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d -b ~/.local/bin',
+  windows: 'winget install Task.Task'
+} as const;
+type InstallPlatform = keyof typeof installCommands;
+
+const installPlatform = ref<InstallPlatform>('unix');
+const installCommand = computed(() => installCommands[installPlatform.value]);
+const installPlatformLabel = computed(() =>
+  installPlatform.value === 'windows' ? 'Windows' : 'macOS and Linux'
+);
 const copyState = ref<'idle' | 'copied' | 'failed'>('idle');
 const commandEl = ref<HTMLElement>();
 let copyResetTimer: number | undefined;
@@ -19,7 +28,7 @@ const copyLabel = computed(() => {
 
 const copyAnnouncement = computed(() => {
   if (copyState.value === 'copied') {
-    return 'Install command copied to clipboard';
+    return `${installPlatformLabel.value} install command copied to clipboard`;
   }
   if (copyState.value === 'failed') {
     return 'The install command could not be copied, so it has been selected';
@@ -28,10 +37,24 @@ const copyAnnouncement = computed(() => {
 });
 
 const copyAriaLabel = computed(() => {
-  if (copyState.value === 'copied') return 'Install command copied';
-  if (copyState.value === 'failed') return 'Copy install command again';
-  return 'Copy install command';
+  if (copyState.value === 'copied') {
+    return `${installPlatformLabel.value} install command copied`;
+  }
+  if (copyState.value === 'failed') {
+    return `Copy ${installPlatformLabel.value} install command again`;
+  }
+  return `Copy ${installPlatformLabel.value} install command`;
 });
+
+function selectInstallPlatform(platform: InstallPlatform) {
+  if (installPlatform.value === platform) return;
+
+  window.clearTimeout(copyResetTimer);
+  copyResetTimer = undefined;
+  copyState.value = 'idle';
+  installPlatform.value = platform;
+  window.getSelection()?.removeAllRanges();
+}
 
 function resetCopyState() {
   window.clearTimeout(copyResetTimer);
@@ -42,7 +65,7 @@ function resetCopyState() {
 
 async function copyInstallCommand() {
   try {
-    await navigator.clipboard.writeText(installCommand);
+    await navigator.clipboard.writeText(installCommand.value);
     copyState.value = 'copied';
   } catch {
     copyState.value = 'failed';
@@ -81,9 +104,36 @@ onUnmounted(() => window.clearTimeout(copyResetTimer));
         </p>
       </div>
 
+      <div
+        class="install-platforms"
+        role="group"
+        aria-label="Choose an operating system"
+      >
+        <span>Install on:</span>
+        <button
+          type="button"
+          :aria-pressed="installPlatform === 'unix'"
+          @click="selectInstallPlatform('unix')"
+        >
+          macOS / Linux
+        </button>
+        <button
+          type="button"
+          :aria-pressed="installPlatform === 'windows'"
+          @click="selectInstallPlatform('windows')"
+        >
+          Windows
+        </button>
+      </div>
+
       <div class="install-command">
         <span aria-hidden="true" class="prompt">$</span>
-        <code ref="commandEl">{{ installCommand }}</code>
+        <code
+          ref="commandEl"
+          aria-live="polite"
+          :aria-label="`${installPlatformLabel} install command`"
+          >{{ installCommand }}</code
+        >
         <button
           type="button"
           :aria-label="copyAriaLabel"
@@ -97,8 +147,8 @@ onUnmounted(() => window.clearTimeout(copyResetTimer));
         </span>
       </div>
       <p class="install-note">
-        Prefer a package manager? Task is also available through Homebrew,
-        WinGet, Scoop, npm, apt, dnf, apk, and more.
+        Need another installation method? Task is also available through
+        Homebrew, Scoop, npm, apt, dnf, apk, and more.
         <a href="/docs/installation" data-umami-event="home-install-options"
           >See every installation method</a
         >.
@@ -250,6 +300,40 @@ onUnmounted(() => window.clearTimeout(copyResetTimer));
   color: var(--vp-c-text-2);
   font-size: 1.05rem;
   line-height: 1.7;
+}
+
+.install-platforms {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  max-width: 940px;
+  margin-bottom: 0.6rem;
+  color: var(--vp-c-text-2);
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.install-platforms button {
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--vp-c-text-2);
+  cursor: pointer;
+  font: inherit;
+  padding: 0.35rem 0.65rem;
+}
+
+.install-platforms button[aria-pressed='true'] {
+  border-color: var(--vp-c-brand-1);
+  background: var(--vp-c-brand-soft);
+  color: var(--vp-c-brand-1);
+}
+
+.install-platforms button:hover,
+.install-platforms button:focus-visible {
+  border-color: var(--vp-c-brand-1);
+  color: var(--vp-c-brand-1);
 }
 
 .install-command {
