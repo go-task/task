@@ -3,6 +3,8 @@ title: Conditional execution
 description:
   Decide whether a task should run at all, using `preconditions`, `if`, and the
   flags that limit when a task runs.
+section: Guide
+docType: guide
 outline: deep
 ---
 

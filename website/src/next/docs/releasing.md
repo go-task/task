@@ -3,6 +3,8 @@ title: Releasing
 description:
   Task release process including GoReleaser, Homebrew, npm, Snapcraft, winget,
   and other package managers
+section: Contributing
+docType: contributing
 outline: deep
 ---
 

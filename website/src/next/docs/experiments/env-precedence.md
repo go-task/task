@@ -2,6 +2,8 @@
 title: 'Env Precedence (#1038)'
 description:
   Experiment to change the precedence of environment variables in Task
+section: Project
+docType: project
 outline: deep
 ---
 

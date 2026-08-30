@@ -3,6 +3,8 @@ title: Style Guide
 description:
   Official style guide for Taskfile.yml files with best practices and
   recommended conventions
+section: Contributing
+docType: contributing
 outline: deep
 ---
 

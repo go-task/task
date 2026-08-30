@@ -3,6 +3,8 @@ title: Platform-specific behaviour
 description:
   Restrict tasks and commands to an operating system or architecture, and set
   shell options with `set` and `shopt`.
+section: Guide
+docType: guide
 outline: deep
 ---
 

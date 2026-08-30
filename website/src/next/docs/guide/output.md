@@ -3,6 +3,8 @@ title: Output and logging
 description:
   Choose how Task prints command output, silence it, ignore errors, and annotate
   failures in CI.
+section: Guide
+docType: guide
 outline: deep
 ---
 

@@ -1,6 +1,8 @@
 ---
 title: Watch mode
 description: Re-run a task automatically whenever its sources change.
+section: Guide
+docType: guide
 outline: deep
 ---
 

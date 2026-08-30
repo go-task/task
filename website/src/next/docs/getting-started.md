@@ -1,6 +1,8 @@
 ---
 title: Getting Started
 description: Guide for getting started with Task
+section: Getting Started
+docType: guide
 outline: deep
 ---
 

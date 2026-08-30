@@ -3,6 +3,8 @@ title: Guide
 description:
   An index of every topic in the Task guide, from running your first task to
   composing Taskfiles across repositories.
+section: Guide
+docType: guide
 outline: deep
 ---
 

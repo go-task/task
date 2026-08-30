@@ -3,6 +3,8 @@ title: Variable resolution
 description:
   The single order Task uses to resolve a variable, and the consequences that
   surprise people most often.
+section: Concepts
+docType: concept
 outline: deep
 ---
 

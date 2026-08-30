@@ -3,6 +3,8 @@ title: Taskfile Versions
 description:
   How to use the Taskfile schema version to ensure users are using the correct
   versions of Task
+section: Project
+docType: project
 outline: deep
 ---
 

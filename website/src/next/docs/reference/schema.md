@@ -1,6 +1,8 @@
 ---
 title: Taskfile Schema Reference
 description: A reference for the Taskfile schema
+section: Reference
+docType: reference
 outline: deep
 ---
 

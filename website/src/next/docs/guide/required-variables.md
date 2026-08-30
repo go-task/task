@@ -3,6 +3,8 @@ title: Required variables and prompts
 description:
   Require variables to be set, restrict them to a list of allowed values, and
   prompt for them interactively.
+section: Guide
+docType: guide
 outline: deep
 ---
 

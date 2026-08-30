@@ -2,6 +2,8 @@
 title: Remote Taskfiles
 description:
   Guide to loading and securely using Taskfiles from HTTP and Git sources
+section: Guide
+docType: guide
 outline: deep
 ---
 
