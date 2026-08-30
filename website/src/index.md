@@ -43,4 +43,6 @@ features:
     details:
       Include Taskfiles straight from a URL or a Git repo, so shared workflows
       live in one place instead of being copy-pasted.
+    link: /docs/remote-taskfiles
+    linkText: Explore Remote Taskfiles
 ---
