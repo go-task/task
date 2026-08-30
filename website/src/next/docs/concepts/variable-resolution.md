@@ -107,10 +107,20 @@ them onto the tasks that use them, where step 8 keeps them local.
 
 ### `env:` and `vars:` are not the same thing
 
-Both end up in the same set, so <span v-pre>`{{.FOO}}`</span> finds a name set
-by `env:`. The difference is on the way out: only `env:` entries are exported to
-the environment of the commands Task runs. A `vars:` entry exists for templates
-only, and `$FOO` in a command will not see it.
+A `vars:` entry exists for templates only. `$FOO` in a command will not see it,
+whichever level it was declared at.
+
+`env:` is exported to the environment of the commands Task runs, so `$FOO`
+works. Whether a template also sees it depends on where it was declared:
+
+| Declared at              | <span v-pre>`{{.FOO}}`</span> | `$FOO` |
+| ------------------------ | ----------------------------- | ------ |
+| the root of the Taskfile | yes, it is step 3 above       | yes    |
+| on a task                | **no, it renders empty**      | yes    |
+
+A task's `env:` is assembled after the variable set has been resolved, so it
+never takes part in the order on this page. Read a task-level value with `$FOO`,
+or declare it in `vars:` if a template needs it.
 
 ## When values are computed
 
