@@ -353,7 +353,7 @@ function track(event: string) {
 }
 
 .code-panel :deep(pre) {
-  min-height: 420px;
+  flex: 1;
   min-width: 0;
   margin: 0;
   overflow: auto;
@@ -404,6 +404,8 @@ function track(event: string) {
 
 .path-grid article {
   position: relative;
+  display: flex;
+  flex-direction: column;
   min-width: 0;
   padding: 1.5rem;
   border: 1px solid var(--vp-c-divider);
@@ -425,7 +427,6 @@ function track(event: string) {
 }
 
 .path-grid p {
-  min-height: 5.1rem;
   margin: 0.75rem 0 1rem;
   color: var(--vp-c-text-2);
   font-size: 0.9rem;
@@ -435,7 +436,7 @@ function track(event: string) {
 .path-grid ul {
   display: grid;
   gap: 0.55rem;
-  margin: 0;
+  margin: auto 0 0;
   padding: 1rem 0 0;
   border-top: 1px solid var(--vp-c-divider);
   list-style: none;
@@ -467,14 +468,6 @@ function track(event: string) {
   .code-panel + .code-panel {
     border-top: 1px solid var(--vp-c-divider);
     border-left: 0;
-  }
-
-  .code-panel :deep(pre) {
-    min-height: auto;
-  }
-
-  .path-grid p {
-    min-height: 0;
   }
 }
 
