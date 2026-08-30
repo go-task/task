@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, onUnmounted, ref } from 'vue';
 import { VPHomeSponsors } from 'vitepress/theme';
 import { sponsors } from '../sponsors';
 import AdoptersCarousel from './AdoptersCarousel.vue';
@@ -8,6 +8,7 @@ import { data as example } from './homeExample.data';
 const installCommand =
   'sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d -b ~/.local/bin';
 const copyState = ref<'idle' | 'copied' | 'failed'>('idle');
+const commandEl = ref<HTMLElement>();
 let copyResetTimer: number | undefined;
 
 const copyLabel = computed(() => {
@@ -21,7 +22,7 @@ const copyAnnouncement = computed(() => {
     return 'Install command copied to clipboard';
   }
   if (copyState.value === 'failed') {
-    return 'The install command could not be copied';
+    return 'The install command could not be copied, so it has been selected';
   }
   return '';
 });
@@ -45,9 +46,25 @@ async function copyInstallCommand() {
     copyState.value = 'copied';
   } catch {
     copyState.value = 'failed';
+    selectInstallCommand();
   }
   resetCopyState();
 }
+
+// Without the clipboard API — insecure context, denied permission — the least
+// we can do is select the command so a manual copy is one keystroke away.
+function selectInstallCommand() {
+  const node = commandEl.value;
+  if (!node) return;
+
+  const range = document.createRange();
+  range.selectNodeContents(node);
+  const selection = window.getSelection();
+  selection?.removeAllRanges();
+  selection?.addRange(range);
+}
+
+onUnmounted(() => window.clearTimeout(copyResetTimer));
 </script>
 
 <template>
@@ -64,7 +81,7 @@ async function copyInstallCommand() {
 
       <div class="install-command">
         <span aria-hidden="true" class="prompt">$</span>
-        <code>{{ installCommand }}</code>
+        <code ref="commandEl">{{ installCommand }}</code>
         <button
           type="button"
           :aria-label="copyAriaLabel"
