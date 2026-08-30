@@ -5,8 +5,6 @@ description:
   YAML Taskfile.
 layout: home
 titleTemplate: false
-# The hero buttons live in .vitepress/components/HeroActions.vue, which
-# renders them next to the GitHub star count.
 hero:
   name: Task
   text: The Modern Task Runner
@@ -16,6 +14,13 @@ hero:
   image:
     src: /img/logo.svg
     alt: Task logo
+  actions:
+    - theme: brand
+      text: Get Started
+      link: /docs/getting-started
+    - theme: alt
+      text: Browse the Reference
+      link: /docs/reference/schema
 
 features:
   - title: Readable by design

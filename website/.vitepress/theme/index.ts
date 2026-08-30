@@ -2,7 +2,7 @@ import DefaultTheme from 'vitepress/theme';
 import type { Theme } from 'vitepress';
 import './custom.css';
 import HomePage from '../components/HomePage.vue';
-import HeroActions from '../components/HeroActions.vue';
+import HeroStars from '../components/HeroStars.vue';
 import AuthorCard from '../components/AuthorCard.vue';
 import BlogPost from '../components/BlogPost.vue';
 import Version from '../components/Version.vue';
@@ -16,7 +16,7 @@ export default {
   extends: DefaultTheme,
   Layout() {
     return h(DefaultTheme.Layout, null, {
-      'home-hero-actions-after': () => h(HeroActions),
+      'home-hero-actions-after': () => h(HeroStars),
       'home-features-after': () => h(HomePage)
     });
   },
