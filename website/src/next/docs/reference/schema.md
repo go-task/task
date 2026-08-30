@@ -420,7 +420,7 @@ value.
 
 For complete documentation on secret variables, including security
 considerations and best practices, see the
-[Secret variables](/docs/guide#secret-variables) section in the Guide.
+[Secret variables](../variables.md#secret-variables) section in the Guide.
 
 :::
 
@@ -786,7 +786,8 @@ tasks:
     # …
 ```
 
-See [Prompting for missing variables interactively](/docs/guide#prompting-for-missing-variables-interactively)
+See
+[Prompting for missing variables interactively](../required-variables.md#prompting-for-missing-variables-interactively)
 for information on enabling interactive prompts for missing required variables.
 
 #### `watch`
