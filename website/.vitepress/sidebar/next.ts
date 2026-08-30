@@ -97,6 +97,16 @@ export const sidebar: DefaultTheme.SidebarItem[] = [
     ]
   },
   {
+    text: 'Concepts',
+    collapsed: true,
+    items: [
+      {
+        text: 'Variable resolution',
+        link: '/docs/concepts/variable-resolution'
+      }
+    ]
+  },
+  {
     text: 'Reference',
     collapsed: false,
     items: [

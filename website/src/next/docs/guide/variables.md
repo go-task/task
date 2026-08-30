@@ -48,20 +48,12 @@ tasks:
       - 'echo {{.MAP.A}}' # 1
 ```
 
-Variables can be set in many places in a Taskfile. When executing
-[templates][templating-reference], Task will look for variables in the order
-listed below (most important first):
-
-- Variables declared in the task definition
-- Variables given while calling a task from another (see
-  [Calling another task](./dependencies.md#calling-another-task))
-- Variables of the [included Taskfile](./includes.md) (when the task is
-  included)
-- Variables of the
-  [inclusion of the Taskfile](./includes.md#vars-of-included-taskfiles) (when
-  the task is included)
-- Global variables (those declared in the `vars:` option in the Taskfile)
-- Environment variables
+Variables can be set in many places in a Taskfile, and when the same name is set
+twice, one of them wins. The order is the same everywhere and it is described
+once, in [Variable resolution](../concepts/variable-resolution.md#the-order) —
+including the two cases that surprise people most: a task's own `vars:` cannot
+be overridden from the command line, and `vars:` given on an `includes:` entry
+act as defaults rather than overrides.
 
 Example of sending parameters with environment variables:
 
