@@ -103,6 +103,10 @@ export const sidebar: DefaultTheme.SidebarItem[] = [
       {
         text: 'Variable resolution',
         link: '/docs/concepts/variable-resolution'
+      },
+      {
+        text: 'Dependencies and concurrency',
+        link: '/docs/concepts/dependencies-and-concurrency'
       }
     ]
   },
