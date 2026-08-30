@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### 🚀 Features
+
+- Added opt-in task-level grouping for `output: group`. Set `by_task: true` or
+  use `--output-group-by-task` to combine all shell command output from a task
+  into one group while preserving the existing per-command default.
+
 ### 📦 Package API
 
 - Bumped the minimum Go version to 1.26. Task follows Go's two-latest support

@@ -707,6 +707,11 @@
               "description": "Swallows command output on zero exit code",
               "type": "boolean",
               "default": false
+            },
+            "by_task": {
+              "description": "Groups all shell command output from each task into one block instead of one group per command",
+              "type": "boolean",
+              "default": false
             }
           }
         }
@@ -768,7 +773,7 @@
           ]
         },
         "output": {
-          "description": "Defines how the STDOUT and STDERR are printed when running tasks in parallel. The interleaved output prints lines in real time (default). The group output will print the entire output of a command once, after it finishes, so you won't have live feedback for commands that take a long time to run. The prefix output will prefix every line printed by a command with [task-name] as the prefix, but you can customize the prefix for a command with the prefix: attribute.",
+          "description": "Defines how the STDOUT and STDERR are printed when running tasks in parallel. The interleaved output prints lines in real time (default). The group output prints the entire output of each command once after it finishes, so you won't have live feedback for commands that take a long time to run. By default, each command in a task gets its own group; set group.by_task to group all shell command output from a task into one block. The prefix output will prefix every line printed by a command with [task-name] as the prefix, but you can customize the prefix for a command with the prefix: attribute.",
           "anyOf": [
             { "$ref": "#/definitions/outputString" },
             { "$ref": "#/definitions/outputObject" }
