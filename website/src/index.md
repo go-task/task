@@ -31,8 +31,7 @@ features:
 
   - title: One workflow everywhere
     icon: 🖥️
-    details:
-      Run the same Taskfile on Linux, macOS, Windows, locally, and in CI.
+    details: Run the same Taskfile on Linux, macOS, Windows, locally, and in CI.
 
   - title: Only run what changed
     icon: 🎯
