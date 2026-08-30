@@ -56,7 +56,3 @@ live-reloading, like [Air](https://github.com/air-verse/air/). Also, be sure to
 to us.
 
 :::
-
-[config]: ./reference/config.md
-[gotemplate]: https://golang.org/pkg/text/template/
-[templating-reference]: ./reference/templating.md
