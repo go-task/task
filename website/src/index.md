@@ -37,4 +37,10 @@ features:
     icon: 🎯
     details:
       Track sources and generated files to skip work that is already up to date.
+
+  - title: One Taskfile, every repo
+    icon: 🔗
+    details:
+      Include Taskfiles straight from a URL or a Git repo, so shared workflows
+      live in one place instead of being copy-pasted.
 ---
