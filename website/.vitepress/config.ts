@@ -312,17 +312,11 @@ export default defineConfig({
   vite: {
     plugins: [
       llmstxt({
-        ignoreFiles: [
-          'index.md',
-          'team.md',
-          'donate.md',
-          // Matched against source paths, which `rewrites` does not touch.
-          `${channel}/docs/styleguide.md`,
-          `${channel}/docs/contributing.md`,
-          `${channel}/docs/releasing.md`,
-          `${channel}/docs/changelog.md`,
-          `${channel}/blog/*`
-        ]
+        sidebar: [{ text: 'Documentation', items: docsSidebar }],
+        ignoreFiles: ['donate.md', 'adopters.md'],
+        ignoreFilesPerOutput: {
+          llmsFullTxt: ['docs/changelog.md']
+        }
       }),
       groupIconVitePlugin({
         customIcon: {
