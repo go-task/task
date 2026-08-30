@@ -176,9 +176,10 @@ export default defineConfig({
       { name: 'twitter:description', content: pageDescription }
     ]);
 
-    // Preview builds keep production canonicals but must never be indexed.
+    // Only the released public site is indexable. The public next site and
+    // previews keep production canonicals but must never be indexed.
     if (
-      !isPublicDeploy ||
+      !isProduction ||
       pageData.relativePath === '404.md' ||
       pageData.frontmatter.noindex === true
     ) {
@@ -454,7 +455,7 @@ export default defineConfig({
     hostname: 'https://taskfile.dev'
   },
   buildEnd({ outDir }) {
-    const robots = isPublicDeploy
+    const robots = isProduction
       ? [
           'User-agent: *',
           'Allow: /',
