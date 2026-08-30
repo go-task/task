@@ -14,7 +14,65 @@ export const sidebar: DefaultTheme.SidebarItem[] = [
   },
   {
     text: 'Guide',
-    link: '/docs/guide'
+    link: '/docs/guide',
+    items: [
+      {
+        text: 'Running tasks',
+        link: '/docs/running-tasks'
+      },
+      {
+        text: 'Defining tasks',
+        link: '/docs/defining-tasks'
+      },
+      {
+        text: 'Passing arguments',
+        link: '/docs/arguments'
+      },
+      {
+        text: 'Variables',
+        link: '/docs/variables'
+      },
+      {
+        text: 'Environment variables',
+        link: '/docs/environment'
+      },
+      {
+        text: 'Required variables and prompts',
+        link: '/docs/required-variables'
+      },
+      {
+        text: 'Dependencies and task calls',
+        link: '/docs/dependencies'
+      },
+      {
+        text: 'Skipping work that is up to date',
+        link: '/docs/up-to-date'
+      },
+      {
+        text: 'Conditional execution',
+        link: '/docs/conditional-execution'
+      },
+      {
+        text: 'Loops',
+        link: '/docs/loops'
+      },
+      {
+        text: 'Including other Taskfiles',
+        link: '/docs/includes'
+      },
+      {
+        text: 'Output and logging',
+        link: '/docs/output'
+      },
+      {
+        text: 'Platform-specific behaviour',
+        link: '/docs/platforms'
+      },
+      {
+        text: 'Watch mode',
+        link: '/docs/watch'
+      }
+    ]
   },
   {
     text: 'Remote Taskfiles',

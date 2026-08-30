@@ -72,7 +72,7 @@ task default
 
 Note that we don't have to specify the name of the Taskfile. Task will
 automatically look for a file called `Taskfile.yml` (or any of Task's
-[supported file names](/docs/guide#supported-file-names)) in the current
+[supported file names](./running-tasks.md#supported-file-names)) in the current
 directory. Additionally, tasks with the name `default` are special. They can
 also be run without specifying the task name.
 
@@ -131,5 +131,5 @@ task build
 That's about it for the basics, but there's _so much_ more that you can do with
 Task. Check out the rest of the documentation to learn more about all the
 features Task has to offer! We recommend taking a look at the
-[usage guide](/docs/guide) next. Alternatively, you can check out our reference
+[usage guide](./guide.md) next. Alternatively, you can check out our reference
 docs for the [Taskfile schema](reference/schema) and [CLI](reference/cli).
