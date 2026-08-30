@@ -297,7 +297,8 @@ export default defineConfig({
   srcDir: 'src',
   cleanUrls: true,
   srcExclude: [`${other}/**`, `${channel}/docs/**/template.md`],
-  rewrites: { [`${channel}/:path*`]: ':path*' },
+  rewrites: (id) =>
+    id.startsWith(`${channel}/`) ? id.slice(channel.length + 1) : id,
   markdown: {
     config: (md) => {
       md.use(githubLinksPlugin, {
@@ -311,17 +312,11 @@ export default defineConfig({
   vite: {
     plugins: [
       llmstxt({
-        ignoreFiles: [
-          'index.md',
-          'team.md',
-          'donate.md',
-          // Matched against source paths, which `rewrites` does not touch.
-          `${channel}/docs/styleguide.md`,
-          `${channel}/docs/contributing.md`,
-          `${channel}/docs/releasing.md`,
-          `${channel}/docs/changelog.md`,
-          `${channel}/blog/*`
-        ]
+        sidebar: [{ text: 'Documentation', items: docsSidebar }],
+        ignoreFiles: ['donate.md', 'adopters.md'],
+        ignoreFilesPerOutput: {
+          llmsFullTxt: ['docs/changelog.md']
+        }
       }),
       groupIconVitePlugin({
         customIcon: {
