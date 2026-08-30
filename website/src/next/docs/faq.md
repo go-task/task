@@ -104,7 +104,7 @@ This is possible because Task compiles a small set of core utilities in Go and
 enables them by default on Windows for greater compatibility.
 
 It's possible to control whether these builtin core utilities are used or not
-with the [`TASK_CORE_UTILS`](/docs/reference/environment#task-core-utils)
+with the [`TASK_CORE_UTILS`](./reference/environment.md#task-core-utils)
 environment variable:
 
 ```bash

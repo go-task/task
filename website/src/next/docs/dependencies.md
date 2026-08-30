@@ -210,7 +210,7 @@ commands are executed in the reverse order if you schedule multiple of them.
 :::
 
 A special variable `.EXIT_CODE` is exposed when a command exited with a non-zero
-[exit code](/docs/reference/cli#exit-codes). You can check its presence to know
+[exit code](./reference/cli.md#exit-codes). You can check its presence to know
 if the task completed successfully or not:
 
 ```yaml

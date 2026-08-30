@@ -12,4 +12,4 @@ check out our [blog post][blog-post].
 
 [changelog]: ../changelog.md#v3-51-1-2026-05-16
 [remote-taskfile-docs]: ../remote-taskfiles.md
-[blog-post]: ../../blog/remote-taskfiles
+[blog-post]: ../../blog/remote-taskfiles.md

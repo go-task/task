@@ -57,6 +57,6 @@ to us.
 
 :::
 
-[config]: /docs/reference/config
+[config]: ./reference/config.md
 [gotemplate]: https://golang.org/pkg/text/template/
-[templating-reference]: /docs/reference/templating
+[templating-reference]: ./reference/templating.md
