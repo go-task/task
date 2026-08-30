@@ -43,18 +43,10 @@ async function copyInstallCommand() {
   try {
     await navigator.clipboard.writeText(installCommand);
     copyState.value = 'copied';
-    track('home-install-copy');
   } catch {
     copyState.value = 'failed';
   }
   resetCopyState();
-}
-
-function track(event: string) {
-  const analytics = (
-    window as Window & { umami?: { track: (name: string) => void } }
-  ).umami;
-  analytics?.track(event);
 }
 </script>
 
@@ -76,6 +68,7 @@ function track(event: string) {
         <button
           type="button"
           :aria-label="copyAriaLabel"
+          data-umami-event="home-install-copy"
           @click="copyInstallCommand"
         >
           {{ copyLabel }}
