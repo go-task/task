@@ -1,5 +1,8 @@
 ---
 title: Donate
+description:
+  Support the ongoing development and maintenance of the open-source Task task
+  runner.
 layout: doc
 outline: false
 editLink: false

@@ -1,5 +1,8 @@
 ---
-title: "Task: The Modern Task Runner"
+title: 'Task: The Modern Task Runner'
+description:
+  Task is a fast, cross-platform task runner and build tool that uses a simple
+  YAML Taskfile.
 layout: home
 hero:
   name: Task
