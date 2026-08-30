@@ -3,6 +3,7 @@ import { computed, ref } from 'vue';
 import { VPHomeSponsors } from 'vitepress/theme';
 import { sponsors } from '../sponsors';
 import AdoptersCarousel from './AdoptersCarousel.vue';
+import { data as example } from './homeExample.data';
 
 const installCommand =
   'sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d -b ~/.local/bin';
@@ -97,29 +98,7 @@ function track(event: string) {
             <span class="status-dot" aria-hidden="true"></span>
             Taskfile.yml
           </div>
-          <pre
-            v-pre
-          ><code><span class="syntax-key">version</span>: <span class="syntax-string">'3'</span>
-
-<span class="syntax-key">vars</span>:
-  <span class="syntax-key">GREETING</span>: <span class="syntax-string">Hello</span>
-
-<span class="syntax-key">tasks</span>:
-  <span class="syntax-key">test</span>:
-    <span class="syntax-key">desc</span>: <span class="syntax-string">Run the test suite</span>
-    <span class="syntax-key">sources</span>: [<span class="syntax-string">'**/*.go'</span>]
-    <span class="syntax-key">cmds</span>:
-      - go test ./...
-
-  <span class="syntax-key">build</span>:
-    <span class="syntax-key">desc</span>: <span class="syntax-string">Build the application</span>
-    <span class="syntax-key">deps</span>: [test]
-    <span class="syntax-key">sources</span>: [<span class="syntax-string">'**/*.go'</span>]
-    <span class="syntax-key">generates</span>: [bin/app]
-    <span class="syntax-key">cmds</span>:
-      - mkdir -p bin
-      - echo <span class="syntax-string">"{{.GREETING}} from Task"</span>
-      - go build -o bin/app ./cmd/app</code></pre>
+          <div class="code-body" v-html="example.taskfile"></div>
         </div>
 
         <div class="code-panel terminal-panel">
@@ -127,22 +106,9 @@ function track(event: string) {
             <span class="status-dot" aria-hidden="true"></span>
             Terminal
           </div>
-          <pre><code><span class="terminal-prompt">$</span> task --list
-task: Available tasks for this project:
-* build:  Build the application
-* test:   Run the test suite
-
-<span class="terminal-prompt">$</span> task build
-task: [test] go test ./...
-ok      example/app
-task: [build] mkdir -p bin
-task: [build] echo "Hello from Task"
-Hello from Task
-task: [build] go build -o bin/app ./cmd/app
-
-<span class="terminal-prompt">$</span> task build
-task: Task "test" is up to date
-task: Task "build" is up to date</code></pre>
+          <div class="code-body">
+            <pre><code v-html="example.terminal"></code></pre>
+          </div>
         </div>
       </div>
 
@@ -286,7 +252,7 @@ task: Task "build" is up to date</code></pre>
 }
 
 .install-command .prompt,
-.terminal-prompt {
+.example :deep(.terminal-prompt) {
   color: var(--vp-c-brand-1);
   font-weight: 700;
 }
@@ -354,6 +320,14 @@ task: Task "build" is up to date</code></pre>
 }
 
 .code-panel {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.code-body {
+  display: flex;
+  flex: 1;
   min-width: 0;
 }
 
@@ -378,8 +352,9 @@ task: Task "build" is up to date</code></pre>
   box-shadow: 0 0 0 4px var(--vp-c-brand-soft);
 }
 
-.code-panel pre {
+.code-panel :deep(pre) {
   min-height: 420px;
+  min-width: 0;
   margin: 0;
   overflow: auto;
   padding: 1.5rem;
@@ -390,15 +365,7 @@ task: Task "build" is up to date</code></pre>
   line-height: 1.65;
 }
 
-.syntax-key {
-  color: var(--vp-c-brand-1);
-}
-
-.syntax-string {
-  color: var(--vp-c-yellow-1);
-}
-
-.terminal-panel pre {
+.terminal-panel :deep(pre) {
   color: var(--vp-c-text-2);
 }
 
@@ -502,7 +469,7 @@ task: Task "build" is up to date</code></pre>
     border-left: 0;
   }
 
-  .code-panel pre {
+  .code-panel :deep(pre) {
     min-height: auto;
   }
 
@@ -530,7 +497,7 @@ task: Task "build" is up to date</code></pre>
     grid-column: 1 / -1;
   }
 
-  .code-panel pre {
+  .code-panel :deep(pre) {
     padding: 1rem;
     font-size: 0.74rem;
   }
