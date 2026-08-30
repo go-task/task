@@ -25,6 +25,12 @@ const copyAnnouncement = computed(() => {
   return '';
 });
 
+const copyAriaLabel = computed(() => {
+  if (copyState.value === 'copied') return 'Install command copied';
+  if (copyState.value === 'failed') return 'Copy install command again';
+  return 'Copy install command';
+});
+
 function resetCopyState() {
   window.clearTimeout(copyResetTimer);
   copyResetTimer = window.setTimeout(() => {
@@ -68,7 +74,7 @@ function track(event: string) {
         <code>{{ installCommand }}</code>
         <button
           type="button"
-          :aria-label="`${copyLabel} install command`"
+          :aria-label="copyAriaLabel"
           @click="copyInstallCommand"
         >
           {{ copyLabel }}
