@@ -297,6 +297,11 @@ export default defineConfig({
   srcDir: 'src',
   cleanUrls: true,
   srcExclude: [`${other}/**`, `${channel}/docs/**/template.md`],
+  // A function rather than the equivalent `{ '<channel>/:path*': ':path*' }`.
+  // vitepress-plugin-llms reuses this config to name its Markdown output, and
+  // on the object form it compiles the `:path*` array parameter back without
+  // separators, producing dist/docsreferencecli.md instead of
+  // dist/docs/reference/cli.md and breaking every relative link in them.
   rewrites: (id) =>
     id.startsWith(`${channel}/`) ? id.slice(channel.length + 1) : id,
   markdown: {
