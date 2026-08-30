@@ -468,7 +468,7 @@ onUnmounted(() => window.clearTimeout(copyResetTimer));
   padding: 0 24px;
 }
 
-@media (max-width: 800px) {
+@media (max-width: 959px) {
   .quick-start,
   .choose-path {
     padding-top: 4.5rem;
@@ -485,7 +485,7 @@ onUnmounted(() => window.clearTimeout(copyResetTimer));
   }
 }
 
-@media (max-width: 560px) {
+@media (max-width: 639px) {
   .home-content {
     margin-top: 2.5rem;
   }
