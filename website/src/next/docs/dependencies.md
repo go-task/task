@@ -224,3 +224,5 @@ tasks:
           {{.EXIT_CODE}}!{{else}}Success!{{end}}'
       - exit 1
 ```
+
+[config]: ./reference/config.md

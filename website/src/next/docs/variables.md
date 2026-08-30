@@ -455,3 +455,5 @@ vars:
 ```
 
 :::
+
+[templating-reference]: ./reference/templating.md
