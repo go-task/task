@@ -16,8 +16,8 @@ of our commitment to transparency.
 
 ### Critical Assets
 
-- **Source Code:** The Task CLI, build scripts, and configuration files
-  (e.g., `Taskfile.yml`, `.goreleaser.yml`).
+- **Source Code:** The Task CLI, build scripts, and configuration files (e.g.,
+  `Taskfile.yml`, `.goreleaser.yml`).
 - **Build Artifacts:** Compiled binaries, packages, and containers distributed
   to users.
 - **Secrets:** API tokens, signing keys, and repository credentials used in
@@ -78,8 +78,8 @@ of our commitment to transparency.
 
 #### Secrets Leakage
 
-- Exposure of tokens, credentials, or signing keys in logs, error messages,
-  or artifacts
+- Exposure of tokens, credentials, or signing keys in logs, error messages, or
+  artifacts
 - Hardcoded secrets in code or configuration
 - Improper secret management in CI/CD environments
 

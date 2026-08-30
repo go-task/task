@@ -1,5 +1,6 @@
 ---
 title: '--- Template ---'
+description: Template for documenting a new experiment.
 ---
 
 # \{Name of Experiment\} (#\{Issue\})
