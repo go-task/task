@@ -92,6 +92,8 @@ onUnmounted(() => window.clearTimeout(copyResetTimer));
 
 <template>
   <main class="home-content">
+    <AdoptersCarousel />
+
     <section class="quick-start" aria-labelledby="quick-start-title">
       <div class="section-heading">
         <p class="eyebrow">
@@ -246,8 +248,6 @@ onUnmounted(() => window.clearTimeout(copyResetTimer));
       </div>
     </section>
 
-    <AdoptersCarousel />
-
     <div class="sponsors">
       <VPHomeSponsors
         v-if="sponsors"
@@ -269,6 +269,10 @@ onUnmounted(() => window.clearTimeout(copyResetTimer));
   max-width: 1152px;
   margin: 0 auto;
   padding: 6rem 24px 0;
+}
+
+.quick-start {
+  padding-top: 4.5rem;
 }
 
 .section-heading {
