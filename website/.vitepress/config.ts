@@ -381,7 +381,9 @@ export default defineConfig({
       { text: 'Home', link: '/' },
       {
         text: 'Docs',
-        link: '/docs/',
+        // The landing page only exists on next until cmd/release promotes it;
+        // the released channel still has to enter the section at the guide.
+        link: isLatest ? '/docs/guide' : '/docs/',
         activeMatch: '^/docs'
       },
       { text: 'Blog', link: '/blog', activeMatch: '^/blog' },
