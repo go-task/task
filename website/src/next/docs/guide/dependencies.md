@@ -3,6 +3,8 @@ title: Dependencies and task calls
 description:
   Run tasks in parallel with `deps`, call another task from `cmds`, and schedule
   cleanup with `defer`.
+section: Guide
+docType: guide
 outline: deep
 ---
 

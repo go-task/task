@@ -3,6 +3,8 @@ title: Environment variables
 description:
   Set environment variables on a single task or on every task, and load them
   from `.env` files.
+section: Guide
+docType: guide
 outline: deep
 ---
 

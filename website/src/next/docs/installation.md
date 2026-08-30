@@ -1,6 +1,8 @@
 ---
 title: Installation
 description: Installation methods for Task
+section: Getting Started
+docType: guide
 outline: deep
 ---
 

@@ -3,6 +3,8 @@ title: Running tasks
 description:
   How Task finds a Taskfile, and how to run one from a subdirectory, from your
   home directory, from standard input or as a dry run.
+section: Guide
+docType: guide
 outline: deep
 ---
 

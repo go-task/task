@@ -3,6 +3,8 @@ title: Threat Model
 description:
   Threats, assets, trust boundaries, and mitigations for the Task project and
   its release infrastructure
+section: Project
+docType: project
 outline: deep
 ---
 

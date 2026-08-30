@@ -3,6 +3,8 @@ title: Dependencies and concurrency
 description:
   What runs in parallel, what runs in order, and why the output of a Taskfile is
   not always in the order you wrote it.
+section: Concepts
+docType: concept
 outline: deep
 ---
 

@@ -3,6 +3,8 @@ title: Loops
 description:
   Repeat a command over a static list, a matrix, a variable, your task's
   sources, or other tasks.
+section: Guide
+docType: guide
 outline: deep
 ---
 

@@ -3,6 +3,8 @@ title: Contributing
 description:
   Comprehensive guide for contributing to the Task project, including setup,
   development, testing, and submitting PRs
+section: Contributing
+docType: contributing
 outline: deep
 ---
 

@@ -3,6 +3,8 @@ title: Passing arguments
 description:
   Forward command line arguments to a task with `--`, and match part of a task's
   name with a wildcard.
+section: Guide
+docType: guide
 outline: deep
 ---
 

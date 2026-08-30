@@ -3,6 +3,8 @@ title: Defining tasks
 description:
   Task syntax shortcuts, internal tasks, aliases, the directory a task runs in,
   and the help text Task shows for it.
+section: Guide
+docType: guide
 outline: deep
 ---
 

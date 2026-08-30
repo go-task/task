@@ -144,6 +144,23 @@ export default defineConfig({
     ).href;
     head.push(['link', { rel: 'canonical', href: canonicalUrl }]);
 
+    // The DocSearch crawler otherwise has to infer a record's section from the
+    // active sidebar link in the DOM. Stating it on the page is steadier: it
+    // survives a theme upgrade, and it is what hierarchy.lvl0 - the breadcrumb
+    // on every search result - should be set from.
+    if (pageData.frontmatter.section) {
+      head.push([
+        'meta',
+        { name: 'docsearch:section', content: pageData.frontmatter.section }
+      ])
+    }
+    if (pageData.frontmatter.docType) {
+      head.push([
+        'meta',
+        { name: 'docsearch:type', content: pageData.frontmatter.docType }
+      ])
+    }
+
     // Dynamic Open Graph and Twitter meta tags
     const isHome = new URL(canonicalUrl).pathname === '/';
     let pageTitle = pageData.frontmatter.title || pageData.title || taskName;

@@ -3,6 +3,8 @@ title: Variables
 description:
   Static, dynamic, map and secret variables, how they are scoped, and how they
   reference each other.
+section: Guide
+docType: guide
 outline: deep
 ---
 

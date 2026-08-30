@@ -3,6 +3,8 @@ title: FAQ
 description:
   Frequently asked questions about Task, including ETAs, shell limitations, and
   Windows compatibility
+section: Project
+docType: project
 outline: deep
 ---
 

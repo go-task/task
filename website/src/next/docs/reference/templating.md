@@ -3,6 +3,8 @@ title: Templating Reference
 description:
   Comprehensive guide to Task's templating system with Go text/template, special
   variables, and available functions
+section: Reference
+docType: reference
 outline: deep
 ---
 

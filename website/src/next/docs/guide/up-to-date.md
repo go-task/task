@@ -3,6 +3,8 @@ title: Skipping work that is up to date
 description:
   Stop a task from running again when nothing has changed, using source and
   generated file fingerprints or your own `status` checks.
+section: Guide
+docType: guide
 outline: deep
 ---
 

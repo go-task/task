@@ -3,6 +3,8 @@ title: Documentation
 description:
   Task is a task runner and build tool that aims to be simpler and easier to use
   than GNU Make. Start here to install it, learn it, or look something up.
+section: Overview
+docType: overview
 outline: deep
 ---
 

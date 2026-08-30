@@ -3,6 +3,8 @@ title: Incident Response Plan
 description:
   Task's process for detecting, triaging, mitigating, and disclosing security
   incidents
+section: Project
+docType: project
 outline: deep
 ---
 

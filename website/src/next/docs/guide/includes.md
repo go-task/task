@@ -3,6 +3,8 @@ title: Including other Taskfiles
 description:
   Reuse tasks across projects with `includes` — namespaces, optional and
   internal includes, flattening, and per-include variables.
+section: Guide
+docType: guide
 outline: deep
 ---
 
