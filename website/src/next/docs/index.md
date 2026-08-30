@@ -39,7 +39,8 @@ conditional execution, loops, includes, output modes and watch mode.
 ## Keeping up
 
 - [Changelog](./changelog.md) — what shipped, and when.
-- [Experiments](./experiments/) and [Deprecations](./deprecations/) — what is
-  coming, and what is going away.
+- [Experiments](./experiments/index.md) and
+  [Deprecations](./deprecations/index.md) — what is coming, and what is going
+  away.
 - [FAQ](./faq.md) — the questions that come up most often.
 - [Community](./community.md) — integrations and tools built by other people.

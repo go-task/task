@@ -984,7 +984,7 @@ When a command exceeds its timeout, it is terminated and the task fails with an
 error, preventing commands from hanging indefinitely in a pipeline. The timeout
 bounds the whole step, so an [`if`](#command) condition that hangs is cut short
 too, and [`ignore_error`](#command) covers a timeout like any other failure. A
-timed-out command reports [`EXIT_CODE`](/docs/reference/templating#exit-code)
+timed-out command reports [`EXIT_CODE`](./templating.md#exit-code)
 `124`, following the convention of `timeout(1)`.
 
 A dependency takes the same key:

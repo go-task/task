@@ -271,7 +271,7 @@ tasks:
 ```
 
 Warning prompts are called before executing a task. If a prompt is denied Task
-will exit with [exit code](/docs/reference/cli#exit-codes) 205. If approved,
+will exit with [exit code](./reference/cli.md#exit-codes) 205. If approved,
 Task will continue as normal.
 
 ```shell

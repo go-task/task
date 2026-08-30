@@ -171,7 +171,7 @@ of our commitment to transparency.
 ## References
 
 - [Task Documentation](https://taskfile.dev/)
-- [Incident Response Plan](./incident-response-plan)
+- [Incident Response Plan](./incident-response-plan.md)
 - [OWASP Top 10](https://owasp.org/www-project-top-ten/)
 - [Supply Chain Security](https://slsa.dev/)
 - [GitHub Security Best Practices](https://docs.github.com/en/code-security)
