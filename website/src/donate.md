@@ -34,14 +34,14 @@ The preferred way to donate is through **GitHub Sponsors**. We suggest splitting
 your donation equally between maintainers:
 
 <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin: 1rem 0;">
-  <a href="https://github.com/sponsors/andreynering" target="_blank">
-    <img src="https://img.shields.io/badge/@andreynering-30363d?logo=github&logoColor=white&style=for-the-badge" />
+  <a href="https://github.com/sponsors/andreynering" target="_blank" rel="noopener noreferrer">
+    <img src="https://img.shields.io/badge/@andreynering-30363d?logo=github&logoColor=white&style=for-the-badge" alt="Sponsor Andrey Nering on GitHub" />
   </a>
-  <a href="https://github.com/sponsors/pd93" target="_blank">
-    <img src="https://img.shields.io/badge/@pd93-30363d?logo=github&logoColor=white&style=for-the-badge" />
+  <a href="https://github.com/sponsors/pd93" target="_blank" rel="noopener noreferrer">
+    <img src="https://img.shields.io/badge/@pd93-30363d?logo=github&logoColor=white&style=for-the-badge" alt="Sponsor Pete Davison on GitHub" />
   </a>
-  <a href="https://github.com/sponsors/vmaerten" target="_blank">
-    <img src="https://img.shields.io/badge/@vmaerten-30363d?logo=github&logoColor=white&style=for-the-badge" />
+  <a href="https://github.com/sponsors/vmaerten" target="_blank" rel="noopener noreferrer">
+    <img src="https://img.shields.io/badge/@vmaerten-30363d?logo=github&logoColor=white&style=for-the-badge" alt="Sponsor Valentin Maerten on GitHub" />
   </a>
 </div>
 

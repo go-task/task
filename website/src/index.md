@@ -11,7 +11,7 @@ hero:
     A fast, cross-platform build tool inspired by Make, designed for modern
     workflows.
   image:
-    src: /img/logo.png
+    src: /img/logo.svg
     alt: Task logo
   actions:
     - theme: brand
