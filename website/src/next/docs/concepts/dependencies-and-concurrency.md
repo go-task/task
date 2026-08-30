@@ -27,6 +27,14 @@ tasks:
     deps: [compile, generate-assets]
     cmds:
       - echo "packaging"
+
+  compile:
+    cmds:
+      - go build -o ./bin/app .
+
+  generate-assets:
+    cmds:
+      - esbuild --bundle --minify css/index.css > public/bundle.css
 ```
 
 `compile` and `generate-assets` run concurrently in an unspecified order, and
@@ -45,6 +53,14 @@ tasks:
     cmds:
       - task: build
       - task: publish
+
+  build:
+    cmds:
+      - go build -o ./bin/app .
+
+  publish:
+    cmds:
+      - ./scripts/publish.sh ./bin/app
 ```
 
 Here `build` finishes before `publish` starts.
