@@ -5,6 +5,10 @@ import type { DefaultTheme } from 'vitepress';
 // the "Documentation channels" section of website/src/next/docs/contributing.md.
 export const sidebar: DefaultTheme.SidebarItem[] = [
   {
+    text: 'Overview',
+    link: '/docs/'
+  },
+  {
     text: 'Installation',
     link: '/docs/installation'
   },
