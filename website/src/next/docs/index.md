@@ -44,3 +44,10 @@ conditional execution, loops, includes, output modes and watch mode.
   away.
 - [FAQ](./faq.md) — the questions that come up most often.
 - [Community](./community.md) — integrations and tools built by other people.
+
+## Using an AI coding assistant
+
+[Task documentation for coding agents](../agents.md) is a compact map of these
+pages plus the semantics that are easiest to get wrong. Every page is also
+available as raw Markdown by appending `.md` to its URL, and the whole corpus is
+at [/llms.txt](/llms.txt).
