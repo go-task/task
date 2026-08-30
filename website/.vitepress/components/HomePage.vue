@@ -71,7 +71,9 @@ onUnmounted(() => window.clearTimeout(copyResetTimer));
   <main class="home-content">
     <section class="quick-start" aria-labelledby="quick-start-title">
       <div class="section-heading">
-        <p class="eyebrow">// FROM ZERO TO YOUR FIRST TASK</p>
+        <p class="eyebrow">
+          <span aria-hidden="true">//</span> FROM ZERO TO YOUR FIRST TASK
+        </p>
         <h2 id="quick-start-title">A useful Taskfile in a few minutes</h2>
         <p>
           Install one binary, add readable project commands, and give everyone
@@ -137,7 +139,9 @@ onUnmounted(() => window.clearTimeout(copyResetTimer));
 
     <section class="choose-path" aria-labelledby="choose-path-title">
       <div class="section-heading">
-        <p class="eyebrow">// FIND THE RIGHT ANSWER</p>
+        <p class="eyebrow">
+          <span aria-hidden="true">//</span> FIND THE RIGHT ANSWER
+        </p>
         <h2 id="choose-path-title">Start broad or jump straight to syntax</h2>
         <p>
           The documentation has separate entry points for learning, exact
