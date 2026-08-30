@@ -158,7 +158,7 @@ export default defineConfig({
     if (pageData.frontmatter.docType) {
       head.push([
         'meta',
-        { name: 'docsearch:type', content: pageData.frontmatter.docType }
+        { name: 'docsearch:doc_type', content: pageData.frontmatter.docType }
       ])
     }
 

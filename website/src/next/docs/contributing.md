@@ -132,7 +132,8 @@ Search is provided by Algolia DocSearch. The crawler runs on Algolia's side and
 is configured through their dashboard, but `website/docsearch.config.js` holds
 the same configuration in the repository so it can be read and reviewed. If you
 change one, change the other. A page's `section:` frontmatter is what the
-crawler shows as the breadcrumb on a search result, so a new page needs one.
+crawler shows as the breadcrumb on a search result, while `docType:` powers its
+search facet, so a new page needs both.
 
 When making a change, consider whether a change to the [Usage
 Guide][usage-guide] is necessary. This document contains descriptions and
