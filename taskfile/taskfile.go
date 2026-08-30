@@ -51,7 +51,7 @@ func RemoteExists(ctx context.Context, u url.URL, client *http.Client) (*url.URL
 		if ctx.Err() != nil {
 			return nil, fmt.Errorf("checking remote file: %w", ctx.Err())
 		}
-		return nil, errors.TaskfileFetchFailedError{URI: u.Redacted()}
+		return nil, taskfileFetchError(err, u.Redacted())
 	}
 	defer resp.Body.Close()
 
@@ -80,7 +80,7 @@ func RemoteExists(ctx context.Context, u url.URL, client *http.Client) (*url.URL
 		// Try the alternative URL
 		resp, err = client.Do(req)
 		if err != nil {
-			return nil, errors.TaskfileFetchFailedError{URI: u.Redacted()}
+			return nil, taskfileFetchError(err, u.Redacted())
 		}
 		defer resp.Body.Close()
 
@@ -91,4 +91,13 @@ func RemoteExists(ctx context.Context, u url.URL, client *http.Client) (*url.URL
 	}
 
 	return nil, errors.TaskfileNotFoundError{URI: u.Redacted(), Walk: false}
+}
+
+// taskfileFetchError preserves redirect-policy errors wrapped by http.Client.
+// Other transport errors remain generic download failures.
+func taskfileFetchError(err error, uri string) error {
+	if notSecure, ok := errors.AsType[*errors.TaskfileNotSecureError](err); ok {
+		return notSecure
+	}
+	return errors.TaskfileFetchFailedError{URI: uri}
 }

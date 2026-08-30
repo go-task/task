@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### 🐛 Fixes
+
+- Fixed an `https` remote Taskfile being downloaded over an unencrypted
+  connection when the server redirects to `http`. Such a redirect now requires
+  `--insecure`, like an `http` entrypoint (by @vmaerten).
+
 ### 📦 Package API
 
 - Bumped the minimum Go version to 1.26. Task follows Go's two-latest support
