@@ -30,9 +30,17 @@ type Remote struct {
 	CacheExpiry  *time.Duration `yaml:"cache-expiry"`
 	CacheDir     *string        `yaml:"cache-dir"`
 	TrustedHosts []string       `yaml:"trusted-hosts"`
+	Auth         []RemoteAuth   `yaml:"auth"`
 	CACert       *string        `yaml:"cacert"`
 	Cert         *string        `yaml:"cert"`
 	CertKey      *string        `yaml:"cert-key"`
+}
+
+// RemoteAuth holds the HTTP headers to send when fetching a remote Taskfile
+// from a given host.
+type RemoteAuth struct {
+	Host    string            `yaml:"host"`
+	Headers map[string]string `yaml:"headers"`
 }
 
 // Merge combines the current TaskRC with another TaskRC, prioritizing non-nil fields from the other TaskRC.
@@ -60,6 +68,7 @@ func (t *TaskRC) Merge(other *TaskRC) {
 		slices.Sort(merged)
 		t.Remote.TrustedHosts = slices.Compact(merged)
 	}
+	t.Remote.Auth = mergeAuth(t.Remote.Auth, other.Remote.Auth)
 	t.Remote.CACert = cmp.Or(other.Remote.CACert, t.Remote.CACert)
 	t.Remote.Cert = cmp.Or(other.Remote.Cert, t.Remote.Cert)
 	t.Remote.CertKey = cmp.Or(other.Remote.CertKey, t.Remote.CertKey)
@@ -72,4 +81,22 @@ func (t *TaskRC) Merge(other *TaskRC) {
 	t.Interactive = cmp.Or(other.Interactive, t.Interactive)
 	t.Failfast = cmp.Or(other.Failfast, t.Failfast)
 	t.TempDir = cmp.Or(other.TempDir, t.TempDir)
+}
+
+// mergeAuth unions both lists by host. An entry from other replaces the one
+// for the same host as a whole, so a closer file can drop a header rather than
+// inherit it.
+func mergeAuth(base, other []RemoteAuth) []RemoteAuth {
+	if len(other) == 0 {
+		return base
+	}
+	byHost := make(map[string]RemoteAuth, len(base)+len(other))
+	for _, auth := range slices.Concat(base, other) {
+		byHost[auth.Host] = auth
+	}
+	merged := slices.Collect(maps.Values(byHost))
+	slices.SortFunc(merged, func(a, b RemoteAuth) int {
+		return cmp.Compare(a.Host, b.Host)
+	})
+	return merged
 }

@@ -51,6 +51,7 @@ type (
 		caCert              string
 		cert                string
 		certKey             string
+		authHeadersByHost   HeadersByHost
 		debugFunc           DebugFunc
 		promptFunc          PromptFunc
 		promptMutex         sync.Mutex
@@ -242,6 +243,19 @@ func (o *readerCertKeyOption) ApplyToReader(r *Reader) {
 	r.certKey = o.certKey
 }
 
+// WithReaderAuthHeaders sets the HTTP headers to send to each configured host.
+func WithReaderAuthHeaders(authHeadersByHost HeadersByHost) ReaderOption {
+	return &readerAuthHeadersOption{authHeadersByHost: authHeadersByHost}
+}
+
+type readerAuthHeadersOption struct {
+	authHeadersByHost HeadersByHost
+}
+
+func (o *readerAuthHeadersOption) ApplyToReader(r *Reader) {
+	r.authHeadersByHost = o.authHeadersByHost
+}
+
 // Read will read the Taskfile defined by the [Reader]'s [Node] and recurse
 // through any [ast.Includes] it finds, reading each included Taskfile and
 // building an [ast.TaskfileGraph] as it goes. If any errors occur, they will be
@@ -286,7 +300,9 @@ func (r *Reader) isTrusted(uri string) bool {
 	host := parsedURL.Host
 
 	// Check against each trusted pattern (exact match including port if provided)
-	return slices.Contains(r.trustedHosts, host)
+	return slices.ContainsFunc(r.trustedHosts, func(pattern string) bool {
+		return hostMatches(pattern, host)
+	})
 }
 
 func (r *Reader) include(ctx context.Context, node Node) error {
@@ -355,6 +371,7 @@ func (r *Reader) include(ctx context.Context, node Node) error {
 				WithCACert(r.caCert),
 				WithCert(r.cert),
 				WithCertKey(r.certKey),
+				WithAuthHeaders(r.authHeadersByHost),
 			)
 			if err != nil {
 				if include.Optional {

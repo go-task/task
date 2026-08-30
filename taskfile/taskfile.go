@@ -66,6 +66,13 @@ func RemoteExists(ctx context.Context, u url.URL, client *http.Client) (*url.URL
 		return &u, nil
 	}
 
+	// The default names need the same credentials, so trying them would only
+	// add rejected requests. A 403 is left alone: it is also what a server
+	// without directory listing answers for a readable directory.
+	if resp.StatusCode == http.StatusUnauthorized {
+		return nil, errors.TaskfileFetchFailedError{URI: u.Redacted(), HTTPStatusCode: resp.StatusCode}
+	}
+
 	// If the request was not successful, append the default Taskfile names to
 	// the URL and return the URL of the first successful request
 	for _, taskfile := range DefaultTaskfiles {

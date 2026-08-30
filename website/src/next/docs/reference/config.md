@@ -300,6 +300,76 @@ task --trusted-hosts github.com,gitlab.com -t https://github.com/user/repo.git//
 task --trusted-hosts example.com:8080 -t https://example.com:8080/Taskfile.yml
 ```
 
+#### `remote.auth`
+
+- **Type**: `array of objects`
+- **Default**: `[]` (empty list)
+- **Description**: HTTP headers to send when downloading a remote Taskfile from
+  a given host
+
+```yaml
+remote:
+  auth:
+    - host: gitlab.com
+      headers:
+        PRIVATE-TOKEN: '{{env "GITLAB_TOKEN"}}'
+    - host: artifacts.example.com:8443
+      headers:
+        Authorization: 'Bearer {{env "ARTIFACTS_TOKEN"}}'
+```
+
+This is the recommended way to authenticate a remote Taskfile. Unlike a
+credential placed in the URL, the header never appears in your Taskfile, in the
+confirmation prompt or in an error message, so the include URL stays safe to
+commit.
+
+Each entry applies to a single host, matched exactly and including the port if
+the URL has one — the same rule as
+[`remote.trusted-hosts`](#remote-trusted-hosts). Header values may reference
+[templating functions](./templating.md), evaluated when Task contacts the host.
+Values starting with `{{` must be quoted, as YAML would otherwise read them as a
+mapping. An undefined environment variable expands to nothing, so the header is
+sent empty and the server rejects it with a `401`.
+
+Functions compose, so an `Authorization` header needs no manual encoding:
+
+```yaml
+remote:
+  auth:
+    - host: artifacts.example.com
+      headers:
+        Authorization: 'Basic {{ printf "%s:%s" (env "USER") (env "PASS") | b64enc }}'
+```
+
+::: warning
+
+Only functions are available here — `{{.GITLAB_TOKEN}}` and other variable
+references resolve to nothing. The configuration file is read before any
+Taskfile, so no variable exists yet. Use `{{env "GITLAB_TOKEN"}}` instead.
+
+:::
+
+The header your server expects depends on the service:
+
+| Service     | Header                                 |
+| ----------- | -------------------------------------- |
+| GitLab API  | `PRIVATE-TOKEN` (or `JOB-TOKEN` in CI) |
+| GitHub API  | `Authorization: Bearer <token>`        |
+| Artifactory | `X-JFrog-Art-Api`                      |
+
+There is no CLI flag or environment variable for this option: a token given on
+the command line would be visible to any process listing it.
+
+::: warning
+
+Headers are only sent to the host they are configured for. If that host answers
+with a redirect to another one, the request follows the redirect **without**
+them, and will likely fail — point the URL at the final host instead. Headers
+are also HTTP-only: a Taskfile fetched over `git` should authenticate with SSH
+or a git credential helper.
+
+:::
+
 #### `remote.cacert`
 
 - **Type**: `string`
@@ -354,6 +424,10 @@ remote:
   trusted-hosts:
     - github.com
     - gitlab.com
+  auth:
+    - host: gitlab.com
+      headers:
+        PRIVATE-TOKEN: '{{env "GITLAB_TOKEN"}}'
   cacert: ''
   cert: ''
   cert-key: ''
