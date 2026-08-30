@@ -24,9 +24,9 @@ URL. The curated index is at [/llms.txt](/llms.txt) and the full corpus at
 - [Templating](./docs/reference/templating.md): every template function and
   special variable. Check here before inventing one.
 - [Guide](./docs/guide/): one page per topic, for how to do a thing.
-- [Variable resolution](./docs/concepts/variable-resolution.md) and
-  [Dependencies and concurrency](./docs/concepts/dependencies-and-concurrency.md):
-  for when the behaviour matters more than the procedure.
+- [Resolution order](./docs/guide/variables.md#resolution-order) and
+  [Task dependencies](./docs/guide/dependencies.md#task-dependencies): for when
+  the behaviour matters more than the procedure.
 
 ## Semantics that are easy to get wrong
 
