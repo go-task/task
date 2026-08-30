@@ -52,7 +52,7 @@ tasks:
 
 Variables can be set in many places in a Taskfile, and when the same name is set
 twice, one of them wins. The order is the same everywhere and it is described
-once, in [Variable resolution](../concepts/variable-resolution.md#the-order) —
+once, in [Variable resolution](../concepts/variable-resolution.md#the-order),
 including the two cases that surprise people most: a task's own `vars:` cannot
 be overridden from the command line, and `vars:` given on an `includes:` entry
 act as defaults rather than overrides.

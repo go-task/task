@@ -31,7 +31,7 @@ tasks:
 
 `compile` and `generate-assets` run concurrently in an unspecified order, and
 `packaging` is printed only once both have finished. Nothing orders the
-dependencies relative to each other — if `generate-assets` needs `compile` to
+dependencies relative to each other. If `generate-assets` needs `compile` to
 have run, it must say so itself, with its own `deps`.
 
 A task reference inside `cmds` is different: it runs at its position in the
@@ -66,7 +66,7 @@ finishes. See [Output and logging](../guide/output.md).
 
 `--concurrency` / `-C` caps how many tasks run simultaneously. The default is
 `0`, meaning no limit. It is the setting to reach for when parallel tasks
-compete for the same resource — a database, a port, the network.
+compete for the same resource: a database, a port, the network.
 
 ## When one dependency fails
 
@@ -120,6 +120,6 @@ That prints `deploying`, then `remove the temp dir`, then `stop the tunnel`.
 
 ## Related
 
-- [Dependencies and task calls](../guide/dependencies.md) — the syntax for each.
-- [Output and logging](../guide/output.md) — output modes for parallel runs.
-- [CLI](../reference/cli.md) — `--concurrency`, `--failfast`.
+- [Dependencies and task calls](../guide/dependencies.md): the syntax for each.
+- [Output and logging](../guide/output.md): output modes for parallel runs.
+- [CLI](../reference/cli.md): `--concurrency`, `--failfast`.
