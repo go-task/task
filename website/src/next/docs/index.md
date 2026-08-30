@@ -22,7 +22,7 @@ Install the binary, then write your first Taskfile. It takes about five minutes.
 
 ## Using Task
 
-The [Guide](./guide.md) covers everything Task can do, one topic per page:
+The [Guide](./guide/index.md) covers everything Task can do, one topic per page:
 running and defining tasks, variables, dependencies, up-to-date checks,
 conditional execution, loops, includes, output modes and watch mode.
 

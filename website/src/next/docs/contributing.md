@@ -258,4 +258,4 @@ If you have questions, feel free to ask them in the `#help` forum channel on our
 [styleguide]: ./styleguide.md
 [cli-reference]: ./reference/cli.md
 [schema-reference]: ./reference/schema.md
-[usage-guide]: ./guide.md
+[usage-guide]: ./guide/index.md

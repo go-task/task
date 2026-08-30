@@ -456,4 +456,4 @@ vars:
 
 :::
 
-[templating-reference]: ./reference/templating.md
+[templating-reference]: ../reference/templating.md
