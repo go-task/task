@@ -2803,13 +2803,17 @@ $ task default
 The `tui` output opens an interactive, full-screen view. The requested root
 task is shown as a non-selectable heading on the left. Tasks reached from it
 appear beneath it in a one-level list and remain visible while pending,
-running, or finished. Repeated calls to the same task under one root share a
-single row and output view. The output of the selected task is shown on the
-right. Use Tab or the left/right arrow keys to focus a pane. In the task pane,
+running, or finished. Repeated executions have separate rows and output views;
+calls that join an existing `run: once` or `run: when_changed` execution share
+its row. The output of the selected task is shown on the right. Use Tab or the
+left/right arrow keys to focus a pane. In the task pane,
 use the up/down arrows or `j`/`k` to select a task. In the output pane, those
 keys scroll; Page Up and Page Down also scroll the output directly. You can
-click a task to select it and use the mouse wheel over either pane. Pressing
-`q` while tasks are still running cancels them. The view remains open after
+click a task to select it and use the mouse wheel over either pane. Press `c`
+to open a frozen, output-only view for selecting and copying text with the
+terminal. The arrow keys or `j`/`k`, Page Up/Down, and `g`/`G` scroll that
+view; press `c` or Escape to resume interaction. Pressing `q`
+while tasks are still running cancels them. The view remains open after
 execution completes so that output can be inspected.
 
 ```shell

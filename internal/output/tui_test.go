@@ -186,6 +186,59 @@ func TestTUIModelMouseSelectsTasksAndFocusesPanes(t *testing.T) {
 	assert.Equal(t, outputPane, m.focus)
 }
 
+func TestTUIModelTextSelectionModeDisablesMouseAndFreezesView(t *testing.T) {
+	t.Parallel()
+
+	m := newTUIModel(func() {}, false)
+	m = updateTUIModel(t, m, tea.WindowSizeMsg{Width: 80, Height: 12})
+	m = updateTUIModel(t, m, started(1, 0, "root"))
+	m = updateTUIModel(t, m, started(2, 1, "worker"))
+	m = updateTUIModel(t, m, taskOutputMsg{id: 2, name: "worker", data: "first\n"})
+	assert.Contains(t, m.View().Content, "c select text")
+
+	m = updateTUIModel(t, m, tea.KeyPressMsg{Code: 'c', Text: "c"})
+	selectionView := m.View()
+	assert.True(t, m.selectingText)
+	assert.Equal(t, tea.MouseModeNone, selectionView.MouseMode)
+	assert.Contains(t, selectionView.Content, "drag to select")
+	assert.Contains(t, selectionView.Content, "first")
+	assert.NotContains(t, selectionView.Content, "TASKS")
+	assert.NotContains(t, selectionView.Content, "╭")
+
+	m = updateTUIModel(t, m, taskOutputMsg{id: 2, name: "worker", data: "second\n"})
+	assert.Equal(t, selectionView.Content, m.View().Content)
+	assert.Equal(t, "first\nsecond\n", m.byID[2].output)
+
+	m = updateTUIModel(t, m, tea.KeyPressMsg{Code: tea.KeyEscape})
+	assert.False(t, m.selectingText)
+	assert.Equal(t, tea.MouseModeCellMotion, m.View().MouseMode)
+	assert.Contains(t, m.View().Content, "second")
+}
+
+func TestTUIModelTextSelectionModeScrollsWithKeyboard(t *testing.T) {
+	t.Parallel()
+
+	m := newTUIModel(func() {}, false)
+	m = updateTUIModel(t, m, tea.WindowSizeMsg{Width: 80, Height: 10})
+	m = updateTUIModel(t, m, started(1, 0, "root"))
+	m = updateTUIModel(t, m, started(2, 1, "worker"))
+	m = updateTUIModel(t, m, taskOutputMsg{id: 2, name: "worker", data: numberedLines(60)})
+	m = updateTUIModel(t, m, tea.KeyPressMsg{Code: 'c', Text: "c"})
+
+	require.True(t, m.selectionPage.AtBottom())
+	bottomOffset := m.selectionPage.YOffset()
+	require.Greater(t, bottomOffset, 0)
+
+	m = updateTUIModel(t, m, tea.KeyPressMsg{Code: tea.KeyPgUp})
+	assert.Less(t, m.selectionPage.YOffset(), bottomOffset)
+	assert.Contains(t, m.View().Content, "scroll")
+
+	m = updateTUIModel(t, m, tea.KeyPressMsg{Code: 'g', Text: "g"})
+	assert.True(t, m.selectionPage.AtTop())
+	m = updateTUIModel(t, m, tea.KeyPressMsg{Code: 'G', Text: "G"})
+	assert.True(t, m.selectionPage.AtBottom())
+}
+
 func TestTUIModelScrollsAndRemembersEachTaskOutput(t *testing.T) {
 	t.Parallel()
 

@@ -240,6 +240,10 @@ type tuiModel struct {
 	err          error
 	cancel       context.CancelFunc
 	hideInternal bool
+
+	selectingText bool
+	selectionView string
+	selectionPage viewport.Model
 }
 
 type tuiTaskKey struct {
@@ -268,6 +272,9 @@ func (m tuiModel) Init() tea.Cmd { return nil }
 func (m tuiModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
+		if m.selectingText {
+			m.leaveTextSelection()
+		}
 		m.saveViewport()
 		m.width, m.height = msg.Width, msg.Height
 		m.resizeViewport()
@@ -312,9 +319,15 @@ func (m tuiModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.cancel()
 		return m, tea.Quit
 	case tea.MouseClickMsg:
+		if m.selectingText {
+			return m, nil
+		}
 		m.handleMouseClick(tea.Mouse(msg))
 		return m, nil
 	case tea.MouseWheelMsg:
+		if m.selectingText {
+			return m, nil
+		}
 		return m, m.handleMouseWheel(msg)
 	case tea.KeyPressMsg:
 		return m.handleKey(msg)
@@ -324,6 +337,34 @@ func (m tuiModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m *tuiModel) handleKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
+	if m.selectingText {
+		switch msg.String() {
+		case "c", "esc":
+			m.leaveTextSelection()
+			return *m, nil
+		case "q", "ctrl+c":
+			if !m.done {
+				m.cancel()
+			}
+			return *m, tea.Quit
+		case "up", "k":
+			m.selectionPage.ScrollUp(1)
+		case "down", "j":
+			m.selectionPage.ScrollDown(1)
+		case "pgup":
+			m.selectionPage.PageUp()
+		case "pgdown":
+			m.selectionPage.PageDown()
+		case "home", "g":
+			m.selectionPage.GotoTop()
+		case "end", "G":
+			m.selectionPage.GotoBottom()
+		default:
+			return *m, nil
+		}
+		m.refreshSelectionView()
+		return *m, nil
+	}
 	switch msg.String() {
 	case "q", "esc", "ctrl+c":
 		if !m.done {
@@ -338,6 +379,9 @@ func (m *tuiModel) handleKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 		return *m, nil
 	case "right", "l":
 		m.focus = outputPane
+		return *m, nil
+	case "c":
+		m.enterTextSelection()
 		return *m, nil
 	case "pgup", "pgdown":
 		m.focus = outputPane
@@ -379,31 +423,89 @@ func (m *tuiModel) handleKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 }
 
 func (m tuiModel) View() tea.View {
+	content := m.renderContent()
+	if m.selectingText && m.selectionView != "" {
+		content = m.selectionView
+	}
+	view := tea.NewView(content)
+	view.AltScreen = true
+	if m.selectingText {
+		view.MouseMode = tea.MouseModeNone
+	} else {
+		view.MouseMode = tea.MouseModeCellMotion
+	}
+	view.WindowTitle = "Task"
+	return view
+}
+
+func (m tuiModel) renderContent() string {
 	layout := newTUILayout(m.width, m.height)
 	left, right := m.renderPanes(layout)
 	body := lipgloss.JoinHorizontal(lipgloss.Top, left, strings.Repeat(" ", layout.gap), right)
 
-	help := " tab/←/→ pane  •  ↑/↓ select  •  click a task  •  q quit"
+	help := " tab/←/→ pane  •  ↑/↓ select  •  click a task  •  c select text  •  q quit"
 	if m.focus == outputPane {
-		help = " tab/←/→ pane  •  ↑/↓ or pgup/pgdn scroll  •  mouse wheel  •  q quit"
+		help = " tab/←/→ pane  •  ↑/↓ or pgup/pgdn scroll  •  wheel  •  c select text  •  q quit"
 	}
 	helpStyle := tuiHelpStyle
 	if m.done {
 		if m.err != nil {
-			help = " execution failed  •  enter/q quit"
+			help = " execution failed  •  c select text  •  enter/q quit"
 			helpStyle = tuiFailureStyle
 		} else {
-			help = " execution complete  •  enter/q quit"
+			help = " execution complete  •  c select text  •  enter/q quit"
 			helpStyle = tuiSuccessStyle
 		}
 	}
 	help = truncateRunes(help, max(layout.width, 1))
 
-	view := tea.NewView(body + "\n" + helpStyle.Render(help))
-	view.AltScreen = true
-	view.MouseMode = tea.MouseModeCellMotion
-	view.WindowTitle = "Task"
-	return view
+	return body + "\n" + helpStyle.Render(help)
+}
+
+func (m *tuiModel) enterTextSelection() {
+	m.selectingText = true
+	view := viewport.New(
+		viewport.WithWidth(max(m.width, 1)),
+		viewport.WithHeight(max(m.height-1, 1)),
+	)
+	view.SoftWrap = true
+	if task := m.selectedTask(); task != nil {
+		content := task.output
+		if task.truncated {
+			content = "… earlier output was discarded …\n" + content
+		}
+		view.SetContent(content)
+		if m.viewport.AtBottom() {
+			view.GotoBottom()
+		} else if !m.viewport.AtTop() {
+			position := m.viewport.ScrollPercent()
+			view.GotoBottom()
+			view.SetYOffset(int(position * float64(view.YOffset())))
+		}
+	}
+	m.selectionPage = view
+	m.refreshSelectionView()
+}
+
+func (m *tuiModel) leaveTextSelection() {
+	if m.selectionPage.AtTop() {
+		m.viewport.GotoTop()
+	} else if m.selectionPage.AtBottom() {
+		m.viewport.GotoBottom()
+	} else {
+		position := m.selectionPage.ScrollPercent()
+		m.viewport.GotoBottom()
+		m.viewport.SetYOffset(int(position * float64(m.viewport.YOffset())))
+	}
+	m.saveViewport()
+	m.selectingText = false
+	m.selectionView = ""
+	m.selectionPage = viewport.Model{}
+}
+
+func (m *tuiModel) refreshSelectionView() {
+	help := truncateRunes(" text selection  •  ↑/↓ or pgup/pgdn scroll  •  drag to select  •  c/esc resume", max(m.width, 1))
+	m.selectionView = m.selectionPage.View() + "\n" + tuiHelpStyle.Render(help)
 }
 
 func (m tuiModel) renderPanes(layout tuiLayout) (string, string) {
