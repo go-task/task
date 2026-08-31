@@ -15,6 +15,7 @@ import (
 	"github.com/go-task/task/v3/internal/logger"
 	"github.com/go-task/task/v3/internal/templater"
 	"github.com/go-task/task/v3/internal/term"
+	"github.com/go-task/task/v3/taskfile/ast"
 )
 
 const (
@@ -23,9 +24,10 @@ const (
 )
 
 type TUI struct {
-	logger *logger.Logger
-	input  io.Reader
-	output io.Writer
+	logger       *logger.Logger
+	input        io.Reader
+	output       io.Writer
+	hideInternal bool
 
 	mutex   sync.RWMutex
 	program *tea.Program
@@ -40,15 +42,16 @@ type pendingOutput struct {
 	data string
 }
 
-func NewTUI(log *logger.Logger) (*TUI, error) {
+func NewTUI(log *logger.Logger, options ast.OutputTUI) (*TUI, error) {
 	if !log.AssumeTerm && !term.IsTerminal() {
 		return nil, fmt.Errorf(`task: output style "tui" requires an interactive terminal`)
 	}
 	return &TUI{
-		logger:  log,
-		input:   log.Stdin,
-		output:  log.Stdout,
-		pending: make(map[uint64]pendingOutput),
+		logger:       log,
+		input:        log.Stdin,
+		output:       log.Stdout,
+		hideInternal: options.HideInternal,
+		pending:      make(map[uint64]pendingOutput),
 	}, nil
 }
 
@@ -64,6 +67,10 @@ func (t *TUI) WrapWriterForTask(_ io.Writer, _ io.Writer, task TaskInvocation, _
 	return w, w, func(error) error { return nil }
 }
 
+func (t *TUI) TaskScheduled(task TaskInvocation) {
+	t.send(taskScheduledMsg{task: task})
+}
+
 func (t *TUI) TaskStarted(task TaskInvocation) {
 	t.send(taskStartedMsg{task: task})
 }
@@ -72,11 +79,15 @@ func (t *TUI) TaskFinished(id uint64, err error) {
 	t.send(taskFinishedMsg{id: id, err: err})
 }
 
+func (t *TUI) TaskJoined(id, ownerID uint64) {
+	t.send(taskJoinedMsg{id: id, ownerID: ownerID})
+}
+
 func (t *TUI) Run(ctx context.Context, run func(context.Context) error) error {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	model := newTUIModel(cancel)
+	model := newTUIModel(cancel, t.hideInternal)
 	program := tea.NewProgram(
 		model,
 		tea.WithInput(t.input),
@@ -182,21 +193,30 @@ const (
 )
 
 type tuiTask struct {
-	id        uint64
-	parentID  uint64
-	name      string
-	output    string
-	state     taskState
-	truncated bool
+	id         uint64
+	rootID     uint64
+	name       string
+	occurrence int
+	internal   bool
+	isRoot     bool
+	hidden     bool
+	output     string
+	state      taskState
+	truncated  bool
 
 	scrollOffset int
 	followOutput bool
 }
 
+type taskScheduledMsg struct{ task TaskInvocation }
 type taskStartedMsg struct{ task TaskInvocation }
 type taskFinishedMsg struct {
 	id  uint64
 	err error
+}
+type taskJoinedMsg struct {
+	id      uint64
+	ownerID uint64
 }
 type taskOutputMsg struct {
 	id         uint64
@@ -206,30 +226,40 @@ type outputReadyMsg struct{ tui *TUI }
 type executionDoneMsg struct{ err error }
 
 type tuiModel struct {
-	tasks      []*tuiTask
-	byID       map[uint64]*tuiTask
-	selectedID uint64
-	hasSelect  bool
-	listTop    int
-	focus      paneFocus
-	width      int
-	height     int
-	viewport   viewport.Model
-	done       bool
-	err        error
-	cancel     context.CancelFunc
+	tasks        []*tuiTask
+	byID         map[uint64]*tuiTask
+	nameCounts   map[tuiTaskKey]int
+	selectedID   uint64
+	hasSelect    bool
+	listTop      int
+	focus        paneFocus
+	width        int
+	height       int
+	viewport     viewport.Model
+	done         bool
+	err          error
+	cancel       context.CancelFunc
+	hideInternal bool
 }
 
-func newTUIModel(cancel context.CancelFunc) tuiModel {
+type tuiTaskKey struct {
+	rootID uint64
+	name   string
+	isRoot bool
+}
+
+func newTUIModel(cancel context.CancelFunc, hideInternal bool) tuiModel {
 	view := viewport.New()
 	view.SoftWrap = true
 	view.MouseWheelDelta = 3
 	return tuiModel{
-		byID:     make(map[uint64]*tuiTask),
-		width:    100,
-		height:   30,
-		viewport: view,
-		cancel:   cancel,
+		byID:         make(map[uint64]*tuiTask),
+		nameCounts:   make(map[tuiTaskKey]int),
+		width:        100,
+		height:       30,
+		viewport:     view,
+		cancel:       cancel,
+		hideInternal: hideInternal,
 	}
 }
 
@@ -244,18 +274,28 @@ func (m tuiModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.loadViewport()
 		m.keepSelectionVisible()
 		return m, nil
+	case taskScheduledMsg:
+		m.scheduleTask(msg.task)
+		m.keepSelectionVisible()
+		return m, nil
 	case taskStartedMsg:
-		task := m.ensureTask(msg.task.ID, msg.task.Name, msg.task.ParentID)
+		task := m.scheduleTask(msg.task)
 		task.state = taskRunning
 		m.keepSelectionVisible()
 		return m, nil
 	case taskFinishedMsg:
-		task := m.ensureTask(msg.id, "", 0)
+		task := m.byID[msg.id]
+		if task == nil {
+			return m, nil
+		}
 		if msg.err != nil {
 			task.state = taskFailed
 		} else {
 			task.state = taskSucceeded
 		}
+		return m, nil
+	case taskJoinedMsg:
+		m.joinTask(msg.id, msg.ownerID)
 		return m, nil
 	case taskOutputMsg:
 		m.appendOutput(msg.id, msg.name, msg.data)
@@ -316,7 +356,7 @@ func (m *tuiModel) handleKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 		return *m, m.updateViewport(msg)
 	case "home", "g":
 		if m.focus == taskPane {
-			m.selectTask(0)
+			m.selectBoundary(false)
 		} else {
 			m.viewport.GotoTop()
 			m.saveViewport()
@@ -324,7 +364,7 @@ func (m *tuiModel) handleKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 		return *m, nil
 	case "end", "G":
 		if m.focus == taskPane {
-			m.selectTask(len(m.taskRows()) - 1)
+			m.selectBoundary(true)
 		} else {
 			m.viewport.GotoBottom()
 			m.saveViewport()
@@ -412,30 +452,79 @@ func newTUILayout(width, height int) tuiLayout {
 	}
 }
 
-func (m *tuiModel) ensureTask(id uint64, name string, parentID uint64) *tuiTask {
-	if task, ok := m.byID[id]; ok {
-		if name != "" {
-			task.name = name
+func (m *tuiModel) scheduleTask(invocation TaskInvocation) *tuiTask {
+	if task := m.byID[invocation.ID]; task != nil {
+		return task
+	}
+	isRoot := invocation.ID == invocation.RootID
+	key := tuiTaskKey{rootID: invocation.RootID, name: invocation.Name, isRoot: isRoot}
+	m.nameCounts[key]++
+	task := &tuiTask{
+		id:           invocation.ID,
+		rootID:       invocation.RootID,
+		name:         invocation.Name,
+		occurrence:   m.nameCounts[key],
+		internal:     invocation.Internal,
+		isRoot:       isRoot,
+		hidden:       m.hideInternal && invocation.Internal && !isRoot,
+		state:        taskLog,
+		followOutput: true,
+	}
+	m.byID[invocation.ID] = task
+	m.tasks = append(m.tasks, task)
+	if m.hasSelect && m.selectedID == task.id {
+		m.loadViewport()
+	}
+	if !task.isRoot && !task.hidden && !m.hasSelect {
+		m.selectedID = task.id
+		m.hasSelect = true
+		m.loadViewport()
+	}
+	return task
+}
+
+func (m *tuiModel) joinTask(id, ownerID uint64) {
+	task := m.byID[id]
+	if task == nil {
+		return
+	}
+	selected := m.hasSelect && m.selectedID == id
+	if selected {
+		m.saveViewport()
+	}
+	delete(m.byID, id)
+	for i, candidate := range m.tasks {
+		if candidate.id == id {
+			m.tasks = append(m.tasks[:i], m.tasks[i+1:]...)
+			break
 		}
-		if parentID != 0 && parentID != id {
-			task.parentID = parentID
-		}
+	}
+	key := tuiTaskKey{rootID: task.rootID, name: task.name, isRoot: task.isRoot}
+	if m.nameCounts[key] > 1 {
+		m.nameCounts[key]--
+	} else {
+		delete(m.nameCounts, key)
+	}
+	if selected {
+		m.selectedID = ownerID
+		m.hasSelect = ownerID != 0
+		m.loadViewport()
+	}
+	m.keepSelectionVisible()
+}
+
+func (m *tuiModel) ensureOutputTask(id uint64, name string) *tuiTask {
+	if task := m.byID[id]; task != nil {
 		return task
 	}
 	if name == "" {
 		name = fmt.Sprintf("task %d", id)
 	}
-	task := &tuiTask{
-		id:           id,
-		parentID:     parentID,
-		name:         name,
-		state:        taskLog,
-		followOutput: true,
-	}
+	task := &tuiTask{id: id, name: name, state: taskLog, followOutput: true}
 	m.byID[id] = task
 	m.tasks = append(m.tasks, task)
 	if !m.hasSelect {
-		m.selectedID = id
+		m.selectedID = task.id
 		m.hasSelect = true
 		m.loadViewport()
 	}
@@ -443,7 +532,7 @@ func (m *tuiModel) ensureTask(id uint64, name string, parentID uint64) *tuiTask 
 }
 
 func (m *tuiModel) appendOutput(id uint64, name, data string) {
-	task := m.ensureTask(id, name, 0)
+	task := m.ensureOutputTask(id, name)
 	if task.state == taskLog && id != 0 {
 		task.state = taskRunning
 	}
@@ -452,9 +541,17 @@ func (m *tuiModel) appendOutput(id uint64, name, data string) {
 		task.output = task.output[len(task.output)-maxTaskOutputLen:]
 		task.truncated = true
 	}
-	if m.hasSelect && id == m.selectedID {
+	if m.hasSelect && task.id == m.selectedID {
 		m.loadViewport()
 	}
+}
+
+func (m tuiModel) taskName(task *tuiTask) string {
+	key := tuiTaskKey{rootID: task.rootID, name: task.name, isRoot: task.isRoot}
+	if m.nameCounts[key] > 1 {
+		return fmt.Sprintf("#%d %s", task.occurrence, task.name)
+	}
+	return task.name
 }
 
 type tuiTaskRow struct {
@@ -464,56 +561,37 @@ type tuiTaskRow struct {
 }
 
 func (m tuiModel) taskRows() []tuiTaskRow {
-	children := make(map[uint64][]*tuiTask)
-	var roots []*tuiTask
+	childrenByRoot := make(map[uint64][]*tuiTask)
+	var roots, standalone []*tuiTask
 	for _, task := range m.tasks {
-		_, parentExists := m.byID[task.parentID]
-		if task.parentID == 0 || task.parentID == task.id || !parentExists {
+		if task.hidden {
+			continue
+		}
+		if task.isRoot {
 			roots = append(roots, task)
 			continue
 		}
-		children[task.parentID] = append(children[task.parentID], task)
+		if task.rootID == 0 {
+			standalone = append(standalone, task)
+		} else {
+			childrenByRoot[task.rootID] = append(childrenByRoot[task.rootID], task)
+		}
 	}
 
 	rows := make([]tuiTaskRow, 0, len(m.tasks))
-	visited := make(map[uint64]bool, len(m.tasks))
-	var walk func(*tuiTask, int, []bool, string, bool)
-	walk = func(task *tuiTask, depth int, ancestorContinues []bool, connector string, hasNextSibling bool) {
-		if visited[task.id] {
-			return
-		}
-		visited[task.id] = true
-		var prefix strings.Builder
-		for _, continues := range ancestorContinues {
-			if continues {
-				prefix.WriteString("│  ")
-			} else {
-				prefix.WriteString("   ")
-			}
-		}
-		prefix.WriteString(connector)
-		rows = append(rows, tuiTaskRow{task: task, depth: depth, treePrefix: prefix.String()})
-		childAncestors := ancestorContinues
-		if depth > 0 {
-			childAncestors = append(append([]bool(nil), ancestorContinues...), hasNextSibling)
-		}
-		for i, child := range children[task.id] {
-			hasNext := i < len(children[task.id])-1
-			childConnector := "└─ "
-			if hasNext {
-				childConnector = "├─ "
-			}
-			walk(child, depth+1, childAncestors, childConnector, hasNext)
-		}
-	}
 	for _, root := range roots {
-		walk(root, 0, nil, "", false)
-	}
-	// Defensive fallback for malformed/cyclic parent information.
-	for _, task := range m.tasks {
-		if !visited[task.id] {
-			walk(task, 0, nil, "", false)
+		rows = append(rows, tuiTaskRow{task: root})
+		children := childrenByRoot[root.id]
+		for i, child := range children {
+			connector := "└─ "
+			if i < len(children)-1 {
+				connector = "├─ "
+			}
+			rows = append(rows, tuiTaskRow{task: child, depth: 1, treePrefix: connector})
 		}
+	}
+	for _, task := range standalone {
+		rows = append(rows, tuiTaskRow{task: task})
 	}
 	return rows
 }
@@ -541,14 +619,24 @@ func (m *tuiModel) moveSelection(delta int) {
 	}
 	index := m.selectedIndex()
 	if index < 0 {
-		index = 0
+		if delta < 0 {
+			m.selectBoundary(true)
+		} else {
+			m.selectBoundary(false)
+		}
+		return
 	}
-	m.selectTask(min(max(index+delta, 0), len(rows)-1))
+	for index += delta; index >= 0 && index < len(rows); index += delta {
+		if !rows[index].task.isRoot {
+			m.selectTask(index)
+			return
+		}
+	}
 }
 
 func (m *tuiModel) selectTask(index int) {
 	rows := m.taskRows()
-	if index < 0 || index >= len(rows) {
+	if index < 0 || index >= len(rows) || rows[index].task.isRoot {
 		return
 	}
 	m.saveViewport()
@@ -556,6 +644,25 @@ func (m *tuiModel) selectTask(index int) {
 	m.hasSelect = true
 	m.keepSelectionVisible()
 	m.loadViewport()
+}
+
+func (m *tuiModel) selectBoundary(last bool) {
+	rows := m.taskRows()
+	if last {
+		for i := len(rows) - 1; i >= 0; i-- {
+			if !rows[i].task.isRoot {
+				m.selectTask(i)
+				return
+			}
+		}
+		return
+	}
+	for i, row := range rows {
+		if !row.task.isRoot {
+			m.selectTask(i)
+			return
+		}
+	}
 }
 
 func (m *tuiModel) keepSelectionVisible() {
@@ -674,8 +781,11 @@ func (m tuiModel) taskList(width, height int) string {
 	for i := m.listTop; i < end; i++ {
 		row := rows[i]
 		branch := row.treePrefix
-		if lipgloss.Width(branch) > max(width/2, 3) {
-			branch = "… " + truncateLeft(branch, max(width/2-2, 1))
+		if row.task.isRoot {
+			prefix := "  " + taskIcon(row.task.state) + " "
+			name := truncateRunes(m.taskName(row.task), max(width-lipgloss.Width(prefix), 1))
+			lines = append(lines, prefix+tuiRootStyle.Render(name))
+			continue
 		}
 		selected := row.task.id == m.selectedID
 		marker := "  "
@@ -683,7 +793,7 @@ func (m tuiModel) taskList(width, height int) string {
 			marker = "▌ "
 		}
 		plainPrefix := marker + branch + taskIconText(row.task.state) + " "
-		name := truncateRunes(row.task.name, max(width-lipgloss.Width(plainPrefix), 1))
+		name := truncateRunes(m.taskName(row.task), max(width-lipgloss.Width(plainPrefix), 1))
 		if selected {
 			lines = append(lines, tuiSelectedStyle.Width(width).Render(plainPrefix+name))
 			continue
@@ -695,15 +805,15 @@ func (m tuiModel) taskList(width, height int) string {
 }
 
 func (m tuiModel) outputPanel(width int) string {
-	name := ""
+	title := "OUTPUT"
 	if task := m.selectedTask(); task != nil {
-		name = task.name
+		title += " · " + m.taskName(task)
 	}
 	position := ""
 	if !m.viewport.AtTop() || !m.viewport.AtBottom() {
 		position = fmt.Sprintf("%3.0f%%", m.viewport.ScrollPercent()*100)
 	}
-	return paneTitle("OUTPUT · "+name, position, width) + "\n" + m.viewport.View()
+	return paneTitle(title, position, width) + "\n" + m.viewport.View()
 }
 
 func paneTitle(left, right string, width int) string {
@@ -754,14 +864,6 @@ func truncateRunes(s string, width int) string {
 	return string(runes[:width-1]) + "…"
 }
 
-func truncateLeft(s string, width int) string {
-	runes := []rune(s)
-	if len(runes) <= width {
-		return s
-	}
-	return string(runes[len(runes)-width:])
-}
-
 var (
 	tuiAccentColor = compat.AdaptiveColor{Light: lipgloss.Color("#006A83"), Dark: lipgloss.Color("#5FD7FF")}
 	tuiPanelStyle  = lipgloss.NewStyle().
@@ -770,6 +872,7 @@ var (
 			PaddingLeft(1).
 			PaddingRight(1)
 	tuiTitleStyle    = lipgloss.NewStyle().Bold(true).Foreground(tuiAccentColor)
+	tuiRootStyle     = lipgloss.NewStyle().Bold(true)
 	tuiSelectedStyle = lipgloss.NewStyle().
 				Bold(true).
 				Foreground(compat.AdaptiveColor{Light: lipgloss.Color("#10212B"), Dark: lipgloss.Color("#F4F7FA")}).

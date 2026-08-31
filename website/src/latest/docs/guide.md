@@ -2800,17 +2800,29 @@ $ task default
 [print-baz] baz
 ```
 
-The `tui` output opens an interactive, full-screen view. Running tasks and
-their status are shown as a call tree on the left, while the output of the
-selected task is shown on the right. Use Tab or the left/right arrow keys to
-focus a pane. In the task pane, use the up/down arrows or `j`/`k` to select a
-task. In the output pane, those keys scroll; Page Up and Page Down also scroll
-the output directly. You can click a task to select it and use the mouse wheel
-over either pane. Pressing `q` while tasks are still running cancels them. The
-view remains open after execution completes so that output can be inspected.
+The `tui` output opens an interactive, full-screen view. The requested root
+task is shown as a non-selectable heading on the left. Tasks reached from it
+appear beneath it in a one-level list and remain visible while pending,
+running, or finished. Repeated calls to the same task under one root share a
+single row and output view. The output of the selected task is shown on the
+right. Use Tab or the left/right arrow keys to focus a pane. In the task pane,
+use the up/down arrows or `j`/`k` to select a task. In the output pane, those
+keys scroll; Page Up and Page Down also scroll the output directly. You can
+click a task to select it and use the mouse wheel over either pane. Pressing
+`q` while tasks are still running cancels them. The view remains open after
+execution completes so that output can be inspected.
 
 ```shell
 $ task --output tui build test lint
+```
+
+Internal tasks are shown by default. They can be hidden when the output mode
+is configured in the Taskfile:
+
+```yaml
+output:
+  tui:
+    hide_internal: true
 ```
 
 This mode requires an interactive terminal. It is intended for local use; use

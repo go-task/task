@@ -16,12 +16,13 @@ type Output interface {
 
 type CloseFunc func(err error) error
 
-// TaskInvocation identifies one runtime invocation of a task. IDs are unique
-// within an Executor; ParentID is zero for tasks invoked from the CLI.
+// TaskInvocation identifies one runtime call to a task. IDs are unique within
+// an Executor, including repeated calls to the same task.
 type TaskInvocation struct {
-	ID       uint64
-	ParentID uint64
+	ID       uint64 // Unique call ID
+	RootID   uint64 // ID of the root call requested by the user
 	Name     string
+	Internal bool
 }
 
 // Runner is implemented by output modes that need to own the terminal while
@@ -33,8 +34,16 @@ type Runner interface {
 // TaskLifecycle is implemented by output modes that display task state in
 // addition to command output.
 type TaskLifecycle interface {
+	TaskScheduled(TaskInvocation)
 	TaskStarted(TaskInvocation)
 	TaskFinished(id uint64, err error)
+}
+
+// TaskJoinLifecycle is implemented by output modes that distinguish task calls
+// from executions. A joined call waits for the execution owned by ownerID and
+// does not produce its own output.
+type TaskJoinLifecycle interface {
+	TaskJoined(id, ownerID uint64)
 }
 
 // TaskOutput is implemented by output modes that keep output for individual
@@ -52,6 +61,12 @@ func Run(o Output, ctx context.Context, fn func(context.Context) error) error {
 	return fn(ctx)
 }
 
+func TaskScheduled(o Output, task TaskInvocation) {
+	if lifecycle, ok := o.(TaskLifecycle); ok {
+		lifecycle.TaskScheduled(task)
+	}
+}
+
 func TaskStarted(o Output, task TaskInvocation) {
 	if lifecycle, ok := o.(TaskLifecycle); ok {
 		lifecycle.TaskStarted(task)
@@ -61,6 +76,12 @@ func TaskStarted(o Output, task TaskInvocation) {
 func TaskFinished(o Output, id uint64, err error) {
 	if lifecycle, ok := o.(TaskLifecycle); ok {
 		lifecycle.TaskFinished(id, err)
+	}
+}
+
+func TaskJoined(o Output, id, ownerID uint64) {
+	if lifecycle, ok := o.(TaskJoinLifecycle); ok {
+		lifecycle.TaskJoined(id, ownerID)
 	}
 }
 
@@ -100,7 +121,7 @@ func BuildFor(o *ast.Output, logger *logger.Logger) (Output, error) {
 		if err := checkOutputGroupUnset(o); err != nil {
 			return nil, err
 		}
-		return NewTUI(logger)
+		return NewTUI(logger, o.TUI)
 	default:
 		return nil, fmt.Errorf(`task: output style %q not recognized`, o.Name)
 	}

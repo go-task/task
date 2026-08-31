@@ -21,22 +21,27 @@ func TestBuildTUI(t *testing.T) {
 	got, err := BuildFor(&ast.Output{Name: "tui"}, &logger.Logger{AssumeTerm: true})
 	require.NoError(t, err)
 	assert.IsType(t, &TUI{}, got)
+
+	got, err = BuildFor(&ast.Output{Name: "tui", TUI: ast.OutputTUI{HideInternal: true}}, &logger.Logger{AssumeTerm: true})
+	require.NoError(t, err)
+	assert.True(t, got.(*TUI).hideInternal)
 }
 
 func TestTUIModelTracksTasksAndOutput(t *testing.T) {
 	t.Parallel()
 
-	m := newTUIModel(func() {})
-	m = updateTUIModel(t, m, started(1, 0, "build"))
-	m = updateTUIModel(t, m, taskOutputMsg{id: 1, name: "build", data: "compiling\r\ndone\r"})
-	m = updateTUIModel(t, m, started(2, 0, "test"))
-	m = updateTUIModel(t, m, taskFinishedMsg{id: 1})
-	m = updateTUIModel(t, m, taskFinishedMsg{id: 2, err: errors.New("failed")})
+	m := newTUIModel(func() {}, false)
+	m = updateTUIModel(t, m, started(1, 0, "root"))
+	m = updateTUIModel(t, m, started(2, 1, "build"))
+	m = updateTUIModel(t, m, taskOutputMsg{id: 2, name: "build", data: "compiling\r\ndone\r"})
+	m = updateTUIModel(t, m, started(3, 1, "test"))
+	m = updateTUIModel(t, m, taskFinishedMsg{id: 2})
+	m = updateTUIModel(t, m, taskFinishedMsg{id: 3, err: errors.New("failed")})
 
-	require.Len(t, m.tasks, 2)
-	assert.Equal(t, taskSucceeded, m.byID[1].state)
-	assert.Equal(t, "compiling\ndone\n", m.byID[1].output)
-	assert.Equal(t, taskFailed, m.byID[2].state)
+	require.Len(t, m.tasks, 3)
+	assert.Equal(t, taskSucceeded, m.byID[2].state)
+	assert.Equal(t, "compiling\ndone\n", m.byID[2].output)
+	assert.Equal(t, taskFailed, m.byID[3].state)
 	assert.Equal(t, m.width, lipgloss.Width(m.View().Content))
 	assert.Equal(t, m.height, lipgloss.Height(m.View().Content))
 	assert.LessOrEqual(t, lipgloss.Width(m.View().Content), m.width)
@@ -46,14 +51,14 @@ func TestTUIModelTracksTasksAndOutput(t *testing.T) {
 	assert.Equal(t, lipgloss.Height(left), lipgloss.Height(right))
 
 	m.moveSelection(1)
-	assert.Equal(t, uint64(2), m.selectedID)
+	assert.Equal(t, uint64(3), m.selectedID)
 	assert.Contains(t, m.View().Content, "test")
 }
 
 func TestTUIModelFitsMinimumTerminalSize(t *testing.T) {
 	t.Parallel()
 
-	m := newTUIModel(func() {})
+	m := newTUIModel(func() {}, false)
 	m = updateTUIModel(t, m, tea.WindowSizeMsg{Width: 40, Height: 8})
 	m = updateTUIModel(t, m, started(1, 0, "a-task-with-a-fairly-long-name"))
 
@@ -66,52 +71,114 @@ func TestTUIModelFitsMinimumTerminalSize(t *testing.T) {
 	assert.Equal(t, lipgloss.Height(left), lipgloss.Height(right))
 }
 
-func TestTUIModelKeepsConcurrentInvocationsSeparate(t *testing.T) {
+func TestTUIModelKeepsRepeatedTaskCallsSeparate(t *testing.T) {
 	t.Parallel()
 
-	m := newTUIModel(func() {})
-	m = updateTUIModel(t, m, started(1, 0, "worker"))
-	m = updateTUIModel(t, m, started(2, 0, "worker"))
-	m = updateTUIModel(t, m, taskOutputMsg{id: 1, name: "worker", data: "first"})
-	m = updateTUIModel(t, m, taskOutputMsg{id: 2, name: "worker", data: "second"})
-	m = updateTUIModel(t, m, taskFinishedMsg{id: 1, err: errors.New("failed")})
-	m = updateTUIModel(t, m, taskFinishedMsg{id: 2})
+	m := newTUIModel(func() {}, false)
+	m = updateTUIModel(t, m, tea.WindowSizeMsg{Width: 80, Height: 20})
+	m = updateTUIModel(t, m, started(1, 0, "root"))
+	m = updateTUIModel(t, m, started(2, 1, "worker"))
+	m = updateTUIModel(t, m, started(3, 1, "worker"))
+	m = updateTUIModel(t, m, taskOutputMsg{id: 2, name: "worker", data: "first"})
+	m = updateTUIModel(t, m, taskOutputMsg{id: 3, name: "worker", data: " second"})
+	m = updateTUIModel(t, m, taskFinishedMsg{id: 2, err: errors.New("failed")})
+	m = updateTUIModel(t, m, taskFinishedMsg{id: 3})
 
-	require.Len(t, m.tasks, 2)
-	assert.Equal(t, "first", m.byID[1].output)
-	assert.Equal(t, taskFailed, m.byID[1].state)
-	assert.Equal(t, "second", m.byID[2].output)
-	assert.Equal(t, taskSucceeded, m.byID[2].state)
+	require.Len(t, m.tasks, 3)
+	assert.NotSame(t, m.byID[2], m.byID[3])
+	assert.Equal(t, "first", m.byID[2].output)
+	assert.Equal(t, " second", m.byID[3].output)
+	assert.Equal(t, taskFailed, m.byID[2].state)
+	assert.Equal(t, taskSucceeded, m.byID[3].state)
+	assert.Equal(t, []string{"root", "worker", "worker"}, rowNames(m.taskRows()))
+	assert.Contains(t, m.taskList(30, 10), "#1 worker")
+	assert.Contains(t, m.taskList(30, 10), "#2 worker")
+
+	m.selectTask(2)
+	assert.Equal(t, " second", m.selectedTask().output)
+	assert.Contains(t, m.viewport.View(), " second")
+	assert.Contains(t, m.outputPanel(30), "#2 worker")
 }
 
-func TestTUIModelBuildsRuntimeInvocationTree(t *testing.T) {
+func TestTUIModelHidesCallsThatJoinAnExistingExecution(t *testing.T) {
 	t.Parallel()
 
-	m := newTUIModel(func() {})
+	m := newTUIModel(func() {}, false)
+	m = updateTUIModel(t, m, started(1, 0, "root"))
+	m = updateTUIModel(t, m, started(2, 1, "worker"))
+	m = updateTUIModel(t, m, scheduled(3, 1, "worker", false))
+	require.Len(t, m.tasks, 3)
+	assert.Contains(t, m.taskList(30, 10), "#1 worker")
+	assert.Contains(t, m.taskList(30, 10), "#2 worker")
+
+	m.selectTask(2)
+	m = updateTUIModel(t, m, taskJoinedMsg{id: 3, ownerID: 2})
+
+	require.Len(t, m.tasks, 2)
+	assert.Nil(t, m.byID[3])
+	assert.Equal(t, uint64(2), m.selectedID)
+	assert.Equal(t, []string{"root", "worker"}, rowNames(m.taskRows()))
+	assert.NotContains(t, m.taskList(30, 10), "#1")
+	assert.NotContains(t, m.taskList(30, 10), "#2")
+}
+
+func TestTUIModelFlattensExecutionsUnderTheirRoot(t *testing.T) {
+	t.Parallel()
+
+	m := newTUIModel(func() {}, false)
 	m = updateTUIModel(t, m, started(1, 0, "root"))
 	m = updateTUIModel(t, m, started(5, 0, "other-root"))
 	m = updateTUIModel(t, m, started(2, 1, "child"))
-	m = updateTUIModel(t, m, started(3, 2, "grandchild"))
+	m = updateTUIModel(t, m, started(3, 1, "grandchild"))
 	m = updateTUIModel(t, m, started(4, 1, "second-child"))
 
 	rows := m.taskRows()
 	assert.Equal(t, []string{"root", "child", "grandchild", "second-child", "other-root"}, rowNames(rows))
-	assert.Equal(t, []int{0, 1, 2, 1, 0}, rowDepths(rows))
-	assert.Equal(t, []string{"", "├─ ", "│  └─ ", "└─ ", ""}, rowPrefixes(rows))
+	assert.Equal(t, []int{0, 1, 1, 1, 0}, rowDepths(rows))
+	assert.Equal(t, []string{"", "├─ ", "├─ ", "└─ ", ""}, rowPrefixes(rows))
 	assert.Contains(t, m.taskList(30, 10), "▌")
+}
+
+func TestTUIModelShowsPendingTasksAndDoesNotSelectRoot(t *testing.T) {
+	t.Parallel()
+
+	m := newTUIModel(func() {}, false)
+	m = updateTUIModel(t, m, scheduled(1, 1, "root", false))
+	assert.False(t, m.hasSelect)
+	m = updateTUIModel(t, m, scheduled(2, 1, "child", false))
+	assert.Equal(t, taskLog, m.byID[2].state)
+	assert.Equal(t, uint64(2), m.selectedID)
+
+	m.selectTask(0)
+	assert.Equal(t, uint64(2), m.selectedID)
+	m = updateTUIModel(t, m, taskFinishedMsg{id: 2})
+	assert.Equal(t, taskSucceeded, m.byID[2].state)
+}
+
+func TestTUIModelCanHideInternalTasks(t *testing.T) {
+	t.Parallel()
+
+	m := newTUIModel(func() {}, true)
+	m = updateTUIModel(t, m, scheduled(1, 1, "root", false))
+	m = updateTUIModel(t, m, scheduled(2, 1, "visible", false))
+	m = updateTUIModel(t, m, scheduled(3, 1, "internal", true))
+
+	assert.Equal(t, []string{"root", "visible"}, rowNames(m.taskRows()))
+	assert.Equal(t, 1, m.nameCounts[tuiTaskKey{rootID: 1, name: "internal"}])
 }
 
 func TestTUIModelMouseSelectsTasksAndFocusesPanes(t *testing.T) {
 	t.Parallel()
 
-	m := newTUIModel(func() {})
+	m := newTUIModel(func() {}, false)
 	m = updateTUIModel(t, m, tea.WindowSizeMsg{Width: 100, Height: 30})
-	m = updateTUIModel(t, m, started(1, 0, "first"))
-	m = updateTUIModel(t, m, started(2, 0, "second"))
+	m = updateTUIModel(t, m, started(1, 0, "root"))
+	m = updateTUIModel(t, m, started(2, 1, "first"))
+	m = updateTUIModel(t, m, started(3, 1, "second"))
 
-	// The title occupies row 1 inside the border; the second task is row 3.
-	m = updateTUIModel(t, m, tea.MouseClickMsg{X: 5, Y: 3, Button: tea.MouseLeft})
-	assert.Equal(t, uint64(2), m.selectedID)
+	// The title occupies row 1; the root is row 2 and the second child is row 4.
+	m = updateTUIModel(t, m, tea.MouseClickMsg{X: 5, Y: 4, Button: tea.MouseLeft})
+	assert.Equal(t, uint64(3), m.selectedID)
 	assert.Equal(t, taskPane, m.focus)
 
 	layout := newTUILayout(m.width, m.height)
@@ -122,20 +189,21 @@ func TestTUIModelMouseSelectsTasksAndFocusesPanes(t *testing.T) {
 func TestTUIModelScrollsAndRemembersEachTaskOutput(t *testing.T) {
 	t.Parallel()
 
-	m := newTUIModel(func() {})
+	m := newTUIModel(func() {}, false)
 	m = updateTUIModel(t, m, tea.WindowSizeMsg{Width: 80, Height: 10})
-	m = updateTUIModel(t, m, started(1, 0, "first"))
-	m = updateTUIModel(t, m, taskOutputMsg{id: 1, name: "first", data: numberedLines(30)})
-	m = updateTUIModel(t, m, started(2, 0, "second"))
+	m = updateTUIModel(t, m, started(1, 0, "root"))
+	m = updateTUIModel(t, m, started(2, 1, "first"))
+	m = updateTUIModel(t, m, taskOutputMsg{id: 2, name: "first", data: numberedLines(30)})
+	m = updateTUIModel(t, m, started(3, 1, "second"))
 	m.focus = outputPane
 	m = updateTUIModel(t, m, tea.KeyPressMsg{Code: tea.KeyPgUp})
 
 	firstOffset := m.viewport.YOffset()
 	assert.Greater(t, firstOffset, 0)
-	assert.False(t, m.byID[1].followOutput)
+	assert.False(t, m.byID[2].followOutput)
 
+	m.selectTask(2)
 	m.selectTask(1)
-	m.selectTask(0)
 	assert.Equal(t, firstOffset, m.viewport.YOffset())
 
 	layout := newTUILayout(m.width, m.height)
@@ -151,7 +219,7 @@ func TestTUIModelQuitCancelsExecution(t *testing.T) {
 	t.Parallel()
 
 	ctx, cancel := context.WithCancel(t.Context())
-	m := newTUIModel(cancel)
+	m := newTUIModel(cancel, false)
 	key := tea.KeyPressMsg{Code: 'q', Text: "q"}
 	next, cmd := m.Update(key)
 	require.NotNil(t, cmd)
@@ -171,8 +239,15 @@ func TestTUIOutputQueueCoalescesWrites(t *testing.T) {
 	assert.False(t, tui.outputQueued)
 }
 
-func started(id, parentID uint64, name string) taskStartedMsg {
-	return taskStartedMsg{task: TaskInvocation{ID: id, ParentID: parentID, Name: name}}
+func started(id, rootID uint64, name string) taskStartedMsg {
+	if rootID == 0 {
+		rootID = id
+	}
+	return taskStartedMsg{task: TaskInvocation{ID: id, RootID: rootID, Name: name}}
+}
+
+func scheduled(id, rootID uint64, name string, internal bool) taskScheduledMsg {
+	return taskScheduledMsg{task: TaskInvocation{ID: id, RootID: rootID, Name: name, Internal: internal}}
 }
 
 func updateTUIModel(t *testing.T, m tuiModel, msg tea.Msg) tuiModel {

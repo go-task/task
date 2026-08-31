@@ -137,7 +137,7 @@ func (e *Executor) splitRegularAndWatchCalls(calls ...*Call) (regularCalls []*Ca
 }
 
 // RunTask runs a task by its name
-func (e *Executor) RunTask(ctx context.Context, call *Call) error {
+func (e *Executor) RunTask(ctx context.Context, call *Call) (runErr error) {
 	// Inject prompted vars into call if available
 	if e.promptedVars != nil {
 		if call.Vars == nil {
@@ -180,6 +180,19 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) error {
 			return fmt.Errorf(`task: task %q requires confirmation; use --yes with output style "tui"`, t.Name())
 		}
 	}
+
+	call.invocationID = atomic.AddUint64(&e.taskInvocationID, 1)
+	if !call.Indirect || call.rootInvocationID == 0 {
+		call.rootInvocationID = call.invocationID
+	}
+	invocation := output.TaskInvocation{
+		ID:       call.invocationID,
+		RootID:   call.rootInvocationID,
+		Name:     t.Prefix,
+		Internal: t.Internal,
+	}
+	output.TaskScheduled(e.Output, invocation)
+	defer func() { output.TaskFinished(e.Output, call.invocationID, runErr) }()
 
 	// Check if condition after CompiledTask so dynamic variables are resolved
 	if strings.TrimSpace(t.If) != "" {
@@ -224,16 +237,11 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) error {
 	release := e.acquireConcurrencyLimit()
 	defer release()
 
-	call.invocationID = atomic.AddUint64(&e.taskInvocationID, 1)
-	invocation := output.TaskInvocation{
-		ID:       call.invocationID,
-		ParentID: call.parentInvocationID,
-		Name:     t.Prefix,
-	}
-	output.TaskStarted(e.Output, invocation)
-	err = e.startExecution(ctx, t, func(ctx context.Context) error {
+	err = e.startExecution(ctx, t, call.invocationID, func(ctx context.Context) (runErr error) {
+		output.TaskStarted(e.Output, invocation)
+
 		e.Logger.VerboseErrf(logger.Magenta, "task: %q started\n", call.Task)
-		if err := e.runDeps(ctx, t, call.invocationID); err != nil {
+		if err := e.runDeps(ctx, t, call.rootInvocationID); err != nil {
 			return err
 		}
 
@@ -313,7 +321,6 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) error {
 		e.Logger.VerboseErrf(logger.Magenta, "task: %q finished\n", call.Task)
 		return nil
 	})
-	output.TaskFinished(e.Output, call.invocationID, err)
 	if err != nil {
 		return &errors.TaskRunError{TaskName: t.Name(), Err: err}
 	}
@@ -338,7 +345,7 @@ func (e *Executor) mkdir(t *ast.Task) error {
 	return nil
 }
 
-func (e *Executor) runDeps(ctx context.Context, t *ast.Task, parentInvocationID uint64) error {
+func (e *Executor) runDeps(ctx context.Context, t *ast.Task, rootInvocationID uint64) error {
 	g := &errgroup.Group{}
 	if e.Failfast || t.Failfast {
 		g, ctx = errgroup.WithContext(ctx)
@@ -358,7 +365,7 @@ func (e *Executor) runDeps(ctx context.Context, t *ast.Task, parentInvocationID 
 				defer cancel()
 			}
 
-			err := e.RunTask(depCtx, &Call{Task: d.Task, Vars: d.Vars, Silent: d.Silent, Indirect: true, parentInvocationID: parentInvocationID})
+			err := e.RunTask(depCtx, &Call{Task: d.Task, Vars: d.Vars, Silent: d.Silent, Indirect: true, rootInvocationID: rootInvocationID})
 			if err != nil && timedOut(depCtx, timeout) {
 				return timeout
 			}
@@ -425,7 +432,7 @@ func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call *Call, i in
 		reacquire := e.releaseConcurrencyLimit()
 		defer reacquire()
 
-		err := e.RunTask(ctx, &Call{Task: cmd.Task, Vars: cmd.Vars, Silent: cmd.Silent, Indirect: true, parentInvocationID: call.invocationID})
+		err := e.RunTask(ctx, &Call{Task: cmd.Task, Vars: cmd.Vars, Silent: cmd.Silent, Indirect: true, rootInvocationID: call.rootInvocationID})
 		if err != nil && timedOut(ctx, timeout) {
 			err = timeout
 		}
@@ -459,9 +466,9 @@ func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call *Call, i in
 			return fmt.Errorf("task: failed to get variables: %w", err)
 		}
 		stdOut, stdErr, closer := output.WrapWriter(outputWrapper, e.Stdout, e.Stderr, output.TaskInvocation{
-			ID:       call.invocationID,
-			ParentID: call.parentInvocationID,
-			Name:     t.Prefix,
+			ID:     call.invocationID,
+			RootID: call.rootInvocationID,
+			Name:   t.Prefix,
 		}, outputTemplater)
 		if logCommand && output.IsTUI(e.Output) {
 			e.Logger.FOutf(stdErr, logger.Green, "task: [%s] %s\n", t.Name(), cmd.LogCmd)
@@ -512,11 +519,12 @@ func timedOut(ctx context.Context, timeout *errors.TaskTimeoutError) bool {
 // executionState is the outcome of a task execution, shared with the callers
 // that join it. err is written before done is closed; read it only once closed.
 type executionState struct {
-	done chan struct{}
-	err  error
+	done    chan struct{}
+	err     error
+	ownerID uint64
 }
 
-func (e *Executor) startExecution(ctx context.Context, t *ast.Task, execute func(ctx context.Context) error) error {
+func (e *Executor) startExecution(ctx context.Context, t *ast.Task, invocationID uint64, execute func(ctx context.Context) error) error {
 	h, err := e.GetHash(t)
 	if err != nil {
 		return err
@@ -531,6 +539,7 @@ func (e *Executor) startExecution(ctx context.Context, t *ast.Task, execute func
 	if other, ok := e.executionHashes[h]; ok {
 		e.executionHashesMutex.Unlock()
 		e.Logger.VerboseErrf(logger.Magenta, "task: skipping execution of task: %s\n", h)
+		output.TaskJoined(e.Output, invocationID, other.ownerID)
 
 		// Release our execution slot to avoid blocking other tasks while we wait
 		reacquire := e.releaseConcurrencyLimit()
@@ -556,7 +565,7 @@ func (e *Executor) startExecution(ctx context.Context, t *ast.Task, execute func
 		}
 	}
 
-	state := &executionState{done: make(chan struct{})}
+	state := &executionState{done: make(chan struct{}), ownerID: invocationID}
 	e.executionHashes[h] = state
 	e.executionHashesMutex.Unlock()
 

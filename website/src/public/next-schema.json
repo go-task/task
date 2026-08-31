@@ -693,6 +693,8 @@
     },
     "outputObject": {
       "type": "object",
+      "minProperties": 1,
+      "maxProperties": 1,
       "properties": {
         "group": {
           "type": "object",
@@ -709,6 +711,17 @@
               "default": false
             }
           }
+        },
+        "tui": {
+          "type": "object",
+          "properties": {
+            "hide_internal": {
+              "description": "Hides internal tasks from the TUI task list",
+              "type": "boolean",
+              "default": false
+            }
+          },
+          "additionalProperties": false
         }
       },
       "additionalProperties": false

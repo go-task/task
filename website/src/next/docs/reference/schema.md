@@ -42,6 +42,11 @@ output:
     begin: "::group::{{.TASK}}"
     end: "::endgroup::"
     error_only: false
+
+# TUI options
+output:
+  tui:
+    hide_internal: false
 ```
 
 ### `method`
