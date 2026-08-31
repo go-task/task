@@ -2692,12 +2692,13 @@ the shell in real-time. This is good for having live feedback for logging
 printed by commands, but the output can become messy if you have multiple
 commands running simultaneously and printing lots of stuff.
 
-To make this more customizable, there are currently three different output
+To make this more customizable, there are currently four different output
 options you can choose:
 
 - `interleaved` (default)
 - `group`
 - `prefixed`
+- `tui`
 
 To choose another one, just set it to root in the Taskfile:
 
@@ -2800,6 +2801,24 @@ $ task default
 [print-bar] bar
 [print-baz] baz
 ```
+
+The `tui` output opens an interactive, full-screen view. Running tasks and
+their status are shown as a call tree on the left, while the output of the
+selected task is shown on the right. Use Tab or the left/right arrow keys to
+focus a pane. In the task pane, use the up/down arrows or `j`/`k` to select a
+task. In the output pane, those keys scroll; Page Up and Page Down also scroll
+the output directly. You can click a task to select it and use the mouse wheel
+over either pane. Pressing `q` while tasks are still running cancels them. The
+view remains open after execution completes so that output can be inspected.
+
+```shell
+$ task --output tui build test lint
+```
+
+This mode requires an interactive terminal. It is intended for local use; use
+one of the stream-based modes in CI or when redirecting output. Watch mode,
+interactive commands, and interactive variable prompting are not currently
+supported. Task confirmation prompts can be accepted up front with `--yes`.
 
 ::: tip
 

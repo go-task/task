@@ -81,6 +81,7 @@ type (
 		mkdirMutexMap        map[string]*sync.Mutex
 		executionHashes      map[string]*executionState
 		executionHashesMutex sync.Mutex
+		taskInvocationID     uint64
 		watchedDirs          *xsync.Map[string, bool]
 	}
 	TempDir struct {

@@ -8,4 +8,7 @@ type Call struct {
 	Vars     *ast.Vars
 	Silent   bool
 	Indirect bool // True if the task was called by another task
+
+	invocationID       uint64
+	parentInvocationID uint64
 }

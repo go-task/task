@@ -688,7 +688,7 @@
     },
     "outputString": {
       "type": "string",
-      "enum": ["interleaved", "prefixed", "group"],
+      "enum": ["interleaved", "prefixed", "group", "tui"],
       "default": "interleaved"
     },
     "outputObject": {

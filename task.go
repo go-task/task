@@ -39,6 +39,16 @@ type MatchingTask struct {
 
 // Run runs Task
 func (e *Executor) Run(ctx context.Context, calls ...*Call) error {
+	return output.Run(e.Output, ctx, func(ctx context.Context) error {
+		return e.run(ctx, calls...)
+	})
+}
+
+func (e *Executor) run(ctx context.Context, calls ...*Call) error {
+	if output.IsTUI(e.Output) && e.Interactive {
+		return errors.New(`task: output style "tui" cannot be combined with interactive variable prompting`)
+	}
+
 	// check if given tasks exist
 	for _, call := range calls {
 		task, err := e.GetTask(call)
@@ -81,6 +91,9 @@ func (e *Executor) Run(ctx context.Context, calls ...*Call) error {
 	regularCalls, watchCalls, err := e.splitRegularAndWatchCalls(calls...)
 	if err != nil {
 		return err
+	}
+	if output.IsTUI(e.Output) && len(watchCalls) > 0 {
+		return errors.New(`task: output style "tui" does not currently support watch mode`)
 	}
 
 	g := &errgroup.Group{}
@@ -159,6 +172,14 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) error {
 	if err != nil {
 		return err
 	}
+	if output.IsTUI(e.Output) {
+		if t.Interactive {
+			return fmt.Errorf(`task: task %q is interactive and cannot run with output style "tui"`, t.Name())
+		}
+		if len(t.Prompt) > 0 && !e.AssumeYes {
+			return fmt.Errorf(`task: task %q requires confirmation; use --yes with output style "tui"`, t.Name())
+		}
+	}
 
 	// Check if condition after CompiledTask so dynamic variables are resolved
 	if strings.TrimSpace(t.If) != "" {
@@ -203,9 +224,16 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) error {
 	release := e.acquireConcurrencyLimit()
 	defer release()
 
-	if err = e.startExecution(ctx, t, func(ctx context.Context) error {
+	call.invocationID = atomic.AddUint64(&e.taskInvocationID, 1)
+	invocation := output.TaskInvocation{
+		ID:       call.invocationID,
+		ParentID: call.parentInvocationID,
+		Name:     t.Prefix,
+	}
+	output.TaskStarted(e.Output, invocation)
+	err = e.startExecution(ctx, t, func(ctx context.Context) error {
 		e.Logger.VerboseErrf(logger.Magenta, "task: %q started\n", call.Task)
-		if err := e.runDeps(ctx, t); err != nil {
+		if err := e.runDeps(ctx, t, call.invocationID); err != nil {
 			return err
 		}
 
@@ -284,7 +312,9 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) error {
 		}
 		e.Logger.VerboseErrf(logger.Magenta, "task: %q finished\n", call.Task)
 		return nil
-	}); err != nil {
+	})
+	output.TaskFinished(e.Output, call.invocationID, err)
+	if err != nil {
 		return &errors.TaskRunError{TaskName: t.Name(), Err: err}
 	}
 
@@ -308,7 +338,7 @@ func (e *Executor) mkdir(t *ast.Task) error {
 	return nil
 }
 
-func (e *Executor) runDeps(ctx context.Context, t *ast.Task) error {
+func (e *Executor) runDeps(ctx context.Context, t *ast.Task, parentInvocationID uint64) error {
 	g := &errgroup.Group{}
 	if e.Failfast || t.Failfast {
 		g, ctx = errgroup.WithContext(ctx)
@@ -328,7 +358,7 @@ func (e *Executor) runDeps(ctx context.Context, t *ast.Task) error {
 				defer cancel()
 			}
 
-			err := e.RunTask(depCtx, &Call{Task: d.Task, Vars: d.Vars, Silent: d.Silent, Indirect: true})
+			err := e.RunTask(depCtx, &Call{Task: d.Task, Vars: d.Vars, Silent: d.Silent, Indirect: true, parentInvocationID: parentInvocationID})
 			if err != nil && timedOut(depCtx, timeout) {
 				return timeout
 			}
@@ -395,7 +425,7 @@ func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call *Call, i in
 		reacquire := e.releaseConcurrencyLimit()
 		defer reacquire()
 
-		err := e.RunTask(ctx, &Call{Task: cmd.Task, Vars: cmd.Vars, Silent: cmd.Silent, Indirect: true})
+		err := e.RunTask(ctx, &Call{Task: cmd.Task, Vars: cmd.Vars, Silent: cmd.Silent, Indirect: true, parentInvocationID: call.invocationID})
 		if err != nil && timedOut(ctx, timeout) {
 			err = timeout
 		}
@@ -410,7 +440,8 @@ func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call *Call, i in
 			return nil
 		}
 
-		if e.Verbose || (!call.Silent && !cmd.Silent && !t.IsSilent() && !e.Taskfile.Silent && !e.Silent) {
+		logCommand := e.Verbose || (!call.Silent && !cmd.Silent && !t.IsSilent() && !e.Taskfile.Silent && !e.Silent)
+		if logCommand && (!output.IsTUI(e.Output) || e.Dry) {
 			e.Logger.Errf(logger.Green, "task: [%s] %s\n", t.Name(), cmd.LogCmd)
 		}
 
@@ -427,7 +458,14 @@ func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call *Call, i in
 		if err != nil {
 			return fmt.Errorf("task: failed to get variables: %w", err)
 		}
-		stdOut, stdErr, closer := outputWrapper.WrapWriter(e.Stdout, e.Stderr, t.Prefix, outputTemplater)
+		stdOut, stdErr, closer := output.WrapWriter(outputWrapper, e.Stdout, e.Stderr, output.TaskInvocation{
+			ID:       call.invocationID,
+			ParentID: call.parentInvocationID,
+			Name:     t.Prefix,
+		}, outputTemplater)
+		if logCommand && output.IsTUI(e.Output) {
+			e.Logger.FOutf(stdErr, logger.Green, "task: [%s] %s\n", t.Name(), cmd.LogCmd)
+		}
 
 		err = execext.RunCommand(ctx, &execext.RunCommandOptions{
 			Command:   cmd.Cmd,
