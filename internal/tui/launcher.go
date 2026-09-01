@@ -33,13 +33,6 @@ func (i launcherItem) matches(filter string) bool {
 	return strings.Contains(text, strings.ToLower(filter))
 }
 
-func (i launcherItem) height() int {
-	if i.description == "" {
-		return 3
-	}
-	return 4
-}
-
 type launcherModel struct {
 	items    []launcherItem
 	filtered []int
@@ -182,21 +175,13 @@ func (m *launcherModel) keepSelectionVisible() {
 	}
 	m.selected = min(max(m.selected, 0), len(m.filtered)-1)
 	m.top = min(max(m.top, 0), m.selected)
-	available := m.cardViewportHeight()
-	for m.top < m.selected && m.cardsHeight(m.top, m.selected) > available {
-		m.top++
+	available := m.taskViewportHeight()
+	if m.selected >= m.top+available {
+		m.top = m.selected - available + 1
 	}
 }
 
-func (m launcherModel) cardsHeight(from, through int) int {
-	height := 0
-	for index := from; index <= through && index < len(m.filtered); index++ {
-		height += m.items[m.filtered[index]].height()
-	}
-	return height
-}
-
-func (m launcherModel) cardViewportHeight() int {
+func (m launcherModel) taskViewportHeight() int {
 	layout := newLauncherLayout(m.width, m.height)
 	return max(layout.innerHeight-2, 1)
 }
@@ -205,17 +190,14 @@ func (m launcherModel) itemAtY(y int) int {
 	// The outer border occupies row zero; title and filter occupy rows one and
 	// two, so cards begin at row three.
 	row := y - 3
-	if row < 0 || row >= m.cardViewportHeight() {
+	if row < 0 || row >= m.taskViewportHeight() {
 		return -1
 	}
-	for index := m.top; index < len(m.filtered); index++ {
-		height := m.items[m.filtered[index]].height()
-		if row < height {
-			return index
-		}
-		row -= height
+	index := m.top + row
+	if index >= len(m.filtered) {
+		return -1
 	}
-	return -1
+	return index
 }
 
 func (m launcherModel) View() tea.View {
@@ -244,15 +226,10 @@ func (m launcherModel) renderContent(layout launcherLayout) string {
 	lines = append(lines, tuiHelpStyle.Render(truncateText(filter, layout.innerWidth)))
 
 	available := max(layout.innerHeight-len(lines), 0)
-	used := 0
-	for index := m.top; index < len(m.filtered); index++ {
+	nameWidth := m.nameColumnWidth(layout.innerWidth)
+	for index := m.top; index < len(m.filtered) && index-m.top < available; index++ {
 		item := m.items[m.filtered[index]]
-		card := launcherCard(item, layout.innerWidth, index == m.selected)
-		if used+len(card) > available {
-			break
-		}
-		lines = append(lines, card...)
-		used += len(card)
+		lines = append(lines, launcherRow(item, layout.innerWidth, nameWidth, index == m.selected))
 	}
 	if len(m.filtered) == 0 && available > 0 {
 		lines = append(lines, tuiHelpStyle.Render("No matching tasks"))
@@ -260,40 +237,39 @@ func (m launcherModel) renderContent(layout launcherLayout) string {
 	return strings.Join(lines, "\n")
 }
 
-func launcherCard(item launcherItem, width int, selected bool) []string {
-	width = max(width, 4)
-	borderStyle := tuiTreeStyle
-	if selected {
-		borderStyle = lipgloss.NewStyle().Foreground(tuiAccentColor).Bold(true)
+func (m launcherModel) nameColumnWidth(width int) int {
+	longest := 1
+	for _, itemIndex := range m.filtered {
+		longest = max(longest, lipgloss.Width(m.items[itemIndex].name))
 	}
-	top := borderStyle.Render("╭" + strings.Repeat("─", width-2) + "╮")
-	bottom := borderStyle.Render("╰" + strings.Repeat("─", width-2) + "╯")
-	lines := []string{top, launcherCardLine(item.name, width, selected, true)}
-	if item.description != "" {
-		lines = append(lines, launcherCardLine(item.description, width, selected, false))
+	// Prefer complete task names while preserving useful room for descriptions
+	// on ordinary terminal widths.
+	maxNameWidth := max(width*3/5, 1)
+	if width > 3 {
+		maxNameWidth = min(maxNameWidth, width-3)
 	}
-	return append(lines, bottom)
+	return min(longest, maxNameWidth)
 }
 
-func launcherCardLine(text string, width int, selected, bold bool) string {
-	innerWidth := max(width-2, 1)
-	text = truncateText(text, max(innerWidth-2, 1))
-	content := " " + text
-	content += strings.Repeat(" ", max(innerWidth-lipgloss.Width(content), 0))
-	style := lipgloss.NewStyle()
-	if bold {
-		style = style.Bold(true)
-	}
+func launcherRow(item launcherItem, width, nameWidth int, selected bool) string {
+	width = max(width, 1)
+	nameWidth = min(max(nameWidth, 1), width)
+	name := truncateMiddle(item.name, nameWidth)
+	name += strings.Repeat(" ", max(nameWidth-lipgloss.Width(name), 0))
+
+	gapWidth := min(2, max(width-nameWidth, 0))
+	descriptionWidth := max(width-nameWidth-gapWidth, 0)
+	description := truncateText(item.description, descriptionWidth)
+	description += strings.Repeat(" ", max(descriptionWidth-lipgloss.Width(description), 0))
+	content := name + strings.Repeat(" ", gapWidth) + description
+	content += strings.Repeat(" ", max(width-lipgloss.Width(content), 0))
+
 	if selected {
-		style = style.Foreground(tuiSelectedStyle.GetForeground()).Background(tuiSelectedStyle.GetBackground())
-	} else if !bold {
-		style = tuiHelpStyle
+		return tuiSelectedStyle.Width(width).Render(content)
 	}
-	borderStyle := tuiTreeStyle
-	if selected {
-		borderStyle = lipgloss.NewStyle().Foreground(tuiAccentColor).Bold(true)
-	}
-	return borderStyle.Render("│") + style.Render(content) + borderStyle.Render("│")
+	name = lipgloss.NewStyle().Bold(true).Render(name)
+	description = tuiHelpStyle.Render(description)
+	return name + strings.Repeat(" ", gapWidth) + description
 }
 
 type launcherLayout struct {

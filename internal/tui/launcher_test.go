@@ -2,7 +2,6 @@ package tui
 
 import (
 	"context"
-	"strings"
 	"testing"
 
 	tea "charm.land/bubbletea/v2"
@@ -82,25 +81,24 @@ func TestLauncherControlCQuits(t *testing.T) {
 	assert.IsType(t, tea.QuitMsg{}, cmd())
 }
 
-func TestLauncherCardsOnlyReserveDescriptionRowsWhenNeeded(t *testing.T) {
+func TestLauncherRowsUseNameAndDescriptionColumns(t *testing.T) {
 	t.Parallel()
 
-	withoutDescription := launcherCard(launcherItem{name: "lint"}, 30, false)
-	withDescription := launcherCard(launcherItem{name: "build", description: "Compile the project"}, 30, true)
+	withoutDescription := launcherRow(launcherItem{name: "lint"}, 40, 10, false)
+	withDescription := launcherRow(launcherItem{name: "build", description: "Compile the project"}, 40, 10, true)
 
-	assert.Len(t, withoutDescription, 3)
-	assert.Len(t, withDescription, 4)
-	for _, line := range append(withoutDescription, withDescription...) {
-		assert.Equal(t, 30, lipgloss.Width(line))
+	for _, line := range []string{withoutDescription, withDescription} {
+		assert.Equal(t, 40, lipgloss.Width(line))
+		assert.NotContains(t, ansi.Strip(line), "│")
 	}
-	assert.Contains(t, ansi.Strip(strings.Join(withDescription, "\n")), "Compile the project")
+	assert.Contains(t, ansi.Strip(withDescription), "build       Compile the project")
 }
 
 func TestLauncherViewFitsTheTerminalAndScrollsSelection(t *testing.T) {
 	t.Parallel()
 
 	m := testLauncher()
-	m, _, _ = m.Update(tea.WindowSizeMsg{Width: 60, Height: 12})
+	m, _, _ = m.Update(tea.WindowSizeMsg{Width: 60, Height: 7})
 	for range 2 {
 		m, _, _ = m.Update(tea.KeyPressMsg{Code: tea.KeyDown})
 	}
@@ -108,7 +106,7 @@ func TestLauncherViewFitsTheTerminalAndScrollsSelection(t *testing.T) {
 	assert.Equal(t, 2, m.selected)
 	assert.Greater(t, m.top, 0)
 	assert.Equal(t, 60, lipgloss.Width(m.View().Content))
-	assert.Equal(t, 12, lipgloss.Height(m.View().Content))
+	assert.Equal(t, 7, lipgloss.Height(m.View().Content))
 }
 
 func TestAppRunsNormalLauncherSelectionOutsideDashboard(t *testing.T) {
