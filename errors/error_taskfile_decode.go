@@ -25,8 +25,7 @@ type (
 
 func NewTaskfileDecodeError(err error, node *yaml.Node) *TaskfileDecodeError {
 	// If the error is already a DecodeError, return it
-	taskfileInvalidErr := &TaskfileDecodeError{}
-	if errors.As(err, &taskfileInvalidErr) {
+	if taskfileInvalidErr, ok := errors.AsType[*TaskfileDecodeError](err); ok {
 		return taskfileInvalidErr
 	}
 	return &TaskfileDecodeError{
@@ -45,8 +44,7 @@ func (err *TaskfileDecodeError) Error() string {
 		fmt.Fprintln(buf, color.RedString("err:  %s", err.Message))
 	} else {
 		// Extract the errors from the TypeError
-		te := &yaml.TypeError{}
-		if errors.As(err.Err, &te) {
+		if te, ok := errors.AsType[*yaml.TypeError](err.Err); ok {
 			if len(te.Errors) > 1 {
 				fmt.Fprintln(buf, color.RedString("errs:"))
 				for _, message := range te.Errors {

@@ -3,53 +3,70 @@ name: goreleaser
 on:
   push:
     tags:
-      - 'v*'
+      - "v*"
 
 permissions:
-  id-token: write  # Required for OIDC
-  contents: read
+  id-token: write # Required for OIDC
+  contents: write
 
 jobs:
   goreleaser:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
 
       - name: Set up Go
-        uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417 # v6.3.0
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
-          go-version: 1.26.x
+          go-version: 1.27.x
 
-      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version: '24'
-          registry-url: 'https://registry.npmjs.org'
+          node-version: "24"
+          registry-url: "https://registry.npmjs.org"
 
       - name: Update npm
         run: npm install -g npm@latest
 
       - name: Install Task
-        uses: go-task/setup-task@0ab1b2a65bc55236a3bc64cde78f80e20e8885c2 # v1
+        uses: go-task/setup-task@a00fbb05ce67b35648be3c78cbc9fd85354c757e # v2
 
       - name: Install pnpm
-        uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061 # v4
+        uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6
         with:
-          package_json_file: 'website/package.json'
-          run_install: 'true'
+          package_json_file: "website/package.json"
+
+      # Must run from website/, the only directory with a pnpm-workspace.yaml.
+      # From the repo root pnpm falls back to its defaults and enforces
+      # minimumReleaseAge, which the workspace file sets to 0.
+      - name: Install website dependencies
+        run: pnpm install
+        working-directory: website
+
+      # GoReleaser builds the snap packages but does not install snapcraft.
+      - name: Install snapcraft
+        run: sudo snap install snapcraft --classic
+
+      - name: Generate release notes
+        run: go run ./cmd/release --notes > "${RUNNER_TEMP}/release-notes.md"
 
       - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@ec59f474b9834571250b370d4735c50f8e2d1e29 # v7
+        uses: goreleaser/goreleaser-action@f06c13b6b1a9625abc9e6e439d9c05a8f2190e94 # v7
         with:
           distribution: goreleaser-pro
           version: latest
-          args: release --clean --draft
+          args: release --clean --release-notes=${{ runner.temp }}/release-notes.md
         env:
-          GITHUB_TOKEN: ${{secrets.GH_PAT}}
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+          GH_GORELEASER_TOKEN: ${{secrets.GH_GORELEASER_TOKEN}}
           GORELEASER_KEY: ${{secrets.GORELEASER_KEY}}
           CLOUDSMITH_TOKEN: ${{secrets.CLOUDSMITH_TOKEN}}
+          DISCORD_WEBHOOK_ID: ${{secrets.DISCORD_WEBHOOK_ID}}
+          DISCORD_WEBHOOK_TOKEN: ${{secrets.DISCORD_WEBHOOK_TOKEN}}
+          SNAPCRAFT_STORE_CREDENTIALS: ${{secrets.SNAPCRAFT_STORE_CREDENTIALS}}
 
       - name: Deploy Website
         shell: bash

@@ -81,7 +81,7 @@ func TraverseStringsFunc[T any](v T, fn func(v string) (string, error)) (T, erro
 	traverseFunc = func(copy, v reflect.Value) error {
 		switch v.Kind() {
 
-		case reflect.Ptr:
+		case reflect.Pointer:
 			// Unwrap the pointer
 			originalValue := v.Elem()
 			// If the pointer is nil, do nothing

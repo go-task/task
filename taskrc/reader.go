@@ -65,7 +65,7 @@ func (r *Reader) Read(node *Node) (*ast.TaskRC, error) {
 	}
 
 	// Read the file
-	b, err := os.ReadFile(node.entrypoint)
+	b, err := os.ReadFile(node.entrypoint) //nolint:gosec
 	if err != nil {
 		return nil, err
 	}

@@ -1,7 +1,6 @@
 package task
 
 import (
-	"context"
 	"io"
 	"os"
 	"sync"
@@ -10,6 +9,7 @@ import (
 	"github.com/puzpuzpuz/xsync/v4"
 	"github.com/sajari/fuzzy"
 
+	"github.com/go-task/task/v3/internal/fingerprint"
 	"github.com/go-task/task/v3/internal/logger"
 	"github.com/go-task/task/v3/internal/output"
 	"github.com/go-task/task/v3/internal/sort"
@@ -29,6 +29,7 @@ type (
 		Dir                 string
 		Entrypoint          string
 		TempDir             TempDir
+		TempDirPath         string
 		Force               bool
 		ForceAll            bool
 		Insecure            bool
@@ -78,7 +79,7 @@ type (
 		concurrencySemaphore chan struct{}
 		taskCallCount        map[string]*int32
 		mkdirMutexMap        map[string]*sync.Mutex
-		executionHashes      map[string]context.Context
+		executionHashes      map[string]*executionState
 		executionHashesMutex sync.Mutex
 		watchedDirs          *xsync.Map[string, bool]
 	}
@@ -106,7 +107,7 @@ func NewExecutor(opts ...ExecutorOption) *Executor {
 		concurrencySemaphore: nil,
 		taskCallCount:        map[string]*int32{},
 		mkdirMutexMap:        map[string]*sync.Mutex{},
-		executionHashes:      map[string]context.Context{},
+		executionHashes:      map[string]*executionState{},
 		executionHashesMutex: sync.Mutex{},
 	}
 	e.Options(opts...)
@@ -119,6 +120,17 @@ func (e *Executor) Options(opts ...ExecutorOption) {
 	for _, opt := range opts {
 		opt.ApplyToExecutor(e)
 	}
+}
+
+// fingerprinter is built on the fly rather than once in Setup because fields
+// like Dry may be mutated between runs.
+func (e *Executor) fingerprinter() *fingerprint.Fingerprinter {
+	return fingerprint.NewFingerprinter(
+		e.Taskfile.Method,
+		e.TempDir.Fingerprint,
+		e.Dry,
+		e.Logger,
+	)
 }
 
 // WithDir sets the working directory of the [Executor]. By default, the
@@ -163,6 +175,22 @@ type tempDirOption struct {
 
 func (o *tempDirOption) ApplyToExecutor(e *Executor) {
 	e.TempDir = o.tempDir
+}
+
+// WithTempDirPath sets an unresolved path used to build [Executor.TempDir]
+// during [Executor.Setup]. Relative paths are resolved from the root Taskfile
+// directory. Use [WithTempDir] when the remote and fingerprint directories have
+// already been resolved.
+func WithTempDirPath(path string) ExecutorOption {
+	return &tempDirPathOption{path: path}
+}
+
+type tempDirPathOption struct {
+	path string
+}
+
+func (o *tempDirPathOption) ApplyToExecutor(e *Executor) {
+	e.TempDirPath = o.path
 }
 
 // WithForce ensures that the [Executor] always runs a task, even when
@@ -592,7 +620,8 @@ func (o *ioOption) ApplyToExecutor(e *Executor) {
 	e.Stderr = o.rw
 }
 
-// WithVersionCheck tells the [Executor] whether or not to check the version of
+// WithVersionCheck tells the [Executor] whether or not to check the schema
+// version of the Taskfile before running.
 func WithVersionCheck(enableVersionCheck bool) ExecutorOption {
 	return &versionCheckOption{enableVersionCheck}
 }
@@ -605,7 +634,8 @@ func (o *versionCheckOption) ApplyToExecutor(e *Executor) {
 	e.EnableVersionCheck = o.enableVersionCheck
 }
 
-// WithFailfast tells the [Executor] whether or not to check the version of
+// WithFailfast tells the [Executor] to stop running tasks as soon as any task
+// returns an error.
 func WithFailfast(failfast bool) ExecutorOption {
 	return &failfastOption{failfast}
 }

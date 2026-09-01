@@ -1,6 +1,8 @@
 package ast
 
 import (
+	"time"
+
 	"go.yaml.in/yaml/v3"
 
 	"github.com/go-task/task/v3/errors"
@@ -9,7 +11,8 @@ import (
 
 // Cmd is a task command
 type Cmd struct {
-	Cmd         string
+	Cmd         string // Resolved command (used for execution and fingerprinting)
+	LogCmd      string // Command with secrets masked (used for logging)
 	Task        string
 	For         *For
 	If          string
@@ -20,6 +23,7 @@ type Cmd struct {
 	IgnoreError bool
 	Defer       bool
 	Platforms   []*Platform
+	Timeout     time.Duration
 }
 
 func (c *Cmd) DeepCopy() *Cmd {
@@ -28,6 +32,7 @@ func (c *Cmd) DeepCopy() *Cmd {
 	}
 	return &Cmd{
 		Cmd:         c.Cmd,
+		LogCmd:      c.LogCmd,
 		Task:        c.Task,
 		For:         c.For.DeepCopy(),
 		If:          c.If,
@@ -38,6 +43,7 @@ func (c *Cmd) DeepCopy() *Cmd {
 		IgnoreError: c.IgnoreError,
 		Defer:       c.Defer,
 		Platforms:   deepcopy.Slice(c.Platforms),
+		Timeout:     c.Timeout,
 	}
 }
 
@@ -65,11 +71,26 @@ func (c *Cmd) UnmarshalYAML(node *yaml.Node) error {
 			IgnoreError bool `yaml:"ignore_error"`
 			Defer       *Defer
 			Platforms   []*Platform
+			Timeout     string
 		}
 		if err := node.Decode(&cmdStruct); err != nil {
 			return errors.NewTaskfileDecodeError(err, node)
 		}
+
+		if cmdStruct.Timeout != "" {
+			timeout, err := parseTimeout(cmdStruct.Timeout, node)
+			if err != nil {
+				return err
+			}
+			c.Timeout = timeout
+		}
+
 		if cmdStruct.Defer != nil {
+			// Rejected rather than dropped: without the field, yaml would
+			// swallow the key without a word.
+			if cmdStruct.Defer.Timeout != "" {
+				return errors.NewTaskfileDecodeError(nil, node).WithMessage("timeout must be set next to defer, not inside it")
+			}
 
 			// A deferred command
 			if cmdStruct.Defer.Cmd != "" {
@@ -118,4 +139,17 @@ func (c *Cmd) UnmarshalYAML(node *yaml.Node) error {
 	}
 
 	return errors.NewTaskfileDecodeError(nil, node).WithTypeMessage("command")
+}
+
+// parseTimeout rejects non-positive durations, which would otherwise read as no
+// timeout at all - the unbounded run the key exists to prevent.
+func parseTimeout(s string, node *yaml.Node) (time.Duration, error) {
+	timeout, err := time.ParseDuration(s)
+	if err != nil {
+		return 0, errors.NewTaskfileDecodeError(err, node).WithMessage("invalid timeout format")
+	}
+	if timeout <= 0 {
+		return 0, errors.NewTaskfileDecodeError(nil, node).WithMessage("timeout must be greater than zero")
+	}
+	return timeout, nil
 }

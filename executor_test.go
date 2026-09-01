@@ -165,6 +165,7 @@ func (tt *ExecutorTest) run(t *testing.T) {
 		// Create a golden fixture file for the output
 		g := goldie.New(t,
 			goldie.WithFixtureDir(filepath.Join(e.Dir, "testdata")),
+			goldie.WithEqualFn(NormalizedEqual),
 		)
 
 		// Call setup and check for errors
@@ -282,6 +283,68 @@ func TestVars(t *testing.T) {
 	)
 }
 
+func TestSecretVars(t *testing.T) {
+	t.Parallel()
+	NewExecutorTest(t,
+		WithName("secret vars are masked in logs"),
+		WithExecutorOptions(
+			task.WithDir("testdata/secrets"),
+		),
+		WithTask("test-secret-masking"),
+	)
+	NewExecutorTest(t,
+		WithName("multiple secrets masked"),
+		WithExecutorOptions(
+			task.WithDir("testdata/secrets"),
+		),
+		WithTask("test-multiple-secrets"),
+	)
+	NewExecutorTest(t,
+		WithName("mixed secret and public vars"),
+		WithExecutorOptions(
+			task.WithDir("testdata/secrets"),
+		),
+		WithTask("test-mixed"),
+	)
+	NewExecutorTest(t,
+		WithName("deferred command with secrets"),
+		WithExecutorOptions(
+			task.WithDir("testdata/secrets"),
+		),
+		WithTask("test-deferred-secret"),
+	)
+	NewExecutorTest(t,
+		WithName("env secret limitation"),
+		WithExecutorOptions(
+			task.WithDir("testdata/secrets"),
+		),
+		WithTask("test-env-secret-limitation"),
+	)
+	NewExecutorTest(t,
+		WithName("secret vars are masked in summary"),
+		WithExecutorOptions(
+			task.WithDir("testdata/secrets"),
+			task.WithSummary(true),
+		),
+		WithTask("test-secret-masking"),
+	)
+	NewExecutorTest(t,
+		WithName("dynamic secret masked in verbose"),
+		WithExecutorOptions(
+			task.WithDir("testdata/secrets"),
+			task.WithVerbose(true),
+		),
+		WithTask("test-dynamic-secret-verbose"),
+	)
+	NewExecutorTest(t,
+		WithName("secret key order independent"),
+		WithExecutorOptions(
+			task.WithDir("testdata/secrets"),
+		),
+		WithTask("test-secret-key-order"),
+	)
+}
+
 func TestRequires(t *testing.T) {
 	t.Parallel()
 	NewExecutorTest(t,
@@ -351,6 +414,41 @@ func TestRequires(t *testing.T) {
 		),
 		WithTask("var-defined-in-task"),
 	)
+	NewExecutorTest(t,
+		WithName("enum ref - passes validation"),
+		WithExecutorOptions(
+			task.WithDir("testdata/requires"),
+		),
+		WithTask("validation-var-ref"),
+		WithVar("ENV", "dev"),
+	)
+	NewExecutorTest(t,
+		WithName("enum ref - fails validation"),
+		WithExecutorOptions(
+			task.WithDir("testdata/requires"),
+		),
+		WithTask("validation-var-ref"),
+		WithVar("ENV", "invalid"),
+		WithRunError(),
+	)
+	NewExecutorTest(t,
+		WithName("enum ref - ref to non-list"),
+		WithExecutorOptions(
+			task.WithDir("testdata/requires"),
+		),
+		WithTask("validation-var-ref-invalid"),
+		WithVar("VALUE", "test"),
+		WithRunError(),
+	)
+	NewExecutorTest(t,
+		WithName("enum ref - ref to nonexistent var"),
+		WithExecutorOptions(
+			task.WithDir("testdata/requires"),
+		),
+		WithTask("validation-var-ref-nonexistent"),
+		WithVar("ENV", "dev"),
+		WithRunError(),
+	)
 }
 
 // TODO: mock fs
@@ -419,6 +517,12 @@ func TestDeps(t *testing.T) {
 		WithExecutorOptions(
 			task.WithDir("testdata/deps"),
 			task.WithSilent(true),
+			// Deps run in parallel and, with the default interleaved output,
+			// their sub-line writes (echo writes the content and the newline
+			// separately) can interleave into a garbled buffer. Group output
+			// flushes each command atomically, keeping every line intact. The
+			// set of lines asserted (via PPSortedLines) is unchanged.
+			task.WithOutputStyle(ast.Output{Name: "group"}),
 		),
 		WithPostProcessFn(PPSortedLines),
 	)
@@ -825,6 +929,7 @@ func TestForCmds(t *testing.T) {
 		{name: "loop-explicit"},
 		{name: "loop-matrix"},
 		{name: "loop-matrix-ref"},
+		{name: "loop-matrix-ref-computed"},
 		{
 			name:    "loop-matrix-ref-error",
 			wantErr: true,

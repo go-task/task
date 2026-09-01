@@ -21,7 +21,7 @@ tasks:
     dir: subdirectory
     vars:
       TASK_DIR:
-        sh: basename $(pwd)
+        sh: basename "$(pwd)"
     silent: true
 
   from-interpolated-dir:
@@ -30,4 +30,4 @@ tasks:
     dir: '{{.DIRECTORY}}'
     vars:
       INTERPOLATED_DIR:
-        sh: basename $(pwd)
+        sh: basename "$(pwd)"

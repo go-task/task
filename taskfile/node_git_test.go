@@ -1,6 +1,9 @@
 package taskfile
 
 import (
+	"os"
+	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -244,4 +247,24 @@ func TestRepoCacheKey_Consistency(t *testing.T) {
 
 	assert.Equal(t, key1, key2)
 	assert.Equal(t, key2, key3)
+}
+
+func TestRepoCacheKey_BlocksTraversalRef(t *testing.T) {
+	t.Parallel()
+
+	// A malicious ref containing path traversal components must not be able to make
+	// the cache directory escape the task-git-repos root (CWE-22, GHSA-g8jx-8vm6-phr8).
+	node, err := NewGitNode("https://github.com/foo/bar.git//file.yml?ref=../../../../victim-delete-me", "", false)
+	require.NoError(t, err)
+
+	key := node.repoCacheKey()
+
+	// The key itself must not carry traversal components.
+	assert.NotContains(t, key, "..", "cache key must not contain traversal components")
+
+	// Joined under the cache root, the resolved path must stay inside it.
+	root := filepath.Join(os.TempDir(), "task-git-repos")
+	resolved := filepath.Clean(filepath.Join(root, key))
+	assert.True(t, strings.HasPrefix(resolved, root+string(os.PathSeparator)),
+		"cache dir %q must stay within %q", resolved, root)
 }

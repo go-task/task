@@ -38,7 +38,7 @@ func buildHTTPClient(insecure bool, caCert, cert, certKey string) (*http.Client,
 	}
 
 	tlsConfig := &tls.Config{
-		InsecureSkipVerify: insecure,
+		InsecureSkipVerify: insecure, //nolint:gosec
 	}
 
 	// Load custom CA certificate if provided

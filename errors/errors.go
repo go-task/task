@@ -39,6 +39,7 @@ const (
 	CodeTaskCancelled
 	CodeTaskMissingRequiredVars
 	CodeTaskNotAllowedVars
+	CodeTaskTimedOut
 )
 
 // TaskError extends the standard error interface with a Code method. This code will
@@ -64,6 +65,13 @@ func Is(err, target error) bool {
 // As wraps the standard errors.As function so that we don't need to alias that package.
 func As(err error, target any) bool {
 	return errors.As(err, target)
+}
+
+// AsType wraps the standard errors.AsType function so that we don't need to alias
+// that package. It returns the first error in err's tree that matches type T, and
+// whether such an error was found.
+func AsType[T error](err error) (T, bool) {
+	return errors.AsType[T](err)
 }
 
 // Unwrap wraps the standard errors.Unwrap function so that we don't need to alias that package.

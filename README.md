@@ -34,4 +34,32 @@
       </td>
     </tr>
   </table>
+
+  <h2>Community Sponsors</h2>
+
+  <table>
+    <tr>
+      <td align="center" valign="middle">
+        <a target="_blank" href="https://cloudsmith.com/">
+          <img src="website/src/public/img/cloudsmith.svg" height="100px" width="200px" title="Cloudsmith" />
+        </a>
+      </td>
+      <td align="center" valign="middle">
+        <a target="_blank" href="https://jb.gg/OpenSource">
+          <picture>
+            <source media="(prefers-color-scheme: dark)" srcset="website/src/public/img/jetbrains-dark.svg" />
+            <img src="website/src/public/img/jetbrains.svg" height="100px" width="200px" title="JetBrains" alt="JetBrains logo" />
+          </picture>
+        </a>
+      </td>
+    </tr>
+    <tr>
+      <td align="center">
+        Package hosting provided by <a target="_blank" href="https://cloudsmith.com/">Cloudsmith</a>.
+      </td>
+      <td align="center">
+        Tooling provided by <a target="_blank" href="https://jb.gg/OpenSource">JetBrains</a>.
+      </td>
+    </tr>
+  </table>
 </div>

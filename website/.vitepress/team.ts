@@ -12,7 +12,7 @@ export const team = [
       { icon: 'x', link: 'https://x.com/andreynering' },
       {
         icon: 'bluesky',
-        link: 'https://bsky.app/profile/andreynering.bsky.social'
+        link: 'https://bsky.app/profile/andrey.nering.dev'
       },
       { icon: 'mastodon', link: 'https://mastodon.social/@andreynering' }
     ]

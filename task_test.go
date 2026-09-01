@@ -2,6 +2,7 @@ package task_test
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io"
 	"io/fs"
@@ -88,13 +89,14 @@ func (tt *TaskTest) writeFixture(
 	if tt.fixtureTemplatingEnabled {
 		fixtureTemplateData := map[string]any{
 			"TEST_NAME": t.Name(),
-			"TEST_DIR":  wd,
+			"TEST_DIR":  filepath.ToSlash(wd),
 		}
 		// If the test has additional template data, copy it into the map
 		if tt.fixtureTemplateData != nil {
 			maps.Copy(fixtureTemplateData, tt.fixtureTemplateData)
 		}
-		g.AssertWithTemplate(t, goldenFileName, fixtureTemplateData, b)
+		// Normalize output before comparison (CRLF→LF, backslash→forward slash)
+		g.AssertWithTemplate(t, goldenFileName, fixtureTemplateData, normalizeOutput(b))
 	} else {
 		g.Assert(t, goldenFileName, b)
 	}
@@ -308,6 +310,73 @@ func PPSortedLines(t *testing.T, b []byte) []byte {
 	return []byte(strings.Join(lines, "\n") + "\n")
 }
 
+// normalizeOutput normalizes cross-platform differences for byte slice comparison:
+// - Converts CRLF and CR to LF (line endings)
+// - Converts backslashes to forward slashes (Windows paths)
+// - Handles escaped backslashes in JSON (\\) by converting to single forward slash
+func normalizeOutput(b []byte) []byte {
+	b = bytes.ReplaceAll(b, []byte("\r\n"), []byte("\n"))
+	b = bytes.ReplaceAll(b, []byte("\r"), []byte("\n"))
+	// First replace escaped backslashes (common in JSON), then single backslashes
+	b = bytes.ReplaceAll(b, []byte("\\\\"), []byte("/"))
+	b = bytes.ReplaceAll(b, []byte("\\"), []byte("/"))
+	return b
+}
+
+// normalizePathSeparators converts backslashes to forward slashes for cross-platform path comparison.
+func normalizePathSeparators(s string) string {
+	return strings.ReplaceAll(s, "\\", "/")
+}
+
+// NormalizedEqual compares two byte slices after normalizing output.
+// This is used as a custom goldie.EqualFn for cross-platform golden file tests.
+func NormalizedEqual(actual, expected []byte) bool {
+	return bytes.Equal(normalizeOutput(actual), normalizeOutput(expected))
+}
+
+func TestNormalizeOutput(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name     string
+		input    []byte
+		expected []byte
+	}{
+		{"CRLF to LF", []byte("line1\r\nline2\r\n"), []byte("line1\nline2\n")},
+		{"CR to LF", []byte("line1\rline2\r"), []byte("line1\nline2\n")},
+		{"Windows path", []byte(`D:\a\task\task`), []byte(`D:/a/task/task`)},
+		{"JSON escaped backslash", []byte(`{"path":"D:\\a\\task"}`), []byte(`{"path":"D:/a/task"}`)},
+		{"Mixed", []byte("D:\\a\\task\r\n"), []byte("D:/a/task\n")},
+		{"Unix path unchanged", []byte("/home/user/task\n"), []byte("/home/user/task\n")},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			got := normalizeOutput(tt.input)
+			assert.Equal(t, tt.expected, got)
+		})
+	}
+}
+
+func TestNormalizePathSeparators(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{"Windows path", `D:\a\task\task`, `D:/a/task/task`},
+		{"Unix path unchanged", `/home/user/task`, `/home/user/task`},
+		{"Mixed separators", `C:\Users/name\file`, `C:/Users/name/file`},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			got := normalizePathSeparators(tt.input)
+			assert.Equal(t, tt.expected, got)
+		})
+	}
+}
+
 // SyncBuffer is a threadsafe buffer for testing.
 // Some times replace stdout/stderr with a buffer to capture output.
 // stdout and stderr are threadsafe, but a regular bytes.Buffer is not.
@@ -487,6 +556,344 @@ func TestStatusChecksum(t *testing.T) { // nolint:paralleltest // cannot run in 
 	}
 }
 
+// TestStatusTimestamp is a regression test for https://github.com/go-task/task/issues/1230.
+// When using method: timestamp, deleting a generated file should cause the task to re-run,
+// not be skipped because the timestamp file is still present.
+func TestStatusTimestamp(t *testing.T) { // nolint:paralleltest // cannot run in parallel
+	const dir = "testdata/timestamp"
+
+	generatedFile := filepathext.SmartJoin(dir, "generated.txt")
+	tempDir := task.TempDir{
+		Remote:      filepathext.SmartJoin(dir, ".task"),
+		Fingerprint: filepathext.SmartJoin(dir, ".task"),
+	}
+
+	// Clean up any state from previous runs.
+	_ = os.Remove(generatedFile)
+	_ = os.RemoveAll(filepathext.SmartJoin(dir, ".task"))
+
+	var buff bytes.Buffer
+	e := task.NewExecutor(
+		task.WithDir(dir),
+		task.WithStdout(&buff),
+		task.WithStderr(&buff),
+		task.WithTempDir(tempDir),
+	)
+	require.NoError(t, e.Setup())
+
+	// First run: task should execute and create generated.txt.
+	require.NoError(t, e.Run(t.Context(), &task.Call{Task: "build"}))
+	_, err := os.Stat(generatedFile)
+	require.NoError(t, err, "generated.txt should exist after first run")
+	buff.Reset()
+
+	// Second run: task should be up to date.
+	require.NoError(t, e.Run(t.Context(), &task.Call{Task: "build"}))
+	assert.Equal(t, `task: Task "build" is up to date`+"\n", buff.String())
+	buff.Reset()
+
+	// Delete the generated file (simulate a clean), but leave the timestamp file.
+	require.NoError(t, os.Remove(generatedFile))
+	_, err = os.Stat(generatedFile)
+	require.Error(t, err, "generated.txt should be gone")
+
+	// Third run: task MUST re-run because generated.txt is missing.
+	// This is the regression: previously the task was incorrectly skipped.
+	require.NoError(t, e.Run(t.Context(), &task.Call{Task: "build"}))
+	assert.NotContains(t, buff.String(), "is up to date", "task should re-run when generated file is missing")
+	_, err = os.Stat(generatedFile)
+	require.NoError(t, err, "generated.txt should be recreated after third run")
+}
+
+// TestStatusChecksumMissingGenerated is a regression test for https://github.com/go-task/task/issues/1230.
+// When using method: checksum, deleting a generated file should cause the task to re-run,
+// not be skipped because the checksum file still matches.
+func TestStatusChecksumMissingGenerated(t *testing.T) { // nolint:paralleltest // cannot run in parallel
+	const dir = "testdata/checksum"
+
+	generatedFile := filepathext.SmartJoin(dir, "generated.txt")
+	tempDir := task.TempDir{
+		Remote:      filepathext.SmartJoin(dir, ".task"),
+		Fingerprint: filepathext.SmartJoin(dir, ".task"),
+	}
+
+	// Clean up any state from previous runs.
+	_ = os.Remove(generatedFile)
+	_ = os.RemoveAll(filepathext.SmartJoin(dir, ".task"))
+
+	var buff bytes.Buffer
+	e := task.NewExecutor(
+		task.WithDir(dir),
+		task.WithStdout(&buff),
+		task.WithStderr(&buff),
+		task.WithTempDir(tempDir),
+	)
+	require.NoError(t, e.Setup())
+
+	// First run: task should execute and create generated.txt.
+	require.NoError(t, e.Run(t.Context(), &task.Call{Task: "build"}))
+	_, err := os.Stat(generatedFile)
+	require.NoError(t, err, "generated.txt should exist after first run")
+	buff.Reset()
+
+	// Second run: task should be up to date.
+	require.NoError(t, e.Run(t.Context(), &task.Call{Task: "build"}))
+	assert.Equal(t, `task: Task "build" is up to date`+"\n", buff.String())
+	buff.Reset()
+
+	// Delete the generated file (simulate a clean), but leave the checksum file.
+	require.NoError(t, os.Remove(generatedFile))
+	_, err = os.Stat(generatedFile)
+	require.Error(t, err, "generated.txt should be gone")
+
+	// Third run: task MUST re-run because generated.txt is missing.
+	// This is the regression: previously the task was incorrectly skipped.
+	require.NoError(t, e.Run(t.Context(), &task.Call{Task: "build"}))
+	assert.NotContains(t, buff.String(), "is up to date", "task should re-run when generated file is missing")
+	_, err = os.Stat(generatedFile)
+	require.NoError(t, err, "generated.txt should be recreated after third run")
+}
+
+// The injected fingerprint variable follows the method the up-to-date check
+// uses, including when that method comes from the Taskfile level.
+func TestFingerprintVarMethod(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name         string
+		dir          string
+		executorOpts []task.ExecutorOption
+		wantErr      string
+		assertOutput func(t *testing.T, output string)
+	}{
+		{
+			name: "TIMESTAMP is injected when the method is inherited from the Taskfile",
+			dir:  "testdata/method_taskfile_timestamp",
+			assertOutput: func(t *testing.T, output string) {
+				t.Helper()
+				// An unresolved variable renders as an empty string, so this
+				// has to match an actual timestamp, not just the prefix.
+				assert.Regexp(t, `ts=\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}`, output)
+			},
+		},
+		{
+			name: "no variable is injected when the effective method is none",
+			dir:  "testdata/method_taskfile_none",
+			assertOutput: func(t *testing.T, output string) {
+				t.Helper()
+				assert.Contains(t, output, "cs=\n")
+			},
+		},
+		{
+			name:         "an invalid method doesn't fail a run that skips fingerprinting",
+			dir:          "testdata/method_invalid",
+			executorOpts: []task.ExecutorOption{task.WithForce(true)},
+			assertOutput: func(t *testing.T, output string) {
+				t.Helper()
+				assert.Contains(t, output, "cs=[]\n")
+			},
+		},
+		{
+			name:    "an invalid method is still reported by the up-to-date check",
+			dir:     "testdata/method_invalid",
+			wantErr: `task: invalid method "checksums"`,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			_ = os.RemoveAll(filepathext.SmartJoin(tt.dir, ".task"))
+
+			var buff bytes.Buffer
+			opts := append([]task.ExecutorOption{
+				task.WithDir(tt.dir),
+				task.WithStdout(&buff),
+				task.WithStderr(&buff),
+				task.WithTempDir(task.TempDir{
+					Remote:      filepathext.SmartJoin(tt.dir, ".task"),
+					Fingerprint: filepathext.SmartJoin(tt.dir, ".task"),
+				}),
+			}, tt.executorOpts...)
+			e := task.NewExecutor(opts...)
+			require.NoError(t, e.Setup())
+
+			err := e.Run(t.Context(), &task.Call{Task: "build"})
+			if tt.wantErr != "" {
+				require.ErrorContains(t, err, tt.wantErr)
+				return
+			}
+			require.NoError(t, err)
+			tt.assertOutput(t, buff.String())
+		})
+	}
+}
+
+func writeFile(t *testing.T, dir, name, content string) {
+	t.Helper()
+	require.NoError(t, os.WriteFile(filepathext.SmartJoin(dir, name), []byte(content), 0o644))
+}
+
+// gitignoreStep writes a set of files then runs the task once, capturing its
+// output as a golden fixture named run.
+type gitignoreStep struct {
+	write map[string]string
+	run   string
+}
+
+// gitignoreSeq drives a checksum task through a sequence of runs against a
+// fixture dir. create seeds runtime files (removed on cleanup); restore resets
+// tracked files to their committed content on cleanup; artifacts are
+// task-produced files to delete on cleanup.
+type gitignoreSeq struct {
+	dir       string
+	task      string
+	create    map[string]string
+	restore   map[string]string
+	artifacts []string
+	steps     []gitignoreStep
+}
+
+func (s gitignoreSeq) run(t *testing.T) {
+	t.Helper()
+	cleanup := func() {
+		// The fixture manages its own .git marker so that gitignore filtering
+		// resolves a repo root regardless of the build source: an in-tree
+		// checkout would otherwise inherit the go-task .git, but a GitHub
+		// source tarball has none, which would silently disable filtering and
+		// break the golden fixtures.
+		_ = os.RemoveAll(filepathext.SmartJoin(s.dir, ".git"))
+		_ = os.RemoveAll(filepathext.SmartJoin(s.dir, ".task"))
+		for name := range s.create {
+			_ = os.Remove(filepathext.SmartJoin(s.dir, name))
+		}
+		for _, name := range s.artifacts {
+			_ = os.Remove(filepathext.SmartJoin(s.dir, name))
+		}
+		for name, content := range s.restore {
+			writeFile(t, s.dir, name, content)
+		}
+	}
+	cleanup()
+	t.Cleanup(cleanup)
+	require.NoError(t, os.MkdirAll(filepathext.SmartJoin(s.dir, ".git"), 0o755))
+	for name, content := range s.create {
+		writeFile(t, s.dir, name, content)
+	}
+	for _, step := range s.steps {
+		for name, content := range step.write {
+			writeFile(t, s.dir, name, content)
+		}
+		NewExecutorTest(t,
+			WithName(step.run),
+			WithExecutorOptions(task.WithDir(s.dir)),
+			WithTask(s.task),
+		)
+	}
+}
+
+func TestGitignoreChecksum(t *testing.T) { //nolint:paralleltest // shares testdata/gitignore and mutates fixture files
+	gitignoreSeq{
+		dir:       "testdata/gitignore",
+		task:      "build",
+		create:    map[string]string{"ignored.txt": "ignored\n"},
+		restore:   map[string]string{"source.txt": "source content\n"},
+		artifacts: []string{"generated.txt"},
+		steps: []gitignoreStep{
+			{run: "first run"},
+			{run: "up to date"},
+			{run: "ignored file modified", write: map[string]string{"ignored.txt": "ignored modified\n"}},
+			{run: "source file modified", write: map[string]string{"source.txt": "source modified\n"}},
+		},
+	}.run(t)
+}
+
+// TestGitignoreNegation checks that a `!pattern` in a nested .gitignore
+// re-includes a file excluded by a parent .gitignore.
+func TestGitignoreNegation(t *testing.T) { //nolint:paralleltest // mutates fixture files
+	gitignoreSeq{
+		dir:    "testdata/gitignore_negation",
+		task:   "build",
+		create: map[string]string{"sub/debug.log": "debug\n", "sub/other.log": "other\n"},
+		steps: []gitignoreStep{
+			{run: "first run"},
+			{run: "up to date"},
+			{run: "ignored file modified", write: map[string]string{"sub/other.log": "other modified\n"}},
+			{run: "reincluded file modified", write: map[string]string{"sub/debug.log": "debug modified\n"}},
+		},
+	}.run(t)
+}
+
+// TestGitignoreNested checks that a .gitignore in a subdirectory below the task
+// dir is honored when its files are reached by a deep glob.
+func TestGitignoreNested(t *testing.T) { //nolint:paralleltest // mutates fixture files
+	gitignoreSeq{
+		dir:     "testdata/gitignore_nested",
+		task:    "build",
+		create:  map[string]string{"sub/secret.dat": "secret\n"},
+		restore: map[string]string{"sub/keep.txt": "keep\n"},
+		steps: []gitignoreStep{
+			{run: "first run"},
+			{run: "up to date"},
+			{run: "ignored file modified", write: map[string]string{"sub/secret.dat": "secret modified\n"}},
+			{run: "source file modified", write: map[string]string{"sub/keep.txt": "keep modified\n"}},
+		},
+	}.run(t)
+}
+
+// TestGitignoreIncluded checks that a top-level use_gitignore in an included
+// Taskfile is propagated onto its tasks during merge.
+func TestGitignoreIncluded(t *testing.T) { //nolint:paralleltest // mutates fixture files
+	gitignoreSeq{
+		dir:    "testdata/gitignore_included",
+		task:   "included:build",
+		create: map[string]string{"ignored.txt": "ignored\n"},
+		steps: []gitignoreStep{
+			{run: "first run"},
+			{run: "up to date"},
+			{run: "ignored file modified", write: map[string]string{"ignored.txt": "ignored modified\n"}},
+		},
+	}.run(t)
+}
+
+// TestGitignoreIncludedOverride checks that an explicit use_gitignore: false in
+// an included Taskfile is preserved even when the root Taskfile sets it to true.
+func TestGitignoreIncludedOverride(t *testing.T) { //nolint:paralleltest // mutates fixture files
+	gitignoreSeq{
+		dir:    "testdata/gitignore_included_override",
+		task:   "included:build",
+		create: map[string]string{"ignored.txt": "ignored\n"},
+		steps: []gitignoreStep{
+			{run: "first run"},
+			{run: "up to date"},
+			{run: "ignored file modified", write: map[string]string{"ignored.txt": "ignored modified\n"}},
+		},
+	}.run(t)
+}
+
+func TestGitignoreTaskListFallback(t *testing.T) { //nolint:paralleltest // shares testdata/gitignore with TestGitignoreChecksum
+	const dir = "testdata/gitignore"
+
+	var buff bytes.Buffer
+	e := task.NewExecutor(
+		task.WithDir(dir),
+		task.WithStdout(&buff),
+		task.WithStderr(&buff),
+	)
+	require.NoError(t, e.Setup())
+
+	listed, err := e.CompiledTaskForTaskList(&task.Call{Task: "build"})
+	require.NoError(t, err)
+	assert.True(t, listed.ShouldUseGitignore(),
+		"task list should reflect the global use_gitignore fallback")
+
+	// "build-no-use_gitignore" explicitly disables it.
+	listedOff, err := e.CompiledTaskForTaskList(&task.Call{Task: "build-no-use_gitignore"})
+	require.NoError(t, err)
+	assert.False(t, listedOff.ShouldUseGitignore(),
+		"explicit use_gitignore: false must be preserved in the list path")
+}
+
 func TestStatusVariables(t *testing.T) {
 	t.Parallel()
 
@@ -628,6 +1035,44 @@ func TestTaskIgnoreErrors(t *testing.T) {
 	require.Error(t, e.Run(t.Context(), &task.Call{Task: "cmd-should-fail"}))
 }
 
+func TestIgnoreErrorsOnTimeout(t *testing.T) {
+	t.Parallel()
+
+	const dir = "testdata/ignore_errors"
+	tests := []struct {
+		name        string
+		task        string
+		expectError bool
+	}{
+		{name: "ignored at task level", task: "task-timeout-should-pass"},
+		{name: "ignored at command level", task: "cmd-timeout-should-pass"},
+		{name: "not ignored", task: "cmd-timeout-should-fail", expectError: true},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			var buff bytes.Buffer
+			e := task.NewExecutor(
+				task.WithDir(dir),
+				task.WithStdout(&buff),
+				task.WithStderr(&buff),
+			)
+			require.NoError(t, e.Setup())
+
+			err := e.Run(t.Context(), &task.Call{Task: test.task})
+			if test.expectError {
+				require.Error(t, err)
+				assert.NotContains(t, buff.String(), "reached the end")
+				return
+			}
+			require.NoError(t, err)
+			assert.Contains(t, buff.String(), "reached the end")
+		})
+	}
+}
+
 func TestExpand(t *testing.T) {
 	t.Parallel()
 
@@ -749,8 +1194,6 @@ func TestIncludesMultiLevel(t *testing.T) {
 }
 
 func TestIncludesRemote(t *testing.T) {
-	enableExperimentForTest(t, &experiments.RemoteTaskfiles, 1)
-
 	dir := "testdata/includes_remote"
 	os.RemoveAll(filepath.Join(dir, ".task", "remote"))
 
@@ -856,7 +1299,7 @@ func TestIncludesRemote(t *testing.T) {
 
 					for k, taskCall := range taskCalls {
 						t.Run(taskCall.Task, func(t *testing.T) {
-							expectedContent := fmt.Sprint(rand.Int64())
+							expectedContent := fmt.Sprint(rand.Int64()) //nolint:gosec
 							t.Setenv("CONTENT", expectedContent)
 
 							outputFile := fmt.Sprintf("%d.%d.txt", i, k)
@@ -916,6 +1359,25 @@ func TestIncludesIncorrect(t *testing.T) {
 	assert.Contains(t, err.Error(), "Failed to parse testdata/includes_incorrect/incomplete.yml:", err.Error())
 }
 
+func TestIncludesMissingTaskfile(t *testing.T) {
+	t.Parallel()
+
+	const dir = "testdata/includes_missing_taskfile"
+
+	var buff bytes.Buffer
+	e := task.NewExecutor(
+		task.WithDir(dir),
+		task.WithStdout(&buff),
+		task.WithStderr(&buff),
+		task.WithSilent(true),
+	)
+
+	err := e.Setup()
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "include must specify taskfile or dir")
+	assert.NotContains(t, err.Error(), "include cycle detected")
+}
+
 func TestIncludesEmptyMain(t *testing.T) {
 	t.Parallel()
 
@@ -934,8 +1396,6 @@ func TestIncludesEmptyMain(t *testing.T) {
 }
 
 func TestIncludesHttp(t *testing.T) {
-	enableExperimentForTest(t, &experiments.RemoteTaskfiles, 1)
-
 	dir, err := filepath.Abs("testdata/includes_http")
 	require.NoError(t, err)
 
@@ -1078,7 +1538,7 @@ func TestIncludesOptionalImplicitFalse(t *testing.T) {
 	wd, _ := os.Getwd()
 
 	message := "task: No Taskfile found at \"%s/%s/TaskfileOptional.yml\""
-	expected := fmt.Sprintf(message, wd, dir)
+	expected := fmt.Sprintf(message, filepath.ToSlash(wd), dir)
 
 	e := task.NewExecutor(
 		task.WithDir(dir),
@@ -1098,7 +1558,7 @@ func TestIncludesOptionalExplicitFalse(t *testing.T) {
 	wd, _ := os.Getwd()
 
 	message := "task: No Taskfile found at \"%s/%s/TaskfileOptional.yml\""
-	expected := fmt.Sprintf(message, wd, dir)
+	expected := fmt.Sprintf(message, filepath.ToSlash(wd), dir)
 
 	e := task.NewExecutor(
 		task.WithDir(dir),
@@ -1146,11 +1606,11 @@ func TestIncludesRelativePath(t *testing.T) {
 	require.NoError(t, e.Setup())
 
 	require.NoError(t, e.Run(t.Context(), &task.Call{Task: "common:pwd"}))
-	assert.Contains(t, buff.String(), "testdata/includes_rel_path/common")
+	assert.Contains(t, filepath.ToSlash(buff.String()), "testdata/includes_rel_path/common")
 
 	buff.Reset()
 	require.NoError(t, e.Run(t.Context(), &task.Call{Task: "included:common:pwd"}))
-	assert.Contains(t, buff.String(), "testdata/includes_rel_path/common")
+	assert.Contains(t, filepath.ToSlash(buff.String()), "testdata/includes_rel_path/common")
 }
 
 func TestIncludesInternal(t *testing.T) {
@@ -1292,6 +1752,25 @@ func TestIncludesWithExclude(t *testing.T) {
 	require.Error(t, err)
 	buff.Reset()
 
+	err = e.Run(t.Context(), &task.Call{Task: "included:foo:child"})
+	require.NoError(t, err)
+	assert.Equal(t, "foo:child\n", buff.String())
+	buff.Reset()
+
+	err = e.Run(t.Context(), &task.Call{Task: "included:namespace"})
+	require.NoError(t, err)
+	assert.Equal(t, "namespace\n", buff.String())
+	buff.Reset()
+
+	err = e.Run(t.Context(), &task.Call{Task: "included:namespace:one"})
+	require.Error(t, err)
+	buff.Reset()
+
+	err = e.Run(t.Context(), &task.Call{Task: "included:namespace-other:one"})
+	require.NoError(t, err)
+	assert.Equal(t, "namespace-other:one\n", buff.String())
+	buff.Reset()
+
 	err = e.Run(t.Context(), &task.Call{Task: "bar"})
 	require.Error(t, err)
 	buff.Reset()
@@ -1299,6 +1778,20 @@ func TestIncludesWithExclude(t *testing.T) {
 	err = e.Run(t.Context(), &task.Call{Task: "foo"})
 	require.NoError(t, err)
 	assert.Equal(t, "foo\n", buff.String())
+	buff.Reset()
+
+	err = e.Run(t.Context(), &task.Call{Task: "namespace"})
+	require.NoError(t, err)
+	assert.Equal(t, "namespace\n", buff.String())
+	buff.Reset()
+
+	err = e.Run(t.Context(), &task.Call{Task: "namespace:two"})
+	require.Error(t, err)
+	buff.Reset()
+
+	err = e.Run(t.Context(), &task.Call{Task: "namespace-other:one"})
+	require.NoError(t, err)
+	assert.Equal(t, "namespace-other:one\n", buff.String())
 }
 
 func TestIncludedTaskfileVarMerging(t *testing.T) {
@@ -1328,7 +1821,7 @@ func TestIncludedTaskfileVarMerging(t *testing.T) {
 
 			err := e.Run(t.Context(), &task.Call{Task: test.task})
 			require.NoError(t, err)
-			assert.Contains(t, buff.String(), test.expectedOutput)
+			assert.Contains(t, filepath.ToSlash(buff.String()), test.expectedOutput)
 		})
 	}
 }
@@ -1475,7 +1968,9 @@ func TestWhenNoDirAttributeItRunsInSameDirAsTaskfile(t *testing.T) {
 	require.NoError(t, e.Run(t.Context(), &task.Call{Task: "whereami"}))
 
 	// got should be the "dir" part of "testdata/dir"
-	got := strings.TrimSuffix(filepath.Base(out.String()), "\n")
+	// Normalize path separators for cross-platform compatibility (Windows uses backslashes)
+	normalized := normalizePathSeparators(out.String())
+	got := strings.TrimSuffix(filepath.Base(normalized), "\n")
 	assert.Equal(t, expected, got, "Mismatch in the working directory")
 }
 
@@ -1494,7 +1989,9 @@ func TestWhenDirAttributeAndDirExistsItRunsInThatDir(t *testing.T) {
 	require.NoError(t, e.Setup())
 	require.NoError(t, e.Run(t.Context(), &task.Call{Task: "whereami"}))
 
-	got := strings.TrimSuffix(filepath.Base(out.String()), "\n")
+	// Normalize path separators for cross-platform compatibility (Windows uses backslashes)
+	normalized := normalizePathSeparators(out.String())
+	got := strings.TrimSuffix(filepath.Base(normalized), "\n")
 	assert.Equal(t, expected, got, "Mismatch in the working directory")
 }
 
@@ -1520,7 +2017,9 @@ func TestWhenDirAttributeItCreatesMissingAndRunsInThatDir(t *testing.T) {
 	require.NoError(t, e.Setup())
 	require.NoError(t, e.Run(t.Context(), &task.Call{Task: target}))
 
-	got := strings.TrimSuffix(filepath.Base(out.String()), "\n")
+	// Normalize path separators for cross-platform compatibility (Windows uses backslashes)
+	normalized := normalizePathSeparators(out.String())
+	got := strings.TrimSuffix(filepath.Base(normalized), "\n")
 	assert.Equal(t, expected, got, "Mismatch in the working directory")
 
 	// Clean-up after ourselves only if no error.
@@ -1549,7 +2048,11 @@ func TestDynamicVariablesRunOnTheNewCreatedDir(t *testing.T) {
 	require.NoError(t, e.Setup())
 	require.NoError(t, e.Run(t.Context(), &task.Call{Task: target}))
 
-	got := strings.TrimSuffix(filepath.Base(out.String()), "\n")
+	// Normalize path separators for cross-platform compatibility (Windows uses backslashes)
+	// Take only the first line as Windows may output additional debug info
+	normalized := normalizePathSeparators(out.String())
+	firstLine, _, _ := strings.Cut(normalized, "\n")
+	got := filepath.Base(firstLine)
 	assert.Equal(t, expected, got, "Mismatch in the working directory")
 
 	// Clean-up after ourselves only if no error.
@@ -1874,6 +2377,54 @@ func TestRunOnceSharedDeps(t *testing.T) {
 	assert.Contains(t, buff.String(), `task: [service-b:build] echo "build b"`)
 }
 
+func TestRunOnceSharedFailurePropagates(t *testing.T) {
+	t.Parallel()
+
+	const dir = "testdata/run_once_failure"
+
+	var buff bytes.Buffer
+	e := task.NewExecutor(
+		task.WithDir(dir),
+		task.WithStdout(&buff),
+		task.WithStderr(&buff),
+	)
+	require.NoError(t, e.Setup())
+
+	err := e.Run(t.Context(), &task.Call{Task: "default"})
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), `Failed to run task "shared"`)
+	assert.NotContains(t, buff.String(), "should not be reached")
+	// The shared task still ran only once, which is the point of run: once.
+	assert.Equal(t, 1, strings.Count(buff.String(), "shared ran"))
+}
+
+func TestRunOnceJoinerHonorsItsOwnTimeout(t *testing.T) {
+	t.Parallel()
+
+	const dir = "testdata/run_once_timeout"
+
+	// The two deps run concurrently, so they need a buffer they can share.
+	var buff SyncBuffer
+	e := task.NewExecutor(
+		task.WithDir(dir),
+		task.WithStdout(&buff),
+		task.WithStderr(&buff),
+	)
+	require.NoError(t, e.Setup())
+
+	start := time.Now()
+	err := e.Run(t.Context(), &task.Call{Task: "default"})
+	require.Error(t, err)
+	// The joiner used to wait on the shared execution alone, ignoring its own
+	// timeout for as long as that execution took.
+	assert.Less(t, time.Since(start), 5*time.Second)
+
+	var timeoutErr *errors.TaskTimeoutError
+	require.ErrorAs(t, err, &timeoutErr)
+	assert.Equal(t, "joiner", timeoutErr.TaskName)
+	assert.NotContains(t, buff.buf.String(), "should not be reached")
+}
+
 func TestRunWhenChanged(t *testing.T) {
 	t.Parallel()
 
@@ -1927,6 +2478,27 @@ task-1 ran successfully
 	assert.Contains(t, buff.String(), "child task deferred value-from-parent")
 }
 
+func TestDeferredTaskTimeout(t *testing.T) {
+	t.Parallel()
+
+	const dir = "testdata/deferred"
+	var buff bytes.Buffer
+	e := task.NewExecutor(
+		task.WithDir(dir),
+		task.WithStdout(&buff),
+		task.WithStderr(&buff),
+		task.WithVerbose(true),
+	)
+	require.NoError(t, e.Setup())
+
+	start := time.Now()
+	require.NoError(t, e.Run(t.Context(), &task.Call{Task: "parent-with-timeout"}))
+	assert.Less(t, time.Since(start), 500*time.Millisecond)
+	assert.Contains(t, buff.String(), "parent completed")
+	assert.NotContains(t, buff.String(), "\ncleanup completed\n")
+	assert.Contains(t, buff.String(), "ignored error in deferred cmd")
+}
+
 func TestExitCodeZero(t *testing.T) {
 	t.Parallel()
 
@@ -1957,6 +2529,27 @@ func TestExitCodeOne(t *testing.T) {
 
 	require.Error(t, e.Run(t.Context(), &task.Call{Task: "exit-one"}))
 	assert.Equal(t, "FOO=bar - DYNAMIC_FOO=bar - EXIT_CODE=1", strings.TrimSpace(buff.String()))
+}
+
+func TestExitCodeTimeout(t *testing.T) {
+	t.Parallel()
+
+	const dir = "testdata/exit_code"
+	var buff bytes.Buffer
+	e := task.NewExecutor(
+		task.WithDir(dir),
+		task.WithStdout(&buff),
+		task.WithStderr(&buff),
+	)
+	require.NoError(t, e.Setup())
+
+	err := e.Run(t.Context(), &task.Call{Task: "exit-timeout"})
+	require.Error(t, err)
+	assert.Equal(t, "EXIT_CODE=124", strings.TrimSpace(buff.String()))
+
+	var runErr *errors.TaskRunError
+	require.ErrorAs(t, err, &runErr)
+	assert.Equal(t, errors.TimeoutExitCode, runErr.TaskExitCode())
 }
 
 func TestIgnoreNilElements(t *testing.T) {
@@ -2163,6 +2756,175 @@ func TestErrorCode(t *testing.T) {
 	}
 }
 
+func TestCommandTimeout(t *testing.T) {
+	t.Parallel()
+
+	const dir = "testdata/timeout"
+	tests := []struct {
+		name          string
+		task          string
+		expectError   bool
+		errorContains string
+	}{
+		{
+			name:          "timeout exceeded",
+			task:          "timeout-exceeded",
+			expectError:   true,
+			errorContains: "timeout exceeded",
+		},
+		{
+			name:        "timeout not exceeded",
+			task:        "timeout-not-exceeded",
+			expectError: false,
+		},
+		{
+			name:        "no timeout",
+			task:        "no-timeout",
+			expectError: false,
+		},
+		{
+			name:          "multiple commands with timeout",
+			task:          "multiple-cmds-timeout",
+			expectError:   true,
+			errorContains: "timeout exceeded",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			var buff bytes.Buffer
+			e := task.NewExecutor(
+				task.WithDir(dir),
+				task.WithStdout(&buff),
+				task.WithStderr(&buff),
+			)
+			require.NoError(t, e.Setup())
+
+			err := e.Run(t.Context(), &task.Call{Task: test.task})
+			if test.expectError {
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), test.errorContains)
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestDepTimeout(t *testing.T) {
+	t.Parallel()
+
+	const dir = "testdata/dep_timeout"
+
+	t.Run("timeout exceeded", func(t *testing.T) {
+		t.Parallel()
+
+		var buff SyncBuffer
+		e := task.NewExecutor(
+			task.WithDir(dir),
+			task.WithStdout(&buff),
+			task.WithStderr(&buff),
+		)
+		require.NoError(t, e.Setup())
+
+		start := time.Now()
+		err := e.Run(t.Context(), &task.Call{Task: "timeout-exceeded"})
+		require.Error(t, err)
+		assert.Less(t, time.Since(start), 5*time.Second)
+
+		var timeoutErr *errors.TaskTimeoutError
+		require.ErrorAs(t, err, &timeoutErr)
+		assert.Equal(t, "slow", timeoutErr.TaskName)
+		assert.NotContains(t, buff.buf.String(), "should not be reached")
+	})
+
+	t.Run("timeout not exceeded", func(t *testing.T) {
+		t.Parallel()
+
+		var buff SyncBuffer
+		e := task.NewExecutor(
+			task.WithDir(dir),
+			task.WithStdout(&buff),
+			task.WithStderr(&buff),
+		)
+		require.NoError(t, e.Setup())
+
+		require.NoError(t, e.Run(t.Context(), &task.Call{Task: "timeout-not-exceeded"}))
+		assert.Contains(t, buff.buf.String(), "reached the end")
+	})
+}
+
+func TestCommandTimeoutBoundsIfCondition(t *testing.T) {
+	t.Parallel()
+
+	var buff bytes.Buffer
+	e := task.NewExecutor(
+		task.WithDir("testdata/timeout"),
+		task.WithStdout(&buff),
+		task.WithStderr(&buff),
+	)
+	require.NoError(t, e.Setup())
+
+	start := time.Now()
+	err := e.Run(t.Context(), &task.Call{Task: "slow-if-condition"})
+	require.Error(t, err)
+	assert.Less(t, time.Since(start), 5*time.Second)
+
+	var timeoutErr *errors.TaskTimeoutError
+	require.ErrorAs(t, err, &timeoutErr)
+	// A condition that times out fails the command, it does not skip it.
+	assert.NotContains(t, buff.String(), "condition was met")
+}
+
+func TestCommandTimeoutAttribution(t *testing.T) {
+	t.Parallel()
+
+	const dir = "testdata/timeout"
+	tests := []struct {
+		name        string
+		task        string
+		notContains string
+	}{
+		{
+			name:        "a command declaring no timeout is not blamed for one",
+			task:        "inherited-timeout",
+			notContains: "(0s)",
+		},
+		{
+			name:        "a command is not blamed for a timeout it never reached",
+			task:        "larger-child-timeout",
+			notContains: "10m",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			e := task.NewExecutor(
+				task.WithDir(dir),
+				task.WithStdout(io.Discard),
+				task.WithStderr(io.Discard),
+			)
+			require.NoError(t, e.Setup())
+
+			err := e.Run(t.Context(), &task.Call{Task: test.task})
+			require.Error(t, err)
+			assert.Contains(t, err.Error(), "command timeout exceeded (500ms)")
+			assert.NotContains(t, err.Error(), test.notContains)
+
+			var timeoutErr *errors.TaskTimeoutError
+			require.ErrorAs(t, err, &timeoutErr)
+			assert.Equal(t, test.task, timeoutErr.TaskName)
+
+			// --watch swallows context errors; a timeout must not look like one.
+			assert.False(t, errors.Is(err, context.DeadlineExceeded))
+		})
+	}
+}
+
 func TestEvaluateSymlinksInPaths(t *testing.T) { // nolint:paralleltest // cannot run in parallel
 	const dir = "testdata/evaluate_symlinks_in_paths"
 	var buff bytes.Buffer
@@ -2268,7 +3030,8 @@ func TestUserWorkingDirectory(t *testing.T) {
 	require.NoError(t, err)
 	require.NoError(t, e.Setup())
 	require.NoError(t, e.Run(t.Context(), &task.Call{Task: "default"}))
-	assert.Equal(t, fmt.Sprintf("%s\n", wd), buff.String())
+	// Use filepath.ToSlash because USER_WORKING_DIR uses forward slashes on all platforms
+	assert.Equal(t, fmt.Sprintf("%s\n", filepath.ToSlash(wd)), buff.String())
 }
 
 func TestUserWorkingDirectoryWithIncluded(t *testing.T) {
@@ -2277,7 +3040,7 @@ func TestUserWorkingDirectoryWithIncluded(t *testing.T) {
 	wd, err := os.Getwd()
 	require.NoError(t, err)
 
-	wd = filepathext.SmartJoin(wd, "testdata/user_working_dir_with_includes/somedir")
+	wd = filepath.ToSlash(filepathext.SmartJoin(wd, "testdata/user_working_dir_with_includes/somedir"))
 
 	var buff bytes.Buffer
 	e := task.NewExecutor(
@@ -2290,7 +3053,8 @@ func TestUserWorkingDirectoryWithIncluded(t *testing.T) {
 	require.NoError(t, err)
 	require.NoError(t, e.Setup())
 	require.NoError(t, e.Run(t.Context(), &task.Call{Task: "included:echo"}))
-	assert.Equal(t, fmt.Sprintf("%s\n", wd), buff.String())
+	// Normalize path separators for cross-platform compatibility (Windows uses backslashes)
+	assert.Equal(t, fmt.Sprintf("%s\n", wd), normalizePathSeparators(buff.String()))
 }
 
 func TestPlatforms(t *testing.T) {
@@ -2421,6 +3185,27 @@ func TestSplitArgs(t *testing.T) {
 	err := e.Run(t.Context(), &task.Call{Task: "default", Vars: vars})
 	require.NoError(t, err)
 	assert.Equal(t, "3\n", buff.String())
+}
+
+func TestAbsPath(t *testing.T) {
+	t.Parallel()
+
+	var buff bytes.Buffer
+	e := task.NewExecutor(
+		task.WithDir("testdata/abs_path"),
+		task.WithStdout(&buff),
+		task.WithStderr(&buff),
+		task.WithSilent(true),
+	)
+	require.NoError(t, e.Setup())
+
+	err := e.Run(t.Context(), &task.Call{Task: "default"})
+	require.NoError(t, err)
+
+	cwd, err := os.Getwd()
+	require.NoError(t, err)
+	expected := filepath.Join(cwd, "bar") + "\n"
+	assert.Equal(t, expected, buff.String())
 }
 
 func TestSingleCmdDep(t *testing.T) {

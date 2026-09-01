@@ -1,0 +1,26 @@
+version: '3'
+
+silent: true
+
+tasks:
+  timeout-exceeded:
+    deps:
+      - task: slow
+        timeout: 300ms
+    cmds:
+      - echo "should not be reached"
+
+  timeout-not-exceeded:
+    deps:
+      - task: quick
+        timeout: 5s
+    cmds:
+      - echo "reached the end"
+
+  slow:
+    cmds:
+      - sleep 10
+
+  quick:
+    cmds:
+      - echo "quick"

@@ -4,6 +4,7 @@ vars:
   OS_VAR: ["windows", "linux", "darwin"]
   ARCH_VAR: ["amd64", "arm64"]
   NOT_A_LIST: "not a list"
+  OS_CSV: "windows,linux,darwin"
 
 tasks:
   # Loop over a list of values
@@ -26,6 +27,16 @@ tasks:
           matrix:
             OS:
               ref: .OS_VAR
+            ARCH:
+              ref: .ARCH_VAR
+        cmd: echo "{{.ITEM.OS}}/{{.ITEM.ARCH}}"
+
+  loop-matrix-ref-computed:
+    cmds:
+      - for:
+          matrix:
+            OS:
+              ref: 'splitList "," .OS_CSV'
             ARCH:
               ref: .ARCH_VAR
         cmd: echo "{{.ITEM.OS}}/{{.ITEM.ARCH}}"

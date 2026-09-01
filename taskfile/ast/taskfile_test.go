@@ -2,6 +2,7 @@ package ast_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -22,8 +23,10 @@ vars:
   PARAM1: VALUE1
   PARAM2: VALUE2
 `
-		yamlDeferredCall = `defer: { task: some_task, vars: { PARAM1: "var" } }`
-		yamlDeferredCmd  = `defer: echo 'test'`
+		yamlDeferredCall            = `defer: { task: some_task, vars: { PARAM1: "var" } }`
+		yamlDeferredCallWithTimeout = `{ defer: { task: some_task }, timeout: 1s }`
+		yamlDeferredCmd             = `defer: echo 'test'`
+		yamlDeferredCmdWithTimeout  = `{ defer: echo 'test', timeout: 1s }`
 	)
 	tests := []struct {
 		content  string
@@ -78,6 +81,16 @@ vars:
 			},
 		},
 		{
+			yamlDeferredCallWithTimeout,
+			&ast.Cmd{},
+			&ast.Cmd{Task: "some_task", Defer: true, Timeout: time.Second},
+		},
+		{
+			yamlDeferredCmdWithTimeout,
+			&ast.Cmd{},
+			&ast.Cmd{Cmd: `echo 'test'`, Defer: true, Timeout: time.Second},
+		},
+		{
 			yamlDep,
 			&ast.Dep{},
 			&ast.Dep{Task: "task-name"},
@@ -108,5 +121,57 @@ vars:
 		err := yaml.Unmarshal([]byte(test.content), test.v)
 		require.NoError(t, err)
 		assert.Equal(t, test.expected, test.v)
+	}
+}
+
+func TestTimeoutParseError(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name    string
+		content string
+		message string
+	}{
+		{
+			name:    "unparsable duration",
+			content: `{cmd: echo, timeout: invalid}`,
+			message: "invalid timeout format",
+		},
+		{
+			name:    "zero duration",
+			content: `{cmd: echo, timeout: 0s}`,
+			message: "timeout must be greater than zero",
+		},
+		{
+			name:    "negative duration",
+			content: `{cmd: echo, timeout: -1s}`,
+			message: "timeout must be greater than zero",
+		},
+		{
+			name:    "negative duration on a deferred task",
+			content: `{defer: {task: some_task}, timeout: -5m}`,
+			message: "timeout must be greater than zero",
+		},
+		{
+			name:    "unparsable duration on a deferred task",
+			content: `{defer: {task: some_task}, timeout: invalid}`,
+			message: "invalid timeout format",
+		},
+		{
+			name:    "timeout nested inside defer",
+			content: `{defer: {task: some_task, timeout: 1s}}`,
+			message: "timeout must be set next to defer, not inside it",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			var cmd ast.Cmd
+			err := yaml.Unmarshal([]byte(test.content), &cmd)
+			require.Error(t, err)
+			assert.ErrorContains(t, err, test.message)
+		})
 	}
 }

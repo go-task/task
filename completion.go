@@ -11,6 +11,9 @@ var completionBash string
 //go:embed completion/fish/task.fish
 var completionFish string
 
+//go:embed completion/nu/task-completions.nu
+var completionNu string
+
 //go:embed completion/ps/task.ps1
 var completionPowershell string
 
@@ -24,6 +27,8 @@ func Completion(completion string) (string, error) {
 		return completionBash, nil
 	case "fish":
 		return completionFish, nil
+	case "nu", "nushell":
+		return completionNu, nil
 	case "powershell":
 		return completionPowershell, nil
 	case "zsh":

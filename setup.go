@@ -1,6 +1,7 @@
 package task
 
 import (
+	"cmp"
 	"context"
 	"fmt"
 	"os"
@@ -13,7 +14,6 @@ import (
 	"github.com/sajari/fuzzy"
 
 	"github.com/go-task/task/v3/errors"
-	"github.com/go-task/task/v3/internal/env"
 	"github.com/go-task/task/v3/internal/execext"
 	"github.com/go-task/task/v3/internal/filepathext"
 	"github.com/go-task/task/v3/internal/logger"
@@ -59,8 +59,7 @@ func (e *Executor) getRootNode() (taskfile.Node, error) {
 		taskfile.WithCert(e.Cert),
 		taskfile.WithCertKey(e.CertKey),
 	)
-	var taskNotFoundError errors.TaskfileNotFoundError
-	if errors.As(err, &taskNotFoundError) {
+	if taskNotFoundError, ok := errors.AsType[errors.TaskfileNotFoundError](err); ok {
 		taskNotFoundError.AskInit = true
 		return nil, taskNotFoundError
 	}
@@ -133,13 +132,9 @@ func (e *Executor) setupTempDir() error {
 		return nil
 	}
 
-	tempDir := env.GetTaskEnv("TEMP_DIR")
-	if tempDir == "" {
-		e.TempDir = TempDir{
-			Remote:      filepathext.SmartJoin(e.Dir, ".task"),
-			Fingerprint: filepathext.SmartJoin(e.Dir, ".task"),
-		}
-	} else if filepath.IsAbs(tempDir) || strings.HasPrefix(tempDir, "~") {
+	// e.TempDirPath carries the resolved CLI precedence (flag > TASK_TEMP_DIR > taskrc).
+	tempDir := cmp.Or(e.TempDirPath, ".task")
+	if filepath.IsAbs(tempDir) || strings.HasPrefix(tempDir, "~") {
 		tempDir, err := execext.ExpandLiteral(tempDir)
 		if err != nil {
 			return err
@@ -265,7 +260,7 @@ func (e *Executor) setupDefaults() {
 }
 
 func (e *Executor) setupConcurrencyState() {
-	e.executionHashes = make(map[string]context.Context)
+	e.executionHashes = make(map[string]*executionState)
 
 	e.taskCallCount = make(map[string]*int32, e.Taskfile.Tasks.Len())
 	e.mkdirMutexMap = make(map[string]*sync.Mutex, e.Taskfile.Tasks.Len())

@@ -5,7 +5,7 @@ set -g __task_experiments_cache ""
 set -g __task_experiments_cache_time 0
 
 # Helper function to get experiments with 1-second cache
-function __task_get_experiments
+function __task_get_experiments --inherit-variable GO_TASK_PROGNAME
     set -l now (date +%s)
     set -l ttl 1  # Cache for 1 second only
 
@@ -16,7 +16,7 @@ function __task_get_experiments
     end
 
     # Refresh cache
-    set -g __task_experiments_cache (task --experiments 2>/dev/null)
+    set -g __task_experiments_cache ($GO_TASK_PROGNAME --experiments 2>/dev/null)
     set -g __task_experiments_cache_time $now
     printf '%s\n' $__task_experiments_cache
 end
@@ -69,7 +69,7 @@ complete -c $GO_TASK_PROGNAME \
 complete -c $GO_TASK_PROGNAME -s a -l list-all                  -d 'list all tasks'
 complete -c $GO_TASK_PROGNAME -s c -l color                     -d 'colored output (default true)'
 complete -c $GO_TASK_PROGNAME -s C -l concurrency               -d 'limit number of concurrent tasks'
-complete -c $GO_TASK_PROGNAME      -l completion                -d 'generate shell completion script' -xa "bash zsh fish powershell"
+complete -c $GO_TASK_PROGNAME      -l completion                -d 'generate shell completion script' -xa "bash zsh fish powershell nu"
 complete -c $GO_TASK_PROGNAME -s d -l dir                       -d 'set directory of execution'
 complete -c $GO_TASK_PROGNAME      -l disable-fuzzy             -d 'disable fuzzy matching for task names'
 complete -c $GO_TASK_PROGNAME -s n -l dry                       -d 'compile and print tasks without executing'
@@ -101,20 +101,16 @@ complete -c $GO_TASK_PROGNAME -s v -l verbose                   -d 'verbose outp
 complete -c $GO_TASK_PROGNAME      -l version                   -d 'show version'
 complete -c $GO_TASK_PROGNAME -s w -l watch                     -d 'watch mode, re-run on changes'
 complete -c $GO_TASK_PROGNAME -s y -l yes                       -d 'assume yes to all prompts'
+complete -c $GO_TASK_PROGNAME      -l offline                   -d 'use only local or cached Taskfiles'
+complete -c $GO_TASK_PROGNAME      -l timeout                   -d 'timeout for remote Taskfile downloads'
+complete -c $GO_TASK_PROGNAME      -l expiry                    -d 'cache expiry duration'
+complete -c $GO_TASK_PROGNAME      -l remote-cache-dir          -d 'directory to cache remote Taskfiles' -xa "(__fish_complete_directories)"
+complete -c $GO_TASK_PROGNAME      -l cacert                    -d 'custom CA certificate for TLS' -r
+complete -c $GO_TASK_PROGNAME      -l cert                      -d 'client certificate for mTLS' -r
+complete -c $GO_TASK_PROGNAME      -l cert-key                  -d 'client certificate private key' -r
+complete -c $GO_TASK_PROGNAME      -l download                  -d 'download remote Taskfile'
+complete -c $GO_TASK_PROGNAME      -l clear-cache               -d 'clear remote Taskfile cache'
 
 # Experimental flags (dynamically checked at completion time via -n condition)
 # GentleForce experiment
 complete -c $GO_TASK_PROGNAME -n "__task_is_experiment_enabled GENTLE_FORCE" -l force-all -d 'force execution of task and all dependencies'
-
-# RemoteTaskfiles experiment - Options
-complete -c $GO_TASK_PROGNAME -n "__task_is_experiment_enabled REMOTE_TASKFILES" -l offline          -d 'use only local or cached Taskfiles'
-complete -c $GO_TASK_PROGNAME -n "__task_is_experiment_enabled REMOTE_TASKFILES" -l timeout          -d 'timeout for remote Taskfile downloads'
-complete -c $GO_TASK_PROGNAME -n "__task_is_experiment_enabled REMOTE_TASKFILES" -l expiry           -d 'cache expiry duration'
-complete -c $GO_TASK_PROGNAME -n "__task_is_experiment_enabled REMOTE_TASKFILES" -l remote-cache-dir -d 'directory to cache remote Taskfiles' -xa "(__fish_complete_directories)"
-complete -c $GO_TASK_PROGNAME -n "__task_is_experiment_enabled REMOTE_TASKFILES" -l cacert           -d 'custom CA certificate for TLS' -r
-complete -c $GO_TASK_PROGNAME -n "__task_is_experiment_enabled REMOTE_TASKFILES" -l cert             -d 'client certificate for mTLS' -r
-complete -c $GO_TASK_PROGNAME -n "__task_is_experiment_enabled REMOTE_TASKFILES" -l cert-key         -d 'client certificate private key' -r
-
-# RemoteTaskfiles experiment - Operations
-complete -c $GO_TASK_PROGNAME -n "__task_is_experiment_enabled REMOTE_TASKFILES" -l download    -d 'download remote Taskfile'
-complete -c $GO_TASK_PROGNAME -n "__task_is_experiment_enabled REMOTE_TASKFILES" -l clear-cache -d 'clear remote Taskfile cache'

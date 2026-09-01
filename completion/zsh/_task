@@ -13,9 +13,9 @@ function __task_is_experiment_enabled() {
 
 # Listing commands from Taskfile.yml
 function __task_list() {
-    local -a scripts cmd
+    local -a scripts cmd task_aliases match mbegin mend
     local -i enabled=0
-    local taskfile item task desc
+    local taskfile item task desc task_alias
 
     cmd=($TASK_CMD)
     taskfile=${(Qv)opt_args[(i)-t|--taskfile]}
@@ -50,14 +50,31 @@ function __task_list() {
     local show_desc
     zstyle -T ":completion:${curcontext}:" verbose && show_desc=true || show_desc=false
 
+    # Read zstyle show-aliases option (default = true via -T)
+    local show_aliases
+    zstyle -T ":completion:${curcontext}:" show-aliases && show_aliases=true || show_aliases=false
+
     for item in "${(@)${(f)output}[2,-1]#\* }"; do
         task="${item%%:[[:space:]]*}"
+
+        # Extract the aliases listed in the trailing "(aliases: a, b)" column.
+        # NB: `aliases` is a reserved zsh parameter, so use a different name.
+        task_aliases=()
+        if [[ "$show_aliases" == "true" && "$item" == (#b)*'(aliases: '(*)')' ]]; then
+            task_aliases=( "${(@s:, :)match[1]}" )
+        fi
 
         if [[ "$show_desc" == "true" ]]; then
             local desc="${item##[^[:space:]]##[[:space:]]##}"
             scripts+=( "${task//:/\\:}:$desc" )
+            for task_alias in $task_aliases; do
+                scripts+=( "${task_alias//:/\\:}:$desc (alias of $task)" )
+            done
         else
             scripts+=( "$task" )
+            for task_alias in $task_aliases; do
+                scripts+=( "$task_alias" )
+            done
         fi
     done
 
@@ -77,7 +94,7 @@ _task() {
         '(-F --failfast)'{-F,--failfast}'[when running tasks in parallel, stop all tasks if one fails]'
         '(-f --force)'{-f,--force}'[run even if task is up-to-date]'
         '(-c --color)'{-c,--color}'[colored output]'
-        '(--completion)--completion[generate shell completion script]:shell:(bash zsh fish powershell)'
+        '(--completion)--completion[generate shell completion script]:shell:(bash zsh fish powershell nu)'
         '(-d --dir)'{-d,--dir}'[dir to run in]:execution dir:_dirs'
         '(--disable-fuzzy)--disable-fuzzy[disable fuzzy matching for task names]'
         '(-n --dry)'{-n,--dry}'[compiles and prints tasks without executing]'
@@ -103,24 +120,20 @@ _task() {
         '(-v --verbose)'{-v,--verbose}'[verbose mode]'
         '(-w --watch)'{-w,--watch}'[watch-mode for given tasks, re-run when inputs change]'
         '(-y --yes)'{-y,--yes}'[assume yes to all prompts]'
+		'(--offline --clear-cache)--download[download remote Taskfile]'
+		'(--offline --download)--offline[use only local or cached Taskfiles]'
+		'(--timeout)--timeout[timeout for remote Taskfile downloads]:duration: '
+		'(--expiry)--expiry[cache expiry duration]:duration: '
+		'(--remote-cache-dir)--remote-cache-dir[directory to cache remote Taskfiles]:cache dir:_dirs'
+		'(--cacert)--cacert[custom CA certificate for TLS]:file:_files'
+		'(--cert)--cert[client certificate for mTLS]:file:_files'
+		'(--cert-key)--cert-key[client certificate private key]:file:_files'
     )
 
     # Experimental flags (dynamically added based on enabled experiments)
     # Options (modify behavior)
     if __task_is_experiment_enabled "GENTLE_FORCE"; then
         standard_args+=('(--force-all)--force-all[force execution of task and all dependencies]')
-    fi
-
-    if __task_is_experiment_enabled "REMOTE_TASKFILES"; then
-        standard_args+=(
-            '(--offline --download)--offline[use only local or cached Taskfiles]'
-            '(--timeout)--timeout[timeout for remote Taskfile downloads]:duration: '
-            '(--expiry)--expiry[cache expiry duration]:duration: '
-            '(--remote-cache-dir)--remote-cache-dir[directory to cache remote Taskfiles]:cache dir:_dirs'
-            '(--cacert)--cacert[custom CA certificate for TLS]:file:_files'
-            '(--cert)--cert[client certificate for mTLS]:file:_files'
-            '(--cert-key)--cert-key[client certificate private key]:file:_files'
-        )
     fi
 
     operation_args=(
@@ -133,17 +146,8 @@ _task() {
             '(*)'{-i,--init}'[create new Taskfile.yml]'
             '(- *)'{-h,--help}'[show help]'
             '(- *)--version[show version and exit]'
-    )
-
-    # Experimental operations (dynamically added based on enabled experiments)
-    if __task_is_experiment_enabled "REMOTE_TASKFILES"; then
-        standard_args+=(
-            '(--offline --clear-cache)--download[download remote Taskfile]'
-        )
-        operation_args+=(
             '(* --download)--clear-cache[clear remote Taskfile cache]'
-        )
-    fi
+    )
 
     _arguments -S $standard_args $operation_args
 }

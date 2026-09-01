@@ -2,13 +2,12 @@ package taskfile
 
 import (
 	"context"
+	"slices"
 	"strings"
 	"time"
 
 	giturls "github.com/chainguard-dev/git-urls"
 
-	"github.com/go-task/task/v3/errors"
-	"github.com/go-task/task/v3/experiments"
 	"github.com/go-task/task/v3/internal/fsext"
 )
 
@@ -66,14 +65,11 @@ func NewNode(
 	default:
 		node, err = NewFileNode(entrypoint, dir, opts...)
 	}
-	if _, isRemote := node.(RemoteNode); isRemote && !experiments.RemoteTaskfiles.Enabled() {
-		return nil, errors.New("task: Remote taskfiles are not enabled. You can read more about this experiment and how to enable it at https://taskfile.dev/experiments/remote-taskfiles")
-	}
 
 	return node, err
 }
 
-func isRemoteEntrypoint(entrypoint string) bool {
+func IsRemoteEntrypoint(entrypoint string) bool {
 	scheme, _ := getScheme(entrypoint)
 	switch scheme {
 	case "git", "http", "https":
@@ -89,12 +85,15 @@ func getScheme(uri string) (string, error) {
 		return "", err
 	}
 
-	if strings.HasSuffix(strings.Split(u.Path, "//")[0], ".git") && (u.Scheme == "git" || u.Scheme == "ssh" || u.Scheme == "https" || u.Scheme == "http") {
+	isDotGit := strings.HasSuffix(strings.Split(u.Path, "//")[0], ".git")
+	isUnderscoreGit := strings.Contains(strings.Split(u.Path, "//")[0], "/_git/")
+	schemeIsGitCompatible := slices.Contains([]string{"git", "ssh", "https", "http"}, u.Scheme)
+	if (isDotGit || isUnderscoreGit) && schemeIsGitCompatible {
 		return "git", nil
 	}
 
-	if i := strings.Index(uri, "://"); i != -1 {
-		return uri[:i], nil
+	if before, _, ok := strings.Cut(uri, "://"); ok {
+		return before, nil
 	}
 
 	return "", nil

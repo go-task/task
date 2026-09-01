@@ -15,7 +15,6 @@ import (
 	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/env"
 	"github.com/go-task/task/v3/internal/execext"
-	"github.com/go-task/task/v3/internal/fingerprint"
 	"github.com/go-task/task/v3/internal/logger"
 	"github.com/go-task/task/v3/internal/output"
 	"github.com/go-task/task/v3/internal/slicesext"
@@ -221,17 +220,7 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) error {
 				return err
 			}
 
-			// Get the fingerprinting method to use
-			method := e.Taskfile.Method
-			if t.Method != "" {
-				method = t.Method
-			}
-			upToDate, err := fingerprint.IsTaskUpToDate(ctx, t,
-				fingerprint.WithMethod(method),
-				fingerprint.WithTempDir(e.TempDir.Fingerprint),
-				fingerprint.WithDry(e.Dry),
-				fingerprint.WithLogger(e.Logger),
-			)
+			upToDate, err := e.fingerprinter().UpToDate(ctx, t)
 			if err != nil {
 				return err
 			}
@@ -277,13 +266,17 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) error {
 					e.Logger.VerboseErrf(logger.Yellow, "task: error cleaning status on error: %v\n", err2)
 				}
 
-				var exitCode interp.ExitStatus
-				if errors.As(err, &exitCode) {
-					if t.IgnoreError {
-						e.Logger.VerboseErrf(logger.Yellow, "task: task error ignored: %v\n", err)
-						continue
-					}
+				if t.IgnoreError && isCommandFailure(err) {
+					e.Logger.VerboseErrf(logger.Yellow, "task: task error ignored: %v\n", err)
+					continue
+				}
+
+				e.Logger.VerboseErrf(logger.Red, "task: %q failed: %v\n", call.Task, err)
+
+				if exitCode, ok := errors.AsType[interp.ExitStatus](err); ok {
 					deferredExitCode = uint8(exitCode)
+				} else if _, ok := errors.AsType[*errors.TaskTimeoutError](err); ok {
+					deferredExitCode = errors.TimeoutExitCode
 				}
 
 				return err
@@ -326,11 +319,20 @@ func (e *Executor) runDeps(ctx context.Context, t *ast.Task) error {
 
 	for _, d := range t.Deps {
 		g.Go(func() error {
-			err := e.RunTask(ctx, &Call{Task: d.Task, Vars: d.Vars, Silent: d.Silent, Indirect: true})
-			if err != nil {
-				return err
+			depCtx := ctx
+			var timeout *errors.TaskTimeoutError
+			if d.Timeout > 0 {
+				timeout = &errors.TaskTimeoutError{TaskName: d.Task, Timeout: d.Timeout}
+				var cancel context.CancelFunc
+				depCtx, cancel = context.WithTimeoutCause(ctx, d.Timeout, timeout)
+				defer cancel()
 			}
-			return nil
+
+			err := e.RunTask(depCtx, &Call{Task: d.Task, Vars: d.Vars, Silent: d.Silent, Indirect: true})
+			if err != nil && timedOut(depCtx, timeout) {
+				return timeout
+			}
+			return err
 		})
 	}
 
@@ -349,6 +351,8 @@ func (e *Executor) runDeferred(t *ast.Task, call *Call, i int, vars *ast.Vars, d
 		extra["EXIT_CODE"] = fmt.Sprintf("%d", *deferredExitCode)
 	}
 
+	// Resolve template with secrets masked for logging
+	cmd.LogCmd = templater.MaskSecretsWithExtra(cmd.Cmd, vars, extra)
 	cmd.Cmd = templater.ReplaceWithExtra(cmd.Cmd, cache, extra)
 	cmd.Task = templater.ReplaceWithExtra(cmd.Task, cache, extra)
 	cmd.If = templater.ReplaceWithExtra(cmd.If, cache, extra)
@@ -362,6 +366,15 @@ func (e *Executor) runDeferred(t *ast.Task, call *Call, i int, vars *ast.Vars, d
 func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call *Call, i int) error {
 	cmd := t.Cmds[i]
 
+	// In place before the if condition, which would otherwise run unbounded.
+	var timeout *errors.TaskTimeoutError
+	if cmd.Timeout > 0 {
+		timeout = &errors.TaskTimeoutError{TaskName: t.Name(), Timeout: cmd.Timeout}
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeoutCause(ctx, cmd.Timeout, timeout)
+		defer cancel()
+	}
+
 	// Check if condition for any command type
 	if strings.TrimSpace(cmd.If) != "" {
 		if err := execext.RunCommand(ctx, &execext.RunCommandOptions{
@@ -369,6 +382,9 @@ func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call *Call, i in
 			Dir:     t.Dir,
 			Env:     env.Get(t),
 		}); err != nil {
+			if timedOut(ctx, timeout) {
+				return timeout
+			}
 			e.Logger.VerboseOutf(logger.Yellow, "task: [%s] if condition not met - skipped\n", t.Name())
 			return nil
 		}
@@ -380,20 +396,22 @@ func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call *Call, i in
 		defer reacquire()
 
 		err := e.RunTask(ctx, &Call{Task: cmd.Task, Vars: cmd.Vars, Silent: cmd.Silent, Indirect: true})
-		var exitCode interp.ExitStatus
-		if errors.As(err, &exitCode) && cmd.IgnoreError {
+		if err != nil && timedOut(ctx, timeout) {
+			err = timeout
+		}
+		if cmd.IgnoreError && isCommandFailure(err) {
 			e.Logger.VerboseErrf(logger.Yellow, "task: [%s] task error ignored: %v\n", t.Name(), err)
 			return nil
 		}
 		return err
 	case cmd.Cmd != "":
 		if !shouldRunOnCurrentPlatform(cmd.Platforms) {
-			e.Logger.VerboseOutf(logger.Yellow, "task: [%s] %s not for current platform - ignored\n", t.Name(), cmd.Cmd)
+			e.Logger.VerboseOutf(logger.Yellow, "task: [%s] %s not for current platform - ignored\n", t.Name(), cmd.LogCmd)
 			return nil
 		}
 
 		if e.Verbose || (!call.Silent && !cmd.Silent && !t.IsSilent() && !e.Taskfile.Silent && !e.Silent) {
-			e.Logger.Errf(logger.Green, "task: [%s] %s\n", t.Name(), cmd.Cmd)
+			e.Logger.Errf(logger.Green, "task: [%s] %s\n", t.Name(), cmd.LogCmd)
 		}
 
 		if e.Dry {
@@ -424,8 +442,10 @@ func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call *Call, i in
 		if closeErr := closer(err); closeErr != nil {
 			e.Logger.Errf(logger.Red, "task: unable to close writer: %v\n", closeErr)
 		}
-		var exitCode interp.ExitStatus
-		if errors.As(err, &exitCode) && cmd.IgnoreError {
+		if err != nil && timedOut(ctx, timeout) {
+			err = timeout
+		}
+		if cmd.IgnoreError && isCommandFailure(err) {
 			e.Logger.VerboseErrf(logger.Yellow, "task: [%s] command error ignored: %v\n", t.Name(), err)
 			return nil
 		}
@@ -433,6 +453,29 @@ func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call *Call, i in
 	default:
 		return nil
 	}
+}
+
+// isCommandFailure reports whether the command failed on its own terms - a
+// non-zero exit status or its timeout - rather than Task failing to run it.
+func isCommandFailure(err error) bool {
+	if _, ok := errors.AsType[interp.ExitStatus](err); ok {
+		return true
+	}
+	_, ok := errors.AsType[*errors.TaskTimeoutError](err)
+	return ok
+}
+
+// timedOut reports whether ctx was cancelled by the given timeout rather than by
+// an inherited deadline, which a derived context reports as its own.
+func timedOut(ctx context.Context, timeout *errors.TaskTimeoutError) bool {
+	return timeout != nil && errors.Is(context.Cause(ctx), timeout)
+}
+
+// executionState is the outcome of a task execution, shared with the callers
+// that join it. err is written before done is closed; read it only once closed.
+type executionState struct {
+	done chan struct{}
+	err  error
 }
 
 func (e *Executor) startExecution(ctx context.Context, t *ast.Task, execute func(ctx context.Context) error) error {
@@ -447,7 +490,7 @@ func (e *Executor) startExecution(ctx context.Context, t *ast.Task, execute func
 
 	e.executionHashesMutex.Lock()
 
-	if otherExecutionCtx, ok := e.executionHashes[h]; ok {
+	if other, ok := e.executionHashes[h]; ok {
 		e.executionHashesMutex.Unlock()
 		e.Logger.VerboseErrf(logger.Magenta, "task: skipping execution of task: %s\n", h)
 
@@ -455,17 +498,33 @@ func (e *Executor) startExecution(ctx context.Context, t *ast.Task, execute func
 		reacquire := e.releaseConcurrencyLimit()
 		defer reacquire()
 
-		<-otherExecutionCtx.Done()
-		return nil
+		// A finished execution wins even if our context is done: there is
+		// nothing left to wait for, and select would otherwise pick at random.
+		select {
+		case <-other.done:
+			return other.err
+		default:
+		}
+
+		select {
+		case <-other.done:
+			// Its outcome is ours. Returning nil would hide an execution that
+			// failed, or that another caller's timeout killed.
+			return other.err
+		case <-ctx.Done():
+			// We did not start it, so we can only stop waiting. Report the cause
+			// so that our own timeout surfaces as one.
+			return context.Cause(ctx)
+		}
 	}
 
-	ctx, cancel := context.WithCancel(ctx)
-	defer cancel()
-
-	e.executionHashes[h] = ctx
+	state := &executionState{done: make(chan struct{})}
+	e.executionHashes[h] = state
 	e.executionHashesMutex.Unlock()
 
-	return execute(ctx)
+	defer close(state.done)
+	state.err = execute(ctx)
+	return state.err
 }
 
 // FindMatchingTasks returns a list of tasks that match the given call. A task

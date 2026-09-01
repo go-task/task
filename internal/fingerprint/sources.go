@@ -1,6 +1,14 @@
 package fingerprint
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/go-task/task/v3/errors"
+)
+
+// ErrInvalidMethod lets callers that only need a fingerprint value tell a bad
+// method name apart from a checker failing on the sources themselves.
+var ErrInvalidMethod = errors.New("invalid method")
 
 func NewSourcesChecker(method, tempDir string, dry bool) (SourcesCheckable, error) {
 	switch method {
@@ -11,6 +19,6 @@ func NewSourcesChecker(method, tempDir string, dry bool) (SourcesCheckable, erro
 	case "none":
 		return NoneChecker{}, nil
 	default:
-		return nil, fmt.Errorf(`task: invalid method "%s"`, method)
+		return nil, fmt.Errorf(`task: %w "%s"`, ErrInvalidMethod, method)
 	}
 }

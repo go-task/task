@@ -53,6 +53,7 @@ func (checker *ChecksumChecker) IsUpToDate(t *ast.Task) (bool, error) {
 	if len(t.Generates) > 0 {
 		// For each specified 'generates' field, check whether the files actually exist
 		for _, g := range t.Generates {
+			// Exclusion patterns don't represent output files; skip them.
 			if g.Negate {
 				continue
 			}
@@ -87,8 +88,12 @@ func (*ChecksumChecker) Kind() string {
 	return "checksum"
 }
 
+// readerOnly hides any WriterTo/ReaderFrom implementation of the wrapped
+// reader, forcing io.CopyBuffer to use the caller-provided buffer.
+type readerOnly struct{ io.Reader }
+
 func (c *ChecksumChecker) checksum(t *ast.Task) (string, error) {
-	sources, err := Globs(t.Dir, t.Sources)
+	sources, err := Globs(t.Dir, t.Sources, t.ShouldUseGitignore())
 	if err != nil {
 		return "", err
 	}
@@ -100,14 +105,18 @@ func (c *ChecksumChecker) checksum(t *ast.Task) (string, error) {
 		if _, err := io.CopyBuffer(h, strings.NewReader(filepath.Base(f)), buf); err != nil {
 			return "", err
 		}
-		f, err := os.Open(f)
+		file, err := os.Open(f)
 		if err != nil {
 			return "", err
 		}
-		if _, err = io.CopyBuffer(h, f, buf); err != nil {
+		// Wrap the file in a plain io.Reader so io.CopyBuffer cannot take the
+		// (*os.File).WriteTo fast path, which ignores buf and allocates a fresh
+		// 32KiB buffer for every file. Reusing buf keeps this loop allocation-free.
+		if _, err = io.CopyBuffer(h, readerOnly{file}, buf); err != nil {
+			file.Close()
 			return "", err
 		}
-		f.Close()
+		file.Close()
 	}
 
 	hash := h.Sum128()
@@ -118,7 +127,7 @@ func (checker *ChecksumChecker) checksumFilePath(t *ast.Task) string {
 	return filepath.Join(checker.tempDir, "checksum", normalizeFilename(t.Name()))
 }
 
-var checksumFilenameRegexp = regexp.MustCompile("[^A-z0-9]")
+var checksumFilenameRegexp = regexp.MustCompile("[^[:alnum:]]")
 
 // replaces invalid characters on filenames with "-"
 func normalizeFilename(f string) string {

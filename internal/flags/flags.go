@@ -87,6 +87,7 @@ var (
 	Cert                string
 	CertKey             string
 	Interactive         bool
+	TempDir             string
 )
 
 func init() {
@@ -143,16 +144,27 @@ func init() {
 	pflag.BoolVarP(&ExitCode, "exit-code", "x", false, "Pass-through the exit code of the task command.")
 	pflag.StringVarP(&Dir, "dir", "d", "", "Sets the directory in which Task will execute and look for a Taskfile.")
 	pflag.StringVarP(&Entrypoint, "taskfile", "t", "", `Choose which Taskfile to run. Defaults to "Taskfile.yml".`)
-	pflag.StringVarP(&Output.Name, "output", "o", "", "Sets output style: [interleaved|group|prefixed].")
-	pflag.StringVar(&Output.Group.Begin, "output-group-begin", "", "Message template to print before a task's grouped output.")
-	pflag.StringVar(&Output.Group.End, "output-group-end", "", "Message template to print after a task's grouped output.")
-	pflag.BoolVar(&Output.Group.ErrorOnly, "output-group-error-only", false, "Swallow output from successful tasks.")
+	pflag.StringVar(&TempDir, "temp-dir", getConfig(config, "TEMP_DIR", func() *string { return config.TempDir }, ""), "Sets the directory used to store Task temporary files, such as checksums. Relative paths are relative to the root Taskfile.")
+	pflag.StringVarP(&Output.Name, "output", "o", getConfig(config, "OUTPUT", func() *string { return nil }, ""), "Sets output style: [interleaved|group|prefixed].")
+	pflag.StringVar(&Output.Group.Begin, "output-group-begin", getConfig(config, "OUTPUT_GROUP_BEGIN", func() *string { return nil }, ""), "Message template to print before a task's grouped output.")
+	pflag.StringVar(&Output.Group.End, "output-group-end", getConfig(config, "OUTPUT_GROUP_END", func() *string { return nil }, ""), "Message template to print after a task's grouped output.")
+	pflag.BoolVar(&Output.Group.ErrorOnly, "output-group-error-only", getConfig(config, "OUTPUT_GROUP_ERROR_ONLY", func() *bool { return nil }, false), "Swallow output from successful tasks.")
 	pflag.BoolVarP(&Color, "color", "c", getConfig(config, "COLOR", func() *bool { return config.Color }, true), "Colored output. Enabled by default. Set flag to false or use NO_COLOR=1 to disable.")
 	pflag.IntVarP(&Concurrency, "concurrency", "C", getConfig(config, "CONCURRENCY", func() *int { return config.Concurrency }, 0), "Limit number of tasks to run concurrently.")
 	pflag.DurationVarP(&Interval, "interval", "I", 0, "Interval to watch for changes.")
 	pflag.BoolVarP(&Failfast, "failfast", "F", getConfig(config, "FAILFAST", func() *bool { return &config.Failfast }, false), "When running tasks in parallel, stop all tasks if one fails.")
 	pflag.BoolVarP(&Global, "global", "g", false, "Runs global Taskfile, from $HOME/{T,t}askfile.{yml,yaml}.")
 	pflag.BoolVar(&Experiments, "experiments", false, "Lists all the available experiments and whether or not they are enabled.")
+	pflag.BoolVar(&Download, "download", false, "Forces task to download remote Taskfiles and ignore any cached versions.")
+	pflag.BoolVar(&Offline, "offline", getConfig(config, "REMOTE_OFFLINE", func() *bool { return config.Remote.Offline }, false), "Forces Task to only use local or cached Taskfiles.")
+	pflag.StringSliceVar(&TrustedHosts, "trusted-hosts", getConfig(config, "REMOTE_TRUSTED_HOSTS", func() *[]string { return &config.Remote.TrustedHosts }, nil), "List of trusted hosts for remote Taskfiles (comma-separated).")
+	pflag.DurationVar(&Timeout, "timeout", getConfig(config, "REMOTE_TIMEOUT", func() *time.Duration { return config.Remote.Timeout }, time.Second*10), "Timeout for downloading remote Taskfiles.")
+	pflag.BoolVar(&ClearCache, "clear-cache", false, "Clear the remote cache.")
+	pflag.DurationVar(&CacheExpiryDuration, "expiry", getConfig(config, "REMOTE_CACHE_EXPIRY", func() *time.Duration { return config.Remote.CacheExpiry }, 0), "Expiry duration for cached remote Taskfiles.")
+	pflag.StringVar(&RemoteCacheDir, "remote-cache-dir", getConfig(config, "REMOTE_CACHE_DIR", func() *string { return config.Remote.CacheDir }, env.GetTaskEnv("REMOTE_DIR")), "Directory to cache remote Taskfiles.")
+	pflag.StringVar(&CACert, "cacert", getConfig(config, "REMOTE_CACERT", func() *string { return config.Remote.CACert }, ""), "Path to a custom CA certificate for HTTPS connections.")
+	pflag.StringVar(&Cert, "cert", getConfig(config, "REMOTE_CERT", func() *string { return config.Remote.Cert }, ""), "Path to a client certificate for HTTPS connections.")
+	pflag.StringVar(&CertKey, "cert-key", getConfig(config, "REMOTE_CERT_KEY", func() *string { return config.Remote.CertKey }, ""), "Path to a client certificate key for HTTPS connections.")
 
 	// Gentle force experiment will override the force flag and add a new force-all flag
 	if experiments.GentleForce.Enabled() {
@@ -162,19 +174,6 @@ func init() {
 		pflag.BoolVarP(&ForceAll, "force", "f", false, "Forces execution even when the task is up-to-date.")
 	}
 
-	// Remote Taskfiles experiment will adds the "download" and "offline" flags
-	if experiments.RemoteTaskfiles.Enabled() {
-		pflag.BoolVar(&Download, "download", false, "Downloads a cached version of a remote Taskfile.")
-		pflag.BoolVar(&Offline, "offline", getConfig(config, "REMOTE_OFFLINE", func() *bool { return config.Remote.Offline }, false), "Forces Task to only use local or cached Taskfiles.")
-		pflag.StringSliceVar(&TrustedHosts, "trusted-hosts", getConfig(config, "REMOTE_TRUSTED_HOSTS", func() *[]string { return &config.Remote.TrustedHosts }, nil), "List of trusted hosts for remote Taskfiles (comma-separated).")
-		pflag.DurationVar(&Timeout, "timeout", getConfig(config, "REMOTE_TIMEOUT", func() *time.Duration { return config.Remote.Timeout }, time.Second*10), "Timeout for downloading remote Taskfiles.")
-		pflag.BoolVar(&ClearCache, "clear-cache", false, "Clear the remote cache.")
-		pflag.DurationVar(&CacheExpiryDuration, "expiry", getConfig(config, "REMOTE_CACHE_EXPIRY", func() *time.Duration { return config.Remote.CacheExpiry }, 0), "Expiry duration for cached remote Taskfiles.")
-		pflag.StringVar(&RemoteCacheDir, "remote-cache-dir", getConfig(config, "REMOTE_CACHE_DIR", func() *string { return config.Remote.CacheDir }, env.GetTaskEnv("REMOTE_DIR")), "Directory to cache remote Taskfiles.")
-		pflag.StringVar(&CACert, "cacert", getConfig(config, "REMOTE_CACERT", func() *string { return config.Remote.CACert }, ""), "Path to a custom CA certificate for HTTPS connections.")
-		pflag.StringVar(&Cert, "cert", getConfig(config, "REMOTE_CERT", func() *string { return config.Remote.Cert }, ""), "Path to a client certificate for HTTPS connections.")
-		pflag.StringVar(&CertKey, "cert-key", getConfig(config, "REMOTE_CERT_KEY", func() *string { return config.Remote.CertKey }, ""), "Path to a client certificate key for HTTPS connections.")
-	}
 	pflag.Parse()
 
 	// Auto-detect color based on environment when not explicitly configured
@@ -308,6 +307,7 @@ func (o *flagsOption) ApplyToExecutor(e *task.Executor) {
 		task.WithTaskSorter(sorter),
 		task.WithVersionCheck(true),
 		task.WithFailfast(Failfast),
+		task.WithTempDirPath(TempDir),
 	)
 }
 

@@ -19,6 +19,7 @@ type TaskRC struct {
 	Interactive  *bool           `yaml:"interactive"`
 	Remote       Remote          `yaml:"remote"`
 	Failfast     bool            `yaml:"failfast"`
+	TempDir      *string         `yaml:"temp-dir"`
 	Experiments  map[string]int  `yaml:"experiments"`
 }
 
@@ -70,4 +71,5 @@ func (t *TaskRC) Merge(other *TaskRC) {
 	t.Concurrency = cmp.Or(other.Concurrency, t.Concurrency)
 	t.Interactive = cmp.Or(other.Interactive, t.Interactive)
 	t.Failfast = cmp.Or(other.Failfast, t.Failfast)
+	t.TempDir = cmp.Or(other.TempDir, t.TempDir)
 }

@@ -117,7 +117,12 @@ func printTaskCommands(l *logger.Logger, t *ast.Task) {
 		isCommand := c.Cmd != ""
 		l.Outf(logger.Default, " - ")
 		if isCommand {
-			l.Outf(logger.Yellow, "%s\n", c.Cmd)
+			// Use the masked command so secret values are not leaked in summaries
+			logCmd := c.LogCmd
+			if logCmd == "" {
+				logCmd = c.Cmd
+			}
+			l.Outf(logger.Yellow, "%s\n", logCmd)
 		} else {
 			l.Outf(logger.Green, "Task: %s\n", c.Task)
 		}
@@ -196,6 +201,11 @@ func printTaskEnv(l *logger.Logger, t *ast.Task) {
 // formatVarValue formats a variable value based on its type.
 // Handles static values, shell commands (sh:), references (ref:), and maps.
 func formatVarValue(v ast.Var) string {
+	// Never expose secret variables in the summary, whatever their type
+	if v.Secret {
+		return "*****"
+	}
+
 	// Shell command - check this first before Value
 	// because dynamic vars may have both Sh and an empty Value
 	if v.Sh != nil {
@@ -247,15 +257,17 @@ func printTaskRequires(l *logger.Logger, t *ast.Task) {
 	l.Outf(logger.Default, "  vars:\n")
 
 	for _, v := range t.Requires.Vars {
-		// If the variable has enum constraints, format accordingly
-		if len(v.Enum) > 0 {
+		if v.Enum != nil && len(v.Enum.Value) > 0 {
 			l.Outf(logger.Yellow, "    - %s:\n", v.Name)
 			l.Outf(logger.Yellow, "        enum:\n")
-			for _, enumValue := range v.Enum {
+			for _, enumValue := range v.Enum.Value {
 				l.Outf(logger.Yellow, "          - %s\n", enumValue)
 			}
+		} else if v.Enum != nil && v.Enum.Ref != "" {
+			l.Outf(logger.Yellow, "    - %s:\n", v.Name)
+			l.Outf(logger.Yellow, "        enum:\n")
+			l.Outf(logger.Yellow, "          ref: %s\n", v.Enum.Ref)
 		} else {
-			// Simple required variable
 			l.Outf(logger.Yellow, "    - %s\n", v.Name)
 		}
 	}
@@ -283,7 +295,9 @@ func isEnvVar(key string, envVars map[string]bool) bool {
 		key == "TASKFILE_DIR" ||
 		key == "USER_WORKING_DIR" ||
 		key == "ALIAS" ||
-		key == "MATCH" {
+		key == "MATCH" ||
+		key == "PATH_LIST_SEPARATOR" ||
+		key == "FILE_PATH_SEPARATOR" {
 		return true
 	}
 	return envVars[key]

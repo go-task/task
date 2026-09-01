@@ -3,8 +3,11 @@ package task
 import (
 	"slices"
 
+	"github.com/elliotchance/orderedmap/v3"
+
 	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/input"
+	"github.com/go-task/task/v3/internal/templater"
 	"github.com/go-task/task/v3/internal/term"
 	"github.com/go-task/task/v3/taskfile/ast"
 )
@@ -32,7 +35,7 @@ func (e *Executor) promptDepsVars(calls []*Call) error {
 
 	// Collect all missing vars from the dependency tree
 	visited := make(map[string]bool)
-	varsMap := make(map[string]*ast.VarsWithValidation)
+	varsMap := orderedmap.NewOrderedMap[string, *ast.VarsWithValidation]()
 
 	var collect func(call *Call) error
 	collect = func(call *Call) error {
@@ -42,8 +45,8 @@ func (e *Executor) promptDepsVars(calls []*Call) error {
 		}
 
 		for _, v := range getMissingRequiredVars(compiledTask) {
-			if _, exists := varsMap[v.Name]; !exists {
-				varsMap[v.Name] = v
+			if !varsMap.Has(v.Name) {
+				varsMap.Set(v.Name, resolveEnumRefForPrompt(v, compiledTask.Vars))
 			}
 		}
 
@@ -73,15 +76,15 @@ func (e *Executor) promptDepsVars(calls []*Call) error {
 		}
 	}
 
-	if len(varsMap) == 0 {
+	if varsMap.Len() == 0 {
 		return nil
 	}
 
 	prompter := e.newPrompter()
 	e.promptedVars = ast.NewVars()
 
-	for _, v := range varsMap {
-		value, err := prompter.Prompt(v.Name, v.Enum)
+	for v := range varsMap.Values() {
+		value, err := prompter.Prompt(v.Name, getEnumValues(v.Enum))
 		if err != nil {
 			if errors.Is(err, input.ErrCancelled) {
 				return &errors.TaskCancelledByUserError{TaskName: "interactive prompt"}
@@ -120,7 +123,7 @@ func (e *Executor) promptTaskVars(t *ast.Task, call *Call) (bool, error) {
 	prompter := e.newPrompter()
 
 	for _, v := range missing {
-		value, err := prompter.Prompt(v.Name, v.Enum)
+		value, err := prompter.Prompt(v.Name, getEnumValues(v.Enum))
 		if err != nil {
 			if errors.Is(err, input.ErrCancelled) {
 				return false, &errors.TaskCancelledByUserError{TaskName: t.Name()}
@@ -168,7 +171,7 @@ func (e *Executor) areTaskRequiredVarsSet(t *ast.Task) error {
 	for i, v := range missing {
 		missingVars[i] = errors.MissingVar{
 			Name:          v.Name,
-			AllowedValues: v.Enum,
+			AllowedValues: getEnumValues(v.Enum),
 		}
 	}
 
@@ -187,11 +190,12 @@ func (e *Executor) areTaskRequiredVarsAllowedValuesSet(t *ast.Task) error {
 	for _, requiredVar := range t.Requires.Vars {
 		varValue, _ := t.Vars.Get(requiredVar.Name)
 
+		enumValues := getEnumValues(requiredVar.Enum)
 		value, isString := varValue.Value.(string)
-		if isString && requiredVar.Enum != nil && !slices.Contains(requiredVar.Enum, value) {
+		if isString && len(enumValues) > 0 && !slices.Contains(enumValues, value) {
 			notAllowedValuesVars = append(notAllowedValuesVars, errors.NotAllowedVar{
 				Value: value,
-				Enum:  requiredVar.Enum,
+				Enum:  enumValues,
 				Name:  requiredVar.Name,
 			})
 		}
@@ -205,4 +209,24 @@ func (e *Executor) areTaskRequiredVarsAllowedValuesSet(t *ast.Task) error {
 	}
 
 	return nil
+}
+
+func getEnumValues(e *ast.Enum) []string {
+	if e == nil {
+		return nil
+	}
+	return e.Value
+}
+
+// resolveEnumRefForPrompt returns a copy of v with its enum ref resolved into
+// concrete values, so the interactive prompter can show a Select. Refs that
+// depend on dynamic vars may not resolve here and fall back to free-form input.
+func resolveEnumRefForPrompt(v *ast.VarsWithValidation, vars *ast.Vars) *ast.VarsWithValidation {
+	if v.Enum == nil || v.Enum.Ref == "" || len(v.Enum.Value) > 0 {
+		return v
+	}
+	vCopy := v.DeepCopy()
+	cache := &templater.Cache{Vars: vars}
+	_ = resolveEnumRefs(&ast.Requires{Vars: []*ast.VarsWithValidation{vCopy}}, cache)
+	return vCopy
 }

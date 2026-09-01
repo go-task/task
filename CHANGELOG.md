@@ -1,8 +1,165 @@
 # Changelog
 
+## Unreleased
+
+### 🚀 Features
+
+- Added official [pre-commit](https://pre-commit.com/) support via a
+  `.pre-commit-hooks.yaml` at the repository root (#2562).
+
+### 📦 Package API
+
+- Bumped the minimum Go version to 1.26. Task follows Go's two-latest support
+  window, and is now tested against 1.26 and 1.27. This only affects projects
+  importing Task as a Go module (#2920 by @vmaerten).
+
+## v3.53.1 - 2026-08-18
+
+### 🚀 Features
+
+- **Remote Taskfiles are now generally available!** This has been an
+  experimental feature for 3 years, but is now enabled by default. Massive
+  thanks to all those that contributed and gave feedback (too many to list
+  here). We've also given the
+  [Remote Taskfiles documentation](https://taskfile.dev/docs/remote-taskfiles) a
+  bit of a polish (#1317, #2906 by @pd93).
+- Added a per-command `timeout` that terminates a command once it exceeds the
+  given duration (Go duration syntax). It covers shell commands, task calls,
+  deferred commands, `deps` and the `if` condition, obeys `ignore_error`, and
+  reports exit code `124`. Callers that join a `run: once` or `when_changed`
+  task already running now honor their own `timeout`, and inherit that task's
+  failure instead of being told it succeeded (#1569, #2898 by @vmaerten).
+- Considerably improve performance of fingerprinting on large repositories
+  (monorepos). Fingerprinting is up to 86% faster and make up to 70% fewer
+  memory allocations on the more advanced scenarios. Benchmarks were added as
+  well. We're basically skipping work when not needed. (#2853, #2883 by
+  @Napolitain, #2884 by @Napolitain).
+- Further improved fingerprinting performance on large repositories: hashing
+  source files now reuses a single buffer, reducing memory allocations by ~98%
+  and wall-clock time by ~7% (#2925 by @vmaerten).
+- `includes.excludes` can now exclude a whole namespace: append `:*` to the
+  namespace name, e.g. `excludes: ['debug:*']`. Bare entries still match a
+  single task name exactly (#2300, #2959 by @xmxxc).
+- Added support for `enum.ref` in `--interactive` prompts. Required vars using
+  `enum.ref` now show the selection list like static enums, instead of falling
+  back to free-form input (#2817 by @vmaerten).
+- Added Nushell completions, available via `task --completion nu`. They complete
+  task names and aliases, every flag with its description, and the values of
+  `--completion`, `--output` and `--sort` (#2966 by @vmaerten).
+- Added a verbose log line for failed tasks. In `--verbose` mode, a task whose
+  command exits non-zero now reports `task: "<name>" failed: <error>` instead of
+  stopping without a trace (#2240 by @Drino).
+
+### 🐛 Fixes
+
+- Fixed a pinned `checksum:` not being verified when a remote Taskfile came from
+  the cache (#2980 by @vmaerten).
+- Fixed the fingerprint variable (`{{.CHECKSUM}}`/`{{.TIMESTAMP}}`) ignoring a
+  `method:` set at the Taskfile level: the variable now follows the same method
+  resolution as the up-to-date check. Only the variable matching the effective
+  method is injected, so a task inheriting a Taskfile-level `method: timestamp`
+  gets `{{.TIMESTAMP}}` and no longer a `{{.CHECKSUM}}` (which now renders as an
+  empty string), and neither variable is injected when the effective method is
+  `none` (#2924 by @vmaerten).
+- Fixed `ref:` in `for: matrix:` and `enum:` only accepting literal lists. Refs
+  computed with template functions like `keys` or `splitList` no longer fail
+  with "must resolve to a list" (#2544, #2956 by @no-hup).
+- Fixed pressing `Esc` at an interactive variable prompt not cancelling the run
+  (#2942 by @anilnatha).
+- Fixed `joinUrl` collapsing the `//` in a URL scheme (e.g. producing
+  `http:/localhost` instead of `http://localhost`) (#2915 by @vsaraikin).
+- Fixed the JSON schema rejecting `ignore_error` on a command inside a `for`
+  loop. Editors no longer flag a Taskfile that Task runs perfectly fine (#2044
+  by @gokeefe-atb).
+- Fixed the JSON schema rejecting more keys the Taskfile parser accepts:
+  `ignore_error` on a `task:` call, and `if`, `set` and `shopt` on a command
+  inside a `for` loop (#2967 by @vmaerten).
+
+### 📚 Documentation & Website
+
+- Updated taskfile versions doc to mention when version checks were introduced
+  (#2184 by @jubr).
+- Load the sidebar data and titles/excerpts from the blog post markdown document
+  and its frontmatter on the website (#2981 by @pd93).
+
+## v3.53.0 - 2026-08-18
+
+- Failed due to an issue with our release process.
+
+## v3.52.0 - 2026-07-02
+
+- Fixed --interactive prompts for required vars sometimes appearing in a random
+  order. Prompts now follow the order the vars are declared in the Taskfile.
+  (#2871 by @caproven)
+- Fixed Fish completions not being picked up correctly by installing them to
+  Fish's `vendor_completions.d` directory instead of `completions` (#2850, #2859
+  by @Legimity).
+- PowerShell completions now work with aliases of the `task` command, not just
+  the `task` binary itself (#2852 by @kojiishi).
+- Fixed task and namespace aliases not being completed by the Zsh completion. A
+  `show-aliases` zstyle can turn this off (#2865, #2864 by @vmaerten).
+- Fixed task names containing certain characters (e.g. `\`, `_`, `^`) leaking
+  into checksum/timestamp filenames, breaking `sources:`/`generates:` up-to-date
+  detection (#2886 by @s3onghyun).
+- Fixed `for: matrix:` loops using `ref:` rows producing wrong values when the
+  same task was run concurrently (e.g. by parallel `deps`) with different vars
+  (#2890, #2894 by @amitmishra11).
+- Added a `secret: true` flag for variables that masks their value in logs,
+  `task --summary`, and command output (#2514 by @vmaerten).
+- Added the `use_gitignore` setting (global or per-task) to skip files matched
+  by your `.gitignore` when fingerprinting `sources`/`generates` and when
+  watching (#2773 by @vmaerten).
+- Added support for configuring output flags (`--output`,
+  `--output-group-begin`, `--output-group-end`, `--output-group-error-only`) via
+  the `TASK_OUTPUT*` environment variables (#2873 by @liiight).
+- Added a `--temp-dir` flag (with `TASK_TEMP_DIR` env var and `temp-dir` taskrc
+  config) to customise the directory where Task stores temporary files such as
+  checksums. Relative paths are resolved against the root Taskfile (#2891 by
+  @kjasn).
+- Defined environment variable behavior for remote taskfiles (#2267, #2847 by
+  @vmaerten).
+- Added support for remote Taskfiles hosted on Azure DevOps, whose git URLs use
+  a `/_git/` path segment rather than a `.git` suffix (#2904 by @pd93).
+- Re-added the example remote taskfile at
+  [taskfile.dev/Taskfile.yml](https://taskfile.dev/Taskfile.yml) (#2905 by
+  @pd93).
+- Fixed malformed `includes:` entries (missing `taskfile`/`dir`) reporting a
+  misleading "include cycle detected" error instead of a clear configuration
+  error (#1881, #2892 by @Lewin671).
+
+## v3.51.1 - 2026-05-16
+
+- A significant performance boost was achieved for large Taskfiles (monorepos)
+  by skipping templating altogether when the string is static (#2820 by @romnn).
+- Added `absPath` template function that resolves a path to its absolute form,
+  cleaning `..` and `.` components (#2681, #2788 by @mateenanjum).
+- Added `joinEnv` function to join paths based on your oprating system: `;` for
+  Windows and `:` elsewhere, and `joinUrl` to join URL paths. Also, added two
+  new special variables: `FILE_PATH_SEPARATOR` which returns `\` on Windows and
+  `/` elsewhere, and `PATH_LIST_SEPARATOR` which returns `;` on Windows and `:`
+  elsewhere (#2406, #2408 by @solvingj).
+- Update the shell interpreter with a regression fix (#2812, #2832 by
+  @andreynering).
+- Fix potential panic with the shell interpreter (#2810 by @trulede).
+
+## v3.50.0 - 2026-04-13
+
+- Added `enum.ref` support in `requires`: enum constraints can now reference
+  variables or template pipelines (e.g., `ref: .ALLOWED_ENVS`) instead of
+  duplicating static lists. Combined with `sh:` variables, this enables fully
+  dynamic enum validation (#2678 by @vmaerten).
+- Fixed Fish completion using hardcoded `task` binary name instead of
+  `$GO_TASK_PROGNAME` for experiments cache (#2730, #2727 by @SergioChan).
+- Fixed watch mode ignoring SIGHUP signal, causing the watcher to exit instead
+  of restarting (#2764, #2642).
+- Fixed a long time bug where the task wouldn't re-run as it should when using
+  `method: timestamp` and the files listed on `generates:` were deleted. This
+  makes `method: timestamp` behaves the same as `method: checksum` (#1230, #2716
+  by @drichardson).
+
 ## v3.49.1 - 2026-03-08
 
-* Reverted #2632 for now, which caused some regressions. That change will be
+- Reverted #2632 for now, which caused some regressions. That change will be
   reworked (#2720, #2722, #2723).
 
 ## v3.49.0 - 2026-03-07

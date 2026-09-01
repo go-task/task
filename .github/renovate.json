@@ -6,20 +6,34 @@
     "schedule:weekly",
     ":semanticCommitTypeAll(chore)"
   ],
-  "mode": "full",
   "addLabels":["area: dependencies"],
+  "osvVulnerabilityAlerts": true,
+  "postUpdateOptions": ["gomodTidy"],
+  "constraints": {
+    "go": "1.26.4"
+  },
   "customManagers": [
     {
       "customType": "regex",
-      "fileMatch": ["^\\.github/workflows/.*\\.ya?ml$"],
+      "managerFilePatterns": ["/^\\.github/workflows/.*\\.ya?ml$/"],
       "matchStrings": [
-        "uses:\\s*golangci/golangci-lint-action@\\S+\\s+with:\\s+version:\\s*(?<currentValue>v[\\d.]+)"
+        "uses:\\s*golangci/golangci-lint-action@\\S+(?:\\s*#[^\\n]*)?\\s+with:\\s+version:\\s*(?<currentValue>v[\\d.]+)"
       ],
       "datasourceTemplate": "github-releases",
       "depNameTemplate": "golangci/golangci-lint"
     }
   ],
   "packageRules": [
+    {
+      "matchManagers": ["gomod"],
+      "matchDepTypes": ["indirect"],
+      "enabled": true
+    },
+    {
+      "matchUpdateTypes": ["digest", "pinDigest"],
+      "groupName": "all non-major dependencies",
+      "groupSlug": "all-minor-patch"
+    },
     {
       "matchManagers": ["github-actions"],
       "addLabels": ["area: github actions"]
@@ -31,6 +45,23 @@
     {
       "matchCategories": ["golang"],
       "addLabels": ["lang: go"]
+    },
+    {
+      "matchManagers": ["gomod"],
+      "matchDepTypes": ["golang"],
+      "enabled": false
+    },
+    {
+      "description": "Skip releases whose own `go` directive exceeds ours. Without this, `gomodTidy` propagates their requirement into our go.mod and breaks the older Go versions in the CI matrix.",
+      "matchManagers": ["gomod"],
+      "constraintsFiltering": "strict"
+    },
+    {
+      "description": "Digest updates carry no release metadata, so constraintsFiltering cannot inspect their `go` directive. Indirect deps pinned to a pseudo-version are the ones that slip through, so don't chase upstream HEAD for those; they move when the direct dep that pulls them in moves.",
+      "matchManagers": ["gomod"],
+      "matchDepTypes": ["indirect"],
+      "matchUpdateTypes": ["digest"],
+      "enabled": false
     }
   ]
 }

@@ -2,6 +2,7 @@ package ast
 
 import (
 	"iter"
+	"strings"
 	"sync"
 
 	"github.com/elliotchance/orderedmap/v3"
@@ -35,6 +36,27 @@ type (
 	// Includes structure.
 	IncludeElement orderedmap.Element[string, *Include]
 )
+
+func (include *Include) isTaskExcluded(name string) bool {
+	if include == nil {
+		return false
+	}
+
+	for _, exclude := range include.Excludes {
+		namespace, ok := strings.CutSuffix(exclude, NamespaceSeparator+"*")
+		if ok {
+			if namespace != "" && strings.HasPrefix(name, namespace+NamespaceSeparator) {
+				return true
+			}
+			continue
+		}
+
+		if name == exclude {
+			return true
+		}
+	}
+	return false
+}
 
 // NewIncludes creates a new instance of Includes and initializes it with the
 // provided set of elements, if any. The elements are added in the order they
@@ -170,6 +192,9 @@ func (include *Include) UnmarshalYAML(node *yaml.Node) error {
 		}
 		if err := node.Decode(&includedTaskfile); err != nil {
 			return errors.NewTaskfileDecodeError(err, node)
+		}
+		if strings.TrimSpace(includedTaskfile.Taskfile) == "" && strings.TrimSpace(includedTaskfile.Dir) == "" {
+			return errors.NewTaskfileDecodeError(nil, node).WithMessage("include must specify taskfile or dir")
 		}
 		include.Taskfile = includedTaskfile.Taskfile
 		include.Dir = includedTaskfile.Dir

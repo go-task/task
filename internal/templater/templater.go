@@ -68,6 +68,13 @@ func ReplaceWithExtra[T any](v T, cache *Cache, extra map[string]any) T {
 		return v
 	}
 
+	// Optimization: skip if string is not a template
+	if s, ok := any(v).(string); ok {
+		if !strings.Contains(s, "{{") {
+			return v
+		}
+	}
+
 	// Initialize the cache map if it's not already initialized
 	if cache.cacheMap == nil {
 		cache.cacheMap = cache.Vars.ToCacheMap()
@@ -82,6 +89,10 @@ func ReplaceWithExtra[T any](v T, cache *Cache, extra map[string]any) T {
 
 	// Traverse the value and parse any template variables
 	copy, err := deepcopy.TraverseStringsFunc(v, func(v string) (string, error) {
+		// Optimization: skip if string is not a template
+		if !strings.Contains(v, "{{") {
+			return v, nil
+		}
 		tpl, err := template.New("").Funcs(templateFuncs).Parse(v)
 		if err != nil {
 			return v, err
@@ -121,14 +132,15 @@ func ReplaceVar(v ast.Var, cache *Cache) ast.Var {
 
 func ReplaceVarWithExtra(v ast.Var, cache *Cache, extra map[string]any) ast.Var {
 	if v.Ref != "" {
-		return ast.Var{Value: ResolveRef(v.Ref, cache)}
+		return ast.Var{Value: ResolveRef(v.Ref, cache), Secret: v.Secret}
 	}
 	return ast.Var{
-		Value: ReplaceWithExtra(v.Value, cache, extra),
-		Sh:    ReplaceWithExtra(v.Sh, cache, extra),
-		Live:  v.Live,
-		Ref:   v.Ref,
-		Dir:   v.Dir,
+		Value:  ReplaceWithExtra(v.Value, cache, extra),
+		Sh:     ReplaceWithExtra(v.Sh, cache, extra),
+		Live:   v.Live,
+		Ref:    v.Ref,
+		Dir:    v.Dir,
+		Secret: v.Secret,
 	}
 }
 
