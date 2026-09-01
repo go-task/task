@@ -4,10 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"testing"
 
 	tea "charm.land/bubbletea/v2"
 	"charm.land/lipgloss/v2"
+	"github.com/charmbracelet/x/ansi"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -55,6 +57,32 @@ func TestTUIModelTracksTasksAndOutput(t *testing.T) {
 	assert.Contains(t, m.View().Content, "test")
 }
 
+func TestTUIModelDistinguishesCanceledTasksAndShowsStatusWords(t *testing.T) {
+	t.Parallel()
+
+	m := newTUIModel(func() {}, false)
+	m = updateTUIModel(t, m, started(1, 0, "root"))
+	m = updateTUIModel(t, m, scheduled(2, 1, "pending-task", false))
+	m = updateTUIModel(t, m, started(3, 1, "running-task"))
+	m = updateTUIModel(t, m, started(4, 1, "successful-task"))
+	m = updateTUIModel(t, m, taskFinishedMsg{id: 4})
+	m = updateTUIModel(t, m, started(5, 1, "failed-task"))
+	m = updateTUIModel(t, m, taskFinishedMsg{id: 5, err: errors.New("failed")})
+	m = updateTUIModel(t, m, started(6, 1, "canceled-task"))
+	m = updateTUIModel(t, m, taskFinishedMsg{id: 6, err: fmt.Errorf("wrapped: %w", context.Canceled)})
+
+	assert.Equal(t, taskCanceled, m.byID[6].state)
+	assert.Equal(t, "■", taskIconText(taskCanceled))
+	list := m.taskList(50, 20)
+	for _, status := range []string{"pending", "running", "success", "failed", "canceled"} {
+		assert.Contains(t, list, status)
+	}
+	name, status := taskNameStatus("build", taskRunning, 20)
+	assert.Equal(t, "build running", name+" "+status)
+	name, status = taskNameStatus("fail-fast-success-1s", taskSucceeded, 13)
+	assert.Equal(t, "fa…1s success", name+" "+status)
+}
+
 func TestTUIModelFitsMinimumTerminalSize(t *testing.T) {
 	t.Parallel()
 
@@ -69,6 +97,20 @@ func TestTUIModelFitsMinimumTerminalSize(t *testing.T) {
 	assert.LessOrEqual(t, lipgloss.Height(view), 8)
 	left, right := m.renderPanes(newTUILayout(40, 8))
 	assert.Equal(t, lipgloss.Height(left), lipgloss.Height(right))
+}
+
+func TestTUILayoutGivesWideTerminalsMoreTaskSpace(t *testing.T) {
+	t.Parallel()
+
+	compact := newTUILayout(80, 24)
+	wide := newTUILayout(240, 24)
+
+	assert.Zero(t, compact.gap)
+	assert.Greater(t, wide.leftOuterWidth, compact.leftOuterWidth)
+	assert.Equal(t, 72, wide.leftOuterWidth)
+	assert.Equal(t, compact.leftOuterWidth-tuiPanelStyle.GetHorizontalFrameSize(), compact.leftInnerWidth)
+	assert.Equal(t, compact.rightOuterWidth-tuiPanelStyle.GetHorizontalFrameSize(), compact.rightInnerWidth)
+	assert.Equal(t, compact.bodyHeight-tuiPanelStyle.GetVerticalFrameSize(), compact.innerHeight)
 }
 
 func TestTUIModelKeepsRepeatedTaskCallsSeparate(t *testing.T) {
@@ -134,9 +176,13 @@ func TestTUIModelFlattensExecutionsUnderTheirRoot(t *testing.T) {
 
 	rows := m.taskRows()
 	assert.Equal(t, []string{"root", "child", "grandchild", "second-child", "other-root"}, rowNames(rows))
-	assert.Equal(t, []int{0, 1, 1, 1, 0}, rowDepths(rows))
-	assert.Equal(t, []string{"", "├─ ", "├─ ", "└─ ", ""}, rowPrefixes(rows))
-	assert.Contains(t, m.taskList(30, 10), "▌")
+	list := ansi.Strip(m.taskList(30, 10))
+	lines := strings.Split(list, "\n")
+	require.GreaterOrEqual(t, len(lines), 3)
+	assert.True(t, strings.HasPrefix(lines[1], "● root"), lines[1])
+	assert.True(t, strings.HasPrefix(lines[2], "▌● child"), lines[2])
+	assert.NotContains(t, list, "├")
+	assert.NotContains(t, list, "└")
 }
 
 func TestTUIModelShowsPendingTasksAndDoesNotSelectRoot(t *testing.T) {
@@ -317,22 +363,6 @@ func rowNames(rows []tuiTaskRow) []string {
 		names[i] = row.task.name
 	}
 	return names
-}
-
-func rowDepths(rows []tuiTaskRow) []int {
-	depths := make([]int, len(rows))
-	for i, row := range rows {
-		depths[i] = row.depth
-	}
-	return depths
-}
-
-func rowPrefixes(rows []tuiTaskRow) []string {
-	prefixes := make([]string, len(rows))
-	for i, row := range rows {
-		prefixes[i] = row.treePrefix
-	}
-	return prefixes
 }
 
 func numberedLines(count int) string {

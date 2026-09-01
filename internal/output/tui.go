@@ -2,6 +2,7 @@ package output
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"strings"
@@ -183,6 +184,7 @@ const (
 	taskRunning
 	taskSucceeded
 	taskFailed
+	taskCanceled
 )
 
 type paneFocus uint8
@@ -295,7 +297,9 @@ func (m tuiModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if task == nil {
 			return m, nil
 		}
-		if msg.err != nil {
+		if errors.Is(msg.err, context.Canceled) {
+			task.state = taskCanceled
+		} else if msg.err != nil {
 			task.state = taskFailed
 		} else {
 			task.state = taskSucceeded
@@ -536,8 +540,10 @@ type tuiLayout struct {
 func newTUILayout(width, height int) tuiLayout {
 	width, height = max(width, 1), max(height, 1)
 	bodyHeight := max(height-1, 3)
-	gap := 1
-	leftOuterWidth := min(max(width*30/100, 20), 36)
+	horizontalFrame := tuiPanelStyle.GetHorizontalFrameSize()
+	verticalFrame := tuiPanelStyle.GetVerticalFrameSize()
+	gap := 0
+	leftOuterWidth := min(max(width*35/100, 22), 72)
 	if right := width - gap - leftOuterWidth; right < 16 {
 		leftOuterWidth = max(width-gap-16, 8)
 	}
@@ -548,9 +554,9 @@ func newTUILayout(width, height int) tuiLayout {
 		gap:             gap,
 		leftOuterWidth:  leftOuterWidth,
 		rightOuterWidth: rightOuterWidth,
-		leftInnerWidth:  max(leftOuterWidth-4, 1),
-		rightInnerWidth: max(rightOuterWidth-4, 1),
-		innerHeight:     max(bodyHeight-2, 1),
+		leftInnerWidth:  max(leftOuterWidth-horizontalFrame, 1),
+		rightInnerWidth: max(rightOuterWidth-horizontalFrame, 1),
+		innerHeight:     max(bodyHeight-verticalFrame, 1),
 	}
 }
 
@@ -657,9 +663,7 @@ func (m tuiModel) taskName(task *tuiTask) string {
 }
 
 type tuiTaskRow struct {
-	task       *tuiTask
-	depth      int
-	treePrefix string
+	task *tuiTask
 }
 
 func (m tuiModel) taskRows() []tuiTaskRow {
@@ -683,13 +687,8 @@ func (m tuiModel) taskRows() []tuiTaskRow {
 	rows := make([]tuiTaskRow, 0, len(m.tasks))
 	for _, root := range roots {
 		rows = append(rows, tuiTaskRow{task: root})
-		children := childrenByRoot[root.id]
-		for i, child := range children {
-			connector := "└─ "
-			if i < len(children)-1 {
-				connector = "├─ "
-			}
-			rows = append(rows, tuiTaskRow{task: child, depth: 1, treePrefix: connector})
+		for _, child := range childrenByRoot[root.id] {
+			rows = append(rows, tuiTaskRow{task: child})
 		}
 	}
 	for _, task := range standalone {
@@ -882,25 +881,36 @@ func (m tuiModel) taskList(width, height int) string {
 	end := min(len(rows), m.listTop+max(height-1, 1))
 	for i := m.listTop; i < end; i++ {
 		row := rows[i]
-		branch := row.treePrefix
 		if row.task.isRoot {
-			prefix := "  " + taskIcon(row.task.state) + " "
-			name := truncateRunes(m.taskName(row.task), max(width-lipgloss.Width(prefix), 1))
-			lines = append(lines, prefix+tuiRootStyle.Render(name))
+			prefix := taskIcon(row.task.state) + " "
+			name, status := taskNameStatus(m.taskName(row.task), row.task.state, width-lipgloss.Width(prefix))
+			suffix := ""
+			if status != "" {
+				suffix = " " + taskStateLabel(row.task.state, status)
+			}
+			lines = append(lines, prefix+tuiRootStyle.Render(name)+suffix)
 			continue
 		}
 		selected := row.task.id == m.selectedID
-		marker := "  "
+		marker := " "
 		if selected {
-			marker = "▌ "
+			marker = "▌"
 		}
-		plainPrefix := marker + branch + taskIconText(row.task.state) + " "
-		name := truncateRunes(m.taskName(row.task), max(width-lipgloss.Width(plainPrefix), 1))
+		plainPrefix := marker + taskIconText(row.task.state) + " "
+		name, status := taskNameStatus(m.taskName(row.task), row.task.state, width-lipgloss.Width(plainPrefix))
 		if selected {
-			lines = append(lines, tuiSelectedStyle.Width(width).Render(plainPrefix+name))
+			suffix := ""
+			if status != "" {
+				suffix = " " + status
+			}
+			lines = append(lines, tuiSelectedStyle.Width(width).Render(plainPrefix+name+suffix))
 			continue
 		}
-		line := tuiTreeStyle.Render(marker+branch) + taskIcon(row.task.state) + " " + name
+		suffix := ""
+		if status != "" {
+			suffix = " " + taskStateLabel(row.task.state, status)
+		}
+		line := tuiTreeStyle.Render(marker) + taskIcon(row.task.state) + " " + name + suffix
 		lines = append(lines, line)
 	}
 	return strings.Join(lines, "\n")
@@ -924,17 +934,40 @@ func paneTitle(left, right string, width int) string {
 	return tuiTitleStyle.Render(left) + strings.Repeat(" ", space) + tuiHelpStyle.Render(right)
 }
 
-func taskIcon(state taskState) string {
+func taskStateStyle(state taskState) lipgloss.Style {
 	switch state {
 	case taskRunning:
-		return tuiRunningStyle.Render(taskIconText(state))
+		return tuiRunningStyle
 	case taskSucceeded:
-		return tuiSuccessStyle.Render(taskIconText(state))
+		return tuiSuccessStyle
 	case taskFailed:
-		return tuiFailureStyle.Render(taskIconText(state))
+		return tuiFailureStyle
+	case taskCanceled:
+		return tuiCanceledStyle
 	default:
-		return tuiHelpStyle.Render(taskIconText(state))
+		return tuiHelpStyle
 	}
+}
+
+func taskIcon(state taskState) string {
+	return taskStateStyle(state).Render(taskIconText(state))
+}
+
+func taskStateLabel(state taskState, label string) string {
+	return taskStateStyle(state).Render(label)
+}
+
+func taskNameStatus(name string, state taskState, width int) (string, string) {
+	if width <= 1 {
+		return truncateMiddleRunes(name, max(width, 1)), ""
+	}
+	statusWidth := min(lipgloss.Width(taskStateText(state)), max(width-2, 0))
+	if statusWidth == 0 {
+		return truncateMiddleRunes(name, width), ""
+	}
+	status := truncateRunes(taskStateText(state), statusWidth)
+	name = truncateMiddleRunes(name, max(width-lipgloss.Width(status)-1, 1))
+	return name, status
 }
 
 func taskIconText(state taskState) string {
@@ -945,8 +978,25 @@ func taskIconText(state taskState) string {
 		return "✓"
 	case taskFailed:
 		return "✗"
+	case taskCanceled:
+		return "■"
 	default:
 		return "·"
+	}
+}
+
+func taskStateText(state taskState) string {
+	switch state {
+	case taskRunning:
+		return "running"
+	case taskSucceeded:
+		return "success"
+	case taskFailed:
+		return "failed"
+	case taskCanceled:
+		return "canceled"
+	default:
+		return "pending"
 	}
 }
 
@@ -966,6 +1016,19 @@ func truncateRunes(s string, width int) string {
 	return string(runes[:width-1]) + "…"
 }
 
+func truncateMiddleRunes(s string, width int) string {
+	runes := []rune(s)
+	if len(runes) <= width {
+		return s
+	}
+	if width <= 1 {
+		return "…"
+	}
+	left := (width - 1) / 2
+	right := width - 1 - left
+	return string(runes[:left]) + "…" + string(runes[len(runes)-right:])
+}
+
 var (
 	tuiAccentColor = compat.AdaptiveColor{Light: lipgloss.Color("#006A83"), Dark: lipgloss.Color("#5FD7FF")}
 	tuiPanelStyle  = lipgloss.NewStyle().
@@ -973,15 +1036,17 @@ var (
 			BorderForeground(compat.AdaptiveColor{Light: lipgloss.Color("#87909A"), Dark: lipgloss.Color("#59636E")}).
 			PaddingLeft(1).
 			PaddingRight(1)
+
 	tuiTitleStyle    = lipgloss.NewStyle().Bold(true).Foreground(tuiAccentColor)
 	tuiRootStyle     = lipgloss.NewStyle().Bold(true)
 	tuiSelectedStyle = lipgloss.NewStyle().
 				Bold(true).
 				Foreground(compat.AdaptiveColor{Light: lipgloss.Color("#10212B"), Dark: lipgloss.Color("#F4F7FA")}).
 				Background(compat.AdaptiveColor{Light: lipgloss.Color("#D9E8ED"), Dark: lipgloss.Color("#34444D")})
-	tuiTreeStyle    = lipgloss.NewStyle().Foreground(compat.AdaptiveColor{Light: lipgloss.Color("#77818A"), Dark: lipgloss.Color("#697580")})
-	tuiRunningStyle = lipgloss.NewStyle().Foreground(compat.AdaptiveColor{Light: lipgloss.Color("#8A6500"), Dark: lipgloss.Color("#FFD75F")})
-	tuiSuccessStyle = lipgloss.NewStyle().Foreground(compat.AdaptiveColor{Light: lipgloss.Color("#257A3E"), Dark: lipgloss.Color("#5FD787")})
-	tuiFailureStyle = lipgloss.NewStyle().Foreground(compat.AdaptiveColor{Light: lipgloss.Color("#B42318"), Dark: lipgloss.Color("#FF6B6B")})
-	tuiHelpStyle    = lipgloss.NewStyle().Foreground(compat.AdaptiveColor{Light: lipgloss.Color("#66717C"), Dark: lipgloss.Color("#89949F")})
+	tuiTreeStyle     = lipgloss.NewStyle().Foreground(compat.AdaptiveColor{Light: lipgloss.Color("#77818A"), Dark: lipgloss.Color("#697580")})
+	tuiRunningStyle  = lipgloss.NewStyle().Foreground(compat.AdaptiveColor{Light: lipgloss.Color("#8A6500"), Dark: lipgloss.Color("#FFD75F")})
+	tuiSuccessStyle  = lipgloss.NewStyle().Foreground(compat.AdaptiveColor{Light: lipgloss.Color("#257A3E"), Dark: lipgloss.Color("#5FD787")})
+	tuiFailureStyle  = lipgloss.NewStyle().Foreground(compat.AdaptiveColor{Light: lipgloss.Color("#B42318"), Dark: lipgloss.Color("#FF6B6B")})
+	tuiCanceledStyle = lipgloss.NewStyle().Foreground(compat.AdaptiveColor{Light: lipgloss.Color("#5F6670"), Dark: lipgloss.Color("#AAB2BD")})
+	tuiHelpStyle     = lipgloss.NewStyle().Foreground(compat.AdaptiveColor{Light: lipgloss.Color("#66717C"), Dark: lipgloss.Color("#89949F")})
 )

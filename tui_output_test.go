@@ -2,6 +2,7 @@ package task_test
 
 import (
 	"bytes"
+	"context"
 	"io"
 	"os"
 	"path/filepath"
@@ -86,13 +87,53 @@ tasks:
 	}
 }
 
+func TestTaskLifecycleReportsFailfastCancellation(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	taskfile := `version: '3'
+tasks:
+  default:
+    failfast: true
+    deps: [fail, slow]
+  fail:
+    cmds:
+      - sleep 0.1
+      - exit 1
+  slow:
+    cmds:
+      - sleep 5
+`
+	require.NoError(t, os.WriteFile(filepath.Join(dir, "Taskfile.yml"), []byte(taskfile), 0o600))
+
+	e := task.NewExecutor(
+		task.WithDir(dir),
+		task.WithStdout(io.Discard),
+		task.WithStderr(io.Discard),
+		task.WithSilent(true),
+		task.WithForce(true),
+	)
+	require.NoError(t, e.Setup())
+	recorder := &lifecycleRecorder{}
+	e.Output = recorder
+
+	require.Error(t, e.Run(t.Context(), &task.Call{Task: "default"}))
+	byName := make(map[string]output.TaskInvocation)
+	for _, invocation := range recorder.started {
+		byName[invocation.Name] = invocation
+	}
+	require.Contains(t, byName, "slow")
+	assert.ErrorIs(t, recorder.finishErrors[byName["slow"].ID], context.Canceled)
+}
+
 type lifecycleRecorder struct {
-	mutex     sync.Mutex
-	scheduled []output.TaskInvocation
-	started   []output.TaskInvocation
-	finished  []uint64
-	outputs   map[uint64]*bytes.Buffer
-	joined    map[uint64]uint64
+	mutex        sync.Mutex
+	scheduled    []output.TaskInvocation
+	started      []output.TaskInvocation
+	finished     []uint64
+	outputs      map[uint64]*bytes.Buffer
+	joined       map[uint64]uint64
+	finishErrors map[uint64]error
 }
 
 func (*lifecycleRecorder) WrapWriter(_ io.Writer, _ io.Writer, _ string, _ *templater.Cache) (io.Writer, io.Writer, output.CloseFunc) {
@@ -125,10 +166,14 @@ func (r *lifecycleRecorder) TaskScheduled(task output.TaskInvocation) {
 	r.scheduled = append(r.scheduled, task)
 }
 
-func (r *lifecycleRecorder) TaskFinished(id uint64, _ error) {
+func (r *lifecycleRecorder) TaskFinished(id uint64, err error) {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
 	r.finished = append(r.finished, id)
+	if r.finishErrors == nil {
+		r.finishErrors = make(map[uint64]error)
+	}
+	r.finishErrors[id] = err
 }
 
 func (r *lifecycleRecorder) TaskJoined(id, ownerID uint64) {

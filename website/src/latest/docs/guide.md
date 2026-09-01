@@ -2805,7 +2805,9 @@ task is shown as a non-selectable heading on the left. Tasks reached from it
 appear beneath it in a one-level list and remain visible while pending,
 running, or finished. Repeated executions have separate rows and output views;
 calls that join an existing `run: once` or `run: when_changed` execution share
-its row. The output of the selected task is shown on the right. Use Tab or the
+its row. Each row shows its status as both an icon and a word, including a
+distinct `canceled` state for work interrupted by fail-fast cancellation. The
+output of the selected task is shown on the right. Use Tab or the
 left/right arrow keys to focus a pane. In the task pane,
 use the up/down arrows or `j`/`k` to select a task. In the output pane, those
 keys scroll; Page Up and Page Down also scroll the output directly. You can
