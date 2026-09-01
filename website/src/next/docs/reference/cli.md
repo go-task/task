@@ -72,6 +72,19 @@ task --init
 task -i
 ```
 
+### `task --tui [tasks...]`
+
+Open the interactive task launcher. Type to filter, use the arrow keys to select
+a task, then press Enter to run it normally or Ctrl+T to run it in the execution
+dashboard. When task names are supplied, skip the launcher and open the
+execution dashboard directly.
+
+```bash
+task --tui
+task --tui build test
+task -T --parallel build test
+```
+
 ::: tip
 
 Combine `--list` or `--list-all` with `--silent` (`-ls` or `-as` for shortants)
@@ -238,7 +251,7 @@ task build --temp-dir .task-cache
 
 #### `-o, --output <mode>`
 
-Set output style. Available modes: `interleaved`, `group`, `prefixed`, `tui`.
+Set output style. Available modes: `interleaved`, `group`, `prefixed`.
 
 - **Environment variable**: [`TASK_OUTPUT`](./environment.md#task-output)
 
@@ -279,30 +292,6 @@ Only show command output on non-zero exit codes.
 task test --output group --output-group-error-only
 ```
 
-#### `--output-tui-status <style>`
-
-Set how task status is displayed in TUI output. Available styles: `icons`,
-`labels`. The default is `icons`.
-
-- **Environment variable**:
-  [`TASK_OUTPUT_TUI_STATUS`](./environment.md#task-output-tui-status)
-
-```bash
-task test --output tui --output-tui-status labels
-```
-
-#### `--output-tui-task-navigator <mode>`
-
-Set how tasks are organized in the TUI task navigator. Available modes: `list`,
-`tree`. The default is `list`.
-
-- **Environment variable**:
-  [`TASK_OUTPUT_TUI_TASK_NAVIGATOR`](./environment.md#task-output-tui-task-navigator)
-
-```bash
-task test --output tui --output-tui-task-navigator tree
-```
-
 #### `-c, --color`
 
 Control colored output. Enabled by default.
@@ -314,6 +303,31 @@ Control colored output. Enabled by default.
 task build --color=false
 # or use environment variable
 NO_COLOR=1 task build
+```
+
+### TUI
+
+#### `-T, --tui`
+
+Open the interactive task launcher, or the execution dashboard when task names
+are provided.
+
+#### `--tui-status <style>`
+
+Set how task status is displayed in the TUI. Available styles: `icons`,
+`labels`. The default is `icons`.
+
+```bash
+task --tui --tui-status labels test
+```
+
+#### `--tui-task-navigator <mode>`
+
+Set how tasks are organized in the TUI task navigator. Available modes: `list`,
+`tree`. The default is `list`.
+
+```bash
+task --tui --tui-task-navigator tree test
 ```
 
 ### Task Information

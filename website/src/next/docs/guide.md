@@ -2692,13 +2692,12 @@ the shell in real-time. This is good for having live feedback for logging
 printed by commands, but the output can become messy if you have multiple
 commands running simultaneously and printing lots of stuff.
 
-To make this more customizable, there are currently four different output
+To make this more customizable, there are currently three different output
 options you can choose:
 
 - `interleaved` (default)
 - `group`
 - `prefixed`
-- `tui`
 
 To choose another one, just set it to root in the Taskfile:
 
@@ -2812,11 +2811,28 @@ $ task default
 [print-baz] baz
 ```
 
-### `tui` output
+## Interactive TUI
 
-The `tui` output opens an interactive, full-screen Terminal User Interface (TUI).
-The left pane shows a task navigator and the right pane shows the output of the
-currently selected task.
+Run `task --tui` (or `task -T`) to open an interactive, full-screen Terminal
+User Interface (TUI). The launcher lists the available non-internal tasks and
+their descriptions. Type to filter by task name or description and use the
+up/down arrows to select a task. Press Enter to leave the TUI and run it with
+Task's normal terminal output, or press Ctrl+T to run it in the execution
+dashboard. Escape clears the current filter.
+
+You can skip the launcher by providing task names directly:
+
+```shell
+$ task --tui build test lint
+$ task --tui --parallel build test lint
+```
+
+Each requested task is displayed as an independent root. As with regular Task
+invocations, multiple requested tasks run sequentially by default; pass
+`--parallel` to run them concurrently.
+
+During execution, the left pane shows a task navigator and the right pane shows
+the output of the currently selected task.
 
 The requested root task appears at the top and can be selected to inspect output
 from commands that it runs directly. When the root only orchestrates other
@@ -2827,21 +2843,10 @@ execution share one entry. With the tree navigator, tasks are nested beneath the
 task that invoked them. Joined calls then remain visible at each location with a
 `↳` marker and share the owner's status and output.
 
-The TUI output can be configured with the `tui` option in the Taskfile:
-
-```yaml
-output:
-  tui:
-    # Whether to show the task navigator as a flat list or a tree of tasks.
-    task_navigator: list # list or tree; default: list
-
-    # Whether to show the status of tasks as icons or text labels.
-    status: icons # icons or labels; default: icons
-```
-
 Each task shows a status icon, including a distinct canceled state for work
-interrupted by fail-fast cancellation. The `labels` status option replaces the
-icons with text labels.
+interrupted by fail-fast cancellation. Pass `--tui-status labels` to replace
+the icons with text labels. Pass `--tui-task-navigator tree` to nest tasks under
+the task that invoked them instead of using the default list navigator.
 
 Use Tab or the left/right arrow keys to switch between the task navigator and
 the output pane. Clicking either pane also focuses it.
@@ -2863,16 +2868,15 @@ controls above remain available. Press `c` again or Escape to return to the
 two-pane view.
 
 ```shell
-$ task --output tui build test lint
-$ task --output tui --output-tui-task-navigator tree --output-tui-status labels build
+$ task --tui --tui-task-navigator tree --tui-status labels build
 ```
 
 Pressing `q` while tasks are running requests cancellation and closes the TUI
 after Task's execution has returned. After execution finishes normally, the TUI
 remains open so its output can be inspected; press Enter or `q` to close it.
 
-This mode requires an interactive terminal. It is intended for local use; use
-one of the stream-based modes in CI or when redirecting output. Watch mode,
+The TUI requires an interactive terminal. It is intended for local use; use one
+of the stream-based output modes in CI or when redirecting output. Watch mode,
 interactive commands, and interactive variable prompting are not currently
 supported. Task confirmation prompts can be accepted up front with `--yes`.
 
