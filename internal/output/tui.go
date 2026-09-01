@@ -29,6 +29,7 @@ type TUI struct {
 	input        io.Reader
 	output       io.Writer
 	hideInternal bool
+	statusLabels bool
 
 	mutex   sync.RWMutex
 	program *tea.Program
@@ -47,11 +48,20 @@ func NewTUI(log *logger.Logger, options ast.OutputTUI) (*TUI, error) {
 	if !log.AssumeTerm && !term.IsTerminal() {
 		return nil, fmt.Errorf(`task: output style "tui" requires an interactive terminal`)
 	}
+	statusLabels := false
+	switch options.Status {
+	case "", "icons":
+	case "labels":
+		statusLabels = true
+	default:
+		return nil, fmt.Errorf(`task: invalid TUI status style %q: expected "icons" or "labels"`, options.Status)
+	}
 	return &TUI{
 		logger:       log,
 		input:        log.Stdin,
 		output:       log.Stdout,
 		hideInternal: options.HideInternal,
+		statusLabels: statusLabels,
 		pending:      make(map[uint64]pendingOutput),
 	}, nil
 }
@@ -89,6 +99,7 @@ func (t *TUI) Run(ctx context.Context, run func(context.Context) error) error {
 	defer cancel()
 
 	model := newTUIModel(cancel, t.hideInternal)
+	model.statusLabels = t.statusLabels
 	program := tea.NewProgram(
 		model,
 		tea.WithInput(t.input),
@@ -242,6 +253,7 @@ type tuiModel struct {
 	err          error
 	cancel       context.CancelFunc
 	hideInternal bool
+	statusLabels bool
 
 	selectingText bool
 	selectionView string
@@ -663,7 +675,8 @@ func (m tuiModel) taskName(task *tuiTask) string {
 }
 
 type tuiTaskRow struct {
-	task *tuiTask
+	task       *tuiTask
+	treePrefix string
 }
 
 func (m tuiModel) taskRows() []tuiTaskRow {
@@ -687,8 +700,13 @@ func (m tuiModel) taskRows() []tuiTaskRow {
 	rows := make([]tuiTaskRow, 0, len(m.tasks))
 	for _, root := range roots {
 		rows = append(rows, tuiTaskRow{task: root})
-		for _, child := range childrenByRoot[root.id] {
-			rows = append(rows, tuiTaskRow{task: child})
+		children := childrenByRoot[root.id]
+		for i, child := range children {
+			prefix := "├─ "
+			if i == len(children)-1 {
+				prefix = "└─ "
+			}
+			rows = append(rows, tuiTaskRow{task: child, treePrefix: prefix})
 		}
 	}
 	for _, task := range standalone {
@@ -882,8 +900,11 @@ func (m tuiModel) taskList(width, height int) string {
 	for i := m.listTop; i < end; i++ {
 		row := rows[i]
 		if row.task.isRoot {
-			prefix := taskIcon(row.task.state) + " "
-			name, status := taskNameStatus(m.taskName(row.task), row.task.state, width-lipgloss.Width(prefix))
+			prefix := ""
+			if !m.statusLabels {
+				prefix = taskIcon(row.task.state) + " "
+			}
+			name, status := taskNameStatus(m.taskName(row.task), row.task.state, width-lipgloss.Width(prefix), m.statusLabels)
 			suffix := ""
 			if status != "" {
 				suffix = " " + taskStateLabel(row.task.state, status)
@@ -892,12 +913,12 @@ func (m tuiModel) taskList(width, height int) string {
 			continue
 		}
 		selected := row.task.id == m.selectedID
-		marker := " "
-		if selected {
-			marker = "▌"
+		plainIcon := ""
+		if !m.statusLabels {
+			plainIcon = taskIconText(row.task.state) + " "
 		}
-		plainPrefix := marker + taskIconText(row.task.state) + " "
-		name, status := taskNameStatus(m.taskName(row.task), row.task.state, width-lipgloss.Width(plainPrefix))
+		plainPrefix := row.treePrefix + plainIcon
+		name, status := taskNameStatus(m.taskName(row.task), row.task.state, width-lipgloss.Width(plainPrefix), m.statusLabels)
 		if selected {
 			suffix := ""
 			if status != "" {
@@ -910,7 +931,11 @@ func (m tuiModel) taskList(width, height int) string {
 		if status != "" {
 			suffix = " " + taskStateLabel(row.task.state, status)
 		}
-		line := tuiTreeStyle.Render(marker) + taskIcon(row.task.state) + " " + name + suffix
+		icon := ""
+		if !m.statusLabels {
+			icon = taskIcon(row.task.state) + " "
+		}
+		line := tuiTreeStyle.Render(row.treePrefix) + icon + name + suffix
 		lines = append(lines, line)
 	}
 	return strings.Join(lines, "\n")
@@ -957,7 +982,10 @@ func taskStateLabel(state taskState, label string) string {
 	return taskStateStyle(state).Render(label)
 }
 
-func taskNameStatus(name string, state taskState, width int) (string, string) {
+func taskNameStatus(name string, state taskState, width int, showStatus bool) (string, string) {
+	if !showStatus {
+		return truncateMiddleRunes(name, max(width, 1)), ""
+	}
 	if width <= 1 {
 		return truncateMiddleRunes(name, max(width, 1)), ""
 	}

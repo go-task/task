@@ -24,9 +24,14 @@ func TestBuildTUI(t *testing.T) {
 	require.NoError(t, err)
 	assert.IsType(t, &TUI{}, got)
 
-	got, err = BuildFor(&ast.Output{Name: "tui", TUI: ast.OutputTUI{HideInternal: true}}, &logger.Logger{AssumeTerm: true})
+	got, err = BuildFor(&ast.Output{Name: "tui", TUI: ast.OutputTUI{HideInternal: true, Status: "labels"}}, &logger.Logger{AssumeTerm: true})
 	require.NoError(t, err)
 	assert.True(t, got.(*TUI).hideInternal)
+	assert.True(t, got.(*TUI).statusLabels)
+
+	_, err = BuildFor(&ast.Output{Name: "tui", TUI: ast.OutputTUI{Status: "unknown"}}, &logger.Logger{AssumeTerm: true})
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), `expected "icons" or "labels"`)
 }
 
 func TestTUIModelTracksTasksAndOutput(t *testing.T) {
@@ -61,6 +66,7 @@ func TestTUIModelDistinguishesCanceledTasksAndShowsStatusWords(t *testing.T) {
 	t.Parallel()
 
 	m := newTUIModel(func() {}, false)
+	m.statusLabels = true
 	m = updateTUIModel(t, m, started(1, 0, "root"))
 	m = updateTUIModel(t, m, scheduled(2, 1, "pending-task", false))
 	m = updateTUIModel(t, m, started(3, 1, "running-task"))
@@ -77,10 +83,26 @@ func TestTUIModelDistinguishesCanceledTasksAndShowsStatusWords(t *testing.T) {
 	for _, status := range []string{"pending", "running", "success", "failed", "canceled"} {
 		assert.Contains(t, list, status)
 	}
-	name, status := taskNameStatus("build", taskRunning, 20)
+	name, status := taskNameStatus("build", taskRunning, 20, true)
 	assert.Equal(t, "build running", name+" "+status)
-	name, status = taskNameStatus("fail-fast-success-1s", taskSucceeded, 13)
+	name, status = taskNameStatus("fail-fast-success-1s", taskSucceeded, 13, true)
 	assert.Equal(t, "fa…1s success", name+" "+status)
+}
+
+func TestTUIStatusLabelsAreOptionalAndDisabledByDefault(t *testing.T) {
+	t.Parallel()
+
+	m := newTUIModel(func() {}, false)
+	m = updateTUIModel(t, m, started(1, 0, "root"))
+	m = updateTUIModel(t, m, started(2, 1, "worker"))
+
+	icons := ansi.Strip(m.taskList(30, 10))
+	assert.Contains(t, icons, "└─ ● worker")
+	assert.NotContains(t, icons, "running")
+	m.statusLabels = true
+	labels := ansi.Strip(m.taskList(30, 10))
+	assert.Contains(t, labels, "└─ worker running")
+	assert.NotContains(t, labels, "●")
 }
 
 func TestTUIModelFitsMinimumTerminalSize(t *testing.T) {
@@ -178,11 +200,11 @@ func TestTUIModelFlattensExecutionsUnderTheirRoot(t *testing.T) {
 	assert.Equal(t, []string{"root", "child", "grandchild", "second-child", "other-root"}, rowNames(rows))
 	list := ansi.Strip(m.taskList(30, 10))
 	lines := strings.Split(list, "\n")
-	require.GreaterOrEqual(t, len(lines), 3)
+	require.GreaterOrEqual(t, len(lines), 5)
 	assert.True(t, strings.HasPrefix(lines[1], "● root"), lines[1])
-	assert.True(t, strings.HasPrefix(lines[2], "▌● child"), lines[2])
-	assert.NotContains(t, list, "├")
-	assert.NotContains(t, list, "└")
+	assert.True(t, strings.HasPrefix(lines[2], "├─ ● child"), lines[2])
+	assert.True(t, strings.HasPrefix(lines[3], "├─ ● grandchild"), lines[3])
+	assert.True(t, strings.HasPrefix(lines[4], "└─ ● second-child"), lines[4])
 }
 
 func TestTUIModelShowsPendingTasksAndDoesNotSelectRoot(t *testing.T) {

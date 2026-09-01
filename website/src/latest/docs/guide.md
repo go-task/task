@@ -2802,11 +2802,12 @@ $ task default
 
 The `tui` output opens an interactive, full-screen view. The requested root
 task is shown as a non-selectable heading on the left. Tasks reached from it
-appear beneath it in a one-level list and remain visible while pending,
+appear beneath it in a one-level tree and remain visible while pending,
 running, or finished. Repeated executions have separate rows and output views;
 calls that join an existing `run: once` or `run: when_changed` execution share
-its row. Each row shows its status as both an icon and a word, including a
-distinct `canceled` state for work interrupted by fail-fast cancellation. The
+its row. Each row shows a status icon by default, including a distinct canceled
+state for work interrupted by fail-fast cancellation. Text labels can be used
+instead of icons with the `status` option. The
 output of the selected task is shown on the right. Use Tab or the
 left/right arrow keys to focus a pane. In the task pane,
 use the up/down arrows or `j`/`k` to select a task. In the output pane, those
@@ -2829,6 +2830,7 @@ is configured in the Taskfile:
 output:
   tui:
     hide_internal: true
+    status: labels
 ```
 
 This mode requires an interactive terminal. It is intended for local use; use

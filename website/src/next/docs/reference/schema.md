@@ -47,6 +47,7 @@ output:
 output:
   tui:
     hide_internal: false
+    status: icons # icons or labels
 ```
 
 ### `method`

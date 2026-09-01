@@ -71,7 +71,8 @@ type OutputGroup struct {
 
 // OutputTUI contains options specific to the TUI output style.
 type OutputTUI struct {
-	HideInternal bool `yaml:"hide_internal"`
+	HideInternal bool   `yaml:"hide_internal"`
+	Status       string `yaml:"status"`
 }
 
 // IsSet returns true if and only if a custom output style is set.

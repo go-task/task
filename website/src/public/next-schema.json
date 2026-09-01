@@ -719,6 +719,12 @@
               "description": "Hides internal tasks from the TUI task list",
               "type": "boolean",
               "default": false
+            },
+            "status": {
+              "description": "Chooses whether task statuses use icons or text labels",
+              "type": "string",
+              "enum": ["icons", "labels"],
+              "default": "icons"
             }
           },
           "additionalProperties": false
