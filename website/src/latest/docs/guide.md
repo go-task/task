@@ -2690,13 +2690,12 @@ the shell in real-time. This is good for having live feedback for logging
 printed by commands, but the output can become messy if you have multiple
 commands running simultaneously and printing lots of stuff.
 
-To make this more customizable, there are currently four different output
+To make this more customizable, there are currently three different output
 options you can choose:
 
 - `interleaved` (default)
 - `group`
 - `prefixed`
-- `tui`
 
 To choose another one, just set it to root in the Taskfile:
 
@@ -2799,48 +2798,6 @@ $ task default
 [print-bar] bar
 [print-baz] baz
 ```
-
-The `tui` output opens an interactive, full-screen view. The requested root
-task is shown as a non-selectable heading on the left. Tasks reached from it are
-shown in a list and remain visible while pending, running, or finished. Repeated
-executions have separate rows and output views. Calls that join an existing
-`run: once` or `run: when_changed` execution share one list row. The task
-navigator can instead be configured as a tree. In that mode, tasks are nested
-beneath the task that invoked them, and joined calls remain in each tree location
-with a `↳` marker while sharing the owner's status and output.
-Each row shows a status icon by default, including a distinct canceled
-state for work interrupted by fail-fast cancellation. Text labels can be used
-instead of icons with the `status` option. The
-output of the selected task is shown on the right. Use Tab or the
-left/right arrow keys to focus a pane. In the task pane,
-use the up/down arrows or `j`/`k` to select a task. In the output pane, those
-keys scroll; Page Up and Page Down also scroll the output directly. You can
-click a task to select it and use the mouse wheel over either pane. Press `c`
-to open a frozen, output-only view for selecting and copying text with the
-terminal. The arrow keys or `j`/`k`, Page Up/Down, and `g`/`G` scroll that
-view; press `c` or Escape to resume interaction. Pressing `q`
-while tasks are still running cancels them. The view remains open after
-execution completes so that output can be inspected.
-
-```shell
-$ task --output tui build test lint
-```
-
-Internal tasks are shown by default. They can be hidden when the output mode
-is configured in the Taskfile:
-
-```yaml
-output:
-  tui:
-    hide_internal: true
-    status: labels
-    task_navigator: tree
-```
-
-This mode requires an interactive terminal. It is intended for local use; use
-one of the stream-based modes in CI or when redirecting output. Watch mode,
-interactive commands, and interactive variable prompting are not currently
-supported. Task confirmation prompts can be accepted up front with `--yes`.
 
 ::: tip
 

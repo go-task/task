@@ -29,7 +29,7 @@ version: '3'
 
 - **Type**: `string` or `object`
 - **Default**: `interleaved`
-- **Options**: `interleaved`, `group`, `prefixed`, `tui`
+- **Options**: `interleaved`, `group`, `prefixed`
 - **Description**: Controls how task output is displayed
 
 ```yaml
@@ -42,13 +42,6 @@ output:
     begin: "::group::{{.TASK}}"
     end: "::endgroup::"
     error_only: false
-
-# TUI options
-output:
-  tui:
-    hide_internal: false
-    status: icons # icons or labels
-    task_navigator: list # list or tree
 ```
 
 ### `method`

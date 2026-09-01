@@ -23,7 +23,6 @@ type TaskInvocation struct {
 	ParentID uint64 // ID of the task call that scheduled this call; zero for roots
 	RootID   uint64 // ID of the root call requested by the user
 	Name     string
-	Internal bool
 }
 
 // Runner is implemented by output modes that need to own the terminal while

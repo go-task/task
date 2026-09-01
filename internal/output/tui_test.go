@@ -25,9 +25,8 @@ func TestBuildTUI(t *testing.T) {
 	assert.IsType(t, &TUI{}, got)
 	assert.Equal(t, taskNavigatorList, got.(*TUI).taskNavigator)
 
-	got, err = BuildFor(&ast.Output{Name: "tui", TUI: ast.OutputTUI{HideInternal: true, Status: "labels", TaskNavigator: "tree"}}, &logger.Logger{AssumeTerm: true})
+	got, err = BuildFor(&ast.Output{Name: "tui", TUI: ast.OutputTUI{Status: "labels", TaskNavigator: "tree"}}, &logger.Logger{AssumeTerm: true})
 	require.NoError(t, err)
-	assert.True(t, got.(*TUI).hideInternal)
 	assert.True(t, got.(*TUI).statusLabels)
 	assert.Equal(t, taskNavigatorTree, got.(*TUI).taskNavigator)
 
@@ -43,7 +42,7 @@ func TestBuildTUI(t *testing.T) {
 func TestTUIModelTracksTasksAndOutput(t *testing.T) {
 	t.Parallel()
 
-	m := newTUIModel(func() {}, false)
+	m := newTUIModel(func() {})
 	m = updateTUIModel(t, m, started(1, 0, "root"))
 	m = updateTUIModel(t, m, started(2, 1, "build"))
 	m = updateTUIModel(t, m, taskOutputMsg{id: 2, name: "build", data: "compiling\r\ndone\r"})
@@ -71,10 +70,10 @@ func TestTUIModelTracksTasksAndOutput(t *testing.T) {
 func TestTUIModelDistinguishesCanceledTasksAndShowsStatusWords(t *testing.T) {
 	t.Parallel()
 
-	m := newTUIModel(func() {}, false)
+	m := newTUIModel(func() {})
 	m.statusLabels = true
 	m = updateTUIModel(t, m, started(1, 0, "root"))
-	m = updateTUIModel(t, m, scheduled(2, 1, "pending-task", false))
+	m = updateTUIModel(t, m, scheduled(2, 1, "pending-task"))
 	m = updateTUIModel(t, m, started(3, 1, "running-task"))
 	m = updateTUIModel(t, m, started(4, 1, "successful-task"))
 	m = updateTUIModel(t, m, taskFinishedMsg{id: 4})
@@ -98,7 +97,7 @@ func TestTUIModelDistinguishesCanceledTasksAndShowsStatusWords(t *testing.T) {
 func TestTUIStatusLabelsAreOptionalAndDisabledByDefault(t *testing.T) {
 	t.Parallel()
 
-	m := newTUIModel(func() {}, false)
+	m := newTUIModel(func() {})
 	m = updateTUIModel(t, m, started(1, 0, "root"))
 	m = updateTUIModel(t, m, started(2, 1, "worker"))
 
@@ -114,7 +113,7 @@ func TestTUIStatusLabelsAreOptionalAndDisabledByDefault(t *testing.T) {
 func TestTUIModelFitsMinimumTerminalSize(t *testing.T) {
 	t.Parallel()
 
-	m := newTUIModel(func() {}, false)
+	m := newTUIModel(func() {})
 	m = updateTUIModel(t, m, tea.WindowSizeMsg{Width: 40, Height: 8})
 	m = updateTUIModel(t, m, started(1, 0, "a-task-with-a-fairly-long-name"))
 
@@ -154,7 +153,7 @@ func TestTUITextTruncationUsesTerminalCellWidth(t *testing.T) {
 func TestTUIModelKeepsRepeatedTaskCallsSeparate(t *testing.T) {
 	t.Parallel()
 
-	m := newTUIModel(func() {}, false)
+	m := newTUIModel(func() {})
 	m = updateTUIModel(t, m, tea.WindowSizeMsg{Width: 80, Height: 20})
 	m = updateTUIModel(t, m, started(1, 0, "root"))
 	m = updateTUIModel(t, m, started(2, 1, "worker"))
@@ -183,13 +182,13 @@ func TestTUIModelKeepsRepeatedTaskCallsSeparate(t *testing.T) {
 func TestTUIModelSharesJoinedExecutionStatusAndOutput(t *testing.T) {
 	t.Parallel()
 
-	m := newTUIModel(func() {}, false)
+	m := newTUIModel(func() {})
 	m.taskNavigator = taskNavigatorTree
 	m = updateTUIModel(t, m, tea.WindowSizeMsg{Width: 80, Height: 20})
 	m = updateTUIModel(t, m, started(1, 0, "root"))
 	m = updateTUIModel(t, m, started(2, 1, "worker"))
 	m = updateTUIModel(t, m, taskOutputMsg{id: 2, name: "worker", data: "shared output"})
-	m = updateTUIModel(t, m, scheduled(3, 1, "worker", false))
+	m = updateTUIModel(t, m, scheduled(3, 1, "worker"))
 	require.Len(t, m.tasks, 3)
 	assert.Contains(t, m.taskList(30, 10), "#1 worker")
 	assert.Contains(t, m.taskList(30, 10), "#2 worker")
@@ -220,13 +219,13 @@ func TestTUIModelSharesJoinedExecutionStatusAndOutput(t *testing.T) {
 func TestTUIModelShowsSharedExecutionInEachTreeLocation(t *testing.T) {
 	t.Parallel()
 
-	m := newTUIModel(func() {}, false)
+	m := newTUIModel(func() {})
 	m.taskNavigator = taskNavigatorTree
 	m = updateTUIModel(t, m, started(1, 0, "root"))
 	m = updateTUIModel(t, m, started(2, 1, "parent-a"))
 	m = updateTUIModel(t, m, started(3, 1, "parent-b"))
 	m = updateTUIModel(t, m, startedUnder(4, 2, 1, "shared"))
-	m = updateTUIModel(t, m, scheduledUnder(5, 3, 1, "shared", false))
+	m = updateTUIModel(t, m, scheduledUnder(5, 3, 1, "shared"))
 	m = updateTUIModel(t, m, taskJoinedMsg{id: 5, ownerID: 4})
 
 	assert.Equal(t, []string{"root", "parent-a", "shared", "parent-b", "shared"}, rowNames(m.taskRows()))
@@ -240,10 +239,10 @@ func TestTUIModelShowsSharedExecutionInEachTreeLocation(t *testing.T) {
 func TestTUIModelMarksOwnerSharedWhenJoinEventArrivesFirst(t *testing.T) {
 	t.Parallel()
 
-	m := newTUIModel(func() {}, false)
+	m := newTUIModel(func() {})
 	m.taskNavigator = taskNavigatorTree
 	m = updateTUIModel(t, m, started(1, 0, "root"))
-	m = updateTUIModel(t, m, scheduled(3, 1, "shared", false))
+	m = updateTUIModel(t, m, scheduled(3, 1, "shared"))
 	m = updateTUIModel(t, m, taskJoinedMsg{id: 3, ownerID: 2})
 	m = updateTUIModel(t, m, started(2, 1, "shared"))
 
@@ -257,7 +256,7 @@ func TestTUIModelMarksOwnerSharedWhenJoinEventArrivesFirst(t *testing.T) {
 func TestTUIModelNestsExecutionsUnderTheirParent(t *testing.T) {
 	t.Parallel()
 
-	m := newTUIModel(func() {}, false)
+	m := newTUIModel(func() {})
 	m.taskNavigator = taskNavigatorTree
 	m = updateTUIModel(t, m, started(1, 0, "root"))
 	m = updateTUIModel(t, m, started(5, 0, "other-root"))
@@ -279,10 +278,10 @@ func TestTUIModelNestsExecutionsUnderTheirParent(t *testing.T) {
 func TestTUIModelShowsPendingTasksAndDoesNotSelectRoot(t *testing.T) {
 	t.Parallel()
 
-	m := newTUIModel(func() {}, false)
-	m = updateTUIModel(t, m, scheduled(1, 1, "root", false))
+	m := newTUIModel(func() {})
+	m = updateTUIModel(t, m, scheduled(1, 1, "root"))
 	assert.False(t, m.hasSelect)
-	m = updateTUIModel(t, m, scheduled(2, 1, "child", false))
+	m = updateTUIModel(t, m, scheduled(2, 1, "child"))
 	assert.Equal(t, taskPending, m.byID[2].state)
 	assert.Equal(t, uint64(2), m.selectedID)
 
@@ -292,27 +291,15 @@ func TestTUIModelShowsPendingTasksAndDoesNotSelectRoot(t *testing.T) {
 	assert.Equal(t, taskSucceeded, m.byID[2].state)
 }
 
-func TestTUIModelCanHideInternalTasks(t *testing.T) {
-	t.Parallel()
-
-	m := newTUIModel(func() {}, true)
-	m = updateTUIModel(t, m, scheduled(1, 1, "root", false))
-	m = updateTUIModel(t, m, scheduled(2, 1, "visible", false))
-	m = updateTUIModel(t, m, scheduled(3, 1, "internal", true))
-	m = updateTUIModel(t, m, scheduledUnder(4, 3, 1, "visible-descendant", false))
-
-	assert.Equal(t, []string{"root", "visible", "visible-descendant"}, rowNames(m.taskRows()))
-}
-
 func TestTUIModelListNavigatorFlattensTasksAndCollapsesSharedCalls(t *testing.T) {
 	t.Parallel()
 
-	m := newTUIModel(func() {}, false)
+	m := newTUIModel(func() {})
 	m = updateTUIModel(t, m, started(1, 0, "root"))
 	m = updateTUIModel(t, m, started(2, 1, "parent-a"))
 	m = updateTUIModel(t, m, started(3, 1, "parent-b"))
 	m = updateTUIModel(t, m, startedUnder(4, 2, 1, "shared"))
-	m = updateTUIModel(t, m, scheduledUnder(5, 3, 1, "shared", false))
+	m = updateTUIModel(t, m, scheduledUnder(5, 3, 1, "shared"))
 	m.selectTask(4)
 	assert.Equal(t, uint64(5), m.selectedID)
 	m = updateTUIModel(t, m, taskJoinedMsg{id: 5, ownerID: 4})
@@ -330,7 +317,7 @@ func TestTUIModelListNavigatorFlattensTasksAndCollapsesSharedCalls(t *testing.T)
 func TestTUIModelMouseSelectsTasksAndFocusesPanes(t *testing.T) {
 	t.Parallel()
 
-	m := newTUIModel(func() {}, false)
+	m := newTUIModel(func() {})
 	m = updateTUIModel(t, m, tea.WindowSizeMsg{Width: 100, Height: 30})
 	m = updateTUIModel(t, m, started(1, 0, "root"))
 	m = updateTUIModel(t, m, started(2, 1, "first"))
@@ -346,10 +333,10 @@ func TestTUIModelMouseSelectsTasksAndFocusesPanes(t *testing.T) {
 	assert.Equal(t, outputPane, m.focus)
 }
 
-func TestTUIModelTextSelectionModeDisablesMouseAndFreezesView(t *testing.T) {
+func TestTUIModelTextSelectionModeDisablesMouseAndShowsLiveOutput(t *testing.T) {
 	t.Parallel()
 
-	m := newTUIModel(func() {}, false)
+	m := newTUIModel(func() {})
 	m = updateTUIModel(t, m, tea.WindowSizeMsg{Width: 80, Height: 12})
 	m = updateTUIModel(t, m, started(1, 0, "root"))
 	m = updateTUIModel(t, m, started(2, 1, "worker"))
@@ -366,7 +353,9 @@ func TestTUIModelTextSelectionModeDisablesMouseAndFreezesView(t *testing.T) {
 	assert.NotContains(t, selectionView.Content, "╭")
 
 	m = updateTUIModel(t, m, taskOutputMsg{id: 2, name: "worker", data: "second\n"})
-	assert.Equal(t, selectionView.Content, m.View().Content)
+	assert.NotEqual(t, selectionView.Content, m.View().Content)
+	assert.Contains(t, m.View().Content, "second")
+	assert.True(t, m.selectionPage.AtBottom())
 	assert.Equal(t, "first\nsecond\n", m.byID[2].output)
 
 	m = updateTUIModel(t, m, tea.KeyPressMsg{Code: tea.KeyEscape})
@@ -378,7 +367,7 @@ func TestTUIModelTextSelectionModeDisablesMouseAndFreezesView(t *testing.T) {
 func TestTUIModelTextSelectionModeScrollsWithKeyboard(t *testing.T) {
 	t.Parallel()
 
-	m := newTUIModel(func() {}, false)
+	m := newTUIModel(func() {})
 	m = updateTUIModel(t, m, tea.WindowSizeMsg{Width: 80, Height: 10})
 	m = updateTUIModel(t, m, started(1, 0, "root"))
 	m = updateTUIModel(t, m, started(2, 1, "worker"))
@@ -390,7 +379,10 @@ func TestTUIModelTextSelectionModeScrollsWithKeyboard(t *testing.T) {
 	require.Greater(t, bottomOffset, 0)
 
 	m = updateTUIModel(t, m, tea.KeyPressMsg{Code: tea.KeyPgUp})
-	assert.Less(t, m.selectionPage.YOffset(), bottomOffset)
+	scrolledOffset := m.selectionPage.YOffset()
+	assert.Less(t, scrolledOffset, bottomOffset)
+	m = updateTUIModel(t, m, taskOutputMsg{id: 2, name: "worker", data: "new output\n"})
+	assert.Equal(t, scrolledOffset, m.selectionPage.YOffset())
 	assert.Contains(t, m.View().Content, "scroll")
 
 	m = updateTUIModel(t, m, tea.KeyPressMsg{Code: 'g', Text: "g"})
@@ -402,7 +394,7 @@ func TestTUIModelTextSelectionModeScrollsWithKeyboard(t *testing.T) {
 func TestTUIModelScrollsAndRemembersEachTaskOutput(t *testing.T) {
 	t.Parallel()
 
-	m := newTUIModel(func() {}, false)
+	m := newTUIModel(func() {})
 	m = updateTUIModel(t, m, tea.WindowSizeMsg{Width: 80, Height: 10})
 	m = updateTUIModel(t, m, started(1, 0, "root"))
 	m = updateTUIModel(t, m, started(2, 1, "first"))
@@ -432,7 +424,7 @@ func TestTUIModelQuitCancelsExecution(t *testing.T) {
 	t.Parallel()
 
 	ctx, cancel := context.WithCancel(t.Context())
-	m := newTUIModel(cancel, false)
+	m := newTUIModel(cancel)
 	key := tea.KeyPressMsg{Code: 'q', Text: "q"}
 	next, cmd := m.Update(key)
 	require.NotNil(t, cmd)
@@ -467,16 +459,16 @@ func startedUnder(id, parentID, rootID uint64, name string) taskStartedMsg {
 	return taskStartedMsg{task: TaskInvocation{ID: id, ParentID: parentID, RootID: rootID, Name: name}}
 }
 
-func scheduled(id, rootID uint64, name string, internal bool) taskScheduledMsg {
+func scheduled(id, rootID uint64, name string) taskScheduledMsg {
 	parentID := rootID
 	if id == rootID {
 		parentID = 0
 	}
-	return scheduledUnder(id, parentID, rootID, name, internal)
+	return scheduledUnder(id, parentID, rootID, name)
 }
 
-func scheduledUnder(id, parentID, rootID uint64, name string, internal bool) taskScheduledMsg {
-	return taskScheduledMsg{task: TaskInvocation{ID: id, ParentID: parentID, RootID: rootID, Name: name, Internal: internal}}
+func scheduledUnder(id, parentID, rootID uint64, name string) taskScheduledMsg {
+	return taskScheduledMsg{task: TaskInvocation{ID: id, ParentID: parentID, RootID: rootID, Name: name}}
 }
 
 func updateTUIModel(t *testing.T, m tuiModel, msg tea.Msg) tuiModel {

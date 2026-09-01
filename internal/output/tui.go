@@ -23,7 +23,6 @@ type TUI struct {
 	logger        *logger.Logger
 	input         io.Reader
 	output        io.Writer
-	hideInternal  bool
 	statusLabels  bool
 	taskNavigator tuiTaskNavigator
 
@@ -64,7 +63,6 @@ func NewTUI(log *logger.Logger, options ast.OutputTUI) (*TUI, error) {
 		logger:        log,
 		input:         log.Stdin,
 		output:        log.Stdout,
-		hideInternal:  options.HideInternal,
 		statusLabels:  statusLabels,
 		taskNavigator: taskNavigator,
 		pending:       make(map[uint64]pendingOutput),
@@ -103,7 +101,7 @@ func (t *TUI) Run(ctx context.Context, run func(context.Context) error) error {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	model := newTUIModel(cancel, t.hideInternal)
+	model := newTUIModel(cancel)
 	model.statusLabels = t.statusLabels
 	model.taskNavigator = t.taskNavigator
 	program := tea.NewProgram(

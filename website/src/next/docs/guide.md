@@ -2711,6 +2711,14 @@ tasks:
   # ...
 ```
 
+::: tip
+
+The `output` option can also be specified by the `--output` or `-o` flags.
+
+:::
+
+### `group` output
+
 The `group` output will print the entire output of a command once after it
 finishes, so you will not have live feedback for commands that take a long time
 to run.
@@ -2769,7 +2777,9 @@ output-of-errors
 task: Failed to run task "errors": exit status 1
 ```
 
-The `prefix` output will prefix every line printed by a command with
+### `prefixed` output
+
+The `prefixed` output will prefix every line printed by a command with
 `[task-name] ` as the prefix, but you can customize the prefix for a command
 with the `prefix:` attribute:
 
@@ -2802,53 +2812,66 @@ $ task default
 [print-baz] baz
 ```
 
-The `tui` output opens an interactive, full-screen view. The requested root
-task is shown as a non-selectable heading on the left. Tasks reached from it are
-shown in a list and remain visible while pending, running, or finished. Repeated
-executions have separate rows and output views. Calls that join an existing
-`run: once` or `run: when_changed` execution share one list row. The task
-navigator can instead be configured as a tree. In that mode, tasks are nested
-beneath the task that invoked them, and joined calls remain in each tree location
-with a `↳` marker while sharing the owner's status and output.
-Each row shows a status icon by default, including a distinct canceled
-state for work interrupted by fail-fast cancellation. Text labels can be used
-instead of icons with the `status` option. The
-output of the selected task is shown on the right. Use Tab or the
-left/right arrow keys to focus a pane. In the task pane,
-use the up/down arrows or `j`/`k` to select a task. In the output pane, those
-keys scroll; Page Up and Page Down also scroll the output directly. You can
-click a task to select it and use the mouse wheel over either pane. Press `c`
-to open a frozen, output-only view for selecting and copying text with the
-terminal. The arrow keys or `j`/`k`, Page Up/Down, and `g`/`G` scroll that
-view; press `c` or Escape to resume interaction. Pressing `q`
-while tasks are still running cancels them. The view remains open after
-execution completes so that output can be inspected.
+### `tui` output
+
+The `tui` output opens an interactive, full-screen Terminal User Interface (TUI).
+The left pane shows a task navigator and the right pane shows the output of the
+currently selected task.
+
+The requested root task is a non-selectable heading. By default, all tasks
+reached from that root appear below it in a list. Repeated executions have
+separate entries, while calls that join an existing `run: once` or
+`run: when_changed` execution share one entry. With the tree navigator, tasks
+are nested beneath the task that invoked them. Joined calls then remain visible
+at each location with a `↳` marker and share the owner's status and output.
+
+The TUI output can be configured with the `tui` option in the Taskfile:
+
+```yaml
+output:
+  tui:
+    # Whether to show the task navigator as a flat list or a tree of tasks.
+    task_navigator: list # list or tree; default: list
+
+    # Whether to show the status of tasks as icons or text labels.
+    status: icons # icons or labels; default: icons
+```
+
+Each task shows a status icon, including a distinct canceled state for work
+interrupted by fail-fast cancellation. The `labels` status option replaces the
+icons with text labels.
+
+Use Tab or the left/right arrow keys to switch between the task navigator and
+the output pane. Clicking either pane also focuses it.
+
+When the navigator is focused, use the up/down arrows or `j`/`k` to select a
+task. You can also click a task directly. When the output pane is focused, use
+the following controls to scroll:
+
+- Up/down arrows or `j`/`k`
+- Page Up and Page Down
+- `g` and `G` to jump to the beginning or end
+- Mouse wheel
+
+Press `c` to open a live, output-only view of the selected task. Mouse reporting
+is disabled in this view, allowing the terminal to select and copy its text.
+Incoming output remains visible; the view follows it while at the bottom and
+preserves the current position after you scroll up. The keyboard scrolling
+controls above remain available. Press `c` again or Escape to return to the
+two-pane view.
 
 ```shell
 $ task --output tui build test lint
 ```
 
-Internal tasks are shown by default. They can be hidden when the output mode
-is configured in the Taskfile:
-
-```yaml
-output:
-  tui:
-    hide_internal: true
-    status: labels
-    task_navigator: tree
-```
+Pressing `q` while tasks are running requests cancellation and closes the TUI
+after Task's execution has returned. After execution finishes normally, the TUI
+remains open so its output can be inspected; press Enter or `q` to close it.
 
 This mode requires an interactive terminal. It is intended for local use; use
 one of the stream-based modes in CI or when redirecting output. Watch mode,
 interactive commands, and interactive variable prompting are not currently
 supported. Task confirmation prompts can be accepted up front with `--yes`.
-
-::: tip
-
-The `output` option can also be specified by the `--output` or `-o` flags.
-
-:::
 
 ## CI Integration
 

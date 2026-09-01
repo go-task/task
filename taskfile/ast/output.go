@@ -71,7 +71,6 @@ type OutputGroup struct {
 
 // OutputTUI contains options specific to the TUI output style.
 type OutputTUI struct {
-	HideInternal  bool   `yaml:"hide_internal"`
 	Status        string `yaml:"status"`
 	TaskNavigator string `yaml:"task_navigator"`
 }

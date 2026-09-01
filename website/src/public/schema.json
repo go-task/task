@@ -688,13 +688,11 @@
     },
     "outputString": {
       "type": "string",
-      "enum": ["interleaved", "prefixed", "group", "tui"],
+      "enum": ["interleaved", "prefixed", "group"],
       "default": "interleaved"
     },
     "outputObject": {
       "type": "object",
-      "minProperties": 1,
-      "maxProperties": 1,
       "properties": {
         "group": {
           "type": "object",
@@ -711,23 +709,6 @@
               "default": false
             }
           }
-        },
-        "tui": {
-          "type": "object",
-          "properties": {
-            "hide_internal": {
-              "description": "Hides internal tasks from the TUI task list",
-              "type": "boolean",
-              "default": false
-            },
-            "status": {
-              "description": "Chooses whether task statuses use icons or text labels",
-              "type": "string",
-              "enum": ["icons", "labels"],
-              "default": "icons"
-            }
-          },
-          "additionalProperties": false
         }
       },
       "additionalProperties": false

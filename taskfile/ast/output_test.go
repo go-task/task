@@ -12,9 +12,8 @@ func TestOutputTUIUnmarshalYAML(t *testing.T) {
 	t.Parallel()
 
 	var output Output
-	require.NoError(t, yaml.Unmarshal([]byte("tui:\n  hide_internal: true\n  status: labels\n  task_navigator: tree\n"), &output))
+	require.NoError(t, yaml.Unmarshal([]byte("tui:\n  status: labels\n  task_navigator: tree\n"), &output))
 	assert.Equal(t, "tui", output.Name)
-	assert.True(t, output.TUI.HideInternal)
 	assert.Equal(t, "labels", output.TUI.Status)
 	assert.Equal(t, "tree", output.TUI.TaskNavigator)
 }

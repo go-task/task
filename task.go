@@ -190,7 +190,6 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) (runErr error) {
 		ParentID: call.parentInvocationID,
 		RootID:   call.rootInvocationID,
 		Name:     t.Prefix,
-		Internal: t.Internal,
 	}
 	output.TaskScheduled(e.Output, invocation)
 	defer func() { output.TaskFinished(e.Output, call.invocationID, runErr) }()

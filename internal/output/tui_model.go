@@ -39,7 +39,6 @@ type tuiTask struct {
 	rootID    uint64
 	name      string
 	isRoot    bool
-	hidden    bool
 	shared    bool
 	ownerID   uint64
 	output    string
@@ -85,12 +84,10 @@ type tuiModel struct {
 	done          bool
 	err           error
 	cancel        context.CancelFunc
-	hideInternal  bool
 	statusLabels  bool
 	taskNavigator tuiTaskNavigator
 
 	selectingText bool
-	selectionView string
 	selectionPage viewport.Model
 }
 
@@ -100,7 +97,7 @@ type tuiTaskKey struct {
 	isRoot  bool
 }
 
-func newTUIModel(cancel context.CancelFunc, hideInternal bool) tuiModel {
+func newTUIModel(cancel context.CancelFunc) tuiModel {
 	view := viewport.New()
 	view.SoftWrap = true
 	view.MouseWheelDelta = 3
@@ -110,7 +107,6 @@ func newTUIModel(cancel context.CancelFunc, hideInternal bool) tuiModel {
 		height:        30,
 		viewport:      view,
 		cancel:        cancel,
-		hideInternal:  hideInternal,
 		taskNavigator: taskNavigatorList,
 	}
 }
@@ -212,7 +208,6 @@ func (m *tuiModel) handleKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 		default:
 			return *m, nil
 		}
-		m.refreshSelectionView()
 		return *m, nil
 	}
 	switch msg.String() {

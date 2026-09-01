@@ -715,16 +715,17 @@
         "tui": {
           "type": "object",
           "properties": {
-            "hide_internal": {
-              "description": "Hides internal tasks from the TUI task list",
-              "type": "boolean",
-              "default": false
-            },
             "status": {
               "description": "Chooses whether task statuses use icons or text labels",
               "type": "string",
               "enum": ["icons", "labels"],
               "default": "icons"
+            },
+            "task_navigator": {
+              "description": "Chooses whether tasks use a flat list or a nested tree",
+              "type": "string",
+              "enum": ["list", "tree"],
+              "default": "list"
             }
           },
           "additionalProperties": false

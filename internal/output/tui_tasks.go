@@ -20,7 +20,6 @@ func (m *tuiModel) scheduleTask(invocation TaskInvocation) *tuiTask {
 		rootID:       invocation.RootID,
 		name:         invocation.Name,
 		isRoot:       isRoot,
-		hidden:       m.hideInternal && invocation.Internal && !isRoot,
 		state:        taskPending,
 		followOutput: true,
 	}
@@ -33,12 +32,12 @@ func (m *tuiModel) scheduleTask(invocation TaskInvocation) *tuiTask {
 	m.byID[invocation.ID] = task
 	m.tasks = append(m.tasks, task)
 	if m.hasSelect && m.selectedID == task.id {
-		m.loadViewport()
+		m.refreshOutputView()
 	}
-	if !task.isRoot && !task.hidden && !m.hasSelect {
+	if !task.isRoot && !m.hasSelect {
 		m.selectedID = task.id
 		m.hasSelect = true
-		m.loadViewport()
+		m.refreshOutputView()
 	}
 	return task
 }
@@ -57,9 +56,9 @@ func (m *tuiModel) joinTask(id, ownerID uint64) {
 		m.saveViewport()
 		m.selectedID = ownerID
 		m.hasSelect = ownerID != 0
-		m.loadViewport()
+		m.refreshOutputView()
 	} else if m.hasSelect && m.selectedID == id {
-		m.loadViewport()
+		m.refreshOutputView()
 	}
 	m.keepSelectionVisible()
 }
@@ -77,7 +76,7 @@ func (m *tuiModel) ensureOutputTask(id uint64, name string) *tuiTask {
 	if !m.hasSelect {
 		m.selectedID = task.id
 		m.hasSelect = true
-		m.loadViewport()
+		m.refreshOutputView()
 	}
 	return task
 }
@@ -93,6 +92,14 @@ func (m *tuiModel) appendOutput(id uint64, name, data string) {
 		task.truncated = true
 	}
 	if selected := m.selectedTask(); selected != nil && selected.id == task.id {
+		m.refreshOutputView()
+	}
+}
+
+func (m *tuiModel) refreshOutputView() {
+	if m.selectingText {
+		m.syncSelectionPage()
+	} else {
 		m.loadViewport()
 	}
 }
@@ -124,7 +131,7 @@ func (m tuiModel) taskNameKey(task *tuiTask) tuiTaskKey {
 }
 
 func (m tuiModel) taskVisible(task *tuiTask) bool {
-	return !task.hidden && (m.taskNavigator == taskNavigatorTree || task.ownerID == 0)
+	return m.taskNavigator == taskNavigatorTree || task.ownerID == 0
 }
 
 func (m tuiModel) taskState(task *tuiTask) taskState {
@@ -200,7 +207,10 @@ func (m tuiModel) treeTaskRows() []tuiTaskRow {
 			roots = append(roots, task)
 			continue
 		}
-		parentID := m.visibleParentID(task)
+		parentID := task.parentID
+		if m.byID[parentID] == nil {
+			parentID = 0
+		}
 		if parentID == 0 {
 			standalone = append(standalone, task)
 		} else {
@@ -228,21 +238,6 @@ func sortTasksByID(tasks []*tuiTask) {
 	slices.SortFunc(tasks, func(a, b *tuiTask) int {
 		return cmp.Compare(a.id, b.id)
 	})
-}
-
-func (m tuiModel) visibleParentID(task *tuiTask) uint64 {
-	parentID := task.parentID
-	for parentID != 0 {
-		parent := m.byID[parentID]
-		if parent == nil {
-			return 0
-		}
-		if !parent.hidden {
-			return parentID
-		}
-		parentID = parent.parentID
-	}
-	return 0
 }
 
 func appendTaskRows(rows []tuiTaskRow, parentID uint64, ancestorLast []bool, childrenByParent map[uint64][]*tuiTask) []tuiTaskRow {

@@ -13,8 +13,8 @@ import (
 
 func (m tuiModel) View() tea.View {
 	content := m.renderContent()
-	if m.selectingText && m.selectionView != "" {
-		content = m.selectionView
+	if m.selectingText {
+		content = m.textSelectionView()
 	}
 	view := tea.NewView(content)
 	view.AltScreen = true
@@ -58,43 +58,60 @@ func (m *tuiModel) enterTextSelection() {
 		viewport.WithHeight(max(m.height-1, 1)),
 	)
 	view.SoftWrap = true
-	if task := m.selectedTask(); task != nil {
-		content := task.output
-		if task.truncated {
-			content = "… earlier output was discarded …\n" + content
-		}
-		view.SetContent(content)
-		if m.viewport.AtBottom() {
-			view.GotoBottom()
-		} else if !m.viewport.AtTop() {
-			position := m.viewport.ScrollPercent()
-			view.GotoBottom()
-			view.SetYOffset(int(position * float64(view.YOffset())))
-		}
-	}
 	m.selectionPage = view
-	m.refreshSelectionView()
+	m.selectionPage.SetContent(m.textSelectionContent())
+	if m.viewport.AtBottom() {
+		m.selectionPage.GotoBottom()
+	} else if !m.viewport.AtTop() {
+		position := m.viewport.ScrollPercent()
+		m.selectionPage.GotoBottom()
+		m.selectionPage.SetYOffset(int(position * float64(m.selectionPage.YOffset())))
+	}
 }
 
 func (m *tuiModel) leaveTextSelection() {
-	if m.selectionPage.AtTop() {
+	atTop := m.selectionPage.AtTop()
+	atBottom := m.selectionPage.AtBottom()
+	position := m.selectionPage.ScrollPercent()
+	m.selectingText = false
+	m.selectionPage = viewport.Model{}
+	m.loadViewport()
+	if atTop {
 		m.viewport.GotoTop()
-	} else if m.selectionPage.AtBottom() {
+	} else if atBottom {
 		m.viewport.GotoBottom()
 	} else {
-		position := m.selectionPage.ScrollPercent()
 		m.viewport.GotoBottom()
 		m.viewport.SetYOffset(int(position * float64(m.viewport.YOffset())))
 	}
 	m.saveViewport()
-	m.selectingText = false
-	m.selectionView = ""
-	m.selectionPage = viewport.Model{}
 }
 
-func (m *tuiModel) refreshSelectionView() {
+func (m *tuiModel) syncSelectionPage() {
+	atBottom := m.selectionPage.AtBottom()
+	offset := m.selectionPage.YOffset()
+	m.selectionPage.SetContent(m.textSelectionContent())
+	if atBottom {
+		m.selectionPage.GotoBottom()
+	} else {
+		m.selectionPage.SetYOffset(offset)
+	}
+}
+
+func (m *tuiModel) textSelectionContent() string {
+	content := ""
+	if task := m.selectedTask(); task != nil {
+		content = task.output
+		if task.truncated {
+			content = "… earlier output was discarded …\n" + content
+		}
+	}
+	return content
+}
+
+func (m tuiModel) textSelectionView() string {
 	help := truncateText(" text selection  •  ↑/↓ or pgup/pgdn scroll  •  drag to select  •  c/esc resume", max(m.width, 1))
-	m.selectionView = m.selectionPage.View() + "\n" + tuiHelpStyle.Render(help)
+	return m.selectionPage.View() + "\n" + tuiHelpStyle.Render(help)
 }
 
 func (m tuiModel) renderPanes(layout tuiLayout) (string, string) {
