@@ -23,15 +23,21 @@ func TestBuildTUI(t *testing.T) {
 	got, err := BuildFor(&ast.Output{Name: "tui"}, &logger.Logger{AssumeTerm: true})
 	require.NoError(t, err)
 	assert.IsType(t, &TUI{}, got)
+	assert.Equal(t, taskNavigatorList, got.(*TUI).taskNavigator)
 
-	got, err = BuildFor(&ast.Output{Name: "tui", TUI: ast.OutputTUI{HideInternal: true, Status: "labels"}}, &logger.Logger{AssumeTerm: true})
+	got, err = BuildFor(&ast.Output{Name: "tui", TUI: ast.OutputTUI{HideInternal: true, Status: "labels", TaskNavigator: "tree"}}, &logger.Logger{AssumeTerm: true})
 	require.NoError(t, err)
 	assert.True(t, got.(*TUI).hideInternal)
 	assert.True(t, got.(*TUI).statusLabels)
+	assert.Equal(t, taskNavigatorTree, got.(*TUI).taskNavigator)
 
 	_, err = BuildFor(&ast.Output{Name: "tui", TUI: ast.OutputTUI{Status: "unknown"}}, &logger.Logger{AssumeTerm: true})
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), `expected "icons" or "labels"`)
+
+	_, err = BuildFor(&ast.Output{Name: "tui", TUI: ast.OutputTUI{TaskNavigator: "unknown"}}, &logger.Logger{AssumeTerm: true})
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), `expected "list" or "tree"`)
 }
 
 func TestTUIModelTracksTasksAndOutput(t *testing.T) {
@@ -178,6 +184,7 @@ func TestTUIModelSharesJoinedExecutionStatusAndOutput(t *testing.T) {
 	t.Parallel()
 
 	m := newTUIModel(func() {}, false)
+	m.taskNavigator = taskNavigatorTree
 	m = updateTUIModel(t, m, tea.WindowSizeMsg{Width: 80, Height: 20})
 	m = updateTUIModel(t, m, started(1, 0, "root"))
 	m = updateTUIModel(t, m, started(2, 1, "worker"))
@@ -214,6 +221,7 @@ func TestTUIModelShowsSharedExecutionInEachTreeLocation(t *testing.T) {
 	t.Parallel()
 
 	m := newTUIModel(func() {}, false)
+	m.taskNavigator = taskNavigatorTree
 	m = updateTUIModel(t, m, started(1, 0, "root"))
 	m = updateTUIModel(t, m, started(2, 1, "parent-a"))
 	m = updateTUIModel(t, m, started(3, 1, "parent-b"))
@@ -233,6 +241,7 @@ func TestTUIModelMarksOwnerSharedWhenJoinEventArrivesFirst(t *testing.T) {
 	t.Parallel()
 
 	m := newTUIModel(func() {}, false)
+	m.taskNavigator = taskNavigatorTree
 	m = updateTUIModel(t, m, started(1, 0, "root"))
 	m = updateTUIModel(t, m, scheduled(3, 1, "shared", false))
 	m = updateTUIModel(t, m, taskJoinedMsg{id: 3, ownerID: 2})
@@ -249,6 +258,7 @@ func TestTUIModelNestsExecutionsUnderTheirParent(t *testing.T) {
 	t.Parallel()
 
 	m := newTUIModel(func() {}, false)
+	m.taskNavigator = taskNavigatorTree
 	m = updateTUIModel(t, m, started(1, 0, "root"))
 	m = updateTUIModel(t, m, started(5, 0, "other-root"))
 	m = updateTUIModel(t, m, started(2, 1, "child"))
@@ -292,7 +302,29 @@ func TestTUIModelCanHideInternalTasks(t *testing.T) {
 	m = updateTUIModel(t, m, scheduledUnder(4, 3, 1, "visible-descendant", false))
 
 	assert.Equal(t, []string{"root", "visible", "visible-descendant"}, rowNames(m.taskRows()))
-	assert.Equal(t, 1, m.nameCounts[tuiTaskKey{parentID: 1, name: "internal"}])
+}
+
+func TestTUIModelListNavigatorFlattensTasksAndCollapsesSharedCalls(t *testing.T) {
+	t.Parallel()
+
+	m := newTUIModel(func() {}, false)
+	m = updateTUIModel(t, m, started(1, 0, "root"))
+	m = updateTUIModel(t, m, started(2, 1, "parent-a"))
+	m = updateTUIModel(t, m, started(3, 1, "parent-b"))
+	m = updateTUIModel(t, m, startedUnder(4, 2, 1, "shared"))
+	m = updateTUIModel(t, m, scheduledUnder(5, 3, 1, "shared", false))
+	m.selectTask(4)
+	assert.Equal(t, uint64(5), m.selectedID)
+	m = updateTUIModel(t, m, taskJoinedMsg{id: 5, ownerID: 4})
+
+	assert.Equal(t, []uint64{1, 2, 3, 4}, rowIDs(m.taskRows()))
+	assert.Equal(t, uint64(4), m.selectedID)
+	list := ansi.Strip(m.taskList(40, 10))
+	assert.Contains(t, list, "├─ ● parent-a")
+	assert.Contains(t, list, "├─ ● parent-b")
+	assert.Contains(t, list, "└─ ● shared")
+	assert.NotContains(t, list, "↳")
+	assert.NotContains(t, list, "#1 shared")
 }
 
 func TestTUIModelMouseSelectsTasksAndFocusesPanes(t *testing.T) {

@@ -158,7 +158,7 @@ func (m tuiModel) taskList(width, height int) string {
 		row := rows[i]
 		state := m.taskState(row.task)
 		sharedPrefix := ""
-		if row.task.shared {
+		if m.taskNavigator == taskNavigatorTree && row.task.shared {
 			sharedPrefix = "↳ "
 		}
 		if row.task.isRoot {

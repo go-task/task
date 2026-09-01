@@ -20,11 +20,12 @@ const (
 )
 
 type TUI struct {
-	logger       *logger.Logger
-	input        io.Reader
-	output       io.Writer
-	hideInternal bool
-	statusLabels bool
+	logger        *logger.Logger
+	input         io.Reader
+	output        io.Writer
+	hideInternal  bool
+	statusLabels  bool
+	taskNavigator tuiTaskNavigator
 
 	mutex   sync.RWMutex
 	program *tea.Program
@@ -51,13 +52,22 @@ func NewTUI(log *logger.Logger, options ast.OutputTUI) (*TUI, error) {
 	default:
 		return nil, fmt.Errorf(`task: invalid TUI status style %q: expected "icons" or "labels"`, options.Status)
 	}
+	taskNavigator := taskNavigatorList
+	switch options.TaskNavigator {
+	case "", "list":
+	case "tree":
+		taskNavigator = taskNavigatorTree
+	default:
+		return nil, fmt.Errorf(`task: invalid TUI task navigator %q: expected "list" or "tree"`, options.TaskNavigator)
+	}
 	return &TUI{
-		logger:       log,
-		input:        log.Stdin,
-		output:       log.Stdout,
-		hideInternal: options.HideInternal,
-		statusLabels: statusLabels,
-		pending:      make(map[uint64]pendingOutput),
+		logger:        log,
+		input:         log.Stdin,
+		output:        log.Stdout,
+		hideInternal:  options.HideInternal,
+		statusLabels:  statusLabels,
+		taskNavigator: taskNavigator,
+		pending:       make(map[uint64]pendingOutput),
 	}, nil
 }
 
@@ -95,6 +105,7 @@ func (t *TUI) Run(ctx context.Context, run func(context.Context) error) error {
 
 	model := newTUIModel(cancel, t.hideInternal)
 	model.statusLabels = t.statusLabels
+	model.taskNavigator = t.taskNavigator
 	program := tea.NewProgram(
 		model,
 		tea.WithInput(t.input),

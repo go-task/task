@@ -26,9 +26,17 @@ const (
 	outputPane
 )
 
+type tuiTaskNavigator uint8
+
+const (
+	taskNavigatorList tuiTaskNavigator = iota
+	taskNavigatorTree
+)
+
 type tuiTask struct {
 	id        uint64
 	parentID  uint64
+	rootID    uint64
 	name      string
 	isRoot    bool
 	hidden    bool
@@ -65,21 +73,21 @@ type (
 )
 
 type tuiModel struct {
-	tasks        []*tuiTask
-	byID         map[uint64]*tuiTask
-	nameCounts   map[tuiTaskKey]int
-	selectedID   uint64
-	hasSelect    bool
-	listTop      int
-	focus        paneFocus
-	width        int
-	height       int
-	viewport     viewport.Model
-	done         bool
-	err          error
-	cancel       context.CancelFunc
-	hideInternal bool
-	statusLabels bool
+	tasks         []*tuiTask
+	byID          map[uint64]*tuiTask
+	selectedID    uint64
+	hasSelect     bool
+	listTop       int
+	focus         paneFocus
+	width         int
+	height        int
+	viewport      viewport.Model
+	done          bool
+	err           error
+	cancel        context.CancelFunc
+	hideInternal  bool
+	statusLabels  bool
+	taskNavigator tuiTaskNavigator
 
 	selectingText bool
 	selectionView string
@@ -87,9 +95,9 @@ type tuiModel struct {
 }
 
 type tuiTaskKey struct {
-	parentID uint64
-	name     string
-	isRoot   bool
+	groupID uint64
+	name    string
+	isRoot  bool
 }
 
 func newTUIModel(cancel context.CancelFunc, hideInternal bool) tuiModel {
@@ -97,13 +105,13 @@ func newTUIModel(cancel context.CancelFunc, hideInternal bool) tuiModel {
 	view.SoftWrap = true
 	view.MouseWheelDelta = 3
 	return tuiModel{
-		byID:         make(map[uint64]*tuiTask),
-		nameCounts:   make(map[tuiTaskKey]int),
-		width:        100,
-		height:       30,
-		viewport:     view,
-		cancel:       cancel,
-		hideInternal: hideInternal,
+		byID:          make(map[uint64]*tuiTask),
+		width:         100,
+		height:        30,
+		viewport:      view,
+		cancel:        cancel,
+		hideInternal:  hideInternal,
+		taskNavigator: taskNavigatorList,
 	}
 }
 

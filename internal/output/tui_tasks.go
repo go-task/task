@@ -14,11 +14,10 @@ func (m *tuiModel) scheduleTask(invocation TaskInvocation) *tuiTask {
 		return task
 	}
 	isRoot := invocation.ID == invocation.RootID
-	key := tuiTaskKey{parentID: invocation.ParentID, name: invocation.Name, isRoot: isRoot}
-	m.nameCounts[key]++
 	task := &tuiTask{
 		id:           invocation.ID,
 		parentID:     invocation.ParentID,
+		rootID:       invocation.RootID,
 		name:         invocation.Name,
 		isRoot:       isRoot,
 		hidden:       m.hideInternal && invocation.Internal && !isRoot,
@@ -54,7 +53,12 @@ func (m *tuiModel) joinTask(id, ownerID uint64) {
 	if owner := m.byID[ownerID]; owner != nil {
 		owner.shared = true
 	}
-	if m.hasSelect && m.selectedID == id {
+	if m.taskNavigator == taskNavigatorList && m.hasSelect && m.selectedID == id {
+		m.saveViewport()
+		m.selectedID = ownerID
+		m.hasSelect = ownerID != 0
+		m.loadViewport()
+	} else if m.hasSelect && m.selectedID == id {
 		m.loadViewport()
 	}
 	m.keepSelectionVisible()
@@ -94,18 +98,33 @@ func (m *tuiModel) appendOutput(id uint64, name, data string) {
 }
 
 func (m tuiModel) taskName(task *tuiTask) string {
-	key := tuiTaskKey{parentID: task.parentID, name: task.name, isRoot: task.isRoot}
-	if m.nameCounts[key] > 1 {
-		occurrence := 1
-		for _, candidate := range m.tasks {
-			candidateKey := tuiTaskKey{parentID: candidate.parentID, name: candidate.name, isRoot: candidate.isRoot}
-			if candidateKey == key && candidate.id < task.id {
-				occurrence++
-			}
+	key := m.taskNameKey(task)
+	count, occurrence := 0, 0
+	for _, candidate := range m.tasks {
+		if !m.taskVisible(candidate) || m.taskNameKey(candidate) != key {
+			continue
 		}
+		count++
+		if candidate.id <= task.id {
+			occurrence++
+		}
+	}
+	if count > 1 {
 		return fmt.Sprintf("#%d %s", occurrence, task.name)
 	}
 	return task.name
+}
+
+func (m tuiModel) taskNameKey(task *tuiTask) tuiTaskKey {
+	groupID := task.rootID
+	if m.taskNavigator == taskNavigatorTree {
+		groupID = task.parentID
+	}
+	return tuiTaskKey{groupID: groupID, name: task.name, isRoot: task.isRoot}
+}
+
+func (m tuiModel) taskVisible(task *tuiTask) bool {
+	return !task.hidden && (m.taskNavigator == taskNavigatorTree || task.ownerID == 0)
 }
 
 func (m tuiModel) taskState(task *tuiTask) taskState {
@@ -123,10 +142,58 @@ type tuiTaskRow struct {
 }
 
 func (m tuiModel) taskRows() []tuiTaskRow {
+	if m.taskNavigator == taskNavigatorTree {
+		return m.treeTaskRows()
+	}
+	return m.listTaskRows()
+}
+
+func (m tuiModel) listTaskRows() []tuiTaskRow {
+	childrenByRoot := make(map[uint64][]*tuiTask)
+	var roots, standalone []*tuiTask
+	for _, task := range m.tasks {
+		if !m.taskVisible(task) {
+			continue
+		}
+		if task.isRoot {
+			roots = append(roots, task)
+			continue
+		}
+		if task.rootID == 0 {
+			standalone = append(standalone, task)
+		} else {
+			childrenByRoot[task.rootID] = append(childrenByRoot[task.rootID], task)
+		}
+	}
+	sortTasksByID(roots)
+	sortTasksByID(standalone)
+	for _, children := range childrenByRoot {
+		sortTasksByID(children)
+	}
+
+	rows := make([]tuiTaskRow, 0, len(m.tasks))
+	for _, root := range roots {
+		rows = append(rows, tuiTaskRow{task: root})
+		children := childrenByRoot[root.id]
+		for i, child := range children {
+			prefix := "├─ "
+			if i == len(children)-1 {
+				prefix = "└─ "
+			}
+			rows = append(rows, tuiTaskRow{task: child, treePrefix: prefix})
+		}
+	}
+	for _, task := range standalone {
+		rows = append(rows, tuiTaskRow{task: task})
+	}
+	return rows
+}
+
+func (m tuiModel) treeTaskRows() []tuiTaskRow {
 	childrenByParent := make(map[uint64][]*tuiTask)
 	var roots, standalone []*tuiTask
 	for _, task := range m.tasks {
-		if task.hidden {
+		if !m.taskVisible(task) {
 			continue
 		}
 		if task.isRoot {

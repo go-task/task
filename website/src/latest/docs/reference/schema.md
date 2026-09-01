@@ -48,6 +48,7 @@ output:
   tui:
     hide_internal: false
     status: icons # icons or labels
+    task_navigator: list # list or tree
 ```
 
 ### `method`
