@@ -141,6 +141,15 @@ func (e *Executor) splitRegularAndWatchCalls(calls ...*Call) (regularCalls []*Ca
 
 // RunTask runs a task by its name
 func (e *Executor) RunTask(ctx context.Context, call *Call) (runErr error) {
+	// Requested roots are scheduled before execution begins so terminal UIs can
+	// show the complete root list. Cover their entire attempt with a completion
+	// event, including validation and compilation failures that happen before a
+	// task can start.
+	invocationAlreadyScheduled := call.invocationID != 0
+	if invocationAlreadyScheduled {
+		defer func() { output.TaskFinished(e.Output, call.invocationID, runErr) }()
+	}
+
 	// Inject prompted vars into call if available
 	if e.promptedVars != nil {
 		if call.Vars == nil {
@@ -176,7 +185,9 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) (runErr error) {
 		return err
 	}
 	invocation := e.taskInvocation(call, t.Name())
-	defer func() { output.TaskFinished(e.Output, call.invocationID, runErr) }()
+	if !invocationAlreadyScheduled {
+		defer func() { output.TaskFinished(e.Output, call.invocationID, runErr) }()
+	}
 
 	if output.IsTerminalUI(e.Output) {
 		if t.Interactive {

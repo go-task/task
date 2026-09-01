@@ -82,6 +82,7 @@ func TestTUIModelDistinguishesCanceledTasksAndShowsStatusWords(t *testing.T) {
 	m = updateTUIModel(t, m, taskFinishedMsg{id: 6, err: fmt.Errorf("wrapped: %w", context.Canceled)})
 
 	assert.Equal(t, taskCanceled, m.byID[6].state)
+	assert.Equal(t, "failed\n", m.byID[5].output)
 	assert.Equal(t, "■", taskIconText(taskCanceled))
 	list := m.taskList(50, 20)
 	for _, status := range []string{"pending", "running", "success", "failed", "canceled"} {
@@ -164,7 +165,7 @@ func TestTUIModelKeepsRepeatedTaskCallsSeparate(t *testing.T) {
 
 	require.Len(t, m.tasks, 3)
 	assert.NotSame(t, m.byID[2], m.byID[3])
-	assert.Equal(t, "first", m.byID[2].output)
+	assert.Equal(t, "first\nfailed\n", m.byID[2].output)
 	assert.Equal(t, " second", m.byID[3].output)
 	assert.Equal(t, taskFailed, m.byID[2].state)
 	assert.Equal(t, taskSucceeded, m.byID[3].state)
@@ -305,7 +306,7 @@ func TestTUIModelNumbersRepeatedRootCalls(t *testing.T) {
 	assert.Equal(t, uint64(1), m.selectedTask().id)
 }
 
-func TestTUIModelCancelsTasksLeftPendingWhenExecutionEnds(t *testing.T) {
+func TestTUIModelSkipsTasksNotAttemptedWhenExecutionEnds(t *testing.T) {
 	t.Parallel()
 
 	m := newTUIModel(func() {})
@@ -314,7 +315,9 @@ func TestTUIModelCancelsTasksLeftPendingWhenExecutionEnds(t *testing.T) {
 	m = updateTUIModel(t, m, taskFinishedMsg{id: 2})
 	m = updateTUIModel(t, m, executionDoneMsg{})
 
-	assert.Equal(t, taskCanceled, m.byID[1].state)
+	assert.Equal(t, taskSkipped, m.byID[1].state)
+	assert.Equal(t, "○", taskIconText(taskSkipped))
+	assert.Equal(t, "skipped", taskStateText(taskSkipped))
 	assert.Equal(t, taskSucceeded, m.byID[2].state)
 }
 

@@ -166,10 +166,48 @@ tasks:
 	))
 	assert.Equal(t, 2, recorder.scheduledAtFirstStart)
 	assert.Equal(t, []string{"build", "test"}, invocationNames(recorder.scheduled))
+	assert.ElementsMatch(t, []uint64{recorder.scheduled[0].ID, recorder.scheduled[1].ID}, recorder.finished)
 	for _, invocation := range recorder.scheduled {
 		assert.Equal(t, invocation.ID, invocation.RootID)
 		assert.Zero(t, invocation.ParentID)
 	}
+}
+
+func TestTaskLifecycleFinishesRootThatFailsBeforeStarting(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	taskfile := `version: '3'
+tasks:
+  lint:
+    requires:
+      vars: [FIX]
+    cmds: [echo lint]
+  typing: echo typing
+`
+	require.NoError(t, os.WriteFile(filepath.Join(dir, "Taskfile.yml"), []byte(taskfile), 0o600))
+
+	e := task.NewExecutor(
+		task.WithDir(dir),
+		task.WithStdout(io.Discard),
+		task.WithStderr(io.Discard),
+		task.WithSilent(true),
+	)
+	require.NoError(t, e.Setup())
+	recorder := &lifecycleRecorder{}
+	e.Output = recorder
+
+	err := e.Run(
+		t.Context(),
+		&task.Call{Task: "lint"},
+		&task.Call{Task: "typing"},
+	)
+	require.Error(t, err)
+	require.Len(t, recorder.scheduled, 2)
+	require.Len(t, recorder.finished, 1)
+	lint := recorder.scheduled[0]
+	assert.Equal(t, lint.ID, recorder.finished[0])
+	assert.Error(t, recorder.finishErrors[lint.ID])
 }
 
 type lifecycleRecorder struct {

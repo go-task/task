@@ -258,6 +258,8 @@ func taskStateStyle(state taskState) lipgloss.Style {
 		return tuiFailureStyle
 	case taskCanceled:
 		return tuiCanceledStyle
+	case taskSkipped:
+		return tuiHelpStyle
 	default:
 		return tuiHelpStyle
 	}
@@ -297,6 +299,8 @@ func taskIconText(state taskState) string {
 		return "✗"
 	case taskCanceled:
 		return "■"
+	case taskSkipped:
+		return "○"
 	default:
 		return "·"
 	}
@@ -312,6 +316,8 @@ func taskStateText(state taskState) string {
 		return "failed"
 	case taskCanceled:
 		return "canceled"
+	case taskSkipped:
+		return "skipped"
 	default:
 		return "pending"
 	}

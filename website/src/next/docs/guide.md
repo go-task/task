@@ -2843,10 +2843,11 @@ execution share one entry. With the tree navigator, tasks are nested beneath the
 task that invoked them. Joined calls then remain visible at each location with a
 `↳` marker and share the owner's status and output.
 
-Each task shows a status icon, including a distinct canceled state for work
-interrupted by fail-fast cancellation. Pass `--tui-status labels` to replace
-the icons with text labels. Pass `--tui-task-navigator tree` to nest tasks under
-the task that invoked them instead of using the default list navigator.
+Each task shows a status icon, including distinct canceled and skipped states.
+Canceled tasks were interrupted, while skipped tasks were never attempted after
+an earlier sequential task failed. Pass `--tui-status labels` to replace the
+icons with text labels. Pass `--tui-task-navigator tree` to nest tasks under the
+task that invoked them instead of using the default list navigator.
 
 Use Tab or the left/right arrow keys to switch between the task navigator and
 the output pane. Clicking either pane also focuses it.

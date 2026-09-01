@@ -2,6 +2,7 @@ package tui
 
 import (
 	"context"
+	"strings"
 
 	"charm.land/bubbles/v2/viewport"
 	tea "charm.land/bubbletea/v2"
@@ -18,6 +19,7 @@ const (
 	taskSucceeded
 	taskFailed
 	taskCanceled
+	taskSkipped
 )
 
 type paneFocus uint8
@@ -152,6 +154,7 @@ func (m tuiModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			task.state = taskCanceled
 		} else if msg.err != nil {
 			task.state = taskFailed
+			m.appendFailure(task, msg.err)
 		} else {
 			task.state = taskSucceeded
 		}
@@ -174,7 +177,13 @@ func (m tuiModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		}
 		for _, task := range m.tasks {
-			if task.id != 0 && (task.state == taskPending || task.state == taskRunning) {
+			if task.id == 0 {
+				continue
+			}
+			switch task.state {
+			case taskPending:
+				task.state = taskSkipped
+			case taskRunning:
 				task.state = taskCanceled
 			}
 		}
@@ -209,6 +218,19 @@ func (m tuiModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	}
 
 	return m, nil
+}
+
+func (m *tuiModel) appendFailure(task *tuiTask, err error) {
+	if task.output != "" && !strings.HasSuffix(task.output, "\n") {
+		task.output += "\n"
+	}
+	message := err.Error() + "\n"
+	if !strings.HasSuffix(task.output, message) {
+		task.output += message
+	}
+	if selected := m.selectedTask(); selected != nil && selected.id == task.id {
+		m.refreshOutputView()
+	}
 }
 
 func (m *tuiModel) handleKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
