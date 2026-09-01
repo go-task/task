@@ -1,0 +1,262 @@
+package tui
+
+import (
+	"context"
+	"fmt"
+	"io"
+	"sync"
+	"sync/atomic"
+
+	tea "charm.land/bubbletea/v2"
+
+	"github.com/go-task/task/v3"
+	"github.com/go-task/task/v3/internal/logger"
+	"github.com/go-task/task/v3/internal/output"
+	"github.com/go-task/task/v3/internal/templater"
+	"github.com/go-task/task/v3/internal/term"
+)
+
+const (
+	systemTaskName   = "Task messages"
+	maxTaskOutputLen = 10 << 20
+)
+
+// UI captures task lifecycle and output events for the interactive interface.
+type UI struct {
+	logger        *logger.Logger
+	input         io.Reader
+	output        io.Writer
+	statusLabels  bool
+	taskNavigator tuiTaskNavigator
+
+	mutex   sync.RWMutex
+	program *tea.Program
+
+	outputMutex  sync.Mutex
+	pending      map[uint64]pendingOutput
+	outputQueued bool
+}
+
+type pendingOutput struct {
+	name string
+	data string
+}
+
+// Options configures the execution dashboard.
+type Options struct {
+	Status        string
+	TaskNavigator string
+}
+
+// New creates a terminal interface using the logger's input and output streams.
+func New(log *logger.Logger, options Options) (*UI, error) {
+	if !log.AssumeTerm && !term.IsTerminal() {
+		return nil, fmt.Errorf("task: --tui requires an interactive terminal")
+	}
+	statusLabels := false
+	switch options.Status {
+	case "", "icons":
+	case "labels":
+		statusLabels = true
+	default:
+		return nil, fmt.Errorf(`task: invalid TUI status style %q: expected "icons" or "labels"`, options.Status)
+	}
+	taskNavigator := taskNavigatorList
+	switch options.TaskNavigator {
+	case "", "list":
+	case "tree":
+		taskNavigator = taskNavigatorTree
+	default:
+		return nil, fmt.Errorf(`task: invalid TUI task navigator %q: expected "list" or "tree"`, options.TaskNavigator)
+	}
+	return &UI{
+		logger:        log,
+		input:         log.Stdin,
+		output:        log.Stdout,
+		statusLabels:  statusLabels,
+		taskNavigator: taskNavigator,
+		pending:       make(map[uint64]pendingOutput),
+	}, nil
+}
+
+// WrapWriter satisfies Output. Executor calls WrapWriterForTask so output can
+// be associated with a specific invocation; other callers use the system log.
+func (t *UI) WrapWriter(_ io.Writer, _ io.Writer, _ string, _ *templater.Cache) (io.Writer, io.Writer, output.CloseFunc) {
+	w := &tuiWriter{ui: t, name: systemTaskName}
+	return w, w, func(error) error { return nil }
+}
+
+func (t *UI) WrapWriterForTask(_ io.Writer, _ io.Writer, task output.TaskInvocation, _ *templater.Cache) (io.Writer, io.Writer, output.CloseFunc) {
+	w := &tuiWriter{ui: t, id: task.ID, name: task.Name}
+	return w, w, func(error) error { return nil }
+}
+
+func (t *UI) TaskScheduled(task output.TaskInvocation) {
+	t.send(taskScheduledMsg{task: task})
+}
+
+func (t *UI) TaskStarted(task output.TaskInvocation) {
+	t.send(taskStartedMsg{task: task})
+}
+
+func (t *UI) TaskFinished(id uint64, err error) {
+	t.send(taskFinishedMsg{id: id, err: err})
+}
+
+func (t *UI) TaskJoined(id, ownerID uint64) {
+	t.send(taskJoinedMsg{id: id, ownerID: ownerID})
+}
+
+func (*UI) IsTerminalUI() {}
+
+// Run opens the launcher when calls is empty, or starts the calls immediately.
+func (t *UI) Run(ctx context.Context, executor *task.Executor, calls []*task.Call) error {
+	runCtx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	var launcher launcherModel
+	if len(calls) == 0 {
+		tasks, err := executor.GetTaskList(task.FilterOutInternal)
+		if err != nil {
+			return err
+		}
+		launcher = newLauncherModel(tasks)
+	}
+
+	execution := newTUIModel(cancel)
+	execution.statusLabels = t.statusLabels
+	execution.taskNavigator = t.taskNavigator
+
+	done := make(chan error, 1)
+	var started atomic.Bool
+	var startOnce sync.Once
+	start := func(selectedCalls []*task.Call) {
+		startOnce.Do(func() {
+			started.Store(true)
+			go func() {
+				err := executor.Run(runCtx, selectedCalls...)
+				done <- err
+				t.send(executionDoneMsg{ui: t, err: err})
+			}()
+		})
+	}
+
+	var normalTask string
+	model := newAppModel(
+		launcher,
+		execution,
+		len(calls) == 0,
+		func(names []string) {
+			selectedCalls := make([]*task.Call, len(names))
+			for i, name := range names {
+				selectedCalls[i] = &task.Call{Task: name}
+			}
+			start(selectedCalls)
+		},
+		func(name string) { normalTask = name },
+	)
+	program := tea.NewProgram(
+		model,
+		tea.WithInput(t.input),
+		tea.WithOutput(t.output),
+		tea.WithFilter(func(_ tea.Model, msg tea.Msg) tea.Msg {
+			if _, ok := msg.(tea.InterruptMsg); ok {
+				return interruptRequestedMsg{}
+			}
+			return msg
+		}),
+	)
+
+	t.mutex.Lock()
+	t.program = program
+	t.mutex.Unlock()
+
+	oldOutput := executor.Output
+	executor.Output = t
+
+	oldStdout, oldStderr := t.logger.Stdout, t.logger.Stderr
+	systemWriter := &tuiWriter{ui: t, name: systemTaskName}
+	t.logger.Stdout, t.logger.Stderr = systemWriter, systemWriter
+	var restoreOnce sync.Once
+	restore := func() {
+		restoreOnce.Do(func() {
+			executor.Output = oldOutput
+			t.logger.Stdout, t.logger.Stderr = oldStdout, oldStderr
+			t.mutex.Lock()
+			t.program = nil
+			t.mutex.Unlock()
+		})
+	}
+	defer restore()
+
+	go func() {
+		<-runCtx.Done()
+		program.Send(interruptRequestedMsg{})
+	}()
+	if len(calls) > 0 {
+		start(calls)
+	}
+
+	_, uiErr := program.Run()
+	cancel()
+	var runErr error
+	if started.Load() {
+		runErr = <-done
+	}
+	if uiErr != nil {
+		return fmt.Errorf("task: TUI failed: %w", uiErr)
+	}
+	if normalTask != "" {
+		restore()
+		return executor.Run(ctx, &task.Call{Task: normalTask})
+	}
+	return runErr
+}
+
+func (t *UI) send(msg tea.Msg) {
+	t.mutex.RLock()
+	program := t.program
+	t.mutex.RUnlock()
+	if program != nil {
+		program.Send(msg)
+	}
+}
+
+func (t *UI) enqueueOutput(id uint64, name, data string) {
+	t.outputMutex.Lock()
+	pending := t.pending[id]
+	pending.name = name
+	pending.data += data
+	t.pending[id] = pending
+	if t.outputQueued {
+		t.outputMutex.Unlock()
+		return
+	}
+	t.outputQueued = true
+	t.outputMutex.Unlock()
+
+	// Sending asynchronously lets bursts of command output collapse into one
+	// model update instead of rebuilding the viewport for every pipe write.
+	go t.send(outputReadyMsg{ui: t})
+}
+
+func (t *UI) drainOutput() map[uint64]pendingOutput {
+	t.outputMutex.Lock()
+	defer t.outputMutex.Unlock()
+	output := t.pending
+	t.pending = make(map[uint64]pendingOutput)
+	t.outputQueued = false
+	return output
+}
+
+type tuiWriter struct {
+	ui   *UI
+	id   uint64
+	name string
+}
+
+func (w *tuiWriter) Write(p []byte) (int, error) {
+	data := string(append([]byte(nil), p...))
+	w.ui.enqueueOutput(w.id, w.name, data)
+	return len(p), nil
+}

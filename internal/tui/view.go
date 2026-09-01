@@ -1,4 +1,4 @@
-package output
+package tui
 
 import (
 	"fmt"
@@ -37,7 +37,9 @@ func (m tuiModel) renderContent() string {
 		help = " tab/←/→ pane  •  ↑/↓ or pgup/pgdn scroll  •  wheel  •  c select text  •  q quit"
 	}
 	helpStyle := tuiHelpStyle
-	if m.done {
+	if m.quitting && !m.done {
+		help = " stopping tasks… waiting for processes to exit"
+	} else if m.done {
 		if m.err != nil {
 			help = " execution failed  •  c select text  •  enter/q quit"
 			helpStyle = tuiFailureStyle

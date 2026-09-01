@@ -15,54 +15,7 @@ import (
 	"github.com/go-task/task/v3"
 	"github.com/go-task/task/v3/internal/output"
 	"github.com/go-task/task/v3/internal/templater"
-	"github.com/go-task/task/v3/taskfile/ast"
 )
-
-func TestTUIOutputStyleKeepsTaskfileOptions(t *testing.T) {
-	t.Parallel()
-
-	dir := t.TempDir()
-	taskfile := `version: '3'
-output:
-  tui:
-    status: icons
-    task_navigator: tree
-tasks:
-  default: echo done
-`
-	require.NoError(t, os.WriteFile(filepath.Join(dir, "Taskfile.yml"), []byte(taskfile), 0o600))
-
-	tests := []struct {
-		name   string
-		output ast.Output
-		want   ast.OutputTUI
-	}{
-		{
-			name:   "CLI selects TUI mode",
-			output: ast.Output{Name: "tui"},
-			want:   ast.OutputTUI{Status: "icons", TaskNavigator: "tree"},
-		},
-		{
-			name:   "CLI option overrides one Taskfile option",
-			output: ast.Output{Name: "tui", TUI: ast.OutputTUI{Status: "labels"}},
-			want:   ast.OutputTUI{Status: "labels", TaskNavigator: "tree"},
-		},
-	}
-
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			e := task.NewExecutor(
-				task.WithDir(dir),
-				task.WithStdout(io.Discard),
-				task.WithStderr(io.Discard),
-				task.WithOutputStyle(test.output),
-				task.WithAssumeTerm(true),
-			)
-			require.NoError(t, e.Setup())
-			assert.Equal(t, test.want, e.OutputStyle.TUI)
-		})
-	}
-}
 
 func TestTaskLifecycleOutput(t *testing.T) {
 	t.Parallel()
@@ -184,6 +137,41 @@ tasks:
 	assert.ErrorIs(t, recorder.finishErrors[byName["slow"].ID], context.Canceled)
 }
 
+func TestTaskLifecycleSchedulesAllRequestedRootsBeforeExecution(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	taskfile := `version: '3'
+tasks:
+  build: echo build
+  test: echo test
+`
+	require.NoError(t, os.WriteFile(filepath.Join(dir, "Taskfile.yml"), []byte(taskfile), 0o600))
+
+	e := task.NewExecutor(
+		task.WithDir(dir),
+		task.WithStdout(io.Discard),
+		task.WithStderr(io.Discard),
+		task.WithSilent(true),
+		task.WithForce(true),
+	)
+	require.NoError(t, e.Setup())
+	recorder := &lifecycleRecorder{}
+	e.Output = recorder
+
+	require.NoError(t, e.Run(
+		t.Context(),
+		&task.Call{Task: "build"},
+		&task.Call{Task: "test"},
+	))
+	assert.Equal(t, 2, recorder.scheduledAtFirstStart)
+	assert.Equal(t, []string{"build", "test"}, invocationNames(recorder.scheduled))
+	for _, invocation := range recorder.scheduled {
+		assert.Equal(t, invocation.ID, invocation.RootID)
+		assert.Zero(t, invocation.ParentID)
+	}
+}
+
 type lifecycleRecorder struct {
 	mutex        sync.Mutex
 	scheduled    []output.TaskInvocation
@@ -192,6 +180,8 @@ type lifecycleRecorder struct {
 	outputs      map[uint64]*bytes.Buffer
 	joined       map[uint64]uint64
 	finishErrors map[uint64]error
+
+	scheduledAtFirstStart int
 }
 
 func (*lifecycleRecorder) WrapWriter(_ io.Writer, _ io.Writer, _ string, _ *templater.Cache) (io.Writer, io.Writer, output.CloseFunc) {
@@ -215,6 +205,9 @@ func (r *lifecycleRecorder) WrapWriterForTask(_ io.Writer, _ io.Writer, task out
 func (r *lifecycleRecorder) TaskStarted(task output.TaskInvocation) {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
+	if len(r.started) == 0 {
+		r.scheduledAtFirstStart = len(r.scheduled)
+	}
 	r.started = append(r.started, task)
 }
 
@@ -251,4 +244,12 @@ func countInvocations(invocations []output.TaskInvocation, name string) int {
 		}
 	}
 	return count
+}
+
+func invocationNames(invocations []output.TaskInvocation) []string {
+	names := make([]string, len(invocations))
+	for i, invocation := range invocations {
+		names[i] = invocation.Name
+	}
+	return names
 }

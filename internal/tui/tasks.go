@@ -1,4 +1,4 @@
-package output
+package tui
 
 import (
 	"cmp"
@@ -7,9 +7,11 @@ import (
 	"strings"
 
 	tea "charm.land/bubbletea/v2"
+
+	"github.com/go-task/task/v3/internal/output"
 )
 
-func (m *tuiModel) scheduleTask(invocation TaskInvocation) *tuiTask {
+func (m *tuiModel) scheduleTask(invocation output.TaskInvocation) *tuiTask {
 	if task := m.byID[invocation.ID]; task != nil {
 		return task
 	}
@@ -59,7 +61,7 @@ func (m *tuiModel) joinTask(id, ownerID uint64) {
 	if owner := m.byID[ownerID]; owner != nil {
 		owner.shared = true
 	}
-	if m.taskNavigator == taskNavigatorList && m.hasSelect && m.selectedID == id {
+	if m.taskNavigator == taskNavigatorList && !task.isRoot && m.hasSelect && m.selectedID == id {
 		m.saveViewport()
 		m.selectedID = ownerID
 		m.hasSelect = ownerID != 0
@@ -130,15 +132,18 @@ func (m tuiModel) taskName(task *tuiTask) string {
 }
 
 func (m tuiModel) taskNameKey(task *tuiTask) tuiTaskKey {
-	groupID := task.rootID
-	if m.taskNavigator == taskNavigatorTree {
+	groupID := uint64(0)
+	if !task.isRoot {
+		groupID = task.rootID
+	}
+	if !task.isRoot && m.taskNavigator == taskNavigatorTree {
 		groupID = task.parentID
 	}
 	return tuiTaskKey{groupID: groupID, name: task.name, isRoot: task.isRoot}
 }
 
 func (m tuiModel) taskVisible(task *tuiTask) bool {
-	return m.taskNavigator == taskNavigatorTree || task.ownerID == 0
+	return m.taskNavigator == taskNavigatorTree || task.isRoot || task.ownerID == 0
 }
 
 func (m tuiModel) taskState(task *tuiTask) taskState {

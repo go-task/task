@@ -1,4 +1,4 @@
-package output
+package tui
 
 import (
 	"context"
@@ -14,27 +14,26 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/go-task/task/v3/internal/logger"
-	"github.com/go-task/task/v3/taskfile/ast"
+	"github.com/go-task/task/v3/internal/output"
 )
 
-func TestBuildTUI(t *testing.T) {
+func TestNew(t *testing.T) {
 	t.Parallel()
 
-	got, err := BuildFor(&ast.Output{Name: "tui"}, &logger.Logger{AssumeTerm: true})
+	got, err := New(&logger.Logger{AssumeTerm: true}, Options{})
 	require.NoError(t, err)
-	assert.IsType(t, &TUI{}, got)
-	assert.Equal(t, taskNavigatorList, got.(*TUI).taskNavigator)
+	assert.Equal(t, taskNavigatorList, got.taskNavigator)
 
-	got, err = BuildFor(&ast.Output{Name: "tui", TUI: ast.OutputTUI{Status: "labels", TaskNavigator: "tree"}}, &logger.Logger{AssumeTerm: true})
+	got, err = New(&logger.Logger{AssumeTerm: true}, Options{Status: "labels", TaskNavigator: "tree"})
 	require.NoError(t, err)
-	assert.True(t, got.(*TUI).statusLabels)
-	assert.Equal(t, taskNavigatorTree, got.(*TUI).taskNavigator)
+	assert.True(t, got.statusLabels)
+	assert.Equal(t, taskNavigatorTree, got.taskNavigator)
 
-	_, err = BuildFor(&ast.Output{Name: "tui", TUI: ast.OutputTUI{Status: "unknown"}}, &logger.Logger{AssumeTerm: true})
+	_, err = New(&logger.Logger{AssumeTerm: true}, Options{Status: "unknown"})
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), `expected "icons" or "labels"`)
 
-	_, err = BuildFor(&ast.Output{Name: "tui", TUI: ast.OutputTUI{TaskNavigator: "unknown"}}, &logger.Logger{AssumeTerm: true})
+	_, err = New(&logger.Logger{AssumeTerm: true}, Options{TaskNavigator: "unknown"})
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), `expected "list" or "tree"`)
 }
@@ -275,6 +274,50 @@ func TestTUIModelNestsExecutionsUnderTheirParent(t *testing.T) {
 	assert.True(t, strings.HasPrefix(lines[4], "└─ ● second-child"), lines[4])
 }
 
+func TestTUIModelShowsMultipleIndependentRoots(t *testing.T) {
+	t.Parallel()
+
+	m := newTUIModel(func() {})
+	m = updateTUIModel(t, m, started(1, 0, "build"))
+	m = updateTUIModel(t, m, started(2, 1, "compile"))
+	m = updateTUIModel(t, m, started(3, 0, "test"))
+	m = updateTUIModel(t, m, started(4, 3, "unit"))
+
+	assert.Equal(t, []string{"build", "compile", "test", "unit"}, rowNames(m.taskRows()))
+	list := ansi.Strip(m.taskList(40, 10))
+	assert.Contains(t, list, "● build\n└─ ● compile")
+	assert.Contains(t, list, "● test\n└─ ● unit")
+}
+
+func TestTUIModelNumbersRepeatedRootCalls(t *testing.T) {
+	t.Parallel()
+
+	m := newTUIModel(func() {})
+	m = updateTUIModel(t, m, started(1, 0, "build"))
+	m = updateTUIModel(t, m, started(2, 0, "build"))
+
+	assert.Equal(t, "#1 build", m.taskName(m.byID[1]))
+	assert.Equal(t, "#2 build", m.taskName(m.byID[2]))
+	m.selectTask(1)
+	m = updateTUIModel(t, m, taskJoinedMsg{id: 2, ownerID: 1})
+	assert.Equal(t, []uint64{1, 2}, rowIDs(m.taskRows()))
+	assert.Equal(t, uint64(2), m.selectedID)
+	assert.Equal(t, uint64(1), m.selectedTask().id)
+}
+
+func TestTUIModelCancelsTasksLeftPendingWhenExecutionEnds(t *testing.T) {
+	t.Parallel()
+
+	m := newTUIModel(func() {})
+	m = updateTUIModel(t, m, scheduled(1, 1, "first"))
+	m = updateTUIModel(t, m, started(2, 0, "second"))
+	m = updateTUIModel(t, m, taskFinishedMsg{id: 2})
+	m = updateTUIModel(t, m, executionDoneMsg{})
+
+	assert.Equal(t, taskCanceled, m.byID[1].state)
+	assert.Equal(t, taskSucceeded, m.byID[2].state)
+}
+
 func TestTUIModelPrefersFirstChildButAllowsSelectingRoot(t *testing.T) {
 	t.Parallel()
 
@@ -459,16 +502,22 @@ func TestTUIModelQuitCancelsExecution(t *testing.T) {
 	m := newTUIModel(cancel)
 	key := tea.KeyPressMsg{Code: 'q', Text: "q"}
 	next, cmd := m.Update(key)
+	require.Nil(t, cmd)
+	assert.ErrorIs(t, ctx.Err(), context.Canceled)
+	m = next.(tuiModel)
+	assert.True(t, m.quitting)
+	assert.Contains(t, m.View().Content, "waiting for processes to exit")
+
+	next, cmd = m.Update(executionDoneMsg{})
 	require.NotNil(t, cmd)
 	assert.IsType(t, tea.QuitMsg{}, cmd())
-	assert.ErrorIs(t, ctx.Err(), context.Canceled)
-	assert.IsType(t, tuiModel{}, next)
+	assert.True(t, next.(tuiModel).done)
 }
 
 func TestTUIOutputQueueCoalescesWrites(t *testing.T) {
 	t.Parallel()
 
-	tui := &TUI{pending: make(map[uint64]pendingOutput)}
+	tui := &UI{pending: make(map[uint64]pendingOutput)}
 	tui.enqueueOutput(7, "build", "one")
 	tui.enqueueOutput(7, "build", " two")
 
@@ -488,7 +537,7 @@ func started(id, rootID uint64, name string) taskStartedMsg {
 }
 
 func startedUnder(id, parentID, rootID uint64, name string) taskStartedMsg {
-	return taskStartedMsg{task: TaskInvocation{ID: id, ParentID: parentID, RootID: rootID, Name: name}}
+	return taskStartedMsg{task: output.TaskInvocation{ID: id, ParentID: parentID, RootID: rootID, Name: name}}
 }
 
 func scheduled(id, rootID uint64, name string) taskScheduledMsg {
@@ -500,7 +549,7 @@ func scheduled(id, rootID uint64, name string) taskScheduledMsg {
 }
 
 func scheduledUnder(id, parentID, rootID uint64, name string) taskScheduledMsg {
-	return taskScheduledMsg{task: TaskInvocation{ID: id, ParentID: parentID, RootID: rootID, Name: name}}
+	return taskScheduledMsg{task: output.TaskInvocation{ID: id, ParentID: parentID, RootID: rootID, Name: name}}
 }
 
 func updateTUIModel(t *testing.T, m tuiModel, msg tea.Msg) tuiModel {

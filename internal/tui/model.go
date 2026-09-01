@@ -1,4 +1,4 @@
-package output
+package tui
 
 import (
 	"context"
@@ -7,6 +7,7 @@ import (
 	tea "charm.land/bubbletea/v2"
 
 	"github.com/go-task/task/v3/errors"
+	"github.com/go-task/task/v3/internal/output"
 )
 
 type taskState uint8
@@ -50,8 +51,8 @@ type tuiTask struct {
 }
 
 type (
-	taskScheduledMsg struct{ task TaskInvocation }
-	taskStartedMsg   struct{ task TaskInvocation }
+	taskScheduledMsg struct{ task output.TaskInvocation }
+	taskStartedMsg   struct{ task output.TaskInvocation }
 	taskFinishedMsg  struct {
 		id  uint64
 		err error
@@ -67,8 +68,12 @@ type taskOutputMsg struct {
 	name, data string
 }
 type (
-	outputReadyMsg   struct{ tui *TUI }
-	executionDoneMsg struct{ err error }
+	outputReadyMsg   struct{ ui *UI }
+	executionDoneMsg struct {
+		ui  *UI
+		err error
+	}
+	interruptRequestedMsg struct{}
 )
 
 type tuiModel struct {
@@ -82,6 +87,7 @@ type tuiModel struct {
 	height        int
 	viewport      viewport.Model
 	done          bool
+	quitting      bool
 	err           error
 	cancel        context.CancelFunc
 	statusLabels  bool
@@ -154,16 +160,33 @@ func (m tuiModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.appendOutput(msg.id, msg.name, msg.data)
 		return m, nil
 	case outputReadyMsg:
-		for id, pending := range msg.tui.drainOutput() {
+		for id, pending := range msg.ui.drainOutput() {
 			m.appendOutput(id, pending.name, pending.data)
 		}
 		return m, nil
 	case executionDoneMsg:
+		if msg.ui != nil {
+			for id, pending := range msg.ui.drainOutput() {
+				m.appendOutput(id, pending.name, pending.data)
+			}
+		}
+		for _, task := range m.tasks {
+			if task.id != 0 && (task.state == taskPending || task.state == taskRunning) {
+				task.state = taskCanceled
+			}
+		}
 		m.done, m.err = true, msg.err
+		if m.quitting {
+			return m, tea.Quit
+		}
 		return m, nil
-	case tea.InterruptMsg:
+	case interruptRequestedMsg:
+		if m.done {
+			return m, tea.Quit
+		}
+		m.quitting = true
 		m.cancel()
-		return m, tea.Quit
+		return m, nil
 	case tea.MouseClickMsg:
 		if m.selectingText {
 			return m, nil
@@ -189,10 +212,12 @@ func (m *tuiModel) handleKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 			m.leaveTextSelection()
 			return *m, nil
 		case "q", "ctrl+c":
-			if !m.done {
-				m.cancel()
+			if m.done {
+				return *m, tea.Quit
 			}
-			return *m, tea.Quit
+			m.quitting = true
+			m.cancel()
+			return *m, nil
 		case "up", "k":
 			m.selectionPage.ScrollUp(1)
 		case "down", "j":
@@ -212,10 +237,12 @@ func (m *tuiModel) handleKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 	}
 	switch msg.String() {
 	case "q", "esc", "ctrl+c":
-		if !m.done {
-			m.cancel()
+		if m.done {
+			return *m, tea.Quit
 		}
-		return *m, tea.Quit
+		m.quitting = true
+		m.cancel()
+		return *m, nil
 	case "tab", "shift+tab":
 		m.toggleFocus()
 		return *m, nil

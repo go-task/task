@@ -1,7 +1,6 @@
 package output
 
 import (
-	"context"
 	"fmt"
 	"io"
 
@@ -25,40 +24,24 @@ type TaskInvocation struct {
 	Name     string
 }
 
-// Runner is implemented by output modes that need to own the terminal while
-// tasks execute.
-type Runner interface {
-	Run(context.Context, func(context.Context) error) error
-}
-
-// TaskLifecycle is implemented by output modes that display task state in
-// addition to command output.
+// TaskLifecycle is implemented by output consumers that also track task state.
 type TaskLifecycle interface {
 	TaskScheduled(TaskInvocation)
 	TaskStarted(TaskInvocation)
 	TaskFinished(id uint64, err error)
 }
 
-// TaskJoinLifecycle is implemented by output modes that distinguish task calls
+// TaskJoinLifecycle is implemented by output consumers that distinguish calls
 // from executions. A joined call waits for the execution owned by ownerID and
 // does not produce its own output.
 type TaskJoinLifecycle interface {
 	TaskJoined(id, ownerID uint64)
 }
 
-// TaskOutput is implemented by output modes that keep output for individual
-// task invocations. Other output modes continue to use Output.WrapWriter.
+// TaskOutput is implemented by output consumers that keep output for individual
+// task invocations. Other consumers continue to use Output.WrapWriter.
 type TaskOutput interface {
 	WrapWriterForTask(stdOut, stdErr io.Writer, task TaskInvocation, cache *templater.Cache) (io.Writer, io.Writer, CloseFunc)
-}
-
-// Run executes fn through the output mode when it needs to manage the whole
-// execution lifecycle. Traditional stream-based output modes simply call fn.
-func Run(o Output, ctx context.Context, fn func(context.Context) error) error {
-	if runner, ok := o.(Runner); ok {
-		return runner.Run(ctx, fn)
-	}
-	return fn(ctx)
 }
 
 func TaskScheduled(o Output, task TaskInvocation) {
@@ -93,8 +76,14 @@ func WrapWriter(o Output, stdOut, stdErr io.Writer, task TaskInvocation, cache *
 	return o.WrapWriter(stdOut, stdErr, task.Name, cache)
 }
 
-func IsTUI(o Output) bool {
-	_, ok := o.(*TUI)
+// TerminalUI marks an Output that owns the terminal while tasks are running.
+type TerminalUI interface {
+	IsTerminalUI()
+}
+
+// IsTerminalUI reports whether an Output owns the terminal while tasks run.
+func IsTerminalUI(o Output) bool {
+	_, ok := o.(TerminalUI)
 	return ok
 }
 
@@ -117,11 +106,6 @@ func BuildFor(o *ast.Output, logger *logger.Logger) (Output, error) {
 			return nil, err
 		}
 		return NewPrefixed(logger), nil
-	case "tui":
-		if err := checkOutputGroupUnset(o); err != nil {
-			return nil, err
-		}
-		return NewTUI(logger, o.TUI)
 	default:
 		return nil, fmt.Errorf(`task: output style %q not recognized`, o.Name)
 	}

@@ -12,8 +12,6 @@ type Output struct {
 	Name string `yaml:"-"`
 	// Group specific style
 	Group OutputGroup
-	// TUI specific options
-	TUI OutputTUI
 }
 
 // IsSet returns true if and only if a custom output style is set.
@@ -35,29 +33,18 @@ func (s *Output) UnmarshalYAML(node *yaml.Node) error {
 	case yaml.MappingNode:
 		var tmp struct {
 			Group *OutputGroup
-			TUI   *OutputTUI
 		}
 		if err := node.Decode(&tmp); err != nil {
 			return errors.NewTaskfileDecodeError(err, node)
 		}
-		if tmp.Group != nil && tmp.TUI != nil {
-			return errors.NewTaskfileDecodeError(nil, node).WithMessage(`output style must have only one of the "group" or "tui" keys`)
+		if tmp.Group == nil {
+			return errors.NewTaskfileDecodeError(nil, node).WithMessage(`output style must have the "group" key when in mapping form`)
 		}
-		if tmp.Group != nil {
-			*s = Output{
-				Name:  "group",
-				Group: *tmp.Group,
-			}
-			return nil
+		*s = Output{
+			Name:  "group",
+			Group: *tmp.Group,
 		}
-		if tmp.TUI != nil {
-			*s = Output{
-				Name: "tui",
-				TUI:  *tmp.TUI,
-			}
-			return nil
-		}
-		return errors.NewTaskfileDecodeError(nil, node).WithMessage(`output style must have the "group" or "tui" key when in mapping form`)
+		return nil
 	}
 
 	return errors.NewTaskfileDecodeError(nil, node).WithTypeMessage("output")
@@ -67,12 +54,6 @@ func (s *Output) UnmarshalYAML(node *yaml.Node) error {
 type OutputGroup struct {
 	Begin, End string
 	ErrorOnly  bool `yaml:"error_only"`
-}
-
-// OutputTUI contains options specific to the TUI output style.
-type OutputTUI struct {
-	Status        string `yaml:"status"`
-	TaskNavigator string `yaml:"task_navigator"`
 }
 
 // IsSet returns true if and only if a custom output style is set.

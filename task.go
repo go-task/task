@@ -39,14 +39,8 @@ type MatchingTask struct {
 
 // Run runs Task
 func (e *Executor) Run(ctx context.Context, calls ...*Call) error {
-	return output.Run(e.Output, ctx, func(ctx context.Context) error {
-		return e.run(ctx, calls...)
-	})
-}
-
-func (e *Executor) run(ctx context.Context, calls ...*Call) error {
-	if output.IsTUI(e.Output) && e.Interactive {
-		return errors.New(`task: output style "tui" cannot be combined with interactive variable prompting`)
+	if output.IsTerminalUI(e.Output) && e.Interactive {
+		return errors.New("task: --tui cannot be combined with interactive variable prompting")
 	}
 
 	// check if given tasks exist
@@ -92,8 +86,17 @@ func (e *Executor) run(ctx context.Context, calls ...*Call) error {
 	if err != nil {
 		return err
 	}
-	if output.IsTUI(e.Output) && len(watchCalls) > 0 {
-		return errors.New(`task: output style "tui" does not currently support watch mode`)
+	if output.IsTerminalUI(e.Output) && len(watchCalls) > 0 {
+		return errors.New("task: --tui does not currently support watch mode")
+	}
+	// Schedule every requested root before starting execution so lifecycle
+	// consumers can present the complete set even when roots run sequentially.
+	for _, call := range regularCalls {
+		t, err := e.GetTask(call)
+		if err != nil {
+			return err
+		}
+		e.taskInvocation(call, t.Name())
 	}
 
 	g := &errgroup.Group{}
@@ -172,27 +175,17 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) (runErr error) {
 	if err != nil {
 		return err
 	}
-	if output.IsTUI(e.Output) {
+	invocation := e.taskInvocation(call, t.Name())
+	defer func() { output.TaskFinished(e.Output, call.invocationID, runErr) }()
+
+	if output.IsTerminalUI(e.Output) {
 		if t.Interactive {
-			return fmt.Errorf(`task: task %q is interactive and cannot run with output style "tui"`, t.Name())
+			return fmt.Errorf("task: task %q is interactive and cannot run with --tui", t.Name())
 		}
 		if len(t.Prompt) > 0 && !e.AssumeYes {
-			return fmt.Errorf(`task: task %q requires confirmation; use --yes with output style "tui"`, t.Name())
+			return fmt.Errorf("task: task %q requires confirmation; use --yes with --tui", t.Name())
 		}
 	}
-
-	call.invocationID = atomic.AddUint64(&e.taskInvocationID, 1)
-	if !call.Indirect || call.rootInvocationID == 0 {
-		call.rootInvocationID = call.invocationID
-	}
-	invocation := output.TaskInvocation{
-		ID:       call.invocationID,
-		ParentID: call.parentInvocationID,
-		RootID:   call.rootInvocationID,
-		Name:     t.Prefix,
-	}
-	output.TaskScheduled(e.Output, invocation)
-	defer func() { output.TaskFinished(e.Output, call.invocationID, runErr) }()
 
 	// Check if condition after CompiledTask so dynamic variables are resolved
 	if strings.TrimSpace(t.If) != "" {
@@ -326,6 +319,29 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) (runErr error) {
 	}
 
 	return nil
+}
+
+func (e *Executor) taskInvocation(call *Call, name string) output.TaskInvocation {
+	if call.invocationID == 0 {
+		call.invocationID = atomic.AddUint64(&e.taskInvocationID, 1)
+		if !call.Indirect || call.rootInvocationID == 0 {
+			call.rootInvocationID = call.invocationID
+		}
+		invocation := output.TaskInvocation{
+			ID:       call.invocationID,
+			ParentID: call.parentInvocationID,
+			RootID:   call.rootInvocationID,
+			Name:     name,
+		}
+		output.TaskScheduled(e.Output, invocation)
+		return invocation
+	}
+	return output.TaskInvocation{
+		ID:       call.invocationID,
+		ParentID: call.parentInvocationID,
+		RootID:   call.rootInvocationID,
+		Name:     name,
+	}
 }
 
 func (e *Executor) mkdir(t *ast.Task) error {
@@ -462,7 +478,7 @@ func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call *Call, i in
 		}
 
 		logCommand := e.Verbose || (!call.Silent && !cmd.Silent && !t.IsSilent() && !e.Taskfile.Silent && !e.Silent)
-		if logCommand && (!output.IsTUI(e.Output) || e.Dry) {
+		if logCommand && (!output.IsTerminalUI(e.Output) || e.Dry) {
 			e.Logger.Errf(logger.Green, "task: [%s] %s\n", t.Name(), cmd.LogCmd)
 		}
 
@@ -485,7 +501,7 @@ func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call *Call, i in
 			RootID:   call.rootInvocationID,
 			Name:     t.Prefix,
 		}, outputTemplater)
-		if logCommand && output.IsTUI(e.Output) {
+		if logCommand && output.IsTerminalUI(e.Output) {
 			e.Logger.FOutf(stdErr, logger.Green, "task: [%s] %s\n", t.Name(), cmd.LogCmd)
 		}
 
