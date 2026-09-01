@@ -135,6 +135,16 @@ func TestTUILayoutGivesWideTerminalsMoreTaskSpace(t *testing.T) {
 	assert.Equal(t, compact.bodyHeight-tuiPanelStyle.GetVerticalFrameSize(), compact.innerHeight)
 }
 
+func TestTUITextTruncationUsesTerminalCellWidth(t *testing.T) {
+	t.Parallel()
+
+	assert.LessOrEqual(t, ansi.StringWidth(truncateText("界界界", 4)), 4)
+	middle := truncateMiddle("build-界界-target", 10)
+	assert.LessOrEqual(t, ansi.StringWidth(middle), 10)
+	assert.Contains(t, middle, "…")
+	assert.True(t, strings.HasSuffix(middle, "arget"), middle)
+}
+
 func TestTUIModelKeepsRepeatedTaskCallsSeparate(t *testing.T) {
 	t.Parallel()
 
@@ -186,6 +196,23 @@ func TestTUIModelHidesCallsThatJoinAnExistingExecution(t *testing.T) {
 	assert.NotContains(t, m.taskList(30, 10), "#2")
 }
 
+func TestTUIModelRenumbersRemainingRepeatedCallsAfterJoin(t *testing.T) {
+	t.Parallel()
+
+	m := newTUIModel(func() {}, false)
+	m = updateTUIModel(t, m, started(1, 0, "root"))
+	m = updateTUIModel(t, m, started(2, 1, "worker"))
+	m = updateTUIModel(t, m, scheduled(3, 1, "worker", false))
+	m = updateTUIModel(t, m, started(4, 1, "worker"))
+	m = updateTUIModel(t, m, taskJoinedMsg{id: 3, ownerID: 2})
+
+	assert.Equal(t, 1, m.byID[2].occurrence)
+	assert.Equal(t, 2, m.byID[4].occurrence)
+	assert.Contains(t, m.taskList(30, 10), "#1 worker")
+	assert.Contains(t, m.taskList(30, 10), "#2 worker")
+	assert.NotContains(t, m.taskList(30, 10), "#3 worker")
+}
+
 func TestTUIModelFlattensExecutionsUnderTheirRoot(t *testing.T) {
 	t.Parallel()
 
@@ -214,7 +241,7 @@ func TestTUIModelShowsPendingTasksAndDoesNotSelectRoot(t *testing.T) {
 	m = updateTUIModel(t, m, scheduled(1, 1, "root", false))
 	assert.False(t, m.hasSelect)
 	m = updateTUIModel(t, m, scheduled(2, 1, "child", false))
-	assert.Equal(t, taskLog, m.byID[2].state)
+	assert.Equal(t, taskPending, m.byID[2].state)
 	assert.Equal(t, uint64(2), m.selectedID)
 
 	m.selectTask(0)
