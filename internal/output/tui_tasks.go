@@ -31,12 +31,19 @@ func (m *tuiModel) scheduleTask(invocation TaskInvocation) *tuiTask {
 	}
 	m.byID[invocation.ID] = task
 	m.tasks = append(m.tasks, task)
-	if m.hasSelect && m.selectedID == task.id {
-		m.refreshOutputView()
-	}
-	if !task.isRoot && !m.hasSelect {
+	if !m.hasSelect {
 		m.selectedID = task.id
 		m.hasSelect = true
+		m.refreshOutputView()
+	} else if !task.isRoot {
+		// Prefer the first child for orchestration roots, while keeping a root
+		// selected if it has already produced output of its own.
+		selected := m.selectedRowTask()
+		if selected != nil && selected.isRoot && selected.output == "" {
+			m.selectedID = task.id
+			m.refreshOutputView()
+		}
+	} else if m.selectedID == task.id {
 		m.refreshOutputView()
 	}
 	return task
@@ -304,17 +311,15 @@ func (m *tuiModel) moveSelection(delta int) {
 		}
 		return
 	}
-	for index += delta; index >= 0 && index < len(rows); index += delta {
-		if !rows[index].task.isRoot {
-			m.selectTask(index)
-			return
-		}
+	index += delta
+	if index >= 0 && index < len(rows) {
+		m.selectTask(index)
 	}
 }
 
 func (m *tuiModel) selectTask(index int) {
 	rows := m.taskRows()
-	if index < 0 || index >= len(rows) || rows[index].task.isRoot {
+	if index < 0 || index >= len(rows) {
 		return
 	}
 	m.saveViewport()
@@ -326,21 +331,14 @@ func (m *tuiModel) selectTask(index int) {
 
 func (m *tuiModel) selectBoundary(last bool) {
 	rows := m.taskRows()
-	if last {
-		for i := range slices.Backward(rows) {
-			if !rows[i].task.isRoot {
-				m.selectTask(i)
-				return
-			}
-		}
+	if len(rows) == 0 {
 		return
 	}
-	for i, row := range rows {
-		if !row.task.isRoot {
-			m.selectTask(i)
-			return
-		}
+	if last {
+		m.selectTask(len(rows) - 1)
+		return
 	}
+	m.selectTask(0)
 }
 
 func (m *tuiModel) keepSelectionVisible() {

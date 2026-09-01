@@ -275,20 +275,52 @@ func TestTUIModelNestsExecutionsUnderTheirParent(t *testing.T) {
 	assert.True(t, strings.HasPrefix(lines[4], "└─ ● second-child"), lines[4])
 }
 
-func TestTUIModelShowsPendingTasksAndDoesNotSelectRoot(t *testing.T) {
+func TestTUIModelPrefersFirstChildButAllowsSelectingRoot(t *testing.T) {
 	t.Parallel()
 
 	m := newTUIModel(func() {})
 	m = updateTUIModel(t, m, scheduled(1, 1, "root"))
-	assert.False(t, m.hasSelect)
+	assert.True(t, m.hasSelect)
+	assert.Equal(t, uint64(1), m.selectedID)
 	m = updateTUIModel(t, m, scheduled(2, 1, "child"))
 	assert.Equal(t, taskPending, m.byID[2].state)
 	assert.Equal(t, uint64(2), m.selectedID)
 
 	m.selectTask(0)
-	assert.Equal(t, uint64(2), m.selectedID)
+	assert.Equal(t, uint64(1), m.selectedID)
 	m = updateTUIModel(t, m, taskFinishedMsg{id: 2})
 	assert.Equal(t, taskSucceeded, m.byID[2].state)
+}
+
+func TestTUIModelMakesRootOutputAccessible(t *testing.T) {
+	t.Parallel()
+
+	m := newTUIModel(func() {})
+	m = updateTUIModel(t, m, tea.WindowSizeMsg{Width: 80, Height: 20})
+	m = updateTUIModel(t, m, started(1, 0, "root"))
+	m = updateTUIModel(t, m, taskOutputMsg{id: 1, name: "root", data: "root output\n"})
+
+	assert.Equal(t, uint64(1), m.selectedID)
+	assert.Contains(t, m.outputPanel(40), "OUTPUT · root")
+	assert.Contains(t, m.viewport.View(), "root output")
+	assert.Contains(t, ansi.Strip(m.taskList(30, 10)), "● root")
+}
+
+func TestTUIModelKeepsRootSelectedWhenItProducedOutputBeforeChild(t *testing.T) {
+	t.Parallel()
+
+	m := newTUIModel(func() {})
+	m = updateTUIModel(t, m, tea.WindowSizeMsg{Width: 80, Height: 20})
+	m = updateTUIModel(t, m, started(1, 0, "root"))
+	m = updateTUIModel(t, m, taskOutputMsg{id: 1, name: "root", data: "root output\n"})
+	m = updateTUIModel(t, m, started(2, 1, "child"))
+
+	assert.Equal(t, uint64(1), m.selectedID)
+	m.moveSelection(1)
+	assert.Equal(t, uint64(2), m.selectedID)
+	m.moveSelection(-1)
+	assert.Equal(t, uint64(1), m.selectedID)
+	assert.Contains(t, m.viewport.View(), "root output")
 }
 
 func TestTUIModelListNavigatorFlattensTasksAndCollapsesSharedCalls(t *testing.T) {

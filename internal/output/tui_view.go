@@ -174,25 +174,11 @@ func (m tuiModel) taskList(width, height int) string {
 	for i := m.listTop; i < end; i++ {
 		row := rows[i]
 		state := m.taskState(row.task)
+		selected := row.task.id == m.selectedID
 		sharedPrefix := ""
 		if m.taskNavigator == taskNavigatorTree && row.task.shared {
 			sharedPrefix = "↳ "
 		}
-		if row.task.isRoot {
-			prefix := ""
-			if !m.statusLabels {
-				prefix = taskIcon(state) + " "
-			}
-			prefix += sharedPrefix
-			name, status := taskNameStatus(m.taskName(row.task), state, width-lipgloss.Width(prefix), m.statusLabels)
-			suffix := ""
-			if status != "" {
-				suffix = " " + taskStateLabel(state, status)
-			}
-			lines = append(lines, prefix+tuiRootStyle.Render(name)+suffix)
-			continue
-		}
-		selected := row.task.id == m.selectedID
 		plainIcon := ""
 		if !m.statusLabels {
 			plainIcon = taskIconText(state) + " "
@@ -205,6 +191,19 @@ func (m tuiModel) taskList(width, height int) string {
 				suffix = " " + status
 			}
 			lines = append(lines, tuiSelectedStyle.Width(width).Render(plainPrefix+name+suffix))
+			continue
+		}
+		if row.task.isRoot {
+			prefix := ""
+			if !m.statusLabels {
+				prefix = taskIcon(state) + " "
+			}
+			prefix += sharedPrefix
+			suffix := ""
+			if status != "" {
+				suffix = " " + taskStateLabel(state, status)
+			}
+			lines = append(lines, prefix+tuiRootStyle.Render(name)+suffix)
 			continue
 		}
 		suffix := ""
