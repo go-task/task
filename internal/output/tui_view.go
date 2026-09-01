@@ -156,15 +156,21 @@ func (m tuiModel) taskList(width, height int) string {
 	end := min(len(rows), m.listTop+max(height-1, 1))
 	for i := m.listTop; i < end; i++ {
 		row := rows[i]
+		state := m.taskState(row.task)
+		sharedPrefix := ""
+		if row.task.shared {
+			sharedPrefix = "↳ "
+		}
 		if row.task.isRoot {
 			prefix := ""
 			if !m.statusLabels {
-				prefix = taskIcon(row.task.state) + " "
+				prefix = taskIcon(state) + " "
 			}
-			name, status := taskNameStatus(m.taskName(row.task), row.task.state, width-lipgloss.Width(prefix), m.statusLabels)
+			prefix += sharedPrefix
+			name, status := taskNameStatus(m.taskName(row.task), state, width-lipgloss.Width(prefix), m.statusLabels)
 			suffix := ""
 			if status != "" {
-				suffix = " " + taskStateLabel(row.task.state, status)
+				suffix = " " + taskStateLabel(state, status)
 			}
 			lines = append(lines, prefix+tuiRootStyle.Render(name)+suffix)
 			continue
@@ -172,10 +178,10 @@ func (m tuiModel) taskList(width, height int) string {
 		selected := row.task.id == m.selectedID
 		plainIcon := ""
 		if !m.statusLabels {
-			plainIcon = taskIconText(row.task.state) + " "
+			plainIcon = taskIconText(state) + " "
 		}
-		plainPrefix := row.treePrefix + plainIcon
-		name, status := taskNameStatus(m.taskName(row.task), row.task.state, width-lipgloss.Width(plainPrefix), m.statusLabels)
+		plainPrefix := row.treePrefix + plainIcon + sharedPrefix
+		name, status := taskNameStatus(m.taskName(row.task), state, width-lipgloss.Width(plainPrefix), m.statusLabels)
 		if selected {
 			suffix := ""
 			if status != "" {
@@ -186,13 +192,13 @@ func (m tuiModel) taskList(width, height int) string {
 		}
 		suffix := ""
 		if status != "" {
-			suffix = " " + taskStateLabel(row.task.state, status)
+			suffix = " " + taskStateLabel(state, status)
 		}
 		icon := ""
 		if !m.statusLabels {
-			icon = taskIcon(row.task.state) + " "
+			icon = taskIcon(state) + " "
 		}
-		line := tuiTreeStyle.Render(row.treePrefix) + icon + name + suffix
+		line := tuiTreeStyle.Render(row.treePrefix) + icon + tuiTreeStyle.Render(sharedPrefix) + name + suffix
 		lines = append(lines, line)
 	}
 	return strings.Join(lines, "\n")
@@ -200,7 +206,7 @@ func (m tuiModel) taskList(width, height int) string {
 
 func (m tuiModel) outputPanel(width int) string {
 	title := "OUTPUT"
-	if task := m.selectedTask(); task != nil {
+	if task := m.selectedRowTask(); task != nil {
 		title += " · " + m.taskName(task)
 	}
 	position := ""

@@ -2803,11 +2803,12 @@ $ task default
 ```
 
 The `tui` output opens an interactive, full-screen view. The requested root
-task is shown as a non-selectable heading on the left. Tasks reached from it
-appear beneath it in a one-level tree and remain visible while pending,
-running, or finished. Repeated executions have separate rows and output views;
-calls that join an existing `run: once` or `run: when_changed` execution share
-its row. Each row shows a status icon by default, including a distinct canceled
+task is shown as a non-selectable heading on the left. Tasks reached from it are
+nested beneath the task that invoked them and remain visible while pending,
+running, or finished. Repeated executions have separate rows and output views.
+Calls that join an existing `run: once` or `run: when_changed` execution remain
+in each tree location, use a `↳` marker, and share the owner's status and output.
+Each row shows a status icon by default, including a distinct canceled
 state for work interrupted by fail-fast cancellation. Text labels can be used
 instead of icons with the `status` option. The
 output of the selected task is shown on the right. Use Tab or the

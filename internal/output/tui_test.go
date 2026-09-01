@@ -174,12 +174,14 @@ func TestTUIModelKeepsRepeatedTaskCallsSeparate(t *testing.T) {
 	assert.Contains(t, m.outputPanel(30), "#2 worker")
 }
 
-func TestTUIModelHidesCallsThatJoinAnExistingExecution(t *testing.T) {
+func TestTUIModelSharesJoinedExecutionStatusAndOutput(t *testing.T) {
 	t.Parallel()
 
 	m := newTUIModel(func() {}, false)
+	m = updateTUIModel(t, m, tea.WindowSizeMsg{Width: 80, Height: 20})
 	m = updateTUIModel(t, m, started(1, 0, "root"))
 	m = updateTUIModel(t, m, started(2, 1, "worker"))
+	m = updateTUIModel(t, m, taskOutputMsg{id: 2, name: "worker", data: "shared output"})
 	m = updateTUIModel(t, m, scheduled(3, 1, "worker", false))
 	require.Len(t, m.tasks, 3)
 	assert.Contains(t, m.taskList(30, 10), "#1 worker")
@@ -188,39 +190,69 @@ func TestTUIModelHidesCallsThatJoinAnExistingExecution(t *testing.T) {
 	m.selectTask(2)
 	m = updateTUIModel(t, m, taskJoinedMsg{id: 3, ownerID: 2})
 
-	require.Len(t, m.tasks, 2)
-	assert.Nil(t, m.byID[3])
-	assert.Equal(t, uint64(2), m.selectedID)
-	assert.Equal(t, []string{"root", "worker"}, rowNames(m.taskRows()))
-	assert.NotContains(t, m.taskList(30, 10), "#1")
-	assert.NotContains(t, m.taskList(30, 10), "#2")
+	require.Len(t, m.tasks, 3)
+	assert.Equal(t, uint64(2), m.byID[3].ownerID)
+	assert.True(t, m.byID[2].shared)
+	assert.True(t, m.byID[3].shared)
+	assert.Equal(t, []uint64{1, 2, 3}, rowIDs(m.taskRows()))
+	assert.Equal(t, "#1 worker", m.taskName(m.byID[2]))
+	assert.Equal(t, "#2 worker", m.taskName(m.byID[3]))
+	assert.Equal(t, uint64(3), m.selectedID)
+	assert.Equal(t, uint64(2), m.selectedTask().id)
+	assert.Equal(t, "shared output", m.selectedTask().output)
+	assert.Contains(t, m.outputPanel(30), "#2 worker")
+	assert.Equal(t, taskRunning, m.taskState(m.byID[3]))
+	m = updateTUIModel(t, m, taskOutputMsg{id: 2, name: "worker", data: " continued"})
+	assert.Contains(t, m.viewport.View(), "shared output continued")
+	m = updateTUIModel(t, m, taskFinishedMsg{id: 2})
+	assert.Equal(t, taskSucceeded, m.taskState(m.byID[3]))
+	assert.Equal(t, []string{"root", "worker", "worker"}, rowNames(m.taskRows()))
+	assert.Equal(t, 2, strings.Count(ansi.Strip(m.taskList(30, 10)), "↳"))
 }
 
-func TestTUIModelRenumbersRemainingRepeatedCallsAfterJoin(t *testing.T) {
+func TestTUIModelShowsSharedExecutionInEachTreeLocation(t *testing.T) {
 	t.Parallel()
 
 	m := newTUIModel(func() {}, false)
 	m = updateTUIModel(t, m, started(1, 0, "root"))
-	m = updateTUIModel(t, m, started(2, 1, "worker"))
-	m = updateTUIModel(t, m, scheduled(3, 1, "worker", false))
-	m = updateTUIModel(t, m, started(4, 1, "worker"))
-	m = updateTUIModel(t, m, taskJoinedMsg{id: 3, ownerID: 2})
+	m = updateTUIModel(t, m, started(2, 1, "parent-a"))
+	m = updateTUIModel(t, m, started(3, 1, "parent-b"))
+	m = updateTUIModel(t, m, startedUnder(4, 2, 1, "shared"))
+	m = updateTUIModel(t, m, scheduledUnder(5, 3, 1, "shared", false))
+	m = updateTUIModel(t, m, taskJoinedMsg{id: 5, ownerID: 4})
 
-	assert.Equal(t, 1, m.byID[2].occurrence)
-	assert.Equal(t, 2, m.byID[4].occurrence)
-	assert.Contains(t, m.taskList(30, 10), "#1 worker")
-	assert.Contains(t, m.taskList(30, 10), "#2 worker")
-	assert.NotContains(t, m.taskList(30, 10), "#3 worker")
+	assert.Equal(t, []string{"root", "parent-a", "shared", "parent-b", "shared"}, rowNames(m.taskRows()))
+	list := ansi.Strip(m.taskList(40, 10))
+	assert.Contains(t, list, "│  └─ ● ↳ shared")
+	assert.Contains(t, list, "   └─ ● ↳ shared")
+	assert.NotContains(t, list, "#1 shared")
+	assert.NotContains(t, list, "#2 shared")
 }
 
-func TestTUIModelFlattensExecutionsUnderTheirRoot(t *testing.T) {
+func TestTUIModelMarksOwnerSharedWhenJoinEventArrivesFirst(t *testing.T) {
+	t.Parallel()
+
+	m := newTUIModel(func() {}, false)
+	m = updateTUIModel(t, m, started(1, 0, "root"))
+	m = updateTUIModel(t, m, scheduled(3, 1, "shared", false))
+	m = updateTUIModel(t, m, taskJoinedMsg{id: 3, ownerID: 2})
+	m = updateTUIModel(t, m, started(2, 1, "shared"))
+
+	assert.True(t, m.byID[2].shared)
+	assert.True(t, m.byID[3].shared)
+	assert.Equal(t, []uint64{1, 2, 3}, rowIDs(m.taskRows()))
+	assert.Equal(t, "#1 shared", m.taskName(m.byID[2]))
+	assert.Equal(t, "#2 shared", m.taskName(m.byID[3]))
+}
+
+func TestTUIModelNestsExecutionsUnderTheirParent(t *testing.T) {
 	t.Parallel()
 
 	m := newTUIModel(func() {}, false)
 	m = updateTUIModel(t, m, started(1, 0, "root"))
 	m = updateTUIModel(t, m, started(5, 0, "other-root"))
 	m = updateTUIModel(t, m, started(2, 1, "child"))
-	m = updateTUIModel(t, m, started(3, 1, "grandchild"))
+	m = updateTUIModel(t, m, startedUnder(3, 2, 1, "grandchild"))
 	m = updateTUIModel(t, m, started(4, 1, "second-child"))
 
 	rows := m.taskRows()
@@ -230,7 +262,7 @@ func TestTUIModelFlattensExecutionsUnderTheirRoot(t *testing.T) {
 	require.GreaterOrEqual(t, len(lines), 5)
 	assert.True(t, strings.HasPrefix(lines[1], "● root"), lines[1])
 	assert.True(t, strings.HasPrefix(lines[2], "├─ ● child"), lines[2])
-	assert.True(t, strings.HasPrefix(lines[3], "├─ ● grandchild"), lines[3])
+	assert.True(t, strings.HasPrefix(lines[3], "│  └─ ● grandchild"), lines[3])
 	assert.True(t, strings.HasPrefix(lines[4], "└─ ● second-child"), lines[4])
 }
 
@@ -257,9 +289,10 @@ func TestTUIModelCanHideInternalTasks(t *testing.T) {
 	m = updateTUIModel(t, m, scheduled(1, 1, "root", false))
 	m = updateTUIModel(t, m, scheduled(2, 1, "visible", false))
 	m = updateTUIModel(t, m, scheduled(3, 1, "internal", true))
+	m = updateTUIModel(t, m, scheduledUnder(4, 3, 1, "visible-descendant", false))
 
-	assert.Equal(t, []string{"root", "visible"}, rowNames(m.taskRows()))
-	assert.Equal(t, 1, m.nameCounts[tuiTaskKey{rootID: 1, name: "internal"}])
+	assert.Equal(t, []string{"root", "visible", "visible-descendant"}, rowNames(m.taskRows()))
+	assert.Equal(t, 1, m.nameCounts[tuiTaskKey{parentID: 1, name: "internal"}])
 }
 
 func TestTUIModelMouseSelectsTasksAndFocusesPanes(t *testing.T) {
@@ -391,11 +424,27 @@ func started(id, rootID uint64, name string) taskStartedMsg {
 	if rootID == 0 {
 		rootID = id
 	}
-	return taskStartedMsg{task: TaskInvocation{ID: id, RootID: rootID, Name: name}}
+	parentID := rootID
+	if id == rootID {
+		parentID = 0
+	}
+	return startedUnder(id, parentID, rootID, name)
+}
+
+func startedUnder(id, parentID, rootID uint64, name string) taskStartedMsg {
+	return taskStartedMsg{task: TaskInvocation{ID: id, ParentID: parentID, RootID: rootID, Name: name}}
 }
 
 func scheduled(id, rootID uint64, name string, internal bool) taskScheduledMsg {
-	return taskScheduledMsg{task: TaskInvocation{ID: id, RootID: rootID, Name: name, Internal: internal}}
+	parentID := rootID
+	if id == rootID {
+		parentID = 0
+	}
+	return scheduledUnder(id, parentID, rootID, name, internal)
+}
+
+func scheduledUnder(id, parentID, rootID uint64, name string, internal bool) taskScheduledMsg {
+	return taskScheduledMsg{task: TaskInvocation{ID: id, ParentID: parentID, RootID: rootID, Name: name, Internal: internal}}
 }
 
 func updateTUIModel(t *testing.T, m tuiModel, msg tea.Msg) tuiModel {
@@ -412,6 +461,14 @@ func rowNames(rows []tuiTaskRow) []string {
 		names[i] = row.task.name
 	}
 	return names
+}
+
+func rowIDs(rows []tuiTaskRow) []uint64 {
+	ids := make([]uint64, len(rows))
+	for i, row := range rows {
+		ids[i] = row.task.id
+	}
+	return ids
 }
 
 func numberedLines(count int) string {

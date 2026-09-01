@@ -9,6 +9,7 @@ type Call struct {
 	Silent   bool
 	Indirect bool // True if the task was called by another task
 
-	invocationID     uint64
-	rootInvocationID uint64
+	invocationID       uint64
+	parentInvocationID uint64
+	rootInvocationID   uint64
 }

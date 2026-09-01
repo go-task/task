@@ -1,8 +1,10 @@
 package output
 
 import (
+	"cmp"
 	"fmt"
 	"slices"
+	"strings"
 
 	tea "charm.land/bubbletea/v2"
 )
@@ -12,18 +14,22 @@ func (m *tuiModel) scheduleTask(invocation TaskInvocation) *tuiTask {
 		return task
 	}
 	isRoot := invocation.ID == invocation.RootID
-	key := tuiTaskKey{rootID: invocation.RootID, name: invocation.Name, isRoot: isRoot}
+	key := tuiTaskKey{parentID: invocation.ParentID, name: invocation.Name, isRoot: isRoot}
 	m.nameCounts[key]++
 	task := &tuiTask{
 		id:           invocation.ID,
-		rootID:       invocation.RootID,
+		parentID:     invocation.ParentID,
 		name:         invocation.Name,
-		occurrence:   m.nameCounts[key],
-		internal:     invocation.Internal,
 		isRoot:       isRoot,
 		hidden:       m.hideInternal && invocation.Internal && !isRoot,
 		state:        taskPending,
 		followOutput: true,
+	}
+	for _, candidate := range m.tasks {
+		if candidate.ownerID == task.id {
+			task.shared = true
+			break
+		}
 	}
 	m.byID[invocation.ID] = task
 	m.tasks = append(m.tasks, task)
@@ -43,40 +49,15 @@ func (m *tuiModel) joinTask(id, ownerID uint64) {
 	if task == nil {
 		return
 	}
-	selected := m.hasSelect && m.selectedID == id
-	if selected {
-		m.saveViewport()
+	task.shared = true
+	task.ownerID = ownerID
+	if owner := m.byID[ownerID]; owner != nil {
+		owner.shared = true
 	}
-	delete(m.byID, id)
-	for i, candidate := range m.tasks {
-		if candidate.id == id {
-			m.tasks = append(m.tasks[:i], m.tasks[i+1:]...)
-			break
-		}
-	}
-	m.recountTaskNames(tuiTaskKey{rootID: task.rootID, name: task.name, isRoot: task.isRoot})
-	if selected {
-		m.selectedID = ownerID
-		m.hasSelect = ownerID != 0
+	if m.hasSelect && m.selectedID == id {
 		m.loadViewport()
 	}
 	m.keepSelectionVisible()
-}
-
-func (m *tuiModel) recountTaskNames(key tuiTaskKey) {
-	count := 0
-	for _, task := range m.tasks {
-		if (tuiTaskKey{rootID: task.rootID, name: task.name, isRoot: task.isRoot}) != key {
-			continue
-		}
-		count++
-		task.occurrence = count
-	}
-	if count == 0 {
-		delete(m.nameCounts, key)
-		return
-	}
-	m.nameCounts[key] = count
 }
 
 func (m *tuiModel) ensureOutputTask(id uint64, name string) *tuiTask {
@@ -107,17 +88,33 @@ func (m *tuiModel) appendOutput(id uint64, name, data string) {
 		task.output = task.output[len(task.output)-maxTaskOutputLen:]
 		task.truncated = true
 	}
-	if m.hasSelect && task.id == m.selectedID {
+	if selected := m.selectedTask(); selected != nil && selected.id == task.id {
 		m.loadViewport()
 	}
 }
 
 func (m tuiModel) taskName(task *tuiTask) string {
-	key := tuiTaskKey{rootID: task.rootID, name: task.name, isRoot: task.isRoot}
+	key := tuiTaskKey{parentID: task.parentID, name: task.name, isRoot: task.isRoot}
 	if m.nameCounts[key] > 1 {
-		return fmt.Sprintf("#%d %s", task.occurrence, task.name)
+		occurrence := 1
+		for _, candidate := range m.tasks {
+			candidateKey := tuiTaskKey{parentID: candidate.parentID, name: candidate.name, isRoot: candidate.isRoot}
+			if candidateKey == key && candidate.id < task.id {
+				occurrence++
+			}
+		}
+		return fmt.Sprintf("#%d %s", occurrence, task.name)
 	}
 	return task.name
+}
+
+func (m tuiModel) taskState(task *tuiTask) taskState {
+	if task.ownerID != 0 {
+		if owner := m.byID[task.ownerID]; owner != nil {
+			return owner.state
+		}
+	}
+	return task.state
 }
 
 type tuiTaskRow struct {
@@ -126,7 +123,7 @@ type tuiTaskRow struct {
 }
 
 func (m tuiModel) taskRows() []tuiTaskRow {
-	childrenByRoot := make(map[uint64][]*tuiTask)
+	childrenByParent := make(map[uint64][]*tuiTask)
 	var roots, standalone []*tuiTask
 	for _, task := range m.tasks {
 		if task.hidden {
@@ -136,24 +133,23 @@ func (m tuiModel) taskRows() []tuiTaskRow {
 			roots = append(roots, task)
 			continue
 		}
-		if task.rootID == 0 {
+		parentID := m.visibleParentID(task)
+		if parentID == 0 {
 			standalone = append(standalone, task)
 		} else {
-			childrenByRoot[task.rootID] = append(childrenByRoot[task.rootID], task)
+			childrenByParent[parentID] = append(childrenByParent[parentID], task)
 		}
+	}
+	sortTasksByID(roots)
+	sortTasksByID(standalone)
+	for _, children := range childrenByParent {
+		sortTasksByID(children)
 	}
 
 	rows := make([]tuiTaskRow, 0, len(m.tasks))
 	for _, root := range roots {
 		rows = append(rows, tuiTaskRow{task: root})
-		children := childrenByRoot[root.id]
-		for i, child := range children {
-			prefix := "├─ "
-			if i == len(children)-1 {
-				prefix = "└─ "
-			}
-			rows = append(rows, tuiTaskRow{task: child, treePrefix: prefix})
-		}
+		rows = appendTaskRows(rows, root.id, nil, childrenByParent)
 	}
 	for _, task := range standalone {
 		rows = append(rows, tuiTaskRow{task: task})
@@ -161,11 +157,66 @@ func (m tuiModel) taskRows() []tuiTaskRow {
 	return rows
 }
 
-func (m *tuiModel) selectedTask() *tuiTask {
+func sortTasksByID(tasks []*tuiTask) {
+	slices.SortFunc(tasks, func(a, b *tuiTask) int {
+		return cmp.Compare(a.id, b.id)
+	})
+}
+
+func (m tuiModel) visibleParentID(task *tuiTask) uint64 {
+	parentID := task.parentID
+	for parentID != 0 {
+		parent := m.byID[parentID]
+		if parent == nil {
+			return 0
+		}
+		if !parent.hidden {
+			return parentID
+		}
+		parentID = parent.parentID
+	}
+	return 0
+}
+
+func appendTaskRows(rows []tuiTaskRow, parentID uint64, ancestorLast []bool, childrenByParent map[uint64][]*tuiTask) []tuiTaskRow {
+	children := childrenByParent[parentID]
+	for i, child := range children {
+		last := i == len(children)-1
+		var prefix strings.Builder
+		prefix.Grow((len(ancestorLast) + 1) * 3)
+		for _, wasLast := range ancestorLast {
+			if wasLast {
+				prefix.WriteString("   ")
+			} else {
+				prefix.WriteString("│  ")
+			}
+		}
+		if last {
+			prefix.WriteString("└─ ")
+		} else {
+			prefix.WriteString("├─ ")
+		}
+		rows = append(rows, tuiTaskRow{task: child, treePrefix: prefix.String()})
+		rows = appendTaskRows(rows, child.id, append(ancestorLast, last), childrenByParent)
+	}
+	return rows
+}
+
+func (m *tuiModel) selectedRowTask() *tuiTask {
 	if !m.hasSelect {
 		return nil
 	}
 	return m.byID[m.selectedID]
+}
+
+func (m *tuiModel) selectedTask() *tuiTask {
+	task := m.selectedRowTask()
+	if task != nil && task.ownerID != 0 {
+		if owner := m.byID[task.ownerID]; owner != nil {
+			return owner
+		}
+	}
+	return task
 }
 
 func (m *tuiModel) selectedIndex() int {

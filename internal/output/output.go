@@ -20,6 +20,7 @@ type CloseFunc func(err error) error
 // an Executor, including repeated calls to the same task.
 type TaskInvocation struct {
 	ID       uint64 // Unique call ID
+	ParentID uint64 // ID of the task call that scheduled this call; zero for roots
 	RootID   uint64 // ID of the root call requested by the user
 	Name     string
 	Internal bool

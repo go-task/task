@@ -187,6 +187,7 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) (runErr error) {
 	}
 	invocation := output.TaskInvocation{
 		ID:       call.invocationID,
+		ParentID: call.parentInvocationID,
 		RootID:   call.rootInvocationID,
 		Name:     t.Prefix,
 		Internal: t.Internal,
@@ -241,7 +242,7 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) (runErr error) {
 		output.TaskStarted(e.Output, invocation)
 
 		e.Logger.VerboseErrf(logger.Magenta, "task: %q started\n", call.Task)
-		if err := e.runDeps(ctx, t, call.rootInvocationID); err != nil {
+		if err := e.runDeps(ctx, t, call.invocationID, call.rootInvocationID); err != nil {
 			return err
 		}
 
@@ -345,7 +346,7 @@ func (e *Executor) mkdir(t *ast.Task) error {
 	return nil
 }
 
-func (e *Executor) runDeps(ctx context.Context, t *ast.Task, rootInvocationID uint64) error {
+func (e *Executor) runDeps(ctx context.Context, t *ast.Task, parentInvocationID, rootInvocationID uint64) error {
 	g := &errgroup.Group{}
 	if e.Failfast || t.Failfast {
 		g, ctx = errgroup.WithContext(ctx)
@@ -365,7 +366,14 @@ func (e *Executor) runDeps(ctx context.Context, t *ast.Task, rootInvocationID ui
 				defer cancel()
 			}
 
-			err := e.RunTask(depCtx, &Call{Task: d.Task, Vars: d.Vars, Silent: d.Silent, Indirect: true, rootInvocationID: rootInvocationID})
+			err := e.RunTask(depCtx, &Call{
+				Task:               d.Task,
+				Vars:               d.Vars,
+				Silent:             d.Silent,
+				Indirect:           true,
+				parentInvocationID: parentInvocationID,
+				rootInvocationID:   rootInvocationID,
+			})
 			if err != nil && timedOut(depCtx, timeout) {
 				return timeout
 			}
@@ -432,7 +440,14 @@ func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call *Call, i in
 		reacquire := e.releaseConcurrencyLimit()
 		defer reacquire()
 
-		err := e.RunTask(ctx, &Call{Task: cmd.Task, Vars: cmd.Vars, Silent: cmd.Silent, Indirect: true, rootInvocationID: call.rootInvocationID})
+		err := e.RunTask(ctx, &Call{
+			Task:               cmd.Task,
+			Vars:               cmd.Vars,
+			Silent:             cmd.Silent,
+			Indirect:           true,
+			parentInvocationID: call.invocationID,
+			rootInvocationID:   call.rootInvocationID,
+		})
 		if err != nil && timedOut(ctx, timeout) {
 			err = timeout
 		}
@@ -466,9 +481,10 @@ func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call *Call, i in
 			return fmt.Errorf("task: failed to get variables: %w", err)
 		}
 		stdOut, stdErr, closer := output.WrapWriter(outputWrapper, e.Stdout, e.Stderr, output.TaskInvocation{
-			ID:     call.invocationID,
-			RootID: call.rootInvocationID,
-			Name:   t.Prefix,
+			ID:       call.invocationID,
+			ParentID: call.parentInvocationID,
+			RootID:   call.rootInvocationID,
+			Name:     t.Prefix,
 		}, outputTemplater)
 		if logCommand && output.IsTUI(e.Output) {
 			e.Logger.FOutf(stdErr, logger.Green, "task: [%s] %s\n", t.Name(), cmd.LogCmd)

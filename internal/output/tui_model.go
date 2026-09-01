@@ -27,16 +27,16 @@ const (
 )
 
 type tuiTask struct {
-	id         uint64
-	rootID     uint64
-	name       string
-	occurrence int
-	internal   bool
-	isRoot     bool
-	hidden     bool
-	output     string
-	state      taskState
-	truncated  bool
+	id        uint64
+	parentID  uint64
+	name      string
+	isRoot    bool
+	hidden    bool
+	shared    bool
+	ownerID   uint64
+	output    string
+	state     taskState
+	truncated bool
 
 	scrollOffset int
 	followOutput bool
@@ -87,9 +87,9 @@ type tuiModel struct {
 }
 
 type tuiTaskKey struct {
-	rootID uint64
-	name   string
-	isRoot bool
+	parentID uint64
+	name     string
+	isRoot   bool
 }
 
 func newTUIModel(cancel context.CancelFunc, hideInternal bool) tuiModel {

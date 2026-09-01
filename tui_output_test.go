@@ -66,9 +66,20 @@ tasks:
 		assert.Equal(t, byName["shared"].ID, ownerID)
 	}
 	assert.Equal(t, root.ID, root.RootID)
+	assert.Zero(t, root.ParentID)
+	for _, name := range []string{"first", "second", "third"} {
+		assert.Equal(t, root.ID, byName[name].ParentID, name)
+	}
 	for _, name := range []string{"first", "second", "third", "shared"} {
 		assert.Equal(t, root.ID, byName[name].RootID, name)
 	}
+	var sharedParentIDs []uint64
+	for _, invocation := range recorder.scheduled {
+		if invocation.Name == "shared" {
+			sharedParentIDs = append(sharedParentIDs, invocation.ParentID)
+		}
+	}
+	assert.ElementsMatch(t, []uint64{byName["first"].ID, byName["second"].ID}, sharedParentIDs)
 	scheduledIDs := make([]uint64, len(recorder.scheduled))
 	for i, invocation := range recorder.scheduled {
 		scheduledIDs[i] = invocation.ID
