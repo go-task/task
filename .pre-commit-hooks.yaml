@@ -1,0 +1,10 @@
+# yaml-language-server: $schema=https://json.schemastore.org/pre-commit-hooks.json
+
+- id: task
+  name: task
+  description: Run a Taskfile task as a pre-commit hook
+  language: golang
+  entry: task
+  pass_filenames: false
+  require_serial: true
+  minimum_pre_commit_version: "3.0.0"
