@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -267,4 +268,38 @@ func TestRepoCacheKey_BlocksTraversalRef(t *testing.T) {
 	resolved := filepath.Clean(filepath.Join(root, key))
 	assert.True(t, strings.HasPrefix(resolved, root+string(os.PathSeparator)),
 		"cache dir %q must stay within %q", resolved, root)
+}
+
+func TestLockRepoCache_MutuallyExclusive(t *testing.T) {
+	t.Parallel()
+
+	// Two acquisitions of the same cache key must not both hold the lock:
+	// the second blocks until the first releases (issue #3011 cross-process).
+	key := "test-lock-key"
+	unlock1, err := lockRepoCache(key)
+	require.NoError(t, err)
+
+	acquired := make(chan struct{})
+	go func() {
+		unlock2, lockErr := lockRepoCache(key)
+		require.NoError(t, lockErr)
+		close(acquired)
+		unlock2()
+	}()
+
+	select {
+	case <-acquired:
+		t.Fatal("second lock acquired while first still held")
+	case <-time.After(100 * time.Millisecond):
+		// Expected: second acquisition is blocked.
+	}
+
+	unlock1()
+
+	select {
+	case <-acquired:
+		// Second acquisition proceeds after release.
+	case <-time.After(2 * time.Second):
+		t.Fatal("second lock not acquired after first released")
+	}
 }

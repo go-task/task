@@ -12,6 +12,7 @@ import (
 
 	giturls "github.com/chainguard-dev/git-urls"
 	"github.com/hashicorp/go-getter"
+	"golang.org/x/sys/unix"
 
 	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/execext"
@@ -46,6 +47,31 @@ func (c *gitRepoCache) getLockForRepo(cacheKey string) *sync.Mutex {
 
 var globalGitRepoCache = &gitRepoCache{
 	locks: make(map[string]*sync.Mutex),
+}
+
+// lockRepoCache takes an exclusive cross-process lock for one repo cache key.
+// The in-process mutex (gitRepoCache) does not protect against multiple Task
+// *processes* cloning the same repository concurrently (issue #3011), so we
+// also flock a lock file that lives outside the cache dir (which CleanGitCache
+// removes).
+func lockRepoCache(cacheKey string) (func(), error) {
+	lockDir := filepath.Join(os.TempDir(), "task-git-repos-locks")
+	if err := os.MkdirAll(lockDir, 0o755); err != nil {
+		return nil, fmt.Errorf("creating git repo lock dir: %w", err)
+	}
+	lockFile := filepath.Join(lockDir, cacheKey+".lock")
+	f, err := os.OpenFile(lockFile, os.O_CREATE|os.O_RDWR, 0o600)
+	if err != nil {
+		return nil, fmt.Errorf("opening git repo lock file: %w", err)
+	}
+	if err := unix.Flock(int(f.Fd()), unix.LOCK_EX); err != nil {
+		f.Close()
+		return nil, fmt.Errorf("locking git repo cache: %w", err)
+	}
+	return func() {
+		_ = unix.Flock(int(f.Fd()), unix.LOCK_UN)
+		_ = f.Close()
+	}, nil
 }
 
 func CleanGitCache() error {
@@ -129,6 +155,15 @@ func (node *GitNode) getOrCloneRepo(ctx context.Context) (string, error) {
 	defer repoMutex.Unlock()
 
 	cacheDir := filepath.Join(os.TempDir(), "task-git-repos", cacheKey)
+
+	// Cross-process lock: an IDE extension, shell completion and a terminal can
+	// invoke Task at the same time; the per-process mutex above does not
+	// serialize them (issue #3011). Serialize the clone with a file lock.
+	unlock, err := lockRepoCache(cacheKey)
+	if err != nil {
+		return "", err
+	}
+	defer unlock()
 
 	// Check cache FIRST - if already cloned, no network needed, timeout irrelevant
 	gitDir := filepath.Join(cacheDir, ".git")
