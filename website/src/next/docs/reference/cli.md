@@ -238,7 +238,7 @@ task build --temp-dir .task-cache
 
 #### `-o, --output <mode>`
 
-Set output style. Available modes: `interleaved`, `group`, `prefixed`.
+Set output style. Available modes: `interleaved`, `group`, `prefixed`, `tui`.
 
 - **Environment variable**: [`TASK_OUTPUT`](./environment.md#task-output)
 
@@ -277,6 +277,30 @@ Only show command output on non-zero exit codes.
 
 ```bash
 task test --output group --output-group-error-only
+```
+
+#### `--output-tui-status <style>`
+
+Set how task status is displayed in TUI output. Available styles: `icons`,
+`labels`. The default is `icons`.
+
+- **Environment variable**:
+  [`TASK_OUTPUT_TUI_STATUS`](./environment.md#task-output-tui-status)
+
+```bash
+task test --output tui --output-tui-status labels
+```
+
+#### `--output-tui-task-navigator <mode>`
+
+Set how tasks are organized in the TUI task navigator. Available modes: `list`,
+`tree`. The default is `list`.
+
+- **Environment variable**:
+  [`TASK_OUTPUT_TUI_TASK_NAVIGATOR`](./environment.md#task-output-tui-task-navigator)
+
+```bash
+task test --output tui --output-tui-task-navigator tree
 ```
 
 #### `-c, --color`

@@ -149,6 +149,8 @@ func init() {
 	pflag.StringVar(&Output.Group.Begin, "output-group-begin", getConfig(config, "OUTPUT_GROUP_BEGIN", func() *string { return nil }, ""), "Message template to print before a task's grouped output.")
 	pflag.StringVar(&Output.Group.End, "output-group-end", getConfig(config, "OUTPUT_GROUP_END", func() *string { return nil }, ""), "Message template to print after a task's grouped output.")
 	pflag.BoolVar(&Output.Group.ErrorOnly, "output-group-error-only", getConfig(config, "OUTPUT_GROUP_ERROR_ONLY", func() *bool { return nil }, false), "Swallow output from successful tasks.")
+	pflag.StringVar(&Output.TUI.Status, "output-tui-status", getConfig(config, "OUTPUT_TUI_STATUS", func() *string { return nil }, ""), "Sets TUI task status style: [icons|labels].")
+	pflag.StringVar(&Output.TUI.TaskNavigator, "output-tui-task-navigator", getConfig(config, "OUTPUT_TUI_TASK_NAVIGATOR", func() *string { return nil }, ""), "Sets TUI task navigator: [list|tree].")
 	pflag.BoolVarP(&Color, "color", "c", getConfig(config, "COLOR", func() *bool { return config.Color }, true), "Colored output. Enabled by default. Set flag to false or use NO_COLOR=1 to disable.")
 	pflag.IntVarP(&Concurrency, "concurrency", "C", getConfig(config, "CONCURRENCY", func() *int { return config.Concurrency }, 0), "Limit number of tasks to run concurrently.")
 	pflag.DurationVarP(&Interval, "interval", "I", 0, "Interval to watch for changes.")
@@ -213,16 +215,8 @@ func Validate() error {
 		return errors.New("task: You can't set both --global and --dir")
 	}
 
-	if Output.Name != "group" {
-		if Output.Group.Begin != "" {
-			return errors.New("task: You can't set --output-group-begin without --output=group")
-		}
-		if Output.Group.End != "" {
-			return errors.New("task: You can't set --output-group-end without --output=group")
-		}
-		if Output.Group.ErrorOnly {
-			return errors.New("task: You can't set --output-group-error-only without --output=group")
-		}
+	if err := validateOutputOptions(Output); err != nil {
+		return err
 	}
 
 	if List && ListAll {
@@ -246,6 +240,29 @@ func Validate() error {
 		return errors.New("task: --cert and --cert-key must be provided together")
 	}
 
+	return nil
+}
+
+func validateOutputOptions(output ast.Output) error {
+	if output.Name != "group" {
+		if output.Group.Begin != "" {
+			return errors.New("task: You can't set --output-group-begin without --output=group")
+		}
+		if output.Group.End != "" {
+			return errors.New("task: You can't set --output-group-end without --output=group")
+		}
+		if output.Group.ErrorOnly {
+			return errors.New("task: You can't set --output-group-error-only without --output=group")
+		}
+	}
+	if output.Name != "tui" {
+		if output.TUI.Status != "" {
+			return errors.New("task: You can't set --output-tui-status without --output=tui")
+		}
+		if output.TUI.TaskNavigator != "" {
+			return errors.New("task: You can't set --output-tui-task-navigator without --output=tui")
+		}
+	}
 	return nil
 }
 

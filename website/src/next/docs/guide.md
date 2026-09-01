@@ -2818,12 +2818,14 @@ The `tui` output opens an interactive, full-screen Terminal User Interface (TUI)
 The left pane shows a task navigator and the right pane shows the output of the
 currently selected task.
 
-The requested root task is a non-selectable heading. By default, all tasks
-reached from that root appear below it in a list. Repeated executions have
-separate entries, while calls that join an existing `run: once` or
-`run: when_changed` execution share one entry. With the tree navigator, tasks
-are nested beneath the task that invoked them. Joined calls then remain visible
-at each location with a `↳` marker and share the owner's status and output.
+The requested root task appears at the top and can be selected to inspect output
+from commands that it runs directly. When the root only orchestrates other
+tasks, the first child is selected automatically. By default, all tasks reached
+from that root appear below it in a list. Repeated executions have separate
+entries, while calls that join an existing `run: once` or `run: when_changed`
+execution share one entry. With the tree navigator, tasks are nested beneath the
+task that invoked them. Joined calls then remain visible at each location with a
+`↳` marker and share the owner's status and output.
 
 The TUI output can be configured with the `tui` option in the Taskfile:
 
@@ -2862,6 +2864,7 @@ two-pane view.
 
 ```shell
 $ task --output tui build test lint
+$ task --output tui --output-tui-task-navigator tree --output-tui-status labels build
 ```
 
 Pressing `q` while tasks are running requests cancellation and closes the TUI

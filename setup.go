@@ -196,6 +196,15 @@ func (e *Executor) setupLogger() {
 func (e *Executor) setupOutput() error {
 	if !e.OutputStyle.IsSet() {
 		e.OutputStyle = e.Taskfile.Output
+	} else if e.OutputStyle.Name == "tui" && e.Taskfile.Output.Name == "tui" {
+		// Selecting the TUI from the CLI should not discard its Taskfile
+		// configuration. Non-empty CLI or environment values remain overrides.
+		if e.OutputStyle.TUI.Status == "" {
+			e.OutputStyle.TUI.Status = e.Taskfile.Output.TUI.Status
+		}
+		if e.OutputStyle.TUI.TaskNavigator == "" {
+			e.OutputStyle.TUI.TaskNavigator = e.Taskfile.Output.TUI.TaskNavigator
+		}
 	}
 
 	var err error

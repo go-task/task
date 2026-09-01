@@ -85,7 +85,7 @@ files > defaults.
 
 ### `TASK_OUTPUT`
 
-- **Type**: `string` (`interleaved`, `group`, `prefixed`)
+- **Type**: `string` (`interleaved`, `group`, `prefixed`, `tui`)
 - **Description**: Sets the output style
 - **CLI equivalent**: [`--output`](./cli.md#o-output-mode)
 
@@ -113,6 +113,24 @@ files > defaults.
   output style is `group`.
 - **CLI equivalent**:
   [`--output-group-error-only`](./cli.md#output-group-error-only)
+
+### `TASK_OUTPUT_TUI_STATUS`
+
+- **Type**: `string` (`icons`, `labels`)
+- **Default**: `icons`
+- **Description**: Sets how task status is displayed in TUI output. Only applies
+  when the output style is `tui`.
+- **CLI equivalent**:
+  [`--output-tui-status`](./cli.md#output-tui-status-style)
+
+### `TASK_OUTPUT_TUI_TASK_NAVIGATOR`
+
+- **Type**: `string` (`list`, `tree`)
+- **Default**: `list`
+- **Description**: Sets how tasks are organized in the TUI task navigator. Only
+  applies when the output style is `tui`.
+- **CLI equivalent**:
+  [`--output-tui-task-navigator`](./cli.md#output-tui-task-navigator-mode)
 
 ### `TASK_TEMP_DIR`
 

@@ -15,7 +15,54 @@ import (
 	"github.com/go-task/task/v3"
 	"github.com/go-task/task/v3/internal/output"
 	"github.com/go-task/task/v3/internal/templater"
+	"github.com/go-task/task/v3/taskfile/ast"
 )
+
+func TestTUIOutputStyleKeepsTaskfileOptions(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	taskfile := `version: '3'
+output:
+  tui:
+    status: icons
+    task_navigator: tree
+tasks:
+  default: echo done
+`
+	require.NoError(t, os.WriteFile(filepath.Join(dir, "Taskfile.yml"), []byte(taskfile), 0o600))
+
+	tests := []struct {
+		name   string
+		output ast.Output
+		want   ast.OutputTUI
+	}{
+		{
+			name:   "CLI selects TUI mode",
+			output: ast.Output{Name: "tui"},
+			want:   ast.OutputTUI{Status: "icons", TaskNavigator: "tree"},
+		},
+		{
+			name:   "CLI option overrides one Taskfile option",
+			output: ast.Output{Name: "tui", TUI: ast.OutputTUI{Status: "labels"}},
+			want:   ast.OutputTUI{Status: "labels", TaskNavigator: "tree"},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			e := task.NewExecutor(
+				task.WithDir(dir),
+				task.WithStdout(io.Discard),
+				task.WithStderr(io.Discard),
+				task.WithOutputStyle(test.output),
+				task.WithAssumeTerm(true),
+			)
+			require.NoError(t, e.Setup())
+			assert.Equal(t, test.want, e.OutputStyle.TUI)
+		})
+	}
+}
 
 func TestTaskLifecycleOutput(t *testing.T) {
 	t.Parallel()
