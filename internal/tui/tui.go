@@ -111,8 +111,8 @@ func (*UI) IsTerminalUI() {}
 
 // Run opens the launcher when calls is empty, or starts the calls immediately.
 func (t *UI) Run(ctx context.Context, executor *task.Executor, calls []*task.Call) error {
-	runCtx, cancel := context.WithCancel(ctx)
-	defer cancel()
+	sessionCtx, cancelSession := context.WithCancel(ctx)
+	defer cancelSession()
 
 	var launcher launcherModel
 	if len(calls) == 0 {
@@ -123,22 +123,28 @@ func (t *UI) Run(ctx context.Context, executor *task.Executor, calls []*task.Cal
 		launcher = newLauncherModel(tasks)
 	}
 
-	execution := newTUIModel(cancel)
+	execution := newTUIModel(func() {})
 	execution.statusLabels = t.statusLabels
 	execution.taskNavigator = t.taskNavigator
+	execution.canReturnToLauncher = len(calls) == 0
 
-	done := make(chan error, 1)
+	var runs sync.WaitGroup
 	var started atomic.Bool
-	var startOnce sync.Once
-	start := func(selectedCalls []*task.Call) {
-		startOnce.Do(func() {
-			started.Store(true)
-			go func() {
-				err := executor.Run(runCtx, selectedCalls...)
-				done <- err
-				t.send(executionDoneMsg{ui: t, err: err})
-			}()
+	var resultMutex sync.Mutex
+	var lastRunErr error
+	programReady := make(chan struct{})
+	start := func(selectedCalls []*task.Call) context.CancelFunc {
+		runCtx, cancelRun := context.WithCancel(sessionCtx)
+		started.Store(true)
+		runs.Go(func() {
+			<-programReady
+			err := executor.Run(runCtx, selectedCalls...)
+			resultMutex.Lock()
+			lastRunErr = err
+			resultMutex.Unlock()
+			t.send(executionDoneMsg{ui: t, err: err})
 		})
+		return cancelRun
 	}
 
 	var normalTask string
@@ -146,15 +152,18 @@ func (t *UI) Run(ctx context.Context, executor *task.Executor, calls []*task.Cal
 		launcher,
 		execution,
 		len(calls) == 0,
-		func(names []string) {
+		func(names []string) context.CancelFunc {
 			selectedCalls := make([]*task.Call, len(names))
 			for i, name := range names {
 				selectedCalls[i] = &task.Call{Task: name}
 			}
-			start(selectedCalls)
+			return start(selectedCalls)
 		},
 		func(name string) { normalTask = name },
 	)
+	if len(calls) > 0 {
+		model.execution.cancel = start(calls)
+	}
 	program := tea.NewProgram(
 		model,
 		tea.WithInput(t.input),
@@ -188,21 +197,15 @@ func (t *UI) Run(ctx context.Context, executor *task.Executor, calls []*task.Cal
 		})
 	}
 	defer restore()
+	close(programReady)
 
 	go func() {
-		<-runCtx.Done()
+		<-sessionCtx.Done()
 		program.Send(interruptRequestedMsg{})
 	}()
-	if len(calls) > 0 {
-		start(calls)
-	}
-
-	_, uiErr := program.Run()
-	cancel()
-	var runErr error
-	if started.Load() {
-		runErr = <-done
-	}
+	finalModel, uiErr := program.Run()
+	cancelSession()
+	runs.Wait()
 	if uiErr != nil {
 		return fmt.Errorf("task: TUI failed: %w", uiErr)
 	}
@@ -210,7 +213,12 @@ func (t *UI) Run(ctx context.Context, executor *task.Executor, calls []*task.Cal
 		restore()
 		return executor.Run(ctx, &task.Call{Task: normalTask})
 	}
-	return runErr
+	if !started.Load() || finalModel.(appModel).page == launcherPage {
+		return nil
+	}
+	resultMutex.Lock()
+	defer resultMutex.Unlock()
+	return lastRunErr
 }
 
 func (t *UI) send(msg tea.Msg) {

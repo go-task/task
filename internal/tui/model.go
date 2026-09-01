@@ -74,24 +74,27 @@ type (
 		err error
 	}
 	interruptRequestedMsg struct{}
+	returnToLauncherMsg   struct{}
 )
 
 type tuiModel struct {
-	tasks         []*tuiTask
-	byID          map[uint64]*tuiTask
-	selectedID    uint64
-	hasSelect     bool
-	listTop       int
-	focus         paneFocus
-	width         int
-	height        int
-	viewport      viewport.Model
-	done          bool
-	quitting      bool
-	err           error
-	cancel        context.CancelFunc
-	statusLabels  bool
-	taskNavigator tuiTaskNavigator
+	tasks               []*tuiTask
+	byID                map[uint64]*tuiTask
+	selectedID          uint64
+	hasSelect           bool
+	listTop             int
+	focus               paneFocus
+	width               int
+	height              int
+	viewport            viewport.Model
+	done                bool
+	quitting            bool
+	returning           bool
+	err                 error
+	cancel              context.CancelFunc
+	statusLabels        bool
+	taskNavigator       tuiTaskNavigator
+	canReturnToLauncher bool
 
 	selectingText bool
 	selectionPage viewport.Model
@@ -179,6 +182,9 @@ func (m tuiModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if m.quitting {
 			return m, tea.Quit
 		}
+		if m.returning {
+			return m, returnToLauncher
+		}
 		return m, nil
 	case interruptRequestedMsg:
 		if m.done {
@@ -236,11 +242,26 @@ func (m *tuiModel) handleKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 		return *m, nil
 	}
 	switch msg.String() {
-	case "q", "esc", "ctrl+c":
+	case "q", "ctrl+c":
 		if m.done {
 			return *m, tea.Quit
 		}
 		m.quitting = true
+		m.cancel()
+		return *m, nil
+	case "b", "esc":
+		if !m.canReturnToLauncher {
+			if m.done {
+				return *m, tea.Quit
+			}
+			m.quitting = true
+			m.cancel()
+			return *m, nil
+		}
+		if m.done {
+			return *m, returnToLauncher
+		}
+		m.returning = true
 		m.cancel()
 		return *m, nil
 	case "tab", "shift+tab":
@@ -292,4 +313,8 @@ func (m *tuiModel) handleKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 		}
 	}
 	return *m, nil
+}
+
+func returnToLauncher() tea.Msg {
+	return returnToLauncherMsg{}
 }

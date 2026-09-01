@@ -1,6 +1,10 @@
 package tui
 
-import tea "charm.land/bubbletea/v2"
+import (
+	"context"
+
+	tea "charm.land/bubbletea/v2"
+)
 
 type appPage uint8
 
@@ -13,7 +17,7 @@ type appModel struct {
 	page      appPage
 	launcher  launcherModel
 	execution tuiModel
-	startTUI  func([]string)
+	startTUI  func([]string) context.CancelFunc
 	runNormal func(string)
 	width     int
 	height    int
@@ -23,7 +27,7 @@ func newAppModel(
 	launcher launcherModel,
 	execution tuiModel,
 	showLauncher bool,
-	startTUI func([]string),
+	startTUI func([]string) context.CancelFunc,
 	runNormal func(string),
 ) appModel {
 	page := executionPage
@@ -66,13 +70,22 @@ func (m appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 		m.page = executionPage
+		statusLabels, taskNavigator := m.execution.statusLabels, m.execution.taskNavigator
+		canReturnToLauncher := m.execution.canReturnToLauncher
+		cancel := m.startTUI([]string{request.name})
+		m.execution = newTUIModel(cancel)
+		m.execution.statusLabels = statusLabels
+		m.execution.taskNavigator = taskNavigator
+		m.execution.canReturnToLauncher = canReturnToLauncher
 		execution, resizeCmd := m.execution.Update(tea.WindowSizeMsg{Width: m.width, Height: m.height})
 		m.execution = execution.(tuiModel)
-		startCmd := func() tea.Msg {
-			m.startTUI([]string{request.name})
-			return nil
-		}
-		return m, tea.Batch(cmd, resizeCmd, startCmd, tea.ClearScreen)
+		return m, tea.Batch(cmd, resizeCmd, tea.ClearScreen)
+	}
+	if _, ok := msg.(returnToLauncherMsg); ok {
+		m.page = launcherPage
+		launcher, _, _ := m.launcher.Update(tea.WindowSizeMsg{Width: m.width, Height: m.height})
+		m.launcher = launcher
+		return m, tea.ClearScreen
 	}
 
 	execution, cmd := m.execution.Update(msg)

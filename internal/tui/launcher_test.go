@@ -1,6 +1,7 @@
 package tui
 
 import (
+	"context"
 	"strings"
 	"testing"
 
@@ -43,12 +44,42 @@ func TestLauncherUsesSeparateNormalAndTUIActions(t *testing.T) {
 	_, _, request := m.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
 	require.NotNil(t, request)
 	assert.Equal(t, "lint", request.name)
-	assert.Equal(t, launchNormally, request.mode)
+	assert.Equal(t, launchInTUI, request.mode)
 
-	_, _, request = m.Update(tea.KeyPressMsg{Code: 't', Mod: tea.ModCtrl})
+	_, _, request = m.Update(tea.KeyPressMsg{Code: 'r', Mod: tea.ModCtrl})
 	require.NotNil(t, request)
 	assert.Equal(t, "lint", request.name)
-	assert.Equal(t, launchInTUI, request.mode)
+	assert.Equal(t, launchNormally, request.mode)
+
+	_, _, request = m.Update(tea.KeyPressMsg{Code: tea.KeyEnter, Mod: tea.ModAlt})
+	require.NotNil(t, request)
+	assert.Equal(t, launchNormally, request.mode)
+}
+
+func TestLauncherEscapeOnlyClearsTheFilter(t *testing.T) {
+	t.Parallel()
+
+	m := testLauncher()
+	m.applyFilter("build")
+	m, cmd, request := m.Update(tea.KeyPressMsg{Code: tea.KeyEscape})
+	require.Nil(t, cmd)
+	require.Nil(t, request)
+	assert.Empty(t, m.filter)
+
+	m, cmd, request = m.Update(tea.KeyPressMsg{Code: tea.KeyEscape})
+	require.Nil(t, cmd)
+	require.Nil(t, request)
+	assert.Empty(t, m.filter)
+}
+
+func TestLauncherControlCQuits(t *testing.T) {
+	t.Parallel()
+
+	m := testLauncher()
+	_, cmd, request := m.Update(tea.KeyPressMsg{Code: 'c', Mod: tea.ModCtrl})
+	require.Nil(t, request)
+	require.NotNil(t, cmd)
+	assert.IsType(t, tea.QuitMsg{}, cmd())
 }
 
 func TestLauncherCardsOnlyReserveDescriptionRowsWhenNeeded(t *testing.T) {
@@ -88,15 +119,58 @@ func TestAppRunsNormalLauncherSelectionOutsideDashboard(t *testing.T) {
 		testLauncher(),
 		newTUIModel(func() {}),
 		true,
-		func([]string) { t.Fatal("dashboard callback should not run") },
+		func([]string) context.CancelFunc {
+			t.Fatal("dashboard callback should not run")
+			return func() {}
+		},
 		func(name string) { normalTask = name },
 	)
 
-	next, cmd := m.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
+	next, cmd := m.Update(tea.KeyPressMsg{Code: 'r', Mod: tea.ModCtrl})
 	require.NotNil(t, cmd)
 	assert.IsType(t, tea.QuitMsg{}, cmd())
 	assert.Equal(t, "build", normalTask)
 	assert.Equal(t, launcherPage, next.(appModel).page)
+}
+
+func TestAppCanReturnToLauncherAfterDashboardExecution(t *testing.T) {
+	t.Parallel()
+
+	execution := newTUIModel(func() {})
+	execution.canReturnToLauncher = true
+	var dashboardTasks []string
+	m := newAppModel(
+		testLauncher(),
+		execution,
+		true,
+		func(names []string) context.CancelFunc {
+			dashboardTasks = append(dashboardTasks, names[0])
+			return func() {}
+		},
+		func(string) { t.Fatal("normal callback should not run") },
+	)
+
+	next, _ := m.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
+	m = next.(appModel)
+	assert.Equal(t, executionPage, m.page)
+	assert.Equal(t, []string{"build"}, dashboardTasks)
+	assert.True(t, m.execution.canReturnToLauncher)
+
+	next, _ = m.Update(executionDoneMsg{})
+	m = next.(appModel)
+	next, cmd := m.Update(tea.KeyPressMsg{Code: tea.KeyEscape})
+	m = next.(appModel)
+	require.NotNil(t, cmd)
+
+	next, _ = m.Update(cmd())
+	m = next.(appModel)
+	assert.Equal(t, launcherPage, m.page)
+
+	next, _ = m.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
+	m = next.(appModel)
+	assert.Equal(t, executionPage, m.page)
+	assert.Equal(t, []string{"build", "build"}, dashboardTasks)
+	assert.False(t, m.execution.done)
 }
 
 func testLauncher() launcherModel {

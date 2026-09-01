@@ -2816,9 +2816,9 @@ $ task default
 Run `task --tui` (or `task -T`) to open an interactive, full-screen Terminal
 User Interface (TUI). The launcher lists the available non-internal tasks and
 their descriptions. Type to filter by task name or description and use the
-up/down arrows to select a task. Press Enter to leave the TUI and run it with
-Task's normal terminal output, or press Ctrl+T to run it in the execution
-dashboard. Escape clears the current filter.
+up/down arrows to select a task. Press Enter to run it in the execution
+dashboard, or press Ctrl+R to leave the TUI and run it with Task's normal
+terminal output. Escape clears the current filter and Ctrl+C quits.
 
 You can skip the launcher by providing task names directly:
 
@@ -2873,7 +2873,9 @@ $ task --tui --tui-task-navigator tree --tui-status labels build
 
 Pressing `q` while tasks are running requests cancellation and closes the TUI
 after Task's execution has returned. After execution finishes normally, the TUI
-remains open so its output can be inspected; press Enter or `q` to close it.
+remains open so its output can be inspected; press Escape or `b` to return to
+the launcher, or press Enter or `q` to close it. Returning while execution is
+still in progress first cancels the tasks and waits for their processes to exit.
 
 The TUI requires an interactive terminal. It is intended for local use; use one
 of the stream-based output modes in CI or when redirecting output. Watch mode,

@@ -514,6 +514,25 @@ func TestTUIModelQuitCancelsExecution(t *testing.T) {
 	assert.True(t, next.(tuiModel).done)
 }
 
+func TestTUIModelBackCancelsBeforeReturningToLauncher(t *testing.T) {
+	t.Parallel()
+
+	ctx, cancel := context.WithCancel(t.Context())
+	m := newTUIModel(cancel)
+	m.canReturnToLauncher = true
+	next, cmd := m.Update(tea.KeyPressMsg{Code: tea.KeyEscape})
+	require.Nil(t, cmd)
+	assert.ErrorIs(t, ctx.Err(), context.Canceled)
+	m = next.(tuiModel)
+	assert.True(t, m.returning)
+	assert.Contains(t, m.View().Content, "returning to launcher")
+
+	next, cmd = m.Update(executionDoneMsg{})
+	require.NotNil(t, cmd)
+	assert.IsType(t, returnToLauncherMsg{}, cmd())
+	assert.True(t, next.(tuiModel).done)
+}
+
 func TestTUIOutputQueueCoalescesWrites(t *testing.T) {
 	t.Parallel()
 

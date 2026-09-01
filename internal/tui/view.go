@@ -36,9 +36,14 @@ func (m tuiModel) renderContent() string {
 	if m.focus == outputPane {
 		help = " tab/←/→ pane  •  ↑/↓ or pgup/pgdn scroll  •  wheel  •  c select text  •  q quit"
 	}
+	if m.canReturnToLauncher {
+		help += "  •  esc/b launcher"
+	}
 	helpStyle := tuiHelpStyle
 	if m.quitting && !m.done {
 		help = " stopping tasks… waiting for processes to exit"
+	} else if m.returning && !m.done {
+		help = " stopping tasks… returning to launcher after processes exit"
 	} else if m.done {
 		if m.err != nil {
 			help = " execution failed  •  c select text  •  enter/q quit"
@@ -46,6 +51,9 @@ func (m tuiModel) renderContent() string {
 		} else {
 			help = " execution complete  •  c select text  •  enter/q quit"
 			helpStyle = tuiSuccessStyle
+		}
+		if m.canReturnToLauncher {
+			help += "  •  esc/b launcher"
 		}
 	}
 	help = truncateText(help, max(layout.width, 1))

@@ -85,9 +85,11 @@ func (m launcherModel) Update(msg tea.Msg) (launcherModel, tea.Cmd, *launchReque
 	case tea.KeyPressMsg:
 		switch msg.String() {
 		case "enter":
-			return m, nil, m.request(launchNormally)
-		case "ctrl+t", "alt+enter":
 			return m, nil, m.request(launchInTUI)
+		case "ctrl+r", "alt+enter":
+			return m, nil, m.request(launchNormally)
+		case "ctrl+c":
+			return m, tea.Quit, nil
 		case "up":
 			m.moveSelection(-1)
 		case "down", "tab":
@@ -104,11 +106,8 @@ func (m launcherModel) Update(msg tea.Msg) (launcherModel, tea.Cmd, *launchReque
 		case "ctrl+u":
 			m.applyFilter("")
 		case "esc":
-			if m.filter != "" {
-				m.applyFilter("")
-				return m, nil, nil
-			}
-			return m, tea.Quit, nil
+			m.applyFilter("")
+			return m, nil, nil
 		default:
 			if text := printableText(msg.Text); text != "" {
 				m.applyFilter(m.filter + text)
@@ -226,7 +225,7 @@ func (m launcherModel) View() tea.View {
 		Width(layout.width).
 		Height(layout.bodyHeight).
 		Render(content)
-	help := truncateText(" type to filter  •  ↑/↓ select  •  enter run normally  •  ctrl+t run in TUI  •  esc clear  •  ctrl+c quit", layout.width)
+	help := truncateText(" type to filter  •  ↑/↓ select  •  enter run in TUI  •  ctrl+r run normally  •  esc clear  •  ctrl+c quit", layout.width)
 
 	view := tea.NewView(panel + "\n" + tuiHelpStyle.Render(help))
 	view.AltScreen = true
