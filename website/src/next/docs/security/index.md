@@ -1,5 +1,8 @@
 ---
 title: Security
+description:
+  How to report Task security vulnerabilities and how the project responds to
+  them
 outline: deep
 ---
 

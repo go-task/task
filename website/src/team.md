@@ -1,4 +1,8 @@
 ---
+title: Task maintainers
+description:
+  Meet the international team that maintains the Task task runner and its
+  open-source community.
 layout: page
 ---
 

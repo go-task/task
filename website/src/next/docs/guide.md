@@ -1,4 +1,6 @@
 ---
+description:
+  Guide to running Taskfiles and using Task features in real-world workflows
 outline: deep
 ---
 

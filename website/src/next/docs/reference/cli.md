@@ -457,6 +457,10 @@ Task uses specific exit codes to indicate different types of errors:
 - **105** - Remote Taskfile fetch not secure
 - **106** - No cache for remote Taskfile in offline mode
 - **107** - No schema version defined in Taskfile
+- **108** - Remote Taskfile network timeout
+- **109** - Invalid Taskfile
+- **110** - Taskfile cycle detected
+- **111** - Taskfile does not match checksum
 
 ### Task Errors (200-255)
 
@@ -468,6 +472,7 @@ Task uses specific exit codes to indicate different types of errors:
 - **205** - Task cancelled by user
 - **206** - Missing required variables
 - **207** - Variable has incorrect value
+- **208** - Task timed out
 
 ::: info
 

@@ -28,7 +28,7 @@ files > defaults.
 - **Type**: `boolean` (`true`, `false`, `1`, `0`)
 - **Default**: `false`
 - **Description**: Enable verbose output for all tasks
-- **CLI equivalent**: [`-v, --verbose`](./cli.md#-v---verbose)
+- **CLI equivalent**: [`-v, --verbose`](./cli.md#v-verbose)
 - **Config equivalent**: [`verbose`](./config.md#verbose)
 
 ### `TASK_SILENT`
@@ -36,7 +36,7 @@ files > defaults.
 - **Type**: `boolean` (`true`, `false`, `1`, `0`)
 - **Default**: `false`
 - **Description**: Disables echoing of commands
-- **CLI equivalent**: [`-s, --silent`](./cli.md#-s---silent)
+- **CLI equivalent**: [`-s, --silent`](./cli.md#s-silent)
 - **Config equivalent**: [`silent`](./config.md#silent)
 
 ### `TASK_COLOR`
@@ -44,7 +44,7 @@ files > defaults.
 - **Type**: `boolean` (`true`, `false`, `1`, `0`)
 - **Default**: `true`
 - **Description**: Enable colored output
-- **CLI equivalent**: [`-c, --color`](./cli.md#-c---color)
+- **CLI equivalent**: [`-c, --color`](./cli.md#c-color)
 - **Config equivalent**: [`color`](./config.md#color)
 
 ### `TASK_DISABLE_FUZZY`
@@ -52,14 +52,14 @@ files > defaults.
 - **Type**: `boolean` (`true`, `false`, `1`, `0`)
 - **Default**: `false`
 - **Description**: Disable fuzzy matching for task names
-- **CLI equivalent**: [`--disable-fuzzy`](./cli.md#--disable-fuzzy)
+- **CLI equivalent**: [`--disable-fuzzy`](./cli.md#disable-fuzzy)
 - **Config equivalent**: [`disable-fuzzy`](./config.md#disable-fuzzy)
 
 ### `TASK_CONCURRENCY`
 
 - **Type**: `integer`
 - **Description**: Limit number of tasks to run concurrently
-- **CLI equivalent**: [`-C, --concurrency`](./cli.md#-c---concurrency-number)
+- **CLI equivalent**: [`-C, --concurrency`](./cli.md#c-concurrency-number)
 - **Config equivalent**: [`concurrency`](./config.md#concurrency)
 
 ### `TASK_FAILFAST`
@@ -67,7 +67,7 @@ files > defaults.
 - **Type**: `boolean` (`true`, `false`, `1`, `0`)
 - **Default**: `false`
 - **Description**: When running tasks in parallel, stop all tasks if one fails
-- **CLI equivalent**: [`-F, --failfast`](./cli.md#-f---failfast)
+- **CLI equivalent**: [`-F, --failfast`](./cli.md#f-failfast)
 - **Config equivalent**: [`failfast`](./config.md#failfast)
 
 ### `TASK_DRY`
@@ -76,28 +76,28 @@ files > defaults.
 - **Default**: `false`
 - **Description**: Compiles and prints tasks in the order that they would be
   run, without executing them
-- **CLI equivalent**: [`-n, --dry`](./cli.md#-n---dry)
+- **CLI equivalent**: [`-n, --dry`](./cli.md#n-dry)
 
 ### `TASK_ASSUME_YES`
 
 - **Type**: `boolean` (`true`, `false`, `1`, `0`)
 - **Default**: `false`
 - **Description**: Assume "yes" as answer to all prompts
-- **CLI equivalent**: [`-y, --yes`](./cli.md#-y---yes)
+- **CLI equivalent**: [`-y, --yes`](./cli.md#y-yes)
 
 ### `TASK_INTERACTIVE`
 
 - **Type**: `boolean` (`true`, `false`, `1`, `0`)
 - **Default**: `false`
 - **Description**: Prompt for missing required variables
-- **CLI equivalent**: [`--interactive`](./cli.md#--interactive)
+- **CLI equivalent**: [`--interactive`](./cli.md#interactive)
 - **Config equivalent**: [`interactive`](./config.md#interactive)
 
 ### `TASK_OUTPUT`
 
 - **Type**: `string` (`interleaved`, `group`, `prefixed`)
 - **Description**: Sets the output style
-- **CLI equivalent**: [`-o, --output`](./cli.md#-o---output-mode)
+- **CLI equivalent**: [`-o, --output`](./cli.md#o-output-mode)
 
 ### `TASK_OUTPUT_GROUP_BEGIN`
 
@@ -105,7 +105,7 @@ files > defaults.
 - **Description**: Message template to print before a task's grouped output.
   Only applies when the output style is `group`.
 - **CLI equivalent**:
-  [`--output-group-begin`](./cli.md#--output-group-begin-template)
+  [`--output-group-begin`](./cli.md#output-group-begin-template)
 
 ### `TASK_OUTPUT_GROUP_END`
 
@@ -113,7 +113,7 @@ files > defaults.
 - **Description**: Message template to print after a task's grouped output. Only
   applies when the output style is `group`.
 - **CLI equivalent**:
-  [`--output-group-end`](./cli.md#--output-group-end-template)
+  [`--output-group-end`](./cli.md#output-group-end-template)
 
 ### `TASK_OUTPUT_GROUP_ERROR_ONLY`
 
@@ -122,7 +122,7 @@ files > defaults.
 - **Description**: Swallow output from successful tasks. Only applies when the
   output style is `group`.
 - **CLI equivalent**:
-  [`--output-group-error-only`](./cli.md#--output-group-error-only)
+  [`--output-group-error-only`](./cli.md#output-group-error-only)
 
 ### `TASK_TEMP_DIR`
 
@@ -131,7 +131,7 @@ checksums and temporary metadata. Can be relative like `tmp/task` or absolute
 like `/tmp/.task` or `~/.task`. Relative paths are relative to the root
 Taskfile, not the working directory. Defaults to: `./.task`.
 
-- **CLI equivalent**: [`--temp-dir`](./cli.md#--temp-dir-path)
+- **CLI equivalent**: [`--temp-dir`](./cli.md#temp-dir-path)
 - **Config equivalent**: [`temp-dir`](./config.md#temp-dir)
 
 ### `TASK_CORE_UTILS`
@@ -142,9 +142,27 @@ implemented in Go, or the ones available in the system. Valid values are `true`
 other operating systems. We might consider making this enabled by default on all
 platforms in the future.
 
+### `NO_COLOR`
+
+Disable color output. Any non-empty value turns colors off.
+
+This is only consulted when color hasn't been set explicitly. The full order of
+precedence is `--color` > `TASK_COLOR` > the `color` config key > `NO_COLOR` >
+`FORCE_COLOR`/`CI` > TTY auto-detection, so `NO_COLOR` wins over `FORCE_COLOR`
+and `CI` but loses to anything you set deliberately.
+
+- **CLI equivalent**: [`-c, --color`](./cli.md#c-color)
+- **Config equivalent**: [`color`](./config.md#color)
+
 ### `FORCE_COLOR`
 
-Force color output usage.
+Force color output usage, even when the output isn't a terminal. Any non-empty
+value enables it. Overridden by `NO_COLOR`.
+
+### `CI`
+
+Treated the same as `FORCE_COLOR` when it parses as a truthy boolean, so colors
+stay on in CI logs that aren't attached to a TTY. Overridden by `NO_COLOR`.
 
 ## Remote Taskfile Variables
 
@@ -155,28 +173,28 @@ The following variables are used to control the behavior of
 
 Allow insecure connections when fetching remote Taskfiles.
 
-- **CLI equivalent**: [`--insecure`](./cli.md#--insecure)
+- **CLI equivalent**: [`--insecure`](./cli.md#insecure)
 - **Config equivalent**: [`remote.insecure`](./config.md#remote-insecure)
 
 ### `TASK_REMOTE_OFFLINE`
 
 Work in offline mode, preventing remote Taskfile fetching.
 
-- **CLI equivalent**: [`--offline`](./cli.md#--offline)
+- **CLI equivalent**: [`--offline`](./cli.md#offline)
 - **Config equivalent**: [`remote.offline`](./config.md#remote-offline)
 
 ### `TASK_REMOTE_TIMEOUT`
 
 Timeout duration for remote operations (e.g., '30s', '5m').
 
-- **CLI equivalent**: [`--timeout`](./cli.md#--timeout)
+- **CLI equivalent**: [`--timeout`](./cli.md#timeout)
 - **Config equivalent**: [`remote.timeout`](./config.md#remote-timeout)
 
 ### `TASK_REMOTE_CACHE_EXPIRY`
 
 Cache expiry duration for remote Taskfiles (e.g., '1h', '24h').
 
-- **CLI equivalent**: [`--expiry`](./cli.md#--expiry)
+- **CLI equivalent**: [`--expiry`](./cli.md#expiry)
 - **Config equivalent**: [`remote.cache-expiry`](./config.md#remote-cache-expiry)
 
 ### `TASK_REMOTE_CACHE_DIR`
@@ -184,7 +202,7 @@ Cache expiry duration for remote Taskfiles (e.g., '1h', '24h').
 Directory where remote Taskfiles are cached. Can be an absolute path (e.g.,
 `/var/cache/task`) or relative to the Taskfile directory.
 
-- **CLI equivalent**: [`--remote-cache-dir`](./cli.md#--remote-cache-dir)
+- **CLI equivalent**: [`--remote-cache-dir`](./cli.md#remote-cache-dir)
 - **Config equivalent**: [`remote.cache-dir`](./config.md#remote-cache-dir)
 
 ### `TASK_REMOTE_TRUSTED_HOSTS`
@@ -192,7 +210,7 @@ Directory where remote Taskfiles are cached. Can be an absolute path (e.g.,
 List of (comma-separated) trusted hosts for remote Taskfiles. Hosts in this list
 will not prompt for confirmation when downloading Taskfiles.
 
-- **CLI equivalent**: [`--trusted-hosts`](./cli.md#--trusted-hosts)
+- **CLI equivalent**: [`--trusted-hosts`](./cli.md#trusted-hosts)
 - **Config equivalent**:
   [`remote.trusted-hosts`](./config.md#remote-trusted-hosts)
 
@@ -205,21 +223,21 @@ and only add hosts you fully trust.
 
 Path to a custom CA certificate file for TLS verification.
 
-- **CLI equivalent**: [`--cacert`](./cli.md#--cacert)
+- **CLI equivalent**: [`--cacert`](./cli.md#cacert)
 - **Config equivalent**: [`remote.cacert`](./config.md#remote-cacert)
 
 ### `TASK_REMOTE_CERT`
 
 Path to a client certificate file for mTLS authentication.
 
-- **CLI equivalent**: [`--cert`](./cli.md#--cert)
+- **CLI equivalent**: [`--cert`](./cli.md#cert)
 - **Config equivalent**: [`remote.cert`](./config.md#remote-cert)
 
 ### `TASK_REMOTE_CERT_KEY`
 
 Path to the client certificate private key file.
 
-- **CLI equivalent**: [`--cert-key`](./cli.md#--cert-key)
+- **CLI equivalent**: [`--cert-key`](./cli.md#cert-key)
 - **Config equivalent**: [`remote.cert-key`](./config.md#remote-cert-key)
 
 ### Custom Colors

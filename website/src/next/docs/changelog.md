@@ -1,5 +1,8 @@
 ---
 title: Changelog
+description:
+  Release history for Task, including new features, improvements, fixes, and
+  breaking changes
 outline: deep
 editLink: false
 ---
