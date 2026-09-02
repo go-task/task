@@ -165,6 +165,7 @@ failfast: true
   variable. Requires a TTY. Task automatically detects non-TTY environments (CI
   pipelines, etc.) and skips prompts.
 - **CLI equivalent**: [`--interactive`](./cli.md#interactive)
+- **Environment variable**: [`TASK_INTERACTIVE`](./environment.md#task-interactive)
 
 ```yaml
 interactive: true
@@ -176,6 +177,7 @@ interactive: true
 - **Default**: `./.task`
 - **Description**: Directory to store Task temporary files, such as checksums
   and temporary metadata. Relative paths are relative to the root Taskfile.
+- **CLI equivalent**: [`--temp-dir`](./cli.md#temp-dir-path)
 - **Environment variable**: [`TASK_TEMP_DIR`](./environment.md#task-temp-dir)
 
 ```yaml
@@ -305,6 +307,8 @@ task --trusted-hosts example.com:8080 -t https://example.com:8080/Taskfile.yml
 - **Type**: `string`
 - **Default**: `""`
 - **Description**: Path to a custom CA certificate file for TLS verification
+- **CLI equivalent**: [`--cacert`](./cli.md#cacert)
+- **Environment variable**: [`TASK_REMOTE_CACERT`](./environment.md#task-remote-cacert)
 
 ```yaml
 remote:
@@ -316,6 +320,8 @@ remote:
 - **Type**: `string`
 - **Default**: `""`
 - **Description**: Path to a client certificate file for mTLS authentication
+- **CLI equivalent**: [`--cert`](./cli.md#cert)
+- **Environment variable**: [`TASK_REMOTE_CERT`](./environment.md#task-remote-cert)
 
 ```yaml
 remote:
@@ -327,6 +333,8 @@ remote:
 - **Type**: `string`
 - **Default**: `""`
 - **Description**: Path to the client certificate private key file
+- **CLI equivalent**: [`--cert-key`](./cli.md#cert-key)
+- **Environment variable**: [`TASK_REMOTE_CERT_KEY`](./environment.md#task-remote-cert-key)
 
 ```yaml
 remote:
