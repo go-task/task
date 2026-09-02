@@ -36,14 +36,14 @@ func (m tuiModel) renderContent() string {
 		{key: "tab/←/→", action: "pane"},
 		{key: "↑/↓", action: "select"},
 		{key: "click", action: "task"},
-		{key: "f", action: "fullscreen output"},
+		{key: "f", action: "fullscreen"},
 	}
 	if m.focus == outputPane {
 		controls = []helpControl{
 			{key: "tab/←/→", action: "pane"},
 			{key: "↑/↓ or pgup/pgdn", action: "scroll"},
 			{key: "wheel", action: "scroll"},
-			{key: "f", action: "fullscreen output"},
+			{key: "f", action: "fullscreen"},
 		}
 	}
 	if m.canReturnToLauncher {
@@ -57,7 +57,7 @@ func (m tuiModel) renderContent() string {
 		help = renderStatus(layout.width, "stopping tasks… returning to launcher after processes exit", tuiHelpStyle)
 	} else if m.done {
 		doneControls := []helpControl{
-			{key: "f", action: "fullscreen output"},
+			{key: "f", action: "fullscreen"},
 			{key: "enter/q", action: "quit"},
 		}
 		if m.canReturnToLauncher {
@@ -134,10 +134,10 @@ func (m *tuiModel) fullscreenOutputContent() string {
 func (m tuiModel) fullscreenOutputView() string {
 	help := renderStatusControls(
 		m.width,
-		"fullscreen output",
+		"fullscreen",
 		tuiHelpStyle,
 		helpControl{key: "↑/↓ or pgup/pgdn", action: "scroll"},
-		helpControl{key: "drag", action: "select"},
+		helpControl{key: "g/G", action: "top/bottom"},
 		helpControl{key: "f/esc", action: "return"},
 	)
 	return m.fullscreenViewport.View() + "\n" + help
