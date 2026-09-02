@@ -209,9 +209,9 @@ func (m launcherModel) View() tea.View {
 		Render(content)
 	help := renderControls(
 		layout.width,
-		helpControl{key: "↑/↓", action: "select"},
-		helpControl{key: "enter", action: "TUI"},
-		helpControl{key: "ctrl+r", action: "normal"},
+		helpControl{key: "↑/↓", action: "navigate"},
+		helpControl{key: "enter", action: "run in TUI"},
+		helpControl{key: "ctrl+r", action: "run normally"},
 		helpControl{key: "esc", action: "clear"},
 		helpControl{key: "ctrl+c", action: "quit"},
 	)

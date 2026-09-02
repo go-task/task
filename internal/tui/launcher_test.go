@@ -219,6 +219,17 @@ func TestHelpStylesKeysSeparatelyFromActions(t *testing.T) {
 	assert.Contains(t, help, tuiKeyStyle.Render("enter"))
 }
 
+func TestLauncherHelpDescribesLaunchActions(t *testing.T) {
+	t.Parallel()
+
+	m := testLauncher()
+	m.width = 160
+	help := ansi.Strip(m.View().Content)
+	assert.Contains(t, help, "↑/↓: navigate")
+	assert.Contains(t, help, "enter: run in TUI")
+	assert.Contains(t, help, "ctrl+r: run normally")
+}
+
 func testLauncher() launcherModel {
 	return newLauncherModel([]*ast.Task{
 		{Task: "build", Desc: "Compile the project"},
