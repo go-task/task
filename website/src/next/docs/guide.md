@@ -2836,18 +2836,17 @@ the output of the currently selected task.
 
 The requested root task appears at the top and can be selected to inspect output
 from commands that it runs directly. When the root only orchestrates other
-tasks, the first child is selected automatically. By default, all tasks reached
-from that root appear below it in a list. Repeated executions have separate
-entries, while calls that join an existing `run: once` or `run: when_changed`
-execution share one entry. With the tree navigator, tasks are nested beneath the
-task that invoked them. Joined calls then remain visible at each location with a
-`↳` marker and share the owner's status and output.
+tasks, the first child is selected automatically. By default, tasks are nested
+beneath the task that invoked them. Repeated executions have separate entries,
+while calls that join an existing `run: once` or `run: when_changed` execution
+remain visible at each location with a `↳` marker and share the owner's status
+and output. Pass `--tui-task-navigator list` to show all tasks reached from each
+root in a compact, single-level list instead.
 
 Each task shows a status icon, including distinct canceled and skipped states.
 Canceled tasks were interrupted, while skipped tasks were never attempted after
 an earlier sequential task failed. Pass `--tui-status labels` to replace the
-icons with text labels. Pass `--tui-task-navigator tree` to nest tasks under the
-task that invoked them instead of using the default list navigator.
+icons with text labels.
 
 Use Tab or the left/right arrow keys to switch between the task navigator and
 the output pane. Clicking either pane also focuses it.

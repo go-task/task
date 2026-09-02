@@ -325,10 +325,10 @@ task --tui --tui-status labels test
 #### `--tui-task-navigator <mode>`
 
 Set how tasks are organized in the TUI task navigator. Available modes: `list`,
-`tree`. The default is `list`.
+`tree`. The default is `tree`.
 
 ```bash
-task --tui --tui-task-navigator tree test
+task --tui --tui-task-navigator list test
 ```
 
 ### Task Information

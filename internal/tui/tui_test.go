@@ -22,12 +22,12 @@ func TestNew(t *testing.T) {
 
 	got, err := New(&logger.Logger{AssumeTerm: true}, Options{})
 	require.NoError(t, err)
-	assert.Equal(t, taskNavigatorList, got.taskNavigator)
+	assert.Equal(t, taskNavigatorTree, got.taskNavigator)
 
-	got, err = New(&logger.Logger{AssumeTerm: true}, Options{Status: "labels", TaskNavigator: "tree"})
+	got, err = New(&logger.Logger{AssumeTerm: true}, Options{Status: "labels", TaskNavigator: "list"})
 	require.NoError(t, err)
 	assert.True(t, got.statusLabels)
-	assert.Equal(t, taskNavigatorTree, got.taskNavigator)
+	assert.Equal(t, taskNavigatorList, got.taskNavigator)
 
 	_, err = New(&logger.Logger{AssumeTerm: true}, Options{Status: "unknown"})
 	require.Error(t, err)
@@ -373,6 +373,7 @@ func TestTUIModelListNavigatorFlattensTasksAndCollapsesSharedCalls(t *testing.T)
 	t.Parallel()
 
 	m := newTUIModel(func() {})
+	m.taskNavigator = taskNavigatorList
 	m = updateTUIModel(t, m, started(1, 0, "root"))
 	m = updateTUIModel(t, m, started(2, 1, "parent-a"))
 	m = updateTUIModel(t, m, started(3, 1, "parent-b"))

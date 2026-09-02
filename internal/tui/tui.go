@@ -61,11 +61,11 @@ func New(log *logger.Logger, options Options) (*UI, error) {
 	default:
 		return nil, fmt.Errorf(`task: invalid TUI status style %q: expected "icons" or "labels"`, options.Status)
 	}
-	taskNavigator := taskNavigatorList
+	taskNavigator := taskNavigatorTree
 	switch options.TaskNavigator {
-	case "", "list":
-	case "tree":
-		taskNavigator = taskNavigatorTree
+	case "", "tree":
+	case "list":
+		taskNavigator = taskNavigatorList
 	default:
 		return nil, fmt.Errorf(`task: invalid TUI task navigator %q: expected "list" or "tree"`, options.TaskNavigator)
 	}

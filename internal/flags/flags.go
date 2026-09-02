@@ -149,7 +149,7 @@ func init() {
 	pflag.StringVarP(&Entrypoint, "taskfile", "t", "", `Choose which Taskfile to run. Defaults to "Taskfile.yml".`)
 	pflag.BoolVarP(&TUI, "tui", "T", false, "Runs Task in an interactive terminal interface.")
 	pflag.StringVar(&TUIStatus, "tui-status", "", "Sets TUI task status style: [icons|labels].")
-	pflag.StringVar(&TUITaskNavigator, "tui-task-navigator", "", "Sets TUI task navigator: [list|tree].")
+	pflag.StringVar(&TUITaskNavigator, "tui-task-navigator", "", "Sets TUI task navigator: [list|tree]. Defaults to tree.")
 	pflag.StringVar(&TempDir, "temp-dir", getConfig(config, "TEMP_DIR", func() *string { return config.TempDir }, ""), "Sets the directory used to store Task temporary files, such as checksums. Relative paths are relative to the root Taskfile.")
 	pflag.StringVarP(&Output.Name, "output", "o", getConfig(config, "OUTPUT", func() *string { return nil }, ""), "Sets output style: [interleaved|group|prefixed].")
 	pflag.StringVar(&Output.Group.Begin, "output-group-begin", getConfig(config, "OUTPUT_GROUP_BEGIN", func() *string { return nil }, ""), "Message template to print before a task's grouped output.")

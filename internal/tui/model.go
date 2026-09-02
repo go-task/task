@@ -118,7 +118,7 @@ func newTUIModel(cancel context.CancelFunc) tuiModel {
 		height:        30,
 		viewport:      view,
 		cancel:        cancel,
-		taskNavigator: taskNavigatorList,
+		taskNavigator: taskNavigatorTree,
 	}
 }
 
