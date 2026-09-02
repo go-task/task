@@ -207,9 +207,16 @@ func (m launcherModel) View() tea.View {
 		Width(layout.width).
 		Height(layout.bodyHeight).
 		Render(content)
-	help := truncateText(" type to filter  •  ↑/↓ select  •  enter run in TUI  •  ctrl+r run normally  •  esc clear  •  ctrl+c quit", layout.width)
+	help := renderControls(
+		layout.width,
+		helpControl{key: "↑/↓", action: "select"},
+		helpControl{key: "enter", action: "TUI"},
+		helpControl{key: "ctrl+r", action: "normal"},
+		helpControl{key: "esc", action: "clear"},
+		helpControl{key: "ctrl+c", action: "quit"},
+	)
 
-	view := tea.NewView(panel + "\n" + tuiHelpStyle.Render(help))
+	view := tea.NewView(panel + "\n" + help)
 	view.AltScreen = true
 	view.MouseMode = tea.MouseModeCellMotion
 	view.WindowTitle = "Task"

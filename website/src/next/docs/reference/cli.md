@@ -77,8 +77,8 @@ task -i
 Open the interactive task launcher. Type to filter, use the arrow keys to select
 a task, then press Enter to run it in the execution dashboard or Ctrl+R to run
 it normally. Escape clears the filter. From the dashboard, Escape or `b` returns
-to the launcher. When task names are supplied, skip the launcher and open the
-execution dashboard directly.
+to or opens the launcher. When task names are supplied, skip the launcher and
+open the execution dashboard directly.
 
 ```bash
 task --tui

@@ -2827,6 +2827,8 @@ $ task --tui build test lint
 $ task --tui --parallel build test lint
 ```
 
+After direct execution completes, press Escape or `b` to open the launcher.
+
 Each requested task is displayed as an independent root. As with regular Task
 invocations, multiple requested tasks run sequentially by default; pass
 `--parallel` to run them concurrently.
@@ -2873,9 +2875,10 @@ $ task --tui --tui-task-navigator tree --tui-status labels build
 
 Pressing `q` while tasks are running requests cancellation and closes the TUI
 after Task's execution has returned. After execution finishes normally, the TUI
-remains open so its output can be inspected; press Escape or `b` to return to
-the launcher, or press Enter or `q` to close it. Returning while execution is
-still in progress first cancels the tasks and waits for their processes to exit.
+remains open so its output can be inspected; press Escape or `b` to open the
+launcher, or press Enter or `q` to close it. Switching to the launcher while
+execution is still in progress first cancels the tasks and waits for their
+processes to exit.
 
 The TUI requires an interactive terminal. It is intended for local use; use one
 of the stream-based output modes in CI or when redirecting output. Watch mode,

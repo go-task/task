@@ -14,19 +14,23 @@ const (
 )
 
 type appModel struct {
-	page      appPage
-	launcher  launcherModel
-	execution tuiModel
-	startTUI  func([]string) context.CancelFunc
-	runNormal func(string)
-	width     int
-	height    int
+	page           appPage
+	launcher       launcherModel
+	launcherLoaded bool
+	execution      tuiModel
+	loadLauncher   func() (launcherModel, error)
+	startTUI       func([]string) context.CancelFunc
+	runNormal      func(string)
+	err            error
+	width          int
+	height         int
 }
 
 func newAppModel(
 	launcher launcherModel,
 	execution tuiModel,
 	showLauncher bool,
+	loadLauncher func() (launcherModel, error),
 	startTUI func([]string) context.CancelFunc,
 	runNormal func(string),
 ) appModel {
@@ -35,11 +39,13 @@ func newAppModel(
 		page = launcherPage
 	}
 	return appModel{
-		page:      page,
-		launcher:  launcher,
-		execution: execution,
-		startTUI:  startTUI,
-		runNormal: runNormal,
+		page:           page,
+		launcher:       launcher,
+		launcherLoaded: showLauncher,
+		execution:      execution,
+		loadLauncher:   loadLauncher,
+		startTUI:       startTUI,
+		runNormal:      runNormal,
 	}
 }
 
@@ -82,6 +88,15 @@ func (m appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, tea.Batch(cmd, resizeCmd, tea.ClearScreen)
 	}
 	if _, ok := msg.(returnToLauncherMsg); ok {
+		if !m.launcherLoaded {
+			launcher, err := m.loadLauncher()
+			if err != nil {
+				m.err = err
+				return m, tea.Quit
+			}
+			m.launcher = launcher
+			m.launcherLoaded = true
+		}
 		m.page = launcherPage
 		launcher, _, _ := m.launcher.Update(tea.WindowSizeMsg{Width: m.width, Height: m.height})
 		m.launcher = launcher

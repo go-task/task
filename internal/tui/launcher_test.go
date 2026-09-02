@@ -117,6 +117,10 @@ func TestAppRunsNormalLauncherSelectionOutsideDashboard(t *testing.T) {
 		testLauncher(),
 		newTUIModel(func() {}),
 		true,
+		func() (launcherModel, error) {
+			t.Fatal("launcher loader should not run")
+			return launcherModel{}, nil
+		},
 		func([]string) context.CancelFunc {
 			t.Fatal("dashboard callback should not run")
 			return func() {}
@@ -141,6 +145,10 @@ func TestAppCanReturnToLauncherAfterDashboardExecution(t *testing.T) {
 		testLauncher(),
 		execution,
 		true,
+		func() (launcherModel, error) {
+			t.Fatal("launcher loader should not run")
+			return launcherModel{}, nil
+		},
 		func(names []string) context.CancelFunc {
 			dashboardTasks = append(dashboardTasks, names[0])
 			return func() {}
@@ -169,6 +177,46 @@ func TestAppCanReturnToLauncherAfterDashboardExecution(t *testing.T) {
 	assert.Equal(t, executionPage, m.page)
 	assert.Equal(t, []string{"build", "build"}, dashboardTasks)
 	assert.False(t, m.execution.done)
+}
+
+func TestAppLoadsLauncherAfterDirectExecution(t *testing.T) {
+	t.Parallel()
+
+	execution := newTUIModel(func() {})
+	execution.done = true
+	execution.canReturnToLauncher = true
+	loaded := false
+	m := newAppModel(
+		launcherModel{},
+		execution,
+		false,
+		func() (launcherModel, error) {
+			loaded = true
+			return testLauncher(), nil
+		},
+		func([]string) context.CancelFunc {
+			t.Fatal("dashboard callback should not run")
+			return func() {}
+		},
+		func(string) { t.Fatal("normal callback should not run") },
+	)
+
+	next, cmd := m.Update(returnToLauncherMsg{})
+	m = next.(appModel)
+	assert.True(t, loaded)
+	assert.True(t, m.launcherLoaded)
+	assert.Equal(t, launcherPage, m.page)
+	require.NotNil(t, cmd)
+	require.NotEmpty(t, m.launcher.items)
+	assert.Equal(t, "build", m.launcher.items[0].name)
+}
+
+func TestHelpStylesKeysSeparatelyFromActions(t *testing.T) {
+	t.Parallel()
+
+	help := renderControls(80, helpControl{key: "enter", action: "run in TUI"})
+	assert.Equal(t, " enter: run in TUI", ansi.Strip(help))
+	assert.Contains(t, help, tuiKeyStyle.Render("enter"))
 }
 
 func testLauncher() launcherModel {

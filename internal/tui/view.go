@@ -32,33 +32,45 @@ func (m tuiModel) renderContent() string {
 	left, right := m.renderPanes(layout)
 	body := lipgloss.JoinHorizontal(lipgloss.Top, left, strings.Repeat(" ", layout.gap), right)
 
-	help := " tab/←/→ pane  •  ↑/↓ select  •  click a task  •  c select text  •  q quit"
+	controls := []helpControl{
+		{key: "tab/←/→", action: "pane"},
+		{key: "↑/↓", action: "select"},
+		{key: "click", action: "task"},
+		{key: "c", action: "copy"},
+	}
 	if m.focus == outputPane {
-		help = " tab/←/→ pane  •  ↑/↓ or pgup/pgdn scroll  •  wheel  •  c select text  •  q quit"
+		controls = []helpControl{
+			{key: "tab/←/→", action: "pane"},
+			{key: "↑/↓ or pgup/pgdn", action: "scroll"},
+			{key: "wheel", action: "scroll"},
+			{key: "c", action: "copy"},
+		}
 	}
 	if m.canReturnToLauncher {
-		help += "  •  esc/b launcher"
+		controls = append(controls, helpControl{key: "esc/b", action: "launcher"})
 	}
-	helpStyle := tuiHelpStyle
+	controls = append(controls, helpControl{key: "q", action: "quit"})
+	help := renderControls(layout.width, controls...)
 	if m.quitting && !m.done {
-		help = " stopping tasks… waiting for processes to exit"
+		help = renderStatus(layout.width, "stopping tasks… waiting for processes to exit", tuiHelpStyle)
 	} else if m.returning && !m.done {
-		help = " stopping tasks… returning to launcher after processes exit"
+		help = renderStatus(layout.width, "stopping tasks… returning to launcher after processes exit", tuiHelpStyle)
 	} else if m.done {
-		if m.err != nil {
-			help = " execution failed  •  c select text  •  enter/q quit"
-			helpStyle = tuiFailureStyle
-		} else {
-			help = " execution complete  •  c select text  •  enter/q quit"
-			helpStyle = tuiSuccessStyle
+		doneControls := []helpControl{
+			{key: "c", action: "copy"},
+			{key: "enter/q", action: "quit"},
 		}
 		if m.canReturnToLauncher {
-			help += "  •  esc/b launcher"
+			doneControls = append(doneControls, helpControl{key: "esc/b", action: "launcher"})
+		}
+		if m.err != nil {
+			help = renderStatusControls(layout.width, "execution failed", tuiFailureStyle, doneControls...)
+		} else {
+			help = renderStatusControls(layout.width, "execution complete", tuiSuccessStyle, doneControls...)
 		}
 	}
-	help = truncateText(help, max(layout.width, 1))
 
-	return body + "\n" + helpStyle.Render(help)
+	return body + "\n" + help
 }
 
 func (m *tuiModel) enterTextSelection() {
@@ -120,8 +132,15 @@ func (m *tuiModel) textSelectionContent() string {
 }
 
 func (m tuiModel) textSelectionView() string {
-	help := truncateText(" text selection  •  ↑/↓ or pgup/pgdn scroll  •  drag to select  •  c/esc resume", max(m.width, 1))
-	return m.selectionPage.View() + "\n" + tuiHelpStyle.Render(help)
+	help := renderStatusControls(
+		m.width,
+		"text selection",
+		tuiHelpStyle,
+		helpControl{key: "↑/↓ or pgup/pgdn", action: "scroll"},
+		helpControl{key: "drag", action: "select"},
+		helpControl{key: "c/esc", action: "resume"},
+	)
+	return m.selectionPage.View() + "\n" + help
 }
 
 func (m tuiModel) renderPanes(layout tuiLayout) (string, string) {
@@ -345,6 +364,35 @@ func truncateMiddle(s string, width int) string {
 	return ansi.Cut(s, 0, left) + "…" + ansi.Cut(s, stringWidth-right, stringWidth)
 }
 
+type helpControl struct {
+	key    string
+	action string
+}
+
+func renderControls(width int, controls ...helpControl) string {
+	return renderStatusControls(width, "", tuiHelpStyle, controls...)
+}
+
+func renderStatus(width int, status string, style lipgloss.Style) string {
+	return truncateText(" "+style.Render(status), max(width, 1))
+}
+
+func renderStatusControls(width int, status string, style lipgloss.Style, controls ...helpControl) string {
+	var line strings.Builder
+	line.WriteString(" ")
+	if status != "" {
+		line.WriteString(style.Render(status))
+	}
+	for index, control := range controls {
+		if status != "" || index > 0 {
+			line.WriteString("   ")
+		}
+		line.WriteString(tuiKeyStyle.Render(control.key))
+		line.WriteString(tuiHelpStyle.Render(": " + control.action))
+	}
+	return truncateText(line.String(), max(width, 1))
+}
+
 var (
 	tuiAccentColor = compat.AdaptiveColor{Light: lipgloss.Color("#006A83"), Dark: lipgloss.Color("#5FD7FF")}
 	tuiPanelStyle  = lipgloss.NewStyle().
@@ -354,6 +402,7 @@ var (
 			PaddingRight(1)
 
 	tuiTitleStyle    = lipgloss.NewStyle().Bold(true).Foreground(tuiAccentColor)
+	tuiKeyStyle      = lipgloss.NewStyle().Bold(true).Foreground(tuiAccentColor)
 	tuiRootStyle     = lipgloss.NewStyle().Bold(true)
 	tuiSelectedStyle = lipgloss.NewStyle().
 				Bold(true).

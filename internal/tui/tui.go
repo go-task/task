@@ -114,19 +114,26 @@ func (t *UI) Run(ctx context.Context, executor *task.Executor, calls []*task.Cal
 	sessionCtx, cancelSession := context.WithCancel(ctx)
 	defer cancelSession()
 
+	loadLauncher := func() (launcherModel, error) {
+		tasks, err := executor.GetTaskList(task.FilterOutInternal)
+		if err != nil {
+			return launcherModel{}, err
+		}
+		return newLauncherModel(tasks), nil
+	}
 	var launcher launcherModel
 	if len(calls) == 0 {
-		tasks, err := executor.GetTaskList(task.FilterOutInternal)
+		var err error
+		launcher, err = loadLauncher()
 		if err != nil {
 			return err
 		}
-		launcher = newLauncherModel(tasks)
 	}
 
 	execution := newTUIModel(func() {})
 	execution.statusLabels = t.statusLabels
 	execution.taskNavigator = t.taskNavigator
-	execution.canReturnToLauncher = len(calls) == 0
+	execution.canReturnToLauncher = true
 
 	var runs sync.WaitGroup
 	var started atomic.Bool
@@ -152,6 +159,7 @@ func (t *UI) Run(ctx context.Context, executor *task.Executor, calls []*task.Cal
 		launcher,
 		execution,
 		len(calls) == 0,
+		loadLauncher,
 		func(names []string) context.CancelFunc {
 			selectedCalls := make([]*task.Call, len(names))
 			for i, name := range names {
@@ -209,11 +217,15 @@ func (t *UI) Run(ctx context.Context, executor *task.Executor, calls []*task.Cal
 	if uiErr != nil {
 		return fmt.Errorf("task: TUI failed: %w", uiErr)
 	}
+	finalApp := finalModel.(appModel)
+	if finalApp.err != nil {
+		return finalApp.err
+	}
 	if normalTask != "" {
 		restore()
 		return executor.Run(ctx, &task.Call{Task: normalTask})
 	}
-	if !started.Load() || finalModel.(appModel).page == launcherPage {
+	if !started.Load() || finalApp.page == launcherPage {
 		return nil
 	}
 	resultMutex.Lock()
