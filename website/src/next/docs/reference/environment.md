@@ -28,6 +28,7 @@ files > defaults.
 - **Type**: `boolean` (`true`, `false`, `1`, `0`)
 - **Default**: `false`
 - **Description**: Enable verbose output for all tasks
+- **CLI equivalent**: [`-v, --verbose`](./cli.md#-v---verbose)
 - **Config equivalent**: [`verbose`](./config.md#verbose)
 
 ### `TASK_SILENT`
@@ -35,6 +36,7 @@ files > defaults.
 - **Type**: `boolean` (`true`, `false`, `1`, `0`)
 - **Default**: `false`
 - **Description**: Disables echoing of commands
+- **CLI equivalent**: [`-s, --silent`](./cli.md#-s---silent)
 - **Config equivalent**: [`silent`](./config.md#silent)
 
 ### `TASK_COLOR`
@@ -42,6 +44,7 @@ files > defaults.
 - **Type**: `boolean` (`true`, `false`, `1`, `0`)
 - **Default**: `true`
 - **Description**: Enable colored output
+- **CLI equivalent**: [`-c, --color`](./cli.md#-c---color)
 - **Config equivalent**: [`color`](./config.md#color)
 
 ### `TASK_DISABLE_FUZZY`
@@ -49,6 +52,7 @@ files > defaults.
 - **Type**: `boolean` (`true`, `false`, `1`, `0`)
 - **Default**: `false`
 - **Description**: Disable fuzzy matching for task names
+- **CLI equivalent**: [`--disable-fuzzy`](./cli.md#--disable-fuzzy)
 - **Config equivalent**: [`disable-fuzzy`](./config.md#disable-fuzzy)
 
 ### `TASK_CONCURRENCY`
@@ -93,7 +97,7 @@ files > defaults.
 
 - **Type**: `string` (`interleaved`, `group`, `prefixed`)
 - **Description**: Sets the output style
-- **CLI equivalent**: [`--output`](./cli.md#--output-string)
+- **CLI equivalent**: [`-o, --output`](./cli.md#-o---output-mode)
 
 ### `TASK_OUTPUT_GROUP_BEGIN`
 
@@ -127,6 +131,9 @@ checksums and temporary metadata. Can be relative like `tmp/task` or absolute
 like `/tmp/.task` or `~/.task`. Relative paths are relative to the root
 Taskfile, not the working directory. Defaults to: `./.task`.
 
+- **CLI equivalent**: [`--temp-dir`](./cli.md#--temp-dir-path)
+- **Config equivalent**: [`temp-dir`](./config.md#temp-dir)
+
 ### `TASK_CORE_UTILS`
 
 This env controls whether the Bash interpreter will use its own core utilities
@@ -148,27 +155,46 @@ The following variables are used to control the behavior of
 
 Allow insecure connections when fetching remote Taskfiles.
 
+- **CLI equivalent**: [`--insecure`](./cli.md#--insecure)
+- **Config equivalent**: [`remote.insecure`](./config.md#remote-insecure)
+
 ### `TASK_REMOTE_OFFLINE`
 
 Work in offline mode, preventing remote Taskfile fetching.
+
+- **CLI equivalent**: [`--offline`](./cli.md#--offline)
+- **Config equivalent**: [`remote.offline`](./config.md#remote-offline)
 
 ### `TASK_REMOTE_TIMEOUT`
 
 Timeout duration for remote operations (e.g., '30s', '5m').
 
+- **CLI equivalent**: [`--timeout`](./cli.md#--timeout)
+- **Config equivalent**: [`remote.timeout`](./config.md#remote-timeout)
+
 ### `TASK_REMOTE_CACHE_EXPIRY`
 
 Cache expiry duration for remote Taskfiles (e.g., '1h', '24h').
+
+- **CLI equivalent**: [`--expiry`](./cli.md#--expiry)
+- **Config equivalent**: [`remote.cache-expiry`](./config.md#remote-cache-expiry)
 
 ### `TASK_REMOTE_CACHE_DIR`
 
 Directory where remote Taskfiles are cached. Can be an absolute path (e.g.,
 `/var/cache/task`) or relative to the Taskfile directory.
 
+- **CLI equivalent**: [`--remote-cache-dir`](./cli.md#--remote-cache-dir)
+- **Config equivalent**: [`remote.cache-dir`](./config.md#remote-cache-dir)
+
 ### `TASK_REMOTE_TRUSTED_HOSTS`
 
 List of (comma-separated) trusted hosts for remote Taskfiles. Hosts in this list
 will not prompt for confirmation when downloading Taskfiles.
+
+- **CLI equivalent**: [`--trusted-hosts`](./cli.md#--trusted-hosts)
+- **Config equivalent**:
+  [`remote.trusted-hosts`](./config.md#remote-trusted-hosts)
 
 Hosts in the trusted hosts list will automatically be trusted without prompting
 for confirmation when they are first downloaded or when their checksums change.
@@ -179,13 +205,22 @@ and only add hosts you fully trust.
 
 Path to a custom CA certificate file for TLS verification.
 
+- **CLI equivalent**: [`--cacert`](./cli.md#--cacert)
+- **Config equivalent**: [`remote.cacert`](./config.md#remote-cacert)
+
 ### `TASK_REMOTE_CERT`
 
 Path to a client certificate file for mTLS authentication.
 
+- **CLI equivalent**: [`--cert`](./cli.md#--cert)
+- **Config equivalent**: [`remote.cert`](./config.md#remote-cert)
+
 ### `TASK_REMOTE_CERT_KEY`
 
 Path to the client certificate private key file.
+
+- **CLI equivalent**: [`--cert-key`](./cli.md#--cert-key)
+- **Config equivalent**: [`remote.cert-key`](./config.md#remote-cert-key)
 
 ### Custom Colors
 
