@@ -412,7 +412,7 @@ func TestTUIModelMouseSelectsTasksAndFocusesPanes(t *testing.T) {
 	assert.Equal(t, outputPane, m.focus)
 }
 
-func TestTUIModelTextSelectionModeDisablesMouseAndShowsLiveOutput(t *testing.T) {
+func TestTUIModelFullscreenOutputDisablesMouseAndShowsLiveOutput(t *testing.T) {
 	t.Parallel()
 
 	m := newTUIModel(func() {})
@@ -420,11 +420,11 @@ func TestTUIModelTextSelectionModeDisablesMouseAndShowsLiveOutput(t *testing.T) 
 	m = updateTUIModel(t, m, started(1, 0, "root"))
 	m = updateTUIModel(t, m, started(2, 1, "worker"))
 	m = updateTUIModel(t, m, taskOutputMsg{id: 2, name: "worker", data: "first\n"})
-	assert.Contains(t, ansi.Strip(m.View().Content), "c: copy")
+	assert.Contains(t, ansi.Strip(m.View().Content), "f: fullscreen output")
 
-	m = updateTUIModel(t, m, tea.KeyPressMsg{Code: 'c', Text: "c"})
+	m = updateTUIModel(t, m, tea.KeyPressMsg{Code: 'f', Text: "f"})
 	selectionView := m.View()
-	assert.True(t, m.selectingText)
+	assert.True(t, m.fullscreenOutput)
 	assert.Equal(t, tea.MouseModeNone, selectionView.MouseMode)
 	assert.Contains(t, ansi.Strip(selectionView.Content), "drag: select")
 	assert.Contains(t, selectionView.Content, "first")
@@ -434,16 +434,16 @@ func TestTUIModelTextSelectionModeDisablesMouseAndShowsLiveOutput(t *testing.T) 
 	m = updateTUIModel(t, m, taskOutputMsg{id: 2, name: "worker", data: "second\n"})
 	assert.NotEqual(t, selectionView.Content, m.View().Content)
 	assert.Contains(t, m.View().Content, "second")
-	assert.True(t, m.selectionPage.AtBottom())
+	assert.True(t, m.fullscreenViewport.AtBottom())
 	assert.Equal(t, "first\nsecond\n", m.byID[2].output)
 
 	m = updateTUIModel(t, m, tea.KeyPressMsg{Code: tea.KeyEscape})
-	assert.False(t, m.selectingText)
+	assert.False(t, m.fullscreenOutput)
 	assert.Equal(t, tea.MouseModeCellMotion, m.View().MouseMode)
 	assert.Contains(t, m.View().Content, "second")
 }
 
-func TestTUIModelTextSelectionModeScrollsWithKeyboard(t *testing.T) {
+func TestTUIModelFullscreenOutputScrollsWithKeyboard(t *testing.T) {
 	t.Parallel()
 
 	m := newTUIModel(func() {})
@@ -451,23 +451,23 @@ func TestTUIModelTextSelectionModeScrollsWithKeyboard(t *testing.T) {
 	m = updateTUIModel(t, m, started(1, 0, "root"))
 	m = updateTUIModel(t, m, started(2, 1, "worker"))
 	m = updateTUIModel(t, m, taskOutputMsg{id: 2, name: "worker", data: numberedLines(60)})
-	m = updateTUIModel(t, m, tea.KeyPressMsg{Code: 'c', Text: "c"})
+	m = updateTUIModel(t, m, tea.KeyPressMsg{Code: 'f', Text: "f"})
 
-	require.True(t, m.selectionPage.AtBottom())
-	bottomOffset := m.selectionPage.YOffset()
+	require.True(t, m.fullscreenViewport.AtBottom())
+	bottomOffset := m.fullscreenViewport.YOffset()
 	require.Greater(t, bottomOffset, 0)
 
 	m = updateTUIModel(t, m, tea.KeyPressMsg{Code: tea.KeyPgUp})
-	scrolledOffset := m.selectionPage.YOffset()
+	scrolledOffset := m.fullscreenViewport.YOffset()
 	assert.Less(t, scrolledOffset, bottomOffset)
 	m = updateTUIModel(t, m, taskOutputMsg{id: 2, name: "worker", data: "new output\n"})
-	assert.Equal(t, scrolledOffset, m.selectionPage.YOffset())
+	assert.Equal(t, scrolledOffset, m.fullscreenViewport.YOffset())
 	assert.Contains(t, m.View().Content, "scroll")
 
 	m = updateTUIModel(t, m, tea.KeyPressMsg{Code: 'g', Text: "g"})
-	assert.True(t, m.selectionPage.AtTop())
+	assert.True(t, m.fullscreenViewport.AtTop())
 	m = updateTUIModel(t, m, tea.KeyPressMsg{Code: 'G', Text: "G"})
-	assert.True(t, m.selectionPage.AtBottom())
+	assert.True(t, m.fullscreenViewport.AtBottom())
 }
 
 func TestTUIModelScrollsAndRemembersEachTaskOutput(t *testing.T) {

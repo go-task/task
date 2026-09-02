@@ -106,8 +106,8 @@ func (m *tuiModel) appendOutput(id uint64, name, data string) {
 }
 
 func (m *tuiModel) refreshOutputView() {
-	if m.selectingText {
-		m.syncSelectionPage()
+	if m.fullscreenOutput {
+		m.syncFullscreenOutput()
 	} else {
 		m.loadViewport()
 	}

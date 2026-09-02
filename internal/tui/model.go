@@ -98,8 +98,8 @@ type tuiModel struct {
 	taskNavigator       tuiTaskNavigator
 	canReturnToLauncher bool
 
-	selectingText bool
-	selectionPage viewport.Model
+	fullscreenOutput   bool
+	fullscreenViewport viewport.Model
 }
 
 type tuiTaskKey struct {
@@ -127,8 +127,8 @@ func (m tuiModel) Init() tea.Cmd { return nil }
 func (m tuiModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
-		if m.selectingText {
-			m.leaveTextSelection()
+		if m.fullscreenOutput {
+			m.leaveFullscreenOutput()
 		}
 		m.saveViewport()
 		m.width, m.height = msg.Width, msg.Height
@@ -203,13 +203,13 @@ func (m tuiModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.cancel()
 		return m, nil
 	case tea.MouseClickMsg:
-		if m.selectingText {
+		if m.fullscreenOutput {
 			return m, nil
 		}
 		m.handleMouseClick(tea.Mouse(msg))
 		return m, nil
 	case tea.MouseWheelMsg:
-		if m.selectingText {
+		if m.fullscreenOutput {
 			return m, nil
 		}
 		return m, m.handleMouseWheel(msg)
@@ -234,10 +234,10 @@ func (m *tuiModel) appendFailure(task *tuiTask, err error) {
 }
 
 func (m *tuiModel) handleKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
-	if m.selectingText {
+	if m.fullscreenOutput {
 		switch msg.String() {
-		case "c", "esc":
-			m.leaveTextSelection()
+		case "f", "esc":
+			m.leaveFullscreenOutput()
 			return *m, nil
 		case "q", "ctrl+c":
 			if m.done {
@@ -247,17 +247,17 @@ func (m *tuiModel) handleKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 			m.cancel()
 			return *m, nil
 		case "up", "k":
-			m.selectionPage.ScrollUp(1)
+			m.fullscreenViewport.ScrollUp(1)
 		case "down", "j":
-			m.selectionPage.ScrollDown(1)
+			m.fullscreenViewport.ScrollDown(1)
 		case "pgup":
-			m.selectionPage.PageUp()
+			m.fullscreenViewport.PageUp()
 		case "pgdown":
-			m.selectionPage.PageDown()
+			m.fullscreenViewport.PageDown()
 		case "home", "g":
-			m.selectionPage.GotoTop()
+			m.fullscreenViewport.GotoTop()
 		case "end", "G":
-			m.selectionPage.GotoBottom()
+			m.fullscreenViewport.GotoBottom()
 		default:
 			return *m, nil
 		}
@@ -295,8 +295,8 @@ func (m *tuiModel) handleKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 	case "right", "l":
 		m.focus = outputPane
 		return *m, nil
-	case "c":
-		m.enterTextSelection()
+	case "f":
+		m.enterFullscreenOutput()
 		return *m, nil
 	case "pgup", "pgdown":
 		m.focus = outputPane

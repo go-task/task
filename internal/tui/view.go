@@ -13,12 +13,12 @@ import (
 
 func (m tuiModel) View() tea.View {
 	content := m.renderContent()
-	if m.selectingText {
-		content = m.textSelectionView()
+	if m.fullscreenOutput {
+		content = m.fullscreenOutputView()
 	}
 	view := tea.NewView(content)
 	view.AltScreen = true
-	if m.selectingText {
+	if m.fullscreenOutput {
 		view.MouseMode = tea.MouseModeNone
 	} else {
 		view.MouseMode = tea.MouseModeCellMotion
@@ -36,14 +36,14 @@ func (m tuiModel) renderContent() string {
 		{key: "tab/←/→", action: "pane"},
 		{key: "↑/↓", action: "select"},
 		{key: "click", action: "task"},
-		{key: "c", action: "copy"},
+		{key: "f", action: "fullscreen output"},
 	}
 	if m.focus == outputPane {
 		controls = []helpControl{
 			{key: "tab/←/→", action: "pane"},
 			{key: "↑/↓ or pgup/pgdn", action: "scroll"},
 			{key: "wheel", action: "scroll"},
-			{key: "c", action: "copy"},
+			{key: "f", action: "fullscreen output"},
 		}
 	}
 	if m.canReturnToLauncher {
@@ -57,7 +57,7 @@ func (m tuiModel) renderContent() string {
 		help = renderStatus(layout.width, "stopping tasks… returning to launcher after processes exit", tuiHelpStyle)
 	} else if m.done {
 		doneControls := []helpControl{
-			{key: "c", action: "copy"},
+			{key: "f", action: "fullscreen output"},
 			{key: "enter/q", action: "quit"},
 		}
 		if m.canReturnToLauncher {
@@ -73,30 +73,30 @@ func (m tuiModel) renderContent() string {
 	return body + "\n" + help
 }
 
-func (m *tuiModel) enterTextSelection() {
-	m.selectingText = true
+func (m *tuiModel) enterFullscreenOutput() {
+	m.fullscreenOutput = true
 	view := viewport.New(
 		viewport.WithWidth(max(m.width, 1)),
 		viewport.WithHeight(max(m.height-1, 1)),
 	)
 	view.SoftWrap = true
-	m.selectionPage = view
-	m.selectionPage.SetContent(m.textSelectionContent())
+	m.fullscreenViewport = view
+	m.fullscreenViewport.SetContent(m.fullscreenOutputContent())
 	if m.viewport.AtBottom() {
-		m.selectionPage.GotoBottom()
+		m.fullscreenViewport.GotoBottom()
 	} else if !m.viewport.AtTop() {
 		position := m.viewport.ScrollPercent()
-		m.selectionPage.GotoBottom()
-		m.selectionPage.SetYOffset(int(position * float64(m.selectionPage.YOffset())))
+		m.fullscreenViewport.GotoBottom()
+		m.fullscreenViewport.SetYOffset(int(position * float64(m.fullscreenViewport.YOffset())))
 	}
 }
 
-func (m *tuiModel) leaveTextSelection() {
-	atTop := m.selectionPage.AtTop()
-	atBottom := m.selectionPage.AtBottom()
-	position := m.selectionPage.ScrollPercent()
-	m.selectingText = false
-	m.selectionPage = viewport.Model{}
+func (m *tuiModel) leaveFullscreenOutput() {
+	atTop := m.fullscreenViewport.AtTop()
+	atBottom := m.fullscreenViewport.AtBottom()
+	position := m.fullscreenViewport.ScrollPercent()
+	m.fullscreenOutput = false
+	m.fullscreenViewport = viewport.Model{}
 	m.loadViewport()
 	if atTop {
 		m.viewport.GotoTop()
@@ -109,18 +109,18 @@ func (m *tuiModel) leaveTextSelection() {
 	m.saveViewport()
 }
 
-func (m *tuiModel) syncSelectionPage() {
-	atBottom := m.selectionPage.AtBottom()
-	offset := m.selectionPage.YOffset()
-	m.selectionPage.SetContent(m.textSelectionContent())
+func (m *tuiModel) syncFullscreenOutput() {
+	atBottom := m.fullscreenViewport.AtBottom()
+	offset := m.fullscreenViewport.YOffset()
+	m.fullscreenViewport.SetContent(m.fullscreenOutputContent())
 	if atBottom {
-		m.selectionPage.GotoBottom()
+		m.fullscreenViewport.GotoBottom()
 	} else {
-		m.selectionPage.SetYOffset(offset)
+		m.fullscreenViewport.SetYOffset(offset)
 	}
 }
 
-func (m *tuiModel) textSelectionContent() string {
+func (m *tuiModel) fullscreenOutputContent() string {
 	content := ""
 	if task := m.selectedTask(); task != nil {
 		content = task.output
@@ -131,16 +131,16 @@ func (m *tuiModel) textSelectionContent() string {
 	return content
 }
 
-func (m tuiModel) textSelectionView() string {
+func (m tuiModel) fullscreenOutputView() string {
 	help := renderStatusControls(
 		m.width,
-		"text selection",
+		"fullscreen output",
 		tuiHelpStyle,
 		helpControl{key: "↑/↓ or pgup/pgdn", action: "scroll"},
 		helpControl{key: "drag", action: "select"},
-		helpControl{key: "c/esc", action: "resume"},
+		helpControl{key: "f/esc", action: "return"},
 	)
-	return m.selectionPage.View() + "\n" + help
+	return m.fullscreenViewport.View() + "\n" + help
 }
 
 func (m tuiModel) renderPanes(layout tuiLayout) (string, string) {

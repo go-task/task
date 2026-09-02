@@ -2862,11 +2862,11 @@ the following controls to scroll:
 - `g` and `G` to jump to the beginning or end
 - Mouse wheel
 
-Press `c` to open a live, output-only view of the selected task. Mouse reporting
-is disabled in this view, allowing the terminal to select and copy its text.
+Press `f` to show the selected task's output fullscreen. Mouse reporting is
+disabled in this view, allowing the terminal to select and copy its text.
 Incoming output remains visible; the view follows it while at the bottom and
 preserves the current position after you scroll up. The keyboard scrolling
-controls above remain available. Press `c` again or Escape to return to the
+controls above remain available. Press `f` again or Escape to return to the
 two-pane view.
 
 ```shell
