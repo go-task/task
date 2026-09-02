@@ -3,8 +3,8 @@ package tui
 import (
 	"fmt"
 	"strings"
-	"unicode"
 
+	"charm.land/bubbles/v2/textinput"
 	tea "charm.land/bubbletea/v2"
 	"charm.land/lipgloss/v2"
 
@@ -34,17 +34,21 @@ func (i launcherItem) matches(filter string) bool {
 }
 
 type launcherModel struct {
-	items    []launcherItem
-	filtered []int
-	filter   string
-	selected int
-	top      int
-	width    int
-	height   int
+	items       []launcherItem
+	filtered    []int
+	filterInput textinput.Model
+	selected    int
+	top         int
+	width       int
+	height      int
 }
 
 func newLauncherModel(tasks []*ast.Task) launcherModel {
-	m := launcherModel{width: 100, height: 30}
+	m := launcherModel{
+		filterInput: newLauncherFilterInput(),
+		width:       100,
+		height:      30,
+	}
 	m.items = make([]launcherItem, 0, len(tasks))
 	for _, task := range tasks {
 		m.items = append(m.items, launcherItem{
@@ -56,7 +60,22 @@ func newLauncherModel(tasks []*ast.Task) launcherModel {
 	return m
 }
 
-func (m launcherModel) Init() tea.Cmd { return nil }
+func newLauncherFilterInput() textinput.Model {
+	input := textinput.New()
+	input.Prompt = ""
+	input.Placeholder = "type to search"
+	styles := input.Styles()
+	styles.Focused.Text = lipgloss.NewStyle()
+	styles.Focused.Placeholder = tuiHelpStyle
+	styles.Cursor.Color = tuiHelpColor
+	input.SetStyles(styles)
+	wordDeleteKeys := input.KeyMap.DeleteWordBackward.Keys()
+	input.KeyMap.DeleteWordBackward.SetKeys(append(wordDeleteKeys, "ctrl+backspace")...)
+	input.Focus()
+	return input
+}
+
+func (m launcherModel) Init() tea.Cmd { return textinput.Blink }
 
 func (m launcherModel) Update(msg tea.Msg) (launcherModel, tea.Cmd, *launchRequest) {
 	switch msg := msg.(type) {
@@ -85,29 +104,29 @@ func (m launcherModel) Update(msg tea.Msg) (launcherModel, tea.Cmd, *launchReque
 			return m, tea.Quit, nil
 		case "up":
 			m.moveSelection(-1)
+			return m, nil, nil
 		case "down", "tab":
 			m.moveSelection(1)
+			return m, nil, nil
 		case "home":
 			m.selectBoundary(false)
+			return m, nil, nil
 		case "end":
 			m.selectBoundary(true)
-		case "backspace":
-			runes := []rune(m.filter)
-			if len(runes) > 0 {
-				m.applyFilter(string(runes[:len(runes)-1]))
-			}
-		case "ctrl+u":
-			m.applyFilter("")
+			return m, nil, nil
 		case "esc":
 			m.applyFilter("")
 			return m, nil, nil
-		default:
-			if text := printableText(msg.Text); text != "" {
-				m.applyFilter(m.filter + text)
-			}
 		}
 	}
-	return m, nil, nil
+
+	previousFilter := m.filterInput.Value()
+	var cmd tea.Cmd
+	m.filterInput, cmd = m.filterInput.Update(msg)
+	if filter := m.filterInput.Value(); filter != previousFilter {
+		m.applyFilter(filter)
+	}
+	return m, cmd, nil
 }
 
 func (m launcherModel) request(mode launchMode) *launchRequest {
@@ -122,7 +141,7 @@ func (m *launcherModel) applyFilter(filter string) {
 	if request := m.request(launchNormally); request != nil {
 		selectedName = request.name
 	}
-	m.filter = filter
+	m.filterInput.SetValue(filter)
 	m.filtered = m.filtered[:0]
 	for index, item := range m.items {
 		if item.matches(filter) {
@@ -138,15 +157,6 @@ func (m *launcherModel) applyFilter(filter string) {
 	}
 	m.top = min(m.top, max(len(m.filtered)-1, 0))
 	m.keepSelectionVisible()
-}
-
-func printableText(text string) string {
-	return strings.Map(func(r rune) rune {
-		if unicode.IsControl(r) {
-			return -1
-		}
-		return r
-	}, text)
 }
 
 func (m *launcherModel) moveSelection(delta int) {
@@ -226,11 +236,7 @@ func (m launcherModel) View() tea.View {
 func (m launcherModel) renderContent(layout launcherLayout) string {
 	count := fmt.Sprintf("%d/%d", len(m.filtered), len(m.items))
 	lines := []string{paneTitle("TASKS", count, layout.innerWidth)}
-	filter := "Filter: " + m.filter
-	if m.filter == "" {
-		filter = "Filter: type to search"
-	}
-	lines = append(lines, tuiHelpStyle.Render(truncateText(filter, layout.innerWidth)))
+	lines = append(lines, m.renderFilter(layout.innerWidth))
 
 	available := max(layout.innerHeight-len(lines), 0)
 	nameWidth := m.nameColumnWidth(layout.innerWidth)
@@ -242,6 +248,25 @@ func (m launcherModel) renderContent(layout launcherLayout) string {
 		lines = append(lines, tuiHelpStyle.Render("No matching tasks"))
 	}
 	return strings.Join(lines, "\n")
+}
+
+func (m launcherModel) renderFilter(width int) string {
+	labelStyle := tuiHelpStyle
+	cursorColor := tuiHelpColor
+	if m.filterInput.Value() != "" {
+		labelStyle = tuiFilterActiveStyle
+		cursorColor = tuiFilterActiveColor
+	}
+
+	input := m.filterInput
+	styles := input.Styles()
+	styles.Cursor.Color = cursorColor
+	input.SetStyles(styles)
+	label := labelStyle.Render("Filter: ")
+	// Textinput renders the cursor as one cell beyond its configured content
+	// width when it is positioned at the end of the value.
+	input.SetWidth(max(width-lipgloss.Width(label)-1, 1))
+	return truncateText(label+input.View(), width)
 }
 
 func (m launcherModel) nameColumnWidth(width int) int {

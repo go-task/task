@@ -100,7 +100,7 @@ func (m appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.page = launcherPage
 		launcher, _, _ := m.launcher.Update(tea.WindowSizeMsg{Width: m.width, Height: m.height})
 		m.launcher = launcher
-		return m, tea.ClearScreen
+		return m, tea.Batch(tea.ClearScreen, m.launcher.Init())
 	}
 
 	execution, cmd := m.execution.Update(msg)

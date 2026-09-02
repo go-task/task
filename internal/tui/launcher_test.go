@@ -19,20 +19,51 @@ func TestLauncherFiltersAsTheUserTypes(t *testing.T) {
 	m := testLauncher()
 	m, _, request := m.Update(tea.KeyPressMsg{Code: 'p', Text: "p"})
 	require.Nil(t, request)
-	assert.Equal(t, "p", m.filter)
+	assert.Equal(t, "p", m.filterInput.Value())
 	assert.Equal(t, []int{0, 2}, m.filtered)
 
 	m, _, _ = m.Update(tea.KeyPressMsg{Code: 'u', Text: "u"})
-	assert.Equal(t, "pu", m.filter)
+	assert.Equal(t, "pu", m.filterInput.Value())
 	assert.Equal(t, []int{2}, m.filtered)
 	assert.Contains(t, ansi.Strip(m.View().Content), "publish")
 	assert.NotContains(t, ansi.Strip(m.View().Content), "build")
 
 	m, _, _ = m.Update(tea.KeyPressMsg{Code: tea.KeyBackspace})
-	assert.Equal(t, "p", m.filter)
+	assert.Equal(t, "p", m.filterInput.Value())
 	m, _, _ = m.Update(tea.KeyPressMsg{Code: tea.KeyEscape})
-	assert.Empty(t, m.filter)
+	assert.Empty(t, m.filterInput.Value())
 	assert.Len(t, m.filtered, 3)
+}
+
+func TestLauncherFilterLooksInactiveUntilTheUserTypes(t *testing.T) {
+	t.Parallel()
+
+	m := testLauncher()
+	assert.True(t, m.filterInput.Focused())
+	inactive := m.renderFilter(40)
+	assert.Equal(t, 40, lipgloss.Width(inactive))
+	assert.Contains(t, inactive, tuiHelpStyle.Render("Filter: "))
+	assert.Contains(t, ansi.Strip(inactive), "Filter: type to search")
+
+	m, _, _ = m.Update(tea.KeyPressMsg{Code: 'b', Text: "b"})
+	active := m.renderFilter(40)
+	assert.Equal(t, 40, lipgloss.Width(active))
+	assert.Contains(t, active, tuiFilterActiveStyle.Render("Filter: "))
+	assert.Contains(t, ansi.Strip(active), "Filter: b")
+	assert.NotContains(t, active, tuiHelpStyle.Render("b"))
+}
+
+func TestLauncherFilterDeletesWords(t *testing.T) {
+	t.Parallel()
+
+	m := testLauncher()
+	m, _, _ = m.Update(tea.KeyPressMsg{Text: "build docs"})
+	m, _, _ = m.Update(tea.KeyPressMsg{Code: 'w', Mod: tea.ModCtrl})
+	assert.Equal(t, "build ", m.filterInput.Value())
+
+	m, _, _ = m.Update(tea.KeyPressMsg{Text: "tests"})
+	m, _, _ = m.Update(tea.KeyPressMsg{Code: tea.KeyBackspace, Mod: tea.ModCtrl})
+	assert.Equal(t, "build ", m.filterInput.Value())
 }
 
 func TestLauncherUsesSeparateNormalAndTUIActions(t *testing.T) {
@@ -63,12 +94,12 @@ func TestLauncherEscapeOnlyClearsTheFilter(t *testing.T) {
 	m, cmd, request := m.Update(tea.KeyPressMsg{Code: tea.KeyEscape})
 	require.Nil(t, cmd)
 	require.Nil(t, request)
-	assert.Empty(t, m.filter)
+	assert.Empty(t, m.filterInput.Value())
 
 	m, cmd, request = m.Update(tea.KeyPressMsg{Code: tea.KeyEscape})
 	require.Nil(t, cmd)
 	require.Nil(t, request)
-	assert.Empty(t, m.filter)
+	assert.Empty(t, m.filterInput.Value())
 }
 
 func TestLauncherControlCQuits(t *testing.T) {
@@ -215,7 +246,7 @@ func TestHelpStylesKeysSeparatelyFromActions(t *testing.T) {
 	t.Parallel()
 
 	help := renderControls(80, helpControl{key: "enter", action: "run in TUI"})
-	assert.Equal(t, " enter: run in TUI", ansi.Strip(help))
+	assert.Equal(t, "enter: run in TUI", ansi.Strip(help))
 	assert.Contains(t, help, tuiKeyStyle.Render("enter"))
 }
 

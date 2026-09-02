@@ -379,13 +379,12 @@ func renderStatus(width int, status string, style lipgloss.Style) string {
 
 func renderStatusControls(width int, status string, style lipgloss.Style, controls ...helpControl) string {
 	var line strings.Builder
-	line.WriteString(" ")
 	if status != "" {
 		line.WriteString(style.Render(status))
 	}
 	for index, control := range controls {
 		if status != "" || index > 0 {
-			line.WriteString("   ")
+			line.WriteString("  ")
 		}
 		line.WriteString(tuiKeyStyle.Render(control.key))
 		line.WriteString(tuiHelpStyle.Render(": " + control.action))
@@ -394,17 +393,20 @@ func renderStatusControls(width int, status string, style lipgloss.Style, contro
 }
 
 var (
-	tuiAccentColor = compat.AdaptiveColor{Light: lipgloss.Color("#006A83"), Dark: lipgloss.Color("#5FD7FF")}
-	tuiPanelStyle  = lipgloss.NewStyle().
-			Border(lipgloss.RoundedBorder()).
-			BorderForeground(compat.AdaptiveColor{Light: lipgloss.Color("#87909A"), Dark: lipgloss.Color("#59636E")}).
-			PaddingLeft(1).
-			PaddingRight(1)
+	tuiAccentColor       = compat.AdaptiveColor{Light: lipgloss.Color("#006A83"), Dark: lipgloss.Color("#5FD7FF")}
+	tuiFilterActiveColor = compat.AdaptiveColor{Light: lipgloss.Color("#5F3DC4"), Dark: lipgloss.Color("#AF87FF")}
+	tuiHelpColor         = compat.AdaptiveColor{Light: lipgloss.Color("#66717C"), Dark: lipgloss.Color("#89949F")}
+	tuiPanelStyle        = lipgloss.NewStyle().
+				Border(lipgloss.RoundedBorder()).
+				BorderForeground(compat.AdaptiveColor{Light: lipgloss.Color("#87909A"), Dark: lipgloss.Color("#59636E")}).
+				PaddingLeft(1).
+				PaddingRight(1)
 
-	tuiTitleStyle    = lipgloss.NewStyle().Bold(true).Foreground(tuiAccentColor)
-	tuiKeyStyle      = lipgloss.NewStyle().Bold(true).Foreground(tuiAccentColor)
-	tuiRootStyle     = lipgloss.NewStyle().Bold(true)
-	tuiSelectedStyle = lipgloss.NewStyle().
+	tuiTitleStyle        = lipgloss.NewStyle().Bold(true).Foreground(tuiAccentColor)
+	tuiFilterActiveStyle = lipgloss.NewStyle().Foreground(tuiFilterActiveColor)
+	tuiKeyStyle          = lipgloss.NewStyle().Bold(true).Foreground(tuiAccentColor)
+	tuiRootStyle         = lipgloss.NewStyle().Bold(true)
+	tuiSelectedStyle     = lipgloss.NewStyle().
 				Bold(true).
 				Foreground(compat.AdaptiveColor{Light: lipgloss.Color("#10212B"), Dark: lipgloss.Color("#F4F7FA")}).
 				Background(compat.AdaptiveColor{Light: lipgloss.Color("#D9E8ED"), Dark: lipgloss.Color("#34444D")})
@@ -413,5 +415,5 @@ var (
 	tuiSuccessStyle  = lipgloss.NewStyle().Foreground(compat.AdaptiveColor{Light: lipgloss.Color("#257A3E"), Dark: lipgloss.Color("#5FD787")})
 	tuiFailureStyle  = lipgloss.NewStyle().Foreground(compat.AdaptiveColor{Light: lipgloss.Color("#B42318"), Dark: lipgloss.Color("#FF6B6B")})
 	tuiCanceledStyle = lipgloss.NewStyle().Foreground(compat.AdaptiveColor{Light: lipgloss.Color("#5F6670"), Dark: lipgloss.Color("#AAB2BD")})
-	tuiHelpStyle     = lipgloss.NewStyle().Foreground(compat.AdaptiveColor{Light: lipgloss.Color("#66717C"), Dark: lipgloss.Color("#89949F")})
+	tuiHelpStyle     = lipgloss.NewStyle().Foreground(tuiHelpColor)
 )
