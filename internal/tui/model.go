@@ -73,6 +73,11 @@ type taskOutputMsg struct {
 	name, data string
 }
 type (
+	noticeExpiredMsg   struct{ id int }
+	noticeRequestedMsg struct{ text string }
+)
+
+type (
 	outputReadyMsg   struct{ ui *UI }
 	executionDoneMsg struct {
 		ui  *UI
@@ -103,6 +108,11 @@ type tuiModel struct {
 
 	fullscreenOutput   bool
 	fullscreenViewport viewport.Model
+
+	// notice is transient feedback shown in place of the controls, such as the
+	// result of a copy. noticeID lets a later notice cancel an earlier timer.
+	notice   string
+	noticeID int
 }
 
 type tuiTaskKey struct {
@@ -164,6 +174,13 @@ func (m tuiModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			task.state = taskSucceeded
 		}
 		return m, nil
+	case noticeExpiredMsg:
+		if msg.id == m.noticeID {
+			m.notice = ""
+		}
+		return m, nil
+	case noticeRequestedMsg:
+		return m, m.showNotice(msg.text)
 	case taskJoinedMsg:
 		m.joinTask(msg.id, msg.ownerID)
 		return m, nil
@@ -244,6 +261,10 @@ func (m *tuiModel) handleKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 		case "f", "esc":
 			m.leaveFullscreenOutput()
 			return *m, nil
+		case "y":
+			return *m, m.copyOutput()
+		case "s":
+			return *m, m.snapshotSelectedOutput()
 		case "q", "ctrl+c":
 			if m.done {
 				return *m, tea.Quit
@@ -303,6 +324,10 @@ func (m *tuiModel) handleKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 	case "f":
 		m.enterFullscreenOutput()
 		return *m, nil
+	case "y":
+		return *m, m.copyOutput()
+	case "s":
+		return *m, m.snapshotSelectedOutput()
 	case "pgup", "pgdown":
 		m.focus = outputPane
 		return *m, m.updateViewport(msg)

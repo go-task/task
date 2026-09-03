@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"slices"
 	"strings"
+	"time"
 	"unicode/utf8"
 
 	tea "charm.land/bubbletea/v2"
@@ -116,6 +117,41 @@ func trimPartialRune(s string) string {
 		s = s[1:]
 	}
 	return s
+}
+
+// copyOutput puts the selected task's output on the system clipboard using
+// OSC 52, which works over SSH. Terminals that do not support the sequence
+// ignore it silently, and nothing in the program can detect that.
+func (m *tuiModel) copyOutput() tea.Cmd {
+	task := m.selectedTask()
+	if task == nil || task.output == "" {
+		return m.showNotice("nothing to copy")
+	}
+	return tea.Batch(
+		tea.SetClipboard(task.output),
+		m.showNotice("copied "+humanizeBytes(len(task.output))),
+	)
+}
+
+// showNotice replaces the controls with a short message that clears itself.
+func (m *tuiModel) showNotice(text string) tea.Cmd {
+	m.noticeID++
+	m.notice = text
+	id := m.noticeID
+	return tea.Tick(noticeDuration, func(time.Time) tea.Msg {
+		return noticeExpiredMsg{id: id}
+	})
+}
+
+func humanizeBytes(n int) string {
+	switch {
+	case n >= 1<<20:
+		return fmt.Sprintf("%.1f MB", float64(n)/(1<<20))
+	case n >= 1<<10:
+		return fmt.Sprintf("%.1f KB", float64(n)/(1<<10))
+	default:
+		return fmt.Sprintf("%d B", n)
+	}
 }
 
 func (m *tuiModel) refreshOutputView() {

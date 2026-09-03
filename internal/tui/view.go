@@ -35,15 +35,17 @@ func (m tuiModel) renderContent() string {
 	controls := []helpControl{
 		{key: "tab/←/→", action: "pane"},
 		{key: "↑/↓", action: "select"},
-		{key: "click", action: "task"},
 		{key: "f", action: "fullscreen"},
+		{key: "y", action: "copy"},
+		{key: "s", action: "snapshot"},
 	}
 	if m.focus == outputPane {
 		controls = []helpControl{
 			{key: "tab/←/→", action: "pane"},
 			{key: "↑/↓ or pgup/pgdn", action: "scroll"},
-			{key: "wheel", action: "scroll"},
 			{key: "f", action: "fullscreen"},
+			{key: "y", action: "copy"},
+			{key: "s", action: "snapshot"},
 		}
 	}
 	if m.canReturnToLauncher {
@@ -51,13 +53,18 @@ func (m tuiModel) renderContent() string {
 	}
 	controls = append(controls, helpControl{key: "q", action: "quit"})
 	help := renderControls(layout.width, controls...)
-	if m.quitting && !m.done {
+	switch {
+	case m.quitting && !m.done:
 		help = renderStatus(layout.width, "stopping tasks… waiting for processes to exit", tuiHelpStyle)
-	} else if m.returning && !m.done {
+	case m.returning && !m.done:
 		help = renderStatus(layout.width, "stopping tasks… returning to launcher after processes exit", tuiHelpStyle)
-	} else if m.done {
+	case m.notice != "":
+		help = renderStatus(layout.width, m.notice, tuiTitleStyle)
+	case m.done:
 		doneControls := []helpControl{
 			{key: "f", action: "fullscreen"},
+			{key: "y", action: "copy"},
+			{key: "s", action: "snapshot"},
 			{key: "enter/q", action: "quit"},
 		}
 		if m.canReturnToLauncher {
@@ -132,12 +139,17 @@ func (m *tuiModel) fullscreenOutputContent() string {
 }
 
 func (m tuiModel) fullscreenOutputView() string {
+	if m.notice != "" {
+		return m.fullscreenViewport.View() + "\n" + renderStatus(m.width, m.notice, tuiTitleStyle)
+	}
 	help := renderStatusControls(
 		m.width,
 		"fullscreen",
 		tuiHelpStyle,
 		helpControl{key: "↑/↓ or pgup/pgdn", action: "scroll"},
 		helpControl{key: "g/G", action: "top/bottom"},
+		helpControl{key: "y", action: "copy"},
+		helpControl{key: "s", action: "snapshot"},
 		helpControl{key: "f/esc", action: "return"},
 	)
 	return m.fullscreenViewport.View() + "\n" + help

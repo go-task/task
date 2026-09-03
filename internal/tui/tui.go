@@ -6,6 +6,7 @@ import (
 	"io"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	tea "charm.land/bubbletea/v2"
 
@@ -17,6 +18,7 @@ import (
 const (
 	systemTaskName   = "Task messages"
 	maxTaskOutputLen = 10 << 20
+	noticeDuration   = 2 * time.Second
 )
 
 // taskInvocation aliases the executor type so the rest of this package can keep

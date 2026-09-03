@@ -757,3 +757,73 @@ func TestTrimPartialRuneKeepsOutputValid(t *testing.T) {
 	}
 	assert.Equal(t, "llo", trimPartialRune(text[3:]), "the half of é must be dropped")
 }
+
+func TestTUIModelCopiesSelectedOutputToClipboard(t *testing.T) {
+	t.Parallel()
+
+	m := newTUIModel(func() {})
+	m = updateTUIModel(t, m, started(1, 0, "build"))
+	m = updateTUIModel(t, m, taskOutputMsg{id: 1, name: "build", data: "compiling\n"})
+
+	next, cmd := m.Update(tea.KeyPressMsg{Code: 'y', Text: "y"})
+	m = next.(tuiModel)
+	require.NotNil(t, cmd)
+	assert.Contains(t, m.View().Content, "copied")
+
+	// The notice clears itself, and a stale timer must not clear a newer one.
+	m.noticeID++
+	m = updateTUIModel(t, m, noticeExpiredMsg{id: m.noticeID - 1})
+	assert.NotEmpty(t, m.notice, "an outdated timer must not clear the current notice")
+	m = updateTUIModel(t, m, noticeExpiredMsg{id: m.noticeID})
+	assert.Empty(t, m.notice)
+}
+
+func TestTUIModelReportsWhenThereIsNothingToCopy(t *testing.T) {
+	t.Parallel()
+
+	m := newTUIModel(func() {})
+	m = updateTUIModel(t, m, started(1, 0, "build"))
+
+	next, cmd := m.Update(tea.KeyPressMsg{Code: 'y', Text: "y"})
+	m = next.(tuiModel)
+	require.NotNil(t, cmd)
+	assert.Contains(t, m.View().Content, "nothing to copy")
+}
+
+func TestSnapshotOutputBody(t *testing.T) {
+	t.Parallel()
+
+	finished := (&snapshotOutput{text: "compiling\n"}).body()
+	assert.Contains(t, finished, "compiling\n")
+	assert.Contains(t, finished, "Press Enter to return")
+	assert.NotContains(t, finished, "still running")
+
+	running := (&snapshotOutput{text: "compiling", running: true}).body()
+	assert.Contains(t, running, "still running")
+	// A body that did not end in a newline must not run into the footer.
+	assert.Contains(t, running, "compiling\n")
+
+	empty := (&snapshotOutput{}).body()
+	assert.Contains(t, empty, "(no output)")
+}
+
+func TestSnapshotOutputWaitsForEnter(t *testing.T) {
+	t.Parallel()
+
+	var screen bytes.Buffer
+	snapshot := &snapshotOutput{text: "hello\n"}
+	snapshot.SetStdout(&screen)
+	snapshot.SetStdin(strings.NewReader("\n"))
+
+	require.NoError(t, snapshot.Run())
+	assert.Contains(t, screen.String(), "hello")
+	assert.Contains(t, screen.String(), "Press Enter to return")
+}
+
+func TestHumanizeBytes(t *testing.T) {
+	t.Parallel()
+
+	assert.Equal(t, "12 B", humanizeBytes(12))
+	assert.Equal(t, "1.0 KB", humanizeBytes(1024))
+	assert.Equal(t, "1.5 MB", humanizeBytes(1024*1024*3/2))
+}
