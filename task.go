@@ -184,6 +184,10 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) (runErr error) {
 	if err != nil {
 		return err
 	}
+	// Scheduling needs the compiled task's name, so a call that fails to resolve
+	// or compile reports no lifecycle events at all and stays out of a listener's
+	// task list; the error still surfaces through its parent. Requested roots are
+	// exempt because Run schedules them up front.
 	invocation := e.taskInvocation(call, t.Name())
 	if !invocationAlreadyScheduled {
 		defer func() { e.notifyFinished(call.invocationID, finishError(ctx, runErr)) }()

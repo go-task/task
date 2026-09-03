@@ -313,6 +313,10 @@ NO_COLOR=1 task build
 Open the interactive task launcher, or the execution dashboard when task names
 are provided.
 
+The dashboard gives each task invocation its own output pane, so `--output` has
+no effect on tasks run inside it. It still applies to tasks launched with
+Ctrl+R, which run with Task's normal terminal output.
+
 #### `--tui-status <style>`
 
 Set how task status is displayed in the TUI. Available styles: `icons`,
