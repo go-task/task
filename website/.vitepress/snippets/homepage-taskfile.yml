@@ -1,0 +1,21 @@
+version: '3'
+
+vars:
+  GREETING: Hello
+
+tasks:
+  test:
+    desc: Run the test suite
+    sources: ['**/*.go']
+    cmds:
+      - go test ./...
+
+  build:
+    desc: Build the application
+    deps: [test]
+    sources: ['**/*.go']
+    generates: [bin/app]
+    cmds:
+      - mkdir -p bin
+      - echo "{{.GREETING}} from Task"
+      - go build -o bin/app ./cmd/app

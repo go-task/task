@@ -23,7 +23,10 @@ export default {
     app.component('BlogPost', BlogPost);
     app.component('Version', Version);
     app.component('Adopters', Adopters);
-    app.component('CopyOrDownloadAsMarkdownButtons', CopyOrDownloadAsMarkdownButtons);
+    app.component(
+      'CopyOrDownloadAsMarkdownButtons',
+      CopyOrDownloadAsMarkdownButtons
+    );
     enhanceAppWithTabs(app);
   }
 } satisfies Theme;

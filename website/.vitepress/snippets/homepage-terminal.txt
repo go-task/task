@@ -1,0 +1,16 @@
+$ task --list
+task: Available tasks for this project:
+* build:       Build the application
+* test:        Run the test suite
+
+$ task build
+task: [test] go test ./...
+ok      example/app     0.2s
+task: [build] mkdir -p bin
+task: [build] echo "Hello from Task"
+Hello from Task
+task: [build] go build -o bin/app ./cmd/app
+
+$ task build
+task: Task "test" is up to date
+task: Task "build" is up to date

@@ -141,9 +141,8 @@ img[src*='custom-icon-badges.demolab.com'] {
   }
 }
 
-
 .VPTeamPage > .VPTeamPageTitle {
-  padding-top: 0
+  padding-top: 0;
 }
 
 /* VitePress greys out sponsor logos by default. Show them in their brand
@@ -168,4 +167,40 @@ html:not(.dark) .vp-sponsor-grid-item .logo-dark {
 
 .dark .vp-sponsor-grid-item.has-dark-logo:hover .logo-light {
   display: block;
+}
+
+@media (max-width: 639px) {
+  .VPHomeHero {
+    overflow: hidden;
+  }
+
+  .VPHomeHero .main,
+  .VPHomeHero .heading,
+  .VPHomeHero .text,
+  .VPHomeHero .tagline {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .VPHomeHero .text {
+    width: 100%;
+    overflow-wrap: anywhere;
+    font-size: 28px;
+    line-height: 36px;
+  }
+
+  .VPHomeHero .actions {
+    align-items: stretch;
+    margin-right: 0;
+    margin-left: 0;
+  }
+
+  .VPHomeHero .action {
+    min-width: min(100%, 15rem);
+  }
+
+  .VPHomeHero .VPButton {
+    justify-content: center;
+    width: 100%;
+  }
 }

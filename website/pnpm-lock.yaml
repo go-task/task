@@ -23,6 +23,9 @@ importers:
       prettier:
         specifier: ^3.6.2
         version: 3.9.6
+      shiki:
+        specifier: ^2.5.0
+        version: 2.5.0
       vitepress:
         specifier: ^1.6.3
         version: 1.6.4(@algolia/client-search@5.35.0)(@types/node@24.13.3)(jwt-decode@4.0.0)(postcss@8.5.26)(search-insights@2.17.3)(typescript@5.9.3)
