@@ -119,17 +119,17 @@ func trimPartialRune(s string) string {
 	return s
 }
 
-// copyOutput puts the selected task's output on the system clipboard using
-// OSC 52, which works over SSH. Terminals that do not support the sequence
-// ignore it silently, and nothing in the program can detect that.
+// copyOutput puts the selected task's output on the system clipboard.
 func (m *tuiModel) copyOutput() tea.Cmd {
 	task := m.selectedTask()
 	if task == nil || task.output == "" {
 		return m.showNotice("nothing to copy")
 	}
+	// Send both. OSC 52 reaches a terminal we are talking to over SSH; the
+	// helper reaches terminals that ignore OSC 52. Whichever lands, lands.
 	return tea.Batch(
 		tea.SetClipboard(task.output),
-		m.showNotice("copied "+humanizeBytes(len(task.output))),
+		copyToSystemClipboard(task.output),
 	)
 }
 

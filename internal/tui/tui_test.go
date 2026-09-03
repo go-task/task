@@ -768,7 +768,11 @@ func TestTUIModelCopiesSelectedOutputToClipboard(t *testing.T) {
 	next, cmd := m.Update(tea.KeyPressMsg{Code: 'y', Text: "y"})
 	m = next.(tuiModel)
 	require.NotNil(t, cmd)
-	assert.Contains(t, m.View().Content, "copied")
+
+	// The notice reports the outcome of the copy, not the attempt.
+	m = updateTUIModel(t, m, clipboardCopiedMsg{size: 10, confirmed: true})
+	assert.Contains(t, m.View().Content, "copied 10 B")
+	assert.NotContains(t, m.View().Content, "press s")
 
 	// The notice clears itself, and a stale timer must not clear a newer one.
 	m.noticeID++
@@ -826,4 +830,51 @@ func TestHumanizeBytes(t *testing.T) {
 	assert.Equal(t, "12 B", humanizeBytes(12))
 	assert.Equal(t, "1.0 KB", humanizeBytes(1024))
 	assert.Equal(t, "1.5 MB", humanizeBytes(1024*1024*3/2))
+}
+
+func TestTUIModelAdmitsWhenAClipboardCopyCannotBeConfirmed(t *testing.T) {
+	t.Parallel()
+
+	m := newTUIModel(func() {})
+	m = updateTUIModel(t, m, started(1, 0, "build"))
+	m = updateTUIModel(t, m, taskOutputMsg{id: 1, name: "build", data: "compiling\n"})
+
+	// No clipboard helper ran, so only OSC 52 was sent. It has no reply, and
+	// VTE-based terminals discard it, so the notice must not claim success.
+	m = updateTUIModel(t, m, clipboardCopiedMsg{size: 10})
+	assert.Contains(t, m.View().Content, "press s")
+}
+
+func TestSystemClipboardArgsPrefersTheSessionsTool(t *testing.T) {
+	// Not parallel: it sets environment variables.
+	dir := t.TempDir()
+	for _, name := range []string{"wl-copy", "xclip"} {
+		path := filepath.Join(dir, name)
+		require.NoError(t, os.WriteFile(path, []byte("#!/bin/sh\n"), 0o700))
+	}
+	t.Setenv("PATH", dir)
+
+	t.Setenv("WAYLAND_DISPLAY", "wayland-0")
+	t.Setenv("DISPLAY", "")
+	args, ok := systemClipboardArgs()
+	require.True(t, ok)
+	assert.Equal(t, "wl-copy", args[0])
+
+	t.Setenv("WAYLAND_DISPLAY", "")
+	t.Setenv("DISPLAY", ":0")
+	args, ok = systemClipboardArgs()
+	require.True(t, ok)
+	assert.Equal(t, []string{"xclip", "-selection", "clipboard"}, args)
+}
+
+func TestCopyToSystemClipboardReportsWhenNoHelperExists(t *testing.T) {
+	// Not parallel: it sets environment variables.
+	t.Setenv("PATH", t.TempDir())
+	t.Setenv("WAYLAND_DISPLAY", "")
+	t.Setenv("DISPLAY", "")
+
+	msg, ok := copyToSystemClipboard("hello")().(clipboardCopiedMsg)
+	require.True(t, ok)
+	assert.Equal(t, 5, msg.size)
+	assert.False(t, msg.confirmed, "no helper ran, so the copy cannot be confirmed")
 }
