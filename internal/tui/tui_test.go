@@ -1,9 +1,13 @@
 package tui
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
+	"io"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -13,6 +17,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/go-task/task/v3"
 	"github.com/go-task/task/v3/internal/logger"
 )
 
@@ -605,4 +610,31 @@ func numberedLines(count int) string {
 		output += fmt.Sprintf("line %02d\n", i)
 	}
 	return output
+}
+
+func TestRunRejectsUnknownTasksWithoutOpeningTheTUI(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	taskfile := "version: '3'\ntasks:\n  build: echo built\n"
+	require.NoError(t, os.WriteFile(filepath.Join(dir, "Taskfile.yml"), []byte(taskfile), 0o600))
+
+	var screen bytes.Buffer
+	log := &logger.Logger{
+		AssumeTerm: true,
+		Stdin:      strings.NewReader(""),
+		Stdout:     &screen,
+		Stderr:     &screen,
+	}
+	ui, err := New(log, Options{})
+	require.NoError(t, err)
+
+	e := task.NewExecutor(task.WithDir(dir), task.WithStdout(io.Discard), task.WithStderr(io.Discard))
+	require.NoError(t, e.Setup())
+
+	err = ui.Run(t.Context(), e, []*task.Call{{Task: "nope"}})
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "nope")
+	assert.Empty(t, screen.String(), "the terminal must be untouched when the task cannot be resolved")
+	assert.Nil(t, e.Listener, "the executor must not be left with a listener attached")
 }

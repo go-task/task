@@ -124,6 +124,15 @@ func (t *UI) Run(ctx context.Context, executor *task.Executor, calls []*task.Cal
 		if err != nil {
 			return err
 		}
+	} else {
+		// Resolve the requested tasks before the alt screen opens, so an unknown
+		// task name reports itself on the terminal instead of inside a dashboard
+		// the user then has to quit.
+		for _, call := range calls {
+			if _, err := executor.GetTask(call); err != nil {
+				return err
+			}
+		}
 	}
 
 	execution := newTUIModel(func() {})
