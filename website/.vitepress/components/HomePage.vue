@@ -187,11 +187,14 @@ import { data as example } from './homeExample.data';
   font-weight: 700;
 }
 
+.quick-start .section-heading {
+  margin-bottom: 1.25rem;
+}
+
 .install-link {
   display: inline-flex;
   gap: 0.4rem;
   align-items: center;
-  margin-top: 1.25rem;
   border-radius: 7px;
   background: var(--vp-c-brand-3);
   color: var(--vp-button-brand-text);
