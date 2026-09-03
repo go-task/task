@@ -878,3 +878,26 @@ func TestCopyToSystemClipboardReportsWhenNoHelperExists(t *testing.T) {
 	assert.Equal(t, 5, msg.size)
 	assert.False(t, msg.confirmed, "no helper ran, so the copy cannot be confirmed")
 }
+
+func TestTUIModelCopiesWithoutColourCodes(t *testing.T) {
+	t.Parallel()
+
+	m := newTUIModel(func() {})
+	m = updateTUIModel(t, m, started(1, 0, "build"))
+	m = updateTUIModel(t, m, taskOutputMsg{
+		id:   1,
+		name: "build",
+		data: "\x1b[31mFAILED\x1b[0m: two tests\n",
+	})
+
+	// The pane keeps the colours; the clipboard gets the characters, which is
+	// what selecting the same text in a terminal would give.
+	assert.Contains(t, m.byID[1].output, "\x1b[31m")
+
+	_, cmd := m.Update(tea.KeyPressMsg{Code: 'y', Text: "y"})
+	require.NotNil(t, cmd)
+
+	copied := copyText(m.byID[1].output)
+	assert.Equal(t, "FAILED: two tests\n", copied)
+	assert.NotContains(t, copied, "\x1b")
+}

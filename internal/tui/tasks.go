@@ -9,6 +9,7 @@ import (
 	"unicode/utf8"
 
 	tea "charm.land/bubbletea/v2"
+	"github.com/charmbracelet/x/ansi"
 )
 
 func (m *tuiModel) scheduleTask(invocation taskInvocation) *tuiTask {
@@ -120,17 +121,29 @@ func trimPartialRune(s string) string {
 }
 
 // copyOutput puts the selected task's output on the system clipboard.
+//
+// Colours are stripped. Selecting text in a terminal yields the characters, not
+// the escape sequences that coloured them, so copying by hand from the snapshot
+// view already gives plain text; keeping the codes here would make the two ways
+// of copying disagree. Copied output usually ends up somewhere that cannot
+// render them anyway, such as an issue or a chat message.
 func (m *tuiModel) copyOutput() tea.Cmd {
 	task := m.selectedTask()
 	if task == nil || task.output == "" {
 		return m.showNotice("nothing to copy")
 	}
+	text := copyText(task.output)
 	// Send both. OSC 52 reaches a terminal we are talking to over SSH; the
 	// helper reaches terminals that ignore OSC 52. Whichever lands, lands.
 	return tea.Batch(
-		tea.SetClipboard(task.output),
-		copyToSystemClipboard(task.output),
+		tea.SetClipboard(text),
+		copyToSystemClipboard(text),
 	)
+}
+
+// copyText is what a copy puts on the clipboard for the given task output.
+func copyText(output string) string {
+	return ansi.Strip(output)
 }
 
 // showNotice replaces the controls with a short message that clears itself.
