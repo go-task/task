@@ -147,7 +147,7 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) (runErr error) {
 	// task can start.
 	invocationAlreadyScheduled := call.invocationID != 0
 	if invocationAlreadyScheduled {
-		defer func() { output.TaskFinished(e.Output, call.invocationID, runErr) }()
+		defer func() { output.TaskFinished(e.Output, call.invocationID, finishError(ctx, runErr)) }()
 	}
 
 	// Inject prompted vars into call if available
@@ -186,7 +186,7 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) (runErr error) {
 	}
 	invocation := e.taskInvocation(call, t.Name())
 	if !invocationAlreadyScheduled {
-		defer func() { output.TaskFinished(e.Output, call.invocationID, runErr) }()
+		defer func() { output.TaskFinished(e.Output, call.invocationID, finishError(ctx, runErr)) }()
 	}
 
 	if output.IsTerminalUI(e.Output) {
@@ -330,6 +330,24 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) (runErr error) {
 	}
 
 	return nil
+}
+
+// finishError reports why a task attempt ended, for lifecycle consumers.
+//
+// A killed process does not report cancellation the same way on every platform:
+// the shell interpreter surfaces the context error on Unix, while on Windows the
+// same kill arrives as a plain non-zero exit status. Consulting the context makes
+// the distinction between "failed" and "canceled" portable. The task error is
+// wrapped rather than replaced so its message survives for display.
+func finishError(ctx context.Context, err error) error {
+	if err == nil || ctx.Err() == nil {
+		return err
+	}
+	cause := context.Cause(ctx)
+	if cause == nil || errors.Is(err, cause) {
+		return err
+	}
+	return fmt.Errorf("%w: %w", cause, err)
 }
 
 func (e *Executor) taskInvocation(call *Call, name string) output.TaskInvocation {
