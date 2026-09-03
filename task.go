@@ -141,14 +141,19 @@ func (e *Executor) splitRegularAndWatchCalls(calls ...*Call) (regularCalls []*Ca
 
 // RunTask runs a task by its name
 func (e *Executor) RunTask(ctx context.Context, call *Call) (runErr error) {
-	// Requested roots are scheduled before execution begins so terminal UIs can
-	// show the complete root list. Cover their entire attempt with a completion
-	// event, including validation and compilation failures that happen before a
-	// task can start.
-	invocationAlreadyScheduled := call.invocationID != 0
-	if invocationAlreadyScheduled {
-		defer func() { e.notifyFinished(call.invocationID, finishError(ctx, runErr)) }()
-	}
+	// Announce the call before Task decides whether to run it, so a listener's
+	// task list stays complete even when the task cannot be resolved or
+	// compiled. Requested roots are announced by Run before execution begins;
+	// this covers every other call.
+	e.taskInvocation(call, call.Task)
+	skipped := false
+	defer func() {
+		if skipped {
+			e.notifyFinished(call.invocationID, ErrSkipped)
+			return
+		}
+		e.notifyFinished(call.invocationID, finishError(ctx, runErr))
+	}()
 
 	// Inject prompted vars into call if available
 	if e.promptedVars != nil {
@@ -169,6 +174,7 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) (runErr error) {
 	}
 	if !shouldRunOnCurrentPlatform(t.Platforms) {
 		e.Logger.VerboseOutf(logger.Yellow, `task: %q not for current platform - ignored\n`, call.Task)
+		skipped = true
 		return nil
 	}
 
@@ -184,14 +190,9 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) (runErr error) {
 	if err != nil {
 		return err
 	}
-	// Scheduling needs the compiled task's name, so a call that fails to resolve
-	// or compile reports no lifecycle events at all and stays out of a listener's
-	// task list; the error still surfaces through its parent. Requested roots are
-	// exempt because Run schedules them up front.
+	// Compilation resolves labels and included-taskfile prefixes, which the raw
+	// call name does not carry, so re-read the name for the events that follow.
 	invocation := e.taskInvocation(call, t.Name())
-	if !invocationAlreadyScheduled {
-		defer func() { e.notifyFinished(call.invocationID, finishError(ctx, runErr)) }()
-	}
 
 	if e.ownsTerminal() {
 		if t.Interactive {
@@ -210,6 +211,7 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) (runErr error) {
 			Env:     env.Get(t),
 		}); err != nil {
 			e.Logger.VerboseOutf(logger.Yellow, "task: if condition not met - skipped: %q\n", call.Task)
+			skipped = true
 			return nil
 		}
 	}

@@ -149,7 +149,9 @@ func (m tuiModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if task == nil {
 			return m, nil
 		}
-		if errors.Is(msg.err, context.Canceled) {
+		if errors.Is(msg.err, errTaskSkipped) {
+			task.state = taskSkipped
+		} else if errors.Is(msg.err, context.Canceled) {
 			task.state = taskCanceled
 		} else if msg.err != nil {
 			task.state = taskFailed

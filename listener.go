@@ -1,6 +1,10 @@
 package task
 
-import "io"
+import (
+	"io"
+
+	"github.com/go-task/task/v3/errors"
+)
 
 // Invocation identifies one runtime call to a task. IDs are unique within an
 // Executor, including repeated calls to the same task.
@@ -10,6 +14,12 @@ type Invocation struct {
 	RootID   uint64 // ID of the root call requested by the user
 	Name     string
 }
+
+// ErrSkipped is reported to a Listener's TaskFinished when Task decided not to
+// run a call at all -- because the task is not for the current platform, or its
+// "if" condition was not met. It is never returned to the caller of Run: from
+// Task's point of view a skipped call is not a failure.
+var ErrSkipped = errors.New("task: skipped")
 
 // Listener observes task execution and may take over the terminal while it
 // runs. It is optional: an Executor without one behaves exactly as before.
@@ -25,7 +35,8 @@ type Listener interface {
 	// TaskStarted reports that a call began executing its deps and commands.
 	TaskStarted(Invocation)
 	// TaskFinished reports the outcome of a call. A nil error means success; an
-	// error wrapping context.Canceled means the call was interrupted.
+	// error wrapping context.Canceled means the call was interrupted, and
+	// ErrSkipped means Task chose not to run it.
 	TaskFinished(id uint64, err error)
 	// TaskJoined reports a call that waits on the execution owned by ownerID
 	// instead of running its own. It produces no output of its own.

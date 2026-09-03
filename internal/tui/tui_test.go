@@ -638,3 +638,43 @@ func TestRunRejectsUnknownTasksWithoutOpeningTheTUI(t *testing.T) {
 	assert.Empty(t, screen.String(), "the terminal must be untouched when the task cannot be resolved")
 	assert.Nil(t, e.Listener, "the executor must not be left with a listener attached")
 }
+
+func TestTUIModelShowsSkippedCallsAsSkipped(t *testing.T) {
+	t.Parallel()
+
+	m := newTUIModel(func() {})
+	m = updateTUIModel(t, m, started(1, 0, "build"))
+	m = updateTUIModel(t, m, scheduledUnder(2, 1, 1, "other-platform"))
+	m = updateTUIModel(t, m, taskFinishedMsg{id: 2, err: errTaskSkipped})
+
+	assert.Equal(t, taskSkipped, m.byID[2].state)
+	// A skipped call is not a failure, so its error is not written to its output.
+	assert.Empty(t, m.byID[2].output)
+}
+
+func TestTUIModelShowsCallsThatNeverCompiled(t *testing.T) {
+	t.Parallel()
+
+	m := newTUIModel(func() {})
+	m = updateTUIModel(t, m, started(1, 0, "build"))
+	m = updateTUIModel(t, m, scheduledUnder(2, 1, 1, "typoo"))
+	m = updateTUIModel(t, m, taskFinishedMsg{id: 2, err: errors.New(`task: Task "typoo" does not exist`)})
+
+	assert.Equal(t, taskFailed, m.byID[2].state)
+	assert.Contains(t, rowNames(m.taskRows()), "typoo")
+	assert.Contains(t, m.byID[2].output, `Task "typoo" does not exist`)
+}
+
+func TestTUIModelRenamesCallsOnceCompilationResolvesTheName(t *testing.T) {
+	t.Parallel()
+
+	m := newTUIModel(func() {})
+	m = updateTUIModel(t, m, started(1, 0, "build"))
+	// Announced under the raw Taskfile name, then started under its label.
+	m = updateTUIModel(t, m, scheduledUnder(2, 1, 1, "docs"))
+	assert.Contains(t, rowNames(m.taskRows()), "docs")
+
+	m = updateTUIModel(t, m, startedUnder(2, 1, 1, "Build the docs"))
+	assert.Contains(t, rowNames(m.taskRows()), "Build the docs")
+	assert.NotContains(t, rowNames(m.taskRows()), "docs")
+}

@@ -11,6 +11,11 @@ import (
 
 func (m *tuiModel) scheduleTask(invocation taskInvocation) *tuiTask {
 	if task := m.byID[invocation.ID]; task != nil {
+		// A call is announced under the name written in the Taskfile, before
+		// compilation resolves labels and included-taskfile prefixes.
+		if invocation.Name != "" {
+			task.name = invocation.Name
+		}
 		return task
 	}
 	isRoot := invocation.ID == invocation.RootID

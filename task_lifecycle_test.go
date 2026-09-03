@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"runtime"
 	"sync"
 	"testing"
 
@@ -331,4 +332,91 @@ tasks:
 		require.True(t, ok, "started call %d produced no output", invocation.ID)
 		assert.Contains(t, buffer.String(), "built")
 	}
+}
+
+func TestTaskLifecycleReportsCallsThatCannotBeResolved(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	taskfile := `version: '3'
+tasks:
+  build:
+    deps: [compile, typoo]
+    cmds: [echo building]
+  compile:
+    cmds: [echo compiling]
+`
+	require.NoError(t, os.WriteFile(filepath.Join(dir, "Taskfile.yml"), []byte(taskfile), 0o600))
+
+	e := task.NewExecutor(
+		task.WithDir(dir),
+		task.WithStdout(io.Discard),
+		task.WithStderr(io.Discard),
+		task.WithSilent(true),
+		task.WithForce(true),
+	)
+	require.NoError(t, e.Setup())
+	recorder := &lifecycleRecorder{}
+	e.Listener = recorder
+
+	require.Error(t, e.Run(t.Context(), &task.Call{Task: "build"}))
+
+	// The dep never compiles, but it is still announced under the name written
+	// in the Taskfile and its own failure is reported against it.
+	byName := make(map[string]task.Invocation)
+	for _, invocation := range recorder.scheduled {
+		byName[invocation.Name] = invocation
+	}
+	require.Contains(t, byName, "typoo")
+	err := recorder.finishErrors[byName["typoo"].ID]
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), `Task "typoo" does not exist`)
+}
+
+func TestTaskLifecycleReportsSkippedCalls(t *testing.T) {
+	t.Parallel()
+
+	otherPlatform := "windows"
+	if runtime.GOOS == "windows" {
+		otherPlatform = "linux"
+	}
+	dir := t.TempDir()
+	taskfile := `version: '3'
+tasks:
+  build:
+    deps: [other-platform, condition-not-met, always]
+  other-platform:
+    platforms: [` + otherPlatform + `]
+    cmds: [echo nope]
+  condition-not-met:
+    if: 'false'
+    cmds: [echo nope]
+  always:
+    cmds: [echo yes]
+`
+	require.NoError(t, os.WriteFile(filepath.Join(dir, "Taskfile.yml"), []byte(taskfile), 0o600))
+
+	e := task.NewExecutor(
+		task.WithDir(dir),
+		task.WithStdout(io.Discard),
+		task.WithStderr(io.Discard),
+		task.WithSilent(true),
+		task.WithForce(true),
+	)
+	require.NoError(t, e.Setup())
+	recorder := &lifecycleRecorder{}
+	e.Listener = recorder
+
+	require.NoError(t, e.Run(t.Context(), &task.Call{Task: "build"}))
+
+	byName := make(map[string]task.Invocation)
+	for _, invocation := range recorder.scheduled {
+		byName[invocation.Name] = invocation
+	}
+	for _, name := range []string{"other-platform", "condition-not-met"} {
+		require.Contains(t, byName, name)
+		assert.ErrorIs(t, recorder.finishErrors[byName[name].ID], task.ErrSkipped, name)
+	}
+	require.Contains(t, byName, "always")
+	assert.NoError(t, recorder.finishErrors[byName["always"].ID])
 }
