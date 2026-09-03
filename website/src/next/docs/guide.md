@@ -2862,12 +2862,32 @@ the following controls to scroll:
 - `g` and `G` to jump to the beginning or end
 - Mouse wheel
 
-Press `f` to show the selected task's output fullscreen. Mouse reporting is
-disabled in this view, allowing the terminal to select and copy its text.
-Incoming output remains visible; the view follows it while at the bottom and
-preserves the current position after you scroll up. The keyboard scrolling
-controls above remain available. Press `f` again or Escape to return to the
-two-pane view.
+Press `f` to show the selected task's output fullscreen. Incoming output remains
+visible; the view follows it while at the bottom and preserves the current
+position after you scroll up. The keyboard scrolling controls above remain
+available. Press `f` again or Escape to return to the two-pane view.
+
+### Copying task output
+
+Selecting text with the mouse does not work inside the dashboard. A terminal
+discards a selection whenever the screen is repainted, and scrolling either pane
+is a repaint. Three controls get the text out instead:
+
+- `y` copies the selected task's output to the system clipboard as plain text.
+- `Y` copies it with its colours, for pasting somewhere that renders ANSI escape
+  sequences, such as an editor with an ANSI extension.
+- `s` prints the output to the terminal and waits for Enter. The text lands in
+  your terminal's normal scrollback, where its own scrolling and selection apply
+  as they would to any other command output.
+
+All three work whether or not the task has finished. A snapshot of a running
+task says so, and shows the output as it stood at that moment.
+
+Copying uses the OSC 52 escape sequence and, where one is available, a clipboard
+helper such as `wl-copy`, `pbcopy`, `xclip`, `xsel` or `clip.exe`. OSC 52 works
+over SSH but is not supported everywhere; terminals based on VTE, including
+GNOME Terminal, ignore it. When no helper confirmed the copy, the message says
+so and points at `s`.
 
 ```shell
 $ task --tui --tui-task-navigator tree --tui-status labels build

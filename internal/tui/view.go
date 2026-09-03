@@ -36,7 +36,7 @@ func (m tuiModel) renderContent() string {
 		{key: "tab/←/→", action: "pane"},
 		{key: "↑/↓", action: "select"},
 		{key: "f", action: "fullscreen"},
-		{key: "y", action: "copy"},
+		{key: "y/Y", action: "copy/raw"},
 		{key: "s", action: "snapshot"},
 	}
 	if m.focus == outputPane {
@@ -44,7 +44,7 @@ func (m tuiModel) renderContent() string {
 			{key: "tab/←/→", action: "pane"},
 			{key: "↑/↓ or pgup/pgdn", action: "scroll"},
 			{key: "f", action: "fullscreen"},
-			{key: "y", action: "copy"},
+			{key: "y/Y", action: "copy/raw"},
 			{key: "s", action: "snapshot"},
 		}
 	}
@@ -63,7 +63,7 @@ func (m tuiModel) renderContent() string {
 	case m.done:
 		doneControls := []helpControl{
 			{key: "f", action: "fullscreen"},
-			{key: "y", action: "copy"},
+			{key: "y/Y", action: "copy/raw"},
 			{key: "s", action: "snapshot"},
 			{key: "enter/q", action: "quit"},
 		}
@@ -148,7 +148,7 @@ func (m tuiModel) fullscreenOutputView() string {
 		tuiHelpStyle,
 		helpControl{key: "↑/↓ or pgup/pgdn", action: "scroll"},
 		helpControl{key: "g/G", action: "top/bottom"},
-		helpControl{key: "y", action: "copy"},
+		helpControl{key: "y/Y", action: "copy/raw"},
 		helpControl{key: "s", action: "snapshot"},
 		helpControl{key: "f/esc", action: "return"},
 	)

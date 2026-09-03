@@ -18,6 +18,7 @@ const clipboardTimeout = 3 * time.Second
 type clipboardCopiedMsg struct {
 	size      int
 	confirmed bool // a system clipboard tool accepted the text
+	colours   bool // escape sequences were kept
 }
 
 // systemClipboardArgs returns the command that puts stdin on the clipboard, or
@@ -53,11 +54,11 @@ func systemClipboardArgs() ([]string, bool) {
 
 // copyToSystemClipboard runs the clipboard helper, if there is one. It reports
 // whether the text was definitely copied, which OSC 52 can never tell us.
-func copyToSystemClipboard(text string) tea.Cmd {
+func copyToSystemClipboard(text string, keepColours bool) tea.Cmd {
 	return func() tea.Msg {
 		args, ok := systemClipboardArgs()
 		if !ok {
-			return clipboardCopiedMsg{size: len(text)}
+			return clipboardCopiedMsg{size: len(text), colours: keepColours}
 		}
 
 		ctx, cancel := context.WithTimeout(context.Background(), clipboardTimeout)
@@ -72,8 +73,8 @@ func copyToSystemClipboard(text string) tea.Cmd {
 		cmd.Stdout, cmd.Stderr = nil, nil
 
 		if err := cmd.Run(); err != nil {
-			return clipboardCopiedMsg{size: len(text)}
+			return clipboardCopiedMsg{size: len(text), colours: keepColours}
 		}
-		return clipboardCopiedMsg{size: len(text), confirmed: true}
+		return clipboardCopiedMsg{size: len(text), confirmed: true, colours: keepColours}
 	}
 }

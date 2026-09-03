@@ -873,7 +873,7 @@ func TestCopyToSystemClipboardReportsWhenNoHelperExists(t *testing.T) {
 	t.Setenv("WAYLAND_DISPLAY", "")
 	t.Setenv("DISPLAY", "")
 
-	msg, ok := copyToSystemClipboard("hello")().(clipboardCopiedMsg)
+	msg, ok := copyToSystemClipboard("hello", false)().(clipboardCopiedMsg)
 	require.True(t, ok)
 	assert.Equal(t, 5, msg.size)
 	assert.False(t, msg.confirmed, "no helper ran, so the copy cannot be confirmed")
@@ -897,7 +897,28 @@ func TestTUIModelCopiesWithoutColourCodes(t *testing.T) {
 	_, cmd := m.Update(tea.KeyPressMsg{Code: 'y', Text: "y"})
 	require.NotNil(t, cmd)
 
-	copied := copyText(m.byID[1].output)
+	copied := copyText(m.byID[1].output, false)
 	assert.Equal(t, "FAILED: two tests\n", copied)
 	assert.NotContains(t, copied, "\x1b")
+}
+
+func TestTUIModelCopiesWithColoursOnShiftY(t *testing.T) {
+	t.Parallel()
+
+	const coloured = "\x1b[31mFAILED\x1b[0m\n"
+	m := newTUIModel(func() {})
+	m = updateTUIModel(t, m, started(1, 0, "build"))
+	m = updateTUIModel(t, m, taskOutputMsg{id: 1, name: "build", data: coloured})
+
+	assert.Equal(t, "FAILED\n", copyText(m.byID[1].output, false))
+	assert.Equal(t, coloured, copyText(m.byID[1].output, true), "Y must keep the escape sequences")
+
+	_, cmd := m.Update(tea.KeyPressMsg{Code: 'Y', Text: "Y"})
+	require.NotNil(t, cmd)
+
+	// The notice distinguishes the two, so the key teaches itself on use.
+	m = updateTUIModel(t, m, clipboardCopiedMsg{size: 7, confirmed: true, colours: true})
+	assert.Contains(t, m.View().Content, "with colours")
+	m = updateTUIModel(t, m, clipboardCopiedMsg{size: 7, confirmed: true})
+	assert.NotContains(t, m.View().Content, "with colours")
 }

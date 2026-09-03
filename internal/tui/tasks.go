@@ -122,27 +122,32 @@ func trimPartialRune(s string) string {
 
 // copyOutput puts the selected task's output on the system clipboard.
 //
-// Colours are stripped. Selecting text in a terminal yields the characters, not
-// the escape sequences that coloured them, so copying by hand from the snapshot
-// view already gives plain text; keeping the codes here would make the two ways
-// of copying disagree. Copied output usually ends up somewhere that cannot
-// render them anyway, such as an issue or a chat message.
-func (m *tuiModel) copyOutput() tea.Cmd {
+// Colours are stripped unless keepColours is set. Plain text is the default
+// because copied output usually lands somewhere that cannot render escape
+// sequences, such as an issue or a chat message, and because selecting text in
+// a terminal yields the characters rather than the sequences that coloured
+// them, so the snapshot view already gives plain text. Keeping them is worth a
+// key of its own for pasting into something that does render them, such as an
+// editor with an ANSI extension.
+func (m *tuiModel) copyOutput(keepColours bool) tea.Cmd {
 	task := m.selectedTask()
 	if task == nil || task.output == "" {
 		return m.showNotice("nothing to copy")
 	}
-	text := copyText(task.output)
+	text := copyText(task.output, keepColours)
 	// Send both. OSC 52 reaches a terminal we are talking to over SSH; the
 	// helper reaches terminals that ignore OSC 52. Whichever lands, lands.
 	return tea.Batch(
 		tea.SetClipboard(text),
-		copyToSystemClipboard(text),
+		copyToSystemClipboard(text, keepColours),
 	)
 }
 
 // copyText is what a copy puts on the clipboard for the given task output.
-func copyText(output string) string {
+func copyText(output string, keepColours bool) string {
+	if keepColours {
+		return output
+	}
 	return ansi.Strip(output)
 }
 

@@ -183,6 +183,9 @@ func (m tuiModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, m.showNotice(msg.text)
 	case clipboardCopiedMsg:
 		notice := "copied " + humanizeBytes(msg.size)
+		if msg.colours {
+			notice += " with colours"
+		}
 		if !msg.confirmed {
 			// Only OSC 52 was sent, and it has no reply, so we cannot know
 			// whether the terminal honoured it. Say so rather than claim
@@ -271,7 +274,9 @@ func (m *tuiModel) handleKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 			m.leaveFullscreenOutput()
 			return *m, nil
 		case "y":
-			return *m, m.copyOutput()
+			return *m, m.copyOutput(false)
+		case "Y":
+			return *m, m.copyOutput(true)
 		case "s":
 			return *m, m.snapshotSelectedOutput()
 		case "q", "ctrl+c":
@@ -334,7 +339,9 @@ func (m *tuiModel) handleKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 		m.enterFullscreenOutput()
 		return *m, nil
 	case "y":
-		return *m, m.copyOutput()
+		return *m, m.copyOutput(false)
+	case "Y":
+		return *m, m.copyOutput(true)
 	case "s":
 		return *m, m.snapshotSelectedOutput()
 	case "pgup", "pgdown":
