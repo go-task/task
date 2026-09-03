@@ -797,25 +797,44 @@ func TestTUIModelReportsWhenThereIsNothingToCopy(t *testing.T) {
 func TestSnapshotOutputBody(t *testing.T) {
 	t.Parallel()
 
-	finished := (&snapshotOutput{text: "compiling\n"}).body()
+	finished := (&snapshotOutput{name: "build", text: "compiling\n", width: 40}).body()
 	assert.Contains(t, finished, "compiling\n")
+	// The dump carries no other context, so it always says what it is.
+	assert.Contains(t, finished, "snapshot: build")
+	assert.Contains(t, finished, "end of snapshot")
 	assert.Contains(t, finished, "Press Enter to return")
 	assert.NotContains(t, finished, "still running")
 
-	running := (&snapshotOutput{text: "compiling", running: true}).body()
+	running := (&snapshotOutput{name: "build", text: "compiling", running: true, width: 40}).body()
 	assert.Contains(t, running, "still running")
-	// A body that did not end in a newline must not run into the footer.
+	// Output that did not end in a newline must not run into the footer.
 	assert.Contains(t, running, "compiling\n")
 
-	empty := (&snapshotOutput{}).body()
+	empty := (&snapshotOutput{name: "build", width: 40}).body()
 	assert.Contains(t, empty, "(no output)")
+}
+
+func TestSnapshotOutputStartsOnABlankScreen(t *testing.T) {
+	t.Parallel()
+
+	snapshot := &snapshotOutput{name: "build", text: "hi\n", width: 40, height: 24}
+	blank := snapshot.blankScreen()
+
+	// Scrolling the old screen away keeps it in scrollback; erasing it might
+	// not, depending on the terminal.
+	assert.Equal(t, 24, strings.Count(blank, "\n"))
+	assert.True(t, strings.HasSuffix(blank, "\x1b[H"), "cursor must return to the top")
+	assert.NotContains(t, blank, "2J", "the screen must not be erased")
+
+	// A zero height means we do not know the terminal size; print nothing.
+	assert.Empty(t, (&snapshotOutput{}).blankScreen())
 }
 
 func TestSnapshotOutputWaitsForEnter(t *testing.T) {
 	t.Parallel()
 
 	var screen bytes.Buffer
-	snapshot := &snapshotOutput{text: "hello\n"}
+	snapshot := &snapshotOutput{name: "build", text: "hello\n", width: 40}
 	snapshot.SetStdout(&screen)
 	snapshot.SetStdin(strings.NewReader("\n"))
 

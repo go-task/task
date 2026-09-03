@@ -17,8 +17,11 @@ import (
 // repaint. Handing the text to the terminal sidesteps that entirely, at the
 // cost of the view being a snapshot rather than a live one.
 type snapshotOutput struct {
+	name    string
 	text    string
 	running bool
+	width   int
+	height  int
 
 	stdin  io.Reader
 	stdout io.Writer
@@ -29,7 +32,7 @@ func (s *snapshotOutput) SetStdout(w io.Writer) { s.stdout = w }
 func (*snapshotOutput) SetStderr(io.Writer)     {}
 
 func (s *snapshotOutput) Run() error {
-	if _, err := io.WriteString(s.stdout, s.body()); err != nil {
+	if _, err := io.WriteString(s.stdout, s.blankScreen()+s.body()); err != nil {
 		return err
 	}
 	if s.stdin == nil {
@@ -44,21 +47,53 @@ func (s *snapshotOutput) Run() error {
 	return nil
 }
 
+// blankScreen scrolls whatever the terminal was showing up into its scrollback
+// and puts the cursor back at the top, so the snapshot starts on a clean screen
+// rather than underneath the shell session.
+//
+// Erasing the screen instead would also blank it, but terminals disagree on
+// whether the erased lines are kept in scrollback or discarded, and discarding
+// them would throw away what the user had on screen before Task ran. Scrolling
+// destroys nothing on any terminal.
+func (s *snapshotOutput) blankScreen() string {
+	if s.height <= 0 {
+		return ""
+	}
+	const cursorHome = "\x1b[H"
+	return strings.Repeat("\n", s.height) + cursorHome
+}
+
 func (s *snapshotOutput) body() string {
 	var b strings.Builder
-	b.WriteString(s.text)
-	if s.text != "" && !strings.HasSuffix(s.text, "\n") {
-		b.WriteString("\n")
-	}
+	b.WriteString(s.rule(fmt.Sprintf("snapshot: %s", s.name)))
+	b.WriteString("\n")
+
 	if s.text == "" {
 		b.WriteString("(no output)\n")
+	} else {
+		b.WriteString(s.text)
+		if !strings.HasSuffix(s.text, "\n") {
+			b.WriteString("\n")
+		}
 	}
+
+	b.WriteString(s.rule("end of snapshot"))
 	b.WriteString("\n")
 	if s.running {
-		b.WriteString("— snapshot taken while the task was still running —\n")
+		b.WriteString("This task was still running. The output above is what it had produced so far.\n")
 	}
 	b.WriteString("Scroll and select with your terminal. Press Enter to return.\n")
 	return b.String()
+}
+
+// rule draws a labelled horizontal separator, so the snapshot is visibly
+// bounded rather than blending into the surrounding terminal output.
+func (s *snapshotOutput) rule(label string) string {
+	line := "── " + label + " "
+	if width := s.width - len([]rune(line)); width > 0 {
+		return line + strings.Repeat("─", width)
+	}
+	return line
 }
 
 // snapshotSelectedOutput hands the selected task's output to the terminal.
@@ -68,8 +103,11 @@ func (m *tuiModel) snapshotSelectedOutput() tea.Cmd {
 		return nil
 	}
 	snapshot := &snapshotOutput{
+		name:    m.taskName(task),
 		text:    task.output,
 		running: m.taskState(task) == taskRunning,
+		width:   m.width,
+		height:  m.height,
 	}
 	return tea.Exec(snapshot, func(err error) tea.Msg {
 		if err != nil {
