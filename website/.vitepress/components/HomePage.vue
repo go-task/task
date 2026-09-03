@@ -1,93 +1,8 @@
 <script setup lang="ts">
-import { computed, onUnmounted, ref } from 'vue';
 import { VPHomeSponsors } from 'vitepress/theme';
 import { sponsors } from '../sponsors';
 import AdoptersCarousel from './AdoptersCarousel.vue';
 import { data as example } from './homeExample.data';
-
-const installCommands = {
-  unix: 'sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d -b ~/.local/bin',
-  windows: 'winget install Task.Task'
-} as const;
-type InstallPlatform = keyof typeof installCommands;
-
-const installPlatform = ref<InstallPlatform>('unix');
-const installCommand = computed(() => installCommands[installPlatform.value]);
-const installPlatformLabel = computed(() =>
-  installPlatform.value === 'windows' ? 'Windows' : 'macOS and Linux'
-);
-const copyState = ref<'idle' | 'copied' | 'failed'>('idle');
-const commandEl = ref<HTMLElement>();
-let copyResetTimer: number | undefined;
-
-const copyLabel = computed(() => {
-  if (copyState.value === 'copied') return 'Copied';
-  if (copyState.value === 'failed') return 'Copy failed';
-  return 'Copy';
-});
-
-const copyAnnouncement = computed(() => {
-  if (copyState.value === 'copied') {
-    return `${installPlatformLabel.value} install command copied to clipboard`;
-  }
-  if (copyState.value === 'failed') {
-    return 'The install command could not be copied, so it has been selected';
-  }
-  return '';
-});
-
-const copyAriaLabel = computed(() => {
-  if (copyState.value === 'copied') {
-    return `${installPlatformLabel.value} install command copied`;
-  }
-  if (copyState.value === 'failed') {
-    return `Copy ${installPlatformLabel.value} install command again`;
-  }
-  return `Copy ${installPlatformLabel.value} install command`;
-});
-
-function selectInstallPlatform(platform: InstallPlatform) {
-  if (installPlatform.value === platform) return;
-
-  window.clearTimeout(copyResetTimer);
-  copyResetTimer = undefined;
-  copyState.value = 'idle';
-  installPlatform.value = platform;
-  window.getSelection()?.removeAllRanges();
-}
-
-function resetCopyState() {
-  window.clearTimeout(copyResetTimer);
-  copyResetTimer = window.setTimeout(() => {
-    copyState.value = 'idle';
-  }, 2000);
-}
-
-async function copyInstallCommand() {
-  try {
-    await navigator.clipboard.writeText(installCommand.value);
-    copyState.value = 'copied';
-  } catch {
-    copyState.value = 'failed';
-    selectInstallCommand();
-  }
-  resetCopyState();
-}
-
-// Without the clipboard API — insecure context, denied permission — the least
-// we can do is select the command so a manual copy is one keystroke away.
-function selectInstallCommand() {
-  const node = commandEl.value;
-  if (!node) return;
-
-  const range = document.createRange();
-  range.selectNodeContents(node);
-  const selection = window.getSelection();
-  selection?.removeAllRanges();
-  selection?.addRange(range);
-}
-
-onUnmounted(() => window.clearTimeout(copyResetTimer));
 </script>
 
 <template>
@@ -106,54 +21,17 @@ onUnmounted(() => window.clearTimeout(copyResetTimer));
         </p>
       </div>
 
-      <div
-        class="install-platforms"
-        role="group"
-        aria-label="Choose an operating system"
-      >
-        <span>Install on:</span>
-        <button
-          type="button"
-          :aria-pressed="installPlatform === 'unix'"
-          @click="selectInstallPlatform('unix')"
+      <div class="install-actions">
+        <a
+          class="primary-link"
+          href="/docs/installation"
+          data-umami-event="home-install"
+          >Install Task <span aria-hidden="true">→</span></a
         >
-          macOS / Linux
-        </button>
-        <button
-          type="button"
-          :aria-pressed="installPlatform === 'windows'"
-          @click="selectInstallPlatform('windows')"
-        >
-          Windows
-        </button>
-      </div>
-
-      <div class="install-command">
-        <span aria-hidden="true" class="prompt">$</span>
-        <code
-          ref="commandEl"
-          aria-live="polite"
-          :aria-label="`${installPlatformLabel} install command`"
-          >{{ installCommand }}</code
-        >
-        <button
-          type="button"
-          :aria-label="copyAriaLabel"
-          data-umami-event="home-install-copy"
-          @click="copyInstallCommand"
-        >
-          {{ copyLabel }}
-        </button>
-        <span class="visually-hidden" aria-live="polite">
-          {{ copyAnnouncement }}
-        </span>
       </div>
       <p class="install-note">
-        Need another installation method? Task is also available through
-        Homebrew, Scoop, npm, apt, dnf, apk, and more.
-        <a href="/docs/installation" data-umami-event="home-install-options"
-          >See every installation method</a
-        >.
+        Homebrew, winget, Scoop, npm, apt, dnf, apk, and more—every installation
+        method lives on one page.
       </p>
 
       <div class="example" aria-label="Taskfile and terminal example">
@@ -306,94 +184,18 @@ onUnmounted(() => window.clearTimeout(copyResetTimer));
   line-height: 1.7;
 }
 
-.install-platforms {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.4rem;
-  max-width: 940px;
-  margin-bottom: 0.6rem;
-  color: var(--vp-c-text-2);
-  font-size: 0.78rem;
-  font-weight: 600;
-}
-
-.install-platforms button {
-  border: 1px solid var(--vp-c-divider);
-  border-radius: 999px;
-  background: transparent;
-  color: var(--vp-c-text-2);
-  cursor: pointer;
-  font: inherit;
-  padding: 0.35rem 0.65rem;
-}
-
-.install-platforms button[aria-pressed='true'] {
-  border-color: var(--vp-c-brand-1);
-  background: var(--vp-c-brand-soft);
-  color: var(--vp-c-brand-1);
-}
-
-.install-platforms button:hover,
-.install-platforms button:focus-visible {
-  border-color: var(--vp-c-brand-1);
-  color: var(--vp-c-brand-1);
-}
-
-.install-command {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 0.75rem;
-  max-width: 940px;
-  padding: 0.65rem 0.75rem 0.65rem 1rem;
-  border: 1px solid var(--vp-c-divider);
-  border-radius: 12px;
-  background: var(--vp-code-block-bg);
-  color: var(--vp-code-block-color);
-}
-
-.install-command .prompt,
 .example :deep(.terminal-prompt) {
   color: var(--vp-c-brand-1);
   font-weight: 700;
 }
 
-.install-command code {
-  overflow-x: auto;
-  padding: 0;
-  background: none;
-  color: inherit;
-  font-size: 0.85rem;
-  white-space: nowrap;
-}
-
-.install-command button {
-  min-width: 4.5rem;
-  border: 1px solid var(--vp-c-divider);
-  border-radius: 7px;
-  background: var(--vp-c-bg-soft);
-  color: var(--vp-c-text-1);
-  cursor: pointer;
-  font: inherit;
-  font-size: 0.75rem;
-  font-weight: 700;
-  padding: 0.45rem 0.7rem;
-}
-
-.install-command button:hover,
-.install-command button:focus-visible {
-  border-color: var(--vp-c-brand-1);
-  color: var(--vp-c-brand-1);
-}
-
 .install-note {
-  margin: 0.75rem 0 2rem;
+  margin: 0.9rem 0 2rem;
   color: var(--vp-c-text-2);
   font-size: 0.85rem;
 }
 
-.install-note a,
+.install-actions a,
 .example-actions a,
 .path-grid a {
   color: var(--vp-c-brand-1);
@@ -401,7 +203,7 @@ onUnmounted(() => window.clearTimeout(copyResetTimer));
   text-decoration: none;
 }
 
-.install-note a:hover,
+.install-actions a:hover,
 .example-actions a:hover,
 .path-grid a:hover {
   text-decoration: underline;
@@ -471,6 +273,7 @@ onUnmounted(() => window.clearTimeout(copyResetTimer));
   color: var(--vp-c-text-2);
 }
 
+.install-actions,
 .example-actions {
   display: flex;
   flex-wrap: wrap;
@@ -479,6 +282,7 @@ onUnmounted(() => window.clearTimeout(copyResetTimer));
   margin-top: 1.5rem;
 }
 
+.install-actions .primary-link,
 .example-actions .primary-link {
   display: inline-flex;
   gap: 0.5rem;
@@ -489,6 +293,7 @@ onUnmounted(() => window.clearTimeout(copyResetTimer));
   padding: 0.7rem 1rem;
 }
 
+.install-actions .primary-link:hover,
 .example-actions .primary-link:hover {
   background: var(--vp-button-brand-hover-bg);
   text-decoration: none;
@@ -582,14 +387,6 @@ onUnmounted(() => window.clearTimeout(copyResetTimer));
   .choose-path {
     padding-right: 16px;
     padding-left: 16px;
-  }
-
-  .install-command {
-    grid-template-columns: auto minmax(0, 1fr);
-  }
-
-  .install-command button {
-    grid-column: 1 / -1;
   }
 
   .code-panel :deep(pre) {
