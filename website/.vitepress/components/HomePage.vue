@@ -21,14 +21,12 @@ import { data as example } from './homeExample.data';
         </p>
       </div>
 
-      <div class="install-actions">
-        <a
-          class="primary-link"
-          href="/docs/installation"
-          data-umami-event="home-install"
-          >Install Task <span aria-hidden="true">→</span></a
-        >
-      </div>
+      <a
+        class="install-link"
+        href="/docs/installation"
+        data-umami-event="home-install"
+        >Install Task <span aria-hidden="true">→</span></a
+      >
       <p class="install-note">
         Homebrew, winget, Scoop, npm, apt, dnf, apk, and more—every installation
         method lives on one page.
@@ -189,13 +187,30 @@ import { data as example } from './homeExample.data';
   font-weight: 700;
 }
 
+.install-link {
+  display: inline-flex;
+  gap: 0.4rem;
+  align-items: center;
+  margin-top: 1.25rem;
+  border-radius: 7px;
+  background: var(--vp-c-brand-3);
+  color: var(--vp-button-brand-text);
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: none;
+  padding: 0.45rem 0.85rem;
+}
+
+.install-link:hover {
+  background: var(--vp-button-brand-hover-bg);
+}
+
 .install-note {
-  margin: 0.9rem 0 2rem;
+  margin: 0.75rem 0 1.75rem;
   color: var(--vp-c-text-2);
   font-size: 0.85rem;
 }
 
-.install-actions a,
 .example-actions a,
 .path-grid a {
   color: var(--vp-c-brand-1);
@@ -203,7 +218,6 @@ import { data as example } from './homeExample.data';
   text-decoration: none;
 }
 
-.install-actions a:hover,
 .example-actions a:hover,
 .path-grid a:hover {
   text-decoration: underline;
@@ -273,7 +287,6 @@ import { data as example } from './homeExample.data';
   color: var(--vp-c-text-2);
 }
 
-.install-actions,
 .example-actions {
   display: flex;
   flex-wrap: wrap;
@@ -282,7 +295,6 @@ import { data as example } from './homeExample.data';
   margin-top: 1.5rem;
 }
 
-.install-actions .primary-link,
 .example-actions .primary-link {
   display: inline-flex;
   gap: 0.5rem;
@@ -293,7 +305,6 @@ import { data as example } from './homeExample.data';
   padding: 0.7rem 1rem;
 }
 
-.install-actions .primary-link:hover,
 .example-actions .primary-link:hover {
   background: var(--vp-button-brand-hover-bg);
   text-decoration: none;
