@@ -1,0 +1,83 @@
+version: '3'
+
+tasks:
+  shared-dep-always-running:
+    desc: Two parents call a shared dependency with the default run behavior
+    deps: [parent-a-always, parent-b-always]
+
+  parent-a-always:
+    internal: true
+    deps: [shared-always]
+    cmds:
+      - echo "parent A continued after shared-always"
+
+  parent-b-always:
+    internal: true
+    deps: [shared-always]
+    cmds:
+      - echo "parent B continued after shared-always"
+
+  shared-always:
+    internal: true
+    silent: true
+    cmds:
+      - |
+        echo "shared-always START $(date +%H:%M:%S.%3N)"
+        sleep 2
+        echo "shared-always END   $(date +%H:%M:%S.%3N)"
+
+  shared-dep-running-once:
+    desc: Two parents call a shared dependency configured with run once
+    deps: [parent-a-once, parent-b-once]
+
+  parent-a-once:
+    internal: true
+    deps: [shared-once]
+    cmds:
+      - echo "parent A continued after shared-once"
+
+  parent-b-once:
+    internal: true
+    deps: [shared-once]
+    cmds:
+      - echo "parent B continued after shared-once"
+
+  shared-once:
+    internal: true
+    run: once
+    silent: true
+    cmds:
+      - |
+        echo "shared-once START $(date +%H:%M:%S.%3N)"
+        sleep 2
+        echo "shared-once END   $(date +%H:%M:%S.%3N)"
+
+  fail-fast-example:
+    desc: One task succeeds, one fails, and one is canceled by fail-fast
+    failfast: true
+    deps:
+      - success-after-1s
+      - fail-after-2s
+      - success-after-3s
+
+  success-after-1s:
+    internal: true
+    cmds:
+      - echo "1-second task START"
+      - sleep 1
+      - echo "1-second task SUCCESS"
+
+  fail-after-2s:
+    internal: true
+    cmds:
+      - echo "2-second task START"
+      - sleep 2
+      - echo "2-second task FAILING"
+      - exit 1
+
+  success-after-3s:
+    internal: true
+    cmds:
+      - echo "3-second task START"
+      - sleep 3
+      - echo "3-second task SUCCESS"
