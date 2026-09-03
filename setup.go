@@ -259,6 +259,21 @@ func (e *Executor) setupDefaults() {
 	}
 }
 
+// ResetRunState clears the per-run bookkeeping that Task accumulates while
+// executing: the map of started executions that "run: once" and
+// "run: when_changed" calls join, and the per-task call counter behind
+// MaximumTaskCall. Both are meant to span a single Run; a caller that reuses one
+// Executor for several independent runs -- an interactive launcher, say -- must
+// reset them in between, or the second run will join the first run's finished
+// executions and return their results without executing anything.
+//
+// It must not be called while tasks are running.
+func (e *Executor) ResetRunState() {
+	e.executionHashesMutex.Lock()
+	defer e.executionHashesMutex.Unlock()
+	e.setupConcurrencyState()
+}
+
 func (e *Executor) setupConcurrencyState() {
 	e.executionHashes = make(map[string]*executionState)
 

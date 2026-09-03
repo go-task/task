@@ -139,6 +139,10 @@ func (t *UI) Run(ctx context.Context, executor *task.Executor, calls []*task.Cal
 	start := func(selectedCalls []*task.Call) context.CancelFunc {
 		runCtx, cancelRun := context.WithCancel(sessionCtx)
 		started.Store(true)
+		// Each launcher selection is an independent run. Without this, the
+		// second run of a "run: once" task joins the first run's finished
+		// execution and returns its result without executing anything.
+		executor.ResetRunState()
 		runs.Go(func() {
 			<-programReady
 			err := executor.Run(runCtx, selectedCalls...)

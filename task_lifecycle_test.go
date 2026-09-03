@@ -287,3 +287,48 @@ func invocationNames(invocations []task.Invocation) []string {
 	}
 	return names
 }
+
+func TestResetRunStateLetsRunOnceTasksExecuteAgain(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	taskfile := `version: '3'
+tasks:
+  build:
+    run: once
+    cmds: [echo built]
+`
+	require.NoError(t, os.WriteFile(filepath.Join(dir, "Taskfile.yml"), []byte(taskfile), 0o600))
+
+	e := task.NewExecutor(
+		task.WithDir(dir),
+		task.WithStdout(io.Discard),
+		task.WithStderr(io.Discard),
+		task.WithSilent(true),
+		task.WithForce(true),
+	)
+	require.NoError(t, e.Setup())
+	recorder := &lifecycleRecorder{}
+	e.Listener = recorder
+
+	require.NoError(t, e.Run(t.Context(), &task.Call{Task: "build"}))
+
+	// Reusing the Executor without resetting joins the finished execution, so
+	// the second run produces no output of its own.
+	require.NoError(t, e.Run(t.Context(), &task.Call{Task: "build"}))
+	require.Len(t, recorder.joined, 1)
+
+	e.ResetRunState()
+	require.NoError(t, e.Run(t.Context(), &task.Call{Task: "build"}))
+	require.Len(t, recorder.joined, 1, "reset run should execute rather than join")
+
+	// All three calls were scheduled, but the joined one never started or
+	// produced output of its own: it adopted the first run's result.
+	require.Len(t, recorder.scheduled, 3)
+	require.Len(t, recorder.started, 2)
+	for _, invocation := range recorder.started {
+		buffer, ok := recorder.outputs[invocation.ID]
+		require.True(t, ok, "started call %d produced no output", invocation.ID)
+		assert.Contains(t, buffer.String(), "built")
+	}
+}
