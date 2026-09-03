@@ -7,11 +7,9 @@ import (
 	"strings"
 
 	tea "charm.land/bubbletea/v2"
-
-	"github.com/go-task/task/v3/internal/output"
 )
 
-func (m *tuiModel) scheduleTask(invocation output.TaskInvocation) *tuiTask {
+func (m *tuiModel) scheduleTask(invocation taskInvocation) *tuiTask {
 	if task := m.byID[invocation.ID]; task != nil {
 		return task
 	}

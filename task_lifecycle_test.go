@@ -13,8 +13,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/go-task/task/v3"
-	"github.com/go-task/task/v3/internal/output"
-	"github.com/go-task/task/v3/internal/templater"
 )
 
 func TestTaskLifecycleOutput(t *testing.T) {
@@ -50,12 +48,12 @@ tasks:
 	)
 	require.NoError(t, e.Setup())
 	recorder := &lifecycleRecorder{}
-	e.Output = recorder
+	e.Listener = recorder
 
 	require.NoError(t, e.Run(t.Context(), &task.Call{Task: "default"}))
 	require.Len(t, recorder.scheduled, 6)
 	require.Len(t, recorder.started, 5)
-	byName := make(map[string]output.TaskInvocation)
+	byName := make(map[string]task.Invocation)
 	for _, invocation := range recorder.started {
 		byName[invocation.Name] = invocation
 	}
@@ -126,10 +124,10 @@ tasks:
 	)
 	require.NoError(t, e.Setup())
 	recorder := &lifecycleRecorder{}
-	e.Output = recorder
+	e.Listener = recorder
 
 	require.Error(t, e.Run(t.Context(), &task.Call{Task: "default"}))
-	byName := make(map[string]output.TaskInvocation)
+	byName := make(map[string]task.Invocation)
 	for _, invocation := range recorder.started {
 		byName[invocation.Name] = invocation
 	}
@@ -157,7 +155,7 @@ tasks:
 	)
 	require.NoError(t, e.Setup())
 	recorder := &lifecycleRecorder{}
-	e.Output = recorder
+	e.Listener = recorder
 
 	require.NoError(t, e.Run(
 		t.Context(),
@@ -195,7 +193,7 @@ tasks:
 	)
 	require.NoError(t, e.Setup())
 	recorder := &lifecycleRecorder{}
-	e.Output = recorder
+	e.Listener = recorder
 
 	err := e.Run(
 		t.Context(),
@@ -212,8 +210,8 @@ tasks:
 
 type lifecycleRecorder struct {
 	mutex        sync.Mutex
-	scheduled    []output.TaskInvocation
-	started      []output.TaskInvocation
+	scheduled    []task.Invocation
+	started      []task.Invocation
 	finished     []uint64
 	outputs      map[uint64]*bytes.Buffer
 	joined       map[uint64]uint64
@@ -222,37 +220,35 @@ type lifecycleRecorder struct {
 	scheduledAtFirstStart int
 }
 
-func (*lifecycleRecorder) WrapWriter(_ io.Writer, _ io.Writer, _ string, _ *templater.Cache) (io.Writer, io.Writer, output.CloseFunc) {
-	return io.Discard, io.Discard, func(error) error { return nil }
-}
+func (*lifecycleRecorder) OwnsTerminal() bool { return false }
 
-func (r *lifecycleRecorder) WrapWriterForTask(_ io.Writer, _ io.Writer, task output.TaskInvocation, _ *templater.Cache) (io.Writer, io.Writer, output.CloseFunc) {
+func (r *lifecycleRecorder) WriterFor(invocation task.Invocation) (io.Writer, io.Writer) {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
 	if r.outputs == nil {
 		r.outputs = make(map[uint64]*bytes.Buffer)
 	}
-	buffer := r.outputs[task.ID]
+	buffer := r.outputs[invocation.ID]
 	if buffer == nil {
 		buffer = &bytes.Buffer{}
-		r.outputs[task.ID] = buffer
+		r.outputs[invocation.ID] = buffer
 	}
-	return buffer, buffer, func(error) error { return nil }
+	return buffer, buffer
 }
 
-func (r *lifecycleRecorder) TaskStarted(task output.TaskInvocation) {
+func (r *lifecycleRecorder) TaskStarted(invocation task.Invocation) {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
 	if len(r.started) == 0 {
 		r.scheduledAtFirstStart = len(r.scheduled)
 	}
-	r.started = append(r.started, task)
+	r.started = append(r.started, invocation)
 }
 
-func (r *lifecycleRecorder) TaskScheduled(task output.TaskInvocation) {
+func (r *lifecycleRecorder) TaskScheduled(invocation task.Invocation) {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
-	r.scheduled = append(r.scheduled, task)
+	r.scheduled = append(r.scheduled, invocation)
 }
 
 func (r *lifecycleRecorder) TaskFinished(id uint64, err error) {
@@ -274,7 +270,7 @@ func (r *lifecycleRecorder) TaskJoined(id, ownerID uint64) {
 	r.joined[id] = ownerID
 }
 
-func countInvocations(invocations []output.TaskInvocation, name string) int {
+func countInvocations(invocations []task.Invocation, name string) int {
 	count := 0
 	for _, invocation := range invocations {
 		if invocation.Name == name {
@@ -284,7 +280,7 @@ func countInvocations(invocations []output.TaskInvocation, name string) int {
 	return count
 }
 
-func invocationNames(invocations []output.TaskInvocation) []string {
+func invocationNames(invocations []task.Invocation) []string {
 	names := make([]string, len(invocations))
 	for i, invocation := range invocations {
 		names[i] = invocation.Name

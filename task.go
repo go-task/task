@@ -39,8 +39,8 @@ type MatchingTask struct {
 
 // Run runs Task
 func (e *Executor) Run(ctx context.Context, calls ...*Call) error {
-	if output.IsTerminalUI(e.Output) && e.Interactive {
-		return errors.New("task: --tui cannot be combined with interactive variable prompting")
+	if e.ownsTerminal() && e.Interactive {
+		return errors.New("task: interactive variable prompting is not supported while a terminal UI is active")
 	}
 
 	// check if given tasks exist
@@ -86,8 +86,8 @@ func (e *Executor) Run(ctx context.Context, calls ...*Call) error {
 	if err != nil {
 		return err
 	}
-	if output.IsTerminalUI(e.Output) && len(watchCalls) > 0 {
-		return errors.New("task: --tui does not currently support watch mode")
+	if e.ownsTerminal() && len(watchCalls) > 0 {
+		return errors.New("task: watch mode is not supported while a terminal UI is active")
 	}
 	// Schedule every requested root before starting execution so lifecycle
 	// consumers can present the complete set even when roots run sequentially.
@@ -147,7 +147,7 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) (runErr error) {
 	// task can start.
 	invocationAlreadyScheduled := call.invocationID != 0
 	if invocationAlreadyScheduled {
-		defer func() { output.TaskFinished(e.Output, call.invocationID, finishError(ctx, runErr)) }()
+		defer func() { e.notifyFinished(call.invocationID, finishError(ctx, runErr)) }()
 	}
 
 	// Inject prompted vars into call if available
@@ -186,15 +186,15 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) (runErr error) {
 	}
 	invocation := e.taskInvocation(call, t.Name())
 	if !invocationAlreadyScheduled {
-		defer func() { output.TaskFinished(e.Output, call.invocationID, finishError(ctx, runErr)) }()
+		defer func() { e.notifyFinished(call.invocationID, finishError(ctx, runErr)) }()
 	}
 
-	if output.IsTerminalUI(e.Output) {
+	if e.ownsTerminal() {
 		if t.Interactive {
-			return fmt.Errorf("task: task %q is interactive and cannot run with --tui", t.Name())
+			return fmt.Errorf("task: task %q is interactive and cannot run while a terminal UI is active", t.Name())
 		}
 		if len(t.Prompt) > 0 && !e.AssumeYes {
-			return fmt.Errorf("task: task %q requires confirmation; use --yes with --tui", t.Name())
+			return fmt.Errorf("task: task %q requires confirmation; run with --yes", t.Name())
 		}
 	}
 
@@ -242,7 +242,7 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) (runErr error) {
 	defer release()
 
 	err = e.startExecution(ctx, t, call.invocationID, func(ctx context.Context) (runErr error) {
-		output.TaskStarted(e.Output, invocation)
+		e.notifyStarted(invocation)
 
 		e.Logger.VerboseErrf(logger.Magenta, "task: %q started\n", call.Task)
 		if err := e.runDeps(ctx, t, call.invocationID, call.rootInvocationID); err != nil {
@@ -350,22 +350,22 @@ func finishError(ctx context.Context, err error) error {
 	return fmt.Errorf("%w: %w", cause, err)
 }
 
-func (e *Executor) taskInvocation(call *Call, name string) output.TaskInvocation {
+func (e *Executor) taskInvocation(call *Call, name string) Invocation {
 	if call.invocationID == 0 {
 		call.invocationID = atomic.AddUint64(&e.taskInvocationID, 1)
 		if !call.Indirect || call.rootInvocationID == 0 {
 			call.rootInvocationID = call.invocationID
 		}
-		invocation := output.TaskInvocation{
+		invocation := Invocation{
 			ID:       call.invocationID,
 			ParentID: call.parentInvocationID,
 			RootID:   call.rootInvocationID,
 			Name:     name,
 		}
-		output.TaskScheduled(e.Output, invocation)
+		e.notifyScheduled(invocation)
 		return invocation
 	}
-	return output.TaskInvocation{
+	return Invocation{
 		ID:       call.invocationID,
 		ParentID: call.parentInvocationID,
 		RootID:   call.rootInvocationID,
@@ -507,7 +507,7 @@ func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call *Call, i in
 		}
 
 		logCommand := e.Verbose || (!call.Silent && !cmd.Silent && !t.IsSilent() && !e.Taskfile.Silent && !e.Silent)
-		if logCommand && (!output.IsTerminalUI(e.Output) || e.Dry) {
+		if logCommand && (!e.ownsTerminal() || e.Dry) {
 			e.Logger.Errf(logger.Green, "task: [%s] %s\n", t.Name(), cmd.LogCmd)
 		}
 
@@ -519,18 +519,24 @@ func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call *Call, i in
 		if t.Interactive {
 			outputWrapper = output.Interleaved{}
 		}
+		stdOutBase, stdErrBase := e.listenerWriters(Invocation{
+			ID:       call.invocationID,
+			ParentID: call.parentInvocationID,
+			RootID:   call.rootInvocationID,
+			Name:     t.Name(),
+		})
+		if e.ownsTerminal() {
+			// The listener renders raw command output in its own panes, so
+			// --output styling applies to runs it does not host instead.
+			outputWrapper = output.Interleaved{}
+		}
 		vars, err := e.Compiler.FastGetVariables(t, call)
 		outputTemplater := &templater.Cache{Vars: vars}
 		if err != nil {
 			return fmt.Errorf("task: failed to get variables: %w", err)
 		}
-		stdOut, stdErr, closer := output.WrapWriter(outputWrapper, e.Stdout, e.Stderr, output.TaskInvocation{
-			ID:       call.invocationID,
-			ParentID: call.parentInvocationID,
-			RootID:   call.rootInvocationID,
-			Name:     t.Prefix,
-		}, outputTemplater)
-		if logCommand && output.IsTerminalUI(e.Output) {
+		stdOut, stdErr, closer := outputWrapper.WrapWriter(stdOutBase, stdErrBase, t.Prefix, outputTemplater)
+		if logCommand && e.ownsTerminal() {
 			e.Logger.FOutf(stdErr, logger.Green, "task: [%s] %s\n", t.Name(), cmd.LogCmd)
 		}
 
@@ -599,7 +605,7 @@ func (e *Executor) startExecution(ctx context.Context, t *ast.Task, invocationID
 	if other, ok := e.executionHashes[h]; ok {
 		e.executionHashesMutex.Unlock()
 		e.Logger.VerboseErrf(logger.Magenta, "task: skipping execution of task: %s\n", h)
-		output.TaskJoined(e.Output, invocationID, other.ownerID)
+		e.notifyJoined(invocationID, other.ownerID)
 
 		// Release our execution slot to avoid blocking other tasks while we wait
 		reacquire := e.releaseConcurrencyLimit()

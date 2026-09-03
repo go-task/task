@@ -8,7 +8,6 @@ import (
 	tea "charm.land/bubbletea/v2"
 
 	"github.com/go-task/task/v3/errors"
-	"github.com/go-task/task/v3/internal/output"
 )
 
 type taskState uint8
@@ -53,8 +52,8 @@ type tuiTask struct {
 }
 
 type (
-	taskScheduledMsg struct{ task output.TaskInvocation }
-	taskStartedMsg   struct{ task output.TaskInvocation }
+	taskScheduledMsg struct{ task taskInvocation }
+	taskStartedMsg   struct{ task taskInvocation }
 	taskFinishedMsg  struct {
 		id  uint64
 		err error

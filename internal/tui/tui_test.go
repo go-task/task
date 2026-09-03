@@ -14,7 +14,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/go-task/task/v3/internal/logger"
-	"github.com/go-task/task/v3/internal/output"
 )
 
 func TestNew(t *testing.T) {
@@ -561,7 +560,7 @@ func started(id, rootID uint64, name string) taskStartedMsg {
 }
 
 func startedUnder(id, parentID, rootID uint64, name string) taskStartedMsg {
-	return taskStartedMsg{task: output.TaskInvocation{ID: id, ParentID: parentID, RootID: rootID, Name: name}}
+	return taskStartedMsg{task: taskInvocation{ID: id, ParentID: parentID, RootID: rootID, Name: name}}
 }
 
 func scheduled(id, rootID uint64, name string) taskScheduledMsg {
@@ -573,7 +572,7 @@ func scheduled(id, rootID uint64, name string) taskScheduledMsg {
 }
 
 func scheduledUnder(id, parentID, rootID uint64, name string) taskScheduledMsg {
-	return taskScheduledMsg{task: output.TaskInvocation{ID: id, ParentID: parentID, RootID: rootID, Name: name}}
+	return taskScheduledMsg{task: taskInvocation{ID: id, ParentID: parentID, RootID: rootID, Name: name}}
 }
 
 func updateTUIModel(t *testing.T, m tuiModel, msg tea.Msg) tuiModel {

@@ -11,8 +11,6 @@ import (
 
 	"github.com/go-task/task/v3"
 	"github.com/go-task/task/v3/internal/logger"
-	"github.com/go-task/task/v3/internal/output"
-	"github.com/go-task/task/v3/internal/templater"
 	"github.com/go-task/task/v3/internal/term"
 )
 
@@ -20,6 +18,10 @@ const (
 	systemTaskName   = "Task messages"
 	maxTaskOutputLen = 10 << 20
 )
+
+// taskInvocation aliases the executor type so the rest of this package can keep
+// using "task" as a local variable name without shadowing the package.
+type taskInvocation = task.Invocation
 
 // UI captures task lifecycle and output events for the interactive interface.
 type UI struct {
@@ -79,24 +81,18 @@ func New(log *logger.Logger, options Options) (*UI, error) {
 	}, nil
 }
 
-// WrapWriter satisfies Output. Executor calls WrapWriterForTask so output can
-// be associated with a specific invocation; other callers use the system log.
-func (t *UI) WrapWriter(_ io.Writer, _ io.Writer, _ string, _ *templater.Cache) (io.Writer, io.Writer, output.CloseFunc) {
-	w := &tuiWriter{ui: t, name: systemTaskName}
-	return w, w, func(error) error { return nil }
+// WriterFor routes a task's command output into that task's own pane.
+func (t *UI) WriterFor(invocation task.Invocation) (io.Writer, io.Writer) {
+	w := &tuiWriter{ui: t, id: invocation.ID, name: invocation.Name}
+	return w, w
 }
 
-func (t *UI) WrapWriterForTask(_ io.Writer, _ io.Writer, task output.TaskInvocation, _ *templater.Cache) (io.Writer, io.Writer, output.CloseFunc) {
-	w := &tuiWriter{ui: t, id: task.ID, name: task.Name}
-	return w, w, func(error) error { return nil }
+func (t *UI) TaskScheduled(invocation task.Invocation) {
+	t.send(taskScheduledMsg{task: invocation})
 }
 
-func (t *UI) TaskScheduled(task output.TaskInvocation) {
-	t.send(taskScheduledMsg{task: task})
-}
-
-func (t *UI) TaskStarted(task output.TaskInvocation) {
-	t.send(taskStartedMsg{task: task})
+func (t *UI) TaskStarted(invocation task.Invocation) {
+	t.send(taskStartedMsg{task: invocation})
 }
 
 func (t *UI) TaskFinished(id uint64, err error) {
@@ -107,7 +103,7 @@ func (t *UI) TaskJoined(id, ownerID uint64) {
 	t.send(taskJoinedMsg{id: id, ownerID: ownerID})
 }
 
-func (*UI) IsTerminalUI() {}
+func (*UI) OwnsTerminal() bool { return true }
 
 // Run opens the launcher when calls is empty, or starts the calls immediately.
 func (t *UI) Run(ctx context.Context, executor *task.Executor, calls []*task.Call) error {
@@ -188,8 +184,7 @@ func (t *UI) Run(ctx context.Context, executor *task.Executor, calls []*task.Cal
 	t.program = program
 	t.mutex.Unlock()
 
-	oldOutput := executor.Output
-	executor.Output = t
+	executor.Listener = t
 
 	oldStdout, oldStderr := t.logger.Stdout, t.logger.Stderr
 	systemWriter := &tuiWriter{ui: t, name: systemTaskName}
@@ -197,7 +192,7 @@ func (t *UI) Run(ctx context.Context, executor *task.Executor, calls []*task.Cal
 	var restoreOnce sync.Once
 	restore := func() {
 		restoreOnce.Do(func() {
-			executor.Output = oldOutput
+			executor.Listener = nil
 			t.logger.Stdout, t.logger.Stderr = oldStdout, oldStderr
 			t.mutex.Lock()
 			t.program = nil

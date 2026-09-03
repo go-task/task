@@ -68,6 +68,7 @@ type (
 		Compiler           *Compiler
 		Output             output.Output
 		OutputStyle        ast.Output
+		Listener           Listener // Optional; observes execution and may own the terminal
 		TaskSorter         sort.Sorter
 		UserWorkingDir     string
 		EnableVersionCheck bool
