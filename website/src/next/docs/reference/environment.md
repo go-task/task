@@ -1,6 +1,8 @@
 ---
 title: Environment Reference
 description: A reference for the Taskfile environment variables
+section: Reference
+docType: reference
 outline: deep
 ---
 

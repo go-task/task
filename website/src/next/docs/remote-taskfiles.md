@@ -1,6 +1,9 @@
 ---
+title: Remote Taskfiles
 description:
   Guide to loading and securely using Taskfiles from HTTP and Git sources
+section: Guide
+docType: guide
 outline: deep
 ---
 
@@ -175,14 +178,14 @@ includes:
 
 ## Special Variables
 
-The file-path [special variables](../docs/reference/templating.md#file-paths)
+The file-path [special variables](./reference/templating.md#file-paths)
 behave differently when a Taskfile is loaded from a remote source, because there
 is no local file or directory that corresponds 1:1 to the Taskfile:
 
 | Variable                     | Value when loaded remotely                                                                                                                              |
 | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `TASKFILE` / `ROOT_TASKFILE` | The original URL, unchanged                                                                                                                             |
-| `TASKFILE_DIR` / `ROOT_DIR`  | Empty string — a directory variable cannot point to a URL                                                                                               |
+| `TASKFILE_DIR` / `ROOT_DIR`  | Empty string, a directory variable cannot point to a URL                                                                                                |
 | `TASK_DIR`                   | Resolved against `USER_WORKING_DIR` (relative `dir:` → joined with `USER_WORKING_DIR`, empty `dir:` → `USER_WORKING_DIR`, absolute `dir:` → kept as-is) |
 
 If a remote Taskfile includes a local Taskfile (or vice-versa), each variable

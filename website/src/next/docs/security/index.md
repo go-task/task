@@ -3,6 +3,8 @@ title: Security
 description:
   How to report Task security vulnerabilities and how the project responds to
   them
+section: Project
+docType: project
 outline: deep
 ---
 
@@ -21,5 +23,5 @@ You can read more about how we handle security-related issues in our [Incident
 Response Plan][irp] and [Threat Model][tm].
 
 [pvr]: https://github.com/go-task/task/security/advisories/new
-[irp]: ./incident-response-plan
-[tm]: ./threat-model
+[irp]: ./incident-response-plan.md
+[tm]: ./threat-model.md

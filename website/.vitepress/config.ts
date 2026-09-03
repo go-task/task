@@ -144,6 +144,23 @@ export default defineConfig({
     ).href;
     head.push(['link', { rel: 'canonical', href: canonicalUrl }]);
 
+    // The DocSearch crawler otherwise has to infer a record's section from the
+    // active sidebar link in the DOM. Stating it on the page is steadier: it
+    // survives a theme upgrade, and it is what hierarchy.lvl0 - the breadcrumb
+    // on every search result - should be set from.
+    if (pageData.frontmatter.section) {
+      head.push([
+        'meta',
+        { name: 'docsearch:section', content: pageData.frontmatter.section }
+      ])
+    }
+    if (pageData.frontmatter.docType) {
+      head.push([
+        'meta',
+        { name: 'docsearch:doc_type', content: pageData.frontmatter.docType }
+      ])
+    }
+
     // Dynamic Open Graph and Twitter meta tags
     const isHome = new URL(canonicalUrl).pathname === '/';
     let pageTitle = pageData.frontmatter.title || pageData.title || taskName;
@@ -297,6 +314,11 @@ export default defineConfig({
   srcDir: 'src',
   cleanUrls: true,
   srcExclude: [`${other}/**`, `${channel}/docs/**/template.md`],
+  // A function rather than the equivalent `{ '<channel>/:path*': ':path*' }`.
+  // vitepress-plugin-llms reuses this config to name its Markdown output, and
+  // on the object form it compiles the `:path*` array parameter back without
+  // separators, producing dist/docsreferencecli.md instead of
+  // dist/docs/reference/cli.md and breaking every relative link in them.
   rewrites: (id) =>
     id.startsWith(`${channel}/`) ? id.slice(channel.length + 1) : id,
   markdown: {
@@ -381,7 +403,9 @@ export default defineConfig({
       { text: 'Home', link: '/' },
       {
         text: 'Docs',
-        link: '/docs/guide',
+        // The landing page only exists on next until cmd/release promotes it;
+        // the released channel still has to enter the section at the guide.
+        link: isLatest ? '/docs/guide' : '/docs/',
         activeMatch: '^/docs'
       },
       { text: 'Blog', link: '/blog', activeMatch: '^/blog' },

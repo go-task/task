@@ -1,6 +1,8 @@
 ---
 title: Experiments
 description: Guide to Task’s experimental features and how to use them
+section: Project
+docType: project
 outline: deep
 ---
 
