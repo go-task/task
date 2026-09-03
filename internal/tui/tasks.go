@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"slices"
 	"strings"
+	"unicode/utf8"
 
 	tea "charm.land/bubbletea/v2"
 )
@@ -98,14 +99,23 @@ func (m *tuiModel) appendOutput(id uint64, name, data string) {
 	if task.state == taskPending && id != 0 {
 		task.state = taskRunning
 	}
-	task.output += normalizeOutput(data)
+	task.output, task.pendingRedraw = appendOutputText(task.output, data, task.pendingRedraw)
 	if len(task.output) > maxTaskOutputLen {
-		task.output = task.output[len(task.output)-maxTaskOutputLen:]
+		task.output = trimPartialRune(task.output[len(task.output)-maxTaskOutputLen:])
 		task.truncated = true
 	}
 	if selected := m.selectedTask(); selected != nil && selected.id == task.id {
 		m.refreshOutputView()
 	}
+}
+
+// trimPartialRune drops the leading bytes of the rune that slicing the output
+// buffer at a fixed byte length may have cut in half.
+func trimPartialRune(s string) string {
+	for len(s) > 0 && !utf8.RuneStart(s[0]) {
+		s = s[1:]
+	}
+	return s
 }
 
 func (m *tuiModel) refreshOutputView() {

@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"unicode/utf8"
 
 	tea "charm.land/bubbletea/v2"
 	"charm.land/lipgloss/v2"
@@ -55,7 +56,9 @@ func TestTUIModelTracksTasksAndOutput(t *testing.T) {
 
 	require.Len(t, m.tasks, 3)
 	assert.Equal(t, taskSucceeded, m.byID[2].state)
-	assert.Equal(t, "compiling\ndone\n", m.byID[2].output)
+	// The trailing carriage return returns the cursor to the start of "done"
+	// without erasing it, so the line stays visible until something redraws it.
+	assert.Equal(t, "compiling\ndone", m.byID[2].output)
 	assert.Equal(t, taskFailed, m.byID[3].state)
 	assert.Equal(t, m.width, lipgloss.Width(m.View().Content))
 	assert.Equal(t, m.height, lipgloss.Height(m.View().Content))
@@ -677,4 +680,80 @@ func TestTUIModelRenamesCallsOnceCompilationResolvesTheName(t *testing.T) {
 	m = updateTUIModel(t, m, startedUnder(2, 1, 1, "Build the docs"))
 	assert.Contains(t, rowNames(m.taskRows()), "Build the docs")
 	assert.NotContains(t, rowNames(m.taskRows()), "docs")
+}
+
+func TestTUIOutputRedrawsLinesOnCarriageReturn(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name  string
+		parts []string
+		want  string
+	}{
+		{
+			name:  "a progress bar collapses to its last frame",
+			parts: []string{"Downloading  0%\rDownloading 50%\rDownloading 100%\nDone\n"},
+			want:  "Downloading 100%\nDone\n",
+		},
+		{
+			name:  "a redraw arriving in a later write replaces the line",
+			parts: []string{"Downloading  0%", "\rDownloading 50%", "\rDownloading 100%\n"},
+			want:  "Downloading 100%\n",
+		},
+		{
+			name:  "earlier complete lines survive a redraw",
+			parts: []string{"building\nDownloading  0%\rDownloading 100%\n"},
+			want:  "building\nDownloading 100%\n",
+		},
+		{
+			name:  "a trailing carriage return leaves the line visible",
+			parts: []string{"partial\r"},
+			want:  "partial",
+		},
+		{
+			name:  "a carriage return followed by a newline keeps the line",
+			parts: []string{"kept\r", "\nnext\n"},
+			want:  "kept\nnext\n",
+		},
+		{
+			name:  "a redraw spanning two writes replaces only the current line",
+			parts: []string{"first\nsecond\r", "third\n"},
+			want:  "first\nthird\n",
+		},
+		{
+			name:  "windows line endings stay line breaks",
+			parts: []string{"first\r\nsecond\r\n"},
+			want:  "first\nsecond\n",
+		},
+		{
+			name:  "output without carriage returns is untouched",
+			parts: []string{"one\n", "two\n"},
+			want:  "one\ntwo\n",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			m := newTUIModel(func() {})
+			m = updateTUIModel(t, m, started(1, 0, "build"))
+			for _, part := range test.parts {
+				m = updateTUIModel(t, m, taskOutputMsg{id: 1, name: "build", data: part})
+			}
+			assert.Equal(t, test.want, m.byID[1].output)
+		})
+	}
+}
+
+func TestTrimPartialRuneKeepsOutputValid(t *testing.T) {
+	t.Parallel()
+
+	// Slicing the output buffer at a fixed byte length can land inside a rune.
+	const text = "héllo"
+	for cut := range len(text) + 1 {
+		got := trimPartialRune(text[cut:])
+		assert.True(t, utf8.ValidString(got), "cut at %d produced %q", cut, got)
+		assert.True(t, strings.HasSuffix(text, got), "cut at %d dropped too much: %q", cut, got)
+	}
+	assert.Equal(t, "llo", trimPartialRune(text[3:]), "the half of é must be dropped")
 }

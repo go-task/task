@@ -49,6 +49,10 @@ type tuiTask struct {
 
 	scrollOffset int
 	followOutput bool
+
+	// pendingRedraw records a carriage return whose line has not been redrawn
+	// yet, so the redraw can span separate writes.
+	pendingRedraw bool
 }
 
 type (

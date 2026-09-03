@@ -128,3 +128,15 @@ tasks:
     label: Build the docs
     cmds:
       - echo "renamed once compilation resolved the label"
+
+  progress-bar-example:
+    desc: A progress bar that redraws one line, next to ordinary line output
+    cmds:
+      - |
+        echo "starting download"
+        for i in $(seq 0 5 100); do
+          printf "\rDownloading... %3d%%" "$i"
+          sleep 0.15
+        done
+        printf "\rDownloading... done   \n"
+        echo "finished"

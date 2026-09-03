@@ -342,9 +342,58 @@ func taskStateText(state taskState) string {
 	}
 }
 
-func normalizeOutput(s string) string {
-	s = strings.ReplaceAll(s, "\r\n", "\n")
-	return strings.ReplaceAll(s, "\r", "\n")
+// appendOutputText appends data to existing, giving a carriage return the
+// meaning it has on a terminal: move back to the start of the current line, so
+// that what follows redraws it. Progress bars from tools like docker, npm and
+// curl repaint themselves that way, and treating every repaint as a new line
+// buries the pane in near-identical lines.
+//
+// A carriage return does not erase anything by itself -- the text stays on
+// screen until something overwrites it -- so the pending redraw is carried
+// across writes in pendingRedraw and applied only when more output arrives.
+//
+// The line is replaced rather than overwritten cell by cell, so a repaint
+// shorter than what it replaces leaves no remainder behind. That differs from a
+// real terminal, but tools that repaint a line pad it to a fixed width, and full
+// cursor emulation is well beyond what an output pane needs.
+func appendOutputText(existing, data string, pendingRedraw bool) (string, bool) {
+	data = strings.ReplaceAll(data, "\r\n", "\n")
+	if !pendingRedraw && !strings.ContainsRune(data, '\r') {
+		return existing + data, false
+	}
+	out := existing
+	for {
+		segment, rest, hasCarriageReturn := strings.Cut(data, "\r")
+		out, pendingRedraw = writeOutputSegment(out, segment, pendingRedraw)
+		if !hasCarriageReturn {
+			return out, pendingRedraw
+		}
+		pendingRedraw = true
+		data = rest
+	}
+}
+
+// writeOutputSegment appends text containing no carriage return, first dropping
+// the line the cursor was returned to if anything is about to redraw it.
+func writeOutputSegment(out, segment string, pendingRedraw bool) (string, bool) {
+	if segment == "" {
+		return out, pendingRedraw
+	}
+	if pendingRedraw {
+		// A newline commits the line the cursor returned to; printable text
+		// redraws it.
+		if segment[0] != '\n' {
+			out = dropCurrentLine(out)
+		}
+	}
+	return out + segment, false
+}
+
+func dropCurrentLine(s string) string {
+	if newline := strings.LastIndexByte(s, '\n'); newline >= 0 {
+		return s[:newline+1]
+	}
+	return ""
 }
 
 func truncateText(s string, width int) string {
