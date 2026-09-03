@@ -806,9 +806,12 @@ func TestSnapshotOutputBody(t *testing.T) {
 	assert.NotContains(t, finished, "still running")
 
 	running := (&snapshotOutput{name: "build", text: "compiling", running: true, width: 40}).body()
-	assert.Contains(t, running, "still running")
+	assert.Contains(t, ansi.Strip(running), "still running")
 	// Output that did not end in a newline must not run into the footer.
 	assert.Contains(t, running, "compiling\n")
+	// The warning is coloured; the rest of the footer is not.
+	assert.NotEqual(t, ansi.Strip(running), running, "the warning must stand out")
+	assert.NotContains(t, finished, "\x1b", "a finished snapshot needs no colour")
 
 	empty := (&snapshotOutput{name: "build", width: 40}).body()
 	assert.Contains(t, empty, "(no output)")

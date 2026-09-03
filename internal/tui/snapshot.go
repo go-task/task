@@ -80,9 +80,14 @@ func (s *snapshotOutput) body() string {
 	b.WriteString(s.rule("end of snapshot"))
 	b.WriteString("\n")
 	if s.running {
-		b.WriteString("This task was still running. The output above is what it had produced so far.\n")
+		// Reuse the colour the navigator gives a running task, which doubles as
+		// the usual warning colour: the output above is incomplete.
+		b.WriteString(tuiRunningStyle.Render(
+			"This task was still running. The output above is what it had produced so far.",
+		))
+		b.WriteString("\n")
 	}
-	b.WriteString("Scroll and select with your terminal. Press Enter to return.\n")
+	b.WriteString("Press Enter to return.\n")
 	return b.String()
 }
 
