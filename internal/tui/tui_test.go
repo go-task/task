@@ -108,11 +108,18 @@ func TestTUIStatusLabelsAreOptionalAndDisabledByDefault(t *testing.T) {
 	m = updateTUIModel(t, m, started(1, 0, "root"))
 	m = updateTUIModel(t, m, started(2, 1, "worker"))
 
-	icons := ansi.Strip(m.taskList(30, 10))
+	// Skip the pane header, which carries the state of the run as a whole.
+	taskRows := func(m tuiModel) string {
+		lines := strings.SplitN(ansi.Strip(m.taskList(30, 10)), "\n", 2)
+		require.Len(t, lines, 2)
+		return lines[1]
+	}
+
+	icons := taskRows(m)
 	assert.Contains(t, icons, "└─ ● worker")
 	assert.NotContains(t, icons, "running")
 	m.statusLabels = true
-	labels := ansi.Strip(m.taskList(30, 10))
+	labels := taskRows(m)
 	assert.Contains(t, labels, "└─ worker running")
 	assert.NotContains(t, labels, "●")
 }
@@ -427,13 +434,13 @@ func TestTUIModelFullscreenOutputDisablesMouseAndShowsLiveOutput(t *testing.T) {
 	m = updateTUIModel(t, m, started(1, 0, "root"))
 	m = updateTUIModel(t, m, started(2, 1, "worker"))
 	m = updateTUIModel(t, m, taskOutputMsg{id: 2, name: "worker", data: "first\n"})
-	assert.Contains(t, ansi.Strip(m.View().Content), "f: fullscreen")
+	assert.Contains(t, ansi.Strip(m.View().Content), "f fullscreen")
 
 	m = updateTUIModel(t, m, tea.KeyPressMsg{Code: 'f', Text: "f"})
 	selectionView := m.View()
 	assert.True(t, m.fullscreenOutput)
 	assert.Equal(t, tea.MouseModeNone, selectionView.MouseMode)
-	assert.Contains(t, ansi.Strip(selectionView.Content), "g/G: top/bottom")
+	assert.Contains(t, ansi.Strip(selectionView.Content), "? keys")
 	assert.NotContains(t, ansi.Strip(selectionView.Content), "drag")
 	assert.Contains(t, selectionView.Content, "first")
 	assert.NotContains(t, selectionView.Content, "TASKS")
@@ -943,4 +950,102 @@ func TestTUIModelCopiesWithColoursOnShiftY(t *testing.T) {
 	assert.Contains(t, m.View().Content, "with colours")
 	m = updateTUIModel(t, m, clipboardCopiedMsg{size: 7, confirmed: true})
 	assert.NotContains(t, m.View().Content, "with colours")
+}
+
+func TestTUIModelShowsRunStateInTheTaskPaneHeader(t *testing.T) {
+	t.Parallel()
+
+	m := newTUIModel(func() {})
+	m = updateTUIModel(t, m, started(1, 0, "build"))
+	header := func(m tuiModel) string {
+		return strings.SplitN(ansi.Strip(m.taskList(40, 10)), "\n", 2)[0]
+	}
+	assert.Contains(t, header(m), "running")
+
+	done := updateTUIModel(t, m, executionDoneMsg{})
+	assert.Contains(t, header(done), "complete")
+
+	failed := updateTUIModel(t, m, executionDoneMsg{err: errors.New("boom")})
+	assert.Contains(t, header(failed), "failed")
+
+	// The footer stays dedicated to keys.
+	assert.NotContains(t, ansi.Strip(done.View().Content), "execution complete")
+}
+
+func TestTUIModelOpensAndClosesTheKeyList(t *testing.T) {
+	t.Parallel()
+
+	m := newTUIModel(func() {})
+	m.canReturnToLauncher = true
+	m = updateTUIModel(t, m, tea.WindowSizeMsg{Width: 100, Height: 24})
+	m = updateTUIModel(t, m, started(1, 0, "build"))
+
+	m = updateTUIModel(t, m, tea.KeyPressMsg{Code: '?', Text: "?"})
+	require.True(t, m.showHelp)
+	page := ansi.Strip(m.View().Content)
+	// Everything the short footer had no room for must be listed here.
+	for _, expected := range []string{"Y", "copy with colours", "wheel", "click", "launcher", "quit"} {
+		assert.Contains(t, page, expected)
+	}
+	assert.Equal(t, tea.MouseModeNone, m.View().MouseMode)
+
+	m = updateTUIModel(t, m, tea.KeyPressMsg{Code: 'x', Text: "x"})
+	assert.False(t, m.showHelp, "any key returns from the key list")
+}
+
+func TestTUIViewsFitTheTerminal(t *testing.T) {
+	t.Parallel()
+
+	for _, size := range []struct{ width, height int }{{40, 10}, {80, 24}, {200, 60}} {
+		t.Run(fmt.Sprintf("%dx%d", size.width, size.height), func(t *testing.T) {
+			t.Parallel()
+			base := newTUIModel(func() {})
+			base = updateTUIModel(t, base, tea.WindowSizeMsg{Width: size.width, Height: size.height})
+			base = updateTUIModel(t, base, started(1, 0, "a-task-with-a-fairly-long-name"))
+
+			views := map[string]tuiModel{
+				"dashboard":  base,
+				"fullscreen": updateTUIModel(t, base, tea.KeyPressMsg{Code: 'f', Text: "f"}),
+				"keys":       updateTUIModel(t, base, tea.KeyPressMsg{Code: '?', Text: "?"}),
+			}
+			for name, m := range views {
+				content := m.View().Content
+				assert.LessOrEqual(t, lipgloss.Width(content), size.width, "%s is too wide", name)
+				assert.LessOrEqual(t, lipgloss.Height(content), size.height, "%s is too tall", name)
+			}
+		})
+	}
+}
+
+func TestDashboardKeysHideTheLauncherWhenThereIsNoneToReturnTo(t *testing.T) {
+	t.Parallel()
+
+	withLauncher := newDashboardKeys(false, true)
+	assert.True(t, withLauncher.Launcher.Enabled())
+
+	direct := newDashboardKeys(false, false)
+	assert.False(t, direct.Launcher.Enabled(), "a disabled binding is left out of the help")
+}
+
+func TestDashboardKeysDescribeArrowsByFocus(t *testing.T) {
+	t.Parallel()
+
+	assert.Equal(t, "select", newDashboardKeys(false, true).Move.Help().Desc)
+	assert.Equal(t, "scroll", newDashboardKeys(true, true).Move.Help().Desc)
+}
+
+func TestShortHelpKeepsTheWayOutOnANarrowTerminal(t *testing.T) {
+	t.Parallel()
+
+	m := newTUIModel(func() {})
+	bindings := newDashboardKeys(false, true).ShortHelp()
+	for _, width := range []int{20, 40, 60, 80, 200} {
+		line := shortHelp(m.help, bindings, width)
+		assert.LessOrEqual(t, lipgloss.Width(line), width, "footer overflows at %d", width)
+		if width >= 40 {
+			// The pointer to the full key list is pinned, so truncation eats the
+			// middle rather than the way out.
+			assert.Contains(t, ansi.Strip(line), "? keys", "at %d columns", width)
+		}
+	}
 }

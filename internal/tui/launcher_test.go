@@ -2,6 +2,7 @@ package tui
 
 import (
 	"context"
+	"strings"
 	"testing"
 
 	tea "charm.land/bubbletea/v2"
@@ -242,12 +243,14 @@ func TestAppLoadsLauncherAfterDirectExecution(t *testing.T) {
 	assert.Equal(t, "build", m.launcher.items[0].name)
 }
 
-func TestHelpStylesKeysSeparatelyFromActions(t *testing.T) {
+func TestLauncherHelpFitsANarrowTerminal(t *testing.T) {
 	t.Parallel()
 
-	help := renderControls(80, helpControl{key: "enter", action: "run in TUI"})
-	assert.Equal(t, "enter: run in TUI", ansi.Strip(help))
-	assert.Contains(t, help, tuiKeyStyle.Render("enter"))
+	m := testLauncher()
+	m.width, m.height = 80, 24
+	for line := range strings.SplitSeq(m.View().Content, "\n") {
+		assert.LessOrEqual(t, lipgloss.Width(line), 80)
+	}
 }
 
 func TestLauncherHelpDescribesLaunchActions(t *testing.T) {
@@ -256,9 +259,9 @@ func TestLauncherHelpDescribesLaunchActions(t *testing.T) {
 	m := testLauncher()
 	m.width = 160
 	help := ansi.Strip(m.View().Content)
-	assert.Contains(t, help, "↑/↓: navigate")
-	assert.Contains(t, help, "enter: run in TUI")
-	assert.Contains(t, help, "ctrl+r: run normally")
+	assert.Contains(t, help, "↑/↓ navigate")
+	assert.Contains(t, help, "enter run in TUI")
+	assert.Contains(t, help, "ctrl+r run normally")
 }
 
 func testLauncher() launcherModel {

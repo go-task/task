@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"charm.land/bubbles/v2/help"
 	"charm.land/bubbles/v2/textinput"
 	tea "charm.land/bubbletea/v2"
 	"charm.land/lipgloss/v2"
@@ -34,6 +35,7 @@ func (i launcherItem) matches(filter string) bool {
 }
 
 type launcherModel struct {
+	help        help.Model
 	items       []launcherItem
 	filtered    []int
 	filterInput textinput.Model
@@ -45,6 +47,7 @@ type launcherModel struct {
 
 func newLauncherModel(tasks []*ast.Task) launcherModel {
 	m := launcherModel{
+		help:        newHelpModel(),
 		filterInput: newLauncherFilterInput(),
 		width:       100,
 		height:      30,
@@ -217,14 +220,7 @@ func (m launcherModel) View() tea.View {
 		Width(layout.width).
 		Height(layout.bodyHeight).
 		Render(content)
-	help := renderControls(
-		layout.width,
-		helpControl{key: "↑/↓", action: "navigate"},
-		helpControl{key: "enter", action: "run in TUI"},
-		helpControl{key: "ctrl+r", action: "run normally"},
-		helpControl{key: "esc", action: "clear"},
-		helpControl{key: "ctrl+c", action: "quit"},
-	)
+	help := shortHelp(m.help, newLauncherKeys().ShortHelp(), layout.width)
 
 	view := tea.NewView(panel + "\n" + help)
 	view.AltScreen = true

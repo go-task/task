@@ -4,6 +4,8 @@ import (
 	"context"
 	"strings"
 
+	"charm.land/bubbles/v2/help"
+	"charm.land/bubbles/v2/key"
 	"charm.land/bubbles/v2/viewport"
 	tea "charm.land/bubbletea/v2"
 
@@ -108,6 +110,8 @@ type tuiModel struct {
 
 	fullscreenOutput   bool
 	fullscreenViewport viewport.Model
+	showHelp           bool
+	help               help.Model
 
 	// notice is transient feedback shown in place of the controls, such as the
 	// result of a copy. noticeID lets a later notice cancel an earlier timer.
@@ -126,6 +130,7 @@ func newTUIModel(cancel context.CancelFunc) tuiModel {
 	view.SoftWrap = true
 	view.MouseWheelDelta = 3
 	return tuiModel{
+		help:          newHelpModel(),
 		byID:          make(map[uint64]*tuiTask),
 		width:         100,
 		height:        30,
@@ -268,119 +273,132 @@ func (m *tuiModel) appendFailure(task *tuiTask, err error) {
 }
 
 func (m *tuiModel) handleKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
-	if m.fullscreenOutput {
-		switch msg.String() {
-		case "f", "esc":
-			m.leaveFullscreenOutput()
-			return *m, nil
-		case "y":
-			return *m, m.copyOutput(false)
-		case "Y":
-			return *m, m.copyOutput(true)
-		case "s":
-			return *m, m.snapshotSelectedOutput()
-		case "q", "ctrl+c":
-			if m.done {
-				return *m, tea.Quit
-			}
-			m.quitting = true
-			m.cancel()
-			return *m, nil
-		case "up", "k":
-			m.fullscreenViewport.ScrollUp(1)
-		case "down", "j":
-			m.fullscreenViewport.ScrollDown(1)
-		case "pgup":
-			m.fullscreenViewport.PageUp()
-		case "pgdown":
-			m.fullscreenViewport.PageDown()
-		case "home", "g":
-			m.fullscreenViewport.GotoTop()
-		case "end", "G":
-			m.fullscreenViewport.GotoBottom()
-		default:
-			return *m, nil
-		}
+	if m.showHelp {
+		// Any key leaves the key list; it is a reference, not a mode.
+		m.showHelp = false
 		return *m, nil
 	}
-	switch msg.String() {
-	case "q", "ctrl+c":
-		if m.done {
-			return *m, tea.Quit
+	if m.fullscreenOutput {
+		return m.handleFullscreenKey(msg)
+	}
+	return m.handleDashboardKey(msg)
+}
+
+func (m *tuiModel) handleFullscreenKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
+	keys := newFullscreenKeys()
+	switch {
+	case key.Matches(msg, keys.Return):
+		m.leaveFullscreenOutput()
+	case key.Matches(msg, keys.Quit):
+		return *m, m.requestQuit()
+	case key.Matches(msg, keys.Help):
+		m.showHelp = true
+	case key.Matches(msg, keys.Copy):
+		return *m, m.copyOutput(false)
+	case key.Matches(msg, keys.CopyRaw):
+		return *m, m.copyOutput(true)
+	case key.Matches(msg, keys.Snapshot):
+		return *m, m.snapshotSelectedOutput()
+	case key.Matches(msg, keys.Move):
+		if msg.String() == "up" || msg.String() == "k" {
+			m.fullscreenViewport.ScrollUp(1)
+		} else {
+			m.fullscreenViewport.ScrollDown(1)
 		}
-		m.quitting = true
-		m.cancel()
-		return *m, nil
-	case "b", "esc":
-		if !m.canReturnToLauncher {
-			if m.done {
-				return *m, tea.Quit
-			}
-			m.quitting = true
-			m.cancel()
-			return *m, nil
+	case key.Matches(msg, keys.Page):
+		if msg.String() == "pgup" {
+			m.fullscreenViewport.PageUp()
+		} else {
+			m.fullscreenViewport.PageDown()
 		}
+	case key.Matches(msg, keys.Top):
+		m.fullscreenViewport.GotoTop()
+	case key.Matches(msg, keys.Bottom):
+		m.fullscreenViewport.GotoBottom()
+	}
+	return *m, nil
+}
+
+func (m *tuiModel) handleDashboardKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
+	keys := newDashboardKeys(m.focus == outputPane, m.canReturnToLauncher)
+	switch {
+	case key.Matches(msg, keys.Quit):
+		return *m, m.requestQuit()
+	case key.Matches(msg, keys.Launcher):
 		if m.done {
 			return *m, returnToLauncher
 		}
 		m.returning = true
 		m.cancel()
 		return *m, nil
-	case "tab", "shift+tab":
-		m.toggleFocus()
-		return *m, nil
-	case "left", "h":
-		m.focus = taskPane
-		return *m, nil
-	case "right", "l":
-		m.focus = outputPane
-		return *m, nil
-	case "f":
+	case key.Matches(msg, keys.Help):
+		m.showHelp = true
+	case key.Matches(msg, keys.Pane):
+		m.togglePane(msg)
+	case key.Matches(msg, keys.Fullscreen):
 		m.enterFullscreenOutput()
-		return *m, nil
-	case "y":
+	case key.Matches(msg, keys.Copy):
 		return *m, m.copyOutput(false)
-	case "Y":
+	case key.Matches(msg, keys.CopyRaw):
 		return *m, m.copyOutput(true)
-	case "s":
+	case key.Matches(msg, keys.Snapshot):
 		return *m, m.snapshotSelectedOutput()
-	case "pgup", "pgdown":
+	case key.Matches(msg, keys.Page):
 		m.focus = outputPane
 		return *m, m.updateViewport(msg)
-	case "up", "k":
+	case key.Matches(msg, keys.Move):
 		if m.focus == taskPane {
-			m.moveSelection(-1)
+			if msg.String() == "up" || msg.String() == "k" {
+				m.moveSelection(-1)
+			} else {
+				m.moveSelection(1)
+			}
 			return *m, nil
 		}
 		return *m, m.updateViewport(msg)
-	case "down", "j":
-		if m.focus == taskPane {
-			m.moveSelection(1)
-			return *m, nil
-		}
-		return *m, m.updateViewport(msg)
-	case "home", "g":
+	case key.Matches(msg, keys.Top):
 		if m.focus == taskPane {
 			m.selectBoundary(false)
 		} else {
 			m.viewport.GotoTop()
 			m.saveViewport()
 		}
-		return *m, nil
-	case "end", "G":
+	case key.Matches(msg, keys.Bottom):
 		if m.focus == taskPane {
 			m.selectBoundary(true)
 		} else {
 			m.viewport.GotoBottom()
 			m.saveViewport()
 		}
-		return *m, nil
-	case "enter":
+	case msg.String() == "enter":
 		if m.done {
 			return *m, tea.Quit
 		}
 	}
 	return *m, nil
+}
+
+// togglePane moves focus. The arrow and vi keys name a direction, so they pick
+// a pane outright; tab cycles.
+func (m *tuiModel) togglePane(msg tea.KeyPressMsg) {
+	switch msg.String() {
+	case "left", "h":
+		m.focus = taskPane
+	case "right", "l":
+		m.focus = outputPane
+	default:
+		m.toggleFocus()
+	}
+}
+
+// requestQuit closes the TUI, cancelling execution first if it is still running.
+func (m *tuiModel) requestQuit() tea.Cmd {
+	if m.done {
+		return tea.Quit
+	}
+	m.quitting = true
+	m.cancel()
+	return nil
 }
 
 func returnToLauncher() tea.Msg {

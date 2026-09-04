@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strings"
 
+	"charm.land/bubbles/v2/help"
+	"charm.land/bubbles/v2/key"
 	"charm.land/bubbles/v2/viewport"
 	tea "charm.land/bubbletea/v2"
 	"charm.land/lipgloss/v2"
@@ -13,12 +15,15 @@ import (
 
 func (m tuiModel) View() tea.View {
 	content := m.renderContent()
-	if m.fullscreenOutput {
+	switch {
+	case m.showHelp:
+		content = m.helpView()
+	case m.fullscreenOutput:
 		content = m.fullscreenOutputView()
 	}
 	view := tea.NewView(content)
 	view.AltScreen = true
-	if m.fullscreenOutput {
+	if m.fullscreenOutput || m.showHelp {
 		view.MouseMode = tea.MouseModeNone
 	} else {
 		view.MouseMode = tea.MouseModeCellMotion
@@ -32,52 +37,18 @@ func (m tuiModel) renderContent() string {
 	left, right := m.renderPanes(layout)
 	body := lipgloss.JoinHorizontal(lipgloss.Top, left, strings.Repeat(" ", layout.gap), right)
 
-	controls := []helpControl{
-		{key: "tab/←/→", action: "pane"},
-		{key: "↑/↓", action: "select"},
-		{key: "f", action: "fullscreen"},
-		{key: "y/Y", action: "copy/raw"},
-		{key: "s", action: "snapshot"},
-	}
-	if m.focus == outputPane {
-		controls = []helpControl{
-			{key: "tab/←/→", action: "pane"},
-			{key: "↑/↓ or pgup/pgdn", action: "scroll"},
-			{key: "f", action: "fullscreen"},
-			{key: "y/Y", action: "copy/raw"},
-			{key: "s", action: "snapshot"},
-		}
-	}
-	if m.canReturnToLauncher {
-		controls = append(controls, helpControl{key: "esc/b", action: "launcher"})
-	}
-	controls = append(controls, helpControl{key: "q", action: "quit"})
-	help := renderControls(layout.width, controls...)
+	keys := newDashboardKeys(m.focus == outputPane, m.canReturnToLauncher)
+	footer := shortHelp(m.help, keys.ShortHelp(), layout.width)
 	switch {
 	case m.quitting && !m.done:
-		help = renderStatus(layout.width, "stopping tasks… waiting for processes to exit", tuiHelpStyle)
+		footer = renderStatus(layout.width, "stopping tasks… waiting for processes to exit", tuiHelpStyle)
 	case m.returning && !m.done:
-		help = renderStatus(layout.width, "stopping tasks… returning to launcher after processes exit", tuiHelpStyle)
+		footer = renderStatus(layout.width, "stopping tasks… returning to launcher after processes exit", tuiHelpStyle)
 	case m.notice != "":
-		help = renderStatus(layout.width, m.notice, tuiTitleStyle)
-	case m.done:
-		doneControls := []helpControl{
-			{key: "f", action: "fullscreen"},
-			{key: "y/Y", action: "copy/raw"},
-			{key: "s", action: "snapshot"},
-			{key: "enter/q", action: "quit"},
-		}
-		if m.canReturnToLauncher {
-			doneControls = append(doneControls, helpControl{key: "esc/b", action: "launcher"})
-		}
-		if m.err != nil {
-			help = renderStatusControls(layout.width, "execution failed", tuiFailureStyle, doneControls...)
-		} else {
-			help = renderStatusControls(layout.width, "execution complete", tuiSuccessStyle, doneControls...)
-		}
+		footer = renderStatus(layout.width, m.notice, tuiTitleStyle)
 	}
 
-	return body + "\n" + help
+	return body + "\n" + footer
 }
 
 func (m *tuiModel) enterFullscreenOutput() {
@@ -139,20 +110,35 @@ func (m *tuiModel) fullscreenOutputContent() string {
 }
 
 func (m tuiModel) fullscreenOutputView() string {
-	if m.notice != "" {
-		return m.fullscreenViewport.View() + "\n" + renderStatus(m.width, m.notice, tuiTitleStyle)
+	footer := renderStatus(m.width, m.notice, tuiTitleStyle)
+	if m.notice == "" {
+		footer = shortHelp(m.help, newFullscreenKeys().ShortHelp(), m.width)
 	}
-	help := renderStatusControls(
-		m.width,
-		"fullscreen",
-		tuiHelpStyle,
-		helpControl{key: "↑/↓ or pgup/pgdn", action: "scroll"},
-		helpControl{key: "g/G", action: "top/bottom"},
-		helpControl{key: "y/Y", action: "copy/raw"},
-		helpControl{key: "s", action: "snapshot"},
-		helpControl{key: "f/esc", action: "return"},
-	)
-	return m.fullscreenViewport.View() + "\n" + help
+	return m.fullscreenViewport.View() + "\n" + footer
+}
+
+// helpView lists every binding of the view it was opened from. It takes the
+// whole screen rather than growing the footer, which would resize the panes.
+func (m tuiModel) helpView() string {
+	var keys help.KeyMap = newDashboardKeys(m.focus == outputPane, m.canReturnToLauncher)
+	title := "KEYS"
+	if m.fullscreenOutput {
+		keys = newFullscreenKeys()
+		title = "KEYS · fullscreen"
+	}
+	helpModel := m.help
+	helpModel.ShowAll = true
+	helpModel.SetWidth(max(m.width-2, 1))
+
+	body := tuiPanelStyle.
+		BorderForeground(tuiAccentColor).
+		Width(max(m.width, 1)).
+		Height(max(m.height-1, 1)).
+		MaxWidth(max(m.width, 1)).
+		MaxHeight(max(m.height-1, 1)).
+		Render(paneTitle(title, "", max(m.width-tuiPanelStyle.GetHorizontalFrameSize(), 1)) +
+			"\n\n" + helpModel.View(keys))
+	return body + "\n" + renderStatus(m.width, "press any key to return", tuiHelpStyle)
 }
 
 func (m tuiModel) renderPanes(layout tuiLayout) (string, string) {
@@ -204,7 +190,7 @@ func newTUILayout(width, height int) tuiLayout {
 }
 
 func (m tuiModel) taskList(width, height int) string {
-	lines := []string{paneTitle("TASKS", "", width)}
+	lines := []string{paneTitle("TASKS", m.runStateLabel(), width)}
 	rows := m.taskRows()
 	if len(rows) == 0 {
 		lines = append(lines, tuiHelpStyle.Render("Waiting for tasks…"))
@@ -270,13 +256,32 @@ func (m tuiModel) outputPanel(width int) string {
 	if !m.viewport.AtTop() || !m.viewport.AtBottom() {
 		position = fmt.Sprintf("%3.0f%%", m.viewport.ScrollPercent()*100)
 	}
-	return paneTitle(title, position, width) + "\n" + m.viewport.View()
+	return paneTitle(title, tuiHelpStyle.Render(position), width) + "\n" + m.viewport.View()
 }
 
+// paneTitle renders a pane header. right is rendered as given, so a caller can
+// style it to carry meaning; the width maths uses its display width.
 func paneTitle(left, right string, width int) string {
 	left = truncateText(left, max(width-lipgloss.Width(right)-1, 1))
 	space := max(width-lipgloss.Width(left)-lipgloss.Width(right), 0)
-	return tuiTitleStyle.Render(left) + strings.Repeat(" ", space) + tuiHelpStyle.Render(right)
+	return tuiTitleStyle.Render(left) + strings.Repeat(" ", space) + right
+}
+
+// runStateLabel summarises the whole run for the task pane header, so the
+// footer can stay dedicated to keys.
+func (m tuiModel) runStateLabel() string {
+	switch {
+	case (m.quitting || m.returning) && !m.done:
+		return tuiHelpStyle.Render("stopping…")
+	case m.done && m.err != nil:
+		return tuiFailureStyle.Render("failed")
+	case m.done:
+		return tuiSuccessStyle.Render("complete")
+	case len(m.tasks) == 0:
+		return ""
+	default:
+		return tuiRunningStyle.Render("running")
+	}
 }
 
 func taskStateStyle(state taskState) lipgloss.Style {
@@ -425,32 +430,48 @@ func truncateMiddle(s string, width int) string {
 	return ansi.Cut(s, 0, left) + "…" + ansi.Cut(s, stringWidth-right, stringWidth)
 }
 
-type helpControl struct {
-	key    string
-	action string
+// shortHelp renders one line of key hints, clamped to width.
+//
+// The last binding is pinned: its width is reserved before the rest are laid
+// out, so the way out of the view survives truncation on a narrow terminal.
+// Without that the tail is what gets dropped, which is exactly where quit and
+// the pointer to the full key list sit.
+//
+// Clamping is ours to do. The help bubble is asked to fit the width but does
+// not guarantee it: when there is no room even for its ellipsis it keeps
+// appending items, overflowing the screen.
+func shortHelp(helpModel help.Model, bindings []key.Binding, width int) string {
+	width = max(width, 1)
+	render := func(b []key.Binding, w int) string {
+		helpModel.SetWidth(w)
+		return truncateText(helpModel.ShortHelpView(b), w)
+	}
+	if len(bindings) < 2 {
+		return render(bindings, width)
+	}
+
+	pinned := helpModel.ShortHelpView(bindings[len(bindings)-1:])
+	separator := helpModel.Styles.ShortSeparator.Inline(true).Render(helpModel.ShortSeparator)
+	rest := max(width-lipgloss.Width(pinned)-lipgloss.Width(separator), 1)
+	return truncateText(render(bindings[:len(bindings)-1], rest)+separator+pinned, width)
 }
 
-func renderControls(width int, controls ...helpControl) string {
-	return renderStatusControls(width, "", tuiHelpStyle, controls...)
+// newHelpModel styles the help bubble with the palette the rest of the TUI
+// uses. Its own defaults are a flat grey that reads as disabled next to the
+// panes.
+func newHelpModel() help.Model {
+	model := help.New()
+	styles := model.Styles
+	styles.ShortKey, styles.FullKey = tuiKeyStyle, tuiKeyStyle
+	styles.ShortDesc, styles.FullDesc = tuiHelpStyle, tuiHelpStyle
+	styles.ShortSeparator, styles.FullSeparator = tuiTreeStyle, tuiTreeStyle
+	styles.Ellipsis = tuiTreeStyle
+	model.Styles = styles
+	return model
 }
 
 func renderStatus(width int, status string, style lipgloss.Style) string {
 	return truncateText(" "+style.Render(status), max(width, 1))
-}
-
-func renderStatusControls(width int, status string, style lipgloss.Style, controls ...helpControl) string {
-	var line strings.Builder
-	if status != "" {
-		line.WriteString(style.Render(status))
-	}
-	for index, control := range controls {
-		if status != "" || index > 0 {
-			line.WriteString("  ")
-		}
-		line.WriteString(tuiKeyStyle.Render(control.key))
-		line.WriteString(tuiHelpStyle.Render(": " + control.action))
-	}
-	return truncateText(line.String(), max(width, 1))
 }
 
 var (
