@@ -208,7 +208,7 @@ func (m tuiModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			// Only OSC 52 was sent, and it has no reply, so we cannot know
 			// whether the terminal honoured it. Say so rather than claim
 			// success: VTE-based terminals silently discard it.
-			notice += " — if nothing was copied, press s"
+			notice += " — if nothing was copied, press t"
 		}
 		return m, m.showNotice(notice)
 	case taskJoinedMsg:

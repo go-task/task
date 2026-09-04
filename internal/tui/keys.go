@@ -68,7 +68,7 @@ func newDashboardKeys(outputFocused, canReturnToLauncher bool) dashboardKeys {
 		Fullscreen: key.NewBinding(key.WithKeys("f"), key.WithHelp("f", "output fullscreen")),
 		Copy:       key.NewBinding(key.WithKeys("y"), key.WithHelp("y", "copy output without ANSI codes")),
 		CopyRaw:    key.NewBinding(key.WithKeys("Y"), key.WithHelp("Y", "copy output with ANSI codes")),
-		Snapshot:   key.NewBinding(key.WithKeys("s"), key.WithHelp("s", "print output to terminal")),
+		Snapshot:   key.NewBinding(key.WithKeys("t"), key.WithHelp("t", "print output to terminal")),
 		Launcher:   key.NewBinding(key.WithKeys("esc", "b"), key.WithHelp("esc/b", "stop, open launcher")),
 		Quit:       key.NewBinding(key.WithKeys("q", "ctrl+c"), key.WithHelp("q", "stop and quit")),
 		Help:       key.NewBinding(key.WithKeys("?"), key.WithHelp("?", "show this list")),
@@ -93,7 +93,7 @@ func (k dashboardKeys) ShortHelp() []key.Binding {
 		terse(k.Pane, "tab", "pane"),
 		terse(k.Fullscreen, "f", "fullscreen"),
 		terse(k.Copy, "y", "copy"),
-		terse(k.Snapshot, "s", "print"),
+		terse(k.Snapshot, "t", "to terminal"),
 	}
 }
 
@@ -131,7 +131,7 @@ func newFullscreenKeys() fullscreenKeys {
 		Bottom:   key.NewBinding(key.WithKeys("end", "G"), key.WithHelp("G", "jump to end")),
 		Copy:     key.NewBinding(key.WithKeys("y"), key.WithHelp("y", "copy output without ANSI codes")),
 		CopyRaw:  key.NewBinding(key.WithKeys("Y"), key.WithHelp("Y", "copy output with ANSI codes")),
-		Snapshot: key.NewBinding(key.WithKeys("s"), key.WithHelp("s", "print output to terminal")),
+		Snapshot: key.NewBinding(key.WithKeys("t"), key.WithHelp("t", "print output to terminal")),
 		Return:   key.NewBinding(key.WithKeys("f", "esc"), key.WithHelp("f/esc", "back to panes")),
 		Quit:     key.NewBinding(key.WithKeys("q", "ctrl+c"), key.WithHelp("q", "stop and quit")),
 		Help:     key.NewBinding(key.WithKeys("?"), key.WithHelp("?", "show this list")),
@@ -145,7 +145,7 @@ func (k fullscreenKeys) ShortHelp() []key.Binding {
 		terse(k.Move, "↑/↓", "scroll"),
 		terse(k.Return, "f/esc", "back"),
 		terse(k.Copy, "y", "copy"),
-		terse(k.Snapshot, "s", "print"),
+		terse(k.Snapshot, "t", "to terminal"),
 	}
 }
 

@@ -13,6 +13,7 @@ import (
 	"time"
 	"unicode/utf8"
 
+	"charm.land/bubbles/v2/help"
 	tea "charm.land/bubbletea/v2"
 	"charm.land/lipgloss/v2"
 	"github.com/charmbracelet/x/ansi"
@@ -872,7 +873,7 @@ func TestTUIModelAdmitsWhenAClipboardCopyCannotBeConfirmed(t *testing.T) {
 	// No clipboard helper ran, so only OSC 52 was sent. It has no reply, and
 	// VTE-based terminals discard it, so the notice must not claim success.
 	m = updateTUIModel(t, m, clipboardCopiedMsg{size: 10})
-	assert.Contains(t, m.View().Content, "press s")
+	assert.Contains(t, m.View().Content, "press t")
 }
 
 func TestSystemClipboardArgsPrefersTheSessionsTool(t *testing.T) {
@@ -1142,4 +1143,37 @@ func TestFullHelpUsesTheColumnsThatFit(t *testing.T) {
 	// layout gives way rather than the wording.
 	wide, narrow := countColumns(140), countColumns(50)
 	assert.Less(t, wide, narrow, "a narrow terminal should stack into more rows")
+}
+
+func TestFooterFitsEightyColumns(t *testing.T) {
+	t.Parallel()
+
+	// Eighty columns is the width worth protecting, and the line has little
+	// room to spare. Widening a label enough to overflow silently drops the
+	// entries at the end, so fail here instead.
+	m := newTUIModel(func() {})
+	for _, keys := range []help.KeyMap{
+		newDashboardKeys(false, true),
+		newDashboardKeys(true, true),
+		newFullscreenKeys(),
+		newLauncherKeys(),
+	} {
+		full := shortHelp(m.help, keys.ShortHelp(), 200)
+		assert.LessOrEqual(t, lipgloss.Width(full), 80,
+			"the footer must fit 80 columns without dropping entries: %s", ansi.Strip(full))
+	}
+}
+
+func TestPrintToTerminalIsBoundToT(t *testing.T) {
+	t.Parallel()
+
+	m := newTUIModel(func() {})
+	m = updateTUIModel(t, m, started(1, 0, "build"))
+	m = updateTUIModel(t, m, taskOutputMsg{id: 1, name: "build", data: "hi\n"})
+
+	_, cmd := m.Update(tea.KeyPressMsg{Code: 't', Text: "t"})
+	assert.NotNil(t, cmd, "t prints the output to the terminal")
+
+	_, cmd = m.Update(tea.KeyPressMsg{Code: 's', Text: "s"})
+	assert.Nil(t, cmd, "s no longer does anything")
 }

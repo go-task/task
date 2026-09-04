@@ -2885,7 +2885,7 @@ is a repaint. Three controls get the text out instead:
 - `Y` copies it with those sequences intact, for pasting somewhere that renders
   them, such as an editor with an ANSI extension. They carry bold, dim and
   underline as well as colour.
-- `s` prints the output to the terminal and waits for Enter. The text lands in
+- `t` prints the output to the terminal and waits for Enter. The text lands in
   your terminal's normal scrollback, where its own scrolling and selection apply
   as they would to any other command output.
 
@@ -2896,7 +2896,7 @@ Copying uses the OSC 52 escape sequence and, where one is available, a clipboard
 helper such as `wl-copy`, `pbcopy`, `xclip`, `xsel` or `clip.exe`. OSC 52 works
 over SSH but is not supported everywhere; terminals based on VTE, including
 GNOME Terminal, ignore it. When no helper confirmed the copy, the message says
-so and points at `s`.
+so and points at `t`.
 
 ```shell
 $ task --tui --tui-task-navigator tree --tui-status labels build
