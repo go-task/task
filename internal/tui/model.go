@@ -61,11 +61,16 @@ type tuiTask struct {
 
 type (
 	taskScheduledMsg struct{ task taskInvocation }
-	taskStartedMsg   struct{ task taskInvocation }
-	taskFinishedMsg  struct {
-		id     uint64
-		result taskResult
-		err    error
+	taskStartedMsg   struct {
+		task taskInvocation
+		at   time.Time
+	}
+	taskFinishedMsg struct {
+		id       uint64
+		result   taskResult
+		err      error
+		at       time.Time
+		duration time.Duration
 	}
 )
 
@@ -168,7 +173,10 @@ func (m tuiModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case taskStartedMsg:
 		task := m.scheduleTask(msg.task)
 		task.state = taskRunning
-		task.startedAt = time.Now()
+		// The executor timestamps the event. Stamping it here would measure
+		// when this loop got round to it, which during a snapshot is after the
+		// task has already finished.
+		task.startedAt = msg.at
 		m.keepSelectionVisible()
 		return m, m.startElapsedTicker()
 	case elapsedTickMsg:
@@ -179,7 +187,12 @@ func (m tuiModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if task == nil {
 			return m, nil
 		}
-		task.finishedAt = time.Now()
+		task.finishedAt = msg.at
+		if msg.duration > 0 {
+			// Prefer the executor's measurement over the gap between the two
+			// events reaching us.
+			task.startedAt = msg.at.Add(-msg.duration)
+		}
 		switch msg.result {
 		case resultSkipped:
 			task.state = taskSkipped

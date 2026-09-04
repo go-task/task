@@ -577,7 +577,11 @@ func started(id, rootID uint64, name string) taskStartedMsg {
 }
 
 func startedUnder(id, parentID, rootID uint64, name string) taskStartedMsg {
-	return taskStartedMsg{task: taskInvocation{ID: id, ParentID: parentID, RootID: rootID, Name: name}}
+	// The executor timestamps every event, so a hand-built one does too.
+	return taskStartedMsg{
+		task: taskInvocation{ID: id, ParentID: parentID, RootID: rootID, Task: name, Name: name},
+		at:   time.Now(),
+	}
 }
 
 func scheduled(id, rootID uint64, name string) taskScheduledMsg {
@@ -589,7 +593,7 @@ func scheduled(id, rootID uint64, name string) taskScheduledMsg {
 }
 
 func scheduledUnder(id, parentID, rootID uint64, name string) taskScheduledMsg {
-	return taskScheduledMsg{task: taskInvocation{ID: id, ParentID: parentID, RootID: rootID, Name: name}}
+	return taskScheduledMsg{task: taskInvocation{ID: id, ParentID: parentID, RootID: rootID, Task: name, Name: name}}
 }
 
 func updateTUIModel(t *testing.T, m tuiModel, msg tea.Msg) tuiModel {

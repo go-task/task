@@ -1,117 +1,151 @@
 package task
 
-import "io"
+import (
+	"io"
+	"time"
+)
 
 // Invocation identifies one runtime call to a task. IDs are unique within an
 // Executor, including repeated calls to the same task.
 type Invocation struct {
 	ID       uint64 // Unique call ID
-	ParentID uint64 // ID of the task call that scheduled this call; zero for roots
-	RootID   uint64 // ID of the root call requested by the user
-	Name     string
+	ParentID uint64 // Call that scheduled this one; zero for a requested root
+	RootID   uint64 // Requested root this call descends from
+	Task     string // Name as written in the Taskfile; the key GetTask takes
+	Name     string // Display name: the task's label when it has one
 }
 
-// TaskResult is how a call ended.
-type TaskResult uint8
+// Result is how a call ended.
+type Result uint8
 
 const (
-	// TaskSucceeded is the zero value so that the outcome of a call that
-	// reported no error needs no further interpretation.
-	TaskSucceeded TaskResult = iota
-	TaskFailed
-	// TaskCanceled is a call interrupted before it could finish, by a failing
+	// ResultSucceeded is the zero value, so a call that reported nothing needs
+	// no further interpretation.
+	ResultSucceeded Result = iota
+	ResultFailed
+	// ResultCanceled is a call interrupted before it could finish, by a failing
 	// sibling under fail-fast or by the caller cancelling the context.
-	TaskCanceled
-	// TaskSkipped is a call Task chose not to run at all: the task is not for
-	// the current platform, or its "if" condition was not met. Skipping is not
-	// a failure, and Run returns no error for it.
-	TaskSkipped
+	ResultCanceled
+	// ResultSkipped is a call Task chose not to run at all: the task is not for
+	// the current platform, or its "if" condition was not met. Skipping is not a
+	// failure, and Run returns no error for it.
+	ResultSkipped
 )
 
-func (r TaskResult) String() string {
+func (r Result) String() string {
 	switch r {
-	case TaskSucceeded:
+	case ResultSucceeded:
 		return "succeeded"
-	case TaskFailed:
+	case ResultFailed:
 		return "failed"
-	case TaskCanceled:
+	case ResultCanceled:
 		return "canceled"
-	case TaskSkipped:
+	case ResultSkipped:
 		return "skipped"
 	default:
 		return "unknown"
 	}
 }
 
-// Listener observes task execution and may take over the terminal while it
-// runs. It is optional: an Executor without one behaves exactly as before.
+// Started reports a call beginning execution. A call that is scheduled but
+// never attempted, because an earlier root failed, is never started.
+type Started struct {
+	Invocation
+	At time.Time
+}
+
+// Finished reports how a call ended. Every call that started is finished, as is
+// every call that failed before it could start.
+type Finished struct {
+	Invocation
+	Result Result
+	// Err is the detail behind ResultFailed, and nil otherwise. For a task that
+	// ran, it is an *errors.TaskRunError, whose TaskExitCode reports the exit
+	// status of the command that failed.
+	Err error
+	At  time.Time
+	// Duration is how long the call ran, and zero if it never started.
+	Duration time.Duration
+}
+
+// Joined reports a call that waited on another call's execution rather than
+// running its own, because the task is "run: once" or "run: when_changed". A
+// joined call produces no output and takes its result from the owner.
+type Joined struct {
+	Invocation
+	OwnerID uint64 // The call whose execution this one waited on
+}
+
+// Listener observes task execution. Assign one to Executor.Listener.
 //
-// Lifecycle methods are called from the goroutines that run the tasks, so
-// implementations must be safe for concurrent use.
-type Listener interface {
-	// TaskScheduled reports a call that Task intends to run. A call that is
-	// attempted is always reported to TaskFinished, but a scheduled call may
-	// never be attempted -- when an earlier requested root fails, say -- and
-	// then no further event arrives for it.
-	TaskScheduled(Invocation)
-	// TaskStarted reports that a call began executing its deps and commands.
-	TaskStarted(Invocation)
-	// TaskFinished reports how a call ended. err carries the detail behind a
-	// TaskFailed or TaskCanceled result and is nil otherwise; classify on the
-	// result rather than on whether err is nil, because what a killed process
-	// reports differs between platforms.
-	TaskFinished(id uint64, result TaskResult, err error)
-	// TaskJoined reports a call that waits on the execution owned by ownerID
-	// instead of running its own. It produces no output of its own.
-	TaskJoined(id, ownerID uint64)
+// Every field is optional: a zero Listener observes nothing and changes no
+// behaviour. New fields may be added, so a client that sets only what it needs
+// keeps working.
+//
+// Callbacks run on the goroutines executing the tasks, so implementations must
+// be safe for concurrent use, and must return promptly: a callback that blocks
+// holds up the task that reported it.
+type Listener struct {
+	// Scheduled reports a call Task intends to run. A call that is attempted is
+	// always Finished, but a scheduled call may never be attempted, and then no
+	// further event arrives for it.
+	Scheduled func(Invocation)
+	Started   func(Started)
+	Finished  func(Finished)
+	Joined    func(Joined)
 
-	// WriterFor returns the destination streams for a call's command output.
-	// Returning a nil writer leaves that stream on the Executor's own, which is
-	// what a listener that only wants lifecycle events should do.
-	WriterFor(Invocation) (stdOut, stdErr io.Writer)
+	// OutputFor returns where a call's command output goes. A nil writer leaves
+	// that stream on the Executor's own, which is what a listener that only
+	// wants events should return.
+	//
+	// Output arrives as the command wrote it, escape sequences included, so a
+	// client can render colour.
+	OutputFor func(Invocation) (stdOut, stdErr io.Writer)
 
-	// OwnsTerminal reports that the listener is drawing to the terminal, so Task
-	// must not write to its own streams or run anything interactive.
-	OwnsTerminal() bool
+	// OwnsScreen says the client is drawing the display, so the Executor's own
+	// Stdout, Stderr and Stdin are not usable. Task routes what it would have
+	// printed through OutputFor, and refuses to run anything that needs the
+	// terminal: interactive tasks, confirmation prompts and watch mode.
+	OwnsScreen bool
 }
 
 func (e *Executor) notifyScheduled(invocation Invocation) {
-	if e.Listener != nil {
-		e.Listener.TaskScheduled(invocation)
+	if e.Listener != nil && e.Listener.Scheduled != nil {
+		e.Listener.Scheduled(invocation)
 	}
 }
 
-func (e *Executor) notifyStarted(invocation Invocation) {
-	if e.Listener != nil {
-		e.Listener.TaskStarted(invocation)
+func (e *Executor) notifyStarted(invocation Invocation, at time.Time) {
+	if e.Listener != nil && e.Listener.Started != nil {
+		e.Listener.Started(Started{Invocation: invocation, At: at})
 	}
 }
 
-func (e *Executor) notifyFinished(id uint64, result TaskResult, err error) {
-	if e.Listener != nil {
-		e.Listener.TaskFinished(id, result, err)
+func (e *Executor) notifyFinished(finished Finished) {
+	if e.Listener != nil && e.Listener.Finished != nil {
+		e.Listener.Finished(finished)
 	}
 }
 
-func (e *Executor) notifyJoined(id, ownerID uint64) {
-	if e.Listener != nil {
-		e.Listener.TaskJoined(id, ownerID)
+func (e *Executor) notifyJoined(invocation Invocation, ownerID uint64) {
+	if e.Listener != nil && e.Listener.Joined != nil {
+		e.Listener.Joined(Joined{Invocation: invocation, OwnerID: ownerID})
 	}
 }
 
-// ownsTerminal reports whether a listener is drawing to the terminal.
-func (e *Executor) ownsTerminal() bool {
-	return e.Listener != nil && e.Listener.OwnsTerminal()
+// ownsScreen reports whether a client is drawing the display.
+func (e *Executor) ownsScreen() bool {
+	return e.Listener != nil && e.Listener.OwnsScreen
 }
 
 // listenerWriters returns where a call's command output should go, falling back
 // to the Executor's own streams for whichever the listener declines to take.
 func (e *Executor) listenerWriters(invocation Invocation) (io.Writer, io.Writer) {
 	stdOut, stdErr := e.Stdout, e.Stderr
-	if e.Listener == nil {
+	if e.Listener == nil || e.Listener.OutputFor == nil {
 		return stdOut, stdErr
 	}
-	listenerOut, listenerErr := e.Listener.WriterFor(invocation)
+	listenerOut, listenerErr := e.Listener.OutputFor(invocation)
 	if listenerOut != nil {
 		stdOut = listenerOut
 	}

@@ -26,13 +26,13 @@ const (
 type taskInvocation = task.Invocation
 
 // taskResult and its values are aliased for the same reason.
-type taskResult = task.TaskResult
+type taskResult = task.Result
 
 const (
-	resultSucceeded = task.TaskSucceeded
-	resultFailed    = task.TaskFailed
-	resultCanceled  = task.TaskCanceled
-	resultSkipped   = task.TaskSkipped
+	resultSucceeded = task.ResultSucceeded
+	resultFailed    = task.ResultFailed
+	resultCanceled  = task.ResultCanceled
+	resultSkipped   = task.ResultSkipped
 )
 
 // UI captures task lifecycle and output events for the interactive interface.
@@ -93,29 +93,35 @@ func New(log *logger.Logger, options Options) (*UI, error) {
 	}, nil
 }
 
-// WriterFor routes a task's command output into that task's own pane.
-func (t *UI) WriterFor(invocation task.Invocation) (io.Writer, io.Writer) {
-	w := &tuiWriter{ui: t, id: invocation.ID, name: invocation.Name}
-	return w, w
+// listener turns execution events into messages for the Bubble Tea program.
+func (t *UI) listener() *task.Listener {
+	return &task.Listener{
+		OwnsScreen: true,
+		Scheduled: func(invocation task.Invocation) {
+			t.send(taskScheduledMsg{task: invocation})
+		},
+		Started: func(started task.Started) {
+			t.send(taskStartedMsg{task: started.Invocation, at: started.At})
+		},
+		Finished: func(finished task.Finished) {
+			t.send(taskFinishedMsg{
+				id:       finished.ID,
+				result:   finished.Result,
+				err:      finished.Err,
+				at:       finished.At,
+				duration: finished.Duration,
+			})
+		},
+		Joined: func(joined task.Joined) {
+			t.send(taskJoinedMsg{id: joined.ID, ownerID: joined.OwnerID})
+		},
+		// Route each task's command output into its own pane.
+		OutputFor: func(invocation task.Invocation) (io.Writer, io.Writer) {
+			w := &tuiWriter{ui: t, id: invocation.ID, name: invocation.Name}
+			return w, w
+		},
+	}
 }
-
-func (t *UI) TaskScheduled(invocation task.Invocation) {
-	t.send(taskScheduledMsg{task: invocation})
-}
-
-func (t *UI) TaskStarted(invocation task.Invocation) {
-	t.send(taskStartedMsg{task: invocation})
-}
-
-func (t *UI) TaskFinished(id uint64, result taskResult, err error) {
-	t.send(taskFinishedMsg{id: id, result: result, err: err})
-}
-
-func (t *UI) TaskJoined(id, ownerID uint64) {
-	t.send(taskJoinedMsg{id: id, ownerID: ownerID})
-}
-
-func (*UI) OwnsTerminal() bool { return true }
 
 // Run opens the launcher when calls is empty, or starts the calls immediately.
 func (t *UI) Run(ctx context.Context, executor *task.Executor, calls []*task.Call) error {
@@ -209,7 +215,7 @@ func (t *UI) Run(ctx context.Context, executor *task.Executor, calls []*task.Cal
 	t.program = program
 	t.mutex.Unlock()
 
-	executor.Listener = t
+	executor.Listener = t.listener()
 
 	oldStdout, oldStderr := t.logger.Stdout, t.logger.Stderr
 	systemWriter := &tuiWriter{ui: t, name: systemTaskName}

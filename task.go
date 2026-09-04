@@ -8,6 +8,7 @@ import (
 	"slices"
 	"strings"
 	"sync/atomic"
+	"time"
 
 	"golang.org/x/sync/errgroup"
 	"mvdan.cc/sh/v3/interp"
@@ -39,7 +40,7 @@ type MatchingTask struct {
 
 // Run runs Task
 func (e *Executor) Run(ctx context.Context, calls ...*Call) error {
-	if e.ownsTerminal() && e.Interactive {
+	if e.ownsScreen() && e.Interactive {
 		return errors.New("task: interactive variable prompting is not supported while a terminal UI is active")
 	}
 
@@ -86,7 +87,7 @@ func (e *Executor) Run(ctx context.Context, calls ...*Call) error {
 	if err != nil {
 		return err
 	}
-	if e.ownsTerminal() && len(watchCalls) > 0 {
+	if e.ownsScreen() && len(watchCalls) > 0 {
 		return errors.New("task: watch mode is not supported while a terminal UI is active")
 	}
 	// Schedule every requested root before starting execution so lifecycle
@@ -145,10 +146,20 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) (runErr error) {
 	// task list stays complete even when the task cannot be resolved or
 	// compiled. Requested roots are announced by Run before execution begins;
 	// this covers every other call.
-	e.taskInvocation(call, call.Task)
+	invocation := e.taskInvocation(call, call.Task)
 	skipped := false
+	var startedAt time.Time
 	defer func() {
-		e.notifyFinished(call.invocationID, taskResult(ctx, skipped, runErr), runErr)
+		finished := Finished{
+			Invocation: invocation,
+			Result:     taskResult(ctx, skipped, runErr),
+			Err:        runErr,
+			At:         time.Now(),
+		}
+		if !startedAt.IsZero() {
+			finished.Duration = finished.At.Sub(startedAt)
+		}
+		e.notifyFinished(finished)
 	}()
 
 	// Inject prompted vars into call if available
@@ -188,9 +199,9 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) (runErr error) {
 	}
 	// Compilation resolves labels and included-taskfile prefixes, which the raw
 	// call name does not carry, so re-read the name for the events that follow.
-	invocation := e.taskInvocation(call, t.Name())
+	invocation = e.taskInvocation(call, t.Name())
 
-	if e.ownsTerminal() {
+	if e.ownsScreen() {
 		if t.Interactive {
 			return fmt.Errorf("task: task %q is interactive and cannot run while a terminal UI is active", t.Name())
 		}
@@ -243,8 +254,9 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) (runErr error) {
 	release := e.acquireConcurrencyLimit()
 	defer release()
 
-	err = e.startExecution(ctx, t, call.invocationID, func(ctx context.Context) (runErr error) {
-		e.notifyStarted(invocation)
+	err = e.startExecution(ctx, t, invocation, func(ctx context.Context) (runErr error) {
+		startedAt = time.Now()
+		e.notifyStarted(invocation, startedAt)
 
 		e.Logger.VerboseErrf(logger.Magenta, "task: %q started\n", call.Task)
 		if err := e.runDeps(ctx, t, call.invocationID, call.rootInvocationID); err != nil {
@@ -341,16 +353,16 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) (runErr error) {
 // shell interpreter surfaces the context error on Unix, while on Windows the
 // same kill arrives as a plain non-zero exit status. The context is the same
 // everywhere.
-func taskResult(ctx context.Context, skipped bool, err error) TaskResult {
+func taskResult(ctx context.Context, skipped bool, err error) Result {
 	switch {
 	case skipped:
-		return TaskSkipped
+		return ResultSkipped
 	case err == nil:
-		return TaskSucceeded
+		return ResultSucceeded
 	case ctx.Err() != nil:
-		return TaskCanceled
+		return ResultCanceled
 	default:
-		return TaskFailed
+		return ResultFailed
 	}
 }
 
@@ -360,19 +372,19 @@ func (e *Executor) taskInvocation(call *Call, name string) Invocation {
 		if !call.Indirect || call.rootInvocationID == 0 {
 			call.rootInvocationID = call.invocationID
 		}
-		invocation := Invocation{
-			ID:       call.invocationID,
-			ParentID: call.parentInvocationID,
-			RootID:   call.rootInvocationID,
-			Name:     name,
-		}
+		invocation := e.invocationOf(call, name)
 		e.notifyScheduled(invocation)
 		return invocation
 	}
+	return e.invocationOf(call, name)
+}
+
+func (e *Executor) invocationOf(call *Call, name string) Invocation {
 	return Invocation{
 		ID:       call.invocationID,
 		ParentID: call.parentInvocationID,
 		RootID:   call.rootInvocationID,
+		Task:     call.Task,
 		Name:     name,
 	}
 }
@@ -511,7 +523,7 @@ func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call *Call, i in
 		}
 
 		logCommand := e.Verbose || (!call.Silent && !cmd.Silent && !t.IsSilent() && !e.Taskfile.Silent && !e.Silent)
-		if logCommand && (!e.ownsTerminal() || e.Dry) {
+		if logCommand && (!e.ownsScreen() || e.Dry) {
 			e.Logger.Errf(logger.Green, "task: [%s] %s\n", t.Name(), cmd.LogCmd)
 		}
 
@@ -523,13 +535,8 @@ func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call *Call, i in
 		if t.Interactive {
 			outputWrapper = output.Interleaved{}
 		}
-		stdOutBase, stdErrBase := e.listenerWriters(Invocation{
-			ID:       call.invocationID,
-			ParentID: call.parentInvocationID,
-			RootID:   call.rootInvocationID,
-			Name:     t.Name(),
-		})
-		if e.ownsTerminal() {
+		stdOutBase, stdErrBase := e.listenerWriters(e.invocationOf(call, t.Name()))
+		if e.ownsScreen() {
 			// The listener renders raw command output in its own panes, so
 			// --output styling applies to runs it does not host instead.
 			outputWrapper = output.Interleaved{}
@@ -540,7 +547,7 @@ func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call *Call, i in
 			return fmt.Errorf("task: failed to get variables: %w", err)
 		}
 		stdOut, stdErr, closer := outputWrapper.WrapWriter(stdOutBase, stdErrBase, t.Prefix, outputTemplater)
-		if logCommand && e.ownsTerminal() {
+		if logCommand && e.ownsScreen() {
 			e.Logger.FOutf(stdErr, logger.Green, "task: [%s] %s\n", t.Name(), cmd.LogCmd)
 		}
 
@@ -594,7 +601,7 @@ type executionState struct {
 	ownerID uint64
 }
 
-func (e *Executor) startExecution(ctx context.Context, t *ast.Task, invocationID uint64, execute func(ctx context.Context) error) error {
+func (e *Executor) startExecution(ctx context.Context, t *ast.Task, invocation Invocation, execute func(ctx context.Context) error) error {
 	h, err := e.GetHash(t)
 	if err != nil {
 		return err
@@ -609,7 +616,7 @@ func (e *Executor) startExecution(ctx context.Context, t *ast.Task, invocationID
 	if other, ok := e.executionHashes[h]; ok {
 		e.executionHashesMutex.Unlock()
 		e.Logger.VerboseErrf(logger.Magenta, "task: skipping execution of task: %s\n", h)
-		e.notifyJoined(invocationID, other.ownerID)
+		e.notifyJoined(invocation, other.ownerID)
 
 		// Release our execution slot to avoid blocking other tasks while we wait
 		reacquire := e.releaseConcurrencyLimit()
@@ -635,7 +642,7 @@ func (e *Executor) startExecution(ctx context.Context, t *ast.Task, invocationID
 		}
 	}
 
-	state := &executionState{done: make(chan struct{}), ownerID: invocationID}
+	state := &executionState{done: make(chan struct{}), ownerID: invocation.ID}
 	e.executionHashes[h] = state
 	e.executionHashesMutex.Unlock()
 
