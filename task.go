@@ -40,6 +40,10 @@ type MatchingTask struct {
 
 // Run runs Task
 func (e *Executor) Run(ctx context.Context, calls ...*Call) error {
+	if e.ownsScreen() && e.Interactive {
+		return errors.New("task: interactive variable prompting is not supported while a terminal UI is active")
+	}
+
 	// check if given tasks exist
 	for _, call := range calls {
 		task, err := e.GetTask(call)
@@ -197,8 +201,13 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) (runErr error) {
 	// call name does not carry, so re-read the name for the events that follow.
 	invocation = e.taskInvocation(call, t.Name())
 
-	if e.ownsScreen() && t.Interactive {
-		return fmt.Errorf("task: task %q is interactive and cannot run while a terminal UI is active", t.Name())
+	if e.ownsScreen() {
+		if t.Interactive {
+			return fmt.Errorf("task: task %q is interactive and cannot run while a terminal UI is active", t.Name())
+		}
+		if len(t.Prompt) > 0 && !e.AssumeYes {
+			return fmt.Errorf("task: task %q requires confirmation; run with --yes", t.Name())
+		}
 	}
 
 	// Check if condition after CompiledTask so dynamic variables are resolved
@@ -283,20 +292,14 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) (runErr error) {
 		}
 
 		for _, p := range t.Prompt {
-			if p == "" || e.Dry {
-				continue
-			}
-			// The confirmation is read from the terminal, so borrow it back
-			// from a client that is drawing on it.
-			err := e.runInTerminal("confirming a prompt", func() error {
-				return e.Logger.Prompt(logger.Yellow, p, "n", "y", "yes")
-			})
-			if errors.Is(err, logger.ErrNoTerminal) {
-				return &errors.TaskCancelledNoTerminalError{TaskName: call.Task}
-			} else if errors.Is(err, logger.ErrPromptCancelled) {
-				return &errors.TaskCancelledByUserError{TaskName: call.Task}
-			} else if err != nil {
-				return err
+			if p != "" && !e.Dry {
+				if err := e.Logger.Prompt(logger.Yellow, p, "n", "y", "yes"); errors.Is(err, logger.ErrNoTerminal) {
+					return &errors.TaskCancelledNoTerminalError{TaskName: call.Task}
+				} else if errors.Is(err, logger.ErrPromptCancelled) {
+					return &errors.TaskCancelledByUserError{TaskName: call.Task}
+				} else if err != nil {
+					return err
+				}
 			}
 		}
 

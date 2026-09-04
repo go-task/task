@@ -2,7 +2,6 @@ package task_test
 
 import (
 	"bytes"
-	"errors"
 	"io"
 	"os"
 	"path/filepath"
@@ -529,78 +528,4 @@ func TestListenerNeedsNoFields(t *testing.T) {
 	e.Listener = &task.Listener{}
 	require.NoError(t, e.Run(t.Context(), &task.Call{Task: "build"}))
 	assert.Contains(t, out.String(), "built")
-}
-
-func TestListenerLendsTheTerminalForPrompts(t *testing.T) {
-	t.Parallel()
-
-	dir := t.TempDir()
-	taskfile := `version: '3'
-tasks:
-  deploy:
-    requires:
-      vars: [TARGET]
-    cmds: [echo deploying]
-`
-	require.NoError(t, os.WriteFile(filepath.Join(dir, "Taskfile.yml"), []byte(taskfile), 0o600))
-
-	e := task.NewExecutor(
-		task.WithDir(dir),
-		task.WithStdout(io.Discard),
-		task.WithStderr(io.Discard),
-		task.WithSilent(true),
-		task.WithForce(true),
-		task.WithInteractive(true),
-		task.WithAssumeTerm(true),
-	)
-	require.NoError(t, e.Setup())
-
-	// Declining tells us Task asked before prompting, without starting the
-	// prompter, which needs a real terminal to drive.
-	declined := errors.New("the client kept the terminal")
-	lent := 0
-	e.Listener = &task.Listener{
-		OwnsScreen: true,
-		RunInTerminal: func(func() error) error {
-			lent++
-			return declined
-		},
-	}
-
-	err := e.Run(t.Context(), &task.Call{Task: "deploy"})
-	require.ErrorIs(t, err, declined, "Task must honour a client that will not lend the terminal")
-	assert.Equal(t, 1, lent, "prompting must borrow the terminal from the client")
-}
-
-func TestListenerRefusesPromptsItCannotLendTheTerminalFor(t *testing.T) {
-	t.Parallel()
-
-	dir := t.TempDir()
-	taskfile := `version: '3'
-tasks:
-  deploy:
-    requires:
-      vars: [TARGET]
-    cmds: [echo deploying]
-`
-	require.NoError(t, os.WriteFile(filepath.Join(dir, "Taskfile.yml"), []byte(taskfile), 0o600))
-
-	e := task.NewExecutor(
-		task.WithDir(dir),
-		task.WithStdout(io.Discard),
-		task.WithStderr(io.Discard),
-		task.WithSilent(true),
-		task.WithForce(true),
-		task.WithInteractive(true),
-		task.WithAssumeTerm(true),
-	)
-	require.NoError(t, e.Setup())
-
-	// A client drawing in a window has no terminal to lend, so it leaves
-	// RunInTerminal nil and Task says so rather than prompting into the void.
-	e.Listener = &task.Listener{OwnsScreen: true}
-
-	err := e.Run(t.Context(), &task.Call{Task: "deploy"})
-	require.Error(t, err)
-	assert.Contains(t, err.Error(), "needs the terminal")
 }

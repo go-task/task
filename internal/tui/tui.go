@@ -45,13 +45,6 @@ type UI struct {
 
 	mutex   sync.RWMutex
 	program *tea.Program
-	// programDone is closed when the program stops, so a goroutine waiting on a
-	// terminal handover is not left waiting for a reply that cannot come.
-	programDone chan struct{}
-	// terminalMutex serialises handovers: only one thing can hold the terminal.
-	terminalMutex sync.Mutex
-	// borrowed is set while Task holds the terminal.
-	borrowed atomic.Pointer[borrowedTerminal]
 
 	outputMutex  sync.Mutex
 	pending      map[uint64]pendingOutput
@@ -97,7 +90,6 @@ func New(log *logger.Logger, options Options) (*UI, error) {
 		statusLabels:  statusLabels,
 		taskNavigator: taskNavigator,
 		pending:       make(map[uint64]pendingOutput),
-		programDone:   make(chan struct{}),
 	}, nil
 }
 
@@ -128,7 +120,6 @@ func (t *UI) listener() *task.Listener {
 			w := &tuiWriter{ui: t, id: invocation.ID, name: invocation.Name}
 			return w, w
 		},
-		RunInTerminal: t.runInTerminal,
 	}
 }
 
@@ -247,7 +238,6 @@ func (t *UI) Run(ctx context.Context, executor *task.Executor, calls []*task.Cal
 		program.Send(interruptRequestedMsg{})
 	}()
 	finalModel, uiErr := program.Run()
-	close(t.programDone)
 	cancelSession()
 	runs.Wait()
 	if uiErr != nil {
@@ -312,11 +302,6 @@ type tuiWriter struct {
 }
 
 func (w *tuiWriter) Write(p []byte) (int, error) {
-	if w.name == systemTaskName {
-		if borrowed := w.ui.borrowed.Load(); borrowed != nil {
-			return borrowed.out.Write(p)
-		}
-	}
 	data := string(append([]byte(nil), p...))
 	w.ui.enqueueOutput(w.id, w.name, data)
 	return len(p), nil
