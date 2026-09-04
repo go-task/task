@@ -1,6 +1,7 @@
 package task
 
 import (
+	"fmt"
 	"io"
 	"time"
 )
@@ -102,6 +103,18 @@ type Listener struct {
 	// client can render colour.
 	OutputFor func(Invocation) (stdOut, stdErr io.Writer)
 
+	// RunInTerminal lends the terminal to fn while the client stops drawing,
+	// for the things Task can only do on a real terminal: prompting for a
+	// missing required variable, and confirming a task that declares "prompt".
+	//
+	// The client must restore its own display once fn returns, and must
+	// serialise concurrent calls: only one thing can hold the terminal.
+	//
+	// Leave it nil and Task refuses to do those things while OwnsScreen is set.
+	// A client with no terminal to lend, drawing in a window rather than on a
+	// screen, should leave it nil.
+	RunInTerminal func(fn func() error) error
+
 	// OwnsScreen says the client is drawing the display, so the Executor's own
 	// Stdout, Stderr and Stdin are not usable. Task routes what it would have
 	// printed through OutputFor, and refuses to run anything that needs the
@@ -131,6 +144,19 @@ func (e *Executor) notifyJoined(invocation Invocation, ownerID uint64) {
 	if e.Listener != nil && e.Listener.Joined != nil {
 		e.Listener.Joined(Joined{Invocation: invocation, OwnerID: ownerID})
 	}
+}
+
+// runInTerminal performs fn with the terminal available to it, borrowing it
+// back from a client that is drawing the display. what names the thing needing
+// the terminal, for the error a client that cannot lend it produces.
+func (e *Executor) runInTerminal(what string, fn func() error) error {
+	if e.Listener != nil && e.Listener.RunInTerminal != nil {
+		return e.Listener.RunInTerminal(fn)
+	}
+	if e.ownsScreen() {
+		return fmt.Errorf("task: %s needs the terminal, which the interface is drawing on", what)
+	}
+	return fn()
 }
 
 // ownsScreen reports whether a client is drawing the display.

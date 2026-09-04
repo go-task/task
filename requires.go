@@ -83,18 +83,21 @@ func (e *Executor) promptDepsVars(calls []*Call) error {
 	prompter := e.newPrompter()
 	e.promptedVars = ast.NewVars()
 
-	for v := range varsMap.Values() {
-		value, err := prompter.Prompt(v.Name, getEnumValues(v.Enum))
-		if err != nil {
-			if errors.Is(err, input.ErrCancelled) {
-				return &errors.TaskCancelledByUserError{TaskName: "interactive prompt"}
+	// The prompter draws on the terminal, so borrow it back from a client that
+	// is using it.
+	return e.runInTerminal("prompting for required variables", func() error {
+		for v := range varsMap.Values() {
+			value, err := prompter.Prompt(v.Name, getEnumValues(v.Enum))
+			if err != nil {
+				if errors.Is(err, input.ErrCancelled) {
+					return &errors.TaskCancelledByUserError{TaskName: "interactive prompt"}
+				}
+				return err
 			}
-			return err
+			e.promptedVars.Set(v.Name, ast.Var{Value: value})
 		}
-		e.promptedVars.Set(v.Name, ast.Var{Value: value})
-	}
-
-	return nil
+		return nil
+	})
 }
 
 // promptTaskVars prompts for any missing required vars from a single task.
@@ -122,26 +125,32 @@ func (e *Executor) promptTaskVars(t *ast.Task, call *Call) (bool, error) {
 
 	prompter := e.newPrompter()
 
-	for _, v := range missing {
-		value, err := prompter.Prompt(v.Name, getEnumValues(v.Enum))
-		if err != nil {
-			if errors.Is(err, input.ErrCancelled) {
-				return false, &errors.TaskCancelledByUserError{TaskName: t.Name()}
+	err := e.runInTerminal("prompting for required variables", func() error {
+		for _, v := range missing {
+			value, err := prompter.Prompt(v.Name, getEnumValues(v.Enum))
+			if err != nil {
+				if errors.Is(err, input.ErrCancelled) {
+					return &errors.TaskCancelledByUserError{TaskName: t.Name()}
+				}
+				return err
 			}
-			return false, err
-		}
 
-		// Add to call.Vars for recompilation
-		if call.Vars == nil {
-			call.Vars = ast.NewVars()
-		}
-		call.Vars.Set(v.Name, ast.Var{Value: value})
+			// Add to call.Vars for recompilation
+			if call.Vars == nil {
+				call.Vars = ast.NewVars()
+			}
+			call.Vars.Set(v.Name, ast.Var{Value: value})
 
-		// Cache for reuse by other tasks
-		if e.promptedVars == nil {
-			e.promptedVars = ast.NewVars()
+			// Cache for reuse by other tasks
+			if e.promptedVars == nil {
+				e.promptedVars = ast.NewVars()
+			}
+			e.promptedVars.Set(v.Name, ast.Var{Value: value})
 		}
-		e.promptedVars.Set(v.Name, ast.Var{Value: value})
+		return nil
+	})
+	if err != nil {
+		return false, err
 	}
 
 	return true, nil

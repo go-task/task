@@ -225,8 +225,8 @@ func Validate() error {
 	if err := validateTUIOptions(TUI, TUIStatus, TUITaskNavigator); err != nil {
 		return err
 	}
-	if TUI && (List || ListAll || ListJson || Status || Summary || Watch || Interactive) {
-		return errors.New("task: --tui cannot be combined with task listing, status, summary, watch, or interactive modes")
+	if TUI && (List || ListAll || ListJson || Status || Summary || Watch) {
+		return errors.New("task: --tui cannot be combined with task listing, status, summary, or watch modes")
 	}
 
 	if List && ListAll {
