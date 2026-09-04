@@ -121,15 +121,13 @@ func (m tuiModel) fullscreenOutputView() string {
 // helpView lists every binding of the view it was opened from. It takes the
 // whole screen rather than growing the footer, which would resize the panes.
 func (m tuiModel) helpView() string {
-	var keys help.KeyMap = newDashboardKeys(m.focus == outputPane, m.canReturnToLauncher)
+	bindings := newDashboardKeys(m.focus == outputPane, m.canReturnToLauncher).allBindings()
 	title := "KEYS"
 	if m.fullscreenOutput {
-		keys = newFullscreenKeys()
+		bindings = newFullscreenKeys().allBindings()
 		title = "KEYS · fullscreen"
 	}
-	helpModel := m.help
-	helpModel.ShowAll = true
-	helpModel.SetWidth(max(m.width-2, 1))
+	inner := max(m.width-tuiPanelStyle.GetHorizontalFrameSize(), 1)
 
 	body := tuiPanelStyle.
 		BorderForeground(tuiAccentColor).
@@ -137,8 +135,7 @@ func (m tuiModel) helpView() string {
 		Height(max(m.height-1, 1)).
 		MaxWidth(max(m.width, 1)).
 		MaxHeight(max(m.height-1, 1)).
-		Render(paneTitle(title, "", max(m.width-tuiPanelStyle.GetHorizontalFrameSize(), 1)) +
-			"\n\n" + helpModel.View(keys))
+		Render(paneTitle(title, "", inner) + "\n\n" + fullHelp(m.help, bindings, inner))
 	return body + "\n" + renderStatus(m.width, "press any key to return", tuiHelpStyle)
 }
 
@@ -479,28 +476,28 @@ func truncateMiddle(s string, width int) string {
 
 // shortHelp renders one line of key hints, clamped to width.
 //
-// The last binding is pinned: its width is reserved before the rest are laid
-// out, so the way out of the view survives truncation on a narrow terminal.
-// Without that the tail is what gets dropped, which is exactly where quit and
-// the pointer to the full key list sit.
-//
 // Clamping is ours to do. The help bubble is asked to fit the width but does
 // not guarantee it: when there is no room even for its ellipsis it keeps
-// appending items, overflowing the screen.
+// appending items, overflowing the screen. It drops from the end, which is why
+// the keymaps put help and quit first.
 func shortHelp(helpModel help.Model, bindings []key.Binding, width int) string {
 	width = max(width, 1)
-	render := func(b []key.Binding, w int) string {
-		helpModel.SetWidth(w)
-		return truncateText(helpModel.ShortHelpView(b), w)
-	}
-	if len(bindings) < 2 {
-		return render(bindings, width)
-	}
+	helpModel.SetWidth(width)
+	return truncateText(helpModel.ShortHelpView(bindings), width)
+}
 
-	pinned := helpModel.ShortHelpView(bindings[len(bindings)-1:])
-	separator := helpModel.Styles.ShortSeparator.Inline(true).Render(helpModel.ShortSeparator)
-	rest := max(width-lipgloss.Width(pinned)-lipgloss.Width(separator), 1)
-	return truncateText(render(bindings[:len(bindings)-1], rest)+separator+pinned, width)
+// fullHelp renders the key list in as many columns as the width allows, down to
+// a single column. Descriptions are written to be read, not to fit four columns
+// on an 80 column terminal.
+func fullHelp(helpModel help.Model, bindings []key.Binding, width int) string {
+	helpModel.ShowAll = true
+	for _, columns := range []int{3, 2, 1} {
+		view := helpModel.FullHelpView(fullHelpColumns(bindings, columns))
+		if lipgloss.Width(view) <= width {
+			return view
+		}
+	}
+	return helpModel.FullHelpView(fullHelpColumns(bindings, 1))
 }
 
 // newHelpModel styles the help bubble with the palette the rest of the TUI

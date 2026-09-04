@@ -441,7 +441,7 @@ func TestTUIModelFullscreenOutputDisablesMouseAndShowsLiveOutput(t *testing.T) {
 	selectionView := m.View()
 	assert.True(t, m.fullscreenOutput)
 	assert.Equal(t, tea.MouseModeNone, selectionView.MouseMode)
-	assert.Contains(t, ansi.Strip(selectionView.Content), "? keys")
+	assert.Contains(t, ansi.Strip(selectionView.Content), "? help")
 	assert.NotContains(t, ansi.Strip(selectionView.Content), "drag")
 	assert.Contains(t, selectionView.Content, "first")
 	assert.NotContains(t, selectionView.Content, "TASKS")
@@ -1031,8 +1031,12 @@ func TestDashboardKeysHideTheLauncherWhenThereIsNoneToReturnTo(t *testing.T) {
 func TestDashboardKeysDescribeArrowsByFocus(t *testing.T) {
 	t.Parallel()
 
-	assert.Equal(t, "select", newDashboardKeys(false, true).Move.Help().Desc)
-	assert.Equal(t, "scroll", newDashboardKeys(true, true).Move.Help().Desc)
+	assert.Equal(t, "select a task", newDashboardKeys(false, true).Move.Help().Desc)
+	assert.Equal(t, "scroll the output", newDashboardKeys(true, true).Move.Help().Desc)
+
+	// The footer restates them in a word.
+	assert.Equal(t, "select", newDashboardKeys(false, true).ShortHelp()[2].Help().Desc)
+	assert.Equal(t, "scroll", newDashboardKeys(true, true).ShortHelp()[2].Help().Desc)
 }
 
 func TestShortHelpKeepsTheWayOutOnANarrowTerminal(t *testing.T) {
@@ -1043,10 +1047,11 @@ func TestShortHelpKeepsTheWayOutOnANarrowTerminal(t *testing.T) {
 	for _, width := range []int{20, 40, 60, 80, 200} {
 		line := shortHelp(m.help, bindings, width)
 		assert.LessOrEqual(t, lipgloss.Width(line), width, "footer overflows at %d", width)
-		if width >= 40 {
-			// The pointer to the full key list is pinned, so truncation eats the
-			// middle rather than the way out.
-			assert.Contains(t, ansi.Strip(line), "? keys", "at %d columns", width)
+		if width >= 20 {
+			// Help and quit lead, so truncation eats the tail rather than the
+			// way out of the view.
+			assert.Contains(t, ansi.Strip(line), "? help", "at %d columns", width)
+			assert.Contains(t, ansi.Strip(line), "q quit", "at %d columns", width)
 		}
 	}
 }
@@ -1115,4 +1120,26 @@ func TestTUIModelStopsTheClockOnCancelledTasks(t *testing.T) {
 
 	require.Equal(t, taskCanceled, m.byID[1].state)
 	assert.False(t, m.byID[1].finishedAt.IsZero(), "a cancelled task must stop counting up")
+}
+
+func TestFullHelpUsesTheColumnsThatFit(t *testing.T) {
+	t.Parallel()
+
+	m := newTUIModel(func() {})
+	bindings := newDashboardKeys(false, true).allBindings()
+
+	countColumns := func(width int) int {
+		view := fullHelp(m.help, bindings, width)
+		require.LessOrEqual(t, lipgloss.Width(view), width, "key list overflows at %d", width)
+		// Every binding is listed whatever the layout.
+		for _, binding := range bindings {
+			assert.Contains(t, ansi.Strip(view), binding.Help().Desc)
+		}
+		return len(strings.Split(strings.TrimRight(ansi.Strip(view), "\n"), "\n"))
+	}
+
+	// Narrower means taller: the descriptions are written to be read, so the
+	// layout gives way rather than the wording.
+	wide, narrow := countColumns(140), countColumns(50)
+	assert.Less(t, wide, narrow, "a narrow terminal should stack into more rows")
 }

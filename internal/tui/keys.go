@@ -7,24 +7,40 @@ import "charm.land/bubbles/v2/key"
 // carry a sentinel no terminal can produce.
 const mouseHelpKey = "\x00mouse"
 
-// terse returns a copy of a binding with shorter help text, for the one-line
-// footer. key.Binding is a value, so the original is untouched.
+// terse returns a copy of a binding with shorter help text. key.Binding is a
+// value, so the original is untouched.
+//
+// A binding carries the description the full key list shows. The footer has
+// room for a word at most, so ShortHelp restates the entries it shows. Keeping
+// both wordings in one place is what stops them drifting apart.
 func terse(b key.Binding, name, desc string) key.Binding {
 	b.SetHelp(name, desc)
 	return b
 }
 
-// dashboardKeys are the two-pane view's bindings. Help text for the arrow keys
-// depends on which pane has focus, so a keymap is built per render rather than
-// kept as a package-level value.
+// fullHelpColumns lays bindings out column by column, keeping related entries
+// together in reading order.
+func fullHelpColumns(bindings []key.Binding, columns int) [][]key.Binding {
+	columns = max(columns, 1)
+	perColumn := (len(bindings) + columns - 1) / columns
+	groups := make([][]key.Binding, 0, columns)
+	for start := 0; start < len(bindings); start += perColumn {
+		groups = append(groups, bindings[start:min(start+perColumn, len(bindings))])
+	}
+	return groups
+}
+
+// dashboardKeys are the two-pane view's bindings. The arrow keys mean different
+// things depending on which pane has focus, so a keymap is built per render
+// rather than kept as a package-level value.
 type dashboardKeys struct {
-	Pane       key.Binding
 	Move       key.Binding
+	Pane       key.Binding
+	Click      key.Binding
+	Wheel      key.Binding
 	Page       key.Binding
 	Top        key.Binding
 	Bottom     key.Binding
-	Click      key.Binding
-	Wheel      key.Binding
 	Fullscreen key.Binding
 	Copy       key.Binding
 	CopyRaw    key.Binding
@@ -35,27 +51,27 @@ type dashboardKeys struct {
 }
 
 func newDashboardKeys(outputFocused, canReturnToLauncher bool) dashboardKeys {
-	move := key.NewBinding(key.WithKeys("up", "down", "k", "j"), key.WithHelp("↑/↓", "select"))
-	click := key.NewBinding(key.WithKeys(mouseHelpKey), key.WithHelp("click", "select"))
+	move := key.NewBinding(key.WithKeys("up", "down", "k", "j"), key.WithHelp("↑/↓", "select a task"))
+	click := key.NewBinding(key.WithKeys(mouseHelpKey), key.WithHelp("click", "select a task"))
 	if outputFocused {
-		move.SetHelp("↑/↓", "scroll")
-		click.SetHelp("click", "focus pane")
+		move.SetHelp("↑/↓", "scroll the output")
+		click.SetHelp("click", "focus a pane")
 	}
 	keys := dashboardKeys{
-		Pane:       key.NewBinding(key.WithKeys("tab", "shift+tab", "left", "right", "h", "l"), key.WithHelp("tab/←/→", "pane")),
 		Move:       move,
-		Page:       key.NewBinding(key.WithKeys("pgup", "pgdown"), key.WithHelp("pgup/pgdn", "page")),
-		Top:        key.NewBinding(key.WithKeys("home", "g"), key.WithHelp("g", "top")),
-		Bottom:     key.NewBinding(key.WithKeys("end", "G"), key.WithHelp("G", "bottom")),
+		Pane:       key.NewBinding(key.WithKeys("tab", "shift+tab", "left", "right", "h", "l"), key.WithHelp("tab/←/→", "switch pane")),
 		Click:      click,
-		Wheel:      key.NewBinding(key.WithKeys(mouseHelpKey), key.WithHelp("wheel", "scroll")),
-		Fullscreen: key.NewBinding(key.WithKeys("f"), key.WithHelp("f", "fullscreen")),
-		Copy:       key.NewBinding(key.WithKeys("y"), key.WithHelp("y", "copy")),
+		Wheel:      key.NewBinding(key.WithKeys(mouseHelpKey), key.WithHelp("wheel", "scroll the output")),
+		Page:       key.NewBinding(key.WithKeys("pgup", "pgdown"), key.WithHelp("pgup/pgdn", "scroll a page")),
+		Top:        key.NewBinding(key.WithKeys("home", "g"), key.WithHelp("g", "jump to start")),
+		Bottom:     key.NewBinding(key.WithKeys("end", "G"), key.WithHelp("G", "jump to end")),
+		Fullscreen: key.NewBinding(key.WithKeys("f"), key.WithHelp("f", "output fullscreen")),
+		Copy:       key.NewBinding(key.WithKeys("y"), key.WithHelp("y", "copy output")),
 		CopyRaw:    key.NewBinding(key.WithKeys("Y"), key.WithHelp("Y", "copy with colours")),
-		Snapshot:   key.NewBinding(key.WithKeys("s"), key.WithHelp("s", "snapshot to terminal")),
-		Launcher:   key.NewBinding(key.WithKeys("esc", "b"), key.WithHelp("esc/b", "launcher")),
-		Quit:       key.NewBinding(key.WithKeys("q", "ctrl+c"), key.WithHelp("q", "quit")),
-		Help:       key.NewBinding(key.WithKeys("?"), key.WithHelp("?", "keys")),
+		Snapshot:   key.NewBinding(key.WithKeys("s"), key.WithHelp("s", "print to terminal")),
+		Launcher:   key.NewBinding(key.WithKeys("esc", "b"), key.WithHelp("esc/b", "stop, open launcher")),
+		Quit:       key.NewBinding(key.WithKeys("q", "ctrl+c"), key.WithHelp("q", "stop and quit")),
+		Help:       key.NewBinding(key.WithKeys("?"), key.WithHelp("?", "show this list")),
 	}
 	if !canReturnToLauncher {
 		keys.Launcher.SetEnabled(false)
@@ -63,29 +79,33 @@ func newDashboardKeys(outputFocused, canReturnToLauncher bool) dashboardKeys {
 	return keys
 }
 
-// ShortHelp lists the footer keys in the order they matter, because the help
-// bubble drops from the end when the line does not fit.
-//
-// Descriptions are terser than in the full list so that the whole line, quit
-// and the pointer to the full list included, survives an 80 column terminal.
+// ShortHelp lists the footer keys. Help and quit lead, so the way out is never
+// what a narrow terminal drops.
 func (k dashboardKeys) ShortHelp() []key.Binding {
+	move := "select"
+	if k.Move.Help().Desc == "scroll the output" {
+		move = "scroll"
+	}
 	return []key.Binding{
-		k.Move,
+		terse(k.Help, "?", "help"),
+		terse(k.Quit, "q", "quit"),
+		terse(k.Move, "↑/↓", move),
 		terse(k.Pane, "tab", "pane"),
-		k.Fullscreen,
-		k.Copy,
+		terse(k.Fullscreen, "f", "fullscreen"),
+		terse(k.Copy, "y", "copy"),
 		terse(k.Snapshot, "s", "snapshot"),
-		k.Quit,
-		k.Help,
 	}
 }
 
 func (k dashboardKeys) FullHelp() [][]key.Binding {
-	return [][]key.Binding{
-		{k.Move, k.Pane, k.Click, k.Wheel},
-		{k.Page, k.Top, k.Bottom, k.Fullscreen},
-		{k.Copy, k.CopyRaw, k.Snapshot},
-		{k.Launcher, k.Quit, k.Help},
+	return fullHelpColumns(k.allBindings(), 3)
+}
+
+func (k dashboardKeys) allBindings() []key.Binding {
+	return []key.Binding{
+		k.Move, k.Pane, k.Click, k.Wheel, k.Page,
+		k.Top, k.Bottom, k.Fullscreen, k.Copy, k.CopyRaw,
+		k.Snapshot, k.Launcher, k.Quit, k.Help,
 	}
 }
 
@@ -105,28 +125,39 @@ type fullscreenKeys struct {
 
 func newFullscreenKeys() fullscreenKeys {
 	return fullscreenKeys{
-		Move:     key.NewBinding(key.WithKeys("up", "down", "k", "j"), key.WithHelp("↑/↓", "scroll")),
-		Page:     key.NewBinding(key.WithKeys("pgup", "pgdown"), key.WithHelp("pgup/pgdn", "page")),
-		Top:      key.NewBinding(key.WithKeys("home", "g"), key.WithHelp("g", "top")),
-		Bottom:   key.NewBinding(key.WithKeys("end", "G"), key.WithHelp("G", "bottom")),
-		Copy:     key.NewBinding(key.WithKeys("y"), key.WithHelp("y", "copy")),
+		Move:     key.NewBinding(key.WithKeys("up", "down", "k", "j"), key.WithHelp("↑/↓", "scroll the output")),
+		Page:     key.NewBinding(key.WithKeys("pgup", "pgdown"), key.WithHelp("pgup/pgdn", "scroll a page")),
+		Top:      key.NewBinding(key.WithKeys("home", "g"), key.WithHelp("g", "jump to start")),
+		Bottom:   key.NewBinding(key.WithKeys("end", "G"), key.WithHelp("G", "jump to end")),
+		Copy:     key.NewBinding(key.WithKeys("y"), key.WithHelp("y", "copy output")),
 		CopyRaw:  key.NewBinding(key.WithKeys("Y"), key.WithHelp("Y", "copy with colours")),
-		Snapshot: key.NewBinding(key.WithKeys("s"), key.WithHelp("s", "snapshot to terminal")),
-		Return:   key.NewBinding(key.WithKeys("f", "esc"), key.WithHelp("f/esc", "return")),
-		Quit:     key.NewBinding(key.WithKeys("q", "ctrl+c"), key.WithHelp("q", "quit")),
-		Help:     key.NewBinding(key.WithKeys("?"), key.WithHelp("?", "keys")),
+		Snapshot: key.NewBinding(key.WithKeys("s"), key.WithHelp("s", "print to terminal")),
+		Return:   key.NewBinding(key.WithKeys("f", "esc"), key.WithHelp("f/esc", "back to panes")),
+		Quit:     key.NewBinding(key.WithKeys("q", "ctrl+c"), key.WithHelp("q", "stop and quit")),
+		Help:     key.NewBinding(key.WithKeys("?"), key.WithHelp("?", "show this list")),
 	}
 }
 
 func (k fullscreenKeys) ShortHelp() []key.Binding {
-	return []key.Binding{k.Move, k.Copy, terse(k.Snapshot, "s", "snapshot"), k.Return, k.Help}
+	return []key.Binding{
+		terse(k.Help, "?", "help"),
+		terse(k.Quit, "q", "quit"),
+		terse(k.Move, "↑/↓", "scroll"),
+		terse(k.Return, "f/esc", "back"),
+		terse(k.Copy, "y", "copy"),
+		terse(k.Snapshot, "s", "snapshot"),
+	}
 }
 
 func (k fullscreenKeys) FullHelp() [][]key.Binding {
-	return [][]key.Binding{
-		{k.Move, k.Page, k.Top, k.Bottom},
-		{k.Copy, k.CopyRaw, k.Snapshot},
-		{k.Return, k.Quit, k.Help},
+	return fullHelpColumns(k.allBindings(), 3)
+}
+
+func (k fullscreenKeys) allBindings() []key.Binding {
+	return []key.Binding{
+		k.Move, k.Page, k.Top, k.Bottom,
+		k.Copy, k.CopyRaw, k.Snapshot,
+		k.Return, k.Quit, k.Help,
 	}
 }
 
@@ -134,7 +165,7 @@ func (k fullscreenKeys) FullHelp() [][]key.Binding {
 //
 // The launcher filters as you type, so every printable character belongs to the
 // filter and cannot be a command. That rules out "?" for help here, which is why
-// the launcher keeps to a single line of help rather than offering a full view.
+// the launcher keeps to a single line rather than offering a full list.
 type launcherKeys struct {
 	Move        key.Binding
 	Boundary    key.Binding
@@ -156,7 +187,7 @@ func newLauncherKeys() launcherKeys {
 }
 
 func (k launcherKeys) ShortHelp() []key.Binding {
-	return []key.Binding{k.Move, k.RunInTUI, k.RunNormally, k.ClearFilter, k.Quit}
+	return []key.Binding{k.Quit, k.Move, k.RunInTUI, k.RunNormally, k.ClearFilter}
 }
 
 func (k launcherKeys) FullHelp() [][]key.Binding {
