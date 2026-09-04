@@ -2865,8 +2865,9 @@ the following controls to scroll:
 - Mouse wheel
 
 Each task shows how long it ran, counting up while it is running and keeping its
-final duration afterwards. On a narrow terminal the durations are dropped so
-that task names keep their space.
+final duration afterwards. Quick tasks are reported in milliseconds. A task that
+has not started has no duration, which is not the same as a duration of zero. On
+a narrow terminal the durations are dropped so that task names keep their space.
 
 Press `f` to show the selected task's output fullscreen. Incoming output remains
 visible; the view follows it while at the bottom and preserves the current

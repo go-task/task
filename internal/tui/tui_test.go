@@ -8,6 +8,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"testing"
 	"time"
@@ -300,7 +301,7 @@ func TestTUIModelShowsMultipleIndependentRoots(t *testing.T) {
 	m = updateTUIModel(t, m, started(4, 3, "unit"))
 
 	assert.Equal(t, []string{"build", "compile", "test", "unit"}, rowNames(m.taskRows()))
-	list := ansi.Strip(m.taskList(40, 10))
+	list := taskListWithoutDurations(t, m, 40, 10)
 	assert.Contains(t, list, "● build\n└─ ● compile")
 	assert.Contains(t, list, "● test\n└─ ● unit")
 }
@@ -1067,8 +1068,11 @@ func TestShortHelpKeepsTheWayOutOnANarrowTerminal(t *testing.T) {
 func TestFormatDuration(t *testing.T) {
 	t.Parallel()
 
-	// Sub-second timings are noise in a task runner.
-	assert.Empty(t, formatDuration(400*time.Millisecond))
+	// A quick task reports milliseconds rather than nothing, so every row that
+	// ran carries a number.
+	assert.Equal(t, "0ms", formatDuration(0))
+	assert.Equal(t, "3ms", formatDuration(3*time.Millisecond))
+	assert.Equal(t, "400ms", formatDuration(400*time.Millisecond))
 	assert.Equal(t, "3.4s", formatDuration(3400*time.Millisecond))
 	assert.Equal(t, "12s", formatDuration(12*time.Second))
 	assert.Equal(t, "1m35s", formatDuration(95*time.Second))
@@ -1214,4 +1218,31 @@ func TestFooterPairsTheArrowKeys(t *testing.T) {
 	require.Len(t, keys, 8)
 	assert.Equal(t, []string{"↑/↓", "←/→"}, keys[len(keys)-2:], "the arrows are adjacent and last")
 	assert.Equal(t, "pane", bindings[len(bindings)-1].Help().Desc)
+}
+
+// taskListWithoutDurations renders the task pane with the right-aligned
+// duration column trimmed, for assertions about names and tree structure.
+func taskListWithoutDurations(t *testing.T, m tuiModel, width, height int) string {
+	t.Helper()
+	var lines []string
+	for line := range strings.SplitSeq(ansi.Strip(m.taskList(width, height)), "\n") {
+		lines = append(lines, strings.TrimRight(regexp.
+			MustCompile(`\s+\d[\dhms.]*$`).
+			ReplaceAllString(line, ""), " "))
+	}
+	return strings.Join(lines, "\n")
+}
+
+func TestTUIModelReportsNoDurationForTasksThatNeverRan(t *testing.T) {
+	t.Parallel()
+
+	m := newTUIModel(func() {})
+	m = updateTUIModel(t, m, started(1, 0, "build"))
+	m = updateTUIModel(t, m, scheduledUnder(2, 1, 1, "never-attempted"))
+
+	// A task that ran has a duration even if it was instant; one that never
+	// started has none, which is different from a duration of zero.
+	assert.Equal(t, "0ms", m.durationLabel(m.byID[1]))
+	assert.Empty(t, m.durationLabel(m.byID[2]))
+	assert.NotContains(t, ansi.Strip(m.taskList(40, 10)), "never-attempted   0ms")
 }

@@ -213,7 +213,7 @@ func (m tuiModel) taskList(width, height int) string {
 		// The duration is right-aligned so durations line up and can be compared
 		// down the column. It is dropped rather than squeezing the name on a
 		// narrow pane.
-		duration := formatDuration(m.elapsed(row.task))
+		duration := m.durationLabel(row.task)
 		available := width - lipgloss.Width(plainPrefix)
 		durationWidth := 0
 		if duration != "" && available-lipgloss.Width(duration)-1 >= minTaskNameWidth {
@@ -347,17 +347,31 @@ func taskNameStatus(name string, state taskState, width int, showStatus bool) (s
 	return name, status
 }
 
+// durationLabel is how long a task ran, or nothing at all for one that never
+// started. A pending or skipped task has no duration to report, as opposed to a
+// duration of zero.
+func (m tuiModel) durationLabel(task *tuiTask) string {
+	if task.startedAt.IsZero() {
+		return ""
+	}
+	return formatDuration(m.elapsed(task))
+}
+
 // minTaskNameWidth is the room a name needs before a duration may take space
 // from it. Below that, knowing which task a row is matters more than knowing
 // how long it took.
 const minTaskNameWidth = 12
 
 // formatDuration renders how long a task ran, short enough for a narrow pane.
-// Anything under a second is noise in a task runner, so it is left out.
+//
+// Quick tasks are reported in milliseconds rather than rounded away. A task that
+// took three milliseconds spent that time starting a process and doing nothing,
+// which is worth seeing, and a column where only the slow rows carry a number
+// reads as a fault rather than a decision.
 func formatDuration(d time.Duration) string {
 	switch {
 	case d < time.Second:
-		return ""
+		return fmt.Sprintf("%dms", d.Milliseconds())
 	case d < 10*time.Second:
 		return fmt.Sprintf("%.1fs", d.Seconds())
 	case d < time.Minute:
