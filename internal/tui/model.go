@@ -213,7 +213,7 @@ func (m tuiModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case noticeRequestedMsg:
 		return m, m.showNotice(msg.text)
 	case terminalRequestedMsg:
-		handover := &terminalHandover{run: msg.run}
+		handover := &terminalHandover{ui: msg.ui, run: msg.run}
 		return m, tea.Exec(handover, func(execErr error) tea.Msg {
 			if execErr != nil {
 				msg.done <- execErr

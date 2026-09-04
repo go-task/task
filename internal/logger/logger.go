@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/Ladicle/tabwriter"
+	"github.com/charmbracelet/x/ansi"
 	"github.com/fatih/color"
 
 	"github.com/go-task/task/v3/errors"
@@ -208,7 +209,10 @@ func (l *Logger) Prompt(color Color, prompt string, defaultValue string, continu
 		return err
 	}
 
-	input = strings.TrimSpace(strings.ToLower(input))
+	// A terminal may answer a capability query at any moment, and in line mode
+	// its reply lands in what the user typed. Drop escape sequences so they do
+	// not turn a "y" into an unrecognised answer.
+	input = strings.TrimSpace(strings.ToLower(ansi.Strip(input)))
 	if !slices.Contains(continueValues, input) {
 		return ErrPromptCancelled
 	}

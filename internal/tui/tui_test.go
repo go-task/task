@@ -1245,8 +1245,54 @@ func TestTUIModelReportsNoDurationForTasksThatNeverRan(t *testing.T) {
 	m = updateTUIModel(t, m, scheduledUnder(2, 1, 1, "never-attempted"))
 
 	// A task that ran has a duration even if it was instant; one that never
-	// started has none, which is different from a duration of zero.
+	// started has none, which is different from a duration of zero. Pin the
+	// start so the assertion does not depend on how long the test itself took.
+	m.byID[1].startedAt = time.Now()
+	m.byID[1].finishedAt = m.byID[1].startedAt
 	assert.Equal(t, "0ms", m.durationLabel(m.byID[1]))
 	assert.Empty(t, m.durationLabel(m.byID[2]))
 	assert.NotContains(t, ansi.Strip(m.taskList(40, 10)), "never-attempted   0ms")
+}
+
+func TestSystemMessagesGoToTheTerminalWhileTaskHoldsIt(t *testing.T) {
+	t.Parallel()
+
+	var terminal bytes.Buffer
+	ui := &UI{output: &terminal, pending: make(map[uint64]pendingOutput)}
+	writer := &tuiWriter{ui: ui, name: systemTaskName}
+
+	// Normally Task's own messages are collected for the system pane.
+	_, err := writer.Write([]byte("collected\n"))
+	require.NoError(t, err)
+	assert.Empty(t, terminal.String())
+	assert.Contains(t, ui.drainOutput()[0].data, "collected")
+
+	// While Task holds the terminal they go there instead, or a prompt would
+	// wait for an answer to a question nobody was shown.
+	ui.borrowed.Store(&borrowedTerminal{out: &terminal})
+	_, err = writer.Write([]byte("Really run this? [y/N]: "))
+	require.NoError(t, err)
+	assert.Contains(t, terminal.String(), "Really run this?")
+	assert.Empty(t, ui.drainOutput(), "nothing was collected for a pane")
+
+	ui.borrowed.Store(nil)
+	_, err = writer.Write([]byte("collected again\n"))
+	require.NoError(t, err)
+	assert.Contains(t, ui.drainOutput()[0].data, "collected again")
+}
+
+func TestTaskOutputStaysInItsPaneWhileTaskHoldsTheTerminal(t *testing.T) {
+	t.Parallel()
+
+	var terminal bytes.Buffer
+	ui := &UI{output: &terminal, pending: make(map[uint64]pendingOutput)}
+	ui.borrowed.Store(&borrowedTerminal{out: &terminal})
+
+	// A task running in parallel keeps buffering; only Task's own messages are
+	// redirected.
+	writer := &tuiWriter{ui: ui, id: 7, name: "build"}
+	_, err := writer.Write([]byte("still building\n"))
+	require.NoError(t, err)
+	assert.Empty(t, terminal.String())
+	assert.Contains(t, ui.drainOutput()[7].data, "still building")
 }

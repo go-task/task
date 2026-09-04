@@ -50,6 +50,8 @@ type UI struct {
 	programDone chan struct{}
 	// terminalMutex serialises handovers: only one thing can hold the terminal.
 	terminalMutex sync.Mutex
+	// borrowed is set while Task holds the terminal.
+	borrowed atomic.Pointer[borrowedTerminal]
 
 	outputMutex  sync.Mutex
 	pending      map[uint64]pendingOutput
@@ -310,6 +312,11 @@ type tuiWriter struct {
 }
 
 func (w *tuiWriter) Write(p []byte) (int, error) {
+	if w.name == systemTaskName {
+		if borrowed := w.ui.borrowed.Load(); borrowed != nil {
+			return borrowed.out.Write(p)
+		}
+	}
 	data := string(append([]byte(nil), p...))
 	w.ui.enqueueOutput(w.id, w.name, data)
 	return len(p), nil

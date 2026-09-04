@@ -7,6 +7,7 @@ import "io"
 // executor, on another goroutine, so the request travels as a message and the
 // outcome comes back on done.
 type terminalRequestedMsg struct {
+	ui   *UI
 	run  func() error
 	done chan error
 }
@@ -16,8 +17,14 @@ type terminalRequestedMsg struct {
 // what lets Task's prompter start a program of its own: nesting one inside ours
 // would not work, but this is not nested.
 type terminalHandover struct {
+	ui  *UI
 	run func() error
 	err error
+}
+
+// borrowedTerminal is where Task's own messages go while it holds the terminal.
+type borrowedTerminal struct {
+	out io.Writer
 }
 
 func (*terminalHandover) SetStdin(io.Reader)  {}
@@ -28,6 +35,13 @@ func (*terminalHandover) SetStderr(io.Writer) {}
 // mistaken for a failure to hand over the terminal. The real outcome is read
 // from err.
 func (h *terminalHandover) Run() error {
+	// Task's own messages are normally collected into a pane. While it holds
+	// the terminal they belong on the terminal: a confirmation prompt asked
+	// into a pane the user cannot see would hang waiting for an answer to a
+	// question nobody was shown.
+	h.ui.borrowed.Store(&borrowedTerminal{out: h.ui.output})
+	defer h.ui.borrowed.Store(nil)
+
 	h.err = h.run()
 	return nil
 }
@@ -49,7 +63,7 @@ func (t *UI) runInTerminal(fn func() error) error {
 	}
 
 	done := make(chan error, 1)
-	program.Send(terminalRequestedMsg{run: fn, done: done})
+	program.Send(terminalRequestedMsg{ui: t, run: fn, done: done})
 	select {
 	case err := <-done:
 		return err
