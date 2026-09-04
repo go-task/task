@@ -1,7 +1,6 @@
 package ast
 
 import (
-	"fmt"
 	"regexp"
 	"strings"
 
@@ -87,23 +86,24 @@ func (t *Task) WildcardMatch(name string) (bool, []string) {
 	names := append([]string{t.Task}, t.Aliases...)
 
 	for _, taskName := range names {
-		regexStr := fmt.Sprintf("^%s$", strings.ReplaceAll(taskName, "*", "(.*)"))
-		regex := regexp.MustCompile(regexStr)
+		// Without a wildcard the name is a plain string, so skip building a regex
+		if !strings.Contains(taskName, "*") {
+			if taskName == name {
+				return true, nil
+			}
+			continue
+		}
+
+		// Escape the task name so a name like "c++" or "a.b" is matched literally
+		// and does not panic in MustCompile, then turn the escaped "*" back into
+		// the wildcard group
+		pattern := strings.ReplaceAll(regexp.QuoteMeta(taskName), `\*`, "(.*)")
+		regex := regexp.MustCompile("^" + pattern + "$")
 		wildcards := regex.FindStringSubmatch(name)
 
-		if len(wildcards) == 0 {
-			continue
+		if len(wildcards) > 1 {
+			return true, wildcards[1:]
 		}
-
-		// Remove the first match, which is the full string
-		wildcards = wildcards[1:]
-		wildcardCount := strings.Count(taskName, "*")
-
-		if len(wildcards) != wildcardCount {
-			continue
-		}
-
-		return true, wildcards
 	}
 
 	return false, nil
