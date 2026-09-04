@@ -2879,9 +2879,12 @@ Selecting text with the mouse does not work inside the dashboard. A terminal
 discards a selection whenever the screen is repainted, and scrolling either pane
 is a repaint. Three controls get the text out instead:
 
-- `y` copies the selected task's output to the system clipboard as plain text.
-- `Y` copies it with its colours, for pasting somewhere that renders ANSI escape
-  sequences, such as an editor with an ANSI extension.
+- `y` copies the selected task's output to the system clipboard with its ANSI
+  escape sequences stripped, which is what a terminal gives you when you select
+  text by hand.
+- `Y` copies it with those sequences intact, for pasting somewhere that renders
+  them, such as an editor with an ANSI extension. They carry bold, dim and
+  underline as well as colour.
 - `s` prints the output to the terminal and waits for Enter. The text lands in
   your terminal's normal scrollback, where its own scrolling and selection apply
   as they would to any other command output.

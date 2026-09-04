@@ -985,7 +985,7 @@ func TestTUIModelOpensAndClosesTheKeyList(t *testing.T) {
 	require.True(t, m.showHelp)
 	page := ansi.Strip(m.View().Content)
 	// Everything the short footer had no room for must be listed here.
-	for _, expected := range []string{"Y", "copy with colours", "wheel", "click", "launcher", "quit"} {
+	for _, expected := range []string{"Y", "copy output with ANSI codes", "wheel", "click", "launcher", "quit"} {
 		assert.Contains(t, page, expected)
 	}
 	assert.Equal(t, tea.MouseModeNone, m.View().MouseMode)
