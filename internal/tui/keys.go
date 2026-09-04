@@ -93,7 +93,7 @@ func (k dashboardKeys) ShortHelp() []key.Binding {
 		terse(k.Pane, "tab", "pane"),
 		terse(k.Fullscreen, "f", "fullscreen"),
 		terse(k.Copy, "y", "copy"),
-		terse(k.Snapshot, "s", "snapshot"),
+		terse(k.Snapshot, "s", "print"),
 	}
 }
 
@@ -145,7 +145,7 @@ func (k fullscreenKeys) ShortHelp() []key.Binding {
 		terse(k.Move, "↑/↓", "scroll"),
 		terse(k.Return, "f/esc", "back"),
 		terse(k.Copy, "y", "copy"),
-		terse(k.Snapshot, "s", "snapshot"),
+		terse(k.Snapshot, "s", "print"),
 	}
 }
 
