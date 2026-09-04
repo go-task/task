@@ -79,8 +79,14 @@ func newDashboardKeys(outputFocused, canReturnToLauncher bool) dashboardKeys {
 	return keys
 }
 
-// ShortHelp lists the footer keys. Help and quit lead, so the way out is never
-// what a narrow terminal drops.
+// ShortHelp lists the footer keys in order of importance, because the help
+// bubble drops from the end when the line does not fit. Leaving a view comes
+// first: help, quit, and the way back to the launcher. Then moving around, then
+// the actions.
+//
+// The whole line is not expected to fit eighty columns. It does not have to:
+// what matters is that the entries a reader needs to get somewhere else survive,
+// and "?" lists the rest.
 func (k dashboardKeys) ShortHelp() []key.Binding {
 	move := "select"
 	if k.Move.Help().Desc == "scroll the output" {
@@ -89,10 +95,11 @@ func (k dashboardKeys) ShortHelp() []key.Binding {
 	return []key.Binding{
 		terse(k.Help, "?", "help"),
 		terse(k.Quit, "q", "quit"),
+		terse(k.Launcher, "esc/b", "launcher"),
 		terse(k.Move, "↑/↓", move),
-		terse(k.Pane, "tab", "pane"),
-		terse(k.Fullscreen, "f", "fullscreen"),
 		terse(k.Copy, "y", "copy"),
+		terse(k.Fullscreen, "f", "fullscreen"),
+		terse(k.Pane, "tab", "pane"),
 		terse(k.Snapshot, "t", "to terminal"),
 	}
 }
@@ -142,8 +149,8 @@ func (k fullscreenKeys) ShortHelp() []key.Binding {
 	return []key.Binding{
 		terse(k.Help, "?", "help"),
 		terse(k.Quit, "q", "quit"),
-		terse(k.Move, "↑/↓", "scroll"),
 		terse(k.Return, "f/esc", "back"),
+		terse(k.Move, "↑/↓", "scroll"),
 		terse(k.Copy, "y", "copy"),
 		terse(k.Snapshot, "t", "to terminal"),
 	}

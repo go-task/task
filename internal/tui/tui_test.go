@@ -13,7 +13,6 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"charm.land/bubbles/v2/help"
 	tea "charm.land/bubbletea/v2"
 	"charm.land/lipgloss/v2"
 	"github.com/charmbracelet/x/ansi"
@@ -1036,8 +1035,16 @@ func TestDashboardKeysDescribeArrowsByFocus(t *testing.T) {
 	assert.Equal(t, "scroll the output", newDashboardKeys(true, true).Move.Help().Desc)
 
 	// The footer restates them in a word.
-	assert.Equal(t, "select", newDashboardKeys(false, true).ShortHelp()[2].Help().Desc)
-	assert.Equal(t, "scroll", newDashboardKeys(true, true).ShortHelp()[2].Help().Desc)
+	shortDesc := func(outputFocused bool) string {
+		for _, binding := range newDashboardKeys(outputFocused, true).ShortHelp() {
+			if binding.Help().Key == "↑/↓" {
+				return binding.Help().Desc
+			}
+		}
+		return ""
+	}
+	assert.Equal(t, "select", shortDesc(false))
+	assert.Equal(t, "scroll", shortDesc(true))
 }
 
 func TestShortHelpKeepsTheWayOutOnANarrowTerminal(t *testing.T) {
@@ -1145,22 +1152,31 @@ func TestFullHelpUsesTheColumnsThatFit(t *testing.T) {
 	assert.Less(t, wide, narrow, "a narrow terminal should stack into more rows")
 }
 
-func TestFooterFitsEightyColumns(t *testing.T) {
+func TestFooterKeepsTheWayOutAtEightyColumns(t *testing.T) {
 	t.Parallel()
 
-	// Eighty columns is the width worth protecting, and the line has little
-	// room to spare. Widening a label enough to overflow silently drops the
-	// entries at the end, so fail here instead.
+	// The whole line is not expected to fit eighty columns; it is ordered so
+	// that what does fit is what a reader needs to get somewhere else.
 	m := newTUIModel(func() {})
-	for _, keys := range []help.KeyMap{
-		newDashboardKeys(false, true),
-		newDashboardKeys(true, true),
-		newFullscreenKeys(),
-		newLauncherKeys(),
-	} {
-		full := shortHelp(m.help, keys.ShortHelp(), 200)
-		assert.LessOrEqual(t, lipgloss.Width(full), 80,
-			"the footer must fit 80 columns without dropping entries: %s", ansi.Strip(full))
+	dashboard := ansi.Strip(shortHelp(m.help, newDashboardKeys(false, true).ShortHelp(), 80))
+	for _, expected := range []string{"? help", "q quit", "esc/b launcher", "↑/↓ select", "y copy"} {
+		assert.Contains(t, dashboard, expected, "footer at 80 columns: %s", dashboard)
+	}
+
+	full := ansi.Strip(shortHelp(m.help, newFullscreenKeys().ShortHelp(), 80))
+	for _, expected := range []string{"? help", "q quit", "f/esc back"} {
+		assert.Contains(t, full, expected, "fullscreen footer at 80 columns: %s", full)
+	}
+
+	// Truncation drops whole entries: a line that was cut ends at an entry
+	// boundary followed by the ellipsis, never part-way through a word.
+	for _, width := range []int{40, 60, 80, 100} {
+		line := ansi.Strip(shortHelp(m.help, newDashboardKeys(false, true).ShortHelp(), width))
+		assert.LessOrEqual(t, lipgloss.Width(line), width)
+		if strings.HasSuffix(line, "…") {
+			assert.True(t, strings.HasSuffix(line, " …"),
+				"at %d columns the line was cut mid-entry: %s", width, line)
+		}
 	}
 }
 

@@ -482,7 +482,10 @@ func truncateMiddle(s string, width int) string {
 // the keymaps put help and quit first.
 func shortHelp(helpModel help.Model, bindings []key.Binding, width int) string {
 	width = max(width, 1)
-	helpModel.SetWidth(width)
+	// Leave room for the bubble's own ellipsis. Given the exact width it has no
+	// space to place one, and rather than stop it keeps appending, leaving us to
+	// cut a word in half. With the margin it drops whole entries instead.
+	helpModel.SetWidth(max(width-2, 1))
 	return truncateText(helpModel.ShortHelpView(bindings), width)
 }
 
