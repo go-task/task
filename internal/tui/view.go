@@ -3,6 +3,7 @@ package tui
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"charm.land/bubbles/v2/help"
 	"charm.land/bubbles/v2/key"
@@ -211,13 +212,37 @@ func (m tuiModel) taskList(width, height int) string {
 			plainIcon = taskIconText(state) + " "
 		}
 		plainPrefix := row.treePrefix + plainIcon + sharedPrefix
-		name, status := taskNameStatus(m.taskName(row.task), state, width-lipgloss.Width(plainPrefix), m.statusLabels)
+
+		// The duration is right-aligned so durations line up and can be compared
+		// down the column. It is dropped rather than squeezing the name on a
+		// narrow pane.
+		duration := formatDuration(m.elapsed(row.task))
+		available := width - lipgloss.Width(plainPrefix)
+		durationWidth := 0
+		if duration != "" && available-lipgloss.Width(duration)-1 >= minTaskNameWidth {
+			durationWidth = lipgloss.Width(duration) + 1
+		} else {
+			duration = ""
+		}
+		withDuration := func(content string, dim bool) string {
+			if duration == "" {
+				return content
+			}
+			rendered := duration
+			if dim {
+				rendered = tuiHelpStyle.Render(duration)
+			}
+			pad := max(width-lipgloss.Width(content)-lipgloss.Width(duration), 1)
+			return content + strings.Repeat(" ", pad) + rendered
+		}
+
+		name, status := taskNameStatus(m.taskName(row.task), state, available-durationWidth, m.statusLabels)
 		if selected {
 			suffix := ""
 			if status != "" {
 				suffix = " " + status
 			}
-			lines = append(lines, tuiSelectedStyle.Width(width).Render(plainPrefix+name+suffix))
+			lines = append(lines, tuiSelectedStyle.Width(width).Render(withDuration(plainPrefix+name+suffix, false)))
 			continue
 		}
 		if row.task.isRoot {
@@ -230,7 +255,7 @@ func (m tuiModel) taskList(width, height int) string {
 			if status != "" {
 				suffix = " " + taskStateLabel(state, status)
 			}
-			lines = append(lines, prefix+tuiRootStyle.Render(name)+suffix)
+			lines = append(lines, withDuration(prefix+tuiRootStyle.Render(name)+suffix, true))
 			continue
 		}
 		suffix := ""
@@ -242,7 +267,7 @@ func (m tuiModel) taskList(width, height int) string {
 			icon = taskIcon(state) + " "
 		}
 		line := tuiTreeStyle.Render(row.treePrefix) + icon + tuiTreeStyle.Render(sharedPrefix) + name + suffix
-		lines = append(lines, line)
+		lines = append(lines, withDuration(line, true))
 	}
 	return strings.Join(lines, "\n")
 }
@@ -323,6 +348,28 @@ func taskNameStatus(name string, state taskState, width int, showStatus bool) (s
 	status := truncateText(taskStateText(state), statusWidth)
 	name = truncateMiddle(name, max(width-lipgloss.Width(status)-1, 1))
 	return name, status
+}
+
+// minTaskNameWidth is the room a name needs before a duration may take space
+// from it. Below that, knowing which task a row is matters more than knowing
+// how long it took.
+const minTaskNameWidth = 12
+
+// formatDuration renders how long a task ran, short enough for a narrow pane.
+// Anything under a second is noise in a task runner, so it is left out.
+func formatDuration(d time.Duration) string {
+	switch {
+	case d < time.Second:
+		return ""
+	case d < 10*time.Second:
+		return fmt.Sprintf("%.1fs", d.Seconds())
+	case d < time.Minute:
+		return fmt.Sprintf("%ds", int(d.Seconds()))
+	case d < time.Hour:
+		return fmt.Sprintf("%dm%02ds", int(d.Minutes()), int(d.Seconds())%60)
+	default:
+		return fmt.Sprintf("%dh%02dm", int(d.Hours()), int(d.Minutes())%60)
+	}
 }
 
 func taskIconText(state taskState) string {

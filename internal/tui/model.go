@@ -3,6 +3,7 @@ package tui
 import (
 	"context"
 	"strings"
+	"time"
 
 	"charm.land/bubbles/v2/help"
 	"charm.land/bubbles/v2/key"
@@ -49,6 +50,9 @@ type tuiTask struct {
 	state     taskState
 	truncated bool
 
+	startedAt  time.Time
+	finishedAt time.Time
+
 	scrollOffset int
 	followOutput bool
 
@@ -75,7 +79,10 @@ type taskOutputMsg struct {
 	name, data string
 }
 type (
-	noticeExpiredMsg   struct{ id int }
+	noticeExpiredMsg struct{ id int }
+	// elapsedTickMsg redraws running durations. It is only scheduled while a
+	// task is running, so a finished dashboard is completely static.
+	elapsedTickMsg     struct{}
 	noticeRequestedMsg struct{ text string }
 )
 
@@ -112,6 +119,7 @@ type tuiModel struct {
 	fullscreenViewport viewport.Model
 	showHelp           bool
 	help               help.Model
+	ticking            bool
 
 	// notice is transient feedback shown in place of the controls, such as the
 	// result of a copy. noticeID lets a later notice cancel an earlier timer.
@@ -161,13 +169,18 @@ func (m tuiModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case taskStartedMsg:
 		task := m.scheduleTask(msg.task)
 		task.state = taskRunning
+		task.startedAt = time.Now()
 		m.keepSelectionVisible()
-		return m, nil
+		return m, m.startElapsedTicker()
+	case elapsedTickMsg:
+		m.ticking = false
+		return m, m.startElapsedTicker()
 	case taskFinishedMsg:
 		task := m.byID[msg.id]
 		if task == nil {
 			return m, nil
 		}
+		task.finishedAt = time.Now()
 		if errors.Is(msg.err, errTaskSkipped) {
 			task.state = taskSkipped
 		} else if errors.Is(msg.err, context.Canceled) {
@@ -224,6 +237,7 @@ func (m tuiModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				task.state = taskSkipped
 			case taskRunning:
 				task.state = taskCanceled
+				task.finishedAt = time.Now()
 			}
 		}
 		m.done, m.err = true, msg.err
@@ -399,6 +413,37 @@ func (m *tuiModel) requestQuit() tea.Cmd {
 	m.quitting = true
 	m.cancel()
 	return nil
+}
+
+// startElapsedTicker schedules a redraw a second from now, but only while a
+// task is running and only if one is not already pending. A dashboard whose
+// tasks have all finished draws nothing and costs nothing.
+func (m *tuiModel) startElapsedTicker() tea.Cmd {
+	if m.ticking || !m.anyRunning() {
+		return nil
+	}
+	m.ticking = true
+	return tea.Tick(time.Second, func(time.Time) tea.Msg { return elapsedTickMsg{} })
+}
+
+func (m tuiModel) anyRunning() bool {
+	for _, task := range m.tasks {
+		if task.state == taskRunning {
+			return true
+		}
+	}
+	return false
+}
+
+// elapsed is how long a task ran, or has been running so far.
+func (m tuiModel) elapsed(task *tuiTask) time.Duration {
+	if task.startedAt.IsZero() {
+		return 0
+	}
+	if task.finishedAt.IsZero() {
+		return time.Since(task.startedAt)
+	}
+	return task.finishedAt.Sub(task.startedAt)
 }
 
 func returnToLauncher() tea.Msg {

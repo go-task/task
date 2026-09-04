@@ -2850,6 +2850,8 @@ Canceled tasks were interrupted, while skipped tasks were never attempted after
 an earlier sequential task failed. Pass `--tui-status labels` to replace the
 icons with text labels.
 
+Press `?` at any time to see every key available in the current view.
+
 Use Tab or the left/right arrow keys to switch between the task navigator and
 the output pane. Clicking either pane also focuses it.
 
@@ -2861,6 +2863,10 @@ the following controls to scroll:
 - Page Up and Page Down
 - `g` and `G` to jump to the beginning or end
 - Mouse wheel
+
+Each task shows how long it ran, counting up while it is running and keeping its
+final duration afterwards. On a narrow terminal the durations are dropped so
+that task names keep their space.
 
 Press `f` to show the selected task's output fullscreen. Incoming output remains
 visible; the view follows it while at the bottom and preserves the current

@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 	"unicode/utf8"
 
 	tea "charm.land/bubbletea/v2"
@@ -1048,4 +1049,70 @@ func TestShortHelpKeepsTheWayOutOnANarrowTerminal(t *testing.T) {
 			assert.Contains(t, ansi.Strip(line), "? keys", "at %d columns", width)
 		}
 	}
+}
+
+func TestFormatDuration(t *testing.T) {
+	t.Parallel()
+
+	// Sub-second timings are noise in a task runner.
+	assert.Empty(t, formatDuration(400*time.Millisecond))
+	assert.Equal(t, "3.4s", formatDuration(3400*time.Millisecond))
+	assert.Equal(t, "12s", formatDuration(12*time.Second))
+	assert.Equal(t, "1m35s", formatDuration(95*time.Second))
+	assert.Equal(t, "2h05m", formatDuration(125*time.Minute))
+}
+
+func TestTUIModelShowsHowLongTasksTook(t *testing.T) {
+	t.Parallel()
+
+	m := newTUIModel(func() {})
+	m = updateTUIModel(t, m, started(1, 0, "build"))
+	m = updateTUIModel(t, m, startedUnder(2, 1, 1, "compile"))
+
+	now := time.Now()
+	m.byID[1].startedAt = now.Add(-95 * time.Second)
+	m.byID[2].startedAt = now.Add(-3400 * time.Millisecond)
+	m.byID[2].finishedAt = now
+
+	pane := ansi.Strip(m.taskList(34, 8))
+	assert.Contains(t, pane, "1m35s", "a running task counts up")
+	assert.Contains(t, pane, "3.4s", "a finished task keeps its final duration")
+
+	// A narrow pane keeps the names and drops the durations.
+	assert.NotContains(t, ansi.Strip(m.taskList(18, 8)), "1m35s")
+}
+
+func TestTUIModelTicksOnlyWhileTasksRun(t *testing.T) {
+	t.Parallel()
+
+	m := newTUIModel(func() {})
+	next, cmd := m.Update(started(1, 0, "build"))
+	m = next.(tuiModel)
+	require.NotNil(t, cmd, "a running task schedules a redraw")
+	assert.True(t, m.ticking)
+
+	// A second start must not stack a second ticker.
+	next, cmd = m.Update(startedUnder(2, 1, 1, "compile"))
+	m = next.(tuiModel)
+	assert.Nil(t, cmd, "only one ticker at a time")
+
+	// Once everything has finished the ticker stops, so an idle dashboard is
+	// completely static.
+	m = updateTUIModel(t, m, taskFinishedMsg{id: 1})
+	m = updateTUIModel(t, m, taskFinishedMsg{id: 2})
+	next, cmd = m.Update(elapsedTickMsg{})
+	m = next.(tuiModel)
+	assert.Nil(t, cmd)
+	assert.False(t, m.ticking)
+}
+
+func TestTUIModelStopsTheClockOnCancelledTasks(t *testing.T) {
+	t.Parallel()
+
+	m := newTUIModel(func() {})
+	m = updateTUIModel(t, m, started(1, 0, "slow"))
+	m = updateTUIModel(t, m, executionDoneMsg{})
+
+	require.Equal(t, taskCanceled, m.byID[1].state)
+	assert.False(t, m.byID[1].finishedAt.IsZero(), "a cancelled task must stop counting up")
 }
