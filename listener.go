@@ -1,10 +1,6 @@
 package task
 
-import (
-	"io"
-
-	"github.com/go-task/task/v3/errors"
-)
+import "io"
 
 // Invocation identifies one runtime call to a task. IDs are unique within an
 // Executor, including repeated calls to the same task.
@@ -15,11 +11,37 @@ type Invocation struct {
 	Name     string
 }
 
-// ErrSkipped is reported to a Listener's TaskFinished when Task decided not to
-// run a call at all -- because the task is not for the current platform, or its
-// "if" condition was not met. It is never returned to the caller of Run: from
-// Task's point of view a skipped call is not a failure.
-var ErrSkipped = errors.New("task: skipped")
+// TaskResult is how a call ended.
+type TaskResult uint8
+
+const (
+	// TaskSucceeded is the zero value so that the outcome of a call that
+	// reported no error needs no further interpretation.
+	TaskSucceeded TaskResult = iota
+	TaskFailed
+	// TaskCanceled is a call interrupted before it could finish, by a failing
+	// sibling under fail-fast or by the caller cancelling the context.
+	TaskCanceled
+	// TaskSkipped is a call Task chose not to run at all: the task is not for
+	// the current platform, or its "if" condition was not met. Skipping is not
+	// a failure, and Run returns no error for it.
+	TaskSkipped
+)
+
+func (r TaskResult) String() string {
+	switch r {
+	case TaskSucceeded:
+		return "succeeded"
+	case TaskFailed:
+		return "failed"
+	case TaskCanceled:
+		return "canceled"
+	case TaskSkipped:
+		return "skipped"
+	default:
+		return "unknown"
+	}
+}
 
 // Listener observes task execution and may take over the terminal while it
 // runs. It is optional: an Executor without one behaves exactly as before.
@@ -34,10 +56,11 @@ type Listener interface {
 	TaskScheduled(Invocation)
 	// TaskStarted reports that a call began executing its deps and commands.
 	TaskStarted(Invocation)
-	// TaskFinished reports the outcome of a call. A nil error means success; an
-	// error wrapping context.Canceled means the call was interrupted, and
-	// ErrSkipped means Task chose not to run it.
-	TaskFinished(id uint64, err error)
+	// TaskFinished reports how a call ended. err carries the detail behind a
+	// TaskFailed or TaskCanceled result and is nil otherwise; classify on the
+	// result rather than on whether err is nil, because what a killed process
+	// reports differs between platforms.
+	TaskFinished(id uint64, result TaskResult, err error)
 	// TaskJoined reports a call that waits on the execution owned by ownerID
 	// instead of running its own. It produces no output of its own.
 	TaskJoined(id, ownerID uint64)
@@ -64,9 +87,9 @@ func (e *Executor) notifyStarted(invocation Invocation) {
 	}
 }
 
-func (e *Executor) notifyFinished(id uint64, err error) {
+func (e *Executor) notifyFinished(id uint64, result TaskResult, err error) {
 	if e.Listener != nil {
-		e.Listener.TaskFinished(id, err)
+		e.Listener.TaskFinished(id, result, err)
 	}
 }
 

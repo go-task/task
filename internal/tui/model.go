@@ -9,8 +9,6 @@ import (
 	"charm.land/bubbles/v2/key"
 	"charm.land/bubbles/v2/viewport"
 	tea "charm.land/bubbletea/v2"
-
-	"github.com/go-task/task/v3/errors"
 )
 
 type taskState uint8
@@ -65,8 +63,9 @@ type (
 	taskScheduledMsg struct{ task taskInvocation }
 	taskStartedMsg   struct{ task taskInvocation }
 	taskFinishedMsg  struct {
-		id  uint64
-		err error
+		id     uint64
+		result taskResult
+		err    error
 	}
 )
 
@@ -181,14 +180,15 @@ func (m tuiModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, nil
 		}
 		task.finishedAt = time.Now()
-		if errors.Is(msg.err, errTaskSkipped) {
+		switch msg.result {
+		case resultSkipped:
 			task.state = taskSkipped
-		} else if errors.Is(msg.err, context.Canceled) {
+		case resultCanceled:
 			task.state = taskCanceled
-		} else if msg.err != nil {
+		case resultFailed:
 			task.state = taskFailed
 			m.appendFailure(task, msg.err)
-		} else {
+		case resultSucceeded:
 			task.state = taskSucceeded
 		}
 		return m, nil

@@ -7,57 +7,49 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
-func TestFinishError(t *testing.T) {
+func TestTaskResult(t *testing.T) {
 	t.Parallel()
 
-	liveCtx := context.Background()
-	canceledCtx, cancel := context.WithCancel(context.Background())
+	live := context.Background()
+	canceled, cancel := context.WithCancel(context.Background())
 	cancel()
 
-	timeout := errors.New("task timed out")
-	timedOutCtx, cancelTimedOut := context.WithCancelCause(context.Background())
-	cancelTimedOut(timeout)
-	t.Cleanup(func() { cancelTimedOut(nil) })
+	failure := errors.New("exit status 1")
 
-	// A killed process reports the context error on Unix but a plain exit status
-	// on Windows, so both shapes must classify as cancellation.
-	unixShape := fmt.Errorf("running command: %w", context.Canceled)
-	windowsShape := errors.New("exit status 1")
+	tests := []struct {
+		name    string
+		ctx     context.Context
+		skipped bool
+		err     error
+		want    TaskResult
+	}{
+		{"no error", live, false, nil, TaskSucceeded},
+		{"failed", live, false, failure, TaskFailed},
+		{"skipped", live, true, nil, TaskSkipped},
+		// A killed process reports the context error on Unix but a plain exit
+		// status on Windows, so the context decides, not the error.
+		{"killed, reported as a context error", canceled, false, fmt.Errorf("run: %w", context.Canceled), TaskCanceled},
+		{"killed, reported as an exit status", canceled, false, failure, TaskCanceled},
+		// Succeeding in a context that is already done is still success.
+		{"finished before cancellation landed", canceled, false, nil, TaskSucceeded},
+		// Skipping wins: Task chose not to run it, so there is nothing to cancel.
+		{"skipped in a cancelled context", canceled, true, nil, TaskSkipped},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			assert.Equal(t, test.want, taskResult(test.ctx, test.skipped, test.err))
+		})
+	}
+}
 
-	t.Run("succeeded", func(t *testing.T) {
-		t.Parallel()
-		assert.NoError(t, finishError(canceledCtx, nil))
-	})
+func TestTaskResultString(t *testing.T) {
+	t.Parallel()
 
-	t.Run("failed while the context was live", func(t *testing.T) {
-		t.Parallel()
-		err := errors.New("exit status 1")
-		assert.Equal(t, err, finishError(liveCtx, err))
-	})
-
-	t.Run("canceled reported by the interpreter", func(t *testing.T) {
-		t.Parallel()
-		got := finishError(canceledCtx, unixShape)
-		require.ErrorIs(t, got, context.Canceled)
-		// Already carries the cause, so it is passed through unwrapped.
-		assert.Equal(t, unixShape, got)
-	})
-
-	t.Run("canceled reported as a plain exit status", func(t *testing.T) {
-		t.Parallel()
-		got := finishError(canceledCtx, windowsShape)
-		require.ErrorIs(t, got, context.Canceled)
-		assert.ErrorIs(t, got, windowsShape)
-		assert.Contains(t, got.Error(), "exit status 1")
-	})
-
-	t.Run("cancellation cause wins over the generic error", func(t *testing.T) {
-		t.Parallel()
-		got := finishError(timedOutCtx, windowsShape)
-		require.ErrorIs(t, got, timeout)
-		assert.ErrorIs(t, got, windowsShape)
-	})
+	assert.Equal(t, "succeeded", TaskSucceeded.String())
+	assert.Equal(t, "failed", TaskFailed.String())
+	assert.Equal(t, "canceled", TaskCanceled.String())
+	assert.Equal(t, "skipped", TaskSkipped.String())
 }

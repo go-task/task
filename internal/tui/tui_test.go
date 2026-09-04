@@ -54,7 +54,7 @@ func TestTUIModelTracksTasksAndOutput(t *testing.T) {
 	m = updateTUIModel(t, m, taskOutputMsg{id: 2, name: "build", data: "compiling\r\ndone\r"})
 	m = updateTUIModel(t, m, started(3, 1, "test"))
 	m = updateTUIModel(t, m, taskFinishedMsg{id: 2})
-	m = updateTUIModel(t, m, taskFinishedMsg{id: 3, err: errors.New("failed")})
+	m = updateTUIModel(t, m, taskFinishedMsg{id: 3, result: resultFailed, err: errors.New("failed")})
 
 	require.Len(t, m.tasks, 3)
 	assert.Equal(t, taskSucceeded, m.byID[2].state)
@@ -86,9 +86,9 @@ func TestTUIModelDistinguishesCanceledTasksAndShowsStatusWords(t *testing.T) {
 	m = updateTUIModel(t, m, started(4, 1, "successful-task"))
 	m = updateTUIModel(t, m, taskFinishedMsg{id: 4})
 	m = updateTUIModel(t, m, started(5, 1, "failed-task"))
-	m = updateTUIModel(t, m, taskFinishedMsg{id: 5, err: errors.New("failed")})
+	m = updateTUIModel(t, m, taskFinishedMsg{id: 5, result: resultFailed, err: errors.New("failed")})
 	m = updateTUIModel(t, m, started(6, 1, "canceled-task"))
-	m = updateTUIModel(t, m, taskFinishedMsg{id: 6, err: fmt.Errorf("wrapped: %w", context.Canceled)})
+	m = updateTUIModel(t, m, taskFinishedMsg{id: 6, result: resultCanceled})
 
 	assert.Equal(t, taskCanceled, m.byID[6].state)
 	assert.Equal(t, "failed\n", m.byID[5].output)
@@ -176,7 +176,7 @@ func TestTUIModelKeepsRepeatedTaskCallsSeparate(t *testing.T) {
 	m = updateTUIModel(t, m, started(3, 1, "worker"))
 	m = updateTUIModel(t, m, taskOutputMsg{id: 2, name: "worker", data: "first"})
 	m = updateTUIModel(t, m, taskOutputMsg{id: 3, name: "worker", data: " second"})
-	m = updateTUIModel(t, m, taskFinishedMsg{id: 2, err: errors.New("failed")})
+	m = updateTUIModel(t, m, taskFinishedMsg{id: 2, result: resultFailed, err: errors.New("failed")})
 	m = updateTUIModel(t, m, taskFinishedMsg{id: 3})
 
 	require.Len(t, m.tasks, 3)
@@ -657,7 +657,7 @@ func TestTUIModelShowsSkippedCallsAsSkipped(t *testing.T) {
 	m := newTUIModel(func() {})
 	m = updateTUIModel(t, m, started(1, 0, "build"))
 	m = updateTUIModel(t, m, scheduledUnder(2, 1, 1, "other-platform"))
-	m = updateTUIModel(t, m, taskFinishedMsg{id: 2, err: errTaskSkipped})
+	m = updateTUIModel(t, m, taskFinishedMsg{id: 2, result: resultSkipped})
 
 	assert.Equal(t, taskSkipped, m.byID[2].state)
 	// A skipped call is not a failure, so its error is not written to its output.
@@ -670,7 +670,7 @@ func TestTUIModelShowsCallsThatNeverCompiled(t *testing.T) {
 	m := newTUIModel(func() {})
 	m = updateTUIModel(t, m, started(1, 0, "build"))
 	m = updateTUIModel(t, m, scheduledUnder(2, 1, 1, "typoo"))
-	m = updateTUIModel(t, m, taskFinishedMsg{id: 2, err: errors.New(`task: Task "typoo" does not exist`)})
+	m = updateTUIModel(t, m, taskFinishedMsg{id: 2, result: resultFailed, err: errors.New(`task: Task "typoo" does not exist`)})
 
 	assert.Equal(t, taskFailed, m.byID[2].state)
 	assert.Contains(t, rowNames(m.taskRows()), "typoo")

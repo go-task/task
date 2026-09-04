@@ -2,7 +2,6 @@ package task_test
 
 import (
 	"bytes"
-	"context"
 	"io"
 	"os"
 	"path/filepath"
@@ -133,7 +132,7 @@ tasks:
 		byName[invocation.Name] = invocation
 	}
 	require.Contains(t, byName, "slow")
-	assert.ErrorIs(t, recorder.finishErrors[byName["slow"].ID], context.Canceled)
+	assert.Equal(t, task.TaskCanceled, recorder.finishResults[byName["slow"].ID])
 }
 
 func TestTaskLifecycleSchedulesAllRequestedRootsBeforeExecution(t *testing.T) {
@@ -207,16 +206,18 @@ tasks:
 	lint := recorder.scheduled[0]
 	assert.Equal(t, lint.ID, recorder.finished[0])
 	assert.Error(t, recorder.finishErrors[lint.ID])
+	assert.Equal(t, task.TaskFailed, recorder.finishResults[lint.ID])
 }
 
 type lifecycleRecorder struct {
-	mutex        sync.Mutex
-	scheduled    []task.Invocation
-	started      []task.Invocation
-	finished     []uint64
-	outputs      map[uint64]*bytes.Buffer
-	joined       map[uint64]uint64
-	finishErrors map[uint64]error
+	mutex         sync.Mutex
+	scheduled     []task.Invocation
+	started       []task.Invocation
+	finished      []uint64
+	outputs       map[uint64]*bytes.Buffer
+	joined        map[uint64]uint64
+	finishErrors  map[uint64]error
+	finishResults map[uint64]task.TaskResult
 
 	scheduledAtFirstStart int
 }
@@ -252,14 +253,16 @@ func (r *lifecycleRecorder) TaskScheduled(invocation task.Invocation) {
 	r.scheduled = append(r.scheduled, invocation)
 }
 
-func (r *lifecycleRecorder) TaskFinished(id uint64, err error) {
+func (r *lifecycleRecorder) TaskFinished(id uint64, result task.TaskResult, err error) {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
 	r.finished = append(r.finished, id)
 	if r.finishErrors == nil {
 		r.finishErrors = make(map[uint64]error)
+		r.finishResults = make(map[uint64]task.TaskResult)
 	}
 	r.finishErrors[id] = err
+	r.finishResults[id] = result
 }
 
 func (r *lifecycleRecorder) TaskJoined(id, ownerID uint64) {
@@ -370,6 +373,7 @@ tasks:
 	require.Contains(t, byName, "typoo")
 	err := recorder.finishErrors[byName["typoo"].ID]
 	require.Error(t, err)
+	assert.Equal(t, task.TaskFailed, recorder.finishResults[byName["typoo"].ID])
 	assert.Contains(t, err.Error(), `Task "typoo" does not exist`)
 }
 
@@ -415,8 +419,9 @@ tasks:
 	}
 	for _, name := range []string{"other-platform", "condition-not-met"} {
 		require.Contains(t, byName, name)
-		assert.ErrorIs(t, recorder.finishErrors[byName[name].ID], task.ErrSkipped, name)
+		assert.Equal(t, task.TaskSkipped, recorder.finishResults[byName[name].ID], name)
+		assert.NoError(t, recorder.finishErrors[byName[name].ID], "skipping is not a failure")
 	}
 	require.Contains(t, byName, "always")
-	assert.NoError(t, recorder.finishErrors[byName["always"].ID])
+	assert.Equal(t, task.TaskSucceeded, recorder.finishResults[byName["always"].ID])
 }

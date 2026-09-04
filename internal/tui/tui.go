@@ -25,8 +25,15 @@ const (
 // using "task" as a local variable name without shadowing the package.
 type taskInvocation = task.Invocation
 
-// errTaskSkipped is aliased for the same reason.
-var errTaskSkipped = task.ErrSkipped
+// taskResult and its values are aliased for the same reason.
+type taskResult = task.TaskResult
+
+const (
+	resultSucceeded = task.TaskSucceeded
+	resultFailed    = task.TaskFailed
+	resultCanceled  = task.TaskCanceled
+	resultSkipped   = task.TaskSkipped
+)
 
 // UI captures task lifecycle and output events for the interactive interface.
 type UI struct {
@@ -100,8 +107,8 @@ func (t *UI) TaskStarted(invocation task.Invocation) {
 	t.send(taskStartedMsg{task: invocation})
 }
 
-func (t *UI) TaskFinished(id uint64, err error) {
-	t.send(taskFinishedMsg{id: id, err: err})
+func (t *UI) TaskFinished(id uint64, result taskResult, err error) {
+	t.send(taskFinishedMsg{id: id, result: result, err: err})
 }
 
 func (t *UI) TaskJoined(id, ownerID uint64) {
