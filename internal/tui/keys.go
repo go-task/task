@@ -59,7 +59,7 @@ func newDashboardKeys(outputFocused, canReturnToLauncher bool) dashboardKeys {
 	}
 	keys := dashboardKeys{
 		Move:       move,
-		Pane:       key.NewBinding(key.WithKeys("tab", "shift+tab", "left", "right", "h", "l"), key.WithHelp("tab/←/→", "switch pane")),
+		Pane:       key.NewBinding(key.WithKeys("tab", "shift+tab", "left", "right", "h", "l"), key.WithHelp("←/→/tab", "switch pane")),
 		Click:      click,
 		Wheel:      key.NewBinding(key.WithKeys(mouseHelpKey), key.WithHelp("wheel", "scroll the output")),
 		Page:       key.NewBinding(key.WithKeys("pgup", "pgdown"), key.WithHelp("pgup/pgdn", "scroll a page")),
@@ -81,8 +81,9 @@ func newDashboardKeys(outputFocused, canReturnToLauncher bool) dashboardKeys {
 
 // ShortHelp lists the footer keys in order of importance, because the help
 // bubble drops from the end when the line does not fit. Leaving a view comes
-// first: help, quit, and the way back to the launcher. Then moving around, then
-// the actions.
+// first: help, quit, and the way back to the launcher. Then the actions, which
+// are the part nobody can guess. Moving around comes last, and the two arrow
+// entries sit together: vertical moves the selection, horizontal moves panes.
 //
 // The whole line is not expected to fit eighty columns. It does not have to:
 // what matters is that the entries a reader needs to get somewhere else survive,
@@ -96,11 +97,11 @@ func (k dashboardKeys) ShortHelp() []key.Binding {
 		terse(k.Help, "?", "help"),
 		terse(k.Quit, "q", "quit"),
 		terse(k.Launcher, "esc/b", "launcher"),
-		terse(k.Move, "↑/↓", move),
 		terse(k.Copy, "y", "copy"),
 		terse(k.Fullscreen, "f", "fullscreen"),
-		terse(k.Pane, "tab", "pane"),
 		terse(k.Snapshot, "t", "to terminal"),
+		terse(k.Move, "↑/↓", move),
+		terse(k.Pane, "←/→", "pane"),
 	}
 }
 
@@ -150,9 +151,9 @@ func (k fullscreenKeys) ShortHelp() []key.Binding {
 		terse(k.Help, "?", "help"),
 		terse(k.Quit, "q", "quit"),
 		terse(k.Return, "f/esc", "back"),
-		terse(k.Move, "↑/↓", "scroll"),
 		terse(k.Copy, "y", "copy"),
 		terse(k.Snapshot, "t", "to terminal"),
+		terse(k.Move, "↑/↓", "scroll"),
 	}
 }
 

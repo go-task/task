@@ -474,19 +474,40 @@ func truncateMiddle(s string, width int) string {
 	return ansi.Cut(s, 0, left) + "…" + ansi.Cut(s, stringWidth-right, stringWidth)
 }
 
-// shortHelp renders one line of key hints, clamped to width.
+// shortHelp renders one line of key hints, dropping whole entries from the end
+// when they do not fit and marking the cut with an ellipsis.
 //
-// Clamping is ours to do. The help bubble is asked to fit the width but does
-// not guarantee it: when there is no room even for its ellipsis it keeps
-// appending items, overflowing the screen. It drops from the end, which is why
-// the keymaps put help and quit first.
+// The help bubble's own ShortHelpView cannot do this. It only drops an entry
+// when there is room to place its ellipsis, and otherwise keeps appending, so
+// it overflows the width it was given and leaves a word cut in half. Its styles
+// and separator are still used, so the line matches the full key list.
 func shortHelp(helpModel help.Model, bindings []key.Binding, width int) string {
 	width = max(width, 1)
-	// Leave room for the bubble's own ellipsis. Given the exact width it has no
-	// space to place one, and rather than stop it keeps appending, leaving us to
-	// cut a word in half. With the margin it drops whole entries instead.
-	helpModel.SetWidth(max(width-2, 1))
-	return truncateText(helpModel.ShortHelpView(bindings), width)
+	styles := helpModel.Styles
+	separator := styles.ShortSeparator.Inline(true).Render(helpModel.ShortSeparator)
+	ellipsis := " " + styles.Ellipsis.Inline(true).Render(helpModel.Ellipsis)
+
+	var line strings.Builder
+	used := 0
+	for _, binding := range bindings {
+		if !binding.Enabled() {
+			continue
+		}
+		entry := styles.ShortKey.Inline(true).Render(binding.Help().Key) + " " +
+			styles.ShortDesc.Inline(true).Render(binding.Help().Desc)
+		if used > 0 {
+			entry = separator + entry
+		}
+		if used+lipgloss.Width(entry) > width {
+			if used+lipgloss.Width(ellipsis) <= width {
+				line.WriteString(ellipsis)
+			}
+			break
+		}
+		line.WriteString(entry)
+		used += lipgloss.Width(entry)
+	}
+	return truncateText(line.String(), width)
 }
 
 // fullHelp renders the key list in as many columns as the width allows, down to

@@ -1158,8 +1158,10 @@ func TestFooterKeepsTheWayOutAtEightyColumns(t *testing.T) {
 	// The whole line is not expected to fit eighty columns; it is ordered so
 	// that what does fit is what a reader needs to get somewhere else.
 	m := newTUIModel(func() {})
+	// The arrow keys are deliberately last: they are the part of a TUI a reader
+	// can guess, so they are what an eighty column terminal gives up.
 	dashboard := ansi.Strip(shortHelp(m.help, newDashboardKeys(false, true).ShortHelp(), 80))
-	for _, expected := range []string{"? help", "q quit", "esc/b launcher", "↑/↓ select", "y copy"} {
+	for _, expected := range []string{"? help", "q quit", "esc/b launcher", "y copy", "t to terminal"} {
 		assert.Contains(t, dashboard, expected, "footer at 80 columns: %s", dashboard)
 	}
 
@@ -1174,8 +1176,12 @@ func TestFooterKeepsTheWayOutAtEightyColumns(t *testing.T) {
 		line := ansi.Strip(shortHelp(m.help, newDashboardKeys(false, true).ShortHelp(), width))
 		assert.LessOrEqual(t, lipgloss.Width(line), width)
 		if strings.HasSuffix(line, "…") {
+			// A trimmed line ends at an entry boundary, never part-way through a
+			// word and never on a dangling separator.
 			assert.True(t, strings.HasSuffix(line, " …"),
 				"at %d columns the line was cut mid-entry: %s", width, line)
+			assert.NotContains(t, line, "• …",
+				"at %d columns the line ends on a separator: %s", width, line)
 		}
 	}
 }
@@ -1192,4 +1198,20 @@ func TestPrintToTerminalIsBoundToT(t *testing.T) {
 
 	_, cmd = m.Update(tea.KeyPressMsg{Code: 's', Text: "s"})
 	assert.Nil(t, cmd, "s no longer does anything")
+}
+
+func TestFooterPairsTheArrowKeys(t *testing.T) {
+	t.Parallel()
+
+	// Vertical arrows move the selection and horizontal arrows move panes, so
+	// the two entries sit next to each other rather than either being described
+	// as tab.
+	bindings := newDashboardKeys(false, true).ShortHelp()
+	var keys []string
+	for _, binding := range bindings {
+		keys = append(keys, binding.Help().Key)
+	}
+	require.Len(t, keys, 8)
+	assert.Equal(t, []string{"↑/↓", "←/→"}, keys[len(keys)-2:], "the arrows are adjacent and last")
+	assert.Equal(t, "pane", bindings[len(bindings)-1].Help().Desc)
 }
