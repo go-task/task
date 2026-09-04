@@ -140,3 +140,33 @@ tasks:
         done
         printf "\rDownloading... done   \n"
         echo "finished"
+
+  prompt-vars-example:
+    desc: Required variables, asked for up front when run with --interactive
+    requires:
+      vars:
+        - RELEASE_NAME
+        - name: ENVIRONMENT
+          enum: [development, staging, production]
+    cmds:
+      - echo "releasing {{.RELEASE_NAME}} to {{.ENVIRONMENT}}"
+
+  prompt-vars-midrun-example:
+    desc: A sub-task whose variables are only asked for once the run reaches it
+    cmds:
+      - echo "this runs first, in the dashboard"
+      - task: needs-a-variable
+      - echo "and this runs after the prompt"
+
+  needs-a-variable:
+    internal: true
+    requires:
+      vars: [TICKET]
+    cmds:
+      - echo "working on {{.TICKET}}"
+
+  confirm-example:
+    desc: A confirmation Task asks for before running the task
+    prompt: Really run the example?
+    cmds:
+      - echo "confirmed"
