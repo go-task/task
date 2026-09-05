@@ -44,7 +44,6 @@ type dashboardKeys struct {
 	Fullscreen key.Binding
 	Copy       key.Binding
 	CopyRaw    key.Binding
-	Snapshot   key.Binding
 	Save       key.Binding
 	SaveAll    key.Binding
 	Navigator  key.Binding
@@ -71,7 +70,6 @@ func newDashboardKeys(outputFocused, canReturnToLauncher bool) dashboardKeys {
 		Fullscreen: key.NewBinding(key.WithKeys("f"), key.WithHelp("f", "output fullscreen")),
 		Copy:       key.NewBinding(key.WithKeys("y"), key.WithHelp("y", "copy output without ANSI codes")),
 		CopyRaw:    key.NewBinding(key.WithKeys("Y"), key.WithHelp("Y", "copy output with ANSI codes")),
-		Snapshot:   key.NewBinding(key.WithKeys("t"), key.WithHelp("t", "print output to terminal")),
 		Save:       key.NewBinding(key.WithKeys("s"), key.WithHelp("s", "save output to a file")),
 		SaveAll:    key.NewBinding(key.WithKeys("S"), key.WithHelp("S", "save every output to a folder")),
 		Navigator:  key.NewBinding(key.WithKeys("n"), key.WithHelp("n", "switch task view: tree or list")),
@@ -105,7 +103,6 @@ func (k dashboardKeys) ShortHelp() []key.Binding {
 		terse(k.Launcher, "esc/b", "launcher"),
 		terse(k.Copy, "y", "copy"),
 		terse(k.Fullscreen, "f", "fullscreen"),
-		terse(k.Snapshot, "t", "to terminal"),
 		terse(k.Save, "s", "save"),
 		terse(k.Move, "↑/↓", move),
 		terse(k.Pane, "←/→", "pane"),
@@ -116,26 +113,25 @@ func (k dashboardKeys) allBindings() []key.Binding {
 	return []key.Binding{
 		k.Move, k.Pane, k.Click, k.Wheel, k.Page,
 		k.Top, k.Bottom, k.Fullscreen, k.Copy, k.CopyRaw,
-		k.Snapshot, k.Save, k.SaveAll, k.Navigator, k.Launcher, k.Quit, k.Help,
+		k.Save, k.SaveAll, k.Navigator, k.Launcher, k.Quit, k.Help,
 	}
 }
 
 // fullscreenKeys are the bindings of the single-pane output view.
 type fullscreenKeys struct {
-	Move     key.Binding
-	Select   key.Binding
-	Cancel   key.Binding
-	Page     key.Binding
-	Top      key.Binding
-	Bottom   key.Binding
-	Copy     key.Binding
-	CopyRaw  key.Binding
-	Snapshot key.Binding
-	Save     key.Binding
-	SaveAll  key.Binding
-	Return   key.Binding
-	Quit     key.Binding
-	Help     key.Binding
+	Move    key.Binding
+	Select  key.Binding
+	Cancel  key.Binding
+	Page    key.Binding
+	Top     key.Binding
+	Bottom  key.Binding
+	Copy    key.Binding
+	CopyRaw key.Binding
+	Save    key.Binding
+	SaveAll key.Binding
+	Return  key.Binding
+	Quit    key.Binding
+	Help    key.Binding
 }
 
 // newFullscreenKeys describes the single-pane output view. What the copy keys
@@ -156,20 +152,19 @@ func newFullscreenKeys(selecting bool) fullscreenKeys {
 		cancel.SetEnabled(true)
 	}
 	return fullscreenKeys{
-		Move:     key.NewBinding(key.WithKeys("up", "down", "k", "j"), key.WithHelp("↑/↓", "move the line cursor")),
-		Select:   selectHelp,
-		Cancel:   cancel,
-		Page:     key.NewBinding(key.WithKeys("pgup", "pgdown"), key.WithHelp("pgup/pgdn", "move a page")),
-		Top:      key.NewBinding(key.WithKeys("home", "g"), key.WithHelp("g", "jump to start")),
-		Bottom:   key.NewBinding(key.WithKeys("end", "G"), key.WithHelp("G", "jump to end")),
-		Copy:     copyHelp,
-		CopyRaw:  copyRawHelp,
-		Snapshot: key.NewBinding(key.WithKeys("t"), key.WithHelp("t", "print output to terminal")),
-		Save:     key.NewBinding(key.WithKeys("s"), key.WithHelp("s", "save output to a file")),
-		SaveAll:  key.NewBinding(key.WithKeys("S"), key.WithHelp("S", "save every output to a folder")),
-		Return:   key.NewBinding(key.WithKeys("f", "esc"), key.WithHelp("f/esc", "back to panes")),
-		Quit:     key.NewBinding(key.WithKeys("q", "ctrl+c"), key.WithHelp("q", "stop and quit")),
-		Help:     key.NewBinding(key.WithKeys("?"), key.WithHelp("?", "show this list")),
+		Move:    key.NewBinding(key.WithKeys("up", "down", "k", "j"), key.WithHelp("↑/↓", "move the line cursor")),
+		Select:  selectHelp,
+		Cancel:  cancel,
+		Page:    key.NewBinding(key.WithKeys("pgup", "pgdown"), key.WithHelp("pgup/pgdn", "move a page")),
+		Top:     key.NewBinding(key.WithKeys("home", "g"), key.WithHelp("g", "jump to start")),
+		Bottom:  key.NewBinding(key.WithKeys("end", "G"), key.WithHelp("G", "jump to end")),
+		Copy:    copyHelp,
+		CopyRaw: copyRawHelp,
+		Save:    key.NewBinding(key.WithKeys("s"), key.WithHelp("s", "save output to a file")),
+		SaveAll: key.NewBinding(key.WithKeys("S"), key.WithHelp("S", "save every output to a folder")),
+		Return:  key.NewBinding(key.WithKeys("f", "esc"), key.WithHelp("f/esc", "back to panes")),
+		Quit:    key.NewBinding(key.WithKeys("q", "ctrl+c"), key.WithHelp("q", "stop and quit")),
+		Help:    key.NewBinding(key.WithKeys("?"), key.WithHelp("?", "show this list")),
 	}
 }
 
@@ -184,7 +179,6 @@ func (k fullscreenKeys) ShortHelp() []key.Binding {
 		terse(k.Return, "f/esc", "back"),
 		terse(k.Select, "v", selectLabel),
 		terse(k.Copy, "y", copyLabel),
-		terse(k.Snapshot, "t", "to terminal"),
 		terse(k.Move, "↑/↓", "cursor"),
 	}
 }
@@ -192,7 +186,7 @@ func (k fullscreenKeys) ShortHelp() []key.Binding {
 func (k fullscreenKeys) allBindings() []key.Binding {
 	return []key.Binding{
 		k.Move, k.Page, k.Top, k.Bottom,
-		k.Select, k.Cancel, k.Copy, k.CopyRaw, k.Snapshot, k.Save, k.SaveAll,
+		k.Select, k.Cancel, k.Copy, k.CopyRaw, k.Save, k.SaveAll,
 		k.Return, k.Quit, k.Help,
 	}
 }

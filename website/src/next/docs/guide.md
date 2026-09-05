@@ -2901,7 +2901,7 @@ inside them; the copy still carries those sequences for `Y`.
 
 Selecting text with the mouse does not work inside the dashboard. A terminal
 discards a selection whenever the screen is repainted, and scrolling either pane
-is a repaint. Three controls get the text out instead:
+is a repaint. These controls get the text out instead:
 
 - `y` copies the selected task's output to the system clipboard with its ANSI
   escape sequences stripped, which is what a terminal gives you when you select
@@ -2909,9 +2909,6 @@ is a repaint. Three controls get the text out instead:
 - `Y` copies it with those sequences intact, for pasting somewhere that renders
   them, such as an editor with an ANSI extension. They carry bold, dim and
   underline as well as colour.
-- `t` prints the output to the terminal and waits for Enter. The text lands in
-  your terminal's normal scrollback, where its own scrolling and selection apply
-  as they would to any other command output.
 - `s` saves the selected task's output, and `S` saves every task's output to a
   folder, one file per task. Both ask where in the footer: `s` suggests a full
   path and `S` only a folder, since the files inside are named for you. The
@@ -2922,14 +2919,15 @@ is a repaint. Three controls get the text out instead:
   `git status`; one that already exists is left alone. Any missing directories are created, and saved output keeps its
   escape sequences, so `cat` and `less -R` show the colour.
 
-All three work whether or not the task has finished. A snapshot of a running
-task says so, and shows the output as it stood at that moment.
+To take part of an output rather than all of it, select the lines you want in
+the fullscreen view and press `y`. All of these work whether or not the task has
+finished.
 
 Copying uses the OSC 52 escape sequence and, where one is available, a clipboard
 helper such as `wl-copy`, `pbcopy`, `xclip`, `xsel` or `clip.exe`. OSC 52 works
 over SSH but is not supported everywhere; terminals based on VTE, including
-GNOME Terminal, ignore it. When no helper confirmed the copy, the message says
-so and points at `t`.
+GNOME Terminal, ignore it, which is why the helper is tried as well. When
+neither confirmed the copy, the message says so and points at `s`.
 
 ```shell
 $ task --tui --tui-task-navigator tree --tui-status labels build

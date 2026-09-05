@@ -256,7 +256,7 @@ func (m tuiModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			// Only OSC 52 was sent, and it has no reply, so we cannot know
 			// whether the terminal honoured it. Say so rather than claim
 			// success: VTE-based terminals silently discard it.
-			notice += " — if nothing was copied, press t"
+			notice += " — if nothing was copied, press s to save it"
 		}
 		return m, m.showNotice(notice)
 	case taskJoinedMsg:
@@ -391,8 +391,6 @@ func (m *tuiModel) handleFullscreenKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd)
 		return *m, m.copyFullscreenLines(false)
 	case key.Matches(msg, keys.CopyRaw):
 		return *m, m.copyFullscreenLines(true)
-	case key.Matches(msg, keys.Snapshot):
-		return *m, m.snapshotSelectedOutput()
 	case key.Matches(msg, keys.Save):
 		return *m, m.askWhereToSave(false)
 	case key.Matches(msg, keys.SaveAll):
@@ -520,8 +518,6 @@ func (m *tuiModel) handleDashboardKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) 
 		return *m, m.copyOutput(false)
 	case key.Matches(msg, keys.CopyRaw):
 		return *m, m.copyOutput(true)
-	case key.Matches(msg, keys.Snapshot):
-		return *m, m.snapshotSelectedOutput()
 	case key.Matches(msg, keys.Save):
 		return *m, m.askWhereToSave(false)
 	case key.Matches(msg, keys.SaveAll):

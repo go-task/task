@@ -811,58 +811,6 @@ func TestTUIModelReportsWhenThereIsNothingToCopy(t *testing.T) {
 	assert.Contains(t, m.View().Content, "nothing to copy")
 }
 
-func TestSnapshotOutputBody(t *testing.T) {
-	t.Parallel()
-
-	finished := (&snapshotOutput{name: "build", text: "compiling\n", width: 40}).body()
-	assert.Contains(t, finished, "compiling\n")
-	// The dump carries no other context, so it always says what it is.
-	assert.Contains(t, finished, "snapshot: build")
-	assert.Contains(t, finished, "end of snapshot")
-	assert.Contains(t, finished, "Press Enter to return")
-	assert.NotContains(t, finished, "still running")
-
-	running := (&snapshotOutput{name: "build", text: "compiling", running: true, width: 40}).body()
-	assert.Contains(t, ansi.Strip(running), "still running")
-	// Output that did not end in a newline must not run into the footer.
-	assert.Contains(t, running, "compiling\n")
-	// The warning is coloured; the rest of the footer is not.
-	assert.NotEqual(t, ansi.Strip(running), running, "the warning must stand out")
-	assert.NotContains(t, finished, "\x1b", "a finished snapshot needs no colour")
-
-	empty := (&snapshotOutput{name: "build", width: 40}).body()
-	assert.Contains(t, empty, "(no output)")
-}
-
-func TestSnapshotOutputStartsOnABlankScreen(t *testing.T) {
-	t.Parallel()
-
-	snapshot := &snapshotOutput{name: "build", text: "hi\n", width: 40, height: 24}
-	blank := snapshot.blankScreen()
-
-	// Scrolling the old screen away keeps it in scrollback; erasing it might
-	// not, depending on the terminal.
-	assert.Equal(t, 24, strings.Count(blank, "\n"))
-	assert.True(t, strings.HasSuffix(blank, "\x1b[H"), "cursor must return to the top")
-	assert.NotContains(t, blank, "2J", "the screen must not be erased")
-
-	// A zero height means we do not know the terminal size; print nothing.
-	assert.Empty(t, (&snapshotOutput{}).blankScreen())
-}
-
-func TestSnapshotOutputWaitsForEnter(t *testing.T) {
-	t.Parallel()
-
-	var screen bytes.Buffer
-	snapshot := &snapshotOutput{name: "build", text: "hello\n", width: 40}
-	snapshot.SetStdout(&screen)
-	snapshot.SetStdin(strings.NewReader("\n"))
-
-	require.NoError(t, snapshot.Run())
-	assert.Contains(t, screen.String(), "hello")
-	assert.Contains(t, screen.String(), "Press Enter to return")
-}
-
 func TestHumanizeBytes(t *testing.T) {
 	t.Parallel()
 
@@ -881,7 +829,7 @@ func TestTUIModelAdmitsWhenAClipboardCopyCannotBeConfirmed(t *testing.T) {
 	// No clipboard helper ran, so only OSC 52 was sent. It has no reply, and
 	// VTE-based terminals discard it, so the notice must not claim success.
 	m = updateTUIModel(t, m, clipboardCopiedMsg{size: 10})
-	assert.Contains(t, m.View().Content, "press t")
+	assert.Contains(t, m.View().Content, "press s to save it")
 }
 
 func TestSystemClipboardArgsPrefersTheSessionsTool(t *testing.T) {
@@ -1173,7 +1121,7 @@ func TestFooterKeepsTheWayOutAtEightyColumns(t *testing.T) {
 	// The arrow keys are deliberately last: they are the part of a TUI a reader
 	// can guess, so they are what an eighty column terminal gives up.
 	dashboard := ansi.Strip(shortHelp(m.help, newDashboardKeys(false, true).ShortHelp(), 80))
-	for _, expected := range []string{"? help", "q quit", "esc/b launcher", "y copy", "t to terminal"} {
+	for _, expected := range []string{"? help", "q quit", "esc/b launcher", "y copy", "s save"} {
 		assert.Contains(t, dashboard, expected, "footer at 80 columns: %s", dashboard)
 	}
 
@@ -1198,7 +1146,10 @@ func TestFooterKeepsTheWayOutAtEightyColumns(t *testing.T) {
 	}
 }
 
-func TestPrintToTerminalIsBoundToT(t *testing.T) {
+// t used to print the output to the terminal, for its own scrollback and the
+// native selection there. Selecting lines with the keyboard covers that, and
+// works over a connection where the terminal owns no scrollback of ours.
+func TestPrintToTerminalIsGone(t *testing.T) {
 	t.Parallel()
 
 	m := newTUIModel(func() {})
@@ -1206,12 +1157,14 @@ func TestPrintToTerminalIsBoundToT(t *testing.T) {
 	m = updateTUIModel(t, m, taskOutputMsg{id: 1, name: "build", data: "hi\n"})
 
 	_, cmd := m.Update(tea.KeyPressMsg{Code: 't', Text: "t"})
-	assert.NotNil(t, cmd, "t prints the output to the terminal")
+	assert.Nil(t, cmd, "t is not bound to anything")
 
-	// s used to mean snapshot, before printing moved to t. It now saves.
-	keys := newDashboardKeys(false, true)
-	assert.Equal(t, "print output to terminal", keys.Snapshot.Help().Desc)
-	assert.Equal(t, "save output to a file", keys.Save.Help().Desc)
+	for _, binding := range newDashboardKeys(false, true).allBindings() {
+		assert.NotContains(t, binding.Keys(), "t")
+	}
+	for _, binding := range newFullscreenKeys(false).allBindings() {
+		assert.NotContains(t, binding.Keys(), "t")
+	}
 }
 
 func TestFooterPairsTheArrowKeys(t *testing.T) {
@@ -1225,7 +1178,7 @@ func TestFooterPairsTheArrowKeys(t *testing.T) {
 	for _, binding := range bindings {
 		keys = append(keys, binding.Help().Key)
 	}
-	require.Len(t, keys, 9)
+	require.Len(t, keys, 8)
 	assert.Equal(t, []string{"↑/↓", "←/→"}, keys[len(keys)-2:], "the arrows are adjacent and last")
 	assert.Equal(t, "pane", bindings[len(bindings)-1].Help().Desc)
 }
