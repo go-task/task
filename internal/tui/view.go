@@ -16,9 +16,10 @@ import (
 
 func (m tuiModel) View() tea.View {
 	content := m.renderContent()
-	switch {
-	case m.prompt != nil:
+	if m.prompt != nil {
 		content = m.promptView()
+	}
+	switch {
 	case m.showHelp:
 		content = m.helpView()
 	case m.fullscreenOutput:
@@ -49,6 +50,9 @@ func (m tuiModel) renderContent() string {
 		footer = renderStatus(layout.width, "stopping tasks… returning to launcher after processes exit", tuiHelpStyle)
 	case m.notice != "":
 		footer = renderStatus(layout.width, m.notice, tuiTitleStyle)
+	}
+	if m.prompt != nil {
+		footer = renderPromptKeys(m, layout.width, m.promptKeys())
 	}
 
 	return body + "\n" + footer

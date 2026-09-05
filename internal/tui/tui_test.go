@@ -1386,13 +1386,12 @@ func TestPromptControlCQuitsTheInterface(t *testing.T) {
 	assert.Nil(t, m.prompt)
 }
 
-func TestPromptTakesTheScreen(t *testing.T) {
+func TestPromptIsADialogOverTheDashboard(t *testing.T) {
 	t.Parallel()
 
 	m := newTUIModel(func() {})
-	m = updateTUIModel(t, m, tea.WindowSizeMsg{Width: 90, Height: 12})
+	m = updateTUIModel(t, m, tea.WindowSizeMsg{Width: 90, Height: 14})
 	m = updateTUIModel(t, m, started(1, 0, "release"))
-	m = updateTUIModel(t, m, taskOutputMsg{id: 1, name: "release", data: "building\n"})
 
 	m.beginPrompt(&promptState{
 		kind: promptChoice, task: "release", name: "ENVIRONMENT",
@@ -1400,16 +1399,34 @@ func TestPromptTakesTheScreen(t *testing.T) {
 	})
 	view := ansi.Strip(m.View().Content)
 
-	// A blocking question is modal: nothing else can proceed until it is
-	// answered, so it takes the screen rather than sharing it with panes that
-	// would look live.
-	assert.Contains(t, view, "TASK IS ASKING")
-	assert.Contains(t, view, "release")
+	// A question is an interruption, not a place you navigated to, so it is
+	// drawn over the interface rather than replacing it.
+	assert.Contains(t, view, `Task "release" is asking`)
 	assert.Contains(t, view, "staging")
+	assert.Contains(t, view, "TASKS", "the dashboard stays behind the dialog")
+	// The footer belongs to the question while it is up.
 	assert.Contains(t, view, "enter confirm")
-	assert.NotContains(t, view, "TASKS")
-	assert.NotContains(t, view, "OUTPUT")
-	assert.NotContains(t, view, "building")
+	assert.NotContains(t, view, "y copy")
+}
+
+func TestPromptDialogFitsASmallTerminal(t *testing.T) {
+	t.Parallel()
+
+	options := make([]string, 30)
+	for i := range options {
+		options[i] = fmt.Sprintf("option-%02d", i)
+	}
+	for _, size := range []struct{ width, height int }{{40, 10}, {80, 24}, {200, 60}} {
+		m := newTUIModel(func() {})
+		m = updateTUIModel(t, m, tea.WindowSizeMsg{Width: size.width, Height: size.height})
+		m.beginPrompt(&promptState{
+			kind: promptChoice, task: "release", name: "ENVIRONMENT",
+			options: options, done: make(chan promptAnswer, 1),
+		})
+		content := m.View().Content
+		assert.LessOrEqual(t, lipgloss.Width(content), size.width, "%dx%d", size.width, size.height)
+		assert.LessOrEqual(t, lipgloss.Height(content), size.height, "%dx%d", size.width, size.height)
+	}
 }
 
 func TestPromptWrapsALongMessage(t *testing.T) {

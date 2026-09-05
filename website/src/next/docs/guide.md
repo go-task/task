@@ -2920,10 +2920,10 @@ asked for: free text, or a list to choose from when the variable declares an
 a task requiring a variable could not be run from the launcher at all, as there
 is nowhere to pass one.
 
-A question takes the whole screen while it is up, because nothing else can
-proceed until it is answered. It can arrive partway through a run, because a
-task reached through `cmds` is only compiled when the run gets to it; the header
-names the task that is asking.
+A question appears as a dialog over the dashboard, and names the task that is
+asking. It can arrive partway through a run, because a task reached through
+`cmds` is only compiled when the run gets to it. Nothing else can proceed until
+you answer.
 
 Watch mode and tasks marked `interactive: true` are not supported. An
 interactive task is not a question Task can relay: its command takes the

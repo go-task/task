@@ -157,52 +157,67 @@ func (m *tuiModel) handlePromptKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 	return *m, nil
 }
 
-// promptView draws the question over the whole screen.
+// promptView draws the question as a dialog over the dashboard.
 //
-// A blocking question is modal: nothing else can proceed until it is answered,
-// and taking the screen says so. Sharing the screen with the task list would
-// suggest the rest of the interface is still live, and leave less room for a
-// message whose length the Taskfile author chose.
+// A blocking question is an interruption, not a place you navigated to, and a
+// box over the interface reads that way. It also tells it apart from the key
+// list, which fills the screen because it is a reference you asked for.
 func (m tuiModel) promptView() string {
+	width, height := max(m.width, 1), max(m.height, 1)
+	box := m.promptBox(width, height)
+	x := max((width-lipgloss.Width(box))/2, 0)
+	y := max((height-lipgloss.Height(box))/2, 0)
+
+	// A Compositor is what applies a layer's position; Canvas.Compose draws
+	// into the whole canvas and ignores it.
+	return lipgloss.NewCanvas(width, height).
+		Compose(lipgloss.NewCompositor(
+			lipgloss.NewLayer(m.renderContent()),
+			lipgloss.NewLayer(box).X(x).Y(y).Z(1),
+		)).
+		Render()
+}
+
+// promptBox is the dialog itself, sized to its content within the screen.
+func (m tuiModel) promptBox(screenWidth, screenHeight int) string {
 	state := m.prompt
-	width := max(m.width, 1)
-	height := max(m.height-1, 1)
-	inner := max(width-tuiPanelStyle.GetHorizontalFrameSize(), 1)
+	outer := min(max(screenWidth-8, 24), 72)
+	inner := max(outer-tuiPanelStyle.GetHorizontalFrameSize(), 1)
+	// A long list of options must not grow the box past the screen.
+	maxHeight := max(screenHeight-2, 3)
 
 	var body strings.Builder
-	body.WriteString(paneTitle("TASK IS ASKING", tuiHelpStyle.Render(state.task), inner))
+	body.WriteString(tuiTitleStyle.Render(truncateText(
+		fmt.Sprintf("Task %q is asking", state.task), inner)))
 	body.WriteString("\n\n")
 
 	switch state.kind {
 	case promptConfirm:
 		body.WriteString(wrapText(state.message, inner))
 	case promptText:
-		body.WriteString(tuiTitleStyle.Render(truncateText(state.name, inner)))
+		body.WriteString(wrapText(state.name, inner))
 		body.WriteString("\n\n")
 		state.input.SetWidth(max(inner-1, 1))
 		body.WriteString(state.input.View())
 	case promptChoice:
-		body.WriteString(tuiTitleStyle.Render(truncateText(state.name, inner)))
-		body.WriteString("\n\n")
+		body.WriteString(wrapText(state.name, inner))
+		body.WriteString("\n")
 		for i, option := range state.options {
 			line := truncateText("  "+option, inner)
 			if i == state.cursor {
 				// Highlight the whole row, as the launcher does.
 				line = tuiSelectedStyle.Width(inner).Render(line)
 			}
-			body.WriteString(line)
-			body.WriteString("\n")
+			body.WriteString("\n" + line)
 		}
 	}
 
-	panel := tuiPanelStyle.
+	return tuiPanelStyle.
 		BorderForeground(tuiAccentColor).
-		Width(width).
-		Height(height).
-		MaxWidth(width).
-		MaxHeight(height).
+		Width(outer).
+		MaxWidth(outer).
+		MaxHeight(maxHeight).
 		Render(body.String())
-	return panel + "\n" + renderPromptKeys(m, width, m.promptKeys())
 }
 
 // promptKeys are the footer hints while a question is on screen.
