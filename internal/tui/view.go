@@ -52,7 +52,9 @@ func (m tuiModel) renderContent() string {
 		footer = renderStatus(layout.width, m.notice, tuiTitleStyle)
 	}
 	if m.prompt != nil {
-		footer = renderPromptKeys(m, layout.width, m.promptKeys())
+		// The dialog carries its own keys. Leaving the dashboard's here would
+		// offer controls that do nothing while a question is waiting.
+		footer = ""
 	}
 
 	return body + "\n" + footer

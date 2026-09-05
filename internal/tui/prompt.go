@@ -212,6 +212,11 @@ func (m tuiModel) promptBox(screenWidth, screenHeight int) string {
 		}
 	}
 
+	// The keys belong to the dialog, not to the interface behind it, which
+	// cannot be acted on while a question is up.
+	body.WriteString("\n\n")
+	body.WriteString(renderPromptKeys(m, inner, m.promptKeys()))
+
 	return tuiPanelStyle.
 		BorderForeground(tuiAccentColor).
 		Width(outer).

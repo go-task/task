@@ -1404,9 +1404,11 @@ func TestPromptIsADialogOverTheDashboard(t *testing.T) {
 	assert.Contains(t, view, `Task "release" is asking`)
 	assert.Contains(t, view, "staging")
 	assert.Contains(t, view, "TASKS", "the dashboard stays behind the dialog")
-	// The footer belongs to the question while it is up.
+	// The dialog carries its own keys, and the interface behind it offers
+	// none, since none of them would do anything.
 	assert.Contains(t, view, "enter confirm")
 	assert.NotContains(t, view, "y copy")
+	assert.NotContains(t, view, "? help")
 }
 
 func TestPromptDialogFitsASmallTerminal(t *testing.T) {
