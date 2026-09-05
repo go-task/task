@@ -2,6 +2,7 @@ package task_test
 
 import (
 	"bytes"
+	"errors"
 	"io"
 	"os"
 	"path/filepath"
@@ -659,4 +660,62 @@ tasks:
 `)
 	e.Prompter = &recordingPrompter{answer: "v1"}
 	require.NoError(t, e.Run(t.Context(), &task.Call{Task: "release"}))
+}
+
+func TestPrompterAsksWithoutTheInteractiveFlag(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	require.NoError(t, os.WriteFile(filepath.Join(dir, "Taskfile.yml"), []byte(`version: '3'
+tasks:
+  release:
+    requires:
+      vars: [RELEASE_NAME]
+    cmds: [echo releasing]
+`), 0o600))
+
+	// Providing a Prompter is itself the statement that someone can answer, so
+	// --interactive is not also required. A client from which there is no way
+	// to pass a variable would otherwise be unable to run the task at all.
+	e := task.NewExecutor(
+		task.WithDir(dir),
+		task.WithStdout(io.Discard),
+		task.WithStderr(io.Discard),
+		task.WithSilent(true),
+		task.WithForce(true),
+	)
+	require.NoError(t, e.Setup())
+	e.Prompter = &recordingPrompter{answer: "v1"}
+
+	require.NoError(t, e.Run(t.Context(), &task.Call{Task: "release"}))
+}
+
+func TestPrompterCanRefuseToAsk(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	require.NoError(t, os.WriteFile(filepath.Join(dir, "Taskfile.yml"), []byte(`version: '3'
+tasks:
+  release:
+    requires:
+      vars: [RELEASE_NAME]
+    cmds: [echo releasing]
+`), 0o600))
+
+	e := task.NewExecutor(
+		task.WithDir(dir),
+		task.WithStdout(io.Discard),
+		task.WithStderr(io.Discard),
+		task.WithSilent(true),
+		task.WithForce(true),
+	)
+	require.NoError(t, e.Setup())
+
+	// A client that does not want to be asked declines in its Prompter, which
+	// is a better place to decide than a flag: it can answer some and not
+	// others.
+	e.Prompter = &recordingPrompter{err: errors.New("nobody is here to answer")}
+	err := e.Run(t.Context(), &task.Call{Task: "release"})
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "nobody is here to answer")
 }

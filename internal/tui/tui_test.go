@@ -1385,3 +1385,42 @@ func TestPromptControlCQuitsTheInterface(t *testing.T) {
 	assert.True(t, m.quitting, "ctrl+c closes the interface, as it does elsewhere")
 	assert.Nil(t, m.prompt)
 }
+
+func TestPromptKeepsTheTaskListVisible(t *testing.T) {
+	t.Parallel()
+
+	m := newTUIModel(func() {})
+	m = updateTUIModel(t, m, tea.WindowSizeMsg{Width: 90, Height: 12})
+	m = updateTUIModel(t, m, started(1, 0, "release"))
+	m = updateTUIModel(t, m, taskOutputMsg{id: 1, name: "release", data: "building\n"})
+
+	m.beginPrompt(&promptState{
+		kind: promptChoice, task: "release", name: "ENVIRONMENT",
+		options: []string{"staging", "production"}, done: make(chan promptAnswer, 1),
+	})
+	view := ansi.Strip(m.View().Content)
+
+	// A question can arrive minutes into a run, so it takes the output pane
+	// rather than the screen: the other tasks stay visible while it is up.
+	assert.Contains(t, view, "TASKS")
+	assert.Contains(t, view, "release")
+	assert.Contains(t, view, "ASKING")
+	assert.Contains(t, view, "staging")
+	assert.Contains(t, view, "enter confirm")
+	// The output it replaces is not shown while the question is.
+	assert.NotContains(t, view, "building")
+}
+
+func TestPromptWrapsALongMessage(t *testing.T) {
+	t.Parallel()
+
+	long := "This will delete every artifact in the production bucket and cannot be undone"
+	wrapped := wrapText(long, 30)
+
+	require.Greater(t, len(strings.Split(wrapped, "\n")), 1, "a long message wraps")
+	for line := range strings.SplitSeq(wrapped, "\n") {
+		assert.LessOrEqual(t, lipgloss.Width(line), 30)
+	}
+	// Wrapping breaks between words, not through them.
+	assert.Equal(t, strings.Fields(long), strings.Fields(wrapped))
+}

@@ -16,8 +16,11 @@ import (
 
 func (e *Executor) canPrompt() bool {
 	if e.Prompter != nil {
-		// The client asks, so no terminal is needed.
-		return e.Interactive
+		// Providing a Prompter is itself the statement that someone is there to
+		// answer, so no terminal and no --interactive are needed. A caller that
+		// wants questions refused can refuse them in its Prompter, which is a
+		// better place to decide than a flag: it can answer some and not others.
+		return true
 	}
 	return e.Interactive && (e.AssumeTerm || term.IsTerminal())
 }

@@ -2914,10 +2914,15 @@ The TUI requires an interactive terminal. It is intended for local use; use one
 of the stream-based output modes in CI or when redirecting output.
 
 When Task needs to ask you something, it asks in the interface. A task
-declaring `prompt` shows its confirmation, and with `--interactive` a missing
-required variable is asked for: free text, or a list to choose from when the
-variable declares an `enum`. A question can arrive partway through a run,
-because a task reached through `cmds` is only compiled when the run gets to it.
+declaring `prompt` shows its confirmation, and a missing required variable is
+asked for: free text, or a list to choose from when the variable declares an
+`enum`. `--interactive` is not needed, since the TUI can always ask; without it
+a task requiring a variable could not be run from the launcher at all, as there
+is nowhere to pass one.
+
+A question appears in the output pane, so the task list stays visible while you
+answer. It can arrive partway through a run, because a task reached through
+`cmds` is only compiled when the run gets to it.
 
 Watch mode and tasks marked `interactive: true` are not supported. An
 interactive task is not a question Task can relay: its command takes the

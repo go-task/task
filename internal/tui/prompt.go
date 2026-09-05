@@ -6,6 +6,7 @@ import (
 
 	"charm.land/bubbles/v2/textinput"
 	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
 
 	"github.com/go-task/task/v3"
 )
@@ -156,52 +157,71 @@ func (m *tuiModel) handlePromptKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 	return *m, nil
 }
 
-// promptView draws the question over the whole screen, as the key list does,
-// rather than over the panes: a question is the only thing to act on while it
-// is up.
-func (m tuiModel) promptView() string {
+// promptPanel draws the question in the output pane, so the task list stays
+// visible. A question can arrive minutes into a run, from a task reached
+// through cmds, and taking the whole screen then would hide every other task
+// at the moment the user most wants to see them.
+func (m tuiModel) promptPanel(width int) string {
 	state := m.prompt
-	width := max(m.width, 1)
-	inner := max(width-tuiPanelStyle.GetHorizontalFrameSize(), 1)
-
 	var body strings.Builder
-	body.WriteString(paneTitle("TASK IS ASKING", tuiHelpStyle.Render(state.task), inner))
+	body.WriteString(paneTitle("ASKING · "+state.task, "", width))
 	body.WriteString("\n\n")
 
-	var keys []helpBinding
 	switch state.kind {
 	case promptConfirm:
-		body.WriteString(truncateText(state.message, inner))
-		keys = []helpBinding{{"y", "yes"}, {"n/esc", "no"}}
+		body.WriteString(wrapText(state.message, width))
 	case promptText:
-		body.WriteString(tuiTitleStyle.Render(state.name))
+		body.WriteString(tuiTitleStyle.Render(truncateText(state.name, width)))
 		body.WriteString("\n\n")
-		state.input.SetWidth(max(inner-1, 1))
+		state.input.SetWidth(max(width-1, 1))
 		body.WriteString(state.input.View())
-		keys = []helpBinding{{"enter", "confirm"}, {"esc", "cancel"}}
 	case promptChoice:
-		body.WriteString(tuiTitleStyle.Render(state.name))
+		body.WriteString(tuiTitleStyle.Render(truncateText(state.name, width)))
 		body.WriteString("\n\n")
 		for i, option := range state.options {
-			line := truncateText("  "+option, inner)
+			line := truncateText("  "+option, width)
 			if i == state.cursor {
 				// Highlight the whole row, as the launcher does.
-				line = tuiSelectedStyle.Width(inner).Render(line)
+				line = tuiSelectedStyle.Width(width).Render(line)
 			}
 			body.WriteString(line)
 			body.WriteString("\n")
 		}
-		keys = []helpBinding{{"↑/↓", "choose"}, {"enter", "confirm"}, {"esc", "cancel"}}
 	}
+	return body.String()
+}
 
-	panel := tuiPanelStyle.
-		BorderForeground(tuiAccentColor).
-		Width(width).
-		Height(max(m.height-1, 1)).
-		MaxWidth(width).
-		MaxHeight(max(m.height-1, 1)).
-		Render(body.String())
-	return panel + "\n" + renderPromptKeys(m, width, keys)
+// promptKeys are the footer hints while a question is on screen.
+func (m tuiModel) promptKeys() []helpBinding {
+	switch m.prompt.kind {
+	case promptConfirm:
+		return []helpBinding{{"y", "yes"}, {"n/esc", "no"}, {"ctrl+c", "quit"}}
+	case promptChoice:
+		return []helpBinding{{"↑/↓", "choose"}, {"enter", "confirm"}, {"esc", "cancel"}}
+	default:
+		return []helpBinding{{"enter", "confirm"}, {"esc", "cancel"}}
+	}
+}
+
+// wrapText breaks text to width without splitting words, for a message written
+// by a Taskfile author who did not know how wide the pane would be.
+func wrapText(text string, width int) string {
+	width = max(width, 1)
+	var out strings.Builder
+	line := ""
+	for word := range strings.FieldsSeq(text) {
+		switch {
+		case line == "":
+			line = word
+		case lipgloss.Width(line)+1+lipgloss.Width(word) <= width:
+			line += " " + word
+		default:
+			out.WriteString(truncateText(line, width) + "\n")
+			line = word
+		}
+	}
+	out.WriteString(truncateText(line, width))
+	return out.String()
 }
 
 type helpBinding struct{ key, desc string }
