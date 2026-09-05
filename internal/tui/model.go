@@ -257,6 +257,7 @@ func (m tuiModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		}
 		m.done, m.err = true, msg.err
+		m.reportUnattributedFailure(msg.err)
 		if m.quitting {
 			return m, tea.Quit
 		}
@@ -287,6 +288,25 @@ func (m tuiModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	}
 
 	return m, nil
+}
+
+// reportUnattributedFailure shows a failure that belongs to no task.
+//
+// A run can fail before anything is scheduled: a declined prompt, a Taskfile
+// that will not load. The error is then attached to nothing, and the dashboard
+// would say the run failed while showing an empty task list and no reason.
+func (m *tuiModel) reportUnattributedFailure(err error) {
+	if err == nil {
+		return
+	}
+	for _, task := range m.tasks {
+		if task.state == taskFailed {
+			// Already shown against the task it belongs to.
+			return
+		}
+	}
+	// appendOutput creates the pane and selects it when nothing else is.
+	m.appendOutput(0, systemTaskName, err.Error()+"\n")
 }
 
 func (m *tuiModel) appendFailure(task *tuiTask, err error) {

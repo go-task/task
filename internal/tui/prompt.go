@@ -114,12 +114,18 @@ func (m *tuiModel) answerPrompt(answer promptAnswer) {
 
 func (m *tuiModel) handlePromptKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 	state := m.prompt
+	if msg.String() == "ctrl+c" {
+		// Ctrl+C closes the interface, as it does everywhere else. Answer the
+		// question first, or the task waiting on it never returns.
+		m.answerPrompt(promptAnswer{err: task.ErrPromptCancelled})
+		return *m, m.requestQuit()
+	}
 	switch state.kind {
 	case promptConfirm:
 		switch msg.String() {
 		case "y", "Y":
 			m.answerPrompt(promptAnswer{confirmed: true})
-		case "n", "N", "esc", "enter", "ctrl+c":
+		case "n", "N", "esc", "enter":
 			m.answerPrompt(promptAnswer{})
 		}
 	case promptChoice:
@@ -132,14 +138,14 @@ func (m *tuiModel) handlePromptKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 			if len(state.options) > 0 {
 				m.answerPrompt(promptAnswer{value: state.options[state.cursor]})
 			}
-		case "esc", "ctrl+c":
+		case "esc":
 			m.answerPrompt(promptAnswer{err: task.ErrPromptCancelled})
 		}
 	case promptText:
 		switch msg.String() {
 		case "enter":
 			m.answerPrompt(promptAnswer{value: state.input.Value()})
-		case "esc", "ctrl+c":
+		case "esc":
 			m.answerPrompt(promptAnswer{err: task.ErrPromptCancelled})
 		default:
 			var cmd tea.Cmd

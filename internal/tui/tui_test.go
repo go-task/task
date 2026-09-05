@@ -1341,3 +1341,47 @@ func TestPromptRefusesAVariableTypeItCannotRender(t *testing.T) {
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "cannot ask")
 }
+
+func TestTUIModelShowsAFailureThatBelongsToNoTask(t *testing.T) {
+	t.Parallel()
+
+	// Declining a prompt fails the run before anything is scheduled. Without
+	// somewhere to put it, the dashboard would say the run failed while showing
+	// an empty task list and no reason.
+	m := newTUIModel(func() {})
+	m = updateTUIModel(t, m, tea.WindowSizeMsg{Width: 80, Height: 20})
+	m = updateTUIModel(t, m, executionDoneMsg{err: errors.New(`task: task "deploy" cancelled by user`)})
+
+	pane := ansi.Strip(m.View().Content)
+	assert.Contains(t, pane, systemTaskName)
+	assert.Contains(t, pane, "cancelled by user")
+	assert.NotContains(t, pane, "Waiting for tasks")
+}
+
+func TestTUIModelDoesNotRepeatAFailureAlreadyShownAgainstATask(t *testing.T) {
+	t.Parallel()
+
+	m := newTUIModel(func() {})
+	m = updateTUIModel(t, m, started(1, 0, "build"))
+	m = updateTUIModel(t, m, taskFinishedMsg{id: 1, result: resultFailed, err: errors.New("exit status 1")})
+	m = updateTUIModel(t, m, executionDoneMsg{err: errors.New(`task: Failed to run task "build": exit status 1`)})
+
+	// The task carries its own failure, so the run's error is not repeated.
+	assert.NotContains(t, rowNames(m.taskRows()), systemTaskName)
+}
+
+func TestPromptControlCQuitsTheInterface(t *testing.T) {
+	t.Parallel()
+
+	m := newTUIModel(func() {})
+	state := &promptState{kind: promptText, name: "RELEASE_NAME", done: make(chan promptAnswer, 1)}
+	m.beginPrompt(state)
+
+	next, _ := m.Update(tea.KeyPressMsg{Code: 'c', Mod: tea.ModCtrl, Text: ""})
+	m = next.(tuiModel)
+
+	// The waiting task is released first, or it would never return.
+	assert.ErrorIs(t, (<-state.done).err, task.ErrPromptCancelled)
+	assert.True(t, m.quitting, "ctrl+c closes the interface, as it does elsewhere")
+	assert.Nil(t, m.prompt)
+}
