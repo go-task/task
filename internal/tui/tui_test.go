@@ -11,6 +11,7 @@ import (
 	"regexp"
 	"slices"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 	"unicode/utf8"
@@ -1782,4 +1783,103 @@ func TestFirstPathElement(t *testing.T) {
 	assert.Equal(t, ".", firstPathElement("."))
 	// An absolute path was asked for by name, so nothing is added to it.
 	assert.Empty(t, firstPathElement(filepath.Join(string(filepath.Separator), "var", "logs")))
+}
+
+func TestAwaitAnswerGivesUpWhenTheInterfaceStops(t *testing.T) {
+	t.Parallel()
+
+	t.Run("an answer is returned", func(t *testing.T) {
+		t.Parallel()
+		done := make(chan promptAnswer, 1)
+		done <- promptAnswer{confirmed: true}
+		assert.Equal(t, promptAnswer{confirmed: true}, awaitAnswer(done, make(chan struct{})))
+	})
+
+	t.Run("a stopped interface releases the waiting task", func(t *testing.T) {
+		t.Parallel()
+		// Without this the task waits for an answer that can no longer come,
+		// and Task hangs instead of exiting.
+		programDone := make(chan struct{})
+		close(programDone)
+		assert.ErrorIs(t, awaitAnswer(make(chan promptAnswer), programDone).err, task.ErrPromptCancelled)
+	})
+
+	t.Run("an answer already given wins a stopped interface", func(t *testing.T) {
+		t.Parallel()
+		programDone := make(chan struct{})
+		close(programDone)
+
+		// The user answered, so their answer is used rather than discarded
+		// because the interface happened to stop at the same moment. Repeated
+		// because a plain select over two ready cases picks at random.
+		for range 100 {
+			done := make(chan promptAnswer, 1)
+			done <- promptAnswer{value: "dev"}
+			answer := awaitAnswer(done, programDone)
+			require.NoError(t, answer.err)
+			require.Equal(t, "dev", answer.value)
+		}
+	})
+}
+
+func TestPromptingWithoutAnInterfaceDoesNotBlock(t *testing.T) {
+	t.Parallel()
+
+	// A task can reach a question after the interface has closed, during a
+	// cancelled run. It must be told so rather than waiting for a dialog that
+	// will never be drawn.
+	ui := &UI{programDone: make(chan struct{})}
+
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		confirmed, err := ui.Confirm("deploy", "Really?")
+		assert.False(t, confirmed)
+		assert.ErrorIs(t, err, task.ErrPromptCancelled)
+
+		value, err := ui.Ask(task.VarRequest{Task: "deploy", Name: "ENV", Type: task.StringVar{}})
+		assert.Nil(t, value)
+		assert.ErrorIs(t, err, task.ErrPromptCancelled)
+	}()
+
+	select {
+	case <-done:
+	case <-time.After(5 * time.Second):
+		t.Fatal("asking without an interface blocked")
+	}
+}
+
+func TestQuestionsAreAskedOneAtATime(t *testing.T) {
+	t.Parallel()
+
+	// Tasks running in parallel can reach questions at once, and the screen
+	// holds one. Serialising them is what stops two dialogs racing for it.
+	ui := &UI{programDone: make(chan struct{})}
+
+	var wg sync.WaitGroup
+	for i := range 20 {
+		wg.Go(func() {
+			_, err := ui.Ask(task.VarRequest{
+				Task: "deploy", Name: fmt.Sprintf("VAR_%d", i), Type: task.StringVar{},
+			})
+			assert.ErrorIs(t, err, task.ErrPromptCancelled)
+		})
+	}
+
+	done := make(chan struct{})
+	go func() { wg.Wait(); close(done) }()
+	select {
+	case <-done:
+	case <-time.After(5 * time.Second):
+		t.Fatal("concurrent questions deadlocked")
+	}
+}
+
+func TestSendReportsWhetherAnythingReceivedIt(t *testing.T) {
+	t.Parallel()
+
+	// Events keep arriving from the executor after the interface has closed;
+	// they are dropped rather than panicking on a program that is gone.
+	ui := &UI{pending: make(map[uint64]pendingOutput)}
+	assert.False(t, ui.send(taskScheduledMsg{}), "nothing is running to receive it")
 }

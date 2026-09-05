@@ -110,10 +110,6 @@ func (k dashboardKeys) ShortHelp() []key.Binding {
 	}
 }
 
-func (k dashboardKeys) FullHelp() [][]key.Binding {
-	return fullHelpColumns(k.allBindings(), 3)
-}
-
 func (k dashboardKeys) allBindings() []key.Binding {
 	return []key.Binding{
 		k.Move, k.Pane, k.Click, k.Wheel, k.Page,
@@ -164,10 +160,6 @@ func (k fullscreenKeys) ShortHelp() []key.Binding {
 		terse(k.Snapshot, "t", "to terminal"),
 		terse(k.Move, "↑/↓", "scroll"),
 	}
-}
-
-func (k fullscreenKeys) FullHelp() [][]key.Binding {
-	return fullHelpColumns(k.allBindings(), 3)
 }
 
 func (k fullscreenKeys) allBindings() []key.Binding {

@@ -268,13 +268,18 @@ func (t *UI) Run(ctx context.Context, executor *task.Executor, calls []*task.Cal
 	return lastRunErr
 }
 
-func (t *UI) send(msg tea.Msg) {
+// send delivers a message to the running program, reporting whether there was
+// one to receive it. Everything the executor reports arrives this way, and it
+// may arrive after the interface has closed.
+func (t *UI) send(msg tea.Msg) bool {
 	t.mutex.RLock()
 	program := t.program
 	t.mutex.RUnlock()
-	if program != nil {
-		program.Send(msg)
+	if program == nil {
+		return false
 	}
+	program.Send(msg)
+	return true
 }
 
 func (t *UI) enqueueOutput(id uint64, name, data string) {

@@ -70,20 +70,32 @@ func (t *UI) ask(state *promptState) promptAnswer {
 	t.promptMutex.Lock()
 	defer t.promptMutex.Unlock()
 
-	t.mutex.RLock()
-	program := t.program
-	t.mutex.RUnlock()
-	if program == nil {
+	state.done = make(chan promptAnswer, 1)
+	if !t.send(promptRequestedMsg{state: state}) {
+		// Nothing is drawing, so there is nobody to ask.
 		return promptAnswer{err: task.ErrPromptCancelled}
 	}
+	return awaitAnswer(state.done, t.programDone)
+}
 
-	state.done = make(chan promptAnswer, 1)
-	program.Send(promptRequestedMsg{state: state})
+// awaitAnswer waits for the user's answer, giving up if the interface stops
+// first.
+//
+// Without the second case a task would wait for an answer that can no longer
+// come, and Task would hang rather than exit.
+func awaitAnswer(done <-chan promptAnswer, programDone <-chan struct{}) promptAnswer {
+	// An answer already given wins even if the interface has since stopped:
+	// the user answered, and select would otherwise pick at random.
 	select {
-	case answer := <-state.done:
+	case answer := <-done:
 		return answer
-	case <-t.programDone:
-		// The interface stopped before the question could be answered.
+	default:
+	}
+
+	select {
+	case answer := <-done:
+		return answer
+	case <-programDone:
 		return promptAnswer{err: task.ErrPromptCancelled}
 	}
 }
