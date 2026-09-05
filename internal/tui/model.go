@@ -426,6 +426,8 @@ func (m *tuiModel) handleDashboardKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) 
 		return *m, m.askWhereToSave(false)
 	case key.Matches(msg, keys.SaveAll):
 		return *m, m.askWhereToSave(true)
+	case key.Matches(msg, keys.Navigator):
+		m.toggleTaskNavigator()
 	case key.Matches(msg, keys.Page):
 		m.focus = outputPane
 		return *m, m.updateViewport(msg)
@@ -521,6 +523,18 @@ func taskExitCode(name string, err error) *int {
 	}
 	code := runErr.TaskExitCode()
 	return &code
+}
+
+// toggleTaskNavigator switches the task pane between the tree and the flat
+// list. A deep tree is sometimes easier to read flattened, and the choice is
+// cheap enough to make while a run is going.
+func (m *tuiModel) toggleTaskNavigator() {
+	if m.taskNavigator == taskNavigatorTree {
+		m.taskNavigator = taskNavigatorList
+	} else {
+		m.taskNavigator = taskNavigatorTree
+	}
+	m.keepSelectionVisible()
 }
 
 func returnToLauncher() tea.Msg {

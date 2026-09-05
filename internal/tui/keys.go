@@ -47,6 +47,7 @@ type dashboardKeys struct {
 	Snapshot   key.Binding
 	Save       key.Binding
 	SaveAll    key.Binding
+	Navigator  key.Binding
 	Launcher   key.Binding
 	Quit       key.Binding
 	Help       key.Binding
@@ -73,6 +74,7 @@ func newDashboardKeys(outputFocused, canReturnToLauncher bool) dashboardKeys {
 		Snapshot:   key.NewBinding(key.WithKeys("t"), key.WithHelp("t", "print output to terminal")),
 		Save:       key.NewBinding(key.WithKeys("s"), key.WithHelp("s", "save output to a file")),
 		SaveAll:    key.NewBinding(key.WithKeys("S"), key.WithHelp("S", "save every output to a folder")),
+		Navigator:  key.NewBinding(key.WithKeys("v"), key.WithHelp("v", "switch task view: tree or list")),
 		Launcher:   key.NewBinding(key.WithKeys("esc", "b"), key.WithHelp("esc/b", "stop, open launcher")),
 		Quit:       key.NewBinding(key.WithKeys("q", "ctrl+c"), key.WithHelp("q", "stop and quit")),
 		Help:       key.NewBinding(key.WithKeys("?"), key.WithHelp("?", "show this list")),
@@ -114,7 +116,7 @@ func (k dashboardKeys) allBindings() []key.Binding {
 	return []key.Binding{
 		k.Move, k.Pane, k.Click, k.Wheel, k.Page,
 		k.Top, k.Bottom, k.Fullscreen, k.Copy, k.CopyRaw,
-		k.Snapshot, k.Save, k.SaveAll, k.Launcher, k.Quit, k.Help,
+		k.Snapshot, k.Save, k.SaveAll, k.Navigator, k.Launcher, k.Quit, k.Help,
 	}
 }
 

@@ -1977,3 +1977,33 @@ func TestScrollIndicatorSitsOnTheOutputPaneBorder(t *testing.T) {
 	assert.True(t, strings.HasSuffix(border, "╯"), "the label stays clear of the corner: %q", border)
 	assert.Equal(t, m.width, lipgloss.Width(border), "the border keeps its width")
 }
+
+func TestNavigatorKeySwitchesTheTaskView(t *testing.T) {
+	t.Parallel()
+
+	prefixFor := func(m tuiModel, id uint64) string {
+		for _, row := range m.taskRows() {
+			if row.task.id == id {
+				return row.treePrefix
+			}
+		}
+		t.Fatalf("no row for task %d", id)
+		return ""
+	}
+
+	m := newTUIModel(func() {})
+	m = updateTUIModel(t, m, tea.WindowSizeMsg{Width: 90, Height: 14})
+	m = updateTUIModel(t, m, started(1, 0, "root"))
+	m = updateTUIModel(t, m, startedUnder(2, 1, 1, "build"))
+	m = updateTUIModel(t, m, startedUnder(3, 2, 1, "compile"))
+
+	require.Equal(t, taskNavigatorTree, m.taskNavigator)
+	assert.Greater(t, lipgloss.Width(prefixFor(m, 3)), 3, "the tree nests a grandchild under its parent")
+
+	m = updateTUIModel(t, m, tea.KeyPressMsg{Code: 'v', Text: "v"})
+	assert.Equal(t, taskNavigatorList, m.taskNavigator)
+	assert.Equal(t, 3, lipgloss.Width(prefixFor(m, 3)), "the list puts every task under its root")
+
+	m = updateTUIModel(t, m, tea.KeyPressMsg{Code: 'v', Text: "v"})
+	assert.Equal(t, taskNavigatorTree, m.taskNavigator, "the key toggles back")
+}

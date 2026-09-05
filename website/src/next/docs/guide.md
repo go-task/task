@@ -2843,7 +2843,8 @@ beneath the task that invoked them. Repeated executions have separate entries,
 while calls that join an existing `run: once` or `run: when_changed` execution
 remain visible at each location with a `↳` marker and share the owner's status
 and output. Pass `--tui-task-navigator list` to show all tasks reached from each
-root in a compact, single-level list instead.
+root in a compact, single-level list instead. Press `v` during a run to switch
+between the two.
 
 Each task shows a status icon, including distinct canceled and skipped states.
 Canceled tasks were interrupted, while skipped tasks were never attempted after
