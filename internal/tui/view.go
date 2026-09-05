@@ -160,7 +160,40 @@ func (m tuiModel) renderPanes(layout tuiLayout) (string, string) {
 		Render(m.taskList(layout.leftInnerWidth, layout.innerHeight))
 	right := rightStyle.Width(layout.rightOuterWidth).Height(layout.bodyHeight).
 		Render(m.outputPanel(layout.rightInnerWidth))
-	return left, right
+	return left, withBottomLabel(right, m.scrollLabel(m.viewport), rightStyle)
+}
+
+// scrollLabel is how far down the output the viewport is, or nothing at all
+// when the whole of it is on screen.
+func (m tuiModel) scrollLabel(view viewport.Model) string {
+	if view.AtTop() && view.AtBottom() {
+		return ""
+	}
+	return fmt.Sprintf("%.0f%%", view.ScrollPercent()*100)
+}
+
+// withBottomLabel writes a label into a panel's bottom border, the way a pager
+// puts its position indicator on the frame rather than spending a row of
+// content on it. The panel is returned unchanged when the frame is too narrow
+// to hold the label clear of both corners.
+func withBottomLabel(panel, label string, style lipgloss.Style) string {
+	if label == "" {
+		return panel
+	}
+	label = " " + label + " "
+	lines := strings.Split(panel, "\n")
+	last := len(lines) - 1
+	width := lipgloss.Width(lines[last])
+	fill := width - lipgloss.Width(label) - 4
+	if fill < 1 {
+		return panel
+	}
+	border := lipgloss.RoundedBorder()
+	frame := lipgloss.NewStyle().Foreground(style.GetBorderBottomForeground())
+	lines[last] = frame.Render(border.BottomLeft+strings.Repeat(border.Bottom, fill)) +
+		tuiHelpStyle.Render(label) +
+		frame.Render(strings.Repeat(border.Bottom, 2)+border.BottomRight)
+	return strings.Join(lines, "\n")
 }
 
 type tuiLayout struct {
@@ -284,12 +317,7 @@ func (m tuiModel) outputPanel(width int) string {
 	if task := m.selectedRowTask(); task != nil {
 		title += " · " + m.taskName(task)
 	}
-	right := m.outputStatus()
-	if !m.viewport.AtTop() || !m.viewport.AtBottom() {
-		position := fmt.Sprintf("%3.0f%%", m.viewport.ScrollPercent()*100)
-		right = strings.TrimLeft(right+"  "+tuiHelpStyle.Render(position), " ")
-	}
-	return paneTitle(title, right, width) + "\n" + m.viewport.View()
+	return paneTitle(title, m.outputStatus(), width) + "\n" + m.viewport.View()
 }
 
 // paneTitle renders a pane header. right is rendered as given, so a caller can

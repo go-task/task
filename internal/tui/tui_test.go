@@ -1950,3 +1950,30 @@ func selectTaskByID(t *testing.T, m *tuiModel, id uint64) {
 	}
 	t.Fatalf("no row for task %d", id)
 }
+
+func TestScrollIndicatorSitsOnTheOutputPaneBorder(t *testing.T) {
+	t.Parallel()
+
+	m := newTUIModel(func() {})
+	m = updateTUIModel(t, m, tea.WindowSizeMsg{Width: 90, Height: 14})
+	m = updateTUIModel(t, m, started(1, 0, "root"))
+	m = updateTUIModel(t, m, started(2, 1, "build"))
+	selectTaskByID(t, &m, 2)
+
+	assert.NotContains(t, ansi.Strip(m.View().Content), "%",
+		"output that fits on screen has no position to report")
+
+	lines := make([]string, 0, 40)
+	for i := range 40 {
+		lines = append(lines, fmt.Sprintf("line %d", i))
+	}
+	m = updateTUIModel(t, m, taskOutputMsg{id: 2, name: "build", data: strings.Join(lines, "\n")})
+	m.viewport.SetYOffset(10)
+
+	view := strings.Split(ansi.Strip(m.View().Content), "\n")
+	title, border := view[1], view[len(view)-2]
+	assert.NotContains(t, title, "%", "the header slot is left to the task's status")
+	assert.Contains(t, border, "33%")
+	assert.True(t, strings.HasSuffix(border, "╯"), "the label stays clear of the corner: %q", border)
+	assert.Equal(t, m.width, lipgloss.Width(border), "the border keeps its width")
+}
