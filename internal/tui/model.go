@@ -424,10 +424,6 @@ func (m *tuiModel) handleDashboardKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) 
 			m.viewport.GotoBottom()
 			m.saveViewport()
 		}
-	case msg.String() == "enter":
-		if m.done {
-			return *m, tea.Quit
-		}
 	}
 	return *m, nil
 }

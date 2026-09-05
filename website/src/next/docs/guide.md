@@ -2906,7 +2906,7 @@ $ task --tui --tui-task-navigator tree --tui-status labels build
 Pressing `q` while tasks are running requests cancellation and closes the TUI
 after Task's execution has returned. After execution finishes normally, the TUI
 remains open so its output can be inspected; press Escape or `b` to open the
-launcher, or press Enter or `q` to close it. Switching to the launcher while
+launcher, or press `q` to close it. Switching to the launcher while
 execution is still in progress first cancels the tasks and waits for their
 processes to exit.
 

@@ -1514,3 +1514,23 @@ func TestConfirmationShowsAndUsesItsDefault(t *testing.T) {
 		}
 	})
 }
+
+func TestFinishedDashboardIsOnlyClosedByADocumentedKey(t *testing.T) {
+	t.Parallel()
+
+	m := newTUIModel(func() {})
+	m = updateTUIModel(t, m, tea.WindowSizeMsg{Width: 80, Height: 20})
+	m = updateTUIModel(t, m, started(1, 0, "build"))
+	m = updateTUIModel(t, m, taskFinishedMsg{id: 1})
+	m = updateTUIModel(t, m, executionDoneMsg{})
+	require.True(t, m.done)
+
+	// Enter used to close the finished dashboard without appearing among the
+	// keys. It is a confirm key in the dialogs, so pressing it out of habit
+	// threw away output the run had left to read.
+	_, cmd := m.Update(tea.KeyPressMsg{Code: tea.KeyEnter, Text: "enter"})
+	assert.Nil(t, cmd, "enter does not close the interface")
+
+	_, cmd = m.Update(tea.KeyPressMsg{Code: 'q', Text: "q"})
+	assert.NotNil(t, cmd, "q, which the footer lists, does")
+}
