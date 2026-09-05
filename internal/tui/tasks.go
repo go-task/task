@@ -126,9 +126,8 @@ func trimPartialRune(s string) string {
 // because copied output usually lands somewhere that cannot render escape
 // sequences, such as an issue or a chat message, and because selecting text in
 // a terminal yields the characters rather than the sequences that coloured
-// them, so the snapshot view already gives plain text. Keeping them is worth a
-// key of its own for pasting into something that does render them, such as an
-// editor with an ANSI extension.
+// them. Keeping them is worth a key of its own for pasting into something that
+// does render them, such as an editor with an ANSI extension.
 func (m *tuiModel) copyOutput(keepColours bool) tea.Cmd {
 	task := m.selectedTask()
 	if task == nil || task.output == "" {

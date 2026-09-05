@@ -198,8 +198,8 @@ func (m tuiModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		task := m.scheduleTask(msg.task)
 		task.state = taskRunning
 		// The executor timestamps the event. Stamping it here would measure
-		// when this loop got round to it, which during a snapshot is after the
-		// task has already finished.
+		// when this loop got round to it, which for a burst of events is well
+		// after the task started.
 		task.startedAt = msg.at
 		m.keepSelectionVisible()
 		return m, m.startElapsedTicker()
