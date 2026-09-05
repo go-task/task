@@ -69,6 +69,7 @@ type (
 		Output             output.Output
 		OutputStyle        ast.Output
 		Listener           *Listener // Optional; observes execution and may draw the display
+		Prompter           Prompter  // Optional; answers the questions Task asks
 		TaskSorter         sort.Sorter
 		UserWorkingDir     string
 		EnableVersionCheck bool

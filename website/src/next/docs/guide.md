@@ -2911,9 +2911,17 @@ execution is still in progress first cancels the tasks and waits for their
 processes to exit.
 
 The TUI requires an interactive terminal. It is intended for local use; use one
-of the stream-based output modes in CI or when redirecting output. Watch mode,
-interactive commands, and interactive variable prompting are not currently
-supported. Task confirmation prompts can be accepted up front with `--yes`.
+of the stream-based output modes in CI or when redirecting output.
+
+When Task needs to ask you something, it asks in the interface. A task
+declaring `prompt` shows its confirmation, and with `--interactive` a missing
+required variable is asked for: free text, or a list to choose from when the
+variable declares an `enum`. A question can arrive partway through a run,
+because a task reached through `cmds` is only compiled when the run gets to it.
+
+Watch mode and tasks marked `interactive: true` are not supported. An
+interactive task is not a question Task can relay: its command takes the
+terminal and uses it however it likes.
 
 ## CI Integration
 

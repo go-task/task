@@ -1,0 +1,214 @@
+package tui
+
+import (
+	"fmt"
+	"strings"
+
+	"charm.land/bubbles/v2/textinput"
+	tea "charm.land/bubbletea/v2"
+
+	"github.com/go-task/task/v3"
+)
+
+// promptKind is which question is being asked.
+type promptKind uint8
+
+const (
+	promptConfirm promptKind = iota
+	promptText
+	promptChoice
+)
+
+// promptAnswer travels back to the goroutine that asked.
+type promptAnswer struct {
+	confirmed bool
+	value     any
+	err       error
+}
+
+// promptState is a question waiting on screen. Only one exists at a time: the
+// task that asked is blocked until it is answered.
+type promptState struct {
+	kind    promptKind
+	task    string
+	message string
+	name    string
+	options []string
+	cursor  int
+	input   textinput.Model
+	done    chan promptAnswer
+}
+
+type promptRequestedMsg struct{ state *promptState }
+
+// Confirm asks whether to run a task that declares "prompt".
+func (t *UI) Confirm(taskName, message string) (bool, error) {
+	answer := t.ask(&promptState{kind: promptConfirm, task: taskName, message: message})
+	return answer.confirmed, answer.err
+}
+
+// Ask asks for a required variable that was not supplied.
+func (t *UI) Ask(request task.VarRequest) (any, error) {
+	state := &promptState{kind: promptText, task: request.Task, name: request.Name}
+	switch varType := request.Type.(type) {
+	case task.EnumVar:
+		state.kind = promptChoice
+		state.options = varType.Options
+	case task.StringVar:
+	default:
+		// Guessing would produce a value the task then acts on.
+		return nil, fmt.Errorf("task: the TUI cannot ask for a %T variable", varType)
+	}
+	answer := t.ask(state)
+	return answer.value, answer.err
+}
+
+// ask puts a question on screen and waits for it to be answered. Serialised,
+// because the screen holds one question at a time and tasks may ask at once.
+func (t *UI) ask(state *promptState) promptAnswer {
+	t.promptMutex.Lock()
+	defer t.promptMutex.Unlock()
+
+	t.mutex.RLock()
+	program := t.program
+	t.mutex.RUnlock()
+	if program == nil {
+		return promptAnswer{err: task.ErrPromptCancelled}
+	}
+
+	state.done = make(chan promptAnswer, 1)
+	program.Send(promptRequestedMsg{state: state})
+	select {
+	case answer := <-state.done:
+		return answer
+	case <-t.programDone:
+		// The interface stopped before the question could be answered.
+		return promptAnswer{err: task.ErrPromptCancelled}
+	}
+}
+
+// beginPrompt puts a question on screen.
+func (m *tuiModel) beginPrompt(state *promptState) tea.Cmd {
+	if state.kind == promptText {
+		input := textinput.New()
+		input.Prompt = ""
+		input.Placeholder = "type a value"
+		input.Focus()
+		state.input = input
+	}
+	m.prompt = state
+	if state.kind == promptText {
+		return textinput.Blink
+	}
+	return nil
+}
+
+// answerPrompt hands the answer back and takes the question off screen.
+func (m *tuiModel) answerPrompt(answer promptAnswer) {
+	if m.prompt == nil {
+		return
+	}
+	m.prompt.done <- answer
+	m.prompt = nil
+}
+
+func (m *tuiModel) handlePromptKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
+	state := m.prompt
+	switch state.kind {
+	case promptConfirm:
+		switch msg.String() {
+		case "y", "Y":
+			m.answerPrompt(promptAnswer{confirmed: true})
+		case "n", "N", "esc", "enter", "ctrl+c":
+			m.answerPrompt(promptAnswer{})
+		}
+	case promptChoice:
+		switch msg.String() {
+		case "up", "k":
+			state.cursor = max(state.cursor-1, 0)
+		case "down", "j":
+			state.cursor = min(state.cursor+1, len(state.options)-1)
+		case "enter":
+			if len(state.options) > 0 {
+				m.answerPrompt(promptAnswer{value: state.options[state.cursor]})
+			}
+		case "esc", "ctrl+c":
+			m.answerPrompt(promptAnswer{err: task.ErrPromptCancelled})
+		}
+	case promptText:
+		switch msg.String() {
+		case "enter":
+			m.answerPrompt(promptAnswer{value: state.input.Value()})
+		case "esc", "ctrl+c":
+			m.answerPrompt(promptAnswer{err: task.ErrPromptCancelled})
+		default:
+			var cmd tea.Cmd
+			state.input, cmd = state.input.Update(msg)
+			return *m, cmd
+		}
+	}
+	return *m, nil
+}
+
+// promptView draws the question over the whole screen, as the key list does,
+// rather than over the panes: a question is the only thing to act on while it
+// is up.
+func (m tuiModel) promptView() string {
+	state := m.prompt
+	width := max(m.width, 1)
+	inner := max(width-tuiPanelStyle.GetHorizontalFrameSize(), 1)
+
+	var body strings.Builder
+	body.WriteString(paneTitle("TASK IS ASKING", tuiHelpStyle.Render(state.task), inner))
+	body.WriteString("\n\n")
+
+	var keys []helpBinding
+	switch state.kind {
+	case promptConfirm:
+		body.WriteString(truncateText(state.message, inner))
+		keys = []helpBinding{{"y", "yes"}, {"n/esc", "no"}}
+	case promptText:
+		body.WriteString(tuiTitleStyle.Render(state.name))
+		body.WriteString("\n\n")
+		state.input.SetWidth(max(inner-1, 1))
+		body.WriteString(state.input.View())
+		keys = []helpBinding{{"enter", "confirm"}, {"esc", "cancel"}}
+	case promptChoice:
+		body.WriteString(tuiTitleStyle.Render(state.name))
+		body.WriteString("\n\n")
+		for i, option := range state.options {
+			line := truncateText("  "+option, inner)
+			if i == state.cursor {
+				// Highlight the whole row, as the launcher does.
+				line = tuiSelectedStyle.Width(inner).Render(line)
+			}
+			body.WriteString(line)
+			body.WriteString("\n")
+		}
+		keys = []helpBinding{{"↑/↓", "choose"}, {"enter", "confirm"}, {"esc", "cancel"}}
+	}
+
+	panel := tuiPanelStyle.
+		BorderForeground(tuiAccentColor).
+		Width(width).
+		Height(max(m.height-1, 1)).
+		MaxWidth(width).
+		MaxHeight(max(m.height-1, 1)).
+		Render(body.String())
+	return panel + "\n" + renderPromptKeys(m, width, keys)
+}
+
+type helpBinding struct{ key, desc string }
+
+func renderPromptKeys(m tuiModel, width int, keys []helpBinding) string {
+	var line strings.Builder
+	for i, k := range keys {
+		if i > 0 {
+			line.WriteString(m.help.Styles.ShortSeparator.Inline(true).Render(m.help.ShortSeparator))
+		}
+		line.WriteString(m.help.Styles.ShortKey.Inline(true).Render(k.key))
+		line.WriteString(" ")
+		line.WriteString(m.help.Styles.ShortDesc.Inline(true).Render(k.desc))
+	}
+	return truncateText(line.String(), max(width, 1))
+}

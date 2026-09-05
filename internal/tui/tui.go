@@ -45,6 +45,11 @@ type UI struct {
 
 	mutex   sync.RWMutex
 	program *tea.Program
+	// programDone is closed when the program stops, so a task waiting on an
+	// answer is not left waiting for one that cannot come.
+	programDone chan struct{}
+	// promptMutex serialises questions: the screen holds one at a time.
+	promptMutex sync.Mutex
 
 	outputMutex  sync.Mutex
 	pending      map[uint64]pendingOutput
@@ -90,6 +95,7 @@ func New(log *logger.Logger, options Options) (*UI, error) {
 		statusLabels:  statusLabels,
 		taskNavigator: taskNavigator,
 		pending:       make(map[uint64]pendingOutput),
+		programDone:   make(chan struct{}),
 	}, nil
 }
 
@@ -216,6 +222,7 @@ func (t *UI) Run(ctx context.Context, executor *task.Executor, calls []*task.Cal
 	t.mutex.Unlock()
 
 	executor.Listener = t.listener()
+	executor.Prompter = t
 
 	oldStdout, oldStderr := t.logger.Stdout, t.logger.Stderr
 	systemWriter := &tuiWriter{ui: t, name: systemTaskName}
@@ -224,6 +231,7 @@ func (t *UI) Run(ctx context.Context, executor *task.Executor, calls []*task.Cal
 	restore := func() {
 		restoreOnce.Do(func() {
 			executor.Listener = nil
+			executor.Prompter = nil
 			t.logger.Stdout, t.logger.Stderr = oldStdout, oldStderr
 			t.mutex.Lock()
 			t.program = nil
@@ -238,6 +246,7 @@ func (t *UI) Run(ctx context.Context, executor *task.Executor, calls []*task.Cal
 		program.Send(interruptRequestedMsg{})
 	}()
 	finalModel, uiErr := program.Run()
+	close(t.programDone)
 	cancelSession()
 	runs.Wait()
 	if uiErr != nil {

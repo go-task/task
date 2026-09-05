@@ -123,6 +123,7 @@ type tuiModel struct {
 	fullscreenViewport viewport.Model
 	showHelp           bool
 	help               help.Model
+	prompt             *promptState
 	ticking            bool
 
 	// notice is transient feedback shown in place of the controls, such as the
@@ -212,6 +213,8 @@ func (m tuiModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, nil
 	case noticeRequestedMsg:
 		return m, m.showNotice(msg.text)
+	case promptRequestedMsg:
+		return m, m.beginPrompt(msg.state)
 	case clipboardCopiedMsg:
 		notice := "copied " + humanizeBytes(msg.size)
 		if msg.colours {
@@ -300,6 +303,10 @@ func (m *tuiModel) appendFailure(task *tuiTask, err error) {
 }
 
 func (m *tuiModel) handleKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
+	if m.prompt != nil {
+		// A task is blocked waiting for this answer, so nothing else can act.
+		return m.handlePromptKey(msg)
+	}
 	if m.showHelp {
 		// Any key leaves the key list; it is a reference, not a mode.
 		m.showHelp = false

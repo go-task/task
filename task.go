@@ -40,10 +40,6 @@ type MatchingTask struct {
 
 // Run runs Task
 func (e *Executor) Run(ctx context.Context, calls ...*Call) error {
-	if e.ownsScreen() && e.Interactive {
-		return errors.New("task: interactive variable prompting is not supported while a terminal UI is active")
-	}
-
 	// check if given tasks exist
 	for _, call := range calls {
 		task, err := e.GetTask(call)
@@ -88,7 +84,7 @@ func (e *Executor) Run(ctx context.Context, calls ...*Call) error {
 		return err
 	}
 	if e.ownsScreen() && len(watchCalls) > 0 {
-		return errors.New("task: watch mode is not supported while a terminal UI is active")
+		return errors.New("task: watch mode is not supported while a client is drawing the display")
 	}
 	// Schedule every requested root before starting execution so lifecycle
 	// consumers can present the complete set even when roots run sequentially.
@@ -201,13 +197,11 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) (runErr error) {
 	// call name does not carry, so re-read the name for the events that follow.
 	invocation = e.taskInvocation(call, t.Name())
 
-	if e.ownsScreen() {
-		if t.Interactive {
-			return fmt.Errorf("task: task %q is interactive and cannot run while a terminal UI is active", t.Name())
-		}
-		if len(t.Prompt) > 0 && !e.AssumeYes {
-			return fmt.Errorf("task: task %q requires confirmation; run with --yes", t.Name())
-		}
+	if e.ownsScreen() && t.Interactive {
+		// An interactive task is not a question Task can relay: its command
+		// takes the terminal and uses it however it likes. Confirmations and
+		// missing variables are relayed, through the Executor's Prompter.
+		return fmt.Errorf("task: task %q is interactive and cannot run while a client is drawing the display", t.Name())
 	}
 
 	// Check if condition after CompiledTask so dynamic variables are resolved
@@ -292,14 +286,15 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) (runErr error) {
 		}
 
 		for _, p := range t.Prompt {
-			if p != "" && !e.Dry {
-				if err := e.Logger.Prompt(logger.Yellow, p, "n", "y", "yes"); errors.Is(err, logger.ErrNoTerminal) {
-					return &errors.TaskCancelledNoTerminalError{TaskName: call.Task}
-				} else if errors.Is(err, logger.ErrPromptCancelled) {
-					return &errors.TaskCancelledByUserError{TaskName: call.Task}
-				} else if err != nil {
-					return err
-				}
+			if p == "" || e.Dry {
+				continue
+			}
+			confirmed, err := e.confirm(call.Task, p)
+			if err != nil {
+				return err
+			}
+			if !confirmed {
+				return &errors.TaskCancelledByUserError{TaskName: call.Task}
 			}
 		}
 

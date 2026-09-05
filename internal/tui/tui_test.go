@@ -1253,3 +1253,91 @@ func TestTUIModelReportsNoDurationForTasksThatNeverRan(t *testing.T) {
 	assert.Empty(t, m.durationLabel(m.byID[2]))
 	assert.NotContains(t, ansi.Strip(m.taskList(40, 10)), "never-attempted   0ms")
 }
+
+func TestPromptAsksTheUserAndReturnsTheAnswer(t *testing.T) {
+	t.Parallel()
+
+	press := func(m tuiModel, keys ...string) tuiModel {
+		for _, key := range keys {
+			next, _ := m.Update(tea.KeyPressMsg{Code: rune(key[0]), Text: key})
+			m = next.(tuiModel)
+		}
+		return m
+	}
+
+	t.Run("confirm", func(t *testing.T) {
+		t.Parallel()
+		m := newTUIModel(func() {})
+		state := &promptState{kind: promptConfirm, task: "deploy", message: "Really?", done: make(chan promptAnswer, 1)}
+		m.beginPrompt(state)
+		assert.Contains(t, ansi.Strip(m.View().Content), "Really?")
+
+		m = press(m, "y")
+		assert.Equal(t, promptAnswer{confirmed: true}, <-state.done)
+		assert.Nil(t, m.prompt, "the question leaves the screen once answered")
+	})
+
+	t.Run("declining is not an error", func(t *testing.T) {
+		t.Parallel()
+		m := newTUIModel(func() {})
+		state := &promptState{kind: promptConfirm, done: make(chan promptAnswer, 1)}
+		m.beginPrompt(state)
+
+		m = press(m, "n")
+		answer := <-state.done
+		assert.False(t, answer.confirmed)
+		assert.NoError(t, answer.err, "declining stops the task without being an error")
+	})
+
+	t.Run("free text", func(t *testing.T) {
+		t.Parallel()
+		m := newTUIModel(func() {})
+		state := &promptState{kind: promptText, name: "RELEASE_NAME", done: make(chan promptAnswer, 1)}
+		m.beginPrompt(state)
+
+		m = press(m, "v", "1")
+		next, _ := m.Update(tea.KeyPressMsg{Code: tea.KeyEnter, Text: "enter"})
+		m = next.(tuiModel)
+		assert.Equal(t, "v1", (<-state.done).value)
+	})
+
+	t.Run("choice", func(t *testing.T) {
+		t.Parallel()
+		m := newTUIModel(func() {})
+		state := &promptState{
+			kind:    promptChoice,
+			name:    "ENVIRONMENT",
+			options: []string{"development", "staging", "production"},
+			done:    make(chan promptAnswer, 1),
+		}
+		m.beginPrompt(state)
+		assert.Contains(t, ansi.Strip(m.View().Content), "staging")
+
+		m = press(m, "j")
+		next, _ := m.Update(tea.KeyPressMsg{Code: tea.KeyEnter, Text: "enter"})
+		m = next.(tuiModel)
+		assert.Equal(t, "staging", (<-state.done).value)
+	})
+
+	t.Run("cancelling a value stops the run", func(t *testing.T) {
+		t.Parallel()
+		m := newTUIModel(func() {})
+		state := &promptState{kind: promptText, done: make(chan promptAnswer, 1)}
+		m.beginPrompt(state)
+
+		next, _ := m.Update(tea.KeyPressMsg{Code: tea.KeyEsc, Text: "esc"})
+		m = next.(tuiModel)
+		assert.ErrorIs(t, (<-state.done).err, task.ErrPromptCancelled)
+	})
+}
+
+func TestPromptRefusesAVariableTypeItCannotRender(t *testing.T) {
+	t.Parallel()
+
+	// Task can add variable types; guessing would produce a value the task acts
+	// on, so an unknown one is refused.
+	ui := &UI{}
+	_, err := ui.Ask(task.VarRequest{Task: "deploy", Name: "COUNT", Type: nil})
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "cannot ask")
+}

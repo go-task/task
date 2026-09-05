@@ -529,3 +529,134 @@ func TestListenerNeedsNoFields(t *testing.T) {
 	require.NoError(t, e.Run(t.Context(), &task.Call{Task: "build"}))
 	assert.Contains(t, out.String(), "built")
 }
+
+// recordingPrompter answers Task's questions the way a client would.
+type recordingPrompter struct {
+	mutex     sync.Mutex
+	confirms  []string
+	requests  []task.VarRequest
+	confirmed bool
+	answer    any
+	err       error
+}
+
+func (p *recordingPrompter) Confirm(taskName, message string) (bool, error) {
+	p.mutex.Lock()
+	defer p.mutex.Unlock()
+	p.confirms = append(p.confirms, taskName+": "+message)
+	return p.confirmed, p.err
+}
+
+func (p *recordingPrompter) Ask(request task.VarRequest) (any, error) {
+	p.mutex.Lock()
+	defer p.mutex.Unlock()
+	p.requests = append(p.requests, request)
+	return p.answer, p.err
+}
+
+func newPrompterExecutor(t *testing.T, taskfile string) *task.Executor {
+	t.Helper()
+	dir := t.TempDir()
+	require.NoError(t, os.WriteFile(filepath.Join(dir, "Taskfile.yml"), []byte(taskfile), 0o600))
+	e := task.NewExecutor(
+		task.WithDir(dir),
+		task.WithStdout(io.Discard),
+		task.WithStderr(io.Discard),
+		task.WithSilent(true),
+		task.WithForce(true),
+		task.WithInteractive(true),
+	)
+	require.NoError(t, e.Setup())
+	return e
+}
+
+func TestPrompterAnswersForRequiredVariables(t *testing.T) {
+	t.Parallel()
+
+	e := newPrompterExecutor(t, `version: '3'
+tasks:
+  release:
+    requires:
+      vars:
+        - RELEASE_NAME
+        - name: ENVIRONMENT
+          enum: [development, staging, production]
+    cmds: [echo releasing]
+`)
+	prompter := &recordingPrompter{answer: "staging"}
+	e.Prompter = prompter
+
+	require.NoError(t, e.Run(t.Context(), &task.Call{Task: "release"}))
+
+	byName := make(map[string]task.VarRequest)
+	for _, request := range prompter.requests {
+		byName[request.Name] = request
+	}
+
+	// A free-text variable and an enum arrive as different types, so a client
+	// can pick the right dialog without inspecting the Taskfile.
+	require.Contains(t, byName, "RELEASE_NAME")
+	assert.Equal(t, task.StringVar{}, byName["RELEASE_NAME"].Type)
+	assert.Equal(t, "release", byName["RELEASE_NAME"].Task, "the client is told who is asking")
+
+	require.Contains(t, byName, "ENVIRONMENT")
+	enum, ok := byName["ENVIRONMENT"].Type.(task.EnumVar)
+	require.True(t, ok, "an enum variable is an EnumVar")
+	assert.Equal(t, []string{"development", "staging", "production"}, enum.Options)
+}
+
+func TestPrompterConfirmsAndDeclines(t *testing.T) {
+	t.Parallel()
+
+	taskfile := `version: '3'
+tasks:
+  deploy:
+    prompt: Really deploy?
+    cmds: [echo deploying]
+`
+	e := newPrompterExecutor(t, taskfile)
+	prompter := &recordingPrompter{confirmed: true}
+	e.Prompter = prompter
+	require.NoError(t, e.Run(t.Context(), &task.Call{Task: "deploy"}))
+	assert.Equal(t, []string{"deploy: Really deploy?"}, prompter.confirms)
+
+	// Declining stops the task, and is not an error the client has to invent.
+	declining := newPrompterExecutor(t, taskfile)
+	declining.Prompter = &recordingPrompter{confirmed: false}
+	err := declining.Run(t.Context(), &task.Call{Task: "deploy"})
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "cancelled")
+}
+
+func TestPrompterCancellationStopsTheRun(t *testing.T) {
+	t.Parallel()
+
+	e := newPrompterExecutor(t, `version: '3'
+tasks:
+  release:
+    requires:
+      vars: [RELEASE_NAME]
+    cmds: [echo releasing]
+`)
+	e.Prompter = &recordingPrompter{err: task.ErrPromptCancelled}
+
+	err := e.Run(t.Context(), &task.Call{Task: "release"})
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "cancelled")
+}
+
+func TestPrompterIsUsedWithoutATerminal(t *testing.T) {
+	t.Parallel()
+
+	// A client answers, so Task does not need a terminal of its own. Without a
+	// Prompter this same executor would fail on the missing variable.
+	e := newPrompterExecutor(t, `version: '3'
+tasks:
+  release:
+    requires:
+      vars: [RELEASE_NAME]
+    cmds: [echo releasing]
+`)
+	e.Prompter = &recordingPrompter{answer: "v1"}
+	require.NoError(t, e.Run(t.Context(), &task.Call{Task: "release"}))
+}

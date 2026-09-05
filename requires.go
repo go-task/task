@@ -1,19 +1,71 @@
 package task
 
 import (
+	"fmt"
 	"slices"
 
 	"github.com/elliotchance/orderedmap/v3"
 
 	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/input"
+	"github.com/go-task/task/v3/internal/logger"
 	"github.com/go-task/task/v3/internal/templater"
 	"github.com/go-task/task/v3/internal/term"
 	"github.com/go-task/task/v3/taskfile/ast"
 )
 
 func (e *Executor) canPrompt() bool {
+	if e.Prompter != nil {
+		// The client asks, so no terminal is needed.
+		return e.Interactive
+	}
 	return e.Interactive && (e.AssumeTerm || term.IsTerminal())
+}
+
+// askVar obtains a required variable that was not supplied: from the client
+// when one can answer, and otherwise on the terminal as Task always has.
+func (e *Executor) askVar(taskName string, v *ast.VarsWithValidation) (any, error) {
+	if e.Prompter != nil {
+		return e.Prompter.Ask(VarRequest{
+			Task: taskName,
+			Name: v.Name,
+			Type: varTypeOf(v),
+		})
+	}
+	if e.ownsScreen() {
+		return nil, fmt.Errorf(
+			"task: task %q needs a value for %q, and the client cannot ask for one",
+			taskName, v.Name)
+	}
+	return e.newPrompter().Prompt(v.Name, getEnumValues(v.Enum))
+}
+
+func varTypeOf(v *ast.VarsWithValidation) VarType {
+	if options := getEnumValues(v.Enum); len(options) > 0 {
+		return EnumVar{Options: options}
+	}
+	return StringVar{}
+}
+
+// confirm asks whether to run a task that declares "prompt".
+func (e *Executor) confirm(taskName, message string) (bool, error) {
+	if e.Prompter != nil {
+		return e.Prompter.Confirm(taskName, message)
+	}
+	if e.ownsScreen() {
+		return false, fmt.Errorf(
+			"task: task %q needs confirmation, and the client cannot ask for it", taskName)
+	}
+	err := e.Logger.Prompt(logger.Yellow, message, "n", "y", "yes")
+	switch {
+	case errors.Is(err, logger.ErrNoTerminal):
+		return false, &errors.TaskCancelledNoTerminalError{TaskName: taskName}
+	case errors.Is(err, logger.ErrPromptCancelled):
+		return false, nil
+	case err != nil:
+		return false, err
+	}
+	return true, nil
 }
 
 func (e *Executor) newPrompter() *input.Prompter {
@@ -36,6 +88,7 @@ func (e *Executor) promptDepsVars(calls []*Call) error {
 	// Collect all missing vars from the dependency tree
 	visited := make(map[string]bool)
 	varsMap := orderedmap.NewOrderedMap[string, *ast.VarsWithValidation]()
+	askedFor := make(map[string]string)
 
 	var collect func(call *Call) error
 	collect = func(call *Call) error {
@@ -47,6 +100,9 @@ func (e *Executor) promptDepsVars(calls []*Call) error {
 		for _, v := range getMissingRequiredVars(compiledTask) {
 			if !varsMap.Has(v.Name) {
 				varsMap.Set(v.Name, resolveEnumRefForPrompt(v, compiledTask.Vars))
+				// Remember who needed it first, so a client can say which task
+				// it is asking on behalf of.
+				askedFor[v.Name] = call.Task
 			}
 		}
 
@@ -80,14 +136,13 @@ func (e *Executor) promptDepsVars(calls []*Call) error {
 		return nil
 	}
 
-	prompter := e.newPrompter()
 	e.promptedVars = ast.NewVars()
 
 	for v := range varsMap.Values() {
-		value, err := prompter.Prompt(v.Name, getEnumValues(v.Enum))
+		value, err := e.askVar(askedFor[v.Name], v)
 		if err != nil {
-			if errors.Is(err, input.ErrCancelled) {
-				return &errors.TaskCancelledByUserError{TaskName: "interactive prompt"}
+			if errors.Is(err, input.ErrCancelled) || errors.Is(err, ErrPromptCancelled) {
+				return &errors.TaskCancelledByUserError{TaskName: askedFor[v.Name]}
 			}
 			return err
 		}
@@ -120,12 +175,10 @@ func (e *Executor) promptTaskVars(t *ast.Task, call *Call) (bool, error) {
 		return false, nil
 	}
 
-	prompter := e.newPrompter()
-
 	for _, v := range missing {
-		value, err := prompter.Prompt(v.Name, getEnumValues(v.Enum))
+		value, err := e.askVar(t.Task, v)
 		if err != nil {
-			if errors.Is(err, input.ErrCancelled) {
+			if errors.Is(err, input.ErrCancelled) || errors.Is(err, ErrPromptCancelled) {
 				return false, &errors.TaskCancelledByUserError{TaskName: t.Name()}
 			}
 			return false, err

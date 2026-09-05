@@ -17,6 +17,8 @@ import (
 func (m tuiModel) View() tea.View {
 	content := m.renderContent()
 	switch {
+	case m.prompt != nil:
+		content = m.promptView()
 	case m.showHelp:
 		content = m.helpView()
 	case m.fullscreenOutput:
@@ -24,7 +26,7 @@ func (m tuiModel) View() tea.View {
 	}
 	view := tea.NewView(content)
 	view.AltScreen = true
-	if m.fullscreenOutput || m.showHelp {
+	if m.fullscreenOutput || m.showHelp || m.prompt != nil {
 		view.MouseMode = tea.MouseModeNone
 	} else {
 		view.MouseMode = tea.MouseModeCellMotion
