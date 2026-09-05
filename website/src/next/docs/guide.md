@@ -2891,10 +2891,11 @@ is a repaint. Three controls get the text out instead:
   as they would to any other command output.
 - `s` saves the selected task's output, and `S` saves every task's output to a
   folder, one file per task. Both ask where in the footer: `s` suggests a full
-  path and `S` only a folder, since the files inside are named for you. Names
-  are `<timestamp>.<task>.log`, so a folder of logs sorts by run. Any missing
-  directories are created, and saved output keeps its escape sequences, so `cat`
-  and `less -R` show the colour.
+  path and `S` only a folder, since the files inside are named for you. The
+  suggestions are `~/logs/<timestamp>.<task>.log` and
+  `~/logs/<timestamp>.<task>/`, named for the task you ran, so a folder of logs
+  sorts by run. Any missing directories are created, and saved output keeps its
+  escape sequences, so `cat` and `less -R` show the colour.
 
 All three work whether or not the task has finished. A snapshot of a running
 task says so, and shows the output as it stood at that moment.

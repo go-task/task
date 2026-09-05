@@ -1647,11 +1647,17 @@ func TestSaveAllWritesOneFilePerTask(t *testing.T) { // nolint:paralleltest // t
 	m = updateTUIModel(t, m, taskOutputMsg{id: 1, name: "build", data: "building\n"})
 	m = updateTUIModel(t, m, taskOutputMsg{id: 2, name: "test:unit", data: "testing\n"})
 
+	// Select a task other than the root, to show the folder is named for the
+	// run rather than for whatever happens to be selected.
+	m.selectedID, m.hasSelect = 2, true
+
 	m = updateTUIModel(t, m, tea.KeyPressMsg{Code: 'S', Text: "S"})
 	require.NotNil(t, m.save)
-	assert.Contains(t, ansi.Strip(m.View().Content), "Save all to folder:")
-	assert.NotContains(t, ansi.Strip(m.View().Content), ".log",
-		"saving all asks for a folder, not a file")
+	suggestion := ansi.Strip(m.View().Content)
+	assert.Contains(t, suggestion, "Save all to folder:")
+	assert.NotContains(t, suggestion, ".log", "saving all asks for a folder, not a file")
+	assert.Contains(t, suggestion, ".build", "the folder is named for the task that was run")
+	assert.NotContains(t, suggestion, "test-unit")
 	m = clearField(t, m)
 
 	m, saved := typePath(t, m, "logs/run-1")
@@ -1664,15 +1670,10 @@ func TestSaveAllWritesOneFilePerTask(t *testing.T) { // nolint:paralleltest // t
 	for _, entry := range entries {
 		names = append(names, entry.Name())
 	}
-	// The folder was the only thing asked for, so the files are named the way a
-	// single save names its own: when it was saved, then which task it was.
-	require.Len(t, names, 2)
-	for _, name := range names {
-		assert.Regexp(t, `^\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}\.`, name)
-	}
-	// A namespaced task name is not a usable file name.
-	assert.True(t, strings.HasSuffix(names[0], ".build.log") || strings.HasSuffix(names[1], ".build.log"), names)
-	assert.True(t, strings.HasSuffix(names[0], ".test-unit.log") || strings.HasSuffix(names[1], ".test-unit.log"), names)
+	// The folder already says which run this was and when, so a file inside it
+	// only says which task it came from. A namespaced task name is not a usable
+	// file name.
+	assert.ElementsMatch(t, []string{"build.log", "test-unit.log"}, names)
 }
 
 func TestSaveReportsWhenThereIsNothingToSave(t *testing.T) {

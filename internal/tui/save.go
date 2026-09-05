@@ -41,10 +41,16 @@ type saveState struct {
 // usable in a file name on Windows, so the ISO form is spelled with dashes.
 const savedAtLayout = "2006-01-02T15-04-05"
 
-// generatedFileName is what a saved output is called: when it was saved, then
-// which task it came from, so a folder of logs sorts by run.
+// generatedFileName is what a single saved output is called: when it was saved,
+// then which task it came from, so a folder of logs sorts by run.
 func generatedFileName(stamp, taskName string) string {
-	return stamp + "." + fileNameFor(taskName) + ".log"
+	return generatedName(stamp, taskName) + ".log"
+}
+
+// generatedName is the timestamped name of one run, used for a single file and
+// for the folder a whole run is saved into.
+func generatedName(stamp, taskName string) string {
+	return stamp + "." + fileNameFor(taskName)
 }
 
 // defaultSaveDir is where logs go unless the user says otherwise.
@@ -70,9 +76,15 @@ func (m *tuiModel) askWhereToSave(all bool) tea.Cmd {
 	}
 
 	stamp := time.Now().Format(savedAtLayout)
-	suggestion := defaultSaveDir()
-	if !all {
-		suggestion = filepath.Join(suggestion, generatedFileName(stamp, outputs[0].name))
+	name := outputs[0].name
+	if all {
+		name = m.runName()
+	}
+	suggestion := filepath.Join(defaultSaveDir(), generatedFileName(stamp, name))
+	if all {
+		// A folder, not a file: the run is the folder, and the tasks are the
+		// files inside it.
+		suggestion = filepath.Join(defaultSaveDir(), generatedName(stamp, name))
 	}
 	input := textinput.New()
 	input.Prompt = ""
@@ -126,9 +138,9 @@ func saveOutputs(state *saveState, target string) tea.Cmd {
 		}
 		used := make(map[string]bool, len(state.outputs))
 		for _, output := range state.outputs {
-			// Only the folder was asked for, so the files are named the same
-			// way a single save names its own.
-			name := unusedName(generatedFileName(state.stamp, output.name), used)
+			// The folder already says which run this was and when, so a file
+			// only has to say which task it came from.
+			name := unusedName(fileNameFor(output.name)+".log", used)
 			if err := os.WriteFile(filepath.Join(path, name), []byte(output.content), 0o600); err != nil {
 				return savedMsg{err: err}
 			}
@@ -213,4 +225,22 @@ func saveError(err error) string {
 		return pathErr.Err.Error()
 	}
 	return err.Error()
+}
+
+// runName names the run, for the folder a whole run is saved into. That is the
+// task the user asked for, rather than whichever one happens to be selected.
+func (m tuiModel) runName() string {
+	var root *tuiTask
+	for _, task := range m.tasks {
+		if task.isRoot && (root == nil || task.id < root.id) {
+			root = task
+		}
+	}
+	if root != nil {
+		return m.taskName(root)
+	}
+	if selected := m.selectedTask(); selected != nil {
+		return m.taskName(selected)
+	}
+	return "task"
 }
