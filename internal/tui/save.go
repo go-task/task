@@ -132,7 +132,7 @@ func saveOutputs(state *saveState, target string) tea.Cmd {
 		}
 
 		if !state.all {
-			if err := os.MkdirAll(filepath.Dir(path), 0o750); err != nil {
+			if err := makeSaveDir(filepath.Dir(path)); err != nil {
 				return savedMsg{err: err}
 			}
 			if err := os.WriteFile(path, []byte(state.outputs[0].content), 0o600); err != nil {
@@ -141,7 +141,7 @@ func saveOutputs(state *saveState, target string) tea.Cmd {
 			return savedMsg{path: path, count: 1}
 		}
 
-		if err := os.MkdirAll(path, 0o750); err != nil {
+		if err := makeSaveDir(path); err != nil {
 			return savedMsg{err: err}
 		}
 		used := make(map[string]bool, len(state.outputs))
@@ -251,4 +251,49 @@ func (m tuiModel) runName() string {
 		return m.taskName(selected)
 	}
 	return "task"
+}
+
+// ignoreMarker is what Task writes into a logs directory it created, so a
+// directory the user did not make does not turn up in git status, or get
+// committed by a stray git add.
+const ignoreMarker = "# Created by Task. Delete this file to track saved output.\n*\n"
+
+// makeSaveDir creates dir and its parents.
+//
+// When it is Task that creates the default logs directory, it leaves a
+// .gitignore behind. A directory the user typed themselves is theirs, and one
+// that already exists is left exactly as it is.
+func makeSaveDir(dir string) error {
+	head := firstPathElement(dir)
+	ours := head == defaultSaveDir() && !pathExists(head)
+
+	if err := os.MkdirAll(dir, 0o750); err != nil {
+		return err
+	}
+	if !ours {
+		return nil
+	}
+	marker := filepath.Join(head, ".gitignore")
+	if pathExists(marker) {
+		return nil
+	}
+	return os.WriteFile(marker, []byte(ignoreMarker), 0o600)
+}
+
+// firstPathElement is the leading directory of a relative path, and empty for
+// an absolute one, which the user asked for by name.
+func firstPathElement(path string) string {
+	cleaned := filepath.Clean(path)
+	if filepath.IsAbs(cleaned) {
+		return ""
+	}
+	if index := strings.IndexRune(cleaned, filepath.Separator); index >= 0 {
+		return cleaned[:index]
+	}
+	return cleaned
+}
+
+func pathExists(path string) bool {
+	_, err := os.Stat(path)
+	return err == nil
 }

@@ -1727,3 +1727,59 @@ func TestGeneratedFileNameGroupsByTask(t *testing.T) {
 	assert.NotEqual(t, first, second)
 	assert.True(t, strings.HasSuffix(second, ".log"), second)
 }
+
+func TestSaveLeavesAGitignoreInADirectoryItCreated(t *testing.T) { // nolint:paralleltest // t.Chdir cannot be used in a parallel test
+	dir := t.TempDir()
+	t.Chdir(dir)
+
+	m := withOutput(t)
+	m = updateTUIModel(t, m, tea.KeyPressMsg{Code: 's', Text: "s"})
+	_, saved := typePath(t, m, "")
+	require.NoError(t, saved.err)
+
+	// Task made the directory, so it ignores itself rather than turning up in
+	// git status or being swept in by git add.
+	marker, err := os.ReadFile(filepath.Join(dir, "logs", ".gitignore"))
+	require.NoError(t, err)
+	assert.Contains(t, string(marker), "*")
+	assert.Contains(t, string(marker), "Created by Task")
+}
+
+func TestSaveLeavesAnExistingDirectoryAlone(t *testing.T) { // nolint:paralleltest // t.Chdir cannot be used in a parallel test
+	dir := t.TempDir()
+	t.Chdir(dir)
+	require.NoError(t, os.Mkdir("logs", 0o750))
+
+	m := withOutput(t)
+	m = updateTUIModel(t, m, tea.KeyPressMsg{Code: 's', Text: "s"})
+	_, saved := typePath(t, m, "")
+	require.NoError(t, saved.err)
+
+	// The directory was already there, so it is the user's to manage.
+	assert.NoFileExists(t, filepath.Join(dir, "logs", ".gitignore"))
+}
+
+func TestSaveDoesNotWriteAGitignoreIntoAPathTheUserChose(t *testing.T) { // nolint:paralleltest // t.Chdir cannot be used in a parallel test
+	dir := t.TempDir()
+	t.Chdir(dir)
+
+	m := withOutput(t)
+	m = updateTUIModel(t, m, tea.KeyPressMsg{Code: 's', Text: "s"})
+	m = clearField(t, m)
+	_, saved := typePath(t, m, "build-output/today/build.log")
+	require.NoError(t, saved.err)
+
+	assert.NoFileExists(t, filepath.Join(dir, "build-output", ".gitignore"))
+	assert.NoFileExists(t, filepath.Join(dir, "build-output", "today", ".gitignore"))
+}
+
+func TestFirstPathElement(t *testing.T) {
+	t.Parallel()
+
+	assert.Equal(t, "logs", firstPathElement("logs"))
+	assert.Equal(t, "logs", firstPathElement("logs/run-1"))
+	assert.Equal(t, "logs", firstPathElement("./logs/run-1"))
+	assert.Equal(t, ".", firstPathElement("."))
+	// An absolute path was asked for by name, so nothing is added to it.
+	assert.Empty(t, firstPathElement(filepath.Join(string(filepath.Separator), "var", "logs")))
+}

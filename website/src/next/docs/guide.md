@@ -2894,8 +2894,9 @@ is a repaint. Three controls get the text out instead:
   path and `S` only a folder, since the files inside are named for you. The
   suggestions are `logs/<task>.<timestamp>.log` and `logs/<task>.<timestamp>/`,
   beside the project and named for the task you ran, so a folder of logs groups
-  a task's runs together and `ls -t` still orders them by time. You may want
-  `logs/` in your `.gitignore`. Any missing directories are created, and saved output keeps its
+  a task's runs together and `ls -t` still orders them by time. A `logs`
+  directory that Task creates ignores itself, so it does not appear in
+  `git status`; one that already exists is left alone. Any missing directories are created, and saved output keeps its
   escape sequences, so `cat` and `less -R` show the colour.
 
 All three work whether or not the task has finished. A snapshot of a running
