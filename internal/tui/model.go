@@ -2,6 +2,7 @@ package tui
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"time"
 
@@ -215,6 +216,14 @@ func (m tuiModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, m.showNotice(msg.text)
 	case promptRequestedMsg:
 		return m, m.beginPrompt(msg.state)
+	case savedMsg:
+		if msg.err != nil {
+			return m, m.showNotice("save failed: " + msg.err.Error())
+		}
+		if msg.count == 1 {
+			return m, m.showNotice("saved " + msg.path)
+		}
+		return m, m.showNotice(fmt.Sprintf("saved %d outputs to %s", msg.count, msg.path))
 	case clipboardCopiedMsg:
 		notice := "copied " + humanizeBytes(msg.size)
 		if msg.colours {
@@ -353,6 +362,10 @@ func (m *tuiModel) handleFullscreenKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd)
 		return *m, m.copyOutput(true)
 	case key.Matches(msg, keys.Snapshot):
 		return *m, m.snapshotSelectedOutput()
+	case key.Matches(msg, keys.Save):
+		return *m, m.saveSelected()
+	case key.Matches(msg, keys.SaveAll):
+		return *m, m.saveAll()
 	case key.Matches(msg, keys.Move):
 		if msg.String() == "up" || msg.String() == "k" {
 			m.fullscreenViewport.ScrollUp(1)
@@ -397,6 +410,10 @@ func (m *tuiModel) handleDashboardKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) 
 		return *m, m.copyOutput(true)
 	case key.Matches(msg, keys.Snapshot):
 		return *m, m.snapshotSelectedOutput()
+	case key.Matches(msg, keys.Save):
+		return *m, m.saveSelected()
+	case key.Matches(msg, keys.SaveAll):
+		return *m, m.saveAll()
 	case key.Matches(msg, keys.Page):
 		m.focus = outputPane
 		return *m, m.updateViewport(msg)

@@ -1204,8 +1204,10 @@ func TestPrintToTerminalIsBoundToT(t *testing.T) {
 	_, cmd := m.Update(tea.KeyPressMsg{Code: 't', Text: "t"})
 	assert.NotNil(t, cmd, "t prints the output to the terminal")
 
-	_, cmd = m.Update(tea.KeyPressMsg{Code: 's', Text: "s"})
-	assert.Nil(t, cmd, "s no longer does anything")
+	// s used to mean snapshot, before printing moved to t. It now saves.
+	keys := newDashboardKeys(false, true)
+	assert.Equal(t, "print output to terminal", keys.Snapshot.Help().Desc)
+	assert.Equal(t, "save output to a file", keys.Save.Help().Desc)
 }
 
 func TestFooterPairsTheArrowKeys(t *testing.T) {
@@ -1219,7 +1221,7 @@ func TestFooterPairsTheArrowKeys(t *testing.T) {
 	for _, binding := range bindings {
 		keys = append(keys, binding.Help().Key)
 	}
-	require.Len(t, keys, 8)
+	require.Len(t, keys, 9)
 	assert.Equal(t, []string{"↑/↓", "←/→"}, keys[len(keys)-2:], "the arrows are adjacent and last")
 	assert.Equal(t, "pane", bindings[len(bindings)-1].Help().Desc)
 }
@@ -1533,4 +1535,90 @@ func TestFinishedDashboardIsOnlyClosedByADocumentedKey(t *testing.T) {
 
 	_, cmd = m.Update(tea.KeyPressMsg{Code: 'q', Text: "q"})
 	assert.NotNil(t, cmd, "q, which the footer lists, does")
+}
+
+func TestSaveWritesTheSelectedOutput(t *testing.T) { // nolint:paralleltest // t.Chdir cannot be used in a parallel test
+	dir := t.TempDir()
+	t.Chdir(dir)
+
+	m := newTUIModel(func() {})
+	m = updateTUIModel(t, m, started(1, 0, "build"))
+	m = updateTUIModel(t, m, taskOutputMsg{id: 1, name: "build", data: "\x1b[31mFAILED\x1b[0m\n"})
+
+	next, cmd := m.Update(tea.KeyPressMsg{Code: 's', Text: "s"})
+	m = next.(tuiModel)
+	require.NotNil(t, cmd)
+	saved, ok := cmd().(savedMsg)
+	require.True(t, ok)
+	require.NoError(t, saved.err)
+
+	content, err := os.ReadFile(saved.path)
+	require.NoError(t, err)
+	// Written as the command produced it: what is not stripped can still be
+	// stripped later, and cat renders the colour.
+	assert.Equal(t, "\x1b[31mFAILED\x1b[0m\n", string(content))
+
+	m = updateTUIModel(t, m, saved)
+	assert.Contains(t, ansi.Strip(m.View().Content), "saved")
+}
+
+func TestSaveDoesNotOverwriteAnEarlierSave(t *testing.T) { // nolint:paralleltest // t.Chdir cannot be used in a parallel test
+	dir := t.TempDir()
+	t.Chdir(dir)
+
+	m := newTUIModel(func() {})
+	m = updateTUIModel(t, m, started(1, 0, "build"))
+	m = updateTUIModel(t, m, taskOutputMsg{id: 1, name: "build", data: "first\n"})
+
+	first := m.saveSelected()().(savedMsg)
+	second := m.saveSelected()().(savedMsg)
+	require.NoError(t, first.err)
+	require.NoError(t, second.err)
+	assert.NotEqual(t, first.path, second.path, "saving twice keeps both files")
+}
+
+func TestSaveAllWritesOneFilePerTask(t *testing.T) { // nolint:paralleltest // t.Chdir cannot be used in a parallel test
+	dir := t.TempDir()
+	t.Chdir(dir)
+
+	m := newTUIModel(func() {})
+	m = updateTUIModel(t, m, started(1, 0, "build"))
+	m = updateTUIModel(t, m, startedUnder(2, 1, 1, "test:unit"))
+	m = updateTUIModel(t, m, startedUnder(3, 1, 1, "silent"))
+	m = updateTUIModel(t, m, taskOutputMsg{id: 1, name: "build", data: "building\n"})
+	m = updateTUIModel(t, m, taskOutputMsg{id: 2, name: "test:unit", data: "testing\n"})
+
+	saved := m.saveAll()().(savedMsg)
+	require.NoError(t, saved.err)
+	assert.Equal(t, 2, saved.count, "a task with no output is not written")
+
+	entries, err := os.ReadDir(saved.path)
+	require.NoError(t, err)
+	var names []string
+	for _, entry := range entries {
+		names = append(names, entry.Name())
+	}
+	// A namespaced task name is not a usable file name.
+	assert.ElementsMatch(t, []string{"build.log", "test-unit.log"}, names)
+}
+
+func TestSaveReportsWhenThereIsNothingToSave(t *testing.T) {
+	t.Parallel()
+
+	m := newTUIModel(func() {})
+	m = updateTUIModel(t, m, started(1, 0, "build"))
+
+	m = updateTUIModel(t, m, tea.KeyPressMsg{Code: 's', Text: "s"})
+	assert.Contains(t, ansi.Strip(m.View().Content), "nothing to save")
+}
+
+func TestFileNameForATaskName(t *testing.T) {
+	t.Parallel()
+
+	assert.Equal(t, "build", fileNameFor("build"))
+	assert.Equal(t, "test-unit", fileNameFor("test:unit"))
+	assert.Equal(t, "Build-the-docs", fileNameFor("Build the docs"))
+	assert.Equal(t, "build-foo", fileNameFor("build:*:foo"))
+	// A label can be anything, including nothing usable.
+	assert.Equal(t, "task", fileNameFor("///"))
 }

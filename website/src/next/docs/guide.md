@@ -2889,6 +2889,10 @@ is a repaint. Three controls get the text out instead:
 - `t` prints the output to the terminal and waits for Enter. The text lands in
   your terminal's normal scrollback, where its own scrolling and selection apply
   as they would to any other command output.
+- `s` saves the selected task's output to a file in the current directory, and
+  `S` saves every task's output to a new folder, one file per task. Saved output
+  keeps its escape sequences, so `cat` and `less -R` show the colour; an
+  existing file is never overwritten.
 
 All three work whether or not the task has finished. A snapshot of a running
 task says so, and shows the output as it stood at that moment.

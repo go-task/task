@@ -45,6 +45,8 @@ type dashboardKeys struct {
 	Copy       key.Binding
 	CopyRaw    key.Binding
 	Snapshot   key.Binding
+	Save       key.Binding
+	SaveAll    key.Binding
 	Launcher   key.Binding
 	Quit       key.Binding
 	Help       key.Binding
@@ -69,6 +71,8 @@ func newDashboardKeys(outputFocused, canReturnToLauncher bool) dashboardKeys {
 		Copy:       key.NewBinding(key.WithKeys("y"), key.WithHelp("y", "copy output without ANSI codes")),
 		CopyRaw:    key.NewBinding(key.WithKeys("Y"), key.WithHelp("Y", "copy output with ANSI codes")),
 		Snapshot:   key.NewBinding(key.WithKeys("t"), key.WithHelp("t", "print output to terminal")),
+		Save:       key.NewBinding(key.WithKeys("s"), key.WithHelp("s", "save output to a file")),
+		SaveAll:    key.NewBinding(key.WithKeys("S"), key.WithHelp("S", "save every output to a folder")),
 		Launcher:   key.NewBinding(key.WithKeys("esc", "b"), key.WithHelp("esc/b", "stop, open launcher")),
 		Quit:       key.NewBinding(key.WithKeys("q", "ctrl+c"), key.WithHelp("q", "stop and quit")),
 		Help:       key.NewBinding(key.WithKeys("?"), key.WithHelp("?", "show this list")),
@@ -100,6 +104,7 @@ func (k dashboardKeys) ShortHelp() []key.Binding {
 		terse(k.Copy, "y", "copy"),
 		terse(k.Fullscreen, "f", "fullscreen"),
 		terse(k.Snapshot, "t", "to terminal"),
+		terse(k.Save, "s", "save"),
 		terse(k.Move, "↑/↓", move),
 		terse(k.Pane, "←/→", "pane"),
 	}
@@ -113,7 +118,7 @@ func (k dashboardKeys) allBindings() []key.Binding {
 	return []key.Binding{
 		k.Move, k.Pane, k.Click, k.Wheel, k.Page,
 		k.Top, k.Bottom, k.Fullscreen, k.Copy, k.CopyRaw,
-		k.Snapshot, k.Launcher, k.Quit, k.Help,
+		k.Snapshot, k.Save, k.SaveAll, k.Launcher, k.Quit, k.Help,
 	}
 }
 
@@ -126,6 +131,8 @@ type fullscreenKeys struct {
 	Copy     key.Binding
 	CopyRaw  key.Binding
 	Snapshot key.Binding
+	Save     key.Binding
+	SaveAll  key.Binding
 	Return   key.Binding
 	Quit     key.Binding
 	Help     key.Binding
@@ -140,6 +147,8 @@ func newFullscreenKeys() fullscreenKeys {
 		Copy:     key.NewBinding(key.WithKeys("y"), key.WithHelp("y", "copy output without ANSI codes")),
 		CopyRaw:  key.NewBinding(key.WithKeys("Y"), key.WithHelp("Y", "copy output with ANSI codes")),
 		Snapshot: key.NewBinding(key.WithKeys("t"), key.WithHelp("t", "print output to terminal")),
+		Save:     key.NewBinding(key.WithKeys("s"), key.WithHelp("s", "save output to a file")),
+		SaveAll:  key.NewBinding(key.WithKeys("S"), key.WithHelp("S", "save every output to a folder")),
 		Return:   key.NewBinding(key.WithKeys("f", "esc"), key.WithHelp("f/esc", "back to panes")),
 		Quit:     key.NewBinding(key.WithKeys("q", "ctrl+c"), key.WithHelp("q", "stop and quit")),
 		Help:     key.NewBinding(key.WithKeys("?"), key.WithHelp("?", "show this list")),
@@ -164,7 +173,7 @@ func (k fullscreenKeys) FullHelp() [][]key.Binding {
 func (k fullscreenKeys) allBindings() []key.Binding {
 	return []key.Binding{
 		k.Move, k.Page, k.Top, k.Bottom,
-		k.Copy, k.CopyRaw, k.Snapshot,
+		k.Copy, k.CopyRaw, k.Snapshot, k.Save, k.SaveAll,
 		k.Return, k.Quit, k.Help,
 	}
 }
