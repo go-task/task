@@ -10,6 +10,8 @@ import (
 	"charm.land/bubbles/v2/key"
 	"charm.land/bubbles/v2/viewport"
 	tea "charm.land/bubbletea/v2"
+
+	"github.com/go-task/task/v3/errors"
 )
 
 type taskState uint8
@@ -48,6 +50,10 @@ type tuiTask struct {
 	output    string
 	state     taskState
 	truncated bool
+
+	// exitCode is what this task's own command exited with, when it failed and
+	// reported one.
+	exitCode *int
 
 	startedAt  time.Time
 	finishedAt time.Time
@@ -203,6 +209,7 @@ func (m tuiModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			task.state = taskCanceled
 		case resultFailed:
 			task.state = taskFailed
+			task.exitCode = taskExitCode(task.name, msg.err)
 			m.appendFailure(task, msg.err)
 		case resultSucceeded:
 			task.state = taskSucceeded
@@ -502,6 +509,18 @@ func (m tuiModel) elapsed(task *tuiTask) time.Duration {
 		return time.Since(task.startedAt)
 	}
 	return task.finishedAt.Sub(task.startedAt)
+}
+
+// taskExitCode is the status the task's own command exited with. A task that
+// failed because a dependency did carries that dependency's error, so the code
+// is reported only when the error names this task.
+func taskExitCode(name string, err error) *int {
+	runErr, ok := errors.AsType[*errors.TaskRunError](err)
+	if !ok || runErr.TaskName != name {
+		return nil
+	}
+	code := runErr.TaskExitCode()
+	return &code
 }
 
 func returnToLauncher() tea.Msg {

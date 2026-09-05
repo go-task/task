@@ -21,8 +21,10 @@ import (
 	"github.com/charmbracelet/x/ansi"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"mvdan.cc/sh/v3/interp"
 
 	"github.com/go-task/task/v3"
+	taskerrors "github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/logger"
 )
 
@@ -1882,4 +1884,69 @@ func TestSendReportsWhetherAnythingReceivedIt(t *testing.T) {
 	// they are dropped rather than panicking on a program that is gone.
 	ui := &UI{pending: make(map[uint64]pendingOutput)}
 	assert.False(t, ui.send(taskScheduledMsg{}), "nothing is running to receive it")
+}
+
+func TestOutputHeaderShowsTheStatusAndExitCode(t *testing.T) {
+	t.Parallel()
+
+	exitError := func(name string, status uint8) error {
+		return &taskerrors.TaskRunError{TaskName: name, Err: interp.ExitStatus(status)}
+	}
+
+	m := newTUIModel(func() {})
+	m = updateTUIModel(t, m, tea.WindowSizeMsg{Width: 100, Height: 30})
+	m = updateTUIModel(t, m, started(1, 0, "root"))
+	m = updateTUIModel(t, m, started(2, 1, "build"))
+	m = updateTUIModel(t, m, started(3, 1, "test"))
+	m = updateTUIModel(t, m, started(4, 1, "lint"))
+
+	selectTaskByID(t, &m, 2)
+	assert.Contains(t, ansi.Strip(m.outputStatus()), "running", "a task still running says so")
+
+	m = updateTUIModel(t, m, taskFinishedMsg{id: 2})
+	assert.Contains(t, ansi.Strip(m.outputStatus()), "success")
+	assert.NotContains(t, m.outputStatus(), "(", "a task that succeeded has no code to report")
+
+	// A task that ran its own failing command reports what it exited with.
+	m = updateTUIModel(t, m, taskFinishedMsg{id: 3, result: resultFailed, err: exitError("test", 127)})
+	selectTaskByID(t, &m, 3)
+	assert.Contains(t, ansi.Strip(m.outputStatus()), "failed (127)")
+	assert.Contains(t, ansi.Strip(m.View().Content), "failed (127)")
+
+	// A task that failed because a dependency did carries the dependency's
+	// error, which is not this task's exit code.
+	m = updateTUIModel(t, m, taskFinishedMsg{id: 4, result: resultFailed, err: exitError("test", 127)})
+	selectTaskByID(t, &m, 4)
+	assert.Equal(t, "failed", ansi.Strip(m.outputStatus()))
+}
+
+func TestOutputHeaderFollowsTheJoinedOwner(t *testing.T) {
+	t.Parallel()
+
+	m := newTUIModel(func() {})
+	m = updateTUIModel(t, m, started(1, 0, "root"))
+	m = updateTUIModel(t, m, started(2, 1, "build"))
+	m = updateTUIModel(t, m, scheduled(3, 1, "build"))
+	m = updateTUIModel(t, m, taskJoinedMsg{id: 3, ownerID: 2})
+	m = updateTUIModel(t, m, taskFinishedMsg{
+		id:     2,
+		result: resultFailed,
+		err:    &taskerrors.TaskRunError{TaskName: "build", Err: interp.ExitStatus(2)},
+	})
+
+	selectTaskByID(t, &m, 3)
+	assert.Contains(t, ansi.Strip(m.outputStatus()), "failed (2)",
+		"a joined invocation reports how the run it waited on ended")
+}
+
+func selectTaskByID(t *testing.T, m *tuiModel, id uint64) {
+	t.Helper()
+	for index, row := range m.taskRows() {
+		if row.task.id == id {
+			m.selectTask(index)
+			require.Equal(t, id, m.selectedID)
+			return
+		}
+	}
+	t.Fatalf("no row for task %d", id)
 }

@@ -214,12 +214,18 @@ func (m tuiModel) taskVisible(task *tuiTask) bool {
 }
 
 func (m tuiModel) taskState(task *tuiTask) taskState {
+	return m.taskOwner(task).state
+}
+
+// taskOwner is the invocation that actually ran, which for a joined task is
+// the one it waited on rather than the task itself.
+func (m tuiModel) taskOwner(task *tuiTask) *tuiTask {
 	if task.ownerID != 0 {
 		if owner := m.byID[task.ownerID]; owner != nil {
-			return owner.state
+			return owner
 		}
 	}
-	return task.state
+	return task
 }
 
 type tuiTaskRow struct {

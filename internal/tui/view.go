@@ -284,11 +284,12 @@ func (m tuiModel) outputPanel(width int) string {
 	if task := m.selectedRowTask(); task != nil {
 		title += " · " + m.taskName(task)
 	}
-	position := ""
+	right := m.outputStatus()
 	if !m.viewport.AtTop() || !m.viewport.AtBottom() {
-		position = fmt.Sprintf("%3.0f%%", m.viewport.ScrollPercent()*100)
+		position := fmt.Sprintf("%3.0f%%", m.viewport.ScrollPercent()*100)
+		right = strings.TrimLeft(right+"  "+tuiHelpStyle.Render(position), " ")
 	}
-	return paneTitle(title, tuiHelpStyle.Render(position), width) + "\n" + m.viewport.View()
+	return paneTitle(title, right, width) + "\n" + m.viewport.View()
 }
 
 // paneTitle renders a pane header. right is rendered as given, so a caller can
@@ -297,6 +298,26 @@ func paneTitle(left, right string, width int) string {
 	left = truncateText(left, max(width-lipgloss.Width(right)-1, 1))
 	space := max(width-lipgloss.Width(left)-lipgloss.Width(right), 0)
 	return tuiTitleStyle.Render(left) + strings.Repeat(" ", space) + right
+}
+
+// outputStatus is how the selected task ended, for the output pane header. A
+// task that reported an exit code carries it alongside, the way mprocs and
+// similar interfaces do, so that "exit 127" can be told from "exit 1" without
+// reading the output.
+func (m tuiModel) outputStatus() string {
+	selected := m.selectedRowTask()
+	if selected == nil {
+		return ""
+	}
+	task := m.taskOwner(selected)
+	if task.state == taskPending {
+		return ""
+	}
+	label := taskStateText(task.state)
+	if task.exitCode != nil {
+		label += fmt.Sprintf(" (%d)", *task.exitCode)
+	}
+	return taskStateLabel(task.state, label)
 }
 
 // runStateLabel summarises the whole run for the task pane header, so the
