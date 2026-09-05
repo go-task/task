@@ -1970,10 +1970,27 @@ func TestScrollIndicatorSitsOnTheOutputPaneBorder(t *testing.T) {
 	m = updateTUIModel(t, m, taskOutputMsg{id: 2, name: "build", data: strings.Join(lines, "\n")})
 	m.viewport.SetYOffset(10)
 
+	borderLabel := func(m tuiModel) string {
+		view := strings.Split(ansi.Strip(m.View().Content), "\n")
+		return view[len(view)-2]
+	}
+
 	view := strings.Split(ansi.Strip(m.View().Content), "\n")
 	title, border := view[1], view[len(view)-2]
 	assert.NotContains(t, title, "%", "the header slot is left to the task's status")
-	assert.Contains(t, border, "33%")
+
+	// The label counts the last visible line against the total, so it says how
+	// much of the output has been seen rather than where in the scrollable
+	// range the viewport sits.
+	height := m.viewport.Height()
+	assert.Contains(t, border, fmt.Sprintf("%.0f%%", float64(10+height)/40*100))
+
+	m.viewport.GotoTop()
+	assert.Contains(t, borderLabel(m), fmt.Sprintf("%.0f%%", float64(height)/40*100),
+		"a screenful already read is not nought per cent")
+
+	m.viewport.GotoBottom()
+	assert.Contains(t, borderLabel(m), "100%")
 	assert.True(t, strings.HasSuffix(border, "╯"), "the label stays clear of the corner: %q", border)
 	assert.Equal(t, m.width, lipgloss.Width(border), "the border keeps its width")
 }

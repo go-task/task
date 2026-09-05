@@ -163,13 +163,18 @@ func (m tuiModel) renderPanes(layout tuiLayout) (string, string) {
 	return left, withBottomLabel(right, m.scrollLabel(m.viewport), rightStyle)
 }
 
-// scrollLabel is how far down the output the viewport is, or nothing at all
-// when the whole of it is on screen.
+// scrollLabel is how much of the output has been seen, or nothing at all when
+// the whole of it is on screen. It counts the last visible line against the
+// total, the way a pager does, rather than the viewport's own ScrollPercent,
+// which measures position within the scrollable range: that reads 0% at the
+// top however much of the output is already showing.
 func (m tuiModel) scrollLabel(view viewport.Model) string {
-	if view.AtTop() && view.AtBottom() {
+	total := view.TotalLineCount()
+	if total == 0 || (view.AtTop() && view.AtBottom()) {
 		return ""
 	}
-	return fmt.Sprintf("%.0f%%", view.ScrollPercent()*100)
+	seen := min(view.YOffset()+view.Height(), total)
+	return fmt.Sprintf("%.0f%%", float64(seen)/float64(total)*100)
 }
 
 // withBottomLabel writes a label into a panel's bottom border, the way a pager
