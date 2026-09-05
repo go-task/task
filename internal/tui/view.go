@@ -160,44 +160,45 @@ func (m tuiModel) renderPanes(layout tuiLayout) (string, string) {
 		Render(m.taskList(layout.leftInnerWidth, layout.innerHeight))
 	right := rightStyle.Width(layout.rightOuterWidth).Height(layout.bodyHeight).
 		Render(m.outputPanel(layout.rightInnerWidth))
-	return left, withBottomLabel(right, m.scrollLabel(m.viewport), rightStyle)
+	return left, withScrollbar(right, m.viewport, rightStyle)
 }
 
-// scrollLabel is how much of the output has been seen, or nothing at all when
-// the whole of it is on screen. It counts the last visible line against the
-// total, the way a pager does, rather than the viewport's own ScrollPercent,
-// which measures position within the scrollable range: that reads 0% at the
-// top however much of the output is already showing.
-func (m tuiModel) scrollLabel(view viewport.Model) string {
-	total := view.TotalLineCount()
-	if total == 0 || (view.AtTop() && view.AtBottom()) {
-		return ""
-	}
-	seen := min(view.YOffset()+view.Height(), total)
-	return fmt.Sprintf("%.0f%%", float64(seen)/float64(total)*100)
-}
-
-// withBottomLabel writes a label into a panel's bottom border, the way a pager
-// puts its position indicator on the frame rather than spending a row of
-// content on it. The panel is returned unchanged when the frame is too narrow
-// to hold the label clear of both corners.
-func withBottomLabel(panel, label string, style lipgloss.Style) string {
-	if label == "" {
+// withScrollbar draws the output's scroll position as a thumb on the panel's
+// right border, the way lazygit and gitui do. It replaces the border cell of
+// each viewport row, so it costs neither a column of output nor a number the
+// reader has to interpret. A panel whose output fits on screen keeps its plain
+// border.
+func withScrollbar(panel string, view viewport.Model, style lipgloss.Style) string {
+	total, height := view.TotalLineCount(), view.Height()
+	if height < 1 || total <= height {
 		return panel
 	}
-	label = " " + label + " "
 	lines := strings.Split(panel, "\n")
-	last := len(lines) - 1
-	width := lipgloss.Width(lines[last])
-	fill := width - lipgloss.Width(label) - 4
-	if fill < 1 {
+	// The first line of the panel is its top border and the second is the pane
+	// title; the last is the bottom border. The viewport's own rows lie
+	// between, and they are what the thumb is measured against.
+	const firstRow = 2
+	track := len(lines) - 1 - firstRow
+	if track < 2 {
 		return panel
 	}
-	border := lipgloss.RoundedBorder()
-	frame := lipgloss.NewStyle().Foreground(style.GetBorderBottomForeground())
-	lines[last] = frame.Render(border.BottomLeft+strings.Repeat(border.Bottom, fill)) +
-		tuiHelpStyle.Render(label) +
-		frame.Render(strings.Repeat(border.Bottom, 2)+border.BottomRight)
+
+	// The thumb keeps the border's colour, so that it still follows which pane
+	// has the focus. A block against a thin line is a difference of shape, and
+	// so survives a terminal whose palette flattens the two.
+	thumb := lipgloss.NewStyle().Foreground(style.GetBorderRightForeground())
+
+	// The thumb is as long a part of the track as the screen is of the output,
+	// and never shorter than one cell.
+	size := max(track*height/total, 1)
+	offset := 0
+	if span := track - size; span > 0 {
+		offset = min(view.YOffset()*span/(total-height), span)
+	}
+	for row := firstRow + offset; row < firstRow+offset+size; row++ {
+		width := lipgloss.Width(lines[row])
+		lines[row] = ansi.Truncate(lines[row], width-1, "") + thumb.Render("█")
+	}
 	return strings.Join(lines, "\n")
 }
 

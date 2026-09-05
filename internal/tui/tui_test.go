@@ -1951,48 +1951,63 @@ func selectTaskByID(t *testing.T, m *tuiModel, id uint64) {
 	t.Fatalf("no row for task %d", id)
 }
 
-func TestScrollIndicatorSitsOnTheOutputPaneBorder(t *testing.T) {
+func TestScrollbarSitsOnTheOutputPaneBorder(t *testing.T) {
 	t.Parallel()
 
 	m := newTUIModel(func() {})
-	m = updateTUIModel(t, m, tea.WindowSizeMsg{Width: 90, Height: 14})
+	m = updateTUIModel(t, m, tea.WindowSizeMsg{Width: 70, Height: 14})
 	m = updateTUIModel(t, m, started(1, 0, "root"))
 	m = updateTUIModel(t, m, started(2, 1, "build"))
 	selectTaskByID(t, &m, 2)
 
-	assert.NotContains(t, ansi.Strip(m.View().Content), "%",
-		"output that fits on screen has no position to report")
+	assert.NotContains(t, ansi.Strip(m.View().Content), "█",
+		"output that fits on screen keeps a plain border")
 
 	lines := make([]string, 0, 40)
 	for i := range 40 {
 		lines = append(lines, fmt.Sprintf("line %d", i))
 	}
 	m = updateTUIModel(t, m, taskOutputMsg{id: 2, name: "build", data: strings.Join(lines, "\n")})
-	m.viewport.SetYOffset(10)
-
-	borderLabel := func(m tuiModel) string {
-		view := strings.Split(ansi.Strip(m.View().Content), "\n")
-		return view[len(view)-2]
-	}
-
-	view := strings.Split(ansi.Strip(m.View().Content), "\n")
-	title, border := view[1], view[len(view)-2]
-	assert.NotContains(t, title, "%", "the header slot is left to the task's status")
-
-	// The label counts the last visible line against the total, so it says how
-	// much of the output has been seen rather than where in the scrollable
-	// range the viewport sits.
-	height := m.viewport.Height()
-	assert.Contains(t, border, fmt.Sprintf("%.0f%%", float64(10+height)/40*100))
+	track := m.viewport.Height()
 
 	m.viewport.GotoTop()
-	assert.Contains(t, borderLabel(m), fmt.Sprintf("%.0f%%", float64(height)/40*100),
-		"a screenful already read is not nought per cent")
+	start, size := scrollbarThumb(t, m)
+	assert.Equal(t, 0, start, "at the top the thumb starts at the top of the track")
+	// Ten lines of forty are on screen, so the thumb covers a quarter of the
+	// track.
+	assert.Equal(t, track*m.viewport.Height()/40, size)
 
 	m.viewport.GotoBottom()
-	assert.Contains(t, borderLabel(m), "100%")
-	assert.True(t, strings.HasSuffix(border, "╯"), "the label stays clear of the corner: %q", border)
-	assert.Equal(t, m.width, lipgloss.Width(border), "the border keeps its width")
+	start, bottomSize := scrollbarThumb(t, m)
+	assert.Equal(t, track-size, start, "at the end the thumb reaches the bottom of the track")
+	assert.Equal(t, size, bottomSize, "the thumb keeps its length")
+
+	m.viewport.SetYOffset(15)
+	middle, _ := scrollbarThumb(t, m)
+	assert.Greater(t, middle, 0)
+	assert.Less(t, middle, track-size)
+}
+
+// scrollbarThumb reads the thumb's position and length out of the rendered
+// output pane, from the border cell at the end of each of its rows.
+func scrollbarThumb(t *testing.T, m tuiModel) (start, size int) {
+	t.Helper()
+	lines := strings.Split(ansi.Strip(m.View().Content), "\n")
+	// The panel opens with its top border and the pane title, and closes with
+	// its bottom border; the footer follows it.
+	rows := lines[2 : len(lines)-2]
+	var thumb []int
+	for i, line := range rows {
+		runes := []rune(line)
+		if runes[len(runes)-1] == '█' {
+			thumb = append(thumb, i)
+		}
+	}
+	require.NotEmpty(t, thumb, "no thumb in %q", rows)
+	for i, row := range thumb {
+		require.Equal(t, thumb[0]+i, row, "the thumb is one unbroken run: %v", thumb)
+	}
+	return thumb[0], len(thumb)
 }
 
 func TestNavigatorKeySwitchesTheTaskView(t *testing.T) {

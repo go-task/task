@@ -2868,11 +2868,11 @@ the following controls to scroll:
 - `g` and `G` to jump to the beginning or end
 - Mouse wheel
 
-While the output is scrolled, how far down it you are appears on the bottom
-right of the output pane's frame. The top right of the pane shows how the
-selected task ended, along with the exit code when the task ran a command that
-reported one. A task that failed only because one of its dependencies did shows
-no code of its own.
+Output taller than the pane draws a scrollbar on the pane's right border,
+showing both where you are and how much there is. The top right of the pane
+shows how the selected task ended, along with the exit code when the task ran a
+command that reported one. A task that failed only because one of its
+dependencies did shows no code of its own.
 
 Each task shows how long it ran, counting up while it is running and keeping its
 final duration afterwards. Quick tasks are reported in milliseconds. A task that
