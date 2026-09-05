@@ -330,6 +330,9 @@ Set how task status is displayed in the TUI. Available styles: `icons`,
 task --tui --tui-status labels test
 ```
 
+Both TUI options can be set as defaults in
+[`.taskrc.yml`](./config.md#tui), so that they do not have to be repeated.
+
 #### `--tui-task-navigator <mode>`
 
 Set how tasks are organized in the TUI task navigator. Available modes: `list`,
@@ -338,6 +341,8 @@ Set how tasks are organized in the TUI task navigator. Available modes: `list`,
 ```bash
 task --tui --tui-task-navigator list test
 ```
+
+Press `v` in the interface to switch between the two during a run.
 
 ### Task Information
 

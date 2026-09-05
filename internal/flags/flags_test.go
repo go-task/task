@@ -47,23 +47,26 @@ func TestValidateTUIOptions(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		name      string
-		enabled   bool
-		status    string
-		navigator string
-		wantError string
+		name         string
+		enabled      bool
+		statusSet    bool
+		navigatorSet bool
+		wantError    string
 	}{
 		{name: "TUI without options", enabled: true},
-		{name: "TUI with options", enabled: true, status: "labels", navigator: "tree"},
-		{name: "status without TUI", status: "labels", wantError: "--tui-status without --tui"},
-		{name: "navigator without TUI", navigator: "tree", wantError: "--tui-task-navigator without --tui"},
+		{name: "TUI with options", enabled: true, statusSet: true, navigatorSet: true},
+		{name: "status flag without TUI", statusSet: true, wantError: "--tui-status without --tui"},
+		{name: "navigator flag without TUI", navigatorSet: true, wantError: "--tui-task-navigator without --tui"},
+		// A .taskrc.yml default leaves the flags unchanged, so an ordinary run
+		// is not failed by settings that only apply to the interface.
+		{name: "options configured, TUI off"},
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
-			err := validateTUIOptions(test.enabled, test.status, test.navigator)
+			err := validateTUIOptions(test.enabled, test.statusSet, test.navigatorSet)
 			if test.wantError == "" {
 				require.NoError(t, err)
 				return

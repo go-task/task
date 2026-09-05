@@ -148,8 +148,8 @@ func init() {
 	pflag.StringVarP(&Dir, "dir", "d", "", "Sets the directory in which Task will execute and look for a Taskfile.")
 	pflag.StringVarP(&Entrypoint, "taskfile", "t", "", `Choose which Taskfile to run. Defaults to "Taskfile.yml".`)
 	pflag.BoolVarP(&TUI, "tui", "T", false, "Runs Task in an interactive terminal interface.")
-	pflag.StringVar(&TUIStatus, "tui-status", "", "Sets TUI task status style: [icons|labels].")
-	pflag.StringVar(&TUITaskNavigator, "tui-task-navigator", "", "Sets TUI task navigator: [list|tree]. Defaults to tree.")
+	pflag.StringVar(&TUIStatus, "tui-status", getConfig(config, "TUI_STATUS", func() *string { return config.TUI.Status }, ""), "Sets TUI task status style: [icons|labels].")
+	pflag.StringVar(&TUITaskNavigator, "tui-task-navigator", getConfig(config, "TUI_TASK_NAVIGATOR", func() *string { return config.TUI.TaskNavigator }, ""), "Sets TUI task navigator: [list|tree]. Defaults to tree.")
 	pflag.StringVar(&TempDir, "temp-dir", getConfig(config, "TEMP_DIR", func() *string { return config.TempDir }, ""), "Sets the directory used to store Task temporary files, such as checksums. Relative paths are relative to the root Taskfile.")
 	pflag.StringVarP(&Output.Name, "output", "o", getConfig(config, "OUTPUT", func() *string { return nil }, ""), "Sets output style: [interleaved|group|prefixed].")
 	pflag.StringVar(&Output.Group.Begin, "output-group-begin", getConfig(config, "OUTPUT_GROUP_BEGIN", func() *string { return nil }, ""), "Message template to print before a task's grouped output.")
@@ -222,7 +222,7 @@ func Validate() error {
 	if err := validateOutputOptions(Output); err != nil {
 		return err
 	}
-	if err := validateTUIOptions(TUI, TUIStatus, TUITaskNavigator); err != nil {
+	if err := validateTUIOptions(TUI, pflag.Lookup("tui-status").Changed, pflag.Lookup("tui-task-navigator").Changed); err != nil {
 		return err
 	}
 	if TUI && (List || ListAll || ListJson || Status || Summary || Watch) {
@@ -285,14 +285,17 @@ func validateTUIPrompting(tui, interactive, interactiveSet bool) error {
 	return nil
 }
 
-func validateTUIOptions(enabled bool, status, navigator string) error {
+// validateTUIOptions rejects the interface's display options without the
+// interface. Only the flags are rejected: the same settings in .taskrc.yml are
+// defaults for the runs that do use it, and must not fail the ones that don't.
+func validateTUIOptions(enabled, statusSet, navigatorSet bool) error {
 	if enabled {
 		return nil
 	}
-	if status != "" {
+	if statusSet {
 		return errors.New("task: You can't set --tui-status without --tui")
 	}
-	if navigator != "" {
+	if navigatorSet {
 		return errors.New("task: You can't set --tui-task-navigator without --tui")
 	}
 	return nil

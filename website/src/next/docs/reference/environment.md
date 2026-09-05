@@ -121,6 +121,16 @@ checksums and temporary metadata. Can be relative like `tmp/task` or absolute
 like `/tmp/.task` or `~/.task`. Relative paths are relative to the root
 Taskfile, not the working directory. Defaults to: `./.task`.
 
+### `TASK_TUI_STATUS`
+
+Sets how a task's state is shown in the terminal interface's task navigator.
+Valid values are `icons` and `labels`. Defaults to `icons`.
+
+### `TASK_TUI_TASK_NAVIGATOR`
+
+Sets how tasks are arranged in the terminal interface's navigator. Valid values
+are `tree` and `list`. Defaults to `tree`.
+
 ### `TASK_CORE_UTILS`
 
 This env controls whether the Bash interpreter will use its own core utilities

@@ -2851,6 +2851,9 @@ Canceled tasks were interrupted, while skipped tasks were never attempted after
 an earlier sequential task failed. Pass `--tui-status labels` to replace the
 icons with text labels.
 
+Both `--tui-status` and `--tui-task-navigator` can be set as defaults in
+[`.taskrc.yml`](./reference/config.md#tui).
+
 Press `?` at any time to see every key available in the current view.
 
 Use Tab or the left/right arrow keys to switch between the task navigator and
