@@ -157,38 +157,52 @@ func (m *tuiModel) handlePromptKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 	return *m, nil
 }
 
-// promptPanel draws the question in the output pane, so the task list stays
-// visible. A question can arrive minutes into a run, from a task reached
-// through cmds, and taking the whole screen then would hide every other task
-// at the moment the user most wants to see them.
-func (m tuiModel) promptPanel(width int) string {
+// promptView draws the question over the whole screen.
+//
+// A blocking question is modal: nothing else can proceed until it is answered,
+// and taking the screen says so. Sharing the screen with the task list would
+// suggest the rest of the interface is still live, and leave less room for a
+// message whose length the Taskfile author chose.
+func (m tuiModel) promptView() string {
 	state := m.prompt
+	width := max(m.width, 1)
+	height := max(m.height-1, 1)
+	inner := max(width-tuiPanelStyle.GetHorizontalFrameSize(), 1)
+
 	var body strings.Builder
-	body.WriteString(paneTitle("ASKING · "+state.task, "", width))
+	body.WriteString(paneTitle("TASK IS ASKING", tuiHelpStyle.Render(state.task), inner))
 	body.WriteString("\n\n")
 
 	switch state.kind {
 	case promptConfirm:
-		body.WriteString(wrapText(state.message, width))
+		body.WriteString(wrapText(state.message, inner))
 	case promptText:
-		body.WriteString(tuiTitleStyle.Render(truncateText(state.name, width)))
+		body.WriteString(tuiTitleStyle.Render(truncateText(state.name, inner)))
 		body.WriteString("\n\n")
-		state.input.SetWidth(max(width-1, 1))
+		state.input.SetWidth(max(inner-1, 1))
 		body.WriteString(state.input.View())
 	case promptChoice:
-		body.WriteString(tuiTitleStyle.Render(truncateText(state.name, width)))
+		body.WriteString(tuiTitleStyle.Render(truncateText(state.name, inner)))
 		body.WriteString("\n\n")
 		for i, option := range state.options {
-			line := truncateText("  "+option, width)
+			line := truncateText("  "+option, inner)
 			if i == state.cursor {
 				// Highlight the whole row, as the launcher does.
-				line = tuiSelectedStyle.Width(width).Render(line)
+				line = tuiSelectedStyle.Width(inner).Render(line)
 			}
 			body.WriteString(line)
 			body.WriteString("\n")
 		}
 	}
-	return body.String()
+
+	panel := tuiPanelStyle.
+		BorderForeground(tuiAccentColor).
+		Width(width).
+		Height(height).
+		MaxWidth(width).
+		MaxHeight(height).
+		Render(body.String())
+	return panel + "\n" + renderPromptKeys(m, width, m.promptKeys())
 }
 
 // promptKeys are the footer hints while a question is on screen.

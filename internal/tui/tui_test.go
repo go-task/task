@@ -1386,7 +1386,7 @@ func TestPromptControlCQuitsTheInterface(t *testing.T) {
 	assert.Nil(t, m.prompt)
 }
 
-func TestPromptKeepsTheTaskListVisible(t *testing.T) {
+func TestPromptTakesTheScreen(t *testing.T) {
 	t.Parallel()
 
 	m := newTUIModel(func() {})
@@ -1400,14 +1400,15 @@ func TestPromptKeepsTheTaskListVisible(t *testing.T) {
 	})
 	view := ansi.Strip(m.View().Content)
 
-	// A question can arrive minutes into a run, so it takes the output pane
-	// rather than the screen: the other tasks stay visible while it is up.
-	assert.Contains(t, view, "TASKS")
+	// A blocking question is modal: nothing else can proceed until it is
+	// answered, so it takes the screen rather than sharing it with panes that
+	// would look live.
+	assert.Contains(t, view, "TASK IS ASKING")
 	assert.Contains(t, view, "release")
-	assert.Contains(t, view, "ASKING")
 	assert.Contains(t, view, "staging")
 	assert.Contains(t, view, "enter confirm")
-	// The output it replaces is not shown while the question is.
+	assert.NotContains(t, view, "TASKS")
+	assert.NotContains(t, view, "OUTPUT")
 	assert.NotContains(t, view, "building")
 }
 

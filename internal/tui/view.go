@@ -17,6 +17,8 @@ import (
 func (m tuiModel) View() tea.View {
 	content := m.renderContent()
 	switch {
+	case m.prompt != nil:
+		content = m.promptView()
 	case m.showHelp:
 		content = m.helpView()
 	case m.fullscreenOutput:
@@ -47,9 +49,6 @@ func (m tuiModel) renderContent() string {
 		footer = renderStatus(layout.width, "stopping tasks… returning to launcher after processes exit", tuiHelpStyle)
 	case m.notice != "":
 		footer = renderStatus(layout.width, m.notice, tuiTitleStyle)
-	}
-	if m.prompt != nil {
-		footer = renderPromptKeys(m, layout.width, m.promptKeys())
 	}
 
 	return body + "\n" + footer
@@ -149,17 +148,10 @@ func (m tuiModel) renderPanes(layout tuiLayout) (string, string) {
 	} else {
 		rightStyle = rightStyle.BorderForeground(tuiAccentColor)
 	}
-	pane := m.outputPanel(layout.rightInnerWidth)
-	if m.prompt != nil {
-		// A question owns the keyboard, so it takes the focus ring with it.
-		leftStyle = tuiPanelStyle
-		rightStyle = tuiPanelStyle.BorderForeground(tuiAccentColor)
-		pane = m.promptPanel(layout.rightInnerWidth)
-	}
 	left := leftStyle.Width(layout.leftOuterWidth).Height(layout.bodyHeight).
 		Render(m.taskList(layout.leftInnerWidth, layout.innerHeight))
 	right := rightStyle.Width(layout.rightOuterWidth).Height(layout.bodyHeight).
-		Render(pane)
+		Render(m.outputPanel(layout.rightInnerWidth))
 	return left, right
 }
 
