@@ -228,6 +228,9 @@ func Validate() error {
 	if TUI && (List || ListAll || ListJson || Status || Summary || Watch) {
 		return errors.New("task: --tui cannot be combined with task listing, status, summary, or watch modes")
 	}
+	if err := validateTUIPrompting(TUI, Interactive, pflag.Lookup("interactive").Changed); err != nil {
+		return err
+	}
 
 	if List && ListAll {
 		return errors.New("task: cannot use --list and --list-all at the same time")
@@ -264,6 +267,20 @@ func validateOutputOptions(output ast.Output) error {
 		if output.Group.ErrorOnly {
 			return errors.New("task: You can't set --output-group-error-only without --output=group")
 		}
+	}
+	return nil
+}
+
+// validateTUIPrompting rejects turning prompting off while the TUI is on.
+//
+// The interface asks in its own dialog, so it does not consult --interactive,
+// and passing it would be silently ignored. It cannot honour the flag either:
+// a task requiring a variable would then be unrunnable from the launcher,
+// which has nowhere to pass one.
+func validateTUIPrompting(tui, interactive, interactiveSet bool) error {
+	if tui && interactiveSet && !interactive {
+		return errors.New(
+			"task: You can't set --interactive=false with --tui: the interface asks in its own dialog")
 	}
 	return nil
 }

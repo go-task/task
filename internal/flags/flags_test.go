@@ -73,3 +73,40 @@ func TestValidateTUIOptions(t *testing.T) {
 		})
 	}
 }
+
+func TestValidateTUIPrompting(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name           string
+		tui            bool
+		interactive    bool
+		interactiveSet bool
+		wantError      string
+	}{
+		{name: "TUI alone"},
+		{name: "TUI without the flag", tui: true},
+		{name: "TUI with prompting asked for", tui: true, interactive: true, interactiveSet: true},
+		{
+			name: "TUI with prompting turned off", tui: true, interactiveSet: true,
+			wantError: "--interactive=false with --tui",
+		},
+		// The flag defaults to false, so an unset flag must not be mistaken for
+		// a request to turn prompting off.
+		{name: "TUI with the flag left alone", tui: true, interactive: false},
+		// Without the TUI the flag means what it always has.
+		{name: "prompting turned off on its own", interactiveSet: true},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			err := validateTUIPrompting(test.tui, test.interactive, test.interactiveSet)
+			if test.wantError == "" {
+				require.NoError(t, err)
+				return
+			}
+			require.Error(t, err)
+			assert.Contains(t, err.Error(), test.wantError)
+		})
+	}
+}

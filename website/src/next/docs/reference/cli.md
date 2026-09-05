@@ -317,6 +317,10 @@ The dashboard gives each task invocation its own output pane, so `--output` has
 no effect on tasks run inside it. It still applies to tasks launched with
 Ctrl+R, which run with Task's normal terminal output.
 
+The interface asks for missing required variables in its own dialog, so
+[`--interactive`](#--interactive) is not needed and `--interactive=false` is
+rejected rather than ignored.
+
 #### `--tui-status <style>`
 
 Set how task status is displayed in the TUI. Available styles: `icons`,
